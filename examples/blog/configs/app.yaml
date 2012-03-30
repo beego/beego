@@ -1,3 +1,6 @@
-application: guestbook-go
+application: blog
 handlers:
-- url: /.*
+- url: "/user"
+  handlefun:"user.Index"
+- url: "/blog"
+  handlefun:"blog.Index"
