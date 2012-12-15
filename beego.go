@@ -28,7 +28,7 @@ func init() {
 	var err error
 	AppConfig, err = LoadConfig(path.Join(AppPath, "conf", "app.conf"))
 	if err != nil {
-		Trace("open Config err:", err)
+		//Trace("open Config err:", err)
 		HttpAddr = ""
 		HttpPort = 8080
 		AppName = "beego"
