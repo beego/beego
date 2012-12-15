@@ -11,7 +11,7 @@ Beego is licensed under the Apache Licence, Version 2.0
 ============
 To install:
 
-    go install github.com/astaxie/beego
+    go get github.com/astaxie/beego
 
 go version: go1 release
 
