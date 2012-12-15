@@ -93,6 +93,21 @@ func (app *App) RegisterController(path string, c ControllerInterface) *App {
 	return app
 }
 
+func (app *App) Filter(filter http.HandlerFunc) *App {
+	app.Handlers.Filter(filter)
+	return app
+}
+
+func (app *App) FilterParam(param string, filter http.HandlerFunc) *App {
+	app.Handlers.FilterParam(param, filter)
+	return app
+}
+
+func (app *App) FilterPrefixPath(path string, filter http.HandlerFunc) *App {
+	app.Handlers.FilterParam(path, filter)
+	return app
+}
+
 func (app *App) SetViewsPath(path string) *App {
 	ViewsPath = path
 	return app

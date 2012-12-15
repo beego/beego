@@ -72,5 +72,28 @@ this will serve any files in /static, including files in subdirectories. For exa
 
 ## Filters / Middleware
 ============
+You can apply filters to routes, which is useful for enforcing security, redirects, etc.
 
+You can, for example, filter all request to enforce some type of security:
+
+	var FilterUser = func(w http.ResponseWriter, r *http.Request) {
+	    if r.URL.User == nil || r.URL.User.Username() != "admin" {
+	        http.Error(w, "", http.StatusUnauthorized)
+	    }
+	}
+	
+	beego.BeeApp.Filter(FilterUser)
+	
+You can also apply filters only when certain REST URL Parameters exist:
+
+	beego.BeeApp.RegisterController("/:id([0-9]+)", &admin.EditController{})
+	beego.BeeApp.FilterParam("id", func(rw http.ResponseWriter, r *http.Request) {
+	    ...
+	})
+	
+also You can apply filters only when certain prefix URL path exist:
+
+	beego.BeeApp.FilterPrefixPath("/admin", func(rw http.ResponseWriter, r *http.Request) {
+	    … auth 
+	})
  		
