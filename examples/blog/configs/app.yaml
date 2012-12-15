@@ -1,6 +1,0 @@
-application: blog
-handlers:
-- url: "/user"
-  handlefun:"user.Index"
-- url: "/blog"
-  handlefun:"blog.Index"
