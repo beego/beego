@@ -1,4 +1,4 @@
-Beego
+## Beego
 =======
 Beego is an open source version of the scalable, non-blocking web server
 and tools that power SNDA's CDN system. Documentation and downloads are
@@ -7,7 +7,7 @@ available at https://github.com/astaxie/beego
 Beego is licensed under the Apache Licence, Version 2.0
 (http://www.apache.org/licenses/LICENSE-2.0.html).
 
-Installation
+## Installation
 ============
 To install:
 
@@ -15,7 +15,7 @@ To install:
 
 go version: go1 release
 
-Quick Start
+## Quick Start
 ============
 Here is the canonical "Hello, world" example app for beego:
 
@@ -47,3 +47,30 @@ default port:8080
 	Transfer-Encoding: chunked
 	
 	hello world
+	
+	
+## Router
+============
+In beego, a route is a struct paired with a URL-matching pattern. The strcut has many method with the same name of http method to server the http request. Each route is associated with a block:
+
+	beego.BeeApp.RegisterController("/", &controllers.MainController{})
+	beego.BeeApp.RegisterController("/admin", &admin.UserController{})
+	beego.BeeApp.RegisterController("/admin/index", &admin.ArticleController{})
+	beego.BeeApp.RegisterController("/admin/addpkg", &admin.AddController{})
+
+You can specify custom regular expressions for routes:
+
+	beego.BeeApp.RegisterController("/admin/editpkg/:id([0-9]+)", &admin.EditController{})
+	beego.BeeApp.RegisterController("/admin/delpkg/:id([0-9]+)", &admin.DelController{})
+	beego.BeeApp.RegisterController("/:pkg(.*)", &controllers.MainController{})
+	
+You can also create routes for static files:
+
+	beego.BeeApp.SetStaticPath("/static","/public")
+	
+this will serve any files in /static, including files in subdirectories. For example request `/static/logo.gif` or `/static/style/main.css` will server with the file in the path `/pulic/logo.gif` or `/public/style/main.css`
+
+## Filters / Middleware
+============
+
+ 		
