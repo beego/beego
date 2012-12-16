@@ -262,9 +262,62 @@ beego has three default defined funtion:
 
 	Compare is a quick and dirty comparison function. It will convert whatever you give it to strings and see if the two values are equal.Whitespace is trimmed. Used by the template parser as "eq"
 
+## Beego Variables
+============ 
+beego has many default variables, as follow is a list to show:
+
+- BeeApp       *App
+
+	global app init by the beego. You needn't to init it, just use it.
+	
+- AppName      string
+
+	appname is what you project named, default is beego
+
+- AppPath      string
+
+	this is the project path
+
+- StaticDir    map[string]string
+
+	staticdir store the map which request url to the static file path
+	
+	default is the request url has prefix `static`, then server the path in the app path
+	
+- HttpAddr     string
+
+	http listen address, defult is ""
+
+- HttpPort     int
+
+	http listen port, default is 8080
+
+- RecoverPanic bool
+
+	RecoverPanic mean when the program panic  whether the process auto recover,default is true
+
+- AutoRender   bool
+
+	whether run the Render function, default is true
+
+- ViewsPath    string
+
+	the template path, default is /views
+
+- RunMode      string //"dev" or "prod"
+
+	the runmode ,default is prod
+
+- AppConfig    *Config
+
+    Appconfig is a result that parse file from conf/app.conf, if this file not exist then the variable is nil. if the file exist, then return the Config as follow.
 
 ## Config
-============ 	
+============ 
+
+beego support parse ini file, beego will parse the default file in the path `conf/app.conf`
+
+
 
 ## Logger
 ============ 	
