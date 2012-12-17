@@ -101,7 +101,7 @@ also You can apply filters only when certain prefix URL path exist:
 	})
  		
 
-## Controller / Strcut
+## Controller / Struct
 ============ 	
 you type a ChildStruct has anonymous type `beego.Controller`
 
