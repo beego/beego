@@ -48,6 +48,9 @@ default port:8080
 	
 	hello world
 	
+also i write an app based on beego. you can get the code from:[beepkg](https://github.com/astaxie/beepkg)
+
+in other way i has writing a tool to quick create an app based on beego. you can get the tools from [bee](https://github.com/astaxie/bee)		
 	
 ## Router
 ============
