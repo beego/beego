@@ -32,7 +32,7 @@ func init() {
 		HttpAddr = ""
 		HttpPort = 8080
 		AppName = "beego"
-		RunMode = "prod"
+		RunMode = "prod" //default runmod
 		AutoRender = true
 		RecoverPanic = true
 		ViewsPath = "views"
