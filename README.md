@@ -169,7 +169,7 @@ So you can define ChildStruct method to accomplish the interface's method, now l
 	}
 	
 	func (this *AddController) Post() {
-		//数据处理
+		//data deal with
 		this.Ct.Request.ParseForm()
 		pkgname := this.Ct.Request.Form.Get("pkgname")
 		content := this.Ct.Request.Form.Get("content")
@@ -261,7 +261,22 @@ beego has three default defined funtion:
 - beegoTplFuncMap["compare"] = Compare	
 
 	Compare is a quick and dirty comparison function. It will convert whatever you give it to strings and see if the two values are equal.Whitespace is trimmed. Used by the template parser as "eq"
+	
+### JSON/XML output
+You can use `beego.Controller.ServeJson` or `beego.Controller.ServeXml` for serializing to Json and Xml. I found myself constantly writing code to serialize, set content type, content length, etc. Feel free to use these functions to eliminate redundant code in your app.
+		
+Helper function for serving Json, sets content type to application/json:
 
+	func (this *AddController) Get() {
+	    mystruct := { ... }
+	    routes.ServeJson(w, &mystruct)
+	}
+Helper function for serving Xml, sets content type to application/xml:
+
+	func (this *AddController) Get() {
+	    mystruct := { ... }
+	    routes.ServeXml(w, &mystruct)
+	}
 ## Beego Variables
 ============ 
 beego has many default variables, as follow is a list to show:
@@ -317,10 +332,74 @@ beego has many default variables, as follow is a list to show:
 
 beego support parse ini file, beego will parse the default file in the path `conf/app.conf`
 
+throw this conf file you can set many Beego Variables to change default values.
 
+app.conf
+
+	appname = beepkg
+	httpaddr = "127.0.0.1"
+	httpport = 9090
+	runmode ="dev"
+	autorender = false
+	autorecover = false
+	viewspath = "myview"
+
+this variables will replace the default beego variable's values
+
+you can also set you own variables such as database setting
+
+	mysqluser = "root"
+	mysqlpass = "rootpass"
+	mysqlurls = "127.0.0.1"
+	mysqldb   = "beego"
+	
+In you app you can get the config like this:
+
+	beego.AppConfig.String("mysqluser")
+	beego.AppConfig.String("mysqlpass")
+	beego.AppConfig.String("mysqlurls")
+	beego.AppConfig.String("mysqldb")
 
 ## Logger
 ============ 	
+beego has a default log named BeeLogger which output to os.Stdout.
 
+you can change it output with the standard log.Logger like this:
 
+	fd,err := os.OpenFile("/opt/app/beepkg/beepkg.log", os.O_RDWR|os.O_APPEND, 0644)
+	if err != nil {
+		beego.Critical("openfile beepkg.log:", err)
+		return
+	}
+	lg := log.New(fd, "", log.Ldate|log.Ltime)
+	beego.SetLogger(lg)
+	
+
+### Supported log levels
+- Trace - For pervasive information on states of all elementary constructs. Use 'Trace' for in-depth debugging to find problem parts of a function, to check values of temporary variables, etc.
+- Debug - For detailed system behavior reports and diagnostic messages to help to locate problems during development.
+- Info - For general information on the application's work. Use 'Info' level in your code so that you could leave it 'enabled' even in production. So it is a 'production log level'.
+- Warn - For indicating small errors, strange situations, failures that are automatically handled in a safe manner.
+- Error - For severe failures that affects application's workflow, not fatal, however (without forcing app shutdown).
+- Critical - For producing final messages before application’s death. Note: critical messages force immediate flush because in critical situation it is important to avoid log message losses if app crashes.
+- Off - A special log level used to turn off logging
+
+beego has follow functions:
+
+- Trace(v ...interface{})
+- Debug(v ...interface{})
+- Info(v ...interface{})
+- Warn(v ...interface{})
+- Error(v ...interface{})
+- Critical(v ...interface{})
+
+you can set log levels like this :
+
+	beego.SetLevel(beego.LevelError)
+
+after set the log levels, in the logs function which below the setlevels willn't output anything
+
+after set levels to beego.LevelError
+
+Trace, Debug, Info, Warn will not output anything. So you can change it when in dev and prod mode.
  		
