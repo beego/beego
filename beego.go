@@ -125,3 +125,27 @@ func (app *App) ErrorLog(ctx *Context) {
 func (app *App) AccessLog(ctx *Context) {
 	BeeLogger.Printf("[ACC] host: '%s', request: '%s %s', proto: '%s', ua: %s'', remote: '%s'\n", ctx.Request.Host, ctx.Request.Method, ctx.Request.URL.Path, ctx.Request.Proto, ctx.Request.UserAgent(), ctx.Request.RemoteAddr)
 }
+
+func RegisterController(path string, c ControllerInterface) *App {
+	BeeApp.RegisterController(path, c)
+	return BeeApp
+}
+
+func Filter(filter http.HandlerFunc) *App {
+	BeeApp.Filter(filter)
+	return BeeApp
+}
+
+func FilterParam(param string, filter http.HandlerFunc) *App {
+	BeeApp.FilterParam(param, filter)
+	return BeeApp
+}
+
+func FilterPrefixPath(path string, filter http.HandlerFunc) *App {
+	BeeApp.FilterParam(path, filter)
+	return BeeApp
+}
+
+func Run() {
+	BeeApp.Run()
+}

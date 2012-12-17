@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"path"
 	"strconv"
 )
@@ -144,4 +145,9 @@ func (c *Controller) ServeXml() {
 	c.Ct.SetHeader("Content-Length", strconv.Itoa(len(content)), true)
 	c.Ct.ContentType("xml")
 	c.Ct.ResponseWriter.Write(content)
+}
+
+func (c *Controller) Input() url.Values {
+	c.Ct.Request.ParseForm()
+	return c.Ct.Request.Form
 }

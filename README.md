@@ -34,8 +34,8 @@ Here is the canonical "Hello, world" example app for beego:
 	}
 	
 	func main() {
-		beego.BeeApp.RegisterController("/", &MainController{})
-		beego.BeeApp.Run()
+		beego.RegisterController("/", &MainController{})
+		beego.Run()
 	}
 	
 default port:8080
@@ -56,16 +56,16 @@ in other way i has writing a tool to quick create an app based on beego. you can
 ============
 In beego, a route is a struct paired with a URL-matching pattern. The strcut has many method with the same name of http method to server the http request. Each route is associated with a block:
 
-	beego.BeeApp.RegisterController("/", &controllers.MainController{})
-	beego.BeeApp.RegisterController("/admin", &admin.UserController{})
-	beego.BeeApp.RegisterController("/admin/index", &admin.ArticleController{})
-	beego.BeeApp.RegisterController("/admin/addpkg", &admin.AddController{})
+	beego.RegisterController("/", &controllers.MainController{})
+	beego.RegisterController("/admin", &admin.UserController{})
+	beego.RegisterController("/admin/index", &admin.ArticleController{})
+	beego.RegisterController("/admin/addpkg", &admin.AddController{})
 
 You can specify custom regular expressions for routes:
 
-	beego.BeeApp.RegisterController("/admin/editpkg/:id([0-9]+)", &admin.EditController{})
-	beego.BeeApp.RegisterController("/admin/delpkg/:id([0-9]+)", &admin.DelController{})
-	beego.BeeApp.RegisterController("/:pkg(.*)", &controllers.MainController{})
+	beego.RegisterController("/admin/editpkg/:id([0-9]+)", &admin.EditController{})
+	beego.RegisterController("/admin/delpkg/:id([0-9]+)", &admin.DelController{})
+	beego.RegisterController("/:pkg(.*)", &controllers.MainController{})
 	
 You can also create routes for static files:
 
@@ -85,18 +85,18 @@ You can, for example, filter all request to enforce some type of security:
 	    }
 	}
 	
-	beego.BeeApp.Filter(FilterUser)
+	beego.Filter(FilterUser)
 	
 You can also apply filters only when certain REST URL Parameters exist:
 
-	beego.BeeApp.RegisterController("/:id([0-9]+)", &admin.EditController{})
-	beego.BeeApp.FilterParam("id", func(rw http.ResponseWriter, r *http.Request) {
+	beego.RegisterController("/:id([0-9]+)", &admin.EditController{})
+	beego.FilterParam("id", func(rw http.ResponseWriter, r *http.Request) {
 	    ...
 	})
 	
 also You can apply filters only when certain prefix URL path exist:
 
-	beego.BeeApp.FilterPrefixPath("/admin", func(rw http.ResponseWriter, r *http.Request) {
+	beego.FilterPrefixPath("/admin", func(rw http.ResponseWriter, r *http.Request) {
 	    … auth 
 	})
  		
