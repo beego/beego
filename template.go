@@ -47,7 +47,7 @@ func Compare(a, b interface{}) (equal bool) {
 
 // AddFuncMap let user to register a func in the template
 func AddFuncMap(key string, funname interface{}) error {
-	if _, ok := beegoTplFuncMap["key"]; ok {
+	if _, ok := beegoTplFuncMap[key]; ok {
 		beegoTplFuncMap[key] = funname
 		return nil
 	}
