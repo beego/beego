@@ -69,6 +69,7 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface) {
 		route := &controllerInfo{}
 		route.regex = regex
 		route.params = params
+		route.pattern = pattern
 		route.controllerType = t
 
 		p.routers = append(p.routers, route)
@@ -146,7 +147,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	for _, route := range p.fixrouters {
 		n := len(requestPath)
 		if (requestPath[n-1] != '/' && route.pattern == requestPath) ||
-			(len(route.pattern) >= n && requestPath[0:n] == route.pattern) {
+			(len(route.pattern) >= n && requestPath[0:n-1] == route.pattern) {
 			runrouter = route
 			findrouter = true
 			break
