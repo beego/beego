@@ -146,8 +146,19 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	//first find path from the fixrouters to Improve Performance
 	for _, route := range p.fixrouters {
 		n := len(requestPath)
+		//route like "/"
+		if n == 1 {
+			if requestPath == route.pattern {
+				runrouter = route
+				findrouter = true
+				break
+			} else {
+				continue
+			}
+		}
+
 		if (requestPath[n-1] != '/' && route.pattern == requestPath) ||
-			(len(route.pattern) >= n && requestPath == route.pattern) {
+			(len(route.pattern) >= n && requestPath[0:n-1] == route.pattern) {
 			runrouter = route
 			findrouter = true
 			break
