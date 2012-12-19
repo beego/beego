@@ -13,12 +13,10 @@ To install:
 
     go get github.com/astaxie/beego
 
-go version: go1 release
-
 ## Quick Start
 ============
 Here is the canonical "Hello, world" example app for beego:
-
+```go
 	package main
 	
 	import (
@@ -35,16 +33,12 @@ Here is the canonical "Hello, world" example app for beego:
 	
 	func main() {
 		beego.RegisterController("/", &MainController{})
+		//beego.HttpPort = 8080 // default
 		beego.Run()
 	}
-	
-> in tip version the default listin on tcp6. so you must set HttpAddr:
+```
 
-> `beego.HttpAddr = "127.0.0.1"`		
-	
-default port:8080
-
-	http get http://localhost:8080
+	http get http://localhost:8080/
 	HTTP/1.1 200 OK
 	Content-Type: text/plain; charset=utf-8
 	Date: Sat, 15 Dec 2012 16:03:00 GMT
@@ -52,37 +46,37 @@ default port:8080
 	
 	hello world
 	
-also i write an app based on beego. you can get the code from:[beepkg](https://github.com/astaxie/beepkg)
+A more complete example use of beego exists here:[beepkg](https://github.com/astaxie/beepkg)
 
-in other way i has writing a tool to quick create an app based on beego. you can get the tools from [bee](https://github.com/astaxie/bee)		
+Some associated tools for beego reside in:[bee](https://github.com/astaxie/bee)		
 	
 ## Router
 ============
-In beego, a route is a struct paired with a URL-matching pattern. The strcut has many method with the same name of http method to server the http request. Each route is associated with a block:
-
+In beego, a route is a struct paired with a URL-matching pattern. The struct has many method with the same name of http method to serve the http response. Each route is associated with a block.
+```go
 	beego.RegisterController("/", &controllers.MainController{})
 	beego.RegisterController("/admin", &admin.UserController{})
 	beego.RegisterController("/admin/index", &admin.ArticleController{})
 	beego.RegisterController("/admin/addpkg", &admin.AddController{})
-
+```
 You can specify custom regular expressions for routes:
-
+```go
 	beego.RegisterController("/admin/editpkg/:id([0-9]+)", &admin.EditController{})
 	beego.RegisterController("/admin/delpkg/:id([0-9]+)", &admin.DelController{})
 	beego.RegisterController("/:pkg(.*)", &controllers.MainController{})
-	
+```	
 You can also create routes for static files:
 
 	beego.BeeApp.SetStaticPath("/static","/public")
 	
-this will serve any files in /static, including files in subdirectories. For example request `/static/logo.gif` or `/static/style/main.css` will server with the file in the path `/pulic/logo.gif` or `/public/style/main.css`
+This will serve any files in /static, including files in subdirectories. For example request `/static/logo.gif` or `/static/style/main.css` will server with the file in the path `/pulic/logo.gif` or `/public/style/main.css`
 
 ## Filters / Middleware
 ============
 You can apply filters to routes, which is useful for enforcing security, redirects, etc.
 
 You can, for example, filter all request to enforce some type of security:
-
+```go
 	var FilterUser = func(w http.ResponseWriter, r *http.Request) {
 	    if r.URL.User == nil || r.URL.User.Username() != "admin" {
 	        http.Error(w, "", http.StatusUnauthorized)
@@ -90,30 +84,30 @@ You can, for example, filter all request to enforce some type of security:
 	}
 	
 	beego.Filter(FilterUser)
-	
+```	
 You can also apply filters only when certain REST URL Parameters exist:
-
+```go
 	beego.RegisterController("/:id([0-9]+)", &admin.EditController{})
 	beego.FilterParam("id", func(rw http.ResponseWriter, r *http.Request) {
 	    ...
 	})
-	
-also You can apply filters only when certain prefix URL path exist:
-
+```	
+Additionally, You can apply filters only when certain prefix URL path exist:
+```go
 	beego.FilterPrefixPath("/admin", func(rw http.ResponseWriter, r *http.Request) {
 	    … auth 
 	})
- 		
+```		
 
 ## Controller / Struct
 ============ 	
-you type a ChildStruct has anonymous type `beego.Controller`
-
+To implement a beego Controller, embed the `beego.Controller` struct:
+```go
 	type xxxController struct {
 		beego.Controller
 	}
-
-the `beego.Controller` is `beego.ControllerInterface` has the follow method:
+```
+`beego.Controller` satisfieds the `beego.ControllerInterface` interface, which defines the following methods:
 
 - Init(ct *Context, cn string)
 
@@ -161,7 +155,7 @@ the `beego.Controller` is `beego.ControllerInterface` has the follow method:
 	
 
 So you can define ChildStruct method to accomplish the interface's method, now let us see an example:
-
+```go
 	type AddController struct {
 		beego.Controller
 	}
@@ -196,12 +190,12 @@ So you can define ChildStruct method to accomplish the interface's method, now l
 		models.InsertArticle(at)
 		this.Ctx.Redirect(302, "/admin/index")
 	}
-
+```
 ## View / Template
 ============ 		
 ### template view path
 
-the default viewPath is `/views`,you can put the template file in the views.beego will find the template from viewpath.
+The default viewPath is `/views`, you can put the template file in the views. beego will find the template from viewpath.
 
 also you can modify the viewpaths like this:
 
@@ -222,34 +216,36 @@ So if the ChildName="AddController",Request Method= "POST",default TplEXT="tpl"
 So beego will file the file in the path:`/view/AddController/POST.tpl`
 
 ### autoRender
-In the controller you needn't to call render function. beego will auto call this function after HTTP' Method Call.
+In the controller you needn't to call render function. beego will auto call this function after HTTP Method Call.
 
-also you can close the autoRendder like this:
-
+You can disable automatic invokation of autorender via the AutoRender Flag:
+```go
 	beego.AutoRender = false
-
+```
 
 ### layout
-beego also support layout. beego's layout is like this:
-
+beego supports layouts for views. For example:
+```go
 	this.Layout = "admin/layout.html"
 	this.TplNames = "admin/add.tpl"	
+```
 
-in the layout.html you must define the variable like this to show sub template's content:
+In layout.html you must define the variable like this to show sub template's content:
 
 	{{.LayoutContent}}
 
-beego first Parse the file TplNames defined, then get the content from the sub template to the data["LayoutContent"], at last Parse the layout file and show it.
+beego first parses the TplNames files, renders their content, and appends it to data["LayoutContent"].
 
 ### template function
 beego support users to define template function like this:
-
+```go
 	func hello(in string)(out string){
 		out = in + "world"
 		return
 	}
 	
 	beego.AddFuncMap("hi",hello)
+```
 
 then in you template you can use it like this:
 
@@ -273,17 +269,20 @@ beego has three default defined funtion:
 You can use `beego.Controller.ServeJson` or `beego.Controller.ServeXml` for serializing to Json and Xml. I found myself constantly writing code to serialize, set content type, content length, etc. Feel free to use these functions to eliminate redundant code in your app.
 		
 Helper function for serving Json, sets content type to application/json:
-
+```go
 	func (this *AddController) Get() {
 	    mystruct := { ... }
 	    routes.ServeJson(w, &mystruct)
 	}
+```
 Helper function for serving Xml, sets content type to application/xml:
-
+```go
 	func (this *AddController) Get() {
 	    mystruct := { ... }
 	    routes.ServeXml(w, &mystruct)
 	}
+```
+
 ## Beego Variables
 ============ 
 beego has many default variables, as follow is a list to show:
@@ -409,4 +408,3 @@ after set the log levels, in the logs function which below the setlevels willn't
 after set levels to beego.LevelError
 
 Trace, Debug, Info, Warn will not output anything. So you can change it when in dev and prod mode.
- 		
