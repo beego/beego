@@ -30,7 +30,7 @@ Here is the canonical "Hello, world" example app for beego:
 	}
 	
 	func (this *MainController) Get() {
-		this.Ct.WriteString("hello world")
+		this.Ctx.WriteString("hello world")
 	}
 	
 	func main() {
@@ -177,10 +177,10 @@ So you can define ChildStruct method to accomplish the interface's method, now l
 	
 	func (this *AddController) Post() {
 		//data deal with
-		this.Ct.Request.ParseForm()
-		pkgname := this.Ct.Request.Form.Get("pkgname")
-		content := this.Ct.Request.Form.Get("content")
-		beego.Info(this.Ct.Request.Form)
+		this.Ctx.Request.ParseForm()
+		pkgname := this.Ctx.Request.Form.Get("pkgname")
+		content := this.Ctx.Request.Form.Get("content")
+		beego.Info(this.Ctx.Request.Form)
 		pk := models.GetCruPkg(pkgname)
 		if pk.Id == 0 {
 			var pp models.PkgEntity
@@ -194,7 +194,7 @@ So you can define ChildStruct method to accomplish the interface's method, now l
 		at.Pkgid = pk.Id
 		at.Content = content
 		models.InsertArticle(at)
-		this.Ct.Redirect(302, "/admin/index")
+		this.Ctx.Redirect(302, "/admin/index")
 	}
 
 ## View / Template
@@ -216,7 +216,7 @@ then beego will find the file in the path:`/views/admin/add.tpl`
 
 if you don't set TplNames,beego will find like this:
 
-	c.TplNames = c.ChildName + "/" + c.Ct.Request.Method + "." + c.TplExt
+	c.TplNames = c.ChildName + "/" + c.Ctx.Request.Method + "." + c.TplExt
 
 So if the ChildName="AddController",Request Method= "POST",default TplEXT="tpl"	
 So beego will file the file in the path:`/view/AddController/POST.tpl`
