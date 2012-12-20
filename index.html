@@ -29,8 +29,6 @@
       <section>
         <h1>Beego</h1>
 
-<h1></h1>
-
 <p>Beego is an open source version of the scalable, non-blocking web server
 and tools that power SNDA's CDN system. Documentation and downloads are
 available at <a href="https://github.com/astaxie/beego">https://github.com/astaxie/beego</a></p>
@@ -40,16 +38,12 @@ available at <a href="https://github.com/astaxie/beego">https://github.com/astax
 
 <h1>Installation</h1>
 
-<h1></h1>
-
 <p>To install:</p>
 
 <pre><code>go get github.com/astaxie/beego
 </code></pre>
 
 <h1>Quick Start</h1>
-
-<h1></h1>
 
 <p>Here is the canonical "Hello, world" example app for beego:</p>
 
@@ -89,8 +83,6 @@ hello world
 
 <h1>Router</h1>
 
-<h1></h1>
-
 <p>In beego, a route is a struct paired with a URL-matching pattern. The struct has many method with the same name of http method to serve the http response. Each route is associated with a block.</p>
 
 <div class="highlight"><pre><span class="n">beego</span><span class="p">.</span><span class="n">RegisterController</span><span class="p">(</span><span class="s">"/"</span><span class="p">,</span> <span class="p">&amp;</span><span class="n">controllers</span><span class="p">.</span><span class="n">MainController</span><span class="p">{})</span>
@@ -113,9 +105,7 @@ hello world
 
 <p>This will serve any files in /static, including files in subdirectories. For example request <code>/static/logo.gif</code> or <code>/static/style/main.css</code> will server with the file in the path <code>/pulic/logo.gif</code> or <code>/public/style/main.css</code></p>
 
-<h2>Filters / Middleware</h2>
-
-<h1></h1>
+<h1>Filters / Middleware</h1>
 
 <p>You can apply filters to routes, which is useful for enforcing security, redirects, etc.</p>
 
@@ -146,8 +136,6 @@ hello world
 </pre></div>
 
 <h1>Controller / Struct</h1>
-
-<h1></h1>
 
 <p>To implement a beego Controller, embed the <code>beego.Controller</code> struct:</p>
 
@@ -253,8 +241,6 @@ hello world
 </pre></div>
 
 <h1>View / Template</h1>
-
-<h1></h1>
 
 <h3>template view path</h3>
 
@@ -363,8 +349,6 @@ So beego will file the file in the path:<code>/view/AddController/POST.tpl</code
 
 <h1>Beego Variables</h1>
 
-<h1></h1>
-
 <p>beego has many default variables, as follow is a list to show:</p>
 
 <ul>
@@ -427,8 +411,6 @@ So beego will file the file in the path:<code>/view/AddController/POST.tpl</code
 </li>
 </ul><h1>Config</h1>
 
-<h1></h1>
-
 <p>beego support parse ini file, beego will parse the default file in the path <code>conf/app.conf</code></p>
 
 <p>throw this conf file you can set many Beego Variables to change default values.</p>
@@ -463,8 +445,6 @@ beego.AppConfig.String("mysqldb")
 </code></pre>
 
 <h1>Logger</h1>
-
-<h1></h1>
 
 <p>beego has a default log named BeeLogger which output to os.Stdout.</p>
 
