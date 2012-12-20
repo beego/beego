@@ -17,25 +17,25 @@ To install:
 ============
 Here is the canonical "Hello, world" example app for beego:
 ```go
-	package main
-	
-	import (
-		"github.com/astaxie/beego"
-	)
-	
-	type MainController struct {
-		beego.Controller
-	}
-	
-	func (this *MainController) Get() {
-		this.Ctx.WriteString("hello world")
-	}
-	
-	func main() {
-		beego.RegisterController("/", &MainController{})
-		//beego.HttpPort = 8080 // default
-		beego.Run()
-	}
+package main
+
+import (
+	"github.com/astaxie/beego"
+)
+
+type MainController struct {
+	beego.Controller
+}
+
+func (this *MainController) Get() {
+	this.Ctx.WriteString("hello world")
+}
+
+func main() {
+	beego.RegisterController("/", &MainController{})
+	//beego.HttpPort = 8080 // default
+	beego.Run()
+}
 ```
 
 	http get http://localhost:8080/
@@ -54,16 +54,16 @@ Some associated tools for beego reside in:[bee](https://github.com/astaxie/bee)
 ============
 In beego, a route is a struct paired with a URL-matching pattern. The struct has many method with the same name of http method to serve the http response. Each route is associated with a block.
 ```go
-	beego.RegisterController("/", &controllers.MainController{})
-	beego.RegisterController("/admin", &admin.UserController{})
-	beego.RegisterController("/admin/index", &admin.ArticleController{})
-	beego.RegisterController("/admin/addpkg", &admin.AddController{})
+beego.RegisterController("/", &controllers.MainController{})
+beego.RegisterController("/admin", &admin.UserController{})
+beego.RegisterController("/admin/index", &admin.ArticleController{})
+beego.RegisterController("/admin/addpkg", &admin.AddController{})
 ```
 You can specify custom regular expressions for routes:
 ```go
-	beego.RegisterController("/admin/editpkg/:id([0-9]+)", &admin.EditController{})
-	beego.RegisterController("/admin/delpkg/:id([0-9]+)", &admin.DelController{})
-	beego.RegisterController("/:pkg(.*)", &controllers.MainController{})
+beego.RegisterController("/admin/editpkg/:id([0-9]+)", &admin.EditController{})
+beego.RegisterController("/admin/delpkg/:id([0-9]+)", &admin.DelController{})
+beego.RegisterController("/:pkg(.*)", &controllers.MainController{})
 ```	
 You can also create routes for static files:
 
@@ -77,35 +77,35 @@ You can apply filters to routes, which is useful for enforcing security, redirec
 
 You can, for example, filter all request to enforce some type of security:
 ```go
-	var FilterUser = func(w http.ResponseWriter, r *http.Request) {
-	    if r.URL.User == nil || r.URL.User.Username() != "admin" {
-	        http.Error(w, "", http.StatusUnauthorized)
-	    }
-	}
-	
-	beego.Filter(FilterUser)
+var FilterUser = func(w http.ResponseWriter, r *http.Request) {
+    if r.URL.User == nil || r.URL.User.Username() != "admin" {
+        http.Error(w, "", http.StatusUnauthorized)
+    }
+}
+
+beego.Filter(FilterUser)
 ```	
 You can also apply filters only when certain REST URL Parameters exist:
 ```go
-	beego.RegisterController("/:id([0-9]+)", &admin.EditController{})
-	beego.FilterParam("id", func(rw http.ResponseWriter, r *http.Request) {
-	    ...
-	})
+beego.RegisterController("/:id([0-9]+)", &admin.EditController{})
+beego.FilterParam("id", func(rw http.ResponseWriter, r *http.Request) {
+    ...
+})
 ```	
 Additionally, You can apply filters only when certain prefix URL path exist:
 ```go
-	beego.FilterPrefixPath("/admin", func(rw http.ResponseWriter, r *http.Request) {
-	    … auth 
-	})
+beego.FilterPrefixPath("/admin", func(rw http.ResponseWriter, r *http.Request) {
+    … auth 
+})
 ```		
 
 ## Controller / Struct
 ============ 	
 To implement a beego Controller, embed the `beego.Controller` struct:
 ```go
-	type xxxController struct {
-		beego.Controller
-	}
+type xxxController struct {
+	beego.Controller
+}
 ```
 `beego.Controller` satisfieds the `beego.ControllerInterface` interface, which defines the following methods:
 
@@ -156,40 +156,40 @@ To implement a beego Controller, embed the `beego.Controller` struct:
 
 So you can define ChildStruct method to accomplish the interface's method, now let us see an example:
 ```go
-	type AddController struct {
-		beego.Controller
+type AddController struct {
+	beego.Controller
+}
+
+func (this *AddController) Prepare() {
+
+}
+
+func (this *AddController) Get() {
+	this.Layout = "admin/layout.html"
+	this.TplNames = "admin/add.tpl"
+}
+
+func (this *AddController) Post() {
+	//data deal with
+	this.Ctx.Request.ParseForm()
+	pkgname := this.Ctx.Request.Form.Get("pkgname")
+	content := this.Ctx.Request.Form.Get("content")
+	beego.Info(this.Ctx.Request.Form)
+	pk := models.GetCruPkg(pkgname)
+	if pk.Id == 0 {
+		var pp models.PkgEntity
+		pp.Pid = 0
+		pp.Pathname = pkgname
+		pp.Intro = pkgname
+		models.InsertPkg(pp)
+		pk = models.GetCruPkg(pkgname)
 	}
-	
-	func (this *AddController) Prepare() {
-	
-	}
-	
-	func (this *AddController) Get() {
-		this.Layout = "admin/layout.html"
-		this.TplNames = "admin/add.tpl"
-	}
-	
-	func (this *AddController) Post() {
-		//data deal with
-		this.Ctx.Request.ParseForm()
-		pkgname := this.Ctx.Request.Form.Get("pkgname")
-		content := this.Ctx.Request.Form.Get("content")
-		beego.Info(this.Ctx.Request.Form)
-		pk := models.GetCruPkg(pkgname)
-		if pk.Id == 0 {
-			var pp models.PkgEntity
-			pp.Pid = 0
-			pp.Pathname = pkgname
-			pp.Intro = pkgname
-			models.InsertPkg(pp)
-			pk = models.GetCruPkg(pkgname)
-		}
-		var at models.Article
-		at.Pkgid = pk.Id
-		at.Content = content
-		models.InsertArticle(at)
-		this.Ctx.Redirect(302, "/admin/index")
-	}
+	var at models.Article
+	at.Pkgid = pk.Id
+	at.Content = content
+	models.InsertArticle(at)
+	this.Ctx.Redirect(302, "/admin/index")
+}
 ```
 ## View / Template
 ============ 		
@@ -220,14 +220,14 @@ In the controller you needn't to call render function. beego will auto call this
 
 You can disable automatic invokation of autorender via the AutoRender Flag:
 ```go
-	beego.AutoRender = false
+beego.AutoRender = false
 ```
 
 ### layout
 beego supports layouts for views. For example:
 ```go
-	this.Layout = "admin/layout.html"
-	this.TplNames = "admin/add.tpl"	
+this.Layout = "admin/layout.html"
+this.TplNames = "admin/add.tpl"	
 ```
 
 In layout.html you must define the variable like this to show sub template's content:
@@ -239,12 +239,12 @@ beego first parses the TplNames files, renders their content, and appends it to 
 ### template function
 beego support users to define template function like this:
 ```go
-	func hello(in string)(out string){
-		out = in + "world"
-		return
-	}
-	
-	beego.AddFuncMap("hi",hello)
+func hello(in string)(out string){
+	out = in + "world"
+	return
+}
+
+beego.AddFuncMap("hi",hello)
 ```
 
 then in you template you can use it like this:
@@ -270,17 +270,17 @@ You can use `beego.Controller.ServeJson` or `beego.Controller.ServeXml` for seri
 		
 Helper function for serving Json, sets content type to application/json:
 ```go
-	func (this *AddController) Get() {
-	    mystruct := { ... }
-	    routes.ServeJson(w, &mystruct)
-	}
+func (this *AddController) Get() {
+    mystruct := { ... }
+    routes.ServeJson(w, &mystruct)
+}
 ```
 Helper function for serving Xml, sets content type to application/xml:
 ```go
-	func (this *AddController) Get() {
-	    mystruct := { ... }
-	    routes.ServeXml(w, &mystruct)
-	}
+func (this *AddController) Get() {
+    mystruct := { ... }
+    routes.ServeXml(w, &mystruct)
+}
 ```
 
 ## Beego Variables
