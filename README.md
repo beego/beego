@@ -36,10 +36,9 @@ Here is the canonical "Hello, world" example app for beego:
 		//beego.HttpPort = 8080 // default
 		beego.Run()
 	}
+```
 
-default port:8080
-
-	http get http://localhost:8080
+	http get http://localhost:8080/
 	HTTP/1.1 200 OK
 	Content-Type: text/plain; charset=utf-8
 	Date: Sat, 15 Dec 2012 16:03:00 GMT
