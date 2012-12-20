@@ -38,9 +38,6 @@ Here is the canonical "Hello, world" example app for beego:
 		beego.Run()
 	}
 	
-> in tip version the default listin on tcp6. so you must set HttpAddr:
-
-> `beego.HttpAddr = "127.0.0.1"`		
 	
 default port:8080
 
