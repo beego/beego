@@ -26,7 +26,6 @@ func (ctx *Context) Abort(status int, body string) {
 func (ctx *Context) Redirect(status int, url_ string) {
 	ctx.ResponseWriter.Header().Set("Location", url_)
 	ctx.ResponseWriter.WriteHeader(status)
-	ctx.ResponseWriter.Write([]byte("Redirecting to: " + url_))
 }
 
 func (ctx *Context) NotModified() {
