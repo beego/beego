@@ -156,7 +156,7 @@ func FilterPrefixPath(path string, filter http.HandlerFunc) *App {
 func Run() {
 	if PprofOn {
 		BeeApp.RegisterController(`/debug/pprof`, &ProfController{})
-		BeeApp.RegisterController(`/debug/pprof/:pp([\w+])`, &ProfController{})
+		BeeApp.RegisterController(`/debug/pprof/:pp([\w]+)`, &ProfController{})
 	}
 	BeeApp.Run()
 }

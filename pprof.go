@@ -18,5 +18,8 @@ func (this *ProfController) Get() {
 		pprof.Profile(this.Ctx.ResponseWriter, this.Ctx.Request)
 	} else if ptype == "symbol" {
 		pprof.Symbol(this.Ctx.ResponseWriter, this.Ctx.Request)
+	} else {
+		pprof.Index(this.Ctx.ResponseWriter, this.Ctx.Request)
 	}
+	this.Ctx.ResponseWriter.WriteHeader(200)
 }
