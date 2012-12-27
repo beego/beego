@@ -16,6 +16,7 @@ var (
 	HttpPort     int
 	RecoverPanic bool
 	AutoRender   bool
+	PprofOn      bool
 	ViewsPath    string
 	RunMode      string //"dev" or "prod"
 	AppConfig    *Config
@@ -35,6 +36,7 @@ func init() {
 		RunMode = "prod" //default runmod
 		AutoRender = true
 		RecoverPanic = true
+		PprofOn = false
 		ViewsPath = "views"
 	} else {
 		HttpAddr = AppConfig.String("httpaddr")
@@ -58,6 +60,11 @@ func init() {
 			RecoverPanic = true
 		} else {
 			RecoverPanic = ar
+		}
+		if ar, err := AppConfig.Bool("pprofon"); err != nil {
+			PprofOn = false
+		} else {
+			PprofOn = ar
 		}
 		if views := AppConfig.String("viewspath"); views == "" {
 			ViewsPath = "views"
@@ -147,5 +154,9 @@ func FilterPrefixPath(path string, filter http.HandlerFunc) *App {
 }
 
 func Run() {
+	if PprofOn {
+		BeeApp.RegisterController(`/debug/pprof`, &ProfController{})
+		BeeApp.RegisterController(`/debug/pprof/:pp([\w+])`, &ProfController{})
+	}
 	BeeApp.Run()
 }
