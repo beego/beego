@@ -2,7 +2,7 @@
 =======
 Beego is an open source version of the scalable, non-blocking web server
 and tools that power SNDA's CDN system. Documentation and downloads are
-available at https://github.com/astaxie/beego
+available at https://astaxie.github.com/beego
 
 Beego is licensed under the Apache Licence, Version 2.0
 (http://www.apache.org/licenses/LICENSE-2.0.html).
