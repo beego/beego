@@ -100,7 +100,7 @@ func init() {
 		} else {
 			SessionName = ar
 		}
-		if ar, err := AppConfig.Int("sessiongcmaxlifetime"); err != nil {
+		if ar, err := AppConfig.Int("sessiongcmaxlifetime"); err != nil && ar != 0 {
 			int64val, _ := strconv.ParseInt(strconv.Itoa(ar), 10, 64)
 			SessionGCMaxLifetime = int64val
 		} else {
