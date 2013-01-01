@@ -332,6 +332,16 @@ beego has many default variables, as follow is a list to show:
 - AppConfig    *Config
 
     Appconfig is a result that parse file from conf/app.conf, if this file not exist then the variable is nil. if the file exist, then return the Config as follow.
+	
+- PprofOn bool
+
+	default is false. turn on pprof, if set to true. you can visit like this:
+	
+		/debug/pprof
+		/debug/pprof/cmdline
+		/debug/pprof/profile
+		/debug/pprof/symbol	
+	this serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool. For more information about pprof, see	http://golang.org/pkg/net/http/pprof/
 
 ## Config
 ============ 
