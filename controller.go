@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"encoding/xml"
+	"github.com/astaxie/session"
 	"html/template"
 	"io/ioutil"
 	"net/http"
@@ -150,4 +151,9 @@ func (c *Controller) ServeXml() {
 func (c *Controller) Input() url.Values {
 	c.Ctx.Request.ParseForm()
 	return c.Ctx.Request.Form
+}
+
+func (c *Controller) StartSession() (sess session.Session) {
+	sess = GlobalSessions.SessionStart(c.Ctx.ResponseWriter, c.Ctx.Request)
+	return
 }

@@ -2,9 +2,12 @@ package beego
 
 import (
 	"fmt"
+	"github.com/astaxie/session"
+	_ "github.com/astaxie/session/providers/memory"
 	"net/http"
 	"os"
 	"path"
+	"strconv"
 )
 
 var (
@@ -20,6 +23,13 @@ var (
 	ViewsPath    string
 	RunMode      string //"dev" or "prod"
 	AppConfig    *Config
+	//related to session 
+	SessionOn            bool   // wheather auto start session,default is false
+	SessionProvider      string // default session provider  memory
+	SessionName          string // sessionName cookie's name
+	SessionGCMaxLifetime int64  // session's gc maxlifetime
+
+	GlobalSessions *session.Manager //GlobalSessions
 )
 
 func init() {
@@ -38,6 +48,10 @@ func init() {
 		RecoverPanic = true
 		PprofOn = false
 		ViewsPath = "views"
+		SessionOn = false
+		SessionProvider = "memory"
+		SessionName = "beegosessionID"
+		SessionGCMaxLifetime = 3600
 	} else {
 		HttpAddr = AppConfig.String("httpaddr")
 		if v, err := AppConfig.Int("httpport"); err != nil {
@@ -70,6 +84,27 @@ func init() {
 			ViewsPath = "views"
 		} else {
 			ViewsPath = views
+		}
+		if ar, err := AppConfig.Bool("sessionon"); err != nil {
+			SessionOn = false
+		} else {
+			SessionOn = ar
+		}
+		if ar := AppConfig.String("sessionprovider"); ar == "" {
+			SessionProvider = "memory"
+		} else {
+			SessionProvider = ar
+		}
+		if ar := AppConfig.String("sessionname"); ar == "" {
+			SessionName = "beegosessionID"
+		} else {
+			SessionName = ar
+		}
+		if ar, err := AppConfig.Int("sessiongcmaxlifetime"); err != nil {
+			int64val, _ := strconv.ParseInt(strconv.Itoa(ar), 10, 64)
+			SessionGCMaxLifetime = int64val
+		} else {
+			SessionGCMaxLifetime = 3600
 		}
 	}
 	StaticDir["/static"] = "static"
@@ -157,6 +192,10 @@ func Run() {
 	if PprofOn {
 		BeeApp.RegisterController(`/debug/pprof`, &ProfController{})
 		BeeApp.RegisterController(`/debug/pprof/:pp([\w]+)`, &ProfController{})
+	}
+	if SessionOn {
+		GlobalSessions, _ = session.NewManager(SessionProvider, SessionName, SessionGCMaxLifetime)
+		go GlobalSessions.GC()
 	}
 	BeeApp.Run()
 }
