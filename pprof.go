@@ -9,17 +9,17 @@ type ProfController struct {
 }
 
 func (this *ProfController) Get() {
-	ptype := this.Ctx.Params[":pp"]
-	if ptype == "" {
+	switch this.Ctx.Params[":pp"] {
+	default:
 		pprof.Index(this.Ctx.ResponseWriter, this.Ctx.Request)
-	} else if ptype == "cmdline" {
+	case "":
+		pprof.Index(this.Ctx.ResponseWriter, this.Ctx.Request)
+	case "cmdline":
 		pprof.Cmdline(this.Ctx.ResponseWriter, this.Ctx.Request)
-	} else if ptype == "profile" {
+	case "profile":
 		pprof.Profile(this.Ctx.ResponseWriter, this.Ctx.Request)
-	} else if ptype == "symbol" {
+	case "symbol":
 		pprof.Symbol(this.Ctx.ResponseWriter, this.Ctx.Request)
-	} else {
-		pprof.Index(this.Ctx.ResponseWriter, this.Ctx.Request)
 	}
 	this.Ctx.ResponseWriter.WriteHeader(200)
 }
