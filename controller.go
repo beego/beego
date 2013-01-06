@@ -127,7 +127,7 @@ func (c *Controller) Redirect(url string, code int) {
 }
 
 func (c *Controller) ServeJson() {
-	content, err := json.MarshalIndent(c.Data, "", "  ")
+	content, err := json.MarshalIndent(c.Data["json"], "", "  ")
 	if err != nil {
 		http.Error(c.Ctx.ResponseWriter, err.Error(), http.StatusInternalServerError)
 		return
@@ -138,7 +138,7 @@ func (c *Controller) ServeJson() {
 }
 
 func (c *Controller) ServeXml() {
-	content, err := xml.Marshal(c.Data)
+	content, err := xml.Marshal(c.Data["xml"])
 	if err != nil {
 		http.Error(c.Ctx.ResponseWriter, err.Error(), http.StatusInternalServerError)
 		return
