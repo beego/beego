@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/astaxie/session"
 	_ "github.com/astaxie/session/providers/memory"
+	"html/template"
 	"net/http"
 	"os"
 	"path"
@@ -11,18 +12,19 @@ import (
 )
 
 var (
-	BeeApp       *App
-	AppName      string
-	AppPath      string
-	StaticDir    map[string]string
-	HttpAddr     string
-	HttpPort     int
-	RecoverPanic bool
-	AutoRender   bool
-	PprofOn      bool
-	ViewsPath    string
-	RunMode      string //"dev" or "prod"
-	AppConfig    *Config
+	BeeApp        *App
+	AppName       string
+	AppPath       string
+	StaticDir     map[string]string
+	TemplateCache map[string]*template.Template
+	HttpAddr      string
+	HttpPort      int
+	RecoverPanic  bool
+	AutoRender    bool
+	PprofOn       bool
+	ViewsPath     string
+	RunMode       string //"dev" or "prod"
+	AppConfig     *Config
 	//related to session 
 	SessionOn            bool   // wheather auto start session,default is false
 	SessionProvider      string // default session provider  memory
@@ -36,6 +38,7 @@ func init() {
 	BeeApp = NewApp()
 	AppPath, _ = os.Getwd()
 	StaticDir = make(map[string]string)
+	TemplateCache = make(map[string]*template.Template)
 	var err error
 	AppConfig, err = LoadConfig(path.Join(AppPath, "conf", "app.conf"))
 	if err != nil {
