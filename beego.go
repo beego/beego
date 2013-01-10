@@ -5,7 +5,9 @@ import (
 	"github.com/astaxie/session"
 	_ "github.com/astaxie/session/providers/memory"
 	"html/template"
+	"net"
 	"net/http"
+	"net/http/fcgi"
 	"os"
 	"path"
 	"strconv"
@@ -30,6 +32,7 @@ var (
 	SessionProvider      string // default session provider  memory
 	SessionName          string // sessionName cookie's name
 	SessionGCMaxLifetime int64  // session's gc maxlifetime
+	UseFcgi              bool
 
 	GlobalSessions *session.Manager //GlobalSessions
 )
@@ -55,6 +58,7 @@ func init() {
 		SessionProvider = "memory"
 		SessionName = "beegosessionID"
 		SessionGCMaxLifetime = 3600
+		UseFcgi = false
 	} else {
 		HttpAddr = AppConfig.String("httpaddr")
 		if v, err := AppConfig.Int("httpport"); err != nil {
@@ -109,6 +113,11 @@ func init() {
 		} else {
 			SessionGCMaxLifetime = 3600
 		}
+		if ar, err := AppConfig.Bool("usefcgi"); err != nil {
+			UseFcgi = false
+		} else {
+			UseFcgi = ar
+		}
 	}
 	StaticDir["/static"] = "static"
 
@@ -127,7 +136,16 @@ func NewApp() *App {
 
 func (app *App) Run() {
 	addr := fmt.Sprintf("%s:%d", HttpAddr, HttpPort)
-	err := http.ListenAndServe(addr, app.Handlers)
+	var err error
+	if UseFcgi {
+		l, e := net.Listen("tcp", addr)
+		if e != nil {
+			BeeLogger.Fatal("Listen: ", e)
+		}
+		err = fcgi.Serve(l, app.Handlers)
+	} else {
+		err = http.ListenAndServe(addr, app.Handlers)
+	}
 	if err != nil {
 		BeeLogger.Fatal("ListenAndServe: ", err)
 	}
