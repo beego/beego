@@ -272,14 +272,16 @@ Helper function for serving Json, sets content type to application/json:
 ```go
 func (this *AddController) Get() {
     mystruct := { ... }
-    this.ServeJson(&mystruct)
+	this.Data["json"] = &mystruct
+    this.ServeJson()
 }
 ```
 Helper function for serving Xml, sets content type to application/xml:
 ```go
 func (this *AddController) Get() {
     mystruct := { ... }
-    this.ServeXml(&mystruct)
+	this.Data["xml"]=&mystruct
+    this.ServeXml()
 }
 ```
 
