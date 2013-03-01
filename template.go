@@ -3,9 +3,8 @@ package beego
 //@todo add template funcs
 
 import (
-	//"fmt"
+    "fmt"
 	"errors"
-	"fmt"
 	"github.com/russross/blackfriday"
 	"html/template"
 	"strings"
@@ -88,8 +87,8 @@ func Compare(a, b interface{}) (equal bool) {
 // AddFuncMap let user to register a func in the template
 func AddFuncMap(key string, funname interface{}) error {
 	if _, ok := beegoTplFuncMap[key]; ok {
-		beegoTplFuncMap[key] = funname
-		return nil
+        return errors.New("funcmap already has the key")
 	}
-	return errors.New("funcmap already has the key")
+	beegoTplFuncMap[key] = funname
+	return nil
 }
