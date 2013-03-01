@@ -167,7 +167,7 @@ func (app *App) FilterParam(param string, filter http.HandlerFunc) *App {
 }
 
 func (app *App) FilterPrefixPath(path string, filter http.HandlerFunc) *App {
-	app.Handlers.FilterParam(path, filter)
+	app.Handlers.FilterPrefixPath(path, filter)
 	return app
 }
 
@@ -205,7 +205,7 @@ func FilterParam(param string, filter http.HandlerFunc) *App {
 }
 
 func FilterPrefixPath(path string, filter http.HandlerFunc) *App {
-	BeeApp.FilterParam(path, filter)
+	BeeApp.FilterPrefixPath(path, filter)
 	return BeeApp
 }
 
