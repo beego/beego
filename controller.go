@@ -15,7 +15,6 @@ import (
 
 type Controller struct {
 	Ctx       *Context
-	Tpl       *template.Template
 	Data      map[interface{}]interface{}
 	ChildName string
 	TplNames  string
@@ -39,8 +38,6 @@ type ControllerInterface interface {
 
 func (c *Controller) Init(ctx *Context, cn string) {
 	c.Data = make(map[interface{}]interface{})
-	c.Tpl = template.New(cn + ctx.Request.Method)
-	c.Tpl = c.Tpl.Funcs(beegoTplFuncMap)
 	c.Layout = ""
 	c.TplNames = ""
 	c.ChildName = cn
@@ -91,17 +88,14 @@ func (c *Controller) Render() error {
 		if c.TplNames == "" {
 			c.TplNames = c.ChildName + "/" + c.Ctx.Request.Method + "." + c.TplExt
 		}
-		t, err := c.Tpl.ParseFiles(path.Join(ViewsPath, c.TplNames), path.Join(ViewsPath, c.Layout))
-		if err != nil {
-			Trace("template ParseFiles err:", err)
-		}
 		_, file := path.Split(c.TplNames)
+		subdir := path.Dir(c.TplNames)
 		newbytes := bytes.NewBufferString("")
-		t.ExecuteTemplate(newbytes, file, c.Data)
+		BeeTemplates[subdir].ExecuteTemplate(newbytes, file, c.Data)
 		tplcontent, _ := ioutil.ReadAll(newbytes)
 		c.Data["LayoutContent"] = template.HTML(string(tplcontent))
 		_, file = path.Split(c.Layout)
-		err = t.ExecuteTemplate(c.Ctx.ResponseWriter, file, c.Data)
+		err := BeeTemplates[subdir].ExecuteTemplate(c.Ctx.ResponseWriter, file, c.Data)
 		if err != nil {
 			Trace("template Execute err:", err)
 		}
@@ -109,12 +103,9 @@ func (c *Controller) Render() error {
 		if c.TplNames == "" {
 			c.TplNames = c.ChildName + "/" + c.Ctx.Request.Method + "." + c.TplExt
 		}
-		t, err := c.Tpl.ParseFiles(path.Join(ViewsPath, c.TplNames))
-		if err != nil {
-			Trace("template ParseFiles err:", err)
-		}
 		_, file := path.Split(c.TplNames)
-		err = t.ExecuteTemplate(c.Ctx.ResponseWriter, file, c.Data)
+		subdir := path.Dir(c.TplNames)
+		err := BeeTemplates[subdir].ExecuteTemplate(c.Ctx.ResponseWriter, file, c.Data)
 		if err != nil {
 			Trace("template Execute err:", err)
 		}

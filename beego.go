@@ -13,6 +13,8 @@ import (
 	"strconv"
 )
 
+const VERSION = "0.0.3"
+
 var (
 	BeeApp        *App
 	AppName       string
@@ -218,5 +220,6 @@ func Run() {
 		GlobalSessions, _ = session.NewManager(SessionProvider, SessionName, SessionGCMaxLifetime)
 		go GlobalSessions.GC()
 	}
+	BuildTemplate(ViewsPath)
 	BeeApp.Run()
 }
