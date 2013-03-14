@@ -83,6 +83,20 @@ func (c *Controller) Options() {
 }
 
 func (c *Controller) Render() error {
+	rb, err := c.RenderBytes()
+
+	if err != nil {
+		return err
+	} else {
+		c.Ctx.SetHeader("Content-Length", strconv.Itoa(len(rb)), true)
+		c.Ctx.ContentType("text/html")
+		c.Ctx.ResponseWriter.Write(rb)
+		return nil
+	}
+	return nil
+}
+
+func (c *Controller) RenderBytes() ([]byte, error) {
 	//if the controller has set layout, then first get the tplname's content set the content to the layout
 	if c.Layout != "" {
 		if c.TplNames == "" {
@@ -95,22 +109,28 @@ func (c *Controller) Render() error {
 		tplcontent, _ := ioutil.ReadAll(newbytes)
 		c.Data["LayoutContent"] = template.HTML(string(tplcontent))
 		_, file = path.Split(c.Layout)
-		err := BeeTemplates[subdir].ExecuteTemplate(c.Ctx.ResponseWriter, file, c.Data)
+		ibytes := bytes.NewBufferString("")
+		err := BeeTemplates[subdir].ExecuteTemplate(ibytes, file, c.Data)
 		if err != nil {
 			Trace("template Execute err:", err)
 		}
+		icontent, _ := ioutil.ReadAll(ibytes)
+		return icontent, nil
 	} else {
 		if c.TplNames == "" {
 			c.TplNames = c.ChildName + "/" + c.Ctx.Request.Method + "." + c.TplExt
 		}
 		_, file := path.Split(c.TplNames)
 		subdir := path.Dir(c.TplNames)
-		err := BeeTemplates[subdir].ExecuteTemplate(c.Ctx.ResponseWriter, file, c.Data)
+		ibytes := bytes.NewBufferString("")
+		err := BeeTemplates[subdir].ExecuteTemplate(ibytes, file, c.Data)
 		if err != nil {
 			Trace("template Execute err:", err)
 		}
+		icontent, _ := ioutil.ReadAll(ibytes)
+		return icontent, nil
 	}
-	return nil
+	return []byte{}, nil
 }
 
 func (c *Controller) Redirect(url string, code int) {
