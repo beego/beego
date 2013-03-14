@@ -29,6 +29,7 @@ func init() {
 	beegoTplFuncMap["dateformat"] = DateFormat
 	beegoTplFuncMap["date"] = Date
 	beegoTplFuncMap["compare"] = Compare
+	beegoTplFuncMap["substr"] = Substr
 }
 
 // MarkDown parses a string in MarkDown format and returns HTML. Used by the template parser as "markdown"
@@ -37,6 +38,20 @@ func MarkDown(raw string) (output template.HTML) {
 	bOutput := blackfriday.MarkdownBasic(input)
 	output = template.HTML(string(bOutput))
 	return
+}
+
+func Substr(s string, start, length int) string {
+	bt := []rune(s)
+	if start < 0 {
+		start = 0
+	}
+	var end int
+	if (start + length) > (len(bt) - 1) {
+		end = len(bt) - 1
+	} else {
+		end = start + length
+	}
+	return string(bt[start:end])
 }
 
 // DateFormat takes a time and a layout string and returns a string with the formatted date. Used by the template parser as "dateformat"
