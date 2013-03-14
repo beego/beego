@@ -4,25 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"sync"
 	"time"
-)
-
-const (
-	Kb = 1024
-	Mb = 1024 * 1024
-	Gb = 1024 * 1024 * 1024
 )
 
 var (
 	DefaultEvery int = 60 // 1 minute
-)
-
-var (
-	InvalidCacheItem = errors.New("invalid cache item")
-	ItemIsDirectory  = errors.New("can't cache a directory")
-	ItemNotInCache   = errors.New("item not in cache")
-	ItemTooLarge     = errors.New("item too large for cache")
-	WriteIncomplete  = errors.New("incomplete write of cache item")
 )
 
 type BeeItem struct {
@@ -37,6 +24,7 @@ func (itm *BeeItem) Access() interface{} {
 }
 
 type BeeCache struct {
+	lock  sync.RWMutex
 	dur   time.Duration
 	items map[string]*BeeItem
 	Every int // Run an expiration check Every seconds
@@ -44,13 +32,14 @@ type BeeCache struct {
 
 // NewDefaultCache returns a new FileCache with sane defaults.
 func NewBeeCache() *BeeCache {
-	cache := BeeCache{time.Since(time.Now()),
-		nil,
-		DefaultEvery}
+	cache := BeeCache{dur: time.Since(time.Now()),
+		Every: DefaultEvery}
 	return &cache
 }
 
 func (bc *BeeCache) Get(name string) interface{} {
+	bc.lock.RLock()
+	defer bc.lock.RUnlock()
 	itm, ok := bc.items[name]
 	if !ok {
 		return nil
@@ -59,8 +48,10 @@ func (bc *BeeCache) Get(name string) interface{} {
 }
 
 func (bc *BeeCache) Put(name string, value interface{}, expired int) error {
+	bc.lock.Lock()
+	defer bc.lock.Unlock()
 	t := BeeItem{val: value, Lastaccess: time.Now(), expired: expired}
-	if bc.IsExist(name) {
+	if _, ok := bc.items[name]; !ok {
 		return errors.New("the key is exist")
 	} else {
 		bc.items[name] = &t
@@ -69,8 +60,9 @@ func (bc *BeeCache) Put(name string, value interface{}, expired int) error {
 }
 
 func (bc *BeeCache) Delete(name string) (ok bool, err error) {
-	_, ok = bc.items[name]
-	if !ok {
+	bc.lock.Lock()
+	defer bc.lock.Unlock()
+	if _, ok = bc.items[name]; !ok {
 		return
 	}
 	delete(bc.items, name)
@@ -82,6 +74,8 @@ func (bc *BeeCache) Delete(name string) (ok bool, err error) {
 }
 
 func (bc *BeeCache) IsExist(name string) bool {
+	bc.lock.RLock()
+	defer bc.lock.RUnlock()
 	_, ok := bc.items[name]
 	return ok
 }
@@ -108,15 +102,15 @@ func (bc *BeeCache) vaccuum() {
 			return
 		}
 		for name, _ := range bc.items {
-			if bc.item_expired(name) {
-				delete(bc.items, name)
-			}
+			bc.item_expired(name)
 		}
 	}
 }
 
 // item_expired returns true if an item is expired.
 func (bc *BeeCache) item_expired(name string) bool {
+	bc.lock.Lock()
+	defer bc.lock.Unlock()
 	itm, ok := bc.items[name]
 	if !ok {
 		return true
@@ -124,8 +118,10 @@ func (bc *BeeCache) item_expired(name string) bool {
 	dur := time.Now().Sub(itm.Lastaccess)
 	sec, err := strconv.Atoi(fmt.Sprintf("%0.0f", dur.Seconds()))
 	if err != nil {
+		delete(bc.items, name)
 		return true
 	} else if sec >= itm.expired {
+		delete(bc.items, name)
 		return true
 	}
 	return false
