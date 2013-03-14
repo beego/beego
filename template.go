@@ -17,13 +17,14 @@ import (
 var (
 	beegoTplFuncMap template.FuncMap
 	BeeTemplates    map[string]*template.Template
-	BeeTemplateExt  string
+	BeeTemplateExt  []string
 )
 
 func init() {
 	BeeTemplates = make(map[string]*template.Template)
 	beegoTplFuncMap = make(template.FuncMap)
-	BeeTemplateExt = "tpl"
+	BeeTemplateExt = make([]string, 0)
+	BeeTemplateExt = append(BeeTemplateExt, "tpl", "html")
 	beegoTplFuncMap["markdown"] = MarkDown
 	beegoTplFuncMap["dateformat"] = DateFormat
 	beegoTplFuncMap["date"] = Date
@@ -116,7 +117,14 @@ func (self *templatefile) visit(paths string, f os.FileInfo, err error) error {
 	} else if (f.Mode() & os.ModeSymlink) > 0 {
 		return nil
 	} else {
-		if strings.HasSuffix(paths, BeeTemplateExt) {
+		hasExt := false
+		for _, v := range BeeTemplateExt {
+			if strings.HasSuffix(paths, v) {
+				hasExt = true
+				break
+			}
+		}
+		if hasExt {
 			a := []byte(paths)
 			a = a[len([]byte(self.root)):]
 			subdir := path.Dir(strings.TrimLeft(string(a), "/"))
@@ -133,8 +141,13 @@ func (self *templatefile) visit(paths string, f os.FileInfo, err error) error {
 	return nil
 }
 
-func SetGlobalTemplateExt(ext string) {
-	BeeTemplateExt = ext
+func AddTemplateExt(ext string) {
+	for _, v := range BeeTemplateExt {
+		if v == ext {
+			return
+		}
+	}
+	BeeTemplateExt = append(BeeTemplateExt, ext)
 }
 
 func BuildTemplate(dir string) error {
