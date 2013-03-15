@@ -143,7 +143,7 @@ func (self *templatefile) visit(paths string, f os.FileInfo, err error) error {
 			replace := strings.NewReplacer("\\", "/")
 			a := []byte(paths)
 			a = a[len([]byte(self.root)):]
-			subdir := path.Dir(replace.Replace(strings.TrimLeft(string(a), "/")))
+			subdir := path.Dir(strings.TrimLeft(replace.Replace(string(a)), "/"))
 			if _, ok := self.files[subdir]; ok {
 				self.files[subdir] = append(self.files[subdir], paths)
 			} else {
