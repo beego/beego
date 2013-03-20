@@ -1,0 +1,359 @@
+<!DOCTYPE HTML>
+<html itemscope="" itemtype="http://schema.org/Organization">
+<head>
+<title>beego入门教程 | beego.me</title>
+<meta name="description" content="beego入门教程，beego的知识点，golang应用框架."/>
+<meta name="keywords" content="beego, beedb, golang"/>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="../css/yui-reset-fonts.css" />
+<link rel="stylesheet" href="../css/main.css?ver=20130308" type="text/css" media="all" />
+<link rel="stylesheet" href="../css/colorbox.css" type="text/css" media="all" />
+<link rel="stylesheet" href="../css/campaign.css?ver=20130213" type="text/css" media="all" />
+<script src="../js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+<link rel="stylesheet" href="../css/git.css" type="text/css" media="all" />
+<script src="../js/swfobject.js" type="text/javascript" charset="utf-8"></script>
+<script>
+$(function(){
+$('#sectionfooter .box').wrapInner('<div class="fourColumn" />');
+});
+</script>
+</head>
+<body id="customNav" class="campaign tutorial git en">
+<div id="container">
+<div id="header" class="noNav">
+<div class="box">
+<div id="logo"><a href="http://www.beego.me">beego应用框架</a></div>
+</div>
+</div>
+<div id="content">
+<div id="companyHeader" class="wrapper sectionNavCustom" style="margin-top:40px;">
+<div class="box">
+<div id="companyLogo">
+<a href="http://beego.me/beego">beego应用框架之入门</a>
+</div>
+<div id="companyNav">
+<ul>
+<li class=''>
+<a href="/beego/">
+概括
+</a>
+</li>
+<li class='selected'>
+<a href="/beego/tutorial">
+beego入门
+</a>
+</li>
+<li class=''>
+<a href="/beego/examples">
+beego实例
+</a>
+</li>
+</ul>
+</div>
+<div id="subNav" style="margin-bottom:0;">
+<ul>
+<li class=''>
+<a href="/beego/tutorial/hello.html">1. hello</a>
+</li>
+<li class=''>
+<a href="/beego/tutorial/router.html">2. Router</a>
+</li>
+<li class=''>
+<a href="/beego/tutorial/filters.html">3. Filters</a>
+</li>
+<li class=''>
+<a href="/beego/tutorial/controller.html">4. Controller</a>
+</li>
+<li class=''>
+<a href="/beego/tutorial/template.html">5. Template</a>
+</li>
+<li class=''>
+<a href="/beego/tutorial/variables.html">6. Variables</a>
+</li>
+<li class=''>
+<a href="/beego/tutorial/config.html">7. Config</a>
+</li>
+<li class=''>
+<a href="/beego/tutorial/cache.html">8. Cache</a>
+</li>
+<li class=''>
+<a href="/beego/tutorial/logger.html">9. Logger</a>
+</li>
+<li class=''>
+<a href="/beego/tutorial/bee.html">10. Bee</a>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<!-- 2 - column template: -->
+<div id="introsection" class="wrapper">
+<div class="box">
+<div class="twoCol">
+<div class="col">
+<h1>beego入门指南</h1>
+<div class="fancyIntro">
+<p>beego是一个类似python的tornado框架，采用了RESTFul的设计思路，使用Go编写出來的一个极轻量级、高可伸缩性和高性能的Web应用框架。</p> 
+<p>beego跟其他主流的Web服务器框架不同是采用RESTFul方式来设计，采用Go的struct的组合和Go语言的反射来实现异步处理请求，响应快速，可处理上万并发连接，特别适用于各种服务类的应用。</p>
+</div>
+</div>
+<div class="col last">
+<!--using cdnBaseURL-->
+<img src="../images/beego_all.png" alt="Atlassian Git Tutorial" class="" style="margin:0px 0 -55px;" />
+</div>
+</div>
+</div>
+</div>
+<div id="mainsection" class="wrapper">
+<div class="box noBottomBorder">
+<div class="mainContent">
+<div class="outer">
+<div class="inner">
+<!-- 2 - column template: -->
+<div class="wrapper">
+<div class="box">
+<div class="twoCol">
+<div class="col">
+<!-- image -->
+<!-- heading -->
+<!-- fancy font paragraph -->
+<!-- normal font paragraph -->
+<h3>1. beego安装及hello应用</h3> <p>如果你以前没有安装过beego，本小节讲带领读者如何安装beego，接着会演示如何使用beego以最快的速度搭建一个应用，不超过20行代码就可以运行一个hello wolrd应用，让你一览beego的项目的结构。</p> <p><a magnoliaauthor="" wac="" landing="" git="" tutorial="" class="cta" href="/beego/tutorial/hello.html">了解更多<span class="arrow">&raquo;</span></a></p>
+</div>
+<div class="col last">
+<!--using cdnBaseURL-->
+<img src="../images/1.png" alt="beego Tutorial: hello" />
+</div>
+</div>
+</div>
+</div>
+<!-- 2 - column template: -->
+<div class="wrapper">
+<div class="box">
+<div class="twoCol">
+<div class="col">
+<!-- image -->
+<!-- heading -->
+<!-- fancy font paragraph -->
+<!-- normal font paragraph -->
+<h3>2. beego路由</h3> <p>本小节将介绍beego的路由功能，我们都知道路由就是把用户的请求分发到不同的控制器，Go语言默认只支持静态固定的路由，而且是分发到指定的函数，beego进行了进一步的改造，使得beego能够把用户的请求分发到不同的struct的不同方法中，而且路由不仅实现了路径对应到控制器的注册，还支持多种方式的注册，全匹配路径和正则的注册，这样用户就可以根据不同的需求实现更加自由的路由配置</p> <p><a magnoliaauthor="" wac="" landing="" git="" tutorial="" class="cta" href="/beego/tutorial/router.html">了解更多<span class="arrow">&raquo;</span></a></p>
+</div>
+<div class="col last">
+<!--using cdnBaseURL-->
+<img src="../images/2.png" alt="beego Tutorial: router" />
+</div>
+</div>
+</div>
+</div>
+<!-- 2 - column template: -->
+<div class="wrapper">
+<div class="box">
+<div class="twoCol">
+<div class="col">
+<!-- image -->
+<!-- heading -->
+<!-- fancy font paragraph -->
+<!-- normal font paragraph -->
+<h3>3. beego过滤器</h3> <p>本小节介绍beego的过滤器，过滤器就是在执行逻辑前和执行逻辑后运行的控制，如右边图所示，用户可以在beego路由到控制器之前进行插入逻辑，例如执行一些数据库连接、用户认证等操作，在执行控制器逻辑之后进行一些过滤器插入，执行一些例如关闭数据库、关闭模板等操作</p> <p><a magnoliaauthor="" wac="" landing="" git="" tutorial="" class="cta" href="/beego/tutorial/filters.html">了解更多<span class="arrow">&raquo;</span></a></p>
+</div>
+<div class="col last">
+<!--using cdnBaseURL-->
+<img src="../images/3.png" alt="beego Tutorial: Filters" />
+</div>
+</div>
+</div>
+</div>
+<!-- 2 - column template: -->
+<div class="wrapper">
+<div class="box">
+<div class="twoCol">
+<div class="col">
+<!-- image -->
+<!-- heading -->
+<!-- fancy font paragraph -->
+<!-- normal font paragraph -->
+<h3>4. beego控制器</h3> <p>beego的控制器采用了struct，内部组合了beego.Controller，实现了一些基础的初始化，前置执行逻辑、RESTFul方法的执行，后置执行逻辑，方便的获取用户的信息等，用户只需要实现对应的method(Get,Post,Delete等)就可以实现对应逻辑。/p> <p><a class="cta" href="/beego/tutorial/controller.html" >了解更多<span class="arrow">&raquo;</span></a></p>
+</div>
+<div class="col last">
+<!--using cdnBaseURL-->
+<img src="../images/4.png" alt="bee Tutorial: Controller" />
+</div>
+</div>
+</div>
+</div>
+<!-- 2 - column template: -->
+<div class="wrapper">
+<div class="box">
+<div class="twoCol">
+<div class="col">
+<!-- image -->
+<!-- heading -->
+<!-- fancy font paragraph -->
+<!-- normal font paragraph -->
+<h3>5. beego模板</h3> <p>beego的模板采用了Go语言自带的html/template,但是实现了一些模板函数：markdown格式转化、date函数实现时间的转化，substr实现中文字符串的完美截取，compare用于对比数据，不过默认支持lauout的方式，用户可以很方便的实现模板的结构，然后执行相应的逻辑快，同时采取了默认渲染的方式，用户无需显示调用，还支持静态化。</p> <p><a class="cta" href="/beego/tutorial/controller.html" >了解更多<span class="arrow">&raquo;</span></a></p>
+</div>
+<div class="col last">
+<!--using cdnBaseURL-->
+<img src="../images/5.png" alt="bee Tutorial: Controller" />
+</div>
+</div>
+</div>
+</div>
+<!-- 2 - column template: -->
+<div class="wrapper">
+<div class="box">
+<div class="twoCol">
+<div class="col">
+<!-- image -->
+<!-- heading -->
+<!-- fancy font paragraph -->
+<!-- normal font paragraph -->
+<h3>6. beego内置参数</h3> <p>beego采取了约定大于配置的方式，默认就有很多默认参数，他们有模板路径、应用路径、静态文件路径、配置文件参数、应用名称、开发和部署模式等各种内置参数，但是用户可以通过conf文件来改变这些参数的值，这样不仅达到了最少配置，同时又不失自由。</p> <p><a class="cta" href="/beego/tutorial/controller.html" >了解更多<span class="arrow">&raquo;</span></a></p>
+</div>
+<div class="col last">
+<!--using cdnBaseURL-->
+<img src="../images/6.png" alt="bee Tutorial: Controller" />
+</div>
+</div>
+</div>
+</div>
+<!-- 2 - column template: -->
+<div class="wrapper">
+<div class="box">
+<div class="twoCol">
+<div class="col">
+<!-- image -->
+<!-- heading -->
+<!-- fancy font paragraph -->
+<!-- normal font paragraph -->
+<h3>7. beego配置文件</h3> <p>beego支持配置文件的解析，支持ini文件类型，可以很方便的读取配置文件里面的信息，用户可以根据不同的类型调用不同的接口，如：string类型、int类型、bool类型</p> <p><a class="cta" href="/beego/tutorial/controller.html" >了解更多<span class="arrow">&raquo;</span></a></p>
+</div>
+<div class="col last">
+<!--using cdnBaseURL-->
+<img src="../images/7.png" alt="bee Tutorial: Controller" />
+</div>
+</div>
+</div>
+</div>
+<!-- 2 - column template: -->
+<div class="wrapper">
+<div class="box">
+<div class="twoCol">
+<div class="col">
+<!-- image -->
+<!-- heading -->
+<!-- fancy font paragraph -->
+<!-- normal font paragraph -->
+<h3>8. beego缓存系统</h3> <p>beego内置了一个缓存系统，由于我们有些时候需要用到缓存，所以缓存系统对于我们一般的应用来说还是非常需要，例如数据库的缓存、文件内容的缓存、用户登陆信息的缓存等等，beego的缓存系统实现了类似memcache的几个接口：put、get、delete</p> <p><a class="cta" href="/beego/tutorial/controller.html" >了解更多<span class="arrow">&raquo;</span></a></p>
+</div>
+<div class="col last">
+<!--using cdnBaseURL-->
+<img src="../images/8.png" alt="bee Tutorial: Controller" />
+</div>
+</div>
+</div>
+</div>
+<!-- 2 - column template: -->
+<div class="wrapper">
+<div class="box">
+<div class="twoCol">
+<div class="col">
+<!-- image -->
+<!-- heading -->
+<!-- fancy font paragraph -->
+<!-- normal font paragraph -->
+<h3>9. beego日志处理</h3> <p>我们经常需要调试程序，特别是在多goroutine的情况下，日志是最好的调试方式。beego的日志系统支持用户自定义的Log接口方式，调试方法支持Info、Error、Warn等各种级别，用户在发布的时候还可以设定等级，非常适合自己在应用的时候实现日志分级。</p> <p><a class="cta" href="/beego/tutorial/controller.html" >了解更多<span class="arrow">&raquo;</span></a></p>
+</div>
+<div class="col last">
+<!--using cdnBaseURL-->
+<img src="../images/9.png" alt="bee Tutorial: Controller" />
+</div>
+</div>
+</div>
+</div>
+<div class="lastSection">
+<!-- 2 - column template: -->
+<div class="wrapper">
+<div class="box">
+<div class="twoCol">
+<div class="col">
+<!-- image -->
+<!-- heading -->
+<!-- fancy font paragraph -->
+<!-- normal font paragraph -->
+<h3>10. beego辅助工具</h3> <p>beego提供了一些辅助开发工具，bee工具可以方便用户快速的创建项目，第二可以方便用户实时编译，无需用户手工编译。其次beego提供了session的集成，用户可以很方便的实现用户登陆等需要使用session的功能。
+</p> <p><a magnoliaauthor="" wac="" landing="" git="" tutorial="" class="cta" href="/beego/tutorial/bee.html">了解更多<span class="arrow">&raquo;</span></a></p>
+</div>
+<div class="col last">
+<!--using cdnBaseURL-->
+<img src="../images/10.png" alt="beego Tutorial: bee" />
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="clear"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script src="../js/jquery-plugins-min.js"></script>
+<script src="../js/jquery-ui.min.js" type="text/javascript"></script>
+<script src="../js/scripts.js?ver=20130222"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+var deviceAgent = navigator.userAgent.toLowerCase();
+is_iOS = deviceAgent.match(/(iphone|ipod|ipad)/);
+$("#newsletterSubscribe").attr('value', "Enter your email").css('color','#036');
+$("#newsletterSubscribe").focus(function(){
+$("#newsletterSubscribe").attr('value', "").css('color','#fff');
+});
+$('#subscribeForm').submit(function(e){
+var emailInput = $("#newsletterSubscribe").attr('value');
+var filter = /^\S+@\S+\.\S+$/;
+if(filter.test(emailInput)){
+return true;
+} else {
+e.preventDefault();
+$('.emailError').show();
+return false;
+}
+});
+$('.expandable tr.hasDescription').click(function(){
+if (!$(this).hasClass('open')) {
+$('.description').hide();
+$('.expandable tr').removeClass('open');
+$(this).addClass('open').next('.description').slideDown('fast');
+} else {
+$(this).removeClass('open').next('.description').slideUp('fast');
+}
+});
+$('.accordionBox li.hasDescription').click(function(){
+if (!$(this).hasClass('open')) {
+$('.description').slideUp('fast');
+$('.accordionBox li').removeClass('open');
+$(this).addClass('open').find('.description').stop().slideDown('fast');
+} else {
+$(this).removeClass('open').find('.description').slideUp('fast');
+}
+});
+screenshotTour();
+removeRoundTop();
+function removeRoundTop(){
+if ($('#featureNav li:first,.vertical #tabsNav li:first').hasClass('selected')) {
+$('.tourContent').addClass('navTop');
+$('.campaign #tabsDef.vertical').addClass('navTop');
+} else {
+$('.tourContent').removeClass('navTop');
+$('.campaign #tabsDef.vertical').removeClass('navTop');
+}
+}
+$('#featureNav ul,.vertical #tabsNav').click(function(){removeRoundTop();});
+initVideos();
+});
+</script>
+</body>
+</html>

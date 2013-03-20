@@ -1,0 +1,99 @@
+
+/*
+    ColorBox Core Style:
+    The following CSS is consistent between example themes and should not be altered.
+*/
+#colorbox, 
+#cboxOverlay, #cboxWrapper{position:absolute; top:0; left:0; z-index:10000; overflow:hidden;}
+#cboxOverlay{position:fixed; width:100%; height:100%;}
+#cboxMiddleLeft, #cboxBottomLeft{clear:left;}
+#cboxContent{position:relative;}
+#cboxLoadedContent{overflow:auto;}
+#cboxTitle{margin:0 auto;}
+#cboxLoadingOverlay, #cboxLoadingGraphic{position:absolute; top:0; left:0; width:100%;}
+#cboxPrevious, #cboxNext, #cboxClose, #cboxSlideshow{cursor:pointer;}
+.cboxPhoto{float:left; margin:auto; border:0; display:block;}
+.cboxIframe{width:100%; height:100%; display:block; border:0;}
+
+/* 
+    User Style:
+    Change the following styles to modify the appearance of ColorBox.  They are
+    ordered & tabbed in a way that represents the nesting of the generated HTML.
+*/  
+
+
+
+#cboxOverlay{/*background:url(/en/dms/wac2011/colorbox_images/overlay.png) repeat 0 0;*/ background:#000;}
+#cboxLoadingGraphic{background:url(/en/dms/wac/colorbox_images/loading.gif) no-repeat center center;}   
+#colorbox{}
+
+    #cboxContent{background:#fff; overflow:hidden; border:4px solid #333333;}
+        #cboxError{padding:50px; border:1px solid #ccc;}
+/*        #cboxLoadedContent{padding-bottom:80px;}*/
+        #cboxTitle{position:absolute; visibility:hidden; bottom:-20px; left:0; right:0; text-align:center; width:80%; color:#404040; height: 70px; padding:10px;}
+        #cboxCurrent{position:absolute; bottom:4px; left:58px; color:#949494;}
+        #cboxSlideshow{position:absolute; bottom:4px; right:30px; color:#0092ef;}
+        #cboxPrevious, #cboxNext{
+      bottom:0;
+      height:100%;
+      position:absolute;
+      text-indent:-9999px;
+      top:0;
+      margin-top: 20px;
+      width:200px;
+    }
+    #cboxPrevious {left:0;}
+    
+    #cboxNext{right:0;}
+    
+        #cboxPrevious.hover{background:url(/en/dms/wac/images/ssArrow.png) no-repeat left center;
+    }
+
+        #cboxNext.hover{background:url(/en/dms/wac/images/ssArrow.png) no-repeat right center;  
+     }
+        #cboxLoadingOverlay{background:url(/en/dms/wac/colorbox_images/loading_background.png) no-repeat center center;}
+
+        #cboxClose{position:absolute; top:0; right:0; background:url(/en/dms/wac/images/lightboxControls.png) no-repeat left bottom; width:27px; height:27px; text-indent:-9999px; z-index: 5000;}
+        #cboxClose.hover{background-position:right bottom;}
+                                                           
+/*
+  The following fixes a problem where IE7+ replaces a PNG's alpha transparency with a black fill
+  when an alpha filter (opacity change) is set on the element or ancestor element.
+*/
+.cboxIE #cboxTopLeft,
+.cboxIE #cboxTopCenter,
+.cboxIE #cboxTopRight,
+.cboxIE #cboxBottomLeft,
+.cboxIE #cboxBottomCenter,
+.cboxIE #cboxBottomRight,
+.cboxIE #cboxMiddleLeft,
+.cboxIE #cboxMiddleRight {
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#00FFFFFF,endColorstr=#00FFFFFF);
+}
+    
+/*
+  The following provides PNG transparency support for IE6
+*/
+/*.cboxIE6 #cboxTopLeft{background:url(/en/dms/wac2011/colorbox_images/ie6/borderTopLeft.png);}
+.cboxIE6 #cboxTopCenter{background:url(/en/dms/wac2011/colorbox_images/ie6/borderTopCenter.png);}
+.cboxIE6 #cboxTopRight{background:url(/en/dms/wac2011/colorbox_images/ie6/borderTopRight.png);}
+.cboxIE6 #cboxBottomLeft{background:url(/en/dms/wac2011/colorbox_images/ie6/borderBottomLeft.png);}
+.cboxIE6 #cboxBottomCenter{background:url(/en/dms/wac2011/colorbox_images/ie6/borderBottomCenter.png);}
+.cboxIE6 #cboxBottomRight{background:url(/en/dms/wac2011/colorbox_images/ie6/borderBottomRight.png);}
+.cboxIE6 #cboxMiddleLeft{background:url(/en/dms/wac2011/colorbox_images/ie6/borderMiddleLeft.png);}
+.cboxIE6 #cboxMiddleRight{background:url(/en/dms/wac2011/colorbox_images/ie6/borderMiddleRight.png);}
+
+.cboxIE6 #cboxTopLeft,
+.cboxIE6 #cboxTopCenter,
+.cboxIE6 #cboxTopRight,
+.cboxIE6 #cboxBottomLeft,
+.cboxIE6 #cboxBottomCenter,
+.cboxIE6 #cboxBottomRight,
+.cboxIE6 #cboxMiddleLeft,
+.cboxIE6 #cboxMiddleRight {
+    _behavior: expression(this.src = this.src ? this.src : this.currentStyle.backgroundImage.split('"')[1], this.style.background = "none", this.style.filter = "progid:DXImageTransform.Microsoft.AlphaImageLoader(src=" + this.src + ", sizingMethod='scale')");
+}   */     
+
+
+                                    
+

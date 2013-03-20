@@ -1,0 +1,121 @@
+
+.git.overview #subNav,
+.git.workflows #subNav{
+display:none;
+}
+.campaign #content .box{
+padding:0;
+}
+.campaign #content .wrapper .box{
+border:0;
+}
+.overview #introsection .col.last img,
+.tutorial #introsection .col.last img,
+.tutorial .mainContent .twoCol .col.last img{
+margin-bottom:14px;
+}
+.overview #detailsection{
+margin-top:37px;
+}
+.overview #ctasection{
+margin-top:14px;
+}
+.overview #ctasection .centeredBlock{
+left:0;
+padding:8px 0 7px;
+}
+.overview #ctasection .centeredBlock a{
+margin:0;
+right:0;
+}
+.campaign #tabsDef.vertical .twoCol .col{
+width:356px;
+}
+.campaign #tabsDef.vertical .twoCol .col.last{
+width:236px;
+}
+.campaign #content #tabsDef.vertical .wrapper,
+.campaign.tutorial #content .mainContent .wrapper{
+border-bottom:1px solid #A9D2E8;
+}
+.campaign #content #tabsDef.vertical .wrapper:last-child,
+.campaign.tutorial #content .mainContent .wrapper:last-child{
+border-bottom:0;
+}
+.campaign.tutorial #content .mainContent .wrapper{
+margin-bottom:30px;
+padding-bottom:16px;
+}
+.campaign.tutorial #content .mainContent .wrapper:last-child{
+margin-bottom:27px;
+}
+.campaign.tutorial #content .mainContent .box{
+margin-bottom:0;
+}
+.tutorial .mainContent .twoCol .col{
+width:580px;
+}
+.tutorial .mainContent .twoCol .col.last{
+width:236px;
+}
+.tutorial #mainsection{
+margin-top:33px;
+}
+.tutorial .inner{
+min-height:800px;
+}
+.tutorial h4{
+color:#036;
+font-size:123.1%;
+font-weight:700;
+line-height:22px;
+margin:16px 0 10px;
+}
+code{
+-khtml-border-radius:6px;
+-moz-border-radius:6px;
+-webkit-border-radius:6px;
+border-radius:6px;
+border:1px solid #ccc;
+background-color:#f5f5f5;
+display:block;
+font-family:monospace;
+font-size:13px;
+line-height:20px;
+margin:19px 0;
+padding:15px 17px;
+}
+p .code{
+display:inline-block;
+font-family:monospace;
+padding:0 4px;
+}
+.pageNav{
+margin-top:-23px;
+padding:0 0 23px;
+}
+.pageNav li.previous,
+.pageNav li.next{
+padding:0;
+}
+.pageNav li.previous em,
+.pageNav li.previous a{
+padding-left:23px;
+}
+.pageNav li.next em,
+.pageNav li.next a{
+padding-right:23px;
+}
+.tabsContent .box img{
+margin-bottom:17px;
+}
+.campaign #tabsDef.vertical .tabsContent .inner{
+min-height:550px;
+}
+#companyLogo a{
+color:#036;
+}
+.campaign #content #sectionfooter .box{
+padding:45px 0 30px;
+}
+
