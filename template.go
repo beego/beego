@@ -196,11 +196,18 @@ func AddTemplateExt(ext string) {
 }
 
 func BuildTemplate(dir string) error {
+	f, err := os.Stat(dir)
+	if err != nil {
+		return err
+	}
+	if !f.IsDir() {
+		return errors.New("is not dir")
+	}
 	self := templatefile{
 		root:  dir,
 		files: make(map[string][]string),
 	}
-	err := filepath.Walk(dir, func(path string, f os.FileInfo, err error) error {
+	err = filepath.Walk(dir, func(path string, f os.FileInfo, err error) error {
 		return self.visit(path, f, err)
 	})
 	if err != nil {
