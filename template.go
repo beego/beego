@@ -207,7 +207,7 @@ func BuildTemplate(dir string) error {
 		root:  dir,
 		files: make(map[string][]string),
 	}
-	err = filepath.Walk(dir, func(path string, f os.FileInfo, err error) error {
+	err := filepath.Walk(dir, func(path string, f os.FileInfo, err error) error {
 		return self.visit(path, f, err)
 	})
 	if err != nil {
