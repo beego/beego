@@ -31,6 +31,7 @@ func init() {
 	beegoTplFuncMap["date"] = Date
 	beegoTplFuncMap["compare"] = Compare
 	beegoTplFuncMap["substr"] = Substr
+	beegoTplFuncMap["html2str"] = Html2str
 }
 
 // MarkDown parses a string in MarkDown format and returns HTML. Used by the template parser as "markdown"
