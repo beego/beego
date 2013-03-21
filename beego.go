@@ -220,6 +220,9 @@ func Run() {
 		GlobalSessions, _ = session.NewManager(SessionProvider, SessionName, SessionGCMaxLifetime)
 		go GlobalSessions.GC()
 	}
-	BuildTemplate(ViewsPath)
+	err := BuildTemplate(ViewsPath)
+	if err != nil {
+		Warn(err)
+	}
 	BeeApp.Run()
 }
