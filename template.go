@@ -196,12 +196,12 @@ func AddTemplateExt(ext string) {
 }
 
 func BuildTemplate(dir string) error {
-	f, err := os.Stat(dir)
-	if err != nil {
-		return err
-	}
-	if !f.IsDir() {
-		return errors.New("is not dir")
+	if _, err := os.Stat(dir); err != nil {
+		if os.IsNotExist(err) {
+			return err
+		} else {
+			return errors.New("dir open err")
+		}
 	}
 	self := templatefile{
 		root:  dir,
