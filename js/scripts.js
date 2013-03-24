@@ -740,16 +740,16 @@ var searchableTabNavigation  = function(settings){
        var newTitle = $("#" + hashReplace + "-tab a:first").attr("title");
        document.title = newTitle;
        currentState = hashReplace;
-       
-       $.ajax({
-         url: $.url().attr("base") + $.url().attr("directory") + $.url().attr("file") + "?_escaped_fragment_=" +  hashReplace,
-         dataType: "html",
-         success: function(html) {
-                   var div = $(settings.contentItem, $(html)).addClass('done');
-                   $(settings.contentItem).replaceWith(div);          
-                   //initPage();
-         }
-       });    
+       $(settings.contentItem).replaceWith("开发中");
+       // $.ajax({
+       //   url: $.url().attr("base") + $.url().attr("directory") + $.url().attr("file") + "?_escaped_fragment_=" +  hashReplace,
+       //   dataType: "html",
+       //   success: function(html) {
+       //             var div = $(settings.contentItem, $(html)).addClass('done');
+       //             $(settings.contentItem).replaceWith(div);          
+       //             //initPage();
+       //   }
+       // });    
    }
     
 
