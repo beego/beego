@@ -741,7 +741,7 @@ var searchableTabNavigation  = function(settings){
        var div = $("#" + hashReplace + "-content").html();
        document.title = newTitle;
        currentState = hashReplace;
-       $(settings.contentItem).replaceWith(div);
+       //$(settings.contentItem).replaceWith(div);
        // $.ajax({
        //   url: $.url().attr("base") + $.url().attr("directory") + $.url().attr("file") + "?_escaped_fragment_=" +  hashReplace,
        //   dataType: "html",
