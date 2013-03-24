@@ -740,7 +740,11 @@ var searchableTabNavigation  = function(settings){
        var newTitle = $("#" + hashReplace + "-tab a:first").attr("title");
        document.title = newTitle;
        currentState = hashReplace;
-       $(settings.contentItem).replaceWith("开发中");
+       $(settings.contentItem).replaceWith('<div class="outer">
+<div class="inner">
+开发中
+</div>
+</div>');
        // $.ajax({
        //   url: $.url().attr("base") + $.url().attr("directory") + $.url().attr("file") + "?_escaped_fragment_=" +  hashReplace,
        //   dataType: "html",
