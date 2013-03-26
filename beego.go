@@ -13,7 +13,7 @@ import (
 	"strconv"
 )
 
-const VERSION = "0.0.3"
+const VERSION = "0.0.4"
 
 var (
 	BeeApp        *App
@@ -49,22 +49,22 @@ func init() {
 	if err != nil {
 		//Trace("open Config err:", err)
 		HttpAddr = ""
-		HttpPort = 8080
+		HttpPort = 80
 		AppName = "beego"
 		RunMode = "prod" //default runmod
-		AutoRender = true
+		AutoRender = false
 		RecoverPanic = true
 		PprofOn = false
 		ViewsPath = "views"
 		SessionOn = false
 		SessionProvider = "memory"
-		SessionName = "beegosessionID"
+		SessionName = "BeegoSessionid"
 		SessionGCMaxLifetime = 3600
 		UseFcgi = false
 	} else {
 		HttpAddr = AppConfig.String("httpaddr")
 		if v, err := AppConfig.Int("httpport"); err != nil {
-			HttpPort = 8080
+			HttpPort = 80
 		} else {
 			HttpPort = v
 		}
@@ -75,7 +75,7 @@ func init() {
 			RunMode = "prod"
 		}
 		if ar, err := AppConfig.Bool("autorender"); err != nil {
-			AutoRender = true
+			AutoRender = false
 		} else {
 			AutoRender = ar
 		}
@@ -105,7 +105,7 @@ func init() {
 			SessionProvider = ar
 		}
 		if ar := AppConfig.String("sessionname"); ar == "" {
-			SessionName = "beegosessionID"
+			SessionName = "BeegoSessionid"
 		} else {
 			SessionName = ar
 		}
@@ -126,12 +126,12 @@ func init() {
 }
 
 type App struct {
-	Handlers *ControllerRegistor
+	Handlers *HandlerRegistor
 }
 
 // New returns a new PatternServeMux.
 func NewApp() *App {
-	cr := NewControllerRegistor()
+	cr := NewHandlerRegistor()
 	app := &App{Handlers: cr}
 	return app
 }
@@ -153,7 +153,7 @@ func (app *App) Run() {
 	}
 }
 
-func (app *App) RegisterController(path string, c ControllerInterface) *App {
+func (app *App) Route(path string, c HandlerInterface) *App {
 	app.Handlers.Add(path, c)
 	return app
 }
@@ -191,8 +191,8 @@ func (app *App) AccessLog(ctx *Context) {
 	BeeLogger.Printf("[ACC] host: '%s', request: '%s %s', proto: '%s', ua: %s'', remote: '%s'\n", ctx.Request.Host, ctx.Request.Method, ctx.Request.URL.Path, ctx.Request.Proto, ctx.Request.UserAgent(), ctx.Request.RemoteAddr)
 }
 
-func RegisterController(path string, c ControllerInterface) *App {
-	BeeApp.RegisterController(path, c)
+func Route(path string, c HandlerInterface) *App {
+	BeeApp.Route(path, c)
 	return BeeApp
 }
 
@@ -213,8 +213,8 @@ func FilterPrefixPath(path string, filter http.HandlerFunc) *App {
 
 func Run() {
 	if PprofOn {
-		BeeApp.RegisterController(`/debug/pprof`, &ProfController{})
-		BeeApp.RegisterController(`/debug/pprof/:pp([\w]+)`, &ProfController{})
+		BeeApp.Route(`/debug/pprof`, &ProfHandler{})
+		BeeApp.Route(`/debug/pprof/:pp([\w]+)`, &ProfHandler{})
 	}
 	if SessionOn {
 		GlobalSessions, _ = session.NewManager(SessionProvider, SessionName, SessionGCMaxLifetime)

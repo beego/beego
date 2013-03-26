@@ -23,17 +23,17 @@ import (
 	"github.com/astaxie/beego"
 )
 
-type MainController struct {
-	beego.Controller
+type MainHandler struct {
+	beego.Handler
 }
 
-func (this *MainController) Get() {
+func (this *MainHandler) Get() {
 	this.Ctx.WriteString("hello world")
 }
 
 func main() {
-	beego.RegisterController("/", &MainController{})
-	//beego.HttpPort = 8080 // default
+	beego.Route("/", &MainHandler{})
+	//beego.HttpPort = 80 // default
 	beego.Run()
 }
 ```
@@ -54,16 +54,16 @@ Some associated tools for beego reside in:[bee](https://github.com/astaxie/bee)
 ============
 In beego, a route is a struct paired with a URL-matching pattern. The struct has many method with the same name of http method to serve the http response. Each route is associated with a block.
 ```go
-beego.RegisterController("/", &controllers.MainController{})
-beego.RegisterController("/admin", &admin.UserController{})
-beego.RegisterController("/admin/index", &admin.ArticleController{})
-beego.RegisterController("/admin/addpkg", &admin.AddController{})
+beego.Route("/", &handlers.MainHandler{})
+beego.Route("/admin", &admin.UserHandler{})
+beego.Route("/admin/index", &admin.ArticleHandler{})
+beego.Route("/admin/addpkg", &admin.AddHandler{})
 ```
 You can specify custom regular expressions for routes:
 ```go
-beego.RegisterController("/admin/editpkg/:id([0-9]+)", &admin.EditController{})
-beego.RegisterController("/admin/delpkg/:id([0-9]+)", &admin.DelController{})
-beego.RegisterController("/:pkg(.*)", &controllers.MainController{})
+beego.Route("/admin/editpkg/:id([0-9]+)", &admin.EditHandler{})
+beego.Route("/admin/delpkg/:id([0-9]+)", &admin.DelHandler{})
+beego.Route("/:pkg(.*)", &handlers.MainHandler{})
 ```	
 You can also create routes for static files:
 
@@ -87,7 +87,7 @@ beego.Filter(FilterUser)
 ```	
 You can also apply filters only when certain REST URL Parameters exist:
 ```go
-beego.RegisterController("/:id([0-9]+)", &admin.EditController{})
+beego.Route("/:id([0-9]+)", &admin.EditHandler{})
 beego.FilterParam("id", func(rw http.ResponseWriter, r *http.Request) {
     ...
 })
@@ -99,19 +99,19 @@ beego.FilterPrefixPath("/admin", func(rw http.ResponseWriter, r *http.Request) {
 })
 ```		
 
-## Controller / Struct
+## Handler / Struct
 ============ 	
-To implement a beego Controller, embed the `beego.Controller` struct:
+To implement a beego Handler, embed the `beego.Handler` struct:
 ```go
-type xxxController struct {
-	beego.Controller
+type xxxHandler struct {
+	beego.Handler
 }
 ```
-`beego.Controller` satisfieds the `beego.ControllerInterface` interface, which defines the following methods:
+`beego.Handler` satisfieds the `beego.HandlerInterface` interface, which defines the following methods:
 
 - Init(ct *Context, cn string)
 
-	this function is init the Context, ChildStruct' name and the Controller's variables.
+	this function is init the Context, ChildStruct' name and the Handler's variables.
 	
 - Prepare()
 
@@ -156,20 +156,20 @@ type xxxController struct {
 
 So you can define ChildStruct method to accomplish the interface's method, now let us see an example:
 ```go
-type AddController struct {
-	beego.Controller
+type AddHandler struct {
+	beego.Handler
 }
 
-func (this *AddController) Prepare() {
+func (this *AddHandler) Prepare() {
 
 }
 
-func (this *AddController) Get() {
+func (this *AddHandler) Get() {
 	this.Layout = "admin/layout.html"
 	this.TplNames = "admin/add.tpl"
 }
 
-func (this *AddController) Post() {
+func (this *AddHandler) Post() {
 	//data deal with
 	this.Ctx.Request.ParseForm()
 	pkgname := this.Ctx.Request.Form.Get("pkgname")
@@ -212,11 +212,11 @@ if you don't set TplNames,beego will find like this:
 
 	c.TplNames = c.ChildName + "/" + c.Ctx.Request.Method + "." + c.TplExt
 
-So if the ChildName="AddController",Request Method= "POST",default TplEXT="tpl"	
-So beego will file the file in the path:`/view/AddController/POST.tpl`
+So if the ChildName="AddHandler",Request Method= "POST",default TplEXT="tpl"	
+So beego will file the file in the path:`/view/AddHandler/POST.tpl`
 
 ### autoRender
-In the controller you needn't to call render function. beego will auto call this function after HTTP Method Call.
+In the handler you needn't to call render function. beego will auto call this function after HTTP Method Call.
 
 You can disable automatic invokation of autorender via the AutoRender Flag:
 ```go
@@ -266,11 +266,11 @@ beego has three default defined funtion:
 	Compare is a quick and dirty comparison function. It will convert whatever you give it to strings and see if the two values are equal.Whitespace is trimmed. Used by the template parser as "eq"
 	
 ### JSON/XML output
-You can use `beego.Controller.ServeJson` or `beego.Controller.ServeXml` for serializing to Json and Xml. I found myself constantly writing code to serialize, set content type, content length, etc. Feel free to use these functions to eliminate redundant code in your app.
+You can use `beego.Handler.ServeJson` or `beego.Handler.ServeXml` for serializing to Json and Xml. I found myself constantly writing code to serialize, set content type, content length, etc. Feel free to use these functions to eliminate redundant code in your app.
 		
 Helper function for serving Json, sets content type to application/json:
 ```go
-func (this *AddController) Get() {
+func (this *AddHandler) Get() {
     mystruct := { ... }
 	this.Data["json"] = &mystruct
     this.ServeJson()
@@ -278,7 +278,7 @@ func (this *AddController) Get() {
 ```
 Helper function for serving Xml, sets content type to application/xml:
 ```go
-func (this *AddController) Get() {
+func (this *AddHandler) Get() {
     mystruct := { ... }
 	this.Data["xml"]=&mystruct
     this.ServeXml()
