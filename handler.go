@@ -13,7 +13,7 @@ import (
 	"strconv"
 )
 
-type Controller struct {
+type Handler struct {
 	Ctx       *Context
 	Data      map[interface{}]interface{}
 	ChildName string
@@ -22,7 +22,7 @@ type Controller struct {
 	TplExt    string
 }
 
-type ControllerInterface interface {
+type HandlerInterface interface {
 	Init(ct *Context, cn string)
 	Prepare()
 	Get()
@@ -36,53 +36,68 @@ type ControllerInterface interface {
 	Render() error
 }
 
-func (c *Controller) Init(ctx *Context, cn string) {
+func (c *Handler) Init(ctx *Context, cn string) {
 	c.Data = make(map[interface{}]interface{})
 	c.Layout = ""
 	c.TplNames = ""
 	c.ChildName = cn
 	c.Ctx = ctx
-	c.TplExt = "tpl"
+	c.TplExt = "html"
 
 }
 
-func (c *Controller) Prepare() {
+func (c *Handler) Prepare() {
 
 }
 
-func (c *Controller) Finish() {
+func (c *Handler) Finish() {
 
 }
 
-func (c *Controller) Get() {
+func (c *Handler) Get() {
 	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", 405)
 }
 
-func (c *Controller) Post() {
+func (c *Handler) Post() {
 	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", 405)
 }
 
-func (c *Controller) Delete() {
+func (c *Handler) Delete() {
 	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", 405)
 }
 
-func (c *Controller) Put() {
+func (c *Handler) Put() {
 	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", 405)
 }
 
-func (c *Controller) Head() {
+func (c *Handler) Head() {
 	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", 405)
 }
 
-func (c *Controller) Patch() {
+func (c *Handler) Patch() {
 	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", 405)
 }
 
-func (c *Controller) Options() {
+func (c *Handler) Options() {
 	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", 405)
 }
 
-func (c *Controller) Render() error {
+func (c *Handler) SetSession(name string, value interface{}) {
+	ss := c.StartSession()
+	ss.Set(name, value)
+}
+
+func (c *Handler) GetSession(name string) interface{} {
+	ss := c.StartSession()
+	return ss.Get(name)
+}
+
+func (c *Handler) DelSession(name string) {
+	ss := c.StartSession()
+	ss.Delete(name)
+}
+
+func (c *Handler) Render() error {
 	rb, err := c.RenderBytes()
 
 	if err != nil {
@@ -96,8 +111,13 @@ func (c *Controller) Render() error {
 	return nil
 }
 
-func (c *Controller) RenderBytes() ([]byte, error) {
-	//if the controller has set layout, then first get the tplname's content set the content to the layout
+func (c *Handler) RenderString() (string, error) {
+	b, e := c.RenderBytes()
+	return string(b), e
+}
+
+func (c *Handler) RenderBytes() ([]byte, error) {
+	//if the handler has set layout, then first get the tplname's content set the content to the layout
 	if c.Layout != "" {
 		if c.TplNames == "" {
 			c.TplNames = c.ChildName + "/" + c.Ctx.Request.Method + "." + c.TplExt
@@ -133,11 +153,11 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 	return []byte{}, nil
 }
 
-func (c *Controller) Redirect(url string, code int) {
+func (c *Handler) Redirect(url string, code int) {
 	c.Ctx.Redirect(code, url)
 }
 
-func (c *Controller) ServeJson() {
+func (c *Handler) ServeJson() {
 	content, err := json.MarshalIndent(c.Data["json"], "", "  ")
 	if err != nil {
 		http.Error(c.Ctx.ResponseWriter, err.Error(), http.StatusInternalServerError)
@@ -148,7 +168,7 @@ func (c *Controller) ServeJson() {
 	c.Ctx.ResponseWriter.Write(content)
 }
 
-func (c *Controller) ServeXml() {
+func (c *Handler) ServeXml() {
 	content, err := xml.Marshal(c.Data["xml"])
 	if err != nil {
 		http.Error(c.Ctx.ResponseWriter, err.Error(), http.StatusInternalServerError)
@@ -159,12 +179,12 @@ func (c *Controller) ServeXml() {
 	c.Ctx.ResponseWriter.Write(content)
 }
 
-func (c *Controller) Input() url.Values {
+func (c *Handler) Input() url.Values {
 	c.Ctx.Request.ParseForm()
 	return c.Ctx.Request.Form
 }
 
-func (c *Controller) StartSession() (sess session.Session) {
+func (c *Handler) StartSession() (sess session.Session) {
 	sess = GlobalSessions.SessionStart(c.Ctx.ResponseWriter, c.Ctx.Request)
 	return
 }

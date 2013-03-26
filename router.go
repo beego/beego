@@ -9,24 +9,24 @@ import (
 	"strings"
 )
 
-type controllerInfo struct {
+type handlerInfo struct {
 	pattern        string
 	regex          *regexp.Regexp
 	params         map[int]string
-	controllerType reflect.Type
+	handlerType reflect.Type
 }
 
-type ControllerRegistor struct {
-	routers    []*controllerInfo
-	fixrouters []*controllerInfo
+type HandlerRegistor struct {
+	routers    []*handlerInfo
+	fixrouters []*handlerInfo
 	filters    []http.HandlerFunc
 }
 
-func NewControllerRegistor() *ControllerRegistor {
-	return &ControllerRegistor{routers: make([]*controllerInfo, 0)}
+func NewHandlerRegistor() *HandlerRegistor {
+	return &HandlerRegistor{routers: make([]*handlerInfo, 0)}
 }
 
-func (p *ControllerRegistor) Add(pattern string, c ControllerInterface) {
+func (p *HandlerRegistor) Add(pattern string, c HandlerInterface) {
 	parts := strings.Split(pattern, "/")
 
 	j := 0
@@ -48,9 +48,9 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface) {
 	if j == 0 {
 		//now create the Route
 		t := reflect.Indirect(reflect.ValueOf(c)).Type()
-		route := &controllerInfo{}
+		route := &handlerInfo{}
 		route.pattern = pattern
-		route.controllerType = t
+		route.handlerType = t
 
 		p.fixrouters = append(p.fixrouters, route)
 	} else { // add regexp routers
@@ -66,11 +66,11 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface) {
 
 		//now create the Route
 		t := reflect.Indirect(reflect.ValueOf(c)).Type()
-		route := &controllerInfo{}
+		route := &handlerInfo{}
 		route.regex = regex
 		route.params = params
 		route.pattern = pattern
-		route.controllerType = t
+		route.handlerType = t
 
 		p.routers = append(p.routers, route)
 	}
@@ -78,12 +78,12 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface) {
 }
 
 // Filter adds the middleware filter.
-func (p *ControllerRegistor) Filter(filter http.HandlerFunc) {
+func (p *HandlerRegistor) Filter(filter http.HandlerFunc) {
 	p.filters = append(p.filters, filter)
 }
 
 // FilterParam adds the middleware filter if the REST URL parameter exists.
-func (p *ControllerRegistor) FilterParam(param string, filter http.HandlerFunc) {
+func (p *HandlerRegistor) FilterParam(param string, filter http.HandlerFunc) {
 	if !strings.HasPrefix(param, ":") {
 		param = ":" + param
 	}
@@ -97,7 +97,7 @@ func (p *ControllerRegistor) FilterParam(param string, filter http.HandlerFunc) 
 }
 
 // FilterPrefixPath adds the middleware filter if the prefix path exists.
-func (p *ControllerRegistor) FilterPrefixPath(path string, filter http.HandlerFunc) {
+func (p *HandlerRegistor) FilterPrefixPath(path string, filter http.HandlerFunc) {
 	p.Filter(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.URL.Path, path) {
 			filter(w, r)
@@ -106,7 +106,7 @@ func (p *ControllerRegistor) FilterPrefixPath(path string, filter http.HandlerFu
 }
 
 // AutoRoute
-func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (p *HandlerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err := recover(); err != nil {
 			if !RecoverPanic {
@@ -126,7 +126,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}()
 	w := &responseWriter{writer: rw}
 
-	var runrouter *controllerInfo
+	var runrouter *handlerInfo
 	var findrouter bool
 
 	params := make(map[string]string)
@@ -209,14 +209,14 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}
 
 		//Invoke the request handler
-		vc := reflect.New(runrouter.controllerType)
+		vc := reflect.New(runrouter.handlerType)
 
-		//call the controller init function
+		//call the handler init function
 		init := vc.MethodByName("Init")
 		in := make([]reflect.Value, 2)
 		ct := &Context{ResponseWriter: w, Request: r, Params: params}
 		in[0] = reflect.ValueOf(ct)
-		in[1] = reflect.ValueOf(runrouter.controllerType.Name())
+		in[1] = reflect.ValueOf(runrouter.handlerType.Name())
 		init.Call(in)
 		//call prepare function
 		in = make([]reflect.Value, 0)
