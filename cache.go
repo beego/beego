@@ -51,7 +51,7 @@ func (bc *BeeCache) Put(name string, value interface{}, expired int) error {
 	bc.lock.Lock()
 	defer bc.lock.Unlock()
 	t := BeeItem{val: value, Lastaccess: time.Now(), expired: expired}
-	if _, ok := bc.items[name]; !ok {
+	if _, ok := bc.items[name]; ok {
 		return errors.New("the key is exist")
 	} else {
 		bc.items[name] = &t
