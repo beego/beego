@@ -1,4 +1,4 @@
-## Beego2
+## Beego
 =======
 Beego is an open source version of the scalable, non-blocking web server
 and tools that power SNDA's CDN system. Documentation and downloads are
