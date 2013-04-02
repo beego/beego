@@ -98,19 +98,30 @@ func (c *Controller) Render() error {
 
 func (c *Controller) RenderBytes() ([]byte, error) {
 	//if the controller has set layout, then first get the tplname's content set the content to the layout
+	var t *template.Template
+	var err error
 	if c.Layout != "" {
 		if c.TplNames == "" {
 			c.TplNames = c.ChildName + "/" + c.Ctx.Request.Method + "." + c.TplExt
 		}
+		if RunMode == "dev" {
+			t, err = template.New("beegoTemplate").Funcs(beegoTplFuncMap).ParseFiles(path.Join(ViewsPath, c.TplNames), path.Join(ViewsPath, c.Layout))
+			if err != nil {
+				Trace("template ParseFiles err:", err)
+			}
+		} else {
+			subdir := path.Dir(c.TplNames)
+			t = BeeTemplates[subdir]
+		}
 		_, file := path.Split(c.TplNames)
-		subdir := path.Dir(c.TplNames)
+
 		newbytes := bytes.NewBufferString("")
-		BeeTemplates[subdir].ExecuteTemplate(newbytes, file, c.Data)
+		t.ExecuteTemplate(newbytes, file, c.Data)
 		tplcontent, _ := ioutil.ReadAll(newbytes)
 		c.Data["LayoutContent"] = template.HTML(string(tplcontent))
 		_, file = path.Split(c.Layout)
 		ibytes := bytes.NewBufferString("")
-		err := BeeTemplates[subdir].ExecuteTemplate(ibytes, file, c.Data)
+		err := t.ExecuteTemplate(ibytes, file, c.Data)
 		if err != nil {
 			Trace("template Execute err:", err)
 		}
@@ -120,10 +131,18 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		if c.TplNames == "" {
 			c.TplNames = c.ChildName + "/" + c.Ctx.Request.Method + "." + c.TplExt
 		}
+		if RunMode == "dev" {
+			t, err = template.New("beegoTemplate").Funcs(beegoTplFuncMap).ParseFiles(path.Join(ViewsPath, c.TplNames))
+			if err != nil {
+				Trace("template ParseFiles err:", err)
+			}
+		} else {
+			subdir := path.Dir(c.TplNames)
+			t = BeeTemplates[subdir]
+		}
 		_, file := path.Split(c.TplNames)
-		subdir := path.Dir(c.TplNames)
 		ibytes := bytes.NewBufferString("")
-		err := BeeTemplates[subdir].ExecuteTemplate(ibytes, file, c.Data)
+		err := t.ExecuteTemplate(ibytes, file, c.Data)
 		if err != nil {
 			Trace("template Execute err:", err)
 		}

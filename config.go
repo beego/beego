@@ -97,6 +97,10 @@ func (c *Config) Int(key string) (int, error) {
 	return strconv.Atoi(c.data[key])
 }
 
+func (c *Config) Int64(key string) (int64, error) {
+	return strconv.ParseInt(c.data[key], 10, 64)
+}
+
 // Float returns the float value for a given key.
 func (c *Config) Float(key string) (float64, error) {
 	return strconv.ParseFloat(c.data[key], 64)
