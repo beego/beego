@@ -153,7 +153,7 @@ func (app *App) Run() {
 	}
 }
 
-func (app *App) RegisterController(path string, c ControllerInterface) *App {
+func (app *App) Router(path string, c ControllerInterface) *App {
 	app.Handlers.Add(path, c)
 	return app
 }
@@ -192,7 +192,12 @@ func (app *App) AccessLog(ctx *Context) {
 }
 
 func RegisterController(path string, c ControllerInterface) *App {
-	BeeApp.RegisterController(path, c)
+	BeeApp.Router(path, c)
+	return BeeApp
+}
+
+func Router(path string, c ControllerInterface) *App {
+	BeeApp.Router(path, c)
 	return BeeApp
 }
 
@@ -213,8 +218,8 @@ func FilterPrefixPath(path string, filter http.HandlerFunc) *App {
 
 func Run() {
 	if PprofOn {
-		BeeApp.RegisterController(`/debug/pprof`, &ProfController{})
-		BeeApp.RegisterController(`/debug/pprof/:pp([\w]+)`, &ProfController{})
+		BeeApp.Router(`/debug/pprof`, &ProfController{})
+		BeeApp.Router(`/debug/pprof/:pp([\w]+)`, &ProfController{})
 	}
 	if SessionOn {
 		GlobalSessions, _ = session.NewManager(SessionProvider, SessionName, SessionGCMaxLifetime)
