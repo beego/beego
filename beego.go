@@ -2,8 +2,7 @@ package beego
 
 import (
 	"fmt"
-	"github.com/astaxie/session"
-	_ "github.com/astaxie/session/providers/memory"
+	"github.com/astaxie/beego/session"
 	"html/template"
 	"net"
 	"net/http"
@@ -31,9 +30,10 @@ var (
 	AppConfig     *Config
 	//related to session 
 	SessionOn            bool   // wheather auto start session,default is false
-	SessionProvider      string // default session provider  memory
+	SessionProvider      string // default session provider  memory mysql redis 
 	SessionName          string // sessionName cookie's name
 	SessionGCMaxLifetime int64  // session's gc maxlifetime
+	SessionSavePath      string // session savepath if use mysql/redis/file this set to the connectinfo
 	UseFcgi              bool
 
 	GlobalSessions *session.Manager //GlobalSessions
@@ -60,6 +60,7 @@ func init() {
 		SessionProvider = "memory"
 		SessionName = "beegosessionID"
 		SessionGCMaxLifetime = 3600
+		SessionSavePath = ""
 		UseFcgi = false
 	} else {
 		HttpAddr = AppConfig.String("httpaddr")
@@ -108,6 +109,11 @@ func init() {
 			SessionName = "beegosessionID"
 		} else {
 			SessionName = ar
+		}
+		if ar := AppConfig.String("sessionsavepath"); ar == "" {
+			SessionSavePath = ""
+		} else {
+			SessionSavePath = ar
 		}
 		if ar, err := AppConfig.Int("sessiongcmaxlifetime"); err != nil && ar != 0 {
 			int64val, _ := strconv.ParseInt(strconv.Itoa(ar), 10, 64)
@@ -222,7 +228,7 @@ func Run() {
 		BeeApp.Router(`/debug/pprof/:pp([\w]+)`, &ProfController{})
 	}
 	if SessionOn {
-		GlobalSessions, _ = session.NewManager(SessionProvider, SessionName, SessionGCMaxLifetime)
+		GlobalSessions, _ = session.NewManager(SessionProvider, SessionName, SessionGCMaxLifetime, SessionSavePath)
 		go GlobalSessions.GC()
 	}
 	err := BuildTemplate(ViewsPath)

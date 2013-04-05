@@ -32,7 +32,7 @@ func (this *MainController) Get() {
 }
 
 func main() {
-	beego.RegisterController("/", &MainController{})
+	beego.Router("/", &MainController{})
 	//beego.HttpPort = 8080 // default
 	beego.Run()
 }
@@ -54,16 +54,16 @@ Some associated tools for beego reside in:[bee](https://github.com/astaxie/bee)
 ============
 In beego, a route is a struct paired with a URL-matching pattern. The struct has many method with the same name of http method to serve the http response. Each route is associated with a block.
 ```go
-beego.RegisterController("/", &controllers.MainController{})
-beego.RegisterController("/admin", &admin.UserController{})
-beego.RegisterController("/admin/index", &admin.ArticleController{})
-beego.RegisterController("/admin/addpkg", &admin.AddController{})
+beego.Router("/", &controllers.MainController{})
+beego.Router("/admin", &admin.UserController{})
+beego.Router("/admin/index", &admin.ArticleController{})
+beego.Router("/admin/addpkg", &admin.AddController{})
 ```
 You can specify custom regular expressions for routes:
 ```go
-beego.RegisterController("/admin/editpkg/:id([0-9]+)", &admin.EditController{})
-beego.RegisterController("/admin/delpkg/:id([0-9]+)", &admin.DelController{})
-beego.RegisterController("/:pkg(.*)", &controllers.MainController{})
+beego.Router("/admin/editpkg/:id([0-9]+)", &admin.EditController{})
+beego.Router("/admin/delpkg/:id([0-9]+)", &admin.DelController{})
+beego.Router("/:pkg(.*)", &controllers.MainController{})
 ```	
 You can also create routes for static files:
 
@@ -87,7 +87,7 @@ beego.Filter(FilterUser)
 ```	
 You can also apply filters only when certain REST URL Parameters exist:
 ```go
-beego.RegisterController("/:id([0-9]+)", &admin.EditController{})
+beego.Router("/:id([0-9]+)", &admin.EditController{})
 beego.FilterParam("id", func(rw http.ResponseWriter, r *http.Request) {
     ...
 })
