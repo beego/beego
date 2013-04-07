@@ -207,6 +207,11 @@ func Router(path string, c ControllerInterface) *App {
 	return BeeApp
 }
 
+func RouterHandler(path string, c http.Handler) *App {
+	BeeApp.Handlers.AddHandler(path, c)
+	return BeeApp
+}
+
 func Filter(filter http.HandlerFunc) *App {
 	BeeApp.Filter(filter)
 	return BeeApp
