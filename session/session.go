@@ -61,9 +61,17 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 	if err != nil || cookie.Value == "" {
 		sid := manager.sessionId()
 		session, _ = manager.provider.SessionRead(sid)
-		cookie := http.Cookie{Name: manager.cookieName, Value: url.QueryEscape(sid), Path: "/", HttpOnly: true, MaxAge: int(manager.maxlifetime)}
+		cookie := http.Cookie{Name: manager.cookieName,
+			Value:    url.QueryEscape(sid),
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true}
+		cookie.Expires = time.Now().Add(time.Duration(manager.maxlifetime) * time.Second)
 		http.SetCookie(w, &cookie)
+		r.AddCookie(&cookie)
 	} else {
+		cookie.Expires = time.Now().Add(time.Duration(manager.maxlifetime) * time.Second)
+		http.SetCookie(w, cookie)
 		sid, _ := url.QueryUnescape(cookie.Value)
 		session, _ = manager.provider.SessionRead(sid)
 	}
