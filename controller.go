@@ -12,6 +12,7 @@ import (
 	"net/url"
 	"path"
 	"strconv"
+	"strings"
 )
 
 type Controller struct {
@@ -172,7 +173,7 @@ func (c *Controller) ServeXml() {
 
 func (c *Controller) Input() url.Values {
 	ct := c.Ctx.Request.Header.Get("Content-Type")
-	if ct == "multipart/form-data" {
+	if strings.Contains(ct, "multipart/form-data") {
 		c.Ctx.Request.ParseMultipartForm(MaxMemory) //64MB
 	} else {
 		c.Ctx.Request.ParseForm()
