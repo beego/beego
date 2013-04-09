@@ -41,16 +41,42 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface) {
 	params := make(map[int]string)
 	for i, part := range parts {
 		if strings.HasPrefix(part, ":") {
-			expr := "([^/]+)"
+			expr := "(.+)"
 			//a user may choose to override the defult expression
 			// similar to expressjs: ‘/user/:id([0-9]+)’ 
 			if index := strings.Index(part, "("); index != -1 {
 				expr = part[index:]
 				part = part[:index]
+				//match /user/:id:int ([0-9]+)
+				//match /post/:username:word	([\w]+)
+			} else if lindex := strings.LastIndex(part, ":"); lindex != 0 {
+				switch part[lindex:] {
+				case "int":
+					expr = "([0-9]+)"
+					part = part[:index]
+				case "word":
+					expr = `([\w]+)`
+					part = part[:index]
+				}
 			}
 			params[j] = part
 			parts[i] = expr
 			j++
+		}
+		if strings.HasPrefix(part, "*") {
+			expr := "(.+)"
+			if part == "*.*" {
+				params[j] = ":path"
+				parts[j] = "([^.]+)."
+				j++
+				params[j] = ":ext"
+				parts[j] = "([^.]+)"
+				j++
+			} else {
+				params[j] = ":splat"
+				parts[i] = expr
+				j++
+			}
 		}
 	}
 	if j == 0 {
@@ -79,10 +105,8 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface) {
 		route.params = params
 		route.pattern = pattern
 		route.controllerType = t
-
 		p.routers = append(p.routers, route)
 	}
-
 }
 
 func (p *ControllerRegistor) AddHandler(pattern string, c http.Handler) {

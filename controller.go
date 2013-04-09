@@ -7,6 +7,7 @@ import (
 	"github.com/astaxie/beego/session"
 	"html/template"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
 	"net/url"
 	"path"
@@ -189,6 +190,10 @@ func (c *Controller) GetInt(key string) (int64, error) {
 
 func (c *Controller) GetBool(key string) (bool, error) {
 	return strconv.ParseBool(c.Input().Get(key))
+}
+
+func (c *Controller) GetFile(key string) (multipart.File, *multipart.FileHeader, error) {
+	return c.Ctx.Request.FormFile(key)
 }
 
 func (c *Controller) StartSession() (sess session.SessionStore) {
