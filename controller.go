@@ -170,8 +170,25 @@ func (c *Controller) ServeXml() {
 }
 
 func (c *Controller) Input() url.Values {
-	c.Ctx.Request.ParseForm()
+	ct := c.Ctx.Request.Header.Get("Content-Type")
+	if ct == "multipart/form-data" {
+		c.Ctx.Request.ParseMultipartForm(MaxMemory) //64MB
+	} else {
+		c.Ctx.Request.ParseForm()
+	}
 	return c.Ctx.Request.Form
+}
+
+func (c *Controller) GetString(key string) string {
+	return c.Input().Get(key)
+}
+
+func (c *Controller) GetInt(key string) (int64, error) {
+	return strconv.ParseInt(c.Input().Get(key), 10, 64)
+}
+
+func (c *Controller) GetBool(key string) (bool, error) {
+	return strconv.ParseBool(c.Input().Get(key))
 }
 
 func (c *Controller) StartSession() (sess session.SessionStore) {
