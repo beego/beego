@@ -51,12 +51,12 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface) {
 				//match /post/:username:word	([\w]+)
 			} else if lindex := strings.LastIndex(part, ":"); lindex != 0 {
 				switch part[lindex:] {
-				case "int":
+				case ":int":
 					expr = "([0-9]+)"
-					part = part[:index]
-				case "word":
+					part = part[:lindex]
+				case ":word":
 					expr = `([\w]+)`
-					part = part[:index]
+					part = part[:lindex]
 				}
 			}
 			params[j] = part
@@ -67,10 +67,9 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface) {
 			expr := "(.+)"
 			if part == "*.*" {
 				params[j] = ":path"
-				parts[j] = "([^.]+)."
+				parts[i] = "([^.]+).([^.]+)"
 				j++
 				params[j] = ":ext"
-				parts[j] = "([^.]+)"
 				j++
 			} else {
 				params[j] = ":splat"
