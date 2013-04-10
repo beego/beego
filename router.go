@@ -48,13 +48,13 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface) {
 				expr = part[index:]
 				part = part[:index]
 				//match /user/:id:int ([0-9]+)
-				//match /post/:username:word	([\w]+)
+				//match /post/:username:string	([\w]+)
 			} else if lindex := strings.LastIndex(part, ":"); lindex != 0 {
 				switch part[lindex:] {
 				case ":int":
 					expr = "([0-9]+)"
 					part = part[:lindex]
-				case ":word":
+				case ":string":
 					expr = `([\w]+)`
 					part = part[:lindex]
 				}
