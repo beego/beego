@@ -52,7 +52,7 @@ func init() {
 		HttpAddr = ""
 		HttpPort = 8080
 		AppName = "beego"
-		RunMode = "prod" //default runmod
+		RunMode = "dev" //default runmod
 		AutoRender = true
 		RecoverPanic = true
 		PprofOn = false
@@ -80,7 +80,7 @@ func init() {
 		if runmode := AppConfig.String("runmode"); runmode != "" {
 			RunMode = runmode
 		} else {
-			RunMode = "prod"
+			RunMode = "dev"
 		}
 		if ar, err := AppConfig.Bool("autorender"); err != nil {
 			AutoRender = true
@@ -245,7 +245,9 @@ func Run() {
 	}
 	err := BuildTemplate(ViewsPath)
 	if err != nil {
-		Warn(err)
+		if RunMode == "dev" {
+			Warn(err)
+		}
 	}
 	BeeApp.Run()
 }
