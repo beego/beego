@@ -1,6 +1,7 @@
 package beego
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -190,13 +191,20 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				// go back to panic
 				panic(err)
 			} else {
+				var stack string
 				Critical("Handler crashed with error", err)
-				for i := 1; ; i += 1 {
+				for i := 1; ; i++ {
 					_, file, line, ok := runtime.Caller(i)
 					if !ok {
 						break
 					}
 					Critical(file, line)
+					if RunMode == "dev" {
+						stack = stack + fmt.Sprintln(file, line)
+					}
+				}
+				if RunMode == "dev" {
+					ShowErr(err, rw, r, stack)
 				}
 			}
 		}
