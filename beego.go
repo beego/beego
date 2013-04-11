@@ -9,6 +9,7 @@ import (
 	"net/http/fcgi"
 	"os"
 	"path"
+	"runtime"
 	"strconv"
 )
 
@@ -249,5 +250,6 @@ func Run() {
 			Warn(err)
 		}
 	}
+	runtime.GOMAXPROCS(runtime.NumCPU())
 	BeeApp.Run()
 }
