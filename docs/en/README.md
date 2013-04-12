@@ -1,8 +1,18 @@
 ## Beego
-=======
-Beego is an open source version of the scalable, non-blocking web server
-and tools that power SNDA's CDN system. Documentation and downloads are
-available at http://astaxie.github.com/beego
+========
+Beego is a lightweight, open source, non-blocking and scalable web framework for the Go programming language. It's like tornado in Python. This web framework has already been using for building web server and tools in SNDA's CDN system. It has following main features:
+
+- Supports MVC model, you only need to focus on logic and implementation methods.
+- Supports websocket, use customized handlers to integrate sockjs.
+- Supports customized router rules, including regex and semanteme.
+- Session integration, supports memory, file, redis, mysql, etc.
+- Automated parsing user form, you can get data very easy.
+- Log level system, easy to record debugging and deployment logs.
+- Use configuration file (.ini) to customized your system.
+- Use built-in templates in Go, and it provides much more useful functions which are commonly used in web development.
+
+The working principles of Beego as follows.
+![](images/beego.png)
 
 Beego is licensed under the Apache Licence, Version 2.0
 (http://www.apache.org/licenses/LICENSE-2.0.html).
