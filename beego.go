@@ -42,6 +42,7 @@ var (
 )
 
 func init() {
+	os.Chdir(path.Dir(os.Args[0]))
 	BeeApp = NewApp()
 	AppPath, _ = os.Getwd()
 	StaticDir = make(map[string]string)
