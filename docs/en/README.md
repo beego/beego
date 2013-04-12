@@ -9,9 +9,9 @@ Beego is a lightweight, open source, non-blocking and scalable web framework for
 - Automated parsing user form, you can get data very easy.
 - Log level system, easy to record debugging and deployment logs.
 - Use configuration file (.ini) to customized your system.
-- Use built-in templates in Go, and it provides much more useful functions in web development.
+- Use built-in templates in Go, and it provides much more useful functions which are commonly used in web development.
 
-The work principles of Beego as follows.
+The working principles of Beego as follows.
 ![](images/beego.png)
 
 Beego is licensed under the Apache Licence, Version 2.0
