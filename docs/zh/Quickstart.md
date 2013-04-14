@@ -8,16 +8,17 @@
 - [开发模式](#-3)
 - [路由设置](#-4)
 - [静态文件](#-5)
-- [模板处理](#-6)
-- [request处理](#-7)
-- [跳转和错误](#-8)
-- [response处理](#-9)
-- [Sessions](#-10)
-- [Cache设置](#-11)
-- [安全的Map](#-12)
-- [日志处理](#-13)
-- [第三方应用集成](#-14)
-- [部署编译应用](#-15)
+- [过滤和中间件](#-6)
+- [模板处理](#-7)
+- [request处理](#-8)
+- [跳转和错误](#-9)
+- [response处理](#-10)
+- [Sessions](#-11)
+- [Cache设置](#-12)
+- [安全的Map](#-13)
+- [日志处理](#-14)
+- [第三方应用集成](#-15)
+- [部署编译应用](#-16)
 
 ## 最小应用
 一个最小最简单的应用如下代码所示：
@@ -88,9 +89,120 @@
 
 ## 开发模式
 
+通过bee创建的项目，beego默认情况下是开发模式。
+	
+我们可以通过如下的方式改变我们的模式：
+
+	beego.RunMode = "pro"
+
+或者我们在conf/app.conf下面设置如下：
+
+	runmode = pro
+
+以上两种效果一样。
+
+开发模式中
+
+- 开发模式下，如果你的目录不存在views目录，那么会出现类似下面的错误提示：
+
+		2013/04/13 19:36:17 [W] [stat views: no such file or directory]
+
+- 模板会自动重新加载不缓存。
+- 如果服务端出错，那么就会在浏览器端显示如下类似的截图：
+
+![](images/dev.png)
+
 ## 路由设置
 
+路由的主要功能是实现从请求地址到实现方法，beego中封装了`Controller`，所以路由是从路径到`ControllerInterface`的过程，`ControllerInterface`的方法有如下：
+
+	type ControllerInterface interface {
+		Init(ct *Context, cn string)
+		Prepare()
+		Get()
+		Post()
+		Delete()
+		Put()
+		Head()
+		Patch()
+		Options()
+		Finish()
+		Render() error
+	}
+
+这些方法`beego.Controller`都已经实现了，所以只要用户定义struct的时候匿名包含就可以了。当然更灵活的方法就是用户可以去自定义类似的方法，然后实现自己的逻辑。
+
+用户可以通过如下的方式进行路由设置：
+
+	beego.Router("/", &controllers.MainController{})
+	beego.Router("/admin", &admin.UserController{})
+	beego.Router("/admin/index", &admin.ArticleController{})
+	beego.Router("/admin/addpkg", &admin.AddController{})
+
+为了用户更加方便的路由设置，beego参考了sinatra的路由实现，支持多种方式的路由：
+
+- beego.Router("/api/:id([0-9]+)", &controllers.RController{})    
+	自定义正则匹配	//匹配 /api/123 :id= 123 
+
+- beego.Router("/news/:all", &controllers.RController{})    
+	全匹配方式 //匹配 /news/path/to/123.html :all= path/to/123.html
+	
+- beego.Router("/user/:username([\w]+)", &controllers.RController{})    
+	正则字符串匹配 //匹配 /user/astaxie    :username = astaxie
+	
+- beego.Router("/download/*.*", &controllers.RController{})    
+	*匹配方式 //匹配 /download/file/api.xml     :path= file/api   :ext=xml
+	
+- beego.Router("/download/ceshi/*", &controllers.RController{})   
+	*全匹配方式 //匹配  /download/ceshi/file/api.json  :splat=file/api.json
+	
+- beego.Router("/:id:int", &controllers.RController{})    
+	int类型设置方式  //匹配 :id为int类型，框架帮你实现了正则([0-9]+)
+	
+- beego.Router("/:hi:string", &controllers.RController{})   
+	string类型设置方式 //匹配 :hi为string类型。框架帮你实现了正则([\w]+)
+
 ## 静态文件
+Go语言内部其实已经提供了`http.ServeFile`，通过这个函数可以实现静态文件的服务。beego针对这个功能进行了一层封装，通过下面的方式进行静态文件注册：
+
+	beego.SetStaticPath("/static","public")
+	
+- 第一个参数是路径，url路径信息
+- 第二个参数是静态文件目录（相对应用所在的目录）
+
+beego支持多个目录的静态文件注册，用户可以注册如下的静态文件目录：
+
+	beego.SetStaticPath("/images","images")
+	beego.SetStaticPath("/css","css")
+	beego.SetStaticPath("/js","js")
+
+设置了如上的静态目录之后，用户访问`/images/login/login.png`，那么就会访问应用对应的目录下面的`images/login/login.png`文件。如果是访问`/static/img/logo.png`，那么就访问`public/img/logo.png`文件。
+
+## 过滤和中间件
+beego支持自定义过滤中间件，例如安全验证，强制跳转等
+
+如下例子所示，验证用户名是否是admin，应用于全部的请求：
+
+	var FilterUser = func(w http.ResponseWriter, r *http.Request) {
+	    if r.URL.User == nil || r.URL.User.Username() != "admin" {
+	        http.Error(w, "", http.StatusUnauthorized)
+	    }
+	}
+
+	beego.Filter(FilterUser)
+	
+还可以通过参数进行过滤，如果匹配参数就执行
+
+	beego.Router("/:id([0-9]+)", &admin.EditController{})
+	beego.FilterParam("id", func(rw http.ResponseWriter, r *http.Request) {
+	    dosomething()
+	})
+	
+当然你还可以通过前缀过滤
+
+	beego.FilterPrefixPath("/admin", func(rw http.ResponseWriter, r *http.Request) {
+	    dosomething()
+	})
 
 ## 模板处理
 

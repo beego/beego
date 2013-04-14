@@ -221,6 +221,16 @@ func RouterHandler(path string, c http.Handler) *App {
 	return BeeApp
 }
 
+func SetViewsPath(path string) *App {
+	BeeApp.SetViewsPath(path)
+	return BeeApp
+}
+
+func SetStaticPath(url string, path string) *App {
+	StaticDir[url] = path
+	return BeeApp
+}
+
 func Filter(filter http.HandlerFunc) *App {
 	BeeApp.Filter(filter)
 	return BeeApp
