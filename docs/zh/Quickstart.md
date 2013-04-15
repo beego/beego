@@ -205,6 +205,40 @@ beego支持自定义过滤中间件，例如安全验证，强制跳转等
 	})
 
 ## 模板处理
+### 模板目录
+beego中默认的模板目录是`views`，用户可以把你的模板文件放到该目录下，beego会自动在该目录下的所有模板文件进行解析并缓存，开发模式下会每次重新解析，不做缓存。当然用户可以通过如下的方式改变模板的目录：
+
+	beego.ViewsPath = "/myviewpath"
+### 自动渲染
+beego中用户无需手动的调用渲染输出模板，beego会自动的在调用玩相应的method方法之后调用Render函数，当然如果你的应用是不需要模板输出的，那么你可以在配置文件或者在main.go中设置关闭自动渲染。
+
+配置文件配置如下：
+	
+	autorender = false
+
+main.go文件中设置如下：
+
+	beego.AutoRender = false
+### 模板名称
+beego采用了Go语言内置的模板引擎，所有模板的语法和Go的一模一样，至于如何写模板文件，详细的请参考[模板教程](https://github.com/astaxie/build-web-application-with-golang/blob/master/ebook/07.4.md)。
+
+用户通过在Controller的对应方法中设置相应的模板名称，beego会自动的在viewpath目录下查询该文件并渲染，例如下面的设置，beego会在admin下面找add.tpl文件进行渲染：
+
+	this.TplNames = "admin/add.tpl"
+
+我们看到上面的模板后缀名是tpl，beego默认情况下支持tpl和html后缀名的模板文件，如果你的后缀名不是这两种，请进行如下设置：
+
+	beego.AddTemplateExt("你文件的后缀名")
+
+当你设置了自动渲染，然后在你的Controller中没有设置任何的TplNames，那么beego会自动设置你的模板文件如下：
+
+	c.TplNames = c.ChildName + "/" + c.Ctx.Request.Method + "." + c.TplExt
+
+也就是你对应的Controller名字+请求方法名.模板后缀，也就是如果你的Controller名是`AddController`，请求方法是`POST`，默认的文件后缀是`tpl`，那么就会默认请求`/viewpath/AddController/POST.tpl`文件。
+
+### lauout设计
+
+### 模板函数
 
 ## request处理
 
