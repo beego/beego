@@ -15,3 +15,6 @@
 有了这个初衷之后我就开始设计beego的执行逻辑，由于Go语言和python的思路比较接近，所以我就参考了tornado的思路来设计beego，你可以看到beego的RESTful处理完全和tornado的处理是一模一样的，通过controller层的Get、Post等方法来实现RESTFul。刚开始的时候路由参考的是[https://github.com/drone/routes](https://github.com/drone/routes)，这个的正则处理我觉得非常好，弥补了Go语言默认Mux中的路由功能，但是由于要采用RESTFul方式，所以我自己设计了一个接口，实现python中的继承思想。
 
 整个的MVC逻辑中C是最重要的部分，这一块采用了我上面说的接口方式，M模块目前我还没想好怎么做，但是大家可以参考我的另一个开源项目beedb来实现数据的管理，V这一块目前采用了Go语言自带的模板引擎，但是实现了很多方便的模板函数。这样一个简易的框架就完成了，然后我就不断的完善周边的功能，包括表单处理、session处理、日志处理、配置处理、自动化运行等功能。
+
+- [beego介绍](README.md)
+- [安装入门](Install.md)
