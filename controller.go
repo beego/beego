@@ -6,10 +6,12 @@ import (
 	"encoding/xml"
 	"github.com/astaxie/beego/session"
 	"html/template"
+	"io"
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"os"
 	"path"
 	"strconv"
 	"strings"
@@ -195,6 +197,21 @@ func (c *Controller) GetBool(key string) (bool, error) {
 
 func (c *Controller) GetFile(key string) (multipart.File, *multipart.FileHeader, error) {
 	return c.Ctx.Request.FormFile(key)
+}
+
+func (c *Controller) SaveToFile(fromfile, tofile string) error {
+	file, _, err := c.Ctx.Request.FormFile(fromfile)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+	f, err := os.OpenFile(tofile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	io.Copy(f, file)
+	return nil
 }
 
 func (c *Controller) StartSession() (sess session.SessionStore) {

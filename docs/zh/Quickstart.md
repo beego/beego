@@ -237,10 +237,79 @@ beego采用了Go语言内置的模板引擎，所有模板的语法和Go的一�
 也就是你对应的Controller名字+请求方法名.模板后缀，也就是如果你的Controller名是`AddController`，请求方法是`POST`，默认的文件后缀是`tpl`，那么就会默认请求`/viewpath/AddController/POST.tpl`文件。
 
 ### lauout设计
+beego支持layout设计，例如你在管理系统中，其实整个的管理界面是固定的，支会变化中间的部分，那么你可以通过如下的设置：
+	
+	this.Layout = "admin/layout.html"
+	this.TplNames = "admin/add.tpl" 
+
+在layout.html中你必须设置如下的变量：
+
+	{{.LayoutContent}}
+	
+beego就会首先解析TplNames指定的文件，获取内容赋值给LayoutContent，然后最后渲染layout.html文件。
+
+目前采用首先把目录下所有的文件进行缓存，所以用户还可以通过类似这样的方式实现layout：
+
+	{{template "header.html"}}
+	处理逻辑
+	{{template "footer.html"}}
 
 ### 模板函数
+beego支持用户定义模板函数，但是必须在`beego.Run()`调用之前，设置如下：
 
+	func hello(in string)(out string){
+	    out = in + "world"
+	    return
+	}
+	
+	beego.AddFuncMap("hi",hello)
+
+定义之后你就可以在模板中这样使用了：
+
+	{{.Content | hi}}
+
+目前beego内置的模板函数有如下：
+
+* markdown 
+	
+	实现了把markdown文本转化为html信息，使用方法{{markdown .Content}}
+* dateformat 
+
+	实现了时间的格式化，返回字符串，使用方法{{dateformat .Time "2006-01-02T15:04:05Z07:00"}}
+* date 
+
+	实现了类似PHP的date函数，可以很方便的根据字符串返回时间，使用方法{{date .T "Y-m-d H:i:s"}}
+* compare 
+
+	实现了比较两个对象的比较，如果相同返回true，否者false，使用方法{{compare .A .B}}
+* substr 
+
+	实现了字符串的截取，支持中文截取的完美截取，使用方法{{substr .Str 0 30}}
+* html2str 
+
+	实现了把html转化为字符串，剔除一些script、css之类的元素，返回纯文本信息，使用方法{{html2str .Htmlinfo}}
+* str2html 
+
+	实现了把相应的字符串当作HTML来输出，不转义，使用方法{{str2html .Strhtml}}
+* htmlquote 
+
+	实现了基本的html字符转义，使用方法{{htmlquote .quote}}
+* htmlunquote 	
+
+	实现了基本的反转移字符，使用方法{{htmlunquote .unquote}}
+	
 ## request处理
+我们经常需要获取用户传递的数据，包括Get、POST等方式的请求，beego里面会自动解析这些数据，你可以通过如下方式获取数据
+
+- GetString
+- GetInt
+- GetBool
+
+
+### 文件上传
+
+- GetFile
+- SaveToFile
 
 ## 跳转和错误
 
