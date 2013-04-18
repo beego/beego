@@ -9,16 +9,19 @@
 - [路由设置](#-4)
 - [静态文件](#-5)
 - [过滤和中间件](#-6)
-- [模板处理](#-7)
-- [request处理](#-8)
-- [跳转和错误](#-9)
-- [response处理](#-10)
-- [Sessions](#-11)
-- [Cache设置](#-12)
-- [安全的Map](#-13)
-- [日志处理](#-14)
-- [第三方应用集成](#-15)
-- [部署编译应用](#-16)
+- [Controller设计](#-7)
+- [模板处理](#-8)
+- [request处理](#-9)
+- [跳转和错误](#-10)
+- [response处理](#-11)
+- [Sessions](#-12)
+- [Cache设置](#-13)
+- [安全的Map](#-14)
+- [日志处理](#-15)
+- [配置管理](#-16)
+- [beego参数](#-17)
+- [第三方应用集成](#-18)
+- [部署编译应用](#-19)
 
 ## 最小应用
 一个最小最简单的应用如下代码所示：
@@ -204,6 +207,94 @@ beego支持自定义过滤中间件，例如安全验证，强制跳转等
 	    dosomething()
 	})
 
+## Controller设计
+基于beego的Controller设计，只需要匿名组合`beego.Controller`就可以了，如下所示：
+
+	type xxxController struct {
+	    beego.Controller
+	}
+
+`beego.Controller`实现了接口`beego.ControllerInterface`，`beego.ControllerInterface`定义了如下函数：
+
+- Init(ct *Context, cn string)
+
+	这个函数主要初始化了Context、相应的Controller名称，模板名，初始化模板参数的容器Data
+	
+- Prepare()
+
+	这个函数主要是为了用户扩展用的，这个函数会在下面定义的这些Method方法之前执行，用户可以重写这个函数实现类似用户验证之类。
+   
+- Get()
+
+	如果用户请求的HTTP Method是GET, 那么就执行该函数，默认是403，用户继承的子struct中可以实现了该方法以处理Get请求.
+	
+- Post()
+
+	如果用户请求的HTTP Method是POST, 那么就执行该函数，默认是403，用户继承的子struct中可以实现了该方法以处理Post请求.
+
+- Delete()
+
+	如果用户请求的HTTP Method是DELETE, 那么就执行该函数，默认是403，用户继承的子struct中可以实现了该方法以处理Delete请求.
+
+- Put()
+
+	如果用户请求的HTTP Method是PUT, 那么就执行该函数，默认是403，用户继承的子struct中可以实现了该方法以处理Put请求.
+
+- Head()
+
+	如果用户请求的HTTP Method是HEAD, 那么就执行该函数，默认是403，用户继承的子struct中可以实现了该方法以处理Head请求.
+
+- Patch()
+
+	如果用户请求的HTTP Method是PATCH, 那么就执行该函数，默认是403，用户继承的子struct中可以实现了该方法以处理Patch请求.
+
+- Options()
+
+	如果用户请求的HTTP Method是OPTIONS, 那么就执行该函数，默认是403，用户继承的子struct中可以实现了该方法以处理Options请求.
+
+- Finish()
+
+	这个函数实在执行完相应的http Method方法之后执行的，默认是空，用户可以在子Strcut中重写这个函数，执行例如数据库关闭，清理数据之类的工作
+
+- Render() error
+
+	这个函数主要用来实现渲染模板，如果beego.AutoRender为true的情况下才会执行。
+
+所以通过子struct的方法重写，用户就可以实现自己的逻辑，接下来我们看一个实际的例子：
+
+	type AddController struct {
+	    beego.Controller
+	}
+	
+	func (this *AddController) Prepare() {
+	
+	}
+	
+	func (this *AddController) Get() {
+		this.Data["content"] ="value"
+	    this.Layout = "admin/layout.html"
+	    this.TplNames = "admin/add.tpl"
+	}
+	
+	func (this *AddController) Post() {
+	    pkgname := this.GetString("pkgname")
+	    content := this.GetString("content")
+	    pk := models.GetCruPkg(pkgname)
+	    if pk.Id == 0 {
+	        var pp models.PkgEntity
+	        pp.Pid = 0
+	        pp.Pathname = pkgname
+	        pp.Intro = pkgname
+	        models.InsertPkg(pp)
+	        pk = models.GetCruPkg(pkgname)
+	    }
+	    var at models.Article
+	    at.Pkgid = pk.Id
+	    at.Content = content
+	    models.InsertArticle(at)
+	    this.Ctx.Redirect(302, "/admin/index")
+	}	
+
 ## 模板处理
 ### 模板目录
 beego中默认的模板目录是`views`，用户可以把你的模板文件放到该目录下，beego会自动在该目录下的所有模板文件进行解析并缓存，开发模式下会每次重新解析，不做缓存。当然用户可以通过如下的方式改变模板的目录：
@@ -219,6 +310,12 @@ beego中用户无需手动的调用渲染输出模板，beego会自动的在调�
 main.go文件中设置如下：
 
 	beego.AutoRender = false
+	
+### 模板数据
+模板中的数据是通过在Controller中`this.Data`获取的，所以如果你想在模板中获取内容`{{.Content}}`,那么你需要在Controller中如下设置：
+	
+	this.Data["Context"] = "value"
+		
 ### 模板名称
 beego采用了Go语言内置的模板引擎，所有模板的语法和Go的一模一样，至于如何写模板文件，详细的请参考[模板教程](https://github.com/astaxie/build-web-application-with-golang/blob/master/ebook/07.4.md)。
 
@@ -680,6 +777,120 @@ LevelTrace、LevelDebug、LevelInfo、LevelWarning、	LevelError、LevelCritical
 			}	
 		}
 	}
+
+## 配置管理
+beego支持解析ini文件, beego默认会解析当前应用下的`conf/app.conf`文件
+
+通过这个文件你可以初始化很多beego的默认参数
+
+	appname = beepkg
+	httpaddr = "127.0.0.1"
+	httpport = 9090
+	runmode ="dev"
+	autorender = false
+	autorecover = false
+	viewspath = "myview"
+	
+上面这些参数会替换beego默认的一些参数。
+
+你可以在配置文件中配置应用需要用的一些配置信息，例如下面所示的数据库信息：
+
+	mysqluser = "root"
+	mysqlpass = "rootpass"
+	mysqlurls = "127.0.0.1"
+	mysqldb   = "beego"
+	
+那么你就可以通过如下的方式获取设置的配置信息:
+
+	beego.AppConfig.String("mysqluser")
+	beego.AppConfig.String("mysqlpass")
+	beego.AppConfig.String("mysqlurls")
+	beego.AppConfig.String("mysqldb")
+
+AppConfig支持如下方法
+
+- Bool(key string) (bool, error)
+- Int(key string) (int, error)
+- Int64(key string) (int64, error)
+- Float(key string) (float64, error)
+- String(key string) string
+
+## beego参数
+beego中带有很多可配置的参数，我们来一一认识一下它们，这样有利于我们在接下来的beego开发中可以充分的发挥他们的作用：
+
+* BeeApp
+
+	beego默认启动的一个应用器入口，在应用import beego的时候，在init中已经初始化的。
+	
+* AppConfig
+
+	beego的配置文件解析之后的对象，也是在init的时候初始化的，里面保存有解析`conf/app.conf`下面所有的参数数据
+	
+* HttpAddr
+
+	应用监听地址，默认为空，监听所有的网卡IP
+	
+* HttpPort
+
+	应用监听端口，默认为8080
+	
+* AppName
+
+	应用名称，默认是beego
+	
+* RunMode 
+
+	应用的模式，默认是dev，为开发模式，在开发模式下出错会提示友好的出错页面，如前面错误描述中所述。
+	
+* AutoRender
+
+	是否模板自动渲染，默认值为true，对于API类型的应用，应用需要把该选项设置为false，不需要渲染模板。
+	
+* RecoverPanic
+
+	是否异常恢复，默认值为true，即当应用出现异常的情况，通过recover恢复回来，而不会导致应用异常退出。
+	
+* PprofOn
+
+	是否启用pprof，默认是false，当开启之后，用户可以通过如下地址查看相应的goroutine执行情况
+	
+		/debug/pprof
+		/debug/pprof/cmdline
+		/debug/pprof/profile
+		/debug/pprof/symbol 
+	关于pprof的信息，请参考官方的描述[pprof](http://golang.org/pkg/net/http/pprof/)	
+	
+* ViewsPath
+
+	模板路径，默认值是views
+	
+* SessionOn
+
+	session是否开启，默认是false
+	
+* SessionProvider
+
+	session的引擎，默认是memory
+	
+* SessionName
+
+	存在客户端的cookie名称，默认值是beegosessionID
+	
+* SessionGCMaxLifetime
+
+	session过期时间，默认值是3600秒
+	
+* SessionSavePath
+
+	session保存路径，默认是空
+	
+* UseFcgi
+
+	是否启用fastcgi，默认是false
+	
+* MaxMemory
+
+	文件上传默认内存缓存大小，默认值是`1 << 26`(64M)
 
 ## 第三方应用集成
 beego支持第三方应用的集成，用户可以自定义`http.Handler`,用户可以通过如下方式进行注册路由：
