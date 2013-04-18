@@ -815,7 +815,7 @@ AppConfig支持如下方法
 - Float(key string) (float64, error)
 - String(key string) string
 
-## beego参数
+## 系统默认参数
 beego中带有很多可配置的参数，我们来一一认识一下它们，这样有利于我们在接下来的beego开发中可以充分的发挥他们的作用：
 
 * BeeApp
