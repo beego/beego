@@ -207,7 +207,7 @@ beego支持自定义过滤中间件，例如安全验证，强制跳转等
 	    dosomething()
 	})
 
-## Controller设计
+## 控制器设计
 基于beego的Controller设计，只需要匿名组合`beego.Controller`就可以了，如下所示：
 
 	type xxxController struct {
