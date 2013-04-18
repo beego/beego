@@ -682,8 +682,92 @@ LevelTrace、LevelDebug、LevelInfo、LevelWarning、	LevelError、LevelCritical
 	}
 
 ## 第三方应用集成
+beego支持第三方应用的集成，用户可以自定义`http.Handler`,用户可以通过如下方式进行注册路由：
+
+	beego.RouterHandler("/chat/:info(.*)", sockjshandler)
+	
+sockjshandler实现了接口`http.Handler`。
+
+目前在beego的example中有支持sockjs的chat例子，示例代码如下：
+
+	package main
+	
+	import (
+		"fmt"
+		"github.com/astaxie/beego"
+		"github.com/fzzy/sockjs-go/sockjs"
+		"strings"
+	)
+	
+	var users *sockjs.SessionPool = sockjs.NewSessionPool()
+	
+	func chatHandler(s sockjs.Session) {
+		users.Add(s)
+		defer users.Remove(s)
+	
+		for {
+			m := s.Receive()
+			if m == nil {
+				break
+			}
+			fullAddr := s.Info().RemoteAddr
+			addr := fullAddr[:strings.LastIndex(fullAddr, ":")]
+			m = []byte(fmt.Sprintf("%s: %s", addr, m))
+			users.Broadcast(m)
+		}
+	}
+	
+	type MainController struct {
+		beego.Controller
+	}
+	
+	func (m *MainController) Get() {
+		m.TplNames = "index.html"
+	}
+	
+	func main() {
+		conf := sockjs.NewConfig()
+		sockjshandler := sockjs.NewHandler("/chat", chatHandler, conf)
+		beego.Router("/", &MainController{})
+		beego.RouterHandler("/chat/:info(.*)", sockjshandler)
+		beego.Run()
+	}
+
+通过上面的代码很简单的实现了一个多人的聊天室。上面这个只是一个sockjs的例子，我想通过大家自定义`http.Handler`，可以有很多种方式来进行扩展beego应用。
 
 ## 部署编译应用
+Go语言的应用最后编译之后是一个二进制文件，你只需要copy这个应用到服务器上，运行起来就行。beego由于带有几个静态文件、配置文件、模板文件三个目录，所以用户部署的时候需要同时copy这三个目录到相应的部署应用之下，下面以我实际的应用部署为例：
+
+	$ mkdir /opt/app/beepkg
+	$ cp beepkg /opt/app/beepkg
+	$ cp -fr views /opt/app/beepkg
+	$ cp -fr static /opt/app/beepkg
+	$ cp -fr conf /opt/app/beepkg
+	
+这样在`/opt/app/beepkg`目录下面就会显示如下的目录结构：
+
+	.
+	├── conf
+	│   ├── app.conf
+	├── static
+	│   ├── css
+	│   ├── img
+	│   └── js
+	└── views
+	    └── index.tpl
+	├── beepkg	
+
+这样我们就已经把我们需要的应用搬到服务器了，那么接下来就可以开始部署了，我现在服务器端用两种方式来run，
+
+- Supervisord 
+	
+	安装和配置见[Supervisord](Supervisord.md)
+
+- nohup方式
+
+	nohup ./beepkg &
+
+个人比较推荐第一种方式，可以很好的管理起来应用
 
 - [beego介绍](README.md)
 - [一步一步开发应用](Tutorial.md)
