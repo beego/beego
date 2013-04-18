@@ -37,6 +37,7 @@ var (
 	SessionSavePath      string // session savepath if use mysql/redis/file this set to the connectinfo
 	UseFcgi              bool
 	MaxMemory            int64
+	EnableGzip           bool // enable gzip
 
 	GlobalSessions *session.Manager //GlobalSessions
 )
@@ -66,6 +67,7 @@ func init() {
 		SessionSavePath = ""
 		UseFcgi = false
 		MaxMemory = 1 << 26 //64MB
+		EnableGzip = false
 	} else {
 		HttpAddr = AppConfig.String("httpaddr")
 		if v, err := AppConfig.Int("httpport"); err != nil {
@@ -134,6 +136,11 @@ func init() {
 			UseFcgi = false
 		} else {
 			UseFcgi = ar
+		}
+		if ar, err := AppConfig.Bool("enablegzip"); err != nil {
+			EnableGzip = false
+		} else {
+			EnableGzip = ar
 		}
 	}
 	StaticDir["/static"] = "static"
