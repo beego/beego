@@ -301,27 +301,385 @@ beego支持用户定义模板函数，但是必须在`beego.Run()`调用之前�
 ## request处理
 我们经常需要获取用户传递的数据，包括Get、POST等方式的请求，beego里面会自动解析这些数据，你可以通过如下方式获取数据
 
-- GetString
-- GetInt
-- GetBool
+- GetString(key string) string
+- GetInt(key string) (int64, error)
+- GetBool(key string) (bool, error)
 
+使用例子如下：
+
+	func (this *MainController) Post() {
+		jsoninfo := this.GetString("jsoninfo")
+		if jsoninfo == "" {
+			this.Ctx.WriteString("jsoninfo is empty")
+			return
+		}
+	}
+
+如果你需要的数据可能是其他类型的，例如是int类型而不是int64，那么你需要这样处理：
+
+	func (this *MainController) Post() {
+		id := this.Input().Get("id")
+		intid, err := strconv.Atoi(id)
+	}		
+
+更多其他的request的信息，用户可以通过`this.Ctx.Request`获取信息，关于该对象的属性和方法参考手册[Request](http://golang.org/pkg/net/http/#Request)
 
 ### 文件上传
+在beego中你可以很容易的处理文件上传，就是别忘记在你的form表单中增加这个属性`enctype="multipart/form-data"`，否者你的浏览器不会传输你的上传文件。
 
-- GetFile
-- SaveToFile
+文件上传之后一般是放在系统的内存里面，如果文件的size大于设置的缓存内存大小，那么就放在临时文件中，默认的缓存内存是64M，你可以通过如下来调整这个缓存内存大小:
 
+	beego.MaxMemory = 1<<22 
+
+或者在配置文件中通过如下设置
+
+	maxmemory = 1<<22
+
+beego提供了两个很方便的方法来处理文件上传：
+
+- GetFile(key string) (multipart.File, *multipart.FileHeader, error)
+
+	该方法主要用于用户读取表单中的文件名`the_file`，然后返回相应的信息，用户根据这些变量来处理文件上传：过滤、保存文件等。
+	
+- SaveToFile(fromfile, tofile string) error
+
+	该方法是在GetFile的基础上实现了快速保存的功能
+	
+保存的代码例子如下：
+	
+	func (this *MainController) Post() {
+		this.SaveToFile("the_file","/var/www/uploads/uploaded_file.txt"")
+	}
+
+### JSON和XML输出
+beego当初设计的时候就考虑了API功能的设计，而我们在设计API的时候经常是输出JSON或者XML数据，那么beego提供了这样的方式直接输出：
+
+JSON数据直接输出，设置`content-type`为`application/json`：
+
+	func (this *AddController) Get() {
+	    mystruct := { ... }
+	    this.Data["json"] = &mystruct
+	    this.ServeJson()
+	}	
+
+XML数据直接输出，设置`content-type`为`application/xml`：
+
+	func (this *AddController) Get() {
+	    mystruct := { ... }
+	    this.Data["xml"]=&mystruct
+	    this.ServeXml()
+	}	
+	
 ## 跳转和错误
+我们在做Web开发的时候，经常会遇到页面调整和错误处理，beego这这方面也进行了考虑，通过`Redirect`方法来进行跳转：
+
+	func (this *AddController) Get() {
+	   this.Redirect("/", 302)
+	}	
+
+@todo 错误处理还需要后期改进
 
 ## response处理
+response可能会有集中情况：
+
+1. 模板输出
+
+	模板输出上面模板介绍里面已经介绍，beego会在执行完相应的Controller里面的对应的Method之后输出到模板。
+	
+2. 跳转
+
+	上一节介绍的跳转就是我们经常用到的页面之间的跳转
+	
+3. 字符串输出
+
+	有些时候我们只是想输出相应的一个字符串，那么我们可以通过如下的代码实现
+	
+		this.Ctx.WriteString("ok")
 
 ## Sessions
+beego内置了session模块，目前session模块支持的后端引擎包括memory、file、mysql、redis四中，用户也可以根据相应的interface实现自己的引擎。
+
+beego中使用session相当方便，只要在main入口函数中设置如下：
+
+	beego.SessionOn = true
+
+或者通过配置文件配置如下：
+
+	sessionon = true
+
+通过这种方式就可以开启session，如何使用session，请看下面的例子：
+
+	func (this *MainController) Get() {
+		v := this.GetSession("asta")
+		if v == nil {
+			this.SetSession("asta", int(1))
+			this.Data["num"] = 0
+		} else {
+			this.SetSession("asta", v.(int)+1)
+			this.Data["num"] = v.(int)
+		}
+		this.TplNames = "index.tpl"
+	}
+
+上面的例子中我们知道session有几个方便的方法：
+
+- SetSession(name string, value interface{})
+- GetSession(name string) interface{}
+- DelSession(name string)
+
+session操作主要有设置session、获取session、删除session
+
+当然你要可以通过下面的方式自己控制相应的逻辑这些逻辑：
+
+	sess:=this.StartSession()
+	defer sess.SessionRelease()
+
+sess对象具有如下方法：
+
+* sess.Set()
+* sess.Get()
+* sess.Delete()
+* sess.SessionID()
+
+但是我还是建议大家采用SetSession、GetSession、DelSession三个方法来操作，避免自己在操作的过程中资源没释放的问题。
+
+关于Session模块使用中的一些参数设置：
+
+- SessionOn
+
+	设置是否开启Session，默认是false，配置文件对应的参数名：sessionon
+	
+- SessionProvider
+
+	设置Session的引擎，默认是memory，目前支持还有file、mysql、redis等，配置文件对应的参数名：sessionprovider
+	
+- SessionName
+
+	设置cookies的名字，Session默认是保存在用户的浏览器cookies里面的，默认名是beegosessionID，配置文件对应的参数名是：sessionname
+	
+- SessionGCMaxLifetime
+
+	设置Session过期的时间，默认值是3600秒，配置文件对应的参数：sessiongcmaxlifetime
+	
+- SessionSavePath
+	
+	设置对应file、mysql、redis引擎的保存路径或者链接地址，默认值是空，配置文件对应的参数：sessionsavepath
+
+
+当SessionProvider为file时，SessionSavePath是只保存文件的目录，如下所示：
+
+	beego.SessionProvider = "file"
+	beego.SessionSavePath = "./tmp"
+
+当SessionProvider为mysql时，SessionSavePath是链接地址，采用[go-sql-driver](https://github.com/go-sql-driver/mysql)，如下所示：
+
+	beego.SessionProvider = "mysql"
+	beego.SessionSavePath = "username:password@protocol(address)/dbname?param=value"
+	
+当SessionProvider为redis时，SessionSavePath是redis的链接地址，采用了[redigo](https://github.com/garyburd/redigo)，如下所示：
+
+	beego.SessionProvider = "redis"
+	beego.SessionSavePath = "127.0.0.1:6379"	
 
 ## Cache设置
+beego内置了一个cache模块，实现了类似memcache的功能，缓存数据在内存中，主要的使用方法如下：
+
+	var (
+		urllist *beego.BeeCache
+	)
+	
+	func init() {
+		urllist = beego.NewBeeCache()
+		urllist.Every = 0 //不过期
+		urllist.Start()
+	}
+
+	func (this *ShortController) Post() {
+		var result ShortResult
+		longurl := this.Input().Get("longurl")
+		beego.Info(longurl)
+		result.UrlLong = longurl
+		urlmd5 := models.GetMD5(longurl)
+		beego.Info(urlmd5)
+		if urllist.IsExist(urlmd5) {
+			result.UrlShort = urllist.Get(urlmd5).(string)
+		} else {
+			result.UrlShort = models.Generate()
+			err := urllist.Put(urlmd5, result.UrlShort, 0)
+			if err != nil {
+				beego.Info(err)
+			}
+			err = urllist.Put(result.UrlShort, longurl, 0)
+			if err != nil {
+				beego.Info(err)
+			}
+		}
+		this.Data["json"] = result
+		this.ServeJson()
+	}	
+	
+上面这个例子演示了如何使用beego的Cache模块，主要是通过`beego.NewBeeCache`初始化一个对象，然后设置过期时间，开启过期检测，在业务逻辑中就可以通过如下的接口进行增删改的操作：
+
+- Get(name string) interface{}
+- Put(name string, value interface{}, expired int) error
+- Delete(name string) (ok bool, err error)
+- IsExist(name string) bool
 
 ## 安全的Map
+我们知道在Go语言里面map是非线程安全的，详细的[atomic_maps](http://golang.org/doc/faq#atomic_maps)。但是我们在平常的业务中经常需要用到线程安全的map，特别是在goroutine的情况下，所以beego内置了一个简单的线程安全的map：
+
+	bm := NewBeeMap()
+	if !bm.Set("astaxie", 1) {
+		t.Error("set Error")
+	}
+	if !bm.Check("astaxie") {
+		t.Error("check err")
+	}
+
+	if v := bm.Get("astaxie"); v.(int) != 1 {
+		t.Error("get err")
+	}
+
+	bm.Delete("astaxie")
+	if bm.Check("astaxie") {
+		t.Error("delete err")
+	}
+	
+上面演示了如何使用线程安全的Map，主要的接口有：
+
+- Get(k interface{}) interface{}
+- Set(k interface{}, v interface{}) bool
+- Check(k interface{}) bool
+- Delete(k interface{})
 
 ## 日志处理
+beego默认有一个初始化的BeeLogger对象输出内容到stdout中，你可以通过如下的方式设置自己的输出：
+
+	beego.SetLogger(*log.Logger)
+
+只要你的输出符合`*log.Logger`就可以，例如输出到文件：
+
+	fd,err := os.OpenFile("/var/log/beeapp/beeapp.log", os.O_RDWR|os.O_APPEND, 0644)
+	if err != nil {
+	    beego.Critical("openfile beeapp.log:", err)
+	    return
+	}
+	lg := log.New(fd, "", log.Ldate|log.Ltime)
+	beego.SetLogger(lg)
+### 不同级别的log日志函数
+
+* Trace(v ...interface{})
+* Debug(v ...interface{})
+* Info(v ...interface{})
+* Warn(v ...interface{})
+* Error(v ...interface{})
+* Critical(v ...interface{})
+
+你可以通过下面的方式设置不同的日志分级：
+
+	beego.SetLevel(beego.LevelError)
+	
+当你代码中有很多日志输出之后，如果想上线，但是你不想输出Trace、Debug、Info等信息，那么你可以设置如下：
+
+	beego.SetLevel(beego.LevelWarning)
+
+这样的话就不会输出小于这个level的日志，日志的排序如下：
+
+LevelTrace、LevelDebug、LevelInfo、LevelWarning、	LevelError、LevelCritical	
+
+用户可以根据不同的级别输出不同的错误信息，如下例子所示：
+
+### Examples of log messages
+- Trace
+
+	* "Entered parse function validation block"
+	* "Validation: entered second 'if'"
+	* "Dictionary 'Dict' is empty. Using default value"
+- Debug
+
+	* "Web page requested: http://somesite.com Params='...'"
+	* "Response generated. Response size: 10000. Sending."
+	* "New file received. Type:PNG Size:20000"
+- Info
+	* "Web server restarted"
+	* "Hourly statistics: Requested pages: 12345 Errors: 123 ..."
+	* "Service paused. Waiting for 'resume' call"
+- Warn
+	* "Cache corrupted for file='test.file'. Reading from back-end"
+	* "Database 192.168.0.7/DB not responding. Using backup 192.168.0.8/DB"
+	* "No response from statistics server. Statistics not sent"
+- Error
+	* "Internal error. Cannot process request #12345 Error:...."
+	* "Cannot perform login: credentials DB not responding"
+- Critical
+	* "Critical panic received: .... Shutting down"
+	* "Fatal error: ... App is shutting down to prevent data corruption or loss"
+	
+### Example
+
+	func internalCalculationFunc(x, y int) (result int, err error) {
+		beego.Debug("calculating z. x:",x," y:",y)
+		z := y
+		switch {
+		case x == 3 :
+			beego.Trace("x == 3")
+			panic("Failure.")
+		case y == 1 :
+			beego.Trace("y == 1")
+			return 0, errors.New("Error!")
+		case y == 2 :
+			beego.Trace("y == 2")
+			z = x
+		default :
+			beego.Trace("default")
+			z += x
+		}
+		retVal := z-3
+		beego.Debug("Returning ", retVal)
+				
+		return retVal, nil
+	}	
+	
+	func processInput(input inputData) {
+		defer func() {
+			if r := recover(); r != nil {
+	            beego.Error("Unexpected error occurred: ", r)
+				outputs <- outputData{result : 0, error : true}
+	        }
+		}()
+		beego.Info("Received input signal. x:",input.x," y:", input.y)	
+		
+		res, err := internalCalculationFunc(input.x, input.y)	
+		if err != nil {
+			beego.Warn("Error in calculation:", err.Error())
+		}
+		
+		beego.Info("Returning result: ",res," error: ",err)		
+		outputs <- outputData{result : res, error : err != nil}	
+	}
+	
+	func main() {
+		inputs = make(chan inputData)
+		outputs = make(chan outputData)
+		criticalChan = make(chan int)
+		beego.Info("App started.")
+		
+		go consumeResults(outputs)
+		beego.Info("Started receiving results.")
+		
+		go generateInputs(inputs)
+		beego.Info("Started sending signals.")
+		
+		for {
+			select {
+				case input := <- inputs:
+					processInput(input)
+				case <- criticalChan:
+					beego.Critical("Caught value from criticalChan: Go shut down.")
+					panic("Shut down due to critical fault.")
+			}	
+		}
+	}
 
 ## 第三方应用集成
 
