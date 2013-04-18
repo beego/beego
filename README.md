@@ -7,6 +7,8 @@ available at http://astaxie.github.com/beego
 Beego is licensed under the Apache Licence, Version 2.0
 (http://www.apache.org/licenses/LICENSE-2.0.html).
 
+[中文文档](https://github.com/astaxie/beego/tree/master/docs/zh)
+
 ## Installation
 ============
 To install:

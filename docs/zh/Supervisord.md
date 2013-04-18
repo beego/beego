@@ -20,15 +20,15 @@
 3. 新建管理的应用
 
 		cd /etc/supervisord.conf.d
-		vim ddq.conf
+		vim beepkg.conf
 	
 	配置文件：
 	
-		[program:ddq]
-		directory = /opt/app/ddq
-		command = /opt/app/ddq/ddq
+		[program:beepkg]
+		directory = /opt/app/beepkg
+		command = /opt/app/beepkg/beepkg
 		autostart = true
 		startsecs = 5
 		user = root
 		redirect_stderr = true
-		stdout_logfile = /var/log/supervisord/shorturl.log 
+		stdout_logfile = /var/log/supervisord/beepkg.log 
