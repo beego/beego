@@ -42,7 +42,7 @@ The following example prints string "Hello world" to your browser, it shows how 
 	}
 
 #Handbook
-- [Purposes of design Beego](Why.md)
+- [Purposes](Why.md)
 - [Installation](Install.md)
 - [Quick start](Quickstart.md)
 - [Step by step](Tutorial.md)
