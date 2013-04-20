@@ -94,7 +94,7 @@ func AddTemplateExt(ext string) {
 func BuildTemplate(dir string) error {
 	if _, err := os.Stat(dir); err != nil {
 		if os.IsNotExist(err) {
-			return err
+			return nil
 		} else {
 			return errors.New("dir open err")
 		}
