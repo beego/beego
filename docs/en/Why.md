@@ -6,7 +6,7 @@ Remember when I was writing the book about how to build web applications with Go
 I used to use CI in PHP and tornado in Python, there are both lightweight, so they has following advantages:
 
 1. Save time for handling general problems, I only need to care about logic part.
-2. Learn more languages by studying their source code, it's not hard to read and understand them because they are both lightweight frameworks.
+2. Learn more about languages by studying their source code, it's not hard to read and understand them because they are both lightweight frameworks.
 3. It's quite easy to make secondary development of these frameworks for specific purposes.
 
 Those reasons are my original intention of implementing Beego, and used two chapters in my book to introduce and design this lightweight web framework in GO.
