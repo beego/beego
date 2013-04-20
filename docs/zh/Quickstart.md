@@ -891,6 +891,10 @@ beego中带有很多可配置的参数，我们来一一认识一下它们，这
 * MaxMemory
 
 	文件上传默认内存缓存大小，默认值是`1 << 26`(64M)
+	
+* EnableGzip
+
+	是否开启gzip支持，默认为false不支持gzip，一旦开启了gzip，那么在模板输出的内容会进行gzip或者zlib压缩，根据用户的Accept-Encoding来判断。	
 
 ## 第三方应用集成
 beego支持第三方应用的集成，用户可以自定义`http.Handler`,用户可以通过如下方式进行注册路由：
