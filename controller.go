@@ -6,6 +6,7 @@ import (
 	"compress/zlib"
 	"encoding/json"
 	"encoding/xml"
+	"errors"
 	"github.com/astaxie/beego/session"
 	"html/template"
 	"io"
@@ -148,6 +149,10 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		subdir := path.Dir(c.TplNames)
 		_, file := path.Split(c.TplNames)
 		newbytes := bytes.NewBufferString("")
+		if _, ok := BeeTemplates[subdir]; !ok {
+			panic("can't find templatefile in the path:" + c.TplNames)
+			return []byte{}, errors.New("can't find templatefile in the path:" + c.TplNames)
+		}
 		BeeTemplates[subdir].ExecuteTemplate(newbytes, file, c.Data)
 		tplcontent, _ := ioutil.ReadAll(newbytes)
 		c.Data["LayoutContent"] = template.HTML(string(tplcontent))
@@ -169,6 +174,10 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		subdir := path.Dir(c.TplNames)
 		_, file := path.Split(c.TplNames)
 		ibytes := bytes.NewBufferString("")
+		if _, ok := BeeTemplates[subdir]; !ok {
+			panic("can't find templatefile in the path:" + c.TplNames)
+			return []byte{}, errors.New("can't find templatefile in the path:" + c.TplNames)
+		}
 		err := BeeTemplates[subdir].ExecuteTemplate(ibytes, file, c.Data)
 		if err != nil {
 			Trace("template Execute err:", err)
