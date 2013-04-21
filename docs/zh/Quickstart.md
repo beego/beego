@@ -150,7 +150,7 @@
 - beego.Router("/news/:all", &controllers.RController{})    
 	全匹配方式 //匹配 /news/path/to/123.html :all= path/to/123.html
 	
-- beego.Router("/user/:username([\w]+)", &controllers.RController{})    
+- beego.Router(\`/user/:username([\w]+)\`, &controllers.RController{})    
 	正则字符串匹配 //匹配 /user/astaxie    :username = astaxie
 	
 - beego.Router("/download/*.*", &controllers.RController{})    
@@ -164,6 +164,14 @@
 	
 - beego.Router("/:hi:string", &controllers.RController{})   
 	string类型设置方式 //匹配 :hi为string类型。框架帮你实现了正则([\w]+)
+	
+如何在Controller中获取，上面的变量可以通过如下方式获取
+
+	this.Ctx.Params[":id"]	
+	this.Ctx.Params[":username"]	
+	this.Ctx.Params[":splat"]	
+	this.Ctx.Params[":path"]	
+	this.Ctx.Params[":ext"]	
 
 ## 静态文件
 Go语言内部其实已经提供了`http.ServeFile`，通过这个函数可以实现静态文件的服务。beego针对这个功能进行了一层封装，通过下面的方式进行静态文件注册：
