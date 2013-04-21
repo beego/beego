@@ -3,13 +3,13 @@ Hey, you say you've never heard about Beego and don't know how to use it? Don't 
 
 **Navigation**
 
-- [Hello world](#-1)
-- [New project](#-2)
-- [Development mode](#-3)
-- [Router](#-4)
-- [Static files](#-5)
-- [Filter and middleware](#-6)
-- [Controller](#-7)
+- [Hello world](#hello-world)
+- [New project](#new-project)
+- [Development mode](#development-mode)
+- [Router](#router)
+- [Static files](#static-files)
+- [Filter and middleware](#filter-and-middleware)
+- [Controller](#controller)
 - [Template](#-8)
 - [Handle request](#request)
 - [Redirect and error](#-15)
@@ -105,8 +105,7 @@ In development mode, you have following effects:
 ![](images/dev.png)
 
 ## Router
-
-路由的主要功能是实现从请求地址到实现方法，beego中封装了`Controller`，所以路由是从路径到`ControllerInterface`的过程，`ControllerInterface`的方法有如下：
+The main function of router is to connect request URL and handler. Beego wrapped `Controller`, so it connects request URL and `ControllerInterface`. The `ControllerInterface` has following methods:
 
 	type ControllerInterface interface {
 		Init(ct *Context, cn string)
@@ -122,58 +121,65 @@ In development mode, you have following effects:
 		Render() error
 	}
 
-这些方法`beego.Controller`都已经实现了，所以只要用户定义struct的时候匿名包含就可以了。当然更灵活的方法就是用户可以去自定义类似的方法，然后实现自己的逻辑。
+`beego.Controller` implemented all of them, so you just use this struct as anonymous field in your controller struct. Of course you have to overload corresponding methods for more specific usages.
 
-用户可以通过如下的方式进行路由设置：
+Users can use following ways to register route rules:
 
 	beego.Router("/", &controllers.MainController{})
 	beego.Router("/admin", &admin.UserController{})
 	beego.Router("/admin/index", &admin.ArticleController{})
 	beego.Router("/admin/addpkg", &admin.AddController{})
 
-为了用户更加方便的路由设置，beego参考了sinatra的路由实现，支持多种方式的路由：
+For more convenient configure route rules, Beego references the idea from sinatra, so it supports more kinds of route rules as follows:
 
 - beego.Router("/api/:id([0-9]+)", &controllers.RController{})    
-	自定义正则匹配	//匹配 /api/123 :id= 123 
 
-- beego.Router("/news/:all", &controllers.RController{})    
-	全匹配方式 //匹配 /news/path/to/123.html :all= path/to/123.html
+		Customized regular expression match 	// match /api/123 :id= 123 
+
+- beego.Router("/news/:all", &controllers.RController{})   
+ 
+		Match rest of all // match /news/path/to/123.html :all= path/to/123.html
 	
-- beego.Router("/user/:username([\w]+)", &controllers.RController{})    
-	正则字符串匹配 //匹配 /user/astaxie    :username = astaxie
+- beego.Router("/user/:username([\w]+)", &controllers.RController{})   
+ 
+		Regular expression // match /user/astaxie    :username = astaxie
 	
-- beego.Router("/download/*.*", &controllers.RController{})    
-	*匹配方式 //匹配 /download/file/api.xml     :path= file/api   :ext=xml
+- beego.Router("/download/`*`.`*`", &controllers.RController{})   
+
+		Wildcard character // match /download/file/api.xml     :path= file/api   :ext=xml
 	
-- beego.Router("/download/ceshi/*", &controllers.RController{})   
-	*全匹配方式 //匹配  /download/ceshi/file/api.json  :splat=file/api.json
+- beego.Router("/download/ceshi/`*`", &controllers.RController{})   
+
+		wildcard character match rest of all // match  /download/ceshi/file/api.json  :splat=file/api.json
 	
-- beego.Router("/:id:int", &controllers.RController{})    
-	int类型设置方式  //匹配 :id为int类型，框架帮你实现了正则([0-9]+)
+- beego.Router("/:id:int", &controllers.RController{})   
+ 
+		Match type int  // match :id is int type, Beego uses regular expression ([0-9]+) automatically
 	
 - beego.Router("/:hi:string", &controllers.RController{})   
-	string类型设置方式 //匹配 :hi为string类型。框架帮你实现了正则([\w]+)
 
-## 静态文件
-Go语言内部其实已经提供了`http.ServeFile`，通过这个函数可以实现静态文件的服务。beego针对这个功能进行了一层封装，通过下面的方式进行静态文件注册：
+		Match type string // match :hi is string type, Beego uses regular expression ([\w]+) automatically
+
+##Static files
+Go provides `http.ServeFile` for static files, Beego wrapped this function and use following way to register static file folder:
 
 	beego.SetStaticPath("/static","public")
 	
-- 第一个参数是路径，url路径信息
-- 第二个参数是静态文件目录（相对应用所在的目录）
+- The first argument is the path of your URL.
+- The second argument is the directory in your application path.
 
-beego支持多个目录的静态文件注册，用户可以注册如下的静态文件目录：
+Beego supports multiple static file directories as follows:
 
 	beego.SetStaticPath("/images","images")
 	beego.SetStaticPath("/css","css")
 	beego.SetStaticPath("/js","js")
 
-设置了如上的静态目录之后，用户访问`/images/login/login.png`，那么就会访问应用对应的目录下面的`images/login/login.png`文件。如果是访问`/static/img/logo.png`，那么就访问`public/img/logo.png`文件。
+After you setting static directory, when users visit `/images/login/login.png`，Beego accesses `images/login/login.png` in related to your application directory. One more example, if users visit `/static/img/logo.png`, Beego accesses file `public/img/logo.png`.
 
-## 过滤和中间件
-beego支持自定义过滤中间件，例如安全验证，强制跳转等
+##Filter and middleware
+Beego supports customized filter and middleware, such as security verification, force redirect, etc.
 
-如下例子所示，验证用户名是否是admin，应用于全部的请求：
+Here is an example of verify user name of all requests, check if it's admin.
 
 	var FilterUser = func(w http.ResponseWriter, r *http.Request) {
 	    if r.URL.User == nil || r.URL.User.Username() != "admin" {
@@ -183,73 +189,73 @@ beego支持自定义过滤中间件，例如安全验证，强制跳转等
 
 	beego.Filter(FilterUser)
 	
-还可以通过参数进行过滤，如果匹配参数就执行
+You can also filter by arguments:
 
 	beego.Router("/:id([0-9]+)", &admin.EditController{})
 	beego.FilterParam("id", func(rw http.ResponseWriter, r *http.Request) {
 	    dosomething()
 	})
 	
-当然你还可以通过前缀过滤
+Filter by prefix is also available:
 
 	beego.FilterPrefixPath("/admin", func(rw http.ResponseWriter, r *http.Request) {
 	    dosomething()
 	})
 
-## 控制器设计
-基于beego的Controller设计，只需要匿名组合`beego.Controller`就可以了，如下所示：
+##Controller
+Use `beego.controller` as anonymous in your controller struct to implement the interface in Beego:
 
 	type xxxController struct {
 	    beego.Controller
 	}
 
-`beego.Controller`实现了接口`beego.ControllerInterface`，`beego.ControllerInterface`定义了如下函数：
+`beego.Controller` implemented`beego.ControllerInterface`, `beego.ControllerInterface` defined following methods:
 
-- Init(ct *Context, cn string)
+- Init(ct `*`Context, cn string)
 
-	这个函数主要初始化了Context、相应的Controller名称，模板名，初始化模板参数的容器Data
+	Initialize context, controller's name, template's name, and container of template arguments
 	
 - Prepare()
 
-	这个函数主要是为了用户扩展用的，这个函数会在下面定义的这些Method方法之前执行，用户可以重写这个函数实现类似用户验证之类。
+	This is for expend usages, it executes before all the following methods. Users can overload this method for verification for example.
    
 - Get()
 
-	如果用户请求的HTTP Method是GET, 那么就执行该函数，默认是403，用户继承的子struct中可以实现了该方法以处理Get请求.
+	This method executes when client sends request as GET method, 403 as default status code. Users overload this method for customized handle process of GET method.
 	
 - Post()
 
-	如果用户请求的HTTP Method是POST, 那么就执行该函数，默认是403，用户继承的子struct中可以实现了该方法以处理Post请求.
+	This method executes when client sends request as POST method, 403 as default status code. Users overload this method for customized handle process of POST method.
 
 - Delete()
 
-	如果用户请求的HTTP Method是DELETE, 那么就执行该函数，默认是403，用户继承的子struct中可以实现了该方法以处理Delete请求.
+	This method executes when client sends request as DELETE method, 403 as default status code. Users overload this method for customized handle process of DELETE method.
 
 - Put()
 
-	如果用户请求的HTTP Method是PUT, 那么就执行该函数，默认是403，用户继承的子struct中可以实现了该方法以处理Put请求.
+	This method executes when client sends request as PUT method, 403 as default status code. Users overload this method for customized handle process of PUT method.
 
 - Head()
 
-	如果用户请求的HTTP Method是HEAD, 那么就执行该函数，默认是403，用户继承的子struct中可以实现了该方法以处理Head请求.
+	This method executes when client sends request as HEAD method, 403 as default status code. Users overload this method for customized handle process of HEAD method.
 
 - Patch()
 
-	如果用户请求的HTTP Method是PATCH, 那么就执行该函数，默认是403，用户继承的子struct中可以实现了该方法以处理Patch请求.
+	This method executes when client sends request as PATCH method, 403 as default status code. Users overload this method for customized handle process of PATCH method.
 
 - Options()
 
-	如果用户请求的HTTP Method是OPTIONS, 那么就执行该函数，默认是403，用户继承的子struct中可以实现了该方法以处理Options请求.
+	This method executes when client sends request as OPTIONS method, 403 as default status code. Users overload this method for customized handle process of OPTIONS method.
 
 - Finish()
 
-	这个函数实在执行完相应的http Method方法之后执行的，默认是空，用户可以在子Strcut中重写这个函数，执行例如数据库关闭，清理数据之类的工作
+	This method executes after corresponding method finished, empty as default. User overload this method for more usages like close database, clean data, etc.
 
 - Render() error
 
-	这个函数主要用来实现渲染模板，如果beego.AutoRender为true的情况下才会执行。
+	This method is for rendering template, it executes automatically when you set beego.AutoRender to true.
 
-所以通过子struct的方法重写，用户就可以实现自己的逻辑，接下来我们看一个实际的例子：
+Overload all methods for all customized logic processes, let's see an example:
 
 	type AddController struct {
 	    beego.Controller
