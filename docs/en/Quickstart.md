@@ -3,10 +3,10 @@ Hey, you say you've never heard about Beego and don't know how to use it? Don't 
 
 **Navigation**
 
-- [Hello world](#-1)
-- [New project](#-2)
-- [Development mode](#-3)
-- [Router](#-4)
+- [Hello world](#hello-world)
+- [New project](#new-project)
+- [Development mode](#development-mode)
+- [Router](#router)
 - [Static files](#-5)
 - [Filter and middleware](#-6)
 - [Controller](#-7)
@@ -105,8 +105,7 @@ In development mode, you have following effects:
 ![](images/dev.png)
 
 ## Router
-
-路由的主要功能是实现从请求地址到实现方法，beego中封装了`Controller`，所以路由是从路径到`ControllerInterface`的过程，`ControllerInterface`的方法有如下：
+The main function of router is to connect request URL and handler. Beego wrapped `Controller`, so it connects request URL and `ControllerInterface`. The `ControllerInterface` has following methods:
 
 	type ControllerInterface interface {
 		Init(ct *Context, cn string)
@@ -122,39 +121,46 @@ In development mode, you have following effects:
 		Render() error
 	}
 
-这些方法`beego.Controller`都已经实现了，所以只要用户定义struct的时候匿名包含就可以了。当然更灵活的方法就是用户可以去自定义类似的方法，然后实现自己的逻辑。
+`beego.Controller` implemented all of them, so you just use this struct as anonymous field in your controller struct. Of course you have to overload corresponding methods for more specific usages.
 
-用户可以通过如下的方式进行路由设置：
+Users can use following ways to register route rules:
 
 	beego.Router("/", &controllers.MainController{})
 	beego.Router("/admin", &admin.UserController{})
 	beego.Router("/admin/index", &admin.ArticleController{})
 	beego.Router("/admin/addpkg", &admin.AddController{})
 
-为了用户更加方便的路由设置，beego参考了sinatra的路由实现，支持多种方式的路由：
+For more convenient configure route rules, Beego references the idea from sinatra, so it supports more kinds of route rules as follows:
 
 - beego.Router("/api/:id([0-9]+)", &controllers.RController{})    
-	自定义正则匹配	//匹配 /api/123 :id= 123 
 
-- beego.Router("/news/:all", &controllers.RController{})    
-	全匹配方式 //匹配 /news/path/to/123.html :all= path/to/123.html
+		Customized regular expression match 	// match /api/123 :id= 123 
+
+- beego.Router("/news/:all", &controllers.RController{})   
+ 
+		Match rest of all // match /news/path/to/123.html :all= path/to/123.html
 	
-- beego.Router("/user/:username([\w]+)", &controllers.RController{})    
-	正则字符串匹配 //匹配 /user/astaxie    :username = astaxie
+- beego.Router("/user/:username([\w]+)", &controllers.RController{})   
+ 
+		Regular expression // match /user/astaxie    :username = astaxie
 	
-- beego.Router("/download/*.*", &controllers.RController{})    
-	*匹配方式 //匹配 /download/file/api.xml     :path= file/api   :ext=xml
+- beego.Router("/download/`*`.`*`", &controllers.RController{})   
+
+		Wildcard character // match /download/file/api.xml     :path= file/api   :ext=xml
 	
-- beego.Router("/download/ceshi/*", &controllers.RController{})   
-	*全匹配方式 //匹配  /download/ceshi/file/api.json  :splat=file/api.json
+- beego.Router("/download/ceshi/`*`", &controllers.RController{})   
+
+		wildcard character match rest of all // match  /download/ceshi/file/api.json  :splat=file/api.json
 	
-- beego.Router("/:id:int", &controllers.RController{})    
-	int类型设置方式  //匹配 :id为int类型，框架帮你实现了正则([0-9]+)
+- beego.Router("/:id:int", &controllers.RController{})   
+ 
+		Match type int  // match :id is int type, Beego uses regular expression ([0-9]+) automatically
 	
 - beego.Router("/:hi:string", &controllers.RController{})   
-	string类型设置方式 //匹配 :hi为string类型。框架帮你实现了正则([\w]+)
 
-## 静态文件
+		Match type string // match :hi is string type, Beego uses regular expression ([\w]+) automatically
+
+## Static files
 Go语言内部其实已经提供了`http.ServeFile`，通过这个函数可以实现静态文件的服务。beego针对这个功能进行了一层封装，通过下面的方式进行静态文件注册：
 
 	beego.SetStaticPath("/static","public")
