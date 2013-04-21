@@ -199,7 +199,7 @@ func (c *Controller) ServeJson() {
 		return
 	}
 	c.Ctx.SetHeader("Content-Length", strconv.Itoa(len(content)), true)
-	ctx.ResponseWriter.Header().Set("Content-Type", "application/json")
+	c.Ctx.ResponseWriter.Header().Set("Content-Type", "application/json")
 	c.Ctx.ResponseWriter.Write(content)
 }
 
@@ -210,7 +210,7 @@ func (c *Controller) ServeXml() {
 		return
 	}
 	c.Ctx.SetHeader("Content-Length", strconv.Itoa(len(content)), true)
-	ctx.ResponseWriter.Header().Set("Content-Type", "application/xml")
+	c.Ctx.ResponseWriter.Header().Set("Content-Type", "application/xml")
 	c.Ctx.ResponseWriter.Write(content)
 }
 
