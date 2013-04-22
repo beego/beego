@@ -92,6 +92,7 @@ func (bc *MemoryCache) StartAndGC(config string) error {
 	var cf map[string]int
 	json.Unmarshal([]byte(config), &cf)
 	if _, ok := cf["every"]; !ok {
+		cf = make(map[string]int)
 		cf["interval"] = DefaultEvery
 	}
 	dur, err := time.ParseDuration(fmt.Sprintf("%ds", cf["interval"]))
