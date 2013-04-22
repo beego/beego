@@ -110,7 +110,7 @@ func (bc *MemoryCache) vaccuum() {
 		return
 	}
 	for {
-		<-time.After(time.Duration(bc.dur))
+		<-time.After(time.Duration(bc.dur) * time.Second)
 		if bc.items == nil {
 			return
 		}
