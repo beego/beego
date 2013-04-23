@@ -10,8 +10,8 @@ Hey, you say you've never heard about Beego and don't know how to use it? Don't 
 - [Static files](#static-files)
 - [Filter and middleware](#filter-and-middleware)
 - [Controller](#controller)
-- [Template](#-8)
-- [Handle request](#request)
+- [Template](#template)
+- [Handle request](#handle-request)
 - [Redirect and error](#-15)
 - [Handle response](#response)
 - [Sessions](#sessions)
@@ -290,64 +290,65 @@ Overload all methods for all customized logic processes, let's see an example:
 	    this.Ctx.Redirect(302, "/admin/index")
 	}	
 
-## 模板处理
-### 模板目录
-beego中默认的模板目录是`views`，用户可以把你的模板文件放到该目录下，beego会自动在该目录下的所有模板文件进行解析并缓存，开发模式下会每次重新解析，不做缓存。当然用户可以通过如下的方式改变模板的目录：
+##Template
+###Template directory
+Beego uses `views` as the default directory for template files, parses and caches them as needed(cache is not enable in develop mode), but you can **change**(because only one directory can be used for template files) its directory using following code:
 
 	beego.ViewsPath = "/myviewpath"
-### 自动渲染
-beego中用户无需手动的调用渲染输出模板，beego会自动的在调用玩相应的method方法之后调用Render函数，当然如果你的应用是不需要模板输出的，那么你可以在配置文件或者在main.go中设置关闭自动渲染。
 
-配置文件配置如下：
+###Auto-render
+You don't need to call render function manually, Beego calls it automatically after corresponding methods executed. If your application is somehow doesn't need templates, you can disable this feature either in code of `main.go` or configuration file.
+
+To disable auto-render in configuration file:
 	
 	autorender = false
 
-main.go文件中设置如下：
+To disable auto-render in `main.go`(before you call `beego.Run()` to run the application):
 
 	beego.AutoRender = false
 	
-### 模板数据
-模板中的数据是通过在Controller中`this.Data`获取的，所以如果你想在模板中获取内容`{{.Content}}`,那么你需要在Controller中如下设置：
+###Template data
+You can use `this.Data` in controller methods to access the data in templates. Suppose you want to get content of `{{.Content}}`, you can use following code to do this:
 	
 	this.Data["Context"] = "value"
 		
-### 模板名称
-beego采用了Go语言内置的模板引擎，所有模板的语法和Go的一模一样，至于如何写模板文件，详细的请参考[模板教程](https://github.com/astaxie/build-web-application-with-golang/blob/master/ebook/07.4.md)。
+###Template name
+Beego uses built-in template engine of Go, so there is no different in syntax. As for how to write template file, please visit [Template tutorial](https://github.com/Unknwon/build-web-application-with-golang_EN/blob/master/eBook/07.4.md)。
 
-用户通过在Controller的对应方法中设置相应的模板名称，beego会自动的在viewpath目录下查询该文件并渲染，例如下面的设置，beego会在admin下面找add.tpl文件进行渲染：
+Beego parses template files in `viewpath` and render it after you set the name of the template file in controller methods. For example, Beego finds the file `add.tpl` in directory `admin` in following code:
 
 	this.TplNames = "admin/add.tpl"
 
-我们看到上面的模板后缀名是tpl，beego默认情况下支持tpl和html后缀名的模板文件，如果你的后缀名不是这两种，请进行如下设置：
+Beego supports two kinds of extensions for template files, which are `tpl` and `html`, if you want to use other extensions, you have to use following code to let Beego know:
 
-	beego.AddTemplateExt("你文件的后缀名")
+	beego.AddTemplateExt("<your template file extension>")
 
-当你设置了自动渲染，然后在你的Controller中没有设置任何的TplNames，那么beego会自动设置你的模板文件如下：
+If you enabled auto-render and you don't tell Beego which template file you are going to use in controller methods, Beego uses following format to find the template file if it exists:
 
 	c.TplNames = c.ChildName + "/" + c.Ctx.Request.Method + "." + c.TplExt
 
-也就是你对应的Controller名字+请求方法名.模板后缀，也就是如果你的Controller名是`AddController`，请求方法是`POST`，默认的文件后缀是`tpl`，那么就会默认请求`/viewpath/AddController/POST.tpl`文件。
+Which is `<corresponding controller name>/<request method name>.<template extension>`. For example, your controller name is `AddController` and the request method is POST, and the default file extension is `tpl`, so Beego will try to find file `/<viewpath>/AddController/POST.tpl`.
 
-### lauout设计
-beego支持layout设计，例如你在管理系统中，其实整个的管理界面是固定的，支会变化中间的部分，那么你可以通过如下的设置：
+###Layout design
+Beego supports layout design, which means if you are working on an administration application, and some part of its user interface is exactly same all the time, then you can make this part as a layout.
 	
 	this.Layout = "admin/layout.html"
 	this.TplNames = "admin/add.tpl" 
 
-在layout.html中你必须设置如下的变量：
+You have to set following variable in order to make Beego possible to insert your dynamic content:
 
 	{{.LayoutContent}}
 	
-beego就会首先解析TplNames指定的文件，获取内容赋值给LayoutContent，然后最后渲染layout.html文件。
+Beego parses template file and assign content to `LayoutContent`, and render them together.
 
-目前采用首先把目录下所有的文件进行缓存，所以用户还可以通过类似这样的方式实现layout：
+Right now, Beego caches all template files, so you can use following way to implement another kind of layout:
 
 	{{template "header.html"}}
-	处理逻辑
+	Handle logic
 	{{template "footer.html"}}
 
-### 模板函数
-beego支持用户定义模板函数，但是必须在`beego.Run()`调用之前，设置如下：
+###Template function
+Beego supports customized template functions that are registered before you call `beego.Run()`.
 
 	func hello(in string)(out string){
 	    out = in + "world"
@@ -356,48 +357,48 @@ beego支持用户定义模板函数，但是必须在`beego.Run()`调用之前�
 	
 	beego.AddFuncMap("hi",hello)
 
-定义之后你就可以在模板中这样使用了：
+Then you can use this function in your template files:
 
 	{{.Content | hi}}
 
-目前beego内置的模板函数有如下：
+There are some built-in template functions:
 
 * markdown 
 	
-	实现了把markdown文本转化为html信息，使用方法{{markdown .Content}}
+	This function converts markdown content to HTML format, use {{markdown .Content}} in template files.
 * dateformat 
 
-	实现了时间的格式化，返回字符串，使用方法{{dateformat .Time "2006-01-02T15:04:05Z07:00"}}
+	This function converts time to formatted string, use {{dateformat .Time "2006-01-02T15:04:05Z07:00"}} in template files.
 * date 
 
-	实现了类似PHP的date函数，可以很方便的根据字符串返回时间，使用方法{{date .T "Y-m-d H:i:s"}}
+	This function implements date function like in PHP, use formatted string to get corresponding time, use {{date .T "Y-m-d H:i:s"}} in template files.
 * compare 
 
-	实现了比较两个对象的比较，如果相同返回true，否者false，使用方法{{compare .A .B}}
+	This functions compares two objects, returns true if they are same, false otherwise, use {{compare .A .B}} in template files.
 * substr 
 
-	实现了字符串的截取，支持中文截取的完美截取，使用方法{{substr .Str 0 30}}
+	This function cuts out string from another string by index, it supports UTF-8 characters, use {{substr .Str 0 30}} in template files.
 * html2str 
 
-	实现了把html转化为字符串，剔除一些script、css之类的元素，返回纯文本信息，使用方法{{html2str .Htmlinfo}}
+	This function escapes HTML to raw string, use {{html2str .Htmlinfo}} in template files.
 * str2html 
 
-	实现了把相应的字符串当作HTML来输出，不转义，使用方法{{str2html .Strhtml}}
+	This function outputs string in HTML format without escaping, use {{str2html .Strhtml}} in template files.
 * htmlquote 
 
-	实现了基本的html字符转义，使用方法{{htmlquote .quote}}
+	This functions implements basic HTML escape, use {{htmlquote .quote}} in template files.
 * htmlunquote 	
 
-	实现了基本的反转移字符，使用方法{{htmlunquote .unquote}}
+	This functions implements basic invert-escape of HTML, use {{htmlunquote .unquote}} in template files.
 	
-## request处理
-我们经常需要获取用户传递的数据，包括Get、POST等方式的请求，beego里面会自动解析这些数据，你可以通过如下方式获取数据
+##Handle request
+We always need to get data from users, including methods like GET, POST, etc. Beego parses these data automatically, and you can access them by following code:
 
 - GetString(key string) string
 - GetInt(key string) (int64, error)
 - GetBool(key string) (bool, error)
 
-使用例子如下：
+Usage example:
 
 	func (this *MainController) Post() {
 		jsoninfo := this.GetString("jsoninfo")
@@ -407,46 +408,48 @@ beego支持用户定义模板函数，但是必须在`beego.Run()`调用之前�
 		}
 	}
 
-如果你需要的数据可能是其他类型的，例如是int类型而不是int64，那么你需要这样处理：
+If you need other types that are not included above, like you need int64 instead of int, then you need to do following way:
 
 	func (this *MainController) Post() {
 		id := this.Input().Get("id")
 		intid, err := strconv.Atoi(id)
 	}		
 
-更多其他的request的信息，用户可以通过`this.Ctx.Request`获取信息，关于该对象的属性和方法参考手册[Request](http://golang.org/pkg/net/http/#Request)
+To use `this.Ctx.Request` for more information about request, and object properties and method please read [Request](http://golang.org/pkg/net/http/#Request)
 
-### 文件上传
-在beego中你可以很容易的处理文件上传，就是别忘记在你的form表单中增加这个属性`enctype="multipart/form-data"`，否者你的浏览器不会传输你的上传文件。
+###File upload
+It's very easy to upload file through Beego, but don't forget to add `enctype="multipart/form-data"` in your form, otherwise the browser will not upload anything.
 
-文件上传之后一般是放在系统的内存里面，如果文件的size大于设置的缓存内存大小，那么就放在临时文件中，默认的缓存内存是64M，你可以通过如下来调整这个缓存内存大小:
+Files will be saved in memory, if the size is greater than cache memory, the rest part will be saved as temporary file. The default cache memory is 64 MB, and you can using following ways to change this size.
+
+In code:
 
 	beego.MaxMemory = 1<<22 
 
-或者在配置文件中通过如下设置
+In configuration file:
 
 	maxmemory = 1<<22
 
-beego提供了两个很方便的方法来处理文件上传：
+Beego provides two convenient functions to upload files:
 
-- GetFile(key string) (multipart.File, *multipart.FileHeader, error)
+- GetFile(key string) (multipart.File, `*`multipart.FileHeader, error)
 
-	该方法主要用于用户读取表单中的文件名`the_file`，然后返回相应的信息，用户根据这些变量来处理文件上传：过滤、保存文件等。
+	This function is mainly used to read file name element `the_file` in form and returns corresponding information. You can use this information either filter or save files.
 	
 - SaveToFile(fromfile, tofile string) error
 
-	该方法是在GetFile的基础上实现了快速保存的功能
+	This function a wrapper of GetFile and gives ability to save file.
 	
-保存的代码例子如下：
+This is an example to save file that is uploaded:
 	
 	func (this *MainController) Post() {
 		this.SaveToFile("the_file","/var/www/uploads/uploaded_file.txt"")
 	}
 
-### JSON和XML输出
-beego当初设计的时候就考虑了API功能的设计，而我们在设计API的时候经常是输出JSON或者XML数据，那么beego提供了这样的方式直接输出：
+###Output Json and XML
+Beego considered API function design at the beginning, and we often use Json or XML format data as output. Therefore, it's no reason that Beego doesn't support it:
 
-JSON数据直接输出，设置`content-type`为`application/json`：
+Set `content-type` to `application/json` for output raw Json format data:
 
 	func (this *AddController) Get() {
 	    mystruct := { ... }
@@ -454,7 +457,7 @@ JSON数据直接输出，设置`content-type`为`application/json`：
 	    this.ServeJson()
 	}	
 
-XML数据直接输出，设置`content-type`为`application/xml`：
+Set `content-type` to `application/xml` for output raw XML format data:
 
 	func (this *AddController) Get() {
 	    mystruct := { ... }
