@@ -227,7 +227,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	requestPath := r.URL.Path
-	r.ParseMultipartForm()
+	r.ParseMultipartForm(MaxMemory)
 
 	//user defined Handler
 	for pattern, c := range p.userHandlers {
