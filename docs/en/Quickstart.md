@@ -776,10 +776,8 @@ You can use different log level to output different error messages, it's based o
 		}
 	}
 
-## 配置管理
-beego支持解析ini文件, beego默认会解析当前应用下的`conf/app.conf`文件
-
-通过这个文件你可以初始化很多beego的默认参数
+##Configuration
+Beego supports to parse .ini file in path `conf/app.conf`, and you have following options:
 
 	appname = beepkg
 	httpaddr = "127.0.0.1"
@@ -789,23 +787,23 @@ beego支持解析ini文件, beego默认会解析当前应用下的`conf/app.conf
 	autorecover = false
 	viewspath = "myview"
 	
-上面这些参数会替换beego默认的一些参数。
+If you set value in configuration file, Beego uses it to replace default value.
 
-你可以在配置文件中配置应用需要用的一些配置信息，例如下面所示的数据库信息：
+You can also have other values for your application, for example, database connection information:
 
 	mysqluser = "root"
 	mysqlpass = "rootpass"
 	mysqlurls = "127.0.0.1"
 	mysqldb   = "beego"
 	
-那么你就可以通过如下的方式获取设置的配置信息:
+Then use following code to load your settings:
 
 	beego.AppConfig.String("mysqluser")
 	beego.AppConfig.String("mysqlpass")
 	beego.AppConfig.String("mysqlurls")
 	beego.AppConfig.String("mysqldb")
 
-AppConfig支持如下方法
+AppConfig supports following methods:
 
 - Bool(key string) (bool, error)
 - Int(key string) (int, error)
@@ -813,91 +811,92 @@ AppConfig支持如下方法
 - Float(key string) (float64, error)
 - String(key string) string
 
-## 系统默认参数
-beego中带有很多可配置的参数，我们来一一认识一下它们，这样有利于我们在接下来的beego开发中可以充分的发挥他们的作用：
+##Beego arguments
+Beego has many configurable arguments, let me introduce to you all of them, so you can use them for more usage in your application:
 
 * BeeApp
 
-	beego默认启动的一个应用器入口，在应用import beego的时候，在init中已经初始化的。
+	Entry point of Beego, it initialized in init() function when you import Beego package.
 	
 * AppConfig
 
-	beego的配置文件解析之后的对象，也是在init的时候初始化的，里面保存有解析`conf/app.conf`下面所有的参数数据
+	It stores values from file `conf/app.conf` and initialized in init() function.
 	
 * HttpAddr
 
-	应用监听地址，默认为空，监听所有的网卡IP
+	Application listening address, default is empty for listening all IP.
 	
 * HttpPort
 
-	应用监听端口，默认为8080
+	Application listening port, default is 8080.
 	
 * AppName
 
-	应用名称，默认是beego
+	Application name, default is "beego".
 	
 * RunMode 
 
-	应用的模式，默认是dev，为开发模式，在开发模式下出错会提示友好的出错页面，如前面错误描述中所述。
+	Application mode, default is "dev" develop mode and gives friendly error messages.
 	
 * AutoRender
 
-	是否模板自动渲染，默认值为true，对于API类型的应用，应用需要把该选项设置为false，不需要渲染模板。
+	This value indicates whether auto-render or not, default is true, you should set to false for API usage applications.
 	
 * RecoverPanic
 
-	是否异常恢复，默认值为true，即当应用出现异常的情况，通过recover恢复回来，而不会导致应用异常退出。
+	This value indicates whether recover from panic or not, default is true, and program will not exit when error occurs.
 	
 * PprofOn
 
-	是否启用pprof，默认是false，当开启之后，用户可以通过如下地址查看相应的goroutine执行情况
+	This value indicates whether enable pprof or not, default is false, and you can use following address to see goroutine execution status once you enable this feature.
 	
 		/debug/pprof
 		/debug/pprof/cmdline
 		/debug/pprof/profile
 		/debug/pprof/symbol 
-	关于pprof的信息，请参考官方的描述[pprof](http://golang.org/pkg/net/http/pprof/)	
+	
+	For more information about pprof, please read [pprof](http://golang.org/pkg/net/http/pprof/)	
 	
 * ViewsPath
 
-	模板路径，默认值是views
+	Template path, default is "views".
 	
 * SessionOn
 
-	session是否开启，默认是false
+	This value indicate whether enable session or not, default is false.
 	
 * SessionProvider
 
-	session的引擎，默认是memory
+	Session engine, default is memory.
 	
 * SessionName
 
-	存在客户端的cookie名称，默认值是beegosessionID
+	Name for cookie that save in client browser, default is "beegosessionID".
 	
 * SessionGCMaxLifetime
 
-	session过期时间，默认值是3600秒
+	Session expired time, default is 3600 seconds.
 	
 * SessionSavePath
 
-	session保存路径，默认是空
+	Save path of session, default is empty.
 	
 * UseFcgi
 
-	是否启用fastcgi，默认是false
+	This value indicates whether enable fastcgi or not, default is false.
 	
 * MaxMemory
 
-	文件上传默认内存缓存大小，默认值是`1 << 26`(64M)
+	Maximum memory size for file upload, default is `1 << 26`(64M).
 
-## 第三方应用集成
-beego支持第三方应用的集成，用户可以自定义`http.Handler`,用户可以通过如下方式进行注册路由：
+##Integrated third-party applications
+Beego supports to integrate third-party application, you can customized `http.Handler` as follows:
 
 	beego.RouterHandler("/chat/:info(.*)", sockjshandler)
 	
-sockjshandler实现了接口`http.Handler`。
+sockjshandler implemented interface `http.Handler`.
 
-目前在beego的example中有支持sockjs的chat例子，示例代码如下：
+Beego has an example for supporting chat of sockjs, here is the code:
 
 	package main
 	
@@ -942,10 +941,10 @@ sockjshandler实现了接口`http.Handler`。
 		beego.Run()
 	}
 
-通过上面的代码很简单的实现了一个多人的聊天室。上面这个只是一个sockjs的例子，我想通过大家自定义`http.Handler`，可以有很多种方式来进行扩展beego应用。
+The above example implemented a simple chat room for sockjs, and you can use `http.Handler` for more extensions.
 
-## 部署编译应用
-Go语言的应用最后编译之后是一个二进制文件，你只需要copy这个应用到服务器上，运行起来就行。beego由于带有几个静态文件、配置文件、模板文件三个目录，所以用户部署的时候需要同时copy这三个目录到相应的部署应用之下，下面以我实际的应用部署为例：
+##Deployment
+Go compiles program to binary file, you only need to copy this binary to your server and run it. Because Beego uses MVC model, so you may have folders for static files, configuration files and template files, so you have to copy those files as well. Here is a real example for deployment.
 
 	$ mkdir /opt/app/beepkg
 	$ cp beepkg /opt/app/beepkg
@@ -953,7 +952,7 @@ Go语言的应用最后编译之后是一个二进制文件，你只需要copy�
 	$ cp -fr static /opt/app/beepkg
 	$ cp -fr conf /opt/app/beepkg
 	
-这样在`/opt/app/beepkg`目录下面就会显示如下的目录结构：
+Here is the directory structure pf `/opt/app/beepkg`.
 
 	.
 	├── conf
@@ -966,17 +965,15 @@ Go语言的应用最后编译之后是一个二进制文件，你只需要copy�
 	    └── index.tpl
 	├── beepkg	
 
-这样我们就已经把我们需要的应用搬到服务器了，那么接下来就可以开始部署了，我现在服务器端用两种方式来run，
+Now you can run your application in server, here are two good ways to manage your applications, and I recommend the first one.
 
 - Supervisord 
 	
-	安装和配置见[Supervisord](Supervisord.md)
+	More information: [Supervisord](Supervisord.md)
 
-- nohup方式
+- nohup
 
 	nohup ./beepkg &
-
-个人比较推荐第一种方式，可以很好的管理起来应用
 
 - [Introduction](README.md)
 - [Step by step](Tutorial.md)
