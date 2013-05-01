@@ -12,16 +12,16 @@ Hey, you say you've never heard about Beego and don't know how to use it? Don't 
 - [Controller](#controller)
 - [Template](#template)
 - [Handle request](#handle-request)
-- [Redirect and error](#-15)
-- [Handle response](#response)
+- [Redirect and error](#redirect-and-error)
+- [Handle response](#handle-response)
 - [Sessions](#sessions)
 - [Cache](#cache)
-- [Safe map](#map)
-- [Log](#-16)
-- [Configuration](#-17)
-- [Beego arguments](#-18)
-- [Integrated third-party applications](#-19)
-- [Deployment](#-20)
+- [Safe map](#safe-map)
+- [Log](#log)
+- [Configuration](#configuration)
+- [Beego arguments](#beego-arguments)
+- [Integrated third-party applications](#integrated-third-party-applications)
+- [Deployment](#deployment)
 
 ## Hello world
 This is an example of "Hello world" in Beego:
@@ -465,44 +465,44 @@ Set `content-type` to `application/xml` for output raw XML format data:
 	    this.ServeXml()
 	}	
 	
-## 跳转和错误
-我们在做Web开发的时候，经常会遇到页面调整和错误处理，beego这这方面也进行了考虑，通过`Redirect`方法来进行跳转：
+##Redirect and error
+You can use following to redirect:
 
 	func (this *AddController) Get() {
 	   this.Redirect("/", 302)
 	}	
 
-@todo 错误处理还需要后期改进
+@todo Error processing need to be improved.
 
-## response处理
-response可能会有集中情况：
+##Handle response
+There are some situations that you may have in response:
 
-1. 模板输出
+1. Output template
 
-	模板输出上面模板介绍里面已经介绍，beego会在执行完相应的Controller里面的对应的Method之后输出到模板。
+	I've already talked about template above, Beego outputs template after corresponding method executed.
 	
-2. 跳转
+2. Redirect
 
-	上一节介绍的跳转就是我们经常用到的页面之间的跳转
+	You can use this.Redirect("/", 302) to redirect page.
 	
-3. 字符串输出
+3. Output string
 
-	有些时候我们只是想输出相应的一个字符串，那么我们可以通过如下的代码实现
+	Sometimes we just need to print string on the screen:
 	
 		this.Ctx.WriteString("ok")
 
 ## Sessions
-beego内置了session模块，目前session模块支持的后端引擎包括memory、file、mysql、redis四中，用户也可以根据相应的interface实现自己的引擎。
+Beego has a built-in session module and supports four engines, including memory, file, MySQL and redis. You can implement your own engine based on the interface.
 
-beego中使用session相当方便，只要在main入口函数中设置如下：
+It's easy to use session in Beego, use following code in your main() function:
 
 	beego.SessionOn = true
 
-或者通过配置文件配置如下：
+Or use configuration file:
 
 	sessionon = true
 
-通过这种方式就可以开启session，如何使用session，请看下面的例子：
+The following example shows you how to use session in Beego:
 
 	func (this *MainController) Get() {
 		v := this.GetSession("asta")
@@ -516,68 +516,67 @@ beego中使用session相当方便，只要在main入口函数中设置如下：
 		this.TplNames = "index.tpl"
 	}
 
-上面的例子中我们知道session有几个方便的方法：
+We can see that there are few convenient methods:
 
 - SetSession(name string, value interface{})
 - GetSession(name string) interface{}
 - DelSession(name string)
 
-session操作主要有设置session、获取session、删除session
+There are three kinds of operation for session: set, get, and delete.
 
-当然你要可以通过下面的方式自己控制相应的逻辑这些逻辑：
+Of course you can use following code to customized session logic:
 
 	sess:=this.StartSession()
 	defer sess.SessionRelease()
 
-sess对象具有如下方法：
+The sess object has following methods:
 
 * sess.Set()
 * sess.Get()
 * sess.Delete()
 * sess.SessionID()
 
-但是我还是建议大家采用SetSession、GetSession、DelSession三个方法来操作，避免自己在操作的过程中资源没释放的问题。
+However, I recommend you to use SetSession、GetSession、DelSession these three operations in order to prevent resource leak.
 
-关于Session模块使用中的一些参数设置：
+There are some arguments you can use in session module:
 
 - SessionOn
 
-	设置是否开启Session，默认是false，配置文件对应的参数名：sessionon
+	Whether enable session or not, default is false, corresponding arguments in configuration file: sessionon.
 	
 - SessionProvider
 
-	设置Session的引擎，默认是memory，目前支持还有file、mysql、redis等，配置文件对应的参数名：sessionprovider
+	Setting session engine, default is memory, other options are file, MySQL and redis, corresponding arguments in configuration file: sessionprovider.
 	
 - SessionName
 
-	设置cookies的名字，Session默认是保存在用户的浏览器cookies里面的，默认名是beegosessionID，配置文件对应的参数名是：sessionname
+	Setting name of cookies, it saves in users' browser with name beegosessionID, corresponding arguments in configuration file: sessionname.
 	
 - SessionGCMaxLifetime
 
-	设置Session过期的时间，默认值是3600秒，配置文件对应的参数：sessiongcmaxlifetime
+	Setting session expired time, default is 3600 seconds, corresponding arguments in configuration: sessiongcmaxlifetime
 	
 - SessionSavePath
 	
-	设置对应file、mysql、redis引擎的保存路径或者链接地址，默认值是空，配置文件对应的参数：sessionsavepath
+	Setting save path or link address of corresponding file, MySQL and redis engines, default is empty, corresponding arguments in configuration file: sessionsavepath
 
-
-当SessionProvider为file时，SessionSavePath是只保存文件的目录，如下所示：
+When the SessionProvider is file, SessionSavePath saves file path:
 
 	beego.SessionProvider = "file"
 	beego.SessionSavePath = "./tmp"
 
-当SessionProvider为mysql时，SessionSavePath是链接地址，采用[go-sql-driver](https://github.com/go-sql-driver/mysql)，如下所示：
+When the SessionProvider is mysql, SessionSavePath is link address, it uses driver [go-sql-driver](https://github.com/go-sql-driver/mysql):
 
 	beego.SessionProvider = "mysql"
 	beego.SessionSavePath = "username:password@protocol(address)/dbname?param=value"
 	
-当SessionProvider为redis时，SessionSavePath是redis的链接地址，采用了[redigo](https://github.com/garyburd/redigo)，如下所示：
+When the SessionProvider is redis, SessionSavePath is link address of redis, it uses driver [redigo](https://github.com/garyburd/redigo):
 
 	beego.SessionProvider = "redis"
 	beego.SessionSavePath = "127.0.0.1:6379"	
 
-## Cache设置
-beego内置了一个cache模块，实现了类似memcache的功能，缓存数据在内存中，主要的使用方法如下：
+## Cache
+Beego has a built-in cache module, it's like memcache, which caches data in memory. Here is an example of using cache module in Beego:
 
 	var (
 		urllist *beego.BeeCache
@@ -585,7 +584,7 @@ beego内置了一个cache模块，实现了类似memcache的功能，缓存数�
 	
 	func init() {
 		urllist = beego.NewBeeCache()
-		urllist.Every = 0 //不过期
+		urllist.Every = 0 // Not expired
 		urllist.Start()
 	}
 
@@ -613,15 +612,15 @@ beego内置了一个cache模块，实现了类似memcache的功能，缓存数�
 		this.ServeJson()
 	}	
 	
-上面这个例子演示了如何使用beego的Cache模块，主要是通过`beego.NewBeeCache`初始化一个对象，然后设置过期时间，开启过期检测，在业务逻辑中就可以通过如下的接口进行增删改的操作：
+To use cache, you need to initialize a `beego.NewBeeCache` object and set expired time, and enable expired check. Then you can use following methods to achieve other operations:
 
 - Get(name string) interface{}
 - Put(name string, value interface{}, expired int) error
 - Delete(name string) (ok bool, err error)
 - IsExist(name string) bool
 
-## 安全的Map
-我们知道在Go语言里面map是非线程安全的，详细的[atomic_maps](http://golang.org/doc/faq#atomic_maps)。但是我们在平常的业务中经常需要用到线程安全的map，特别是在goroutine的情况下，所以beego内置了一个简单的线程安全的map：
+##Safe map
+We know that map is not thread safe in Go, if you don't know it, this article may be helpful for you: [atomic_maps](http://golang.org/doc/faq#atomic_maps). However, we need a kind of thread safe map in practice, especially when we are using goroutines. Therefore, Beego provides a simple built-in thread safe map implementation.
 
 	bm := NewBeeMap()
 	if !bm.Set("astaxie", 1) {
@@ -640,19 +639,19 @@ beego内置了一个cache模块，实现了类似memcache的功能，缓存数�
 		t.Error("delete err")
 	}
 	
-上面演示了如何使用线程安全的Map，主要的接口有：
+This map has following interfaces:
 
 - Get(k interface{}) interface{}
 - Set(k interface{}, v interface{}) bool
 - Check(k interface{}) bool
 - Delete(k interface{})
 
-## 日志处理
-beego默认有一个初始化的BeeLogger对象输出内容到stdout中，你可以通过如下的方式设置自己的输出：
+##Log
+Beego has a default BeeLogger object that outputs log into stdout, and you can use your own logger as well:
 
 	beego.SetLogger(*log.Logger)
 
-只要你的输出符合`*log.Logger`就可以，例如输出到文件：
+You can output everything that implemented `*log.Logger`, for example, write to file:
 
 	fd,err := os.OpenFile("/var/log/beeapp/beeapp.log", os.O_RDWR|os.O_APPEND, 0644)
 	if err != nil {
@@ -661,7 +660,8 @@ beego默认有一个初始化的BeeLogger对象输出内容到stdout中，你可
 	}
 	lg := log.New(fd, "", log.Ldate|log.Ltime)
 	beego.SetLogger(lg)
-### 不同级别的log日志函数
+
+###Different levels of log
 
 * Trace(v ...interface{})
 * Debug(v ...interface{})
@@ -670,19 +670,19 @@ beego默认有一个初始化的BeeLogger对象输出内容到stdout中，你可
 * Error(v ...interface{})
 * Critical(v ...interface{})
 
-你可以通过下面的方式设置不同的日志分级：
+You can use following code to set log level:
 
 	beego.SetLevel(beego.LevelError)
 	
-当你代码中有很多日志输出之后，如果想上线，但是你不想输出Trace、Debug、Info等信息，那么你可以设置如下：
+Your project may have a lot of log outputs, but you don't want to output everything after your application is running on the internet, for example, you want to ignore Trace, Debug and Info level log outputs, you can use following setting:
 
 	beego.SetLevel(beego.LevelWarning)
 
-这样的话就不会输出小于这个level的日志，日志的排序如下：
+Then Beego will not output log that has lower level of LevelWarning. Here is the list of all log levels, order from lower to higher:
 
 LevelTrace、LevelDebug、LevelInfo、LevelWarning、	LevelError、LevelCritical	
 
-用户可以根据不同的级别输出不同的错误信息，如下例子所示：
+You can use different log level to output different error messages, it's based on how critical the error you think it is:
 
 ### Examples of log messages
 - Trace
@@ -776,10 +776,8 @@ LevelTrace、LevelDebug、LevelInfo、LevelWarning、	LevelError、LevelCritical
 		}
 	}
 
-## 配置管理
-beego支持解析ini文件, beego默认会解析当前应用下的`conf/app.conf`文件
-
-通过这个文件你可以初始化很多beego的默认参数
+##Configuration
+Beego supports to parse .ini file in path `conf/app.conf`, and you have following options:
 
 	appname = beepkg
 	httpaddr = "127.0.0.1"
@@ -789,23 +787,23 @@ beego支持解析ini文件, beego默认会解析当前应用下的`conf/app.conf
 	autorecover = false
 	viewspath = "myview"
 	
-上面这些参数会替换beego默认的一些参数。
+If you set value in configuration file, Beego uses it to replace default value.
 
-你可以在配置文件中配置应用需要用的一些配置信息，例如下面所示的数据库信息：
+You can also have other values for your application, for example, database connection information:
 
 	mysqluser = "root"
 	mysqlpass = "rootpass"
 	mysqlurls = "127.0.0.1"
 	mysqldb   = "beego"
 	
-那么你就可以通过如下的方式获取设置的配置信息:
+Then use following code to load your settings:
 
 	beego.AppConfig.String("mysqluser")
 	beego.AppConfig.String("mysqlpass")
 	beego.AppConfig.String("mysqlurls")
 	beego.AppConfig.String("mysqldb")
 
-AppConfig支持如下方法
+AppConfig supports following methods:
 
 - Bool(key string) (bool, error)
 - Int(key string) (int, error)
@@ -813,91 +811,92 @@ AppConfig支持如下方法
 - Float(key string) (float64, error)
 - String(key string) string
 
-## 系统默认参数
-beego中带有很多可配置的参数，我们来一一认识一下它们，这样有利于我们在接下来的beego开发中可以充分的发挥他们的作用：
+##Beego arguments
+Beego has many configurable arguments, let me introduce to you all of them, so you can use them for more usage in your application:
 
 * BeeApp
 
-	beego默认启动的一个应用器入口，在应用import beego的时候，在init中已经初始化的。
+	Entry point of Beego, it initialized in init() function when you import Beego package.
 	
 * AppConfig
 
-	beego的配置文件解析之后的对象，也是在init的时候初始化的，里面保存有解析`conf/app.conf`下面所有的参数数据
+	It stores values from file `conf/app.conf` and initialized in init() function.
 	
 * HttpAddr
 
-	应用监听地址，默认为空，监听所有的网卡IP
+	Application listening address, default is empty for listening all IP.
 	
 * HttpPort
 
-	应用监听端口，默认为8080
+	Application listening port, default is 8080.
 	
 * AppName
 
-	应用名称，默认是beego
+	Application name, default is "beego".
 	
 * RunMode 
 
-	应用的模式，默认是dev，为开发模式，在开发模式下出错会提示友好的出错页面，如前面错误描述中所述。
+	Application mode, default is "dev" develop mode and gives friendly error messages.
 	
 * AutoRender
 
-	是否模板自动渲染，默认值为true，对于API类型的应用，应用需要把该选项设置为false，不需要渲染模板。
+	This value indicates whether auto-render or not, default is true, you should set to false for API usage applications.
 	
 * RecoverPanic
 
-	是否异常恢复，默认值为true，即当应用出现异常的情况，通过recover恢复回来，而不会导致应用异常退出。
+	This value indicates whether recover from panic or not, default is true, and program will not exit when error occurs.
 	
 * PprofOn
 
-	是否启用pprof，默认是false，当开启之后，用户可以通过如下地址查看相应的goroutine执行情况
+	This value indicates whether enable pprof or not, default is false, and you can use following address to see goroutine execution status once you enable this feature.
 	
 		/debug/pprof
 		/debug/pprof/cmdline
 		/debug/pprof/profile
 		/debug/pprof/symbol 
-	关于pprof的信息，请参考官方的描述[pprof](http://golang.org/pkg/net/http/pprof/)	
+	
+	For more information about pprof, please read [pprof](http://golang.org/pkg/net/http/pprof/)	
 	
 * ViewsPath
 
-	模板路径，默认值是views
+	Template path, default is "views".
 	
 * SessionOn
 
-	session是否开启，默认是false
+	This value indicate whether enable session or not, default is false.
 	
 * SessionProvider
 
-	session的引擎，默认是memory
+	Session engine, default is memory.
 	
 * SessionName
 
-	存在客户端的cookie名称，默认值是beegosessionID
+	Name for cookie that save in client browser, default is "beegosessionID".
 	
 * SessionGCMaxLifetime
 
-	session过期时间，默认值是3600秒
+	Session expired time, default is 3600 seconds.
 	
 * SessionSavePath
 
-	session保存路径，默认是空
+	Save path of session, default is empty.
 	
 * UseFcgi
 
-	是否启用fastcgi，默认是false
+	This value indicates whether enable fastcgi or not, default is false.
 	
 * MaxMemory
 
-	文件上传默认内存缓存大小，默认值是`1 << 26`(64M)
+	Maximum memory size for file upload, default is `1 << 26`(64M).
 
-## 第三方应用集成
-beego支持第三方应用的集成，用户可以自定义`http.Handler`,用户可以通过如下方式进行注册路由：
+##Integrated third-party applications
+Beego supports to integrate third-party application, you can customized `http.Handler` as follows:
 
 	beego.RouterHandler("/chat/:info(.*)", sockjshandler)
 	
-sockjshandler实现了接口`http.Handler`。
+sockjshandler implemented interface `http.Handler`.
 
-目前在beego的example中有支持sockjs的chat例子，示例代码如下：
+Beego has an example for supporting chat of sockjs, here is the code:
 
 	package main
 	
@@ -942,10 +941,10 @@ sockjshandler实现了接口`http.Handler`。
 		beego.Run()
 	}
 
-通过上面的代码很简单的实现了一个多人的聊天室。上面这个只是一个sockjs的例子，我想通过大家自定义`http.Handler`，可以有很多种方式来进行扩展beego应用。
+The above example implemented a simple chat room for sockjs, and you can use `http.Handler` for more extensions.
 
-## 部署编译应用
-Go语言的应用最后编译之后是一个二进制文件，你只需要copy这个应用到服务器上，运行起来就行。beego由于带有几个静态文件、配置文件、模板文件三个目录，所以用户部署的时候需要同时copy这三个目录到相应的部署应用之下，下面以我实际的应用部署为例：
+##Deployment
+Go compiles program to binary file, you only need to copy this binary to your server and run it. Because Beego uses MVC model, so you may have folders for static files, configuration files and template files, so you have to copy those files as well. Here is a real example for deployment.
 
 	$ mkdir /opt/app/beepkg
 	$ cp beepkg /opt/app/beepkg
@@ -953,7 +952,7 @@ Go语言的应用最后编译之后是一个二进制文件，你只需要copy�
 	$ cp -fr static /opt/app/beepkg
 	$ cp -fr conf /opt/app/beepkg
 	
-这样在`/opt/app/beepkg`目录下面就会显示如下的目录结构：
+Here is the directory structure pf `/opt/app/beepkg`.
 
 	.
 	├── conf
@@ -966,17 +965,15 @@ Go语言的应用最后编译之后是一个二进制文件，你只需要copy�
 	    └── index.tpl
 	├── beepkg	
 
-这样我们就已经把我们需要的应用搬到服务器了，那么接下来就可以开始部署了，我现在服务器端用两种方式来run，
+Now you can run your application in server, here are two good ways to manage your applications, and I recommend the first one.
 
 - Supervisord 
 	
-	安装和配置见[Supervisord](Supervisord.md)
+	More information: [Supervisord](Supervisord.md)
 
-- nohup方式
+- nohup
 
 	nohup ./beepkg &
-
-个人比较推荐第一种方式，可以很好的管理起来应用
 
 - [Introduction](README.md)
 - [Step by step](Tutorial.md)
