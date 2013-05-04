@@ -341,8 +341,8 @@ beego采用了Go语言内置的模板引擎，所有模板的语法和Go的一�
 
 也就是你对应的Controller名字+请求方法名.模板后缀，也就是如果你的Controller名是`AddController`，请求方法是`POST`，默认的文件后缀是`tpl`，那么就会默认请求`/viewpath/AddController/POST.tpl`文件。
 
-### lauout设计
-beego支持layout设计，例如你在管理系统中，其实整个的管理界面是固定的，支会变化中间的部分，那么你可以通过如下的设置：
+### layout设计
+beego支持layout设计，例如你在管理系统中，其实整个的管理界面是固定的，只会变化中间的部分，那么你可以通过如下的设置：
 	
 	this.Layout = "admin/layout.html"
 	this.TplNames = "admin/add.tpl" 
