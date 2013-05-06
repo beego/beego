@@ -192,6 +192,10 @@ func (c *Controller) Redirect(url string, code int) {
 	c.Ctx.Redirect(code, url)
 }
 
+func (c *Controller) Abort(code string) {
+	panic(code)
+}
+
 func (c *Controller) ServeJson() {
 	content, err := json.MarshalIndent(c.Data["json"], "", "  ")
 	if err != nil {

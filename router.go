@@ -187,24 +187,29 @@ func (p *ControllerRegistor) FilterPrefixPath(path string, filter http.HandlerFu
 func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err := recover(); err != nil {
-			if !RecoverPanic {
-				// go back to panic
-				panic(err)
+			errstr := fmt.Sprint(err)
+			if handler, ok := ErrorMaps[errstr]; ok {
+				handler(rw, r)
 			} else {
-				var stack string
-				Critical("Handler crashed with error", err)
-				for i := 1; ; i++ {
-					_, file, line, ok := runtime.Caller(i)
-					if !ok {
-						break
+				if !RecoverPanic {
+					// go back to panic
+					panic(err)
+				} else {
+					var stack string
+					Critical("Handler crashed with error", err)
+					for i := 1; ; i++ {
+						_, file, line, ok := runtime.Caller(i)
+						if !ok {
+							break
+						}
+						Critical(file, line)
+						if RunMode == "dev" {
+							stack = stack + fmt.Sprintln(file, line)
+						}
 					}
-					Critical(file, line)
 					if RunMode == "dev" {
-						stack = stack + fmt.Sprintln(file, line)
+						ShowErr(err, rw, r, stack)
 					}
-				}
-				if RunMode == "dev" {
-					ShowErr(err, rw, r, stack)
 				}
 			}
 		}
@@ -385,7 +390,11 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	//if no matches to url, throw a not found exception
 	if w.started == false {
-		http.NotFound(w, r)
+		if h, ok := ErrorMaps["404"]; ok {
+			h(w, r)
+		} else {
+			http.NotFound(w, r)
+		}
 	}
 }
 

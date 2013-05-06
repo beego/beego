@@ -148,6 +148,11 @@ func RouterHandler(path string, c http.Handler) *App {
 	return BeeApp
 }
 
+func Errorhandler(err string, h http.HandlerFunc) *App {
+	ErrorMaps[err] = h
+	return BeeApp
+}
+
 func SetViewsPath(path string) *App {
 	BeeApp.SetViewsPath(path)
 	return BeeApp
@@ -195,5 +200,6 @@ func Run() {
 		}
 	}
 	runtime.GOMAXPROCS(runtime.NumCPU())
+	registerErrorHander()
 	BeeApp.Run()
 }

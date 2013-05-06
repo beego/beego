@@ -482,7 +482,58 @@ XML数据直接输出，设置`content-type`为`application/xml`：
 	   this.Redirect("/", 302)
 	}	
 
-@todo 错误处理还需要后期改进
+如何中止此次请求并抛出异常，beego可以在控制器中这操作
+
+	func (this *MainController) Get() {
+		this.Abort("401")
+		v := this.GetSession("asta")
+		if v == nil {
+			this.SetSession("asta", int(1))
+			this.Data["Email"] = 0
+		} else {
+			this.SetSession("asta", v.(int)+1)
+			this.Data["Email"] = v.(int)
+		}
+		this.TplNames = "index.tpl"	
+	}
+
+这样`this.Abort("401")`之后的代码不会再执行，而且会默认显示给用户如下页面
+
+![](images/401.png)	
+
+beego框架默认支持404、401、403、500、503这几种错误的处理。用户可以自定义相应的错误处理，例如下面重新定义404页面：
+
+	func page_not_found(rw http.ResponseWriter, r *http.Request){
+		t:= template.New("beegoerrortemp").ParseFiles(beego.ViewsPath+"404.html")
+		data :=make(map[string]interface{})
+		data["content"] = "page not found"
+		t.Execute(rw, data)
+	}
+	
+	func main() {
+		beego.Errorhandler("404",PageNotFound)
+		beego.Router("/", &controllers.MainController{})
+		beego.Run()
+	}	
+
+我们可以通过自定义错误页面`404.html`来处理404错误。
+
+beego更加人性化的还有一个设计就是支持用户自定义字符串错误类型处理函数，例如下面的代码，用户注册了一个数据库出错的处理页面：
+
+	func dbError(rw http.ResponseWriter, r *http.Request){
+		t:= template.New("beegoerrortemp").ParseFiles(beego.ViewsPath+"dberror.html")
+		data :=make(map[string]interface{})
+		data["content"] = "database is now down"
+		t.Execute(rw, data)
+	}
+
+	func main() {
+		beego.Errorhandler("dbError",dbError)
+		beego.Router("/", &controllers.MainController{})
+		beego.Run()
+	}	
+
+一旦在入口注册该错误处理代码，那么你可以在任何你的逻辑中遇到数据库错误调用`this.Abort("dbError")`来进行异常页面处理。
 
 ## response处理
 response可能会有集中情况：
