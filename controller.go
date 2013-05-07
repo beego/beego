@@ -160,6 +160,7 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		BeeTemplates[subdir].ExecuteTemplate(newbytes, file, c.Data)
 		tplcontent, _ := ioutil.ReadAll(newbytes)
 		c.Data["LayoutContent"] = template.HTML(string(tplcontent))
+		subdir = path.Dir(c.Layout)
 		_, file = path.Split(c.Layout)
 		ibytes := bytes.NewBufferString("")
 		err := BeeTemplates[subdir].ExecuteTemplate(ibytes, file, c.Data)
