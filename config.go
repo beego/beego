@@ -75,8 +75,8 @@ func LoadConfig(name string) (*Config, error) {
 		}
 
 		val := bytes.SplitN(line, bEqual, 2)
-		if bytes.HasPrefix(strings.TrimSpace(string(val[1])), bDQuote) {
-			val[1] = bytes.Trim(strings.TrimSpace(string(val[1])), `"`)
+		if bytes.HasPrefix([]byte(strings.TrimSpace(string(val[1]))), bDQuote) {
+			val[1] = bytes.Trim([]byte(strings.TrimSpace(string(val[1]))), `"`)
 		}
 
 		key := strings.TrimSpace(string(val[0]))
