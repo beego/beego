@@ -21,12 +21,13 @@ import (
 )
 
 type Controller struct {
-	Ctx       *Context
-	Data      map[interface{}]interface{}
-	ChildName string
-	TplNames  string
-	Layout    string
-	TplExt    string
+	Ctx        *Context
+	Data       map[interface{}]interface{}
+	ChildName  string
+	TplNames   string
+	Layout     string
+	TplExt     string
+	CruSession session.SessionStore
 }
 
 type ControllerInterface interface {
@@ -58,6 +59,9 @@ func (c *Controller) Prepare() {
 }
 
 func (c *Controller) Finish() {
+	if c.CruSession != nil {
+		c.CruSession.SessionRelease()
+	}
 }
 
 func (c *Controller) Get() {
@@ -259,25 +263,30 @@ func (c *Controller) SaveToFile(fromfile, tofile string) error {
 	return nil
 }
 
-func (c *Controller) StartSession() (sess session.SessionStore) {
-	sess = GlobalSessions.SessionStart(c.Ctx.ResponseWriter, c.Ctx.Request)
-	return
+func (c *Controller) StartSession() session.SessionStore {
+	if c.CruSession == nil {
+		c.CruSession = GlobalSessions.SessionStart(c.Ctx.ResponseWriter, c.Ctx.Request)
+	}
+	return c.CruSession
 }
 
 func (c *Controller) SetSession(name string, value interface{}) {
-	ss := c.StartSession()
-	defer ss.SessionRelease()
-	ss.Set(name, value)
+	if c.CruSession == nil {
+		c.StartSession()
+	}
+	c.CruSession.Set(name, value)
 }
 
 func (c *Controller) GetSession(name string) interface{} {
-	ss := c.StartSession()
-	defer ss.SessionRelease()
-	return ss.Get(name)
+	if c.CruSession == nil {
+		c.StartSession()
+	}
+	return c.CruSession.Get(name)
 }
 
 func (c *Controller) DelSession(name string) {
-	ss := c.StartSession()
-	defer ss.SessionRelease()
-	ss.Delete(name)
+	if c.CruSession == nil {
+		c.StartSession()
+	}
+	c.CruSession.Delete(name)
 }
