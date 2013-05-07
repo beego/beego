@@ -180,10 +180,12 @@ func FilterPrefixPath(path string, filter http.HandlerFunc) *App {
 }
 
 func Run() {
-	err := ParseConfig()
-	if err != nil {
-		if RunMode == "dev" {
-			Warn(err)
+	if AppConfigPath != path.Join(AppPath, "conf", "app.conf") {
+		err := ParseConfig()
+		if err != nil {
+			if RunMode == "dev" {
+				Warn(err)
+			}
 		}
 	}
 	if PprofOn {
@@ -194,7 +196,7 @@ func Run() {
 		GlobalSessions, _ = session.NewManager(SessionProvider, SessionName, SessionGCMaxLifetime, SessionSavePath)
 		go GlobalSessions.GC()
 	}
-	err = BuildTemplate(ViewsPath)
+	err := BuildTemplate(ViewsPath)
 	if err != nil {
 		if RunMode == "dev" {
 			Warn(err)
