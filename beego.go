@@ -65,6 +65,7 @@ func init() {
 	EnableGzip = false
 	StaticDir["/static"] = "static"
 	AppConfigPath = path.Join(AppPath, "conf", "app.conf")
+	ParseConfig()
 }
 
 type App struct {
