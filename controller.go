@@ -59,6 +59,10 @@ func (c *Controller) Prepare() {
 }
 
 func (c *Controller) Finish() {
+
+}
+
+func (c *Controller) Destructor() {
 	if c.CruSession != nil {
 		c.CruSession.SessionRelease()
 	}

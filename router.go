@@ -388,6 +388,8 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				}
 			}
 		}
+		method = vc.MethodByName("Destructor")
+		method.Call(in)
 	}
 
 	//if no matches to url, throw a not found exception
