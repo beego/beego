@@ -1,5 +1,4 @@
 ## beego
-=======
 beego is a Go Framework which is inspired from tornado and sinatra. 
 
 It is a simply & powerful web framework.
