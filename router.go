@@ -261,6 +261,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			values := r.URL.Query()
 			for i, match := range matches[1:] {
 				values.Add(c.params[i], match)
+				r.Form.Add(c.params[i], match)
 				params[c.params[i]] = match
 			}
 			//reassemble query params and add to RawQuery
@@ -315,6 +316,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				values := r.URL.Query()
 				for i, match := range matches[1:] {
 					values.Add(route.params[i], match)
+					r.Form.Add(route.params[i], match)
 					params[route.params[i]] = match
 				}
 				//reassemble query params and add to RawQuery
