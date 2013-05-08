@@ -504,14 +504,14 @@ XML数据直接输出，设置`content-type`为`application/xml`：
 beego框架默认支持404、401、403、500、503这几种错误的处理。用户可以自定义相应的错误处理，例如下面重新定义404页面：
 
 	func page_not_found(rw http.ResponseWriter, r *http.Request){
-		t:= template.New("beegoerrortemp").ParseFiles(beego.ViewsPath+"404.html")
+		t,_:= template.New("beegoerrortemp").ParseFiles(beego.ViewsPath+"/404.html")
 		data :=make(map[string]interface{})
 		data["content"] = "page not found"
 		t.Execute(rw, data)
 	}
 	
 	func main() {
-		beego.Errorhandler("404",PageNotFound)
+		beego.Errorhandler("404",page_not_found)
 		beego.Router("/", &controllers.MainController{})
 		beego.Run()
 	}	
@@ -521,7 +521,7 @@ beego框架默认支持404、401、403、500、503这几种错误的处理。用
 beego更加人性化的还有一个设计就是支持用户自定义字符串错误类型处理函数，例如下面的代码，用户注册了一个数据库出错的处理页面：
 
 	func dbError(rw http.ResponseWriter, r *http.Request){
-		t:= template.New("beegoerrortemp").ParseFiles(beego.ViewsPath+"dberror.html")
+		t,_:= template.New("beegoerrortemp").ParseFiles(beego.ViewsPath+"/dberror.html")
 		data :=make(map[string]interface{})
 		data["content"] = "database is now down"
 		t.Execute(rw, data)
