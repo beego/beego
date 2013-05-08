@@ -223,6 +223,12 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	//static file server
 	for prefix, staticDir := range StaticDir {
+		if r.URL.Path == "/favicon.ico" {
+			file := staticDir + r.URL.Path
+			http.ServeFile(w, r, file)
+			w.started = true
+			return
+		}
 		if strings.HasPrefix(r.URL.Path, prefix) {
 			file := staticDir + r.URL.Path[len(prefix):]
 			http.ServeFile(w, r, file)
