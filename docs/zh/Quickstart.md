@@ -341,8 +341,8 @@ beego采用了Go语言内置的模板引擎，所有模板的语法和Go的一�
 
 也就是你对应的Controller名字+请求方法名.模板后缀，也就是如果你的Controller名是`AddController`，请求方法是`POST`，默认的文件后缀是`tpl`，那么就会默认请求`/viewpath/AddController/POST.tpl`文件。
 
-### lauout设计
-beego支持layout设计，例如你在管理系统中，其实整个的管理界面是固定的，支会变化中间的部分，那么你可以通过如下的设置：
+### layout设计
+beego支持layout设计，例如你在管理系统中，其实整个的管理界面是固定的，只会变化中间的部分，那么你可以通过如下的设置：
 	
 	this.Layout = "admin/layout.html"
 	this.TplNames = "admin/add.tpl" 
@@ -482,7 +482,58 @@ XML数据直接输出，设置`content-type`为`application/xml`：
 	   this.Redirect("/", 302)
 	}	
 
-@todo 错误处理还需要后期改进
+如何中止此次请求并抛出异常，beego可以在控制器中这操作
+
+	func (this *MainController) Get() {
+		this.Abort("401")
+		v := this.GetSession("asta")
+		if v == nil {
+			this.SetSession("asta", int(1))
+			this.Data["Email"] = 0
+		} else {
+			this.SetSession("asta", v.(int)+1)
+			this.Data["Email"] = v.(int)
+		}
+		this.TplNames = "index.tpl"	
+	}
+
+这样`this.Abort("401")`之后的代码不会再执行，而且会默认显示给用户如下页面
+
+![](images/401.png)	
+
+beego框架默认支持404、401、403、500、503这几种错误的处理。用户可以自定义相应的错误处理，例如下面重新定义404页面：
+
+	func page_not_found(rw http.ResponseWriter, r *http.Request){
+		t,_:= template.New("beegoerrortemp").ParseFiles(beego.ViewsPath+"/404.html")
+		data :=make(map[string]interface{})
+		data["content"] = "page not found"
+		t.Execute(rw, data)
+	}
+	
+	func main() {
+		beego.Errorhandler("404",page_not_found)
+		beego.Router("/", &controllers.MainController{})
+		beego.Run()
+	}	
+
+我们可以通过自定义错误页面`404.html`来处理404错误。
+
+beego更加人性化的还有一个设计就是支持用户自定义字符串错误类型处理函数，例如下面的代码，用户注册了一个数据库出错的处理页面：
+
+	func dbError(rw http.ResponseWriter, r *http.Request){
+		t,_:= template.New("beegoerrortemp").ParseFiles(beego.ViewsPath+"/dberror.html")
+		data :=make(map[string]interface{})
+		data["content"] = "database is now down"
+		t.Execute(rw, data)
+	}
+
+	func main() {
+		beego.Errorhandler("dbError",dbError)
+		beego.Router("/", &controllers.MainController{})
+		beego.Run()
+	}	
+
+一旦在入口注册该错误处理代码，那么你可以在任何你的逻辑中遇到数据库错误调用`this.Abort("dbError")`来进行异常页面处理。
 
 ## response处理
 response可能会有集中情况：
@@ -833,6 +884,10 @@ beego中带有很多可配置的参数，我们来一一认识一下它们，这
 * AppConfig
 
 	beego的配置文件解析之后的对象，也是在init的时候初始化的，里面保存有解析`conf/app.conf`下面所有的参数数据
+	
+* AppConfigPath
+
+	配置文件所在的路径，默认是应用程序对应的目录下的`conf/app.conf`，用户可以修改该值配置自己的配置文件	
 	
 * HttpAddr
 

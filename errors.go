@@ -57,7 +57,7 @@ var tpl = `
 `
 
 func ShowErr(err interface{}, rw http.ResponseWriter, r *http.Request, Stack string) {
-	t, err := template.New("beegoerrortemp").Parse(tpl)
+	t, _ := template.New("beegoerrortemp").Parse(tpl)
 	data := make(map[string]string)
 	data["AppError"] = AppName + ":" + fmt.Sprint(err)
 	data["RequestMethod"] = r.Method
@@ -67,4 +67,209 @@ func ShowErr(err interface{}, rw http.ResponseWriter, r *http.Request, Stack str
 	data["BeegoVersion"] = VERSION
 	data["GoVersion"] = runtime.Version()
 	t.Execute(rw, data)
+}
+
+var errtpl = `
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<title>Page Not Found</title>
+		<style type="text/css">
+			* {
+				margin:0;
+				padding:0;
+			}
+
+			body {
+				background-color:#EFEFEF;
+				font: .9em "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+			}
+
+			#wrapper{
+				width:600px;
+				margin:40px auto 0;
+				text-align:center;
+				-moz-box-shadow: 5px 5px 10px rgba(0,0,0,0.3);
+				-webkit-box-shadow: 5px 5px 10px rgba(0,0,0,0.3);
+				box-shadow: 5px 5px 10px rgba(0,0,0,0.3);
+			}
+
+			#wrapper h1{
+				color:#FFF;
+				text-align:center;
+				margin-bottom:20px;
+			}
+
+			#wrapper a{
+				display:block;
+				font-size:.9em;
+				padding-top:20px;
+				color:#FFF;
+				text-decoration:none;
+				text-align:center;
+			}
+
+			#container {
+				width:600px;
+				padding-bottom:15px;
+				background-color:#FFFFFF;
+			}
+
+			.navtop{
+				height:40px;
+				background-color:#24B2EB;
+				padding:13px;
+			}
+
+			.content {
+				padding:10px 10px 25px;
+				background: #FFFFFF;
+				margin:;
+				color:#333;
+			}
+
+			a.button{
+				color:white;
+				padding:15px 20px;
+				text-shadow:1px 1px 0 #00A5FF;
+				font-weight:bold;
+				text-align:center;
+				border:1px solid #24B2EB;
+				margin:0px 200px;
+				clear:both;
+				background-color: #24B2EB;
+				border-radius:100px;
+				-moz-border-radius:100px;
+				-webkit-border-radius:100px;
+			}
+
+			a.button:hover{
+				text-decoration:none;
+				background-color: #24B2EB;
+			}
+
+		</style>
+	</head>
+	<body>
+		<div id="wrapper">
+			<div id="container">
+				<div class="navtop">
+					<h1>{{.Title}}</h1>
+				</div>
+				<div id="content">
+					{{.Content}}
+					<a href="/" title="Home" class="button">Go Home</a><br />
+
+					<br>power by beego {{.BeegoVersion}}
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
+`
+
+var ErrorMaps map[string]http.HandlerFunc
+
+func init() {
+	ErrorMaps = make(map[string]http.HandlerFunc)
+}
+
+//404
+func NotFound(rw http.ResponseWriter, r *http.Request) {
+	t, _ := template.New("beegoerrortemp").Parse(errtpl)
+	data := make(map[string]interface{})
+	data["Title"] = "Page Not Found"
+	data["Content"] = template.HTML("<br>The Page You have requested flown the coop." +
+		"<br>Perhaps you are here because:" +
+		"<br><br><ul>" +
+		"<br>The page has moved" +
+		"<br>The page no longer exists" +
+		"<br>You were looking for your puppy and got lost" +
+		"<br>You like 404 pages" +
+		"</ul>")
+	data["BeegoVersion"] = VERSION
+	t.Execute(rw, data)
+}
+
+//401
+func Unauthorized(rw http.ResponseWriter, r *http.Request) {
+	t, _ := template.New("beegoerrortemp").Parse(errtpl)
+	data := make(map[string]interface{})
+	data["Title"] = "Unauthorized"
+	data["Content"] = template.HTML("<br>The Page You have requested can't authorized." +
+		"<br>Perhaps you are here because:" +
+		"<br><br><ul>" +
+		"<br>Check the credentials that you supplied" +
+		"<br>Check the address for errors" +
+		"</ul>")
+	data["BeegoVersion"] = VERSION
+	t.Execute(rw, data)
+}
+
+//403
+func Forbidden(rw http.ResponseWriter, r *http.Request) {
+	t, _ := template.New("beegoerrortemp").Parse(errtpl)
+	data := make(map[string]interface{})
+	data["Title"] = "Forbidden"
+	data["Content"] = template.HTML("<br>The Page You have requested forbidden." +
+		"<br>Perhaps you are here because:" +
+		"<br><br><ul>" +
+		"<br>Your address may be blocked" +
+		"<br>The site may be disabled" +
+		"<br>You need to log in" +
+		"</ul>")
+	data["BeegoVersion"] = VERSION
+	t.Execute(rw, data)
+}
+
+//503
+func ServiceUnavailable(rw http.ResponseWriter, r *http.Request) {
+	t, _ := template.New("beegoerrortemp").Parse(errtpl)
+	data := make(map[string]interface{})
+	data["Title"] = "Service Unavailable"
+	data["Content"] = template.HTML("<br>The Page You have requested unavailable." +
+		"<br>Perhaps you are here because:" +
+		"<br><br><ul>" +
+		"<br><br>The page is overloaded" +
+		"<br>Please try again later." +
+		"</ul>")
+	data["BeegoVersion"] = VERSION
+	t.Execute(rw, data)
+}
+
+//500
+func InternalServerError(rw http.ResponseWriter, r *http.Request) {
+	t, _ := template.New("beegoerrortemp").Parse(errtpl)
+	data := make(map[string]interface{})
+	data["Title"] = "Internal Server Error"
+	data["Content"] = template.HTML("<br>The Page You have requested has down now." +
+		"<br><br><ul>" +
+		"<br>simply try again later" +
+		"<br>you should report the fault to the website administrator" +
+		"</ul>")
+	data["BeegoVersion"] = VERSION
+	t.Execute(rw, data)
+}
+
+func registerErrorHander() {
+	if _, ok := ErrorMaps["404"]; !ok {
+		ErrorMaps["404"] = NotFound
+	}
+
+	if _, ok := ErrorMaps["401"]; !ok {
+		ErrorMaps["401"] = Unauthorized
+	}
+
+	if _, ok := ErrorMaps["403"]; !ok {
+		ErrorMaps["403"] = Forbidden
+	}
+
+	if _, ok := ErrorMaps["503"]; !ok {
+		ErrorMaps["503"] = ServiceUnavailable
+	}
+
+	if _, ok := ErrorMaps["500"]; !ok {
+		ErrorMaps["500"] = InternalServerError
+	}
 }

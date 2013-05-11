@@ -75,8 +75,8 @@ func LoadConfig(name string) (*Config, error) {
 		}
 
 		val := bytes.SplitN(line, bEqual, 2)
-		if bytes.HasPrefix(val[1], bDQuote) {
-			val[1] = bytes.Trim(val[1], `"`)
+		if bytes.HasPrefix([]byte(strings.TrimSpace(string(val[1]))), bDQuote) {
+			val[1] = bytes.Trim([]byte(strings.TrimSpace(string(val[1]))), `"`)
 		}
 
 		key := strings.TrimSpace(string(val[0]))
@@ -121,5 +121,59 @@ func (c *Config) SetValue(key, value string) error {
 	}
 
 	c.data[key] = value
+	return nil
+}
+
+func ParseConfig() (err error) {
+	AppConfig, err = LoadConfig(AppConfigPath)
+	if err != nil {
+		return err
+	} else {
+		HttpAddr = AppConfig.String("httpaddr")
+		if v, err := AppConfig.Int("httpport"); err == nil {
+			HttpPort = v
+		}
+		if v, err := AppConfig.Int64("maxmemory"); err == nil {
+			MaxMemory = v
+		}
+		AppName = AppConfig.String("appname")
+		if runmode := AppConfig.String("runmode"); runmode != "" {
+			RunMode = runmode
+		}
+		if ar, err := AppConfig.Bool("autorender"); err == nil {
+			AutoRender = ar
+		}
+		if ar, err := AppConfig.Bool("autorecover"); err == nil {
+			RecoverPanic = ar
+		}
+		if ar, err := AppConfig.Bool("pprofon"); err == nil {
+			PprofOn = ar
+		}
+		if views := AppConfig.String("viewspath"); views != "" {
+			ViewsPath = views
+		}
+		if ar, err := AppConfig.Bool("sessionon"); err == nil {
+			SessionOn = ar
+		}
+		if ar := AppConfig.String("sessionprovider"); ar != "" {
+			SessionProvider = ar
+		}
+		if ar := AppConfig.String("sessionname"); ar != "" {
+			SessionName = ar
+		}
+		if ar := AppConfig.String("sessionsavepath"); ar != "" {
+			SessionSavePath = ar
+		}
+		if ar, err := AppConfig.Int("sessiongcmaxlifetime"); err == nil && ar != 0 {
+			int64val, _ := strconv.ParseInt(strconv.Itoa(ar), 10, 64)
+			SessionGCMaxLifetime = int64val
+		}
+		if ar, err := AppConfig.Bool("usefcgi"); err == nil {
+			UseFcgi = ar
+		}
+		if ar, err := AppConfig.Bool("enablegzip"); err == nil {
+			EnableGzip = ar
+		}
+	}
 	return nil
 }

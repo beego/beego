@@ -10,7 +10,6 @@ import (
 	"os"
 	"path"
 	"runtime"
-	"strconv"
 )
 
 const VERSION = "0.5.0"
@@ -19,6 +18,7 @@ var (
 	BeeApp        *App
 	AppName       string
 	AppPath       string
+	AppConfigPath string
 	StaticDir     map[string]string
 	TemplateCache map[string]*template.Template
 	HttpAddr      string
@@ -30,16 +30,15 @@ var (
 	RunMode       string //"dev" or "prod"
 	AppConfig     *Config
 	//related to session 
-	SessionOn            bool   // wheather auto start session,default is false
-	SessionProvider      string // default session provider  memory mysql redis 
-	SessionName          string // sessionName cookie's name
-	SessionGCMaxLifetime int64  // session's gc maxlifetime
-	SessionSavePath      string // session savepath if use mysql/redis/file this set to the connectinfo
+	GlobalSessions       *session.Manager //GlobalSessions
+	SessionOn            bool             // wheather auto start session,default is false
+	SessionProvider      string           // default session provider  memory mysql redis 
+	SessionName          string           // sessionName cookie's name
+	SessionGCMaxLifetime int64            // session's gc maxlifetime
+	SessionSavePath      string           // session savepath if use mysql/redis/file this set to the connectinfo
 	UseFcgi              bool
 	MaxMemory            int64
 	EnableGzip           bool // enable gzip
-
-	GlobalSessions *session.Manager //GlobalSessions
 )
 
 func init() {
@@ -48,103 +47,25 @@ func init() {
 	AppPath, _ = os.Getwd()
 	StaticDir = make(map[string]string)
 	TemplateCache = make(map[string]*template.Template)
-	var err error
-	AppConfig, err = LoadConfig(path.Join(AppPath, "conf", "app.conf"))
-	if err != nil {
-		//Trace("open Config err:", err)
-		HttpAddr = ""
-		HttpPort = 8080
-		AppName = "beego"
-		RunMode = "dev" //default runmod
-		AutoRender = true
-		RecoverPanic = true
-		PprofOn = false
-		ViewsPath = "views"
-		SessionOn = false
-		SessionProvider = "memory"
-		SessionName = "beegosessionID"
-		SessionGCMaxLifetime = 3600
-		SessionSavePath = ""
-		UseFcgi = false
-		MaxMemory = 1 << 26 //64MB
-		EnableGzip = false
-	} else {
-		HttpAddr = AppConfig.String("httpaddr")
-		if v, err := AppConfig.Int("httpport"); err != nil {
-			HttpPort = 8080
-		} else {
-			HttpPort = v
-		}
-		if v, err := AppConfig.Int64("maxmemory"); err != nil {
-			MaxMemory = 1 << 26
-		} else {
-			MaxMemory = v
-		}
-		AppName = AppConfig.String("appname")
-		if runmode := AppConfig.String("runmode"); runmode != "" {
-			RunMode = runmode
-		} else {
-			RunMode = "dev"
-		}
-		if ar, err := AppConfig.Bool("autorender"); err != nil {
-			AutoRender = true
-		} else {
-			AutoRender = ar
-		}
-		if ar, err := AppConfig.Bool("autorecover"); err != nil {
-			RecoverPanic = true
-		} else {
-			RecoverPanic = ar
-		}
-		if ar, err := AppConfig.Bool("pprofon"); err != nil {
-			PprofOn = false
-		} else {
-			PprofOn = ar
-		}
-		if views := AppConfig.String("viewspath"); views == "" {
-			ViewsPath = "views"
-		} else {
-			ViewsPath = views
-		}
-		if ar, err := AppConfig.Bool("sessionon"); err != nil {
-			SessionOn = false
-		} else {
-			SessionOn = ar
-		}
-		if ar := AppConfig.String("sessionprovider"); ar == "" {
-			SessionProvider = "memory"
-		} else {
-			SessionProvider = ar
-		}
-		if ar := AppConfig.String("sessionname"); ar == "" {
-			SessionName = "beegosessionID"
-		} else {
-			SessionName = ar
-		}
-		if ar := AppConfig.String("sessionsavepath"); ar == "" {
-			SessionSavePath = ""
-		} else {
-			SessionSavePath = ar
-		}
-		if ar, err := AppConfig.Int("sessiongcmaxlifetime"); err == nil && ar != 0 {
-			int64val, _ := strconv.ParseInt(strconv.Itoa(ar), 10, 64)
-			SessionGCMaxLifetime = int64val
-		} else {
-			SessionGCMaxLifetime = 3600
-		}
-		if ar, err := AppConfig.Bool("usefcgi"); err != nil {
-			UseFcgi = false
-		} else {
-			UseFcgi = ar
-		}
-		if ar, err := AppConfig.Bool("enablegzip"); err != nil {
-			EnableGzip = false
-		} else {
-			EnableGzip = ar
-		}
-	}
+	HttpAddr = ""
+	HttpPort = 8080
+	AppName = "beego"
+	RunMode = "dev" //default runmod
+	AutoRender = true
+	RecoverPanic = true
+	PprofOn = false
+	ViewsPath = "views"
+	SessionOn = false
+	SessionProvider = "memory"
+	SessionName = "beegosessionID"
+	SessionGCMaxLifetime = 3600
+	SessionSavePath = ""
+	UseFcgi = false
+	MaxMemory = 1 << 26 //64MB
+	EnableGzip = false
 	StaticDir["/static"] = "static"
-
+	AppConfigPath = path.Join(AppPath, "conf", "app.conf")
+	ParseConfig()
 }
 
 type App struct {
@@ -228,6 +149,11 @@ func RouterHandler(path string, c http.Handler) *App {
 	return BeeApp
 }
 
+func Errorhandler(err string, h http.HandlerFunc) *App {
+	ErrorMaps[err] = h
+	return BeeApp
+}
+
 func SetViewsPath(path string) *App {
 	BeeApp.SetViewsPath(path)
 	return BeeApp
@@ -254,6 +180,14 @@ func FilterPrefixPath(path string, filter http.HandlerFunc) *App {
 }
 
 func Run() {
+	if AppConfigPath != path.Join(AppPath, "conf", "app.conf") {
+		err := ParseConfig()
+		if err != nil {
+			if RunMode == "dev" {
+				Warn(err)
+			}
+		}
+	}
 	if PprofOn {
 		BeeApp.Router(`/debug/pprof`, &ProfController{})
 		BeeApp.Router(`/debug/pprof/:pp([\w]+)`, &ProfController{})
@@ -269,5 +203,6 @@ func Run() {
 		}
 	}
 	runtime.GOMAXPROCS(runtime.NumCPU())
+	registerErrorHander()
 	BeeApp.Run()
 }
