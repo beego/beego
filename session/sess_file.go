@@ -32,7 +32,6 @@ func (fs *FileSessionStore) Set(key, value interface{}) error {
 func (fs *FileSessionStore) Get(key interface{}) interface{} {
 	fs.lock.RLock()
 	defer fs.lock.RUnlock()
-	fs.updatecontent()
 	if v, ok := fs.values[key]; ok {
 		return v
 	} else {
@@ -58,13 +57,13 @@ func (fs *FileSessionStore) SessionRelease() {
 }
 
 func (fs *FileSessionStore) updatecontent() {
-	if len(fs.values) > 0 {
-		b, err := encodeGob(fs.values)
-		if err != nil {
-			return
-		}
-		fs.f.Write(b)
+	b, err := encodeGob(fs.values)
+	if err != nil {
+		return
 	}
+	fs.f.Truncate(0)
+	fs.f.Seek(0, 0)
+	fs.f.Write(b)
 }
 
 type FileProvider struct {
@@ -107,7 +106,7 @@ func (fp *FileProvider) SessionRead(sid string) (SessionStore, error) {
 		}
 	}
 	f.Close()
-	f, err = os.Create(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid))
+	f, err = os.OpenFile(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid), os.O_WRONLY|os.O_CREATE, 0777)
 	ss := &FileSessionStore{f: f, sid: sid, values: kv}
 	return ss, nil
 }
