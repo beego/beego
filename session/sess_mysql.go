@@ -55,11 +55,13 @@ func (st *MysqlSessionStore) SessionID() string {
 }
 
 func (st *MysqlSessionStore) updatemysql() {
-	b, err := encodeGob(st.values)
-	if err != nil {
-		return
+	if len(st.values) > 0 {
+		b, err := encodeGob(st.values)
+		if err != nil {
+			return
+		}
+		st.c.Exec("UPDATE session set `session_data`= ? where session_key=?", b, st.sid)
 	}
-	st.c.Exec("UPDATE session set `session_data`= ? where session_key=?", b, st.sid)
 }
 
 func (st *MysqlSessionStore) SessionRelease() {

@@ -275,21 +275,21 @@ func (c *Controller) StartSession() session.SessionStore {
 	return c.CruSession
 }
 
-func (c *Controller) SetSession(name string, value interface{}) {
+func (c *Controller) SetSession(name interface{}, value interface{}) {
 	if c.CruSession == nil {
 		c.StartSession()
 	}
 	c.CruSession.Set(name, value)
 }
 
-func (c *Controller) GetSession(name string) interface{} {
+func (c *Controller) GetSession(name interface{}) interface{} {
 	if c.CruSession == nil {
 		c.StartSession()
 	}
 	return c.CruSession.Get(name)
 }
 
-func (c *Controller) DelSession(name string) {
+func (c *Controller) DelSession(name interface{}) {
 	if c.CruSession == nil {
 		c.StartSession()
 	}

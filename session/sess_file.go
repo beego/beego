@@ -58,11 +58,13 @@ func (fs *FileSessionStore) SessionRelease() {
 }
 
 func (fs *FileSessionStore) updatecontent() {
-	b, err := encodeGob(fs.values)
-	if err != nil {
-		return
+	if len(fs.values) > 0 {
+		b, err := encodeGob(fs.values)
+		if err != nil {
+			return
+		}
+		fs.f.Write(b)
 	}
-	fs.f.Write(b)
 }
 
 type FileProvider struct {
