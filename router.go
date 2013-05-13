@@ -399,7 +399,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	//if no matches to url, throw a not found exception
-	if w.started == false {
+	if !findrouter {
 		if h, ok := ErrorMaps["404"]; ok {
 			h(w, r)
 		} else {
