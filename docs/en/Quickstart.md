@@ -472,7 +472,58 @@ You can use following to redirect:
 	   this.Redirect("/", 302)
 	}	
 
-@todo Error processing need to be improved.
+You can also throw an exception in your controller as follows:
+
+	func (this *MainController) Get() {
+	    this.Abort("401")
+	    v := this.GetSession("asta")
+	    if v == nil {
+	        this.SetSession("asta", int(1))
+	        this.Data["Email"] = 0
+	    } else {
+	        this.SetSession("asta", v.(int)+1)
+	        this.Data["Email"] = v.(int)
+	    }
+	    this.TplNames = "index.tpl" 
+	}
+
+Then Beego will not execute rest code of the function body when you call `this.Abort("401")`, and gives following default page view to users:
+
+![](images/401.png)
+
+Beego supports following error code: 404, 401, 403, 500 and 503, you can customize your error handle, for example, use following code to replace 404 error handle process:
+
+	func page_not_found(rw http.ResponseWriter, r *http.Request){
+	    t,_:= template.New("beegoerrortemp").ParseFiles(beego.ViewsPath+"/404.html")
+	    data :=make(map[string]interface{})
+	    data["content"] = "page not found"
+	    t.Execute(rw, data)
+	}
+	
+	func main() {
+	    beego.Errorhandler("404",page_not_found)
+	    beego.Router("/", &controllers.MainController{})
+	    beego.Run()
+	}   
+
+You may be able to use your own `404.html` for your 404 error.
+
+Beego also gives you ability to modify error message that shows on the error page, the following example shows how to set more meaningful error message when database has problems:
+
+	func dbError(rw http.ResponseWriter, r *http.Request){
+	    t,_:= template.New("beegoerrortemp").ParseFiles(beego.ViewsPath+"/dberror.html")
+	    data :=make(map[string]interface{})
+	    data["content"] = "database is now down"
+	    t.Execute(rw, data)
+	}
+	
+	func main() {
+	    beego.Errorhandler("dbError",dbError)
+	    beego.Router("/", &controllers.MainController{})
+	    beego.Run()
+	}   
+
+After you registered this customized error, you can use `this.Abort("dbError")` for any database error in your applications.
 
 ##Handle response
 There are some situations that you may have in response:
@@ -888,6 +939,10 @@ Beego has many configurable arguments, let me introduce to you all of them, so y
 * MaxMemory
 
 	Maximum memory size for file upload, default is `1 << 26`(64M).
+
+* EnableGzip
+
+	This value indicate whether enable gzip or not, default is false.
 
 ##Integrated third-party applications
 Beego supports to integrate third-party application, you can customized `http.Handler` as follows:
