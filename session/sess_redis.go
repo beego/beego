@@ -55,9 +55,9 @@ func (rp *RedisProvider) connectInit() redis.Conn {
 		return nil
 	}
 	return c*/
-	if redisPool == nil {
+	//if redisPool == nil {
 		redisPool = make(chan redis.Conn, MAX_POOL_SIZE)
-	}
+	//}
 	if len(redisPool) == 0 {
 		go func() {
 			for i := 0; i < MAX_POOL_SIZE/2; i++ {
@@ -76,7 +76,7 @@ func putRedis(conn redis.Conn) {
 	if redisPool == nil {
 		redisPool = make(chan redis.Conn, MAX_POOL_SIZE)
 	}
-	if len(redisPool) == MAX_POOL_SIZE {
+	if len(redisPool) >= MAX_POOL_SIZE {
 		conn.Close()
 		return
 	}
