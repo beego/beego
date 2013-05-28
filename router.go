@@ -1,12 +1,14 @@
 package beego
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"reflect"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 )
 
@@ -183,6 +185,69 @@ func (p *ControllerRegistor) FilterPrefixPath(path string, filter http.HandlerFu
 	})
 }
 
+func structMap(vc reflect.Value, params *map[string]string) error {
+	for k, v := range *params {
+		names := strings.Split(k, ".")
+		var value reflect.Value = vc
+		for i, name := range names {
+			if i != len(names)-1 {
+				if value.Kind() != reflect.Struct {
+					return errors.New("arg error")
+				}
+				value := value.FieldByName(name)
+				if !value.IsValid() {
+					return errors.New("arg error")
+				}
+			} else {
+				tv := value.FieldByName(name)
+				fmt.Println(name, tv, tv.Kind())
+				if !tv.IsValid() {
+					return errors.New("arg error")
+				}
+				if !tv.CanSet() {
+					return errors.New("can not set " + name)
+				}
+				var l interface{}
+				switch k := tv.Kind(); k {
+				case reflect.String:
+					l = v
+				case reflect.Bool:
+					l = (v == "true")
+				case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
+					x, err := strconv.Atoi(v)
+					if err != nil {
+						return errors.New("arg " + v + " as int: " + err.Error())
+					}
+					l = x
+				case reflect.Int64:
+					x, err := strconv.ParseInt(v, 10, 64)
+					if err != nil {
+						return errors.New("arg " + v + " as int: " + err.Error())
+					}
+					l = x
+				case reflect.Float32, reflect.Float64:
+					x, err := strconv.ParseFloat(v, 64)
+					if err != nil {
+						return errors.New("arg " + v + " as float64: " + err.Error())
+					}
+					l = x
+				case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+					x, err := strconv.ParseUint(v, 10, 64)
+					if err != nil {
+						return errors.New("arg " + v + " as int: " + err.Error())
+					}
+					l = x
+				case reflect.Struct:
+					fmt.Println("can not set an struct")
+				}
+
+				tv.Set(reflect.ValueOf(l))
+			}
+		}
+	}
+	return nil
+}
+
 // AutoRoute
 func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	defer func() {
@@ -351,6 +416,9 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		init := vc.MethodByName("Init")
 		in := make([]reflect.Value, 2)
 		ct := &Context{ResponseWriter: w, Request: r, Params: params}
+
+		structMap(vc.Elem(), &params)
+
 		in[0] = reflect.ValueOf(ct)
 		in[1] = reflect.ValueOf(runrouter.controllerType.Name())
 		init.Call(in)
