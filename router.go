@@ -1,7 +1,6 @@
 package beego
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -10,6 +9,10 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+)
+
+var (
+	sc *Controller = &Controller{}
 )
 
 type controllerInfo struct {
@@ -46,7 +49,7 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface) {
 		if strings.HasPrefix(part, ":") {
 			expr := "(.+)"
 			//a user may choose to override the defult expression
-			// similar to expressjs: ‘/user/:id([0-9]+)’ 
+			// similar to expressjs: ‘/user/:id([0-9]+)’
 			if index := strings.Index(part, "("); index != -1 {
 				expr = part[index:]
 				part = part[:index]
@@ -120,7 +123,7 @@ func (p *ControllerRegistor) AddHandler(pattern string, c http.Handler) {
 		if strings.HasPrefix(part, ":") {
 			expr := "([^/]+)"
 			//a user may choose to override the defult expression
-			// similar to expressjs: ‘/user/:id([0-9]+)’ 
+			// similar to expressjs: ‘/user/:id([0-9]+)’
 			if index := strings.Index(part, "("); index != -1 {
 				expr = part[index:]
 				part = part[:index]
@@ -185,27 +188,40 @@ func (p *ControllerRegistor) FilterPrefixPath(path string, filter http.HandlerFu
 	})
 }
 
-func structMap(vc reflect.Value, params *map[string]string) error {
-	for k, v := range *params {
+func StructMap(vc reflect.Value, params *url.Values) error {
+
+	for k, t := range *params {
+		v := t[0]
 		names := strings.Split(k, ".")
 		var value reflect.Value = vc
 		for i, name := range names {
-			if i != len(names)-1 {
-				if value.Kind() != reflect.Struct {
-					return errors.New("arg error")
+			name = strings.Title(name)
+			if i == 0 {
+				if reflect.ValueOf(sc).Elem().FieldByName(name).IsValid() {
+					Trace("Controller's property should not be changed by mapper.")
+					break
 				}
-				value := value.FieldByName(name)
+			}
+			if value.Kind() != reflect.Struct {
+				Trace(fmt.Sprintf("arg error, value kind is %v", value.Kind()))
+				break
+			}
+
+			if i != len(names)-1 {
+				value = value.FieldByName(name)
 				if !value.IsValid() {
-					return errors.New("arg error")
+					Trace(fmt.Sprintf("(%v value is not valid %v)", name, value))
+					break
 				}
 			} else {
 				tv := value.FieldByName(name)
-				fmt.Println(name, tv, tv.Kind())
 				if !tv.IsValid() {
-					return errors.New("arg error")
+					Trace(fmt.Sprintf("struct %v has no field named %v", value, name))
+					break
 				}
 				if !tv.CanSet() {
-					return errors.New("can not set " + name)
+					Trace("can not set " + k)
+					break
 				}
 				var l interface{}
 				switch k := tv.Kind(); k {
@@ -216,29 +232,33 @@ func structMap(vc reflect.Value, params *map[string]string) error {
 				case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
 					x, err := strconv.Atoi(v)
 					if err != nil {
-						return errors.New("arg " + v + " as int: " + err.Error())
+						Trace("arg " + v + " as int: " + err.Error())
+						break
 					}
 					l = x
 				case reflect.Int64:
 					x, err := strconv.ParseInt(v, 10, 64)
 					if err != nil {
-						return errors.New("arg " + v + " as int: " + err.Error())
+						Trace("arg " + v + " as int: " + err.Error())
+						break
 					}
 					l = x
 				case reflect.Float32, reflect.Float64:
 					x, err := strconv.ParseFloat(v, 64)
 					if err != nil {
-						return errors.New("arg " + v + " as float64: " + err.Error())
+						Trace("arg " + v + " as float64: " + err.Error())
+						break
 					}
 					l = x
 				case reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 					x, err := strconv.ParseUint(v, 10, 64)
 					if err != nil {
-						return errors.New("arg " + v + " as int: " + err.Error())
+						Trace("arg " + v + " as int: " + err.Error())
+						break
 					}
 					l = x
 				case reflect.Struct:
-					fmt.Println("can not set an struct")
+					Trace("can not set an struct")
 				}
 
 				tv.Set(reflect.ValueOf(l))
@@ -412,12 +432,13 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		//Invoke the request handler
 		vc := reflect.New(runrouter.controllerType)
 
+		r.ParseForm()
+		StructMap(vc.Elem(), &r.Form)
+
 		//call the controller init function
 		init := vc.MethodByName("Init")
 		in := make([]reflect.Value, 2)
 		ct := &Context{ResponseWriter: w, Request: r, Params: params}
-
-		structMap(vc.Elem(), &params)
 
 		in[0] = reflect.ValueOf(ct)
 		in[1] = reflect.ValueOf(runrouter.controllerType.Name())
