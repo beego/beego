@@ -188,9 +188,8 @@ func (p *ControllerRegistor) FilterPrefixPath(path string, filter http.HandlerFu
 	})
 }
 
-func StructMap(vc reflect.Value, params *url.Values) error {
-
-	for k, t := range *params {
+func StructMap(vc reflect.Value, r *http.Request) error {
+	for k, t := range r.Form {
 		v := t[0]
 		names := strings.Split(k, ".")
 		var value reflect.Value = vc
@@ -432,8 +431,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		//Invoke the request handler
 		vc := reflect.New(runrouter.controllerType)
 
-		r.ParseForm()
-		StructMap(vc.Elem(), &r.Form)
+		StructMap(vc.Elem(), &r)
 
 		//call the controller init function
 		init := vc.MethodByName("Init")
