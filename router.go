@@ -431,7 +431,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		//Invoke the request handler
 		vc := reflect.New(runrouter.controllerType)
 
-		StructMap(vc.Elem(), &r)
+		StructMap(vc.Elem(), r)
 
 		//call the controller init function
 		init := vc.MethodByName("Init")
