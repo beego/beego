@@ -29,10 +29,10 @@ var (
 	ViewsPath     string
 	RunMode       string //"dev" or "prod"
 	AppConfig     *Config
-	//related to session 
+	//related to session
 	GlobalSessions       *session.Manager //GlobalSessions
 	SessionOn            bool             // wheather auto start session,default is false
-	SessionProvider      string           // default session provider  memory mysql redis 
+	SessionProvider      string           // default session provider  memory mysql redis
 	SessionName          string           // sessionName cookie's name
 	SessionGCMaxLifetime int64            // session's gc maxlifetime
 	SessionSavePath      string           // session savepath if use mysql/redis/file this set to the connectinfo
@@ -81,15 +81,27 @@ func NewApp() *App {
 
 func (app *App) Run() {
 	addr := fmt.Sprintf("%s:%d", HttpAddr, HttpPort)
-	var err error
+	var (
+		err error
+		l   net.Listener
+	)
 	if UseFcgi {
-		l, e := net.Listen("tcp", addr)
-		if e != nil {
-			BeeLogger.Fatal("Listen: ", e)
+		l, err = net.Listen("tcp", addr)
+		if err != nil {
+			BeeLogger.Fatal("Listen: ", err)
 		}
 		err = fcgi.Serve(l, app.Handlers)
 	} else {
-		err = http.ListenAndServe(addr, app.Handlers)
+		server := &http.Server{Handler: app.Handlers}
+		laddr, err := net.ResolveTCPAddr("tcp", addr)
+		if nil != err {
+			BeeLogger.Fatal("ResolveTCPAddr:", err)
+		}
+		l, err = GetInitListner(laddr)
+		theStoppable = newStoppable(l)
+		err = server.Serve(theStoppable)
+		theStoppable.wg.Wait()
+		CloseSelf()
 	}
 	if err != nil {
 		BeeLogger.Fatal("ListenAndServe: ", err)
