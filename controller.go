@@ -216,6 +216,23 @@ func (c *Controller) ServeJson() {
 	c.Ctx.ResponseWriter.Write(content)
 }
 
+func (c *Controller) ServeJsonp() {
+	content, err := json.MarshalIndent(c.Data["jsonp"], "", "  ")
+	if err != nil {
+		http.Error(c.Ctx.ResponseWriter, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	callback := c.Ctx.Request.Form.Get("callback")
+	if callback == "" {
+		http.Error(c.Ctx.ResponseWriter, `"callback" parameter required`, http.StatusInternalServerError)
+		return
+	}
+	callback_content := fmt.Sprintf("%s(%s);\r\n", callback, string(content))
+	c.Ctx.SetHeader("Content-Length", strconv.Itoa(len(callback_content)), true)
+	c.Ctx.ResponseWriter.Header().Set("Content-Type", "application/jsonp;charset=UTF-8")
+	c.Ctx.ResponseWriter.Write([]byte(callback_content))
+}
+
 func (c *Controller) ServeXml() {
 	content, err := xml.Marshal(c.Data["xml"])
 	if err != nil {
