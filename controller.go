@@ -227,10 +227,13 @@ func (c *Controller) ServeJsonp() {
 		http.Error(c.Ctx.ResponseWriter, `"callback" parameter required`, http.StatusInternalServerError)
 		return
 	}
-	callback_content := fmt.Sprintf("%s(%s);\r\n", callback, string(content))
-	c.Ctx.SetHeader("Content-Length", strconv.Itoa(len(callback_content)), true)
-	c.Ctx.ResponseWriter.Header().Set("Content-Type", "application/jsonp;charset=UTF-8")
-	c.Ctx.ResponseWriter.Write([]byte(callback_content))
+	callback_content := bytes.NewBufferString(callback)
+	callback_content.WriteString("(")
+	callback_content.Write(content)
+	callback_content.WriteString(");\r\n")
+	c.Ctx.SetHeader("Content-Length", strconv.Itoa(callback_content.Len()), true)
+	c.Ctx.ResponseWriter.Header().Set("Content-Type", "application/json;charset=UTF-8")
+	c.Ctx.ResponseWriter.Write(callback_content.Bytes())
 }
 
 func (c *Controller) ServeXml() {
