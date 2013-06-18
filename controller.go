@@ -261,6 +261,18 @@ func (c *Controller) GetString(key string) string {
 	return c.Input().Get(key)
 }
 
+func (c *Controller) GetStrings(key string) []string {
+    r := c.Ctx.Request;
+    if r.Form == nil {
+		return []string{}
+	}
+    vs := r.Form[key]
+    if len(vs) > 0 {
+        return vs
+    }
+    return []string{}
+}
+
 func (c *Controller) GetInt(key string) (int64, error) {
 	return strconv.ParseInt(c.Input().Get(key), 10, 64)
 }
