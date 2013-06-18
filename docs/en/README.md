@@ -47,6 +47,7 @@ The following example prints string "Hello world" to your browser, it shows how 
 - [Quick start](Quickstart.md)
 - [Step by step](Tutorial.md)
 - [Real world usage](Application.md)
+- [Hot update](HotUpdate.md)
 
 #Documentation
-[godoc](http://godoc.org/github.com/astaxie/beego)
+[Go Walker](http://gowalker.org/github.com/astaxie/beego)

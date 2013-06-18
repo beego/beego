@@ -47,4 +47,4 @@ beego是一个类似tornado的Go应用框架，采用了RESTFul的方式来实�
 
 API对于我们平时开发应用非常有用，用于查询一些开发的函数，godoc做的非常好了
 
-[godoc](http://godoc.org/github.com/astaxie/beego)
+[Go Walker](http://gowalker.org/github.com/astaxie/beego)
