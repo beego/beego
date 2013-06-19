@@ -1,4 +1,7 @@
 ## beego
+
+[![Build Status](https://drone.io/github.com/astaxie/beego/status.png)](https://drone.io/github.com/astaxie/beego/latest)
+
 beego is a Go Framework which is inspired from tornado and sinatra. 
 
 It is a simply & powerful web framework.
