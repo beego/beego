@@ -298,8 +298,10 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			}
 		}
 	}()
+
 	w := &responseWriter{writer: rw}
 
+	w.Header().Set("Server", "beegoServer")
 	var runrouter *controllerInfo
 	var findrouter bool
 
