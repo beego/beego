@@ -32,14 +32,6 @@ Then in you web app init the global session manager
 			go globalSessions.GC()
 		}
 
-* Use **MySQL** as provider, the last param is the DNS, learn more from [mysql](https://github.com/Go-SQL-Driver/MySQL#dsn-data-source-name): 
-
-		func init() {
-			globalSessions, _ = session.NewManager(
-				"mysql", "gosessionid", 3600, "username:password@protocol(address)/dbname?param=value")
-			go globalSessions.GC()
-		}
-
 * Use **file** as provider, the last param is the path where you want file to be stored:
 
 		func init() {
@@ -51,6 +43,14 @@ Then in you web app init the global session manager
 
 		func init() {
 			globalSessions, _ = session.NewManager("redis", "gosessionid", 3600, "127.0.0.1:6379")
+			go globalSessions.GC()
+		}
+		
+* Use **MySQL** as provider, the last param is the DSN, learn more from [mysql](https://github.com/Go-SQL-Driver/MySQL#dsn-data-source-name): 
+
+		func init() {
+			globalSessions, _ = session.NewManager(
+				"mysql", "gosessionid", 3600, "username:password@protocol(address)/dbname?param=value")
 			go globalSessions.GC()
 		}
 
