@@ -1,16 +1,17 @@
-#Installation
+# Installation
+
 Beego is a simple web framework, but it uses many third-party packages, so you have to install all dependency packages also.
 
 - Before anything you do, you have to check that you installed Go in your computer, see more detail about Go installation in my book: [Chapter 1](https://github.com/Unknwon/build-web-application-with-golang_EN/blob/master/eBook/01.1.md)
-- Use `go get ` to install Beego: 
+- Use `go get ` to install Beego:
 
 		go get github.com/astaxie/beego
-		
-- Install bee tools for fast-develop Beego applications: 
 
-		go get github.com/astaxie/bee		
+- Install bee tools for fast-develop Beego applications:
 
-Good job, you're ready to Beego with powerful bee tools! 
+		go get github.com/astaxie/bee
+
+Good job, you're ready to Beego with powerful bee tools!
 
 ![](images/bee.png)
 
