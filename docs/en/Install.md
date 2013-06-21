@@ -16,10 +16,10 @@ Good job, you're ready to Beego with powerful bee tools!
 
 Beego has following dependency packages:
 
-- Session module: [github.com/astaxie/beego/session](github.com/astaxie/beego/session)
-- To support redis engine: [github.com/garyburd/redigo/redis](github.com/garyburd/redigo/redis)
-- To support mysql engine: [github.com/go-sql-driver/mysql](github.com/go-sql-driver/mysql)
-- To support markdown as template function: [github.com/russross/blackfriday](github.com/russross/blackfriday)
+- Session module: [github.com/astaxie/beego/session](https://github.com/astaxie/beego/session)
+- To support redis engine: [github.com/garyburd/redigo/redis](https://github.com/garyburd/redigo/redis)
+- To support mysql engine: [github.com/go-sql-driver/mysql](https://github.com/go-sql-driver/mysql)
+- To support markdown as template function: [github.com/russross/blackfriday](https://github.com/russross/blackfriday)
 
 - [Introduction](README.md)
 - [Quick start](Quickstart.md)
