@@ -1,4 +1,6 @@
-## supervisord
+## Supervisord
+
+[Supervisord](http://supervisord.org/) will make sure your web app is always up.
 
 1. Installation
 
@@ -12,7 +14,7 @@
 		
 		mkdir /etc/supervisord.conf.d
 
-2. Configure /etc/supervisord.conf
+2. Configure `/etc/supervisord.conf`
 
 		[include]
 		files = /etc/supervisord.conf.d/*.conf
