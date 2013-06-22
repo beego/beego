@@ -6,19 +6,23 @@ beego is a Go Framework which is inspired from tornado and sinatra.
 
 It is a simply & powerful web framework.
 
-Have this features:
+
+## Features
 
 * RESTFul support
 * MVC architecture 
-* Session support memory/file/redis/mysql
-* Cache support memory/redis/memcache
+* Session support (store in memory, file, Redis or MySQL)
+* Cache support (store in memory, Redis or Memcache)
 * Global Config
 * Intelligent routing
-* thread safe map
-* Friendly error display
+* Thread-safe map
+* Friendly displaying of errors
 * Useful template functions
 
-[English Documents](https://github.com/astaxie/beego/tree/master/docs/en)
+
+## Documentation
+
+[English](https://github.com/astaxie/beego/tree/master/docs/en)
 
 [API](http://gowalker.org/github.com/astaxie/beego)
 
@@ -26,11 +30,12 @@ Have this features:
 
 
 ## LICENSE
+
 beego is licensed under the Apache Licence, Version 2.0
 (http://www.apache.org/licenses/LICENSE-2.0.html).
 
 
-## Use Case
+## Use case
 
-- API documentation [gowalker](https://github.com/Unknwon/gowalker)
-- CMS [toropress](https://github.com/insionng/toropress)
+- Displaying API documentation: [gowalker](https://github.com/Unknwon/gowalker)
+- CMS: [toropress](https://github.com/insionng/toropress)
