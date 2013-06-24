@@ -74,7 +74,7 @@ var errtpl = `
 <html lang="en">
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-		<title>Page Not Found</title>
+		<title>{{.Title}}</title>
 		<style type="text/css">
 			* {
 				margin:0;
