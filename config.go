@@ -174,6 +174,9 @@ func ParseConfig() (err error) {
 		if ar, err := AppConfig.Bool("enablegzip"); err == nil {
 			EnableGzip = ar
 		}
+		if ar, err := AppConfig.Bool("directoryindex"); err == nil {
+			DirectoryIndex = ar
+		}
 	}
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"os"
 	"reflect"
 	"regexp"
 	"runtime"
@@ -317,6 +318,21 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}
 		if strings.HasPrefix(r.URL.Path, prefix) {
 			file := staticDir + r.URL.Path[len(prefix):]
+			finfo, err := os.Stat(file)
+			if err != nil {
+				return
+			}
+			//if the request is dir and DirectoryIndex is false then
+			if finfo.IsDir() && !DirectoryIndex {
+				if h, ok := ErrorMaps["403"]; ok {
+					h(w, r)
+				} else {
+					w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+					w.WriteHeader(403)
+					fmt.Fprintln(w, "403 Forbidden")
+					return
+				}
+			}
 			http.ServeFile(w, r, file)
 			w.started = true
 			return

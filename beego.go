@@ -39,6 +39,7 @@ var (
 	UseFcgi              bool
 	MaxMemory            int64
 	EnableGzip           bool // enable gzip
+	DirectoryIndex       bool //ebable DirectoryIndex default is false
 )
 
 func init() {
