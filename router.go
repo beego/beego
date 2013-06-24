@@ -326,6 +326,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			if finfo.IsDir() && !DirectoryIndex {
 				if h, ok := ErrorMaps["403"]; ok {
 					h(w, r)
+					return
 				} else {
 					w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 					w.WriteHeader(403)
