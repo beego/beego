@@ -46,6 +46,30 @@ func NewFileWriter(fname string, rotate bool) *FileLogWriter {
 	return w
 }
 
+// Set rotate at linecount (chainable). Must be called before call StartLogger
+func (w *FileLogWriter) SetRotateLines(maxlines int) *FileLogWriter {
+	w.maxlines = maxlines
+	return w
+}
+
+// Set rotate at size (chainable). Must be called before call StartLogger
+func (w *FileLogWriter) SetRotateSize(maxsize int) *FileLogWriter {
+	w.maxsize = maxsize
+	return w
+}
+
+// Set rotate daily (chainable). Must be called before call StartLogger
+func (w *FileLogWriter) SetRotateDaily(daily bool) *FileLogWriter {
+	w.daily = daily
+	return w
+}
+
+// Set rotate daily's log keep for maxday,other will delete
+func (w *FileLogWriter) SetRotateMaxDay(maxday int64) *FileLogWriter {
+	w.maxday = maxday
+	return w
+}
+
 func (w *FileLogWriter) StartLogger() error {
 	if err := w.DoRotate(false); err != nil {
 		return err
