@@ -139,9 +139,9 @@ func (w *FileLogWriter) DoRotate(rotate bool) error {
 	w.maxsize_cursize = int(finfo.Size())
 	w.daily_opendate = time.Now().Day()
 	if finfo.Size() > 0 {
-		content, err := ioutil.ReadAll(fd)
+		content, err := ioutil.ReadFile(w.filename)
 		if err != nil {
-			//Do something
+			fmt.Println(err)
 		}
 		w.maxlines_curlines = len(strings.Split(string(content), "\n"))
 
