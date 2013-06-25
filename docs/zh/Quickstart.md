@@ -787,7 +787,7 @@ beego默认有一个初始化的BeeLogger对象输出内容到stdout中，你可
 
 - func (w *FileLogWriter) SetRotateDaily(daily bool) *FileLogWriter
 - func (w *FileLogWriter) SetRotateLines(maxlines int) *FileLogWriter
-- func (w *FileLogWriter) SetRotateMaxDay(maxday int64) *FileLogWriter
+- func (w *FileLogWriter) SetRotateMaxDays(maxdays int64) *FileLogWriter
 - func (w *FileLogWriter) SetRotateSize(maxsize int) *FileLogWriter
 
 但是这些函数调用必须在调用`StartLogger`之前。
