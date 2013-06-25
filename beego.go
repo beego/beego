@@ -139,6 +139,11 @@ func (app *App) SetStaticPath(url string, path string) *App {
 	return app
 }
 
+func (app *App) DelStaticPath(url string) *App {
+	delete(StaticDir, url)
+	return app
+}
+
 func (app *App) ErrorLog(ctx *Context) {
 	BeeLogger.Printf("[ERR] host: '%s', request: '%s %s', proto: '%s', ua: '%s', remote: '%s'\n", ctx.Request.Host, ctx.Request.Method, ctx.Request.URL.Path, ctx.Request.Proto, ctx.Request.UserAgent(), ctx.Request.RemoteAddr)
 }
