@@ -28,7 +28,7 @@ func Register(name string, adapter Cache) {
 	adapters[name] = adapter
 }
 
-//config is json {"interval":360} 
+// config need to be correct JSON as string: {"interval":360} 
 func NewCache(adapterName, config string) (Cache, error) {
 	adapter, ok := adapters[adapterName]
 	if !ok {

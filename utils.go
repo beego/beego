@@ -32,7 +32,7 @@ func Substr(s string, start, length int) string {
 	}
 	var end int
 	if (start + length) > (len(bt) - 1) {
-		end = len(bt) - 1
+		end = len(bt)
 	} else {
 		end = start + length
 	}

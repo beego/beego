@@ -12,7 +12,7 @@ import (
 	"runtime"
 )
 
-const VERSION = "0.6.0"
+const VERSION = "0.7.0"
 
 var (
 	BeeApp        *App
@@ -39,6 +39,7 @@ var (
 	UseFcgi              bool
 	MaxMemory            int64
 	EnableGzip           bool // enable gzip
+	DirectoryIndex       bool //ebable DirectoryIndex default is false
 )
 
 func init() {
@@ -138,6 +139,11 @@ func (app *App) SetStaticPath(url string, path string) *App {
 	return app
 }
 
+func (app *App) DelStaticPath(url string) *App {
+	delete(StaticDir, url)
+	return app
+}
+
 func (app *App) ErrorLog(ctx *Context) {
 	BeeLogger.Printf("[ERR] host: '%s', request: '%s %s', proto: '%s', ua: '%s', remote: '%s'\n", ctx.Request.Host, ctx.Request.Method, ctx.Request.URL.Path, ctx.Request.Proto, ctx.Request.UserAgent(), ctx.Request.RemoteAddr)
 }
@@ -173,6 +179,11 @@ func SetViewsPath(path string) *App {
 
 func SetStaticPath(url string, path string) *App {
 	StaticDir[url] = path
+	return BeeApp
+}
+
+func DelStaticPath(url string) *App {
+	delete(StaticDir, url)
 	return BeeApp
 }
 

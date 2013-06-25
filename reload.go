@@ -137,16 +137,15 @@ func GetInitListner(tcpaddr *net.TCPAddr) (l net.Listener, err error) {
 	countStr := os.Getenv(FDKey)
 	if countStr == "" {
 		return net.ListenTCP("tcp", tcpaddr)
-	} else {
-		count, err := strconv.Atoi(countStr)
-		if err != nil {
-			return nil, err
-		}
-		f := os.NewFile(uintptr(count), "listen socket")
-		l, err = net.FileListener(f)
-		if err != nil {
-			return nil, err
-		}
-		return l, nil
 	}
+	count, err := strconv.Atoi(countStr)
+	if err != nil {
+		return nil, err
+	}
+	f := os.NewFile(uintptr(count), "listen socket")
+	l, err = net.FileListener(f)
+	if err != nil {
+		return nil, err
+	}
+	return l, nil
 }
