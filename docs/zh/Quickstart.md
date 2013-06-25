@@ -766,16 +766,31 @@ beego默认有一个初始化的BeeLogger对象输出内容到stdout中，你可
 
 	beego.SetLogger(*log.Logger)
 
-只要你的输出符合`*log.Logger`就可以，例如输出到文件：
+现在beego支持文件方式输出到，而且支持文件的自动化logrotate，在main函数入口处初始化如下：
 
-	fd,err := os.OpenFile("/var/log/beeapp/beeapp.log", os.O_RDWR|os.O_APPEND, 0644)
+	filew := beego.NewFileWriter("tmp/log.log", true)
+	err := filew.StartLogger()
 	if err != nil {
-		beego.Critical("openfile beeapp.log:", err)
-		return
+		beego.Critical("NewFileWriter err", err)
 	}
-	lg := log.New(fd, "", log.Ldate|log.Ltime)
-	beego.SetLogger(lg)
 
+这样就默认开始在当前目录的tmp/log.log文件中开始记录日志，默认支持文件的logrotate，第二个参数为true表示开启，false表示关闭，开启的rotate的规则如下：
+
+1. 1000000行日志就自动分割
+2. 文件的大小为256M就自动分割
+3. 每天进行分割
+4. 日志默认保存7天
+
+一天之中分割不能多余999个，每个分割的文件名是`定义的文件名.日期.三位数字`
+
+用户可以通过如下函数修改相应的日志切割规则：
+
+- func (w *FileLogWriter) SetRotateDaily(daily bool) *FileLogWriter
+- func (w *FileLogWriter) SetRotateLines(maxlines int) *FileLogWriter
+- func (w *FileLogWriter) SetRotateMaxDay(maxday int64) *FileLogWriter
+- func (w *FileLogWriter) SetRotateSize(maxsize int) *FileLogWriter
+
+但是这些函数调用必须在调用`StartLogger`之前。
 
 ### 不同级别的log日志函数
 
@@ -1030,6 +1045,9 @@ beego中带有很多可配置的参数，我们来一一认识一下它们，这
 
 	是否开启gzip支持，默认为false不支持gzip，一旦开启了gzip，那么在模板输出的内容会进行gzip或者zlib压缩，根据用户的Accept-Encoding来判断。
 
+* DirectoryIndex
+
+	是否开启静态目录的列表显示，默认不显示目录，返回403错误
 
 ## 第三方应用集成
 
