@@ -182,6 +182,11 @@ func SetStaticPath(url string, path string) *App {
 	return BeeApp
 }
 
+func DelStaticPath(url string) *App {
+	delete(StaticDir, url)
+	return BeeApp
+}
+
 func Filter(filter http.HandlerFunc) *App {
 	BeeApp.Filter(filter)
 	return BeeApp

@@ -38,4 +38,5 @@ beego is licensed under the Apache Licence, Version 2.0
 ## Use case
 
 - Displaying API documentation: [gowalker](https://github.com/Unknwon/gowalker)
+- seocms: [seocms](https://github.com/chinakr/seocms)
 - CMS: [toropress](https://github.com/insionng/toropress)
