@@ -26,7 +26,7 @@ type FileLogWriter struct {
 
 	// Rotate daily
 	daily          bool
-	maxday         int64
+	maxdays        int64
 	daily_opendate int
 
 	rotate bool
@@ -40,7 +40,7 @@ func NewFileWriter(fname string, rotate bool) *FileLogWriter {
 		maxlines: 1000000,
 		maxsize:  1 << 28, //256 MB
 		daily:    true,
-		maxday:   7,
+		maxdays:  7,
 		rotate:   rotate,
 	}
 	return w
@@ -64,9 +64,9 @@ func (w *FileLogWriter) SetRotateDaily(daily bool) *FileLogWriter {
 	return w
 }
 
-// Set rotate daily's log keep for maxday,other will delete
-func (w *FileLogWriter) SetRotateMaxDay(maxday int64) *FileLogWriter {
-	w.maxday = maxday
+// Set rotate daily's log keep for maxdays, other will delete
+func (w *FileLogWriter) SetRotateMaxDays(maxdays int64) *FileLogWriter {
+	w.maxdays = maxdays
 	return w
 }
 
@@ -155,7 +155,7 @@ func (w *FileLogWriter) DoRotate(rotate bool) error {
 func (w *FileLogWriter) deleteOldLog() {
 	dir := path.Dir(w.filename)
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if !info.IsDir() && info.ModTime().Unix() < (time.Now().Unix()-60*60*24*w.maxday) {
+		if !info.IsDir() && info.ModTime().Unix() < (time.Now().Unix()-60*60*24*w.maxdays) {
 			os.Remove(path)
 		}
 		return nil
