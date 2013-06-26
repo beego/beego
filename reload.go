@@ -29,9 +29,12 @@ type conn struct {
 	net.Conn
 	wg      *sync.WaitGroup
 	isclose bool
+	lock    sync.Mutex
 }
 
 func (c conn) Close() error {
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	err := c.Conn.Close()
 	if !c.isclose {
 		c.wg.Done()
