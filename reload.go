@@ -36,7 +36,7 @@ func (c conn) Close() error {
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	err := c.Conn.Close()
-	if !c.isclose {
+	if !c.isclose && err == nil {
 		c.wg.Done()
 		c.isclose = true
 	}
