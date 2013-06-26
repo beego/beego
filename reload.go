@@ -27,12 +27,16 @@ var ErrInitStart = errors.New("init from")
 // Allows for us to notice when the connection is closed.
 type conn struct {
 	net.Conn
-	wg *sync.WaitGroup
+	wg      *sync.WaitGroup
+	isclose bool
 }
 
 func (c conn) Close() error {
 	err := c.Conn.Close()
-	c.wg.Done()
+	if !c.isclose {
+		c.wg.Done()
+		c.isclose = true
+	}
 	return err
 }
 
