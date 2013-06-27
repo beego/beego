@@ -762,16 +762,29 @@ Beego has a default BeeLogger object that outputs log into stdout, and you can u
 
 	beego.SetLogger(*log.Logger)
 
-You can output everything that implemented `*log.Logger`, for example, write to file:
+Now Beego supports new way to record your log with automatically log rotate. Use following code in your main function:
 
-	fd,err := os.OpenFile("/var/log/beeapp/beeapp.log", os.O_RDWR|os.O_APPEND, 0644)
+	filew := beego.NewFileWriter("tmp/log.log", true)
+	err := filew.StartLogger()
 	if err != nil {
-		beego.Critical("openfile beeapp.log:", err)
-		return
+		beego.Critical("NewFileWriter err", err)
 	}
-	lg := log.New(fd, "", log.Ldate|log.Ltime)
-	beego.SetLogger(lg)
 
+So Beego records your log into file `tmp/log.log`, the second argument indicates whether enable log rotate or not. The rules of rotate as follows:
+
+1. segment log every 1,000,000 lines.
+2. segment log every 256 MB file size.
+3. segment log daily. 
+4. save log file up to 7 days as default.
+
+You cannot segment log over 999 times everyday, the segmented file name with format `<defined file name>.<date>.<three digits>`.
+
+You are able to modify rotate rules with following methods, be sure that you call them before `StartLogger()`.
+
+- func (w *FileLogWriter) SetRotateDaily(daily bool) *FileLogWriter
+- func (w *FileLogWriter) SetRotateLines(maxlines int) *FileLogWriter
+- func (w *FileLogWriter) SetRotateMaxDays(maxdays int64) *FileLogWriter
+- func (w *FileLogWriter) SetRotateSize(maxsize int) *FileLogWriter
 
 ### Different levels of log
 
