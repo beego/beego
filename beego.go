@@ -40,6 +40,7 @@ var (
 	MaxMemory            int64
 	EnableGzip           bool // enable gzip
 	DirectoryIndex       bool //ebable DirectoryIndex default is false
+	EnbaleHotUpdate      bool //enable HotUpdate default is false
 )
 
 func init() {
@@ -93,16 +94,21 @@ func (app *App) Run() {
 		}
 		err = fcgi.Serve(l, app.Handlers)
 	} else {
-		server := &http.Server{Handler: app.Handlers}
-		laddr, err := net.ResolveTCPAddr("tcp", addr)
-		if nil != err {
-			BeeLogger.Fatal("ResolveTCPAddr:", err)
+		if EnbaleHotUpdate {
+			server := &http.Server{Handler: app.Handlers}
+			laddr, err := net.ResolveTCPAddr("tcp", addr)
+			if nil != err {
+				BeeLogger.Fatal("ResolveTCPAddr:", err)
+			}
+			l, err = GetInitListner(laddr)
+			theStoppable = newStoppable(l)
+			err = server.Serve(theStoppable)
+			theStoppable.wg.Wait()
+			CloseSelf()
+		} else {
+			err = http.ListenAndServe(addr, app.Handlers)
 		}
-		l, err = GetInitListner(laddr)
-		theStoppable = newStoppable(l)
-		err = server.Serve(theStoppable)
-		theStoppable.wg.Wait()
-		CloseSelf()
+
 	}
 	if err != nil {
 		BeeLogger.Fatal("ListenAndServe: ", err)
