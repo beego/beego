@@ -202,7 +202,9 @@ func (w *FileLogWriter) deleteOldLog() {
 	dir := path.Dir(w.filename)
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if !info.IsDir() && info.ModTime().Unix() < (time.Now().Unix()-60*60*24*w.maxdays) {
-			os.Remove(path)
+			if strings.HasPrefix(filepath.Base(path), filepath.Base(w.filename)) {
+				os.Remove(path)
+			}
 		}
 		return nil
 	})
