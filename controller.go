@@ -262,15 +262,15 @@ func (c *Controller) GetString(key string) string {
 }
 
 func (c *Controller) GetStrings(key string) []string {
-    r := c.Ctx.Request;
-    if r.Form == nil {
+	r := c.Ctx.Request
+	if r.Form == nil {
 		return []string{}
 	}
-    vs := r.Form[key]
-    if len(vs) > 0 {
-        return vs
-    }
-    return []string{}
+	vs := r.Form[key]
+	if len(vs) > 0 {
+		return vs
+	}
+	return []string{}
 }
 
 func (c *Controller) GetInt(key string) (int64, error) {
@@ -326,4 +326,8 @@ func (c *Controller) DelSession(name interface{}) {
 		c.StartSession()
 	}
 	c.CruSession.Delete(name)
+}
+
+func (c *Controller) IsAjax() bool {
+	return (c.Ctx.Request.Header.Get("HTTP_X_REQUESTED_WITH") == "XMLHttpRequest")
 }
