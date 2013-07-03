@@ -98,7 +98,11 @@ func (app *App) Run() {
 		err = fcgi.Serve(l, app.Handlers)
 	} else {
 		if EnbaleHotUpdate {
-			server := &http.Server{Handler: app.Handlers}
+			server := &http.Server{
+				Handler:      app.Handlers,
+				ReadTimeout:  time.Duration(HttpServerTimeOut) * time.Second,
+				WriteTimeout: time.Duration(HttpServerTimeOut) * time.Second,
+			}
 			laddr, err := net.ResolveTCPAddr("tcp", addr)
 			if nil != err {
 				BeeLogger.Fatal("ResolveTCPAddr:", err)
