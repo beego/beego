@@ -180,6 +180,9 @@ func ParseConfig() (err error) {
 		if hotupdate, err := AppConfig.Bool("hotupdate"); err == nil {
 			EnbaleHotUpdate = hotupdate
 		}
+		if timeout, err := AppConfig.Int64("httpservertimeout"); err == nil {
+			HttpServerTimeOut = timeout
+		}
 	}
 	return nil
 }

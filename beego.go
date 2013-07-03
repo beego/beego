@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"time"
 )
 
 const VERSION = "0.7.0"
@@ -41,6 +42,7 @@ var (
 	EnableGzip           bool // enable gzip
 	DirectoryIndex       bool //ebable DirectoryIndex default is false
 	EnbaleHotUpdate      bool //enable HotUpdate default is false
+	HttpServerTimeOut    int64
 )
 
 func init() {
@@ -67,6 +69,7 @@ func init() {
 	EnableGzip = false
 	StaticDir["/static"] = "static"
 	AppConfigPath = path.Join(AppPath, "conf", "app.conf")
+	HttpServerTimeOut = 0
 	ParseConfig()
 }
 
@@ -106,7 +109,13 @@ func (app *App) Run() {
 			theStoppable.wg.Wait()
 			CloseSelf()
 		} else {
-			err = http.ListenAndServe(addr, app.Handlers)
+			s := &http.Server{
+				Addr:         addr,
+				Handler:      app.Handlers,
+				ReadTimeout:  time.Duration(HttpServerTimeOut) * time.Second,
+				WriteTimeout: time.Duration(HttpServerTimeOut) * time.Second,
+			}
+			err = s.ListenAndServe()
 		}
 
 	}
