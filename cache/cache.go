@@ -6,7 +6,7 @@ import (
 
 type Cache interface {
 	Get(key string) interface{}
-	Put(key string, val interface{}, timeout int) error
+	Put(key string, val interface{}, timeout int64) error
 	Delete(key string) error
 	IsExist(key string) bool
 	ClearAll() error
@@ -28,7 +28,7 @@ func Register(name string, adapter Cache) {
 	adapters[name] = adapter
 }
 
-// config need to be correct JSON as string: {"interval":360} 
+// config need to be correct JSON as string: {"interval":360}
 func NewCache(adapterName, config string) (Cache, error) {
 	adapter, ok := adapters[adapterName]
 	if !ok {

@@ -6,7 +6,7 @@ import (
 )
 
 func Test_cache(t *testing.T) {
-	bm, err := NewCache("memory", `{"interval":60}`)
+	bm, err := NewCache("memory", `{"interval":20}`)
 	if err != nil {
 		t.Error("init err")
 	}
@@ -21,7 +21,7 @@ func Test_cache(t *testing.T) {
 		t.Error("get err")
 	}
 
-	time.Sleep(70 * time.Second)
+	time.Sleep(30 * time.Second)
 
 	if bm.IsExist("astaxie") {
 		t.Error("check err")

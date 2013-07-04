@@ -31,7 +31,7 @@ func (rc *RedisCache) Get(key string) interface{} {
 	return v
 }
 
-func (rc *RedisCache) Put(key string, val interface{}, timeout int) error {
+func (rc *RedisCache) Put(key string, val interface{}, timeout int64) error {
 	if rc.c == nil {
 		rc.c = rc.connectInit()
 	}
