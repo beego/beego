@@ -258,6 +258,8 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	requestPath := r.URL.Path
 
+	r.ParseMultipartForm(MaxMemory)
+
 	//user defined Handler
 	for pattern, c := range p.userHandlers {
 		if c.regex == nil && pattern == requestPath {
@@ -353,7 +355,6 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	r.ParseMultipartForm(MaxMemory)
 	if runrouter != nil {
 		//execute middleware filters
 		for _, filter := range p.filters {
