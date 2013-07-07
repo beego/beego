@@ -43,6 +43,7 @@ var (
 	DirectoryIndex       bool //ebable DirectoryIndex default is false
 	EnbaleHotUpdate      bool //enable HotUpdate default is false
 	HttpServerTimeOut    int64
+	ErrorsShow           bool
 )
 
 func init() {
@@ -70,6 +71,7 @@ func init() {
 	StaticDir["/static"] = "static"
 	AppConfigPath = path.Join(AppPath, "conf", "app.conf")
 	HttpServerTimeOut = 0
+	ErrorsShow = true
 	ParseConfig()
 }
 

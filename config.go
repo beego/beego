@@ -183,6 +183,9 @@ func ParseConfig() (err error) {
 		if timeout, err := AppConfig.Int64("httpservertimeout"); err == nil {
 			HttpServerTimeOut = timeout
 		}
+		if errorsshow, err := AppConfig.Bool("errorsshow"); err == nil {
+			ErrorsShow = errorsshow
+		}
 	}
 	return nil
 }
