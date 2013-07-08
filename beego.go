@@ -180,8 +180,14 @@ func RegisterController(path string, c ControllerInterface) *App {
 	return BeeApp
 }
 
-func Router(path string, c ControllerInterface) *App {
-	BeeApp.Router(path, c)
+func Router(rootpath string, c ControllerInterface) *App {
+	BeeApp.Router(rootpath, c)
+	return BeeApp
+}
+
+func RESTRouter(rootpath string, c ControllerInterface) *App {
+	Router(rootpath, c)
+	Router(path.Join(rootpath, ":objectId"), c)
 	return BeeApp
 }
 
