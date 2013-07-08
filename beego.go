@@ -45,6 +45,7 @@ var (
 	HttpServerTimeOut    int64
 	ErrorsShow           bool
 	XSRFKEY              string
+	CopyRequestBody      bool
 )
 
 func init() {

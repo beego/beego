@@ -1,7 +1,9 @@
 package beego
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
@@ -258,6 +260,18 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	requestPath := r.URL.Path
 
+	var requestbody []byte
+
+	if CopyRequestBody {
+		requestbody, _ = ioutil.ReadAll(r.Body)
+
+		r.Body.Close()
+
+		bf := bytes.NewBuffer(requestbody)
+
+		r.Body = ioutil.NopCloser(bf)
+	}
+
 	r.ParseMultipartForm(MaxMemory)
 
 	//user defined Handler
@@ -346,7 +360,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 					params[route.params[i]] = match
 				}
 				//reassemble query params and add to RawQuery
-				r.URL.RawQuery = url.Values(values).Encode() + "&" + r.URL.RawQuery
+				r.URL.RawQuery = url.Values(values).Encode()
 				//r.URL.RawQuery = url.Values(values).Encode()
 			}
 			runrouter = route
@@ -370,7 +384,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		//call the controller init function
 		init := vc.MethodByName("Init")
 		in := make([]reflect.Value, 2)
-		ct := &Context{ResponseWriter: w, Request: r, Params: params}
+		ct := &Context{ResponseWriter: w, Request: r, Params: params, RequestBody: requestbody}
 
 		in[0] = reflect.ValueOf(ct)
 		in[1] = reflect.ValueOf(runrouter.controllerType.Name())

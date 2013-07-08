@@ -11,6 +11,7 @@ import (
 type Context struct {
 	ResponseWriter http.ResponseWriter
 	Request        *http.Request
+	RequestBody    []byte
 	Params         map[string]string
 }
 

@@ -186,6 +186,9 @@ func ParseConfig() (err error) {
 		if errorsshow, err := AppConfig.Bool("errorsshow"); err == nil {
 			ErrorsShow = errorsshow
 		}
+		if copyrequestbody, err := AppConfig.Bool("copyrequestbody"); err == nil {
+			CopyRequestBody = copyrequestbody
+		}
 		if xsrfkey := AppConfig.String("xsrfkey"); xsrfkey != "" {
 			XSRFKEY = xsrfkey
 		}
