@@ -404,6 +404,15 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				method = vc.MethodByName("Options")
 				method.Call(in)
 			}
+			gotofunc := vc.Elem().FieldByName("gotofunc").String()
+			if gotofunc != "" {
+				method = vc.MethodByName(gotofunc)
+				if method.IsValid() {
+					method.Call(in)
+				} else {
+					panic("gotofunc is exists:" + gotofunc)
+				}
+			}
 			if !w.started {
 				if AutoRender {
 					method = vc.MethodByName("Render")

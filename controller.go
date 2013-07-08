@@ -33,6 +33,7 @@ type Controller struct {
 	Layout      string
 	TplExt      string
 	_xsrf_token string
+	gotofunc    string
 	CruSession  session.SessionStore
 }
 
@@ -375,4 +376,11 @@ func (c *Controller) CheckXsrfCookie() bool {
 func (c *Controller) XsrfFormHtml() string {
 	return "<input type=\"hidden\" name=\"_xsrf\" value=\"" +
 		c._xsrf_token + "\"/>"
+}
+
+func (c *Controller) GoToFunc(funcname string) {
+	if funcname[0] < 65 || funcname[0] > 90 {
+		panic("GoToFunc should exported function")
+	}
+	c.gotofunc = funcname
 }
