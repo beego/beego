@@ -101,3 +101,11 @@ var cookieValueSanitizer = strings.NewReplacer("\n", " ", "\r", " ", ";", " ")
 func sanitizeValue(v string) string {
 	return cookieValueSanitizer.Replace(v)
 }
+
+func (ctx *Context) GetCookie(key string) string {
+	keycookie, err := ctx.Request.Cookie(key)
+	if err != nil {
+		return ""
+	}
+	return keycookie.Value
+}

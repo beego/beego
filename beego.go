@@ -44,6 +44,7 @@ var (
 	EnbaleHotUpdate      bool //enable HotUpdate default is false
 	HttpServerTimeOut    int64
 	ErrorsShow           bool
+	XSRFKEY              string
 )
 
 func init() {
@@ -72,6 +73,7 @@ func init() {
 	AppConfigPath = path.Join(AppPath, "conf", "app.conf")
 	HttpServerTimeOut = 0
 	ErrorsShow = true
+	XSRFKEY = "beegoxsrf"
 	ParseConfig()
 }
 

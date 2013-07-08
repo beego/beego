@@ -4,9 +4,13 @@ import (
 	"bytes"
 	"compress/gzip"
 	"compress/zlib"
+	"crypto/hmac"
+	"crypto/sha1"
+	"encoding/base64"
 	"encoding/json"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"github.com/astaxie/beego/session"
 	"html/template"
 	"io"
@@ -18,16 +22,18 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Controller struct {
-	Ctx        *Context
-	Data       map[interface{}]interface{}
-	ChildName  string
-	TplNames   string
-	Layout     string
-	TplExt     string
-	CruSession session.SessionStore
+	Ctx         *Context
+	Data        map[interface{}]interface{}
+	ChildName   string
+	TplNames    string
+	Layout      string
+	TplExt      string
+	_xsrf_token string
+	CruSession  session.SessionStore
 }
 
 type ControllerInterface interface {
@@ -330,4 +336,43 @@ func (c *Controller) DelSession(name interface{}) {
 
 func (c *Controller) IsAjax() bool {
 	return (c.Ctx.Request.Header.Get("HTTP_X_REQUESTED_WITH") == "XMLHttpRequest")
+}
+
+func (c *Controller) XsrfToken() string {
+	if c._xsrf_token == "" {
+		token := c.Ctx.GetCookie("_xsrf")
+		if token == "" {
+			h := hmac.New(sha1.New, []byte(XSRFKEY))
+			fmt.Fprintf(h, "%s:%d", c.Ctx.Request.RemoteAddr, time.Now().UnixNano())
+			tok := fmt.Sprintf("%s:%d", h.Sum(nil), time.Now().UnixNano())
+			token := base64.URLEncoding.EncodeToString([]byte(tok))
+			c.Ctx.SetCookie("_xsrf", token)
+		}
+		c._xsrf_token = token
+	}
+	return c._xsrf_token
+}
+
+func (c *Controller) CheckXsrfCookie() bool {
+	token := c.GetString("_xsrf")
+
+	if token == "" {
+		token = c.Ctx.Request.Header.Get("X-Xsrftoken")
+	}
+	if token == "" {
+		token = c.Ctx.Request.Header.Get("X-Csrftoken")
+	}
+	if token == "" {
+		c.Ctx.Abort(403, "'_xsrf' argument missing from POST")
+	}
+
+	if c._xsrf_token != token {
+		c.Ctx.Abort(403, "XSRF cookie does not match POST argument")
+	}
+	return true
+}
+
+func (c *Controller) XsrfFormHtml() string {
+	return "<input type=\"hidden\" name=\"_xsrf\" value=\"" +
+		c._xsrf_token + "\"/>"
 }
