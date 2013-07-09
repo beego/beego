@@ -6,9 +6,6 @@ import (
 	"github.com/astaxie/beego/example/beeapi/models"
 )
 
-type ResponseInfo struct {
-}
-
 type ObejctController struct {
 	beego.Controller
 }
