@@ -257,6 +257,13 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			return
 		}
 	}
+	//execute middleware filters
+	for _, filter := range p.filters {
+		filter(w, r)
+		if w.started {
+			return
+		}
+	}
 
 	requestPath := r.URL.Path
 
@@ -271,8 +278,6 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 		r.Body = ioutil.NopCloser(bf)
 	}
-
-	r.ParseMultipartForm(MaxMemory)
 
 	//user defined Handler
 	for pattern, c := range p.userHandlers {
@@ -295,6 +300,8 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		if len(matches[0]) != len(requestPath) {
 			continue
 		}
+
+		r.ParseMultipartForm(MaxMemory)
 
 		if len(c.params) > 0 {
 			//add url parameters to the query param map
@@ -351,6 +358,8 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				continue
 			}
 
+			r.ParseMultipartForm(MaxMemory)
+
 			if len(route.params) > 0 {
 				//add url parameters to the query param map
 				values := r.URL.Query()
@@ -370,13 +379,6 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	if runrouter != nil {
-		//execute middleware filters
-		for _, filter := range p.filters {
-			filter(w, r)
-			if w.started {
-				return
-			}
-		}
 
 		//Invoke the request handler
 		vc := reflect.New(runrouter.controllerType)
