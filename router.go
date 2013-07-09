@@ -272,8 +272,6 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		r.Body = ioutil.NopCloser(bf)
 	}
 
-	r.ParseMultipartForm(MaxMemory)
-
 	//user defined Handler
 	for pattern, c := range p.userHandlers {
 		if c.regex == nil && pattern == requestPath {
@@ -295,21 +293,27 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		if len(matches[0]) != len(requestPath) {
 			continue
 		}
+		if !SkipParseFormOnHandler {
+			r.ParseMultipartForm(MaxMemory)
 
-		if len(c.params) > 0 {
-			//add url parameters to the query param map
-			values := r.URL.Query()
-			for i, match := range matches[1:] {
-				values.Add(c.params[i], match)
-				r.Form.Add(c.params[i], match)
-				params[c.params[i]] = match
+			if len(c.params) > 0 {
+				//add url parameters to the query param map
+				values := r.URL.Query()
+				for i, match := range matches[1:] {
+					values.Add(c.params[i], match)
+					r.Form.Add(c.params[i], match)
+					params[c.params[i]] = match
+				}
+				//reassemble query params and add to RawQuery
+				r.URL.RawQuery = url.Values(values).Encode() + "&" + r.URL.RawQuery
+				//r.URL.RawQuery = url.Values(values).Encode()
 			}
-			//reassemble query params and add to RawQuery
-			r.URL.RawQuery = url.Values(values).Encode() + "&" + r.URL.RawQuery
-			//r.URL.RawQuery = url.Values(values).Encode()
 		}
-		c.h.ServeHTTP(rw, r)
-		return
+		c.h.ServeHTTP(w, r)
+		if w.started {
+			return
+		}
+		break
 	}
 
 	//first find path from the fixrouters to Improve Performance
@@ -350,6 +354,8 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			if len(matches[0]) != len(requestPath) {
 				continue
 			}
+
+			r.ParseMultipartForm(MaxMemory)
 
 			if len(route.params) > 0 {
 				//add url parameters to the query param map

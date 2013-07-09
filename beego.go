@@ -31,21 +31,22 @@ var (
 	RunMode       string //"dev" or "prod"
 	AppConfig     *Config
 	//related to session
-	GlobalSessions       *session.Manager //GlobalSessions
-	SessionOn            bool             // wheather auto start session,default is false
-	SessionProvider      string           // default session provider  memory mysql redis
-	SessionName          string           // sessionName cookie's name
-	SessionGCMaxLifetime int64            // session's gc maxlifetime
-	SessionSavePath      string           // session savepath if use mysql/redis/file this set to the connectinfo
-	UseFcgi              bool
-	MaxMemory            int64
-	EnableGzip           bool // enable gzip
-	DirectoryIndex       bool //ebable DirectoryIndex default is false
-	EnbaleHotUpdate      bool //enable HotUpdate default is false
-	HttpServerTimeOut    int64
-	ErrorsShow           bool
-	XSRFKEY              string
-	CopyRequestBody      bool
+	GlobalSessions         *session.Manager //GlobalSessions
+	SessionOn              bool             // wheather auto start session,default is false
+	SessionProvider        string           // default session provider  memory mysql redis
+	SessionName            string           // sessionName cookie's name
+	SessionGCMaxLifetime   int64            // session's gc maxlifetime
+	SessionSavePath        string           // session savepath if use mysql/redis/file this set to the connectinfo
+	UseFcgi                bool
+	MaxMemory              int64
+	EnableGzip             bool // enable gzip
+	DirectoryIndex         bool //ebable DirectoryIndex default is false
+	EnbaleHotUpdate        bool //enable HotUpdate default is false
+	HttpServerTimeOut      int64
+	ErrorsShow             bool
+	XSRFKEY                string
+	CopyRequestBody        bool
+	SkipParseFormOnHandler bool //do not ParseMultipartForm on user defined Handler
 )
 
 func init() {
