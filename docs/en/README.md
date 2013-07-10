@@ -1,4 +1,5 @@
-#Beego
+# Beego
+
 Beego is a lightweight, open source, non-blocking and scalable web framework for the Go programming language. It's like tornado in Python. This web framework has already been using for building web server and tools in SNDA's CDN system. Documentation and downloads available at [http://astaxie.github.com/beego](http://astaxie.github.com/beego)
 
 It has following main features:
@@ -19,34 +20,41 @@ The working principles of Beego as follows:
 Beego is licensed under the Apache Licence, Version 2.0
 (http://www.apache.org/licenses/LICENSE-2.0.html).
 
-#Simple example
+
+# Simple example
+
 The following example prints string "Hello world" to your browser, it shows how easy to build a web application with Beego.
 
 	package main
-
+	
 	import (
-    	"github.com/astaxie/beego"
+		"github.com/astaxie/beego"
 	)
-
+	
 	type MainController struct {
-    	beego.Controller
+		beego.Controller
 	}
-
+	
 	func (this *MainController) Get() {
-    	this.Ctx.WriteString("hello world")
+		this.Ctx.WriteString("hello world")
 	}
-
+	
 	func main() {
-    	beego.Router("/", &MainController{})
-    	beego.Run()
+		beego.Router("/", &MainController{})
+		beego.Run()
 	}
 
-#Handbook
+
+# Handbook
+
 - [Purposes](Why.md)
 - [Installation](Install.md)
 - [Quick start](Quickstart.md)
 - [Step by step](Tutorial.md)
 - [Real world usage](Application.md)
+- [Hot update](HotUpdate.md)
 
-#Documentation
-[godoc](http://godoc.org/github.com/astaxie/beego)
+
+# Documentation
+
+[Go Walker](http://gowalker.org/github.com/astaxie/beego)

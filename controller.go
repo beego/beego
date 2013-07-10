@@ -4,9 +4,13 @@ import (
 	"bytes"
 	"compress/gzip"
 	"compress/zlib"
+	"crypto/hmac"
+	"crypto/sha1"
+	"encoding/base64"
 	"encoding/json"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"github.com/astaxie/beego/session"
 	"html/template"
 	"io"
@@ -18,16 +22,19 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Controller struct {
-	Ctx        *Context
-	Data       map[interface{}]interface{}
-	ChildName  string
-	TplNames   string
-	Layout     string
-	TplExt     string
-	CruSession session.SessionStore
+	Ctx         *Context
+	Data        map[interface{}]interface{}
+	ChildName   string
+	TplNames    string
+	Layout      string
+	TplExt      string
+	_xsrf_token string
+	gotofunc    string
+	CruSession  session.SessionStore
 }
 
 type ControllerInterface interface {
@@ -212,8 +219,28 @@ func (c *Controller) ServeJson() {
 		return
 	}
 	c.Ctx.SetHeader("Content-Length", strconv.Itoa(len(content)), true)
-	c.Ctx.ResponseWriter.Header().Set("Content-Type", "application/json")
+	c.Ctx.ResponseWriter.Header().Set("Content-Type", "application/json;charset=UTF-8")
 	c.Ctx.ResponseWriter.Write(content)
+}
+
+func (c *Controller) ServeJsonp() {
+	content, err := json.MarshalIndent(c.Data["jsonp"], "", "  ")
+	if err != nil {
+		http.Error(c.Ctx.ResponseWriter, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	callback := c.Ctx.Request.Form.Get("callback")
+	if callback == "" {
+		http.Error(c.Ctx.ResponseWriter, `"callback" parameter required`, http.StatusInternalServerError)
+		return
+	}
+	callback_content := bytes.NewBufferString(callback)
+	callback_content.WriteString("(")
+	callback_content.Write(content)
+	callback_content.WriteString(");\r\n")
+	c.Ctx.SetHeader("Content-Length", strconv.Itoa(callback_content.Len()), true)
+	c.Ctx.ResponseWriter.Header().Set("Content-Type", "application/json;charset=UTF-8")
+	c.Ctx.ResponseWriter.Write(callback_content.Bytes())
 }
 
 func (c *Controller) ServeXml() {
@@ -223,7 +250,7 @@ func (c *Controller) ServeXml() {
 		return
 	}
 	c.Ctx.SetHeader("Content-Length", strconv.Itoa(len(content)), true)
-	c.Ctx.ResponseWriter.Header().Set("Content-Type", "application/xml")
+	c.Ctx.ResponseWriter.Header().Set("Content-Type", "application/xml;charset=UTF-8")
 	c.Ctx.ResponseWriter.Write(content)
 }
 
@@ -239,6 +266,18 @@ func (c *Controller) Input() url.Values {
 
 func (c *Controller) GetString(key string) string {
 	return c.Input().Get(key)
+}
+
+func (c *Controller) GetStrings(key string) []string {
+	r := c.Ctx.Request
+	if r.Form == nil {
+		return []string{}
+	}
+	vs := r.Form[key]
+	if len(vs) > 0 {
+		return vs
+	}
+	return []string{}
 }
 
 func (c *Controller) GetInt(key string) (int64, error) {
@@ -294,4 +333,54 @@ func (c *Controller) DelSession(name interface{}) {
 		c.StartSession()
 	}
 	c.CruSession.Delete(name)
+}
+
+func (c *Controller) IsAjax() bool {
+	return (c.Ctx.Request.Header.Get("HTTP_X_REQUESTED_WITH") == "XMLHttpRequest")
+}
+
+func (c *Controller) XsrfToken() string {
+	if c._xsrf_token == "" {
+		token := c.Ctx.GetCookie("_xsrf")
+		if token == "" {
+			h := hmac.New(sha1.New, []byte(XSRFKEY))
+			fmt.Fprintf(h, "%s:%d", c.Ctx.Request.RemoteAddr, time.Now().UnixNano())
+			tok := fmt.Sprintf("%s:%d", h.Sum(nil), time.Now().UnixNano())
+			token := base64.URLEncoding.EncodeToString([]byte(tok))
+			c.Ctx.SetCookie("_xsrf", token)
+		}
+		c._xsrf_token = token
+	}
+	return c._xsrf_token
+}
+
+func (c *Controller) CheckXsrfCookie() bool {
+	token := c.GetString("_xsrf")
+
+	if token == "" {
+		token = c.Ctx.Request.Header.Get("X-Xsrftoken")
+	}
+	if token == "" {
+		token = c.Ctx.Request.Header.Get("X-Csrftoken")
+	}
+	if token == "" {
+		c.Ctx.Abort(403, "'_xsrf' argument missing from POST")
+	}
+
+	if c._xsrf_token != token {
+		c.Ctx.Abort(403, "XSRF cookie does not match POST argument")
+	}
+	return true
+}
+
+func (c *Controller) XsrfFormHtml() string {
+	return "<input type=\"hidden\" name=\"_xsrf\" value=\"" +
+		c._xsrf_token + "\"/>"
+}
+
+func (c *Controller) GoToFunc(funcname string) {
+	if funcname[0] < 65 || funcname[0] > 90 {
+		panic("GoToFunc should exported function")
+	}
+	c.gotofunc = funcname
 }

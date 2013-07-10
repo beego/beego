@@ -66,11 +66,11 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 			Path:     "/",
 			HttpOnly: true,
 			Secure:   false}
-		cookie.Expires = time.Now().Add(time.Duration(manager.maxlifetime) * time.Second)
+		//cookie.Expires = time.Now().Add(time.Duration(manager.maxlifetime) * time.Second)
 		http.SetCookie(w, &cookie)
 		r.AddCookie(&cookie)
 	} else {
-		cookie.Expires = time.Now().Add(time.Duration(manager.maxlifetime) * time.Second)
+		//cookie.Expires = time.Now().Add(time.Duration(manager.maxlifetime) * time.Second)
 		cookie.HttpOnly = true
 		cookie.Path = "/"
 		http.SetCookie(w, cookie)

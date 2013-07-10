@@ -1,9 +1,12 @@
 package beego
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"reflect"
 	"regexp"
 	"runtime"
@@ -44,7 +47,7 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface) {
 		if strings.HasPrefix(part, ":") {
 			expr := "(.+)"
 			//a user may choose to override the defult expression
-			// similar to expressjs: ‘/user/:id([0-9]+)’ 
+			// similar to expressjs: ‘/user/:id([0-9]+)’
 			if index := strings.Index(part, "("); index != -1 {
 				expr = part[index:]
 				part = part[:index]
@@ -118,7 +121,7 @@ func (p *ControllerRegistor) AddHandler(pattern string, c http.Handler) {
 		if strings.HasPrefix(part, ":") {
 			expr := "([^/]+)"
 			//a user may choose to override the defult expression
-			// similar to expressjs: ‘/user/:id([0-9]+)’ 
+			// similar to expressjs: ‘/user/:id([0-9]+)’
 			if index := strings.Index(part, "("); index != -1 {
 				expr = part[index:]
 				part = part[:index]
@@ -188,7 +191,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	defer func() {
 		if err := recover(); err != nil {
 			errstr := fmt.Sprint(err)
-			if handler, ok := ErrorMaps[errstr]; ok {
+			if handler, ok := ErrorMaps[errstr]; ok && ErrorsShow {
 				handler(rw, r)
 			} else {
 				if !RecoverPanic {
@@ -214,8 +217,10 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			}
 		}
 	}()
+
 	w := &responseWriter{writer: rw}
 
+	w.Header().Set("Server", "beegoServer")
 	var runrouter *controllerInfo
 	var findrouter bool
 
@@ -231,6 +236,22 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}
 		if strings.HasPrefix(r.URL.Path, prefix) {
 			file := staticDir + r.URL.Path[len(prefix):]
+			finfo, err := os.Stat(file)
+			if err != nil {
+				return
+			}
+			//if the request is dir and DirectoryIndex is false then
+			if finfo.IsDir() && !DirectoryIndex {
+				if h, ok := ErrorMaps["403"]; ok {
+					h(w, r)
+					return
+				} else {
+					w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+					w.WriteHeader(403)
+					fmt.Fprintln(w, "403 Forbidden")
+					return
+				}
+			}
 			http.ServeFile(w, r, file)
 			w.started = true
 			return
@@ -238,6 +259,19 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	requestPath := r.URL.Path
+
+	var requestbody []byte
+
+	if CopyRequestBody {
+		requestbody, _ = ioutil.ReadAll(r.Body)
+
+		r.Body.Close()
+
+		bf := bytes.NewBuffer(requestbody)
+
+		r.Body = ioutil.NopCloser(bf)
+	}
+
 	r.ParseMultipartForm(MaxMemory)
 
 	//user defined Handler
@@ -326,7 +360,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 					params[route.params[i]] = match
 				}
 				//reassemble query params and add to RawQuery
-				r.URL.RawQuery = url.Values(values).Encode() + "&" + r.URL.RawQuery
+				r.URL.RawQuery = url.Values(values).Encode()
 				//r.URL.RawQuery = url.Values(values).Encode()
 			}
 			runrouter = route
@@ -350,7 +384,8 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		//call the controller init function
 		init := vc.MethodByName("Init")
 		in := make([]reflect.Value, 2)
-		ct := &Context{ResponseWriter: w, Request: r, Params: params}
+		ct := &Context{ResponseWriter: w, Request: r, Params: params, RequestBody: requestbody}
+
 		in[0] = reflect.ValueOf(ct)
 		in[1] = reflect.ValueOf(runrouter.controllerType.Name())
 		init.Call(in)
@@ -382,6 +417,15 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			} else if r.Method == "OPTIONS" {
 				method = vc.MethodByName("Options")
 				method.Call(in)
+			}
+			gotofunc := vc.Elem().FieldByName("gotofunc").String()
+			if gotofunc != "" {
+				method = vc.MethodByName(gotofunc)
+				if method.IsValid() {
+					method.Call(in)
+				} else {
+					panic("gotofunc is exists:" + gotofunc)
+				}
 			}
 			if !w.started {
 				if AutoRender {

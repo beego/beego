@@ -133,46 +133,64 @@ func ParseConfig() (err error) {
 		if v, err := AppConfig.Int("httpport"); err == nil {
 			HttpPort = v
 		}
-		if v, err := AppConfig.Int64("maxmemory"); err == nil {
-			MaxMemory = v
+		if maxmemory, err := AppConfig.Int64("maxmemory"); err == nil {
+			MaxMemory = maxmemory
 		}
 		AppName = AppConfig.String("appname")
 		if runmode := AppConfig.String("runmode"); runmode != "" {
 			RunMode = runmode
 		}
-		if ar, err := AppConfig.Bool("autorender"); err == nil {
-			AutoRender = ar
+		if autorender, err := AppConfig.Bool("autorender"); err == nil {
+			AutoRender = autorender
 		}
-		if ar, err := AppConfig.Bool("autorecover"); err == nil {
-			RecoverPanic = ar
+		if autorecover, err := AppConfig.Bool("autorecover"); err == nil {
+			RecoverPanic = autorecover
 		}
-		if ar, err := AppConfig.Bool("pprofon"); err == nil {
-			PprofOn = ar
+		if pprofon, err := AppConfig.Bool("pprofon"); err == nil {
+			PprofOn = pprofon
 		}
 		if views := AppConfig.String("viewspath"); views != "" {
 			ViewsPath = views
 		}
-		if ar, err := AppConfig.Bool("sessionon"); err == nil {
-			SessionOn = ar
+		if sessionon, err := AppConfig.Bool("sessionon"); err == nil {
+			SessionOn = sessionon
 		}
-		if ar := AppConfig.String("sessionprovider"); ar != "" {
-			SessionProvider = ar
+		if sessProvider := AppConfig.String("sessionprovider"); sessProvider != "" {
+			SessionProvider = sessProvider
 		}
-		if ar := AppConfig.String("sessionname"); ar != "" {
-			SessionName = ar
+		if sessName := AppConfig.String("sessionname"); sessName != "" {
+			SessionName = sessName
 		}
-		if ar := AppConfig.String("sessionsavepath"); ar != "" {
-			SessionSavePath = ar
+		if sesssavepath := AppConfig.String("sessionsavepath"); sesssavepath != "" {
+			SessionSavePath = sesssavepath
 		}
-		if ar, err := AppConfig.Int("sessiongcmaxlifetime"); err == nil && ar != 0 {
-			int64val, _ := strconv.ParseInt(strconv.Itoa(ar), 10, 64)
+		if sessMaxLifeTime, err := AppConfig.Int("sessiongcmaxlifetime"); err == nil && sessMaxLifeTime != 0 {
+			int64val, _ := strconv.ParseInt(strconv.Itoa(sessMaxLifeTime), 10, 64)
 			SessionGCMaxLifetime = int64val
 		}
-		if ar, err := AppConfig.Bool("usefcgi"); err == nil {
-			UseFcgi = ar
+		if usefcgi, err := AppConfig.Bool("usefcgi"); err == nil {
+			UseFcgi = usefcgi
 		}
-		if ar, err := AppConfig.Bool("enablegzip"); err == nil {
-			EnableGzip = ar
+		if enablegzip, err := AppConfig.Bool("enablegzip"); err == nil {
+			EnableGzip = enablegzip
+		}
+		if directoryindex, err := AppConfig.Bool("directoryindex"); err == nil {
+			DirectoryIndex = directoryindex
+		}
+		if hotupdate, err := AppConfig.Bool("hotupdate"); err == nil {
+			EnbaleHotUpdate = hotupdate
+		}
+		if timeout, err := AppConfig.Int64("httpservertimeout"); err == nil {
+			HttpServerTimeOut = timeout
+		}
+		if errorsshow, err := AppConfig.Bool("errorsshow"); err == nil {
+			ErrorsShow = errorsshow
+		}
+		if copyrequestbody, err := AppConfig.Bool("copyrequestbody"); err == nil {
+			CopyRequestBody = copyrequestbody
+		}
+		if xsrfkey := AppConfig.String("xsrfkey"); xsrfkey != "" {
+			XSRFKEY = xsrfkey
 		}
 	}
 	return nil

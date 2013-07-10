@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"strconv"
 	"sync"
 	"time"
 )
@@ -16,12 +15,7 @@ var (
 type MemoryItem struct {
 	val        interface{}
 	Lastaccess time.Time
-	expired    int
-}
-
-func (itm *MemoryItem) Access() interface{} {
-	itm.Lastaccess = time.Now()
-	return itm.val
+	expired    int64
 }
 
 type MemoryCache struct {
@@ -44,13 +38,21 @@ func (bc *MemoryCache) Get(name string) interface{} {
 	if !ok {
 		return nil
 	}
-	return itm.Access()
+	if (time.Now().Unix() - itm.Lastaccess.Unix()) > itm.expired {
+		go bc.Delete(name)
+		return nil
+	}
+	return itm.val
 }
 
-func (bc *MemoryCache) Put(name string, value interface{}, expired int) error {
+func (bc *MemoryCache) Put(name string, value interface{}, expired int64) error {
 	bc.lock.Lock()
 	defer bc.lock.Unlock()
-	t := MemoryItem{val: value, Lastaccess: time.Now(), expired: expired}
+	t := MemoryItem{
+		val:        value,
+		Lastaccess: time.Now(),
+		expired:    expired,
+	}
 	if _, ok := bc.items[name]; ok {
 		return errors.New("the key is exist")
 	} else {
@@ -87,11 +89,11 @@ func (bc *MemoryCache) ClearAll() error {
 	return nil
 }
 
-// Start activates the file cache; it will 
+// Start activates the file cache; it will
 func (bc *MemoryCache) StartAndGC(config string) error {
 	var cf map[string]int
 	json.Unmarshal([]byte(config), &cf)
-	if _, ok := cf["every"]; !ok {
+	if _, ok := cf["interval"]; !ok {
 		cf = make(map[string]int)
 		cf["interval"] = DefaultEvery
 	}
@@ -110,7 +112,7 @@ func (bc *MemoryCache) vaccuum() {
 		return
 	}
 	for {
-		<-time.After(time.Duration(bc.dur) * time.Second)
+		<-time.After(bc.dur)
 		if bc.items == nil {
 			return
 		}
@@ -128,12 +130,8 @@ func (bc *MemoryCache) item_expired(name string) bool {
 	if !ok {
 		return true
 	}
-	dur := time.Now().Sub(itm.Lastaccess)
-	sec, err := strconv.Atoi(fmt.Sprintf("%0.0f", dur.Seconds()))
-	if err != nil {
-		delete(bc.items, name)
-		return true
-	} else if sec >= itm.expired {
+	sec := time.Now().Unix() - itm.Lastaccess.Unix()
+	if sec >= itm.expired {
 		delete(bc.items, name)
 		return true
 	}

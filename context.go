@@ -1,16 +1,17 @@
 package beego
 
 import (
+	"bytes"
 	"fmt"
 	"mime"
 	"net/http"
 	"strings"
-	"time"
 )
 
 type Context struct {
 	ResponseWriter http.ResponseWriter
 	Request        *http.Request
+	RequestBody    []byte
 	Params         map[string]string
 }
 
@@ -37,7 +38,7 @@ func (ctx *Context) NotFound(message string) {
 	ctx.ResponseWriter.Write([]byte(message))
 }
 
-//Sets the content type by extension, as defined in the mime package. 
+//Sets the content type by extension, as defined in the mime package.
 //For example, ctx.ContentType("json") sets the content-type to "application/json"
 func (ctx *Context) ContentType(ext string) {
 	if !strings.HasPrefix(ext, ".") {
@@ -58,14 +59,54 @@ func (ctx *Context) SetHeader(hdr string, val string, unique bool) {
 }
 
 //Sets a cookie -- duration is the amount of time in seconds. 0 = forever
-func (ctx *Context) SetCookie(name string, value string, age int64) {
-	var utctime time.Time
-	if age == 0 {
-		// 2^31 - 1 seconds (roughly 2038)
-		utctime = time.Unix(2147483647, 0)
+
+//params:
+//string name
+//string value
+//int64 expire = 0
+//string $path
+//string $domain
+//bool $secure = false
+//bool $httponly = false
+func (ctx *Context) SetCookie(name string, value string, others ...interface{}) {
+	var b bytes.Buffer
+	fmt.Fprintf(&b, "%s=%s", sanitizeName(name), sanitizeValue(value))
+	if len(others) > 0 {
+		fmt.Fprintf(&b, "; Max-Age=%d", others[0].(int64))
 	} else {
-		utctime = time.Unix(time.Now().Unix()+age, 0)
+		fmt.Fprintf(&b, "; Max-Age=0")
 	}
-	cookie := fmt.Sprintf("%s=%s; Expires=%s; Path=/", name, value, webTime(utctime))
-	ctx.SetHeader("Set-Cookie", cookie, true)
+	if len(others) > 1 {
+		fmt.Fprintf(&b, "; Path=%s", sanitizeValue(others[1].(string)))
+	}
+	if len(others) > 2 {
+		fmt.Fprintf(&b, "; Domain=%s", sanitizeValue(others[2].(string)))
+	}
+	if len(others) > 3 {
+		fmt.Fprintf(&b, "; Secure")
+	}
+	if len(others) > 4 {
+		fmt.Fprintf(&b, "; HttpOnly")
+	}
+	ctx.SetHeader("Set-Cookie", b.String(), true)
+}
+
+var cookieNameSanitizer = strings.NewReplacer("\n", "-", "\r", "-")
+
+func sanitizeName(n string) string {
+	return cookieNameSanitizer.Replace(n)
+}
+
+var cookieValueSanitizer = strings.NewReplacer("\n", " ", "\r", " ", ";", " ")
+
+func sanitizeValue(v string) string {
+	return cookieValueSanitizer.Replace(v)
+}
+
+func (ctx *Context) GetCookie(key string) string {
+	keycookie, err := ctx.Request.Cookie(key)
+	if err != nil {
+		return ""
+	}
+	return keycookie.Value
 }

@@ -28,7 +28,7 @@ func (rc *MemcacheCache) Get(key string) interface{} {
 	return contain
 }
 
-func (rc *MemcacheCache) Put(key string, val interface{}, timeout int) error {
+func (rc *MemcacheCache) Put(key string, val interface{}, timeout int64) error {
 	if rc.c == nil {
 		rc.c = rc.connectInit()
 	}

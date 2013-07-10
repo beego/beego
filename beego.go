@@ -10,9 +10,10 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"time"
 )
 
-const VERSION = "0.6.0"
+const VERSION = "0.7.2"
 
 var (
 	BeeApp        *App
@@ -29,16 +30,22 @@ var (
 	ViewsPath     string
 	RunMode       string //"dev" or "prod"
 	AppConfig     *Config
-	//related to session 
+	//related to session
 	GlobalSessions       *session.Manager //GlobalSessions
 	SessionOn            bool             // wheather auto start session,default is false
-	SessionProvider      string           // default session provider  memory mysql redis 
+	SessionProvider      string           // default session provider  memory mysql redis
 	SessionName          string           // sessionName cookie's name
 	SessionGCMaxLifetime int64            // session's gc maxlifetime
 	SessionSavePath      string           // session savepath if use mysql/redis/file this set to the connectinfo
 	UseFcgi              bool
 	MaxMemory            int64
 	EnableGzip           bool // enable gzip
+	DirectoryIndex       bool //ebable DirectoryIndex default is false
+	EnbaleHotUpdate      bool //enable HotUpdate default is false
+	HttpServerTimeOut    int64
+	ErrorsShow           bool
+	XSRFKEY              string
+	CopyRequestBody      bool
 )
 
 func init() {
@@ -65,6 +72,9 @@ func init() {
 	EnableGzip = false
 	StaticDir["/static"] = "static"
 	AppConfigPath = path.Join(AppPath, "conf", "app.conf")
+	HttpServerTimeOut = 0
+	ErrorsShow = true
+	XSRFKEY = "beegoxsrf"
 	ParseConfig()
 }
 
@@ -81,15 +91,42 @@ func NewApp() *App {
 
 func (app *App) Run() {
 	addr := fmt.Sprintf("%s:%d", HttpAddr, HttpPort)
-	var err error
+	var (
+		err error
+		l   net.Listener
+	)
 	if UseFcgi {
-		l, e := net.Listen("tcp", addr)
-		if e != nil {
-			BeeLogger.Fatal("Listen: ", e)
+		l, err = net.Listen("tcp", addr)
+		if err != nil {
+			BeeLogger.Fatal("Listen: ", err)
 		}
 		err = fcgi.Serve(l, app.Handlers)
 	} else {
-		err = http.ListenAndServe(addr, app.Handlers)
+		if EnbaleHotUpdate {
+			server := &http.Server{
+				Handler:      app.Handlers,
+				ReadTimeout:  time.Duration(HttpServerTimeOut) * time.Second,
+				WriteTimeout: time.Duration(HttpServerTimeOut) * time.Second,
+			}
+			laddr, err := net.ResolveTCPAddr("tcp", addr)
+			if nil != err {
+				BeeLogger.Fatal("ResolveTCPAddr:", err)
+			}
+			l, err = GetInitListner(laddr)
+			theStoppable = newStoppable(l)
+			err = server.Serve(theStoppable)
+			theStoppable.wg.Wait()
+			CloseSelf()
+		} else {
+			s := &http.Server{
+				Addr:         addr,
+				Handler:      app.Handlers,
+				ReadTimeout:  time.Duration(HttpServerTimeOut) * time.Second,
+				WriteTimeout: time.Duration(HttpServerTimeOut) * time.Second,
+			}
+			err = s.ListenAndServe()
+		}
+
 	}
 	if err != nil {
 		BeeLogger.Fatal("ListenAndServe: ", err)
@@ -126,6 +163,11 @@ func (app *App) SetStaticPath(url string, path string) *App {
 	return app
 }
 
+func (app *App) DelStaticPath(url string) *App {
+	delete(StaticDir, url)
+	return app
+}
+
 func (app *App) ErrorLog(ctx *Context) {
 	BeeLogger.Printf("[ERR] host: '%s', request: '%s %s', proto: '%s', ua: '%s', remote: '%s'\n", ctx.Request.Host, ctx.Request.Method, ctx.Request.URL.Path, ctx.Request.Proto, ctx.Request.UserAgent(), ctx.Request.RemoteAddr)
 }
@@ -139,8 +181,14 @@ func RegisterController(path string, c ControllerInterface) *App {
 	return BeeApp
 }
 
-func Router(path string, c ControllerInterface) *App {
-	BeeApp.Router(path, c)
+func Router(rootpath string, c ControllerInterface) *App {
+	BeeApp.Router(rootpath, c)
+	return BeeApp
+}
+
+func RESTRouter(rootpath string, c ControllerInterface) *App {
+	Router(rootpath, c)
+	Router(path.Join(rootpath, ":objectId"), c)
 	return BeeApp
 }
 
@@ -161,6 +209,11 @@ func SetViewsPath(path string) *App {
 
 func SetStaticPath(url string, path string) *App {
 	StaticDir[url] = path
+	return BeeApp
+}
+
+func DelStaticPath(url string) *App {
+	delete(StaticDir, url)
 	return BeeApp
 }
 

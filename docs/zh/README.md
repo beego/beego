@@ -18,21 +18,22 @@ beego是一个类似tornado的Go应用框架，采用了RESTFul的方式来实�
 	package main
 	
 	import (
-	    "github.com/astaxie/beego"
+		"github.com/astaxie/beego"
 	)
 	
 	type MainController struct {
-	    beego.Controller
+		beego.Controller
 	}
 	
 	func (this *MainController) Get() {
-	    this.Ctx.WriteString("hello world")
+		this.Ctx.WriteString("hello world")
 	}
 	
 	func main() {
-	    beego.Router("/", &MainController{})
-	    beego.Run()
+		beego.Router("/", &MainController{})
+		beego.Run()
 	}
+
 
 # beego 指南
 
@@ -41,9 +42,12 @@ beego是一个类似tornado的Go应用框架，采用了RESTFul的方式来实�
 * [快速入门](Quickstart.md)
 * [一步一步开发应用](Tutorial.md)
 * [beego案例](Application.md)
+* [热升级](HotUpdate.md)
+* [API应用开发入门](API.md)
+
 
 # API接口
 
 API对于我们平时开发应用非常有用，用于查询一些开发的函数，godoc做的非常好了
 
-[godoc](http://godoc.org/github.com/astaxie/beego)
+[Go Walker](http://gowalker.org/github.com/astaxie/beego)
