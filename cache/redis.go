@@ -58,6 +58,28 @@ func (rc *RedisCache) IsExist(key string) bool {
 	return v
 }
 
+func (rc *RedisCache) Incr(key string) error {
+	if rc.c == nil {
+		rc.c = rc.connectInit()
+	}
+	_, err := redis.Bool(rc.c.Do("HINCRBY", rc.key, key, 1))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (rc *RedisCache) Decr(key string) error {
+	if rc.c == nil {
+		rc.c = rc.connectInit()
+	}
+	_, err := redis.Bool(rc.c.Do("HINCRBY", rc.key, key, -1))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (rc *RedisCache) ClearAll() error {
 	if rc.c == nil {
 		rc.c = rc.connectInit()

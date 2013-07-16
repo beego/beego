@@ -75,6 +75,70 @@ func (bc *MemoryCache) Delete(name string) error {
 	return nil
 }
 
+func (bc *MemoryCache) Incr(key string) error {
+	bc.lock.RLock()
+	defer bc.lock.RUnlock()
+	itm, ok := bc.items[key]
+	if !ok {
+		return errors.New("key not exist")
+	}
+	switch itm.val.(type) {
+	case int:
+		itm.val = itm.val.(int) + 1
+	case int64:
+		itm.val = itm.val.(int64) + 1
+	case int32:
+		itm.val = itm.val.(int32) + 1
+	case uint:
+		itm.val = itm.val.(uint) + 1
+	case uint32:
+		itm.val = itm.val.(uint32) + 1
+	case uint64:
+		itm.val = itm.val.(uint64) + 1
+	default:
+		return errors.New("item val is not int int64 int32")
+	}
+	return nil
+}
+
+func (bc *MemoryCache) Decr(key string) error {
+	bc.lock.RLock()
+	defer bc.lock.RUnlock()
+	itm, ok := bc.items[key]
+	if !ok {
+		return errors.New("key not exist")
+	}
+	switch itm.val.(type) {
+	case int:
+		itm.val = itm.val.(int) - 1
+	case int64:
+		itm.val = itm.val.(int64) - 1
+	case int32:
+		itm.val = itm.val.(int32) - 1
+	case uint:
+		if itm.val.(uint) > 0 {
+			itm.val = itm.val.(uint) - 1
+		} else {
+			return errors.New("item val is less than 0")
+		}
+	case uint32:
+		if itm.val.(uint32) > 0 {
+			itm.val = itm.val.(uint32) - 1
+		} else {
+			return errors.New("item val is less than 0")
+		}
+	case uint64:
+		if itm.val.(uint64) > 0 {
+			itm.val = itm.val.(uint64) - 1
+		} else {
+			return errors.New("item val is less than 0")
+		}
+	default:
+		return errors.New("item val is not int int64 int32")
+	}
+	return nil
+}
+
 func (bc *MemoryCache) IsExist(name string) bool {
 	bc.lock.RLock()
 	defer bc.lock.RUnlock()

@@ -31,6 +31,21 @@ func Test_cache(t *testing.T) {
 		t.Error("set Error", err)
 	}
 
+	if err = bm.Incr("astaxie"); err != nil {
+		t.Error("Incr Error", err)
+	}
+
+	if v := bm.Get("astaxie"); v.(int) != 2 {
+		t.Error("get err")
+	}
+
+	if err = bm.Decr("astaxie"); err != nil {
+		t.Error("Incr Error", err)
+	}
+
+	if v := bm.Get("astaxie"); v.(int) != 1 {
+		t.Error("get err")
+	}
 	bm.Delete("astaxie")
 	if bm.IsExist("astaxie") {
 		t.Error("delete err")

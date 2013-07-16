@@ -8,6 +8,8 @@ type Cache interface {
 	Get(key string) interface{}
 	Put(key string, val interface{}, timeout int64) error
 	Delete(key string) error
+	Incr(key string) error
+	Decr(key string) error
 	IsExist(key string) bool
 	ClearAll() error
 	StartAndGC(config string) error
