@@ -189,6 +189,7 @@ func NotFound(rw http.ResponseWriter, r *http.Request) {
 		"<br>You like 404 pages" +
 		"</ul>")
 	data["BeegoVersion"] = VERSION
+	rw.WriteHeader(http.StatusNotFound)
 	t.Execute(rw, data)
 }
 
@@ -204,6 +205,7 @@ func Unauthorized(rw http.ResponseWriter, r *http.Request) {
 		"<br>Check the address for errors" +
 		"</ul>")
 	data["BeegoVersion"] = VERSION
+	rw.WriteHeader(http.StatusUnauthorized)
 	t.Execute(rw, data)
 }
 
@@ -220,6 +222,7 @@ func Forbidden(rw http.ResponseWriter, r *http.Request) {
 		"<br>You need to log in" +
 		"</ul>")
 	data["BeegoVersion"] = VERSION
+	rw.WriteHeader(http.StatusForbidden)
 	t.Execute(rw, data)
 }
 
@@ -235,6 +238,7 @@ func ServiceUnavailable(rw http.ResponseWriter, r *http.Request) {
 		"<br>Please try again later." +
 		"</ul>")
 	data["BeegoVersion"] = VERSION
+	rw.WriteHeader(http.StatusServiceUnavailable)
 	t.Execute(rw, data)
 }
 
@@ -249,6 +253,7 @@ func InternalServerError(rw http.ResponseWriter, r *http.Request) {
 		"<br>you should report the fault to the website administrator" +
 		"</ul>")
 	data["BeegoVersion"] = VERSION
+	rw.WriteHeader(http.StatusInternalServerError)
 	t.Execute(rw, data)
 }
 
