@@ -196,6 +196,7 @@ func (a Alpha) IsSatisfied(obj interface{}) bool {
 				return false
 			}
 		}
+		return true
 	}
 	return false
 }
@@ -219,6 +220,7 @@ func (n Numeric) IsSatisfied(obj interface{}) bool {
 				return false
 			}
 		}
+		return true
 	}
 	return false
 }
@@ -242,6 +244,7 @@ func (a AlphaNumeric) IsSatisfied(obj interface{}) bool {
 				return false
 			}
 		}
+		return true
 	}
 	return false
 }
@@ -284,7 +287,7 @@ func (n NoMatch) IsSatisfied(obj interface{}) bool {
 }
 
 func (n NoMatch) DefaultMessage() string {
-	return fmt.Sprintln("Must no match", n.Regexp)
+	return fmt.Sprintln("Must not match", n.Regexp)
 }
 
 func (n NoMatch) GetKey() string {
@@ -299,7 +302,7 @@ type AlphaDash struct {
 }
 
 func (a AlphaDash) DefaultMessage() string {
-	return fmt.Sprintln("Must be valid characters")
+	return fmt.Sprintln("Must be valid alpha or numeric or dash(-_) characters")
 }
 
 func (a AlphaDash) GetKey() string {
@@ -321,7 +324,7 @@ func (e Email) GetKey() string {
 	return e.Key
 }
 
-var ipPattern = regexp.MustCompile("((2[0-4]\\d|25[0-5]|[01]?\\d\\d?)\\.){3}(2[0-4]\\d|25[0-5]|[01]?\\d\\d?)")
+var ipPattern = regexp.MustCompile("^((2[0-4]\\d|25[0-5]|[01]?\\d\\d?)\\.){3}(2[0-4]\\d|25[0-5]|[01]?\\d\\d?)$")
 
 type IP struct {
 	Match

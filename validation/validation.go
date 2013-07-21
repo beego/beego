@@ -72,7 +72,7 @@ func (r *ValidationResult) Message(message string, args ...interface{}) *Validat
 		if len(args) == 0 {
 			r.Error.Message = message
 		} else {
-			r.Error.Message = fmt.Sprintf(message, args)
+			r.Error.Message = fmt.Sprintf(message, args...)
 		}
 	}
 	return r
@@ -107,15 +107,15 @@ func (v *Validation) Length(obj interface{}, n int, key string) *ValidationResul
 	return v.apply(Length{n, key}, obj)
 }
 
-func (v *Validation) Alpha(obj interface{}, n int, key string) *ValidationResult {
+func (v *Validation) Alpha(obj interface{}, key string) *ValidationResult {
 	return v.apply(Alpha{key}, obj)
 }
 
-func (v *Validation) Numeric(obj interface{}, n int, key string) *ValidationResult {
+func (v *Validation) Numeric(obj interface{}, key string) *ValidationResult {
 	return v.apply(Numeric{key}, obj)
 }
 
-func (v *Validation) AlphaNumeric(obj interface{}, n int, key string) *ValidationResult {
+func (v *Validation) AlphaNumeric(obj interface{}, key string) *ValidationResult {
 	return v.apply(AlphaNumeric{key}, obj)
 }
 
