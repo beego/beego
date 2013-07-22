@@ -51,6 +51,14 @@ func (rc *MemcacheCache) Delete(key string) error {
 	return err
 }
 
+func (rc *MemcacheCache) Incr(key string) error {
+	return errors.New("not support in memcache")
+}
+
+func (rc *MemcacheCache) Decr(key string) error {
+	return errors.New("not support in memcache")
+}
+
 func (rc *MemcacheCache) IsExist(key string) bool {
 	if rc.c == nil {
 		rc.c = rc.connectInit()
