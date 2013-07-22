@@ -31,7 +31,7 @@ func TestRequired(t *testing.T) {
 		t.Error("empty slice should be false")
 	}
 	if !valid.Required([]interface{}{"ok"}, "slice").Ok {
-		t.Error("slice should  be equal true")
+		t.Error("slice should be true")
 	}
 }
 
