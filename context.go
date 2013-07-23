@@ -95,7 +95,7 @@ func (ctx *Context) SetCookie(name string, value string, others ...interface{}) 
 	if len(others) > 4 {
 		fmt.Fprintf(&b, "; HttpOnly")
 	}
-	ctx.SetHeader("Set-Cookie", b.String(), true)
+	ctx.SetHeader("Set-Cookie", b.String(), false)
 }
 
 var cookieNameSanitizer = strings.NewReplacer("\n", "-", "\r", "-")
