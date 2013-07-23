@@ -63,7 +63,7 @@ func (m Min) IsSatisfied(obj interface{}) bool {
 }
 
 func (m Min) DefaultMessage() string {
-	return fmt.Sprintln("Minimum is", m.Min)
+	return fmt.Sprint("Minimum is ", m.Min)
 }
 
 func (m Min) GetKey() string {
@@ -84,7 +84,7 @@ func (m Max) IsSatisfied(obj interface{}) bool {
 }
 
 func (m Max) DefaultMessage() string {
-	return fmt.Sprintln("Maximum is", m.Max)
+	return fmt.Sprint("Maximum is ", m.Max)
 }
 
 func (m Max) GetKey() string {
@@ -103,7 +103,7 @@ func (r Range) IsSatisfied(obj interface{}) bool {
 }
 
 func (r Range) DefaultMessage() string {
-	return fmt.Sprintln("Range is", r.Min.Min, "to", r.Max.Max)
+	return fmt.Sprint("Range is ", r.Min.Min, " to ", r.Max.Max)
 }
 
 func (r Range) GetKey() string {
@@ -128,7 +128,7 @@ func (m MinSize) IsSatisfied(obj interface{}) bool {
 }
 
 func (m MinSize) DefaultMessage() string {
-	return fmt.Sprintln("Minimum size is", m.Min)
+	return fmt.Sprint("Minimum size is ", m.Min)
 }
 
 func (m MinSize) GetKey() string {
@@ -153,7 +153,7 @@ func (m MaxSize) IsSatisfied(obj interface{}) bool {
 }
 
 func (m MaxSize) DefaultMessage() string {
-	return fmt.Sprintln("Maximum size is", m.Max)
+	return fmt.Sprint("Maximum size is ", m.Max)
 }
 
 func (m MaxSize) GetKey() string {
@@ -178,7 +178,7 @@ func (l Length) IsSatisfied(obj interface{}) bool {
 }
 
 func (l Length) DefaultMessage() string {
-	return fmt.Sprintln("Required length is", l.N)
+	return fmt.Sprint("Required length is ", l.N)
 }
 
 func (l Length) GetKey() string {
@@ -202,7 +202,7 @@ func (a Alpha) IsSatisfied(obj interface{}) bool {
 }
 
 func (a Alpha) DefaultMessage() string {
-	return fmt.Sprintln("Must be valid alpha characters")
+	return fmt.Sprint("Must be valid alpha characters")
 }
 
 func (a Alpha) GetKey() string {
@@ -226,7 +226,7 @@ func (n Numeric) IsSatisfied(obj interface{}) bool {
 }
 
 func (n Numeric) DefaultMessage() string {
-	return fmt.Sprintln("Must be valid numeric characters")
+	return fmt.Sprint("Must be valid numeric characters")
 }
 
 func (n Numeric) GetKey() string {
@@ -250,7 +250,7 @@ func (a AlphaNumeric) IsSatisfied(obj interface{}) bool {
 }
 
 func (a AlphaNumeric) DefaultMessage() string {
-	return fmt.Sprintln("Must be valid alpha or numeric characters")
+	return fmt.Sprint("Must be valid alpha or numeric characters")
 }
 
 func (a AlphaNumeric) GetKey() string {
@@ -269,7 +269,7 @@ func (m Match) IsSatisfied(obj interface{}) bool {
 }
 
 func (m Match) DefaultMessage() string {
-	return fmt.Sprintln("Must match", m.Regexp)
+	return fmt.Sprint("Must match ", m.Regexp)
 }
 
 func (m Match) GetKey() string {
@@ -287,7 +287,7 @@ func (n NoMatch) IsSatisfied(obj interface{}) bool {
 }
 
 func (n NoMatch) DefaultMessage() string {
-	return fmt.Sprintln("Must not match", n.Regexp)
+	return fmt.Sprint("Must not match ", n.Regexp)
 }
 
 func (n NoMatch) GetKey() string {
@@ -302,7 +302,7 @@ type AlphaDash struct {
 }
 
 func (a AlphaDash) DefaultMessage() string {
-	return fmt.Sprintln("Must be valid alpha or numeric or dash(-_) characters")
+	return fmt.Sprint("Must be valid alpha or numeric or dash(-_) characters")
 }
 
 func (a AlphaDash) GetKey() string {
@@ -317,7 +317,7 @@ type Email struct {
 }
 
 func (e Email) DefaultMessage() string {
-	return fmt.Sprintln("Must be a valid email address")
+	return fmt.Sprint("Must be a valid email address")
 }
 
 func (e Email) GetKey() string {
@@ -332,7 +332,7 @@ type IP struct {
 }
 
 func (i IP) DefaultMessage() string {
-	return fmt.Sprintln("Must be a valid ip address")
+	return fmt.Sprint("Must be a valid ip address")
 }
 
 func (i IP) GetKey() string {
@@ -347,7 +347,7 @@ type Base64 struct {
 }
 
 func (b Base64) DefaultMessage() string {
-	return fmt.Sprintln("Must be valid base64 characters")
+	return fmt.Sprint("Must be valid base64 characters")
 }
 
 func (b Base64) GetKey() string {

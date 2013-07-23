@@ -2,6 +2,7 @@ package validation
 
 import (
 	"fmt"
+	"reflect"
 	"regexp"
 )
 
@@ -174,4 +175,30 @@ func (v *Validation) Check(obj interface{}, checks ...Validator) *ValidationResu
 		}
 	}
 	return result
+}
+
+// the obj parameter must be a struct or a struct pointer
+func (v *Validation) Valid(obj interface{}) (b bool, err error) {
+	t := reflect.TypeOf(obj)
+	switch {
+	case isStruct(t):
+	case isStructPtr(t):
+		t = t.Elem()
+	default:
+		err = fmt.Errorf("%v must be a struct or a struct pointer", obj)
+		return
+	}
+	// tv := reflect.TypeOf(v)
+	// for i := 0; i < t.NumField(); i++ {
+	//  f := t.Field(i)
+	//  var vfs []ValidFunc
+	//  if vfs, err = getValidFuncs(f); err != nil {
+	//  return
+	//  }
+	//  for _, vf := range vfs {
+	//  m, _ := tv.MethodByName(vf.Name)
+	//  m.Func
+	//  }
+	// }
+	return
 }

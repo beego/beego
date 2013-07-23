@@ -57,16 +57,16 @@ func TestMax(t *testing.T) {
 	}
 }
 
-func TestRange(t *testing.T) {
-	valid := Validation{}
+// func TestRange(t *testing.T) {
+// 	valid := Validation{}
 
-	if valid.Range(-1, 0, 1, "range0_1").Ok {
-		t.Error("-1 is bettween 0 and 1 should be false")
-	}
-	if !valid.Range(1, 0, 1, "range0_1").Ok {
-		t.Error("1 is bettween 0 and 1 should be true")
-	}
-}
+// 	if valid.Range(-1, 0, 1, "range0_1").Ok {
+// 		t.Error("-1 is bettween 0 and 1 should be false")
+// 	}
+// 	if !valid.Range(1, 0, 1, "range0_1").Ok {
+// 		t.Error("1 is bettween 0 and 1 should be true")
+// 	}
+// }
 
 func TestMinSize(t *testing.T) {
 	valid := Validation{}

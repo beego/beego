@@ -3,6 +3,8 @@ package validation
 import (
 	"fmt"
 	"reflect"
+	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -13,7 +15,7 @@ const (
 var (
 	// key: function name
 	// value: the number of parameters
-	funcs = make(map[string]int)
+	funcs = make(Funcs)
 
 	// doesn't belong to validation functions
 	unFuncs = map[string]bool{
@@ -33,7 +35,7 @@ func init() {
 	for i := 0; i < t.NumMethod(); i++ {
 		m := t.Method(i)
 		if !unFuncs[m.Name] {
-			funcs[m.Name] = m.Type.NumIn() - 3
+			funcs[m.Name] = m.Func
 		}
 	}
 }
@@ -41,6 +43,25 @@ func init() {
 type ValidFunc struct {
 	Name   string
 	Params []interface{}
+}
+
+type Funcs map[string]reflect.Value
+
+func (f Funcs) Call(name string, params ...interface{}) (result []reflect.Value, err error) {
+	if _, ok := f[name]; !ok {
+		err = fmt.Errorf("%s does not exist", name)
+		return
+	}
+	if len(params) != f[name].Type().NumIn() {
+		err = fmt.Errorf("The number of params is not adapted")
+		return
+	}
+	in := make([]reflect.Value, len(params))
+	for k, param := range params {
+		in[k] = reflect.ValueOf(param)
+	}
+	result = f[name].Call(in)
+	return
 }
 
 func isStruct(t reflect.Type) bool {
@@ -110,22 +131,53 @@ func parseFunc(vfunc string) (v ValidFunc, err error) {
 		return
 	}
 
-	v = ValidFunc{name, trim(params)}
+	tParams, err := trim(name, params)
+	if err != nil {
+		return
+	}
+	v = ValidFunc{name, tParams}
 	return
 }
 
 func numIn(name string) (num int, err error) {
-	num, ok := funcs[name]
+	fn, ok := funcs[name]
 	if !ok {
 		err = fmt.Errorf("doesn't exsits %s valid function", name)
+		return
+	}
+	num = fn.Type().NumIn() - 3
+	return
+}
+
+func trim(name string, s []string) (ts []interface{}, err error) {
+	ts = make([]interface{}, len(s))
+	fn, ok := funcs[name]
+	if !ok {
+		err = fmt.Errorf("doesn't exsits %s valid function", name)
+		return
+	}
+	for i := 0; i < len(s); i++ {
+		var param interface{}
+		if param, err = magic(fn.Type().In(i+2), strings.TrimSpace(s[i])); err != nil {
+			return
+		}
+		ts[i] = param
 	}
 	return
 }
 
-func trim(s []string) []interface{} {
-	ts := make([]interface{}, len(s))
-	for i := 0; i < len(s); i++ {
-		ts[i] = strings.TrimSpace(s[i])
+func magic(t reflect.Type, s string) (i interface{}, err error) {
+	switch t.Kind() {
+	case reflect.Int:
+		i, err = strconv.Atoi(s)
+	case reflect.String:
+		i = s
+	case reflect.Ptr:
+		if t.Elem().String() != "regexp.Regexp" {
+			err = fmt.Errorf("%s does not support", t.Elem().String())
+			return
+		}
+		i, err = regexp.Compile(s)
 	}
-	return ts
+	return
 }
