@@ -15,6 +15,8 @@ Test:
 
 ## Example
 
+Direct Use:
+
 	import (
 		"github.com/astaxie/beego/validation"
 		"log"
@@ -43,6 +45,53 @@ Test:
 			log.Println(v.Error.Key, v.Error.Message)
 		}
 	}
+
+Struct Tag Use:
+
+	import (
+		"github.com/astaxie/beego/validation"
+	)
+
+	// validation function follow with "valid" tag
+	// functions divide with ";"
+	// parameters in parentheses "()" and divide with ","
+	type user struct {
+		Id   int
+		Name string `valid:"Required"`
+		Age  int    `valid:"Required;Range(1, 140)"`
+	}
+
+	func main() {
+		valid := Validation{}
+		u := user{Name: "test", Age: 40}
+		b, err := valid.Valid(u)
+		if err != nil {
+			// handle error
+		}
+		if !b {
+			// validation does not pass
+			// blabla...
+		}
+	}
+
+Struct Tag Functions:
+
+	Required
+	Min(min int)
+	Max(max int)
+	Range(min, max int)
+	MinSize(min int)
+	MaxSize(max int)
+	Length(length int)
+	Alpha
+	Numeric
+	AlphaNumeric
+	Match(regexp string)		// does not support yet
+	NoMatch(regexp string)	// does not support yet
+	AlphaDash
+	Email
+	IP
+	Base64
 
 
 ## LICENSE
