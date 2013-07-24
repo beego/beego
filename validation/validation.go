@@ -179,26 +179,29 @@ func (v *Validation) Check(obj interface{}, checks ...Validator) *ValidationResu
 
 // the obj parameter must be a struct or a struct pointer
 func (v *Validation) Valid(obj interface{}) (b bool, err error) {
-	t := reflect.TypeOf(obj)
+	objT := reflect.TypeOf(obj)
+	objV := reflect.ValueOf(obj)
 	switch {
-	case isStruct(t):
-	case isStructPtr(t):
-		t = t.Elem()
+	case isStruct(objT):
+	case isStructPtr(objT):
+		objT = objT.Elem()
+		objV = objV.Elem()
 	default:
 		err = fmt.Errorf("%v must be a struct or a struct pointer", obj)
 		return
 	}
-	// tv := reflect.TypeOf(v)
-	// for i := 0; i < t.NumField(); i++ {
-	//  f := t.Field(i)
-	//  var vfs []ValidFunc
-	//  if vfs, err = getValidFuncs(f); err != nil {
-	//  return
-	//  }
-	//  for _, vf := range vfs {
-	//  m, _ := tv.MethodByName(vf.Name)
-	//  m.Func
-	//  }
-	// }
-	return
+
+	for i := 0; i < objT.NumField(); i++ {
+		var vfs []ValidFunc
+		if vfs, err = getValidFuncs(objT.Field(i)); err != nil {
+			return
+		}
+		for _, vf := range vfs {
+			if _, err = funcs.Call(vf.Name,
+				mergeParam(v, objV.Field(i).Interface(), vf.Params)...); err != nil {
+				return
+			}
+		}
+	}
+	return !v.HasErrors(), nil
 }

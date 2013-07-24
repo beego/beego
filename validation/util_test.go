@@ -67,7 +67,10 @@ func TestCall(t *testing.T) {
 		t.Fatal(err)
 	}
 	valid := &Validation{}
-	funcs.Call(vfs[1].Name, valid, u.Age, vfs[1].Params[0], vfs[1].Params[1], vfs[1].Name)
+	vfs[1].Params = append([]interface{}{valid, u.Age}, vfs[1].Params...)
+	if _, err = funcs.Call(vfs[1].Name, vfs[1].Params...); err != nil {
+		t.Fatal(err)
+	}
 	if len(valid.Errors) != 1 {
 		t.Error("age out of range should be has an error")
 	}

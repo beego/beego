@@ -48,6 +48,11 @@ type ValidFunc struct {
 type Funcs map[string]reflect.Value
 
 func (f Funcs) Call(name string, params ...interface{}) (result []reflect.Value, err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			err = r.(error)
+		}
+	}()
 	if _, ok := f[name]; !ok {
 		err = fmt.Errorf("%s does not exist", name)
 		return
@@ -109,7 +114,7 @@ func parseFunc(vfunc string) (v ValidFunc, err error) {
 			err = fmt.Errorf("%s require %d parameters", vfunc, num)
 			return
 		}
-		v = ValidFunc{Name: vfunc}
+		v = ValidFunc{vfunc, []interface{}{vfunc}}
 		return
 	}
 
@@ -145,12 +150,13 @@ func numIn(name string) (num int, err error) {
 		err = fmt.Errorf("doesn't exsits %s valid function", name)
 		return
 	}
+	// sub *Validation obj and key
 	num = fn.Type().NumIn() - 3
 	return
 }
 
 func trim(name string, s []string) (ts []interface{}, err error) {
-	ts = make([]interface{}, len(s))
+	ts = make([]interface{}, len(s), len(s)+1)
 	fn, ok := funcs[name]
 	if !ok {
 		err = fmt.Errorf("doesn't exsits %s valid function", name)
@@ -158,14 +164,17 @@ func trim(name string, s []string) (ts []interface{}, err error) {
 	}
 	for i := 0; i < len(s); i++ {
 		var param interface{}
+		// skip *Validation and obj params
 		if param, err = magic(fn.Type().In(i+2), strings.TrimSpace(s[i])); err != nil {
 			return
 		}
 		ts[i] = param
 	}
+	ts = append(ts, name)
 	return
 }
 
+// modify the parameters's type to adapt the function input parameters' type
 func magic(t reflect.Type, s string) (i interface{}, err error) {
 	switch t.Kind() {
 	case reflect.Int:
@@ -174,10 +183,16 @@ func magic(t reflect.Type, s string) (i interface{}, err error) {
 		i = s
 	case reflect.Ptr:
 		if t.Elem().String() != "regexp.Regexp" {
-			err = fmt.Errorf("%s does not support", t.Elem().String())
+			err = fmt.Errorf("does not support %s", t.Elem().String())
 			return
 		}
 		i, err = regexp.Compile(s)
+	default:
+		err = fmt.Errorf("does not support %s", t.Kind().String())
 	}
 	return
+}
+
+func mergeParam(v *Validation, obj interface{}, params []interface{}) []interface{} {
+	return append([]interface{}{v, obj}, params...)
 }

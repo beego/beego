@@ -57,16 +57,16 @@ func TestMax(t *testing.T) {
 	}
 }
 
-// func TestRange(t *testing.T) {
-// 	valid := Validation{}
+func TestRange(t *testing.T) {
+	valid := Validation{}
 
-// 	if valid.Range(-1, 0, 1, "range0_1").Ok {
-// 		t.Error("-1 is bettween 0 and 1 should be false")
-// 	}
-// 	if !valid.Range(1, 0, 1, "range0_1").Ok {
-// 		t.Error("1 is bettween 0 and 1 should be true")
-// 	}
-// }
+	if valid.Range(-1, 0, 1, "range0_1").Ok {
+		t.Error("-1 is bettween 0 and 1 should be false")
+	}
+	if !valid.Range(1, 0, 1, "range0_1").Ok {
+		t.Error("1 is bettween 0 and 1 should be true")
+	}
+}
 
 func TestMinSize(t *testing.T) {
 	valid := Validation{}
@@ -215,5 +215,32 @@ func TestBase64(t *testing.T) {
 	}
 	if !valid.Base64("c3VjaHVhbmdqaUBnbWFpbC5jb20=", "base64").Ok {
 		t.Error("\"c3VjaHVhbmdqaUBnbWFpbC5jb20=\" are a valid base64 characters should be true")
+	}
+}
+
+func TestValid(t *testing.T) {
+	type user struct {
+		Id   int
+		Name string `valid:"Required"`
+		Age  int    `valid:"Required;Range(1, 140)"`
+	}
+	valid := Validation{}
+
+	u := user{Name: "test", Age: 40}
+	b, err := valid.Valid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !b {
+		t.Error("validation should be passed")
+	}
+
+	uptr := &user{Name: "test", Age: 180}
+	b, err = valid.Valid(uptr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b {
+		t.Error("validation should not be passed")
 	}
 }
