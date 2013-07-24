@@ -31,7 +31,7 @@ func TestRequired(t *testing.T) {
 		t.Error("empty slice should be false")
 	}
 	if !valid.Required([]interface{}{"ok"}, "slice").Ok {
-		t.Error("slice should  be equal true")
+		t.Error("slice should be true")
 	}
 }
 
@@ -215,5 +215,32 @@ func TestBase64(t *testing.T) {
 	}
 	if !valid.Base64("c3VjaHVhbmdqaUBnbWFpbC5jb20=", "base64").Ok {
 		t.Error("\"c3VjaHVhbmdqaUBnbWFpbC5jb20=\" are a valid base64 characters should be true")
+	}
+}
+
+func TestValid(t *testing.T) {
+	type user struct {
+		Id   int
+		Name string `valid:"Required"`
+		Age  int    `valid:"Required;Range(1, 140)"`
+	}
+	valid := Validation{}
+
+	u := user{Name: "test", Age: 40}
+	b, err := valid.Valid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !b {
+		t.Error("validation should be passed")
+	}
+
+	uptr := &user{Name: "test", Age: 180}
+	b, err = valid.Valid(uptr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b {
+		t.Error("validation should not be passed")
 	}
 }
