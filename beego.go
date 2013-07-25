@@ -133,8 +133,8 @@ func (app *App) Run() {
 	}
 }
 
-func (app *App) Router(path string, c ControllerInterface) *App {
-	app.Handlers.Add(path, c)
+func (app *App) Router(path string, c ControllerInterface, mappingMethods ...string) *App {
+	app.Handlers.Add(path, c, mappingMethods...)
 	return app
 }
 
@@ -181,8 +181,8 @@ func RegisterController(path string, c ControllerInterface) *App {
 	return BeeApp
 }
 
-func Router(rootpath string, c ControllerInterface) *App {
-	BeeApp.Router(rootpath, c)
+func Router(rootpath string, c ControllerInterface, mappingMethods ...string) *App {
+	BeeApp.Router(rootpath, c, mappingMethods...)
 	return BeeApp
 }
 
