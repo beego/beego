@@ -27,6 +27,12 @@ func TestParseForm(t *testing.T) {
 	if err := ParseForm(form, &u); err != nil {
 		t.Fatal(err)
 	}
+	if u.Id != 0 {
+		t.Error("Id should not be changed")
+	}
+	if len(u.tag) != 0 {
+		t.Error("tag should not be changed")
+	}
 	if u.Name.(string) != "test" {
 		t.Error("should be equal")
 	}
