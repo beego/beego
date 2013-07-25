@@ -264,6 +264,10 @@ func (c *Controller) Input() url.Values {
 	return c.Ctx.Request.Form
 }
 
+func (c *Controller) ParseForm(obj interface{}) error {
+	return ParseForm(c.Input(), obj)
+}
+
 func (c *Controller) GetString(key string) string {
 	return c.Input().Get(key)
 }
