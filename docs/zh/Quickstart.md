@@ -4,25 +4,25 @@
 
 **导航**
 
-- [最小应用](#-1)
-- [新建项目](#-2)
-- [开发模式](#-3)
-- [路由设置](#-4)
-- [静态文件](#-5)
-- [过滤和中间件](#-6)
-- [Controller设计](#-7)
-- [模板处理](#-8)
-- [request处理](#request)
-- [跳转和错误](#-15)
-- [response处理](#response)
+- [最小应用](#%E6%9C%80%E5%B0%8F%E5%BA%94%E7%94%A8)
+- [新建项目](#%E6%96%B0%E5%BB%BA%E9%A1%B9%E7%9B%AE)
+- [开发模式](#%E5%BC%80%E5%8F%91%E6%A8%A1%E5%BC%8F)
+- [路由设置](%E8%B7%AF%E7%94%B1%E8%AE%BE%E7%BD%AE)
+- [静态文件](#%E9%9D%99%E6%80%81%E6%96%87%E4%BB%B6)
+- [过滤和中间件](#%E8%BF%87%E6%BB%A4%E5%92%8C%E4%B8%AD%E9%97%B4%E4%BB%B6)
+- [Controller设计](#%E6%8E%A7%E5%88%B6%E5%99%A8%E8%AE%BE%E8%AE%A1)
+- [模板处理](#%E6%A8%A1%E6%9D%BF%E5%A4%84%E7%90%86)
+- [request处理](#request%E5%A4%84%E7%90%86)
+- [跳转和错误](#%E8%B7%B3%E8%BD%AC%E5%92%8C%E9%94%99%E8%AF%AF)
+- [response处理](#response%E5%A4%84%E7%90%86)
 - [Sessions](#sessions)
-- [Cache设置](#cache)
-- [安全的Map](#map)
-- [日志处理](#-16)
-- [配置管理](#-17)
-- [beego参数](#-18)
-- [第三方应用集成](#-19)
-- [部署编译应用](#-20)
+- [Cache设置](#cache%E8%AE%BE%E7%BD%AE)
+- [安全的Map](#%E5%AE%89%E5%85%A8%E7%9A%84map)
+- [日志处理](#%E6%97%A5%E5%BF%97%E5%A4%84%E7%90%86)
+- [配置管理](#%E9%85%8D%E7%BD%AE%E7%AE%A1%E7%90%86)
+- [beego参数](#%E7%B3%BB%E7%BB%9F%E9%BB%98%E8%AE%A4%E5%8F%82%E6%95%B0)
+- [第三方应用集成](#%E7%AC%AC%E4%B8%89%E6%96%B9%E5%BA%94%E7%94%A8%E9%9B%86%E6%88%90)
+- [部署编译应用](#%E9%83%A8%E7%BD%B2%E7%BC%96%E8%AF%91%E5%BA%94%E7%94%A8)
 
 
 ## 最小应用
@@ -179,6 +179,37 @@
 	this.Ctx.Params[":path"]
 	this.Ctx.Params[":ext"]
 
+上面列举的是默认的请求方法名(请求的method和函数名一致，例如GET请求执行Get函数，POST请求执行Post函数)，如果用户期望自定义函数名，那么可以使用如下方式：
+
+	beego.Router("/",&IndexController{},"*:Index")
+	
+使用第三个参数，第三个参数就是用来设置对应method到函数名，定义如下
+
+- *表示任意的method都执行该函数
+- 使用`httpmethod:funcname`格式来展示
+- 多个不同的格式使用`;`分割
+- 多个method对应同一个funcname，method之间通过`,`来分割	
+
+以下是一个RESTful的设计如下
+
+- beego.Router("/api/list",&RestController{},"*:ListFood")
+- beego.Router("/api/create",&RestController{},"post:CreateFood")
+- beego.Router("/api/update",&RestController{},"put:UpdateFood")
+- beego.Router("/api/delete",&RestController{},"delete:DeleteFood")
+
+以下是多个http method指向同一个函数
+	
+	beego.Router("/api",&RestController{},"get,post:ApiFunc")
+
+一下是不同的method对应不同的函数，通过`;`进行分割
+
+	beego.Router("/simple",&SimpleController{},"get:GetFunc;post:PostFunc")
+
+>>>如果同时存在*和对应的http method，那么优先执行http method的方法，例如同时注册了如下所示的路由：
+
+>>> beego.Router("/simple",&SimpleController{},"*:AllFunc;post:PostFunc")
+
+>>>那么执行POST请求的时候，执行PostFunc而不执行AllFunc
 
 ## 静态文件
 

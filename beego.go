@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-const VERSION = "0.7.2"
+const VERSION = "0.8.0"
 
 var (
 	BeeApp        *App

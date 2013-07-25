@@ -434,12 +434,16 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			if r.Method == "GET" {
 				if m, ok := runrouter.methods["get"]; ok {
 					method = vc.MethodByName(m)
+				} else if m, ok = runrouter.methods["*"]; ok {
+					method = vc.MethodByName(m)
 				} else {
 					method = vc.MethodByName("Get")
 				}
 				method.Call(in)
 			} else if r.Method == "HEAD" {
 				if m, ok := runrouter.methods["head"]; ok {
+					method = vc.MethodByName(m)
+				} else if m, ok = runrouter.methods["*"]; ok {
 					method = vc.MethodByName(m)
 				} else {
 					method = vc.MethodByName("Head")
@@ -448,12 +452,16 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			} else if r.Method == "DELETE" || (r.Method == "POST" && r.Form.Get("_method") == "delete") {
 				if m, ok := runrouter.methods["delete"]; ok {
 					method = vc.MethodByName(m)
+				} else if m, ok = runrouter.methods["*"]; ok {
+					method = vc.MethodByName(m)
 				} else {
 					method = vc.MethodByName("Delete")
 				}
 				method.Call(in)
 			} else if r.Method == "PUT" || (r.Method == "POST" && r.Form.Get("_method") == "put") {
 				if m, ok := runrouter.methods["put"]; ok {
+					method = vc.MethodByName(m)
+				} else if m, ok = runrouter.methods["*"]; ok {
 					method = vc.MethodByName(m)
 				} else {
 					method = vc.MethodByName("Put")
@@ -462,6 +470,8 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			} else if r.Method == "POST" {
 				if m, ok := runrouter.methods["post"]; ok {
 					method = vc.MethodByName(m)
+				} else if m, ok = runrouter.methods["*"]; ok {
+					method = vc.MethodByName(m)
 				} else {
 					method = vc.MethodByName("Post")
 				}
@@ -469,12 +479,16 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			} else if r.Method == "PATCH" {
 				if m, ok := runrouter.methods["patch"]; ok {
 					method = vc.MethodByName(m)
+				} else if m, ok = runrouter.methods["*"]; ok {
+					method = vc.MethodByName(m)
 				} else {
 					method = vc.MethodByName("Patch")
 				}
 				method.Call(in)
 			} else if r.Method == "OPTIONS" {
 				if m, ok := runrouter.methods["options"]; ok {
+					method = vc.MethodByName(m)
+				} else if m, ok = runrouter.methods["*"]; ok {
 					method = vc.MethodByName(m)
 				} else {
 					method = vc.MethodByName("Options")
