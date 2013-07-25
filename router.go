@@ -13,11 +13,14 @@ import (
 	"strings"
 )
 
+var HTTPMETHOD = []string{"get", "post", "put", "delete", "patch", "options", "head"}
+
 type controllerInfo struct {
 	pattern        string
 	regex          *regexp.Regexp
 	params         map[int]string
 	controllerType reflect.Type
+	methods        map[string]string
 }
 
 type userHandler struct {
@@ -38,7 +41,16 @@ func NewControllerRegistor() *ControllerRegistor {
 	return &ControllerRegistor{routers: make([]*controllerInfo, 0), userHandlers: make(map[string]*userHandler)}
 }
 
-func (p *ControllerRegistor) Add(pattern string, c ControllerInterface) {
+//methods support like this:
+//default methods is the same name as method
+//Add("/user",&UserController{})
+//Add("/api/list",&RestController{},"*:ListFood")
+//Add("/api/create",&RestController{},"post:CreateFood")
+//Add("/api/update",&RestController{},"put:UpdateFood")
+//Add("/api/delete",&RestController{},"delete:DeleteFood")
+//Add("/api",&RestController{},"get,post:ApiFunc")
+//Add("/simple",&SimpleController{},"get:GetFunc;post:PostFunc")
+func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingMethods ...string) {
 	parts := strings.Split(pattern, "/")
 
 	j := 0
@@ -82,13 +94,35 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface) {
 			}
 		}
 	}
+	t := reflect.Indirect(reflect.ValueOf(c)).Type()
+	methods := make(map[string]string)
+	if len(mappingMethods) > 0 {
+		semi := strings.Split(mappingMethods[0], ";")
+		for _, v := range semi {
+			colon := strings.Split(v, ":")
+			if len(colon) != 2 {
+				panic("method mapping fomate is error")
+			}
+			comma := strings.Split(colon[0], ",")
+			for _, m := range comma {
+				if m == "*" || inSlice(strings.ToLower(m), HTTPMETHOD) {
+					if _, ok := t.MethodByName(colon[1]); ok {
+						methods[strings.ToLower(m)] = colon[1]
+					} else {
+						panic(colon[1] + " method don't exist in the controller " + t.Name())
+					}
+				} else {
+					panic(v + " is an error method mapping,Don't exist method named " + m)
+				}
+			}
+		}
+	}
 	if j == 0 {
 		//now create the Route
-		t := reflect.Indirect(reflect.ValueOf(c)).Type()
 		route := &controllerInfo{}
 		route.pattern = pattern
 		route.controllerType = t
-
+		route.methods = methods
 		p.fixrouters = append(p.fixrouters, route)
 	} else { // add regexp routers
 		//recreate the url pattern, with parameters replaced
@@ -102,11 +136,12 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface) {
 		}
 
 		//now create the Route
-		t := reflect.Indirect(reflect.ValueOf(c)).Type()
+
 		route := &controllerInfo{}
 		route.regex = regex
 		route.params = params
 		route.pattern = pattern
+		route.methods = methods
 		route.controllerType = t
 		p.routers = append(p.routers, route)
 	}
@@ -397,25 +432,53 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		//if response has written,yes don't run next
 		if !w.started {
 			if r.Method == "GET" {
-				method = vc.MethodByName("Get")
+				if m, ok := runrouter.methods["get"]; ok {
+					method = vc.MethodByName(m)
+				} else {
+					method = vc.MethodByName("Get")
+				}
 				method.Call(in)
 			} else if r.Method == "HEAD" {
-				method = vc.MethodByName("Head")
+				if m, ok := runrouter.methods["head"]; ok {
+					method = vc.MethodByName(m)
+				} else {
+					method = vc.MethodByName("Head")
+				}
 				method.Call(in)
 			} else if r.Method == "DELETE" || (r.Method == "POST" && r.Form.Get("_method") == "delete") {
-				method = vc.MethodByName("Delete")
+				if m, ok := runrouter.methods["delete"]; ok {
+					method = vc.MethodByName(m)
+				} else {
+					method = vc.MethodByName("Delete")
+				}
 				method.Call(in)
 			} else if r.Method == "PUT" || (r.Method == "POST" && r.Form.Get("_method") == "put") {
-				method = vc.MethodByName("Put")
+				if m, ok := runrouter.methods["put"]; ok {
+					method = vc.MethodByName(m)
+				} else {
+					method = vc.MethodByName("Put")
+				}
 				method.Call(in)
 			} else if r.Method == "POST" {
-				method = vc.MethodByName("Post")
+				if m, ok := runrouter.methods["post"]; ok {
+					method = vc.MethodByName(m)
+				} else {
+					method = vc.MethodByName("Post")
+				}
 				method.Call(in)
 			} else if r.Method == "PATCH" {
-				method = vc.MethodByName("Patch")
+				if m, ok := runrouter.methods["patch"]; ok {
+					method = vc.MethodByName(m)
+				} else {
+					method = vc.MethodByName("Patch")
+				}
 				method.Call(in)
 			} else if r.Method == "OPTIONS" {
-				method = vc.MethodByName("Options")
+				if m, ok := runrouter.methods["options"]; ok {
+					method = vc.MethodByName(m)
+				} else {
+					method = vc.MethodByName("Options")
+				}
 				method.Call(in)
 			}
 			gotofunc := vc.Elem().FieldByName("gotofunc").String()
@@ -432,10 +495,8 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 					method = vc.MethodByName("Render")
 					method.Call(in)
 				}
-				if !w.started {
-					method = vc.MethodByName("Finish")
-					method.Call(in)
-				}
+				method = vc.MethodByName("Finish")
+				method.Call(in)
 			}
 		}
 		method = vc.MethodByName("Destructor")
