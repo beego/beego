@@ -32,7 +32,7 @@ type FileLogWriter struct {
 
 	rotate bool
 
-	startLock sync.Mutex //only one log can write to the file
+	startLock sync.Mutex // Only one log can write to the file
 }
 
 type MuxWriter struct {
