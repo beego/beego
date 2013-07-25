@@ -2,7 +2,6 @@ package beego
 
 import (
 	"fmt"
-	"github.com/russross/blackfriday"
 	"html/template"
 	"regexp"
 	"strings"
@@ -15,14 +14,6 @@ func webTime(t time.Time) string {
 		ftime = ftime[0:len(ftime)-3] + "GMT"
 	}
 	return ftime
-}
-
-// MarkDown parses a string in MarkDown format and returns HTML. Used by the template parser as "markdown"
-func MarkDown(raw string) (output template.HTML) {
-	input := []byte(raw)
-	bOutput := blackfriday.MarkdownBasic(input)
-	output = template.HTML(string(bOutput))
-	return
 }
 
 func Substr(s string, start, length int) string {

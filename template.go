@@ -23,7 +23,6 @@ func init() {
 	beegoTplFuncMap = make(template.FuncMap)
 	BeeTemplateExt = make([]string, 0)
 	BeeTemplateExt = append(BeeTemplateExt, "tpl", "html")
-	beegoTplFuncMap["markdown"] = MarkDown
 	beegoTplFuncMap["dateformat"] = DateFormat
 	beegoTplFuncMap["date"] = Date
 	beegoTplFuncMap["compare"] = Compare
