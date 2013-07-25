@@ -204,6 +204,16 @@
 一下是不同的method对应不同的函数，通过`;`进行分割
 
 	beego.Router("/simple",&SimpleController{},"get:GetFunc;post:PostFunc")
+	
+可用的http method
+- * ：包含一下所有的函数
+- get ：GET请求
+- post ：POST请求
+- put ：PUT请求
+- delete ：DELETE请求
+- patch  ：PATCH请求
+- options ：OPTIONS请求
+- head	：HEAD请求
 
 >>>如果同时存在*和对应的http method，那么优先执行http method的方法，例如同时注册了如下所示的路由：
 
