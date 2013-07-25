@@ -39,13 +39,13 @@ var (
 	SessionSavePath      string           // session savepath if use mysql/redis/file this set to the connectinfo
 	UseFcgi              bool
 	MaxMemory            int64
-	EnableGzip           bool // enable gzip
-	DirectoryIndex       bool //ebable DirectoryIndex default is false
-	EnbaleHotUpdate      bool //enable HotUpdate default is false
-	HttpServerTimeOut    int64
-	ErrorsShow           bool
-	XSRFKEY              string
-	CopyRequestBody      bool
+	EnableGzip           bool   // enable gzip
+	DirectoryIndex       bool   //ebable DirectoryIndex default is false
+	EnbaleHotUpdate      bool   //enable HotUpdate default is false
+	HttpServerTimeOut    int64  //set httpserver timeout
+	ErrorsShow           bool   //set weather show errors
+	XSRFKEY              string //set XSRF
+	CopyRequestBody      bool   //When in raw application, You want to the reqeustbody
 )
 
 func init() {
