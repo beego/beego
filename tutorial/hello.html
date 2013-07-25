@@ -107,6 +107,8 @@ beego实例
 </li>
 <li name="dirlist" id="dirlist-tab" ><a href="#!dirlist" title="beego入门教程 | 目录结构">beego推荐结构目录</a>
 </li>
+<li name="develop" id="develop-tab" ><a href="#!develop" title="beego入门教程 | 开发模式">beego推开发模式</a>
+</li>
 </ul>
 <div class="tabsContent">
 <div class="outer">
@@ -258,6 +260,28 @@ beego实例
 </div>
 </div>
 
+<div style="display:none" id="develop-content">
+<div class="outer">
+<div class="inner">
+<p style="text-align: center;"><b>开发模式</b></p>
+<p>通过如下命令创建beego项目，首先进入gopath目录</p>
+<p>我们可以通过如下的方式改变我们的模式：</p>
+<p><code>beego.RunMode = "pro"</code></p>
+<p>或者我们在conf/app.conf下面设置如下：</p>
+<p><code>runmode = pro</code></p>
+<p>以上两种效果一样。</p>
+<p>开发模式中</p>
+<p>
+	<ul  class="def">
+		<li>开发模式下，如果你的目录不存在views目录，那么会出现类似下面的错误提示：<br></li>
+		<li><code>2013/04/13 19:36:17 [W] [stat views: no such file or directory]</code></li>
+		<li>模板会自动重新加载不缓存。<br></li>
+		<li>如果服务端出错，那么就会在浏览器端显示如下类似的截图：<br></li>
+	</ul>
+<p style="text-align: center;"><img src="../images/dev.png" alt="Switch to beego" class="" style="margin-top:0px;"></p>
+</div>
+</div>
+</div>
 
 <script>
 $(function(){
