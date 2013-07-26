@@ -3,7 +3,10 @@ package beego
 import (
 	"fmt"
 	"html/template"
+	"net/url"
+	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -169,4 +172,81 @@ func inSlice(v string, sl []string) bool {
 		}
 	}
 	return false
+}
+
+// parse form values to struct via tag
+func ParseForm(form url.Values, obj interface{}) error {
+	objT := reflect.TypeOf(obj)
+	objV := reflect.ValueOf(obj)
+	if !(objT.Kind() == reflect.Ptr && objT.Elem().Kind() == reflect.Struct) {
+		return fmt.Errorf("%v must be  a struct pointer", obj)
+	}
+	objT = objT.Elem()
+	objV = objV.Elem()
+
+	for i := 0; i < objT.NumField(); i++ {
+		fieldV := objV.Field(i)
+		if !fieldV.CanSet() {
+			continue
+		}
+		fieldT := objT.Field(i)
+		tag := fieldT.Tag.Get("form")
+		if len(tag) == 0 {
+			tag = fieldT.Name
+		}
+		value := form.Get(tag)
+		if len(value) == 0 {
+			continue
+		}
+
+		switch fieldT.Type.Kind() {
+		case reflect.Bool:
+			b, err := strconv.ParseBool(value)
+			if err != nil {
+				return err
+			}
+			fieldV.SetBool(b)
+		case reflect.Int:
+			fallthrough
+		case reflect.Int8:
+			fallthrough
+		case reflect.Int16:
+			fallthrough
+		case reflect.Int32:
+			fallthrough
+		case reflect.Int64:
+			x, err := strconv.ParseInt(value, 10, 64)
+			if err != nil {
+				return err
+			}
+			fieldV.SetInt(x)
+		case reflect.Uint:
+			fallthrough
+		case reflect.Uint8:
+			fallthrough
+		case reflect.Uint16:
+			fallthrough
+		case reflect.Uint32:
+			fallthrough
+		case reflect.Uint64:
+			x, err := strconv.ParseUint(value, 10, 64)
+			if err != nil {
+				return err
+			}
+			fieldV.SetUint(x)
+		case reflect.Float32:
+			fallthrough
+		case reflect.Float64:
+			x, err := strconv.ParseFloat(value, 64)
+			if err != nil {
+				return err
+			}
+			fieldV.SetFloat(x)
+		case reflect.Interface:
+			fieldV.Set(reflect.ValueOf(value))
+		case reflect.String:
+			fieldV.SetString(value)
+		}
+	}
+	return nil
 }
