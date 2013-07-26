@@ -76,7 +76,7 @@
 
 通过如下命令创建beego项目，首先进入gopath目录
 
-	bee create hello
+	bee new hello
 
 这样就建立了一个项目hello，目录结构如下所示
 
