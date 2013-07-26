@@ -1,0 +1,341 @@
+<!DOCTYPE HTML>
+<html itemscope="" itemtype="http://schema.org/Organization">
+<head>
+<title>beego入门教程 | beego.me</title>
+<meta name="description" content="beego入门教程，beego的知识点，golang应用框架."/>
+<meta name="keywords" content="beego, beedb, golang"/>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<link rel="stylesheet" type="text/css" href="../css/yui-reset-fonts.css" />
+<link rel="stylesheet" href="../css/main.css?ver=20130308" type="text/css" media="all" />
+<link rel="stylesheet" href="../css/colorbox.css" type="text/css" media="all" />
+<link rel="stylesheet" href="../css/campaign.css?ver=20130213" type="text/css" media="all" />
+<script src="../js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+<link rel="stylesheet" href="../css/git.css" type="text/css" media="all" />
+<script src="../js/swfobject.js" type="text/javascript" charset="utf-8"></script>
+<script>
+$(function(){
+
+$('a[href*="#!"]').live('click',function(){
+	// alert($('#overview'+'-content').html());
+	var id = $(this).attr("href").substr(2);
+	$(window).scrollTo('.tabsContent:visible');
+	$("div[class='tabsContent']").html($("#"+id+'-content').html());
+	// $('#overview'+'-content').show();
+});
+});
+</script>
+</head>
+<body id="customNav" class="campaign tutorial git gitbasics en">
+<div id="container">
+<div id="header" class="noNav">
+<div class="box">
+<div id="logo"><a href="http://beego.me/beego">beego应用框架</a></div>
+</div>
+</div>
+<div id="content">
+<div id="companyHeader" class="wrapper sectionNavCustom" style="margin-top:40px;">
+<div class="box">
+<div id="companyLogo">
+<a href="http://beego.me/beego">beego应用框架之入门</a>
+</div>
+<div id="companyNav">
+<ul>
+<li class=''>
+<a href="/beego/">
+概括
+</a>
+</li>
+<li class='selected'>
+<a href="/beego/tutorial">
+beego入门
+</a>
+</li>
+<li class=''>
+<a href="/beego/examples">
+beego实例
+</a>
+</li>
+</ul>
+</div>
+<div id="subNav" style="margin-bottom:0;">
+<ul>
+<li >
+<a href="/beego/tutorial/hello.html">1. hello</a>
+</li>
+<li class='selected'>
+<a href="/beego/tutorial/router.html">2. Router</a>
+</li>
+<li class=''>
+<a href="/beego/tutorial/filters.html">3. Filters</a>
+</li>
+<li class=''>
+<a href="/beego/tutorial/controller.html">4. Controller</a>
+</li>
+<li class=''>
+<a href="/beego/tutorial/template.html">5. Template</a>
+</li>
+<li class=''>
+<a href="/beego/tutorial/variables.html">6. Variables</a>
+</li>
+<li class=''>
+<a href="/beego/tutorial/config.html">7. Config</a>
+</li>
+<li class=''>
+<a href="/beego/tutorial/cache.html">8. Cache</a>
+</li>
+<li class=''>
+<a href="/beego/tutorial/logger.html">9. Logger</a>
+</li>
+<li class=''>
+<a href="/beego/tutorial/bee.html">10. Bee</a>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<!-- 2 - column template: -->
+<div id="tabsection" class="wrapper">
+<div class="box">
+<div id="tabsDef" class="clearfix vertical">
+<ul id="tabsNav">
+<!-- if any tabs in this are seoTabs, they should all behave as SEO tabs, so first test if any tabs are seo tabs -->
+<li name="router" id="router-tab" class="selected"><a href="#!router" title="beego入门教程 | 路由設置">beego之路由设置</a>
+</li>
+<li name="static" id="static-tab"><a href="#!static" title="beego入门教程 | 静态文件">beego之静态文件</a>
+</li>
+</ul>
+<div class="tabsContent">
+<div class="outer">
+<div class="inner">
+</div>
+</div>
+</div>
+</div>
+
+<div style="display:none" id="router-content">
+<div class="outer">
+<div class="inner">
+	<p style="text-align: center"><b>路由设置</b></p>
+	<p>路由的主要功能是实现从请求地址到实现方法，beego中封装了Controller，所以路由是从路径到ControllerInterface的过程，ControllerInterface的方法有如下：</p>
+	
+<p>
+<pre class="plain">
+<code>type ControllerInterface interface {
+    Init(ct *Context, cn string)
+    Prepare()
+    Get()
+    Post()
+    Delete()
+    Put()
+    Head()
+    Patch()
+    Options()
+    Finish()
+    Render() error
+}
+</code>
+</pre>
+</p>
+
+<p>这些方法beego.Controller都已经实现了，所以只要用户定义struct的时候匿名包含就可以了。当然更灵活的方法就是用户可以去自定义类似的方法，然后实现自己的逻辑。</p>
+<p>用户可以通过如下的方式进行路由设置：</p>
+<p>
+<pre class="plain">
+<code>beego.Router("/", &controllers.MainController{})
+beego.Router("/admin", &admin.UserController{})
+beego.Router("/admin/index", &admin.ArticleController{})
+beego.Router("/admin/addpkg", &admin.AddController{})
+</code>
+</pre>
+</p>为了用户更加方便的路由设置，beego参考了sinatra的路由实现，支持多种方式的路由：</p>
+<ul class="def" style="padding-left: 20px">
+<li>beego.Router("/api/:id([0-9]+)", &controllers.RController{}) <br/>自定义正则匹配 //匹配 /api/123 :id= 123</li>
+
+<li>beego.Router("/news/:all", &controllers.RController{}) <br/>全匹配方式 //匹配 /news/path/to/123.html :all= path/to/123.html</li>
+
+<li>beego.Router(`/user/:username([\w]+)`, &controllers.RController{}) <br/>正则字符串匹配 //匹配 /user/astaxie :username = astaxie</li>
+
+<li>beego.Router("/download/*.*", &controllers.RController{}) <br/>*匹配方式 //匹配 /download/file/api.xml :path= file/api :ext=xml</li>
+
+<li>beego.Router("/download/ceshi/*", &controllers.RController{})<br/>
+*全匹配方式 //匹配 /download/ceshi/file/api.json :splat=file/api.json</li>
+
+<li>beego.Router("/:id:int", &controllers.RController{})<br/>
+int类型设置方式 //匹配 :id为int类型，框架帮你实现了正则([0-9]+)</li>
+
+<li>beego.Router("/:hi:string", &controllers.RController{})<br/>
+string类型设置方式 //匹配 :hi为string类型。框架帮你实现了正则([\w]+)</li>
+</ul>
+<p>如何在Controller中获取，上面的变量可以通过如下方式获取</p>
+
+<pre class="plain">
+<code>this.Ctx.Params[":id"]
+this.Ctx.Params[":username"]
+this.Ctx.Params[":splat"]
+this.Ctx.Params[":path"]
+this.Ctx.Params[":ext"]
+</code>
+</pre>
+
+<p>上面列举的是默认的请求方法名(请求的method和函数名一致，例如GET请求执行Get函数，POST请求执行Post函数)，如果用户期望自定义函数名，那么可以使用如下方式：</p>
+
+
+<pre class="plain">
+<code>beego.Router("/",&IndexController{},"*:Index")</code>
+</pre>
+<p>
+	使用第三个参数，第三个参数就是用来设置对应method到函数名，定义如下
+	<ul class="def" style="padding-left: 20px">
+	<li>*表示任意的method都执行该函数</li>
+	<li>使用httpmethod:funcname格式来展示</li>
+	<li>多个不同的格式使用;分割</li>
+	<li>多个method对应同一个funcname，method之间通过,来分割</li>
+	</ul>
+</p>
+
+<p>以下是一个RESTful的设计如下
+	<ul class="def" style="padding-left: 20px">
+	<li>beego.Router("/api/list",&RestController{},"*:ListFood")</li>
+	<li>beego.Router("/api/create",&RestController{},"post:CreateFood")</li>
+	<li>beego.Router("/api/update",&RestController{},"put:UpdateFood")</li>
+	<li>beego.Router("/api/delete",&RestController{},"delete:DeleteFood")</li>
+	</ul>
+</p>
+<p>
+以下是多个http method指向同一个函数
+<code>beego.Router("/api",&RestController{},"get,post:ApiFunc")</code>
+一下是不同的method对应不同的函数，通过;进行分割
+<code>beego.Router("/simple",&SimpleController{},"get:GetFunc;post:PostFunc")</code>
+</p>
+
+<p>
+可用的http method
+<ul class="def" style="padding-left: 20px">
+	<li>* ：包含一下所有的函数</li>
+	<li>get ：GET请求</li>
+	<li>post ：POST请求</li>
+	<li>put ：PUT请求</li>
+	<li>delete ：DELETE请求</li>
+	<li>patch ：PATCH请求</li>
+	<li>options ：OPTIONS请求</li>
+	<li>head ：HEAD请求</li>
+</ul>
+</p>
+
+<p>
+<pre>
+<code>如果同时存在*和对应的http method，那么优先执行http method的方法，
+例如同时注册了如下所示的路由：
+beego.Router("/simple",&SimpleController{},"*:AllFunc;post:PostFunc")
+那么执行POST请求的时候，执行PostFunc而不执行AllFunc
+</code>
+
+</pre>
+</p>
+
+</div>
+</div>
+</div>
+
+<div style="display:none" id="static-content">
+<div class="outer">
+<div class="inner">
+<p style="text-align: center;"><b>静态文件</b></p>
+
+<p>
+
+Go语言内部其实已经提供了http.ServeFile，通过这个函数可以实现静态文件的服务。beego针对这个功能进行了一层封装，通过下面的方式进行静态文件注册：
+
+<code>beego.SetStaticPath("/static","public")</code>
+<ul class="def">
+<li>第一个参数是路径，url路径信息</li>
+<li>第二个参数是静态文件目录（相对应用所在的目录）</li>
+</ul>
+beego支持多个目录的静态文件注册，用户可以注册如下的静态文件目录：
+<pre>
+<code>beego.SetStaticPath("/images","images")
+beego.SetStaticPath("/css","css")
+beego.SetStaticPath("/js","js")
+</code>
+</pre>
+设置了如上的静态目录之后，用户访问/images/login/login.png，那么就会访问应用对应的目录下面的images/login/login.png文件。如果是访问/static/img/logo.png，那么就访问public/img/logo.png文件。
+</p>
+
+</div>
+</div>
+</div>
+
+<a onclick="javascript:$(window).scrollTo('.tabsContent:visible');" style="position: fixed;right:25px;bottom:20px;">回到頂部</a>
+
+<script>
+$(function(){
+searchableTabNavigation({
+listItem: "#tabsNav li",
+contentItem: ".tabsContent"
+});
+});
+</script>
+</div>
+</div>
+</div>
+</div>
+<script>if ( typeof window.JSON === 'undefined' ) { document.write('<script src="../js/json2.js"><\/script>'); }</script>
+<script src="../js/jquery-plugins-min.js"></script>
+<script src="../js/jquery-ui.min.js" type="text/javascript"></script>
+<script src="../js/scripts.js?ver=20130222"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+var deviceAgent = navigator.userAgent.toLowerCase();
+is_iOS = deviceAgent.match(/(iphone|ipod|ipad)/);
+$("#newsletterSubscribe").attr('value', "Enter your email").css('color','#036');
+$("#newsletterSubscribe").focus(function(){
+$("#newsletterSubscribe").attr('value', "").css('color','#fff');
+});
+$('#subscribeForm').submit(function(e){
+var emailInput = $("#newsletterSubscribe").attr('value');
+var filter = /^\S+@\S+\.\S+$/;
+if(filter.test(emailInput)){
+return true;
+} else {
+e.preventDefault();
+$('.emailError').show();
+return false;
+}
+});
+$('.expandable tr.hasDescription').click(function(){
+if (!$(this).hasClass('open')) {
+$('.description').hide();
+$('.expandable tr').removeClass('open');
+$(this).addClass('open').next('.description').slideDown('fast');
+} else {
+$(this).removeClass('open').next('.description').slideUp('fast');
+}
+});
+$('.accordionBox li.hasDescription').click(function(){
+if (!$(this).hasClass('open')) {
+$('.description').slideUp('fast');
+$('.accordionBox li').removeClass('open');
+$(this).addClass('open').find('.description').stop().slideDown('fast');
+} else {
+$(this).removeClass('open').find('.description').slideUp('fast');
+}
+});
+screenshotTour();
+removeRoundTop();
+function removeRoundTop(){
+if ($('#featureNav li:first,.vertical #tabsNav li:first').hasClass('selected')) {
+$('.tourContent').addClass('navTop');
+$('.campaign #tabsDef.vertical').addClass('navTop');
+} else {
+$('.tourContent').removeClass('navTop');
+$('.campaign #tabsDef.vertical').removeClass('navTop');
+}
+}
+$('#featureNav ul,.vertical #tabsNav').click(function(){removeRoundTop();});
+initVideos();
+
+$("div[class='tabsContent']").html($('#router-content').html());
+});
+</script>
+</body>
+</html>
