@@ -94,7 +94,8 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingM
 			}
 		}
 	}
-	t := reflect.Indirect(reflect.ValueOf(c)).Type()
+	reflectVal := reflect.ValueOf(c)
+	t := reflect.Indirect(reflectVal).Type()
 	methods := make(map[string]string)
 	if len(mappingMethods) > 0 {
 		semi := strings.Split(mappingMethods[0], ";")
@@ -106,7 +107,7 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingM
 			comma := strings.Split(colon[0], ",")
 			for _, m := range comma {
 				if m == "*" || inSlice(strings.ToLower(m), HTTPMETHOD) {
-					if _, ok := t.MethodByName(colon[1]); ok {
+					if val := reflectVal.MethodByName(colon[1]); val.IsValid() {
 						methods[strings.ToLower(m)] = colon[1]
 					} else {
 						panic(colon[1] + " method don't exist in the controller " + t.Name())
