@@ -626,7 +626,7 @@ response可能会有几种情况：
 
 1. 模板输出
 
-	模板输出上面模板介绍里面已经介绍，beego会在执行完相应的Controller里面的对应的Method之后输出到模板。
+	上面模板介绍里面已经介绍，beego会在执行完相应的Controller里面的对应的Method之后输出到模板。
 
 2. 跳转
 
@@ -665,7 +665,7 @@ beego中使用session相当方便，只要在main入口函数中设置如下：
 		this.TplNames = "index.tpl"
 	}
 
-上面的例子中我们知道session有几个方便的方法：
+session有几个方便的方法：
 
 - SetSession(name string, value interface{})
 - GetSession(name string) interface{}
