@@ -8,11 +8,12 @@ import (
 
 func TestWebTime(t *testing.T) {
 	ts := "Fri, 26 Jul 2013 12:27:42 CST"
-	tt, _ := time.Parse(time.RFC1123, ts)
+	l, _ := time.LoadLocation("GST")
+	tt, _ := time.ParseInLocation(time.RFC1123, ts, l)
 	if ts != webTime(tt) {
 		t.Error("should be equal")
 	}
-	if "Fri, 26 Jul 2013 04:27:42 GMT" != webTime(tt.UTC()) {
+	if "Fri, 26 Jul 2013 12:27:42 GMT" != webTime(tt.UTC()) {
 		t.Error("should be equal")
 	}
 }
