@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 )
 
@@ -35,10 +36,15 @@ type ControllerRegistor struct {
 	fixrouters   []*controllerInfo
 	filters      []http.HandlerFunc
 	userHandlers map[string]*userHandler
+	autoRouter   map[string]map[string]reflect.Type //key:controller key:method value:reflect.type
 }
 
 func NewControllerRegistor() *ControllerRegistor {
-	return &ControllerRegistor{routers: make([]*controllerInfo, 0), userHandlers: make(map[string]*userHandler)}
+	return &ControllerRegistor{
+		routers:      make([]*controllerInfo, 0),
+		userHandlers: make(map[string]*userHandler),
+		autoRouter:   make(map[string]map[string]reflect.Type),
+	}
 }
 
 //methods support like this:
@@ -145,6 +151,21 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingM
 		route.methods = methods
 		route.controllerType = t
 		p.routers = append(p.routers, route)
+	}
+}
+
+func (p *ControllerRegistor) AddAuto(c ControllerInterface) {
+	reflectVal := reflect.ValueOf(c)
+	rt := reflectVal.Type()
+	ct := reflect.Indirect(reflectVal).Type()
+	firstParam := strings.ToLower(strings.TrimSuffix(ct.Name(), "Controller"))
+	if _, ok := p.autoRouter[firstParam]; ok {
+		return
+	} else {
+		p.autoRouter[firstParam] = make(map[string]reflect.Type)
+	}
+	for i := 0; i < rt.NumMethod(); i++ {
+		p.autoRouter[firstParam][rt.Method(i).Name] = ct
 	}
 }
 
@@ -518,6 +539,55 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		method.Call(in)
 	}
 
+	//start autorouter
+
+	if !findrouter {
+		for cName, methodmap := range p.autoRouter {
+			if strings.HasPrefix(strings.ToLower(requestPath), "/"+cName) {
+				for mName, controllerType := range methodmap {
+					if strings.HasPrefix(strings.ToLower(requestPath), "/"+cName+"/"+strings.ToLower(mName)) {
+						//parse params
+						otherurl := requestPath[len("/"+cName+"/"+strings.ToLower(mName)):]
+						if len(otherurl) > 1 && otherurl[0] != '/' {
+							plist := strings.Split(otherurl, "/")
+							for k, v := range plist {
+								params[strconv.Itoa(k)] = v
+							}
+						}
+						//Invoke the request handler
+						vc := reflect.New(controllerType)
+
+						//call the controller init function
+						init := vc.MethodByName("Init")
+						in := make([]reflect.Value, 2)
+						ct := &Context{ResponseWriter: w, Request: r, Params: params, RequestBody: requestbody}
+
+						in[0] = reflect.ValueOf(ct)
+						in[1] = reflect.ValueOf(controllerType.Name())
+						init.Call(in)
+						//call prepare function
+						in = make([]reflect.Value, 0)
+						method := vc.MethodByName("Prepare")
+						method.Call(in)
+						method = vc.MethodByName(mName)
+						method.Call(in)
+						if !w.started {
+							if AutoRender {
+								method = vc.MethodByName("Render")
+								method.Call(in)
+							}
+							method = vc.MethodByName("Finish")
+							method.Call(in)
+						}
+						method = vc.MethodByName("Destructor")
+						method.Call(in)
+						// set find
+						findrouter = true
+					}
+				}
+			}
+		}
+	}
 	//if no matches to url, throw a not found exception
 	if !findrouter {
 		if h, ok := ErrorMaps["404"]; ok {

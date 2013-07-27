@@ -138,6 +138,11 @@ func (app *App) Router(path string, c ControllerInterface, mappingMethods ...str
 	return app
 }
 
+func (app *App) AutoRouter(c ControllerInterface) *App {
+	app.Handlers.AddAuto(c)
+	return app
+}
+
 func (app *App) Filter(filter http.HandlerFunc) *App {
 	app.Handlers.Filter(filter)
 	return app
@@ -189,6 +194,11 @@ func Router(rootpath string, c ControllerInterface, mappingMethods ...string) *A
 func RESTRouter(rootpath string, c ControllerInterface) *App {
 	Router(rootpath, c)
 	Router(path.Join(rootpath, ":objectId"), c)
+	return BeeApp
+}
+
+func AutoRouter(c ControllerInterface) *App {
+	BeeApp.AutoRouter(c)
 	return BeeApp
 }
 
