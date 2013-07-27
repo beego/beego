@@ -548,9 +548,9 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 					if strings.HasPrefix(strings.ToLower(requestPath), "/"+cName+"/"+strings.ToLower(mName)) {
 						//parse params
 						otherurl := requestPath[len("/"+cName+"/"+strings.ToLower(mName)):]
-						if len(otherurl) > 1 && otherurl[0] != '/' {
+						if len(otherurl) > 1 {
 							plist := strings.Split(otherurl, "/")
-							for k, v := range plist {
+							for k, v := range plist[1:] {
 								params[strconv.Itoa(k)] = v
 							}
 						}
