@@ -353,3 +353,70 @@ func (b Base64) DefaultMessage() string {
 func (b Base64) GetKey() string {
 	return b.Key
 }
+
+// just for chinese mobile phone number
+var mobilePattern = regexp.MustCompile("^((\\+86)|(86))?(1(([35][0-9])|(47)|[8][01236789]))\\d{8}$")
+
+type Mobile struct {
+	Match
+	Key string
+}
+
+func (m Mobile) DefaultMessage() string {
+	return fmt.Sprint("Must be valid mobile number")
+}
+
+func (m Mobile) GetKey() string {
+	return m.Key
+}
+
+// just for chinese telephone number
+var telPattern = regexp.MustCompile("^(0\\d{2,3}(\\-)?)?\\d{7,8}$")
+
+type Tel struct {
+	Match
+	Key string
+}
+
+func (t Tel) DefaultMessage() string {
+	return fmt.Sprint("Must be valid telephone number")
+}
+
+func (t Tel) GetKey() string {
+	return t.Key
+}
+
+// just for chinese telephone or mobile phone number
+type Phone struct {
+	Mobile
+	Tel
+	Key string
+}
+
+func (p Phone) IsSatisfied(obj interface{}) bool {
+	return p.Mobile.IsSatisfied(obj) || p.Tel.IsSatisfied(obj)
+}
+
+func (p Phone) DefaultMessage() string {
+	return fmt.Sprint("Must be valid telephone or mobile phone number")
+}
+
+func (p Phone) GetKey() string {
+	return p.Key
+}
+
+// just for chinese zipcode
+var zipCodePattern = regexp.MustCompile("^[1-9]\\d{5}$")
+
+type ZipCode struct {
+	Match
+	Key string
+}
+
+func (z ZipCode) DefaultMessage() string {
+	return fmt.Sprint("Must be valid zipcode")
+}
+
+func (z ZipCode) GetKey() string {
+	return z.Key
+}

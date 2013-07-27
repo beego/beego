@@ -218,6 +218,68 @@ func TestBase64(t *testing.T) {
 	}
 }
 
+func TestMobile(t *testing.T) {
+	valid := Validation{}
+
+	if valid.Mobile("19800008888", "mobile").Ok {
+		t.Error("\"19800008888\" is a valid mobile phone number should be false")
+	}
+	if !valid.Mobile("18800008888", "mobile").Ok {
+		t.Error("\"18800008888\" is a valid mobile phone number should be true")
+	}
+	if !valid.Mobile("18000008888", "mobile").Ok {
+		t.Error("\"18000008888\" is a valid mobile phone number should be true")
+	}
+	if !valid.Mobile("8618300008888", "mobile").Ok {
+		t.Error("\"8618300008888\" is a valid mobile phone number should be true")
+	}
+	if !valid.Mobile("+8614700008888", "mobile").Ok {
+		t.Error("\"+8614700008888\" is a valid mobile phone number should be true")
+	}
+}
+
+func TestTel(t *testing.T) {
+	valid := Validation{}
+
+	if valid.Tel("222-00008888", "telephone").Ok {
+		t.Error("\"222-00008888\" is a valid telephone number should be false")
+	}
+	if !valid.Tel("022-70008888", "telephone").Ok {
+		t.Error("\"022-70008888\" is a valid telephone number should be true")
+	}
+	if !valid.Tel("02270008888", "telephone").Ok {
+		t.Error("\"02270008888\" is a valid telephone number should be true")
+	}
+	if !valid.Tel("70008888", "telephone").Ok {
+		t.Error("\"70008888\" is a valid telephone number should be true")
+	}
+}
+
+func TestPhone(t *testing.T) {
+	valid := Validation{}
+
+	if valid.Phone("222-00008888", "phone").Ok {
+		t.Error("\"222-00008888\" is a valid phone number should be false")
+	}
+	if !valid.Mobile("+8614700008888", "phone").Ok {
+		t.Error("\"+8614700008888\" is a valid phone number should be true")
+	}
+	if !valid.Tel("02270008888", "phone").Ok {
+		t.Error("\"02270008888\" is a valid phone number should be true")
+	}
+}
+
+func TestZipCode(t *testing.T) {
+	valid := Validation{}
+
+	if valid.ZipCode("", "zipcode").Ok {
+		t.Error("\"00008888\" is a valid zipcode should be false")
+	}
+	if !valid.ZipCode("536000", "zipcode").Ok {
+		t.Error("\"536000\" is a valid zipcode should be true")
+	}
+}
+
 func TestValid(t *testing.T) {
 	type user struct {
 		Id   int

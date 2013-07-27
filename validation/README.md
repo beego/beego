@@ -92,6 +92,10 @@ Struct Tag Functions:
 	Email
 	IP
 	Base64
+	Mobile
+	Tel
+	Phone
+	ZipCode
 
 
 ## LICENSE

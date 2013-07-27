@@ -144,6 +144,23 @@ func (v *Validation) Base64(str string, key string) *ValidationResult {
 	return v.apply(Base64{Match{Regexp: base64Pattern}, key}, str)
 }
 
+func (v *Validation) Mobile(str string, key string) *ValidationResult {
+	return v.apply(Mobile{Match{Regexp: mobilePattern}, key}, str)
+}
+
+func (v *Validation) Tel(str string, key string) *ValidationResult {
+	return v.apply(Tel{Match{Regexp: telPattern}, key}, str)
+}
+
+func (v *Validation) Phone(str string, key string) *ValidationResult {
+	return v.apply(Phone{Mobile{Match: Match{Regexp: mobilePattern}},
+		Tel{Match: Match{Regexp: telPattern}}, key}, str)
+}
+
+func (v *Validation) ZipCode(str string, key string) *ValidationResult {
+	return v.apply(ZipCode{Match{Regexp: zipCodePattern}, key}, str)
+}
+
 func (v *Validation) apply(chk Validator, obj interface{}) *ValidationResult {
 	if chk.IsSatisfied(obj) {
 		return &ValidationResult{Ok: true}
