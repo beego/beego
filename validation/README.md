@@ -55,9 +55,10 @@ Struct Tag Use:
 	// validation function follow with "valid" tag
 	// functions divide with ";"
 	// parameters in parentheses "()" and divide with ","
+	// Match function's pattern string must in "//"
 	type user struct {
 		Id   int
-		Name string `valid:"Required"`
+		Name string `valid:"Required;Match(/^(test)?\\w*@;com$/)"`
 		Age  int    `valid:"Required;Range(1, 140)"`
 	}
 
@@ -86,8 +87,7 @@ Struct Tag Functions:
 	Alpha
 	Numeric
 	AlphaNumeric
-	Match(regexp string)		// does not support yet
-	NoMatch(regexp string)	// does not support yet
+	Match(pattern string)
 	AlphaDash
 	Email
 	IP
