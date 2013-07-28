@@ -206,37 +206,19 @@ func ParseForm(form url.Values, obj interface{}) error {
 				return err
 			}
 			fieldV.SetBool(b)
-		case reflect.Int:
-			fallthrough
-		case reflect.Int8:
-			fallthrough
-		case reflect.Int16:
-			fallthrough
-		case reflect.Int32:
-			fallthrough
-		case reflect.Int64:
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 			x, err := strconv.ParseInt(value, 10, 64)
 			if err != nil {
 				return err
 			}
 			fieldV.SetInt(x)
-		case reflect.Uint:
-			fallthrough
-		case reflect.Uint8:
-			fallthrough
-		case reflect.Uint16:
-			fallthrough
-		case reflect.Uint32:
-			fallthrough
-		case reflect.Uint64:
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 			x, err := strconv.ParseUint(value, 10, 64)
 			if err != nil {
 				return err
 			}
 			fieldV.SetUint(x)
-		case reflect.Float32:
-			fallthrough
-		case reflect.Float64:
+		case reflect.Float32, reflect.Float64:
 			x, err := strconv.ParseFloat(value, 64)
 			if err != nil {
 				return err
