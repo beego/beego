@@ -61,10 +61,10 @@ func TestRange(t *testing.T) {
 	valid := Validation{}
 
 	if valid.Range(-1, 0, 1, "range0_1").Ok {
-		t.Error("-1 is bettween 0 and 1 should be false")
+		t.Error("-1 is between 0 and 1 should be false")
 	}
 	if !valid.Range(1, 0, 1, "range0_1").Ok {
-		t.Error("1 is bettween 0 and 1 should be true")
+		t.Error("1 is between 0 and 1 should be true")
 	}
 }
 
@@ -283,12 +283,12 @@ func TestZipCode(t *testing.T) {
 func TestValid(t *testing.T) {
 	type user struct {
 		Id   int
-		Name string `valid:"Required"`
+		Name string `valid:"Required;Match(/^(test)?\\w*@(/test/);com$/)"`
 		Age  int    `valid:"Required;Range(1, 140)"`
 	}
 	valid := Validation{}
 
-	u := user{Name: "test", Age: 40}
+	u := user{Name: "test@/test/;com", Age: 40}
 	b, err := valid.Valid(u)
 	if err != nil {
 		t.Fatal(err)
@@ -297,8 +297,17 @@ func TestValid(t *testing.T) {
 		t.Error("validation should be passed")
 	}
 
-	uptr := &user{Name: "test", Age: 180}
+	uptr := &user{Name: "test", Age: 40}
 	b, err = valid.Valid(uptr)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b {
+		t.Error("validation should not be passed")
+	}
+
+	u = user{Name: "test@/test/;com", Age: 180}
+	b, err = valid.Valid(u)
 	if err != nil {
 		t.Fatal(err)
 	}

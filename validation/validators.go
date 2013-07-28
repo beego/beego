@@ -264,8 +264,7 @@ type Match struct {
 }
 
 func (m Match) IsSatisfied(obj interface{}) bool {
-	str := obj.(string)
-	return m.Regexp.MatchString(str)
+	return m.Regexp.MatchString(fmt.Sprintf("%v", obj))
 }
 
 func (m Match) DefaultMessage() string {

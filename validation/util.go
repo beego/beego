@@ -26,6 +26,7 @@ var (
 		"apply":     true,
 		"Check":     true,
 		"Valid":     true,
+		"NoMatch":   true,
 	}
 )
 
@@ -50,7 +51,7 @@ type Funcs map[string]reflect.Value
 func (f Funcs) Call(name string, params ...interface{}) (result []reflect.Value, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = r.(error)
+			err = fmt.Errorf("%v", r)
 		}
 	}()
 	if _, ok := f[name]; !ok {
@@ -82,10 +83,17 @@ func getValidFuncs(f reflect.StructField) (vfs []ValidFunc, err error) {
 	if len(tag) == 0 {
 		return
 	}
+	if vfs, tag, err = getRegFuncs(tag, f.Name); err != nil {
+		fmt.Printf("%+v\n", err)
+		return
+	}
 	fs := strings.Split(tag, ";")
 	for _, vfunc := range fs {
 		var vf ValidFunc
-		vf, err = parseFunc(vfunc)
+		if len(vfunc) == 0 {
+			continue
+		}
+		vf, err = parseFunc(vfunc, f.Name)
 		if err != nil {
 			return
 		}
@@ -94,10 +102,33 @@ func getValidFuncs(f reflect.StructField) (vfs []ValidFunc, err error) {
 	return
 }
 
-func parseFunc(vfunc string) (v ValidFunc, err error) {
+// Get Match function
+// May be get NoMatch function in the future
+func getRegFuncs(tag, key string) (vfs []ValidFunc, str string, err error) {
+	tag = strings.TrimSpace(tag)
+	index := strings.Index(tag, "Match(/")
+	if index == -1 {
+		str = tag
+		return
+	}
+	end := strings.LastIndex(tag, "/)")
+	if end < index {
+		err = fmt.Errorf("invalid Match function")
+		return
+	}
+	reg, err := regexp.Compile(tag[index+len("Match(/") : end])
+	if err != nil {
+		return
+	}
+	vfs = []ValidFunc{ValidFunc{"Match", []interface{}{reg, key}}}
+	str = strings.TrimSpace(tag[:index]) + strings.TrimSpace(tag[end+len("/)"):])
+	return
+}
+
+func parseFunc(vfunc, key string) (v ValidFunc, err error) {
 	defer func() {
 		if r := recover(); r != nil {
-			err = r.(error)
+			err = fmt.Errorf("%v", r)
 		}
 	}()
 
@@ -114,7 +145,7 @@ func parseFunc(vfunc string) (v ValidFunc, err error) {
 			err = fmt.Errorf("%s require %d parameters", vfunc, num)
 			return
 		}
-		v = ValidFunc{vfunc, []interface{}{vfunc}}
+		v = ValidFunc{vfunc, []interface{}{key}}
 		return
 	}
 
@@ -136,7 +167,7 @@ func parseFunc(vfunc string) (v ValidFunc, err error) {
 		return
 	}
 
-	tParams, err := trim(name, params)
+	tParams, err := trim(name, key, params)
 	if err != nil {
 		return
 	}
@@ -155,7 +186,7 @@ func numIn(name string) (num int, err error) {
 	return
 }
 
-func trim(name string, s []string) (ts []interface{}, err error) {
+func trim(name, key string, s []string) (ts []interface{}, err error) {
 	ts = make([]interface{}, len(s), len(s)+1)
 	fn, ok := funcs[name]
 	if !ok {
@@ -170,7 +201,7 @@ func trim(name string, s []string) (ts []interface{}, err error) {
 		}
 		ts[i] = param
 	}
-	ts = append(ts, name)
+	ts = append(ts, key)
 	return
 }
 
