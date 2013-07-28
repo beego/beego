@@ -97,11 +97,11 @@ It generates folders and files for your project, directory structure as follows:
 
 Beego uses development mode as default, you can use following code to change mode in your application:
 
-	beego.RunMode = "pro"
+	beego.RunMode = "prod"
 
 Or use configuration file in `conf/app.conf`, and input following content:
 
-	runmode = pro
+	runmode = prod
 
 No differences between two ways.
 
