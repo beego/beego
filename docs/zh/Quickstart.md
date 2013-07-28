@@ -123,6 +123,8 @@
 
 ## 路由设置
 
+### 默认路由RESTFul规则
+
 路由的主要功能是实现从请求地址到实现方法，beego中封装了`Controller`，所以路由是从路径到`ControllerInterface`的过程，`ControllerInterface`的方法有如下：
 
 	type ControllerInterface interface {
@@ -179,6 +181,7 @@
 	this.Ctx.Params[":path"]
 	this.Ctx.Params[":ext"]
 
+### 自定义方法及RESTFul规则
 上面列举的是默认的请求方法名(请求的method和函数名一致，例如GET请求执行Get函数，POST请求执行Post函数)，如果用户期望自定义函数名，那么可以使用如下方式：
 
 	beego.Router("/",&IndexController{},"*:Index")
@@ -220,6 +223,24 @@
 >>> beego.Router("/simple",&SimpleController{},"*:AllFunc;post:PostFunc")
 
 >>>那么执行POST请求的时候，执行PostFunc而不执行AllFunc
+
+### 自动化路由
+用户首先需要把需要路由的控制器注册到自动路由中：
+
+	beego.AutoRouter(&controllers.ObjectController{})
+
+那么beego就会通过反射获取该结构体中所有的实现方法，你就可以通过如下的方式访问到对应的方法中：
+
+	/object/login   调用ObjectController中的Login方法
+	/object/logout  调用ObjectController中的Logout方法
+	
+除了前缀两个/:controller/:method的匹配之外，剩下的url，beego会帮你自动化解析为参数，保存在`this.Ctx.Params`当中：
+
+	/object/blog/2013/09/12  调用ObjectController中的Blog方法，参数如下：map[0:2013 1:09 2:12]
+	
+	
+>>> 方法名在内部是保存了用户设置的，例如Login，url匹配的时候都会转化为小写，所以，/object/LOGIN这样的url也一样可以路由到用户定义的Login方法中
+
 
 ## 静态文件
 
