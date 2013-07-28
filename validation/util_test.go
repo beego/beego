@@ -6,10 +6,11 @@ import (
 )
 
 type user struct {
-	Id   int
-	Tag  string `valid:"Maxx(aa)"`
-	Name string `valid:"Required"`
-	Age  int    `valid:"Required;Range(1, 140)"`
+	Id    int
+	Tag   string `valid:"Maxx(aa)"`
+	Name  string `valid:"Required;"`
+	Age   int    `valid:"Required;Range(1, 140)"`
+	match string `valid:"Required; Match(/^(test)?\\w*@(/test/);com$/);Max(2)"`
 }
 
 func TestGetValidFuncs(t *testing.T) {
@@ -54,6 +55,14 @@ func TestGetValidFuncs(t *testing.T) {
 	}
 	if vfs[1].Name != "Range" && len(vfs[1].Params) != 2 {
 		t.Error("Range funcs should be got")
+	}
+
+	f, _ = tf.FieldByName("match")
+	if vfs, err = getValidFuncs(f); err != nil {
+		t.Fatal(err)
+	}
+	if len(vfs) != 3 {
+		t.Fatal("should get 3 ValidFunc but now is", len(vfs))
 	}
 }
 
