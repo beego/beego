@@ -101,11 +101,11 @@
 
 我们可以通过如下的方式改变我们的模式：
 
-	beego.RunMode = "pro"
+	beego.RunMode = "prod"
 
 或者我们在conf/app.conf下面设置如下：
 
-	runmode = pro
+	runmode = prod
 
 以上两种效果一样。
 
