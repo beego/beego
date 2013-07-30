@@ -385,7 +385,8 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}
 
 		if (requestPath[n-1] != '/' && route.pattern == requestPath) ||
-			(requestPath[n-1] == '/' && len(route.pattern) >= n-1 && requestPath[0:n-1] == route.pattern) {
+			(requestPath[n-1] == '/' && len(route.pattern) >= n-1 && requestPath[0:n-1] == route.pattern) ||
+			(len(route.pattern)-1 == n && requestPath == route.pattern[:n-1]) {
 			runrouter = route
 			findrouter = true
 			break
