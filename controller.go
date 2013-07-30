@@ -182,7 +182,7 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		return icontent, nil
 	} else {
 		if c.TplNames == "" {
-			c.TplNames = c.ChildName + "/" + c.Ctx.Request.Method + "." + c.TplExt
+			c.TplNames = c.ChildName + "/" + strings.ToLower(c.Ctx.Request.Method) + "." + c.TplExt
 		}
 		if RunMode == "dev" {
 			BuildTemplate(ViewsPath)
