@@ -338,7 +338,7 @@ To disable auto-render in `main.go`(before you call `beego.Run()` to run the app
 
 You can use `this.Data` in controller methods to access the data in templates. Suppose you want to get content of `{{.Content}}`, you can use following code to do this:
 
-	this.Data["Context"] = "value"
+	this.Data["Content"] = "value"
 
 
 ### Template name

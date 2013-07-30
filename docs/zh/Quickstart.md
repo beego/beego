@@ -405,7 +405,7 @@ main.go文件中设置如下：
 
 模板中的数据是通过在Controller中`this.Data`获取的，所以如果你想在模板中获取内容`{{.Content}}`,那么你需要在Controller中如下设置：
 
-	this.Data["Context"] = "value"
+	this.Data["Content"] = "value"
 
 
 ### 模板名称
