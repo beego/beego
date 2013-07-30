@@ -74,7 +74,7 @@ What happened in behind above example?
 
 Get into your $GOPATH, then use following command to setup Beego project:
 
-	bee create hello
+	bee new hello
 
 It generates folders and files for your project, directory structure as follows:
 
