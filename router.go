@@ -373,14 +373,15 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	for _, route := range p.fixrouters {
 		n := len(requestPath)
 		//route like "/"
-		if n == 1 {
-			if requestPath == route.pattern {
-				runrouter = route
-				findrouter = true
-				break
-			} else {
-				continue
-			}
+		//if n == 1 {
+		//	else {
+		//		continue
+		//	}
+		//}
+		if requestPath == route.pattern {
+			runrouter = route
+			findrouter = true
+			break
 		}
 
 		if (requestPath[n-1] != '/' && route.pattern == requestPath) ||
