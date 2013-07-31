@@ -145,7 +145,7 @@ type fieldInfo struct {
 	unique              bool
 	initial             StrTo
 	choices             fieldChoices
-	maxLength           int
+	size                int
 	auto_now            bool
 	auto_now_add        bool
 	rel                 bool
@@ -188,7 +188,7 @@ func newFieldInfo(mi *modelInfo, field reflect.Value, sf reflect.StructField) (f
 
 	digits := tags["digits"]
 	decimals := tags["decimals"]
-	maxLength := tags["max_length"]
+	size := tags["size"]
 	onDelete := tags["on_delete"]
 
 checkType:
@@ -248,13 +248,13 @@ checkType:
 		if err != nil {
 			goto end
 		}
-		if fieldType == TypeTextField && maxLength != "" {
+		if fieldType == TypeTextField && size != "" {
 			fieldType = TypeCharField
 		}
 		if fieldType == TypeFloatField && (digits != "" || decimals != "") {
 			fieldType = TypeDecimalField
 		}
-		if fieldType == TypeDateTimeField && attrs["date"] {
+		if fieldType == TypeDateTimeField && tags["type"] == "date" {
 			fieldType = TypeDateField
 		}
 	}
@@ -354,15 +354,15 @@ checkType:
 	switch fieldType {
 	case TypeBooleanField:
 	case TypeCharField:
-		if maxLength != "" {
-			v, e := StrTo(maxLength).Int32()
+		if size != "" {
+			v, e := StrTo(size).Int32()
 			if e != nil {
-				err = fmt.Errorf("wrong maxLength value `%s`", maxLength)
+				err = fmt.Errorf("wrong size value `%s`", size)
 			} else {
-				fi.maxLength = int(v)
+				fi.size = int(v)
 			}
 		} else {
-			err = fmt.Errorf("maxLength must be specify")
+			err = fmt.Errorf("size must be specify")
 		}
 	case TypeTextField:
 		fi.index = false
@@ -417,7 +417,6 @@ checkType:
 	}
 
 	if fi.unique {
-		fi.null = false
 		fi.blank = false
 		fi.index = false
 	}
@@ -484,7 +483,6 @@ checkType:
 
 	fi.choices = choices
 	fi.initial = initial
-
 end:
 	if err != nil {
 		return nil, err

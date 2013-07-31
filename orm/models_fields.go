@@ -93,10 +93,16 @@ func (e *BooleanField) RawValue() interface{} {
 	return e.Value()
 }
 
+func (e *BooleanField) Clean() error {
+	return nil
+}
+
+var _ Fielder = new(BooleanField)
+
 // A string field
-// required values tag: max_length
-// The max_length is enforced at the database level and in models’s validation.
-// eg: `max_length:"120"`
+// required values tag: size
+// The size is enforced at the database level and in models’s validation.
+// eg: `orm:"size(120)"`
 type CharField string
 
 func (e CharField) Value() string {
@@ -129,6 +135,12 @@ func (e *CharField) RawValue() interface{} {
 	return e.Value()
 }
 
+func (e *CharField) Clean() error {
+	return nil
+}
+
+var _ Fielder = new(CharField)
+
 // A date, represented in go by a time.Time instance.
 // only date values like 2006-01-02
 // Has a few extra, optional attr tag:
@@ -141,7 +153,7 @@ func (e *CharField) RawValue() interface{} {
 // Automatically set the field to now when the object is first created. Useful for creation of timestamps.
 // Note that the current date is always used; it’s not just a default value that you can override.
 //
-// eg: `attr:"auto_now"` or `attr:"auto_now_add"`
+// eg: `orm:"auto_now"` or `orm:"auto_now_add"`
 type DateField time.Time
 
 func (e DateField) Value() time.Time {
@@ -179,6 +191,12 @@ func (e *DateField) SetRaw(value interface{}) error {
 func (e *DateField) RawValue() interface{} {
 	return e.Value()
 }
+
+func (e *DateField) Clean() error {
+	return nil
+}
+
+var _ Fielder = new(DateField)
 
 // A date, represented in go by a time.Time instance.
 // datetime values like 2006-01-02 15:04:05
@@ -221,6 +239,12 @@ func (e *DateTimeField) RawValue() interface{} {
 	return e.Value()
 }
 
+func (e *DateTimeField) Clean() error {
+	return nil
+}
+
+var _ Fielder = new(DateTimeField)
+
 // A floating-point number represented in go by a float32 value.
 type FloatField float64
 
@@ -261,6 +285,12 @@ func (e *FloatField) RawValue() interface{} {
 	return e.Value()
 }
 
+func (e *FloatField) Clean() error {
+	return nil
+}
+
+var _ Fielder = new(FloatField)
+
 // -32768 to 32767
 type SmallIntegerField int16
 
@@ -298,6 +328,12 @@ func (e *SmallIntegerField) SetRaw(value interface{}) error {
 func (e *SmallIntegerField) RawValue() interface{} {
 	return e.Value()
 }
+
+func (e *SmallIntegerField) Clean() error {
+	return nil
+}
+
+var _ Fielder = new(SmallIntegerField)
 
 // -2147483648 to 2147483647
 type IntegerField int32
@@ -337,6 +373,12 @@ func (e *IntegerField) RawValue() interface{} {
 	return e.Value()
 }
 
+func (e *IntegerField) Clean() error {
+	return nil
+}
+
+var _ Fielder = new(IntegerField)
+
 // -9223372036854775808 to 9223372036854775807.
 type BigIntegerField int64
 
@@ -374,6 +416,12 @@ func (e *BigIntegerField) SetRaw(value interface{}) error {
 func (e *BigIntegerField) RawValue() interface{} {
 	return e.Value()
 }
+
+func (e *BigIntegerField) Clean() error {
+	return nil
+}
+
+var _ Fielder = new(BigIntegerField)
 
 // 0 to 65535
 type PositiveSmallIntegerField uint16
@@ -413,6 +461,12 @@ func (e *PositiveSmallIntegerField) RawValue() interface{} {
 	return e.Value()
 }
 
+func (e *PositiveSmallIntegerField) Clean() error {
+	return nil
+}
+
+var _ Fielder = new(PositiveSmallIntegerField)
+
 // 0 to 4294967295
 type PositiveIntegerField uint32
 
@@ -450,6 +504,12 @@ func (e *PositiveIntegerField) SetRaw(value interface{}) error {
 func (e *PositiveIntegerField) RawValue() interface{} {
 	return e.Value()
 }
+
+func (e *PositiveIntegerField) Clean() error {
+	return nil
+}
+
+var _ Fielder = new(PositiveIntegerField)
 
 // 0 to 18446744073709551615
 type PositiveBigIntegerField uint64
@@ -489,6 +549,12 @@ func (e *PositiveBigIntegerField) RawValue() interface{} {
 	return e.Value()
 }
 
+func (e *PositiveBigIntegerField) Clean() error {
+	return nil
+}
+
+var _ Fielder = new(PositiveBigIntegerField)
+
 // A large text field.
 type TextField string
 
@@ -521,3 +587,9 @@ func (e *TextField) SetRaw(value interface{}) error {
 func (e *TextField) RawValue() interface{} {
 	return e.Value()
 }
+
+func (e *TextField) Clean() error {
+	return nil
+}
+
+var _ Fielder = new(TextField)

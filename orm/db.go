@@ -406,7 +406,7 @@ func (d *dbTables) getLimitSql(offset int64, limit int) (limits string) {
 	if limit < 0 {
 		// no limit
 		if offset > 0 {
-			limits = fmt.Sprintf("OFFSET %d", offset)
+			limits = fmt.Sprintf("LIMIT 18446744073709551615 OFFSET %d", offset)
 		}
 	} else if offset <= 0 {
 		limits = fmt.Sprintf("LIMIT %d", limit)
@@ -732,7 +732,7 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 
 	refs := make([]interface{}, colsNum)
 	for i, _ := range refs {
-		var ref string
+		var ref interface{}
 		refs[i] = &ref
 	}
 
@@ -842,7 +842,7 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 
 	refs := make([]interface{}, colsNum)
 	for i, _ := range refs {
-		var ref string
+		var ref interface{}
 		refs[i] = &ref
 	}
 
@@ -882,18 +882,20 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 							lastm := mmi
 							mmi := fi.relModelInfo
 							field := reflect.Indirect(last.Field(fi.fieldIndex))
-							d.setColsValues(mmi, &field, mmi.fields.dbcols, trefs[:len(mmi.fields.dbcols)])
-							for _, fi := range mmi.fields.fieldsReverse {
-								if fi.reverseFieldInfo.mi == lastm {
-									if fi.reverseFieldInfo != nil {
-										field.Field(fi.fieldIndex).Set(last.Addr())
+							if field.IsValid() {
+								d.setColsValues(mmi, &field, mmi.fields.dbcols, trefs[:len(mmi.fields.dbcols)])
+								for _, fi := range mmi.fields.fieldsReverse {
+									if fi.reverseFieldInfo.mi == lastm {
+										if fi.reverseFieldInfo != nil {
+											field.Field(fi.fieldIndex).Set(last.Addr())
+										}
 									}
 								}
+								cacheV[names] = &field
+								cacheM[names] = mmi
+								last = field
 							}
 							trefs = trefs[len(mmi.fields.dbcols):]
-							cacheV[names] = &field
-							cacheM[names] = mmi
-							last = field
 						}
 					}
 				}
@@ -961,10 +963,15 @@ func (d *dbBase) GetOperatorSql(mi *modelInfo, operator string, args []interface
 		sql = operatorsSQL[operator]
 		arg := params[0]
 		switch operator {
+		case "exact":
+			if arg == nil {
+				params[0] = "IS NULL"
+			}
 		case "iexact", "contains", "icontains", "startswith", "endswith", "istartswith", "iendswith":
 			param := strings.Replace(ToStr(arg), `%`, `\%`, -1)
 			switch operator {
-			case "iexact", "contains", "icontains":
+			case "iexact":
+			case "contains", "icontains":
 				param = fmt.Sprintf("%%%s%%", param)
 			case "startswith", "istartswith":
 				param = fmt.Sprintf("%s%%", param)
@@ -1143,203 +1150,59 @@ setValue:
 	switch {
 	case fieldType == TypeBooleanField:
 		if isNative {
+			if value == nil {
+				value = false
+			}
 			field.SetBool(value.(bool))
 		}
 	case fieldType == TypeCharField || fieldType == TypeTextField:
 		if isNative {
+			if value == nil {
+				value = ""
+			}
 			field.SetString(value.(string))
 		}
 	case fieldType == TypeDateField || fieldType == TypeDateTimeField:
 		if isNative {
+			if value == nil {
+				value = time.Time{}
+			}
 			field.Set(reflect.ValueOf(value))
 		}
 	case fieldType&IsIntegerField > 0:
 		if fieldType&IsPostiveIntegerField > 0 {
 			if isNative {
+				if value == nil {
+					value = uint64(0)
+				}
 				field.SetUint(value.(uint64))
 			}
 		} else {
 			if isNative {
+				if value == nil {
+					value = int64(0)
+				}
 				field.SetInt(value.(int64))
 			}
 		}
 	case fieldType == TypeFloatField || fieldType == TypeDecimalField:
 		if isNative {
+			if value == nil {
+				value = float64(0)
+			}
 			field.SetFloat(value.(float64))
 		}
 	case fieldType&IsRelField > 0:
-		fieldType = fi.relModelInfo.fields.pk[0].fieldType
-		mf := reflect.New(fi.relModelInfo.addrField.Elem().Type())
-		md := mf.Interface().(Modeler)
-		md.Init(md)
-		field.Set(mf)
-		f := mf.Elem().Field(fi.relModelInfo.fields.pk[0].fieldIndex)
-		field = &f
-		goto setValue
-	}
-
-	if isNative == false {
-		fd := field.Addr().Interface().(Fielder)
-		err := fd.SetRaw(value)
-		if err != nil {
-			return nil, err
+		if value != nil {
+			fieldType = fi.relModelInfo.fields.pk[0].fieldType
+			mf := reflect.New(fi.relModelInfo.addrField.Elem().Type())
+			md := mf.Interface().(Modeler)
+			md.Init(md)
+			field.Set(mf)
+			f := mf.Elem().Field(fi.relModelInfo.fields.pk[0].fieldIndex)
+			field = &f
+			goto setValue
 		}
-	}
-
-	return value, nil
-}
-
-func (d *dbBase) xsetValue(fi *fieldInfo, val interface{}, field *reflect.Value) (interface{}, error) {
-	if val == nil {
-		return nil, nil
-	}
-
-	var value interface{}
-
-	var str *StrTo
-	switch v := val.(type) {
-	case []byte:
-		s := StrTo(string(v))
-		str = &s
-	case string:
-		s := StrTo(v)
-		str = &s
-	}
-
-	fieldType := fi.fieldType
-	isNative := fi.isFielder == false
-
-setValue:
-	switch {
-	case fieldType == TypeBooleanField:
-		if str == nil {
-			switch v := val.(type) {
-			case int64:
-				b := v == 1
-				if isNative {
-					field.SetBool(b)
-				}
-				value = b
-			default:
-				s := StrTo(ToStr(v))
-				str = &s
-			}
-		}
-		if str != nil {
-			b, err := str.Bool()
-			if err != nil {
-				return nil, err
-			}
-			if isNative {
-				field.SetBool(b)
-			}
-			value = b
-		}
-	case fieldType == TypeCharField || fieldType == TypeTextField:
-		s := str.String()
-		if str == nil {
-			s = ToStr(val)
-		}
-		if isNative {
-			field.SetString(s)
-		}
-		value = s
-	case fieldType == TypeDateField || fieldType == TypeDateTimeField:
-		if str == nil {
-			switch v := val.(type) {
-			case time.Time:
-				if isNative {
-					field.Set(reflect.ValueOf(v))
-				}
-				value = v
-			default:
-				s := StrTo(ToStr(v))
-				str = &s
-			}
-		}
-		if str != nil {
-			format := format_DateTime
-			if fi.fieldType == TypeDateField {
-				format = format_Date
-			}
-
-			t, err := timeParse(str.String(), format)
-			if err != nil {
-				return nil, err
-			}
-			if isNative {
-				field.Set(reflect.ValueOf(t))
-			}
-			value = t
-		}
-	case fieldType&IsIntegerField > 0:
-		if str == nil {
-			s := StrTo(ToStr(val))
-			str = &s
-		}
-		if str != nil {
-			var err error
-			switch fieldType {
-			case TypeSmallIntegerField:
-				value, err = str.Int16()
-			case TypeIntegerField:
-				value, err = str.Int32()
-			case TypeBigIntegerField:
-				value, err = str.Int64()
-			case TypePositiveSmallIntegerField:
-				value, err = str.Uint16()
-			case TypePositiveIntegerField:
-				value, err = str.Uint32()
-			case TypePositiveBigIntegerField:
-				value, err = str.Uint64()
-			}
-			if err != nil {
-				return nil, err
-			}
-			if fieldType&IsPostiveIntegerField > 0 {
-				v, _ := str.Uint64()
-				if isNative {
-					field.SetUint(v)
-				}
-			} else {
-				v, _ := str.Int64()
-				if isNative {
-					field.SetInt(v)
-				}
-			}
-		}
-	case fieldType == TypeFloatField || fieldType == TypeDecimalField:
-		if str == nil {
-			switch v := val.(type) {
-			case float64:
-				if isNative {
-					field.SetFloat(v)
-				}
-				value = v
-			default:
-				s := StrTo(ToStr(v))
-				str = &s
-			}
-		}
-		if str != nil {
-			v, err := str.Float64()
-			if err != nil {
-				return nil, err
-			}
-			if isNative {
-				field.SetFloat(v)
-			}
-			value = v
-		}
-	case fieldType&IsRelField > 0:
-		fieldType = fi.relModelInfo.fields.pk[0].fieldType
-		mf := reflect.New(fi.relModelInfo.addrField.Elem().Type())
-		md := mf.Interface().(Modeler)
-		md.Init(md)
-		field.Set(mf)
-		f := mf.Elem().Field(fi.relModelInfo.fields.pk[0].fieldIndex)
-		field = &f
-		goto setValue
 	}
 
 	if isNative == false {
@@ -1420,7 +1283,7 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 
 	refs := make([]interface{}, len(cols))
 	for i, _ := range refs {
-		var ref string
+		var ref interface{}
 		refs[i] = &ref
 	}
 

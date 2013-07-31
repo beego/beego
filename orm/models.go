@@ -26,7 +26,7 @@ var (
 		"auto":         1,
 		"auto_now":     1,
 		"auto_now_add": 1,
-		"max_length":   2,
+		"size":         2,
 		"choices":      2,
 		"column":       2,
 		"default":      2,
@@ -37,6 +37,7 @@ var (
 		"digits":       2,
 		"decimals":     2,
 		"on_delete":    2,
+		"type":         2,
 	}
 )
 

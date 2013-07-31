@@ -16,40 +16,46 @@ type querySet struct {
 }
 
 func (o *querySet) Filter(expr string, args ...interface{}) QuerySeter {
+	o = o.clone()
 	if o.cond == nil {
 		o.cond = NewCondition()
 	}
 	o.cond.And(expr, args...)
-	return o.Clone()
+	return o
 }
 
 func (o *querySet) Exclude(expr string, args ...interface{}) QuerySeter {
+	o = o.clone()
 	if o.cond == nil {
 		o.cond = NewCondition()
 	}
 	o.cond.AndNot(expr, args...)
-	return o.Clone()
+	return o
 }
 
 func (o *querySet) Limit(limit int, args ...int64) QuerySeter {
+	o = o.clone()
 	o.limit = limit
 	if len(args) > 0 {
 		o.offset = args[0]
 	}
-	return o.Clone()
+	return o
 }
 
 func (o *querySet) Offset(offset int64) QuerySeter {
+	o = o.clone()
 	o.offset = offset
-	return o.Clone()
+	return o
 }
 
-func (o *querySet) OrderBy(orders ...string) QuerySeter {
-	o.orders = orders
-	return o.Clone()
+func (o *querySet) OrderBy(exprs ...string) QuerySeter {
+	o = o.clone()
+	o.orders = exprs
+	return o
 }
 
 func (o *querySet) RelatedSel(params ...interface{}) QuerySeter {
+	o = o.clone()
 	var related []string
 	if len(params) == 0 {
 		o.relDepth = DefaultRelsDepth
@@ -66,19 +72,19 @@ func (o *querySet) RelatedSel(params ...interface{}) QuerySeter {
 		}
 	}
 	o.related = related
-	return o.Clone()
+	return o
 }
 
-func (o querySet) Clone() QuerySeter {
+func (o querySet) clone() *querySet {
 	if o.cond != nil {
 		o.cond = o.cond.Clone()
 	}
 	return &o
 }
 
-func (o *querySet) SetCond(cond *Condition) error {
+func (o querySet) SetCond(cond *Condition) QuerySeter {
 	o.cond = cond
-	return nil
+	return &o
 }
 
 func (o *querySet) Count() (int64, error) {
@@ -112,16 +118,16 @@ func (o *querySet) One(container Modeler) error {
 	return nil
 }
 
-func (o *querySet) Values(results *[]Params, args ...string) (int64, error) {
-	return o.orm.alias.DbBaser.ReadValues(o.orm.db, o, o.mi, o.cond, args, results)
+func (o *querySet) Values(results *[]Params, exprs ...string) (int64, error) {
+	return o.orm.alias.DbBaser.ReadValues(o.orm.db, o, o.mi, o.cond, exprs, results)
 }
 
-func (o *querySet) ValuesList(results *[]ParamsList, args ...string) (int64, error) {
-	return o.orm.alias.DbBaser.ReadValues(o.orm.db, o, o.mi, o.cond, args, results)
+func (o *querySet) ValuesList(results *[]ParamsList, exprs ...string) (int64, error) {
+	return o.orm.alias.DbBaser.ReadValues(o.orm.db, o, o.mi, o.cond, exprs, results)
 }
 
-func (o *querySet) ValuesFlat(result *ParamsList, arg string) (int64, error) {
-	return o.orm.alias.DbBaser.ReadValues(o.orm.db, o, o.mi, o.cond, []string{arg}, result)
+func (o *querySet) ValuesFlat(result *ParamsList, expr string) (int64, error) {
+	return o.orm.alias.DbBaser.ReadValues(o.orm.db, o, o.mi, o.cond, []string{expr}, result)
 }
 
 func newQuerySet(orm *orm, mi *modelInfo) QuerySeter {

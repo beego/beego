@@ -113,15 +113,18 @@ end:
 }
 
 func RegisterDriver(name string, typ driverType) {
-	if _, ok := drivers[name]; ok == false {
+	if t, ok := drivers[name]; ok == false {
 		drivers[name] = typ
 	} else {
-		fmt.Println("name `%s` db driver already registered")
-		os.Exit(2)
+		if t != typ {
+			fmt.Println("name `%s` db driver already registered and is other type")
+			os.Exit(2)
+		}
 	}
 }
 
 func init() {
-	// RegisterDriver("mysql", DR_MySQL)
-	RegisterDriver("mymysql", DR_MySQL)
+	RegisterDriver("mysql", DR_MySQL)
+	RegisterDriver("postgres", DR_Postgres)
+	RegisterDriver("sqlite3", DR_Sqlite)
 }

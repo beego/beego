@@ -75,11 +75,20 @@ func (o *object) Update() (int64, error) {
 	if err != nil {
 		return num, err
 	}
-	return 0, nil
+	return num, nil
 }
 
 func (o *object) Delete() (int64, error) {
-	return o.orm.alias.DbBaser.Delete(o.orm.db, o.mi, o.ind)
+	num, err := o.orm.alias.DbBaser.Delete(o.orm.db, o.mi, o.ind)
+	if err != nil {
+		return num, err
+	}
+	if num > 0 {
+		if o.mi.fields.auto != nil {
+			o.ind.Field(o.mi.fields.auto.fieldIndex).SetInt(0)
+		}
+	}
+	return num, nil
 }
 
 func newObject(orm *orm, mi *modelInfo, md Modeler) ObjectSeter {

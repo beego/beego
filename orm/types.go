@@ -10,13 +10,14 @@ type Fielder interface {
 	FieldType() int
 	SetRaw(interface{}) error
 	RawValue() interface{}
+	Clean() error
 }
 
 type Modeler interface {
 	Init(Modeler) Modeler
 	IsInited() bool
-	Clean() FieldErrors
-	CleanFields(string) FieldErrors
+	Clean() IFieldErrors
+	CleanFields(string) IFieldErrors
 	GetTableName() string
 }
 
@@ -48,8 +49,7 @@ type QuerySeter interface {
 	Offset(int64) QuerySeter
 	OrderBy(...string) QuerySeter
 	RelatedSel(...interface{}) QuerySeter
-	Clone() QuerySeter
-	SetCond(*Condition) error
+	SetCond(*Condition) QuerySeter
 	Count() (int64, error)
 	Update(Params) (int64, error)
 	Delete() (int64, error)
@@ -73,6 +73,17 @@ type RawSeter interface {
 	ValuesList(*[]ParamsList) (int64, error)
 	ValuesFlat(*ParamsList) (int64, error)
 	Prepare() (RawPreparer, error)
+}
+
+type IFieldError interface {
+	Name() string
+	Error() error
+}
+
+type IFieldErrors interface {
+	Get(string) IFieldError
+	Set(string, IFieldError)
+	List() []IFieldError
 }
 
 type dbQuerier interface {
