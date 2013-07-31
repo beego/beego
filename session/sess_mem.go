@@ -9,8 +9,8 @@ import (
 var mempder = &MemProvider{list: list.New(), sessions: make(map[string]*list.Element)}
 
 type MemSessionStore struct {
-	sid          string                      //session id唯一标示	  	
-	timeAccessed time.Time                   //最后访问时间	  	
+	sid          string                      //session id唯一标示
+	timeAccessed time.Time                   //最后访问时间
 	value        map[interface{}]interface{} //session里面存储的值
 	lock         sync.RWMutex
 }
@@ -113,8 +113,8 @@ func (pder *MemProvider) SessionGC() {
 }
 
 func (pder *MemProvider) SessionUpdate(sid string) error {
-	pder.lock.RLock()
-	defer pder.lock.RUnlock()
+	pder.lock.Lock()
+	defer pder.lock.Unlock()
 	if element, ok := pder.sessions[sid]; ok {
 		element.Value.(*MemSessionStore).timeAccessed = time.Now()
 		pder.list.MoveToFront(element)
