@@ -1,58 +1,62 @@
 ## Object
 
-对 object 操作的三个方法 Insert / Update / Delete
+对 object 操作简单的三个方法 Read / Insert / Update / Delete
 ```go
 o := orm.NewOrm()
 user := NewUser()
 user.UserName = "slene"
 user.Password = "password"
 user.Email = "vslene@gmail.com"
-obj := o.Object(user)
-fmt.Println(obj.Insert())
+
+fmt.Println(o.Insert(user))
+
 user.UserName = "Your"
-fmt.Println(obj.Update())
-fmt.Println(obj.Delete())
+fmt.Println(o.Update(user))
+
+fmt.Println(o.Delete(user))
 ```
 ### Read
 ```go
-var user User
-err := o.QueryTable("user").Filter("id", 1).One(&user)
-if err != orm.ErrMultiRows {
-	fmt.Println(user.UserName)
+o := orm.NewOrm()
+user := User{Id: 1}
+
+o.Read(&user)
+
+if err == sql.ErrNoRows {
+	fmt.Println("查询不到")
+} else if err == orm.ErrMissPK {
+	fmt.Println("找不到主键")
+} else {
+	fmt.Println(user.Id, user.UserName)
 }
 ```
-### Create
+### Insert
 ```go
-profile := NewProfile()
-profile.Age = 30
-profile.Money = 9.8
-
-user := NewUser()
-user.Profile = profile
+o := orm.NewOrm()
+var user User
 user.UserName = "slene"
 user.Password = "password"
 user.Email = "vslene@gmail.com"
 user.IsActive = true
 
-fmt.Println(o.Object(profile).Insert())
-fmt.Println(o.Object(user).Insert())
+fmt.Println(o.Insert(&user))
 fmt.Println(user.Id)
 ```
 创建后会自动对 auto 的 field 赋值
 
 ### Update
 ```go
-var user User
-err := o.QueryTable("user").Filter("id", 1).One(&user)
-if err != orm.ErrMultiRows {
-	fmt.Println(user.UserName)
+o := orm.NewOrm()
+user := User{Id: 1}
+if o.Read(&user) == nil {
+	user.UserName = "MyName"
+	o.Update(&user)
 }
-user.UserName = "MyName"
-o.Object(&user).Update()
 ```
 ### Delete
 ```go
-o.Object(user).Delete()
+o := orm.NewOrm()
+o.Delete(&User{Id: 1})
 ```
 Delete 操作会对反向关系进行操作，此例中 Post 拥有一个到 User 的外键。删除 User 的时候。如果 on_delete 设置为默认的级联操作，将删除对应的 Post
 

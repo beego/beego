@@ -40,8 +40,8 @@ func main() {
 	user.Email = "vslene@gmail.com"
 	user.IsActive = true
 
-	fmt.Println(o.Object(profile).Insert())
-	fmt.Println(o.Object(user).Insert())
+	fmt.Println(o.Insert(profile))
+	fmt.Println(o.Insert(user))
 
 	var params []orm.Params
 	if cnt, err := o.QueryTable("user").RelatedSel().Limit(3).OrderBy("-id").Values(&params); err != nil {

@@ -126,6 +126,7 @@ qs.Filter("profile__isnull", false)
 qs.Filter("profile__isnull", true).Filter("user_name", "slene")
 // WHERE profile_id IS NULL AND user_name = 'slene'
 ```
+
 #### Exclude
 
 使用 `NOT` 排除条件
@@ -135,6 +136,9 @@ qs.Filter("profile__isnull", true).Filter("user_name", "slene")
 qs.Exclude("profile__isnull", true).Filter("user_name", "slene")
 // WHERE NOT profile_id IS NULL AND user_name = 'slene'
 ```
+
+#### SetCond
+
 #### Limit
 
 限制最大返回数据行数，第二个参数可以设置 `Offset`
@@ -157,6 +161,7 @@ qs.Limit(-1, 100)
 // LIMIT 18446744073709551615 OFFSET 100
 // 18446744073709551615 是 1<<64 - 1 用来指定无 limit 限制 但有 offset 偏移的情况
 ```
+
 #### Offset
 	
 设置 偏移行数
@@ -164,6 +169,7 @@ qs.Limit(-1, 100)
 qs.OFFSET(20)
 // LIMIT 1000 OFFSET 20
 ```
+
 #### OrderBy
 
 参数使用 **expr**
@@ -176,6 +182,7 @@ qs.OrderBy("id", "-profile__age")
 qs.OrderBy("-profile__money", "profile")
 // ORDER BY profile.money DESC, profile_id ASC
 ```
+
 #### RelatedSel
 
 关系查询，参数使用 **expr**
@@ -193,15 +200,132 @@ qs.RelateSel("user")
 
 // 对设置 null 属性的 Field 将使用 LEFT OUTER JOIN
 ```
-#### Count
 
-查询当前条件下的行数
+#### Count
+依据当前的查询条件，返回结果行数
 ```go
-o.QueryTable("user").Count() // SELECT COUNT(*) FROM USER
+cnt, err := o.QueryTable("user").Count() // SELECT COUNT(*) FROM USER
+fmt.Printf("Count Num: %s, %s", cnt, err)
 ```
 
+#### Update
+依据当前查询条件，进行批量更新操作
+```go
+num, err := o.QueryTable("user").Filter("user_name", "slene").Update(orm.Params{
+	"user_name": "astaxie",
+})
+fmt.Printf("Affected Num: %s, %s", num, err)
+// SET user_name = "astaixe" WHERE user_name = "slene"
+```
 
+#### Delete
+依据当前查询条件，进行批量删除操作
+```go
+num, err := o.QueryTable("user").Filter("user_name", "slene").Delete()
+fmt.Printf("Affected Num: %s, %s", num, err)
+// DELETE FROM user WHERE user_name = "slene"
+```
 
+#### All
+返回对应的结果集对象
+```go
+var users []*User
+num, err := o.QueryTable("user").Filter("user_name", "slene").All(&users)
+fmt.Printf("Returned Rows Num: %s, %s", num, err)
+```
+
+#### One
+尝试返回单个对象
+```go
+var user *User
+err := o.QueryTable("user").Filter("user_name", "slene").One(&user)
+if err == orm.ErrMultiRows {
+	fmt.Printf("Returned Multi Rows Not One")
+}
+```
+
+#### Values
+返回结果集的 key => value 值
+
+key 为 Model 里的 Field name，value 的值 以 string 保存
+
+```go
+var maps []orm.Params
+num, err := o.QueryTable("user").Values(&maps)
+if err != nil {
+	fmt.Printf("Result Nums: %d\n", num)
+	for _, m := range maps {
+		fmt.Println(m["Id"], m["UserName"])
+	}
+}
+```
+
+返回指定的 Field 数据
+
+**TODO**: 暂不支持级联查询 **RelatedSel** 直接返回 Values
+
+但可以直接指定 expr 级联返回需要的数据
+
+```go
+var maps []orm.Params
+num, err := o.QueryTable("user").Values(&maps, "id", "user_name", "profile", "profile__age")
+if err != nil {
+	fmt.Printf("Result Nums: %d\n", num)
+	for _, m := range maps {
+		fmt.Println(m["Id"], m["UserName"], m["Profile"], m["Profile__Age"])
+		// map 中的数据都是展开的，没有复杂的嵌套
+	}
+}
+```
+
+#### ValuesList
+
+顾名思义，返回的结果集以slice存储
+
+结果的排列与 Model 中定义的 Field 顺序一致
+
+返回的每个元素值以 string 保存
+
+```go
+var lists []orm.ParamsList
+num, err := o.QueryTable("user").ValuesList(&lists)
+if err != nil {
+	fmt.Printf("Result Nums: %d\n", num)
+	for _, row := range lists {
+		fmt.Println(row)
+	}
+}
+```
+
+当然也可以指定 expr 返回指定的 Field
+
+```go
+var lists []orm.ParamsList
+num, err := o.QueryTable("user").ValuesList(&lists, "user_name", "profile__age")
+if err != nil {
+	fmt.Printf("Result Nums: %d\n", num)
+	for _, row := range lists {
+		fmt.Printf("UserName: %s, Age: %s\m", row[0], row[1])
+	}
+}
+```
+
+#### ValuesFlat
+
+只返回特定的 Field 值，讲结果集展开到单个 slice 里
+
+```go
+var list orm.ParamsList
+num, err := o.QueryTable("user").ValuesFlat(&list, "user_name")
+if err != nil {
+	fmt.Printf("Result Nums: %d\n", num)
+	fmt.Printf("All User Names: %s", strings.Join(list, ", ")
+}
+```
+
+#### PrepareInsert
+
+用于批量插入 prepare -> insert -> insert
 
 
 

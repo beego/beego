@@ -278,12 +278,12 @@ type Tag struct {
 
 设置对应的 rel 关系删除时，如何处理关系字段。
 
-```go
-cascade        级联删除(默认值)
-set_null       设置为 NULL，需要设置 null = true
-set_default    设置为默认值，需要设置 default 值
-do_nothing     什么也不做，忽略
+	cascade        级联删除(默认值)
+	set_null       设置为 NULL，需要设置 null = true
+	set_default    设置为默认值，需要设置 default 值
+	do_nothing     什么也不做，忽略
 
+```go
 type User struct {
 	...
 	Profile *Profile `orm:"null;rel(one);on_delete(set_null)"`
