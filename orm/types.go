@@ -22,19 +22,16 @@ type Modeler interface {
 }
 
 type Ormer interface {
-	Object(Modeler) ObjectSeter
+	Read(Modeler) error
+	Insert(Modeler) (int64, error)
+	Update(Modeler) (int64, error)
+	Delete(Modeler) (int64, error)
 	QueryTable(interface{}) QuerySeter
 	Using(string) error
 	Begin() error
 	Commit() error
 	Rollback() error
 	Raw(string, ...interface{}) RawSeter
-}
-
-type ObjectSeter interface {
-	Insert() (int64, error)
-	Update() (int64, error)
-	Delete() (int64, error)
 }
 
 type Inserter interface {
@@ -94,6 +91,7 @@ type dbQuerier interface {
 }
 
 type dbBaser interface {
+	Read(dbQuerier, *modelInfo, reflect.Value) error
 	Insert(dbQuerier, *modelInfo, reflect.Value) (int64, error)
 	InsertStmt(*sql.Stmt, *modelInfo, reflect.Value) (int64, error)
 	Update(dbQuerier, *modelInfo, reflect.Value) (int64, error)

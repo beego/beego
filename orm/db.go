@@ -559,6 +559,42 @@ func (d *dbBase) InsertStmt(stmt *sql.Stmt, mi *modelInfo, ind reflect.Value) (i
 	}
 }
 
+func (d *dbBase) Read(q dbQuerier, mi *modelInfo, ind reflect.Value) error {
+	pkNames, pkValues, ok := d.existPk(mi, ind)
+	if ok == false {
+		return ErrMissPK
+	}
+
+	pkColumns := strings.Join(pkNames, "` = ? AND `")
+
+	sels := strings.Join(mi.fields.dbcols, "`, `")
+	colsNum := len(mi.fields.dbcols)
+
+	query := fmt.Sprintf("SELECT `%s` FROM `%s` WHERE `%s` = ?", sels, mi.table, pkColumns)
+
+	refs := make([]interface{}, colsNum)
+	for i, _ := range refs {
+		var ref interface{}
+		refs[i] = &ref
+	}
+
+	row := q.QueryRow(query, pkValues...)
+	if err := row.Scan(refs...); err != nil {
+		return err
+	} else {
+		elm := reflect.New(mi.addrField.Elem().Type())
+		md := elm.Interface().(Modeler)
+		md.Init(md)
+		mind := reflect.Indirect(elm)
+
+		d.setColsValues(mi, &mind, mi.fields.dbcols, refs)
+
+		ind.Set(mind)
+	}
+
+	return nil
+}
+
 func (d *dbBase) Insert(q dbQuerier, mi *modelInfo, ind reflect.Value) (int64, error) {
 	names, values, err := d.collectValues(mi, ind, true, true)
 	if err != nil {

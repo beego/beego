@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"reflect"
 	"time"
 )
 
@@ -26,13 +27,59 @@ type orm struct {
 	isTx  bool
 }
 
-func (o *orm) Object(md Modeler) ObjectSeter {
+func (o *orm) getMiInd(md Modeler) (mi *modelInfo, ind reflect.Value) {
 	md.Init(md, true)
 	name := md.GetTableName()
 	if mi, ok := modelCache.get(name); ok {
-		return newObject(o, mi, md)
+		return mi, reflect.Indirect(reflect.ValueOf(md))
 	}
 	panic(fmt.Sprintf("<orm.Object> table name: `%s` not exists", name))
+}
+
+func (o *orm) Read(md Modeler) error {
+	mi, ind := o.getMiInd(md)
+	err := o.alias.DbBaser.Read(o.db, mi, ind)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (o *orm) Insert(md Modeler) (int64, error) {
+	mi, ind := o.getMiInd(md)
+	id, err := o.alias.DbBaser.Insert(o.db, mi, ind)
+	if err != nil {
+		return id, err
+	}
+	if id > 0 {
+		if mi.fields.auto != nil {
+			ind.Field(mi.fields.auto.fieldIndex).SetInt(id)
+		}
+	}
+	return id, nil
+}
+
+func (o *orm) Update(md Modeler) (int64, error) {
+	mi, ind := o.getMiInd(md)
+	num, err := o.alias.DbBaser.Update(o.db, mi, ind)
+	if err != nil {
+		return num, err
+	}
+	return num, nil
+}
+
+func (o *orm) Delete(md Modeler) (int64, error) {
+	mi, ind := o.getMiInd(md)
+	num, err := o.alias.DbBaser.Delete(o.db, mi, ind)
+	if err != nil {
+		return num, err
+	}
+	if num > 0 {
+		if mi.fields.auto != nil {
+			ind.Field(mi.fields.auto.fieldIndex).SetInt(0)
+		}
+	}
+	return num, nil
 }
 
 func (o *orm) QueryTable(ptrStructOrTableName interface{}) QuerySeter {
