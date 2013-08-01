@@ -51,34 +51,35 @@ func (self *templatefile) visit(paths string, f os.FileInfo, err error) error {
 	if f == nil {
 		return err
 	}
-	if f.IsDir() {
+	if f.IsDir() || (f.Mode()&os.ModeSymlink) > 0 {
 		return nil
-	} else if (f.Mode() & os.ModeSymlink) > 0 {
+	}
+	if !HasTemplateEXt(paths) {
 		return nil
-	} else {
-		hasExt := false
-		for _, v := range BeeTemplateExt {
-			if strings.HasSuffix(paths, v) {
-				hasExt = true
-				break
-			}
-		}
-		if hasExt {
-			replace := strings.NewReplacer("\\", "/")
-			a := []byte(paths)
-			a = a[len([]byte(self.root)):]
-			subdir := path.Dir(strings.TrimLeft(replace.Replace(string(a)), "/"))
-			if _, ok := self.files[subdir]; ok {
-				self.files[subdir] = append(self.files[subdir], paths)
-			} else {
-				m := make([]string, 1)
-				m[0] = paths
-				self.files[subdir] = m
-			}
+	}
 
+	replace := strings.NewReplacer("\\", "/")
+	a := []byte(paths)
+	a = a[len([]byte(self.root)):]
+	subdir := path.Dir(strings.TrimLeft(replace.Replace(string(a)), "/"))
+	if _, ok := self.files[subdir]; ok {
+		self.files[subdir] = append(self.files[subdir], paths)
+	} else {
+		m := make([]string, 1)
+		m[0] = paths
+		self.files[subdir] = m
+	}
+
+	return nil
+}
+
+func HasTemplateEXt(paths string) bool {
+	for _, v := range BeeTemplateExt {
+		if strings.HasSuffix(paths, "."+v) {
+			return true
 		}
 	}
-	return nil
+	return false
 }
 
 func AddTemplateExt(ext string) {
