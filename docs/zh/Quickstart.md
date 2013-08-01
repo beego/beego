@@ -115,7 +115,7 @@
 
 		2013/04/13 19:36:17 [W] [stat views: no such file or directory]
 
-- 模板会自动重新加载不缓存。
+- 模板每次使用都会重新加载，不进行缓存。
 - 如果服务端出错，那么就会在浏览器端显示如下类似的截图：
 
 ![](images/dev.png)
@@ -643,11 +643,11 @@ beego更加人性化的还有一个设计就是支持用户自定义字符串错
 
 ## response处理
 
-response可能会有集中情况：
+response可能会有几种情况：
 
 1. 模板输出
 
-	模板输出上面模板介绍里面已经介绍，beego会在执行完相应的Controller里面的对应的Method之后输出到模板。
+	上面模板介绍里面已经介绍，beego会在执行完相应的Controller里面的对应的Method之后输出到模板。
 
 2. 跳转
 
@@ -686,7 +686,7 @@ beego中使用session相当方便，只要在main入口函数中设置如下：
 		this.TplNames = "index.tpl"
 	}
 
-上面的例子中我们知道session有几个方便的方法：
+session有几个方便的方法：
 
 - SetSession(name string, value interface{})
 - GetSession(name string) interface{}
