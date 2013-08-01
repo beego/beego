@@ -231,7 +231,7 @@ func (t *dbTables) getJoinSql() (join string) {
 	return
 }
 
-func (d *dbTables) parseExprs(mi *modelInfo, exprs []string) (index, column string, info *fieldInfo, success bool) {
+func (d *dbTables) parseExprs(mi *modelInfo, exprs []string) (index, column, name string, info *fieldInfo, success bool) {
 	var (
 		ffi *fieldInfo
 		jtl *dbTable
@@ -290,6 +290,11 @@ func (d *dbTables) parseExprs(mi *modelInfo, exprs []string) (index, column stri
 				}
 				column = fi.column
 				info = fi
+				if jtl != nil {
+					name = jtl.name + ExprSep + fi.name
+				} else {
+					name = fi.name
+				}
 
 				switch fi.fieldType {
 				case RelManyToMany, RelReverseMany:
@@ -304,6 +309,7 @@ func (d *dbTables) parseExprs(mi *modelInfo, exprs []string) (index, column stri
 		if exist == false {
 			index = ""
 			column = ""
+			name = ""
 			success = false
 			return
 		}
@@ -349,7 +355,7 @@ func (d *dbTables) getCondSql(cond *Condition, sub bool) (where string, params [
 				exprs = exprs[:num]
 			}
 
-			index, column, _, suc := d.parseExprs(mi, exprs)
+			index, column, _, _, suc := d.parseExprs(mi, exprs)
 			if suc == false {
 				panic(fmt.Errorf("unknown field/column name `%s`", strings.Join(p.exprs, ExprSep)))
 			}
@@ -387,7 +393,7 @@ func (d *dbTables) getOrderSql(orders []string) (orderSql string) {
 		}
 		exprs := strings.Split(order, ExprSep)
 
-		index, column, _, suc := d.parseExprs(d.mi, exprs)
+		index, column, _, _, suc := d.parseExprs(d.mi, exprs)
 		if suc == false {
 			panic(fmt.Errorf("unknown field/column name `%s`", strings.Join(exprs, ExprSep)))
 		}
@@ -1249,18 +1255,18 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 		cols = make([]string, 0, len(exprs))
 		infos = make([]*fieldInfo, 0, len(exprs))
 		for _, ex := range exprs {
-			index, col, fi, suc := tables.parseExprs(mi, strings.Split(ex, ExprSep))
+			index, col, name, fi, suc := tables.parseExprs(mi, strings.Split(ex, ExprSep))
 			if suc == false {
 				panic(fmt.Errorf("unknown field/column name `%s`", ex))
 			}
-			cols = append(cols, fmt.Sprintf("%s.`%s`", index, col))
+			cols = append(cols, fmt.Sprintf("%s.`%s` `%s`", index, col, name))
 			infos = append(infos, fi)
 		}
 	} else {
 		cols = make([]string, 0, len(mi.fields.dbcols))
 		infos = make([]*fieldInfo, 0, len(exprs))
 		for _, fi := range mi.fields.fieldsDB {
-			cols = append(cols, fmt.Sprintf("T0.`%s`", fi.column))
+			cols = append(cols, fmt.Sprintf("T0.`%s` `%s`", fi.column, fi.name))
 			infos = append(infos, fi)
 		}
 	}
@@ -1287,8 +1293,19 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 		refs[i] = &ref
 	}
 
-	var cnt int64
+	var (
+		cnt     int64
+		columns []string
+	)
 	for rs.Next() {
+		if cnt == 0 {
+			if cols, err := rs.Columns(); err != nil {
+				return 0, err
+			} else {
+				columns = cols
+			}
+		}
+
 		if err := rs.Scan(refs...); err != nil {
 			return 0, err
 		}
@@ -1306,11 +1323,7 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 					panic(fmt.Sprintf("db value convert failed `%v` %s", val, err.Error()))
 				}
 
-				if hasExprs {
-					params[exprs[i]] = value
-				} else {
-					params[mi.fields.dbcols[i]] = value
-				}
+				params[columns[i]] = value
 			}
 			maps = append(maps, params)
 		case 2:
