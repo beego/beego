@@ -17,6 +17,7 @@ func (o *insertSet) Insert(md Modeler) (int64, error) {
 	if o.closed {
 		return 0, ErrStmtClosed
 	}
+	md.Init(md, true)
 	val := reflect.ValueOf(md)
 	ind := reflect.Indirect(val)
 	if val.Type() != o.mi.addrField.Type() {

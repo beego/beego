@@ -27,6 +27,7 @@ type orm struct {
 }
 
 func (o *orm) Object(md Modeler) ObjectSeter {
+	md.Init(md, true)
 	name := md.GetTableName()
 	if mi, ok := modelCache.get(name); ok {
 		return newObject(o, mi, md)
@@ -38,8 +39,9 @@ func (o *orm) QueryTable(ptrStructOrTableName interface{}) QuerySeter {
 	name := ""
 	if table, ok := ptrStructOrTableName.(string); ok {
 		name = snakeString(table)
-	} else if m, ok := ptrStructOrTableName.(Modeler); ok {
-		name = m.GetTableName()
+	} else if md, ok := ptrStructOrTableName.(Modeler); ok {
+		md.Init(md, true)
+		name = md.GetTableName()
 	}
 	if mi, ok := modelCache.get(name); ok {
 		return newQuerySet(o, mi)

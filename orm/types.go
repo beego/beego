@@ -14,7 +14,7 @@ type Fielder interface {
 }
 
 type Modeler interface {
-	Init(Modeler) Modeler
+	Init(Modeler, ...interface{}) Modeler
 	IsInited() bool
 	Clean() IFieldErrors
 	CleanFields(string) IFieldErrors

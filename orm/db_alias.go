@@ -21,8 +21,12 @@ const (
 
 var (
 	dataBaseCache = &_dbCache{cache: make(map[string]*alias)}
-	drivers       = make(map[string]driverType)
-	dbBasers      = map[driverType]dbBaser{
+	drivers       = map[string]driverType{
+		"mysql":    DR_MySQL,
+		"postgres": DR_Postgres,
+		"sqlite3":  DR_Sqlite,
+	}
+	dbBasers = map[driverType]dbBaser{
 		DR_MySQL:    newdbBaseMysql(),
 		DR_Sqlite:   newdbBaseSqlite(),
 		DR_Oracle:   newdbBaseMysql(),
@@ -121,10 +125,4 @@ func RegisterDriver(name string, typ driverType) {
 			os.Exit(2)
 		}
 	}
-}
-
-func init() {
-	RegisterDriver("mysql", DR_MySQL)
-	RegisterDriver("postgres", DR_Postgres)
-	RegisterDriver("sqlite3", DR_Sqlite)
 }

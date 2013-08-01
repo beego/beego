@@ -58,12 +58,19 @@ type Manager struct {
 // 	}
 // }
 
-func (m *Manager) Init(model Modeler) Modeler {
+func (m *Manager) Init(model Modeler, args ...interface{}) Modeler {
 	if m.inited {
 		return m.ins
 	}
 	m.inited = true
 	m.ins = model
+	skipInitial := false
+	if len(args) > 0 {
+		if b, ok := args[0].(bool); ok && b {
+			skipInitial = true
+		}
+	}
+	_ = skipInitial
 	return model
 }
 
