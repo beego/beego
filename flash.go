@@ -10,6 +10,12 @@ type FlashData struct {
 	Data map[string]string
 }
 
+func NewFlash() *FlashData{
+	return &FlashData{
+		Data:make(map[string]string)
+	}
+}
+
 func (fd *FlashData) Notice(msg string, args ...interface{}) {
 	if len(args) == 0 {
 		fd.Data["notice"] = msg
