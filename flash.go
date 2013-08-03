@@ -10,9 +10,9 @@ type FlashData struct {
 	Data map[string]string
 }
 
-func NewFlash() *FlashData{
+func NewFlash() *FlashData {
 	return &FlashData{
-		Data:make(map[string]string)
+		Data: make(map[string]string),
 	}
 }
 
