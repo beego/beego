@@ -804,6 +804,7 @@ flash对象有三个级别的设置：
 * Notice提示信息
 * Warning警告信息
 * Error错误信息
+
 ## Cache设置
 
 beego内置了一个cache模块，实现了类似memcache的功能，缓存数据在内存中，主要的使用方法如下：
