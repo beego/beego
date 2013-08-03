@@ -44,6 +44,7 @@ beego是一个类似tornado的Go应用框架，采用了RESTFul的方式来实�
 * [beego案例](Application.md)
 * [热升级](HotUpdate.md)
 * [API应用开发入门](API.md)
+* [HTTPLIB客户端](HttpLib.md)
 
 
 # API接口
