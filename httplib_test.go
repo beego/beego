@@ -6,7 +6,7 @@ import (
 )
 
 func TestGetUrl(t *testing.T) {
-	resp, err := GetUrl("http://beego.me/").Response()
+	resp, err := Get("http://beego.me/").Response()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -22,7 +22,7 @@ func TestGetUrl(t *testing.T) {
 		t.Fatal("data is no")
 	}
 
-	str, err := GetUrl("http://beego.me/").String()
+	str, err := Get("http://beego.me/").String()
 	if err != nil {
 		t.Fatal(err)
 	}
