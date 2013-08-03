@@ -15,7 +15,7 @@
 - [request处理](#request%E5%A4%84%E7%90%86)
 - [跳转和错误](#%E8%B7%B3%E8%BD%AC%E5%92%8C%E9%94%99%E8%AF%AF)
 - [response处理](#response%E5%A4%84%E7%90%86)
-- [Sessions](#sessions)
+- [Sessions/Flash](#sessions/flash)
 - [Cache设置](#cache%E8%AE%BE%E7%BD%AE)
 - [安全的Map](#%E5%AE%89%E5%85%A8%E7%9A%84map)
 - [日志处理](#%E6%97%A5%E5%BF%97%E5%A4%84%E7%90%86)
@@ -660,7 +660,7 @@ response可能会有几种情况：
 		this.Ctx.WriteString("ok")
 
 
-## Sessions
+## Sessions/Flash
 
 beego内置了session模块，目前session模块支持的后端引擎包括memory、file、mysql、redis四中，用户也可以根据相应的interface实现自己的引擎。
 
@@ -746,7 +746,64 @@ sess对象具有如下方法：
 	beego.SessionProvider = "redis"
 	beego.SessionSavePath = "127.0.0.1:6379"
 
+这个flash与Adobe/Macromedia Flash没有任何关系。它主要用于在两个逻辑间传递临时数据，flash中存放的所有数据会在紧接着的下一个逻辑中调用后清除。一般用于传递提示和错误消息。它适合[Post/Redirect/Get](http://en.wikipedia.org/wiki/Post/Redirect/Get)模式。下面看使用的例子
 
+	// 显示设置信息
+	func (c *MainController) Get() {
+		flash:=beego.ReadFromRequest(c)
+		if n,ok:=flash.Data["notice"];ok{
+			//显示设置成功
+			c.TplNames = "set_success.html"
+		}else if n,ok=flash.Data["error"];ok{
+			//显示错误
+			c.TplNames = "set_error.html"
+		}else{
+			// 不然默认显示设置页面
+			this.Data["list"]=GetInfo()
+			c.TplNames = "setting_list.html"
+		}
+	}
+	
+	// 处理设置信息
+	func (c *MainController) Post() {
+		flash:=beego.NewFlash()
+		setting:=Settings{}
+		valid := Validation{}
+		c.ParseForm(&setting)
+		if b, err := valid.Valid(setting);err!=nil {
+			flash.Error("Settings invalid!")
+			flash.Store(c)
+			c.Redirect("/setting",302)
+			return
+		}else if b!=nil{
+			flash.Error("validation err!")
+			flash.Store(c)
+			c.Redirect("/setting",302)
+			return
+		}	
+		saveSetting(setting)
+		flash.Notice("Settings saved!")
+		flash.Store(c)
+		c.Redirect("/setting",302)
+	}
+
+上面的代码执行的大概逻辑是这样的：
+
+1. Get方法执行，因为没有flash数据，所以显示设置页面
+2. 用户设置信息之后点击递交，执行Post，然后初始化一个flash，通过验证，验证出错或者验证不通过设置flash的错误，如果通过了就保存设置，然后设置flash成功设置的信息。
+3. 设置完成后跳转到Get请求
+4. Get请求获取到了Flash信息，然后执行相应的逻辑，如果出错显示出错的页面，如果成功显示成功的页面。
+
+默认情况下`ReadFromRequest`函数已经实现了读取的数据赋值给flash，所以在你的模板里面你可以这样读取数据
+
+	{{.flash.error}}
+	{{.flash.warning}}
+	{{.flash.notice}}
+	
+flash对象有三个级别的设置：
+* Notice提示信息
+* Warning警告信息
+* Error错误信息
 ## Cache设置
 
 beego内置了一个cache模块，实现了类似memcache的功能，缓存数据在内存中，主要的使用方法如下：

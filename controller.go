@@ -58,7 +58,6 @@ func (c *Controller) Init(ctx *Context, cn string) {
 	c.ChildName = cn
 	c.Ctx = ctx
 	c.TplExt = "tpl"
-
 }
 
 func (c *Controller) Prepare() {
