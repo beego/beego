@@ -2,8 +2,8 @@ package beego
 
 import (
 	"bytes"
+	"compress/flate"
 	"compress/gzip"
-	"compress/zlib"
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/base64"
@@ -109,39 +109,7 @@ func (c *Controller) Render() error {
 		return err
 	} else {
 		c.Ctx.ResponseWriter.Header().Set("Content-Type", "text/html; charset=utf-8")
-		output_writer := c.Ctx.ResponseWriter.(io.Writer)
-		if EnableGzip == true && c.Ctx.Request.Header.Get("Accept-Encoding") != "" {
-			splitted := strings.SplitN(c.Ctx.Request.Header.Get("Accept-Encoding"), ",", -1)
-			encodings := make([]string, len(splitted))
-
-			for i, val := range splitted {
-				encodings[i] = strings.TrimSpace(val)
-			}
-			for _, val := range encodings {
-				if val == "gzip" {
-					c.Ctx.ResponseWriter.Header().Set("Content-Encoding", "gzip")
-					output_writer, _ = gzip.NewWriterLevel(c.Ctx.ResponseWriter, gzip.BestSpeed)
-
-					break
-				} else if val == "deflate" {
-					c.Ctx.ResponseWriter.Header().Set("Content-Encoding", "deflate")
-					output_writer, _ = zlib.NewWriterLevel(c.Ctx.ResponseWriter, zlib.BestSpeed)
-					break
-				}
-			}
-		} else {
-			c.Ctx.SetHeader("Content-Length", strconv.Itoa(len(rb)), true)
-		}
-		output_writer.Write(rb)
-		switch output_writer.(type) {
-		case *gzip.Writer:
-			output_writer.(*gzip.Writer).Close()
-		case *zlib.Writer:
-			output_writer.(*zlib.Writer).Close()
-		case io.WriteCloser:
-			output_writer.(io.WriteCloser).Close()
-		}
-		return nil
+		c.writeToWriter(rb)
 	}
 	return nil
 }
@@ -203,6 +171,41 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 	return []byte{}, nil
 }
 
+func (c *Controller) writeToWriter(rb []byte) {
+	output_writer := c.Ctx.ResponseWriter.(io.Writer)
+	if EnableGzip == true && c.Ctx.Request.Header.Get("Accept-Encoding") != "" {
+		splitted := strings.SplitN(c.Ctx.Request.Header.Get("Accept-Encoding"), ",", -1)
+		encodings := make([]string, len(splitted))
+
+		for i, val := range splitted {
+			encodings[i] = strings.TrimSpace(val)
+		}
+		for _, val := range encodings {
+			if val == "gzip" {
+				c.Ctx.ResponseWriter.Header().Set("Content-Encoding", "gzip")
+				output_writer, _ = gzip.NewWriterLevel(c.Ctx.ResponseWriter, gzip.BestSpeed)
+
+				break
+			} else if val == "deflate" {
+				c.Ctx.ResponseWriter.Header().Set("Content-Encoding", "deflate")
+				output_writer, _ = flate.NewWriter(c.Ctx.ResponseWriter, flate.BestSpeed)
+				break
+			}
+		}
+	} else {
+		c.Ctx.SetHeader("Content-Length", strconv.Itoa(len(rb)), true)
+	}
+	output_writer.Write(rb)
+	switch output_writer.(type) {
+	case *gzip.Writer:
+		output_writer.(*gzip.Writer).Close()
+	case *flate.Writer:
+		output_writer.(*flate.Writer).Close()
+	case io.WriteCloser:
+		output_writer.(io.WriteCloser).Close()
+	}
+}
+
 func (c *Controller) Redirect(url string, code int) {
 	c.Ctx.Redirect(code, url)
 }
@@ -217,9 +220,8 @@ func (c *Controller) ServeJson() {
 		http.Error(c.Ctx.ResponseWriter, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	c.Ctx.SetHeader("Content-Length", strconv.Itoa(len(content)), true)
 	c.Ctx.ResponseWriter.Header().Set("Content-Type", "application/json;charset=UTF-8")
-	c.Ctx.ResponseWriter.Write(content)
+	c.writeToWriter(content)
 }
 
 func (c *Controller) ServeJsonp() {
@@ -237,9 +239,8 @@ func (c *Controller) ServeJsonp() {
 	callback_content.WriteString("(")
 	callback_content.Write(content)
 	callback_content.WriteString(");\r\n")
-	c.Ctx.SetHeader("Content-Length", strconv.Itoa(callback_content.Len()), true)
 	c.Ctx.ResponseWriter.Header().Set("Content-Type", "application/json;charset=UTF-8")
-	c.Ctx.ResponseWriter.Write(callback_content.Bytes())
+	c.writeToWriter(callback_content.Bytes())
 }
 
 func (c *Controller) ServeXml() {
@@ -248,9 +249,8 @@ func (c *Controller) ServeXml() {
 		http.Error(c.Ctx.ResponseWriter, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	c.Ctx.SetHeader("Content-Length", strconv.Itoa(len(content)), true)
 	c.Ctx.ResponseWriter.Header().Set("Content-Type", "application/xml;charset=UTF-8")
-	c.Ctx.ResponseWriter.Write(content)
+	c.writeToWriter(content)
 }
 
 func (c *Controller) Input() url.Values {
