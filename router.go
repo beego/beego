@@ -383,13 +383,12 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			findrouter = true
 			break
 		}
-
-		if (requestPath[n-1] != '/' && route.pattern == requestPath) ||
-			(requestPath[n-1] == '/' && len(route.pattern) >= n-1 && requestPath[0:n-1] == route.pattern) ||
-			(len(route.pattern) == n+1 && requestPath == route.pattern[0:n]) {
-			runrouter = route
-			findrouter = true
-			break
+		// pattern /admin   url /admin 200  /admin/ 404
+		// pattern /admin/  url /admin 301  /admin/ 200
+		if requestPath[n-1] != '/' && len(route.pattern) == n+1 &&
+			route.pattern[n] == '/' && route.pattern[:n-1] == requestPath {
+			http.Redirect(w, r, requestPath+"/", 301)
+			return
 		}
 	}
 
@@ -545,7 +544,10 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	if !findrouter {
 		for cName, methodmap := range p.autoRouter {
-			if strings.HasPrefix(strings.ToLower(requestPath), "/"+cName) {
+			if strings.ToLower(requestPath) == "/"+cName+"/" {
+				requestPath = requestPath + "index"
+			}
+			if strings.HasPrefix(strings.ToLower(requestPath), "/"+cName+"/") {
 				for mName, controllerType := range methodmap {
 					if strings.HasPrefix(strings.ToLower(requestPath), "/"+cName+"/"+strings.ToLower(mName)) {
 						//parse params
