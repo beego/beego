@@ -544,6 +544,12 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	if !findrouter {
 		for cName, methodmap := range p.autoRouter {
+
+			if strings.ToLower(requestPath) == "/"+cName {
+				http.Redirect(w, r, requestPath+"/", 301)
+				return
+			}
+
 			if strings.ToLower(requestPath) == "/"+cName+"/" {
 				requestPath = requestPath + "index"
 			}
