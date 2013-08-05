@@ -73,6 +73,11 @@ func (bc *BeeCache) Delete(name string) (ok bool, err error) {
 	return
 }
 
+// Return all of the item in a BeeCache
+func (bc *BeeCache) Items() map[string]*BeeItem {
+    return bc.items
+}
+
 func (bc *BeeCache) IsExist(name string) bool {
 	bc.lock.RLock()
 	defer bc.lock.RUnlock()
