@@ -120,7 +120,7 @@ func getRegFuncs(tag, key string) (vfs []ValidFunc, str string, err error) {
 	if err != nil {
 		return
 	}
-	vfs = []ValidFunc{ValidFunc{"Match", []interface{}{reg, key}}}
+	vfs = []ValidFunc{ValidFunc{"Match", []interface{}{reg, key + ".Match"}}}
 	str = strings.TrimSpace(tag[:index]) + strings.TrimSpace(tag[end+len("/)"):])
 	return
 }
@@ -145,7 +145,7 @@ func parseFunc(vfunc, key string) (v ValidFunc, err error) {
 			err = fmt.Errorf("%s require %d parameters", vfunc, num)
 			return
 		}
-		v = ValidFunc{vfunc, []interface{}{key}}
+		v = ValidFunc{vfunc, []interface{}{key + "." + vfunc}}
 		return
 	}
 
@@ -167,7 +167,7 @@ func parseFunc(vfunc, key string) (v ValidFunc, err error) {
 		return
 	}
 
-	tParams, err := trim(name, key, params)
+	tParams, err := trim(name, key+"."+name, params)
 	if err != nil {
 		return
 	}

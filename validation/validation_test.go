@@ -298,6 +298,7 @@ func TestValid(t *testing.T) {
 	}
 
 	uptr := &user{Name: "test", Age: 40}
+	valid.Clear()
 	b, err = valid.Valid(uptr)
 	if err != nil {
 		t.Fatal(err)
@@ -305,13 +306,26 @@ func TestValid(t *testing.T) {
 	if b {
 		t.Error("validation should not be passed")
 	}
+	if len(valid.Errors) != 1 {
+		t.Fatalf("valid errors len should be 1 but got %d", len(valid.Errors))
+	}
+	if valid.Errors[0].Key != "Name.Match" {
+		t.Errorf("Message key should be `Name.Match` but got %s", valid.Errors[0].Key)
+	}
 
 	u = user{Name: "test@/test/;com", Age: 180}
+	valid.Clear()
 	b, err = valid.Valid(u)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if b {
 		t.Error("validation should not be passed")
+	}
+	if len(valid.Errors) != 1 {
+		t.Fatalf("valid errors len should be 1 but got %d", len(valid.Errors))
+	}
+	if valid.Errors[0].Key != "Age.Range" {
+		t.Errorf("Message key should be `Name.Match` but got %s", valid.Errors[0].Key)
 	}
 }
