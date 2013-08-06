@@ -214,13 +214,16 @@ func (c *Controller) Abort(code string) {
 	panic(code)
 }
 
-func (c *Controller) ServeJson() {
+func (c *Controller) ServeJson(encoding ...bool) {
 	content, err := json.MarshalIndent(c.Data["json"], "", "  ")
 	if err != nil {
 		http.Error(c.Ctx.ResponseWriter, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	c.Ctx.ResponseWriter.Header().Set("Content-Type", "application/json;charset=UTF-8")
+	if len(encoding) > 0 && encoding[0] == true {
+		content = []byte(stringsToJson(string(content)))
+	}
 	c.writeToWriter(content)
 }
 
