@@ -1,4 +1,4 @@
-package beego
+package httplib
 
 import (
 	"bytes"

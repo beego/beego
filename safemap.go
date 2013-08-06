@@ -56,3 +56,9 @@ func (m *BeeMap) Delete(k interface{}) {
 	defer m.lock.Unlock()
 	delete(m.bm, k)
 }
+
+func (m *BeeMap) Items() map[interface{}]interface{} {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
+	return m.bm
+}
