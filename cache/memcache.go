@@ -19,7 +19,7 @@ func (rc *MemcacheCache) Get(key string) interface{} {
 	if rc.c == nil {
 		rc.c = rc.connectInit()
 	}
-	v, _, err := rc.c.Get(key)
+	v, err := rc.c.Get(key)
 	if err != nil {
 		return nil
 	}
@@ -63,7 +63,7 @@ func (rc *MemcacheCache) IsExist(key string) bool {
 	if rc.c == nil {
 		rc.c = rc.connectInit()
 	}
-	v, _, err := rc.c.Get(key)
+	v, err := rc.c.Get(key)
 	if err != nil {
 		return false
 	}
