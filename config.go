@@ -192,6 +192,9 @@ func ParseConfig() (err error) {
 		if xsrfkey := AppConfig.String("xsrfkey"); xsrfkey != "" {
 			XSRFKEY = xsrfkey
 		}
+		if enablexsrf, err := AppConfig.Bool("enablexsrf"); err == nil {
+			EnableXSRF = enablexsrf
+		}
 	}
 	return nil
 }

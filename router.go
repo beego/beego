@@ -452,6 +452,17 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		method := vc.MethodByName("Prepare")
 		method.Call(in)
 
+		//if XSRF is Enable then check cookie where there has any cookie in the  request's cookie _csrf
+		if EnableXSRF {
+			method = vc.MethodByName("XsrfToken")
+			method.Call(in)
+			if r.Method == "POST" || r.Method == "DELETE" || r.Method == "PUT" ||
+				(r.Method == "POST" && (r.Form.Get("_method") == "delete" || r.Form.Get("_method") == "put")) {
+				method = vc.MethodByName("CheckXsrfCookie")
+				method.Call(in)
+			}
+		}
+
 		//if response has written,yes don't run next
 		if !w.started {
 			if r.Method == "GET" {
@@ -581,6 +592,16 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 						method.Call(in)
 						method = vc.MethodByName(mName)
 						method.Call(in)
+						//if XSRF is Enable then check cookie where there has any cookie in the  request's cookie _csrf
+						if EnableXSRF {
+							method = vc.MethodByName("XsrfToken")
+							method.Call(in)
+							if r.Method == "POST" || r.Method == "DELETE" || r.Method == "PUT" ||
+								(r.Method == "POST" && (r.Form.Get("_method") == "delete" || r.Form.Get("_method") == "put")) {
+								method = vc.MethodByName("CheckXsrfCookie")
+								method.Call(in)
+							}
+						}
 						if !w.started {
 							if AutoRender {
 								method = vc.MethodByName("Render")

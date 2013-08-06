@@ -352,7 +352,7 @@ func (c *Controller) XsrfToken() string {
 			h := hmac.New(sha1.New, []byte(XSRFKEY))
 			fmt.Fprintf(h, "%s:%d", c.Ctx.Request.RemoteAddr, time.Now().UnixNano())
 			tok := fmt.Sprintf("%s:%d", h.Sum(nil), time.Now().UnixNano())
-			token := base64.URLEncoding.EncodeToString([]byte(tok))
+			token = base64.URLEncoding.EncodeToString([]byte(tok))
 			c.Ctx.SetCookie("_xsrf", token)
 		}
 		c._xsrf_token = token
@@ -362,7 +362,6 @@ func (c *Controller) XsrfToken() string {
 
 func (c *Controller) CheckXsrfCookie() bool {
 	token := c.GetString("_xsrf")
-
 	if token == "" {
 		token = c.Ctx.Request.Header.Get("X-Xsrftoken")
 	}

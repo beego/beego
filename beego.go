@@ -45,7 +45,8 @@ var (
 	HttpServerTimeOut    int64  //set httpserver timeout
 	ErrorsShow           bool   //set weather show errors
 	XSRFKEY              string //set XSRF
-	CopyRequestBody      bool   //When in raw application, You want to the reqeustbody
+	EnableXSRF           bool
+	CopyRequestBody      bool //When in raw application, You want to the reqeustbody
 )
 
 func init() {
