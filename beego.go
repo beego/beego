@@ -46,6 +46,7 @@ var (
 	ErrorsShow           bool   //set weather show errors
 	XSRFKEY              string //set XSRF
 	EnableXSRF           bool
+	XSRFExpire           int
 	CopyRequestBody      bool //When in raw application, You want to the reqeustbody
 )
 
@@ -76,6 +77,7 @@ func init() {
 	HttpServerTimeOut = 0
 	ErrorsShow = true
 	XSRFKEY = "beegoxsrf"
+	XSRFExpire = 60
 	ParseConfig()
 }
 

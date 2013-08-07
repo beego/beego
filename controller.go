@@ -35,6 +35,7 @@ type Controller struct {
 	_xsrf_token string
 	gotofunc    string
 	CruSession  session.SessionStore
+	XSRFExpire  int
 }
 
 type ControllerInterface interface {
@@ -353,7 +354,13 @@ func (c *Controller) XsrfToken() string {
 			fmt.Fprintf(h, "%s:%d", c.Ctx.Request.RemoteAddr, time.Now().UnixNano())
 			tok := fmt.Sprintf("%s:%d", h.Sum(nil), time.Now().UnixNano())
 			token = base64.URLEncoding.EncodeToString([]byte(tok))
-			c.Ctx.SetCookie("_xsrf", token)
+			expire := 0
+			if c.XSRFExpire > 0 {
+				expire = c.XSRFExpire
+			} else {
+				expire = XSRFExpire
+			}
+			c.Ctx.SetCookie("_xsrf", token, expire)
 		}
 		c._xsrf_token = token
 	}

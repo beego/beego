@@ -195,6 +195,9 @@ func ParseConfig() (err error) {
 		if enablexsrf, err := AppConfig.Bool("enablexsrf"); err == nil {
 			EnableXSRF = enablexsrf
 		}
+		if expire, err := AppConfig.Int("xsrfexpire"); err == nil {
+			XSRFExpire = expire
+		}
 	}
 	return nil
 }
