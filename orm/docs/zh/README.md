@@ -6,7 +6,7 @@
 	- [关系型 Field 设置](Models.md#relation-field-options)
 2. Custom Fields
 3. [Orm 使用方法](Orm.md)
-	- [Ormer 接口](Orm.md#Ormer)
+	- [Ormer 接口](Orm.md#ormer)
 4. [对象操作](Object.md)
 5. [复杂查询](Query.md)
 	- [查询使用的表达式语法](Query.md#expr)
