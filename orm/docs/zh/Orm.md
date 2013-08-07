@@ -75,26 +75,26 @@ o = orm.NewOrm() // 创建一个 Ormer
 ```
 
 * type Ormer interface {
-	* [Read(Modeler) error](Object.md#Read)
-	* [Insert(Modeler) (int64, error)](Object.md#Insert)
-	* [Update(Modeler) (int64, error)](Object.md#Update)
-	* [Delete(Modeler) (int64, error)](Object.md#Delete)
-	* [M2mAdd(Modeler, string, ...interface{}) (int64, error)](Object.md#M2mAdd)
-	* [M2mDel(Modeler, string, ...interface{}) (int64, error)](Object.md#M2mDel)
-	* [LoadRel(Modeler, string) (int64, error)](Object.md#LoadRel)
-	* [QueryTable(interface{}) QuerySeter](#QueryTable)
-	* [Using(string) error](#Using)
-	* [Begin() error](Transaction.md#Begin)
-	* [Commit() error](Transaction.md#Commit)
-	* [Rollback() error](Transaction.md#Rollback)
-	* [Raw(string, ...interface{}) RawSeter](#Raw)
-	* [Driver() Driver](#Driver)
+	* [Read(Modeler) error](Object.md#read)
+	* [Insert(Modeler) (int64, error)](Object.md#insert)
+	* [Update(Modeler) (int64, error)](Object.md#update)
+	* [Delete(Modeler) (int64, error)](Object.md#delete)
+	* [M2mAdd(Modeler, string, ...interface{}) (int64, error)](Object.md#m2madd)
+	* [M2mDel(Modeler, string, ...interface{}) (int64, error)](Object.md#m2mdel)
+	* [LoadRel(Modeler, string) (int64, error)](Object.md#loadRel)
+	* [QueryTable(interface{}) QuerySeter](#querytable)
+	* [Using(string) error](#using)
+	* [Begin() error](Transaction.md#begin)
+	* [Commit() error](Transaction.md#commit)
+	* [Rollback() error](Transaction.md#rollback)
+	* [Raw(string, ...interface{}) RawSeter](#raw)
+	* [Driver() Driver](#driver)
 * }
 
 
 #### QueryTable
 
-传入表名，或者 Modeler 对象，返回一个 [QuerySeter](Query.md#QuerySeter)
+传入表名，或者 Modeler 对象，返回一个 [QuerySeter](Query.md#queryseter)
 
 ```go
 o := orm.NewOrm()

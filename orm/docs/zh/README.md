@@ -10,8 +10,8 @@
 4. [对象操作](Object.md)
 5. [复杂查询](Query.md)
 	- [查询使用的表达式语法](Query.md#expr)
-	- [查询支持的操作符号](Query.md#Operators)
-	- [QuerySeter 接口](Query.md#QuerySeter)
+	- [查询支持的操作符号](Query.md#operators)
+	- [QuerySeter 接口](Query.md#queryseter)
 6. Raw
 7. Transaction
 8. Faq
