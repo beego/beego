@@ -171,6 +171,18 @@ func (a argInt) Get(i int, args ...int) (r int) {
 	return
 }
 
+type argAny []interface{}
+
+func (a argAny) Get(i int, args ...interface{}) (r interface{}) {
+	if i >= 0 && i < len(a) {
+		r = a[i]
+	}
+	if len(args) > 0 {
+		r = args[0]
+	}
+	return
+}
+
 func timeParse(dateString, format string) (time.Time, error) {
 	tp, err := time.ParseInLocation(format, dateString, DefaultTimeLoc)
 	return tp, err

@@ -15,47 +15,43 @@ type querySet struct {
 	orm      *orm
 }
 
-func (o *querySet) Filter(expr string, args ...interface{}) QuerySeter {
-	o = o.clone()
+var _ QuerySeter = new(querySet)
+
+func (o querySet) Filter(expr string, args ...interface{}) QuerySeter {
 	if o.cond == nil {
 		o.cond = NewCondition()
 	}
-	o.cond.And(expr, args...)
-	return o
+	o.cond = o.cond.And(expr, args...)
+	return &o
 }
 
-func (o *querySet) Exclude(expr string, args ...interface{}) QuerySeter {
-	o = o.clone()
+func (o querySet) Exclude(expr string, args ...interface{}) QuerySeter {
 	if o.cond == nil {
 		o.cond = NewCondition()
 	}
-	o.cond.AndNot(expr, args...)
-	return o
+	o.cond = o.cond.AndNot(expr, args...)
+	return &o
 }
 
-func (o *querySet) Limit(limit int, args ...int64) QuerySeter {
-	o = o.clone()
+func (o querySet) Limit(limit int, args ...int64) QuerySeter {
 	o.limit = limit
 	if len(args) > 0 {
 		o.offset = args[0]
 	}
-	return o
+	return &o
 }
 
-func (o *querySet) Offset(offset int64) QuerySeter {
-	o = o.clone()
+func (o querySet) Offset(offset int64) QuerySeter {
 	o.offset = offset
-	return o
+	return &o
 }
 
-func (o *querySet) OrderBy(exprs ...string) QuerySeter {
-	o = o.clone()
+func (o querySet) OrderBy(exprs ...string) QuerySeter {
 	o.orders = exprs
-	return o
+	return &o
 }
 
-func (o *querySet) RelatedSel(params ...interface{}) QuerySeter {
-	o = o.clone()
+func (o querySet) RelatedSel(params ...interface{}) QuerySeter {
 	var related []string
 	if len(params) == 0 {
 		o.relDepth = DefaultRelsDepth
@@ -72,13 +68,6 @@ func (o *querySet) RelatedSel(params ...interface{}) QuerySeter {
 		}
 	}
 	o.related = related
-	return o
-}
-
-func (o querySet) clone() *querySet {
-	if o.cond != nil {
-		o.cond = o.cond.Clone()
-	}
 	return &o
 }
 
@@ -114,6 +103,9 @@ func (o *querySet) One(container Modeler) error {
 	}
 	if num > 1 {
 		return ErrMultiRows
+	}
+	if num == 0 {
+		return ErrNoRows
 	}
 	return nil
 }

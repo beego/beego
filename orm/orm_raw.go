@@ -63,6 +63,8 @@ type rawSet struct {
 	orm   *orm
 }
 
+var _ RawSeter = new(rawSet)
+
 func (o rawSet) SetArgs(args ...interface{}) RawSeter {
 	o.args = args
 	return &o
@@ -76,7 +78,12 @@ func (o *rawSet) Exec() (int64, error) {
 	return getResult(res)
 }
 
-func (o *rawSet) Mapper(...interface{}) (int64, error) {
+func (o *rawSet) QueryRow(...interface{}) error {
+	//TODO
+	return nil
+}
+
+func (o *rawSet) QueryRows(...interface{}) (int64, error) {
 	//TODO
 	return 0, nil
 }
@@ -120,7 +127,7 @@ func (o *rawSet) readValues(container interface{}) (int64, error) {
 				cols = columns
 				refs = make([]interface{}, len(cols))
 				for i, _ := range refs {
-					var ref string
+					var ref sql.NullString
 					refs[i] = &ref
 				}
 			}
@@ -134,21 +141,21 @@ func (o *rawSet) readValues(container interface{}) (int64, error) {
 		case 1:
 			params := make(Params, len(cols))
 			for i, ref := range refs {
-				value := reflect.Indirect(reflect.ValueOf(ref)).Interface()
-				params[cols[i]] = value
+				value := reflect.Indirect(reflect.ValueOf(ref)).Interface().(sql.NullString)
+				params[cols[i]] = value.String
 			}
 			maps = append(maps, params)
 		case 2:
 			params := make(ParamsList, 0, len(cols))
 			for _, ref := range refs {
-				value := reflect.Indirect(reflect.ValueOf(ref)).Interface()
-				params = append(params, value)
+				value := reflect.Indirect(reflect.ValueOf(ref)).Interface().(sql.NullString)
+				params = append(params, value.String)
 			}
 			lists = append(lists, params)
 		case 3:
 			for _, ref := range refs {
-				value := reflect.Indirect(reflect.ValueOf(ref)).Interface()
-				list = append(list, value)
+				value := reflect.Indirect(reflect.ValueOf(ref)).Interface().(sql.NullString)
+				list = append(list, value.String)
 			}
 		}
 

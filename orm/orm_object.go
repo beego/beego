@@ -13,6 +13,8 @@ type insertSet struct {
 	closed bool
 }
 
+var _ Inserter = new(insertSet)
+
 func (o *insertSet) Insert(md Modeler) (int64, error) {
 	if o.closed {
 		return 0, ErrStmtClosed
@@ -28,14 +30,17 @@ func (o *insertSet) Insert(md Modeler) (int64, error) {
 		return id, err
 	}
 	if id > 0 {
-		if o.mi.fields.auto != nil {
-			ind.Field(o.mi.fields.auto.fieldIndex).SetInt(id)
+		if o.mi.fields.pk.auto {
+			ind.Field(o.mi.fields.pk.fieldIndex).SetInt(id)
 		}
 	}
 	return id, nil
 }
 
 func (o *insertSet) Close() error {
+	if o.closed {
+		return ErrStmtClosed
+	}
 	o.closed = true
 	return o.stmt.Close()
 }

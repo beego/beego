@@ -49,6 +49,7 @@ type _modelCache struct {
 	sync.RWMutex
 	orders []string
 	cache  map[string]*modelInfo
+	done   bool
 }
 
 func (mc *_modelCache) all() map[string]*modelInfo {

@@ -9,13 +9,15 @@ import (
 )
 
 var (
-	ErrTXHasBegin    = errors.New("<Ormer.Begin> transaction already begin")
-	ErrTXNotBegin    = errors.New("<Ormer.Commit/Rollback> transaction not begin")
-	ErrMultiRows     = errors.New("<QuerySeter.One> return multi rows")
-	ErrStmtClosed    = errors.New("<QuerySeter.Insert> stmt already closed")
 	DefaultRowsLimit = 1000
 	DefaultRelsDepth = 5
 	DefaultTimeLoc   = time.Local
+	ErrTxHasBegan    = errors.New("<Ormer.Begin> transaction already begin")
+	ErrTxDone        = errors.New("<Ormer.Commit/Rollback> transaction not begin")
+	ErrMultiRows     = errors.New("<QuerySeter> return multi rows")
+	ErrNoRows        = errors.New("<QuerySeter> not row found")
+	ErrStmtClosed    = errors.New("<QuerySeter> stmt already closed")
+	ErrNotImplement  = errors.New("have not implement")
 )
 
 type Params map[string]interface{}
@@ -27,13 +29,15 @@ type orm struct {
 	isTx  bool
 }
 
+var _ Ormer = new(orm)
+
 func (o *orm) getMiInd(md Modeler) (mi *modelInfo, ind reflect.Value) {
 	md.Init(md, true)
 	name := md.GetTableName()
 	if mi, ok := modelCache.get(name); ok {
 		return mi, reflect.Indirect(reflect.ValueOf(md))
 	}
-	panic(fmt.Sprintf("<orm.Object> table name: `%s` not exists", name))
+	panic(fmt.Sprintf("<orm> table name: `%s` not exists", name))
 }
 
 func (o *orm) Read(md Modeler) error {
@@ -52,8 +56,8 @@ func (o *orm) Insert(md Modeler) (int64, error) {
 		return id, err
 	}
 	if id > 0 {
-		if mi.fields.auto != nil {
-			ind.Field(mi.fields.auto.fieldIndex).SetInt(id)
+		if mi.fields.pk.auto {
+			ind.Field(mi.fields.pk.fieldIndex).SetInt(id)
 		}
 	}
 	return id, nil
@@ -75,11 +79,29 @@ func (o *orm) Delete(md Modeler) (int64, error) {
 		return num, err
 	}
 	if num > 0 {
-		if mi.fields.auto != nil {
-			ind.Field(mi.fields.auto.fieldIndex).SetInt(0)
+		if mi.fields.pk.auto {
+			ind.Field(mi.fields.pk.fieldIndex).SetInt(0)
 		}
 	}
 	return num, nil
+}
+
+func (o *orm) M2mAdd(md Modeler, name string, mds ...interface{}) (int64, error) {
+	// TODO
+	panic(ErrNotImplement)
+	return 0, nil
+}
+
+func (o *orm) M2mDel(md Modeler, name string, mds ...interface{}) (int64, error) {
+	// TODO
+	panic(ErrNotImplement)
+	return 0, nil
+}
+
+func (o *orm) LoadRel(md Modeler, name string) (int64, error) {
+	// TODO
+	panic(ErrNotImplement)
+	return 0, nil
 }
 
 func (o *orm) QueryTable(ptrStructOrTableName interface{}) QuerySeter {
@@ -111,7 +133,7 @@ func (o *orm) Using(name string) error {
 
 func (o *orm) Begin() error {
 	if o.isTx {
-		return ErrTXHasBegin
+		return ErrTxHasBegan
 	}
 	tx, err := o.alias.DB.Begin()
 	if err != nil {
@@ -124,24 +146,28 @@ func (o *orm) Begin() error {
 
 func (o *orm) Commit() error {
 	if o.isTx == false {
-		return ErrTXNotBegin
+		return ErrTxDone
 	}
 	err := o.db.(*sql.Tx).Commit()
 	if err == nil {
 		o.isTx = false
 		o.db = o.alias.DB
+	} else if err == sql.ErrTxDone {
+		return ErrTxDone
 	}
 	return err
 }
 
 func (o *orm) Rollback() error {
 	if o.isTx == false {
-		return ErrTXNotBegin
+		return ErrTxDone
 	}
 	err := o.db.(*sql.Tx).Rollback()
 	if err == nil {
 		o.isTx = false
 		o.db = o.alias.DB
+	} else if err == sql.ErrTxDone {
+		return ErrTxDone
 	}
 	return err
 }
@@ -150,7 +176,13 @@ func (o *orm) Raw(query string, args ...interface{}) RawSeter {
 	return newRawSet(o, query, args)
 }
 
+func (o *orm) Driver() Driver {
+	return driver(o.alias.Name)
+}
+
 func NewOrm() Ormer {
+	BootStrap() // execute only once
+
 	o := new(orm)
 	err := o.Using("default")
 	if err != nil {

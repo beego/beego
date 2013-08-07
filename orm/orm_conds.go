@@ -26,23 +26,24 @@ func NewCondition() *Condition {
 	return c
 }
 
-func (c *Condition) And(expr string, args ...interface{}) *Condition {
+func (c Condition) And(expr string, args ...interface{}) *Condition {
 	if expr == "" || len(args) == 0 {
 		panic("<Condition.And> args cannot empty")
 	}
 	c.params = append(c.params, condValue{exprs: strings.Split(expr, ExprSep), args: args})
-	return c
+	return &c
 }
 
-func (c *Condition) AndNot(expr string, args ...interface{}) *Condition {
+func (c Condition) AndNot(expr string, args ...interface{}) *Condition {
 	if expr == "" || len(args) == 0 {
 		panic("<Condition.AndNot> args cannot empty")
 	}
 	c.params = append(c.params, condValue{exprs: strings.Split(expr, ExprSep), args: args, isNot: true})
-	return c
+	return &c
 }
 
 func (c *Condition) AndCond(cond *Condition) *Condition {
+	c = c.clone()
 	if c == cond {
 		panic("cannot use self as sub cond")
 	}
@@ -52,23 +53,24 @@ func (c *Condition) AndCond(cond *Condition) *Condition {
 	return c
 }
 
-func (c *Condition) Or(expr string, args ...interface{}) *Condition {
+func (c Condition) Or(expr string, args ...interface{}) *Condition {
 	if expr == "" || len(args) == 0 {
 		panic("<Condition.Or> args cannot empty")
 	}
 	c.params = append(c.params, condValue{exprs: strings.Split(expr, ExprSep), args: args, isOr: true})
-	return c
+	return &c
 }
 
-func (c *Condition) OrNot(expr string, args ...interface{}) *Condition {
+func (c Condition) OrNot(expr string, args ...interface{}) *Condition {
 	if expr == "" || len(args) == 0 {
 		panic("<Condition.OrNot> args cannot empty")
 	}
 	c.params = append(c.params, condValue{exprs: strings.Split(expr, ExprSep), args: args, isNot: true, isOr: true})
-	return c
+	return &c
 }
 
 func (c *Condition) OrCond(cond *Condition) *Condition {
+	c = c.clone()
 	if c == cond {
 		panic("cannot use self as sub cond")
 	}
@@ -82,13 +84,6 @@ func (c *Condition) IsEmpty() bool {
 	return len(c.params) == 0
 }
 
-func (c Condition) Clone() *Condition {
-	params := c.params
-	c.params = make([]condValue, len(params))
-	copy(c.params, params)
+func (c Condition) clone() *Condition {
 	return &c
-}
-
-func (c *Condition) Merge() (expr string, args []interface{}) {
-	return expr, args
 }

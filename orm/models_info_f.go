@@ -32,32 +32,8 @@ func (f *fieldChoices) Clone() fieldChoices {
 	return *f
 }
 
-type primaryKeys []*fieldInfo
-
-func (p *primaryKeys) Add(fi *fieldInfo) {
-	*p = append(*p, fi)
-}
-
-func (p primaryKeys) Exist(fi *fieldInfo) (int, bool) {
-	for i, v := range p {
-		if v == fi {
-			return i, true
-		}
-	}
-	return -1, false
-}
-
-func (p primaryKeys) IsMulti() bool {
-	return len(p) > 1
-}
-
-func (p primaryKeys) IsEmpty() bool {
-	return len(p) == 0
-}
-
 type fields struct {
-	pk            primaryKeys
-	auto          *fieldInfo
+	pk            *fieldInfo
 	columns       map[string]*fieldInfo
 	fields        map[string]*fieldInfo
 	fieldsLow     map[string]*fieldInfo

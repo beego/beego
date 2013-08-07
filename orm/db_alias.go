@@ -9,24 +9,37 @@ import (
 
 const defaultMaxIdle = 30
 
-type driverType int
+type DriverType int
 
 const (
-	_ driverType = iota
+	_ DriverType = iota
 	DR_MySQL
 	DR_Sqlite
 	DR_Oracle
 	DR_Postgres
 )
 
+type driver string
+
+func (d driver) Type() DriverType {
+	a, _ := dataBaseCache.get(string(d))
+	return a.Driver
+}
+
+func (d driver) Name() string {
+	return string(d)
+}
+
+var _ Driver = new(driver)
+
 var (
 	dataBaseCache = &_dbCache{cache: make(map[string]*alias)}
-	drivers       = map[string]driverType{
+	drivers       = map[string]DriverType{
 		"mysql":    DR_MySQL,
 		"postgres": DR_Postgres,
 		"sqlite3":  DR_Sqlite,
 	}
-	dbBasers = map[driverType]dbBaser{
+	dbBasers = map[DriverType]dbBaser{
 		DR_MySQL:    newdbBaseMysql(),
 		DR_Sqlite:   newdbBaseSqlite(),
 		DR_Oracle:   newdbBaseMysql(),
@@ -63,6 +76,7 @@ func (ac *_dbCache) getDefault() (al *alias) {
 
 type alias struct {
 	Name       string
+	Driver     DriverType
 	DriverName string
 	DataSource string
 	MaxIdle    int
@@ -87,6 +101,7 @@ func RegisterDataBase(name, driverName, dataSource string, maxIdle int) {
 
 	if dr, ok := drivers[driverName]; ok {
 		al.DbBaser = dbBasers[dr]
+		al.Driver = dr
 	} else {
 		err = fmt.Errorf("driver name `%s` have not registered", driverName)
 		goto end
@@ -116,7 +131,7 @@ end:
 	}
 }
 
-func RegisterDriver(name string, typ driverType) {
+func RegisterDriver(name string, typ DriverType) {
 	if t, ok := drivers[name]; ok == false {
 		drivers[name] = typ
 	} else {

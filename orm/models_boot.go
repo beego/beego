@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func RegisterModel(model Modeler) {
+func registerModel(model Modeler) {
 	info := newModelInfo(model)
 	model.Init(model)
 	table := model.GetTableName()
@@ -27,9 +27,10 @@ func RegisterModel(model Modeler) {
 	modelCache.set(table, info)
 }
 
-func BootStrap() {
-	modelCache.Lock()
-	defer modelCache.Unlock()
+func bootStrap() {
+	if modelCache.done {
+		return
+	}
 
 	var (
 		err    error
@@ -58,14 +59,6 @@ func BootStrap() {
 					goto end
 				}
 				fi.relModelInfo = mii
-
-				if fi.rel {
-
-					if mii.fields.pk.IsMulti() {
-						err = fmt.Errorf("field `%s` unsupport rel to multi primary key field", fi.fullName)
-						goto end
-					}
-				}
 
 				switch fi.fieldType {
 				case RelManyToMany:
@@ -207,6 +200,25 @@ end:
 		fmt.Println(err)
 		os.Exit(2)
 	}
+}
 
-	runCommand()
+func RegisterModel(models ...Modeler) {
+	if modelCache.done {
+		panic(fmt.Errorf("RegisterModel must be run begore BootStrap"))
+	}
+
+	for _, model := range models {
+		registerModel(model)
+	}
+}
+
+func BootStrap() {
+	if modelCache.done {
+		return
+	}
+
+	modelCache.Lock()
+	defer modelCache.Unlock()
+	bootStrap()
+	modelCache.done = true
 }

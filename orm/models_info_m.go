@@ -50,29 +50,24 @@ func newModelInfo(model Modeler) (info *modelInfo) {
 		if err != nil {
 			break
 		}
+
 		added := info.fields.Add(fi)
 		if added == false {
 			err = errors.New(fmt.Sprintf("duplicate column name: %s", fi.column))
 			break
 		}
+
 		if fi.pk {
 			if info.fields.pk != nil {
 				err = errors.New(fmt.Sprintf("one model must have one pk field only"))
 				break
 			} else {
-				info.fields.pk.Add(fi)
+				info.fields.pk = fi
 			}
 		}
-		if fi.auto {
-			info.fields.auto = fi
-		}
+
 		fi.fieldIndex = i
 		fi.mi = info
-	}
-
-	if _, ok := info.fields.pk.Exist(info.fields.auto); info.fields.auto != nil && ok == false {
-		err = errors.New(fmt.Sprintf("when auto field exists, you cannot set other pk field"))
-		goto end
 	}
 
 	if err != nil {
@@ -80,11 +75,6 @@ func newModelInfo(model Modeler) (info *modelInfo) {
 		os.Exit(2)
 	}
 
-end:
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(2)
-	}
 	return
 }
 
@@ -125,6 +115,6 @@ func newM2MModelInfo(m1, m2 *modelInfo) (info *modelInfo) {
 	info.fields.Add(fa)
 	info.fields.Add(f1)
 	info.fields.Add(f2)
-	info.fields.pk.Add(fa)
+	info.fields.pk = fa
 	return
 }
