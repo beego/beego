@@ -13,7 +13,7 @@ qs := o.QueryTable("user")
 user := NewUser()
 qs = o.QueryTable(user) // 返回 QuerySeter
 ```
-### expr
+## expr
 
 QuerySeter 中用于描述字段和 sql 操作符使用简单的 expr 查询方法
 
@@ -32,9 +32,20 @@ qs.Filter("profile__age__in", 18, 20) // WHERE profile.age IN (18, 20)
 qs.Filter("profile__age__in", 18, 20).Exclude("profile__money__lt", 1000)
 // WHERE profile.age IN (18, 20) AND NOT profile.money < 1000
 ```
-### Operators
+## Operators
 
-当前支持的操作符号
+当前支持的操作符号：
+
+* [exact](#exact) / [iexact](#iexact) 等于
+* [contains](#contains) / [icontains](#icontains) 包含
+* [gt / gte](#gt / gte) 大于 / 大于等于
+* [lt / lte](#lt / lte) 小于 / 小于等于
+* [startswith](#startswith) / [istartswith](#istartswith) 以...起始
+* [endswith](#endswith) / [iendswith](#iendswith) 以...结束
+* [in](#in)
+* [isnull](#isnull)
+
+后面以 `i` 开头的表示：大小写不敏感
 
 #### exact
 
@@ -119,6 +130,29 @@ qs.Filter("profile__isnull", false)
 ```
 ## QuerySeter
 
+QuerySeter 当前支持的方法
+
+* type QuerySeter interface {
+	* [Filter(string, ...interface{}) QuerySeter](#Filter)
+	* [Exclude(string, ...interface{}) QuerySeter](#Exclude)
+	* [SetCond(*Condition) QuerySeter](#SetCond)
+	* [Limit(int, ...int64) QuerySeter](#Limit)
+	* [Offset(int64) QuerySeter](#Offset)
+	* [OrderBy(...string) QuerySeter](#OrderBy)
+	* [RelatedSel(...interface{}) QuerySeter](#RelatedSel)
+	* [Count() (int64, error)](#Count)
+	* [Update(Params) (int64, error)](#Update)
+	* [Delete() (int64, error)](#Delete)
+	* [PrepareInsert() (Inserter, error)](#PrepareInsert)
+	* [All(interface{}) (int64, error)](#All)
+	* [One(Modeler) error](#One)
+	* [Values(*[]Params, ...string) (int64, error)](#Values)
+	* [ValuesList(*[]ParamsList, ...string) (int64, error)](#ValuesList)
+	* [ValuesFlat(*ParamsList, string) (int64, error)](#ValuesFlat)
+* }
+
+每个返回 QuerySeter 的 api 调用时都会新建一个 QuerySeter，不影响之前创建的。
+
 #### Filter
 
 多个 Filter 之间使用 `AND` 连接
@@ -138,6 +172,21 @@ qs.Exclude("profile__isnull", true).Filter("user_name", "slene")
 ```
 
 #### SetCond
+
+自定义条件表达式
+
+```go
+cond := NewCondition()
+cond1 := cond.And("profile__isnull", false).AndNot("status__in", 1).Or("profile__age__gt", 2000)
+
+qs := orm.QueryTable("user")
+qs = qs.SetCond(cond1)
+// WHERE ... AND ... AND NOT ... OR ...
+
+cond2 := cond.AndCond(cond1).OrCond(cond.And("user_name", "slene"))
+qs = qs.SetCond(cond2).Count()
+// WHERE (... AND ... AND NOT ... OR ...) OR ( ... )
+```
 
 #### Limit
 
@@ -166,7 +215,7 @@ qs.Limit(-1, 100)
 	
 设置 偏移行数
 ```go
-qs.OFFSET(20)
+qs.Offset(20)
 // LIMIT 1000 OFFSET 20
 ```
 
@@ -226,6 +275,28 @@ fmt.Printf("Affected Num: %s, %s", num, err)
 // DELETE FROM user WHERE user_name = "slene"
 ```
 
+#### PrepareInsert
+
+用于一次 prepare 多次 insert 插入，以提高批量插入的速度。
+
+```go
+var users []*User
+...
+qs := dORM.QueryTable("user")
+i, _ := qs.PrepareInsert()
+for _, user := range users {
+	id, err := i.Insert(user)
+	if err != nil {
+		...
+	}
+}
+// PREPARE INSERT INTO user (`user_name`, ...) VALUES (?, ...)
+// EXECUTE INSERT INTO user (`user_name`, ...) VALUES ("slene", ...)
+// EXECUTE ...
+// ...
+i.Close() // 别忘记关闭 statement
+```
+
 #### All
 返回对应的结果集对象
 ```go
@@ -235,12 +306,19 @@ fmt.Printf("Returned Rows Num: %s, %s", num, err)
 ```
 
 #### One
-尝试返回单个对象
+
+尝试返回单条记录
+
 ```go
 var user *User
 err := o.QueryTable("user").Filter("user_name", "slene").One(&user)
 if err == orm.ErrMultiRows {
+	// 多条的时候报错
 	fmt.Printf("Returned Multi Rows Not One")
+}
+if err == orm.ErrNoRows {
+	// 没有找到记录
+	fmt.Printf("Not row found")
 }
 ```
 
@@ -322,11 +400,6 @@ if err != nil {
 	fmt.Printf("All User Names: %s", strings.Join(list, ", ")
 }
 ```
-
-#### PrepareInsert
-
-用于批量插入 prepare -> insert -> insert
-
 
 
 

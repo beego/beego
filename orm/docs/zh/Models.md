@@ -105,11 +105,8 @@ func NewComment() *Comment {
 
 func init() {
 	// 需要在init中注册定义的model
-	orm.RegisterModel(new(User))
-	orm.RegisterModel(new(Profile))
-	orm.RegisterModel(new(Post))
-	orm.RegisterModel(new(Tag))
-	orm.RegisterModel(new(Comment))
+	orm.RegisterModel(new(User), new(Profile))
+	orm.RegisterModel(new(Post), new(Tag), new(Comment))
 }
 ```
 

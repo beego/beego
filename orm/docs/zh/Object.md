@@ -12,7 +12,7 @@ fmt.Println(o.Insert(user))
 
 user.UserName = "Your"
 fmt.Println(o.Update(user))
-
+fmt.Println(o.Read(user))
 fmt.Println(o.Delete(user))
 ```
 ### Read
@@ -36,7 +36,7 @@ o := orm.NewOrm()
 var user User
 user.UserName = "slene"
 user.Password = "password"
-user.Email = "vslene@gmail.com"
+user.Email = "vslene@gmail.com"[]()
 user.IsActive = true
 
 fmt.Println(o.Insert(&user))

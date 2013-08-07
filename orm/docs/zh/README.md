@@ -27,8 +27,6 @@ func init() {
 }
 
 func main() {
-	orm.BootStrap() // 确保在所有 RegisterModel 之后执行
-
 	o := orm.NewOrm()
 
 	user := User{Name: "slene"}
@@ -55,12 +53,18 @@ func main() {
 
 ## 详细文档
 
-1. [Model Definition](Models.md)
+1. [模型定义](Models.md)
+	- [支持的 Field 类型](Models.md#Field Type)
+	- [Field 设置参数](Models.md#Field Options)
+	- [关系型 Field 设置](Models.md#Relation Field Options)
 2. Custom Fields
-3. [Orm](Orm.md)
-4. [Object](Object.md)
-5. [Query](Query.md)
-6. Condition
-7. Raw
-8. Transaction
-9. Faq
+3. [Orm 使用方法](Orm.md)
+	- [Ormer 接口](Orm.md#Ormer)
+4. [对象操作](Object.md)
+5. [复杂查询](Query.md)
+	- [查询使用的表达式语法](Query.md#expr)
+	- [查询支持的操作符号](Query.md#Operators)
+	- [QuerySeter 接口](Query.md#QuerySeter)
+6. Raw
+7. Transaction
+8. Faq
