@@ -949,21 +949,76 @@ func (d *dbBase) Count(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condition
 	return
 }
 
-func (d *dbBase) GetOperatorSql(mi *modelInfo, operator string, args []interface{}) (string, []interface{}) {
-	params := make([]interface{}, len(args))
-	copy(params, args)
-	sql := ""
-	for i, arg := range args {
-		if md, ok := arg.(Modeler); ok {
-			ind := reflect.Indirect(reflect.ValueOf(md))
-			if _, vu, exist := d.existPk(mi, ind); exist {
-				arg = vu
-			} else {
-				panic(fmt.Sprintf("`%s` need a valid args value", operator))
-			}
+func (d *dbBase) getOperatorParams(operator string, args []interface{}) (params []interface{}) {
+	for _, arg := range args {
+		val := reflect.ValueOf(arg)
+
+		if arg == nil {
+			params = append(params, arg)
+			continue
 		}
-		params[i] = arg
+
+		kind := val.Kind()
+
+		switch kind {
+		case reflect.Slice, reflect.Array:
+			var args []interface{}
+			for i := 0; i < val.Len(); i++ {
+				v := val.Index(i)
+
+				var vu interface{}
+				if v.CanInterface() {
+					vu = v.Interface()
+				}
+
+				if vu == nil {
+					continue
+				}
+
+				args = append(args, vu)
+			}
+
+			if len(args) > 0 {
+				p := d.getOperatorParams(operator, args)
+				params = append(params, p...)
+			}
+
+		case reflect.Ptr, reflect.Struct:
+			ind := reflect.Indirect(val)
+
+			if ind.Kind() == reflect.Struct {
+				typ := ind.Type()
+				fullName := typ.PkgPath() + "." + typ.Name()
+				var value interface{}
+				if mmi, ok := modelCache.get(fullName); ok {
+					if _, vu, exist := d.existPk(mmi, ind); exist {
+						value = vu
+					}
+				}
+				arg = value
+
+				if arg == nil {
+					panic(fmt.Sprintf("`%s` operator need a valid args value, unknown table or value `%v`", operator, val.Type()))
+				}
+			} else {
+				arg = ind.Interface()
+			}
+
+			params = append(params, arg)
+
+		default:
+			params = append(params, arg)
+		}
+
 	}
+
+	return
+}
+
+func (d *dbBase) GetOperatorSql(mi *modelInfo, operator string, args []interface{}) (string, []interface{}) {
+	sql := ""
+	params := d.getOperatorParams(operator, args)
+
 	if operator == "in" {
 		marks := make([]string, len(params))
 		for i, _ := range marks {

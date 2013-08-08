@@ -18,7 +18,7 @@ fmt.Println(o.Delete(user))
 o := orm.NewOrm()
 user := User{Id: 1}
 
-o.Read(&user)
+err = o.Read(&user)
 
 if err == sql.ErrNoRows {
 	fmt.Println("查询不到")

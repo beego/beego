@@ -410,6 +410,15 @@ func TestOperators(t *testing.T) {
 	num, err = qs.Filter("status__in", 1, 2).Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, T_Equal, 2))
+
+	num, err = qs.Filter("status__in", []int{1, 2}).Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, T_Equal, 2))
+
+	n1, n2 := 1, 2
+	num, err = qs.Filter("status__in", []*int{&n1}, &n2).Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, T_Equal, 2))
 }
 
 func TestAll(t *testing.T) {
@@ -684,5 +693,49 @@ func TestDelete(t *testing.T) {
 }
 
 func TestTransaction(t *testing.T) {
+	o := NewOrm()
+	err := o.Begin()
+	throwFail(t, err)
+
+	var names = []string{"1", "2", "3"}
+
+	var user User
+	user.UserName = names[0]
+	id, err := o.Insert(&user)
+	throwFail(t, err)
+	throwFail(t, AssertIs(id, T_Large, 0))
+
+	num, err := o.QueryTable("user").Filter("user_name", "slene").Update(Params{"user_name": names[1]})
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, T_Large, 0))
+
+	switch o.Driver().Type() {
+	case DR_MySQL:
+		id, err := o.Raw("INSERT INTO user (user_name) VALUES (?)", names[2]).Exec()
+		throwFail(t, err)
+		throwFail(t, AssertIs(id, T_Large, 0))
+	}
+
+	err = o.Rollback()
+	throwFail(t, err)
+
+	num, err = o.QueryTable("user").Filter("user_name__in", &user).Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, T_Equal, 0))
+
+	err = o.Begin()
+	throwFail(t, err)
+
+	user.UserName = "commit"
+	id, err = o.Insert(&user)
+	throwFail(t, err)
+	throwFail(t, AssertIs(id, T_Large, 0))
+
+	o.Commit()
+	throwFail(t, err)
+
+	num, err = o.QueryTable("user").Filter("user_name", "commit").Delete()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, T_Equal, 1))
 
 }

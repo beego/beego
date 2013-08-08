@@ -16,7 +16,10 @@ const (
 
 var (
 	errLog     *log.Logger
-	modelCache = &_modelCache{cache: make(map[string]*modelInfo)}
+	modelCache = &_modelCache{
+		cache:     make(map[string]*modelInfo),
+		cacheByFN: make(map[string]*modelInfo),
+	}
 	supportTag = map[string]int{
 		"null":         1,
 		"blank":        1,
@@ -47,9 +50,10 @@ func init() {
 
 type _modelCache struct {
 	sync.RWMutex
-	orders []string
-	cache  map[string]*modelInfo
-	done   bool
+	orders    []string
+	cache     map[string]*modelInfo
+	cacheByFN map[string]*modelInfo
+	done      bool
 }
 
 func (mc *_modelCache) all() map[string]*modelInfo {
@@ -70,12 +74,16 @@ func (mc *_modelCache) allOrdered() []*modelInfo {
 
 func (mc *_modelCache) get(table string) (mi *modelInfo, ok bool) {
 	mi, ok = mc.cache[table]
+	if ok == false {
+		mi, ok = mc.cacheByFN[table]
+	}
 	return
 }
 
 func (mc *_modelCache) set(table string, mi *modelInfo) *modelInfo {
 	mii := mc.cache[table]
 	mc.cache[table] = mi
+	mc.cacheByFN[mi.fullName] = mi
 	if mii == nil {
 		mc.orders = append(mc.orders, table)
 	}
