@@ -1,16 +1,14 @@
-## Object
+## 对象的CRUD操作
 
 对 object 操作简单的三个方法 Read / Insert / Update / Delete
 ```go
 o := orm.NewOrm()
 user := NewUser()
-user.UserName = "slene"
-user.Password = "password"
-user.Email = "vslene@gmail.com"
+user.Name = "slene"
 
 fmt.Println(o.Insert(user))
 
-user.UserName = "Your"
+user.Name = "Your"
 fmt.Println(o.Update(user))
 fmt.Println(o.Read(user))
 fmt.Println(o.Delete(user))
@@ -27,16 +25,14 @@ if err == sql.ErrNoRows {
 } else if err == orm.ErrMissPK {
 	fmt.Println("找不到主键")
 } else {
-	fmt.Println(user.Id, user.UserName)
+	fmt.Println(user.Id, user.Name)
 }
 ```
 ### Insert
 ```go
 o := orm.NewOrm()
 var user User
-user.UserName = "slene"
-user.Password = "password"
-user.Email = "vslene@gmail.com"[]()
+user.Name = "slene"
 user.IsActive = true
 
 fmt.Println(o.Insert(&user))
@@ -49,7 +45,7 @@ fmt.Println(user.Id)
 o := orm.NewOrm()
 user := User{Id: 1}
 if o.Read(&user) == nil {
-	user.UserName = "MyName"
+	user.Name = "MyName"
 	o.Update(&user)
 }
 ```

@@ -1,6 +1,40 @@
-## Orm
+## Orm 使用方法
 
 beego/orm 的使用例子
+
+后文例子如无特殊说明都以这个为基础。
+
+##### models.go:
+
+```go
+package main
+
+import (
+	"github.com/astaxie/beego/orm"
+)
+
+type User struct {
+	Id          int        `orm:"auto"`     // 设置为auto主键
+	Name        string
+	Profile     *Profile   `orm:"rel(one)"` // OneToOne relation
+	orm.Manager // 每个model都需要定义orm.Manager
+}
+
+type Profile struct {
+	Id          int     `orm:"auto"`
+	Age         int16
+	User        *User   `orm:"reverse(one)"` // 设置反向关系(可选)
+	orm.Manager
+}
+
+func init() {
+	// 需要在init中注册定义的model
+	orm.RegisterModel(new(User), new(Profile))
+}
+```
+
+##### main.go
+
 ```go
 package main
 
@@ -22,19 +56,17 @@ func main() {
 
 	profile := NewProfile()
 	profile.Age = 30
-	profile.Money = 9.8
 
 	user := NewUser()
 	user.Profile = profile
-	user.UserName = "slene"
-	user.Password = "password"
-	user.Email = "vslene@gmail.com"
-	user.IsActive = true
+	user.Name = "slene"
 
 	fmt.Println(o.Insert(profile))
 	fmt.Println(o.Insert(user))
 }
 ```
+
+## 数据库的设置
 
 #### RegisterDriver
 
@@ -66,12 +98,14 @@ orm 必须注册一个名称为 `default` 的数据库，用以作为默认使�
 orm.RegisterDataBase("default", "mysql", "root:root@/orm_test?charset=utf8", 30)
 ```
 
-## Ormer
+## ORM 接口使用
+
+使用 orm 必然接触的 Ormer 接口，我们来熟悉一下
 
 ```go
 var o Ormer
 o = orm.NewOrm() // 创建一个 Ormer
-// NewOrm 的同时会执行一次 orm.BootStrap，用以验证模型之间的定义并缓存。
+// NewOrm 的同时会执行 orm.BootStrap (整个 app 只执行一次)，用以验证模型之间的定义并缓存。
 ```
 
 * type Ormer interface {
@@ -84,9 +118,9 @@ o = orm.NewOrm() // 创建一个 Ormer
 	* [LoadRel(Modeler, string) (int64, error)](Object.md#loadRel)
 	* [QueryTable(interface{}) QuerySeter](#querytable)
 	* [Using(string) error](#using)
-	* [Begin() error](Transaction.md#begin)
-	* [Commit() error](Transaction.md#commit)
-	* [Rollback() error](Transaction.md#rollback)
+	* [Begin() error](Transaction.md)
+	* [Commit() error](Transaction.md)
+	* [Rollback() error](Transaction.md)
 	* [Raw(string, ...interface{}) RawSeter](#raw)
 	* [Driver() Driver](#driver)
 * }
@@ -133,7 +167,7 @@ Raw 函数，返回一个 [RawSeter](Raw.md) 用以对设置的 sql 语句和参
 ```go
 o := NewOrm()
 var r RawSeter
-r = o.Raw("UPDATE user SET user_name = ? WHERE user_name = ?", "testing", "slene")
+r = o.Raw("UPDATE user SET name = ? WHERE name = ?", "testing", "slene")
 ```
 
 #### Driver

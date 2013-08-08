@@ -1,4 +1,4 @@
-## Query
+## 高级查询
 
 orm 以 **QuerySeter** 来组织查询，每个返回 **QuerySeter** 的方法都会获得一个新的 **QuerySeter** 对象。
 
@@ -29,8 +29,8 @@ qs.Filter("profile__age__gt", 18) // WHERE profile.age > 18
 qs.Filter("profile__age__gte", 18) // WHERE profile.age >= 18
 qs.Filter("profile__age__in", 18, 20) // WHERE profile.age IN (18, 20)
 
-qs.Filter("profile__age__in", 18, 20).Exclude("profile__money__lt", 1000)
-// WHERE profile.age IN (18, 20) AND NOT profile.money < 1000
+qs.Filter("profile__age__in", 18, 20).Exclude("profile__lt", 1000)
+// WHERE profile.age IN (18, 20) AND NOT profile_id < 1000
 ```
 ## Operators
 
@@ -51,27 +51,27 @@ qs.Filter("profile__age__in", 18, 20).Exclude("profile__money__lt", 1000)
 
 Filter / Exclude / Condition expr 的默认值
 ```go
-qs.Filter("user_name", "slene") // WHERE user_name = 'slene'
-qs.Filter("user_name__exact", "slene") // WHERE user_name = 'slene'
+qs.Filter("name", "slene") // WHERE name = 'slene'
+qs.Filter("name__exact", "slene") // WHERE name = 'slene'
 // 使用 = 匹配，大小写是否敏感取决于数据表使用的 collation
 qs.Filter("profile", nil) // WHERE profile_id IS NULL
 ```
 #### iexact
 ```go
-qs.Filter("user_name__iexact", "slene")
-// WHERE user_name LIKE 'slene'
+qs.Filter("name__iexact", "slene")
+// WHERE name LIKE 'slene'
 // 大小写不敏感，匹配任意 'Slene' 'sLENE'
 ```
 #### contains
 ```go
-qs.Filter("user_name__contains", "slene")
-// WHERE user_name LIKE BINARY '%slene%'
+qs.Filter("name__contains", "slene")
+// WHERE name LIKE BINARY '%slene%'
 // 大小写敏感, 匹配包含 slene 的字符
 ```
 #### icontains
 ```go
-qs.Filter("user_name__icontains", "slene")
-// WHERE user_name LIKE '%slene%'
+qs.Filter("name__icontains", "slene")
+// WHERE name LIKE '%slene%'
 // 大小写不敏感, 匹配任意 'im Slene', 'im sLENE'
 ```
 #### in
@@ -97,26 +97,26 @@ qs.Filter("profile__age__lte", 18)
 ```
 #### startswith
 ```go
-qs.Filter("user_name__startswith", "slene")
-// WHERE user_name LIKE BINARY 'slene%'
+qs.Filter("name__startswith", "slene")
+// WHERE name LIKE BINARY 'slene%'
 // 大小写敏感, 匹配以 'slene' 起始的字符串
 ```
 #### istartswith
 ```go
-qs.Filter("user_name__istartswith", "slene")
-// WHERE user_name LIKE 'slene%'
+qs.Filter("name__istartswith", "slene")
+// WHERE name LIKE 'slene%'
 // 大小写不敏感, 匹配任意以 'slene', 'Slene' 起始的字符串
 ```
 #### endswith
 ```go
-qs.Filter("user_name__endswith", "slene")
-// WHERE user_name LIKE BINARY '%slene'
+qs.Filter("name__endswith", "slene")
+// WHERE name LIKE BINARY '%slene'
 // 大小写敏感, 匹配以 'slene' 结束的字符串
 ```
 #### iendswith
 ```go
-qs.Filter("user_name__startswith", "slene")
-// WHERE user_name LIKE '%slene'
+qs.Filter("name__startswith", "slene")
+// WHERE name LIKE '%slene'
 // 大小写不敏感, 匹配任意以 'slene', 'Slene' 结束的字符串
 ```
 #### isnull
@@ -128,9 +128,9 @@ qs.Filter("profile_id__isnull", true)
 qs.Filter("profile__isnull", false)
 // WHERE profile_id IS NOT NULL
 ```
-## QuerySeter
+## 高级查询接口使用
 
-QuerySeter 当前支持的方法
+QuerySeter 是高级查询使用的接口，我们来熟悉下他的接口方法
 
 * type QuerySeter interface {
 	* [Filter(string, ...interface{}) QuerySeter](#filter)
@@ -151,24 +151,30 @@ QuerySeter 当前支持的方法
 	* [ValuesFlat(*ParamsList, string) (int64, error)](#valuesflat)
 * }
 
-每个返回 QuerySeter 的 api 调用时都会新建一个 QuerySeter，不影响之前创建的。
+* 每个返回 QuerySeter 的 api 调用时都会新建一个 QuerySeter，不影响之前创建的。
+
+* 高级查询使用 Filter 和 Exclude 来做常用的条件查询。囊括两种清晰的过滤规则：包含， 排除
 
 #### Filter
 
+用来过滤查询结果，起到 **包含条件** 的作用
+
 多个 Filter 之间使用 `AND` 连接
 ```go
-qs.Filter("profile__isnull", true).Filter("user_name", "slene")
-// WHERE profile_id IS NULL AND user_name = 'slene'
+qs.Filter("profile__isnull", true).Filter("name", "slene")
+// WHERE profile_id IS NULL AND name = 'slene'
 ```
 
 #### Exclude
+
+用来过滤查询结果，起到 **排除条件** 的作用
 
 使用 `NOT` 排除条件
 
 多个 Exclude 之间使用 `AND` 连接
 ```go
-qs.Exclude("profile__isnull", true).Filter("user_name", "slene")
-// WHERE NOT profile_id IS NULL AND user_name = 'slene'
+qs.Exclude("profile__isnull", true).Filter("name", "slene")
+// WHERE NOT profile_id IS NULL AND name = 'slene'
 ```
 
 #### SetCond
@@ -183,7 +189,7 @@ qs := orm.QueryTable("user")
 qs = qs.SetCond(cond1)
 // WHERE ... AND ... AND NOT ... OR ...
 
-cond2 := cond.AndCond(cond1).OrCond(cond.And("user_name", "slene"))
+cond2 := cond.AndCond(cond1).OrCond(cond.And("name", "slene"))
 qs = qs.SetCond(cond2).Count()
 // WHERE (... AND ... AND NOT ... OR ...) OR ( ... )
 ```
@@ -228,8 +234,8 @@ qs.Offset(20)
 qs.OrderBy("id", "-profile__age")
 // ORDER BY id ASC, profile.age DESC
 
-qs.OrderBy("-profile__money", "profile")
-// ORDER BY profile.money DESC, profile_id ASC
+qs.OrderBy("-profile__age", "profile")
+// ORDER BY profile.age DESC, profile_id ASC
 ```
 
 #### RelatedSel
@@ -260,19 +266,19 @@ fmt.Printf("Count Num: %s, %s", cnt, err)
 #### Update
 依据当前查询条件，进行批量更新操作
 ```go
-num, err := o.QueryTable("user").Filter("user_name", "slene").Update(orm.Params{
-	"user_name": "astaxie",
+num, err := o.QueryTable("user").Filter("name", "slene").Update(orm.Params{
+	"name": "astaxie",
 })
 fmt.Printf("Affected Num: %s, %s", num, err)
-// SET user_name = "astaixe" WHERE user_name = "slene"
+// SET name = "astaixe" WHERE name = "slene"
 ```
 
 #### Delete
 依据当前查询条件，进行批量删除操作
 ```go
-num, err := o.QueryTable("user").Filter("user_name", "slene").Delete()
+num, err := o.QueryTable("user").Filter("name", "slene").Delete()
 fmt.Printf("Affected Num: %s, %s", num, err)
-// DELETE FROM user WHERE user_name = "slene"
+// DELETE FROM user WHERE name = "slene"
 ```
 
 #### PrepareInsert
@@ -282,7 +288,7 @@ fmt.Printf("Affected Num: %s, %s", num, err)
 ```go
 var users []*User
 ...
-qs := dORM.QueryTable("user")
+qs := o.QueryTable("user")
 i, _ := qs.PrepareInsert()
 for _, user := range users {
 	id, err := i.Insert(user)
@@ -290,8 +296,8 @@ for _, user := range users {
 		...
 	}
 }
-// PREPARE INSERT INTO user (`user_name`, ...) VALUES (?, ...)
-// EXECUTE INSERT INTO user (`user_name`, ...) VALUES ("slene", ...)
+// PREPARE INSERT INTO user (`name`, ...) VALUES (?, ...)
+// EXECUTE INSERT INTO user (`name`, ...) VALUES ("slene", ...)
 // EXECUTE ...
 // ...
 i.Close() // 别忘记关闭 statement
@@ -301,7 +307,7 @@ i.Close() // 别忘记关闭 statement
 返回对应的结果集对象
 ```go
 var users []*User
-num, err := o.QueryTable("user").Filter("user_name", "slene").All(&users)
+num, err := o.QueryTable("user").Filter("name", "slene").All(&users)
 fmt.Printf("Returned Rows Num: %s, %s", num, err)
 ```
 
@@ -311,7 +317,7 @@ fmt.Printf("Returned Rows Num: %s, %s", num, err)
 
 ```go
 var user *User
-err := o.QueryTable("user").Filter("user_name", "slene").One(&user)
+err := o.QueryTable("user").Filter("name", "slene").One(&user)
 if err == orm.ErrMultiRows {
 	// 多条的时候报错
 	fmt.Printf("Returned Multi Rows Not One")
@@ -333,7 +339,7 @@ num, err := o.QueryTable("user").Values(&maps)
 if err != nil {
 	fmt.Printf("Result Nums: %d\n", num)
 	for _, m := range maps {
-		fmt.Println(m["Id"], m["UserName"])
+		fmt.Println(m["Id"], m["Name"])
 	}
 }
 ```
@@ -346,11 +352,11 @@ if err != nil {
 
 ```go
 var maps []orm.Params
-num, err := o.QueryTable("user").Values(&maps, "id", "user_name", "profile", "profile__age")
+num, err := o.QueryTable("user").Values(&maps, "id", "name", "profile", "profile__age")
 if err != nil {
 	fmt.Printf("Result Nums: %d\n", num)
 	for _, m := range maps {
-		fmt.Println(m["Id"], m["UserName"], m["Profile"], m["Profile__Age"])
+		fmt.Println(m["Id"], m["Name"], m["Profile"], m["Profile__Age"])
 		// map 中的数据都是展开的，没有复杂的嵌套
 	}
 }
@@ -379,11 +385,11 @@ if err != nil {
 
 ```go
 var lists []orm.ParamsList
-num, err := o.QueryTable("user").ValuesList(&lists, "user_name", "profile__age")
+num, err := o.QueryTable("user").ValuesList(&lists, "name", "profile__age")
 if err != nil {
 	fmt.Printf("Result Nums: %d\n", num)
 	for _, row := range lists {
-		fmt.Printf("UserName: %s, Age: %s\m", row[0], row[1])
+		fmt.Printf("Name: %s, Age: %s\m", row[0], row[1])
 	}
 }
 ```
@@ -394,7 +400,7 @@ if err != nil {
 
 ```go
 var list orm.ParamsList
-num, err := o.QueryTable("user").ValuesFlat(&list, "user_name")
+num, err := o.QueryTable("user").ValuesFlat(&list, "name")
 if err != nil {
 	fmt.Printf("Result Nums: %d\n", num)
 	fmt.Printf("All User Names: %s", strings.Join(list, ", ")

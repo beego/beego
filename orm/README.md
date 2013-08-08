@@ -82,6 +82,8 @@ num, err := qs.Filter("User__Name", "slene").All(&posts)
 
 #### Use Raw sql
 
+If you don't like ORM，use Raw SQL to query / mapping without ORM setting
+
 ```go
 var maps []Params
 num, err := o.Raw("SELECT id FROM user WHERE name = ?", "slene").Values(&maps)

@@ -1,144 +1,8 @@
-## Model Definition
+## 模型定义
 
-比较全面的 Model 定义例子，后文所有的例子如无特殊说明都以这个为基础。
+复杂的模型定义不是必须的，此功能用作数据库数据转换和自动建表
 
-当前还没有完成自动创建表的功能，所以提供一个 [Models.sql](Models.sql) 测试
-
-note: 根据文档的更新，随时都可能更新这个 Model
-
-##### models.go:
-
-```go
-package main
-
-import (
-	"github.com/astaxie/beego/orm"
-	"time"
-)
-
-type User struct {
-	Id          int        `orm:"auto"`            // 设置为auto主键
-	UserName    string     `orm:"size(30);unique"` // 设置字段为unique
-	Email       string     `orm:"size(100)"`       // 设置string字段长度时,会使用varchar类型
-	Password    string     `orm:"size(100)"`
-	Status      int16      `orm:"choices(0,1,2,3);defalut(0)"` // choices设置可选值
-	IsStaff     bool       `orm:"default(false)"`              // default设置默认值
-	IsActive    bool       `orm:"default(0)"`
-	Created     time.Time  `orm:"auto_now_add;type(date)"`           // 创建时自动设置时间
-	Updated     time.Time  `orm:"auto_now"`                          // 每次更新时自动设置时间
-	Profile     *Profile   `orm:"null;rel(one);on_delete(set_null)"` // OneToOne relation, 级联删除时设置为NULL
-	Posts       []*Post `orm:"reverse(many)" json:"-"` // fk 的反向关系
-	orm.Manager `json:"-"` // 每个model都需要定义orm.Manager
-}
-
-// 定义NewModel进行orm.Manager的初始化(必须)
-func NewUser() *User {
-	obj := new(User)
-	obj.Manager.Init(obj)
-	return obj
-}
-
-type Profile struct {
-	Id          int     `orm:"auto"`
-	Age         int16   ``
-	Money       float64 ``
-	User        *User   `orm:"reverse(one)" json:"-"` // 设置反向关系(字段可选)
-	orm.Manager `json:"-"`
-}
-
-func (u *Profile) TableName() string {
-	return "profile" // 自定义表名
-}
-
-func NewProfile() *Profile {
-	obj := new(Profile)
-	obj.Manager.Init(obj)
-	return obj
-}
-
-type Post struct {
-	Id          int       `orm:"auto"`
-	User        *User     `orm:"rel(fk)"` // RelForeignKey relation
-	Title       string    `orm:"size(60)"`
-	Content     string    ``
-	Created     time.Time ``
-	Updated     time.Time ``
-	Tags        []*Tag    `orm:"rel(m2m)"` // ManyToMany relation
-	orm.Manager `json:"-"`
-}
-
-func NewPost() *Post {
-	obj := new(Post)
-	obj.Manager.Init(obj)
-	return obj
-}
-
-type Tag struct {
-	Id          int     `orm:"auto"`
-	Name        string  `orm:"size(30)"`
-	Status      int16   `orm:"choices(0,1,2);default(0)"`
-	Posts       []*Post `orm:"reverse(many)" json:"-"`
-	orm.Manager `json:"-"`
-}
-
-func NewTag() *Tag {
-	obj := new(Tag)
-	obj.Manager.Init(obj)
-	return obj
-}
-
-type Comment struct {
-	Id          int       `orm:"auto"`
-	Post        *Post     `orm:"rel(fk)"`
-	Content     string    ``
-	Parent      *Comment  `orm:"null;rel(fk)"` // null设置allow NULL
-	Status      int16     `orm:"choices(0,1,2);default(0)"`
-	Created     time.Time `orm:"auto_now_add"`
-	orm.Manager `json:"-"`
-}
-
-func NewComment() *Comment {
-	obj := new(Comment)
-	obj.Manager.Init(obj)
-	return obj
-}
-
-func init() {
-	// 需要在init中注册定义的model
-	orm.RegisterModel(new(User), new(Profile))
-	orm.RegisterModel(new(Post), new(Tag), new(Comment))
-}
-```
-
-## Field Type
-
-现在 orm 支持下面的字段形式
-
-| go type		   | field type  | mysql type
-| :---   	   | :---        | :---
-| bool | TypeBooleanField | tinyint
-| string | TypeCharField | varchar
-| string | TypeTextField | longtext
-| time.Time | TypeDateField | date
-| time.TIme | TypeDateTimeField | datetime
-|  int16 |TypeSmallIntegerField | int(4)
-|  int, int32 |TypeIntegerField | int(11)
-|  int64 |TypeBigIntegerField | bigint(20)
-|  uint, uint16 |TypePositiveSmallIntegerField | int(4) unsigned
-|  uint32 |TypePositiveIntegerField | int(11) unsigned
-|  uint64 |TypePositiveBigIntegerField | bigint(20) unsigned
-| float32, float64 | TypeFloatField | double
-| float32, float64 | TypeDecimalField | double(digits, decimals)
-
-关系型的字段，其字段类型取决于对应的主键。
-
-* RelForeignKey
-* RelOneToOne
-* RelManyToMany
-* RelReverseOne
-* RelReverseMany
-
-## Field Options
+## Struct Tag 设置参数
 ```go
 orm:"null;rel(fk)"
 ```
@@ -175,13 +39,26 @@ orm:"null;rel(fk)"
 
 为字段设置 db 字段的名称
 ```go
-UserName `orm:"column(db_user_name)"`
+Name `orm:"column(user_name)"`
 ```
 #### default
 
 为字段设置默认值，类型必须符合
 ```go
-Status int `orm:"default(1)"`
+type User struct {
+	...
+	Status int `orm:"default(1)"`
+```
+仅当进行 orm.Manager 初始化时才会赋值
+```go
+func NewUser() *User {
+	obj := new(User)
+	obj.Manager.Init(obj)
+	return obj
+}
+
+u := NewUser()
+fmt.Println(u.Status) // 1
 ```
 #### choices
 
@@ -219,7 +96,7 @@ Updated     time.Time `auto_now`
 ```go
 Created time.Time `orm:"auto_now_add;type(date)"`
 ```
-## Relation Field Options
+## 表关系设置
 
 #### rel / reverse
 
@@ -291,3 +168,32 @@ type Profile struct {
 
 // 删除 Profile 时将设置 User.Profile 的数据库字段为 NULL
 ```
+
+
+## Struct Field 类型与数据库的对应
+
+现在 orm 支持下面的字段形式
+
+| go type		   | field type  | mysql type
+| :---   	   | :---        | :---
+| bool | TypeBooleanField | tinyint
+| string | TypeCharField | varchar
+| string | TypeTextField | longtext
+| time.Time | TypeDateField | date
+| time.TIme | TypeDateTimeField | datetime
+|  int16 |TypeSmallIntegerField | int(4)
+|  int, int32 |TypeIntegerField | int(11)
+|  int64 |TypeBigIntegerField | bigint(20)
+|  uint, uint16 |TypePositiveSmallIntegerField | int(4) unsigned
+|  uint32 |TypePositiveIntegerField | int(11) unsigned
+|  uint64 |TypePositiveBigIntegerField | bigint(20) unsigned
+| float32, float64 | TypeFloatField | double
+| float32, float64 | TypeDecimalField | double(digits, decimals)
+
+关系型的字段，其字段类型取决于对应的主键。
+
+* RelForeignKey
+* RelOneToOne
+* RelManyToMany
+* RelReverseOne
+* RelReverseMany
