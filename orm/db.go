@@ -1070,11 +1070,11 @@ setValue:
 			value = b
 		}
 	case fieldType == TypeCharField || fieldType == TypeTextField:
-		s := str.String()
 		if str == nil {
-			s = ToStr(val)
+			value = ToStr(val)
+		} else {
+			value = str.String()
 		}
-		value = s
 	case fieldType == TypeDateField || fieldType == TypeDateTimeField:
 		if str == nil {
 			switch v := val.(type) {
