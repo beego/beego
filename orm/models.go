@@ -1,8 +1,6 @@
 package orm
 
 import (
-	"log"
-	"os"
 	"sync"
 )
 
@@ -15,7 +13,6 @@ const (
 )
 
 var (
-	errLog     *log.Logger
 	modelCache = &_modelCache{
 		cache:     make(map[string]*modelInfo),
 		cacheByFN: make(map[string]*modelInfo),
@@ -43,10 +40,6 @@ var (
 		"type":         2,
 	}
 )
-
-func init() {
-	errLog = log.New(os.Stderr, "[ORM] ", log.Ldate|log.Ltime|log.Lshortfile)
-}
 
 type _modelCache struct {
 	sync.RWMutex

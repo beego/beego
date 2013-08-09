@@ -1,7 +1,6 @@
 package orm
 
 import (
-	"database/sql"
 	"fmt"
 	"reflect"
 )
@@ -9,7 +8,7 @@ import (
 type insertSet struct {
 	mi     *modelInfo
 	orm    *orm
-	stmt   *sql.Stmt
+	stmt   stmtQuerier
 	closed bool
 }
 
@@ -49,10 +48,14 @@ func newInsertSet(orm *orm, mi *modelInfo) (Inserter, error) {
 	bi := new(insertSet)
 	bi.orm = orm
 	bi.mi = mi
-	st, err := orm.alias.DbBaser.PrepareInsert(orm.db, mi)
+	st, query, err := orm.alias.DbBaser.PrepareInsert(orm.db, mi)
 	if err != nil {
 		return nil, err
 	}
-	bi.stmt = st
+	if Debug {
+		bi.stmt = newStmtQueryLog(orm.alias, st, query)
+	} else {
+		bi.stmt = st
+	}
 	return bi, nil
 }

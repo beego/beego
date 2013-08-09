@@ -527,7 +527,7 @@ func (d *dbBase) collectValues(mi *modelInfo, ind reflect.Value, skipAuto bool, 
 	return
 }
 
-func (d *dbBase) PrepareInsert(q dbQuerier, mi *modelInfo) (*sql.Stmt, error) {
+func (d *dbBase) PrepareInsert(q dbQuerier, mi *modelInfo) (stmtQuerier, string, error) {
 	dbcols := make([]string, 0, len(mi.fields.dbcols))
 	marks := make([]string, 0, len(mi.fields.dbcols))
 	for _, fi := range mi.fields.fieldsDB {
@@ -540,10 +540,11 @@ func (d *dbBase) PrepareInsert(q dbQuerier, mi *modelInfo) (*sql.Stmt, error) {
 	columns := strings.Join(dbcols, "`,`")
 
 	query := fmt.Sprintf("INSERT INTO `%s` (`%s`) VALUES (%s)", mi.table, columns, qmarks)
-	return q.Prepare(query)
+	stmt, err := q.Prepare(query)
+	return stmt, query, err
 }
 
-func (d *dbBase) InsertStmt(stmt *sql.Stmt, mi *modelInfo, ind reflect.Value) (int64, error) {
+func (d *dbBase) InsertStmt(stmt stmtQuerier, mi *modelInfo, ind reflect.Value) (int64, error) {
 	_, values, err := d.collectValues(mi, ind, true, true)
 	if err != nil {
 		return 0, err

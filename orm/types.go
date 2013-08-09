@@ -94,6 +94,13 @@ type IFieldErrors interface {
 	List() []IFieldError
 }
 
+type stmtQuerier interface {
+	Close() error
+	Exec(args ...interface{}) (sql.Result, error)
+	Query(args ...interface{}) (*sql.Rows, error)
+	QueryRow(args ...interface{}) *sql.Row
+}
+
 type dbQuerier interface {
 	Prepare(query string) (*sql.Stmt, error)
 	Exec(query string, args ...interface{}) (sql.Result, error)
@@ -101,10 +108,19 @@ type dbQuerier interface {
 	QueryRow(query string, args ...interface{}) *sql.Row
 }
 
+type txer interface {
+	Begin() (*sql.Tx, error)
+}
+
+type txEnder interface {
+	Commit() error
+	Rollback() error
+}
+
 type dbBaser interface {
 	Read(dbQuerier, *modelInfo, reflect.Value) error
 	Insert(dbQuerier, *modelInfo, reflect.Value) (int64, error)
-	InsertStmt(*sql.Stmt, *modelInfo, reflect.Value) (int64, error)
+	InsertStmt(stmtQuerier, *modelInfo, reflect.Value) (int64, error)
 	Update(dbQuerier, *modelInfo, reflect.Value) (int64, error)
 	Delete(dbQuerier, *modelInfo, reflect.Value) (int64, error)
 	ReadBatch(dbQuerier, *querySet, *modelInfo, *Condition, interface{}) (int64, error)
@@ -112,6 +128,6 @@ type dbBaser interface {
 	DeleteBatch(dbQuerier, *querySet, *modelInfo, *Condition) (int64, error)
 	Count(dbQuerier, *querySet, *modelInfo, *Condition) (int64, error)
 	GetOperatorSql(*modelInfo, string, []interface{}) (string, []interface{})
-	PrepareInsert(dbQuerier, *modelInfo) (*sql.Stmt, error)
+	PrepareInsert(dbQuerier, *modelInfo) (stmtQuerier, string, error)
 	ReadValues(dbQuerier, *querySet, *modelInfo, *Condition, []string, interface{}) (int64, error)
 }

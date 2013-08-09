@@ -4,18 +4,26 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"os"
 	"reflect"
 	"time"
 )
 
+const (
+	Debug_Queries = iota
+)
+
 var (
+	// DebugLevel       = Debug_Queries
+	Debug            = true
+	DebugLog         = NewLog(os.Stderr)
 	DefaultRowsLimit = 1000
 	DefaultRelsDepth = 5
 	DefaultTimeLoc   = time.Local
 	ErrTxHasBegan    = errors.New("<Ormer.Begin> transaction already begin")
 	ErrTxDone        = errors.New("<Ormer.Commit/Rollback> transaction not begin")
 	ErrMultiRows     = errors.New("<QuerySeter> return multi rows")
-	ErrNoRows        = errors.New("<QuerySeter> not row found")
+	ErrNoRows        = errors.New("<QuerySeter> no row found")
 	ErrStmtClosed    = errors.New("<QuerySeter> stmt already closed")
 	ErrNotImplement  = errors.New("have not implement")
 )
@@ -124,7 +132,11 @@ func (o *orm) Using(name string) error {
 	}
 	if al, ok := dataBaseCache.get(name); ok {
 		o.alias = al
-		o.db = al.DB
+		if Debug {
+			o.db = newDbQueryLog(al, al.DB)
+		} else {
+			o.db = al.DB
+		}
 	} else {
 		return errors.New(fmt.Sprintf("<orm.Using> unknown db alias name `%s`", name))
 	}
@@ -135,12 +147,17 @@ func (o *orm) Begin() error {
 	if o.isTx {
 		return ErrTxHasBegan
 	}
-	tx, err := o.alias.DB.Begin()
+	var tx *sql.Tx
+	tx, err := o.db.(txer).Begin()
 	if err != nil {
 		return err
 	}
 	o.isTx = true
-	o.db = tx
+	if Debug {
+		o.db.(*dbQueryLog).SetDB(tx)
+	} else {
+		o.db = tx
+	}
 	return nil
 }
 
@@ -148,10 +165,10 @@ func (o *orm) Commit() error {
 	if o.isTx == false {
 		return ErrTxDone
 	}
-	err := o.db.(*sql.Tx).Commit()
+	err := o.db.(txEnder).Commit()
 	if err == nil {
 		o.isTx = false
-		o.db = o.alias.DB
+		o.Using(o.alias.Name)
 	} else if err == sql.ErrTxDone {
 		return ErrTxDone
 	}
@@ -162,10 +179,10 @@ func (o *orm) Rollback() error {
 	if o.isTx == false {
 		return ErrTxDone
 	}
-	err := o.db.(*sql.Tx).Rollback()
+	err := o.db.(txEnder).Rollback()
 	if err == nil {
 		o.isTx = false
-		o.db = o.alias.DB
+		o.Using(o.alias.Name)
 	} else if err == sql.ErrTxDone {
 		return ErrTxDone
 	}

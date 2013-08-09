@@ -97,9 +97,11 @@ func NewComment() *Comment {
 var DBARGS = struct {
 	Driver string
 	Source string
+	Debug  string
 }{
 	os.Getenv("ORM_DRIVER"),
 	os.Getenv("ORM_SOURCE"),
+	os.Getenv("ORM_DEBUG"),
 }
 
 var dORM Ormer
@@ -110,6 +112,8 @@ func init() {
 	RegisterModel(new(Post))
 	RegisterModel(new(Tag))
 	RegisterModel(new(Comment))
+
+	Debug, _ = StrTo(DBARGS.Debug).Bool()
 
 	if DBARGS.Driver == "" || DBARGS.Source == "" {
 		fmt.Println(`need driver and source!

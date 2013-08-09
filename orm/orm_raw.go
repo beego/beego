@@ -26,7 +26,7 @@ func getResult(res sql.Result) (int64, error) {
 
 type rawPrepare struct {
 	rs     *rawSet
-	stmt   *sql.Stmt
+	stmt   stmtQuerier
 	closed bool
 }
 
@@ -53,7 +53,11 @@ func newRawPreparer(rs *rawSet) (RawPreparer, error) {
 	if err != nil {
 		return nil, err
 	}
-	o.stmt = st
+	if Debug {
+		o.stmt = newStmtQueryLog(rs.orm.alias, st, rs.query)
+	} else {
+		o.stmt = st
+	}
 	return o, nil
 }
 
