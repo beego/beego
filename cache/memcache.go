@@ -24,7 +24,11 @@ func (rc *MemcacheCache) Get(key string) interface{} {
 		return nil
 	}
 	var contain interface{}
-	contain = v
+	if len(v) > 0 {
+		contain = string(v[0].Value)
+	} else {
+		contain = nil
+	}
 	return contain
 }
 
