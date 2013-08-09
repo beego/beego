@@ -39,16 +39,21 @@ type orm struct {
 
 var _ Ormer = new(orm)
 
-func (o *orm) getMiInd(md Modeler) (mi *modelInfo, ind reflect.Value) {
-	md.Init(md, true)
-	name := md.GetTableName()
-	if mi, ok := modelCache.get(name); ok {
-		return mi, reflect.Indirect(reflect.ValueOf(md))
+func (o *orm) getMiInd(md interface{}) (mi *modelInfo, ind reflect.Value) {
+	val := reflect.ValueOf(md)
+	ind = reflect.Indirect(val)
+	typ := ind.Type()
+	if val.Kind() != reflect.Ptr {
+		panic(fmt.Sprintf("<Ormer> cannot use non-ptr model struct `%s`", getFullName(typ)))
 	}
-	panic(fmt.Sprintf("<orm> table name: `%s` not exists", name))
+	name := getFullName(typ)
+	if mi, ok := modelCache.getByFN(name); ok {
+		return mi, ind
+	}
+	panic(fmt.Sprintf("<Ormer> table: `%s` not found, maybe not RegisterModel", name))
 }
 
-func (o *orm) Read(md Modeler) error {
+func (o *orm) Read(md interface{}) error {
 	mi, ind := o.getMiInd(md)
 	err := o.alias.DbBaser.Read(o.db, mi, ind)
 	if err != nil {
@@ -57,7 +62,7 @@ func (o *orm) Read(md Modeler) error {
 	return nil
 }
 
-func (o *orm) Insert(md Modeler) (int64, error) {
+func (o *orm) Insert(md interface{}) (int64, error) {
 	mi, ind := o.getMiInd(md)
 	id, err := o.alias.DbBaser.Insert(o.db, mi, ind)
 	if err != nil {
@@ -71,7 +76,7 @@ func (o *orm) Insert(md Modeler) (int64, error) {
 	return id, nil
 }
 
-func (o *orm) Update(md Modeler) (int64, error) {
+func (o *orm) Update(md interface{}) (int64, error) {
 	mi, ind := o.getMiInd(md)
 	num, err := o.alias.DbBaser.Update(o.db, mi, ind)
 	if err != nil {
@@ -80,7 +85,7 @@ func (o *orm) Update(md Modeler) (int64, error) {
 	return num, nil
 }
 
-func (o *orm) Delete(md Modeler) (int64, error) {
+func (o *orm) Delete(md interface{}) (int64, error) {
 	mi, ind := o.getMiInd(md)
 	num, err := o.alias.DbBaser.Delete(o.db, mi, ind)
 	if err != nil {
@@ -94,41 +99,48 @@ func (o *orm) Delete(md Modeler) (int64, error) {
 	return num, nil
 }
 
-func (o *orm) M2mAdd(md Modeler, name string, mds ...interface{}) (int64, error) {
+func (o *orm) M2mAdd(md interface{}, name string, mds ...interface{}) (int64, error) {
 	// TODO
 	panic(ErrNotImplement)
 	return 0, nil
 }
 
-func (o *orm) M2mDel(md Modeler, name string, mds ...interface{}) (int64, error) {
+func (o *orm) M2mDel(md interface{}, name string, mds ...interface{}) (int64, error) {
 	// TODO
 	panic(ErrNotImplement)
 	return 0, nil
 }
 
-func (o *orm) LoadRel(md Modeler, name string) (int64, error) {
+func (o *orm) LoadRel(md interface{}, name string) (int64, error) {
 	// TODO
 	panic(ErrNotImplement)
 	return 0, nil
 }
 
-func (o *orm) QueryTable(ptrStructOrTableName interface{}) QuerySeter {
+func (o *orm) QueryTable(ptrStructOrTableName interface{}) (qs QuerySeter) {
 	name := ""
 	if table, ok := ptrStructOrTableName.(string); ok {
 		name = snakeString(table)
-	} else if md, ok := ptrStructOrTableName.(Modeler); ok {
-		md.Init(md, true)
-		name = md.GetTableName()
+		if mi, ok := modelCache.get(name); ok {
+			qs = newQuerySet(o, mi)
+		}
+	} else {
+		val := reflect.ValueOf(ptrStructOrTableName)
+		ind := reflect.Indirect(val)
+		name = getFullName(ind.Type())
+		if mi, ok := modelCache.getByFN(name); ok {
+			qs = newQuerySet(o, mi)
+		}
 	}
-	if mi, ok := modelCache.get(name); ok {
-		return newQuerySet(o, mi)
+	if qs == nil {
+		panic(fmt.Sprintf("<Ormer.QueryTable> table name: `%s` not exists", name))
 	}
-	panic(fmt.Sprintf("<orm.SetTable> table name: `%s` not exists", name))
+	return
 }
 
 func (o *orm) Using(name string) error {
 	if o.isTx {
-		panic("<orm.Using> transaction has been start, cannot change db")
+		panic("<Ormer.Using> transaction has been start, cannot change db")
 	}
 	if al, ok := dataBaseCache.get(name); ok {
 		o.alias = al
@@ -138,7 +150,7 @@ func (o *orm) Using(name string) error {
 			o.db = al.DB
 		}
 	} else {
-		return errors.New(fmt.Sprintf("<orm.Using> unknown db alias name `%s`", name))
+		return errors.New(fmt.Sprintf("<Ormer.Using> unknown db alias name `%s`", name))
 	}
 	return nil
 }

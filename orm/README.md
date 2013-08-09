@@ -33,7 +33,6 @@ import (
 type User struct {
 	Id   int    `orm:"auto"`
 	Name string `orm:"size(100)"`
-	orm.Manager
 }
 
 func init() {
@@ -72,7 +71,6 @@ type Post struct {
 	Id    int    `orm:"auto"`
 	Title string `orm:"size(100)"`
 	User  *User  `orm:"rel(fk)"`
-	orm.Manager
 }
 
 var posts []*Post

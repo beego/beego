@@ -11,32 +11,30 @@ import (
 )
 
 type User struct {
-	Id       int       `orm:"auto"`
-	UserName string    `orm:"size(30);unique"`
-	Email    string    `orm:"size(100)"`
-	Password string    `orm:"size(100)"`
-	Status   int16     `orm:"choices(0,1,2,3);defalut(0)"`
-	IsStaff  bool      `orm:"default(false)"`
-	IsActive bool      `orm:"default(1)"`
-	Created  time.Time `orm:"auto_now_add;type(date)"`
-	Updated  time.Time `orm:"auto_now"`
-	Profile  *Profile  `orm:"null;rel(one);on_delete(set_null)"`
-	Posts    []*Post   `orm:"reverse(many)" json:"-"`
-	Manager  `json:"-"`
+	Id         int    `orm:"auto"`
+	UserName   string `orm:"size(30);unique"`
+	Email      string `orm:"size(100)"`
+	Password   string `orm:"size(100)"`
+	Status     int16
+	IsStaff    bool
+	IsActive   bool      `orm:"default(1)"`
+	Created    time.Time `orm:"auto_now_add;type(date)"`
+	Updated    time.Time `orm:"auto_now"`
+	Profile    *Profile  `orm:"null;rel(one);on_delete(set_null)"`
+	Posts      []*Post   `orm:"reverse(many)" json:"-"`
+	ShouldSkip string    `orm:"-"`
 }
 
 func NewUser() *User {
 	obj := new(User)
-	obj.Manager.Init(obj)
 	return obj
 }
 
 type Profile struct {
-	Id      int     `orm:"auto"`
-	Age     int16   ``
-	Money   float64 ``
-	User    *User   `orm:"reverse(one)" json:"-"`
-	Manager `json:"-"`
+	Id    int     `orm:"auto"`
+	Age   int16   ``
+	Money float64 ``
+	User  *User   `orm:"reverse(one)" json:"-"`
 }
 
 func (u *Profile) TableName() string {
@@ -45,7 +43,6 @@ func (u *Profile) TableName() string {
 
 func NewProfile() *Profile {
 	obj := new(Profile)
-	obj.Manager.Init(obj)
 	return obj
 }
 
@@ -57,25 +54,21 @@ type Post struct {
 	Created time.Time `orm:"auto_now_add"`
 	Updated time.Time `orm:"auto_now"`
 	Tags    []*Tag    `orm:"rel(m2m)"`
-	Manager `json:"-"`
 }
 
 func NewPost() *Post {
 	obj := new(Post)
-	obj.Manager.Init(obj)
 	return obj
 }
 
 type Tag struct {
-	Id      int     `orm:"auto"`
-	Name    string  `orm:"size(30)"`
-	Posts   []*Post `orm:"reverse(many)" json:"-"`
-	Manager `json:"-"`
+	Id    int     `orm:"auto"`
+	Name  string  `orm:"size(30)"`
+	Posts []*Post `orm:"reverse(many)" json:"-"`
 }
 
 func NewTag() *Tag {
 	obj := new(Tag)
-	obj.Manager.Init(obj)
 	return obj
 }
 
@@ -85,12 +78,10 @@ type Comment struct {
 	Content string    ``
 	Parent  *Comment  `orm:"null;rel(fk)"`
 	Created time.Time `orm:"auto_now_add"`
-	Manager `json:"-"`
 }
 
 func NewComment() *Comment {
 	obj := new(Comment)
-	obj.Manager.Init(obj)
 	return obj
 }
 

@@ -8,20 +8,36 @@ import (
 	"strings"
 )
 
-func registerModel(model Modeler) {
-	info := newModelInfo(model)
-	model.Init(model)
-	table := model.GetTableName()
+func registerModel(model interface{}) {
+	val := reflect.ValueOf(model)
+	ind := reflect.Indirect(val)
+	typ := ind.Type()
+
+	if val.Kind() != reflect.Ptr {
+		panic(fmt.Sprintf("<orm.RegisterModel> cannot use non-ptr model struct `%s`", getFullName(typ)))
+	}
+
+	info := newModelInfo(val)
+
+	name := getFullName(typ)
+	if _, ok := modelCache.getByFN(name); ok {
+		fmt.Printf("<orm.RegisterModel> model `%s` redeclared, must be unique\n", name)
+		os.Exit(2)
+	}
+
+	table := getTableName(val)
 	if _, ok := modelCache.get(table); ok {
-		fmt.Printf("model <%T> redeclared, must be unique\n", model)
+		fmt.Printf("<orm.RegisterModel> table name `%s` redeclared, must be unique\n", table)
 		os.Exit(2)
 	}
+
 	if info.fields.pk == nil {
-		fmt.Printf("model <%T> need a primary key field\n", model)
+		fmt.Printf("<orm.RegisterModel> `%s` need a primary key field\n", name)
 		os.Exit(2)
 	}
+
 	info.table = table
-	info.pkg = getPkgPath(model)
+	info.pkg = typ.PkgPath()
 	info.model = model
 	info.manual = true
 	modelCache.set(table, info)
@@ -52,8 +68,8 @@ func bootStrap() {
 					elm = elm.Elem()
 				}
 
-				tn := getTableName(reflect.New(elm).Interface().(Modeler))
-				mii, ok := modelCache.get(tn)
+				name := getFullName(elm)
+				mii, ok := modelCache.getByFN(name)
 				if ok == false || mii.pkg != elm.PkgPath() {
 					err = fmt.Errorf("can not found rel in field `%s`, `%s` may be miss register", fi.fullName, elm.String())
 					goto end
@@ -202,7 +218,7 @@ end:
 	}
 }
 
-func RegisterModel(models ...Modeler) {
+func RegisterModel(models ...interface{}) {
 	if modelCache.done {
 		panic(fmt.Errorf("RegisterModel must be run begore BootStrap"))
 	}

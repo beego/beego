@@ -7,30 +7,7 @@ import (
 	"strings"
 )
 
-type fieldChoices []StrTo
-
-func (f *fieldChoices) Add(s StrTo) {
-	if f.Have(s) == false {
-		*f = append(*f, s)
-	}
-}
-
-func (f *fieldChoices) Clear() {
-	*f = fieldChoices([]StrTo{})
-}
-
-func (f *fieldChoices) Have(s StrTo) bool {
-	for _, v := range *f {
-		if v == s {
-			return true
-		}
-	}
-	return false
-}
-
-func (f *fieldChoices) Clone() fieldChoices {
-	return *f
-}
+var errSkipField = errors.New("skip field")
 
 type fields struct {
 	pk            *fieldInfo
@@ -111,7 +88,7 @@ type fieldInfo struct {
 	name                string
 	fullName            string
 	column              string
-	addrValue           *reflect.Value
+	addrValue           reflect.Value
 	sf                  *reflect.StructField
 	auto                bool
 	pk                  bool
@@ -120,7 +97,6 @@ type fieldInfo struct {
 	index               bool
 	unique              bool
 	initial             StrTo
-	choices             fieldChoices
 	size                int
 	auto_now            bool
 	auto_now_add        bool
@@ -142,13 +118,10 @@ func newFieldInfo(mi *modelInfo, field reflect.Value, sf reflect.StructField) (f
 	var (
 		tag       string
 		tagValue  string
-		choices   fieldChoices
-		values    fieldChoices
 		initial   StrTo
 		fieldType int
 		attrs     map[string]bool
 		tags      map[string]string
-		parts     []string
 		addrField reflect.Value
 	)
 
@@ -162,10 +135,19 @@ func newFieldInfo(mi *modelInfo, field reflect.Value, sf reflect.StructField) (f
 
 	parseStructTag(sf.Tag.Get(defaultStructTagName), &attrs, &tags)
 
+	if _, ok := attrs["-"]; ok {
+		return nil, errSkipField
+	}
+
 	digits := tags["digits"]
 	decimals := tags["decimals"]
 	size := tags["size"]
 	onDelete := tags["on_delete"]
+
+	initial.Clear()
+	if v, ok := tags["default"]; ok {
+		initial.Set(v)
+	}
 
 checkType:
 	switch f := addrField.Interface().(type) {
@@ -237,10 +219,6 @@ checkType:
 
 	switch fieldType {
 	case RelForeignKey, RelOneToOne, RelReverseOne:
-		if _, ok := addrField.Interface().(Modeler); ok == false {
-			err = fmt.Errorf("rel/reverse:one field must be implements Modeler")
-			goto end
-		}
 		if field.Kind() != reflect.Ptr {
 			err = fmt.Errorf("rel/reverse:one field must be *%s", field.Type().Name())
 			goto end
@@ -254,10 +232,6 @@ checkType:
 				err = fmt.Errorf("rel/reverse:many slice must be []*%s", field.Type().Elem().Name())
 				goto end
 			}
-			if _, ok := reflect.New(field.Type().Elem()).Elem().Interface().(Modeler); ok == false {
-				err = fmt.Errorf("rel/reverse:many slice element must be implements Modeler")
-				goto end
-			}
 		}
 	}
 
@@ -269,7 +243,7 @@ checkType:
 	fi.fieldType = fieldType
 	fi.name = sf.Name
 	fi.column = getColumnName(fieldType, addrField, sf, tags["column"])
-	fi.addrValue = &addrField
+	fi.addrValue = addrField
 	fi.sf = &sf
 	fi.fullName = mi.fullName + "." + sf.Name
 
@@ -306,7 +280,7 @@ checkType:
 		switch onDelete {
 		case od_CASCADE, od_DO_NOTHING:
 		case od_SET_DEFAULT:
-			if tags["default"] == "" {
+			if initial.Exist() == false {
 				err = errors.New("on_delete: set_default need set field a default value")
 				goto end
 			}
@@ -397,31 +371,13 @@ checkType:
 		fi.index = false
 	}
 
-	parts = strings.Split(tags["choices"], ",")
-	if len(parts) > 1 {
-		for _, v := range parts {
-			choices.Add(StrTo(strings.TrimSpace(v)))
-		}
-	}
-
-	initial.Clear()
-	if v, ok := tags["default"]; ok {
-		initial.Set(v)
-	}
-
 	if fi.auto || fi.pk || fi.unique || fieldType == TypeDateField || fieldType == TypeDateTimeField {
 		// can not set default
-		choices.Clear()
 		initial.Clear()
 	}
 
-	values = choices.Clone()
-
 	if initial.Exist() {
-		values.Add(initial)
-	}
-
-	for i, v := range values {
+		v := initial
 		switch fieldType {
 		case TypeBooleanField:
 			_, err = v.Bool()
@@ -441,23 +397,11 @@ checkType:
 			_, err = v.Uint64()
 		}
 		if err != nil {
-			if initial.Exist() && len(values) == i {
-				tag, tagValue = "default", tags["default"]
-			} else {
-				tag, tagValue = "choices", tags["choices"]
-			}
+			tag, tagValue = "default", tags["default"]
 			goto wrongTag
 		}
 	}
 
-	if len(choices) > 0 && initial.Exist() {
-		if choices.Have(initial) == false {
-			err = fmt.Errorf("default value `%s` not in choices `%s`", tags["default"], tags["choices"])
-			goto end
-		}
-	}
-
-	fi.choices = choices
 	fi.initial = initial
 end:
 	if err != nil {

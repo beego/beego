@@ -18,6 +18,7 @@ var (
 		cacheByFN: make(map[string]*modelInfo),
 	}
 	supportTag = map[string]int{
+		"-":            1,
 		"null":         1,
 		"blank":        1,
 		"index":        1,
@@ -27,7 +28,6 @@ var (
 		"auto_now":     1,
 		"auto_now_add": 1,
 		"size":         2,
-		"choices":      2,
 		"column":       2,
 		"default":      2,
 		"rel":          2,
@@ -67,9 +67,11 @@ func (mc *_modelCache) allOrdered() []*modelInfo {
 
 func (mc *_modelCache) get(table string) (mi *modelInfo, ok bool) {
 	mi, ok = mc.cache[table]
-	if ok == false {
-		mi, ok = mc.cacheByFN[table]
-	}
+	return
+}
+
+func (mc *_modelCache) getByFN(name string) (mi *modelInfo, ok bool) {
+	mi, ok = mc.cacheByFN[name]
 	return
 }
 

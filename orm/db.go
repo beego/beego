@@ -582,8 +582,6 @@ func (d *dbBase) Read(q dbQuerier, mi *modelInfo, ind reflect.Value) error {
 		return err
 	} else {
 		elm := reflect.New(mi.addrField.Elem().Type())
-		md := elm.Interface().(Modeler)
-		md.Init(md)
 		mind := reflect.Indirect(elm)
 
 		d.setColsValues(mi, &mind, mi.fields.dbcols, refs)
@@ -803,25 +801,27 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 
 	val := reflect.ValueOf(container)
 	ind := reflect.Indirect(val)
-	typ := ind.Type()
 
 	errTyp := true
 
 	one := true
 
 	if val.Kind() == reflect.Ptr {
-		tp := typ
+		fn := ""
 		if ind.Kind() == reflect.Slice {
 			one = false
 			if ind.Type().Elem().Kind() == reflect.Ptr {
-				tp = ind.Type().Elem().Elem()
+				typ := ind.Type().Elem().Elem()
+				fn = getFullName(typ)
 			}
+		} else {
+			fn = getFullName(ind.Type())
 		}
-		errTyp = tp.PkgPath()+"."+tp.Name() != mi.fullName
+		errTyp = fn != mi.fullName
 	}
 
 	if errTyp {
-		panic(fmt.Sprintf("wrong object type `%s` for rows scan, need *[]*%s or *%s", val.Type(), mi.fullName, mi.fullName))
+		panic(fmt.Sprintf("wrong object type `%s` for rows scan, need *[]*%s or *%s", ind.Type(), mi.fullName, mi.fullName))
 	}
 
 	rlimit := qs.limit
@@ -873,8 +873,6 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 			}
 
 			elm := reflect.New(mi.addrField.Elem().Type())
-			md := elm.Interface().(Modeler)
-			md.Init(md)
 			mind := reflect.Indirect(elm)
 
 			cacheV := make(map[string]*reflect.Value)
@@ -989,9 +987,9 @@ func (d *dbBase) getOperatorParams(operator string, args []interface{}) (params 
 
 			if ind.Kind() == reflect.Struct {
 				typ := ind.Type()
-				fullName := typ.PkgPath() + "." + typ.Name()
+				name := getFullName(typ)
 				var value interface{}
-				if mmi, ok := modelCache.get(fullName); ok {
+				if mmi, ok := modelCache.getByFN(name); ok {
 					if _, vu, exist := d.existPk(mmi, ind); exist {
 						value = vu
 					}
@@ -999,7 +997,7 @@ func (d *dbBase) getOperatorParams(operator string, args []interface{}) (params 
 				arg = value
 
 				if arg == nil {
-					panic(fmt.Sprintf("`%s` operator need a valid args value, unknown table or value `%v`", operator, val.Type()))
+					panic(fmt.Sprintf("`%s` operator need a valid args value, unknown table or value `%s`", operator, name))
 				}
 			} else {
 				arg = ind.Interface()
@@ -1266,8 +1264,6 @@ setValue:
 		if value != nil {
 			fieldType = fi.relModelInfo.fields.pk.fieldType
 			mf := reflect.New(fi.relModelInfo.addrField.Elem().Type())
-			md := mf.Interface().(Modeler)
-			md.Init(md)
 			field.Set(mf)
 			f := mf.Elem().Field(fi.relModelInfo.fields.pk.fieldIndex)
 			field = &f

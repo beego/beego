@@ -12,13 +12,13 @@ type modelInfo struct {
 	name      string
 	fullName  string
 	table     string
-	model     Modeler
+	model     interface{}
 	fields    *fields
 	manual    bool
 	addrField reflect.Value
 }
 
-func newModelInfo(model Modeler) (info *modelInfo) {
+func newModelInfo(val reflect.Value) (info *modelInfo) {
 	var (
 		err error
 		fi  *fieldInfo
@@ -28,26 +28,24 @@ func newModelInfo(model Modeler) (info *modelInfo) {
 	info = &modelInfo{}
 	info.fields = newFields()
 
-	val := reflect.ValueOf(model)
 	ind := reflect.Indirect(val)
 	typ := ind.Type()
 
 	info.addrField = ind.Addr()
 
 	info.name = typ.Name()
-	info.fullName = typ.PkgPath() + "." + typ.Name()
+	info.fullName = getFullName(typ)
 
 	for i := 0; i < ind.NumField(); i++ {
 		field := ind.Field(i)
 		sf = ind.Type().Field(i)
-		if field.CanAddr() {
-			addr := field.Addr()
-			if _, ok := addr.Interface().(*Manager); ok {
+		fi, err = newFieldInfo(info, field, sf)
+
+		if err != nil {
+			if err == errSkipField {
+				err = nil
 				continue
 			}
-		}
-		fi, err = newFieldInfo(info, field, sf)
-		if err != nil {
 			break
 		}
 

@@ -14,15 +14,19 @@ type insertSet struct {
 
 var _ Inserter = new(insertSet)
 
-func (o *insertSet) Insert(md Modeler) (int64, error) {
+func (o *insertSet) Insert(md interface{}) (int64, error) {
 	if o.closed {
 		return 0, ErrStmtClosed
 	}
-	md.Init(md, true)
 	val := reflect.ValueOf(md)
 	ind := reflect.Indirect(val)
-	if val.Type() != o.mi.addrField.Type() {
-		panic(fmt.Sprintf("<Inserter.Insert> need type `%s` but found `%s`", o.mi.addrField.Type(), val.Type()))
+	typ := ind.Type()
+	name := getFullName(typ)
+	if val.Kind() != reflect.Ptr {
+		panic(fmt.Sprintf("<Inserter.Insert> cannot use non-ptr model struct `%s`", name))
+	}
+	if name != o.mi.fullName {
+		panic(fmt.Sprintf("<Inserter.Insert> need model `%s` but found `%s`", o.mi.fullName, name))
 	}
 	id, err := o.orm.alias.DbBaser.InsertStmt(o.stmt, o.mi, ind)
 	if err != nil {

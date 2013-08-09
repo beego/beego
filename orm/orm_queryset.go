@@ -63,7 +63,7 @@ func (o querySet) RelatedSel(params ...interface{}) QuerySeter {
 			case int:
 				o.relDepth = val
 			default:
-				panic(fmt.Sprintf("<querySet.RelatedSel> wrong param kind: %v", val))
+				panic(fmt.Sprintf("<QuerySeter.RelatedSel> wrong param kind: %v", val))
 			}
 		}
 	}
@@ -96,7 +96,7 @@ func (o *querySet) All(container interface{}) (int64, error) {
 	return o.orm.alias.DbBaser.ReadBatch(o.orm.db, o, o.mi, o.cond, container)
 }
 
-func (o *querySet) One(container Modeler) error {
+func (o *querySet) One(container interface{}) error {
 	num, err := o.orm.alias.DbBaser.ReadBatch(o.orm.db, o, o.mi, o.cond, container)
 	if err != nil {
 		return err

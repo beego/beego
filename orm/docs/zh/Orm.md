@@ -17,14 +17,12 @@ type User struct {
 	Id          int        `orm:"auto"`     // 设置为auto主键
 	Name        string
 	Profile     *Profile   `orm:"rel(one)"` // OneToOne relation
-	orm.Manager // 每个model都需要定义orm.Manager
 }
 
 type Profile struct {
 	Id          int     `orm:"auto"`
 	Age         int16
 	User        *User   `orm:"reverse(one)"` // 设置反向关系(可选)
-	orm.Manager
 }
 
 func init() {

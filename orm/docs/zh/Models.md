@@ -11,6 +11,17 @@ orm:"null;rel(fk)"
 
 多个设置间使用 `;` 分隔，设置的值如果是多个，使用 `,` 分隔。
 
+#### 忽略字段
+
+设置 `-` 即可忽略 struct 中的字段
+
+```go
+type User struct {
+...
+	AnyField string `orm:"-"`
+...
+```
+
 #### auto
 
 设置为 Autoincrement Primary Key
@@ -48,23 +59,6 @@ Name `orm:"column(user_name)"`
 type User struct {
 	...
 	Status int `orm:"default(1)"`
-```
-仅当进行 orm.Manager 初始化时才会赋值
-```go
-func NewUser() *User {
-	obj := new(User)
-	obj.Manager.Init(obj)
-	return obj
-}
-
-u := NewUser()
-fmt.Println(u.Status) // 1
-```
-#### choices
-
-为字段设置一组可选的值，类型必须符合。其他值 clean 会返回错误
-```go
-Status int `orm:"choices(1,2,3,4)"`
 ```
 #### size (string)
 

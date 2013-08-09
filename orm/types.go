@@ -18,22 +18,14 @@ type Fielder interface {
 	Clean() error
 }
 
-type Modeler interface {
-	Init(Modeler, ...interface{}) Modeler
-	IsInited() bool
-	Clean() IFieldErrors
-	CleanFields(string) IFieldErrors
-	GetTableName() string
-}
-
 type Ormer interface {
-	Read(Modeler) error
-	Insert(Modeler) (int64, error)
-	Update(Modeler) (int64, error)
-	Delete(Modeler) (int64, error)
-	M2mAdd(Modeler, string, ...interface{}) (int64, error)
-	M2mDel(Modeler, string, ...interface{}) (int64, error)
-	LoadRel(Modeler, string) (int64, error)
+	Read(interface{}) error
+	Insert(interface{}) (int64, error)
+	Update(interface{}) (int64, error)
+	Delete(interface{}) (int64, error)
+	M2mAdd(interface{}, string, ...interface{}) (int64, error)
+	M2mDel(interface{}, string, ...interface{}) (int64, error)
+	LoadRel(interface{}, string) (int64, error)
 	QueryTable(interface{}) QuerySeter
 	Using(string) error
 	Begin() error
@@ -44,7 +36,7 @@ type Ormer interface {
 }
 
 type Inserter interface {
-	Insert(Modeler) (int64, error)
+	Insert(interface{}) (int64, error)
 	Close() error
 }
 
@@ -61,7 +53,7 @@ type QuerySeter interface {
 	Delete() (int64, error)
 	PrepareInsert() (Inserter, error)
 	All(interface{}) (int64, error)
-	One(Modeler) error
+	One(interface{}) error
 	Values(*[]Params, ...string) (int64, error)
 	ValuesList(*[]ParamsList, ...string) (int64, error)
 	ValuesFlat(*ParamsList, string) (int64, error)

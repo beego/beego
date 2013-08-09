@@ -7,8 +7,11 @@ import (
 	"time"
 )
 
-func getTableName(model Modeler) string {
-	val := reflect.ValueOf(model)
+func getFullName(typ reflect.Type) string {
+	return typ.PkgPath() + "." + typ.Name()
+}
+
+func getTableName(val reflect.Value) string {
 	ind := reflect.Indirect(val)
 	fun := val.MethodByName("TableName")
 	if fun.IsValid() {
@@ -21,11 +24,6 @@ func getTableName(model Modeler) string {
 		}
 	}
 	return snakeString(ind.Type().Name())
-}
-
-func getPkgPath(model Modeler) string {
-	val := reflect.ValueOf(model)
-	return val.Type().Elem().PkgPath()
 }
 
 func getColumnName(ft int, addrField reflect.Value, sf reflect.StructField, col string) string {

@@ -152,6 +152,14 @@ func throwFailNow(t *testing.T, err error, args ...interface{}) {
 	}
 }
 
+func TestModelSyntax(t *testing.T) {
+	mi, ok := modelCache.get("user")
+	throwFail(t, AssertIs(ok, T_Equal, true))
+	if ok {
+		throwFail(t, AssertIs(mi.fields.GetByName("ShouldSkip") == nil, T_Equal, true))
+	}
+}
+
 func TestCRUD(t *testing.T) {
 	profile := NewProfile()
 	profile.Age = 30
