@@ -15,7 +15,7 @@ const (
 
 var (
 	// DebugLevel       = Debug_Queries
-	Debug            = true
+	Debug            = false
 	DebugLog         = NewLog(os.Stderr)
 	DefaultRowsLimit = 1000
 	DefaultRelsDepth = 5
