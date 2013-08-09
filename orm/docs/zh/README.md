@@ -4,6 +4,7 @@
 1. [Orm 使用方法](Orm.md)
 	- [数据库的设置](Orm.md#数据库的设置)
 	- [ORM 接口使用](Orm.md#orm-接口使用)
+	- [调试模式打印查询语句](Orm.md#调试模式打印查询语句)
 2. [对象的CRUD操作](Object.md)
 3. [高级查询](Query.md)
 	- [使用的表达式语法](Query.md#expr)

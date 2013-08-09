@@ -107,6 +107,29 @@ if err != nil {
 
 ```
 
+#### Debug Log Queries
+
+In development env, you can simple use
+
+```go
+func main() {
+	orm.Debug = true
+...
+```
+
+enable log queries.
+
+output include all queries, such as exec / prepare / transaction.
+
+like this:
+
+```go
+[ORM] - 2013-08-09 13:18:16 - [Queries/default] - [    db.Exec /     0.4ms] - [INSERT INTO `user` (`name`) VALUES (?)] - `slene`
+...
+```
+
+note: not recommend use this in product env.
+
 ## Docs
 
 more details and examples in docs and test
