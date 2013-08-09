@@ -22,12 +22,11 @@ func (rs *RedisSessionStore) Set(key, value interface{}) error {
 }
 
 func (rs *RedisSessionStore) Get(key interface{}) interface{} {
-	//v, err := rs.c.Do("GET", rs.sid, key)
-	v, err := redis.String(rs.c.Do("HGET", rs.sid, key))
+	reply, err := rs.c.Do("HGET", rs.sid, key)
 	if err != nil {
 		return nil
 	}
-	return v
+	return reply
 }
 
 func (rs *RedisSessionStore) Delete(key interface{}) error {
@@ -56,7 +55,7 @@ func (rp *RedisProvider) connectInit() redis.Conn {
 	}
 	return c*/
 	//if redisPool == nil {
-		redisPool = make(chan redis.Conn, MAX_POOL_SIZE)
+	redisPool = make(chan redis.Conn, MAX_POOL_SIZE)
 	//}
 	if len(redisPool) == 0 {
 		go func() {
