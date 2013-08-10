@@ -178,7 +178,7 @@ func inSlice(v string, sl []string) bool {
 func ParseForm(form url.Values, obj interface{}) error {
 	objT := reflect.TypeOf(obj)
 	objV := reflect.ValueOf(obj)
-	if !(objT.Kind() == reflect.Ptr && objT.Elem().Kind() == reflect.Struct) {
+	if !isStructPtr(objT) {
 		return fmt.Errorf("%v must be  a struct pointer", obj)
 	}
 	objT = objT.Elem()
@@ -189,8 +189,8 @@ func ParseForm(form url.Values, obj interface{}) error {
 		if !fieldV.CanSet() {
 			continue
 		}
-		fieldT := objT.Field(i)
 
+		fieldT := objT.Field(i)
 		tags := strings.Split(fieldT.Tag.Get("form"), ",")
 		var tag string
 		if len(tags) == 0 || len(tags[0]) == 0 {
@@ -236,6 +236,69 @@ func ParseForm(form url.Values, obj interface{}) error {
 		}
 	}
 	return nil
+}
+
+// form types for RenderForm function
+var FormType = map[string]bool{
+	"text":     true,
+	"textarea": true,
+	"hidden":   true,
+	"password": true,
+}
+
+var unKind = map[reflect.Kind]bool{
+	reflect.Uintptr:       true,
+	reflect.Complex64:     true,
+	reflect.Complex128:    true,
+	reflect.Array:         true,
+	reflect.Chan:          true,
+	reflect.Func:          true,
+	reflect.Map:           true,
+	reflect.Ptr:           true,
+	reflect.Slice:         true,
+	reflect.Struct:        true,
+	reflect.UnsafePointer: true,
+}
+
+// obj must be a struct pointer
+func RenderForm(obj interface{}) template.HTML {
+	objT := reflect.TypeOf(obj)
+	objV := reflect.ValueOf(obj)
+	if !isStructPtr(objT) {
+		return template.HTML("")
+	}
+	objT = objT.Elem()
+	objV = objV.Elem()
+
+	var raw []string
+	for i := 0; i < objT.NumField(); i++ {
+		fieldV := objV.Field(i)
+		if !fieldV.CanSet() || unKind[fieldV.Kind()] {
+			continue
+		}
+
+		fieldT := objT.Field(i)
+		tags := strings.Split(fieldT.Tag.Get("form"), ",")
+		name := fieldT.Name
+		if len(tags) < 2 {
+			if len(tags) == 1 && len(tags[0]) > 0 {
+				name = tags[0]
+			}
+			raw = append(raw, fmt.Sprintf(`%v: <input name="%v" type="text" value="%v">`,
+				fieldT.Name, name, fieldV.Interface()))
+		} else {
+			if len(tags[0]) > 0 {
+				name = tags[0]
+			}
+			raw = append(raw, fmt.Sprintf(`%v: <input name="%v" type="%v" value="%v">`,
+				fieldT.Name, name, tags[1], fieldV.Interface()))
+		}
+	}
+	return template.HTML(strings.Join(raw, "</br>"))
+}
+
+func isStructPtr(t reflect.Type) bool {
+	return t.Kind() == reflect.Ptr && t.Elem().Kind() == reflect.Struct
 }
 
 func stringsToJson(str string) string {
