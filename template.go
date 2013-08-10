@@ -31,6 +31,7 @@ func init() {
 	beegoTplFuncMap["str2html"] = Str2html
 	beegoTplFuncMap["htmlquote"] = Htmlquote
 	beegoTplFuncMap["htmlunquote"] = Htmlunquote
+	beegoTplFuncMap["renderform"] = RenderForm
 }
 
 // AddFuncMap let user to register a func in the template
