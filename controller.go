@@ -342,6 +342,10 @@ func (c *Controller) DelSession(name interface{}) {
 	c.CruSession.Delete(name)
 }
 
+func (c *Controller) DestroySession() {
+	GlobalSessions.SessionDestroy(c.Ctx.ResponseWriter, c.Ctx.Request)
+}
+
 func (c *Controller) IsAjax() bool {
 	return (c.Ctx.Request.Header.Get("HTTP_X_REQUESTED_WITH") == "XMLHttpRequest")
 }
