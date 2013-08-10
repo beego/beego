@@ -124,18 +124,18 @@ func TestParseForm(t *testing.T) {
 		t.Fatal(err)
 	}
 	if u.Id != 0 {
-		t.Error("Id should not be changed")
+		t.Errorf("Id should equal 0 but got %v", u.Id)
 	}
 	if len(u.tag) != 0 {
-		t.Error("tag should not be changed")
+		t.Error("tag's length should equal 0 but got %v", len(u.tag))
 	}
 	if u.Name.(string) != "test" {
-		t.Error("should be equal")
+		t.Error("Name should equal `test` but got `%v`", u.Name.(string))
 	}
 	if u.Age != 40 {
-		t.Error("should be equal")
+		t.Error("Age should equal 40 but got %v", u.Age)
 	}
 	if u.Email != "test@gmail.com" {
-		t.Error("should be equal")
+		t.Error("Email should equal `test@gmail.com` but got `%v`", u.Email)
 	}
 }
