@@ -6,39 +6,17 @@ import (
 	"reflect"
 )
 
-func getResult(res sql.Result) (int64, error) {
-	if num, err := res.LastInsertId(); err != nil {
-		return 0, err
-	} else {
-		if num > 0 {
-			return num, nil
-		}
-	}
-	if num, err := res.RowsAffected(); err != nil {
-		return num, err
-	} else {
-		if num > 0 {
-			return num, nil
-		}
-	}
-	return 0, nil
-}
-
 type rawPrepare struct {
 	rs     *rawSet
 	stmt   stmtQuerier
 	closed bool
 }
 
-func (o *rawPrepare) Exec(args ...interface{}) (int64, error) {
+func (o *rawPrepare) Exec(args ...interface{}) (sql.Result, error) {
 	if o.closed {
-		return 0, ErrStmtClosed
+		return nil, ErrStmtClosed
 	}
-	res, err := o.stmt.Exec(args...)
-	if err != nil {
-		return 0, err
-	}
-	return getResult(res)
+	return o.stmt.Exec(args...)
 }
 
 func (o *rawPrepare) Close() error {
@@ -74,12 +52,8 @@ func (o rawSet) SetArgs(args ...interface{}) RawSeter {
 	return &o
 }
 
-func (o *rawSet) Exec() (int64, error) {
-	res, err := o.orm.db.Exec(o.query, o.args...)
-	if err != nil {
-		return 0, err
-	}
-	return getResult(res)
+func (o *rawSet) Exec() (sql.Result, error) {
+	return o.orm.db.Exec(o.query, o.args...)
 }
 
 func (o *rawSet) QueryRow(...interface{}) error {

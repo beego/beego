@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"os"
 	"path/filepath"
 	"reflect"
 	"runtime"
@@ -11,6 +12,8 @@ import (
 	"testing"
 	"time"
 )
+
+var _ = os.PathSeparator
 
 type T_Code int
 
@@ -60,9 +63,9 @@ func ValuesCompare(is bool, a interface{}, o T_Code, args ...interface{}) (err e
 		ok = is && ok || !is && !ok
 		if !ok {
 			if is {
-				err = fmt.Errorf("should: a == b, a = `%v`, b = `%v`", a, b)
+				err = fmt.Errorf("expected: a == `%v`, get `%v`", b, a)
 			} else {
-				err = fmt.Errorf("should: a != b, a = `%v`, b = `%v`", a, b)
+				err = fmt.Errorf("expected: a != `%v`, get `%v`", b, a)
 			}
 		}
 	case T_Less, T_Large:
@@ -89,9 +92,9 @@ func ValuesCompare(is bool, a interface{}, o T_Code, args ...interface{}) (err e
 		ok = is && ok || !is && !ok
 		if !ok {
 			if is {
-				err = fmt.Errorf("should: a %s b, a = `%v`, b = `%v`", opts[0], f1, f2)
+				err = fmt.Errorf("should: a %s b, but a = `%v`, b = `%v`", opts[0], f1, f2)
 			} else {
-				err = fmt.Errorf("should: a %s b, a = `%v`, b = `%v`", opts[1], f1, f2)
+				err = fmt.Errorf("should: a %s b, but a = `%v`, b = `%v`", opts[1], f1, f2)
 			}
 		}
 	}
@@ -122,32 +125,51 @@ func getCaller(skip int) string {
 	fun := runtime.FuncForPC(pc)
 	_, fn := filepath.Split(file)
 	data, err := ioutil.ReadFile(file)
-	code := ""
+	var codes []string
 	if err == nil {
 		lines := bytes.Split(data, []byte{'\n'})
-		code = strings.TrimSpace(string(lines[line-1]))
+		n := 10
+		for i := 0; i < n; i++ {
+			o := line - n
+			if o < 0 {
+				continue
+			}
+			cur := o + i + 1
+			flag := "  "
+			if cur == line {
+				flag = ">>"
+			}
+			code := fmt.Sprintf(" %s %5d:   %s", flag, cur, strings.TrimSpace(string(lines[o+i])))
+			if code != "" {
+				codes = append(codes, code)
+			}
+		}
 	}
 	funName := fun.Name()
 	if i := strings.LastIndex(funName, "."); i > -1 {
 		funName = funName[i+1:]
 	}
-	return fmt.Sprintf("%s:%d: %s: %s", fn, line, funName, code)
+	return fmt.Sprintf("%s:%d: \n%s", fn, line, strings.Join(codes, "\n"))
 }
 
 func throwFail(t *testing.T, err error, args ...interface{}) {
 	if err != nil {
-		params := []interface{}{"\n", getCaller(2), "\n", err, "\n"}
-		params = append(params, args...)
-		t.Error(params...)
+		con := fmt.Sprintf("\t\nError: %s\n%s\n", err.Error(), getCaller(2))
+		if len(args) > 0 {
+			con += fmt.Sprint(args...)
+		}
+		t.Error(con)
 		t.Fail()
 	}
 }
 
 func throwFailNow(t *testing.T, err error, args ...interface{}) {
 	if err != nil {
-		params := []interface{}{"\n", getCaller(2), "\n", err, "\n"}
-		params = append(params, args...)
-		t.Error(params...)
+		con := fmt.Sprintf("\t\nError: %s\n%s\n", err.Error(), getCaller(2))
+		if len(args) > 0 {
+			con += fmt.Sprint(args...)
+		}
+		t.Error(con)
 		t.FailNow()
 	}
 }
@@ -165,8 +187,8 @@ func TestCRUD(t *testing.T) {
 	profile.Age = 30
 	profile.Money = 1234.12
 	id, err := dORM.Insert(profile)
-	throwFailNow(t, err)
-	throwFailNow(t, AssertIs(id, T_Large, 0))
+	throwFail(t, err)
+	throwFail(t, AssertIs(id, T_Equal, 1))
 
 	user := NewUser()
 	user.UserName = "slene"
@@ -177,51 +199,53 @@ func TestCRUD(t *testing.T) {
 	user.IsActive = true
 
 	id, err = dORM.Insert(user)
-	throwFailNow(t, err)
-	throwFailNow(t, AssertIs(id, T_Large, 0))
+	throwFail(t, err)
+	throwFail(t, AssertIs(id, T_Equal, 1))
 
 	u := &User{Id: user.Id}
 	err = dORM.Read(u)
-	throwFailNow(t, err)
+	throwFail(t, err)
 
-	throwFailNow(t, AssertIs(u.UserName, T_Equal, "slene"))
-	throwFailNow(t, AssertIs(u.Email, T_Equal, "vslene@gmail.com"))
-	throwFailNow(t, AssertIs(u.Password, T_Equal, "pass"))
-	throwFailNow(t, AssertIs(u.Status, T_Equal, 3))
-	throwFailNow(t, AssertIs(u.IsStaff, T_Equal, true))
-	throwFailNow(t, AssertIs(u.IsActive, T_Equal, true))
-	throwFailNow(t, AssertIs(u.Created, T_Equal, user.Created, format_Date))
-	throwFailNow(t, AssertIs(u.Updated, T_Equal, user.Updated, format_DateTime))
+	throwFail(t, AssertIs(u.UserName, T_Equal, "slene"))
+	throwFail(t, AssertIs(u.Email, T_Equal, "vslene@gmail.com"))
+	throwFail(t, AssertIs(u.Password, T_Equal, "pass"))
+	throwFail(t, AssertIs(u.Status, T_Equal, 3))
+	throwFail(t, AssertIs(u.IsStaff, T_Equal, true))
+	throwFail(t, AssertIs(u.IsActive, T_Equal, true))
+	throwFail(t, AssertIs(u.Created, T_Equal, user.Created, format_Date))
+	throwFail(t, AssertIs(u.Updated, T_Equal, user.Updated, format_DateTime))
 
 	user.UserName = "astaxie"
 	user.Profile = profile
 	num, err := dORM.Update(user)
-	throwFailNow(t, err)
-	throwFailNow(t, AssertIs(num, T_Equal, 1))
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, T_Equal, 1))
 
 	u = &User{Id: user.Id}
 	err = dORM.Read(u)
-	throwFailNow(t, err)
+	throwFail(t, err)
 
-	throwFailNow(t, AssertIs(u.UserName, T_Equal, "astaxie"))
-	throwFailNow(t, AssertIs(u.Profile.Id, T_Equal, profile.Id))
+	if err == nil {
+		throwFail(t, AssertIs(u.UserName, T_Equal, "astaxie"))
+		throwFail(t, AssertIs(u.Profile.Id, T_Equal, profile.Id))
+	}
 
 	num, err = dORM.Delete(profile)
-	throwFailNow(t, err)
-	throwFailNow(t, AssertIs(num, T_Equal, 1))
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, T_Equal, 1))
 
 	u = &User{Id: user.Id}
 	err = dORM.Read(u)
-	throwFailNow(t, err)
-	throwFailNow(t, AssertIs(true, T_Equal, u.Profile == nil))
+	throwFail(t, err)
+	throwFail(t, AssertIs(true, T_Equal, u.Profile == nil))
 
 	num, err = dORM.Delete(user)
-	throwFailNow(t, err)
-	throwFailNow(t, AssertIs(num, T_Equal, 1))
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, T_Equal, 1))
 
 	u = &User{Id: 100}
 	err = dORM.Read(u)
-	throwFailNow(t, AssertIs(err, T_Equal, ErrNoRows))
+	throwFail(t, AssertIs(err, T_Equal, ErrNoRows))
 }
 
 func TestInsertTestData(t *testing.T) {
@@ -232,8 +256,8 @@ func TestInsertTestData(t *testing.T) {
 	profile.Money = 1234.12
 
 	id, err := dORM.Insert(profile)
-	throwFailNow(t, err)
-	throwFailNow(t, AssertIs(id, T_Large, 0))
+	throwFail(t, err)
+	throwFail(t, AssertIs(id, T_Equal, 2))
 
 	user := NewUser()
 	user.UserName = "slene"
@@ -247,16 +271,16 @@ func TestInsertTestData(t *testing.T) {
 	users = append(users, user)
 
 	id, err = dORM.Insert(user)
-	throwFailNow(t, err)
-	throwFailNow(t, AssertIs(id, T_Large, 0))
+	throwFail(t, err)
+	throwFail(t, AssertIs(id, T_Equal, 2))
 
 	profile = NewProfile()
 	profile.Age = 30
 	profile.Money = 4321.09
 
 	id, err = dORM.Insert(profile)
-	throwFailNow(t, err)
-	throwFailNow(t, AssertIs(id, T_Large, 0))
+	throwFail(t, err)
+	throwFail(t, AssertIs(id, T_Equal, 3))
 
 	user = NewUser()
 	user.UserName = "astaxie"
@@ -270,8 +294,8 @@ func TestInsertTestData(t *testing.T) {
 	users = append(users, user)
 
 	id, err = dORM.Insert(user)
-	throwFailNow(t, err)
-	throwFailNow(t, AssertIs(id, T_Large, 0))
+	throwFail(t, err)
+	throwFail(t, AssertIs(id, T_Equal, 3))
 
 	user = NewUser()
 	user.UserName = "nobody"
@@ -284,8 +308,8 @@ func TestInsertTestData(t *testing.T) {
 	users = append(users, user)
 
 	id, err = dORM.Insert(user)
-	throwFailNow(t, err)
-	throwFailNow(t, AssertIs(id, T_Large, 0))
+	throwFail(t, err)
+	throwFail(t, AssertIs(id, T_Equal, 4))
 
 	tags := []*Tag{
 		&Tag{Name: "golang"},
@@ -315,21 +339,21 @@ The program—and web server—godoc processes Go source files to extract docume
 
 	for _, tag := range tags {
 		id, err := dORM.Insert(tag)
-		throwFailNow(t, err)
-		throwFailNow(t, AssertIs(id, T_Large, 0))
+		throwFail(t, err)
+		throwFail(t, AssertIs(id, T_Large, 0))
 	}
 
 	for _, post := range posts {
 		id, err := dORM.Insert(post)
-		throwFailNow(t, err)
-		throwFailNow(t, AssertIs(id, T_Large, 0))
+		throwFail(t, err)
+		throwFail(t, AssertIs(id, T_Large, 0))
 		// dORM.M2mAdd(post, "tags", post.Tags)
 	}
 
 	for _, comment := range comments {
 		id, err := dORM.Insert(comment)
-		throwFailNow(t, err)
-		throwFailNow(t, AssertIs(id, T_Large, 0))
+		throwFail(t, err)
+		throwFail(t, AssertIs(id, T_Large, 0))
 	}
 }
 
@@ -359,9 +383,17 @@ func TestOperators(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, T_Equal, 2))
 
+	var shouldNum int
+
+	if IsSqlite {
+		shouldNum = 2
+	} else {
+		shouldNum = 0
+	}
+
 	num, err = qs.Filter("user_name__contains", "E").Count()
 	throwFail(t, err)
-	throwFail(t, AssertIs(num, T_Equal, 0))
+	throwFail(t, AssertIs(num, T_Equal, shouldNum))
 
 	num, err = qs.Filter("user_name__icontains", "E").Count()
 	throwFail(t, err)
@@ -391,9 +423,15 @@ func TestOperators(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, T_Equal, 1))
 
+	if IsSqlite {
+		shouldNum = 1
+	} else {
+		shouldNum = 0
+	}
+
 	num, err = qs.Filter("user_name__startswith", "S").Count()
 	throwFail(t, err)
-	throwFail(t, AssertIs(num, T_Equal, 0))
+	throwFail(t, AssertIs(num, T_Equal, shouldNum))
 
 	num, err = qs.Filter("user_name__istartswith", "S").Count()
 	throwFail(t, err)
@@ -403,9 +441,15 @@ func TestOperators(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, T_Equal, 2))
 
+	if IsSqlite {
+		shouldNum = 2
+	} else {
+		shouldNum = 0
+	}
+
 	num, err = qs.Filter("user_name__endswith", "E").Count()
 	throwFail(t, err)
-	throwFail(t, AssertIs(num, T_Equal, 0))
+	throwFail(t, AssertIs(num, T_Equal, shouldNum))
 
 	num, err = qs.Filter("user_name__iendswith", "E").Count()
 	throwFail(t, err)
@@ -537,7 +581,6 @@ func TestRelatedSel(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, T_Equal, 1))
 	throwFail(t, AssertNot(user.Profile, T_Equal, nil))
-	throwFail(t, AssertIs(user.Profile.Age, T_Equal, 28))
 	if user.Profile != nil {
 		throwFail(t, AssertIs(user.Profile.Age, T_Equal, 28))
 	}
@@ -617,7 +660,7 @@ func TestOrderBy(t *testing.T) {
 func TestPrepareInsert(t *testing.T) {
 	qs := dORM.QueryTable("user")
 	i, err := qs.PrepareInsert()
-	throwFail(t, err)
+	throwFailNow(t, err)
 
 	var user User
 	user.UserName = "testing1"
@@ -641,15 +684,18 @@ func TestPrepareInsert(t *testing.T) {
 }
 
 func TestRaw(t *testing.T) {
-	switch dORM.Driver().Type() {
-	case DR_MySQL:
-		num, err := dORM.Raw("UPDATE user SET user_name = ? WHERE user_name = ?", "testing", "slene").Exec()
-		throwFail(t, err)
-		throwFail(t, AssertIs(num, T_Equal, 1))
+	switch {
+	case IsMysql || IsSqlite:
 
-		num, err = dORM.Raw("UPDATE user SET user_name = ? WHERE user_name = ?", "slene", "testing").Exec()
+		res, err := dORM.Raw("UPDATE user SET user_name = ? WHERE user_name = ?", "testing", "slene").Exec()
 		throwFail(t, err)
-		throwFail(t, AssertIs(num, T_Equal, 1))
+		num, err := res.RowsAffected()
+		throwFail(t, AssertIs(num, T_Equal, 1), err)
+
+		res, err = dORM.Raw("UPDATE user SET user_name = ? WHERE user_name = ?", "slene", "testing").Exec()
+		throwFail(t, err)
+		num, err = res.RowsAffected()
+		throwFail(t, AssertIs(num, T_Equal, 1), err)
 
 		var maps []Params
 		num, err = dORM.Raw("SELECT user_name FROM user WHERE status = ?", 1).Values(&maps)
@@ -681,8 +727,15 @@ func TestRaw(t *testing.T) {
 
 func TestUpdate(t *testing.T) {
 	qs := dORM.QueryTable("user")
-	num, err := qs.Filter("user_name", "slene").Update(Params{
+	num, err := qs.Filter("user_name", "slene").Filter("is_staff", false).Update(Params{
 		"is_staff": true,
+	})
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, T_Equal, 1))
+
+	// with join
+	num, err = qs.Filter("user_name", "slene").Filter("profile__age", 28).Filter("is_staff", true).Update(Params{
+		"is_staff": false,
 	})
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, T_Equal, 1))
@@ -701,48 +754,54 @@ func TestDelete(t *testing.T) {
 }
 
 func TestTransaction(t *testing.T) {
+	// this test worked when database support transaction
+
 	o := NewOrm()
 	err := o.Begin()
 	throwFail(t, err)
 
 	var names = []string{"1", "2", "3"}
 
-	var user User
-	user.UserName = names[0]
-	id, err := o.Insert(&user)
+	var tag Tag
+	tag.Name = names[0]
+	id, err := o.Insert(&tag)
 	throwFail(t, err)
 	throwFail(t, AssertIs(id, T_Large, 0))
 
-	num, err := o.QueryTable("user").Filter("user_name", "slene").Update(Params{"user_name": names[1]})
+	num, err := o.QueryTable("tag").Filter("name", "golang").Update(Params{"name": names[1]})
 	throwFail(t, err)
-	throwFail(t, AssertIs(num, T_Large, 0))
+	throwFail(t, AssertIs(num, T_Equal, 1))
 
-	switch o.Driver().Type() {
-	case DR_MySQL:
-		id, err := o.Raw("INSERT INTO user (user_name) VALUES (?)", names[2]).Exec()
+	switch {
+	case IsMysql || IsSqlite:
+		res, err := o.Raw("INSERT INTO tag (name) VALUES (?)", names[2]).Exec()
 		throwFail(t, err)
-		throwFail(t, AssertIs(id, T_Large, 0))
+		if err == nil {
+			id, err = res.LastInsertId()
+			throwFail(t, err)
+			throwFail(t, AssertIs(id, T_Large, 0))
+		}
 	}
 
 	err = o.Rollback()
 	throwFail(t, err)
 
-	num, err = o.QueryTable("user").Filter("user_name__in", &user).Count()
+	num, err = o.QueryTable("tag").Filter("name__in", names).Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, T_Equal, 0))
 
 	err = o.Begin()
 	throwFail(t, err)
 
-	user.UserName = "commit"
-	id, err = o.Insert(&user)
+	tag.Name = "commit"
+	id, err = o.Insert(&tag)
 	throwFail(t, err)
 	throwFail(t, AssertIs(id, T_Large, 0))
 
 	o.Commit()
 	throwFail(t, err)
 
-	num, err = o.QueryTable("user").Filter("user_name", "commit").Delete()
+	num, err = o.QueryTable("tag").Filter("name", "commit").Delete()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, T_Equal, 1))
 

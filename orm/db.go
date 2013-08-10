@@ -43,394 +43,7 @@ var (
 		"isnull": true,
 		// "search":      true,
 	}
-	operatorsSQL = map[string]string{
-		"exact":     "= ?",
-		"iexact":    "LIKE ?",
-		"contains":  "LIKE BINARY ?",
-		"icontains": "LIKE ?",
-		// "regex":       "REGEXP BINARY ?",
-		// "iregex":      "REGEXP ?",
-		"gt":          "> ?",
-		"gte":         ">= ?",
-		"lt":          "< ?",
-		"lte":         "<= ?",
-		"startswith":  "LIKE BINARY ?",
-		"endswith":    "LIKE BINARY ?",
-		"istartswith": "LIKE ?",
-		"iendswith":   "LIKE ?",
-	}
 )
-
-type dbTable struct {
-	id    int
-	index string
-	name  string
-	names []string
-	sel   bool
-	inner bool
-	mi    *modelInfo
-	fi    *fieldInfo
-	jtl   *dbTable
-}
-
-type dbTables struct {
-	tablesM map[string]*dbTable
-	tables  []*dbTable
-	mi      *modelInfo
-	base    dbBaser
-}
-
-func (t *dbTables) set(names []string, mi *modelInfo, fi *fieldInfo, inner bool) *dbTable {
-	name := strings.Join(names, ExprSep)
-	if j, ok := t.tablesM[name]; ok {
-		j.name = name
-		j.mi = mi
-		j.fi = fi
-		j.inner = inner
-	} else {
-		i := len(t.tables) + 1
-		jt := &dbTable{i, fmt.Sprintf("T%d", i), name, names, false, inner, mi, fi, nil}
-		t.tablesM[name] = jt
-		t.tables = append(t.tables, jt)
-	}
-	return t.tablesM[name]
-}
-
-func (t *dbTables) add(names []string, mi *modelInfo, fi *fieldInfo, inner bool) (*dbTable, bool) {
-	name := strings.Join(names, ExprSep)
-	if _, ok := t.tablesM[name]; ok == false {
-		i := len(t.tables) + 1
-		jt := &dbTable{i, fmt.Sprintf("T%d", i), name, names, false, inner, mi, fi, nil}
-		t.tablesM[name] = jt
-		t.tables = append(t.tables, jt)
-		return jt, true
-	}
-	return t.tablesM[name], false
-}
-
-func (t *dbTables) get(name string) (*dbTable, bool) {
-	j, ok := t.tablesM[name]
-	return j, ok
-}
-
-func (t *dbTables) loopDepth(depth int, prefix string, fi *fieldInfo, related []string) []string {
-	if depth < 0 || fi.fieldType == RelManyToMany {
-		return related
-	}
-
-	if prefix == "" {
-		prefix = fi.name
-	} else {
-		prefix = prefix + ExprSep + fi.name
-	}
-	related = append(related, prefix)
-
-	depth--
-	for _, fi := range fi.relModelInfo.fields.fieldsRel {
-		related = t.loopDepth(depth, prefix, fi, related)
-	}
-
-	return related
-}
-
-func (t *dbTables) parseRelated(rels []string, depth int) {
-
-	relsNum := len(rels)
-	related := make([]string, relsNum)
-	copy(related, rels)
-
-	relDepth := depth
-
-	if relsNum != 0 {
-		relDepth = 0
-	}
-
-	relDepth--
-	for _, fi := range t.mi.fields.fieldsRel {
-		related = t.loopDepth(relDepth, "", fi, related)
-	}
-
-	for i, s := range related {
-		var (
-			exs    = strings.Split(s, ExprSep)
-			names  = make([]string, 0, len(exs))
-			mmi    = t.mi
-			cansel = true
-			jtl    *dbTable
-		)
-		for _, ex := range exs {
-			if fi, ok := mmi.fields.GetByAny(ex); ok && fi.rel && fi.fieldType != RelManyToMany {
-				names = append(names, fi.name)
-				mmi = fi.relModelInfo
-
-				jt := t.set(names, mmi, fi, fi.null == false)
-				jt.jtl = jtl
-
-				if fi.reverse {
-					cansel = false
-				}
-
-				if cansel {
-					jt.sel = depth > 0
-
-					if i < relsNum {
-						jt.sel = true
-					}
-				}
-
-				jtl = jt
-
-			} else {
-				panic(fmt.Sprintf("unknown model/table name `%s`", ex))
-			}
-		}
-	}
-}
-
-func (t *dbTables) getJoinSql() (join string) {
-	for _, jt := range t.tables {
-		if jt.inner {
-			join += "INNER JOIN "
-		} else {
-			join += "LEFT OUTER JOIN "
-		}
-		var (
-			table  string
-			t1, t2 string
-			c1, c2 string
-		)
-		t1 = "T0"
-		if jt.jtl != nil {
-			t1 = jt.jtl.index
-		}
-		t2 = jt.index
-		table = jt.mi.table
-
-		switch {
-		case jt.fi.fieldType == RelManyToMany || jt.fi.reverse && jt.fi.reverseFieldInfo.fieldType == RelManyToMany:
-			c1 = jt.fi.mi.fields.pk.column
-			for _, ffi := range jt.mi.fields.fieldsRel {
-				if jt.fi.mi == ffi.relModelInfo {
-					c2 = ffi.column
-					break
-				}
-			}
-		default:
-			c1 = jt.fi.column
-			c2 = jt.fi.relModelInfo.fields.pk.column
-
-			if jt.fi.reverse {
-				c1 = jt.mi.fields.pk.column
-				c2 = jt.fi.reverseFieldInfo.column
-			}
-		}
-
-		join += fmt.Sprintf("`%s` %s ON %s.`%s` = %s.`%s` ", table, t2,
-			t2, c2, t1, c1)
-	}
-	return
-}
-
-func (d *dbTables) parseExprs(mi *modelInfo, exprs []string) (index, column, name string, info *fieldInfo, success bool) {
-	var (
-		ffi *fieldInfo
-		jtl *dbTable
-		mmi = mi
-	)
-
-	num := len(exprs) - 1
-	names := make([]string, 0)
-
-	for i, ex := range exprs {
-		exist := false
-
-	check:
-		fi, ok := mmi.fields.GetByAny(ex)
-
-		if ok {
-
-			if num != i {
-				names = append(names, fi.name)
-
-				switch {
-				case fi.rel:
-					mmi = fi.relModelInfo
-					if fi.fieldType == RelManyToMany {
-						mmi = fi.relThroughModelInfo
-					}
-				case fi.reverse:
-					mmi = fi.reverseFieldInfo.mi
-					if fi.reverseFieldInfo.fieldType == RelManyToMany {
-						mmi = fi.reverseFieldInfo.relThroughModelInfo
-					}
-				default:
-					return
-				}
-
-				jt, _ := d.add(names, mmi, fi, fi.null == false)
-				jt.jtl = jtl
-				jtl = jt
-
-				if fi.rel && fi.fieldType == RelManyToMany {
-					ex = fi.relModelInfo.name
-					goto check
-				}
-
-				if fi.reverse && fi.reverseFieldInfo.fieldType == RelManyToMany {
-					ex = fi.reverseFieldInfo.mi.name
-					goto check
-				}
-
-				exist = true
-
-			} else {
-
-				if ffi == nil {
-					index = "T0"
-				} else {
-					index = jtl.index
-				}
-				column = fi.column
-				info = fi
-				if jtl != nil {
-					name = jtl.name + ExprSep + fi.name
-				} else {
-					name = fi.name
-				}
-
-				switch fi.fieldType {
-				case RelManyToMany, RelReverseMany:
-				default:
-					exist = true
-				}
-			}
-
-			ffi = fi
-		}
-
-		if exist == false {
-			index = ""
-			column = ""
-			name = ""
-			success = false
-			return
-		}
-	}
-
-	success = index != "" && column != ""
-	return
-}
-
-func (d *dbTables) getCondSql(cond *Condition, sub bool) (where string, params []interface{}) {
-	if cond == nil || cond.IsEmpty() {
-		return
-	}
-
-	mi := d.mi
-
-	// outFor:
-	for i, p := range cond.params {
-		if i > 0 {
-			if p.isOr {
-				where += "OR "
-			} else {
-				where += "AND "
-			}
-		}
-		if p.isNot {
-			where += "NOT "
-		}
-		if p.isCond {
-			w, ps := d.getCondSql(p.cond, true)
-			if w != "" {
-				w = fmt.Sprintf("( %s) ", w)
-			}
-			where += w
-			params = append(params, ps...)
-		} else {
-			exprs := p.exprs
-
-			num := len(exprs) - 1
-			operator := ""
-			if operators[exprs[num]] {
-				operator = exprs[num]
-				exprs = exprs[:num]
-			}
-
-			index, column, _, _, suc := d.parseExprs(mi, exprs)
-			if suc == false {
-				panic(fmt.Errorf("unknown field/column name `%s`", strings.Join(p.exprs, ExprSep)))
-			}
-
-			if operator == "" {
-				operator = "exact"
-			}
-
-			operSql, args := d.base.GetOperatorSql(mi, operator, p.args)
-
-			where += fmt.Sprintf("%s.`%s` %s ", index, column, operSql)
-			params = append(params, args...)
-
-		}
-	}
-
-	if sub == false && where != "" {
-		where = "WHERE " + where
-	}
-
-	return
-}
-
-func (d *dbTables) getOrderSql(orders []string) (orderSql string) {
-	if len(orders) == 0 {
-		return
-	}
-
-	orderSqls := make([]string, 0, len(orders))
-	for _, order := range orders {
-		asc := "ASC"
-		if order[0] == '-' {
-			asc = "DESC"
-			order = order[1:]
-		}
-		exprs := strings.Split(order, ExprSep)
-
-		index, column, _, _, suc := d.parseExprs(d.mi, exprs)
-		if suc == false {
-			panic(fmt.Errorf("unknown field/column name `%s`", strings.Join(exprs, ExprSep)))
-		}
-
-		orderSqls = append(orderSqls, fmt.Sprintf("%s.`%s` %s", index, column, asc))
-	}
-
-	orderSql = fmt.Sprintf("ORDER BY %s ", strings.Join(orderSqls, ", "))
-	return
-}
-
-func (d *dbTables) getLimitSql(offset int64, limit int) (limits string) {
-	if limit == 0 {
-		limit = DefaultRowsLimit
-	}
-	if limit < 0 {
-		// no limit
-		if offset > 0 {
-			limits = fmt.Sprintf("LIMIT 18446744073709551615 OFFSET %d", offset)
-		}
-	} else if offset <= 0 {
-		limits = fmt.Sprintf("LIMIT %d", limit)
-	} else {
-		limits = fmt.Sprintf("LIMIT %d OFFSET %d", limit, offset)
-	}
-	return
-}
-
-func newDbTables(mi *modelInfo, base dbBaser) *dbTables {
-	tables := &dbTables{}
-	tables.tablesM = make(map[string]*dbTable)
-	tables.mi = mi
-	tables.base = base
-	return tables
-}
 
 type dbBase struct {
 	ins dbBaser
@@ -528,6 +141,8 @@ func (d *dbBase) collectValues(mi *modelInfo, ind reflect.Value, skipAuto bool, 
 }
 
 func (d *dbBase) PrepareInsert(q dbQuerier, mi *modelInfo) (stmtQuerier, string, error) {
+	Q := d.ins.TableQuote()
+
 	dbcols := make([]string, 0, len(mi.fields.dbcols))
 	marks := make([]string, 0, len(mi.fields.dbcols))
 	for _, fi := range mi.fields.fieldsDB {
@@ -537,9 +152,13 @@ func (d *dbBase) PrepareInsert(q dbQuerier, mi *modelInfo) (stmtQuerier, string,
 		}
 	}
 	qmarks := strings.Join(marks, ", ")
-	columns := strings.Join(dbcols, "`,`")
+	sep := fmt.Sprintf("%s, %s", Q, Q)
+	columns := strings.Join(dbcols, sep)
 
-	query := fmt.Sprintf("INSERT INTO `%s` (`%s`) VALUES (%s)", mi.table, columns, qmarks)
+	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s)", Q, mi.table, Q, Q, columns, Q, qmarks)
+
+	d.ins.ReplaceMarks(&query)
+
 	stmt, err := q.Prepare(query)
 	return stmt, query, err
 }
@@ -563,16 +182,21 @@ func (d *dbBase) Read(q dbQuerier, mi *modelInfo, ind reflect.Value) error {
 		return ErrMissPK
 	}
 
-	sels := strings.Join(mi.fields.dbcols, "`, `")
+	Q := d.ins.TableQuote()
+
+	sep := fmt.Sprintf("%s, %s", Q, Q)
+	sels := strings.Join(mi.fields.dbcols, sep)
 	colsNum := len(mi.fields.dbcols)
 
-	query := fmt.Sprintf("SELECT `%s` FROM `%s` WHERE `%s` = ?", sels, mi.table, pkColumn)
+	query := fmt.Sprintf("SELECT %s%s%s FROM %s%s%s WHERE %s%s%s = ?", Q, sels, Q, Q, mi.table, Q, Q, pkColumn, Q)
 
 	refs := make([]interface{}, colsNum)
 	for i, _ := range refs {
 		var ref interface{}
 		refs[i] = &ref
 	}
+
+	d.ins.ReplaceMarks(&query)
 
 	row := q.QueryRow(query, pkValue)
 	if err := row.Scan(refs...); err != nil {
@@ -598,14 +222,20 @@ func (d *dbBase) Insert(q dbQuerier, mi *modelInfo, ind reflect.Value) (int64, e
 		return 0, err
 	}
 
+	Q := d.ins.TableQuote()
+
 	marks := make([]string, len(names))
 	for i, _ := range marks {
 		marks[i] = "?"
 	}
-	qmarks := strings.Join(marks, ", ")
-	columns := strings.Join(names, "`,`")
 
-	query := fmt.Sprintf("INSERT INTO `%s` (`%s`) VALUES (%s)", mi.table, columns, qmarks)
+	sep := fmt.Sprintf("%s, %s", Q, Q)
+	qmarks := strings.Join(marks, ", ")
+	columns := strings.Join(names, sep)
+
+	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s)", Q, mi.table, Q, Q, columns, Q, qmarks)
+
+	d.ins.ReplaceMarks(&query)
 
 	if res, err := q.Exec(query, values...); err == nil {
 		return res.LastInsertId()
@@ -624,11 +254,16 @@ func (d *dbBase) Update(q dbQuerier, mi *modelInfo, ind reflect.Value) (int64, e
 		return 0, err
 	}
 
-	setColumns := strings.Join(setNames, "` = ?, `")
-
-	query := fmt.Sprintf("UPDATE `%s` SET `%s` = ? WHERE `%s` = ?", mi.table, setColumns, pkName)
-
 	setValues = append(setValues, pkValue)
+
+	Q := d.ins.TableQuote()
+
+	sep := fmt.Sprintf("%s = ?, %s", Q, Q)
+	setColumns := strings.Join(setNames, sep)
+
+	query := fmt.Sprintf("UPDATE %s%s%s SET %s%s%s = ? WHERE %s%s%s = ?", Q, mi.table, Q, Q, setColumns, Q, Q, pkName, Q)
+
+	d.ins.ReplaceMarks(&query)
 
 	if res, err := q.Exec(query, setValues...); err == nil {
 		return res.RowsAffected()
@@ -644,7 +279,11 @@ func (d *dbBase) Delete(q dbQuerier, mi *modelInfo, ind reflect.Value) (int64, e
 		return 0, ErrMissPK
 	}
 
-	query := fmt.Sprintf("DELETE FROM `%s` WHERE `%s` = ?", mi.table, pkName)
+	Q := d.ins.TableQuote()
+
+	query := fmt.Sprintf("DELETE FROM %s%s%s WHERE %s%s%s = ?", Q, mi.table, Q, Q, pkName, Q)
+
+	d.ins.ReplaceMarks(&query)
 
 	if res, err := q.Exec(query, pkValue); err == nil {
 
@@ -694,11 +333,24 @@ func (d *dbBase) UpdateBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 
 	where, args := tables.getCondSql(cond, false)
 
+	values = append(values, args...)
+
 	join := tables.getJoinSql()
 
-	query := fmt.Sprintf("UPDATE `%s` T0 %sSET T0.`%s` = ? %s", mi.table, join, strings.Join(columns, "` = ?, T0.`"), where)
+	var query string
 
-	values = append(values, args...)
+	Q := d.ins.TableQuote()
+
+	if d.ins.SupportUpdateJoin() {
+		cols := strings.Join(columns, fmt.Sprintf("%s = ?, T0.%s", Q, Q))
+		query = fmt.Sprintf("UPDATE %s%s%s T0 %sSET T0.%s%s%s = ? %s", Q, mi.table, Q, join, Q, cols, Q, where)
+	} else {
+		cols := strings.Join(columns, fmt.Sprintf("%s = ?, %s", Q, Q))
+		supQuery := fmt.Sprintf("SELECT T0.%s%s%s FROM %s%s%s T0 %s%s", Q, mi.fields.pk.column, Q, Q, mi.table, Q, join, where)
+		query = fmt.Sprintf("UPDATE %s%s%s SET %s%s%s = ? WHERE %s%s%s IN ( %s )", Q, mi.table, Q, Q, cols, Q, Q, mi.fields.pk.column, Q, supQuery)
+	}
+
+	d.ins.ReplaceMarks(&query)
 
 	if res, err := q.Exec(query, values...); err == nil {
 		return res.RowsAffected()
@@ -744,11 +396,15 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 		panic("delete operation cannot execute without condition")
 	}
 
+	Q := d.ins.TableQuote()
+
 	where, args := tables.getCondSql(cond, false)
 	join := tables.getJoinSql()
 
-	cols := fmt.Sprintf("T0.`%s`", mi.fields.pk.column)
-	query := fmt.Sprintf("SELECT %s FROM `%s` T0 %s%s", cols, mi.table, join, where)
+	cols := fmt.Sprintf("T0.%s%s%s", Q, mi.fields.pk.column, Q)
+	query := fmt.Sprintf("SELECT %s FROM %s%s%s T0 %s%s", cols, Q, mi.table, Q, join, where)
+
+	d.ins.ReplaceMarks(&query)
 
 	var rs *sql.Rows
 	if r, err := q.Query(query, args...); err != nil {
@@ -773,8 +429,10 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 		return 0, nil
 	}
 
-	sql, args := d.ins.GetOperatorSql(mi, "in", args)
-	query = fmt.Sprintf("DELETE FROM `%s` WHERE `%s` %s", mi.table, mi.fields.pk.column, sql)
+	sql, args := d.ins.GenerateOperatorSql(mi, "in", args)
+	query = fmt.Sprintf("DELETE FROM %s%s%s WHERE %s%s%s %s", Q, mi.table, Q, Q, mi.fields.pk.column, Q, sql)
+
+	d.ins.ReplaceMarks(&query)
 
 	if res, err := q.Exec(query, args...); err == nil {
 		num, err := res.RowsAffected()
@@ -831,24 +489,30 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 		offset = 0
 	}
 
+	Q := d.ins.TableQuote()
+
 	tables := newDbTables(mi, d.ins)
 	tables.parseRelated(qs.related, qs.relDepth)
 
 	where, args := tables.getCondSql(cond, false)
 	orderBy := tables.getOrderSql(qs.orders)
-	limit := tables.getLimitSql(offset, rlimit)
+	limit := tables.getLimitSql(mi, offset, rlimit)
 	join := tables.getJoinSql()
 
 	colsNum := len(mi.fields.dbcols)
-	cols := fmt.Sprintf("T0.`%s`", strings.Join(mi.fields.dbcols, "`, T0.`"))
+	sep := fmt.Sprintf("%s, T0.%s", Q, Q)
+	cols := fmt.Sprintf("T0.%s%s%s", Q, strings.Join(mi.fields.dbcols, sep), Q)
 	for _, tbl := range tables.tables {
 		if tbl.sel {
 			colsNum += len(tbl.mi.fields.dbcols)
-			cols += fmt.Sprintf(", %s.`%s`", tbl.index, strings.Join(tbl.mi.fields.dbcols, "`, "+tbl.index+".`"))
+			sep := fmt.Sprintf("%s, %s.%s", Q, tbl.index, Q)
+			cols += fmt.Sprintf(", %s.%s%s%s", tbl.index, Q, strings.Join(tbl.mi.fields.dbcols, sep), Q)
 		}
 	}
 
-	query := fmt.Sprintf("SELECT %s FROM `%s` T0 %s%s%s%s", cols, mi.table, join, where, orderBy, limit)
+	query := fmt.Sprintf("SELECT %s FROM %s%s%s T0 %s%s%s%s", cols, Q, mi.table, Q, join, where, orderBy, limit)
+
+	d.ins.ReplaceMarks(&query)
 
 	var rs *sql.Rows
 	if r, err := q.Query(query, args...); err != nil {
@@ -940,7 +604,11 @@ func (d *dbBase) Count(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condition
 	tables.getOrderSql(qs.orders)
 	join := tables.getJoinSql()
 
-	query := fmt.Sprintf("SELECT COUNT(*) FROM `%s` T0 %s%s", mi.table, join, where)
+	Q := d.ins.TableQuote()
+
+	query := fmt.Sprintf("SELECT COUNT(*) FROM %s%s%s T0 %s%s", Q, mi.table, Q, join, where)
+
+	d.ins.ReplaceMarks(&query)
 
 	row := q.QueryRow(query, args...)
 
@@ -1014,7 +682,7 @@ func (d *dbBase) getOperatorParams(operator string, args []interface{}) (params 
 	return
 }
 
-func (d *dbBase) GetOperatorSql(mi *modelInfo, operator string, args []interface{}) (string, []interface{}) {
+func (d *dbBase) GenerateOperatorSql(mi *modelInfo, operator string, args []interface{}) (string, []interface{}) {
 	sql := ""
 	params := d.getOperatorParams(operator, args)
 
@@ -1028,7 +696,7 @@ func (d *dbBase) GetOperatorSql(mi *modelInfo, operator string, args []interface
 		if len(params) > 1 {
 			panic(fmt.Sprintf("operator `%s` need 1 args not %d", operator, len(params)))
 		}
-		sql = operatorsSQL[operator]
+		sql = d.ins.OperatorSql(operator)
 		arg := params[0]
 		switch operator {
 		case "exact":
@@ -1073,13 +741,13 @@ func (d *dbBase) setColsValues(mi *modelInfo, ind *reflect.Value, cols []string,
 
 		value, err := d.getValue(fi, val)
 		if err != nil {
-			panic(fmt.Sprintf("db value convert failed `%v` %s", val, err.Error()))
+			panic(fmt.Sprintf("Raw value: `%v` %s", val, err.Error()))
 		}
 
 		_, err = d.setValue(fi, value, &field)
 
 		if err != nil {
-			panic(fmt.Sprintf("db value convert failed `%v` %s", val, err.Error()))
+			panic(fmt.Sprintf("Raw value: `%v` %s", val, err.Error()))
 		}
 	}
 }
@@ -1090,6 +758,7 @@ func (d *dbBase) getValue(fi *fieldInfo, val interface{}) (interface{}, error) {
 	}
 
 	var value interface{}
+	var tErr error
 
 	var str *StrTo
 	switch v := val.(type) {
@@ -1119,7 +788,8 @@ setValue:
 		if str != nil {
 			b, err := str.Bool()
 			if err != nil {
-				return nil, err
+				tErr = err
+				goto end
 			}
 			value = b
 		}
@@ -1140,14 +810,23 @@ setValue:
 			}
 		}
 		if str != nil {
-			format := format_DateTime
+			s := str.String()
+			var format string
 			if fi.fieldType == TypeDateField {
 				format = format_Date
+				if len(s) > 10 {
+					s = s[:10]
+				}
+			} else {
+				format = format_DateTime
+				if len(s) > 19 {
+					s = s[:19]
+				}
 			}
-			s := str.String()
 			t, err := timeParse(s, format)
 			if err != nil && s != "0000-00-00" && s != "0000-00-00 00:00:00" {
-				return nil, err
+				tErr = err
+				goto end
 			}
 			value = t
 		}
@@ -1173,7 +852,8 @@ setValue:
 				_, err = str.Uint64()
 			}
 			if err != nil {
-				return nil, err
+				tErr = err
+				goto end
 			}
 			if fieldType&IsPostiveIntegerField > 0 {
 				v, _ := str.Uint64()
@@ -1196,13 +876,21 @@ setValue:
 		if str != nil {
 			v, err := str.Float64()
 			if err != nil {
-				return nil, err
+				tErr = err
+				goto end
 			}
 			value = v
 		}
 	case fieldType&IsRelField > 0:
-		fieldType = fi.relModelInfo.fields.pk.fieldType
+		fi = fi.relModelInfo.fields.pk
+		fieldType = fi.fieldType
 		goto setValue
+	}
+
+end:
+	if tErr != nil {
+		err := fmt.Errorf("convert to `%s` failed, field: %s err: %s", fi.addrValue.Type(), fi.fullName, tErr)
+		return nil, err
 	}
 
 	return value, nil
@@ -1275,6 +963,7 @@ setValue:
 		fd := field.Addr().Interface().(Fielder)
 		err := fd.SetRaw(value)
 		if err != nil {
+			err = fmt.Errorf("converted value `%v` set to Fielder `%s` failed, err: %s", value, fi.fullName, err)
 			return nil, err
 		}
 	}
@@ -1311,6 +1000,8 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 
 	hasExprs := len(exprs) > 0
 
+	Q := d.ins.TableQuote()
+
 	if hasExprs {
 		cols = make([]string, 0, len(exprs))
 		infos = make([]*fieldInfo, 0, len(exprs))
@@ -1319,26 +1010,26 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 			if suc == false {
 				panic(fmt.Errorf("unknown field/column name `%s`", ex))
 			}
-			cols = append(cols, fmt.Sprintf("%s.`%s` `%s`", index, col, name))
+			cols = append(cols, fmt.Sprintf("%s.%s%s%s %s%s%s", index, Q, col, Q, Q, name, Q))
 			infos = append(infos, fi)
 		}
 	} else {
 		cols = make([]string, 0, len(mi.fields.dbcols))
 		infos = make([]*fieldInfo, 0, len(exprs))
 		for _, fi := range mi.fields.fieldsDB {
-			cols = append(cols, fmt.Sprintf("T0.`%s` `%s`", fi.column, fi.name))
+			cols = append(cols, fmt.Sprintf("T0.%s%s%s %s%s%s", Q, fi.column, Q, Q, fi.name, Q))
 			infos = append(infos, fi)
 		}
 	}
 
 	where, args := tables.getCondSql(cond, false)
 	orderBy := tables.getOrderSql(qs.orders)
-	limit := tables.getLimitSql(qs.offset, qs.limit)
+	limit := tables.getLimitSql(mi, qs.offset, qs.limit)
 	join := tables.getJoinSql()
 
 	sels := strings.Join(cols, ", ")
 
-	query := fmt.Sprintf("SELECT %s FROM `%s` T0 %s%s%s%s", sels, mi.table, join, where, orderBy, limit)
+	query := fmt.Sprintf("SELECT %s FROM %s%s%s T0 %s%s%s%s", sels, Q, mi.table, Q, join, where, orderBy, limit)
 
 	var rs *sql.Rows
 	if r, err := q.Query(query, args...); err != nil {
@@ -1429,4 +1120,20 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 	}
 
 	return cnt, nil
+}
+
+func (d *dbBase) SupportUpdateJoin() bool {
+	return true
+}
+
+func (d *dbBase) MaxLimit() uint64 {
+	return 18446744073709551615
+}
+
+func (d *dbBase) TableQuote() string {
+	return "`"
+}
+
+func (d *dbBase) ReplaceMarks(query *string) {
+	// default use `?` as mark, do nothing
 }

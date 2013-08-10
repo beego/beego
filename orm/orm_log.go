@@ -135,7 +135,7 @@ func (d *dbQueryLog) Commit() error {
 
 func (d *dbQueryLog) Rollback() error {
 	a := time.Now()
-	err := d.db.(txEnder).Commit()
+	err := d.db.(txEnder).Rollback()
 	debugLogQueies(d.alias, "tx.Rollback", "ROLLBACK", a, err)
 	return err
 }

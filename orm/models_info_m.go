@@ -79,7 +79,7 @@ func newModelInfo(val reflect.Value) (info *modelInfo) {
 func newM2MModelInfo(m1, m2 *modelInfo) (info *modelInfo) {
 	info = new(modelInfo)
 	info.fields = newFields()
-	info.table = m1.table + "_" + m2.table + "_rel"
+	info.table = m1.table + "_" + m2.table + "s"
 	info.name = camelString(info.table)
 	info.fullName = m1.pkg + "." + info.name
 

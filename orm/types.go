@@ -60,12 +60,12 @@ type QuerySeter interface {
 }
 
 type RawPreparer interface {
-	Exec(...interface{}) (int64, error)
+	Exec(...interface{}) (sql.Result, error)
 	Close() error
 }
 
 type RawSeter interface {
-	Exec() (int64, error)
+	Exec() (sql.Result, error)
 	QueryRow(...interface{}) error
 	QueryRows(...interface{}) (int64, error)
 	SetArgs(...interface{}) RawSeter
@@ -116,10 +116,15 @@ type dbBaser interface {
 	Update(dbQuerier, *modelInfo, reflect.Value) (int64, error)
 	Delete(dbQuerier, *modelInfo, reflect.Value) (int64, error)
 	ReadBatch(dbQuerier, *querySet, *modelInfo, *Condition, interface{}) (int64, error)
+	SupportUpdateJoin() bool
 	UpdateBatch(dbQuerier, *querySet, *modelInfo, *Condition, Params) (int64, error)
 	DeleteBatch(dbQuerier, *querySet, *modelInfo, *Condition) (int64, error)
 	Count(dbQuerier, *querySet, *modelInfo, *Condition) (int64, error)
-	GetOperatorSql(*modelInfo, string, []interface{}) (string, []interface{})
+	OperatorSql(string) string
+	GenerateOperatorSql(*modelInfo, string, []interface{}) (string, []interface{})
 	PrepareInsert(dbQuerier, *modelInfo) (stmtQuerier, string, error)
 	ReadValues(dbQuerier, *querySet, *modelInfo, *Condition, []string, interface{}) (int64, error)
+	MaxLimit() uint64
+	TableQuote() string
+	ReplaceMarks(*string)
 }
