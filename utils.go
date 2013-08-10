@@ -190,10 +190,15 @@ func ParseForm(form url.Values, obj interface{}) error {
 			continue
 		}
 		fieldT := objT.Field(i)
-		tag := fieldT.Tag.Get("form")
-		if len(tag) == 0 {
+
+		tags := strings.Split(fieldT.Tag.Get("form"), ",")
+		var tag string
+		if len(tags) == 0 || len(tags[0]) == 0 {
 			tag = fieldT.Name
+		} else {
+			tag = tags[0]
 		}
+
 		value := form.Get(tag)
 		if len(value) == 0 {
 			continue
