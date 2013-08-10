@@ -543,10 +543,10 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 					method = vc.MethodByName("Render")
 					method.Call(in)
 				}
-				method = vc.MethodByName("Finish")
-				method.Call(in)
 			}
 		}
+		method = vc.MethodByName("Finish")
+		method.Call(in)
 		method = vc.MethodByName("Destructor")
 		method.Call(in)
 	}
@@ -607,9 +607,9 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 								method = vc.MethodByName("Render")
 								method.Call(in)
 							}
-							method = vc.MethodByName("Finish")
-							method.Call(in)
 						}
+						method = vc.MethodByName("Finish")
+						method.Call(in)
 						method = vc.MethodByName("Destructor")
 						method.Call(in)
 						// set find
