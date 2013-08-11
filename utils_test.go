@@ -153,7 +153,7 @@ func TestRenderForm(t *testing.T) {
 		Id    int         `form:"-"`
 		tag   string      `form:"tag"`
 		Name  interface{} `form:"username"`
-		Age   int         `form:"age,text"`
+		Age   int         `form:"age,text,年龄："`
 		Sex   string
 		Email []string
 		Intro string `form:",textarea"`
@@ -167,7 +167,7 @@ func TestRenderForm(t *testing.T) {
 	output = RenderForm(&u)
 	result := template.HTML(
 		`Name: <input name="username" type="text" value="test"></br>` +
-			`Age: <input name="age" type="text" value="0"></br>` +
+			`年龄：<input name="age" type="text" value="0"></br>` +
 			`Sex: <input name="Sex" type="text" value=""></br>` +
 			`Intro: <input name="Intro" type="textarea" value="">`)
 	if output != result {
