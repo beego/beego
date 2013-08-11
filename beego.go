@@ -161,6 +161,21 @@ func (app *App) FilterPrefixPath(path string, filter http.HandlerFunc) *App {
 	return app
 }
 
+func (app *App) FilterAfter(filter http.HandlerFunc) *App {
+	app.Handlers.FilterAfter(filter)
+	return app
+}
+
+func (app *App) FilterParamAfter(param string, filter http.HandlerFunc) *App {
+	app.Handlers.FilterParamAfter(param, filter)
+	return app
+}
+
+func (app *App) FilterPrefixPathAfter(path string, filter http.HandlerFunc) *App {
+	app.Handlers.FilterPrefixPathAfter(path, filter)
+	return app
+}
+
 func (app *App) SetViewsPath(path string) *App {
 	ViewsPath = path
 	return app
@@ -242,6 +257,21 @@ func FilterParam(param string, filter http.HandlerFunc) *App {
 
 func FilterPrefixPath(path string, filter http.HandlerFunc) *App {
 	BeeApp.FilterPrefixPath(path, filter)
+	return BeeApp
+}
+
+func FilterAfter(filter http.HandlerFunc) *App {
+	BeeApp.FilterAfter(filter)
+	return BeeApp
+}
+
+func FilterParamAfter(param string, filter http.HandlerFunc) *App {
+	BeeApp.FilterParamAfter(param, filter)
+	return BeeApp
+}
+
+func FilterPrefixPathAfter(path string, filter http.HandlerFunc) *App {
+	BeeApp.FilterPrefixPathAfter(path, filter)
 	return BeeApp
 }
 
