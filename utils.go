@@ -195,6 +195,8 @@ func ParseForm(form url.Values, obj interface{}) error {
 		var tag string
 		if len(tags) == 0 || len(tags[0]) == 0 {
 			tag = fieldT.Name
+		} else if tags[0] == "-" {
+			continue
 		} else {
 			tag = tags[0]
 		}
@@ -280,19 +282,23 @@ func RenderForm(obj interface{}) template.HTML {
 		fieldT := objT.Field(i)
 		tags := strings.Split(fieldT.Tag.Get("form"), ",")
 		name := fieldT.Name
-		if len(tags) < 2 {
-			if len(tags) == 1 && len(tags[0]) > 0 {
-				name = tags[0]
-			}
-			raw = append(raw, fmt.Sprintf(`%v: <input name="%v" type="text" value="%v">`,
-				fieldT.Name, name, fieldV.Interface()))
-		} else {
+		fType := "text"
+		if len(tags) > 0 && tags[0] == "-" {
+			continue
+		}
+
+		if len(tags) == 1 && len(tags[0]) > 0 {
+			name = tags[0]
+		} else if len(tags) >= 2 {
 			if len(tags[0]) > 0 {
 				name = tags[0]
 			}
-			raw = append(raw, fmt.Sprintf(`%v: <input name="%v" type="%v" value="%v">`,
-				fieldT.Name, name, tags[1], fieldV.Interface()))
+			if len(tags[1]) > 0 {
+				fType = tags[1]
+			}
 		}
+		raw = append(raw, fmt.Sprintf(`%v: <input name="%v" type="%v" value="%v">`,
+			fieldT.Name, name, fType, fieldV.Interface()))
 	}
 	return template.HTML(strings.Join(raw, "</br>"))
 }
