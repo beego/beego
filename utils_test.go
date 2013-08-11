@@ -104,8 +104,8 @@ func TestInSlice(t *testing.T) {
 
 func TestParseForm(t *testing.T) {
 	type user struct {
-		Id    int
-		tag   string      `form:tag`
+		Id    int         `form:"-"`
+		tag   string      `form:"tag"`
 		Name  interface{} `form:"username"`
 		Age   int         `form:"age,text"`
 		Email string
@@ -114,6 +114,8 @@ func TestParseForm(t *testing.T) {
 
 	u := user{}
 	form := url.Values{
+		"Id":       []string{"1"},
+		"-":        []string{"1"},
 		"tag":      []string{"no"},
 		"username": []string{"test"},
 		"age":      []string{"40"},
@@ -148,10 +150,11 @@ func TestParseForm(t *testing.T) {
 
 func TestRenderForm(t *testing.T) {
 	type user struct {
-		Id    int
-		tag   string      `form:tag`
+		Id    int         `form:"-"`
+		tag   string      `form:"tag"`
 		Name  interface{} `form:"username"`
 		Age   int         `form:"age,text"`
+		Sex   string
 		Email []string
 		Intro string `form:",textarea"`
 	}
@@ -163,9 +166,9 @@ func TestRenderForm(t *testing.T) {
 	}
 	output = RenderForm(&u)
 	result := template.HTML(
-		`Id: <input name="Id" type="text" value="0"></br>` +
-			`Name: <input name="username" type="text" value="test"></br>` +
+		`Name: <input name="username" type="text" value="test"></br>` +
 			`Age: <input name="age" type="text" value="0"></br>` +
+			`Sex: <input name="Sex" type="text" value=""></br>` +
 			`Intro: <input name="Intro" type="textarea" value="">`)
 	if output != result {
 		t.Errorf("output should equal `%v` but got `%v`", result, output)
