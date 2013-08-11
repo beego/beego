@@ -4,9 +4,13 @@ a powerful orm framework
 
 now, beta, unstable, may be changing some api make your app build failed.
 
-**Driver Support:**
+**Support Database:**
 
 * MySQL: [github.com/go-sql-driver/mysql](https://github.com/go-sql-driver/mysql)
+* PostgreSQL: [github.com/lib/pq](https://github.com/lib/pq)
+* Sqlite3: [github.com/mattn/go-sqlite3](https://github.com/mattn/go-sqlite3)
+
+Passed all test, but need more feedback.
 
 **Features:**
 
@@ -139,7 +143,5 @@ more details and examples in docs and test
 - some unrealized api
 - examples
 - docs
-- support sqlite
-- support postgres
 
 ## 

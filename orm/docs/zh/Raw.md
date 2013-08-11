@@ -1,6 +1,13 @@
 ## 使用SQL语句进行查询
 
-使用 Raw SQL 查询，无需使用 ORM 表定义
+* 使用 Raw SQL 查询，无需使用 ORM 表定义
+* 多数据库，都可直接使用占位符号 `?`，自动转换
+* 查询时的参数，支持使用 Model Struct 和 Slice, Array
+
+```go
+ids := []int{1, 2, 3}
+p.Raw("SELECT name FROM user WHERE id IN (?, ?, ?)", ids)
+```
 
 创建一个 **RawSeter**
 
@@ -44,8 +51,9 @@ TODO
 用于单条 sql 语句，重复利用，替换参数然后执行。
 
 ```go
-num, err := r.SetArgs("set name", "name1").Exec()
-num, err := r.SetArgs("set name", "name2").Exec()
+num, err := r.SetArgs("arg1", "arg2").Exec()
+num, err := r.SetArgs("arg1", "arg2").Exec()
+...
 ```
 #### Values / ValuesList / ValuesFlat
 

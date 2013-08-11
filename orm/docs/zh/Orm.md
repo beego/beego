@@ -66,6 +66,18 @@ func main() {
 
 ## 数据库的设置
 
+目前 orm 支持三种数据库，以下为测试过的 driver
+
+将你需要使用的 driver 加入 import 中
+
+```go
+import (
+	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
+	_ "github.com/mattn/go-sqlite3"
+)
+```
+
 #### RegisterDriver
 
 三种数据库类型
