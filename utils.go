@@ -281,24 +281,39 @@ func RenderForm(obj interface{}) template.HTML {
 
 		fieldT := objT.Field(i)
 		tags := strings.Split(fieldT.Tag.Get("form"), ",")
+		label := fieldT.Name + ": "
 		name := fieldT.Name
 		fType := "text"
-		if len(tags) > 0 && tags[0] == "-" {
-			continue
-		}
 
-		if len(tags) == 1 && len(tags[0]) > 0 {
-			name = tags[0]
-		} else if len(tags) >= 2 {
+		switch len(tags) {
+		case 1:
+			if tags[0] == "-" {
+				continue
+			}
+			if len(tags[0]) > 0 {
+				name = tags[0]
+			}
+		case 2:
 			if len(tags[0]) > 0 {
 				name = tags[0]
 			}
 			if len(tags[1]) > 0 {
 				fType = tags[1]
 			}
+		case 3:
+			if len(tags[0]) > 0 {
+				name = tags[0]
+			}
+			if len(tags[1]) > 0 {
+				fType = tags[1]
+			}
+			if len(tags[2]) > 0 {
+				label = tags[2]
+			}
 		}
-		raw = append(raw, fmt.Sprintf(`%v: <input name="%v" type="%v" value="%v">`,
-			fieldT.Name, name, fType, fieldV.Interface()))
+
+		raw = append(raw, fmt.Sprintf(`%v<input name="%v" type="%v" value="%v">`,
+			label, name, fType, fieldV.Interface()))
 	}
 	return template.HTML(strings.Join(raw, "</br>"))
 }
