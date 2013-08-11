@@ -51,7 +51,9 @@ func ValuesCompare(is bool, a interface{}, o T_Code, args ...interface{}) (err e
 			if v2, vo := b.(time.Time); vo {
 				if arg.Get(1) != nil {
 					format := ToStr(arg.Get(1))
-					ok = v.Format(format) == v2.Format(format)
+					a = v.Format(format)
+					b = v2.Format(format)
+					ok = a == b
 				} else {
 					err = fmt.Errorf("compare datetime miss format")
 					goto wrongArg
@@ -363,6 +365,10 @@ func TestExpr(t *testing.T) {
 	num, err := qs.Filter("UserName", "slene").Filter("user_name", "slene").Filter("profile__Age", 28).Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, T_Equal, 1))
+
+	num, err = qs.Filter("created", time.Now()).Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, T_Equal, 3))
 }
 
 func TestOperators(t *testing.T) {
@@ -721,6 +727,102 @@ func TestRaw(t *testing.T) {
 			throwFail(t, AssertIs(list[0], T_Equal, "2"))
 			throwFail(t, AssertIs(list[1], T_Equal, "3"))
 			throwFail(t, AssertIs(list[2], T_Equal, ""))
+		}
+
+		pre, err := dORM.Raw("INSERT INTO tag (name) VALUES (?)").Prepare()
+		throwFail(t, err)
+		if pre != nil {
+			r, err := pre.Exec("name1")
+			throwFail(t, err)
+
+			tid, err := r.LastInsertId()
+			throwFail(t, err)
+			throwFail(t, AssertIs(tid, T_Large, 0))
+
+			r, err = pre.Exec("name2")
+			throwFail(t, err)
+
+			id, err := r.LastInsertId()
+			throwFail(t, err)
+			throwFail(t, AssertIs(id, T_Equal, tid+1))
+
+			r, err = pre.Exec("name3")
+			throwFail(t, err)
+
+			id, err = r.LastInsertId()
+			throwFail(t, err)
+			throwFail(t, AssertIs(id, T_Equal, tid+2))
+
+			err = pre.Close()
+			throwFail(t, err)
+
+			res, err := dORM.Raw("DELETE FROM tag WHERE name IN (?, ?, ?)", []string{"name1", "name2", "name3"}).Exec()
+			throwFail(t, err)
+
+			num, err := res.RowsAffected()
+			throwFail(t, err)
+			throwFail(t, AssertIs(num, T_Equal, 3))
+		}
+
+	case IsPostgres:
+
+		res, err := dORM.Raw(`UPDATE "user" SET "user_name" = ? WHERE "user_name" = ?`, "testing", "slene").Exec()
+		throwFail(t, err)
+		num, err := res.RowsAffected()
+		throwFail(t, AssertIs(num, T_Equal, 1), err)
+
+		res, err = dORM.Raw(`UPDATE "user" SET "user_name" = ? WHERE "user_name" = ?`, "slene", "testing").Exec()
+		throwFail(t, err)
+		num, err = res.RowsAffected()
+		throwFail(t, AssertIs(num, T_Equal, 1), err)
+
+		var maps []Params
+		num, err = dORM.Raw(`SELECT "user_name" FROM "user" WHERE "status" = ?`, 1).Values(&maps)
+		throwFail(t, err)
+		throwFail(t, AssertIs(num, T_Equal, 1))
+		if num == 1 {
+			throwFail(t, AssertIs(maps[0]["user_name"], T_Equal, "slene"))
+		}
+
+		var lists []ParamsList
+		num, err = dORM.Raw(`SELECT "user_name" FROM "user" WHERE "status" = ?`, 1).ValuesList(&lists)
+		throwFail(t, err)
+		throwFail(t, AssertIs(num, T_Equal, 1))
+		if num == 1 {
+			throwFail(t, AssertIs(lists[0][0], T_Equal, "slene"))
+		}
+
+		var list ParamsList
+		num, err = dORM.Raw(`SELECT "profile_id" FROM "user" ORDER BY id ASC`).ValuesFlat(&list)
+		throwFail(t, err)
+		throwFail(t, AssertIs(num, T_Equal, 3))
+		if num == 3 {
+			throwFail(t, AssertIs(list[0], T_Equal, "2"))
+			throwFail(t, AssertIs(list[1], T_Equal, "3"))
+			throwFail(t, AssertIs(list[2], T_Equal, ""))
+		}
+
+		pre, err := dORM.Raw(`INSERT INTO "tag" ("name") VALUES (?) RETURNING "id"`).Prepare()
+		throwFail(t, err)
+		if pre != nil {
+			_, err := pre.Exec("name1")
+			throwFail(t, err)
+
+			_, err = pre.Exec("name2")
+			throwFail(t, err)
+
+			_, err = pre.Exec("name3")
+			throwFail(t, err)
+
+			err = pre.Close()
+			throwFail(t, err)
+
+			res, err := dORM.Raw(`DELETE FROM "tag" WHERE "name" IN (?, ?, ?)`, []string{"name1", "name2", "name3"}).Exec()
+			throwFail(t, err)
+
+			num, err := res.RowsAffected()
+			throwFail(t, err)
+			throwFail(t, AssertIs(num, T_Equal, 3))
 		}
 	}
 }

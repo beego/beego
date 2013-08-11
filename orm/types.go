@@ -121,10 +121,12 @@ type dbBaser interface {
 	DeleteBatch(dbQuerier, *querySet, *modelInfo, *Condition) (int64, error)
 	Count(dbQuerier, *querySet, *modelInfo, *Condition) (int64, error)
 	OperatorSql(string) string
-	GenerateOperatorSql(*modelInfo, string, []interface{}) (string, []interface{})
+	GenerateOperatorSql(*modelInfo, *fieldInfo, string, []interface{}) (string, []interface{})
+	GenerateOperatorLeftCol(string, *string)
 	PrepareInsert(dbQuerier, *modelInfo) (stmtQuerier, string, error)
 	ReadValues(dbQuerier, *querySet, *modelInfo, *Condition, []string, interface{}) (int64, error)
 	MaxLimit() uint64
 	TableQuote() string
 	ReplaceMarks(*string)
+	HasReturningID(*modelInfo, *string) bool
 }

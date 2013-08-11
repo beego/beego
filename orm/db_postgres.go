@@ -1,6 +1,7 @@
 package orm
 
 import (
+	"fmt"
 	"strconv"
 )
 
@@ -27,6 +28,23 @@ var _ dbBaser = new(dbBasePostgres)
 
 func (d *dbBasePostgres) OperatorSql(operator string) string {
 	return postgresOperators[operator]
+}
+
+func (d *dbBasePostgres) GenerateOperatorLeftCol(operator string, leftCol *string) {
+	switch operator {
+	case "contains", "startswith", "endswith":
+		*leftCol = fmt.Sprintf("%s::text", *leftCol)
+	case "iexact", "icontains", "istartswith", "iendswith":
+		*leftCol = fmt.Sprintf("UPPER(%s::text)", *leftCol)
+	}
+}
+
+func (d *dbBasePostgres) SupportUpdateJoin() bool {
+	return false
+}
+
+func (d *dbBasePostgres) MaxLimit() uint64 {
+	return 0
 }
 
 func (d *dbBasePostgres) TableQuote() string {
@@ -59,7 +77,15 @@ func (d *dbBasePostgres) ReplaceMarks(query *string) {
 	*query = string(data)
 }
 
-// func (d *dbBasePostgres)
+func (d *dbBasePostgres) HasReturningID(mi *modelInfo, query *string) (has bool) {
+	if mi.fields.pk.auto {
+		if query != nil {
+			*query = fmt.Sprintf(`%s RETURNING "%s"`, *query, mi.fields.pk.column)
+		}
+		has = true
+	}
+	return
+}
 
 func newdbBasePostgres() dbBaser {
 	b := new(dbBasePostgres)

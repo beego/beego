@@ -22,7 +22,11 @@ func NewLog(out io.Writer) *Log {
 func debugLogQueies(alias *alias, operaton, query string, t time.Time, err error, args ...interface{}) {
 	sub := time.Now().Sub(t) / 1e5
 	elsp := float64(int(sub)) / 10.0
-	con := fmt.Sprintf(" - %s - [Queries/%s] - [%11s / %7.1fms] - [%s]", t.Format(format_DateTime), alias.Name, operaton, elsp, query)
+	flag := "  OK"
+	if err != nil {
+		flag = "FAIL"
+	}
+	con := fmt.Sprintf(" - %s - [Queries/%s] - [%s / %11s / %7.1fms] - [%s]", t.Format(format_DateTime), alias.Name, flag, operaton, elsp, query)
 	cons := make([]string, 0, len(args))
 	for _, arg := range args {
 		cons = append(cons, fmt.Sprintf("%v", arg))

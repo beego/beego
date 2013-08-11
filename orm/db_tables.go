@@ -177,7 +177,7 @@ func (t *dbTables) getJoinSql() (join string) {
 	return
 }
 
-func (d *dbTables) parseExprs(mi *modelInfo, exprs []string) (index, column, name string, info *fieldInfo, success bool) {
+func (d *dbTables) parseExprs(mi *modelInfo, exprs []string) (index, name string, info *fieldInfo, success bool) {
 	var (
 		ffi *fieldInfo
 		jtl *dbTable
@@ -236,7 +236,6 @@ func (d *dbTables) parseExprs(mi *modelInfo, exprs []string) (index, column, nam
 				} else {
 					index = jtl.index
 				}
-				column = fi.column
 				info = fi
 				if jtl != nil {
 					name = jtl.name + ExprSep + fi.name
@@ -256,14 +255,14 @@ func (d *dbTables) parseExprs(mi *modelInfo, exprs []string) (index, column, nam
 
 		if exist == false {
 			index = ""
-			column = ""
 			name = ""
+			info = nil
 			success = false
 			return
 		}
 	}
 
-	success = index != "" && column != ""
+	success = index != "" && info != nil
 	return
 }
 
@@ -305,7 +304,7 @@ func (d *dbTables) getCondSql(cond *Condition, sub bool) (where string, params [
 				exprs = exprs[:num]
 			}
 
-			index, column, _, _, suc := d.parseExprs(mi, exprs)
+			index, _, fi, suc := d.parseExprs(mi, exprs)
 			if suc == false {
 				panic(fmt.Errorf("unknown field/column name `%s`", strings.Join(p.exprs, ExprSep)))
 			}
@@ -314,9 +313,12 @@ func (d *dbTables) getCondSql(cond *Condition, sub bool) (where string, params [
 				operator = "exact"
 			}
 
-			operSql, args := d.base.GenerateOperatorSql(mi, operator, p.args)
+			operSql, args := d.base.GenerateOperatorSql(mi, fi, operator, p.args)
 
-			where += fmt.Sprintf("%s.%s%s%s %s ", index, Q, column, Q, operSql)
+			leftCol := fmt.Sprintf("%s.%s%s%s", index, Q, fi.column, Q)
+			d.base.GenerateOperatorLeftCol(operator, &leftCol)
+
+			where += fmt.Sprintf("%s %s ", leftCol, operSql)
 			params = append(params, args...)
 
 		}
@@ -345,12 +347,12 @@ func (d *dbTables) getOrderSql(orders []string) (orderSql string) {
 		}
 		exprs := strings.Split(order, ExprSep)
 
-		index, column, _, _, suc := d.parseExprs(d.mi, exprs)
+		index, _, fi, suc := d.parseExprs(d.mi, exprs)
 		if suc == false {
 			panic(fmt.Errorf("unknown field/column name `%s`", strings.Join(exprs, ExprSep)))
 		}
 
-		orderSqls = append(orderSqls, fmt.Sprintf("%s.%s%s%s %s", index, Q, column, Q, asc))
+		orderSqls = append(orderSqls, fmt.Sprintf("%s.%s%s%s %s", index, Q, fi.column, Q, asc))
 	}
 
 	orderSql = fmt.Sprintf("ORDER BY %s ", strings.Join(orderSqls, ", "))
@@ -365,7 +367,11 @@ func (d *dbTables) getLimitSql(mi *modelInfo, offset int64, limit int) (limits s
 		// no limit
 		if offset > 0 {
 			maxLimit := d.base.MaxLimit()
-			limits = fmt.Sprintf("LIMIT %d OFFSET %d", maxLimit, offset)
+			if maxLimit == 0 {
+				limits = fmt.Sprintf("OFFSET %d", offset)
+			} else {
+				limits = fmt.Sprintf("LIMIT %d OFFSET %d", maxLimit, offset)
+			}
 		}
 	} else if offset <= 0 {
 		limits = fmt.Sprintf("LIMIT %d", limit)

@@ -302,7 +302,8 @@ ORM_DRIVER=mysql ORM_SOURCE="root:root@/my_db?charset=utf8" go test github.com/a
 	queries := strings.Split(initSQLs[DBARGS.Driver], ";")
 
 	for _, query := range queries {
-		if strings.TrimSpace(query) == "" {
+		query = strings.TrimSpace(query)
+		if len(query) == 0 {
 			continue
 		}
 		_, err := dORM.Raw(query).Exec()

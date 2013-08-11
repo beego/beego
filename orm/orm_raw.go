@@ -27,12 +27,16 @@ func (o *rawPrepare) Close() error {
 func newRawPreparer(rs *rawSet) (RawPreparer, error) {
 	o := new(rawPrepare)
 	o.rs = rs
-	st, err := rs.orm.db.Prepare(rs.query)
+
+	query := rs.query
+	rs.orm.alias.DbBaser.ReplaceMarks(&query)
+
+	st, err := rs.orm.db.Prepare(query)
 	if err != nil {
 		return nil, err
 	}
 	if Debug {
-		o.stmt = newStmtQueryLog(rs.orm.alias, st, rs.query)
+		o.stmt = newStmtQueryLog(rs.orm.alias, st, query)
 	} else {
 		o.stmt = st
 	}
@@ -53,7 +57,11 @@ func (o rawSet) SetArgs(args ...interface{}) RawSeter {
 }
 
 func (o *rawSet) Exec() (sql.Result, error) {
-	return o.orm.db.Exec(o.query, o.args...)
+	query := o.query
+	o.orm.alias.DbBaser.ReplaceMarks(&query)
+
+	args := getFlatParams(nil, o.args)
+	return o.orm.db.Exec(query, args...)
 }
 
 func (o *rawSet) QueryRow(...interface{}) error {
@@ -85,8 +93,13 @@ func (o *rawSet) readValues(container interface{}) (int64, error) {
 		panic(fmt.Sprintf("unsupport read values type `%T`", container))
 	}
 
+	query := o.query
+	o.orm.alias.DbBaser.ReplaceMarks(&query)
+
+	args := getFlatParams(nil, o.args)
+
 	var rs *sql.Rows
-	if r, err := o.orm.db.Query(o.query, o.args...); err != nil {
+	if r, err := o.orm.db.Query(query, args...); err != nil {
 		return 0, err
 	} else {
 		rs = r
