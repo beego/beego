@@ -104,8 +104,8 @@ func TestInSlice(t *testing.T) {
 
 func TestParseForm(t *testing.T) {
 	type user struct {
-		Id    int
-		tag   string      `form:tag`
+		Id    int         `form:"-"`
+		tag   string      `form:"tag"`
 		Name  interface{} `form:"username"`
 		Age   int         `form:"age,text"`
 		Email string
@@ -114,6 +114,8 @@ func TestParseForm(t *testing.T) {
 
 	u := user{}
 	form := url.Values{
+		"Id":       []string{"1"},
+		"-":        []string{"1"},
 		"tag":      []string{"no"},
 		"username": []string{"test"},
 		"age":      []string{"40"},

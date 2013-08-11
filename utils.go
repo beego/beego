@@ -195,6 +195,8 @@ func ParseForm(form url.Values, obj interface{}) error {
 		var tag string
 		if len(tags) == 0 || len(tags[0]) == 0 {
 			tag = fieldT.Name
+		} else if tags[0] == "-" {
+			continue
 		} else {
 			tag = tags[0]
 		}
