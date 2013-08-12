@@ -79,6 +79,7 @@ func init() {
 	XSRFKEY = "beegoxsrf"
 	XSRFExpire = 60
 	ParseConfig()
+	runtime.GOMAXPROCS(runtime.NumCPU())
 }
 
 type App struct {
@@ -298,7 +299,6 @@ func Run() {
 			Warn(err)
 		}
 	}
-	runtime.GOMAXPROCS(runtime.NumCPU())
 	registerErrorHander()
 	BeeApp.Run()
 }
