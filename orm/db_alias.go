@@ -118,6 +118,8 @@ func RegisterDataBase(name, driverName, dataSource string, maxIdle int) {
 		goto end
 	}
 
+	al.DB.SetMaxIdleConns(al.MaxIdle)
+
 	err = al.DB.Ping()
 	if err != nil {
 		err = fmt.Errorf("register db `%s`, %s", name, err.Error())
