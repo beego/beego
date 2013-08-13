@@ -3,6 +3,7 @@ package orm
 import (
 	"fmt"
 	"strings"
+	"time"
 )
 
 type dbTable struct {
@@ -266,7 +267,7 @@ func (d *dbTables) parseExprs(mi *modelInfo, exprs []string) (index, name string
 	return
 }
 
-func (d *dbTables) getCondSql(cond *Condition, sub bool) (where string, params []interface{}) {
+func (d *dbTables) getCondSql(cond *Condition, sub bool, tz *time.Location) (where string, params []interface{}) {
 	if cond == nil || cond.IsEmpty() {
 		return
 	}
@@ -288,7 +289,7 @@ func (d *dbTables) getCondSql(cond *Condition, sub bool) (where string, params [
 			where += "NOT "
 		}
 		if p.isCond {
-			w, ps := d.getCondSql(p.cond, true)
+			w, ps := d.getCondSql(p.cond, true, tz)
 			if w != "" {
 				w = fmt.Sprintf("( %s) ", w)
 			}
@@ -313,10 +314,10 @@ func (d *dbTables) getCondSql(cond *Condition, sub bool) (where string, params [
 				operator = "exact"
 			}
 
-			operSql, args := d.base.GenerateOperatorSql(mi, fi, operator, p.args)
+			operSql, args := d.base.GenerateOperatorSql(mi, fi, operator, p.args, tz)
 
 			leftCol := fmt.Sprintf("%s.%s%s%s", index, Q, fi.column, Q)
-			d.base.GenerateOperatorLeftCol(operator, &leftCol)
+			d.base.GenerateOperatorLeftCol(fi, operator, &leftCol)
 
 			where += fmt.Sprintf("%s %s ", leftCol, operSql)
 			params = append(params, args...)

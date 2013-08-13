@@ -77,15 +77,15 @@ func (o querySet) SetCond(cond *Condition) QuerySeter {
 }
 
 func (o *querySet) Count() (int64, error) {
-	return o.orm.alias.DbBaser.Count(o.orm.db, o, o.mi, o.cond)
+	return o.orm.alias.DbBaser.Count(o.orm.db, o, o.mi, o.cond, o.orm.alias.TZ)
 }
 
 func (o *querySet) Update(values Params) (int64, error) {
-	return o.orm.alias.DbBaser.UpdateBatch(o.orm.db, o, o.mi, o.cond, values)
+	return o.orm.alias.DbBaser.UpdateBatch(o.orm.db, o, o.mi, o.cond, values, o.orm.alias.TZ)
 }
 
 func (o *querySet) Delete() (int64, error) {
-	return o.orm.alias.DbBaser.DeleteBatch(o.orm.db, o, o.mi, o.cond)
+	return o.orm.alias.DbBaser.DeleteBatch(o.orm.db, o, o.mi, o.cond, o.orm.alias.TZ)
 }
 
 func (o *querySet) PrepareInsert() (Inserter, error) {
@@ -93,11 +93,11 @@ func (o *querySet) PrepareInsert() (Inserter, error) {
 }
 
 func (o *querySet) All(container interface{}) (int64, error) {
-	return o.orm.alias.DbBaser.ReadBatch(o.orm.db, o, o.mi, o.cond, container)
+	return o.orm.alias.DbBaser.ReadBatch(o.orm.db, o, o.mi, o.cond, container, o.orm.alias.TZ)
 }
 
 func (o *querySet) One(container interface{}) error {
-	num, err := o.orm.alias.DbBaser.ReadBatch(o.orm.db, o, o.mi, o.cond, container)
+	num, err := o.orm.alias.DbBaser.ReadBatch(o.orm.db, o, o.mi, o.cond, container, o.orm.alias.TZ)
 	if err != nil {
 		return err
 	}
@@ -111,15 +111,15 @@ func (o *querySet) One(container interface{}) error {
 }
 
 func (o *querySet) Values(results *[]Params, exprs ...string) (int64, error) {
-	return o.orm.alias.DbBaser.ReadValues(o.orm.db, o, o.mi, o.cond, exprs, results)
+	return o.orm.alias.DbBaser.ReadValues(o.orm.db, o, o.mi, o.cond, exprs, results, o.orm.alias.TZ)
 }
 
 func (o *querySet) ValuesList(results *[]ParamsList, exprs ...string) (int64, error) {
-	return o.orm.alias.DbBaser.ReadValues(o.orm.db, o, o.mi, o.cond, exprs, results)
+	return o.orm.alias.DbBaser.ReadValues(o.orm.db, o, o.mi, o.cond, exprs, results, o.orm.alias.TZ)
 }
 
 func (o *querySet) ValuesFlat(result *ParamsList, expr string) (int64, error) {
-	return o.orm.alias.DbBaser.ReadValues(o.orm.db, o, o.mi, o.cond, []string{expr}, result)
+	return o.orm.alias.DbBaser.ReadValues(o.orm.db, o, o.mi, o.cond, []string{expr}, result, o.orm.alias.TZ)
 }
 
 func newQuerySet(orm *orm, mi *modelInfo) QuerySeter {

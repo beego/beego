@@ -55,7 +55,7 @@ func (o *orm) getMiInd(md interface{}) (mi *modelInfo, ind reflect.Value) {
 
 func (o *orm) Read(md interface{}) error {
 	mi, ind := o.getMiInd(md)
-	err := o.alias.DbBaser.Read(o.db, mi, ind)
+	err := o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ)
 	if err != nil {
 		return err
 	}
@@ -64,7 +64,7 @@ func (o *orm) Read(md interface{}) error {
 
 func (o *orm) Insert(md interface{}) (int64, error) {
 	mi, ind := o.getMiInd(md)
-	id, err := o.alias.DbBaser.Insert(o.db, mi, ind)
+	id, err := o.alias.DbBaser.Insert(o.db, mi, ind, o.alias.TZ)
 	if err != nil {
 		return id, err
 	}
@@ -78,7 +78,7 @@ func (o *orm) Insert(md interface{}) (int64, error) {
 
 func (o *orm) Update(md interface{}) (int64, error) {
 	mi, ind := o.getMiInd(md)
-	num, err := o.alias.DbBaser.Update(o.db, mi, ind)
+	num, err := o.alias.DbBaser.Update(o.db, mi, ind, o.alias.TZ)
 	if err != nil {
 		return num, err
 	}
@@ -87,7 +87,7 @@ func (o *orm) Update(md interface{}) (int64, error) {
 
 func (o *orm) Delete(md interface{}) (int64, error) {
 	mi, ind := o.getMiInd(md)
-	num, err := o.alias.DbBaser.Delete(o.db, mi, ind)
+	num, err := o.alias.DbBaser.Delete(o.db, mi, ind, o.alias.TZ)
 	if err != nil {
 		return num, err
 	}

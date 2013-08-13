@@ -1,5 +1,9 @@
 package orm
 
+import (
+	"fmt"
+)
+
 var sqliteOperators = map[string]string{
 	"exact":       "= ?",
 	"iexact":      "LIKE ? ESCAPE '\\'",
@@ -23,6 +27,12 @@ var _ dbBaser = new(dbBaseSqlite)
 
 func (d *dbBaseSqlite) OperatorSql(operator string) string {
 	return sqliteOperators[operator]
+}
+
+func (d *dbBaseSqlite) GenerateOperatorLeftCol(fi *fieldInfo, operator string, leftCol *string) {
+	if fi.fieldType == TypeDateField {
+		*leftCol = fmt.Sprintf("DATE(%s)", *leftCol)
+	}
 }
 
 func (d *dbBaseSqlite) SupportUpdateJoin() bool {

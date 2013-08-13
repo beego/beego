@@ -22,12 +22,16 @@ const (
 	// time.Time
 	TypeDateTimeField
 
+	// int8
+	TypeBitField
 	// int16
 	TypeSmallIntegerField
 	// int32
 	TypeIntegerField
 	// int64
 	TypeBigIntegerField
+	// uint8
+	TypePostiveBitField
 	// uint16
 	TypePositiveSmallIntegerField
 	// uint32
@@ -49,8 +53,8 @@ const (
 
 const (
 	IsIntegerField        = ^-TypePositiveBigIntegerField >> 4 << 5
-	IsPostiveIntegerField = ^-TypePositiveBigIntegerField >> 7 << 8
-	IsRelField            = ^-RelReverseMany >> 12 << 13
+	IsPostiveIntegerField = ^-TypePositiveBigIntegerField >> 8 << 9
+	IsRelField            = ^-RelReverseMany >> 14 << 15
 	IsFieldType           = ^-RelReverseMany<<1 + 1
 )
 

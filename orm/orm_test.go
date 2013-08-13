@@ -15,6 +15,11 @@ import (
 
 var _ = os.PathSeparator
 
+var (
+	test_Date     = format_Date + " -0700"
+	test_DateTime = format_DateTime + " -0700"
+)
+
 type T_Code int
 
 const (
@@ -141,7 +146,7 @@ func getCaller(skip int) string {
 			if cur == line {
 				flag = ">>"
 			}
-			code := fmt.Sprintf(" %s %5d:   %s", flag, cur, strings.TrimSpace(string(lines[o+i])))
+			code := fmt.Sprintf(" %s %5d:   %s", flag, cur, strings.Replace(string(lines[o+i]), "\t", "    ", -1))
 			if code != "" {
 				codes = append(codes, code)
 			}
@@ -158,7 +163,11 @@ func throwFail(t *testing.T, err error, args ...interface{}) {
 	if err != nil {
 		con := fmt.Sprintf("\t\nError: %s\n%s\n", err.Error(), getCaller(2))
 		if len(args) > 0 {
-			con += fmt.Sprint(args...)
+			parts := make([]string, 0, len(args))
+			for _, arg := range args {
+				parts = append(parts, fmt.Sprintf("%v", arg))
+			}
+			con += " " + strings.Join(parts, ", ")
 		}
 		t.Error(con)
 		t.Fail()
@@ -169,7 +178,11 @@ func throwFailNow(t *testing.T, err error, args ...interface{}) {
 	if err != nil {
 		con := fmt.Sprintf("\t\nError: %s\n%s\n", err.Error(), getCaller(2))
 		if len(args) > 0 {
-			con += fmt.Sprint(args...)
+			parts := make([]string, 0, len(args))
+			for _, arg := range args {
+				parts = append(parts, fmt.Sprintf("%v", arg))
+			}
+			con += " " + strings.Join(parts, ", ")
 		}
 		t.Error(con)
 		t.FailNow()
@@ -177,11 +190,98 @@ func throwFailNow(t *testing.T, err error, args ...interface{}) {
 }
 
 func TestModelSyntax(t *testing.T) {
-	mi, ok := modelCache.get("user")
+	user := &User{}
+	ind := reflect.ValueOf(user).Elem()
+	fn := getFullName(ind.Type())
+	mi, ok := modelCache.getByFN(fn)
+	throwFail(t, AssertIs(ok, T_Equal, true))
+
+	mi, ok = modelCache.get("user")
 	throwFail(t, AssertIs(ok, T_Equal, true))
 	if ok {
 		throwFail(t, AssertIs(mi.fields.GetByName("ShouldSkip") == nil, T_Equal, true))
 	}
+}
+
+func TestDataTypes(t *testing.T) {
+	values := map[string]interface{}{
+		"Boolean":  true,
+		"Char":     "char",
+		"Text":     "text",
+		"Date":     time.Now(),
+		"DateTime": time.Now(),
+		"Byte":     byte(1<<8 - 1),
+		"Rune":     rune(1<<31 - 1),
+		"Int":      int(1<<31 - 1),
+		"Int8":     int8(1<<7 - 1),
+		"Int16":    int16(1<<15 - 1),
+		"Int32":    int32(1<<31 - 1),
+		"Int64":    int64(1<<63 - 1),
+		"Uint":     uint(1<<32 - 1),
+		"Uint8":    uint8(1<<8 - 1),
+		"Uint16":   uint16(1<<16 - 1),
+		"Uint32":   uint32(1<<32 - 1),
+		"Uint64":   uint64(1<<63 - 1), // uint64 values with high bit set are not supported
+		"Float32":  float32(100.1234),
+		"Float64":  float64(100.1234),
+		"Decimal":  float64(100.1234),
+	}
+	d := Data{}
+	ind := reflect.Indirect(reflect.ValueOf(&d))
+
+	for name, value := range values {
+		e := ind.FieldByName(name)
+		e.Set(reflect.ValueOf(value))
+	}
+
+	id, err := dORM.Insert(&d)
+	throwFail(t, err)
+	throwFail(t, AssertIs(id, T_Equal, 1))
+
+	d = Data{Id: 1}
+	err = dORM.Read(&d)
+	throwFail(t, err)
+
+	ind = reflect.Indirect(reflect.ValueOf(&d))
+
+	for name, value := range values {
+		e := ind.FieldByName(name)
+		vu := e.Interface()
+		switch name {
+		case "Date":
+			vu = vu.(time.Time).In(DefaultTimeLoc).Format(test_Date)
+			value = value.(time.Time).In(DefaultTimeLoc).Format(test_Date)
+		case "DateTime":
+			vu = vu.(time.Time).In(DefaultTimeLoc).Format(test_DateTime)
+			value = value.(time.Time).In(DefaultTimeLoc).Format(test_DateTime)
+		}
+		throwFail(t, AssertIs(vu == value, T_Equal, true), value, vu)
+	}
+}
+
+func TestNullDataTypes(t *testing.T) {
+	d := DataNull{}
+
+	if IsPostgres {
+		// can removed when this fixed
+		// https://github.com/lib/pq/pull/125
+		d.DateTime = time.Now()
+	}
+
+	id, err := dORM.Insert(&d)
+	throwFail(t, err)
+	throwFail(t, AssertIs(id, T_Equal, 1))
+
+	d = DataNull{Id: 1}
+	err = dORM.Read(&d)
+	throwFail(t, err)
+
+	_, err = dORM.Raw(`INSERT INTO data_null (boolean) VALUES (?)`, nil).Exec()
+	throwFail(t, err)
+
+	d = DataNull{Id: 2}
+	err = dORM.Read(&d)
+	throwFail(t, err)
 }
 
 func TestCRUD(t *testing.T) {
@@ -214,8 +314,8 @@ func TestCRUD(t *testing.T) {
 	throwFail(t, AssertIs(u.Status, T_Equal, 3))
 	throwFail(t, AssertIs(u.IsStaff, T_Equal, true))
 	throwFail(t, AssertIs(u.IsActive, T_Equal, true))
-	throwFail(t, AssertIs(u.Created, T_Equal, user.Created, format_Date))
-	throwFail(t, AssertIs(u.Updated, T_Equal, user.Updated, format_DateTime))
+	throwFail(t, AssertIs(u.Created.In(DefaultTimeLoc), T_Equal, user.Created.In(DefaultTimeLoc), test_Date))
+	throwFail(t, AssertIs(u.Updated.In(DefaultTimeLoc), T_Equal, user.Updated.In(DefaultTimeLoc), test_DateTime))
 
 	user.UserName = "astaxie"
 	user.Profile = profile
@@ -360,13 +460,19 @@ The program—and web server—godoc processes Go source files to extract docume
 }
 
 func TestExpr(t *testing.T) {
-	qs := dORM.QueryTable("User")
+	user := &User{}
+	qs := dORM.QueryTable(user)
+	qs = dORM.QueryTable("User")
 	qs = dORM.QueryTable("user")
 	num, err := qs.Filter("UserName", "slene").Filter("user_name", "slene").Filter("profile__Age", 28).Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, T_Equal, 1))
 
 	num, err = qs.Filter("created", time.Now()).Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, T_Equal, 3))
+
+	num, err = qs.Filter("created", time.Now().Format(format_Date)).Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, T_Equal, 3))
 }
@@ -820,9 +926,11 @@ func TestRaw(t *testing.T) {
 			res, err := dORM.Raw(`DELETE FROM "tag" WHERE "name" IN (?, ?, ?)`, []string{"name1", "name2", "name3"}).Exec()
 			throwFail(t, err)
 
-			num, err := res.RowsAffected()
-			throwFail(t, err)
-			throwFail(t, AssertIs(num, T_Equal, 3))
+			if err == nil {
+				num, err := res.RowsAffected()
+				throwFail(t, err)
+				throwFail(t, AssertIs(num, T_Equal, 3))
+			}
 		}
 	}
 }

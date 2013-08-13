@@ -60,7 +60,7 @@ func (o *rawSet) Exec() (sql.Result, error) {
 	query := o.query
 	o.orm.alias.DbBaser.ReplaceMarks(&query)
 
-	args := getFlatParams(nil, o.args)
+	args := getFlatParams(nil, o.args, o.orm.alias.TZ)
 	return o.orm.db.Exec(query, args...)
 }
 
@@ -96,7 +96,7 @@ func (o *rawSet) readValues(container interface{}) (int64, error) {
 	query := o.query
 	o.orm.alias.DbBaser.ReplaceMarks(&query)
 
-	args := getFlatParams(nil, o.args)
+	args := getFlatParams(nil, o.args, o.orm.alias.TZ)
 
 	var rs *sql.Rows
 	if r, err := o.orm.db.Query(query, args...); err != nil {
