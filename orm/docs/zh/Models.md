@@ -164,27 +164,91 @@ type Profile struct {
 ```
 
 
-## Struct Field 类型与数据库的对应
+## 模型字段与数据库类型的对应
 
-现在 orm 支持下面的字段形式
+在此列出 orm 推荐的对应数据库类型，自动建表功能也会以此为标准。
 
-| go type		   | field type  | mysql type
-| :---   	   | :---        | :---
-| bool | TypeBooleanField | tinyint
-| string | TypeCharField | varchar
-| string | TypeTextField | longtext
-| time.Time | TypeDateField | date
-| time.TIme | TypeDateTimeField | datetime
-|  int16 |TypeSmallIntegerField | int(4)
-|  int, int32 |TypeIntegerField | int(11)
-|  int64 |TypeBigIntegerField | bigint(20)
-|  uint, uint16 |TypePositiveSmallIntegerField | int(4) unsigned
-|  uint32 |TypePositiveIntegerField | int(11) unsigned
-|  uint64 |TypePositiveBigIntegerField | bigint(20) unsigned
-| float32, float64 | TypeFloatField | double
-| float32, float64 | TypeDecimalField | double(digits, decimals)
+默认所有的字段都是 **NOT NULL**
 
-关系型的字段，其字段类型取决于对应的主键。
+#### MySQL
+
+| go		   |mysql
+| :---   	   | :---
+| bool | bool
+| string - 设置 size 时 | varchar(size)
+| string | longtext
+| time.Time - 设置 type 为 date 时 | date
+| time.TIme | datetime
+| byte | tinyint unsigned
+| rune | integer
+| int | integer
+| int8 | tinyint
+| int16 | smallint
+| int32 | integer
+| int64 | bigint
+| uint | integer unsigned
+| uint8 | tinyint unsigned
+| uint16 | smallint unsigned
+| uint32 | integer unsigned
+| uint64 | bigint unsigned
+| float32 | double precision
+| float64 | double precision
+| float64 - 设置 digits, decimals 时  | numeric(digits, decimals)
+
+#### Sqlite3
+
+| go		   | sqlite3
+| :---   	   | :---
+| bool | bool
+| string - 设置 size 时 | varchar(size)
+| string | text
+| time.Time - 设置 type 为 date 时 | date
+| time.TIme | datetime
+| byte | tinyint unsigned
+| rune | integer
+| int | integer
+| int8 | tinyint
+| int16 | smallint
+| int32 | integer
+| int64 | bigint
+| uint | integer unsigned
+| uint8 | tinyint unsigned
+| uint16 | smallint unsigned
+| uint32 | integer unsigned
+| uint64 | bigint unsigned
+| float32 | real
+| float64 | real
+| float64 - 设置 digits, decimals 时  | decimal
+
+#### PostgreSQL
+
+| go		   | postgres
+| :---   	   | :---
+| bool | bool
+| string - 设置 size 时 | varchar(size)
+| string | text
+| time.Time - 设置 type 为 date 时 | date
+| time.TIme | timestamp with time zone
+| byte | smallint CHECK("column" >= 0 AND "column" <= 255)
+| rune | integer
+| int | integer
+| int8 | smallint CHECK("column" >= -127 AND "column" <= 128)
+| int16 | smallint
+| int32 | integer
+| int64 | bigint
+| uint | bigint CHECK("column" >= 0)
+| uint8 | smallint CHECK("column" >= 0 AND "column" <= 255)
+| uint16 | integer CHECK("column" >= 0)
+| uint32 | bigint CHECK("column" >= 0)
+| uint64 | bigint CHECK("column" >= 0)
+| float32 | double precision
+| float64 | double precision
+| float64 - 设置 digits, decimals 时  | numeric(digits, decimals)
+
+
+## 关系型字段
+
+其字段类型取决于对应的主键。
 
 * RelForeignKey
 * RelOneToOne

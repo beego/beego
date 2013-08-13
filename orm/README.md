@@ -1,6 +1,10 @@
 # beego orm
 
-a powerful orm framework
+[![Build Status](https://drone.io/github.com/astaxie/beego/status.png)](https://drone.io/github.com/astaxie/beego/latest)
+
+A powerful orm framework for go.
+
+It is heavily influenced by Django ORM, SQLAlchemy.
 
 now, beta, unstable, may be changing some api make your app build failed.
 
@@ -14,11 +18,24 @@ Passed all test, but need more feedback.
 
 **Features:**
 
-...
+* full go type support
+* easy for usage, simple CRUD operation
+* auto join with relation table
+* cross DataBase compatible query
+* Raw SQL query / mapper without orm model
+* full test keep stable and strong
+
+more features please read the docs
 
 **Install:**
 
 	go get github.com/astaxie/beego/orm
+
+## Changelog
+
+* 2013-08-13: update test for database types
+* 2013-08-13: go type support, such as int8, uint8, byte, rune
+* 2013-08-13: date / datetime timezone support very well
 
 ## Quick Start
 
@@ -143,5 +160,3 @@ more details and examples in docs and test
 - some unrealized api
 - examples
 - docs
-
-## 
