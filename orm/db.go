@@ -201,10 +201,6 @@ func (d *dbBase) Read(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Lo
 
 	d.ins.ReplaceMarks(&query)
 
-	if len(refs) == 21 {
-		fmt.Println(query, pkValue)
-	}
-
 	row := q.QueryRow(query, pkValue)
 	if err := row.Scan(refs...); err != nil {
 		if err == sql.ErrNoRows {

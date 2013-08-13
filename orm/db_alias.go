@@ -167,7 +167,7 @@ func RegisterDriver(driverName string, typ DriverType) {
 		drivers[driverName] = typ
 	} else {
 		if t != typ {
-			fmt.Println("driverName `%s` db driver already registered and is other type")
+			fmt.Sprintf("driverName `%s` db driver already registered and is other type\n", driverName)
 			os.Exit(2)
 		}
 	}
@@ -177,7 +177,7 @@ func SetDataBaseTZ(name string, tz *time.Location) {
 	if al, ok := dataBaseCache.get(name); ok {
 		al.TZ = tz
 	} else {
-		err := fmt.Errorf("DataBase name `%s` not registered", name)
-		fmt.Println(err)
+		fmt.Sprintf("DataBase name `%s` not registered\n", name)
+		os.Exit(2)
 	}
 }
