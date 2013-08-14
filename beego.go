@@ -32,7 +32,7 @@ var (
 	AppConfig     *Config
 	//related to session
 	GlobalSessions       *session.Manager //GlobalSessions
-	SessionOn            bool             // wheather auto start session,default is false
+	SessionOn            bool             // whether auto start session,default is false
 	SessionProvider      string           // default session provider  memory mysql redis
 	SessionName          string           // sessionName cookie's name
 	SessionGCMaxLifetime int64            // session's gc maxlifetime
@@ -40,8 +40,8 @@ var (
 	UseFcgi              bool
 	MaxMemory            int64
 	EnableGzip           bool   // enable gzip
-	DirectoryIndex       bool   //ebable DirectoryIndex default is false
-	EnbaleHotUpdate      bool   //enable HotUpdate default is false
+	DirectoryIndex       bool   //enable DirectoryIndex default is false
+	EnableHotUpdate      bool   //enable HotUpdate default is false
 	HttpServerTimeOut    int64  //set httpserver timeout
 	ErrorsShow           bool   //set weather show errors
 	XSRFKEY              string //set XSRF
@@ -106,7 +106,7 @@ func (app *App) Run() {
 		}
 		err = fcgi.Serve(l, app.Handlers)
 	} else {
-		if EnbaleHotUpdate {
+		if EnableHotUpdate {
 			server := &http.Server{
 				Handler:      app.Handlers,
 				ReadTimeout:  time.Duration(HttpServerTimeOut) * time.Second,
