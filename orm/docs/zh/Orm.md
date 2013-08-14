@@ -80,7 +80,7 @@ import (
 
 #### RegisterDriver
 
-三种数据库类型
+三种默认数据库类型
 
 ```go
 orm.DR_MySQL
@@ -93,7 +93,7 @@ orm.DR_Postgres
 // 参数2   数据库类型
 // 这个用来设置 driverName 对应的数据库类型
 // mysql / sqlite3 / postgres 这三种是默认已经注册过的，所以可以无需设置
-orm.RegisterDriver("mysql", orm.DR_MySQL)
+orm.RegisterDriver("mymysql", orm.DR_MySQL)
 ```
 
 #### RegisterDataBase
@@ -107,6 +107,56 @@ orm 必须注册一个名称为 `default` 的数据库，用以作为默认使�
 // 参数4   设置最大的空闲连接数，使用 golang 自己的连接池
 orm.RegisterDataBase("default", "mysql", "root:root@/orm_test?charset=utf8", 30)
 ```
+
+#### 时区设置
+
+orm 默认使用 time.Local 本地时区
+
+* 作用于 orm 自动创建的时间
+* 从数据库中取回的时间转换成 orm 本地时间
+
+如果需要的话，你也可以进行更改
+
+```go
+// 设置为 UTC 时间
+orm.DefaultTimeLoc = time.UTC
+```
+
+orm 在进行 RegisterDataBase 的同时，会获取数据库使用的时区，然后在 time.Time 类型存取的时做相应转换，以匹配时间系统，从而保证时间不会出错。
+
+**注意:** 鉴于 Sqlite3 的设计，存取默认都为 UTC 时间
+
+## RegisterModel
+
+如果使用 orm.QuerySeter 进行高级查询的话，这个是必须的。
+
+反之，如果只使用 Raw 查询和 map struct，是无需这一步的。您可以去查看 [Raw SQL 查询](Raw.md)
+
+将你定义的 Model 进行注册，最佳设计是有单独的 models.go 文件，在他的 init 函数中进行注册。
+
+
+迷你版 models.go
+```go
+package main
+
+import "github.com/astaxie/beego/orm"
+
+type User struct {
+	Id   int    `orm:"auto"`
+	name string
+}
+
+func init(){
+	orm.RegisterModel(new(User))
+}
+```
+
+RegisterModel 也可以同时注册多个 model
+
+```go
+orm.RegisterModel(new(User), new(Profile), new(Post))
+```
+
 
 ## ORM 接口使用
 

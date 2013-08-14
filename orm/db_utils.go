@@ -24,7 +24,7 @@ func getExistPk(mi *modelInfo, ind reflect.Value) (column string, value interfac
 	return
 }
 
-func getFlatParams(fi *fieldInfo, args []interface{}) (params []interface{}) {
+func getFlatParams(fi *fieldInfo, args []interface{}, tz *time.Location) (params []interface{}) {
 
 outFor:
 	for _, arg := range args {
@@ -39,9 +39,9 @@ outFor:
 		case []byte:
 		case time.Time:
 			if fi != nil && fi.fieldType == TypeDateField {
-				arg = v.Format(format_Date)
+				arg = v.In(DefaultTimeLoc).Format(format_Date)
 			} else {
-				arg = v.Format(format_DateTime)
+				arg = v.In(tz).Format(format_DateTime)
 			}
 		default:
 			kind := val.Kind()
@@ -65,7 +65,7 @@ outFor:
 				}
 
 				if len(args) > 0 {
-					p := getFlatParams(fi, args)
+					p := getFlatParams(fi, args, tz)
 					params = append(params, p...)
 				}
 				continue outFor

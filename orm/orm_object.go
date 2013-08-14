@@ -28,7 +28,7 @@ func (o *insertSet) Insert(md interface{}) (int64, error) {
 	if name != o.mi.fullName {
 		panic(fmt.Sprintf("<Inserter.Insert> need model `%s` but found `%s`", o.mi.fullName, name))
 	}
-	id, err := o.orm.alias.DbBaser.InsertStmt(o.stmt, o.mi, ind)
+	id, err := o.orm.alias.DbBaser.InsertStmt(o.stmt, o.mi, ind, o.orm.alias.TZ)
 	if err != nil {
 		return id, err
 	}

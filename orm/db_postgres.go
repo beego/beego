@@ -30,7 +30,7 @@ func (d *dbBasePostgres) OperatorSql(operator string) string {
 	return postgresOperators[operator]
 }
 
-func (d *dbBasePostgres) GenerateOperatorLeftCol(operator string, leftCol *string) {
+func (d *dbBasePostgres) GenerateOperatorLeftCol(fi *fieldInfo, operator string, leftCol *string) {
 	switch operator {
 	case "contains", "startswith", "endswith":
 		*leftCol = fmt.Sprintf("%s::text", *leftCol)

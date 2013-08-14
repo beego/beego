@@ -3,6 +3,7 @@ package orm
 import (
 	"database/sql"
 	"reflect"
+	"time"
 )
 
 type Driver interface {
@@ -110,23 +111,25 @@ type txEnder interface {
 }
 
 type dbBaser interface {
-	Read(dbQuerier, *modelInfo, reflect.Value) error
-	Insert(dbQuerier, *modelInfo, reflect.Value) (int64, error)
-	InsertStmt(stmtQuerier, *modelInfo, reflect.Value) (int64, error)
-	Update(dbQuerier, *modelInfo, reflect.Value) (int64, error)
-	Delete(dbQuerier, *modelInfo, reflect.Value) (int64, error)
-	ReadBatch(dbQuerier, *querySet, *modelInfo, *Condition, interface{}) (int64, error)
+	Read(dbQuerier, *modelInfo, reflect.Value, *time.Location) error
+	Insert(dbQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
+	InsertStmt(stmtQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
+	Update(dbQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
+	Delete(dbQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
+	ReadBatch(dbQuerier, *querySet, *modelInfo, *Condition, interface{}, *time.Location) (int64, error)
 	SupportUpdateJoin() bool
-	UpdateBatch(dbQuerier, *querySet, *modelInfo, *Condition, Params) (int64, error)
-	DeleteBatch(dbQuerier, *querySet, *modelInfo, *Condition) (int64, error)
-	Count(dbQuerier, *querySet, *modelInfo, *Condition) (int64, error)
+	UpdateBatch(dbQuerier, *querySet, *modelInfo, *Condition, Params, *time.Location) (int64, error)
+	DeleteBatch(dbQuerier, *querySet, *modelInfo, *Condition, *time.Location) (int64, error)
+	Count(dbQuerier, *querySet, *modelInfo, *Condition, *time.Location) (int64, error)
 	OperatorSql(string) string
-	GenerateOperatorSql(*modelInfo, *fieldInfo, string, []interface{}) (string, []interface{})
-	GenerateOperatorLeftCol(string, *string)
+	GenerateOperatorSql(*modelInfo, *fieldInfo, string, []interface{}, *time.Location) (string, []interface{})
+	GenerateOperatorLeftCol(*fieldInfo, string, *string)
 	PrepareInsert(dbQuerier, *modelInfo) (stmtQuerier, string, error)
-	ReadValues(dbQuerier, *querySet, *modelInfo, *Condition, []string, interface{}) (int64, error)
+	ReadValues(dbQuerier, *querySet, *modelInfo, *Condition, []string, interface{}, *time.Location) (int64, error)
 	MaxLimit() uint64
 	TableQuote() string
 	ReplaceMarks(*string)
 	HasReturningID(*modelInfo, *string) bool
+	TimeFromDB(*time.Time, *time.Location)
+	TimeToDB(*time.Time, *time.Location)
 }

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"sync"
+	"time"
 )
 
 const defaultMaxIdle = 30
@@ -82,6 +83,7 @@ type alias struct {
 	MaxIdle    int
 	DB         *sql.DB
 	DbBaser    dbBaser
+	TZ         *time.Location
 }
 
 func RegisterDataBase(name, driverName, dataSource string, maxIdle int) {
@@ -120,6 +122,33 @@ func RegisterDataBase(name, driverName, dataSource string, maxIdle int) {
 
 	al.DB.SetMaxIdleConns(al.MaxIdle)
 
+	// orm timezone system match database
+	// default use Local
+	al.TZ = time.Local
+
+	switch al.Driver {
+	case DR_MySQL:
+		row := al.DB.QueryRow("SELECT @@session.time_zone")
+		var tz string
+		row.Scan(&tz)
+		if tz != "SYSTEM" {
+			t, err := time.Parse("-07:00", tz)
+			if err == nil {
+				al.TZ = t.Location()
+			}
+		}
+	case DR_Sqlite:
+		al.TZ = time.UTC
+	case DR_Postgres:
+		row := al.DB.QueryRow("SELECT current_setting('TIMEZONE')")
+		var tz string
+		row.Scan(&tz)
+		loc, err := time.LoadLocation(tz)
+		if err == nil {
+			al.TZ = loc
+		}
+	}
+
 	err = al.DB.Ping()
 	if err != nil {
 		err = fmt.Errorf("register db `%s`, %s", name, err.Error())
@@ -133,13 +162,22 @@ end:
 	}
 }
 
-func RegisterDriver(name string, typ DriverType) {
-	if t, ok := drivers[name]; ok == false {
-		drivers[name] = typ
+func RegisterDriver(driverName string, typ DriverType) {
+	if t, ok := drivers[driverName]; ok == false {
+		drivers[driverName] = typ
 	} else {
 		if t != typ {
-			fmt.Println("name `%s` db driver already registered and is other type")
+			fmt.Sprintf("driverName `%s` db driver already registered and is other type\n", driverName)
 			os.Exit(2)
 		}
+	}
+}
+
+func SetDataBaseTZ(name string, tz *time.Location) {
+	if al, ok := dataBaseCache.get(name); ok {
+		al.TZ = tz
+	} else {
+		fmt.Sprintf("DataBase name `%s` not registered\n", name)
+		os.Exit(2)
 	}
 }

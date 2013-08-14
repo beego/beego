@@ -327,8 +327,8 @@ checkType:
 	case TypeDecimalField:
 		d1 := digits
 		d2 := decimals
-		v1, er1 := StrTo(d1).Int16()
-		v2, er2 := StrTo(d2).Int16()
+		v1, er1 := StrTo(d1).Int8()
+		v2, er2 := StrTo(d2).Int8()
 		if er1 != nil || er2 != nil {
 			err = fmt.Errorf("wrong digits/decimals value %s/%s", d2, d1)
 			goto end
@@ -383,12 +383,16 @@ checkType:
 			_, err = v.Bool()
 		case TypeFloatField, TypeDecimalField:
 			_, err = v.Float64()
+		case TypeBitField:
+			_, err = v.Int8()
 		case TypeSmallIntegerField:
 			_, err = v.Int16()
 		case TypeIntegerField:
 			_, err = v.Int32()
 		case TypeBigIntegerField:
 			_, err = v.Int64()
+		case TypePostiveBitField:
+			_, err = v.Uint8()
 		case TypePositiveSmallIntegerField:
 			_, err = v.Uint16()
 		case TypePositiveIntegerField:

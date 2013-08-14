@@ -38,6 +38,11 @@ func (f StrTo) Float64() (float64, error) {
 	return strconv.ParseFloat(f.String(), 64)
 }
 
+func (f StrTo) Int8() (int8, error) {
+	v, err := strconv.ParseInt(f.String(), 10, 8)
+	return int8(v), err
+}
+
 func (f StrTo) Int16() (int16, error) {
 	v, err := strconv.ParseInt(f.String(), 10, 16)
 	return int16(v), err
@@ -51,6 +56,11 @@ func (f StrTo) Int32() (int32, error) {
 func (f StrTo) Int64() (int64, error) {
 	v, err := strconv.ParseInt(f.String(), 10, 64)
 	return int64(v), err
+}
+
+func (f StrTo) Uint8() (uint8, error) {
+	v, err := strconv.ParseUint(f.String(), 10, 8)
+	return uint8(v), err
 }
 
 func (f StrTo) Uint16() (uint16, error) {
@@ -85,6 +95,8 @@ func ToStr(value interface{}, args ...int) (s string) {
 		s = strconv.FormatFloat(v, 'f', argInt(args).Get(0, -1), argInt(args).Get(1, 64))
 	case int:
 		s = strconv.FormatInt(int64(v), argInt(args).Get(0, 10))
+	case int8:
+		s = strconv.FormatInt(int64(v), argInt(args).Get(0, 10))
 	case int16:
 		s = strconv.FormatInt(int64(v), argInt(args).Get(0, 10))
 	case int32:
@@ -92,6 +104,8 @@ func ToStr(value interface{}, args ...int) (s string) {
 	case int64:
 		s = strconv.FormatInt(v, argInt(args).Get(0, 10))
 	case uint:
+		s = strconv.FormatUint(uint64(v), argInt(args).Get(0, 10))
+	case uint8:
 		s = strconv.FormatUint(uint64(v), argInt(args).Get(0, 10))
 	case uint16:
 		s = strconv.FormatUint(uint64(v), argInt(args).Get(0, 10))
