@@ -216,7 +216,7 @@ func (c *Controller) Abort(code string) {
 }
 
 func (c *Controller) ServeJson(encoding ...bool) {
-	content, err := json.MarshalIndent(c.Data["json"], "", "  ")
+	content, err := json.Marshal(c.Data["json"])
 	if err != nil {
 		http.Error(c.Ctx.ResponseWriter, err.Error(), http.StatusInternalServerError)
 		return
@@ -229,7 +229,7 @@ func (c *Controller) ServeJson(encoding ...bool) {
 }
 
 func (c *Controller) ServeJsonp() {
-	content, err := json.MarshalIndent(c.Data["jsonp"], "", "  ")
+	content, err := json.Marshal(c.Data["jsonp"])
 	if err != nil {
 		http.Error(c.Ctx.ResponseWriter, err.Error(), http.StatusInternalServerError)
 		return
