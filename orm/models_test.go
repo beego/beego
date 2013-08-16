@@ -13,10 +13,10 @@ import (
 )
 
 type Data struct {
-	Id       int `orm:"auto"`
+	Id       int
 	Boolean  bool
-	Char     string `orm:"size(50)"`
-	Text     string
+	Char     string    `orm:size(50)`
+	Text     string    `orm:"type(text)"`
 	Date     time.Time `orm:"type(date)"`
 	DateTime time.Time
 	Byte     byte
@@ -37,10 +37,10 @@ type Data struct {
 }
 
 type DataNull struct {
-	Id       int       `orm:"auto"`
+	Id       int
 	Boolean  bool      `orm:"null"`
 	Char     string    `orm:"size(50);null"`
-	Text     string    `orm:"null"`
+	Text     string    `orm:"type(text);null"`
 	Date     time.Time `orm:"type(date);null"`
 	DateTime time.Time `orm:"null"`
 	Byte     byte      `orm:"null"`
@@ -61,7 +61,7 @@ type DataNull struct {
 }
 
 type User struct {
-	Id         int    `orm:"auto"`
+	Id         int
 	UserName   string `orm:"size(30);unique"`
 	Email      string `orm:"size(100)"`
 	Password   string `orm:"size(100)"`
@@ -81,10 +81,10 @@ func NewUser() *User {
 }
 
 type Profile struct {
-	Id    int     `orm:"auto"`
-	Age   int16   ``
-	Money float64 ``
-	User  *User   `orm:"reverse(one)" json:"-"`
+	Id    int
+	Age   int16
+	Money float64
+	User  *User `orm:"reverse(one)" json:"-"`
 }
 
 func (u *Profile) TableName() string {
@@ -97,8 +97,8 @@ func NewProfile() *Profile {
 }
 
 type Post struct {
-	Id      int       `orm:"auto"`
-	User    *User     `orm:"rel(fk)"` //
+	Id      int
+	User    *User     `orm:"rel(fk)"`
 	Title   string    `orm:"size(60)"`
 	Content string    ``
 	Created time.Time `orm:"auto_now_add"`
@@ -112,7 +112,7 @@ func NewPost() *Post {
 }
 
 type Tag struct {
-	Id    int     `orm:"auto"`
+	Id    int
 	Name  string  `orm:"size(30)"`
 	Posts []*Post `orm:"reverse(many)" json:"-"`
 }
@@ -123,7 +123,7 @@ func NewTag() *Tag {
 }
 
 type Comment struct {
-	Id      int       `orm:"auto"`
+	Id      int
 	Post    *Post     `orm:"rel(fk)"`
 	Content string    ``
 	Parent  *Comment  `orm:"null;rel(fk)"`

@@ -89,7 +89,7 @@ type fieldInfo struct {
 	fullName            string
 	column              string
 	addrValue           reflect.Value
-	sf                  *reflect.StructField
+	sf                  reflect.StructField
 	auto                bool
 	pk                  bool
 	null                bool
@@ -244,7 +244,7 @@ checkType:
 	fi.name = sf.Name
 	fi.column = getColumnName(fieldType, addrField, sf, tags["column"])
 	fi.addrValue = addrField
-	fi.sf = &sf
+	fi.sf = sf
 	fi.fullName = mi.fullName + "." + sf.Name
 
 	fi.null = attrs["null"]
@@ -358,6 +358,14 @@ checkType:
 
 	if fi.auto || fi.pk {
 		if fi.auto {
+
+			switch addrField.Elem().Kind() {
+			case reflect.Int, reflect.Int32, reflect.Int64:
+			default:
+				err = fmt.Errorf("auto primary key only support int, int32, int64, but found `%s`", addrField.Elem().Kind())
+				goto end
+			}
+
 			fi.pk = true
 		}
 		fi.null = false

@@ -32,8 +32,26 @@ func registerModel(model interface{}) {
 	}
 
 	if info.fields.pk == nil {
-		fmt.Printf("<orm.RegisterModel> `%s` need a primary key field\n", name)
-		os.Exit(2)
+	outFor:
+		for _, fi := range info.fields.fieldsDB {
+			if fi.name == "Id" {
+				if fi.sf.Tag.Get(defaultStructTagName) == "" {
+					switch fi.addrValue.Elem().Kind() {
+					case reflect.Int, reflect.Int64, reflect.Int32:
+						fi.auto = true
+						fi.pk = true
+						info.fields.pk = fi
+						break outFor
+					}
+				}
+			}
+		}
+
+		if info.fields.pk == nil {
+			fmt.Printf("<orm.RegisterModel> `%s` need a primary key field\n", name)
+			os.Exit(2)
+		}
+
 	}
 
 	info.table = table
