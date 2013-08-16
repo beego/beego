@@ -15,7 +15,7 @@ import (
 type Data struct {
 	Id       int
 	Boolean  bool
-	Char     string    `orm:size(50)`
+	Char     string    `orm:"size(50)"`
 	Text     string    `orm:"type(text)"`
 	Date     time.Time `orm:"type(date)"`
 	DateTime time.Time
@@ -100,7 +100,7 @@ type Post struct {
 	Id      int
 	User    *User     `orm:"rel(fk)"`
 	Title   string    `orm:"size(60)"`
-	Content string    ``
+	Content string    `orm:"type(text)"`
 	Created time.Time `orm:"auto_now_add"`
 	Updated time.Time `orm:"auto_now"`
 	Tags    []*Tag    `orm:"rel(m2m)"`
@@ -125,7 +125,7 @@ func NewTag() *Tag {
 type Comment struct {
 	Id      int
 	Post    *Post     `orm:"rel(fk)"`
-	Content string    ``
+	Content string    `orm:"type(text)"`
 	Parent  *Comment  `orm:"null;rel(fk)"`
 	Created time.Time `orm:"auto_now_add"`
 }

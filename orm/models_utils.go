@@ -64,7 +64,7 @@ func getFieldType(val reflect.Value) (ft int, err error) {
 	case reflect.Bool:
 		ft = TypeBooleanField
 	case reflect.String:
-		ft = TypeTextField
+		ft = TypeCharField
 	case reflect.Invalid:
 	default:
 		if elm.CanInterface() {

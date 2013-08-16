@@ -206,8 +206,8 @@ checkType:
 		if err != nil {
 			goto end
 		}
-		if fieldType == TypeTextField && size != "" {
-			fieldType = TypeCharField
+		if fieldType == TypeCharField && tags["type"] == "text" {
+			fieldType = TypeTextField
 		}
 		if fieldType == TypeFloatField && (digits != "" || decimals != "") {
 			fieldType = TypeDecimalField
@@ -312,7 +312,7 @@ checkType:
 				fi.size = int(v)
 			}
 		} else {
-			err = fmt.Errorf("size must be specify")
+			fi.size = 255
 		}
 	case TypeTextField:
 		fi.index = false
