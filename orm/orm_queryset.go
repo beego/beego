@@ -2,6 +2,7 @@ package orm
 
 import (
 	"fmt"
+	"reflect"
 )
 
 type querySet struct {
@@ -33,16 +34,28 @@ func (o querySet) Exclude(expr string, args ...interface{}) QuerySeter {
 	return &o
 }
 
-func (o querySet) Limit(limit int, args ...int64) QuerySeter {
+func (o *querySet) setOffset(num interface{}) {
+	val := reflect.ValueOf(num)
+	switch num.(type) {
+	case int, int8, int16, int32, int64:
+		o.offset = val.Int()
+	case uint, uint8, uint16, uint32, uint64:
+		o.offset = int64(val.Uint())
+	default:
+		panic(fmt.Errorf("<QuerySeter> offset value need numeric not `%T`", num))
+	}
+}
+
+func (o querySet) Limit(limit int, args ...interface{}) QuerySeter {
 	o.limit = limit
 	if len(args) > 0 {
-		o.offset = args[0]
+		o.setOffset(args[0])
 	}
 	return &o
 }
 
-func (o querySet) Offset(offset int64) QuerySeter {
-	o.offset = offset
+func (o querySet) Offset(offset interface{}) QuerySeter {
+	o.setOffset(offset)
 	return &o
 }
 
