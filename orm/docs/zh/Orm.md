@@ -157,6 +157,7 @@ RegisterModel 也可以同时注册多个 model
 orm.RegisterModel(new(User), new(Profile), new(Post))
 ```
 
+详细的 struct 定义请查看文档 [模型定义](Models.md)
 
 ## ORM 接口使用
 
