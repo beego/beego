@@ -216,7 +216,13 @@ func (c *Controller) Abort(code string) {
 }
 
 func (c *Controller) ServeJson(encoding ...bool) {
-	content, err := json.Marshal(c.Data["json"])
+	var content []byte
+	var err error
+	if RunMode == "prod" {
+		content, err = json.Marshal(c.Data["json"])
+	} else {
+		content, err = json.MarshalIndent(c.Data["json"], "", "  ")
+	}
 	if err != nil {
 		http.Error(c.Ctx.ResponseWriter, err.Error(), http.StatusInternalServerError)
 		return
@@ -229,7 +235,13 @@ func (c *Controller) ServeJson(encoding ...bool) {
 }
 
 func (c *Controller) ServeJsonp() {
-	content, err := json.Marshal(c.Data["jsonp"])
+	var content []byte
+	var err error
+	if RunMode == "prod" {
+		content, err = json.Marshal(c.Data["jsonp"])
+	} else {
+		content, err = json.MarshalIndent(c.Data["jsonp"], "", "  ")
+	}
 	if err != nil {
 		http.Error(c.Ctx.ResponseWriter, err.Error(), http.StatusInternalServerError)
 		return
@@ -248,7 +260,13 @@ func (c *Controller) ServeJsonp() {
 }
 
 func (c *Controller) ServeXml() {
-	content, err := xml.Marshal(c.Data["xml"])
+	var content []byte
+	var err error
+	if RunMode == "prod" {
+		content, err = xml.Marshal(c.Data["xml"])
+	} else {
+		content, err = xml.MarshalIndent(c.Data["xml"], "", "  ")
+	}
 	if err != nil {
 		http.Error(c.Ctx.ResponseWriter, err.Error(), http.StatusInternalServerError)
 		return
