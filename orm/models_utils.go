@@ -52,7 +52,7 @@ func getFieldType(val reflect.Value) (ft int, err error) {
 	case reflect.Int64:
 		ft = TypeBigIntegerField
 	case reflect.Uint8:
-		ft = TypePostiveBitField
+		ft = TypePositiveBitField
 	case reflect.Uint16:
 		ft = TypePositiveSmallIntegerField
 	case reflect.Uint32, reflect.Uint:

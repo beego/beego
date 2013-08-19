@@ -31,7 +31,7 @@ const (
 	// int64
 	TypeBigIntegerField
 	// uint8
-	TypePostiveBitField
+	TypePositiveBitField
 	// uint16
 	TypePositiveSmallIntegerField
 	// uint32

@@ -90,6 +90,9 @@ func newM2MModelInfo(m1, m2 *modelInfo) (info *modelInfo) {
 	fa.auto = true
 	fa.pk = true
 	fa.dbcol = true
+	fa.name = "Id"
+	fa.column = "id"
+	fa.fullName = info.fullName + "." + fa.name
 
 	f1.dbcol = true
 	f2.dbcol = true

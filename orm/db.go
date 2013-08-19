@@ -805,7 +805,7 @@ setValue:
 				_, err = str.Int32()
 			case TypeBigIntegerField:
 				_, err = str.Int64()
-			case TypePostiveBitField:
+			case TypePositiveBitField:
 				_, err = str.Uint8()
 			case TypePositiveSmallIntegerField:
 				_, err = str.Uint16()
@@ -1111,4 +1111,8 @@ func (d *dbBase) TimeFromDB(t *time.Time, tz *time.Location) {
 
 func (d *dbBase) TimeToDB(t *time.Time, tz *time.Location) {
 	*t = t.In(tz)
+}
+
+func (d *dbBase) DbTypes() map[string]string {
+	return nil
 }

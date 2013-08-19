@@ -19,6 +19,26 @@ var sqliteOperators = map[string]string{
 	"iendswith":   "LIKE ? ESCAPE '\\'",
 }
 
+var sqliteTypes = map[string]string{
+	"auto":            "NOT NULL PRIMARY KEY AUTOINCREMENT",
+	"pk":              "NOT NULL PRIMARY KEY",
+	"bool":            "bool",
+	"string":          "varchar(%d)",
+	"string-text":     "text",
+	"time.Time-date":  "date",
+	"time.Time":       "datetime",
+	"int8":            "tinyint",
+	"int16":           "smallint",
+	"int32":           "integer",
+	"int64":           "bigint",
+	"uint8":           "tinyint unsigned",
+	"uint16":          "smallint unsigned",
+	"uint32":          "integer unsigned",
+	"uint64":          "bigint unsigned",
+	"float64":         "real",
+	"float64-decimal": "decimal",
+}
+
 type dbBaseSqlite struct {
 	dbBase
 }
@@ -41,6 +61,10 @@ func (d *dbBaseSqlite) SupportUpdateJoin() bool {
 
 func (d *dbBaseSqlite) MaxLimit() uint64 {
 	return 9223372036854775807
+}
+
+func (d *dbBaseSqlite) DbTypes() map[string]string {
+	return sqliteTypes
 }
 
 func newdbBaseSqlite() dbBaser {

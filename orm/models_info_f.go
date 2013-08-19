@@ -399,7 +399,7 @@ checkType:
 			_, err = v.Int32()
 		case TypeBigIntegerField:
 			_, err = v.Int64()
-		case TypePostiveBitField:
+		case TypePositiveBitField:
 			_, err = v.Uint8()
 		case TypePositiveSmallIntegerField:
 			_, err = v.Uint16()

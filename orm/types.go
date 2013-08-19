@@ -132,4 +132,5 @@ type dbBaser interface {
 	HasReturningID(*modelInfo, *string) bool
 	TimeFromDB(*time.Time, *time.Location)
 	TimeToDB(*time.Time, *time.Location)
+	DbTypes() map[string]string
 }

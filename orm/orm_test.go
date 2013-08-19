@@ -189,6 +189,47 @@ func throwFailNow(t *testing.T, err error, args ...interface{}) {
 	}
 }
 
+func TestSyncDb(t *testing.T) {
+	RegisterModel(new(Data), new(DataNull))
+	RegisterModel(new(User))
+	RegisterModel(new(Profile))
+	RegisterModel(new(Post))
+	RegisterModel(new(Tag))
+	RegisterModel(new(Comment))
+
+	BootStrap()
+
+	al := dataBaseCache.getDefault()
+	db := al.DB
+
+	drops := getDbDropSql(al)
+	for _, query := range drops {
+		_, err := db.Exec(query)
+		throwFailNow(t, err, query)
+	}
+
+	tables := getDbCreateSql(al)
+	for _, query := range tables {
+		_, err := db.Exec(query)
+		throwFailNow(t, err, query)
+	}
+
+	modelCache.clean()
+}
+
+func TestRegisterModels(t *testing.T) {
+	RegisterModel(new(Data), new(DataNull))
+	RegisterModel(new(User))
+	RegisterModel(new(Profile))
+	RegisterModel(new(Post))
+	RegisterModel(new(Tag))
+	RegisterModel(new(Comment))
+
+	BootStrap()
+
+	dORM = NewOrm()
+}
+
 func TestModelSyntax(t *testing.T) {
 	user := &User{}
 	ind := reflect.ValueOf(user).Elem()

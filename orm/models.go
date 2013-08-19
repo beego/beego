@@ -84,3 +84,10 @@ func (mc *_modelCache) set(table string, mi *modelInfo) *modelInfo {
 	}
 	return mii
 }
+
+func (mc *_modelCache) clean() {
+	mc.orders = make([]string, 0)
+	mc.cache = make(map[string]*modelInfo)
+	mc.cacheByFN = make(map[string]*modelInfo)
+	mc.done = false
+}
