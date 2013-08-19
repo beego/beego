@@ -255,7 +255,7 @@ func (c *Controller) ServeJsonp() {
 	callback_content.WriteString("(")
 	callback_content.Write(content)
 	callback_content.WriteString(");\r\n")
-	c.Ctx.ResponseWriter.Header().Set("Content-Type", "application/json;charset=UTF-8")
+	c.Ctx.ResponseWriter.Header().Set("Content-Type", "application/javascript;charset=UTF-8")
 	c.writeToWriter(callback_content.Bytes())
 }
 
