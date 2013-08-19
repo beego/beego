@@ -198,6 +198,12 @@ func ParseConfig() (err error) {
 		if expire, err := AppConfig.Int("xsrfexpire"); err == nil {
 			XSRFExpire = expire
 		}
+		if tplleft := AppConfig.String("templateleft"); tplleft != "" {
+			TemplatLeft = tplleft
+		}
+		if tplright := AppConfig.String("templateright"); tplright != "" {
+			TemplatRight = tplright
+		}
 	}
 	return nil
 }

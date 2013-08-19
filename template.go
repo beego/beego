@@ -112,7 +112,7 @@ func BuildTemplate(dir string) error {
 		return err
 	}
 	for k, v := range self.files {
-		BeeTemplates[k] = template.Must(template.New("beegoTemplate" + k).Funcs(beegoTplFuncMap).ParseFiles(v...))
+		BeeTemplates[k] = template.Must(template.New("beegoTemplate"+k).Funcs(beegoTplFuncMap).ParseFiles(v...)).Delims(TemplatLeft, TemplatRight)
 	}
 	return nil
 }
