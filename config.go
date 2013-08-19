@@ -199,10 +199,10 @@ func ParseConfig() (err error) {
 			XSRFExpire = expire
 		}
 		if tplleft := AppConfig.String("templateleft"); tplleft != "" {
-			TemplatLeft = tplleft
+			TemplateLeft = tplleft
 		}
 		if tplright := AppConfig.String("templateright"); tplright != "" {
-			TemplatRight = tplright
+			TemplateRight = tplright
 		}
 	}
 	return nil

@@ -48,8 +48,8 @@ var (
 	EnableXSRF           bool
 	XSRFExpire           int
 	CopyRequestBody      bool //When in raw application, You want to the reqeustbody
-	TemplatLeft          string
-	TemplatRight         string
+	TemplateLeft         string
+	TemplateRight        string
 )
 
 func init() {
@@ -80,8 +80,8 @@ func init() {
 	ErrorsShow = true
 	XSRFKEY = "beegoxsrf"
 	XSRFExpire = 60
-	TemplatLeft = "{{"
-	TemplatRight = "}}"
+	TemplateLeft = "{{"
+	TemplateRight = "}}"
 	ParseConfig()
 	runtime.GOMAXPROCS(runtime.NumCPU())
 }
