@@ -108,7 +108,11 @@ func (app *App) Run() {
 		l   net.Listener
 	)
 	if UseFcgi {
-		l, err = net.Listen("tcp", addr)
+		if HttpPort == 0 {
+			l, err = net.Listen("unix", addr)
+		} else {
+			l, err = net.Listen("tcp", addr)
+		}
 		if err != nil {
 			BeeLogger.Fatal("Listen: ", err)
 		}
