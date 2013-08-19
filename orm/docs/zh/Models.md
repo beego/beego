@@ -1,13 +1,28 @@
 ## 模型定义
 
-复杂的模型定义不是必须的，此功能用作数据库数据转换和自动建表
+复杂的模型定义不是必须的，此功能用作数据库数据转换和[自动建表](Cmd.md#自动建表)
+
+默认的表名使用驼峰转蛇形，比如 AuthUser -> auth_user
+
+**自定义表名**
+
+```go
+type User struct {
+	Id int
+	Name string
+}
+
+func (u *User) TableName() string {
+	return "auth_user"
+}
+```
+
+如果[前缀设置](Orm.md#registermodelwithprefix)为`prefix_`那么表名为：prefix_auth_user
 
 ## Struct Tag 设置参数
 ```go
 orm:"null;rel(fk)"
 ```
-	
-通常每个 Field 的 StructTag 里包含两种类型的设置，类似 null 的 bool 型设置，还有 类似 rel(fk) 的指定值设置，bool 型默认为 false，指定以后即表示为 true
 
 多个设置间使用 `;` 分隔，设置的值如果是多个，使用 `,` 分隔。
 
@@ -24,11 +39,13 @@ type User struct {
 
 #### auto
 
-设置为 Autoincrement Primary Key
+当 Field 类型为 int, int32, int64 时，可以设置字段为自增健
+
+当模型定义里没有主键时，符合上述类型且名称为 `Id` 的 Field 将被视为自增健。
 
 #### pk
 
-设置为 Primary Key
+设置为主键，适用于自定义其他类型为主键
 
 #### null
 
@@ -60,9 +77,12 @@ type User struct {
 	...
 	Status int `orm:"default(1)"`
 ```
-#### size (string)
+#### size
 
-string 类型字段设置 size 以后，db type 将使用 varchar
+string 类型字段默认为 varchar(255)
+
+设置 size 以后，db type 将使用 varchar(size)
+
 ```go
 Title string `orm:"size(60)"`
 ```
@@ -86,10 +106,18 @@ Updated     time.Time `auto_now`
 
 #### type
 
-设置为 date, time.Time 字段的对应 db 类型使用 date
+设置为 date 时，time.Time 字段的对应 db 类型使用 date
+
 ```go
 Created time.Time `orm:"auto_now_add;type(date)"`
 ```
+
+设置为 text 时，string 字段对应的 db 类型使用 text
+
+```go
+Content string `orm:"type(text)"`
+```
+
 ## 表关系设置
 
 #### rel / reverse
@@ -174,9 +202,10 @@ type Profile struct {
 
 | go		   |mysql
 | :---   	   | :---
+| int, int32, int64 - 设置 auto 或者名称为 `Id` 时 | integer AUTO_INCREMENT
 | bool | bool
-| string - 设置 size 时 | varchar(size)
-| string | longtext
+| string - 默认为 size 255 | varchar(size)
+| string - 设置 type(text) 时 | longtext
 | time.Time - 设置 type 为 date 时 | date
 | time.TIme | datetime
 | byte | tinyint unsigned
@@ -199,9 +228,10 @@ type Profile struct {
 
 | go		   | sqlite3
 | :---   	   | :---
+| int, int32, int64 - 设置 auto 或者名称为 `Id` 时 | integer AUTOINCREMENT
 | bool | bool
-| string - 设置 size 时 | varchar(size)
-| string | text
+| string - 默认为 size 255 | varchar(size)
+| string - 设置 type(text) 时 | text
 | time.Time - 设置 type 为 date 时 | date
 | time.TIme | datetime
 | byte | tinyint unsigned
@@ -224,9 +254,10 @@ type Profile struct {
 
 | go		   | postgres
 | :---   	   | :---
+| int, int32, int64 - 设置 auto 或者名称为 `Id` 时 | serial
 | bool | bool
-| string - 设置 size 时 | varchar(size)
-| string | text
+| string - 默认为 size 255 | varchar(size)
+| string - 设置 type(text) 时 | text
 | time.Time - 设置 type 为 date 时 | date
 | time.TIme | timestamp with time zone
 | byte | smallint CHECK("column" >= 0 AND "column" <= 255)

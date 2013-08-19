@@ -3,7 +3,7 @@
 对 object 操作简单的三个方法 Read / Insert / Update / Delete
 ```go
 o := orm.NewOrm()
-user := NewUser()
+user := new(User)
 user.Name = "slene"
 
 fmt.Println(o.Insert(user))

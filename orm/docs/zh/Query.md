@@ -10,7 +10,7 @@ o := orm.NewOrm()
 qs := o.QueryTable("user")
 
 // 也可以直接使用对象作为表名
-user := NewUser()
+user := new(User)
 qs = o.QueryTable(user) // 返回 QuerySeter
 ```
 ## expr

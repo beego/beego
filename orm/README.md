@@ -33,6 +33,7 @@ more features please read the docs
 
 ## Changelog
 
+* 2013-08-19: support table auto create
 * 2013-08-13: update test for database types
 * 2013-08-13: go type support, such as int8, uint8, byte, rune
 * 2013-08-13: date / datetime timezone support very well

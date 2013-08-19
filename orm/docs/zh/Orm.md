@@ -14,13 +14,13 @@ import (
 )
 
 type User struct {
-	Id          int        `orm:"auto"`     // 设置为auto主键
+	Id          int
 	Name        string
 	Profile     *Profile   `orm:"rel(one)"` // OneToOne relation
 }
 
 type Profile struct {
-	Id          int     `orm:"auto"`
+	Id          int
 	Age         int16
 	User        *User   `orm:"reverse(one)"` // 设置反向关系(可选)
 }
@@ -52,10 +52,10 @@ func main() {
 	o := orm.NewOrm()
 	o.Using("default") // 默认使用 default，你可以指定为其他数据库
 
-	profile := NewProfile()
+	profile := new(Profile)
 	profile.Age = 30
 
-	user := NewUser()
+	user := new(User)
 	user.Profile = profile
 	user.Name = "slene"
 
@@ -98,10 +98,10 @@ orm.RegisterDriver("mymysql", orm.DR_MySQL)
 
 #### RegisterDataBase
 
-orm 必须注册一个名称为 `default` 的数据库，用以作为默认使用。
+orm 必须注册一个别名为 `default` 的数据库，作为默认使用。
 
 ```go
-// 参数1   自定义数据库名称，用来在orm中切换数据库使用
+// 参数1   数据库的别名，用来在orm中切换数据库使用
 // 参数2   driverName
 // 参数3   对应的链接字符串
 // 参数4   设置最大的空闲连接数，使用 golang 自己的连接池
@@ -126,11 +126,13 @@ orm 在进行 RegisterDataBase 的同时，会获取数据库使用的时区，�
 
 **注意:** 鉴于 Sqlite3 的设计，存取默认都为 UTC 时间
 
-## RegisterModel
+## 注册模型
 
 如果使用 orm.QuerySeter 进行高级查询的话，这个是必须的。
 
 反之，如果只使用 Raw 查询和 map struct，是无需这一步的。您可以去查看 [Raw SQL 查询](Raw.md)
+
+#### RegisterModel
 
 将你定义的 Model 进行注册，最佳设计是有单独的 models.go 文件，在他的 init 函数中进行注册。
 
@@ -142,7 +144,7 @@ package main
 import "github.com/astaxie/beego/orm"
 
 type User struct {
-	Id   int    `orm:"auto"`
+	Id   int
 	name string
 }
 
@@ -158,6 +160,16 @@ orm.RegisterModel(new(User), new(Profile), new(Post))
 ```
 
 详细的 struct 定义请查看文档 [模型定义](Models.md)
+
+#### RegisterModelWithPrefix
+
+使用表名前缀
+
+```go
+orm.RegisterModelWithPrefix("prefix_", new(User))
+```
+
+创建后的表名为 prefix_user
 
 ## ORM 接口使用
 
