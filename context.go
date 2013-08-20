@@ -74,14 +74,24 @@ func (ctx *Context) SetCookie(name string, value string, others ...interface{}) 
 	if len(others) > 0 {
 		switch others[0].(type) {
 		case int:
-			fmt.Fprintf(&b, "; Max-Age=%d", others[0].(int))
+			if others[0].(int) > 0 {
+				fmt.Fprintf(&b, "; Max-Age=%d", others[0].(int))
+			} else if others[0].(int) < 0 {
+				fmt.Fprintf(&b, "; Max-Age=0")
+			}
 		case int64:
-			fmt.Fprintf(&b, "; Max-Age=%d", others[0].(int64))
+			if others[0].(int64) > 0 {
+				fmt.Fprintf(&b, "; Max-Age=%d", others[0].(int64))
+			} else if others[0].(int64) < 0 {
+				fmt.Fprintf(&b, "; Max-Age=0")
+			}
 		case int32:
-			fmt.Fprintf(&b, "; Max-Age=%d", others[0].(int32))
+			if others[0].(int32) > 0 {
+				fmt.Fprintf(&b, "; Max-Age=%d", others[0].(int32))
+			} else if others[0].(int32) < 0 {
+				fmt.Fprintf(&b, "; Max-Age=0")
+			}
 		}
-	} else {
-		fmt.Fprintf(&b, "; Max-Age=0")
 	}
 	if len(others) > 1 {
 		fmt.Fprintf(&b, "; Path=%s", sanitizeValue(others[1].(string)))

@@ -54,7 +54,8 @@ func ReadFromRequest(c *Controller) *FlashData {
 		Data: make(map[string]string),
 	}
 	if cookie, err := c.Ctx.Request.Cookie("BEEGO_FLASH"); err == nil {
-		vals := strings.Split(cookie.Value, "\x00")
+		v, _ := url.QueryUnescape(cookie.Value)
+		vals := strings.Split(v, "\x00")
 		for _, v := range vals {
 			if len(v) > 0 {
 				kv := strings.Split(v, ":")
@@ -64,8 +65,7 @@ func ReadFromRequest(c *Controller) *FlashData {
 			}
 		}
 		//read one time then delete it
-		cookie.MaxAge = -1
-		c.Ctx.Request.AddCookie(cookie)
+		c.Ctx.SetCookie("BEEGO_FLASH", "", -1)
 	}
 	c.Data["flash"] = flash.Data
 	return flash
