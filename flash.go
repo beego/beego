@@ -65,7 +65,7 @@ func ReadFromRequest(c *Controller) *FlashData {
 			}
 		}
 		//read one time then delete it
-		c.Ctx.SetCookie("BEEGO_FLASH", "", -1)
+		c.Ctx.SetCookie("BEEGO_FLASH", "", -1, "/")
 	}
 	c.Data["flash"] = flash.Data
 	return flash
