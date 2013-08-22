@@ -39,6 +39,7 @@ func getDbCreateSql(al *alias) (sqls []string) {
 
 	Q := al.DbBaser.TableQuote()
 	T := al.DbBaser.DbTypes()
+	sep := fmt.Sprintf("%s, %s", Q, Q)
 
 	for _, mi := range modelCache.allOrdered() {
 		sql := fmt.Sprintf("-- %s\n", strings.Repeat("-", 50))
@@ -48,6 +49,8 @@ func getDbCreateSql(al *alias) (sqls []string) {
 		sql += fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s%s%s (\n", Q, mi.table, Q)
 
 		columns := make([]string, 0, len(mi.fields.fieldsDB))
+
+		sqlIndexes := [][]string{}
 
 		for _, fi := range mi.fields.fieldsDB {
 
@@ -120,6 +123,10 @@ func getDbCreateSql(al *alias) (sqls []string) {
 				if fi.unique {
 					column += " " + "UNIQUE"
 				}
+
+				if fi.index {
+					sqlIndexes = append(sqlIndexes, []string{column})
+				}
 			}
 
 			if strings.Index(column, "%COL%") != -1 {
@@ -129,6 +136,21 @@ func getDbCreateSql(al *alias) (sqls []string) {
 			columns = append(columns, column)
 		}
 
+		if mi.model != nil {
+			for _, names := range getTableUnique(mi.addrField) {
+				cols := make([]string, 0, len(names))
+				for _, name := range names {
+					if fi, ok := mi.fields.GetByAny(name); ok && fi.dbcol {
+						cols = append(cols, fi.column)
+					} else {
+						panic(fmt.Errorf("cannot found column `%s` when parse UNIQUE in `%s.TableUnique`", name, mi.fullName))
+					}
+				}
+				column := fmt.Sprintf("    UNIQUE (%s%s%s)", Q, strings.Join(cols, sep), Q)
+				columns = append(columns, column)
+			}
+		}
+
 		sql += strings.Join(columns, ",\n")
 		sql += "\n)"
 
@@ -136,7 +158,30 @@ func getDbCreateSql(al *alias) (sqls []string) {
 			sql += " ENGINE=INNODB"
 		}
 
+		sql += ";"
 		sqls = append(sqls, sql)
+
+		if mi.model != nil {
+			for _, names := range getTableIndex(mi.addrField) {
+				cols := make([]string, 0, len(names))
+				for _, name := range names {
+					if fi, ok := mi.fields.GetByAny(name); ok && fi.dbcol {
+						cols = append(cols, fi.column)
+					} else {
+						panic(fmt.Errorf("cannot found column `%s` when parse INDEX in `%s.TableIndex`", name, mi.fullName))
+					}
+				}
+				sqlIndexes = append(sqlIndexes, cols)
+			}
+		}
+
+		for _, names := range sqlIndexes {
+			name := strings.Join(names, "_")
+			cols := strings.Join(names, sep)
+			sql := fmt.Sprintf("CREATE INDEX %s%s%s ON %s%s%s (%s%s%s);", Q, name, Q, Q, mi.table, Q, Q, cols, Q)
+			sqls = append(sqls, sql)
+		}
+
 	}
 
 	return sqls

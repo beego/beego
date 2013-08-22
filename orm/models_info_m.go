@@ -31,7 +31,7 @@ func newModelInfo(val reflect.Value) (info *modelInfo) {
 	ind := reflect.Indirect(val)
 	typ := ind.Type()
 
-	info.addrField = ind.Addr()
+	info.addrField = val
 
 	info.name = typ.Name()
 	info.fullName = getFullName(typ)

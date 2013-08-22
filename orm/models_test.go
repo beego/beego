@@ -78,6 +78,18 @@ type User struct {
 	ShouldSkip string    `orm:"-"`
 }
 
+func (u *User) TableIndex() [][]string {
+	return [][]string{
+		[]string{"Id", "UserName"},
+	}
+}
+
+func (u *User) TableUnique() [][]string {
+	return [][]string{
+		[]string{"UserName", "Email"},
+	}
+}
+
 func NewUser() *User {
 	obj := new(User)
 	return obj
