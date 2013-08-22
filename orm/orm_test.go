@@ -196,6 +196,7 @@ func TestSyncDb(t *testing.T) {
 	RegisterModel(new(Post))
 	RegisterModel(new(Tag))
 	RegisterModel(new(Comment))
+	RegisterModel(new(UserBig))
 
 	BootStrap()
 

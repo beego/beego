@@ -93,7 +93,6 @@ type fieldInfo struct {
 	auto                bool
 	pk                  bool
 	null                bool
-	blank               bool
 	index               bool
 	unique              bool
 	initial             StrTo
@@ -248,7 +247,6 @@ checkType:
 	fi.fullName = mi.fullName + "." + sf.Name
 
 	fi.null = attrs["null"]
-	fi.blank = attrs["blank"]
 	fi.index = attrs["index"]
 	fi.auto = attrs["auto"]
 	fi.pk = attrs["pk"]
@@ -257,7 +255,6 @@ checkType:
 	switch fieldType {
 	case RelManyToMany, RelReverseMany, RelReverseOne:
 		fi.null = false
-		fi.blank = false
 		fi.index = false
 		fi.auto = false
 		fi.pk = false
@@ -360,22 +357,20 @@ checkType:
 		if fi.auto {
 
 			switch addrField.Elem().Kind() {
-			case reflect.Int, reflect.Int32, reflect.Int64:
+			case reflect.Int, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint32, reflect.Uint64:
 			default:
-				err = fmt.Errorf("auto primary key only support int, int32, int64, but found `%s`", addrField.Elem().Kind())
+				err = fmt.Errorf("auto primary key only support int, int32, int64, uint, uint32, uint64 but found `%s`", addrField.Elem().Kind())
 				goto end
 			}
 
 			fi.pk = true
 		}
 		fi.null = false
-		fi.blank = false
 		fi.index = false
 		fi.unique = false
 	}
 
 	if fi.unique {
-		fi.blank = false
 		fi.index = false
 	}
 

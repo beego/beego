@@ -42,7 +42,7 @@ func registerModel(model interface{}, prefix string) {
 			if fi.name == "Id" {
 				if fi.sf.Tag.Get(defaultStructTagName) == "" {
 					switch fi.addrValue.Elem().Kind() {
-					case reflect.Int, reflect.Int64, reflect.Int32:
+					case reflect.Int, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint32, reflect.Uint64:
 						fi.auto = true
 						fi.pk = true
 						info.fields.pk = fi

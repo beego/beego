@@ -20,7 +20,6 @@ var (
 	supportTag = map[string]int{
 		"-":            1,
 		"null":         1,
-		"blank":        1,
 		"index":        1,
 		"unique":       1,
 		"pk":           1,

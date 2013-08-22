@@ -102,9 +102,10 @@ func getDbCreateSql(al *alias) (sqls []string) {
 			}
 
 			if fi.auto {
-				if al.Driver == DR_Postgres {
+				switch al.Driver {
+				case DR_Sqlite, DR_Postgres:
 					column += T["auto"]
-				} else {
+				default:
 					column += col + " " + T["auto"]
 				}
 			} else if fi.pk {

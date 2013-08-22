@@ -58,6 +58,11 @@ type DataNull struct {
 	Decimal  float64   `orm:"digits(8);decimals(4);null"`
 }
 
+// only for mysql
+type UserBig struct {
+	Id uint64
+}
+
 type User struct {
 	Id         int
 	UserName   string `orm:"size(30);unique"`

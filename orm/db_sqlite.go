@@ -20,7 +20,7 @@ var sqliteOperators = map[string]string{
 }
 
 var sqliteTypes = map[string]string{
-	"auto":            "NOT NULL PRIMARY KEY AUTOINCREMENT",
+	"auto":            "integer NOT NULL PRIMARY KEY AUTOINCREMENT",
 	"pk":              "NOT NULL PRIMARY KEY",
 	"bool":            "bool",
 	"string":          "varchar(%d)",
