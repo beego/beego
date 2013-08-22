@@ -6,12 +6,12 @@ import (
 )
 
 var yamlcontext = `
-"appname": "beeapi",
-"httpport": 8080,
-"mysqlport": 3600,
-"PI": 3.1415976,
-"runmode": "dev",
-"autorender": false,
+"appname": beeapi
+"httpport": 8080
+"mysqlport": 3600
+"PI": 3.1415976
+"runmode": dev
+"autorender": false
 "copyrequestbody": true
 `
 

@@ -80,8 +80,8 @@ func (c *YAMLConfigContainer) Bool(key string) (bool, error) {
 }
 
 func (c *YAMLConfigContainer) Int(key string) (int, error) {
-	if v, ok := c.data[key].(int); ok {
-		return v, nil
+	if v, ok := c.data[key].(int64); ok {
+		return int(v), nil
 	}
 	return 0, errors.New("not int value")
 }
