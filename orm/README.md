@@ -154,8 +154,8 @@ note: not recommend use this in product env.
 
 more details and examples in docs and test
 
-* [中文](docs/zh)
-* English
+* [中文](http://beego.me/docs/Models_Overview?lang=zh)
+* [English](http://beego.me/docs/Models_Overview?lang=en)
 
 ## TODO
 - some unrealized api

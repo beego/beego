@@ -1,9 +1,14 @@
+最新文档请查看 beedoc
+
+* [中文](http://beego.me/docs/Models_Overview?lang=zh)
+* [English](http://beego.me/docs/Models_Overview?lang=en)
+
 ## 文档目录
 
 1. [Orm 使用方法](Orm.md)
 	- [数据库的设置](Orm.md#数据库的设置)
 		* [驱动类型设置](Orm.md#registerdriver)
-		* [参数设置](Orm.md#registerdataBase)
+		* [参数设置](Orm.md#registerdatabase)
 		* [时区设置](Orm.md#时区设置)
 	- [注册模型](Orm.md#注册模型)
 	- [ORM 接口使用](Orm.md#orm-接口使用)
@@ -29,6 +34,7 @@
 
 ### 文档更新记录
 
+* 2013-08-20: 这里不再更新，最新文档在 beedoc, [中文](http://beego.me/docs/Models_Overview?lang=zh) / [English](http://beego.me/docs/Models_Overview?lang=en)
 * 2013-08-19: 增加[自动建表](Cmd.md#自动建表)功能
 * 2013-08-13: ORM 的 [时区设置](Orm.md#时区设置)
 * 2013-08-13: [模型字段与数据库类型的对应](Models.md#模型字段与数据库类型的对应) 推荐的数据库对应使用的类型
