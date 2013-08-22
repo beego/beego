@@ -3,8 +3,6 @@ package testing
 import (
 	"github.com/fanngyuan/beego"
 	"github.com/fanngyuan/beego/httplib"
-//	"strings"
-//	"fmt"
 )
 
 var port = ""
