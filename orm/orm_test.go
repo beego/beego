@@ -206,13 +206,19 @@ func TestSyncDb(t *testing.T) {
 	drops := getDbDropSql(al)
 	for _, query := range drops {
 		_, err := db.Exec(query)
-		throwFailNow(t, err, query)
+		throwFail(t, err, query)
 	}
 
-	tables := getDbCreateSql(al)
-	for _, query := range tables {
-		_, err := db.Exec(query)
-		throwFailNow(t, err, query)
+	sqls, indexes := getDbCreateSql(al)
+
+	for i, mi := range modelCache.allOrdered() {
+		queries := []string{sqls[i]}
+		queries = append(queries, indexes[mi.table]...)
+
+		for _, query := range queries {
+			_, err := db.Exec(query)
+			throwFail(t, err, query)
+		}
 	}
 
 	modelCache.clean()

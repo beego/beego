@@ -99,18 +99,23 @@ func (d *commandSyncDb) Run() {
 		}
 	}
 
-	tables := getDbCreateSql(d.al)
+	sqls, indexes := getDbCreateSql(d.al)
 
 	for i, mi := range modelCache.allOrdered() {
-		query := tables[i]
-		_, err := db.Exec(query)
 		fmt.Printf("create table `%s` \n", mi.table)
-		if d.verbose {
-			query = "    " + strings.Join(strings.Split(query, "\n"), "\n    ")
-			fmt.Println(query)
-		}
-		if err != nil {
-			fmt.Printf("    %s\n", err.Error())
+
+		queries := []string{sqls[i]}
+		queries = append(queries, indexes[mi.table]...)
+
+		for _, query := range queries {
+			_, err := db.Exec(query)
+			if d.verbose {
+				query = "    " + strings.Join(strings.Split(query, "\n"), "\n    ")
+				fmt.Println(query)
+			}
+			if err != nil {
+				fmt.Printf("    %s\n", err.Error())
+			}
 		}
 		if d.verbose {
 			fmt.Println("")
@@ -133,9 +138,15 @@ func (d *commandSqlAll) Parse(args []string) {
 }
 
 func (d *commandSqlAll) Run() {
-	sqls := getDbCreateSql(d.al)
-	sql := strings.Join(sqls, "\n\n")
-	fmt.Println(sql)
+	sqls, indexes := getDbCreateSql(d.al)
+	var all []string
+	for i, mi := range modelCache.allOrdered() {
+		queries := []string{sqls[i]}
+		queries = append(queries, indexes[mi.table]...)
+		sql := strings.Join(queries, "\n")
+		all = append(all, sql)
+	}
+	fmt.Println(strings.Join(all, "\n\n"))
 }
 
 func init() {

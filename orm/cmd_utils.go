@@ -31,7 +31,7 @@ func getDbDropSql(al *alias) (sqls []string) {
 	return sqls
 }
 
-func getDbCreateSql(al *alias) (sqls []string) {
+func getDbCreateSql(al *alias) (sqls []string, tableIndexes map[string][]string) {
 	if len(modelCache.cache) == 0 {
 		fmt.Println("no Model found, need register your model")
 		os.Exit(2)
@@ -40,6 +40,8 @@ func getDbCreateSql(al *alias) (sqls []string) {
 	Q := al.DbBaser.TableQuote()
 	T := al.DbBaser.DbTypes()
 	sep := fmt.Sprintf("%s, %s", Q, Q)
+
+	tableIndexes = make(map[string][]string)
 
 	for _, mi := range modelCache.allOrdered() {
 		sql := fmt.Sprintf("-- %s\n", strings.Repeat("-", 50))
@@ -125,7 +127,7 @@ func getDbCreateSql(al *alias) (sqls []string) {
 				}
 
 				if fi.index {
-					sqlIndexes = append(sqlIndexes, []string{column})
+					sqlIndexes = append(sqlIndexes, []string{fi.column})
 				}
 			}
 
@@ -179,10 +181,10 @@ func getDbCreateSql(al *alias) (sqls []string) {
 			name := strings.Join(names, "_")
 			cols := strings.Join(names, sep)
 			sql := fmt.Sprintf("CREATE INDEX %s%s%s ON %s%s%s (%s%s%s);", Q, name, Q, Q, mi.table, Q, Q, cols, Q)
-			sqls = append(sqls, sql)
+			tableIndexes[mi.table] = append(tableIndexes[mi.table], sql)
 		}
 
 	}
 
-	return sqls
+	return
 }

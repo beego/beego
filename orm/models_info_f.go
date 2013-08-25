@@ -344,13 +344,6 @@ checkType:
 			err = fmt.Errorf("non-integer type cannot set auto")
 			goto end
 		}
-
-		if fi.pk || fi.index || fi.unique {
-			if fieldType != TypeCharField && fieldType != RelOneToOne {
-				err = fmt.Errorf("cannot set pk/index/unique")
-				goto end
-			}
-		}
 	}
 
 	if fi.auto || fi.pk {

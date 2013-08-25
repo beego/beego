@@ -58,8 +58,8 @@ func (mc *_modelCache) all() map[string]*modelInfo {
 
 func (mc *_modelCache) allOrdered() []*modelInfo {
 	m := make([]*modelInfo, 0, len(mc.orders))
-	for _, v := range mc.cache {
-		m = append(m, v)
+	for _, table := range mc.orders {
+		m = append(m, mc.cache[table])
 	}
 	return m
 }
