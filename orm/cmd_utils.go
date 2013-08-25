@@ -178,7 +178,7 @@ func getDbCreateSql(al *alias) (sqls []string, tableIndexes map[string][]string)
 		}
 
 		for _, names := range sqlIndexes {
-			name := strings.Join(names, "_")
+			name := mi.table + "_" + strings.Join(names, "_")
 			cols := strings.Join(names, sep)
 			sql := fmt.Sprintf("CREATE INDEX %s%s%s ON %s%s%s (%s%s%s);", Q, name, Q, Q, mi.table, Q, Q, cols, Q)
 			tableIndexes[mi.table] = append(tableIndexes[mi.table], sql)

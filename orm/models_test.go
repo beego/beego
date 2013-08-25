@@ -81,6 +81,7 @@ type User struct {
 func (u *User) TableIndex() [][]string {
 	return [][]string{
 		[]string{"Id", "UserName"},
+		[]string{"Id", "Created"},
 	}
 }
 
@@ -119,6 +120,12 @@ type Post struct {
 	Created time.Time `orm:"auto_now_add"`
 	Updated time.Time `orm:"auto_now"`
 	Tags    []*Tag    `orm:"rel(m2m)"`
+}
+
+func (u *Post) TableIndex() [][]string {
+	return [][]string{
+		[]string{"Id", "Created"},
+	}
 }
 
 func NewPost() *Post {
