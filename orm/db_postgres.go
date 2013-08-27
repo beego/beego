@@ -107,8 +107,24 @@ func (d *dbBasePostgres) HasReturningID(mi *modelInfo, query *string) (has bool)
 	return
 }
 
+func (d *dbBasePostgres) ShowTablesQuery() string {
+	return "SELECT table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema NOT IN ('pg_catalog', 'information_schema')"
+}
+
+func (d *dbBasePostgres) ShowColumnsQuery(table string) string {
+	return fmt.Sprintf("SELECT column_name, data_type, is_nullable FROM information_schema.columns where table_schema NOT IN ('pg_catalog', 'information_schema') and table_name = '%s'", table)
+}
+
 func (d *dbBasePostgres) DbTypes() map[string]string {
 	return postgresTypes
+}
+
+func (d *dbBasePostgres) IndexExists(db dbQuerier, table string, name string) bool {
+	query := fmt.Sprintf("SELECT COUNT(*) FROM pg_indexes WHERE tablename = '%s' AND indexname = '%s'", table, name)
+	row := db.QueryRow(query)
+	var cnt int
+	row.Scan(&cnt)
+	return cnt > 0
 }
 
 func newdbBasePostgres() dbBaser {

@@ -133,4 +133,9 @@ type dbBaser interface {
 	TimeFromDB(*time.Time, *time.Location)
 	TimeToDB(*time.Time, *time.Location)
 	DbTypes() map[string]string
+	GetTables(dbQuerier) (map[string]bool, error)
+	GetColumns(dbQuerier, string) (map[string][3]string, error)
+	ShowTablesQuery() string
+	ShowColumnsQuery(string) string
+	IndexExists(dbQuerier, string, string) bool
 }

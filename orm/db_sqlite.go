@@ -1,6 +1,7 @@
 package orm
 
 import (
+	"database/sql"
 	"fmt"
 )
 
@@ -65,6 +66,51 @@ func (d *dbBaseSqlite) MaxLimit() uint64 {
 
 func (d *dbBaseSqlite) DbTypes() map[string]string {
 	return sqliteTypes
+}
+
+func (d *dbBaseSqlite) ShowTablesQuery() string {
+	return "SELECT name FROM sqlite_master WHERE type = 'table'"
+}
+
+func (d *dbBaseSqlite) GetColumns(db dbQuerier, table string) (map[string][3]string, error) {
+	query := d.ins.ShowColumnsQuery(table)
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+
+	columns := make(map[string][3]string)
+	for rows.Next() {
+		var tmp, name, typ, null sql.NullString
+		err := rows.Scan(&tmp, &name, &typ, &null, &tmp, &tmp)
+		if err != nil {
+			return nil, err
+		}
+		columns[name.String] = [3]string{name.String, typ.String, null.String}
+	}
+
+	return columns, nil
+}
+
+func (d *dbBaseSqlite) ShowColumnsQuery(table string) string {
+	return fmt.Sprintf("pragma table_info('%s')", table)
+}
+
+func (d *dbBaseSqlite) IndexExists(db dbQuerier, table string, name string) bool {
+	query := fmt.Sprintf("PRAGMA index_list('%s')", table)
+	rows, err := db.Query(query)
+	if err != nil {
+		panic(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var tmp, index sql.NullString
+		rows.Scan(&tmp, &index, &tmp)
+		if name == index.String {
+			return true
+		}
+	}
+	return false
 }
 
 func newdbBaseSqlite() dbBaser {

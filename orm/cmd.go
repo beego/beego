@@ -9,7 +9,7 @@ import (
 
 type commander interface {
 	Parse([]string)
-	Run()
+	Run() error
 }
 
 var (
@@ -59,9 +59,11 @@ func RunCommand() {
 }
 
 type commandSyncDb struct {
-	al      *alias
-	force   bool
-	verbose bool
+	al        *alias
+	force     bool
+	verbose   bool
+	noInfo    bool
+	rtOnError bool
 }
 
 func (d *commandSyncDb) Parse(args []string) {
@@ -76,7 +78,7 @@ func (d *commandSyncDb) Parse(args []string) {
 	d.al = getDbAlias(name)
 }
 
-func (d *commandSyncDb) Run() {
+func (d *commandSyncDb) Run() error {
 	var drops []string
 	if d.force {
 		drops = getDbDropSql(d.al)
@@ -87,25 +89,103 @@ func (d *commandSyncDb) Run() {
 	if d.force {
 		for i, mi := range modelCache.allOrdered() {
 			query := drops[i]
-			_, err := db.Exec(query)
-			result := ""
-			if err != nil {
-				result = err.Error()
+			if !d.noInfo {
+				fmt.Printf("drop table `%s`\n", mi.table)
 			}
-			fmt.Printf("drop table `%s` %s\n", mi.table, result)
+			_, err := db.Exec(query)
 			if d.verbose {
 				fmt.Printf("    %s\n\n", query)
+			}
+			if err != nil {
+				if d.rtOnError {
+					return err
+				}
+				fmt.Printf("    %s\n", err.Error())
 			}
 		}
 	}
 
 	sqls, indexes := getDbCreateSql(d.al)
 
+	tables, err := d.al.DbBaser.GetTables(db)
+	if err != nil {
+		if d.rtOnError {
+			return err
+		}
+		fmt.Printf("    %s\n", err.Error())
+	}
+
 	for i, mi := range modelCache.allOrdered() {
-		fmt.Printf("create table `%s` \n", mi.table)
+		if tables[mi.table] {
+			if !d.noInfo {
+				fmt.Printf("table `%s` already exists, skip\n", mi.table)
+			}
+
+			var fields []*fieldInfo
+			columns, err := d.al.DbBaser.GetColumns(db, mi.table)
+			if err != nil {
+				if d.rtOnError {
+					return err
+				}
+				fmt.Printf("    %s\n", err.Error())
+			}
+
+			for _, fi := range mi.fields.fieldsDB {
+				if _, ok := columns[fi.column]; ok == false {
+					fields = append(fields, fi)
+				}
+			}
+
+			for _, fi := range fields {
+				query := getColumnAddQuery(d.al, fi)
+
+				if !d.noInfo {
+					fmt.Printf("add column `%s` for table `%s`\n", fi.fullName, mi.table)
+				}
+
+				_, err := db.Exec(query)
+				if d.verbose {
+					fmt.Printf("    %s\n", query)
+				}
+				if err != nil {
+					if d.rtOnError {
+						return err
+					}
+					fmt.Printf("    %s\n", err.Error())
+				}
+			}
+
+			for _, idx := range indexes[mi.table] {
+				if d.al.DbBaser.IndexExists(db, idx.Table, idx.Name) == false {
+					if !d.noInfo {
+						fmt.Printf("create index `%s` for table `%s`\n", idx.Name, idx.Table)
+					}
+
+					query := idx.Sql
+					_, err := db.Exec(query)
+					if d.verbose {
+						fmt.Printf("    %s\n", query)
+					}
+					if err != nil {
+						if d.rtOnError {
+							return err
+						}
+						fmt.Printf("    %s\n", err.Error())
+					}
+				}
+			}
+
+			continue
+		}
+
+		if !d.noInfo {
+			fmt.Printf("create table `%s` \n", mi.table)
+		}
 
 		queries := []string{sqls[i]}
-		queries = append(queries, indexes[mi.table]...)
+		for _, idx := range indexes[mi.table] {
+			queries = append(queries, idx.Sql)
+		}
 
 		for _, query := range queries {
 			_, err := db.Exec(query)
@@ -114,6 +194,9 @@ func (d *commandSyncDb) Run() {
 				fmt.Println(query)
 			}
 			if err != nil {
+				if d.rtOnError {
+					return err
+				}
 				fmt.Printf("    %s\n", err.Error())
 			}
 		}
@@ -121,6 +204,8 @@ func (d *commandSyncDb) Run() {
 			fmt.Println("")
 		}
 	}
+
+	return nil
 }
 
 type commandSqlAll struct {
@@ -137,19 +222,36 @@ func (d *commandSqlAll) Parse(args []string) {
 	d.al = getDbAlias(name)
 }
 
-func (d *commandSqlAll) Run() {
+func (d *commandSqlAll) Run() error {
 	sqls, indexes := getDbCreateSql(d.al)
 	var all []string
 	for i, mi := range modelCache.allOrdered() {
 		queries := []string{sqls[i]}
-		queries = append(queries, indexes[mi.table]...)
+		for _, idx := range indexes[mi.table] {
+			queries = append(queries, idx.Sql)
+		}
 		sql := strings.Join(queries, "\n")
 		all = append(all, sql)
 	}
 	fmt.Println(strings.Join(all, "\n\n"))
+
+	return nil
 }
 
 func init() {
 	commands["syncdb"] = new(commandSyncDb)
 	commands["sqlall"] = new(commandSqlAll)
+}
+
+func RunSyncdb(name string, force bool, verbose bool) error {
+	BootStrap()
+
+	al := getDbAlias(name)
+	cmd := new(commandSyncDb)
+	cmd.al = al
+	cmd.force = force
+	cmd.noInfo = !verbose
+	cmd.verbose = verbose
+	cmd.rtOnError = true
+	return cmd.Run()
 }

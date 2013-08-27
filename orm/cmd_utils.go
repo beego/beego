@@ -6,6 +6,12 @@ import (
 	"strings"
 )
 
+type dbIndex struct {
+	Table string
+	Name  string
+	Sql   string
+}
+
 func getDbAlias(name string) *alias {
 	if al, ok := dataBaseCache.get(name); ok {
 		return al
@@ -31,7 +37,71 @@ func getDbDropSql(al *alias) (sqls []string) {
 	return sqls
 }
 
-func getDbCreateSql(al *alias) (sqls []string, tableIndexes map[string][]string) {
+func getColumnTyp(al *alias, fi *fieldInfo) (col string) {
+	T := al.DbBaser.DbTypes()
+	fieldType := fi.fieldType
+
+checkColumn:
+	switch fieldType {
+	case TypeBooleanField:
+		col = T["bool"]
+	case TypeCharField:
+		col = fmt.Sprintf(T["string"], fi.size)
+	case TypeTextField:
+		col = T["string-text"]
+	case TypeDateField:
+		col = T["time.Time-date"]
+	case TypeDateTimeField:
+		col = T["time.Time"]
+	case TypeBitField:
+		col = T["int8"]
+	case TypeSmallIntegerField:
+		col = T["int16"]
+	case TypeIntegerField:
+		col = T["int32"]
+	case TypeBigIntegerField:
+		if al.Driver == DR_Sqlite {
+			fieldType = TypeIntegerField
+			goto checkColumn
+		}
+		col = T["int64"]
+	case TypePositiveBitField:
+		col = T["uint8"]
+	case TypePositiveSmallIntegerField:
+		col = T["uint16"]
+	case TypePositiveIntegerField:
+		col = T["uint32"]
+	case TypePositiveBigIntegerField:
+		col = T["uint64"]
+	case TypeFloatField:
+		col = T["float64"]
+	case TypeDecimalField:
+		s := T["float64-decimal"]
+		if strings.Index(s, "%d") == -1 {
+			col = s
+		} else {
+			col = fmt.Sprintf(s, fi.digits, fi.decimals)
+		}
+	case RelForeignKey, RelOneToOne:
+		fieldType = fi.relModelInfo.fields.pk.fieldType
+		goto checkColumn
+	}
+
+	return
+}
+
+func getColumnAddQuery(al *alias, fi *fieldInfo) string {
+	Q := al.DbBaser.TableQuote()
+	typ := getColumnTyp(al, fi)
+
+	if fi.null == false {
+		typ += " " + "NOT NULL"
+	}
+
+	return fmt.Sprintf("ALTER TABLE %s%s%s ADD COLUMN %s%s%s %s", Q, fi.mi.table, Q, Q, fi.column, Q, typ)
+}
+
+func getDbCreateSql(al *alias) (sqls []string, tableIndexes map[string][]dbIndex) {
 	if len(modelCache.cache) == 0 {
 		fmt.Println("no Model found, need register your model")
 		os.Exit(2)
@@ -41,7 +111,7 @@ func getDbCreateSql(al *alias) (sqls []string, tableIndexes map[string][]string)
 	T := al.DbBaser.DbTypes()
 	sep := fmt.Sprintf("%s, %s", Q, Q)
 
-	tableIndexes = make(map[string][]string)
+	tableIndexes = make(map[string][]dbIndex)
 
 	for _, mi := range modelCache.allOrdered() {
 		sql := fmt.Sprintf("-- %s\n", strings.Repeat("-", 50))
@@ -56,55 +126,8 @@ func getDbCreateSql(al *alias) (sqls []string, tableIndexes map[string][]string)
 
 		for _, fi := range mi.fields.fieldsDB {
 
-			fieldType := fi.fieldType
 			column := fmt.Sprintf("    %s%s%s ", Q, fi.column, Q)
-			col := ""
-
-		checkColumn:
-			switch fieldType {
-			case TypeBooleanField:
-				col = T["bool"]
-			case TypeCharField:
-				col = fmt.Sprintf(T["string"], fi.size)
-			case TypeTextField:
-				col = T["string-text"]
-			case TypeDateField:
-				col = T["time.Time-date"]
-			case TypeDateTimeField:
-				col = T["time.Time"]
-			case TypeBitField:
-				col = T["int8"]
-			case TypeSmallIntegerField:
-				col = T["int16"]
-			case TypeIntegerField:
-				col = T["int32"]
-			case TypeBigIntegerField:
-				if al.Driver == DR_Sqlite {
-					fieldType = TypeIntegerField
-					goto checkColumn
-				}
-				col = T["int64"]
-			case TypePositiveBitField:
-				col = T["uint8"]
-			case TypePositiveSmallIntegerField:
-				col = T["uint16"]
-			case TypePositiveIntegerField:
-				col = T["uint32"]
-			case TypePositiveBigIntegerField:
-				col = T["uint64"]
-			case TypeFloatField:
-				col = T["float64"]
-			case TypeDecimalField:
-				s := T["float64-decimal"]
-				if strings.Index(s, "%d") == -1 {
-					col = s
-				} else {
-					col = fmt.Sprintf(s, fi.digits, fi.decimals)
-				}
-			case RelForeignKey, RelOneToOne:
-				fieldType = fi.relModelInfo.fields.pk.fieldType
-				goto checkColumn
-			}
+			col := getColumnTyp(al, fi)
 
 			if fi.auto {
 				switch al.Driver {
@@ -181,7 +204,13 @@ func getDbCreateSql(al *alias) (sqls []string, tableIndexes map[string][]string)
 			name := mi.table + "_" + strings.Join(names, "_")
 			cols := strings.Join(names, sep)
 			sql := fmt.Sprintf("CREATE INDEX %s%s%s ON %s%s%s (%s%s%s);", Q, name, Q, Q, mi.table, Q, Q, cols, Q)
-			tableIndexes[mi.table] = append(tableIndexes[mi.table], sql)
+
+			index := dbIndex{}
+			index.Table = mi.table
+			index.Name = name
+			index.Sql = sql
+
+			tableIndexes[mi.table] = append(tableIndexes[mi.table], index)
 		}
 
 	}

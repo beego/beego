@@ -1,5 +1,9 @@
 package orm
 
+import (
+	"fmt"
+)
+
 var mysqlOperators = map[string]string{
 	"exact":     "= ?",
 	"iexact":    "LIKE ?",
@@ -49,6 +53,23 @@ func (d *dbBaseMysql) OperatorSql(operator string) string {
 
 func (d *dbBaseMysql) DbTypes() map[string]string {
 	return mysqlTypes
+}
+
+func (d *dbBaseMysql) ShowTablesQuery() string {
+	return "SELECT table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema = DATABASE()"
+}
+
+func (d *dbBaseMysql) ShowColumnsQuery(table string) string {
+	return fmt.Sprintf("SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE FROM information_schema.columns "+
+		"WHERE table_schema = DATABASE() AND table_name = '%s'", table)
+}
+
+func (d *dbBaseMysql) IndexExists(db dbQuerier, table string, name string) bool {
+	row := db.QueryRow("SELECT count(*) FROM information_schema.statistics "+
+		"WHERE table_schema = DATABASE() AND table_name = ? AND index_name = ?", table, name)
+	var cnt int
+	row.Scan(&cnt)
+	return cnt > 0
 }
 
 func newdbBaseMysql() dbBaser {

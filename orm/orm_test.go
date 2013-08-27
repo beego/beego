@@ -198,28 +198,8 @@ func TestSyncDb(t *testing.T) {
 	RegisterModel(new(Comment))
 	RegisterModel(new(UserBig))
 
-	BootStrap()
-
-	al := dataBaseCache.getDefault()
-	db := al.DB
-
-	drops := getDbDropSql(al)
-	for _, query := range drops {
-		_, err := db.Exec(query)
-		throwFail(t, err, query)
-	}
-
-	sqls, indexes := getDbCreateSql(al)
-
-	for i, mi := range modelCache.allOrdered() {
-		queries := []string{sqls[i]}
-		queries = append(queries, indexes[mi.table]...)
-
-		for _, query := range queries {
-			_, err := db.Exec(query)
-			throwFail(t, err, query)
-		}
-	}
+	err := RunSyncdb("default", true, false)
+	throwFail(t, err)
 
 	modelCache.clean()
 }
