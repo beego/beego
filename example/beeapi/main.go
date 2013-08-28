@@ -15,6 +15,6 @@ import (
 //	/object/<objectId>	DELETE					Deleting Objects
 
 func main() {
-	beego.RESTRouter("/object", &controllers.ObejctController{})
+	beego.RESTRouter("/object", &controllers.ObjectController{})
 	beego.Run()
 }
