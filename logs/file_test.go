@@ -99,3 +99,12 @@ func exists(path string) (bool, error) {
 	}
 	return false, err
 }
+
+func BenchmarkFile(b *testing.B) {
+	log := NewLogger(100000)
+	log.SetLogger("file", `{"filename":"test4.log"}`)
+	for i := 0; i < b.N; i++ {
+		log.Trace("trace")
+	}
+	os.Remove("test4.log")
+}

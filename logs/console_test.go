@@ -6,6 +6,7 @@ import (
 
 func TestConsole(t *testing.T) {
 	log := NewLogger(10000)
+	log.SetLogger("console", "")
 	log.Trace("trace")
 	log.Info("info")
 	log.Warn("warning")
@@ -18,4 +19,12 @@ func TestConsole(t *testing.T) {
 	log.Warn("warning")
 	log.Debug("debug")
 	log.Critical("critical")
+}
+
+func BenchmarkConsole(b *testing.B) {
+	log := NewLogger(10000)
+	log.SetLogger("console", "")
+	for i := 0; i < b.N; i++ {
+		log.Trace("trace")
+	}
 }

@@ -3,8 +3,10 @@ package logs
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/smtp"
 	"strings"
+	"time"
 )
 
 const (
@@ -77,7 +79,8 @@ func (s *SmtpWriter) WriteMsg(msg string, level int) error {
 	// and send the email all in one step.
 	content_type := "Content-Type: text/plain" + "; charset=UTF-8"
 	mailmsg := []byte("To: " + strings.Join(s.recipientAddresses, ";") + "\r\nFrom: " + s.username + "<" + s.username +
-		">\r\nSubject: " + s.subject + "\r\n" + content_type + "\r\n\r\n" + msg)
+		">\r\nSubject: " + s.subject + "\r\n" + content_type + "\r\n\r\n" + fmt.Sprintf(".%s", time.Now().Format("2006-01-02 15:04:05")) + msg)
+
 	err := smtp.SendMail(
 		s.host,
 		auth,
@@ -85,6 +88,7 @@ func (s *SmtpWriter) WriteMsg(msg string, level int) error {
 		s.recipientAddresses,
 		mailmsg,
 	)
+
 	return err
 }
 

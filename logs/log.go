@@ -54,7 +54,7 @@ func NewLogger(channellen int64) *BeeLogger {
 	bl := new(BeeLogger)
 	bl.msg = make(chan *logMsg, channellen)
 	bl.outputs = make(map[string]LoggerInterface)
-	bl.SetLogger("console", "") // default output to console
+	//bl.SetLogger("console", "") // default output to console
 	go bl.StartLogger()
 	return bl
 }
