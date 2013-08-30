@@ -90,7 +90,7 @@ func (o *rawSet) readValues(container interface{}) (int64, error) {
 	case *ParamsList:
 		typ = 3
 	default:
-		panic(fmt.Sprintf("unsupport read values type `%T`", container))
+		panic(fmt.Sprintf("<RawSeter> unsupport read values type `%T`", container))
 	}
 
 	query := o.query
@@ -133,20 +133,32 @@ func (o *rawSet) readValues(container interface{}) (int64, error) {
 			params := make(Params, len(cols))
 			for i, ref := range refs {
 				value := reflect.Indirect(reflect.ValueOf(ref)).Interface().(sql.NullString)
-				params[cols[i]] = value.String
+				if value.Valid {
+					params[cols[i]] = value.String
+				} else {
+					params[cols[i]] = nil
+				}
 			}
 			maps = append(maps, params)
 		case 2:
 			params := make(ParamsList, 0, len(cols))
 			for _, ref := range refs {
 				value := reflect.Indirect(reflect.ValueOf(ref)).Interface().(sql.NullString)
-				params = append(params, value.String)
+				if value.Valid {
+					params = append(params, value.String)
+				} else {
+					params = append(params, nil)
+				}
 			}
 			lists = append(lists, params)
 		case 3:
 			for _, ref := range refs {
 				value := reflect.Indirect(reflect.ValueOf(ref)).Interface().(sql.NullString)
-				list = append(list, value.String)
+				if value.Valid {
+					list = append(list, value.String)
+				} else {
+					list = append(list, nil)
+				}
 			}
 		}
 
