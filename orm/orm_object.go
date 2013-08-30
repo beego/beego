@@ -34,7 +34,11 @@ func (o *insertSet) Insert(md interface{}) (int64, error) {
 	}
 	if id > 0 {
 		if o.mi.fields.pk.auto {
-			ind.Field(o.mi.fields.pk.fieldIndex).SetInt(id)
+			if o.mi.fields.pk.fieldType&IsPostiveIntegerField > 0 {
+				ind.Field(o.mi.fields.pk.fieldIndex).SetUint(uint64(id))
+			} else {
+				ind.Field(o.mi.fields.pk.fieldIndex).SetInt(id)
+			}
 		}
 	}
 	return id, nil

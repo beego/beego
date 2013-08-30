@@ -211,6 +211,7 @@ func TestRegisterModels(t *testing.T) {
 	RegisterModel(new(Post))
 	RegisterModel(new(Tag))
 	RegisterModel(new(Comment))
+	RegisterModel(new(UserBig))
 
 	BootStrap()
 
@@ -231,33 +232,34 @@ func TestModelSyntax(t *testing.T) {
 	}
 }
 
+var Data_Values = map[string]interface{}{
+	"Boolean":  true,
+	"Char":     "char",
+	"Text":     "text",
+	"Date":     time.Now(),
+	"DateTime": time.Now(),
+	"Byte":     byte(1<<8 - 1),
+	"Rune":     rune(1<<31 - 1),
+	"Int":      int(1<<31 - 1),
+	"Int8":     int8(1<<7 - 1),
+	"Int16":    int16(1<<15 - 1),
+	"Int32":    int32(1<<31 - 1),
+	"Int64":    int64(1<<63 - 1),
+	"Uint":     uint(1<<32 - 1),
+	"Uint8":    uint8(1<<8 - 1),
+	"Uint16":   uint16(1<<16 - 1),
+	"Uint32":   uint32(1<<32 - 1),
+	"Uint64":   uint64(1<<63 - 1), // uint64 values with high bit set are not supported
+	"Float32":  float32(100.1234),
+	"Float64":  float64(100.1234),
+	"Decimal":  float64(100.1234),
+}
+
 func TestDataTypes(t *testing.T) {
-	values := map[string]interface{}{
-		"Boolean":  true,
-		"Char":     "char",
-		"Text":     "text",
-		"Date":     time.Now(),
-		"DateTime": time.Now(),
-		"Byte":     byte(1<<8 - 1),
-		"Rune":     rune(1<<31 - 1),
-		"Int":      int(1<<31 - 1),
-		"Int8":     int8(1<<7 - 1),
-		"Int16":    int16(1<<15 - 1),
-		"Int32":    int32(1<<31 - 1),
-		"Int64":    int64(1<<63 - 1),
-		"Uint":     uint(1<<32 - 1),
-		"Uint8":    uint8(1<<8 - 1),
-		"Uint16":   uint16(1<<16 - 1),
-		"Uint32":   uint32(1<<32 - 1),
-		"Uint64":   uint64(1<<63 - 1), // uint64 values with high bit set are not supported
-		"Float32":  float32(100.1234),
-		"Float64":  float64(100.1234),
-		"Decimal":  float64(100.1234),
-	}
 	d := Data{}
 	ind := reflect.Indirect(reflect.ValueOf(&d))
 
-	for name, value := range values {
+	for name, value := range Data_Values {
 		e := ind.FieldByName(name)
 		e.Set(reflect.ValueOf(value))
 	}
@@ -272,7 +274,7 @@ func TestDataTypes(t *testing.T) {
 
 	ind = reflect.Indirect(reflect.ValueOf(&d))
 
-	for name, value := range values {
+	for name, value := range Data_Values {
 		e := ind.FieldByName(name)
 		vu := e.Interface()
 		switch name {
@@ -376,6 +378,17 @@ func TestCRUD(t *testing.T) {
 	u = &User{Id: 100}
 	err = dORM.Read(u)
 	throwFail(t, AssertIs(err, T_Equal, ErrNoRows))
+
+	ub := UserBig{}
+	ub.Name = "name"
+	id, err = dORM.Insert(&ub)
+	throwFail(t, err)
+	throwFail(t, AssertIs(id, T_Equal, 1))
+
+	ub = UserBig{Id: 1}
+	err = dORM.Read(&ub)
+	throwFail(t, err)
+	throwFail(t, AssertIs(ub.Name, T_Equal, "name"))
 }
 
 func TestInsertTestData(t *testing.T) {
@@ -823,7 +836,15 @@ func TestPrepareInsert(t *testing.T) {
 	throwFail(t, AssertIs(err, T_Equal, ErrStmtClosed))
 }
 
-func TestRaw(t *testing.T) {
+func TestRawQueryRow(t *testing.T) {
+
+}
+
+func TestRawQueryRows(t *testing.T) {
+
+}
+
+func TestRawValues(t *testing.T) {
 	switch {
 	case IsMysql || IsSqlite:
 
@@ -860,42 +881,7 @@ func TestRaw(t *testing.T) {
 		if num == 3 {
 			throwFail(t, AssertIs(list[0], T_Equal, "2"))
 			throwFail(t, AssertIs(list[1], T_Equal, "3"))
-			throwFail(t, AssertIs(list[2], T_Equal, ""))
-		}
-
-		pre, err := dORM.Raw("INSERT INTO tag (name) VALUES (?)").Prepare()
-		throwFail(t, err)
-		if pre != nil {
-			r, err := pre.Exec("name1")
-			throwFail(t, err)
-
-			tid, err := r.LastInsertId()
-			throwFail(t, err)
-			throwFail(t, AssertIs(tid, T_Large, 0))
-
-			r, err = pre.Exec("name2")
-			throwFail(t, err)
-
-			id, err := r.LastInsertId()
-			throwFail(t, err)
-			throwFail(t, AssertIs(id, T_Equal, tid+1))
-
-			r, err = pre.Exec("name3")
-			throwFail(t, err)
-
-			id, err = r.LastInsertId()
-			throwFail(t, err)
-			throwFail(t, AssertIs(id, T_Equal, tid+2))
-
-			err = pre.Close()
-			throwFail(t, err)
-
-			res, err := dORM.Raw("DELETE FROM tag WHERE name IN (?, ?, ?)", []string{"name1", "name2", "name3"}).Exec()
-			throwFail(t, err)
-
-			num, err := res.RowsAffected()
-			throwFail(t, err)
-			throwFail(t, AssertIs(num, T_Equal, 3))
+			throwFail(t, AssertIs(list[2], T_Equal, nil))
 		}
 
 	case IsPostgres:
@@ -933,8 +919,51 @@ func TestRaw(t *testing.T) {
 		if num == 3 {
 			throwFail(t, AssertIs(list[0], T_Equal, "2"))
 			throwFail(t, AssertIs(list[1], T_Equal, "3"))
-			throwFail(t, AssertIs(list[2], T_Equal, ""))
+			throwFail(t, AssertIs(list[2], T_Equal, nil))
 		}
+	}
+}
+
+func TestRawPrepare(t *testing.T) {
+	switch {
+	case IsMysql || IsSqlite:
+
+		pre, err := dORM.Raw("INSERT INTO tag (name) VALUES (?)").Prepare()
+		throwFail(t, err)
+		if pre != nil {
+			r, err := pre.Exec("name1")
+			throwFail(t, err)
+
+			tid, err := r.LastInsertId()
+			throwFail(t, err)
+			throwFail(t, AssertIs(tid, T_Large, 0))
+
+			r, err = pre.Exec("name2")
+			throwFail(t, err)
+
+			id, err := r.LastInsertId()
+			throwFail(t, err)
+			throwFail(t, AssertIs(id, T_Equal, tid+1))
+
+			r, err = pre.Exec("name3")
+			throwFail(t, err)
+
+			id, err = r.LastInsertId()
+			throwFail(t, err)
+			throwFail(t, AssertIs(id, T_Equal, tid+2))
+
+			err = pre.Close()
+			throwFail(t, err)
+
+			res, err := dORM.Raw("DELETE FROM tag WHERE name IN (?, ?, ?)", []string{"name1", "name2", "name3"}).Exec()
+			throwFail(t, err)
+
+			num, err := res.RowsAffected()
+			throwFail(t, err)
+			throwFail(t, AssertIs(num, T_Equal, 3))
+		}
+
+	case IsPostgres:
 
 		pre, err := dORM.Raw(`INSERT INTO "tag" ("name") VALUES (?) RETURNING "id"`).Prepare()
 		throwFail(t, err)

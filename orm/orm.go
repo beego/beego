@@ -70,7 +70,11 @@ func (o *orm) Insert(md interface{}) (int64, error) {
 	}
 	if id > 0 {
 		if mi.fields.pk.auto {
-			ind.Field(mi.fields.pk.fieldIndex).SetInt(id)
+			if mi.fields.pk.fieldType&IsPostiveIntegerField > 0 {
+				ind.Field(mi.fields.pk.fieldIndex).SetUint(uint64(id))
+			} else {
+				ind.Field(mi.fields.pk.fieldIndex).SetInt(id)
+			}
 		}
 	}
 	return id, nil
@@ -93,7 +97,11 @@ func (o *orm) Delete(md interface{}) (int64, error) {
 	}
 	if num > 0 {
 		if mi.fields.pk.auto {
-			ind.Field(mi.fields.pk.fieldIndex).SetInt(0)
+			if mi.fields.pk.fieldType&IsPostiveIntegerField > 0 {
+				ind.Field(mi.fields.pk.fieldIndex).SetUint(0)
+			} else {
+				ind.Field(mi.fields.pk.fieldIndex).SetInt(0)
+			}
 		}
 	}
 	return num, nil

@@ -60,7 +60,8 @@ type DataNull struct {
 
 // only for mysql
 type UserBig struct {
-	Id uint64
+	Id   uint64
+	Name string
 }
 
 type User struct {

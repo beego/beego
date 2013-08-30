@@ -304,7 +304,11 @@ func (d *dbBase) Delete(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.
 
 		if num > 0 {
 			if mi.fields.pk.auto {
-				ind.Field(mi.fields.pk.fieldIndex).SetInt(0)
+				if mi.fields.pk.fieldType&IsPostiveIntegerField > 0 {
+					ind.Field(mi.fields.pk.fieldIndex).SetUint(0)
+				} else {
+					ind.Field(mi.fields.pk.fieldIndex).SetInt(0)
+				}
 			}
 
 			err := d.deleteRels(q, mi, []interface{}{pkValue}, tz)
