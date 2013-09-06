@@ -497,15 +497,15 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 	}
 
 	if errTyp {
-		panic(fmt.Sprintf("wrong object type `%s` for rows scan, need *[]*%s or *%s", ind.Type(), mi.fullName, mi.fullName))
+		if one {
+			panic(fmt.Sprintf("wrong object type `%s` for rows scan, need *%s", val.Type(), mi.fullName))
+		} else {
+			panic(fmt.Sprintf("wrong object type `%s` for rows scan, need *[]*%s or *[]%s", val.Type(), mi.fullName, mi.fullName))
+		}
 	}
 
 	rlimit := qs.limit
 	offset := qs.offset
-	if one {
-		rlimit = 0
-		offset = 0
-	}
 
 	Q := d.ins.TableQuote()
 
@@ -704,7 +704,7 @@ func (d *dbBase) setColsValues(mi *modelInfo, ind *reflect.Value, cols []string,
 			panic(fmt.Sprintf("Raw value: `%v` %s", val, err.Error()))
 		}
 
-		_, err = d.setFieldValue(fi, value, &field)
+		_, err = d.setFieldValue(fi, value, field)
 
 		if err != nil {
 			panic(fmt.Sprintf("Raw value: `%v` %s", val, err.Error()))
@@ -786,6 +786,7 @@ setValue:
 					s = s[:19]
 				}
 				t, err = time.ParseInLocation(format_DateTime, s, tz)
+				t = t.In(DefaultTimeLoc)
 			}
 			if err != nil && s != "0000-00-00" && s != "0000-00-00 00:00:00" {
 				tErr = err
@@ -864,7 +865,7 @@ end:
 
 }
 
-func (d *dbBase) setFieldValue(fi *fieldInfo, value interface{}, field *reflect.Value) (interface{}, error) {
+func (d *dbBase) setFieldValue(fi *fieldInfo, value interface{}, field reflect.Value) (interface{}, error) {
 
 	fieldType := fi.fieldType
 	isNative := fi.isFielder == false
@@ -921,7 +922,7 @@ setValue:
 			mf := reflect.New(fi.relModelInfo.addrField.Elem().Type())
 			field.Set(mf)
 			f := mf.Elem().Field(fi.relModelInfo.fields.pk.fieldIndex)
-			field = &f
+			field = f
 			goto setValue
 		}
 	}
