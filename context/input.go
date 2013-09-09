@@ -151,5 +151,6 @@ func (input *BeegoInput) Body() []byte {
 	input.req.Body.Close()
 	bf := bytes.NewBuffer(requestbody)
 	input.req.Body = ioutil.NopCloser(bf)
+	input.RequestBody = requestbody
 	return requestbody
 }
