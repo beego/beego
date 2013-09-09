@@ -39,7 +39,7 @@ func (app *App) Run() {
 			l, err = net.Listen("tcp", addr)
 		}
 		if err != nil {
-			BeeLogger.Fatal("Listen: ", err)
+			BeeLogger.Critical("Listen: ", err)
 		}
 		err = fcgi.Serve(l, app.Handlers)
 	} else {
@@ -51,7 +51,7 @@ func (app *App) Run() {
 			}
 			laddr, err := net.ResolveTCPAddr("tcp", addr)
 			if nil != err {
-				BeeLogger.Fatal("ResolveTCPAddr:", err)
+				BeeLogger.Critical("ResolveTCPAddr:", err)
 			}
 			l, err = GetInitListner(laddr)
 			theStoppable = newStoppable(l)
@@ -73,7 +73,7 @@ func (app *App) Run() {
 		}
 	}
 	if err != nil {
-		BeeLogger.Fatal("ListenAndServe: ", err)
+		BeeLogger.Critical("ListenAndServe: ", err)
 	}
 }
 
