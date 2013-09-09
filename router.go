@@ -1,9 +1,8 @@
 package beego
 
 import (
-	"bytes"
 	"fmt"
-	"io/ioutil"
+	beecontext "github.com/astaxie/beego/context"
 	"net/http"
 	"net/url"
 	"os"
@@ -25,31 +24,20 @@ type controllerInfo struct {
 	hasMethod      bool
 }
 
-type userHandler struct {
-	pattern string
-	regex   *regexp.Regexp
-	params  map[int]string
-	h       http.Handler
-}
-
 type ControllerRegistor struct {
 	routers      []*controllerInfo
 	fixrouters   []*controllerInfo
 	enableFilter bool
-	filters      []http.HandlerFunc
-	enableAfter  bool
-	afterFilters []http.HandlerFunc
-	enableUser   bool
-	userHandlers map[string]*userHandler
+	filters      map[string][]*FilterRouter
 	enableAuto   bool
 	autoRouter   map[string]map[string]reflect.Type //key:controller key:method value:reflect.type
 }
 
 func NewControllerRegistor() *ControllerRegistor {
 	return &ControllerRegistor{
-		routers:      make([]*controllerInfo, 0),
-		userHandlers: make(map[string]*userHandler),
-		autoRouter:   make(map[string]map[string]reflect.Type),
+		routers:    make([]*controllerInfo, 0),
+		autoRouter: make(map[string]map[string]reflect.Type),
+		filters:    make(map[string][]*FilterRouter),
 	}
 }
 
@@ -182,35 +170,39 @@ func (p *ControllerRegistor) AddAuto(c ControllerInterface) {
 	}
 }
 
-func (p *ControllerRegistor) AddHandler(pattern string, c http.Handler) {
-	p.enableUser = true
-	parts := strings.Split(pattern, "/")
+// Filter adds the middleware filter.
+func (p *ControllerRegistor) AddFilter(pattern, action string, filter FilterFunc) {
+	p.enableFilter = true
+	mr := new(FilterRouter)
+	mr.filterFunc = filter
 
+	parts := strings.Split(pattern, "/")
 	j := 0
-	params := make(map[int]string)
 	for i, part := range parts {
 		if strings.HasPrefix(part, ":") {
-			expr := "([^/]+)"
+			expr := "(.+)"
 			//a user may choose to override the defult expression
 			// similar to expressjs: ‘/user/:id([0-9]+)’
 			if index := strings.Index(part, "("); index != -1 {
 				expr = part[index:]
 				part = part[:index]
+				//match /user/:id:int ([0-9]+)
+				//match /post/:username:string	([\w]+)
+			} else if lindex := strings.LastIndex(part, ":"); lindex != 0 {
+				switch part[lindex:] {
+				case ":int":
+					expr = "([0-9]+)"
+					part = part[:lindex]
+				case ":string":
+					expr = `([\w]+)`
+					part = part[:lindex]
+				}
 			}
-			params[j] = part
 			parts[i] = expr
 			j++
 		}
 	}
-	if j == 0 {
-		//now create the Route
-		uh := &userHandler{}
-		uh.pattern = pattern
-		uh.h = c
-		p.userHandlers[pattern] = uh
-	} else { // add regexp routers
-		//recreate the url pattern, with parameters replaced
-		//by regular expressions. then compile the regex
+	if j != 0 {
 		pattern = strings.Join(parts, "/")
 		regex, regexErr := regexp.Compile(pattern)
 		if regexErr != nil {
@@ -218,73 +210,11 @@ func (p *ControllerRegistor) AddHandler(pattern string, c http.Handler) {
 			panic(regexErr)
 			return
 		}
-
-		//now create the Route
-		uh := &userHandler{}
-		uh.regex = regex
-		uh.params = params
-		uh.pattern = pattern
-		uh.h = c
-		p.userHandlers[pattern] = uh
+		mr.regex = regex
+		mr.hasregex = true
 	}
-}
-
-// Filter adds the middleware filter.
-func (p *ControllerRegistor) Filter(filter http.HandlerFunc) {
-	p.enableFilter = true
-	p.filters = append(p.filters, filter)
-}
-
-// FilterParam adds the middleware filter if the REST URL parameter exists.
-func (p *ControllerRegistor) FilterParam(param string, filter http.HandlerFunc) {
-	if !strings.HasPrefix(param, ":") {
-		param = ":" + param
-	}
-
-	p.Filter(func(w http.ResponseWriter, r *http.Request) {
-		p := r.URL.Query().Get(param)
-		if len(p) > 0 {
-			filter(w, r)
-		}
-	})
-}
-
-// FilterPrefixPath adds the middleware filter if the prefix path exists.
-func (p *ControllerRegistor) FilterPrefixPath(path string, filter http.HandlerFunc) {
-	p.Filter(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, path) {
-			filter(w, r)
-		}
-	})
-}
-
-// Filter adds the middleware after filter.
-func (p *ControllerRegistor) FilterAfter(filter http.HandlerFunc) {
-	p.enableAfter = true
-	p.afterFilters = append(p.afterFilters, filter)
-}
-
-// FilterParam adds the middleware filter if the REST URL parameter exists.
-func (p *ControllerRegistor) FilterParamAfter(param string, filter http.HandlerFunc) {
-	if !strings.HasPrefix(param, ":") {
-		param = ":" + param
-	}
-
-	p.FilterAfter(func(w http.ResponseWriter, r *http.Request) {
-		p := r.URL.Query().Get(param)
-		if len(p) > 0 {
-			filter(w, r)
-		}
-	})
-}
-
-// FilterPrefixPath adds the middleware filter if the prefix path exists.
-func (p *ControllerRegistor) FilterPrefixPathAfter(path string, filter http.HandlerFunc) {
-	p.FilterAfter(func(w http.ResponseWriter, r *http.Request) {
-		if strings.HasPrefix(r.URL.Path, path) {
-			filter(w, r)
-		}
-	})
+	mr.pattern = pattern
+	p.filters[action] = append(p.filters[action], mr)
 }
 
 // AutoRoute
@@ -320,12 +250,29 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}()
 
 	w := &responseWriter{writer: rw}
-
 	w.Header().Set("Server", "beegoServer")
+	context := &beecontext.Context{
+		ResponseWriter: w,
+		Request:        r,
+		Input:          beecontext.NewInput(r),
+		Output:         beecontext.NewOutput(w),
+	}
+	context.Output.Context = context
 	var runrouter *controllerInfo
 	var findrouter bool
 
 	params := make(map[string]string)
+
+	context.Input.Param = params
+	if p.enableFilter {
+		if l, ok := p.filters["BeforRouter"]; ok {
+			for _, filterR := range l {
+				if filterR.ValidRouter(r.URL.Path) {
+					filterR.filterFunc(context)
+				}
+			}
+		}
+	}
 
 	//static file server
 	for prefix, staticDir := range StaticDir {
@@ -359,61 +306,22 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}
 	}
 
+	if p.enableFilter {
+		if l, ok := p.filters["AfterStatic"]; ok {
+			for _, filterR := range l {
+				if filterR.ValidRouter(r.URL.Path) {
+					filterR.filterFunc(context)
+				}
+			}
+		}
+	}
 	requestPath := r.URL.Path
 
-	var requestbody []byte
-
 	if CopyRequestBody {
-		requestbody, _ = ioutil.ReadAll(r.Body)
-
-		r.Body.Close()
-
-		bf := bytes.NewBuffer(requestbody)
-
-		r.Body = ioutil.NopCloser(bf)
+		context.Input.Body()
 	}
 
 	r.ParseMultipartForm(MaxMemory)
-
-	//user defined Handler
-	if p.enableUser {
-		for pattern, c := range p.userHandlers {
-			if c.regex == nil && pattern == requestPath {
-				c.h.ServeHTTP(rw, r)
-				return
-			} else if c.regex == nil {
-				continue
-			}
-
-			//check if Route pattern matches url
-			if !c.regex.MatchString(requestPath) {
-				continue
-			}
-
-			//get submatches (params)
-			matches := c.regex.FindStringSubmatch(requestPath)
-
-			//double check that the Route matches the URL pattern.
-			if len(matches[0]) != len(requestPath) {
-				continue
-			}
-
-			if len(c.params) > 0 {
-				//add url parameters to the query param map
-				values := r.URL.Query()
-				for i, match := range matches[1:] {
-					values.Add(c.params[i], match)
-					r.Form.Add(c.params[i], match)
-					params[c.params[i]] = match
-				}
-				//reassemble query params and add to RawQuery
-				r.URL.RawQuery = url.Values(values).Encode() + "&" + r.URL.RawQuery
-				//r.URL.RawQuery = url.Values(values).Encode()
-			}
-			c.h.ServeHTTP(rw, r)
-			return
-		}
-	}
 
 	//first find path from the fixrouters to Improve Performance
 	for _, route := range p.fixrouters {
@@ -471,23 +379,21 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	if runrouter != nil {
 		//execute middleware filters
 		if p.enableFilter {
-			for _, filter := range p.filters {
-				filter(w, r)
-				if w.started {
-					return
+			if l, ok := p.filters["BeforExec"]; ok {
+				for _, filterR := range l {
+					if filterR.ValidRouter(r.URL.Path) {
+						filterR.filterFunc(context)
+					}
 				}
 			}
 		}
-
 		//Invoke the request handler
 		vc := reflect.New(runrouter.controllerType)
 
 		//call the controller init function
 		init := vc.MethodByName("Init")
 		in := make([]reflect.Value, 2)
-		ct := &Context{ResponseWriter: w, Request: r, Params: params, RequestBody: requestbody}
-
-		in[0] = reflect.ValueOf(ct)
+		in[0] = reflect.ValueOf(context)
 		in[1] = reflect.ValueOf(runrouter.controllerType.Name())
 		init.Call(in)
 		//call prepare function
@@ -617,14 +523,16 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				}
 			}
 		}
+
 		method = vc.MethodByName("Finish")
 		method.Call(in)
 		//execute middleware filters
-		if p.enableAfter {
-			for _, filter := range p.afterFilters {
-				filter(w, r)
-				if w.started {
-					return
+		if p.enableFilter {
+			if l, ok := p.filters["AfterExec"]; ok {
+				for _, filterR := range l {
+					if filterR.ValidRouter(r.URL.Path) {
+						filterR.filterFunc(context)
+					}
 				}
 			}
 		}
@@ -651,10 +559,11 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 						if strings.HasPrefix(strings.ToLower(requestPath), "/"+cName+"/"+strings.ToLower(mName)) {
 							//execute middleware filters
 							if p.enableFilter {
-								for _, filter := range p.filters {
-									filter(w, r)
-									if w.started {
-										return
+								if l, ok := p.filters["BeforExec"]; ok {
+									for _, filterR := range l {
+										if filterR.ValidRouter(r.URL.Path) {
+											filterR.filterFunc(context)
+										}
 									}
 								}
 							}
@@ -672,9 +581,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 							//call the controller init function
 							init := vc.MethodByName("Init")
 							in := make([]reflect.Value, 2)
-							ct := &Context{ResponseWriter: w, Request: r, Params: params, RequestBody: requestbody}
-
-							in[0] = reflect.ValueOf(ct)
+							in[0] = reflect.ValueOf(context)
 							in[1] = reflect.ValueOf(controllerType.Name())
 							init.Call(in)
 							//call prepare function
@@ -702,11 +609,12 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 							method = vc.MethodByName("Finish")
 							method.Call(in)
 							//execute middleware filters
-							if p.enableAfter {
-								for _, filter := range p.afterFilters {
-									filter(w, r)
-									if w.started {
-										return
+							if p.enableFilter {
+								if l, ok := p.filters["AfterExec"]; ok {
+									for _, filterR := range l {
+										if filterR.ValidRouter(r.URL.Path) {
+											filterR.filterFunc(context)
+										}
 									}
 								}
 							}
@@ -714,6 +622,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 							method.Call(in)
 							// set find
 							findrouter = true
+							goto Last
 						}
 					}
 				}
@@ -721,6 +630,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}
 	}
 
+Last:
 	//if no matches to url, throw a not found exception
 	if !findrouter {
 		if h, ok := ErrorMaps["404"]; ok {

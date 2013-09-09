@@ -16,6 +16,11 @@ func (ctx *Context) Redirect(status int, localurl string) {
 	ctx.Output.SetStatus(status)
 }
 
+func (ctx *Context) Abort(status int, body string) {
+	ctx.Output.SetStatus(status)
+	ctx.Output.Body([]byte(body))
+}
+
 func (ctx *Context) WriteString(content string) {
 	ctx.Output.Body([]byte(content))
 }

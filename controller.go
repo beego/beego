@@ -2,15 +2,12 @@ package beego
 
 import (
 	"bytes"
-	"compress/flate"
-	"compress/gzip"
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/base64"
-	"encoding/json"
-	"encoding/xml"
 	"errors"
 	"fmt"
+	"github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/session"
 	"html/template"
 	"io"
@@ -26,7 +23,7 @@ import (
 )
 
 type Controller struct {
-	Ctx         *Context
+	Ctx         *context.Context
 	Data        map[interface{}]interface{}
 	ChildName   string
 	TplNames    string
@@ -39,7 +36,7 @@ type Controller struct {
 }
 
 type ControllerInterface interface {
-	Init(ct *Context, cn string)
+	Init(ct *Context, childName string)
 	Prepare()
 	Get()
 	Post()
@@ -52,11 +49,11 @@ type ControllerInterface interface {
 	Render() error
 }
 
-func (c *Controller) Init(ctx *Context, cn string) {
+func (c *Controller) Init(ctx *context.Context, childName string) {
 	c.Data = make(map[interface{}]interface{})
 	c.Layout = ""
 	c.TplNames = ""
-	c.ChildName = cn
+	c.ChildName = childName
 	c.Ctx = ctx
 	c.TplExt = "tpl"
 }
@@ -109,8 +106,8 @@ func (c *Controller) Render() error {
 	if err != nil {
 		return err
 	} else {
-		c.Ctx.ResponseWriter.Header().Set("Content-Type", "text/html; charset=utf-8")
-		c.writeToWriter(rb)
+		c.Ctx.Output.Header("Content-Type", "text/html; charset=utf-8")
+		c.Ctx.Output.Body(rb)
 	}
 	return nil
 }
@@ -172,41 +169,6 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 	return []byte{}, nil
 }
 
-func (c *Controller) writeToWriter(rb []byte) {
-	output_writer := c.Ctx.ResponseWriter.(io.Writer)
-	if EnableGzip == true && c.Ctx.Request.Header.Get("Accept-Encoding") != "" {
-		splitted := strings.SplitN(c.Ctx.Request.Header.Get("Accept-Encoding"), ",", -1)
-		encodings := make([]string, len(splitted))
-
-		for i, val := range splitted {
-			encodings[i] = strings.TrimSpace(val)
-		}
-		for _, val := range encodings {
-			if val == "gzip" {
-				c.Ctx.ResponseWriter.Header().Set("Content-Encoding", "gzip")
-				output_writer, _ = gzip.NewWriterLevel(c.Ctx.ResponseWriter, gzip.BestSpeed)
-
-				break
-			} else if val == "deflate" {
-				c.Ctx.ResponseWriter.Header().Set("Content-Encoding", "deflate")
-				output_writer, _ = flate.NewWriter(c.Ctx.ResponseWriter, flate.BestSpeed)
-				break
-			}
-		}
-	} else {
-		c.Ctx.SetHeader("Content-Length", strconv.Itoa(len(rb)), true)
-	}
-	output_writer.Write(rb)
-	switch output_writer.(type) {
-	case *gzip.Writer:
-		output_writer.(*gzip.Writer).Close()
-	case *flate.Writer:
-		output_writer.(*flate.Writer).Close()
-	case io.WriteCloser:
-		output_writer.(io.WriteCloser).Close()
-	}
-}
-
 func (c *Controller) Redirect(url string, code int) {
 	c.Ctx.Redirect(code, url)
 }
@@ -216,63 +178,37 @@ func (c *Controller) Abort(code string) {
 }
 
 func (c *Controller) ServeJson(encoding ...bool) {
-	var content []byte
-	var err error
+	var hasIndent bool
+	var hasencoding bool
 	if RunMode == "prod" {
-		content, err = json.Marshal(c.Data["json"])
+		hasIndent = false
 	} else {
-		content, err = json.MarshalIndent(c.Data["json"], "", "  ")
+		hasIndent = true
 	}
-	if err != nil {
-		http.Error(c.Ctx.ResponseWriter, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	c.Ctx.ResponseWriter.Header().Set("Content-Type", "application/json;charset=UTF-8")
 	if len(encoding) > 0 && encoding[0] == true {
-		content = []byte(stringsToJson(string(content)))
+		hasencoding = true
 	}
-	c.writeToWriter(content)
+	c.Ctx.Output.Json(c.Data["json"], hasIndent, hasencoding)
 }
 
 func (c *Controller) ServeJsonp() {
-	var content []byte
-	var err error
+	var hasIndent bool
 	if RunMode == "prod" {
-		content, err = json.Marshal(c.Data["jsonp"])
+		hasIndent = false
 	} else {
-		content, err = json.MarshalIndent(c.Data["jsonp"], "", "  ")
+		hasIndent = true
 	}
-	if err != nil {
-		http.Error(c.Ctx.ResponseWriter, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	callback := c.Ctx.Request.Form.Get("callback")
-	if callback == "" {
-		http.Error(c.Ctx.ResponseWriter, `"callback" parameter required`, http.StatusInternalServerError)
-		return
-	}
-	callback_content := bytes.NewBufferString(callback)
-	callback_content.WriteString("(")
-	callback_content.Write(content)
-	callback_content.WriteString(");\r\n")
-	c.Ctx.ResponseWriter.Header().Set("Content-Type", "application/javascript;charset=UTF-8")
-	c.writeToWriter(callback_content.Bytes())
+	c.Ctx.Output.Jsonp(c.Data["jsonp"], hasIndent)
 }
 
 func (c *Controller) ServeXml() {
-	var content []byte
-	var err error
+	var hasIndent bool
 	if RunMode == "prod" {
-		content, err = xml.Marshal(c.Data["xml"])
+		hasIndent = false
 	} else {
-		content, err = xml.MarshalIndent(c.Data["xml"], "", "  ")
+		hasIndent = true
 	}
-	if err != nil {
-		http.Error(c.Ctx.ResponseWriter, err.Error(), http.StatusInternalServerError)
-		return
-	}
-	c.Ctx.ResponseWriter.Header().Set("Content-Type", "application/xml;charset=UTF-8")
-	c.writeToWriter(content)
+	c.Ctx.Output.Xml(c.Data["xml"], hasIndent)
 }
 
 func (c *Controller) Input() url.Values {
@@ -311,6 +247,10 @@ func (c *Controller) GetInt(key string) (int64, error) {
 
 func (c *Controller) GetBool(key string) (bool, error) {
 	return strconv.ParseBool(c.Input().Get(key))
+}
+
+func (c *Controller) GetFloat(key string) (float64, error) {
+	return strconv.ParseFloat(c.Input().Get(key), 64)
 }
 
 func (c *Controller) GetFile(key string) (multipart.File, *multipart.FileHeader, error) {
@@ -365,7 +305,7 @@ func (c *Controller) DestroySession() {
 }
 
 func (c *Controller) IsAjax() bool {
-	return (c.Ctx.Request.Header.Get("HTTP_X_REQUESTED_WITH") == "XMLHttpRequest")
+	return c.Ctx.Input.IsAjax()
 }
 
 func (c *Controller) XsrfToken() string {

@@ -17,7 +17,7 @@ import (
 )
 
 type BeegoOutput struct {
-	context    *Context
+	Context    *Context
 	Status     int
 	EnableGzip bool
 	res        http.ResponseWriter
@@ -35,8 +35,8 @@ func (output *BeegoOutput) Header(key, val string) {
 
 func (output *BeegoOutput) Body(content []byte) {
 	output_writer := output.res.(io.Writer)
-	if output.EnableGzip == true && output.context.Input.Header("Accept-Encoding") != "" {
-		splitted := strings.SplitN(output.context.Input.Header("Accept-Encoding"), ",", -1)
+	if output.EnableGzip == true && output.Context.Input.Header("Accept-Encoding") != "" {
+		splitted := strings.SplitN(output.Context.Input.Header("Accept-Encoding"), ",", -1)
 		encodings := make([]string, len(splitted))
 
 		for i, val := range splitted {
@@ -120,23 +120,40 @@ func sanitizeValue(v string) string {
 	return cookieValueSanitizer.Replace(v)
 }
 
-func (output *BeegoOutput) Json(data string) error {
+func (output *BeegoOutput) Json(data interface{}, hasIndent bool, coding bool) error {
 	output.Header("Content-Type", "application/json;charset=UTF-8")
-	content, err := json.Marshal(data)
+	var content []byte
+	var err error
+	if hasIndent {
+		content, err = json.MarshalIndent(data, "", "  ")
+	} else {
+		content, err = json.Marshal(data)
+	}
 	if err != nil {
+		http.Error(output.res, err.Error(), http.StatusInternalServerError)
 		return err
+	}
+	if coding {
+		content = []byte(stringsToJson(string(content)))
 	}
 	output.Body(content)
 	return nil
 }
 
-func (output *BeegoOutput) Jsonp(data string) error {
+func (output *BeegoOutput) Jsonp(data interface{}, hasIndent bool) error {
 	output.Header("Content-Type", "application/javascript;charset=UTF-8")
-	content, err := json.Marshal(data)
+	var content []byte
+	var err error
+	if hasIndent {
+		content, err = json.MarshalIndent(data, "", "  ")
+	} else {
+		content, err = json.Marshal(data)
+	}
 	if err != nil {
+		http.Error(output.res, err.Error(), http.StatusInternalServerError)
 		return err
 	}
-	callback := output.context.Input.Query("callback")
+	callback := output.Context.Input.Query("callback")
 	if callback == "" {
 		return errors.New(`"callback" parameter required`)
 	}
@@ -148,10 +165,17 @@ func (output *BeegoOutput) Jsonp(data string) error {
 	return nil
 }
 
-func (output *BeegoOutput) Xml(data string) error {
+func (output *BeegoOutput) Xml(data string, hasIndent bool) error {
 	output.Header("Content-Type", "application/xml;charset=UTF-8")
-	content, err := xml.Marshal(data)
+	var content []byte
+	var err error
+	if hasIndent {
+		content, err = xml.MarshalIndent(data, "", "  ")
+	} else {
+		content, err = xml.Marshal(data)
+	}
 	if err != nil {
+		http.Error(output.res, err.Error(), http.StatusInternalServerError)
 		return err
 	}
 	output.Body(content)
@@ -166,7 +190,7 @@ func (output *BeegoOutput) Download(file string) {
 	output.Header("Expires", "0")
 	output.Header("Cache-Control", "must-revalidate")
 	output.Header("Pragma", "public")
-	http.ServeFile(output.res, output.context.Request, file)
+	http.ServeFile(output.res, output.Context.Request, file)
 }
 
 func (output *BeegoOutput) ContentType(ext string) {
@@ -218,4 +242,18 @@ func (output *BeegoOutput) IsClientError(status int) bool {
 
 func (output *BeegoOutput) IsServerError(status int) bool {
 	return output.Status >= 500 && output.Status < 600
+}
+
+func stringsToJson(str string) string {
+	rs := []rune(str)
+	jsons := ""
+	for _, r := range rs {
+		rint := int(r)
+		if rint < 128 {
+			jsons += string(r)
+		} else {
+			jsons += "\\u" + strconv.FormatInt(int64(rint), 16) // json
+		}
+	}
+	return jsons
 }
