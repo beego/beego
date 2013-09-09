@@ -479,15 +479,19 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 	ind := reflect.Indirect(val)
 
 	errTyp := true
-
 	one := true
+	isPtr := true
 
 	if val.Kind() == reflect.Ptr {
 		fn := ""
 		if ind.Kind() == reflect.Slice {
 			one = false
-			if ind.Type().Elem().Kind() == reflect.Ptr {
-				typ := ind.Type().Elem().Elem()
+			typ := ind.Type().Elem()
+			switch typ.Kind() {
+			case reflect.Ptr:
+				fn = getFullName(typ.Elem())
+			case reflect.Struct:
+				isPtr = false
 				fn = getFullName(typ)
 			}
 		} else {
@@ -601,13 +605,21 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 			if one {
 				ind.Set(mind)
 			} else {
-				slice = reflect.Append(slice, mind.Addr())
+				if cnt == 0 {
+					slice = reflect.New(ind.Type()).Elem()
+				}
+
+				if isPtr {
+					slice = reflect.Append(slice, mind.Addr())
+				} else {
+					slice = reflect.Append(slice, mind)
+				}
 			}
 		}
 		cnt++
 	}
 
-	if one == false {
+	if one == false && cnt > 0 {
 		ind.Set(slice)
 	}
 

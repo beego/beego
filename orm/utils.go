@@ -115,6 +115,8 @@ func ToStr(value interface{}, args ...int) (s string) {
 		s = strconv.FormatUint(v, argInt(args).Get(0, 10))
 	case string:
 		s = v
+	case []byte:
+		s = string(v)
 	default:
 		s = fmt.Sprintf("%v", v)
 	}

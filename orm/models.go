@@ -5,11 +5,12 @@ import (
 )
 
 const (
-	od_CASCADE           = "cascade"
-	od_SET_NULL          = "set_null"
-	od_SET_DEFAULT       = "set_default"
-	od_DO_NOTHING        = "do_nothing"
-	defaultStructTagName = "orm"
+	od_CASCADE            = "cascade"
+	od_SET_NULL           = "set_null"
+	od_SET_DEFAULT        = "set_default"
+	od_DO_NOTHING         = "do_nothing"
+	defaultStructTagName  = "orm"
+	defaultStructTagDelim = ";"
 )
 
 var (

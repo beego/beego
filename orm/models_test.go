@@ -16,7 +16,7 @@ type Data struct {
 	Char     string    `orm:"size(50)"`
 	Text     string    `orm:"type(text)"`
 	Date     time.Time `orm:"type(date)"`
-	DateTime time.Time
+	DateTime time.Time `orm:"column(datetime)"`
 	Byte     byte
 	Rune     rune
 	Int      int
@@ -37,10 +37,10 @@ type Data struct {
 type DataNull struct {
 	Id       int
 	Boolean  bool      `orm:"null"`
-	Char     string    `orm:"size(50);null"`
-	Text     string    `orm:"type(text);null"`
-	Date     time.Time `orm:"type(date);null"`
-	DateTime time.Time `orm:"null"`
+	Char     string    `orm:"null;size(50)"`
+	Text     string    `orm:"null;type(text)"`
+	Date     time.Time `orm:"null;type(date)"`
+	DateTime time.Time `orm:"null;column(datetime)""`
 	Byte     byte      `orm:"null"`
 	Rune     rune      `orm:"null"`
 	Int      int       `orm:"null"`
@@ -174,7 +174,10 @@ var (
 	IsPostgres = DBARGS.Driver == "postgres"
 )
 
-var dORM Ormer
+var (
+	dORM     Ormer
+	dDbBaser dbBaser
+)
 
 func init() {
 	Debug, _ = StrTo(DBARGS.Debug).Bool()

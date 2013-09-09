@@ -216,6 +216,7 @@ func TestRegisterModels(t *testing.T) {
 	BootStrap()
 
 	dORM = NewOrm()
+	dDbBaser = getDbAlias("default").DbBaser
 }
 
 func TestModelSyntax(t *testing.T) {
@@ -629,9 +630,23 @@ func TestOperators(t *testing.T) {
 func TestAll(t *testing.T) {
 	var users []*User
 	qs := dORM.QueryTable("user")
-	num, err := qs.All(&users)
+	num, err := qs.OrderBy("Id").All(&users)
 	throwFail(t, err)
-	throwFail(t, AssertIs(num, T_Equal, 3))
+	throwFailNow(t, AssertIs(num, T_Equal, 3))
+
+	throwFail(t, AssertIs(users[0].UserName, T_Equal, "slene"))
+	throwFail(t, AssertIs(users[1].UserName, T_Equal, "astaxie"))
+	throwFail(t, AssertIs(users[2].UserName, T_Equal, "nobody"))
+
+	var users2 []User
+	qs = dORM.QueryTable("user")
+	num, err = qs.OrderBy("Id").All(&users2)
+	throwFail(t, err)
+	throwFailNow(t, AssertIs(num, T_Equal, 3))
+
+	throwFailNow(t, AssertIs(users2[0].UserName, T_Equal, "slene"))
+	throwFailNow(t, AssertIs(users2[1].UserName, T_Equal, "astaxie"))
+	throwFailNow(t, AssertIs(users2[2].UserName, T_Equal, "nobody"))
 
 	qs = dORM.QueryTable("user")
 	num, err = qs.Filter("user_name", "nothing").All(&users)
@@ -645,8 +660,14 @@ func TestOne(t *testing.T) {
 	err := qs.One(&user)
 	throwFail(t, AssertIs(err, T_Equal, ErrMultiRows))
 
+	user = User{}
+	err = qs.OrderBy("Id").Limit(1).One(&user)
+	throwFailNow(t, err)
+	throwFail(t, AssertIs(user.UserName, T_Equal, "slene"))
+
 	err = qs.Filter("user_name", "nothing").One(&user)
 	throwFail(t, AssertIs(err, T_Equal, ErrNoRows))
+
 }
 
 func TestValues(t *testing.T) {
@@ -836,91 +857,305 @@ func TestPrepareInsert(t *testing.T) {
 	throwFail(t, AssertIs(err, T_Equal, ErrStmtClosed))
 }
 
-func TestRawQueryRow(t *testing.T) {
+func TestRawExec(t *testing.T) {
+	Q := dDbBaser.TableQuote()
 
+	query := fmt.Sprintf("UPDATE %suser%s SET %suser_name%s = ? WHERE %suser_name%s = ?", Q, Q, Q, Q, Q, Q)
+	res, err := dORM.Raw(query, "testing", "slene").Exec()
+	throwFail(t, err)
+	num, err := res.RowsAffected()
+	throwFail(t, AssertIs(num, T_Equal, 1), err)
+
+	res, err = dORM.Raw(query, "slene", "testing").Exec()
+	throwFail(t, err)
+	num, err = res.RowsAffected()
+	throwFail(t, AssertIs(num, T_Equal, 1), err)
 }
 
-func TestRawQueryRows(t *testing.T) {
+func TestRawQueryRow(t *testing.T) {
+	var (
+		Boolean  bool
+		Char     string
+		Text     string
+		Date     time.Time
+		DateTime time.Time
+		Byte     byte
+		Rune     rune
+		Int      int
+		Int8     int
+		Int16    int16
+		Int32    int32
+		Int64    int64
+		Uint     uint
+		Uint8    uint8
+		Uint16   uint16
+		Uint32   uint32
+		Uint64   uint64
+		Float32  float32
+		Float64  float64
+		Decimal  float64
+	)
 
+	data_values := make(map[string]interface{}, len(Data_Values))
+
+	for k, v := range Data_Values {
+		data_values[strings.ToLower(k)] = v
+	}
+
+	Q := dDbBaser.TableQuote()
+
+	cols := []string{
+		"id", "boolean", "char", "text", "date", "datetime", "byte", "rune", "int", "int8", "int16", "int32",
+		"int64", "uint", "uint8", "uint16", "uint32", "uint64", "float32", "float64", "decimal",
+	}
+	sep := fmt.Sprintf("%s, %s", Q, Q)
+	query := fmt.Sprintf("SELECT %s%s%s FROM data WHERE id = ?", Q, strings.Join(cols, sep), Q)
+	var id int
+	values := []interface{}{
+		&id, &Boolean, &Char, &Text, &Date, &DateTime, &Byte, &Rune, &Int, &Int8, &Int16, &Int32,
+		&Int64, &Uint, &Uint8, &Uint16, &Uint32, &Uint64, &Float32, &Float64, &Decimal,
+	}
+	err := dORM.Raw(query, 1).QueryRow(values...)
+	throwFailNow(t, err)
+	for i, col := range cols {
+		vu := values[i]
+		v := reflect.ValueOf(vu).Elem().Interface()
+		switch col {
+		case "id":
+			throwFail(t, AssertIs(id, T_Equal, 1))
+		case "date":
+			v = v.(time.Time).In(DefaultTimeLoc)
+			value := data_values[col].(time.Time).In(DefaultTimeLoc)
+			throwFail(t, AssertIs(v, T_Equal, value, test_Date))
+		case "datetime":
+			v = v.(time.Time).In(DefaultTimeLoc)
+			value := data_values[col].(time.Time).In(DefaultTimeLoc)
+			throwFail(t, AssertIs(v, T_Equal, value, test_DateTime))
+		default:
+			throwFail(t, AssertIs(v, T_Equal, data_values[col]))
+		}
+	}
+
+	type Tmp struct {
+		Skip0    string
+		Id       int
+		Char     *string
+		Skip1    int `orm:"-"`
+		Date     time.Time
+		DateTime time.Time
+	}
+
+	Boolean = false
+	Text = ""
+	Int64 = 0
+	Uint = 0
+
+	tmp := new(Tmp)
+
+	cols = []string{
+		"int", "char", "date", "datetime", "boolean", "text", "int64", "uint",
+	}
+	query = fmt.Sprintf("SELECT NULL, %s%s%s FROM data WHERE id = ?", Q, strings.Join(cols, sep), Q)
+	values = []interface{}{
+		tmp, &Boolean, &Text, &Int64, &Uint,
+	}
+	err = dORM.Raw(query, 1).QueryRow(values...)
+	throwFailNow(t, err)
+
+	for _, col := range cols {
+		switch col {
+		case "id":
+			throwFail(t, AssertIs(tmp.Id, T_Equal, data_values[col]))
+		case "char":
+			c := tmp.Char
+			throwFail(t, AssertIs(*c, T_Equal, data_values[col]))
+		case "date":
+			v := tmp.Date.In(DefaultTimeLoc)
+			value := data_values[col].(time.Time).In(DefaultTimeLoc)
+			throwFail(t, AssertIs(v, T_Equal, value, test_Date))
+		case "datetime":
+			v := tmp.DateTime.In(DefaultTimeLoc)
+			value := data_values[col].(time.Time).In(DefaultTimeLoc)
+			throwFail(t, AssertIs(v, T_Equal, value, test_DateTime))
+		case "boolean":
+			throwFail(t, AssertIs(Boolean, T_Equal, data_values[col]))
+		case "text":
+			throwFail(t, AssertIs(Text, T_Equal, data_values[col]))
+		case "int64":
+			throwFail(t, AssertIs(Int64, T_Equal, data_values[col]))
+		case "uint":
+			throwFail(t, AssertIs(Uint, T_Equal, data_values[col]))
+		}
+	}
+
+	var (
+		uid    int
+		status *int
+		pid    *int
+	)
+
+	cols = []string{
+		"id", "status", "profile_id",
+	}
+	query = fmt.Sprintf("SELECT %s%s%s FROM %suser%s WHERE id = ?", Q, strings.Join(cols, sep), Q, Q, Q)
+	err = dORM.Raw(query, 4).QueryRow(&uid, &status, &pid)
+	throwFail(t, err)
+	throwFail(t, AssertIs(uid, T_Equal, 4))
+	throwFail(t, AssertIs(*status, T_Equal, 3))
+	throwFail(t, AssertIs(pid, T_Equal, nil))
+}
+
+func TestQueryRows(t *testing.T) {
+	Q := dDbBaser.TableQuote()
+
+	cols := []string{
+		"id", "boolean", "char", "text", "date", "datetime", "byte", "rune", "int", "int8", "int16", "int32",
+		"int64", "uint", "uint8", "uint16", "uint32", "uint64", "float32", "float64", "decimal",
+	}
+
+	var datas []*Data
+	var dids []int
+
+	sep := fmt.Sprintf("%s, %s", Q, Q)
+	query := fmt.Sprintf("SELECT %s%s%s, id FROM %sdata%s", Q, strings.Join(cols, sep), Q, Q, Q)
+	num, err := dORM.Raw(query).QueryRows(&datas, &dids)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, T_Equal, 1))
+	throwFailNow(t, AssertIs(len(datas), T_Equal, 1))
+	throwFailNow(t, AssertIs(len(dids), T_Equal, 1))
+	throwFailNow(t, AssertIs(dids[0], T_Equal, 1))
+
+	ind := reflect.Indirect(reflect.ValueOf(datas[0]))
+
+	for name, value := range Data_Values {
+		e := ind.FieldByName(name)
+		vu := e.Interface()
+		switch name {
+		case "Date":
+			vu = vu.(time.Time).In(DefaultTimeLoc).Format(test_Date)
+			value = value.(time.Time).In(DefaultTimeLoc).Format(test_Date)
+		case "DateTime":
+			vu = vu.(time.Time).In(DefaultTimeLoc).Format(test_DateTime)
+			value = value.(time.Time).In(DefaultTimeLoc).Format(test_DateTime)
+		}
+		throwFail(t, AssertIs(vu == value, T_Equal, true), value, vu)
+	}
+
+	type Tmp struct {
+		Id      int
+		Name    string
+		Skiped0 string `orm:"-"`
+		Pid     *int
+		Skiped1 Data
+		Skiped2 *Data
+	}
+
+	var (
+		ids         []int
+		userNames   []string
+		profileIds1 []int
+		profileIds2 []*int
+		createds    []time.Time
+		updateds    []time.Time
+		tmps1       []*Tmp
+		tmps2       []Tmp
+	)
+	cols = []string{
+		"id", "user_name", "profile_id", "profile_id", "id", "user_name", "profile_id", "id", "user_name", "profile_id", "created", "updated",
+	}
+	query = fmt.Sprintf("SELECT %s%s%s FROM %suser%s ORDER BY id", Q, strings.Join(cols, sep), Q, Q, Q)
+	num, err = dORM.Raw(query).QueryRows(&ids, &userNames, &profileIds1, &profileIds2, &tmps1, &tmps2, &createds, &updateds)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, T_Equal, 3))
+
+	var users []User
+	dORM.QueryTable("user").OrderBy("Id").All(&users)
+
+	for i := 0; i < 3; i++ {
+		id := ids[i]
+		name := userNames[i]
+		pid1 := profileIds1[i]
+		pid2 := profileIds2[i]
+		created := createds[i]
+		updated := updateds[i]
+
+		user := users[i]
+		throwFailNow(t, AssertIs(id, T_Equal, user.Id))
+		throwFailNow(t, AssertIs(name, T_Equal, user.UserName))
+		if user.Profile != nil {
+			throwFailNow(t, AssertIs(pid1, T_Equal, user.Profile.Id))
+			throwFailNow(t, AssertIs(*pid2, T_Equal, user.Profile.Id))
+		} else {
+			throwFailNow(t, AssertIs(pid1, T_Equal, 0))
+			throwFailNow(t, AssertIs(pid2, T_Equal, nil))
+		}
+		throwFailNow(t, AssertIs(created, T_Equal, user.Created, test_Date))
+		throwFailNow(t, AssertIs(updated, T_Equal, user.Updated, test_DateTime))
+
+		tmp := tmps1[i]
+		tmp1 := *tmp
+		throwFailNow(t, AssertIs(tmp1.Id, T_Equal, user.Id))
+		throwFailNow(t, AssertIs(tmp1.Name, T_Equal, user.UserName))
+		if user.Profile != nil {
+			pid := tmp1.Pid
+			throwFailNow(t, AssertIs(*pid, T_Equal, user.Profile.Id))
+		} else {
+			throwFailNow(t, AssertIs(tmp1.Pid, T_Equal, nil))
+		}
+
+		tmp2 := tmps2[i]
+		throwFailNow(t, AssertIs(tmp2.Id, T_Equal, user.Id))
+		throwFailNow(t, AssertIs(tmp2.Name, T_Equal, user.UserName))
+		if user.Profile != nil {
+			pid := tmp2.Pid
+			throwFailNow(t, AssertIs(*pid, T_Equal, user.Profile.Id))
+		} else {
+			throwFailNow(t, AssertIs(tmp2.Pid, T_Equal, nil))
+		}
+	}
+
+	type Sec struct {
+		Id   int
+		Name string
+	}
+
+	var tmp []*Sec
+	query = fmt.Sprintf("SELECT NULL, NULL FROM %suser%s LIMIT 1", Q, Q)
+	num, err = dORM.Raw(query).QueryRows(&tmp)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, T_Equal, 1))
+	throwFail(t, AssertIs(tmp[0], T_Equal, nil))
 }
 
 func TestRawValues(t *testing.T) {
-	switch {
-	case IsMysql || IsSqlite:
+	Q := dDbBaser.TableQuote()
 
-		res, err := dORM.Raw("UPDATE user SET user_name = ? WHERE user_name = ?", "testing", "slene").Exec()
-		throwFail(t, err)
-		num, err := res.RowsAffected()
-		throwFail(t, AssertIs(num, T_Equal, 1), err)
+	var maps []Params
+	query := fmt.Sprintf("SELECT %suser_name%s FROM %suser%s WHERE %sstatus%s = ?", Q, Q, Q, Q, Q, Q)
+	num, err := dORM.Raw(query, 1).Values(&maps)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, T_Equal, 1))
+	if num == 1 {
+		throwFail(t, AssertIs(maps[0]["user_name"], T_Equal, "slene"))
+	}
 
-		res, err = dORM.Raw("UPDATE user SET user_name = ? WHERE user_name = ?", "slene", "testing").Exec()
-		throwFail(t, err)
-		num, err = res.RowsAffected()
-		throwFail(t, AssertIs(num, T_Equal, 1), err)
+	var lists []ParamsList
+	num, err = dORM.Raw(query, 1).ValuesList(&lists)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, T_Equal, 1))
+	if num == 1 {
+		throwFail(t, AssertIs(lists[0][0], T_Equal, "slene"))
+	}
 
-		var maps []Params
-		num, err = dORM.Raw("SELECT user_name FROM user WHERE status = ?", 1).Values(&maps)
-		throwFail(t, err)
-		throwFail(t, AssertIs(num, T_Equal, 1))
-		if num == 1 {
-			throwFail(t, AssertIs(maps[0]["user_name"], T_Equal, "slene"))
-		}
-
-		var lists []ParamsList
-		num, err = dORM.Raw("SELECT user_name FROM user WHERE status = ?", 1).ValuesList(&lists)
-		throwFail(t, err)
-		throwFail(t, AssertIs(num, T_Equal, 1))
-		if num == 1 {
-			throwFail(t, AssertIs(lists[0][0], T_Equal, "slene"))
-		}
-
-		var list ParamsList
-		num, err = dORM.Raw("SELECT profile_id FROM user ORDER BY id ASC").ValuesFlat(&list)
-		throwFail(t, err)
-		throwFail(t, AssertIs(num, T_Equal, 3))
-		if num == 3 {
-			throwFail(t, AssertIs(list[0], T_Equal, "2"))
-			throwFail(t, AssertIs(list[1], T_Equal, "3"))
-			throwFail(t, AssertIs(list[2], T_Equal, nil))
-		}
-
-	case IsPostgres:
-
-		res, err := dORM.Raw(`UPDATE "user" SET "user_name" = ? WHERE "user_name" = ?`, "testing", "slene").Exec()
-		throwFail(t, err)
-		num, err := res.RowsAffected()
-		throwFail(t, AssertIs(num, T_Equal, 1), err)
-
-		res, err = dORM.Raw(`UPDATE "user" SET "user_name" = ? WHERE "user_name" = ?`, "slene", "testing").Exec()
-		throwFail(t, err)
-		num, err = res.RowsAffected()
-		throwFail(t, AssertIs(num, T_Equal, 1), err)
-
-		var maps []Params
-		num, err = dORM.Raw(`SELECT "user_name" FROM "user" WHERE "status" = ?`, 1).Values(&maps)
-		throwFail(t, err)
-		throwFail(t, AssertIs(num, T_Equal, 1))
-		if num == 1 {
-			throwFail(t, AssertIs(maps[0]["user_name"], T_Equal, "slene"))
-		}
-
-		var lists []ParamsList
-		num, err = dORM.Raw(`SELECT "user_name" FROM "user" WHERE "status" = ?`, 1).ValuesList(&lists)
-		throwFail(t, err)
-		throwFail(t, AssertIs(num, T_Equal, 1))
-		if num == 1 {
-			throwFail(t, AssertIs(lists[0][0], T_Equal, "slene"))
-		}
-
-		var list ParamsList
-		num, err = dORM.Raw(`SELECT "profile_id" FROM "user" ORDER BY id ASC`).ValuesFlat(&list)
-		throwFail(t, err)
-		throwFail(t, AssertIs(num, T_Equal, 3))
-		if num == 3 {
-			throwFail(t, AssertIs(list[0], T_Equal, "2"))
-			throwFail(t, AssertIs(list[1], T_Equal, "3"))
-			throwFail(t, AssertIs(list[2], T_Equal, nil))
-		}
+	query = fmt.Sprintf("SELECT %sprofile_id%s FROM %suser%s ORDER BY %sid%s ASC", Q, Q, Q, Q, Q, Q)
+	var list ParamsList
+	num, err = dORM.Raw(query).ValuesFlat(&list)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, T_Equal, 3))
+	if num == 3 {
+		throwFail(t, AssertIs(list[0], T_Equal, "2"))
+		throwFail(t, AssertIs(list[1], T_Equal, "3"))
+		throwFail(t, AssertIs(list[2], T_Equal, nil))
 	}
 }
 

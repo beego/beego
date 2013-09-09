@@ -114,7 +114,7 @@ func getFieldType(val reflect.Value) (ft int, err error) {
 func parseStructTag(data string, attrs *map[string]bool, tags *map[string]string) {
 	attr := make(map[string]bool)
 	tag := make(map[string]string)
-	for _, v := range strings.Split(data, ";") {
+	for _, v := range strings.Split(data, defaultStructTagDelim) {
 		v = strings.TrimSpace(v)
 		if supportTag[v] == 1 {
 			attr[v] = true
