@@ -1,6 +1,8 @@
 package beego
 
 import (
+	"strings"
+
 	"github.com/astaxie/beego/logs"
 )
 
@@ -35,30 +37,34 @@ func SetLogger(adaptername string, config string) {
 
 // Trace logs a message at trace level.
 func Trace(v ...interface{}) {
-	BeeLogger.Trace("%v", v...)
+	BeeLogger.Trace(generateFmtStr(len(v)), v...)
 }
 
 // Debug logs a message at debug level.
 func Debug(v ...interface{}) {
-	BeeLogger.Debug("%v", v...)
+	BeeLogger.Debug(generateFmtStr(len(v)), v...)
 }
 
 // Info logs a message at info level.
 func Info(v ...interface{}) {
-	BeeLogger.Info("%v", v...)
+	BeeLogger.Info(generateFmtStr(len(v)), v...)
 }
 
 // Warning logs a message at warning level.
 func Warn(v ...interface{}) {
-	BeeLogger.Warn("%v", v...)
+	BeeLogger.Warn(generateFmtStr(len(v)), v...)
 }
 
 // Error logs a message at error level.
 func Error(v ...interface{}) {
-	BeeLogger.Error("%v", v...)
+	BeeLogger.Error(generateFmtStr(len(v)), v...)
 }
 
 // Critical logs a message at critical level.
 func Critical(v ...interface{}) {
-	BeeLogger.Critical("%v", v...)
+	BeeLogger.Critical(generateFmtStr(len(v)), v...)
+}
+
+func generateFmtStr(n int) string {
+	return strings.Repeat("%v ", n)
 }
