@@ -165,7 +165,7 @@ func (output *BeegoOutput) Jsonp(data interface{}, hasIndent bool) error {
 	return nil
 }
 
-func (output *BeegoOutput) Xml(data string, hasIndent bool) error {
+func (output *BeegoOutput) Xml(data interface{}, hasIndent bool) error {
 	output.Header("Content-Type", "application/xml;charset=UTF-8")
 	var content []byte
 	var err error
