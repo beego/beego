@@ -85,7 +85,7 @@ func init() {
 }
 
 func ParseConfig() (err error) {
-	AppConfig, err := config.NewConfig("ini", AppConfigPath)
+	AppConfig, err = config.NewConfig("ini", AppConfigPath)
 	if err != nil {
 		return err
 	} else {
