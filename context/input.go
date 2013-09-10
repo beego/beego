@@ -74,6 +74,10 @@ func (input *BeegoInput) IsSecure() bool {
 	return input.Scheme() == "https"
 }
 
+func (input *BeegoInput) IsWebsocket() bool {
+	return input.Header("Upgrade") == "websocket"
+}
+
 func (input *BeegoInput) IsUpload() bool {
 	return input.req.MultipartForm != nil
 }
