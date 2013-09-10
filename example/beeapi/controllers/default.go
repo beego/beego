@@ -12,7 +12,7 @@ type ObjectController struct {
 
 func (this *ObjectController) Post() {
 	var ob models.Object
-	json.Unmarshal(this.Ctx.RequestBody, &ob)
+	json.Unmarshal(this.Ctx.Input.RequestBody, &ob)
 	objectid := models.AddOne(ob)
 	this.Data["json"] = map[string]string{"ObjectId": objectid}
 	this.ServeJson()
@@ -37,7 +37,7 @@ func (this *ObjectController) Get() {
 func (this *ObjectController) Put() {
 	objectId := this.Ctx.Params[":objectId"]
 	var ob models.Object
-	json.Unmarshal(this.Ctx.RequestBody, &ob)
+	json.Unmarshal(this.Ctx.Input.RequestBody, &ob)
 
 	err := models.Update(objectId, ob.Score)
 	if err != nil {
