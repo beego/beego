@@ -258,6 +258,12 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		Output:         beecontext.NewOutput(w),
 	}
 	context.Output.Context = context
+
+	if context.Input.IsWebsocket() {
+		context.ResponseWriter = rw
+		context.Output = beecontext.NewOutput(rw)
+	}
+
 	var runrouter *controllerInfo
 	var findrouter bool
 
@@ -516,7 +522,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 					panic("gotofunc is exists:" + gotofunc)
 				}
 			}
-			if !w.started {
+			if !w.started && !context.Input.IsWebsocket() {
 				if AutoRender {
 					method = vc.MethodByName("Render")
 					method.Call(in)
@@ -600,7 +606,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 									method.Call(in)
 								}
 							}
-							if !w.started {
+							if !w.started && !context.Input.IsWebsocket() {
 								if AutoRender {
 									method = vc.MethodByName("Render")
 									method.Call(in)
