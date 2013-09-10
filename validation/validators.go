@@ -7,10 +7,34 @@ import (
 	"time"
 )
 
+var MessageTmpls = map[string]string{
+	"Required":     "Can not be empty",
+	"Min":          "Minimum is %d",
+	"Max":          "Maximum is %d",
+	"Range":        "Range is %d to %d",
+	"MinSize":      "Minimum size is %d",
+	"MaxSize":      "Maximum size is %d",
+	"Length":       "Required length is %d",
+	"Alpha":        "Must be valid alpha characters",
+	"Numeric":      "Must be valid numeric characters",
+	"AlphaNumeric": "Must be valid alpha or numeric characters",
+	"Match":        "Must match %s",
+	"NoMatch":      "Must not match %s",
+	"AlphaDash":    "Must be valid alpha or numeric or dash(-_) characters",
+	"Email":        "Must be a valid email address",
+	"IP":           "Must be a valid ip address",
+	"Base64":       "Must be valid base64 characters",
+	"Mobile":       "Must be valid mobile number",
+	"Tel":          "Must be valid telephone number",
+	"Phone":        "Must be valid telephone or mobile phone number",
+	"ZipCode":      "Must be valid zipcode",
+}
+
 type Validator interface {
 	IsSatisfied(interface{}) bool
 	DefaultMessage() string
 	GetKey() string
+	GetLimitValue() interface{}
 }
 
 type Required struct {
@@ -49,6 +73,10 @@ func (r Required) GetKey() string {
 	return r.Key
 }
 
+func (r Required) GetLimitValue() interface{} {
+	return nil
+}
+
 type Min struct {
 	Min int
 	Key string
@@ -63,11 +91,15 @@ func (m Min) IsSatisfied(obj interface{}) bool {
 }
 
 func (m Min) DefaultMessage() string {
-	return fmt.Sprint("Minimum is ", m.Min)
+	return fmt.Sprintf(MessageTmpls["Min"], m.Min)
 }
 
 func (m Min) GetKey() string {
 	return m.Key
+}
+
+func (m Min) GetLimitValue() interface{} {
+	return m.Min
 }
 
 type Max struct {
@@ -84,11 +116,15 @@ func (m Max) IsSatisfied(obj interface{}) bool {
 }
 
 func (m Max) DefaultMessage() string {
-	return fmt.Sprint("Maximum is ", m.Max)
+	return fmt.Sprintf(MessageTmpls["Max"], m.Max)
 }
 
 func (m Max) GetKey() string {
 	return m.Key
+}
+
+func (m Max) GetLimitValue() interface{} {
+	return m.Max
 }
 
 // Requires an integer to be within Min, Max inclusive.
@@ -103,11 +139,15 @@ func (r Range) IsSatisfied(obj interface{}) bool {
 }
 
 func (r Range) DefaultMessage() string {
-	return fmt.Sprint("Range is ", r.Min.Min, " to ", r.Max.Max)
+	return fmt.Sprintf(MessageTmpls["Range"], r.Min.Min, r.Max.Max)
 }
 
 func (r Range) GetKey() string {
 	return r.Key
+}
+
+func (r Range) GetLimitValue() interface{} {
+	return []int{r.Min.Min, r.Max.Max}
 }
 
 // Requires an array or string to be at least a given length.
@@ -128,11 +168,15 @@ func (m MinSize) IsSatisfied(obj interface{}) bool {
 }
 
 func (m MinSize) DefaultMessage() string {
-	return fmt.Sprint("Minimum size is ", m.Min)
+	return fmt.Sprintf(MessageTmpls["MinSize"], m.Min)
 }
 
 func (m MinSize) GetKey() string {
 	return m.Key
+}
+
+func (m MinSize) GetLimitValue() interface{} {
+	return m.Min
 }
 
 // Requires an array or string to be at most a given length.
@@ -153,11 +197,15 @@ func (m MaxSize) IsSatisfied(obj interface{}) bool {
 }
 
 func (m MaxSize) DefaultMessage() string {
-	return fmt.Sprint("Maximum size is ", m.Max)
+	return fmt.Sprintf(MessageTmpls["MaxSize"], m.Max)
 }
 
 func (m MaxSize) GetKey() string {
 	return m.Key
+}
+
+func (m MaxSize) GetLimitValue() interface{} {
+	return m.Max
 }
 
 // Requires an array or string to be exactly a given length.
@@ -178,11 +226,15 @@ func (l Length) IsSatisfied(obj interface{}) bool {
 }
 
 func (l Length) DefaultMessage() string {
-	return fmt.Sprint("Required length is ", l.N)
+	return fmt.Sprintf(MessageTmpls["Length"], l.N)
 }
 
 func (l Length) GetKey() string {
 	return l.Key
+}
+
+func (l Length) GetLimitValue() interface{} {
+	return l.N
 }
 
 type Alpha struct {
@@ -202,11 +254,15 @@ func (a Alpha) IsSatisfied(obj interface{}) bool {
 }
 
 func (a Alpha) DefaultMessage() string {
-	return fmt.Sprint("Must be valid alpha characters")
+	return fmt.Sprint(MessageTmpls["Alpha"])
 }
 
 func (a Alpha) GetKey() string {
 	return a.Key
+}
+
+func (a Alpha) GetLimitValue() interface{} {
+	return nil
 }
 
 type Numeric struct {
@@ -226,11 +282,15 @@ func (n Numeric) IsSatisfied(obj interface{}) bool {
 }
 
 func (n Numeric) DefaultMessage() string {
-	return fmt.Sprint("Must be valid numeric characters")
+	return fmt.Sprint(MessageTmpls["Numeric"])
 }
 
 func (n Numeric) GetKey() string {
 	return n.Key
+}
+
+func (n Numeric) GetLimitValue() interface{} {
+	return nil
 }
 
 type AlphaNumeric struct {
@@ -250,11 +310,15 @@ func (a AlphaNumeric) IsSatisfied(obj interface{}) bool {
 }
 
 func (a AlphaNumeric) DefaultMessage() string {
-	return fmt.Sprint("Must be valid alpha or numeric characters")
+	return fmt.Sprint(MessageTmpls["AlphaNumeric"])
 }
 
 func (a AlphaNumeric) GetKey() string {
 	return a.Key
+}
+
+func (a AlphaNumeric) GetLimitValue() interface{} {
+	return nil
 }
 
 // Requires a string to match a given regex.
@@ -268,11 +332,15 @@ func (m Match) IsSatisfied(obj interface{}) bool {
 }
 
 func (m Match) DefaultMessage() string {
-	return fmt.Sprint("Must match ", m.Regexp)
+	return fmt.Sprintf(MessageTmpls["Match"], m.Regexp.String())
 }
 
 func (m Match) GetKey() string {
 	return m.Key
+}
+
+func (m Match) GetLimitValue() interface{} {
+	return m.Regexp.String()
 }
 
 // Requires a string to not match a given regex.
@@ -286,11 +354,15 @@ func (n NoMatch) IsSatisfied(obj interface{}) bool {
 }
 
 func (n NoMatch) DefaultMessage() string {
-	return fmt.Sprint("Must not match ", n.Regexp)
+	return fmt.Sprintf(MessageTmpls["NoMatch"], n.Regexp.String())
 }
 
 func (n NoMatch) GetKey() string {
 	return n.Key
+}
+
+func (n NoMatch) GetLimitValue() interface{} {
+	return n.Regexp.String()
 }
 
 var alphaDashPattern = regexp.MustCompile("[^\\d\\w-_]")
@@ -301,11 +373,15 @@ type AlphaDash struct {
 }
 
 func (a AlphaDash) DefaultMessage() string {
-	return fmt.Sprint("Must be valid alpha or numeric or dash(-_) characters")
+	return fmt.Sprint(MessageTmpls["AlphaDash"])
 }
 
 func (a AlphaDash) GetKey() string {
 	return a.Key
+}
+
+func (a AlphaDash) GetLimitValue() interface{} {
+	return nil
 }
 
 var emailPattern = regexp.MustCompile("[\\w!#$%&'*+/=?^_`{|}~-]+(?:\\.[\\w!#$%&'*+/=?^_`{|}~-]+)*@(?:[\\w](?:[\\w-]*[\\w])?\\.)+[a-zA-Z0-9](?:[\\w-]*[\\w])?")
@@ -316,11 +392,15 @@ type Email struct {
 }
 
 func (e Email) DefaultMessage() string {
-	return fmt.Sprint("Must be a valid email address")
+	return fmt.Sprint(MessageTmpls["Email"])
 }
 
 func (e Email) GetKey() string {
 	return e.Key
+}
+
+func (e Email) GetLimitValue() interface{} {
+	return nil
 }
 
 var ipPattern = regexp.MustCompile("^((2[0-4]\\d|25[0-5]|[01]?\\d\\d?)\\.){3}(2[0-4]\\d|25[0-5]|[01]?\\d\\d?)$")
@@ -331,11 +411,15 @@ type IP struct {
 }
 
 func (i IP) DefaultMessage() string {
-	return fmt.Sprint("Must be a valid ip address")
+	return fmt.Sprint(MessageTmpls["IP"])
 }
 
 func (i IP) GetKey() string {
 	return i.Key
+}
+
+func (i IP) GetLimitValue() interface{} {
+	return nil
 }
 
 var base64Pattern = regexp.MustCompile("^(?:[A-Za-z0-99+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$")
@@ -346,11 +430,15 @@ type Base64 struct {
 }
 
 func (b Base64) DefaultMessage() string {
-	return fmt.Sprint("Must be valid base64 characters")
+	return fmt.Sprint(MessageTmpls["Base64"])
 }
 
 func (b Base64) GetKey() string {
 	return b.Key
+}
+
+func (b Base64) GetLimitValue() interface{} {
+	return nil
 }
 
 // just for chinese mobile phone number
@@ -362,11 +450,15 @@ type Mobile struct {
 }
 
 func (m Mobile) DefaultMessage() string {
-	return fmt.Sprint("Must be valid mobile number")
+	return fmt.Sprint(MessageTmpls["Mobile"])
 }
 
 func (m Mobile) GetKey() string {
 	return m.Key
+}
+
+func (m Mobile) GetLimitValue() interface{} {
+	return nil
 }
 
 // just for chinese telephone number
@@ -378,11 +470,15 @@ type Tel struct {
 }
 
 func (t Tel) DefaultMessage() string {
-	return fmt.Sprint("Must be valid telephone number")
+	return fmt.Sprint(MessageTmpls["Tel"])
 }
 
 func (t Tel) GetKey() string {
 	return t.Key
+}
+
+func (t Tel) GetLimitValue() interface{} {
+	return nil
 }
 
 // just for chinese telephone or mobile phone number
@@ -397,11 +493,15 @@ func (p Phone) IsSatisfied(obj interface{}) bool {
 }
 
 func (p Phone) DefaultMessage() string {
-	return fmt.Sprint("Must be valid telephone or mobile phone number")
+	return fmt.Sprint(MessageTmpls["Phone"])
 }
 
 func (p Phone) GetKey() string {
 	return p.Key
+}
+
+func (p Phone) GetLimitValue() interface{} {
+	return nil
 }
 
 // just for chinese zipcode
@@ -413,9 +513,13 @@ type ZipCode struct {
 }
 
 func (z ZipCode) DefaultMessage() string {
-	return fmt.Sprint("Must be valid zipcode")
+	return fmt.Sprint(MessageTmpls["ZipCode"])
 }
 
 func (z ZipCode) GetKey() string {
 	return z.Key
+}
+
+func (z ZipCode) GetLimitValue() interface{} {
+	return nil
 }

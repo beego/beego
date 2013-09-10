@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"strings"
 )
 
 type ValidationError struct {
-	Message, Key string
+	Message, Key, Name, Field, Tmpl string
+	Value                           interface{}
+	LimitValue                      interface{}
 }
 
 // Returns the Message.
@@ -170,9 +173,24 @@ func (v *Validation) apply(chk Validator, obj interface{}) *ValidationResult {
 	}
 
 	// Add the error to the validation context.
+	key := chk.GetKey()
+	Name := key
+	Field := ""
+
+	parts := strings.Split(key, ".")
+	if len(parts) == 2 {
+		Field = parts[0]
+		Name = parts[1]
+	}
+
 	err := &ValidationError{
-		Message: chk.DefaultMessage(),
-		Key:     chk.GetKey(),
+		Message:    chk.DefaultMessage(),
+		Key:        key,
+		Name:       Name,
+		Field:      Field,
+		Value:      obj,
+		Tmpl:       MessageTmpls[Name],
+		LimitValue: chk.GetLimitValue(),
 	}
 	v.Errors = append(v.Errors, err)
 
