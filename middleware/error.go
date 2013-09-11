@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"net/http"
 	"runtime"
+	"strconv"
 )
 
 var (
@@ -284,5 +285,24 @@ func RegisterErrorHander() {
 
 	if _, ok := ErrorMaps["500"]; !ok {
 		ErrorMaps["500"] = InternalServerError
+	}
+}
+
+func Exception(errcode string, w http.ResponseWriter, r *http.Request, msg string) {
+	if h, ok := ErrorMaps[errcode]; ok {
+		h(w, r)
+		return
+	} else {
+		isint, err := strconv.Atoi(errcode)
+		if err != nil {
+			isint = 500
+		}
+		if isint == 400 {
+			msg = "404 page not found"
+		}
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.WriteHeader(isint)
+		fmt.Fprintln(w, msg)
+		return
 	}
 }

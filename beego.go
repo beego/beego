@@ -1,6 +1,7 @@
 package beego
 
 import (
+	"github.com/astaxie/beego/middleware"
 	"github.com/astaxie/beego/session"
 	"net/http"
 	"path"
@@ -25,7 +26,7 @@ func AutoRouter(c ControllerInterface) *App {
 }
 
 func Errorhandler(err string, h http.HandlerFunc) *App {
-	ErrorMaps[err] = h
+	middleware.Errorhandler(err, h)
 	return BeeApp
 }
 
@@ -78,6 +79,10 @@ func Run() {
 			}
 		}
 	}
-	registerErrorHander()
+
+	middleware.VERSION = VERSION
+	middleware.AppName = AppName
+	middleware.RegisterErrorHander()
+
 	BeeApp.Run()
 }

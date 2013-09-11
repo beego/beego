@@ -3,6 +3,7 @@ package beego
 import (
 	"fmt"
 	beecontext "github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/middleware"
 	"net/http"
 	"net/url"
 	"os"
@@ -222,7 +223,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	defer func() {
 		if err := recover(); err != nil {
 			errstr := fmt.Sprint(err)
-			if handler, ok := ErrorMaps[errstr]; ok && ErrorsShow {
+			if handler, ok := middleware.ErrorMaps[errstr]; ok && ErrorsShow {
 				handler(rw, r)
 			} else {
 				if !RecoverPanic {
@@ -242,7 +243,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 						}
 					}
 					if RunMode == "dev" {
-						ShowErr(err, rw, r, stack)
+						middleware.ShowErr(err, rw, r, stack)
 					}
 				}
 			}
@@ -296,15 +297,8 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			}
 			//if the request is dir and DirectoryIndex is false then
 			if finfo.IsDir() && !DirectoryIndex {
-				if h, ok := ErrorMaps["403"]; ok {
-					h(w, r)
-					return
-				} else {
-					w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-					w.WriteHeader(403)
-					fmt.Fprintln(w, "403 Forbidden")
-					return
-				}
+				middleware.Exception("403", rw, r, "403 Forbidden")
+				return
 			}
 			http.ServeFile(w, r, file)
 			w.started = true
@@ -641,12 +635,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 Last:
 	//if no matches to url, throw a not found exception
 	if !findrouter {
-		if h, ok := ErrorMaps["404"]; ok {
-			w.status = 404
-			h(w, r)
-		} else {
-			http.NotFound(w, r)
-		}
+		middleware.Exception("404", rw, r, "")
 	}
 }
 
