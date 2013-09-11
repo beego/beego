@@ -327,8 +327,6 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		context.Input.Body()
 	}
 
-	r.ParseMultipartForm(MaxMemory)
-
 	//first find path from the fixrouters to Improve Performance
 	for _, route := range p.fixrouters {
 		n := len(requestPath)
@@ -369,12 +367,10 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				values := r.URL.Query()
 				for i, match := range matches[1:] {
 					values.Add(route.params[i], match)
-					r.Form.Add(route.params[i], match)
 					params[route.params[i]] = match
 				}
 				//reassemble query params and add to RawQuery
 				r.URL.RawQuery = url.Values(values).Encode()
-				//r.URL.RawQuery = url.Values(values).Encode()
 			}
 			runrouter = route
 			findrouter = true
@@ -383,6 +379,9 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	if runrouter != nil {
+		if r.Method == "POST" {
+			r.ParseMultipartForm(MaxMemory)
+		}
 		//execute middleware filters
 		if p.enableFilter {
 			if l, ok := p.filters["BeforExec"]; ok {
@@ -563,6 +562,9 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				if strings.HasPrefix(strings.ToLower(requestPath), "/"+cName+"/") {
 					for mName, controllerType := range methodmap {
 						if strings.HasPrefix(strings.ToLower(requestPath), "/"+cName+"/"+strings.ToLower(mName)) {
+							if r.Method == "POST" {
+								r.ParseMultipartForm(MaxMemory)
+							}
 							//execute middleware filters
 							if p.enableFilter {
 								if l, ok := p.filters["BeforExec"]; ok {
