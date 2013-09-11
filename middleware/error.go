@@ -7,6 +7,10 @@ import (
 	"runtime"
 )
 
+var (
+	AppName string
+	VERSION string
+)
 var tpl = `
 <!DOCTYPE html> 
 <html> 
