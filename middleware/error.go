@@ -257,7 +257,11 @@ func InternalServerError(rw http.ResponseWriter, r *http.Request) {
 	t.Execute(rw, data)
 }
 
-func registerErrorHander() {
+func Errorhandler(err string, h http.HandlerFunc) {
+	ErrorMaps[err] = h
+}
+
+func RegisterErrorHander() {
 	if _, ok := ErrorMaps["404"]; !ok {
 		ErrorMaps["404"] = NotFound
 	}
