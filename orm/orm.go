@@ -53,9 +53,9 @@ func (o *orm) getMiInd(md interface{}) (mi *modelInfo, ind reflect.Value) {
 	panic(fmt.Sprintf("<Ormer> table: `%s` not found, maybe not RegisterModel", name))
 }
 
-func (o *orm) Read(md interface{}) error {
+func (o *orm) Read(md interface{}, cols ...string) error {
 	mi, ind := o.getMiInd(md)
-	err := o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ)
+	err := o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols)
 	if err != nil {
 		return err
 	}
@@ -80,9 +80,9 @@ func (o *orm) Insert(md interface{}) (int64, error) {
 	return id, nil
 }
 
-func (o *orm) Update(md interface{}) (int64, error) {
+func (o *orm) Update(md interface{}, cols ...string) (int64, error) {
 	mi, ind := o.getMiInd(md)
-	num, err := o.alias.DbBaser.Update(o.db, mi, ind, o.alias.TZ)
+	num, err := o.alias.DbBaser.Update(o.db, mi, ind, o.alias.TZ, cols)
 	if err != nil {
 		return num, err
 	}

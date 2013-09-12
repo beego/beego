@@ -20,9 +20,9 @@ type Fielder interface {
 }
 
 type Ormer interface {
-	Read(interface{}) error
+	Read(interface{}, ...string) error
 	Insert(interface{}) (int64, error)
-	Update(interface{}) (int64, error)
+	Update(interface{}, ...string) (int64, error)
 	Delete(interface{}) (int64, error)
 	M2mAdd(interface{}, string, ...interface{}) (int64, error)
 	M2mDel(interface{}, string, ...interface{}) (int64, error)
@@ -53,8 +53,8 @@ type QuerySeter interface {
 	Update(Params) (int64, error)
 	Delete() (int64, error)
 	PrepareInsert() (Inserter, error)
-	All(interface{}) (int64, error)
-	One(interface{}) error
+	All(interface{}, ...string) (int64, error)
+	One(interface{}, ...string) error
 	Values(*[]Params, ...string) (int64, error)
 	ValuesList(*[]ParamsList, ...string) (int64, error)
 	ValuesFlat(*ParamsList, string) (int64, error)
@@ -111,12 +111,12 @@ type txEnder interface {
 }
 
 type dbBaser interface {
-	Read(dbQuerier, *modelInfo, reflect.Value, *time.Location) error
+	Read(dbQuerier, *modelInfo, reflect.Value, *time.Location, []string) error
 	Insert(dbQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
 	InsertStmt(stmtQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
-	Update(dbQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
+	Update(dbQuerier, *modelInfo, reflect.Value, *time.Location, []string) (int64, error)
 	Delete(dbQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
-	ReadBatch(dbQuerier, *querySet, *modelInfo, *Condition, interface{}, *time.Location) (int64, error)
+	ReadBatch(dbQuerier, *querySet, *modelInfo, *Condition, interface{}, *time.Location, []string) (int64, error)
 	SupportUpdateJoin() bool
 	UpdateBatch(dbQuerier, *querySet, *modelInfo, *Condition, Params, *time.Location) (int64, error)
 	DeleteBatch(dbQuerier, *querySet, *modelInfo, *Condition, *time.Location) (int64, error)

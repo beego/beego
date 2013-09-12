@@ -105,12 +105,12 @@ func (o *querySet) PrepareInsert() (Inserter, error) {
 	return newInsertSet(o.orm, o.mi)
 }
 
-func (o *querySet) All(container interface{}) (int64, error) {
-	return o.orm.alias.DbBaser.ReadBatch(o.orm.db, o, o.mi, o.cond, container, o.orm.alias.TZ)
+func (o *querySet) All(container interface{}, cols ...string) (int64, error) {
+	return o.orm.alias.DbBaser.ReadBatch(o.orm.db, o, o.mi, o.cond, container, o.orm.alias.TZ, cols)
 }
 
-func (o *querySet) One(container interface{}) error {
-	num, err := o.orm.alias.DbBaser.ReadBatch(o.orm.db, o, o.mi, o.cond, container, o.orm.alias.TZ)
+func (o *querySet) One(container interface{}, cols ...string) error {
+	num, err := o.orm.alias.DbBaser.ReadBatch(o.orm.db, o, o.mi, o.cond, container, o.orm.alias.TZ, cols)
 	if err != nil {
 		return err
 	}

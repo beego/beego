@@ -38,6 +38,11 @@ func (f StrTo) Float64() (float64, error) {
 	return strconv.ParseFloat(f.String(), 64)
 }
 
+func (f StrTo) Int() (int, error) {
+	v, err := strconv.ParseInt(f.String(), 10, 32)
+	return int(v), err
+}
+
 func (f StrTo) Int8() (int8, error) {
 	v, err := strconv.ParseInt(f.String(), 10, 8)
 	return int8(v), err
@@ -56,6 +61,11 @@ func (f StrTo) Int32() (int32, error) {
 func (f StrTo) Int64() (int64, error) {
 	v, err := strconv.ParseInt(f.String(), 10, 64)
 	return int64(v), err
+}
+
+func (f StrTo) Uint() (uint, error) {
+	v, err := strconv.ParseUint(f.String(), 10, 32)
+	return uint(v), err
 }
 
 func (f StrTo) Uint8() (uint8, error) {
