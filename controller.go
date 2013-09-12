@@ -136,25 +136,32 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		}
 		err := BeeTemplates[subdir].ExecuteTemplate(newbytes, file, c.Data)
 		if err != nil {
-		LayoutTplErrDeal:
 			if terr, ok := err.(*template.Error); ok {
 				if terr.ErrorCode == template.ErrNoSuchTemplate {
-					reg := regexp.MustCompile("\"(.+)\"")
-					a := reg.FindStringSubmatch(terr.Description)
+					reg := regexp.MustCompile("{{template \"(.+)\"")
+					filedata, _ := ioutil.ReadFile(path.Join(ViewsPath, c.TplNames))
+					a := reg.FindStringSubmatch(string(filedata))
 					if len(a) > 1 {
-						missfile := path.Join(ViewsPath, subdir, a[1])
-						AllTemplateFiles.files[subdir] = append(AllTemplateFiles.files[subdir], missfile)
+						for _, tfile := range a[1:] {
+							missfile := path.Join(ViewsPath, subdir, tfile)
+							if ok, _ := FileExists(missfile); ok {
+								AllTemplateFiles.files[subdir] = append(AllTemplateFiles.files[subdir], missfile)
+							}
+						}
 						for k, v := range AllTemplateFiles.files {
 							BeeTemplates[k] = template.Must(template.New("beegoTemplate"+k).Delims(TemplateLeft, TemplateRight).Funcs(beegoTplFuncMap).ParseFiles(v...))
 						}
 						err = BeeTemplates[subdir].ExecuteTemplate(newbytes, file, c.Data)
 						if err != nil {
-							goto LayoutTplErrDeal
+							Trace("template Execute err:", err)
 						}
+						goto LayoutTplOk
 					}
 				}
 			}
+			Trace("template Execute err:", err)
 		}
+	LayoutTplOk:
 		tplcontent, _ := ioutil.ReadAll(newbytes)
 		c.Data["LayoutContent"] = template.HTML(string(tplcontent))
 		subdir = path.Dir(c.Layout)
@@ -162,26 +169,32 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		ibytes := bytes.NewBufferString("")
 		err = BeeTemplates[subdir].ExecuteTemplate(ibytes, file, c.Data)
 		if err != nil {
-		LayoutErrDeal:
 			if terr, ok := err.(*template.Error); ok {
 				if terr.ErrorCode == template.ErrNoSuchTemplate {
-					reg := regexp.MustCompile("\"(.+)\"")
-					a := reg.FindStringSubmatch(terr.Description)
+					reg := regexp.MustCompile("{{template \"(.+)\"")
+					filedata, _ := ioutil.ReadFile(path.Join(ViewsPath, c.Layout))
+					a := reg.FindStringSubmatch(string(filedata))
 					if len(a) > 1 {
-						missfile := path.Join(ViewsPath, subdir, a[1])
-						AllTemplateFiles.files[subdir] = append(AllTemplateFiles.files[subdir], missfile)
+						for _, tfile := range a[1:] {
+							missfile := path.Join(ViewsPath, subdir, tfile)
+							if ok, _ := FileExists(missfile); ok {
+								AllTemplateFiles.files[subdir] = append(AllTemplateFiles.files[subdir], missfile)
+							}
+						}
 						for k, v := range AllTemplateFiles.files {
 							BeeTemplates[k] = template.Must(template.New("beegoTemplate"+k).Delims(TemplateLeft, TemplateRight).Funcs(beegoTplFuncMap).ParseFiles(v...))
 						}
 						err = BeeTemplates[subdir].ExecuteTemplate(ibytes, file, c.Data)
 						if err != nil {
-							goto LayoutErrDeal
+							Trace("template Execute err:", err)
 						}
+						goto LayoutOk
 					}
 				}
 			}
 			Trace("template Execute err:", err)
 		}
+	LayoutOk:
 		icontent, _ := ioutil.ReadAll(ibytes)
 		return icontent, nil
 	} else {
@@ -200,26 +213,31 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		}
 		err := BeeTemplates[subdir].ExecuteTemplate(ibytes, file, c.Data)
 		if err != nil {
-		ErrDeal:
 			if terr, ok := err.(*template.Error); ok {
 				if terr.ErrorCode == template.ErrNoSuchTemplate {
-					reg := regexp.MustCompile("\"(.+)\"")
-					a := reg.FindStringSubmatch(terr.Description)
+					reg := regexp.MustCompile("{{template \"(.+)\"")
+					filedata, _ := ioutil.ReadFile(path.Join(ViewsPath, c.TplNames))
+					a := reg.FindStringSubmatch(string(filedata))
 					if len(a) > 1 {
-						missfile := path.Join(ViewsPath, subdir, a[1])
-						AllTemplateFiles.files[subdir] = append(AllTemplateFiles.files[subdir], missfile)
+						for _, tfile := range a[1:] {
+							missfile := path.Join(ViewsPath, subdir, tfile)
+							if ok, _ := FileExists(missfile); ok {
+								AllTemplateFiles.files[subdir] = append(AllTemplateFiles.files[subdir], missfile)
+							}
+						}
 						for k, v := range AllTemplateFiles.files {
 							BeeTemplates[k] = template.Must(template.New("beegoTemplate"+k).Delims(TemplateLeft, TemplateRight).Funcs(beegoTplFuncMap).ParseFiles(v...))
 						}
 						err = BeeTemplates[subdir].ExecuteTemplate(ibytes, file, c.Data)
 						if err != nil {
-							goto ErrDeal
+							Trace("template Execute err:", err)
 						}
+						goto TplOk
 					}
 				}
 			}
-			Trace("template Execute err:", err)
 		}
+	TplOk:
 		icontent, _ := ioutil.ReadAll(ibytes)
 		return icontent, nil
 	}
