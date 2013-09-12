@@ -18,32 +18,28 @@ func TestBuildTemplate(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, name := range files {
-		if _, err := os.Create(filepath.Join(dir, name)); err != nil {
+		if f, err := os.Create(filepath.Join(dir, name)); err != nil {
 			t.Fatal(err)
+		} else {
+			f.Close()
 		}
 	}
 	if err := BuildTemplate(dir); err != nil {
 		t.Fatal(err)
 	}
-	if len(BeeTemplates) != 1 {
-		t.Fatalf("should be 1 but got %v", len(BeeTemplates))
-	}
-	for _, v := range BeeTemplates {
-		if len(v.Templates()) != 3 {
-			t.Errorf("should be 3 but got %v", len(v.Templates()))
-		}
+	if len(BeeTemplates) != 2 {
+		t.Fatalf("should be 2 but got %v", len(BeeTemplates))
 	}
 
 	AddTemplateExt("mystyle")
 	if err := BuildTemplate(dir); err != nil {
 		t.Fatal(err)
 	}
-	if len(BeeTemplates) != 1 {
-		t.Fatalf("should be 1 but got %v", len(BeeTemplates))
+	if len(BeeTemplates) != 3 {
+		t.Fatalf("should be 3 but got %v", len(BeeTemplates))
 	}
-	for _, v := range BeeTemplates {
-		if len(v.Templates()) != 4 {
-			t.Errorf("should be 4 but got %v", len(v.Templates()))
-		}
+	for _, name := range files {
+		os.Remove(filepath.Join(dir, name))
 	}
+	os.Remove(dir)
 }
