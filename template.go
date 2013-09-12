@@ -13,9 +13,10 @@ import (
 )
 
 var (
-	beegoTplFuncMap template.FuncMap
-	BeeTemplates    map[string]*template.Template
-	BeeTemplateExt  []string
+	beegoTplFuncMap  template.FuncMap
+	BeeTemplates     map[string]*template.Template
+	BeeTemplateExt   []string
+	AllTemplateFiles *templatefile
 )
 
 func init() {
@@ -100,18 +101,18 @@ func BuildTemplate(dir string) error {
 			return errors.New("dir open err")
 		}
 	}
-	self := templatefile{
+	AllTemplateFiles = &templatefile{
 		root:  dir,
 		files: make(map[string][]string),
 	}
 	err := filepath.Walk(dir, func(path string, f os.FileInfo, err error) error {
-		return self.visit(path, f, err)
+		return AllTemplateFiles.visit(path, f, err)
 	})
 	if err != nil {
 		fmt.Printf("filepath.Walk() returned %v\n", err)
 		return err
 	}
-	for k, v := range self.files {
+	for k, v := range AllTemplateFiles.files {
 		BeeTemplates[k] = template.Must(template.New("beegoTemplate"+k).Delims(TemplateLeft, TemplateRight).Funcs(beegoTplFuncMap).ParseFiles(v...))
 	}
 	return nil
