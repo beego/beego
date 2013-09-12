@@ -6,17 +6,17 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 )
 
 var (
-	beegoTplFuncMap  template.FuncMap
-	BeeTemplates     map[string]*template.Template
-	BeeTemplateExt   []string
-	AllTemplateFiles *templatefile
+	beegoTplFuncMap template.FuncMap
+	BeeTemplates    map[string]*template.Template
+	BeeTemplateExt  []string
 )
 
 func init() {
@@ -63,7 +63,14 @@ func (self *templatefile) visit(paths string, f os.FileInfo, err error) error {
 	replace := strings.NewReplacer("\\", "/")
 	a := []byte(paths)
 	a = a[len([]byte(self.root)):]
-	subdir := path.Dir(strings.TrimLeft(replace.Replace(string(a)), "/"))
+	file := strings.TrimLeft(replace.Replace(string(a)), "/")
+	subdir := filepath.Dir(file)
+	t, err := getTemplate(file)
+	if err != nil {
+		Trace("parse template err:", file, err)
+	} else {
+		BeeTemplates[file] = t
+	}
 	if _, ok := self.files[subdir]; ok {
 		self.files[subdir] = append(self.files[subdir], paths)
 	} else {
@@ -101,19 +108,55 @@ func BuildTemplate(dir string) error {
 			return errors.New("dir open err")
 		}
 	}
-	AllTemplateFiles = &templatefile{
+	self := &templatefile{
 		root:  dir,
 		files: make(map[string][]string),
 	}
 	err := filepath.Walk(dir, func(path string, f os.FileInfo, err error) error {
-		return AllTemplateFiles.visit(path, f, err)
+		return self.visit(path, f, err)
 	})
 	if err != nil {
 		fmt.Printf("filepath.Walk() returned %v\n", err)
 		return err
 	}
-	for k, v := range AllTemplateFiles.files {
-		BeeTemplates[k] = template.Must(template.New("beegoTemplate"+k).Delims(TemplateLeft, TemplateRight).Funcs(beegoTplFuncMap).ParseFiles(v...))
-	}
 	return nil
+}
+
+func getTplDeep(file string, t *template.Template) (*template.Template, error) {
+	fileabspath := filepath.Join(ViewsPath, file)
+	data, err := ioutil.ReadFile(fileabspath)
+	if err != nil {
+		return nil, err
+	}
+	t, err = t.New(file).Parse(string(data))
+	if err != nil {
+		return nil, err
+	}
+	reg := regexp.MustCompile("{{template \"(.+)\"")
+	allsub := reg.FindAllStringSubmatch(string(data), -1)
+	for _, m := range allsub {
+		if len(m) == 2 {
+			tlook := t.Lookup(m[1])
+			if tlook != nil {
+				continue
+			}
+			if !HasTemplateEXt(m[1]) {
+				continue
+			}
+			t, err = getTplDeep(m[1], t)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+	return t, nil
+}
+
+func getTemplate(file string) (t *template.Template, err error) {
+	t = template.New(file).Delims(TemplateLeft, TemplateRight).Funcs(beegoTplFuncMap)
+	t, err = getTplDeep(file, t)
+	if err != nil {
+		return nil, err
+	}
+	return
 }
