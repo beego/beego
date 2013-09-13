@@ -7,7 +7,7 @@ import (
 	"path"
 )
 
-const VERSION = "0.9.0"
+const VERSION = "0.9.9"
 
 func Router(rootpath string, c ControllerInterface, mappingMethods ...string) *App {
 	BeeApp.Router(rootpath, c, mappingMethods...)
