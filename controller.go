@@ -318,7 +318,7 @@ func (c *Controller) XsrfToken() string {
 			} else {
 				expire = XSRFExpire
 			}
-			c.Ctx.SetCookie("_xsrf", token, expire)
+			c.Ctx.SetCookie("_xsrf", token, expire, "/")
 		}
 		c._xsrf_token = token
 	}
