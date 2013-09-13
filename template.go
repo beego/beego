@@ -126,15 +126,15 @@ func BuildTemplate(dir string) error {
 	return nil
 }
 
-func getTplDeep(root, file string, t *template.Template) (*template.Template, error) {
+func getTplDeep(root, file string, t *template.Template) (*template.Template, [][]string, error) {
 	fileabspath := filepath.Join(root, file)
 	data, err := ioutil.ReadFile(fileabspath)
 	if err != nil {
-		return nil, err
+		return nil, [][]string{}, err
 	}
 	t, err = t.New(file).Parse(string(data))
 	if err != nil {
-		return nil, err
+		return nil, [][]string{}, err
 	}
 	reg := regexp.MustCompile("{{[ ]*template[ ]+\"([^\"]+)\"")
 	allsub := reg.FindAllStringSubmatch(string(data), -1)
@@ -147,27 +147,58 @@ func getTplDeep(root, file string, t *template.Template) (*template.Template, er
 			if !HasTemplateEXt(m[1]) {
 				continue
 			}
-			t, err = getTplDeep(root, m[1], t)
+			t, _, err = getTplDeep(root, m[1], t)
 			if err != nil {
-				return nil, err
+				return nil, [][]string{}, err
 			}
 		}
 	}
-	return t, nil
+	return t, allsub, nil
 }
 
 func getTemplate(root, file string, others ...string) (t *template.Template, err error) {
 	t = template.New(file).Delims(TemplateLeft, TemplateRight).Funcs(beegoTplFuncMap)
-	t, err = getTplDeep(root, file, t)
-	for _, otherfile := range others {
-		if temp := t.Lookup(otherfile); temp != nil {
-			continue
+	var submods [][]string
+	t, submods, err = getTplDeep(root, file, t)
+	for _, m := range submods {
+		if len(m) == 2 {
+			templ := t.Lookup(m[1])
+			if templ != nil {
+				continue
+			}
+			//first check filename
+			for _, otherfile := range others {
+				if otherfile == m[1] {
+					t, _, err = getTplDeep(root, otherfile, t)
+					if err != nil {
+						Trace("template parse file err:", err)
+					}
+					break
+				}
+			}
+			//second check define
+			for _, otherfile := range others {
+				fileabspath := filepath.Join(root, otherfile)
+				data, err := ioutil.ReadFile(fileabspath)
+				if err != nil {
+					continue
+				}
+				reg := regexp.MustCompile("{{[ ]*define[ ]+\"([^\"]+)\"")
+				allsub := reg.FindAllStringSubmatch(string(data), -1)
+				for _, sub := range allsub {
+					if len(sub) == 2 && sub[1] == m[1] {
+						t, _, err = getTplDeep(root, otherfile, t)
+						if err != nil {
+							Trace("template parse file err:", err)
+						}
+						break
+					}
+				}
+			}
 		}
-		t, err = getTplDeep(root, otherfile, t)
-		if err != nil {
-			break
-		}
+
 	}
+
 	if err != nil {
 		return nil, err
 	}
