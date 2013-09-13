@@ -45,7 +45,7 @@ type QuerySeter interface {
 	Filter(string, ...interface{}) QuerySeter
 	Exclude(string, ...interface{}) QuerySeter
 	SetCond(*Condition) QuerySeter
-	Limit(int, ...interface{}) QuerySeter
+	Limit(interface{}, ...interface{}) QuerySeter
 	Offset(interface{}) QuerySeter
 	OrderBy(...string) QuerySeter
 	RelatedSel(...interface{}) QuerySeter

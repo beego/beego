@@ -360,9 +360,9 @@ func (d *dbTables) getOrderSql(orders []string) (orderSql string) {
 	return
 }
 
-func (d *dbTables) getLimitSql(mi *modelInfo, offset int64, limit int) (limits string) {
+func (d *dbTables) getLimitSql(mi *modelInfo, offset int64, limit int64) (limits string) {
 	if limit == 0 {
-		limit = DefaultRowsLimit
+		limit = int64(DefaultRowsLimit)
 	}
 	if limit < 0 {
 		// no limit

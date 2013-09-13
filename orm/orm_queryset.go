@@ -2,7 +2,6 @@ package orm
 
 import (
 	"fmt"
-	"reflect"
 )
 
 type querySet struct {
@@ -10,7 +9,7 @@ type querySet struct {
 	cond     *Condition
 	related  []string
 	relDepth int
-	limit    int
+	limit    int64
 	offset   int64
 	orders   []string
 	orm      *orm
@@ -35,19 +34,11 @@ func (o querySet) Exclude(expr string, args ...interface{}) QuerySeter {
 }
 
 func (o *querySet) setOffset(num interface{}) {
-	val := reflect.ValueOf(num)
-	switch num.(type) {
-	case int, int8, int16, int32, int64:
-		o.offset = val.Int()
-	case uint, uint8, uint16, uint32, uint64:
-		o.offset = int64(val.Uint())
-	default:
-		panic(fmt.Errorf("<QuerySeter> offset value need numeric not `%T`", num))
-	}
+	o.offset = ToInt64(num)
 }
 
-func (o querySet) Limit(limit int, args ...interface{}) QuerySeter {
-	o.limit = limit
+func (o querySet) Limit(limit interface{}, args ...interface{}) QuerySeter {
+	o.limit = ToInt64(limit)
 	if len(args) > 0 {
 		o.setOffset(args[0])
 	}
