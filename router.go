@@ -94,6 +94,47 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingM
 				j++
 			}
 		}
+		//url like someprefix:id(xxx).html
+		if strings.Contains(part, ":") && strings.Contains(part, "(") && strings.Contains(part, ")") {
+			var out []rune
+			var start bool
+			var startexp bool
+			var param []rune
+			var expt []rune
+			for _, v := range part {
+				if start {
+					if v != '(' {
+						param = append(param, v)
+						continue
+					}
+				}
+				if startexp {
+					if v != ')' {
+						expt = append(expt, v)
+						continue
+					}
+				}
+				if v == ':' {
+					param = make([]rune, 0)
+					param = append(param, ':')
+					start = true
+				} else if v == '(' {
+					startexp = true
+					start = false
+					params[j] = string(param)
+					j++
+					expt = make([]rune, 0)
+					expt = append(expt, '(')
+				} else if v == ')' {
+					startexp = false
+					expt = append(expt, ')')
+					out = append(out, expt...)
+				} else {
+					out = append(out, v)
+				}
+			}
+			parts[i] = string(out)
+		}
 	}
 	reflectVal := reflect.ValueOf(c)
 	t := reflect.Indirect(reflectVal).Type()

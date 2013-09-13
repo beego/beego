@@ -69,6 +69,26 @@ func TestRouteOk(t *testing.T) {
 	}
 }
 
+func TestManyRoute(t *testing.T) {
+
+	r, _ := http.NewRequest("GET", "/beego32-12.html", nil)
+	w := httptest.NewRecorder()
+
+	handler := NewControllerRegistor()
+	handler.Add("/beego:id([0-9]+)-:page([0-9]+).html", &TestController{})
+	handler.ServeHTTP(w, r)
+
+	id := r.URL.Query().Get(":id")
+	page := r.URL.Query().Get(":page")
+
+	if id != "32" {
+		t.Errorf("url param set to [%s]; want [%s]", id, "32")
+	}
+	if page != "12" {
+		t.Errorf("url param set to [%s]; want [%s]", page, "12")
+	}
+}
+
 func TestNotFound(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
