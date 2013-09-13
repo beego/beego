@@ -65,17 +65,11 @@ func (self *templatefile) visit(paths string, f os.FileInfo, err error) error {
 	a = a[len([]byte(self.root)):]
 	file := strings.TrimLeft(replace.Replace(string(a)), "/")
 	subdir := filepath.Dir(file)
-	t, err := getTemplate(self.root, file)
-	if err != nil {
-		Trace("parse template err:", file, err)
-	} else {
-		BeeTemplates[file] = t
-	}
 	if _, ok := self.files[subdir]; ok {
-		self.files[subdir] = append(self.files[subdir], paths)
+		self.files[subdir] = append(self.files[subdir], file)
 	} else {
 		m := make([]string, 1)
-		m[0] = paths
+		m[0] = file
 		self.files[subdir] = m
 	}
 
@@ -119,6 +113,16 @@ func BuildTemplate(dir string) error {
 		fmt.Printf("filepath.Walk() returned %v\n", err)
 		return err
 	}
+	for _, v := range self.files {
+		for _, file := range v {
+			t, err := getTemplate(self.root, file, v...)
+			if err != nil {
+				Trace("parse template err:", file, err)
+			} else {
+				BeeTemplates[file] = t
+			}
+		}
+	}
 	return nil
 }
 
@@ -152,9 +156,18 @@ func getTplDeep(root, file string, t *template.Template) (*template.Template, er
 	return t, nil
 }
 
-func getTemplate(root, file string) (t *template.Template, err error) {
+func getTemplate(root, file string, others ...string) (t *template.Template, err error) {
 	t = template.New(file).Delims(TemplateLeft, TemplateRight).Funcs(beegoTplFuncMap)
 	t, err = getTplDeep(root, file, t)
+	for _, otherfile := range others {
+		if temp := t.Lookup(otherfile); temp != nil {
+			continue
+		}
+		t, err = getTplDeep(root, otherfile, t)
+		if err != nil {
+			break
+		}
+	}
 	if err != nil {
 		return nil, err
 	}
