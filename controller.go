@@ -275,6 +275,15 @@ func (c *Controller) StartSession() session.SessionStore {
 	return c.CruSession
 }
 
+func (c *Controller) StartNewSession() session.SessionStore {
+	if c.CruSession != nil {
+		c.CruSession.SessionRelease()
+	}
+	c.DestroySession()
+	c.CruSession = GlobalSessions.SessionStartNew(c.Ctx.ResponseWriter, c.Ctx.Request)
+	return c.CruSession
+}
+
 func (c *Controller) SetSession(name interface{}, value interface{}) {
 	if c.CruSession == nil {
 		c.StartSession()

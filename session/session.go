@@ -59,16 +59,7 @@ func NewManager(provideName, cookieName string, maxlifetime int64, savePath stri
 func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (session SessionStore) {
 	cookie, err := r.Cookie(manager.cookieName)
 	if err != nil || cookie.Value == "" {
-		sid := manager.sessionId()
-		session, _ = manager.provider.SessionRead(sid)
-		cookie := http.Cookie{Name: manager.cookieName,
-			Value:    url.QueryEscape(sid),
-			Path:     "/",
-			HttpOnly: true,
-			Secure:   false}
-		//cookie.Expires = time.Now().Add(time.Duration(manager.maxlifetime) * time.Second)
-		http.SetCookie(w, &cookie)
-		r.AddCookie(&cookie)
+		session = manager.SessionStartNew(w, r)
 	} else {
 		//cookie.Expires = time.Now().Add(time.Duration(manager.maxlifetime) * time.Second)
 		cookie.HttpOnly = true
@@ -77,6 +68,20 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 		sid, _ := url.QueryUnescape(cookie.Value)
 		session, _ = manager.provider.SessionRead(sid)
 	}
+	return
+}
+
+func (manager *Manager) SessionStartNew(w http.ResponseWriter, r *http.Request) (session SessionStore) {
+	sid := manager.sessionId()
+	session, _ = manager.provider.SessionRead(sid)
+	cookie := http.Cookie{Name: manager.cookieName,
+		Value:    url.QueryEscape(sid),
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   false}
+	//cookie.Expires = time.Now().Add(time.Duration(manager.maxlifetime) * time.Second)
+	http.SetCookie(w, &cookie)
+	r.AddCookie(&cookie)
 	return
 }
 
