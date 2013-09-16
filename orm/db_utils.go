@@ -6,6 +6,15 @@ import (
 	"time"
 )
 
+func getDbAlias(name string) *alias {
+	if al, ok := dataBaseCache.get(name); ok {
+		return al
+	} else {
+		panic(fmt.Errorf("unknown DataBase alias name %s", name))
+	}
+	return nil
+}
+
 func getExistPk(mi *modelInfo, ind reflect.Value) (column string, value interface{}, exist bool) {
 	fi := mi.fields.pk
 

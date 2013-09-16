@@ -26,6 +26,20 @@ func getTableName(val reflect.Value) string {
 	return snakeString(ind.Type().Name())
 }
 
+func getTableEngine(val reflect.Value) string {
+	fun := val.MethodByName("TableEngine")
+	if fun.IsValid() {
+		vals := fun.Call([]reflect.Value{})
+		if len(vals) > 0 {
+			val := vals[0]
+			if val.Kind() == reflect.String {
+				return val.String()
+			}
+		}
+	}
+	return ""
+}
+
 func getTableIndex(val reflect.Value) [][]string {
 	fun := val.MethodByName("TableIndex")
 	if fun.IsValid() {

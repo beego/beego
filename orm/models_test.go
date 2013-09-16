@@ -223,4 +223,10 @@ go test -v github.com/astaxie/beego/orm
 	}
 
 	RegisterDataBase("default", DBARGS.Driver, DBARGS.Source, 20)
+
+	alias := getDbAlias("default")
+	if alias.Driver == DR_MySQL {
+		alias.Engine = "INNODB"
+	}
+
 }

@@ -12,17 +12,6 @@ type dbIndex struct {
 	Sql   string
 }
 
-func getDbAlias(name string) *alias {
-	if al, ok := dataBaseCache.get(name); ok {
-		return al
-	} else {
-		fmt.Println(fmt.Sprintf("unknown DataBase alias name %s", name))
-		os.Exit(2)
-	}
-
-	return nil
-}
-
 func getDbDropSql(al *alias) (sqls []string) {
 	if len(modelCache.cache) == 0 {
 		fmt.Println("no Model found, need register your model")
@@ -180,7 +169,14 @@ func getDbCreateSql(al *alias) (sqls []string, tableIndexes map[string][]dbIndex
 		sql += "\n)"
 
 		if al.Driver == DR_MySQL {
-			sql += " ENGINE=INNODB"
+			var engine string
+			if mi.model != nil {
+				engine = getTableEngine(mi.addrField)
+			}
+			if engine == "" {
+				engine = al.Engine
+			}
+			sql += " ENGINE=" + engine
 		}
 
 		sql += ";"
