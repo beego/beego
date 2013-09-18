@@ -268,19 +268,19 @@ func (c *Controller) SaveToFile(fromfile, tofile string) error {
 	return nil
 }
 
-func (c *Controller) StartSession() session.SessionStore {
+func (c *Controller) StartSession(params ...interface{}) session.SessionStore {
 	if c.CruSession == nil {
-		c.CruSession = GlobalSessions.SessionStart(c.Ctx.ResponseWriter, c.Ctx.Request)
+		c.CruSession = GlobalSessions.SessionStart(c.Ctx.ResponseWriter, c.Ctx.Request, params...)
 	}
 	return c.CruSession
 }
 
-func (c *Controller) StartNewSession() session.SessionStore {
+func (c *Controller) StartNewSession(params ...interface{}) session.SessionStore {
 	if c.CruSession != nil {
 		c.CruSession.SessionRelease()
 	}
 	c.DestroySession()
-	c.CruSession = GlobalSessions.SessionStartNew(c.Ctx.ResponseWriter, c.Ctx.Request)
+	c.CruSession = GlobalSessions.SessionStartNew(c.Ctx.ResponseWriter, c.Ctx.Request, params...)
 	return c.CruSession
 }
 
