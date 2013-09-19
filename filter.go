@@ -15,6 +15,9 @@ func (mr *FilterRouter) ValidRouter(router string) bool {
 	if mr.pattern == "" {
 		return true
 	}
+	if mr.pattern == "*" {
+		return true
+	}
 	if router == mr.pattern {
 		return true
 	}
