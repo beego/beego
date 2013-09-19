@@ -71,12 +71,10 @@ func Run() {
 		go GlobalSessions.GC()
 	}
 
-	if AutoRender {
-		err := BuildTemplate(ViewsPath)
-		if err != nil {
-			if RunMode == "dev" {
-				Warn(err)
-			}
+	err := BuildTemplate(ViewsPath)
+	if err != nil {
+		if RunMode == "dev" {
+			Warn(err)
 		}
 	}
 
