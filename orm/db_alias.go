@@ -9,9 +9,6 @@ import (
 	"time"
 )
 
-const defaultMaxIdleConns = 30
-const defaultMaxOpenConns = 50
-
 type DriverType int
 
 const (
@@ -92,18 +89,6 @@ type alias struct {
 
 // Setting the database connect params. Use the database driver self dataSource args.
 func RegisterDataBase(aliasName, driverName, dataSource string, params ...int) {
-	maxIdleConns := defaultMaxIdleConns
-	maxOpenConns := defaultMaxOpenConns
-
-	for i, v := range params {
-		switch i {
-		case 0:
-			maxIdleConns = v
-		case 1:
-			maxOpenConns = v
-		}
-	}
-
 	al := new(alias)
 	al.Name = aliasName
 	al.DriverName = driverName
@@ -173,8 +158,14 @@ func RegisterDataBase(aliasName, driverName, dataSource string, params ...int) {
 		}
 	}
 
-	SetMaxIdleConns(al.Name, maxIdleConns)
-	SetMaxOpenConns(al.Name, maxOpenConns)
+	for i, v := range params {
+		switch i {
+		case 0:
+			SetMaxIdleConns(al.Name, v)
+		case 1:
+			SetMaxOpenConns(al.Name, v)
+		}
+	}
 
 	err = al.DB.Ping()
 	if err != nil {
