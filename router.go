@@ -316,6 +316,9 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			for _, filterR := range l {
 				if filterR.ValidRouter(r.URL.Path) {
 					filterR.filterFunc(context)
+					if w.started {
+						return
+					}
 				}
 			}
 		}
@@ -351,6 +354,9 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			for _, filterR := range l {
 				if filterR.ValidRouter(r.URL.Path) {
 					filterR.filterFunc(context)
+					if w.started {
+						return
+					}
 				}
 			}
 		}
@@ -423,6 +429,9 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				for _, filterR := range l {
 					if filterR.ValidRouter(r.URL.Path) {
 						filterR.filterFunc(context)
+						if w.started {
+							return
+						}
 					}
 				}
 			}
@@ -572,6 +581,9 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				for _, filterR := range l {
 					if filterR.ValidRouter(r.URL.Path) {
 						filterR.filterFunc(context)
+						if w.started {
+							return
+						}
 					}
 				}
 			}
@@ -614,6 +626,9 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 									for _, filterR := range l {
 										if filterR.ValidRouter(r.URL.Path) {
 											filterR.filterFunc(context)
+											if w.started {
+												return
+											}
 										}
 									}
 								}
@@ -665,6 +680,9 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 									for _, filterR := range l {
 										if filterR.ValidRouter(r.URL.Path) {
 											filterR.filterFunc(context)
+											if w.started {
+												return
+											}
 										}
 									}
 								}
