@@ -311,7 +311,6 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	params := make(map[string]string)
 
-	context.Input.Param = params
 	if p.enableFilter {
 		if l, ok := p.filters["BeforRouter"]; ok {
 			for _, filterR := range l {
@@ -412,6 +411,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			break
 		}
 	}
+	context.Input.Param = params
 
 	if runrouter != nil {
 		if r.Method == "POST" {
@@ -584,6 +584,14 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	if p.enableAuto {
 		if !findrouter {
+			lastindex := strings.LastIndex(requestPath, "/")
+			lastsub := requestPath[lastindex+1:]
+			if subindex := strings.LastIndex(lastsub, "."); subindex != -1 {
+				context.Input.Param[":ext"] = lastsub[subindex+1:]
+				r.URL.Query().Add(":ext", lastsub[subindex+1:])
+				r.URL.RawQuery = r.URL.Query().Encode()
+				requestPath = requestPath[:len(requestPath)-len(lastsub[subindex:])]
+			}
 			for cName, methodmap := range p.autoRouter {
 
 				if strings.ToLower(requestPath) == "/"+cName {

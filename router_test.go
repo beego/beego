@@ -21,6 +21,10 @@ func (this *TestController) List() {
 	this.Ctx.Output.Body([]byte("i am list"))
 }
 
+func (this *TestController) Myext() {
+	this.Ctx.Output.Body([]byte(this.Ctx.Input.Params(":ext")))
+}
+
 func TestUserFunc(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/api/list", nil)
 	w := httptest.NewRecorder()
@@ -41,6 +45,18 @@ func TestAutoFunc(t *testing.T) {
 	handler.AddAuto(&TestController{})
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != "i am list" {
+		t.Errorf("user define func can't run")
+	}
+}
+
+func TestAutoExtFunc(t *testing.T) {
+	r, _ := http.NewRequest("GET", "/test/myext.json", nil)
+	w := httptest.NewRecorder()
+
+	handler := NewControllerRegistor()
+	handler.AddAuto(&TestController{})
+	handler.ServeHTTP(w, r)
+	if w.Body.String() != "json" {
 		t.Errorf("user define func can't run")
 	}
 }
