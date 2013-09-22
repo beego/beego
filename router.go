@@ -444,18 +444,15 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		vc := reflect.New(runrouter.controllerType)
 
 		//call the controller init function
-		init := vc.MethodByName("Init")
+		method := vc.MethodByName("Init")
 		in := make([]reflect.Value, 2)
 		in[0] = reflect.ValueOf(context)
 		in[1] = reflect.ValueOf(runrouter.controllerType.Name())
-		init.Call(in)
-		//call prepare function
-		in = make([]reflect.Value, 0)
-		method := vc.MethodByName("Prepare")
 		method.Call(in)
 
 		//if XSRF is Enable then check cookie where there has any cookie in the  request's cookie _csrf
 		if EnableXSRF {
+			in = make([]reflect.Value, 0)
 			method = vc.MethodByName("XsrfToken")
 			method.Call(in)
 			if r.Method == "POST" || r.Method == "DELETE" || r.Method == "PUT" ||
@@ -464,6 +461,11 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				method.Call(in)
 			}
 		}
+
+		//call prepare function
+		in = make([]reflect.Value, 0)
+		method = vc.MethodByName("Prepare")
+		method.Call(in)
 
 		//if response has written,yes don't run next
 		if !w.started {
