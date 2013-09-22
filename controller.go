@@ -335,9 +335,7 @@ func (c *Controller) CheckXsrfCookie() bool {
 	}
 	if token == "" {
 		c.Ctx.Abort(403, "'_xsrf' argument missing from POST")
-	}
-
-	if c._xsrf_token != token {
+	} else if c._xsrf_token != token {
 		c.Ctx.Abort(403, "XSRF cookie does not match POST argument")
 	}
 	return true
