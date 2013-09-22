@@ -745,6 +745,17 @@ func TestRelatedSel(t *testing.T) {
 	num, err = qs.Filter("user__username", "slene").Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
+
+	var posts []*Post
+	qs = dORM.QueryTable("post")
+	num, err = qs.RelatedSel().All(&posts)
+	throwFail(t, err)
+	throwFailNow(t, AssertIs(num, 4))
+
+	throwFailNow(t, AssertIs(posts[0].User.UserName, "slene"))
+	throwFailNow(t, AssertIs(posts[1].User.UserName, "astaxie"))
+	throwFailNow(t, AssertIs(posts[2].User.UserName, "astaxie"))
+	throwFailNow(t, AssertIs(posts[3].User.UserName, "nobody"))
 }
 
 func TestSetCond(t *testing.T) {

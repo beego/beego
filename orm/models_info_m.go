@@ -66,6 +66,7 @@ func newModelInfo(val reflect.Value) (info *modelInfo) {
 
 		fi.fieldIndex = i
 		fi.mi = info
+		fi.inModel = true
 	}
 
 	if err != nil {

@@ -649,9 +649,12 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 							if field.IsValid() {
 								d.setColsValues(mmi, &field, mmi.fields.dbcols, trefs[:len(mmi.fields.dbcols)], tz)
 								for _, fi := range mmi.fields.fieldsReverse {
-									if fi.reverseFieldInfo.mi == lastm {
+									if fi.inModel && fi.reverseFieldInfo.mi == lastm {
 										if fi.reverseFieldInfo != nil {
-											field.Field(fi.fieldIndex).Set(last.Addr())
+											f := field.Field(fi.fieldIndex)
+											if f.Kind() == reflect.Ptr {
+												f.Set(last.Addr())
+											}
 										}
 									}
 								}
