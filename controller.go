@@ -270,7 +270,7 @@ func (c *Controller) SaveToFile(fromfile, tofile string) error {
 
 func (c *Controller) StartSession() session.SessionStore {
 	if c.CruSession == nil {
-		c.CruSession = GlobalSessions.SessionStart(c.Ctx.ResponseWriter, c.Ctx.Request)
+		c.CruSession = c.Ctx.Input.CruSession
 	}
 	return c.CruSession
 }

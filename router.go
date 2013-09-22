@@ -306,6 +306,10 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		context.Output = beecontext.NewOutput(rw)
 	}
 
+	if SessionOn {
+		context.Input.CruSession = GlobalSessions.SessionStart(w, r)
+	}
+
 	var runrouter *controllerInfo
 	var findrouter bool
 
