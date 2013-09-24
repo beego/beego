@@ -48,6 +48,7 @@ var (
 	CopyRequestBody      bool //When in raw application, You want to the reqeustbody
 	TemplateLeft         string
 	TemplateRight        string
+	SecureKey            string //cookie secure hash key
 )
 
 func init() {
@@ -82,6 +83,7 @@ func init() {
 	TemplateRight = "}}"
 	ParseConfig()
 	runtime.GOMAXPROCS(runtime.NumCPU())
+	SecureKey = "beegocookiesecure!@#$%^&*()"
 }
 
 func ParseConfig() (err error) {
@@ -172,6 +174,9 @@ func ParseConfig() (err error) {
 		}
 		if keyfile := AppConfig.String("HttpKeyFile"); keyfile != "" {
 			HttpKeyFile = keyfile
+		}
+		if securekey := AppConfig.String("SecureKey"); securekey != "" {
+			SecureKey = securekey
 		}
 	}
 	return nil

@@ -306,7 +306,7 @@ func (c *Controller) IsAjax() bool {
 
 func (c *Controller) XsrfToken() string {
 	if c._xsrf_token == "" {
-		token := c.Ctx.GetCookie("_xsrf")
+		token := c.Ctx.GetSecureCookie("_xsrf")
 		if token == "" {
 			h := hmac.New(sha1.New, []byte(XSRFKEY))
 			fmt.Fprintf(h, "%s:%d", c.Ctx.Request.RemoteAddr, time.Now().UnixNano())
@@ -318,7 +318,7 @@ func (c *Controller) XsrfToken() string {
 			} else {
 				expire = XSRFExpire
 			}
-			c.Ctx.SetCookie("_xsrf", token, expire, "/")
+			c.Ctx.SetSecureCookie("_xsrf", token, expire, "/")
 		}
 		c._xsrf_token = token
 	}

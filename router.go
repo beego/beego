@@ -298,6 +298,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		Request:        r,
 		Input:          beecontext.NewInput(r),
 		Output:         beecontext.NewOutput(w),
+		SecureKey:      SecureKey,
 	}
 	context.Output.Context = context
 
