@@ -67,7 +67,7 @@ func Run() {
 	}
 
 	if SessionOn {
-		GlobalSessions, _ = session.NewManager(SessionProvider, SessionName, SessionGCMaxLifetime, SessionSavePath)
+		GlobalSessions, _ = session.NewManager(SessionProvider, SessionName, SessionGCMaxLifetime, SessionSavePath, HttpTLS)
 		go GlobalSessions.GC()
 	}
 

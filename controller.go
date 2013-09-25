@@ -304,21 +304,56 @@ func (c *Controller) IsAjax() bool {
 	return c.Ctx.Input.IsAjax()
 }
 
+func (c *Controller) GetSecureCookie(Secret, key string) (string, bool) {
+	val := c.Ctx.GetCookie(key)
+	if val == "" {
+		return "", false
+	}
+
+	parts := strings.SplitN(val, "|", 3)
+
+	vs := parts[0]
+	timestamp := parts[1]
+	sig := parts[2]
+
+	h := hmac.New(sha1.New, []byte(Secret))
+	fmt.Fprintf(h, "%s%s", vs, timestamp)
+
+	if fmt.Sprintf("%02x", h.Sum(nil)) != sig {
+		return "", false
+	}
+
+	ts, _ := strconv.ParseInt(timestamp, 0, 64)
+
+	buf := bytes.NewBufferString(val)
+	encoder := base64.NewDecoder(base64.StdEncoding, buf)
+
+	res, _ := ioutil.ReadAll(encoder)
+	return string(res), true
+}
+
+func (c *Controller) SetSecureCookie(Secret, name, val string, age int) {
+	vs := base64.URLEncoding.EncodeToString([]byte(val))
+	timestamp := strconv.FormatInt(time.Now().UnixNano(), 10)
+	h := hmac.New(sha1.New, []byte(Secret))
+	fmt.Fprintf(h, "%s%s", vs, timestamp)
+	sig := fmt.Sprintf("%02x", h.Sum(nil))
+	cookie := strings.Join([]string{vs, timestamp, sig}, "|")
+	c.Ctx.SetCookie(name, cookie, age, "/")
+}
+
 func (c *Controller) XsrfToken() string {
 	if c._xsrf_token == "" {
-		token := c.Ctx.GetCookie("_xsrf")
-		if token == "" {
-			h := hmac.New(sha1.New, []byte(XSRFKEY))
-			fmt.Fprintf(h, "%s:%d", c.Ctx.Request.RemoteAddr, time.Now().UnixNano())
-			tok := fmt.Sprintf("%s:%d", h.Sum(nil), time.Now().UnixNano())
-			token = base64.URLEncoding.EncodeToString([]byte(tok))
+		token, ok := c.GetSecureCookie(XSRFKEY, "_xsrf")
+		if !ok {
 			expire := 0
 			if c.XSRFExpire > 0 {
 				expire = c.XSRFExpire
 			} else {
 				expire = XSRFExpire
 			}
-			c.Ctx.SetCookie("_xsrf", token, expire, "/")
+			token = GetRandomString(15)
+			c.SetSecureCookie(XSRFKEY, "_xsrf", token, expire)
 		}
 		c._xsrf_token = token
 	}
