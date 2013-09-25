@@ -323,8 +323,6 @@ func (c *Controller) GetSecureCookie(Secret, key string) (string, bool) {
 		return "", false
 	}
 
-	ts, _ := strconv.ParseInt(timestamp, 0, 64)
-
 	buf := bytes.NewBufferString(val)
 	encoder := base64.NewDecoder(base64.StdEncoding, buf)
 

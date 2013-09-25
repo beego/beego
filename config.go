@@ -77,7 +77,7 @@ func init() {
 	HttpServerTimeOut = 0
 	ErrorsShow = true
 	XSRFKEY = "beegoxsrf"
-	XSRFExpire = 60
+	XSRFExpire = 0
 	TemplateLeft = "{{"
 	TemplateRight = "}}"
 	ParseConfig()
