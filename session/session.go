@@ -44,15 +44,16 @@ type Manager struct {
 	cookieName  string //private cookiename
 	provider    Provider
 	maxlifetime int64
+	options     []interface{}
 }
 
-func NewManager(provideName, cookieName string, maxlifetime int64, savePath string) (*Manager, error) {
+func NewManager(provideName, cookieName string, maxlifetime int64, savePath string, options ...interface{}) (*Manager, error) {
 	provider, ok := provides[provideName]
 	if !ok {
 		return nil, fmt.Errorf("session: unknown provide %q (forgotten import?)", provideName)
 	}
 	provider.SessionInit(maxlifetime, savePath)
-	return &Manager{provider: provider, cookieName: cookieName, maxlifetime: maxlifetime}, nil
+	return &Manager{provider: provider, cookieName: cookieName, maxlifetime: maxlifetime, options: options}, nil
 }
 
 //get Session
@@ -61,11 +62,15 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 	if err != nil || cookie.Value == "" {
 		sid := manager.sessionId()
 		session, _ = manager.provider.SessionRead(sid)
+		secure := false
+		if len(manager.options) > 0 {
+			secure = manager.options[0].(bool)
+		}
 		cookie := http.Cookie{Name: manager.cookieName,
 			Value:    url.QueryEscape(sid),
 			Path:     "/",
 			HttpOnly: true,
-			Secure:   false}
+			Secure:   secure}
 		//cookie.Expires = time.Now().Add(time.Duration(manager.maxlifetime) * time.Second)
 		http.SetCookie(w, &cookie)
 		r.AddCookie(&cookie)
