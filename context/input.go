@@ -40,7 +40,13 @@ func (input *BeegoInput) Site() string {
 }
 
 func (input *BeegoInput) Scheme() string {
-	return input.req.URL.Scheme
+	if input.req.URL.Scheme != "" {
+		return input.req.URL.Scheme
+	} else if input.req.TLS == nil {
+		return "http"
+	} else {
+		return "https"
+	}
 }
 
 func (input *BeegoInput) Domain() string {
