@@ -50,6 +50,14 @@ func (st *MysqlSessionStore) Delete(key interface{}) error {
 	return nil
 }
 
+func (st *MysqlSessionStore) Flush() error {
+	st.lock.Lock()
+	defer st.lock.Unlock()
+	st.values = make(map[interface{}]interface{})
+	st.updatemysql()
+	return nil
+}
+
 func (st *MysqlSessionStore) SessionID() string {
 	return st.sid
 }
@@ -95,6 +103,28 @@ func (mp *MysqlProvider) SessionRead(sid string) (SessionStore, error) {
 	if err == sql.ErrNoRows {
 		c.Exec("insert into session(`session_key`,`session_data`,`session_expiry`) values(?,?,?)", sid, "", time.Now().Unix())
 	}
+	var kv map[interface{}]interface{}
+	if len(sessiondata) == 0 {
+		kv = make(map[interface{}]interface{})
+	} else {
+		kv, err = decodeGob(sessiondata)
+		if err != nil {
+			return nil, err
+		}
+	}
+	rs := &MysqlSessionStore{c: c, sid: sid, values: kv}
+	return rs, nil
+}
+
+func (mp *MysqlProvider) SessionRegenerate(oldsid, sid string) (SessionStore, error) {
+	c := mp.connectInit()
+	row := c.QueryRow("select session_data from session where session_key=?", oldsid)
+	var sessiondata []byte
+	err := row.Scan(&sessiondata)
+	if err == sql.ErrNoRows {
+		c.Exec("insert into session(`session_key`,`session_data`,`session_expiry`) values(?,?,?)", oldsid, "", time.Now().Unix())
+	}
+	c.Exec("update session set `session_key`=? where session_key=?", sid, oldsid)
 	var kv map[interface{}]interface{}
 	if len(sessiondata) == 0 {
 		kv = make(map[interface{}]interface{})

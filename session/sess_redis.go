@@ -35,6 +35,11 @@ func (rs *RedisSessionStore) Delete(key interface{}) error {
 	return err
 }
 
+func (rs *RedisSessionStore) Flush() error {
+	_, err := rs.c.Do("DEL", rs.sid)
+	return err
+}
+
 func (rs *RedisSessionStore) SessionID() string {
 	return rs.sid
 }
@@ -95,6 +100,16 @@ func (rp *RedisProvider) SessionRead(sid string) (SessionStore, error) {
 		//c.Do("SET", sid, sid, rp.maxlifetime)
 		c.Do("HSET", sid, sid, rp.maxlifetime)
 	}
+	rs := &RedisSessionStore{c: c, sid: sid}
+	return rs, nil
+}
+
+func (rp *RedisProvider) SessionRegenerate(oldsid, sid string) (SessionStore, error) {
+	c := rp.connectInit()
+	if str, err := redis.String(c.Do("HGET", oldsid, oldsid)); err != nil || str == "" {
+		c.Do("HSET", oldsid, oldsid, rp.maxlifetime)
+	}
+	c.Do("RENAME", oldsid, sid)
 	rs := &RedisSessionStore{c: c, sid: sid}
 	return rs, nil
 }
