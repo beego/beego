@@ -312,6 +312,10 @@ func (c *Controller) GetSecureCookie(Secret, key string) (string, bool) {
 
 	parts := strings.SplitN(val, "|", 3)
 
+	if len(parts) != 3 {
+		return "", false
+	}
+
 	vs := parts[0]
 	timestamp := parts[1]
 	sig := parts[2]
