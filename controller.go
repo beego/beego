@@ -326,15 +326,11 @@ func (c *Controller) GetSecureCookie(Secret, key string) (string, bool) {
 	if fmt.Sprintf("%02x", h.Sum(nil)) != sig {
 		return "", false
 	}
-
-	buf := bytes.NewBufferString(val)
-	encoder := base64.NewDecoder(base64.StdEncoding, buf)
-
-	res, _ := ioutil.ReadAll(encoder)
+	res, _ := base64.URLEncoding.DecodeString(vs)
 	return string(res), true
 }
 
-func (c *Controller) SetSecureCookie(Secret, name, val string, age int) {
+func (c *Controller) SetSecureCookie(Secret, name, val string, age int64) {
 	vs := base64.URLEncoding.EncodeToString([]byte(val))
 	timestamp := strconv.FormatInt(time.Now().UnixNano(), 10)
 	h := hmac.New(sha1.New, []byte(Secret))
@@ -348,11 +344,11 @@ func (c *Controller) XsrfToken() string {
 	if c._xsrf_token == "" {
 		token, ok := c.GetSecureCookie(XSRFKEY, "_xsrf")
 		if !ok {
-			expire := 0
+			var expire int64
 			if c.XSRFExpire > 0 {
-				expire = c.XSRFExpire
+				expire = int64(c.XSRFExpire)
 			} else {
-				expire = XSRFExpire
+				expire = int64(XSRFExpire)
 			}
 			token = GetRandomString(15)
 			c.SetSecureCookie(XSRFKEY, "_xsrf", token, expire)
@@ -379,8 +375,16 @@ func (c *Controller) CheckXsrfCookie() bool {
 }
 
 func (c *Controller) XsrfFormHtml() string {
+	var expire int64
+	if c.XSRFExpire > 0 {
+		expire = int64(c.XSRFExpire)
+	} else {
+		expire = int64(XSRFExpire)
+	}
+	token := GetRandomString(15)
+	c.SetSecureCookie(XSRFKEY, "_xsrf", token, expire)
 	return "<input type=\"hidden\" name=\"_xsrf\" value=\"" +
-		c._xsrf_token + "\"/>"
+		token + "\"/>"
 }
 
 func (c *Controller) GoToFunc(funcname string) {
