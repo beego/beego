@@ -382,7 +382,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		// pattern /admin   url /admin 200  /admin/ 404
 		// pattern /admin/  url /admin 301  /admin/ 200
 		if requestPath[n-1] != '/' && len(route.pattern) == n+1 &&
-			route.pattern[n] == '/' && route.pattern[:n-1] == requestPath {
+			route.pattern[n] == '/' && route.pattern[:n] == requestPath {
 			http.Redirect(w, r, requestPath+"/", 301)
 			return
 		}
