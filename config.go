@@ -53,7 +53,7 @@ var (
 func init() {
 	os.Chdir(path.Dir(os.Args[0]))
 	BeeApp = NewApp()
-	AppPath, _ = os.Getwd()
+	AppPath = path.Dir(os.Args[0])
 	StaticDir = make(map[string]string)
 	TemplateCache = make(map[string]*template.Template)
 	HttpAddr = ""
