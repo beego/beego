@@ -36,7 +36,7 @@ type Controller struct {
 }
 
 type ControllerInterface interface {
-	Init(ct *context.Context, childName string)
+	Init(ct *context.Context, childName string, app interface{})
 	Prepare()
 	Get()
 	Post()

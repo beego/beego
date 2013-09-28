@@ -445,7 +445,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 		//call the controller init function
 		method := vc.MethodByName("Init")
-		in := make([]reflect.Value, 2)
+		in := make([]reflect.Value, 3)
 		in[0] = reflect.ValueOf(context)
 		in[1] = reflect.ValueOf(runrouter.controllerType.Name())
 		in[2] = reflect.ValueOf(vc.Interface())
@@ -653,9 +653,10 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 							//call the controller init function
 							init := vc.MethodByName("Init")
-							in := make([]reflect.Value, 2)
+							in := make([]reflect.Value, 3)
 							in[0] = reflect.ValueOf(context)
 							in[1] = reflect.ValueOf(controllerType.Name())
+							in[2] = reflect.ValueOf(vc.Interface())
 							init.Call(in)
 							//call prepare function
 							in = make([]reflect.Value, 0)
