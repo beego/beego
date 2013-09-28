@@ -375,16 +375,8 @@ func (c *Controller) CheckXsrfCookie() bool {
 }
 
 func (c *Controller) XsrfFormHtml() string {
-	var expire int64
-	if c.XSRFExpire > 0 {
-		expire = int64(c.XSRFExpire)
-	} else {
-		expire = int64(XSRFExpire)
-	}
-	token := GetRandomString(15)
-	c.SetSecureCookie(XSRFKEY, "_xsrf", token, expire)
 	return "<input type=\"hidden\" name=\"_xsrf\" value=\"" +
-		token + "\"/>"
+		c._xsrf_token + "\"/>"
 }
 
 func (c *Controller) GoToFunc(funcname string) {
