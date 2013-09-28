@@ -22,16 +22,17 @@ import (
 )
 
 type Controller struct {
-	Ctx         *context.Context
-	Data        map[interface{}]interface{}
-	ChildName   string
-	TplNames    string
-	Layout      string
-	TplExt      string
-	_xsrf_token string
-	gotofunc    string
-	CruSession  session.SessionStore
-	XSRFExpire  int
+	Ctx           *context.Context
+	Data          map[interface{}]interface{}
+	ChildName     string
+	TplNames      string
+	Layout        string
+	TplExt        string
+	_xsrf_token   string
+	gotofunc      string
+	CruSession    session.SessionStore
+	XSRFExpire    int
+	AppController interface{}
 }
 
 type ControllerInterface interface {
@@ -48,13 +49,14 @@ type ControllerInterface interface {
 	Render() error
 }
 
-func (c *Controller) Init(ctx *context.Context, childName string) {
+func (c *Controller) Init(ctx *context.Context, childName string, app interface{}) {
 	c.Data = make(map[interface{}]interface{})
 	c.Layout = ""
 	c.TplNames = ""
 	c.ChildName = childName
 	c.Ctx = ctx
 	c.TplExt = "tpl"
+	c.AppController = app
 }
 
 func (c *Controller) Prepare() {

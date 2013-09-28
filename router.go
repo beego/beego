@@ -448,6 +448,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		in := make([]reflect.Value, 2)
 		in[0] = reflect.ValueOf(context)
 		in[1] = reflect.ValueOf(runrouter.controllerType.Name())
+		in[2] = reflect.ValueOf(vc.Interface())
 		method.Call(in)
 
 		//if XSRF is Enable then check cookie where there has any cookie in the  request's cookie _csrf
