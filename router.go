@@ -300,6 +300,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		Output:         beecontext.NewOutput(w),
 	}
 	context.Output.Context = context
+	context.Output.EnableGzip = EnableGzip
 
 	if context.Input.IsWebsocket() {
 		context.ResponseWriter = rw
