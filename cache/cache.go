@@ -36,6 +36,9 @@ func NewCache(adapterName, config string) (Cache, error) {
 	if !ok {
 		return nil, fmt.Errorf("cache: unknown adaptername %q (forgotten import?)", adapterName)
 	}
-	adapter.StartAndGC(config)
+	err := adapter.StartAndGC(config)
+	if err != nil {
+		return nil, err
+	}
 	return adapter, nil
 }
