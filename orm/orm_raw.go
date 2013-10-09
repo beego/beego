@@ -314,7 +314,7 @@ func (o *rawSet) loopSetRefs(refs []interface{}, sIdxes [][]int, sInds []reflect
 
 func (o *rawSet) QueryRow(containers ...interface{}) error {
 	if len(containers) == 0 {
-		panic("<RawSeter.QueryRow> need at least one arg")
+		panic(fmt.Errorf("<RawSeter.QueryRow> need at least one arg"))
 	}
 
 	refs := make([]interface{}, 0, len(containers))
@@ -327,7 +327,7 @@ func (o *rawSet) QueryRow(containers ...interface{}) error {
 		ind := reflect.Indirect(val)
 
 		if val.Kind() != reflect.Ptr {
-			panic("<RawSeter.QueryRow> all args must be use ptr")
+			panic(fmt.Errorf("<RawSeter.QueryRow> all args must be use ptr"))
 		}
 
 		etyp := ind.Type()
@@ -377,7 +377,7 @@ func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
 		val := reflect.ValueOf(container)
 		sInd := reflect.Indirect(val)
 		if val.Kind() != reflect.Ptr || sInd.Kind() != reflect.Slice {
-			panic("<RawSeter.QueryRows> all args must be use ptr slice")
+			panic(fmt.Errorf("<RawSeter.QueryRows> all args must be use ptr slice"))
 		}
 
 		etyp := sInd.Type().Elem()
@@ -440,7 +440,7 @@ func (o *rawSet) readValues(container interface{}) (int64, error) {
 	case *ParamsList:
 		typ = 3
 	default:
-		panic(fmt.Sprintf("<RawSeter> unsupport read values type `%T`", container))
+		panic(fmt.Errorf("<RawSeter> unsupport read values type `%T`", container))
 	}
 
 	query := o.query

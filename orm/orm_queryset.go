@@ -67,7 +67,7 @@ func (o querySet) RelatedSel(params ...interface{}) QuerySeter {
 			case int:
 				o.relDepth = val
 			default:
-				panic(fmt.Sprintf("<QuerySeter.RelatedSel> wrong param kind: %v", val))
+				panic(fmt.Errorf("<QuerySeter.RelatedSel> wrong param kind: %v", val))
 			}
 		}
 	}

@@ -58,7 +58,7 @@ func (d *dbBase) collectValues(mi *modelInfo, ind reflect.Value, cols []string, 
 		if fi, _ = mi.fields.GetByAny(column); fi != nil {
 			column = fi.column
 		} else {
-			panic(fmt.Sprintf("wrong db field/column name `%s` for model `%s`", column, mi.fullName))
+			panic(fmt.Errorf("wrong db field/column name `%s` for model `%s`", column, mi.fullName))
 		}
 		if fi.dbcol == false || fi.auto && skipAuto {
 			continue
@@ -360,7 +360,7 @@ func (d *dbBase) UpdateBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	values := make([]interface{}, 0, len(params))
 	for col, val := range params {
 		if fi, ok := mi.fields.GetByAny(col); ok == false || fi.dbcol == false {
-			panic(fmt.Sprintf("wrong field/column name `%s`", col))
+			panic(fmt.Errorf("wrong field/column name `%s`", col))
 		} else {
 			columns = append(columns, fi.column)
 			values = append(values, val)
@@ -368,7 +368,7 @@ func (d *dbBase) UpdateBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	}
 
 	if len(columns) == 0 {
-		panic("update params cannot empty")
+		panic(fmt.Errorf("update params cannot empty"))
 	}
 
 	tables := newDbTables(mi, d.ins)
@@ -438,7 +438,7 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	}
 
 	if cond == nil || cond.IsEmpty() {
-		panic("delete operation cannot execute without condition")
+		panic(fmt.Errorf("delete operation cannot execute without condition"))
 	}
 
 	Q := d.ins.TableQuote()
@@ -533,9 +533,9 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 
 	if errTyp {
 		if one {
-			panic(fmt.Sprintf("wrong object type `%s` for rows scan, need *%s", val.Type(), mi.fullName))
+			panic(fmt.Errorf("wrong object type `%s` for rows scan, need *%s", val.Type(), mi.fullName))
 		} else {
-			panic(fmt.Sprintf("wrong object type `%s` for rows scan, need *[]*%s or *[]%s", val.Type(), mi.fullName, mi.fullName))
+			panic(fmt.Errorf("wrong object type `%s` for rows scan, need *[]*%s or *[]%s", val.Type(), mi.fullName, mi.fullName))
 		}
 	}
 
@@ -559,7 +559,7 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 					maps[fi.column] = true
 				}
 			} else {
-				panic(fmt.Sprintf("wrong field/column name `%s`", col))
+				panic(fmt.Errorf("wrong field/column name `%s`", col))
 			}
 		}
 		if hasRel {
@@ -717,7 +717,7 @@ func (d *dbBase) GenerateOperatorSql(mi *modelInfo, fi *fieldInfo, operator stri
 	params := getFlatParams(fi, args, tz)
 
 	if len(params) == 0 {
-		panic(fmt.Sprintf("operator `%s` need at least one args", operator))
+		panic(fmt.Errorf("operator `%s` need at least one args", operator))
 	}
 	arg := params[0]
 
@@ -729,7 +729,7 @@ func (d *dbBase) GenerateOperatorSql(mi *modelInfo, fi *fieldInfo, operator stri
 		sql = fmt.Sprintf("IN (%s)", strings.Join(marks, ", "))
 	} else {
 		if len(params) > 1 {
-			panic(fmt.Sprintf("operator `%s` need 1 args not %d", operator, len(params)))
+			panic(fmt.Errorf("operator `%s` need 1 args not %d", operator, len(params)))
 		}
 		sql = d.ins.OperatorSql(operator)
 		switch operator {
@@ -758,7 +758,7 @@ func (d *dbBase) GenerateOperatorSql(mi *modelInfo, fi *fieldInfo, operator stri
 				}
 				params = nil
 			} else {
-				panic(fmt.Sprintf("operator `%s` need a bool value not `%T`", operator, arg))
+				panic(fmt.Errorf("operator `%s` need a bool value not `%T`", operator, arg))
 			}
 		}
 	}
@@ -779,13 +779,13 @@ func (d *dbBase) setColsValues(mi *modelInfo, ind *reflect.Value, cols []string,
 
 		value, err := d.convertValueFromDB(fi, val, tz)
 		if err != nil {
-			panic(fmt.Sprintf("Raw value: `%v` %s", val, err.Error()))
+			panic(fmt.Errorf("Raw value: `%v` %s", val, err.Error()))
 		}
 
 		_, err = d.setFieldValue(fi, value, field)
 
 		if err != nil {
-			panic(fmt.Sprintf("Raw value: `%v` %s", val, err.Error()))
+			panic(fmt.Errorf("Raw value: `%v` %s", val, err.Error()))
 		}
 	}
 }
@@ -1034,7 +1034,7 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 	case *ParamsList:
 		typ = 3
 	default:
-		panic(fmt.Sprintf("unsupport read values type `%T`", container))
+		panic(fmt.Errorf("unsupport read values type `%T`", container))
 	}
 
 	tables := newDbTables(mi, d.ins)
@@ -1117,7 +1117,7 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 
 				value, err := d.convertValueFromDB(fi, val, tz)
 				if err != nil {
-					panic(fmt.Sprintf("db value convert failed `%v` %s", val, err.Error()))
+					panic(fmt.Errorf("db value convert failed `%v` %s", val, err.Error()))
 				}
 
 				params[columns[i]] = value
@@ -1132,7 +1132,7 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 
 				value, err := d.convertValueFromDB(fi, val, tz)
 				if err != nil {
-					panic(fmt.Sprintf("db value convert failed `%v` %s", val, err.Error()))
+					panic(fmt.Errorf("db value convert failed `%v` %s", val, err.Error()))
 				}
 
 				params = append(params, value)
@@ -1146,7 +1146,7 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 
 				value, err := d.convertValueFromDB(fi, val, tz)
 				if err != nil {
-					panic(fmt.Sprintf("db value convert failed `%v` %s", val, err.Error()))
+					panic(fmt.Errorf("db value convert failed `%v` %s", val, err.Error()))
 				}
 
 				list = append(list, value)

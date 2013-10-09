@@ -14,7 +14,7 @@ func registerModel(model interface{}, prefix string) {
 	typ := ind.Type()
 
 	if val.Kind() != reflect.Ptr {
-		panic(fmt.Sprintf("<orm.RegisterModel> cannot use non-ptr model struct `%s`", getFullName(typ)))
+		panic(fmt.Errorf("<orm.RegisterModel> cannot use non-ptr model struct `%s`", getFullName(typ)))
 	}
 
 	table := getTableName(val)
@@ -177,7 +177,7 @@ func bootStrap() {
 							}
 						}
 						if added == false {
-							panic(fmt.Sprintf("cannot generate auto reverse field info `%s` to `%s`", fi.fullName, ffi.fullName))
+							panic(fmt.Errorf("cannot generate auto reverse field info `%s` to `%s`", fi.fullName, ffi.fullName))
 						}
 					}
 				}
