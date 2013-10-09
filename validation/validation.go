@@ -7,6 +7,10 @@ import (
 	"strings"
 )
 
+type ValidFormer interface {
+	Valid(*Validation)
+}
+
 type ValidationError struct {
 	Message, Key, Name, Field, Tmpl string
 	Value                           interface{}
@@ -19,42 +23,6 @@ func (e *ValidationError) String() string {
 		return ""
 	}
 	return e.Message
-}
-
-// A Validation context manages data validation and error messages.
-type Validation struct {
-	Errors []*ValidationError
-}
-
-func (v *Validation) Clear() {
-	v.Errors = []*ValidationError{}
-}
-
-func (v *Validation) HasErrors() bool {
-	return len(v.Errors) > 0
-}
-
-// Return the errors mapped by key.
-// If there are multiple validation errors associated with a single key, the
-// first one "wins".  (Typically the first validation will be the more basic).
-func (v *Validation) ErrorMap() map[string]*ValidationError {
-	m := map[string]*ValidationError{}
-	for _, e := range v.Errors {
-		if _, ok := m[e.Key]; !ok {
-			m[e.Key] = e
-		}
-	}
-	return m
-}
-
-// Add an error to the validation context.
-func (v *Validation) Error(message string, args ...interface{}) *ValidationResult {
-	result := (&ValidationResult{
-		Ok:    false,
-		Error: &ValidationError{},
-	}).Message(message, args...)
-	v.Errors = append(v.Errors, result.Error)
-	return result
 }
 
 // A ValidationResult is returned from every validation method.
@@ -80,6 +48,37 @@ func (r *ValidationResult) Message(message string, args ...interface{}) *Validat
 		}
 	}
 	return r
+}
+
+// A Validation context manages data validation and error messages.
+type Validation struct {
+	Errors    []*ValidationError
+	ErrorsMap map[string]*ValidationError
+}
+
+func (v *Validation) Clear() {
+	v.Errors = []*ValidationError{}
+}
+
+func (v *Validation) HasErrors() bool {
+	return len(v.Errors) > 0
+}
+
+// Return the errors mapped by key.
+// If there are multiple validation errors associated with a single key, the
+// first one "wins".  (Typically the first validation will be the more basic).
+func (v *Validation) ErrorMap() map[string]*ValidationError {
+	return v.ErrorsMap
+}
+
+// Add an error to the validation context.
+func (v *Validation) Error(message string, args ...interface{}) *ValidationResult {
+	result := (&ValidationResult{
+		Ok:    false,
+		Error: &ValidationError{},
+	}).Message(message, args...)
+	v.Errors = append(v.Errors, result.Error)
+	return result
 }
 
 // Test that the argument is non-nil and non-empty (if string or list)
@@ -192,13 +191,29 @@ func (v *Validation) apply(chk Validator, obj interface{}) *ValidationResult {
 		Tmpl:       MessageTmpls[Name],
 		LimitValue: chk.GetLimitValue(),
 	}
-	v.Errors = append(v.Errors, err)
+	v.setError(err)
 
 	// Also return it in the result.
 	return &ValidationResult{
 		Ok:    false,
 		Error: err,
 	}
+}
+
+func (v *Validation) setError(err *ValidationError) {
+	v.Errors = append(v.Errors, err)
+	if v.ErrorsMap == nil {
+		v.ErrorsMap = make(map[string]*ValidationError)
+	}
+	if _, ok := v.ErrorsMap[err.Field]; !ok {
+		v.ErrorsMap[err.Field] = err
+	}
+}
+
+func (v *Validation) SetError(fieldName string, errMsg string) *ValidationError {
+	err := &ValidationError{Key: fieldName, Field: fieldName, Tmpl: errMsg, Message: errMsg}
+	v.setError(err)
+	return err
 }
 
 // Apply a group of validators to a field, in order, and return the
@@ -241,5 +256,12 @@ func (v *Validation) Valid(obj interface{}) (b bool, err error) {
 			}
 		}
 	}
+
+	if !v.HasErrors() {
+		if form, ok := obj.(ValidFormer); ok {
+			form.Valid(v)
+		}
+	}
+
 	return !v.HasErrors(), nil
 }
