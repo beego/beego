@@ -1230,6 +1230,35 @@ func TestUpdate(t *testing.T) {
 	})
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
+
+	num, err = qs.Filter("user_name", "slene").Update(Params{
+		"Nums": ColValue(Col_Add, 100),
+	})
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	num, err = qs.Filter("user_name", "slene").Update(Params{
+		"Nums": ColValue(Col_Minus, 50),
+	})
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	num, err = qs.Filter("user_name", "slene").Update(Params{
+		"Nums": ColValue(Col_Multiply, 3),
+	})
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	num, err = qs.Filter("user_name", "slene").Update(Params{
+		"Nums": ColValue(Col_Except, 5),
+	})
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	user := User{UserName: "slene"}
+	err = dORM.Read(&user, "UserName")
+	throwFail(t, err)
+	throwFail(t, AssertIs(user.Nums, 30))
 }
 
 func TestDelete(t *testing.T) {
