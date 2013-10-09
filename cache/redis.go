@@ -22,7 +22,11 @@ func NewRedisCache() *RedisCache {
 
 func (rc *RedisCache) Get(key string) interface{} {
 	if rc.c == nil {
-		rc.c = rc.connectInit()
+		var err error
+		rc.c, err = rc.connectInit()
+		if err != nil {
+			return nil
+		}
 	}
 	v, err := rc.c.Do("HGET", rc.key, key)
 	if err != nil {
@@ -33,7 +37,11 @@ func (rc *RedisCache) Get(key string) interface{} {
 
 func (rc *RedisCache) Put(key string, val interface{}, timeout int64) error {
 	if rc.c == nil {
-		rc.c = rc.connectInit()
+		var err error
+		rc.c, err = rc.connectInit()
+		if err != nil {
+			return err
+		}
 	}
 	_, err := rc.c.Do("HSET", rc.key, key, val)
 	return err
@@ -41,7 +49,11 @@ func (rc *RedisCache) Put(key string, val interface{}, timeout int64) error {
 
 func (rc *RedisCache) Delete(key string) error {
 	if rc.c == nil {
-		rc.c = rc.connectInit()
+		var err error
+		rc.c, err = rc.connectInit()
+		if err != nil {
+			return err
+		}
 	}
 	_, err := rc.c.Do("HDEL", rc.key, key)
 	return err
@@ -49,7 +61,11 @@ func (rc *RedisCache) Delete(key string) error {
 
 func (rc *RedisCache) IsExist(key string) bool {
 	if rc.c == nil {
-		rc.c = rc.connectInit()
+		var err error
+		rc.c, err = rc.connectInit()
+		if err != nil {
+			return false
+		}
 	}
 	v, err := redis.Bool(rc.c.Do("HEXISTS", rc.key, key))
 	if err != nil {
@@ -60,7 +76,11 @@ func (rc *RedisCache) IsExist(key string) bool {
 
 func (rc *RedisCache) Incr(key string) error {
 	if rc.c == nil {
-		rc.c = rc.connectInit()
+		var err error
+		rc.c, err = rc.connectInit()
+		if err != nil {
+			return err
+		}
 	}
 	_, err := redis.Bool(rc.c.Do("HINCRBY", rc.key, key, 1))
 	if err != nil {
@@ -71,7 +91,11 @@ func (rc *RedisCache) Incr(key string) error {
 
 func (rc *RedisCache) Decr(key string) error {
 	if rc.c == nil {
-		rc.c = rc.connectInit()
+		var err error
+		rc.c, err = rc.connectInit()
+		if err != nil {
+			return err
+		}
 	}
 	_, err := redis.Bool(rc.c.Do("HINCRBY", rc.key, key, -1))
 	if err != nil {
@@ -82,7 +106,11 @@ func (rc *RedisCache) Decr(key string) error {
 
 func (rc *RedisCache) ClearAll() error {
 	if rc.c == nil {
-		rc.c = rc.connectInit()
+		var err error
+		rc.c, err = rc.connectInit()
+		if err != nil {
+			return err
+		}
 	}
 	_, err := rc.c.Do("DEL", rc.key)
 	return err
@@ -99,19 +127,23 @@ func (rc *RedisCache) StartAndGC(config string) error {
 	}
 	rc.key = cf["key"]
 	rc.conninfo = cf["conn"]
-	rc.c = rc.connectInit()
+	var err error
+	rc.c, err = rc.connectInit()
+	if err != nil {
+		return err
+	}
 	if rc.c == nil {
 		return errors.New("dial tcp conn error")
 	}
 	return nil
 }
 
-func (rc *RedisCache) connectInit() redis.Conn {
+func (rc *RedisCache) connectInit() (redis.Conn, error) {
 	c, err := redis.Dial("tcp", rc.conninfo)
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return c
+	return c, nil
 }
 
 func init() {
