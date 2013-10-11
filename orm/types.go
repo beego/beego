@@ -50,6 +50,7 @@ type QuerySeter interface {
 	OrderBy(...string) QuerySeter
 	RelatedSel(...interface{}) QuerySeter
 	Count() (int64, error)
+	Exist() bool
 	Update(Params) (int64, error)
 	Delete() (int64, error)
 	PrepareInsert() (Inserter, error)

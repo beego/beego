@@ -114,6 +114,11 @@ func (o *querySet) Count() (int64, error) {
 	return o.orm.alias.DbBaser.Count(o.orm.db, o, o.mi, o.cond, o.orm.alias.TZ)
 }
 
+func (o *querySet) Exist() bool {
+	cnt, _ := o.orm.alias.DbBaser.Count(o.orm.db, o, o.mi, o.cond, o.orm.alias.TZ)
+	return cnt > 0
+}
+
 func (o *querySet) Update(values Params) (int64, error) {
 	return o.orm.alias.DbBaser.UpdateBatch(o.orm.db, o, o.mi, o.cond, values, o.orm.alias.TZ)
 }
