@@ -26,8 +26,10 @@ func (mr *FilterRouter) ValidRouter(router string) bool {
 			return true
 		}
 		matches := mr.regex.FindStringSubmatch(router)
-		if len(matches[0]) == len(router) {
-			return true
+		if len(matches) > 0 {
+			if len(matches[0]) == len(router) {
+				return true
+			}
 		}
 	}
 	return false
