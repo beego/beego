@@ -126,7 +126,7 @@ func (t *dbTables) parseRelated(rels []string, depth int) {
 				jtl = jt
 
 			} else {
-				panic(fmt.Sprintf("unknown model/table name `%s`", ex))
+				panic(fmt.Errorf("unknown model/table name `%s`", ex))
 			}
 		}
 	}

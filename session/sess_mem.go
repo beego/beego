@@ -40,6 +40,13 @@ func (st *MemSessionStore) Delete(key interface{}) error {
 	return nil
 }
 
+func (st *MemSessionStore) Flush() error {
+	st.lock.Lock()
+	defer st.lock.Unlock()
+	st.value = make(map[interface{}]interface{})
+	return nil
+}
+
 func (st *MemSessionStore) SessionID() string {
 	return st.sid
 }
@@ -67,6 +74,29 @@ func (pder *MemProvider) SessionRead(sid string) (SessionStore, error) {
 	if element, ok := pder.sessions[sid]; ok {
 		go pder.SessionUpdate(sid)
 		pder.lock.RUnlock()
+		return element.Value.(*MemSessionStore), nil
+	} else {
+		pder.lock.RUnlock()
+		pder.lock.Lock()
+		newsess := &MemSessionStore{sid: sid, timeAccessed: time.Now(), value: make(map[interface{}]interface{})}
+		element := pder.list.PushBack(newsess)
+		pder.sessions[sid] = element
+		pder.lock.Unlock()
+		return newsess, nil
+	}
+	return nil, nil
+}
+
+func (pder *MemProvider) SessionRegenerate(oldsid, sid string) (SessionStore, error) {
+	pder.lock.RLock()
+	if element, ok := pder.sessions[oldsid]; ok {
+		go pder.SessionUpdate(oldsid)
+		pder.lock.RUnlock()
+		pder.lock.Lock()
+		element.Value.(*MemSessionStore).sid = sid
+		pder.sessions[sid] = element
+		delete(pder.sessions, oldsid)
+		pder.lock.Unlock()
 		return element.Value.(*MemSessionStore), nil
 	} else {
 		pder.lock.RUnlock()

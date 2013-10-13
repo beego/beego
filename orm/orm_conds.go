@@ -1,6 +1,7 @@
 package orm
 
 import (
+	"fmt"
 	"strings"
 )
 
@@ -28,7 +29,7 @@ func NewCondition() *Condition {
 
 func (c Condition) And(expr string, args ...interface{}) *Condition {
 	if expr == "" || len(args) == 0 {
-		panic("<Condition.And> args cannot empty")
+		panic(fmt.Errorf("<Condition.And> args cannot empty"))
 	}
 	c.params = append(c.params, condValue{exprs: strings.Split(expr, ExprSep), args: args})
 	return &c
@@ -36,7 +37,7 @@ func (c Condition) And(expr string, args ...interface{}) *Condition {
 
 func (c Condition) AndNot(expr string, args ...interface{}) *Condition {
 	if expr == "" || len(args) == 0 {
-		panic("<Condition.AndNot> args cannot empty")
+		panic(fmt.Errorf("<Condition.AndNot> args cannot empty"))
 	}
 	c.params = append(c.params, condValue{exprs: strings.Split(expr, ExprSep), args: args, isNot: true})
 	return &c
@@ -45,7 +46,7 @@ func (c Condition) AndNot(expr string, args ...interface{}) *Condition {
 func (c *Condition) AndCond(cond *Condition) *Condition {
 	c = c.clone()
 	if c == cond {
-		panic("cannot use self as sub cond")
+		panic(fmt.Errorf("<Condition.AndCond> cannot use self as sub cond"))
 	}
 	if cond != nil {
 		c.params = append(c.params, condValue{cond: cond, isCond: true})
@@ -55,7 +56,7 @@ func (c *Condition) AndCond(cond *Condition) *Condition {
 
 func (c Condition) Or(expr string, args ...interface{}) *Condition {
 	if expr == "" || len(args) == 0 {
-		panic("<Condition.Or> args cannot empty")
+		panic(fmt.Errorf("<Condition.Or> args cannot empty"))
 	}
 	c.params = append(c.params, condValue{exprs: strings.Split(expr, ExprSep), args: args, isOr: true})
 	return &c
@@ -63,7 +64,7 @@ func (c Condition) Or(expr string, args ...interface{}) *Condition {
 
 func (c Condition) OrNot(expr string, args ...interface{}) *Condition {
 	if expr == "" || len(args) == 0 {
-		panic("<Condition.OrNot> args cannot empty")
+		panic(fmt.Errorf("<Condition.OrNot> args cannot empty"))
 	}
 	c.params = append(c.params, condValue{exprs: strings.Split(expr, ExprSep), args: args, isNot: true, isOr: true})
 	return &c
@@ -72,7 +73,7 @@ func (c Condition) OrNot(expr string, args ...interface{}) *Condition {
 func (c *Condition) OrCond(cond *Condition) *Condition {
 	c = c.clone()
 	if c == cond {
-		panic("cannot use self as sub cond")
+		panic(fmt.Errorf("<Condition.OrCond> cannot use self as sub cond"))
 	}
 	if cond != nil {
 		c.params = append(c.params, condValue{cond: cond, isCond: true, isOr: true})

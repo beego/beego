@@ -44,13 +44,13 @@ func (o *orm) getMiInd(md interface{}) (mi *modelInfo, ind reflect.Value) {
 	ind = reflect.Indirect(val)
 	typ := ind.Type()
 	if val.Kind() != reflect.Ptr {
-		panic(fmt.Sprintf("<Ormer> cannot use non-ptr model struct `%s`", getFullName(typ)))
+		panic(fmt.Errorf("<Ormer> cannot use non-ptr model struct `%s`", getFullName(typ)))
 	}
 	name := getFullName(typ)
 	if mi, ok := modelCache.getByFN(name); ok {
 		return mi, ind
 	}
-	panic(fmt.Sprintf("<Ormer> table: `%s` not found, maybe not RegisterModel", name))
+	panic(fmt.Errorf("<Ormer> table: `%s` not found, maybe not RegisterModel", name))
 }
 
 func (o *orm) Read(md interface{}, cols ...string) error {
@@ -141,14 +141,14 @@ func (o *orm) QueryTable(ptrStructOrTableName interface{}) (qs QuerySeter) {
 		}
 	}
 	if qs == nil {
-		panic(fmt.Sprintf("<Ormer.QueryTable> table name: `%s` not exists", name))
+		panic(fmt.Errorf("<Ormer.QueryTable> table name: `%s` not exists", name))
 	}
 	return
 }
 
 func (o *orm) Using(name string) error {
 	if o.isTx {
-		panic("<Ormer.Using> transaction has been start, cannot change db")
+		panic(fmt.Errorf("<Ormer.Using> transaction has been start, cannot change db"))
 	}
 	if al, ok := dataBaseCache.get(name); ok {
 		o.alias = al
@@ -158,7 +158,7 @@ func (o *orm) Using(name string) error {
 			o.db = al.DB
 		}
 	} else {
-		return errors.New(fmt.Sprintf("<Ormer.Using> unknown db alias name `%s`", name))
+		return fmt.Errorf("<Ormer.Using> unknown db alias name `%s`", name)
 	}
 	return nil
 }

@@ -22,20 +22,21 @@ import (
 )
 
 type Controller struct {
-	Ctx         *context.Context
-	Data        map[interface{}]interface{}
-	ChildName   string
-	TplNames    string
-	Layout      string
-	TplExt      string
-	_xsrf_token string
-	gotofunc    string
-	CruSession  session.SessionStore
-	XSRFExpire  int
+	Ctx           *context.Context
+	Data          map[interface{}]interface{}
+	ChildName     string
+	TplNames      string
+	Layout        string
+	TplExt        string
+	_xsrf_token   string
+	gotofunc      string
+	CruSession    session.SessionStore
+	XSRFExpire    int
+	AppController interface{}
 }
 
 type ControllerInterface interface {
-	Init(ct *context.Context, childName string)
+	Init(ct *context.Context, childName string, app interface{})
 	Prepare()
 	Get()
 	Post()
@@ -48,13 +49,14 @@ type ControllerInterface interface {
 	Render() error
 }
 
-func (c *Controller) Init(ctx *context.Context, childName string) {
+func (c *Controller) Init(ctx *context.Context, childName string, app interface{}) {
 	c.Data = make(map[interface{}]interface{})
 	c.Layout = ""
 	c.TplNames = ""
 	c.ChildName = childName
 	c.Ctx = ctx
 	c.TplExt = "tpl"
+	c.AppController = app
 }
 
 func (c *Controller) Prepare() {
@@ -304,21 +306,54 @@ func (c *Controller) IsAjax() bool {
 	return c.Ctx.Input.IsAjax()
 }
 
+func (c *Controller) GetSecureCookie(Secret, key string) (string, bool) {
+	val := c.Ctx.GetCookie(key)
+	if val == "" {
+		return "", false
+	}
+
+	parts := strings.SplitN(val, "|", 3)
+
+	if len(parts) != 3 {
+		return "", false
+	}
+
+	vs := parts[0]
+	timestamp := parts[1]
+	sig := parts[2]
+
+	h := hmac.New(sha1.New, []byte(Secret))
+	fmt.Fprintf(h, "%s%s", vs, timestamp)
+
+	if fmt.Sprintf("%02x", h.Sum(nil)) != sig {
+		return "", false
+	}
+	res, _ := base64.URLEncoding.DecodeString(vs)
+	return string(res), true
+}
+
+func (c *Controller) SetSecureCookie(Secret, name, val string, age int64) {
+	vs := base64.URLEncoding.EncodeToString([]byte(val))
+	timestamp := strconv.FormatInt(time.Now().UnixNano(), 10)
+	h := hmac.New(sha1.New, []byte(Secret))
+	fmt.Fprintf(h, "%s%s", vs, timestamp)
+	sig := fmt.Sprintf("%02x", h.Sum(nil))
+	cookie := strings.Join([]string{vs, timestamp, sig}, "|")
+	c.Ctx.SetCookie(name, cookie, age, "/")
+}
+
 func (c *Controller) XsrfToken() string {
 	if c._xsrf_token == "" {
-		token := c.Ctx.GetCookie("_xsrf")
-		if token == "" {
-			h := hmac.New(sha1.New, []byte(XSRFKEY))
-			fmt.Fprintf(h, "%s:%d", c.Ctx.Request.RemoteAddr, time.Now().UnixNano())
-			tok := fmt.Sprintf("%s:%d", h.Sum(nil), time.Now().UnixNano())
-			token = base64.URLEncoding.EncodeToString([]byte(tok))
-			expire := 0
+		token, ok := c.GetSecureCookie(XSRFKEY, "_xsrf")
+		if !ok {
+			var expire int64
 			if c.XSRFExpire > 0 {
-				expire = c.XSRFExpire
+				expire = int64(c.XSRFExpire)
 			} else {
-				expire = XSRFExpire
+				expire = int64(XSRFExpire)
 			}
-			c.Ctx.SetCookie("_xsrf", token, expire, "/")
+			token = GetRandomString(15)
+			c.SetSecureCookie(XSRFKEY, "_xsrf", token, expire)
 		}
 		c._xsrf_token = token
 	}

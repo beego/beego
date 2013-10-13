@@ -77,6 +77,7 @@ type User struct {
 	Profile    *Profile  `orm:"null;rel(one);on_delete(set_null)"`
 	Posts      []*Post   `orm:"reverse(many)" json:"-"`
 	ShouldSkip string    `orm:"-"`
+	Nums       int
 }
 
 func (u *User) TableIndex() [][]string {

@@ -300,6 +300,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		Output:         beecontext.NewOutput(w),
 	}
 	context.Output.Context = context
+	context.Output.EnableGzip = EnableGzip
 
 	if context.Input.IsWebsocket() {
 		context.ResponseWriter = rw
@@ -382,7 +383,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		// pattern /admin   url /admin 200  /admin/ 404
 		// pattern /admin/  url /admin 301  /admin/ 200
 		if requestPath[n-1] != '/' && len(route.pattern) == n+1 &&
-			route.pattern[n] == '/' && route.pattern[:n-1] == requestPath {
+			route.pattern[n] == '/' && route.pattern[:n] == requestPath {
 			http.Redirect(w, r, requestPath+"/", 301)
 			return
 		}
@@ -445,9 +446,10 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 		//call the controller init function
 		method := vc.MethodByName("Init")
-		in := make([]reflect.Value, 2)
+		in := make([]reflect.Value, 3)
 		in[0] = reflect.ValueOf(context)
 		in[1] = reflect.ValueOf(runrouter.controllerType.Name())
+		in[2] = reflect.ValueOf(vc.Interface())
 		method.Call(in)
 
 		//if XSRF is Enable then check cookie where there has any cookie in the  request's cookie _csrf
@@ -652,9 +654,10 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 							//call the controller init function
 							init := vc.MethodByName("Init")
-							in := make([]reflect.Value, 2)
+							in := make([]reflect.Value, 3)
 							in[0] = reflect.ValueOf(context)
 							in[1] = reflect.ValueOf(controllerType.Name())
+							in[2] = reflect.ValueOf(vc.Interface())
 							init.Call(in)
 							//call prepare function
 							in = make([]reflect.Value, 0)
