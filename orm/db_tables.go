@@ -100,22 +100,29 @@ func (t *dbTables) parseRelated(rels []string, depth int) {
 			exs    = strings.Split(s, ExprSep)
 			names  = make([]string, 0, len(exs))
 			mmi    = t.mi
-			cansel = true
+			cancel = true
 			jtl    *dbTable
 		)
+
+		inner := true
+
 		for _, ex := range exs {
 			if fi, ok := mmi.fields.GetByAny(ex); ok && fi.rel && fi.fieldType != RelManyToMany {
 				names = append(names, fi.name)
 				mmi = fi.relModelInfo
 
-				jt := t.set(names, mmi, fi, fi.null == false)
+				if fi.null {
+					inner = false
+				}
+
+				jt := t.set(names, mmi, fi, inner)
 				jt.jtl = jtl
 
 				if fi.reverse {
-					cansel = false
+					cancel = false
 				}
 
-				if cansel {
+				if cancel {
 					jt.sel = depth > 0
 
 					if i < relsNum {
@@ -178,9 +185,8 @@ func (t *dbTables) getJoinSql() (join string) {
 	return
 }
 
-func (d *dbTables) parseExprs(mi *modelInfo, exprs []string) (index, name string, info *fieldInfo, success bool) {
+func (t *dbTables) parseExprs(mi *modelInfo, exprs []string) (index, name string, info *fieldInfo, success bool) {
 	var (
-		ffi *fieldInfo
 		jtl *dbTable
 		mmi = mi
 	)
@@ -188,73 +194,67 @@ func (d *dbTables) parseExprs(mi *modelInfo, exprs []string) (index, name string
 	num := len(exprs) - 1
 	names := make([]string, 0)
 
-	for i, ex := range exprs {
-		exist := false
+	inner := true
 
-	check:
+	for i, ex := range exprs {
+
 		fi, ok := mmi.fields.GetByAny(ex)
 
 		if ok {
 
-			if num != i {
-				names = append(names, fi.name)
+			isRel := fi.rel || fi.reverse
 
-				switch {
-				case fi.rel:
-					mmi = fi.relModelInfo
-					if fi.fieldType == RelManyToMany {
-						mmi = fi.relThroughModelInfo
-					}
-				case fi.reverse:
-					mmi = fi.reverseFieldInfo.mi
-					if fi.reverseFieldInfo.fieldType == RelManyToMany {
-						mmi = fi.reverseFieldInfo.relThroughModelInfo
-					}
-				default:
-					return
+			names = append(names, fi.name)
+
+			switch {
+			case fi.rel:
+				mmi = fi.relModelInfo
+				if fi.fieldType == RelManyToMany {
+					mmi = fi.relThroughModelInfo
+				}
+			case fi.reverse:
+				mmi = fi.reverseFieldInfo.mi
+			}
+
+			if isRel && (fi.mi.isThrough == false || num != i) {
+				if fi.null {
+					inner = false
 				}
 
-				jt, _ := d.add(names, mmi, fi, fi.null == false)
+				jt, _ := t.add(names, mmi, fi, inner)
 				jt.jtl = jtl
 				jtl = jt
+			}
 
-				if fi.rel && fi.fieldType == RelManyToMany {
-					ex = fi.relModelInfo.name
-					goto check
-				}
-
-				if fi.reverse && fi.reverseFieldInfo.fieldType == RelManyToMany {
-					ex = fi.reverseFieldInfo.mi.name
-					goto check
-				}
-
-				exist = true
-
-			} else {
-
-				if ffi == nil {
+			if num == i {
+				if i == 0 || jtl == nil {
 					index = "T0"
 				} else {
 					index = jtl.index
 				}
+
 				info = fi
-				if jtl != nil {
-					name = jtl.name + ExprSep + fi.name
-				} else {
+
+				if jtl == nil {
 					name = fi.name
+				} else {
+					name = jtl.name + ExprSep + fi.name
 				}
 
-				switch fi.fieldType {
-				case RelManyToMany, RelReverseMany:
-				default:
-					exist = true
+				switch {
+				case fi.rel:
+
+				case fi.reverse:
+					switch fi.reverseFieldInfo.fieldType {
+					case RelOneToOne, RelForeignKey:
+						index = jtl.index
+						info = fi.reverseFieldInfo.mi.fields.pk
+						name = info.name
+					}
 				}
 			}
 
-			ffi = fi
-		}
-
-		if exist == false {
+		} else {
 			index = ""
 			name = ""
 			info = nil
@@ -267,16 +267,15 @@ func (d *dbTables) parseExprs(mi *modelInfo, exprs []string) (index, name string
 	return
 }
 
-func (d *dbTables) getCondSql(cond *Condition, sub bool, tz *time.Location) (where string, params []interface{}) {
+func (t *dbTables) getCondSql(cond *Condition, sub bool, tz *time.Location) (where string, params []interface{}) {
 	if cond == nil || cond.IsEmpty() {
 		return
 	}
 
-	Q := d.base.TableQuote()
+	Q := t.base.TableQuote()
 
-	mi := d.mi
+	mi := t.mi
 
-	// outFor:
 	for i, p := range cond.params {
 		if i > 0 {
 			if p.isOr {
@@ -289,7 +288,7 @@ func (d *dbTables) getCondSql(cond *Condition, sub bool, tz *time.Location) (whe
 			where += "NOT "
 		}
 		if p.isCond {
-			w, ps := d.getCondSql(p.cond, true, tz)
+			w, ps := t.getCondSql(p.cond, true, tz)
 			if w != "" {
 				w = fmt.Sprintf("( %s) ", w)
 			}
@@ -305,7 +304,7 @@ func (d *dbTables) getCondSql(cond *Condition, sub bool, tz *time.Location) (whe
 				exprs = exprs[:num]
 			}
 
-			index, _, fi, suc := d.parseExprs(mi, exprs)
+			index, _, fi, suc := t.parseExprs(mi, exprs)
 			if suc == false {
 				panic(fmt.Errorf("unknown field/column name `%s`", strings.Join(p.exprs, ExprSep)))
 			}
@@ -314,10 +313,10 @@ func (d *dbTables) getCondSql(cond *Condition, sub bool, tz *time.Location) (whe
 				operator = "exact"
 			}
 
-			operSql, args := d.base.GenerateOperatorSql(mi, fi, operator, p.args, tz)
+			operSql, args := t.base.GenerateOperatorSql(mi, fi, operator, p.args, tz)
 
 			leftCol := fmt.Sprintf("%s.%s%s%s", index, Q, fi.column, Q)
-			d.base.GenerateOperatorLeftCol(fi, operator, &leftCol)
+			t.base.GenerateOperatorLeftCol(fi, operator, &leftCol)
 
 			where += fmt.Sprintf("%s %s ", leftCol, operSql)
 			params = append(params, args...)
@@ -332,12 +331,12 @@ func (d *dbTables) getCondSql(cond *Condition, sub bool, tz *time.Location) (whe
 	return
 }
 
-func (d *dbTables) getOrderSql(orders []string) (orderSql string) {
+func (t *dbTables) getOrderSql(orders []string) (orderSql string) {
 	if len(orders) == 0 {
 		return
 	}
 
-	Q := d.base.TableQuote()
+	Q := t.base.TableQuote()
 
 	orderSqls := make([]string, 0, len(orders))
 	for _, order := range orders {
@@ -348,7 +347,7 @@ func (d *dbTables) getOrderSql(orders []string) (orderSql string) {
 		}
 		exprs := strings.Split(order, ExprSep)
 
-		index, _, fi, suc := d.parseExprs(d.mi, exprs)
+		index, _, fi, suc := t.parseExprs(t.mi, exprs)
 		if suc == false {
 			panic(fmt.Errorf("unknown field/column name `%s`", strings.Join(exprs, ExprSep)))
 		}
@@ -360,14 +359,14 @@ func (d *dbTables) getOrderSql(orders []string) (orderSql string) {
 	return
 }
 
-func (d *dbTables) getLimitSql(mi *modelInfo, offset int64, limit int64) (limits string) {
+func (t *dbTables) getLimitSql(mi *modelInfo, offset int64, limit int64) (limits string) {
 	if limit == 0 {
 		limit = int64(DefaultRowsLimit)
 	}
 	if limit < 0 {
 		// no limit
 		if offset > 0 {
-			maxLimit := d.base.MaxLimit()
+			maxLimit := t.base.MaxLimit()
 			if maxLimit == 0 {
 				limits = fmt.Sprintf("OFFSET %d", offset)
 			} else {

@@ -151,7 +151,11 @@ func getDbCreateSql(al *alias) (sqls []string, tableIndexes map[string][]dbIndex
 		}
 
 		if mi.model != nil {
-			for _, names := range getTableUnique(mi.addrField) {
+			allnames := getTableUnique(mi.addrField)
+			if !mi.manual && len(mi.uniques) > 0 {
+				allnames = append(allnames, mi.uniques)
+			}
+			for _, names := range allnames {
 				cols := make([]string, 0, len(names))
 				for _, name := range names {
 					if fi, ok := mi.fields.GetByAny(name); ok && fi.dbcol {

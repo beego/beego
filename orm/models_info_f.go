@@ -103,6 +103,8 @@ type fieldInfo struct {
 	reverse             bool
 	reverseField        string
 	reverseFieldInfo    *fieldInfo
+	reverseFieldInfoTwo *fieldInfo
+	reverseFieldInfoM2M *fieldInfo
 	relTable            string
 	relThrough          string
 	relThroughModelInfo *modelInfo

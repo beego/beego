@@ -52,7 +52,6 @@ type dbBase struct {
 var _ dbBaser = new(dbBase)
 
 func (d *dbBase) collectValues(mi *modelInfo, ind reflect.Value, cols []string, skipAuto bool, insert bool, tz *time.Location) (columns []string, values []interface{}, err error) {
-	_, pkValue, _ := getExistPk(mi, ind)
 	for _, column := range cols {
 		var fi *fieldInfo
 		if fi, _ = mi.fields.GetByAny(column); fi != nil {
@@ -63,82 +62,90 @@ func (d *dbBase) collectValues(mi *modelInfo, ind reflect.Value, cols []string, 
 		if fi.dbcol == false || fi.auto && skipAuto {
 			continue
 		}
-		var value interface{}
-		if fi.pk {
-			value = pkValue
-		} else {
-			field := ind.Field(fi.fieldIndex)
-			if fi.isFielder {
-				f := field.Addr().Interface().(Fielder)
-				value = f.RawValue()
-			} else {
-				switch fi.fieldType {
-				case TypeBooleanField:
-					value = field.Bool()
-				case TypeCharField, TypeTextField:
-					value = field.String()
-				case TypeFloatField, TypeDecimalField:
-					vu := field.Interface()
-					if _, ok := vu.(float32); ok {
-						value, _ = StrTo(ToStr(vu)).Float64()
-					} else {
-						value = field.Float()
-					}
-				case TypeDateField, TypeDateTimeField:
-					value = field.Interface()
-					if t, ok := value.(time.Time); ok {
-						if fi.fieldType == TypeDateField {
-							d.ins.TimeToDB(&t, DefaultTimeLoc)
-						} else {
-							d.ins.TimeToDB(&t, tz)
-						}
-						value = t
-					}
-				default:
-					switch {
-					case fi.fieldType&IsPostiveIntegerField > 0:
-						value = field.Uint()
-					case fi.fieldType&IsIntegerField > 0:
-						value = field.Int()
-					case fi.fieldType&IsRelField > 0:
-						if field.IsNil() {
-							value = nil
-						} else {
-							if _, vu, ok := getExistPk(fi.relModelInfo, reflect.Indirect(field)); ok {
-								value = vu
-							} else {
-								value = nil
-							}
-						}
-						if fi.null == false && value == nil {
-							return nil, nil, errors.New(fmt.Sprintf("field `%s` cannot be NULL", fi.fullName))
-						}
-					}
-				}
-			}
-			switch fi.fieldType {
-			case TypeDateField, TypeDateTimeField:
-				if fi.auto_now || fi.auto_now_add && insert {
-					tnow := time.Now()
-					if fi.fieldType == TypeDateField {
-						d.ins.TimeToDB(&tnow, DefaultTimeLoc)
-					} else {
-						d.ins.TimeToDB(&tnow, tz)
-					}
-					value = tnow
-					if fi.isFielder {
-						f := field.Addr().Interface().(Fielder)
-						f.SetRaw(tnow.In(DefaultTimeLoc))
-					} else {
-						field.Set(reflect.ValueOf(tnow.In(DefaultTimeLoc)))
-					}
-				}
-			}
+		value, err := d.collectFieldValue(mi, fi, ind, insert, tz)
+		if err != nil {
+			return nil, nil, err
 		}
 		columns = append(columns, column)
 		values = append(values, value)
 	}
 	return
+}
+
+func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Value, insert bool, tz *time.Location) (interface{}, error) {
+	var value interface{}
+	if fi.pk {
+		_, value, _ = getExistPk(mi, ind)
+	} else {
+		field := ind.Field(fi.fieldIndex)
+		if fi.isFielder {
+			f := field.Addr().Interface().(Fielder)
+			value = f.RawValue()
+		} else {
+			switch fi.fieldType {
+			case TypeBooleanField:
+				value = field.Bool()
+			case TypeCharField, TypeTextField:
+				value = field.String()
+			case TypeFloatField, TypeDecimalField:
+				vu := field.Interface()
+				if _, ok := vu.(float32); ok {
+					value, _ = StrTo(ToStr(vu)).Float64()
+				} else {
+					value = field.Float()
+				}
+			case TypeDateField, TypeDateTimeField:
+				value = field.Interface()
+				if t, ok := value.(time.Time); ok {
+					if fi.fieldType == TypeDateField {
+						d.ins.TimeToDB(&t, DefaultTimeLoc)
+					} else {
+						d.ins.TimeToDB(&t, tz)
+					}
+					value = t
+				}
+			default:
+				switch {
+				case fi.fieldType&IsPostiveIntegerField > 0:
+					value = field.Uint()
+				case fi.fieldType&IsIntegerField > 0:
+					value = field.Int()
+				case fi.fieldType&IsRelField > 0:
+					if field.IsNil() {
+						value = nil
+					} else {
+						if _, vu, ok := getExistPk(fi.relModelInfo, reflect.Indirect(field)); ok {
+							value = vu
+						} else {
+							value = nil
+						}
+					}
+					if fi.null == false && value == nil {
+						return nil, errors.New(fmt.Sprintf("field `%s` cannot be NULL", fi.fullName))
+					}
+				}
+			}
+		}
+		switch fi.fieldType {
+		case TypeDateField, TypeDateTimeField:
+			if fi.auto_now || fi.auto_now_add && insert {
+				tnow := time.Now()
+				if fi.fieldType == TypeDateField {
+					d.ins.TimeToDB(&tnow, DefaultTimeLoc)
+				} else {
+					d.ins.TimeToDB(&tnow, tz)
+				}
+				value = tnow
+				if fi.isFielder {
+					f := field.Addr().Interface().(Fielder)
+					f.SetRaw(tnow.In(DefaultTimeLoc))
+				} else {
+					field.Set(reflect.ValueOf(tnow.In(DefaultTimeLoc)))
+				}
+			}
+		}
+	}
+	return value, nil
 }
 
 func (d *dbBase) PrepareInsert(q dbQuerier, mi *modelInfo) (stmtQuerier, string, error) {
@@ -250,6 +257,10 @@ func (d *dbBase) Insert(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.
 		return 0, err
 	}
 
+	return d.InsertValue(q, mi, names, values)
+}
+
+func (d *dbBase) InsertValue(q dbQuerier, mi *modelInfo, names []string, values []interface{}) (int64, error) {
 	Q := d.ins.TableQuote()
 
 	marks := make([]string, len(names))
@@ -653,10 +664,12 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 			trefs = refs[len(tCols):]
 
 			for _, tbl := range tables.tables {
+				// loop selected tables
 				if tbl.sel {
 					last := mind
 					names := ""
 					mmi := mi
+					// loop cascade models
 					for _, name := range tbl.names {
 						names += name
 						if val, ok := cacheV[names]; ok {
@@ -665,27 +678,30 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 						} else {
 							fi := mmi.fields.GetByName(name)
 							lastm := mmi
-							mmi := fi.relModelInfo
-							field := reflect.Indirect(last.Field(fi.fieldIndex))
-							if field.IsValid() {
-								d.setColsValues(mmi, &field, mmi.fields.dbcols, trefs[:len(mmi.fields.dbcols)], tz)
-								for _, fi := range mmi.fields.fieldsReverse {
-									if fi.inModel && fi.reverseFieldInfo.mi == lastm {
-										if fi.reverseFieldInfo != nil {
-											f := field.Field(fi.fieldIndex)
-											if f.Kind() == reflect.Ptr {
-												f.Set(last.Addr())
+							mmi = fi.relModelInfo
+							field := last
+							if last.Kind() != reflect.Invalid {
+								field = reflect.Indirect(last.Field(fi.fieldIndex))
+								if field.IsValid() {
+									d.setColsValues(mmi, &field, mmi.fields.dbcols, trefs[:len(mmi.fields.dbcols)], tz)
+									for _, fi := range mmi.fields.fieldsReverse {
+										if fi.inModel && fi.reverseFieldInfo.mi == lastm {
+											if fi.reverseFieldInfo != nil {
+												f := field.Field(fi.fieldIndex)
+												if f.Kind() == reflect.Ptr {
+													f.Set(last.Addr())
+												}
 											}
 										}
 									}
+									last = field
 								}
-								cacheV[names] = &field
-								cacheM[names] = mmi
-								last = field
 							}
-							trefs = trefs[len(mmi.fields.dbcols):]
+							cacheV[names] = &field
+							cacheM[names] = mmi
 						}
 					}
+					trefs = trefs[len(mmi.fields.dbcols):]
 				}
 			}
 

@@ -16,6 +16,8 @@ type modelInfo struct {
 	fields    *fields
 	manual    bool
 	addrField reflect.Value
+	uniques   []string
+	isThrough bool
 }
 
 func newModelInfo(val reflect.Value) (info *modelInfo) {
@@ -118,5 +120,7 @@ func newM2MModelInfo(m1, m2 *modelInfo) (info *modelInfo) {
 	info.fields.Add(f1)
 	info.fields.Add(f2)
 	info.fields.pk = fa
+
+	info.uniques = []string{f1.column, f2.column}
 	return
 }

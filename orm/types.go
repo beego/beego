@@ -24,9 +24,8 @@ type Ormer interface {
 	Insert(interface{}) (int64, error)
 	Update(interface{}, ...string) (int64, error)
 	Delete(interface{}) (int64, error)
-	M2mAdd(interface{}, string, ...interface{}) (int64, error)
-	M2mDel(interface{}, string, ...interface{}) (int64, error)
-	LoadRel(interface{}, string) (int64, error)
+	LoadRelated(interface{}, string, ...interface{}) (int64, error)
+	QueryM2M(interface{}, string) QueryM2Mer
 	QueryTable(interface{}) QuerySeter
 	Using(string) error
 	Begin() error
@@ -59,6 +58,14 @@ type QuerySeter interface {
 	Values(*[]Params, ...string) (int64, error)
 	ValuesList(*[]ParamsList, ...string) (int64, error)
 	ValuesFlat(*ParamsList, string) (int64, error)
+}
+
+type QueryM2Mer interface {
+	Add(...interface{}) (int64, error)
+	Remove(...interface{}) (int64, error)
+	Exist(interface{}) bool
+	Clear() (int64, error)
+	Count() (int64, error)
 }
 
 type RawPreparer interface {
@@ -114,6 +121,7 @@ type txEnder interface {
 type dbBaser interface {
 	Read(dbQuerier, *modelInfo, reflect.Value, *time.Location, []string) error
 	Insert(dbQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
+	InsertValue(dbQuerier, *modelInfo, []string, []interface{}) (int64, error)
 	InsertStmt(stmtQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
 	Update(dbQuerier, *modelInfo, reflect.Value, *time.Location, []string) (int64, error)
 	Delete(dbQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
@@ -139,4 +147,5 @@ type dbBaser interface {
 	ShowTablesQuery() string
 	ShowColumnsQuery(string) string
 	IndexExists(dbQuerier, string, string) bool
+	collectFieldValue(*modelInfo, *fieldInfo, reflect.Value, bool, *time.Location) (interface{}, error)
 }

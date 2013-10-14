@@ -99,10 +99,11 @@ func NewUser() *User {
 }
 
 type Profile struct {
-	Id    int
-	Age   int16
-	Money float64
-	User  *User `orm:"reverse(one)" json:"-"`
+	Id       int
+	Age      int16
+	Money    float64
+	User     *User `orm:"reverse(one)" json:"-"`
+	BestPost *Post `orm:"rel(one);null"`
 }
 
 func (u *Profile) TableName() string {
@@ -136,9 +137,10 @@ func NewPost() *Post {
 }
 
 type Tag struct {
-	Id    int
-	Name  string  `orm:"size(30)"`
-	Posts []*Post `orm:"reverse(many)" json:"-"`
+	Id       int
+	Name     string  `orm:"size(30)"`
+	BestPost *Post   `orm:"rel(one);null"`
+	Posts    []*Post `orm:"reverse(many)" json:"-"`
 }
 
 func NewTag() *Tag {

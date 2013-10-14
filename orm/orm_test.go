@@ -48,9 +48,9 @@ func ValuesCompare(is bool, a interface{}, args ...interface{}) (err error, ok b
 	ok = is && ok || !is && !ok
 	if !ok {
 		if is {
-			err = fmt.Errorf("expected: a == `%v`, get `%v`", b, a)
+			err = fmt.Errorf("expected: `%v`, get `%v`", b, a)
 		} else {
-			err = fmt.Errorf("expected: a != `%v`, get `%v`", b, a)
+			err = fmt.Errorf("expected: `%v`, get `%v`", b, a)
 		}
 	}
 
@@ -419,7 +419,7 @@ func TestInsertTestData(t *testing.T) {
 	throwFail(t, AssertIs(id, 4))
 
 	tags := []*Tag{
-		&Tag{Name: "golang"},
+		&Tag{Name: "golang", BestPost: &Post{Id: 2}},
 		&Tag{Name: "example"},
 		&Tag{Name: "format"},
 		&Tag{Name: "c++"},
@@ -454,7 +454,13 @@ The program—and web server—godoc processes Go source files to extract docume
 		id, err := dORM.Insert(post)
 		throwFail(t, err)
 		throwFail(t, AssertIs(id > 0, true))
-		// dORM.M2mAdd(post, "tags", post.Tags)
+
+		num := len(post.Tags)
+		if num > 0 {
+			nums, err := dORM.QueryM2M(post, "tags").Add(post.Tags)
+			throwFailNow(t, err)
+			throwFailNow(t, AssertIs(nums, num))
+		}
 	}
 
 	for _, comment := range comments {
@@ -588,6 +594,68 @@ func TestOperators(t *testing.T) {
 	num, err = qs.Filter("status__in", []*int{&n1}, &n2).Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 2))
+}
+
+func TestSetCond(t *testing.T) {
+	cond := NewCondition()
+	cond1 := cond.And("profile__isnull", false).AndNot("status__in", 1).Or("profile__age__gt", 2000)
+
+	qs := dORM.QueryTable("user")
+	num, err := qs.SetCond(cond1).Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	cond2 := cond.AndCond(cond1).OrCond(cond.And("user_name", "slene"))
+	num, err = qs.SetCond(cond2).Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 2))
+}
+
+func TestLimit(t *testing.T) {
+	var posts []*Post
+	qs := dORM.QueryTable("post")
+	num, err := qs.Limit(1).All(&posts)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	num, err = qs.Limit(-1).All(&posts)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 4))
+
+	num, err = qs.Limit(-1, 2).All(&posts)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 2))
+
+	num, err = qs.Limit(0, 2).All(&posts)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 2))
+}
+
+func TestOffset(t *testing.T) {
+	var posts []*Post
+	qs := dORM.QueryTable("post")
+	num, err := qs.Limit(1).Offset(2).All(&posts)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	num, err = qs.Offset(2).All(&posts)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 2))
+}
+
+func TestOrderBy(t *testing.T) {
+	qs := dORM.QueryTable("user")
+	num, err := qs.OrderBy("-status").Filter("user_name", "nobody").Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	num, err = qs.OrderBy("status").Filter("user_name", "slene").Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	num, err = qs.OrderBy("-profile__age").Filter("user_name", "astaxie").Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
 }
 
 func TestAll(t *testing.T) {
@@ -758,66 +826,292 @@ func TestRelatedSel(t *testing.T) {
 	throwFailNow(t, AssertIs(posts[3].User.UserName, "nobody"))
 }
 
-func TestSetCond(t *testing.T) {
-	cond := NewCondition()
-	cond1 := cond.And("profile__isnull", false).AndNot("status__in", 1).Or("profile__age__gt", 2000)
+func TestReverseQuery(t *testing.T) {
+	var profile Profile
+	err := dORM.QueryTable("user_profile").Filter("User", 3).One(&profile)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(profile.Age, 30))
 
-	qs := dORM.QueryTable("user")
-	num, err := qs.SetCond(cond1).Count()
-	throwFail(t, err)
-	throwFail(t, AssertIs(num, 1))
+	profile = Profile{}
+	err = dORM.QueryTable("user_profile").Filter("User__UserName", "astaxie").One(&profile)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(profile.Age, 30))
 
-	cond2 := cond.AndCond(cond1).OrCond(cond.And("user_name", "slene"))
-	num, err = qs.SetCond(cond2).Count()
-	throwFail(t, err)
-	throwFail(t, AssertIs(num, 2))
-}
+	var user User
+	err = dORM.QueryTable("user").Filter("Posts__Title", "Examples").One(&user)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(user.UserName, "astaxie"))
 
-func TestLimit(t *testing.T) {
+	user = User{}
+	err = dORM.QueryTable("user").Filter("Posts__User__UserName", "astaxie").Limit(1).One(&user)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(user.UserName, "astaxie"))
+
+	user = User{}
+	err = dORM.QueryTable("user").Filter("Posts__User__UserName", "astaxie").RelatedSel().Limit(1).One(&user)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(user.UserName, "astaxie"))
+	throwFailNow(t, AssertIs(user.Profile == nil, false))
+	throwFailNow(t, AssertIs(user.Profile.Age, 30))
+
 	var posts []*Post
-	qs := dORM.QueryTable("post")
-	num, err := qs.Limit(1).All(&posts)
-	throwFail(t, err)
-	throwFail(t, AssertIs(num, 1))
+	num, err := dORM.QueryTable("post").Filter("Tags__Tag__Name", "golang").All(&posts)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 3))
+	throwFailNow(t, AssertIs(posts[0].Title, "Introduction"))
 
-	num, err = qs.Limit(-1).All(&posts)
-	throwFail(t, err)
-	throwFail(t, AssertIs(num, 4))
+	posts = []*Post{}
+	num, err = dORM.QueryTable("post").Filter("Tags__Tag__Name", "golang").Filter("User__UserName", "slene").All(&posts)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 1))
+	throwFailNow(t, AssertIs(posts[0].Title, "Introduction"))
 
-	num, err = qs.Limit(-1, 2).All(&posts)
-	throwFail(t, err)
-	throwFail(t, AssertIs(num, 2))
+	posts = []*Post{}
+	num, err = dORM.QueryTable("post").Filter("Tags__Tag__Name", "golang").
+		Filter("User__UserName", "slene").RelatedSel().All(&posts)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 1))
+	throwFailNow(t, AssertIs(posts[0].User == nil, false))
+	throwFailNow(t, AssertIs(posts[0].User.UserName, "slene"))
 
-	num, err = qs.Limit(0, 2).All(&posts)
-	throwFail(t, err)
-	throwFail(t, AssertIs(num, 2))
+	var tags []*Tag
+	num, err = dORM.QueryTable("tag").Filter("Posts__Post__Title", "Introduction").All(&tags)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 1))
+	throwFailNow(t, AssertIs(tags[0].Name, "golang"))
+
+	tags = []*Tag{}
+	num, err = dORM.QueryTable("tag").Filter("Posts__Post__Title", "Introduction").
+		Filter("BestPost__User__UserName", "astaxie").All(&tags)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 1))
+	throwFailNow(t, AssertIs(tags[0].Name, "golang"))
+
+	tags = []*Tag{}
+	num, err = dORM.QueryTable("tag").Filter("Posts__Post__Title", "Introduction").
+		Filter("BestPost__User__UserName", "astaxie").RelatedSel().All(&tags)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 1))
+	throwFailNow(t, AssertIs(tags[0].Name, "golang"))
+	throwFailNow(t, AssertIs(tags[0].BestPost == nil, false))
+	throwFailNow(t, AssertIs(tags[0].BestPost.Title, "Examples"))
+	throwFailNow(t, AssertIs(tags[0].BestPost.User == nil, false))
+	throwFailNow(t, AssertIs(tags[0].BestPost.User.UserName, "astaxie"))
 }
 
-func TestOffset(t *testing.T) {
-	var posts []*Post
-	qs := dORM.QueryTable("post")
-	num, err := qs.Limit(1).Offset(2).All(&posts)
-	throwFail(t, err)
-	throwFail(t, AssertIs(num, 1))
+func TestLoadRelated(t *testing.T) {
+	// load reverse foreign key
+	user := User{Id: 3}
 
-	num, err = qs.Offset(2).All(&posts)
-	throwFail(t, err)
-	throwFail(t, AssertIs(num, 2))
+	err := dORM.Read(&user)
+	throwFailNow(t, err)
+
+	num, err := dORM.LoadRelated(&user, "Posts")
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 2))
+	throwFailNow(t, AssertIs(len(user.Posts), 2))
+	throwFailNow(t, AssertIs(user.Posts[0].User.Id, 3))
+
+	num, err = dORM.LoadRelated(&user, "Posts", true)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(len(user.Posts), 2))
+	throwFailNow(t, AssertIs(user.Posts[0].User.UserName, "astaxie"))
+
+	num, err = dORM.LoadRelated(&user, "Posts", true, 1)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(len(user.Posts), 1))
+
+	num, err = dORM.LoadRelated(&user, "Posts", true, 0, 0, "-Id")
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(len(user.Posts), 2))
+	throwFailNow(t, AssertIs(user.Posts[0].Title, "Formatting"))
+
+	num, err = dORM.LoadRelated(&user, "Posts", true, 1, 1, "Id")
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(len(user.Posts), 1))
+	throwFailNow(t, AssertIs(user.Posts[0].Title, "Formatting"))
+
+	// load reverse one to one
+	profile := Profile{Id: 3}
+	profile.BestPost = &Post{Id: 2}
+	num, err = dORM.Update(&profile, "BestPost")
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 1))
+
+	err = dORM.Read(&profile)
+	throwFailNow(t, err)
+
+	num, err = dORM.LoadRelated(&profile, "User")
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 1))
+	throwFailNow(t, AssertIs(profile.User == nil, false))
+	throwFailNow(t, AssertIs(profile.User.UserName, "astaxie"))
+
+	num, err = dORM.LoadRelated(&profile, "User", true)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 1))
+	throwFailNow(t, AssertIs(profile.User == nil, false))
+	throwFailNow(t, AssertIs(profile.User.UserName, "astaxie"))
+	throwFailNow(t, AssertIs(profile.User.Profile.Age, profile.Age))
+
+	// load rel one to one
+	err = dORM.Read(&user)
+	throwFailNow(t, err)
+
+	num, err = dORM.LoadRelated(&user, "Profile")
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 1))
+	throwFailNow(t, AssertIs(user.Profile == nil, false))
+	throwFailNow(t, AssertIs(user.Profile.Age, 30))
+
+	num, err = dORM.LoadRelated(&user, "Profile", true)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 1))
+	throwFailNow(t, AssertIs(user.Profile == nil, false))
+	throwFailNow(t, AssertIs(user.Profile.Age, 30))
+	throwFailNow(t, AssertIs(user.Profile.BestPost == nil, false))
+	throwFailNow(t, AssertIs(user.Profile.BestPost.Title, "Examples"))
+
+	post := Post{Id: 2}
+
+	// load rel foreign key
+	err = dORM.Read(&post)
+	throwFailNow(t, err)
+
+	num, err = dORM.LoadRelated(&post, "User")
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 1))
+	throwFailNow(t, AssertIs(post.User == nil, false))
+	throwFailNow(t, AssertIs(post.User.UserName, "astaxie"))
+
+	num, err = dORM.LoadRelated(&post, "User", true)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 1))
+	throwFailNow(t, AssertIs(post.User == nil, false))
+	throwFailNow(t, AssertIs(post.User.UserName, "astaxie"))
+	throwFailNow(t, AssertIs(post.User.Profile == nil, false))
+	throwFailNow(t, AssertIs(post.User.Profile.Age, 30))
+
+	// load rel m2m
+	post = Post{Id: 2}
+
+	err = dORM.Read(&post)
+	throwFailNow(t, err)
+
+	num, err = dORM.LoadRelated(&post, "Tags")
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 2))
+	throwFailNow(t, AssertIs(len(post.Tags), 2))
+	throwFailNow(t, AssertIs(post.Tags[0].Name, "golang"))
+
+	num, err = dORM.LoadRelated(&post, "Tags", true)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 2))
+	throwFailNow(t, AssertIs(len(post.Tags), 2))
+	throwFailNow(t, AssertIs(post.Tags[0].Name, "golang"))
+	throwFailNow(t, AssertIs(post.Tags[0].BestPost == nil, false))
+	throwFailNow(t, AssertIs(post.Tags[0].BestPost.User.UserName, "astaxie"))
+
+	// load reverse m2m
+	tag := Tag{Id: 1}
+
+	err = dORM.Read(&tag)
+	throwFailNow(t, err)
+
+	num, err = dORM.LoadRelated(&tag, "Posts")
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 3))
+	throwFailNow(t, AssertIs(tag.Posts[0].Title, "Introduction"))
+	throwFailNow(t, AssertIs(tag.Posts[0].User.Id, 2))
+	throwFailNow(t, AssertIs(tag.Posts[0].User.Profile == nil, true))
+
+	num, err = dORM.LoadRelated(&tag, "Posts", true)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 3))
+	throwFailNow(t, AssertIs(tag.Posts[0].Title, "Introduction"))
+	throwFailNow(t, AssertIs(tag.Posts[0].User.Id, 2))
+	throwFailNow(t, AssertIs(tag.Posts[0].User.UserName, "slene"))
 }
 
-func TestOrderBy(t *testing.T) {
-	qs := dORM.QueryTable("user")
-	num, err := qs.OrderBy("-status").Filter("user_name", "nobody").Count()
-	throwFail(t, err)
-	throwFail(t, AssertIs(num, 1))
+func TestQueryM2M(t *testing.T) {
+	post := Post{Id: 4}
+	m2m := dORM.QueryM2M(&post, "Tags")
 
-	num, err = qs.OrderBy("status").Filter("user_name", "slene").Count()
-	throwFail(t, err)
-	throwFail(t, AssertIs(num, 1))
+	tag1 := []*Tag{&Tag{Name: "TestTag1"}, &Tag{Name: "TestTag2"}}
+	tag2 := &Tag{Name: "TestTag3"}
+	tag3 := []interface{}{&Tag{Name: "TestTag4"}}
 
-	num, err = qs.OrderBy("-profile__age").Filter("user_name", "astaxie").Count()
-	throwFail(t, err)
-	throwFail(t, AssertIs(num, 1))
+	tags := []interface{}{tag1[0], tag1[1], tag2, tag3[0]}
+
+	for _, tag := range tags {
+		_, err := dORM.Insert(tag)
+		throwFailNow(t, err)
+	}
+
+	num, err := m2m.Add(tag1)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 2))
+
+	num, err = m2m.Add(tag2)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 1))
+
+	num, err = m2m.Add(tag3)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 1))
+
+	num, err = m2m.Count()
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 5))
+
+	num, err = m2m.Remove(tag3)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 1))
+
+	num, err = m2m.Count()
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 4))
+
+	exist := m2m.Exist(tag2)
+	throwFailNow(t, AssertIs(exist, true))
+
+	num, err = m2m.Remove(tag2)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 1))
+
+	exist = m2m.Exist(tag2)
+	throwFailNow(t, AssertIs(exist, false))
+
+	num, err = m2m.Count()
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 3))
+
+	num, err = m2m.Clear()
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 3))
+
+	num, err = m2m.Count()
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 0))
+}
+
+func TestQueryRelate(t *testing.T) {
+	// post := &Post{Id: 2}
+
+	// qs := dORM.QueryRelate(post, "Tags")
+	// num, err := qs.Count()
+	// throwFailNow(t, err)
+	// throwFailNow(t, AssertIs(num, 2))
+
+	// var tags []*Tag
+	// num, err = qs.All(&tags)
+	// throwFailNow(t, err)
+	// throwFailNow(t, AssertIs(num, 2))
+	// throwFailNow(t, AssertIs(tags[0].Name, "golang"))
+
+	// num, err = dORM.QueryTable("Tag").Filter("Posts__Post", 2).Count()
+	// throwFailNow(t, err)
+	// throwFailNow(t, AssertIs(num, 2))
 }
 
 func TestPrepareInsert(t *testing.T) {
