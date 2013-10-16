@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"regexp"
 	"time"
+	"unicode/utf8"
 )
 
 var MessageTmpls = map[string]string{
@@ -158,7 +159,7 @@ type MinSize struct {
 
 func (m MinSize) IsSatisfied(obj interface{}) bool {
 	if str, ok := obj.(string); ok {
-		return len(str) >= m.Min
+		return utf8.RuneCountInString(str) >= m.Min
 	}
 	v := reflect.ValueOf(obj)
 	if v.Kind() == reflect.Slice {
@@ -187,7 +188,7 @@ type MaxSize struct {
 
 func (m MaxSize) IsSatisfied(obj interface{}) bool {
 	if str, ok := obj.(string); ok {
-		return len(str) <= m.Max
+		return utf8.RuneCountInString(str) <= m.Max
 	}
 	v := reflect.ValueOf(obj)
 	if v.Kind() == reflect.Slice {
@@ -216,7 +217,7 @@ type Length struct {
 
 func (l Length) IsSatisfied(obj interface{}) bool {
 	if str, ok := obj.(string); ok {
-		return len(str) == l.N
+		return utf8.RuneCountInString(str) == l.N
 	}
 	v := reflect.ValueOf(obj)
 	if v.Kind() == reflect.Slice {
