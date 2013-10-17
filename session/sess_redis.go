@@ -1,6 +1,7 @@
 package session
 
 import (
+	"fmt"
 	"github.com/garyburd/redigo/redis"
 )
 
@@ -67,7 +68,8 @@ func (rp *RedisProvider) connectInit() redis.Conn {
 			for i := 0; i < MAX_POOL_SIZE/2; i++ {
 				c, err := redis.Dial("tcp", rp.savePath)
 				if err != nil {
-					panic(err)
+					fmt.Println(err)
+					return
 				}
 				putRedis(c)
 			}
