@@ -212,6 +212,10 @@ func bootStrap() {
 				}
 			}
 		}
+	}
+
+	models = modelCache.all()
+	for _, mi := range models {
 		for _, fi := range mi.fields.fieldsReverse {
 			switch fi.fieldType {
 			case RelReverseOne:
