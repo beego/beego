@@ -217,24 +217,23 @@ func (manager *Manager) SessionRegenerateId(w http.ResponseWriter, r *http.Reque
 //remote_addr cruunixnano randdata
 
 func (manager *Manager) sessionId(r *http.Request) (sid string) {
-	b := make([]byte, 24)
-	if _, err := io.ReadFull(rand.Reader, b); err != nil {
+	bs := make([]byte, 24)
+	if _, err := io.ReadFull(rand.Reader, bs); err != nil {
 		return ""
 	}
-	bs := base64.URLEncoding.EncodeToString(b)
 	sig := fmt.Sprintf("%s%d%s", r.RemoteAddr, time.Now().UnixNano(), bs)
 	if manager.hashfunc == "md5" {
 		h := md5.New()
-		h.Write([]byte(bs))
-		sid = fmt.Sprintf("%s", hex.EncodeToString(h.Sum(nil)))
+		h.Write([]byte(sig))
+		sid = hex.EncodeToString(h.Sum(nil))
 	} else if manager.hashfunc == "sha1" {
 		h := hmac.New(sha1.New, []byte(manager.hashkey))
 		fmt.Fprintf(h, "%s", sig)
-		sid = fmt.Sprintf("%s", hex.EncodeToString(h.Sum(nil)))
+		sid = hex.EncodeToString(h.Sum(nil))
 	} else {
 		h := hmac.New(sha1.New, []byte(manager.hashkey))
 		fmt.Fprintf(h, "%s", sig)
-		sid = fmt.Sprintf("%s", hex.EncodeToString(h.Sum(nil)))
+		sid = hex.EncodeToString(h.Sum(nil))
 	}
 	return
 }
