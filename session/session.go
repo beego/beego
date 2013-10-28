@@ -51,7 +51,7 @@ type Manager struct {
 	maxlifetime int64
 	hashfunc    string //support md5 & sha1
 	hashkey     string
-	maxage      int
+	maxage      int //cookielifetime
 	secure      bool
 	options     []interface{}
 }
@@ -137,8 +137,8 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 		cookie.Path = "/"
 		if manager.maxage >= 0 {
 			cookie.MaxAge = manager.maxage
+			http.SetCookie(w, cookie)
 		}
-		http.SetCookie(w, cookie)
 		sid, _ := url.QueryUnescape(cookie.Value)
 		session, _ = manager.provider.SessionRead(sid)
 	}
