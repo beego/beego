@@ -8,6 +8,7 @@ import (
 	"path"
 	"runtime"
 	"strconv"
+	"strings"
 )
 
 var (
@@ -177,6 +178,12 @@ func ParseConfig() (err error) {
 		}
 		if serverName := AppConfig.String("BeegoServerName"); serverName != "" {
 			BeegoServerName = serverName
+		}
+		if sd := AppConfig.String("StaticDir"); sd != "" {
+			sds := strings.Split(sd, ",")
+			for _, v := range sds {
+				StaticDir["/"+v] = v
+			}
 		}
 	}
 	return nil

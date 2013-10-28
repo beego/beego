@@ -5,6 +5,7 @@ import (
 	"github.com/astaxie/beego/session"
 	"net/http"
 	"path"
+	"strings"
 )
 
 const VERSION = "0.9.9"
@@ -36,6 +37,9 @@ func SetViewsPath(path string) *App {
 }
 
 func SetStaticPath(url string, path string) *App {
+	if !strings.HasPrefix(url, "/") {
+		url = "/" + url
+	}
 	StaticDir[url] = path
 	return BeeApp
 }
