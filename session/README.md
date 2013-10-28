@@ -39,10 +39,10 @@ Then in you web app init the global session manager
 			go globalSessions.GC()
 		}
 
-* Use **Redis** as provider, the last param is the Redis conn address:
+* Use **Redis** as provider, the last param is the Redis conn address,poolsize,password:
 
 		func init() {
-			globalSessions, _ = session.NewManager("redis", "gosessionid", 3600, "127.0.0.1:6379")
+			globalSessions, _ = session.NewManager("redis", "gosessionid", 3600, "127.0.0.1:6379,100,astaxie")
 			go globalSessions.GC()
 		}
 		
