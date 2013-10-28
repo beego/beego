@@ -158,6 +158,11 @@ func (manager *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (manager *Manager) GetProvider(sid string) (sessions SessionStore, err error) {
+	sessions, err = manager.provider.SessionRead(sid)
+	return
+}
+
 func (manager *Manager) GC() {
 	manager.provider.SessionGC()
 	time.AfterFunc(time.Duration(manager.maxlifetime)*time.Second, func() { manager.GC() })
