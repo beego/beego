@@ -292,7 +292,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}()
 
 	w := &responseWriter{writer: rw}
-	w.Header().Set("Server", "beegoServer")
+	w.Header().Set("Server", BeegoServerName)
 	context := &beecontext.Context{
 		ResponseWriter: w,
 		Request:        r,

@@ -48,6 +48,7 @@ var (
 	CopyRequestBody      bool //When in raw application, You want to the reqeustbody
 	TemplateLeft         string
 	TemplateRight        string
+	BeegoServerName      string
 )
 
 func init() {
@@ -80,6 +81,7 @@ func init() {
 	XSRFExpire = 0
 	TemplateLeft = "{{"
 	TemplateRight = "}}"
+	BeegoServerName = "beegoServer"
 	ParseConfig()
 	runtime.GOMAXPROCS(runtime.NumCPU())
 }
@@ -172,6 +174,9 @@ func ParseConfig() (err error) {
 		}
 		if keyfile := AppConfig.String("HttpKeyFile"); keyfile != "" {
 			HttpKeyFile = keyfile
+		}
+		if serverName := AppConfig.String("BeegoServerName"); serverName != "" {
+			BeegoServerName = serverName
 		}
 	}
 	return nil
