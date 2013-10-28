@@ -51,6 +51,8 @@ type Manager struct {
 	maxlifetime int64
 	hashfunc    string //support md5 & sha1
 	hashkey     string
+	maxage      int
+	secure      bool
 	options     []interface{}
 }
 
@@ -65,6 +67,10 @@ func NewManager(provideName, cookieName string, maxlifetime int64, savePath stri
 		return nil, fmt.Errorf("session: unknown provide %q (forgotten import?)", provideName)
 	}
 	provider.SessionInit(maxlifetime, savePath)
+	secure := false
+	if len(options) > 0 {
+		secure = options[0].(bool)
+	}
 	hashfunc := "sha1"
 	if len(options) > 1 {
 		hashfunc = options[1].(string)
@@ -73,12 +79,37 @@ func NewManager(provideName, cookieName string, maxlifetime int64, savePath stri
 	if len(options) > 2 {
 		hashkey = options[2].(string)
 	}
+	maxage := -1
+	if len(options) > 3 {
+		switch options[3].(type) {
+		case int:
+			if options[3].(int) > 0 {
+				maxage = options[3].(int)
+			} else if options[3].(int) < 0 {
+				maxage = 0
+			}
+		case int64:
+			if options[3].(int64) > 0 {
+				maxage = int(options[3].(int64))
+			} else if options[3].(int64) < 0 {
+				maxage = 0
+			}
+		case int32:
+			if options[3].(int32) > 0 {
+				maxage = int(options[3].(int32))
+			} else if options[3].(int32) < 0 {
+				maxage = 0
+			}
+		}
+	}
 	return &Manager{
 		provider:    provider,
 		cookieName:  cookieName,
 		maxlifetime: maxlifetime,
 		hashfunc:    hashfunc,
 		hashkey:     hashkey,
+		maxage:      maxage,
+		secure:      secure,
 		options:     options,
 	}, nil
 }
@@ -86,43 +117,16 @@ func NewManager(provideName, cookieName string, maxlifetime int64, savePath stri
 //get Session
 func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (session SessionStore) {
 	cookie, err := r.Cookie(manager.cookieName)
-	maxage := -1
-	if len(manager.options) > 3 {
-		switch manager.options[3].(type) {
-		case int:
-			if manager.options[3].(int) > 0 {
-				maxage = manager.options[3].(int)
-			} else if manager.options[3].(int) < 0 {
-				maxage = 0
-			}
-		case int64:
-			if manager.options[3].(int64) > 0 {
-				maxage = int(manager.options[3].(int64))
-			} else if manager.options[3].(int64) < 0 {
-				maxage = 0
-			}
-		case int32:
-			if manager.options[3].(int32) > 0 {
-				maxage = int(manager.options[3].(int32))
-			} else if manager.options[3].(int32) < 0 {
-				maxage = 0
-			}
-		}
-	}
 	if err != nil || cookie.Value == "" {
 		sid := manager.sessionId(r)
 		session, _ = manager.provider.SessionRead(sid)
-		secure := false
-		if len(manager.options) > 0 {
-			secure = manager.options[0].(bool)
-		}
 		cookie = &http.Cookie{Name: manager.cookieName,
 			Value:    url.QueryEscape(sid),
 			Path:     "/",
 			HttpOnly: true,
-			Secure:   secure}
-		if maxage >= 0 {
-			cookie.MaxAge = maxage
+			Secure:   manager.secure}
+		if manager.maxage >= 0 {
+			cookie.MaxAge = manager.maxage
 		}
 		//cookie.Expires = time.Now().Add(time.Duration(manager.maxlifetime) * time.Second)
 		http.SetCookie(w, cookie)
@@ -131,8 +135,8 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 		//cookie.Expires = time.Now().Add(time.Duration(manager.maxlifetime) * time.Second)
 		cookie.HttpOnly = true
 		cookie.Path = "/"
-		if maxage >= 0 {
-			cookie.MaxAge = maxage
+		if manager.maxage >= 0 {
+			cookie.MaxAge = manager.maxage
 		}
 		http.SetCookie(w, cookie)
 		sid, _ := url.QueryUnescape(cookie.Value)
@@ -165,15 +169,11 @@ func (manager *Manager) SessionRegenerateId(w http.ResponseWriter, r *http.Reque
 	if err != nil && cookie.Value == "" {
 		//delete old cookie
 		session, _ = manager.provider.SessionRead(sid)
-		secure := false
-		if len(manager.options) > 0 {
-			secure = manager.options[0].(bool)
-		}
 		cookie = &http.Cookie{Name: manager.cookieName,
 			Value:    url.QueryEscape(sid),
 			Path:     "/",
 			HttpOnly: true,
-			Secure:   secure,
+			Secure:   manager.secure,
 		}
 	} else {
 		oldsid, _ := url.QueryUnescape(cookie.Value)
@@ -182,31 +182,8 @@ func (manager *Manager) SessionRegenerateId(w http.ResponseWriter, r *http.Reque
 		cookie.HttpOnly = true
 		cookie.Path = "/"
 	}
-	maxage := -1
-	if len(manager.options) > 3 {
-		switch manager.options[3].(type) {
-		case int:
-			if manager.options[3].(int) > 0 {
-				maxage = manager.options[3].(int)
-			} else if manager.options[3].(int) < 0 {
-				maxage = 0
-			}
-		case int64:
-			if manager.options[3].(int64) > 0 {
-				maxage = int(manager.options[3].(int64))
-			} else if manager.options[3].(int64) < 0 {
-				maxage = 0
-			}
-		case int32:
-			if manager.options[3].(int32) > 0 {
-				maxage = int(manager.options[3].(int32))
-			} else if manager.options[3].(int32) < 0 {
-				maxage = 0
-			}
-		}
-	}
-	if maxage >= 0 {
-		cookie.MaxAge = maxage
+	if manager.maxage >= 0 {
+		cookie.MaxAge = manager.maxage
 	}
 	http.SetCookie(w, cookie)
 	r.AddCookie(cookie)
