@@ -162,7 +162,7 @@ func getTplDeep(root, file string, t *template.Template) (*template.Template, []
 			} else {
 				relativefile := filepath.Join(filepath.Dir(file), m[1])
 				if e, _ := FileExists(relativefile); e {
-					t, _, err = getTplDeep(root, m[1], t)
+					t, _, err = getTplDeep(root, relativefile, t)
 					if err != nil {
 						return nil, [][]string{}, err
 					}
