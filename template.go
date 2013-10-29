@@ -154,10 +154,23 @@ func getTplDeep(root, file string, t *template.Template) (*template.Template, []
 			if !HasTemplateEXt(m[1]) {
 				continue
 			}
-			t, _, err = getTplDeep(root, m[1], t)
-			if err != nil {
-				return nil, [][]string{}, err
+			if e, _ := FileExists(filepath.Join(root, m[1])); e {
+				t, _, err = getTplDeep(root, m[1], t)
+				if err != nil {
+					return nil, [][]string{}, err
+				}
+			} else {
+				relativefile := filepath.Join(filepath.Dir(file), m[1])
+				if e, _ := FileExists(relativefile); e {
+					t, _, err = getTplDeep(root, m[1], t)
+					if err != nil {
+						return nil, [][]string{}, err
+					}
+				} else {
+					panic("can't find template file" + m[1])
+				}
 			}
+
 		}
 	}
 	return t, allsub, nil
