@@ -73,7 +73,7 @@ func (input *BeegoInput) Is(method string) bool {
 }
 
 func (input *BeegoInput) IsAjax() bool {
-	return input.Header("HTTP_X_REQUESTED_WITH") == "XMLHttpRequest"
+	return input.Header("X-Requested-With") == "XMLHttpRequest"
 }
 
 func (input *BeegoInput) IsSecure() bool {
