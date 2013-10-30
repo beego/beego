@@ -133,8 +133,16 @@ func BuildTemplate(dir string) error {
 	return nil
 }
 
-func getTplDeep(root, file string, t *template.Template) (*template.Template, [][]string, error) {
-	fileabspath := filepath.Join(root, file)
+func getTplDeep(root, file, parent string, t *template.Template) (*template.Template, [][]string, error) {
+	var fileabspath string
+	if filepath.HasPrefix(file, "../") {
+		fileabspath = filepath.Join(root, filepath.Dir(parent), file)
+	} else {
+		fileabspath = filepath.Join(root, file)
+	}
+	if e, _ := FileExists(fileabspath); !e {
+		panic("can't find template file" + file)
+	}
 	data, err := ioutil.ReadFile(fileabspath)
 	if err != nil {
 		return nil, [][]string{}, err
@@ -154,23 +162,10 @@ func getTplDeep(root, file string, t *template.Template) (*template.Template, []
 			if !HasTemplateEXt(m[1]) {
 				continue
 			}
-			if e, _ := FileExists(filepath.Join(root, m[1])); e {
-				t, _, err = getTplDeep(root, m[1], t)
-				if err != nil {
-					return nil, [][]string{}, err
-				}
-			} else {
-				relativefile := filepath.Join(filepath.Dir(file), m[1])
-				if e, _ := FileExists(relativefile); e {
-					t, _, err = getTplDeep(root, relativefile, t)
-					if err != nil {
-						return nil, [][]string{}, err
-					}
-				} else {
-					panic("can't find template file" + m[1])
-				}
+			t, _, err = getTplDeep(root, m[1], file, t)
+			if err != nil {
+				return nil, [][]string{}, err
 			}
-
 		}
 	}
 	return t, allsub, nil
@@ -179,7 +174,7 @@ func getTplDeep(root, file string, t *template.Template) (*template.Template, []
 func getTemplate(root, file string, others ...string) (t *template.Template, err error) {
 	t = template.New(file).Delims(TemplateLeft, TemplateRight).Funcs(beegoTplFuncMap)
 	var submods [][]string
-	t, submods, err = getTplDeep(root, file, t)
+	t, submods, err = getTplDeep(root, file, "", t)
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +198,7 @@ func _getTemplate(t0 *template.Template, root string, submods [][]string, others
 			for _, otherfile := range others {
 				if otherfile == m[1] {
 					var submods1 [][]string
-					t, submods1, err = getTplDeep(root, otherfile, t)
+					t, submods1, err = getTplDeep(root, otherfile, "", t)
 					if err != nil {
 						Trace("template parse file err:", err)
 					} else if submods1 != nil && len(submods1) > 0 {
@@ -224,7 +219,7 @@ func _getTemplate(t0 *template.Template, root string, submods [][]string, others
 				for _, sub := range allsub {
 					if len(sub) == 2 && sub[1] == m[1] {
 						var submods1 [][]string
-						t, submods1, err = getTplDeep(root, otherfile, t)
+						t, submods1, err = getTplDeep(root, otherfile, "", t)
 						if err != nil {
 							Trace("template parse file err:", err)
 						} else if submods1 != nil && len(submods1) > 0 {
