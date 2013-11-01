@@ -128,6 +128,12 @@ func (rp *RedisProvider) SessionGC() {
 	return
 }
 
+//@todo
+func (rp *RedisProvider) SessionAll() int {
+
+	return 0
+}
+
 func init() {
 	Register("redis", redispder)
 }

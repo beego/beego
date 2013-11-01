@@ -2,6 +2,7 @@ package session
 
 import (
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -131,6 +132,18 @@ func (fp *FileProvider) SessionGC() {
 	filepath.Walk(fp.savePath, gcpath)
 }
 
+func (fp *FileProvider) SessionAll() int {
+	a := &activeSession{}
+	err := filepath.Walk(fp.savePath, func(path string, f os.FileInfo, err error) error {
+		return a.visit(path, f, err)
+	})
+	if err != nil {
+		fmt.Printf("filepath.Walk() returned %v\n", err)
+		return 0
+	}
+	return a.total
+}
+
 func (fp *FileProvider) SessionRegenerate(oldsid, sid string) (SessionStore, error) {
 	err := os.MkdirAll(path.Join(fp.savePath, string(oldsid[0]), string(oldsid[1])), 0777)
 	if err != nil {
@@ -190,6 +203,21 @@ func gcpath(path string, info os.FileInfo, err error) error {
 	if (info.ModTime().Unix() + gcmaxlifetime) < time.Now().Unix() {
 		os.Remove(path)
 	}
+	return nil
+}
+
+type activeSession struct {
+	total int
+}
+
+func (self *activeSession) visit(paths string, f os.FileInfo, err error) error {
+	if err != nil {
+		return err
+	}
+	if f.IsDir() {
+		return nil
+	}
+	self.total = self.total + 1
 	return nil
 }
 
