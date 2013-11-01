@@ -27,6 +27,7 @@ type Provider interface {
 	SessionRead(sid string) (SessionStore, error)
 	SessionRegenerate(oldsid, sid string) (SessionStore, error)
 	SessionDestroy(sid string) error
+	SessionAll() int //get all active session
 	SessionGC()
 }
 
@@ -193,6 +194,10 @@ func (manager *Manager) SessionRegenerateId(w http.ResponseWriter, r *http.Reque
 	http.SetCookie(w, cookie)
 	r.AddCookie(cookie)
 	return
+}
+
+func (manager *Manager) GetActiveSession() int {
+	return manager.provider.SessionAll()
 }
 
 //remote_addr cruunixnano randdata

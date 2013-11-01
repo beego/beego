@@ -142,6 +142,10 @@ func (pder *MemProvider) SessionGC() {
 	pder.lock.RUnlock()
 }
 
+func (pder *MemProvider) SessionAll() int {
+	return pder.list.Len()
+}
+
 func (pder *MemProvider) SessionUpdate(sid string) error {
 	pder.lock.Lock()
 	defer pder.lock.Unlock()

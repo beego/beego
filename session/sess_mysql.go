@@ -152,6 +152,17 @@ func (mp *MysqlProvider) SessionGC() {
 	return
 }
 
+func (mp *MysqlProvider) SessionAll() int {
+	c := mp.connectInit()
+	defer c.Close()
+	var total int
+	err := c.QueryRow("SELECT count(*) as num from session").Scan(&total)
+	if err != nil {
+		return 0
+	}
+	return total
+}
+
 func init() {
 	Register("mysql", mysqlpder)
 }
