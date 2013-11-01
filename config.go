@@ -180,9 +180,16 @@ func ParseConfig() (err error) {
 			BeegoServerName = serverName
 		}
 		if sd := AppConfig.String("StaticDir"); sd != "" {
-			sds := strings.Split(sd, ",")
+			for k := range StaticDir {
+				delete(StaticDir, k)
+			}
+			sds := strings.Fields(sd)
 			for _, v := range sds {
-				StaticDir["/"+v] = v
+				if url2fsmap := strings.SplitN(v, ":", 2); url2fsmap[1] != "" {
+					StaticDir["/"+url2fsmap[0]] = url2fsmap[1]
+				} else {
+					StaticDir["/"+url2fsmap[0]] = url2fsmap[0]
+				}
 			}
 		}
 	}
