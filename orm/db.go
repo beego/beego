@@ -393,7 +393,7 @@ func (d *dbBase) UpdateBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 
 	join := tables.getJoinSql()
 
-	var query, T, cols string
+	var query, T string
 
 	Q := d.ins.TableQuote()
 
@@ -401,30 +401,34 @@ func (d *dbBase) UpdateBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 		T = "T0."
 	}
 
+	cols := make([]string, 0, len(columns))
+
 	for i, v := range columns {
 		col := fmt.Sprintf("%s%s%s%s", T, Q, v, Q)
 		if c, ok := values[i].(colValue); ok {
 			switch c.opt {
 			case Col_Add:
-				cols += col + " = " + col + " + ? "
+				cols = append(cols, col+" = "+col+" + ?")
 			case Col_Minus:
-				cols += col + " = " + col + " - ? "
+				cols = append(cols, col+" = "+col+" - ?")
 			case Col_Multiply:
-				cols += col + " = " + col + " * ? "
+				cols = append(cols, col+" = "+col+" * ?")
 			case Col_Except:
-				cols += col + " = " + col + " / ? "
+				cols = append(cols, col+" = "+col+" / ?")
 			}
 			values[i] = c.value
 		} else {
-			cols += col + " = ? "
+			cols = append(cols, col+" = ?")
 		}
 	}
 
+	sets := strings.Join(cols, ", ") + " "
+
 	if d.ins.SupportUpdateJoin() {
-		query = fmt.Sprintf("UPDATE %s%s%s T0 %sSET %s%s", Q, mi.table, Q, join, cols, where)
+		query = fmt.Sprintf("UPDATE %s%s%s T0 %sSET %s%s", Q, mi.table, Q, join, sets, where)
 	} else {
 		supQuery := fmt.Sprintf("SELECT T0.%s%s%s FROM %s%s%s T0 %s%s", Q, mi.fields.pk.column, Q, Q, mi.table, Q, join, where)
-		query = fmt.Sprintf("UPDATE %s%s%s SET %sWHERE %s%s%s IN ( %s )", Q, mi.table, Q, cols, Q, mi.fields.pk.column, Q, supQuery)
+		query = fmt.Sprintf("UPDATE %s%s%s SET %sWHERE %s%s%s IN ( %s )", Q, mi.table, Q, sets, Q, mi.fields.pk.column, Q, supQuery)
 	}
 
 	d.ins.ReplaceMarks(&query)

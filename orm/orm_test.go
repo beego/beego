@@ -1513,7 +1513,8 @@ func TestRawPrepare(t *testing.T) {
 func TestUpdate(t *testing.T) {
 	qs := dORM.QueryTable("user")
 	num, err := qs.Filter("user_name", "slene").Filter("is_staff", false).Update(Params{
-		"is_staff": true,
+		"is_staff":  true,
+		"is_active": true,
 	})
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
