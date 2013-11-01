@@ -97,10 +97,6 @@ func (e *BooleanField) RawValue() interface{} {
 	return e.Value()
 }
 
-func (e *BooleanField) Clean() error {
-	return nil
-}
-
 var _ Fielder = new(BooleanField)
 
 // A string field
@@ -137,10 +133,6 @@ func (e *CharField) SetRaw(value interface{}) error {
 
 func (e *CharField) RawValue() interface{} {
 	return e.Value()
-}
-
-func (e *CharField) Clean() error {
-	return nil
 }
 
 var _ Fielder = new(CharField)
@@ -196,10 +188,6 @@ func (e *DateField) RawValue() interface{} {
 	return e.Value()
 }
 
-func (e *DateField) Clean() error {
-	return nil
-}
-
 var _ Fielder = new(DateField)
 
 // A date, represented in go by a time.Time instance.
@@ -241,10 +229,6 @@ func (e *DateTimeField) SetRaw(value interface{}) error {
 
 func (e *DateTimeField) RawValue() interface{} {
 	return e.Value()
-}
-
-func (e *DateTimeField) Clean() error {
-	return nil
 }
 
 var _ Fielder = new(DateTimeField)
@@ -289,10 +273,6 @@ func (e *FloatField) RawValue() interface{} {
 	return e.Value()
 }
 
-func (e *FloatField) Clean() error {
-	return nil
-}
-
 var _ Fielder = new(FloatField)
 
 // -32768 to 32767
@@ -331,10 +311,6 @@ func (e *SmallIntegerField) SetRaw(value interface{}) error {
 
 func (e *SmallIntegerField) RawValue() interface{} {
 	return e.Value()
-}
-
-func (e *SmallIntegerField) Clean() error {
-	return nil
 }
 
 var _ Fielder = new(SmallIntegerField)
@@ -377,10 +353,6 @@ func (e *IntegerField) RawValue() interface{} {
 	return e.Value()
 }
 
-func (e *IntegerField) Clean() error {
-	return nil
-}
-
 var _ Fielder = new(IntegerField)
 
 // -9223372036854775808 to 9223372036854775807.
@@ -419,10 +391,6 @@ func (e *BigIntegerField) SetRaw(value interface{}) error {
 
 func (e *BigIntegerField) RawValue() interface{} {
 	return e.Value()
-}
-
-func (e *BigIntegerField) Clean() error {
-	return nil
 }
 
 var _ Fielder = new(BigIntegerField)
@@ -465,10 +433,6 @@ func (e *PositiveSmallIntegerField) RawValue() interface{} {
 	return e.Value()
 }
 
-func (e *PositiveSmallIntegerField) Clean() error {
-	return nil
-}
-
 var _ Fielder = new(PositiveSmallIntegerField)
 
 // 0 to 4294967295
@@ -507,10 +471,6 @@ func (e *PositiveIntegerField) SetRaw(value interface{}) error {
 
 func (e *PositiveIntegerField) RawValue() interface{} {
 	return e.Value()
-}
-
-func (e *PositiveIntegerField) Clean() error {
-	return nil
 }
 
 var _ Fielder = new(PositiveIntegerField)
@@ -553,10 +513,6 @@ func (e *PositiveBigIntegerField) RawValue() interface{} {
 	return e.Value()
 }
 
-func (e *PositiveBigIntegerField) Clean() error {
-	return nil
-}
-
 var _ Fielder = new(PositiveBigIntegerField)
 
 // A large text field.
@@ -590,10 +546,6 @@ func (e *TextField) SetRaw(value interface{}) error {
 
 func (e *TextField) RawValue() interface{} {
 	return e.Value()
-}
-
-func (e *TextField) Clean() error {
-	return nil
 }
 
 var _ Fielder = new(TextField)

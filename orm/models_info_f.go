@@ -128,10 +128,14 @@ func newFieldInfo(mi *modelInfo, field reflect.Value, sf reflect.StructField) (f
 
 	fi = new(fieldInfo)
 
-	if field.Kind() != reflect.Ptr && field.Kind() != reflect.Slice && field.CanAddr() {
+	addrField = field
+	if field.CanAddr() && field.Kind() != reflect.Ptr {
 		addrField = field.Addr()
-	} else {
-		addrField = field
+		if _, ok := addrField.Interface().(Fielder); !ok {
+			if field.Kind() == reflect.Slice {
+				addrField = field
+			}
+		}
 	}
 
 	parseStructTag(sf.Tag.Get(defaultStructTagName), &attrs, &tags)

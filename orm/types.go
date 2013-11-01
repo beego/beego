@@ -16,7 +16,6 @@ type Fielder interface {
 	FieldType() int
 	SetRaw(interface{}) error
 	RawValue() interface{}
-	Clean() error
 }
 
 type Ormer interface {
@@ -82,17 +81,6 @@ type RawSeter interface {
 	ValuesList(*[]ParamsList) (int64, error)
 	ValuesFlat(*ParamsList) (int64, error)
 	Prepare() (RawPreparer, error)
-}
-
-type IFieldError interface {
-	Name() string
-	Error() error
-}
-
-type IFieldErrors interface {
-	Get(string) IFieldError
-	Set(string, IFieldError)
-	List() []IFieldError
 }
 
 type stmtQuerier interface {
