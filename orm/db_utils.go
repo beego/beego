@@ -50,9 +50,34 @@ outFor:
 
 		switch v := arg.(type) {
 		case []byte:
+		case string:
+			if fi != nil {
+				if fi.fieldType == TypeDateField || fi.fieldType == TypeDateTimeField {
+					var t time.Time
+					var err error
+					if len(v) >= 19 {
+						s := v[:19]
+						t, err = time.ParseInLocation(format_DateTime, s, DefaultTimeLoc)
+					} else {
+						s := v
+						if len(v) > 10 {
+							s = v[:10]
+						}
+						t, err = time.ParseInLocation(format_Date, s, DefaultTimeLoc)
+					}
+					if err == nil {
+						if fi.fieldType == TypeDateField {
+							v = t.In(tz).Format(format_Date)
+						} else {
+							v = t.In(tz).Format(format_DateTime)
+						}
+					}
+				}
+			}
+			arg = v
 		case time.Time:
 			if fi != nil && fi.fieldType == TypeDateField {
-				arg = v.In(DefaultTimeLoc).Format(format_Date)
+				arg = v.In(tz).Format(format_Date)
 			} else {
 				arg = v.In(tz).Format(format_DateTime)
 			}

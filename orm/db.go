@@ -97,11 +97,7 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 			case TypeDateField, TypeDateTimeField:
 				value = field.Interface()
 				if t, ok := value.(time.Time); ok {
-					if fi.fieldType == TypeDateField {
-						d.ins.TimeToDB(&t, DefaultTimeLoc)
-					} else {
-						d.ins.TimeToDB(&t, tz)
-					}
+					d.ins.TimeToDB(&t, tz)
 					value = t
 				}
 			default:
@@ -130,11 +126,7 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 		case TypeDateField, TypeDateTimeField:
 			if fi.auto_now || fi.auto_now_add && insert {
 				tnow := time.Now()
-				if fi.fieldType == TypeDateField {
-					d.ins.TimeToDB(&tnow, DefaultTimeLoc)
-				} else {
-					d.ins.TimeToDB(&tnow, tz)
-				}
+				d.ins.TimeToDB(&tnow, tz)
 				value = tnow
 				if fi.isFielder {
 					f := field.Addr().Interface().(Fielder)
@@ -895,18 +887,17 @@ setValue:
 				t   time.Time
 				err error
 			)
-			if fi.fieldType == TypeDateField {
+			if len(s) >= 19 {
+				s = s[:19]
+				t, err = time.ParseInLocation(format_DateTime, s, tz)
+			} else {
 				if len(s) > 10 {
 					s = s[:10]
 				}
-				t, err = time.ParseInLocation(format_Date, s, DefaultTimeLoc)
-			} else {
-				if len(s) > 19 {
-					s = s[:19]
-				}
-				t, err = time.ParseInLocation(format_DateTime, s, tz)
-				t = t.In(DefaultTimeLoc)
+				t, err = time.ParseInLocation(format_Date, s, tz)
 			}
+			t = t.In(DefaultTimeLoc)
+
 			if err != nil && s != "0000-00-00" && s != "0000-00-00 00:00:00" {
 				tErr = err
 				goto end
