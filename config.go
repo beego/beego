@@ -30,26 +30,29 @@ var (
 	RunMode       string //"dev" or "prod"
 	AppConfig     config.ConfigContainer
 	//related to session
-	GlobalSessions       *session.Manager //GlobalSessions
-	SessionOn            bool             // whether auto start session,default is false
-	SessionProvider      string           // default session provider  memory mysql redis
-	SessionName          string           // sessionName cookie's name
-	SessionGCMaxLifetime int64            // session's gc maxlifetime
-	SessionSavePath      string           // session savepath if use mysql/redis/file this set to the connectinfo
-	UseFcgi              bool
-	MaxMemory            int64
-	EnableGzip           bool   // enable gzip
-	DirectoryIndex       bool   //enable DirectoryIndex default is false
-	EnableHotUpdate      bool   //enable HotUpdate default is false
-	HttpServerTimeOut    int64  //set httpserver timeout
-	ErrorsShow           bool   //set weather show errors
-	XSRFKEY              string //set XSRF
-	EnableXSRF           bool
-	XSRFExpire           int
-	CopyRequestBody      bool //When in raw application, You want to the reqeustbody
-	TemplateLeft         string
-	TemplateRight        string
-	BeegoServerName      string
+	GlobalSessions        *session.Manager //GlobalSessions
+	SessionOn             bool             // whether auto start session,default is false
+	SessionProvider       string           // default session provider  memory mysql redis
+	SessionName           string           // sessionName cookie's name
+	SessionGCMaxLifetime  int64            // session's gc maxlifetime
+	SessionSavePath       string           // session savepath if use mysql/redis/file this set to the connectinfo
+	SessionHashFunc       string
+	SessionHashKey        string
+	SessionCookieLifeTime int
+	UseFcgi               bool
+	MaxMemory             int64
+	EnableGzip            bool   // enable gzip
+	DirectoryIndex        bool   //enable DirectoryIndex default is false
+	EnableHotUpdate       bool   //enable HotUpdate default is false
+	HttpServerTimeOut     int64  //set httpserver timeout
+	ErrorsShow            bool   //set weather show errors
+	XSRFKEY               string //set XSRF
+	EnableXSRF            bool
+	XSRFExpire            int
+	CopyRequestBody       bool //When in raw application, You want to the reqeustbody
+	TemplateLeft          string
+	TemplateRight         string
+	BeegoServerName       string
 )
 
 func init() {
@@ -71,6 +74,9 @@ func init() {
 	SessionName = "beegosessionID"
 	SessionGCMaxLifetime = 3600
 	SessionSavePath = ""
+	SessionHashFunc = "sha1"
+	SessionHashKey = "beegoserversessionkey"
+	SessionCookieLifeTime = 3600
 	UseFcgi = false
 	MaxMemory = 1 << 26 //64MB
 	EnableGzip = false
@@ -157,6 +163,18 @@ func ParseConfig() (err error) {
 		if sesssavepath := AppConfig.String("SessionSavePath"); sesssavepath != "" {
 			SessionSavePath = sesssavepath
 		}
+		if sesshashfunc := AppConfig.String("sessionhashfunc"); sesshashfunc != "" {
+			SessionHashFunc = sesshashfunc
+		}
+		if sesshashfunc := AppConfig.String("SessionHashFunc"); sesshashfunc != "" {
+			SessionHashFunc = sesshashfunc
+		}
+		if sesshashkey := AppConfig.String("sessionhashkey"); sesshashkey != "" {
+			SessionHashKey = sesshashkey
+		}
+		if sesshashkey := AppConfig.String("SessionHashKey"); sesshashkey != "" {
+			SessionHashKey = sesshashkey
+		}
 		if sessMaxLifeTime, err := AppConfig.Int("sessiongcmaxlifetime"); err == nil && sessMaxLifeTime != 0 {
 			int64val, _ := strconv.ParseInt(strconv.Itoa(sessMaxLifeTime), 10, 64)
 			SessionGCMaxLifetime = int64val
@@ -164,6 +182,12 @@ func ParseConfig() (err error) {
 		if sessMaxLifeTime, err := AppConfig.Int("SessionGCMaxLifetime"); err == nil && sessMaxLifeTime != 0 {
 			int64val, _ := strconv.ParseInt(strconv.Itoa(sessMaxLifeTime), 10, 64)
 			SessionGCMaxLifetime = int64val
+		}
+		if sesscookielifetime, err := AppConfig.Int("sessioncookielifelime"); err == nil && sesscookielifetime != 0 {
+			SessionCookieLifeTime = sesscookielifetime
+		}
+		if sesscookielifetime, err := AppConfig.Int("SessionCookieLifeTime"); err == nil && sesscookielifetime != 0 {
+			SessionCookieLifeTime = sesscookielifetime
 		}
 		if usefcgi, err := AppConfig.Bool("usefcgi"); err == nil {
 			UseFcgi = usefcgi
