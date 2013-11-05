@@ -298,6 +298,11 @@ func (c *Controller) DelSession(name interface{}) {
 	c.CruSession.Delete(name)
 }
 
+func (c *Controller) SessionRegenerateID() {
+	c.CruSession = GlobalSessions.SessionRegenerateId(c.Ctx.ResponseWriter, c.Ctx.Request)
+	c.Ctx.Input.CruSession = c.CruSession
+}
+
 func (c *Controller) DestroySession() {
 	GlobalSessions.SessionDestroy(c.Ctx.ResponseWriter, c.Ctx.Request)
 }
