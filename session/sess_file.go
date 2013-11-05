@@ -28,7 +28,6 @@ func (fs *FileSessionStore) Set(key, value interface{}) error {
 	fs.lock.Lock()
 	defer fs.lock.Unlock()
 	fs.values[key] = value
-	fs.updatecontent()
 	return nil
 }
 
@@ -47,7 +46,6 @@ func (fs *FileSessionStore) Delete(key interface{}) error {
 	fs.lock.Lock()
 	defer fs.lock.Unlock()
 	delete(fs.values, key)
-	fs.updatecontent()
 	return nil
 }
 
@@ -55,7 +53,6 @@ func (fs *FileSessionStore) Flush() error {
 	fs.lock.Lock()
 	defer fs.lock.Unlock()
 	fs.values = make(map[interface{}]interface{})
-	fs.updatecontent()
 	return nil
 }
 
@@ -64,10 +61,7 @@ func (fs *FileSessionStore) SessionID() string {
 }
 
 func (fs *FileSessionStore) SessionRelease() {
-	fs.f.Close()
-}
-
-func (fs *FileSessionStore) updatecontent() {
+	defer fs.f.Close()
 	b, err := encodeGob(fs.values)
 	if err != nil {
 		return

@@ -27,7 +27,6 @@ func (st *MysqlSessionStore) Set(key, value interface{}) error {
 	st.lock.Lock()
 	defer st.lock.Unlock()
 	st.values[key] = value
-	st.updatemysql()
 	return nil
 }
 
@@ -46,7 +45,6 @@ func (st *MysqlSessionStore) Delete(key interface{}) error {
 	st.lock.Lock()
 	defer st.lock.Unlock()
 	delete(st.values, key)
-	st.updatemysql()
 	return nil
 }
 
@@ -54,7 +52,6 @@ func (st *MysqlSessionStore) Flush() error {
 	st.lock.Lock()
 	defer st.lock.Unlock()
 	st.values = make(map[interface{}]interface{})
-	st.updatemysql()
 	return nil
 }
 
@@ -62,7 +59,8 @@ func (st *MysqlSessionStore) SessionID() string {
 	return st.sid
 }
 
-func (st *MysqlSessionStore) updatemysql() {
+func (st *MysqlSessionStore) SessionRelease() {
+	defer st.c.Close()
 	if len(st.values) > 0 {
 		b, err := encodeGob(st.values)
 		if err != nil {
@@ -70,10 +68,6 @@ func (st *MysqlSessionStore) updatemysql() {
 		}
 		st.c.Exec("UPDATE session set `session_data`= ? where session_key=?", b, st.sid)
 	}
-}
-
-func (st *MysqlSessionStore) SessionRelease() {
-	st.c.Close()
 }
 
 type MysqlProvider struct {

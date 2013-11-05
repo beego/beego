@@ -4,6 +4,7 @@ import (
 	"github.com/garyburd/redigo/redis"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 var redispder = &RedisProvider{}
@@ -13,33 +14,42 @@ var MAX_POOL_SIZE = 100
 var redisPool chan redis.Conn
 
 type RedisSessionStore struct {
-	c   redis.Conn
-	sid string
+	c      redis.Conn
+	sid    string
+	lock   sync.RWMutex
+	values map[interface{}]interface{}
 }
 
 func (rs *RedisSessionStore) Set(key, value interface{}) error {
-	//_, err := rs.c.Do("HSET", rs.sid, key, value)
-	_, err := rs.c.Do("HSET", rs.sid, key, value)
-	return err
+	rs.lock.Lock()
+	defer rs.lock.Unlock()
+	rs.values[key] = value
+	return nil
 }
 
 func (rs *RedisSessionStore) Get(key interface{}) interface{} {
-	reply, err := rs.c.Do("HGET", rs.sid, key)
-	if err != nil {
+	rs.lock.RLock()
+	defer rs.lock.RUnlock()
+	if v, ok := rs.values[key]; ok {
+		return v
+	} else {
 		return nil
 	}
-	return reply
+	return nil
 }
 
 func (rs *RedisSessionStore) Delete(key interface{}) error {
-	//_, err := rs.c.Do("HDEL", rs.sid, key)
-	_, err := rs.c.Do("HDEL", rs.sid, key)
-	return err
+	rs.lock.Lock()
+	defer rs.lock.Unlock()
+	delete(rs.values, key)
+	return nil
 }
 
 func (rs *RedisSessionStore) Flush() error {
-	_, err := rs.c.Do("DEL", rs.sid)
-	return err
+	rs.lock.Lock()
+	defer rs.lock.Unlock()
+	rs.values = make(map[interface{}]interface{})
+	return nil
 }
 
 func (rs *RedisSessionStore) SessionID() string {
@@ -47,7 +57,23 @@ func (rs *RedisSessionStore) SessionID() string {
 }
 
 func (rs *RedisSessionStore) SessionRelease() {
-	rs.c.Close()
+	defer rs.c.Close()
+	keys, err := redis.Values(rs.c.Do("HKEYS", rs.sid))
+	if err == nil {
+		for _, key := range keys {
+			if val, ok := rs.values[key]; ok {
+				rs.c.Do("HSET", rs.sid, key, val)
+				rs.Delete(key)
+			} else {
+				rs.c.Do("HDEL", rs.sid, key)
+			}
+		}
+	}
+	if len(rs.values) > 0 {
+		for k, v := range rs.values {
+			rs.c.Do("HSET", rs.sid, k, v)
+		}
+	}
 }
 
 type RedisProvider struct {
@@ -103,7 +129,19 @@ func (rp *RedisProvider) SessionRead(sid string) (SessionStore, error) {
 		c.Do("HSET", sid, sid, rp.maxlifetime)
 	}
 	c.Do("EXPIRE", sid, rp.maxlifetime)
-	rs := &RedisSessionStore{c: c, sid: sid}
+	kvs, err := redis.Values(c.Do("HGETALL", sid))
+	vals := make(map[interface{}]interface{})
+	var key interface{}
+	if err == nil {
+		for k, v := range kvs {
+			if k%2 == 0 {
+				key = v
+			} else {
+				vals[key] = v
+			}
+		}
+	}
+	rs := &RedisSessionStore{c: c, sid: sid, values: vals}
 	return rs, nil
 }
 
@@ -114,7 +152,19 @@ func (rp *RedisProvider) SessionRegenerate(oldsid, sid string) (SessionStore, er
 	}
 	c.Do("RENAME", oldsid, sid)
 	c.Do("EXPIRE", sid, rp.maxlifetime)
-	rs := &RedisSessionStore{c: c, sid: sid}
+	kvs, err := redis.Values(c.Do("HGETALL", sid))
+	vals := make(map[interface{}]interface{})
+	var key interface{}
+	if err == nil {
+		for k, v := range kvs {
+			if k%2 == 0 {
+				key = v
+			} else {
+				vals[key] = v
+			}
+		}
+	}
+	rs := &RedisSessionStore{c: c, sid: sid, values: vals}
 	return rs, nil
 }
 

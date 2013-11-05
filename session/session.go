@@ -18,7 +18,7 @@ type SessionStore interface {
 	Get(key interface{}) interface{}  //get session value
 	Delete(key interface{}) error     //delete session value
 	SessionID() string                //back current sessionID
-	SessionRelease()                  // release the resource
+	SessionRelease()                  // release the resource & save data to provider
 	Flush() error                     //delete all data
 }
 
@@ -129,17 +129,9 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 		if manager.maxage >= 0 {
 			cookie.MaxAge = manager.maxage
 		}
-		//cookie.Expires = time.Now().Add(time.Duration(manager.maxlifetime) * time.Second)
 		http.SetCookie(w, cookie)
 		r.AddCookie(cookie)
 	} else {
-		//cookie.Expires = time.Now().Add(time.Duration(manager.maxlifetime) * time.Second)
-		//cookie.HttpOnly = true
-		//cookie.Path = "/"
-		//if manager.maxage >= 0 {
-		//	cookie.MaxAge = manager.maxage
-		//	http.SetCookie(w, cookie)
-		//}
 		sid, _ := url.QueryUnescape(cookie.Value)
 		session, _ = manager.provider.SessionRead(sid)
 	}
@@ -200,8 +192,16 @@ func (manager *Manager) GetActiveSession() int {
 	return manager.provider.SessionAll()
 }
 
-//remote_addr cruunixnano randdata
+func (manager *Manager) SetHashFunc(hasfunc, hashkey string) {
+	manager.hashfunc = hasfunc
+	manager.hashkey = hashkey
+}
 
+func (manager *Manager) SetSecure(secure bool) {
+	manager.secure = secure
+}
+
+//remote_addr cruunixnano randdata
 func (manager *Manager) sessionId(r *http.Request) (sid string) {
 	bs := make([]byte, 24)
 	if _, err := io.ReadFull(rand.Reader, bs); err != nil {
