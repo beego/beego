@@ -58,21 +58,12 @@ func (rs *RedisSessionStore) SessionID() string {
 
 func (rs *RedisSessionStore) SessionRelease() {
 	defer rs.c.Close()
-	keys, err := redis.Values(rs.c.Do("HKEYS", rs.sid))
-	if err == nil {
-		for _, key := range keys {
-			if val, ok := rs.values[key]; ok {
-				rs.c.Do("HSET", rs.sid, key, val)
-				rs.Delete(key)
-			} else {
-				rs.c.Do("HDEL", rs.sid, key)
-			}
-		}
-	}
 	if len(rs.values) > 0 {
-		for k, v := range rs.values {
-			rs.c.Do("HSET", rs.sid, k, v)
+		b, err := encodeGob(rs.values)
+		if err != nil {
+			return
 		}
+		rs.c.Do("SET", rs.sid, string(b))
 	}
 }
 
@@ -123,31 +114,27 @@ func (rp *RedisProvider) SessionInit(maxlifetime int64, savePath string) error {
 
 func (rp *RedisProvider) SessionRead(sid string) (SessionStore, error) {
 	c := rp.poollist.Get()
-	//if str, err := redis.String(c.Do("GET", sid)); err != nil || str == "" {
-	if str, err := redis.String(c.Do("HGET", sid, sid)); err != nil || str == "" {
-		//c.Do("SET", sid, sid, rp.maxlifetime)
-		c.Do("HSET", sid, sid, rp.maxlifetime)
+	if existed, err := redis.Int(c.Do("EXISTS", sid)); err != nil || existed == 0 {
+		c.Do("SET", sid)
 	}
 	c.Do("EXPIRE", sid, rp.maxlifetime)
-	kvs, err := redis.Values(c.Do("HGETALL", sid))
-	vals := make(map[interface{}]interface{})
-	var key interface{}
-	if err == nil {
-		for k, v := range kvs {
-			if k%2 == 0 {
-				key = v
-			} else {
-				vals[key] = v
-			}
+	kvs, err := redis.String(c.Do("GET", sid))
+	var kv map[interface{}]interface{}
+	if len(kvs) == 0 {
+		kv = make(map[interface{}]interface{})
+	} else {
+		kv, err = decodeGob([]byte(kvs))
+		if err != nil {
+			return nil, err
 		}
 	}
-	rs := &RedisSessionStore{c: c, sid: sid, values: vals}
+	rs := &RedisSessionStore{c: c, sid: sid, values: kv}
 	return rs, nil
 }
 
 func (rp *RedisProvider) SessionExist(sid string) bool {
 	c := rp.poollist.Get()
-	if str, err := redis.String(c.Do("HGET", sid, sid)); err != nil || str == "" {
+	if existed, err := redis.Int(c.Do("EXISTS", sid)); err != nil || existed == 0 {
 		return false
 	} else {
 		return true
@@ -156,24 +143,22 @@ func (rp *RedisProvider) SessionExist(sid string) bool {
 
 func (rp *RedisProvider) SessionRegenerate(oldsid, sid string) (SessionStore, error) {
 	c := rp.poollist.Get()
-	if str, err := redis.String(c.Do("HGET", oldsid, oldsid)); err != nil || str == "" {
-		c.Do("HSET", oldsid, oldsid, rp.maxlifetime)
+	if existed, err := redis.Int(c.Do("EXISTS", oldsid)); err != nil || existed == 0 {
+		c.Do("SET", oldsid)
 	}
 	c.Do("RENAME", oldsid, sid)
 	c.Do("EXPIRE", sid, rp.maxlifetime)
-	kvs, err := redis.Values(c.Do("HGETALL", sid))
-	vals := make(map[interface{}]interface{})
-	var key interface{}
-	if err == nil {
-		for k, v := range kvs {
-			if k%2 == 0 {
-				key = v
-			} else {
-				vals[key] = v
-			}
+	kvs, err := redis.String(c.Do("GET", sid))
+	var kv map[interface{}]interface{}
+	if len(kvs) == 0 {
+		kv = make(map[interface{}]interface{})
+	} else {
+		kv, err = decodeGob([]byte(kvs))
+		if err != nil {
+			return nil, err
 		}
 	}
-	rs := &RedisSessionStore{c: c, sid: sid, values: vals}
+	rs := &RedisSessionStore{c: c, sid: sid, values: kv}
 	return rs, nil
 }
 
