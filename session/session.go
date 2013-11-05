@@ -25,6 +25,7 @@ type SessionStore interface {
 type Provider interface {
 	SessionInit(maxlifetime int64, savePath string) error
 	SessionRead(sid string) (SessionStore, error)
+	SessionExist(sid string) bool
 	SessionRegenerate(oldsid, sid string) (SessionStore, error)
 	SessionDestroy(sid string) error
 	SessionAll() int //get all active session
@@ -133,7 +134,22 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 		r.AddCookie(cookie)
 	} else {
 		sid, _ := url.QueryUnescape(cookie.Value)
-		session, _ = manager.provider.SessionRead(sid)
+		if manager.provider.SessionExist(sid) {
+			session, _ = manager.provider.SessionRead(sid)
+		} else {
+			sid = manager.sessionId(r)
+			session, _ = manager.provider.SessionRead(sid)
+			cookie = &http.Cookie{Name: manager.cookieName,
+				Value:    url.QueryEscape(sid),
+				Path:     "/",
+				HttpOnly: true,
+				Secure:   manager.secure}
+			if manager.maxage >= 0 {
+				cookie.MaxAge = manager.maxage
+			}
+			http.SetCookie(w, cookie)
+			r.AddCookie(cookie)
+		}
 	}
 	return
 }

@@ -145,6 +145,15 @@ func (rp *RedisProvider) SessionRead(sid string) (SessionStore, error) {
 	return rs, nil
 }
 
+func (rp *RedisProvider) SessionExist(sid string) bool {
+	c := rp.poollist.Get()
+	if str, err := redis.String(c.Do("HGET", sid, sid)); err != nil || str == "" {
+		return false
+	} else {
+		return true
+	}
+}
+
 func (rp *RedisProvider) SessionRegenerate(oldsid, sid string) (SessionStore, error) {
 	c := rp.poollist.Get()
 	if str, err := redis.String(c.Do("HGET", oldsid, oldsid)); err != nil || str == "" {

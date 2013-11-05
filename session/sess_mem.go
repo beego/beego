@@ -87,6 +87,16 @@ func (pder *MemProvider) SessionRead(sid string) (SessionStore, error) {
 	return nil, nil
 }
 
+func (pder *MemProvider) SessionExist(sid string) bool {
+	pder.lock.RLock()
+	defer pder.lock.RUnlock()
+	if _, ok := pder.sessions[sid]; ok {
+		return true
+	} else {
+		return false
+	}
+}
+
 func (pder *MemProvider) SessionRegenerate(oldsid, sid string) (SessionStore, error) {
 	pder.lock.RLock()
 	if element, ok := pder.sessions[oldsid]; ok {

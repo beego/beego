@@ -116,6 +116,15 @@ func (fp *FileProvider) SessionRead(sid string) (SessionStore, error) {
 	return ss, nil
 }
 
+func (fp *FileProvider) SessionExist(sid string) bool {
+	_, err := os.Stat(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid))
+	if err == nil {
+		return true
+	} else {
+		return false
+	}
+}
+
 func (fp *FileProvider) SessionDestroy(sid string) error {
 	os.Remove(path.Join(fp.savePath))
 	return nil
