@@ -1,7 +1,7 @@
 package testing
 
 import (
-	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/config"
 	"github.com/astaxie/beego/httplib"
 )
 
@@ -14,7 +14,7 @@ type TestHttpRequest struct {
 
 func getPort() string {
 	if port == "" {
-		config, err := beego.ParseConfig("../conf/app.conf")
+		config, err := config.NewConfig("ini", "../conf/app.conf")
 		if err != nil {
 			return "8080"
 		}
