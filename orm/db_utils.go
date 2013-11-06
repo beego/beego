@@ -63,7 +63,7 @@ outFor:
 						if len(v) > 10 {
 							s = v[:10]
 						}
-						t, err = time.ParseInLocation(format_Date, s, DefaultTimeLoc)
+						t, err = time.ParseInLocation(format_Date, s, tz)
 					}
 					if err == nil {
 						if fi.fieldType == TypeDateField {
