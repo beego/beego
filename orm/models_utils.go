@@ -73,13 +73,16 @@ func getTableUnique(val reflect.Value) [][]string {
 }
 
 func getColumnName(ft int, addrField reflect.Value, sf reflect.StructField, col string) string {
-	column := strings.ToLower(col)
-	if column == "" {
+	col = strings.ToLower(col)
+	column := col
+	if col == "" {
 		column = snakeString(sf.Name)
 	}
 	switch ft {
 	case RelForeignKey, RelOneToOne:
-		column = column + "_id"
+		if len(col) == 0 {
+			column = column + "_id"
+		}
 	case RelManyToMany, RelReverseMany, RelReverseOne:
 		column = sf.Name
 	}

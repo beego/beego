@@ -150,7 +150,7 @@ func NewTag() *Tag {
 
 type Comment struct {
 	Id      int
-	Post    *Post     `orm:"rel(fk)"`
+	Post    *Post     `orm:"rel(fk);column(post)"`
 	Content string    `orm:"type(text)"`
 	Parent  *Comment  `orm:"null;rel(fk)"`
 	Created time.Time `orm:"auto_now_add"`
