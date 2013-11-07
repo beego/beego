@@ -311,6 +311,11 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		context.Input.CruSession = GlobalSessions.SessionStart(w, r)
 	}
 
+	if !inSlice(strings.ToLower(r.Method), HTTPMETHOD) {
+		http.Error(w, "Method Not Allowed", 405)
+		return
+	}
+
 	var runrouter *controllerInfo
 	var findrouter bool
 
