@@ -629,7 +629,9 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				}
 				if strings.HasPrefix(strings.ToLower(requestPath), "/"+cName+"/") {
 					for mName, controllerType := range methodmap {
-						if strings.HasPrefix(strings.ToLower(requestPath), "/"+cName+"/"+strings.ToLower(mName)) {
+						if strings.ToLower(requestPath) == "/"+cName+"/"+strings.ToLower(mName) ||
+							(strings.HasPrefix(strings.ToLower(requestPath), "/"+cName+"/"+strings.ToLower(mName)) &&
+								requestPath[len("/"+cName+"/"+strings.ToLower(mName)):len("/"+cName+"/"+strings.ToLower(mName))+1] == "/") {
 							if r.Method == "POST" {
 								r.ParseMultipartForm(MaxMemory)
 							}
