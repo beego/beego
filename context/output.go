@@ -8,6 +8,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"html/template"
 	"io"
 	"mime"
 	"net/http"
@@ -157,7 +158,7 @@ func (output *BeegoOutput) Jsonp(data interface{}, hasIndent bool) error {
 	if callback == "" {
 		return errors.New(`"callback" parameter required`)
 	}
-	callback_content := bytes.NewBufferString(callback)
+	callback_content := bytes.NewBufferString(template.JSEscapeString(callback))
 	callback_content.WriteString("(")
 	callback_content.Write(content)
 	callback_content.WriteString(");\r\n")
