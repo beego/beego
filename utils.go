@@ -373,3 +373,18 @@ func GetRandomString(n int) string {
 	}
 	return string(bytes)
 }
+
+// This will reference the index function local to the current blueprint:
+//	UrlFor(".index")
+//	...  print UrlFor("index")
+//	...  print UrlFor("login")
+//	...  print UrlFor("login", "next","/"")
+//	...  print UrlFor("profile", "username","John Doe")
+//	...
+//	/
+//	/login
+//	/login?next=/
+//	/user/John%20Doe
+func UrlFor(endpoint string, values ...string) {
+
+}
