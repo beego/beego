@@ -705,7 +705,13 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 				ind.Set(mind)
 			} else {
 				if cnt == 0 {
-					slice = reflect.New(ind.Type()).Elem()
+					// you can use a empty & caped container list
+					// orm will not replace it
+					if ind.Len() != 0 {
+						// if container is not empty
+						// create a new one
+						slice = reflect.New(ind.Type()).Elem()
+					}
 				}
 
 				if isPtr {
@@ -718,8 +724,16 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 		cnt++
 	}
 
-	if one == false && cnt > 0 {
-		ind.Set(slice)
+	if one == false {
+		if cnt > 0 {
+			ind.Set(slice)
+		} else {
+			// when a result is empty and container is nil
+			// to set a empty container
+			if ind.IsNil() {
+				ind.Set(reflect.MakeSlice(ind.Type(), 0, 0))
+			}
+		}
 	}
 
 	return cnt, nil
@@ -1058,12 +1072,24 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 	)
 
 	typ := 0
-	switch container.(type) {
+	switch v := container.(type) {
 	case *[]Params:
+		d := *v
+		if len(d) == 0 {
+			maps = d
+		}
 		typ = 1
 	case *[]ParamsList:
+		d := *v
+		if len(d) == 0 {
+			lists = d
+		}
 		typ = 2
 	case *ParamsList:
+		d := *v
+		if len(d) == 0 {
+			list = d
+		}
 		typ = 3
 	default:
 		panic(fmt.Errorf("unsupport read values type `%T`", container))
