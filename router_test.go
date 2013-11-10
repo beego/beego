@@ -1,10 +1,8 @@
 package beego
 
 import (
-	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 )
 
@@ -143,16 +141,13 @@ func TestNotFound(t *testing.T) {
 // TestStatic tests the ability to serve static
 // content from the filesystem
 func TestStatic(t *testing.T) {
-	r, _ := http.NewRequest("GET", "/router_test.go", nil)
+	r, _ := http.NewRequest("GET", "/static/js/jquery.js", nil)
 	w := httptest.NewRecorder()
-	pwd, _ := os.Getwd()
 
 	handler := NewControllerRegistor()
-	SetStaticPath("/", pwd)
 	handler.ServeHTTP(w, r)
 
-	testFile, _ := ioutil.ReadFile(pwd + "/routes_test.go")
-	if w.Body.String() != string(testFile) {
+	if w.Code != 404 {
 		t.Errorf("handler.Static failed to serve file")
 	}
 }
