@@ -259,6 +259,121 @@ func (p *ControllerRegistor) AddFilter(pattern, action string, filter FilterFunc
 	p.filters[action] = append(p.filters[action], mr)
 }
 
+func (p *ControllerRegistor) UrlFor(endpoint string, values ...string) string {
+	paths := strings.Split(endpoint, ".")
+	if len(paths) <= 1 {
+		Warn("urlfor endpoint must like path.controller.method")
+		return ""
+	}
+	if len(values)%2 != 0 {
+		Warn("urlfor params must key-value pair")
+		return ""
+	}
+	urlv := url.Values{}
+	if len(values) > 0 {
+		key := ""
+		for k, v := range values {
+			if k%2 == 0 {
+				key = v
+			} else {
+				urlv.Set(key, v)
+			}
+		}
+	}
+	controllName := strings.Join(paths[:len(paths)-1], ".")
+	methodName := paths[len(paths)-1]
+	for _, route := range p.fixrouters {
+		if route.controllerType.Name() == controllName {
+			var finded bool
+			if inSlice(strings.ToLower(methodName), HTTPMETHOD) {
+				if route.hasMethod {
+					if m, ok := route.methods[strings.ToLower(methodName)]; ok && m != methodName {
+						finded = false
+					} else if m, ok = route.methods["*"]; ok && m != methodName {
+						finded = false
+					} else {
+						finded = true
+					}
+				} else {
+					finded = true
+				}
+			} else if route.hasMethod {
+				for _, md := range route.methods {
+					if md == methodName {
+						finded = true
+					}
+				}
+			}
+			if !finded {
+				continue
+			}
+			if len(values) > 0 {
+				return route.pattern + "?" + urlv.Encode()
+			}
+			return route.pattern
+		}
+	}
+	for _, route := range p.routers {
+		if route.controllerType.Name() == controllName {
+			var finded bool
+			if inSlice(strings.ToLower(methodName), HTTPMETHOD) {
+				if route.hasMethod {
+					if m, ok := route.methods[strings.ToLower(methodName)]; ok && m != methodName {
+						finded = false
+					} else if m, ok = route.methods["*"]; ok && m != methodName {
+						finded = false
+					} else {
+						finded = true
+					}
+				} else {
+					finded = true
+				}
+			} else if route.hasMethod {
+				for _, md := range route.methods {
+					if md == methodName {
+						finded = true
+					}
+				}
+			}
+			if !finded {
+				continue
+			}
+			var returnurl string
+			var i int
+			var startreg bool
+			for _, v := range route.regex.String() {
+				if v == '(' {
+					startreg = true
+					continue
+				} else if v == ')' {
+					startreg = false
+					returnurl = returnurl + urlv.Get(route.params[i])
+					i++
+				} else if !startreg {
+					returnurl = string(append([]rune(returnurl), v))
+				}
+			}
+			if route.regex.MatchString(returnurl) {
+				return returnurl
+			}
+		}
+	}
+	if p.enableAuto {
+		for cName, methodList := range p.autoRouter {
+			if strings.ToLower(strings.TrimSuffix(paths[len(paths)-2], "Controller")) == cName {
+				if _, ok := methodList[methodName]; ok {
+					if len(values) > 0 {
+						return "/" + strings.TrimSuffix(paths[len(paths)-2], "Controller") + "/" + methodName + "?" + urlv.Encode()
+					} else {
+						return "/" + strings.TrimSuffix(paths[len(paths)-2], "Controller") + "/" + methodName
+					}
+				}
+			}
+		}
+	}
+	return ""
+}
+
 // AutoRoute
 func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	defer func() {

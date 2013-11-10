@@ -16,6 +16,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -173,6 +174,17 @@ func (c *Controller) Redirect(url string, code int) {
 
 func (c *Controller) Abort(code string) {
 	panic(code)
+}
+
+func (c *Controller) UrlFor(endpoint string, values ...string) string {
+	if len(endpoint) <= 0 {
+		return ""
+	}
+	if endpoint[0] == '.' {
+		return UrlFor(reflect.Indirect(reflect.ValueOf(c.AppController)).Type().Name()+endpoint, values...)
+	} else {
+		return UrlFor(endpoint, values...)
+	}
 }
 
 func (c *Controller) ServeJson(encoding ...bool) {

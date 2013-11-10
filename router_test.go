@@ -25,6 +25,29 @@ func (this *TestController) Myext() {
 	this.Ctx.Output.Body([]byte(this.Ctx.Input.Params(":ext")))
 }
 
+func (this *TestController) GetUrl() {
+	this.Ctx.Output.Body([]byte(this.UrlFor(".Myext")))
+}
+
+func TestUrlFor(t *testing.T) {
+	handler := NewControllerRegistor()
+	handler.Add("/api/list", &TestController{}, "*:List")
+	handler.Add("/person/:last/:first", &TestController{})
+	handler.AddAuto(&TestController{})
+	if handler.UrlFor("TestController.List") != "/api/list" {
+		t.Errorf("TestController.List must equal to /api/list")
+	}
+	if handler.UrlFor("TestController.Get", ":last", "xie", ":first", "asta") != "/person/xie/asta" {
+		t.Errorf("TestController.Get must equal to /person/xie/asta")
+	}
+	if handler.UrlFor("TestController.Myext") != "/Test/Myext" {
+		t.Errorf("TestController.Myext must equal to /Test/Myext")
+	}
+	if handler.UrlFor("TestController.GetUrl") != "/Test/GetUrl" {
+		t.Errorf("TestController.GetUrl must equal to /Test/GetUrl")
+	}
+}
+
 func TestUserFunc(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/api/list", nil)
 	w := httptest.NewRecorder()

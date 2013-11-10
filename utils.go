@@ -385,6 +385,6 @@ func GetRandomString(n int) string {
 //	/login
 //	/login?next=/
 //	/user/John%20Doe
-func UrlFor(endpoint string, values ...string) {
-
+func UrlFor(endpoint string, values ...string) string {
+	return BeeApp.UrlFor(endpoint, values...)
 }

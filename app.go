@@ -87,6 +87,9 @@ func (app *App) AutoRouter(c ControllerInterface) *App {
 	return app
 }
 
+func (app *App) UrlFor(endpoint string, values ...string) string {
+	return app.Handlers.UrlFor(endpoint, values...)
+}
 func (app *App) Filter(pattern, action string, filter FilterFunc) *App {
 	app.Handlers.AddFilter(pattern, action, filter)
 	return app
