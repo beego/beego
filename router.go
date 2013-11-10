@@ -461,7 +461,9 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			file := staticDir + r.URL.Path[len(prefix):]
 			finfo, err := os.Stat(file)
 			if err != nil {
-				Warn(err)
+				if RunMode == "dev" {
+					Warn(err)
+				}
 				http.NotFound(w, r)
 				return
 			}
