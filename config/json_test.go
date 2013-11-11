@@ -12,7 +12,14 @@ var jsoncontext = `{
 "PI": 3.1415976,
 "runmode": "dev",
 "autorender": false,
-"copyrequestbody": true
+"copyrequestbody": true,
+"database": {
+        "host": "host",                 
+        "port": "port",                 
+        "database": "database",
+        "username": "username",
+        "password": "password"
+    }
 }`
 
 func TestJson(t *testing.T) {
@@ -62,5 +69,14 @@ func TestJson(t *testing.T) {
 	}
 	if jsonconf.String("name") != "astaxie" {
 		t.Fatal("get name error")
+	}
+	if db, err := jsonconf.DIY("database"); err != nil {
+		t.Fatal(err)
+	} else if m, ok := db.(map[string]interface{}); !ok {
+		t.Fatal("db not map[string]interface{}")
+	} else {
+		if m["host"].(string) != "host" {
+			t.Fatal("get host err")
+		}
 	}
 }
