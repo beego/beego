@@ -153,7 +153,7 @@ func getTplDeep(root, file, parent string, t *template.Template) (*template.Temp
 	if err != nil {
 		return nil, [][]string{}, err
 	}
-	reg := regexp.MustCompile("{{[ ]*template[ ]+\"([^\"]+)\"")
+	reg := regexp.MustCompile(TemplateLeft + "[ ]*template[ ]+\"([^\"]+)\"")
 	allsub := reg.FindAllStringSubmatch(string(data), -1)
 	for _, m := range allsub {
 		if len(m) == 2 {
@@ -216,7 +216,7 @@ func _getTemplate(t0 *template.Template, root string, submods [][]string, others
 				if err != nil {
 					continue
 				}
-				reg := regexp.MustCompile("{{[ ]*define[ ]+\"([^\"]+)\"")
+				reg := regexp.MustCompile(TemplateLeft + "[ ]*define[ ]+\"([^\"]+)\"")
 				allsub := reg.FindAllStringSubmatch(string(data), -1)
 				for _, sub := range allsub {
 					if len(sub) == 2 && sub[1] == m[1] {
