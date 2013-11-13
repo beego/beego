@@ -258,3 +258,7 @@ func stringsToJson(str string) string {
 	}
 	return jsons
 }
+
+func (output *BeegoOutput) Session(name interface{}, value interface{}) {
+	output.Context.Input.CruSession.Set(name, value)
+}

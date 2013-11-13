@@ -53,6 +53,9 @@ var (
 	TemplateLeft          string
 	TemplateRight         string
 	BeegoServerName       string
+	EnableAdmin           bool   //enable admin module to log api time
+	AdminHttpAddr         string //admin module http addr
+	AdminHttpPort         int
 )
 
 func init() {
@@ -89,6 +92,9 @@ func init() {
 	TemplateLeft = "{{"
 	TemplateRight = "}}"
 	BeegoServerName = "beegoServer"
+	EnableAdmin = true
+	AdminHttpAddr = "localhost"
+	AdminHttpPort = 8088
 	ParseConfig()
 	runtime.GOMAXPROCS(runtime.NumCPU())
 }
@@ -310,6 +316,24 @@ func ParseConfig() (err error) {
 					StaticDir["/"+url2fsmap[0]] = url2fsmap[0]
 				}
 			}
+		}
+		if enableadmin, err := AppConfig.Bool("enableadmin"); err == nil {
+			EnableAdmin = enableadmin
+		}
+		if enableadmin, err := AppConfig.Bool("EnableAdmin"); err == nil {
+			EnableAdmin = enableadmin
+		}
+		if adminhttpaddr := AppConfig.String("admintttpaddr"); adminhttpaddr != "" {
+			AdminHttpAddr = adminhttpaddr
+		}
+		if adminhttpaddr := AppConfig.String("AdminHttpAddr"); adminhttpaddr != "" {
+			AdminHttpAddr = adminhttpaddr
+		}
+		if adminhttpport, err := AppConfig.Int("adminhttpport"); err == nil {
+			AdminHttpPort = adminhttpport
+		}
+		if adminhttpport, err := AppConfig.Int("AdminHttpPort"); err == nil {
+			AdminHttpPort = adminhttpport
 		}
 	}
 	return nil

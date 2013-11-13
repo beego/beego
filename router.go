@@ -2,6 +2,7 @@ package beego
 
 import (
 	"fmt"
+	"github.com/astaxie/beego/admin"
 	beecontext "github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/middleware"
 	"net/http"
@@ -12,6 +13,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var HTTPMETHOD = []string{"get", "post", "put", "delete", "patch", "options", "head"}
@@ -406,6 +408,12 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}
 	}()
 
+	starttime := time.Now()
+	requestPath := r.URL.Path
+	var runrouter *controllerInfo
+	var findrouter bool
+	params := make(map[string]string)
+
 	w := &responseWriter{writer: rw}
 	w.Header().Set("Server", BeegoServerName)
 	context := &beecontext.Context{
@@ -422,19 +430,10 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		context.Output = beecontext.NewOutput(rw)
 	}
 
-	if SessionOn {
-		context.Input.CruSession = GlobalSessions.SessionStart(w, r)
-	}
-
 	if !inSlice(strings.ToLower(r.Method), HTTPMETHOD) {
 		http.Error(w, "Method Not Allowed", 405)
-		return
+		goto Admin
 	}
-
-	var runrouter *controllerInfo
-	var findrouter bool
-
-	params := make(map[string]string)
 
 	if p.enableFilter {
 		if l, ok := p.filters["BeforRouter"]; ok {
@@ -442,7 +441,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				if filterR.ValidRouter(r.URL.Path) {
 					filterR.filterFunc(context)
 					if w.started {
-						return
+						goto Admin
 					}
 				}
 			}
@@ -455,7 +454,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			file := staticDir + r.URL.Path
 			http.ServeFile(w, r, file)
 			w.started = true
-			return
+			goto Admin
 		}
 		if strings.HasPrefix(r.URL.Path, prefix) {
 			file := staticDir + r.URL.Path[len(prefix):]
@@ -465,17 +464,22 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 					Warn(err)
 				}
 				http.NotFound(w, r)
-				return
+				goto Admin
 			}
 			//if the request is dir and DirectoryIndex is false then
 			if finfo.IsDir() && !DirectoryIndex {
 				middleware.Exception("403", rw, r, "403 Forbidden")
-				return
+				goto Admin
 			}
 			http.ServeFile(w, r, file)
 			w.started = true
-			return
+			goto Admin
 		}
+	}
+
+	// session init after static file
+	if SessionOn {
+		context.Input.CruSession = GlobalSessions.SessionStart(w, r)
 	}
 
 	if p.enableFilter {
@@ -484,13 +488,12 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				if filterR.ValidRouter(r.URL.Path) {
 					filterR.filterFunc(context)
 					if w.started {
-						return
+						goto Admin
 					}
 				}
 			}
 		}
 	}
-	requestPath := r.URL.Path
 
 	if CopyRequestBody {
 		context.Input.Body()
@@ -509,7 +512,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		if requestPath[n-1] != '/' && len(route.pattern) == n+1 &&
 			route.pattern[n] == '/' && route.pattern[:n] == requestPath {
 			http.Redirect(w, r, requestPath+"/", 301)
-			return
+			goto Admin
 		}
 	}
 
@@ -546,6 +549,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			break
 		}
 	}
+
 	context.Input.Param = params
 
 	if runrouter != nil {
@@ -559,7 +563,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 					if filterR.ValidRouter(r.URL.Path) {
 						filterR.filterFunc(context)
 						if w.started {
-							return
+							goto Admin
 						}
 					}
 				}
@@ -714,7 +718,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 					if filterR.ValidRouter(r.URL.Path) {
 						filterR.filterFunc(context)
 						if w.started {
-							return
+							goto Admin
 						}
 					}
 				}
@@ -740,7 +744,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 				if strings.ToLower(requestPath) == "/"+cName {
 					http.Redirect(w, r, requestPath+"/", 301)
-					return
+					goto Admin
 				}
 
 				if strings.ToLower(requestPath) == "/"+cName+"/" {
@@ -754,6 +758,8 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 							if r.Method == "POST" {
 								r.ParseMultipartForm(MaxMemory)
 							}
+							// set find
+							findrouter = true
 							//execute middleware filters
 							if p.enableFilter {
 								if l, ok := p.filters["BeforExec"]; ok {
@@ -761,7 +767,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 										if filterR.ValidRouter(r.URL.Path) {
 											filterR.filterFunc(context)
 											if w.started {
-												return
+												goto Admin
 											}
 										}
 									}
@@ -816,7 +822,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 										if filterR.ValidRouter(r.URL.Path) {
 											filterR.filterFunc(context)
 											if w.started {
-												return
+												goto Admin
 											}
 										}
 									}
@@ -824,9 +830,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 							}
 							method = vc.MethodByName("Destructor")
 							method.Call(in)
-							// set find
-							findrouter = true
-							goto Last
+							goto Admin
 						}
 					}
 				}
@@ -834,10 +838,15 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-Last:
 	//if no matches to url, throw a not found exception
 	if !findrouter {
 		middleware.Exception("404", rw, r, "")
+	}
+
+Admin:
+	//admin module record QPS
+	if EnableAdmin {
+		go admin.StatisticsMap.AddStatistics(r.Method, requestPath, runrouter.controllerType.Name(), time.Since(starttime))
 	}
 }
 

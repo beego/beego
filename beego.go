@@ -93,5 +93,9 @@ func Run() {
 	middleware.AppName = AppName
 	middleware.RegisterErrorHander()
 
+	if EnableAdmin {
+		go BeeAdminApp.Run()
+	}
+
 	BeeApp.Run()
 }
