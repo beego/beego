@@ -74,6 +74,7 @@ func (app *App) Run() {
 	}
 	if err != nil {
 		BeeLogger.Critical("ListenAndServe: ", err)
+		time.Sleep(100 * time.Microsecond)
 	}
 }
 
