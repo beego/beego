@@ -40,7 +40,7 @@ func AdminIndex(rw http.ResponseWriter, r *http.Request) {
 }
 
 func QpsIndex(rw http.ResponseWriter, r *http.Request) {
-	info := admin.StatisticsMap.GetMap(rw)
+	admin.StatisticsMap.GetMap(rw)
 }
 func ProfIndex(rw http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
