@@ -846,12 +846,14 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 Admin:
 	//admin module record QPS
 	if EnableAdmin {
-		if runrouter != nil {
-			go admin.StatisticsMap.AddStatistics(r.Method, requestPath, runrouter.controllerType.Name(), time.Since(starttime))
-		} else {
-			go admin.StatisticsMap.AddStatistics(r.Method, requestPath, "", time.Since(starttime))
+		timeend := time.Since(starttime)
+		if FilterMonitorFunc(r.Method, requestPath, timeend) {
+			if runrouter != nil {
+				go admin.StatisticsMap.AddStatistics(r.Method, requestPath, runrouter.controllerType.Name(), timeend)
+			} else {
+				go admin.StatisticsMap.AddStatistics(r.Method, requestPath, "", timeend)
+			}
 		}
-
 	}
 }
 

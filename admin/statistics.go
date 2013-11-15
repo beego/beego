@@ -1,7 +1,8 @@
 package admin
 
 import (
-	"encoding/json"
+	"io"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -60,14 +61,21 @@ func (m *UrlMap) AddStatistics(requestMethod, requestUrl, requestController stri
 	}
 }
 
-func (m *UrlMap) GetMap() []byte {
+func (m *UrlMap) GetMap(rw io.Writer) {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
-	r, err := json.Marshal(m.urlmap)
-	if err != nil {
-		return []byte("")
+	rw.Write([]byte("requestURL                    avgTime"))
+	for k, v := range m.urlmap {
+		rw.Write([]byte(k + ""))
+		for kk, vv := range v {
+			rw.Write([]byte(kk))
+			rw.Write([]byte(strconv.FormatInt(vv.RequestNum, 10)))
+			rw.Write([]byte(strconv.FormatInt(int64(vv.TotalTime), 10)))
+			rw.Write([]byte(strconv.FormatInt(int64(vv.MaxTime), 10)))
+			rw.Write([]byte(strconv.FormatInt(int64(vv.MinTime), 10)))
+			rw.Write([]byte(strconv.FormatInt(int64(vv.TotalTime)/vv.RequestNum, 10)))
+		}
 	}
-	return r
 }
 
 var StatisticsMap *UrlMap

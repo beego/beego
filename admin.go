@@ -2,20 +2,54 @@ package beego
 
 import (
 	"fmt"
+	"github.com/astaxie/beego/admin"
 	"net/http"
+	"time"
 )
 
 var BeeAdminApp *AdminApp
+
+//func MyFilterMonitor(method, requestPath string, t time.Duration) bool {
+//	if method == "POST" {
+//		return false
+//	}
+//	if t.Nanoseconds() < 100 {
+//		return false
+//	}
+//	if strings.HasPrefix(requestPath, "/astaxie") {
+//		return false
+//	}
+//	return true
+//}
+
+//beego.FilterMonitorFunc = MyFilterMonitor
+var FilterMonitorFunc func(string, string, time.Duration) bool
 
 func init() {
 	BeeAdminApp = &AdminApp{
 		routers: make(map[string]http.HandlerFunc),
 	}
 	BeeAdminApp.Route("/", AdminIndex)
+	BeeAdminApp.Route("/qps", QpsIndex)
+	BeeAdminApp.Route("/prof", ProfIndex)
+	FilterMonitorFunc = func(string, string, time.Duration) bool { return true }
 }
 
 func AdminIndex(rw http.ResponseWriter, r *http.Request) {
 	rw.Write([]byte("Welcome to Admin Dashboard"))
+}
+
+func QpsIndex(rw http.ResponseWriter, r *http.Request) {
+	info := admin.UrlMap.GetMap(rw)
+}
+func ProfIndex(rw http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	command := r.Form.Get("command")
+	if command != "" {
+		admin.ProcessInput(command)
+	} else {
+		rw.Write([]byte("request url like '/prof?command=lookup goroutine'"))
+	}
 }
 
 type AdminApp struct {
