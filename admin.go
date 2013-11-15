@@ -46,7 +46,7 @@ func ProfIndex(rw http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	command := r.Form.Get("command")
 	if command != "" {
-		admin.ProcessInput(command)
+		admin.ProcessInput(command, rw)
 	} else {
 		rw.Write([]byte("request url like '/prof?command=lookup goroutine'"))
 	}

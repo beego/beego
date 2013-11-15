@@ -64,11 +64,11 @@ func (m *UrlMap) AddStatistics(requestMethod, requestUrl, requestController stri
 func (m *UrlMap) GetMap(rw io.Writer) {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
-	fmt.Fprintf(rw, "| % -30s| % -10s | % -16s | % -16s | % -16s | % -16s | % -16s |\n", "requestUrl", "method", "times", "used (s)", "avg used (μs)", "max used (μs)", "min used (μs)")
+	fmt.Fprintf(rw, "| % -50s| % -10s | % -16s | % -16s | % -16s | % -16s | % -16s |\n", "requestUrl", "method", "times", "used", "max used", "min used", "avg used")
 	for k, v := range m.urlmap {
 		for kk, vv := range v {
-			fmt.Fprintf(rw, "| % -30s| % -10s | % -16d | % -16f | % -16f | % -16f | % -16f |\n", k,
-				kk, vv.RequestNum, vv.TotalTime, vv.MaxTime, vv.MinTime, int64(vv.TotalTime)/vv.RequestNum,
+			fmt.Fprintf(rw, "| % -50s| % -10s | % -16d | % -16s | % -16s | % -16s | % -16s |\n", k,
+				kk, vv.RequestNum, toS(vv.TotalTime), toS(vv.MaxTime), toS(vv.MinTime), toS(time.Duration(int64(vv.TotalTime)/vv.RequestNum)),
 			)
 		}
 	}

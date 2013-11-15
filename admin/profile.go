@@ -2,6 +2,7 @@ package admin
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"runtime"
@@ -11,7 +12,6 @@ import (
 	"time"
 )
 
-var heapProfileCounter int32
 var startTime = time.Now()
 var pid int
 
@@ -19,20 +19,20 @@ func init() {
 	pid = os.Getpid()
 }
 
-func ProcessInput(input string) {
+func ProcessInput(input string, w io.Writer) {
 	switch input {
 	case "lookup goroutine":
 		p := pprof.Lookup("goroutine")
-		p.WriteTo(os.Stdout, 2)
+		p.WriteTo(w, 2)
 	case "lookup heap":
 		p := pprof.Lookup("heap")
-		p.WriteTo(os.Stdout, 2)
+		p.WriteTo(w, 2)
 	case "lookup threadcreate":
 		p := pprof.Lookup("threadcreate")
-		p.WriteTo(os.Stdout, 2)
+		p.WriteTo(w, 2)
 	case "lookup block":
 		p := pprof.Lookup("block")
-		p.WriteTo(os.Stdout, 2)
+		p.WriteTo(w, 2)
 	case "start cpuprof":
 		StartCPUProfile()
 	case "stop cpuprof":
@@ -40,7 +40,7 @@ func ProcessInput(input string) {
 	case "get memprof":
 		MemProf()
 	case "gc summary":
-		PrintGCSummary()
+		PrintGCSummary(w)
 	}
 }
 
@@ -66,16 +66,16 @@ func StopCPUProfile() {
 	pprof.StopCPUProfile()
 }
 
-func PrintGCSummary() {
+func PrintGCSummary(w io.Writer) {
 	memStats := &runtime.MemStats{}
 	runtime.ReadMemStats(memStats)
 	gcstats := &debug.GCStats{PauseQuantiles: make([]time.Duration, 100)}
 	debug.ReadGCStats(gcstats)
 
-	printGC(memStats, gcstats)
+	printGC(memStats, gcstats, w)
 }
 
-func printGC(memStats *runtime.MemStats, gcstats *debug.GCStats) {
+func printGC(memStats *runtime.MemStats, gcstats *debug.GCStats, w io.Writer) {
 
 	if gcstats.NumGC > 0 {
 		lastPause := gcstats.Pause[0]
@@ -83,7 +83,7 @@ func printGC(memStats *runtime.MemStats, gcstats *debug.GCStats) {
 		overhead := float64(gcstats.PauseTotal) / float64(elapsed) * 100
 		allocatedRate := float64(memStats.TotalAlloc) / elapsed.Seconds()
 
-		fmt.Printf("NumGC:%d Pause:%s Pause(Avg):%s Overhead:%3.2f%% Alloc:%s Sys:%s Alloc(Rate):%s/s Histogram:%s %s %s \n",
+		fmt.Fprintf(w, "NumGC:%d Pause:%s Pause(Avg):%s Overhead:%3.2f%% Alloc:%s Sys:%s Alloc(Rate):%s/s Histogram:%s %s %s \n",
 			gcstats.NumGC,
 			toS(lastPause),
 			toS(avg(gcstats.Pause)),
@@ -99,7 +99,7 @@ func printGC(memStats *runtime.MemStats, gcstats *debug.GCStats) {
 		elapsed := time.Now().Sub(startTime)
 		allocatedRate := float64(memStats.TotalAlloc) / elapsed.Seconds()
 
-		fmt.Printf("Alloc:%s Sys:%s Alloc(Rate):%s/s\n",
+		fmt.Fprintf(w, "Alloc:%s Sys:%s Alloc(Rate):%s/s\n",
 			toH(memStats.Alloc),
 			toH(memStats.Sys),
 			toH(uint64(allocatedRate)))
