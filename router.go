@@ -844,6 +844,18 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 Admin:
+	if p.enableFilter {
+		if l, ok := p.filters["Finish"]; ok {
+			for _, filterR := range l {
+				if filterR.ValidRouter(r.URL.Path) {
+					filterR.filterFunc(context)
+					if w.started {
+						break
+					}
+				}
+			}
+		}
+	}
 	//admin module record QPS
 	if EnableAdmin {
 		timeend := time.Since(starttime)
