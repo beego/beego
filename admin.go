@@ -32,6 +32,8 @@ func init() {
 	BeeAdminApp.Route("/", AdminIndex)
 	BeeAdminApp.Route("/qps", QpsIndex)
 	BeeAdminApp.Route("/prof", ProfIndex)
+	BeeAdminApp.Route("/healthcheck", admin.Healthcheck)
+	BeeAdminApp.Route("/task", admin.TaskStatus)
 	FilterMonitorFunc = func(string, string, time.Duration) bool { return true }
 }
 
@@ -42,6 +44,7 @@ func AdminIndex(rw http.ResponseWriter, r *http.Request) {
 func QpsIndex(rw http.ResponseWriter, r *http.Request) {
 	admin.StatisticsMap.GetMap(rw)
 }
+
 func ProfIndex(rw http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	command := r.Form.Get("command")

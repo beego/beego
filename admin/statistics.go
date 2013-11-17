@@ -17,8 +17,9 @@ type Statistics struct {
 }
 
 type UrlMap struct {
-	lock   sync.RWMutex
-	urlmap map[string]map[string]*Statistics
+	lock        sync.RWMutex
+	LengthLimit int //limit the urlmap's length if it's equal to 0 there's no limit
+	urlmap      map[string]map[string]*Statistics
 }
 
 func (m *UrlMap) AddStatistics(requestMethod, requestUrl, requestController string, requesttime time.Duration) {
@@ -47,6 +48,9 @@ func (m *UrlMap) AddStatistics(requestMethod, requestUrl, requestController stri
 		}
 
 	} else {
+		if m.LengthLimit > 0 && m.LengthLimit <= len(m.urlmap) {
+			return
+		}
 		methodmap := make(map[string]*Statistics)
 		nb := &Statistics{
 			RequestUrl:        requestUrl,
