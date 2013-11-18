@@ -1304,6 +1304,10 @@ func (d *dbBase) GetColumns(db dbQuerier, table string) (map[string][3]string, e
 	return columns, nil
 }
 
+func (d *dbBase) OperatorSql(operator string) string {
+	panic(ErrNotImplement)
+}
+
 func (d *dbBase) ShowTablesQuery() string {
 	panic(ErrNotImplement)
 }
