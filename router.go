@@ -2,9 +2,9 @@ package beego
 
 import (
 	"fmt"
-	"github.com/astaxie/beego/admin"
 	beecontext "github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/middleware"
+	"github.com/astaxie/beego/toolbox"
 	"net/http"
 	"net/url"
 	"os"
@@ -861,9 +861,9 @@ Admin:
 		timeend := time.Since(starttime)
 		if FilterMonitorFunc(r.Method, requestPath, timeend) {
 			if runrouter != nil {
-				go admin.StatisticsMap.AddStatistics(r.Method, requestPath, runrouter.controllerType.Name(), timeend)
+				go toolbox.StatisticsMap.AddStatistics(r.Method, requestPath, runrouter.controllerType.Name(), timeend)
 			} else {
-				go admin.StatisticsMap.AddStatistics(r.Method, requestPath, "", timeend)
+				go toolbox.StatisticsMap.AddStatistics(r.Method, requestPath, "", timeend)
 			}
 		}
 	}

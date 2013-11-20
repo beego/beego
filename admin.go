@@ -2,7 +2,7 @@ package beego
 
 import (
 	"fmt"
-	"github.com/astaxie/beego/admin"
+	"github.com/astaxie/beego/toolbox"
 	"net/http"
 	"time"
 )
@@ -32,8 +32,9 @@ func init() {
 	BeeAdminApp.Route("/", AdminIndex)
 	BeeAdminApp.Route("/qps", QpsIndex)
 	BeeAdminApp.Route("/prof", ProfIndex)
-	BeeAdminApp.Route("/healthcheck", admin.Healthcheck)
-	BeeAdminApp.Route("/task", admin.TaskStatus)
+	BeeAdminApp.Route("/healthcheck", toolbox.Healthcheck)
+	BeeAdminApp.Route("/task", toolbox.TaskStatus)
+	BeeAdminApp.Route("/runtask", toolbox.RunTask)
 	FilterMonitorFunc = func(string, string, time.Duration) bool { return true }
 }
 
@@ -42,14 +43,14 @@ func AdminIndex(rw http.ResponseWriter, r *http.Request) {
 }
 
 func QpsIndex(rw http.ResponseWriter, r *http.Request) {
-	admin.StatisticsMap.GetMap(rw)
+	toolbox.StatisticsMap.GetMap(rw)
 }
 
 func ProfIndex(rw http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	command := r.Form.Get("command")
 	if command != "" {
-		admin.ProcessInput(command, rw)
+		toolbox.ProcessInput(command, rw)
 	} else {
 		rw.Write([]byte("request url like '/prof?command=lookup goroutine'"))
 	}
