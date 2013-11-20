@@ -65,6 +65,9 @@ func (admin *AdminApp) Route(pattern string, f http.HandlerFunc) {
 }
 
 func (admin *AdminApp) Run() {
+	if len(toolbox.AdminTaskList) > 0 {
+		toolbox.StartTask()
+	}
 	addr := AdminHttpAddr
 
 	if AdminHttpPort != 0 {
