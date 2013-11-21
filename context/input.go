@@ -101,14 +101,14 @@ func (input *BeegoInput) IP() string {
 }
 
 func (input *BeegoInput) Proxy() []string {
-	if ips := input.Header("HTTP_X_FORWARDED_FOR"); ips != "" {
+	if ips := input.Header("X-Forwarded-For"); ips != "" {
 		return strings.Split(ips, ",")
 	}
 	return []string{}
 }
 
 func (input *BeegoInput) Refer() string {
-	return input.Header("HTTP_REFERER")
+	return input.Header("Referer")
 }
 
 func (input *BeegoInput) SubDomains() string {
@@ -126,7 +126,7 @@ func (input *BeegoInput) Port() int {
 }
 
 func (input *BeegoInput) UserAgent() string {
-	return input.Header("HTTP_USER_AGENT")
+	return input.Header("User-Agent")
 }
 
 func (input *BeegoInput) Params(key string) string {
