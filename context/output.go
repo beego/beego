@@ -64,8 +64,6 @@ func (output *BeegoOutput) Body(content []byte) {
 		output_writer.(*gzip.Writer).Close()
 	case *flate.Writer:
 		output_writer.(*flate.Writer).Close()
-	case io.WriteCloser:
-		output_writer.(io.WriteCloser).Close()
 	}
 }
 
