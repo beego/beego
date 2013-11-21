@@ -1,7 +1,7 @@
 package session
 
 import (
-	"github.com/garyburd/redigo/redis"
+	"github.com/beego/redigo/redis"
 	"strconv"
 	"strings"
 	"sync"

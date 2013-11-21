@@ -4,7 +4,7 @@ package config
 
 import (
 	"errors"
-	"github.com/clbanning/x2j"
+	"github.com/beego/x2j"
 	"io/ioutil"
 	"os"
 	"strconv"

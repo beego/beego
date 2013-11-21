@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/wendal/goyaml2"
+	"github.com/beego/goyaml2"
 	"io/ioutil"
 	"log"
 	"os"

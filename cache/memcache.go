@@ -1,9 +1,9 @@
 package cache
 
 import (
-	"code.google.com/p/vitess/go/memcache"
 	"encoding/json"
 	"errors"
+	"github.com/beego/memcache"
 )
 
 type MemcacheCache struct {
