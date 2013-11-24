@@ -146,6 +146,7 @@ func TestSyncDb(t *testing.T) {
 	RegisterModel(new(Tag))
 	RegisterModel(new(Comment))
 	RegisterModel(new(UserBig))
+	RegisterModel(new(PostTags))
 
 	err := RunSyncdb("default", true, false)
 	throwFail(t, err)
@@ -161,6 +162,7 @@ func TestRegisterModels(t *testing.T) {
 	RegisterModel(new(Tag))
 	RegisterModel(new(Comment))
 	RegisterModel(new(UserBig))
+	RegisterModel(new(PostTags))
 
 	BootStrap()
 

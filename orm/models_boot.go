@@ -106,9 +106,7 @@ func bootStrap() {
 						msg := fmt.Sprintf("field `%s` wrong rel_through value `%s`", fi.fullName, fi.relThrough)
 						if i := strings.LastIndex(fi.relThrough, "."); i != -1 && len(fi.relThrough) > (i+1) {
 							pn := fi.relThrough[:i]
-							mn := fi.relThrough[i+1:]
-							tn := snakeString(mn)
-							rmi, ok := modelCache.get(tn)
+							rmi, ok := modelCache.getByFN(fi.relThrough)
 							if ok == false || pn != rmi.pkg {
 								err = errors.New(msg + " cannot find table")
 								goto end

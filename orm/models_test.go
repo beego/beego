@@ -122,7 +122,7 @@ type Post struct {
 	Content string    `orm:"type(text)"`
 	Created time.Time `orm:"auto_now_add"`
 	Updated time.Time `orm:"auto_now"`
-	Tags    []*Tag    `orm:"rel(m2m)"`
+	Tags    []*Tag    `orm:"rel(m2m);rel_through(github.com/astaxie/beego/orm.PostTags)"`
 }
 
 func (u *Post) TableIndex() [][]string {
@@ -146,6 +146,16 @@ type Tag struct {
 func NewTag() *Tag {
 	obj := new(Tag)
 	return obj
+}
+
+type PostTags struct {
+	Id   int
+	Post *Post `orm:"rel(fk)"`
+	Tag  *Tag  `orm:"rel(fk)"`
+}
+
+func (m *PostTags) TableName() string {
+	return "prefix_post_tags"
 }
 
 type Comment struct {
