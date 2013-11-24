@@ -274,9 +274,7 @@ func (o *orm) QueryTable(ptrStructOrTableName interface{}) (qs QuerySeter) {
 			qs = newQuerySet(o, mi)
 		}
 	} else {
-		val := reflect.ValueOf(ptrStructOrTableName)
-		ind := reflect.Indirect(val)
-		name = getFullName(ind.Type())
+		name = getFullName(indirectType(reflect.TypeOf(ptrStructOrTableName)))
 		if mi, ok := modelCache.getByFN(name); ok {
 			qs = newQuerySet(o, mi)
 		}

@@ -473,6 +473,7 @@ The program—and web server—godoc processes Go source files to extract docume
 func TestExpr(t *testing.T) {
 	user := &User{}
 	qs := dORM.QueryTable(user)
+	qs = dORM.QueryTable((*User)(nil))
 	qs = dORM.QueryTable("User")
 	qs = dORM.QueryTable("user")
 	num, err := qs.Filter("UserName", "slene").Filter("user_name", "slene").Filter("profile__Age", 28).Count()

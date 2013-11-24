@@ -231,3 +231,13 @@ func timeParse(dateString, format string) (time.Time, error) {
 func timeFormat(t time.Time, format string) string {
 	return t.Format(format)
 }
+
+func indirectType(v reflect.Type) reflect.Type {
+	switch v.Kind() {
+	case reflect.Ptr:
+		return indirectType(v.Elem())
+	default:
+		return v
+	}
+	return v
+}
