@@ -96,6 +96,11 @@ func (app *App) Filter(pattern, action string, filter FilterFunc) *App {
 	return app
 }
 
+func (app *App) InsertFilter(pattern string, pos int, filter FilterFunc) *App {
+	app.Handlers.InsertFilter(pattern, pos, filter)
+	return app
+}
+
 func (app *App) SetViewsPath(path string) *App {
 	ViewsPath = path
 	return app

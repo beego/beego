@@ -16,6 +16,14 @@ import (
 	"time"
 )
 
+const (
+	BeforeRouter = iota
+	AfterStatic
+	BeforeExec
+	AfterExec
+	FinishRouter
+)
+
 var HTTPMETHOD = []string{"get", "post", "put", "delete", "patch", "options", "head"}
 
 type controllerInfo struct {
@@ -31,7 +39,7 @@ type ControllerRegistor struct {
 	routers      []*controllerInfo
 	fixrouters   []*controllerInfo
 	enableFilter bool
-	filters      map[string][]*FilterRouter
+	filters      map[int][]*FilterRouter
 	enableAuto   bool
 	autoRouter   map[string]map[string]reflect.Type //key:controller key:method value:reflect.type
 }
@@ -40,7 +48,7 @@ func NewControllerRegistor() *ControllerRegistor {
 	return &ControllerRegistor{
 		routers:    make([]*controllerInfo, 0),
 		autoRouter: make(map[string]map[string]reflect.Type),
-		filters:    make(map[string][]*FilterRouter),
+		filters:    make(map[int][]*FilterRouter),
 	}
 }
 
@@ -215,17 +223,15 @@ func (p *ControllerRegistor) AddAuto(c ControllerInterface) {
 }
 
 // Filter adds the middleware filter.
-func (p *ControllerRegistor) AddFilter(pattern, action string, filter FilterFunc) {
-	p.enableFilter = true
+func buildFilter(pattern string, filter FilterFunc) *FilterRouter {
 	mr := new(FilterRouter)
 	mr.filterFunc = filter
-
 	parts := strings.Split(pattern, "/")
 	j := 0
 	for i, part := range parts {
 		if strings.HasPrefix(part, ":") {
 			expr := "(.+)"
-			//a user may choose to override the defult expression
+			//a user may choose to override the default expression
 			// similar to expressjs: ‘/user/:id([0-9]+)’
 			if index := strings.Index(part, "("); index != -1 {
 				expr = part[index:]
@@ -252,13 +258,36 @@ func (p *ControllerRegistor) AddFilter(pattern, action string, filter FilterFunc
 		if regexErr != nil {
 			//TODO add error handling here to avoid panic
 			panic(regexErr)
-			return
 		}
 		mr.regex = regex
 		mr.hasregex = true
 	}
 	mr.pattern = pattern
-	p.filters[action] = append(p.filters[action], mr)
+	return mr
+}
+
+//p.filters[action] = append(p.filters[action], mr)
+func (p *ControllerRegistor) AddFilter(pattern, action string, filter FilterFunc) {
+	mr := buildFilter(pattern, filter)
+	switch action {
+	case "BeforRouter":
+		p.filters[BeforeRouter] = append(p.filters[BeforeRouter], mr)
+	case "AfterStatic":
+		p.filters[AfterStatic] = append(p.filters[AfterStatic], mr)
+	case "BeforeExec":
+		p.filters[BeforeExec] = append(p.filters[BeforeExec], mr)
+	case "AfterExec":
+		p.filters[AfterExec] = append(p.filters[AfterExec], mr)
+	case "FinishRouter":
+		p.filters[FinishRouter] = append(p.filters[FinishRouter], mr)
+	}
+	p.enableFilter = true
+}
+
+func (p *ControllerRegistor) InsertFilter(pattern string, filterPos int, filter FilterFunc) {
+	mr := buildFilter(pattern, filter)
+	p.filters[filterPos] = append(p.filters[filterPos], mr)
+	p.enableFilter = true
 }
 
 func (p *ControllerRegistor) UrlFor(endpoint string, values ...string) string {
@@ -436,7 +465,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	if p.enableFilter {
-		if l, ok := p.filters["BeforRouter"]; ok {
+		if l, ok := p.filters[BeforeRouter]; ok {
 			for _, filterR := range l {
 				if filterR.ValidRouter(r.URL.Path) {
 					filterR.filterFunc(context)
@@ -483,7 +512,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	if p.enableFilter {
-		if l, ok := p.filters["AfterStatic"]; ok {
+		if l, ok := p.filters[AfterStatic]; ok {
 			for _, filterR := range l {
 				if filterR.ValidRouter(r.URL.Path) {
 					filterR.filterFunc(context)
@@ -558,7 +587,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}
 		//execute middleware filters
 		if p.enableFilter {
-			if l, ok := p.filters["BeforExec"]; ok {
+			if l, ok := p.filters[BeforeExec]; ok {
 				for _, filterR := range l {
 					if filterR.ValidRouter(r.URL.Path) {
 						filterR.filterFunc(context)
@@ -713,7 +742,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		method.Call(in)
 		//execute middleware filters
 		if p.enableFilter {
-			if l, ok := p.filters["AfterExec"]; ok {
+			if l, ok := p.filters[AfterExec]; ok {
 				for _, filterR := range l {
 					if filterR.ValidRouter(r.URL.Path) {
 						filterR.filterFunc(context)
@@ -762,7 +791,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 							findrouter = true
 							//execute middleware filters
 							if p.enableFilter {
-								if l, ok := p.filters["BeforExec"]; ok {
+								if l, ok := p.filters[BeforeExec]; ok {
 									for _, filterR := range l {
 										if filterR.ValidRouter(r.URL.Path) {
 											filterR.filterFunc(context)
@@ -817,7 +846,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 							method.Call(in)
 							//execute middleware filters
 							if p.enableFilter {
-								if l, ok := p.filters["AfterExec"]; ok {
+								if l, ok := p.filters[AfterExec]; ok {
 									for _, filterR := range l {
 										if filterR.ValidRouter(r.URL.Path) {
 											filterR.filterFunc(context)
@@ -845,7 +874,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 Admin:
 	if p.enableFilter {
-		if l, ok := p.filters["Finish"]; ok {
+		if l, ok := p.filters[FinishRouter]; ok {
 			for _, filterR := range l {
 				if filterR.ValidRouter(r.URL.Path) {
 					filterR.filterFunc(context)
