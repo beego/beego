@@ -222,7 +222,6 @@ func (p *ControllerRegistor) AddAuto(c ControllerInterface) {
 	}
 }
 
-// Filter adds the middleware filter.
 func buildFilter(pattern string, filter FilterFunc) *FilterRouter {
 	mr := new(FilterRouter)
 	mr.filterFunc = filter
@@ -266,7 +265,6 @@ func buildFilter(pattern string, filter FilterFunc) *FilterRouter {
 	return mr
 }
 
-//p.filters[action] = append(p.filters[action], mr)
 func (p *ControllerRegistor) AddFilter(pattern, action string, filter FilterFunc) {
 	mr := buildFilter(pattern, filter)
 	switch action {
