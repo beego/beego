@@ -284,9 +284,9 @@ func (p *ControllerRegistor) AddFilter(pattern, action string, filter FilterFunc
 	p.enableFilter = true
 }
 
-func (p *ControllerRegistor) InsertFilter(pattern string, filterPos int, filter FilterFunc) {
+func (p *ControllerRegistor) InsertFilter(pattern string, pos int, filter FilterFunc) {
 	mr := buildFilter(pattern, filter)
-	p.filters[filterPos] = append(p.filters[filterPos], mr)
+	p.filters[pos] = append(p.filters[pos], mr)
 	p.enableFilter = true
 }
 
