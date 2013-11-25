@@ -49,6 +49,7 @@ func DelStaticPath(url string) *App {
 	return BeeApp
 }
 
+//!!DEPRECATED!! use InsertFilter
 //action has four values:
 //BeforRouter
 //AfterStatic
@@ -58,6 +59,12 @@ func AddFilter(pattern, action string, filter FilterFunc) *App {
 	BeeApp.Filter(pattern, action, filter)
 	return BeeApp
 }
+
+func InsertFilter(pattern string, pos int, filter FilterFunc) *App {
+    BeeApp.InsertFilter(pattern, pos, filter)
+    return BeeApp
+}
+
 
 func Run() {
 	//if AppConfigPath not In the conf/app.conf reParse config
