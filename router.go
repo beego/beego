@@ -581,7 +581,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	context.Input.Param = params
+	context.Input.Params = params
 
 	if runrouter != nil {
 		if r.Method == "POST" {
@@ -766,7 +766,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			lastindex := strings.LastIndex(requestPath, "/")
 			lastsub := requestPath[lastindex+1:]
 			if subindex := strings.LastIndex(lastsub, "."); subindex != -1 {
-				context.Input.Param[":ext"] = lastsub[subindex+1:]
+				context.Input.Params[":ext"] = lastsub[subindex+1:]
 				r.URL.Query().Add(":ext", lastsub[subindex+1:])
 				r.URL.RawQuery = r.URL.Query().Encode()
 				requestPath = requestPath[:len(requestPath)-len(lastsub[subindex:])]
