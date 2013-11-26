@@ -139,6 +139,7 @@ func (input *BeegoInput) Param(key string) string {
 }
 
 func (input *BeegoInput) Query(key string) string {
+	input.req.ParseForm()
 	return input.req.Form.Get(key)
 }
 

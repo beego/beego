@@ -222,49 +222,6 @@ func (p *ControllerRegistor) AddAuto(c ControllerInterface) {
 	}
 }
 
-func buildFilter(pattern string, filter FilterFunc) *FilterRouter {
-	mr := new(FilterRouter)
-	mr.filterFunc = filter
-	parts := strings.Split(pattern, "/")
-	j := 0
-	for i, part := range parts {
-		if strings.HasPrefix(part, ":") {
-			expr := "(.+)"
-			//a user may choose to override the default expression
-			// similar to expressjs: ‘/user/:id([0-9]+)’
-			if index := strings.Index(part, "("); index != -1 {
-				expr = part[index:]
-				part = part[:index]
-				//match /user/:id:int ([0-9]+)
-				//match /post/:username:string	([\w]+)
-			} else if lindex := strings.LastIndex(part, ":"); lindex != 0 {
-				switch part[lindex:] {
-				case ":int":
-					expr = "([0-9]+)"
-					part = part[:lindex]
-				case ":string":
-					expr = `([\w]+)`
-					part = part[:lindex]
-				}
-			}
-			parts[i] = expr
-			j++
-		}
-	}
-	if j != 0 {
-		pattern = strings.Join(parts, "/")
-		regex, regexErr := regexp.Compile(pattern)
-		if regexErr != nil {
-			//TODO add error handling here to avoid panic
-			panic(regexErr)
-		}
-		mr.regex = regex
-		mr.hasregex = true
-	}
-	mr.pattern = pattern
-	return mr
-}
-
 func (p *ControllerRegistor) AddFilter(pattern, action string, filter FilterFunc) {
 	mr := buildFilter(pattern, filter)
 	switch action {
@@ -469,7 +426,8 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	if p.enableFilter {
 		if l, ok := p.filters[BeforeRouter]; ok {
 			for _, filterR := range l {
-				if filterR.ValidRouter(r.URL.Path) {
+				if ok, p := filterR.ValidRouter(r.URL.Path); ok {
+					context.Input.Params = p
 					filterR.filterFunc(context)
 					if w.started {
 						goto Admin
@@ -516,7 +474,8 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	if p.enableFilter {
 		if l, ok := p.filters[AfterStatic]; ok {
 			for _, filterR := range l {
-				if filterR.ValidRouter(r.URL.Path) {
+				if ok, p := filterR.ValidRouter(r.URL.Path); ok {
+					context.Input.Params = p
 					filterR.filterFunc(context)
 					if w.started {
 						goto Admin
@@ -591,7 +550,8 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		if p.enableFilter {
 			if l, ok := p.filters[BeforeExec]; ok {
 				for _, filterR := range l {
-					if filterR.ValidRouter(r.URL.Path) {
+					if ok, p := filterR.ValidRouter(r.URL.Path); ok {
+						context.Input.Params = p
 						filterR.filterFunc(context)
 						if w.started {
 							goto Admin
@@ -746,7 +706,8 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		if p.enableFilter {
 			if l, ok := p.filters[AfterExec]; ok {
 				for _, filterR := range l {
-					if filterR.ValidRouter(r.URL.Path) {
+					if ok, p := filterR.ValidRouter(r.URL.Path); ok {
+						context.Input.Params = p
 						filterR.filterFunc(context)
 						if w.started {
 							goto Admin
@@ -795,7 +756,8 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 							if p.enableFilter {
 								if l, ok := p.filters[BeforeExec]; ok {
 									for _, filterR := range l {
-										if filterR.ValidRouter(r.URL.Path) {
+										if ok, p := filterR.ValidRouter(r.URL.Path); ok {
+											context.Input.Params = p
 											filterR.filterFunc(context)
 											if w.started {
 												goto Admin
@@ -850,7 +812,8 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 							if p.enableFilter {
 								if l, ok := p.filters[AfterExec]; ok {
 									for _, filterR := range l {
-										if filterR.ValidRouter(r.URL.Path) {
+										if ok, p := filterR.ValidRouter(r.URL.Path); ok {
+											context.Input.Params = p
 											filterR.filterFunc(context)
 											if w.started {
 												goto Admin
@@ -878,7 +841,8 @@ Admin:
 	if p.enableFilter {
 		if l, ok := p.filters[FinishRouter]; ok {
 			for _, filterR := range l {
-				if filterR.ValidRouter(r.URL.Path) {
+				if ok, p := filterR.ValidRouter(r.URL.Path); ok {
+					context.Input.Params = p
 					filterR.filterFunc(context)
 					if w.started {
 						break
