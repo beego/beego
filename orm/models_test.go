@@ -1,6 +1,7 @@
 package orm
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -11,7 +12,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// A true/false field.
+// A slice string field.
 type SliceStringField []string
 
 func (e SliceStringField) Value() []string {
@@ -57,9 +58,38 @@ func (e *SliceStringField) RawValue() interface{} {
 	return e.String()
 }
 
-func (e *SliceStringField) Clean() error {
+var _ Fielder = new(SliceStringField)
+
+// A json field.
+type JsonField struct {
+	Name string
+	Data string
+}
+
+func (e *JsonField) String() string {
+	data, _ := json.Marshal(e)
+	return string(data)
+}
+
+func (e *JsonField) FieldType() int {
+	return TypeTextField
+}
+
+func (e *JsonField) SetRaw(value interface{}) error {
+	switch d := value.(type) {
+	case string:
+		return json.Unmarshal([]byte(d), e)
+	default:
+		return fmt.Errorf("<JsonField.SetRaw> unknown value `%v`", value)
+	}
 	return nil
 }
+
+func (e *JsonField) RawValue() interface{} {
+	return e.String()
+}
+
+var _ Fielder = new(JsonField)
 
 type Data struct {
 	Id       int
@@ -130,6 +160,7 @@ type User struct {
 	ShouldSkip string    `orm:"-"`
 	Nums       int
 	Langs      SliceStringField `orm:"size(100)"`
+	Extra      JsonField        `orm:"type(text)"`
 }
 
 func (u *User) TableIndex() [][]string {

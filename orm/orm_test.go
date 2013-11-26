@@ -478,7 +478,9 @@ func TestCustomField(t *testing.T) {
 	throwFailNow(t, err)
 
 	user.Langs = append(user.Langs, "zh-CN", "en-US")
-	_, err = dORM.Update(&user, "Langs")
+	user.Extra.Name = "beego"
+	user.Extra.Data = "orm"
+	_, err = dORM.Update(&user, "Langs", "Extra")
 	throwFailNow(t, err)
 
 	user = User{Id: 2}
@@ -487,6 +489,9 @@ func TestCustomField(t *testing.T) {
 	throwFailNow(t, AssertIs(len(user.Langs), 2))
 	throwFailNow(t, AssertIs(user.Langs[0], "zh-CN"))
 	throwFailNow(t, AssertIs(user.Langs[1], "en-US"))
+
+	throwFailNow(t, AssertIs(user.Extra.Name, "beego"))
+	throwFailNow(t, AssertIs(user.Extra.Data, "orm"))
 }
 
 func TestExpr(t *testing.T) {
