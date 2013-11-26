@@ -46,9 +46,7 @@ Then in you web app init the global session manager
 			go globalSessions.GC()
 		}
 		
-* Use **MySQL** as provider, the last param is the DSN, learn more from [mysql](https://github.com/go-sql-driver/mysql#dsn-data-source-name),but first you should import mysql:
-
-		import _ "github.com/go-sql-driver/mysql"
+* Use **MySQL** as provider, the last param is the DSN, learn more from [mysql](https://github.com/go-sql-driver/mysql#dsn-data-source-name):
 
 		func init() {
 			globalSessions, _ = session.NewManager(
