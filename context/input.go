@@ -11,15 +11,17 @@ import (
 
 type BeegoInput struct {
 	CruSession  session.SessionStore
-	Param       map[string]string
+	Params      map[string]string
+	Data        map[interface{}]interface{}
 	req         *http.Request
 	RequestBody []byte
 }
 
 func NewInput(req *http.Request) *BeegoInput {
 	return &BeegoInput{
-		Param: make(map[string]string),
-		req:   req,
+		Params: make(map[string]string),
+		Data:   make(map[interface{}]interface{}),
+		req:    req,
 	}
 }
 
@@ -129,8 +131,8 @@ func (input *BeegoInput) UserAgent() string {
 	return input.Header("User-Agent")
 }
 
-func (input *BeegoInput) Params(key string) string {
-	if v, ok := input.Param[key]; ok {
+func (input *BeegoInput) Param(key string) string {
+	if v, ok := input.Params[key]; ok {
 		return v
 	}
 	return ""
@@ -163,4 +165,15 @@ func (input *BeegoInput) Body() []byte {
 	input.req.Body = ioutil.NopCloser(bf)
 	input.RequestBody = requestbody
 	return requestbody
+}
+
+func (input *BeegoInput) GetData(key interface{}) interface{} {
+	if v, ok := input.Data[key]; ok {
+		return v
+	}
+	return nil
+}
+
+func (input *BeegoInput) SetData(key, val interface{}) {
+	input.Data[key] = val
 }
