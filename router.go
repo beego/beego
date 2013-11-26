@@ -268,7 +268,7 @@ func buildFilter(pattern string, filter FilterFunc) *FilterRouter {
 func (p *ControllerRegistor) AddFilter(pattern, action string, filter FilterFunc) {
 	mr := buildFilter(pattern, filter)
 	switch action {
-	case "BeforRouter":
+	case "BeforeRouter":
 		p.filters[BeforeRouter] = append(p.filters[BeforeRouter], mr)
 	case "AfterStatic":
 		p.filters[AfterStatic] = append(p.filters[AfterStatic], mr)
