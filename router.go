@@ -407,28 +407,32 @@ func (p *ControllerRegistor) UrlFor(endpoint string, values ...string) string {
 func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err := recover(); err != nil {
-			errstr := fmt.Sprint(err)
-			if handler, ok := middleware.ErrorMaps[errstr]; ok && ErrorsShow {
-				handler(rw, r)
+			if _, ok := err.(middleware.HTTPException); ok {
+				// catch intented errors, only for HTTP 4XX and 5XX
 			} else {
-				if !RecoverPanic {
-					// go back to panic
-					panic(err)
+				errstr := fmt.Sprint(err)
+				if handler, ok := middleware.ErrorMaps[errstr]; ok && ErrorsShow {
+					handler(rw, r)
 				} else {
-					var stack string
-					Critical("Handler crashed with error", err)
-					for i := 1; ; i++ {
-						_, file, line, ok := runtime.Caller(i)
-						if !ok {
-							break
+					if !RecoverPanic {
+						// go back to panic
+						panic(err)
+					} else {
+						var stack string
+						Critical("Handler crashed with error", err)
+						for i := 1; ; i++ {
+							_, file, line, ok := runtime.Caller(i)
+							if !ok {
+								break
+							}
+							Critical(file, line)
+							if RunMode == "dev" {
+								stack = stack + fmt.Sprintln(file, line)
+							}
 						}
-						Critical(file, line)
 						if RunMode == "dev" {
-							stack = stack + fmt.Sprintln(file, line)
+							middleware.ShowErr(err, rw, r, stack)
 						}
-					}
-					if RunMode == "dev" {
-						middleware.ShowErr(err, rw, r, stack)
 					}
 				}
 			}

@@ -2,6 +2,8 @@ package context
 
 import (
 	"net/http"
+
+	"github.com/astaxie/beego/middleware"
 )
 
 type Context struct {
@@ -19,6 +21,13 @@ func (ctx *Context) Redirect(status int, localurl string) {
 func (ctx *Context) Abort(status int, body string) {
 	ctx.Output.SetStatus(status)
 	ctx.Output.Body([]byte(body))
+
+    if e, ok := middleware.HTTPExceptionMaps[status]; ok {
+        if len(body) >= 1 {
+            e.Description = body
+        }
+        panic(e)
+    }
 }
 
 func (ctx *Context) WriteString(content string) {
