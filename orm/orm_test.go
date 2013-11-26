@@ -472,6 +472,23 @@ The program—and web server—godoc processes Go source files to extract docume
 	}
 }
 
+func TestCustomField(t *testing.T) {
+	user := User{Id: 2}
+	err := dORM.Read(&user)
+	throwFailNow(t, err)
+
+	user.Langs = append(user.Langs, "zh-CN", "en-US")
+	_, err = dORM.Update(&user, "Langs")
+	throwFailNow(t, err)
+
+	user = User{Id: 2}
+	err = dORM.Read(&user)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(len(user.Langs), 2))
+	throwFailNow(t, AssertIs(user.Langs[0], "zh-CN"))
+	throwFailNow(t, AssertIs(user.Langs[1], "en-US"))
+}
+
 func TestExpr(t *testing.T) {
 	user := &User{}
 	qs := dORM.QueryTable(user)
@@ -728,7 +745,7 @@ func TestValues(t *testing.T) {
 	var maps []Params
 	qs := dORM.QueryTable("user")
 
-	num, err := qs.Values(&maps)
+	num, err := qs.OrderBy("Id").Values(&maps)
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 3))
 	if num == 3 {
@@ -736,7 +753,7 @@ func TestValues(t *testing.T) {
 		throwFail(t, AssertIs(maps[2]["Profile"], nil))
 	}
 
-	num, err = qs.Values(&maps, "UserName", "Profile__Age")
+	num, err = qs.OrderBy("Id").Values(&maps, "UserName", "Profile__Age")
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 3))
 	if num == 3 {
@@ -750,7 +767,7 @@ func TestValuesList(t *testing.T) {
 	var list []ParamsList
 	qs := dORM.QueryTable("user")
 
-	num, err := qs.ValuesList(&list)
+	num, err := qs.OrderBy("Id").ValuesList(&list)
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 3))
 	if num == 3 {
@@ -758,7 +775,7 @@ func TestValuesList(t *testing.T) {
 		throwFail(t, AssertIs(list[2][9], nil))
 	}
 
-	num, err = qs.ValuesList(&list, "UserName", "Profile__Age")
+	num, err = qs.OrderBy("Id").ValuesList(&list, "UserName", "Profile__Age")
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 3))
 	if num == 3 {
