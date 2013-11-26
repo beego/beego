@@ -9,7 +9,6 @@ package session
 
 import (
 	"database/sql"
-	_ "github.com/beego/mysql"
 	"sync"
 	"time"
 )
