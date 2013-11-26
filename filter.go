@@ -9,6 +9,7 @@ type FilterRouter struct {
 	regex      *regexp.Regexp
 	filterFunc FilterFunc
 	hasregex   bool
+	params     map[int]string
 }
 
 func (mr *FilterRouter) ValidRouter(router string) bool {

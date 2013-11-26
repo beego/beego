@@ -20,7 +20,7 @@ func (this *TestController) List() {
 }
 
 func (this *TestController) Myext() {
-	this.Ctx.Output.Body([]byte(this.Ctx.Input.Params(":ext")))
+	this.Ctx.Output.Body([]byte(this.Ctx.Input.Param(":ext")))
 }
 
 func (this *TestController) GetUrl() {
