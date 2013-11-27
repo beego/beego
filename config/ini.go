@@ -13,10 +13,14 @@ import (
 )
 
 var (
-	bComment = []byte{'#'}
-	bEmpty   = []byte{}
-	bEqual   = []byte{'='}
-	bDQuote  = []byte{'"'}
+	DEFAULT_SECTION = "DEFAULT"
+	bComment        = []byte{'#'}
+	alterComment    = []byte{';'}
+	bEmpty          = []byte{}
+	bEqual          = []byte{'='}
+	bDQuote         = []byte{'"'}
+	sectionStart    = []byte{'['}
+	sectionEnd      = []byte{']'}
 )
 
 type IniConfig struct {
@@ -32,9 +36,9 @@ func (ini *IniConfig) Parse(name string) (ConfigContainer, error) {
 
 	cfg := &IniConfigContainer{
 		file.Name(),
-		make(map[int][]string),
+		make(map[string]map[string]string),
 		make(map[string]string),
-		make(map[string]int64),
+		make(map[string]string),
 		sync.RWMutex{},
 	}
 	cfg.Lock()
@@ -43,8 +47,8 @@ func (ini *IniConfig) Parse(name string) (ConfigContainer, error) {
 
 	var comment bytes.Buffer
 	buf := bufio.NewReader(file)
-
-	for nComment, off := 0, int64(1); ; {
+	section := DEFAULT_SECTION
+	for {
 		line, _, err := buf.ReadLine()
 		if err == io.EOF {
 			break
@@ -52,8 +56,7 @@ func (ini *IniConfig) Parse(name string) (ConfigContainer, error) {
 		if bytes.Equal(line, bEmpty) {
 			continue
 		}
-
-		off += int64(len(line))
+		line = bytes.TrimSpace(line)
 
 		if bytes.HasPrefix(line, bComment) {
 			line = bytes.TrimLeft(line, "#")
@@ -62,63 +65,94 @@ func (ini *IniConfig) Parse(name string) (ConfigContainer, error) {
 			comment.WriteByte('\n')
 			continue
 		}
-		if comment.Len() != 0 {
-			cfg.comment[nComment] = []string{comment.String()}
-			comment.Reset()
-			nComment++
+		if bytes.HasPrefix(line, alterComment) {
+			line = bytes.TrimLeft(line, ";")
+			line = bytes.TrimLeftFunc(line, unicode.IsSpace)
+			comment.Write(line)
+			comment.WriteByte('\n')
+			continue
+		}
+		if bytes.HasPrefix(line, sectionStart) && bytes.HasSuffix(line, sectionEnd) {
+			section = string(line[1 : len(line)-1])
+			if comment.Len() > 0 {
+				cfg.sectionComment[section] = comment.String()
+				comment.Reset()
+			}
+			if _, ok := cfg.data[section]; !ok {
+				cfg.data[section] = make(map[string]string)
+			}
+		} else {
+			if _, ok := cfg.data[section]; !ok {
+				cfg.data[section] = make(map[string]string)
+			}
+			keyval := bytes.SplitN(line, bEqual, 2)
+			val := bytes.TrimSpace(keyval[1])
+			if bytes.HasPrefix(val, bDQuote) {
+				val = bytes.Trim(val, `"`)
+			}
+
+			key := string(bytes.TrimSpace(keyval[0]))
+			cfg.data[section][key] = string(val)
+			if comment.Len() > 0 {
+				cfg.keycomment[section+"."+key] = comment.String()
+				comment.Reset()
+			}
 		}
 
-		val := bytes.SplitN(line, bEqual, 2)
-		if bytes.HasPrefix([]byte(strings.TrimSpace(string(val[1]))), bDQuote) {
-			val[1] = bytes.Trim([]byte(strings.TrimSpace(string(val[1]))), `"`)
-		}
-
-		key := strings.TrimSpace(string(val[0]))
-		cfg.comment[nComment-1] = append(cfg.comment[nComment-1], key)
-		cfg.data[key] = strings.TrimSpace(string(val[1]))
-		cfg.offset[key] = off
 	}
 	return cfg, nil
 }
 
 // A Config represents the configuration.
 type IniConfigContainer struct {
-	filename string
-	comment  map[int][]string  // id: []{comment, key...}; id 1 is for main comment.
-	data     map[string]string // key: value
-	offset   map[string]int64  // key: offset; for editing.
+	filename       string
+	data           map[string]map[string]string //section=> key:val
+	sectionComment map[string]string            //sction : comment
+	keycomment     map[string]string            // id: []{comment, key...}; id 1 is for main comment.
 	sync.RWMutex
 }
 
 // Bool returns the boolean value for a given key.
 func (c *IniConfigContainer) Bool(key string) (bool, error) {
-	return strconv.ParseBool(c.data[key])
+	return strconv.ParseBool(c.getdata(key))
 }
 
 // Int returns the integer value for a given key.
 func (c *IniConfigContainer) Int(key string) (int, error) {
-	return strconv.Atoi(c.data[key])
+	return strconv.Atoi(c.getdata(key))
 }
 
 func (c *IniConfigContainer) Int64(key string) (int64, error) {
-	return strconv.ParseInt(c.data[key], 10, 64)
+	return strconv.ParseInt(c.getdata(key), 10, 64)
 }
 
 // Float returns the float value for a given key.
 func (c *IniConfigContainer) Float(key string) (float64, error) {
-	return strconv.ParseFloat(c.data[key], 64)
+	return strconv.ParseFloat(c.getdata(key), 64)
 }
 
 // String returns the string value for a given key.
 func (c *IniConfigContainer) String(key string) string {
-	return c.data[key]
+	return c.getdata(key)
 }
 
 // WriteValue writes a new value for key.
 func (c *IniConfigContainer) Set(key, value string) error {
 	c.Lock()
 	defer c.Unlock()
-	c.data[key] = value
+	if len(key) == 0 {
+		return errors.New("key is empty")
+	}
+	var section, k string
+	sectionkey := strings.Split(key, ".")
+	if len(sectionkey) >= 2 {
+		section = sectionkey[0]
+		k = sectionkey[1]
+	} else {
+		section = DEFAULT_SECTION
+		k = sectionkey[0]
+	}
+	c.data[section][k] = value
 	return nil
 }
 
@@ -127,6 +161,30 @@ func (c *IniConfigContainer) DIY(key string) (v interface{}, err error) {
 		return v, nil
 	}
 	return v, errors.New("key not find")
+}
+
+//section.key or key
+func (c *IniConfigContainer) getdata(key string) string {
+	c.RLock()
+	defer c.RUnlock()
+	if len(key) == 0 {
+		return ""
+	}
+	var section, k string
+	sectionkey := strings.Split(key, ".")
+	if len(sectionkey) >= 2 {
+		section = sectionkey[0]
+		k = sectionkey[1]
+	} else {
+		section = DEFAULT_SECTION
+		k = sectionkey[0]
+	}
+	if v, ok := c.data[section]; ok {
+		if vv, o := v[k]; o {
+			return vv
+		}
+	}
+	return ""
 }
 
 func init() {
