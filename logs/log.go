@@ -20,6 +20,7 @@ type LoggerInterface interface {
 	Init(config string) error
 	WriteMsg(msg string, level int) error
 	Destroy()
+	Flush()
 }
 
 var adapters = make(map[string]loggerType)
@@ -140,8 +141,26 @@ func (bl *BeeLogger) Critical(format string, v ...interface{}) {
 	bl.writerMsg(LevelCritical, msg)
 }
 
-func (bl *BeeLogger) Close() {
+//flush all chan data
+func (bl *BeeLogger) Flush() {
 	for _, l := range bl.outputs {
+		l.Flush()
+	}
+}
+
+func (bl *BeeLogger) Close() {
+	for {
+		if len(bl.msg) > 0 {
+			bm := <-bl.msg
+			for _, l := range bl.outputs {
+				l.WriteMsg(bm.msg, bm.level)
+			}
+		} else {
+			break
+		}
+	}
+	for _, l := range bl.outputs {
+		l.Flush()
 		l.Destroy()
 	}
 }

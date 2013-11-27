@@ -237,6 +237,10 @@ func (w *FileLogWriter) Destroy() {
 	w.mw.fd.Close()
 }
 
+func (w *FileLogWriter) Flush() {
+	w.mw.fd.Sync()
+}
+
 func init() {
 	Register("file", NewFileWriter)
 }

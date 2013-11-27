@@ -42,6 +42,10 @@ func (c *ConsoleWriter) Destroy() {
 
 }
 
+func (c *ConsoleWriter) Flush() {
+
+}
+
 func init() {
 	Register("console", NewConsole)
 }

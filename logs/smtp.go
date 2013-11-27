@@ -92,6 +92,9 @@ func (s *SmtpWriter) WriteMsg(msg string, level int) error {
 	return err
 }
 
+func (s *SmtpWriter) Flush() {
+	return
+}
 func (s *SmtpWriter) Destroy() {
 	return
 }

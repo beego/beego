@@ -65,6 +65,10 @@ func (c *ConnWriter) WriteMsg(msg string, level int) error {
 	return nil
 }
 
+func (c *ConnWriter) Flush() {
+
+}
+
 func (c *ConnWriter) Destroy() {
 	if c.innerWriter == nil {
 		return
