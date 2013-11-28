@@ -103,7 +103,7 @@ func (b *BeegoHttpRequest) Body(data interface{}) *BeegoHttpRequest {
 
 func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 	var paramBody string
-	if b.params != nil && len(b.params) > 0 {
+	if len(b.params) > 0 {
 		var buf bytes.Buffer
 		for k, v := range b.params {
 			buf.WriteString(url.QueryEscape(k))
@@ -114,6 +114,7 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 		paramBody = buf.String()
 		paramBody = paramBody[0 : len(paramBody)-1]
 	}
+
 	if b.req.Method == "GET" && len(paramBody) > 0 {
 		if strings.Index(b.url, "?") != -1 {
 			b.url += "&" + paramBody
@@ -130,10 +131,10 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 		b.url = "http://" + b.url
 		url, err = url.Parse(b.url)
 	}
-
 	if err != nil {
 		return nil, err
 	}
+
 	b.req.URL = url
 	if b.showdebug {
 		dump, err := httputil.DumpRequest(b.req, true)
