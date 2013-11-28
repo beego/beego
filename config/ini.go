@@ -14,8 +14,8 @@ import (
 
 var (
 	DEFAULT_SECTION = "DEFAULT"
-	bComment        = []byte{'#'}
-	alterComment    = []byte{';'}
+	bNumComment     = []byte{'#'} // number sign
+	bSemComment     = []byte{';'} // semicolon
 	bEmpty          = []byte{}
 	bEqual          = []byte{'='}
 	bDQuote         = []byte{'"'}
@@ -58,20 +58,21 @@ func (ini *IniConfig) Parse(name string) (ConfigContainer, error) {
 		}
 		line = bytes.TrimSpace(line)
 
-		if bytes.HasPrefix(line, bComment) {
-			line = bytes.TrimLeft(line, "#")
+		var bComment []byte
+		switch {
+		case bytes.HasPrefix(line, bNumComment):
+			bComment = bNumComment
+		case bytes.HasPrefix(line, bSemComment):
+			bComment = bSemComment
+		}
+		if bComment != nil {
+			line = bytes.TrimLeft(line, string(bComment))
 			line = bytes.TrimLeftFunc(line, unicode.IsSpace)
 			comment.Write(line)
 			comment.WriteByte('\n')
 			continue
 		}
-		if bytes.HasPrefix(line, alterComment) {
-			line = bytes.TrimLeft(line, ";")
-			line = bytes.TrimLeftFunc(line, unicode.IsSpace)
-			comment.Write(line)
-			comment.WriteByte('\n')
-			continue
-		}
+
 		if bytes.HasPrefix(line, sectionStart) && bytes.HasSuffix(line, sectionEnd) {
 			section = string(line[1 : len(line)-1])
 			if comment.Len() > 0 {
