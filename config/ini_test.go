@@ -18,6 +18,7 @@ copyrequestbody = true
 [demo]
 key1="asta"
 key2 = "xie"
+CaseInsensitive = true
 `
 
 func TestIni(t *testing.T) {
@@ -73,5 +74,8 @@ func TestIni(t *testing.T) {
 	}
 	if iniconf.String("demo.key2") != "xie" {
 		t.Fatal("get demo.key2 error")
+	}
+	if v, err := iniconf.Bool("demo.caseinsensitive"); err != nil || v != true {
+		t.Fatal("get demo.caseinsensitive error")
 	}
 }

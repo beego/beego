@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	DEFAULT_SECTION = "DEFAULT"
+	DEFAULT_SECTION = "default"
 	bNumComment     = []byte{'#'} // number sign
 	bSemComment     = []byte{';'} // semicolon
 	bEmpty          = []byte{}
@@ -75,6 +75,7 @@ func (ini *IniConfig) Parse(name string) (ConfigContainer, error) {
 
 		if bytes.HasPrefix(line, sectionStart) && bytes.HasSuffix(line, sectionEnd) {
 			section = string(line[1 : len(line)-1])
+			section = strings.ToLower(section) // section name case insensitive
 			if comment.Len() > 0 {
 				cfg.sectionComment[section] = comment.String()
 				comment.Reset()
@@ -92,7 +93,8 @@ func (ini *IniConfig) Parse(name string) (ConfigContainer, error) {
 				val = bytes.Trim(val, `"`)
 			}
 
-			key := string(bytes.TrimSpace(keyval[0]))
+			key := string(bytes.TrimSpace(keyval[0])) // key name case insensitive
+			key = strings.ToLower(key)
 			cfg.data[section][key] = string(val)
 			if comment.Len() > 0 {
 				cfg.keycomment[section+"."+key] = comment.String()
@@ -115,25 +117,30 @@ type IniConfigContainer struct {
 
 // Bool returns the boolean value for a given key.
 func (c *IniConfigContainer) Bool(key string) (bool, error) {
+	key = strings.ToLower(key)
 	return strconv.ParseBool(c.getdata(key))
 }
 
 // Int returns the integer value for a given key.
 func (c *IniConfigContainer) Int(key string) (int, error) {
+	key = strings.ToLower(key)
 	return strconv.Atoi(c.getdata(key))
 }
 
 func (c *IniConfigContainer) Int64(key string) (int64, error) {
+	key = strings.ToLower(key)
 	return strconv.ParseInt(c.getdata(key), 10, 64)
 }
 
 // Float returns the float value for a given key.
 func (c *IniConfigContainer) Float(key string) (float64, error) {
+	key = strings.ToLower(key)
 	return strconv.ParseFloat(c.getdata(key), 64)
 }
 
 // String returns the string value for a given key.
 func (c *IniConfigContainer) String(key string) string {
+	key = strings.ToLower(key)
 	return c.getdata(key)
 }
 
@@ -144,7 +151,9 @@ func (c *IniConfigContainer) Set(key, value string) error {
 	if len(key) == 0 {
 		return errors.New("key is empty")
 	}
+
 	var section, k string
+	key = strings.ToLower(key)
 	sectionkey := strings.Split(key, ".")
 	if len(sectionkey) >= 2 {
 		section = sectionkey[0]
@@ -158,6 +167,7 @@ func (c *IniConfigContainer) Set(key, value string) error {
 }
 
 func (c *IniConfigContainer) DIY(key string) (v interface{}, err error) {
+	key = strings.ToLower(key)
 	if v, ok := c.data[key]; ok {
 		return v, nil
 	}
@@ -171,7 +181,9 @@ func (c *IniConfigContainer) getdata(key string) string {
 	if len(key) == 0 {
 		return ""
 	}
+
 	var section, k string
+	key = strings.ToLower(key)
 	sectionkey := strings.Split(key, ".")
 	if len(sectionkey) >= 2 {
 		section = sectionkey[0]
