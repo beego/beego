@@ -1,14 +1,15 @@
 package beego
 
 import (
-	"github.com/astaxie/beego/config"
-	"github.com/astaxie/beego/session"
 	"html/template"
 	"os"
 	"path"
 	"runtime"
 	"strconv"
 	"strings"
+
+	"github.com/astaxie/beego/config"
+	"github.com/astaxie/beego/session"
 )
 
 var (
@@ -58,9 +59,9 @@ var (
 	AdminHttpPort         int
 )
 
-func init() {
+func InitConfig() {
+	// explicit call config.Init
 	os.Chdir(path.Dir(os.Args[0]))
-	BeeApp = NewApp()
 	AppPath = path.Dir(os.Args[0])
 	StaticDir = make(map[string]string)
 	TemplateCache = make(map[string]*template.Template)
@@ -84,7 +85,6 @@ func init() {
 	MaxMemory = 1 << 26 //64MB
 	EnableGzip = false
 	StaticDir["/static"] = "static"
-	AppConfigPath = path.Join(AppPath, "conf", "app.conf")
 	HttpServerTimeOut = 0
 	ErrorsShow = true
 	XSRFKEY = "beegoxsrf"
@@ -95,7 +95,17 @@ func init() {
 	EnableAdmin = true
 	AdminHttpAddr = "localhost"
 	AdminHttpPort = 8088
-	ParseConfig()
+
+	// if AppConfigPath hasn't been set yet,
+	// use /Path/to/AppPath/conf/app.conf as the default
+	if AppConfigPath == "" {
+		AppConfigPath = path.Join(AppPath, "conf", "app.conf")
+	}
+
+	if err := ParseConfig(); err != nil {
+		panic(err)
+	}
+
 	runtime.GOMAXPROCS(runtime.NumCPU())
 }
 
@@ -258,4 +268,8 @@ func ParseConfig() (err error) {
 		}
 	}
 	return nil
+}
+
+func init() {
+	BeeApp = NewApp()
 }
