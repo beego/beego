@@ -104,7 +104,7 @@ func ParseConfig() (err error) {
 	if err != nil {
 		return err
 	} else {
-		HttpAddr = AppConfig.String("httpaddr")
+		HttpAddr = AppConfig.String("HttpAddr")
 
 		if v, err := AppConfig.Int("HttpPort"); err == nil {
 			HttpPort = v
