@@ -1,11 +1,12 @@
 package beego
 
 import (
-	"github.com/astaxie/beego/middleware"
-	"github.com/astaxie/beego/session"
 	"net/http"
 	"path"
 	"strings"
+
+	"github.com/astaxie/beego/middleware"
+	"github.com/astaxie/beego/session"
 )
 
 const VERSION = "0.9.9"
@@ -61,21 +62,12 @@ func AddFilter(pattern, action string, filter FilterFunc) *App {
 }
 
 func InsertFilter(pattern string, pos int, filter FilterFunc) *App {
-    BeeApp.InsertFilter(pattern, pos, filter)
-    return BeeApp
+	BeeApp.InsertFilter(pattern, pos, filter)
+	return BeeApp
 }
 
-
 func Run() {
-	//if AppConfigPath not In the conf/app.conf reParse config
-	if AppConfigPath != path.Join(AppPath, "conf", "app.conf") {
-		err := ParseConfig()
-		if err != nil {
-			if RunMode == "dev" {
-				Warn(err)
-			}
-		}
-	}
+	InitConfig()
 
 	if SessionOn {
 		GlobalSessions, _ = session.NewManager(SessionProvider,
