@@ -219,7 +219,7 @@ func ParseConfig() (err error) {
 			HttpTLS = httptls
 		}
 
-		if certfile := AppConfig.String("httpcertfile"); certfile != "" {
+		if certfile := AppConfig.String("HttpCertFile"); certfile != "" {
 			HttpCertFile = certfile
 		}
 
