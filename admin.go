@@ -2,9 +2,10 @@ package beego
 
 import (
 	"fmt"
-	"github.com/astaxie/beego/toolbox"
 	"net/http"
 	"time"
+
+	"github.com/astaxie/beego/toolbox"
 )
 
 var BeeAdminApp *AdminApp

@@ -26,7 +26,6 @@ var (
 	HttpKeyFile   string
 	RecoverPanic  bool
 	AutoRender    bool
-	PprofOn       bool
 	ViewsPath     string
 	RunMode       string //"dev" or "prod"
 	AppConfig     config.ConfigContainer
@@ -71,7 +70,6 @@ func InitConfig() {
 	RunMode = "dev" //default runmod
 	AutoRender = true
 	RecoverPanic = true
-	PprofOn = false
 	ViewsPath = "views"
 	SessionOn = false
 	SessionProvider = "memory"

@@ -4,11 +4,12 @@ package config
 
 import (
 	"errors"
-	"github.com/beego/x2j"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"sync"
+
+	"github.com/beego/x2j"
 )
 
 type XMLConfig struct {

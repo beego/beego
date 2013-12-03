@@ -1,10 +1,11 @@
 package beego
 
 import (
-	"github.com/astaxie/beego/context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/astaxie/beego/context"
 )
 
 var FilterUser = func(ctx *context.Context) {

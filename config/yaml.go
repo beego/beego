@@ -4,11 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/beego/goyaml2"
 	"io/ioutil"
 	"log"
 	"os"
 	"sync"
+
+	"github.com/beego/goyaml2"
 )
 
 type YAMLConfig struct {

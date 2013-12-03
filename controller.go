@@ -7,8 +7,6 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/astaxie/beego/context"
-	"github.com/astaxie/beego/session"
 	"html/template"
 	"io"
 	"io/ioutil"
@@ -20,6 +18,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/session"
 )
 
 type Controller struct {

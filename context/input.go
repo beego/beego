@@ -2,11 +2,12 @@ package context
 
 import (
 	"bytes"
-	"github.com/astaxie/beego/session"
 	"io/ioutil"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/astaxie/beego/session"
 )
 
 type BeegoInput struct {

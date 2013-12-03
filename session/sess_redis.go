@@ -1,10 +1,11 @@
 package session
 
 import (
-	"github.com/beego/redigo/redis"
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/beego/redigo/redis"
 )
 
 var redispder = &RedisProvider{}

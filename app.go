@@ -2,11 +2,12 @@ package beego
 
 import (
 	"fmt"
-	"github.com/astaxie/beego/context"
 	"net"
 	"net/http"
 	"net/http/fcgi"
 	"time"
+
+	"github.com/astaxie/beego/context"
 )
 
 type FilterFunc func(*context.Context)

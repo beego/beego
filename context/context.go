@@ -1,8 +1,9 @@
 package context
 
 import (
-	"github.com/astaxie/beego/middleware"
 	"net/http"
+
+	"github.com/astaxie/beego/middleware"
 )
 
 type Context struct {

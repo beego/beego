@@ -2,9 +2,6 @@ package beego
 
 import (
 	"fmt"
-	beecontext "github.com/astaxie/beego/context"
-	"github.com/astaxie/beego/middleware"
-	"github.com/astaxie/beego/toolbox"
 	"net/http"
 	"net/url"
 	"os"
@@ -14,6 +11,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	beecontext "github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/middleware"
+	"github.com/astaxie/beego/toolbox"
 )
 
 const (
