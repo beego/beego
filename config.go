@@ -59,18 +59,32 @@ var (
 )
 
 func init() {
-	os.Chdir(path.Dir(os.Args[0]))
+	// create beeapp
 	BeeApp = NewApp()
+
+	// initialize default configurations
+	os.Chdir(path.Dir(os.Args[0]))
 	AppPath = path.Dir(os.Args[0])
+
 	StaticDir = make(map[string]string)
+	StaticDir["/static"] = "static"
+
 	TemplateCache = make(map[string]*template.Template)
-	HttpAddr = ""
+
+	// set this to 0.0.0.0 to make this app available to externally
+	HttpAddr = "127.0.0.1"
 	HttpPort = 8080
+
 	AppName = "beego"
+
 	RunMode = "dev" //default runmod
+
 	AutoRender = true
+
 	RecoverPanic = true
+
 	ViewsPath = "views"
+
 	SessionOn = false
 	SessionProvider = "memory"
 	SessionName = "beegosessionID"
@@ -79,23 +93,38 @@ func init() {
 	SessionHashFunc = "sha1"
 	SessionHashKey = "beegoserversessionkey"
 	SessionCookieLifeTime = 3600
+
 	UseFcgi = false
+
 	MaxMemory = 1 << 26 //64MB
+
 	EnableGzip = false
-	StaticDir["/static"] = "static"
+
 	AppConfigPath = path.Join(AppPath, "conf", "app.conf")
+
 	HttpServerTimeOut = 0
+
 	ErrorsShow = true
+
 	XSRFKEY = "beegoxsrf"
 	XSRFExpire = 0
+
 	TemplateLeft = "{{"
 	TemplateRight = "}}"
+
 	BeegoServerName = "beegoServer"
+
 	EnableAdmin = true
-	AdminHttpAddr = "localhost"
+	AdminHttpAddr = "127.0.0.1"
 	AdminHttpPort = 8088
-	ParseConfig()
+
 	runtime.GOMAXPROCS(runtime.NumCPU())
+
+	err := ParseConfig()
+	if err != nil && !os.IsNotExist(err) {
+		// panic unless the err is can not find default configuration file
+		panic(err)
+	}
 }
 
 func ParseConfig() (err error) {

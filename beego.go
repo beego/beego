@@ -67,13 +67,12 @@ func InsertFilter(pattern string, pos int, filter FilterFunc) *App {
 }
 
 func Run() {
-	//if AppConfigPath not In the conf/app.conf reParse config
+	// if AppConfigPath not In the conf/app.conf reParse config
 	if AppConfigPath != path.Join(AppPath, "conf", "app.conf") {
 		err := ParseConfig()
 		if err != nil {
-			if RunMode == "dev" {
-				Warn(err)
-			}
+			// configuration is critical to app, panic here if parse failed
+			panic(err)
 		}
 	}
 
