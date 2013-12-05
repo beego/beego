@@ -155,7 +155,7 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingM
 		for _, v := range semi {
 			colon := strings.Split(v, ":")
 			if len(colon) != 2 {
-				panic("method mapping fomate is error")
+				panic("method mapping format is invalid")
 			}
 			comma := strings.Split(colon[0], ",")
 			for _, m := range comma {
@@ -163,10 +163,10 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingM
 					if val := reflectVal.MethodByName(colon[1]); val.IsValid() {
 						methods[strings.ToLower(m)] = colon[1]
 					} else {
-						panic(colon[1] + " method don't exist in the controller " + t.Name())
+						panic(colon[1] + " method doesn't exist in the controller " + t.Name())
 					}
 				} else {
-					panic(v + " is an error method mapping,Don't exist method named " + m)
+					panic(v + " is an invalid method mapping. Method doesn't exist " + m)
 				}
 			}
 		}
