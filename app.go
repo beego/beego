@@ -30,7 +30,7 @@ func (app *App) Run() {
 		addr = fmt.Sprintf("%s:%d", HttpAddr, HttpPort)
 	}
 
-	BeeLogger.Info("Runing on %s", addr)
+	BeeLogger.Info("Running on %s", addr)
 
 	var (
 		err error
