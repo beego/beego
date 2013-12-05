@@ -54,7 +54,7 @@ func (c *JsonConfigContainer) Int64(key string) (int64, error) {
 	if v, ok := c.data[key].(float64); ok {
 		return int64(v), nil
 	}
-	return 0, errors.New("not bool value")
+	return 0, errors.New("not int64 value")
 }
 
 func (c *JsonConfigContainer) Float(key string) (float64, error) {
