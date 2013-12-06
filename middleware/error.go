@@ -13,8 +13,8 @@ var (
 	VERSION string
 )
 var tpl = `
-<!DOCTYPE html> 
-<html> 
+<!DOCTYPE html>
+<html>
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <title>beego application error</title>
@@ -28,10 +28,10 @@ var tpl = `
         #content .stack pre{padding-left: 10px;}
         table {}
         td.t {text-align: right; padding-right: 5px; color: #888;}
-    </style> 
+    </style>
     <script type="text/javascript">
     </script>
-</head> 
+</head>
 <body>
     <div id="header">
         <h2>{{.AppError}}</h2>
@@ -58,7 +58,7 @@ var tpl = `
         <p>golang version: {{.GoVersion}}</p>
     </div>
 </body>
-</html>        
+</html>
 `
 
 func ShowErr(err interface{}, rw http.ResponseWriter, r *http.Request, Stack string) {
@@ -260,6 +260,10 @@ func InternalServerError(rw http.ResponseWriter, r *http.Request) {
 	data["BeegoVersion"] = VERSION
 	rw.WriteHeader(http.StatusInternalServerError)
 	t.Execute(rw, data)
+}
+
+func SimpleServerError(rw http.ResponseWriter, r *http.Request) {
+	http.Error(rw, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }
 
 func Errorhandler(err string, h http.HandlerFunc) {
