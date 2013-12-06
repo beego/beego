@@ -34,6 +34,8 @@ func init() {
 	beegoTplFuncMap["htmlquote"] = Htmlquote
 	beegoTplFuncMap["htmlunquote"] = Htmlunquote
 	beegoTplFuncMap["renderform"] = RenderForm
+	beegoTplFuncMap["assets_js"] = AssetsJs
+	beegoTplFuncMap["assets_css"] = AssetsCss
 
 	// go1.2 added template funcs
 	// Comparisons
