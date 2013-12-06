@@ -388,3 +388,22 @@ func GetRandomString(n int) string {
 func UrlFor(endpoint string, values ...string) string {
 	return BeeApp.UrlFor(endpoint, values...)
 }
+
+
+//This can be changed to a better name
+func AssetsJs(src string) template.HTML {
+	text := string(src)
+
+	text = "<script src=\""+src+"\"></script>"
+
+	return template.HTML(text)
+}
+
+//This can be changed to a better name
+func AssetsCss(src string) template.HTML {
+	text := string(src)
+
+	text = "<link href=\""+src+"\" rel=\"stylesheet\" />"
+
+	return template.HTML(text)
+}
