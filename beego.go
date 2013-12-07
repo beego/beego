@@ -76,6 +76,9 @@ func Run() {
 		}
 	}
 
+	//init mime
+	initMime()
+
 	if SessionOn {
 		GlobalSessions, _ = session.NewManager(SessionProvider,
 			SessionName,
