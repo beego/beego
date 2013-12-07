@@ -33,7 +33,8 @@ func Register(name string, adapter Config) {
 	adapters[name] = adapter
 }
 
-// config need to be correct JSON as string: {"interval":360}
+// adapterNamer is ini/json/xml/yaml
+// filename is the config file path
 func NewConfig(adapterName, fileaname string) (ConfigContainer, error) {
 	adapter, ok := adapters[adapterName]
 	if !ok {
