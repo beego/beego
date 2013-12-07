@@ -12,7 +12,7 @@ import (
 	"reflect"
 	"strconv"
 	"sync"
-	"syscall"
+	//"syscall"
 )
 
 const (
@@ -82,15 +82,15 @@ func (sl *stoppableListener) Accept() (c net.Conn, err error) {
 
 func WaitSignal(l net.Listener) error {
 	ch := make(chan os.Signal, 1)
-	signal.Notify(ch, syscall.SIGTERM, syscall.SIGHUP)
+	signal.Notify(ch, os.Interrupt, os.Kill)
 	for {
 		sig := <-ch
 		log.Println(sig.String())
 		switch sig {
 
-		case syscall.SIGTERM:
+		case os.Kill:
 			return nil
-		case syscall.SIGHUP:
+		case os.Interrupt:
 			err := Restart(l)
 			if nil != err {
 				return err
