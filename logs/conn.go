@@ -87,8 +87,7 @@ func (c *ConnWriter) connect() error {
 		return err
 	}
 
-	tcpConn, ok := conn.(*net.TCPConn)
-	if ok {
+	if tcpConn, ok := conn.(*net.TCPConn); ok {
 		tcpConn.SetKeepAlive(true)
 	}
 

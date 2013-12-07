@@ -6,7 +6,7 @@ import (
 )
 
 func TestGetUrl(t *testing.T) {
-	resp, err := Get("http://beego.me/").Response()
+	resp, err := Get("http://beego.me/").Debug(true).Response()
 	if err != nil {
 		t.Fatal(err)
 	}

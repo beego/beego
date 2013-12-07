@@ -53,7 +53,16 @@ func ProfIndex(rw http.ResponseWriter, r *http.Request) {
 	if command != "" {
 		toolbox.ProcessInput(command, rw)
 	} else {
-		rw.Write([]byte("request url like '/prof?command=lookup goroutine'"))
+		rw.Write([]byte("request url like '/prof?command=lookup goroutine'\n"))
+		rw.Write([]byte("the command have below types:\n"))
+		rw.Write([]byte("1. lookup goroutine\n"))
+		rw.Write([]byte("2. lookup heap\n"))
+		rw.Write([]byte("3. lookup threadcreate\n"))
+		rw.Write([]byte("4. lookup block\n"))
+		rw.Write([]byte("5. start cpuprof\n"))
+		rw.Write([]byte("6. stop cpuprof\n"))
+		rw.Write([]byte("7. get memprof\n"))
+		rw.Write([]byte("8. gc summary\n"))
 	}
 }
 
