@@ -72,7 +72,7 @@ func init() {
 	TemplateCache = make(map[string]*template.Template)
 
 	// set this to 0.0.0.0 to make this app available to externally
-	HttpAddr = "127.0.0.1"
+	HttpAddr = ""
 	HttpPort = 8080
 
 	AppName = "beego"
