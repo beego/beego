@@ -122,8 +122,8 @@ func init() {
 
 	err := ParseConfig()
 	if err != nil && !os.IsNotExist(err) {
-		// panic unless the err is can not find default configuration file
-		panic(err)
+		// for init if doesn't have app.conf will not panic
+		Info(err)
 	}
 }
 
