@@ -154,7 +154,7 @@ func (c *IniConfigContainer) Set(key, value string) error {
 
 	var section, k string
 	key = strings.ToLower(key)
-	sectionkey := strings.Split(key, ".")
+	sectionkey := strings.Split(key, "::")
 	if len(sectionkey) >= 2 {
 		section = sectionkey[0]
 		k = sectionkey[1]
@@ -184,7 +184,7 @@ func (c *IniConfigContainer) getdata(key string) string {
 
 	var section, k string
 	key = strings.ToLower(key)
-	sectionkey := strings.Split(key, ".")
+	sectionkey := strings.Split(key, "::")
 	if len(sectionkey) >= 2 {
 		section = sectionkey[0]
 		k = sectionkey[1]
