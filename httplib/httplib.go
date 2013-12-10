@@ -2,6 +2,7 @@ package httplib
 
 import (
 	"bytes"
+	"crypto/tls"
 	"encoding/json"
 	"encoding/xml"
 	"io"
@@ -22,7 +23,7 @@ func Get(url string) *BeegoHttpRequest {
 	req.Method = "GET"
 	req.Header = http.Header{}
 	req.Header.Set("User-Agent", defaultUserAgent)
-	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second}
+	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil}
 }
 
 func Post(url string) *BeegoHttpRequest {
@@ -30,7 +31,7 @@ func Post(url string) *BeegoHttpRequest {
 	req.Method = "POST"
 	req.Header = http.Header{}
 	req.Header.Set("User-Agent", defaultUserAgent)
-	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second}
+	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil}
 }
 
 func Put(url string) *BeegoHttpRequest {
@@ -38,7 +39,7 @@ func Put(url string) *BeegoHttpRequest {
 	req.Method = "PUT"
 	req.Header = http.Header{}
 	req.Header.Set("User-Agent", defaultUserAgent)
-	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second}
+	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil}
 }
 
 func Delete(url string) *BeegoHttpRequest {
@@ -46,7 +47,7 @@ func Delete(url string) *BeegoHttpRequest {
 	req.Method = "DELETE"
 	req.Header = http.Header{}
 	req.Header.Set("User-Agent", defaultUserAgent)
-	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second}
+	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil}
 }
 
 func Head(url string) *BeegoHttpRequest {
@@ -54,7 +55,7 @@ func Head(url string) *BeegoHttpRequest {
 	req.Method = "HEAD"
 	req.Header = http.Header{}
 	req.Header.Set("User-Agent", defaultUserAgent)
-	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second}
+	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil}
 }
 
 type BeegoHttpRequest struct {
@@ -64,6 +65,7 @@ type BeegoHttpRequest struct {
 	showdebug        bool
 	connectTimeout   time.Duration
 	readWriteTimeout time.Duration
+	tlsClientConfig  *tls.Config
 }
 
 func (b *BeegoHttpRequest) Debug(isdebug bool) *BeegoHttpRequest {
@@ -74,6 +76,11 @@ func (b *BeegoHttpRequest) Debug(isdebug bool) *BeegoHttpRequest {
 func (b *BeegoHttpRequest) SetTimeout(connectTimeout, readWriteTimeout time.Duration) *BeegoHttpRequest {
 	b.connectTimeout = connectTimeout
 	b.readWriteTimeout = readWriteTimeout
+	return b
+}
+
+func (b *BeegoHttpRequest) SetTLSClientConfig(config *tls.Config) *BeegoHttpRequest {
+	b.tlsClientConfig = config
 	return b
 }
 
@@ -146,7 +153,8 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 
 	client := &http.Client{
 		Transport: &http.Transport{
-			Dial: TimeoutDialer(b.connectTimeout, b.readWriteTimeout),
+			TLSClientConfig: b.tlsClientConfig,
+			Dial:            TimeoutDialer(b.connectTimeout, b.readWriteTimeout),
 		},
 	}
 	resp, err := client.Do(b.req)

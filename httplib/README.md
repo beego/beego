@@ -44,3 +44,11 @@ set post timeout:
 if you want to debug the request info, set the debug on
 
 	httplib.Get("").Debug(true)
+	
+## support HTTPS client
+if request url is https. You can set the client support tsl:
+
+	httplib.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
+	
+more info about the tls.Config please visit http://golang.org/pkg/crypto/tls/#Config	
+		
