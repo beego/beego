@@ -18,7 +18,12 @@ var jsoncontext = `{
         "port": "port",                 
         "database": "database",
         "username": "username",
-        "password": "password"
+        "password": "password",
+		"conns":{
+			"maxconnection":12,
+			"autoconnect":true,
+			"connectioninfo":"info"
+		}
     }
 }`
 
@@ -70,9 +75,19 @@ func TestJson(t *testing.T) {
 	if jsonconf.String("name") != "astaxie" {
 		t.Fatal("get name error")
 	}
+	if jsonconf.String("database::host") != "host" {
+		t.Fatal("get database::host error")
+	}
+	if jsonconf.String("database::conns::connectioninfo") != "info" {
+		t.Fatal("get database::conns::connectioninfo error")
+	}
+	if maxconnection, err := jsonconf.Int("database::conns::maxconnection"); err != nil || maxconnection != 12 {
+		t.Fatal("get database::conns::maxconnection error")
+	}
 	if db, err := jsonconf.DIY("database"); err != nil {
 		t.Fatal(err)
 	} else if m, ok := db.(map[string]interface{}); !ok {
+		t.Log(db)
 		t.Fatal("db not map[string]interface{}")
 	} else {
 		if m["host"].(string) != "host" {
