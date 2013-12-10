@@ -143,7 +143,6 @@ func (this *FileCache) Put(key string, val interface{}, timeout int64) error {
 	} else {
 		item.Expired = time.Now().Unix() + timeout
 	}
-	item.Expired = time.Now().Unix() + timeout
 	item.Lastaccess = time.Now().Unix()
 	data, err := Gob_encode(item)
 	if err != nil {
