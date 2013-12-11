@@ -46,7 +46,7 @@ if you want to debug the request info, set the debug on
 	httplib.Get("").Debug(true)
 	
 ## support HTTPS client
-if request url is https. You can set the client support tsl:
+if request url is https. You can set the client support tls:
 
 	httplib.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 	
