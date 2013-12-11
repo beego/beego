@@ -6,6 +6,7 @@ import (
 
 type Cache interface {
 	Get(key string) interface{}
+	GetString(key string) (string, bool)
 	Put(key string, val interface{}, timeout int64) error
 	Delete(key string) error
 	Incr(key string) error

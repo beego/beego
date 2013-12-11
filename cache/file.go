@@ -134,6 +134,18 @@ func (this *FileCache) Get(key string) interface{} {
 	return to.Data
 }
 
+func (this *FileCache) GetString(key string) (string, bool) {
+	var contain string
+	data := this.Get(key)
+	if data == nil {
+		return contain, false
+	}
+	if d, ok := data.(string); ok {
+		contain = d
+	}
+	return contain, true
+}
+
 func (this *FileCache) Put(key string, val interface{}, timeout int64) error {
 	filename := this.getCacheFileName(key)
 	var item FileCacheItem

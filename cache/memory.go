@@ -45,6 +45,18 @@ func (bc *MemoryCache) Get(name string) interface{} {
 	return itm.val
 }
 
+func (bc *MemoryCache) GetString(name string) (string, bool) {
+	var contain string
+	data := bc.Get(name)
+	if data == nil {
+		return contain, false
+	}
+	if d, ok := data.(string); ok {
+		contain = d
+	}
+	return contain, true
+}
+
 func (bc *MemoryCache) Put(name string, value interface{}, expired int64) error {
 	bc.lock.Lock()
 	defer bc.lock.Unlock()
