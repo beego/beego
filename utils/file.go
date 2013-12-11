@@ -43,7 +43,7 @@ func LookFile(filename string, paths ...string) (fullpath string, err error) {
 // like command grep -E
 // for example: GrepE(`^hello`, "hello.txt")
 // \n is striped while read
-func GrepE(patten string, filename string) (lines []string, err error) {
+func GrepFile(patten string, filename string) (lines []string, err error) {
 	re, err := regexp.Compile(patten)
 	if err != nil {
 		return

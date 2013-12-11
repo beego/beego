@@ -22,7 +22,7 @@ func TestSelfDir(t *testing.T) {
 }
 
 func TestFileExists(t *testing.T) {
-	if !FileExists("/bin/echo") {
+	if !FileExists("./file.go") {
 		t.Errorf("/bin/echo should exists, but it didn't")
 	}
 
@@ -44,14 +44,14 @@ func TestLookFile(t *testing.T) {
 	}
 }
 
-func TestGrepE(t *testing.T) {
-	_, err := GrepE("", noExistedFile)
+func TestGrepFile(t *testing.T) {
+	_, err := GrepFile("", noExistedFile)
 	if err == nil {
 		t.Error("expect file-not-existed error, but got nothing")
 	}
 
 	path := filepath.Join(".", "testdata", "grepe.test")
-	lines, err := GrepE(`^\s*[^#]+`, path)
+	lines, err := GrepFile(`^\s*[^#]+`, path)
 	if err != nil {
 		t.Error(err)
 	}
