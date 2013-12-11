@@ -472,7 +472,38 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				middleware.Exception("403", rw, r, "403 Forbidden")
 				return
 			}
-			http.ServeFile(w, r, file)
+			
+			//This block obtained from (https://github.com/smithfox/beego) - it should probably get merged into astaxie/beego after a pull request
+			if strings.HasSuffix(file, ".css") ||
+				strings.HasSuffix(file, ".js") ||
+				strings.HasSuffix(file, ".map") ||
+				strings.HasSuffix(file, ".json") ||
+				strings.HasSuffix(file, ".html") ||
+				strings.HasSuffix(file, ".mustache") {
+
+				if EnableGzip {
+					w.contentEncoding = GetAcceptEncodingZip(r)
+				}
+
+				memzipfile, err := OpenMemZipFile(file, w.contentEncoding)
+				if err != nil {
+					return
+				}
+
+				w.InitHeadContent(finfo.Size())
+
+				if strings.HasSuffix(file, ".mustache") {
+					w.Header().Set("Content-Type", "text/html; charset=utf-8") //FIXME: hardcode
+				}
+
+				http.ServeContent(w, r, file, finfo.ModTime(), memzipfile)
+			} else { //其他静态文件直接读文件
+				if strings.Contains(file, "game/") {
+					w.Header().Set("Cache-Control", "max-age=2592000")
+				}
+				http.ServeFile(w, r, file)
+			}
+			
 			w.started = true
 			return
 		}
@@ -844,14 +875,25 @@ Last:
 //responseWriter is a wrapper for the http.ResponseWriter
 //started set to true if response was written to then don't execute other handler
 type responseWriter struct {
-	writer  http.ResponseWriter
-	started bool
-	status  int
+	writer          http.ResponseWriter
+	started         bool
+	status          int
+	contentEncoding string
 }
 
 // Header returns the header map that will be sent by WriteHeader.
 func (w *responseWriter) Header() http.Header {
 	return w.writer.Header()
+}
+
+func (w *responseWriter) InitHeadContent(contentlength int64) {
+	if w.contentEncoding == "gzip" {
+		w.Header().Set("Content-Encoding", "gzip")
+	} else if w.contentEncoding == "deflate" {
+		w.Header().Set("Content-Encoding", "deflate")
+	} else {
+		w.Header().Set("Content-Length", strconv.FormatInt(contentlength, 10))
+	}
 }
 
 // Write writes the data to the connection as part of an HTTP reply,
