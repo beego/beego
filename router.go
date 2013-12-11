@@ -477,7 +477,6 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			if strings.HasSuffix(file, ".css") ||
 				strings.HasSuffix(file, ".js") ||
 				strings.HasSuffix(file, ".map") ||
-				strings.HasSuffix(file, ".json") ||
 				strings.HasSuffix(file, ".html") ||
 				strings.HasSuffix(file, ".mustache") {
 
