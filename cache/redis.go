@@ -36,6 +36,20 @@ func (rc *RedisCache) Get(key string) interface{} {
 	return v
 }
 
+func (rc *RedisCache) GetString(key string) (string, bool) {
+	var contain string
+
+	data := rc.Get(key)
+	if data == nil {
+		return contain, false
+	}
+
+	if d, ok := data.([]byte); ok {
+		contain = string(d)
+	}
+	return contain, true
+}
+
 func (rc *RedisCache) Put(key string, val interface{}, timeout int64) error {
 	if rc.c == nil {
 		var err error

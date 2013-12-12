@@ -33,6 +33,22 @@ func (rc *MemcacheCache) Get(key string) interface{} {
 	return contain
 }
 
+func (rc *MemcacheCache) GetString(key string) (string, bool) {
+	var contain string
+
+	if rc.c == nil {
+		rc.c = rc.connectInit()
+	}
+	v, err := rc.c.Get(key)
+	if err != nil {
+		return contain, false
+	}
+	if len(v) > 0 {
+		contain = string(v[0].Value)
+	}
+	return contain, true
+}
+
 func (rc *MemcacheCache) Put(key string, val interface{}, timeout int64) error {
 	if rc.c == nil {
 		rc.c = rc.connectInit()
