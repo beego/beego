@@ -30,7 +30,7 @@ func FileExists(name string) bool {
 
 // search a file in paths.
 // this is offen used in search config file in /etc ~/
-func LookFile(filename string, paths ...string) (fullpath string, err error) {
+func SearchFile(filename string, paths ...string) (fullpath string, err error) {
 	for _, path := range paths {
 		if fullpath = filepath.Join(path, filename); FileExists(fullpath) {
 			return
@@ -41,7 +41,7 @@ func LookFile(filename string, paths ...string) (fullpath string, err error) {
 }
 
 // like command grep -E
-// for example: GrepE(`^hello`, "hello.txt")
+// for example: GrepFile(`^hello`, "hello.txt")
 // \n is striped while read
 func GrepFile(patten string, filename string) (lines []string, err error) {
 	re, err := regexp.Compile(patten)
