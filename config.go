@@ -92,7 +92,7 @@ func init() {
 	SessionSavePath = ""
 	SessionHashFunc = "sha1"
 	SessionHashKey = "beegoserversessionkey"
-	SessionCookieLifeTime = 3600
+	SessionCookieLifeTime = 0 //set cookie default is the brower life
 
 	UseFcgi = false
 
