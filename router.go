@@ -2,8 +2,6 @@ package beego
 
 import (
 	"fmt"
-	beecontext "github.com/astaxie/beego/context"
-	"github.com/astaxie/beego/middleware"
 	"net/http"
 	"net/url"
 	"os"
@@ -12,6 +10,19 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
+
+	beecontext "github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/middleware"
+	"github.com/astaxie/beego/toolbox"
+)
+
+const (
+	BeforeRouter = iota
+	AfterStatic
+	BeforeExec
+	AfterExec
+	FinishRouter
 )
 
 var HTTPMETHOD = []string{"get", "post", "put", "delete", "patch", "options", "head"}
@@ -29,7 +40,7 @@ type ControllerRegistor struct {
 	routers      []*controllerInfo
 	fixrouters   []*controllerInfo
 	enableFilter bool
-	filters      map[string][]*FilterRouter
+	filters      map[int][]*FilterRouter
 	enableAuto   bool
 	autoRouter   map[string]map[string]reflect.Type //key:controller key:method value:reflect.type
 }
@@ -38,7 +49,7 @@ func NewControllerRegistor() *ControllerRegistor {
 	return &ControllerRegistor{
 		routers:    make([]*controllerInfo, 0),
 		autoRouter: make(map[string]map[string]reflect.Type),
-		filters:    make(map[string][]*FilterRouter),
+		filters:    make(map[int][]*FilterRouter),
 	}
 }
 
@@ -144,7 +155,7 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingM
 		for _, v := range semi {
 			colon := strings.Split(v, ":")
 			if len(colon) != 2 {
-				panic("method mapping fomate is error")
+				panic("method mapping format is invalid")
 			}
 			comma := strings.Split(colon[0], ",")
 			for _, m := range comma {
@@ -152,10 +163,10 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingM
 					if val := reflectVal.MethodByName(colon[1]); val.IsValid() {
 						methods[strings.ToLower(m)] = colon[1]
 					} else {
-						panic(colon[1] + " method don't exist in the controller " + t.Name())
+						panic(colon[1] + " method doesn't exist in the controller " + t.Name())
 					}
 				} else {
-					panic(v + " is an error method mapping,Don't exist method named " + m)
+					panic(v + " is an invalid method mapping. Method doesn't exist " + m)
 				}
 			}
 		}
@@ -212,51 +223,27 @@ func (p *ControllerRegistor) AddAuto(c ControllerInterface) {
 	}
 }
 
-// Filter adds the middleware filter.
 func (p *ControllerRegistor) AddFilter(pattern, action string, filter FilterFunc) {
+	mr := buildFilter(pattern, filter)
+	switch action {
+	case "BeforeRouter":
+		p.filters[BeforeRouter] = append(p.filters[BeforeRouter], mr)
+	case "AfterStatic":
+		p.filters[AfterStatic] = append(p.filters[AfterStatic], mr)
+	case "BeforeExec":
+		p.filters[BeforeExec] = append(p.filters[BeforeExec], mr)
+	case "AfterExec":
+		p.filters[AfterExec] = append(p.filters[AfterExec], mr)
+	case "FinishRouter":
+		p.filters[FinishRouter] = append(p.filters[FinishRouter], mr)
+	}
 	p.enableFilter = true
-	mr := new(FilterRouter)
-	mr.filterFunc = filter
+}
 
-	parts := strings.Split(pattern, "/")
-	j := 0
-	for i, part := range parts {
-		if strings.HasPrefix(part, ":") {
-			expr := "(.+)"
-			//a user may choose to override the defult expression
-			// similar to expressjs: ‘/user/:id([0-9]+)’
-			if index := strings.Index(part, "("); index != -1 {
-				expr = part[index:]
-				part = part[:index]
-				//match /user/:id:int ([0-9]+)
-				//match /post/:username:string	([\w]+)
-			} else if lindex := strings.LastIndex(part, ":"); lindex != 0 {
-				switch part[lindex:] {
-				case ":int":
-					expr = "([0-9]+)"
-					part = part[:lindex]
-				case ":string":
-					expr = `([\w]+)`
-					part = part[:lindex]
-				}
-			}
-			parts[i] = expr
-			j++
-		}
-	}
-	if j != 0 {
-		pattern = strings.Join(parts, "/")
-		regex, regexErr := regexp.Compile(pattern)
-		if regexErr != nil {
-			//TODO add error handling here to avoid panic
-			panic(regexErr)
-			return
-		}
-		mr.regex = regex
-		mr.hasregex = true
-	}
-	mr.pattern = pattern
-	p.filters[action] = append(p.filters[action], mr)
+func (p *ControllerRegistor) InsertFilter(pattern string, pos int, filter FilterFunc) {
+	mr := buildFilter(pattern, filter)
+	p.filters[pos] = append(p.filters[pos], mr)
+	p.enableFilter = true
 }
 
 func (p *ControllerRegistor) UrlFor(endpoint string, values ...string) string {
@@ -378,33 +365,43 @@ func (p *ControllerRegistor) UrlFor(endpoint string, values ...string) string {
 func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err := recover(); err != nil {
-			errstr := fmt.Sprint(err)
-			if handler, ok := middleware.ErrorMaps[errstr]; ok && ErrorsShow {
-				handler(rw, r)
+			if _, ok := err.(middleware.HTTPException); ok {
+				// catch intented errors, only for HTTP 4XX and 5XX
 			} else {
-				if !RecoverPanic {
-					// go back to panic
-					panic(err)
+				if ErrorsShow {
+					handler := p.getErrorHandler(fmt.Sprint(err))
+					handler(rw, r)
 				} else {
-					var stack string
-					Critical("Handler crashed with error", err)
-					for i := 1; ; i++ {
-						_, file, line, ok := runtime.Caller(i)
-						if !ok {
-							break
+					if !RecoverPanic {
+						// go back to panic
+						panic(err)
+					} else {
+						var stack string
+						Critical("Handler crashed with error", err)
+						for i := 1; ; i++ {
+							_, file, line, ok := runtime.Caller(i)
+							if !ok {
+								break
+							}
+							Critical(file, line)
+							if RunMode == "dev" {
+								stack = stack + fmt.Sprintln(file, line)
+							}
 						}
-						Critical(file, line)
 						if RunMode == "dev" {
-							stack = stack + fmt.Sprintln(file, line)
+							middleware.ShowErr(err, rw, r, stack)
 						}
-					}
-					if RunMode == "dev" {
-						middleware.ShowErr(err, rw, r, stack)
 					}
 				}
 			}
 		}
 	}()
+
+	starttime := time.Now()
+	requestPath := r.URL.Path
+	var runrouter *controllerInfo
+	var findrouter bool
+	params := make(map[string]string)
 
 	w := &responseWriter{writer: rw}
 	w.Header().Set("Server", BeegoServerName)
@@ -422,27 +419,19 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		context.Output = beecontext.NewOutput(rw)
 	}
 
-	if SessionOn {
-		context.Input.CruSession = GlobalSessions.SessionStart(w, r)
-	}
-
 	if !inSlice(strings.ToLower(r.Method), HTTPMETHOD) {
 		http.Error(w, "Method Not Allowed", 405)
-		return
+		goto Admin
 	}
 
-	var runrouter *controllerInfo
-	var findrouter bool
-
-	params := make(map[string]string)
-
 	if p.enableFilter {
-		if l, ok := p.filters["BeforRouter"]; ok {
+		if l, ok := p.filters[BeforeRouter]; ok {
 			for _, filterR := range l {
-				if filterR.ValidRouter(r.URL.Path) {
+				if ok, p := filterR.ValidRouter(r.URL.Path); ok {
+					context.Input.Params = p
 					filterR.filterFunc(context)
 					if w.started {
-						return
+						goto Admin
 					}
 				}
 			}
@@ -455,7 +444,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			file := staticDir + r.URL.Path
 			http.ServeFile(w, r, file)
 			w.started = true
-			return
+			goto Admin
 		}
 		if strings.HasPrefix(r.URL.Path, prefix) {
 			file := staticDir + r.URL.Path[len(prefix):]
@@ -465,21 +454,26 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 					Warn(err)
 				}
 				http.NotFound(w, r)
-				return
+				goto Admin
 			}
 			//if the request is dir and DirectoryIndex is false then
 			if finfo.IsDir() && !DirectoryIndex {
 				middleware.Exception("403", rw, r, "403 Forbidden")
-				return
+				goto Admin
 			}
-			
-			//This block obtained from (https://github.com/smithfox/beego) - it should probably get merged into astaxie/beego after a pull request
-			if strings.HasSuffix(file, ".css") ||
-				strings.HasSuffix(file, ".js") ||
-				strings.HasSuffix(file, ".map") ||
-				strings.HasSuffix(file, ".html") ||
-				strings.HasSuffix(file, ".mustache") {
 
+			//This block obtained from (https://github.com/smithfox/beego) - it should probably get merged into astaxie/beego after a pull request
+			isStaticFileToCompress := false
+			if StaticExtensionsToGzip != nil && len(StaticExtensionsToGzip) > 0 {
+				for _, statExtension := range StaticExtensionsToGzip {
+					if strings.HasSuffix(strings.ToLower(file), strings.ToLower(statExtension)) {
+						isStaticFileToCompress = true
+						break
+					}
+				}
+			}
+
+			if isStaticFileToCompress {
 				if EnableGzip {
 					w.contentEncoding = GetAcceptEncodingZip(r)
 				}
@@ -496,31 +490,33 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				}
 
 				http.ServeContent(w, r, file, finfo.ModTime(), memzipfile)
-			} else { //其他静态文件直接读文件
-				if strings.Contains(file, "game/") {
-					w.Header().Set("Cache-Control", "max-age=2592000")
-				}
+			} else {
 				http.ServeFile(w, r, file)
 			}
-			
+
 			w.started = true
-			return
+			goto Admin
 		}
 	}
 
+	// session init after static file
+	if SessionOn {
+		context.Input.CruSession = GlobalSessions.SessionStart(w, r)
+	}
+
 	if p.enableFilter {
-		if l, ok := p.filters["AfterStatic"]; ok {
+		if l, ok := p.filters[AfterStatic]; ok {
 			for _, filterR := range l {
-				if filterR.ValidRouter(r.URL.Path) {
+				if ok, p := filterR.ValidRouter(r.URL.Path); ok {
+					context.Input.Params = p
 					filterR.filterFunc(context)
 					if w.started {
-						return
+						goto Admin
 					}
 				}
 			}
 		}
 	}
-	requestPath := r.URL.Path
 
 	if CopyRequestBody {
 		context.Input.Body()
@@ -539,7 +535,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		if requestPath[n-1] != '/' && len(route.pattern) == n+1 &&
 			route.pattern[n] == '/' && route.pattern[:n] == requestPath {
 			http.Redirect(w, r, requestPath+"/", 301)
-			return
+			goto Admin
 		}
 	}
 
@@ -576,7 +572,8 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			break
 		}
 	}
-	context.Input.Param = params
+
+	context.Input.Params = params
 
 	if runrouter != nil {
 		if r.Method == "POST" {
@@ -584,12 +581,13 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}
 		//execute middleware filters
 		if p.enableFilter {
-			if l, ok := p.filters["BeforExec"]; ok {
+			if l, ok := p.filters[BeforeExec]; ok {
 				for _, filterR := range l {
-					if filterR.ValidRouter(r.URL.Path) {
+					if ok, p := filterR.ValidRouter(r.URL.Path); ok {
+						context.Input.Params = p
 						filterR.filterFunc(context)
 						if w.started {
-							return
+							goto Admin
 						}
 					}
 				}
@@ -739,12 +737,13 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		method.Call(in)
 		//execute middleware filters
 		if p.enableFilter {
-			if l, ok := p.filters["AfterExec"]; ok {
+			if l, ok := p.filters[AfterExec]; ok {
 				for _, filterR := range l {
-					if filterR.ValidRouter(r.URL.Path) {
+					if ok, p := filterR.ValidRouter(r.URL.Path); ok {
+						context.Input.Params = p
 						filterR.filterFunc(context)
 						if w.started {
-							return
+							goto Admin
 						}
 					}
 				}
@@ -761,7 +760,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			lastindex := strings.LastIndex(requestPath, "/")
 			lastsub := requestPath[lastindex+1:]
 			if subindex := strings.LastIndex(lastsub, "."); subindex != -1 {
-				context.Input.Param[":ext"] = lastsub[subindex+1:]
+				context.Input.Params[":ext"] = lastsub[subindex+1:]
 				r.URL.Query().Add(":ext", lastsub[subindex+1:])
 				r.URL.RawQuery = r.URL.Query().Encode()
 				requestPath = requestPath[:len(requestPath)-len(lastsub[subindex:])]
@@ -770,7 +769,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 				if strings.ToLower(requestPath) == "/"+cName {
 					http.Redirect(w, r, requestPath+"/", 301)
-					return
+					goto Admin
 				}
 
 				if strings.ToLower(requestPath) == "/"+cName+"/" {
@@ -784,14 +783,17 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 							if r.Method == "POST" {
 								r.ParseMultipartForm(MaxMemory)
 							}
+							// set find
+							findrouter = true
 							//execute middleware filters
 							if p.enableFilter {
-								if l, ok := p.filters["BeforExec"]; ok {
+								if l, ok := p.filters[BeforeExec]; ok {
 									for _, filterR := range l {
-										if filterR.ValidRouter(r.URL.Path) {
+										if ok, p := filterR.ValidRouter(r.URL.Path); ok {
+											context.Input.Params = p
 											filterR.filterFunc(context)
 											if w.started {
-												return
+												goto Admin
 											}
 										}
 									}
@@ -841,12 +843,13 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 							method.Call(in)
 							//execute middleware filters
 							if p.enableFilter {
-								if l, ok := p.filters["AfterExec"]; ok {
+								if l, ok := p.filters[AfterExec]; ok {
 									for _, filterR := range l {
-										if filterR.ValidRouter(r.URL.Path) {
+										if ok, p := filterR.ValidRouter(r.URL.Path); ok {
+											context.Input.Params = p
 											filterR.filterFunc(context)
 											if w.started {
-												return
+												goto Admin
 											}
 										}
 									}
@@ -854,9 +857,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 							}
 							method = vc.MethodByName("Destructor")
 							method.Call(in)
-							// set find
-							findrouter = true
-							goto Last
+							goto Admin
 						}
 					}
 				}
@@ -864,11 +865,54 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-Last:
 	//if no matches to url, throw a not found exception
 	if !findrouter {
 		middleware.Exception("404", rw, r, "")
 	}
+
+Admin:
+	if p.enableFilter {
+		if l, ok := p.filters[FinishRouter]; ok {
+			for _, filterR := range l {
+				if ok, p := filterR.ValidRouter(r.URL.Path); ok {
+					context.Input.Params = p
+					filterR.filterFunc(context)
+					if w.started {
+						break
+					}
+				}
+			}
+		}
+	}
+	//admin module record QPS
+	if EnableAdmin {
+		timeend := time.Since(starttime)
+		if FilterMonitorFunc(r.Method, requestPath, timeend) {
+			if runrouter != nil {
+				go toolbox.StatisticsMap.AddStatistics(r.Method, requestPath, runrouter.controllerType.Name(), timeend)
+			} else {
+				go toolbox.StatisticsMap.AddStatistics(r.Method, requestPath, "", timeend)
+			}
+		}
+	}
+}
+
+// there always should be error handler that sets error code accordingly for all unhandled errors
+// in order to have custom UI for error page it's necessary to override "500" error
+func (p *ControllerRegistor) getErrorHandler(errorCode string) func(rw http.ResponseWriter, r *http.Request) {
+	handler := middleware.SimpleServerError
+	ok := true
+	if errorCode != "" {
+		handler, ok = middleware.ErrorMaps[errorCode]
+		if !ok {
+			handler, ok = middleware.ErrorMaps["500"]
+		}
+		if !ok || handler == nil {
+			handler = middleware.SimpleServerError
+		}
+	}
+
+	return handler
 }
 
 //responseWriter is a wrapper for the http.ResponseWriter
