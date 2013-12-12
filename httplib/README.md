@@ -43,12 +43,20 @@ set post timeout:
 ## debug
 if you want to debug the request info, set the debug on
 
-	httplib.Get("").Debug(true)
+	httplib.Get("http://beego.me/").Debug(true)
 	
 ## support HTTPS client
-if request url is https. You can set the client support tls:
+if request url is https. You can set the client support TSL:
 
 	httplib.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 	
 more info about the tls.Config please visit http://golang.org/pkg/crypto/tls/#Config	
 		
+## set cookie
+some http request need setcookie. So set it like this:
+
+	cookie := &http.Cookie{}
+	cookie.Name = "username"
+	cookie.Value  = "astaxie"
+	httplib.Get("http://beego.me/").SetCookie(cookie)
+
