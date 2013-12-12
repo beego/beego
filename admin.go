@@ -40,7 +40,14 @@ func init() {
 }
 
 func AdminIndex(rw http.ResponseWriter, r *http.Request) {
-	rw.Write([]byte("Welcome to Admin Dashboard"))
+	rw.Write([]byte("Welcome to Admin Dashboard\n"))
+	rw.Write([]byte("There are servral functions:\n"))
+	rw.Write([]byte("1. Record all request and request time, http://localhost:8088/qps\n"))
+	rw.Write([]byte("2. Get runtime profiling data by the pprof, http://localhost:8088/prof\n"))
+	rw.Write([]byte("3. Get healthcheck result from http://localhost:8088/prof\n"))
+	rw.Write([]byte("4. Get current task infomation from taskhttp://localhost:8088/task \n"))
+	rw.Write([]byte("5. To run a task passed a param http://localhost:8088/runtask\n"))
+
 }
 
 func QpsIndex(rw http.ResponseWriter, r *http.Request) {
