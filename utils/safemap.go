@@ -1,4 +1,4 @@
-package beego
+package utils
 
 import (
 	"sync"

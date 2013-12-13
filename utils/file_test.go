@@ -23,7 +23,7 @@ func TestSelfDir(t *testing.T) {
 
 func TestFileExists(t *testing.T) {
 	if !FileExists("./file.go") {
-		t.Errorf("/bin/echo should exists, but it didn't")
+		t.Errorf("./file.go should exists, but it didn't")
 	}
 
 	if FileExists(noExistedFile) {
@@ -31,14 +31,14 @@ func TestFileExists(t *testing.T) {
 	}
 }
 
-func TestLookFile(t *testing.T) {
-	path, err := LookFile(filepath.Base(SelfPath()), SelfDir())
+func TestSearchFile(t *testing.T) {
+	path, err := SearchFile(filepath.Base(SelfPath()), SelfDir())
 	if err != nil {
 		t.Error(err)
 	}
 	t.Log(path)
 
-	path, err = LookFile(noExistedFile, ".")
+	path, err = SearchFile(noExistedFile, ".")
 	if err == nil {
 		t.Errorf("err shouldnot be nil, got path: %s", SelfDir())
 	}
