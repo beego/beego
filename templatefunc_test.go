@@ -7,18 +7,6 @@ import (
 	"time"
 )
 
-func TestWebTime(t *testing.T) {
-	ts := "Fri, 26 Jul 2013 12:27:42 CST"
-	l, _ := time.LoadLocation("GST")
-	tt, _ := time.ParseInLocation(time.RFC1123, ts, l)
-	if ts != webTime(tt) {
-		t.Error("should be equal")
-	}
-	if "Fri, 26 Jul 2013 12:27:42 GMT" != webTime(tt.UTC()) {
-		t.Error("should be equal")
-	}
-}
-
 func TestSubstr(t *testing.T) {
 	s := `012345`
 	if Substr(s, 0, 2) != "01" {
@@ -89,16 +77,6 @@ func TestHtmlunquote(t *testing.T) {
 	s := `<' ”“&">`
 	if Htmlunquote(h) != s {
 		t.Error("should be equal")
-	}
-}
-
-func TestInSlice(t *testing.T) {
-	sl := []string{"A", "b"}
-	if !inSlice("A", sl) {
-		t.Error("should be true")
-	}
-	if inSlice("B", sl) {
-		t.Error("should be false")
 	}
 }
 

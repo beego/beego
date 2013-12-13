@@ -15,6 +15,7 @@ import (
 	beecontext "github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/middleware"
 	"github.com/astaxie/beego/toolbox"
+	"github.com/astaxie/beego/utils"
 )
 
 const (
@@ -159,7 +160,7 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingM
 			}
 			comma := strings.Split(colon[0], ",")
 			for _, m := range comma {
-				if m == "*" || inSlice(strings.ToLower(m), HTTPMETHOD) {
+				if m == "*" || utils.InSlice(strings.ToLower(m), HTTPMETHOD) {
 					if val := reflectVal.MethodByName(colon[1]); val.IsValid() {
 						methods[strings.ToLower(m)] = colon[1]
 					} else {
@@ -272,7 +273,7 @@ func (p *ControllerRegistor) UrlFor(endpoint string, values ...string) string {
 	for _, route := range p.fixrouters {
 		if route.controllerType.Name() == controllName {
 			var finded bool
-			if inSlice(strings.ToLower(methodName), HTTPMETHOD) {
+			if utils.InSlice(strings.ToLower(methodName), HTTPMETHOD) {
 				if route.hasMethod {
 					if m, ok := route.methods[strings.ToLower(methodName)]; ok && m != methodName {
 						finded = false
@@ -303,7 +304,7 @@ func (p *ControllerRegistor) UrlFor(endpoint string, values ...string) string {
 	for _, route := range p.routers {
 		if route.controllerType.Name() == controllName {
 			var finded bool
-			if inSlice(strings.ToLower(methodName), HTTPMETHOD) {
+			if utils.InSlice(strings.ToLower(methodName), HTTPMETHOD) {
 				if route.hasMethod {
 					if m, ok := route.methods[strings.ToLower(methodName)]; ok && m != methodName {
 						finded = false
@@ -419,7 +420,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		context.Output = beecontext.NewOutput(rw)
 	}
 
-	if !inSlice(strings.ToLower(r.Method), HTTPMETHOD) {
+	if !utils.InSlice(strings.ToLower(r.Method), HTTPMETHOD) {
 		http.Error(w, "Method Not Allowed", 405)
 		goto Admin
 	}

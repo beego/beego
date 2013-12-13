@@ -3,6 +3,7 @@ package beego
 import (
 	"bytes"
 	"crypto/hmac"
+	"crypto/rand"
 	"crypto/sha1"
 	"encoding/base64"
 	"errors"
@@ -370,7 +371,7 @@ func (c *Controller) XsrfToken() string {
 			} else {
 				expire = int64(XSRFExpire)
 			}
-			token = GetRandomString(15)
+			token = getRandomString(15)
 			c.SetSecureCookie(XSRFKEY, "_xsrf", token, expire)
 		}
 		c._xsrf_token = token
@@ -404,4 +405,15 @@ func (c *Controller) GoToFunc(funcname string) {
 		panic("GoToFunc should exported function")
 	}
 	c.gotofunc = funcname
+}
+
+//utils func for controller internal
+func getRandomString(n int) string {
+	const alphanum = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+	var bytes = make([]byte, n)
+	rand.Read(bytes)
+	for i, b := range bytes {
+		bytes[i] = alphanum[b%byte(len(alphanum))]
+	}
+	return string(bytes)
 }
