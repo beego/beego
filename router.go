@@ -369,12 +369,8 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			if _, ok := err.(middleware.HTTPException); ok {
 				// catch intented errors, only for HTTP 4XX and 5XX
 			} else {
-				if ErrorsShow {
-					handler := p.getErrorHandler(fmt.Sprint(err))
-					handler(rw, r)
-				} else {
+				if RunMode == "dev" {
 					if !RecoverPanic {
-						// go back to panic
 						panic(err)
 					} else {
 						var stack string
@@ -385,15 +381,30 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 								break
 							}
 							Critical(file, line)
-							if RunMode == "dev" {
-								stack = stack + fmt.Sprintln(file, line)
-							}
+							stack = stack + fmt.Sprintln(file, line)
 						}
-						if RunMode == "dev" {
-							middleware.ShowErr(err, rw, r, stack)
+						middleware.ShowErr(err, rw, r, stack)
+					}
+				} else {
+					if ErrorsShow {
+						handler := p.getErrorHandler(fmt.Sprint(err))
+						handler(rw, r)
+					} else {
+						if !RecoverPanic {
+							panic(err)
+						} else {
+							Critical("Handler crashed with error", err)
+							for i := 1; ; i++ {
+								_, file, line, ok := runtime.Caller(i)
+								if !ok {
+									break
+								}
+								Critical(file, line)
+							}
 						}
 					}
 				}
+
 			}
 		}
 	}()
