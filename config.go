@@ -19,6 +19,7 @@ var (
 	AppConfigPath string
 	StaticDir     map[string]string
 	TemplateCache map[string]*template.Template
+	StaticExtensionsToGzip []string //Files which should also be compressed with gzip (.js, .css, etc)
 	HttpAddr      string
 	HttpPort      int
 	HttpTLS       bool
@@ -68,6 +69,8 @@ func init() {
 
 	StaticDir = make(map[string]string)
 	StaticDir["/static"] = "static"
+	
+	StaticExtensionsToGzip = []string{".css", ".js"}
 
 	TemplateCache = make(map[string]*template.Template)
 
@@ -270,6 +273,23 @@ func ParseConfig() (err error) {
 					StaticDir["/"+url2fsmap[0]] = url2fsmap[1]
 				} else {
 					StaticDir["/"+url2fsmap[0]] = url2fsmap[0]
+				}
+			}
+		}
+		
+		if sgz := AppConfig.String("StaticExtensionsToGzip"); sgz != "" {
+			extensions := strings.Split(sgz, ",")
+			if len(extensions) > 0 {
+				StaticExtensionsToGzip = []string{}
+				for _, ext := range extensions {
+					if len(ext) == 0 {
+						continue
+					}
+					extWithDot := ext
+					if extWithDot[:1] != "." {
+						extWithDot = "." + extWithDot
+					}
+					StaticExtensionsToGzip = append(StaticExtensionsToGzip, extWithDot)
 				}
 			}
 		}
