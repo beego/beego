@@ -401,7 +401,7 @@ var mimemaps map[string]string = map[string]string{
 	"sv4cpio":     "application/x-sv4cpio",
 	"sv4crc":      "application/x-sv4crc",
 	"svf":         "image/vnddwg",
-	"svg":         "image/svg+xml",
+	"svg":         "image/svg-xml",
 	"svr":         "application/x-world",
 	"swf":         "application/x-shockwave-flash",
 	"t":           "application/x-troff",
