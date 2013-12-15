@@ -48,6 +48,7 @@ func AdminIndex(rw http.ResponseWriter, r *http.Request) {
 	rw.Write([]byte("3. Get healthcheck result from http://localhost:8088/prof\n"))
 	rw.Write([]byte("4. Get current task infomation from taskhttp://localhost:8088/task \n"))
 	rw.Write([]byte("5. To run a task passed a param http://localhost:8088/runtask\n"))
+	rw.Write([]byte("6. Get all confige & router infomation http://localhost:8088/listconf\n"))
 
 }
 
