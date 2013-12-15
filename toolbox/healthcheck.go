@@ -1,10 +1,5 @@
 package toolbox
 
-import (
-	"fmt"
-	"net/http"
-)
-
 //type DatabaseCheck struct {
 //}
 
@@ -26,16 +21,6 @@ type HealthChecker interface {
 
 func AddHealthCheck(name string, hc HealthChecker) {
 	AdminCheckList[name] = hc
-}
-
-func Healthcheck(rw http.ResponseWriter, req *http.Request) {
-	for name, h := range AdminCheckList {
-		if err := h.Check(); err != nil {
-			fmt.Fprintf(rw, "%s : ok\n", name)
-		} else {
-			fmt.Fprintf(rw, "%s : %s\n", name, err.Error())
-		}
-	}
 }
 
 func init() {

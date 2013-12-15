@@ -33,9 +33,10 @@ func init() {
 	BeeAdminApp.Route("/", AdminIndex)
 	BeeAdminApp.Route("/qps", QpsIndex)
 	BeeAdminApp.Route("/prof", ProfIndex)
-	BeeAdminApp.Route("/healthcheck", toolbox.Healthcheck)
-	BeeAdminApp.Route("/task", toolbox.TaskStatus)
-	BeeAdminApp.Route("/runtask", toolbox.RunTask)
+	BeeAdminApp.Route("/healthcheck", Healthcheck)
+	BeeAdminApp.Route("/task", TaskStatus)
+	BeeAdminApp.Route("/runtask", RunTask)
+	BeeAdminApp.Route("/listconf", ListConf)
 	FilterMonitorFunc = func(string, string, time.Duration) bool { return true }
 }
 
@@ -54,6 +55,121 @@ func QpsIndex(rw http.ResponseWriter, r *http.Request) {
 	toolbox.StatisticsMap.GetMap(rw)
 }
 
+func ListConf(rw http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	command := r.Form.Get("command")
+	if command != "" {
+		switch command {
+		case "conf":
+			fmt.Fprintln(rw, "list all beego's conf:")
+			fmt.Fprintln(rw, "AppName:", AppName)
+			fmt.Fprintln(rw, "AppPath:", AppPath)
+			fmt.Fprintln(rw, "AppConfigPath:", AppConfigPath)
+			fmt.Fprintln(rw, "StaticDir:", StaticDir)
+			fmt.Fprintln(rw, "StaticExtensionsToGzip:", StaticExtensionsToGzip)
+			fmt.Fprintln(rw, "HttpAddr:", HttpAddr)
+			fmt.Fprintln(rw, "HttpPort:", HttpPort)
+			fmt.Fprintln(rw, "HttpTLS:", HttpTLS)
+			fmt.Fprintln(rw, "HttpCertFile:", HttpCertFile)
+			fmt.Fprintln(rw, "HttpKeyFile:", HttpKeyFile)
+			fmt.Fprintln(rw, "RecoverPanic:", RecoverPanic)
+			fmt.Fprintln(rw, "AutoRender:", AutoRender)
+			fmt.Fprintln(rw, "ViewsPath:", ViewsPath)
+			fmt.Fprintln(rw, "RunMode:", RunMode)
+			fmt.Fprintln(rw, "SessionOn:", SessionOn)
+			fmt.Fprintln(rw, "SessionProvider:", SessionProvider)
+			fmt.Fprintln(rw, "SessionName:", SessionName)
+			fmt.Fprintln(rw, "SessionGCMaxLifetime:", SessionGCMaxLifetime)
+			fmt.Fprintln(rw, "SessionSavePath:", SessionSavePath)
+			fmt.Fprintln(rw, "SessionHashFunc:", SessionHashFunc)
+			fmt.Fprintln(rw, "SessionHashKey:", SessionHashKey)
+			fmt.Fprintln(rw, "SessionCookieLifeTime:", SessionCookieLifeTime)
+			fmt.Fprintln(rw, "UseFcgi:", UseFcgi)
+			fmt.Fprintln(rw, "MaxMemory:", MaxMemory)
+			fmt.Fprintln(rw, "EnableGzip:", EnableGzip)
+			fmt.Fprintln(rw, "DirectoryIndex:", DirectoryIndex)
+			fmt.Fprintln(rw, "EnableHotUpdate:", EnableHotUpdate)
+			fmt.Fprintln(rw, "HttpServerTimeOut:", HttpServerTimeOut)
+			fmt.Fprintln(rw, "ErrorsShow:", ErrorsShow)
+			fmt.Fprintln(rw, "XSRFKEY:", XSRFKEY)
+			fmt.Fprintln(rw, "EnableXSRF:", EnableXSRF)
+			fmt.Fprintln(rw, "XSRFExpire:", XSRFExpire)
+			fmt.Fprintln(rw, "CopyRequestBody:", CopyRequestBody)
+			fmt.Fprintln(rw, "TemplateLeft:", TemplateLeft)
+			fmt.Fprintln(rw, "TemplateRight:", TemplateRight)
+			fmt.Fprintln(rw, "BeegoServerName:", BeegoServerName)
+			fmt.Fprintln(rw, "EnableAdmin:", EnableAdmin)
+			fmt.Fprintln(rw, "AdminHttpAddr:", AdminHttpAddr)
+			fmt.Fprintln(rw, "AdminHttpPort:", AdminHttpPort)
+		case "router":
+			fmt.Fprintln(rw, "Print all router infomation:")
+			for _, router := range BeeApp.Handlers.fixrouters {
+				if router.hasMethod {
+					fmt.Fprintln(rw, router.pattern, "----", router.methods, "----", router.controllerType.Name())
+				} else {
+					fmt.Fprintln(rw, router.pattern, "----", router.controllerType.Name())
+				}
+			}
+			for _, router := range BeeApp.Handlers.routers {
+				if router.hasMethod {
+					fmt.Fprintln(rw, router.pattern, "----", router.methods, "----", router.controllerType.Name())
+				} else {
+					fmt.Fprintln(rw, router.pattern, "----", router.controllerType.Name())
+				}
+			}
+			if BeeApp.Handlers.enableAuto {
+				for controllerName, methodObj := range BeeApp.Handlers.autoRouter {
+					fmt.Fprintln(rw, controllerName, "----")
+					for methodName, obj := range methodObj {
+						fmt.Fprintln(rw, "        ", methodName, "-----", obj.Name())
+					}
+				}
+			}
+		case "filter":
+			fmt.Fprintln(rw, "Print all filter infomation:")
+			if BeeApp.Handlers.enableFilter {
+				fmt.Fprintln(rw, "BeforeRouter:")
+				if bf, ok := BeeApp.Handlers.filters[BeforeRouter]; ok {
+					for _, f := range bf {
+						fmt.Fprintln(rw, f.pattern, f.filterFunc)
+					}
+				}
+				fmt.Fprintln(rw, "AfterStatic:")
+				if bf, ok := BeeApp.Handlers.filters[AfterStatic]; ok {
+					for _, f := range bf {
+						fmt.Fprintln(rw, f.pattern, f.filterFunc)
+					}
+				}
+				fmt.Fprintln(rw, "BeforeExec:")
+				if bf, ok := BeeApp.Handlers.filters[BeforeExec]; ok {
+					for _, f := range bf {
+						fmt.Fprintln(rw, f.pattern, f.filterFunc)
+					}
+				}
+				fmt.Fprintln(rw, "AfterExec:")
+				if bf, ok := BeeApp.Handlers.filters[AfterExec]; ok {
+					for _, f := range bf {
+						fmt.Fprintln(rw, f.pattern, f.filterFunc)
+					}
+				}
+				fmt.Fprintln(rw, "FinishRouter:")
+				if bf, ok := BeeApp.Handlers.filters[FinishRouter]; ok {
+					for _, f := range bf {
+						fmt.Fprintln(rw, f.pattern, f.filterFunc)
+					}
+				}
+			}
+		default:
+			rw.Write([]byte("command not support"))
+		}
+	} else {
+		rw.Write([]byte("ListConf support this command:\n"))
+		rw.Write([]byte("1. command=conf\n"))
+		rw.Write([]byte("2. command=router\n"))
+		rw.Write([]byte("3. command=filter\n"))
+	}
+}
+
 func ProfIndex(rw http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	command := r.Form.Get("command")
@@ -70,6 +186,38 @@ func ProfIndex(rw http.ResponseWriter, r *http.Request) {
 		rw.Write([]byte("6. stop cpuprof\n"))
 		rw.Write([]byte("7. get memprof\n"))
 		rw.Write([]byte("8. gc summary\n"))
+	}
+}
+
+func Healthcheck(rw http.ResponseWriter, req *http.Request) {
+	for name, h := range toolbox.AdminCheckList {
+		if err := h.Check(); err != nil {
+			fmt.Fprintf(rw, "%s : ok\n", name)
+		} else {
+			fmt.Fprintf(rw, "%s : %s\n", name, err.Error())
+		}
+	}
+}
+
+func TaskStatus(rw http.ResponseWriter, req *http.Request) {
+	for tname, tk := range toolbox.AdminTaskList {
+		fmt.Fprintf(rw, "%s:%s:%s", tname, tk.GetStatus(), tk.GetPrev().String())
+	}
+}
+
+//to run a Task by http from the querystring taskname
+//url like /task?taskname=sendmail
+func RunTask(rw http.ResponseWriter, req *http.Request) {
+	req.ParseForm()
+	taskname := req.Form.Get("taskname")
+	if t, ok := toolbox.AdminTaskList[taskname]; ok {
+		err := t.Run()
+		if err != nil {
+			fmt.Fprintf(rw, "%v", err)
+		}
+		fmt.Fprintf(rw, "%s run success,Now the Status is %s", t.GetStatus())
+	} else {
+		fmt.Fprintf(rw, "there's no task which named:%s", taskname)
 	}
 }
 

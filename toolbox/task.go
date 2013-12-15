@@ -1,10 +1,8 @@
 package toolbox
 
 import (
-	"fmt"
 	"log"
 	"math"
-	"net/http"
 	"sort"
 	"strconv"
 	"strings"
@@ -396,28 +394,6 @@ func StopTask() {
 
 func AddTask(taskname string, t Tasker) {
 	AdminTaskList[taskname] = t
-}
-
-func TaskStatus(rw http.ResponseWriter, req *http.Request) {
-	for tname, tk := range AdminTaskList {
-		fmt.Fprintf(rw, "%s:%s:%s", tname, tk.GetStatus(), tk.GetPrev().String())
-	}
-}
-
-//to run a Task by http from the querystring taskname
-//url like /task?taskname=sendmail
-func RunTask(rw http.ResponseWriter, req *http.Request) {
-	req.ParseForm()
-	taskname := req.Form.Get("taskname")
-	if t, ok := AdminTaskList[taskname]; ok {
-		err := t.Run()
-		if err != nil {
-			fmt.Fprintf(rw, "%v", err)
-		}
-		fmt.Fprintf(rw, "%s run success,Now the Status is %s", t.GetStatus())
-	} else {
-		fmt.Fprintf(rw, "there's no task which named:%s", taskname)
-	}
 }
 
 //sort map for tasker
