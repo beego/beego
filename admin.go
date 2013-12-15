@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/astaxie/beego/toolbox"
+	"github.com/astaxie/beego/utils"
 )
 
 var BeeAdminApp *AdminApp
@@ -132,31 +133,31 @@ func ListConf(rw http.ResponseWriter, r *http.Request) {
 				fmt.Fprintln(rw, "BeforeRouter:")
 				if bf, ok := BeeApp.Handlers.filters[BeforeRouter]; ok {
 					for _, f := range bf {
-						fmt.Fprintln(rw, f.pattern, f.filterFunc)
+						fmt.Fprintln(rw, f.pattern, utils.GetFuncName(f.filterFunc))
 					}
 				}
 				fmt.Fprintln(rw, "AfterStatic:")
 				if bf, ok := BeeApp.Handlers.filters[AfterStatic]; ok {
 					for _, f := range bf {
-						fmt.Fprintln(rw, f.pattern, f.filterFunc)
+						fmt.Fprintln(rw, f.pattern, utils.GetFuncName(f.filterFunc))
 					}
 				}
 				fmt.Fprintln(rw, "BeforeExec:")
 				if bf, ok := BeeApp.Handlers.filters[BeforeExec]; ok {
 					for _, f := range bf {
-						fmt.Fprintln(rw, f.pattern, f.filterFunc)
+						fmt.Fprintln(rw, f.pattern, utils.GetFuncName(f.filterFunc))
 					}
 				}
 				fmt.Fprintln(rw, "AfterExec:")
 				if bf, ok := BeeApp.Handlers.filters[AfterExec]; ok {
 					for _, f := range bf {
-						fmt.Fprintln(rw, f.pattern, f.filterFunc)
+						fmt.Fprintln(rw, f.pattern, utils.GetFuncName(f.filterFunc))
 					}
 				}
 				fmt.Fprintln(rw, "FinishRouter:")
 				if bf, ok := BeeApp.Handlers.filters[FinishRouter]; ok {
 					for _, f := range bf {
-						fmt.Fprintln(rw, f.pattern, f.filterFunc)
+						fmt.Fprintln(rw, f.pattern, utils.GetFuncName(f.filterFunc))
 					}
 				}
 			}
