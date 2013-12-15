@@ -426,6 +426,24 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	context.Output.Context = context
 	context.Output.EnableGzip = EnableGzip
 
+	do_filter := func(pos int) (started bool) {
+		if p.enableFilter {
+			if l, ok := p.filters[pos]; ok {
+				for _, filterR := range l {
+					if ok, p := filterR.ValidRouter(r.URL.Path); ok {
+						context.Input.Params = p
+						filterR.filterFunc(context)
+						if w.started {
+							return true
+						}
+					}
+				}
+			}
+		}
+
+        return false
+	}
+
 	if context.Input.IsWebsocket() {
 		context.ResponseWriter = rw
 		context.Output = beecontext.NewOutput(rw)
@@ -436,18 +454,8 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		goto Admin
 	}
 
-	if p.enableFilter {
-		if l, ok := p.filters[BeforeRouter]; ok {
-			for _, filterR := range l {
-				if ok, p := filterR.ValidRouter(r.URL.Path); ok {
-					context.Input.Params = p
-					filterR.filterFunc(context)
-					if w.started {
-						goto Admin
-					}
-				}
-			}
-		}
+	if do_filter(BeforeRouter) {
+		goto Admin
 	}
 
 	//static file server
@@ -516,18 +524,8 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		context.Input.CruSession = GlobalSessions.SessionStart(w, r)
 	}
 
-	if p.enableFilter {
-		if l, ok := p.filters[AfterStatic]; ok {
-			for _, filterR := range l {
-				if ok, p := filterR.ValidRouter(r.URL.Path); ok {
-					context.Input.Params = p
-					filterR.filterFunc(context)
-					if w.started {
-						goto Admin
-					}
-				}
-			}
-		}
+	if do_filter(AfterStatic) {
+		goto Admin
 	}
 
 	if CopyRequestBody {
@@ -592,19 +590,10 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			r.ParseMultipartForm(MaxMemory)
 		}
 		//execute middleware filters
-		if p.enableFilter {
-			if l, ok := p.filters[BeforeExec]; ok {
-				for _, filterR := range l {
-					if ok, p := filterR.ValidRouter(r.URL.Path); ok {
-						context.Input.Params = p
-						filterR.filterFunc(context)
-						if w.started {
-							goto Admin
-						}
-					}
-				}
-			}
+		if do_filter(BeforeExec) {
+			goto Admin
 		}
+
 		//Invoke the request handler
 		vc := reflect.New(runrouter.controllerType)
 
@@ -747,20 +736,12 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 		method = vc.MethodByName("Finish")
 		method.Call(in)
+
 		//execute middleware filters
-		if p.enableFilter {
-			if l, ok := p.filters[AfterExec]; ok {
-				for _, filterR := range l {
-					if ok, p := filterR.ValidRouter(r.URL.Path); ok {
-						context.Input.Params = p
-						filterR.filterFunc(context)
-						if w.started {
-							goto Admin
-						}
-					}
-				}
-			}
+		if do_filter(AfterExec) {
+			goto Admin
 		}
+
 		method = vc.MethodByName("Destructor")
 		method.Call(in)
 	}
@@ -797,20 +778,12 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 							}
 							// set find
 							findrouter = true
+
 							//execute middleware filters
-							if p.enableFilter {
-								if l, ok := p.filters[BeforeExec]; ok {
-									for _, filterR := range l {
-										if ok, p := filterR.ValidRouter(r.URL.Path); ok {
-											context.Input.Params = p
-											filterR.filterFunc(context)
-											if w.started {
-												goto Admin
-											}
-										}
-									}
-								}
+							if do_filter(BeforeExec) {
+								goto Admin
 							}
+
 							//parse params
 							otherurl := requestPath[len("/"+cName+"/"+strings.ToLower(mName)):]
 							if len(otherurl) > 1 {
@@ -853,22 +826,15 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 							}
 							method = vc.MethodByName("Finish")
 							method.Call(in)
+
 							//execute middleware filters
-							if p.enableFilter {
-								if l, ok := p.filters[AfterExec]; ok {
-									for _, filterR := range l {
-										if ok, p := filterR.ValidRouter(r.URL.Path); ok {
-											context.Input.Params = p
-											filterR.filterFunc(context)
-											if w.started {
-												goto Admin
-											}
-										}
-									}
-								}
+							if do_filter(AfterExec) {
+								goto Admin
 							}
+
 							method = vc.MethodByName("Destructor")
 							method.Call(in)
+
 							goto Admin
 						}
 					}
@@ -883,19 +849,8 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 Admin:
-	if p.enableFilter {
-		if l, ok := p.filters[FinishRouter]; ok {
-			for _, filterR := range l {
-				if ok, p := filterR.ValidRouter(r.URL.Path); ok {
-					context.Input.Params = p
-					filterR.filterFunc(context)
-					if w.started {
-						break
-					}
-				}
-			}
-		}
-	}
+	do_filter(FinishRouter)
+
 	//admin module record QPS
 	if EnableAdmin {
 		timeend := time.Since(starttime)
