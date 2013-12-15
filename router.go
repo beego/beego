@@ -473,7 +473,39 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				middleware.Exception("403", rw, r, "403 Forbidden")
 				goto Admin
 			}
-			http.ServeFile(w, r, file)
+			
+			//This block obtained from (https://github.com/smithfox/beego) - it should probably get merged into astaxie/beego after a pull request
+			isStaticFileToCompress := false
+			if StaticExtensionsToGzip != nil && len(StaticExtensionsToGzip) > 0 {
+				for _, statExtension := range StaticExtensionsToGzip {
+					if strings.HasSuffix(strings.ToLower(file), strings.ToLower(statExtension)) {
+						isStaticFileToCompress = true
+						break
+					}
+				}
+			}
+
+			if isStaticFileToCompress {
+				if EnableGzip {
+					w.contentEncoding = GetAcceptEncodingZip(r)
+				}
+
+				memzipfile, err := OpenMemZipFile(file, w.contentEncoding)
+				if err != nil {
+					return
+				}
+
+				w.InitHeadContent(finfo.Size())
+
+				if strings.HasSuffix(file, ".mustache") {
+					w.Header().Set("Content-Type", "text/html; charset=utf-8") //FIXME: hardcode
+				}
+
+				http.ServeContent(w, r, file, finfo.ModTime(), memzipfile)
+			} else {
+				http.ServeFile(w, r, file)
+			}
+			
 			w.started = true
 			goto Admin
 		}
@@ -901,11 +933,22 @@ type responseWriter struct {
 	writer  http.ResponseWriter
 	started bool
 	status  int
+	contentEncoding string
 }
 
 // Header returns the header map that will be sent by WriteHeader.
 func (w *responseWriter) Header() http.Header {
 	return w.writer.Header()
+}
+
+func (w *responseWriter) InitHeadContent(contentlength int64) {
+	if w.contentEncoding == "gzip" {
+		w.Header().Set("Content-Encoding", "gzip")
+	} else if w.contentEncoding == "deflate" {
+		w.Header().Set("Content-Encoding", "deflate")
+	} else {
+		w.Header().Set("Content-Length", strconv.FormatInt(contentlength, 10))
+	}
 }
 
 // Write writes the data to the connection as part of an HTTP reply,
