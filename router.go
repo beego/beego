@@ -459,6 +459,12 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		context.Output = beecontext.NewOutput(rw)
 	}
 
+	// session init
+	if SessionOn {
+		context.Input.CruSession = GlobalSessions.SessionStart(w, r)
+		defer context.Input.CruSession.SessionRelease()
+	}
+
 	if !utils.InSlice(strings.ToLower(r.Method), HTTPMETHOD) {
 		http.Error(w, "Method Not Allowed", 405)
 		goto Admin
@@ -527,12 +533,6 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			w.started = true
 			goto Admin
 		}
-	}
-
-	// session init after static file
-	if SessionOn {
-		context.Input.CruSession = GlobalSessions.SessionStart(w, r)
-		defer context.Input.CruSession.SessionRelease()
 	}
 
 	if do_filter(AfterStatic) {
