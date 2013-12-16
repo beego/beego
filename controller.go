@@ -138,6 +138,7 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		err := BeeTemplates[c.TplNames].ExecuteTemplate(newbytes, c.TplNames, c.Data)
 		if err != nil {
 			Trace("template Execute err:", err)
+			return nil, err
 		}
 		tplcontent, _ := ioutil.ReadAll(newbytes)
 		c.Data["LayoutContent"] = template.HTML(string(tplcontent))
@@ -145,6 +146,7 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		err = BeeTemplates[c.Layout].ExecuteTemplate(ibytes, c.Layout, c.Data)
 		if err != nil {
 			Trace("template Execute err:", err)
+			return nil, err
 		}
 		icontent, _ := ioutil.ReadAll(ibytes)
 		return icontent, nil
@@ -163,6 +165,7 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		err := BeeTemplates[c.TplNames].ExecuteTemplate(ibytes, c.TplNames, c.Data)
 		if err != nil {
 			Trace("template Execute err:", err)
+			return nil, err
 		}
 		icontent, _ := ioutil.ReadAll(ibytes)
 		return icontent, nil

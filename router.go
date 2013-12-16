@@ -26,7 +26,10 @@ const (
 	FinishRouter
 )
 
-var HTTPMETHOD = []string{"get", "post", "put", "delete", "patch", "options", "head"}
+var (
+	HTTPMETHOD = []string{"get", "post", "put", "delete", "patch", "options", "head"}
+	errorType  = reflect.TypeOf((*error)(nil)).Elem()
+)
 
 type controllerInfo struct {
 	pattern        string
@@ -441,7 +444,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			}
 		}
 
-        return false
+		return false
 	}
 
 	if context.Input.IsWebsocket() {
@@ -481,7 +484,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				middleware.Exception("403", rw, r, "403 Forbidden")
 				goto Admin
 			}
-			
+
 			//This block obtained from (https://github.com/smithfox/beego) - it should probably get merged into astaxie/beego after a pull request
 			isStaticFileToCompress := false
 			if StaticExtensionsToGzip != nil && len(StaticExtensionsToGzip) > 0 {
@@ -513,7 +516,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			} else {
 				http.ServeFile(w, r, file)
 			}
-			
+
 			w.started = true
 			goto Admin
 		}
@@ -729,7 +732,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			if !w.started && !context.Input.IsWebsocket() {
 				if AutoRender {
 					method = vc.MethodByName("Render")
-					method.Call(in)
+					callMethodWithError(method, in)
 				}
 			}
 		}
@@ -885,9 +888,9 @@ func (p *ControllerRegistor) getErrorHandler(errorCode string) func(rw http.Resp
 //responseWriter is a wrapper for the http.ResponseWriter
 //started set to true if response was written to then don't execute other handler
 type responseWriter struct {
-	writer  http.ResponseWriter
-	started bool
-	status  int
+	writer          http.ResponseWriter
+	started         bool
+	status          int
 	contentEncoding string
 }
 
@@ -919,4 +922,16 @@ func (w *responseWriter) WriteHeader(code int) {
 	w.status = code
 	w.started = true
 	w.writer.WriteHeader(code)
+}
+
+// call method and panic with error if error is in result params
+func callMethodWithError(method reflect.Value, params []reflect.Value) {
+	results := method.Call(params)
+	if len(results) > 0 {
+		for _, result := range results {
+			if result.Type() == errorType && !result.IsNil() {
+				panic(result.Interface().(error))
+			}
+		}
+	}
 }
