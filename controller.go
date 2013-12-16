@@ -181,7 +181,7 @@ func (c *Controller) Abort(code string) {
 }
 
 func (c *Controller) StopRun() {
-	panic("")
+	panic("StopRun")
 }
 
 func (c *Controller) UrlFor(endpoint string, values ...string) string {
