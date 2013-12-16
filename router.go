@@ -376,6 +376,12 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 					if !RecoverPanic {
 						panic(err)
 					} else {
+						if ErrorsShow {
+							if handler, ok := middleware.ErrorMaps[fmt.Sprint(err)]; ok {
+								handler(rw, r)
+								return
+							}
+						}
 						var stack string
 						Critical("Handler crashed with error", err)
 						for i := 1; ; i++ {
@@ -389,12 +395,13 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 						middleware.ShowErr(err, rw, r, stack)
 					}
 				} else {
-					if ErrorsShow {
-						handler := p.getErrorHandler(fmt.Sprint(err))
-						handler(rw, r)
+					if !RecoverPanic {
+						panic(err)
 					} else {
-						if !RecoverPanic {
-							panic(err)
+						// in production model show all infomation
+						if ErrorsShow {
+							handler := p.getErrorHandler(fmt.Sprint(err))
+							handler(rw, r)
 						} else {
 							Critical("Handler crashed with error", err)
 							for i := 1; ; i++ {
@@ -525,6 +532,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	// session init after static file
 	if SessionOn {
 		context.Input.CruSession = GlobalSessions.SessionStart(w, r)
+		defer context.Input.CruSession.SessionRelease()
 	}
 
 	if do_filter(AfterStatic) {
@@ -744,9 +752,6 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		if do_filter(AfterExec) {
 			goto Admin
 		}
-
-		method = vc.MethodByName("Destructor")
-		method.Call(in)
 	}
 
 	//start autorouter
@@ -834,9 +839,6 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 							if do_filter(AfterExec) {
 								goto Admin
 							}
-
-							method = vc.MethodByName("Destructor")
-							method.Call(in)
 
 							goto Admin
 						}

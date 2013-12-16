@@ -16,18 +16,24 @@ type Context struct {
 func (ctx *Context) Redirect(status int, localurl string) {
 	ctx.Output.Header("Location", localurl)
 	ctx.Output.SetStatus(status)
+	ctx.Output.Body([]byte(" "))
 }
 
 func (ctx *Context) Abort(status int, body string) {
 	ctx.Output.SetStatus(status)
-	ctx.Output.Body([]byte(body))
-
+	// first panic from ErrorMaps, is is user defined error functions.
+	if _, ok := middleware.ErrorMaps[body]; ok {
+		panic(body)
+	}
+	// second panic from HTTPExceptionMaps, it is system defined functions.
 	if e, ok := middleware.HTTPExceptionMaps[status]; ok {
 		if len(body) >= 1 {
 			e.Description = body
 		}
 		panic(e)
 	}
+	// last panic user string
+	panic(body)
 }
 
 func (ctx *Context) WriteString(content string) {

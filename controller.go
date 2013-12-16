@@ -70,12 +70,6 @@ func (c *Controller) Finish() {
 
 }
 
-func (c *Controller) Destructor() {
-	if c.CruSession != nil {
-		c.CruSession.SessionRelease()
-	}
-}
-
 func (c *Controller) Get() {
 	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", 405)
 }
@@ -178,7 +172,16 @@ func (c *Controller) Redirect(url string, code int) {
 }
 
 func (c *Controller) Abort(code string) {
-	panic(code)
+	status, err := strconv.Atoi(code)
+	if err == nil {
+		c.Ctx.Abort(status, code)
+	} else {
+		c.Ctx.Abort(200, code)
+	}
+}
+
+func (c *Controller) StopRun() {
+	panic("")
 }
 
 func (c *Controller) UrlFor(endpoint string, values ...string) string {
