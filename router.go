@@ -824,7 +824,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 							if !w.started && !context.Input.IsWebsocket() {
 								if AutoRender {
 									method = vc.MethodByName("Render")
-									method.Call(in)
+									callMethodWithError(method, in)
 								}
 							}
 							method = vc.MethodByName("Finish")
