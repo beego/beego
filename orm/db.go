@@ -1135,6 +1135,8 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 
 	query := fmt.Sprintf("SELECT %s FROM %s%s%s T0 %s%s%s%s", sels, Q, mi.table, Q, join, where, orderBy, limit)
 
+	d.ins.ReplaceMarks(&query)
+
 	var rs *sql.Rows
 	if r, err := q.Query(query, args...); err != nil {
 		return 0, err

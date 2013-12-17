@@ -766,6 +766,10 @@ func TestValues(t *testing.T) {
 		throwFail(t, AssertIs(maps[0]["Profile__Age"], 28))
 		throwFail(t, AssertIs(maps[2]["Profile__Age"], nil))
 	}
+
+	num, err = qs.Filter("UserName", "slene").Values(&maps)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
 }
 
 func TestValuesList(t *testing.T) {
