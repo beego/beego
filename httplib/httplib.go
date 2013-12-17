@@ -2,9 +2,11 @@ package httplib
 
 import (
 	"bytes"
+	"code.google.com/p/mahonia"
 	"crypto/tls"
 	"encoding/json"
 	"encoding/xml"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net"
@@ -23,7 +25,7 @@ func Get(url string) *BeegoHttpRequest {
 	req.Method = "GET"
 	req.Header = http.Header{}
 	req.Header.Set("User-Agent", defaultUserAgent)
-	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil}
+	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil, `utf8`}
 }
 
 func Post(url string) *BeegoHttpRequest {
@@ -31,7 +33,7 @@ func Post(url string) *BeegoHttpRequest {
 	req.Method = "POST"
 	req.Header = http.Header{}
 	req.Header.Set("User-Agent", defaultUserAgent)
-	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil}
+	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil, `utf8`}
 }
 
 func Put(url string) *BeegoHttpRequest {
@@ -39,7 +41,7 @@ func Put(url string) *BeegoHttpRequest {
 	req.Method = "PUT"
 	req.Header = http.Header{}
 	req.Header.Set("User-Agent", defaultUserAgent)
-	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil}
+	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil, `utf8`}
 }
 
 func Delete(url string) *BeegoHttpRequest {
@@ -47,7 +49,7 @@ func Delete(url string) *BeegoHttpRequest {
 	req.Method = "DELETE"
 	req.Header = http.Header{}
 	req.Header.Set("User-Agent", defaultUserAgent)
-	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil}
+	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil, `utf8`}
 }
 
 func Head(url string) *BeegoHttpRequest {
@@ -55,7 +57,7 @@ func Head(url string) *BeegoHttpRequest {
 	req.Method = "HEAD"
 	req.Header = http.Header{}
 	req.Header.Set("User-Agent", defaultUserAgent)
-	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil}
+	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil, `utf8`}
 }
 
 type BeegoHttpRequest struct {
@@ -66,6 +68,7 @@ type BeegoHttpRequest struct {
 	connectTimeout   time.Duration
 	readWriteTimeout time.Duration
 	tlsClientConfig  *tls.Config
+	charset          string
 }
 
 func (b *BeegoHttpRequest) Debug(isdebug bool) *BeegoHttpRequest {
@@ -169,6 +172,22 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 	return resp, nil
 }
 
+func (b *BeegoHttpRequest) SetResponseCharsetMust(charset string) *BeegoHttpRequest {
+	if mahonia.GetCharset(charset) == nil {
+		panic(fmt.Errorf("error: charset \"%s\" set incorrectly", charset))
+	}
+	b.charset = strings.ToLower(charset)
+	return b
+}
+
+func (b *BeegoHttpRequest) SetResponseCharset(charset string) (*BeegoHttpRequest, error) {
+	if mahonia.GetCharset(charset) == nil {
+		return b, fmt.Errorf("error: charset %s set incorrectly", charset)
+	}
+	b.charset = strings.ToLower(charset)
+	return b, nil
+}
+
 func (b *BeegoHttpRequest) String() (string, error) {
 	data, err := b.Bytes()
 	if err != nil {
@@ -187,10 +206,18 @@ func (b *BeegoHttpRequest) Bytes() ([]byte, error) {
 		return nil, nil
 	}
 	defer resp.Body.Close()
-	data, err := ioutil.ReadAll(resp.Body)
+	var drdr io.Reader
+	if b.charset != `utf8` && b.charset != `utf-8` {
+		de := mahonia.NewDecoder(b.charset)
+		drdr = de.NewReader(resp.Body)
+	} else {
+		drdr = resp.Body
+	}
+	data, err := ioutil.ReadAll(drdr)
 	if err != nil {
 		return nil, err
 	}
+
 	return data, nil
 }
 
@@ -209,7 +236,14 @@ func (b *BeegoHttpRequest) ToFile(filename string) error {
 		return nil
 	}
 	defer resp.Body.Close()
-	_, err = io.Copy(f, resp.Body)
+	var drdr io.Reader
+	if b.charset != `utf8` && b.charset != `utf-8` {
+		de := mahonia.NewDecoder(b.charset)
+		drdr = de.NewReader(resp.Body)
+	} else {
+		drdr = resp.Body
+	}
+	_, err = io.Copy(f, drdr)
 	if err != nil {
 		return err
 	}
