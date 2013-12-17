@@ -526,10 +526,6 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 				w.InitHeadContent(finfo.Size())
 
-				if strings.HasSuffix(file, ".mustache") {
-					w.Header().Set("Content-Type", "text/html; charset=utf-8") //FIXME: hardcode
-				}
-
 				http.ServeContent(w, r, file, finfo.ModTime(), memzipfile)
 			} else {
 				http.ServeFile(w, r, file)
