@@ -211,6 +211,7 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingM
 	}
 }
 
+// add auto router to controller
 func (p *ControllerRegistor) AddAuto(c ControllerInterface) {
 	p.enableAuto = true
 	reflectVal := reflect.ValueOf(c)
@@ -424,8 +425,9 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	starttime := time.Now()
 	requestPath := r.URL.Path
-	var runrouter *controllerInfo
+	var runrouter reflect.Type
 	var findrouter bool
+	var runMethod string
 	params := make(map[string]string)
 
 	w := &responseWriter{writer: rw}
@@ -550,8 +552,9 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	for _, route := range p.fixrouters {
 		n := len(requestPath)
 		if requestPath == route.pattern {
-			runrouter = route
+			runrouter = route.controllerType
 			findrouter = true
+			runMethod = p.getRunMethod(r.Method, route)
 			break
 		}
 		// pattern /admin   url /admin 200  /admin/ 404
@@ -591,15 +594,64 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				//reassemble query params and add to RawQuery
 				r.URL.RawQuery = url.Values(values).Encode()
 			}
-			runrouter = route
+			runrouter = route.controllerType
 			findrouter = true
+			context.Input.Params = params
+			runMethod = p.getRunMethod(r.Method, route)
 			break
 		}
 	}
 
-	context.Input.Params = params
+	if !findrouter && p.enableAuto {
+		// deal with url with diffirent ext
+		// /controller/simple
+		// /controller/simple.html
+		// /controller/simple.json
+		// /controller/simple.rss
+		lastindex := strings.LastIndex(requestPath, "/")
+		lastsub := requestPath[lastindex+1:]
+		if subindex := strings.LastIndex(lastsub, "."); subindex != -1 {
+			context.Input.Params[":ext"] = lastsub[subindex+1:]
+			r.URL.Query().Add(":ext", lastsub[subindex+1:])
+			r.URL.RawQuery = r.URL.Query().Encode()
+			requestPath = requestPath[:len(requestPath)-len(lastsub[subindex:])]
+		}
+		for cName, methodmap := range p.autoRouter {
+			// if prev already find the router break
+			if findrouter {
+				break
+			}
+			if strings.ToLower(requestPath) == "/"+cName {
+				http.Redirect(w, r, requestPath+"/", 301)
+				goto Admin
+			}
+			// if there's no action, set the default action to index
+			if strings.ToLower(requestPath) == "/"+cName+"/" {
+				requestPath = requestPath + "index"
+			}
+			// if the request path start with controllerName
+			if strings.HasPrefix(strings.ToLower(requestPath), "/"+cName+"/") {
+				for mName, controllerType := range methodmap {
+					if strings.ToLower(requestPath) == "/"+cName+"/"+strings.ToLower(mName) ||
+						(strings.HasPrefix(strings.ToLower(requestPath), "/"+cName+"/"+strings.ToLower(mName)) &&
+							requestPath[len("/"+cName+"/"+strings.ToLower(mName)):len("/"+cName+"/"+strings.ToLower(mName))+1] == "/") {
+						runrouter = controllerType
+						runMethod = mName
+						findrouter = true
+						break
+					}
+				}
+			}
+		}
+	}
 
-	if runrouter != nil {
+	//if no matches to url, throw a not found exception
+	if !findrouter {
+		middleware.Exception("404", rw, r, "")
+		goto Admin
+	}
+
+	if findrouter {
 		if r.Method == "POST" {
 			r.ParseMultipartForm(MaxMemory)
 		}
@@ -609,14 +661,15 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}
 
 		//Invoke the request handler
-		vc := reflect.New(runrouter.controllerType)
+		vc := reflect.New(runrouter)
 
 		//call the controller init function
 		method := vc.MethodByName("Init")
-		in := make([]reflect.Value, 3)
+		in := make([]reflect.Value, 4)
 		in[0] = reflect.ValueOf(context)
-		in[1] = reflect.ValueOf(runrouter.controllerType.Name())
-		in[2] = reflect.ValueOf(vc.Interface())
+		in[1] = reflect.ValueOf(runrouter.Name())
+		in[2] = reflect.ValueOf(runMethod)
+		in[3] = reflect.ValueOf(vc.Interface())
 		method.Call(in)
 
 		//if XSRF is Enable then check cookie where there has any cookie in the  request's cookie _csrf
@@ -636,110 +689,12 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		method = vc.MethodByName("Prepare")
 		method.Call(in)
 
-		//if response has written,yes don't run next
 		if !w.started {
-			if r.Method == "GET" {
-				if runrouter.hasMethod {
-					if m, ok := runrouter.methods["get"]; ok {
-						method = vc.MethodByName(m)
-					} else if m, ok = runrouter.methods["*"]; ok {
-						method = vc.MethodByName(m)
-					} else {
-						method = vc.MethodByName("Get")
-					}
-				} else {
-					method = vc.MethodByName("Get")
-				}
-				method.Call(in)
-			} else if r.Method == "HEAD" {
-				if runrouter.hasMethod {
-					if m, ok := runrouter.methods["head"]; ok {
-						method = vc.MethodByName(m)
-					} else if m, ok = runrouter.methods["*"]; ok {
-						method = vc.MethodByName(m)
-					} else {
-						method = vc.MethodByName("Head")
-					}
-				} else {
-					method = vc.MethodByName("Head")
-				}
+			//exec main logic
+			method = vc.MethodByName(runMethod)
+			method.Call(in)
 
-				method.Call(in)
-			} else if r.Method == "DELETE" || (r.Method == "POST" && r.Form.Get("_method") == "delete") {
-				if runrouter.hasMethod {
-					if m, ok := runrouter.methods["delete"]; ok {
-						method = vc.MethodByName(m)
-					} else if m, ok = runrouter.methods["*"]; ok {
-						method = vc.MethodByName(m)
-					} else {
-						method = vc.MethodByName("Delete")
-					}
-				} else {
-					method = vc.MethodByName("Delete")
-				}
-				method.Call(in)
-			} else if r.Method == "PUT" || (r.Method == "POST" && r.Form.Get("_method") == "put") {
-				if runrouter.hasMethod {
-					if m, ok := runrouter.methods["put"]; ok {
-						method = vc.MethodByName(m)
-					} else if m, ok = runrouter.methods["*"]; ok {
-						method = vc.MethodByName(m)
-					} else {
-						method = vc.MethodByName("Put")
-					}
-				} else {
-					method = vc.MethodByName("Put")
-				}
-				method.Call(in)
-			} else if r.Method == "POST" {
-				if runrouter.hasMethod {
-					if m, ok := runrouter.methods["post"]; ok {
-						method = vc.MethodByName(m)
-					} else if m, ok = runrouter.methods["*"]; ok {
-						method = vc.MethodByName(m)
-					} else {
-						method = vc.MethodByName("Post")
-					}
-				} else {
-					method = vc.MethodByName("Post")
-				}
-				method.Call(in)
-			} else if r.Method == "PATCH" {
-				if runrouter.hasMethod {
-					if m, ok := runrouter.methods["patch"]; ok {
-						method = vc.MethodByName(m)
-					} else if m, ok = runrouter.methods["*"]; ok {
-						method = vc.MethodByName(m)
-					} else {
-						method = vc.MethodByName("Patch")
-					}
-				} else {
-					method = vc.MethodByName("Patch")
-				}
-				method.Call(in)
-			} else if r.Method == "OPTIONS" {
-				if runrouter.hasMethod {
-					if m, ok := runrouter.methods["options"]; ok {
-						method = vc.MethodByName(m)
-					} else if m, ok = runrouter.methods["*"]; ok {
-						method = vc.MethodByName(m)
-					} else {
-						method = vc.MethodByName("Options")
-					}
-				} else {
-					method = vc.MethodByName("Options")
-				}
-				method.Call(in)
-			}
-			gotofunc := vc.Elem().FieldByName("gotofunc").String()
-			if gotofunc != "" {
-				method = vc.MethodByName(gotofunc)
-				if method.IsValid() {
-					method.Call(in)
-				} else {
-					panic("gotofunc is exists:" + gotofunc)
-				}
-			}
+			//render template
 			if !w.started && !context.Input.IsWebsocket() {
 				if AutoRender {
 					method = vc.MethodByName("Render")
@@ -748,6 +703,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			}
 		}
 
+		// finish all runrouter. release resource
 		method = vc.MethodByName("Finish")
 		method.Call(in)
 
@@ -755,105 +711,6 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		if do_filter(AfterExec) {
 			goto Admin
 		}
-	}
-
-	//start autorouter
-
-	if p.enableAuto {
-		if !findrouter {
-			lastindex := strings.LastIndex(requestPath, "/")
-			lastsub := requestPath[lastindex+1:]
-			if subindex := strings.LastIndex(lastsub, "."); subindex != -1 {
-				context.Input.Params[":ext"] = lastsub[subindex+1:]
-				r.URL.Query().Add(":ext", lastsub[subindex+1:])
-				r.URL.RawQuery = r.URL.Query().Encode()
-				requestPath = requestPath[:len(requestPath)-len(lastsub[subindex:])]
-			}
-			for cName, methodmap := range p.autoRouter {
-
-				if strings.ToLower(requestPath) == "/"+cName {
-					http.Redirect(w, r, requestPath+"/", 301)
-					goto Admin
-				}
-
-				if strings.ToLower(requestPath) == "/"+cName+"/" {
-					requestPath = requestPath + "index"
-				}
-				if strings.HasPrefix(strings.ToLower(requestPath), "/"+cName+"/") {
-					for mName, controllerType := range methodmap {
-						if strings.ToLower(requestPath) == "/"+cName+"/"+strings.ToLower(mName) ||
-							(strings.HasPrefix(strings.ToLower(requestPath), "/"+cName+"/"+strings.ToLower(mName)) &&
-								requestPath[len("/"+cName+"/"+strings.ToLower(mName)):len("/"+cName+"/"+strings.ToLower(mName))+1] == "/") {
-							if r.Method == "POST" {
-								r.ParseMultipartForm(MaxMemory)
-							}
-							// set find
-							findrouter = true
-
-							//execute middleware filters
-							if do_filter(BeforeExec) {
-								goto Admin
-							}
-
-							//parse params
-							otherurl := requestPath[len("/"+cName+"/"+strings.ToLower(mName)):]
-							if len(otherurl) > 1 {
-								plist := strings.Split(otherurl, "/")
-								for k, v := range plist[1:] {
-									params[strconv.Itoa(k)] = v
-								}
-							}
-							//Invoke the request handler
-							vc := reflect.New(controllerType)
-
-							//call the controller init function
-							init := vc.MethodByName("Init")
-							in := make([]reflect.Value, 3)
-							in[0] = reflect.ValueOf(context)
-							in[1] = reflect.ValueOf(controllerType.Name())
-							in[2] = reflect.ValueOf(vc.Interface())
-							init.Call(in)
-							//call prepare function
-							in = make([]reflect.Value, 0)
-							method := vc.MethodByName("Prepare")
-							method.Call(in)
-							method = vc.MethodByName(mName)
-							method.Call(in)
-							//if XSRF is Enable then check cookie where there has any cookie in the  request's cookie _csrf
-							if EnableXSRF {
-								method = vc.MethodByName("XsrfToken")
-								method.Call(in)
-								if r.Method == "POST" || r.Method == "DELETE" || r.Method == "PUT" ||
-									(r.Method == "POST" && (r.Form.Get("_method") == "delete" || r.Form.Get("_method") == "put")) {
-									method = vc.MethodByName("CheckXsrfCookie")
-									method.Call(in)
-								}
-							}
-							if !w.started && !context.Input.IsWebsocket() {
-								if AutoRender {
-									method = vc.MethodByName("Render")
-									callMethodWithError(method, in)
-								}
-							}
-							method = vc.MethodByName("Finish")
-							method.Call(in)
-
-							//execute middleware filters
-							if do_filter(AfterExec) {
-								goto Admin
-							}
-
-							goto Admin
-						}
-					}
-				}
-			}
-		}
-	}
-
-	//if no matches to url, throw a not found exception
-	if !findrouter {
-		middleware.Exception("404", rw, r, "")
 	}
 
 Admin:
@@ -864,7 +721,7 @@ Admin:
 		timeend := time.Since(starttime)
 		if FilterMonitorFunc(r.Method, requestPath, timeend) {
 			if runrouter != nil {
-				go toolbox.StatisticsMap.AddStatistics(r.Method, requestPath, runrouter.controllerType.Name(), timeend)
+				go toolbox.StatisticsMap.AddStatistics(r.Method, requestPath, runrouter.Name(), timeend)
 			} else {
 				go toolbox.StatisticsMap.AddStatistics(r.Method, requestPath, "", timeend)
 			}
@@ -888,6 +745,21 @@ func (p *ControllerRegistor) getErrorHandler(errorCode string) func(rw http.Resp
 	}
 
 	return handler
+}
+
+func (p *ControllerRegistor) getRunMethod(method string, router *controllerInfo) string {
+	method = strings.ToLower(method)
+	if router.hasMethod {
+		if m, ok := router.methods[method]; ok {
+			return m
+		} else if m, ok = router.methods["*"]; ok {
+			return m
+		} else {
+			return strings.Title(method)
+		}
+	} else {
+		return strings.Title(method)
+	}
 }
 
 //responseWriter is a wrapper for the http.ResponseWriter
