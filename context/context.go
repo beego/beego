@@ -16,7 +16,6 @@ type Context struct {
 func (ctx *Context) Redirect(status int, localurl string) {
 	ctx.Output.Header("Location", localurl)
 	ctx.Output.SetStatus(status)
-	ctx.Output.Body([]byte(" "))
 }
 
 func (ctx *Context) Abort(status int, body string) {
