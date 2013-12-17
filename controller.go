@@ -412,11 +412,8 @@ func (c *Controller) XsrfFormHtml() string {
 		c._xsrf_token + "\"/>"
 }
 
-func (c *Controller) GoToFunc(funcname string) {
-	if funcname[0] < 65 || funcname[0] > 90 {
-		panic("GoToFunc should exported function")
-	}
-	c.gotofunc = funcname
+func (c *Controller) GetControllerAndAction() (controllerName, actionName string) {
+	return c.controllerName, c.actionName
 }
 
 //utils func for controller internal
