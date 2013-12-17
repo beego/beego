@@ -24,6 +24,10 @@ import (
 	"github.com/astaxie/beego/session"
 )
 
+var (
+	USERSTOPRUN = errors.New("User stop run")
+)
+
 type Controller struct {
 	Ctx           *context.Context
 	Data          map[interface{}]interface{}
@@ -181,7 +185,7 @@ func (c *Controller) Abort(code string) {
 }
 
 func (c *Controller) StopRun() {
-	panic("StopRun")
+	panic(USERSTOPRUN)
 }
 
 func (c *Controller) UrlFor(endpoint string, values ...string) string {

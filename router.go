@@ -369,7 +369,7 @@ func (p *ControllerRegistor) UrlFor(endpoint string, values ...string) string {
 func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err := recover(); err != nil {
-			if fmt.Sprint(err) == "StopRun" {
+			if err == USERSTOPRUN {
 				return
 			}
 			if _, ok := err.(middleware.HTTPException); ok {
