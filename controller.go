@@ -24,22 +24,27 @@ import (
 	"github.com/astaxie/beego/session"
 )
 
+var (
+	USERSTOPRUN = errors.New("User stop run")
+)
+
 type Controller struct {
-	Ctx           *context.Context
-	Data          map[interface{}]interface{}
-	ChildName     string
-	TplNames      string
-	Layout        string
-	TplExt        string
-	_xsrf_token   string
-	gotofunc      string
-	CruSession    session.SessionStore
-	XSRFExpire    int
-	AppController interface{}
+	Ctx            *context.Context
+	Data           map[interface{}]interface{}
+	controllerName string
+	actionName     string
+	TplNames       string
+	Layout         string
+	TplExt         string
+	_xsrf_token    string
+	gotofunc       string
+	CruSession     session.SessionStore
+	XSRFExpire     int
+	AppController  interface{}
 }
 
 type ControllerInterface interface {
-	Init(ct *context.Context, childName string, app interface{})
+	Init(ct *context.Context, controllerName, actionName string, app interface{})
 	Prepare()
 	Get()
 	Post()
@@ -52,11 +57,12 @@ type ControllerInterface interface {
 	Render() error
 }
 
-func (c *Controller) Init(ctx *context.Context, childName string, app interface{}) {
+func (c *Controller) Init(ctx *context.Context, controllerName, actionName string, app interface{}) {
 	c.Data = make(map[interface{}]interface{})
 	c.Layout = ""
 	c.TplNames = ""
-	c.ChildName = childName
+	c.controllerName = controllerName
+	c.actionName = actionName
 	c.Ctx = ctx
 	c.TplExt = "tpl"
 	c.AppController = app
@@ -119,7 +125,7 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 	//if the controller has set layout, then first get the tplname's content set the content to the layout
 	if c.Layout != "" {
 		if c.TplNames == "" {
-			c.TplNames = c.ChildName + "/" + strings.ToLower(c.Ctx.Request.Method) + "." + c.TplExt
+			c.TplNames = strings.ToLower(c.controllerName) + "/" + strings.ToLower(c.actionName) + "." + c.TplExt
 		}
 		if RunMode == "dev" {
 			BuildTemplate(ViewsPath)
@@ -146,7 +152,7 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		return icontent, nil
 	} else {
 		if c.TplNames == "" {
-			c.TplNames = c.ChildName + "/" + strings.ToLower(c.Ctx.Request.Method) + "." + c.TplExt
+			c.TplNames = strings.ToLower(c.controllerName) + "/" + strings.ToLower(c.actionName) + "." + c.TplExt
 		}
 		if RunMode == "dev" {
 			BuildTemplate(ViewsPath)
@@ -181,7 +187,7 @@ func (c *Controller) Abort(code string) {
 }
 
 func (c *Controller) StopRun() {
-	panic("")
+	panic(USERSTOPRUN)
 }
 
 func (c *Controller) UrlFor(endpoint string, values ...string) string {
