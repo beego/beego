@@ -464,7 +464,6 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	if context.Input.IsWebsocket() {
 		context.ResponseWriter = rw
-		context.Output = beecontext.NewOutput(rw)
 	}
 
 	// defined filter function
