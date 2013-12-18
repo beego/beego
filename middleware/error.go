@@ -294,6 +294,11 @@ func RegisterErrorHander() {
 
 func Exception(errcode string, w http.ResponseWriter, r *http.Request, msg string) {
 	if h, ok := ErrorMaps[errcode]; ok {
+		isint, err := strconv.Atoi(errcode)
+		if err != nil {
+			isint = 500
+		}
+		w.WriteHeader(isint)
 		h(w, r)
 		return
 	} else {
