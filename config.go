@@ -13,23 +13,23 @@ import (
 )
 
 var (
-	BeeApp        *App
-	AppName       string
-	AppPath       string
-	AppConfigPath string
-	StaticDir     map[string]string
-	TemplateCache map[string]*template.Template
+	BeeApp                 *App
+	AppName                string
+	AppPath                string
+	AppConfigPath          string
+	StaticDir              map[string]string
+	TemplateCache          map[string]*template.Template
 	StaticExtensionsToGzip []string //Files which should also be compressed with gzip (.js, .css, etc)
-	HttpAddr      string
-	HttpPort      int
-	HttpTLS       bool
-	HttpCertFile  string
-	HttpKeyFile   string
-	RecoverPanic  bool
-	AutoRender    bool
-	ViewsPath     string
-	RunMode       string //"dev" or "prod"
-	AppConfig     config.ConfigContainer
+	HttpAddr               string
+	HttpPort               int
+	HttpTLS                bool
+	HttpCertFile           string
+	HttpKeyFile            string
+	RecoverPanic           bool
+	AutoRender             bool
+	ViewsPath              string
+	RunMode                string //"dev" or "prod"
+	AppConfig              config.ConfigContainer
 	//related to session
 	GlobalSessions        *session.Manager //GlobalSessions
 	SessionOn             bool             // whether auto start session,default is false
@@ -69,7 +69,7 @@ func init() {
 
 	StaticDir = make(map[string]string)
 	StaticDir["/static"] = "static"
-	
+
 	StaticExtensionsToGzip = []string{".css", ".js"}
 
 	TemplateCache = make(map[string]*template.Template)
@@ -117,7 +117,7 @@ func init() {
 
 	BeegoServerName = "beegoServer"
 
-	EnableAdmin = true
+	EnableAdmin = false
 	AdminHttpAddr = "127.0.0.1"
 	AdminHttpPort = 8088
 
@@ -276,7 +276,7 @@ func ParseConfig() (err error) {
 				}
 			}
 		}
-		
+
 		if sgz := AppConfig.String("StaticExtensionsToGzip"); sgz != "" {
 			extensions := strings.Split(sgz, ",")
 			if len(extensions) > 0 {
