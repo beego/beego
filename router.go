@@ -406,6 +406,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 						if ErrorsShow {
 							handler := p.getErrorHandler(fmt.Sprint(err))
 							handler(rw, r)
+							return
 						} else {
 							Critical("Handler crashed with error", err)
 							for i := 1; ; i++ {
