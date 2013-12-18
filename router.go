@@ -667,50 +667,45 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 		//Invoke the request handler
 		vc := reflect.New(runrouter)
+		execController, ok := vc.Interface().(ControllerInterface)
+		if !ok {
+			panic("controller is not ControllerInterface")
+		}
 
 		//call the controller init function
-		method := vc.MethodByName("Init")
-		in := make([]reflect.Value, 4)
-		in[0] = reflect.ValueOf(context)
-		in[1] = reflect.ValueOf(runrouter.Name())
-		in[2] = reflect.ValueOf(runMethod)
-		in[3] = reflect.ValueOf(vc.Interface())
-		method.Call(in)
+		execController.Init(context, runrouter.Name(), runMethod, vc.Interface())
 
 		//if XSRF is Enable then check cookie where there has any cookie in the  request's cookie _csrf
 		if EnableXSRF {
-			in = make([]reflect.Value, 0)
-			method = vc.MethodByName("XsrfToken")
-			method.Call(in)
+			execController.XsrfToken()
 			if r.Method == "POST" || r.Method == "DELETE" || r.Method == "PUT" ||
 				(r.Method == "POST" && (r.Form.Get("_method") == "delete" || r.Form.Get("_method") == "put")) {
-				method = vc.MethodByName("CheckXsrfCookie")
-				method.Call(in)
+				execController.CheckXsrfCookie()
 			}
 		}
 
 		//call prepare function
-		in = make([]reflect.Value, 0)
-		method = vc.MethodByName("Prepare")
-		method.Call(in)
+		execController.Prepare()
 
 		if !w.started {
 			//exec main logic
-			method = vc.MethodByName(runMethod)
+			in := make([]reflect.Value, 0)
+			method := vc.MethodByName(runMethod)
 			method.Call(in)
 
 			//render template
 			if !w.started && !context.Input.IsWebsocket() {
 				if AutoRender {
-					method = vc.MethodByName("Render")
-					callMethodWithError(method, in)
+					if err := execController.Render(); err != nil {
+						panic(err)
+					}
+
 				}
 			}
 		}
 
 		// finish all runrouter. release resource
-		method = vc.MethodByName("Finish")
-		method.Call(in)
+		execController.Finish()
 
 		//execute middleware filters
 		if do_filter(AfterExec) {
@@ -804,16 +799,4 @@ func (w *responseWriter) WriteHeader(code int) {
 	w.status = code
 	w.started = true
 	w.writer.WriteHeader(code)
-}
-
-// call method and panic with error if error is in result params
-func callMethodWithError(method reflect.Value, params []reflect.Value) {
-	results := method.Call(params)
-	if len(results) > 0 {
-		for _, result := range results {
-			if result.Type() == errorType && !result.IsNil() {
-				panic(result.Interface().(error))
-			}
-		}
-	}
 }

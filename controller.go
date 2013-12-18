@@ -55,6 +55,8 @@ type ControllerInterface interface {
 	Options()
 	Finish()
 	Render() error
+	XsrfToken() string
+	CheckXsrfCookie() bool
 }
 
 func (c *Controller) Init(ctx *context.Context, controllerName, actionName string, app interface{}) {
