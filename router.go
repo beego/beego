@@ -634,6 +634,14 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 						runrouter = controllerType
 						runMethod = mName
 						findrouter = true
+						//parse params
+						otherurl := requestPath[len("/"+cName+"/"+strings.ToLower(mName)):]
+						if len(otherurl) > 1 {
+							plist := strings.Split(otherurl, "/")
+							for k, v := range plist[1:] {
+								context.Input.Params[strconv.Itoa(k)] = v
+							}
+						}
 						break
 					}
 				}

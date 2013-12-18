@@ -19,6 +19,10 @@ func (this *TestController) List() {
 	this.Ctx.Output.Body([]byte("i am list"))
 }
 
+func (this *TestController) Params() {
+	this.Ctx.Output.Body([]byte(this.Ctx.Input.Params["0"] + this.Ctx.Input.Params["1"] + this.Ctx.Input.Params["2"]))
+}
+
 func (this *TestController) Myext() {
 	this.Ctx.Output.Body([]byte(this.Ctx.Input.Param(":ext")))
 }
@@ -85,6 +89,18 @@ func TestAutoFunc(t *testing.T) {
 	handler.AddAuto(&TestController{})
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != "i am list" {
+		t.Errorf("user define func can't run")
+	}
+}
+
+func TestAutoFuncParams(t *testing.T) {
+	r, _ := http.NewRequest("GET", "/test/params/2009/11/12", nil)
+	w := httptest.NewRecorder()
+
+	handler := NewControllerRegistor()
+	handler.AddAuto(&TestController{})
+	handler.ServeHTTP(w, r)
+	if w.Body.String() != "20091112" {
 		t.Errorf("user define func can't run")
 	}
 }
