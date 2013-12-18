@@ -14,28 +14,28 @@ type BeegoInput struct {
 	CruSession  session.SessionStore
 	Params      map[string]string
 	Data        map[interface{}]interface{}
-	req         *http.Request
+	Request     *http.Request
 	RequestBody []byte
 }
 
 func NewInput(req *http.Request) *BeegoInput {
 	return &BeegoInput{
-		Params: make(map[string]string),
-		Data:   make(map[interface{}]interface{}),
-		req:    req,
+		Params:  make(map[string]string),
+		Data:    make(map[interface{}]interface{}),
+		Request: req,
 	}
 }
 
 func (input *BeegoInput) Protocol() string {
-	return input.req.Proto
+	return input.Request.Proto
 }
 
 func (input *BeegoInput) Uri() string {
-	return input.req.RequestURI
+	return input.Request.RequestURI
 }
 
 func (input *BeegoInput) Url() string {
-	return input.req.URL.String()
+	return input.Request.URL.String()
 }
 
 func (input *BeegoInput) Site() string {
@@ -43,9 +43,9 @@ func (input *BeegoInput) Site() string {
 }
 
 func (input *BeegoInput) Scheme() string {
-	if input.req.URL.Scheme != "" {
-		return input.req.URL.Scheme
-	} else if input.req.TLS == nil {
+	if input.Request.URL.Scheme != "" {
+		return input.Request.URL.Scheme
+	} else if input.Request.TLS == nil {
 		return "http"
 	} else {
 		return "https"
@@ -57,18 +57,18 @@ func (input *BeegoInput) Domain() string {
 }
 
 func (input *BeegoInput) Host() string {
-	if input.req.Host != "" {
-		hostParts := strings.Split(input.req.Host, ":")
+	if input.Request.Host != "" {
+		hostParts := strings.Split(input.Request.Host, ":")
 		if len(hostParts) > 0 {
 			return hostParts[0]
 		}
-		return input.req.Host
+		return input.Request.Host
 	}
 	return "localhost"
 }
 
 func (input *BeegoInput) Method() string {
-	return input.req.Method
+	return input.Request.Method
 }
 
 func (input *BeegoInput) Is(method string) bool {
@@ -88,7 +88,7 @@ func (input *BeegoInput) IsWebsocket() bool {
 }
 
 func (input *BeegoInput) IsUpload() bool {
-	return input.req.MultipartForm != nil
+	return input.Request.MultipartForm != nil
 }
 
 func (input *BeegoInput) IP() string {
@@ -96,7 +96,7 @@ func (input *BeegoInput) IP() string {
 	if len(ips) > 0 && ips[0] != "" {
 		return ips[0]
 	}
-	ip := strings.Split(input.req.RemoteAddr, ":")
+	ip := strings.Split(input.Request.RemoteAddr, ":")
 	if len(ip) > 0 {
 		return ip[0]
 	}
@@ -120,7 +120,7 @@ func (input *BeegoInput) SubDomains() string {
 }
 
 func (input *BeegoInput) Port() int {
-	parts := strings.Split(input.req.Host, ":")
+	parts := strings.Split(input.Request.Host, ":")
 	if len(parts) == 2 {
 		port, _ := strconv.Atoi(parts[1])
 		return port
@@ -140,16 +140,16 @@ func (input *BeegoInput) Param(key string) string {
 }
 
 func (input *BeegoInput) Query(key string) string {
-	input.req.ParseForm()
-	return input.req.Form.Get(key)
+	input.Request.ParseForm()
+	return input.Request.Form.Get(key)
 }
 
 func (input *BeegoInput) Header(key string) string {
-	return input.req.Header.Get(key)
+	return input.Request.Header.Get(key)
 }
 
 func (input *BeegoInput) Cookie(key string) string {
-	ck, err := input.req.Cookie(key)
+	ck, err := input.Request.Cookie(key)
 	if err != nil {
 		return ""
 	}
@@ -161,10 +161,10 @@ func (input *BeegoInput) Session(key interface{}) interface{} {
 }
 
 func (input *BeegoInput) Body() []byte {
-	requestbody, _ := ioutil.ReadAll(input.req.Body)
-	input.req.Body.Close()
+	requestbody, _ := ioutil.ReadAll(input.Request.Body)
+	input.Request.Body.Close()
 	bf := bytes.NewBuffer(requestbody)
-	input.req.Body = ioutil.NopCloser(bf)
+	input.Request.Body = ioutil.NopCloser(bf)
 	input.RequestBody = requestbody
 	return requestbody
 }

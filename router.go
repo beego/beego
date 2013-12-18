@@ -28,7 +28,6 @@ const (
 
 var (
 	HTTPMETHOD = []string{"get", "post", "put", "delete", "patch", "options", "head"}
-	errorType  = reflect.TypeOf((*error)(nil)).Elem()
 )
 
 type controllerInfo struct {
@@ -41,19 +40,21 @@ type controllerInfo struct {
 }
 
 type ControllerRegistor struct {
-	routers      []*controllerInfo
-	fixrouters   []*controllerInfo
-	enableFilter bool
-	filters      map[int][]*FilterRouter
-	enableAuto   bool
-	autoRouter   map[string]map[string]reflect.Type //key:controller key:method value:reflect.type
+	routers       []*controllerInfo
+	fixrouters    []*controllerInfo
+	enableFilter  bool
+	filters       map[int][]*FilterRouter
+	enableAuto    bool
+	autoRouter    map[string]map[string]reflect.Type //key:controller key:method value:reflect.type
+	contextBuffer chan *beecontext.Context
 }
 
 func NewControllerRegistor() *ControllerRegistor {
 	return &ControllerRegistor{
-		routers:    make([]*controllerInfo, 0),
-		autoRouter: make(map[string]map[string]reflect.Type),
-		filters:    make(map[int][]*FilterRouter),
+		routers:       make([]*controllerInfo, 0),
+		autoRouter:    make(map[string]map[string]reflect.Type),
+		filters:       make(map[int][]*FilterRouter),
+		contextBuffer: make(chan *beecontext.Context, 100),
 	}
 }
 
@@ -433,15 +434,40 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	w := &responseWriter{writer: rw}
 	w.Header().Set("Server", BeegoServerName)
-	context := &beecontext.Context{
-		ResponseWriter: w,
-		Request:        r,
-		Input:          beecontext.NewInput(r),
-		Output:         beecontext.NewOutput(w),
-	}
-	context.Output.Context = context
-	context.Output.EnableGzip = EnableGzip
 
+	// init context
+	var context *beecontext.Context
+	select {
+	case context = <-p.contextBuffer:
+		context.ResponseWriter = w
+		context.Request = r
+		context.Input.Request = r
+	default:
+		context = &beecontext.Context{
+			ResponseWriter: w,
+			Request:        r,
+			Input:          beecontext.NewInput(r),
+			Output:         beecontext.NewOutput(),
+		}
+		context.Output.Context = context
+		context.Output.EnableGzip = EnableGzip
+	}
+
+	defer func() {
+		if context != nil {
+			select {
+			case p.contextBuffer <- context:
+			default:
+			}
+		}
+	}()
+
+	if context.Input.IsWebsocket() {
+		context.ResponseWriter = rw
+		context.Output = beecontext.NewOutput(rw)
+	}
+
+	// defined filter function
 	do_filter := func(pos int) (started bool) {
 		if p.enableFilter {
 			if l, ok := p.filters[pos]; ok {
@@ -458,11 +484,6 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}
 
 		return false
-	}
-
-	if context.Input.IsWebsocket() {
-		context.ResponseWriter = rw
-		context.Output = beecontext.NewOutput(rw)
 	}
 
 	// session init
