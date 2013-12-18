@@ -709,9 +709,26 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 		if !w.started {
 			//exec main logic
-			in := make([]reflect.Value, 0)
-			method := vc.MethodByName(runMethod)
-			method.Call(in)
+			switch runMethod {
+			case "Get":
+				execController.Get()
+			case "Post":
+				execController.Post()
+			case "Delete":
+				execController.Delete()
+			case "Put":
+				execController.Put()
+			case "Head":
+				execController.Head()
+			case "Patch":
+				execController.Patch()
+			case "Options":
+				execController.Options()
+			default:
+				in := make([]reflect.Value, 0)
+				method := vc.MethodByName(runMethod)
+				method.Call(in)
+			}
 
 			//render template
 			if !w.started && !context.Input.IsWebsocket() {
