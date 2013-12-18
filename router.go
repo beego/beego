@@ -40,13 +40,13 @@ type controllerInfo struct {
 }
 
 type ControllerRegistor struct {
-	routers       []*controllerInfo
-	fixrouters    []*controllerInfo
+	routers       []*controllerInfo // regexp router storage
+	fixrouters    []*controllerInfo // fixed router storage
 	enableFilter  bool
 	filters       map[int][]*FilterRouter
 	enableAuto    bool
 	autoRouter    map[string]map[string]reflect.Type //key:controller key:method value:reflect.type
-	contextBuffer chan *beecontext.Context
+	contextBuffer chan *beecontext.Context           //context buffer pool
 }
 
 func NewControllerRegistor() *ControllerRegistor {
@@ -54,7 +54,7 @@ func NewControllerRegistor() *ControllerRegistor {
 		routers:       make([]*controllerInfo, 0),
 		autoRouter:    make(map[string]map[string]reflect.Type),
 		filters:       make(map[int][]*FilterRouter),
-		contextBuffer: make(chan *beecontext.Context, 100),
+		contextBuffer: make(chan *beecontext.Context, 1000),
 	}
 }
 
@@ -213,6 +213,10 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingM
 }
 
 // add auto router to controller
+// example beego.AddAuto(&MainContorlller{})
+// MainController has method List and Page
+// you can visit the url /main/list to exec List function
+// /main/page to exec Page function
 func (p *ControllerRegistor) AddAuto(c ControllerInterface) {
 	p.enableAuto = true
 	reflectVal := reflect.ValueOf(c)
@@ -367,7 +371,7 @@ func (p *ControllerRegistor) UrlFor(endpoint string, values ...string) string {
 	return ""
 }
 
-// AutoRoute
+// main function to serveHTTP
 func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err := recover(); err != nil {
