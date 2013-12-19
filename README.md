@@ -23,11 +23,11 @@ More info [beego.me](http://beego.me)
 
 ## Documentation
 
-[English](http://beego.me/docs/Overview_Introduction?lang=en&q=)
+[English](http://beego.me/docs/intro/)
 
 [API](http://gowalker.org/github.com/astaxie/beego)
 
-[中文文档](http://beego.me/docs/Overview_Introduction?lang=zh&q=)
+[中文文档](http://beego.me/docs/intro/)
 
 
 ## LICENSE
