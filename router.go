@@ -790,27 +790,21 @@ func (p *ControllerRegistor) getErrorHandler(errorCode string) func(rw http.Resp
 
 func (p *ControllerRegistor) getRunMethod(method string, context *beecontext.Context, router *controllerInfo) string {
 	method = strings.ToLower(method)
+	if method == "post" && strings.ToLower(context.Input.Query("_method")) == "put" {
+		method = "put"
+	}
+	if method == "post" && strings.ToLower(context.Input.Query("_method")) == "delete" {
+		method = "delete"
+	}
 	if router.hasMethod {
 		if m, ok := router.methods[method]; ok {
 			return m
 		} else if m, ok = router.methods["*"]; ok {
 			return m
 		} else {
-			if method == "POST" && strings.ToLower(context.Input.Query("_method")) == "put" {
-				return "Put"
-			}
-			if method == "POST" && strings.ToLower(context.Input.Query("_method")) == "delete" {
-				return "Delete"
-			}
 			return strings.Title(method)
 		}
 	} else {
-		if method == "POST" && strings.ToLower(context.Input.Query("_method")) == "put" {
-			return "Put"
-		}
-		if method == "POST" && strings.ToLower(context.Input.Query("_method")) == "delete" {
-			return "Delete"
-		}
 		return strings.Title(method)
 	}
 }
