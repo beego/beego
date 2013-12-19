@@ -575,7 +575,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		if requestPath == route.pattern {
 			runrouter = route.controllerType
 			findrouter = true
-			runMethod = p.getRunMethod(r.Method, context.Input.Query("_method"), route)
+			runMethod = p.getRunMethod(r.Method, context, route)
 			break
 		}
 		// pattern /admin   url /admin 200  /admin/ 404
@@ -618,7 +618,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			runrouter = route.controllerType
 			findrouter = true
 			context.Input.Params = params
-			runMethod = p.getRunMethod(r.Method, context.Input.Query("_method"), route)
+			runMethod = p.getRunMethod(r.Method, context, route)
 			break
 		}
 	}
@@ -788,7 +788,7 @@ func (p *ControllerRegistor) getErrorHandler(errorCode string) func(rw http.Resp
 	return handler
 }
 
-func (p *ControllerRegistor) getRunMethod(method, _method string, router *controllerInfo) string {
+func (p *ControllerRegistor) getRunMethod(method string, context *beecontext.Context, router *controllerInfo) string {
 	method = strings.ToLower(method)
 	if router.hasMethod {
 		if m, ok := router.methods[method]; ok {
@@ -796,19 +796,19 @@ func (p *ControllerRegistor) getRunMethod(method, _method string, router *contro
 		} else if m, ok = router.methods["*"]; ok {
 			return m
 		} else {
-			if method == "POST" || strings.ToLower(_method) == "put" {
+			if method == "POST" && strings.ToLower(context.Input.Query("_method")) == "put" {
 				return "Put"
 			}
-			if method == "POST" || strings.ToLower(_method) == "delete" {
+			if method == "POST" && strings.ToLower(context.Input.Query("_method")) == "delete" {
 				return "Delete"
 			}
 			return strings.Title(method)
 		}
 	} else {
-		if method == "POST" || strings.ToLower(_method) == "put" {
+		if method == "POST" && strings.ToLower(context.Input.Query("_method")) == "put" {
 			return "Put"
 		}
-		if method == "POST" || strings.ToLower(_method) == "delete" {
+		if method == "POST" && strings.ToLower(context.Input.Query("_method")) == "delete" {
 			return "Delete"
 		}
 		return strings.Title(method)
