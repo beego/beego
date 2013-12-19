@@ -9,22 +9,25 @@ import (
 	"github.com/astaxie/beego/utils"
 )
 
+// BeeAdminApp is the default AdminApp used by admin module.
 var BeeAdminApp *AdminApp
 
-//func MyFilterMonitor(method, requestPath string, t time.Duration) bool {
-//	if method == "POST" {
-//		return false
-//	}
-//	if t.Nanoseconds() < 100 {
-//		return false
-//	}
-//	if strings.HasPrefix(requestPath, "/astaxie") {
-//		return false
-//	}
-//	return true
-//}
-
-//beego.FilterMonitorFunc = MyFilterMonitor
+// FilterMonitorFunc is default monitor filter when admin module is enable.
+// if this func returns, admin module records qbs for this request by condition of this function logic.
+// usage:
+// 	func MyFilterMonitor(method, requestPath string, t time.Duration) bool {
+//	 	if method == "POST" {
+//			return false
+//	 	}
+//	 	if t.Nanoseconds() < 100 {
+//			return false
+//	 	}
+//	 	if strings.HasPrefix(requestPath, "/astaxie") {
+//			return false
+//	 	}
+//	 	return true
+// 	}
+// 	beego.FilterMonitorFunc = MyFilterMonitor.
 var FilterMonitorFunc func(string, string, time.Duration) bool
 
 func init() {
@@ -41,6 +44,8 @@ func init() {
 	FilterMonitorFunc = func(string, string, time.Duration) bool { return true }
 }
 
+// AdminIndex is the default http.Handler for admin module.
+// it matches url pattern "/".
 func AdminIndex(rw http.ResponseWriter, r *http.Request) {
 	rw.Write([]byte("Welcome to Admin Dashboard\n"))
 	rw.Write([]byte("There are servral functions:\n"))
@@ -53,10 +58,14 @@ func AdminIndex(rw http.ResponseWriter, r *http.Request) {
 
 }
 
+// QpsIndex is the http.Handler for writing qbs statistics map result info in http.ResponseWriter.
+// it's registered with url pattern "/qbs" in admin module.
 func QpsIndex(rw http.ResponseWriter, r *http.Request) {
 	toolbox.StatisticsMap.GetMap(rw)
 }
 
+// ListConf is the http.Handler of displaying all beego configuration values as key/value pair.
+// it's registered with url pattern "/listconf" in admin module.
 func ListConf(rw http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	command := r.Form.Get("command")
@@ -172,6 +181,8 @@ func ListConf(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// ProfIndex is a http.Handler for showing profile command.
+// it's in url pattern "/prof" in admin module.
 func ProfIndex(rw http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	command := r.Form.Get("command")
@@ -191,6 +202,8 @@ func ProfIndex(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Healthcheck is a http.Handler calling health checking and showing the result.
+// it's in "/healthcheck" pattern in admin module.
 func Healthcheck(rw http.ResponseWriter, req *http.Request) {
 	for name, h := range toolbox.AdminCheckList {
 		if err := h.Check(); err != nil {
@@ -201,14 +214,16 @@ func Healthcheck(rw http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// TaskStatus is a http.Handler with running task status (task name, status and the last execution).
+// it's in "/task" pattern in admin module.
 func TaskStatus(rw http.ResponseWriter, req *http.Request) {
 	for tname, tk := range toolbox.AdminTaskList {
 		fmt.Fprintf(rw, "%s:%s:%s", tname, tk.GetStatus(), tk.GetPrev().String())
 	}
 }
 
-//to run a Task by http from the querystring taskname
-//url like /task?taskname=sendmail
+// RunTask is a http.Handler to run a Task from the "query string.
+// the request url likes /runtask?taskname=sendmail.
 func RunTask(rw http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 	taskname := req.Form.Get("taskname")
@@ -223,14 +238,18 @@ func RunTask(rw http.ResponseWriter, req *http.Request) {
 	}
 }
 
+// AdminApp is an http.HandlerFunc map used as BeeAdminApp.
 type AdminApp struct {
 	routers map[string]http.HandlerFunc
 }
 
+// Route adds http.HandlerFunc to AdminApp with url pattern.
 func (admin *AdminApp) Route(pattern string, f http.HandlerFunc) {
 	admin.routers[pattern] = f
 }
 
+// Run AdminApp http server.
+// Its addr is defined in configuration file as adminhttpaddr and adminhttpport.
 func (admin *AdminApp) Run() {
 	if len(toolbox.AdminTaskList) > 0 {
 		toolbox.StartTask()
