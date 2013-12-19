@@ -9,7 +9,7 @@ import (
 	"github.com/astaxie/beego/session"
 )
 
-const VERSION = "1.0.0 RC1"
+const VERSION = "1.0.0"
 
 func Router(rootpath string, c ControllerInterface, mappingMethods ...string) *App {
 	BeeApp.Router(rootpath, c, mappingMethods...)
