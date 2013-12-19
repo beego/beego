@@ -7,7 +7,6 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -201,7 +200,7 @@ func (w *FileLogWriter) DoRotate() error {
 }
 
 func (w *FileLogWriter) deleteOldLog() {
-	dir := path.Dir(w.Filename)
+	dir := filepath.Dir(w.Filename)
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if !info.IsDir() && info.ModTime().Unix() < (time.Now().Unix()-60*60*24*w.Maxdays) {
 			if strings.HasPrefix(filepath.Base(path), filepath.Base(w.Filename)) {
