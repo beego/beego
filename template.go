@@ -68,7 +68,7 @@ func (self *templatefile) visit(paths string, f os.FileInfo, err error) error {
 	if f.IsDir() || (f.Mode()&os.ModeSymlink) > 0 {
 		return nil
 	}
-	if !HasTemplateEXt(paths) {
+	if !HasTemplateExt(paths) {
 		return nil
 	}
 
@@ -88,7 +88,7 @@ func (self *templatefile) visit(paths string, f os.FileInfo, err error) error {
 	return nil
 }
 
-func HasTemplateEXt(paths string) bool {
+func HasTemplateExt(paths string) bool {
 	for _, v := range BeeTemplateExt {
 		if strings.HasSuffix(paths, "."+v) {
 			return true
@@ -164,7 +164,7 @@ func getTplDeep(root, file, parent string, t *template.Template) (*template.Temp
 			if tlook != nil {
 				continue
 			}
-			if !HasTemplateEXt(m[1]) {
+			if !HasTemplateExt(m[1]) {
 				continue
 			}
 			t, _, err = getTplDeep(root, m[1], file, t)
