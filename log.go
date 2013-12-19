@@ -25,11 +25,6 @@ func SetLevel(l int) {
 // logger references the used application logger.
 var BeeLogger *logs.BeeLogger
 
-func init() {
-	BeeLogger = logs.NewLogger(10000)
-	BeeLogger.SetLogger("console", "")
-}
-
 // SetLogger sets a new logger.
 func SetLogger(adaptername string, config string) {
 	BeeLogger.SetLogger(adaptername, config)

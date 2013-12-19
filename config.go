@@ -3,12 +3,13 @@ package beego
 import (
 	"html/template"
 	"os"
-	"path"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
 
 	"github.com/astaxie/beego/config"
+	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/session"
 )
 
@@ -64,8 +65,8 @@ func init() {
 	BeeApp = NewApp()
 
 	// initialize default configurations
-	os.Chdir(path.Dir(os.Args[0]))
-	AppPath = path.Dir(os.Args[0])
+	AppPath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
+	os.Chdir(AppPath)
 
 	StaticDir = make(map[string]string)
 	StaticDir["/static"] = "static"
@@ -103,7 +104,7 @@ func init() {
 
 	EnableGzip = false
 
-	AppConfigPath = path.Join(AppPath, "conf", "app.conf")
+	AppConfigPath = filepath.Join(AppPath, "conf", "app.conf")
 
 	HttpServerTimeOut = 0
 
@@ -122,6 +123,10 @@ func init() {
 	AdminHttpPort = 8088
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
+
+	// init BeeLogger
+	BeeLogger = logs.NewLogger(10000)
+	BeeLogger.SetLogger("console", "")
 
 	err := ParseConfig()
 	if err != nil && !os.IsNotExist(err) {
