@@ -90,7 +90,7 @@ func (b *BeegoHttpRequest) Header(key, value string) *BeegoHttpRequest {
 }
 
 func (b *BeegoHttpRequest) SetCookie(cookie *http.Cookie) *BeegoHttpRequest {
-	b.req.Header.Add("Set-Cookie", cookie.String())
+	b.req.Header.Add("Cookie", cookie.String())
 	return b
 }
 

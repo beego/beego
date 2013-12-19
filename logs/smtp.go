@@ -2,7 +2,6 @@ package logs
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/smtp"
 	"strings"
@@ -15,77 +14,51 @@ const (
 
 // smtpWriter is used to send emails via given SMTP-server.
 type SmtpWriter struct {
-	username           string
-	password           string
-	host               string
-	subject            string
-	recipientAddresses []string
-	level              int
+	Username           string   `json:"Username"`
+	Password           string   `json:"password"`
+	Host               string   `json:"Host"`
+	Subject            string   `json:"subject"`
+	RecipientAddresses []string `json:"sendTos"`
+	Level              int      `json:"level"`
 }
 
 func NewSmtpWriter() LoggerInterface {
-	return &SmtpWriter{level: LevelTrace}
+	return &SmtpWriter{Level: LevelTrace}
 }
 
 func (s *SmtpWriter) Init(jsonconfig string) error {
-	var m map[string]interface{}
-	err := json.Unmarshal([]byte(jsonconfig), &m)
+	err := json.Unmarshal([]byte(jsonconfig), s)
 	if err != nil {
 		return err
-	}
-	if username, ok := m["username"]; !ok {
-		return errors.New("smtp config must have auth username")
-	} else if password, ok := m["password"]; !ok {
-		return errors.New("smtp config must have auth password")
-	} else if hostname, ok := m["host"]; !ok {
-		return errors.New("smtp config must have host like 'mail.example.com:25'")
-	} else if sendTos, ok := m["sendTos"]; !ok {
-		return errors.New("smtp config must have sendTos")
-	} else {
-		s.username = username.(string)
-		s.password = password.(string)
-		s.host = hostname.(string)
-		for _, v := range sendTos.([]interface{}) {
-			s.recipientAddresses = append(s.recipientAddresses, v.(string))
-		}
-	}
-
-	if subject, ok := m["subject"]; ok {
-		s.subject = subject.(string)
-	} else {
-		s.subject = subjectPhrase
-	}
-	if lv, ok := m["level"]; ok {
-		s.level = int(lv.(float64))
 	}
 	return nil
 }
 
 func (s *SmtpWriter) WriteMsg(msg string, level int) error {
-	if level < s.level {
+	if level < s.Level {
 		return nil
 	}
 
-	hp := strings.Split(s.host, ":")
+	hp := strings.Split(s.Host, ":")
 
 	// Set up authentication information.
 	auth := smtp.PlainAuth(
 		"",
-		s.username,
-		s.password,
+		s.Username,
+		s.Password,
 		hp[0],
 	)
 	// Connect to the server, authenticate, set the sender and recipient,
 	// and send the email all in one step.
 	content_type := "Content-Type: text/plain" + "; charset=UTF-8"
-	mailmsg := []byte("To: " + strings.Join(s.recipientAddresses, ";") + "\r\nFrom: " + s.username + "<" + s.username +
-		">\r\nSubject: " + s.subject + "\r\n" + content_type + "\r\n\r\n" + fmt.Sprintf(".%s", time.Now().Format("2006-01-02 15:04:05")) + msg)
+	mailmsg := []byte("To: " + strings.Join(s.RecipientAddresses, ";") + "\r\nFrom: " + s.Username + "<" + s.Username +
+		">\r\nSubject: " + s.Subject + "\r\n" + content_type + "\r\n\r\n" + fmt.Sprintf(".%s", time.Now().Format("2006-01-02 15:04:05")) + msg)
 
 	err := smtp.SendMail(
-		s.host,
+		s.Host,
 		auth,
-		s.username,
-		s.recipientAddresses,
+		s.Username,
+		s.RecipientAddresses,
 		mailmsg,
 	)
 

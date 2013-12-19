@@ -14,7 +14,7 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
+	"path/filepath"
 	"reflect"
 	"strconv"
 	"time"
@@ -79,8 +79,8 @@ func (this *FileCache) StartAndGC(config string) error {
 }
 
 func (this *FileCache) Init() {
-	app := path.Dir(os.Args[0])
-	this.CachePath = path.Join(app, this.CachePath)
+	app := filepath.Dir(os.Args[0])
+	this.CachePath = filepath.Join(app, this.CachePath)
 	ok, err := exists(this.CachePath)
 	if err != nil { // print error
 		//fmt.Println(err)
@@ -102,9 +102,9 @@ func (this *FileCache) getCacheFileName(key string) string {
 	//fmt.Println("md5" , keyMd5);
 	switch this.DirectoryLevel {
 	case 2:
-		cachePath = path.Join(cachePath, keyMd5[0:2], keyMd5[2:4])
+		cachePath = filepath.Join(cachePath, keyMd5[0:2], keyMd5[2:4])
 	case 1:
-		cachePath = path.Join(cachePath, keyMd5[0:2])
+		cachePath = filepath.Join(cachePath, keyMd5[0:2])
 	}
 
 	ok, err := exists(cachePath)
@@ -116,7 +116,7 @@ func (this *FileCache) getCacheFileName(key string) string {
 			//fmt.Println(err);
 		}
 	}
-	return path.Join(cachePath, fmt.Sprintf("%s%s", keyMd5, this.FileSuffix))
+	return filepath.Join(cachePath, fmt.Sprintf("%s%s", keyMd5, this.FileSuffix))
 }
 
 func (this *FileCache) Get(key string) interface{} {
