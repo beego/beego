@@ -390,6 +390,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 							}
 						}
 						var stack string
+						Critical("the request url is ", r.URL.Path)
 						Critical("Handler crashed with error", err)
 						for i := 1; ; i++ {
 							_, file, line, ok := runtime.Caller(i)
@@ -411,6 +412,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 							handler(rw, r)
 							return
 						} else {
+							Critical("the request url is ", r.URL.Path)
 							Critical("Handler crashed with error", err)
 							for i := 1; ; i++ {
 								_, file, line, ok := runtime.Caller(i)
