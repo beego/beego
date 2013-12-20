@@ -98,7 +98,9 @@ func (input *BeegoInput) IP() string {
 	}
 	ip := strings.Split(input.Request.RemoteAddr, ":")
 	if len(ip) > 0 {
-		return ip[0]
+		if ip[0] != "["{
+			return ip[0]
+		}
 	}
 	return "127.0.0.1"
 }
