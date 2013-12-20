@@ -574,11 +574,9 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		n := len(requestPath)
 		if requestPath == route.pattern {
 			runrouter = route.controllerType
+			findrouter = true
 			runMethod = p.getRunMethod(r.Method, context, route)
-			if runMethod != "" {
-				findrouter = true
-				break
-			}
+			break
 		}
 		// pattern /admin   url /admin 200  /admin/ 404
 		// pattern /admin/  url /admin 301  /admin/ 200
@@ -618,12 +616,10 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				r.URL.RawQuery = url.Values(values).Encode()
 			}
 			runrouter = route.controllerType
+			findrouter = true
 			context.Input.Params = params
 			runMethod = p.getRunMethod(r.Method, context, route)
-			if runMethod != "" {
-				findrouter = true
-				break
-			}
+			break
 		}
 	}
 
@@ -805,8 +801,9 @@ func (p *ControllerRegistor) getRunMethod(method string, context *beecontext.Con
 			return m
 		} else if m, ok = router.methods["*"]; ok {
 			return m
+		} else {
+			return strings.Title(method)
 		}
-		return ""
 	} else {
 		return strings.Title(method)
 	}
