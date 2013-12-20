@@ -40,21 +40,19 @@ type controllerInfo struct {
 }
 
 type ControllerRegistor struct {
-	routers       []*controllerInfo // regexp router storage
-	fixrouters    []*controllerInfo // fixed router storage
-	enableFilter  bool
-	filters       map[int][]*FilterRouter
-	enableAuto    bool
-	autoRouter    map[string]map[string]reflect.Type //key:controller key:method value:reflect.type
-	contextBuffer chan *beecontext.Context           //context buffer pool
+	routers      []*controllerInfo // regexp router storage
+	fixrouters   []*controllerInfo // fixed router storage
+	enableFilter bool
+	filters      map[int][]*FilterRouter
+	enableAuto   bool
+	autoRouter   map[string]map[string]reflect.Type //key:controller key:method value:reflect.type
 }
 
 func NewControllerRegistor() *ControllerRegistor {
 	return &ControllerRegistor{
-		routers:       make([]*controllerInfo, 0),
-		autoRouter:    make(map[string]map[string]reflect.Type),
-		filters:       make(map[int][]*FilterRouter),
-		contextBuffer: make(chan *beecontext.Context, 1000),
+		routers:    make([]*controllerInfo, 0),
+		autoRouter: make(map[string]map[string]reflect.Type),
+		filters:    make(map[int][]*FilterRouter),
 	}
 }
 
@@ -440,31 +438,14 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	w.Header().Set("Server", BeegoServerName)
 
 	// init context
-	var context *beecontext.Context
-	select {
-	case context = <-p.contextBuffer:
-		context.ResponseWriter = w
-		context.Request = r
-		context.Input.Request = r
-	default:
-		context = &beecontext.Context{
-			ResponseWriter: w,
-			Request:        r,
-			Input:          beecontext.NewInput(r),
-			Output:         beecontext.NewOutput(),
-		}
-		context.Output.Context = context
-		context.Output.EnableGzip = EnableGzip
+	context := &beecontext.Context{
+		ResponseWriter: w,
+		Request:        r,
+		Input:          beecontext.NewInput(r),
+		Output:         beecontext.NewOutput(),
 	}
-
-	defer func() {
-		if context != nil {
-			select {
-			case p.contextBuffer <- context:
-			default:
-			}
-		}
-	}()
+	context.Output.Context = context
+	context.Output.EnableGzip = EnableGzip
 
 	if context.Input.IsWebsocket() {
 		context.ResponseWriter = rw
