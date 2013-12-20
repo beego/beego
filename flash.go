@@ -6,18 +6,22 @@ import (
 	"strings"
 )
 
+// the separation string when encoding flash data.
 const BEEGO_FLASH_SEP = "#BEEGOFLASH#"
 
+// FlashData is a tools to maintain data when using across request.
 type FlashData struct {
 	Data map[string]string
 }
 
+// NewFlash return a new empty FlashData struct.
 func NewFlash() *FlashData {
 	return &FlashData{
 		Data: make(map[string]string),
 	}
 }
 
+// Notice writes notice message to flash.
 func (fd *FlashData) Notice(msg string, args ...interface{}) {
 	if len(args) == 0 {
 		fd.Data["notice"] = msg
@@ -26,6 +30,7 @@ func (fd *FlashData) Notice(msg string, args ...interface{}) {
 	}
 }
 
+// Warning writes warning message to flash.
 func (fd *FlashData) Warning(msg string, args ...interface{}) {
 	if len(args) == 0 {
 		fd.Data["warning"] = msg
@@ -34,6 +39,7 @@ func (fd *FlashData) Warning(msg string, args ...interface{}) {
 	}
 }
 
+// Error writes error message to flash.
 func (fd *FlashData) Error(msg string, args ...interface{}) {
 	if len(args) == 0 {
 		fd.Data["error"] = msg
@@ -42,6 +48,8 @@ func (fd *FlashData) Error(msg string, args ...interface{}) {
 	}
 }
 
+// Store does the saving operation of flash data.
+// the data are encoded and saved in cookie.
 func (fd *FlashData) Store(c *Controller) {
 	c.Data["flash"] = fd.Data
 	var flashValue string
@@ -51,6 +59,7 @@ func (fd *FlashData) Store(c *Controller) {
 	c.Ctx.SetCookie("BEEGO_FLASH", url.QueryEscape(flashValue), 0, "/")
 }
 
+// ReadFromRequest parsed flash data from encoded values in cookie.
 func ReadFromRequest(c *Controller) *FlashData {
 	flash := &FlashData{
 		Data: make(map[string]string),
