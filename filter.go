@@ -5,6 +5,8 @@ import (
 	"strings"
 )
 
+// FilterRouter defines filter operation before controller handler execution.
+// it can match patterned url and do filter function when action arrives.
 type FilterRouter struct {
 	pattern     string
 	regex       *regexp.Regexp
@@ -14,6 +16,8 @@ type FilterRouter struct {
 	parseParams map[string]string
 }
 
+// ValidRouter check current request is valid for this filter.
+// if matched, returns parsed params in this request by defined filter router pattern.
 func (mr *FilterRouter) ValidRouter(router string) (bool, map[string]string) {
 	if mr.pattern == "" {
 		return true, nil

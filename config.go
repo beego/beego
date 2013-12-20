@@ -14,54 +14,81 @@ import (
 )
 
 var (
+	// beego application
 	BeeApp                 *App
+	// application configurations
 	AppName                string
 	AppPath                string
 	AppConfigPath          string
 	StaticDir              map[string]string
+	// template caching map
 	TemplateCache          map[string]*template.Template
-	StaticExtensionsToGzip []string //Files which should also be compressed with gzip (.js, .css, etc)
+	// files with should be compressed with gzip (.js,.css,etc)
+	StaticExtensionsToGzip []string
+	// http server configurations
 	HttpAddr               string
 	HttpPort               int
 	HttpTLS                bool
 	HttpCertFile           string
 	HttpKeyFile            string
+	// flag of auto recover panic
 	RecoverPanic           bool
+	// flag of render template automatically
 	AutoRender             bool
 	ViewsPath              string
-	RunMode                string //"dev" or "prod"
+	// run mode, "dev" or "prod"
+	RunMode                string
 	AppConfig              config.ConfigContainer
-	//related to session
-	GlobalSessions        *session.Manager //GlobalSessions
-	SessionOn             bool             // whether auto start session,default is false
-	SessionProvider       string           // default session provider  memory mysql redis
-	SessionName           string           // sessionName cookie's name
-	SessionGCMaxLifetime  int64            // session's gc maxlifetime
-	SessionSavePath       string           // session savepath if use mysql/redis/file this set to the connectinfo
+	// global session mananger
+	GlobalSessions        *session.Manager
+	// flag of starting session auto. default is false.
+	SessionOn             bool
+	// default session provider, memory, mysql , redis ,etc.
+	SessionProvider       string
+	// the cookie name when saving session id into cookie.
+	SessionName           string
+	// session gc time for auto cleaning expired session.
+	SessionGCMaxLifetime  int64
+	// if use mysql/redis/file provider, define save path to connection info.
+	SessionSavePath       string
+	// session hash generation func.
 	SessionHashFunc       string
+	// session hash salt string.
 	SessionHashKey        string
+	// the life time of session id in cookie.
 	SessionCookieLifeTime int
 	UseFcgi               bool
 	MaxMemory             int64
-	EnableGzip            bool   // enable gzip
-	DirectoryIndex        bool   //enable DirectoryIndex default is false
-	EnableHotUpdate       bool   //enable HotUpdate default is false
-	HttpServerTimeOut     int64  //set httpserver timeout
-	ErrorsShow            bool   //set weather show errors
-	XSRFKEY               string //set XSRF
+	// flag of enable gzip
+	EnableGzip            bool
+	// flag of display directory index. default is false.
+	DirectoryIndex        bool
+	// flag of hot update checking in app self. default is false.
+	EnableHotUpdate       bool
+	HttpServerTimeOut     int64
+	// flag of show errors in page. if true, show error and trace info in page rendered with error template.
+	ErrorsShow            bool
+	// xsrf hash salt string.
+	XSRFKEY               string
+	// flag of enable xsrf.
 	EnableXSRF            bool
+	// the expiry of xsrf value.
 	XSRFExpire            int
-	CopyRequestBody       bool //When in raw application, You want to the reqeustbody
+	// flag of copy raw request body in context.
+	CopyRequestBody       bool
 	TemplateLeft          string
 	TemplateRight         string
+	// beego server name exported in response header.
 	BeegoServerName       string
-	EnableAdmin           bool   //enable admin module to log api time
-	AdminHttpAddr         string //admin module http addr
+	// flag of enable admin module to log every request info.
+	EnableAdmin           bool
+	// http server configurations for admin module.
+	AdminHttpAddr         string
 	AdminHttpPort         int
 )
 
 func init() {
-	// create beeapp
+	// create beego application
 	BeeApp = NewApp()
 
 	// initialize default configurations
@@ -100,7 +127,7 @@ func init() {
 
 	UseFcgi = false
 
-	MaxMemory = 1 << 26 //64MB
+	MaxMemory = 1<<26 //64MB
 
 	EnableGzip = false
 
@@ -135,7 +162,8 @@ func init() {
 	}
 }
 
-//parse config now only support ini, next will support json
+// ParseConfig parsed default config file.
+// now only support ini, next will support json.
 func ParseConfig() (err error) {
 	AppConfig, err = config.NewConfig("ini", AppConfigPath)
 	if err != nil {
