@@ -10,7 +10,7 @@ import (
 	"github.com/astaxie/beego/context"
 )
 
-// FitlerFunc defines filter function type.
+// FilterFunc defines filter function type.
 type FilterFunc func(*context.Context)
 
 // App defines beego application with a new PatternServeMux.

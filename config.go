@@ -15,76 +15,76 @@ import (
 
 var (
 	// beego application
-	BeeApp                 *App
+	BeeApp *App
 	// application configurations
-	AppName                string
-	AppPath                string
-	AppConfigPath          string
-	StaticDir              map[string]string
+	AppName       string
+	AppPath       string
+	AppConfigPath string
+	StaticDir     map[string]string
 	// template caching map
-	TemplateCache          map[string]*template.Template
+	TemplateCache map[string]*template.Template
 	// files with should be compressed with gzip (.js,.css,etc)
 	StaticExtensionsToGzip []string
 	// http server configurations
-	HttpAddr               string
-	HttpPort               int
-	HttpTLS                bool
-	HttpCertFile           string
-	HttpKeyFile            string
+	HttpAddr     string
+	HttpPort     int
+	HttpTLS      bool
+	HttpCertFile string
+	HttpKeyFile  string
 	// flag of auto recover panic
-	RecoverPanic           bool
+	RecoverPanic bool
 	// flag of render template automatically
-	AutoRender             bool
-	ViewsPath              string
+	AutoRender bool
+	ViewsPath  string
 	// run mode, "dev" or "prod"
-	RunMode                string
-	AppConfig              config.ConfigContainer
+	RunMode   string
+	AppConfig config.ConfigContainer
 	// global session mananger
-	GlobalSessions        *session.Manager
+	GlobalSessions *session.Manager
 	// flag of starting session auto. default is false.
-	SessionOn             bool
+	SessionOn bool
 	// default session provider, memory, mysql , redis ,etc.
-	SessionProvider       string
+	SessionProvider string
 	// the cookie name when saving session id into cookie.
-	SessionName           string
+	SessionName string
 	// session gc time for auto cleaning expired session.
-	SessionGCMaxLifetime  int64
+	SessionGCMaxLifetime int64
 	// if use mysql/redis/file provider, define save path to connection info.
-	SessionSavePath       string
+	SessionSavePath string
 	// session hash generation func.
-	SessionHashFunc       string
+	SessionHashFunc string
 	// session hash salt string.
-	SessionHashKey        string
+	SessionHashKey string
 	// the life time of session id in cookie.
 	SessionCookieLifeTime int
 	UseFcgi               bool
 	MaxMemory             int64
 	// flag of enable gzip
-	EnableGzip            bool
+	EnableGzip bool
 	// flag of display directory index. default is false.
-	DirectoryIndex        bool
+	DirectoryIndex bool
 	// flag of hot update checking in app self. default is false.
-	EnableHotUpdate       bool
-	HttpServerTimeOut     int64
+	EnableHotUpdate   bool
+	HttpServerTimeOut int64
 	// flag of show errors in page. if true, show error and trace info in page rendered with error template.
-	ErrorsShow            bool
+	ErrorsShow bool
 	// xsrf hash salt string.
-	XSRFKEY               string
+	XSRFKEY string
 	// flag of enable xsrf.
-	EnableXSRF            bool
+	EnableXSRF bool
 	// the expiry of xsrf value.
-	XSRFExpire            int
+	XSRFExpire int
 	// flag of copy raw request body in context.
-	CopyRequestBody       bool
-	TemplateLeft          string
-	TemplateRight         string
+	CopyRequestBody bool
+	TemplateLeft    string
+	TemplateRight   string
 	// beego server name exported in response header.
-	BeegoServerName       string
+	BeegoServerName string
 	// flag of enable admin module to log every request info.
-	EnableAdmin           bool
+	EnableAdmin bool
 	// http server configurations for admin module.
-	AdminHttpAddr         string
-	AdminHttpPort         int
+	AdminHttpAddr string
+	AdminHttpPort int
 )
 
 func init() {
@@ -127,7 +127,7 @@ func init() {
 
 	UseFcgi = false
 
-	MaxMemory = 1<<26 //64MB
+	MaxMemory = 1 << 26 //64MB
 
 	EnableGzip = false
 

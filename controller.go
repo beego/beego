@@ -144,15 +144,15 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 	//if the controller has set layout, then first get the tplname's content set the content to the layout
 	if c.Layout != "" {
 		if c.TplNames == "" {
-			c.TplNames = strings.ToLower(c.controllerName)+"/"+strings.ToLower(c.actionName)+"." + c.TplExt
+			c.TplNames = strings.ToLower(c.controllerName) + "/" + strings.ToLower(c.actionName) + "." + c.TplExt
 		}
 		if RunMode == "dev" {
 			BuildTemplate(ViewsPath)
 		}
 		newbytes := bytes.NewBufferString("")
 		if _, ok := BeeTemplates[c.TplNames]; !ok {
-			panic("can't find templatefile in the path:"+c.TplNames)
-			return []byte{}, errors.New("can't find templatefile in the path:"+c.TplNames)
+			panic("can't find templatefile in the path:" + c.TplNames)
+			return []byte{}, errors.New("can't find templatefile in the path:" + c.TplNames)
 		}
 		err := BeeTemplates[c.TplNames].ExecuteTemplate(newbytes, c.TplNames, c.Data)
 		if err != nil {
@@ -171,15 +171,15 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		return icontent, nil
 	} else {
 		if c.TplNames == "" {
-			c.TplNames = strings.ToLower(c.controllerName)+"/"+strings.ToLower(c.actionName)+"." + c.TplExt
+			c.TplNames = strings.ToLower(c.controllerName) + "/" + strings.ToLower(c.actionName) + "." + c.TplExt
 		}
 		if RunMode == "dev" {
 			BuildTemplate(ViewsPath)
 		}
 		ibytes := bytes.NewBufferString("")
 		if _, ok := BeeTemplates[c.TplNames]; !ok {
-			panic("can't find templatefile in the path:"+c.TplNames)
-			return []byte{}, errors.New("can't find templatefile in the path:"+c.TplNames)
+			panic("can't find templatefile in the path:" + c.TplNames)
+			return []byte{}, errors.New("can't find templatefile in the path:" + c.TplNames)
 		}
 		err := BeeTemplates[c.TplNames].ExecuteTemplate(ibytes, c.TplNames, c.Data)
 		if err != nil {
@@ -219,7 +219,7 @@ func (c *Controller) UrlFor(endpoint string, values ...string) string {
 		return ""
 	}
 	if endpoint[0] == '.' {
-		return UrlFor(reflect.Indirect(reflect.ValueOf(c.AppController)).Type().Name() + endpoint, values...)
+		return UrlFor(reflect.Indirect(reflect.ValueOf(c.AppController)).Type().Name()+endpoint, values...)
 	} else {
 		return UrlFor(endpoint, values...)
 	}
@@ -327,7 +327,7 @@ func (c *Controller) SaveToFile(fromfile, tofile string) error {
 		return err
 	}
 	defer file.Close()
-	f, err := os.OpenFile(tofile, os.O_WRONLY | os.O_CREATE | os.O_TRUNC, 0666)
+	f, err := os.OpenFile(tofile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		return err
 	}
@@ -464,7 +464,7 @@ func (c *Controller) CheckXsrfCookie() bool {
 // XsrfFormHtml writes an input field contains xsrf token value.
 func (c *Controller) XsrfFormHtml() string {
 	return "<input type=\"hidden\" name=\"_xsrf\" value=\"" +
-			c._xsrf_token + "\"/>"
+		c._xsrf_token + "\"/>"
 }
 
 // GetControllerAndAction gets the executing controller name and action name.
