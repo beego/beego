@@ -125,7 +125,7 @@ func (app *App) UrlFor(endpoint string, values ...string) string {
 	return app.Handlers.UrlFor(endpoint, values...)
 }
 
-// [Deprecated]
+// [Deprecated] use InsertFilter.
 // Filter adds a FilterFunc under pattern condition and named action.
 // The actions contains BeforeRouter,AfterStatic,BeforeExec,AfterExec and FinishRouter.
 func (app *App) Filter(pattern, action string, filter FilterFunc) *App {
