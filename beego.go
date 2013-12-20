@@ -3,6 +3,7 @@ package beego
 import (
 	"net/http"
 	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/astaxie/beego/middleware"
@@ -68,7 +69,7 @@ func InsertFilter(pattern string, pos int, filter FilterFunc) *App {
 
 func Run() {
 	// if AppConfigPath not In the conf/app.conf reParse config
-	if AppConfigPath != path.Join(AppPath, "conf", "app.conf") {
+	if AppConfigPath != filepath.Join(AppPath, "conf", "app.conf") {
 		err := ParseConfig()
 		if err != nil {
 			// configuration is critical to app, panic here if parse failed
