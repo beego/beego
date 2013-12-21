@@ -19,6 +19,7 @@ import (
 )
 
 const (
+	// default filter execution points
 	BeforeRouter = iota
 	AfterStatic
 	BeforeExec
@@ -27,6 +28,7 @@ const (
 )
 
 var (
+	// supported http methods.
 	HTTPMETHOD = []string{"get", "post", "put", "delete", "patch", "options", "head"}
 )
 
@@ -39,6 +41,7 @@ type controllerInfo struct {
 	hasMethod      bool
 }
 
+// ControllerRegistor containers registered router rules, controller handlers and filters.
 type ControllerRegistor struct {
 	routers      []*controllerInfo // regexp router storage
 	fixrouters   []*controllerInfo // fixed router storage
@@ -48,6 +51,7 @@ type ControllerRegistor struct {
 	autoRouter   map[string]map[string]reflect.Type //key:controller key:method value:reflect.type
 }
 
+// NewControllerRegistor returns a new ControllerRegistor.
 func NewControllerRegistor() *ControllerRegistor {
 	return &ControllerRegistor{
 		routers:    make([]*controllerInfo, 0),
@@ -56,15 +60,16 @@ func NewControllerRegistor() *ControllerRegistor {
 	}
 }
 
-//methods support like this:
-//default methods is the same name as method
-//Add("/user",&UserController{})
-//Add("/api/list",&RestController{},"*:ListFood")
-//Add("/api/create",&RestController{},"post:CreateFood")
-//Add("/api/update",&RestController{},"put:UpdateFood")
-//Add("/api/delete",&RestController{},"delete:DeleteFood")
-//Add("/api",&RestController{},"get,post:ApiFunc")
-//Add("/simple",&SimpleController{},"get:GetFunc;post:PostFunc")
+// Add controller handler and pattern rules to ControllerRegistor.
+// usage:
+//	default methods is the same name as method
+//	Add("/user",&UserController{})
+//	Add("/api/list",&RestController{},"*:ListFood")
+//	Add("/api/create",&RestController{},"post:CreateFood")
+//	Add("/api/update",&RestController{},"put:UpdateFood")
+//	Add("/api/delete",&RestController{},"delete:DeleteFood")
+//	Add("/api",&RestController{},"get,post:ApiFunc")
+//	Add("/simple",&SimpleController{},"get:GetFunc;post:PostFunc")
 func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingMethods ...string) {
 	parts := strings.Split(pattern, "/")
 
@@ -210,11 +215,11 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingM
 	}
 }
 
-// add auto router to controller
-// example beego.AddAuto(&MainContorlller{})
-// MainController has method List and Page
-// you can visit the url /main/list to exec List function
-// /main/page to exec Page function
+// Add auto router to ControllerRegistor.
+// example beego.AddAuto(&MainContorlller{}),
+// MainController has method List and Page.
+// visit the url /main/list to exec List function
+// /main/page to exec Page function.
 func (p *ControllerRegistor) AddAuto(c ControllerInterface) {
 	p.enableAuto = true
 	reflectVal := reflect.ValueOf(c)
@@ -231,6 +236,8 @@ func (p *ControllerRegistor) AddAuto(c ControllerInterface) {
 	}
 }
 
+// [Deprecated] use InsertFilter.
+// Add FilterFunc with pattern for action.
 func (p *ControllerRegistor) AddFilter(pattern, action string, filter FilterFunc) {
 	mr := buildFilter(pattern, filter)
 	switch action {
@@ -248,12 +255,15 @@ func (p *ControllerRegistor) AddFilter(pattern, action string, filter FilterFunc
 	p.enableFilter = true
 }
 
+// Add a FilterFunc with pattern rule and action constant.
 func (p *ControllerRegistor) InsertFilter(pattern string, pos int, filter FilterFunc) {
 	mr := buildFilter(pattern, filter)
 	p.filters[pos] = append(p.filters[pos], mr)
 	p.enableFilter = true
 }
 
+// UrlFor does another controller handler in this request function.
+// it can access any controller method.
 func (p *ControllerRegistor) UrlFor(endpoint string, values ...string) string {
 	paths := strings.Split(endpoint, ".")
 	if len(paths) <= 1 {
@@ -369,7 +379,7 @@ func (p *ControllerRegistor) UrlFor(endpoint string, values ...string) string {
 	return ""
 }
 
-// main function to serveHTTP
+// Implement http.Handler interface.
 func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	defer func() {
 		if err := recover(); err != nil {
@@ -753,8 +763,8 @@ Admin:
 	}
 }
 
-// there always should be error handler that sets error code accordingly for all unhandled errors
-// in order to have custom UI for error page it's necessary to override "500" error
+// there always should be error handler that sets error code accordingly for all unhandled errors.
+// in order to have custom UI for error page it's necessary to override "500" error.
 func (p *ControllerRegistor) getErrorHandler(errorCode string) func(rw http.ResponseWriter, r *http.Request) {
 	handler := middleware.SimpleServerError
 	ok := true
@@ -771,6 +781,9 @@ func (p *ControllerRegistor) getErrorHandler(errorCode string) func(rw http.Resp
 	return handler
 }
 
+// returns method name from request header or form field.
+// sometimes browsers can't create PUT and DELETE request.
+// set a form field "_method" instead.
 func (p *ControllerRegistor) getRunMethod(method string, context *beecontext.Context, router *controllerInfo) string {
 	method = strings.ToLower(method)
 	if method == "post" && strings.ToLower(context.Input.Query("_method")) == "put" {
@@ -806,6 +819,7 @@ func (w *responseWriter) Header() http.Header {
 	return w.writer.Header()
 }
 
+// Init content-length header.
 func (w *responseWriter) InitHeadContent(contentlength int64) {
 	if w.contentEncoding == "gzip" {
 		w.Header().Set("Content-Encoding", "gzip")
@@ -817,14 +831,15 @@ func (w *responseWriter) InitHeadContent(contentlength int64) {
 }
 
 // Write writes the data to the connection as part of an HTTP reply,
-// and sets `started` to true
+// and sets `started` to true.
+// started means the response has sent out.
 func (w *responseWriter) Write(p []byte) (int, error) {
 	w.started = true
 	return w.writer.Write(p)
 }
 
 // WriteHeader sends an HTTP response header with status code,
-// and sets `started` to true
+// and sets `started` to true.
 func (w *responseWriter) WriteHeader(code int) {
 	w.status = code
 	w.started = true
