@@ -61,7 +61,7 @@ func DateFormat(t time.Time, layout string) (datestring string) {
 }
 
 // DateFormat pattern rules.
-var DatePatterns = []string{
+var datePatterns = []string{
 	// year
 	"Y", "2006", // A full numeric representation of a year, 4 digits   Examples: 1999 or 2003
 	"y", "06", //A two digit representation of a year   Examples: 99 or 03
@@ -103,14 +103,14 @@ var DatePatterns = []string{
 
 // Parse Date use PHP time format.
 func DateParse(dateString, format string) (time.Time, error) {
-	replacer := strings.NewReplacer(DatePatterns...)
+	replacer := strings.NewReplacer(datePatterns...)
 	format = replacer.Replace(format)
 	return time.ParseInLocation(format, dateString, time.Local)
 }
 
 // Date takes a PHP like date func to Go's time format.
 func Date(t time.Time, format string) string {
-	replacer := strings.NewReplacer(DatePatterns...)
+	replacer := strings.NewReplacer(datePatterns...)
 	format = replacer.Replace(format)
 	return t.Format(format)
 }
