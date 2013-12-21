@@ -16,7 +16,8 @@ import (
 
 var gmfim map[string]*MemFileInfo = make(map[string]*MemFileInfo)
 
-//TODO: 加锁保证数据完整性
+// OpenMemZipFile returns MemFile object with a compressed static file.
+// it's used for serve static file if gzip enable.
 func OpenMemZipFile(path string, zip string) (*MemFile, error) {
 	osfile, e := os.Open(path)
 	if e != nil {
@@ -86,6 +87,8 @@ func OpenMemZipFile(path string, zip string) (*MemFile, error) {
 	return &MemFile{fi: cfi, offset: 0}, nil
 }
 
+// MemFileInfo contains a compressed file bytes and file information.
+// it implements os.FileInfo interface.
 type MemFileInfo struct {
 	os.FileInfo
 	modTime     time.Time
@@ -94,49 +97,62 @@ type MemFileInfo struct {
 	fileSize    int64
 }
 
+// Name returns the compressed filename.
 func (fi *MemFileInfo) Name() string {
 	return fi.Name()
 }
 
+// Size returns the raw file content size, not compressed size.
 func (fi *MemFileInfo) Size() int64 {
 	return fi.contentSize
 }
 
+// Mode returns file mode.
 func (fi *MemFileInfo) Mode() os.FileMode {
 	return fi.Mode()
 }
 
+// ModTime returns the last modified time of raw file.
 func (fi *MemFileInfo) ModTime() time.Time {
 	return fi.modTime
 }
 
+// IsDir returns the compressing file is a directory or not.
 func (fi *MemFileInfo) IsDir() bool {
 	return fi.IsDir()
 }
 
+// return nil. implement the os.FileInfo interface method.
 func (fi *MemFileInfo) Sys() interface{} {
 	return nil
 }
 
+// MemFile contains MemFileInfo and bytes offset when reading.
+// it implements io.Reader,io.ReadCloser and io.Seeker.
 type MemFile struct {
 	fi     *MemFileInfo
 	offset int64
 }
 
+// Close memfile.
 func (f *MemFile) Close() error {
 	return nil
 }
 
+// Get os.FileInfo of memfile.
 func (f *MemFile) Stat() (os.FileInfo, error) {
 	return f.fi, nil
 }
 
+// read os.FileInfo of files in directory of memfile.
+// it returns empty slice.
 func (f *MemFile) Readdir(count int) ([]os.FileInfo, error) {
 	infos := []os.FileInfo{}
 
 	return infos, nil
 }
 
+// Read bytes from the compressed file bytes.
 func (f *MemFile) Read(p []byte) (n int, err error) {
 	if len(f.fi.content)-int(f.offset) >= len(p) {
 		n = len(p)
@@ -152,6 +168,7 @@ func (f *MemFile) Read(p []byte) (n int, err error) {
 var errWhence = errors.New("Seek: invalid whence")
 var errOffset = errors.New("Seek: invalid offset")
 
+// Read bytes from the compressed file bytes by seeker.
 func (f *MemFile) Seek(offset int64, whence int) (ret int64, err error) {
 	switch whence {
 	default:
@@ -169,8 +186,9 @@ func (f *MemFile) Seek(offset int64, whence int) (ret int64, err error) {
 	return f.offset, nil
 }
 
-//返回: gzip, deflate, 优先gzip
-//返回空, 表示不zip
+// GetAcceptEncodingZip returns accept encoding format in http header.
+// zip is first, then deflate if both accepted.
+// If no accepted, return empty string.
 func GetAcceptEncodingZip(r *http.Request) string {
 	ss := r.Header.Get("Accept-Encoding")
 	ss = strings.ToLower(ss)
@@ -181,8 +199,10 @@ func GetAcceptEncodingZip(r *http.Request) string {
 	} else {
 		return ""
 	}
+	return ""
 }
 
+// CloseZWriter closes the io.Writer after compressing static file.
 func CloseZWriter(zwriter io.Writer) {
 	if zwriter == nil {
 		return

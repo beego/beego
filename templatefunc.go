@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-// Substr() return the substr from start to length
+// Substr returns the substr from start to length.
 func Substr(s string, start, length int) string {
 	bt := []rune(s)
 	if start < 0 {
@@ -27,7 +27,7 @@ func Substr(s string, start, length int) string {
 	return string(bt[start:end])
 }
 
-// Html2str() returns escaping text convert from html
+// Html2str returns escaping text convert from html.
 func Html2str(html string) string {
 	src := string(html)
 
@@ -60,6 +60,7 @@ func DateFormat(t time.Time, layout string) (datestring string) {
 	return
 }
 
+// DateFormat pattern rules.
 var DatePatterns = []string{
 	// year
 	"Y", "2006", // A full numeric representation of a year, 4 digits   Examples: 1999 or 2003
@@ -100,14 +101,14 @@ var DatePatterns = []string{
 	"r", time.RFC1123Z,
 }
 
-// Parse Date use PHP time format
+// Parse Date use PHP time format.
 func DateParse(dateString, format string) (time.Time, error) {
 	replacer := strings.NewReplacer(DatePatterns...)
 	format = replacer.Replace(format)
 	return time.ParseInLocation(format, dateString, time.Local)
 }
 
-// Date takes a PHP like date func to Go's time format
+// Date takes a PHP like date func to Go's time format.
 func Date(t time.Time, format string) string {
 	replacer := strings.NewReplacer(DatePatterns...)
 	format = replacer.Replace(format)
@@ -115,7 +116,7 @@ func Date(t time.Time, format string) string {
 }
 
 // Compare is a quick and dirty comparison function. It will convert whatever you give it to strings and see if the two values are equal.
-// Whitespace is trimmed. Used by the template parser as "eq"
+// Whitespace is trimmed. Used by the template parser as "eq".
 func Compare(a, b interface{}) (equal bool) {
 	equal = false
 	if strings.TrimSpace(fmt.Sprintf("%v", a)) == strings.TrimSpace(fmt.Sprintf("%v", b)) {
@@ -124,10 +125,12 @@ func Compare(a, b interface{}) (equal bool) {
 	return
 }
 
+// Convert string to template.HTML type.
 func Str2html(raw string) template.HTML {
 	return template.HTML(raw)
 }
 
+// Htmlquote returns quoted html string.
 func Htmlquote(src string) string {
 	//HTML编码为实体符号
 	/*
@@ -150,6 +153,7 @@ func Htmlquote(src string) string {
 	return strings.TrimSpace(text)
 }
 
+// Htmlunquote returns unquoted html string.
 func Htmlunquote(src string) string {
 	//实体符号解释为HTML
 	/*
@@ -174,13 +178,14 @@ func Htmlunquote(src string) string {
 	return strings.TrimSpace(text)
 }
 
-// This will reference the index function local to the current blueprint:
+// UrlFor returns url string with another registered controller handler with params.
+//	usage:
 //	UrlFor(".index")
-//	...  print UrlFor("index")
-//	...  print UrlFor("login")
-//	...  print UrlFor("login", "next","/"")
-//	...  print UrlFor("profile", "username","John Doe")
-//	...
+//	print UrlFor("index")
+//	print UrlFor("login")
+//	print UrlFor("login", "next","/"")
+//	print UrlFor("profile", "username","John Doe")
+//	result:
 //	/
 //	/login
 //	/login?next=/
@@ -189,7 +194,7 @@ func UrlFor(endpoint string, values ...string) string {
 	return BeeApp.UrlFor(endpoint, values...)
 }
 
-//This can be changed to a better name
+// returns script tag with src string.
 func AssetsJs(src string) template.HTML {
 	text := string(src)
 
@@ -198,7 +203,7 @@ func AssetsJs(src string) template.HTML {
 	return template.HTML(text)
 }
 
-//This can be changed to a better name
+// returns stylesheet link tag with str string.
 func AssetsCss(src string) template.HTML {
 	text := string(src)
 
@@ -207,7 +212,7 @@ func AssetsCss(src string) template.HTML {
 	return template.HTML(text)
 }
 
-// parse form values to struct via tag
+// parse form values to struct via tag.
 func ParseForm(form url.Values, obj interface{}) error {
 	objT := reflect.TypeOf(obj)
 	objV := reflect.ValueOf(obj)
@@ -295,7 +300,8 @@ var unKind = map[reflect.Kind]bool{
 	reflect.UnsafePointer: true,
 }
 
-// obj must be a struct pointer
+// render object to form html.
+// obj must be a struct pointer.
 func RenderForm(obj interface{}) template.HTML {
 	objT := reflect.TypeOf(obj)
 	objV := reflect.ValueOf(obj)

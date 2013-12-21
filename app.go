@@ -61,7 +61,7 @@ func (app *App) Run() {
 			if nil != err {
 				BeeLogger.Critical("ResolveTCPAddr:", err)
 			}
-			l, err = GetInitListner(laddr)
+			l, err = GetInitListener(laddr)
 			theStoppable = newStoppable(l)
 			err = server.Serve(theStoppable)
 			theStoppable.wg.Wait()
@@ -92,19 +92,19 @@ func (app *App) Run() {
 // The c argument needs a controller handler implemented beego.ControllerInterface.
 // The mapping methods argument only need one string to define custom router rules.
 // usage:
-//	simple router
-// 	beego.Router("/admin", &admin.UserController{})
-//	beego.Router("/admin/index", &admin.ArticleController{})
+//  simple router
+//  beego.Router("/admin", &admin.UserController{})
+//  beego.Router("/admin/index", &admin.ArticleController{})
 //
-// 	regex router
+//  regex router
 //
-//	beego.Router(“/api/:id([0-9]+)“, &controllers.RController{})
+//  beego.Router(“/api/:id([0-9]+)“, &controllers.RController{})
 //
 //  custom rules
-//	beego.Router("/api/list",&RestController{},"*:ListFood")
-//	beego.Router("/api/create",&RestController{},"post:CreateFood")
-//	beego.Router("/api/update",&RestController{},"put:UpdateFood")
-//	beego.Router("/api/delete",&RestController{},"delete:DeleteFood")
+//  beego.Router("/api/list",&RestController{},"*:ListFood")
+//  beego.Router("/api/create",&RestController{},"post:CreateFood")
+//  beego.Router("/api/update",&RestController{},"put:UpdateFood")
+//  beego.Router("/api/delete",&RestController{},"delete:DeleteFood")
 func (app *App) Router(path string, c ControllerInterface, mappingMethods ...string) *App {
 	app.Handlers.Add(path, c, mappingMethods...)
 	return app
@@ -118,7 +118,7 @@ func (app *App) AutoRouter(c ControllerInterface) *App {
 	return app
 }
 
-// UrlFor does another controller handler with params in current context.
+// UrlFor creates a url with another registered controller handler with params.
 // The endpoint is formed as path.controller.name to defined the controller method which will run.
 // The values need key-pair data to assign into controller method.
 func (app *App) UrlFor(endpoint string, values ...string) string {
