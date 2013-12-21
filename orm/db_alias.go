@@ -126,7 +126,15 @@ func RegisterDataBase(aliasName, driverName, dataSource string, params ...int) {
 		row := al.DB.QueryRow("SELECT @@session.time_zone")
 		var tz string
 		row.Scan(&tz)
-		if tz != "SYSTEM" {
+		if tz == "SYSTEM" {
+			tz = ""
+			row = al.DB.QueryRow("SELECT @@system_time_zone")
+			row.Scan(&tz)
+			t, err := time.Parse("MST", tz)
+			if err == nil {
+				al.TZ = t.Location()
+			}
+		} else {
 			t, err := time.Parse("-07:00", tz)
 			if err == nil {
 				al.TZ = t.Location()
