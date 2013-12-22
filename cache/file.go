@@ -50,7 +50,7 @@ type FileCache struct {
 // Create new file cache with default directory and suffix.
 // the level and expiry need set in method StartAndGC as config string.
 func NewFileCache() *FileCache {
-	return &FileCache{}
+	return &FileCache{CachePath:FileCachePath, FileSuffix:FileCacheFileSuffix}
 }
 
 // Start and begin gc for file cache.
