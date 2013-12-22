@@ -203,7 +203,7 @@ func AssetsJs(src string) template.HTML {
 	return template.HTML(text)
 }
 
-// returns stylesheet link tag with str string.
+// returns stylesheet link tag with src string.
 func AssetsCss(src string) template.HTML {
 	text := string(src)
 
