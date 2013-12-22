@@ -9,28 +9,34 @@ import (
 )
 
 var (
+	// clock time of recycling the expired cache items in memory.
 	DefaultEvery int = 60 // 1 minute
 )
 
+// Memory cache item.
 type MemoryItem struct {
 	val        interface{}
 	Lastaccess time.Time
 	expired    int64
 }
 
+// Memory cache adapter.
+// it contains a RW locker for safe map storage.
 type MemoryCache struct {
 	lock  sync.RWMutex
 	dur   time.Duration
 	items map[string]*MemoryItem
-	Every int // Run an expiration check Every seconds
+	Every int // run an expiration check Every cloc; time
 }
 
-// NewDefaultCache returns a new FileCache with sane defaults.
+// NewMemoryCache returns a new MemoryCache.
 func NewMemoryCache() *MemoryCache {
 	cache := MemoryCache{items: make(map[string]*MemoryItem)}
 	return &cache
 }
 
+// Get cache from memory.
+// if non-existed or expired, return nil.
 func (bc *MemoryCache) Get(name string) interface{} {
 	bc.lock.RLock()
 	defer bc.lock.RUnlock()
@@ -45,6 +51,7 @@ func (bc *MemoryCache) Get(name string) interface{} {
 	return itm.val
 }
 
+// Put cache to memory.
 func (bc *MemoryCache) Put(name string, value interface{}, expired int64) error {
 	bc.lock.Lock()
 	defer bc.lock.Unlock()
@@ -57,6 +64,7 @@ func (bc *MemoryCache) Put(name string, value interface{}, expired int64) error 
 	return nil
 }
 
+/// Delete cache in memory.
 func (bc *MemoryCache) Delete(name string) error {
 	bc.lock.Lock()
 	defer bc.lock.Unlock()
@@ -71,6 +79,8 @@ func (bc *MemoryCache) Delete(name string) error {
 	return nil
 }
 
+// Increase cache counter in memory.
+// it supports int,int64,int32,uint,uint64,uint32.
 func (bc *MemoryCache) Incr(key string) error {
 	bc.lock.RLock()
 	defer bc.lock.RUnlock()
@@ -97,6 +107,7 @@ func (bc *MemoryCache) Incr(key string) error {
 	return nil
 }
 
+// Decrease counter in memory.
 func (bc *MemoryCache) Decr(key string) error {
 	bc.lock.RLock()
 	defer bc.lock.RUnlock()
@@ -135,6 +146,7 @@ func (bc *MemoryCache) Decr(key string) error {
 	return nil
 }
 
+// check cache exist in memory.
 func (bc *MemoryCache) IsExist(name string) bool {
 	bc.lock.RLock()
 	defer bc.lock.RUnlock()
@@ -142,6 +154,7 @@ func (bc *MemoryCache) IsExist(name string) bool {
 	return ok
 }
 
+// delete all cache in memory.
 func (bc *MemoryCache) ClearAll() error {
 	bc.lock.Lock()
 	defer bc.lock.Unlock()
@@ -149,7 +162,7 @@ func (bc *MemoryCache) ClearAll() error {
 	return nil
 }
 
-// Start activates the file cache; it will
+// start memory cache. it will check expiration in every clock time.
 func (bc *MemoryCache) StartAndGC(config string) error {
 	var cf map[string]int
 	json.Unmarshal([]byte(config), &cf)
@@ -167,6 +180,7 @@ func (bc *MemoryCache) StartAndGC(config string) error {
 	return nil
 }
 
+// check expiration.
 func (bc *MemoryCache) vaccuum() {
 	if bc.Every < 1 {
 		return

@@ -7,15 +7,18 @@ import (
 	"github.com/beego/memcache"
 )
 
+// Memcache adapter.
 type MemcacheCache struct {
 	c        *memcache.Connection
 	conninfo string
 }
 
+// create new memcache adapter.
 func NewMemCache() *MemcacheCache {
 	return &MemcacheCache{}
 }
 
+// get value from memcache.
 func (rc *MemcacheCache) Get(key string) interface{} {
 	if rc.c == nil {
 		rc.c = rc.connectInit()
@@ -33,6 +36,7 @@ func (rc *MemcacheCache) Get(key string) interface{} {
 	return contain
 }
 
+// put value to memcache. only support string.
 func (rc *MemcacheCache) Put(key string, val interface{}, timeout int64) error {
 	if rc.c == nil {
 		rc.c = rc.connectInit()
@@ -48,6 +52,7 @@ func (rc *MemcacheCache) Put(key string, val interface{}, timeout int64) error {
 	return err
 }
 
+// delete value in memcache.
 func (rc *MemcacheCache) Delete(key string) error {
 	if rc.c == nil {
 		rc.c = rc.connectInit()
@@ -56,14 +61,19 @@ func (rc *MemcacheCache) Delete(key string) error {
 	return err
 }
 
+// [Not Support]
+// increase counter.
 func (rc *MemcacheCache) Incr(key string) error {
 	return errors.New("not support in memcache")
 }
 
+// [Not Support]
+// decrease counter.
 func (rc *MemcacheCache) Decr(key string) error {
 	return errors.New("not support in memcache")
 }
 
+// check value exists in memcache.
 func (rc *MemcacheCache) IsExist(key string) bool {
 	if rc.c == nil {
 		rc.c = rc.connectInit()
@@ -80,6 +90,7 @@ func (rc *MemcacheCache) IsExist(key string) bool {
 	return true
 }
 
+// clear all cached in memcache.
 func (rc *MemcacheCache) ClearAll() error {
 	if rc.c == nil {
 		rc.c = rc.connectInit()
@@ -88,6 +99,9 @@ func (rc *MemcacheCache) ClearAll() error {
 	return err
 }
 
+// start memcache adapter.
+// config string is like {"conn":"connection info"}.
+// if connecting error, return.
 func (rc *MemcacheCache) StartAndGC(config string) error {
 	var cf map[string]string
 	json.Unmarshal([]byte(config), &cf)
@@ -102,6 +116,7 @@ func (rc *MemcacheCache) StartAndGC(config string) error {
 	return nil
 }
 
+// connect to memcache and keep the connection.
 func (rc *MemcacheCache) connectInit() *memcache.Connection {
 	c, err := memcache.Connect(rc.conninfo)
 	if err != nil {

@@ -5,6 +5,7 @@ import (
 	"strconv"
 )
 
+// convert interface to string.
 func GetString(v interface{}) string {
 	switch result := v.(type) {
 	case string:
@@ -20,6 +21,7 @@ func GetString(v interface{}) string {
 	}
 }
 
+// convert interface to int.
 func GetInt(v interface{}) int {
 	switch result := v.(type) {
 	case int:
@@ -40,6 +42,7 @@ func GetInt(v interface{}) int {
 	return 0
 }
 
+// convert interface to int64.
 func GetInt64(v interface{}) int64 {
 	switch result := v.(type) {
 	case int:
@@ -60,6 +63,7 @@ func GetInt64(v interface{}) int64 {
 	return 0
 }
 
+// convert interface to float64.
 func GetFloat64(v interface{}) float64 {
 	switch result := v.(type) {
 	case float64:
@@ -76,6 +80,7 @@ func GetFloat64(v interface{}) float64 {
 	return 0
 }
 
+// convert interface to bool.
 func GetBool(v interface{}) bool {
 	switch result := v.(type) {
 	case bool:
@@ -92,6 +97,7 @@ func GetBool(v interface{}) bool {
 	return false
 }
 
+// convert interface to byte slice.
 func getByteArray(v interface{}) []byte {
 	switch result := v.(type) {
 	case []byte:
