@@ -34,9 +34,9 @@ type FileCacheItem struct {
 
 var (
 	FileCachePath           string = "cache" // cache directory
-	FileCacheFileSuffix     string = ".bin"  // cache file suffix
-	FileCacheDirectoryLevel int    = 2       // cache file deep level if auto generated cache files.
-	FileCacheEmbedExpiry    int64  = 0       // cache expire time, default is no expire forever.
+	FileCacheFileSuffix     string = ".bin" // cache file suffix
+	FileCacheDirectoryLevel int    = 2 // cache file deep level if auto generated cache files.
+	FileCacheEmbedExpiry int64 = 0 // cache expire time, default is no expire forever.
 )
 
 // FileCache is cache adapter for file storage.
@@ -47,10 +47,11 @@ type FileCache struct {
 	EmbedExpiry    int
 }
 
-// Create new file cache with default directory and suffix.
+// Create new file cache with no config.
 // the level and expiry need set in method StartAndGC as config string.
 func NewFileCache() *FileCache {
-	return &FileCache{CachePath:FileCachePath, FileSuffix:FileCacheFileSuffix}
+	//    return &FileCache{CachePath:FileCachePath, FileSuffix:FileCacheFileSuffix}
+	return &FileCache{}
 }
 
 // Start and begin gc for file cache.
@@ -142,7 +143,7 @@ func (this *FileCache) Get(key string) interface{} {
 }
 
 // Put value into file cache.
-// timeout means how long to keep this file, unit of second.
+// timeout means how long to keep this file, unit of ms.
 func (this *FileCache) Put(key string, val interface{}, timeout int64) error {
 	filename := this.getCacheFileName(key)
 	var item FileCacheItem
