@@ -10,7 +10,7 @@ More info [beego.me](http://beego.me)
 
 ## Features
 
-* RESTFul support
+* RESTful support
 * MVC architecture
 * Session support (store in memory, file, Redis or MySQL)
 * Cache support (store in memory, Redis or Memcache)
