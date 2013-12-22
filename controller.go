@@ -241,7 +241,7 @@ func (c *Controller) ServeJson(encoding ...bool) {
 	c.Ctx.Output.Json(c.Data["json"], hasIndent, hasencoding)
 }
 
-// ServeJson sends a jsonp response.
+// ServeJsonp sends a jsonp response.
 func (c *Controller) ServeJsonp() {
 	var hasIndent bool
 	if RunMode == "prod" {
@@ -252,7 +252,7 @@ func (c *Controller) ServeJsonp() {
 	c.Ctx.Output.Jsonp(c.Data["jsonp"], hasIndent)
 }
 
-// ServeJson sends xml response.
+// ServeXml sends xml response.
 func (c *Controller) ServeXml() {
 	var hasIndent bool
 	if RunMode == "prod" {

@@ -17,7 +17,7 @@ import (
 
 var (
 	beegoTplFuncMap template.FuncMap
-	// beego template caching map ans supported template file extensions.
+	// beego template caching map and supported template file extensions.
 	BeeTemplates   map[string]*template.Template
 	BeeTemplateExt []string
 )
@@ -89,7 +89,7 @@ func (self *templatefile) visit(paths string, f os.FileInfo, err error) error {
 	return nil
 }
 
-// return this path has supported template extension of beego or not.
+// return this path contains supported template extension of beego or not.
 func HasTemplateExt(paths string) bool {
 	for _, v := range BeeTemplateExt {
 		if strings.HasSuffix(paths, "."+v) {
