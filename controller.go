@@ -38,6 +38,7 @@ type Controller struct {
 	actionName     string
 	TplNames       string
 	Layout         string
+	LayoutSections map[string]string // the key is the section name and the value is the template name
 	TplExt         string
 	_xsrf_token    string
 	gotofunc       string
@@ -161,6 +162,25 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		}
 		tplcontent, _ := ioutil.ReadAll(newbytes)
 		c.Data["LayoutContent"] = template.HTML(string(tplcontent))
+
+		if c.LayoutSections != nil {
+			for sectionName, sectionTpl := range c.LayoutSections {
+				if (sectionTpl == "") {
+					c.Data[sectionName] = ""
+					continue
+				}
+
+				sectionBytes := bytes.NewBufferString("")
+				err = BeeTemplates[sectionTpl].ExecuteTemplate(sectionBytes, sectionTpl, c.Data)
+				if err != nil {
+					Trace("template Execute err:", err)
+					return nil, err
+				}
+				sectionContent, _ := ioutil.ReadAll(sectionBytes)
+				c.Data[sectionName] = template.HTML(string(sectionContent))
+			}
+		}
+
 		ibytes := bytes.NewBufferString("")
 		err = BeeTemplates[c.Layout].ExecuteTemplate(ibytes, c.Layout, c.Data)
 		if err != nil {
