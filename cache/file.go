@@ -144,12 +144,13 @@ func (this *FileCache) Get(key string) interface{} {
 
 // Put value into file cache.
 // timeout means how long to keep this file, unit of ms.
+// if timeout equals FileCacheEmbedExpiry(default is 0), cache this item forever.
 func (this *FileCache) Put(key string, val interface{}, timeout int64) error {
 	filename := this.getCacheFileName(key)
 	var item FileCacheItem
 	item.Data = val
 	if timeout == FileCacheEmbedExpiry {
-		item.Expired = time.Now().Unix() + (86400 * 365 * 10) //10年
+		item.Expired = time.Now().Unix() + (86400 * 365 * 10) // ten years
 	} else {
 		item.Expired = time.Now().Unix() + timeout
 	}
