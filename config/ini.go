@@ -13,21 +13,21 @@ import (
 )
 
 var (
-	DEFAULT_SECTION = "default"
-	bNumComment     = []byte{'#'} // number sign
-	bSemComment     = []byte{';'} // semicolon
+	DEFAULT_SECTION = "default"   // default section means if some ini items not in a section, make them in default section,
+	bNumComment     = []byte{'#'} // number signal
+	bSemComment     = []byte{';'} // semicolon signal
 	bEmpty          = []byte{}
-	bEqual          = []byte{'='}
-	bDQuote         = []byte{'"'}
-	sectionStart    = []byte{'['}
-	sectionEnd      = []byte{']'}
+	bEqual          = []byte{'='} // equal signal
+	bDQuote         = []byte{'"'} // quote signal
+	sectionStart    = []byte{'['} // section start signal
+	sectionEnd      = []byte{']'} // section end signal
 )
 
+// IniConfig implements Config to parse ini file.
 type IniConfig struct {
 }
 
-// ParseFile creates a new Config and parses the file configuration from the
-// named file.
+// ParseFile creates a new Config and parses the file configuration from the named file.
 func (ini *IniConfig) Parse(name string) (ConfigContainer, error) {
 	file, err := os.Open(name)
 	if err != nil {
@@ -106,11 +106,12 @@ func (ini *IniConfig) Parse(name string) (ConfigContainer, error) {
 	return cfg, nil
 }
 
-// A Config represents the configuration.
+// A Config represents the ini configuration.
+// When set and get value, support key as section:name type.
 type IniConfigContainer struct {
 	filename       string
-	data           map[string]map[string]string //section=> key:val
-	sectionComment map[string]string            //sction : comment
+	data           map[string]map[string]string // section=> key:val
+	sectionComment map[string]string            // section : comment
 	keycomment     map[string]string            // id: []{comment, key...}; id 1 is for main comment.
 	sync.RWMutex
 }
@@ -127,6 +128,7 @@ func (c *IniConfigContainer) Int(key string) (int, error) {
 	return strconv.Atoi(c.getdata(key))
 }
 
+// Int64 returns the int64 value for a given key.
 func (c *IniConfigContainer) Int64(key string) (int64, error) {
 	key = strings.ToLower(key)
 	return strconv.ParseInt(c.getdata(key), 10, 64)
@@ -145,6 +147,8 @@ func (c *IniConfigContainer) String(key string) string {
 }
 
 // WriteValue writes a new value for key.
+// if write to one section, the key need be "section::key".
+// if the section is not existed, it panics.
 func (c *IniConfigContainer) Set(key, value string) error {
 	c.Lock()
 	defer c.Unlock()
@@ -169,6 +173,7 @@ func (c *IniConfigContainer) Set(key, value string) error {
 	return nil
 }
 
+// DIY returns the raw value by a given key.
 func (c *IniConfigContainer) DIY(key string) (v interface{}, err error) {
 	key = strings.ToLower(key)
 	if v, ok := c.data[key]; ok {
@@ -177,7 +182,7 @@ func (c *IniConfigContainer) DIY(key string) (v interface{}, err error) {
 	return v, errors.New("key not find")
 }
 
-//section.key or key
+// section.key or key
 func (c *IniConfigContainer) getdata(key string) string {
 	c.RLock()
 	defer c.RUnlock()

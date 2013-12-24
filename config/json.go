@@ -9,9 +9,11 @@ import (
 	"sync"
 )
 
+// JsonConfig is a json config parser and implements Config interface.
 type JsonConfig struct {
 }
 
+// Parse returns a ConfigContainer with parsed json config map.
 func (js *JsonConfig) Parse(filename string) (ConfigContainer, error) {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -32,11 +34,14 @@ func (js *JsonConfig) Parse(filename string) (ConfigContainer, error) {
 	return x, nil
 }
 
+// A Config represents the json configuration.
+// Only when get value, support key as section:name type.
 type JsonConfigContainer struct {
 	data map[string]interface{}
 	sync.RWMutex
 }
 
+// Bool returns the boolean value for a given key.
 func (c *JsonConfigContainer) Bool(key string) (bool, error) {
 	val := c.getdata(key)
 	if val != nil {
@@ -48,9 +53,10 @@ func (c *JsonConfigContainer) Bool(key string) (bool, error) {
 	} else {
 		return false, errors.New("not exist key:" + key)
 	}
-
+	return false, nil
 }
 
+// Int returns the integer value for a given key.
 func (c *JsonConfigContainer) Int(key string) (int, error) {
 	val := c.getdata(key)
 	if val != nil {
@@ -62,8 +68,10 @@ func (c *JsonConfigContainer) Int(key string) (int, error) {
 	} else {
 		return 0, errors.New("not exist key:" + key)
 	}
+	return 0, nil
 }
 
+// Int64 returns the int64 value for a given key.
 func (c *JsonConfigContainer) Int64(key string) (int64, error) {
 	val := c.getdata(key)
 	if val != nil {
@@ -75,8 +83,10 @@ func (c *JsonConfigContainer) Int64(key string) (int64, error) {
 	} else {
 		return 0, errors.New("not exist key:" + key)
 	}
+	return 0, nil
 }
 
+// Float returns the float value for a given key.
 func (c *JsonConfigContainer) Float(key string) (float64, error) {
 	val := c.getdata(key)
 	if val != nil {
@@ -88,8 +98,10 @@ func (c *JsonConfigContainer) Float(key string) (float64, error) {
 	} else {
 		return 0.0, errors.New("not exist key:" + key)
 	}
+	return 0.0, nil
 }
 
+// String returns the string value for a given key.
 func (c *JsonConfigContainer) String(key string) string {
 	val := c.getdata(key)
 	if val != nil {
@@ -101,8 +113,10 @@ func (c *JsonConfigContainer) String(key string) string {
 	} else {
 		return ""
 	}
+	return ""
 }
 
+// WriteValue writes a new value for key.
 func (c *JsonConfigContainer) Set(key, val string) error {
 	c.Lock()
 	defer c.Unlock()
@@ -110,6 +124,7 @@ func (c *JsonConfigContainer) Set(key, val string) error {
 	return nil
 }
 
+// DIY returns the raw value by a given key.
 func (c *JsonConfigContainer) DIY(key string) (v interface{}, err error) {
 	val := c.getdata(key)
 	if val != nil {
@@ -117,9 +132,10 @@ func (c *JsonConfigContainer) DIY(key string) (v interface{}, err error) {
 	} else {
 		return nil, errors.New("not exist key")
 	}
+	return nil, nil
 }
 
-//section.key or key
+// section.key or key
 func (c *JsonConfigContainer) getdata(key string) interface{} {
 	c.RLock()
 	defer c.RUnlock()

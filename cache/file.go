@@ -47,10 +47,11 @@ type FileCache struct {
 	EmbedExpiry    int
 }
 
-// Create new file cache with default directory and suffix.
+// Create new file cache with no config.
 // the level and expiry need set in method StartAndGC as config string.
 func NewFileCache() *FileCache {
-	return &FileCache{CachePath:FileCachePath, FileSuffix:FileCacheFileSuffix}
+	//    return &FileCache{CachePath:FileCachePath, FileSuffix:FileCacheFileSuffix}
+	return &FileCache{}
 }
 
 // Start and begin gc for file cache.
@@ -142,13 +143,14 @@ func (this *FileCache) Get(key string) interface{} {
 }
 
 // Put value into file cache.
-// timeout means how long to keep this file, unit of second.
+// timeout means how long to keep this file, unit of ms.
+// if timeout equals FileCacheEmbedExpiry(default is 0), cache this item forever.
 func (this *FileCache) Put(key string, val interface{}, timeout int64) error {
 	filename := this.getCacheFileName(key)
 	var item FileCacheItem
 	item.Data = val
 	if timeout == FileCacheEmbedExpiry {
-		item.Expired = time.Now().Unix() + (86400 * 365 * 10) //10年
+		item.Expired = time.Now().Unix() + (86400 * 365 * 10) // ten years
 	} else {
 		item.Expired = time.Now().Unix() + timeout
 	}

@@ -26,7 +26,7 @@ type MemoryCache struct {
 	lock  sync.RWMutex
 	dur   time.Duration
 	items map[string]*MemoryItem
-	Every int // run an expiration check Every cloc; time
+	Every int // run an expiration check Every clock time
 }
 
 // NewMemoryCache returns a new MemoryCache.
@@ -52,6 +52,7 @@ func (bc *MemoryCache) Get(name string) interface{} {
 }
 
 // Put cache to memory.
+// if expired is 0, it will be cleaned by next gc operation ( default gc clock is 1 minute).
 func (bc *MemoryCache) Put(name string, value interface{}, expired int64) error {
 	bc.lock.Lock()
 	defer bc.lock.Unlock()
