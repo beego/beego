@@ -166,6 +166,9 @@ func (c *IniConfigContainer) Set(key, value string) error {
 		section = DEFAULT_SECTION
 		k = sectionkey[0]
 	}
+	if _, ok := c.data[section]; !ok {
+		c.data[section] = make(map[string]string)
+	}
 	c.data[section][k] = value
 	return nil
 }
