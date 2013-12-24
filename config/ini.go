@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	DEFAULT_SECTION = "default" // default section means if some ini items not in a section, make them in default section,
+	DEFAULT_SECTION = "default"   // default section means if some ini items not in a section, make them in default section,
 	bNumComment     = []byte{'#'} // number signal
 	bSemComment     = []byte{';'} // semicolon signal
 	bEmpty          = []byte{}

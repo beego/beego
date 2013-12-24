@@ -34,9 +34,9 @@ type FileCacheItem struct {
 
 var (
 	FileCachePath           string = "cache" // cache directory
-	FileCacheFileSuffix     string = ".bin" // cache file suffix
-	FileCacheDirectoryLevel int    = 2 // cache file deep level if auto generated cache files.
-	FileCacheEmbedExpiry int64 = 0 // cache expire time, default is no expire forever.
+	FileCacheFileSuffix     string = ".bin"  // cache file suffix
+	FileCacheDirectoryLevel int    = 2       // cache file deep level if auto generated cache files.
+	FileCacheEmbedExpiry    int64  = 0       // cache expire time, default is no expire forever.
 )
 
 // FileCache is cache adapter for file storage.

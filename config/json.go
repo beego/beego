@@ -53,7 +53,7 @@ func (c *JsonConfigContainer) Bool(key string) (bool, error) {
 	} else {
 		return false, errors.New("not exist key:" + key)
 	}
-	return false,nil
+	return false, nil
 }
 
 // Int returns the integer value for a given key.
@@ -68,7 +68,7 @@ func (c *JsonConfigContainer) Int(key string) (int, error) {
 	} else {
 		return 0, errors.New("not exist key:" + key)
 	}
-	return 0,nil
+	return 0, nil
 }
 
 // Int64 returns the int64 value for a given key.
@@ -83,7 +83,7 @@ func (c *JsonConfigContainer) Int64(key string) (int64, error) {
 	} else {
 		return 0, errors.New("not exist key:" + key)
 	}
-	return 0,nil
+	return 0, nil
 }
 
 // Float returns the float value for a given key.
@@ -98,7 +98,7 @@ func (c *JsonConfigContainer) Float(key string) (float64, error) {
 	} else {
 		return 0.0, errors.New("not exist key:" + key)
 	}
-	return 0.0,nil
+	return 0.0, nil
 }
 
 // String returns the string value for a given key.
@@ -132,7 +132,7 @@ func (c *JsonConfigContainer) DIY(key string) (v interface{}, err error) {
 	} else {
 		return nil, errors.New("not exist key")
 	}
-	return nil,nil
+	return nil, nil
 }
 
 // section.key or key
