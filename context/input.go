@@ -50,7 +50,6 @@ func (input *BeegoInput) Site() string {
 }
 
 // Scheme returns request scheme as "http" or "https".
-// if error, return empty string.
 func (input *BeegoInput) Scheme() string {
 	if input.Request.URL.Scheme != "" {
 		return input.Request.URL.Scheme
@@ -59,7 +58,6 @@ func (input *BeegoInput) Scheme() string {
 	} else {
 		return "https"
 	}
-	return ""
 }
 
 // Domain returns host name.
