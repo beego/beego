@@ -18,6 +18,7 @@ import (
 
 var defaultUserAgent = "beegoServer"
 
+// Get returns *BeegoHttpRequest with GET method.
 func Get(url string) *BeegoHttpRequest {
 	var req http.Request
 	req.Method = "GET"
@@ -26,6 +27,7 @@ func Get(url string) *BeegoHttpRequest {
 	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil}
 }
 
+// Post returns *BeegoHttpRequest with POST method.
 func Post(url string) *BeegoHttpRequest {
 	var req http.Request
 	req.Method = "POST"
@@ -34,6 +36,7 @@ func Post(url string) *BeegoHttpRequest {
 	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil}
 }
 
+// Put returns *BeegoHttpRequest with PUT method.
 func Put(url string) *BeegoHttpRequest {
 	var req http.Request
 	req.Method = "PUT"
@@ -42,6 +45,7 @@ func Put(url string) *BeegoHttpRequest {
 	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil}
 }
 
+// Delete returns *BeegoHttpRequest DELETE GET method.
 func Delete(url string) *BeegoHttpRequest {
 	var req http.Request
 	req.Method = "DELETE"
@@ -50,6 +54,7 @@ func Delete(url string) *BeegoHttpRequest {
 	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil}
 }
 
+// Head returns *BeegoHttpRequest with HEAD method.
 func Head(url string) *BeegoHttpRequest {
 	var req http.Request
 	req.Method = "HEAD"
@@ -58,6 +63,7 @@ func Head(url string) *BeegoHttpRequest {
 	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil}
 }
 
+// BeegoHttpRequest provides more useful methods for requesting one url than http.Request.
 type BeegoHttpRequest struct {
 	url              string
 	req              *http.Request
@@ -68,37 +74,46 @@ type BeegoHttpRequest struct {
 	tlsClientConfig  *tls.Config
 }
 
+// Debug sets show debug or not when executing request.
 func (b *BeegoHttpRequest) Debug(isdebug bool) *BeegoHttpRequest {
 	b.showdebug = isdebug
 	return b
 }
 
+// SetTimeout sets connect time out and read-write time out for BeegoRequest.
 func (b *BeegoHttpRequest) SetTimeout(connectTimeout, readWriteTimeout time.Duration) *BeegoHttpRequest {
 	b.connectTimeout = connectTimeout
 	b.readWriteTimeout = readWriteTimeout
 	return b
 }
 
+// SetTLSClientConfig sets tls connection configurations if visiting https url.
 func (b *BeegoHttpRequest) SetTLSClientConfig(config *tls.Config) *BeegoHttpRequest {
 	b.tlsClientConfig = config
 	return b
 }
 
+// Header add header item string in request.
 func (b *BeegoHttpRequest) Header(key, value string) *BeegoHttpRequest {
 	b.req.Header.Set(key, value)
 	return b
 }
 
+// SetCookie add cookie into request.
 func (b *BeegoHttpRequest) SetCookie(cookie *http.Cookie) *BeegoHttpRequest {
 	b.req.Header.Add("Cookie", cookie.String())
 	return b
 }
 
+// Param adds query param in to request.
+// params build query string as ?key1=value1&key2=value2...
 func (b *BeegoHttpRequest) Param(key, value string) *BeegoHttpRequest {
 	b.params[key] = value
 	return b
 }
 
+// Body adds request raw body.
+// it supports string and []byte.
 func (b *BeegoHttpRequest) Body(data interface{}) *BeegoHttpRequest {
 	switch t := data.(type) {
 	case string:
@@ -169,6 +184,8 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 	return resp, nil
 }
 
+// String returns the body string in response.
+// it calls Response inner.
 func (b *BeegoHttpRequest) String() (string, error) {
 	data, err := b.Bytes()
 	if err != nil {
@@ -178,6 +195,8 @@ func (b *BeegoHttpRequest) String() (string, error) {
 	return string(data), nil
 }
 
+// Bytes returns the body []byte in response.
+// it calls Response inner.
 func (b *BeegoHttpRequest) Bytes() ([]byte, error) {
 	resp, err := b.getResponse()
 	if err != nil {
@@ -194,6 +213,8 @@ func (b *BeegoHttpRequest) Bytes() ([]byte, error) {
 	return data, nil
 }
 
+// ToFile saves the body data in response to one file.
+// it calls Response inner.
 func (b *BeegoHttpRequest) ToFile(filename string) error {
 	f, err := os.Create(filename)
 	if err != nil {
@@ -216,6 +237,8 @@ func (b *BeegoHttpRequest) ToFile(filename string) error {
 	return nil
 }
 
+// ToJson returns the map that marshals from the body bytes as json in response .
+// it calls Response inner.
 func (b *BeegoHttpRequest) ToJson(v interface{}) error {
 	data, err := b.Bytes()
 	if err != nil {
@@ -228,6 +251,8 @@ func (b *BeegoHttpRequest) ToJson(v interface{}) error {
 	return nil
 }
 
+// ToXml returns the map that marshals from the body bytes as xml in response .
+// it calls Response inner.
 func (b *BeegoHttpRequest) ToXML(v interface{}) error {
 	data, err := b.Bytes()
 	if err != nil {
@@ -240,10 +265,12 @@ func (b *BeegoHttpRequest) ToXML(v interface{}) error {
 	return nil
 }
 
+// Response executes request client gets response mannually.
 func (b *BeegoHttpRequest) Response() (*http.Response, error) {
 	return b.getResponse()
 }
 
+// TimeoutDialer returns functions of connection dialer with timeout settings for http.Transport Dial field.
 func TimeoutDialer(cTimeout time.Duration, rwTimeout time.Duration) func(net, addr string) (c net.Conn, err error) {
 	return func(netw, addr string) (net.Conn, error) {
 		conn, err := net.DialTimeout(netw, addr, cTimeout)
