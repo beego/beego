@@ -580,7 +580,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			http.Redirect(w, r, requestPath+"/", 301)
 			goto Admin
 		}
-		if n >= 1 && requestPath[:n-1] == route.pattern {
+		if requestPath[n-1] == '/' && n >= 2 && requestPath[:n-2] == route.pattern {
 			runMethod = p.getRunMethod(r.Method, context, route)
 			if runMethod != "" {
 				runrouter = route.controllerType
