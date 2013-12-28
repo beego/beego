@@ -140,7 +140,7 @@ func (c *Controller) RenderString() (string, error) {
 	return string(b), e
 }
 
-// RenderBytes returns the bytes of renderd tempate string. Do not send out response.
+// RenderBytes returns the bytes of rendered template string. Do not send out response.
 func (c *Controller) RenderBytes() ([]byte, error) {
 	//if the controller has set layout, then first get the tplname's content set the content to the layout
 	if c.Layout != "" {
