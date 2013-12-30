@@ -573,12 +573,20 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				break
 			}
 		}
-		// pattern /admin   url /admin 200  /admin/ 404
+		// pattern /admin   url /admin 200  /admin/ 200
 		// pattern /admin/  url /admin 301  /admin/ 200
 		if requestPath[n-1] != '/' && len(route.pattern) == n+1 &&
 			route.pattern[n] == '/' && route.pattern[:n] == requestPath {
 			http.Redirect(w, r, requestPath+"/", 301)
 			goto Admin
+		}
+		if n >= 1 && requestPath[:n-1] == route.pattern {
+			runMethod = p.getRunMethod(r.Method, context, route)
+			if runMethod != "" {
+				runrouter = route.controllerType
+				findrouter = true
+				break
+			}
 		}
 	}
 
