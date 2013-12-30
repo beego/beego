@@ -13,6 +13,13 @@ import (
 // beego web framework version.
 const VERSION = "1.0.1"
 
+type hookfunc func() error //hook function to run
+var hooks []hookfunc       //hook function slice to store the hookfunc
+
+func init() {
+	hooks = make([]hookfunc, 0)
+}
+
 // Router adds a patterned controller handler to BeeApp.
 // it's an alias method of App.Router.
 func Router(rootpath string, c ControllerInterface, mappingMethods ...string) *App {
@@ -87,6 +94,12 @@ func InsertFilter(pattern string, pos int, filter FilterFunc) *App {
 	return BeeApp
 }
 
+// The hookfunc will run in beego.Run()
+// such as sessionInit, middlerware start, buildtemplate, admin start
+func AddAPPStartHook(hf hookfunc) {
+	hooks = append(hooks, hf)
+}
+
 // Run beego application.
 // it's alias of App.Run.
 func Run() {
@@ -101,6 +114,14 @@ func Run() {
 
 	//init mime
 	initMime()
+
+	// do hooks function
+	for _, hk := range hooks {
+		err := hk()
+		if err != nil {
+			panic(err)
+		}
+	}
 
 	if SessionOn {
 		GlobalSessions, _ = session.NewManager(SessionProvider,

@@ -77,7 +77,7 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingM
 	params := make(map[int]string)
 	for i, part := range parts {
 		if strings.HasPrefix(part, ":") {
-			expr := "(.+)"
+			expr := "(.*)"
 			//a user may choose to override the defult expression
 			// similar to expressjs: ‘/user/:id([0-9]+)’
 			if index := strings.Index(part, "("); index != -1 {
@@ -100,7 +100,7 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingM
 			j++
 		}
 		if strings.HasPrefix(part, "*") {
-			expr := "(.+)"
+			expr := "(.*)"
 			if part == "*.*" {
 				params[j] = ":path"
 				parts[i] = "([^.]+).([^.]+)"
@@ -238,8 +238,11 @@ func (p *ControllerRegistor) AddAuto(c ControllerInterface) {
 
 // [Deprecated] use InsertFilter.
 // Add FilterFunc with pattern for action.
-func (p *ControllerRegistor) AddFilter(pattern, action string, filter FilterFunc) {
-	mr := buildFilter(pattern, filter)
+func (p *ControllerRegistor) AddFilter(pattern, action string, filter FilterFunc) error {
+	mr, err := buildFilter(pattern, filter)
+	if err != nil {
+		return err
+	}
 	switch action {
 	case "BeforeRouter":
 		p.filters[BeforeRouter] = append(p.filters[BeforeRouter], mr)
@@ -253,13 +256,18 @@ func (p *ControllerRegistor) AddFilter(pattern, action string, filter FilterFunc
 		p.filters[FinishRouter] = append(p.filters[FinishRouter], mr)
 	}
 	p.enableFilter = true
+	return nil
 }
 
 // Add a FilterFunc with pattern rule and action constant.
-func (p *ControllerRegistor) InsertFilter(pattern string, pos int, filter FilterFunc) {
-	mr := buildFilter(pattern, filter)
+func (p *ControllerRegistor) InsertFilter(pattern string, pos int, filter FilterFunc) error {
+	mr, err := buildFilter(pattern, filter)
+	if err != nil {
+		return err
+	}
 	p.filters[pos] = append(p.filters[pos], mr)
 	p.enableFilter = true
+	return nil
 }
 
 // UrlFor does another controller handler in this request function.
