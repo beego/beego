@@ -18,6 +18,8 @@ var hooks []hookfunc       //hook function slice to store the hookfunc
 
 func init() {
 	hooks = make([]hookfunc, 0)
+	//init mime
+	AddAPPStartHook(initMime)
 }
 
 // Router adds a patterned controller handler to BeeApp.
@@ -111,9 +113,6 @@ func Run() {
 			panic(err)
 		}
 	}
-
-	//init mime
-	initMime()
 
 	// do hooks function
 	for _, hk := range hooks {
