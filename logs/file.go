@@ -13,6 +13,8 @@ import (
 	"time"
 )
 
+// FileLogWriter implements LoggerInterface.
+// It writes messages by lines limit, file size limit, or time frequency.
 type FileLogWriter struct {
 	*log.Logger
 	mw *MuxWriter
@@ -38,17 +40,20 @@ type FileLogWriter struct {
 	Level int `json:"level"`
 }
 
+// an *os.File writer with locker.
 type MuxWriter struct {
 	sync.Mutex
 	fd *os.File
 }
 
+// write to os.File.
 func (l *MuxWriter) Write(b []byte) (int, error) {
 	l.Lock()
 	defer l.Unlock()
 	return l.fd.Write(b)
 }
 
+// set os.File in writer.
 func (l *MuxWriter) SetFd(fd *os.File) {
 	if l.fd != nil {
 		l.fd.Close()
@@ -56,6 +61,7 @@ func (l *MuxWriter) SetFd(fd *os.File) {
 	l.fd = fd
 }
 
+// create a FileLogWriter returning as LoggerInterface.
 func NewFileWriter() LoggerInterface {
 	w := &FileLogWriter{
 		Filename: "",
@@ -73,15 +79,16 @@ func NewFileWriter() LoggerInterface {
 	return w
 }
 
-// jsonconfig like this
-//{
+// Init file logger with json config.
+// jsonconfig like:
+//	{
 //	"filename":"logs/beego.log",
 //	"maxlines":10000,
 //	"maxsize":1<<30,
 //	"daily":true,
 //	"maxdays":15,
 //	"rotate":true
-//}
+//	}
 func (w *FileLogWriter) Init(jsonconfig string) error {
 	err := json.Unmarshal([]byte(jsonconfig), w)
 	if err != nil {
@@ -94,6 +101,7 @@ func (w *FileLogWriter) Init(jsonconfig string) error {
 	return err
 }
 
+// start file logger. create log file and set to locker-inside file writer.
 func (w *FileLogWriter) StartLogger() error {
 	fd, err := w.createLogFile()
 	if err != nil {
@@ -122,6 +130,7 @@ func (w *FileLogWriter) docheck(size int) {
 	w.maxsize_cursize += size
 }
 
+// write logger message into file.
 func (w *FileLogWriter) WriteMsg(msg string, level int) error {
 	if level < w.Level {
 		return nil
@@ -158,6 +167,8 @@ func (w *FileLogWriter) initFd() error {
 	return nil
 }
 
+// DoRotate means it need to write file in new file.
+// new file name like xx.log.2013-01-01.2
 func (w *FileLogWriter) DoRotate() error {
 	_, err := os.Lstat(w.Filename)
 	if err == nil { // file exists
@@ -211,10 +222,14 @@ func (w *FileLogWriter) deleteOldLog() {
 	})
 }
 
+// destroy file logger, close file writer.
 func (w *FileLogWriter) Destroy() {
 	w.mw.fd.Close()
 }
 
+// flush file logger.
+// there are no buffering messages in file logger in memory.
+// flush file means sync file from disk.
 func (w *FileLogWriter) Flush() {
 	w.mw.fd.Sync()
 }
