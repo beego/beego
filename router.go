@@ -1,7 +1,10 @@
 package beego
 
 import (
+	"bufio"
+	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"os"
@@ -863,4 +866,14 @@ func (w *responseWriter) WriteHeader(code int) {
 	w.status = code
 	w.started = true
 	w.writer.WriteHeader(code)
+}
+
+// hijacker for http
+func (w *responseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	hj, ok := w.writer.(http.Hijacker)
+	if !ok {
+		println("supported?")
+		return nil, nil, errors.New("webserver doesn't support hijacking")
+	}
+	return hj.Hijack()
 }
