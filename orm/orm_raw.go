@@ -285,6 +285,8 @@ func (o *rawSet) QueryRow(containers ...interface{}) error {
 		return err
 	}
 
+	defer rows.Close()
+
 	if rows.Next() {
 		if structMode {
 			columns, err := rows.Columns()
@@ -408,11 +410,12 @@ func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
 		return 0, err
 	}
 
-	nInds := make([]reflect.Value, len(sInds))
-
-	sInd := sInds[0]
+	defer rows.Close()
 
 	var cnt int64
+	nInds := make([]reflect.Value, len(sInds))
+	sInd := sInds[0]
+
 	for rows.Next() {
 
 		if structMode {
@@ -537,6 +540,8 @@ func (o *rawSet) readValues(container interface{}) (int64, error) {
 	} else {
 		rs = r
 	}
+
+	defer rs.Close()
 
 	var (
 		refs []interface{}

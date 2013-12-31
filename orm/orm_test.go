@@ -1392,7 +1392,8 @@ func TestQueryRows(t *testing.T) {
 
 	var ids []int
 	var usernames []string
-	num, err = dORM.Raw("SELECT id, user_name FROM user ORDER BY id asc").QueryRows(&ids, &usernames)
+	query = fmt.Sprintf("SELECT %sid%s, %suser_name%s FROM %suser%s ORDER BY %sid%s ASC", Q, Q, Q, Q, Q, Q, Q, Q)
+	num, err = dORM.Raw(query).QueryRows(&ids, &usernames)
 	throwFailNow(t, err)
 	throwFailNow(t, AssertIs(num, 3))
 	throwFailNow(t, AssertIs(len(ids), 3))
