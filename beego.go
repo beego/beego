@@ -50,6 +50,15 @@ func (gr GroupRouters) AddRouter(pattern string, c ControllerInterface, mappingM
 	gr = append(gr, newRG)
 }
 
+func (gr GroupRouters) AddAuto(c ControllerInterface) {
+	newRG := groupRouter{
+		"",
+		c,
+		"",
+	}
+	gr = append(gr, newRG)
+}
+
 // AddGroupRouter with the prefix
 // it will register the router in BeeApp
 // the follow code is write in modules:
@@ -62,7 +71,9 @@ func (gr GroupRouters) AddRouter(pattern string, c ControllerInterface, mappingM
 // AddRouterGroup("/admin", auth.GR)
 func AddGroupRouter(prefix string, groups GroupRouters) *App {
 	for _, v := range groups {
-		if v.mappingMethods != "" {
+		if v.pattern == "" {
+			BeeApp.AutoRouterWithPrefix(prefix, v.controller)
+		} else if v.mappingMethods != "" {
 			BeeApp.Router(prefix+v.pattern, v.controller, v.mappingMethods)
 		} else {
 			BeeApp.Router(prefix+v.pattern, v.controller)
@@ -92,6 +103,13 @@ func RESTRouter(rootpath string, c ControllerInterface) *App {
 // it's same to App.AutoRouter.
 func AutoRouter(c ControllerInterface) *App {
 	BeeApp.AutoRouter(c)
+	return BeeApp
+}
+
+// AutoPrefix adds controller handler to BeeApp with prefix.
+// it's same to App.AutoRouterWithPrefix.
+func AutoPrefix(prefix string, c ControllerInterface) *App {
+	BeeApp.AutoRouterWithPrefix(prefix, c)
 	return BeeApp
 }
 

@@ -33,6 +33,14 @@ const (
 var (
 	// supported http methods.
 	HTTPMETHOD = []string{"get", "post", "put", "delete", "patch", "options", "head"}
+	// these beego.Controller's methods shouldn't reflect to AutoRouter
+	exceptMethod = []string{"Init", "Prepare", "Finish", "Render", "RenderString",
+		"RenderBytes", "Redirect", "Abort", "StopRun", "UrlFor", "ServeJson", "ServeJsonp",
+		"ServeXml", "Input", "ParseForm", "GetString", "GetStrings", "GetInt", "GetBool",
+		"GetFloat", "GetFile", "SaveToFile", "StartSession", "SetSession", "GetSession",
+		"DelSession", "SessionRegenerateID", "DestroySession", "IsAjax", "GetSecureCookie",
+		"SetSecureCookie", "XsrfToken", "CheckXsrfCookie", "XsrfFormHtml",
+		"GetControllerAndAction"}
 )
 
 type controllerInfo struct {
@@ -221,8 +229,8 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingM
 // Add auto router to ControllerRegistor.
 // example beego.AddAuto(&MainContorlller{}),
 // MainController has method List and Page.
-// visit the url /main/list to exec List function
-// /main/page to exec Page function.
+// visit the url /main/list to execute List function
+// /main/page to execute Page function.
 func (p *ControllerRegistor) AddAuto(c ControllerInterface) {
 	p.enableAuto = true
 	reflectVal := reflect.ValueOf(c)
@@ -235,7 +243,32 @@ func (p *ControllerRegistor) AddAuto(c ControllerInterface) {
 		p.autoRouter[firstParam] = make(map[string]reflect.Type)
 	}
 	for i := 0; i < rt.NumMethod(); i++ {
-		p.autoRouter[firstParam][rt.Method(i).Name] = ct
+		if !utils.InSlice(rt.Method(i).Name, exceptMethod) {
+			p.autoRouter[firstParam][rt.Method(i).Name] = ct
+		}
+	}
+}
+
+// Add auto router to ControllerRegistor with prefix.
+// example beego.AddAutoPrefix("/admin",&MainContorlller{}),
+// MainController has method List and Page.
+// visit the url /admin/main/list to execute List function
+// /admin/main/page to execute Page function.
+func (p *ControllerRegistor) AddAutoPrefix(prefix string, c ControllerInterface) {
+	p.enableAuto = true
+	reflectVal := reflect.ValueOf(c)
+	rt := reflectVal.Type()
+	ct := reflect.Indirect(reflectVal).Type()
+	firstParam := strings.Trim(prefix, "/") + "/" + strings.ToLower(strings.TrimSuffix(ct.Name(), "Controller"))
+	if _, ok := p.autoRouter[firstParam]; ok {
+		return
+	} else {
+		p.autoRouter[firstParam] = make(map[string]reflect.Type)
+	}
+	for i := 0; i < rt.NumMethod(); i++ {
+		if !utils.InSlice(rt.Method(i).Name, exceptMethod) {
+			p.autoRouter[firstParam][rt.Method(i).Name] = ct
+		}
 	}
 }
 
