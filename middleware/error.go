@@ -185,9 +185,9 @@ func NotFound(rw http.ResponseWriter, r *http.Request) {
 	t, _ := template.New("beegoerrortemp").Parse(errtpl)
 	data := make(map[string]interface{})
 	data["Title"] = "Page Not Found"
-	data["Content"] = template.HTML("<br>The Page You have requested flown the coop." +
+	data["Content"] = template.HTML("<br>The page you have requested has flown the coop." +
 		"<br>Perhaps you are here because:" +
-		"<br><br><ul>" +
+		"<br><ul>" +
 		"<br>The page has moved" +
 		"<br>The page no longer exists" +
 		"<br>You were looking for your puppy and got lost" +
@@ -203,11 +203,11 @@ func Unauthorized(rw http.ResponseWriter, r *http.Request) {
 	t, _ := template.New("beegoerrortemp").Parse(errtpl)
 	data := make(map[string]interface{})
 	data["Title"] = "Unauthorized"
-	data["Content"] = template.HTML("<br>The Page You have requested can't authorized." +
+	data["Content"] = template.HTML("<br>The page you have requested can't be authorized." +
 		"<br>Perhaps you are here because:" +
 		"<br><br><ul>" +
-		"<br>Check the credentials that you supplied" +
-		"<br>Check the address for errors" +
+		"<br>The credentials you supplied are incorrect" +
+		"<br>There are errors in the website address" +
 		"</ul>")
 	data["BeegoVersion"] = VERSION
 	//rw.WriteHeader(http.StatusUnauthorized)
@@ -219,7 +219,7 @@ func Forbidden(rw http.ResponseWriter, r *http.Request) {
 	t, _ := template.New("beegoerrortemp").Parse(errtpl)
 	data := make(map[string]interface{})
 	data["Title"] = "Forbidden"
-	data["Content"] = template.HTML("<br>The Page You have requested forbidden." +
+	data["Content"] = template.HTML("<br>The page you have requested is forbidden." +
 		"<br>Perhaps you are here because:" +
 		"<br><br><ul>" +
 		"<br>Your address may be blocked" +
@@ -236,7 +236,7 @@ func ServiceUnavailable(rw http.ResponseWriter, r *http.Request) {
 	t, _ := template.New("beegoerrortemp").Parse(errtpl)
 	data := make(map[string]interface{})
 	data["Title"] = "Service Unavailable"
-	data["Content"] = template.HTML("<br>The Page You have requested unavailable." +
+	data["Content"] = template.HTML("<br>The page you have requested is unavailable." +
 		"<br>Perhaps you are here because:" +
 		"<br><br><ul>" +
 		"<br><br>The page is overloaded" +
@@ -252,11 +252,10 @@ func InternalServerError(rw http.ResponseWriter, r *http.Request) {
 	t, _ := template.New("beegoerrortemp").Parse(errtpl)
 	data := make(map[string]interface{})
 	data["Title"] = "Internal Server Error"
-	data["Content"] = template.HTML("<br>The Page You have requested has down now." +
+	data["Content"] = template.HTML("<br>The page you have requested is down right now." +
 		"<br><br><ul>" +
-		"<br>simply try again later" +
-		"<br>you should report the fault to the website administrator" +
-		"</ul>")
+		"<br>Please try again later and report the error to the website administrator" +
+		"<br></ul>")
 	data["BeegoVersion"] = VERSION
 	//rw.WriteHeader(http.StatusInternalServerError)
 	t.Execute(rw, data)
