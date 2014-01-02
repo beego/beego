@@ -187,7 +187,7 @@ func NotFound(rw http.ResponseWriter, r *http.Request) {
 	data["Title"] = "Page Not Found"
 	data["Content"] = template.HTML("<br>The page you have requested has flown the coop." +
 		"<br>Perhaps you are here because:" +
-		"<br><ul>" +
+		"<br><br><ul>" +
 		"<br>The page has moved" +
 		"<br>The page no longer exists" +
 		"<br>You were looking for your puppy and got lost" +
