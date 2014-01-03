@@ -23,6 +23,7 @@ type dbTables struct {
 	tables  []*dbTable
 	mi      *modelInfo
 	base    dbBaser
+	skipEnd bool
 }
 
 func (t *dbTables) set(names []string, mi *modelInfo, fi *fieldInfo, inner bool) *dbTable {
@@ -221,9 +222,13 @@ func (t *dbTables) parseExprs(mi *modelInfo, exprs []string) (index, name string
 					inner = false
 				}
 
-				jt, _ := t.add(names, mmi, fi, inner)
-				jt.jtl = jtl
-				jtl = jt
+				if num == i && t.skipEnd {
+				} else {
+					jt, _ := t.add(names, mmi, fi, inner)
+					jt.jtl = jtl
+					jtl = jt
+				}
+
 			}
 
 			if num == i {

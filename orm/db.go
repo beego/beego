@@ -461,6 +461,8 @@ func (d *dbBase) deleteRels(q dbQuerier, mi *modelInfo, args []interface{}, tz *
 
 func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condition, tz *time.Location) (int64, error) {
 	tables := newDbTables(mi, d.ins)
+	tables.skipEnd = true
+
 	if qs != nil {
 		tables.parseRelated(qs.related, qs.relDepth)
 	}
