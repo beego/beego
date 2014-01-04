@@ -1561,6 +1561,32 @@ func TestDelete(t *testing.T) {
 	num, err = qs.Filter("user_name", "slene").Filter("profile__isnull", true).Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
+
+	qs = dORM.QueryTable("comment")
+	num, err = qs.Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 6))
+
+	qs = dORM.QueryTable("post")
+	num, err = qs.Filter("Id", 3).Delete()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	qs = dORM.QueryTable("comment")
+	num, err = qs.Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 4))
+
+	fmt.Println("...")
+	qs = dORM.QueryTable("comment")
+	num, err = qs.Filter("Post__User", 3).Delete()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 3))
+
+	qs = dORM.QueryTable("comment")
+	num, err = qs.Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
 }
 
 func TestTransaction(t *testing.T) {
