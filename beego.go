@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/astaxie/beego/middleware"
@@ -194,13 +195,13 @@ func Run() {
 		sessionConfig := AppConfig.String("sessionConfig")
 		if sessionConfig == "" {
 			sessionConfig = `{"cookieName":` + SessionName + `,` +
-				`"gclifetime":` + SessionGCMaxLifetime + `,` +
+				`"gclifetime":` + strconv.FormatInt(SessionGCMaxLifetime, 10) + `,` +
 				`"providerConfig":` + SessionSavePath + `,` +
-				`"secure":` + HttpTLS + `,` +
+				`"secure":` + strconv.FormatBool(HttpTLS) + `,` +
 				`"sessionIDHashFunc":` + SessionHashFunc + `,` +
 				`"sessionIDHashKey":` + SessionHashKey + `,` +
-				`"enableSetCookie":` + SessionAutoSetCookie + `,` +
-				`"cookieLifeTime":` + SessionCookieLifeTime + `,}`
+				`"enableSetCookie":` + strconv.FormatBool(SessionAutoSetCookie) + `,` +
+				`"cookieLifeTime":` + strconv.Itoa(SessionCookieLifeTime) + `,}`
 		}
 		GlobalSessions, _ = session.NewManager(SessionProvider,
 			sessionConfig)

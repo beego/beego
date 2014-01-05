@@ -529,7 +529,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	// session init
 	if SessionOn {
 		context.Input.CruSession = GlobalSessions.SessionStart(w, r)
-		defer context.Input.CruSession.SessionRelease()
+		defer context.Input.CruSession.SessionRelease(w)
 	}
 
 	if !utils.InSlice(strings.ToLower(r.Method), HTTPMETHOD) {
