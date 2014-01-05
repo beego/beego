@@ -191,14 +191,19 @@ func Run() {
 	}
 
 	if SessionOn {
+		sessionConfig := AppConfig.String("sessionConfig")
+		if sessionConfig == "" {
+			sessionConfig = `{"cookieName":` + SessionName + `,` +
+				`"gclifetime":` + SessionGCMaxLifetime + `,` +
+				`"providerConfig":` + SessionSavePath + `,` +
+				`"secure":` + HttpTLS + `,` +
+				`"sessionIDHashFunc":` + SessionHashFunc + `,` +
+				`"sessionIDHashKey":` + SessionHashKey + `,` +
+				`"enableSetCookie":` + SessionAutoSetCookie + `,` +
+				`"cookieLifeTime":` + SessionCookieLifeTime + `,}`
+		}
 		GlobalSessions, _ = session.NewManager(SessionProvider,
-			SessionName,
-			SessionGCMaxLifetime,
-			SessionSavePath,
-			HttpTLS,
-			SessionHashFunc,
-			SessionHashKey,
-			SessionCookieLifeTime)
+			sessionConfig)
 		go GlobalSessions.GC()
 	}
 
