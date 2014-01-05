@@ -1,6 +1,7 @@
 package session
 
 import (
+	"net/http"
 	"strconv"
 	"strings"
 	"sync"
@@ -58,7 +59,7 @@ func (rs *RedisSessionStore) SessionID() string {
 	return rs.sid
 }
 
-func (rs *RedisSessionStore) SessionRelease() {
+func (rs *RedisSessionStore) SessionRelease(w http.ResponseWriter) {
 	defer rs.c.Close()
 	if len(rs.values) > 0 {
 		b, err := encodeGob(rs.values)

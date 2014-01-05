@@ -28,21 +28,21 @@ Then in you web app init the global session manager
 * Use **memory** as provider:
 
 		func init() {
-			globalSessions, _ = session.NewManager("memory", "gosessionid", 3600,"")
+			globalSessions, _ = session.NewManager("memory", `{"cookieName":"gosessionid","gclifetime":3600}`)
 			go globalSessions.GC()
 		}
 
 * Use **file** as provider, the last param is the path where you want file to be stored:
 
 		func init() {
-			globalSessions, _ = session.NewManager("file", "gosessionid", 3600, "./tmp")
+			globalSessions, _ = session.NewManager("file",`{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig","./tmp"}`)
 			go globalSessions.GC()
 		}
 
 * Use **Redis** as provider, the last param is the Redis conn address,poolsize,password:
 
 		func init() {
-			globalSessions, _ = session.NewManager("redis", "gosessionid", 3600, "127.0.0.1:6379,100,astaxie")
+			globalSessions, _ = session.NewManager("redis", `{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig","127.0.0.1:6379,100,astaxie"}`)
 			go globalSessions.GC()
 		}
 		
@@ -50,15 +50,24 @@ Then in you web app init the global session manager
 
 		func init() {
 			globalSessions, _ = session.NewManager(
-				"mysql", "gosessionid", 3600, "username:password@protocol(address)/dbname?param=value")
+				"mysql", `{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig","username:password@protocol(address)/dbname?param=value"}`)
 			go globalSessions.GC()
 		}
+
+* Use **Cookie** as provider:
+
+		func init() {
+			globalSessions, _ = session.NewManager(
+				"cookie", `{"cookieName":"gosessionid","enableSetCookie":false,gclifetime":3600,"ProviderConfig":"{\"cookieName\":\"gosessionid\",\"securityKey\":\"beegocookiehashkey\"}"}`)
+			go globalSessions.GC()
+		}
+
 
 Finally in the handlerfunc you can use it like this
 
 	func login(w http.ResponseWriter, r *http.Request) {
 		sess := globalSessions.SessionStart(w, r)
-		defer sess.SessionRelease()
+		defer sess.SessionRelease(w)
 		username := sess.Get("username")
 		fmt.Println(username)
 		if r.Method == "GET" {
@@ -78,19 +87,19 @@ When you develop a web app, maybe you want to write own provider because you mus
 
 Writing a provider is easy. You only need to define two struct types 
 (Session and Provider), which satisfy the interface definition. 
-Maybe you will find the **memory** provider as good example.
+Maybe you will find the **memory** provider is a good example.
 
 	type SessionStore interface {
-		Set(key, value interface{}) error //set session value
-		Get(key interface{}) interface{}  //get session value
-		Delete(key interface{}) error     //delete session value
-		SessionID() string                //back current sessionID
-		SessionRelease()                  // release the resource & save data to provider
-		Flush() error                     //delete all data
+		Set(key, value interface{}) error     //set session value
+		Get(key interface{}) interface{}      //get session value
+		Delete(key interface{}) error         //delete session value
+		SessionID() string                    //back current sessionID
+		SessionRelease(w http.ResponseWriter) // release the resource & save data to provider & return the data
+		Flush() error                         //delete all data
 	}
 	
 	type Provider interface {
-		SessionInit(maxlifetime int64, savePath string) error
+		SessionInit(gclifetime int64, config string) error
 		SessionRead(sid string) (SessionStore, error)
 		SessionExist(sid string) bool
 		SessionRegenerate(oldsid, sid string) (SessionStore, error)
