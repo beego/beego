@@ -71,6 +71,7 @@ func ShowErr(err interface{}, rw http.ResponseWriter, r *http.Request, Stack str
 	data["Stack"] = Stack
 	data["BeegoVersion"] = VERSION
 	data["GoVersion"] = runtime.Version()
+	rw.WriteHeader(500)
 	t.Execute(rw, data)
 }
 
