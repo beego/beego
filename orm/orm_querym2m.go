@@ -44,7 +44,8 @@ func (o *queryM2M) Add(mds ...interface{}) (int64, error) {
 
 	names := []string{mfi.column, rfi.column}
 
-	var nums int64
+	values := make([]interface{}, 0, len(models)*2)
+
 	for _, md := range models {
 
 		ind := reflect.Indirect(reflect.ValueOf(md))
@@ -59,16 +60,11 @@ func (o *queryM2M) Add(mds ...interface{}) (int64, error) {
 			}
 		}
 
-		values := []interface{}{v1, v2}
-		_, err := dbase.InsertValue(orm.db, mi, names, values)
-		if err != nil {
-			return nums, err
-		}
+		values = append(values, v1, v2)
 
-		nums += 1
 	}
 
-	return nums, nil
+	return dbase.InsertValue(orm.db, mi, true, names, values)
 }
 
 func (o *queryM2M) Remove(mds ...interface{}) (int64, error) {

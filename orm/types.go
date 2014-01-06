@@ -21,6 +21,7 @@ type Fielder interface {
 type Ormer interface {
 	Read(interface{}, ...string) error
 	Insert(interface{}) (int64, error)
+	InsertMulti(int, interface{}) (int64, error)
 	Update(interface{}, ...string) (int64, error)
 	Delete(interface{}) (int64, error)
 	LoadRelated(interface{}, string, ...interface{}) (int64, error)
@@ -109,7 +110,8 @@ type txEnder interface {
 type dbBaser interface {
 	Read(dbQuerier, *modelInfo, reflect.Value, *time.Location, []string) error
 	Insert(dbQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
-	InsertValue(dbQuerier, *modelInfo, []string, []interface{}) (int64, error)
+	InsertMulti(dbQuerier, *modelInfo, reflect.Value, int, *time.Location) (int64, error)
+	InsertValue(dbQuerier, *modelInfo, bool, []string, []interface{}) (int64, error)
 	InsertStmt(stmtQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
 	Update(dbQuerier, *modelInfo, reflect.Value, *time.Location, []string) (int64, error)
 	Delete(dbQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)

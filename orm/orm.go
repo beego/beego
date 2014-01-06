@@ -25,6 +25,7 @@ var (
 	ErrMultiRows     = errors.New("<QuerySeter> return multi rows")
 	ErrNoRows        = errors.New("<QuerySeter> no row found")
 	ErrStmtClosed    = errors.New("<QuerySeter> stmt already closed")
+	ErrArgs          = errors.New("<Ormer> args error may be empty")
 	ErrNotImplement  = errors.New("have not implement")
 )
 
@@ -39,11 +40,11 @@ type orm struct {
 
 var _ Ormer = new(orm)
 
-func (o *orm) getMiInd(md interface{}) (mi *modelInfo, ind reflect.Value) {
+func (o *orm) getMiInd(md interface{}, needPtr bool) (mi *modelInfo, ind reflect.Value) {
 	val := reflect.ValueOf(md)
 	ind = reflect.Indirect(val)
 	typ := ind.Type()
-	if val.Kind() != reflect.Ptr {
+	if needPtr && val.Kind() != reflect.Ptr {
 		panic(fmt.Errorf("<Ormer> cannot use non-ptr model struct `%s`", getFullName(typ)))
 	}
 	name := getFullName(typ)
@@ -62,7 +63,7 @@ func (o *orm) getFieldInfo(mi *modelInfo, name string) *fieldInfo {
 }
 
 func (o *orm) Read(md interface{}, cols ...string) error {
-	mi, ind := o.getMiInd(md)
+	mi, ind := o.getMiInd(md, true)
 	err := o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols)
 	if err != nil {
 		return err
@@ -71,25 +72,63 @@ func (o *orm) Read(md interface{}, cols ...string) error {
 }
 
 func (o *orm) Insert(md interface{}) (int64, error) {
-	mi, ind := o.getMiInd(md)
+	mi, ind := o.getMiInd(md, true)
 	id, err := o.alias.DbBaser.Insert(o.db, mi, ind, o.alias.TZ)
 	if err != nil {
 		return id, err
 	}
-	if id > 0 {
-		if mi.fields.pk.auto {
-			if mi.fields.pk.fieldType&IsPostiveIntegerField > 0 {
-				ind.Field(mi.fields.pk.fieldIndex).SetUint(uint64(id))
-			} else {
-				ind.Field(mi.fields.pk.fieldIndex).SetInt(id)
-			}
-		}
-	}
+
+	o.setPk(mi, ind, id)
+
 	return id, nil
 }
 
+func (o *orm) setPk(mi *modelInfo, ind reflect.Value, id int64) {
+	if mi.fields.pk.auto {
+		if mi.fields.pk.fieldType&IsPostiveIntegerField > 0 {
+			ind.Field(mi.fields.pk.fieldIndex).SetUint(uint64(id))
+		} else {
+			ind.Field(mi.fields.pk.fieldIndex).SetInt(id)
+		}
+	}
+}
+
+func (o *orm) InsertMulti(bulk int, mds interface{}) (int64, error) {
+	var cnt int64
+
+	sind := reflect.Indirect(reflect.ValueOf(mds))
+
+	switch sind.Kind() {
+	case reflect.Array, reflect.Slice:
+		if sind.Len() == 0 {
+			return cnt, ErrArgs
+		}
+	default:
+		return cnt, ErrArgs
+	}
+
+	if bulk <= 1 {
+		for i := 0; i < sind.Len(); i++ {
+			ind := sind.Index(i)
+			mi, _ := o.getMiInd(ind.Interface(), false)
+			id, err := o.alias.DbBaser.Insert(o.db, mi, ind, o.alias.TZ)
+			if err != nil {
+				return cnt, err
+			}
+
+			o.setPk(mi, ind, id)
+
+			cnt += 1
+		}
+	} else {
+		mi, _ := o.getMiInd(sind.Index(0).Interface(), false)
+		return o.alias.DbBaser.InsertMulti(o.db, mi, sind, bulk, o.alias.TZ)
+	}
+	return cnt, nil
+}
+
 func (o *orm) Update(md interface{}, cols ...string) (int64, error) {
-	mi, ind := o.getMiInd(md)
+	mi, ind := o.getMiInd(md, true)
 	num, err := o.alias.DbBaser.Update(o.db, mi, ind, o.alias.TZ, cols)
 	if err != nil {
 		return num, err
@@ -98,25 +137,19 @@ func (o *orm) Update(md interface{}, cols ...string) (int64, error) {
 }
 
 func (o *orm) Delete(md interface{}) (int64, error) {
-	mi, ind := o.getMiInd(md)
+	mi, ind := o.getMiInd(md, true)
 	num, err := o.alias.DbBaser.Delete(o.db, mi, ind, o.alias.TZ)
 	if err != nil {
 		return num, err
 	}
 	if num > 0 {
-		if mi.fields.pk.auto {
-			if mi.fields.pk.fieldType&IsPostiveIntegerField > 0 {
-				ind.Field(mi.fields.pk.fieldIndex).SetUint(0)
-			} else {
-				ind.Field(mi.fields.pk.fieldIndex).SetInt(0)
-			}
-		}
+		o.setPk(mi, ind, 0)
 	}
 	return num, nil
 }
 
 func (o *orm) QueryM2M(md interface{}, name string) QueryM2Mer {
-	mi, ind := o.getMiInd(md)
+	mi, ind := o.getMiInd(md, true)
 	fi := o.getFieldInfo(mi, name)
 
 	switch {
@@ -197,7 +230,7 @@ func (o *orm) QueryRelated(md interface{}, name string) QuerySeter {
 }
 
 func (o *orm) queryRelated(md interface{}, name string) (*modelInfo, *fieldInfo, reflect.Value, QuerySeter) {
-	mi, ind := o.getMiInd(md)
+	mi, ind := o.getMiInd(md, true)
 	fi := o.getFieldInfo(mi, name)
 
 	_, _, exist := getExistPk(mi, ind)

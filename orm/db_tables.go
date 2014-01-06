@@ -214,8 +214,6 @@ loopFor:
 			fi, ok = mmi.fields.GetByAny(ex)
 		}
 
-		// fmt.Println(ex, fi.name, fiN)
-
 		_ = okN
 
 		if ok {
