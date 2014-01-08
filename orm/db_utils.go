@@ -18,7 +18,7 @@ func getDbAlias(name string) *alias {
 func getExistPk(mi *modelInfo, ind reflect.Value) (column string, value interface{}, exist bool) {
 	fi := mi.fields.pk
 
-	v := ind.Field(fi.fieldIndex)
+	v := ind.FieldByIndex(fi.fieldIndexs)
 	if fi.fieldType&IsPostiveIntegerField > 0 {
 		vu := v.Uint()
 		exist = vu > 0

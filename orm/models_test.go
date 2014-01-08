@@ -254,6 +254,22 @@ func NewComment() *Comment {
 	return obj
 }
 
+type EmbedT1 struct {
+	Id int
+	EmbedT2
+	EmbedT3 `orm:"-"`
+	B       int
+}
+
+type EmbedT2 struct {
+	A int
+	B int
+}
+
+type EmbedT3 struct {
+	C int
+}
+
 var DBARGS = struct {
 	Driver string
 	Source string

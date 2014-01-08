@@ -23,7 +23,6 @@ type modelInfo struct {
 func newModelInfo(val reflect.Value) (info *modelInfo) {
 	var (
 		err error
-		fi  *fieldInfo
 		sf  reflect.StructField
 	)
 
@@ -38,45 +37,50 @@ func newModelInfo(val reflect.Value) (info *modelInfo) {
 	info.name = typ.Name()
 	info.fullName = getFullName(typ)
 
-	for i := 0; i < ind.NumField(); i++ {
-		field := ind.Field(i)
-		sf = ind.Type().Field(i)
-		fi, err = newFieldInfo(info, field, sf)
-
-		if err != nil {
-			if err == errSkipField {
-				err = nil
-				continue
-			}
-			break
-		}
-
-		added := info.fields.Add(fi)
-		if added == false {
-			err = errors.New(fmt.Sprintf("duplicate column name: %s", fi.column))
-			break
-		}
-
-		if fi.pk {
-			if info.fields.pk != nil {
-				err = errors.New(fmt.Sprintf("one model must have one pk field only"))
-				break
-			} else {
-				info.fields.pk = fi
-			}
-		}
-
-		fi.fieldIndex = i
-		fi.mi = info
-		fi.inModel = true
-	}
-
+	err = modelInfoParseField(info, ind)
 	if err != nil {
 		fmt.Println(fmt.Errorf("field: %s.%s, %s", ind.Type(), sf.Name, err))
 		os.Exit(2)
 	}
 
 	return
+}
+
+func modelInfoParseField(info *modelInfo, ind reflect.Value) (err error) {
+	var fi *fieldInfo
+	for _, sf := range structGetAllField(ind.Type()) {
+		if sf.Anonymous {
+			continue
+		}
+		field := ind.FieldByIndex(sf.Index)
+		fi, err = newFieldInfo(info, field, *sf)
+
+		if err != nil {
+			if err == errSkipField {
+				err = nil
+				continue
+			}
+			return err
+		}
+
+		added := info.fields.Add(fi)
+		if added == false {
+			return errors.New(fmt.Sprintf("duplicate column name: %s", fi.column))
+		}
+
+		if fi.pk {
+			if info.fields.pk != nil {
+				return errors.New(fmt.Sprintf("one model must have one pk field only"))
+			} else {
+				info.fields.pk = fi
+			}
+		}
+
+		fi.fieldIndexs = sf.Index
+		fi.mi = info
+		fi.inModel = true
+	}
+	return nil
 }
 
 func newM2MModelInfo(m1, m2 *modelInfo) (info *modelInfo) {
