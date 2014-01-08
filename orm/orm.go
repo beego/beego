@@ -79,9 +79,9 @@ func (o *orm) Insert(md interface{}) (int64, error) {
 	if id > 0 {
 		if mi.fields.pk.auto {
 			if mi.fields.pk.fieldType&IsPostiveIntegerField > 0 {
-				ind.Field(mi.fields.pk.fieldIndex).SetUint(uint64(id))
+				ind.FieldByIndex(mi.fields.pk.fieldIndexs).SetUint(uint64(id))
 			} else {
-				ind.Field(mi.fields.pk.fieldIndex).SetInt(id)
+				ind.FieldByIndex(mi.fields.pk.fieldIndexs).SetInt(id)
 			}
 		}
 	}
@@ -106,9 +106,9 @@ func (o *orm) Delete(md interface{}) (int64, error) {
 	if num > 0 {
 		if mi.fields.pk.auto {
 			if mi.fields.pk.fieldType&IsPostiveIntegerField > 0 {
-				ind.Field(mi.fields.pk.fieldIndex).SetUint(0)
+				ind.FieldByIndex(mi.fields.pk.fieldIndexs).SetUint(0)
 			} else {
-				ind.Field(mi.fields.pk.fieldIndex).SetInt(0)
+				ind.FieldByIndex(mi.fields.pk.fieldIndexs).SetInt(0)
 			}
 		}
 	}
@@ -170,7 +170,7 @@ func (o *orm) LoadRelated(md interface{}, name string, args ...interface{}) (int
 		qs.orders = []string{order}
 	}
 
-	find := ind.Field(fi.fieldIndex)
+	find := ind.FieldByIndex(fi.fieldIndexs)
 
 	var nums int64
 	var err error

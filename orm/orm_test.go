@@ -163,6 +163,7 @@ func TestRegisterModels(t *testing.T) {
 	RegisterModel(new(Comment))
 	RegisterModel(new(UserBig))
 	RegisterModel(new(PostTags))
+	RegisterModel(new(EmbedT1))
 
 	BootStrap()
 
@@ -182,6 +183,14 @@ func TestModelSyntax(t *testing.T) {
 	if ok {
 		throwFail(t, AssertIs(mi.fields.GetByName("ShouldSkip") == nil, true))
 	}
+}
+
+func TestModelEmbedSyntax(t *testing.T) {
+	fn := getFullName(reflect.TypeOf((*EmbedT1)(nil)).Elem())
+	mi, ok := modelCache.getByFN(fn)
+	throwFail(t, AssertIs(ok, true))
+
+	throwFail(t, AssertIs(mi.fields.GetByName("C") == nil, true))
 }
 
 var Data_Values = map[string]interface{}{

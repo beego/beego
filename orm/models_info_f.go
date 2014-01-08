@@ -81,7 +81,7 @@ func newFields() *fields {
 
 type fieldInfo struct {
 	mi                  *modelInfo
-	fieldIndex          int
+	fieldIndexs         []int
 	fieldType           int
 	dbcol               bool
 	inModel             bool
