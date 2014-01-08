@@ -20,5 +20,8 @@ func TestMail(t *testing.T) {
 	mail.To = []string{"xiemengjun@gmail.com"}
 	mail.From = "astaxie@gmail.com"
 	mail.Subject = "hi, just from beego!"
+	mail.Text = "Text Body is, of course, supported!"
+	mail.HTML = "<h1>Fancy Html is supported, too!</h1>"
+	mail.AttachFile("/Users/astaxie/github/beego/beego.go")
 	mail.Send()
 }
