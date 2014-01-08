@@ -61,14 +61,12 @@ func (rs *RedisSessionStore) SessionID() string {
 
 func (rs *RedisSessionStore) SessionRelease(w http.ResponseWriter) {
 	defer rs.c.Close()
-	if len(rs.values) > 0 {
-		b, err := encodeGob(rs.values)
-		if err != nil {
-			return
-		}
-		rs.c.Do("SET", rs.sid, string(b))
-		rs.c.Do("EXPIRE", rs.sid, rs.maxlifetime)
+	b, err := encodeGob(rs.values)
+	if err != nil {
+		return
 	}
+	rs.c.Do("SET", rs.sid, string(b))
+	rs.c.Do("EXPIRE", rs.sid, rs.maxlifetime)
 }
 
 type RedisProvider struct {
