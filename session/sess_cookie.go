@@ -105,12 +105,14 @@ func (pder *CookieProvider) SessionInit(maxlifetime int64, config string) error 
 }
 
 func (pder *CookieProvider) SessionRead(sid string) (SessionStore, error) {
-	kv := make(map[interface{}]interface{})
-	kv, _ = decodeCookie(pder.block,
+	maps, _ := decodeCookie(pder.block,
 		pder.config.SecurityKey,
 		pder.config.SecurityName,
 		sid, pder.maxlifetime)
-	rs := &CookieSessionStore{sid: sid, values: kv}
+	if maps == nil {
+		maps = make(map[interface{}]interface{})
+	}
+	rs := &CookieSessionStore{sid: sid, values: maps}
 	return rs, nil
 }
 

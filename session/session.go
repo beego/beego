@@ -85,9 +85,10 @@ func NewManager(provideName, config string) (*Manager, error) {
 	if cf.Maxlifetime == 0 {
 		cf.Maxlifetime = cf.Gclifetime
 	}
-
-	provider.SessionInit(cf.Maxlifetime, cf.ProviderConfig)
-
+	err = provider.SessionInit(cf.Maxlifetime, cf.ProviderConfig)
+	if err != nil {
+		return nil, err
+	}
 	if cf.SessionIDHashFunc == "" {
 		cf.SessionIDHashFunc = "sha1"
 	}
