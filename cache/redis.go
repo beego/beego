@@ -3,6 +3,7 @@ package cache
 import (
 	"encoding/json"
 	"errors"
+	"io"
 
 	"github.com/beego/redigo/redis"
 )
@@ -33,10 +34,18 @@ func (rc *RedisCache) Get(key string) interface{} {
 			return nil
 		}
 	}
+
 	v, err := rc.c.Do("HGET", rc.key, key)
+	// write to closed socket, reset rc.c to nil
+	if err == io.EOF {
+		rc.c = nil
+		return nil
+	}
+
 	if err != nil {
 		return nil
 	}
+
 	return v
 }
 
@@ -50,7 +59,14 @@ func (rc *RedisCache) Put(key string, val interface{}, timeout int64) error {
 			return err
 		}
 	}
+
 	_, err := rc.c.Do("HSET", rc.key, key, val)
+	// write to closed socket, reset rc.c to nil
+	if err == io.EOF {
+		rc.c = nil
+		return err
+	}
+
 	return err
 }
 
@@ -63,7 +79,14 @@ func (rc *RedisCache) Delete(key string) error {
 			return err
 		}
 	}
+
 	_, err := rc.c.Do("HDEL", rc.key, key)
+	// write to closed socket, reset rc.c to nil
+	if err == io.EOF {
+		rc.c = nil
+		return err
+	}
+
 	return err
 }
 
@@ -76,10 +99,18 @@ func (rc *RedisCache) IsExist(key string) bool {
 			return false
 		}
 	}
+
 	v, err := redis.Bool(rc.c.Do("HEXISTS", rc.key, key))
+	// write to closed socket, reset rc.c to nil
+	if err == io.EOF {
+		rc.c = nil
+		return false
+	}
+
 	if err != nil {
 		return false
 	}
+
 	return v
 }
 
@@ -92,11 +123,14 @@ func (rc *RedisCache) Incr(key string) error {
 			return err
 		}
 	}
+
 	_, err := redis.Bool(rc.c.Do("HINCRBY", rc.key, key, 1))
-	if err != nil {
-		return err
+	// write to closed socket
+	if err == io.EOF {
+		rc.c = nil
 	}
-	return nil
+
+	return err
 }
 
 // decrease counter in redis.
@@ -108,11 +142,15 @@ func (rc *RedisCache) Decr(key string) error {
 			return err
 		}
 	}
+
 	_, err := redis.Bool(rc.c.Do("HINCRBY", rc.key, key, -1))
-	if err != nil {
-		return err
+
+	// write to closed socket
+	if err == io.EOF {
+		rc.c = nil
 	}
-	return nil
+
+	return err
 }
 
 // clean all cache in redis. delete this redis collection.
@@ -124,7 +162,13 @@ func (rc *RedisCache) ClearAll() error {
 			return err
 		}
 	}
+
 	_, err := rc.c.Do("DEL", rc.key)
+	// write to closed socket
+	if err == io.EOF {
+		rc.c = nil
+	}
+
 	return err
 }
 
