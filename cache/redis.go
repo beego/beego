@@ -3,7 +3,6 @@ package cache
 import (
 	"encoding/json"
 	"errors"
-	"sync"
 	"time"
 
 	"github.com/beego/redigo/redis"
@@ -19,7 +18,6 @@ type RedisCache struct {
 	p        *redis.Pool // redis connection pool
 	conninfo string
 	key      string
-	mu       sync.Mutex
 }
 
 // create new redis cache with default collection name.
@@ -117,8 +115,6 @@ func (rc *RedisCache) StartAndGC(config string) error {
 
 // connect to redis.
 func (rc *RedisCache) connectInit() {
-	rc.mu.Lock()
-
 	// initialize a new pool
 	rc.p = &redis.Pool{
 		MaxIdle:     3,
@@ -131,8 +127,6 @@ func (rc *RedisCache) connectInit() {
 			return c, nil
 		},
 	}
-
-	rc.mu.Unlock()
 }
 
 func init() {
