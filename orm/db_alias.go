@@ -123,21 +123,18 @@ func RegisterDataBase(aliasName, driverName, dataSource string, params ...int) {
 
 	switch al.Driver {
 	case DR_MySQL:
-		row := al.DB.QueryRow("SELECT @@session.time_zone")
+		row := al.DB.QueryRow("SELECT TIMEDIFF(NOW(), UTC_TIMESTAMP)")
 		var tz string
 		row.Scan(&tz)
-		if tz == "SYSTEM" {
-			tz = ""
-			row = al.DB.QueryRow("SELECT @@system_time_zone")
-			row.Scan(&tz)
-			t, err := time.Parse("MST", tz)
-			if err == nil {
-				al.TZ = t.Location()
+		if len(tz) >= 8 {
+			if tz[0] != '-' {
+				tz = "+" + tz
 			}
-		} else {
-			t, err := time.Parse("-07:00", tz)
+			t, err := time.Parse("-07:00:00", tz)
 			if err == nil {
 				al.TZ = t.Location()
+			} else {
+				DebugLog.Printf("Detect DB timezone: %s %s\n", tz, err.Error())
 			}
 		}
 
@@ -163,6 +160,8 @@ func RegisterDataBase(aliasName, driverName, dataSource string, params ...int) {
 		loc, err := time.LoadLocation(tz)
 		if err == nil {
 			al.TZ = loc
+		} else {
+			DebugLog.Printf("Detect DB timezone: %s %s\n", tz, err.Error())
 		}
 	}
 
