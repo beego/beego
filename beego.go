@@ -192,6 +192,7 @@ func Run() {
 	}
 
 	if SessionOn {
+	        var err error
 		sessionConfig := AppConfig.String("sessionConfig")
 		if sessionConfig == "" {
 			sessionConfig = `{"cookieName":"` + SessionName + `",` +
@@ -203,7 +204,7 @@ func Run() {
 				`"enableSetCookie":` + strconv.FormatBool(SessionAutoSetCookie) + `,` +
 				`"cookieLifeTime":` + strconv.Itoa(SessionCookieLifeTime) + `}`
 		}
-		GlobalSessions, err := session.NewManager(SessionProvider,
+		GlobalSessions, err = session.NewManager(SessionProvider,
 			sessionConfig)
 		if err != nil {
 			panic(err)
