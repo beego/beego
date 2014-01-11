@@ -165,7 +165,7 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 
 		if c.LayoutSections != nil {
 			for sectionName, sectionTpl := range c.LayoutSections {
-				if (sectionTpl == "") {
+				if sectionTpl == "" {
 					c.Data[sectionName] = ""
 					continue
 				}
@@ -391,6 +391,7 @@ func (c *Controller) DelSession(name interface{}) {
 // SessionRegenerateID regenerates session id for this session.
 // the session data have no changes.
 func (c *Controller) SessionRegenerateID() {
+	c.CruSession.SessionRelease(c.Ctx.ResponseWriter)
 	c.CruSession = GlobalSessions.SessionRegenerateId(c.Ctx.ResponseWriter, c.Ctx.Request)
 	c.Ctx.Input.CruSession = c.CruSession
 }
