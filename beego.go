@@ -192,7 +192,7 @@ func Run() {
 	}
 
 	if SessionOn {
-	        var err error
+		var err error
 		sessionConfig := AppConfig.String("sessionConfig")
 		if sessionConfig == "" {
 			sessionConfig = `{"cookieName":"` + SessionName + `",` +
