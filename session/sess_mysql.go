@@ -67,7 +67,7 @@ func (st *MysqlSessionStore) SessionRelease() {
 		if err != nil {
 			return
 		}
-		st.c.Exec("UPDATE session set `session_data`= ? where session_key=?", b, st.sid)
+		st.c.Exec("UPDATE session set `session_data`= ? ,`session_expiry`= ? where session_key=?", b, time.Now().Unix(), st.sid)
 	}
 }
 
@@ -113,6 +113,7 @@ func (mp *MysqlProvider) SessionRead(sid string) (SessionStore, error) {
 
 func (mp *MysqlProvider) SessionExist(sid string) bool {
 	c := mp.connectInit()
+        defer c.Close()
 	row := c.QueryRow("select session_data from session where session_key=?", sid)
 	var sessiondata []byte
 	err := row.Scan(&sessiondata)
