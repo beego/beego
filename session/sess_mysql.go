@@ -115,6 +115,7 @@ func (mp *MysqlProvider) SessionRead(sid string) (SessionStore, error) {
 
 func (mp *MysqlProvider) SessionExist(sid string) bool {
 	c := mp.connectInit()
+	defer c.Close()
 	row := c.QueryRow("select session_data from session where session_key=?", sid)
 	var sessiondata []byte
 	err := row.Scan(&sessiondata)
