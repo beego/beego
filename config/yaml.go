@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/beego/goyaml2"
@@ -115,6 +116,11 @@ func (c *YAMLConfigContainer) String(key string) string {
 		return v
 	}
 	return ""
+}
+
+// Strings returns the []string value for a given key.
+func (c *YAMLConfigContainer) Strings(key string) []string {
+	return strings.Split(c.String(key), ";")
 }
 
 // WriteValue writes a new value for key.

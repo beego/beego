@@ -116,6 +116,11 @@ func (c *JsonConfigContainer) String(key string) string {
 	return ""
 }
 
+// Strings returns the []string value for a given key.
+func (c *JsonConfigContainer) Strings(key string) []string {
+	return strings.Split(c.String(key), ";")
+}
+
 // WriteValue writes a new value for key.
 func (c *JsonConfigContainer) Set(key, val string) error {
 	c.Lock()

@@ -25,6 +25,10 @@ func (c *fakeConfigContainer) String(key string) string {
 	return c.getData(key)
 }
 
+func (c *fakeConfigContainer) Strings(key string) []string {
+	return strings.Split(c.getData(key), ";")
+}
+
 func (c *fakeConfigContainer) Int(key string) (int, error) {
 	return strconv.Atoi(c.getData(key))
 }
