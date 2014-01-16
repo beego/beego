@@ -3,7 +3,6 @@ package beego
 import (
 	"bytes"
 	"crypto/hmac"
-	"crypto/rand"
 	"crypto/sha1"
 	"encoding/base64"
 	"errors"
@@ -22,6 +21,7 @@ import (
 
 	"github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/session"
+	"github.com/astaxie/beego/utils"
 )
 
 var (
@@ -455,7 +455,7 @@ func (c *Controller) XsrfToken() string {
 			} else {
 				expire = int64(XSRFExpire)
 			}
-			token = getRandomString(15)
+			token = string(utils.RandomCreateBytes(15))
 			c.SetSecureCookie(XSRFKEY, "_xsrf", token, expire)
 		}
 		c._xsrf_token = token
@@ -491,15 +491,4 @@ func (c *Controller) XsrfFormHtml() string {
 // GetControllerAndAction gets the executing controller name and action name.
 func (c *Controller) GetControllerAndAction() (controllerName, actionName string) {
 	return c.controllerName, c.actionName
-}
-
-// getRandomString returns random string.
-func getRandomString(n int) string {
-	const alphanum = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
-	var bytes = make([]byte, n)
-	rand.Read(bytes)
-	for i, b := range bytes {
-		bytes[i] = alphanum[b%byte(len(alphanum))]
-	}
-	return string(bytes)
 }
