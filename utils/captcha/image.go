@@ -1,3 +1,4 @@
+// modifiy and integrated to Beego from https://github.com/dchest/captcha
 package captcha
 
 import (
@@ -240,10 +241,16 @@ func getrand() *rand.Rand {
 }
 
 func randIntn(max int) int {
+	if max <= 0 {
+		return 0
+	}
 	return getrand().Intn(max)
 }
 
 func randInt(min, max int) int {
+	if max-min <= 0 {
+		return 0
+	}
 	return getrand().Intn(max-min) + min
 }
 

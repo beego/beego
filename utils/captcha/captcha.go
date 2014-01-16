@@ -1,6 +1,46 @@
+// an example for use captcha
+//
+// ```
+// package controllers
+//
+// import (
+// 	"github.com/astaxie/beego"
+// 	"github.com/astaxie/beego/cache"
+// 	"github.com/astaxie/beego/utils/captcha"
+// )
+//
+// var cpt *captcha.Captcha
+//
+// func init() {
+// 	store := cache.NewMemoryCache()
+// 	cpt = captcha.NewWithFilter("/captcha/", store)
+// }
+//
+// type MainController struct {
+// 	beego.Controller
+// }
+//
+// func (this *MainController) Get() {
+// 	this.TplNames = "index.tpl"
+// }
+//
+// func (this *MainController) Post() {
+// 	this.TplNames = "index.tpl"
+//
+// 	this.Data["Success"] = cpt.VerifyReq(this.Ctx.Request)
+// }
+// ```
+//
+// template usage
+//
+// ```
+// {{.Success}}
+// <form action="/" method="post">
+// 	{{create_captcha}}
+// 	<input name="captcha" type="text">
+// </form>
+// ```
 package captcha
-
-// modifiy and integrated to Beego in one file from https://github.com/dchest/captcha
 
 import (
 	"fmt"
@@ -20,6 +60,7 @@ var (
 )
 
 const (
+	// default captcha attributes
 	challengeNums    = 6
 	expiration       = 600
 	fieldIdName      = "captcha_id"
@@ -29,15 +70,29 @@ const (
 )
 
 type Captcha struct {
-	store            cache.Cache
-	urlPrefix        string
-	FieldIdName      string
+	// beego cache store
+	store cache.Cache
+
+	// url prefix for captcha image
+	urlPrefix string
+
+	// specify captcha id input field name
+	FieldIdName string
+	// specify captcha result input field name
 	FieldCaptchaName string
-	StdWidth         int
-	StdHeight        int
-	ChallengeNums    int
-	Expiration       int64
-	CachePrefix      string
+
+	// captcha image width and height
+	StdWidth  int
+	StdHeight int
+
+	// captcha chars nums
+	ChallengeNums int
+
+	// captcha expiration seconds
+	Expiration int64
+
+	// cache key prefix
+	CachePrefix string
 }
 
 func (c *Captcha) key(id string) string {
@@ -48,6 +103,7 @@ func (c *Captcha) genRandChars() []byte {
 	return utils.RandomCreateBytes(c.ChallengeNums, defaultChars...)
 }
 
+// beego filter handler for serve captcha image
 func (c *Captcha) Handler(ctx *context.Context) {
 	var chars []byte
 
@@ -83,6 +139,7 @@ func (c *Captcha) Handler(ctx *context.Context) {
 	}
 }
 
+// tempalte func for output html
 func (c *Captcha) CreateCaptchaHtml() template.HTML {
 	value, err := c.CreateCaptcha()
 	if err != nil {
@@ -97,6 +154,7 @@ func (c *Captcha) CreateCaptchaHtml() template.HTML {
 		`</a>`, c.FieldIdName, value, c.urlPrefix, value, c.urlPrefix, value))
 }
 
+// create a new captcha id
 func (c *Captcha) CreateCaptcha() (string, error) {
 	// generate captcha id
 	id := string(utils.RandomCreateBytes(15))
@@ -112,11 +170,13 @@ func (c *Captcha) CreateCaptcha() (string, error) {
 	return id, nil
 }
 
+// verify from a request
 func (c *Captcha) VerifyReq(req *http.Request) bool {
 	req.ParseForm()
 	return c.Verify(req.Form.Get(c.FieldIdName), req.Form.Get(c.FieldCaptchaName))
 }
 
+// direct verify id and challenge string
 func (c *Captcha) Verify(id string, challenge string) (success bool) {
 	if len(challenge) == 0 || len(id) == 0 {
 		return
@@ -147,6 +207,7 @@ func (c *Captcha) Verify(id string, challenge string) (success bool) {
 	return true
 }
 
+// create a new captcha.Captcha
 func NewCaptcha(urlPrefix string, store cache.Cache) *Captcha {
 	cpt := &Captcha{}
 	cpt.store = store
@@ -171,6 +232,8 @@ func NewCaptcha(urlPrefix string, store cache.Cache) *Captcha {
 	return cpt
 }
 
+// create a new captcha.Captcha and auto AddFilter for serve captacha image
+// and add a tempalte func for output html
 func NewWithFilter(urlPrefix string, store cache.Cache) *Captcha {
 	cpt := NewCaptcha(urlPrefix, store)
 
