@@ -12,6 +12,7 @@ type dbIndex struct {
 	Sql   string
 }
 
+// create database drop sql.
 func getDbDropSql(al *alias) (sqls []string) {
 	if len(modelCache.cache) == 0 {
 		fmt.Println("no Model found, need register your model")
@@ -26,6 +27,7 @@ func getDbDropSql(al *alias) (sqls []string) {
 	return sqls
 }
 
+// get database column type string.
 func getColumnTyp(al *alias, fi *fieldInfo) (col string) {
 	T := al.DbBaser.DbTypes()
 	fieldType := fi.fieldType
@@ -79,6 +81,7 @@ checkColumn:
 	return
 }
 
+// create alter sql string.
 func getColumnAddQuery(al *alias, fi *fieldInfo) string {
 	Q := al.DbBaser.TableQuote()
 	typ := getColumnTyp(al, fi)
@@ -90,6 +93,7 @@ func getColumnAddQuery(al *alias, fi *fieldInfo) string {
 	return fmt.Sprintf("ALTER TABLE %s%s%s ADD COLUMN %s%s%s %s", Q, fi.mi.table, Q, Q, fi.column, Q, typ)
 }
 
+// create database creation string.
 func getDbCreateSql(al *alias) (sqls []string, tableIndexes map[string][]dbIndex) {
 	if len(modelCache.cache) == 0 {
 		fmt.Println("no Model found, need register your model")

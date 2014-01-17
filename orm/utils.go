@@ -10,6 +10,7 @@ import (
 
 type StrTo string
 
+// set string
 func (f *StrTo) Set(v string) {
 	if v != "" {
 		*f = StrTo(v)
@@ -18,77 +19,93 @@ func (f *StrTo) Set(v string) {
 	}
 }
 
+// clean string
 func (f *StrTo) Clear() {
 	*f = StrTo(0x1E)
 }
 
+// check string exist
 func (f StrTo) Exist() bool {
 	return string(f) != string(0x1E)
 }
 
+// string to bool
 func (f StrTo) Bool() (bool, error) {
 	return strconv.ParseBool(f.String())
 }
 
+// string to float32
 func (f StrTo) Float32() (float32, error) {
 	v, err := strconv.ParseFloat(f.String(), 32)
 	return float32(v), err
 }
 
+// string to float64
 func (f StrTo) Float64() (float64, error) {
 	return strconv.ParseFloat(f.String(), 64)
 }
 
+// string to int
 func (f StrTo) Int() (int, error) {
 	v, err := strconv.ParseInt(f.String(), 10, 32)
 	return int(v), err
 }
 
+// string to int8
 func (f StrTo) Int8() (int8, error) {
 	v, err := strconv.ParseInt(f.String(), 10, 8)
 	return int8(v), err
 }
 
+// string to int16
 func (f StrTo) Int16() (int16, error) {
 	v, err := strconv.ParseInt(f.String(), 10, 16)
 	return int16(v), err
 }
 
+// string to int32
 func (f StrTo) Int32() (int32, error) {
 	v, err := strconv.ParseInt(f.String(), 10, 32)
 	return int32(v), err
 }
 
+// string to int64
 func (f StrTo) Int64() (int64, error) {
 	v, err := strconv.ParseInt(f.String(), 10, 64)
 	return int64(v), err
 }
 
+// string to uint
 func (f StrTo) Uint() (uint, error) {
 	v, err := strconv.ParseUint(f.String(), 10, 32)
 	return uint(v), err
 }
 
+// string to uint8
 func (f StrTo) Uint8() (uint8, error) {
 	v, err := strconv.ParseUint(f.String(), 10, 8)
 	return uint8(v), err
 }
 
+// string to uint16
 func (f StrTo) Uint16() (uint16, error) {
 	v, err := strconv.ParseUint(f.String(), 10, 16)
 	return uint16(v), err
 }
 
+// string to uint31
 func (f StrTo) Uint32() (uint32, error) {
 	v, err := strconv.ParseUint(f.String(), 10, 32)
 	return uint32(v), err
 }
 
+// string to uint64
 func (f StrTo) Uint64() (uint64, error) {
 	v, err := strconv.ParseUint(f.String(), 10, 64)
 	return uint64(v), err
 }
 
+// string to string
 func (f StrTo) String() string {
 	if f.Exist() {
 		return string(f)
@@ -96,6 +113,7 @@ func (f StrTo) String() string {
 	return ""
 }
 
+// interface to string
 func ToStr(value interface{}, args ...int) (s string) {
 	switch v := value.(type) {
 	case bool:
@@ -134,6 +152,7 @@ func ToStr(value interface{}, args ...int) (s string) {
 	return s
 }
 
+// interface to int64
 func ToInt64(value interface{}) (d int64) {
 	val := reflect.ValueOf(value)
 	switch value.(type) {
@@ -147,6 +166,7 @@ func ToInt64(value interface{}) (d int64) {
 	return
 }
 
+// snake string, XxYy to xx_yy
 func snakeString(s string) string {
 	data := make([]byte, 0, len(s)*2)
 	j := false
@@ -164,6 +184,7 @@ func snakeString(s string) string {
 	return strings.ToLower(string(data[:len(data)]))
 }
 
+// camel string, xx_yy to XxYy
 func camelString(s string) string {
 	data := make([]byte, 0, len(s))
 	j := false
@@ -190,6 +211,7 @@ func camelString(s string) string {
 
 type argString []string
 
+// get string by index from string slice
 func (a argString) Get(i int, args ...string) (r string) {
 	if i >= 0 && i < len(a) {
 		r = a[i]
@@ -201,6 +223,7 @@ func (a argString) Get(i int, args ...string) (r string) {
 
 type argInt []int
 
+// get int by index from int slice
 func (a argInt) Get(i int, args ...int) (r int) {
 	if i >= 0 && i < len(a) {
 		r = a[i]
@@ -213,6 +236,7 @@ func (a argInt) Get(i int, args ...int) (r int) {
 
 type argAny []interface{}
 
+// get interface by index from interface slice
 func (a argAny) Get(i int, args ...interface{}) (r interface{}) {
 	if i >= 0 && i < len(a) {
 		r = a[i]
@@ -223,15 +247,18 @@ func (a argAny) Get(i int, args ...interface{}) (r interface{}) {
 	return
 }
 
+// parse time to string with location
 func timeParse(dateString, format string) (time.Time, error) {
 	tp, err := time.ParseInLocation(format, dateString, DefaultTimeLoc)
 	return tp, err
 }
 
+// format time string
 func timeFormat(t time.Time, format string) string {
 	return t.Format(format)
 }
 
+// get pointer indirect type
 func indirectType(v reflect.Type) reflect.Type {
 	switch v.Kind() {
 	case reflect.Ptr:

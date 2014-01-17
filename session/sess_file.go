@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path"
 	"path/filepath"
@@ -60,7 +61,7 @@ func (fs *FileSessionStore) SessionID() string {
 	return fs.sid
 }
 
-func (fs *FileSessionStore) SessionRelease() {
+func (fs *FileSessionStore) SessionRelease(w http.ResponseWriter) {
 	defer fs.f.Close()
 	b, err := encodeGob(fs.values)
 	if err != nil {

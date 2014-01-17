@@ -2,6 +2,7 @@ package session
 
 import (
 	"container/list"
+	"net/http"
 	"sync"
 	"time"
 )
@@ -9,9 +10,9 @@ import (
 var mempder = &MemProvider{list: list.New(), sessions: make(map[string]*list.Element)}
 
 type MemSessionStore struct {
-	sid          string                      //session id唯一标示
-	timeAccessed time.Time                   //最后访问时间
-	value        map[interface{}]interface{} //session里面存储的值
+	sid          string                      //session id
+	timeAccessed time.Time                   //last access time
+	value        map[interface{}]interface{} //session store
 	lock         sync.RWMutex
 }
 
@@ -51,8 +52,7 @@ func (st *MemSessionStore) SessionID() string {
 	return st.sid
 }
 
-func (st *MemSessionStore) SessionRelease() {
-
+func (st *MemSessionStore) SessionRelease(w http.ResponseWriter) {
 }
 
 type MemProvider struct {

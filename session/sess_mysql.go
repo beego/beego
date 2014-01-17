@@ -9,6 +9,7 @@ package session
 
 import (
 	"database/sql"
+	"net/http"
 	"sync"
 	"time"
 
@@ -60,15 +61,15 @@ func (st *MysqlSessionStore) SessionID() string {
 	return st.sid
 }
 
-func (st *MysqlSessionStore) SessionRelease() {
+func (st *MysqlSessionStore) SessionRelease(w http.ResponseWriter) {
 	defer st.c.Close()
-	if len(st.values) > 0 {
-		b, err := encodeGob(st.values)
-		if err != nil {
-			return
-		}
-		st.c.Exec("UPDATE session set `session_data`= ? where session_key=?", b, st.sid)
+	b, err := encodeGob(st.values)
+	if err != nil {
+		return
 	}
+	st.c.Exec("UPDATE session set `session_data`=?, `session_expiry`=? where session_key=?",
+		b, time.Now().Unix(), st.sid)
+
 }
 
 type MysqlProvider struct {
@@ -96,7 +97,8 @@ func (mp *MysqlProvider) SessionRead(sid string) (SessionStore, error) {
 	var sessiondata []byte
 	err := row.Scan(&sessiondata)
 	if err == sql.ErrNoRows {
-		c.Exec("insert into session(`session_key`,`session_data`,`session_expiry`) values(?,?,?)", sid, "", time.Now().Unix())
+		c.Exec("insert into session(`session_key`,`session_data`,`session_expiry`) values(?,?,?)",
+			sid, "", time.Now().Unix())
 	}
 	var kv map[interface{}]interface{}
 	if len(sessiondata) == 0 {
@@ -113,6 +115,7 @@ func (mp *MysqlProvider) SessionRead(sid string) (SessionStore, error) {
 
 func (mp *MysqlProvider) SessionExist(sid string) bool {
 	c := mp.connectInit()
+	defer c.Close()
 	row := c.QueryRow("select session_data from session where session_key=?", sid)
 	var sessiondata []byte
 	err := row.Scan(&sessiondata)

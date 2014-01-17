@@ -3,6 +3,7 @@ package cache
 import (
 	"encoding/json"
 	"errors"
+	"time"
 
 	"github.com/beego/redigo/redis"
 )
@@ -14,7 +15,7 @@ var (
 
 // Redis cache adapter.
 type RedisCache struct {
-	c        redis.Conn
+	p        *redis.Pool // redis connection pool
 	conninfo string
 	key      string
 }
@@ -24,107 +25,62 @@ func NewRedisCache() *RedisCache {
 	return &RedisCache{key: DefaultKey}
 }
 
+// actually do the redis cmds
+func (rc *RedisCache) do(commandName string, args ...interface{}) (reply interface{}, err error) {
+	c := rc.p.Get()
+	defer c.Close()
+
+	return c.Do(commandName, args...)
+}
+
 // Get cache from redis.
 func (rc *RedisCache) Get(key string) interface{} {
-	if rc.c == nil {
-		var err error
-		rc.c, err = rc.connectInit()
-		if err != nil {
-			return nil
-		}
-	}
-	v, err := rc.c.Do("HGET", rc.key, key)
+	v, err := rc.do("HGET", rc.key, key)
 	if err != nil {
 		return nil
 	}
+
 	return v
 }
 
 // put cache to redis.
 // timeout is ignored.
 func (rc *RedisCache) Put(key string, val interface{}, timeout int64) error {
-	if rc.c == nil {
-		var err error
-		rc.c, err = rc.connectInit()
-		if err != nil {
-			return err
-		}
-	}
-	_, err := rc.c.Do("HSET", rc.key, key, val)
+	_, err := rc.do("HSET", rc.key, key, val)
 	return err
 }
 
 // delete cache in redis.
 func (rc *RedisCache) Delete(key string) error {
-	if rc.c == nil {
-		var err error
-		rc.c, err = rc.connectInit()
-		if err != nil {
-			return err
-		}
-	}
-	_, err := rc.c.Do("HDEL", rc.key, key)
+	_, err := rc.do("HDEL", rc.key, key)
 	return err
 }
 
 // check cache exist in redis.
 func (rc *RedisCache) IsExist(key string) bool {
-	if rc.c == nil {
-		var err error
-		rc.c, err = rc.connectInit()
-		if err != nil {
-			return false
-		}
-	}
-	v, err := redis.Bool(rc.c.Do("HEXISTS", rc.key, key))
+	v, err := redis.Bool(rc.do("HEXISTS", rc.key, key))
 	if err != nil {
 		return false
 	}
+
 	return v
 }
 
 // increase counter in redis.
 func (rc *RedisCache) Incr(key string) error {
-	if rc.c == nil {
-		var err error
-		rc.c, err = rc.connectInit()
-		if err != nil {
-			return err
-		}
-	}
-	_, err := redis.Bool(rc.c.Do("HINCRBY", rc.key, key, 1))
-	if err != nil {
-		return err
-	}
-	return nil
+	_, err := redis.Bool(rc.do("HINCRBY", rc.key, key, 1))
+	return err
 }
 
 // decrease counter in redis.
 func (rc *RedisCache) Decr(key string) error {
-	if rc.c == nil {
-		var err error
-		rc.c, err = rc.connectInit()
-		if err != nil {
-			return err
-		}
-	}
-	_, err := redis.Bool(rc.c.Do("HINCRBY", rc.key, key, -1))
-	if err != nil {
-		return err
-	}
-	return nil
+	_, err := redis.Bool(rc.do("HINCRBY", rc.key, key, -1))
+	return err
 }
 
 // clean all cache in redis. delete this redis collection.
 func (rc *RedisCache) ClearAll() error {
-	if rc.c == nil {
-		var err error
-		rc.c, err = rc.connectInit()
-		if err != nil {
-			return err
-		}
-	}
-	_, err := rc.c.Do("DEL", rc.key)
+	_, err := rc.do("DEL", rc.key)
 	return err
 }
 
@@ -135,32 +91,42 @@ func (rc *RedisCache) ClearAll() error {
 func (rc *RedisCache) StartAndGC(config string) error {
 	var cf map[string]string
 	json.Unmarshal([]byte(config), &cf)
+
 	if _, ok := cf["key"]; !ok {
 		cf["key"] = DefaultKey
 	}
+
 	if _, ok := cf["conn"]; !ok {
 		return errors.New("config has no conn key")
 	}
+
 	rc.key = cf["key"]
 	rc.conninfo = cf["conn"]
-	var err error
-	rc.c, err = rc.connectInit()
-	if err != nil {
+	rc.connectInit()
+
+	c := rc.p.Get()
+	defer c.Close()
+	if err := c.Err(); err != nil {
 		return err
 	}
-	if rc.c == nil {
-		return errors.New("dial tcp conn error")
-	}
+
 	return nil
 }
 
 // connect to redis.
-func (rc *RedisCache) connectInit() (redis.Conn, error) {
-	c, err := redis.Dial("tcp", rc.conninfo)
-	if err != nil {
-		return nil, err
+func (rc *RedisCache) connectInit() {
+	// initialize a new pool
+	rc.p = &redis.Pool{
+		MaxIdle:     3,
+		IdleTimeout: 180 * time.Second,
+		Dial: func() (redis.Conn, error) {
+			c, err := redis.Dial("tcp", rc.conninfo)
+			if err != nil {
+				return nil, err
+			}
+			return c, nil
+		},
 	}
-	return c, nil
 }
 
 func init() {

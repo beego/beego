@@ -6,11 +6,13 @@ import (
 	"os"
 )
 
+// ConsoleWriter implements LoggerInterface and writes messages to terminal.
 type ConsoleWriter struct {
 	lg    *log.Logger
 	Level int `json:"level"`
 }
 
+// create ConsoleWriter returning as LoggerInterface.
 func NewConsole() LoggerInterface {
 	cw := new(ConsoleWriter)
 	cw.lg = log.New(os.Stdout, "", log.Ldate|log.Ltime)
@@ -18,6 +20,8 @@ func NewConsole() LoggerInterface {
 	return cw
 }
 
+// init console logger.
+// jsonconfig like '{"level":LevelTrace}'.
 func (c *ConsoleWriter) Init(jsonconfig string) error {
 	err := json.Unmarshal([]byte(jsonconfig), c)
 	if err != nil {
@@ -26,6 +30,7 @@ func (c *ConsoleWriter) Init(jsonconfig string) error {
 	return nil
 }
 
+// write message in console.
 func (c *ConsoleWriter) WriteMsg(msg string, level int) error {
 	if level < c.Level {
 		return nil
@@ -34,10 +39,12 @@ func (c *ConsoleWriter) WriteMsg(msg string, level int) error {
 	return nil
 }
 
+// implementing method. empty.
 func (c *ConsoleWriter) Destroy() {
 
 }
 
+// implementing method. empty.
 func (c *ConsoleWriter) Flush() {
 
 }

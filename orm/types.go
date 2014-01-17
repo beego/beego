@@ -6,11 +6,13 @@ import (
 	"time"
 )
 
+// database driver
 type Driver interface {
 	Name() string
 	Type() DriverType
 }
 
+// field info
 type Fielder interface {
 	String() string
 	FieldType() int
@@ -18,9 +20,11 @@ type Fielder interface {
 	RawValue() interface{}
 }
 
+// orm struct
 type Ormer interface {
 	Read(interface{}, ...string) error
 	Insert(interface{}) (int64, error)
+	InsertMulti(int, interface{}) (int64, error)
 	Update(interface{}, ...string) (int64, error)
 	Delete(interface{}) (int64, error)
 	LoadRelated(interface{}, string, ...interface{}) (int64, error)
@@ -34,11 +38,13 @@ type Ormer interface {
 	Driver() Driver
 }
 
+// insert prepared statement
 type Inserter interface {
 	Insert(interface{}) (int64, error)
 	Close() error
 }
 
+// query seter
 type QuerySeter interface {
 	Filter(string, ...interface{}) QuerySeter
 	Exclude(string, ...interface{}) QuerySeter
@@ -59,6 +65,7 @@ type QuerySeter interface {
 	ValuesFlat(*ParamsList, string) (int64, error)
 }
 
+// model to model query struct
 type QueryM2Mer interface {
 	Add(...interface{}) (int64, error)
 	Remove(...interface{}) (int64, error)
@@ -67,11 +74,13 @@ type QueryM2Mer interface {
 	Count() (int64, error)
 }
 
+// raw query statement
 type RawPreparer interface {
 	Exec(...interface{}) (sql.Result, error)
 	Close() error
 }
 
+// raw query seter
 type RawSeter interface {
 	Exec() (sql.Result, error)
 	QueryRow(...interface{}) error
@@ -83,6 +92,7 @@ type RawSeter interface {
 	Prepare() (RawPreparer, error)
 }
 
+// statement querier
 type stmtQuerier interface {
 	Close() error
 	Exec(args ...interface{}) (sql.Result, error)
@@ -90,6 +100,7 @@ type stmtQuerier interface {
 	QueryRow(args ...interface{}) *sql.Row
 }
 
+// db querier
 type dbQuerier interface {
 	Prepare(query string) (*sql.Stmt, error)
 	Exec(query string, args ...interface{}) (sql.Result, error)
@@ -97,19 +108,23 @@ type dbQuerier interface {
 	QueryRow(query string, args ...interface{}) *sql.Row
 }
 
+// transaction beginner
 type txer interface {
 	Begin() (*sql.Tx, error)
 }
 
+// transaction ending
 type txEnder interface {
 	Commit() error
 	Rollback() error
 }
 
+// base database struct
 type dbBaser interface {
 	Read(dbQuerier, *modelInfo, reflect.Value, *time.Location, []string) error
 	Insert(dbQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
-	InsertValue(dbQuerier, *modelInfo, []string, []interface{}) (int64, error)
+	InsertMulti(dbQuerier, *modelInfo, reflect.Value, int, *time.Location) (int64, error)
+	InsertValue(dbQuerier, *modelInfo, bool, []string, []interface{}) (int64, error)
 	InsertStmt(stmtQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
 	Update(dbQuerier, *modelInfo, reflect.Value, *time.Location, []string) (int64, error)
 	Delete(dbQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)

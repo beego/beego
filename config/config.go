@@ -6,8 +6,9 @@ import (
 
 // ConfigContainer defines how to get and set value from configuration raw data.
 type ConfigContainer interface {
-	Set(key, val string) error // support section::key type in given key when using ini type.
-	String(key string) string  // support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
+	Set(key, val string) error   // support section::key type in given key when using ini type.
+	String(key string) string    // support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
+	Strings(key string) []string //get string slice
 	Int(key string) (int, error)
 	Int64(key string) (int64, error)
 	Bool(key string) (bool, error)

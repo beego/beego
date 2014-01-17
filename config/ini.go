@@ -146,6 +146,11 @@ func (c *IniConfigContainer) String(key string) string {
 	return c.getdata(key)
 }
 
+// Strings returns the []string value for a given key.
+func (c *IniConfigContainer) Strings(key string) []string {
+	return strings.Split(c.String(key), ";")
+}
+
 // WriteValue writes a new value for key.
 // if write to one section, the key need be "section::key".
 // if the section is not existed, it panics.
