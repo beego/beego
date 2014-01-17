@@ -5,6 +5,7 @@ import (
 	"strconv"
 )
 
+// postgresql operators.
 var postgresOperators = map[string]string{
 	"exact":       "= ?",
 	"iexact":      "= UPPER(?)",
@@ -20,6 +21,7 @@ var postgresOperators = map[string]string{
 	"iendswith":   "LIKE UPPER(?)",
 }
 
+// postgresql column field types.
 var postgresTypes = map[string]string{
 	"auto":            "serial NOT NULL PRIMARY KEY",
 	"pk":              "NOT NULL PRIMARY KEY",
@@ -40,16 +42,19 @@ var postgresTypes = map[string]string{
 	"float64-decimal": "numeric(%d, %d)",
 }
 
+// postgresql dbBaser.
 type dbBasePostgres struct {
 	dbBase
 }
 
 var _ dbBaser = new(dbBasePostgres)
 
+// get postgresql operator.
 func (d *dbBasePostgres) OperatorSql(operator string) string {
 	return postgresOperators[operator]
 }
 
+// generate functioned sql string, such as contains(text).
 func (d *dbBasePostgres) GenerateOperatorLeftCol(fi *fieldInfo, operator string, leftCol *string) {
 	switch operator {
 	case "contains", "startswith", "endswith":
@@ -59,6 +64,7 @@ func (d *dbBasePostgres) GenerateOperatorLeftCol(fi *fieldInfo, operator string,
 	}
 }
 
+// postgresql unsupports updating joined record.
 func (d *dbBasePostgres) SupportUpdateJoin() bool {
 	return false
 }
@@ -67,10 +73,13 @@ func (d *dbBasePostgres) MaxLimit() uint64 {
 	return 0
 }
 
+// postgresql quote is ".
 func (d *dbBasePostgres) TableQuote() string {
 	return `"`
 }
 
+// postgresql value placeholder is $n.
+// replace default ? to $n.
 func (d *dbBasePostgres) ReplaceMarks(query *string) {
 	q := *query
 	num := 0
@@ -97,6 +106,7 @@ func (d *dbBasePostgres) ReplaceMarks(query *string) {
 	*query = string(data)
 }
 
+// make returning sql support for postgresql.
 func (d *dbBasePostgres) HasReturningID(mi *modelInfo, query *string) (has bool) {
 	if mi.fields.pk.auto {
 		if query != nil {
@@ -107,18 +117,22 @@ func (d *dbBasePostgres) HasReturningID(mi *modelInfo, query *string) (has bool)
 	return
 }
 
+// show table sql for postgresql.
 func (d *dbBasePostgres) ShowTablesQuery() string {
 	return "SELECT table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema NOT IN ('pg_catalog', 'information_schema')"
 }
 
+// show table columns sql for postgresql.
 func (d *dbBasePostgres) ShowColumnsQuery(table string) string {
 	return fmt.Sprintf("SELECT column_name, data_type, is_nullable FROM information_schema.columns where table_schema NOT IN ('pg_catalog', 'information_schema') and table_name = '%s'", table)
 }
 
+// get column types of postgresql.
 func (d *dbBasePostgres) DbTypes() map[string]string {
 	return postgresTypes
 }
 
+// check index exist in postgresql.
 func (d *dbBasePostgres) IndexExists(db dbQuerier, table string, name string) bool {
 	query := fmt.Sprintf("SELECT COUNT(*) FROM pg_indexes WHERE tablename = '%s' AND indexname = '%s'", table, name)
 	row := db.QueryRow(query)
@@ -127,6 +141,7 @@ func (d *dbBasePostgres) IndexExists(db dbQuerier, table string, name string) bo
 	return cnt > 0
 }
 
+// create new postgresql dbBaser.
 func newdbBasePostgres() dbBaser {
 	b := new(dbBasePostgres)
 	b.ins = b

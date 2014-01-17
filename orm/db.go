@@ -927,6 +927,7 @@ func (d *dbBase) GenerateOperatorSql(mi *modelInfo, fi *fieldInfo, operator stri
 	return sql, params
 }
 
+// gernerate sql string with inner function, such as UPPER(text).
 func (d *dbBase) GenerateOperatorLeftCol(*fieldInfo, string, *string) {
 	// default not use
 }
