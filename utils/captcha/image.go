@@ -8,8 +8,6 @@ import (
 	"image/png"
 	"io"
 	"math"
-	"math/rand"
-	"time"
 )
 
 const (
@@ -236,26 +234,21 @@ type Image struct {
 	dotSize   int
 }
 
-func getrand() *rand.Rand {
-	return rand.New(rand.NewSource(time.Now().UnixNano()))
+var prng = &siprng{}
+
+// randIntn returns a pseudorandom non-negative int in range [0, n).
+func randIntn(n int) int {
+	return prng.Intn(n)
 }
 
-func randIntn(max int) int {
-	if max <= 0 {
-		return 0
-	}
-	return getrand().Intn(max)
+// randInt returns a pseudorandom int in range [from, to].
+func randInt(from, to int) int {
+	return prng.Intn(to+1-from) + from
 }
 
-func randInt(min, max int) int {
-	if max-min <= 0 {
-		return 0
-	}
-	return getrand().Intn(max-min) + min
-}
-
-func randFloat(min, max float64) float64 {
-	return (max-min)*getrand().Float64() + min
+// randFloat returns a pseudorandom float64 in range [from, to].
+func randFloat(from, to float64) float64 {
+	return (to-from)*prng.Float64() + from
 }
 
 func randomPalette() color.Palette {

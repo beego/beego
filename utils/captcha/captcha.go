@@ -12,6 +12,7 @@
 // var cpt *captcha.Captcha
 //
 // func init() {
+// 	// use beego cache system store the captcha data
 // 	store := cache.NewMemoryCache()
 // 	cpt = captcha.NewWithFilter("/captcha/", store)
 // }
