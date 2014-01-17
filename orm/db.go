@@ -15,7 +15,7 @@ const (
 )
 
 var (
-	ErrMissPK = errors.New("missed pk value")
+	ErrMissPK = errors.New("missed pk value") // missing pk error
 )
 
 var (
@@ -45,12 +45,15 @@ var (
 	}
 )
 
+// an instance of dbBaser interface/
 type dbBase struct {
 	ins dbBaser
 }
 
+// check dbBase implements dbBaser interface.
 var _ dbBaser = new(dbBase)
 
+// get struct columns values as interface slice.
 func (d *dbBase) collectValues(mi *modelInfo, ind reflect.Value, cols []string, skipAuto bool, insert bool, names *[]string, tz *time.Location) (values []interface{}, err error) {
 	var columns []string
 
@@ -87,6 +90,7 @@ func (d *dbBase) collectValues(mi *modelInfo, ind reflect.Value, cols []string, 
 	return
 }
 
+// get one field value in struct column as interface.
 func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Value, insert bool, tz *time.Location) (interface{}, error) {
 	var value interface{}
 	if fi.pk {
@@ -155,6 +159,7 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 	return value, nil
 }
 
+// create insert sql preparation statement object.
 func (d *dbBase) PrepareInsert(q dbQuerier, mi *modelInfo) (stmtQuerier, string, error) {
 	Q := d.ins.TableQuote()
 
@@ -180,6 +185,7 @@ func (d *dbBase) PrepareInsert(q dbQuerier, mi *modelInfo) (stmtQuerier, string,
 	return stmt, query, err
 }
 
+// insert struct with prepared statement and given struct reflect value.
 func (d *dbBase) InsertStmt(stmt stmtQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location) (int64, error) {
 	values, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, nil, tz)
 	if err != nil {
@@ -200,6 +206,7 @@ func (d *dbBase) InsertStmt(stmt stmtQuerier, mi *modelInfo, ind reflect.Value, 
 	}
 }
 
+// query sql ,read records and persist in dbBaser.
 func (d *dbBase) Read(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location, cols []string) error {
 	var whereCols []string
 	var args []interface{}
@@ -259,6 +266,7 @@ func (d *dbBase) Read(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Lo
 	return nil
 }
 
+// execute insert sql dbQuerier with given struct reflect.Value.
 func (d *dbBase) Insert(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location) (int64, error) {
 	names := make([]string, 0, len(mi.fields.dbcols)-1)
 	values, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, &names, tz)
@@ -269,6 +277,7 @@ func (d *dbBase) Insert(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.
 	return d.InsertValue(q, mi, false, names, values)
 }
 
+// multi-insert sql with given slice struct reflect.Value.
 func (d *dbBase) InsertMulti(q dbQuerier, mi *modelInfo, sind reflect.Value, bulk int, tz *time.Location) (int64, error) {
 	var (
 		cnt    int64
@@ -325,6 +334,8 @@ func (d *dbBase) InsertMulti(q dbQuerier, mi *modelInfo, sind reflect.Value, bul
 	return cnt, nil
 }
 
+// execute insert sql with given struct and given values.
+// insert the given values, not the field values in struct.
 func (d *dbBase) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []string, values []interface{}) (int64, error) {
 	Q := d.ins.TableQuote()
 
@@ -364,6 +375,7 @@ func (d *dbBase) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []s
 	}
 }
 
+// execute update sql dbQuerier with given struct reflect.Value.
 func (d *dbBase) Update(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location, cols []string) (int64, error) {
 	pkName, pkValue, ok := getExistPk(mi, ind)
 	if ok == false {
@@ -404,6 +416,8 @@ func (d *dbBase) Update(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.
 	return 0, nil
 }
 
+// execute delete sql dbQuerier with given struct reflect.Value.
+// delete index is pk.
 func (d *dbBase) Delete(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location) (int64, error) {
 	pkName, pkValue, ok := getExistPk(mi, ind)
 	if ok == false {
@@ -445,6 +459,8 @@ func (d *dbBase) Delete(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.
 	return 0, nil
 }
 
+// update table-related record by querySet.
+// need querySet not struct reflect.Value to update related records.
 func (d *dbBase) UpdateBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condition, params Params, tz *time.Location) (int64, error) {
 	columns := make([]string, 0, len(params))
 	values := make([]interface{}, 0, len(params))
@@ -520,6 +536,8 @@ func (d *dbBase) UpdateBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	return 0, nil
 }
 
+// delete related records.
+// do UpdateBanch or DeleteBanch by condition of tables' relationship.
 func (d *dbBase) deleteRels(q dbQuerier, mi *modelInfo, args []interface{}, tz *time.Location) error {
 	for _, fi := range mi.fields.fieldsReverse {
 		fi = fi.reverseFieldInfo
@@ -546,6 +564,7 @@ func (d *dbBase) deleteRels(q dbQuerier, mi *modelInfo, args []interface{}, tz *
 	return nil
 }
 
+// delete table-related records.
 func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condition, tz *time.Location) (int64, error) {
 	tables := newDbTables(mi, d.ins)
 	tables.skipEnd = true
@@ -623,6 +642,7 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	return 0, nil
 }
 
+// read related records.
 func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condition, container interface{}, tz *time.Location, cols []string) (int64, error) {
 
 	val := reflect.ValueOf(container)
@@ -832,6 +852,7 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 	return cnt, nil
 }
 
+// excute count sql and return count result int64.
 func (d *dbBase) Count(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condition, tz *time.Location) (cnt int64, err error) {
 	tables := newDbTables(mi, d.ins)
 	tables.parseRelated(qs.related, qs.relDepth)
@@ -852,6 +873,7 @@ func (d *dbBase) Count(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condition
 	return
 }
 
+// generate sql with replacing operator string placeholders and replaced values.
 func (d *dbBase) GenerateOperatorSql(mi *modelInfo, fi *fieldInfo, operator string, args []interface{}, tz *time.Location) (string, []interface{}) {
 	sql := ""
 	params := getFlatParams(fi, args, tz)
@@ -909,6 +931,7 @@ func (d *dbBase) GenerateOperatorLeftCol(*fieldInfo, string, *string) {
 	// default not use
 }
 
+// set values to struct column.
 func (d *dbBase) setColsValues(mi *modelInfo, ind *reflect.Value, cols []string, values []interface{}, tz *time.Location) {
 	for i, column := range cols {
 		val := reflect.Indirect(reflect.ValueOf(values[i])).Interface()
@@ -930,6 +953,7 @@ func (d *dbBase) setColsValues(mi *modelInfo, ind *reflect.Value, cols []string,
 	}
 }
 
+// convert value from database result to value following in field type.
 func (d *dbBase) convertValueFromDB(fi *fieldInfo, val interface{}, tz *time.Location) (interface{}, error) {
 	if val == nil {
 		return nil, nil
@@ -1082,6 +1106,7 @@ end:
 
 }
 
+// set one value to struct column field.
 func (d *dbBase) setFieldValue(fi *fieldInfo, value interface{}, field reflect.Value) (interface{}, error) {
 
 	fieldType := fi.fieldType
@@ -1156,6 +1181,7 @@ setValue:
 	return value, nil
 }
 
+// query sql, read values , save to *[]ParamList.
 func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condition, exprs []string, container interface{}, tz *time.Location) (int64, error) {
 
 	var (
@@ -1323,6 +1349,7 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 	return cnt, nil
 }
 
+// flag of update joined record.
 func (d *dbBase) SupportUpdateJoin() bool {
 	return true
 }
@@ -1331,30 +1358,37 @@ func (d *dbBase) MaxLimit() uint64 {
 	return 18446744073709551615
 }
 
+// return quote.
 func (d *dbBase) TableQuote() string {
 	return "`"
 }
 
+// replace value placeholer in parametered sql string.
 func (d *dbBase) ReplaceMarks(query *string) {
 	// default use `?` as mark, do nothing
 }
 
+// flag of RETURNING sql.
 func (d *dbBase) HasReturningID(*modelInfo, *string) bool {
 	return false
 }
 
+// convert time from db.
 func (d *dbBase) TimeFromDB(t *time.Time, tz *time.Location) {
 	*t = t.In(tz)
 }
 
+// convert time to db.
 func (d *dbBase) TimeToDB(t *time.Time, tz *time.Location) {
 	*t = t.In(tz)
 }
 
+// get database types.
 func (d *dbBase) DbTypes() map[string]string {
 	return nil
 }
 
+// gt all tables.
 func (d *dbBase) GetTables(db dbQuerier) (map[string]bool, error) {
 	tables := make(map[string]bool)
 	query := d.ins.ShowTablesQuery()
@@ -1379,6 +1413,7 @@ func (d *dbBase) GetTables(db dbQuerier) (map[string]bool, error) {
 	return tables, nil
 }
 
+// get all cloumns in table.
 func (d *dbBase) GetColumns(db dbQuerier, table string) (map[string][3]string, error) {
 	columns := make(map[string][3]string)
 	query := d.ins.ShowColumnsQuery(table)
@@ -1405,18 +1440,22 @@ func (d *dbBase) GetColumns(db dbQuerier, table string) (map[string][3]string, e
 	return columns, nil
 }
 
+// not implement.
 func (d *dbBase) OperatorSql(operator string) string {
 	panic(ErrNotImplement)
 }
 
+// not implement.
 func (d *dbBase) ShowTablesQuery() string {
 	panic(ErrNotImplement)
 }
 
+// not implement.
 func (d *dbBase) ShowColumnsQuery(table string) string {
 	panic(ErrNotImplement)
 }
 
+// not implement.
 func (d *dbBase) IndexExists(dbQuerier, string, string) bool {
 	panic(ErrNotImplement)
 }

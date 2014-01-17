@@ -9,27 +9,32 @@ import (
 	"time"
 )
 
+// database driver constant int.
 type DriverType int
 
 const (
-	_ DriverType = iota
-	DR_MySQL
-	DR_Sqlite
-	DR_Oracle
-	DR_Postgres
+	_ DriverType = iota // int enum type
+	DR_MySQL // mysql
+	DR_Sqlite // sqlite
+	DR_Oracle // oracle
+	DR_Postgres // pgsql
 )
 
+// database driver string.
 type driver string
 
+// get type constant int of current driver..
 func (d driver) Type() DriverType {
 	a, _ := dataBaseCache.get(string(d))
 	return a.Driver
 }
 
+// get name of current driver
 func (d driver) Name() string {
 	return string(d)
 }
 
+// check driver iis implemented Driver interface or not.
 var _ Driver = new(driver)
 
 var (
@@ -47,11 +52,13 @@ var (
 	}
 )
 
+// database alias cacher.
 type _dbCache struct {
 	mux   sync.RWMutex
 	cache map[string]*alias
 }
 
+// add database alias with original name.
 func (ac *_dbCache) add(name string, al *alias) (added bool) {
 	ac.mux.Lock()
 	defer ac.mux.Unlock()
@@ -62,6 +69,7 @@ func (ac *_dbCache) add(name string, al *alias) (added bool) {
 	return
 }
 
+// get database alias if cached.
 func (ac *_dbCache) get(name string) (al *alias, ok bool) {
 	ac.mux.RLock()
 	defer ac.mux.RUnlock()
@@ -69,6 +77,7 @@ func (ac *_dbCache) get(name string) (al *alias, ok bool) {
 	return
 }
 
+// get default alias.
 func (ac *_dbCache) getDefault() (al *alias) {
 	al, _ = ac.get("default")
 	return
