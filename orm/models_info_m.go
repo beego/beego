@@ -7,6 +7,7 @@ import (
 	"reflect"
 )
 
+// single model info
 type modelInfo struct {
 	pkg       string
 	name      string
@@ -20,6 +21,7 @@ type modelInfo struct {
 	isThrough bool
 }
 
+// new model info
 func newModelInfo(val reflect.Value) (info *modelInfo) {
 	var (
 		err error
@@ -79,6 +81,8 @@ func newModelInfo(val reflect.Value) (info *modelInfo) {
 	return
 }
 
+// combine related model info to new model info.
+// prepare for relation models query.
 func newM2MModelInfo(m1, m2 *modelInfo) (info *modelInfo) {
 	info = new(modelInfo)
 	info.fields = newFields()

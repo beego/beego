@@ -40,6 +40,7 @@ type orm struct {
 
 var _ Ormer = new(orm)
 
+// get model info and model reflect value
 func (o *orm) getMiInd(md interface{}, needPtr bool) (mi *modelInfo, ind reflect.Value) {
 	val := reflect.ValueOf(md)
 	ind = reflect.Indirect(val)
@@ -54,6 +55,7 @@ func (o *orm) getMiInd(md interface{}, needPtr bool) (mi *modelInfo, ind reflect
 	panic(fmt.Errorf("<Ormer> table: `%s` not found, maybe not RegisterModel", name))
 }
 
+// get field info from model info by given field name
 func (o *orm) getFieldInfo(mi *modelInfo, name string) *fieldInfo {
 	fi, ok := mi.fields.GetByAny(name)
 	if !ok {
@@ -62,6 +64,7 @@ func (o *orm) getFieldInfo(mi *modelInfo, name string) *fieldInfo {
 	return fi
 }
 
+// read data to model
 func (o *orm) Read(md interface{}, cols ...string) error {
 	mi, ind := o.getMiInd(md, true)
 	err := o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols)
@@ -71,6 +74,7 @@ func (o *orm) Read(md interface{}, cols ...string) error {
 	return nil
 }
 
+// insert model data to database
 func (o *orm) Insert(md interface{}) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
 	id, err := o.alias.DbBaser.Insert(o.db, mi, ind, o.alias.TZ)
@@ -83,6 +87,7 @@ func (o *orm) Insert(md interface{}) (int64, error) {
 	return id, nil
 }
 
+// set auto pk field
 func (o *orm) setPk(mi *modelInfo, ind reflect.Value, id int64) {
 	if mi.fields.pk.auto {
 		if mi.fields.pk.fieldType&IsPostiveIntegerField > 0 {
@@ -93,6 +98,7 @@ func (o *orm) setPk(mi *modelInfo, ind reflect.Value, id int64) {
 	}
 }
 
+// insert some models to database
 func (o *orm) InsertMulti(bulk int, mds interface{}) (int64, error) {
 	var cnt int64
 
@@ -127,6 +133,8 @@ func (o *orm) InsertMulti(bulk int, mds interface{}) (int64, error) {
 	return cnt, nil
 }
 
+// update model to database.
+// cols set the columns those want to update.
 func (o *orm) Update(md interface{}, cols ...string) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
 	num, err := o.alias.DbBaser.Update(o.db, mi, ind, o.alias.TZ, cols)
@@ -136,6 +144,7 @@ func (o *orm) Update(md interface{}, cols ...string) (int64, error) {
 	return num, nil
 }
 
+// delete model in database
 func (o *orm) Delete(md interface{}) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
 	num, err := o.alias.DbBaser.Delete(o.db, mi, ind, o.alias.TZ)
@@ -148,6 +157,7 @@ func (o *orm) Delete(md interface{}) (int64, error) {
 	return num, nil
 }
 
+// create a models to models queryer
 func (o *orm) QueryM2M(md interface{}, name string) QueryM2Mer {
 	mi, ind := o.getMiInd(md, true)
 	fi := o.getFieldInfo(mi, name)
@@ -162,6 +172,14 @@ func (o *orm) QueryM2M(md interface{}, name string) QueryM2Mer {
 	return newQueryM2M(md, o, mi, fi, ind)
 }
 
+// load related models to md model.
+// args are limit, offset int and order string.
+//
+// example:
+// 	orm.LoadRelated(post,"Tags")
+// 	for _,tag := range post.Tags{...}
+//
+// make sure the relation is defined in model struct tags.
 func (o *orm) LoadRelated(md interface{}, name string, args ...interface{}) (int64, error) {
 	_, fi, ind, qseter := o.queryRelated(md, name)
 
@@ -223,12 +241,19 @@ func (o *orm) LoadRelated(md interface{}, name string, args ...interface{}) (int
 	return nums, err
 }
 
+// return a QuerySeter for related models to md model.
+// it can do all, update, delete in QuerySeter.
+// example:
+// 	qs := orm.QueryRelated(post,"Tag")
+//  qs.All(&[]*Tag{})
+//
 func (o *orm) QueryRelated(md interface{}, name string) QuerySeter {
 	// is this api needed ?
 	_, _, _, qs := o.queryRelated(md, name)
 	return qs
 }
 
+// get QuerySeter for related models to md model
 func (o *orm) queryRelated(md interface{}, name string) (*modelInfo, *fieldInfo, reflect.Value, QuerySeter) {
 	mi, ind := o.getMiInd(md, true)
 	fi := o.getFieldInfo(mi, name)
@@ -260,6 +285,7 @@ func (o *orm) queryRelated(md interface{}, name string) (*modelInfo, *fieldInfo,
 	return mi, fi, ind, qs
 }
 
+// get reverse relation QuerySeter
 func (o *orm) getReverseQs(md interface{}, mi *modelInfo, fi *fieldInfo) *querySet {
 	switch fi.fieldType {
 	case RelReverseOne, RelReverseMany:
@@ -280,6 +306,7 @@ func (o *orm) getReverseQs(md interface{}, mi *modelInfo, fi *fieldInfo) *queryS
 	return q
 }
 
+// get relation QuerySeter
 func (o *orm) getRelQs(md interface{}, mi *modelInfo, fi *fieldInfo) *querySet {
 	switch fi.fieldType {
 	case RelOneToOne, RelForeignKey, RelManyToMany:
@@ -299,6 +326,9 @@ func (o *orm) getRelQs(md interface{}, mi *modelInfo, fi *fieldInfo) *querySet {
 	return q
 }
 
+// return a QuerySeter for table operations.
+// table name can be string or struct.
+// e.g. QueryTable("user"), QueryTable(&user{}) or QueryTable((*User)(nil)),
 func (o *orm) QueryTable(ptrStructOrTableName interface{}) (qs QuerySeter) {
 	name := ""
 	if table, ok := ptrStructOrTableName.(string); ok {
@@ -318,6 +348,7 @@ func (o *orm) QueryTable(ptrStructOrTableName interface{}) (qs QuerySeter) {
 	return
 }
 
+// switch to another registered database driver by given name.
 func (o *orm) Using(name string) error {
 	if o.isTx {
 		panic(fmt.Errorf("<Ormer.Using> transaction has been start, cannot change db"))
@@ -335,6 +366,7 @@ func (o *orm) Using(name string) error {
 	return nil
 }
 
+// begin transaction
 func (o *orm) Begin() error {
 	if o.isTx {
 		return ErrTxHasBegan
@@ -353,6 +385,7 @@ func (o *orm) Begin() error {
 	return nil
 }
 
+// commit transaction
 func (o *orm) Commit() error {
 	if o.isTx == false {
 		return ErrTxDone
@@ -367,6 +400,7 @@ func (o *orm) Commit() error {
 	return err
 }
 
+// rollback transaction
 func (o *orm) Rollback() error {
 	if o.isTx == false {
 		return ErrTxDone
@@ -381,14 +415,17 @@ func (o *orm) Rollback() error {
 	return err
 }
 
+// return a raw query seter for raw sql string.
 func (o *orm) Raw(query string, args ...interface{}) RawSeter {
 	return newRawSet(o, query, args)
 }
 
+// return current using database Driver
 func (o *orm) Driver() Driver {
 	return driver(o.alias.Name)
 }
 
+// create new orm
 func NewOrm() Ormer {
 	BootStrap() // execute only once
 
