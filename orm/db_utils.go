@@ -6,6 +6,7 @@ import (
 	"time"
 )
 
+// get table alias.
 func getDbAlias(name string) *alias {
 	if al, ok := dataBaseCache.get(name); ok {
 		return al
@@ -15,6 +16,7 @@ func getDbAlias(name string) *alias {
 	return nil
 }
 
+// get pk column info.
 func getExistPk(mi *modelInfo, ind reflect.Value) (column string, value interface{}, exist bool) {
 	fi := mi.fields.pk
 
@@ -37,6 +39,7 @@ func getExistPk(mi *modelInfo, ind reflect.Value) (column string, value interfac
 	return
 }
 
+// get fields description as flatted string.
 func getFlatParams(fi *fieldInfo, args []interface{}, tz *time.Location) (params []interface{}) {
 
 outFor:

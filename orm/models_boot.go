@@ -8,6 +8,8 @@ import (
 	"strings"
 )
 
+// register models.
+// prefix means table name prefix.
 func registerModel(model interface{}, prefix string) {
 	val := reflect.ValueOf(model)
 	ind := reflect.Indirect(val)
@@ -67,6 +69,7 @@ func registerModel(model interface{}, prefix string) {
 	modelCache.set(table, info)
 }
 
+// boostrap models
 func bootStrap() {
 	if modelCache.done {
 		return
@@ -281,6 +284,7 @@ end:
 	}
 }
 
+// register models
 func RegisterModel(models ...interface{}) {
 	if modelCache.done {
 		panic(fmt.Errorf("RegisterModel must be run before BootStrap"))
@@ -302,6 +306,8 @@ func RegisterModelWithPrefix(prefix string, models ...interface{}) {
 	}
 }
 
+// bootrap models.
+// make all model parsed and can not add more models
 func BootStrap() {
 	if modelCache.done {
 		return

@@ -221,7 +221,7 @@ func Run() {
 
 	middleware.VERSION = VERSION
 	middleware.AppName = AppName
-	middleware.RegisterErrorHander()
+	middleware.RegisterErrorHandler()
 
 	if EnableAdmin {
 		go BeeAdminApp.Run()

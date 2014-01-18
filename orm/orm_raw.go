@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// raw sql string prepared statement
 type rawPrepare struct {
 	rs     *rawSet
 	stmt   stmtQuerier
@@ -44,6 +45,7 @@ func newRawPreparer(rs *rawSet) (RawPreparer, error) {
 	return o, nil
 }
 
+// raw query seter
 type rawSet struct {
 	query string
 	args  []interface{}
@@ -52,11 +54,13 @@ type rawSet struct {
 
 var _ RawSeter = new(rawSet)
 
+// set args for every query
 func (o rawSet) SetArgs(args ...interface{}) RawSeter {
 	o.args = args
 	return &o
 }
 
+// execute raw sql and return sql.Result
 func (o *rawSet) Exec() (sql.Result, error) {
 	query := o.query
 	o.orm.alias.DbBaser.ReplaceMarks(&query)
@@ -65,6 +69,7 @@ func (o *rawSet) Exec() (sql.Result, error) {
 	return o.orm.db.Exec(query, args...)
 }
 
+// set field value to row container
 func (o *rawSet) setFieldValue(ind reflect.Value, value interface{}) {
 	switch ind.Kind() {
 	case reflect.Bool:
@@ -163,6 +168,7 @@ func (o *rawSet) setFieldValue(ind reflect.Value, value interface{}) {
 	}
 }
 
+// set field value in loop for slice container
 func (o *rawSet) loopSetRefs(refs []interface{}, sInds []reflect.Value, nIndsPtr *[]reflect.Value, eTyps []reflect.Type, init bool) {
 	nInds := *nIndsPtr
 
@@ -233,6 +239,7 @@ func (o *rawSet) loopSetRefs(refs []interface{}, sInds []reflect.Value, nIndsPtr
 	}
 }
 
+// query data and map to container
 func (o *rawSet) QueryRow(containers ...interface{}) error {
 	refs := make([]interface{}, 0, len(containers))
 	sInds := make([]reflect.Value, 0)
@@ -362,6 +369,7 @@ func (o *rawSet) QueryRow(containers ...interface{}) error {
 	return nil
 }
 
+// query data rows and map to container
 func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
 	refs := make([]interface{}, 0, len(containers))
 	sInds := make([]reflect.Value, 0)
@@ -615,18 +623,22 @@ func (o *rawSet) readValues(container interface{}) (int64, error) {
 	return cnt, nil
 }
 
+// query data to []map[string]interface
 func (o *rawSet) Values(container *[]Params) (int64, error) {
 	return o.readValues(container)
 }
 
+// query data to [][]interface
 func (o *rawSet) ValuesList(container *[]ParamsList) (int64, error) {
 	return o.readValues(container)
 }
 
+// query data to []interface
 func (o *rawSet) ValuesFlat(container *ParamsList) (int64, error) {
 	return o.readValues(container)
 }
 
+// return prepared raw statement for used in times.
 func (o *rawSet) Prepare() (RawPreparer, error) {
 	return newRawPreparer(o)
 }

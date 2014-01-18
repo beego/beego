@@ -2,16 +2,19 @@ package middleware
 
 import "fmt"
 
+// http exceptions
 type HTTPException struct {
 	StatusCode  int // http status code 4xx, 5xx
 	Description string
 }
 
+// return http exception error string, e.g. "400 Bad Request".
 func (e *HTTPException) Error() string {
-	// return `status description`, e.g. `400 Bad Request`
 	return fmt.Sprintf("%d %s", e.StatusCode, e.Description)
 }
 
+// map of http exceptions for each http status code int.
+// defined 400,401,403,404,405,500,502,503 and 504 default.
 var HTTPExceptionMaps map[int]HTTPException
 
 func init() {
