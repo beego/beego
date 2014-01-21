@@ -16,7 +16,7 @@ var MAX_POOL_SIZE = 100
 var redisPool chan redis.Conn
 
 type RedisSessionStore struct {
-	c           redis.Conn
+	p           *redis.Pool
 	sid         string
 	lock        sync.RWMutex
 	values      map[interface{}]interface{}
@@ -60,13 +60,15 @@ func (rs *RedisSessionStore) SessionID() string {
 }
 
 func (rs *RedisSessionStore) SessionRelease(w http.ResponseWriter) {
-	defer rs.c.Close()
+	c := rs.p.Get()
+	defer c.Close()
+
 	b, err := encodeGob(rs.values)
 	if err != nil {
 		return
 	}
-	rs.c.Do("SET", rs.sid, string(b))
-	rs.c.Do("EXPIRE", rs.sid, rs.maxlifetime)
+
+	c.Do("SET", rs.sid, string(b), "EX", rs.maxlifetime)
 }
 
 type RedisProvider struct {
@@ -116,10 +118,8 @@ func (rp *RedisProvider) SessionInit(maxlifetime int64, savePath string) error {
 
 func (rp *RedisProvider) SessionRead(sid string) (SessionStore, error) {
 	c := rp.poollist.Get()
-	if existed, err := redis.Int(c.Do("EXISTS", sid)); err != nil || existed == 0 {
-		c.Do("SET", sid)
-	}
-	c.Do("EXPIRE", sid, rp.maxlifetime)
+	defer c.Close()
+
 	kvs, err := redis.String(c.Do("GET", sid))
 	var kv map[interface{}]interface{}
 	if len(kvs) == 0 {
@@ -130,13 +130,15 @@ func (rp *RedisProvider) SessionRead(sid string) (SessionStore, error) {
 			return nil, err
 		}
 	}
-	rs := &RedisSessionStore{c: c, sid: sid, values: kv, maxlifetime: rp.maxlifetime}
+
+	rs := &RedisSessionStore{p: rp.poollist, sid: sid, values: kv, maxlifetime: rp.maxlifetime}
 	return rs, nil
 }
 
 func (rp *RedisProvider) SessionExist(sid string) bool {
 	c := rp.poollist.Get()
 	defer c.Close()
+
 	if existed, err := redis.Int(c.Do("EXISTS", sid)); err != nil || existed == 0 {
 		return false
 	} else {
@@ -146,11 +148,11 @@ func (rp *RedisProvider) SessionExist(sid string) bool {
 
 func (rp *RedisProvider) SessionRegenerate(oldsid, sid string) (SessionStore, error) {
 	c := rp.poollist.Get()
-	if existed, err := redis.Int(c.Do("EXISTS", oldsid)); err != nil || existed == 0 {
-		c.Do("SET", oldsid)
-	}
+	defer c.Close()
+
 	c.Do("RENAME", oldsid, sid)
 	c.Do("EXPIRE", sid, rp.maxlifetime)
+
 	kvs, err := redis.String(c.Do("GET", sid))
 	var kv map[interface{}]interface{}
 	if len(kvs) == 0 {
@@ -161,13 +163,15 @@ func (rp *RedisProvider) SessionRegenerate(oldsid, sid string) (SessionStore, er
 			return nil, err
 		}
 	}
-	rs := &RedisSessionStore{c: c, sid: sid, values: kv, maxlifetime: rp.maxlifetime}
+
+	rs := &RedisSessionStore{p: rp.poollist, sid: sid, values: kv, maxlifetime: rp.maxlifetime}
 	return rs, nil
 }
 
 func (rp *RedisProvider) SessionDestroy(sid string) error {
 	c := rp.poollist.Get()
 	defer c.Close()
+
 	c.Do("DEL", sid)
 	return nil
 }
@@ -178,7 +182,6 @@ func (rp *RedisProvider) SessionGC() {
 
 //@todo
 func (rp *RedisProvider) SessionAll() int {
-
 	return 0
 }
 
