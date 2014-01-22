@@ -20,6 +20,7 @@ type Fielder interface {
 
 type Ormer interface {
 	Read(interface{}, ...string) error
+	ReadOrCreate(interface{}, string, ...string) (bool, int64, error)
 	Insert(interface{}) (int64, error)
 	Update(interface{}, ...string) (int64, error)
 	Delete(interface{}) (int64, error)
