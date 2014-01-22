@@ -70,6 +70,19 @@ func (o *orm) Read(md interface{}, cols ...string) error {
 	return nil
 }
 
+func (o *orm) ReadOrCreate(md interface{}, col1 string, cols ...string) (bool, int64, error) {
+	cols = append([]string{col1}, cols...)
+	mi, ind := o.getMiInd(md)
+	err := o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols)
+	if err == ErrNoRows {
+		// Create
+		id, err := o.Insert(md)
+		return (err == nil), id, err
+	}
+
+	return false, ind.Field(mi.fields.pk.fieldIndex).Int(), err
+}
+
 func (o *orm) Insert(md interface{}) (int64, error) {
 	mi, ind := o.getMiInd(md)
 	id, err := o.alias.DbBaser.Insert(o.db, mi, ind, o.alias.TZ)
