@@ -38,6 +38,7 @@ type Ormer interface {
 	Raw(string, ...interface{}) RawSeter
 	Driver() Driver
 	GetDB() dbQuerier
+	Debug() Ormer
 }
 
 // insert prepared statement
