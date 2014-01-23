@@ -60,6 +60,11 @@ func (rs *RedisSessionStore) SessionID() string {
 }
 
 func (rs *RedisSessionStore) SessionRelease(w http.ResponseWriter) {
+	// if rs.values is empty, return directly
+	if len(rs.values) < 1 {
+		return
+	}
+
 	c := rs.p.Get()
 	defer c.Close()
 
