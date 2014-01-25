@@ -60,13 +60,14 @@ func (rs *RedisSessionStore) SessionID() string {
 }
 
 func (rs *RedisSessionStore) SessionRelease(w http.ResponseWriter) {
-	// if rs.values is empty, return directly
-	if len(rs.values) < 1 {
-		return
-	}
-
 	c := rs.p.Get()
 	defer c.Close()
+
+	// if rs.values is empty, return directly
+	if len(rs.values) < 1 {
+		c.Do("DEL", rs.sid)
+		return
+	}
 
 	b, err := encodeGob(rs.values)
 	if err != nil {
@@ -155,8 +156,15 @@ func (rp *RedisProvider) SessionRegenerate(oldsid, sid string) (SessionStore, er
 	c := rp.poollist.Get()
 	defer c.Close()
 
-	c.Do("RENAME", oldsid, sid)
-	c.Do("EXPIRE", sid, rp.maxlifetime)
+	if existed, _ := redis.Int(c.Do("EXISTS", oldsid)); existed == 0 {
+		// oldsid doesn't exists, set the new sid directly
+		// ignore error here, since if it return error
+		// the existed value will be 0
+		c.Do("SET", sid, "", "EX", rp.maxlifetime)
+	} else {
+		c.Do("RENAME", oldsid, sid)
+		c.Do("EXPIRE", sid, rp.maxlifetime)
+	}
 
 	kvs, err := redis.String(c.Do("GET", sid))
 	var kv map[interface{}]interface{}
