@@ -1642,3 +1642,41 @@ func TestTransaction(t *testing.T) {
 	throwFail(t, AssertIs(num, 1))
 
 }
+
+func TestReadOrCreate(t *testing.T) {
+	u := &User{
+		UserName: "Kyle",
+		Email: "kylemcc@gmail.com",
+		Password: "other_pass",
+		Status: 7,
+		IsStaff: false,
+		IsActive: true,
+	}
+
+	created, pk, err := dORM.ReadOrCreate(u, "UserName")
+	throwFail(t, err)
+	throwFail(t, AssertIs(created, true))
+	throwFail(t, AssertIs(u.UserName, "Kyle"))
+	throwFail(t, AssertIs(u.Email, "kylemcc@gmail.com"))
+	throwFail(t, AssertIs(u.Password, "other_pass"))
+	throwFail(t, AssertIs(u.Status, 7))
+	throwFail(t, AssertIs(u.IsStaff, false))
+	throwFail(t, AssertIs(u.IsActive, true))
+	throwFail(t, AssertIs(u.Created.In(DefaultTimeLoc), u.Created.In(DefaultTimeLoc), test_Date))
+	throwFail(t, AssertIs(u.Updated.In(DefaultTimeLoc), u.Updated.In(DefaultTimeLoc), test_DateTime))
+
+	nu := &User{UserName: u.UserName, Email: "someotheremail@gmail.com"}
+	created, pk, err = dORM.ReadOrCreate(nu, "UserName")
+	throwFail(t, err)
+	throwFail(t, AssertIs(created, false))
+	throwFail(t, AssertIs(nu.Id, u.Id))
+	throwFail(t, AssertIs(pk, u.Id))
+	throwFail(t, AssertIs(nu.UserName, u.UserName))
+	throwFail(t, AssertIs(nu.Email, u.Email)) // should contain the value in the table, not the one specified above
+	throwFail(t, AssertIs(nu.Password, u.Password))
+	throwFail(t, AssertIs(nu.Status, u.Status))
+	throwFail(t, AssertIs(nu.IsStaff, u.IsStaff))
+	throwFail(t, AssertIs(nu.IsActive, u.IsActive))
+
+	dORM.Delete(u)
+}

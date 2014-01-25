@@ -23,6 +23,7 @@ type Fielder interface {
 // orm struct
 type Ormer interface {
 	Read(interface{}, ...string) error
+	ReadOrCreate(interface{}, string, ...string) (bool, int64, error)
 	Insert(interface{}) (int64, error)
 	InsertMulti(int, interface{}) (int64, error)
 	Update(interface{}, ...string) (int64, error)

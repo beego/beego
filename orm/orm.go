@@ -74,6 +74,20 @@ func (o *orm) Read(md interface{}, cols ...string) error {
 	return nil
 }
 
+// Try to read a row from the database, or insert one if it doesn't exist
+func (o *orm) ReadOrCreate(md interface{}, col1 string, cols ...string) (bool, int64, error) {
+	cols = append([]string{col1}, cols...)
+	mi, ind := o.getMiInd(md, true)
+	err := o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols)
+	if err == ErrNoRows {
+		// Create
+		id, err := o.Insert(md)
+		return (err == nil), id, err
+	}
+
+	return false, ind.Field(mi.fields.pk.fieldIndex).Int(), err
+}
+
 // insert model data to database
 func (o *orm) Insert(md interface{}) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
