@@ -439,6 +439,12 @@ func (o *orm) Driver() Driver {
 	return driver(o.alias.Name)
 }
 
+func (o *orm) GetDB() dbQuerier {
+	panic(ErrNotImplement)
+	// not enough
+	return o.db
+}
+
 // create new orm
 func NewOrm() Ormer {
 	BootStrap() // execute only once
@@ -449,4 +455,31 @@ func NewOrm() Ormer {
 		panic(err)
 	}
 	return o
+}
+
+// create a new ormer object with specify *sql.DB for query
+func NewOrmWithDB(driverName, aliasName string, db *sql.DB) (Ormer, error) {
+	var al *alias
+
+	if dr, ok := drivers[driverName]; ok {
+		al = new(alias)
+		al.DbBaser = dbBasers[dr]
+		al.Driver = dr
+	} else {
+		return nil, fmt.Errorf("driver name `%s` have not registered", driverName)
+	}
+
+	al.Name = aliasName
+	al.DriverName = driverName
+
+	o := new(orm)
+	o.alias = al
+
+	if Debug {
+		o.db = newDbQueryLog(o.alias, db)
+	} else {
+		o.db = db
+	}
+
+	return o, nil
 }

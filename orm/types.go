@@ -37,6 +37,7 @@ type Ormer interface {
 	Rollback() error
 	Raw(string, ...interface{}) RawSeter
 	Driver() Driver
+	GetDB() dbQuerier
 }
 
 // insert prepared statement
@@ -64,6 +65,8 @@ type QuerySeter interface {
 	Values(*[]Params, ...string) (int64, error)
 	ValuesList(*[]ParamsList, ...string) (int64, error)
 	ValuesFlat(*ParamsList, string) (int64, error)
+	RowsToMap(*Params, string, string) (int64, error)
+	RowsToStruct(interface{}, string, string) (int64, error)
 }
 
 // model to model query struct
@@ -87,9 +90,11 @@ type RawSeter interface {
 	QueryRow(...interface{}) error
 	QueryRows(...interface{}) (int64, error)
 	SetArgs(...interface{}) RawSeter
-	Values(*[]Params) (int64, error)
-	ValuesList(*[]ParamsList) (int64, error)
-	ValuesFlat(*ParamsList) (int64, error)
+	Values(*[]Params, ...string) (int64, error)
+	ValuesList(*[]ParamsList, ...string) (int64, error)
+	ValuesFlat(*ParamsList, ...string) (int64, error)
+	RowsToMap(*Params, string, string) (int64, error)
+	RowsToStruct(interface{}, string, string) (int64, error)
 	Prepare() (RawPreparer, error)
 }
 
@@ -108,6 +113,14 @@ type dbQuerier interface {
 	Query(query string, args ...interface{}) (*sql.Rows, error)
 	QueryRow(query string, args ...interface{}) *sql.Row
 }
+
+// type DB interface {
+// 	Begin() (*sql.Tx, error)
+// 	Prepare(query string) (stmtQuerier, error)
+// 	Exec(query string, args ...interface{}) (sql.Result, error)
+// 	Query(query string, args ...interface{}) (*sql.Rows, error)
+// 	QueryRow(query string, args ...interface{}) *sql.Row
+// }
 
 // transaction beginner
 type txer interface {
@@ -139,6 +152,7 @@ type dbBaser interface {
 	GenerateOperatorLeftCol(*fieldInfo, string, *string)
 	PrepareInsert(dbQuerier, *modelInfo) (stmtQuerier, string, error)
 	ReadValues(dbQuerier, *querySet, *modelInfo, *Condition, []string, interface{}, *time.Location) (int64, error)
+	RowsTo(dbQuerier, *querySet, *modelInfo, *Condition, interface{}, string, string, *time.Location) (int64, error)
 	MaxLimit() uint64
 	TableQuote() string
 	ReplaceMarks(*string)

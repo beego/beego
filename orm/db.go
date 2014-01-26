@@ -1350,6 +1350,10 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 	return cnt, nil
 }
 
+func (d *dbBase) RowsTo(dbQuerier, *querySet, *modelInfo, *Condition, interface{}, string, string, *time.Location) (int64, error) {
+	return 0, nil
+}
+
 // flag of update joined record.
 func (d *dbBase) SupportUpdateJoin() bool {
 	return true

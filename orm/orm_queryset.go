@@ -197,6 +197,36 @@ func (o *querySet) ValuesFlat(result *ParamsList, expr string) (int64, error) {
 	return o.orm.alias.DbBaser.ReadValues(o.orm.db, o, o.mi, o.cond, []string{expr}, result, o.orm.alias.TZ)
 }
 
+// query all rows into map[string]interface with specify key and value column name.
+// keyCol = "name", valueCol = "value"
+// table data
+// name  | value
+// total | 100
+// found | 200
+// to map[string]interface{}{
+// 	"total": 100,
+// 	"found": 200,
+// }
+func (o *querySet) RowsToMap(result *Params, keyCol, valueCol string) (int64, error) {
+	panic(ErrNotImplement)
+	return o.orm.alias.DbBaser.RowsTo(o.orm.db, o, o.mi, o.cond, result, keyCol, valueCol, o.orm.alias.TZ)
+}
+
+// query all rows into struct with specify key and value column name.
+// keyCol = "name", valueCol = "value"
+// table data
+// name  | value
+// total | 100
+// found | 200
+// to struct {
+// 	Total int
+// 	Found int
+// }
+func (o *querySet) RowsToStruct(ptrStruct interface{}, keyCol, valueCol string) (int64, error) {
+	panic(ErrNotImplement)
+	return o.orm.alias.DbBaser.RowsTo(o.orm.db, o, o.mi, o.cond, ptrStruct, keyCol, valueCol, o.orm.alias.TZ)
+}
+
 // create new QuerySeter.
 func newQuerySet(orm *orm, mi *modelInfo) QuerySeter {
 	o := new(querySet)
