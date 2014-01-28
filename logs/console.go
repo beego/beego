@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"os"
+	"runtime"
 )
 
 type Brush func(string) string
@@ -54,7 +55,11 @@ func (c *ConsoleWriter) WriteMsg(msg string, level int) error {
 	if level < c.Level {
 		return nil
 	}
-	c.lg.Println(colors[level](msg))
+	if goos := runtime.GOOS; goos == "windows" {
+		c.lg.Println(msg)
+	} else {
+		c.lg.Println(colors[level](msg))
+	}
 	return nil
 }
 
