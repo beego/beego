@@ -53,6 +53,7 @@ const (
 	starBit = 1 << 63
 )
 
+// time taks schedule
 type Schedule struct {
 	Second uint64
 	Minute uint64
@@ -62,8 +63,10 @@ type Schedule struct {
 	Week   uint64
 }
 
+// task func type
 type TaskFunc func() error
 
+// task interface
 type Tasker interface {
 	GetStatus() string
 	Run() error
@@ -73,21 +76,24 @@ type Tasker interface {
 	GetPrev() time.Time
 }
 
+// task error
 type taskerr struct {
 	t       time.Time
 	errinfo string
 }
 
+// task struct
 type Task struct {
 	Taskname string
 	Spec     *Schedule
 	DoFunc   TaskFunc
 	Prev     time.Time
 	Next     time.Time
-	Errlist  []*taskerr //errtime:errinfo
-	ErrLimit int        //max length for the errlist 0 stand for there' no limit
+	Errlist  []*taskerr // like errtime:errinfo
+	ErrLimit int        // max length for the errlist, 0 stand for no limit
 }
 
+// add new task with name, time and func
 func NewTask(tname string, spec string, f TaskFunc) *Task {
 
 	task := &Task{
@@ -99,6 +105,7 @@ func NewTask(tname string, spec string, f TaskFunc) *Task {
 	return task
 }
 
+// get current task status
 func (tk *Task) GetStatus() string {
 	var str string
 	for _, v := range tk.Errlist {
@@ -107,6 +114,7 @@ func (tk *Task) GetStatus() string {
 	return str
 }
 
+// run task
 func (tk *Task) Run() error {
 	err := tk.DoFunc()
 	if err != nil {
@@ -117,53 +125,58 @@ func (tk *Task) Run() error {
 	return err
 }
 
+// set next time for this task
 func (tk *Task) SetNext(now time.Time) {
 	tk.Next = tk.Spec.Next(now)
 }
 
+// get the next call time of this task
 func (tk *Task) GetNext() time.Time {
 	return tk.Next
 }
+
+// set prev time of this task
 func (tk *Task) SetPrev(now time.Time) {
 	tk.Prev = now
 }
 
+// get prev time of this task
 func (tk *Task) GetPrev() time.Time {
 	return tk.Prev
 }
 
-//前6个字段分别表示：
-//       秒钟：0-59
-//       分钟：0-59
-//       小时：1-23
-//       日期：1-31
-//       月份：1-12
-//       星期：0-6（0表示周日）
+// six columns mean：
+//       second：0-59
+//       minute：0-59
+//       hour：1-23
+//       day：1-31
+//       month：1-12
+//       week：0-6（0 means Sunday）
 
-//还可以用一些特殊符号：
-//       *： 表示任何时刻
-//       ,：　表示分割，如第三段里：2,4，表示2点和4点执行
-//　　    －：表示一个段，如第三端里： 1-5，就表示1到5点
-//       /n : 表示每个n的单位执行一次，如第三段里，*/1, 就表示每隔1个小时执行一次命令。也可以写成1-23/1.
+// some signals：
+//       *： any time
+//       ,：　 separate signal
+//　　    －：duration
+//       /n : do as n times of time duration
 /////////////////////////////////////////////////////////
-//	0/30 * * * * *                        每30秒 执行
-//	0 43 21 * * *                         21:43 执行
-//	0 15 05 * * * 　　                     05:15 执行
-//	0 0 17 * * *                          17:00 执行
-//	0 0 17 * * 1                          每周一的 17:00 执行
-//	0 0,10 17 * * 0,2,3                   每周日,周二,周三的 17:00和 17:10 执行
-//	0 0-10 17 1 * *                       毎月1日从 17:00到7:10 毎隔1分钟 执行
-//	0 0 0 1,15 * 1                        毎月1日和 15日和 一日的 0:00 执行
-//	0 42 4 1 * * 　 　                     毎月1日的 4:42分 执行
-//	0 0 21 * * 1-6　　                     周一到周六 21:00 执行
-//	0 0,10,20,30,40,50 * * * *　           每隔10分 执行
-//	0 */10 * * * * 　　　　　　              每隔10分 执行
-//	0 * 1 * * *　　　　　　　　               从1:0到1:59 每隔1分钟 执行
-//	0 0 1 * * *　　　　　　　　               1:00 执行
-//	0 0 */1 * * *　　　　　　　               毎时0分 每隔1小时 执行
-//	0 0 * * * *　　　　　　　　               毎时0分 每隔1小时 执行
-//	0 2 8-20/3 * * *　　　　　　             8:02,11:02,14:02,17:02,20:02 执行
-//	0 30 5 1,15 * *　　　　　　              1日 和 15日的 5:30 执行
+//	0/30 * * * * *                        every 30s
+//	0 43 21 * * *                         21:43
+//	0 15 05 * * * 　　                     05:15
+//	0 0 17 * * *                          17:00
+//	0 0 17 * * 1                           17:00 in every Monday
+//	0 0,10 17 * * 0,2,3                   17:00 and 17:10 in every Sunday, Tuesday and Wednesday
+//	0 0-10 17 1 * *                       17:00 to 17:10 in 1 min duration each time on the first day of month
+//	0 0 0 1,15 * 1                        0:00 on the 1st day and 15th day of month
+//	0 42 4 1 * * 　 　                     4:42 on the 1st day of month
+//	0 0 21 * * 1-6　　                     21:00 from Monday to Saturday
+//	0 0,10,20,30,40,50 * * * *　           every 10 min duration
+//	0 */10 * * * * 　　　　　　              every 10 min duration
+//	0 * 1 * * *　　　　　　　　               1:00 to 1:59 in 1 min duration each time
+//	0 0 1 * * *　　　　　　　　               1:00
+//	0 0 */1 * * *　　　　　　　               0 min of hour in 1 hour duration
+//	0 0 * * * *　　　　　　　　               0 min of hour in 1 hour duration
+//	0 2 8-20/3 * * *　　　　　　             8:02, 11:02, 14:02, 17:02, 20:02
+//	0 30 5 1,15 * *　　　　　　              5:30 on the 1st day and 15th day of month
 func (t *Task) SetCron(spec string) {
 	t.Spec = t.parse(spec)
 }
@@ -252,6 +265,7 @@ func (t *Task) parseSpec(spec string) *Schedule {
 	return nil
 }
 
+// set schedule to next time
 func (s *Schedule) Next(t time.Time) time.Time {
 
 	// Start at the earliest possible time (the upcoming second).
@@ -349,6 +363,7 @@ func dayMatches(s *Schedule, t time.Time) bool {
 	return domMatch || dowMatch
 }
 
+// start all tasks
 func StartTask() {
 	go run()
 }
@@ -388,20 +403,23 @@ func run() {
 	}
 }
 
+// start all tasks
 func StopTask() {
 	stop <- true
 }
 
+// add task with name
 func AddTask(taskname string, t Tasker) {
 	AdminTaskList[taskname] = t
 }
 
-//sort map for tasker
+// sort map for tasker
 type MapSorter struct {
 	Keys []string
 	Vals []Tasker
 }
 
+// create new tasker map
 func NewMapSorter(m map[string]Tasker) *MapSorter {
 	ms := &MapSorter{
 		Keys: make([]string, 0, len(m)),
@@ -414,6 +432,7 @@ func NewMapSorter(m map[string]Tasker) *MapSorter {
 	return ms
 }
 
+// sort tasker map
 func (ms *MapSorter) Sort() {
 	sort.Sort(ms)
 }
