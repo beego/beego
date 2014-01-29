@@ -11,10 +11,12 @@ import (
 
 var redispder = &RedisProvider{}
 
+// redis max pool size
 var MAX_POOL_SIZE = 100
 
 var redisPool chan redis.Conn
 
+// redis session store
 type RedisSessionStore struct {
 	p           *redis.Pool
 	sid         string
@@ -23,6 +25,7 @@ type RedisSessionStore struct {
 	maxlifetime int64
 }
 
+// set value in redis session
 func (rs *RedisSessionStore) Set(key, value interface{}) error {
 	rs.lock.Lock()
 	defer rs.lock.Unlock()
@@ -30,6 +33,7 @@ func (rs *RedisSessionStore) Set(key, value interface{}) error {
 	return nil
 }
 
+// get value in redis session
 func (rs *RedisSessionStore) Get(key interface{}) interface{} {
 	rs.lock.RLock()
 	defer rs.lock.RUnlock()
@@ -41,6 +45,7 @@ func (rs *RedisSessionStore) Get(key interface{}) interface{} {
 	return nil
 }
 
+// delete value in redis session
 func (rs *RedisSessionStore) Delete(key interface{}) error {
 	rs.lock.Lock()
 	defer rs.lock.Unlock()
@@ -48,6 +53,7 @@ func (rs *RedisSessionStore) Delete(key interface{}) error {
 	return nil
 }
 
+// clear all values in redis session
 func (rs *RedisSessionStore) Flush() error {
 	rs.lock.Lock()
 	defer rs.lock.Unlock()
@@ -55,10 +61,12 @@ func (rs *RedisSessionStore) Flush() error {
 	return nil
 }
 
+// get redis session id
 func (rs *RedisSessionStore) SessionID() string {
 	return rs.sid
 }
 
+// save session values to redis
 func (rs *RedisSessionStore) SessionRelease(w http.ResponseWriter) {
 	c := rs.p.Get()
 	defer c.Close()
@@ -77,6 +85,7 @@ func (rs *RedisSessionStore) SessionRelease(w http.ResponseWriter) {
 	c.Do("SET", rs.sid, string(b), "EX", rs.maxlifetime)
 }
 
+// redis session provider
 type RedisProvider struct {
 	maxlifetime int64
 	savePath    string
@@ -85,8 +94,9 @@ type RedisProvider struct {
 	poollist    *redis.Pool
 }
 
-//savepath like redisserveraddr,poolsize,password
-//127.0.0.1:6379,100,astaxie
+// init redis session
+// savepath like redis server addr,pool size,password
+// e.g. 127.0.0.1:6379,100,astaxie
 func (rp *RedisProvider) SessionInit(maxlifetime int64, savePath string) error {
 	rp.maxlifetime = maxlifetime
 	configs := strings.Split(savePath, ",")
@@ -122,6 +132,7 @@ func (rp *RedisProvider) SessionInit(maxlifetime int64, savePath string) error {
 	return nil
 }
 
+// read redis session by sid
 func (rp *RedisProvider) SessionRead(sid string) (SessionStore, error) {
 	c := rp.poollist.Get()
 	defer c.Close()
@@ -141,6 +152,7 @@ func (rp *RedisProvider) SessionRead(sid string) (SessionStore, error) {
 	return rs, nil
 }
 
+// check redis session exist by sid
 func (rp *RedisProvider) SessionExist(sid string) bool {
 	c := rp.poollist.Get()
 	defer c.Close()
@@ -152,6 +164,7 @@ func (rp *RedisProvider) SessionExist(sid string) bool {
 	}
 }
 
+// generate new sid for redis session
 func (rp *RedisProvider) SessionRegenerate(oldsid, sid string) (SessionStore, error) {
 	c := rp.poollist.Get()
 	defer c.Close()
@@ -181,6 +194,7 @@ func (rp *RedisProvider) SessionRegenerate(oldsid, sid string) (SessionStore, er
 	return rs, nil
 }
 
+// delete redis session by id
 func (rp *RedisProvider) SessionDestroy(sid string) error {
 	c := rp.poollist.Get()
 	defer c.Close()
@@ -189,11 +203,12 @@ func (rp *RedisProvider) SessionDestroy(sid string) error {
 	return nil
 }
 
+// Impelment method, no used.
 func (rp *RedisProvider) SessionGC() {
 	return
 }
 
-//@todo
+// @todo
 func (rp *RedisProvider) SessionAll() int {
 	return 0
 }
