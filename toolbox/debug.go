@@ -29,16 +29,13 @@ type pointerInfo struct {
 	used []int
 }
 
-//
 // print the data in console
-//
 func Display(data ...interface{}) {
 	display(true, data...)
 }
 
-//
-// return string
-//
+
+// return data print string
 func GetDisplayString(data ...interface{}) string {
 	return display(false, data...)
 }
@@ -67,9 +64,7 @@ func display(displayed bool, data ...interface{}) string {
 	return buf.String()
 }
 
-//
-// return fomateinfo
-//
+// return data dump and format bytes
 func fomateinfo(headlen int, data ...interface{}) []byte {
 	var buf = new(bytes.Buffer)
 
@@ -108,6 +103,7 @@ func fomateinfo(headlen int, data ...interface{}) []byte {
 	return buf.Bytes()
 }
 
+// check data is golang basic type
 func isSimpleType(val reflect.Value, kind reflect.Kind, pointers **pointerInfo, interfaces *[]reflect.Value) bool {
 	switch kind {
 	case reflect.Bool:
@@ -158,6 +154,7 @@ func isSimpleType(val reflect.Value, kind reflect.Kind, pointers **pointerInfo, 
 	return false
 }
 
+// dump value
 func printKeyValue(buf *bytes.Buffer, val reflect.Value, pointers **pointerInfo, interfaces *[]reflect.Value, structFilter func(string, string) bool, formatOutput bool, indent string, level int) {
 	var t = val.Kind()
 
@@ -367,6 +364,7 @@ func printKeyValue(buf *bytes.Buffer, val reflect.Value, pointers **pointerInfo,
 	}
 }
 
+// dump pointer value
 func printPointerInfo(buf *bytes.Buffer, headlen int, pointers *pointerInfo) {
 	var anyused = false
 	var pointerNum = 0
@@ -434,9 +432,7 @@ func printPointerInfo(buf *bytes.Buffer, headlen int, pointers *pointerInfo) {
 	}
 }
 
-//
-// get stack info
-//
+// get stack bytes
 func stack(skip int, indent string) []byte {
 	var buf = new(bytes.Buffer)
 
@@ -455,7 +451,7 @@ func stack(skip int, indent string) []byte {
 	return buf.Bytes()
 }
 
-// function returns, if possible, the name of the function containing the PC.
+// return the name of the function containing the PC if possible,
 func function(pc uintptr) []byte {
 	fn := runtime.FuncForPC(pc)
 	if fn == nil {

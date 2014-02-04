@@ -1,11 +1,12 @@
 package session
 
-//CREATE TABLE `session` (
-//  `session_key` char(64) NOT NULL,
-//  `session_data` blob,
-//  `session_expiry` int(11) unsigned NOT NULL,
-//  PRIMARY KEY (`session_key`)
-//) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+// mysql session support need create table as sql:
+//	CREATE TABLE `session` (
+//	`session_key` char(64) NOT NULL,
+//	session_data` blob,
+//	`session_expiry` int(11) unsigned NOT NULL,
+//	PRIMARY KEY (`session_key`)
+//	) ENGINE=MyISAM DEFAULT CHARSET=utf8;
 
 import (
 	"database/sql"
@@ -18,6 +19,7 @@ import (
 
 var mysqlpder = &MysqlProvider{}
 
+// mysql session store
 type MysqlSessionStore struct {
 	c      *sql.DB
 	sid    string
@@ -25,6 +27,8 @@ type MysqlSessionStore struct {
 	values map[interface{}]interface{}
 }
 
+// set value in mysql session.
+// it is temp value in map.
 func (st *MysqlSessionStore) Set(key, value interface{}) error {
 	st.lock.Lock()
 	defer st.lock.Unlock()
@@ -32,6 +36,7 @@ func (st *MysqlSessionStore) Set(key, value interface{}) error {
 	return nil
 }
 
+// get value from mysql session
 func (st *MysqlSessionStore) Get(key interface{}) interface{} {
 	st.lock.RLock()
 	defer st.lock.RUnlock()
@@ -43,6 +48,7 @@ func (st *MysqlSessionStore) Get(key interface{}) interface{} {
 	return nil
 }
 
+// delete value in mysql session
 func (st *MysqlSessionStore) Delete(key interface{}) error {
 	st.lock.Lock()
 	defer st.lock.Unlock()
@@ -50,6 +56,7 @@ func (st *MysqlSessionStore) Delete(key interface{}) error {
 	return nil
 }
 
+// clear all values in mysql session
 func (st *MysqlSessionStore) Flush() error {
 	st.lock.Lock()
 	defer st.lock.Unlock()
@@ -57,10 +64,13 @@ func (st *MysqlSessionStore) Flush() error {
 	return nil
 }
 
+// get session id of this mysql session store
 func (st *MysqlSessionStore) SessionID() string {
 	return st.sid
 }
 
+// save mysql session values to database.
+// must call this method to save values to database.
 func (st *MysqlSessionStore) SessionRelease(w http.ResponseWriter) {
 	defer st.c.Close()
 	b, err := encodeGob(st.values)
@@ -72,11 +82,13 @@ func (st *MysqlSessionStore) SessionRelease(w http.ResponseWriter) {
 
 }
 
+// mysql session provider
 type MysqlProvider struct {
 	maxlifetime int64
 	savePath    string
 }
 
+// connect to mysql
 func (mp *MysqlProvider) connectInit() *sql.DB {
 	db, e := sql.Open("mysql", mp.savePath)
 	if e != nil {
@@ -85,12 +97,15 @@ func (mp *MysqlProvider) connectInit() *sql.DB {
 	return db
 }
 
+// init mysql session.
+// savepath is the connection string of mysql.
 func (mp *MysqlProvider) SessionInit(maxlifetime int64, savePath string) error {
 	mp.maxlifetime = maxlifetime
 	mp.savePath = savePath
 	return nil
 }
 
+// get mysql session by sid
 func (mp *MysqlProvider) SessionRead(sid string) (SessionStore, error) {
 	c := mp.connectInit()
 	row := c.QueryRow("select session_data from session where session_key=?", sid)
@@ -113,6 +128,7 @@ func (mp *MysqlProvider) SessionRead(sid string) (SessionStore, error) {
 	return rs, nil
 }
 
+// check mysql session exist
 func (mp *MysqlProvider) SessionExist(sid string) bool {
 	c := mp.connectInit()
 	defer c.Close()
@@ -126,6 +142,7 @@ func (mp *MysqlProvider) SessionExist(sid string) bool {
 	}
 }
 
+// generate new sid for mysql session
 func (mp *MysqlProvider) SessionRegenerate(oldsid, sid string) (SessionStore, error) {
 	c := mp.connectInit()
 	row := c.QueryRow("select session_data from session where session_key=?", oldsid)
@@ -148,6 +165,7 @@ func (mp *MysqlProvider) SessionRegenerate(oldsid, sid string) (SessionStore, er
 	return rs, nil
 }
 
+// delete mysql session by sid
 func (mp *MysqlProvider) SessionDestroy(sid string) error {
 	c := mp.connectInit()
 	c.Exec("DELETE FROM session where session_key=?", sid)
@@ -155,6 +173,7 @@ func (mp *MysqlProvider) SessionDestroy(sid string) error {
 	return nil
 }
 
+// delete expired values in mysql session
 func (mp *MysqlProvider) SessionGC() {
 	c := mp.connectInit()
 	c.Exec("DELETE from session where session_expiry < ?", time.Now().Unix()-mp.maxlifetime)
@@ -162,6 +181,7 @@ func (mp *MysqlProvider) SessionGC() {
 	return
 }
 
+// count values in mysql session
 func (mp *MysqlProvider) SessionAll() int {
 	c := mp.connectInit()
 	defer c.Close()

@@ -14,6 +14,7 @@ import (
 	"time"
 )
 
+// SessionStore contains all data for one session process with specific id.
 type SessionStore interface {
 	Set(key, value interface{}) error     //set session value
 	Get(key interface{}) interface{}      //get session value
@@ -23,6 +24,8 @@ type SessionStore interface {
 	Flush() error                         //delete all data
 }
 
+// Provider contains global session methods and saved SessionStores.
+// it can operate a SessionStore by its id.
 type Provider interface {
 	SessionInit(gclifetime int64, config string) error
 	SessionRead(sid string) (SessionStore, error)
@@ -61,16 +64,24 @@ type managerConfig struct {
 	ProviderConfig    string `json:"providerConfig"`
 }
 
+// Manager contains Provider and its configuration.
 type Manager struct {
 	provider Provider
 	config   *managerConfig
 }
 
-//options
-//1. is https  default false
-//2. hashfunc  default sha1
-//3. hashkey default beegosessionkey
-//4. maxage default is none
+// Create new Manager with provider name and json config string.
+// provider name:
+// 1. cookie
+// 2. file
+// 3. memory
+// 4. redis
+// 5. mysql
+// json config:
+// 1. is https  default false
+// 2. hashfunc  default sha1
+// 3. hashkey default beegosessionkey
+// 4. maxage default is none
 func NewManager(provideName, config string) (*Manager, error) {
 	provider, ok := provides[provideName]
 	if !ok {
@@ -102,7 +113,8 @@ func NewManager(provideName, config string) (*Manager, error) {
 	}, nil
 }
 
-//get Session
+// Start session. generate or read the session id from http request.
+// if session id exists, return SessionStore with this id.
 func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (session SessionStore) {
 	cookie, err := r.Cookie(manager.config.CookieName)
 	if err != nil || cookie.Value == "" {
@@ -144,7 +156,7 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 	return
 }
 
-//Destroy sessionid
+// Destroy session by its id in http request cookie.
 func (manager *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie(manager.config.CookieName)
 	if err != nil || cookie.Value == "" {
@@ -161,16 +173,20 @@ func (manager *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// Get SessionStore by its id.
 func (manager *Manager) GetProvider(sid string) (sessions SessionStore, err error) {
 	sessions, err = manager.provider.SessionRead(sid)
 	return
 }
 
+// Start session gc process.
+// it can do gc in times after gc lifetime.
 func (manager *Manager) GC() {
 	manager.provider.SessionGC()
 	time.AfterFunc(time.Duration(manager.config.Gclifetime)*time.Second, func() { manager.GC() })
 }
 
+// Regenerate a session id for this SessionStore who's id is saving in http request.
 func (manager *Manager) SessionRegenerateId(w http.ResponseWriter, r *http.Request) (session SessionStore) {
 	sid := manager.sessionId(r)
 	cookie, err := r.Cookie(manager.config.CookieName)
@@ -198,20 +214,23 @@ func (manager *Manager) SessionRegenerateId(w http.ResponseWriter, r *http.Reque
 	return
 }
 
+// Get all active sessions count number.
 func (manager *Manager) GetActiveSession() int {
 	return manager.provider.SessionAll()
 }
 
+// Set hash function for generating session id.
 func (manager *Manager) SetHashFunc(hasfunc, hashkey string) {
 	manager.config.SessionIDHashFunc = hasfunc
 	manager.config.SessionIDHashKey = hashkey
 }
 
+// Set cookie with https.
 func (manager *Manager) SetSecure(secure bool) {
 	manager.config.Secure = secure
 }
 
-//remote_addr cruunixnano randdata
+// generate session id with rand string, unix nano time, remote addr by hash function.
 func (manager *Manager) sessionId(r *http.Request) (sid string) {
 	bs := make([]byte, 24)
 	if _, err := io.ReadFull(rand.Reader, bs); err != nil {
