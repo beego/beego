@@ -9,11 +9,13 @@ import (
 	"regexp"
 )
 
+// SelfPath gets compiled executable file absolute path
 func SelfPath() string {
 	path, _ := filepath.Abs(os.Args[0])
 	return path
 }
 
+// SelfDir gets compiled executable file directory
 func SelfDir() string {
 	return filepath.Dir(SelfPath())
 }
@@ -28,8 +30,8 @@ func FileExists(name string) bool {
 	return true
 }
 
-// search a file in paths.
-// this is offen used in search config file in /etc ~/
+// Search a file in paths.
+// this is often used in search config file in /etc ~/
 func SearchFile(filename string, paths ...string) (fullpath string, err error) {
 	for _, path := range paths {
 		if fullpath = filepath.Join(path, filename); FileExists(fullpath) {

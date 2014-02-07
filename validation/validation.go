@@ -32,6 +32,7 @@ type ValidationResult struct {
 	Ok    bool
 }
 
+// Get ValidationResult by given key string.
 func (r *ValidationResult) Key(key string) *ValidationResult {
 	if r.Error != nil {
 		r.Error.Key = key
@@ -39,6 +40,7 @@ func (r *ValidationResult) Key(key string) *ValidationResult {
 	return r
 }
 
+// Set ValidationResult message by string or format string with args
 func (r *ValidationResult) Message(message string, args ...interface{}) *ValidationResult {
 	if r.Error != nil {
 		if len(args) == 0 {
@@ -56,10 +58,12 @@ type Validation struct {
 	ErrorsMap map[string]*ValidationError
 }
 
+// Clean all ValidationError.
 func (v *Validation) Clear() {
 	v.Errors = []*ValidationError{}
 }
 
+// Has ValidationError nor not.
 func (v *Validation) HasErrors() bool {
 	return len(v.Errors) > 0
 }
@@ -101,67 +105,83 @@ func (v *Validation) Range(obj interface{}, min, max int, key string) *Validatio
 	return v.apply(Range{Min{Min: min}, Max{Max: max}, key}, obj)
 }
 
+// Test that the obj is longer than min size if type is string or slice
 func (v *Validation) MinSize(obj interface{}, min int, key string) *ValidationResult {
 	return v.apply(MinSize{min, key}, obj)
 }
 
+// Test that the obj is shorter than max size if type is string or slice
 func (v *Validation) MaxSize(obj interface{}, max int, key string) *ValidationResult {
 	return v.apply(MaxSize{max, key}, obj)
 }
 
+// Test that the obj is same length to n if type is string or slice
 func (v *Validation) Length(obj interface{}, n int, key string) *ValidationResult {
 	return v.apply(Length{n, key}, obj)
 }
 
+// Test that the obj is [a-zA-Z] if type is string
 func (v *Validation) Alpha(obj interface{}, key string) *ValidationResult {
 	return v.apply(Alpha{key}, obj)
 }
 
+// Test that the obj is [0-9] if type is string
 func (v *Validation) Numeric(obj interface{}, key string) *ValidationResult {
 	return v.apply(Numeric{key}, obj)
 }
 
+// Test that the obj is [0-9a-zA-Z] if type is string
 func (v *Validation) AlphaNumeric(obj interface{}, key string) *ValidationResult {
 	return v.apply(AlphaNumeric{key}, obj)
 }
 
+// Test that the obj matches regexp if type is string
 func (v *Validation) Match(obj interface{}, regex *regexp.Regexp, key string) *ValidationResult {
 	return v.apply(Match{regex, key}, obj)
 }
 
+// Test that the obj doesn't match regexp if type is string
 func (v *Validation) NoMatch(obj interface{}, regex *regexp.Regexp, key string) *ValidationResult {
 	return v.apply(NoMatch{Match{Regexp: regex}, key}, obj)
 }
 
+// Test that the obj is [0-9a-zA-Z_-] if type is string
 func (v *Validation) AlphaDash(obj interface{}, key string) *ValidationResult {
 	return v.apply(AlphaDash{NoMatch{Match: Match{Regexp: alphaDashPattern}}, key}, obj)
 }
 
+// Test that the obj is email address if type is string
 func (v *Validation) Email(obj interface{}, key string) *ValidationResult {
 	return v.apply(Email{Match{Regexp: emailPattern}, key}, obj)
 }
 
+// Test that the obj is IP address if type is string
 func (v *Validation) IP(obj interface{}, key string) *ValidationResult {
 	return v.apply(IP{Match{Regexp: ipPattern}, key}, obj)
 }
 
+// Test that the obj is base64 encoded if type is string
 func (v *Validation) Base64(obj interface{}, key string) *ValidationResult {
 	return v.apply(Base64{Match{Regexp: base64Pattern}, key}, obj)
 }
 
+// Test that the obj is chinese mobile number if type is string
 func (v *Validation) Mobile(obj interface{}, key string) *ValidationResult {
 	return v.apply(Mobile{Match{Regexp: mobilePattern}, key}, obj)
 }
 
+// Test that the obj is chinese telephone number if type is string
 func (v *Validation) Tel(obj interface{}, key string) *ValidationResult {
 	return v.apply(Tel{Match{Regexp: telPattern}, key}, obj)
 }
 
+// Test that the obj is chinese mobile or telephone number if type is string
 func (v *Validation) Phone(obj interface{}, key string) *ValidationResult {
 	return v.apply(Phone{Mobile{Match: Match{Regexp: mobilePattern}},
 		Tel{Match: Match{Regexp: telPattern}}, key}, obj)
 }
 
+// Test that the obj is chinese zip code if type is string
 func (v *Validation) ZipCode(obj interface{}, key string) *ValidationResult {
 	return v.apply(ZipCode{Match{Regexp: zipCodePattern}, key}, obj)
 }
@@ -210,6 +230,7 @@ func (v *Validation) setError(err *ValidationError) {
 	}
 }
 
+// Set error message for one field in ValidationError
 func (v *Validation) SetError(fieldName string, errMsg string) *ValidationError {
 	err := &ValidationError{Key: fieldName, Field: fieldName, Tmpl: errMsg, Message: errMsg}
 	v.setError(err)
@@ -230,6 +251,7 @@ func (v *Validation) Check(obj interface{}, checks ...Validator) *ValidationResu
 	return result
 }
 
+// Validate a struct.
 // the obj parameter must be a struct or a struct pointer
 func (v *Validation) Valid(obj interface{}) (b bool, err error) {
 	objT := reflect.TypeOf(obj)

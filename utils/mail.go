@@ -51,6 +51,8 @@ type Attachment struct {
 	Content  []byte
 }
 
+// NewEMail create new Email struct with config json.
+// config json is followed from Email struct fields.
 func NewEMail(config string) *Email {
 	e := new(Email)
 	e.Headers = textproto.MIMEHeader{}
@@ -64,7 +66,7 @@ func NewEMail(config string) *Email {
 	return e
 }
 
-// make all send information to byte
+// Make all send information to byte
 func (e *Email) Bytes() ([]byte, error) {
 	buff := &bytes.Buffer{}
 	w := multipart.NewWriter(buff)
@@ -140,7 +142,7 @@ func (e *Email) Bytes() ([]byte, error) {
 	return buff.Bytes(), nil
 }
 
-// Attach file to the send mail
+// Add attach file to the send mail
 func (e *Email) AttachFile(filename string) (a *Attachment, err error) {
 	f, err := os.Open(filename)
 	if err != nil {
@@ -152,7 +154,7 @@ func (e *Email) AttachFile(filename string) (a *Attachment, err error) {
 }
 
 // Attach is used to attach content from an io.Reader to the email.
-// Required parameters include an io.Reader, the desired filename for the attachment, and the Content-Type
+// Parameters include an io.Reader, the desired filename for the attachment, and the Content-Type.
 func (e *Email) Attach(r io.Reader, filename string, c string) (a *Attachment, err error) {
 	var buffer bytes.Buffer
 	if _, err = io.Copy(&buffer, r); err != nil {
@@ -275,7 +277,7 @@ func headerToBytes(w io.Writer, t textproto.MIMEHeader) error {
 	return nil
 }
 
-// base64Wrap encodeds the attachment content, and wraps it according to RFC 2045 standards (every 76 chars)
+// base64Wrap encodes the attachment content, and wraps it according to RFC 2045 standards (every 76 chars)
 // The output is then written to the specified io.Writer
 func base64Wrap(w io.Writer, b []byte) {
 	// 57 raw bytes per 76-byte base64 line.

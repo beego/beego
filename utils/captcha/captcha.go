@@ -70,6 +70,7 @@ const (
 	urlPrefix        = "/captcha/"
 )
 
+// Captcha struct
 type Captcha struct {
 	// beego cache store
 	store cache.Cache
@@ -96,10 +97,12 @@ type Captcha struct {
 	CachePrefix string
 }
 
+// generate key string
 func (c *Captcha) key(id string) string {
 	return c.CachePrefix + id
 }
 
+// generate rand chars with default chars
 func (c *Captcha) genRandChars() []byte {
 	return utils.RandomCreateBytes(c.ChallengeNums, defaultChars...)
 }

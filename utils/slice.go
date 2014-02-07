@@ -8,6 +8,7 @@ import (
 type reducetype func(interface{}) interface{}
 type filtertype func(interface{}) bool
 
+// InSlice checks given string in string slice or not.
 func InSlice(v string, sl []string) bool {
 	for _, vv := range sl {
 		if vv == v {
@@ -17,6 +18,7 @@ func InSlice(v string, sl []string) bool {
 	return false
 }
 
+// InSliceIface checks given interface in interface slice.
 func InSliceIface(v interface{}, sl []interface{}) bool {
 	for _, vv := range sl {
 		if vv == v {
@@ -26,6 +28,7 @@ func InSliceIface(v interface{}, sl []interface{}) bool {
 	return false
 }
 
+// SliceRandList generate an int slice from min to max.
 func SliceRandList(min, max int) []int {
 	if max < min {
 		min, max = max, min
@@ -40,11 +43,13 @@ func SliceRandList(min, max int) []int {
 	return list
 }
 
+// SliceMerge merges interface slices to one slice.
 func SliceMerge(slice1, slice2 []interface{}) (c []interface{}) {
 	c = append(slice1, slice2...)
 	return
 }
 
+// SliceReduce generates a new slice after parsing every value by reduce function
 func SliceReduce(slice []interface{}, a reducetype) (dslice []interface{}) {
 	for _, v := range slice {
 		dslice = append(dslice, a(v))
@@ -52,12 +57,14 @@ func SliceReduce(slice []interface{}, a reducetype) (dslice []interface{}) {
 	return
 }
 
+// SliceRand returns random one from slice.
 func SliceRand(a []interface{}) (b interface{}) {
 	randnum := rand.Intn(len(a))
 	b = a[randnum]
 	return
 }
 
+// SliceSum sums all values in int64 slice.
 func SliceSum(intslice []int64) (sum int64) {
 	for _, v := range intslice {
 		sum += v
@@ -65,6 +72,7 @@ func SliceSum(intslice []int64) (sum int64) {
 	return
 }
 
+// SliceFilter generates a new slice after filter function.
 func SliceFilter(slice []interface{}, a filtertype) (ftslice []interface{}) {
 	for _, v := range slice {
 		if a(v) {
@@ -74,6 +82,7 @@ func SliceFilter(slice []interface{}, a filtertype) (ftslice []interface{}) {
 	return
 }
 
+// SliceDiff returns diff slice of slice1 - slice2.
 func SliceDiff(slice1, slice2 []interface{}) (diffslice []interface{}) {
 	for _, v := range slice1 {
 		if !InSliceIface(v, slice2) {
@@ -83,6 +92,7 @@ func SliceDiff(slice1, slice2 []interface{}) (diffslice []interface{}) {
 	return
 }
 
+// SliceIntersect returns diff slice of slice2 - slice1.
 func SliceIntersect(slice1, slice2 []interface{}) (diffslice []interface{}) {
 	for _, v := range slice1 {
 		if !InSliceIface(v, slice2) {
@@ -92,6 +102,7 @@ func SliceIntersect(slice1, slice2 []interface{}) (diffslice []interface{}) {
 	return
 }
 
+// SliceChuck separates one slice to some sized slice.
 func SliceChunk(slice []interface{}, size int) (chunkslice [][]interface{}) {
 	if size >= len(slice) {
 		chunkslice = append(chunkslice, slice)
@@ -105,6 +116,7 @@ func SliceChunk(slice []interface{}, size int) (chunkslice [][]interface{}) {
 	return
 }
 
+// SliceRange generates a new slice from begin to end with step duration of int64 number.
 func SliceRange(start, end, step int64) (intslice []int64) {
 	for i := start; i <= end; i += step {
 		intslice = append(intslice, i)
@@ -112,6 +124,7 @@ func SliceRange(start, end, step int64) (intslice []int64) {
 	return
 }
 
+// SlicePad prepends size number of val into slice.
 func SlicePad(slice []interface{}, size int, val interface{}) []interface{} {
 	if size <= len(slice) {
 		return slice
@@ -122,6 +135,7 @@ func SlicePad(slice []interface{}, size int, val interface{}) []interface{} {
 	return slice
 }
 
+// SliceUnique cleans repeated values in slice.
 func SliceUnique(slice []interface{}) (uniqueslice []interface{}) {
 	for _, v := range slice {
 		if !InSliceIface(v, uniqueslice) {
@@ -131,6 +145,7 @@ func SliceUnique(slice []interface{}) (uniqueslice []interface{}) {
 	return
 }
 
+// SliceShuffle shuffles a slice.
 func SliceShuffle(slice []interface{}) []interface{} {
 	for i := 0; i < len(slice); i++ {
 		a := rand.Intn(len(slice))
