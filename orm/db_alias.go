@@ -3,7 +3,6 @@ package orm
 import (
 	"database/sql"
 	"fmt"
-	"os"
 	"reflect"
 	"sync"
 	"time"
@@ -13,11 +12,11 @@ import (
 type DriverType int
 
 const (
-	_ DriverType = iota // int enum type
-	DR_MySQL // mysql
-	DR_Sqlite // sqlite
-	DR_Oracle // oracle
-	DR_Postgres // pgsql
+	_           DriverType = iota // int enum type
+	DR_MySQL                      // mysql
+	DR_Sqlite                     // sqlite
+	DR_Oracle                     // oracle
+	DR_Postgres                   // pgsql
 )
 
 // database driver string.
@@ -96,39 +95,14 @@ type alias struct {
 	Engine       string
 }
 
-// Setting the database connect params. Use the database driver self dataSource args.
-func RegisterDataBase(aliasName, driverName, dataSource string, params ...int) {
-	al := new(alias)
-	al.Name = aliasName
-	al.DriverName = driverName
-	al.DataSource = dataSource
-
-	var (
-		err error
-	)
-
-	if dr, ok := drivers[driverName]; ok {
-		al.DbBaser = dbBasers[dr]
-		al.Driver = dr
-	} else {
-		err = fmt.Errorf("driver name `%s` have not registered", driverName)
-		goto end
-	}
-
-	if dataBaseCache.add(aliasName, al) == false {
-		err = fmt.Errorf("db name `%s` already registered, cannot reuse", aliasName)
-		goto end
-	}
-
-	al.DB, err = sql.Open(driverName, dataSource)
-	if err != nil {
-		err = fmt.Errorf("register db `%s`, %s", aliasName, err.Error())
-		goto end
-	}
-
+func detectTZ(al *alias) {
 	// orm timezone system match database
 	// default use Local
 	al.TZ = time.Local
+
+	if al.DriverName == "sphinx" {
+		return
+	}
 
 	switch al.Driver {
 	case DR_MySQL:
@@ -173,6 +147,60 @@ func RegisterDataBase(aliasName, driverName, dataSource string, params ...int) {
 			DebugLog.Printf("Detect DB timezone: %s %s\n", tz, err.Error())
 		}
 	}
+}
+
+func addAliasWthDB(aliasName, driverName string, db *sql.DB) (*alias, error) {
+	al := new(alias)
+	al.Name = aliasName
+	al.DriverName = driverName
+	al.DB = db
+
+	if dr, ok := drivers[driverName]; ok {
+		al.DbBaser = dbBasers[dr]
+		al.Driver = dr
+	} else {
+		return nil, fmt.Errorf("driver name `%s` have not registered", driverName)
+	}
+
+	err := db.Ping()
+	if err != nil {
+		return nil, fmt.Errorf("register db Ping `%s`, %s", aliasName, err.Error())
+	}
+
+	if dataBaseCache.add(aliasName, al) == false {
+		return nil, fmt.Errorf("db name `%s` already registered, cannot reuse", aliasName)
+	}
+
+	return al, nil
+}
+
+func AddAliasWthDB(aliasName, driverName string, db *sql.DB) error {
+	_, err := addAliasWthDB(aliasName, driverName, db)
+	return err
+}
+
+// Setting the database connect params. Use the database driver self dataSource args.
+func RegisterDataBase(aliasName, driverName, dataSource string, params ...int) error {
+	var (
+		err error
+		db  *sql.DB
+		al  *alias
+	)
+
+	db, err = sql.Open(driverName, dataSource)
+	if err != nil {
+		err = fmt.Errorf("register db `%s`, %s", aliasName, err.Error())
+		goto end
+	}
+
+	al, err = addAliasWthDB(aliasName, driverName, db)
+	if err != nil {
+		goto end
+	}
+
+	al.DataSource = dataSource
+
+	detectTZ(al)
 
 	for i, v := range params {
 		switch i {
@@ -183,39 +211,37 @@ func RegisterDataBase(aliasName, driverName, dataSource string, params ...int) {
 		}
 	}
 
-	err = al.DB.Ping()
-	if err != nil {
-		err = fmt.Errorf("register db `%s`, %s", aliasName, err.Error())
-		goto end
-	}
-
 end:
 	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(2)
+		if db != nil {
+			db.Close()
+		}
+		DebugLog.Println(err.Error())
 	}
+
+	return err
 }
 
 // Register a database driver use specify driver name, this can be definition the driver is which database type.
-func RegisterDriver(driverName string, typ DriverType) {
+func RegisterDriver(driverName string, typ DriverType) error {
 	if t, ok := drivers[driverName]; ok == false {
 		drivers[driverName] = typ
 	} else {
 		if t != typ {
-			fmt.Sprintf("driverName `%s` db driver already registered and is other type\n", driverName)
-			os.Exit(2)
+			return fmt.Errorf("driverName `%s` db driver already registered and is other type\n", driverName)
 		}
 	}
+	return nil
 }
 
 // Change the database default used timezone
-func SetDataBaseTZ(aliasName string, tz *time.Location) {
+func SetDataBaseTZ(aliasName string, tz *time.Location) error {
 	if al, ok := dataBaseCache.get(aliasName); ok {
 		al.TZ = tz
 	} else {
-		fmt.Sprintf("DataBase name `%s` not registered\n", aliasName)
-		os.Exit(2)
+		return fmt.Errorf("DataBase name `%s` not registered\n", aliasName)
 	}
+	return nil
 }
 
 // Change the max idle conns for *sql.DB, use specify database alias name

@@ -518,7 +518,7 @@ func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
 	return cnt, nil
 }
 
-func (o *rawSet) readValues(container interface{}) (int64, error) {
+func (o *rawSet) readValues(container interface{}, needCols []string) (int64, error) {
 	var (
 		maps  []Params
 		lists []ParamsList
@@ -552,20 +552,38 @@ func (o *rawSet) readValues(container interface{}) (int64, error) {
 	defer rs.Close()
 
 	var (
-		refs []interface{}
-		cnt  int64
-		cols []string
+		refs   []interface{}
+		cnt    int64
+		cols   []string
+		indexs []int
 	)
+
 	for rs.Next() {
 		if cnt == 0 {
 			if columns, err := rs.Columns(); err != nil {
 				return 0, err
 			} else {
+				if len(needCols) > 0 {
+					indexs = make([]int, 0, len(needCols))
+				} else {
+					indexs = make([]int, 0, len(columns))
+				}
+
 				cols = columns
 				refs = make([]interface{}, len(cols))
 				for i, _ := range refs {
 					var ref sql.NullString
 					refs[i] = &ref
+
+					if len(needCols) > 0 {
+						for _, c := range needCols {
+							if c == cols[i] {
+								indexs = append(indexs, i)
+							}
+						}
+					} else {
+						indexs = append(indexs, i)
+					}
 				}
 			}
 		}
@@ -577,7 +595,8 @@ func (o *rawSet) readValues(container interface{}) (int64, error) {
 		switch typ {
 		case 1:
 			params := make(Params, len(cols))
-			for i, ref := range refs {
+			for _, i := range indexs {
+				ref := refs[i]
 				value := reflect.Indirect(reflect.ValueOf(ref)).Interface().(sql.NullString)
 				if value.Valid {
 					params[cols[i]] = value.String
@@ -588,7 +607,8 @@ func (o *rawSet) readValues(container interface{}) (int64, error) {
 			maps = append(maps, params)
 		case 2:
 			params := make(ParamsList, 0, len(cols))
-			for _, ref := range refs {
+			for _, i := range indexs {
+				ref := refs[i]
 				value := reflect.Indirect(reflect.ValueOf(ref)).Interface().(sql.NullString)
 				if value.Valid {
 					params = append(params, value.String)
@@ -598,7 +618,8 @@ func (o *rawSet) readValues(container interface{}) (int64, error) {
 			}
 			lists = append(lists, params)
 		case 3:
-			for _, ref := range refs {
+			for _, i := range indexs {
+				ref := refs[i]
 				value := reflect.Indirect(reflect.ValueOf(ref)).Interface().(sql.NullString)
 				if value.Valid {
 					list = append(list, value.String)
@@ -623,19 +644,163 @@ func (o *rawSet) readValues(container interface{}) (int64, error) {
 	return cnt, nil
 }
 
+func (o *rawSet) queryRowsTo(container interface{}, keyCol, valueCol string) (int64, error) {
+	var (
+		maps Params
+		ind  *reflect.Value
+	)
+
+	typ := 0
+	switch container.(type) {
+	case *Params:
+		typ = 1
+	default:
+		typ = 2
+		vl := reflect.ValueOf(container)
+		id := reflect.Indirect(vl)
+		if vl.Kind() != reflect.Ptr || id.Kind() != reflect.Struct {
+			panic(fmt.Errorf("<RawSeter> RowsTo unsupport type `%T` need ptr struct", container))
+		}
+
+		ind = &id
+	}
+
+	query := o.query
+	o.orm.alias.DbBaser.ReplaceMarks(&query)
+
+	args := getFlatParams(nil, o.args, o.orm.alias.TZ)
+
+	var rs *sql.Rows
+	if r, err := o.orm.db.Query(query, args...); err != nil {
+		return 0, err
+	} else {
+		rs = r
+	}
+
+	defer rs.Close()
+
+	var (
+		refs []interface{}
+		cnt  int64
+		cols []string
+	)
+
+	var (
+		keyIndex   = -1
+		valueIndex = -1
+	)
+
+	for rs.Next() {
+		if cnt == 0 {
+			if columns, err := rs.Columns(); err != nil {
+				return 0, err
+			} else {
+				cols = columns
+				refs = make([]interface{}, len(cols))
+				for i, _ := range refs {
+					if keyCol == cols[i] {
+						keyIndex = i
+					}
+
+					if typ == 1 || keyIndex == i {
+						var ref sql.NullString
+						refs[i] = &ref
+					} else {
+						var ref interface{}
+						refs[i] = &ref
+					}
+
+					if valueCol == cols[i] {
+						valueIndex = i
+					}
+				}
+
+				if keyIndex == -1 || valueIndex == -1 {
+					panic(fmt.Errorf("<RawSeter> RowsTo unknown key, value column name `%s: %s`", keyCol, valueCol))
+				}
+			}
+		}
+
+		if err := rs.Scan(refs...); err != nil {
+			return 0, err
+		}
+
+		if cnt == 0 {
+			switch typ {
+			case 1:
+				maps = make(Params)
+			}
+		}
+
+		key := reflect.Indirect(reflect.ValueOf(refs[keyIndex])).Interface().(sql.NullString).String
+
+		switch typ {
+		case 1:
+			value := reflect.Indirect(reflect.ValueOf(refs[valueIndex])).Interface().(sql.NullString)
+			if value.Valid {
+				maps[key] = value.String
+			} else {
+				maps[key] = nil
+			}
+
+		default:
+			if id := ind.FieldByName(camelString(key)); id.IsValid() {
+				o.setFieldValue(id, reflect.ValueOf(refs[valueIndex]).Elem().Interface())
+			}
+		}
+
+		cnt++
+	}
+
+	if typ == 1 {
+		v, _ := container.(*Params)
+		*v = maps
+	}
+
+	return cnt, nil
+}
+
 // query data to []map[string]interface
-func (o *rawSet) Values(container *[]Params) (int64, error) {
-	return o.readValues(container)
+func (o *rawSet) Values(container *[]Params, cols ...string) (int64, error) {
+	return o.readValues(container, cols)
 }
 
 // query data to [][]interface
-func (o *rawSet) ValuesList(container *[]ParamsList) (int64, error) {
-	return o.readValues(container)
+func (o *rawSet) ValuesList(container *[]ParamsList, cols ...string) (int64, error) {
+	return o.readValues(container, cols)
 }
 
 // query data to []interface
-func (o *rawSet) ValuesFlat(container *ParamsList) (int64, error) {
-	return o.readValues(container)
+func (o *rawSet) ValuesFlat(container *ParamsList, cols ...string) (int64, error) {
+	return o.readValues(container, cols)
+}
+
+// query all rows into map[string]interface with specify key and value column name.
+// keyCol = "name", valueCol = "value"
+// table data
+// name  | value
+// total | 100
+// found | 200
+// to map[string]interface{}{
+// 	"total": 100,
+// 	"found": 200,
+// }
+func (o *rawSet) RowsToMap(result *Params, keyCol, valueCol string) (int64, error) {
+	return o.queryRowsTo(result, keyCol, valueCol)
+}
+
+// query all rows into struct with specify key and value column name.
+// keyCol = "name", valueCol = "value"
+// table data
+// name  | value
+// total | 100
+// found | 200
+// to struct {
+// 	Total int
+// 	Found int
+// }
+func (o *rawSet) RowsToStruct(ptrStruct interface{}, keyCol, valueCol string) (int64, error) {
+	return o.queryRowsTo(ptrStruct, keyCol, valueCol)
 }
 
 // return prepared raw statement for used in times.

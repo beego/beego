@@ -45,6 +45,7 @@ type Controller struct {
 	CruSession     session.SessionStore
 	XSRFExpire     int
 	AppController  interface{}
+	EnableReander  bool
 }
 
 // ControllerInterface is an interface to uniform all controller handler.
@@ -74,6 +75,7 @@ func (c *Controller) Init(ctx *context.Context, controllerName, actionName strin
 	c.Ctx = ctx
 	c.TplExt = "tpl"
 	c.AppController = app
+	c.EnableReander = true
 }
 
 // Prepare runs after Init before request function execution.
@@ -123,6 +125,9 @@ func (c *Controller) Options() {
 
 // Render sends the response with rendered template bytes as text/html type.
 func (c *Controller) Render() error {
+	if !c.EnableReander {
+		return nil
+	}
 	rb, err := c.RenderBytes()
 
 	if err != nil {
@@ -398,6 +403,7 @@ func (c *Controller) SessionRegenerateID() {
 
 // DestroySession cleans session data and session cookie.
 func (c *Controller) DestroySession() {
+	c.Ctx.Input.CruSession.Flush()
 	GlobalSessions.SessionDestroy(c.Ctx.ResponseWriter, c.Ctx.Request)
 }
 

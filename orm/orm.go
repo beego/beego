@@ -74,6 +74,20 @@ func (o *orm) Read(md interface{}, cols ...string) error {
 	return nil
 }
 
+// Try to read a row from the database, or insert one if it doesn't exist
+func (o *orm) ReadOrCreate(md interface{}, col1 string, cols ...string) (bool, int64, error) {
+	cols = append([]string{col1}, cols...)
+	mi, ind := o.getMiInd(md, true)
+	err := o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols)
+	if err == ErrNoRows {
+		// Create
+		id, err := o.Insert(md)
+		return (err == nil), id, err
+	}
+
+	return false, ind.Field(mi.fields.pk.fieldIndex).Int(), err
+}
+
 // insert model data to database
 func (o *orm) Insert(md interface{}) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
@@ -425,6 +439,12 @@ func (o *orm) Driver() Driver {
 	return driver(o.alias.Name)
 }
 
+func (o *orm) GetDB() dbQuerier {
+	panic(ErrNotImplement)
+	// not enough
+	return o.db
+}
+
 // create new orm
 func NewOrm() Ormer {
 	BootStrap() // execute only once
@@ -435,4 +455,31 @@ func NewOrm() Ormer {
 		panic(err)
 	}
 	return o
+}
+
+// create a new ormer object with specify *sql.DB for query
+func NewOrmWithDB(driverName, aliasName string, db *sql.DB) (Ormer, error) {
+	var al *alias
+
+	if dr, ok := drivers[driverName]; ok {
+		al = new(alias)
+		al.DbBaser = dbBasers[dr]
+		al.Driver = dr
+	} else {
+		return nil, fmt.Errorf("driver name `%s` have not registered", driverName)
+	}
+
+	al.Name = aliasName
+	al.DriverName = driverName
+
+	o := new(orm)
+	o.alias = al
+
+	if Debug {
+		o.db = newDbQueryLog(o.alias, db)
+	} else {
+		o.db = db
+	}
+
+	return o, nil
 }

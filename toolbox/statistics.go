@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// Statistics struct
 type Statistics struct {
 	RequestUrl        string
 	RequestController string
@@ -16,12 +17,15 @@ type Statistics struct {
 	TotalTime         time.Duration
 }
 
+// UrlMap contains several statistics struct to log different data
 type UrlMap struct {
 	lock        sync.RWMutex
 	LengthLimit int //limit the urlmap's length if it's equal to 0 there's no limit
 	urlmap      map[string]map[string]*Statistics
 }
 
+// add statistics task.
+// it needs request method, request url, request controller and statistics time duration
 func (m *UrlMap) AddStatistics(requestMethod, requestUrl, requestController string, requesttime time.Duration) {
 	m.lock.Lock()
 	defer m.lock.Unlock()
@@ -65,6 +69,7 @@ func (m *UrlMap) AddStatistics(requestMethod, requestUrl, requestController stri
 	}
 }
 
+// put url statistics result in io.Writer
 func (m *UrlMap) GetMap(rw io.Writer) {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
@@ -78,6 +83,7 @@ func (m *UrlMap) GetMap(rw io.Writer) {
 	}
 }
 
+// global statistics data map
 var StatisticsMap *UrlMap
 
 func init() {
