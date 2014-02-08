@@ -76,9 +76,7 @@ func (c *Controller) Init(ctx *context.Context, controllerName, actionName strin
 	c.TplExt = "tpl"
 	c.AppController = app
 	c.EnableReander = true
-	for k, v := range ctx.Input.Data {
-		c.Data[k] = v
-	}
+	c.Data = ctx.Input.Data
 }
 
 // Prepare runs after Init before request function execution.
