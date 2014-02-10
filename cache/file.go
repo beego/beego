@@ -61,6 +61,7 @@ func (this *FileCache) StartAndGC(config string) error {
 	var cfg map[string]string
 	json.Unmarshal([]byte(config), &cfg)
 	//fmt.Println(cfg)
+	//fmt.Println(config)
 	if _, ok := cfg["CachePath"]; !ok {
 		cfg["CachePath"] = FileCachePath
 	}
@@ -135,7 +136,7 @@ func (this *FileCache) Get(key string) interface{} {
 		return ""
 	}
 	var to FileCacheItem
-	Gob_decode([]byte(filedata), &to)
+	Gob_decode(filedata, &to)
 	if to.Expired < time.Now().Unix() {
 		return ""
 	}
@@ -177,7 +178,7 @@ func (this *FileCache) Delete(key string) error {
 func (this *FileCache) Incr(key string) error {
 	data := this.Get(key)
 	var incr int
-	fmt.Println(reflect.TypeOf(data).Name())
+	//fmt.Println(reflect.TypeOf(data).Name())
 	if reflect.TypeOf(data).Name() != "int" {
 		incr = 0
 	} else {
@@ -210,8 +211,7 @@ func (this *FileCache) IsExist(key string) bool {
 // Clean cached files.
 // not implemented.
 func (this *FileCache) ClearAll() error {
-	//this.CachePath .递归删除
-
+	//this.CachePath
 	return nil
 }
 
@@ -271,7 +271,7 @@ func Gob_encode(data interface{}) ([]byte, error) {
 }
 
 // Gob decodes file cache item.
-func Gob_decode(data []byte, to interface{}) error {
+func Gob_decode(data []byte, to *FileCacheItem) error {
 	buf := bytes.NewBuffer(data)
 	dec := gob.NewDecoder(buf)
 	return dec.Decode(&to)

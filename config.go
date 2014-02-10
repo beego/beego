@@ -40,6 +40,7 @@ var (
 	SessionHashFunc        string           // session hash generation func.
 	SessionHashKey         string           // session hash salt string.
 	SessionCookieLifeTime  int              // the life time of session id in cookie.
+	SessionAutoSetCookie   bool             // auto setcookie
 	UseFcgi                bool
 	MaxMemory              int64
 	EnableGzip             bool // flag of enable gzip
@@ -96,6 +97,7 @@ func init() {
 	SessionHashFunc = "sha1"
 	SessionHashKey = "beegoserversessionkey"
 	SessionCookieLifeTime = 0 //set cookie default is the brower life
+	SessionAutoSetCookie = true
 
 	UseFcgi = false
 
@@ -139,6 +141,7 @@ func init() {
 func ParseConfig() (err error) {
 	AppConfig, err = config.NewConfig("ini", AppConfigPath)
 	if err != nil {
+		AppConfig = config.NewFakeConfig()
 		return err
 	} else {
 		HttpAddr = AppConfig.String("HttpAddr")

@@ -13,12 +13,15 @@ package toolbox
 
 //AddHealthCheck("database",&DatabaseCheck{})
 
+// health checker map
 var AdminCheckList map[string]HealthChecker
 
+// health checker interface
 type HealthChecker interface {
 	Check() error
 }
 
+// add health checker with name string
 func AddHealthCheck(name string, hc HealthChecker) {
 	AdminCheckList[name] = hc
 }

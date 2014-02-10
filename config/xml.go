@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/beego/x2j"
@@ -70,6 +71,11 @@ func (c *XMLConfigContainer) String(key string) string {
 		return v
 	}
 	return ""
+}
+
+// Strings returns the []string value for a given key.
+func (c *XMLConfigContainer) Strings(key string) []string {
+	return strings.Split(c.String(key), ";")
 }
 
 // WriteValue writes a new value for key.

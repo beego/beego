@@ -198,3 +198,15 @@ func TestPrepare(t *testing.T) {
 		t.Errorf(w.Body.String() + "user define func can't run")
 	}
 }
+
+func TestAutoPrefix(t *testing.T) {
+	r, _ := http.NewRequest("GET", "/admin/test/list", nil)
+	w := httptest.NewRecorder()
+
+	handler := NewControllerRegistor()
+	handler.AddAutoPrefix("/admin", &TestController{})
+	handler.ServeHTTP(w, r)
+	if w.Body.String() != "i am list" {
+		t.Errorf("TestAutoPrefix can't run")
+	}
+}

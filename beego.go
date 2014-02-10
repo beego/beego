@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"path"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/astaxie/beego/middleware"
@@ -11,7 +12,77 @@ import (
 )
 
 // beego web framework version.
-const VERSION = "1.0.1"
+const VERSION = "1.1.0"
+
+type hookfunc func() error //hook function to run
+var hooks []hookfunc       //hook function slice to store the hookfunc
+
+type groupRouter struct {
+	pattern        string
+	controller     ControllerInterface
+	mappingMethods string
+}
+
+// RouterGroups which will store routers
+type GroupRouters []groupRouter
+
+// Get a new GroupRouters
+func NewGroupRouters() GroupRouters {
+	return make([]groupRouter, 0)
+}
+
+// Add Router in the GroupRouters
+// it is for plugin or module to register router
+func (gr GroupRouters) AddRouter(pattern string, c ControllerInterface, mappingMethod ...string) {
+	var newRG groupRouter
+	if len(mappingMethod) > 0 {
+		newRG = groupRouter{
+			pattern,
+			c,
+			mappingMethod[0],
+		}
+	} else {
+		newRG = groupRouter{
+			pattern,
+			c,
+			"",
+		}
+	}
+	gr = append(gr, newRG)
+}
+
+func (gr GroupRouters) AddAuto(c ControllerInterface) {
+	newRG := groupRouter{
+		"",
+		c,
+		"",
+	}
+	gr = append(gr, newRG)
+}
+
+// AddGroupRouter with the prefix
+// it will register the router in BeeApp
+// the follow code is write in modules:
+// GR:=NewGroupRouters()
+// GR.AddRouter("/login",&UserController,"get:Login")
+// GR.AddRouter("/logout",&UserController,"get:Logout")
+// GR.AddRouter("/register",&UserController,"get:Reg")
+// the follow code is write in app:
+// import "github.com/beego/modules/auth"
+// AddRouterGroup("/admin", auth.GR)
+func AddGroupRouter(prefix string, groups GroupRouters) *App {
+	for _, v := range groups {
+		if v.pattern == "" {
+			BeeApp.AutoRouterWithPrefix(prefix, v.controller)
+		} else if v.mappingMethods != "" {
+			BeeApp.Router(prefix+v.pattern, v.controller, v.mappingMethods)
+		} else {
+			BeeApp.Router(prefix+v.pattern, v.controller)
+		}
+
+	}
+	return BeeApp
+}
 
 // Router adds a patterned controller handler to BeeApp.
 // it's an alias method of App.Router.
@@ -33,6 +104,13 @@ func RESTRouter(rootpath string, c ControllerInterface) *App {
 // it's same to App.AutoRouter.
 func AutoRouter(c ControllerInterface) *App {
 	BeeApp.AutoRouter(c)
+	return BeeApp
+}
+
+// AutoPrefix adds controller handler to BeeApp with prefix.
+// it's same to App.AutoRouterWithPrefix.
+func AutoPrefix(prefix string, c ControllerInterface) *App {
+	BeeApp.AutoRouterWithPrefix(prefix, c)
 	return BeeApp
 }
 
@@ -87,6 +165,12 @@ func InsertFilter(pattern string, pos int, filter FilterFunc) *App {
 	return BeeApp
 }
 
+// The hookfunc will run in beego.Run()
+// such as sessionInit, middlerware start, buildtemplate, admin start
+func AddAPPStartHook(hf hookfunc) {
+	hooks = append(hooks, hf)
+}
+
 // Run beego application.
 // it's alias of App.Run.
 func Run() {
@@ -99,18 +183,32 @@ func Run() {
 		}
 	}
 
-	//init mime
-	initMime()
+	// do hooks function
+	for _, hk := range hooks {
+		err := hk()
+		if err != nil {
+			panic(err)
+		}
+	}
 
 	if SessionOn {
-		GlobalSessions, _ = session.NewManager(SessionProvider,
-			SessionName,
-			SessionGCMaxLifetime,
-			SessionSavePath,
-			HttpTLS,
-			SessionHashFunc,
-			SessionHashKey,
-			SessionCookieLifeTime)
+		var err error
+		sessionConfig := AppConfig.String("sessionConfig")
+		if sessionConfig == "" {
+			sessionConfig = `{"cookieName":"` + SessionName + `",` +
+				`"gclifetime":` + strconv.FormatInt(SessionGCMaxLifetime, 10) + `,` +
+				`"providerConfig":"` + SessionSavePath + `",` +
+				`"secure":` + strconv.FormatBool(HttpTLS) + `,` +
+				`"sessionIDHashFunc":"` + SessionHashFunc + `",` +
+				`"sessionIDHashKey":"` + SessionHashKey + `",` +
+				`"enableSetCookie":` + strconv.FormatBool(SessionAutoSetCookie) + `,` +
+				`"cookieLifeTime":` + strconv.Itoa(SessionCookieLifeTime) + `}`
+		}
+		GlobalSessions, err = session.NewManager(SessionProvider,
+			sessionConfig)
+		if err != nil {
+			panic(err)
+		}
 		go GlobalSessions.GC()
 	}
 
@@ -123,11 +221,17 @@ func Run() {
 
 	middleware.VERSION = VERSION
 	middleware.AppName = AppName
-	middleware.RegisterErrorHander()
+	middleware.RegisterErrorHandler()
 
 	if EnableAdmin {
 		go BeeAdminApp.Run()
 	}
 
 	BeeApp.Run()
+}
+
+func init() {
+	hooks = make([]hookfunc, 0)
+	//init mime
+	AddAPPStartHook(initMime)
 }

@@ -118,6 +118,14 @@ func (app *App) AutoRouter(c ControllerInterface) *App {
 	return app
 }
 
+// AutoRouterWithPrefix adds beego-defined controller handler with prefix.
+// if beego.AutoPrefix("/admin",&MainContorlller{}) and MainController has methods List and Page,
+// visit the url /admin/main/list to exec List function or /admin/main/page to exec Page function.
+func (app *App) AutoRouterWithPrefix(prefix string, c ControllerInterface) *App {
+	app.Handlers.AddAutoPrefix(prefix, c)
+	return app
+}
+
 // UrlFor creates a url with another registered controller handler with params.
 // The endpoint is formed as path.controller.name to defined the controller method which will run.
 // The values need key-pair data to assign into controller method.

@@ -4,6 +4,7 @@ import (
 	"reflect"
 )
 
+// model to model struct
 type queryM2M struct {
 	md  interface{}
 	mi  *modelInfo
@@ -12,6 +13,13 @@ type queryM2M struct {
 	ind reflect.Value
 }
 
+// add models to origin models when creating queryM2M.
+// example:
+// 	m2m := orm.QueryM2M(post,"Tag")
+// 	m2m.Add(&Tag1{},&Tag2{})
+//  for _,tag := range post.Tags{}
+//
+// make sure the relation is defined in post model struct tag.
 func (o *queryM2M) Add(mds ...interface{}) (int64, error) {
 	fi := o.fi
 	mi := fi.relThroughModelInfo
@@ -44,7 +52,8 @@ func (o *queryM2M) Add(mds ...interface{}) (int64, error) {
 
 	names := []string{mfi.column, rfi.column}
 
-	var nums int64
+	values := make([]interface{}, 0, len(models)*2)
+
 	for _, md := range models {
 
 		ind := reflect.Indirect(reflect.ValueOf(md))
@@ -59,18 +68,14 @@ func (o *queryM2M) Add(mds ...interface{}) (int64, error) {
 			}
 		}
 
-		values := []interface{}{v1, v2}
-		_, err := dbase.InsertValue(orm.db, mi, names, values)
-		if err != nil {
-			return nums, err
-		}
+		values = append(values, v1, v2)
 
-		nums += 1
 	}
 
-	return nums, nil
+	return dbase.InsertValue(orm.db, mi, true, names, values)
 }
 
+// remove models following the origin model relationship
 func (o *queryM2M) Remove(mds ...interface{}) (int64, error) {
 	fi := o.fi
 	qs := o.qs.Filter(fi.reverseFieldInfo.name, o.md)
@@ -82,17 +87,20 @@ func (o *queryM2M) Remove(mds ...interface{}) (int64, error) {
 	return nums, nil
 }
 
+// check model is existed in relationship of origin model
 func (o *queryM2M) Exist(md interface{}) bool {
 	fi := o.fi
 	return o.qs.Filter(fi.reverseFieldInfo.name, o.md).
 		Filter(fi.reverseFieldInfoTwo.name, md).Exist()
 }
 
+// clean all models in related of origin model
 func (o *queryM2M) Clear() (int64, error) {
 	fi := o.fi
 	return o.qs.Filter(fi.reverseFieldInfo.name, o.md).Delete()
 }
 
+// count all related models of origin model
 func (o *queryM2M) Count() (int64, error) {
 	fi := o.fi
 	return o.qs.Filter(fi.reverseFieldInfo.name, o.md).Count()
@@ -100,6 +108,7 @@ func (o *queryM2M) Count() (int64, error) {
 
 var _ QueryM2Mer = new(queryM2M)
 
+// create new M2M queryer.
 func newQueryM2M(md interface{}, o *orm, mi *modelInfo, fi *fieldInfo, ind reflect.Value) QueryM2Mer {
 	qm2m := new(queryM2M)
 	qm2m.md = md

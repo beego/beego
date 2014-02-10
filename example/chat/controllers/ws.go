@@ -1,12 +1,13 @@
 package controllers
 
 import (
-	"github.com/astaxie/beego"
-	"github.com/garyburd/go-websocket/websocket"
 	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"time"
+
+	"github.com/astaxie/beego"
+	"github.com/gorilla/websocket"
 )
 
 const (

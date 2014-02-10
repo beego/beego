@@ -5,6 +5,7 @@ import (
 	"reflect"
 )
 
+// an insert queryer struct
 type insertSet struct {
 	mi     *modelInfo
 	orm    *orm
@@ -14,6 +15,7 @@ type insertSet struct {
 
 var _ Inserter = new(insertSet)
 
+// insert model ignore it's registered or not.
 func (o *insertSet) Insert(md interface{}) (int64, error) {
 	if o.closed {
 		return 0, ErrStmtClosed
@@ -44,6 +46,7 @@ func (o *insertSet) Insert(md interface{}) (int64, error) {
 	return id, nil
 }
 
+// close insert queryer statement
 func (o *insertSet) Close() error {
 	if o.closed {
 		return ErrStmtClosed
@@ -52,6 +55,7 @@ func (o *insertSet) Close() error {
 	return o.stmt.Close()
 }
 
+// create new insert queryer.
 func newInsertSet(orm *orm, mi *modelInfo) (Inserter, error) {
 	bi := new(insertSet)
 	bi.orm = orm

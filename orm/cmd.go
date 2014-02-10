@@ -16,6 +16,7 @@ var (
 	commands = make(map[string]commander)
 )
 
+// print help.
 func printHelp(errs ...string) {
 	content := `orm command usage:
 
@@ -31,6 +32,7 @@ func printHelp(errs ...string) {
 	os.Exit(2)
 }
 
+// listen for orm command and then run it if command arguments passed.
 func RunCommand() {
 	if len(os.Args) < 2 || os.Args[1] != "orm" {
 		return
@@ -58,6 +60,7 @@ func RunCommand() {
 	}
 }
 
+// sync database struct command interface.
 type commandSyncDb struct {
 	al        *alias
 	force     bool
@@ -66,6 +69,7 @@ type commandSyncDb struct {
 	rtOnError bool
 }
 
+// parse orm command line arguments.
 func (d *commandSyncDb) Parse(args []string) {
 	var name string
 
@@ -78,6 +82,7 @@ func (d *commandSyncDb) Parse(args []string) {
 	d.al = getDbAlias(name)
 }
 
+// run orm line command.
 func (d *commandSyncDb) Run() error {
 	var drops []string
 	if d.force {
@@ -208,10 +213,12 @@ func (d *commandSyncDb) Run() error {
 	return nil
 }
 
+// database creation commander interface implement.
 type commandSqlAll struct {
 	al *alias
 }
 
+// parse orm command line arguments.
 func (d *commandSqlAll) Parse(args []string) {
 	var name string
 
@@ -222,6 +229,7 @@ func (d *commandSqlAll) Parse(args []string) {
 	d.al = getDbAlias(name)
 }
 
+// run orm line command.
 func (d *commandSqlAll) Run() error {
 	sqls, indexes := getDbCreateSql(d.al)
 	var all []string
@@ -243,6 +251,10 @@ func init() {
 	commands["sqlall"] = new(commandSqlAll)
 }
 
+// run syncdb command line.
+// name means table's alias name. default is "default".
+// force means run next sql if the current is error.
+// verbose means show all info when running command or not.
 func RunSyncdb(name string, force bool, verbose bool) error {
 	BootStrap()
 

@@ -61,6 +61,7 @@ var tpl = `
 </html>
 `
 
+// render default application error page with error and stack string.
 func ShowErr(err interface{}, rw http.ResponseWriter, r *http.Request, Stack string) {
 	t, _ := template.New("beegoerrortemp").Parse(tpl)
 	data := make(map[string]string)
@@ -71,6 +72,7 @@ func ShowErr(err interface{}, rw http.ResponseWriter, r *http.Request, Stack str
 	data["Stack"] = Stack
 	data["BeegoVersion"] = VERSION
 	data["GoVersion"] = runtime.Version()
+	rw.WriteHeader(500)
 	t.Execute(rw, data)
 }
 
@@ -174,18 +176,19 @@ var errtpl = `
 </html>
 `
 
+// map of http handlers for each error string.
 var ErrorMaps map[string]http.HandlerFunc
 
 func init() {
 	ErrorMaps = make(map[string]http.HandlerFunc)
 }
 
-//404
+// show 404 notfound error.
 func NotFound(rw http.ResponseWriter, r *http.Request) {
 	t, _ := template.New("beegoerrortemp").Parse(errtpl)
 	data := make(map[string]interface{})
 	data["Title"] = "Page Not Found"
-	data["Content"] = template.HTML("<br>The Page You have requested flown the coop." +
+	data["Content"] = template.HTML("<br>The page you have requested has flown the coop." +
 		"<br>Perhaps you are here because:" +
 		"<br><br><ul>" +
 		"<br>The page has moved" +
@@ -198,28 +201,28 @@ func NotFound(rw http.ResponseWriter, r *http.Request) {
 	t.Execute(rw, data)
 }
 
-//401
+// show 401 unauthorized error.
 func Unauthorized(rw http.ResponseWriter, r *http.Request) {
 	t, _ := template.New("beegoerrortemp").Parse(errtpl)
 	data := make(map[string]interface{})
 	data["Title"] = "Unauthorized"
-	data["Content"] = template.HTML("<br>The Page You have requested can't authorized." +
+	data["Content"] = template.HTML("<br>The page you have requested can't be authorized." +
 		"<br>Perhaps you are here because:" +
 		"<br><br><ul>" +
-		"<br>Check the credentials that you supplied" +
-		"<br>Check the address for errors" +
+		"<br>The credentials you supplied are incorrect" +
+		"<br>There are errors in the website address" +
 		"</ul>")
 	data["BeegoVersion"] = VERSION
 	//rw.WriteHeader(http.StatusUnauthorized)
 	t.Execute(rw, data)
 }
 
-//403
+// show 403 forbidden error.
 func Forbidden(rw http.ResponseWriter, r *http.Request) {
 	t, _ := template.New("beegoerrortemp").Parse(errtpl)
 	data := make(map[string]interface{})
 	data["Title"] = "Forbidden"
-	data["Content"] = template.HTML("<br>The Page You have requested forbidden." +
+	data["Content"] = template.HTML("<br>The page you have requested is forbidden." +
 		"<br>Perhaps you are here because:" +
 		"<br><br><ul>" +
 		"<br>Your address may be blocked" +
@@ -231,12 +234,12 @@ func Forbidden(rw http.ResponseWriter, r *http.Request) {
 	t.Execute(rw, data)
 }
 
-//503
+// show 503 service unavailable error.
 func ServiceUnavailable(rw http.ResponseWriter, r *http.Request) {
 	t, _ := template.New("beegoerrortemp").Parse(errtpl)
 	data := make(map[string]interface{})
 	data["Title"] = "Service Unavailable"
-	data["Content"] = template.HTML("<br>The Page You have requested unavailable." +
+	data["Content"] = template.HTML("<br>The page you have requested is unavailable." +
 		"<br>Perhaps you are here because:" +
 		"<br><br><ul>" +
 		"<br><br>The page is overloaded" +
@@ -247,30 +250,32 @@ func ServiceUnavailable(rw http.ResponseWriter, r *http.Request) {
 	t.Execute(rw, data)
 }
 
-//500
+// show 500 internal server error.
 func InternalServerError(rw http.ResponseWriter, r *http.Request) {
 	t, _ := template.New("beegoerrortemp").Parse(errtpl)
 	data := make(map[string]interface{})
 	data["Title"] = "Internal Server Error"
-	data["Content"] = template.HTML("<br>The Page You have requested has down now." +
+	data["Content"] = template.HTML("<br>The page you have requested is down right now." +
 		"<br><br><ul>" +
-		"<br>simply try again later" +
-		"<br>you should report the fault to the website administrator" +
-		"</ul>")
+		"<br>Please try again later and report the error to the website administrator" +
+		"<br></ul>")
 	data["BeegoVersion"] = VERSION
 	//rw.WriteHeader(http.StatusInternalServerError)
 	t.Execute(rw, data)
 }
 
+// show 500 internal error with simple text string.
 func SimpleServerError(rw http.ResponseWriter, r *http.Request) {
 	http.Error(rw, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }
 
+// add http handler for given error string.
 func Errorhandler(err string, h http.HandlerFunc) {
 	ErrorMaps[err] = h
 }
 
-func RegisterErrorHander() {
+// register default error http handlers, 404,401,403,500 and 503.
+func RegisterErrorHandler() {
 	if _, ok := ErrorMaps["404"]; !ok {
 		ErrorMaps["404"] = NotFound
 	}
@@ -292,6 +297,8 @@ func RegisterErrorHander() {
 	}
 }
 
+// show error string as simple text message.
+// if error string is empty, show 500 error as default.
 func Exception(errcode string, w http.ResponseWriter, r *http.Request, msg string) {
 	if h, ok := ErrorMaps[errcode]; ok {
 		isint, err := strconv.Atoi(errcode)

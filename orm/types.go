@@ -6,11 +6,13 @@ import (
 	"time"
 )
 
+// database driver
 type Driver interface {
 	Name() string
 	Type() DriverType
 }
 
+// field info
 type Fielder interface {
 	String() string
 	FieldType() int
@@ -18,9 +20,12 @@ type Fielder interface {
 	RawValue() interface{}
 }
 
+// orm struct
 type Ormer interface {
 	Read(interface{}, ...string) error
+	ReadOrCreate(interface{}, string, ...string) (bool, int64, error)
 	Insert(interface{}) (int64, error)
+	InsertMulti(int, interface{}) (int64, error)
 	Update(interface{}, ...string) (int64, error)
 	Delete(interface{}) (int64, error)
 	LoadRelated(interface{}, string, ...interface{}) (int64, error)
@@ -32,13 +37,16 @@ type Ormer interface {
 	Rollback() error
 	Raw(string, ...interface{}) RawSeter
 	Driver() Driver
+	GetDB() dbQuerier
 }
 
+// insert prepared statement
 type Inserter interface {
 	Insert(interface{}) (int64, error)
 	Close() error
 }
 
+// query seter
 type QuerySeter interface {
 	Filter(string, ...interface{}) QuerySeter
 	Exclude(string, ...interface{}) QuerySeter
@@ -57,8 +65,11 @@ type QuerySeter interface {
 	Values(*[]Params, ...string) (int64, error)
 	ValuesList(*[]ParamsList, ...string) (int64, error)
 	ValuesFlat(*ParamsList, string) (int64, error)
+	RowsToMap(*Params, string, string) (int64, error)
+	RowsToStruct(interface{}, string, string) (int64, error)
 }
 
+// model to model query struct
 type QueryM2Mer interface {
 	Add(...interface{}) (int64, error)
 	Remove(...interface{}) (int64, error)
@@ -67,22 +78,27 @@ type QueryM2Mer interface {
 	Count() (int64, error)
 }
 
+// raw query statement
 type RawPreparer interface {
 	Exec(...interface{}) (sql.Result, error)
 	Close() error
 }
 
+// raw query seter
 type RawSeter interface {
 	Exec() (sql.Result, error)
 	QueryRow(...interface{}) error
 	QueryRows(...interface{}) (int64, error)
 	SetArgs(...interface{}) RawSeter
-	Values(*[]Params) (int64, error)
-	ValuesList(*[]ParamsList) (int64, error)
-	ValuesFlat(*ParamsList) (int64, error)
+	Values(*[]Params, ...string) (int64, error)
+	ValuesList(*[]ParamsList, ...string) (int64, error)
+	ValuesFlat(*ParamsList, ...string) (int64, error)
+	RowsToMap(*Params, string, string) (int64, error)
+	RowsToStruct(interface{}, string, string) (int64, error)
 	Prepare() (RawPreparer, error)
 }
 
+// statement querier
 type stmtQuerier interface {
 	Close() error
 	Exec(args ...interface{}) (sql.Result, error)
@@ -90,6 +106,7 @@ type stmtQuerier interface {
 	QueryRow(args ...interface{}) *sql.Row
 }
 
+// db querier
 type dbQuerier interface {
 	Prepare(query string) (*sql.Stmt, error)
 	Exec(query string, args ...interface{}) (sql.Result, error)
@@ -97,19 +114,31 @@ type dbQuerier interface {
 	QueryRow(query string, args ...interface{}) *sql.Row
 }
 
+// type DB interface {
+// 	Begin() (*sql.Tx, error)
+// 	Prepare(query string) (stmtQuerier, error)
+// 	Exec(query string, args ...interface{}) (sql.Result, error)
+// 	Query(query string, args ...interface{}) (*sql.Rows, error)
+// 	QueryRow(query string, args ...interface{}) *sql.Row
+// }
+
+// transaction beginner
 type txer interface {
 	Begin() (*sql.Tx, error)
 }
 
+// transaction ending
 type txEnder interface {
 	Commit() error
 	Rollback() error
 }
 
+// base database struct
 type dbBaser interface {
 	Read(dbQuerier, *modelInfo, reflect.Value, *time.Location, []string) error
 	Insert(dbQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
-	InsertValue(dbQuerier, *modelInfo, []string, []interface{}) (int64, error)
+	InsertMulti(dbQuerier, *modelInfo, reflect.Value, int, *time.Location) (int64, error)
+	InsertValue(dbQuerier, *modelInfo, bool, []string, []interface{}) (int64, error)
 	InsertStmt(stmtQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
 	Update(dbQuerier, *modelInfo, reflect.Value, *time.Location, []string) (int64, error)
 	Delete(dbQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
@@ -123,6 +152,7 @@ type dbBaser interface {
 	GenerateOperatorLeftCol(*fieldInfo, string, *string)
 	PrepareInsert(dbQuerier, *modelInfo) (stmtQuerier, string, error)
 	ReadValues(dbQuerier, *querySet, *modelInfo, *Condition, []string, interface{}, *time.Location) (int64, error)
+	RowsTo(dbQuerier, *querySet, *modelInfo, *Condition, interface{}, string, string, *time.Location) (int64, error)
 	MaxLimit() uint64
 	TableQuote() string
 	ReplaceMarks(*string)

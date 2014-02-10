@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func Test_cache(t *testing.T) {
+func TestCache(t *testing.T) {
 	bm, err := NewCache("memory", `{"interval":20}`)
 	if err != nil {
 		t.Error("init err")
@@ -49,5 +49,53 @@ func Test_cache(t *testing.T) {
 	bm.Delete("astaxie")
 	if bm.IsExist("astaxie") {
 		t.Error("delete err")
+	}
+}
+
+func TestFileCache(t *testing.T) {
+	bm, err := NewCache("file", `{"CachePath":"/cache","FileSuffix":".bin","DirectoryLevel":2,"EmbedExpiry":0}`)
+	if err != nil {
+		t.Error("init err")
+	}
+	if err = bm.Put("astaxie", 1, 10); err != nil {
+		t.Error("set Error", err)
+	}
+	if !bm.IsExist("astaxie") {
+		t.Error("check err")
+	}
+
+	if v := bm.Get("astaxie"); v.(int) != 1 {
+		t.Error("get err")
+	}
+
+	if err = bm.Incr("astaxie"); err != nil {
+		t.Error("Incr Error", err)
+	}
+
+	if v := bm.Get("astaxie"); v.(int) != 2 {
+		t.Error("get err")
+	}
+
+	if err = bm.Decr("astaxie"); err != nil {
+		t.Error("Incr Error", err)
+	}
+
+	if v := bm.Get("astaxie"); v.(int) != 1 {
+		t.Error("get err")
+	}
+	bm.Delete("astaxie")
+	if bm.IsExist("astaxie") {
+		t.Error("delete err")
+	}
+	//test string
+	if err = bm.Put("astaxie", "author", 10); err != nil {
+		t.Error("set Error", err)
+	}
+	if !bm.IsExist("astaxie") {
+		t.Error("check err")
+	}
+
+	if v := bm.Get("astaxie"); v.(string) != "author" {
+		t.Error("get err")
 	}
 }

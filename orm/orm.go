@@ -25,6 +25,7 @@ var (
 	ErrMultiRows     = errors.New("<QuerySeter> return multi rows")
 	ErrNoRows        = errors.New("<QuerySeter> no row found")
 	ErrStmtClosed    = errors.New("<QuerySeter> stmt already closed")
+	ErrArgs          = errors.New("<Ormer> args error may be empty")
 	ErrNotImplement  = errors.New("have not implement")
 )
 
@@ -39,11 +40,12 @@ type orm struct {
 
 var _ Ormer = new(orm)
 
-func (o *orm) getMiInd(md interface{}) (mi *modelInfo, ind reflect.Value) {
+// get model info and model reflect value
+func (o *orm) getMiInd(md interface{}, needPtr bool) (mi *modelInfo, ind reflect.Value) {
 	val := reflect.ValueOf(md)
 	ind = reflect.Indirect(val)
 	typ := ind.Type()
-	if val.Kind() != reflect.Ptr {
+	if needPtr && val.Kind() != reflect.Ptr {
 		panic(fmt.Errorf("<Ormer> cannot use non-ptr model struct `%s`", getFullName(typ)))
 	}
 	name := getFullName(typ)
@@ -53,6 +55,7 @@ func (o *orm) getMiInd(md interface{}) (mi *modelInfo, ind reflect.Value) {
 	panic(fmt.Errorf("<Ormer> table: `%s` not found, maybe not RegisterModel", name))
 }
 
+// get field info from model info by given field name
 func (o *orm) getFieldInfo(mi *modelInfo, name string) *fieldInfo {
 	fi, ok := mi.fields.GetByAny(name)
 	if !ok {
@@ -61,8 +64,9 @@ func (o *orm) getFieldInfo(mi *modelInfo, name string) *fieldInfo {
 	return fi
 }
 
+// read data to model
 func (o *orm) Read(md interface{}, cols ...string) error {
-	mi, ind := o.getMiInd(md)
+	mi, ind := o.getMiInd(md, true)
 	err := o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols)
 	if err != nil {
 		return err
@@ -70,26 +74,83 @@ func (o *orm) Read(md interface{}, cols ...string) error {
 	return nil
 }
 
+// Try to read a row from the database, or insert one if it doesn't exist
+func (o *orm) ReadOrCreate(md interface{}, col1 string, cols ...string) (bool, int64, error) {
+	cols = append([]string{col1}, cols...)
+	mi, ind := o.getMiInd(md, true)
+	err := o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols)
+	if err == ErrNoRows {
+		// Create
+		id, err := o.Insert(md)
+		return (err == nil), id, err
+	}
+
+	return false, ind.Field(mi.fields.pk.fieldIndex).Int(), err
+}
+
+// insert model data to database
 func (o *orm) Insert(md interface{}) (int64, error) {
-	mi, ind := o.getMiInd(md)
+	mi, ind := o.getMiInd(md, true)
 	id, err := o.alias.DbBaser.Insert(o.db, mi, ind, o.alias.TZ)
 	if err != nil {
 		return id, err
 	}
-	if id > 0 {
-		if mi.fields.pk.auto {
-			if mi.fields.pk.fieldType&IsPostiveIntegerField > 0 {
-				ind.Field(mi.fields.pk.fieldIndex).SetUint(uint64(id))
-			} else {
-				ind.Field(mi.fields.pk.fieldIndex).SetInt(id)
-			}
-		}
-	}
+
+	o.setPk(mi, ind, id)
+
 	return id, nil
 }
 
+// set auto pk field
+func (o *orm) setPk(mi *modelInfo, ind reflect.Value, id int64) {
+	if mi.fields.pk.auto {
+		if mi.fields.pk.fieldType&IsPostiveIntegerField > 0 {
+			ind.Field(mi.fields.pk.fieldIndex).SetUint(uint64(id))
+		} else {
+			ind.Field(mi.fields.pk.fieldIndex).SetInt(id)
+		}
+	}
+}
+
+// insert some models to database
+func (o *orm) InsertMulti(bulk int, mds interface{}) (int64, error) {
+	var cnt int64
+
+	sind := reflect.Indirect(reflect.ValueOf(mds))
+
+	switch sind.Kind() {
+	case reflect.Array, reflect.Slice:
+		if sind.Len() == 0 {
+			return cnt, ErrArgs
+		}
+	default:
+		return cnt, ErrArgs
+	}
+
+	if bulk <= 1 {
+		for i := 0; i < sind.Len(); i++ {
+			ind := sind.Index(i)
+			mi, _ := o.getMiInd(ind.Interface(), false)
+			id, err := o.alias.DbBaser.Insert(o.db, mi, ind, o.alias.TZ)
+			if err != nil {
+				return cnt, err
+			}
+
+			o.setPk(mi, ind, id)
+
+			cnt += 1
+		}
+	} else {
+		mi, _ := o.getMiInd(sind.Index(0).Interface(), false)
+		return o.alias.DbBaser.InsertMulti(o.db, mi, sind, bulk, o.alias.TZ)
+	}
+	return cnt, nil
+}
+
+// update model to database.
+// cols set the columns those want to update.
 func (o *orm) Update(md interface{}, cols ...string) (int64, error) {
-	mi, ind := o.getMiInd(md)
+	mi, ind := o.getMiInd(md, true)
 	num, err := o.alias.DbBaser.Update(o.db, mi, ind, o.alias.TZ, cols)
 	if err != nil {
 		return num, err
@@ -97,26 +158,22 @@ func (o *orm) Update(md interface{}, cols ...string) (int64, error) {
 	return num, nil
 }
 
+// delete model in database
 func (o *orm) Delete(md interface{}) (int64, error) {
-	mi, ind := o.getMiInd(md)
+	mi, ind := o.getMiInd(md, true)
 	num, err := o.alias.DbBaser.Delete(o.db, mi, ind, o.alias.TZ)
 	if err != nil {
 		return num, err
 	}
 	if num > 0 {
-		if mi.fields.pk.auto {
-			if mi.fields.pk.fieldType&IsPostiveIntegerField > 0 {
-				ind.Field(mi.fields.pk.fieldIndex).SetUint(0)
-			} else {
-				ind.Field(mi.fields.pk.fieldIndex).SetInt(0)
-			}
-		}
+		o.setPk(mi, ind, 0)
 	}
 	return num, nil
 }
 
+// create a models to models queryer
 func (o *orm) QueryM2M(md interface{}, name string) QueryM2Mer {
-	mi, ind := o.getMiInd(md)
+	mi, ind := o.getMiInd(md, true)
 	fi := o.getFieldInfo(mi, name)
 
 	switch {
@@ -129,6 +186,14 @@ func (o *orm) QueryM2M(md interface{}, name string) QueryM2Mer {
 	return newQueryM2M(md, o, mi, fi, ind)
 }
 
+// load related models to md model.
+// args are limit, offset int and order string.
+//
+// example:
+// 	orm.LoadRelated(post,"Tags")
+// 	for _,tag := range post.Tags{...}
+//
+// make sure the relation is defined in model struct tags.
 func (o *orm) LoadRelated(md interface{}, name string, args ...interface{}) (int64, error) {
 	_, fi, ind, qseter := o.queryRelated(md, name)
 
@@ -190,14 +255,21 @@ func (o *orm) LoadRelated(md interface{}, name string, args ...interface{}) (int
 	return nums, err
 }
 
+// return a QuerySeter for related models to md model.
+// it can do all, update, delete in QuerySeter.
+// example:
+// 	qs := orm.QueryRelated(post,"Tag")
+//  qs.All(&[]*Tag{})
+//
 func (o *orm) QueryRelated(md interface{}, name string) QuerySeter {
 	// is this api needed ?
 	_, _, _, qs := o.queryRelated(md, name)
 	return qs
 }
 
+// get QuerySeter for related models to md model
 func (o *orm) queryRelated(md interface{}, name string) (*modelInfo, *fieldInfo, reflect.Value, QuerySeter) {
-	mi, ind := o.getMiInd(md)
+	mi, ind := o.getMiInd(md, true)
 	fi := o.getFieldInfo(mi, name)
 
 	_, _, exist := getExistPk(mi, ind)
@@ -227,6 +299,7 @@ func (o *orm) queryRelated(md interface{}, name string) (*modelInfo, *fieldInfo,
 	return mi, fi, ind, qs
 }
 
+// get reverse relation QuerySeter
 func (o *orm) getReverseQs(md interface{}, mi *modelInfo, fi *fieldInfo) *querySet {
 	switch fi.fieldType {
 	case RelReverseOne, RelReverseMany:
@@ -247,6 +320,7 @@ func (o *orm) getReverseQs(md interface{}, mi *modelInfo, fi *fieldInfo) *queryS
 	return q
 }
 
+// get relation QuerySeter
 func (o *orm) getRelQs(md interface{}, mi *modelInfo, fi *fieldInfo) *querySet {
 	switch fi.fieldType {
 	case RelOneToOne, RelForeignKey, RelManyToMany:
@@ -266,6 +340,9 @@ func (o *orm) getRelQs(md interface{}, mi *modelInfo, fi *fieldInfo) *querySet {
 	return q
 }
 
+// return a QuerySeter for table operations.
+// table name can be string or struct.
+// e.g. QueryTable("user"), QueryTable(&user{}) or QueryTable((*User)(nil)),
 func (o *orm) QueryTable(ptrStructOrTableName interface{}) (qs QuerySeter) {
 	name := ""
 	if table, ok := ptrStructOrTableName.(string); ok {
@@ -285,6 +362,7 @@ func (o *orm) QueryTable(ptrStructOrTableName interface{}) (qs QuerySeter) {
 	return
 }
 
+// switch to another registered database driver by given name.
 func (o *orm) Using(name string) error {
 	if o.isTx {
 		panic(fmt.Errorf("<Ormer.Using> transaction has been start, cannot change db"))
@@ -302,6 +380,7 @@ func (o *orm) Using(name string) error {
 	return nil
 }
 
+// begin transaction
 func (o *orm) Begin() error {
 	if o.isTx {
 		return ErrTxHasBegan
@@ -320,6 +399,7 @@ func (o *orm) Begin() error {
 	return nil
 }
 
+// commit transaction
 func (o *orm) Commit() error {
 	if o.isTx == false {
 		return ErrTxDone
@@ -334,6 +414,7 @@ func (o *orm) Commit() error {
 	return err
 }
 
+// rollback transaction
 func (o *orm) Rollback() error {
 	if o.isTx == false {
 		return ErrTxDone
@@ -348,14 +429,23 @@ func (o *orm) Rollback() error {
 	return err
 }
 
+// return a raw query seter for raw sql string.
 func (o *orm) Raw(query string, args ...interface{}) RawSeter {
 	return newRawSet(o, query, args)
 }
 
+// return current using database Driver
 func (o *orm) Driver() Driver {
 	return driver(o.alias.Name)
 }
 
+func (o *orm) GetDB() dbQuerier {
+	panic(ErrNotImplement)
+	// not enough
+	return o.db
+}
+
+// create new orm
 func NewOrm() Ormer {
 	BootStrap() // execute only once
 
@@ -365,4 +455,31 @@ func NewOrm() Ormer {
 		panic(err)
 	}
 	return o
+}
+
+// create a new ormer object with specify *sql.DB for query
+func NewOrmWithDB(driverName, aliasName string, db *sql.DB) (Ormer, error) {
+	var al *alias
+
+	if dr, ok := drivers[driverName]; ok {
+		al = new(alias)
+		al.DbBaser = dbBasers[dr]
+		al.Driver = dr
+	} else {
+		return nil, fmt.Errorf("driver name `%s` have not registered", driverName)
+	}
+
+	al.Name = aliasName
+	al.DriverName = driverName
+
+	o := new(orm)
+	o.alias = al
+
+	if Debug {
+		o.db = newDbQueryLog(o.alias, db)
+	} else {
+		o.db = db
+	}
+
+	return o, nil
 }

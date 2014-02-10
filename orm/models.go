@@ -41,6 +41,7 @@ var (
 	}
 )
 
+// model info collection
 type _modelCache struct {
 	sync.RWMutex
 	orders    []string
@@ -49,6 +50,7 @@ type _modelCache struct {
 	done      bool
 }
 
+// get all model info
 func (mc *_modelCache) all() map[string]*modelInfo {
 	m := make(map[string]*modelInfo, len(mc.cache))
 	for k, v := range mc.cache {
@@ -57,6 +59,7 @@ func (mc *_modelCache) all() map[string]*modelInfo {
 	return m
 }
 
+// get orderd model info
 func (mc *_modelCache) allOrdered() []*modelInfo {
 	m := make([]*modelInfo, 0, len(mc.orders))
 	for _, table := range mc.orders {
@@ -65,16 +68,19 @@ func (mc *_modelCache) allOrdered() []*modelInfo {
 	return m
 }
 
+// get model info by table name
 func (mc *_modelCache) get(table string) (mi *modelInfo, ok bool) {
 	mi, ok = mc.cache[table]
 	return
 }
 
+// get model info by field name
 func (mc *_modelCache) getByFN(name string) (mi *modelInfo, ok bool) {
 	mi, ok = mc.cacheByFN[name]
 	return
 }
 
+// set model info to collection
 func (mc *_modelCache) set(table string, mi *modelInfo) *modelInfo {
 	mii := mc.cache[table]
 	mc.cache[table] = mi
@@ -85,6 +91,7 @@ func (mc *_modelCache) set(table string, mi *modelInfo) *modelInfo {
 	return mii
 }
 
+// clean all model info.
 func (mc *_modelCache) clean() {
 	mc.orders = make([]string, 0)
 	mc.cache = make(map[string]*modelInfo)

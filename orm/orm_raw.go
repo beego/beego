@@ -4,10 +4,10 @@ import (
 	"database/sql"
 	"fmt"
 	"reflect"
-	"strings"
 	"time"
 )
 
+// raw sql string prepared statement
 type rawPrepare struct {
 	rs     *rawSet
 	stmt   stmtQuerier
@@ -45,6 +45,7 @@ func newRawPreparer(rs *rawSet) (RawPreparer, error) {
 	return o, nil
 }
 
+// raw query seter
 type rawSet struct {
 	query string
 	args  []interface{}
@@ -53,11 +54,13 @@ type rawSet struct {
 
 var _ RawSeter = new(rawSet)
 
+// set args for every query
 func (o rawSet) SetArgs(args ...interface{}) RawSeter {
 	o.args = args
 	return &o
 }
 
+// execute raw sql and return sql.Result
 func (o *rawSet) Exec() (sql.Result, error) {
 	query := o.query
 	o.orm.alias.DbBaser.ReplaceMarks(&query)
@@ -66,6 +69,7 @@ func (o *rawSet) Exec() (sql.Result, error) {
 	return o.orm.db.Exec(query, args...)
 }
 
+// set field value to row container
 func (o *rawSet) setFieldValue(ind reflect.Value, value interface{}) {
 	switch ind.Kind() {
 	case reflect.Bool:
@@ -164,65 +168,12 @@ func (o *rawSet) setFieldValue(ind reflect.Value, value interface{}) {
 	}
 }
 
-func (o *rawSet) loopInitRefs(typ reflect.Type, refsPtr *[]interface{}, sIdxesPtr *[][]int) {
-	sIdxes := *sIdxesPtr
-	refs := *refsPtr
-
-	if typ.Kind() == reflect.Struct {
-		if typ.String() == "time.Time" {
-			var ref interface{}
-			refs = append(refs, &ref)
-			sIdxes = append(sIdxes, []int{0})
-		} else {
-			idxs := []int{}
-		outFor:
-			for idx := 0; idx < typ.NumField(); idx++ {
-				ctyp := typ.Field(idx)
-
-				tag := ctyp.Tag.Get(defaultStructTagName)
-				for _, v := range strings.Split(tag, defaultStructTagDelim) {
-					if v == "-" {
-						continue outFor
-					}
-				}
-
-				tp := ctyp.Type
-				if tp.Kind() == reflect.Ptr {
-					tp = tp.Elem()
-				}
-
-				if tp.String() == "time.Time" {
-					var ref interface{}
-					refs = append(refs, &ref)
-
-				} else if tp.Kind() != reflect.Struct {
-					var ref interface{}
-					refs = append(refs, &ref)
-
-				} else {
-					// skip other type
-					continue
-				}
-
-				idxs = append(idxs, idx)
-			}
-			sIdxes = append(sIdxes, idxs)
-		}
-	} else {
-		var ref interface{}
-		refs = append(refs, &ref)
-		sIdxes = append(sIdxes, []int{0})
-	}
-
-	*sIdxesPtr = sIdxes
-	*refsPtr = refs
-}
-
-func (o *rawSet) loopSetRefs(refs []interface{}, sIdxes [][]int, sInds []reflect.Value, nIndsPtr *[]reflect.Value, eTyps []reflect.Type, init bool) {
+// set field value in loop for slice container
+func (o *rawSet) loopSetRefs(refs []interface{}, sInds []reflect.Value, nIndsPtr *[]reflect.Value, eTyps []reflect.Type, init bool) {
 	nInds := *nIndsPtr
 
 	cur := 0
-	for i, idxs := range sIdxes {
+	for i := 0; i < len(sInds); i++ {
 		sInd := sInds[i]
 		eTyp := eTyps[i]
 
@@ -258,32 +209,8 @@ func (o *rawSet) loopSetRefs(refs []interface{}, sIdxes [][]int, sInds []reflect
 					o.setFieldValue(ind, value)
 				}
 				cur++
-			} else {
-				hasValue := false
-				for _, idx := range idxs {
-					tind := ind.Field(idx)
-					value := reflect.ValueOf(refs[cur]).Elem().Interface()
-					if value != nil {
-						hasValue = true
-					}
-					if tind.Kind() == reflect.Ptr {
-						if value == nil {
-							tindV := reflect.New(tind.Type()).Elem()
-							tind.Set(tindV)
-						} else {
-							tindV := reflect.New(tind.Type().Elem())
-							o.setFieldValue(tindV.Elem(), value)
-							tind.Set(tindV)
-						}
-					} else {
-						o.setFieldValue(tind, value)
-					}
-					cur++
-				}
-				if hasValue == false && isPtr {
-					val = reflect.New(val.Type()).Elem()
-				}
 			}
+
 		} else {
 			value := reflect.ValueOf(refs[cur]).Elem().Interface()
 			if isPtr && value == nil {
@@ -312,16 +239,14 @@ func (o *rawSet) loopSetRefs(refs []interface{}, sIdxes [][]int, sInds []reflect
 	}
 }
 
+// query data and map to container
 func (o *rawSet) QueryRow(containers ...interface{}) error {
-	if len(containers) == 0 {
-		panic(fmt.Errorf("<RawSeter.QueryRow> need at least one arg"))
-	}
-
 	refs := make([]interface{}, 0, len(containers))
-	sIdxes := make([][]int, 0)
 	sInds := make([]reflect.Value, 0)
 	eTyps := make([]reflect.Type, 0)
 
+	structMode := false
+	var sMi *modelInfo
 	for _, container := range containers {
 		val := reflect.ValueOf(container)
 		ind := reflect.Indirect(val)
@@ -335,44 +260,123 @@ func (o *rawSet) QueryRow(containers ...interface{}) error {
 		if typ.Kind() == reflect.Ptr {
 			typ = typ.Elem()
 		}
-		if typ.Kind() == reflect.Ptr {
-			typ = typ.Elem()
-		}
 
 		sInds = append(sInds, ind)
 		eTyps = append(eTyps, etyp)
 
-		o.loopInitRefs(typ, &refs, &sIdxes)
+		if typ.Kind() == reflect.Struct && typ.String() != "time.Time" {
+			if len(containers) > 1 {
+				panic(fmt.Errorf("<RawSeter.QueryRow> now support one struct only. see #384"))
+			}
+
+			structMode = true
+			fn := getFullName(typ)
+			if mi, ok := modelCache.getByFN(fn); ok {
+				sMi = mi
+			}
+		} else {
+			var ref interface{}
+			refs = append(refs, &ref)
+		}
 	}
 
 	query := o.query
 	o.orm.alias.DbBaser.ReplaceMarks(&query)
 
 	args := getFlatParams(nil, o.args, o.orm.alias.TZ)
-	row := o.orm.db.QueryRow(query, args...)
-
-	if err := row.Scan(refs...); err == sql.ErrNoRows {
-		return ErrNoRows
-	} else if err != nil {
+	rows, err := o.orm.db.Query(query, args...)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return ErrNoRows
+		}
 		return err
 	}
 
-	nInds := make([]reflect.Value, len(sInds))
-	o.loopSetRefs(refs, sIdxes, sInds, &nInds, eTyps, true)
-	for i, sInd := range sInds {
-		nInd := nInds[i]
-		sInd.Set(nInd)
+	defer rows.Close()
+
+	if rows.Next() {
+		if structMode {
+			columns, err := rows.Columns()
+			if err != nil {
+				return err
+			}
+
+			columnsMp := make(map[string]interface{}, len(columns))
+
+			refs = make([]interface{}, 0, len(columns))
+			for _, col := range columns {
+				var ref interface{}
+				columnsMp[col] = &ref
+				refs = append(refs, &ref)
+			}
+
+			if err := rows.Scan(refs...); err != nil {
+				return err
+			}
+
+			ind := sInds[0]
+
+			if ind.Kind() == reflect.Ptr {
+				if ind.IsNil() || !ind.IsValid() {
+					ind.Set(reflect.New(eTyps[0].Elem()))
+				}
+				ind = ind.Elem()
+			}
+
+			if sMi != nil {
+				for _, col := range columns {
+					if fi := sMi.fields.GetByColumn(col); fi != nil {
+						value := reflect.ValueOf(columnsMp[col]).Elem().Interface()
+						o.setFieldValue(ind.FieldByIndex([]int{fi.fieldIndex}), value)
+					}
+				}
+			} else {
+				for i := 0; i < ind.NumField(); i++ {
+					f := ind.Field(i)
+					fe := ind.Type().Field(i)
+
+					var attrs map[string]bool
+					var tags map[string]string
+					parseStructTag(fe.Tag.Get("orm"), &attrs, &tags)
+					var col string
+					if col = tags["column"]; len(col) == 0 {
+						col = snakeString(fe.Name)
+					}
+					if v, ok := columnsMp[col]; ok {
+						value := reflect.ValueOf(v).Elem().Interface()
+						o.setFieldValue(f, value)
+					}
+				}
+			}
+
+		} else {
+			if err := rows.Scan(refs...); err != nil {
+				return err
+			}
+
+			nInds := make([]reflect.Value, len(sInds))
+			o.loopSetRefs(refs, sInds, &nInds, eTyps, true)
+			for i, sInd := range sInds {
+				nInd := nInds[i]
+				sInd.Set(nInd)
+			}
+		}
+
+	} else {
+		return ErrNoRows
 	}
 
 	return nil
 }
 
+// query data rows and map to container
 func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
-	refs := make([]interface{}, 0)
-	sIdxes := make([][]int, 0)
+	refs := make([]interface{}, 0, len(containers))
 	sInds := make([]reflect.Value, 0)
 	eTyps := make([]reflect.Type, 0)
 
+	structMode := false
+	var sMi *modelInfo
 	for _, container := range containers {
 		val := reflect.ValueOf(container)
 		sInd := reflect.Indirect(val)
@@ -389,7 +393,20 @@ func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
 		sInds = append(sInds, sInd)
 		eTyps = append(eTyps, etyp)
 
-		o.loopInitRefs(typ, &refs, &sIdxes)
+		if typ.Kind() == reflect.Struct && typ.String() != "time.Time" {
+			if len(containers) > 1 {
+				panic(fmt.Errorf("<RawSeter.QueryRow> now support one struct only. see #384"))
+			}
+
+			structMode = true
+			fn := getFullName(typ)
+			if mi, ok := modelCache.getByFN(fn); ok {
+				sMi = mi
+			}
+		} else {
+			var ref interface{}
+			refs = append(refs, &ref)
+		}
 	}
 
 	query := o.query
@@ -401,30 +418,107 @@ func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
 		return 0, err
 	}
 
-	nInds := make([]reflect.Value, len(sInds))
+	defer rows.Close()
 
 	var cnt int64
-	for rows.Next() {
-		if err := rows.Scan(refs...); err != nil {
-			return 0, err
-		}
+	nInds := make([]reflect.Value, len(sInds))
+	sInd := sInds[0]
 
-		o.loopSetRefs(refs, sIdxes, sInds, &nInds, eTyps, cnt == 0)
+	for rows.Next() {
+
+		if structMode {
+			columns, err := rows.Columns()
+			if err != nil {
+				return 0, err
+			}
+
+			columnsMp := make(map[string]interface{}, len(columns))
+
+			refs = make([]interface{}, 0, len(columns))
+			for _, col := range columns {
+				var ref interface{}
+				columnsMp[col] = &ref
+				refs = append(refs, &ref)
+			}
+
+			if err := rows.Scan(refs...); err != nil {
+				return 0, err
+			}
+
+			if cnt == 0 && !sInd.IsNil() {
+				sInd.Set(reflect.New(sInd.Type()).Elem())
+			}
+
+			var ind reflect.Value
+			if eTyps[0].Kind() == reflect.Ptr {
+				ind = reflect.New(eTyps[0].Elem())
+			} else {
+				ind = reflect.New(eTyps[0])
+			}
+
+			if ind.Kind() == reflect.Ptr {
+				ind = ind.Elem()
+			}
+
+			if sMi != nil {
+				for _, col := range columns {
+					if fi := sMi.fields.GetByColumn(col); fi != nil {
+						value := reflect.ValueOf(columnsMp[col]).Elem().Interface()
+						o.setFieldValue(ind.FieldByIndex([]int{fi.fieldIndex}), value)
+					}
+				}
+			} else {
+				for i := 0; i < ind.NumField(); i++ {
+					f := ind.Field(i)
+					fe := ind.Type().Field(i)
+
+					var attrs map[string]bool
+					var tags map[string]string
+					parseStructTag(fe.Tag.Get("orm"), &attrs, &tags)
+					var col string
+					if col = tags["column"]; len(col) == 0 {
+						col = snakeString(fe.Name)
+					}
+					if v, ok := columnsMp[col]; ok {
+						value := reflect.ValueOf(v).Elem().Interface()
+						o.setFieldValue(f, value)
+					}
+				}
+			}
+
+			if eTyps[0].Kind() == reflect.Ptr {
+				ind = ind.Addr()
+			}
+
+			sInd = reflect.Append(sInd, ind)
+
+		} else {
+			if err := rows.Scan(refs...); err != nil {
+				return 0, err
+			}
+
+			o.loopSetRefs(refs, sInds, &nInds, eTyps, cnt == 0)
+		}
 
 		cnt++
 	}
 
 	if cnt > 0 {
-		for i, sInd := range sInds {
-			nInd := nInds[i]
-			sInd.Set(nInd)
+
+		if structMode {
+			sInds[0].Set(sInd)
+		} else {
+			for i, sInd := range sInds {
+				nInd := nInds[i]
+				sInd.Set(nInd)
+			}
 		}
 	}
 
 	return cnt, nil
 }
 
-func (o *rawSet) readValues(container interface{}) (int64, error) {
+func (o *rawSet) readValues(container interface{}, needCols []string) (int64, error) {
 	var (
 		maps  []Params
 		lists []ParamsList
@@ -455,21 +549,41 @@ func (o *rawSet) readValues(container interface{}) (int64, error) {
 		rs = r
 	}
 
+	defer rs.Close()
+
 	var (
-		refs []interface{}
-		cnt  int64
-		cols []string
+		refs   []interface{}
+		cnt    int64
+		cols   []string
+		indexs []int
 	)
+
 	for rs.Next() {
 		if cnt == 0 {
 			if columns, err := rs.Columns(); err != nil {
 				return 0, err
 			} else {
+				if len(needCols) > 0 {
+					indexs = make([]int, 0, len(needCols))
+				} else {
+					indexs = make([]int, 0, len(columns))
+				}
+
 				cols = columns
 				refs = make([]interface{}, len(cols))
 				for i, _ := range refs {
 					var ref sql.NullString
 					refs[i] = &ref
+
+					if len(needCols) > 0 {
+						for _, c := range needCols {
+							if c == cols[i] {
+								indexs = append(indexs, i)
+							}
+						}
+					} else {
+						indexs = append(indexs, i)
+					}
 				}
 			}
 		}
@@ -481,7 +595,8 @@ func (o *rawSet) readValues(container interface{}) (int64, error) {
 		switch typ {
 		case 1:
 			params := make(Params, len(cols))
-			for i, ref := range refs {
+			for _, i := range indexs {
+				ref := refs[i]
 				value := reflect.Indirect(reflect.ValueOf(ref)).Interface().(sql.NullString)
 				if value.Valid {
 					params[cols[i]] = value.String
@@ -492,7 +607,8 @@ func (o *rawSet) readValues(container interface{}) (int64, error) {
 			maps = append(maps, params)
 		case 2:
 			params := make(ParamsList, 0, len(cols))
-			for _, ref := range refs {
+			for _, i := range indexs {
+				ref := refs[i]
 				value := reflect.Indirect(reflect.ValueOf(ref)).Interface().(sql.NullString)
 				if value.Valid {
 					params = append(params, value.String)
@@ -502,7 +618,8 @@ func (o *rawSet) readValues(container interface{}) (int64, error) {
 			}
 			lists = append(lists, params)
 		case 3:
-			for _, ref := range refs {
+			for _, i := range indexs {
+				ref := refs[i]
 				value := reflect.Indirect(reflect.ValueOf(ref)).Interface().(sql.NullString)
 				if value.Valid {
 					list = append(list, value.String)
@@ -527,18 +644,166 @@ func (o *rawSet) readValues(container interface{}) (int64, error) {
 	return cnt, nil
 }
 
-func (o *rawSet) Values(container *[]Params) (int64, error) {
-	return o.readValues(container)
+func (o *rawSet) queryRowsTo(container interface{}, keyCol, valueCol string) (int64, error) {
+	var (
+		maps Params
+		ind  *reflect.Value
+	)
+
+	typ := 0
+	switch container.(type) {
+	case *Params:
+		typ = 1
+	default:
+		typ = 2
+		vl := reflect.ValueOf(container)
+		id := reflect.Indirect(vl)
+		if vl.Kind() != reflect.Ptr || id.Kind() != reflect.Struct {
+			panic(fmt.Errorf("<RawSeter> RowsTo unsupport type `%T` need ptr struct", container))
+		}
+
+		ind = &id
+	}
+
+	query := o.query
+	o.orm.alias.DbBaser.ReplaceMarks(&query)
+
+	args := getFlatParams(nil, o.args, o.orm.alias.TZ)
+
+	var rs *sql.Rows
+	if r, err := o.orm.db.Query(query, args...); err != nil {
+		return 0, err
+	} else {
+		rs = r
+	}
+
+	defer rs.Close()
+
+	var (
+		refs []interface{}
+		cnt  int64
+		cols []string
+	)
+
+	var (
+		keyIndex   = -1
+		valueIndex = -1
+	)
+
+	for rs.Next() {
+		if cnt == 0 {
+			if columns, err := rs.Columns(); err != nil {
+				return 0, err
+			} else {
+				cols = columns
+				refs = make([]interface{}, len(cols))
+				for i, _ := range refs {
+					if keyCol == cols[i] {
+						keyIndex = i
+					}
+
+					if typ == 1 || keyIndex == i {
+						var ref sql.NullString
+						refs[i] = &ref
+					} else {
+						var ref interface{}
+						refs[i] = &ref
+					}
+
+					if valueCol == cols[i] {
+						valueIndex = i
+					}
+				}
+
+				if keyIndex == -1 || valueIndex == -1 {
+					panic(fmt.Errorf("<RawSeter> RowsTo unknown key, value column name `%s: %s`", keyCol, valueCol))
+				}
+			}
+		}
+
+		if err := rs.Scan(refs...); err != nil {
+			return 0, err
+		}
+
+		if cnt == 0 {
+			switch typ {
+			case 1:
+				maps = make(Params)
+			}
+		}
+
+		key := reflect.Indirect(reflect.ValueOf(refs[keyIndex])).Interface().(sql.NullString).String
+
+		switch typ {
+		case 1:
+			value := reflect.Indirect(reflect.ValueOf(refs[valueIndex])).Interface().(sql.NullString)
+			if value.Valid {
+				maps[key] = value.String
+			} else {
+				maps[key] = nil
+			}
+
+		default:
+			if id := ind.FieldByName(camelString(key)); id.IsValid() {
+				o.setFieldValue(id, reflect.ValueOf(refs[valueIndex]).Elem().Interface())
+			}
+		}
+
+		cnt++
+	}
+
+	if typ == 1 {
+		v, _ := container.(*Params)
+		*v = maps
+	}
+
+	return cnt, nil
 }
 
-func (o *rawSet) ValuesList(container *[]ParamsList) (int64, error) {
-	return o.readValues(container)
+// query data to []map[string]interface
+func (o *rawSet) Values(container *[]Params, cols ...string) (int64, error) {
+	return o.readValues(container, cols)
 }
 
-func (o *rawSet) ValuesFlat(container *ParamsList) (int64, error) {
-	return o.readValues(container)
+// query data to [][]interface
+func (o *rawSet) ValuesList(container *[]ParamsList, cols ...string) (int64, error) {
+	return o.readValues(container, cols)
 }
 
+// query data to []interface
+func (o *rawSet) ValuesFlat(container *ParamsList, cols ...string) (int64, error) {
+	return o.readValues(container, cols)
+}
+
+// query all rows into map[string]interface with specify key and value column name.
+// keyCol = "name", valueCol = "value"
+// table data
+// name  | value
+// total | 100
+// found | 200
+// to map[string]interface{}{
+// 	"total": 100,
+// 	"found": 200,
+// }
+func (o *rawSet) RowsToMap(result *Params, keyCol, valueCol string) (int64, error) {
+	return o.queryRowsTo(result, keyCol, valueCol)
+}
+
+// query all rows into struct with specify key and value column name.
+// keyCol = "name", valueCol = "value"
+// table data
+// name  | value
+// total | 100
+// found | 200
+// to struct {
+// 	Total int
+// 	Found int
+// }
+func (o *rawSet) RowsToStruct(ptrStruct interface{}, keyCol, valueCol string) (int64, error) {
+	return o.queryRowsTo(ptrStruct, keyCol, valueCol)
+}
+
+// return prepared raw statement for used in times.
 func (o *rawSet) Prepare() (RawPreparer, error) {
 	return newRawPreparer(o)
 }

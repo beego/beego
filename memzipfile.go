@@ -5,16 +5,17 @@ import (
 	"compress/flate"
 	"compress/gzip"
 	"errors"
-	//"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
 var gmfim map[string]*MemFileInfo = make(map[string]*MemFileInfo)
+var lock sync.RWMutex
 
 // OpenMemZipFile returns MemFile object with a compressed static file.
 // it's used for serve static file if gzip enable.
@@ -32,12 +33,12 @@ func OpenMemZipFile(path string, zip string) (*MemFile, error) {
 
 	modtime := osfileinfo.ModTime()
 	fileSize := osfileinfo.Size()
-
+	lock.RLock()
 	cfi, ok := gmfim[zip+":"+path]
+	lock.RUnlock()
 	if ok && cfi.ModTime() == modtime && cfi.fileSize == fileSize {
-		//fmt.Printf("read %s file %s from cache\n", zip, path)
+
 	} else {
-		//fmt.Printf("NOT read %s file %s from cache\n", zip, path)
 		var content []byte
 		if zip == "gzip" {
 			//将文件内容压缩到zipbuf中
@@ -81,8 +82,9 @@ func OpenMemZipFile(path string, zip string) (*MemFile, error) {
 		}
 
 		cfi = &MemFileInfo{osfileinfo, modtime, content, int64(len(content)), fileSize}
+		lock.Lock()
+		defer lock.Unlock()
 		gmfim[zip+":"+path] = cfi
-		//fmt.Printf("%s file %s to %d, cache it\n", zip, path, len(content))
 	}
 	return &MemFile{fi: cfi, offset: 0}, nil
 }
