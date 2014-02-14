@@ -175,14 +175,14 @@ func (c *Captcha) CreateCaptcha() (string, error) {
 }
 
 // verify from a request
-func (c *Captcha) VerifyReq(req *http.Request) bool {
+func (c *Captcha) VerifyReq(req *http.Request, alwaysDelete bool) bool {
 	req.ParseForm()
-	return c.Verify(req.Form.Get(c.FieldIdName), req.Form.Get(c.FieldCaptchaName))
+	return c.Verify(req.Form.Get(c.FieldIdName), req.Form.Get(c.FieldCaptchaName), alwaysDelete)
 }
 
 // direct verify id and challenge string
-func (c *Captcha) Verify(id string, challenge string) (success bool) {
-	if len(challenge) == 0 || len(id) == 0 {
+func (c *Captcha) Verify(id string, challenge string, alwaysDelete bool) (success bool) {
+	if (!alwaysDelete && len(challenge) == 0) || len(id) == 0 {
 		return
 	}
 
@@ -192,6 +192,9 @@ func (c *Captcha) Verify(id string, challenge string) (success bool) {
 
 	if v, ok := c.store.Get(key).([]byte); ok && len(v) == len(challenge) {
 		chars = v
+	} else if ok && alwaysDelete {
+		c.store.Delete(key)
+		return
 	} else {
 		return
 	}
