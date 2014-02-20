@@ -144,6 +144,11 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 		switch fi.fieldType {
 		case TypeDateField, TypeDateTimeField:
 			if fi.auto_now || fi.auto_now_add && insert {
+				if insert {
+					if t, ok := value.(time.Time); ok && !t.IsZero() {
+						break
+					}
+				}
 				tnow := time.Now()
 				d.ins.TimeToDB(&tnow, tz)
 				value = tnow
