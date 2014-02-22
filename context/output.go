@@ -77,43 +77,59 @@ func (output *BeegoOutput) Cookie(name string, value string, others ...interface
 	var b bytes.Buffer
 	fmt.Fprintf(&b, "%s=%s", sanitizeName(name), sanitizeValue(value))
 	if len(others) > 0 {
-		switch others[0].(type) {
+		switch v := others[0].(type) {
 		case int:
-			if others[0].(int) > 0 {
-				fmt.Fprintf(&b, "; Max-Age=%d", others[0].(int))
-			} else if others[0].(int) < 0 {
+			if v > 0 {
+				fmt.Fprintf(&b, "; Max-Age=%d", v)
+			} else if v < 0 {
 				fmt.Fprintf(&b, "; Max-Age=0")
 			}
 		case int64:
-			if others[0].(int64) > 0 {
-				fmt.Fprintf(&b, "; Max-Age=%d", others[0].(int64))
-			} else if others[0].(int64) < 0 {
+			if v > 0 {
+				fmt.Fprintf(&b, "; Max-Age=%d", v)
+			} else if v < 0 {
 				fmt.Fprintf(&b, "; Max-Age=0")
 			}
 		case int32:
-			if others[0].(int32) > 0 {
-				fmt.Fprintf(&b, "; Max-Age=%d", others[0].(int32))
-			} else if others[0].(int32) < 0 {
+			if v > 0 {
+				fmt.Fprintf(&b, "; Max-Age=%d", v)
+			} else if v < 0 {
 				fmt.Fprintf(&b, "; Max-Age=0")
 			}
 		}
 	}
 	if len(others) > 1 {
-		if len(others[1].(string)) == 0 {
-			fmt.Fprintf(&b, "; Path=%s", '/')
+		if v, ok := others[1].(string); ok && len(v) > 0 {
+			fmt.Fprintf(&b, "; Path=%s", sanitizeValue(v))
 		} else {
-			fmt.Fprintf(&b, "; Path=%s", sanitizeValue(others[1].(string)))
+			fmt.Fprintf(&b, "; Path=%s", '/')
 		}
 	}
-	if len(others) > 2 && len(others[2].(string)) > 0 {
-		fmt.Fprintf(&b, "; Domain=%s", sanitizeValue(others[2].(string)))
+	if len(others) > 2 {
+		if v, ok := others[2].(string); ok && len(v) > 0 {
+			fmt.Fprintf(&b, "; Domain=%s", sanitizeValue(v))
+		}
 	}
-	if len(others) > 3 && others[3].(bool) {
-		fmt.Fprintf(&b, "; Secure")
+	if len(others) > 3 {
+		var secure bool
+		switch v := others[3].(type) {
+		case bool:
+			secure = v
+		default:
+			secure = true
+		}
+		if secure {
+			fmt.Fprintf(&b, "; Secure")
+		}
 	}
-	if !(len(others) > 4 && others[4].(bool) == false) {
-		fmt.Fprintf(&b, "; HttpOnly")
+	if len(others) > 4 {
+		if v, ok := others[4].(bool); ok && !v {
+			// HttpOnly = false
+		} else {
+			fmt.Fprintf(&b, "; HttpOnly")
+		}
 	}
+
 	output.Context.ResponseWriter.Header().Add("Set-Cookie", b.String())
 }
 
