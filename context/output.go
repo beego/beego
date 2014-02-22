@@ -98,36 +98,54 @@ func (output *BeegoOutput) Cookie(name string, value string, others ...interface
 			}
 		}
 	}
+
+	// the settings below
+	// Path, Domain, Secure, HttpOnly
+	// can use nil skip set
+
+	// default "/"
 	if len(others) > 1 {
 		if v, ok := others[1].(string); ok && len(v) > 0 {
 			fmt.Fprintf(&b, "; Path=%s", sanitizeValue(v))
-		} else {
-			fmt.Fprintf(&b, "; Path=%s", '/')
 		}
+	} else {
+		fmt.Fprintf(&b, "; Path=%s", "/")
 	}
+
+	// default empty
 	if len(others) > 2 {
 		if v, ok := others[2].(string); ok && len(v) > 0 {
 			fmt.Fprintf(&b, "; Domain=%s", sanitizeValue(v))
 		}
 	}
+
+	// default empty
 	if len(others) > 3 {
 		var secure bool
 		switch v := others[3].(type) {
 		case bool:
 			secure = v
 		default:
-			secure = true
+			if others[3] != nil {
+				secure = true
+			}
 		}
 		if secure {
 			fmt.Fprintf(&b, "; Secure")
 		}
 	}
+
+	// default true
+	httponly := true
 	if len(others) > 4 {
-		if v, ok := others[4].(bool); ok && !v {
+		if v, ok := others[4].(bool); ok && !v || others[4] == nil {
 			// HttpOnly = false
-		} else {
-			fmt.Fprintf(&b, "; HttpOnly")
+			httponly = false
 		}
+	}
+
+	if httponly {
+		fmt.Fprintf(&b, "; HttpOnly")
 	}
 
 	output.Context.ResponseWriter.Header().Add("Set-Cookie", b.String())
