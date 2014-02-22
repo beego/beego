@@ -99,15 +99,19 @@ func (output *BeegoOutput) Cookie(name string, value string, others ...interface
 		}
 	}
 	if len(others) > 1 {
-		fmt.Fprintf(&b, "; Path=%s", sanitizeValue(others[1].(string)))
+		if len(others[1].(string)) == 0 {
+			fmt.Fprintf(&b, "; Path=%s", '/')
+		} else {
+			fmt.Fprintf(&b, "; Path=%s", sanitizeValue(others[1].(string)))
+		}
 	}
-	if len(others) > 2 {
+	if len(others) > 2 && len(others[2].(string)) > 0 {
 		fmt.Fprintf(&b, "; Domain=%s", sanitizeValue(others[2].(string)))
 	}
-	if len(others) > 3 {
+	if len(others) > 3 && others[3].(bool) {
 		fmt.Fprintf(&b, "; Secure")
 	}
-	if len(others) > 4 {
+	if !(len(others) > 4 && others[4].(bool) == false) {
 		fmt.Fprintf(&b, "; HttpOnly")
 	}
 	output.Context.ResponseWriter.Header().Add("Set-Cookie", b.String())
