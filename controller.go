@@ -308,11 +308,11 @@ func (c *Controller) GetString(key string) string {
 // GetStrings returns the input string slice by key string.
 // it's designed for multi-value input field such as checkbox(input[type=checkbox]), multi-selection.
 func (c *Controller) GetStrings(key string) []string {
-	r := c.Ctx.Request
-	if r.Form == nil {
+	f := c.Input()
+	if f == nil {
 		return []string{}
 	}
-	vs := r.Form[key]
+	vs := f[key]
 	if len(vs) > 0 {
 		return vs
 	}
