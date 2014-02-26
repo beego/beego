@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path"
 	"reflect"
 	"regexp"
 	"runtime"
@@ -546,13 +547,13 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	//static file server
 	for prefix, staticDir := range StaticDir {
 		if r.URL.Path == "/favicon.ico" {
-			file := staticDir + r.URL.Path
+			file := path.Join(staticDir, r.URL.Path)
 			http.ServeFile(w, r, file)
 			w.started = true
 			goto Admin
 		}
 		if strings.HasPrefix(r.URL.Path, prefix) {
-			file := staticDir + r.URL.Path[len(prefix):]
+			file := path.Join(staticDir, r.URL.Path[len(prefix):])
 			finfo, err := os.Stat(file)
 			if err != nil {
 				if RunMode == "dev" {
