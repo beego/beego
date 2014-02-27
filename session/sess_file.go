@@ -81,6 +81,7 @@ func (fs *FileSessionStore) SessionRelease(w http.ResponseWriter) {
 
 // File session provider
 type FileProvider struct {
+	lock        sync.RWMutex
 	maxlifetime int64
 	savePath    string
 }
@@ -97,6 +98,9 @@ func (fp *FileProvider) SessionInit(maxlifetime int64, savePath string) error {
 // if file is not exist, create it.
 // the file path is generated from sid string.
 func (fp *FileProvider) SessionRead(sid string) (SessionStore, error) {
+	filepder.lock.Lock()
+	defer filepder.lock.Unlock()
+
 	err := os.MkdirAll(path.Join(fp.savePath, string(sid[0]), string(sid[1])), 0777)
 	if err != nil {
 		println(err.Error())
@@ -133,6 +137,9 @@ func (fp *FileProvider) SessionRead(sid string) (SessionStore, error) {
 // Check file session exist.
 // it checkes the file named from sid exist or not.
 func (fp *FileProvider) SessionExist(sid string) bool {
+	filepder.lock.Lock()
+	defer filepder.lock.Unlock()
+
 	_, err := os.Stat(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid))
 	if err == nil {
 		return true
@@ -143,12 +150,18 @@ func (fp *FileProvider) SessionExist(sid string) bool {
 
 // Remove all files in this save path
 func (fp *FileProvider) SessionDestroy(sid string) error {
+	filepder.lock.Lock()
+	defer filepder.lock.Unlock()
+
 	os.Remove(path.Join(fp.savePath))
 	return nil
 }
 
 // Recycle files in save path
 func (fp *FileProvider) SessionGC() {
+	filepder.lock.Lock()
+	defer filepder.lock.Unlock()
+
 	gcmaxlifetime = fp.maxlifetime
 	filepath.Walk(fp.savePath, gcpath)
 }
@@ -170,6 +183,9 @@ func (fp *FileProvider) SessionAll() int {
 // Generate new sid for file session.
 // it delete old file and create new file named from new sid.
 func (fp *FileProvider) SessionRegenerate(oldsid, sid string) (SessionStore, error) {
+	filepder.lock.Lock()
+	defer filepder.lock.Unlock()
+
 	err := os.MkdirAll(path.Join(fp.savePath, string(oldsid[0]), string(oldsid[1])), 0777)
 	if err != nil {
 		println(err.Error())
