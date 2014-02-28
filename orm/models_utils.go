@@ -1,6 +1,7 @@
 package orm
 
 import (
+	"database/sql"
 	"fmt"
 	"reflect"
 	"strings"
@@ -98,30 +99,29 @@ func getColumnName(ft int, addrField reflect.Value, sf reflect.StructField, col 
 // return field type as type constant from reflect.Value
 func getFieldType(val reflect.Value) (ft int, err error) {
 	elm := reflect.Indirect(val)
-	switch elm.Kind() {
-	case reflect.Int8:
+	switch elm.Interface().(type) {
+	case int8:
 		ft = TypeBitField
-	case reflect.Int16:
+	case int16:
 		ft = TypeSmallIntegerField
-	case reflect.Int32, reflect.Int:
+	case int32, int:
 		ft = TypeIntegerField
-	case reflect.Int64:
+	case int64, sql.NullInt64:
 		ft = TypeBigIntegerField
-	case reflect.Uint8:
+	case uint8:
 		ft = TypePositiveBitField
-	case reflect.Uint16:
+	case uint16:
 		ft = TypePositiveSmallIntegerField
-	case reflect.Uint32, reflect.Uint:
+	case uint32, uint:
 		ft = TypePositiveIntegerField
-	case reflect.Uint64:
+	case uint64:
 		ft = TypePositiveBigIntegerField
-	case reflect.Float32, reflect.Float64:
+	case float32, float64, sql.NullFloat64:
 		ft = TypeFloatField
-	case reflect.Bool:
+	case bool, sql.NullBool:
 		ft = TypeBooleanField
-	case reflect.String:
+	case string, sql.NullString:
 		ft = TypeCharField
-	case reflect.Invalid:
 	default:
 		if elm.CanInterface() {
 			if _, ok := elm.Interface().(time.Time); ok {

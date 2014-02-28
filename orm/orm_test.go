@@ -2,6 +2,7 @@ package orm
 
 import (
 	"bytes"
+	"database/sql"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -258,12 +259,45 @@ func TestNullDataTypes(t *testing.T) {
 	err = dORM.Read(&d)
 	throwFail(t, err)
 
+	throwFail(t, AssertIs(d.NullBool.Valid, false))
+	throwFail(t, AssertIs(d.NullString.Valid, false))
+	throwFail(t, AssertIs(d.NullInt64.Valid, false))
+	throwFail(t, AssertIs(d.NullFloat64.Valid, false))
+
 	_, err = dORM.Raw(`INSERT INTO data_null (boolean) VALUES (?)`, nil).Exec()
 	throwFail(t, err)
 
 	d = DataNull{Id: 2}
 	err = dORM.Read(&d)
 	throwFail(t, err)
+
+	d = DataNull{
+		DateTime:    time.Now(),
+		NullString:  sql.NullString{"test", true},
+		NullBool:    sql.NullBool{true, true},
+		NullInt64:   sql.NullInt64{42, true},
+		NullFloat64: sql.NullFloat64{42.42, true},
+	}
+
+	id, err = dORM.Insert(&d)
+	throwFail(t, err)
+	throwFail(t, AssertIs(id, 3))
+
+	d = DataNull{Id: 3}
+	err = dORM.Read(&d)
+	throwFail(t, err)
+
+	throwFail(t, AssertIs(d.NullBool.Valid, true))
+	throwFail(t, AssertIs(d.NullBool.Bool, true))
+
+	throwFail(t, AssertIs(d.NullString.Valid, true))
+	throwFail(t, AssertIs(d.NullString.String, "test"))
+
+	throwFail(t, AssertIs(d.NullInt64.Valid, true))
+	throwFail(t, AssertIs(d.NullInt64.Int64, 42))
+
+	throwFail(t, AssertIs(d.NullFloat64.Valid, true))
+	throwFail(t, AssertIs(d.NullFloat64.Float64, 42.42))
 }
 
 func TestCRUD(t *testing.T) {
@@ -1646,10 +1680,10 @@ func TestTransaction(t *testing.T) {
 func TestReadOrCreate(t *testing.T) {
 	u := &User{
 		UserName: "Kyle",
-		Email: "kylemcc@gmail.com",
+		Email:    "kylemcc@gmail.com",
 		Password: "other_pass",
-		Status: 7,
-		IsStaff: false,
+		Status:   7,
+		IsStaff:  false,
 		IsActive: true,
 	}
 
