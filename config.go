@@ -58,6 +58,8 @@ var (
 	EnableAdmin            bool   // flag of enable admin module to log every request info.
 	AdminHttpAddr          string // http server configurations for admin module.
 	AdminHttpPort          int
+	FlashName              string // name of the flash variable found in response header and cookie
+	FlashSeperator         string // used to seperate flash key:value
 )
 
 func init() {
@@ -122,6 +124,9 @@ func init() {
 	EnableAdmin = false
 	AdminHttpAddr = "127.0.0.1"
 	AdminHttpPort = 8088
+
+	FlashName = "BEEGO_FLASH"
+	FlashSeperator = "BEEGOFLASH"
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
@@ -269,6 +274,14 @@ func ParseConfig() (err error) {
 
 		if serverName := AppConfig.String("BeegoServerName"); serverName != "" {
 			BeegoServerName = serverName
+		}
+
+		if flashname := AppConfig.String("FlashName"); flashname != "" {
+			FlashName = flashname
+		}
+
+		if flashseperator := AppConfig.String("FlashSeperator"); flashseperator != "" {
+			FlashSeperator = flashseperator
 		}
 
 		if sd := AppConfig.String("StaticDir"); sd != "" {
