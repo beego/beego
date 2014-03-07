@@ -129,7 +129,8 @@ func (rp *RedisProvider) SessionInit(maxlifetime int64, savePath string) error {
 		}
 		return c, err
 	}, rp.poolsize)
-	return nil
+
+	return rp.poollist.Get().Err()
 }
 
 // read redis session by sid
