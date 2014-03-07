@@ -501,3 +501,24 @@ func (c *Controller) XsrfFormHtml() string {
 func (c *Controller) GetControllerAndAction() (controllerName, actionName string) {
 	return c.controllerName, c.actionName
 }
+
+// ReadFromRequest parsed flash data from encoded values in cookie.
+func ReadFromRequest(c *Controller) *FlashData {
+	flash := NewFlash()
+	if cookie, err := c.Ctx.Request.Cookie(flash.Name); err == nil {
+		v, _ := url.QueryUnescape(cookie.Value)
+		vals := strings.Split(v, "\x00")
+		for _, v := range vals {
+			if len(v) > 0 {
+				kv := strings.Split(v, flash.Seperator)
+				if len(kv) == 2 {
+					flash.Data[kv[0]] = kv[1]
+				}
+			}
+		}
+		//read one time then delete it
+		c.Ctx.SetCookie(flash.Name, "", -1, "/")
+	}
+	c.Data["flash"] = flash.Data
+	return flash
+}
