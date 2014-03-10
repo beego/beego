@@ -35,7 +35,7 @@ var (
 		"istartswith": true,
 		"iendswith":   true,
 		"in":          true,
-		// "range":       true,
+		"between":     true,
 		// "year":        true,
 		// "month":       true,
 		// "day":         true,
@@ -916,13 +916,19 @@ func (d *dbBase) GenerateOperatorSql(mi *modelInfo, fi *fieldInfo, operator stri
 	}
 	arg := params[0]
 
-	if operator == "in" {
+	switch operator {
+	case "in":
 		marks := make([]string, len(params))
 		for i, _ := range marks {
 			marks[i] = "?"
 		}
 		sql = fmt.Sprintf("IN (%s)", strings.Join(marks, ", "))
-	} else {
+	case "between":
+		if len(params) != 2 {
+			panic(fmt.Errorf("operator `%s` need 2 args not %d", operator, len(params)))
+		}
+		sql = "BETWEEN ? AND ?"
+	default:
 		if len(params) > 1 {
 			panic(fmt.Errorf("operator `%s` need 1 args not %d", operator, len(params)))
 		}

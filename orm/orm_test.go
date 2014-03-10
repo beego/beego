@@ -653,6 +653,14 @@ func TestOperators(t *testing.T) {
 	num, err = qs.Filter("status__in", []*int{&n1}, &n2).Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 2))
+
+	num, err = qs.Filter("id__between", 2, 3).Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 2))
+
+	num, err = qs.Filter("id__between", []int{2, 3}).Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 2))
 }
 
 func TestSetCond(t *testing.T) {
@@ -1611,7 +1619,6 @@ func TestDelete(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 4))
 
-	fmt.Println("...")
 	qs = dORM.QueryTable("comment")
 	num, err = qs.Filter("Post__User", 3).Delete()
 	throwFail(t, err)
