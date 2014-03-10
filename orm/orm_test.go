@@ -139,6 +139,15 @@ func throwFailNow(t *testing.T, err error, args ...interface{}) {
 	}
 }
 
+func TestGetDB(t *testing.T) {
+	if db, err := GetDB(); err != nil {
+		throwFailNow(t, err)
+	} else {
+		err = db.Ping()
+		throwFailNow(t, err)
+	}
+}
+
 func TestSyncDb(t *testing.T) {
 	RegisterModel(new(Data), new(DataNull))
 	RegisterModel(new(User))
