@@ -43,6 +43,12 @@ var (
 		"GetControllerAndAction"}
 )
 
+// 为项目实例，提供框架的添加非自动映射的控制器methods的外部方法。
+// For app of instances,Append Controller's methods shouldn't reflect to AutoRouter
+func ExceptMethodAppend(action string) {
+	exceptMethod = append(exceptMethod, action)
+}
+
 type controllerInfo struct {
 	pattern        string
 	regex          *regexp.Regexp
