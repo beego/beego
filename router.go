@@ -546,6 +546,9 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	//static file server
 	for prefix, staticDir := range StaticDir {
+		if len(prefix) == 0 {
+			continue
+		}
 		if r.URL.Path == "/favicon.ico" {
 			file := path.Join(staticDir, r.URL.Path)
 			if utils.FileExists(file) {
@@ -557,6 +560,10 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		if strings.HasPrefix(r.URL.Path, prefix) {
 			if len(r.URL.Path) > len(prefix) && r.URL.Path[len(prefix)] != '/' {
 				continue
+			}
+			if r.URL.Path == prefix && prefix[len(prefix)-1] != '/' {
+				http.Redirect(rw, r, r.URL.Path+"/", 302)
+				goto Admin
 			}
 			file := path.Join(staticDir, r.URL.Path[len(prefix):])
 			finfo, err := os.Stat(file)
