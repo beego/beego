@@ -555,7 +555,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			}
 		}
 		if strings.HasPrefix(r.URL.Path, prefix) {
-			if len(r.URL.Path) > len(prefix) && r.URL.Path[len(prefix)+1] != '/' {
+			if len(r.URL.Path) > len(prefix) && r.URL.Path[len(prefix)] != '/' {
 				continue
 			}
 			file := path.Join(staticDir, r.URL.Path[len(prefix):])
