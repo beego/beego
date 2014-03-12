@@ -98,3 +98,9 @@ func (mc *_modelCache) clean() {
 	mc.cacheByFN = make(map[string]*modelInfo)
 	mc.done = false
 }
+
+// Clean model cache. Then you can re-RegisterModel.
+// Common use this api for test case.
+func ResetModelCache() {
+	modelCache.clean()
+}

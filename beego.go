@@ -12,7 +12,7 @@ import (
 )
 
 // beego web framework version.
-const VERSION = "1.1.0"
+const VERSION = "1.1.1"
 
 type hookfunc func() error //hook function to run
 var hooks []hookfunc       //hook function slice to store the hookfunc
@@ -28,12 +28,12 @@ type GroupRouters []groupRouter
 
 // Get a new GroupRouters
 func NewGroupRouters() GroupRouters {
-	return make([]groupRouter, 0)
+	return make(GroupRouters, 0)
 }
 
 // Add Router in the GroupRouters
 // it is for plugin or module to register router
-func (gr GroupRouters) AddRouter(pattern string, c ControllerInterface, mappingMethod ...string) {
+func (gr *GroupRouters) AddRouter(pattern string, c ControllerInterface, mappingMethod ...string) {
 	var newRG groupRouter
 	if len(mappingMethod) > 0 {
 		newRG = groupRouter{
@@ -48,16 +48,16 @@ func (gr GroupRouters) AddRouter(pattern string, c ControllerInterface, mappingM
 			"",
 		}
 	}
-	gr = append(gr, newRG)
+	*gr = append(*gr, newRG)
 }
 
-func (gr GroupRouters) AddAuto(c ControllerInterface) {
+func (gr *GroupRouters) AddAuto(c ControllerInterface) {
 	newRG := groupRouter{
 		"",
 		c,
 		"",
 	}
-	gr = append(gr, newRG)
+	*gr = append(*gr, newRG)
 }
 
 // AddGroupRouter with the prefix

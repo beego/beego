@@ -147,6 +147,8 @@ func (this *FileCache) Get(key string) interface{} {
 // timeout means how long to keep this file, unit of ms.
 // if timeout equals FileCacheEmbedExpiry(default is 0), cache this item forever.
 func (this *FileCache) Put(key string, val interface{}, timeout int64) error {
+	gob.Register(val)
+
 	filename := this.getCacheFileName(key)
 	var item FileCacheItem
 	item.Data = val

@@ -67,7 +67,7 @@ const (
 	fieldIdName      = "captcha_id"
 	fieldCaptchaName = "captcha"
 	cachePrefix      = "captcha_"
-	urlPrefix        = "/captcha/"
+	defaultURLPrefix = "/captcha/"
 )
 
 // Captcha struct
@@ -76,7 +76,7 @@ type Captcha struct {
 	store cache.Cache
 
 	// url prefix for captcha image
-	urlPrefix string
+	URLPrefix string
 
 	// specify captcha id input field name
 	FieldIdName string
@@ -155,7 +155,7 @@ func (c *Captcha) CreateCaptchaHtml() template.HTML {
 	return template.HTML(fmt.Sprintf(`<input type="hidden" name="%s" value="%s">`+
 		`<a class="captcha" href="javascript:">`+
 		`<img onclick="this.src=('%s%s.png?reload='+(new Date()).getTime())" class="captcha-img" src="%s%s.png">`+
-		`</a>`, c.FieldIdName, value, c.urlPrefix, value, c.urlPrefix, value))
+		`</a>`, c.FieldIdName, value, c.URLPrefix, value, c.URLPrefix, value))
 }
 
 // create a new captcha id
@@ -224,14 +224,14 @@ func NewCaptcha(urlPrefix string, store cache.Cache) *Captcha {
 	cpt.StdHeight = stdHeight
 
 	if len(urlPrefix) == 0 {
-		urlPrefix = urlPrefix
+		urlPrefix = defaultURLPrefix
 	}
 
 	if urlPrefix[len(urlPrefix)-1] != '/' {
 		urlPrefix += "/"
 	}
 
-	cpt.urlPrefix = urlPrefix
+	cpt.URLPrefix = urlPrefix
 
 	return cpt
 }
@@ -242,7 +242,7 @@ func NewWithFilter(urlPrefix string, store cache.Cache) *Captcha {
 	cpt := NewCaptcha(urlPrefix, store)
 
 	// create filter for serve captcha image
-	beego.AddFilter(urlPrefix+":", "BeforeRouter", cpt.Handler)
+	beego.AddFilter(cpt.URLPrefix+":", "BeforeRouter", cpt.Handler)
 
 	// add to template func map
 	beego.AddFuncMap("create_captcha", cpt.CreateCaptchaHtml)

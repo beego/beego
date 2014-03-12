@@ -152,8 +152,7 @@ func (fp *FileProvider) SessionExist(sid string) bool {
 func (fp *FileProvider) SessionDestroy(sid string) error {
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()
-
-	os.Remove(path.Join(fp.savePath))
+	os.Remove(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid))
 	return nil
 }
 
