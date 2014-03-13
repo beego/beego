@@ -1,6 +1,7 @@
 package orm
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -116,27 +117,31 @@ type Data struct {
 }
 
 type DataNull struct {
-	Id       int
-	Boolean  bool      `orm:"null"`
-	Char     string    `orm:"null;size(50)"`
-	Text     string    `orm:"null;type(text)"`
-	Date     time.Time `orm:"null;type(date)"`
-	DateTime time.Time `orm:"null;column(datetime)""`
-	Byte     byte      `orm:"null"`
-	Rune     rune      `orm:"null"`
-	Int      int       `orm:"null"`
-	Int8     int8      `orm:"null"`
-	Int16    int16     `orm:"null"`
-	Int32    int32     `orm:"null"`
-	Int64    int64     `orm:"null"`
-	Uint     uint      `orm:"null"`
-	Uint8    uint8     `orm:"null"`
-	Uint16   uint16    `orm:"null"`
-	Uint32   uint32    `orm:"null"`
-	Uint64   uint64    `orm:"null"`
-	Float32  float32   `orm:"null"`
-	Float64  float64   `orm:"null"`
-	Decimal  float64   `orm:"digits(8);decimals(4);null"`
+	Id          int
+	Boolean     bool            `orm:"null"`
+	Char        string          `orm:"null;size(50)"`
+	Text        string          `orm:"null;type(text)"`
+	Date        time.Time       `orm:"null;type(date)"`
+	DateTime    time.Time       `orm:"null;column(datetime)""`
+	Byte        byte            `orm:"null"`
+	Rune        rune            `orm:"null"`
+	Int         int             `orm:"null"`
+	Int8        int8            `orm:"null"`
+	Int16       int16           `orm:"null"`
+	Int32       int32           `orm:"null"`
+	Int64       int64           `orm:"null"`
+	Uint        uint            `orm:"null"`
+	Uint8       uint8           `orm:"null"`
+	Uint16      uint16          `orm:"null"`
+	Uint32      uint32          `orm:"null"`
+	Uint64      uint64          `orm:"null"`
+	Float32     float32         `orm:"null"`
+	Float64     float64         `orm:"null"`
+	Decimal     float64         `orm:"digits(8);decimals(4);null"`
+	NullString  sql.NullString  `orm:"null"`
+	NullBool    sql.NullBool    `orm:"null"`
+	NullFloat64 sql.NullFloat64 `orm:"null"`
+	NullInt64   sql.NullInt64   `orm:"null"`
 }
 
 // only for mysql
@@ -303,9 +308,8 @@ go test -v github.com/astaxie/beego/orm
 
 
 #### Sqlite3
-touch /path/to/orm_test.db
 export ORM_DRIVER=sqlite3
-export ORM_SOURCE=/path/to/orm_test.db
+export ORM_SOURCE='file:memory_test?mode=memory'
 go test -v github.com/astaxie/beego/orm
 
 

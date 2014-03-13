@@ -24,7 +24,7 @@ func Get(url string) *BeegoHttpRequest {
 	req.Method = "GET"
 	req.Header = http.Header{}
 	req.Header.Set("User-Agent", defaultUserAgent)
-	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil}
+	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil, nil, nil}
 }
 
 // Post returns *BeegoHttpRequest with POST method.
@@ -33,7 +33,7 @@ func Post(url string) *BeegoHttpRequest {
 	req.Method = "POST"
 	req.Header = http.Header{}
 	req.Header.Set("User-Agent", defaultUserAgent)
-	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil}
+	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil, nil, nil}
 }
 
 // Put returns *BeegoHttpRequest with PUT method.
@@ -42,7 +42,7 @@ func Put(url string) *BeegoHttpRequest {
 	req.Method = "PUT"
 	req.Header = http.Header{}
 	req.Header.Set("User-Agent", defaultUserAgent)
-	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil}
+	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil, nil, nil}
 }
 
 // Delete returns *BeegoHttpRequest DELETE GET method.
@@ -51,7 +51,7 @@ func Delete(url string) *BeegoHttpRequest {
 	req.Method = "DELETE"
 	req.Header = http.Header{}
 	req.Header.Set("User-Agent", defaultUserAgent)
-	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil}
+	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil, nil, nil}
 }
 
 // Head returns *BeegoHttpRequest with HEAD method.
@@ -60,7 +60,7 @@ func Head(url string) *BeegoHttpRequest {
 	req.Method = "HEAD"
 	req.Header = http.Header{}
 	req.Header.Set("User-Agent", defaultUserAgent)
-	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil}
+	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil, nil, nil}
 }
 
 // BeegoHttpRequest provides more useful methods for requesting one url than http.Request.
@@ -72,6 +72,8 @@ type BeegoHttpRequest struct {
 	connectTimeout   time.Duration
 	readWriteTimeout time.Duration
 	tlsClientConfig  *tls.Config
+	proxy            func(*http.Request) (*url.URL, error)
+	transport        http.RoundTripper
 }
 
 // Debug sets show debug or not when executing request.
@@ -102,6 +104,24 @@ func (b *BeegoHttpRequest) Header(key, value string) *BeegoHttpRequest {
 // SetCookie add cookie into request.
 func (b *BeegoHttpRequest) SetCookie(cookie *http.Cookie) *BeegoHttpRequest {
 	b.req.Header.Add("Cookie", cookie.String())
+	return b
+}
+
+// Set transport to
+func (b *BeegoHttpRequest) SetTransport(transport http.RoundTripper) *BeegoHttpRequest {
+	b.transport = transport
+	return b
+}
+
+// Set http proxy
+// example:
+//
+//	func(req *http.Request) (*url.URL, error) {
+// 		u, _ := url.ParseRequestURI("http://127.0.0.1:8118")
+// 		return u, nil
+// 	}
+func (b *BeegoHttpRequest) SetProxy(proxy func(*http.Request) (*url.URL, error)) *BeegoHttpRequest {
+	b.proxy = proxy
 	return b
 }
 
@@ -171,12 +191,34 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 		println(string(dump))
 	}
 
-	client := &http.Client{
-		Transport: &http.Transport{
+	trans := b.transport
+
+	if trans == nil {
+		// create default transport
+		trans = &http.Transport{
 			TLSClientConfig: b.tlsClientConfig,
+			Proxy:           b.proxy,
 			Dial:            TimeoutDialer(b.connectTimeout, b.readWriteTimeout),
-		},
+		}
+	} else {
+		// if b.transport is *http.Transport then set the settings.
+		if t, ok := trans.(*http.Transport); ok {
+			if t.TLSClientConfig == nil {
+				t.TLSClientConfig = b.tlsClientConfig
+			}
+			if t.Proxy == nil {
+				t.Proxy = b.proxy
+			}
+			if t.Dial == nil {
+				t.Dial = TimeoutDialer(b.connectTimeout, b.readWriteTimeout)
+			}
+		}
 	}
+
+	client := &http.Client{
+		Transport: trans,
+	}
+
 	resp, err := client.Do(b.req)
 	if err != nil {
 		return nil, err

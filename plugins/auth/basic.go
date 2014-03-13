@@ -8,7 +8,7 @@ package auth
 // 	}
 // 	return false
 // }
-// authPlugin := auth.NewBasicAuthenticator(SecretAuth)
+// authPlugin := auth.NewBasicAuthenticator(SecretAuth, "My Realm")
 // beego.AddFilter("*","AfterStatic",authPlugin)
 
 import (

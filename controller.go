@@ -2,11 +2,7 @@ package beego
 
 import (
 	"bytes"
-	"crypto/hmac"
-	"crypto/sha1"
-	"encoding/base64"
 	"errors"
-	"fmt"
 	"html/template"
 	"io"
 	"io/ioutil"
@@ -17,7 +13,6 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/session"
@@ -313,11 +308,11 @@ func (c *Controller) GetString(key string) string {
 // GetStrings returns the input string slice by key string.
 // it's designed for multi-value input field such as checkbox(input[type=checkbox]), multi-selection.
 func (c *Controller) GetStrings(key string) []string {
-	r := c.Ctx.Request
-	if r.Form == nil {
+	f := c.Input()
+	if f == nil {
 		return []string{}
 	}
-	vs := r.Form[key]
+	vs := f[key]
 	if len(vs) > 0 {
 		return vs
 	}
@@ -417,40 +412,12 @@ func (c *Controller) IsAjax() bool {
 
 // GetSecureCookie returns decoded cookie value from encoded browser cookie values.
 func (c *Controller) GetSecureCookie(Secret, key string) (string, bool) {
-	val := c.Ctx.GetCookie(key)
-	if val == "" {
-		return "", false
-	}
-
-	parts := strings.SplitN(val, "|", 3)
-
-	if len(parts) != 3 {
-		return "", false
-	}
-
-	vs := parts[0]
-	timestamp := parts[1]
-	sig := parts[2]
-
-	h := hmac.New(sha1.New, []byte(Secret))
-	fmt.Fprintf(h, "%s%s", vs, timestamp)
-
-	if fmt.Sprintf("%02x", h.Sum(nil)) != sig {
-		return "", false
-	}
-	res, _ := base64.URLEncoding.DecodeString(vs)
-	return string(res), true
+	return c.Ctx.GetSecureCookie(Secret, key)
 }
 
 // SetSecureCookie puts value into cookie after encoded the value.
-func (c *Controller) SetSecureCookie(Secret, name, val string, age int64) {
-	vs := base64.URLEncoding.EncodeToString([]byte(val))
-	timestamp := strconv.FormatInt(time.Now().UnixNano(), 10)
-	h := hmac.New(sha1.New, []byte(Secret))
-	fmt.Fprintf(h, "%s%s", vs, timestamp)
-	sig := fmt.Sprintf("%02x", h.Sum(nil))
-	cookie := strings.Join([]string{vs, timestamp, sig}, "|")
-	c.Ctx.SetCookie(name, cookie, age, "/")
+func (c *Controller) SetSecureCookie(Secret, name, value string, others ...interface{}) {
+	c.Ctx.SetSecureCookie(Secret, name, value, others...)
 }
 
 // XsrfToken creates a xsrf token string and returns.

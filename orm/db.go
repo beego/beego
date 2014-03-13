@@ -35,7 +35,7 @@ var (
 		"istartswith": true,
 		"iendswith":   true,
 		"in":          true,
-		// "range":       true,
+		"between":     true,
 		// "year":        true,
 		// "month":       true,
 		// "day":         true,
@@ -103,15 +103,36 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 		} else {
 			switch fi.fieldType {
 			case TypeBooleanField:
-				value = field.Bool()
-			case TypeCharField, TypeTextField:
-				value = field.String()
-			case TypeFloatField, TypeDecimalField:
-				vu := field.Interface()
-				if _, ok := vu.(float32); ok {
-					value, _ = StrTo(ToStr(vu)).Float64()
+				if nb, ok := field.Interface().(sql.NullBool); ok {
+					value = nil
+					if nb.Valid {
+						value = nb.Bool
+					}
 				} else {
-					value = field.Float()
+					value = field.Bool()
+				}
+			case TypeCharField, TypeTextField:
+				if ns, ok := field.Interface().(sql.NullString); ok {
+					value = nil
+					if ns.Valid {
+						value = ns.String
+					}
+				} else {
+					value = field.String()
+				}
+			case TypeFloatField, TypeDecimalField:
+				if nf, ok := field.Interface().(sql.NullFloat64); ok {
+					value = nil
+					if nf.Valid {
+						value = nf.Float64
+					}
+				} else {
+					vu := field.Interface()
+					if _, ok := vu.(float32); ok {
+						value, _ = StrTo(ToStr(vu)).Float64()
+					} else {
+						value = field.Float()
+					}
 				}
 			case TypeDateField, TypeDateTimeField:
 				value = field.Interface()
@@ -124,7 +145,14 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 				case fi.fieldType&IsPostiveIntegerField > 0:
 					value = field.Uint()
 				case fi.fieldType&IsIntegerField > 0:
-					value = field.Int()
+					if ni, ok := field.Interface().(sql.NullInt64); ok {
+						value = nil
+						if ni.Valid {
+							value = ni.Int64
+						}
+					} else {
+						value = field.Int()
+					}
 				case fi.fieldType&IsRelField > 0:
 					if field.IsNil() {
 						value = nil
@@ -144,6 +172,11 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 		switch fi.fieldType {
 		case TypeDateField, TypeDateTimeField:
 			if fi.auto_now || fi.auto_now_add && insert {
+				if insert {
+					if t, ok := value.(time.Time); ok && !t.IsZero() {
+						break
+					}
+				}
 				tnow := time.Now()
 				d.ins.TimeToDB(&tnow, tz)
 				value = tnow
@@ -883,13 +916,19 @@ func (d *dbBase) GenerateOperatorSql(mi *modelInfo, fi *fieldInfo, operator stri
 	}
 	arg := params[0]
 
-	if operator == "in" {
+	switch operator {
+	case "in":
 		marks := make([]string, len(params))
 		for i, _ := range marks {
 			marks[i] = "?"
 		}
 		sql = fmt.Sprintf("IN (%s)", strings.Join(marks, ", "))
-	} else {
+	case "between":
+		if len(params) != 2 {
+			panic(fmt.Errorf("operator `%s` need 2 args not %d", operator, len(params)))
+		}
+		sql = "BETWEEN ? AND ?"
+	default:
 		if len(params) > 1 {
 			panic(fmt.Errorf("operator `%s` need 1 args not %d", operator, len(params)))
 		}
@@ -1117,17 +1156,37 @@ setValue:
 	switch {
 	case fieldType == TypeBooleanField:
 		if isNative {
-			if value == nil {
-				value = false
+			if nb, ok := field.Interface().(sql.NullBool); ok {
+				if value == nil {
+					nb.Valid = false
+				} else {
+					nb.Bool = value.(bool)
+					nb.Valid = true
+				}
+				field.Set(reflect.ValueOf(nb))
+			} else {
+				if value == nil {
+					value = false
+				}
+				field.SetBool(value.(bool))
 			}
-			field.SetBool(value.(bool))
 		}
 	case fieldType == TypeCharField || fieldType == TypeTextField:
 		if isNative {
-			if value == nil {
-				value = ""
+			if ns, ok := field.Interface().(sql.NullString); ok {
+				if value == nil {
+					ns.Valid = false
+				} else {
+					ns.String = value.(string)
+					ns.Valid = true
+				}
+				field.Set(reflect.ValueOf(ns))
+			} else {
+				if value == nil {
+					value = ""
+				}
+				field.SetString(value.(string))
 			}
-			field.SetString(value.(string))
 		}
 	case fieldType == TypeDateField || fieldType == TypeDateTimeField:
 		if isNative {
@@ -1146,18 +1205,39 @@ setValue:
 			}
 		} else {
 			if isNative {
-				if value == nil {
-					value = int64(0)
+				if ni, ok := field.Interface().(sql.NullInt64); ok {
+					if value == nil {
+						ni.Valid = false
+					} else {
+						ni.Int64 = value.(int64)
+						ni.Valid = true
+					}
+					field.Set(reflect.ValueOf(ni))
+				} else {
+					if value == nil {
+						value = int64(0)
+					}
+					field.SetInt(value.(int64))
 				}
-				field.SetInt(value.(int64))
 			}
 		}
 	case fieldType == TypeFloatField || fieldType == TypeDecimalField:
 		if isNative {
-			if value == nil {
-				value = float64(0)
+			if nf, ok := field.Interface().(sql.NullFloat64); ok {
+				if value == nil {
+					nf.Valid = false
+				} else {
+					nf.Float64 = value.(float64)
+					nf.Valid = true
+				}
+				field.Set(reflect.ValueOf(nf))
+			} else {
+
+				if value == nil {
+					value = float64(0)
+				}
+				field.SetFloat(value.(float64))
 			}
-			field.SetFloat(value.(float64))
 		}
 	case fieldType&IsRelField > 0:
 		if value != nil {
