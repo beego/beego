@@ -51,9 +51,16 @@ outFor:
 			continue
 		}
 
-		switch v := arg.(type) {
-		case []byte:
-		case string:
+		kind := val.Kind()
+		if kind == reflect.Ptr {
+			val = val.Elem()
+			kind = val.Kind()
+			arg = val.Interface()
+		}
+
+		switch kind {
+		case reflect.String:
+			v := val.String()
 			if fi != nil {
 				if fi.fieldType == TypeDateField || fi.fieldType == TypeDateTimeField {
 					var t time.Time
@@ -78,61 +85,66 @@ outFor:
 				}
 			}
 			arg = v
-		case time.Time:
-			if fi != nil && fi.fieldType == TypeDateField {
-				arg = v.In(tz).Format(format_Date)
-			} else {
-				arg = v.In(tz).Format(format_DateTime)
-			}
-		default:
-			kind := val.Kind()
-			switch kind {
-			case reflect.Slice, reflect.Array:
-
-				var args []interface{}
-				for i := 0; i < val.Len(); i++ {
-					v := val.Index(i)
-
-					var vu interface{}
-					if v.CanInterface() {
-						vu = v.Interface()
-					}
-
-					if vu == nil {
-						continue
-					}
-
-					args = append(args, vu)
-				}
-
-				if len(args) > 0 {
-					p := getFlatParams(fi, args, tz)
-					params = append(params, p...)
-				}
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			arg = val.Int()
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			arg = val.Uint()
+		case reflect.Float32:
+			arg, _ = StrTo(ToStr(arg)).Float64()
+		case reflect.Float64:
+			arg = val.Float()
+		case reflect.Bool:
+			arg = val.Bool()
+		case reflect.Slice, reflect.Array:
+			if _, ok := arg.([]byte); ok {
 				continue outFor
+			}
 
-			case reflect.Ptr, reflect.Struct:
-				ind := reflect.Indirect(val)
+			var args []interface{}
+			for i := 0; i < val.Len(); i++ {
+				v := val.Index(i)
 
-				if ind.Kind() == reflect.Struct {
-					typ := ind.Type()
-					name := getFullName(typ)
-					var value interface{}
-					if mmi, ok := modelCache.getByFN(name); ok {
-						if _, vu, exist := getExistPk(mmi, ind); exist {
-							value = vu
-						}
-					}
-					arg = value
+				var vu interface{}
+				if v.CanInterface() {
+					vu = v.Interface()
+				}
 
-					if arg == nil {
-						panic(fmt.Errorf("need a valid args value, unknown table or value `%s`", name))
-					}
+				if vu == nil {
+					continue
+				}
+
+				args = append(args, vu)
+			}
+
+			if len(args) > 0 {
+				p := getFlatParams(fi, args, tz)
+				params = append(params, p...)
+			}
+			continue outFor
+		case reflect.Struct:
+			if v, ok := arg.(time.Time); ok {
+				if fi != nil && fi.fieldType == TypeDateField {
+					arg = v.In(tz).Format(format_Date)
 				} else {
-					arg = ind.Interface()
+					arg = v.In(tz).Format(format_DateTime)
+				}
+			} else {
+				typ := val.Type()
+				name := getFullName(typ)
+				var value interface{}
+				if mmi, ok := modelCache.getByFN(name); ok {
+					if _, vu, exist := getExistPk(mmi, val); exist {
+						value = vu
+					}
+				}
+				arg = value
+
+				if arg == nil {
+					panic(fmt.Errorf("need a valid args value, unknown table or value `%s`", name))
 				}
 			}
 		}
+
 		params = append(params, arg)
 	}
 	return

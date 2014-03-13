@@ -144,6 +144,45 @@ type DataNull struct {
 	NullInt64   sql.NullInt64   `orm:"null"`
 }
 
+type String string
+type Boolean bool
+type Byte byte
+type Rune rune
+type Int int
+type Int8 int8
+type Int16 int16
+type Int32 int32
+type Int64 int64
+type Uint uint
+type Uint8 uint8
+type Uint16 uint16
+type Uint32 uint32
+type Uint64 uint64
+type Float32 float64
+type Float64 float64
+
+type DataCustom struct {
+	Id      int
+	Boolean Boolean
+	Char    string `orm:"size(50)"`
+	Text    string `orm:"type(text)"`
+	Byte    Byte
+	Rune    Rune
+	Int     Int
+	Int8    Int8
+	Int16   Int16
+	Int32   Int32
+	Int64   Int64
+	Uint    Uint
+	Uint8   Uint8
+	Uint16  Uint16
+	Uint32  Uint32
+	Uint64  Uint64
+	Float32 Float32
+	Float64 Float64
+	Decimal Float64 `orm:"digits(8);decimals(4)"`
+}
+
 // only for mysql
 type UserBig struct {
 	Id   uint64

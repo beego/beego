@@ -149,7 +149,7 @@ func TestGetDB(t *testing.T) {
 }
 
 func TestSyncDb(t *testing.T) {
-	RegisterModel(new(Data), new(DataNull))
+	RegisterModel(new(Data), new(DataNull), new(DataCustom))
 	RegisterModel(new(User))
 	RegisterModel(new(Profile))
 	RegisterModel(new(Post))
@@ -165,7 +165,7 @@ func TestSyncDb(t *testing.T) {
 }
 
 func TestRegisterModels(t *testing.T) {
-	RegisterModel(new(Data), new(DataNull))
+	RegisterModel(new(Data), new(DataNull), new(DataCustom))
 	RegisterModel(new(User))
 	RegisterModel(new(Profile))
 	RegisterModel(new(Post))
@@ -307,6 +307,39 @@ func TestNullDataTypes(t *testing.T) {
 
 	throwFail(t, AssertIs(d.NullFloat64.Valid, true))
 	throwFail(t, AssertIs(d.NullFloat64.Float64, 42.42))
+}
+
+func TestDataCustomTypes(t *testing.T) {
+	d := DataCustom{}
+	ind := reflect.Indirect(reflect.ValueOf(&d))
+
+	for name, value := range Data_Values {
+		e := ind.FieldByName(name)
+		if !e.IsValid() {
+			continue
+		}
+		e.Set(reflect.ValueOf(value).Convert(e.Type()))
+	}
+
+	id, err := dORM.Insert(&d)
+	throwFail(t, err)
+	throwFail(t, AssertIs(id, 1))
+
+	d = DataCustom{Id: 1}
+	err = dORM.Read(&d)
+	throwFail(t, err)
+
+	ind = reflect.Indirect(reflect.ValueOf(&d))
+
+	for name, value := range Data_Values {
+		e := ind.FieldByName(name)
+		if !e.IsValid() {
+			continue
+		}
+		vu := e.Interface()
+		value = reflect.ValueOf(value).Convert(e.Type()).Interface()
+		throwFail(t, AssertIs(vu == value, true), value, vu)
+	}
 }
 
 func TestCRUD(t *testing.T) {
@@ -562,6 +595,10 @@ func TestOperators(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
 
+	num, err = qs.Filter("user_name__exact", String("slene")).Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
 	num, err = qs.Filter("user_name__exact", "slene").Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
@@ -602,11 +639,11 @@ func TestOperators(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 3))
 
-	num, err = qs.Filter("status__lt", 3).Count()
+	num, err = qs.Filter("status__lt", Uint(3)).Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 2))
 
-	num, err = qs.Filter("status__lte", 3).Count()
+	num, err = qs.Filter("status__lte", Int(3)).Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 3))
 
