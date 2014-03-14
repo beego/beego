@@ -67,7 +67,7 @@ func (r Required) IsSatisfied(obj interface{}) bool {
 }
 
 func (r Required) DefaultMessage() string {
-	return "Required"
+	return fmt.Sprint(MessageTmpls["Required"])
 }
 
 func (r Required) GetKey() string {
