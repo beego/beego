@@ -44,6 +44,11 @@ var (
 		"GetControllerAndAction"}
 )
 
+// To append a slice's value into "exceptMethod", for controller's methods shouldn't reflect to AutoRouter
+func ExceptMethodAppend(action string) {
+	exceptMethod = append(exceptMethod, action)
+}
+
 type controllerInfo struct {
 	pattern        string
 	regex          *regexp.Regexp
