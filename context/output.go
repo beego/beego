@@ -135,12 +135,12 @@ func (output *BeegoOutput) Cookie(name string, value string, others ...interface
 		}
 	}
 
-	// default true
-	httponly := true
+	// default false. for session cookie default true
+	httponly := false
 	if len(others) > 4 {
-		if v, ok := others[4].(bool); ok && !v || others[4] == nil {
-			// HttpOnly = false
-			httponly = false
+		if v, ok := others[4].(bool); ok && v {
+			// HttpOnly = true
+			httponly = true
 		}
 	}
 
