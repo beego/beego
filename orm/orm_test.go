@@ -1417,7 +1417,7 @@ func TestRawQueryRow(t *testing.T) {
 	)
 
 	cols = []string{
-		"id", "status", "profile_id",
+		"id", "Status", "profile_id",
 	}
 	query = fmt.Sprintf("SELECT %s%s%s FROM %suser%s WHERE id = ?", Q, strings.Join(cols, sep), Q, Q, Q)
 	err = dORM.Raw(query, 4).QueryRow(&uid, &status, &pid)
@@ -1497,7 +1497,7 @@ func TestRawValues(t *testing.T) {
 	Q := dDbBaser.TableQuote()
 
 	var maps []Params
-	query := fmt.Sprintf("SELECT %suser_name%s FROM %suser%s WHERE %sstatus%s = ?", Q, Q, Q, Q, Q, Q)
+	query := fmt.Sprintf("SELECT %suser_name%s FROM %suser%s WHERE %sStatus%s = ?", Q, Q, Q, Q, Q, Q)
 	num, err := dORM.Raw(query, 1).Values(&maps)
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
