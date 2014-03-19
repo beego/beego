@@ -80,7 +80,6 @@ func getTableUnique(val reflect.Value) [][]string {
 
 // get snaked column name
 func getColumnName(ft int, addrField reflect.Value, sf reflect.StructField, col string) string {
-	col = strings.ToLower(col)
 	column := col
 	if col == "" {
 		column = snakeString(sf.Name)

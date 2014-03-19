@@ -194,7 +194,7 @@ type User struct {
 	UserName   string `orm:"size(30);unique"`
 	Email      string `orm:"size(100)"`
 	Password   string `orm:"size(100)"`
-	Status     int16
+	Status     int16  `orm:"column(Status)"`
 	IsStaff    bool
 	IsActive   bool      `orm:"default(1)"`
 	Created    time.Time `orm:"auto_now_add;type(date)"`
