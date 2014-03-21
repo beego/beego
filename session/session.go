@@ -173,7 +173,7 @@ func (manager *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
 }
 
 // Get SessionStore by its id.
-func (manager *Manager) GetProvider(sid string) (sessions SessionStore, err error) {
+func (manager *Manager) GetSessionStore(sid string) (sessions SessionStore, err error) {
 	sessions, err = manager.provider.SessionRead(sid)
 	return
 }
