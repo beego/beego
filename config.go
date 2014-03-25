@@ -60,6 +60,7 @@ var (
 	AdminHttpPort          int
 	FlashName              string // name of the flash variable found in response header and cookie
 	FlashSeperator         string // used to seperate flash key:value
+	EnableLogFuncCallDepth bool   // enable the funcCallDeppth
 )
 
 func init() {
@@ -133,6 +134,10 @@ func init() {
 	// init BeeLogger
 	BeeLogger = logs.NewLogger(10000)
 	BeeLogger.SetLogger("console", "")
+	if EnableLogFuncCallDepth {
+		BeeLogger.EnableFuncCallDepth(true)
+		BeeLogger.SetLogFuncCallDepth(3)
+	}
 
 	err := ParseConfig()
 	if err != nil && !os.IsNotExist(err) {

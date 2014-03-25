@@ -2,6 +2,8 @@ package logs
 
 import (
 	"fmt"
+	"path"
+	"runtime"
 	"sync"
 )
 
@@ -43,10 +45,12 @@ func Register(name string, log loggerType) {
 // BeeLogger is default logger in beego application.
 // it can contain several providers and log message into all providers.
 type BeeLogger struct {
-	lock    sync.Mutex
-	level   int
-	msg     chan *logMsg
-	outputs map[string]LoggerInterface
+	lock                sync.Mutex
+	level               int
+	enableFuncCallDepth bool
+	loggerFuncCallDepth int
+	msg                 chan *logMsg
+	outputs             map[string]LoggerInterface
 }
 
 type logMsg struct {
@@ -59,6 +63,7 @@ type logMsg struct {
 // if the buffering chan is full, logger adapters write to file or other way.
 func NewLogger(channellen int64) *BeeLogger {
 	bl := new(BeeLogger)
+	bl.loggerFuncCallDepth = 2
 	bl.msg = make(chan *logMsg, channellen)
 	bl.outputs = make(map[string]LoggerInterface)
 	//bl.SetLogger("console", "") // default output to console
@@ -100,7 +105,17 @@ func (bl *BeeLogger) writerMsg(loglevel int, msg string) error {
 	}
 	lm := new(logMsg)
 	lm.level = loglevel
-	lm.msg = msg
+	if bl.enableFuncCallDepth {
+		_, file, line, ok := runtime.Caller(bl.loggerFuncCallDepth)
+		if ok {
+			_, filename := path.Split(file)
+			lm.msg = fmt.Sprintf("[%s:%d] %s", filename, line, msg)
+		} else {
+			lm.msg = msg
+		}
+	} else {
+		lm.msg = msg
+	}
 	bl.msg <- lm
 	return nil
 }
@@ -109,6 +124,16 @@ func (bl *BeeLogger) writerMsg(loglevel int, msg string) error {
 // if message level (such as LevelTrace) is less than logger level (such as LevelWarn), ignore message.
 func (bl *BeeLogger) SetLevel(l int) {
 	bl.level = l
+}
+
+// set log funcCallDepth
+func (bl *BeeLogger) SetLogFuncCallDepth(d int) {
+	bl.loggerFuncCallDepth = d
+}
+
+// enable log funcCallDepth
+func (bl *BeeLogger) EnableFuncCallDepth(b bool) {
+	bl.enableFuncCallDepth = b
 }
 
 // start logger chan reading.
