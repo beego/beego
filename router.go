@@ -626,7 +626,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		context.Input.Body()
 	}
 
-	if context.Input.RunController != nil && context.Input.RunMethod {
+	if context.Input.RunController != nil && context.Input.RunMethod != "" {
 		findrouter = true
 		runMethod = context.Input.RunMethod
 		runrouter = context.Input.RunController
