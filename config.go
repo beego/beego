@@ -11,12 +11,14 @@ import (
 	"github.com/astaxie/beego/config"
 	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/session"
+	"github.com/astaxie/beego/utils"
 )
 
 var (
 	BeeApp                 *App // beego application
 	AppName                string
 	AppPath                string
+	workPath               string
 	AppConfigPath          string
 	StaticDir              map[string]string
 	TemplateCache          map[string]*template.Template // template caching map
@@ -66,9 +68,20 @@ func init() {
 	// create beego application
 	BeeApp = NewApp()
 
+	workPath, _ = os.Getwd()
+	workPath, _ = filepath.Abs(workPath)
 	// initialize default configurations
 	AppPath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
-	os.Chdir(AppPath)
+
+	AppConfigPath = filepath.Join(AppPath, "conf", "app.conf")
+
+	if workPath != AppPath {
+		if utils.FileExists(AppConfigPath) {
+			os.Chdir(AppPath)
+		} else {
+			AppConfigPath = filepath.Join(workPath, "conf", "app.conf")
+		}
+	}
 
 	StaticDir = make(map[string]string)
 	StaticDir["/static"] = "static"
@@ -106,8 +119,6 @@ func init() {
 	MaxMemory = 1 << 26 //64MB
 
 	EnableGzip = false
-
-	AppConfigPath = filepath.Join(AppPath, "conf", "app.conf")
 
 	HttpServerTimeOut = 0
 
