@@ -97,12 +97,12 @@ func (w *FileLogWriter) Init(jsonconfig string) error {
 	if len(w.Filename) == 0 {
 		return errors.New("jsonconfig must have filename")
 	}
-	err = w.StartLogger()
+	err = w.startLogger()
 	return err
 }
 
 // start file logger. create log file and set to locker-inside file writer.
-func (w *FileLogWriter) StartLogger() error {
+func (w *FileLogWriter) startLogger() error {
 	fd, err := w.createLogFile()
 	if err != nil {
 		return err
@@ -199,7 +199,7 @@ func (w *FileLogWriter) DoRotate() error {
 		}
 
 		// re-start logger
-		err = w.StartLogger()
+		err = w.startLogger()
 		if err != nil {
 			return fmt.Errorf("Rotate StartLogger: %s\n", err)
 		}
