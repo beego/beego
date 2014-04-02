@@ -62,7 +62,7 @@ func NewLogger(channellen int64) *BeeLogger {
 	bl.msg = make(chan *logMsg, channellen)
 	bl.outputs = make(map[string]LoggerInterface)
 	//bl.SetLogger("console", "") // default output to console
-	go bl.StartLogger()
+	go bl.startLogger()
 	return bl
 }
 
@@ -73,7 +73,10 @@ func (bl *BeeLogger) SetLogger(adaptername string, config string) error {
 	defer bl.lock.Unlock()
 	if log, ok := adapters[adaptername]; ok {
 		lg := log()
-		lg.Init(config)
+		err := lg.Init(config)
+		if err != nil {
+			return err
+		}
 		bl.outputs[adaptername] = lg
 		return nil
 	} else {
@@ -113,7 +116,7 @@ func (bl *BeeLogger) SetLevel(l int) {
 
 // start logger chan reading.
 // when chan is full, write logs.
-func (bl *BeeLogger) StartLogger() {
+func (bl *BeeLogger) startLogger() {
 	for {
 		select {
 		case bm := <-bl.msg:
