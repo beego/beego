@@ -31,8 +31,12 @@ func SetLogFuncCall(b bool) {
 var BeeLogger *logs.BeeLogger
 
 // SetLogger sets a new logger.
-func SetLogger(adaptername string, config string) {
-	BeeLogger.SetLogger(adaptername, config)
+func SetLogger(adaptername string, config string) error {
+	err := BeeLogger.SetLogger(adaptername, config)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Trace logs a message at trace level.
