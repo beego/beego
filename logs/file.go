@@ -90,6 +90,9 @@ func NewFileWriter() LoggerInterface {
 //	"rotate":true
 //	}
 func (w *FileLogWriter) Init(jsonconfig string) error {
+	if len(jsonconfig) == 0 {
+		return nil
+	}
 	err := json.Unmarshal([]byte(jsonconfig), w)
 	if err != nil {
 		return err
