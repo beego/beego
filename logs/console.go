@@ -43,6 +43,9 @@ func NewConsole() LoggerInterface {
 // init console logger.
 // jsonconfig like '{"level":LevelTrace}'.
 func (c *ConsoleWriter) Init(jsonconfig string) error {
+	if len(jsonconfig) == 0 {
+		return nil
+	}
 	err := json.Unmarshal([]byte(jsonconfig), c)
 	if err != nil {
 		return err
