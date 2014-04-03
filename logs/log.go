@@ -79,14 +79,15 @@ func (bl *BeeLogger) SetLogger(adaptername string, config string) error {
 	if log, ok := adapters[adaptername]; ok {
 		lg := log()
 		err := lg.Init(config)
+		bl.outputs[adaptername] = lg
 		if err != nil {
+			fmt.Println("logs.BeeLogger.SetLogger: " + err.Error())
 			return err
 		}
-		bl.outputs[adaptername] = lg
-		return nil
 	} else {
 		return fmt.Errorf("logs: unknown adaptername %q (forgotten Register?)", adaptername)
 	}
+	return nil
 }
 
 // remove a logger adapter in BeeLogger.
