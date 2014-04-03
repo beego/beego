@@ -62,7 +62,6 @@ type ControllerInterface interface {
 
 // Init generates default values of controller operations.
 func (c *Controller) Init(ctx *context.Context, controllerName, actionName string, app interface{}) {
-	c.Data = make(map[interface{}]interface{})
 	c.Layout = ""
 	c.TplNames = ""
 	c.controllerName = controllerName

@@ -118,6 +118,7 @@ func (pder *CookieProvider) SessionInit(maxlifetime int64, config string) error 
 	if err != nil {
 		return err
 	}
+	pder.maxlifetime = maxlifetime
 	return nil
 }
 

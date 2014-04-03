@@ -80,7 +80,6 @@ func getTableUnique(val reflect.Value) [][]string {
 
 // get snaked column name
 func getColumnName(ft int, addrField reflect.Value, sf reflect.StructField, col string) string {
-	col = strings.ToLower(col)
 	column := col
 	if col == "" {
 		column = snakeString(sf.Name)
@@ -99,34 +98,41 @@ func getColumnName(ft int, addrField reflect.Value, sf reflect.StructField, col 
 // return field type as type constant from reflect.Value
 func getFieldType(val reflect.Value) (ft int, err error) {
 	elm := reflect.Indirect(val)
-	switch elm.Interface().(type) {
-	case int8:
+	switch elm.Kind() {
+	case reflect.Int8:
 		ft = TypeBitField
-	case int16:
+	case reflect.Int16:
 		ft = TypeSmallIntegerField
-	case int32, int:
+	case reflect.Int32, reflect.Int:
 		ft = TypeIntegerField
-	case int64, sql.NullInt64:
+	case reflect.Int64:
 		ft = TypeBigIntegerField
-	case uint8:
+	case reflect.Uint8:
 		ft = TypePositiveBitField
-	case uint16:
+	case reflect.Uint16:
 		ft = TypePositiveSmallIntegerField
-	case uint32, uint:
+	case reflect.Uint32, reflect.Uint:
 		ft = TypePositiveIntegerField
-	case uint64:
+	case reflect.Uint64:
 		ft = TypePositiveBigIntegerField
-	case float32, float64, sql.NullFloat64:
+	case reflect.Float32, reflect.Float64:
 		ft = TypeFloatField
-	case bool, sql.NullBool:
+	case reflect.Bool:
 		ft = TypeBooleanField
-	case string, sql.NullString:
+	case reflect.String:
 		ft = TypeCharField
 	default:
-		if elm.CanInterface() {
-			if _, ok := elm.Interface().(time.Time); ok {
-				ft = TypeDateTimeField
-			}
+		switch elm.Interface().(type) {
+		case sql.NullInt64:
+			ft = TypeBigIntegerField
+		case sql.NullFloat64:
+			ft = TypeFloatField
+		case sql.NullBool:
+			ft = TypeBooleanField
+		case sql.NullString:
+			ft = TypeCharField
+		case time.Time:
+			ft = TypeDateTimeField
 		}
 	}
 	if ft&IsFieldType == 0 {

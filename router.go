@@ -44,6 +44,11 @@ var (
 		"GetControllerAndAction"}
 )
 
+// To append a slice's value into "exceptMethod", for controller's methods shouldn't reflect to AutoRouter
+func ExceptMethodAppend(action string) {
+	exceptMethod = append(exceptMethod, action)
+}
+
 type controllerInfo struct {
 	pattern        string
 	regex          *regexp.Regexp
@@ -621,29 +626,37 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		context.Input.Body()
 	}
 
+	if context.Input.RunController != nil && context.Input.RunMethod != "" {
+		findrouter = true
+		runMethod = context.Input.RunMethod
+		runrouter = context.Input.RunController
+	}
+
 	//first find path from the fixrouters to Improve Performance
-	for _, route := range p.fixrouters {
-		n := len(requestPath)
-		if requestPath == route.pattern {
-			runMethod = p.getRunMethod(r.Method, context, route)
-			if runMethod != "" {
-				runrouter = route.controllerType
-				findrouter = true
-				break
+	if !findrouter {
+		for _, route := range p.fixrouters {
+			n := len(requestPath)
+			if requestPath == route.pattern {
+				runMethod = p.getRunMethod(r.Method, context, route)
+				if runMethod != "" {
+					runrouter = route.controllerType
+					findrouter = true
+					break
+				}
 			}
-		}
-		// pattern /admin   url /admin 200  /admin/ 200
-		// pattern /admin/  url /admin 301  /admin/ 200
-		if requestPath[n-1] != '/' && requestPath+"/" == route.pattern {
-			http.Redirect(w, r, requestPath+"/", 301)
-			goto Admin
-		}
-		if requestPath[n-1] == '/' && route.pattern+"/" == requestPath {
-			runMethod = p.getRunMethod(r.Method, context, route)
-			if runMethod != "" {
-				runrouter = route.controllerType
-				findrouter = true
-				break
+			// pattern /admin   url /admin 200  /admin/ 200
+			// pattern /admin/  url /admin 301  /admin/ 200
+			if requestPath[n-1] != '/' && requestPath+"/" == route.pattern {
+				http.Redirect(w, r, requestPath+"/", 301)
+				goto Admin
+			}
+			if requestPath[n-1] == '/' && route.pattern+"/" == requestPath {
+				runMethod = p.getRunMethod(r.Method, context, route)
+				if runMethod != "" {
+					runrouter = route.controllerType
+					findrouter = true
+					break
+				}
 			}
 		}
 	}
