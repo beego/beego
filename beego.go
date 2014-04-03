@@ -2,6 +2,7 @@ package beego
 
 import (
 	"net/http"
+	"os"
 	"path"
 	"path/filepath"
 	"strconv"
@@ -174,6 +175,16 @@ func AddAPPStartHook(hf hookfunc) {
 // Run beego application.
 // it's alias of App.Run.
 func Run() {
+	initBeforeHttpRun()
+
+	if EnableAdmin {
+		go BeeAdminApp.Run()
+	}
+
+	BeeApp.Run()
+}
+
+func initBeforeHttpRun() {
 	// if AppConfigPath not In the conf/app.conf reParse config
 	if AppConfigPath != filepath.Join(AppPath, "conf", "app.conf") {
 		err := ParseConfig()
@@ -222,12 +233,13 @@ func Run() {
 	middleware.VERSION = VERSION
 	middleware.AppName = AppName
 	middleware.RegisterErrorHandler()
+}
 
-	if EnableAdmin {
-		go BeeAdminApp.Run()
-	}
-
-	BeeApp.Run()
+func TestBeegoInit(apppath string) {
+	AppPath = apppath
+	AppConfigPath = filepath.Join(AppPath, "conf", "app.conf")
+	os.Chdir(AppPath)
+	initBeforeHttpRun()
 }
 
 func init() {
