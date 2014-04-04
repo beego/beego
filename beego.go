@@ -13,7 +13,7 @@ import (
 )
 
 // beego web framework version.
-const VERSION = "1.1.2"
+const VERSION = "1.1.3"
 
 type hookfunc func() error //hook function to run
 var hooks []hookfunc       //hook function slice to store the hookfunc
