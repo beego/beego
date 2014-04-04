@@ -14,6 +14,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/astaxie/beego/session"
+
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -73,7 +75,7 @@ func (st *MysqlSessionStore) SessionID() string {
 // must call this method to save values to database.
 func (st *MysqlSessionStore) SessionRelease(w http.ResponseWriter) {
 	defer st.c.Close()
-	b, err := encodeGob(st.values)
+	b, err := session.EncodeGob(st.values)
 	if err != nil {
 		return
 	}
@@ -106,7 +108,7 @@ func (mp *MysqlProvider) SessionInit(maxlifetime int64, savePath string) error {
 }
 
 // get mysql session by sid
-func (mp *MysqlProvider) SessionRead(sid string) (SessionStore, error) {
+func (mp *MysqlProvider) SessionRead(sid string) (session.SessionStore, error) {
 	c := mp.connectInit()
 	row := c.QueryRow("select session_data from session where session_key=?", sid)
 	var sessiondata []byte
@@ -119,7 +121,7 @@ func (mp *MysqlProvider) SessionRead(sid string) (SessionStore, error) {
 	if len(sessiondata) == 0 {
 		kv = make(map[interface{}]interface{})
 	} else {
-		kv, err = decodeGob(sessiondata)
+		kv, err = session.DecodeGob(sessiondata)
 		if err != nil {
 			return nil, err
 		}
@@ -143,7 +145,7 @@ func (mp *MysqlProvider) SessionExist(sid string) bool {
 }
 
 // generate new sid for mysql session
-func (mp *MysqlProvider) SessionRegenerate(oldsid, sid string) (SessionStore, error) {
+func (mp *MysqlProvider) SessionRegenerate(oldsid, sid string) (session.SessionStore, error) {
 	c := mp.connectInit()
 	row := c.QueryRow("select session_data from session where session_key=?", oldsid)
 	var sessiondata []byte
@@ -156,7 +158,7 @@ func (mp *MysqlProvider) SessionRegenerate(oldsid, sid string) (SessionStore, er
 	if len(sessiondata) == 0 {
 		kv = make(map[interface{}]interface{})
 	} else {
-		kv, err = decodeGob(sessiondata)
+		kv, err = session.DecodeGob(sessiondata)
 		if err != nil {
 			return nil, err
 		}
@@ -194,5 +196,5 @@ func (mp *MysqlProvider) SessionAll() int {
 }
 
 func init() {
-	Register("mysql", mysqlpder)
+	session.Register("mysql", mysqlpder)
 }

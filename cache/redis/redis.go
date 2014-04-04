@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/beego/redigo/redis"
+
+	"github.com/astaxie/beego/cache"
 )
 
 var (
@@ -130,5 +132,5 @@ func (rc *RedisCache) connectInit() {
 }
 
 func init() {
-	Register("redis", NewRedisCache())
+	cache.Register("redis", NewRedisCache())
 }

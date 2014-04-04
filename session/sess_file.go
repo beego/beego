@@ -70,7 +70,7 @@ func (fs *FileSessionStore) SessionID() string {
 // Write file session to local file with Gob string
 func (fs *FileSessionStore) SessionRelease(w http.ResponseWriter) {
 	defer fs.f.Close()
-	b, err := encodeGob(fs.values)
+	b, err := EncodeGob(fs.values)
 	if err != nil {
 		return
 	}
@@ -123,7 +123,7 @@ func (fp *FileProvider) SessionRead(sid string) (SessionStore, error) {
 	if len(b) == 0 {
 		kv = make(map[interface{}]interface{})
 	} else {
-		kv, err = decodeGob(b)
+		kv, err = DecodeGob(b)
 		if err != nil {
 			return nil, err
 		}
@@ -222,7 +222,7 @@ func (fp *FileProvider) SessionRegenerate(oldsid, sid string) (SessionStore, err
 	if len(b) == 0 {
 		kv = make(map[interface{}]interface{})
 	} else {
-		kv, err = decodeGob(b)
+		kv, err = DecodeGob(b)
 		if err != nil {
 			return nil, err
 		}

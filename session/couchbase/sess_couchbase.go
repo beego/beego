@@ -1,10 +1,13 @@
 package session
 
 import (
-	"github.com/couchbaselabs/go-couchbase"
 	"net/http"
 	"strings"
 	"sync"
+
+	"github.com/couchbaselabs/go-couchbase"
+
+	"github.com/astaxie/beego/session"
 )
 
 var couchbpder = &CouchbaseProvider{}
@@ -70,7 +73,7 @@ func (cs *CouchbaseSessionStore) SessionRelease(w http.ResponseWriter) {
 		return
 	}
 
-	bo, err := encodeGob(cs.values)
+	bo, err := session.EncodeGob(cs.values)
 	if err != nil {
 		return
 	}
@@ -117,7 +120,7 @@ func (cp *CouchbaseProvider) SessionInit(maxlifetime int64, savePath string) err
 }
 
 // read couchbase session by sid
-func (cp *CouchbaseProvider) SessionRead(sid string) (SessionStore, error) {
+func (cp *CouchbaseProvider) SessionRead(sid string) (session.SessionStore, error) {
 	cp.b = cp.getBucket()
 
 	var doc []byte
@@ -127,7 +130,7 @@ func (cp *CouchbaseProvider) SessionRead(sid string) (SessionStore, error) {
 	if doc == nil {
 		kv = make(map[interface{}]interface{})
 	} else {
-		kv, err = decodeGob(doc)
+		kv, err = session.DecodeGob(doc)
 		if err != nil {
 			return nil, err
 		}
@@ -150,7 +153,7 @@ func (cp *CouchbaseProvider) SessionExist(sid string) bool {
 	}
 }
 
-func (cp *CouchbaseProvider) SessionRegenerate(oldsid, sid string) (SessionStore, error) {
+func (cp *CouchbaseProvider) SessionRegenerate(oldsid, sid string) (session.SessionStore, error) {
 	cp.b = cp.getBucket()
 
 	var doc []byte
@@ -172,7 +175,7 @@ func (cp *CouchbaseProvider) SessionRegenerate(oldsid, sid string) (SessionStore
 	if doc == nil {
 		kv = make(map[interface{}]interface{})
 	} else {
-		kv, err = decodeGob(doc)
+		kv, err = session.DecodeGob(doc)
 		if err != nil {
 			return nil, err
 		}
@@ -199,5 +202,5 @@ func (cp *CouchbaseProvider) SessionAll() int {
 }
 
 func init() {
-	Register("couchbase", couchbpder)
+	session.Register("couchbase", couchbpder)
 }

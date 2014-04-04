@@ -34,6 +34,9 @@ import (
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/astaxie/beego/session"
+
 	_ "github.com/lib/pq"
 )
 
@@ -93,7 +96,7 @@ func (st *PostgresqlSessionStore) SessionID() string {
 // must call this method to save values to database.
 func (st *PostgresqlSessionStore) SessionRelease(w http.ResponseWriter) {
 	defer st.c.Close()
-	b, err := encodeGob(st.values)
+	b, err := session.EncodeGob(st.values)
 	if err != nil {
 		return
 	}
@@ -126,7 +129,7 @@ func (mp *PostgresqlProvider) SessionInit(maxlifetime int64, savePath string) er
 }
 
 // get postgresql session by sid
-func (mp *PostgresqlProvider) SessionRead(sid string) (SessionStore, error) {
+func (mp *PostgresqlProvider) SessionRead(sid string) (session.SessionStore, error) {
 	c := mp.connectInit()
 	row := c.QueryRow("select session_data from session where session_key=$1", sid)
 	var sessiondata []byte
@@ -138,7 +141,7 @@ func (mp *PostgresqlProvider) SessionRead(sid string) (SessionStore, error) {
 		if err != nil {
 			return nil, err
 		}
-	} else  if err != nil {
+	} else if err != nil {
 		return nil, err
 	}
 
@@ -146,7 +149,7 @@ func (mp *PostgresqlProvider) SessionRead(sid string) (SessionStore, error) {
 	if len(sessiondata) == 0 {
 		kv = make(map[interface{}]interface{})
 	} else {
-		kv, err = decodeGob(sessiondata)
+		kv, err = session.DecodeGob(sessiondata)
 		if err != nil {
 			return nil, err
 		}
@@ -162,7 +165,7 @@ func (mp *PostgresqlProvider) SessionExist(sid string) bool {
 	row := c.QueryRow("select session_data from session where session_key=$1", sid)
 	var sessiondata []byte
 	err := row.Scan(&sessiondata)
-		
+
 	if err == sql.ErrNoRows {
 		return false
 	} else {
@@ -171,21 +174,21 @@ func (mp *PostgresqlProvider) SessionExist(sid string) bool {
 }
 
 // generate new sid for postgresql session
-func (mp *PostgresqlProvider) SessionRegenerate(oldsid, sid string) (SessionStore, error) {
+func (mp *PostgresqlProvider) SessionRegenerate(oldsid, sid string) (session.SessionStore, error) {
 	c := mp.connectInit()
 	row := c.QueryRow("select session_data from session where session_key=$1", oldsid)
 	var sessiondata []byte
 	err := row.Scan(&sessiondata)
 	if err == sql.ErrNoRows {
 		c.Exec("insert into session(session_key,session_data,session_expiry) values($1,$2,$3)",
-		oldsid, "", time.Now().Format(time.RFC3339))
+			oldsid, "", time.Now().Format(time.RFC3339))
 	}
 	c.Exec("update session set session_key=$1 where session_key=$2", sid, oldsid)
 	var kv map[interface{}]interface{}
 	if len(sessiondata) == 0 {
 		kv = make(map[interface{}]interface{})
 	} else {
-		kv, err = decodeGob(sessiondata)
+		kv, err = session.DecodeGob(sessiondata)
 		if err != nil {
 			return nil, err
 		}
@@ -223,5 +226,5 @@ func (mp *PostgresqlProvider) SessionAll() int {
 }
 
 func init() {
-	Register("postgresql", postgresqlpder)
+	session.Register("postgresql", postgresqlpder)
 }
