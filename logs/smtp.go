@@ -38,9 +38,6 @@ func NewSmtpWriter() LoggerInterface {
 //		"level":LevelError
 //	}
 func (s *SmtpWriter) Init(jsonconfig string) error {
-	if len(jsonconfig) == 0 {
-		return nil
-	}
 	err := json.Unmarshal([]byte(jsonconfig), s)
 	if err != nil {
 		return err
