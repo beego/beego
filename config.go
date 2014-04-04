@@ -1,6 +1,7 @@
 package beego
 
 import (
+	"fmt"
 	"html/template"
 	"os"
 	"path/filepath"
@@ -143,9 +144,12 @@ func init() {
 
 	// init BeeLogger
 	BeeLogger = logs.NewLogger(10000)
-	BeeLogger.SetLogger("console", "")
+	err := BeeLogger.SetLogger("console", "")
+	if err != nil {
+		fmt.Println("init console log error:", err)
+	}
 
-	err := ParseConfig()
+	err = ParseConfig()
 	if err != nil && !os.IsNotExist(err) {
 		// for init if doesn't have app.conf will not panic
 		Info(err)

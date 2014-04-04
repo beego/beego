@@ -188,7 +188,7 @@ func initBeforeHttpRun() {
 	// if AppConfigPath not In the conf/app.conf reParse config
 	if AppConfigPath != filepath.Join(AppPath, "conf", "app.conf") {
 		err := ParseConfig()
-		if err != nil {
+		if err != nil && AppConfigPath != filepath.Join(workPath, "conf", "app.conf") {
 			// configuration is critical to app, panic here if parse failed
 			panic(err)
 		}

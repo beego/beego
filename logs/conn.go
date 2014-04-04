@@ -29,9 +29,6 @@ func NewConn() LoggerInterface {
 // init connection writer with json config.
 // json config only need key "level".
 func (c *ConnWriter) Init(jsonconfig string) error {
-	if len(jsonconfig) == 0 {
-		return nil
-	}
 	err := json.Unmarshal([]byte(jsonconfig), c)
 	if err != nil {
 		return err
