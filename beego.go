@@ -179,7 +179,7 @@ func Run() {
 	initBeforeHttpRun()
 
 	if EnableAdmin {
-		go BeeAdminApp.Run()
+		go beeAdminApp.Run()
 	}
 
 	BeeApp.Run()
