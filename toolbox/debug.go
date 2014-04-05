@@ -1,4 +1,4 @@
-// most reference from github.com/realint/dbgutil
+// Here are the features: healthcheck, profile, statistics and task.
 package toolbox
 
 import (
@@ -33,7 +33,6 @@ type pointerInfo struct {
 func Display(data ...interface{}) {
 	display(true, data...)
 }
-
 
 // return data print string
 func GetDisplayString(data ...interface{}) string {
