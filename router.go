@@ -7,8 +7,6 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"os"
-	"path"
 	"reflect"
 	"regexp"
 	"runtime"
@@ -33,7 +31,7 @@ const (
 
 var (
 	// supported http methods.
-	HTTPMETHOD = []string{"get", "post", "put", "delete", "patch", "options", "head"}
+	HTTPMETHOD = []string{"get", "post", "put", "delete", "patch", "options", "head", "trace", "connect"}
 	// these beego.Controller's methods shouldn't reflect to AutoRouter
 	exceptMethod = []string{"Init", "Prepare", "Finish", "Render", "RenderString",
 		"RenderBytes", "Redirect", "Abort", "StopRun", "UrlFor", "ServeJson", "ServeJsonp",
@@ -544,86 +542,24 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		http.Error(w, "Method Not Allowed", 405)
 		goto Admin
 	}
+	//static file server
+	if serverStaticRouter(context) {
+		goto Admin
+	}
+
+	if context.Input.IsPost() {
+		if CopyRequestBody && !context.Input.IsUpload() {
+			context.Input.CopyBody()
+		}
+		context.Input.ParseFormOrMulitForm(MaxMemory)
+	}
 
 	if do_filter(BeforeRouter) {
 		goto Admin
 	}
 
-	//static file server
-	for prefix, staticDir := range StaticDir {
-		if len(prefix) == 0 {
-			continue
-		}
-		if r.URL.Path == "/favicon.ico" {
-			file := path.Join(staticDir, r.URL.Path)
-			if utils.FileExists(file) {
-				http.ServeFile(w, r, file)
-				w.started = true
-				goto Admin
-			}
-		}
-		if strings.HasPrefix(r.URL.Path, prefix) {
-			if len(r.URL.Path) > len(prefix) && r.URL.Path[len(prefix)] != '/' {
-				continue
-			}
-			if r.URL.Path == prefix && prefix[len(prefix)-1] != '/' {
-				http.Redirect(rw, r, r.URL.Path+"/", 302)
-				goto Admin
-			}
-			file := path.Join(staticDir, r.URL.Path[len(prefix):])
-			finfo, err := os.Stat(file)
-			if err != nil {
-				if RunMode == "dev" {
-					Warn(err)
-				}
-				http.NotFound(w, r)
-				goto Admin
-			}
-			//if the request is dir and DirectoryIndex is false then
-			if finfo.IsDir() && !DirectoryIndex {
-				middleware.Exception("403", rw, r, "403 Forbidden")
-				goto Admin
-			}
-
-			//This block obtained from (https://github.com/smithfox/beego) - it should probably get merged into astaxie/beego after a pull request
-			isStaticFileToCompress := false
-			if StaticExtensionsToGzip != nil && len(StaticExtensionsToGzip) > 0 {
-				for _, statExtension := range StaticExtensionsToGzip {
-					if strings.HasSuffix(strings.ToLower(file), strings.ToLower(statExtension)) {
-						isStaticFileToCompress = true
-						break
-					}
-				}
-			}
-
-			if isStaticFileToCompress {
-				if EnableGzip {
-					w.contentEncoding = GetAcceptEncodingZip(r)
-				}
-
-				memzipfile, err := OpenMemZipFile(file, w.contentEncoding)
-				if err != nil {
-					return
-				}
-
-				w.InitHeadContent(finfo.Size())
-
-				http.ServeContent(w, r, file, finfo.ModTime(), memzipfile)
-			} else {
-				http.ServeFile(w, r, file)
-			}
-
-			w.started = true
-			goto Admin
-		}
-	}
-
 	if do_filter(AfterStatic) {
 		goto Admin
-	}
-
-	if CopyRequestBody {
-		context.Input.Body()
 	}
 
 	if context.Input.RunController != nil && context.Input.RunMethod != "" {
@@ -757,9 +693,6 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	if findrouter {
-		if r.Method == "POST" {
-			r.ParseMultipartForm(MaxMemory)
-		}
 		//execute middleware filters
 		if do_filter(BeforeExec) {
 			goto Admin
@@ -830,9 +763,8 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-Admin:
 	do_filter(FinishRouter)
-
+Admin:
 	//admin module record QPS
 	if EnableAdmin {
 		timeend := time.Since(starttime)
@@ -891,26 +823,14 @@ func (p *ControllerRegistor) getRunMethod(method string, context *beecontext.Con
 //responseWriter is a wrapper for the http.ResponseWriter
 //started set to true if response was written to then don't execute other handler
 type responseWriter struct {
-	writer          http.ResponseWriter
-	started         bool
-	status          int
-	contentEncoding string
+	writer  http.ResponseWriter
+	started bool
+	status  int
 }
 
 // Header returns the header map that will be sent by WriteHeader.
 func (w *responseWriter) Header() http.Header {
 	return w.writer.Header()
-}
-
-// Init content-length header.
-func (w *responseWriter) InitHeadContent(contentlength int64) {
-	if w.contentEncoding == "gzip" {
-		w.Header().Set("Content-Encoding", "gzip")
-	} else if w.contentEncoding == "deflate" {
-		w.Header().Set("Content-Encoding", "deflate")
-	} else {
-		w.Header().Set("Content-Length", strconv.FormatInt(contentlength, 10))
-	}
 }
 
 // Write writes the data to the connection as part of an HTTP reply,
