@@ -1,3 +1,4 @@
+// beego is an open-source, high-performance web framework for the Go programming language
 package beego
 
 import (
