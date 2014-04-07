@@ -306,9 +306,9 @@ func ParseConfig() (err error) {
 			sds := strings.Fields(sd)
 			for _, v := range sds {
 				if url2fsmap := strings.SplitN(v, ":", 2); len(url2fsmap) == 2 {
-					StaticDir["/"+url2fsmap[0]] = url2fsmap[1]
+					StaticDir["/"+strings.TrimRight(url2fsmap[0], "/")] = url2fsmap[1]
 				} else {
-					StaticDir["/"+url2fsmap[0]] = url2fsmap[0]
+					StaticDir["/"+strings.TrimRight(url2fsmap[0], "/")] = url2fsmap[0]
 				}
 			}
 		}

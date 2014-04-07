@@ -138,6 +138,7 @@ func SetStaticPath(url string, path string) *App {
 	if !strings.HasPrefix(url, "/") {
 		url = "/" + url
 	}
+	url = strings.TrimRight(url, "/")
 	StaticDir[url] = path
 	return BeeApp
 }
