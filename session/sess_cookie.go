@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/url"
+	"strings"
 	"sync"
 )
 
@@ -62,6 +63,9 @@ func (st *CookieSessionStore) SessionID() string {
 
 // Write cookie session to http response cookie
 func (st *CookieSessionStore) SessionRelease(w http.ResponseWriter) {
+	if strings.Contains(w.Header().Get("Set-Cookie"), cookiepder.config.CookieName) {
+		return
+	}
 	str, err := encodeCookie(cookiepder.block,
 		cookiepder.config.SecurityKey,
 		cookiepder.config.SecurityName,
@@ -73,7 +77,8 @@ func (st *CookieSessionStore) SessionRelease(w http.ResponseWriter) {
 		Value:    url.QueryEscape(str),
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   cookiepder.config.Secure}
+		Secure:   cookiepder.config.Secure,
+		MaxAge:   cookiepder.config.Maxage}
 	http.SetCookie(w, cookie)
 	return
 }
