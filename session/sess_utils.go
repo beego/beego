@@ -27,7 +27,7 @@ func init() {
 	gob.Register(map[int]int64{})
 }
 
-func encodeGob(obj map[interface{}]interface{}) ([]byte, error) {
+func EncodeGob(obj map[interface{}]interface{}) ([]byte, error) {
 	buf := bytes.NewBuffer(nil)
 	enc := gob.NewEncoder(buf)
 	err := enc.Encode(obj)
@@ -37,7 +37,7 @@ func encodeGob(obj map[interface{}]interface{}) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func decodeGob(encoded []byte) (map[interface{}]interface{}, error) {
+func DecodeGob(encoded []byte) (map[interface{}]interface{}, error) {
 	buf := bytes.NewBuffer(encoded)
 	dec := gob.NewDecoder(buf)
 	var out map[interface{}]interface{}
@@ -97,8 +97,8 @@ func decrypt(block cipher.Block, value []byte) ([]byte, error) {
 func encodeCookie(block cipher.Block, hashKey, name string, value map[interface{}]interface{}) (string, error) {
 	var err error
 	var b []byte
-	// 1. encodeGob.
-	if b, err = encodeGob(value); err != nil {
+	// 1. EncodeGob.
+	if b, err = EncodeGob(value); err != nil {
 		return "", err
 	}
 	// 2. Encrypt (optional).
@@ -158,8 +158,8 @@ func decodeCookie(block cipher.Block, hashKey, name, value string, gcmaxlifetime
 	if b, err = decrypt(block, b); err != nil {
 		return nil, err
 	}
-	// 5. decodeGob.
-	if dst, err := decodeGob(b); err != nil {
+	// 5. DecodeGob.
+	if dst, err := DecodeGob(b); err != nil {
 		return nil, err
 	} else {
 		return dst, nil

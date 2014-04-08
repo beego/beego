@@ -10,11 +10,11 @@ func Test_gob(t *testing.T) {
 	a := make(map[interface{}]interface{})
 	a["username"] = "astaxie"
 	a[12] = 234
-	b, err := encodeGob(a)
+	b, err := EncodeGob(a)
 	if err != nil {
 		t.Error(err)
 	}
-	c, err := decodeGob(b)
+	c, err := DecodeGob(b)
 	if err != nil {
 		t.Error(err)
 	}

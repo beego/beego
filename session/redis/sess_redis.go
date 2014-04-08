@@ -6,6 +6,8 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/astaxie/beego/session"
+
 	"github.com/beego/redigo/redis"
 )
 
@@ -77,7 +79,7 @@ func (rs *RedisSessionStore) SessionRelease(w http.ResponseWriter) {
 		return
 	}
 
-	b, err := encodeGob(rs.values)
+	b, err := session.EncodeGob(rs.values)
 	if err != nil {
 		return
 	}
@@ -134,7 +136,7 @@ func (rp *RedisProvider) SessionInit(maxlifetime int64, savePath string) error {
 }
 
 // read redis session by sid
-func (rp *RedisProvider) SessionRead(sid string) (SessionStore, error) {
+func (rp *RedisProvider) SessionRead(sid string) (session.SessionStore, error) {
 	c := rp.poollist.Get()
 	defer c.Close()
 
@@ -143,7 +145,7 @@ func (rp *RedisProvider) SessionRead(sid string) (SessionStore, error) {
 	if len(kvs) == 0 {
 		kv = make(map[interface{}]interface{})
 	} else {
-		kv, err = decodeGob([]byte(kvs))
+		kv, err = session.DecodeGob([]byte(kvs))
 		if err != nil {
 			return nil, err
 		}
@@ -166,7 +168,7 @@ func (rp *RedisProvider) SessionExist(sid string) bool {
 }
 
 // generate new sid for redis session
-func (rp *RedisProvider) SessionRegenerate(oldsid, sid string) (SessionStore, error) {
+func (rp *RedisProvider) SessionRegenerate(oldsid, sid string) (session.SessionStore, error) {
 	c := rp.poollist.Get()
 	defer c.Close()
 
@@ -185,7 +187,7 @@ func (rp *RedisProvider) SessionRegenerate(oldsid, sid string) (SessionStore, er
 	if len(kvs) == 0 {
 		kv = make(map[interface{}]interface{})
 	} else {
-		kv, err = decodeGob([]byte(kvs))
+		kv, err = session.DecodeGob([]byte(kvs))
 		if err != nil {
 			return nil, err
 		}
@@ -215,5 +217,5 @@ func (rp *RedisProvider) SessionAll() int {
 }
 
 func init() {
-	Register("redis", redispder)
+	session.Register("redis", redispder)
 }

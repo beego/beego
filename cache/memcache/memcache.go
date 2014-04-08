@@ -5,6 +5,8 @@ import (
 	"errors"
 
 	"github.com/beego/memcache"
+
+	"github.com/astaxie/beego/cache"
 )
 
 // Memcache adapter.
@@ -147,5 +149,5 @@ func (rc *MemcacheCache) connectInit() (*memcache.Connection, error) {
 }
 
 func init() {
-	Register("memcache", NewMemCache())
+	cache.Register("memcache", NewMemCache())
 }

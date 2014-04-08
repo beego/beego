@@ -9,8 +9,8 @@ import (
 	"github.com/astaxie/beego/utils"
 )
 
-// BeeAdminApp is the default AdminApp used by admin module.
-var BeeAdminApp *AdminApp
+// BeeAdminApp is the default adminApp used by admin module.
+var beeAdminApp *adminApp
 
 // FilterMonitorFunc is default monitor filter when admin module is enable.
 // if this func returns, admin module records qbs for this request by condition of this function logic.
@@ -31,22 +31,22 @@ var BeeAdminApp *AdminApp
 var FilterMonitorFunc func(string, string, time.Duration) bool
 
 func init() {
-	BeeAdminApp = &AdminApp{
+	beeAdminApp = &adminApp{
 		routers: make(map[string]http.HandlerFunc),
 	}
-	BeeAdminApp.Route("/", AdminIndex)
-	BeeAdminApp.Route("/qps", QpsIndex)
-	BeeAdminApp.Route("/prof", ProfIndex)
-	BeeAdminApp.Route("/healthcheck", Healthcheck)
-	BeeAdminApp.Route("/task", TaskStatus)
-	BeeAdminApp.Route("/runtask", RunTask)
-	BeeAdminApp.Route("/listconf", ListConf)
+	beeAdminApp.Route("/", adminIndex)
+	beeAdminApp.Route("/qps", qpsIndex)
+	beeAdminApp.Route("/prof", profIndex)
+	beeAdminApp.Route("/healthcheck", healthcheck)
+	beeAdminApp.Route("/task", taskStatus)
+	beeAdminApp.Route("/runtask", runTask)
+	beeAdminApp.Route("/listconf", listConf)
 	FilterMonitorFunc = func(string, string, time.Duration) bool { return true }
 }
 
 // AdminIndex is the default http.Handler for admin module.
 // it matches url pattern "/".
-func AdminIndex(rw http.ResponseWriter, r *http.Request) {
+func adminIndex(rw http.ResponseWriter, r *http.Request) {
 	rw.Write([]byte("Welcome to Admin Dashboard\n"))
 	rw.Write([]byte("There are servral functions:\n"))
 	rw.Write([]byte("1. Record all request and request time, http://localhost:8088/qps\n"))
@@ -60,13 +60,13 @@ func AdminIndex(rw http.ResponseWriter, r *http.Request) {
 
 // QpsIndex is the http.Handler for writing qbs statistics map result info in http.ResponseWriter.
 // it's registered with url pattern "/qbs" in admin module.
-func QpsIndex(rw http.ResponseWriter, r *http.Request) {
+func qpsIndex(rw http.ResponseWriter, r *http.Request) {
 	toolbox.StatisticsMap.GetMap(rw)
 }
 
 // ListConf is the http.Handler of displaying all beego configuration values as key/value pair.
 // it's registered with url pattern "/listconf" in admin module.
-func ListConf(rw http.ResponseWriter, r *http.Request) {
+func listConf(rw http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	command := r.Form.Get("command")
 	if command != "" {
@@ -183,7 +183,7 @@ func ListConf(rw http.ResponseWriter, r *http.Request) {
 
 // ProfIndex is a http.Handler for showing profile command.
 // it's in url pattern "/prof" in admin module.
-func ProfIndex(rw http.ResponseWriter, r *http.Request) {
+func profIndex(rw http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	command := r.Form.Get("command")
 	if command != "" {
@@ -204,7 +204,7 @@ func ProfIndex(rw http.ResponseWriter, r *http.Request) {
 
 // Healthcheck is a http.Handler calling health checking and showing the result.
 // it's in "/healthcheck" pattern in admin module.
-func Healthcheck(rw http.ResponseWriter, req *http.Request) {
+func healthcheck(rw http.ResponseWriter, req *http.Request) {
 	for name, h := range toolbox.AdminCheckList {
 		if err := h.Check(); err != nil {
 			fmt.Fprintf(rw, "%s : ok\n", name)
@@ -216,7 +216,7 @@ func Healthcheck(rw http.ResponseWriter, req *http.Request) {
 
 // TaskStatus is a http.Handler with running task status (task name, status and the last execution).
 // it's in "/task" pattern in admin module.
-func TaskStatus(rw http.ResponseWriter, req *http.Request) {
+func taskStatus(rw http.ResponseWriter, req *http.Request) {
 	for tname, tk := range toolbox.AdminTaskList {
 		fmt.Fprintf(rw, "%s:%s:%s", tname, tk.GetStatus(), tk.GetPrev().String())
 	}
@@ -224,7 +224,7 @@ func TaskStatus(rw http.ResponseWriter, req *http.Request) {
 
 // RunTask is a http.Handler to run a Task from the "query string.
 // the request url likes /runtask?taskname=sendmail.
-func RunTask(rw http.ResponseWriter, req *http.Request) {
+func runTask(rw http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 	taskname := req.Form.Get("taskname")
 	if t, ok := toolbox.AdminTaskList[taskname]; ok {
@@ -238,19 +238,19 @@ func RunTask(rw http.ResponseWriter, req *http.Request) {
 	}
 }
 
-// AdminApp is an http.HandlerFunc map used as BeeAdminApp.
-type AdminApp struct {
+// adminApp is an http.HandlerFunc map used as beeAdminApp.
+type adminApp struct {
 	routers map[string]http.HandlerFunc
 }
 
-// Route adds http.HandlerFunc to AdminApp with url pattern.
-func (admin *AdminApp) Route(pattern string, f http.HandlerFunc) {
+// Route adds http.HandlerFunc to adminApp with url pattern.
+func (admin *adminApp) Route(pattern string, f http.HandlerFunc) {
 	admin.routers[pattern] = f
 }
 
-// Run AdminApp http server.
+// Run adminApp http server.
 // Its addr is defined in configuration file as adminhttpaddr and adminhttpport.
-func (admin *AdminApp) Run() {
+func (admin *adminApp) Run() {
 	if len(toolbox.AdminTaskList) > 0 {
 		toolbox.StartTask()
 	}

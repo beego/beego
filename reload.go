@@ -1,4 +1,3 @@
-// Zero-downtime restarts in Go.
 package beego
 
 import (

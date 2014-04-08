@@ -1,3 +1,4 @@
+// beego is an open-source, high-performance web framework for the Go programming language
 package beego
 
 import (
@@ -13,7 +14,7 @@ import (
 )
 
 // beego web framework version.
-const VERSION = "1.1.3"
+const VERSION = "1.1.4"
 
 type hookfunc func() error //hook function to run
 var hooks []hookfunc       //hook function slice to store the hookfunc
@@ -137,6 +138,7 @@ func SetStaticPath(url string, path string) *App {
 	if !strings.HasPrefix(url, "/") {
 		url = "/" + url
 	}
+	url = strings.TrimRight(url, "/")
 	StaticDir[url] = path
 	return BeeApp
 }
@@ -178,7 +180,7 @@ func Run() {
 	initBeforeHttpRun()
 
 	if EnableAdmin {
-		go BeeAdminApp.Run()
+		go beeAdminApp.Run()
 	}
 
 	BeeApp.Run()
