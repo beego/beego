@@ -13,7 +13,7 @@ import (
 )
 
 func serverStaticRouter(ctx *context.Context) bool {
-	requestPath := ctx.Input.Request.URL.Path
+	requestPath := path.Clean(ctx.Input.Request.URL.Path)
 	for prefix, staticDir := range StaticDir {
 		if len(prefix) == 0 {
 			continue
