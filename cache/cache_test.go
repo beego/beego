@@ -40,7 +40,7 @@ func TestCache(t *testing.T) {
 	}
 
 	if err = bm.Decr("astaxie"); err != nil {
-		t.Error("Incr Error", err)
+		t.Error("Decr Error", err)
 	}
 
 	if v := bm.Get("astaxie"); v.(int) != 1 {
