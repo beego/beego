@@ -73,7 +73,8 @@ func (st *CookieSessionStore) SessionRelease(w http.ResponseWriter) {
 		Value:    url.QueryEscape(str),
 		Path:     "/",
 		HttpOnly: true,
-		Secure:   cookiepder.config.Secure}
+		Secure:   cookiepder.config.Secure,
+		MaxAge:   cookiepder.config.Maxage}
 	http.SetCookie(w, cookie)
 	return
 }
