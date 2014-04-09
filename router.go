@@ -109,6 +109,10 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingM
 					expr = `([\w]+)`
 					part = part[:lindex]
 				}
+				//marth /user/:id! non-empty value
+			} else if part[len(part)-1] == '!' {
+				expr = `(.+)`
+				part = part[:len(part)-1]
 			}
 			params[j] = part
 			parts[i] = expr
