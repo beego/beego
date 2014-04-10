@@ -15,6 +15,10 @@ func (this *TestController) Get() {
 	this.Ctx.Output.Body([]byte("ok"))
 }
 
+func (this *TestController) Post() {
+	this.Ctx.Output.Body([]byte(this.Ctx.Input.Query(":name")))
+}
+
 func (this *TestController) List() {
 	this.Ctx.Output.Body([]byte("i am list"))
 }
@@ -78,6 +82,18 @@ func TestUserFunc(t *testing.T) {
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != "i am list" {
 		t.Errorf("user define func can't run")
+	}
+}
+
+func TestPostFunc(t *testing.T) {
+	r, _ := http.NewRequest("POST", "/astaxie", nil)
+	w := httptest.NewRecorder()
+
+	handler := NewControllerRegistor()
+	handler.Add("/:name", &TestController{})
+	handler.ServeHTTP(w, r)
+	if w.Body.String() != "astaxie" {
+		t.Errorf("post func should astaxie")
 	}
 }
 
