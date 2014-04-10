@@ -64,7 +64,7 @@ func ReadFromRequest(c *Controller) *FlashData {
 		vals := strings.Split(v, "\x00")
 		for _, v := range vals {
 			if len(v) > 0 {
-				kv := strings.Split(v, FlashSeperator)
+				kv := strings.Split(v, "\x23"+FlashSeperator+"\x23")
 				if len(kv) == 2 {
 					flash.Data[kv[0]] = kv[1]
 				}
