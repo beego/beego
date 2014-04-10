@@ -212,6 +212,9 @@ func (input *BeegoInput) Param(key string) string {
 
 // Query returns input data item string by a given string.
 func (input *BeegoInput) Query(key string) string {
+	if val := input.Param(key); val != "" {
+		return val
+	}
 	if input.Request.Form == nil {
 		input.Request.ParseForm()
 	}
