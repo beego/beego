@@ -285,10 +285,7 @@ func (c *Controller) ServeXml() {
 
 // Input returns the input data map from POST or PUT request body and query string.
 func (c *Controller) Input() url.Values {
-	ct := c.Ctx.Request.Header.Get("Content-Type")
-	if strings.Contains(ct, "multipart/form-data") {
-		c.Ctx.Request.ParseMultipartForm(MaxMemory) //64MB
-	} else {
+	if c.Ctx.Request.Form == nil {
 		c.Ctx.Request.ParseForm()
 	}
 	return c.Ctx.Request.Form
@@ -301,7 +298,7 @@ func (c *Controller) ParseForm(obj interface{}) error {
 
 // GetString returns the input value by key string.
 func (c *Controller) GetString(key string) string {
-	return c.Input().Get(key)
+	return c.Ctx.Input.Query(key)
 }
 
 // GetStrings returns the input string slice by key string.
@@ -320,17 +317,17 @@ func (c *Controller) GetStrings(key string) []string {
 
 // GetInt returns input value as int64.
 func (c *Controller) GetInt(key string) (int64, error) {
-	return strconv.ParseInt(c.Input().Get(key), 10, 64)
+	return strconv.ParseInt(c.Ctx.Input.Query(key), 10, 64)
 }
 
 // GetBool returns input value as bool.
 func (c *Controller) GetBool(key string) (bool, error) {
-	return strconv.ParseBool(c.Input().Get(key))
+	return strconv.ParseBool(c.Ctx.Input.Query(key))
 }
 
 // GetFloat returns input value as float64.
 func (c *Controller) GetFloat(key string) (float64, error) {
-	return strconv.ParseFloat(c.Input().Get(key), 64)
+	return strconv.ParseFloat(c.Ctx.Input.Query(key), 64)
 }
 
 // GetFile returns the file data in file upload field named as key.
