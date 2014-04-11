@@ -43,7 +43,6 @@ func (cs *CouchbaseSessionStore) Get(key interface{}) interface{} {
 	} else {
 		return nil
 	}
-	return nil
 }
 
 func (cs *CouchbaseSessionStore) Delete(key interface{}) error {

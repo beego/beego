@@ -266,5 +266,4 @@ func indirectType(v reflect.Type) reflect.Type {
 	default:
 		return v
 	}
-	return v
 }

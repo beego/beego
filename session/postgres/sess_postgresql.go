@@ -68,7 +68,6 @@ func (st *PostgresqlSessionStore) Get(key interface{}) interface{} {
 	} else {
 		return nil
 	}
-	return nil
 }
 
 // delete value in postgresql session

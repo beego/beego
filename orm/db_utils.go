@@ -13,7 +13,6 @@ func getDbAlias(name string) *alias {
 	} else {
 		panic(fmt.Errorf("unknown DataBase alias name %s", name))
 	}
-	return nil
 }
 
 // get pk column info.

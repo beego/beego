@@ -232,7 +232,7 @@ func runTask(rw http.ResponseWriter, req *http.Request) {
 		if err != nil {
 			fmt.Fprintf(rw, "%v", err)
 		}
-		fmt.Fprintf(rw, "%s run success,Now the Status is %s", t.GetStatus())
+		fmt.Fprintf(rw, "%s run success,Now the Status is %s", taskname, t.GetStatus())
 	} else {
 		fmt.Fprintf(rw, "there's no task which named:%s", taskname)
 	}

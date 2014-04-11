@@ -105,7 +105,6 @@ func (rc *MemcacheCache) IsExist(key string) bool {
 	} else {
 		return true
 	}
-	return true
 }
 
 // clear all cached in memcache.

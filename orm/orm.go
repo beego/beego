@@ -293,7 +293,7 @@ func (o *orm) queryRelated(md interface{}, name string) (*modelInfo, *fieldInfo,
 	}
 
 	if qs == nil {
-		panic(fmt.Errorf("<Ormer> name `%s` for model `%s` is not an available rel/reverse field"))
+		panic(fmt.Errorf("<Ormer> name `%s` for model `%s` is not an available rel/reverse field", md, name))
 	}
 
 	return mi, fi, ind, qs
@@ -441,8 +441,6 @@ func (o *orm) Driver() Driver {
 
 func (o *orm) GetDB() dbQuerier {
 	panic(ErrNotImplement)
-	// not enough
-	return o.db
 }
 
 // create new orm

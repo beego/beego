@@ -47,7 +47,6 @@ func (st *MysqlSessionStore) Get(key interface{}) interface{} {
 	} else {
 		return nil
 	}
-	return nil
 }
 
 // delete value in mysql session

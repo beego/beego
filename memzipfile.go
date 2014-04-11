@@ -195,5 +195,4 @@ func getAcceptEncodingZip(r *http.Request) string {
 	} else {
 		return ""
 	}
-	return ""
 }

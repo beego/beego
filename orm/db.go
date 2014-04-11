@@ -446,7 +446,6 @@ func (d *dbBase) Update(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.
 	} else {
 		return 0, err
 	}
-	return 0, nil
 }
 
 // execute delete sql dbQuerier with given struct reflect.Value.
@@ -489,7 +488,6 @@ func (d *dbBase) Delete(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.
 	} else {
 		return 0, err
 	}
-	return 0, nil
 }
 
 // update table-related record by querySet.
@@ -566,7 +564,6 @@ func (d *dbBase) UpdateBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	} else {
 		return 0, err
 	}
-	return 0, nil
 }
 
 // delete related records.
@@ -671,8 +668,6 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	} else {
 		return 0, err
 	}
-
-	return 0, nil
 }
 
 // read related records.

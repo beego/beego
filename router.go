@@ -216,7 +216,6 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingM
 		if regexErr != nil {
 			//TODO add error handling here to avoid panic
 			panic(regexErr)
-			return
 		}
 
 		//now create the Route

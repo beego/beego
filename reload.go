@@ -29,7 +29,7 @@ type conn struct {
 	net.Conn
 	wg      *sync.WaitGroup
 	isclose bool
-	lock    sync.Mutex
+	lock    *sync.Mutex
 }
 
 // Close current processing connection.
@@ -102,7 +102,6 @@ func WaitSignal(l net.Listener) error {
 			return nil
 		}
 	}
-	return nil // It'll never get here.
 }
 
 // Kill current running os process.
