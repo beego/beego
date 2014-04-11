@@ -83,7 +83,6 @@ func (e *JsonField) SetRaw(value interface{}) error {
 	default:
 		return fmt.Errorf("<JsonField.SetRaw> unknown value `%v`", value)
 	}
-	return nil
 }
 
 func (e *JsonField) RawValue() interface{} {
@@ -122,7 +121,7 @@ type DataNull struct {
 	Char        string          `orm:"null;size(50)"`
 	Text        string          `orm:"null;type(text)"`
 	Date        time.Time       `orm:"null;type(date)"`
-	DateTime    time.Time       `orm:"null;column(datetime)""`
+	DateTime    time.Time       `orm:"null;column(datetime)"`
 	Byte        byte            `orm:"null"`
 	Rune        rune            `orm:"null"`
 	Int         int             `orm:"null"`

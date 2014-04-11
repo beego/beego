@@ -282,10 +282,10 @@ func TestNullDataTypes(t *testing.T) {
 
 	d = DataNull{
 		DateTime:    time.Now(),
-		NullString:  sql.NullString{"test", true},
-		NullBool:    sql.NullBool{true, true},
-		NullInt64:   sql.NullInt64{42, true},
-		NullFloat64: sql.NullFloat64{42.42, true},
+		NullString:  sql.NullString{String: "test", Valid: true},
+		NullBool:    sql.NullBool{Bool: true, Valid: true},
+		NullInt64:   sql.NullInt64{Int64: 42, Valid: true},
+		NullFloat64: sql.NullFloat64{Float64: 42.42, Valid: true},
 	}
 
 	id, err = dORM.Insert(&d)

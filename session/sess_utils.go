@@ -164,8 +164,6 @@ func decodeCookie(block cipher.Block, hashKey, name, value string, gcmaxlifetime
 	} else {
 		return dst, nil
 	}
-	// Done.
-	return nil, nil
 }
 
 // Encoding -------------------------------------------------------------------

@@ -153,7 +153,6 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		newbytes := bytes.NewBufferString("")
 		if _, ok := BeeTemplates[c.TplNames]; !ok {
 			panic("can't find templatefile in the path:" + c.TplNames)
-			return []byte{}, errors.New("can't find templatefile in the path:" + c.TplNames)
 		}
 		err := BeeTemplates[c.TplNames].ExecuteTemplate(newbytes, c.TplNames, c.Data)
 		if err != nil {
@@ -199,7 +198,6 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		ibytes := bytes.NewBufferString("")
 		if _, ok := BeeTemplates[c.TplNames]; !ok {
 			panic("can't find templatefile in the path:" + c.TplNames)
-			return []byte{}, errors.New("can't find templatefile in the path:" + c.TplNames)
 		}
 		err := BeeTemplates[c.TplNames].ExecuteTemplate(ibytes, c.TplNames, c.Data)
 		if err != nil {
@@ -209,7 +207,6 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		icontent, _ := ioutil.ReadAll(ibytes)
 		return icontent, nil
 	}
-	return []byte{}, nil
 }
 
 // Redirect sends the redirection response to url with status code.
@@ -243,7 +240,6 @@ func (c *Controller) UrlFor(endpoint string, values ...string) string {
 	} else {
 		return UrlFor(endpoint, values...)
 	}
-	return ""
 }
 
 // ServeJson sends a json response with encoding charset.

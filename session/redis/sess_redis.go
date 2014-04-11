@@ -44,7 +44,6 @@ func (rs *RedisSessionStore) Get(key interface{}) interface{} {
 	} else {
 		return nil
 	}
-	return nil
 }
 
 // delete value in redis session

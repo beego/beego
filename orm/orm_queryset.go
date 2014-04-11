@@ -209,7 +209,6 @@ func (o *querySet) ValuesFlat(result *ParamsList, expr string) (int64, error) {
 // }
 func (o *querySet) RowsToMap(result *Params, keyCol, valueCol string) (int64, error) {
 	panic(ErrNotImplement)
-	return o.orm.alias.DbBaser.RowsTo(o.orm.db, o, o.mi, o.cond, result, keyCol, valueCol, o.orm.alias.TZ)
 }
 
 // query all rows into struct with specify key and value column name.
@@ -224,7 +223,6 @@ func (o *querySet) RowsToMap(result *Params, keyCol, valueCol string) (int64, er
 // }
 func (o *querySet) RowsToStruct(ptrStruct interface{}, keyCol, valueCol string) (int64, error) {
 	panic(ErrNotImplement)
-	return o.orm.alias.DbBaser.RowsTo(o.orm.db, o, o.mi, o.cond, ptrStruct, keyCol, valueCol, o.orm.alias.TZ)
 }
 
 // create new QuerySeter.

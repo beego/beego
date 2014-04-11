@@ -43,7 +43,6 @@ func (fs *FileSessionStore) Get(key interface{}) interface{} {
 	} else {
 		return nil
 	}
-	return nil
 }
 
 // Delete value in file session by given key

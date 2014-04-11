@@ -36,7 +36,6 @@ func (st *CookieSessionStore) Get(key interface{}) interface{} {
 	} else {
 		return nil
 	}
-	return nil
 }
 
 // Delete value in cookie session
