@@ -264,20 +264,15 @@ func (input *BeegoInput) SetData(key, val interface{}) {
 	input.Data[key] = val
 }
 
+// parseForm or parseMultiForm based on Content-type
 func (input *BeegoInput) ParseFormOrMulitForm(maxMemory int64) error {
 	// Parse the body depending on the content type.
-	switch input.Header("Content-Type") {
-	case "application/x-www-form-urlencoded":
-		// Typical form.
-		if err := input.Request.ParseForm(); err != nil {
-			return errors.New("Error parsing request body:" + err.Error())
-		}
-
-	case "multipart/form-data":
+	if strings.Contains(input.Header("Content-Type"), "multipart/form-data") {
 		if err := input.Request.ParseMultipartForm(maxMemory); err != nil {
 			return errors.New("Error parsing request body:" + err.Error())
 		}
+	} else if err := input.Request.ParseForm(); err != nil {
+		return errors.New("Error parsing request body:" + err.Error())
 	}
-
 	return nil
 }
