@@ -55,12 +55,12 @@ func init() {
 func adminIndex(rw http.ResponseWriter, r *http.Request) {
 	rw.Write([]byte("Welcome to Admin Dashboard\n"))
 	rw.Write([]byte("There are servral functions:\n"))
-	rw.Write([]byte("1. Record all request and request time, http://localhost:8088/qps\n"))
-	rw.Write([]byte("2. Get runtime profiling data by the pprof, http://localhost:8088/prof\n"))
-	rw.Write([]byte("3. Get healthcheck result from http://localhost:8088/healthcheck\n"))
-	rw.Write([]byte("4. Get current task infomation from taskhttp://localhost:8088/task \n"))
-	rw.Write([]byte("5. To run a task passed a param http://localhost:8088/runtask\n"))
-	rw.Write([]byte("6. Get all confige & router infomation http://localhost:8088/listconf\n"))
+	rw.Write([]byte("1. Record all request and request time, <a href='/qps'>http://localhost:8088/qps</a>\n"))
+	rw.Write([]byte("2. Get runtime profiling data by the pprof, <a href='/prof'>http://localhost:8088/prof</a>\n"))
+	rw.Write([]byte("3. Get healthcheck result from <a href='/healthcheck'>http://localhost:8088/healthcheck</a>\n"))
+	rw.Write([]byte("4. Get current task infomation from task <a href='/task'>http://localhost:8088/task</a> \n"))
+	rw.Write([]byte("5. To run a task passed a param <a href='/runtask'>http://localhost:8088/runtask</a>\n"))
+	rw.Write([]byte("6. Get all confige & router infomation <a href='/listconf'>http://localhost:8088/listconf</a>\n"))
 
 }
 
