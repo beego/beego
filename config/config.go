@@ -1,9 +1,3 @@
-// Beego (http://beego.me/)
-// @description beego is an open-source, high-performance web framework for the Go programming language.
-// @link        http://github.com/astaxie/beego for the canonical source repository
-// @license     http://github.com/astaxie/beego/blob/master/LICENSE
-// @authors     astaxie
-
 package config
 
 import (
@@ -44,10 +38,12 @@ func Register(name string, adapter Config) {
 
 // adapterName is ini/json/xml/yaml.
 // filename is the config file path.
-func NewConfig(adapterName, fileaname string) (ConfigContainer, error) {
+func NewConfig(adapterName, fileName string) (ConfigContainer, error) {
 	adapter, ok := adapters[adapterName]
 	if !ok {
 		return nil, fmt.Errorf("config: unknown adaptername %q (forgotten import?)", adapterName)
 	}
-	return adapter.Parse(fileaname)
+	// get real file
+	file_name := getFilePath(fileName)
+	return adapter.Parse(file_name)
 }
