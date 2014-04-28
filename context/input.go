@@ -152,7 +152,7 @@ func (input *BeegoInput) IsWebsocket() bool {
 
 // IsSecure returns boolean of whether file uploads in this request or not..
 func (input *BeegoInput) IsUpload() bool {
-	return input.Header("Content-Type") == "multipart/form-data"
+	return strings.Contains(input.Header("Content-Type"), "multipart/form-data")
 }
 
 // IP returns request client ip.
