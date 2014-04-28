@@ -556,7 +556,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		goto Admin
 	}
 
-	if context.Input.IsPost() {
+	if !context.Input.IsGet() && !context.Input.IsHead() {
 		if CopyRequestBody && !context.Input.IsUpload() {
 			context.Input.CopyBody()
 		}
