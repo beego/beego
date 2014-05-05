@@ -35,7 +35,7 @@ Then in you web app init the global session manager
 * Use **file** as provider, the last param is the path where you want file to be stored:
 
 		func init() {
-			globalSessions, _ = session.NewManager("file",`{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig","./tmp"}`)
+			globalSessions, _ = session.NewManager("file",`{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig":"./tmp"}`)
 			go globalSessions.GC()
 		}
 
@@ -50,7 +50,7 @@ Then in you web app init the global session manager
 
 		func init() {
 			globalSessions, _ = session.NewManager(
-				"mysql", `{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig","username:password@protocol(address)/dbname?param=value"}`)
+				"mysql", `{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig":"username:password@protocol(address)/dbname?param=value"}`)
 			go globalSessions.GC()
 		}
 
