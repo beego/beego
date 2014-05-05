@@ -35,14 +35,14 @@ Then in you web app init the global session manager
 * Use **file** as provider, the last param is the path where you want file to be stored:
 
 		func init() {
-			globalSessions, _ = session.NewManager("file",`{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig","./tmp"}`)
+			globalSessions, _ = session.NewManager("file",`{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig":"./tmp"}`)
 			go globalSessions.GC()
 		}
 
 * Use **Redis** as provider, the last param is the Redis conn address,poolsize,password:
 
 		func init() {
-			globalSessions, _ = session.NewManager("redis", `{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig","127.0.0.1:6379,100,astaxie"}`)
+			globalSessions, _ = session.NewManager("redis", `{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig":"127.0.0.1:6379,100,astaxie"}`)
 			go globalSessions.GC()
 		}
 		
@@ -50,7 +50,7 @@ Then in you web app init the global session manager
 
 		func init() {
 			globalSessions, _ = session.NewManager(
-				"mysql", `{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig","username:password@protocol(address)/dbname?param=value"}`)
+				"mysql", `{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig":"username:password@protocol(address)/dbname?param=value"}`)
 			go globalSessions.GC()
 		}
 
@@ -58,7 +58,7 @@ Then in you web app init the global session manager
 
 		func init() {
 			globalSessions, _ = session.NewManager(
-				"cookie", `{"cookieName":"gosessionid","enableSetCookie":false,gclifetime":3600,"ProviderConfig":"{\"cookieName\":\"gosessionid\",\"securityKey\":\"beegocookiehashkey\"}"}`)
+				"cookie", `{"cookieName":"gosessionid","enableSetCookie":false,"gclifetime":3600,"ProviderConfig":"{\"cookieName\":\"gosessionid\",\"securityKey\":\"beegocookiehashkey\"}"}`)
 			go globalSessions.GC()
 		}
 
