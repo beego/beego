@@ -46,7 +46,7 @@ type Controller struct {
 	CruSession     session.SessionStore
 	XSRFExpire     int
 	AppController  interface{}
-	EnableReander  bool
+	EnableRender   bool
 }
 
 // ControllerInterface is an interface to uniform all controller handler.
@@ -75,7 +75,7 @@ func (c *Controller) Init(ctx *context.Context, controllerName, actionName strin
 	c.Ctx = ctx
 	c.TplExt = "tpl"
 	c.AppController = app
-	c.EnableReander = true
+	c.EnableRender = true
 	c.Data = ctx.Input.Data
 }
 
@@ -126,7 +126,7 @@ func (c *Controller) Options() {
 
 // Render sends the response with rendered template bytes as text/html type.
 func (c *Controller) Render() error {
-	if !c.EnableReander {
+	if !c.EnableRender {
 		return nil
 	}
 	rb, err := c.RenderBytes()
