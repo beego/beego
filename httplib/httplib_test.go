@@ -7,6 +7,7 @@
 package httplib
 
 import (
+	"fmt"
 	"io/ioutil"
 	"testing"
 )
@@ -35,4 +36,16 @@ func TestGetUrl(t *testing.T) {
 	if len(str) == 0 {
 		t.Fatal("has no info")
 	}
+}
+
+func TestPost(t *testing.T) {
+	b := Post("http://beego.me/").Debug(true)
+	b.Param("username", "astaxie")
+	b.Param("password", "hello")
+	b.PostFile("uploadfile", "httplib.go")
+	str, err := b.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(str)
 }
