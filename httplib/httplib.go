@@ -13,6 +13,7 @@ import (
 	"encoding/xml"
 	"io"
 	"io/ioutil"
+	"mime/multipart"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -30,7 +31,7 @@ func Get(url string) *BeegoHttpRequest {
 	req.Method = "GET"
 	req.Header = http.Header{}
 	req.Header.Set("User-Agent", defaultUserAgent)
-	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil, nil, nil}
+	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil, nil, nil}
 }
 
 // Post returns *BeegoHttpRequest with POST method.
@@ -39,7 +40,7 @@ func Post(url string) *BeegoHttpRequest {
 	req.Method = "POST"
 	req.Header = http.Header{}
 	req.Header.Set("User-Agent", defaultUserAgent)
-	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil, nil, nil}
+	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil, nil, nil}
 }
 
 // Put returns *BeegoHttpRequest with PUT method.
@@ -48,7 +49,7 @@ func Put(url string) *BeegoHttpRequest {
 	req.Method = "PUT"
 	req.Header = http.Header{}
 	req.Header.Set("User-Agent", defaultUserAgent)
-	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil, nil, nil}
+	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil, nil, nil}
 }
 
 // Delete returns *BeegoHttpRequest DELETE GET method.
@@ -57,7 +58,7 @@ func Delete(url string) *BeegoHttpRequest {
 	req.Method = "DELETE"
 	req.Header = http.Header{}
 	req.Header.Set("User-Agent", defaultUserAgent)
-	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil, nil, nil}
+	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil, nil, nil}
 }
 
 // Head returns *BeegoHttpRequest with HEAD method.
@@ -66,7 +67,7 @@ func Head(url string) *BeegoHttpRequest {
 	req.Method = "HEAD"
 	req.Header = http.Header{}
 	req.Header.Set("User-Agent", defaultUserAgent)
-	return &BeegoHttpRequest{url, &req, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil, nil, nil}
+	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, false, 60 * time.Second, 60 * time.Second, nil, nil, nil}
 }
 
 // BeegoHttpRequest provides more useful methods for requesting one url than http.Request.
@@ -74,6 +75,7 @@ type BeegoHttpRequest struct {
 	url              string
 	req              *http.Request
 	params           map[string]string
+	files            map[string]string
 	showdebug        bool
 	connectTimeout   time.Duration
 	readWriteTimeout time.Duration
@@ -138,6 +140,11 @@ func (b *BeegoHttpRequest) Param(key, value string) *BeegoHttpRequest {
 	return b
 }
 
+func (b *BeegoHttpRequest) PostFile(formname, filename string) *BeegoHttpRequest {
+	b.files[formname] = filename
+	return b
+}
+
 // Body adds request raw body.
 // it supports string and []byte.
 func (b *BeegoHttpRequest) Body(data interface{}) *BeegoHttpRequest {
@@ -175,8 +182,37 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 			b.url = b.url + "?" + paramBody
 		}
 	} else if b.req.Method == "POST" && b.req.Body == nil && len(paramBody) > 0 {
-		b.Header("Content-Type", "application/x-www-form-urlencoded")
-		b.Body(paramBody)
+		if len(b.files) > 0 {
+			bodyBuf := &bytes.Buffer{}
+			bodyWriter := multipart.NewWriter(bodyBuf)
+			for formname, filename := range b.files {
+				fileWriter, err := bodyWriter.CreateFormFile(formname, filename)
+				if err != nil {
+					return nil, err
+				}
+				fh, err := os.Open(filename)
+				if err != nil {
+					return nil, err
+				}
+				//iocopy
+				_, err = io.Copy(fileWriter, fh)
+				fh.Close()
+				if err != nil {
+					return nil, err
+				}
+			}
+			for k, v := range b.params {
+				bodyWriter.WriteField(k, v)
+			}
+			contentType := bodyWriter.FormDataContentType()
+			bodyWriter.Close()
+			b.Header("Content-Type", contentType)
+			b.req.Body = ioutil.NopCloser(bodyBuf)
+			b.req.ContentLength = int64(bodyBuf.Len())
+		} else {
+			b.Header("Content-Type", "application/x-www-form-urlencoded")
+			b.Body(paramBody)
+		}
 	}
 
 	url, err := url.Parse(b.url)
