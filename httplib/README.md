@@ -60,3 +60,8 @@ some http request need setcookie. So set it like this:
 	cookie.Value  = "astaxie"
 	httplib.Get("http://beego.me/").SetCookie(cookie)
 
+## set HTTP version
+some servers need to specify the protocol version of HTTP
+
+	httplib.Get("http://beego.me/").SetProtocolVersion("HTTP/1.1")
+	
