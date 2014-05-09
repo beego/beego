@@ -101,6 +101,23 @@ func (b *BeegoHttpRequest) Header(key, value string) *BeegoHttpRequest {
 	return b
 }
 
+// Set the protocol version for incoming requests.
+// Client requests always use HTTP/1.1.
+func (b *BeegoHttpRequest) SetProtocolVersion(vers string) *BeegoHttpRequest {
+	if len(vers) == 0 {
+		vers = "HTTP/1.1"
+	}
+
+	major, minor, ok := http.ParseHTTPVersion(vers)
+	if ok {
+		b.req.Proto = vers
+		b.req.ProtoMajor = major
+		b.req.ProtoMinor = minor
+	}
+
+	return b
+}
+
 // SetCookie add cookie into request.
 func (b *BeegoHttpRequest) SetCookie(cookie *http.Cookie) *BeegoHttpRequest {
 	b.req.Header.Add("Cookie", cookie.String())
