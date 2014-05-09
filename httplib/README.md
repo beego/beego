@@ -73,3 +73,8 @@ httplib support mutil file upload, use `b.PostFile()`
 		t.Fatal(err)
 	}
 	fmt.Println(str)
+
+## set HTTP version
+some servers need to specify the protocol version of HTTP
+
+	httplib.Get("http://beego.me/").SetProtocolVersion("HTTP/1.1")
