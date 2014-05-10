@@ -9,7 +9,7 @@ package logs
 
 import "syscall"
 
-var colors = []int{
+var colors = [6]int{
 	3, // Trace      cyan or Aqua
 	1, // Debug      blue
 	2, // Info       green
