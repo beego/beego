@@ -9,37 +9,7 @@ package logs
 import (
 	"encoding/json"
 	"log"
-	"os"
-	"runtime"
-	"syscall"
-)
-
-type Brush func(string) string
-
-func NewBrush(color string) Brush {
-	pre := "\033["
-	reset := "\033[0m"
-	return func(text string) string {
-		return pre + color + "m" + text + reset
-	}
-}
-
-var colors = []Brush{
-	NewBrush("1;36"), // Trace      cyan
-	NewBrush("1;34"), // Debug      blue
-	NewBrush("1;32"), // Info       green
-	NewBrush("1;33"), // Warn       yellow
-	NewBrush("1;31"), // Error      red
-	NewBrush("1;35"), // Critical   purple
-}
-var windowsColors = []int{
-	3, // Trace      cyan or Aqua
-	1, // Debug      blue
-	2, // Info       green
-	6, // Warn       yellow
-	4, // Error      red
-	5, // Critical   purple
-}
+	"os")
 
 // ConsoleWriter implements LoggerInterface and writes messages to terminal.
 type ConsoleWriter struct {
@@ -68,24 +38,7 @@ func (c *ConsoleWriter) Init(jsonconfig string) error {
 	return nil
 }
 
-// write message in console.
-func (c *ConsoleWriter) WriteMsg(msg string, level int) error {
-	if level < c.Level {
-		return nil
-	}
-	if goos := runtime.GOOS; goos == "windows" {
-		kernel32 := syscall.NewLazyDLL("kernel32.dll")
-		proc := kernel32.NewProc("SetConsoleTextAttribute")
-		handle, _, _ := proc.Call(uintptr(syscall.Stdout), uintptr(windowsColors[level]))
-		c.lg.Println(msg)
-		handle, _, _ = proc.Call(uintptr(syscall.Stdout), uintptr(7))
-		CloseHandle := kernel32.NewProc("CloseHandle")
-		CloseHandle.Call(handle)
-	} else {
-		c.lg.Println(colors[level](msg))
-	}
-	return nil
-}
+
 
 // implementing method. empty.
 func (c *ConsoleWriter) Destroy() {
