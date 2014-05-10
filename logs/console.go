@@ -11,6 +11,7 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"syscall"
 )
 
 type Brush func(string) string
@@ -30,6 +31,14 @@ var colors = []Brush{
 	NewBrush("1;33"), // Warn       yellow
 	NewBrush("1;31"), // Error      red
 	NewBrush("1;35"), // Critical   purple
+}
+var windowsColors = []int{
+	3, // Trace      cyan or Aqua
+	1, // Debug      blue
+	2, // Info       green
+	6, // Warn       yellow
+	4, // Error      red
+	5, // Critical   purple
 }
 
 // ConsoleWriter implements LoggerInterface and writes messages to terminal.
@@ -65,7 +74,13 @@ func (c *ConsoleWriter) WriteMsg(msg string, level int) error {
 		return nil
 	}
 	if goos := runtime.GOOS; goos == "windows" {
+		kernel32 := syscall.NewLazyDLL("kernel32.dll")
+		proc := kernel32.NewProc("SetConsoleTextAttribute")
+		handle, _, _ := proc.Call(uintptr(syscall.Stdout), uintptr(windowsColors[level]))
 		c.lg.Println(msg)
+		handle, _, _ = proc.Call(uintptr(syscall.Stdout), uintptr(7))
+		CloseHandle := kernel32.NewProc("CloseHandle")
+		CloseHandle.Call(handle)
 	} else {
 		c.lg.Println(colors[level](msg))
 	}
