@@ -62,10 +62,14 @@ func (app *App) Run() {
 				BeeLogger.Critical("ResolveTCPAddr:", err)
 			}
 			l, err = GetInitListener(laddr)
-			theStoppable = newStoppable(l)
-			err = server.Serve(theStoppable)
-			theStoppable.wg.Wait()
-			CloseSelf()
+			if err != nil {
+				theStoppable = newStoppable(l)
+				err = server.Serve(theStoppable)
+				if err != nil {
+					theStoppable.wg.Wait()
+					err = CloseSelf()
+				}
+			}
 		} else {
 			s := &http.Server{
 				Addr:         addr,
