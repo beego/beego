@@ -3,6 +3,7 @@ package beego
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/astaxie/beego/toolbox"
@@ -47,15 +48,21 @@ func init() {
 // AdminIndex is the default http.Handler for admin module.
 // it matches url pattern "/".
 func adminIndex(rw http.ResponseWriter, r *http.Request) {
+	host := r.Host
+	address := strings.Split(host, ":")
+	port := ""
+	if len(address) == 2 {
+		port = address[1]
+	}
 	rw.Write([]byte("Welcome to Admin Dashboard\n"))
 	rw.Write([]byte("There are servral functions:\n"))
-	rw.Write([]byte("1. Record all request and request time, http://localhost:8088/qps\n"))
-	rw.Write([]byte("2. Get runtime profiling data by the pprof, http://localhost:8088/prof\n"))
-	rw.Write([]byte("3. Get healthcheck result from http://localhost:8088/healthcheck\n"))
-	rw.Write([]byte("4. Get current task infomation from taskhttp://localhost:8088/task \n"))
-	rw.Write([]byte("5. To run a task passed a param http://localhost:8088/runtask\n"))
-	rw.Write([]byte("6. Get all confige & router infomation http://localhost:8088/listconf\n"))
-
+	rw.Write([]byte("1. Record all request and request time, http://localhost:" + port + "/qps\n"))
+	rw.Write([]byte("1. Record all request and request time, http://localhost:" + port + "/qps\n"))
+	rw.Write([]byte("2. Get runtime profiling data by the pprof, http://localhost:" + port + "/prof\n"))
+	rw.Write([]byte("3. Get healthcheck result from http://localhost:" + port + "/healthcheck\n"))
+	rw.Write([]byte("4. Get current task infomation from taskhttp://localhost:" + port + "/task \n"))
+	rw.Write([]byte("5. To run a task passed a param http://localhost:" + port + "/runtask\n"))
+	rw.Write([]byte("6. Get all confige & router infomation http://localhost:" + port + "/listconf\n"))
 }
 
 // QpsIndex is the http.Handler for writing qbs statistics map result info in http.ResponseWriter.
