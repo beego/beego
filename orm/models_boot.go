@@ -286,7 +286,7 @@ end:
 
 // register models
 func RegisterModel(models ...interface{}) {
-	RegisterModelWithPrefix(models,"")
+	RegisterModelWithPrefix("", models)
 }
 
 // register models with a prefix
