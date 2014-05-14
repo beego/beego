@@ -286,16 +286,10 @@ end:
 
 // register models
 func RegisterModel(models ...interface{}) {
-	if modelCache.done {
-		panic(fmt.Errorf("RegisterModel must be run before BootStrap"))
-	}
-
-	for _, model := range models {
-		registerModel(model, "")
-	}
+	RegisterModelWithPrefix(models,"")
 }
 
-// register model with a prefix
+// register models with a prefix
 func RegisterModelWithPrefix(prefix string, models ...interface{}) {
 	if modelCache.done {
 		panic(fmt.Errorf("RegisterModel must be run before BootStrap"))
