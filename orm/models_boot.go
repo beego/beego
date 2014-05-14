@@ -10,7 +10,7 @@ import (
 
 // register models.
 // prefix means table name prefix.
-func registerModel(model interface{}, prefix string) {
+func registerModel(prefix string, model interface{}) {
 	val := reflect.ValueOf(model)
 	ind := reflect.Indirect(val)
 	typ := ind.Type()
