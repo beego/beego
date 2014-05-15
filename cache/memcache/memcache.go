@@ -146,11 +146,14 @@ func (rc *MemcacheCache) StartAndGC(config string) error {
 
 // connect to memcache and keep the connection.
 func (rc *MemcacheCache) connectInit() (*memcache.Connection, error) {
-	c, err := memcache.Connect(rc.conninfo)
-	if err != nil {
-		return nil, err
+	if rc.c == nil {
+		c, err := memcache.Connect(rc.conninfo)
+		if err != nil {
+			return nil, err
+		}
+		return c, nil
 	}
-	return c, nil
+	return rc.c,nil
 }
 
 func init() {
