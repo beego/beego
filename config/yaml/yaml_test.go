@@ -9,6 +9,8 @@ package config
 import (
 	"os"
 	"testing"
+
+	"github.com/astaxie/beego/config"
 )
 
 var yamlcontext = `
@@ -33,7 +35,7 @@ func TestYaml(t *testing.T) {
 	}
 	f.Close()
 	defer os.Remove("testyaml.conf")
-	yamlconf, err := NewConfig("yaml", "testyaml.conf")
+	yamlconf, err := config.NewConfig("yaml", "testyaml.conf")
 	if err != nil {
 		t.Fatal(err)
 	}

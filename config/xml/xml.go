@@ -14,6 +14,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/astaxie/beego/config"
 	"github.com/beego/x2j"
 )
 
@@ -24,7 +25,7 @@ type XMLConfig struct {
 }
 
 // Parse returns a ConfigContainer with parsed xml config map.
-func (xmls *XMLConfig) Parse(filename string) (ConfigContainer, error) {
+func (xmls *XMLConfig) Parse(filename string) (config.ConfigContainer, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -101,5 +102,5 @@ func (c *XMLConfigContainer) DIY(key string) (v interface{}, err error) {
 }
 
 func init() {
-	Register("xml", &XMLConfig{})
+	config.Register("xml", &XMLConfig{})
 }

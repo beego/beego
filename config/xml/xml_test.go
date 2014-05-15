@@ -9,6 +9,8 @@ package config
 import (
 	"os"
 	"testing"
+
+	"github.com/astaxie/beego/config"
 )
 
 //xml parse should incluce in <config></config> tags
@@ -36,7 +38,7 @@ func TestXML(t *testing.T) {
 	}
 	f.Close()
 	defer os.Remove("testxml.conf")
-	xmlconf, err := NewConfig("xml", "testxml.conf")
+	xmlconf, err := config.NewConfig("xml", "testxml.conf")
 	if err != nil {
 		t.Fatal(err)
 	}

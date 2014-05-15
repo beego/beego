@@ -16,6 +16,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/astaxie/beego/config"
 	"github.com/beego/goyaml2"
 )
 
@@ -24,7 +25,7 @@ type YAMLConfig struct {
 }
 
 // Parse returns a ConfigContainer with parsed yaml config map.
-func (yaml *YAMLConfig) Parse(filename string) (ConfigContainer, error) {
+func (yaml *YAMLConfig) Parse(filename string) (config.ConfigContainer, error) {
 	y := &YAMLConfigContainer{
 		data: make(map[string]interface{}),
 	}
@@ -146,5 +147,5 @@ func (c *YAMLConfigContainer) DIY(key string) (v interface{}, err error) {
 }
 
 func init() {
-	Register("yaml", &YAMLConfig{})
+	config.Register("yaml", &YAMLConfig{})
 }
