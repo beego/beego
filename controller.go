@@ -25,6 +25,13 @@ import (
 	"github.com/astaxie/beego/utils"
 )
 
+//commonly used mime-types
+const (
+	applicationJson = "application/json"
+	applicationXml  = "applicatoin/xml"
+	textXml         = "text/xml"
+)
+
 var (
 	// custom error when user stop request handler manually.
 	USERSTOPRUN = errors.New("User stop run")
@@ -285,6 +292,20 @@ func (c *Controller) ServeXml() {
 		hasIndent = true
 	}
 	c.Ctx.Output.Xml(c.Data["xml"], hasIndent)
+}
+
+// ServeFormatted serve Xml OR Json, depending on the value of the Accept header
+
+func (c *Controller) ServeFormatted() {
+	accept := c.Ctx.Input.Header("Accept")
+	switch accept {
+	case applicationJson:
+		c.ServeJson()
+	case applicationXml, textXml:
+		c.ServeXml()
+	default:
+		c.ServeJson()
+	}
 }
 
 // Input returns the input data map from POST or PUT request body and query string.
