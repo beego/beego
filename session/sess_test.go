@@ -16,6 +16,7 @@ func Test_gob(t *testing.T) {
 	a := make(map[interface{}]interface{})
 	a["username"] = "astaxie"
 	a[12] = 234
+	a["user"] = User{"asta", "xie"}
 	b, err := EncodeGob(a)
 	if err != nil {
 		t.Error(err)
@@ -33,6 +34,14 @@ func Test_gob(t *testing.T) {
 	if c[12] != 234 {
 		t.Error("decode int error")
 	}
+	if c["user"].(User).Username != "asta" {
+		t.Error("decode struct error")
+	}
+}
+
+type User struct {
+	Username string
+	NickName string
 }
 
 func TestGenerate(t *testing.T) {
