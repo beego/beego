@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/astaxie/beego/context"
 )
 
 type TestController struct {
@@ -230,5 +232,49 @@ func TestAutoPrefix(t *testing.T) {
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != "i am list" {
 		t.Errorf("TestAutoPrefix can't run")
+	}
+}
+
+func TestRouterGet(t *testing.T) {
+	r, _ := http.NewRequest("GET", "/user", nil)
+	w := httptest.NewRecorder()
+
+	handler := NewControllerRegistor()
+	handler.Get("/user", func(ctx *context.Context) {
+		ctx.Output.Body([]byte("Get userlist"))
+	})
+	handler.ServeHTTP(w, r)
+	if w.Body.String() != "Get userlist" {
+		t.Errorf("TestRouterGet can't run")
+	}
+}
+
+func TestRouterPost(t *testing.T) {
+	r, _ := http.NewRequest("POST", "/user/123", nil)
+	w := httptest.NewRecorder()
+
+	handler := NewControllerRegistor()
+	handler.Post("/user/:id", func(ctx *context.Context) {
+		ctx.Output.Body([]byte(ctx.Input.Param(":id")))
+	})
+	handler.ServeHTTP(w, r)
+	if w.Body.String() != "123" {
+		t.Errorf("TestRouterPost can't run")
+	}
+}
+
+func sayhello(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte("sayhello"))
+}
+
+func TestRouterHandler(t *testing.T) {
+	r, _ := http.NewRequest("POST", "/sayhi", nil)
+	w := httptest.NewRecorder()
+
+	handler := NewControllerRegistor()
+	handler.Handler("/sayhi", http.HandlerFunc(sayhello))
+	handler.ServeHTTP(w, r)
+	if w.Body.String() != "sayhello" {
+		t.Errorf("TestRouterHandler can't run")
 	}
 }

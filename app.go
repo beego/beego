@@ -136,6 +136,60 @@ func (app *App) AutoRouterWithPrefix(prefix string, c ControllerInterface) *App 
 	return app
 }
 
+// add router for Get method
+func (app *App) Get(rootpath string, f FilterFunc) *App {
+	app.Handlers.Get(rootpath, f)
+	return app
+}
+
+// add router for Post method
+func (app *App) Post(rootpath string, f FilterFunc) *App {
+	app.Handlers.Post(rootpath, f)
+	return app
+}
+
+// add router for Put method
+func (app *App) Put(rootpath string, f FilterFunc) *App {
+	app.Handlers.Put(rootpath, f)
+	return app
+}
+
+// add router for Delete method
+func (app *App) Delete(rootpath string, f FilterFunc) *App {
+	app.Handlers.Delete(rootpath, f)
+	return app
+}
+
+// add router for Options method
+func (app *App) Options(rootpath string, f FilterFunc) *App {
+	app.Handlers.Options(rootpath, f)
+	return app
+}
+
+// add router for Head method
+func (app *App) Head(rootpath string, f FilterFunc) *App {
+	app.Handlers.Head(rootpath, f)
+	return app
+}
+
+// add router for Patch method
+func (app *App) Patch(rootpath string, f FilterFunc) *App {
+	app.Handlers.Patch(rootpath, f)
+	return app
+}
+
+// add router for Patch method
+func (app *App) Any(rootpath string, f FilterFunc) *App {
+	app.Handlers.Any(rootpath, f)
+	return app
+}
+
+// add router for http.Handler
+func (app *App) Handler(rootpath string, h http.Handler) *App {
+	app.Handlers.Handler(rootpath, h)
+	return app
+}
+
 // UrlFor creates a url with another registered controller handler with params.
 // The endpoint is formed as path.controller.name to defined the controller method which will run.
 // The values need key-pair data to assign into controller method.
