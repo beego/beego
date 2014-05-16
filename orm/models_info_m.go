@@ -49,6 +49,9 @@ func newModelInfo(val reflect.Value) (info *modelInfo) {
 	for i := 0; i < ind.NumField(); i++ {
 		field := ind.Field(i)
 		sf = ind.Type().Field(i)
+		if sf.PkgPath != "" {
+			continue
+		}
 		fi, err = newFieldInfo(info, field, sf)
 
 		if err != nil {
