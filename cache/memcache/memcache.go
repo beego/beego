@@ -137,9 +137,11 @@ func (rc *MemcacheCache) StartAndGC(config string) error {
 	}
 	rc.conninfo = cf["conn"]
 	var err error
-	rc.c, err = rc.connectInit()
-	if err != nil {
-		return errors.New("dial tcp conn error")
+	if rc.c != nil {
+		rc.c, err = rc.connectInit()
+		if err != nil {
+			return errors.New("dial tcp conn error")
+		}
 	}
 	return nil
 }
