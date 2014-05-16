@@ -449,6 +449,16 @@ func (o *orm) GetDB() dbQuerier {
 	panic(ErrNotImplement)
 }
 
+// return a copy of the orm instance with Debug enabled
+func (o orm) Debug() Ormer {
+	// The receiver type of this is intentially a Value and *not*
+	// a pointer in order to take advantage of Go's call by Value
+	// semantics, causing "o" to get copied. As such, Debug is only
+	// enabled for the Value returned by this method call.
+	o.db = newDbQueryLog(o.alias, o.db)
+	return &o
+}
+
 // create new orm
 func NewOrm() Ormer {
 	BootStrap() // execute only once
