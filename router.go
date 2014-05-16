@@ -906,6 +906,9 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			//call the controller init function
 			execController.Init(context, runrouter.Name(), runMethod, vc.Interface())
 
+			//call prepare function
+			execController.Prepare()
+
 			//if XSRF is Enable then check cookie where there has any cookie in the  request's cookie _csrf
 			if EnableXSRF {
 				execController.XsrfToken()
@@ -914,9 +917,6 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 					execController.CheckXsrfCookie()
 				}
 			}
-
-			//call prepare function
-			execController.Prepare()
 
 			if !w.started {
 				//exec main logic
