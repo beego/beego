@@ -185,8 +185,8 @@ func (app *App) Any(rootpath string, f FilterFunc) *App {
 }
 
 // add router for http.Handler
-func (app *App) Handler(rootpath string, h http.Handler) *App {
-	app.Handlers.Handler(rootpath, h)
+func (app *App) Handler(rootpath string, h http.Handler, options ...interface{}) *App {
+	app.Handlers.Handler(rootpath, h, options...)
 	return app
 }
 
