@@ -69,6 +69,7 @@ type controllerInfo struct {
 	handler        http.Handler
 	runfunction    FilterFunc
 	routerType     int
+	isPrefix       bool
 }
 
 // ControllerRegistor containers registered router rules, controller handlers and filters.
@@ -277,11 +278,16 @@ func (p *ControllerRegistor) AddMethod(method, pattern string, f FilterFunc) {
 	}
 }
 
-func (p *ControllerRegistor) Handler(pattern string, h http.Handler) {
+func (p *ControllerRegistor) Handler(pattern string, h http.Handler, options ...interface{}) {
 	paramnums, params, parts := p.splitRoute(pattern)
 	route := &controllerInfo{}
 	route.routerType = routerTypeHandler
 	route.handler = h
+	if len(options) > 0 {
+		if v, ok := options[0].(bool); ok {
+			route.isPrefix = v
+		}
+	}
 	if paramnums == 0 {
 		route.pattern = pattern
 		p.fixrouters = append(p.fixrouters, route)
@@ -446,6 +452,7 @@ func (p *ControllerRegistor) AddFilter(pattern, action string, filter FilterFunc
 	if err != nil {
 		return err
 	}
+
 	switch action {
 	case "BeforeRouter":
 		p.filters[BeforeRouter] = append(p.filters[BeforeRouter], mr)
@@ -759,6 +766,14 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 					findrouter = true
 					break
 				}
+			}
+			if route.routerType == routerTypeHandler && route.isPrefix &&
+				strings.HasPrefix(requestPath, route.pattern) {
+
+				routerInfo = route
+				runrouter = route.controllerType
+				findrouter = true
+				break
 			}
 		}
 	}

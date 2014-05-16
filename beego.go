@@ -170,8 +170,8 @@ func Any(rootpath string, f FilterFunc) *App {
 }
 
 // register router for own Handler
-func Handler(rootpath string, h http.Handler) *App {
-	BeeApp.Handler(rootpath, h)
+func Handler(rootpath string, h http.Handler, options ...interface{}) *App {
+	BeeApp.Handler(rootpath, h, options...)
 	return BeeApp
 }
 
