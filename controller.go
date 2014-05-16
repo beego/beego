@@ -47,6 +47,7 @@ type Controller struct {
 	XSRFExpire     int
 	AppController  interface{}
 	EnableRender   bool
+	EnableXSRF     bool
 }
 
 // ControllerInterface is an interface to uniform all controller handler.
@@ -76,6 +77,7 @@ func (c *Controller) Init(ctx *context.Context, controllerName, actionName strin
 	c.TplExt = "tpl"
 	c.AppController = app
 	c.EnableRender = true
+	c.EnableXSRF = true
 	c.Data = ctx.Input.Data
 }
 
@@ -441,6 +443,9 @@ func (c *Controller) XsrfToken() string {
 // the token can provided in request header "X-Xsrftoken" and "X-CsrfToken"
 // or in form field value named as "_xsrf".
 func (c *Controller) CheckXsrfCookie() bool {
+	if !c.EnableXSRF {
+		return true
+	}
 	token := c.GetString("_xsrf")
 	if token == "" {
 		token = c.Ctx.Request.Header.Get("X-Xsrftoken")
