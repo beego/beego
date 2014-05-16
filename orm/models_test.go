@@ -210,6 +210,8 @@ type User struct {
 	Nums       int
 	Langs      SliceStringField `orm:"size(100)"`
 	Extra      JsonField        `orm:"type(text)"`
+	unexport   bool             `orm:"-"`
+	unexport_  bool
 }
 
 func (u *User) TableIndex() [][]string {
