@@ -43,6 +43,15 @@ func (this *TestController) GetUrl() {
 	this.Ctx.Output.Body([]byte(this.UrlFor(".Myext")))
 }
 
+func (t *TestController) GetParams() {
+	t.Ctx.WriteString(t.Ctx.Input.Query(":last") + "+" +
+		t.Ctx.Input.Query(":first") + "+" + t.Ctx.Input.Query("learn"))
+}
+
+func (t *TestController) GetManyRouter() {
+	t.Ctx.WriteString(t.Ctx.Input.Query(":id") + t.Ctx.Input.Query(":page"))
+}
+
 type ResStatus struct {
 	Code int
 	Msg  string
@@ -147,21 +156,11 @@ func TestRouteOk(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	handler := NewControllerRegistor()
-	handler.Add("/person/:last/:first", &TestController{})
+	handler.Add("/person/:last/:first", &TestController{}, "get:GetParams")
 	handler.ServeHTTP(w, r)
-
-	lastNameParam := r.URL.Query().Get(":last")
-	firstNameParam := r.URL.Query().Get(":first")
-	learnParam := r.URL.Query().Get("learn")
-
-	if lastNameParam != "anderson" {
-		t.Errorf("url param set to [%s]; want [%s]", lastNameParam, "anderson")
-	}
-	if firstNameParam != "thomas" {
-		t.Errorf("url param set to [%s]; want [%s]", firstNameParam, "thomas")
-	}
-	if learnParam != "kungfu" {
-		t.Errorf("url param set to [%s]; want [%s]", learnParam, "kungfu")
+	body := w.Body.String()
+	if body != "anderson+thomas+kungfu" {
+		t.Errorf("url param set to [%s];", body)
 	}
 }
 
@@ -171,17 +170,13 @@ func TestManyRoute(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	handler := NewControllerRegistor()
-	handler.Add("/beego:id([0-9]+)-:page([0-9]+).html", &TestController{})
+	handler.Add("/beego:id([0-9]+)-:page([0-9]+).html", &TestController{}, "get:GetManyRouter")
 	handler.ServeHTTP(w, r)
 
-	id := r.URL.Query().Get(":id")
-	page := r.URL.Query().Get(":page")
+	body := w.Body.String()
 
-	if id != "32" {
-		t.Errorf("url param set to [%s]; want [%s]", id, "32")
-	}
-	if page != "12" {
-		t.Errorf("url param set to [%s]; want [%s]", page, "12")
+	if body != "3212" {
+		t.Errorf("url param set to [%s];", body)
 	}
 }
 
