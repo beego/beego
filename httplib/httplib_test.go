@@ -38,7 +38,7 @@ func TestGetUrl(t *testing.T) {
 	}
 }
 
-func TestPost(t *testing.T) {
+func ExamplePost(t *testing.T) {
 	b := Post("http://beego.me/").Debug(true)
 	b.Param("username", "astaxie")
 	b.Param("password", "hello")
