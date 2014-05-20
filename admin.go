@@ -107,7 +107,6 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 			fmt.Fprintln(rw, "MaxMemory:", MaxMemory)
 			fmt.Fprintln(rw, "EnableGzip:", EnableGzip)
 			fmt.Fprintln(rw, "DirectoryIndex:", DirectoryIndex)
-			fmt.Fprintln(rw, "EnableHotUpdate:", EnableHotUpdate)
 			fmt.Fprintln(rw, "HttpServerTimeOut:", HttpServerTimeOut)
 			fmt.Fprintln(rw, "ErrorsShow:", ErrorsShow)
 			fmt.Fprintln(rw, "XSRFKEY:", XSRFKEY)

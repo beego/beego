@@ -56,7 +56,6 @@ var (
 	MaxMemory              int64
 	EnableGzip             bool // flag of enable gzip
 	DirectoryIndex         bool // flag of display directory index. default is false.
-	EnableHotUpdate        bool // flag of hot update checking by app self. default is false.
 	HttpServerTimeOut      int64
 	ErrorsShow             bool   // flag of show errors in page. if true, show error and trace info in page rendered with error template.
 	XSRFKEY                string // xsrf hash salt string.
@@ -101,6 +100,7 @@ func init() {
 
 	// set this to 0.0.0.0 to make this app available to externally
 	EnableHttpListen = true //default enable http Listen
+
 	HttpAddr = ""
 	HttpPort = 8080
 
@@ -252,10 +252,6 @@ func ParseConfig() (err error) {
 
 		if directoryindex, err := AppConfig.Bool("DirectoryIndex"); err == nil {
 			DirectoryIndex = directoryindex
-		}
-
-		if hotupdate, err := AppConfig.Bool("HotUpdate"); err == nil {
-			EnableHotUpdate = hotupdate
 		}
 
 		if timeout, err := AppConfig.Int64("HttpServerTimeOut"); err == nil {

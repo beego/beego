@@ -45,7 +45,7 @@ func (app *App) Run() {
 		err error
 		l   net.Listener
 	)
-	endRunning := make(chan bool)
+	endRunning := make(chan bool, 1)
 
 	if UseFcgi {
 		if HttpPort == 0 {
@@ -58,56 +58,35 @@ func (app *App) Run() {
 		}
 		err = fcgi.Serve(l, app.Handlers)
 	} else {
-		if EnableHotUpdate {
-			server := &http.Server{
-				Handler:      app.Handlers,
-				ReadTimeout:  time.Duration(HttpServerTimeOut) * time.Second,
-				WriteTimeout: time.Duration(HttpServerTimeOut) * time.Second,
-			}
-			laddr, err := net.ResolveTCPAddr("tcp", addr)
-			if nil != err {
-				BeeLogger.Critical("ResolveTCPAddr:", err)
-			}
-			l, err = GetInitListener(laddr)
-			if err == nil {
-				theStoppable = newStoppable(l)
-				err = server.Serve(theStoppable)
-				if err == nil {
-					theStoppable.wg.Wait()
-					err = CloseSelf()
+		s := &http.Server{
+			Addr:         addr,
+			Handler:      app.Handlers,
+			ReadTimeout:  time.Duration(HttpServerTimeOut) * time.Second,
+			WriteTimeout: time.Duration(HttpServerTimeOut) * time.Second,
+		}
+		if EnableHttpTLS {
+			go func() {
+				if HttpsPort != 0 {
+					s.Addr = fmt.Sprintf("%s:%d", HttpAddr, HttpsPort)
 				}
-			}
-		} else {
-			s := &http.Server{
-				Addr:         addr,
-				Handler:      app.Handlers,
-				ReadTimeout:  time.Duration(HttpServerTimeOut) * time.Second,
-				WriteTimeout: time.Duration(HttpServerTimeOut) * time.Second,
-			}
-			if EnableHttpTLS {
-				go func() {
-					if HttpsPort != 0 {
-						s.Addr = fmt.Sprintf("%s:%d", HttpAddr, HttpsPort)
-					}
-					err := s.ListenAndServeTLS(HttpCertFile, HttpKeyFile)
-					if err != nil {
-						BeeLogger.Critical("ListenAndServeTLS: ", err)
-						time.Sleep(100 * time.Microsecond)
-						endRunning <- true
-					}
-				}()
-			}
+				err := s.ListenAndServeTLS(HttpCertFile, HttpKeyFile)
+				if err != nil {
+					BeeLogger.Critical("ListenAndServeTLS: ", err)
+					time.Sleep(100 * time.Microsecond)
+					endRunning <- true
+				}
+			}()
+		}
 
-			if EnableHttpListen {
-				go func() {
-					err := s.ListenAndServe()
-					if err != nil {
-						BeeLogger.Critical("ListenAndServe: ", err)
-						time.Sleep(100 * time.Microsecond)
-						endRunning <- true
-					}
-				}()
-			}
+		if EnableHttpListen {
+			go func() {
+				err := s.ListenAndServe()
+				if err != nil {
+					BeeLogger.Critical("ListenAndServe: ", err)
+					time.Sleep(100 * time.Microsecond)
+					endRunning <- true
+				}
+			}()
 		}
 	}
 
