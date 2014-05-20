@@ -45,6 +45,7 @@ func (app *App) Run() {
 		err error
 		l   net.Listener
 	)
+	endRunning := make(chan bool)
 
 	if UseFcgi {
 		if HttpPort == 0 {
@@ -83,18 +84,34 @@ func (app *App) Run() {
 				ReadTimeout:  time.Duration(HttpServerTimeOut) * time.Second,
 				WriteTimeout: time.Duration(HttpServerTimeOut) * time.Second,
 			}
-			if HttpTLS {
-				err = s.ListenAndServeTLS(HttpCertFile, HttpKeyFile)
-			} else {
-				err = s.ListenAndServe()
+			if EnableHttpTLS {
+				go func() {
+					if HttpsPort != 0 {
+						s.Addr = fmt.Sprintf("%s:%d", HttpAddr, HttpsPort)
+					}
+					err := s.ListenAndServeTLS(HttpCertFile, HttpKeyFile)
+					if err != nil {
+						BeeLogger.Critical("ListenAndServe: ", err)
+						time.Sleep(100 * time.Microsecond)
+						endRunning <- true
+					}
+				}()
+			}
+
+			if EnableHttpListen {
+				go func() {
+					err := s.ListenAndServe()
+					if err != nil {
+						BeeLogger.Critical("ListenAndServe: ", err)
+						time.Sleep(100 * time.Microsecond)
+						endRunning <- true
+					}
+				}()
 			}
 		}
 	}
 
-	if err != nil {
-		BeeLogger.Critical("ListenAndServe: ", err)
-		time.Sleep(100 * time.Microsecond)
-	}
+	<-endRunning
 }
 
 // Router adds a url-patterned controller handler.

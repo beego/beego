@@ -30,9 +30,11 @@ var (
 	StaticDir              map[string]string
 	TemplateCache          map[string]*template.Template // template caching map
 	StaticExtensionsToGzip []string                      // files with should be compressed with gzip (.js,.css,etc)
+	EnableHttpListen       bool
 	HttpAddr               string
 	HttpPort               int
-	HttpTLS                bool
+	EnableHttpTLS          bool
+	HttpsPort              int
 	HttpCertFile           string
 	HttpKeyFile            string
 	RecoverPanic           bool // flag of auto recover panic
@@ -98,8 +100,11 @@ func init() {
 	TemplateCache = make(map[string]*template.Template)
 
 	// set this to 0.0.0.0 to make this app available to externally
+	EnableHttpListen = true //default enable http Listen
 	HttpAddr = ""
 	HttpPort = 8080
+
+	HttpsPort = 443
 
 	AppName = "beego"
 
@@ -174,6 +179,10 @@ func ParseConfig() (err error) {
 
 		if v, err := AppConfig.Int("HttpPort"); err == nil {
 			HttpPort = v
+		}
+
+		if v, err := AppConfig.Bool("EnableHttpListen"); err == nil {
+			EnableHttpListen = v
 		}
 
 		if maxmemory, err := AppConfig.Int64("MaxMemory"); err == nil {
@@ -281,8 +290,12 @@ func ParseConfig() (err error) {
 			TemplateRight = tplright
 		}
 
-		if httptls, err := AppConfig.Bool("HttpTLS"); err == nil {
-			HttpTLS = httptls
+		if httptls, err := AppConfig.Bool("EnableHttpTLS"); err == nil {
+			EnableHttpTLS = httptls
+		}
+
+		if httpsport, err := AppConfig.Int("HttpsPort"); err == nil {
+			HttpsPort = httpsport
 		}
 
 		if certfile := AppConfig.String("HttpCertFile"); certfile != "" {

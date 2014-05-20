@@ -270,7 +270,7 @@ func initBeforeHttpRun() {
 			sessionConfig = `{"cookieName":"` + SessionName + `",` +
 				`"gclifetime":` + strconv.FormatInt(SessionGCMaxLifetime, 10) + `,` +
 				`"providerConfig":"` + SessionSavePath + `",` +
-				`"secure":` + strconv.FormatBool(HttpTLS) + `,` +
+				`"secure":` + strconv.FormatBool(EnableHttpTLS) + `,` +
 				`"sessionIDHashFunc":"` + SessionHashFunc + `",` +
 				`"sessionIDHashKey":"` + SessionHashKey + `",` +
 				`"enableSetCookie":` + strconv.FormatBool(SessionAutoSetCookie) + `,` +

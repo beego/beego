@@ -88,7 +88,7 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 			fmt.Fprintln(rw, "StaticExtensionsToGzip:", StaticExtensionsToGzip)
 			fmt.Fprintln(rw, "HttpAddr:", HttpAddr)
 			fmt.Fprintln(rw, "HttpPort:", HttpPort)
-			fmt.Fprintln(rw, "HttpTLS:", HttpTLS)
+			fmt.Fprintln(rw, "HttpTLS:", EnableHttpTLS)
 			fmt.Fprintln(rw, "HttpCertFile:", HttpCertFile)
 			fmt.Fprintln(rw, "HttpKeyFile:", HttpKeyFile)
 			fmt.Fprintln(rw, "RecoverPanic:", RecoverPanic)
