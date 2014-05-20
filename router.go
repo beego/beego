@@ -448,7 +448,7 @@ func (p *ControllerRegistor) AddAutoPrefix(prefix string, c ControllerInterface)
 // [Deprecated] use InsertFilter.
 // Add FilterFunc with pattern for action.
 func (p *ControllerRegistor) AddFilter(pattern, action string, filter FilterFunc) error {
-	mr, err := buildFilter(pattern, filter)
+	mr, err := p.buildFilter(pattern, filter)
 	if err != nil {
 		return err
 	}
@@ -471,13 +471,32 @@ func (p *ControllerRegistor) AddFilter(pattern, action string, filter FilterFunc
 
 // Add a FilterFunc with pattern rule and action constant.
 func (p *ControllerRegistor) InsertFilter(pattern string, pos int, filter FilterFunc) error {
-	mr, err := buildFilter(pattern, filter)
+	mr, err := p.buildFilter(pattern, filter)
 	if err != nil {
 		return err
 	}
 	p.filters[pos] = append(p.filters[pos], mr)
 	p.enableFilter = true
 	return nil
+}
+
+func (p *ControllerRegistor) buildFilter(pattern string, filter FilterFunc) (*FilterRouter, error) {
+	mr := new(FilterRouter)
+	mr.params = make(map[int]string)
+	mr.filterFunc = filter
+	j, params, parts := p.splitRoute(pattern)
+	if j != 0 {
+		pattern = strings.Join(parts, "/")
+		regex, regexErr := regexp.Compile(pattern)
+		if regexErr != nil {
+			return nil, regexErr
+		}
+		mr.regex = regex
+		mr.hasregex = true
+	}
+	mr.params = params
+	mr.pattern = pattern
+	return mr, nil
 }
 
 // UrlFor does another controller handler in this request function.

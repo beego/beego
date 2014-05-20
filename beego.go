@@ -140,54 +140,90 @@ func AutoPrefix(prefix string, c ControllerInterface) *App {
 }
 
 // register router for Get method
+// usage:
+//    beego.Get("/", func(ctx *context.Context){
+//          ctx.Output.Body("hello world")
+//    })
 func Get(rootpath string, f FilterFunc) *App {
 	BeeApp.Handlers.Get(rootpath, f)
 	return BeeApp
 }
 
 // register router for Post method
+// usage:
+//    beego.Post("/api", func(ctx *context.Context){
+//          ctx.Output.Body("hello world")
+//    })
 func Post(rootpath string, f FilterFunc) *App {
 	BeeApp.Handlers.Post(rootpath, f)
 	return BeeApp
 }
 
 // register router for Delete method
+// usage:
+//    beego.Delete("/api", func(ctx *context.Context){
+//          ctx.Output.Body("hello world")
+//    })
 func Delete(rootpath string, f FilterFunc) *App {
 	BeeApp.Handlers.Delete(rootpath, f)
 	return BeeApp
 }
 
 // register router for Put method
+// usage:
+//    beego.Put("/api", func(ctx *context.Context){
+//          ctx.Output.Body("hello world")
+//    })
 func Put(rootpath string, f FilterFunc) *App {
 	BeeApp.Handlers.Put(rootpath, f)
 	return BeeApp
 }
 
 // register router for Head method
+// usage:
+//    beego.Head("/api", func(ctx *context.Context){
+//          ctx.Output.Body("hello world")
+//    })
 func Head(rootpath string, f FilterFunc) *App {
 	BeeApp.Handlers.Head(rootpath, f)
 	return BeeApp
 }
 
 // register router for Options method
+// usage:
+//    beego.Options("/api", func(ctx *context.Context){
+//          ctx.Output.Body("hello world")
+//    })
 func Options(rootpath string, f FilterFunc) *App {
 	BeeApp.Handlers.Options(rootpath, f)
 	return BeeApp
 }
 
 // register router for Patch method
+// usage:
+//    beego.Patch("/api", func(ctx *context.Context){
+//          ctx.Output.Body("hello world")
+//    })
 func Patch(rootpath string, f FilterFunc) *App {
 	BeeApp.Handlers.Patch(rootpath, f)
 	return BeeApp
 }
 
 // register router for all method
+// usage:
+//    beego.Any("/api", func(ctx *context.Context){
+//          ctx.Output.Body("hello world")
+//    })
 func Any(rootpath string, f FilterFunc) *App {
 	BeeApp.Handlers.Any(rootpath, f)
 	return BeeApp
 }
 
 // register router for own Handler
+// usage:
+//    beego.Handler("/api", func(ctx *context.Context){
+//          ctx.Output.Body("hello world")
+//    })
 func Handler(rootpath string, h http.Handler, options ...interface{}) *App {
 	BeeApp.Handlers.Handler(rootpath, h, options...)
 	return BeeApp
