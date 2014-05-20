@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
-
 	"github.com/astaxie/beego/context"
 )
 
@@ -272,4 +271,47 @@ func TestRouterHandler(t *testing.T) {
 	if w.Body.String() != "sayhello" {
 		t.Errorf("TestRouterHandler can't run")
 	}
+}
+
+//
+// Benchmarks NewApp:
+//
+
+func beegoFilterFunc(ctx *context.Context) {
+	ctx.WriteString("hello")
+}
+
+type AdminController struct {
+	Controller
+}
+
+func (a *AdminController) Get() {
+	a.Ctx.WriteString("hello")
+}
+
+func BenchmarkFunc(b *testing.B) {
+	mux := NewControllerRegistor()
+	mux.Get("/action", beegoFilterFunc)
+	rw, r := testRequest("GET", "/action")
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		mux.ServeHTTP(rw, r)
+	}
+}
+
+func BenchmarkController(b *testing.B) {
+	mux := NewControllerRegistor()
+	mux.Add("/action", &AdminController{})
+	rw, r := testRequest("GET", "/action")
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		mux.ServeHTTP(rw, r)
+	}
+}
+
+func testRequest(method, path string) (*httptest.ResponseRecorder, *http.Request) {
+	request, _ := http.NewRequest(method, path, nil)
+	recorder := httptest.NewRecorder()
+
+	return recorder, request
 }
