@@ -104,7 +104,7 @@ func init() {
 	HttpAddr = ""
 	HttpPort = 8080
 
-	HttpsPort = 443
+	HttpsPort = 10443
 
 	AppName = "beego"
 
