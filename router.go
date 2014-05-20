@@ -797,14 +797,9 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			}
 
 			if len(route.params) > 0 {
-				//add url parameters to the query param map
-				values := r.URL.Query()
 				for i, match := range matches[1:] {
-					values.Add(route.params[i], match)
 					params[route.params[i]] = match
 				}
-				//reassemble query params and add to RawQuery
-				r.URL.RawQuery = url.Values(values).Encode()
 			}
 			runMethod = p.getRunMethod(r.Method, context, route)
 			if runMethod != "" {
