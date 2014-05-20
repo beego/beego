@@ -91,7 +91,7 @@ func (app *App) Run() {
 					}
 					err := s.ListenAndServeTLS(HttpCertFile, HttpKeyFile)
 					if err != nil {
-						BeeLogger.Critical("ListenAndServe: ", err)
+						BeeLogger.Critical("ListenAndServeTLS: ", err)
 						time.Sleep(100 * time.Microsecond)
 						endRunning <- true
 					}
