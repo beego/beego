@@ -161,7 +161,8 @@ func (input *BeegoInput) IsUpload() bool {
 func (input *BeegoInput) IP() string {
 	ips := input.Proxy()
 	if len(ips) > 0 && ips[0] != "" {
-		return ips[0]
+		rip := strings.Split(ips[0], ":")
+		return rip[0]
 	}
 	ip := strings.Split(input.Request.RemoteAddr, ":")
 	if len(ip) > 0 {

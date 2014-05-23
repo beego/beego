@@ -218,9 +218,9 @@ func profIndex(rw http.ResponseWriter, r *http.Request) {
 func healthcheck(rw http.ResponseWriter, req *http.Request) {
 	for name, h := range toolbox.AdminCheckList {
 		if err := h.Check(); err != nil {
-			fmt.Fprintf(rw, "%s : ok\n", name)
-		} else {
 			fmt.Fprintf(rw, "%s : %s\n", name, err.Error())
+		} else {
+			fmt.Fprintf(rw, "%s : ok\n", name)
 		}
 	}
 }

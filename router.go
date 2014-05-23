@@ -480,6 +480,7 @@ func (p *ControllerRegistor) InsertFilter(pattern string, pos int, filter Filter
 	return nil
 }
 
+// build the Filter by pattern
 func (p *ControllerRegistor) buildFilter(pattern string, filter FilterFunc) (*FilterRouter, error) {
 	mr := new(FilterRouter)
 	mr.params = make(map[int]string)
