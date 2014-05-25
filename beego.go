@@ -284,8 +284,19 @@ func AddAPPStartHook(hf hookfunc) {
 }
 
 // Run beego application.
-// it's alias of App.Run.
-func Run() {
+// beego.Run() default run on HttpPort
+// beego.Run(":8089")
+// beego.Run("127.0.0.1:8089")
+func Run(params ...string) {
+	if len(params) > 0 && params[0] != "" {
+		strs := strings.Split(params[0], ":")
+		if len(strs) > 0 && strs[0] != "" {
+			HttpAddr = strs[0]
+		}
+		if len(strs) > 1 && strs[1] != "" {
+			HttpPort, _ = strconv.Atoi(strs[1])
+		}
+	}
 	initBeforeHttpRun()
 
 	if EnableAdmin {
@@ -346,6 +357,7 @@ func initBeforeHttpRun() {
 	middleware.RegisterErrorHandler()
 }
 
+// this function is for test package init
 func TestBeegoInit(apppath string) {
 	AppPath = apppath
 	AppConfigPath = filepath.Join(AppPath, "conf", "app.conf")
