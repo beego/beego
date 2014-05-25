@@ -70,6 +70,7 @@ var (
 	AdminHttpPort          int
 	FlashName              string // name of the flash variable found in response header and cookie
 	FlashSeperator         string // used to seperate flash key:value
+	AppConfigProvider      string // config provider
 )
 
 func init() {
@@ -90,6 +91,8 @@ func init() {
 			AppConfigPath = filepath.Join(workPath, "conf", "app.conf")
 		}
 	}
+
+	AppConfigProvider = "ini"
 
 	StaticDir = make(map[string]string)
 	StaticDir["/static"] = "static"
@@ -170,7 +173,7 @@ func init() {
 // ParseConfig parsed default config file.
 // now only support ini, next will support json.
 func ParseConfig() (err error) {
-	AppConfig, err = config.NewConfig("ini", AppConfigPath)
+	AppConfig, err = config.NewConfig(AppConfigProvider, AppConfigPath)
 	if err != nil {
 		AppConfig = config.NewFakeConfig()
 		return err
