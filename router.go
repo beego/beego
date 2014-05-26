@@ -344,7 +344,7 @@ func (p *ControllerRegistor) splitRoute(pattern string) (paramnums int, params m
 			expr := "(.*)"
 			if part == "*.*" {
 				params[j] = ":path"
-				parts[i] = "([^.]+).([^.]+)"
+				parts[i] = `([^.]+)\.([^.]+)`
 				j++
 				params[j] = ":ext"
 				j++
