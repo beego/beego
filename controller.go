@@ -452,7 +452,7 @@ func (c *Controller) XsrfToken() string {
 			} else {
 				expire = int64(XSRFExpire)
 			}
-			token = string(utils.RandomCreateBytes(15))
+			token = string(utils.RandomCreateBytes(32))
 			c.SetSecureCookie(XSRFKEY, "_xsrf", token, expire)
 		}
 		c._xsrf_token = token
