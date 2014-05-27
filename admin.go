@@ -122,17 +122,29 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 		case "router":
 			fmt.Fprintln(rw, "Print all router infomation:")
 			for _, router := range BeeApp.Handlers.fixrouters {
-				if router.hasMethod {
-					fmt.Fprintln(rw, router.pattern, "----", router.methods, "----", router.controllerType.Name())
-				} else {
-					fmt.Fprintln(rw, router.pattern, "----", router.controllerType.Name())
+				if router.routerType == routerTypeBeego {
+					if router.hasMethod {
+						fmt.Fprintln(rw, router.pattern, "----", router.methods, "----", router.controllerType.Name())
+					} else {
+						fmt.Fprintln(rw, router.pattern, "----", router.controllerType.Name())
+					}
+				} else if router.routerType == routerTypeRESTFul {
+					fmt.Fprintln(rw, router.pattern, "----", router.methods, "----", router.runfunction)
+				} else if router.routerType == routerTypeHandler {
+					fmt.Fprintln(rw, router.pattern, "----", router.handler)
 				}
 			}
 			for _, router := range BeeApp.Handlers.routers {
-				if router.hasMethod {
-					fmt.Fprintln(rw, router.pattern, "----", router.methods, "----", router.controllerType.Name())
-				} else {
-					fmt.Fprintln(rw, router.pattern, "----", router.controllerType.Name())
+				if router.routerType == routerTypeBeego {
+					if router.hasMethod {
+						fmt.Fprintln(rw, router.pattern, "----", router.methods, "----", router.controllerType.Name())
+					} else {
+						fmt.Fprintln(rw, router.pattern, "----", router.controllerType.Name())
+					}
+				} else if router.routerType == routerTypeRESTFul {
+					fmt.Fprintln(rw, router.pattern, "----", router.methods, "----", router.runfunction)
+				} else if router.routerType == routerTypeHandler {
+					fmt.Fprintln(rw, router.pattern, "----", router.handler)
 				}
 			}
 			if BeeApp.Handlers.enableAuto {

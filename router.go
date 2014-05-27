@@ -525,37 +525,6 @@ func (p *ControllerRegistor) UrlFor(endpoint string, values ...string) string {
 	}
 	controllName := strings.Join(paths[:len(paths)-1], ".")
 	methodName := paths[len(paths)-1]
-	for _, route := range p.fixrouters {
-		if route.controllerType.Name() == controllName {
-			var finded bool
-			if utils.InSlice(strings.ToLower(methodName), HTTPMETHOD) {
-				if route.hasMethod {
-					if m, ok := route.methods[strings.ToLower(methodName)]; ok && m != methodName {
-						finded = false
-					} else if m, ok = route.methods["*"]; ok && m != methodName {
-						finded = false
-					} else {
-						finded = true
-					}
-				} else {
-					finded = true
-				}
-			} else if route.hasMethod {
-				for _, md := range route.methods {
-					if md == methodName {
-						finded = true
-					}
-				}
-			}
-			if !finded {
-				continue
-			}
-			if len(values) > 0 {
-				return route.pattern + "?" + urlv.Encode()
-			}
-			return route.pattern
-		}
-	}
 	for _, route := range p.routers {
 		if route.controllerType.Name() == controllName {
 			var finded bool
@@ -599,6 +568,37 @@ func (p *ControllerRegistor) UrlFor(endpoint string, values ...string) string {
 			if route.regex.MatchString(returnurl) {
 				return returnurl
 			}
+		}
+	}
+	for _, route := range p.fixrouters {
+		if route.controllerType.Name() == controllName {
+			var finded bool
+			if utils.InSlice(strings.ToLower(methodName), HTTPMETHOD) {
+				if route.hasMethod {
+					if m, ok := route.methods[strings.ToLower(methodName)]; ok && m != methodName {
+						finded = false
+					} else if m, ok = route.methods["*"]; ok && m != methodName {
+						finded = false
+					} else {
+						finded = true
+					}
+				} else {
+					finded = true
+				}
+			} else if route.hasMethod {
+				for _, md := range route.methods {
+					if md == methodName {
+						finded = true
+					}
+				}
+			}
+			if !finded {
+				continue
+			}
+			if len(values) > 0 {
+				return route.pattern + "?" + urlv.Encode()
+			}
+			return route.pattern
 		}
 	}
 	if p.enableAuto {
