@@ -18,6 +18,8 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/astaxie/beego/utils"
 )
 
 // SessionStore contains all data for one session process with specific id.
@@ -237,9 +239,9 @@ func (manager *Manager) SetSecure(secure bool) {
 
 // generate session id with rand string, unix nano time, remote addr by hash function.
 func (manager *Manager) sessionId(r *http.Request) (sid string) {
-	bs := make([]byte, 24)
-	if _, err := io.ReadFull(rand.Reader, bs); err != nil {
-		return ""
+	bs := make([]byte, 32)
+	if n, err := io.ReadFull(rand.Reader, bs); n != 32 || err != nil {
+		bs = utils.RandomCreateBytes(32)
 	}
 	sig := fmt.Sprintf("%s%d%s", r.RemoteAddr, time.Now().UnixNano(), bs)
 	if manager.config.SessionIDHashFunc == "md5" {

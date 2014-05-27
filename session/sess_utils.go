@@ -20,6 +20,8 @@ import (
 	"io"
 	"strconv"
 	"time"
+
+	"github.com/astaxie/beego/utils"
 )
 
 func init() {
@@ -60,8 +62,8 @@ func DecodeGob(encoded []byte) (map[interface{}]interface{}, error) {
 // generateRandomKey creates a random key with the given strength.
 func generateRandomKey(strength int) []byte {
 	k := make([]byte, strength)
-	if _, err := io.ReadFull(rand.Reader, k); err != nil {
-		return nil
+	if n, err := io.ReadFull(rand.Reader, k); n != strength || err != nil {
+		return utils.RandomCreateBytes(strength)
 	}
 	return k
 }
