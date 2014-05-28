@@ -191,6 +191,7 @@ func (n *Namespace) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	}
 	if n.condition != nil && !n.condition(context) {
 		http.Error(rw, "Method Not Allowed", 405)
+		return
 	}
 	n.handlers.ServeHTTP(rw, r)
 }

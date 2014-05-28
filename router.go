@@ -763,6 +763,9 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	if !findrouter {
 		for _, route := range p.fixrouters {
 			n := len(requestPath)
+			if n == 0 {
+				continue
+			}
 			if requestPath == route.pattern {
 				runMethod = p.getRunMethod(r.Method, context, route)
 				if runMethod != "" {
