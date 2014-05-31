@@ -37,8 +37,8 @@ func TestDateFormat(t *testing.T) {
 	ts := "Mon, 01 Jul 2013 13:27:42 CST"
 	tt, _ := time.Parse(time.RFC1123, ts)
 
-	if ss := DateFormat(tt, "2006-01-02 15:04:05"); ss != "2013-07-01 14:27:42" {
-		t.Errorf("2013-07-01 14:27:42 does not equal %v", ss)
+	if ss := DateFormat(tt, "2006-01-02 15:04:05"); ss != "2013-07-01 13:27:42" {
+		t.Errorf("2013-07-01 13:27:42 does not equal %v", ss)
 	}
 }
 
@@ -46,17 +46,17 @@ func TestDate(t *testing.T) {
 	ts := "Mon, 01 Jul 2013 13:27:42 CST"
 	tt, _ := time.Parse(time.RFC1123, ts)
 
-	if ss := Date(tt, "Y-m-d H:i:s"); ss != "2013-07-01 14:27:42" {
-		t.Errorf("2013-07-01 14:27:42 does not equal %v", ss)
+	if ss := Date(tt, "Y-m-d H:i:s"); ss != "2013-07-01 13:27:42" {
+		t.Errorf("2013-07-01 13:27:42 does not equal %v", ss)
 	}
-	if ss := Date(tt, "y-n-j h:i:s A"); ss != "13-7-1 02:27:42 PM" {
-		t.Errorf("13-7-1 02:27:42 PM does not equal %v", ss)
+	if ss := Date(tt, "y-n-j h:i:s A"); ss != "13-7-1 01:27:42 PM" {
+		t.Errorf("13-7-1 01:27:42 PM does not equal %v", ss)
 	}
-	if ss := Date(tt, "D, d M Y g:i:s a"); ss != "Mon, 01 Jul 2013 2:27:42 pm" {
-		t.Errorf("Mon, 01 Jul 2013 2:27:42 pm does not equal %v", ss)
+	if ss := Date(tt, "D, d M Y g:i:s a"); ss != "Mon, 01 Jul 2013 1:27:42 pm" {
+		t.Errorf("Mon, 01 Jul 2013 1:27:42 pm does not equal %v", ss)
 	}
-	if ss := Date(tt, "l, d F Y G:i:s"); ss != "Monday, 01 July 2013 14:27:42" {
-		t.Errorf("Monday, 01 July 2013 14:27:42 does not equal %v", ss)
+	if ss := Date(tt, "l, d F Y G:i:s"); ss != "Monday, 01 July 2013 13:27:42" {
+		t.Errorf("Monday, 01 July 2013 13:27:42 does not equal %v", ss)
 	}
 }
 
