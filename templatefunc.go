@@ -131,6 +131,43 @@ func Compare(a, b interface{}) (equal bool) {
 	return
 }
 
+func Config(returnType, key string, defaultVal interface{}) (value interface{}, err error) {
+	switch returnType {
+	case "String":
+		value = AppConfig.String(key)
+	case "Bool":
+		value, err = AppConfig.Bool(key)
+	case "Int":
+		value, err = AppConfig.Int(key)
+	case "Int64":
+		value, err = AppConfig.Int64(key)
+	case "Float":
+		value, err = AppConfig.Float(key)
+	case "DIY":
+		value, err = AppConfig.DIY(key)
+	default:
+		err = errors.New("Config keys must be of type String, Bool, Int, Int64, Float, or DIY!")
+	}
+
+	if err != nil {
+		if reflect.TypeOf(returnType) != reflect.TypeOf(defaultVal) {
+			err = errors.New("defaultVal type does not match returnType!")
+		} else {
+			value, err = defaultVal, nil
+		}
+	} else if reflect.TypeOf(value).Kind() == reflect.String {
+		if value == "" {
+			if reflect.TypeOf(defaultVal).Kind() != reflect.String {
+				err = errors.New("defaultVal type must be a String if the returnType is a String")
+			} else {
+				value = defaultVal.(string)
+			}
+		}
+	}
+
+	return
+}
+
 // Convert string to template.HTML type.
 func Str2html(raw string) template.HTML {
 	return template.HTML(raw)
