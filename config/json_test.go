@@ -100,4 +100,28 @@ func TestJson(t *testing.T) {
 			t.Fatal("get host err")
 		}
 	}
+
+	if _, err := jsonconf.Int("unknown"); err == nil {
+		t.Error("unknown keys should return an error when expecting an Int")
+	}
+
+	if _, err := jsonconf.Int64("unknown"); err == nil {
+		t.Error("unknown keys should return an error when expecting an Int64")
+	}
+
+	if _, err := jsonconf.Float("unknown"); err == nil {
+		t.Error("unknown keys should return an error when expecting a Float")
+	}
+
+	if _, err := jsonconf.DIY("unknown"); err == nil {
+		t.Error("unknown keys should return an error when expecting an interface{}")
+	}
+
+	if val := jsonconf.String("unknown"); val != "" {
+		t.Error("unknown keys should return an empty string when expecting a String")
+	}
+
+	if _, err := jsonconf.Bool("unknown"); err == nil {
+		t.Error("unknown keys should return an error when expecting a Bool")
+	}
 }
