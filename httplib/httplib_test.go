@@ -1,4 +1,4 @@
-// Beego (http://beego.me/)
+// Beego (http://localhost/httplib_test.php)
 // @description beego is an open-source, high-performance web framework for the Go programming language.
 // @link        http://github.com/astaxie/beego for the canonical source repository
 // @license     http://github.com/astaxie/beego/blob/master/LICENSE
@@ -7,13 +7,13 @@
 package httplib
 
 import (
+	"testing"
 	"fmt"
 	"io/ioutil"
-	"testing"
 )
 
 func TestGetUrl(t *testing.T) {
-	resp, err := Get("http://beego.me/").Debug(true).Response()
+	resp, err := Get("http://localhost/httplib_test.php").Debug(true).Response()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -29,7 +29,7 @@ func TestGetUrl(t *testing.T) {
 		t.Fatal("data is no")
 	}
 
-	str, err := Get("http://beego.me/").String()
+	str, err := Get("http://localhost/httplib_test.php").String()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -39,13 +39,62 @@ func TestGetUrl(t *testing.T) {
 }
 
 func TestPost(t *testing.T) {
-	b := Post("http://beego.me/").Debug(true)
+	b := Post("http://localhost/httplib_test.php").Debug(true)
 	b.Param("username", "astaxie")
 	b.Param("password", "hello")
-	b.PostFile("uploadfile", "httplib.go")
+	b.PostFile("uploadfile", "httplib_test.php")
 	str, err := b.String()
 	if err != nil {
 		t.Fatal(err)
 	}
 	fmt.Println(str)
+}
+
+func TestSimpleGetString(t *testing.T) {
+	fmt.Println("TestSimpleGetString==========================================")
+	html, err := Get("http://localhost/httplib_test.php").SetAgent("beegoooooo").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(html)
+	fmt.Println("TestSimpleGetString==========================================")
+}
+
+func TestSimpleGetStringWithDefaultCookie(t *testing.T) {
+	fmt.Println("TestSimpleGetStringWithDefaultCookie==========================================")
+	html, err := Get("http://localhost/httplib_test.php").SetEnableCookie(true).String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(html)
+	html, err = Get("http://localhost/httplib_test.php").SetEnableCookie(true).String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(html)
+	fmt.Println("TestSimpleGetStringWithDefaultCookie==========================================")
+}
+
+func TestDefaultSetting(t *testing.T) {
+	fmt.Println("TestDefaultSetting==========================================")
+	var def BeegoHttpSettings
+	def.EnableCookie = true
+	//def.ShowDebug = true
+	def.UserAgent = "UserAgent"
+	//def.ConnectTimeout = 60*time.Second
+	//def.ReadWriteTimeout = 60*time.Second
+	def.Transport = nil//http.DefaultTransport
+	SetDefaultSetting(def)
+
+	html, err := Get("http://localhost/httplib_test.php").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(html)
+	html, err = Get("http://localhost/httplib_test.php").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	fmt.Println(html)
+	fmt.Println("TestDefaultSetting==========================================")
 }
