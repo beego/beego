@@ -16,13 +16,13 @@ import (
 	"mime/multipart"
 	"net"
 	"net/http"
-	"net/http/httputil"
 	"net/http/cookiejar"
+	"net/http/httputil"
 	"net/url"
 	"os"
 	"strings"
-	"time"
 	"sync"
+	"time"
 )
 
 var defaultSetting = BeegoHttpSettings{false, "beegoServer", 60 * time.Second, 60 * time.Second, nil, nil, nil, false}
@@ -42,10 +42,10 @@ func SetDefaultSetting(setting BeegoHttpSettings) {
 	defer settingMutex.Unlock()
 	defaultSetting = setting
 	if defaultSetting.ConnectTimeout == 0 {
-		defaultSetting.ConnectTimeout = 60*time.Second
+		defaultSetting.ConnectTimeout = 60 * time.Second
 	}
 	if defaultSetting.ReadWriteTimeout == 0 {
-		defaultSetting.ReadWriteTimeout = 60*time.Second
+		defaultSetting.ReadWriteTimeout = 60 * time.Second
 	}
 }
 
@@ -54,7 +54,7 @@ func Get(url string) *BeegoHttpRequest {
 	var req http.Request
 	req.Method = "GET"
 	req.Header = http.Header{}
-	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting }
+	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting}
 }
 
 // Post returns *BeegoHttpRequest with POST method.
@@ -62,7 +62,7 @@ func Post(url string) *BeegoHttpRequest {
 	var req http.Request
 	req.Method = "POST"
 	req.Header = http.Header{}
-	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting }
+	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting}
 }
 
 // Put returns *BeegoHttpRequest with PUT method.
@@ -70,7 +70,7 @@ func Put(url string) *BeegoHttpRequest {
 	var req http.Request
 	req.Method = "PUT"
 	req.Header = http.Header{}
-	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting }
+	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting}
 }
 
 // Delete returns *BeegoHttpRequest DELETE GET method.
@@ -78,7 +78,7 @@ func Delete(url string) *BeegoHttpRequest {
 	var req http.Request
 	req.Method = "DELETE"
 	req.Header = http.Header{}
-	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting }
+	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting}
 }
 
 // Head returns *BeegoHttpRequest with HEAD method.
@@ -86,11 +86,11 @@ func Head(url string) *BeegoHttpRequest {
 	var req http.Request
 	req.Method = "HEAD"
 	req.Header = http.Header{}
-	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting }
+	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting}
 }
 
 // BeegoHttpSettings
-type BeegoHttpSettings struct{
+type BeegoHttpSettings struct {
 	ShowDebug        bool
 	UserAgent        string
 	ConnectTimeout   time.Duration
@@ -103,11 +103,11 @@ type BeegoHttpSettings struct{
 
 // BeegoHttpRequest provides more useful methods for requesting one url than http.Request.
 type BeegoHttpRequest struct {
-	url              string
-	req              *http.Request
-	params           map[string]string
-	files            map[string]string
-	setting          BeegoHttpSettings
+	url     string
+	req     *http.Request
+	params  map[string]string
+	files   map[string]string
+	setting BeegoHttpSettings
 }
 
 // Change request settings
@@ -238,9 +238,9 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 
 	if b.req.Method == "GET" && len(paramBody) > 0 {
 		if strings.Index(b.url, "?") != -1 {
-			b.url += "&"+paramBody
+			b.url += "&" + paramBody
 		} else {
-			b.url = b.url+"?"+paramBody
+			b.url = b.url + "?" + paramBody
 		}
 	} else if b.req.Method == "POST" && b.req.Body == nil && len(paramBody) > 0 {
 		if len(b.files) > 0 {
@@ -278,7 +278,7 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 
 	url, err := url.Parse(b.url)
 	if url.Scheme == "" {
-		b.url = "http://"+b.url
+		b.url = "http://" + b.url
 		url, err = url.Parse(b.url)
 	}
 	if err != nil {
@@ -324,13 +324,13 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 			createDefaultCookie()
 		}
 		jar = defaultCookieJar
-	}else {
+	} else {
 		jar = nil
 	}
 
 	client := &http.Client{
 		Transport: trans,
-		Jar:jar,
+		Jar:       jar,
 	}
 
 	if b.setting.UserAgent != "" {
