@@ -42,7 +42,7 @@ func TestPost(t *testing.T) {
 	b := Post("http://beego.me").Debug(true)
 	b.Param("username", "astaxie")
 	b.Param("password", "hello")
-	b.PostFile("uploadfile", "httplib_test.php")
+	b.PostFile("uploadfile", "httplib_test.go")
 	str, err := b.String()
 	if err != nil {
 		t.Fatal(err)
