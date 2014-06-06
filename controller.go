@@ -28,7 +28,7 @@ import (
 //commonly used mime-types
 const (
 	applicationJson = "application/json"
-	applicationXml  = "applicatoin/xml"
+	applicationXml  = "application/xml"
 	textXml         = "text/xml"
 )
 
