@@ -7,7 +7,6 @@
 package beego
 
 import (
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -375,16 +374,18 @@ func TestBeegoInit(apppath string) {
 //add  remote configure
 func RemoteConf(config string) {
 	if len(config) != 0 {
-
 		resp, err := http.Get(config)
-		defer resp.Body.Close()
 		if err != nil {
-			fmt.Println("Download remote config error:", err)
+			Info("Download remote config error:", err)
+			return
 		}
+		defer resp.Body.Close()
+
 		if resp.StatusCode == 200 {
 			data, err := ioutil.ReadAll(resp.Body)
 			if err != nil {
-				fmt.Println("Read remote config error:", err)
+				Info("Read remote config error:", err)
+				return
 			} else {
 				f, _ := ioutil.TempFile("", "beego")
 				ioutil.WriteFile(f.Name(), data, os.ModeAppend)
@@ -392,6 +393,9 @@ func RemoteConf(config string) {
 				AppConfigRemote = config
 			}
 
+		} else {
+			Info("Notfind remote config ")
+			return
 		}
 
 	}
