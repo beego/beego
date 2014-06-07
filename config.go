@@ -8,17 +8,16 @@ package beego
 
 import (
 	"fmt"
+	"github.com/astaxie/beego/config"
+	"github.com/astaxie/beego/logs"
+	"github.com/astaxie/beego/session"
+	"github.com/astaxie/beego/utils"
 	"html/template"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
-
-	"github.com/astaxie/beego/config"
-	"github.com/astaxie/beego/logs"
-	"github.com/astaxie/beego/session"
-	"github.com/astaxie/beego/utils"
 )
 
 var (
@@ -27,6 +26,7 @@ var (
 	AppPath                string
 	workPath               string
 	AppConfigPath          string
+	AppConfigRemote        string
 	StaticDir              map[string]string
 	TemplateCache          map[string]*template.Template // template caching map
 	StaticExtensionsToGzip []string                      // files with should be compressed with gzip (.js,.css,etc)
@@ -81,7 +81,6 @@ func init() {
 	AppPath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
 
 	AppConfigPath = filepath.Join(AppPath, "conf", "app.conf")
-
 	if workPath != AppPath {
 		if utils.FileExists(AppConfigPath) {
 			os.Chdir(AppPath)
@@ -165,6 +164,7 @@ func init() {
 // ParseConfig parsed default config file.
 // now only support ini, next will support json.
 func ParseConfig() (err error) {
+
 	AppConfig, err = config.NewConfig("ini", AppConfigPath)
 	if err != nil {
 		AppConfig = config.NewFakeConfig()

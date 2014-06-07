@@ -7,6 +7,8 @@
 package beego
 
 import (
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
@@ -237,7 +239,6 @@ func AddAPPStartHook(hf hookfunc) {
 // it's alias of App.Run.
 func Run() {
 	initBeforeHttpRun()
-
 	if EnableAdmin {
 		go beeAdminApp.Run()
 	}
@@ -247,6 +248,7 @@ func Run() {
 
 func initBeforeHttpRun() {
 	// if AppConfigPath not In the conf/app.conf reParse config
+
 	if AppConfigPath != filepath.Join(AppPath, "conf", "app.conf") {
 		err := ParseConfig()
 		if err != nil && AppConfigPath != filepath.Join(workPath, "conf", "app.conf") {
@@ -308,6 +310,30 @@ func TestBeegoInit(apppath string) {
 	initBeforeHttpRun()
 }
 
+//添加远程配置文件
+func Config(config string) {
+	if len(config) != 0 {
+
+		resp, err := http.Get(config)
+		defer resp.Body.Close()
+		if err != nil {
+			fmt.Println("Download remote config error:", err)
+		}
+		if resp.StatusCode == 200 {
+			data, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				fmt.Println("Read remote config error:", err)
+			} else {
+				f, _ := ioutil.TempFile("", "beego")
+				ioutil.WriteFile(f.Name(), data, os.ModeAppend)
+				AppConfigPath = f.Name()
+				AppConfigRemote = config
+			}
+
+		}
+
+	}
+}
 func init() {
 	hooks = make([]hookfunc, 0)
 	//init mime
