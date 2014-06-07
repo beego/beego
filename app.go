@@ -33,6 +33,12 @@ func NewApp() *App {
 
 // Run beego application.
 func (app *App) Run() {
+
+	if len(AppConfigRemote) == 0 {
+		BeeLogger.Info("Use local config")
+	} else {
+		BeeLogger.Info("Use  %s  config", AppConfigRemote)
+	}
 	addr := HttpAddr
 
 	if HttpPort != 0 {
