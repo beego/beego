@@ -36,6 +36,12 @@ func NewApp() *App {
 func (app *App) Run() {
 	addr := HttpAddr
 
+	if len(AppConfigRemote) == 0 {
+		BeeLogger.Info("Use local config")
+	} else {
+		BeeLogger.Info("Use  %s  config", AppConfigRemote)
+	}
+
 	if HttpPort != 0 {
 		addr = fmt.Sprintf("%s:%d", HttpAddr, HttpPort)
 	}
