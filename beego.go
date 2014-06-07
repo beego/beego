@@ -7,6 +7,8 @@
 package beego
 
 import (
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
@@ -370,6 +372,30 @@ func TestBeegoInit(apppath string) {
 	initBeforeHttpRun()
 }
 
+//add  remote configure
+func RemoteConf(config string) {
+	if len(config) != 0 {
+
+		resp, err := http.Get(config)
+		defer resp.Body.Close()
+		if err != nil {
+			fmt.Println("Download remote config error:", err)
+		}
+		if resp.StatusCode == 200 {
+			data, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				fmt.Println("Read remote config error:", err)
+			} else {
+				f, _ := ioutil.TempFile("", "beego")
+				ioutil.WriteFile(f.Name(), data, os.ModeAppend)
+				AppConfigPath = f.Name()
+				AppConfigRemote = config
+			}
+
+		}
+
+	}
+}
 func init() {
 	hooks = make([]hookfunc, 0)
 	//init mime
