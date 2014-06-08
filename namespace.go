@@ -7,18 +7,17 @@ package beego
 
 import (
 	"net/http"
-	"strings"
 
 	beecontext "github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/middleware"
 )
 
 type namespaceCond func(*beecontext.Context) bool
 
 // Namespace is store all the info
 type Namespace struct {
-	prefix    string
-	condition namespaceCond
-	handlers  *ControllerRegistor
+	prefix   string
+	handlers *ControllerRegistor
 }
 
 // get new Namespace
@@ -39,8 +38,23 @@ func NewNamespace(prefix string) *Namespace {
 //       }
 //       return false
 //   })
+// Cond as the first filter
 func (n *Namespace) Cond(cond namespaceCond) *Namespace {
-	n.condition = cond
+	fn := func(ctx *beecontext.Context) {
+		if !cond(ctx) {
+			middleware.Exception("405", ctx.ResponseWriter, ctx.Request, "Method not allowed")
+		}
+	}
+	if v, ok := n.handlers.filters[BeforeRouter]; ok {
+		mr := new(FilterRouter)
+		mr.tree = NewTree()
+		mr.pattern = "*"
+		mr.filterFunc = fn
+		mr.tree.AddRouter("*", true)
+		n.handlers.filters[BeforeRouter] = append([]*FilterRouter{mr}, v...)
+	} else {
+		n.handlers.InsertFilter("*", BeforeRouter, fn)
+	}
 	return n
 }
 
@@ -55,12 +69,13 @@ func (n *Namespace) Cond(cond namespaceCond) *Namespace {
 //        }
 //   })
 func (n *Namespace) Filter(action string, filter FilterFunc) *Namespace {
+	var a int
 	if action == "before" {
-		action = "BeforeRouter"
+		a = BeforeRouter
 	} else if action == "after" {
-		action = "FinishRouter"
+		a = FinishRouter
 	}
-	n.handlers.AddFilter("*", action, filter)
+	n.handlers.InsertFilter("*", a, filter)
 	return n
 }
 
@@ -167,39 +182,35 @@ func (n *Namespace) Handler(rootpath string, h http.Handler) *Namespace {
 //)
 func (n *Namespace) Namespace(ns ...*Namespace) *Namespace {
 	for _, ni := range ns {
-		n.handlers.Handler(ni.prefix, ni, true)
+		n.handlers.routers.AddTree(ni.prefix, ni.handlers.routers)
+		if n.handlers.enableFilter {
+			for pos, filterList := range ni.handlers.filters {
+				for _, mr := range filterList {
+					t := NewTree()
+					t.AddTree(ni.prefix, mr.tree)
+					mr.tree = t
+					n.handlers.insertFilterRouter(pos, mr)
+				}
+			}
+		}
 	}
 	return n
-}
-
-// Namespace implement the http.Handler
-func (n *Namespace) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
-	//trim the preifix from URL.Path
-	r.URL.Path = strings.TrimPrefix(r.URL.Path, n.prefix)
-	// init context
-	context := &beecontext.Context{
-		ResponseWriter: rw,
-		Request:        r,
-		Input:          beecontext.NewInput(r),
-		Output:         beecontext.NewOutput(),
-	}
-	context.Output.Context = context
-	context.Output.EnableGzip = EnableGzip
-
-	if context.Input.IsWebsocket() {
-		context.ResponseWriter = rw
-	}
-	if n.condition != nil && !n.condition(context) {
-		http.Error(rw, "Method Not Allowed", 405)
-		return
-	}
-	n.handlers.ServeHTTP(rw, r)
 }
 
 // register Namespace into beego.Handler
 // support multi Namespace
 func AddNamespace(nl ...*Namespace) {
 	for _, n := range nl {
-		Handler(n.prefix, n, true)
+		BeeApp.Handlers.routers.AddTree(n.prefix, n.handlers.routers)
+		if n.handlers.enableFilter {
+			for pos, filterList := range n.handlers.filters {
+				for _, mr := range filterList {
+					t := NewTree()
+					t.AddTree(n.prefix, mr.tree)
+					mr.tree = t
+					BeeApp.Handlers.insertFilterRouter(pos, mr)
+				}
+			}
+		}
 	}
 }

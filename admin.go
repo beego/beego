@@ -121,51 +121,12 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 			fmt.Fprintln(rw, "AdminHttpPort:", AdminHttpPort)
 		case "router":
 			fmt.Fprintln(rw, "Print all router infomation:")
-			for _, router := range BeeApp.Handlers.fixrouters {
-				if router.routerType == routerTypeBeego {
-					if router.hasMethod {
-						fmt.Fprintln(rw, router.pattern, "----", router.methods, "----", router.controllerType.Name())
-					} else {
-						fmt.Fprintln(rw, router.pattern, "----", router.controllerType.Name())
-					}
-				} else if router.routerType == routerTypeRESTFul {
-					fmt.Fprintln(rw, router.pattern, "----", router.methods, "----", router.runfunction)
-				} else if router.routerType == routerTypeHandler {
-					fmt.Fprintln(rw, router.pattern, "----", router.handler)
-				}
-			}
-			for _, router := range BeeApp.Handlers.routers {
-				if router.routerType == routerTypeBeego {
-					if router.hasMethod {
-						fmt.Fprintln(rw, router.pattern, "----", router.methods, "----", router.controllerType.Name())
-					} else {
-						fmt.Fprintln(rw, router.pattern, "----", router.controllerType.Name())
-					}
-				} else if router.routerType == routerTypeRESTFul {
-					fmt.Fprintln(rw, router.pattern, "----", router.methods, "----", router.runfunction)
-				} else if router.routerType == routerTypeHandler {
-					fmt.Fprintln(rw, router.pattern, "----", router.handler)
-				}
-			}
-			if BeeApp.Handlers.enableAuto {
-				for controllerName, methodObj := range BeeApp.Handlers.autoRouter {
-					fmt.Fprintln(rw, controllerName, "----")
-					for methodName, obj := range methodObj {
-						fmt.Fprintln(rw, "        ", methodName, "-----", obj.Name())
-					}
-				}
-			}
+			// @todo print routers
 		case "filter":
 			fmt.Fprintln(rw, "Print all filter infomation:")
 			if BeeApp.Handlers.enableFilter {
 				fmt.Fprintln(rw, "BeforeRouter:")
 				if bf, ok := BeeApp.Handlers.filters[BeforeRouter]; ok {
-					for _, f := range bf {
-						fmt.Fprintln(rw, f.pattern, utils.GetFuncName(f.filterFunc))
-					}
-				}
-				fmt.Fprintln(rw, "AfterStatic:")
-				if bf, ok := BeeApp.Handlers.filters[AfterStatic]; ok {
 					for _, f := range bf {
 						fmt.Fprintln(rw, f.pattern, utils.GetFuncName(f.filterFunc))
 					}

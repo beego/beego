@@ -25,6 +25,26 @@ func NewTree() *Tree {
 	}
 }
 
+// add Tree to the exist Tree
+// prefix should has no params
+func (t *Tree) AddTree(prefix string, tree *Tree) {
+	t.addtree(splitPath(prefix), tree)
+}
+
+func (t *Tree) addtree(segments []string, tree *Tree) {
+	if len(segments) == 0 {
+		panic("prefix should has path")
+	}
+	if len(segments) == 1 && segments[0] != "" {
+		t.fixrouters[segments[0]] = tree
+		return
+	}
+	seg := segments[0]
+	subTree := NewTree()
+	t.fixrouters[seg] = subTree
+	subTree.addtree(segments[1:], tree)
+}
+
 // call addseg function
 func (t *Tree) AddRouter(pattern string, runObject interface{}) {
 	t.addseg(splitPath(pattern), runObject, nil, "")
@@ -83,22 +103,40 @@ func (t *Tree) match(segments []string, wildcardValues []string) (runObject inte
 				return t.leaf.runObject, pa
 			}
 		}
+		if t.wildcard != nil && t.wildcard.leaf != nil {
+			if ok, pa := t.wildcard.leaf.match(wildcardValues); ok {
+				return t.wildcard.leaf.runObject, pa
+			}
+		}
 		return nil, nil
 	}
 
-	var seg string
-	seg, segments = segments[0], segments[1:]
+	seg, segs := segments[0], segments[1:]
 
 	subTree, ok := t.fixrouters[seg]
 	if ok {
-		runObject, params = subTree.match(segments, wildcardValues)
+		runObject, params = subTree.match(segs, wildcardValues)
+	} else if len(segs) == 0 { //.json .xml
+		if subindex := strings.LastIndex(seg, "."); subindex != -1 {
+			subTree, ok = t.fixrouters[seg[:subindex]]
+			if ok {
+				runObject, params = subTree.match(segs, wildcardValues)
+				if runObject != nil {
+					if params == nil {
+						params = make(map[string]string)
+					}
+					params[":ext"] = seg[subindex+1:]
+					return runObject, params
+				}
+			}
+		}
 	}
 	if runObject == nil && t.wildcard != nil {
-		runObject, params = t.wildcard.match(segments, append(wildcardValues, seg))
+		runObject, params = t.wildcard.match(segs, append(wildcardValues, seg))
 	}
 	if runObject == nil {
 		if t.leaf != nil {
-			if ok, pa := t.leaf.match(append(wildcardValues, seg)); ok {
+			if ok, pa := t.leaf.match(append(wildcardValues, segments...)); ok {
 				return t.leaf.runObject, pa
 			}
 		}
@@ -122,7 +160,21 @@ func (leaf *leafInfo) match(wildcardValues []string) (ok bool, params map[string
 		// has error
 		if len(wildcardValues) == 0 && len(leaf.wildcards) > 0 {
 			if utils.InSlice(":", leaf.wildcards) {
-				return true, nil
+				params = make(map[string]string)
+				j := 0
+				for _, v := range leaf.wildcards {
+					if v == ":" {
+						continue
+					}
+					params[v] = ""
+					j += 1
+				}
+				return true, params
+			}
+			if len(leaf.wildcards) == 1 && leaf.wildcards[0] == ":splat" {
+				params = make(map[string]string)
+				params[":splat"] = ""
+				return true, params
 			}
 			Error("bug of router")
 			return false, nil
@@ -155,10 +207,27 @@ func (leaf *leafInfo) match(wildcardValues []string) (ok bool, params map[string
 			if v == ":" {
 				continue
 			}
+			if v == "." {
+				lastone := wildcardValues[len(wildcardValues)-1]
+				strs := strings.SplitN(lastone, ".", 2)
+				if len(strs) == 2 {
+					params[":ext"] = strs[1]
+				} else {
+					params[":ext"] = ""
+				}
+				if len(wildcardValues[j:]) == 1 {
+					params[":path"] = strs[0]
+				} else {
+					params[":path"] = path.Join(wildcardValues[j:]...) + "/" + strs[0]
+				}
+				return true, params
+			}
 			params[v] = wildcardValues[j]
 			j += 1
 		}
 		if len(params) != len(wildcardValues) {
+			Info(params)
+			Info(wildcardValues)
 			Error("bug of router")
 			return false, nil
 		}
@@ -193,7 +262,7 @@ func splitPath(key string) []string {
 
 // "admin" -> false, nil, ""
 // ":id" -> true, [:id], ""
-// "?:id" -> true, [: id], ""        : meaning can empty
+// "?:id" -> true, [: :id], ""        : meaning can empty
 // ":id:int" -> true, [:id], ([0-9]+)
 // ":name:string" -> true, [:name], ([\w]+)
 // ":id([0-9]+)" -> true, [:id], ([0-9]+)

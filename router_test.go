@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
 	"github.com/astaxie/beego/context"
 )
 
@@ -76,16 +77,17 @@ func TestUrlFor(t *testing.T) {
 	handler.Add("/person/:last/:first", &TestController{})
 	handler.AddAuto(&TestController{})
 	if handler.UrlFor("TestController.List") != "/api/list" {
+		Info(handler.UrlFor("TestController.List"))
 		t.Errorf("TestController.List must equal to /api/list")
 	}
 	if handler.UrlFor("TestController.Get", ":last", "xie", ":first", "asta") != "/person/xie/asta" {
 		t.Errorf("TestController.Get must equal to /person/xie/asta")
 	}
-	if handler.UrlFor("TestController.Myext") != "/Test/Myext" {
-		t.Errorf("TestController.Myext must equal to /Test/Myext")
+	if handler.UrlFor("TestController.Myext") != "/test/myext" {
+		t.Errorf("TestController.Myext must equal to /test/myext")
 	}
-	if handler.UrlFor("TestController.GetUrl") != "/Test/GetUrl" {
-		t.Errorf("TestController.GetUrl must equal to /Test/GetUrl")
+	if handler.UrlFor("TestController.GetUrl") != "/test/geturl" {
+		t.Errorf("TestController.GetUrl must equal to /test/geturl")
 	}
 }
 

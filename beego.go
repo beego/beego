@@ -100,7 +100,7 @@ func AddGroupRouter(prefix string, groups GroupRouters) *App {
 //
 //  regex router
 //
-//  beego.Router(“/api/:id([0-9]+)“, &controllers.RController{})
+//  beego.Router("/api/:id([0-9]+)", &controllers.RController{})
 //
 //  custom rules
 //  beego.Router("/api/list",&RestController{},"*:ListFood")
@@ -109,6 +109,38 @@ func AddGroupRouter(prefix string, groups GroupRouters) *App {
 //  beego.Router("/api/delete",&RestController{},"delete:DeleteFood")
 func Router(rootpath string, c ControllerInterface, mappingMethods ...string) *App {
 	BeeApp.Handlers.Add(rootpath, c, mappingMethods...)
+	return BeeApp
+}
+
+// Router add list from
+// usage:
+// beego.Include(&BankAccount{}, &OrderController{},&RefundController{},&ReceiptController{})
+// type BankAccount struct{
+//   beego.Controller
+// }
+//
+// register the function
+// func (b *BankAccount)Mapping(){
+//  b.Mapping("ShowAccount" , b.ShowAccount)
+//  b.Mapping("ModifyAccount", b.ModifyAccount)
+//}
+//
+// //@router /account/:id  [get]
+// func (b *BankAccount) ShowAccount(){
+//    //logic
+// }
+//
+//
+// //@router /account/:id  [post]
+// func (b *BankAccount) ModifyAccount(){
+//    //logic
+// }
+//
+// the comments @router url methodlist
+// url support all the function Router's pattern
+// methodlist [get post head put delete options *]
+func Include(cList ...ControllerInterface) *App {
+	BeeApp.Handlers.Include(cList...)
 	return BeeApp
 }
 
@@ -258,14 +290,6 @@ func SetStaticPath(url string, path string) *App {
 // DelStaticPath removes the static folder setting in this url pattern in beego application.
 func DelStaticPath(url string) *App {
 	delete(StaticDir, url)
-	return BeeApp
-}
-
-// [Deprecated] use InsertFilter.
-// Filter adds a FilterFunc under pattern condition and named action.
-// The actions contains BeforeRouter,AfterStatic,BeforeExec,AfterExec and FinishRouter.
-func AddFilter(pattern, action string, filter FilterFunc) *App {
-	BeeApp.Handlers.AddFilter(pattern, action, filter)
 	return BeeApp
 }
 

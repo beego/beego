@@ -34,7 +34,8 @@ const (
 
 var (
 	// custom error when user stop request handler manually.
-	USERSTOPRUN = errors.New("User stop run")
+	USERSTOPRUN            = errors.New("User stop run")
+	GlobalControllerRouter map[string]map[string]*Tree //pkgpath+controller:method:routertree
 )
 
 // Controller defines some basic http request handler operations, such as
@@ -55,6 +56,7 @@ type Controller struct {
 	AppController  interface{}
 	EnableRender   bool
 	EnableXSRF     bool
+	Routers        map[string]*Tree //method:routertree
 }
 
 // ControllerInterface is an interface to uniform all controller handler.
@@ -72,6 +74,8 @@ type ControllerInterface interface {
 	Render() error
 	XsrfToken() string
 	CheckXsrfCookie() bool
+	HandlerFunc(fn interface{})
+	URLMapping()
 }
 
 // Init generates default values of controller operations.
@@ -86,6 +90,7 @@ func (c *Controller) Init(ctx *context.Context, controllerName, actionName strin
 	c.EnableRender = true
 	c.EnableXSRF = true
 	c.Data = ctx.Input.Data
+	c.Routers = make(map[string]*Tree)
 }
 
 // Prepare runs after Init before request function execution.
@@ -131,6 +136,32 @@ func (c *Controller) Patch() {
 // Options adds a request function to handle OPTIONS request.
 func (c *Controller) Options() {
 	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", 405)
+}
+
+// call function fn
+func (c *Controller) HandlerFunc(fn interface{}) {
+	if v, ok := fn.(func()); ok {
+		v()
+	}
+}
+
+// URLMapping register the internal Controller router.
+func (c *Controller) URLMapping() {
+}
+
+func (c *Controller) Mapping(method, pattern string, fn func()) {
+	method = strings.ToLower(method)
+	if !utils.InSlice(method, HTTPMETHOD) && method != "*" {
+		Critical("add mapping method:" + method + " is a valid method")
+		return
+	}
+	if t, ok := c.Routers[method]; ok {
+		t.AddRouter(pattern, fn)
+	} else {
+		t = NewTree()
+		t.AddRouter(pattern, fn)
+		c.Routers[method] = t
+	}
 }
 
 // Render sends the response with rendered template bytes as text/html type.
@@ -295,7 +326,6 @@ func (c *Controller) ServeXml() {
 }
 
 // ServeFormatted serve Xml OR Json, depending on the value of the Accept header
-
 func (c *Controller) ServeFormatted() {
 	accept := c.Ctx.Input.Header("Accept")
 	switch accept {
