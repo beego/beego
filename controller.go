@@ -40,10 +40,10 @@ var (
 
 // store the comment for the controller method
 type ControllerComments struct {
-	method           string
-	router           string
-	allowHTTPMethods []string
-	params           []map[string]string
+	Method           string
+	Router           string
+	AllowHTTPMethods []string
+	Params           []map[string]string
 }
 
 // Controller defines some basic http request handler operations, such as

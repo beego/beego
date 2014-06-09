@@ -69,23 +69,23 @@ func parserComments(comments *ast.CommentGroup, funcName, controllerName, pkgpat
 				}
 				key := pkgpath + ":" + controllerName
 				cc := ControllerComments{}
-				cc.method = funcName
-				cc.router = e1[0]
+				cc.Method = funcName
+				cc.Router = e1[0]
 				if len(e1) == 2 && e1[1] != "" {
 					e1 = strings.SplitN(e1[1], " ", 2)
 					if len(e1) >= 1 {
-						cc.allowHTTPMethods = strings.Split(strings.Trim(e1[0], "[]"), ",")
+						cc.AllowHTTPMethods = strings.Split(strings.Trim(e1[0], "[]"), ",")
 					} else {
-						cc.allowHTTPMethods = append(cc.allowHTTPMethods, "get")
+						cc.AllowHTTPMethods = append(cc.AllowHTTPMethods, "get")
 					}
 				} else {
-					cc.allowHTTPMethods = append(cc.allowHTTPMethods, "get")
+					cc.AllowHTTPMethods = append(cc.AllowHTTPMethods, "get")
 				}
 				if len(e1) == 2 && e1[1] != "" {
 					keyval := strings.Split(strings.Trim(e1[1], "[]"), " ")
 					for _, kv := range keyval {
 						kk := strings.Split(kv, ":")
-						cc.params = append(cc.params, map[string]string{strings.Join(kk[:len(kk)-1], ":"): kk[len(kk)-1]})
+						cc.Params = append(cc.Params, map[string]string{strings.Join(kk[:len(kk)-1], ":"): kk[len(kk)-1]})
 					}
 				}
 				genInfoList[key] = append(genInfoList[key], cc)
@@ -107,25 +107,25 @@ func genRouterCode() {
 	for k, cList := range genInfoList {
 		for _, c := range cList {
 			allmethod := "nil"
-			if len(c.allowHTTPMethods) > 0 {
+			if len(c.AllowHTTPMethods) > 0 {
 				allmethod = "[]string{"
-				for _, m := range c.allowHTTPMethods {
+				for _, m := range c.AllowHTTPMethods {
 					allmethod += `"` + m + `",`
 				}
 				allmethod = strings.TrimRight(allmethod, ",") + "}"
 			}
 			params := "nil"
-			if len(c.params) > 0 {
+			if len(c.Params) > 0 {
 				params = "[]map[string]string{"
-				for _, p := range c.params {
+				for _, p := range c.Params {
 					for k, v := range p {
 						params = params + `map[string]string{` + k + `:"` + v + `"},`
 					}
 				}
 				params = strings.TrimRight(params, ",") + "}"
 			}
-			globalinfo = globalinfo + fmt.Sprintln(`beego.GlobalControllerRouter["`+k+`"] = &ControllerComments{"`+
-				strings.TrimSpace(c.method)+`", "`+c.router+`", `+allmethod+", "+params+"}")
+			globalinfo = globalinfo + fmt.Sprintln(`beego.GlobalControllerRouter["`+k+`"] = &beego.ControllerComments{"`+
+				strings.TrimSpace(c.Method)+`", "`+c.Router+`", `+allmethod+", "+params+"}")
 		}
 	}
 	f.WriteString(strings.Replace(globalRouterTemplate, "{{.globalinfo}}", globalinfo, -1))

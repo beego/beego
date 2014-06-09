@@ -185,7 +185,7 @@ func (p *ControllerRegistor) Include(cList ...ControllerInterface) {
 		key := t.PkgPath() + ":" + t.Name()
 		if comm, ok := GlobalControllerRouter[key]; ok {
 			for _, a := range comm {
-				p.Add(a.router, c, strings.Join(a.allowHTTPMethods, ",")+":"+a.method)
+				p.Add(a.Router, c, strings.Join(a.AllowHTTPMethods, ",")+":"+a.Method)
 			}
 		}
 	}
