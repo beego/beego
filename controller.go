@@ -34,8 +34,8 @@ const (
 
 var (
 	// custom error when user stop request handler manually.
-	USERSTOPRUN            = errors.New("User stop run")
-	GlobalControllerRouter map[string]*ControllerComments //pkgpath+controller:comments
+	USERSTOPRUN                                            = errors.New("User stop run")
+	GlobalControllerRouter map[string][]ControllerComments = make(map[string][]ControllerComments) //pkgpath+controller:comments
 )
 
 // store the comment for the controller method
@@ -43,6 +43,7 @@ type ControllerComments struct {
 	method           string
 	router           string
 	allowHTTPMethods []string
+	params           []map[string]string
 }
 
 // Controller defines some basic http request handler operations, such as

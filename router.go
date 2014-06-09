@@ -174,7 +174,7 @@ func (p *ControllerRegistor) Include(cList ...ControllerInterface) {
 			if pkgpath != "" {
 				if _, ok := skip[pkgpath]; !ok {
 					skip[pkgpath] = true
-					parserPkg(pkgpath)
+					parserPkg(pkgpath, t.PkgPath())
 				}
 			}
 		}
@@ -184,7 +184,9 @@ func (p *ControllerRegistor) Include(cList ...ControllerInterface) {
 		t := reflect.Indirect(reflectVal).Type()
 		key := t.PkgPath() + ":" + t.Name()
 		if comm, ok := GlobalControllerRouter[key]; ok {
-			p.Add(comm.router, c, strings.Join(comm.allowHTTPMethods, ",")+":"+comm.method)
+			for _, a := range comm {
+				p.Add(a.router, c, strings.Join(a.allowHTTPMethods, ",")+":"+a.method)
+			}
 		}
 	}
 }

@@ -6,11 +6,17 @@
 package beego
 
 import (
+	"errors"
+	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"os"
-	"path/filepath"
+	"path"
+	"strings"
 )
 
-var globalControllerRouter = `package routers
+var globalRouterTemplate = `package routers
 
 import (
 	"github.com/astaxie/beego"
@@ -21,26 +27,106 @@ func init() {
 }
 `
 
-func parserPkg(pkgpath string) error {
-	err := filepath.Walk(pkgpath, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			Error("error scan app Controller source:", err)
-			return err
+var genInfoList map[string][]ControllerComments
+
+func init() {
+	genInfoList = make(map[string][]ControllerComments)
+}
+
+func parserPkg(pkgRealpath, pkgpath string) error {
+	fileSet := token.NewFileSet()
+	astPkgs, err := parser.ParseDir(fileSet, pkgRealpath, func(info os.FileInfo) bool {
+		name := info.Name()
+		return !info.IsDir() && !strings.HasPrefix(name, ".") && strings.HasSuffix(name, ".go")
+	}, parser.ParseComments)
+
+	if err != nil {
+		return err
+	}
+	for _, pkg := range astPkgs {
+		for _, fl := range pkg.Files {
+			for _, d := range fl.Decls {
+				switch specDecl := d.(type) {
+				case *ast.FuncDecl:
+					parserComments(specDecl.Doc, specDecl.Name.String(), fmt.Sprint(specDecl.Recv.List[0].Type.(*ast.StarExpr).X), pkgpath)
+				}
+			}
 		}
-		//if is normal file or name is temp skip
-		//directory is needed
-		if !info.IsDir() || info.Name() == "tmp" {
-			return nil
+	}
+	genRouterCode()
+	return nil
+}
+
+func parserComments(comments *ast.CommentGroup, funcName, controllerName, pkgpath string) error {
+	if comments != nil && comments.List != nil {
+		for _, c := range comments.List {
+			t := strings.TrimSpace(strings.TrimLeft(c.Text, "//"))
+			if strings.HasPrefix(t, "@router") {
+				elements := strings.TrimLeft(t, "@router ")
+				e1 := strings.SplitN(elements, " ", 2)
+				if len(e1) < 1 {
+					return errors.New("you should has router infomation")
+				}
+				key := pkgpath + ":" + controllerName
+				cc := ControllerComments{}
+				cc.method = funcName
+				cc.router = e1[0]
+				if len(e1) == 2 && e1[1] != "" {
+					e1 = strings.SplitN(e1[1], " ", 2)
+					if len(e1) >= 1 {
+						cc.allowHTTPMethods = strings.Split(strings.Trim(e1[0], "[]"), ",")
+					} else {
+						cc.allowHTTPMethods = append(cc.allowHTTPMethods, "get")
+					}
+				} else {
+					cc.allowHTTPMethods = append(cc.allowHTTPMethods, "get")
+				}
+				if len(e1) == 2 && e1[1] != "" {
+					keyval := strings.Split(strings.Trim(e1[1], "[]"), " ")
+					for _, kv := range keyval {
+						kk := strings.Split(kv, ":")
+						cc.params = append(cc.params, map[string]string{strings.Join(kk[:len(kk)-1], ":"): kk[len(kk)-1]})
+					}
+				}
+				genInfoList[key] = append(genInfoList[key], cc)
+			}
 		}
+	}
+	return nil
+}
 
-		//fileSet := token.NewFileSet()
-		//astPkgs, err := parser.ParseDir(fileSet, path, func(info os.FileInfo) bool {
-		//	name := info.Name()
-		//	return !info.IsDir() && !strings.HasPrefix(name, ".") && strings.HasSuffix(name, ".go")
-		//}, parser.ParseComments)
-
-		return nil
-	})
-
-	return err
+func genRouterCode() {
+	os.Mkdir(path.Join(AppPath, "routers"), 0755)
+	Info("generate router from comments")
+	f, err := os.Create(path.Join(AppPath, "routers", "commentsRouter.go"))
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	var globalinfo string
+	for k, cList := range genInfoList {
+		for _, c := range cList {
+			allmethod := "nil"
+			if len(c.allowHTTPMethods) > 0 {
+				allmethod = "[]string{"
+				for _, m := range c.allowHTTPMethods {
+					allmethod += `"` + m + `",`
+				}
+				allmethod = strings.TrimRight(allmethod, ",") + "}"
+			}
+			params := "nil"
+			if len(c.params) > 0 {
+				params = "[]map[string]string{"
+				for _, p := range c.params {
+					for k, v := range p {
+						params = params + `map[string]string{` + k + `:"` + v + `"},`
+					}
+				}
+				params = strings.TrimRight(params, ",") + "}"
+			}
+			globalinfo = globalinfo + fmt.Sprintln(`beego.GlobalControllerRouter["`+k+`"] = &ControllerComments{"`+
+				strings.TrimSpace(c.method)+`", "`+c.router+`", `+allmethod+", "+params+"}")
+		}
+	}
+	f.WriteString(strings.Replace(globalRouterTemplate, "{{.globalinfo}}", globalinfo, -1))
 }
