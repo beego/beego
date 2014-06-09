@@ -12,7 +12,9 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"os"
 	"path"
+	"path/filepath"
 	"reflect"
 	"runtime"
 	"strconv"
@@ -67,7 +69,7 @@ type controllerInfo struct {
 
 // ControllerRegistor containers registered router rules, controller handlers and filters.
 type ControllerRegistor struct {
-	routers      *Tree
+	routers      map[string]*Tree
 	enableFilter bool
 	filters      map[int][]*FilterRouter
 }
@@ -75,7 +77,7 @@ type ControllerRegistor struct {
 // NewControllerRegistor returns a new ControllerRegistor.
 func NewControllerRegistor() *ControllerRegistor {
 	return &ControllerRegistor{
-		routers: NewTree(),
+		routers: make(map[string]*Tree),
 		filters: make(map[int][]*FilterRouter),
 	}
 }
@@ -120,17 +122,69 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingM
 	route.methods = methods
 	route.routerType = routerTypeBeego
 	route.controllerType = t
-	p.routers.AddRouter(pattern, route)
+	if len(methods) == 0 {
+		for _, m := range HTTPMETHOD {
+			p.addToRouter(m, pattern, route)
+		}
+	} else {
+		for k, _ := range methods {
+			if k == "*" {
+				for _, m := range HTTPMETHOD {
+					p.addToRouter(m, pattern, route)
+				}
+			} else {
+				p.addToRouter(k, pattern, route)
+			}
+		}
+	}
+}
+
+func (p *ControllerRegistor) addToRouter(method, pattern string, r *controllerInfo) {
+	if t, ok := p.routers[method]; ok {
+		t.AddRouter(pattern, r)
+	} else {
+		t := NewTree()
+		t.AddRouter(pattern, r)
+		p.routers[method] = t
+	}
 }
 
 // only when the Runmode is dev will generate router file in the router/auto.go from the controller
 // Include(&BankAccount{}, &OrderController{},&RefundController{},&ReceiptController{})
 func (p *ControllerRegistor) Include(cList ...ControllerInterface) {
 	if RunMode == "dev" {
+		skip := make(map[string]bool, 10)
 		for _, c := range cList {
 			reflectVal := reflect.ValueOf(c)
 			t := reflect.Indirect(reflectVal).Type()
-			t.PkgPath()
+			gopath := os.Getenv("GOPATH")
+			if gopath == "" {
+				panic("you are in dev mode. So please set gopath")
+			}
+			pkgpath := ""
+
+			wgopath := filepath.SplitList(gopath)
+			for _, wg := range wgopath {
+				wg, _ = filepath.EvalSymlinks(filepath.Join(wg, "src", t.PkgPath()))
+				if utils.FileExists(wg) {
+					pkgpath = wg
+					break
+				}
+			}
+			if pkgpath != "" {
+				if _, ok := skip[pkgpath]; !ok {
+					skip[pkgpath] = true
+					parserPkg(pkgpath)
+				}
+			}
+		}
+	}
+	for _, c := range cList {
+		reflectVal := reflect.ValueOf(c)
+		t := reflect.Indirect(reflectVal).Type()
+		key := t.PkgPath() + ":" + t.Name()
+		if comm, ok := GlobalControllerRouter[key]; ok {
+			p.Add(comm.router, c, strings.Join(comm.allowHTTPMethods, ",")+":"+comm.method)
 		}
 	}
 }
@@ -228,7 +282,15 @@ func (p *ControllerRegistor) AddMethod(method, pattern string, f FilterFunc) {
 		methods[method] = method
 	}
 	route.methods = methods
-	p.routers.AddRouter(pattern, route)
+	for k, _ := range methods {
+		if k == "*" {
+			for _, m := range HTTPMETHOD {
+				p.addToRouter(m, pattern, route)
+			}
+		} else {
+			p.addToRouter(k, pattern, route)
+		}
+	}
 }
 
 // add user defined Handler
@@ -241,7 +303,9 @@ func (p *ControllerRegistor) Handler(pattern string, h http.Handler, options ...
 			pattern = path.Join(pattern, "?:all")
 		}
 	}
-	p.routers.AddRouter(pattern, route)
+	for _, m := range HTTPMETHOD {
+		p.addToRouter(m, pattern, route)
+	}
 }
 
 // Add auto router to ControllerRegistor.
@@ -270,7 +334,9 @@ func (p *ControllerRegistor) AddAutoPrefix(prefix string, c ControllerInterface)
 			route.methods = map[string]string{"*": rt.Method(i).Name}
 			route.controllerType = ct
 			pattern := path.Join(prefix, controllerName, strings.ToLower(rt.Method(i).Name), "*")
-			p.routers.AddRouter(pattern, route)
+			for _, m := range HTTPMETHOD {
+				p.addToRouter(m, pattern, route)
+			}
 		}
 	}
 }
@@ -317,12 +383,13 @@ func (p *ControllerRegistor) UrlFor(endpoint string, values ...string) string {
 	}
 	controllName := strings.Join(paths[:len(paths)-1], ".")
 	methodName := paths[len(paths)-1]
-	ok, url := p.geturl(p.routers, "/", controllName, methodName, params)
-	if ok {
-		return url
-	} else {
-		return ""
+	for _, t := range p.routers {
+		ok, url := p.geturl(t, "/", controllName, methodName, params)
+		if ok {
+			return url
+		}
 	}
+	return ""
 }
 
 func (p *ControllerRegistor) geturl(t *Tree, url, controllName, methodName string, params map[string]string) (bool, string) {
@@ -436,6 +503,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	starttime := time.Now()
 	requestPath := r.URL.Path
+	method := strings.ToLower(r.Method)
 	var runrouter reflect.Type
 	var findrouter bool
 	var runMethod string
@@ -485,7 +553,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}()
 	}
 
-	if !utils.InSlice(strings.ToLower(r.Method), HTTPMETHOD) {
+	if !utils.InSlice(method, HTTPMETHOD) {
 		http.Error(w, "Method Not Allowed", 405)
 		goto Admin
 	}
@@ -512,18 +580,21 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	if !findrouter {
-		runObject, p := p.routers.Match(requestPath)
-		if r, ok := runObject.(*controllerInfo); ok {
-			routerInfo = r
-			findrouter = true
-			if splat, ok := p[":splat"]; ok {
-				splatlist := strings.Split(splat, "/")
-				for k, v := range splatlist {
-					p[strconv.Itoa(k)] = v
+		if t, ok := p.routers[method]; ok {
+			runObject, p := t.Match(requestPath)
+			if r, ok := runObject.(*controllerInfo); ok {
+				routerInfo = r
+				findrouter = true
+				if splat, ok := p[":splat"]; ok {
+					splatlist := strings.Split(splat, "/")
+					for k, v := range splatlist {
+						p[strconv.Itoa(k)] = v
+					}
 				}
+				context.Input.Params = p
 			}
-			context.Input.Params = p
 		}
+
 	}
 
 	//if no matches to url, throw a not found exception

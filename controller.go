@@ -35,8 +35,15 @@ const (
 var (
 	// custom error when user stop request handler manually.
 	USERSTOPRUN            = errors.New("User stop run")
-	GlobalControllerRouter map[string]map[string]*Tree //pkgpath+controller:method:routertree
+	GlobalControllerRouter map[string]*ControllerComments //pkgpath+controller:comments
 )
+
+// store the comment for the controller method
+type ControllerComments struct {
+	method           string
+	router           string
+	allowHTTPMethods []string
+}
 
 // Controller defines some basic http request handler operations, such as
 // http context, template and view, session and xsrf.
@@ -56,7 +63,7 @@ type Controller struct {
 	AppController  interface{}
 	EnableRender   bool
 	EnableXSRF     bool
-	Routers        map[string]*Tree //method:routertree
+	methodMapping  map[string]func() //method:routertree
 }
 
 // ControllerInterface is an interface to uniform all controller handler.
@@ -74,7 +81,7 @@ type ControllerInterface interface {
 	Render() error
 	XsrfToken() string
 	CheckXsrfCookie() bool
-	HandlerFunc(fn interface{})
+	HandlerFunc(fn string)
 	URLMapping()
 }
 
@@ -90,7 +97,7 @@ func (c *Controller) Init(ctx *context.Context, controllerName, actionName strin
 	c.EnableRender = true
 	c.EnableXSRF = true
 	c.Data = ctx.Input.Data
-	c.Routers = make(map[string]*Tree)
+	c.methodMapping = make(map[string]func())
 }
 
 // Prepare runs after Init before request function execution.
@@ -139,9 +146,11 @@ func (c *Controller) Options() {
 }
 
 // call function fn
-func (c *Controller) HandlerFunc(fn interface{}) {
-	if v, ok := fn.(func()); ok {
+func (c *Controller) HandlerFunc(fnname string) {
+	if v, ok := c.methodMapping[fnname]; ok {
 		v()
+	} else {
+		Error("call funcname not exist in the methodMapping: " + fnname)
 	}
 }
 
@@ -149,19 +158,8 @@ func (c *Controller) HandlerFunc(fn interface{}) {
 func (c *Controller) URLMapping() {
 }
 
-func (c *Controller) Mapping(method, pattern string, fn func()) {
-	method = strings.ToLower(method)
-	if !utils.InSlice(method, HTTPMETHOD) && method != "*" {
-		Critical("add mapping method:" + method + " is a valid method")
-		return
-	}
-	if t, ok := c.Routers[method]; ok {
-		t.AddRouter(pattern, fn)
-	} else {
-		t = NewTree()
-		t.AddRouter(pattern, fn)
-		c.Routers[method] = t
-	}
+func (c *Controller) Mapping(method string, fn func()) {
+	c.methodMapping[method] = fn
 }
 
 // Render sends the response with rendered template bytes as text/html type.

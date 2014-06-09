@@ -182,7 +182,15 @@ func (n *Namespace) Handler(rootpath string, h http.Handler) *Namespace {
 //)
 func (n *Namespace) Namespace(ns ...*Namespace) *Namespace {
 	for _, ni := range ns {
-		n.handlers.routers.AddTree(ni.prefix, ni.handlers.routers)
+		for k, v := range ni.handlers.routers {
+			if t, ok := n.handlers.routers[k]; ok {
+				n.handlers.routers[k].AddTree(ni.prefix, v)
+			} else {
+				t = NewTree()
+				t.AddTree(ni.prefix, v)
+				n.handlers.routers[k] = t
+			}
+		}
 		if n.handlers.enableFilter {
 			for pos, filterList := range ni.handlers.filters {
 				for _, mr := range filterList {
@@ -201,7 +209,15 @@ func (n *Namespace) Namespace(ns ...*Namespace) *Namespace {
 // support multi Namespace
 func AddNamespace(nl ...*Namespace) {
 	for _, n := range nl {
-		BeeApp.Handlers.routers.AddTree(n.prefix, n.handlers.routers)
+		for k, v := range n.handlers.routers {
+			if t, ok := BeeApp.Handlers.routers[k]; ok {
+				BeeApp.Handlers.routers[k].AddTree(n.prefix, v)
+			} else {
+				t = NewTree()
+				t.AddTree(n.prefix, v)
+				BeeApp.Handlers.routers[k] = t
+			}
+		}
 		if n.handlers.enableFilter {
 			for pos, filterList := range n.handlers.filters {
 				for _, mr := range filterList {

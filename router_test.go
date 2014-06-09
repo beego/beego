@@ -291,6 +291,17 @@ func (a *AdminController) Get() {
 	a.Ctx.WriteString("hello")
 }
 
+func TestRouterFunc(t *testing.T) {
+	mux := NewControllerRegistor()
+	mux.Get("/action", beegoFilterFunc)
+	mux.Post("/action", beegoFilterFunc)
+	rw, r := testRequest("GET", "/action")
+	mux.ServeHTTP(rw, r)
+	if rw.Body.String() != "hello" {
+		t.Errorf("TestRouterFunc can't run")
+	}
+}
+
 func BenchmarkFunc(b *testing.B) {
 	mux := NewControllerRegistor()
 	mux.Get("/action", beegoFilterFunc)
