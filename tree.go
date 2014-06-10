@@ -226,9 +226,6 @@ func (leaf *leafInfo) match(wildcardValues []string) (ok bool, params map[string
 			j += 1
 		}
 		if len(params) != len(wildcardValues) {
-			Info(params)
-			Info(wildcardValues)
-			Error("bug of router")
 			return false, nil
 		}
 		return true, params
