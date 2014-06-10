@@ -178,7 +178,11 @@ func ParseConfig() (err error) {
 		AppConfig = config.NewFakeConfig()
 		return err
 	} else {
-		HttpAddr = AppConfig.String("HttpAddr")
+		if v := AppConfig.String(RunMode + "::HttpAddr"); v != "" {
+			HttpAddr = v
+		} else {
+			HttpAddr = AppConfig.String("HttpAddr")
+		}
 
 		if v, err := AppConfig.Int("HttpPort"); err == nil {
 			HttpPort = v
