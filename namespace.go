@@ -14,6 +14,8 @@ import (
 
 type namespaceCond func(*beecontext.Context) bool
 
+type innnerNamespace func(*Namespace)
+
 // Namespace is store all the info
 type Namespace struct {
 	prefix   string
@@ -21,12 +23,15 @@ type Namespace struct {
 }
 
 // get new Namespace
-func NewNamespace(prefix string) *Namespace {
-	cr := NewControllerRegistor()
-	return &Namespace{
+func NewNamespace(prefix string, params ...innnerNamespace) *Namespace {
+	ns := &Namespace{
 		prefix:   prefix,
-		handlers: cr,
+		handlers: NewControllerRegistor(),
 	}
+	for _, p := range params {
+		p(ns)
+	}
+	return ns
 }
 
 // set condtion function
@@ -68,14 +73,16 @@ func (n *Namespace) Cond(cond namespaceCond) *Namespace {
 //          ctx.Redirect(302, "/login")
 //        }
 //   })
-func (n *Namespace) Filter(action string, filter FilterFunc) *Namespace {
+func (n *Namespace) Filter(action string, filter ...FilterFunc) *Namespace {
 	var a int
 	if action == "before" {
 		a = BeforeRouter
 	} else if action == "after" {
 		a = FinishRouter
 	}
-	n.handlers.InsertFilter("*", a, filter)
+	for _, f := range filter {
+		n.handlers.InsertFilter("*", a, f)
+	}
 	return n
 }
 
@@ -163,6 +170,13 @@ func (n *Namespace) Handler(rootpath string, h http.Handler) *Namespace {
 	return n
 }
 
+// add include class
+// refer: https://godoc.org/github.com/astaxie/beego#Include
+func (n *Namespace) Include(cList ...ControllerInterface) *Namespace {
+	n.handlers.Include(cList...)
+	return n
+}
+
 // nest Namespace
 // usage:
 //ns := beego.NewNamespace(“/v1”).
@@ -228,5 +242,118 @@ func AddNamespace(nl ...*Namespace) {
 				}
 			}
 		}
+	}
+}
+
+// Namespace Condition
+func NSCond(cond namespaceCond) innnerNamespace {
+	return func(ns *Namespace) {
+		ns.Cond(cond)
+	}
+}
+
+// Namespace BeforeRouter filter
+func NSBefore(filiterList ...FilterFunc) innnerNamespace {
+	return func(ns *Namespace) {
+		ns.Filter("before", filiterList...)
+	}
+}
+
+// Namespace FinishRouter filter
+func NSAfter(filiterList ...FilterFunc) innnerNamespace {
+	return func(ns *Namespace) {
+		ns.Filter("after", filiterList...)
+	}
+}
+
+// Namespace Include ControllerInterface
+func NSInclude(cList ...ControllerInterface) innnerNamespace {
+	return func(ns *Namespace) {
+		ns.Include(cList...)
+	}
+}
+
+// Namespace Router
+func NSRouter(rootpath string, c ControllerInterface, mappingMethods ...string) innnerNamespace {
+	return func(ns *Namespace) {
+		ns.Router(rootpath, c, mappingMethods...)
+	}
+}
+
+// Namespace Get
+func NSGet(rootpath string, f FilterFunc) innnerNamespace {
+	return func(ns *Namespace) {
+		ns.Get(rootpath, f)
+	}
+}
+
+// Namespace Post
+func NSPost(rootpath string, f FilterFunc) innnerNamespace {
+	return func(ns *Namespace) {
+		ns.Post(rootpath, f)
+	}
+}
+
+// Namespace Head
+func NSHead(rootpath string, f FilterFunc) innnerNamespace {
+	return func(ns *Namespace) {
+		ns.Head(rootpath, f)
+	}
+}
+
+// Namespace Put
+func NSPut(rootpath string, f FilterFunc) innnerNamespace {
+	return func(ns *Namespace) {
+		ns.Put(rootpath, f)
+	}
+}
+
+// Namespace Delete
+func NSDelete(rootpath string, f FilterFunc) innnerNamespace {
+	return func(ns *Namespace) {
+		ns.Delete(rootpath, f)
+	}
+}
+
+// Namespace Any
+func NSAny(rootpath string, f FilterFunc) innnerNamespace {
+	return func(ns *Namespace) {
+		ns.Any(rootpath, f)
+	}
+}
+
+// Namespace Options
+func NSOptions(rootpath string, f FilterFunc) innnerNamespace {
+	return func(ns *Namespace) {
+		ns.Options(rootpath, f)
+	}
+}
+
+// Namespace Patch
+func NSPatch(rootpath string, f FilterFunc) innnerNamespace {
+	return func(ns *Namespace) {
+		ns.Patch(rootpath, f)
+	}
+}
+
+//Namespace AutoRouter
+func NSAutoRouter(c ControllerInterface) innnerNamespace {
+	return func(ns *Namespace) {
+		ns.AutoRouter(c)
+	}
+}
+
+// Namespace AutoPrefix
+func NSAutoPrefix(prefix string, c ControllerInterface) innnerNamespace {
+	return func(ns *Namespace) {
+		ns.AutoPrefix(prefix, c)
+	}
+}
+
+// Namespace add sub Namespace
+func NSNamespace(prefix string, params ...innnerNamespace) innnerNamespace {
+	return func(ns *Namespace) {
+		n := NewNamespace(prefix, params...)
+		ns.Namespace(n)
 	}
 }

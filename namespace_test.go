@@ -143,3 +143,21 @@ func TestNamespaceCond(t *testing.T) {
 		t.Errorf("TestNamespaceCond can't run get the result " + strconv.Itoa(w.Code))
 	}
 }
+
+func TestNamespaceInside(t *testing.T) {
+	r, _ := http.NewRequest("GET", "/v3/shop/order/123", nil)
+	w := httptest.NewRecorder()
+	ns := NewNamespace("/v3",
+		NSAutoRouter(&TestController{}),
+		NSNamespace("/shop",
+			NSGet("/order/:id", func(ctx *context.Context) {
+				ctx.Output.Body([]byte(ctx.Input.Param(":id")))
+			}),
+		),
+	)
+	AddNamespace(ns)
+	BeeApp.Handlers.ServeHTTP(w, r)
+	if w.Body.String() != "123" {
+		t.Errorf("TestNamespaceInside can't run, get the response is " + w.Body.String())
+	}
+}

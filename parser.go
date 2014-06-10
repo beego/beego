@@ -6,14 +6,18 @@
 package beego
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"io/ioutil"
 	"os"
 	"path"
 	"strings"
+
+	"github.com/astaxie/beego/utils"
 )
 
 var globalRouterTemplate = `package routers
@@ -27,13 +31,22 @@ func init() {
 }
 `
 
-var genInfoList map[string][]ControllerComments
+var (
+	lastupdateFilename string = "lastupdate.tmp"
+	pkgLastupdate      map[string]int64
+	genInfoList        map[string][]ControllerComments
+)
 
 func init() {
+	pkgLastupdate = make(map[string]int64)
 	genInfoList = make(map[string][]ControllerComments)
 }
 
 func parserPkg(pkgRealpath, pkgpath string) error {
+	if !compareFile(pkgRealpath) {
+		Info(pkgRealpath + " don't has updated")
+		return nil
+	}
 	fileSet := token.NewFileSet()
 	astPkgs, err := parser.ParseDir(fileSet, pkgRealpath, func(info os.FileInfo) bool {
 		name := info.Name()
@@ -54,6 +67,7 @@ func parserPkg(pkgRealpath, pkgpath string) error {
 		}
 	}
 	genRouterCode()
+	savetoFile(pkgRealpath)
 	return nil
 }
 
@@ -119,8 +133,14 @@ func genRouterCode() {
 				}
 				params = strings.TrimRight(params, ",") + "}"
 			}
-			globalinfo = globalinfo + fmt.Sprintln(`beego.GlobalControllerRouter["`+k+`"] = append(beego.GlobalControllerRouter["`+k+`"], beego.ControllerComments{"`+
-				strings.TrimSpace(c.Method)+`", "`+c.Router+`", `+allmethod+", "+params+"})")
+			globalinfo = globalinfo + `
+	beego.GlobalControllerRouter["` + k + `"] = append(beego.GlobalControllerRouter["` + k + `"],
+		beego.ControllerComments{
+			"` + strings.TrimSpace(c.Method) + `",
+			"` + c.Router + `",
+			` + allmethod + `,
+			` + params + `})
+`
 		}
 	}
 	if globalinfo != "" {
@@ -131,4 +151,37 @@ func genRouterCode() {
 		defer f.Close()
 		f.WriteString(strings.Replace(globalRouterTemplate, "{{.globalinfo}}", globalinfo, -1))
 	}
+}
+
+func compareFile(pkgRealpath string) bool {
+	if utils.FileExists(path.Join(AppPath, lastupdateFilename)) {
+		content, err := ioutil.ReadFile(path.Join(AppPath, lastupdateFilename))
+		if err != nil {
+			return true
+		}
+		json.Unmarshal(content, &pkgLastupdate)
+		ft, err := os.Lstat(pkgRealpath)
+		if err != nil {
+			return true
+		}
+		if v, ok := pkgLastupdate[pkgRealpath]; ok {
+			if ft.ModTime().UnixNano() > v {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func savetoFile(pkgRealpath string) {
+	ft, err := os.Lstat(pkgRealpath)
+	if err != nil {
+		return
+	}
+	pkgLastupdate[pkgRealpath] = ft.ModTime().UnixNano()
+	d, err := json.Marshal(pkgLastupdate)
+	if err != nil {
+		return
+	}
+	ioutil.WriteFile(path.Join(AppPath, lastupdateFilename), d, os.ModePerm)
 }
