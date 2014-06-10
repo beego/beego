@@ -82,7 +82,7 @@ type ControllerInterface interface {
 	Render() error
 	XsrfToken() string
 	CheckXsrfCookie() bool
-	HandlerFunc(fn string)
+	HandlerFunc(fn string) bool
 	URLMapping()
 }
 
@@ -147,11 +147,12 @@ func (c *Controller) Options() {
 }
 
 // call function fn
-func (c *Controller) HandlerFunc(fnname string) {
+func (c *Controller) HandlerFunc(fnname string) bool {
 	if v, ok := c.methodMapping[fnname]; ok {
 		v()
+		return true
 	} else {
-		Error("call funcname not exist in the methodMapping: " + fnname)
+		return false
 	}
 }
 

@@ -559,10 +559,6 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		http.Error(w, "Method Not Allowed", 405)
 		goto Admin
 	}
-	//static file server
-	if serverStaticRouter(context) {
-		goto Admin
-	}
 
 	if !context.Input.IsGet() && !context.Input.IsHead() {
 		if CopyRequestBody && !context.Input.IsUpload() {
@@ -572,6 +568,11 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	if do_filter(BeforeRouter) {
+		goto Admin
+	}
+
+	//static file server
+	if serverStaticRouter(context) {
 		goto Admin
 	}
 
@@ -666,6 +667,8 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				}
 			}
 
+			execController.URLMapping()
+
 			if !w.started {
 				//exec main logic
 				switch runMethod {
@@ -684,9 +687,11 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				case "Options":
 					execController.Options()
 				default:
-					in := make([]reflect.Value, 0)
-					method := vc.MethodByName(runMethod)
-					method.Call(in)
+					if !execController.HandlerFunc(runMethod) {
+						in := make([]reflect.Value, 0)
+						method := vc.MethodByName(runMethod)
+						method.Call(in)
+					}
 				}
 
 				//render template

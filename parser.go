@@ -98,11 +98,6 @@ func parserComments(comments *ast.CommentGroup, funcName, controllerName, pkgpat
 func genRouterCode() {
 	os.Mkdir(path.Join(AppPath, "routers"), 0755)
 	Info("generate router from comments")
-	f, err := os.Create(path.Join(AppPath, "routers", "commentsRouter.go"))
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
 	var globalinfo string
 	for k, cList := range genInfoList {
 		for _, c := range cList {
@@ -124,9 +119,16 @@ func genRouterCode() {
 				}
 				params = strings.TrimRight(params, ",") + "}"
 			}
-			globalinfo = globalinfo + fmt.Sprintln(`beego.GlobalControllerRouter["`+k+`"] = &beego.ControllerComments{"`+
-				strings.TrimSpace(c.Method)+`", "`+c.Router+`", `+allmethod+", "+params+"}")
+			globalinfo = globalinfo + fmt.Sprintln(`beego.GlobalControllerRouter["`+k+`"] = append(beego.GlobalControllerRouter["`+k+`"], beego.ControllerComments{"`+
+				strings.TrimSpace(c.Method)+`", "`+c.Router+`", `+allmethod+", "+params+"})")
 		}
 	}
-	f.WriteString(strings.Replace(globalRouterTemplate, "{{.globalinfo}}", globalinfo, -1))
+	if globalinfo != "" {
+		f, err := os.Create(path.Join(AppPath, "routers", "commentsRouter.go"))
+		if err != nil {
+			panic(err)
+		}
+		defer f.Close()
+		f.WriteString(strings.Replace(globalRouterTemplate, "{{.globalinfo}}", globalinfo, -1))
+	}
 }
