@@ -18,7 +18,7 @@ import (
 	"github.com/astaxie/beego/utils"
 )
 
-func serverStaticRouter(ctx *context.Context) bool {
+func serverStaticRouter(ctx *context.Context) {
 	requestPath := path.Clean(ctx.Input.Request.URL.Path)
 	for prefix, staticDir := range StaticDir {
 		if len(prefix) == 0 {
@@ -28,7 +28,7 @@ func serverStaticRouter(ctx *context.Context) bool {
 			file := path.Join(staticDir, requestPath)
 			if utils.FileExists(file) {
 				http.ServeFile(ctx.ResponseWriter, ctx.Request, file)
-				return true
+				return
 			}
 		}
 		if strings.HasPrefix(requestPath, prefix) {
@@ -37,7 +37,7 @@ func serverStaticRouter(ctx *context.Context) bool {
 			}
 			if requestPath == prefix && prefix[len(prefix)-1] != '/' {
 				http.Redirect(ctx.ResponseWriter, ctx.Request, requestPath+"/", 302)
-				return true
+				return
 			}
 			file := path.Join(staticDir, requestPath[len(prefix):])
 			finfo, err := os.Stat(file)
@@ -46,12 +46,12 @@ func serverStaticRouter(ctx *context.Context) bool {
 					Warn(err)
 				}
 				http.NotFound(ctx.ResponseWriter, ctx.Request)
-				return true
+				return
 			}
 			//if the request is dir and DirectoryIndex is false then
 			if finfo.IsDir() && !DirectoryIndex {
 				middleware.Exception("403", ctx.ResponseWriter, ctx.Request, "403 Forbidden")
-				return true
+				return
 			}
 
 			//This block obtained from (https://github.com/smithfox/beego) - it should probably get merged into astaxie/beego after a pull request
@@ -73,7 +73,7 @@ func serverStaticRouter(ctx *context.Context) bool {
 
 				memzipfile, err := openMemZipFile(file, contentEncoding)
 				if err != nil {
-					return true
+					return
 				}
 
 				if contentEncoding == "gzip" {
@@ -89,8 +89,7 @@ func serverStaticRouter(ctx *context.Context) bool {
 			} else {
 				http.ServeFile(ctx.ResponseWriter, ctx.Request, file)
 			}
-			return true
+			return
 		}
 	}
-	return false
 }

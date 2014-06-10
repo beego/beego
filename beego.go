@@ -379,6 +379,10 @@ func initBeforeHttpRun() {
 	middleware.VERSION = VERSION
 	middleware.AppName = AppName
 	middleware.RegisterErrorHandler()
+
+	for u, _ := range StaticDir {
+		Get(u, serverStaticRouter)
+	}
 }
 
 // this function is for test package init
