@@ -27,7 +27,7 @@ type App struct {
 
 // NewApp returns a new beego application.
 func NewApp() *App {
-	cr := NewControllerRegistor()
+	cr := NewControllerRegister()
 	app := &App{Handlers: cr, Server: &http.Server{}}
 	return app
 }

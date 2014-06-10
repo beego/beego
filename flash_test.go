@@ -31,7 +31,7 @@ func TestFlashHeader(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	// setup the handler
-	handler := NewControllerRegistor()
+	handler := NewControllerRegister()
 	handler.Add("/", &TestFlashController{}, "get:TestWriteFlash")
 	handler.ServeHTTP(w, r)
 

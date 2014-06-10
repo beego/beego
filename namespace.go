@@ -26,7 +26,7 @@ type Namespace struct {
 func NewNamespace(prefix string, params ...innnerNamespace) *Namespace {
 	ns := &Namespace{
 		prefix:   prefix,
-		handlers: NewControllerRegistor(),
+		handlers: NewControllerRegister(),
 	}
 	for _, p := range params {
 		p(ns)

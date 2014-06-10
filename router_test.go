@@ -72,7 +72,7 @@ func (this *JsonController) Get() {
 }
 
 func TestUrlFor(t *testing.T) {
-	handler := NewControllerRegistor()
+	handler := NewControllerRegister()
 	handler.Add("/api/list", &TestController{}, "*:List")
 	handler.Add("/person/:last/:first", &TestController{})
 	handler.AddAuto(&TestController{})
@@ -95,7 +95,7 @@ func TestUserFunc(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/api/list", nil)
 	w := httptest.NewRecorder()
 
-	handler := NewControllerRegistor()
+	handler := NewControllerRegister()
 	handler.Add("/api/list", &TestController{}, "*:List")
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != "i am list" {
@@ -107,7 +107,7 @@ func TestPostFunc(t *testing.T) {
 	r, _ := http.NewRequest("POST", "/astaxie", nil)
 	w := httptest.NewRecorder()
 
-	handler := NewControllerRegistor()
+	handler := NewControllerRegister()
 	handler.Add("/:name", &TestController{})
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != "astaxie" {
@@ -119,7 +119,7 @@ func TestAutoFunc(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/test/list", nil)
 	w := httptest.NewRecorder()
 
-	handler := NewControllerRegistor()
+	handler := NewControllerRegister()
 	handler.AddAuto(&TestController{})
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != "i am list" {
@@ -131,7 +131,7 @@ func TestAutoFuncParams(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/test/params/2009/11/12", nil)
 	w := httptest.NewRecorder()
 
-	handler := NewControllerRegistor()
+	handler := NewControllerRegister()
 	handler.AddAuto(&TestController{})
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != "20091112" {
@@ -143,7 +143,7 @@ func TestAutoExtFunc(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/test/myext.json", nil)
 	w := httptest.NewRecorder()
 
-	handler := NewControllerRegistor()
+	handler := NewControllerRegister()
 	handler.AddAuto(&TestController{})
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != "json" {
@@ -156,7 +156,7 @@ func TestRouteOk(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/person/anderson/thomas?learn=kungfu", nil)
 	w := httptest.NewRecorder()
 
-	handler := NewControllerRegistor()
+	handler := NewControllerRegister()
 	handler.Add("/person/:last/:first", &TestController{}, "get:GetParams")
 	handler.ServeHTTP(w, r)
 	body := w.Body.String()
@@ -170,7 +170,7 @@ func TestManyRoute(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/beego32-12.html", nil)
 	w := httptest.NewRecorder()
 
-	handler := NewControllerRegistor()
+	handler := NewControllerRegister()
 	handler.Add("/beego:id([0-9]+)-:page([0-9]+).html", &TestController{}, "get:GetManyRouter")
 	handler.ServeHTTP(w, r)
 
@@ -185,7 +185,7 @@ func TestNotFound(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 
-	handler := NewControllerRegistor()
+	handler := NewControllerRegister()
 	handler.ServeHTTP(w, r)
 
 	if w.Code != http.StatusNotFound {
@@ -199,7 +199,7 @@ func TestStatic(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/static/js/jquery.js", nil)
 	w := httptest.NewRecorder()
 
-	handler := NewControllerRegistor()
+	handler := NewControllerRegister()
 	handler.ServeHTTP(w, r)
 
 	if w.Code != 404 {
@@ -211,7 +211,7 @@ func TestPrepare(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/json/list", nil)
 	w := httptest.NewRecorder()
 
-	handler := NewControllerRegistor()
+	handler := NewControllerRegister()
 	handler.Add("/json/list", &JsonController{})
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != `"prepare"` {
@@ -223,7 +223,7 @@ func TestAutoPrefix(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/admin/test/list", nil)
 	w := httptest.NewRecorder()
 
-	handler := NewControllerRegistor()
+	handler := NewControllerRegister()
 	handler.AddAutoPrefix("/admin", &TestController{})
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != "i am list" {
@@ -235,7 +235,7 @@ func TestRouterGet(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/user", nil)
 	w := httptest.NewRecorder()
 
-	handler := NewControllerRegistor()
+	handler := NewControllerRegister()
 	handler.Get("/user", func(ctx *context.Context) {
 		ctx.Output.Body([]byte("Get userlist"))
 	})
@@ -249,7 +249,7 @@ func TestRouterPost(t *testing.T) {
 	r, _ := http.NewRequest("POST", "/user/123", nil)
 	w := httptest.NewRecorder()
 
-	handler := NewControllerRegistor()
+	handler := NewControllerRegister()
 	handler.Post("/user/:id", func(ctx *context.Context) {
 		ctx.Output.Body([]byte(ctx.Input.Param(":id")))
 	})
@@ -267,7 +267,7 @@ func TestRouterHandler(t *testing.T) {
 	r, _ := http.NewRequest("POST", "/sayhi", nil)
 	w := httptest.NewRecorder()
 
-	handler := NewControllerRegistor()
+	handler := NewControllerRegister()
 	handler.Handler("/sayhi", http.HandlerFunc(sayhello))
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != "sayhello" {
@@ -292,7 +292,7 @@ func (a *AdminController) Get() {
 }
 
 func TestRouterFunc(t *testing.T) {
-	mux := NewControllerRegistor()
+	mux := NewControllerRegister()
 	mux.Get("/action", beegoFilterFunc)
 	mux.Post("/action", beegoFilterFunc)
 	rw, r := testRequest("GET", "/action")
@@ -303,7 +303,7 @@ func TestRouterFunc(t *testing.T) {
 }
 
 func BenchmarkFunc(b *testing.B) {
-	mux := NewControllerRegistor()
+	mux := NewControllerRegister()
 	mux.Get("/action", beegoFilterFunc)
 	rw, r := testRequest("GET", "/action")
 	b.ResetTimer()
@@ -313,7 +313,7 @@ func BenchmarkFunc(b *testing.B) {
 }
 
 func BenchmarkController(b *testing.B) {
-	mux := NewControllerRegistor()
+	mux := NewControllerRegister()
 	mux.Add("/action", &AdminController{})
 	rw, r := testRequest("GET", "/action")
 	b.ResetTimer()

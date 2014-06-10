@@ -75,8 +75,8 @@ type ControllerRegistor struct {
 	filters      map[int][]*FilterRouter
 }
 
-// NewControllerRegistor returns a new ControllerRegistor.
-func NewControllerRegistor() *ControllerRegistor {
+// NewControllerRegister returns a new ControllerRegistor.
+func NewControllerRegister() *ControllerRegistor {
 	return &ControllerRegistor{
 		routers: make(map[string]*Tree),
 		filters: make(map[int][]*FilterRouter),
