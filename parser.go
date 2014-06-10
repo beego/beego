@@ -165,7 +165,7 @@ func compareFile(pkgRealpath string) bool {
 			return true
 		}
 		if v, ok := pkgLastupdate[pkgRealpath]; ok {
-			if ft.ModTime().UnixNano() > v {
+			if ft.ModTime().UnixNano() >= v {
 				return false
 			}
 		}

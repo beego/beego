@@ -60,6 +60,7 @@ func ExceptMethodAppend(action string) {
 }
 
 type controllerInfo struct {
+	pattern        string
 	controllerType reflect.Type
 	methods        map[string]string
 	handler        http.Handler
@@ -119,6 +120,7 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingM
 	}
 
 	route := &controllerInfo{}
+	route.pattern = pattern
 	route.methods = methods
 	route.routerType = routerTypeBeego
 	route.controllerType = t
@@ -273,6 +275,7 @@ func (p *ControllerRegistor) AddMethod(method, pattern string, f FilterFunc) {
 		panic("not support http method: " + method)
 	}
 	route := &controllerInfo{}
+	route.pattern = pattern
 	route.routerType = routerTypeRESTFul
 	route.runfunction = f
 	methods := make(map[string]string)
@@ -298,6 +301,7 @@ func (p *ControllerRegistor) AddMethod(method, pattern string, f FilterFunc) {
 // add user defined Handler
 func (p *ControllerRegistor) Handler(pattern string, h http.Handler, options ...interface{}) {
 	route := &controllerInfo{}
+	route.pattern = pattern
 	route.routerType = routerTypeHandler
 	route.handler = h
 	if len(options) > 0 {
@@ -336,6 +340,7 @@ func (p *ControllerRegistor) AddAutoPrefix(prefix string, c ControllerInterface)
 			route.methods = map[string]string{"*": rt.Method(i).Name}
 			route.controllerType = ct
 			pattern := path.Join(prefix, controllerName, strings.ToLower(rt.Method(i).Name), "*")
+			route.pattern = pattern
 			for _, m := range HTTPMETHOD {
 				p.addToRouter(m, pattern, route)
 			}
@@ -502,7 +507,6 @@ func (p *ControllerRegistor) geturl(t *Tree, url, controllName, methodName strin
 // Implement http.Handler interface.
 func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	defer p.recoverPanic(rw, r)
-
 	starttime := time.Now()
 	requestPath := r.URL.Path
 	method := strings.ToLower(r.Method)
@@ -718,15 +722,23 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	do_filter(FinishRouter)
 
 Admin:
+	timeend := time.Since(starttime)
 	//admin module record QPS
 	if EnableAdmin {
-		timeend := time.Since(starttime)
 		if FilterMonitorFunc(r.Method, requestPath, timeend) {
 			if runrouter != nil {
 				go toolbox.StatisticsMap.AddStatistics(r.Method, requestPath, runrouter.Name(), timeend)
 			} else {
 				go toolbox.StatisticsMap.AddStatistics(r.Method, requestPath, "", timeend)
 			}
+		}
+	}
+
+	if RunMode == "dev" {
+		if findrouter {
+			Info("beego: router defined " + routerInfo.pattern + " " + requestPath + " +" + timeend.String())
+		} else {
+			Info("beego:" + requestPath + " 404" + " +" + timeend.String())
 		}
 	}
 }
