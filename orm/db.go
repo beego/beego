@@ -144,7 +144,11 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 				value = field.Interface()
 				if t, ok := value.(time.Time); ok {
 					d.ins.TimeToDB(&t, tz)
-					value = t
+					if t.IsZero() {
+						value = nil
+					} else {
+						value = t
+					}
 				}
 			default:
 				switch {
