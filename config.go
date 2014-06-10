@@ -27,6 +27,7 @@ var (
 	AppPath                string
 	workPath               string
 	AppConfigPath          string
+	AppConfigRemote        string
 	StaticDir              map[string]string
 	TemplateCache          map[string]*template.Template // template caching map
 	StaticExtensionsToGzip []string                      // files with should be compressed with gzip (.js,.css,etc)
