@@ -35,10 +35,6 @@ func serverStaticRouter(ctx *context.Context) {
 			if len(requestPath) > len(prefix) && requestPath[len(prefix)] != '/' {
 				continue
 			}
-			if requestPath == prefix && prefix[len(prefix)-1] != '/' {
-				http.Redirect(ctx.ResponseWriter, ctx.Request, requestPath+"/", 302)
-				return
-			}
 			file := path.Join(staticDir, requestPath[len(prefix):])
 			finfo, err := os.Stat(file)
 			if err != nil {
