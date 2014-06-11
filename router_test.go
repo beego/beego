@@ -27,6 +27,10 @@ func (this *TestController) Post() {
 	this.Ctx.Output.Body([]byte(this.Ctx.Input.Query(":name")))
 }
 
+func (this *TestController) Param() {
+	this.Ctx.Output.Body([]byte(this.Ctx.Input.Query(":name")))
+}
+
 func (this *TestController) List() {
 	this.Ctx.Output.Body([]byte("i am list"))
 }
@@ -74,14 +78,14 @@ func (this *JsonController) Get() {
 func TestUrlFor(t *testing.T) {
 	handler := NewControllerRegister()
 	handler.Add("/api/list", &TestController{}, "*:List")
-	handler.Add("/person/:last/:first", &TestController{})
+	handler.Add("/person/:last/:first", &TestController{}, "*:Param")
 	handler.AddAuto(&TestController{})
 	if handler.UrlFor("TestController.List") != "/api/list" {
 		Info(handler.UrlFor("TestController.List"))
 		t.Errorf("TestController.List must equal to /api/list")
 	}
-	if handler.UrlFor("TestController.Get", ":last", "xie", ":first", "asta") != "/person/xie/asta" {
-		t.Errorf("TestController.Get must equal to /person/xie/asta")
+	if handler.UrlFor("TestController.Param", ":last", "xie", ":first", "asta") != "/person/xie/asta" {
+		t.Errorf("TestController.Param must equal to /person/xie/asta, but get " + handler.UrlFor("TestController.Param", ":last", "xie", ":first", "asta"))
 	}
 	if handler.UrlFor("TestController.Myext") != "/test/myext" {
 		t.Errorf("TestController.Myext must equal to /test/myext")
