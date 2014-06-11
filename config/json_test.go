@@ -33,6 +33,53 @@ var jsoncontext = `{
     }
 }`
 
+var jsoncontextwitharray = `[
+	{
+		"url": "user",
+		"serviceAPI": "http://www.test.com/user"
+	},
+	{
+		"url": "employee",
+		"serviceAPI": "http://www.test.com/employee"
+	}
+]`
+
+func TestJsonStartsWithArray(t *testing.T) {
+	f, err := os.Create("testjsonWithArray.conf")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = f.WriteString(jsoncontextwitharray)
+	if err != nil {
+		f.Close()
+		t.Fatal(err)
+	}
+	f.Close()
+	defer os.Remove("testjsonWithArray.conf")
+	jsonconf, err := NewConfig("json", "testjsonWithArray.conf")
+	if err != nil {
+		t.Fatal(err)
+	}
+	rootArray, err := jsonconf.DIY("rootArray")
+	if (err != nil) {
+		t.Error("array does not exist as element")
+	}
+	rootArrayCasted := rootArray.([]interface{})
+	if (rootArrayCasted == nil) {
+		t.Error("array from root is nil")
+	}else {
+		elem := rootArrayCasted[0].(map[string]interface{})
+		if elem["url"] != "user" || elem["serviceAPI"] != "http://www.test.com/user" {
+			t.Error("array[0] values are not valid")
+		}
+
+		elem2 := rootArrayCasted[1].(map[string]interface{})
+		if elem2["url"] != "employee" || elem2["serviceAPI"] != "http://www.test.com/employee" {
+			t.Error("array[1] values are not valid")
+		}
+	}
+}
+
 func TestJson(t *testing.T) {
 	f, err := os.Create("testjson.conf")
 	if err != nil {
