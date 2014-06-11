@@ -35,7 +35,12 @@ func (js *JsonConfig) Parse(filename string) (ConfigContainer, error) {
 	}
 	err = json.Unmarshal(content, &x.data)
 	if err != nil {
-		return nil, err
+		var wrappingArray []interface{}
+		err2 := json.Unmarshal(content, &wrappingArray)
+		if err2 != nil {
+			return nil, err
+		}
+		x.data["rootArray"] = wrappingArray
 	}
 	return x, nil
 }
