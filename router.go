@@ -524,7 +524,10 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	var routerInfo *controllerInfo
 
 	w := &responseWriter{writer: rw}
-	w.Header().Set("Server", BeegoServerName)
+
+	if RunMode == "dev" {
+		w.Header().Set("Server", BeegoServerName)
+	}
 
 	// init context
 	context := &beecontext.Context{
@@ -535,10 +538,6 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 	context.Output.Context = context
 	context.Output.EnableGzip = EnableGzip
-
-	if context.Input.IsWebsocket() {
-		context.ResponseWriter = rw
-	}
 
 	// defined filter function
 	do_filter := func(pos int) (started bool) {
@@ -702,7 +701,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				}
 
 				//render template
-				if !w.started && !context.Input.IsWebsocket() {
+				if !w.started {
 					if AutoRender {
 						if err := execController.Render(); err != nil {
 							panic(err)
