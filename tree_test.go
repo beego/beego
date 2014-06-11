@@ -29,8 +29,8 @@ func init() {
 	routers = append(routers, testinfo{"/v1/shop/:name:string", "/v1/shop/nike", map[string]string{":name": "nike"}})
 	routers = append(routers, testinfo{"/v1/shop/:id([0-9]+)", "/v1/shop//123", map[string]string{":id": "123"}})
 	routers = append(routers, testinfo{"/v1/shop/:id([0-9]+)_:name", "/v1/shop/123_nike", map[string]string{":id": "123", ":name": "nike"}})
-	routers = append(routers, testinfo{"/v1/shop/:id_cms.html", "/v1/shop/123_cms.html", map[string]string{":id": "123"}})
-	routers = append(routers, testinfo{"/v1/shop/cms_:id_:page.html", "/v1/shop/cms_123_1.html", map[string]string{":id": "123", ":page": "1"}})
+	routers = append(routers, testinfo{"/v1/shop/:id(.+)_cms.html", "/v1/shop/123_cms.html", map[string]string{":id": "123"}})
+	routers = append(routers, testinfo{"/v1/shop/cms_:id(.+)_:page(.+).html", "/v1/shop/cms_123_1.html", map[string]string{":id": "123", ":page": "1"}})
 }
 
 func TestTreeRouters(t *testing.T) {
@@ -113,11 +113,11 @@ func TestSplitSegment(t *testing.T) {
 	if !b || len(w) != 2 || w[0] != ":id" || w[1] != ":name" || r != `([0-9]+)_(.+)` {
 		t.Fatal(`:id([0-9]+)_:name should return true, [:id :name], '([0-9]+)_(.+)'`)
 	}
-	b, w, r = splitSegment(":id_cms.html")
+	b, w, r = splitSegment(":id(.+)_cms.html")
 	if !b || len(w) != 1 || w[0] != ":id" || r != `(.+)_cms.html` {
 		t.Fatal(":id_cms.html should return true, [:id], '(.+)_cms.html'")
 	}
-	b, w, r = splitSegment("cms_:id_:page.html")
+	b, w, r = splitSegment("cms_:id(.+)_:page(.+).html")
 	if !b || len(w) != 2 || w[0] != ":id" || w[1] != ":page" || r != `cms_(.+)_(.+).html` {
 		t.Fatal(":id_cms.html should return true, [:id :page], cms_(.+)_(.+).html")
 	}
