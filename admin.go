@@ -122,7 +122,9 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 		case "router":
 			fmt.Fprintln(rw, "Print all router infomation:")
 			for method, t := range BeeApp.Handlers.routers {
-				fmt.Fprintln(rw, "Method:", method)
+				fmt.Fprintln(rw)
+				fmt.Fprintln(rw)
+				fmt.Fprintln(rw, "		Method:", method)
 				printTree(rw, t)
 			}
 			// @todo print routers
