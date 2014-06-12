@@ -423,8 +423,8 @@ func (p *ControllerRegistor) geturl(t *Tree, url, controllName, methodName strin
 			return ok, u
 		}
 	}
-	if t.leaf != nil {
-		if c, ok := t.leaf.runObject.(*controllerInfo); ok {
+	for _, l := range t.leaves {
+		if c, ok := l.runObject.(*controllerInfo); ok {
 			if c.routerType == routerTypeBeego && c.controllerType.Name() == controllName {
 				find := false
 				if _, ok := HTTPMETHOD[strings.ToUpper(methodName)]; ok {
@@ -442,20 +442,20 @@ func (p *ControllerRegistor) geturl(t *Tree, url, controllName, methodName strin
 					}
 				}
 				if find {
-					if t.leaf.regexps == nil {
-						if len(t.leaf.wildcards) == 0 {
+					if l.regexps == nil {
+						if len(l.wildcards) == 0 {
 							return true, url
 						}
-						if len(t.leaf.wildcards) == 1 {
-							if v, ok := params[t.leaf.wildcards[0]]; ok {
-								delete(params, t.leaf.wildcards[0])
+						if len(l.wildcards) == 1 {
+							if v, ok := params[l.wildcards[0]]; ok {
+								delete(params, l.wildcards[0])
 								return true, url + "/" + v + tourl(params)
 							}
-							if t.leaf.wildcards[0] == ":splat" {
+							if l.wildcards[0] == ":splat" {
 								return true, url + tourl(params)
 							}
 						}
-						if len(t.leaf.wildcards) == 3 && t.leaf.wildcards[0] == "." {
+						if len(l.wildcards) == 3 && l.wildcards[0] == "." {
 							if p, ok := params[":path"]; ok {
 								if e, isok := params[":ext"]; isok {
 									delete(params, ":path")
@@ -465,7 +465,7 @@ func (p *ControllerRegistor) geturl(t *Tree, url, controllName, methodName strin
 							}
 						}
 						canskip := false
-						for _, v := range t.leaf.wildcards {
+						for _, v := range l.wildcards {
 							if v == ":" {
 								canskip = true
 								continue
@@ -485,33 +485,33 @@ func (p *ControllerRegistor) geturl(t *Tree, url, controllName, methodName strin
 					} else {
 						var i int
 						var startreg bool
-						url = url + "/"
-						for _, v := range t.leaf.regexps.String() {
+						regurl := ""
+						for _, v := range strings.Trim(l.regexps.String(), "^$") {
 							if v == '(' {
 								startreg = true
 								continue
 							} else if v == ')' {
 								startreg = false
-								if v, ok := params[t.leaf.wildcards[i]]; ok {
-									url = url + v
+								if v, ok := params[l.wildcards[i]]; ok {
+									delete(params, l.wildcards[i])
+									regurl = regurl + v
 									i++
 								} else {
 									break
 								}
 							} else if !startreg {
-								url = string(append([]rune(url), v))
+								regurl = string(append([]rune(regurl), v))
 							}
 						}
-						if t.leaf.regexps.MatchString(url) {
-							return true, url
+						if l.regexps.MatchString(regurl) {
+							return true, url + "/" + regurl + tourl(params)
 						}
 					}
-				} else {
-					return false, ""
 				}
 			}
 		}
 	}
+
 	return false, ""
 }
 

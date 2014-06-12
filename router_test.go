@@ -95,6 +95,22 @@ func TestUrlFor(t *testing.T) {
 	}
 }
 
+func TestUrlFor2(t *testing.T) {
+	handler := NewControllerRegister()
+	handler.Add("/v1/:v/cms_:id(.+)_:page(.+).html", &TestController{}, "*:List")
+	handler.Add("/v1/:v(.+)_cms/ttt_:id(.+)_:page(.+).html", &TestController{}, "*:Param")
+	if handler.UrlFor("TestController.List", ":v", "za", ":id", "12", ":page", "123") !=
+		"/v1/za/cms_12_123.html" {
+		Info(handler.UrlFor("TestController.List"))
+		t.Errorf("TestController.List must equal to /v1/za/cms_12_123.html")
+	}
+	if handler.UrlFor("TestController.Param", ":v", "za", ":id", "12", ":page", "123") !=
+		"/v1/za_cms/ttt_12_123.html" {
+		Info(handler.UrlFor("TestController.Param"))
+		t.Errorf("TestController.List must equal to /v1/za_cms/ttt_12_123.html")
+	}
+}
+
 func TestUserFunc(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/api/list", nil)
 	w := httptest.NewRecorder()

@@ -256,11 +256,12 @@ func addPrefix(t *Tree, prefix string) {
 	if t.wildcard != nil {
 		addPrefix(t.wildcard, prefix)
 	}
-	if t.leaf != nil {
-		if c, ok := t.leaf.runObject.(*controllerInfo); ok {
+	for _, l := range t.leaves {
+		if c, ok := l.runObject.(*controllerInfo); ok {
 			c.pattern = prefix + c.pattern
 		}
 	}
+
 }
 
 // Namespace Condition

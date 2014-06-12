@@ -16,7 +16,7 @@ type Tree struct {
 	wildcard *Tree
 
 	//if set, failure to match wildcard search
-	leaf *leafInfo
+	leaves []*leafInfo
 }
 
 func NewTree() *Tree {
@@ -86,35 +86,35 @@ func filterTreeWithPrefix(t *Tree, wildcards []string, reg string) {
 	if t.wildcard != nil {
 		filterTreeWithPrefix(t.wildcard, wildcards, reg)
 	}
-	if t.leaf != nil {
-		t.leaf.wildcards = append(wildcards, t.leaf.wildcards...)
+	for _, l := range t.leaves {
+		l.wildcards = append(wildcards, l.wildcards...)
 		if reg != "" {
 			filterCards := []string{}
-			for _, v := range t.leaf.wildcards {
+			for _, v := range l.wildcards {
 				if v == ":" || v == "." {
 					continue
 				}
 				filterCards = append(filterCards, v)
 			}
-			t.leaf.wildcards = filterCards
-			t.leaf.regexps = regexp.MustCompile("^" + reg + strings.Trim(t.leaf.regexps.String(), "^$") + "$")
+			l.wildcards = filterCards
+			l.regexps = regexp.MustCompile("^" + reg + strings.Trim(l.regexps.String(), "^$") + "$")
 		} else {
-			if t.leaf.regexps != nil {
+			if l.regexps != nil {
 				filterCards := []string{}
-				for _, v := range t.leaf.wildcards {
+				for _, v := range l.wildcards {
 					if v == ":" || v == "." {
 						continue
 					}
 					filterCards = append(filterCards, v)
 				}
-				t.leaf.wildcards = filterCards
+				l.wildcards = filterCards
 				for _, w := range wildcards {
 					if w == "." || w == ":" {
 						continue
 					}
 					reg = "([^/]+)/" + reg
 				}
-				t.leaf.regexps = regexp.MustCompile("^" + reg + strings.Trim(t.leaf.regexps.String(), "^$") + "$")
+				l.regexps = regexp.MustCompile("^" + reg + strings.Trim(l.regexps.String(), "^$") + "$")
 			}
 		}
 	}
@@ -137,9 +137,9 @@ func (t *Tree) addseg(segments []string, route interface{}, wildcards []string, 
 				}
 				filterCards = append(filterCards, v)
 			}
-			t.leaf = &leafInfo{runObject: route, wildcards: wildcards, regexps: regexp.MustCompile("^" + reg + "$")}
+			t.leaves = append(t.leaves, &leafInfo{runObject: route, wildcards: wildcards, regexps: regexp.MustCompile("^" + reg + "$")})
 		} else {
-			t.leaf = &leafInfo{runObject: route, wildcards: wildcards}
+			t.leaves = append(t.leaves, &leafInfo{runObject: route, wildcards: wildcards})
 		}
 
 	} else {
@@ -185,15 +185,18 @@ func (t *Tree) Match(pattern string) (runObject interface{}, params map[string]s
 func (t *Tree) match(segments []string, wildcardValues []string) (runObject interface{}, params map[string]string) {
 	// Handle leaf nodes:
 	if len(segments) == 0 {
-		if t.leaf != nil {
-			if ok, pa := t.leaf.match(wildcardValues); ok {
-				return t.leaf.runObject, pa
+		for _, l := range t.leaves {
+			if ok, pa := l.match(wildcardValues); ok {
+				return l.runObject, pa
 			}
 		}
-		if t.wildcard != nil && t.wildcard.leaf != nil {
-			if ok, pa := t.wildcard.leaf.match(wildcardValues); ok {
-				return t.wildcard.leaf.runObject, pa
+		if t.wildcard != nil {
+			for _, l := range t.wildcard.leaves {
+				if ok, pa := l.match(wildcardValues); ok {
+					return l.runObject, pa
+				}
 			}
+
 		}
 		return nil, nil
 	}
@@ -222,13 +225,12 @@ func (t *Tree) match(segments []string, wildcardValues []string) (runObject inte
 		runObject, params = t.wildcard.match(segs, append(wildcardValues, seg))
 	}
 	if runObject == nil {
-		if t.leaf != nil {
-			if ok, pa := t.leaf.match(append(wildcardValues, segments...)); ok {
-				return t.leaf.runObject, pa
+		for _, l := range t.leaves {
+			if ok, pa := l.match(append(wildcardValues, segments...)); ok {
+				return l.runObject, pa
 			}
 		}
 	}
-
 	return runObject, params
 }
 
