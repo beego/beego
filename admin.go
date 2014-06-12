@@ -121,6 +121,10 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 			fmt.Fprintln(rw, "AdminHttpPort:", AdminHttpPort)
 		case "router":
 			fmt.Fprintln(rw, "Print all router infomation:")
+			for method, t := range BeeApp.Handlers.routers {
+				fmt.Fprintln(rw, "Method:", method)
+				printTree(rw, t)
+			}
 			// @todo print routers
 		case "filter":
 			fmt.Fprintln(rw, "Print all filter infomation:")
@@ -160,6 +164,26 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 		rw.Write([]byte("2. <a href='?command=router'>command=router</a><br>\n"))
 		rw.Write([]byte("3. <a href='?command=filter'>command=filter</a><br>\n"))
 		rw.Write([]byte("</body></html>"))
+	}
+}
+
+func printTree(rw http.ResponseWriter, t *Tree) {
+	for _, tr := range t.fixrouters {
+		printTree(rw, tr)
+	}
+	if t.wildcard != nil {
+		printTree(rw, t.wildcard)
+	}
+	for _, l := range t.leaves {
+		if v, ok := l.runObject.(*controllerInfo); ok {
+			if v.routerType == routerTypeBeego {
+				fmt.Fprintln(rw, v.pattern, v.methods, v.controllerType.Name())
+			} else if v.routerType == routerTypeRESTFul {
+				fmt.Fprintln(rw, v.pattern, v.methods)
+			} else if v.routerType == routerTypeHandler {
+				fmt.Fprintln(rw, v.pattern, "handler")
+			}
+		}
 	}
 }
 
