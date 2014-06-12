@@ -28,21 +28,96 @@ func NewTree() *Tree {
 // add Tree to the exist Tree
 // prefix should has no params
 func (t *Tree) AddTree(prefix string, tree *Tree) {
-	t.addtree(splitPath(prefix), tree)
+	t.addtree(splitPath(prefix), tree, nil, "")
 }
 
-func (t *Tree) addtree(segments []string, tree *Tree) {
+func (t *Tree) addtree(segments []string, tree *Tree, wildcards []string, reg string) {
 	if len(segments) == 0 {
 		panic("prefix should has path")
 	}
-	if len(segments) == 1 && segments[0] != "" {
-		t.fixrouters[segments[0]] = tree
+	seg := segments[0]
+	iswild, params, regexpStr := splitSegment(seg)
+	if len(segments) == 1 && seg != "" {
+		if iswild {
+			wildcards = append(wildcards, params...)
+			if regexpStr != "" {
+				for _, w := range params {
+					if w == "." || w == ":" {
+						continue
+					}
+					regexpStr = "([^/]+)/" + regexpStr
+				}
+			}
+			reg = reg + regexpStr
+			filterTreeWithPrefix(tree, wildcards, reg)
+			t.wildcard = tree
+		} else {
+			filterTreeWithPrefix(tree, wildcards, reg)
+			t.fixrouters[seg] = tree
+		}
 		return
 	}
-	seg := segments[0]
-	subTree := NewTree()
-	t.fixrouters[seg] = subTree
-	subTree.addtree(segments[1:], tree)
+	if iswild {
+		if t.wildcard == nil {
+			t.wildcard = NewTree()
+		}
+		wildcards = append(wildcards)
+		if regexpStr != "" {
+			for _, w := range params {
+				if w == "." || w == ":" {
+					continue
+				}
+				regexpStr = "([^/]+)/" + regexpStr
+			}
+		}
+		reg = reg + regexpStr
+		t.wildcard.addtree(segments[1:], tree, wildcards, reg)
+	} else {
+		subTree := NewTree()
+		t.fixrouters[seg] = subTree
+		subTree.addtree(segments[1:], tree, wildcards, reg)
+	}
+}
+
+func filterTreeWithPrefix(t *Tree, wildcards []string, reg string) {
+	for _, v := range t.fixrouters {
+		filterTreeWithPrefix(v, wildcards, reg)
+	}
+	if t.wildcard != nil {
+		filterTreeWithPrefix(t.wildcard, wildcards, reg)
+	}
+	if t.leaf != nil {
+		t.leaf.wildcards = append(wildcards, t.leaf.wildcards...)
+		if reg != "" {
+			filterCards := []string{}
+			for _, v := range t.leaf.wildcards {
+				if v == ":" || v == "." {
+					continue
+				}
+				filterCards = append(filterCards, v)
+			}
+			t.leaf.wildcards = filterCards
+			t.leaf.regexps = regexp.MustCompile("^" + reg + strings.Trim(t.leaf.regexps.String(), "^$") + "$")
+		} else {
+			if t.leaf.regexps != nil {
+				filterCards := []string{}
+				for _, v := range t.leaf.wildcards {
+					if v == ":" || v == "." {
+						continue
+					}
+					filterCards = append(filterCards, v)
+				}
+				t.leaf.wildcards = filterCards
+				for _, w := range wildcards {
+					if w == "." || w == ":" {
+						continue
+					}
+					reg = "([^/]+)/" + reg
+				}
+				t.leaf.regexps = regexp.MustCompile("^" + reg + strings.Trim(t.leaf.regexps.String(), "^$") + "$")
+			}
+		}
+	}
 }
 
 // call addseg function
@@ -73,6 +148,18 @@ func (t *Tree) addseg(segments []string, route interface{}, wildcards []string, 
 		if iswild {
 			if t.wildcard == nil {
 				t.wildcard = NewTree()
+			}
+			if regexpStr != "" {
+				if reg == "" {
+					for _, w := range wildcards {
+						if w == "." || w == ":" {
+							continue
+						}
+						regexpStr = "([^/]+)/" + regexpStr
+					}
+				} else {
+					regexpStr = "/" + regexpStr
+				}
 			}
 			t.wildcard.addseg(segments[1:], route, append(wildcards, params...), reg+regexpStr)
 		} else {
@@ -230,12 +317,11 @@ func (leaf *leafInfo) match(wildcardValues []string) (ok bool, params map[string
 		}
 		return true, params
 	}
-
-	if !leaf.regexps.MatchString(strings.Join(wildcardValues, "")) {
+	if !leaf.regexps.MatchString(path.Join(wildcardValues...)) {
 		return false, nil
 	}
 	params = make(map[string]string)
-	matches := leaf.regexps.FindStringSubmatch(strings.Join(wildcardValues, ""))
+	matches := leaf.regexps.FindStringSubmatch(path.Join(wildcardValues...))
 	for i, match := range matches[1:] {
 		params[leaf.wildcards[i]] = match
 	}

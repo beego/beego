@@ -31,6 +31,9 @@ func init() {
 	routers = append(routers, testinfo{"/v1/shop/:id([0-9]+)_:name", "/v1/shop/123_nike", map[string]string{":id": "123", ":name": "nike"}})
 	routers = append(routers, testinfo{"/v1/shop/:id(.+)_cms.html", "/v1/shop/123_cms.html", map[string]string{":id": "123"}})
 	routers = append(routers, testinfo{"/v1/shop/cms_:id(.+)_:page(.+).html", "/v1/shop/cms_123_1.html", map[string]string{":id": "123", ":page": "1"}})
+	routers = append(routers, testinfo{"/v1/:v/cms/aaa_:id(.+)_:page(.+).html", "/v1/2/cms/aaa_123_1.html", map[string]string{":v": "2", ":id": "123", ":page": "1"}})
+	routers = append(routers, testinfo{"/v1/:v/cms_:id(.+)_:page(.+).html", "/v1/2/cms_123_1.html", map[string]string{":v": "2", ":id": "123", ":page": "1"}})
+	routers = append(routers, testinfo{"/v1/:v(.+)_cms/ttt_:id(.+)_:page(.+).html", "/v1/2_cms/ttt_123_1.html", map[string]string{":v": "2", ":id": "123", ":page": "1"}})
 }
 
 func TestTreeRouters(t *testing.T) {
@@ -50,6 +53,57 @@ func TestTreeRouters(t *testing.T) {
 				}
 			}
 		}
+	}
+}
+
+func TestAddTree(t *testing.T) {
+	tr := NewTree()
+	tr.AddRouter("/shop/:id/account", "astaxie")
+	tr.AddRouter("/shop/:sd/ttt_:id(.+)_:page(.+).html", "astaxie")
+	t1 := NewTree()
+	t1.AddTree("/v1/zl", tr)
+	obj, param := t1.Match("/v1/zl/shop/123/account")
+	if obj == nil || obj.(string) != "astaxie" {
+		t.Fatal("/v1/zl/shop/:id/account can't get obj ")
+	}
+	if param == nil {
+		t.Fatal("get param error")
+	}
+	if param[":id"] != "123" {
+		t.Fatal("get :id param error")
+	}
+	obj, param = t1.Match("/v1/zl/shop/123/ttt_1_12.html")
+	if obj == nil || obj.(string) != "astaxie" {
+		t.Fatal("/v1/zl//shop/:sd/ttt_:id(.+)_:page(.+).html can't get obj ")
+	}
+	if param == nil {
+		t.Fatal("get param error")
+	}
+	if param[":sd"] != "123" || param[":id"] != "1" || param[":page"] != "12" {
+		t.Fatal("get :sd :id :page param error")
+	}
+
+	t2 := NewTree()
+	t2.AddTree("/v1/:shopid", tr)
+	obj, param = t2.Match("/v1/zl/shop/123/account")
+	if obj == nil || obj.(string) != "astaxie" {
+		t.Fatal("/v1/:shopid/shop/:id/account can't get obj ")
+	}
+	if param == nil {
+		t.Fatal("get param error")
+	}
+	if param[":id"] != "123" || param[":shopid"] != "zl" {
+		t.Fatal("get :id :shopid param error")
+	}
+	obj, param = t2.Match("/v1/zl/shop/123/ttt_1_12.html")
+	if obj == nil || obj.(string) != "astaxie" {
+		t.Fatal("/v1/:shopid/shop/:sd/ttt_:id(.+)_:page(.+).html can't get obj ")
+	}
+	if param == nil {
+		t.Fatal("get :shopid param error")
+	}
+	if param[":sd"] != "123" || param[":id"] != "1" || param[":page"] != "12" || param[":shopid"] != "zl" {
+		t.Fatal("get :sd :id :page :shopid param error")
 	}
 }
 
