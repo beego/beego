@@ -383,6 +383,9 @@ func initBeforeHttpRun() {
 	for u, _ := range StaticDir {
 		Get(u+"/*", serverStaticRouter)
 	}
+	if EnableDocs {
+		Get("/docs/*", serverDocs)
+	}
 }
 
 // this function is for test package init

@@ -71,6 +71,7 @@ var (
 	FlashName              string // name of the flash variable found in response header and cookie
 	FlashSeperator         string // used to seperate flash key:value
 	AppConfigProvider      string // config provider
+	EnableDocs             bool   // enable generate docs & server docs API Swagger
 )
 
 func init() {
@@ -360,6 +361,10 @@ func ParseConfig() (err error) {
 
 		if adminhttpport, err := getConfig("int", "AdminHttpPort"); err == nil {
 			AdminHttpPort = adminhttpport.(int)
+		}
+
+		if enabledocs, err := getConfig("bool", "EnableDocs"); err == nil {
+			EnableDocs = enabledocs.(bool)
 		}
 	}
 	return nil
