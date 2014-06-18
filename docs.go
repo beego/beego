@@ -8,6 +8,12 @@ import (
 
 var GlobalDocApi map[string]interface{}
 
+func init() {
+	if EnableDocs {
+		GlobalDocApi = make(map[string]interface{})
+	}
+}
+
 func serverDocs(ctx *context.Context) {
 	var obj interface{}
 	if splat := ctx.Input.Param(":splat"); splat == "" {

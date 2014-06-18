@@ -376,10 +376,6 @@ func initBeforeHttpRun() {
 		}
 	}
 
-	if EnableDocs {
-		GlobalDocApi = make(map[string]interface{})
-	}
-
 	middleware.VERSION = VERSION
 	middleware.AppName = AppName
 	middleware.RegisterErrorHandler()
