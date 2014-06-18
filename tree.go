@@ -160,6 +160,13 @@ func (t *Tree) addseg(segments []string, route interface{}, wildcards []string, 
 				} else {
 					regexpStr = "/" + regexpStr
 				}
+			} else if reg != "" {
+				for _, w := range params {
+					if w == "." || w == ":" {
+						continue
+					}
+					regexpStr = "/([^/]+)" + regexpStr
+				}
 			}
 			t.wildcard.addseg(segments[1:], route, append(wildcards, params...), reg+regexpStr)
 		} else {

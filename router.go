@@ -428,7 +428,9 @@ func (p *ControllerRegistor) geturl(t *Tree, url, controllName, methodName strin
 			if c.routerType == routerTypeBeego && c.controllerType.Name() == controllName {
 				find := false
 				if _, ok := HTTPMETHOD[strings.ToUpper(methodName)]; ok {
-					if m, ok := c.methods[strings.ToUpper(methodName)]; ok && m == strings.ToUpper(methodName) {
+					if len(c.methods) == 0 {
+						find = true
+					} else if m, ok := c.methods[strings.ToUpper(methodName)]; ok && m == strings.ToUpper(methodName) {
 						find = true
 					} else if m, ok = c.methods["*"]; ok && m == methodName {
 						find = true
@@ -504,7 +506,11 @@ func (p *ControllerRegistor) geturl(t *Tree, url, controllName, methodName strin
 							}
 						}
 						if l.regexps.MatchString(regurl) {
-							return true, url + "/" + regurl + tourl(params)
+							if url == "/" {
+								return true, url + regurl + tourl(params)
+							} else {
+								return true, url + "/" + regurl + tourl(params)
+							}
 						}
 					}
 				}

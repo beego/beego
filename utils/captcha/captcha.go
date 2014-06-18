@@ -248,7 +248,7 @@ func NewWithFilter(urlPrefix string, store cache.Cache) *Captcha {
 	cpt := NewCaptcha(urlPrefix, store)
 
 	// create filter for serve captcha image
-	beego.AddFilter(cpt.URLPrefix+":", "BeforeRouter", cpt.Handler)
+	beego.InsertFilter(cpt.URLPrefix+":", beego.BeforeRouter, cpt.Handler)
 
 	// add to template func map
 	beego.AddFuncMap("create_captcha", cpt.CreateCaptchaHtml)

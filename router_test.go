@@ -99,6 +99,7 @@ func TestUrlFor2(t *testing.T) {
 	handler := NewControllerRegister()
 	handler.Add("/v1/:v/cms_:id(.+)_:page(.+).html", &TestController{}, "*:List")
 	handler.Add("/v1/:v(.+)_cms/ttt_:id(.+)_:page(.+).html", &TestController{}, "*:Param")
+	handler.Add("/:year:int/:month:int/:title/:entid", &TestController{})
 	if handler.UrlFor("TestController.List", ":v", "za", ":id", "12", ":page", "123") !=
 		"/v1/za/cms_12_123.html" {
 		Info(handler.UrlFor("TestController.List"))
@@ -108,6 +109,12 @@ func TestUrlFor2(t *testing.T) {
 		"/v1/za_cms/ttt_12_123.html" {
 		Info(handler.UrlFor("TestController.Param"))
 		t.Errorf("TestController.List must equal to /v1/za_cms/ttt_12_123.html")
+	}
+	if handler.UrlFor("TestController.Get", ":year", "1111", ":month", "11",
+		":title", "aaaa", ":entid", "aaaa") !=
+		"/1111/11/aaaa/aaaa" {
+		Info(handler.UrlFor("TestController.Get"))
+		t.Errorf("TestController.Get must equal to /1111/11/aaaa/aaaa")
 	}
 }
 
