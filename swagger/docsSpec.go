@@ -1,6 +1,6 @@
-package beego
+package swagger
 
-const swaggerVersion = "1.2"
+const SwaggerVersion = "1.2"
 
 type ResourceListing struct {
 	ApiVersion     string `json:"apiVersion"`
