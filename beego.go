@@ -381,9 +381,11 @@ func initBeforeHttpRun() {
 	middleware.RegisterErrorHandler()
 
 	for u, _ := range StaticDir {
+		Get(u, serverStaticRouter)
 		Get(u+"/*", serverStaticRouter)
 	}
 	if EnableDocs {
+		Get("/docs", serverDocs)
 		Get("/docs/*", serverDocs)
 	}
 }

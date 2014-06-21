@@ -267,12 +267,6 @@ func (leaf *leafInfo) match(wildcardValues []string) (ok bool, params map[string
 				}
 				return true, params
 			}
-			if len(leaf.wildcards) == 1 && leaf.wildcards[0] == ":splat" {
-				params = make(map[string]string)
-				params[":splat"] = ""
-				return true, params
-			}
-			Error("bug of router")
 			return false, nil
 		} else if len(wildcardValues) == 0 { // static path
 			return true, nil

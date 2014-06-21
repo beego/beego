@@ -350,9 +350,11 @@ func (p *ControllerRegistor) AddAutoPrefix(prefix string, c ControllerInterface)
 			route.methods = map[string]string{"*": rt.Method(i).Name}
 			route.controllerType = ct
 			pattern := path.Join(prefix, controllerName, strings.ToLower(rt.Method(i).Name), "*")
+			patternfix := path.Join(prefix, controllerName, strings.ToLower(rt.Method(i).Name))
 			route.pattern = pattern
 			for _, m := range HTTPMETHOD {
 				p.addToRouter(m, pattern, route)
+				p.addToRouter(m, patternfix, route)
 			}
 		}
 	}
