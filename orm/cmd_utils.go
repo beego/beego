@@ -144,6 +144,10 @@ func getDbCreateSql(al *alias) (sqls []string, tableIndexes map[string][]dbIndex
 					column += " " + "NOT NULL"
 				}
 
+				if fi.initial.String() != "" {
+					column += " DEFAULT " + fi.initial.String()
+				}
+
 				if fi.unique {
 					column += " " + "UNIQUE"
 				}
