@@ -287,6 +287,25 @@ func TestNullDataTypes(t *testing.T) {
 	throwFail(t, AssertIs(d.NullInt64.Valid, false))
 	throwFail(t, AssertIs(d.NullFloat64.Valid, false))
 
+	throwFail(t, AssertIs(d.BooleanPtr, nil))
+	throwFail(t, AssertIs(d.CharPtr, nil))
+	throwFail(t, AssertIs(d.TextPtr, nil))
+	throwFail(t, AssertIs(d.BytePtr, nil))
+	throwFail(t, AssertIs(d.RunePtr, nil))
+	throwFail(t, AssertIs(d.IntPtr, nil))
+	throwFail(t, AssertIs(d.Int8Ptr, nil))
+	throwFail(t, AssertIs(d.Int16Ptr, nil))
+	throwFail(t, AssertIs(d.Int32Ptr, nil))
+	throwFail(t, AssertIs(d.Int64Ptr, nil))
+	throwFail(t, AssertIs(d.UintPtr, nil))
+	throwFail(t, AssertIs(d.Uint8Ptr, nil))
+	throwFail(t, AssertIs(d.Uint16Ptr, nil))
+	throwFail(t, AssertIs(d.Uint32Ptr, nil))
+	throwFail(t, AssertIs(d.Uint64Ptr, nil))
+	throwFail(t, AssertIs(d.Float32Ptr, nil))
+	throwFail(t, AssertIs(d.Float64Ptr, nil))
+	throwFail(t, AssertIs(d.DecimalPtr, nil))
+
 	_, err = dORM.Raw(`INSERT INTO data_null (boolean) VALUES (?)`, nil).Exec()
 	throwFail(t, err)
 
@@ -294,12 +313,49 @@ func TestNullDataTypes(t *testing.T) {
 	err = dORM.Read(&d)
 	throwFail(t, err)
 
+	booleanPtr := true
+	charPtr := string("test")
+	textPtr := string("test")
+	bytePtr := byte('t')
+	runePtr := rune('t')
+	intPtr := int(42)
+	int8Ptr := int8(42)
+	int16Ptr := int16(42)
+	int32Ptr := int32(42)
+	int64Ptr := int64(42)
+	uintPtr := uint(42)
+	uint8Ptr := uint8(42)
+	uint16Ptr := uint16(42)
+	uint32Ptr := uint32(42)
+	uint64Ptr := uint64(42)
+	float32Ptr := float32(42.0)
+	float64Ptr := float64(42.0)
+	decimalPtr := float64(42.0)
+
 	d = DataNull{
 		DateTime:    time.Now(),
 		NullString:  sql.NullString{String: "test", Valid: true},
 		NullBool:    sql.NullBool{Bool: true, Valid: true},
 		NullInt64:   sql.NullInt64{Int64: 42, Valid: true},
 		NullFloat64: sql.NullFloat64{Float64: 42.42, Valid: true},
+		BooleanPtr:  &booleanPtr,
+		CharPtr:     &charPtr,
+		TextPtr:     &textPtr,
+		BytePtr:     &bytePtr,
+		RunePtr:     &runePtr,
+		IntPtr:      &intPtr,
+		Int8Ptr:     &int8Ptr,
+		Int16Ptr:    &int16Ptr,
+		Int32Ptr:    &int32Ptr,
+		Int64Ptr:    &int64Ptr,
+		UintPtr:     &uintPtr,
+		Uint8Ptr:    &uint8Ptr,
+		Uint16Ptr:   &uint16Ptr,
+		Uint32Ptr:   &uint32Ptr,
+		Uint64Ptr:   &uint64Ptr,
+		Float32Ptr:  &float32Ptr,
+		Float64Ptr:  &float64Ptr,
+		DecimalPtr:  &decimalPtr,
 	}
 
 	id, err = dORM.Insert(&d)
@@ -321,6 +377,25 @@ func TestNullDataTypes(t *testing.T) {
 
 	throwFail(t, AssertIs(d.NullFloat64.Valid, true))
 	throwFail(t, AssertIs(d.NullFloat64.Float64, 42.42))
+
+	throwFail(t, AssertIs(*d.BooleanPtr, booleanPtr))
+	throwFail(t, AssertIs(*d.CharPtr, charPtr))
+	throwFail(t, AssertIs(*d.TextPtr, textPtr))
+	throwFail(t, AssertIs(*d.BytePtr, bytePtr))
+	throwFail(t, AssertIs(*d.RunePtr, runePtr))
+	throwFail(t, AssertIs(*d.IntPtr, intPtr))
+	throwFail(t, AssertIs(*d.Int8Ptr, int8Ptr))
+	throwFail(t, AssertIs(*d.Int16Ptr, int16Ptr))
+	throwFail(t, AssertIs(*d.Int32Ptr, int32Ptr))
+	throwFail(t, AssertIs(*d.Int64Ptr, int64Ptr))
+	throwFail(t, AssertIs(*d.UintPtr, uintPtr))
+	throwFail(t, AssertIs(*d.Uint8Ptr, uint8Ptr))
+	throwFail(t, AssertIs(*d.Uint16Ptr, uint16Ptr))
+	throwFail(t, AssertIs(*d.Uint32Ptr, uint32Ptr))
+	throwFail(t, AssertIs(*d.Uint64Ptr, uint64Ptr))
+	throwFail(t, AssertIs(*d.Float32Ptr, float32Ptr))
+	throwFail(t, AssertIs(*d.Float64Ptr, float64Ptr))
+	throwFail(t, AssertIs(*d.DecimalPtr, decimalPtr))
 }
 
 func TestDataCustomTypes(t *testing.T) {
