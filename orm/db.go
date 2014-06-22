@@ -114,6 +114,12 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 					if nb.Valid {
 						value = nb.Bool
 					}
+				} else if field.Kind() == reflect.Ptr {
+					if field.IsNil() {
+						value = nil
+					} else {
+						value = field.Elem().Bool()
+					}
 				} else {
 					value = field.Bool()
 				}
@@ -123,6 +129,12 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 					if ns.Valid {
 						value = ns.String
 					}
+				} else if field.Kind() == reflect.Ptr {
+					if field.IsNil() {
+						value = nil
+					} else {
+						value = field.Elem().String()
+					}
 				} else {
 					value = field.String()
 				}
@@ -131,6 +143,12 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 					value = nil
 					if nf.Valid {
 						value = nf.Float64
+					}
+				} else if field.Kind() == reflect.Ptr {
+					if field.IsNil() {
+						value = nil
+					} else {
+						value = field.Elem().Float()
 					}
 				} else {
 					vu := field.Interface()
@@ -153,12 +171,26 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 			default:
 				switch {
 				case fi.fieldType&IsPostiveIntegerField > 0:
-					value = field.Uint()
+					if field.Kind() == reflect.Ptr {
+						if field.IsNil() {
+							value = nil
+						} else {
+							value = field.Elem().Uint()
+						}
+					} else {
+						value = field.Uint()
+					}
 				case fi.fieldType&IsIntegerField > 0:
 					if ni, ok := field.Interface().(sql.NullInt64); ok {
 						value = nil
 						if ni.Valid {
 							value = ni.Int64
+						}
+					} else if field.Kind() == reflect.Ptr {
+						if field.IsNil() {
+							value = nil
+						} else {
+							value = field.Elem().Int()
 						}
 					} else {
 						value = field.Int()
@@ -1169,6 +1201,11 @@ setValue:
 					nb.Valid = true
 				}
 				field.Set(reflect.ValueOf(nb))
+			} else if field.Kind() == reflect.Ptr {
+				if value != nil {
+					v := value.(bool)
+					field.Set(reflect.ValueOf(&v))
+				}
 			} else {
 				if value == nil {
 					value = false
@@ -1186,6 +1223,11 @@ setValue:
 					ns.Valid = true
 				}
 				field.Set(reflect.ValueOf(ns))
+			} else if field.Kind() == reflect.Ptr {
+				if value != nil {
+					v := value.(string)
+					field.Set(reflect.ValueOf(&v))
+				}
 			} else {
 				if value == nil {
 					value = ""
@@ -1199,6 +1241,56 @@ setValue:
 				value = time.Time{}
 			}
 			field.Set(reflect.ValueOf(value))
+		}
+	case fieldType == TypePositiveBitField && field.Kind() == reflect.Ptr:
+		if value != nil {
+			v := uint8(value.(uint64))
+			field.Set(reflect.ValueOf(&v))
+		}
+	case fieldType == TypePositiveSmallIntegerField && field.Kind() == reflect.Ptr:
+		if value != nil {
+			v := uint16(value.(uint64))
+			field.Set(reflect.ValueOf(&v))
+		}
+	case fieldType == TypePositiveIntegerField && field.Kind() == reflect.Ptr:
+		if value != nil {
+			if field.Type() == reflect.TypeOf(new(uint)) {
+				v := uint(value.(uint64))
+				field.Set(reflect.ValueOf(&v))
+			} else {
+				v := uint32(value.(uint64))
+				field.Set(reflect.ValueOf(&v))
+			}
+		}
+	case fieldType == TypePositiveBigIntegerField && field.Kind() == reflect.Ptr:
+		if value != nil {
+			v := value.(uint64)
+			field.Set(reflect.ValueOf(&v))
+		}
+	case fieldType == TypeBitField && field.Kind() == reflect.Ptr:
+		if value != nil {
+			v := int8(value.(int64))
+			field.Set(reflect.ValueOf(&v))
+		}
+	case fieldType == TypeSmallIntegerField && field.Kind() == reflect.Ptr:
+		if value != nil {
+			v := int16(value.(int64))
+			field.Set(reflect.ValueOf(&v))
+		}
+	case fieldType == TypeIntegerField && field.Kind() == reflect.Ptr:
+		if value != nil {
+			if field.Type() == reflect.TypeOf(new(int)) {
+				v := int(value.(int64))
+				field.Set(reflect.ValueOf(&v))
+			} else {
+				v := int32(value.(int64))
+				field.Set(reflect.ValueOf(&v))
+			}
+		}
+	case fieldType == TypeBigIntegerField && field.Kind() == reflect.Ptr:
+		if value != nil {
+			v := value.(int64)
+			field.Set(reflect.ValueOf(&v))
 		}
 	case fieldType&IsIntegerField > 0:
 		if fieldType&IsPostiveIntegerField > 0 {
@@ -1236,6 +1328,16 @@ setValue:
 					nf.Valid = true
 				}
 				field.Set(reflect.ValueOf(nf))
+			} else if field.Kind() == reflect.Ptr {
+				if value != nil {
+					if field.Type() == reflect.TypeOf(new(float32)) {
+						v := float32(value.(float64))
+						field.Set(reflect.ValueOf(&v))
+					} else {
+						v := value.(float64)
+						field.Set(reflect.ValueOf(&v))
+					}
+				}
 			} else {
 
 				if value == nil {

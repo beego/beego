@@ -147,6 +147,24 @@ type DataNull struct {
 	NullBool    sql.NullBool    `orm:"null"`
 	NullFloat64 sql.NullFloat64 `orm:"null"`
 	NullInt64   sql.NullInt64   `orm:"null"`
+	BooleanPtr  *bool           `orm:"null"`
+	CharPtr     *string         `orm:"null;size(50)"`
+	TextPtr     *string         `orm:"null;type(text)"`
+	BytePtr     *byte           `orm:"null"`
+	RunePtr     *rune           `orm:"null"`
+	IntPtr      *int            `orm:"null"`
+	Int8Ptr     *int8           `orm:"null"`
+	Int16Ptr    *int16          `orm:"null"`
+	Int32Ptr    *int32          `orm:"null"`
+	Int64Ptr    *int64          `orm:"null"`
+	UintPtr     *uint           `orm:"null"`
+	Uint8Ptr    *uint8          `orm:"null"`
+	Uint16Ptr   *uint16         `orm:"null"`
+	Uint32Ptr   *uint32         `orm:"null"`
+	Uint64Ptr   *uint64         `orm:"null"`
+	Float32Ptr  *float32        `orm:"null"`
+	Float64Ptr  *float64        `orm:"null"`
+	DecimalPtr  *float64        `orm:"digits(8);decimals(4);null"`
 }
 
 type String string
