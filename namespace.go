@@ -7,6 +7,7 @@ package beego
 
 import (
 	"net/http"
+	"strings"
 
 	beecontext "github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/middleware"
@@ -258,7 +259,9 @@ func addPrefix(t *Tree, prefix string) {
 	}
 	for _, l := range t.leaves {
 		if c, ok := l.runObject.(*controllerInfo); ok {
-			c.pattern = prefix + c.pattern
+			if !strings.HasPrefix(c.pattern, prefix) {
+				c.pattern = prefix + c.pattern
+			}
 		}
 	}
 
