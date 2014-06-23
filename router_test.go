@@ -79,19 +79,23 @@ func TestUrlFor(t *testing.T) {
 	handler := NewControllerRegister()
 	handler.Add("/api/list", &TestController{}, "*:List")
 	handler.Add("/person/:last/:first", &TestController{}, "*:Param")
-	handler.AddAuto(&TestController{})
-	if handler.UrlFor("TestController.List") != "/api/list" {
-		Info(handler.UrlFor("TestController.List"))
+	if a := handler.UrlFor("TestController.List"); a != "/api/list" {
+		Info(a)
 		t.Errorf("TestController.List must equal to /api/list")
 	}
-	if handler.UrlFor("TestController.Param", ":last", "xie", ":first", "asta") != "/person/xie/asta" {
-		t.Errorf("TestController.Param must equal to /person/xie/asta, but get " + handler.UrlFor("TestController.Param", ":last", "xie", ":first", "asta"))
+	if a := handler.UrlFor("TestController.Param", ":last", "xie", ":first", "asta"); a != "/person/xie/asta" {
+		t.Errorf("TestController.Param must equal to /person/xie/asta, but get " + a)
 	}
-	if handler.UrlFor("TestController.Myext") != "/test/myext" {
-		t.Errorf("TestController.Myext must equal to /test/myext")
+}
+
+func TestUrlFor3(t *testing.T) {
+	handler := NewControllerRegister()
+	handler.AddAuto(&TestController{})
+	if a := handler.UrlFor("TestController.Myext"); a != "/test/myext" {
+		t.Errorf("TestController.Myext must equal to /test/myext, but get " + a)
 	}
-	if handler.UrlFor("TestController.GetUrl") != "/test/geturl" {
-		t.Errorf("TestController.GetUrl must equal to /test/geturl")
+	if a := handler.UrlFor("TestController.GetUrl"); a != "/test/geturl" {
+		t.Errorf("TestController.GetUrl must equal to /test/geturl, but get " + a)
 	}
 }
 

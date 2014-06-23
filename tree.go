@@ -137,26 +137,36 @@ func (t *Tree) addseg(segments []string, route interface{}, wildcards []string, 
 				}
 				filterCards = append(filterCards, v)
 			}
-			t.leaves = append(t.leaves, &leafInfo{runObject: route, wildcards: wildcards, regexps: regexp.MustCompile("^" + reg + "$")})
+			t.leaves = append(t.leaves, &leafInfo{runObject: route, wildcards: filterCards, regexps: regexp.MustCompile("^" + reg + "$")})
 		} else {
 			t.leaves = append(t.leaves, &leafInfo{runObject: route, wildcards: wildcards})
 		}
-
 	} else {
 		seg := segments[0]
 		iswild, params, regexpStr := splitSegment(seg)
+		//for the router  /login/*/access match /login/2009/11/access
+		if !iswild && utils.InSlice(":splat", wildcards) {
+			iswild = true
+			regexpStr = seg
+		}
 		if iswild {
 			if t.wildcard == nil {
 				t.wildcard = NewTree()
 			}
 			if regexpStr != "" {
 				if reg == "" {
+					rr := ""
 					for _, w := range wildcards {
 						if w == "." || w == ":" {
 							continue
 						}
-						regexpStr = "([^/]+)/" + regexpStr
+						if w == ":splat" {
+							rr = rr + "(.+)/"
+						} else {
+							rr = rr + "([^/]+)/"
+						}
 					}
+					regexpStr = rr + regexpStr
 				} else {
 					regexpStr = "/" + regexpStr
 				}

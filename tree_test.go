@@ -19,6 +19,9 @@ func init() {
 	routers = append(routers, testinfo{"/customer/login", "/customer/login.json", map[string]string{":ext": "json"}})
 	routers = append(routers, testinfo{"/*", "/customer/123", map[string]string{":splat": "customer/123"}})
 	routers = append(routers, testinfo{"/*", "/customer/2009/12/11", map[string]string{":splat": "customer/2009/12/11"}})
+	routers = append(routers, testinfo{"/aa/*/bb", "/aa/2009/bb", map[string]string{":splat": "2009"}})
+	routers = append(routers, testinfo{"/cc/*/dd", "/cc/2009/11/dd", map[string]string{":splat": "2009/11"}})
+	routers = append(routers, testinfo{"/ee/:year/*/ff", "/ee/2009/11/ff", map[string]string{":year": "2009", ":splat": "11"}})
 	routers = append(routers, testinfo{"/*.*", "/nice/api.json", map[string]string{":path": "nice/api", ":ext": "json"}})
 	routers = append(routers, testinfo{"/:name/*.*", "/nice/api.json", map[string]string{":name": "nice", ":path": "api", ":ext": "json"}})
 	routers = append(routers, testinfo{"/:name/test/*.*", "/nice/test/api.json", map[string]string{":name": "nice", ":path": "api", ":ext": "json"}})
@@ -47,9 +50,9 @@ func TestTreeRouters(t *testing.T) {
 		if r.params != nil {
 			for k, v := range r.params {
 				if vv, ok := param[k]; !ok {
-					t.Fatal(r.url + r.requesturl + " get param empty:" + k)
+					t.Fatal(r.url + "    " + r.requesturl + " get param empty:" + k)
 				} else if vv != v {
-					t.Fatal(r.url + " " + r.requesturl + " should be:" + v + " get param:" + vv)
+					t.Fatal(r.url + "     " + r.requesturl + " should be:" + v + " get param:" + vv)
 				}
 			}
 		}
