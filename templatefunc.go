@@ -1,7 +1,11 @@
 // Beego (http://beego.me/)
+
 // @description beego is an open-source, high-performance web framework for the Go programming language.
+
 // @link        http://github.com/astaxie/beego for the canonical source repository
+
 // @license     http://github.com/astaxie/beego/blob/master/LICENSE
+
 // @authors     astaxie
 
 package beego
@@ -37,23 +41,20 @@ func Substr(s string, start, length int) string {
 func Html2str(html string) string {
 	src := string(html)
 
-	//将HTML标签全转换成小写
 	re, _ := regexp.Compile("\\<[\\S\\s]+?\\>")
 	src = re.ReplaceAllStringFunc(src, strings.ToLower)
 
-	//去除STYLE
+	//remove STYLE
 	re, _ = regexp.Compile("\\<style[\\S\\s]+?\\</style\\>")
 	src = re.ReplaceAllString(src, "")
 
-	//去除SCRIPT
+	//remove SCRIPT
 	re, _ = regexp.Compile("\\<script[\\S\\s]+?\\</script\\>")
 	src = re.ReplaceAllString(src, "")
 
-	//去除所有尖括号内的HTML代码，并换成换行符
 	re, _ = regexp.Compile("\\<[\\S\\s]+?\\>")
 	src = re.ReplaceAllString(src, "\n")
 
-	//去除连续的换行符
 	re, _ = regexp.Compile("\\s{2,}")
 	src = re.ReplaceAllString(src, "\n")
 

@@ -1,7 +1,11 @@
 // Beego (http://beego.me/)
+
 // @description beego is an open-source, high-performance web framework for the Go programming language.
+
 // @link        http://github.com/astaxie/beego for the canonical source repository
+
 // @license     http://github.com/astaxie/beego/blob/master/LICENSE
+
 // @authors     astaxie
 
 package config
@@ -61,13 +65,13 @@ func TestJsonStartsWithArray(t *testing.T) {
 		t.Fatal(err)
 	}
 	rootArray, err := jsonconf.DIY("rootArray")
-	if (err != nil) {
+	if err != nil {
 		t.Error("array does not exist as element")
 	}
 	rootArrayCasted := rootArray.([]interface{})
-	if (rootArrayCasted == nil) {
+	if rootArrayCasted == nil {
 		t.Error("array from root is nil")
-	}else {
+	} else {
 		elem := rootArrayCasted[0].(map[string]interface{})
 		if elem["url"] != "user" || elem["serviceAPI"] != "http://www.test.com/user" {
 			t.Error("array[0] values are not valid")
