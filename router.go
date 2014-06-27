@@ -599,7 +599,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	if !findrouter {
 		if t, ok := p.routers[r.Method]; ok {
-			runObject, p := t.Match(r.URL.Path)
+			runObject, p := t.Match(strings.ToLower(r.URL.Path))
 			if r, ok := runObject.(*controllerInfo); ok {
 				routerInfo = r
 				findrouter = true
