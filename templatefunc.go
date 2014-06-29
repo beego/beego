@@ -368,42 +368,54 @@ func RenderForm(obj interface{}) template.HTML {
 		}
 
 		fieldT := objT.Field(i)
-		tags := strings.Split(fieldT.Tag.Get("form"), ",")
-		label := fieldT.Name + ": "
-		name := fieldT.Name
-		fType := "text"
 
-		switch len(tags) {
-		case 1:
-			if tags[0] == "-" {
-				continue
-			}
-			if len(tags[0]) > 0 {
-				name = tags[0]
-			}
-		case 2:
-			if len(tags[0]) > 0 {
-				name = tags[0]
-			}
-			if len(tags[1]) > 0 {
-				fType = tags[1]
-			}
-		case 3:
-			if len(tags[0]) > 0 {
-				name = tags[0]
-			}
-			if len(tags[1]) > 0 {
-				fType = tags[1]
-			}
-			if len(tags[2]) > 0 {
-				label = tags[2]
-			}
-		}
+    label, name, fType, ignored := parseFormTag(fieldT)
+    if ignored {
+      continue
+    }
 
 		raw = append(raw, fmt.Sprintf(`%v<input name="%v" type="%v" value="%v">`,
 			label, name, fType, fieldV.Interface()))
 	}
 	return template.HTML(strings.Join(raw, "</br>"))
+}
+
+// parseFormTag takes the stuct-tag of a StructField and parses the `form` value.
+// returned are the form label, name-property, type and wether the field should be ignored.
+func parseFormTag(fieldT reflect.StructField) (label, name, fType string, ignored bool) {
+  tags := strings.Split(fieldT.Tag.Get("form"), ",")
+  label = fieldT.Name + ": "
+  name = fieldT.Name
+  fType = "text"
+  ignored = false;
+
+  switch len(tags) {
+  case 1:
+    if tags[0] == "-" {
+      ignored = true
+    }
+    if len(tags[0]) > 0 {
+      name = tags[0]
+    }
+  case 2:
+    if len(tags[0]) > 0 {
+      name = tags[0]
+    }
+    if len(tags[1]) > 0 {
+      fType = tags[1]
+    }
+  case 3:
+    if len(tags[0]) > 0 {
+      name = tags[0]
+    }
+    if len(tags[1]) > 0 {
+      fType = tags[1]
+    }
+    if len(tags[2]) > 0 {
+      label = tags[2]
+    }
+  }
+  return
 }
 
 func isStructPtr(t reflect.Type) bool {
