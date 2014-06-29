@@ -327,13 +327,6 @@ func ParseForm(form url.Values, obj interface{}) error {
 	return nil
 }
 
-// form types for RenderForm function
-var FormType = map[string]bool{
-	"text":     true,
-	"textarea": true,
-	"hidden":   true,
-	"password": true,
-}
 
 var unKind = map[reflect.Kind]bool{
 	reflect.Uintptr:       true,
