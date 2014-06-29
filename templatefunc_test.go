@@ -148,9 +148,10 @@ func TestRenderForm(t *testing.T) {
 		Sex   string
 		Email []string
 		Intro string `form:",textarea"`
+		Ignored string `form:"-"`
 	}
 
-	u := user{Name: "test"}
+  u := user{Name: "test", Intro: "Some Text"}
 	output := RenderForm(u)
 	if output != template.HTML("") {
 		t.Errorf("output should be empty but got %v", output)
@@ -160,10 +161,22 @@ func TestRenderForm(t *testing.T) {
 		`Name: <input name="username" type="text" value="test"></br>` +
 			`年龄：<input name="age" type="text" value="0"></br>` +
 			`Sex: <input name="Sex" type="text" value=""></br>` +
-			`Intro: <input name="Intro" type="textarea" value="">`)
+			`Intro: <textarea name="Intro">Some Text</textarea>`)
 	if output != result {
 		t.Errorf("output should equal `%v` but got `%v`", result, output)
 	}
+}
+
+func TestRenderFormField(t *testing.T) {
+  html := renderFormField("Label: ", "Name", "text", "Value")
+  if html != `Label: <input name="Name" type="text" value="Value">` {
+    t.Errorf("Wrong html output for input[type=text]: %v ", html)
+  }
+
+  html = renderFormField("Label: ", "Name", "textarea", "Value")
+  if html != `Label: <textarea name="Name">Value</textarea>` {
+    t.Errorf("Wrong html output for textarea: %v ", html)
+  }
 }
 
 func TestParseFormTag(t *testing.T) {

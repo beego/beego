@@ -327,7 +327,6 @@ func ParseForm(form url.Values, obj interface{}) error {
 	return nil
 }
 
-
 var unKind = map[reflect.Kind]bool{
 	reflect.Uintptr:       true,
 	reflect.Complex64:     true,
@@ -367,11 +366,29 @@ func RenderForm(obj interface{}) template.HTML {
       continue
     }
 
-		raw = append(raw, fmt.Sprintf(`%v<input name="%v" type="%v" value="%v">`,
-			label, name, fType, fieldV.Interface()))
+		raw = append(raw, renderFormField(label, name, fType, fieldV.Interface()))
 	}
 	return template.HTML(strings.Join(raw, "</br>"))
 }
+
+func renderFormField(label, name, fType string, value interface{}) string {
+  if isValidForInput(fType) {
+    return fmt.Sprintf(`%v<input name="%v" type="%v" value="%v">`, label, name, fType, value)
+  }
+
+  return fmt.Sprintf(`%v<%v name="%v">%v</%v>`, label, fType, name, value, fType)
+}
+
+func isValidForInput(fType string) bool {
+  validInputTypes := strings.Fields("text password checkbox radio submit reset hidden image file button")
+  for _, validType := range validInputTypes {
+    if fType == validType {
+      return true
+    }
+  }
+  return false
+}
+
 
 // parseFormTag takes the stuct-tag of a StructField and parses the `form` value.
 // returned are the form label, name-property, type and wether the field should be ignored.
