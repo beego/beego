@@ -165,12 +165,12 @@ func compareFile(pkgRealpath string) bool {
 			return true
 		}
 		json.Unmarshal(content, &pkgLastupdate)
-		ft, err := os.Lstat(pkgRealpath)
+		lastupdate, err := getpathTime(pkgRealpath)
 		if err != nil {
 			return true
 		}
 		if v, ok := pkgLastupdate[pkgRealpath]; ok {
-			if ft.ModTime().UnixNano() <= v {
+			if lastupdate <= v {
 				return false
 			}
 		}
@@ -179,14 +179,27 @@ func compareFile(pkgRealpath string) bool {
 }
 
 func savetoFile(pkgRealpath string) {
-	ft, err := os.Lstat(pkgRealpath)
+	lastupdate, err := getpathTime(pkgRealpath)
 	if err != nil {
 		return
 	}
-	pkgLastupdate[pkgRealpath] = ft.ModTime().UnixNano()
+	pkgLastupdate[pkgRealpath] = lastupdate
 	d, err := json.Marshal(pkgLastupdate)
 	if err != nil {
 		return
 	}
 	ioutil.WriteFile(path.Join(AppPath, lastupdateFilename), d, os.ModePerm)
+}
+
+func getpathTime(pkgRealpath string) (lastupdate int64, err error) {
+	fl, err := ioutil.ReadDir(pkgRealpath)
+	if err != nil {
+		return lastupdate, err
+	}
+	for _, f := range fl {
+		if lastupdate < f.ModTime().UnixNano() {
+			lastupdate = f.ModTime().UnixNano()
+		}
+	}
+	return lastupdate, nil
 }
