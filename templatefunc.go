@@ -371,6 +371,7 @@ func RenderForm(obj interface{}) template.HTML {
 	return template.HTML(strings.Join(raw, "</br>"))
 }
 
+// renderFormField returns a string containing HTML of a single form field.
 func renderFormField(label, name, fType string, value interface{}) string {
   if isValidForInput(fType) {
     return fmt.Sprintf(`%v<input name="%v" type="%v" value="%v">`, label, name, fType, value)
@@ -379,8 +380,9 @@ func renderFormField(label, name, fType string, value interface{}) string {
   return fmt.Sprintf(`%v<%v name="%v">%v</%v>`, label, fType, name, value, fType)
 }
 
+// isValidForInput checks if fType is a valid value for the `type` property of an HTML input element.
 func isValidForInput(fType string) bool {
-  validInputTypes := strings.Fields("text password checkbox radio submit reset hidden image file button")
+  validInputTypes := strings.Fields("text password checkbox radio submit reset hidden image file button search email url tel number range date month week time datetime datetime-local color")
   for _, validType := range validInputTypes {
     if fType == validType {
       return true
@@ -388,7 +390,6 @@ func isValidForInput(fType string) bool {
   }
   return false
 }
-
 
 // parseFormTag takes the stuct-tag of a StructField and parses the `form` value.
 // returned are the form label, name-property, type and wether the field should be ignored.
