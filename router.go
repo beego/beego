@@ -346,19 +346,23 @@ func (p *ControllerRegistor) AddAutoPrefix(prefix string, c ControllerInterface)
 	reflectVal := reflect.ValueOf(c)
 	rt := reflectVal.Type()
 	ct := reflect.Indirect(reflectVal).Type()
-	controllerName := strings.ToLower(strings.TrimSuffix(ct.Name(), "Controller"))
+	controllerName := strings.TrimSuffix(ct.Name(), "Controller")
 	for i := 0; i < rt.NumMethod(); i++ {
 		if !utils.InSlice(rt.Method(i).Name, exceptMethod) {
 			route := &controllerInfo{}
 			route.routerType = routerTypeBeego
 			route.methods = map[string]string{"*": rt.Method(i).Name}
 			route.controllerType = ct
-			pattern := path.Join(prefix, controllerName, strings.ToLower(rt.Method(i).Name), "*")
-			patternfix := path.Join(prefix, controllerName, strings.ToLower(rt.Method(i).Name))
+			pattern := path.Join(prefix, strings.ToLower(controllerName), strings.ToLower(rt.Method(i).Name), "*")
+			patternInit := path.Join(prefix, controllerName, rt.Method(i).Name, "*")
+			patternfix := path.Join(prefix, strings.ToLower(controllerName), strings.ToLower(rt.Method(i).Name))
+			patternfixInit := path.Join(prefix, controllerName, rt.Method(i).Name)
 			route.pattern = pattern
 			for _, m := range HTTPMETHOD {
 				p.addToRouter(m, pattern, route)
+				p.addToRouter(m, patternInit, route)
 				p.addToRouter(m, patternfix, route)
+				p.addToRouter(m, patternfixInit, route)
 			}
 		}
 	}
@@ -603,7 +607,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	if !findrouter {
 		if t, ok := p.routers[r.Method]; ok {
-			runObject, p := t.Match(strings.ToLower(r.URL.Path))
+			runObject, p := t.Match(r.URL.Path)
 			if r, ok := runObject.(*controllerInfo); ok {
 				routerInfo = r
 				findrouter = true
