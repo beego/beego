@@ -140,7 +140,7 @@ func detectTZ(al *alias) {
 		if engine != "" {
 			al.Engine = engine
 		} else {
-			engine = "INNODB"
+			al.Engine = "INNODB"
 		}
 
 	case DR_Sqlite:
