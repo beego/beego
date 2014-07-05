@@ -57,11 +57,11 @@ func (rc *RedisCache) Get(key string) interface{} {
 
 // put cache to redis.
 func (rc *RedisCache) Put(key string, val interface{}, timeout int64) error {
-	_, err := rc.do("HSET", rc.key, key, true)
+        _, err := rc.do("SET", key, val)
 	if err != nil {
 		return nil
 	}
-	_, err = rc.do("SET", key, val)
+	_, err = rc.do("HSET", rc.key, key, true)
 	if err != nil {
 		return nil
 	}
