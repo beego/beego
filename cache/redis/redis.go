@@ -47,7 +47,7 @@ func (rc *RedisCache) do(commandName string, args ...interface{}) (reply interfa
 
 // Get cache from redis.
 func (rc *RedisCache) Get(key string) interface{} {
-	v, err := rc.do("HGET", rc.key, key)
+	v, err := rc.do("GET", key)
 	if err != nil {
 		return nil
 	}
@@ -56,43 +56,66 @@ func (rc *RedisCache) Get(key string) interface{} {
 }
 
 // put cache to redis.
-// timeout is ignored.
 func (rc *RedisCache) Put(key string, val interface{}, timeout int64) error {
-	_, err := rc.do("HSET", rc.key, key, val)
+        _, err := rc.do("SET", key, val)
+	if err != nil {
+		return nil
+	}
+	_, err = rc.do("HSET", rc.key, key, true)
+	if err != nil {
+		return nil
+	}
+	_, err = rc.do("EXPIRE", key, timeout)
 	return err
 }
 
 // delete cache in redis.
 func (rc *RedisCache) Delete(key string) error {
-	_, err := rc.do("HDEL", rc.key, key)
+        _, err := rc.do("DEL", key)
+	if err != nil {
+		return nil
+	}
+	_, err = rc.do("HDEL", rc.key, key)
 	return err
 }
 
-// check cache exist in redis.
+// check cache's existence in redis.
 func (rc *RedisCache) IsExist(key string) bool {
-	v, err := redis.Bool(rc.do("HEXISTS", rc.key, key))
+	v, err := redis.Bool(rc.do("EXISTS", key))
 	if err != nil {
 		return false
 	}
-
+	if v == false {
+		_, err := rc.do("HDEL", rc.key, key)
+		if err != nil {
+			return false
+		}
+	}
 	return v
 }
 
 // increase counter in redis.
 func (rc *RedisCache) Incr(key string) error {
-	_, err := redis.Bool(rc.do("HINCRBY", rc.key, key, 1))
+	_, err := redis.Bool(rc.do("INCRBY", key, 1))
 	return err
 }
 
 // decrease counter in redis.
 func (rc *RedisCache) Decr(key string) error {
-	_, err := redis.Bool(rc.do("HINCRBY", rc.key, key, -1))
+	_, err := redis.Bool(rc.do("INCRBY", key, -1))
 	return err
 }
 
 // clean all cache in redis. delete this redis collection.
 func (rc *RedisCache) ClearAll() error {
-	_, err := rc.do("DEL", rc.key)
+	cachedKeys, err := redis.Strings(rc.do("HKEYS", rc.key))
+	for _, str := range cachedKeys {
+		_, err := rc.do("DEL", str)
+		if err != nil {
+			return nil
+		}
+	}
+	_, err = rc.do("DEL", rc.key)
 	return err
 }
 
