@@ -762,6 +762,11 @@ Admin:
 			Info("beego:" + r.URL.Path + " 404" + " +" + timeend.String())
 		}
 	}
+
+	// Call WriteHeader if status code has been set changed
+	if context.Output.Status != 0 {
+		w.writer.WriteHeader(context.Output.Status)
+	}
 }
 
 func (p *ControllerRegistor) recoverPanic(rw http.ResponseWriter, r *http.Request) {
