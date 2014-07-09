@@ -756,11 +756,13 @@ Admin:
 	}
 
 	if RunMode == "dev" {
+		var devinfo string
 		if findrouter {
-			Info("beego: router defined " + routerInfo.pattern + " " + r.URL.Path + " +" + timeend.String())
+			devinfo = fmt.Sprintf("| % -10s| % -16s | % -10s | % -40s | % -10s | % -40s |", "beego", timeend.String(), r.Method, r.URL.Path, "match", routerInfo.pattern)
 		} else {
-			Info("beego:" + r.URL.Path + " 404" + " +" + timeend.String())
+			devinfo = fmt.Sprintf("| % -10s| % -16s | % -10s | % -40s | % -10s |", "beego", timeend.String(), r.Method, r.URL.Path, "notmatch")
 		}
+		Info(devinfo)
 	}
 
 	// Call WriteHeader if status code has been set changed
