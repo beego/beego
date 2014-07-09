@@ -34,11 +34,11 @@ type Cache interface {
 	Incr(key string) error
 	// decrease cached int value by key, as a counter.
 	Decr(key string) error
-	// check cached value is existed or not.
+	// check if cached value exists or not.
 	IsExist(key string) bool
 	// clear all cache.
 	ClearAll() error
-	// start gc routine via config string setting.
+	// start gc routine based on config string settings.
 	StartAndGC(config string) error
 }
 
@@ -57,13 +57,13 @@ func Register(name string, adapter Cache) {
 	adapters[name] = adapter
 }
 
-// Create a new cache driver by adapter and config string.
+// Create a new cache driver by adapter name and config string.
 // config need to be correct JSON as string: {"interval":360}.
 // it will start gc automatically.
 func NewCache(adapterName, config string) (Cache, error) {
 	adapter, ok := adapters[adapterName]
 	if !ok {
-		return nil, fmt.Errorf("cache: unknown adaptername %q (forgotten import?)", adapterName)
+		return nil, fmt.Errorf("cache: unknown adapter name %q (forgot to import?)", adapterName)
 	}
 	err := adapter.StartAndGC(config)
 	if err != nil {
