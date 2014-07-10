@@ -22,12 +22,11 @@ func GetString(v interface{}) string {
 	case []byte:
 		return string(result)
 	default:
-		if v == nil {
-			return ""
-		} else {
+		if v != nil {
 			return fmt.Sprintf("%v", result)
 		}
 	}
+	return ""
 }
 
 // convert interface to int.
@@ -40,12 +39,9 @@ func GetInt(v interface{}) int {
 	case int64:
 		return int(result)
 	default:
-		d := GetString(v)
-		if d != "" {
-			value, err := strconv.Atoi(d)
-			if err == nil {
-				return value
-			}
+		if d := GetString(v); d != "" {
+			value, _ := strconv.Atoi(d)
+			return value
 		}
 	}
 	return 0
@@ -61,12 +57,10 @@ func GetInt64(v interface{}) int64 {
 	case int64:
 		return result
 	default:
-		d := GetString(v)
-		if d != "" {
-			result, err := strconv.ParseInt(d, 10, 64)
-			if err == nil {
-				return result
-			}
+
+		if d := GetString(v); d != "" {
+			value, _ := strconv.ParseInt(d, 10, 64)
+			return value
 		}
 	}
 	return 0
@@ -78,12 +72,9 @@ func GetFloat64(v interface{}) float64 {
 	case float64:
 		return result
 	default:
-		d := GetString(v)
-		if d != "" {
-			value, err := strconv.ParseFloat(d, 64)
-			if err == nil {
-				return value
-			}
+		if d := GetString(v); d != "" {
+			value, _ := strconv.ParseFloat(d, 64)
+			return value
 		}
 	}
 	return 0
@@ -95,12 +86,9 @@ func GetBool(v interface{}) bool {
 	case bool:
 		return result
 	default:
-		d := GetString(v)
-		if d != "" {
-			result, err := strconv.ParseBool(d)
-			if err == nil {
-				return result
-			}
+		if d := GetString(v); d != "" {
+			value, _ := strconv.ParseBool(d)
+			return value
 		}
 	}
 	return false
