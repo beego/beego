@@ -135,11 +135,11 @@ func (fc *FileCache) Get(key string) interface{} {
 func (fc *FileCache) Put(key string, val interface{}, timeout int64) error {
 	gob.Register(val)
 
-	item := FileCacheItem{Data:val}
+	item := FileCacheItem{Data: val}
 	if timeout == FileCacheEmbedExpiry {
-		item.Expired = time.Now().Unix()+(86400*365*10) // ten years
+		item.Expired = time.Now().Unix() + (86400 * 365 * 10) // ten years
 	} else {
-		item.Expired = time.Now().Unix()+timeout
+		item.Expired = time.Now().Unix() + timeout
 	}
 	item.Lastaccess = time.Now().Unix()
 	data, err := Gob_encode(item)
@@ -166,7 +166,7 @@ func (fc *FileCache) Incr(key string) error {
 	if reflect.TypeOf(data).Name() != "int" {
 		incr = 0
 	} else {
-		incr = data.(int)+1
+		incr = data.(int) + 1
 	}
 	fc.Put(key, incr, FileCacheEmbedExpiry)
 	return nil
@@ -179,7 +179,7 @@ func (fc *FileCache) Decr(key string) error {
 	if reflect.TypeOf(data).Name() != "int" || data.(int)-1 <= 0 {
 		decr = 0
 	} else {
-		decr = data.(int)-1
+		decr = data.(int) - 1
 	}
 	fc.Put(key, decr, FileCacheEmbedExpiry)
 	return nil
