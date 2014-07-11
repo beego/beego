@@ -48,7 +48,7 @@ func (c *ConnWriter) Init(jsonconfig string) error {
 // write message in connection.
 // if connection is down, try to re-connect.
 func (c *ConnWriter) WriteMsg(msg string, level int) error {
-	if level < c.Level {
+	if level > c.Level {
 		return nil
 	}
 	if c.neddedConnectOnMsg() {

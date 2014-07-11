@@ -57,7 +57,7 @@ func (s *SmtpWriter) Init(jsonconfig string) error {
 // write message in smtp writer.
 // it will send an email with subject and only this message.
 func (s *SmtpWriter) WriteMsg(msg string, level int) error {
-	if level < s.Level {
+	if level > s.Level {
 		return nil
 	}
 
