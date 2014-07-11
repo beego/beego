@@ -1,13 +1,12 @@
 // Beego (http://beego.me/)
-
+//
 // @description beego is an open-source, high-performance web framework for the Go programming language.
-
+//
 // @link        http://github.com/astaxie/beego for the canonical source repository
-
+//
 // @license     http://github.com/astaxie/beego/blob/master/LICENSE
-
+//
 // @authors     astaxie
-
 package logs
 
 import (
@@ -142,7 +141,7 @@ func (w *FileLogWriter) docheck(size int) {
 
 // write logger message into file.
 func (w *FileLogWriter) WriteMsg(msg string, level int) error {
-	if level < w.Level {
+	if level > w.Level {
 		return nil
 	}
 	n := 24 + len(msg) // 24 stand for the length "2013/06/23 21:00:22 [T] "

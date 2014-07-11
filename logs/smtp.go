@@ -1,13 +1,12 @@
 // Beego (http://beego.me/)
-
+//
 // @description beego is an open-source, high-performance web framework for the Go programming language.
-
+//
 // @link        http://github.com/astaxie/beego for the canonical source repository
-
+//
 // @license     http://github.com/astaxie/beego/blob/master/LICENSE
-
+//
 // @authors     astaxie
-
 package logs
 
 import (
@@ -58,7 +57,7 @@ func (s *SmtpWriter) Init(jsonconfig string) error {
 // write message in smtp writer.
 // it will send an email with subject and only this message.
 func (s *SmtpWriter) WriteMsg(msg string, level int) error {
-	if level < s.Level {
+	if level > s.Level {
 		return nil
 	}
 

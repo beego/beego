@@ -1,13 +1,12 @@
 // Beego (http://beego.me/)
-
+//
 // @description beego is an open-source, high-performance web framework for the Go programming language.
-
+//
 // @link        http://github.com/astaxie/beego for the canonical source repository
-
+//
 // @license     http://github.com/astaxie/beego/blob/master/LICENSE
-
+//
 // @authors     astaxie
-
 package logs
 
 import (
@@ -49,7 +48,7 @@ func (c *ConnWriter) Init(jsonconfig string) error {
 // write message in connection.
 // if connection is down, try to re-connect.
 func (c *ConnWriter) WriteMsg(msg string, level int) error {
-	if level < c.Level {
+	if level > c.Level {
 		return nil
 	}
 	if c.neddedConnectOnMsg() {

@@ -1,13 +1,12 @@
 // Beego (http://beego.me/)
-
+//
 // @description beego is an open-source, high-performance web framework for the Go programming language.
-
+//
 // @link        http://github.com/astaxie/beego for the canonical source repository
-
+//
 // @license     http://github.com/astaxie/beego/blob/master/LICENSE
-
+//
 // @authors     astaxie
-
 package cache
 
 import (
@@ -52,7 +51,7 @@ func Register(name string, adapter Cache) {
 	if adapter == nil {
 		panic("cache: Register adapter is nil")
 	}
-	if _, dup := adapters[name]; dup {
+	if _, ok := adapters[name]; ok {
 		panic("cache: Register called twice for adapter " + name)
 	}
 	adapters[name] = adapter
@@ -61,14 +60,15 @@ func Register(name string, adapter Cache) {
 // Create a new cache driver by adapter name and config string.
 // config need to be correct JSON as string: {"interval":360}.
 // it will start gc automatically.
-func NewCache(adapterName, config string) (Cache, error) {
+func NewCache(adapterName, config string) (adapter Cache, e error) {
 	adapter, ok := adapters[adapterName]
 	if !ok {
-		return nil, fmt.Errorf("cache: unknown adapter name %q (forgot to import?)", adapterName)
+		e = fmt.Errorf("cache: unknown adapter name %q (forgot to import?)", adapterName)
+		return
 	}
 	err := adapter.StartAndGC(config)
 	if err != nil {
-		return nil, err
+		adapter = nil
 	}
-	return adapter, nil
+	return
 }

@@ -1,13 +1,12 @@
 // Beego (http://beego.me/)
-
+//
 // @description beego is an open-source, high-performance web framework for the Go programming language.
-
+//
 // @link        http://github.com/astaxie/beego for the canonical source repository
-
+//
 // @license     http://github.com/astaxie/beego/blob/master/LICENSE
-
+//
 // @authors     astaxie
-
 package beego
 
 import (
@@ -361,10 +360,10 @@ func RenderForm(obj interface{}) template.HTML {
 
 		fieldT := objT.Field(i)
 
-    label, name, fType, ignored := parseFormTag(fieldT)
-    if ignored {
-      continue
-    }
+		label, name, fType, ignored := parseFormTag(fieldT)
+		if ignored {
+			continue
+		}
 
 		raw = append(raw, renderFormField(label, name, fType, fieldV.Interface()))
 	}
@@ -373,60 +372,60 @@ func RenderForm(obj interface{}) template.HTML {
 
 // renderFormField returns a string containing HTML of a single form field.
 func renderFormField(label, name, fType string, value interface{}) string {
-  if isValidForInput(fType) {
-    return fmt.Sprintf(`%v<input name="%v" type="%v" value="%v">`, label, name, fType, value)
-  }
+	if isValidForInput(fType) {
+		return fmt.Sprintf(`%v<input name="%v" type="%v" value="%v">`, label, name, fType, value)
+	}
 
-  return fmt.Sprintf(`%v<%v name="%v">%v</%v>`, label, fType, name, value, fType)
+	return fmt.Sprintf(`%v<%v name="%v">%v</%v>`, label, fType, name, value, fType)
 }
 
 // isValidForInput checks if fType is a valid value for the `type` property of an HTML input element.
 func isValidForInput(fType string) bool {
-  validInputTypes := strings.Fields("text password checkbox radio submit reset hidden image file button search email url tel number range date month week time datetime datetime-local color")
-  for _, validType := range validInputTypes {
-    if fType == validType {
-      return true
-    }
-  }
-  return false
+	validInputTypes := strings.Fields("text password checkbox radio submit reset hidden image file button search email url tel number range date month week time datetime datetime-local color")
+	for _, validType := range validInputTypes {
+		if fType == validType {
+			return true
+		}
+	}
+	return false
 }
 
 // parseFormTag takes the stuct-tag of a StructField and parses the `form` value.
 // returned are the form label, name-property, type and wether the field should be ignored.
 func parseFormTag(fieldT reflect.StructField) (label, name, fType string, ignored bool) {
-  tags := strings.Split(fieldT.Tag.Get("form"), ",")
-  label = fieldT.Name + ": "
-  name = fieldT.Name
-  fType = "text"
-  ignored = false;
+	tags := strings.Split(fieldT.Tag.Get("form"), ",")
+	label = fieldT.Name + ": "
+	name = fieldT.Name
+	fType = "text"
+	ignored = false
 
-  switch len(tags) {
-  case 1:
-    if tags[0] == "-" {
-      ignored = true
-    }
-    if len(tags[0]) > 0 {
-      name = tags[0]
-    }
-  case 2:
-    if len(tags[0]) > 0 {
-      name = tags[0]
-    }
-    if len(tags[1]) > 0 {
-      fType = tags[1]
-    }
-  case 3:
-    if len(tags[0]) > 0 {
-      name = tags[0]
-    }
-    if len(tags[1]) > 0 {
-      fType = tags[1]
-    }
-    if len(tags[2]) > 0 {
-      label = tags[2]
-    }
-  }
-  return
+	switch len(tags) {
+	case 1:
+		if tags[0] == "-" {
+			ignored = true
+		}
+		if len(tags[0]) > 0 {
+			name = tags[0]
+		}
+	case 2:
+		if len(tags[0]) > 0 {
+			name = tags[0]
+		}
+		if len(tags[1]) > 0 {
+			fType = tags[1]
+		}
+	case 3:
+		if len(tags[0]) > 0 {
+			name = tags[0]
+		}
+		if len(tags[1]) > 0 {
+			fType = tags[1]
+		}
+		if len(tags[2]) > 0 {
+			label = tags[2]
+		}
+	}
+	return
 }
 
 func isStructPtr(t reflect.Type) bool {

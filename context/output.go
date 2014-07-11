@@ -1,13 +1,12 @@
 // Beego (http://beego.me/)
-
+//
 // @description beego is an open-source, high-performance web framework for the Go programming language.
-
+//
 // @link        http://github.com/astaxie/beego for the canonical source repository
-
+//
 // @license     http://github.com/astaxie/beego/blob/master/LICENSE
-
+//
 // @authors     astaxie
-
 package context
 
 import (
@@ -72,6 +71,14 @@ func (output *BeegoOutput) Body(content []byte) {
 	} else {
 		output.Header("Content-Length", strconv.Itoa(len(content)))
 	}
+
+	// Write status code if it has been set manually
+	// Set it to 0 afterwards to prevent "multiple response.WriteHeader calls"
+	if output.Status != 0 {
+		output.Context.ResponseWriter.WriteHeader(output.Status)
+		output.Status = 0
+	}
+
 	output_writer.Write(content)
 	switch output_writer.(type) {
 	case *gzip.Writer:
@@ -271,7 +278,6 @@ func (output *BeegoOutput) ContentType(ext string) {
 // SetStatus sets response status code.
 // It writes response header directly.
 func (output *BeegoOutput) SetStatus(status int) {
-	output.Context.ResponseWriter.WriteHeader(status)
 	output.Status = status
 }
 
