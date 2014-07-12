@@ -8,7 +8,7 @@
 
 // @authors     astaxie
 
-package cache
+package redis
 
 import (
 	"testing"
@@ -20,7 +20,7 @@ import (
 )
 
 func TestRedisCache(t *testing.T) {
-        bm, err := cache.NewCache("redis", `{"conn": "127.0.0.1:6379"}`)
+	bm, err := cache.NewCache("redis", `{"conn": "127.0.0.1:6379"}`)
 	if err != nil {
 		t.Error("init err")
 	}
@@ -48,7 +48,7 @@ func TestRedisCache(t *testing.T) {
 		t.Error("Incr Error", err)
 	}
 
-        if v, _ := redis.Int(bm.Get("astaxie"), err); v != 2 {
+	if v, _ := redis.Int(bm.Get("astaxie"), err); v != 2 {
 		t.Error("get err")
 	}
 
@@ -74,8 +74,8 @@ func TestRedisCache(t *testing.T) {
 	if v, _ := redis.String(bm.Get("astaxie"), err); v != "author" {
 		t.Error("get err")
 	}
-        // test clear all
-        if err = bm.ClearAll(); err != nil {
-                t.Error("clear all err")
-        }
+	// test clear all
+	if err = bm.ClearAll(); err != nil {
+		t.Error("clear all err")
+	}
 }

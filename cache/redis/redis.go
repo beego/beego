@@ -7,7 +7,7 @@
 // @license     http://github.com/astaxie/beego/blob/master/LICENSE
 //
 // @authors     astaxie
-package cache
+package redis
 
 import (
 	"encoding/json"
@@ -46,23 +46,21 @@ func (rc *RedisCache) do(commandName string, args ...interface{}) (reply interfa
 
 // Get cache from redis.
 func (rc *RedisCache) Get(key string) interface{} {
-	v, err := rc.do("GET", key)
-	if err != nil {
-		return nil
+	if v, err := rc.do("GET", key); err == nil {
+		return v
 	}
-
-	return v
+	return nil
 }
 
 // put cache to redis.
 func (rc *RedisCache) Put(key string, val interface{}, timeout int64) error {
-        _, err := rc.do("SET", key, val)
-	if err != nil {
-		return nil
+	var err error
+	if _, err = rc.do("SET", key, val); err != nil {
+		return err
 	}
-	_, err = rc.do("HSET", rc.key, key, true)
-	if err != nil {
-		return nil
+
+	if _, err = rc.do("HSET", rc.key, key, true); err != nil {
+		return err
 	}
 	_, err = rc.do("EXPIRE", key, timeout)
 	return err
@@ -70,9 +68,9 @@ func (rc *RedisCache) Put(key string, val interface{}, timeout int64) error {
 
 // delete cache in redis.
 func (rc *RedisCache) Delete(key string) error {
-        _, err := rc.do("DEL", key)
-	if err != nil {
-		return nil
+	var err error
+	if _, err = rc.do("DEL", key); err != nil {
+		return err
 	}
 	_, err = rc.do("HDEL", rc.key, key)
 	return err
@@ -85,8 +83,7 @@ func (rc *RedisCache) IsExist(key string) bool {
 		return false
 	}
 	if v == false {
-		_, err := rc.do("HDEL", rc.key, key)
-		if err != nil {
+		if _, err = rc.do("HDEL", rc.key, key); err != nil {
 			return false
 		}
 	}
@@ -108,10 +105,12 @@ func (rc *RedisCache) Decr(key string) error {
 // clean all cache in redis. delete this redis collection.
 func (rc *RedisCache) ClearAll() error {
 	cachedKeys, err := redis.Strings(rc.do("HKEYS", rc.key))
+	if err != nil {
+		return err
+	}
 	for _, str := range cachedKeys {
-		_, err := rc.do("DEL", str)
-		if err != nil {
-			return nil
+		if _, err = rc.do("DEL", str); err != nil {
+			return err
 		}
 	}
 	_, err = rc.do("DEL", rc.key)
@@ -140,26 +139,21 @@ func (rc *RedisCache) StartAndGC(config string) error {
 
 	c := rc.p.Get()
 	defer c.Close()
-	if err := c.Err(); err != nil {
-		return err
-	}
 
-	return nil
+	return c.Err()
 }
 
 // connect to redis.
 func (rc *RedisCache) connectInit() {
+	dialFunc := func() (c redis.Conn, err error) {
+		c, err = redis.Dial("tcp", rc.conninfo)
+		return
+	}
 	// initialize a new pool
 	rc.p = &redis.Pool{
 		MaxIdle:     3,
 		IdleTimeout: 180 * time.Second,
-		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", rc.conninfo)
-			if err != nil {
-				return nil, err
-			}
-			return c, nil
-		},
+		Dial:        dialFunc,
 	}
 }
 
