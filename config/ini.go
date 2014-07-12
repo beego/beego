@@ -83,8 +83,7 @@ func (ini *IniConfig) Parse(name string) (ConfigContainer, error) {
 		}
 
 		if bytes.HasPrefix(line, sectionStart) && bytes.HasSuffix(line, sectionEnd) {
-			section = string(line[1 : len(line)-1])
-			section = strings.ToLower(section) // section name case insensitive
+			section = strings.ToLower(string(line[1 : len(line)-1])) // section name case insensitive
 			if comment.Len() > 0 {
 				cfg.sectionComment[section] = comment.String()
 				comment.Reset()
@@ -92,23 +91,24 @@ func (ini *IniConfig) Parse(name string) (ConfigContainer, error) {
 			if _, ok := cfg.data[section]; !ok {
 				cfg.data[section] = make(map[string]string)
 			}
-		} else {
-			if _, ok := cfg.data[section]; !ok {
-				cfg.data[section] = make(map[string]string)
-			}
-			keyval := bytes.SplitN(line, bEqual, 2)
-			val := bytes.TrimSpace(keyval[1])
-			if bytes.HasPrefix(val, bDQuote) {
-				val = bytes.Trim(val, `"`)
-			}
+			continue
+		}
 
-			key := string(bytes.TrimSpace(keyval[0])) // key name case insensitive
-			key = strings.ToLower(key)
-			cfg.data[section][key] = string(val)
-			if comment.Len() > 0 {
-				cfg.keycomment[section+"."+key] = comment.String()
-				comment.Reset()
-			}
+		if _, ok := cfg.data[section]; !ok {
+			cfg.data[section] = make(map[string]string)
+		}
+		keyValue := bytes.SplitN(line, bEqual, 2)
+		val := bytes.TrimSpace(keyValue[1])
+		if bytes.HasPrefix(val, bDQuote) {
+			val = bytes.Trim(val, `"`)
+		}
+
+		key := string(bytes.TrimSpace(keyValue[0])) // key name case insensitive
+		key = strings.ToLower(key)
+		cfg.data[section][key] = string(val)
+		if comment.Len() > 0 {
+			cfg.keyComment[section+"."+key] = comment.String()
+			comment.Reset()
 		}
 
 	}
@@ -121,38 +121,34 @@ type IniConfigContainer struct {
 	filename       string
 	data           map[string]map[string]string // section=> key:val
 	sectionComment map[string]string            // section : comment
-	keycomment     map[string]string            // id: []{comment, key...}; id 1 is for main comment.
+	keyComment     map[string]string            // id: []{comment, key...}; id 1 is for main comment.
 	sync.RWMutex
 }
 
 // Bool returns the boolean value for a given key.
 func (c *IniConfigContainer) Bool(key string) (bool, error) {
-	key = strings.ToLower(key)
-	return strconv.ParseBool(c.getdata(key))
+	return strconv.ParseBool(c.getdata(strings.ToLower(key)))
 }
 
 // Int returns the integer value for a given key.
 func (c *IniConfigContainer) Int(key string) (int, error) {
-	key = strings.ToLower(key)
-	return strconv.Atoi(c.getdata(key))
+	return strconv.Atoi(c.getdata(strings.ToLower(key)))
 }
 
 // Int64 returns the int64 value for a given key.
 func (c *IniConfigContainer) Int64(key string) (int64, error) {
-	key = strings.ToLower(key)
-	return strconv.ParseInt(c.getdata(key), 10, 64)
+	return strconv.ParseInt(c.getdata(strings.ToLower(key)), 10, 64)
 }
 
 // Float returns the float value for a given key.
 func (c *IniConfigContainer) Float(key string) (float64, error) {
-	key = strings.ToLower(key)
-	return strconv.ParseFloat(c.getdata(key), 64)
+	return strconv.ParseFloat(c.getdata(strings.ToLower(key)), 64)
 }
 
 // String returns the string value for a given key.
 func (c *IniConfigContainer) String(key string) string {
 	key = strings.ToLower(key)
-	return c.getdata(key)
+	return c.getdata(strings.ToLower(key))
 }
 
 // Strings returns the []string value for a given key.
@@ -170,16 +166,19 @@ func (c *IniConfigContainer) Set(key, value string) error {
 		return errors.New("key is empty")
 	}
 
-	var section, k string
-	key = strings.ToLower(key)
-	sectionkey := strings.Split(key, "::")
-	if len(sectionkey) >= 2 {
-		section = sectionkey[0]
-		k = sectionkey[1]
+	var (
+		section, k string
+		sectionKey []string = strings.Split(key, "::")
+	)
+
+	if len(sectionKey) >= 2 {
+		section = sectionKey[0]
+		k = sectionKey[1]
 	} else {
 		section = DEFAULT_SECTION
-		k = sectionkey[0]
+		k = sectionKey[0]
 	}
+
 	if _, ok := c.data[section]; !ok {
 		c.data[section] = make(map[string]string)
 	}
@@ -189,8 +188,7 @@ func (c *IniConfigContainer) Set(key, value string) error {
 
 // DIY returns the raw value by a given key.
 func (c *IniConfigContainer) DIY(key string) (v interface{}, err error) {
-	key = strings.ToLower(key)
-	if v, ok := c.data[key]; ok {
+	if v, ok := c.data[strings.ToLower(key)]; ok {
 		return v, nil
 	}
 	return v, errors.New("key not find")
@@ -204,18 +202,19 @@ func (c *IniConfigContainer) getdata(key string) string {
 		return ""
 	}
 
-	var section, k string
-	key = strings.ToLower(key)
-	sectionkey := strings.Split(key, "::")
-	if len(sectionkey) >= 2 {
-		section = sectionkey[0]
-		k = sectionkey[1]
+	var (
+		section, k string
+		sectionKey []string = strings.Split(key, "::")
+	)
+	if len(sectionKey) >= 2 {
+		section = sectionKey[0]
+		k = sectionKey[1]
 	} else {
 		section = DEFAULT_SECTION
-		k = sectionkey[0]
+		k = sectionKey[0]
 	}
 	if v, ok := c.data[section]; ok {
-		if vv, o := v[k]; o {
+		if vv, ok2 := v[k]; ok2 {
 			return vv
 		}
 	}
