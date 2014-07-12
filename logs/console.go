@@ -27,12 +27,14 @@ func NewBrush(color string) Brush {
 }
 
 var colors = []Brush{
-	NewBrush("1;36"), // Trace      cyan
-	NewBrush("1;34"), // Debug      blue
-	NewBrush("1;32"), // Info       green
-	NewBrush("1;33"), // Warn       yellow
+	NewBrush("1;37"), // Emergency	white
+	NewBrush("1;36"), // Alert			cyan
+	NewBrush("1;35"), // Critical   magenta
 	NewBrush("1;31"), // Error      red
-	NewBrush("1;35"), // Critical   purple
+	NewBrush("1;33"), // Warning    yellow
+	NewBrush("1;32"), // Notice			green
+	NewBrush("1;34"), // Informational	green
+	NewBrush("1;30"), // Debug      black
 }
 
 // ConsoleWriter implements LoggerInterface and writes messages to terminal.
@@ -45,7 +47,7 @@ type ConsoleWriter struct {
 func NewConsole() LoggerInterface {
 	cw := new(ConsoleWriter)
 	cw.lg = log.New(os.Stdout, "", log.Ldate|log.Ltime)
-	cw.Level = LevelTrace
+	cw.Level = LevelDebug
 	return cw
 }
 
@@ -64,7 +66,7 @@ func (c *ConsoleWriter) Init(jsonconfig string) error {
 
 // write message in console.
 func (c *ConsoleWriter) WriteMsg(msg string, level int) error {
-	if level < c.Level {
+	if level > c.Level {
 		return nil
 	}
 	if goos := runtime.GOOS; goos == "windows" {
