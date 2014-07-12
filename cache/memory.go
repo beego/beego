@@ -49,15 +49,14 @@ func NewMemoryCache() *MemoryCache {
 func (bc *MemoryCache) Get(name string) interface{} {
 	bc.lock.RLock()
 	defer bc.lock.RUnlock()
-	itm, ok := bc.items[name]
-	if !ok {
-		return nil
+	if itm, ok := bc.items[name]; ok {
+		if (time.Now().Unix() - itm.Lastaccess.Unix()) > itm.expired {
+			go bc.Delete(name)
+			return nil
+		}
+		return itm.val
 	}
-	if (time.Now().Unix() - itm.Lastaccess.Unix()) > itm.expired {
-		go bc.Delete(name)
-		return nil
-	}
-	return itm.val
+	return nil
 }
 
 // Put cache to memory.
@@ -65,12 +64,11 @@ func (bc *MemoryCache) Get(name string) interface{} {
 func (bc *MemoryCache) Put(name string, value interface{}, expired int64) error {
 	bc.lock.Lock()
 	defer bc.lock.Unlock()
-	t := MemoryItem{
+	bc.items[name] = &MemoryItem{
 		val:        value,
 		Lastaccess: time.Now(),
 		expired:    expired,
 	}
-	bc.items[name] = &t
 	return nil
 }
 
@@ -82,8 +80,7 @@ func (bc *MemoryCache) Delete(name string) error {
 		return errors.New("key not exist")
 	}
 	delete(bc.items, name)
-	_, valid := bc.items[name]
-	if valid {
+	if _, ok := bc.items[name]; ok {
 		return errors.New("delete key error")
 	}
 	return nil
@@ -214,8 +211,7 @@ func (bc *MemoryCache) item_expired(name string) bool {
 	if !ok {
 		return true
 	}
-	sec := time.Now().Unix() - itm.Lastaccess.Unix()
-	if sec >= itm.expired {
+	if time.Now().Unix()-itm.Lastaccess.Unix() >= itm.expired {
 		delete(bc.items, name)
 		return true
 	}
