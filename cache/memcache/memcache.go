@@ -7,7 +7,7 @@
 // @license     http://github.com/astaxie/beego/blob/master/LICENSE
 //
 // @authors     astaxie
-package cache
+package memcache
 
 import (
 	"encoding/json"
@@ -20,7 +20,7 @@ import (
 
 // Memcache adapter.
 type MemcacheCache struct {
-	c        *memcache.Connection
+	conn     *memcache.Connection
 	conninfo string
 }
 
@@ -31,32 +31,23 @@ func NewMemCache() *MemcacheCache {
 
 // get value from memcache.
 func (rc *MemcacheCache) Get(key string) interface{} {
-	if rc.c == nil {
-		var err error
-		rc.c, err = rc.connectInit()
-		if err != nil {
+	if rc.conn == nil {
+		if err := rc.connectInit(); err != nil {
 			return err
 		}
 	}
-	v, err := rc.c.Get(key)
-	if err != nil {
-		return nil
+	if v, err := rc.conn.Get(key); err == nil {
+		if len(v) > 0 {
+			return string(v[0].Value)
+		}
 	}
-	var contain interface{}
-	if len(v) > 0 {
-		contain = string(v[0].Value)
-	} else {
-		contain = nil
-	}
-	return contain
+	return nil
 }
 
 // put value to memcache. only support string.
 func (rc *MemcacheCache) Put(key string, val interface{}, timeout int64) error {
-	if rc.c == nil {
-		var err error
-		rc.c, err = rc.connectInit()
-		if err != nil {
+	if rc.conn == nil {
+		if err := rc.connectInit(); err != nil {
 			return err
 		}
 	}
@@ -64,7 +55,7 @@ func (rc *MemcacheCache) Put(key string, val interface{}, timeout int64) error {
 	if !ok {
 		return errors.New("val must string")
 	}
-	stored, err := rc.c.Set(key, 0, uint64(timeout), []byte(v))
+	stored, err := rc.conn.Set(key, 0, uint64(timeout), []byte(v))
 	if err == nil && stored == false {
 		return errors.New("stored fail")
 	}
@@ -73,60 +64,52 @@ func (rc *MemcacheCache) Put(key string, val interface{}, timeout int64) error {
 
 // delete value in memcache.
 func (rc *MemcacheCache) Delete(key string) error {
-	if rc.c == nil {
-		var err error
-		rc.c, err = rc.connectInit()
-		if err != nil {
+	if rc.conn == nil {
+		if err := rc.connectInit(); err != nil {
 			return err
 		}
 	}
-	_, err := rc.c.Delete(key)
+	_, err := rc.conn.Delete(key)
 	return err
 }
 
 // [Not Support]
 // increase counter.
-func (rc *MemcacheCache) Incr(key string) error {
+func (rc *MemcacheCache) Incr(_ string) error {
 	return errors.New("not support in memcache")
 }
 
 // [Not Support]
 // decrease counter.
-func (rc *MemcacheCache) Decr(key string) error {
+func (rc *MemcacheCache) Decr(_ string) error {
 	return errors.New("not support in memcache")
 }
 
 // check value exists in memcache.
 func (rc *MemcacheCache) IsExist(key string) bool {
-	if rc.c == nil {
-		var err error
-		rc.c, err = rc.connectInit()
-		if err != nil {
+	if rc.conn == nil {
+		if err := rc.connectInit(); err != nil {
 			return false
 		}
 	}
-	v, err := rc.c.Get(key)
+	v, err := rc.conn.Get(key)
 	if err != nil {
 		return false
 	}
 	if len(v) == 0 {
 		return false
-	} else {
-		return true
 	}
+	return true
 }
 
 // clear all cached in memcache.
 func (rc *MemcacheCache) ClearAll() error {
-	if rc.c == nil {
-		var err error
-		rc.c, err = rc.connectInit()
-		if err != nil {
+	if rc.conn == nil {
+		if err := rc.connectInit(); err != nil {
 			return err
 		}
 	}
-	err := rc.c.FlushAll()
-	return err
+	return rc.conn.FlushAll()
 }
 
 // start memcache adapter.
@@ -139,23 +122,22 @@ func (rc *MemcacheCache) StartAndGC(config string) error {
 		return errors.New("config has no conn key")
 	}
 	rc.conninfo = cf["conn"]
-	var err error
-	if rc.c != nil {
-		rc.c, err = rc.connectInit()
-		if err != nil {
-			return errors.New("dial tcp conn error")
+	if rc.conn == nil {
+		if err := rc.connectInit(); err != nil {
+			return err
 		}
 	}
 	return nil
 }
 
 // connect to memcache and keep the connection.
-func (rc *MemcacheCache) connectInit() (*memcache.Connection, error) {
+func (rc *MemcacheCache) connectInit() error {
 	c, err := memcache.Connect(rc.conninfo)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return c, nil
+	rc.conn = c
+	return nil
 }
 
 func init() {
