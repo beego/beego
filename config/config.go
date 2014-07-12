@@ -39,7 +39,7 @@ func Register(name string, adapter Config) {
 	if adapter == nil {
 		panic("config: Register adapter is nil")
 	}
-	if _, dup := adapters[name]; dup {
+	if _, ok := adapters[name]; ok {
 		panic("config: Register called twice for adapter " + name)
 	}
 	adapters[name] = adapter
