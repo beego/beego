@@ -214,7 +214,7 @@ func (c *IniConfigContainer) getdata(key string) string {
 		k = sectionKey[0]
 	}
 	if v, ok := c.data[section]; ok {
-		if vv, ok2 := v[k]; ok2 {
+		if vv, ok := v[k]; ok {
 			return vv
 		}
 	}
