@@ -20,13 +20,11 @@ type fakeConfigContainer struct {
 }
 
 func (c *fakeConfigContainer) getData(key string) string {
-	key = strings.ToLower(key)
-	return c.data[key]
+	return c.data[strings.ToLower(key)]
 }
 
 func (c *fakeConfigContainer) Set(key, val string) error {
-	key = strings.ToLower(key)
-	c.data[key] = val
+	c.data[strings.ToLower(key)] = val
 	return nil
 }
 
@@ -55,8 +53,7 @@ func (c *fakeConfigContainer) Float(key string) (float64, error) {
 }
 
 func (c *fakeConfigContainer) DIY(key string) (interface{}, error) {
-	key = strings.ToLower(key)
-	if v, ok := c.data[key]; ok {
+	if v, ok := c.data[strings.ToLower(key)]; ok {
 		return v, nil
 	}
 	return nil, errors.New("key not find")
