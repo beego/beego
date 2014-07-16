@@ -27,10 +27,13 @@ func serverStaticRouter(ctx *context.Context) {
 		if len(prefix) == 0 {
 			continue
 		}
-		if requestPath == "/favicon.ico" {
+		if requestPath == "/favicon.ico" || requestPath == "/robots.txt" {
 			file := path.Join(staticDir, requestPath)
 			if utils.FileExists(file) {
 				http.ServeFile(ctx.ResponseWriter, ctx.Request, file)
+				return
+			} else {
+				http.NotFound(ctx.ResponseWriter, ctx.Request)
 				return
 			}
 		}
