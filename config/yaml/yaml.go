@@ -7,7 +7,7 @@
 // @license     http://github.com/astaxie/beego/blob/master/LICENSE
 //
 // @authors     astaxie
-package config
+package yaml
 
 import (
 	"bytes"
@@ -24,39 +24,36 @@ import (
 )
 
 // YAMLConfig is a yaml config parser and implements Config interface.
-type YAMLConfig struct {
-}
+type YAMLConfig struct{}
 
 // Parse returns a ConfigContainer with parsed yaml config map.
-func (yaml *YAMLConfig) Parse(filename string) (config.ConfigContainer, error) {
-	y := &YAMLConfigContainer{
-		data: make(map[string]interface{}),
-	}
+func (yaml *YAMLConfig) Parse(filename string) (y config.ConfigContainer, err error) {
 	cnf, err := ReadYmlReader(filename)
 	if err != nil {
-		return nil, err
+		return
 	}
-	y.data = cnf
-	return y, nil
+	y = &YAMLConfigContainer{
+		data: cnf,
+	}
+	return
 }
 
 // Read yaml file to map.
 // if json like, use json package, unless goyaml2 package.
 func ReadYmlReader(path string) (cnf map[string]interface{}, err error) {
-	err = nil
 	f, err := os.Open(path)
 	if err != nil {
 		return
 	}
 	defer f.Close()
-	err = nil
+
 	buf, err := ioutil.ReadAll(f)
 	if err != nil || len(buf) < 3 {
 		return
 	}
 
 	if string(buf[0:1]) == "{" {
-		log.Println("Look lile a Json, try it")
+		log.Println("Look like a Json, try json umarshal")
 		err = json.Unmarshal(buf, &cnf)
 		if err == nil {
 			log.Println("It is Json Map")
@@ -64,19 +61,19 @@ func ReadYmlReader(path string) (cnf map[string]interface{}, err error) {
 		}
 	}
 
-	_map, _err := goyaml2.Read(bytes.NewBuffer(buf))
-	if _err != nil {
-		log.Println("Goyaml2 ERR>", string(buf), _err)
-		//err = goyaml.Unmarshal(buf, &cnf)
-		err = _err
+	data, err := goyaml2.Read(bytes.NewBuffer(buf))
+	if err != nil {
+		log.Println("Goyaml2 ERR>", string(buf), err)
 		return
 	}
-	if _map == nil {
+
+	if data == nil {
 		log.Println("Goyaml2 output nil? Pls report bug\n" + string(buf))
+		return
 	}
-	cnf, ok := _map.(map[string]interface{})
+	cnf, ok := data.(map[string]interface{})
 	if !ok {
-		log.Println("Not a Map? >> ", string(buf), _map)
+		log.Println("Not a Map? >> ", string(buf), data)
 		cnf = nil
 	}
 	return
