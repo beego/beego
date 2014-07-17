@@ -57,7 +57,7 @@ type JsonConfigContainer struct {
 
 // Bool returns the boolean value for a given key.
 func (c *JsonConfigContainer) Bool(key string) (bool, error) {
-	val := c.getdata(key)
+	val := c.getData(key)
 	if val != nil {
 		if v, ok := val.(bool); ok {
 			return v, nil
@@ -69,7 +69,7 @@ func (c *JsonConfigContainer) Bool(key string) (bool, error) {
 
 // Int returns the integer value for a given key.
 func (c *JsonConfigContainer) Int(key string) (int, error) {
-	val := c.getdata(key)
+	val := c.getData(key)
 	if val != nil {
 		if v, ok := val.(float64); ok {
 			return int(v), nil
@@ -81,7 +81,7 @@ func (c *JsonConfigContainer) Int(key string) (int, error) {
 
 // Int64 returns the int64 value for a given key.
 func (c *JsonConfigContainer) Int64(key string) (int64, error) {
-	val := c.getdata(key)
+	val := c.getData(key)
 	if val != nil {
 		if v, ok := val.(float64); ok {
 			return int64(v), nil
@@ -93,7 +93,7 @@ func (c *JsonConfigContainer) Int64(key string) (int64, error) {
 
 // Float returns the float value for a given key.
 func (c *JsonConfigContainer) Float(key string) (float64, error) {
-	val := c.getdata(key)
+	val := c.getData(key)
 	if val != nil {
 		if v, ok := val.(float64); ok {
 			return v, nil
@@ -105,7 +105,7 @@ func (c *JsonConfigContainer) Float(key string) (float64, error) {
 
 // String returns the string value for a given key.
 func (c *JsonConfigContainer) String(key string) string {
-	val := c.getdata(key)
+	val := c.getData(key)
 	if val != nil {
 		if v, ok := val.(string); ok {
 			return v
@@ -129,7 +129,7 @@ func (c *JsonConfigContainer) Set(key, val string) error {
 
 // DIY returns the raw value by a given key.
 func (c *JsonConfigContainer) DIY(key string) (v interface{}, err error) {
-	val := c.getdata(key)
+	val := c.getData(key)
 	if val != nil {
 		return val, nil
 	}
@@ -137,7 +137,7 @@ func (c *JsonConfigContainer) DIY(key string) (v interface{}, err error) {
 }
 
 // section.key or key
-func (c *JsonConfigContainer) getdata(key string) interface{} {
+func (c *JsonConfigContainer) getData(key string) interface{} {
 	c.RLock()
 	defer c.RUnlock()
 	if len(key) == 0 {
