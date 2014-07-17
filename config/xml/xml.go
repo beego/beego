@@ -7,7 +7,7 @@
 // @license     http://github.com/astaxie/beego/blob/master/LICENSE
 //
 // @authors     astaxie
-package config
+package xml
 
 import (
 	"errors"
@@ -24,27 +24,27 @@ import (
 // XmlConfig is a xml config parser and implements Config interface.
 // xml configurations should be included in <config></config> tag.
 // only support key/value pair as <key>value</key> as each item.
-type XMLConfig struct {
-}
+type XMLConfig struct{}
 
 // Parse returns a ConfigContainer with parsed xml config map.
-func (xmls *XMLConfig) Parse(filename string) (config.ConfigContainer, error) {
+func (xc *XMLConfig) Parse(filename string) (config.ConfigContainer, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err
 	}
 	defer file.Close()
-	x := &XMLConfigContainer{
-		data: make(map[string]interface{}),
-	}
+
+	x := &XMLConfigContainer{data: make(map[string]interface{})}
 	content, err := ioutil.ReadAll(file)
 	if err != nil {
 		return nil, err
 	}
+
 	d, err := x2j.DocToMap(string(content))
 	if err != nil {
 		return nil, err
 	}
+
 	x.data = d["config"].(map[string]interface{})
 	return x, nil
 }

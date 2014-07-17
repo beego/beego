@@ -151,12 +151,12 @@ func (c *JsonConfigContainer) getData(key string) interface{} {
 		}
 		for _, key := range sectionKey[1:] {
 			if v, ok := curValue.(map[string]interface{}); ok {
-				if v2, ok := v[key]; ok {
-					return v2
+				if curValue, ok = v[key]; !ok {
+					return nil
 				}
 			}
 		}
-		return nil
+		return curValue
 	}
 	if v, ok := c.data[key]; ok {
 		return v
