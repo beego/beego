@@ -145,12 +145,14 @@ func (c *JsonConfigContainer) getdata(key string) interface{} {
 	}
 	sectionKey := strings.Split(key, "::")
 	if len(sectionKey) >= 2 {
-		if curValue, ok := c.data[sectionKey[0]]; ok {
-			for _, key := range sectionKey[1:] {
-				if v, ok := curValue.(map[string]interface{}); ok {
-					if v2, ok := v[key]; ok {
-						return v2
-					}
+		curValue, ok := c.data[sectionKey[0]]
+		if !ok {
+			return nil
+		}
+		for _, key := range sectionKey[1:] {
+			if v, ok := curValue.(map[string]interface{}); ok {
+				if v2, ok := v[key]; ok {
+					return v2
 				}
 			}
 		}
