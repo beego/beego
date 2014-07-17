@@ -34,6 +34,3 @@ More info [beego.me](http://beego.me)
 
 beego is licensed under the Apache Licence, Version 2.0
 (http://www.apache.org/licenses/LICENSE-2.0.html).
-
-[![Clone in Koding](http://learn.koding.com/btn/clone_d.png)][koding]
-[koding]: https://koding.com/Teamwork?import=https://github.com/astaxie/beego/archive/master.zip&c=git1
