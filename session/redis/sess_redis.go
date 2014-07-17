@@ -81,12 +81,6 @@ func (rs *RedisSessionStore) SessionRelease(w http.ResponseWriter) {
 	c := rs.p.Get()
 	defer c.Close()
 
-	// if rs.values is empty, return directly
-	if len(rs.values) < 1 {
-		c.Do("DEL", rs.sid)
-		return
-	}
-
 	b, err := session.EncodeGob(rs.values)
 	if err != nil {
 		return

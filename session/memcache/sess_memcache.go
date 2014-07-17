@@ -72,11 +72,6 @@ func (rs *MemcacheSessionStore) SessionID() string {
 // save session values to redis
 func (rs *MemcacheSessionStore) SessionRelease(w http.ResponseWriter) {
 	defer rs.c.Close()
-	// if rs.values is empty, return directly
-	if len(rs.values) < 1 {
-		rs.c.Delete(rs.sid)
-		return
-	}
 
 	b, err := session.EncodeGob(rs.values)
 	if err != nil {

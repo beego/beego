@@ -75,12 +75,6 @@ func (cs *CouchbaseSessionStore) SessionID() string {
 func (cs *CouchbaseSessionStore) SessionRelease(w http.ResponseWriter) {
 	defer cs.b.Close()
 
-	// if rs.values is empty, return directly
-	if len(cs.values) < 1 {
-		cs.b.Delete(cs.sid)
-		return
-	}
-
 	bo, err := session.EncodeGob(cs.values)
 	if err != nil {
 		return
