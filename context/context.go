@@ -42,7 +42,7 @@ func (ctx *Context) Redirect(status int, localurl string) {
 // if middleware.ErrorMaps exists, panic body.
 // if middleware.HTTPExceptionMaps exists, panic HTTPException struct with status and body string.
 func (ctx *Context) Abort(status int, body string) {
-	ctx.Output.SetStatus(status)
+	ctx.ResponseWriter.WriteHeader(status)
 	// first panic from ErrorMaps, is is user defined error functions.
 	if _, ok := middleware.ErrorMaps[body]; ok {
 		panic(body)
