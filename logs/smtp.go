@@ -54,6 +54,18 @@ func (s *SmtpWriter) Init(jsonconfig string) error {
 	return nil
 }
 
+func (s *SmtpWriter) GetSmtpAuth(host string) smtp.Auth {
+	if len(strings.Trim(s.Username, " ")) == 0 && len(strings.Trim(s.Password, " ")) == 0 {
+		return nil
+	}
+	return smtp.PlainAuth(
+		"",
+		s.Username,
+		s.Password,
+		host,
+	)
+}
+
 // write message in smtp writer.
 // it will send an email with subject and only this message.
 func (s *SmtpWriter) WriteMsg(msg string, level int) error {
@@ -64,12 +76,8 @@ func (s *SmtpWriter) WriteMsg(msg string, level int) error {
 	hp := strings.Split(s.Host, ":")
 
 	// Set up authentication information.
-	auth := smtp.PlainAuth(
-		"",
-		s.Username,
-		s.Password,
-		hp[0],
-	)
+	auth := s.GetSmtpAuth(hp[0])
+	
 	// Connect to the server, authenticate, set the sender and recipient,
 	// and send the email all in one step.
 	content_type := "Content-Type: text/plain" + "; charset=UTF-8"
