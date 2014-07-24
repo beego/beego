@@ -12,16 +12,17 @@ package memcache
 import (
 	"encoding/json"
 	"errors"
+	"strings"
 
-	"github.com/beego/memcache"
+	"github.com/bradfitz/gomemcache/memcache"
 
 	"github.com/astaxie/beego/cache"
 )
 
 // Memcache adapter.
 type MemcacheCache struct {
-	conn     *memcache.Connection
-	conninfo string
+	conn     *memcache.Client
+	conninfo []string
 }
 
 // create new memcache adapter.
@@ -36,10 +37,8 @@ func (rc *MemcacheCache) Get(key string) interface{} {
 			return err
 		}
 	}
-	if v, err := rc.conn.Get(key); err == nil {
-		if len(v) > 0 {
-			return string(v[0].Value)
-		}
+	if item, err := rc.conn.Get(key); err == nil {
+		return string(item.Value)
 	}
 	return nil
 }
@@ -55,11 +54,8 @@ func (rc *MemcacheCache) Put(key string, val interface{}, timeout int64) error {
 	if !ok {
 		return errors.New("val must string")
 	}
-	stored, err := rc.conn.Set(key, 0, uint64(timeout), []byte(v))
-	if err == nil && stored == false {
-		return errors.New("stored fail")
-	}
-	return err
+	item := memcache.Item{Key: key, Value: []byte(v), Expiration: int32(timeout)}
+	return rc.conn.Set(&item)
 }
 
 // delete value in memcache.
@@ -69,20 +65,29 @@ func (rc *MemcacheCache) Delete(key string) error {
 			return err
 		}
 	}
-	_, err := rc.conn.Delete(key)
+	return rc.conn.Delete(key)
+}
+
+// increase counter.
+func (rc *MemcacheCache) Incr(key string) error {
+	if rc.conn == nil {
+		if err := rc.connectInit(); err != nil {
+			return err
+		}
+	}
+	_, err := rc.conn.Increment(key, 1)
 	return err
 }
 
-// [Not Support]
-// increase counter.
-func (rc *MemcacheCache) Incr(_ string) error {
-	return errors.New("not support in memcache")
-}
-
-// [Not Support]
 // decrease counter.
-func (rc *MemcacheCache) Decr(_ string) error {
-	return errors.New("not support in memcache")
+func (rc *MemcacheCache) Decr(key string) error {
+	if rc.conn == nil {
+		if err := rc.connectInit(); err != nil {
+			return err
+		}
+	}
+	_, err := rc.conn.Decrement(key, 1)
+	return err
 }
 
 // check value exists in memcache.
@@ -92,11 +97,8 @@ func (rc *MemcacheCache) IsExist(key string) bool {
 			return false
 		}
 	}
-	v, err := rc.conn.Get(key)
+	_, err := rc.conn.Get(key)
 	if err != nil {
-		return false
-	}
-	if len(v) == 0 {
 		return false
 	}
 	return true
@@ -121,7 +123,7 @@ func (rc *MemcacheCache) StartAndGC(config string) error {
 	if _, ok := cf["conn"]; !ok {
 		return errors.New("config has no conn key")
 	}
-	rc.conninfo = cf["conn"]
+	rc.conninfo = strings.Split(cf["conn"], ";")
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
 			return err
@@ -132,11 +134,7 @@ func (rc *MemcacheCache) StartAndGC(config string) error {
 
 // connect to memcache and keep the connection.
 func (rc *MemcacheCache) connectInit() error {
-	c, err := memcache.Connect(rc.conninfo)
-	if err != nil {
-		return err
-	}
-	rc.conn = c
+	rc.conn = memcache.New(rc.conninfo...)
 	return nil
 }
 

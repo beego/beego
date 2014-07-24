@@ -14,7 +14,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/beego/redigo/redis"
+	"github.com/garyburd/redigo/redis"
 
 	"github.com/astaxie/beego/cache"
 )
