@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/astaxie/beego/middleware"
+	"github.com/astaxie/beego/utils"
 )
 
 // Http request context struct including BeegoInput, BeegoOutput, http.Request and http.ResponseWriter.
@@ -29,6 +30,7 @@ type Context struct {
 	Output         *BeegoOutput
 	Request        *http.Request
 	ResponseWriter http.ResponseWriter
+	_xsrf_token    string
 }
 
 // Redirect does redirection to localurl with http header status code.
@@ -112,4 +114,36 @@ func (ctx *Context) SetSecureCookie(Secret, name, value string, others ...interf
 	sig := fmt.Sprintf("%02x", h.Sum(nil))
 	cookie := strings.Join([]string{vs, timestamp, sig}, "|")
 	ctx.Output.Cookie(name, cookie, others...)
+}
+
+// XsrfToken creates a xsrf token string and returns.
+func (ctx *Context) XsrfToken(key string, expire int64) string {
+	if ctx._xsrf_token == "" {
+		token, ok := ctx.GetSecureCookie(key, "_xsrf")
+		if !ok {
+			token = string(utils.RandomCreateBytes(32))
+			ctx.SetSecureCookie(key, "_xsrf", token, expire)
+		}
+		ctx._xsrf_token = token
+	}
+	return ctx._xsrf_token
+}
+
+// CheckXsrfCookie checks xsrf token in this request is valid or not.
+// the token can provided in request header "X-Xsrftoken" and "X-CsrfToken"
+// or in form field value named as "_xsrf".
+func (ctx *Context) CheckXsrfCookie() bool {
+	token := ctx.Input.Query("_xsrf")
+	if token == "" {
+		token = ctx.Request.Header.Get("X-Xsrftoken")
+	}
+	if token == "" {
+		token = ctx.Request.Header.Get("X-Csrftoken")
+	}
+	if token == "" {
+		ctx.Abort(403, "'_xsrf' argument missing from POST")
+	} else if ctx._xsrf_token != token {
+		ctx.Abort(403, "XSRF cookie does not match POST argument")
+	}
+	return true
 }
