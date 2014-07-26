@@ -72,5 +72,9 @@ func (m *BeeMap) Delete(k interface{}) {
 func (m *BeeMap) Items() map[interface{}]interface{} {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
-	return m.bm
+	r := make(map[interface{}]interface{})
+	for k, v := range m.bm {
+		r[k] = v
+	}
+	return r
 }
