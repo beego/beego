@@ -151,7 +151,7 @@ func (bl *BeeLogger) EnableFuncCallDepth(b bool) {
 }
 
 // start logger chan reading.
-// when chan is full, write logs.
+// when chan is not empty, write logs.
 func (bl *BeeLogger) startLogger() {
 	for {
 		select {
