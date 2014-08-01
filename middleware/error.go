@@ -314,6 +314,7 @@ func Exception(errcode string, w http.ResponseWriter, r *http.Request, msg strin
 		if err != nil {
 			isint = 500
 		}
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.WriteHeader(isint)
 		h(w, r)
 		return
