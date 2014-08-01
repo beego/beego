@@ -69,6 +69,7 @@ func (app *App) Run() {
 
 		if EnableHttpTLS {
 			go func() {
+				time.Sleep(20 * time.Microsecond)
 				if HttpsPort != 0 {
 					app.Server.Addr = fmt.Sprintf("%s:%d", HttpAddr, HttpsPort)
 				}
@@ -83,6 +84,7 @@ func (app *App) Run() {
 
 		if EnableHttpListen {
 			go func() {
+				app.Server.Addr = addr
 				err := app.Server.ListenAndServe()
 				if err != nil {
 					BeeLogger.Critical("ListenAndServe: ", err)
