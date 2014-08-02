@@ -159,6 +159,9 @@ func genRouterCode() {
 }
 
 func compareFile(pkgRealpath string) bool {
+	if !utils.FileExists(path.Join(AppPath, "routers", "commentsRouter.go")) {
+		return true
+	}
 	if utils.FileExists(path.Join(AppPath, lastupdateFilename)) {
 		content, err := ioutil.ReadFile(path.Join(AppPath, lastupdateFilename))
 		if err != nil {
