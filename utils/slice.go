@@ -101,7 +101,7 @@ func SliceDiff(slice1, slice2 []interface{}) (diffslice []interface{}) {
 	return
 }
 
-// SliceIntersect returns diff slice of slice2 - slice1.
+// SliceIntersect returns diff slice of slice1 - slice2.
 func SliceIntersect(slice1, slice2 []interface{}) (diffslice []interface{}) {
 	for _, v := range slice1 {
 		if !InSliceIface(v, slice2) {
