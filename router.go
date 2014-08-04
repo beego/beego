@@ -578,6 +578,13 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		return false
 	}
 
+	// filter wrong httpmethod
+	if _, ok := HTTPMETHOD[r.Method]; !ok {
+		http.Error(w, "Method Not Allowed", 405)
+		goto Admin
+	}
+
+	// filter for static file
 	if do_filter(BeforeStatic) {
 		goto Admin
 	}
@@ -593,11 +600,6 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		defer func() {
 			context.Input.CruSession.SessionRelease(w)
 		}()
-	}
-
-	if _, ok := HTTPMETHOD[r.Method]; !ok {
-		http.Error(w, "Method Not Allowed", 405)
-		goto Admin
 	}
 
 	if r.Method != "GET" && r.Method != "HEAD" {
