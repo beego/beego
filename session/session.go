@@ -72,6 +72,7 @@ type managerConfig struct {
 	SessionIDHashKey  string `json:"sessionIDHashKey"`
 	CookieLifeTime    int    `json:"cookieLifeTime"`
 	ProviderConfig    string `json:"providerConfig"`
+	Domain            string `json:"domain"`
 }
 
 // Manager contains Provider and its configuration.
@@ -134,7 +135,8 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 			Value:    url.QueryEscape(sid),
 			Path:     "/",
 			HttpOnly: true,
-			Secure:   manager.config.Secure}
+			Secure:   manager.config.Secure,
+			Domain:   manager.config.Domain}
 		if manager.config.CookieLifeTime >= 0 {
 			cookie.MaxAge = manager.config.CookieLifeTime
 		}
@@ -153,7 +155,8 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 				Value:    url.QueryEscape(sid),
 				Path:     "/",
 				HttpOnly: true,
-				Secure:   manager.config.Secure}
+				Secure:   manager.config.Secure,
+				Domain:   manager.config.Domain}
 			if manager.config.CookieLifeTime >= 0 {
 				cookie.MaxAge = manager.config.CookieLifeTime
 			}
@@ -208,6 +211,7 @@ func (manager *Manager) SessionRegenerateId(w http.ResponseWriter, r *http.Reque
 			Path:     "/",
 			HttpOnly: true,
 			Secure:   manager.config.Secure,
+			Domain:   manager.config.Domain,
 		}
 	} else {
 		oldsid, _ := url.QueryUnescape(cookie.Value)

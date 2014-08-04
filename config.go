@@ -55,6 +55,7 @@ var (
 	SessionHashKey         string           // session hash salt string.
 	SessionCookieLifeTime  int              // the life time of session id in cookie.
 	SessionAutoSetCookie   bool             // auto setcookie
+	SessionDomain          string           // the cookie domain default is empty
 	UseFcgi                bool
 	MaxMemory              int64
 	EnableGzip             bool // flag of enable gzip
