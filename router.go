@@ -32,7 +32,8 @@ import (
 
 const (
 	// default filter execution points
-	BeforeRouter = iota
+	BeforeStatic = iota
+	BeforeRouter
 	BeforeExec
 	AfterExec
 	FinishRouter
@@ -575,6 +576,15 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}
 
 		return false
+	}
+
+	if do_filter(BeforeStatic) {
+		goto Admin
+	}
+
+	serverStaticRouter(context)
+	if w.started {
+		goto Admin
 	}
 
 	// session init

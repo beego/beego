@@ -22,6 +22,9 @@ import (
 )
 
 func serverStaticRouter(ctx *context.Context) {
+	if ctx.Input.Method() != "GET" && ctx.Input.Method() != "HEAD" {
+		return
+	}
 	requestPath := path.Clean(ctx.Input.Request.URL.Path)
 	for prefix, staticDir := range StaticDir {
 		if len(prefix) == 0 {
