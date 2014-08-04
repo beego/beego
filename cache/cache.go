@@ -16,7 +16,7 @@ import (
 // Cache interface contains all behaviors for cache adapter.
 // usage:
 //	cache.Register("file",cache.NewFileCache()) // this operation is run in init method of file.go.
-//	c := cache.NewCache("file","{....}")
+//	c,err := cache.NewCache("file","{....}")
 //	c.Put("key",value,3600)
 //	v := c.Get("key")
 //
