@@ -25,6 +25,9 @@ func TestSubstr(t *testing.T) {
 	if Substr(s, 0, 100) != "012345" {
 		t.Error("should be equal")
 	}
+	if Substr(s, 12, 100) != "012345" {
+		t.Error("should be equal")
+	}
 }
 
 func TestHtml2str(t *testing.T) {

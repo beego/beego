@@ -27,6 +27,9 @@ func Substr(s string, start, length int) string {
 	if start < 0 {
 		start = 0
 	}
+	if start > len(bt) {
+		start = start % len(bt)
+	}
 	var end int
 	if (start + length) > (len(bt) - 1) {
 		end = len(bt)
