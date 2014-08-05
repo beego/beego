@@ -362,7 +362,7 @@ func initBeforeHttpRun() {
 				`"sessionIDHashFunc":"` + SessionHashFunc + `",` +
 				`"sessionIDHashKey":"` + SessionHashKey + `",` +
 				`"enableSetCookie":` + strconv.FormatBool(SessionAutoSetCookie) + `,` +
-				`"domain":` + SessionDomain + `,` +
+				`"domain":"` + SessionDomain + `",` +
 				`"cookieLifeTime":` + strconv.Itoa(SessionCookieLifeTime) + `}`
 		}
 		GlobalSessions, err = session.NewManager(SessionProvider,
