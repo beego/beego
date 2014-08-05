@@ -7,7 +7,7 @@
 // @license     http://github.com/astaxie/beego/blob/master/LICENSE
 //
 // @authors     astaxie
-package toolbox
+package utils
 
 import (
 	"bytes"
