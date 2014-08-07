@@ -22,12 +22,21 @@ type ConfigContainer interface {
 	Int64(key string) (int64, error)
 	Bool(key string) (bool, error)
 	Float(key string) (float64, error)
+	DefaultString(key string, defaultval string) string      // support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
+	DefaultStrings(key string, defaultval []string) []string //get string slice
+	DefaultInt(key string, defaultval int) int
+	DefaultInt64(key string, defaultval int64) int64
+	DefaultBool(key string, defaultval bool) bool
+	DefaultFloat(key string, defaultval float64) float64
 	DIY(key string) (interface{}, error)
+	GetSection(section string) (map[string]string, error)
+	SaveConfigFile(filename string) error
 }
 
 // Config is the adapter interface for parsing config file to get raw data to ConfigContainer.
 type Config interface {
 	Parse(key string) (ConfigContainer, error)
+	ParseData(data []byte) (ConfigContainer, error)
 }
 
 var adapters = make(map[string]Config)
@@ -53,4 +62,14 @@ func NewConfig(adapterName, fileaname string) (ConfigContainer, error) {
 		return nil, fmt.Errorf("config: unknown adaptername %q (forgotten import?)", adapterName)
 	}
 	return adapter.Parse(fileaname)
+}
+
+// adapterName is ini/json/xml/yaml.
+// data is the config data.
+func NewConfigData(adapterName string, data []byte) (ConfigContainer, error) {
+	adapter, ok := adapters[adapterName]
+	if !ok {
+		return nil, fmt.Errorf("config: unknown adaptername %q (forgotten import?)", adapterName)
+	}
+	return adapter.ParseData(data)
 }

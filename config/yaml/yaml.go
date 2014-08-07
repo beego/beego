@@ -13,11 +13,14 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
+	"path"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/astaxie/beego/config"
 	"github.com/beego/goyaml2"
@@ -36,6 +39,16 @@ func (yaml *YAMLConfig) Parse(filename string) (y config.ConfigContainer, err er
 		data: cnf,
 	}
 	return
+}
+
+func (yaml *YAMLConfig) ParseData(data []byte) (config.ConfigContainer, error) {
+	// Save memory data to temporary file
+	tmpName := path.Join(os.TempDir(), "beego", fmt.Sprintf("%d", time.Now().Nanosecond()))
+	os.MkdirAll(path.Dir(tmpName), os.ModePerm)
+	if err := ioutil.WriteFile(tmpName, data, 0655); err != nil {
+		return nil, err
+	}
+	return yaml.Parse(tmpName)
 }
 
 // Read yaml file to map.
@@ -93,12 +106,32 @@ func (c *YAMLConfigContainer) Bool(key string) (bool, error) {
 	return false, errors.New("not bool value")
 }
 
+// DefaultBool return the bool value if has no error
+// otherwise return the defaultval
+func (c *YAMLConfigContainer) DefaultBool(key string, defaultval bool) bool {
+	if v, err := c.Bool(key); err != nil {
+		return defaultval
+	} else {
+		return v
+	}
+}
+
 // Int returns the integer value for a given key.
 func (c *YAMLConfigContainer) Int(key string) (int, error) {
 	if v, ok := c.data[key].(int64); ok {
 		return int(v), nil
 	}
 	return 0, errors.New("not int value")
+}
+
+// DefaultInt returns the integer value for a given key.
+// if err != nil return defaltval
+func (c *YAMLConfigContainer) DefaultInt(key string, defaultval int) int {
+	if v, err := c.Int(key); err != nil {
+		return defaultval
+	} else {
+		return v
+	}
 }
 
 // Int64 returns the int64 value for a given key.
@@ -109,12 +142,32 @@ func (c *YAMLConfigContainer) Int64(key string) (int64, error) {
 	return 0, errors.New("not bool value")
 }
 
+// DefaultInt64 returns the int64 value for a given key.
+// if err != nil return defaltval
+func (c *YAMLConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
+	if v, err := c.Int64(key); err != nil {
+		return defaultval
+	} else {
+		return v
+	}
+}
+
 // Float returns the float value for a given key.
 func (c *YAMLConfigContainer) Float(key string) (float64, error) {
 	if v, ok := c.data[key].(float64); ok {
 		return v, nil
 	}
 	return 0.0, errors.New("not float64 value")
+}
+
+// DefaultFloat returns the float64 value for a given key.
+// if err != nil return defaltval
+func (c *YAMLConfigContainer) DefaultFloat(key string, defaultval float64) float64 {
+	if v, err := c.Float(key); err != nil {
+		return defaultval
+	} else {
+		return v
+	}
 }
 
 // String returns the string value for a given key.
@@ -125,9 +178,50 @@ func (c *YAMLConfigContainer) String(key string) string {
 	return ""
 }
 
+// DefaultString returns the string value for a given key.
+// if err != nil return defaltval
+func (c *YAMLConfigContainer) DefaultString(key string, defaultval string) string {
+	if v := c.String(key); v == "" {
+		return defaultval
+	} else {
+		return v
+	}
+}
+
 // Strings returns the []string value for a given key.
 func (c *YAMLConfigContainer) Strings(key string) []string {
 	return strings.Split(c.String(key), ";")
+}
+
+// DefaultStrings returns the []string value for a given key.
+// if err != nil return defaltval
+func (c *YAMLConfigContainer) DefaultStrings(key string, defaultval []string) []string {
+	if v := c.Strings(key); len(v) == 0 {
+		return defaultval
+	} else {
+		return v
+	}
+}
+
+// GetSection returns map for the given section
+func (c *YAMLConfigContainer) GetSection(section string) (map[string]string, error) {
+	if v, ok := c.data[section]; ok {
+		return v.(map[string]string), nil
+	} else {
+		return nil, errors.New("not exist setction")
+	}
+}
+
+// SaveConfigFile save the config into file
+func (c *YAMLConfigContainer) SaveConfigFile(filename string) (err error) {
+	// Write configuration file by filename.
+	f, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	err = goyaml2.Write(f, c.data)
+	return err
 }
 
 // WriteValue writes a new value for key.

@@ -13,11 +13,15 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
+	"path"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 	"unicode"
 )
 
@@ -30,6 +34,7 @@ var (
 	bDQuote         = []byte{'"'} // quote signal
 	sectionStart    = []byte{'['} // section start signal
 	sectionEnd      = []byte{']'} // section end signal
+	lineBreak       = "\n"
 )
 
 // IniConfig implements Config to parse ini file.
@@ -115,6 +120,16 @@ func (ini *IniConfig) Parse(name string) (ConfigContainer, error) {
 	return cfg, nil
 }
 
+func (ini *IniConfig) ParseData(data []byte) (ConfigContainer, error) {
+	// Save memory data to temporary file
+	tmpName := path.Join(os.TempDir(), "beego", fmt.Sprintf("%d", time.Now().Nanosecond()))
+	os.MkdirAll(path.Dir(tmpName), os.ModePerm)
+	if err := ioutil.WriteFile(tmpName, data, 0655); err != nil {
+		return nil, err
+	}
+	return ini.Parse(tmpName)
+}
+
 // A Config represents the ini configuration.
 // When set and get value, support key as section:name type.
 type IniConfigContainer struct {
@@ -130,9 +145,29 @@ func (c *IniConfigContainer) Bool(key string) (bool, error) {
 	return strconv.ParseBool(c.getdata(strings.ToLower(key)))
 }
 
+// DefaultBool returns the boolean value for a given key.
+// if err != nil return defaltval
+func (c *IniConfigContainer) DefaultBool(key string, defaultval bool) bool {
+	if v, err := c.Bool(key); err != nil {
+		return defaultval
+	} else {
+		return v
+	}
+}
+
 // Int returns the integer value for a given key.
 func (c *IniConfigContainer) Int(key string) (int, error) {
 	return strconv.Atoi(c.getdata(strings.ToLower(key)))
+}
+
+// DefaultInt returns the integer value for a given key.
+// if err != nil return defaltval
+func (c *IniConfigContainer) DefaultInt(key string, defaultval int) int {
+	if v, err := c.Int(key); err != nil {
+		return defaultval
+	} else {
+		return v
+	}
 }
 
 // Int64 returns the int64 value for a given key.
@@ -140,9 +175,29 @@ func (c *IniConfigContainer) Int64(key string) (int64, error) {
 	return strconv.ParseInt(c.getdata(strings.ToLower(key)), 10, 64)
 }
 
+// DefaultInt64 returns the int64 value for a given key.
+// if err != nil return defaltval
+func (c *IniConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
+	if v, err := c.Int64(key); err != nil {
+		return defaultval
+	} else {
+		return v
+	}
+}
+
 // Float returns the float value for a given key.
 func (c *IniConfigContainer) Float(key string) (float64, error) {
 	return strconv.ParseFloat(c.getdata(strings.ToLower(key)), 64)
+}
+
+// DefaultFloat returns the float64 value for a given key.
+// if err != nil return defaltval
+func (c *IniConfigContainer) DefaultFloat(key string, defaultval float64) float64 {
+	if v, err := c.Float(key); err != nil {
+		return defaultval
+	} else {
+		return v
+	}
 }
 
 // String returns the string value for a given key.
@@ -151,9 +206,91 @@ func (c *IniConfigContainer) String(key string) string {
 	return c.getdata(strings.ToLower(key))
 }
 
+// DefaultString returns the string value for a given key.
+// if err != nil return defaltval
+func (c *IniConfigContainer) DefaultString(key string, defaultval string) string {
+	if v := c.String(key); v == "" {
+		return defaultval
+	} else {
+		return v
+	}
+}
+
 // Strings returns the []string value for a given key.
 func (c *IniConfigContainer) Strings(key string) []string {
 	return strings.Split(c.String(key), ";")
+}
+
+// DefaultStrings returns the []string value for a given key.
+// if err != nil return defaltval
+func (c *IniConfigContainer) DefaultStrings(key string, defaultval []string) []string {
+	if v := c.Strings(key); len(v) == 0 {
+		return defaultval
+	} else {
+		return v
+	}
+}
+
+// GetSection returns map for the given section
+func (c *IniConfigContainer) GetSection(section string) (map[string]string, error) {
+	if v, ok := c.data[section]; ok {
+		return v, nil
+	} else {
+		return nil, errors.New("not exist setction")
+	}
+}
+
+// SaveConfigFile save the config into file
+func (c *IniConfigContainer) SaveConfigFile(filename string) (err error) {
+	// Write configuration file by filename.
+	f, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	buf := bytes.NewBuffer(nil)
+	for section, dt := range c.data {
+		// Write section comments.
+		if v, ok := c.sectionComment[section]; ok {
+			if _, err = buf.WriteString(string(bNumComment) + v + lineBreak); err != nil {
+				return err
+			}
+		}
+
+		if section != DEFAULT_SECTION {
+			// Write section name.
+			if _, err = buf.WriteString(string(sectionStart) + section + string(sectionEnd) + lineBreak); err != nil {
+				return err
+			}
+		}
+
+		for key, val := range dt {
+			if key != " " {
+				// Write key comments.
+				if v, ok := c.keyComment[key]; ok {
+					if _, err = buf.WriteString(string(bNumComment) + v + lineBreak); err != nil {
+						return err
+					}
+				}
+
+				// Write key and value.
+				if _, err = buf.WriteString(key + string(bEqual) + val + lineBreak); err != nil {
+					return err
+				}
+			}
+		}
+
+		// Put a line between sections.
+		if _, err = buf.WriteString(lineBreak); err != nil {
+			return err
+		}
+	}
+
+	if _, err = buf.WriteTo(f); err != nil {
+		return err
+	}
+	return nil
 }
 
 // WriteValue writes a new value for key.
