@@ -22,7 +22,7 @@ First you must import it
 
 Then init a Cache (example with memory adapter)
 
-	bm, err := NewCache("memory", `{"interval":60}`)	
+	bm, err := cache.NewCache("memory", `{"interval":60}`)	
 
 Use it like this:	
 	
