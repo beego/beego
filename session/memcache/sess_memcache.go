@@ -11,18 +11,19 @@ package session
 
 import (
 	"net/http"
+	"strings"
 	"sync"
 
 	"github.com/astaxie/beego/session"
 
-	"github.com/beego/memcache"
+	"github.com/bradfitz/gomemcache/memcache"
 )
 
 var mempder = &MemProvider{}
+var client *memcache.Client
 
 // memcache session store
 type MemcacheSessionStore struct {
-	c           *memcache.Connection
 	sid         string
 	lock        sync.RWMutex
 	values      map[interface{}]interface{}
@@ -71,19 +72,18 @@ func (rs *MemcacheSessionStore) SessionID() string {
 
 // save session values to redis
 func (rs *MemcacheSessionStore) SessionRelease(w http.ResponseWriter) {
-	defer rs.c.Close()
-
 	b, err := session.EncodeGob(rs.values)
 	if err != nil {
 		return
 	}
-	rs.c.Set(rs.sid, 0, uint64(rs.maxlifetime), b)
+	item := memcache.Item{Key: rs.sid, Value: b, Expiration: int32(rs.maxlifetime)}
+	client.Set(&item)
 }
 
 // redis session provider
 type MemProvider struct {
 	maxlifetime int64
-	savePath    string
+	conninfo    []string
 	poolsize    int
 	password    string
 }
@@ -93,46 +93,44 @@ type MemProvider struct {
 // e.g. 127.0.0.1:9090
 func (rp *MemProvider) SessionInit(maxlifetime int64, savePath string) error {
 	rp.maxlifetime = maxlifetime
-	rp.savePath = savePath
+	rp.conninfo = strings.Split(savePath, ";")
+	client = memcache.New(rp.conninfo...)
 	return nil
 }
 
 // read redis session by sid
 func (rp *MemProvider) SessionRead(sid string) (session.SessionStore, error) {
-	conn, err := rp.connectInit()
+	if client == nil {
+		if err := rp.connectInit(); err != nil {
+			return nil, err
+		}
+	}
+	item, err := client.Get(sid)
 	if err != nil {
 		return nil, err
-	}
-	kvs, err := conn.Get(sid)
-	if err != nil {
-		return nil, err
-	}
-	var contain []byte
-	if len(kvs) > 0 {
-		contain = kvs[0].Value
 	}
 	var kv map[interface{}]interface{}
-	if len(contain) == 0 {
+	if len(item.Value) == 0 {
 		kv = make(map[interface{}]interface{})
 	} else {
-		kv, err = session.DecodeGob(contain)
+		kv, err = session.DecodeGob(item.Value)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	rs := &MemcacheSessionStore{c: conn, sid: sid, values: kv, maxlifetime: rp.maxlifetime}
+	rs := &MemcacheSessionStore{sid: sid, values: kv, maxlifetime: rp.maxlifetime}
 	return rs, nil
 }
 
 // check redis session exist by sid
 func (rp *MemProvider) SessionExist(sid string) bool {
-	conn, err := rp.connectInit()
-	if err != nil {
-		return false
+	if client == nil {
+		if err := rp.connectInit(); err != nil {
+			return false
+		}
 	}
-	defer conn.Close()
-	if kvs, err := conn.Get(sid); err != nil || len(kvs) == 0 {
+	if item, err := client.Get(sid); err != nil || len(item.Value) == 0 {
 		return false
 	} else {
 		return true
@@ -141,48 +139,61 @@ func (rp *MemProvider) SessionExist(sid string) bool {
 
 // generate new sid for redis session
 func (rp *MemProvider) SessionRegenerate(oldsid, sid string) (session.SessionStore, error) {
-	conn, err := rp.connectInit()
-	if err != nil {
-		return nil, err
+	if client == nil {
+		if err := rp.connectInit(); err != nil {
+			return nil, err
+		}
 	}
 	var contain []byte
-	if kvs, err := conn.Get(sid); err != nil || len(kvs) == 0 {
+	if item, err := client.Get(sid); err != nil || len(item.Value) == 0 {
 		// oldsid doesn't exists, set the new sid directly
 		// ignore error here, since if it return error
 		// the existed value will be 0
-		conn.Set(sid, 0, uint64(rp.maxlifetime), []byte(""))
+		item.Key = sid
+		item.Value = []byte("")
+		item.Expiration = int32(rp.maxlifetime)
+		client.Set(item)
 	} else {
-		conn.Delete(oldsid)
-		conn.Set(sid, 0, uint64(rp.maxlifetime), kvs[0].Value)
-		contain = kvs[0].Value
+		client.Delete(oldsid)
+		item.Key = sid
+		item.Value = item.Value
+		item.Expiration = int32(rp.maxlifetime)
+		client.Set(item)
+		contain = item.Value
 	}
 
 	var kv map[interface{}]interface{}
 	if len(contain) == 0 {
 		kv = make(map[interface{}]interface{})
 	} else {
+		var err error
 		kv, err = session.DecodeGob(contain)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	rs := &MemcacheSessionStore{c: conn, sid: sid, values: kv, maxlifetime: rp.maxlifetime}
+	rs := &MemcacheSessionStore{sid: sid, values: kv, maxlifetime: rp.maxlifetime}
 	return rs, nil
 }
 
 // delete redis session by id
 func (rp *MemProvider) SessionDestroy(sid string) error {
-	conn, err := rp.connectInit()
-	if err != nil {
-		return err
+	if client == nil {
+		if err := rp.connectInit(); err != nil {
+			return err
+		}
 	}
-	defer conn.Close()
 
-	_, err = conn.Delete(sid)
+	err := client.Delete(sid)
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func (rp *MemProvider) connectInit() error {
+	client = memcache.New(rp.conninfo...)
 	return nil
 }
 
@@ -194,15 +205,6 @@ func (rp *MemProvider) SessionGC() {
 // @todo
 func (rp *MemProvider) SessionAll() int {
 	return 0
-}
-
-// connect to memcache and keep the connection.
-func (rp *MemProvider) connectInit() (*memcache.Connection, error) {
-	c, err := memcache.Connect(rp.savePath)
-	if err != nil {
-		return nil, err
-	}
-	return c, nil
 }
 
 func init() {
