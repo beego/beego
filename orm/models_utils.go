@@ -131,6 +131,9 @@ func getFieldType(val reflect.Value) (ft int, err error) {
 	case reflect.String:
 		ft = TypeCharField
 	default:
+		if elm == nil {
+			panic(fmt.Errorf("%s is nil pointer, may be miss setting tag", val))
+		}
 		switch elm.Interface().(type) {
 		case sql.NullInt64:
 			ft = TypeBigIntegerField
