@@ -200,7 +200,7 @@ func (c *Captcha) Verify(id string, challenge string) (success bool) {
 
 	key := c.key(id)
 
-	if v, ok := c.store.Get(key).([]byte); ok && len(v) == len(challenge) {
+	if v, ok := c.store.Get(key).([]byte); ok {
 		chars = v
 	} else {
 		return
@@ -211,6 +211,9 @@ func (c *Captcha) Verify(id string, challenge string) (success bool) {
 		c.store.Delete(key)
 	}()
 
+	if len(chars) != len(challenge) {
+		return
+	}
 	// verify challenge
 	for i, c := range chars {
 		if c != challenge[i]-48 {
@@ -220,6 +223,7 @@ func (c *Captcha) Verify(id string, challenge string) (success bool) {
 
 	return true
 }
+
 
 // create a new captcha.Captcha
 func NewCaptcha(urlPrefix string, store cache.Cache) *Captcha {
