@@ -459,7 +459,7 @@ func (p *ControllerRegistor) geturl(t *Tree, url, controllName, methodName strin
 				if find {
 					if l.regexps == nil {
 						if len(l.wildcards) == 0 {
-							return true, strings.Replace(url, "/"+url_placeholder, "", 1)
+							return true, strings.Replace(url, "/"+url_placeholder, "", 1) + tourl(params)
 						}
 						if len(l.wildcards) == 1 {
 							if v, ok := params[l.wildcards[0]]; ok {
