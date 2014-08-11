@@ -46,22 +46,38 @@ func (t *Tree) addtree(segments []string, tree *Tree, wildcards []string, reg st
 	}
 	seg := segments[0]
 	iswild, params, regexpStr := splitSegment(seg)
-	if len(segments) == 1 && seg != "" {
+	if len(segments) == 1 {
 		if iswild {
-			wildcards = append(wildcards, params...)
 			if regexpStr != "" {
-				for _, w := range params {
+				if reg == "" {
+					rr := ""
+					for _, w := range wildcards {
+						if w == "." || w == ":" {
+							continue
+						}
+						if w == ":splat" {
+							rr = rr + "(.+)/"
+						} else {
+							rr = rr + "([^/]+)/"
+						}
+					}
+					regexpStr = rr + regexpStr
+				} else {
+					regexpStr = "/" + regexpStr
+				}
+			} else {
+				for _, w := range wildcards {
 					if w == "." || w == ":" {
 						continue
 					}
-					regexpStr = "([^/]+)/" + regexpStr
+					regexpStr = "/([^/]+)" + regexpStr
 				}
 			}
 			reg = reg + regexpStr
-			filterTreeWithPrefix(tree, wildcards, reg)
+			filterTreeWithPrefix(tree, append(wildcards, params...), reg)
 			t.wildcard = tree
 		} else {
-			filterTreeWithPrefix(tree, wildcards, reg)
+			filterTreeWithPrefix(tree, append(wildcards, params...), reg)
 			t.fixrouters[seg] = tree
 		}
 		return
@@ -70,21 +86,37 @@ func (t *Tree) addtree(segments []string, tree *Tree, wildcards []string, reg st
 		if t.wildcard == nil {
 			t.wildcard = NewTree()
 		}
-		wildcards = append(wildcards)
 		if regexpStr != "" {
-			for _, w := range params {
+			if reg == "" {
+				rr := ""
+				for _, w := range wildcards {
+					if w == "." || w == ":" {
+						continue
+					}
+					if w == ":splat" {
+						rr = rr + "(.+)/"
+					} else {
+						rr = rr + "([^/]+)/"
+					}
+				}
+				regexpStr = rr + regexpStr
+			} else {
+				regexpStr = "/" + regexpStr
+			}
+		} else {
+			for _, w := range wildcards {
 				if w == "." || w == ":" {
 					continue
 				}
-				regexpStr = "([^/]+)/" + regexpStr
+				regexpStr = "/([^/]+)" + regexpStr
 			}
 		}
 		reg = reg + regexpStr
-		t.wildcard.addtree(segments[1:], tree, wildcards, reg)
+		t.wildcard.addtree(segments[1:], tree, append(wildcards, params...), reg)
 	} else {
 		subTree := NewTree()
 		t.fixrouters[seg] = subTree
-		subTree.addtree(segments[1:], tree, wildcards, reg)
+		subTree.addtree(segments[1:], tree, append(wildcards, params...), reg)
 	}
 }
 
