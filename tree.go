@@ -106,7 +106,11 @@ func filterTreeWithPrefix(t *Tree, wildcards []string, reg string) {
 				filterCards = append(filterCards, v)
 			}
 			l.wildcards = filterCards
-			l.regexps = regexp.MustCompile("^" + reg + strings.Trim(l.regexps.String(), "^$") + "$")
+			if l.regexps != nil {
+				l.regexps = regexp.MustCompile("^" + reg + strings.Trim(l.regexps.String(), "^$") + "$")
+			} else {
+				l.regexps = regexp.MustCompile("^" + reg + "$")
+			}
 		} else {
 			if l.regexps != nil {
 				filterCards := []string{}
