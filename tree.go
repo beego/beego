@@ -108,7 +108,11 @@ func (t *Tree) addtree(segments []string, tree *Tree, wildcards []string, reg st
 				if w == "." || w == ":" {
 					continue
 				}
-				regexpStr = "/([^/]+)" + regexpStr
+				if w == ":splat" {
+					regexpStr = "/(.+)" + regexpStr
+				} else {
+					regexpStr = "/([^/]+)" + regexpStr
+				}
 			}
 		}
 		reg = reg + regexpStr
@@ -145,19 +149,15 @@ func filterTreeWithPrefix(t *Tree, wildcards []string, reg string) {
 			}
 		} else {
 			if l.regexps != nil {
-				filterCards := []string{}
-				for _, v := range l.wildcards {
-					if v == ":" || v == "." {
-						continue
-					}
-					filterCards = append(filterCards, v)
-				}
-				l.wildcards = filterCards
 				for _, w := range wildcards {
 					if w == "." || w == ":" {
 						continue
 					}
-					reg = "([^/]+)/" + reg
+					if w == ":splat" {
+						reg = "(.+)/" + reg
+					} else {
+						reg = "([^/]+)/" + reg
+					}
 				}
 				l.regexps = regexp.MustCompile("^" + reg + strings.Trim(l.regexps.String(), "^$") + "$")
 			}
