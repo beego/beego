@@ -184,147 +184,147 @@ func ParseConfig() (err error) {
 		return err
 	} else {
 
-		if v, err := getConfig("string", "HttpAddr"); err == nil {
+		if v, err := GetConfig("string", "HttpAddr"); err == nil {
 			HttpAddr = v.(string)
 		}
 
-		if v, err := getConfig("int", "HttpPort"); err == nil {
+		if v, err := GetConfig("int", "HttpPort"); err == nil {
 			HttpPort = v.(int)
 		}
 
-		if v, err := getConfig("bool", "EnableHttpListen"); err == nil {
+		if v, err := GetConfig("bool", "EnableHttpListen"); err == nil {
 			EnableHttpListen = v.(bool)
 		}
 
-		if maxmemory, err := getConfig("int64", "MaxMemory"); err == nil {
+		if maxmemory, err := GetConfig("int64", "MaxMemory"); err == nil {
 			MaxMemory = maxmemory.(int64)
 		}
 
-		if appname, _ := getConfig("string", "AppName"); appname != "" {
+		if appname, _ := GetConfig("string", "AppName"); appname != "" {
 			AppName = appname.(string)
 		}
 
-		if runmode, _ := getConfig("string", "RunMode"); runmode != "" {
+		if runmode, _ := GetConfig("string", "RunMode"); runmode != "" {
 			RunMode = runmode.(string)
 		}
 
-		if autorender, err := getConfig("bool", "AutoRender"); err == nil {
+		if autorender, err := GetConfig("bool", "AutoRender"); err == nil {
 			AutoRender = autorender.(bool)
 		}
 
-		if autorecover, err := getConfig("bool", "RecoverPanic"); err == nil {
+		if autorecover, err := GetConfig("bool", "RecoverPanic"); err == nil {
 			RecoverPanic = autorecover.(bool)
 		}
 
-		if views, _ := getConfig("string", "ViewsPath"); views != "" {
+		if views, _ := GetConfig("string", "ViewsPath"); views != "" {
 			ViewsPath = views.(string)
 		}
 
-		if sessionon, err := getConfig("bool", "SessionOn"); err == nil {
+		if sessionon, err := GetConfig("bool", "SessionOn"); err == nil {
 			SessionOn = sessionon.(bool)
 		}
 
-		if sessProvider, _ := getConfig("string", "SessionProvider"); sessProvider != "" {
+		if sessProvider, _ := GetConfig("string", "SessionProvider"); sessProvider != "" {
 			SessionProvider = sessProvider.(string)
 		}
 
-		if sessName, _ := getConfig("string", "SessionName"); sessName != "" {
+		if sessName, _ := GetConfig("string", "SessionName"); sessName != "" {
 			SessionName = sessName.(string)
 		}
 
-		if sesssavepath, _ := getConfig("string", "SessionSavePath"); sesssavepath != "" {
+		if sesssavepath, _ := GetConfig("string", "SessionSavePath"); sesssavepath != "" {
 			SessionSavePath = sesssavepath.(string)
 		}
 
-		if sesshashfunc, _ := getConfig("string", "SessionHashFunc"); sesshashfunc != "" {
+		if sesshashfunc, _ := GetConfig("string", "SessionHashFunc"); sesshashfunc != "" {
 			SessionHashFunc = sesshashfunc.(string)
 		}
 
-		if sesshashkey, _ := getConfig("string", "SessionHashKey"); sesshashkey != "" {
+		if sesshashkey, _ := GetConfig("string", "SessionHashKey"); sesshashkey != "" {
 			SessionHashKey = sesshashkey.(string)
 		}
 
-		if sessMaxLifeTime, err := getConfig("int64", "SessionGCMaxLifetime"); err == nil && sessMaxLifeTime != 0 {
+		if sessMaxLifeTime, err := GetConfig("int64", "SessionGCMaxLifetime"); err == nil && sessMaxLifeTime != 0 {
 			SessionGCMaxLifetime = sessMaxLifeTime.(int64)
 		}
 
-		if sesscookielifetime, err := getConfig("int", "SessionCookieLifeTime"); err == nil && sesscookielifetime != 0 {
+		if sesscookielifetime, err := GetConfig("int", "SessionCookieLifeTime"); err == nil && sesscookielifetime != 0 {
 			SessionCookieLifeTime = sesscookielifetime.(int)
 		}
 
-		if usefcgi, err := getConfig("bool", "UseFcgi"); err == nil {
+		if usefcgi, err := GetConfig("bool", "UseFcgi"); err == nil {
 			UseFcgi = usefcgi.(bool)
 		}
 
-		if enablegzip, err := getConfig("bool", "EnableGzip"); err == nil {
+		if enablegzip, err := GetConfig("bool", "EnableGzip"); err == nil {
 			EnableGzip = enablegzip.(bool)
 		}
 
-		if directoryindex, err := getConfig("bool", "DirectoryIndex"); err == nil {
+		if directoryindex, err := GetConfig("bool", "DirectoryIndex"); err == nil {
 			DirectoryIndex = directoryindex.(bool)
 		}
 
-		if timeout, err := getConfig("int64", "HttpServerTimeOut"); err == nil {
+		if timeout, err := GetConfig("int64", "HttpServerTimeOut"); err == nil {
 			HttpServerTimeOut = timeout.(int64)
 		}
 
-		if errorsshow, err := getConfig("bool", "ErrorsShow"); err == nil {
+		if errorsshow, err := GetConfig("bool", "ErrorsShow"); err == nil {
 			ErrorsShow = errorsshow.(bool)
 		}
 
-		if copyrequestbody, err := getConfig("bool", "CopyRequestBody"); err == nil {
+		if copyrequestbody, err := GetConfig("bool", "CopyRequestBody"); err == nil {
 			CopyRequestBody = copyrequestbody.(bool)
 		}
 
-		if xsrfkey, _ := getConfig("string", "XSRFKEY"); xsrfkey != "" {
+		if xsrfkey, _ := GetConfig("string", "XSRFKEY"); xsrfkey != "" {
 			XSRFKEY = xsrfkey.(string)
 		}
 
-		if enablexsrf, err := getConfig("bool", "EnableXSRF"); err == nil {
+		if enablexsrf, err := GetConfig("bool", "EnableXSRF"); err == nil {
 			EnableXSRF = enablexsrf.(bool)
 		}
 
-		if expire, err := getConfig("int", "XSRFExpire"); err == nil {
+		if expire, err := GetConfig("int", "XSRFExpire"); err == nil {
 			XSRFExpire = expire.(int)
 		}
 
-		if tplleft, _ := getConfig("string", "TemplateLeft"); tplleft != "" {
+		if tplleft, _ := GetConfig("string", "TemplateLeft"); tplleft != "" {
 			TemplateLeft = tplleft.(string)
 		}
 
-		if tplright, _ := getConfig("string", "TemplateRight"); tplright != "" {
+		if tplright, _ := GetConfig("string", "TemplateRight"); tplright != "" {
 			TemplateRight = tplright.(string)
 		}
 
-		if httptls, err := getConfig("bool", "EnableHttpTLS"); err == nil {
+		if httptls, err := GetConfig("bool", "EnableHttpTLS"); err == nil {
 			EnableHttpTLS = httptls.(bool)
 		}
 
-		if httpsport, err := getConfig("int", "HttpsPort"); err == nil {
+		if httpsport, err := GetConfig("int", "HttpsPort"); err == nil {
 			HttpsPort = httpsport.(int)
 		}
 
-		if certfile, _ := getConfig("string", "HttpCertFile"); certfile != "" {
+		if certfile, _ := GetConfig("string", "HttpCertFile"); certfile != "" {
 			HttpCertFile = certfile.(string)
 		}
 
-		if keyfile, _ := getConfig("string", "HttpKeyFile"); keyfile != "" {
+		if keyfile, _ := GetConfig("string", "HttpKeyFile"); keyfile != "" {
 			HttpKeyFile = keyfile.(string)
 		}
 
-		if serverName, _ := getConfig("string", "BeegoServerName"); serverName != "" {
+		if serverName, _ := GetConfig("string", "BeegoServerName"); serverName != "" {
 			BeegoServerName = serverName.(string)
 		}
 
-		if flashname, _ := getConfig("string", "FlashName"); flashname != "" {
+		if flashname, _ := GetConfig("string", "FlashName"); flashname != "" {
 			FlashName = flashname.(string)
 		}
 
-		if flashseperator, _ := getConfig("string", "FlashSeperator"); flashseperator != "" {
+		if flashseperator, _ := GetConfig("string", "FlashSeperator"); flashseperator != "" {
 			FlashSeperator = flashseperator.(string)
 		}
 
-		if sd, _ := getConfig("string", "StaticDir"); sd != "" {
+		if sd, _ := GetConfig("string", "StaticDir"); sd != "" {
 			for k := range StaticDir {
 				delete(StaticDir, k)
 			}
@@ -338,7 +338,7 @@ func ParseConfig() (err error) {
 			}
 		}
 
-		if sgz, _ := getConfig("string", "StaticExtensionsToGzip"); sgz != "" {
+		if sgz, _ := GetConfig("string", "StaticExtensionsToGzip"); sgz != "" {
 			extensions := strings.Split(sgz.(string), ",")
 			if len(extensions) > 0 {
 				StaticExtensionsToGzip = []string{}
@@ -355,26 +355,37 @@ func ParseConfig() (err error) {
 			}
 		}
 
-		if enableadmin, err := getConfig("bool", "EnableAdmin"); err == nil {
+		if enableadmin, err := GetConfig("bool", "EnableAdmin"); err == nil {
 			EnableAdmin = enableadmin.(bool)
 		}
 
-		if adminhttpaddr, _ := getConfig("string", "AdminHttpAddr"); adminhttpaddr != "" {
+		if adminhttpaddr, _ := GetConfig("string", "AdminHttpAddr"); adminhttpaddr != "" {
 			AdminHttpAddr = adminhttpaddr.(string)
 		}
 
-		if adminhttpport, err := getConfig("int", "AdminHttpPort"); err == nil {
+		if adminhttpport, err := GetConfig("int", "AdminHttpPort"); err == nil {
 			AdminHttpPort = adminhttpport.(int)
 		}
 
-		if enabledocs, err := getConfig("bool", "EnableDocs"); err == nil {
+		if enabledocs, err := GetConfig("bool", "EnableDocs"); err == nil {
 			EnableDocs = enabledocs.(bool)
 		}
 	}
 	return nil
 }
 
-func getConfig(typ, key string) (interface{}, error) {
+// Getconfig throw the Runmode
+// [dev]
+// name = astaixe
+// IsEnable = false
+// [prod]
+// name = slene
+// IsEnable = true
+//
+// usage:
+// GetConfig("string", "name")
+// GetConfig("bool", "IsEnable")
+func GetConfig(typ, key string) (interface{}, error) {
 	switch typ {
 	case "string":
 		v := AppConfig.String(RunMode + "::" + key)
