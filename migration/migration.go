@@ -12,6 +12,7 @@ package migration
 import (
 	"errors"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/astaxie/beego"
@@ -25,7 +26,7 @@ const M_DATE_FORMAT = "20060102_150405"
 type Migrationer interface {
 	Up()
 	Down()
-	Exec() error
+	Exec(name, status string) error
 	GetCreated() int64
 }
 
@@ -57,7 +58,7 @@ func (m *Migration) Sql(sql string) {
 }
 
 // execute the sql already add in the sql
-func (m *Migration) Exec() error {
+func (m *Migration) Exec(name, status string) error {
 	o := orm.NewOrm()
 	for _, s := range m.sqls {
 		beego.Info("exec sql:", s)
@@ -67,7 +68,28 @@ func (m *Migration) Exec() error {
 			return err
 		}
 	}
-	return nil
+	return m.addOrUpdateRecord(name, status)
+}
+
+func (m *Migration) addOrUpdateRecord(status, name string) error {
+	o := orm.NewOrm()
+	if status == "down" {
+		status = "rollback"
+		p, err := o.Raw("update migrations set status = ?,rollback_statements = ? where name = ?").Prepare()
+		if err != nil {
+			return nil
+		}
+		_, err = p.Exec(status, strings.Join(m.sqls, "; "), name)
+		return err
+	} else {
+		status = "update"
+		p, err := o.Raw("insert into migrations(`name`，`created_at`，`statements`，`status`) values(?,?,?,?)").Prepare()
+		if err != nil {
+			return err
+		}
+		_, err = p.Exec(name, m.GetCreated(), strings.Join(m.sqls, "; "), status)
+		return err
+	}
 }
 
 // get the unixtime from the Created
@@ -96,7 +118,7 @@ func Upgrade(lasttime int64) error {
 		if v.created > lasttime {
 			beego.Info("start upgrade", v.name)
 			v.m.Up()
-			err := v.m.Exec()
+			err := v.m.Exec(v.name, "up")
 			if err != nil {
 				return err
 			}
@@ -113,7 +135,7 @@ func Rollback(name string) error {
 	if v, ok := migrationMap[name]; ok {
 		beego.Info("start rollback")
 		v.Down()
-		err := v.Exec()
+		err := v.Exec(name, "down")
 		if err != nil {
 			return err
 		}
@@ -131,7 +153,7 @@ func Reset() error {
 	for k, v := range migrationMap {
 		beego.Info("start reset:", k)
 		v.Down()
-		err := v.Exec()
+		err := v.Exec(k, "down")
 		if err != nil {
 			return err
 		}
