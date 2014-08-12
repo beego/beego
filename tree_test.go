@@ -122,6 +122,24 @@ func TestAddTree(t *testing.T) {
 	}
 }
 
+func TestAddTree2(t *testing.T) {
+	tr := NewTree()
+	tr.AddRouter("/shop/:id/account", "astaxie")
+	tr.AddRouter("/shop/:sd/ttt_:id(.+)_:page(.+).html", "astaxie")
+	t3 := NewTree()
+	t3.AddTree("/:version(v1|v2)/:prefix", tr)
+	obj, param := t3.Match("/v1/zl/shop/123/account")
+	if obj == nil || obj.(string) != "astaxie" {
+		t.Fatal("/:version(v1|v2)/:prefix/shop/:id/account can't get obj ")
+	}
+	if param == nil {
+		t.Fatal("get param error")
+	}
+	if param[":id"] != "123" || param[":prefix"] != "zl" || param[":version"] != "v1" {
+		t.Fatal("get :id :prefix :version param error")
+	}
+}
+
 func TestSplitPath(t *testing.T) {
 	a := splitPath("/")
 	if len(a) != 0 {

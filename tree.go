@@ -70,10 +70,10 @@ func (t *Tree) addtree(segments []string, tree *Tree, wildcards []string, reg st
 					if w == "." || w == ":" {
 						continue
 					}
-					regexpStr = "/([^/]+)" + regexpStr
+					regexpStr = "([^/]+)/" + regexpStr
 				}
 			}
-			reg = reg + regexpStr
+			reg = strings.Trim(reg+regexpStr, "/")
 			filterTreeWithPrefix(tree, append(wildcards, params...), reg)
 			t.wildcard = tree
 		} else {
@@ -99,9 +99,9 @@ func (t *Tree) addtree(segments []string, tree *Tree, wildcards []string, reg st
 						rr = rr + "([^/]+)/"
 					}
 				}
-				regexpStr = rr + regexpStr
+				regexpStr = rr + regexpStr + "/"
 			} else {
-				regexpStr = "/" + regexpStr
+				regexpStr = "/" + regexpStr + "/"
 			}
 		} else {
 			for _, w := range wildcards {
@@ -109,9 +109,9 @@ func (t *Tree) addtree(segments []string, tree *Tree, wildcards []string, reg st
 					continue
 				}
 				if w == ":splat" {
-					regexpStr = "/(.+)" + regexpStr
+					regexpStr = "(.+)/" + regexpStr
 				} else {
-					regexpStr = "/([^/]+)" + regexpStr
+					regexpStr = "([^/]+)/" + regexpStr
 				}
 			}
 		}
@@ -132,8 +132,24 @@ func filterTreeWithPrefix(t *Tree, wildcards []string, reg string) {
 		filterTreeWithPrefix(t.wildcard, wildcards, reg)
 	}
 	for _, l := range t.leaves {
-		l.wildcards = append(wildcards, l.wildcards...)
 		if reg != "" {
+			if l.regexps != nil {
+				l.wildcards = append(wildcards, l.wildcards...)
+				l.regexps = regexp.MustCompile("^" + reg + strings.Trim(l.regexps.String(), "^$") + "$")
+			} else {
+				for _, v := range l.wildcards {
+					if v == ":" || v == "." {
+						continue
+					}
+					if v == ":splat" {
+						reg = reg + "/(.+)"
+					} else {
+						reg = reg + "/([^/]+)"
+					}
+				}
+				l.regexps = regexp.MustCompile("^" + reg + "$")
+				l.wildcards = append(wildcards, l.wildcards...)
+			}
 			filterCards := []string{}
 			for _, v := range l.wildcards {
 				if v == ":" || v == "." {
@@ -142,12 +158,8 @@ func filterTreeWithPrefix(t *Tree, wildcards []string, reg string) {
 				filterCards = append(filterCards, v)
 			}
 			l.wildcards = filterCards
-			if l.regexps != nil {
-				l.regexps = regexp.MustCompile("^" + reg + strings.Trim(l.regexps.String(), "^$") + "$")
-			} else {
-				l.regexps = regexp.MustCompile("^" + reg + "$")
-			}
 		} else {
+			l.wildcards = append(wildcards, l.wildcards...)
 			if l.regexps != nil {
 				for _, w := range wildcards {
 					if w == "." || w == ":" {
