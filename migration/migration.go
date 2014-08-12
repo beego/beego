@@ -131,6 +131,7 @@ func Upgrade(lasttime int64) error {
 			v.m.Up()
 			err := v.m.Exec(v.name, "up")
 			if err != nil {
+				beego.Error("execute error:", err)
 				return err
 			}
 			beego.Info("end upgrade:", v.name)
@@ -148,6 +149,7 @@ func Rollback(name string) error {
 		v.Down()
 		err := v.Exec(name, "down")
 		if err != nil {
+			beego.Error("execute error:", err)
 			return err
 		}
 		beego.Info("end rollback")
@@ -166,6 +168,7 @@ func Reset() error {
 		v.Down()
 		err := v.Exec(k, "down")
 		if err != nil {
+			beego.Error("execute error:", err)
 			return err
 		}
 		beego.Info("end reset:", k)
@@ -178,6 +181,7 @@ func Reset() error {
 func Refresh() error {
 	err := Reset()
 	if err != nil {
+		beego.Error("execute error:", err)
 		return err
 	}
 	return Upgrade(0)
