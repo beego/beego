@@ -7,6 +7,17 @@
 // @license     http://github.com/astaxie/beego/blob/master/LICENSE
 //
 // @authors     astaxie
+//
+//	CREATE TABLE `migrations` (
+//		`id_migration` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT 'surrogate key',
+//		`name` varchar(255) DEFAULT NULL COMMENT 'migration name, unique',
+//		`created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT 'date migrated or rolled back',
+//		`statements` longtext COMMENT 'SQL statements for this migration',
+//		`rollback_statements` longtext,
+//		`status` enum('update','rollback') DEFAULT NULL COMMENT 'update indicates it is a normal migration while rollback means this migration is rolled back',
+//		PRIMARY KEY (`id_migration`),
+//		UNIQUE KEY `name` (`name`)
+//	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 package migration
 
 import (
