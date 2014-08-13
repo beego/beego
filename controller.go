@@ -272,6 +272,11 @@ func (c *Controller) Abort(code string) {
 	}
 }
 
+// CustomAbort stops controller handler and show the error data, it's similar Aborts, but support status code and body.
+func (c *Controller) CustomAbort(status int, body string) {
+	c.Ctx.Abort(status, body)
+}
+
 // StopRun makes panic of USERSTOPRUN error and go to recover function if defined.
 func (c *Controller) StopRun() {
 	panic(USERSTOPRUN)
