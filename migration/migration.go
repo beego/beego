@@ -23,7 +23,6 @@ package migration
 import (
 	"errors"
 	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -32,7 +31,10 @@ import (
 )
 
 // const the data format for the bee generate migration datatype
-const M_DATE_FORMAT = "20060102_150405"
+const (
+	M_DATE_FORMAT    = "20060102_150405"
+	M_DB_DATE_FORMAT = "2006-01-02 15:04:05"
+)
 
 // Migrationer is an interface for all Migration struct
 type Migrationer interface {
@@ -99,7 +101,11 @@ func (m *Migration) addOrUpdateRecord(name, status string) error {
 		if err != nil {
 			return err
 		}
-		_, err = p.Exec(name, strconv.FormatInt(m.GetCreated(), 10), strings.Join(m.sqls, "; "), status)
+		t, err := time.Parse(M_DB_DATE_FORMAT, m.Created)
+		if err != nil {
+			return err
+		}
+		_, err = p.Exec(name, t.Format(M_DB_DATE_FORMAT), strings.Join(m.sqls, "; "), status)
 		return err
 	}
 }
