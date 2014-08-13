@@ -101,7 +101,7 @@ func (m *Migration) addOrUpdateRecord(name, status string) error {
 		if err != nil {
 			return err
 		}
-		t, err := time.Parse(M_DB_DATE_FORMAT, m.Created)
+		t, err := time.Parse(M_DATE_FORMAT, m.Created)
 		if err != nil {
 			return err
 		}
