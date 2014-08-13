@@ -23,6 +23,7 @@ package migration
 import (
 	"errors"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -82,11 +83,11 @@ func (m *Migration) Exec(name, status string) error {
 	return m.addOrUpdateRecord(name, status)
 }
 
-func (m *Migration) addOrUpdateRecord(status, name string) error {
+func (m *Migration) addOrUpdateRecord(name, status string) error {
 	o := orm.NewOrm()
 	if status == "down" {
 		status = "rollback"
-		p, err := o.Raw("update migrations set status = ?,rollback_statements = ? where name = ?").Prepare()
+		p, err := o.Raw("update migrations set status = ?, rollback_statements = ? where name = ?").Prepare()
 		if err != nil {
 			return nil
 		}
@@ -94,11 +95,11 @@ func (m *Migration) addOrUpdateRecord(status, name string) error {
 		return err
 	} else {
 		status = "update"
-		p, err := o.Raw("insert into migrations(`name`，`created_at`，`statements`，`status`) values(?,?,?,?)").Prepare()
+		p, err := o.Raw("insert into migrations(`name`, `created_at`, `statements`, `status`) values(?,?,?,?)").Prepare()
 		if err != nil {
 			return err
 		}
-		_, err = p.Exec(name, m.GetCreated(), strings.Join(m.sqls, "; "), status)
+		_, err = p.Exec(name, strconv.FormatInt(m.GetCreated(), 10), strings.Join(m.sqls, "; "), status)
 		return err
 	}
 }

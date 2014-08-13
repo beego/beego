@@ -388,6 +388,9 @@ func initBeforeHttpRun() {
 		Get("/docs", serverDocs)
 		Get("/docs/*", serverDocs)
 	}
+
+	//init mime
+	AddAPPStartHook(initMime)
 }
 
 // this function is for test package init
@@ -406,6 +409,4 @@ func TestBeegoInit(apppath string) {
 
 func init() {
 	hooks = make([]hookfunc, 0)
-	//init mime
-	AddAPPStartHook(initMime)
 }
