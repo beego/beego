@@ -15,8 +15,7 @@
 //		`statements` longtext COMMENT 'SQL statements for this migration',
 //		`rollback_statements` longtext,
 //		`status` enum('update','rollback') DEFAULT NULL COMMENT 'update indicates it is a normal migration while rollback means this migration is rolled back',
-//		PRIMARY KEY (`id_migration`),
-//		UNIQUE KEY `name` (`name`)
+//		PRIMARY KEY (`id_migration`)
 //	) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 package migration
 
