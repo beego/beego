@@ -10,9 +10,10 @@
 package beego
 
 import (
+	"bytes"
 	"fmt"
 	"net/http"
-	"strconv"
+	"text/template"
 	"time"
 
 	"github.com/astaxie/beego/toolbox"
@@ -49,7 +50,6 @@ func init() {
 	beeAdminApp.Route("/prof", profIndex)
 	beeAdminApp.Route("/healthcheck", healthcheck)
 	beeAdminApp.Route("/task", taskStatus)
-	beeAdminApp.Route("/runtask", runTask)
 	beeAdminApp.Route("/listconf", listConf)
 	FilterMonitorFunc = func(string, string, time.Duration) bool { return true }
 }
@@ -57,22 +57,22 @@ func init() {
 // AdminIndex is the default http.Handler for admin module.
 // it matches url pattern "/".
 func adminIndex(rw http.ResponseWriter, r *http.Request) {
-	rw.Write([]byte("<html><head><title>beego admin dashboard</title></head><body>"))
-	rw.Write([]byte("Welcome to Admin Dashboard<br>\n"))
-	rw.Write([]byte("There are servral functions:<br>\n"))
-	rw.Write([]byte("1. Record all request and request time, <a href='/qps'>http://localhost:" + strconv.Itoa(AdminHttpPort) + "/qps</a><br>\n"))
-	rw.Write([]byte("2. Get runtime profiling data by the pprof, <a href='/prof'>http://localhost:" + strconv.Itoa(AdminHttpPort) + "/prof</a><br>\n"))
-	rw.Write([]byte("3. Get healthcheck result from <a href='/healthcheck'>http://localhost:" + strconv.Itoa(AdminHttpPort) + "/healthcheck</a><br>\n"))
-	rw.Write([]byte("4. Get current task infomation from task <a href='/task'>http://localhost:" + strconv.Itoa(AdminHttpPort) + "/task</a><br> \n"))
-	rw.Write([]byte("5. To run a task passed a param <a href='/runtask'>http://localhost:" + strconv.Itoa(AdminHttpPort) + "/runtask</a><br>\n"))
-	rw.Write([]byte("6. Get all confige & router infomation <a href='/listconf'>http://localhost:" + strconv.Itoa(AdminHttpPort) + "/listconf</a><br>\n"))
-	rw.Write([]byte("</body></html>"))
+	tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
+	tmpl = template.Must(tmpl.Parse(indexTpl))
+	data := make(map[interface{}]interface{})
+	tmpl.Execute(rw, data)
 }
 
 // QpsIndex is the http.Handler for writing qbs statistics map result info in http.ResponseWriter.
 // it's registered with url pattern "/qbs" in admin module.
 func qpsIndex(rw http.ResponseWriter, r *http.Request) {
-	toolbox.StatisticsMap.GetMap(rw)
+	tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
+	tmpl = template.Must(tmpl.Parse(qpsTpl))
+	data := make(map[interface{}]interface{})
+	data["Content"] = toolbox.StatisticsMap.GetMap()
+
+	tmpl.Execute(rw, data)
+
 }
 
 // ListConf is the http.Handler of displaying all beego configuration values as key/value pair.
@@ -81,112 +81,217 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	command := r.Form.Get("command")
 	if command != "" {
+		data := make(map[interface{}]interface{})
 		switch command {
 		case "conf":
-			fmt.Fprintln(rw, "list all beego's conf:")
-			fmt.Fprintln(rw, "AppName:", AppName)
-			fmt.Fprintln(rw, "AppPath:", AppPath)
-			fmt.Fprintln(rw, "AppConfigPath:", AppConfigPath)
-			fmt.Fprintln(rw, "StaticDir:", StaticDir)
-			fmt.Fprintln(rw, "StaticExtensionsToGzip:", StaticExtensionsToGzip)
-			fmt.Fprintln(rw, "HttpAddr:", HttpAddr)
-			fmt.Fprintln(rw, "HttpPort:", HttpPort)
-			fmt.Fprintln(rw, "HttpTLS:", EnableHttpTLS)
-			fmt.Fprintln(rw, "HttpCertFile:", HttpCertFile)
-			fmt.Fprintln(rw, "HttpKeyFile:", HttpKeyFile)
-			fmt.Fprintln(rw, "RecoverPanic:", RecoverPanic)
-			fmt.Fprintln(rw, "AutoRender:", AutoRender)
-			fmt.Fprintln(rw, "ViewsPath:", ViewsPath)
-			fmt.Fprintln(rw, "RunMode:", RunMode)
-			fmt.Fprintln(rw, "SessionOn:", SessionOn)
-			fmt.Fprintln(rw, "SessionProvider:", SessionProvider)
-			fmt.Fprintln(rw, "SessionName:", SessionName)
-			fmt.Fprintln(rw, "SessionGCMaxLifetime:", SessionGCMaxLifetime)
-			fmt.Fprintln(rw, "SessionSavePath:", SessionSavePath)
-			fmt.Fprintln(rw, "SessionHashFunc:", SessionHashFunc)
-			fmt.Fprintln(rw, "SessionHashKey:", SessionHashKey)
-			fmt.Fprintln(rw, "SessionCookieLifeTime:", SessionCookieLifeTime)
-			fmt.Fprintln(rw, "UseFcgi:", UseFcgi)
-			fmt.Fprintln(rw, "MaxMemory:", MaxMemory)
-			fmt.Fprintln(rw, "EnableGzip:", EnableGzip)
-			fmt.Fprintln(rw, "DirectoryIndex:", DirectoryIndex)
-			fmt.Fprintln(rw, "HttpServerTimeOut:", HttpServerTimeOut)
-			fmt.Fprintln(rw, "ErrorsShow:", ErrorsShow)
-			fmt.Fprintln(rw, "XSRFKEY:", XSRFKEY)
-			fmt.Fprintln(rw, "EnableXSRF:", EnableXSRF)
-			fmt.Fprintln(rw, "XSRFExpire:", XSRFExpire)
-			fmt.Fprintln(rw, "CopyRequestBody:", CopyRequestBody)
-			fmt.Fprintln(rw, "TemplateLeft:", TemplateLeft)
-			fmt.Fprintln(rw, "TemplateRight:", TemplateRight)
-			fmt.Fprintln(rw, "BeegoServerName:", BeegoServerName)
-			fmt.Fprintln(rw, "EnableAdmin:", EnableAdmin)
-			fmt.Fprintln(rw, "AdminHttpAddr:", AdminHttpAddr)
-			fmt.Fprintln(rw, "AdminHttpPort:", AdminHttpPort)
+			m := make(map[string]interface{})
+
+			m["AppName"] = AppName
+			m["AppPath"] = AppPath
+			m["AppConfigPath"] = AppConfigPath
+			m["StaticDir"] = StaticDir
+			m["StaticExtensionsToGzip"] = StaticExtensionsToGzip
+			m["HttpAddr"] = HttpAddr
+			m["HttpPort"] = HttpPort
+			m["HttpTLS"] = EnableHttpTLS
+			m["HttpCertFile"] = HttpCertFile
+			m["HttpKeyFile"] = HttpKeyFile
+			m["RecoverPanic"] = RecoverPanic
+			m["AutoRender"] = AutoRender
+			m["ViewsPath"] = ViewsPath
+			m["RunMode"] = RunMode
+			m["SessionOn"] = SessionOn
+			m["SessionProvider"] = SessionProvider
+			m["SessionName"] = SessionName
+			m["SessionGCMaxLifetime"] = SessionGCMaxLifetime
+			m["SessionSavePath"] = SessionSavePath
+			m["SessionHashFunc"] = SessionHashFunc
+			m["SessionHashKey"] = SessionHashKey
+			m["SessionCookieLifeTime"] = SessionCookieLifeTime
+			m["UseFcgi"] = UseFcgi
+			m["MaxMemory"] = MaxMemory
+			m["EnableGzip"] = EnableGzip
+			m["DirectoryIndex"] = DirectoryIndex
+			m["HttpServerTimeOut"] = HttpServerTimeOut
+			m["ErrorsShow"] = ErrorsShow
+			m["XSRFKEY"] = XSRFKEY
+			m["EnableXSRF"] = EnableXSRF
+			m["XSRFExpire"] = XSRFExpire
+			m["CopyRequestBody"] = CopyRequestBody
+			m["TemplateLeft"] = TemplateLeft
+			m["TemplateRight"] = TemplateRight
+			m["BeegoServerName"] = BeegoServerName
+			m["EnableAdmin"] = EnableAdmin
+			m["AdminHttpAddr"] = AdminHttpAddr
+			m["AdminHttpPort"] = AdminHttpPort
+
+			tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
+			tmpl = template.Must(tmpl.Parse(configTpl))
+
+			data["Content"] = m
+
+			tmpl.Execute(rw, data)
+
 		case "router":
-			fmt.Fprintln(rw, "Print all router infomation:")
-			for method, t := range BeeApp.Handlers.routers {
-				fmt.Fprintln(rw)
-				fmt.Fprintln(rw)
-				fmt.Fprintln(rw, "		Method:", method)
-				printTree(rw, t)
+			resultList := new([][]string)
+
+			var result = []string{
+				fmt.Sprintf("header"),
+				fmt.Sprintf("Router Pattern"),
+				fmt.Sprintf("Methods"),
+				fmt.Sprintf("Controller"),
 			}
-			// @todo print routers
+			*resultList = append(*resultList, result)
+
+			for method, t := range BeeApp.Handlers.routers {
+				var result = []string{
+					fmt.Sprintf("success"),
+					fmt.Sprintf("Method: %s", method),
+					fmt.Sprintf(""),
+					fmt.Sprintf(""),
+				}
+				*resultList = append(*resultList, result)
+
+				printTree(resultList, t)
+			}
+			data["Content"] = resultList
+			data["Title"] = "Routers"
+			tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
+			tmpl = template.Must(tmpl.Parse(routerAndFilterTpl))
+			tmpl.Execute(rw, data)
 		case "filter":
-			fmt.Fprintln(rw, "Print all filter infomation:")
+			resultList := new([][]string)
+
+			var result = []string{
+				fmt.Sprintf("header"),
+				fmt.Sprintf("Router Pattern"),
+				fmt.Sprintf("Filter Function"),
+			}
+			*resultList = append(*resultList, result)
+
 			if BeeApp.Handlers.enableFilter {
-				fmt.Fprintln(rw, "BeforeRouter:")
+				var result = []string{
+					fmt.Sprintf("success"),
+					fmt.Sprintf("Before Router"),
+					fmt.Sprintf(""),
+				}
+				*resultList = append(*resultList, result)
+
 				if bf, ok := BeeApp.Handlers.filters[BeforeRouter]; ok {
 					for _, f := range bf {
-						fmt.Fprintln(rw, f.pattern, utils.GetFuncName(f.filterFunc))
+
+						var result = []string{
+							fmt.Sprintf(""),
+							fmt.Sprintf("%s", f.pattern),
+							fmt.Sprintf("%s", utils.GetFuncName(f.filterFunc)),
+						}
+						*resultList = append(*resultList, result)
+
 					}
 				}
-				fmt.Fprintln(rw, "BeforeExec:")
+				result = []string{
+					fmt.Sprintf("success"),
+					fmt.Sprintf("Before Exec"),
+					fmt.Sprintf(""),
+				}
+				*resultList = append(*resultList, result)
 				if bf, ok := BeeApp.Handlers.filters[BeforeExec]; ok {
 					for _, f := range bf {
-						fmt.Fprintln(rw, f.pattern, utils.GetFuncName(f.filterFunc))
+
+						var result = []string{
+							fmt.Sprintf(""),
+							fmt.Sprintf("%s", f.pattern),
+							fmt.Sprintf("%s", utils.GetFuncName(f.filterFunc)),
+						}
+						*resultList = append(*resultList, result)
+
 					}
 				}
-				fmt.Fprintln(rw, "AfterExec:")
+				result = []string{
+					fmt.Sprintf("success"),
+					fmt.Sprintf("AfterExec Exec"),
+					fmt.Sprintf(""),
+				}
+				*resultList = append(*resultList, result)
+
 				if bf, ok := BeeApp.Handlers.filters[AfterExec]; ok {
 					for _, f := range bf {
-						fmt.Fprintln(rw, f.pattern, utils.GetFuncName(f.filterFunc))
+
+						var result = []string{
+							fmt.Sprintf(""),
+							fmt.Sprintf("%s", f.pattern),
+							fmt.Sprintf("%s", utils.GetFuncName(f.filterFunc)),
+						}
+						*resultList = append(*resultList, result)
+
 					}
 				}
-				fmt.Fprintln(rw, "FinishRouter:")
+				result = []string{
+					fmt.Sprintf("success"),
+					fmt.Sprintf("Finish Router"),
+					fmt.Sprintf(""),
+				}
+				*resultList = append(*resultList, result)
+
 				if bf, ok := BeeApp.Handlers.filters[FinishRouter]; ok {
 					for _, f := range bf {
-						fmt.Fprintln(rw, f.pattern, utils.GetFuncName(f.filterFunc))
+
+						var result = []string{
+							fmt.Sprintf(""),
+							fmt.Sprintf("%s", f.pattern),
+							fmt.Sprintf("%s", utils.GetFuncName(f.filterFunc)),
+						}
+						*resultList = append(*resultList, result)
+
 					}
 				}
 			}
+			data["Content"] = resultList
+			data["Title"] = "Filters"
+			tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
+			tmpl = template.Must(tmpl.Parse(routerAndFilterTpl))
+			tmpl.Execute(rw, data)
+
 		default:
 			rw.Write([]byte("command not support"))
 		}
 	} else {
-		rw.Write([]byte("<html><head><title>beego admin dashboard</title></head><body>"))
-		rw.Write([]byte("ListConf support this command:<br>\n"))
-		rw.Write([]byte("1. <a href='?command=conf'>command=conf</a><br>\n"))
-		rw.Write([]byte("2. <a href='?command=router'>command=router</a><br>\n"))
-		rw.Write([]byte("3. <a href='?command=filter'>command=filter</a><br>\n"))
-		rw.Write([]byte("</body></html>"))
 	}
 }
 
-func printTree(rw http.ResponseWriter, t *Tree) {
+func printTree(resultList *[][]string, t *Tree) {
 	for _, tr := range t.fixrouters {
-		printTree(rw, tr)
+		printTree(resultList, tr)
 	}
 	if t.wildcard != nil {
-		printTree(rw, t.wildcard)
+		printTree(resultList, t.wildcard)
 	}
 	for _, l := range t.leaves {
 		if v, ok := l.runObject.(*controllerInfo); ok {
 			if v.routerType == routerTypeBeego {
-				fmt.Fprintln(rw, v.pattern, v.methods, v.controllerType.Name())
+				var result = []string{
+					fmt.Sprintf(""),
+					fmt.Sprintf("%s", v.pattern),
+					fmt.Sprintf("%s", v.methods),
+					fmt.Sprintf("%s", v.controllerType),
+				}
+				*resultList = append(*resultList, result)
 			} else if v.routerType == routerTypeRESTFul {
-				fmt.Fprintln(rw, v.pattern, v.methods)
+				var result = []string{
+					fmt.Sprintf(""),
+					fmt.Sprintf("%s", v.pattern),
+					fmt.Sprintf("%s", v.methods),
+					fmt.Sprintf(""),
+				}
+				*resultList = append(*resultList, result)
 			} else if v.routerType == routerTypeHandler {
-				fmt.Fprintln(rw, v.pattern, "handler")
+				var result = []string{
+					fmt.Sprintf(""),
+					fmt.Sprintf("%s", v.pattern),
+					fmt.Sprintf(""),
+					fmt.Sprintf(""),
+				}
+				*resultList = append(*resultList, result)
 			}
 		}
 	}
@@ -197,58 +302,106 @@ func printTree(rw http.ResponseWriter, t *Tree) {
 func profIndex(rw http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	command := r.Form.Get("command")
+	data := make(map[interface{}]interface{})
+
+	var result bytes.Buffer
 	if command != "" {
-		toolbox.ProcessInput(command, rw)
+		toolbox.ProcessInput(command, &result)
+		data["Content"] = result.String()
+		data["Title"] = command
+
+		tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
+		tmpl = template.Must(tmpl.Parse(profillingTpl))
+		tmpl.Execute(rw, data)
 	} else {
-		rw.Write([]byte("<html><head><title>beego admin dashboard</title></head><body>"))
-		rw.Write([]byte("request url like '/prof?command=lookup goroutine'<br>\n"))
-		rw.Write([]byte("the command have below types:<br>\n"))
-		rw.Write([]byte("1. <a href='?command=lookup goroutine'>lookup goroutine</a><br>\n"))
-		rw.Write([]byte("2. <a href='?command=lookup heap'>lookup heap</a><br>\n"))
-		rw.Write([]byte("3. <a href='?command=lookup threadcreate'>lookup threadcreate</a><br>\n"))
-		rw.Write([]byte("4. <a href='?command=lookup block'>lookup block</a><br>\n"))
-		rw.Write([]byte("5. <a href='?command=start cpuprof'>start cpuprof</a><br>\n"))
-		rw.Write([]byte("6. <a href='?command=stop cpuprof'>stop cpuprof</a><br>\n"))
-		rw.Write([]byte("7. <a href='?command=get memprof'>get memprof</a><br>\n"))
-		rw.Write([]byte("8. <a href='?command=gc summary'>gc summary</a><br>\n"))
-		rw.Write([]byte("</body></html>"))
 	}
 }
 
 // Healthcheck is a http.Handler calling health checking and showing the result.
 // it's in "/healthcheck" pattern in admin module.
 func healthcheck(rw http.ResponseWriter, req *http.Request) {
+	data := make(map[interface{}]interface{})
+
+	resultList := new([][]string)
+	var result = []string{
+		fmt.Sprintf("header"),
+		fmt.Sprintf("Name"),
+		fmt.Sprintf("Status"),
+	}
+	*resultList = append(*resultList, result)
+
 	for name, h := range toolbox.AdminCheckList {
 		if err := h.Check(); err != nil {
-			fmt.Fprintf(rw, "%s : %s\n", name, err.Error())
+			result = []string{
+				fmt.Sprintf("error"),
+				fmt.Sprintf("%s", name),
+				fmt.Sprintf("%s", err.Error()),
+			}
+
 		} else {
-			fmt.Fprintf(rw, "%s : ok\n", name)
+			result = []string{
+				fmt.Sprintf("success"),
+				fmt.Sprintf("%s", name),
+				fmt.Sprintf("OK"),
+			}
+
 		}
+		*resultList = append(*resultList, result)
 	}
+
+	data["Content"] = resultList
+	data["Title"] = "Health Check"
+	tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
+	tmpl = template.Must(tmpl.Parse(healthCheckTpl))
+	tmpl.Execute(rw, data)
+
 }
 
 // TaskStatus is a http.Handler with running task status (task name, status and the last execution).
 // it's in "/task" pattern in admin module.
 func taskStatus(rw http.ResponseWriter, req *http.Request) {
-	for tname, tk := range toolbox.AdminTaskList {
-		fmt.Fprintf(rw, "%s:%s:%s", tname, tk.GetStatus(), tk.GetPrev().String())
-	}
-}
+	data := make(map[interface{}]interface{})
 
-// RunTask is a http.Handler to run a Task from the "query string.
-// the request url likes /runtask?taskname=sendmail.
-func runTask(rw http.ResponseWriter, req *http.Request) {
+	// Run Task
 	req.ParseForm()
 	taskname := req.Form.Get("taskname")
-	if t, ok := toolbox.AdminTaskList[taskname]; ok {
-		err := t.Run()
-		if err != nil {
-			fmt.Fprintf(rw, "%v", err)
+	if taskname != "" {
+
+		if t, ok := toolbox.AdminTaskList[taskname]; ok {
+			err := t.Run()
+			if err != nil {
+				data["Message"] = []string{"error", fmt.Sprintf("%s", err)}
+			}
+			data["Message"] = []string{"success", fmt.Sprintf("%s run success,Now the Status is %s", taskname, t.GetStatus())}
+		} else {
+			data["Message"] = []string{"warning", fmt.Sprintf("there's no task which named: %s", taskname)}
 		}
-		fmt.Fprintf(rw, "%s run success,Now the Status is %s", taskname, t.GetStatus())
-	} else {
-		fmt.Fprintf(rw, "there's no task which named:%s", taskname)
 	}
+
+	// List Tasks
+	resultList := new([][]string)
+	var result = []string{
+		fmt.Sprintf("header"),
+		fmt.Sprintf("Task Name"),
+		fmt.Sprintf("Task Spec"),
+		fmt.Sprintf("Task Function"),
+	}
+	*resultList = append(*resultList, result)
+	for tname, tk := range toolbox.AdminTaskList {
+		result = []string{
+			fmt.Sprintf(""),
+			fmt.Sprintf("%s", tname),
+			fmt.Sprintf("%s", tk.GetStatus()),
+			fmt.Sprintf("%s", tk.GetPrev().String()),
+		}
+		*resultList = append(*resultList, result)
+	}
+
+	data["Content"] = resultList
+	data["Title"] = "Tasks"
+	tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
+	tmpl = template.Must(tmpl.Parse(tasksTpl))
+	tmpl.Execute(rw, data)
 }
 
 // adminApp is an http.HandlerFunc map used as beeAdminApp.
