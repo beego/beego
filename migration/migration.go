@@ -148,6 +148,7 @@ func Upgrade(lasttime int64) error {
 		}
 	}
 	beego.Info("total success upgrade:", i, " migration")
+	time.Sleep(2 * time.Second)
 	return nil
 }
 
@@ -163,6 +164,7 @@ func Rollback(name string) error {
 			return err
 		}
 		beego.Info("end rollback")
+		time.Sleep(2 * time.Second)
 		return nil
 	} else {
 		return errors.New("not exist the migrationMap name:" + name)
@@ -176,6 +178,7 @@ func Reset() error {
 	for k, v := range migrationMap {
 		if isRollBack(k) {
 			beego.Info("skip the", k)
+			time.Sleep(1 * time.Second)
 			continue
 		}
 		beego.Info("start reset:", k)
@@ -189,6 +192,7 @@ func Reset() error {
 		beego.Info("end reset:", k)
 	}
 	beego.Info("total success reset:", i, " migration")
+	time.Sleep(2 * time.Second)
 	return nil
 }
 
@@ -242,7 +246,7 @@ func sortMap(m map[string]Migrationer) dataSlice {
 func isRollBack(name string) bool {
 	o := orm.NewOrm()
 	var maps []orm.Params
-	num, err := o.Raw("select * from migrations where `name` = ? order by id desc", name).Values(&maps)
+	num, err := o.Raw("select * from migrations where `name` = ? order by id_migration desc", name).Values(&maps)
 	if err != nil {
 		beego.Info("get name has error", err)
 		return false
