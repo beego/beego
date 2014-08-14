@@ -100,7 +100,7 @@ func (m *Migration) addOrUpdateRecord(name, status string) error {
 		if err != nil {
 			return nil
 		}
-		_, err = p.Exec(status, strings.Join(m.sqls, "; "), name, time.Now().Format(M_DB_DATE_FORMAT))
+		_, err = p.Exec(status, strings.Join(m.sqls, "; "), time.Now().Format(M_DB_DATE_FORMAT), name)
 		return err
 	} else {
 		status = "update"
