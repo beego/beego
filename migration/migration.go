@@ -43,7 +43,10 @@ type Migrationer interface {
 	GetCreated() int64
 }
 
-var migrationMap map[string]Migrationer
+var (
+	migrationMap map[string]Migrationer
+	SkipReset    []string
+)
 
 func init() {
 	migrationMap = make(map[string]Migrationer)
@@ -172,6 +175,10 @@ func Rollback(name string) error {
 func Reset() error {
 	i := 0
 	for k, v := range migrationMap {
+		if inSlice(k, SkipReset) {
+			beego.Info("skip the", k)
+			continue
+		}
 		beego.Info("start reset:", k)
 		v.Down()
 		err := v.Exec(k, "down")
@@ -231,4 +238,13 @@ func sortMap(m map[string]Migrationer) dataSlice {
 	}
 	sort.Sort(s)
 	return s
+}
+
+func inSlice(key string, sli []string) bool {
+	for _, v := range sli {
+		if v == key {
+			return true
+		}
+	}
+	return false
 }
