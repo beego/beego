@@ -176,7 +176,8 @@ func Rollback(name string) error {
 func Reset() error {
 	sm := sortMap(migrationMap)
 	i := 0
-	for _, v := range sm {
+	for j := len(sm) - 1; j >= 0; j-- {
+		v := sm[j]
 		if isRollBack(v.name) {
 			beego.Info("skip the", v.name)
 			time.Sleep(1 * time.Second)
@@ -206,7 +207,8 @@ func Refresh() error {
 		time.Sleep(2 * time.Second)
 		return err
 	}
-	return Upgrade(0)
+	err = Upgrade(0)
+	return err
 }
 
 type dataSlice []data
