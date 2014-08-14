@@ -45,7 +45,6 @@ type Migrationer interface {
 
 var (
 	migrationMap map[string]Migrationer
-	SkipReset    []string
 )
 
 func init() {
@@ -175,7 +174,7 @@ func Rollback(name string) error {
 func Reset() error {
 	i := 0
 	for k, v := range migrationMap {
-		if inSlice(k, SkipReset) {
+		if isRollBack(k) {
 			beego.Info("skip the", k)
 			continue
 		}
@@ -240,11 +239,19 @@ func sortMap(m map[string]Migrationer) dataSlice {
 	return s
 }
 
-func inSlice(key string, sli []string) bool {
-	for _, v := range sli {
-		if v == key {
-			return true
-		}
+func isRollBack(name string) bool {
+	o := orm.NewOrm()
+	var maps []orm.Params
+	num, err := o.Raw("select * from migrations where `name` = ? order by id desc", name).Values(&maps)
+	if err != nil {
+		beego.Info("get name has error", err)
+		return false
+	}
+	if num <= 0 {
+		return false
+	}
+	if maps[0]["status"] == "rollback" {
+		return true
 	}
 	return false
 }
