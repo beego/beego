@@ -39,6 +39,7 @@ const (
 type Migrationer interface {
 	Up()
 	Down()
+	Reset()
 	Exec(name, status string) error
 	GetCreated() int64
 }
@@ -72,6 +73,11 @@ func (m *Migration) Sql(sql string) {
 	m.sqls = append(m.sqls, sql)
 }
 
+// Reset the sqls
+func (m *Migration) Reset() {
+	m.sqls = make([]string, 0)
+}
+
 // execute the sql already add in the sql
 func (m *Migration) Exec(name, status string) error {
 	o := orm.NewOrm()
@@ -90,11 +96,11 @@ func (m *Migration) addOrUpdateRecord(name, status string) error {
 	o := orm.NewOrm()
 	if status == "down" {
 		status = "rollback"
-		p, err := o.Raw("update migrations set status = ?, rollback_statements = ? where name = ?").Prepare()
+		p, err := o.Raw("update migrations set `status` = ?, `rollback_statements` = ?, `created_at` = ? where name = ?").Prepare()
 		if err != nil {
 			return nil
 		}
-		_, err = p.Exec(status, strings.Join(m.sqls, "; "), name)
+		_, err = p.Exec(status, strings.Join(m.sqls, "; "), name, time.Now().Format(M_DB_DATE_FORMAT))
 		return err
 	} else {
 		status = "update"
@@ -102,11 +108,7 @@ func (m *Migration) addOrUpdateRecord(name, status string) error {
 		if err != nil {
 			return err
 		}
-		t, err := time.Parse(M_DATE_FORMAT, m.Created)
-		if err != nil {
-			return err
-		}
-		_, err = p.Exec(name, t.Format(M_DB_DATE_FORMAT), strings.Join(m.sqls, "; "), status)
+		_, err = p.Exec(name, time.Now().Format(M_DB_DATE_FORMAT), strings.Join(m.sqls, "; "), status)
 		return err
 	}
 }
@@ -136,6 +138,7 @@ func Upgrade(lasttime int64) error {
 	for _, v := range sm {
 		if v.created > lasttime {
 			beego.Info("start upgrade", v.name)
+			v.m.Reset()
 			v.m.Up()
 			err := v.m.Exec(v.name, "up")
 			if err != nil {
@@ -156,6 +159,7 @@ func Upgrade(lasttime int64) error {
 func Rollback(name string) error {
 	if v, ok := migrationMap[name]; ok {
 		beego.Info("start rollback")
+		v.Reset()
 		v.Down()
 		err := v.Exec(name, "down")
 		if err != nil {
@@ -184,6 +188,7 @@ func Reset() error {
 			continue
 		}
 		beego.Info("start reset:", v.name)
+		v.m.Reset()
 		v.m.Down()
 		err := v.m.Exec(v.name, "down")
 		if err != nil {
