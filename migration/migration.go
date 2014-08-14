@@ -174,22 +174,24 @@ func Rollback(name string) error {
 // reset all migration
 // run all migration's down function
 func Reset() error {
+	sm := sortMap(migrationMap)
 	i := 0
-	for k, v := range migrationMap {
-		if isRollBack(k) {
-			beego.Info("skip the", k)
+	for _, v := range sm {
+		if isRollBack(v.name) {
+			beego.Info("skip the", v.name)
 			time.Sleep(1 * time.Second)
 			continue
 		}
-		beego.Info("start reset:", k)
-		v.Down()
-		err := v.Exec(k, "down")
+		beego.Info("start reset:", v.name)
+		v.m.Down()
+		err := v.m.Exec(v.name, "down")
 		if err != nil {
 			beego.Error("execute error:", err)
 			time.Sleep(2 * time.Second)
 			return err
 		}
-		beego.Info("end reset:", k)
+		i++
+		beego.Info("end reset:", v.name)
 	}
 	beego.Info("total success reset:", i, " migration")
 	time.Sleep(2 * time.Second)
