@@ -63,7 +63,7 @@ func (ctx *Context) Abort(status int, body string) {
 // Write string to response body.
 // it sends response body.
 func (ctx *Context) WriteString(content string) {
-	ctx.Output.Body([]byte(content))
+	ctx.ResponseWriter.Write([]byte(content))
 }
 
 // Get cookie from request by a given key.
