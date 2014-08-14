@@ -171,6 +171,8 @@ func Rollback(name string) error {
 		time.Sleep(2 * time.Second)
 		return nil
 	} else {
+		beego.Error("not exist the migrationMap name:" + name)
+		time.Sleep(2 * time.Second)
 		return errors.New("not exist the migrationMap name:" + name)
 	}
 }
