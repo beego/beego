@@ -297,8 +297,7 @@ Requests statistics
 <li><a href="/prof?command=lookup heap">lookup heap</a></li>
 <li><a href="/prof?command=lookup threadcreate">lookup threadcreate</a></li>
 <li><a href="/prof?command=lookup block">lookup block</a></li>
-<li><a href="/prof?command=start cpuprof">start cpuprof</a></li>
-<li><a href="/prof?command=stop cpuprof">stop cpuprof</a></li>
+<li><a href="/prof?command=get cpuprof">get cpuprof</a></li>
 <li><a href="/prof?command=get memprof">get memprof</a></li>
 <li><a href="/prof?command=gc summary">gc summary</a></li>
 
