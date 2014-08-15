@@ -17,12 +17,14 @@ import (
 
 // Log levels to control the logging output.
 const (
-	LevelTrace = iota
-	LevelDebug
-	LevelInfo
-	LevelWarning
-	LevelError
+	LevelEmergency = iota
+	LevelAlert
 	LevelCritical
+	LevelError
+	LevelWarning
+	LevelNotice
+	LevelInformational
+	LevelDebug
 )
 
 // SetLogLevel sets the global log level used by the simple
@@ -48,24 +50,17 @@ func SetLogger(adaptername string, config string) error {
 	return nil
 }
 
-// Trace logs a message at trace level.
-func Trace(v ...interface{}) {
-	BeeLogger.Trace(generateFmtStr(len(v)), v...)
+func Emergency(v ...interface{}) {
+	BeeLogger.Emergency(generateFmtStr(len(v)), v...)
 }
 
-// Debug logs a message at debug level.
-func Debug(v ...interface{}) {
-	BeeLogger.Debug(generateFmtStr(len(v)), v...)
+func Alert(v ...interface{}) {
+	BeeLogger.Alert(generateFmtStr(len(v)), v...)
 }
 
-// Info logs a message at info level.
-func Info(v ...interface{}) {
-	BeeLogger.Info(generateFmtStr(len(v)), v...)
-}
-
-// Warning logs a message at warning level.
-func Warn(v ...interface{}) {
-	BeeLogger.Warn(generateFmtStr(len(v)), v...)
+// Critical logs a message at critical level.
+func Critical(v ...interface{}) {
+	BeeLogger.Critical(generateFmtStr(len(v)), v...)
 }
 
 // Error logs a message at error level.
@@ -73,9 +68,39 @@ func Error(v ...interface{}) {
 	BeeLogger.Error(generateFmtStr(len(v)), v...)
 }
 
-// Critical logs a message at critical level.
-func Critical(v ...interface{}) {
-	BeeLogger.Critical(generateFmtStr(len(v)), v...)
+// Warning logs a message at warning level.
+func Warning(v ...interface{}) {
+	BeeLogger.Warning(generateFmtStr(len(v)), v...)
+}
+
+// Deprecated: compatibility alias for Warning(), Will be removed in 1.5.0.
+func Warn(v ...interface{}) {
+	Warning(v...)
+}
+
+func Notice(v ...interface{}) {
+	BeeLogger.Notice(generateFmtStr(len(v)), v...)
+}
+
+// Info logs a message at info level.
+func Informational(v ...interface{}) {
+	BeeLogger.Informational(generateFmtStr(len(v)), v...)
+}
+
+// Deprecated: compatibility alias for Warning(), Will be removed in 1.5.0.
+func Info(v ...interface{}) {
+	Informational(v...)
+}
+
+// Debug logs a message at debug level.
+func Debug(v ...interface{}) {
+	BeeLogger.Debug(generateFmtStr(len(v)), v...)
+}
+
+// Trace logs a message at trace level.
+// Deprecated: compatibility alias for Warning(), Will be removed in 1.5.0.
+func Trace(v ...interface{}) {
+	BeeLogger.Trace(generateFmtStr(len(v)), v...)
 }
 
 func generateFmtStr(n int) string {
