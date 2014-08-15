@@ -15,6 +15,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path"
 	"runtime"
 	"runtime/debug"
 	"runtime/pprof"
@@ -64,7 +65,8 @@ func MemProf(w io.Writer) {
 		pprof.WriteHeapProfile(f)
 		f.Close()
 		fmt.Fprintf(w, "create heap profile %s \n", filename)
-		fmt.Fprintf(w, "Now you can use this to check it: go tool pprof <program> %s\n", filename)
+		_, fl := path.Split(os.Args[0])
+		fmt.Fprintf(w, "Now you can use this to check it: go tool pprof %s %s\n", fl, filename)
 	}
 }
 
@@ -85,7 +87,8 @@ func GetCPUProfile(rw http.ResponseWriter) {
 	time.Sleep(time.Duration(sec) * time.Second)
 	pprof.StopCPUProfile()
 	fmt.Fprintf(rw, "create cpu profile %s \n", filename)
-	fmt.Fprintf(rw, "Now you can use this to check it: go tool pprof <program> %s\n", filename)
+	_, fl := path.Split(os.Args[0])
+	fmt.Fprintf(rw, "Now you can use this to check it: go tool pprof %s %s\n", fl, filename)
 }
 
 // print gc information to io.Writer
