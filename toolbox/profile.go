@@ -13,7 +13,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"net/http"
 	"os"
 	"path"
 	"runtime"
@@ -46,7 +45,7 @@ func ProcessInput(input string, w io.Writer) {
 		p := pprof.Lookup("block")
 		p.WriteTo(w, 2)
 	case "get cpuprof":
-		GetCPUProfile(w.(http.ResponseWriter))
+		GetCPUProfile(w)
 	case "get memprof":
 		MemProf(w)
 	case "gc summary":
@@ -71,24 +70,21 @@ func MemProf(w io.Writer) {
 }
 
 // start cpu profile monitor
-func GetCPUProfile(rw http.ResponseWriter) {
+func GetCPUProfile(w io.Writer) {
 	sec := 30
-	rw.Header().Set("Content-Type", "application/octet-stream")
 	filename := "cpu-" + strconv.Itoa(pid) + ".pprof"
 	f, err := os.Create(filename)
 	if err != nil {
-		rw.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		rw.WriteHeader(http.StatusInternalServerError)
-		fmt.Fprintf(rw, "Could not enable CPU profiling: %s\n", err)
+		fmt.Fprintf(w, "Could not enable CPU profiling: %s\n", err)
 		log.Fatal("record cpu profile failed: ", err)
 	}
-	fmt.Fprintf(rw, "start cpu profileing\n")
 	pprof.StartCPUProfile(f)
 	time.Sleep(time.Duration(sec) * time.Second)
 	pprof.StopCPUProfile()
-	fmt.Fprintf(rw, "create cpu profile %s \n", filename)
+
+	fmt.Fprintf(w, "create cpu profile %s \n", filename)
 	_, fl := path.Split(os.Args[0])
-	fmt.Fprintf(rw, "Now you can use this to check it: go tool pprof %s %s\n", fl, filename)
+	fmt.Fprintf(w, "Now you can use this to check it: go tool pprof %s %s\n", fl, filename)
 }
 
 // print gc information to io.Writer
