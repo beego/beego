@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"runtime"
 	"runtime/debug"
@@ -43,40 +44,48 @@ func ProcessInput(input string, w io.Writer) {
 	case "lookup block":
 		p := pprof.Lookup("block")
 		p.WriteTo(w, 2)
-	case "start cpuprof":
-		StartCPUProfile()
-	case "stop cpuprof":
-		StopCPUProfile()
+	case "get cpuprof":
+		GetCPUProfile(w.(http.ResponseWriter))
 	case "get memprof":
-		MemProf()
+		MemProf(w)
 	case "gc summary":
 		PrintGCSummary(w)
 	}
 }
 
 // record memory profile in pprof
-func MemProf() {
-	if f, err := os.Create("mem-" + strconv.Itoa(pid) + ".memprof"); err != nil {
-		log.Fatal("record memory profile failed: ", err)
+func MemProf(w io.Writer) {
+	filename := "mem-" + strconv.Itoa(pid) + ".memprof"
+	if f, err := os.Create(filename); err != nil {
+		fmt.Fprintf(w, "create file %s error %s\n", filename, err.Error())
+		log.Fatal("record heap profile failed: ", err)
 	} else {
 		runtime.GC()
 		pprof.WriteHeapProfile(f)
 		f.Close()
+		fmt.Fprintf(w, "create heap profile %s \n", filename)
+		fmt.Fprintf(w, "Now you can use this to check it: go tool pprof <program> %s\n", filename)
 	}
 }
 
 // start cpu profile monitor
-func StartCPUProfile() {
-	f, err := os.Create("cpu-" + strconv.Itoa(pid) + ".pprof")
+func GetCPUProfile(rw http.ResponseWriter) {
+	sec := 30
+	rw.Header().Set("Content-Type", "application/octet-stream")
+	filename := "cpu-" + strconv.Itoa(pid) + ".pprof"
+	f, err := os.Create(filename)
 	if err != nil {
-		log.Fatal(err)
+		rw.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		rw.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(rw, "Could not enable CPU profiling: %s\n", err)
+		log.Fatal("record cpu profile failed: ", err)
 	}
+	fmt.Fprintf(rw, "start cpu profileing\n")
 	pprof.StartCPUProfile(f)
-}
-
-// stop cpu profile monitor
-func StopCPUProfile() {
+	time.Sleep(time.Duration(sec) * time.Second)
 	pprof.StopCPUProfile()
+	fmt.Fprintf(rw, "create cpu profile %s \n", filename)
+	fmt.Fprintf(rw, "Now you can use this to check it: go tool pprof <program> %s\n", filename)
 }
 
 // print gc information to io.Writer
