@@ -17,12 +17,14 @@ import (
 
 // Log levels to control the logging output.
 const (
-	LevelTrace = iota
-	LevelDebug
-	LevelInfo
-	LevelWarning
-	LevelError
+	LevelEmergency = iota
+	LevelAlert
 	LevelCritical
+	LevelError
+	LevelWarning
+	LevelNotice
+	LevelInformational
+	LevelDebug
 )
 
 // SetLogLevel sets the global log level used by the simple
