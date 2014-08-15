@@ -27,10 +27,34 @@ For detail usage please check our document:
 var profillingTpl = `
 {{define "content"}}
 <h1>{{.Title}}</h1>
-<pre>
-{{.Content}}
+<pre id="content">
+<div>{{.Content}}</div>
 </pre>
 {{end}}`
+
+var defaultScriptsTpl = ``
+
+var gcAjaxTpl = `
+{{define "scripts"}}
+<script type="text/javascript">
+	var app = app || {};
+(function() {
+	app.$el = $('#content');
+	app.getGc = function() {
+		var that = this;
+		$.ajax("/prof?command=gc%20summary&format=json").done(function(data) {
+			that.$el.append($('<p>' + data.Content + '</p>'));
+		});
+	};
+	$(document).ready(function() {
+		setInterval(function() {
+			app.getGc();
+		}, 3000);
+	});
+})();
+</script>
+{{end}}
+`
 
 var qpsTpl = `
 {{define "content"}}
@@ -311,6 +335,7 @@ Healthcheck
 <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
 <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
 
+{{template "scripts" .}}
 </body>
 </html>
 `
