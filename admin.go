@@ -11,6 +11,7 @@ package beego
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"text/template"
@@ -59,6 +60,7 @@ func init() {
 func adminIndex(rw http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
 	tmpl = template.Must(tmpl.Parse(indexTpl))
+	tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
 	data := make(map[interface{}]interface{})
 	tmpl.Execute(rw, data)
 }
@@ -68,6 +70,7 @@ func adminIndex(rw http.ResponseWriter, r *http.Request) {
 func qpsIndex(rw http.ResponseWriter, r *http.Request) {
 	tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
 	tmpl = template.Must(tmpl.Parse(qpsTpl))
+	tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
 	data := make(map[interface{}]interface{})
 	data["Content"] = toolbox.StatisticsMap.GetMap()
 
@@ -127,6 +130,7 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 
 			tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
 			tmpl = template.Must(tmpl.Parse(configTpl))
+			tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
 
 			data["Content"] = m
 
@@ -158,6 +162,7 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 			data["Title"] = "Routers"
 			tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
 			tmpl = template.Must(tmpl.Parse(routerAndFilterTpl))
+			tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
 			tmpl.Execute(rw, data)
 		case "filter":
 			resultList := new([][]string)
@@ -250,6 +255,7 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 			data["Title"] = "Filters"
 			tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
 			tmpl = template.Must(tmpl.Parse(routerAndFilterTpl))
+			tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
 			tmpl.Execute(rw, data)
 
 		default:
@@ -302,16 +308,35 @@ func printTree(resultList *[][]string, t *Tree) {
 func profIndex(rw http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	command := r.Form.Get("command")
-	data := make(map[interface{}]interface{})
+	format := r.Form.Get("format")
+	data := make(map[string]interface{})
 
 	var result bytes.Buffer
 	if command != "" {
 		toolbox.ProcessInput(command, &result)
 		data["Content"] = result.String()
-		data["Title"] = command
 
+		if format == "json" && command == "gc summary" {
+			dataJson, err := json.Marshal(data)
+			if err != nil {
+				http.Error(rw, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			rw.Header().Set("Content-Type", "application/json")
+			rw.Write(dataJson)
+			return
+		}
+
+		data["Title"] = command
 		tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
 		tmpl = template.Must(tmpl.Parse(profillingTpl))
+		if command == "gc summary" {
+			tmpl = template.Must(tmpl.Parse(gcAjaxTpl))
+		} else {
+
+			tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
+		}
 		tmpl.Execute(rw, data)
 	} else {
 	}
@@ -353,6 +378,7 @@ func healthcheck(rw http.ResponseWriter, req *http.Request) {
 	data["Title"] = "Health Check"
 	tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
 	tmpl = template.Must(tmpl.Parse(healthCheckTpl))
+	tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
 	tmpl.Execute(rw, data)
 
 }
@@ -401,6 +427,7 @@ func taskStatus(rw http.ResponseWriter, req *http.Request) {
 	data["Title"] = "Tasks"
 	tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
 	tmpl = template.Must(tmpl.Parse(tasksTpl))
+	tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
 	tmpl.Execute(rw, data)
 }
 
