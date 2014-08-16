@@ -773,7 +773,7 @@ Admin:
 		} else {
 			devinfo = fmt.Sprintf("| % -10s| % -16s | % -10s | % -40s | % -10s |", "beego", timeend.String(), r.Method, r.URL.Path, "notmatch")
 		}
-		Info(devinfo)
+		Debug(devinfo)
 	}
 
 	// Call WriteHeader if status code has been set changed
