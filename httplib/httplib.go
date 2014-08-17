@@ -395,10 +395,7 @@ func (b *BeegoHttpRequest) ToFile(filename string) error {
 	}
 	defer resp.Body.Close()
 	_, err = io.Copy(f, resp.Body)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // ToJson returns the map that marshals from the body bytes as json in response .
@@ -409,10 +406,7 @@ func (b *BeegoHttpRequest) ToJson(v interface{}) error {
 		return err
 	}
 	err = json.Unmarshal(data, v)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // ToXml returns the map that marshals from the body bytes as xml in response .
@@ -423,10 +417,7 @@ func (b *BeegoHttpRequest) ToXML(v interface{}) error {
 		return err
 	}
 	err = xml.Unmarshal(data, v)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // Response executes request client gets response mannually.
