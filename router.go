@@ -591,6 +591,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	serverStaticRouter(context)
 	if w.started {
+		findrouter = true
 		goto Admin
 	}
 
@@ -769,9 +770,9 @@ Admin:
 	if RunMode == "dev" {
 		var devinfo string
 		if findrouter {
-			devinfo = fmt.Sprintf("| % -10s| % -16s | % -10s | % -40s | % -10s | % -40s |", "beego", timeend.String(), r.Method, r.URL.Path, "match", routerInfo.pattern)
+			devinfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s | % -40s |", r.Method, r.URL.Path, timeend.String(), "match", routerInfo.pattern)
 		} else {
-			devinfo = fmt.Sprintf("| % -10s| % -16s | % -10s | % -40s | % -10s |", "beego", timeend.String(), r.Method, r.URL.Path, "notmatch")
+			devinfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s |", r.Method, r.URL.Path, timeend.String(), "notmatch")
 		}
 		Debug(devinfo)
 	}
