@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package cors provides handlers to enable CORS support.
 package cors
 
 import (
