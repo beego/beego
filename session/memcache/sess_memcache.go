@@ -1,12 +1,35 @@
-// Beego (http://beego.me/)
+// Copyright 2014 beego Author. All Rights Reserved.
 //
-// @description beego is an open-source, high-performance web framework for the Go programming language.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
-// @link        http://github.com/astaxie/beego for the canonical source repository
+//      http://www.apache.org/licenses/LICENSE-2.0
 //
-// @license     http://github.com/astaxie/beego/blob/master/LICENSE
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// package memcache for session provider
 //
-// @authors     astaxie
+// depend on github.com/bradfitz/gomemcache/memcache
+//
+// go install github.com/bradfitz/gomemcache/memcache
+//
+// Usage:
+// import(
+//   _ "github.com/astaxie/beego/session/memcache"
+//   "github.com/astaxie/beego/session"
+// )
+//
+//	func init() {
+//		globalSessions, _ = session.NewManager("memcache", ``{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig":"127.0.0.1:11211"}``)
+//		go globalSessions.GC()
+//	}
+//
+// more docs: http://beego.me/docs/module/session.md
 package session
 
 import (
@@ -65,12 +88,12 @@ func (rs *MemcacheSessionStore) Flush() error {
 	return nil
 }
 
-// get redis session id
+// get memcache session id
 func (rs *MemcacheSessionStore) SessionID() string {
 	return rs.sid
 }
 
-// save session values to redis
+// save session values to memcache
 func (rs *MemcacheSessionStore) SessionRelease(w http.ResponseWriter) {
 	b, err := session.EncodeGob(rs.values)
 	if err != nil {
@@ -80,7 +103,7 @@ func (rs *MemcacheSessionStore) SessionRelease(w http.ResponseWriter) {
 	client.Set(&item)
 }
 
-// redis session provider
+// memcahe session provider
 type MemProvider struct {
 	maxlifetime int64
 	conninfo    []string
@@ -88,7 +111,7 @@ type MemProvider struct {
 	password    string
 }
 
-// init redis session
+// init memcache session
 // savepath like
 // e.g. 127.0.0.1:9090
 func (rp *MemProvider) SessionInit(maxlifetime int64, savePath string) error {
@@ -98,7 +121,7 @@ func (rp *MemProvider) SessionInit(maxlifetime int64, savePath string) error {
 	return nil
 }
 
-// read redis session by sid
+// read memcache session by sid
 func (rp *MemProvider) SessionRead(sid string) (session.SessionStore, error) {
 	if client == nil {
 		if err := rp.connectInit(); err != nil {
@@ -123,7 +146,7 @@ func (rp *MemProvider) SessionRead(sid string) (session.SessionStore, error) {
 	return rs, nil
 }
 
-// check redis session exist by sid
+// check memcache session exist by sid
 func (rp *MemProvider) SessionExist(sid string) bool {
 	if client == nil {
 		if err := rp.connectInit(); err != nil {
@@ -137,7 +160,7 @@ func (rp *MemProvider) SessionExist(sid string) bool {
 	}
 }
 
-// generate new sid for redis session
+// generate new sid for memcache session
 func (rp *MemProvider) SessionRegenerate(oldsid, sid string) (session.SessionStore, error) {
 	if client == nil {
 		if err := rp.connectInit(); err != nil {
@@ -177,7 +200,7 @@ func (rp *MemProvider) SessionRegenerate(oldsid, sid string) (session.SessionSto
 	return rs, nil
 }
 
-// delete redis session by id
+// delete memcache session by id
 func (rp *MemProvider) SessionDestroy(sid string) error {
 	if client == nil {
 		if err := rp.connectInit(); err != nil {

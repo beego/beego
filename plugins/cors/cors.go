@@ -14,26 +14,25 @@
 
 // Package cors provides handlers to enable CORS support.
 // Usage
-//
-// import (
-//  "github.com/astaxie/beego"
-//  "github.com/astaxie/beego/plugins/cors"
+//	import (
+// 		"github.com/astaxie/beego"
+//		"github.com/astaxie/beego/plugins/cors"
 // )
-
-//func main() {
-//  // CORS for https://foo.* origins, allowing:
-//  // - PUT and PATCH methods
-//  // - Origin header
-//  // - Credentials share
-//  beego.InsertFilter("*", beego.BeforeRouter,cors.Allow(&cors.Options{
-//    AllowOrigins:     []string{"https://*.foo.com"},
-//    AllowMethods:     []string{"PUT", "PATCH"},
-//    AllowHeaders:     []string{"Origin"},
-//    ExposeHeaders:    []string{"Content-Length"},
-//    AllowCredentials: true,
-//  }))
-//  beego.Run()
-//}
+//
+//	func main() {
+//		// CORS for https://foo.* origins, allowing:
+//		// - PUT and PATCH methods
+//		// - Origin header
+//		// - Credentials share
+//		beego.InsertFilter("*", beego.BeforeRouter,cors.Allow(&cors.Options{
+//			AllowOrigins:     []string{"https://*.foo.com"},
+//			AllowMethods:     []string{"PUT", "PATCH"},
+//			AllowHeaders:     []string{"Origin"},
+//			ExposeHeaders:    []string{"Content-Length"},
+//			AllowCredentials: true,
+//		}))
+//		beego.Run()
+//	}
 package cors
 
 import (

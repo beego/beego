@@ -27,11 +27,11 @@
 //
 //
 // Advanced Usage:
-// func SecretAuth(username, password string) bool {
-// 	return username == "astaxie" && password == "helloBeego"
-// }
-// authPlugin := auth.NewBasicAuthenticator(SecretAuth, "Authorization Required")
-// beego.InsertFilter("*", beego.BeforeRouter,authPlugin)
+//	func SecretAuth(username, password string) bool {
+//		return username == "astaxie" && password == "helloBeego"
+//	}
+//	authPlugin := auth.NewBasicAuthenticator(SecretAuth, "Authorization Required")
+//	beego.InsertFilter("*", beego.BeforeRouter,authPlugin)
 package auth
 
 import (

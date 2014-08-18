@@ -1,12 +1,32 @@
-// Beego (http://beego.me/)
+// Copyright 2014 beego Author. All Rights Reserved.
 //
-// @description beego is an open-source, high-performance web framework for the Go programming language.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
-// @link        http://github.com/astaxie/beego for the canonical source repository
+//      http://www.apache.org/licenses/LICENSE-2.0
 //
-// @license     http://github.com/astaxie/beego/blob/master/LICENSE
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// package redis for cache provider
 //
-// @authors     astaxie
+// depend on github.com/garyburd/redigo/redis
+//
+// go install github.com/garyburd/redigo/redis
+//
+// Usage:
+// import(
+//   _ "github.com/astaxie/beego/cache/redis"
+//   "github.com/astaxie/beego/cache"
+// )
+//
+//  bm, err := cache.NewCache("redis", `{"conn":"127.0.0.1:11211"}`)
+//
+//  more docs http://beego.me/docs/module/cache.md
 package redis
 
 import (

@@ -154,10 +154,5 @@ note: not recommend use this in product env.
 
 more details and examples in docs and test
 
-* [中文](http://beego.me/docs/Models_Overview?lang=zh)
-* [English](http://beego.me/docs/Models_Overview?lang=en)
+[documents](http://beego.me/docs/mvc/model/overview.md)
 
-## TODO
-- some unrealized api
-- examples
-- docs

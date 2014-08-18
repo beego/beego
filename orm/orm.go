@@ -1,12 +1,53 @@
-// Beego (http://beego.me/)
+// Copyright 2014 beego Author. All Rights Reserved.
 //
-// @description beego is an open-source, high-performance web framework for the Go programming language.
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
 //
-// @link        http://github.com/astaxie/beego for the canonical source repository
+//      http://www.apache.org/licenses/LICENSE-2.0
 //
-// @license     http://github.com/astaxie/beego/blob/master/LICENSE
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// Simple Usage
 //
-// @authors     astaxie, slene
+//	package main
+//
+//	import (
+//		"fmt"
+//		"github.com/astaxie/beego/orm"
+//		_ "github.com/go-sql-driver/mysql" // import your used driver
+//	)
+//
+//	// Model Struct
+//	type User struct {
+//		Id   int    `orm:"auto"`
+//		Name string `orm:"size(100)"`
+//	}
+//
+//	func init() {
+//		orm.RegisterDataBase("default", "mysql", "root:root@/my_db?charset=utf8", 30)
+//	}
+//
+//	func main() {
+//		o := orm.NewOrm()
+//		user := User{Name: "slene"}
+//		// insert
+//		id, err := o.Insert(&user)
+//		// update
+//		user.Name = "astaxie"
+//		num, err := o.Update(&user)
+//		// read one
+//		u := User{Id: user.Id}
+//		err = o.Read(&u)
+//		// delete
+//		num, err = o.Delete(&u)
+//	}
+//
+// more docs: http://beego.me/docs/mvc/model/overview.md
 package orm
 
 import (
