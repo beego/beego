@@ -15,6 +15,8 @@
 package httplib
 
 import (
+	"io/ioutil"
+	"os"
 	"strings"
 	"testing"
 )
@@ -41,6 +43,10 @@ func TestGet(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(s)
+
+	if string(b) != s {
+		t.Fatal("request data not match")
+	}
 }
 
 func TestSimplePost(t *testing.T) {
@@ -169,5 +175,19 @@ func TestToJson(t *testing.T) {
 
 	if n := strings.Count(ip.Origin, "."); n != 3 {
 		t.Fatal("response is not valid ip")
+	}
+}
+
+func TestToFile(t *testing.T) {
+	f := "beego_testfile"
+	req := Get("http://httpbin.org/ip")
+	err := req.ToFile(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(f)
+	b, err := ioutil.ReadFile(f)
+	if n := strings.Index(string(b), "origin"); n == -1 {
+		t.Fatal(err)
 	}
 }

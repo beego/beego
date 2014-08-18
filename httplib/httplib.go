@@ -421,11 +421,15 @@ func (b *BeegoHttpRequest) ToFile(filename string) error {
 	}
 	defer f.Close()
 
-	data, err := b.Bytes()
+	resp, err := b.getResponse()
 	if err != nil {
 		return err
 	}
-	_, err = f.Write(data)
+	if resp.Body == nil {
+		return nil
+	}
+	defer resp.Body.Close()
+	_, err = io.Copy(f, resp.Body)
 	return err
 }
 
