@@ -19,23 +19,41 @@ import (
 	"testing"
 )
 
-func TestSimpleGet(t *testing.T) {
-	str, err := Get("http://httpbin.org/get").String()
+func TestResponse(t *testing.T) {
+	req := Get("http://httpbin.org/get")
+	resp, err := req.Response()
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(str)
+	t.Log(resp)
+}
+
+func TestGet(t *testing.T) {
+	req := Get("http://httpbin.org/get")
+	b, err := req.Bytes()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(b)
+
+	s, err := req.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(s)
 }
 
 func TestSimplePost(t *testing.T) {
 	v := "smallfish"
 	req := Post("http://httpbin.org/post")
 	req.Param("username", v)
+
 	str, err := req.String()
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log(str)
+
 	n := strings.Index(str, v)
 	if n == -1 {
 		t.Fatal(v + " not found in post")
@@ -47,15 +65,33 @@ func TestPostFile(t *testing.T) {
 	req := Post("http://httpbin.org/post")
 	req.Param("username", v)
 	req.PostFile("uploadfile", "httplib_test.go")
+
 	str, err := req.String()
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log(str)
+
 	n := strings.Index(str, v)
 	if n == -1 {
 		t.Fatal(v + " not found in post")
 	}
+}
+
+func TestSimplePut(t *testing.T) {
+	str, err := Put("http://httpbin.org/put").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(str)
+}
+
+func TestSimpleDelete(t *testing.T) {
+	str, err := Delete("http://httpbin.org/delete").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(str)
 }
 
 func TestWithCookie(t *testing.T) {
@@ -65,11 +101,13 @@ func TestWithCookie(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(str)
+
 	str, err = Get("http://httpbin.org/cookies").SetEnableCookie(true).String()
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Log(str)
+
 	n := strings.Index(str, v)
 	if n == -1 {
 		t.Fatal(v + " not found in cookie")
@@ -83,6 +121,7 @@ func TestWithUserAgent(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(str)
+
 	n := strings.Index(str, v)
 	if n == -1 {
 		t.Fatal(v + " not found in user-agent")
@@ -102,8 +141,33 @@ func TestWithSetting(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(str)
+
 	n := strings.Index(str, v)
 	if n == -1 {
 		t.Fatal(v + " not found in user-agent")
+	}
+}
+
+func TestToJson(t *testing.T) {
+	req := Get("http://httpbin.org/ip")
+	resp, err := req.Response()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(resp)
+
+	// httpbin will return http remote addr
+	type Ip struct {
+		Origin string `json:"origin"`
+	}
+	var ip Ip
+	err = req.ToJson(&ip)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(ip.Origin)
+
+	if n := strings.Count(ip.Origin, "."); n != 3 {
+		t.Fatal("response is not valid ip")
 	}
 }

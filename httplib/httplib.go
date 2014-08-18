@@ -16,7 +16,7 @@
 //
 // import "github.com/astaxie/beego/context"
 //
-//	b:=httplib.Post("http://beego.me/")
+//	b := httplib.Post("http://beego.me/")
 //	b.Param("username","astaxie")
 //	b.Param("password","123456")
 //	b.PostFile("uploadfile1", "httplib.pdf")
@@ -76,41 +76,46 @@ func SetDefaultSetting(setting BeegoHttpSettings) {
 // Get returns *BeegoHttpRequest with GET method.
 func Get(url string) *BeegoHttpRequest {
 	var req http.Request
+	var resp http.Response
 	req.Method = "GET"
 	req.Header = http.Header{}
-	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting}
+	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting, &resp, nil}
 }
 
 // Post returns *BeegoHttpRequest with POST method.
 func Post(url string) *BeegoHttpRequest {
 	var req http.Request
+	var resp http.Response
 	req.Method = "POST"
 	req.Header = http.Header{}
-	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting}
+	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting, &resp, nil}
 }
 
 // Put returns *BeegoHttpRequest with PUT method.
 func Put(url string) *BeegoHttpRequest {
 	var req http.Request
+	var resp http.Response
 	req.Method = "PUT"
 	req.Header = http.Header{}
-	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting}
+	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting, &resp, nil}
 }
 
 // Delete returns *BeegoHttpRequest DELETE GET method.
 func Delete(url string) *BeegoHttpRequest {
 	var req http.Request
+	var resp http.Response
 	req.Method = "DELETE"
 	req.Header = http.Header{}
-	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting}
+	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting, &resp, nil}
 }
 
 // Head returns *BeegoHttpRequest with HEAD method.
 func Head(url string) *BeegoHttpRequest {
 	var req http.Request
+	var resp http.Response
 	req.Method = "HEAD"
 	req.Header = http.Header{}
-	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting}
+	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting, &resp, nil}
 }
 
 // BeegoHttpSettings
@@ -132,6 +137,8 @@ type BeegoHttpRequest struct {
 	params  map[string]string
 	files   map[string]string
 	setting BeegoHttpSettings
+	resp    *http.Response
+	body    []byte
 }
 
 // Change request settings
@@ -247,6 +254,9 @@ func (b *BeegoHttpRequest) Body(data interface{}) *BeegoHttpRequest {
 }
 
 func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
+	if b.resp.StatusCode != 0 {
+		return b.resp, nil
+	}
 	var paramBody string
 	if len(b.params) > 0 {
 		var buf bytes.Buffer
@@ -365,6 +375,7 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
+	b.resp = resp
 	return resp, nil
 }
 
@@ -382,6 +393,9 @@ func (b *BeegoHttpRequest) String() (string, error) {
 // Bytes returns the body []byte in response.
 // it calls Response inner.
 func (b *BeegoHttpRequest) Bytes() ([]byte, error) {
+	if b.body != nil {
+		return b.body, nil
+	}
 	resp, err := b.getResponse()
 	if err != nil {
 		return nil, err
@@ -394,6 +408,7 @@ func (b *BeegoHttpRequest) Bytes() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
+	b.body = data
 	return data, nil
 }
 
@@ -406,15 +421,11 @@ func (b *BeegoHttpRequest) ToFile(filename string) error {
 	}
 	defer f.Close()
 
-	resp, err := b.getResponse()
+	data, err := b.Bytes()
 	if err != nil {
 		return err
 	}
-	if resp.Body == nil {
-		return nil
-	}
-	defer resp.Body.Close()
-	_, err = io.Copy(f, resp.Body)
+	_, err = f.Write(data)
 	return err
 }
 
