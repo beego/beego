@@ -126,7 +126,7 @@ func (b *BeegoHttpRequest) SetEnableCookie(enable bool) *BeegoHttpRequest {
 }
 
 // SetUserAgent sets User-Agent header field
-func (b *BeegoHttpRequest) SetAgent(useragent string) *BeegoHttpRequest {
+func (b *BeegoHttpRequest) SetUserAgent(useragent string) *BeegoHttpRequest {
 	b.setting.UserAgent = useragent
 	return b
 }
@@ -410,7 +410,7 @@ func (b *BeegoHttpRequest) ToJson(v interface{}) error {
 
 // ToXml returns the map that marshals from the body bytes as xml in response .
 // it calls Response inner.
-func (b *BeegoHttpRequest) ToXML(v interface{}) error {
+func (b *BeegoHttpRequest) ToXml(v interface{}) error {
 	data, err := b.Bytes()
 	if err != nil {
 		return err

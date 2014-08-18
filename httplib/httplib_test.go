@@ -10,94 +10,95 @@
 package httplib
 
 import (
-	"fmt"
-	"io/ioutil"
+	"strings"
 	"testing"
 )
 
-func TestGetUrl(t *testing.T) {
-	resp, err := Get("http://beego.me").Debug(true).Response()
+func TestSimpleGet(t *testing.T) {
+	str, err := Get("http://httpbin.org/get").String()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if resp.Body == nil {
-		t.Fatal("body is nil")
-	}
-	data, err := ioutil.ReadAll(resp.Body)
-	defer resp.Body.Close()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(data) == 0 {
-		t.Fatal("data is no")
-	}
+	t.Log(str)
+}
 
-	str, err := Get("http://beego.me").String()
+func TestSimplePost(t *testing.T) {
+	v := "smallfish"
+	req := Post("http://httpbin.org/post")
+	req.Param("username", v)
+	str, err := req.String()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(str) == 0 {
-		t.Fatal("has no info")
+	t.Log(str)
+	n := strings.Index(str, v)
+	if n == -1 {
+		t.Fatal(v + " not found in post")
 	}
 }
 
-func ExamplePost(t *testing.T) {
-	b := Post("http://beego.me/").Debug(true)
-	b.Param("username", "astaxie")
-	b.Param("password", "hello")
-	b.PostFile("uploadfile", "httplib_test.go")
-	str, err := b.String()
+func TestPostFile(t *testing.T) {
+	v := "smallfish"
+	req := Post("http://httpbin.org/post")
+	req.Param("username", v)
+	req.PostFile("uploadfile", "httplib_test.go")
+	str, err := req.String()
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println(str)
+	t.Log(str)
+	n := strings.Index(str, v)
+	if n == -1 {
+		t.Fatal(v + " not found in post")
+	}
 }
 
-func TestSimpleGetString(t *testing.T) {
-	fmt.Println("TestSimpleGetString==========================================")
-	html, err := Get("http://httpbin.org/headers").SetAgent("beegoooooo").String()
+func TestWithCookie(t *testing.T) {
+	v := "smallfish"
+	str, err := Get("http://httpbin.org/cookies/set?k1=" + v).SetEnableCookie(true).String()
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println(html)
-	fmt.Println("TestSimpleGetString==========================================")
+	t.Log(str)
+	str, err = Get("http://httpbin.org/cookies").SetEnableCookie(true).String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(str)
+	n := strings.Index(str, v)
+	if n == -1 {
+		t.Fatal(v + " not found in cookie")
+	}
 }
 
-func TestSimpleGetStringWithDefaultCookie(t *testing.T) {
-	fmt.Println("TestSimpleGetStringWithDefaultCookie==========================================")
-	html, err := Get("http://httpbin.org/cookies/set?k1=v1").SetEnableCookie(true).String()
+func TestWithUserAgent(t *testing.T) {
+	v := "beego"
+	str, err := Get("http://httpbin.org/headers").SetUserAgent(v).String()
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println(html)
-	html, err = Get("http://httpbin.org/cookies").SetEnableCookie(true).String()
-	if err != nil {
-		t.Fatal(err)
+	t.Log(str)
+	n := strings.Index(str, v)
+	if n == -1 {
+		t.Fatal(v + " not found in user-agent")
 	}
-	fmt.Println(html)
-	fmt.Println("TestSimpleGetStringWithDefaultCookie==========================================")
 }
 
-func TestDefaultSetting(t *testing.T) {
-	fmt.Println("TestDefaultSetting==========================================")
-	var def BeegoHttpSettings
-	def.EnableCookie = true
-	//def.ShowDebug = true
-	def.UserAgent = "UserAgent"
-	//def.ConnectTimeout = 60*time.Second
-	//def.ReadWriteTimeout = 60*time.Second
-	def.Transport = nil //http.DefaultTransport
-	SetDefaultSetting(def)
+func TestWithSetting(t *testing.T) {
+	v := "beego"
+	var setting BeegoHttpSettings
+	setting.EnableCookie = true
+	setting.UserAgent = v
+	setting.Transport = nil
+	SetDefaultSetting(setting)
 
-	html, err := Get("http://httpbin.org/headers").String()
+	str, err := Get("http://httpbin.org/get").String()
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println(html)
-	html, err = Get("http://httpbin.org/headers").String()
-	if err != nil {
-		t.Fatal(err)
+	t.Log(str)
+	n := strings.Index(str, v)
+	if n == -1 {
+		t.Fatal(v + " not found in user-agent")
 	}
-	fmt.Println(html)
-	fmt.Println("TestDefaultSetting==========================================")
 }
