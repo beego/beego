@@ -49,7 +49,7 @@ type Context struct {
 // It sends http response header directly.
 func (ctx *Context) Redirect(status int, localurl string) {
 	ctx.Output.Header("Location", localurl)
-	ctx.Output.SetStatus(status)
+	ctx.ResponseWriter.WriteHeader(status)
 }
 
 // Abort stops this request.
