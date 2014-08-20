@@ -147,6 +147,12 @@ func (b *BeegoHttpRequest) Setting(setting BeegoHttpSettings) *BeegoHttpRequest 
 	return b
 }
 
+// SetBasicAuth sets the request's Authorization header to use HTTP Basic Authentication with the provided username and password.
+func (b *BeegoHttpRequest) SetBasicAuth(username, password string) *BeegoHttpRequest {
+	b.req.SetBasicAuth(username, password)
+	return b
+}
+
 // SetEnableCookie sets enable/disable cookiejar
 func (b *BeegoHttpRequest) SetEnableCookie(enable bool) *BeegoHttpRequest {
 	b.setting.EnableCookie = enable
