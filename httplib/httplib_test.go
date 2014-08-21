@@ -120,6 +120,18 @@ func TestWithCookie(t *testing.T) {
 	}
 }
 
+func TestWithBasicAuth(t *testing.T) {
+	str, err := Get("http://httpbin.org/basic-auth/user/passwd").SetBasicAuth("user", "passwd").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(str)
+	n := strings.Index(str, "authenticated")
+	if n == -1 {
+		t.Fatal("authenticated not found in response")
+	}
+}
+
 func TestWithUserAgent(t *testing.T) {
 	v := "beego"
 	str, err := Get("http://httpbin.org/headers").SetUserAgent(v).String()
