@@ -33,6 +33,7 @@ type bounds struct {
 var (
 	AdminTaskList map[string]Tasker
 	stop          chan bool
+	changed       chan bool
 	seconds       = bounds{0, 59, nil}
 	minutes       = bounds{0, 59, nil}
 	hours         = bounds{0, 23, nil}
@@ -411,6 +412,8 @@ func run() {
 				e.SetNext(effective)
 			}
 			continue
+		case <-changed:
+			continue
 		case <-stop:
 			return
 		}
@@ -425,6 +428,13 @@ func StopTask() {
 // add task with name
 func AddTask(taskname string, t Tasker) {
 	AdminTaskList[taskname] = t
+	changed <- true
+}
+
+// add task with name
+func DeleteTask(taskname string) {
+	delete(AdminTaskList, taskname)
+	changed <- true
 }
 
 // sort map for tasker
@@ -578,4 +588,5 @@ func all(r bounds) uint64 {
 func init() {
 	AdminTaskList = make(map[string]Tasker)
 	stop = make(chan bool)
+	changed = make(chan bool)
 }
