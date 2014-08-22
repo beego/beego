@@ -73,49 +73,42 @@ func SetDefaultSetting(setting BeegoHttpSettings) {
 	}
 }
 
-// Get returns *BeegoHttpRequest with GET method.
-func Get(url string) *BeegoHttpRequest {
-	var req http.Request
+// return *BeegoHttpRequest with specific method
+func newBeegoRequest(url, method string) *BeegoHttpRequest {
+	req := http.Request{
+		Proto:      "HTTP/1.1",
+		ProtoMajor: 1,
+		ProtoMinor: 1,
+	}
 	var resp http.Response
-	req.Method = "GET"
+	req.Method = method
 	req.Header = http.Header{}
 	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting, &resp, nil}
+}
+
+// Get returns *BeegoHttpRequest with GET method.
+func Get(url string) *BeegoHttpRequest {
+	return newBeegoRequest(url, "GET")
 }
 
 // Post returns *BeegoHttpRequest with POST method.
 func Post(url string) *BeegoHttpRequest {
-	var req http.Request
-	var resp http.Response
-	req.Method = "POST"
-	req.Header = http.Header{}
-	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting, &resp, nil}
+	return newBeegoRequest(url, "POST")
 }
 
 // Put returns *BeegoHttpRequest with PUT method.
 func Put(url string) *BeegoHttpRequest {
-	var req http.Request
-	var resp http.Response
-	req.Method = "PUT"
-	req.Header = http.Header{}
-	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting, &resp, nil}
+	return newBeegoRequest(url, "PUT")
 }
 
 // Delete returns *BeegoHttpRequest DELETE GET method.
 func Delete(url string) *BeegoHttpRequest {
-	var req http.Request
-	var resp http.Response
-	req.Method = "DELETE"
-	req.Header = http.Header{}
-	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting, &resp, nil}
+	return newBeegoRequest(url, "DELETE")
 }
 
 // Head returns *BeegoHttpRequest with HEAD method.
 func Head(url string) *BeegoHttpRequest {
-	var req http.Request
-	var resp http.Response
-	req.Method = "HEAD"
-	req.Header = http.Header{}
-	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting, &resp, nil}
+	return newBeegoRequest(url, "HEAD")
 }
 
 // BeegoHttpSettings
