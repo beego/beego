@@ -111,45 +111,73 @@ func getColumnName(ft int, addrField reflect.Value, sf reflect.StructField, col 
 
 // return field type as type constant from reflect.Value
 func getFieldType(val reflect.Value) (ft int, err error) {
-	elm := reflect.Indirect(val)
-	switch elm.Kind() {
-	case reflect.Int8:
+	switch val.Type() {
+	case reflect.TypeOf(new(int8)):
 		ft = TypeBitField
-	case reflect.Int16:
+	case reflect.TypeOf(new(int16)):
 		ft = TypeSmallIntegerField
-	case reflect.Int32, reflect.Int:
+	case reflect.TypeOf(new(int32)),
+		reflect.TypeOf(new(int)):
 		ft = TypeIntegerField
-	case reflect.Int64:
+	case reflect.TypeOf(new(int64)):
 		ft = TypeBigIntegerField
-	case reflect.Uint8:
+	case reflect.TypeOf(new(uint8)):
 		ft = TypePositiveBitField
-	case reflect.Uint16:
+	case reflect.TypeOf(new(uint16)):
 		ft = TypePositiveSmallIntegerField
-	case reflect.Uint32, reflect.Uint:
+	case reflect.TypeOf(new(uint32)),
+		reflect.TypeOf(new(uint)):
 		ft = TypePositiveIntegerField
-	case reflect.Uint64:
+	case reflect.TypeOf(new(uint64)):
 		ft = TypePositiveBigIntegerField
-	case reflect.Float32, reflect.Float64:
+	case reflect.TypeOf(new(float32)),
+		reflect.TypeOf(new(float64)):
 		ft = TypeFloatField
-	case reflect.Bool:
+	case reflect.TypeOf(new(bool)):
 		ft = TypeBooleanField
-	case reflect.String:
+	case reflect.TypeOf(new(string)):
 		ft = TypeCharField
 	default:
-		if elm.Interface() == nil {
-			panic(fmt.Errorf("%s is nil pointer, may be miss setting tag", val))
-		}
-		switch elm.Interface().(type) {
-		case sql.NullInt64:
+		elm := reflect.Indirect(val)
+		switch elm.Kind() {
+		case reflect.Int8:
+			ft = TypeBitField
+		case reflect.Int16:
+			ft = TypeSmallIntegerField
+		case reflect.Int32, reflect.Int:
+			ft = TypeIntegerField
+		case reflect.Int64:
 			ft = TypeBigIntegerField
-		case sql.NullFloat64:
+		case reflect.Uint8:
+			ft = TypePositiveBitField
+		case reflect.Uint16:
+			ft = TypePositiveSmallIntegerField
+		case reflect.Uint32, reflect.Uint:
+			ft = TypePositiveIntegerField
+		case reflect.Uint64:
+			ft = TypePositiveBigIntegerField
+		case reflect.Float32, reflect.Float64:
 			ft = TypeFloatField
-		case sql.NullBool:
+		case reflect.Bool:
 			ft = TypeBooleanField
-		case sql.NullString:
+		case reflect.String:
 			ft = TypeCharField
-		case time.Time:
-			ft = TypeDateTimeField
+		default:
+			if elm.Interface() == nil {
+				panic(fmt.Errorf("%s is nil pointer, may be miss setting tag", val))
+			}
+			switch elm.Interface().(type) {
+			case sql.NullInt64:
+				ft = TypeBigIntegerField
+			case sql.NullFloat64:
+				ft = TypeFloatField
+			case sql.NullBool:
+				ft = TypeBooleanField
+			case sql.NullString:
+				ft = TypeCharField
+			case time.Time:
+				ft = TypeDateTimeField
+			}
 		}
 	}
 	if ft&IsFieldType == 0 {
