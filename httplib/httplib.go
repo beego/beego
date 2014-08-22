@@ -101,7 +101,7 @@ func Put(url string) *BeegoHttpRequest {
 	return newBeegoRequest(url, "PUT")
 }
 
-// Delete returns *BeegoHttpRequest DELETE GET method.
+// Delete returns *BeegoHttpRequest DELETE method.
 func Delete(url string) *BeegoHttpRequest {
 	return newBeegoRequest(url, "DELETE")
 }
