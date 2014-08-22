@@ -75,14 +75,14 @@ func SetDefaultSetting(setting BeegoHttpSettings) {
 
 // return *BeegoHttpRequest with specific method
 func newBeegoRequest(url, method string) *BeegoHttpRequest {
+	var resp http.Response
 	req := http.Request{
+		Method:     method,
+		Header:     make(http.Header),
 		Proto:      "HTTP/1.1",
 		ProtoMajor: 1,
 		ProtoMinor: 1,
 	}
-	var resp http.Response
-	req.Method = method
-	req.Header = http.Header{}
 	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting, &resp, nil}
 }
 
@@ -310,10 +310,6 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 	}
 
 	url, err := url.Parse(b.url)
-	if url.Scheme == "" {
-		b.url = "http://" + b.url
-		url, err = url.Parse(b.url)
-	}
 	if err != nil {
 		return nil, err
 	}
