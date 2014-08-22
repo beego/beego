@@ -79,6 +79,9 @@ func Get(url string) *BeegoHttpRequest {
 	var resp http.Response
 	req.Method = "GET"
 	req.Header = http.Header{}
+	req.Proto = "HTTP/1.1"
+	req.ProtoMajor = 1
+	req.ProtoMinor = 1
 	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting, &resp, nil}
 }
 
@@ -88,6 +91,9 @@ func Post(url string) *BeegoHttpRequest {
 	var resp http.Response
 	req.Method = "POST"
 	req.Header = http.Header{}
+	req.Proto = "HTTP/1.1"
+	req.ProtoMajor = 1
+	req.ProtoMinor = 1
 	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting, &resp, nil}
 }
 
@@ -97,6 +103,9 @@ func Put(url string) *BeegoHttpRequest {
 	var resp http.Response
 	req.Method = "PUT"
 	req.Header = http.Header{}
+	req.Proto = "HTTP/1.1"
+	req.ProtoMajor = 1
+	req.ProtoMinor = 1
 	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting, &resp, nil}
 }
 
@@ -106,6 +115,9 @@ func Delete(url string) *BeegoHttpRequest {
 	var resp http.Response
 	req.Method = "DELETE"
 	req.Header = http.Header{}
+	req.Proto = "HTTP/1.1"
+	req.ProtoMajor = 1
+	req.ProtoMinor = 1
 	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting, &resp, nil}
 }
 
@@ -115,6 +127,9 @@ func Head(url string) *BeegoHttpRequest {
 	var resp http.Response
 	req.Method = "HEAD"
 	req.Header = http.Header{}
+	req.Proto = "HTTP/1.1"
+	req.ProtoMajor = 1
+	req.ProtoMinor = 1
 	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting, &resp, nil}
 }
 
