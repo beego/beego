@@ -239,7 +239,6 @@ func (w *FileLogWriter) deleteOldLog() {
 				os.Remove(path)
 			}
 		}
-		returnErr = nil
 		return
 	})
 }
