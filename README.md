@@ -1,30 +1,35 @@
-## beego
+## Beego
 
 [![Build Status](https://drone.io/github.com/astaxie/beego/status.png)](https://drone.io/github.com/astaxie/beego/latest)
+[![GoDoc](https://godoc.org/github.com/astaxie/beego?status.svg)](https://godoc.org/github.com/astaxie/beego)
 
 beego is an open-source, high-performance, modularity, full-stack web framework.
 
 More info [beego.me](http://beego.me)
 
+## Installation
+
+    go get github.com/astaxie/beego
+
 ## Features
 
 * RESTful support
 * MVC architecture
-* modularity
-* auto API documents
-* annotation router
-* namespace
-* powerful develop tools
-* full stack for web & API
+* Modularity
+* Auto API documents
+* Annotation router
+* Namespace
+* Powerful develop tools
+* Full stack for Web & API
 
 ## Documentation
 
-[English](http://beego.me/docs/intro/)
+* [English](http://beego.me/docs/intro/)
+* [中文文档](http://beego.me/docs/intro/)
 
-[API](http://godoc.org/github.com/astaxie/beego)
+## Community
 
-[中文文档](http://beego.me/docs/intro/)
-
+* [http://beego.me/community](http://beego.me/community)
 
 ## LICENSE
 
