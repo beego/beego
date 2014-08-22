@@ -319,13 +319,6 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 	}
 
 	b.req.URL = url
-	if b.setting.ShowDebug {
-		dump, err := httputil.DumpRequest(b.req, true)
-		if err != nil {
-			println(err.Error())
-		}
-		println(string(dump))
-	}
 
 	trans := b.setting.Transport
 
@@ -368,6 +361,14 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 
 	if b.setting.UserAgent != "" {
 		b.req.Header.Set("User-Agent", b.setting.UserAgent)
+	}
+
+	if b.setting.ShowDebug {
+		dump, err := httputil.DumpRequest(b.req, true)
+		if err != nil {
+			println(err.Error())
+		}
+		println(string(dump))
 	}
 
 	resp, err := client.Do(b.req)
