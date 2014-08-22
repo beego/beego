@@ -34,6 +34,7 @@ var (
 	AdminTaskList map[string]Tasker
 	stop          chan bool
 	changed       chan bool
+	isstart       bool
 	seconds       = bounds{0, 59, nil}
 	minutes       = bounds{0, 59, nil}
 	hours         = bounds{0, 23, nil}
@@ -380,6 +381,7 @@ func dayMatches(s *Schedule, t time.Time) bool {
 
 // start all tasks
 func StartTask() {
+	isstart = true
 	go run()
 }
 
@@ -422,19 +424,24 @@ func run() {
 
 // start all tasks
 func StopTask() {
+	isstart = false
 	stop <- true
 }
 
 // add task with name
 func AddTask(taskname string, t Tasker) {
 	AdminTaskList[taskname] = t
-	changed <- true
+	if isstart {
+		changed <- true
+	}
 }
 
 // add task with name
 func DeleteTask(taskname string) {
 	delete(AdminTaskList, taskname)
-	changed <- true
+	if isstart {
+		changed <- true
+	}
 }
 
 // sort map for tasker
