@@ -53,7 +53,7 @@ var defaultSetting = BeegoHttpSettings{false, "beegoServer", 60 * time.Second, 6
 var defaultCookieJar http.CookieJar
 var settingMutex sync.Mutex
 
-// createDefaultCookieJar creates a global cookiejar to store cookies.
+// createDefaultCookie creates a global cookiejar to store cookies.
 func createDefaultCookie() {
 	settingMutex.Lock()
 	defer settingMutex.Unlock()
