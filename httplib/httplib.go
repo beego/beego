@@ -83,6 +83,9 @@ func newBeegoRequest(url, method string) *BeegoHttpRequest {
 	var resp http.Response
 	req.Method = method
 	req.Header = http.Header{}
+	req.Proto = "HTTP/1.1"
+	req.ProtoMajor = 1
+	req.ProtoMinor = 1
 	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting, &resp, nil}
 }
 

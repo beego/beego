@@ -106,10 +106,10 @@ func SliceDiff(slice1, slice2 []interface{}) (diffslice []interface{}) {
 	return
 }
 
-// SliceIntersect returns diff slice of slice1 - slice2.
+// SliceIntersect returns slice that are present in all the slice1 and slice2.
 func SliceIntersect(slice1, slice2 []interface{}) (diffslice []interface{}) {
 	for _, v := range slice1 {
-		if !InSliceIface(v, slice2) {
+		if InSliceIface(v, slice2) {
 			diffslice = append(diffslice, v)
 		}
 	}
