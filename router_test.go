@@ -1,8 +1,16 @@
-// Beego (http://beego.me/)
-// @description beego is an open-source, high-performance web framework for the Go programming language.
-// @link        http://github.com/astaxie/beego for the canonical source repository
-// @license     http://github.com/astaxie/beego/blob/master/LICENSE
-// @authors     astaxie
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package beego
 
@@ -91,10 +99,10 @@ func TestUrlFor(t *testing.T) {
 func TestUrlFor3(t *testing.T) {
 	handler := NewControllerRegister()
 	handler.AddAuto(&TestController{})
-	if a := handler.UrlFor("TestController.Myext"); a != "/test/myext" {
+	if a := handler.UrlFor("TestController.Myext"); a != "/test/myext" && a != "/Test/Myext" {
 		t.Errorf("TestController.Myext must equal to /test/myext, but get " + a)
 	}
-	if a := handler.UrlFor("TestController.GetUrl"); a != "/test/geturl" {
+	if a := handler.UrlFor("TestController.GetUrl"); a != "/test/geturl" && a != "/Test/GetUrl" {
 		t.Errorf("TestController.GetUrl must equal to /test/geturl, but get " + a)
 	}
 }
@@ -102,8 +110,14 @@ func TestUrlFor3(t *testing.T) {
 func TestUrlFor2(t *testing.T) {
 	handler := NewControllerRegister()
 	handler.Add("/v1/:v/cms_:id(.+)_:page(.+).html", &TestController{}, "*:List")
+	handler.Add("/v1/:username/edit", &TestController{}, "get:GetUrl")
 	handler.Add("/v1/:v(.+)_cms/ttt_:id(.+)_:page(.+).html", &TestController{}, "*:Param")
 	handler.Add("/:year:int/:month:int/:title/:entid", &TestController{})
+	if handler.UrlFor("TestController.GetUrl", ":username", "astaxie") != "/v1/astaxie/edit" {
+		Info(handler.UrlFor("TestController.GetUrl"))
+		t.Errorf("TestController.List must equal to /v1/astaxie/edit")
+	}
+
 	if handler.UrlFor("TestController.List", ":v", "za", ":id", "12", ":page", "123") !=
 		"/v1/za/cms_12_123.html" {
 		Info(handler.UrlFor("TestController.List"))
@@ -148,6 +162,18 @@ func TestPostFunc(t *testing.T) {
 
 func TestAutoFunc(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/test/list", nil)
+	w := httptest.NewRecorder()
+
+	handler := NewControllerRegister()
+	handler.AddAuto(&TestController{})
+	handler.ServeHTTP(w, r)
+	if w.Body.String() != "i am list" {
+		t.Errorf("user define func can't run")
+	}
+}
+
+func TestAutoFunc2(t *testing.T) {
+	r, _ := http.NewRequest("GET", "/Test/List", nil)
 	w := httptest.NewRecorder()
 
 	handler := NewControllerRegister()

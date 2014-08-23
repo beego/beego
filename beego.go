@@ -1,9 +1,28 @@
-// Beego (http://beego.me/)
-// @description beego is an open-source, high-performance web framework for the Go programming language.
-// @link        http://github.com/astaxie/beego for the canonical source repository
-// @license     http://github.com/astaxie/beego/blob/master/LICENSE
-// @authors     astaxie
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
+// beego is an open-source, high-performance, modularity, full-stack web framework
+//
+//		package main
+//
+// 		import "github.com/astaxie/beego"
+//
+//		 func main() {
+//  			  beego.Run()
+// 		}
+//
+// more infomation: http://beego.me
 package beego
 
 import (
@@ -19,7 +38,7 @@ import (
 )
 
 // beego web framework version.
-const VERSION = "1.3.1"
+const VERSION = "1.4.0"
 
 type hookfunc func() error //hook function to run
 var hooks []hookfunc       //hook function slice to store the hookfunc
@@ -359,6 +378,7 @@ func initBeforeHttpRun() {
 				`"sessionIDHashFunc":"` + SessionHashFunc + `",` +
 				`"sessionIDHashKey":"` + SessionHashKey + `",` +
 				`"enableSetCookie":` + strconv.FormatBool(SessionAutoSetCookie) + `,` +
+				`"domain":"` + SessionDomain + `",` +
 				`"cookieLifeTime":` + strconv.Itoa(SessionCookieLifeTime) + `}`
 		}
 		GlobalSessions, err = session.NewManager(SessionProvider,
@@ -380,14 +400,13 @@ func initBeforeHttpRun() {
 	middleware.AppName = AppName
 	middleware.RegisterErrorHandler()
 
-	for u, _ := range StaticDir {
-		Get(u, serverStaticRouter)
-		Get(u+"/*", serverStaticRouter)
-	}
 	if EnableDocs {
 		Get("/docs", serverDocs)
 		Get("/docs/*", serverDocs)
 	}
+
+	//init mime
+	AddAPPStartHook(initMime)
 }
 
 // this function is for test package init
@@ -406,6 +425,4 @@ func TestBeegoInit(apppath string) {
 
 func init() {
 	hooks = make([]hookfunc, 0)
-	//init mime
-	AddAPPStartHook(initMime)
 }

@@ -1,17 +1,40 @@
-// Beego (http://beego.me/)
-// @description beego is an open-source, high-performance web framework for the Go programming language.
-// @link        http://github.com/astaxie/beego for the canonical source repository
-// @license     http://github.com/astaxie/beego/blob/master/LICENSE
-// @authors     astaxie
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-package cache
+// package redis for cache provider
+//
+// depend on github.com/garyburd/redigo/redis
+//
+// go install github.com/garyburd/redigo/redis
+//
+// Usage:
+// import(
+//   _ "github.com/astaxie/beego/cache/redis"
+//   "github.com/astaxie/beego/cache"
+// )
+//
+//  bm, err := cache.NewCache("redis", `{"conn":"127.0.0.1:11211"}`)
+//
+//  more docs http://beego.me/docs/module/cache.md
+package redis
 
 import (
 	"encoding/json"
 	"errors"
 	"time"
 
-	"github.com/beego/redigo/redis"
+	"github.com/garyburd/redigo/redis"
 
 	"github.com/astaxie/beego/cache"
 )
@@ -43,52 +66,74 @@ func (rc *RedisCache) do(commandName string, args ...interface{}) (reply interfa
 
 // Get cache from redis.
 func (rc *RedisCache) Get(key string) interface{} {
-	v, err := rc.do("HGET", rc.key, key)
-	if err != nil {
-		return nil
+	if v, err := rc.do("GET", key); err == nil {
+		return v
 	}
-
-	return v
+	return nil
 }
 
 // put cache to redis.
-// timeout is ignored.
 func (rc *RedisCache) Put(key string, val interface{}, timeout int64) error {
-	_, err := rc.do("HSET", rc.key, key, val)
+	var err error
+	if _, err = rc.do("SET", key, val); err != nil {
+		return err
+	}
+
+	if _, err = rc.do("HSET", rc.key, key, true); err != nil {
+		return err
+	}
+	_, err = rc.do("EXPIRE", key, timeout)
 	return err
 }
 
 // delete cache in redis.
 func (rc *RedisCache) Delete(key string) error {
-	_, err := rc.do("HDEL", rc.key, key)
+	var err error
+	if _, err = rc.do("DEL", key); err != nil {
+		return err
+	}
+	_, err = rc.do("HDEL", rc.key, key)
 	return err
 }
 
-// check cache exist in redis.
+// check cache's existence in redis.
 func (rc *RedisCache) IsExist(key string) bool {
-	v, err := redis.Bool(rc.do("HEXISTS", rc.key, key))
+	v, err := redis.Bool(rc.do("EXISTS", key))
 	if err != nil {
 		return false
 	}
-
+	if v == false {
+		if _, err = rc.do("HDEL", rc.key, key); err != nil {
+			return false
+		}
+	}
 	return v
 }
 
 // increase counter in redis.
 func (rc *RedisCache) Incr(key string) error {
-	_, err := redis.Bool(rc.do("HINCRBY", rc.key, key, 1))
+	_, err := redis.Bool(rc.do("INCRBY", key, 1))
 	return err
 }
 
 // decrease counter in redis.
 func (rc *RedisCache) Decr(key string) error {
-	_, err := redis.Bool(rc.do("HINCRBY", rc.key, key, -1))
+	_, err := redis.Bool(rc.do("INCRBY", key, -1))
 	return err
 }
 
 // clean all cache in redis. delete this redis collection.
 func (rc *RedisCache) ClearAll() error {
-	_, err := rc.do("DEL", rc.key)
+	cachedKeys, err := redis.Strings(rc.do("HKEYS", rc.key))
+	if err != nil {
+		return err
+	}
+	for _, str := range cachedKeys {
+		if _, err = rc.do("DEL", str); err != nil {
+			return err
+		}
+	}
+	_, err = rc.do("DEL", rc.key)
 	return err
 }
 
@@ -114,26 +159,21 @@ func (rc *RedisCache) StartAndGC(config string) error {
 
 	c := rc.p.Get()
 	defer c.Close()
-	if err := c.Err(); err != nil {
-		return err
-	}
 
-	return nil
+	return c.Err()
 }
 
 // connect to redis.
 func (rc *RedisCache) connectInit() {
+	dialFunc := func() (c redis.Conn, err error) {
+		c, err = redis.Dial("tcp", rc.conninfo)
+		return
+	}
 	// initialize a new pool
 	rc.p = &redis.Pool{
 		MaxIdle:     3,
 		IdleTimeout: 180 * time.Second,
-		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", rc.conninfo)
-			if err != nil {
-				return nil, err
-			}
-			return c, nil
-		},
+		Dial:        dialFunc,
 	}
 }
 

@@ -1,100 +1,193 @@
-// Beego (http://beego.me)
-// @description beego is an open-source, high-performance web framework for the Go programming language.
-// @link        http://github.com/astaxie/beego for the canonical source repository
-// @license     http://github.com/astaxie/beego/blob/master/LICENSE
-// @authors     astaxie
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package httplib
 
 import (
-	"fmt"
 	"io/ioutil"
+	"os"
+	"strings"
 	"testing"
 )
 
-func TestGetUrl(t *testing.T) {
-	resp, err := Get("http://beego.me").Debug(true).Response()
+func TestResponse(t *testing.T) {
+	req := Get("http://httpbin.org/get")
+	resp, err := req.Response()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if resp.Body == nil {
-		t.Fatal("body is nil")
-	}
-	data, err := ioutil.ReadAll(resp.Body)
-	defer resp.Body.Close()
-	if err != nil {
-		t.Fatal(err)
-	}
-	if len(data) == 0 {
-		t.Fatal("data is no")
-	}
+	t.Log(resp)
+}
 
-	str, err := Get("http://beego.me").String()
+func TestGet(t *testing.T) {
+	req := Get("http://httpbin.org/get")
+	b, err := req.Bytes()
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(str) == 0 {
-		t.Fatal("has no info")
+	t.Log(b)
+
+	s, err := req.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(s)
+
+	if string(b) != s {
+		t.Fatal("request data not match")
 	}
 }
 
-func ExamplePost(t *testing.T) {
-	b := Post("http://beego.me/").Debug(true)
-	b.Param("username", "astaxie")
-	b.Param("password", "hello")
-	b.PostFile("uploadfile", "httplib_test.go")
-	str, err := b.String()
+func TestSimplePost(t *testing.T) {
+	v := "smallfish"
+	req := Post("http://httpbin.org/post")
+	req.Param("username", v)
+
+	str, err := req.String()
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println(str)
+	t.Log(str)
+
+	n := strings.Index(str, v)
+	if n == -1 {
+		t.Fatal(v + " not found in post")
+	}
 }
 
-func TestSimpleGetString(t *testing.T) {
-	fmt.Println("TestSimpleGetString==========================================")
-	html, err := Get("http://httpbin.org/headers").SetAgent("beegoooooo").String()
+func TestPostFile(t *testing.T) {
+	v := "smallfish"
+	req := Post("http://httpbin.org/post")
+	req.Param("username", v)
+	req.PostFile("uploadfile", "httplib_test.go")
+
+	str, err := req.String()
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println(html)
-	fmt.Println("TestSimpleGetString==========================================")
+	t.Log(str)
+
+	n := strings.Index(str, v)
+	if n == -1 {
+		t.Fatal(v + " not found in post")
+	}
 }
 
-func TestSimpleGetStringWithDefaultCookie(t *testing.T) {
-	fmt.Println("TestSimpleGetStringWithDefaultCookie==========================================")
-	html, err := Get("http://httpbin.org/cookies/set?k1=v1").SetEnableCookie(true).String()
+func TestSimplePut(t *testing.T) {
+	str, err := Put("http://httpbin.org/put").String()
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println(html)
-	html, err = Get("http://httpbin.org/cookies").SetEnableCookie(true).String()
-	if err != nil {
-		t.Fatal(err)
-	}
-	fmt.Println(html)
-	fmt.Println("TestSimpleGetStringWithDefaultCookie==========================================")
+	t.Log(str)
 }
 
-func TestDefaultSetting(t *testing.T) {
-	fmt.Println("TestDefaultSetting==========================================")
-	var def BeegoHttpSettings
-	def.EnableCookie = true
-	//def.ShowDebug = true
-	def.UserAgent = "UserAgent"
-	//def.ConnectTimeout = 60*time.Second
-	//def.ReadWriteTimeout = 60*time.Second
-	def.Transport = nil //http.DefaultTransport
-	SetDefaultSetting(def)
+func TestSimpleDelete(t *testing.T) {
+	str, err := Delete("http://httpbin.org/delete").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(str)
+}
 
-	html, err := Get("http://httpbin.org/headers").String()
+func TestWithCookie(t *testing.T) {
+	v := "smallfish"
+	str, err := Get("http://httpbin.org/cookies/set?k1=" + v).SetEnableCookie(true).String()
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println(html)
-	html, err = Get("http://httpbin.org/headers").String()
+	t.Log(str)
+
+	str, err = Get("http://httpbin.org/cookies").SetEnableCookie(true).String()
 	if err != nil {
 		t.Fatal(err)
 	}
-	fmt.Println(html)
-	fmt.Println("TestDefaultSetting==========================================")
+	t.Log(str)
+
+	n := strings.Index(str, v)
+	if n == -1 {
+		t.Fatal(v + " not found in cookie")
+	}
+}
+
+func TestWithUserAgent(t *testing.T) {
+	v := "beego"
+	str, err := Get("http://httpbin.org/headers").SetUserAgent(v).String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(str)
+
+	n := strings.Index(str, v)
+	if n == -1 {
+		t.Fatal(v + " not found in user-agent")
+	}
+}
+
+func TestWithSetting(t *testing.T) {
+	v := "beego"
+	var setting BeegoHttpSettings
+	setting.EnableCookie = true
+	setting.UserAgent = v
+	setting.Transport = nil
+	SetDefaultSetting(setting)
+
+	str, err := Get("http://httpbin.org/get").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(str)
+
+	n := strings.Index(str, v)
+	if n == -1 {
+		t.Fatal(v + " not found in user-agent")
+	}
+}
+
+func TestToJson(t *testing.T) {
+	req := Get("http://httpbin.org/ip")
+	resp, err := req.Response()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(resp)
+
+	// httpbin will return http remote addr
+	type Ip struct {
+		Origin string `json:"origin"`
+	}
+	var ip Ip
+	err = req.ToJson(&ip)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(ip.Origin)
+
+	if n := strings.Count(ip.Origin, "."); n != 3 {
+		t.Fatal("response is not valid ip")
+	}
+}
+
+func TestToFile(t *testing.T) {
+	f := "beego_testfile"
+	req := Get("http://httpbin.org/ip")
+	err := req.ToFile(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(f)
+	b, err := ioutil.ReadFile(f)
+	if n := strings.Index(string(b), "origin"); n == -1 {
+		t.Fatal(err)
+	}
 }

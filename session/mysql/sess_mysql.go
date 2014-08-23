@@ -1,11 +1,23 @@
-// Beego (http://beego.me/)
-// @description beego is an open-source, high-performance web framework for the Go programming language.
-// @link        http://github.com/astaxie/beego for the canonical source repository
-// @license     http://github.com/astaxie/beego/blob/master/LICENSE
-// @authors     astaxie
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-package session
-
+// package mysql for session provider
+//
+// depends on github.com/go-sql-driver/mysql:
+//
+// go install github.com/go-sql-driver/mysql
+//
 // mysql session support need create table as sql:
 //	CREATE TABLE `session` (
 //	`session_key` char(64) NOT NULL,
@@ -13,6 +25,20 @@ package session
 //	`session_expiry` int(11) unsigned NOT NULL,
 //	PRIMARY KEY (`session_key`)
 //	) ENGINE=MyISAM DEFAULT CHARSET=utf8;
+//
+// Usage:
+// import(
+//   _ "github.com/astaxie/beego/session/mysql"
+//   "github.com/astaxie/beego/session"
+// )
+//
+//	func init() {
+//		globalSessions, _ = session.NewManager("mysql", ``{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig":"[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]"}``)
+//		go globalSessions.GC()
+//	}
+//
+// more docs: http://beego.me/docs/module/session.md
+package session
 
 import (
 	"database/sql"

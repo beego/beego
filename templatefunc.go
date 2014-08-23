@@ -1,8 +1,16 @@
-// Beego (http://beego.me/)
-// @description beego is an open-source, high-performance web framework for the Go programming language.
-// @link        http://github.com/astaxie/beego for the canonical source repository
-// @license     http://github.com/astaxie/beego/blob/master/LICENSE
-// @authors     astaxie
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package beego
 
@@ -24,6 +32,9 @@ func Substr(s string, start, length int) string {
 	if start < 0 {
 		start = 0
 	}
+	if start > len(bt) {
+		start = start % len(bt)
+	}
 	var end int
 	if (start + length) > (len(bt) - 1) {
 		end = len(bt)
@@ -37,23 +48,20 @@ func Substr(s string, start, length int) string {
 func Html2str(html string) string {
 	src := string(html)
 
-	//将HTML标签全转换成小写
 	re, _ := regexp.Compile("\\<[\\S\\s]+?\\>")
 	src = re.ReplaceAllStringFunc(src, strings.ToLower)
 
-	//去除STYLE
+	//remove STYLE
 	re, _ = regexp.Compile("\\<style[\\S\\s]+?\\</style\\>")
 	src = re.ReplaceAllString(src, "")
 
-	//去除SCRIPT
+	//remove SCRIPT
 	re, _ = regexp.Compile("\\<script[\\S\\s]+?\\</script\\>")
 	src = re.ReplaceAllString(src, "")
 
-	//去除所有尖括号内的HTML代码，并换成换行符
 	re, _ = regexp.Compile("\\<[\\S\\s]+?\\>")
 	src = re.ReplaceAllString(src, "\n")
 
-	//去除连续的换行符
 	re, _ = regexp.Compile("\\s{2,}")
 	src = re.ReplaceAllString(src, "\n")
 
@@ -326,14 +334,6 @@ func ParseForm(form url.Values, obj interface{}) error {
 	return nil
 }
 
-// form types for RenderForm function
-var FormType = map[string]bool{
-	"text":     true,
-	"textarea": true,
-	"hidden":   true,
-	"password": true,
-}
-
 var unKind = map[reflect.Kind]bool{
 	reflect.Uintptr:       true,
 	reflect.Complex64:     true,
@@ -367,42 +367,73 @@ func RenderForm(obj interface{}) template.HTML {
 		}
 
 		fieldT := objT.Field(i)
-		tags := strings.Split(fieldT.Tag.Get("form"), ",")
-		label := fieldT.Name + ": "
-		name := fieldT.Name
-		fType := "text"
 
-		switch len(tags) {
-		case 1:
-			if tags[0] == "-" {
-				continue
-			}
-			if len(tags[0]) > 0 {
-				name = tags[0]
-			}
-		case 2:
-			if len(tags[0]) > 0 {
-				name = tags[0]
-			}
-			if len(tags[1]) > 0 {
-				fType = tags[1]
-			}
-		case 3:
-			if len(tags[0]) > 0 {
-				name = tags[0]
-			}
-			if len(tags[1]) > 0 {
-				fType = tags[1]
-			}
-			if len(tags[2]) > 0 {
-				label = tags[2]
-			}
+		label, name, fType, ignored := parseFormTag(fieldT)
+		if ignored {
+			continue
 		}
 
-		raw = append(raw, fmt.Sprintf(`%v<input name="%v" type="%v" value="%v">`,
-			label, name, fType, fieldV.Interface()))
+		raw = append(raw, renderFormField(label, name, fType, fieldV.Interface()))
 	}
 	return template.HTML(strings.Join(raw, "</br>"))
+}
+
+// renderFormField returns a string containing HTML of a single form field.
+func renderFormField(label, name, fType string, value interface{}) string {
+	if isValidForInput(fType) {
+		return fmt.Sprintf(`%v<input name="%v" type="%v" value="%v">`, label, name, fType, value)
+	}
+
+	return fmt.Sprintf(`%v<%v name="%v">%v</%v>`, label, fType, name, value, fType)
+}
+
+// isValidForInput checks if fType is a valid value for the `type` property of an HTML input element.
+func isValidForInput(fType string) bool {
+	validInputTypes := strings.Fields("text password checkbox radio submit reset hidden image file button search email url tel number range date month week time datetime datetime-local color")
+	for _, validType := range validInputTypes {
+		if fType == validType {
+			return true
+		}
+	}
+	return false
+}
+
+// parseFormTag takes the stuct-tag of a StructField and parses the `form` value.
+// returned are the form label, name-property, type and wether the field should be ignored.
+func parseFormTag(fieldT reflect.StructField) (label, name, fType string, ignored bool) {
+	tags := strings.Split(fieldT.Tag.Get("form"), ",")
+	label = fieldT.Name + ": "
+	name = fieldT.Name
+	fType = "text"
+	ignored = false
+
+	switch len(tags) {
+	case 1:
+		if tags[0] == "-" {
+			ignored = true
+		}
+		if len(tags[0]) > 0 {
+			name = tags[0]
+		}
+	case 2:
+		if len(tags[0]) > 0 {
+			name = tags[0]
+		}
+		if len(tags[1]) > 0 {
+			fType = tags[1]
+		}
+	case 3:
+		if len(tags[0]) > 0 {
+			name = tags[0]
+		}
+		if len(tags[1]) > 0 {
+			fType = tags[1]
+		}
+		if len(tags[2]) > 0 {
+			label = tags[2]
+		}
+	}
+	return
 }
 
 func isStructPtr(t reflect.Type) bool {

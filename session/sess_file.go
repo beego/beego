@@ -1,8 +1,16 @@
-// Beego (http://beego.me/)
-// @description beego is an open-source, high-performance web framework for the Go programming language.
-// @link        http://github.com/astaxie/beego for the canonical source repository
-// @license     http://github.com/astaxie/beego/blob/master/LICENSE
-// @authors     astaxie
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package session
 
@@ -26,7 +34,6 @@ var (
 
 // File session store
 type FileSessionStore struct {
-	f      *os.File
 	sid    string
 	lock   sync.RWMutex
 	values map[interface{}]interface{}
@@ -74,14 +81,23 @@ func (fs *FileSessionStore) SessionID() string {
 
 // Write file session to local file with Gob string
 func (fs *FileSessionStore) SessionRelease(w http.ResponseWriter) {
-	defer fs.f.Close()
 	b, err := EncodeGob(fs.values)
 	if err != nil {
 		return
 	}
-	fs.f.Truncate(0)
-	fs.f.Seek(0, 0)
-	fs.f.Write(b)
+	_, err = os.Stat(path.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid))
+	var f *os.File
+	if err == nil {
+		f, err = os.OpenFile(path.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid), os.O_RDWR, 0777)
+	} else if os.IsNotExist(err) {
+		f, err = os.Create(path.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid))
+	} else {
+		return
+	}
+	f.Truncate(0)
+	f.Seek(0, 0)
+	f.Write(b)
+	f.Close()
 }
 
 // File session provider
@@ -134,8 +150,7 @@ func (fp *FileProvider) SessionRead(sid string) (SessionStore, error) {
 		}
 	}
 	f.Close()
-	f, err = os.OpenFile(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid), os.O_WRONLY|os.O_CREATE, 0777)
-	ss := &FileSessionStore{f: f, sid: sid, values: kv}
+	ss := &FileSessionStore{sid: sid, values: kv}
 	return ss, nil
 }
 
@@ -232,9 +247,7 @@ func (fp *FileProvider) SessionRegenerate(oldsid, sid string) (SessionStore, err
 			return nil, err
 		}
 	}
-
-	newf, err = os.OpenFile(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid), os.O_WRONLY|os.O_CREATE, 0777)
-	ss := &FileSessionStore{f: newf, sid: sid, values: kv}
+	ss := &FileSessionStore{sid: sid, values: kv}
 	return ss, nil
 }
 

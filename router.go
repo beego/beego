@@ -1,8 +1,16 @@
-// Beego (http://beego.me/)
-// @description beego is an open-source, high-performance web framework for the Go programming language.
-// @link        http://github.com/astaxie/beego for the canonical source repository
-// @license     http://github.com/astaxie/beego/blob/master/LICENSE
-// @authors     astaxie
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package beego
 
@@ -29,7 +37,8 @@ import (
 
 const (
 	// default filter execution points
-	BeforeRouter = iota
+	BeforeStatic = iota
+	BeforeRouter
 	BeforeExec
 	AfterExec
 	FinishRouter
@@ -62,6 +71,8 @@ var (
 		"DelSession", "SessionRegenerateID", "DestroySession", "IsAjax", "GetSecureCookie",
 		"SetSecureCookie", "XsrfToken", "CheckXsrfCookie", "XsrfFormHtml",
 		"GetControllerAndAction"}
+
+	url_placeholder = "{{placeholder}}"
 )
 
 // To append a slice's value into "exceptMethod", for controller's methods shouldn't reflect to AutoRouter
@@ -342,19 +353,23 @@ func (p *ControllerRegistor) AddAutoPrefix(prefix string, c ControllerInterface)
 	reflectVal := reflect.ValueOf(c)
 	rt := reflectVal.Type()
 	ct := reflect.Indirect(reflectVal).Type()
-	controllerName := strings.ToLower(strings.TrimSuffix(ct.Name(), "Controller"))
+	controllerName := strings.TrimSuffix(ct.Name(), "Controller")
 	for i := 0; i < rt.NumMethod(); i++ {
 		if !utils.InSlice(rt.Method(i).Name, exceptMethod) {
 			route := &controllerInfo{}
 			route.routerType = routerTypeBeego
 			route.methods = map[string]string{"*": rt.Method(i).Name}
 			route.controllerType = ct
-			pattern := path.Join(prefix, controllerName, strings.ToLower(rt.Method(i).Name), "*")
-			patternfix := path.Join(prefix, controllerName, strings.ToLower(rt.Method(i).Name))
+			pattern := path.Join(prefix, strings.ToLower(controllerName), strings.ToLower(rt.Method(i).Name), "*")
+			patternInit := path.Join(prefix, controllerName, rt.Method(i).Name, "*")
+			patternfix := path.Join(prefix, strings.ToLower(controllerName), strings.ToLower(rt.Method(i).Name))
+			patternfixInit := path.Join(prefix, controllerName, rt.Method(i).Name)
 			route.pattern = pattern
 			for _, m := range HTTPMETHOD {
 				p.addToRouter(m, pattern, route)
+				p.addToRouter(m, patternInit, route)
 				p.addToRouter(m, patternfix, route)
+				p.addToRouter(m, patternfixInit, route)
 			}
 		}
 	}
@@ -420,6 +435,7 @@ func (p *ControllerRegistor) geturl(t *Tree, url, controllName, methodName strin
 		}
 	}
 	if t.wildcard != nil {
+		url = path.Join(url, url_placeholder)
 		ok, u := p.geturl(t.wildcard, url, controllName, methodName, params)
 		if ok {
 			return ok, u
@@ -448,15 +464,14 @@ func (p *ControllerRegistor) geturl(t *Tree, url, controllName, methodName strin
 				if find {
 					if l.regexps == nil {
 						if len(l.wildcards) == 0 {
-							return true, url
+							return true, strings.Replace(url, "/"+url_placeholder, "", 1) + tourl(params)
 						}
 						if len(l.wildcards) == 1 {
 							if v, ok := params[l.wildcards[0]]; ok {
 								delete(params, l.wildcards[0])
-								return true, url + "/" + v + tourl(params)
-							}
-							if l.wildcards[0] == ":splat" {
-								return true, url + tourl(params)
+								return true, strings.Replace(url, url_placeholder, v, 1) + tourl(params)
+							} else {
+								return false, ""
 							}
 						}
 						if len(l.wildcards) == 3 && l.wildcards[0] == "." {
@@ -464,7 +479,7 @@ func (p *ControllerRegistor) geturl(t *Tree, url, controllName, methodName strin
 								if e, isok := params[":ext"]; isok {
 									delete(params, ":path")
 									delete(params, ":ext")
-									return true, url + "/" + p + "." + e + tourl(params)
+									return true, strings.Replace(url, url_placeholder, p+"."+e, -1) + tourl(params)
 								}
 							}
 						}
@@ -475,7 +490,8 @@ func (p *ControllerRegistor) geturl(t *Tree, url, controllName, methodName strin
 								continue
 							}
 							if u, ok := params[v]; ok {
-								url += "/" + u
+								delete(params, v)
+								url = strings.Replace(url, url_placeholder, u, 1)
 							} else {
 								if canskip {
 									canskip = false
@@ -485,7 +501,7 @@ func (p *ControllerRegistor) geturl(t *Tree, url, controllName, methodName strin
 								}
 							}
 						}
-						return true, url
+						return true, url + tourl(params)
 					} else {
 						var i int
 						var startreg bool
@@ -508,11 +524,11 @@ func (p *ControllerRegistor) geturl(t *Tree, url, controllName, methodName strin
 							}
 						}
 						if l.regexps.MatchString(regurl) {
-							if url == "/" {
-								return true, url + regurl + tourl(params)
-							} else {
-								return true, url + "/" + regurl + tourl(params)
+							ps := strings.Split(regurl, "/")
+							for _, p := range ps {
+								url = strings.Replace(url, url_placeholder, p, 1)
 							}
+							return true, url + tourl(params)
 						}
 					}
 				}
@@ -567,17 +583,29 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		return false
 	}
 
+	// filter wrong httpmethod
+	if _, ok := HTTPMETHOD[r.Method]; !ok {
+		http.Error(w, "Method Not Allowed", 405)
+		goto Admin
+	}
+
+	// filter for static file
+	if do_filter(BeforeStatic) {
+		goto Admin
+	}
+
+	serverStaticRouter(context)
+	if w.started {
+		findrouter = true
+		goto Admin
+	}
+
 	// session init
 	if SessionOn {
 		context.Input.CruSession = GlobalSessions.SessionStart(w, r)
 		defer func() {
 			context.Input.CruSession.SessionRelease(w)
 		}()
-	}
-
-	if _, ok := HTTPMETHOD[r.Method]; !ok {
-		http.Error(w, "Method Not Allowed", 405)
-		goto Admin
 	}
 
 	if r.Method != "GET" && r.Method != "HEAD" {
@@ -710,12 +738,11 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				}
 
 				//render template
-				if !w.started {
+				if !w.started && context.Output.Status == 0 {
 					if AutoRender {
 						if err := execController.Render(); err != nil {
 							panic(err)
 						}
-
 					}
 				}
 			}
@@ -746,11 +773,22 @@ Admin:
 	}
 
 	if RunMode == "dev" {
+		var devinfo string
 		if findrouter {
-			Info("beego: router defined " + routerInfo.pattern + " " + r.URL.Path + " +" + timeend.String())
+			if routerInfo != nil {
+				devinfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s | % -40s |", r.Method, r.URL.Path, timeend.String(), "match", routerInfo.pattern)
+			} else {
+				devinfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s |", r.Method, r.URL.Path, timeend.String(), "match")
+			}
 		} else {
-			Info("beego:" + r.URL.Path + " 404" + " +" + timeend.String())
+			devinfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s |", r.Method, r.URL.Path, timeend.String(), "notmatch")
 		}
+		Debug(devinfo)
+	}
+
+	// Call WriteHeader if status code has been set changed
+	if context.Output.Status != 0 {
+		w.writer.WriteHeader(context.Output.Status)
 	}
 }
 

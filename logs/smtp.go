@@ -1,8 +1,16 @@
-// Beego (http://beego.me/)
-// @description beego is an open-source, high-performance web framework for the Go programming language.
-// @link        http://github.com/astaxie/beego for the canonical source repository
-// @license     http://github.com/astaxie/beego/blob/master/LICENSE
-// @authors     astaxie
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package logs
 
@@ -51,22 +59,30 @@ func (s *SmtpWriter) Init(jsonconfig string) error {
 	return nil
 }
 
+func (s *SmtpWriter) GetSmtpAuth(host string) smtp.Auth {
+	if len(strings.Trim(s.Username, " ")) == 0 && len(strings.Trim(s.Password, " ")) == 0 {
+		return nil
+	}
+	return smtp.PlainAuth(
+		"",
+		s.Username,
+		s.Password,
+		host,
+	)
+}
+
 // write message in smtp writer.
 // it will send an email with subject and only this message.
 func (s *SmtpWriter) WriteMsg(msg string, level int) error {
-	if level < s.Level {
+	if level > s.Level {
 		return nil
 	}
 
 	hp := strings.Split(s.Host, ":")
 
 	// Set up authentication information.
-	auth := smtp.PlainAuth(
-		"",
-		s.Username,
-		s.Password,
-		hp[0],
-	)
+	auth := s.GetSmtpAuth(hp[0])
+
 	// Connect to the server, authenticate, set the sender and recipient,
 	// and send the email all in one step.
 	content_type := "Content-Type: text/plain" + "; charset=UTF-8"

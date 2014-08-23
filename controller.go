@@ -1,8 +1,16 @@
-// Beego (http://beego.me/)
-// @description beego is an open-source, high-performance web framework for the Go programming language.
-// @link        http://github.com/astaxie/beego for the canonical source repository
-// @license     http://github.com/astaxie/beego/blob/master/LICENSE
-// @authors     astaxie
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
 package beego
 
@@ -22,7 +30,6 @@ import (
 
 	"github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/session"
-	"github.com/astaxie/beego/utils"
 )
 
 //commonly used mime-types
@@ -270,6 +277,11 @@ func (c *Controller) Abort(code string) {
 	}
 }
 
+// CustomAbort stops controller handler and show the error data, it's similar Aborts, but support status code and body.
+func (c *Controller) CustomAbort(status int, body string) {
+	c.Ctx.Abort(status, body)
+}
+
 // StopRun makes panic of USERSTOPRUN error and go to recover function if defined.
 func (c *Controller) StopRun() {
 	panic(USERSTOPRUN)
@@ -474,18 +486,13 @@ func (c *Controller) SetSecureCookie(Secret, name, value string, others ...inter
 // XsrfToken creates a xsrf token string and returns.
 func (c *Controller) XsrfToken() string {
 	if c._xsrf_token == "" {
-		token, ok := c.GetSecureCookie(XSRFKEY, "_xsrf")
-		if !ok {
-			var expire int64
-			if c.XSRFExpire > 0 {
-				expire = int64(c.XSRFExpire)
-			} else {
-				expire = int64(XSRFExpire)
-			}
-			token = string(utils.RandomCreateBytes(32))
-			c.SetSecureCookie(XSRFKEY, "_xsrf", token, expire)
+		var expire int64
+		if c.XSRFExpire > 0 {
+			expire = int64(c.XSRFExpire)
+		} else {
+			expire = int64(XSRFExpire)
 		}
-		c._xsrf_token = token
+		c._xsrf_token = c.Ctx.XsrfToken(XSRFKEY, expire)
 	}
 	return c._xsrf_token
 }
@@ -497,19 +504,7 @@ func (c *Controller) CheckXsrfCookie() bool {
 	if !c.EnableXSRF {
 		return true
 	}
-	token := c.GetString("_xsrf")
-	if token == "" {
-		token = c.Ctx.Request.Header.Get("X-Xsrftoken")
-	}
-	if token == "" {
-		token = c.Ctx.Request.Header.Get("X-Csrftoken")
-	}
-	if token == "" {
-		c.Ctx.Abort(403, "'_xsrf' argument missing from POST")
-	} else if c._xsrf_token != token {
-		c.Ctx.Abort(403, "XSRF cookie does not match POST argument")
-	}
-	return true
+	return c.Ctx.CheckXsrfCookie()
 }
 
 // XsrfFormHtml writes an input field contains xsrf token value.
