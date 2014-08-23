@@ -14,7 +14,7 @@
 
 // Usage:
 //
-// import "github.com/astaxie/beego/context"
+// import "github.com/astaxie/beego/httplib"
 //
 //	b := httplib.Post("http://beego.me/")
 //	b.Param("username","astaxie")
@@ -53,7 +53,7 @@ var defaultSetting = BeegoHttpSettings{false, "beegoServer", 60 * time.Second, 6
 var defaultCookieJar http.CookieJar
 var settingMutex sync.Mutex
 
-// createDefaultCookieJar creates a global cookiejar to store cookies.
+// createDefaultCookie creates a global cookiejar to store cookies.
 func createDefaultCookie() {
 	settingMutex.Lock()
 	defer settingMutex.Unlock()
@@ -75,14 +75,14 @@ func SetDefaultSetting(setting BeegoHttpSettings) {
 
 // return *BeegoHttpRequest with specific method
 func newBeegoRequest(url, method string) *BeegoHttpRequest {
+	var resp http.Response
 	req := http.Request{
+		Method:     method,
+		Header:     make(http.Header),
 		Proto:      "HTTP/1.1",
 		ProtoMajor: 1,
 		ProtoMinor: 1,
 	}
-	var resp http.Response
-	req.Method = method
-	req.Header = http.Header{}
 	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting, &resp, nil}
 }
 
@@ -101,7 +101,7 @@ func Put(url string) *BeegoHttpRequest {
 	return newBeegoRequest(url, "PUT")
 }
 
-// Delete returns *BeegoHttpRequest DELETE GET method.
+// Delete returns *BeegoHttpRequest DELETE method.
 func Delete(url string) *BeegoHttpRequest {
 	return newBeegoRequest(url, "DELETE")
 }
@@ -310,10 +310,6 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 	}
 
 	url, err := url.Parse(b.url)
-	if url.Scheme == "" {
-		b.url = "http://" + b.url
-		url, err = url.Parse(b.url)
-	}
 	if err != nil {
 		return nil, err
 	}
