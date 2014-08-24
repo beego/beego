@@ -137,121 +137,116 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 			tmpl.Execute(rw, data)
 
 		case "router":
-			resultList := new([][]string)
+			content := make(map[string]interface{})
 
-			var result = []string{
-				fmt.Sprintf("header"),
+			var fields = []string{
 				fmt.Sprintf("Router Pattern"),
 				fmt.Sprintf("Methods"),
 				fmt.Sprintf("Controller"),
 			}
-			*resultList = append(*resultList, result)
+			content["Fields"] = fields
 
+			methods := []string{}
+			methodsData := make(map[string]interface{})
 			for method, t := range BeeApp.Handlers.routers {
-				var result = []string{
-					fmt.Sprintf("success"),
-					fmt.Sprintf("Method: %s", method),
-					fmt.Sprintf(""),
-					fmt.Sprintf(""),
-				}
-				*resultList = append(*resultList, result)
+
+				resultList := new([][]string)
 
 				printTree(resultList, t)
+
+				methods = append(methods, method)
+				methodsData[method] = resultList
 			}
-			data["Content"] = resultList
+
+			content["Data"] = methodsData
+			content["Methods"] = methods
+			data["Content"] = content
 			data["Title"] = "Routers"
+
 			tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
 			tmpl = template.Must(tmpl.Parse(routerAndFilterTpl))
 			tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
 			tmpl.Execute(rw, data)
 		case "filter":
-			resultList := new([][]string)
+			content := make(map[string]interface{})
 
-			var result = []string{
-				fmt.Sprintf("header"),
+			var fields = []string{
 				fmt.Sprintf("Router Pattern"),
 				fmt.Sprintf("Filter Function"),
 			}
-			*resultList = append(*resultList, result)
+			content["Fields"] = fields
+
+			filterTypes := []string{}
+			filterTypeData := make(map[string]interface{})
 
 			if BeeApp.Handlers.enableFilter {
-				var result = []string{
-					fmt.Sprintf("success"),
-					fmt.Sprintf("Before Router"),
-					fmt.Sprintf(""),
-				}
-				*resultList = append(*resultList, result)
+				var filterType string
 
 				if bf, ok := BeeApp.Handlers.filters[BeforeRouter]; ok {
+					filterType = "Before Router"
+					filterTypes = append(filterTypes, filterType)
+					resultList := new([][]string)
 					for _, f := range bf {
 
 						var result = []string{
-							fmt.Sprintf(""),
 							fmt.Sprintf("%s", f.pattern),
 							fmt.Sprintf("%s", utils.GetFuncName(f.filterFunc)),
 						}
 						*resultList = append(*resultList, result)
-
 					}
+					filterTypeData[filterType] = resultList
 				}
-				result = []string{
-					fmt.Sprintf("success"),
-					fmt.Sprintf("Before Exec"),
-					fmt.Sprintf(""),
-				}
-				*resultList = append(*resultList, result)
+
 				if bf, ok := BeeApp.Handlers.filters[BeforeExec]; ok {
+					filterType = "Before Exec"
+					filterTypes = append(filterTypes, filterType)
+					resultList := new([][]string)
 					for _, f := range bf {
 
 						var result = []string{
-							fmt.Sprintf(""),
 							fmt.Sprintf("%s", f.pattern),
 							fmt.Sprintf("%s", utils.GetFuncName(f.filterFunc)),
 						}
 						*resultList = append(*resultList, result)
-
 					}
+					filterTypeData[filterType] = resultList
 				}
-				result = []string{
-					fmt.Sprintf("success"),
-					fmt.Sprintf("AfterExec Exec"),
-					fmt.Sprintf(""),
-				}
-				*resultList = append(*resultList, result)
 
 				if bf, ok := BeeApp.Handlers.filters[AfterExec]; ok {
+					filterType = "After Exec"
+					filterTypes = append(filterTypes, filterType)
+					resultList := new([][]string)
 					for _, f := range bf {
 
 						var result = []string{
-							fmt.Sprintf(""),
 							fmt.Sprintf("%s", f.pattern),
 							fmt.Sprintf("%s", utils.GetFuncName(f.filterFunc)),
 						}
 						*resultList = append(*resultList, result)
-
 					}
+					filterTypeData[filterType] = resultList
 				}
-				result = []string{
-					fmt.Sprintf("success"),
-					fmt.Sprintf("Finish Router"),
-					fmt.Sprintf(""),
-				}
-				*resultList = append(*resultList, result)
 
 				if bf, ok := BeeApp.Handlers.filters[FinishRouter]; ok {
+					filterType = "Finish Router"
+					filterTypes = append(filterTypes, filterType)
+					resultList := new([][]string)
 					for _, f := range bf {
 
 						var result = []string{
-							fmt.Sprintf(""),
 							fmt.Sprintf("%s", f.pattern),
 							fmt.Sprintf("%s", utils.GetFuncName(f.filterFunc)),
 						}
 						*resultList = append(*resultList, result)
-
 					}
+					filterTypeData[filterType] = resultList
 				}
 			}
-			data["Content"] = resultList
+
+			content["Data"] = filterTypeData
+			content["Methods"] = filterTypes
+
+			data["Content"] = content
 			data["Title"] = "Filters"
 			tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
 			tmpl = template.Must(tmpl.Parse(routerAndFilterTpl))
@@ -276,7 +271,6 @@ func printTree(resultList *[][]string, t *Tree) {
 		if v, ok := l.runObject.(*controllerInfo); ok {
 			if v.routerType == routerTypeBeego {
 				var result = []string{
-					fmt.Sprintf(""),
 					fmt.Sprintf("%s", v.pattern),
 					fmt.Sprintf("%s", v.methods),
 					fmt.Sprintf("%s", v.controllerType),
@@ -284,7 +278,6 @@ func printTree(resultList *[][]string, t *Tree) {
 				*resultList = append(*resultList, result)
 			} else if v.routerType == routerTypeRESTFul {
 				var result = []string{
-					fmt.Sprintf(""),
 					fmt.Sprintf("%s", v.pattern),
 					fmt.Sprintf("%s", v.methods),
 					fmt.Sprintf(""),
@@ -292,7 +285,6 @@ func printTree(resultList *[][]string, t *Tree) {
 				*resultList = append(*resultList, result)
 			} else if v.routerType == routerTypeHandler {
 				var result = []string{
-					fmt.Sprintf(""),
 					fmt.Sprintf("%s", v.pattern),
 					fmt.Sprintf(""),
 					fmt.Sprintf(""),
@@ -347,13 +339,15 @@ func profIndex(rw http.ResponseWriter, r *http.Request) {
 func healthcheck(rw http.ResponseWriter, req *http.Request) {
 	data := make(map[interface{}]interface{})
 
-	resultList := new([][]string)
-	var result = []string{
-		fmt.Sprintf("header"),
+	var result = []string{}
+	fields := []string{
 		fmt.Sprintf("Name"),
+		fmt.Sprintf("Message"),
 		fmt.Sprintf("Status"),
 	}
-	*resultList = append(*resultList, result)
+	resultList := new([][]string)
+
+	content := make(map[string]interface{})
 
 	for name, h := range toolbox.AdminCheckList {
 		if err := h.Check(); err != nil {
@@ -374,7 +368,9 @@ func healthcheck(rw http.ResponseWriter, req *http.Request) {
 		*resultList = append(*resultList, result)
 	}
 
-	data["Content"] = resultList
+	content["Fields"] = fields
+	content["Data"] = resultList
+	data["Content"] = content
 	data["Title"] = "Health Check"
 	tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
 	tmpl = template.Must(tmpl.Parse(healthCheckTpl))
@@ -405,17 +401,17 @@ func taskStatus(rw http.ResponseWriter, req *http.Request) {
 	}
 
 	// List Tasks
+	content := make(map[string]interface{})
 	resultList := new([][]string)
-	var result = []string{
-		fmt.Sprintf("header"),
+	var result = []string{}
+	var fields = []string{
 		fmt.Sprintf("Task Name"),
 		fmt.Sprintf("Task Spec"),
 		fmt.Sprintf("Task Function"),
+		fmt.Sprintf(""),
 	}
-	*resultList = append(*resultList, result)
 	for tname, tk := range toolbox.AdminTaskList {
 		result = []string{
-			fmt.Sprintf(""),
 			fmt.Sprintf("%s", tname),
 			fmt.Sprintf("%s", tk.GetStatus()),
 			fmt.Sprintf("%s", tk.GetPrev().String()),
@@ -423,7 +419,9 @@ func taskStatus(rw http.ResponseWriter, req *http.Request) {
 		*resultList = append(*resultList, result)
 	}
 
-	data["Content"] = resultList
+	content["Fields"] = fields
+	content["Data"] = resultList
+	data["Content"] = content
 	data["Title"] = "Tasks"
 	tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
 	tmpl = template.Must(tmpl.Parse(tasksTpl))

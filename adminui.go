@@ -56,31 +56,35 @@ var gcAjaxTpl = `
 {{end}}
 `
 
-var qpsTpl = `
-{{define "content"}}
+var qpsTpl = `{{define "content"}}
 <h1>Requests statistics</h1>
 <table class="table table-striped table-hover ">
-{{range $i, $slice := .Content}}
-<tr>
-{{range $j, $elem := $slice}}
-{{if eq $i 0}}
-<th>
-{{else}}
-<td>
-{{end}}
-{{$elem}}
-{{if eq $i 0}}
-</th>
-{{else}}
-</td>
-{{end}}
-{{end}}
+	<thead>
+	<tr>
+	{{range .Content.Fields}}
+		<th>
+		{{.}}
+		</th>
+	{{end}}
+	</tr>
+	</thead>
 
-</tr>
-{{end}}
+	<tbody>
+	{{range $i, $elem := .Content.Data}}
+
+	<tr>
+		{{range $elem}}
+			<td>
+			{{.}}
+			</td>
+		{{end}}
+	</tr>
+
+	{{end}}
+	</tbody>
+
 </table>
-{{end}}
-`
+{{end}}`
 
 var configTpl = `
 {{define "content"}}
@@ -93,49 +97,51 @@ var configTpl = `
 {{end}}
 `
 
-var routerAndFilterTpl = `
-{{define "content"}}
+var routerAndFilterTpl = `{{define "content"}}
+
 
 <h1>{{.Title}}</h1>
+
+{{range .Content.Methods}}
+
+<div class="panel panel-default">
+<div class="panel-heading lead success"><strong>{{.}}</strong></div>
+<div class="panel-body">
 <table class="table table-striped table-hover ">
-{{range $i, $slice := .Content}}
-<tr>
+	<thead>
+	<tr>
+	{{range $.Content.Fields}}
+		<th>
+		{{.}}
+		</th>
+	{{end}}
+	</tr>
+	</thead>
 
-{{ $header := index $slice 0}}
-{{if eq "header" $header }}
-	{{range $j, $elem := $slice}}
-	{{if ne $j 0}}
-	<th>
-	{{$elem}}
-	</th>
-	{{end}}
-	{{end}}
-{{else if eq "success" $header}}
-	{{range $j, $elem := $slice}}
-	{{if ne $j 0}}
-	<th class="success">
-	{{$elem}}
-	</th>
-	{{end}}
-	{{end}}
-{{else}}
-	{{range $j, $elem := $slice}}
-	{{if ne $j 0}}
-	<td>
-	{{$elem}}
-	</td>
-	{{end}}
-	{{end}}
-{{end}}
+	<tbody>
+	{{$slice := index $.Content.Data .}}
+	{{range $i, $elem := $slice}}
 
-</tr>
-{{end}}
+	<tr>
+		{{range $elem}}
+			<td>
+			{{.}}
+			</td>
+		{{end}}
+	</tr>
+
+	{{end}}
+	</tbody>
+
 </table>
+</div>
+</div>
 {{end}}
-`
 
-var tasksTpl = `
-{{define "content"}}
+
+{{end}}`
+
+var tasksTpl = `{{define "content"}}
 
 <h1>{{.Title}}</h1>
 
@@ -156,59 +162,51 @@ bg-warning
 
 
 <table class="table table-striped table-hover ">
-{{range $i, $slice := .Content}}
+<thead>
 <tr>
+{{range .Content.Fields}}
+<th>
+{{.}}
+</th>
+{{end}}
+</tr>
+</thead>
 
-{{ $header := index $slice 0}}
-{{if eq "header" $header }}
-	{{range $j, $elem := $slice}}
-	{{if ne $j 0}}
-	<th>
-	{{$elem}}
-	</th>
-	{{end}}
-	{{end}}
-	<th>
-	Run Task
-	</th>
-{{else}}
-	{{range $j, $elem := $slice}}
-	{{if ne $j 0}}
+<tbody>
+{{range $i, $slice := .Content.Data}}
+<tr>
+	{{range $slice}}
 	<td>
-	{{$elem}}
+	{{.}}
 	</td>
-	{{end}}
 	{{end}}
 	<td>
 	<a class="btn btn-primary btn-sm" href="/task?taskname={{index $slice 1}}">Run</a>
 	</td>
-{{end}}
-
 </tr>
 {{end}}
+</tbody>
 </table>
-{{end}}
-`
+
+{{end}}`
 
 var healthCheckTpl = `
 {{define "content"}}
 
 <h1>{{.Title}}</h1>
 <table class="table table-striped table-hover ">
-{{range $i, $slice := .Content}}
-
-{{ $header := index $slice 0}}
-{{if eq "header" $header }}
+<thead>
 <tr>
-	{{range $j, $elem := $slice}}
-	{{if ne $j 0}}
+{{range .Content.Fields}}
 	<th>
-	{{$elem}}
+	{{.}}
 	</th>
-	{{end}}
-	{{end}}
+{{end}}
 </tr>
-{{else}} 
+</thead>
+<tbody>
+{{range $i, $slice := .Content.Data}}
+	{{ $header := index $slice 0}}
 	{{ if eq "success" $header}}
 	<tr class="success">
 	{{else if eq "error" $header}}
@@ -223,10 +221,13 @@ var healthCheckTpl = `
 		</td>
 		{{end}}
 		{{end}}
+		<td>
+		{{$header}}
+		</td>
 	</tr>
 {{end}}
 
-{{end}}
+</tbody>
 </table>
 {{end}}`
 
@@ -247,6 +248,7 @@ Welcome to Beego Admin Dashboard
 </title>
 
 <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/css/bootstrap.min.css" rel="stylesheet">
+<link href="//cdn.datatables.net/plug-ins/725b2a2115b/integration/bootstrap/3/dataTables.bootstrap.css" rel="stylesheet">
 
 <style type="text/css">
 ul.nav li.dropdown:hover > ul.dropdown-menu {
@@ -334,7 +336,15 @@ Healthcheck
 
 <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
 <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<script src="//cdn.datatables.net/1.10.2/js/jquery.dataTables.min.js"></script>
+<script src="//cdn.datatables.net/plug-ins/725b2a2115b/integration/bootstrap/3/dataTables.bootstrap.js
+"></script>
 
+<script type="text/javascript">
+$(document).ready(function() {
+    $('.table').dataTable();
+});
+</script>
 {{template "scripts" .}}
 </body>
 </html>
