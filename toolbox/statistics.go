@@ -83,13 +83,16 @@ func (m *UrlMap) AddStatistics(requestMethod, requestUrl, requestController stri
 }
 
 // put url statistics result in io.Writer
-func (m *UrlMap) GetMap() [][]string {
+func (m *UrlMap) GetMap() map[string]interface{} {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
-	resultLists := make([][]string, 0)
 
-	var result = []string{"requestUrl", "method", "times", "used", "max used", "min used", "avg used"}
-	resultLists = append(resultLists, result)
+	var fields = []string{"requestUrl", "method", "times", "used", "max used", "min used", "avg used"}
+
+	resultLists := make([][]string, 0)
+	content := make(map[string]interface{})
+	content["Fields"] = fields
+
 	for k, v := range m.urlmap {
 		for kk, vv := range v {
 			result := []string{
@@ -104,7 +107,8 @@ func (m *UrlMap) GetMap() [][]string {
 			resultLists = append(resultLists, result)
 		}
 	}
-	return resultLists
+	content["Data"] = resultLists
+	return content
 }
 
 // global statistics data map
