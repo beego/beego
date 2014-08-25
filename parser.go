@@ -148,7 +148,7 @@ func genRouterCode() {
 	beego.GlobalControllerRouter["` + k + `"] = append(beego.GlobalControllerRouter["` + k + `"],
 		beego.ControllerComments{
 			"` + strings.TrimSpace(c.Method) + `",
-			"` + c.Router + `",
+			` + "`" + c.Router + "`" + `,
 			` + allmethod + `,
 			` + params + `})
 `
