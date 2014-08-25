@@ -206,7 +206,7 @@ func (c *IniConfigContainer) DefaultFloat(key string, defaultval float64) float6
 }
 
 // String returns the string value for a given key.
-func (c *IniConfigContainer) String(key string) string { 
+func (c *IniConfigContainer) String(key string) string {
 	return c.getdata(key)
 }
 
@@ -337,12 +337,11 @@ func (c *IniConfigContainer) DIY(key string) (v interface{}, err error) {
 
 // section.key or key
 func (c *IniConfigContainer) getdata(key string) string {
-	 if len(key) == 0 {
+	if len(key) == 0 {
 		return ""
 	}
-         c.RLock()
+	c.RLock()
 	defer c.RUnlock()
-	
 
 	var (
 		section, k string
