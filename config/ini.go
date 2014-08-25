@@ -147,7 +147,7 @@ type IniConfigContainer struct {
 
 // Bool returns the boolean value for a given key.
 func (c *IniConfigContainer) Bool(key string) (bool, error) {
-	return strconv.ParseBool(c.getdata(strings.ToLower(key)))
+	return strconv.ParseBool(c.getdata(key))
 }
 
 // DefaultBool returns the boolean value for a given key.
@@ -162,7 +162,7 @@ func (c *IniConfigContainer) DefaultBool(key string, defaultval bool) bool {
 
 // Int returns the integer value for a given key.
 func (c *IniConfigContainer) Int(key string) (int, error) {
-	return strconv.Atoi(c.getdata(strings.ToLower(key)))
+	return strconv.Atoi(c.getdata(key))
 }
 
 // DefaultInt returns the integer value for a given key.
@@ -177,7 +177,7 @@ func (c *IniConfigContainer) DefaultInt(key string, defaultval int) int {
 
 // Int64 returns the int64 value for a given key.
 func (c *IniConfigContainer) Int64(key string) (int64, error) {
-	return strconv.ParseInt(c.getdata(strings.ToLower(key)), 10, 64)
+	return strconv.ParseInt(c.getdata(key), 10, 64)
 }
 
 // DefaultInt64 returns the int64 value for a given key.
@@ -192,7 +192,7 @@ func (c *IniConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
 
 // Float returns the float value for a given key.
 func (c *IniConfigContainer) Float(key string) (float64, error) {
-	return strconv.ParseFloat(c.getdata(strings.ToLower(key)), 64)
+	return strconv.ParseFloat(c.getdata(key), 64)
 }
 
 // DefaultFloat returns the float64 value for a given key.
@@ -206,9 +206,8 @@ func (c *IniConfigContainer) DefaultFloat(key string, defaultval float64) float6
 }
 
 // String returns the string value for a given key.
-func (c *IniConfigContainer) String(key string) string {
-	key = strings.ToLower(key)
-	return c.getdata(strings.ToLower(key))
+func (c *IniConfigContainer) String(key string) string { 
+	return c.getdata(key)
 }
 
 // DefaultString returns the string value for a given key.
@@ -338,15 +337,16 @@ func (c *IniConfigContainer) DIY(key string) (v interface{}, err error) {
 
 // section.key or key
 func (c *IniConfigContainer) getdata(key string) string {
-	c.RLock()
-	defer c.RUnlock()
-	if len(key) == 0 {
+	 if len(key) == 0 {
 		return ""
 	}
+         c.RLock()
+	defer c.RUnlock()
+	
 
 	var (
 		section, k string
-		sectionKey []string = strings.Split(key, "::")
+		sectionKey []string = strings.Split(strings.ToLower(key), "::")
 	)
 	if len(sectionKey) >= 2 {
 		section = sectionKey[0]
