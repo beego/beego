@@ -71,6 +71,59 @@ func (s *SmtpWriter) GetSmtpAuth(host string) smtp.Auth {
 	)
 }
 
+func (s *SmtpWriter) sendMail(hostAddressWithPort string, auth smtp.Auth, fromAddress string, recipients []string, msgContent []byte) error {
+	client, err := smtp.Dial(hostAddressWithPort)
+	if err != nil {
+		return err
+	}
+
+	host, _, _ := net.SplitHostPort(hostAddressWithPort)
+	tlsConn := &tls.Config{
+		InsecureSkipVerify: true,
+		ServerName:         host,
+	}
+	if err = client.StartTLS(tlsConn); err != nil {
+		return err
+	}
+
+	if auth != nil {
+		if err = client.Auth(auth); err != nil {
+			return err
+		}
+	}
+
+	if err = client.Mail(fromAddress); err != nil {
+		return err
+	}
+
+	for _, rec := range recipients {
+		if err = client.Rcpt(rec); err != nil {
+			return err
+		}
+	}
+
+	w, err := client.Data()
+	if err != nil {
+		return err
+	}
+	_, err = w.Write([]byte(msgContent))
+	if err != nil {
+		return err
+	}
+
+	err = w.Close()
+	if err != nil {
+		return err
+	}
+
+	err = client.Quit()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // write message in smtp writer.
 // it will send an email with subject and only this message.
 func (s *SmtpWriter) WriteMsg(msg string, level int) error {
@@ -89,13 +142,7 @@ func (s *SmtpWriter) WriteMsg(msg string, level int) error {
 	mailmsg := []byte("To: " + strings.Join(s.RecipientAddresses, ";") + "\r\nFrom: " + s.Username + "<" + s.Username +
 		">\r\nSubject: " + s.Subject + "\r\n" + content_type + "\r\n\r\n" + fmt.Sprintf(".%s", time.Now().Format("2006-01-02 15:04:05")) + msg)
 
-	err := smtp.SendMail(
-		s.Host,
-		auth,
-		s.Username,
-		s.RecipientAddresses,
-		mailmsg,
-	)
+	err := s.sendMail(s.Host, auth, s.Username, s.RecipientAddresses, mailmsg)
 
 	return err
 }
