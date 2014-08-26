@@ -193,7 +193,10 @@ func (bl *BeeLogger) startLogger() {
 		select {
 		case bm := <-bl.msg:
 			for _, l := range bl.outputs {
-				l.WriteMsg(bm.msg, bm.level)
+				err := l.WriteMsg(bm.msg, bm.level)
+				if err != nil {
+					fmt.Println("ERROR, unable to WriteMsg:", err)
+				}
 			}
 		}
 	}
@@ -281,7 +284,10 @@ func (bl *BeeLogger) Close() {
 		if len(bl.msg) > 0 {
 			bm := <-bl.msg
 			for _, l := range bl.outputs {
-				l.WriteMsg(bm.msg, bm.level)
+				err := l.WriteMsg(bm.msg, bm.level)
+				if err != nil {
+					fmt.Println("ERROR, unable to WriteMsg (while closing logger):", err)
+				}
 			}
 		} else {
 			break
