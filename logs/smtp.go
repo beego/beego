@@ -34,6 +34,7 @@ type SmtpWriter struct {
 	Password           string   `json:"password"`
 	Host               string   `json:"Host"`
 	Subject            string   `json:"subject"`
+	FromAddress        string   `json:"fromAddress"
 	RecipientAddresses []string `json:"sendTos"`
 	Level              int      `json:"level"`
 }
@@ -50,6 +51,7 @@ func NewSmtpWriter() LoggerInterface {
 //		"password:"password",
 //		"host":"smtp.gmail.com:465",
 //		"subject":"email title",
+//		"fromAddress":"from@example.com",
 //		"sendTos":["email1","email2"],
 //		"level":LevelError
 //	}
@@ -141,10 +143,10 @@ func (s *SmtpWriter) WriteMsg(msg string, level int) error {
 	// Connect to the server, authenticate, set the sender and recipient,
 	// and send the email all in one step.
 	content_type := "Content-Type: text/plain" + "; charset=UTF-8"
-	mailmsg := []byte("To: " + strings.Join(s.RecipientAddresses, ";") + "\r\nFrom: " + s.Username + "<" + s.Username +
+	mailmsg := []byte("To: " + strings.Join(s.RecipientAddresses, ";") + "\r\nFrom: " + s.FromAddress + "<" + s.FromAddress +
 		">\r\nSubject: " + s.Subject + "\r\n" + content_type + "\r\n\r\n" + fmt.Sprintf(".%s", time.Now().Format("2006-01-02 15:04:05")) + msg)
 
-	err := s.sendMail(s.Host, auth, s.Username, s.RecipientAddresses, mailmsg)
+	err := s.sendMail(s.Host, auth, s.FromAddress, s.RecipientAddresses, mailmsg)
 
 	return err
 }
