@@ -34,7 +34,7 @@ type SmtpWriter struct {
 	Password           string   `json:"password"`
 	Host               string   `json:"Host"`
 	Subject            string   `json:"subject"`
-	FromAddress        string   `json:"fromAddress"
+	FromAddress        string   `json:"fromAddress"`
 	RecipientAddresses []string `json:"sendTos"`
 	Level              int      `json:"level"`
 }
