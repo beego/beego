@@ -204,13 +204,13 @@ func (bl *BeeLogger) startLogger() {
 
 // Log EMERGENCY level message.
 func (bl *BeeLogger) Emergency(format string, v ...interface{}) {
-	msg := fmt.Sprintf("[D] "+format, v...)
+	msg := fmt.Sprintf("[M] "+format, v...)
 	bl.writerMsg(LevelEmergency, msg)
 }
 
 // Log ALERT level message.
 func (bl *BeeLogger) Alert(format string, v ...interface{}) {
-	msg := fmt.Sprintf("[D] "+format, v...)
+	msg := fmt.Sprintf("[A] "+format, v...)
 	bl.writerMsg(LevelAlert, msg)
 }
 
@@ -234,7 +234,7 @@ func (bl *BeeLogger) Warning(format string, v ...interface{}) {
 
 // Log NOTICE level message.
 func (bl *BeeLogger) Notice(format string, v ...interface{}) {
-	msg := fmt.Sprintf("[W] "+format, v...)
+	msg := fmt.Sprintf("[N] "+format, v...)
 	bl.writerMsg(LevelNotice, msg)
 }
 
