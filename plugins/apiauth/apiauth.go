@@ -21,9 +21,34 @@
 //
 //	func main(){
 //		// apiauth every request
-//		beego.InsertFilter("*", beego.BeforeRouter,auth.APIAuth("appid","appkey"))
+//		beego.InsertFilter("*", beego.BeforeRouter,apiauth.APIBaiscAuth("appid","appkey"))
 //		beego.Run()
 //	}
+//
+// Advanced Usage:
+//
+//	func getAppSecret(appid string) string {
+//		// get appsecret by appid
+//      // maybe store in configure, maybe in database
+//	}
+//
+//	beego.InsertFilter("*", beego.BeforeRouter,apiauth.APIAuthWithFunc(getAppSecret, 360))
+//
+//  in the request user should include these params in the query
+//
+//   1. appid
+//
+//		 appid is asigned to the application
+//
+//   2. signature
+//
+//		 get the signature use apiauth.Signature()
+//
+//        >>> should use url.QueryEscape()
+//
+//   3. timestamp:
+//
+//       send the request time, the format is yyyy-mm-dd HH:ii:ss
 //
 package apiauth
 
@@ -34,7 +59,6 @@ import (
 	"fmt"
 	"net/url"
 	"sort"
-	"strings"
 	"time"
 
 	"github.com/astaxie/beego"
@@ -83,7 +107,7 @@ func APIAuthWithFunc(f AppIdToAppSecret, timeout int) beego.FilterFunc {
 			return
 		}
 		t := time.Now()
-		if (t.Second() - u.Second()) > timeout {
+		if t.Sub(u).Seconds() > float64(timeout) {
 			ctx.Output.SetStatus(403)
 			ctx.WriteString("timeout! the request time is long ago, please try again")
 			return
@@ -117,12 +141,7 @@ func Signature(appsecret, method string, params url.Values, RequestURI string) (
 	sha256 := sha256.New
 	hash := hmac.New(sha256, []byte(appsecret))
 	hash.Write([]byte(string_to_sign))
-	sha := base64.StdEncoding.EncodeToString(hash.Sum(nil))
-	sha = url.QueryEscape(sha)
-	sha = strings.Replace(sha, "+", "%20", -1)
-	sha = strings.Replace(sha, "*", "%2A", -1)
-	sha = strings.Replace(sha, "%7E", "~", -1)
-	return sha
+	return base64.StdEncoding.EncodeToString(hash.Sum(nil))
 }
 
 type valSorter struct {
