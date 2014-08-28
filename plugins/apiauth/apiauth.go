@@ -13,6 +13,7 @@
 // limitations under the License.
 
 // Package apiauth provides handlers to enable apiauth support.
+//
 // Simple Usage:
 //	import(
 //		"github.com/astaxie/beego"
@@ -29,24 +30,26 @@
 //
 //	func getAppSecret(appid string) string {
 //		// get appsecret by appid
-//      // maybe store in configure, maybe in database
+//		// maybe store in configure, maybe in database
 //	}
 //
 //	beego.InsertFilter("*", beego.BeforeRouter,apiauth.APIAuthWithFunc(getAppSecret, 360))
 //
-//  in the request user should include these params in the query
+// Infomation:
 //
-//   1. appid
+// In the request user should include these params in the query
+//
+// 1. appid
 //
 //		 appid is asigned to the application
 //
-//   2. signature
+// 2. signature
 //
-//		 get the signature use apiauth.Signature()
+//	get the signature use apiauth.Signature()
 //
-//        >>> should use url.QueryEscape()
+//	when you send to server remember use url.QueryEscape()
 //
-//   3. timestamp:
+// 3. timestamp:
 //
 //       send the request time, the format is yyyy-mm-dd HH:ii:ss
 //
