@@ -60,7 +60,7 @@ func (input *BeegoInput) Uri() string {
 
 // Url returns request url path (without query string, fragment).
 func (input *BeegoInput) Url() string {
-	return input.Request.URL.String()
+	return input.Request.URL.Path
 }
 
 // Site returns base site url as scheme://domain type.
