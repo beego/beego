@@ -1073,6 +1073,13 @@ setValue:
 			}
 		}
 		if str != nil {
+			switch v := val.(type) {
+			case []byte:
+				if len(v) == 1 {
+					value = v[0] == 1
+					goto end
+				}
+			}
 			b, err := str.Bool()
 			if err != nil {
 				tErr = err
