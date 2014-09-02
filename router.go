@@ -818,8 +818,8 @@ func (p *ControllerRegistor) recoverPanic(rw http.ResponseWriter, r *http.Reques
 						if !ok {
 							break
 						}
-						Critical(file, line)
-						stack = stack + fmt.Sprintln(file, line)
+						Critical(fmt.Sprintf("%s:%d", file, line))
+						stack = stack + fmt.Sprintln(fmt.Sprintf("%s:%d", file, line))
 					}
 					middleware.ShowErr(err, rw, r, stack)
 				}
@@ -840,7 +840,7 @@ func (p *ControllerRegistor) recoverPanic(rw http.ResponseWriter, r *http.Reques
 							if !ok {
 								break
 							}
-							Critical(file, line)
+							Critical(fmt.Sprintf("%s:%d", file, line))
 						}
 					}
 				}
