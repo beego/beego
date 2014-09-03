@@ -64,10 +64,19 @@ func (rc *RedisCache) do(commandName string, args ...interface{}) (reply interfa
 	return c.Do(commandName, args...)
 }
 
+// try to convert the return value from redis into regular string if the value is of []byte
+func tryConvertToString(value interface{}) interface{} {
+	if converted, ok := value.([]byte); ok {
+		return string(converted)
+	} else {
+		return value
+	}
+}
+
 // Get cache from redis.
 func (rc *RedisCache) Get(key string) interface{} {
 	if v, err := rc.do("GET", key); err == nil {
-		return v
+		return tryConvertToString(v)
 	}
 	return nil
 }
