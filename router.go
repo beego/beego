@@ -705,7 +705,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			if EnableXSRF {
 				execController.XsrfToken()
 				if r.Method == "POST" || r.Method == "DELETE" || r.Method == "PUT" ||
-					(r.Method == "POST" && (r.Form.Get("_method") == "delete" || r.Form.Get("_method") == "put")) {
+					(r.Method == "POST" && (context.Input.Query("_method") == "DELETE" || context.Input.Query("_method") == "PUT")) {
 					execController.CheckXsrfCookie()
 				}
 			}
