@@ -1,8 +1,17 @@
-/**
- * package: file
- * User: gouki
- * Date: 2013-10-22 - 14:22
- */
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package cache
 
 import (
@@ -56,12 +65,10 @@ func NewFileCache() *FileCache {
 
 // Start and begin gc for file cache.
 // the config need to be like {CachePath:"/cache","FileSuffix":".bin","DirectoryLevel":2,"EmbedExpiry":0}
-func (this *FileCache) StartAndGC(config string) error {
+func (fc *FileCache) StartAndGC(config string) error {
 
 	var cfg map[string]string
 	json.Unmarshal([]byte(config), &cfg)
-	//fmt.Println(cfg)
-	//fmt.Println(config)
 	if _, ok := cfg["CachePath"]; !ok {
 		cfg["CachePath"] = FileCachePath
 	}
@@ -74,69 +81,53 @@ func (this *FileCache) StartAndGC(config string) error {
 	if _, ok := cfg["EmbedExpiry"]; !ok {
 		cfg["EmbedExpiry"] = strconv.FormatInt(FileCacheEmbedExpiry, 10)
 	}
-	this.CachePath = cfg["CachePath"]
-	this.FileSuffix = cfg["FileSuffix"]
-	this.DirectoryLevel, _ = strconv.Atoi(cfg["DirectoryLevel"])
-	this.EmbedExpiry, _ = strconv.Atoi(cfg["EmbedExpiry"])
+	fc.CachePath = cfg["CachePath"]
+	fc.FileSuffix = cfg["FileSuffix"]
+	fc.DirectoryLevel, _ = strconv.Atoi(cfg["DirectoryLevel"])
+	fc.EmbedExpiry, _ = strconv.Atoi(cfg["EmbedExpiry"])
 
-	this.Init()
+	fc.Init()
 	return nil
 }
 
 // Init will make new dir for file cache if not exist.
-func (this *FileCache) Init() {
+func (fc *FileCache) Init() {
 	app := filepath.Dir(os.Args[0])
-	this.CachePath = filepath.Join(app, this.CachePath)
-	ok, err := exists(this.CachePath)
-	if err != nil { // print error
-		//fmt.Println(err)
+	fc.CachePath = filepath.Join(app, fc.CachePath)
+	if ok, _ := exists(fc.CachePath); !ok { // todo : error handle
+		_ = os.MkdirAll(fc.CachePath, os.ModePerm) // todo : error handle
 	}
-	if !ok {
-		if err = os.Mkdir(this.CachePath, os.ModePerm); err != nil {
-			//fmt.Println(err);
-		}
-	}
-	//fmt.Println(this.getCacheFileName("123456"));
 }
 
 // get cached file name. it's md5 encoded.
-func (this *FileCache) getCacheFileName(key string) string {
+func (fc *FileCache) getCacheFileName(key string) string {
 	m := md5.New()
 	io.WriteString(m, key)
 	keyMd5 := hex.EncodeToString(m.Sum(nil))
-	cachePath := this.CachePath
-	//fmt.Println("cachepath : " , cachePath)
-	//fmt.Println("md5" , keyMd5);
-	switch this.DirectoryLevel {
+	cachePath := fc.CachePath
+	switch fc.DirectoryLevel {
 	case 2:
 		cachePath = filepath.Join(cachePath, keyMd5[0:2], keyMd5[2:4])
 	case 1:
 		cachePath = filepath.Join(cachePath, keyMd5[0:2])
 	}
 
-	ok, err := exists(cachePath)
-	if err != nil {
-		//fmt.Println(err)
+	if ok, _ := exists(cachePath); !ok { // todo : error handle
+		_ = os.MkdirAll(cachePath, os.ModePerm) // todo : error handle
 	}
-	if !ok {
-		if err = os.MkdirAll(cachePath, os.ModePerm); err != nil {
-			//fmt.Println(err);
-		}
-	}
-	return filepath.Join(cachePath, fmt.Sprintf("%s%s", keyMd5, this.FileSuffix))
+
+	return filepath.Join(cachePath, fmt.Sprintf("%s%s", keyMd5, fc.FileSuffix))
 }
 
 // Get value from file cache.
 // if non-exist or expired, return empty string.
-func (this *FileCache) Get(key string) interface{} {
-	filename := this.getCacheFileName(key)
-	filedata, err := File_get_contents(filename)
-	//fmt.Println("get length:" , len(filedata));
+func (fc *FileCache) Get(key string) interface{} {
+	fileData, err := File_get_contents(fc.getCacheFileName(key))
 	if err != nil {
 		return ""
 	}
 	var to FileCacheItem
-	Gob_decode(filedata, &to)
+	Gob_decode(fileData, &to)
 	if to.Expired < time.Now().Unix() {
 		return ""
 	}
@@ -146,10 +137,10 @@ func (this *FileCache) Get(key string) interface{} {
 // Put value into file cache.
 // timeout means how long to keep this file, unit of ms.
 // if timeout equals FileCacheEmbedExpiry(default is 0), cache this item forever.
-func (this *FileCache) Put(key string, val interface{}, timeout int64) error {
-	filename := this.getCacheFileName(key)
-	var item FileCacheItem
-	item.Data = val
+func (fc *FileCache) Put(key string, val interface{}, timeout int64) error {
+	gob.Register(val)
+
+	item := FileCacheItem{Data: val}
 	if timeout == FileCacheEmbedExpiry {
 		item.Expired = time.Now().Unix() + (86400 * 365 * 10) // ten years
 	} else {
@@ -160,13 +151,12 @@ func (this *FileCache) Put(key string, val interface{}, timeout int64) error {
 	if err != nil {
 		return err
 	}
-	err = File_put_contents(filename, data)
-	return err
+	return File_put_contents(fc.getCacheFileName(key), data)
 }
 
 // Delete file cache value.
-func (this *FileCache) Delete(key string) error {
-	filename := this.getCacheFileName(key)
+func (fc *FileCache) Delete(key string) error {
+	filename := fc.getCacheFileName(key)
 	if ok, _ := exists(filename); ok {
 		return os.Remove(filename)
 	}
@@ -174,44 +164,41 @@ func (this *FileCache) Delete(key string) error {
 }
 
 // Increase cached int value.
-// this value is saving forever unless Delete.
-func (this *FileCache) Incr(key string) error {
-	data := this.Get(key)
+// fc value is saving forever unless Delete.
+func (fc *FileCache) Incr(key string) error {
+	data := fc.Get(key)
 	var incr int
-	//fmt.Println(reflect.TypeOf(data).Name())
 	if reflect.TypeOf(data).Name() != "int" {
 		incr = 0
 	} else {
 		incr = data.(int) + 1
 	}
-	this.Put(key, incr, FileCacheEmbedExpiry)
+	fc.Put(key, incr, FileCacheEmbedExpiry)
 	return nil
 }
 
 // Decrease cached int value.
-func (this *FileCache) Decr(key string) error {
-	data := this.Get(key)
+func (fc *FileCache) Decr(key string) error {
+	data := fc.Get(key)
 	var decr int
 	if reflect.TypeOf(data).Name() != "int" || data.(int)-1 <= 0 {
 		decr = 0
 	} else {
 		decr = data.(int) - 1
 	}
-	this.Put(key, decr, FileCacheEmbedExpiry)
+	fc.Put(key, decr, FileCacheEmbedExpiry)
 	return nil
 }
 
 // Check value is exist.
-func (this *FileCache) IsExist(key string) bool {
-	filename := this.getCacheFileName(key)
-	ret, _ := exists(filename)
+func (fc *FileCache) IsExist(key string) bool {
+	ret, _ := exists(fc.getCacheFileName(key))
 	return ret
 }
 
 // Clean cached files.
 // not implemented.
-func (this *FileCache) ClearAll() error {
-	//this.CachePath
+func (fc *FileCache) ClearAll() error {
 	return nil
 }
 
@@ -229,22 +216,22 @@ func exists(path string) (bool, error) {
 
 // Get bytes to file.
 // if non-exist, create this file.
-func File_get_contents(filename string) ([]byte, error) {
-	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, os.ModePerm)
-	if err != nil {
-		return []byte(""), err
+func File_get_contents(filename string) (data []byte, e error) {
+	f, e := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, os.ModePerm)
+	if e != nil {
+		return
 	}
 	defer f.Close()
-	stat, err := f.Stat()
-	if err != nil {
-		return []byte(""), err
+	stat, e := f.Stat()
+	if e != nil {
+		return
 	}
-	data := make([]byte, stat.Size())
-	result, err := f.Read(data)
-	if int64(result) == stat.Size() {
-		return data, err
+	data = make([]byte, stat.Size())
+	result, e := f.Read(data)
+	if e != nil || int64(result) != stat.Size() {
+		return nil, e
 	}
-	return []byte(""), err
+	return
 }
 
 // Put bytes to file.

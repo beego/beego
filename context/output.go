@@ -1,3 +1,17 @@
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package context
 
 import (
@@ -62,6 +76,14 @@ func (output *BeegoOutput) Body(content []byte) {
 	} else {
 		output.Header("Content-Length", strconv.Itoa(len(content)))
 	}
+
+	// Write status code if it has been set manually
+	// Set it to 0 afterwards to prevent "multiple response.WriteHeader calls"
+	if output.Status != 0 {
+		output.Context.ResponseWriter.WriteHeader(output.Status)
+		output.Status = 0
+	}
+
 	output_writer.Write(content)
 	switch output_writer.(type) {
 	case *gzip.Writer:
@@ -77,39 +99,77 @@ func (output *BeegoOutput) Cookie(name string, value string, others ...interface
 	var b bytes.Buffer
 	fmt.Fprintf(&b, "%s=%s", sanitizeName(name), sanitizeValue(value))
 	if len(others) > 0 {
-		switch others[0].(type) {
+		switch v := others[0].(type) {
 		case int:
-			if others[0].(int) > 0 {
-				fmt.Fprintf(&b, "; Max-Age=%d", others[0].(int))
-			} else if others[0].(int) < 0 {
+			if v > 0 {
+				fmt.Fprintf(&b, "; Max-Age=%d", v)
+			} else if v < 0 {
 				fmt.Fprintf(&b, "; Max-Age=0")
 			}
 		case int64:
-			if others[0].(int64) > 0 {
-				fmt.Fprintf(&b, "; Max-Age=%d", others[0].(int64))
-			} else if others[0].(int64) < 0 {
+			if v > 0 {
+				fmt.Fprintf(&b, "; Max-Age=%d", v)
+			} else if v < 0 {
 				fmt.Fprintf(&b, "; Max-Age=0")
 			}
 		case int32:
-			if others[0].(int32) > 0 {
-				fmt.Fprintf(&b, "; Max-Age=%d", others[0].(int32))
-			} else if others[0].(int32) < 0 {
+			if v > 0 {
+				fmt.Fprintf(&b, "; Max-Age=%d", v)
+			} else if v < 0 {
 				fmt.Fprintf(&b, "; Max-Age=0")
 			}
 		}
 	}
+
+	// the settings below
+	// Path, Domain, Secure, HttpOnly
+	// can use nil skip set
+
+	// default "/"
 	if len(others) > 1 {
-		fmt.Fprintf(&b, "; Path=%s", sanitizeValue(others[1].(string)))
+		if v, ok := others[1].(string); ok && len(v) > 0 {
+			fmt.Fprintf(&b, "; Path=%s", sanitizeValue(v))
+		}
+	} else {
+		fmt.Fprintf(&b, "; Path=%s", "/")
 	}
+
+	// default empty
 	if len(others) > 2 {
-		fmt.Fprintf(&b, "; Domain=%s", sanitizeValue(others[2].(string)))
+		if v, ok := others[2].(string); ok && len(v) > 0 {
+			fmt.Fprintf(&b, "; Domain=%s", sanitizeValue(v))
+		}
 	}
+
+	// default empty
 	if len(others) > 3 {
-		fmt.Fprintf(&b, "; Secure")
+		var secure bool
+		switch v := others[3].(type) {
+		case bool:
+			secure = v
+		default:
+			if others[3] != nil {
+				secure = true
+			}
+		}
+		if secure {
+			fmt.Fprintf(&b, "; Secure")
+		}
 	}
+
+	// default false. for session cookie default true
+	httponly := false
 	if len(others) > 4 {
+		if v, ok := others[4].(bool); ok && v {
+			// HttpOnly = true
+			httponly = true
+		}
+	}
+
+	if httponly {
 		fmt.Fprintf(&b, "; HttpOnly")
 	}
+
 	output.Context.ResponseWriter.Header().Add("Set-Cookie", b.String())
 }
 
@@ -193,10 +253,14 @@ func (output *BeegoOutput) Xml(data interface{}, hasIndent bool) error {
 
 // Download forces response for download file.
 // it prepares the download response header automatically.
-func (output *BeegoOutput) Download(file string) {
+func (output *BeegoOutput) Download(file string, filename ...string) {
 	output.Header("Content-Description", "File Transfer")
 	output.Header("Content-Type", "application/octet-stream")
-	output.Header("Content-Disposition", "attachment; filename="+filepath.Base(file))
+	if len(filename) > 0 && filename[0] != "" {
+		output.Header("Content-Disposition", "attachment; filename="+filename[0])
+	} else {
+		output.Header("Content-Disposition", "attachment; filename="+filepath.Base(file))
+	}
 	output.Header("Content-Transfer-Encoding", "binary")
 	output.Header("Expires", "0")
 	output.Header("Cache-Control", "must-revalidate")
@@ -219,7 +283,6 @@ func (output *BeegoOutput) ContentType(ext string) {
 // SetStatus sets response status code.
 // It writes response header directly.
 func (output *BeegoOutput) SetStatus(status int) {
-	output.Context.ResponseWriter.WriteHeader(status)
 	output.Status = status
 }
 

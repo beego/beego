@@ -1,3 +1,17 @@
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package logs
 
 import (
@@ -30,7 +44,7 @@ type FileLogWriter struct {
 
 	// Rotate daily
 	Daily          bool  `json:"daily"`
-	Maxdays        int64 `json:"maxdays`
+	Maxdays        int64 `json:"maxdays"`
 	daily_opendate int
 
 	Rotate bool `json:"rotate"`
@@ -97,12 +111,12 @@ func (w *FileLogWriter) Init(jsonconfig string) error {
 	if len(w.Filename) == 0 {
 		return errors.New("jsonconfig must have filename")
 	}
-	err = w.StartLogger()
+	err = w.startLogger()
 	return err
 }
 
 // start file logger. create log file and set to locker-inside file writer.
-func (w *FileLogWriter) StartLogger() error {
+func (w *FileLogWriter) startLogger() error {
 	fd, err := w.createLogFile()
 	if err != nil {
 		return err
@@ -118,9 +132,9 @@ func (w *FileLogWriter) StartLogger() error {
 func (w *FileLogWriter) docheck(size int) {
 	w.startLock.Lock()
 	defer w.startLock.Unlock()
-	if (w.Maxlines > 0 && w.maxlines_curlines >= w.Maxlines) ||
+	if w.Rotate && ((w.Maxlines > 0 && w.maxlines_curlines >= w.Maxlines) ||
 		(w.Maxsize > 0 && w.maxsize_cursize >= w.Maxsize) ||
-		(w.Daily && time.Now().Day() != w.daily_opendate) {
+		(w.Daily && time.Now().Day() != w.daily_opendate)) {
 		if err := w.DoRotate(); err != nil {
 			fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
 			return
@@ -132,7 +146,7 @@ func (w *FileLogWriter) docheck(size int) {
 
 // write logger message into file.
 func (w *FileLogWriter) WriteMsg(msg string, level int) error {
-	if level < w.Level {
+	if level > w.Level {
 		return nil
 	}
 	n := 24 + len(msg) // 24 stand for the length "2013/06/23 21:00:22 [T] "
@@ -199,7 +213,7 @@ func (w *FileLogWriter) DoRotate() error {
 		}
 
 		// re-start logger
-		err = w.StartLogger()
+		err = w.startLogger()
 		if err != nil {
 			return fmt.Errorf("Rotate StartLogger: %s\n", err)
 		}
@@ -212,13 +226,20 @@ func (w *FileLogWriter) DoRotate() error {
 
 func (w *FileLogWriter) deleteOldLog() {
 	dir := filepath.Dir(w.Filename)
-	filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	filepath.Walk(dir, func(path string, info os.FileInfo, err error) (returnErr error) {
+		defer func() {
+			if r := recover(); r != nil {
+				returnErr = fmt.Errorf("Unable to delete old log '%s', error: %+v", path, r)
+				fmt.Println(returnErr)
+			}
+		}()
+
 		if !info.IsDir() && info.ModTime().Unix() < (time.Now().Unix()-60*60*24*w.Maxdays) {
 			if strings.HasPrefix(filepath.Base(path), filepath.Base(w.Filename)) {
 				os.Remove(path)
 			}
 		}
-		return nil
+		return
 	})
 }
 

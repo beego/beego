@@ -1,3 +1,17 @@
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package toolbox
 
 import (
@@ -19,6 +33,8 @@ type bounds struct {
 var (
 	AdminTaskList map[string]Tasker
 	stop          chan bool
+	changed       chan bool
+	isstart       bool
 	seconds       = bounds{0, 59, nil}
 	minutes       = bounds{0, 59, nil}
 	hours         = bounds{0, 23, nil}
@@ -365,6 +381,7 @@ func dayMatches(s *Schedule, t time.Time) bool {
 
 // start all tasks
 func StartTask() {
+	isstart = true
 	go run()
 }
 
@@ -397,6 +414,8 @@ func run() {
 				e.SetNext(effective)
 			}
 			continue
+		case <-changed:
+			continue
 		case <-stop:
 			return
 		}
@@ -405,12 +424,24 @@ func run() {
 
 // start all tasks
 func StopTask() {
+	isstart = false
 	stop <- true
 }
 
 // add task with name
 func AddTask(taskname string, t Tasker) {
 	AdminTaskList[taskname] = t
+	if isstart {
+		changed <- true
+	}
+}
+
+// add task with name
+func DeleteTask(taskname string) {
+	delete(AdminTaskList, taskname)
+	if isstart {
+		changed <- true
+	}
 }
 
 // sort map for tasker
@@ -564,4 +595,5 @@ func all(r bounds) uint64 {
 func init() {
 	AdminTaskList = make(map[string]Tasker)
 	stop = make(chan bool)
+	changed = make(chan bool)
 }

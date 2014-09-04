@@ -1,3 +1,17 @@
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // an example for use captcha
 //
 // ```
@@ -67,7 +81,7 @@ const (
 	fieldIdName      = "captcha_id"
 	fieldCaptchaName = "captcha"
 	cachePrefix      = "captcha_"
-	urlPrefix        = "/captcha/"
+	defaultURLPrefix = "/captcha/"
 )
 
 // Captcha struct
@@ -76,7 +90,7 @@ type Captcha struct {
 	store cache.Cache
 
 	// url prefix for captcha image
-	urlPrefix string
+	URLPrefix string
 
 	// specify captcha id input field name
 	FieldIdName string
@@ -155,7 +169,7 @@ func (c *Captcha) CreateCaptchaHtml() template.HTML {
 	return template.HTML(fmt.Sprintf(`<input type="hidden" name="%s" value="%s">`+
 		`<a class="captcha" href="javascript:">`+
 		`<img onclick="this.src=('%s%s.png?reload='+(new Date()).getTime())" class="captcha-img" src="%s%s.png">`+
-		`</a>`, c.FieldIdName, value, c.urlPrefix, value, c.urlPrefix, value))
+		`</a>`, c.FieldIdName, value, c.URLPrefix, value, c.URLPrefix, value))
 }
 
 // create a new captcha id
@@ -190,7 +204,7 @@ func (c *Captcha) Verify(id string, challenge string) (success bool) {
 
 	key := c.key(id)
 
-	if v, ok := c.store.Get(key).([]byte); ok && len(v) == len(challenge) {
+	if v, ok := c.store.Get(key).([]byte); ok {
 		chars = v
 	} else {
 		return
@@ -201,6 +215,9 @@ func (c *Captcha) Verify(id string, challenge string) (success bool) {
 		c.store.Delete(key)
 	}()
 
+	if len(chars) != len(challenge) {
+		return
+	}
 	// verify challenge
 	for i, c := range chars {
 		if c != challenge[i]-48 {
@@ -224,14 +241,14 @@ func NewCaptcha(urlPrefix string, store cache.Cache) *Captcha {
 	cpt.StdHeight = stdHeight
 
 	if len(urlPrefix) == 0 {
-		urlPrefix = urlPrefix
+		urlPrefix = defaultURLPrefix
 	}
 
 	if urlPrefix[len(urlPrefix)-1] != '/' {
 		urlPrefix += "/"
 	}
 
-	cpt.urlPrefix = urlPrefix
+	cpt.URLPrefix = urlPrefix
 
 	return cpt
 }
@@ -242,7 +259,7 @@ func NewWithFilter(urlPrefix string, store cache.Cache) *Captcha {
 	cpt := NewCaptcha(urlPrefix, store)
 
 	// create filter for serve captcha image
-	beego.AddFilter(urlPrefix+":", "BeforeRouter", cpt.Handler)
+	beego.InsertFilter(cpt.URLPrefix+"*", beego.BeforeRouter, cpt.Handler)
 
 	// add to template func map
 	beego.AddFuncMap("create_captcha", cpt.CreateCaptchaHtml)

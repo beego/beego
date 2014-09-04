@@ -1,6 +1,21 @@
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package orm
 
 import (
+	"database/sql"
 	"fmt"
 	"reflect"
 	"strings"
@@ -79,7 +94,6 @@ func getTableUnique(val reflect.Value) [][]string {
 
 // get snaked column name
 func getColumnName(ft int, addrField reflect.Value, sf reflect.StructField, col string) string {
-	col = strings.ToLower(col)
 	column := col
 	if col == "" {
 		column = snakeString(sf.Name)
@@ -97,34 +111,71 @@ func getColumnName(ft int, addrField reflect.Value, sf reflect.StructField, col 
 
 // return field type as type constant from reflect.Value
 func getFieldType(val reflect.Value) (ft int, err error) {
-	elm := reflect.Indirect(val)
-	switch elm.Kind() {
-	case reflect.Int8:
+	switch val.Type() {
+	case reflect.TypeOf(new(int8)):
 		ft = TypeBitField
-	case reflect.Int16:
+	case reflect.TypeOf(new(int16)):
 		ft = TypeSmallIntegerField
-	case reflect.Int32, reflect.Int:
+	case reflect.TypeOf(new(int32)),
+		reflect.TypeOf(new(int)):
 		ft = TypeIntegerField
-	case reflect.Int64:
+	case reflect.TypeOf(new(int64)):
 		ft = TypeBigIntegerField
-	case reflect.Uint8:
+	case reflect.TypeOf(new(uint8)):
 		ft = TypePositiveBitField
-	case reflect.Uint16:
+	case reflect.TypeOf(new(uint16)):
 		ft = TypePositiveSmallIntegerField
-	case reflect.Uint32, reflect.Uint:
+	case reflect.TypeOf(new(uint32)),
+		reflect.TypeOf(new(uint)):
 		ft = TypePositiveIntegerField
-	case reflect.Uint64:
+	case reflect.TypeOf(new(uint64)):
 		ft = TypePositiveBigIntegerField
-	case reflect.Float32, reflect.Float64:
+	case reflect.TypeOf(new(float32)),
+		reflect.TypeOf(new(float64)):
 		ft = TypeFloatField
-	case reflect.Bool:
+	case reflect.TypeOf(new(bool)):
 		ft = TypeBooleanField
-	case reflect.String:
+	case reflect.TypeOf(new(string)):
 		ft = TypeCharField
-	case reflect.Invalid:
 	default:
-		if elm.CanInterface() {
-			if _, ok := elm.Interface().(time.Time); ok {
+		elm := reflect.Indirect(val)
+		switch elm.Kind() {
+		case reflect.Int8:
+			ft = TypeBitField
+		case reflect.Int16:
+			ft = TypeSmallIntegerField
+		case reflect.Int32, reflect.Int:
+			ft = TypeIntegerField
+		case reflect.Int64:
+			ft = TypeBigIntegerField
+		case reflect.Uint8:
+			ft = TypePositiveBitField
+		case reflect.Uint16:
+			ft = TypePositiveSmallIntegerField
+		case reflect.Uint32, reflect.Uint:
+			ft = TypePositiveIntegerField
+		case reflect.Uint64:
+			ft = TypePositiveBigIntegerField
+		case reflect.Float32, reflect.Float64:
+			ft = TypeFloatField
+		case reflect.Bool:
+			ft = TypeBooleanField
+		case reflect.String:
+			ft = TypeCharField
+		default:
+			if elm.Interface() == nil {
+				panic(fmt.Errorf("%s is nil pointer, may be miss setting tag", val))
+			}
+			switch elm.Interface().(type) {
+			case sql.NullInt64:
+				ft = TypeBigIntegerField
+			case sql.NullFloat64:
+				ft = TypeFloatField
+			case sql.NullBool:
+				ft = TypeBooleanField
+			case sql.NullString:
+				ft = TypeCharField
+			case time.Time:
 				ft = TypeDateTimeField
 			}
 		}

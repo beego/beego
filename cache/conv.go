@@ -1,3 +1,17 @@
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package cache
 
 import (
@@ -13,12 +27,11 @@ func GetString(v interface{}) string {
 	case []byte:
 		return string(result)
 	default:
-		if v == nil {
-			return ""
-		} else {
+		if v != nil {
 			return fmt.Sprintf("%v", result)
 		}
 	}
+	return ""
 }
 
 // convert interface to int.
@@ -31,12 +44,9 @@ func GetInt(v interface{}) int {
 	case int64:
 		return int(result)
 	default:
-		d := GetString(v)
-		if d != "" {
-			value, err := strconv.Atoi(d)
-			if err == nil {
-				return value
-			}
+		if d := GetString(v); d != "" {
+			value, _ := strconv.Atoi(d)
+			return value
 		}
 	}
 	return 0
@@ -52,12 +62,10 @@ func GetInt64(v interface{}) int64 {
 	case int64:
 		return result
 	default:
-		d := GetString(v)
-		if d != "" {
-			result, err := strconv.ParseInt(d, 10, 64)
-			if err == nil {
-				return result
-			}
+
+		if d := GetString(v); d != "" {
+			value, _ := strconv.ParseInt(d, 10, 64)
+			return value
 		}
 	}
 	return 0
@@ -69,12 +77,9 @@ func GetFloat64(v interface{}) float64 {
 	case float64:
 		return result
 	default:
-		d := GetString(v)
-		if d != "" {
-			value, err := strconv.ParseFloat(d, 64)
-			if err == nil {
-				return value
-			}
+		if d := GetString(v); d != "" {
+			value, _ := strconv.ParseFloat(d, 64)
+			return value
 		}
 	}
 	return 0
@@ -86,12 +91,9 @@ func GetBool(v interface{}) bool {
 	case bool:
 		return result
 	default:
-		d := GetString(v)
-		if d != "" {
-			result, err := strconv.ParseBool(d)
-			if err == nil {
-				return result
-			}
+		if d := GetString(v); d != "" {
+			value, _ := strconv.ParseBool(d)
+			return value
 		}
 	}
 	return false

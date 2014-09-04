@@ -1,7 +1,22 @@
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package orm
 
 import (
 	"bytes"
+	"database/sql"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -138,8 +153,17 @@ func throwFailNow(t *testing.T, err error, args ...interface{}) {
 	}
 }
 
+func TestGetDB(t *testing.T) {
+	if db, err := GetDB(); err != nil {
+		throwFailNow(t, err)
+	} else {
+		err = db.Ping()
+		throwFailNow(t, err)
+	}
+}
+
 func TestSyncDb(t *testing.T) {
-	RegisterModel(new(Data), new(DataNull))
+	RegisterModel(new(Data), new(DataNull), new(DataCustom))
 	RegisterModel(new(User))
 	RegisterModel(new(Profile))
 	RegisterModel(new(Post))
@@ -155,7 +179,7 @@ func TestSyncDb(t *testing.T) {
 }
 
 func TestRegisterModels(t *testing.T) {
-	RegisterModel(new(Data), new(DataNull))
+	RegisterModel(new(Data), new(DataNull), new(DataCustom))
 	RegisterModel(new(User))
 	RegisterModel(new(Profile))
 	RegisterModel(new(Post))
@@ -258,12 +282,153 @@ func TestNullDataTypes(t *testing.T) {
 	err = dORM.Read(&d)
 	throwFail(t, err)
 
+	throwFail(t, AssertIs(d.NullBool.Valid, false))
+	throwFail(t, AssertIs(d.NullString.Valid, false))
+	throwFail(t, AssertIs(d.NullInt64.Valid, false))
+	throwFail(t, AssertIs(d.NullFloat64.Valid, false))
+
+	throwFail(t, AssertIs(d.BooleanPtr, nil))
+	throwFail(t, AssertIs(d.CharPtr, nil))
+	throwFail(t, AssertIs(d.TextPtr, nil))
+	throwFail(t, AssertIs(d.BytePtr, nil))
+	throwFail(t, AssertIs(d.RunePtr, nil))
+	throwFail(t, AssertIs(d.IntPtr, nil))
+	throwFail(t, AssertIs(d.Int8Ptr, nil))
+	throwFail(t, AssertIs(d.Int16Ptr, nil))
+	throwFail(t, AssertIs(d.Int32Ptr, nil))
+	throwFail(t, AssertIs(d.Int64Ptr, nil))
+	throwFail(t, AssertIs(d.UintPtr, nil))
+	throwFail(t, AssertIs(d.Uint8Ptr, nil))
+	throwFail(t, AssertIs(d.Uint16Ptr, nil))
+	throwFail(t, AssertIs(d.Uint32Ptr, nil))
+	throwFail(t, AssertIs(d.Uint64Ptr, nil))
+	throwFail(t, AssertIs(d.Float32Ptr, nil))
+	throwFail(t, AssertIs(d.Float64Ptr, nil))
+	throwFail(t, AssertIs(d.DecimalPtr, nil))
+
 	_, err = dORM.Raw(`INSERT INTO data_null (boolean) VALUES (?)`, nil).Exec()
 	throwFail(t, err)
 
 	d = DataNull{Id: 2}
 	err = dORM.Read(&d)
 	throwFail(t, err)
+
+	booleanPtr := true
+	charPtr := string("test")
+	textPtr := string("test")
+	bytePtr := byte('t')
+	runePtr := rune('t')
+	intPtr := int(42)
+	int8Ptr := int8(42)
+	int16Ptr := int16(42)
+	int32Ptr := int32(42)
+	int64Ptr := int64(42)
+	uintPtr := uint(42)
+	uint8Ptr := uint8(42)
+	uint16Ptr := uint16(42)
+	uint32Ptr := uint32(42)
+	uint64Ptr := uint64(42)
+	float32Ptr := float32(42.0)
+	float64Ptr := float64(42.0)
+	decimalPtr := float64(42.0)
+
+	d = DataNull{
+		DateTime:    time.Now(),
+		NullString:  sql.NullString{String: "test", Valid: true},
+		NullBool:    sql.NullBool{Bool: true, Valid: true},
+		NullInt64:   sql.NullInt64{Int64: 42, Valid: true},
+		NullFloat64: sql.NullFloat64{Float64: 42.42, Valid: true},
+		BooleanPtr:  &booleanPtr,
+		CharPtr:     &charPtr,
+		TextPtr:     &textPtr,
+		BytePtr:     &bytePtr,
+		RunePtr:     &runePtr,
+		IntPtr:      &intPtr,
+		Int8Ptr:     &int8Ptr,
+		Int16Ptr:    &int16Ptr,
+		Int32Ptr:    &int32Ptr,
+		Int64Ptr:    &int64Ptr,
+		UintPtr:     &uintPtr,
+		Uint8Ptr:    &uint8Ptr,
+		Uint16Ptr:   &uint16Ptr,
+		Uint32Ptr:   &uint32Ptr,
+		Uint64Ptr:   &uint64Ptr,
+		Float32Ptr:  &float32Ptr,
+		Float64Ptr:  &float64Ptr,
+		DecimalPtr:  &decimalPtr,
+	}
+
+	id, err = dORM.Insert(&d)
+	throwFail(t, err)
+	throwFail(t, AssertIs(id, 3))
+
+	d = DataNull{Id: 3}
+	err = dORM.Read(&d)
+	throwFail(t, err)
+
+	throwFail(t, AssertIs(d.NullBool.Valid, true))
+	throwFail(t, AssertIs(d.NullBool.Bool, true))
+
+	throwFail(t, AssertIs(d.NullString.Valid, true))
+	throwFail(t, AssertIs(d.NullString.String, "test"))
+
+	throwFail(t, AssertIs(d.NullInt64.Valid, true))
+	throwFail(t, AssertIs(d.NullInt64.Int64, 42))
+
+	throwFail(t, AssertIs(d.NullFloat64.Valid, true))
+	throwFail(t, AssertIs(d.NullFloat64.Float64, 42.42))
+
+	throwFail(t, AssertIs(*d.BooleanPtr, booleanPtr))
+	throwFail(t, AssertIs(*d.CharPtr, charPtr))
+	throwFail(t, AssertIs(*d.TextPtr, textPtr))
+	throwFail(t, AssertIs(*d.BytePtr, bytePtr))
+	throwFail(t, AssertIs(*d.RunePtr, runePtr))
+	throwFail(t, AssertIs(*d.IntPtr, intPtr))
+	throwFail(t, AssertIs(*d.Int8Ptr, int8Ptr))
+	throwFail(t, AssertIs(*d.Int16Ptr, int16Ptr))
+	throwFail(t, AssertIs(*d.Int32Ptr, int32Ptr))
+	throwFail(t, AssertIs(*d.Int64Ptr, int64Ptr))
+	throwFail(t, AssertIs(*d.UintPtr, uintPtr))
+	throwFail(t, AssertIs(*d.Uint8Ptr, uint8Ptr))
+	throwFail(t, AssertIs(*d.Uint16Ptr, uint16Ptr))
+	throwFail(t, AssertIs(*d.Uint32Ptr, uint32Ptr))
+	throwFail(t, AssertIs(*d.Uint64Ptr, uint64Ptr))
+	throwFail(t, AssertIs(*d.Float32Ptr, float32Ptr))
+	throwFail(t, AssertIs(*d.Float64Ptr, float64Ptr))
+	throwFail(t, AssertIs(*d.DecimalPtr, decimalPtr))
+}
+
+func TestDataCustomTypes(t *testing.T) {
+	d := DataCustom{}
+	ind := reflect.Indirect(reflect.ValueOf(&d))
+
+	for name, value := range Data_Values {
+		e := ind.FieldByName(name)
+		if !e.IsValid() {
+			continue
+		}
+		e.Set(reflect.ValueOf(value).Convert(e.Type()))
+	}
+
+	id, err := dORM.Insert(&d)
+	throwFail(t, err)
+	throwFail(t, AssertIs(id, 1))
+
+	d = DataCustom{Id: 1}
+	err = dORM.Read(&d)
+	throwFail(t, err)
+
+	ind = reflect.Indirect(reflect.ValueOf(&d))
+
+	for name, value := range Data_Values {
+		e := ind.FieldByName(name)
+		if !e.IsValid() {
+			continue
+		}
+		vu := e.Interface()
+		value = reflect.ValueOf(value).Convert(e.Type()).Interface()
+		throwFail(t, AssertIs(vu == value, true), value, vu)
+	}
 }
 
 func TestCRUD(t *testing.T) {
@@ -519,6 +684,10 @@ func TestOperators(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
 
+	num, err = qs.Filter("user_name__exact", String("slene")).Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
 	num, err = qs.Filter("user_name__exact", "slene").Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
@@ -559,11 +728,11 @@ func TestOperators(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 3))
 
-	num, err = qs.Filter("status__lt", 3).Count()
+	num, err = qs.Filter("status__lt", Uint(3)).Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 2))
 
-	num, err = qs.Filter("status__lte", 3).Count()
+	num, err = qs.Filter("status__lte", Int(3)).Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 3))
 
@@ -617,6 +786,14 @@ func TestOperators(t *testing.T) {
 
 	n1, n2 := 1, 2
 	num, err = qs.Filter("status__in", []*int{&n1}, &n2).Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 2))
+
+	num, err = qs.Filter("id__between", 2, 3).Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 2))
+
+	num, err = qs.Filter("id__between", []int{2, 3}).Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 2))
 }
@@ -1329,7 +1506,7 @@ func TestRawQueryRow(t *testing.T) {
 	)
 
 	cols = []string{
-		"id", "status", "profile_id",
+		"id", "Status", "profile_id",
 	}
 	query = fmt.Sprintf("SELECT %s%s%s FROM %suser%s WHERE id = ?", Q, strings.Join(cols, sep), Q, Q, Q)
 	err = dORM.Raw(query, 4).QueryRow(&uid, &status, &pid)
@@ -1409,7 +1586,7 @@ func TestRawValues(t *testing.T) {
 	Q := dDbBaser.TableQuote()
 
 	var maps []Params
-	query := fmt.Sprintf("SELECT %suser_name%s FROM %suser%s WHERE %sstatus%s = ?", Q, Q, Q, Q, Q, Q)
+	query := fmt.Sprintf("SELECT %suser_name%s FROM %suser%s WHERE %sStatus%s = ?", Q, Q, Q, Q, Q, Q)
 	num, err := dORM.Raw(query, 1).Values(&maps)
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
@@ -1577,7 +1754,6 @@ func TestDelete(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 4))
 
-	fmt.Println("...")
 	qs = dORM.QueryTable("comment")
 	num, err = qs.Filter("Post__User", 3).Delete()
 	throwFail(t, err)
@@ -1646,10 +1822,10 @@ func TestTransaction(t *testing.T) {
 func TestReadOrCreate(t *testing.T) {
 	u := &User{
 		UserName: "Kyle",
-		Email: "kylemcc@gmail.com",
+		Email:    "kylemcc@gmail.com",
 		Password: "other_pass",
-		Status: 7,
-		IsStaff: false,
+		Status:   7,
+		IsStaff:  false,
 		IsActive: true,
 	}
 

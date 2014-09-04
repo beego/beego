@@ -1,3 +1,9 @@
+// Beego (http://beego.me/)
+// @description beego is an open-source, high-performance web framework for the Go programming language.
+// @link        http://github.com/astaxie/beego for the canonical source repository
+// @license     http://github.com/astaxie/beego/blob/master/LICENSE
+// @authors     Unknwon
+
 package controllers
 
 import (
@@ -54,9 +60,9 @@ func (c *connection) readPump() {
 			break
 		}
 		switch op {
-		case websocket.OpPong:
+		case websocket.PongMessage:
 			c.ws.SetReadDeadline(time.Now().Add(readWait))
-		case websocket.OpText:
+		case websocket.TextMessage:
 			message, err := ioutil.ReadAll(r)
 			if err != nil {
 				break
@@ -83,14 +89,14 @@ func (c *connection) writePump() {
 		select {
 		case message, ok := <-c.send:
 			if !ok {
-				c.write(websocket.OpClose, []byte{})
+				c.write(websocket.CloseMessage, []byte{})
 				return
 			}
-			if err := c.write(websocket.OpText, message); err != nil {
+			if err := c.write(websocket.TextMessage, message); err != nil {
 				return
 			}
 		case <-ticker.C:
-			if err := c.write(websocket.OpPing, []byte{}); err != nil {
+			if err := c.write(websocket.PingMessage, []byte{}); err != nil {
 				return
 			}
 		}
@@ -143,8 +149,13 @@ type WSController struct {
 	beego.Controller
 }
 
+var upgrader = websocket.Upgrader{
+    ReadBufferSize:  1024,
+    WriteBufferSize: 1024,
+}
+
 func (this *WSController) Get() {
-	ws, err := websocket.Upgrade(this.Ctx.ResponseWriter, this.Ctx.Request.Header, nil, 1024, 1024)
+	ws, err := upgrader.Upgrade(this.Ctx.ResponseWriter, this.Ctx.Request,nil)
 	if _, ok := err.(websocket.HandshakeError); ok {
 		http.Error(this.Ctx.ResponseWriter, "Not a websocket handshake", 400)
 		return

@@ -1,3 +1,17 @@
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package orm
 
 import (
@@ -209,7 +223,6 @@ func (o *querySet) ValuesFlat(result *ParamsList, expr string) (int64, error) {
 // }
 func (o *querySet) RowsToMap(result *Params, keyCol, valueCol string) (int64, error) {
 	panic(ErrNotImplement)
-	return o.orm.alias.DbBaser.RowsTo(o.orm.db, o, o.mi, o.cond, result, keyCol, valueCol, o.orm.alias.TZ)
 }
 
 // query all rows into struct with specify key and value column name.
@@ -224,7 +237,6 @@ func (o *querySet) RowsToMap(result *Params, keyCol, valueCol string) (int64, er
 // }
 func (o *querySet) RowsToStruct(ptrStruct interface{}, keyCol, valueCol string) (int64, error) {
 	panic(ErrNotImplement)
-	return o.orm.alias.DbBaser.RowsTo(o.orm.db, o, o.mi, o.cond, ptrStruct, keyCol, valueCol, o.orm.alias.TZ)
 }
 
 // create new QuerySeter.

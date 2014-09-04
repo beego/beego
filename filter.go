@@ -1,153 +1,37 @@
-package beego
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-import (
-	"regexp"
-	"strings"
-)
+package beego
 
 // FilterRouter defines filter operation before controller handler execution.
 // it can match patterned url and do filter function when action arrives.
 type FilterRouter struct {
-	pattern     string
-	regex       *regexp.Regexp
-	filterFunc  FilterFunc
-	hasregex    bool
-	params      map[int]string
-	parseParams map[string]string
+	filterFunc FilterFunc
+	tree       *Tree
+	pattern    string
 }
 
 // ValidRouter check current request is valid for this filter.
 // if matched, returns parsed params in this request by defined filter router pattern.
-func (mr *FilterRouter) ValidRouter(router string) (bool, map[string]string) {
-	if mr.pattern == "" {
-		return true, nil
+func (f *FilterRouter) ValidRouter(router string) (bool, map[string]string) {
+	isok, params := f.tree.Match(router)
+	if isok == nil {
+		return false, nil
 	}
-	if mr.pattern == "*" {
-		return true, nil
+	if isok, ok := isok.(bool); ok {
+		return isok, params
+	} else {
+		return false, nil
 	}
-	if router == mr.pattern {
-		return true, nil
-	}
-	//pattern /admin  router /admin/  match
-	//pattern /admin/ router /admin don't match, because url will 301 in router
-	if n := len(router); n > 1 && router[n-1] == '/' && router[:n-2] == mr.pattern {
-		return true, nil
-	}
-
-	if mr.hasregex {
-		if !mr.regex.MatchString(router) {
-			return false, nil
-		}
-		matches := mr.regex.FindStringSubmatch(router)
-		if len(matches) > 0 {
-			if len(matches[0]) == len(router) {
-				params := make(map[string]string)
-				for i, match := range matches[1:] {
-					params[mr.params[i]] = match
-				}
-				return true, params
-			}
-		}
-	}
-	return false, nil
-}
-
-func buildFilter(pattern string, filter FilterFunc) (*FilterRouter, error) {
-	mr := new(FilterRouter)
-	mr.params = make(map[int]string)
-	mr.filterFunc = filter
-	parts := strings.Split(pattern, "/")
-	j := 0
-	for i, part := range parts {
-		if strings.HasPrefix(part, ":") {
-			expr := "(.*)"
-			//a user may choose to override the default expression
-			// similar to expressjs: ‘/user/:id([0-9]+)’
-			if index := strings.Index(part, "("); index != -1 {
-				expr = part[index:]
-				part = part[:index]
-				//match /user/:id:int ([0-9]+)
-				//match /post/:username:string	([\w]+)
-			} else if lindex := strings.LastIndex(part, ":"); lindex != 0 {
-				switch part[lindex:] {
-				case ":int":
-					expr = "([0-9]+)"
-					part = part[:lindex]
-				case ":string":
-					expr = `([\w]+)`
-					part = part[:lindex]
-				}
-			}
-			mr.params[j] = part
-			parts[i] = expr
-			j++
-		}
-		if strings.HasPrefix(part, "*") {
-			expr := "(.*)"
-			if part == "*.*" {
-				mr.params[j] = ":path"
-				parts[i] = "([^.]+).([^.]+)"
-				j++
-				mr.params[j] = ":ext"
-				j++
-			} else {
-				mr.params[j] = ":splat"
-				parts[i] = expr
-				j++
-			}
-		}
-		//url like someprefix:id(xxx).html
-		if strings.Contains(part, ":") && strings.Contains(part, "(") && strings.Contains(part, ")") {
-			var out []rune
-			var start bool
-			var startexp bool
-			var param []rune
-			var expt []rune
-			for _, v := range part {
-				if start {
-					if v != '(' {
-						param = append(param, v)
-						continue
-					}
-				}
-				if startexp {
-					if v != ')' {
-						expt = append(expt, v)
-						continue
-					}
-				}
-				if v == ':' {
-					param = make([]rune, 0)
-					param = append(param, ':')
-					start = true
-				} else if v == '(' {
-					startexp = true
-					start = false
-					mr.params[j] = string(param)
-					j++
-					expt = make([]rune, 0)
-					expt = append(expt, '(')
-				} else if v == ')' {
-					startexp = false
-					expt = append(expt, ')')
-					out = append(out, expt...)
-				} else {
-					out = append(out, v)
-				}
-			}
-			parts[i] = string(out)
-		}
-	}
-
-	if j != 0 {
-		pattern = strings.Join(parts, "/")
-		regex, regexErr := regexp.Compile(pattern)
-		if regexErr != nil {
-			return nil, regexErr
-		}
-		mr.regex = regex
-		mr.hasregex = true
-	}
-	mr.pattern = pattern
-	return mr, nil
 }

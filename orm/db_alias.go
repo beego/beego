@@ -1,3 +1,17 @@
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package orm
 
 import (
@@ -130,7 +144,7 @@ func detectTZ(al *alias) {
 		if engine != "" {
 			al.Engine = engine
 		} else {
-			engine = "INNODB"
+			al.Engine = "INNODB"
 		}
 
 	case DR_Sqlite:
@@ -168,7 +182,7 @@ func addAliasWthDB(aliasName, driverName string, db *sql.DB) (*alias, error) {
 	}
 
 	if dataBaseCache.add(aliasName, al) == false {
-		return nil, fmt.Errorf("db name `%s` already registered, cannot reuse", aliasName)
+		return nil, fmt.Errorf("DataBase alias name `%s` already registered, cannot reuse", aliasName)
 	}
 
 	return al, nil
@@ -239,7 +253,7 @@ func SetDataBaseTZ(aliasName string, tz *time.Location) error {
 	if al, ok := dataBaseCache.get(aliasName); ok {
 		al.TZ = tz
 	} else {
-		return fmt.Errorf("DataBase name `%s` not registered\n", aliasName)
+		return fmt.Errorf("DataBase alias name `%s` not registered\n", aliasName)
 	}
 	return nil
 }
@@ -258,5 +272,21 @@ func SetMaxOpenConns(aliasName string, maxOpenConns int) {
 	// for tip go 1.2
 	if fun := reflect.ValueOf(al.DB).MethodByName("SetMaxOpenConns"); fun.IsValid() {
 		fun.Call([]reflect.Value{reflect.ValueOf(maxOpenConns)})
+	}
+}
+
+// Get *sql.DB from registered database by db alias name.
+// Use "default" as alias name if you not set.
+func GetDB(aliasNames ...string) (*sql.DB, error) {
+	var name string
+	if len(aliasNames) > 0 {
+		name = aliasNames[0]
+	} else {
+		name = "default"
+	}
+	if al, ok := dataBaseCache.get(name); ok {
+		return al.DB, nil
+	} else {
+		return nil, fmt.Errorf("DataBase of alias name `%s` not found\n", name)
 	}
 }

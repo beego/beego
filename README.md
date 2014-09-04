@@ -1,39 +1,37 @@
-## beego
+## Beego
 
 [![Build Status](https://drone.io/github.com/astaxie/beego/status.png)](https://drone.io/github.com/astaxie/beego/latest)
+[![GoDoc](https://godoc.org/github.com/astaxie/beego?status.svg)](https://godoc.org/github.com/astaxie/beego)
 
-beego is a Go Framework inspired by tornado and sinatra.
-
-It is a simple & powerful web framework.
+beego is an open-source, high-performance, modularity, full-stack web framework.
 
 More info [beego.me](http://beego.me)
+
+## Installation
+
+    go get github.com/astaxie/beego
 
 ## Features
 
 * RESTful support
 * MVC architecture
-* Session support (store in memory, file, Redis or MySQL)
-* Cache support (store in memory, Redis or Memcache)
-* Global Config
-* Intelligent routing
-* Thread-safe map
-* Friendly displaying of errors
-* Useful template functions
-
+* Modularity
+* Auto API documents
+* Annotation router
+* Namespace
+* Powerful develop tools
+* Full stack for Web & API
 
 ## Documentation
 
-[English](http://beego.me/docs/intro/)
+* [English](http://beego.me/docs/intro/)
+* [中文文档](http://beego.me/docs/intro/)
 
-[API](http://gowalker.org/github.com/astaxie/beego)
+## Community
 
-[中文文档](http://beego.me/docs/intro/)
-
+* [http://beego.me/community](http://beego.me/community)
 
 ## LICENSE
 
 beego is licensed under the Apache Licence, Version 2.0
 (http://www.apache.org/licenses/LICENSE-2.0.html).
-
-[![Clone in Koding](http://learn.koding.com/btn/clone_d.png)][koding]
-[koding]: https://koding.com/Teamwork?import=https://github.com/astaxie/beego/archive/master.zip&c=git1

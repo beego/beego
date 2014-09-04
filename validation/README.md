@@ -33,7 +33,7 @@ Direct Use:
 		valid.Required(u.Name, "name")
 		valid.MaxSize(u.Name, 15, "nameMax")
 		valid.Range(u.Age, 0, 140, "age")
-		if valid.HasErrors {
+		if valid.HasErrors() {
 			// validation does not pass
 			// print invalid message
 			for _, err := range valid.Errors {

@@ -1,3 +1,30 @@
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// package session provider
+//
+// Usage:
+// import(
+//   "github.com/astaxie/beego/session"
+// )
+//
+//	func init() {
+//      globalSessions, _ = session.NewManager("memory", `{"cookieName":"gosessionid", "enableSetCookie,omitempty": true, "gclifetime":3600, "maxLifetime": 3600, "secure": false, "sessionIDHashFunc": "sha1", "sessionIDHashKey": "", "cookieLifeTime": 3600, "providerConfig": ""}`)
+//		go globalSessions.GC()
+//	}
+//
+// more docs: http://beego.me/docs/module/session.md
 package session
 
 import (
@@ -12,6 +39,8 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+
+	"github.com/astaxie/beego/utils"
 )
 
 // SessionStore contains all data for one session process with specific id.
@@ -56,12 +85,12 @@ type managerConfig struct {
 	EnableSetCookie   bool   `json:"enableSetCookie,omitempty"`
 	Gclifetime        int64  `json:"gclifetime"`
 	Maxlifetime       int64  `json:"maxLifetime"`
-	Maxage            int    `json:"maxage"`
 	Secure            bool   `json:"secure"`
 	SessionIDHashFunc string `json:"sessionIDHashFunc"`
 	SessionIDHashKey  string `json:"sessionIDHashKey"`
-	CookieLifeTime    int64  `json:"cookieLifeTime"`
+	CookieLifeTime    int    `json:"cookieLifeTime"`
 	ProviderConfig    string `json:"providerConfig"`
+	Domain            string `json:"domain"`
 }
 
 // Manager contains Provider and its configuration.
@@ -124,9 +153,10 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 			Value:    url.QueryEscape(sid),
 			Path:     "/",
 			HttpOnly: true,
-			Secure:   manager.config.Secure}
-		if manager.config.Maxage >= 0 {
-			cookie.MaxAge = manager.config.Maxage
+			Secure:   manager.config.Secure,
+			Domain:   manager.config.Domain}
+		if manager.config.CookieLifeTime >= 0 {
+			cookie.MaxAge = manager.config.CookieLifeTime
 		}
 		if manager.config.EnableSetCookie {
 			http.SetCookie(w, cookie)
@@ -143,9 +173,10 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 				Value:    url.QueryEscape(sid),
 				Path:     "/",
 				HttpOnly: true,
-				Secure:   manager.config.Secure}
-			if manager.config.Maxage >= 0 {
-				cookie.MaxAge = manager.config.Maxage
+				Secure:   manager.config.Secure,
+				Domain:   manager.config.Domain}
+			if manager.config.CookieLifeTime >= 0 {
+				cookie.MaxAge = manager.config.CookieLifeTime
 			}
 			if manager.config.EnableSetCookie {
 				http.SetCookie(w, cookie)
@@ -174,7 +205,7 @@ func (manager *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
 }
 
 // Get SessionStore by its id.
-func (manager *Manager) GetProvider(sid string) (sessions SessionStore, err error) {
+func (manager *Manager) GetSessionStore(sid string) (sessions SessionStore, err error) {
 	sessions, err = manager.provider.SessionRead(sid)
 	return
 }
@@ -198,6 +229,7 @@ func (manager *Manager) SessionRegenerateId(w http.ResponseWriter, r *http.Reque
 			Path:     "/",
 			HttpOnly: true,
 			Secure:   manager.config.Secure,
+			Domain:   manager.config.Domain,
 		}
 	} else {
 		oldsid, _ := url.QueryUnescape(cookie.Value)
@@ -206,8 +238,8 @@ func (manager *Manager) SessionRegenerateId(w http.ResponseWriter, r *http.Reque
 		cookie.HttpOnly = true
 		cookie.Path = "/"
 	}
-	if manager.config.Maxage >= 0 {
-		cookie.MaxAge = manager.config.Maxage
+	if manager.config.CookieLifeTime >= 0 {
+		cookie.MaxAge = manager.config.CookieLifeTime
 	}
 	http.SetCookie(w, cookie)
 	r.AddCookie(cookie)
@@ -232,9 +264,9 @@ func (manager *Manager) SetSecure(secure bool) {
 
 // generate session id with rand string, unix nano time, remote addr by hash function.
 func (manager *Manager) sessionId(r *http.Request) (sid string) {
-	bs := make([]byte, 24)
-	if _, err := io.ReadFull(rand.Reader, bs); err != nil {
-		return ""
+	bs := make([]byte, 32)
+	if n, err := io.ReadFull(rand.Reader, bs); n != 32 || err != nil {
+		bs = utils.RandomCreateBytes(32)
 	}
 	sig := fmt.Sprintf("%s%d%s", r.RemoteAddr, time.Now().UnixNano(), bs)
 	if manager.config.SessionIDHashFunc == "md5" {

@@ -1,3 +1,17 @@
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package session
 
 import (
@@ -35,7 +49,6 @@ func (st *MemSessionStore) Get(key interface{}) interface{} {
 	} else {
 		return nil
 	}
-	return nil
 }
 
 // delete in memory session by key
@@ -94,7 +107,6 @@ func (pder *MemProvider) SessionRead(sid string) (SessionStore, error) {
 		pder.lock.Unlock()
 		return newsess, nil
 	}
-	return nil, nil
 }
 
 // check session store exist in memory session by sid
@@ -129,7 +141,6 @@ func (pder *MemProvider) SessionRegenerate(oldsid, sid string) (SessionStore, er
 		pder.lock.Unlock()
 		return newsess, nil
 	}
-	return nil, nil
 }
 
 // delete session store in memory session by id

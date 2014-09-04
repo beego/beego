@@ -1,12 +1,22 @@
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package beego
 
 import (
 	"bytes"
-	"crypto/hmac"
-	"crypto/sha1"
-	"encoding/base64"
 	"errors"
-	"fmt"
 	"html/template"
 	"io"
 	"io/ioutil"
@@ -17,17 +27,31 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/session"
-	"github.com/astaxie/beego/utils"
+)
+
+//commonly used mime-types
+const (
+	applicationJson = "application/json"
+	applicationXml  = "application/xml"
+	textXml         = "text/xml"
 )
 
 var (
 	// custom error when user stop request handler manually.
-	USERSTOPRUN = errors.New("User stop run")
+	USERSTOPRUN                                            = errors.New("User stop run")
+	GlobalControllerRouter map[string][]ControllerComments = make(map[string][]ControllerComments) //pkgpath+controller:comments
 )
+
+// store the comment for the controller method
+type ControllerComments struct {
+	Method           string
+	Router           string
+	AllowHTTPMethods []string
+	Params           []map[string]string
+}
 
 // Controller defines some basic http request handler operations, such as
 // http context, template and view, session and xsrf.
@@ -45,7 +69,9 @@ type Controller struct {
 	CruSession     session.SessionStore
 	XSRFExpire     int
 	AppController  interface{}
-	EnableReander  bool
+	EnableRender   bool
+	EnableXSRF     bool
+	methodMapping  map[string]func() //method:routertree
 }
 
 // ControllerInterface is an interface to uniform all controller handler.
@@ -63,11 +89,12 @@ type ControllerInterface interface {
 	Render() error
 	XsrfToken() string
 	CheckXsrfCookie() bool
+	HandlerFunc(fn string) bool
+	URLMapping()
 }
 
 // Init generates default values of controller operations.
 func (c *Controller) Init(ctx *context.Context, controllerName, actionName string, app interface{}) {
-	c.Data = make(map[interface{}]interface{})
 	c.Layout = ""
 	c.TplNames = ""
 	c.controllerName = controllerName
@@ -75,8 +102,10 @@ func (c *Controller) Init(ctx *context.Context, controllerName, actionName strin
 	c.Ctx = ctx
 	c.TplExt = "tpl"
 	c.AppController = app
-	c.EnableReander = true
+	c.EnableRender = true
+	c.EnableXSRF = true
 	c.Data = ctx.Input.Data
+	c.methodMapping = make(map[string]func())
 }
 
 // Prepare runs after Init before request function execution.
@@ -124,9 +153,27 @@ func (c *Controller) Options() {
 	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", 405)
 }
 
+// call function fn
+func (c *Controller) HandlerFunc(fnname string) bool {
+	if v, ok := c.methodMapping[fnname]; ok {
+		v()
+		return true
+	} else {
+		return false
+	}
+}
+
+// URLMapping register the internal Controller router.
+func (c *Controller) URLMapping() {
+}
+
+func (c *Controller) Mapping(method string, fn func()) {
+	c.methodMapping[method] = fn
+}
+
 // Render sends the response with rendered template bytes as text/html type.
 func (c *Controller) Render() error {
-	if !c.EnableReander {
+	if !c.EnableRender {
 		return nil
 	}
 	rb, err := c.RenderBytes()
@@ -159,7 +206,6 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		newbytes := bytes.NewBufferString("")
 		if _, ok := BeeTemplates[c.TplNames]; !ok {
 			panic("can't find templatefile in the path:" + c.TplNames)
-			return []byte{}, errors.New("can't find templatefile in the path:" + c.TplNames)
 		}
 		err := BeeTemplates[c.TplNames].ExecuteTemplate(newbytes, c.TplNames, c.Data)
 		if err != nil {
@@ -205,7 +251,6 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		ibytes := bytes.NewBufferString("")
 		if _, ok := BeeTemplates[c.TplNames]; !ok {
 			panic("can't find templatefile in the path:" + c.TplNames)
-			return []byte{}, errors.New("can't find templatefile in the path:" + c.TplNames)
 		}
 		err := BeeTemplates[c.TplNames].ExecuteTemplate(ibytes, c.TplNames, c.Data)
 		if err != nil {
@@ -215,7 +260,6 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		icontent, _ := ioutil.ReadAll(ibytes)
 		return icontent, nil
 	}
-	return []byte{}, nil
 }
 
 // Redirect sends the redirection response to url with status code.
@@ -231,6 +275,11 @@ func (c *Controller) Abort(code string) {
 	} else {
 		c.Ctx.Abort(200, code)
 	}
+}
+
+// CustomAbort stops controller handler and show the error data, it's similar Aborts, but support status code and body.
+func (c *Controller) CustomAbort(status int, body string) {
+	c.Ctx.Abort(status, body)
 }
 
 // StopRun makes panic of USERSTOPRUN error and go to recover function if defined.
@@ -249,7 +298,6 @@ func (c *Controller) UrlFor(endpoint string, values ...string) string {
 	} else {
 		return UrlFor(endpoint, values...)
 	}
-	return ""
 }
 
 // ServeJson sends a json response with encoding charset.
@@ -289,12 +337,22 @@ func (c *Controller) ServeXml() {
 	c.Ctx.Output.Xml(c.Data["xml"], hasIndent)
 }
 
+// ServeFormatted serve Xml OR Json, depending on the value of the Accept header
+func (c *Controller) ServeFormatted() {
+	accept := c.Ctx.Input.Header("Accept")
+	switch accept {
+	case applicationJson:
+		c.ServeJson()
+	case applicationXml, textXml:
+		c.ServeXml()
+	default:
+		c.ServeJson()
+	}
+}
+
 // Input returns the input data map from POST or PUT request body and query string.
 func (c *Controller) Input() url.Values {
-	ct := c.Ctx.Request.Header.Get("Content-Type")
-	if strings.Contains(ct, "multipart/form-data") {
-		c.Ctx.Request.ParseMultipartForm(MaxMemory) //64MB
-	} else {
+	if c.Ctx.Request.Form == nil {
 		c.Ctx.Request.ParseForm()
 	}
 	return c.Ctx.Request.Form
@@ -307,36 +365,65 @@ func (c *Controller) ParseForm(obj interface{}) error {
 
 // GetString returns the input value by key string.
 func (c *Controller) GetString(key string) string {
-	return c.Input().Get(key)
+	return c.Ctx.Input.Query(key)
 }
 
 // GetStrings returns the input string slice by key string.
 // it's designed for multi-value input field such as checkbox(input[type=checkbox]), multi-selection.
 func (c *Controller) GetStrings(key string) []string {
-	r := c.Ctx.Request
-	if r.Form == nil {
+	f := c.Input()
+	if f == nil {
 		return []string{}
 	}
-	vs := r.Form[key]
+	vs := f[key]
 	if len(vs) > 0 {
 		return vs
 	}
 	return []string{}
 }
 
-// GetInt returns input value as int64.
-func (c *Controller) GetInt(key string) (int64, error) {
-	return strconv.ParseInt(c.Input().Get(key), 10, 64)
+// GetInt returns input as an int
+func (c *Controller) GetInt(key string) (int, error) {
+	return strconv.Atoi(c.Ctx.Input.Query(key))
+}
+
+// GetInt8 return input as an int8
+func (c *Controller) GetInt8(key string) (int8, error) {
+	i64, err := strconv.ParseInt(c.Ctx.Input.Query(key), 10, 8)
+	i8 := int8(i64)
+
+	return i8, err
+}
+
+// GetInt16 returns input as an int16
+func (c *Controller) GetInt16(key string) (int16, error) {
+	i64, err := strconv.ParseInt(c.Ctx.Input.Query(key), 10, 16)
+	i16 := int16(i64)
+
+	return i16, err
+}
+
+// GetInt32 returns input as an int32
+func (c *Controller) GetInt32(key string) (int32, error) {
+	i64, err := strconv.ParseInt(c.Ctx.Input.Query(key), 10, 32)
+	i32 := int32(i64)
+
+	return i32, err
+}
+
+// GetInt64 returns input value as int64.
+func (c *Controller) GetInt64(key string) (int64, error) {
+	return strconv.ParseInt(c.Ctx.Input.Query(key), 10, 64)
 }
 
 // GetBool returns input value as bool.
 func (c *Controller) GetBool(key string) (bool, error) {
-	return strconv.ParseBool(c.Input().Get(key))
+	return strconv.ParseBool(c.Ctx.Input.Query(key))
 }
 
 // GetFloat returns input value as float64.
 func (c *Controller) GetFloat(key string) (float64, error) {
-	return strconv.ParseFloat(c.Input().Get(key), 64)
+	return strconv.ParseFloat(c.Ctx.Input.Query(key), 64)
 }
 
 // GetFile returns the file data in file upload field named as key.
@@ -397,7 +484,9 @@ func (c *Controller) DelSession(name interface{}) {
 // SessionRegenerateID regenerates session id for this session.
 // the session data have no changes.
 func (c *Controller) SessionRegenerateID() {
-	c.CruSession.SessionRelease(c.Ctx.ResponseWriter)
+	if c.CruSession != nil {
+		c.CruSession.SessionRelease(c.Ctx.ResponseWriter)
+	}
 	c.CruSession = GlobalSessions.SessionRegenerateId(c.Ctx.ResponseWriter, c.Ctx.Request)
 	c.Ctx.Input.CruSession = c.CruSession
 }
@@ -415,57 +504,24 @@ func (c *Controller) IsAjax() bool {
 
 // GetSecureCookie returns decoded cookie value from encoded browser cookie values.
 func (c *Controller) GetSecureCookie(Secret, key string) (string, bool) {
-	val := c.Ctx.GetCookie(key)
-	if val == "" {
-		return "", false
-	}
-
-	parts := strings.SplitN(val, "|", 3)
-
-	if len(parts) != 3 {
-		return "", false
-	}
-
-	vs := parts[0]
-	timestamp := parts[1]
-	sig := parts[2]
-
-	h := hmac.New(sha1.New, []byte(Secret))
-	fmt.Fprintf(h, "%s%s", vs, timestamp)
-
-	if fmt.Sprintf("%02x", h.Sum(nil)) != sig {
-		return "", false
-	}
-	res, _ := base64.URLEncoding.DecodeString(vs)
-	return string(res), true
+	return c.Ctx.GetSecureCookie(Secret, key)
 }
 
 // SetSecureCookie puts value into cookie after encoded the value.
-func (c *Controller) SetSecureCookie(Secret, name, val string, age int64) {
-	vs := base64.URLEncoding.EncodeToString([]byte(val))
-	timestamp := strconv.FormatInt(time.Now().UnixNano(), 10)
-	h := hmac.New(sha1.New, []byte(Secret))
-	fmt.Fprintf(h, "%s%s", vs, timestamp)
-	sig := fmt.Sprintf("%02x", h.Sum(nil))
-	cookie := strings.Join([]string{vs, timestamp, sig}, "|")
-	c.Ctx.SetCookie(name, cookie, age, "/")
+func (c *Controller) SetSecureCookie(Secret, name, value string, others ...interface{}) {
+	c.Ctx.SetSecureCookie(Secret, name, value, others...)
 }
 
 // XsrfToken creates a xsrf token string and returns.
 func (c *Controller) XsrfToken() string {
 	if c._xsrf_token == "" {
-		token, ok := c.GetSecureCookie(XSRFKEY, "_xsrf")
-		if !ok {
-			var expire int64
-			if c.XSRFExpire > 0 {
-				expire = int64(c.XSRFExpire)
-			} else {
-				expire = int64(XSRFExpire)
-			}
-			token = string(utils.RandomCreateBytes(15))
-			c.SetSecureCookie(XSRFKEY, "_xsrf", token, expire)
+		var expire int64
+		if c.XSRFExpire > 0 {
+			expire = int64(c.XSRFExpire)
+		} else {
+			expire = int64(XSRFExpire)
 		}
-		c._xsrf_token = token
+		c._xsrf_token = c.Ctx.XsrfToken(XSRFKEY, expire)
 	}
 	return c._xsrf_token
 }
@@ -474,19 +530,10 @@ func (c *Controller) XsrfToken() string {
 // the token can provided in request header "X-Xsrftoken" and "X-CsrfToken"
 // or in form field value named as "_xsrf".
 func (c *Controller) CheckXsrfCookie() bool {
-	token := c.GetString("_xsrf")
-	if token == "" {
-		token = c.Ctx.Request.Header.Get("X-Xsrftoken")
+	if !c.EnableXSRF {
+		return true
 	}
-	if token == "" {
-		token = c.Ctx.Request.Header.Get("X-Csrftoken")
-	}
-	if token == "" {
-		c.Ctx.Abort(403, "'_xsrf' argument missing from POST")
-	} else if c._xsrf_token != token {
-		c.Ctx.Abort(403, "XSRF cookie does not match POST argument")
-	}
-	return true
+	return c.Ctx.CheckXsrfCookie()
 }
 
 // XsrfFormHtml writes an input field contains xsrf token value.

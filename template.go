@@ -1,6 +1,18 @@
-package beego
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
 
-//@todo add template funcs
+package beego
 
 import (
 	"errors"
@@ -38,6 +50,7 @@ func init() {
 	beegoTplFuncMap["renderform"] = RenderForm
 	beegoTplFuncMap["assets_js"] = AssetsJs
 	beegoTplFuncMap["assets_css"] = AssetsCss
+	beegoTplFuncMap["config"] = Config
 
 	// go1.2 added template funcs
 	// Comparisons
@@ -151,7 +164,7 @@ func getTplDeep(root, file, parent string, t *template.Template) (*template.Temp
 		fileabspath = filepath.Join(root, file)
 	}
 	if e := utils.FileExists(fileabspath); !e {
-		panic("can't find template file" + file)
+		panic("can't find template file:" + file)
 	}
 	data, err := ioutil.ReadFile(fileabspath)
 	if err != nil {

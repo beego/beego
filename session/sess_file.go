@@ -1,3 +1,17 @@
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package session
 
 import (
@@ -20,7 +34,6 @@ var (
 
 // File session store
 type FileSessionStore struct {
-	f      *os.File
 	sid    string
 	lock   sync.RWMutex
 	values map[interface{}]interface{}
@@ -43,7 +56,6 @@ func (fs *FileSessionStore) Get(key interface{}) interface{} {
 	} else {
 		return nil
 	}
-	return nil
 }
 
 // Delete value in file session by given key
@@ -69,18 +81,28 @@ func (fs *FileSessionStore) SessionID() string {
 
 // Write file session to local file with Gob string
 func (fs *FileSessionStore) SessionRelease(w http.ResponseWriter) {
-	defer fs.f.Close()
-	b, err := encodeGob(fs.values)
+	b, err := EncodeGob(fs.values)
 	if err != nil {
 		return
 	}
-	fs.f.Truncate(0)
-	fs.f.Seek(0, 0)
-	fs.f.Write(b)
+	_, err = os.Stat(path.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid))
+	var f *os.File
+	if err == nil {
+		f, err = os.OpenFile(path.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid), os.O_RDWR, 0777)
+	} else if os.IsNotExist(err) {
+		f, err = os.Create(path.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid))
+	} else {
+		return
+	}
+	f.Truncate(0)
+	f.Seek(0, 0)
+	f.Write(b)
+	f.Close()
 }
 
 // File session provider
 type FileProvider struct {
+	lock        sync.RWMutex
 	maxlifetime int64
 	savePath    string
 }
@@ -97,6 +119,9 @@ func (fp *FileProvider) SessionInit(maxlifetime int64, savePath string) error {
 // if file is not exist, create it.
 // the file path is generated from sid string.
 func (fp *FileProvider) SessionRead(sid string) (SessionStore, error) {
+	filepder.lock.Lock()
+	defer filepder.lock.Unlock()
+
 	err := os.MkdirAll(path.Join(fp.savePath, string(sid[0]), string(sid[1])), 0777)
 	if err != nil {
 		println(err.Error())
@@ -119,20 +144,22 @@ func (fp *FileProvider) SessionRead(sid string) (SessionStore, error) {
 	if len(b) == 0 {
 		kv = make(map[interface{}]interface{})
 	} else {
-		kv, err = decodeGob(b)
+		kv, err = DecodeGob(b)
 		if err != nil {
 			return nil, err
 		}
 	}
 	f.Close()
-	f, err = os.OpenFile(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid), os.O_WRONLY|os.O_CREATE, 0777)
-	ss := &FileSessionStore{f: f, sid: sid, values: kv}
+	ss := &FileSessionStore{sid: sid, values: kv}
 	return ss, nil
 }
 
 // Check file session exist.
 // it checkes the file named from sid exist or not.
 func (fp *FileProvider) SessionExist(sid string) bool {
+	filepder.lock.Lock()
+	defer filepder.lock.Unlock()
+
 	_, err := os.Stat(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid))
 	if err == nil {
 		return true
@@ -143,12 +170,17 @@ func (fp *FileProvider) SessionExist(sid string) bool {
 
 // Remove all files in this save path
 func (fp *FileProvider) SessionDestroy(sid string) error {
+	filepder.lock.Lock()
+	defer filepder.lock.Unlock()
 	os.Remove(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid))
 	return nil
 }
 
 // Recycle files in save path
 func (fp *FileProvider) SessionGC() {
+	filepder.lock.Lock()
+	defer filepder.lock.Unlock()
+
 	gcmaxlifetime = fp.maxlifetime
 	filepath.Walk(fp.savePath, gcpath)
 }
@@ -170,6 +202,9 @@ func (fp *FileProvider) SessionAll() int {
 // Generate new sid for file session.
 // it delete old file and create new file named from new sid.
 func (fp *FileProvider) SessionRegenerate(oldsid, sid string) (SessionStore, error) {
+	filepder.lock.Lock()
+	defer filepder.lock.Unlock()
+
 	err := os.MkdirAll(path.Join(fp.savePath, string(oldsid[0]), string(oldsid[1])), 0777)
 	if err != nil {
 		println(err.Error())
@@ -207,14 +242,12 @@ func (fp *FileProvider) SessionRegenerate(oldsid, sid string) (SessionStore, err
 	if len(b) == 0 {
 		kv = make(map[interface{}]interface{})
 	} else {
-		kv, err = decodeGob(b)
+		kv, err = DecodeGob(b)
 		if err != nil {
 			return nil, err
 		}
 	}
-
-	newf, err = os.OpenFile(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid), os.O_WRONLY|os.O_CREATE, 0777)
-	ss := &FileSessionStore{f: newf, sid: sid, values: kv}
+	ss := &FileSessionStore{sid: sid, values: kv}
 	return ss, nil
 }
 
