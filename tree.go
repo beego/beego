@@ -237,12 +237,18 @@ func (t *Tree) addseg(segments []string, route interface{}, wildcards []string, 
 					regexpStr = "/" + regexpStr
 				}
 			} else if reg != "" {
-				for _, w := range params {
-					if w == "." || w == ":" {
-						continue
+				if seg == "*.*" {
+					regexpStr = "/([^.]+).(.+)"
+				} else {
+					for _, w := range params {
+
+						if w == "." || w == ":" {
+							continue
+						}
+						regexpStr = "/([^/]+)" + regexpStr
 					}
-					regexpStr = "/([^/]+)" + regexpStr
 				}
+
 			}
 			t.wildcard.addseg(segments[1:], route, append(wildcards, params...), reg+regexpStr)
 		} else {
@@ -396,6 +402,7 @@ func (leaf *leafInfo) match(wildcardValues []string) (ok bool, params map[string
 		}
 		return true, params
 	}
+
 	if !leaf.regexps.MatchString(path.Join(wildcardValues...)) {
 		return false, nil
 	}
