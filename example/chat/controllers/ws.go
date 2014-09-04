@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/astaxie/beego"
+	. "github.com/astaxie/beego/debug"
 	"github.com/gorilla/websocket"
 )
 
@@ -32,7 +33,7 @@ const (
 
 func init() {
 	rand.Seed(time.Now().UTC().UnixNano())
-	go h.run()
+	GoRoutineRecovered(func() { h.run() })
 }
 
 // connection is an middleman between the websocket connection and the hub.
@@ -150,12 +151,12 @@ type WSController struct {
 }
 
 var upgrader = websocket.Upgrader{
-    ReadBufferSize:  1024,
-    WriteBufferSize: 1024,
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
 }
 
 func (this *WSController) Get() {
-	ws, err := upgrader.Upgrade(this.Ctx.ResponseWriter, this.Ctx.Request,nil)
+	ws, err := upgrader.Upgrade(this.Ctx.ResponseWriter, this.Ctx.Request, nil)
 	if _, ok := err.(websocket.HandshakeError); ok {
 		http.Error(this.Ctx.ResponseWriter, "Not a websocket handshake", 400)
 		return
@@ -164,7 +165,7 @@ func (this *WSController) Get() {
 	}
 	c := &connection{send: make(chan []byte, 256), ws: ws, username: randomString(10)}
 	h.register <- c
-	go c.writePump()
+	GoRoutineRecovered(func() { c.writePump() })
 	c.readPump()
 }
 

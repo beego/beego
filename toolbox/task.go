@@ -21,6 +21,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	. "github.com/astaxie/beego/debug"
 )
 
 // bounds provides a range of acceptable values (plus a map of name to value).
@@ -382,7 +384,7 @@ func dayMatches(s *Schedule, t time.Time) bool {
 // start all tasks
 func StartTask() {
 	isstart = true
-	go run()
+	GoRoutineRecovered(func() { run() })
 }
 
 func run() {
@@ -409,7 +411,7 @@ func run() {
 				if e.GetNext() != effective {
 					break
 				}
-				go e.Run()
+				GoRoutineRecovered(func() { e.Run() })
 				e.SetPrev(e.GetNext())
 				e.SetNext(effective)
 			}

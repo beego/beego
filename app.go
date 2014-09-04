@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/astaxie/beego/context"
+	. "github.com/astaxie/beego/debug"
 )
 
 // FilterFunc defines filter function type.
@@ -42,6 +43,8 @@ func NewApp() *App {
 
 // Run beego application.
 func (app *App) Run() {
+	SetRecoveryLogger(BeeLogger)
+
 	addr := HttpAddr
 
 	if HttpPort != 0 {
@@ -73,7 +76,7 @@ func (app *App) Run() {
 		app.Server.WriteTimeout = time.Duration(HttpServerTimeOut) * time.Second
 
 		if EnableHttpTLS {
-			go func() {
+			GoRoutineRecovered(func() {
 				time.Sleep(20 * time.Microsecond)
 				if HttpsPort != 0 {
 					app.Server.Addr = fmt.Sprintf("%s:%d", HttpAddr, HttpsPort)
@@ -84,11 +87,11 @@ func (app *App) Run() {
 					time.Sleep(100 * time.Microsecond)
 					endRunning <- true
 				}
-			}()
+			})
 		}
 
 		if EnableHttpListen {
-			go func() {
+			GoRoutineRecovered(func() {
 				app.Server.Addr = addr
 				err := app.Server.ListenAndServe()
 				if err != nil {
@@ -96,7 +99,7 @@ func (app *App) Run() {
 					time.Sleep(100 * time.Microsecond)
 					endRunning <- true
 				}
-			}()
+			})
 		}
 	}
 

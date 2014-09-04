@@ -25,6 +25,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	. "github.com/astaxie/beego/debug"
 )
 
 // FileLogWriter implements LoggerInterface.
@@ -218,7 +220,7 @@ func (w *FileLogWriter) DoRotate() error {
 			return fmt.Errorf("Rotate StartLogger: %s\n", err)
 		}
 
-		go w.deleteOldLog()
+		GoRoutineRecovered(func() { w.deleteOldLog() })
 	}
 
 	return nil
