@@ -59,6 +59,15 @@ func (fd *FlashData) Error(msg string, args ...interface{}) {
 	}
 }
 
+// Set message to flash
+func (fd *FlashData) Set(key string, msg string, args ...interface{}) {
+	if len(args) == 0 {
+		fd.Data[key] = msg
+	} else {
+		fd.Data[key] = fmt.Sprintf(msg, args...)
+	}
+}
+
 // Store does the saving operation of flash data.
 // the data are encoded and saved in cookie.
 func (fd *FlashData) Store(c *Controller) {
