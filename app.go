@@ -48,8 +48,6 @@ func (app *App) Run() {
 		addr = fmt.Sprintf("%s:%d", HttpAddr, HttpPort)
 	}
 
-	BeeLogger.Info("Running on %s", addr)
-
 	var (
 		err error
 		l   net.Listener
@@ -78,6 +76,7 @@ func (app *App) Run() {
 				if HttpsPort != 0 {
 					app.Server.Addr = fmt.Sprintf("%s:%d", HttpAddr, HttpsPort)
 				}
+				BeeLogger.Info("Running on %s", app.Server.Addr)
 				err := app.Server.ListenAndServeTLS(HttpCertFile, HttpKeyFile)
 				if err != nil {
 					BeeLogger.Critical("ListenAndServeTLS: ", err)
@@ -90,6 +89,7 @@ func (app *App) Run() {
 		if EnableHttpListen {
 			go func() {
 				app.Server.Addr = addr
+				BeeLogger.Info("Running on %s", app.Server.Addr)
 				err := app.Server.ListenAndServe()
 				if err != nil {
 					BeeLogger.Critical("ListenAndServe: ", err)
