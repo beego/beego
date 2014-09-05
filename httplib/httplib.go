@@ -355,7 +355,7 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 		Jar:       jar,
 	}
 
-	if b.setting.UserAgent != "" {
+	if b.setting.UserAgent != "" && b.req.Header.Get("User-Agent") == "" {
 		b.req.Header.Set("User-Agent", b.setting.UserAgent)
 	}
 
