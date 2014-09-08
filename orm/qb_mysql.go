@@ -23,54 +23,54 @@ type MySQLQueryBuilder struct {
 	QueryString []string
 }
 
-func (qw *MySQLQueryBuilder) Select(fields ...string) QueryWriter {
+func (qw *MySQLQueryBuilder) Select(fields ...string) QueryBuilder {
 	segment := fmt.Sprintf("SELECT %s", strings.Join(fields, ", "))
 	qw.QueryString = append(qw.QueryString, segment)
 	return qw
 }
 
-func (qw *MySQLQueryBuilder) From(tables ...string) QueryWriter {
+func (qw *MySQLQueryBuilder) From(tables ...string) QueryBuilder {
 	segment := fmt.Sprintf("FROM %s", strings.Join(tables, ", "))
 	qw.QueryString = append(qw.QueryString, segment)
 	return qw
 }
 
-func (qw *MySQLQueryBuilder) Where(cond string) QueryWriter {
+func (qw *MySQLQueryBuilder) Where(cond string) QueryBuilder {
 	qw.QueryString = append(qw.QueryString, "WHERE "+cond)
 	return qw
 }
 
-func (qw *MySQLQueryBuilder) LimitOffset(limit int, offset int) QueryWriter {
+func (qw *MySQLQueryBuilder) LimitOffset(limit int, offset int) QueryBuilder {
 	qw.QueryString = append(qw.QueryString, fmt.Sprintf("LIMIT %d OFFSET %d", limit, offset))
 	return qw
 }
 
-func (qw *MySQLQueryBuilder) InnerJoin(table string) QueryWriter {
+func (qw *MySQLQueryBuilder) InnerJoin(table string) QueryBuilder {
 	qw.QueryString = append(qw.QueryString, "INNER JOIN "+table)
 	return qw
 }
 
-func (qw *MySQLQueryBuilder) LeftJoin(table string) QueryWriter {
+func (qw *MySQLQueryBuilder) LeftJoin(table string) QueryBuilder {
 	qw.QueryString = append(qw.QueryString, "LEFT JOIN "+table)
 	return qw
 }
 
-func (qw *MySQLQueryBuilder) On(cond string) QueryWriter {
+func (qw *MySQLQueryBuilder) On(cond string) QueryBuilder {
 	qw.QueryString = append(qw.QueryString, "ON "+cond)
 	return qw
 }
 
-func (qw *MySQLQueryBuilder) And(cond string) QueryWriter {
+func (qw *MySQLQueryBuilder) And(cond string) QueryBuilder {
 	qw.QueryString = append(qw.QueryString, "AND "+cond)
 	return qw
 }
 
-func (qw *MySQLQueryBuilder) Or(cond string) QueryWriter {
+func (qw *MySQLQueryBuilder) Or(cond string) QueryBuilder {
 	qw.QueryString = append(qw.QueryString, "OR "+cond)
 	return qw
 }
 
-func (qw *MySQLQueryBuilder) In(vals ...string) QueryWriter {
+func (qw *MySQLQueryBuilder) In(vals ...string) QueryBuilder {
 	segment := fmt.Sprintf("IN (%s)", strings.Join(vals, ", "))
 	qw.QueryString = append(qw.QueryString, segment)
 	return qw

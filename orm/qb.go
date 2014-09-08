@@ -17,16 +17,16 @@ package orm
 import "errors"
 
 type QueryBuilder interface {
-	Select(fields ...string) QueryWriter
-	From(tables ...string) QueryWriter
-	Where(cond string) QueryWriter
-	LimitOffset(limit int, offset int) QueryWriter
-	InnerJoin(table string) QueryWriter
-	LeftJoin(table string) QueryWriter
-	On(cond string) QueryWriter
-	And(cond string) QueryWriter
-	Or(cond string) QueryWriter
-	In(vals ...string) QueryWriter
+	Select(fields ...string) QueryBuilder
+	From(tables ...string) QueryBuilder
+	Where(cond string) QueryBuilder
+	LimitOffset(limit int, offset int) QueryBuilder
+	InnerJoin(table string) QueryBuilder
+	LeftJoin(table string) QueryBuilder
+	On(cond string) QueryBuilder
+	And(cond string) QueryBuilder
+	Or(cond string) QueryBuilder
+	In(vals ...string) QueryBuilder
 	Subquery(query string, rename string) string
 	String() string
 }
