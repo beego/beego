@@ -14,6 +14,8 @@
 
 package orm
 
+import "errors"
+
 type QueryBuilder interface {
 	Select(fields ...string) QueryWriter
 	From(tables ...string) QueryWriter
@@ -29,7 +31,15 @@ type QueryBuilder interface {
 	String() string
 }
 
-func NewQueryBuilder() (qb QueryBuilder) {
-	qb = new(MySQLQueryBuilder)
+func NewQueryBuilder(driver string) (qb QueryBuilder, err error) {
+	if driver == "mysql" {
+		qb = new(MySQLQueryBuilder)
+	} else if driver == "postgres" {
+		err = errors.New("postgres querybuilder is not supported yet!")
+	} else if driver == "sqlite" {
+		err = errors.New("sqlite querybuilder is not supported yet!")
+	} else {
+		err = errors.New("unknown driver for query builder!")
+	}
 	return
 }
