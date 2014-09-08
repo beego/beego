@@ -28,3 +28,8 @@ type QueryBuilder interface {
 	Subquery(query string, rename string) string
 	String() string
 }
+
+func NewQueryBuilder() (qb QueryBuilder) {
+	qb = new(MySQLQueryBuilder)
+	return
+}
