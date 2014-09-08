@@ -35,9 +35,9 @@ func NewQueryBuilder(driver string) (qb QueryBuilder, err error) {
 	if driver == "mysql" {
 		qb = new(MySQLQueryBuilder)
 	} else if driver == "postgres" {
-		err = errors.New("postgres querybuilder is not supported yet!")
+		err = errors.New("postgres query builder is not supported yet!")
 	} else if driver == "sqlite" {
-		err = errors.New("sqlite querybuilder is not supported yet!")
+		err = errors.New("sqlite query builder is not supported yet!")
 	} else {
 		err = errors.New("unknown driver for query builder!")
 	}
