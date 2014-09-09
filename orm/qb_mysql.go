@@ -16,70 +16,106 @@ package orm
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 )
 
 type MySQLQueryBuilder struct {
-	QueryString []string
+	QueryTokens []string
 }
 
-func (qw *MySQLQueryBuilder) Select(fields ...string) QueryBuilder {
+func (qb *MySQLQueryBuilder) Select(fields ...string) QueryBuilder {
 	segment := fmt.Sprintf("SELECT %s", strings.Join(fields, ", "))
-	qw.QueryString = append(qw.QueryString, segment)
-	return qw
+	qb.QueryTokens = append(qb.QueryTokens, segment)
+	return qb
 }
 
-func (qw *MySQLQueryBuilder) From(tables ...string) QueryBuilder {
+func (qb *MySQLQueryBuilder) From(tables ...string) QueryBuilder {
 	segment := fmt.Sprintf("FROM %s", strings.Join(tables, ", "))
-	qw.QueryString = append(qw.QueryString, segment)
-	return qw
+	qb.QueryTokens = append(qb.QueryTokens, segment)
+	return qb
 }
 
-func (qw *MySQLQueryBuilder) Where(cond string) QueryBuilder {
-	qw.QueryString = append(qw.QueryString, "WHERE "+cond)
-	return qw
+func (qb *MySQLQueryBuilder) InnerJoin(table string) QueryBuilder {
+	qb.QueryTokens = append(qb.QueryTokens, "INNER JOIN "+table)
+	return qb
 }
 
-func (qw *MySQLQueryBuilder) LimitOffset(limit int, offset int) QueryBuilder {
-	qw.QueryString = append(qw.QueryString, fmt.Sprintf("LIMIT %d OFFSET %d", limit, offset))
-	return qw
+func (qb *MySQLQueryBuilder) LeftJoin(table string) QueryBuilder {
+	qb.QueryTokens = append(qb.QueryTokens, "LEFT JOIN "+table)
+	return qb
 }
 
-func (qw *MySQLQueryBuilder) InnerJoin(table string) QueryBuilder {
-	qw.QueryString = append(qw.QueryString, "INNER JOIN "+table)
-	return qw
+func (qb *MySQLQueryBuilder) RightJoin(table string) QueryBuilder {
+	qb.QueryTokens = append(qb.QueryTokens, "RIGHT JOIN "+table)
+	return qb
 }
 
-func (qw *MySQLQueryBuilder) LeftJoin(table string) QueryBuilder {
-	qw.QueryString = append(qw.QueryString, "LEFT JOIN "+table)
-	return qw
+func (qb *MySQLQueryBuilder) On(cond string) QueryBuilder {
+	qb.QueryTokens = append(qb.QueryTokens, "ON "+cond)
+	return qb
 }
 
-func (qw *MySQLQueryBuilder) On(cond string) QueryBuilder {
-	qw.QueryString = append(qw.QueryString, "ON "+cond)
-	return qw
+func (qb *MySQLQueryBuilder) Where(cond string) QueryBuilder {
+	qb.QueryTokens = append(qb.QueryTokens, "WHERE "+cond)
+	return qb
 }
 
-func (qw *MySQLQueryBuilder) And(cond string) QueryBuilder {
-	qw.QueryString = append(qw.QueryString, "AND "+cond)
-	return qw
+func (qb *MySQLQueryBuilder) And(cond string) QueryBuilder {
+	qb.QueryTokens = append(qb.QueryTokens, "AND "+cond)
+	return qb
 }
 
-func (qw *MySQLQueryBuilder) Or(cond string) QueryBuilder {
-	qw.QueryString = append(qw.QueryString, "OR "+cond)
-	return qw
+func (qb *MySQLQueryBuilder) Or(cond string) QueryBuilder {
+	qb.QueryTokens = append(qb.QueryTokens, "OR "+cond)
+	return qb
 }
 
-func (qw *MySQLQueryBuilder) In(vals ...string) QueryBuilder {
+func (qb *MySQLQueryBuilder) In(vals ...string) QueryBuilder {
 	segment := fmt.Sprintf("IN (%s)", strings.Join(vals, ", "))
-	qw.QueryString = append(qw.QueryString, segment)
-	return qw
+	qb.QueryTokens = append(qb.QueryTokens, segment)
+	return qb
 }
 
-func (qw *MySQLQueryBuilder) Subquery(sub string, alias string) string {
+func (qb *MySQLQueryBuilder) OrderBy(fields ...string) QueryBuilder {
+	qb.QueryTokens = append(qb.QueryTokens, "ORDER BY "+strings.Join(fields, ", "))
+	return qb
+}
+
+func (qb *MySQLQueryBuilder) Asc() QueryBuilder {
+	qb.QueryTokens = append(qb.QueryTokens, "ASC")
+	return qb
+}
+
+func (qb *MySQLQueryBuilder) Desc() QueryBuilder {
+	qb.QueryTokens = append(qb.QueryTokens, "DESC")
+	return qb
+}
+
+func (qb *MySQLQueryBuilder) Limit(limit int) QueryBuilder {
+	qb.QueryTokens = append(qb.QueryTokens, "LIMIT "+strconv.Itoa(limit))
+	return qb
+}
+
+func (qb *MySQLQueryBuilder) Offset(offset int) QueryBuilder {
+	qb.QueryTokens = append(qb.QueryTokens, "OFFSET "+strconv.Itoa(offset))
+	return qb
+}
+
+func (qb *MySQLQueryBuilder) GroupBy(fields ...string) QueryBuilder {
+	qb.QueryTokens = append(qb.QueryTokens, "GROUP BY "+strings.Join(fields, ", "))
+	return qb
+}
+
+func (qb *MySQLQueryBuilder) Having(cond string) QueryBuilder {
+	qb.QueryTokens = append(qb.QueryTokens, "HAVING "+cond)
+	return qb
+}
+
+func (qb *MySQLQueryBuilder) Subquery(sub string, alias string) string {
 	return fmt.Sprintf("(%s) AS %s", sub, alias)
 }
 
-func (qw *MySQLQueryBuilder) String() string {
-	return strings.Join(qw.QueryString, " ")
+func (qb *MySQLQueryBuilder) String() string {
+	return strings.Join(qb.QueryTokens, " ")
 }
