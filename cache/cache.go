@@ -63,6 +63,22 @@ type Cache interface {
 	StartAndGC(config string) error
 }
 
+// a cache interface that supports hash values
+type HashCache interface {
+	// get cached value from a hash record indexed by the key, using the field name
+	HGet(key, field string) interface{}
+	// cache a value into a hash record indexed by the key, using the field name
+	HPut(key, field string, val interface{}) error
+	// delete a value from a hash record indexed by the key, using the field name
+	HDelete(key, field string) error
+	// get all the fields and values in a hash
+	HGetAll(key string) ([]interface{}, error)
+	// increment the value under a particular field from a hash recored by the specified delta
+	HIncrBy(key, field string, delta uint64) (uint64, error)
+	// decrement the value under a particular field from a hash recored by the specified delta
+	HDecrBy(key, field string, delta uint64) (uint64, error)
+}
+
 var adapters = make(map[string]Cache)
 
 // Register makes a cache adapter available by the adapter name.
