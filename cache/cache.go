@@ -52,15 +52,31 @@ type Cache interface {
 	// delete cached value by key.
 	Delete(key string) error
 	// increase cached int value by key, as a counter.
-	Incr(key string) error
+	Incr(key string) (uint64, error)
 	// decrease cached int value by key, as a counter.
-	Decr(key string) error
+	Decr(key string) (uint64, error)
 	// check if cached value exists or not.
 	IsExist(key string) bool
 	// clear all cache.
 	ClearAll() error
 	// start gc routine based on config string settings.
 	StartAndGC(config string) error
+}
+
+// a cache interface that supports hash values
+type HashCache interface {
+	// get cached value from a hash record indexed by the key, using the field name
+	HGet(key, field string) interface{}
+	// cache a value into a hash record indexed by the key, using the field name
+	HPut(key, field string, val interface{}) error
+	// delete a value from a hash record indexed by the key, using the field name
+	HDelete(key, field string) error
+	// get all the fields and values in a hash
+	HGetAll(key string) ([]interface{}, error)
+	// increment the value under a particular field from a hash recored by the specified delta
+	HIncrBy(key, field string, delta uint64) (uint64, error)
+	// decrement the value under a particular field from a hash recored by the specified delta
+	HDecrBy(key, field string, delta uint64) (uint64, error)
 }
 
 var adapters = make(map[string]Cache)

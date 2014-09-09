@@ -203,3 +203,13 @@ func TestToFile(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestHeader(t *testing.T) {
+	req := Get("http://httpbin.org/headers")
+	req.Header("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.57 Safari/537.36")
+	str, err := req.String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(str)
+}
