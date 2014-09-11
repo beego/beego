@@ -20,95 +20,124 @@ import (
 	"strings"
 )
 
+const COMMA_SPACE = ", "
+
 type MySQLQueryBuilder struct {
-	QueryTokens []string
+	Tokens []string
 }
 
 func (qb *MySQLQueryBuilder) Select(fields ...string) QueryBuilder {
-	segment := fmt.Sprintf("SELECT %s", strings.Join(fields, ", "))
-	qb.QueryTokens = append(qb.QueryTokens, segment)
+	qb.Tokens = append(qb.Tokens, "SELECT", strings.Join(fields, COMMA_SPACE))
 	return qb
 }
 
 func (qb *MySQLQueryBuilder) From(tables ...string) QueryBuilder {
-	segment := fmt.Sprintf("FROM %s", strings.Join(tables, ", "))
-	qb.QueryTokens = append(qb.QueryTokens, segment)
+	qb.Tokens = append(qb.Tokens, "FROM", strings.Join(tables, COMMA_SPACE))
 	return qb
 }
 
 func (qb *MySQLQueryBuilder) InnerJoin(table string) QueryBuilder {
-	qb.QueryTokens = append(qb.QueryTokens, "INNER JOIN "+table)
+	qb.Tokens = append(qb.Tokens, "INNER JOIN", table)
 	return qb
 }
 
 func (qb *MySQLQueryBuilder) LeftJoin(table string) QueryBuilder {
-	qb.QueryTokens = append(qb.QueryTokens, "LEFT JOIN "+table)
+	qb.Tokens = append(qb.Tokens, "LEFT JOIN", table)
 	return qb
 }
 
 func (qb *MySQLQueryBuilder) RightJoin(table string) QueryBuilder {
-	qb.QueryTokens = append(qb.QueryTokens, "RIGHT JOIN "+table)
+	qb.Tokens = append(qb.Tokens, "RIGHT JOIN", table)
 	return qb
 }
 
 func (qb *MySQLQueryBuilder) On(cond string) QueryBuilder {
-	qb.QueryTokens = append(qb.QueryTokens, "ON "+cond)
+	qb.Tokens = append(qb.Tokens, "ON", cond)
 	return qb
 }
 
 func (qb *MySQLQueryBuilder) Where(cond string) QueryBuilder {
-	qb.QueryTokens = append(qb.QueryTokens, "WHERE "+cond)
+	qb.Tokens = append(qb.Tokens, "WHERE", cond)
 	return qb
 }
 
 func (qb *MySQLQueryBuilder) And(cond string) QueryBuilder {
-	qb.QueryTokens = append(qb.QueryTokens, "AND "+cond)
+	qb.Tokens = append(qb.Tokens, "AND", cond)
 	return qb
 }
 
 func (qb *MySQLQueryBuilder) Or(cond string) QueryBuilder {
-	qb.QueryTokens = append(qb.QueryTokens, "OR "+cond)
+	qb.Tokens = append(qb.Tokens, "OR", cond)
 	return qb
 }
 
 func (qb *MySQLQueryBuilder) In(vals ...string) QueryBuilder {
-	segment := fmt.Sprintf("IN (%s)", strings.Join(vals, ", "))
-	qb.QueryTokens = append(qb.QueryTokens, segment)
+	qb.Tokens = append(qb.Tokens, "IN", "(", strings.Join(vals, COMMA_SPACE), ")")
 	return qb
 }
 
 func (qb *MySQLQueryBuilder) OrderBy(fields ...string) QueryBuilder {
-	qb.QueryTokens = append(qb.QueryTokens, "ORDER BY "+strings.Join(fields, ", "))
+	qb.Tokens = append(qb.Tokens, "ORDER BY", strings.Join(fields, COMMA_SPACE))
 	return qb
 }
 
 func (qb *MySQLQueryBuilder) Asc() QueryBuilder {
-	qb.QueryTokens = append(qb.QueryTokens, "ASC")
+	qb.Tokens = append(qb.Tokens, "ASC")
 	return qb
 }
 
 func (qb *MySQLQueryBuilder) Desc() QueryBuilder {
-	qb.QueryTokens = append(qb.QueryTokens, "DESC")
+	qb.Tokens = append(qb.Tokens, "DESC")
 	return qb
 }
 
 func (qb *MySQLQueryBuilder) Limit(limit int) QueryBuilder {
-	qb.QueryTokens = append(qb.QueryTokens, "LIMIT "+strconv.Itoa(limit))
+	qb.Tokens = append(qb.Tokens, "LIMIT", strconv.Itoa(limit))
 	return qb
 }
 
 func (qb *MySQLQueryBuilder) Offset(offset int) QueryBuilder {
-	qb.QueryTokens = append(qb.QueryTokens, "OFFSET "+strconv.Itoa(offset))
+	qb.Tokens = append(qb.Tokens, "OFFSET", strconv.Itoa(offset))
 	return qb
 }
 
 func (qb *MySQLQueryBuilder) GroupBy(fields ...string) QueryBuilder {
-	qb.QueryTokens = append(qb.QueryTokens, "GROUP BY "+strings.Join(fields, ", "))
+	qb.Tokens = append(qb.Tokens, "GROUP BY", strings.Join(fields, COMMA_SPACE))
 	return qb
 }
 
 func (qb *MySQLQueryBuilder) Having(cond string) QueryBuilder {
-	qb.QueryTokens = append(qb.QueryTokens, "HAVING "+cond)
+	qb.Tokens = append(qb.Tokens, "HAVING", cond)
+	return qb
+}
+
+func (qb *MySQLQueryBuilder) Update(tables ...string) QueryBuilder {
+	qb.Tokens = append(qb.Tokens, "UPDATE", strings.Join(tables, COMMA_SPACE))
+	return qb
+}
+
+func (qb *MySQLQueryBuilder) Set(kv ...string) QueryBuilder {
+	qb.Tokens = append(qb.Tokens, "SET", strings.Join(kv, COMMA_SPACE))
+	return qb
+}
+
+func (qb *MySQLQueryBuilder) Delete(tables ...string) QueryBuilder {
+	qb.Tokens = append(qb.Tokens, "DELETE", strings.Join(tables, COMMA_SPACE))
+	return qb
+}
+
+func (qb *MySQLQueryBuilder) InsertInto(table string, fields ...string) QueryBuilder {
+	qb.Tokens = append(qb.Tokens, "INSERT INTO", table)
+	if len(fields) != 0 {
+		fieldsStr := strings.Join(fields, COMMA_SPACE)
+		qb.Tokens = append(qb.Tokens, "(", fieldsStr, ")")
+	}
+	return qb
+}
+
+func (qb *MySQLQueryBuilder) Values(vals ...string) QueryBuilder {
+	valsStr := strings.Join(vals, COMMA_SPACE)
+	qb.Tokens = append(qb.Tokens, "VALUES", "(", valsStr, ")")
 	return qb
 }
 
@@ -117,5 +146,5 @@ func (qb *MySQLQueryBuilder) Subquery(sub string, alias string) string {
 }
 
 func (qb *MySQLQueryBuilder) String() string {
-	return strings.Join(qb.QueryTokens, " ")
+	return strings.Join(qb.Tokens, " ")
 }
