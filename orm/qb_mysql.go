@@ -122,7 +122,10 @@ func (qb *MySQLQueryBuilder) Set(kv ...string) QueryBuilder {
 }
 
 func (qb *MySQLQueryBuilder) Delete(tables ...string) QueryBuilder {
-	qb.Tokens = append(qb.Tokens, "DELETE", strings.Join(tables, COMMA_SPACE))
+	qb.Tokens = append(qb.Tokens, "DELETE")
+	if len(tables) != 0 {
+		qb.Tokens = append(qb.Tokens, strings.Join(tables, COMMA_SPACE))
+	}
 	return qb
 }
 
