@@ -308,6 +308,10 @@ func SetStaticPath(url string, path string) *App {
 
 // DelStaticPath removes the static folder setting in this url pattern in beego application.
 func DelStaticPath(url string) *App {
+	if !strings.HasPrefix(url, "/") {
+		url = "/" + url
+	}
+	url = strings.TrimRight(url, "/")
 	delete(StaticDir, url)
 	return BeeApp
 }
