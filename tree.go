@@ -212,7 +212,6 @@ func (t *Tree) addseg(segments []string, route interface{}, wildcards []string, 
 			regexpStr = seg
 		}
 		if seg == "*" && len(wildcards) > 0 && reg == "" {
-			iswild = true
 			regexpStr = "(.+)"
 		}
 		if iswild {
