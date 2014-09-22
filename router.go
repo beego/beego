@@ -415,7 +415,7 @@ func (p *ControllerRegistor) UrlFor(endpoint string, values ...string) string {
 			}
 		}
 	}
-	controllName := strings.Join(paths[:len(paths)-1], ".")
+	controllName := strings.Join(paths[:len(paths)-1], "/")
 	methodName := paths[len(paths)-1]
 	for _, t := range p.routers {
 		ok, url := p.geturl(t, "/", controllName, methodName, params)
@@ -443,7 +443,8 @@ func (p *ControllerRegistor) geturl(t *Tree, url, controllName, methodName strin
 	}
 	for _, l := range t.leaves {
 		if c, ok := l.runObject.(*controllerInfo); ok {
-			if c.routerType == routerTypeBeego && c.controllerType.Name() == controllName {
+			if c.routerType == routerTypeBeego &&
+				strings.HasSuffix(path.Join(c.controllerType.PkgPath(), c.controllerType.Name()), controllName) {
 				find := false
 				if _, ok := HTTPMETHOD[strings.ToUpper(methodName)]; ok {
 					if len(c.methods) == 0 {
