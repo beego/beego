@@ -31,6 +31,7 @@ func serverStaticRouter(ctx *context.Context) {
 		return
 	}
 	requestPath := path.Clean(ctx.Input.Request.URL.Path)
+	i := 0
 	for prefix, staticDir := range StaticDir {
 		if len(prefix) == 0 {
 			continue
@@ -41,8 +42,13 @@ func serverStaticRouter(ctx *context.Context) {
 				http.ServeFile(ctx.ResponseWriter, ctx.Request, file)
 				return
 			} else {
-				http.NotFound(ctx.ResponseWriter, ctx.Request)
-				return
+				i++
+				if i == len(StaticDir) {
+					http.NotFound(ctx.ResponseWriter, ctx.Request)
+					return
+				} else {
+					continue
+				}
 			}
 		}
 		if strings.HasPrefix(requestPath, prefix) {
