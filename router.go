@@ -790,6 +790,7 @@ Admin:
 	if context.Output.Status != 0 {
 		w.writer.WriteHeader(context.Output.Status)
 	}
+	LogFunc(context, timeend)
 }
 
 func (p *ControllerRegistor) recoverPanic(rw http.ResponseWriter, r *http.Request) {
