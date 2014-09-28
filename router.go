@@ -163,6 +163,9 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingM
 }
 
 func (p *ControllerRegistor) addToRouter(method, pattern string, r *controllerInfo) {
+	if !RouterCaseSensitive {
+		pattern = strings.ToLower(pattern)
+	}
 	if t, ok := p.routers[method]; ok {
 		t.AddRouter(pattern, r)
 	} else {
@@ -381,6 +384,9 @@ func (p *ControllerRegistor) InsertFilter(pattern string, pos int, filter Filter
 	mr.tree = NewTree()
 	mr.pattern = pattern
 	mr.filterFunc = filter
+	if !RouterCaseSensitive {
+		pattern = strings.ToLower(pattern)
+	}
 	mr.tree.AddRouter(pattern, true)
 	return p.insertFilterRouter(pos, mr)
 }
@@ -565,12 +571,18 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	context.Output.Context = context
 	context.Output.EnableGzip = EnableGzip
 
+	var urlPath string
+	if !RouterCaseSensitive {
+		urlPath = strings.ToLower(r.URL.Path)
+	} else {
+		urlPath = r.URL.Path
+	}
 	// defined filter function
 	do_filter := func(pos int) (started bool) {
 		if p.enableFilter {
 			if l, ok := p.filters[pos]; ok {
 				for _, filterR := range l {
-					if ok, p := filterR.ValidRouter(r.URL.Path); ok {
+					if ok, p := filterR.ValidRouter(urlPath); ok {
 						context.Input.Params = p
 						filterR.filterFunc(context)
 						if w.started {
@@ -628,7 +640,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	if !findrouter {
 		if t, ok := p.routers[r.Method]; ok {
-			runObject, p := t.Match(r.URL.Path)
+			runObject, p := t.Match(urlPath)
 			if r, ok := runObject.(*controllerInfo); ok {
 				routerInfo = r
 				findrouter = true

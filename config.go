@@ -81,6 +81,7 @@ var (
 	FlashSeperator         string // used to seperate flash key:value
 	AppConfigProvider      string // config provider
 	EnableDocs             bool   // enable generate docs & server docs API Swagger
+	RouterCaseSensitive    bool   // router case sensitive default is true
 )
 
 func init() {
@@ -163,6 +164,8 @@ func init() {
 
 	FlashName = "BEEGO_FLASH"
 	FlashSeperator = "BEEGOFLASH"
+
+	RouterCaseSensitive = true
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
@@ -374,6 +377,10 @@ func ParseConfig() (err error) {
 
 		if enabledocs, err := GetConfig("bool", "EnableDocs"); err == nil {
 			EnableDocs = enabledocs.(bool)
+		}
+
+		if casesensitive, err := GetConfig("bool", "RouterCaseSensitive"); err == nil {
+			RouterCaseSensitive = casesensitive.(bool)
 		}
 	}
 	return nil
