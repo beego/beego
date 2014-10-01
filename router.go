@@ -74,7 +74,7 @@ var (
 
 	url_placeholder = "{{placeholder}}"
 
-	FilterRouterLog func() bool
+	FilterRouterLog func(*beecontext.Context) bool
 )
 
 // To append a slice's value into "exceptMethod", for controller's methods shouldn't reflect to AutoRouter
@@ -798,7 +798,7 @@ Admin:
 		} else {
 			devinfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s |", r.Method, r.URL.Path, timeend.String(), "notmatch")
 		}
-		if FilterRouterLog == nil || !FilterRouterLog() {
+		if FilterRouterLog == nil || !FilterRouterLog(context) {
 			Debug(devinfo)
 		}
 	}
