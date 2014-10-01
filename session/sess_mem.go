@@ -19,6 +19,8 @@ import (
 	"net/http"
 	"sync"
 	"time"
+
+	. "github.com/astaxie/beego/debug"
 )
 
 var mempder = &MemProvider{list: list.New(), sessions: make(map[string]*list.Element)}
@@ -95,7 +97,7 @@ func (pder *MemProvider) SessionInit(maxlifetime int64, savePath string) error {
 func (pder *MemProvider) SessionRead(sid string) (SessionStore, error) {
 	pder.lock.RLock()
 	if element, ok := pder.sessions[sid]; ok {
-		go pder.SessionUpdate(sid)
+		GoRoutineRecovered(func() { pder.SessionUpdate(sid) })
 		pder.lock.RUnlock()
 		return element.Value.(*MemSessionStore), nil
 	} else {
@@ -124,7 +126,7 @@ func (pder *MemProvider) SessionExist(sid string) bool {
 func (pder *MemProvider) SessionRegenerate(oldsid, sid string) (SessionStore, error) {
 	pder.lock.RLock()
 	if element, ok := pder.sessions[oldsid]; ok {
-		go pder.SessionUpdate(oldsid)
+		GoRoutineRecovered(func() { pder.SessionUpdate(oldsid) })
 		pder.lock.RUnlock()
 		pder.lock.Lock()
 		element.Value.(*MemSessionStore).sid = sid

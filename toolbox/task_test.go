@@ -19,6 +19,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	. "github.com/astaxie/beego/debug"
 )
 
 func TestParse(t *testing.T) {
@@ -55,9 +57,9 @@ func TestSpec(t *testing.T) {
 
 func wait(wg *sync.WaitGroup) chan bool {
 	ch := make(chan bool)
-	go func() {
+	GoRoutineRecovered(func() {
 		wg.Wait()
 		ch <- true
-	}()
+	})
 	return ch
 }

@@ -19,11 +19,13 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	. "github.com/astaxie/beego/debug"
 )
 
 func TestMem(t *testing.T) {
 	globalSessions, _ := NewManager("memory", `{"cookieName":"gosessionid","gclifetime":10}`)
-	go globalSessions.GC()
+	GoRoutineRecovered(func() { globalSessions.GC() })
 	r, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 	sess := globalSessions.SessionStart(w, r)

@@ -30,6 +30,7 @@ import (
 	"time"
 
 	beecontext "github.com/astaxie/beego/context"
+	. "github.com/astaxie/beego/debug"
 	"github.com/astaxie/beego/middleware"
 	"github.com/astaxie/beego/toolbox"
 	"github.com/astaxie/beego/utils"
@@ -778,9 +779,9 @@ Admin:
 	if EnableAdmin {
 		if FilterMonitorFunc(r.Method, r.URL.Path, timeend) {
 			if runrouter != nil {
-				go toolbox.StatisticsMap.AddStatistics(r.Method, r.URL.Path, runrouter.Name(), timeend)
+				GoRoutineRecovered(func() { toolbox.StatisticsMap.AddStatistics(r.Method, r.URL.Path, runrouter.Name(), timeend) })
 			} else {
-				go toolbox.StatisticsMap.AddStatistics(r.Method, r.URL.Path, "", timeend)
+				GoRoutineRecovered(func() { toolbox.StatisticsMap.AddStatistics(r.Method, r.URL.Path, "", timeend) })
 			}
 		}
 	}

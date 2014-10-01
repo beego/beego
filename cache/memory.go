@@ -20,6 +20,8 @@ import (
 	"fmt"
 	"sync"
 	"time"
+
+	. "github.com/astaxie/beego/debug"
 )
 
 var (
@@ -56,7 +58,7 @@ func (bc *MemoryCache) Get(name string) interface{} {
 	defer bc.lock.RUnlock()
 	if itm, ok := bc.items[name]; ok {
 		if (time.Now().Unix() - itm.Lastaccess.Unix()) > itm.expired {
-			go bc.Delete(name)
+			GoRoutineRecovered(func() { bc.Delete(name) })
 			return nil
 		}
 		return itm.val
@@ -188,7 +190,7 @@ func (bc *MemoryCache) StartAndGC(config string) error {
 	}
 	bc.Every = cf["interval"]
 	bc.dur = dur
-	go bc.vaccuum()
+	GoRoutineRecovered(func() { bc.vaccuum() })
 	return nil
 }
 

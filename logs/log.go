@@ -37,6 +37,8 @@ import (
 	"path"
 	"runtime"
 	"sync"
+
+	. "github.com/astaxie/beego/debug"
 )
 
 // RFC5424 log message levels.
@@ -111,7 +113,7 @@ func NewLogger(channellen int64) *BeeLogger {
 	bl.msg = make(chan *logMsg, channellen)
 	bl.outputs = make(map[string]LoggerInterface)
 	//bl.SetLogger("console", "") // default output to console
-	go bl.startLogger()
+	GoRoutineRecovered(func() { bl.startLogger() })
 	return bl
 }
 

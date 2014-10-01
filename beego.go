@@ -33,6 +33,7 @@ import (
 	"strconv"
 	"strings"
 
+	. "github.com/astaxie/beego/debug"
 	"github.com/astaxie/beego/middleware"
 	"github.com/astaxie/beego/session"
 )
@@ -347,7 +348,7 @@ func Run(params ...string) {
 	initBeforeHttpRun()
 
 	if EnableAdmin {
-		go beeAdminApp.Run()
+		GoRoutineRecovered(func() { beeAdminApp.Run() })
 	}
 
 	BeeApp.Run()
@@ -390,7 +391,7 @@ func initBeforeHttpRun() {
 		if err != nil {
 			panic(err)
 		}
-		go GlobalSessions.GC()
+		GoRoutineRecovered(func() { GlobalSessions.GC() })
 	}
 
 	err := BuildTemplate(ViewsPath)
