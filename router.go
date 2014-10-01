@@ -73,6 +73,8 @@ var (
 		"GetControllerAndAction"}
 
 	url_placeholder = "{{placeholder}}"
+
+	FilterRouterLog func() bool
 )
 
 // To append a slice's value into "exceptMethod", for controller's methods shouldn't reflect to AutoRouter
@@ -796,7 +798,9 @@ Admin:
 		} else {
 			devinfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s |", r.Method, r.URL.Path, timeend.String(), "notmatch")
 		}
-		Debug(devinfo)
+		if FilterRouterLog == nil || !FilterRouterLog() {
+			Debug(devinfo)
+		}
 	}
 
 	// Call WriteHeader if status code has been set changed
