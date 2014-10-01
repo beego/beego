@@ -65,12 +65,20 @@ func serverStaticRouter(ctx *context.Context) {
 				return
 			}
 			//if the request is dir and DirectoryIndex is false then
-			if finfo.IsDir() && !DirectoryIndex {
-				middleware.Exception("403", ctx.ResponseWriter, ctx.Request, "403 Forbidden")
-				return
-			} else if finfo.IsDir() && ctx.Input.Request.URL.Path[len(ctx.Input.Request.URL.Path)-1] != '/' {
-				http.Redirect(ctx.ResponseWriter, ctx.Request, ctx.Input.Request.URL.Path+"/", 302)
-				return
+			if finfo.IsDir() {
+				if !DirectoryIndex {
+					middleware.Exception("403", ctx.ResponseWriter, ctx.Request, "403 Forbidden")
+					return
+				} else if ctx.Input.Request.URL.Path[len(ctx.Input.Request.URL.Path)-1] != '/' {
+					http.Redirect(ctx.ResponseWriter, ctx.Request, ctx.Input.Request.URL.Path+"/", 302)
+					return
+				}
+			} else if strings.HasSuffix(requestPath, "/index.html") {
+				file := path.Join(staticDir, requestPath)
+				if utils.FileExists(file) {
+					http.ServeFile(ctx.ResponseWriter, ctx.Request, file)
+					return
+				}
 			}
 
 			//This block obtained from (https://github.com/smithfox/beego) - it should probably get merged into astaxie/beego after a pull request
