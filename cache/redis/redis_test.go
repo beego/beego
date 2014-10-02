@@ -28,9 +28,16 @@ func TestRedisCache(t *testing.T) {
 	if err != nil {
 		t.Error("init err")
 	}
+
+	// clear all previous cache
+	if err = bm.ClearAll(); err != nil {
+		t.Error("clear all err")
+	}
+
 	if err = bm.Put("astaxie", 1, 10); err != nil {
 		t.Error("set Error", err)
 	}
+
 	if !bm.IsExist("astaxie") {
 		t.Error("check err")
 	}
@@ -40,29 +47,32 @@ func TestRedisCache(t *testing.T) {
 	if bm.IsExist("astaxie") {
 		t.Error("check err")
 	}
+
 	if err = bm.Put("astaxie", 1, 10); err != nil {
 		t.Error("set Error", err)
 	}
 
-	if v, _ := redis.Int(bm.Get("astaxie"), err); v != 1 {
-		t.Error("get err")
+	v, err := redis.Int(bm.Get("astaxie"), nil)
+	if err != nil {
+		t.Error(err)
+	} else if v != 1 {
+		t.Error("value not as expected", v)
 	}
 
-	if err = bm.Incr("astaxie"); err != nil {
+	counter, err := bm.Incr("astaxie")
+	if err != nil {
 		t.Error("Incr Error", err)
+	} else if counter != 2 {
+		t.Error("value not as expected", counter)
 	}
 
-	if v, _ := redis.Int(bm.Get("astaxie"), err); v != 2 {
-		t.Error("get err")
-	}
-
-	if err = bm.Decr("astaxie"); err != nil {
+	counter, err = bm.Decr("astaxie")
+	if err != nil {
 		t.Error("Decr Error", err)
+	} else if counter != 1 {
+		t.Error("value not as expected", counter)
 	}
 
-	if v, _ := redis.Int(bm.Get("astaxie"), err); v != 1 {
-		t.Error("get err")
-	}
 	bm.Delete("astaxie")
 	if bm.IsExist("astaxie") {
 		t.Error("delete err")
@@ -81,5 +91,81 @@ func TestRedisCache(t *testing.T) {
 	// test clear all
 	if err = bm.ClearAll(); err != nil {
 		t.Error("clear all err")
+	}
+
+	// test HashCache interface
+	hashCache := bm.(cache.HashCache)
+	key := "test"
+	field := "field"
+	value := "value"
+
+	// HPut
+	if err = hashCache.HPut(key, field, value); err != nil {
+		t.Error(err)
+	}
+
+	// HGet
+	if v, _ := redis.String(hashCache.HGet(key, field), nil); v != value {
+		t.Error("value get '%s' is not expected: '%s'", v, value)
+	}
+
+	// HDelete
+	if err = hashCache.HDelete(key, field); err != nil {
+		t.Error(err)
+	}
+
+	// HGet
+	if v := hashCache.HGet(key, field); v != nil {
+		t.Error("value is not deleted properly: '%s'", v)
+	}
+
+	// HGetAll
+	fieldAndValues := [4]string{"field0", "value0", "field1", "value1"}
+	for index := 0; index < len(fieldAndValues); index += 2 {
+		if err = hashCache.HPut(key, fieldAndValues[index], fieldAndValues[index+1]); err != nil {
+			t.Error(err)
+		}
+	}
+
+	fieldAndValuesReturned, err := hashCache.HGetAll(key)
+	if err != nil {
+		t.Error(err)
+	}
+	if len(fieldAndValuesReturned) != len(fieldAndValues) {
+		t.Error("incorrect number of fields and values returned")
+	}
+
+	for index, elem := range fieldAndValuesReturned {
+		str, _ := redis.String(elem, nil)
+		if str != fieldAndValues[index] {
+			t.Error("unexpected returned data '%s', expecting '%s'", str, fieldAndValues[index])
+		}
+	}
+
+	// HIncrBy
+	initValue := uint64(100)
+	delta := uint64(10)
+	field = "counter"
+	if err = hashCache.HPut(key, field, initValue); err != nil {
+		t.Error(err)
+	}
+
+	counter, err = hashCache.HIncrBy(key, field, delta)
+	if err != nil {
+		t.Error(err)
+	} else if counter != initValue+delta {
+		t.Error("value %d is not expected: %d", counter, initValue+delta)
+	}
+
+	// HDecrBy
+	if err = hashCache.HPut(key, field, initValue); err != nil {
+		t.Error(err)
+	}
+
+	counter, err = hashCache.HDecrBy(key, field, delta)
+	if err != nil {
+		t.Error(err)
+	} else if counter != initValue-delta {
+		t.Error("value %d is not expected: %d", counter, initValue-delta)
 	}
 }

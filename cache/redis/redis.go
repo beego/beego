@@ -64,10 +64,19 @@ func (rc *RedisCache) do(commandName string, args ...interface{}) (reply interfa
 	return c.Do(commandName, args...)
 }
 
+// try to convert the return value from redis into regular string if the value is of []byte
+func tryConvertToString(value interface{}) interface{} {
+	if converted, ok := value.([]byte); ok {
+		return string(converted)
+	} else {
+		return value
+	}
+}
+
 // Get cache from redis.
 func (rc *RedisCache) Get(key string) interface{} {
 	if v, err := rc.do("GET", key); err == nil {
-		return v
+		return tryConvertToString(v)
 	}
 	return nil
 }
@@ -111,15 +120,15 @@ func (rc *RedisCache) IsExist(key string) bool {
 }
 
 // increase counter in redis.
-func (rc *RedisCache) Incr(key string) error {
-	_, err := redis.Bool(rc.do("INCRBY", key, 1))
-	return err
+func (rc *RedisCache) Incr(key string) (uint64, error) {
+	counter, err := redis.Uint64(rc.do("INCRBY", key, 1))
+	return counter, err
 }
 
 // decrease counter in redis.
-func (rc *RedisCache) Decr(key string) error {
-	_, err := redis.Bool(rc.do("INCRBY", key, -1))
-	return err
+func (rc *RedisCache) Decr(key string) (uint64, error) {
+	counter, err := redis.Uint64(rc.do("INCRBY", key, -1))
+	return counter, err
 }
 
 // clean all cache in redis. delete this redis collection.

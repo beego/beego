@@ -20,6 +20,7 @@ import (
 	"encoding/gob"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -165,29 +166,33 @@ func (fc *FileCache) Delete(key string) error {
 
 // Increase cached int value.
 // fc value is saving forever unless Delete.
-func (fc *FileCache) Incr(key string) error {
+func (fc *FileCache) Incr(key string) (uint64, error) {
 	data := fc.Get(key)
-	var incr int
-	if reflect.TypeOf(data).Name() != "int" {
+	var incr uint64
+	if reflect.TypeOf(data).Name() != "uint64" {
 		incr = 0
 	} else {
-		incr = data.(int) + 1
+		incr = data.(uint64) + 1
 	}
 	fc.Put(key, incr, FileCacheEmbedExpiry)
-	return nil
+	return incr, nil
 }
 
 // Decrease cached int value.
-func (fc *FileCache) Decr(key string) error {
+func (fc *FileCache) Decr(key string) (uint64, error) {
 	data := fc.Get(key)
-	var decr int
-	if reflect.TypeOf(data).Name() != "int" || data.(int)-1 <= 0 {
+	var decr uint64
+	if reflect.TypeOf(data).Name() != "uint64" {
 		decr = 0
 	} else {
-		decr = data.(int) - 1
+		decr = data.(uint64)
+		if decr == 0 {
+			return 0, errors.New("counter cannot be decremented below 0")
+		}
+		decr -= 1
 	}
 	fc.Put(key, decr, FileCacheEmbedExpiry)
-	return nil
+	return decr, nil
 }
 
 // Check value is exist.
