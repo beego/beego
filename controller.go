@@ -93,6 +93,14 @@ type ControllerInterface interface {
 	URLMapping()
 }
 
+func (c *Controller) GetCtx() *context.Context {
+	return c.Ctx
+}
+
+func (c *Controller) GetData() map[interface{}]interface{} {
+	return c.Data
+}
+
 // Init generates default values of controller operations.
 func (c *Controller) Init(ctx *context.Context, controllerName, actionName string, app interface{}) {
 	c.Layout = ""
