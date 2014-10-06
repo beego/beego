@@ -81,6 +81,9 @@ var (
 	AppConfigProvider      string // config provider
 	EnableDocs             bool   // enable generate docs & server docs API Swagger
 	RouterCaseSensitive    bool   // router case sensitive default is true
+	DateOnlyFormat         string
+	DateTimeFormat         string
+	DateTimeShortFormat    string
 )
 
 type beegoAppConfig struct {
@@ -266,6 +269,10 @@ func init() {
 	FlashSeperator = "BEEGOFLASH"
 
 	RouterCaseSensitive = true
+
+	DateOnlyFormat = "Y-m-d"
+	DateTimeFormat = "Y-m-d H:i:s"
+	DateTimeShortFormat = "Y-m-d H:i"
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
@@ -477,5 +484,18 @@ func ParseConfig() (err error) {
 	if casesensitive, err := AppConfig.Bool("RouterCaseSensitive"); err == nil {
 		RouterCaseSensitive = casesensitive
 	}
+
+	if dateFormat := AppConfig.String("DateFormat"); dateFormat != "" {
+		DateOnlyFormat = dateFormat
+	}
+
+	if dateTimeFormat := AppConfig.String("DateTimeFormat"); dateTimeFormat != "" {
+		DateTimeFormat = dateTimeFormat
+	}
+
+	if dateTimeShortFormat := AppConfig.String("DateTimeShortFormat"); dateTimeShortFormat != "" {
+		DateTimeShortFormat = dateTimeShortFormat
+	}
+
 	return nil
 }

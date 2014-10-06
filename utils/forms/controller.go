@@ -1,0 +1,143 @@
+package forms
+
+import (
+	"html/template"
+	"net/url"
+	"reflect"
+
+	"github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/validation"
+)
+
+type FormController interface {
+	GetSession(name interface{}) interface{}
+	SetSession(name interface{}, value interface{})
+	GetCtx() *context.Context
+	GetData() map[interface{}]interface{}
+	GetLocale() FormLocaler
+	Input() url.Values
+	Tr(format string, args ...interface{}) string
+}
+
+// check form once, void re-submit
+func FormOnceNotMatch(controller FormController) bool {
+	notMatch := false
+	recreat := false
+
+	// get token from request param / header
+	var value string
+	if vus, ok := controller.Input()["_once"]; ok && len(vus) > 0 {
+		value = vus[0]
+	} else {
+		value = controller.GetCtx().Input.Header("X-Form-Once")
+	}
+
+	// exist in session
+	if v, ok := controller.GetSession("form_once").(string); ok && v != "" {
+		// not match
+		if value != v {
+			notMatch = true
+		} else {
+			// if matched then re-creat once
+			recreat = true
+		}
+	}
+
+	FormOnceCreate(controller, recreat)
+	return notMatch
+}
+
+// create form once html
+func FormOnceCreate(controller FormController, args ...bool) {
+	var value string
+	var creat bool
+	creat = len(args) > 0 && args[0]
+	if !creat {
+		if v, ok := controller.GetSession("form_once").(string); ok && v != "" {
+			value = v
+		} else {
+			creat = true
+		}
+	}
+	if creat {
+		value = GetRandomString(10)
+		controller.SetSession("form_once", value)
+	}
+	controller.GetData()["once_token"] = value
+	controller.GetData()["once_html"] = template.HTML(`<input type="hidden" name="_once" value="` + value + `">`)
+}
+
+func validForm(controller FormController, form interface{}, names ...string) (bool, map[string]*validation.ValidationError) {
+	// parse request params to form ptr struct
+	ParseForm(form, controller.Input())
+
+	// Put data back in case users input invalid data for any section.
+	name := reflect.ValueOf(form).Elem().Type().Name()
+	if len(names) > 0 {
+		name = names[0]
+	}
+	controller.GetData()[name] = form
+
+	errName := name + "Error"
+
+	// check form once
+	if FormOnceNotMatch(controller) {
+		return false, nil
+	}
+
+	// Verify basic input.
+	valid := validation.Validation{}
+	if ok, _ := valid.Valid(form); !ok {
+		errs := valid.ErrorMap()
+		controller.GetData()[errName] = &valid
+		return false, errs
+	}
+	return true, nil
+}
+
+// valid form and put errors to tempalte context
+func ValidForm(controller FormController, form interface{}, names ...string) bool {
+	valid, _ := validForm(controller, form, names...)
+	return valid
+}
+
+// valid form and put errors to tempalte context
+func ValidFormSets(controller FormController, form interface{}, names ...string) bool {
+	valid, errs := validForm(controller, form, names...)
+	setFormSets(controller, form, errs, names...)
+	return valid
+}
+
+func SetFormSets(controller FormController, form interface{}, names ...string) *FormSets {
+	return setFormSets(controller, form, nil, names...)
+}
+
+func setFormSets(controller FormController, form interface{}, errs map[string]*validation.ValidationError, names ...string) *FormSets {
+	formSets := NewFormSets(form, errs, controller.GetLocale())
+	name := reflect.ValueOf(form).Elem().Type().Name()
+	if len(names) > 0 {
+		name = names[0]
+	}
+	name += "Sets"
+	controller.GetData()[name] = formSets
+
+	return formSets
+}
+
+// add valid error to FormError
+func SetFormError(controller FormController, form interface{}, fieldName, errMsg string, names ...string) {
+	name := reflect.ValueOf(form).Elem().Type().Name()
+	if len(names) > 0 {
+		name = names[0]
+	}
+	errName := name + "Error"
+	setsName := name + "Sets"
+
+	if valid, ok := controller.GetData()[errName].(*validation.Validation); ok {
+		valid.SetError(fieldName, controller.Tr(errMsg))
+	}
+
+	if fSets, ok := controller.GetData()[setsName].(*FormSets); ok {
+		fSets.SetError(fieldName, errMsg)
+	}
+}
