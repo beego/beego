@@ -17,6 +17,7 @@ package beego
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/astaxie/beego/context"
@@ -384,4 +385,39 @@ func testRequest(method, path string) (*httptest.ResponseRecorder, *http.Request
 	recorder := httptest.NewRecorder()
 
 	return recorder, request
+}
+
+func TestMultiFilterFunc(t *testing.T) {
+
+	url := "/multifilter"
+
+	mux := NewControllerRegister()
+	mux.InsertFilter(url, FinishRouter, beegoFinishFilter1Func)
+
+	mux.InsertFilter("*", FinishRouter, beegoFinishFilter2Func)
+
+	mux.Get(url, beegoFilterFunc)
+
+	rw, r := testRequest("GET", url)
+	mux.ServeHTTP(rw, r)
+
+	if strings.Contains(rw.Body.String(), "hello") == false {
+		t.Errorf("TestMultiFilterFunc did not run")
+	}
+
+	if strings.Contains(rw.Body.String(), "filter1") == false {
+		t.Errorf("TestMultiFilterFunc filter1 not run")
+	}
+
+	if strings.Contains(rw.Body.String(), "filter2") == false {
+		t.Errorf("TestMultiFilterFunc filter2 not run")
+	}
+
+}
+
+func beegoFinishFilter1Func(ctx *context.Context) {
+	ctx.WriteString("|filter1")
+}
+func beegoFinishFilter2Func(ctx *context.Context) {
+	ctx.WriteString("|filter2")
 }

@@ -587,10 +587,10 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 					if ok, p := filterR.ValidRouter(urlPath); ok {
 						context.Input.Params = p
 						filterR.filterFunc(context)
-						if w.started {
-							return true
-						}
 					}
+				}
+				if w.started {
+					return true
 				}
 			}
 		}
