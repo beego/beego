@@ -21,6 +21,7 @@ import (
 	"strconv"
 )
 
+// Paginator within the state of a http request.
 type Paginator struct {
 	Request     *http.Request
 	PerPageNums int
@@ -32,6 +33,7 @@ type Paginator struct {
 	page      int
 }
 
+// Returns the total number of pages.
 func (p *Paginator) PageNums() int {
 	if p.pageNums != 0 {
 		return p.pageNums
@@ -44,14 +46,17 @@ func (p *Paginator) PageNums() int {
 	return p.pageNums
 }
 
+// Returns the total number of items (e.g. from doing SQL count).
 func (p *Paginator) Nums() int64 {
 	return p.nums
 }
 
+// Sets the total number of items.
 func (p *Paginator) SetNums(nums interface{}) {
 	p.nums, _ = ToInt64(nums)
 }
 
+// Returns the current page.
 func (p *Paginator) Page() int {
 	if p.page != 0 {
 		return p.page
@@ -69,6 +74,15 @@ func (p *Paginator) Page() int {
 	return p.page
 }
 
+// Returns a list of all pages.
+//
+// Usage (in a view template):
+//
+//  {{range $index, $page := .paginator.Pages}}
+//    <li{{if $.paginator.IsActive .}} class="active"{{end}}>
+//      <a href="{{$.paginator.PageLink $page}}">{{$page}}</a>
+//    </li>
+//  {{end}}
 func (p *Paginator) Pages() []int {
 	if p.pageRange == nil && p.nums > 0 {
 		var pages []int
@@ -98,6 +112,7 @@ func (p *Paginator) Pages() []int {
 	return p.pageRange
 }
 
+// Returns URL for a given page index.
 func (p *Paginator) PageLink(page int) string {
 	link, _ := url.ParseRequestURI(p.Request.RequestURI)
 	values := link.Query()
@@ -110,6 +125,7 @@ func (p *Paginator) PageLink(page int) string {
 	return link.String()
 }
 
+// Returns URL to the previous page.
 func (p *Paginator) PageLinkPrev() (link string) {
 	if p.HasPrev() {
 		link = p.PageLink(p.Page() - 1)
@@ -117,6 +133,7 @@ func (p *Paginator) PageLinkPrev() (link string) {
 	return
 }
 
+// Returns URL to the next page.
 func (p *Paginator) PageLinkNext() (link string) {
 	if p.HasNext() {
 		link = p.PageLink(p.Page() + 1)
@@ -124,34 +141,42 @@ func (p *Paginator) PageLinkNext() (link string) {
 	return
 }
 
+// Returns URL to the first page.
 func (p *Paginator) PageLinkFirst() (link string) {
 	return p.PageLink(1)
 }
 
+// Returns URL to the last page.
 func (p *Paginator) PageLinkLast() (link string) {
 	return p.PageLink(p.PageNums())
 }
 
+// Returns true if the current page has a predecessor.
 func (p *Paginator) HasPrev() bool {
 	return p.Page() > 1
 }
 
+// Returns true if the current page has a successor.
 func (p *Paginator) HasNext() bool {
 	return p.Page() < p.PageNums()
 }
 
+// Returns true if the given page index points to the current page.
 func (p *Paginator) IsActive(page int) bool {
 	return p.Page() == page
 }
 
+// Returns the current offset.
 func (p *Paginator) Offset() int {
 	return (p.Page() - 1) * p.PerPageNums
 }
 
+// Returns true if there is more than one page.
 func (p *Paginator) HasPages() bool {
 	return p.PageNums() > 1
 }
 
+// Instantiates a paginator struct for the current http request.
 func NewPaginator(req *http.Request, per int, nums interface{}) *Paginator {
 	p := Paginator{}
 	p.Request = req
