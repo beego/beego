@@ -17,6 +17,7 @@ package beego
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/astaxie/beego/context"
@@ -384,4 +385,197 @@ func testRequest(method, path string) (*httptest.ResponseRecorder, *http.Request
 	recorder := httptest.NewRecorder()
 
 	return recorder, request
+}
+
+// Execution point: BeforeRouter
+// expectation: only BeforeRouter function is executed, notmatch output as router doesn't handle
+func TestFilterBeforeRouter(t *testing.T) {
+	testName := "TestFilterBeforeRouter"
+	url := "/beforeRouter"
+
+	mux := NewControllerRegister()
+	mux.InsertFilter(url, BeforeRouter, beegoBeforeRouter1)
+
+	mux.Get(url, beegoFilterFunc)
+
+	rw, r := testRequest("GET", url)
+	mux.ServeHTTP(rw, r)
+
+	if strings.Contains(rw.Body.String(), "BeforeRouter1") == false {
+		t.Errorf(testName + " BeforeRouter did not run")
+	}
+	if strings.Contains(rw.Body.String(), "hello") == true {
+		t.Errorf(testName + " BeforeRouter did not return properly")
+	}
+}
+
+// Execution point: BeforeExec
+// expectation: only BeforeExec function is executed, match as router determines route only
+func TestFilterBeforeExec(t *testing.T) {
+	testName := "TestFilterBeforeExec"
+	url := "/beforeExec"
+
+	mux := NewControllerRegister()
+	mux.InsertFilter(url, BeforeRouter, beegoFilterNoOutput)
+	mux.InsertFilter(url, BeforeExec, beegoBeforeExec1)
+
+	mux.Get(url, beegoFilterFunc)
+
+	rw, r := testRequest("GET", url)
+	mux.ServeHTTP(rw, r)
+
+	if strings.Contains(rw.Body.String(), "BeforeExec1") == false {
+		t.Errorf(testName + " BeforeExec did not run")
+	}
+	if strings.Contains(rw.Body.String(), "hello") == true {
+		t.Errorf(testName + " BeforeExec did not return properly")
+	}
+	if strings.Contains(rw.Body.String(), "BeforeRouter") == true {
+		t.Errorf(testName + " BeforeRouter ran in error")
+	}
+}
+
+// Execution point: AfterExec
+// expectation: only AfterExec function is executed, match as router handles
+func TestFilterAfterExec(t *testing.T) {
+	testName := "TestFilterAfterExec"
+	url := "/afterExec"
+
+	mux := NewControllerRegister()
+	mux.InsertFilter(url, BeforeRouter, beegoFilterNoOutput)
+	mux.InsertFilter(url, BeforeExec, beegoFilterNoOutput)
+	mux.InsertFilter(url, AfterExec, beegoAfterExec1)
+
+	mux.Get(url, beegoFilterFunc)
+
+	rw, r := testRequest("GET", url)
+	mux.ServeHTTP(rw, r)
+
+	if strings.Contains(rw.Body.String(), "AfterExec1") == false {
+		t.Errorf(testName + " AfterExec did not run")
+	}
+	if strings.Contains(rw.Body.String(), "hello") == false {
+		t.Errorf(testName + " handler did not run properly")
+	}
+	if strings.Contains(rw.Body.String(), "BeforeRouter") == true {
+		t.Errorf(testName + " BeforeRouter ran in error")
+	}
+	if strings.Contains(rw.Body.String(), "BeforeExec") == true {
+		t.Errorf(testName + " BeforeExec ran in error")
+	}
+}
+
+// Execution point: FinishRouter
+// expectation: only FinishRouter function is executed, match as router handles
+func TestFilterFinishRouter(t *testing.T) {
+	testName := "TestFilterFinishRouter"
+	url := "/finishRouter"
+
+	mux := NewControllerRegister()
+	mux.InsertFilter(url, BeforeRouter, beegoFilterNoOutput)
+	mux.InsertFilter(url, BeforeExec, beegoFilterNoOutput)
+	mux.InsertFilter(url, AfterExec, beegoFilterNoOutput)
+	mux.InsertFilter(url, FinishRouter, beegoFinishRouter1)
+
+	mux.Get(url, beegoFilterFunc)
+
+	rw, r := testRequest("GET", url)
+	mux.ServeHTTP(rw, r)
+
+	if strings.Contains(rw.Body.String(), "FinishRouter1") == true {
+		t.Errorf(testName + " FinishRouter did not run")
+	}
+	if strings.Contains(rw.Body.String(), "hello") == false {
+		t.Errorf(testName + " handler did not run properly")
+	}
+	if strings.Contains(rw.Body.String(), "AfterExec1") == true {
+		t.Errorf(testName + " AfterExec ran in error")
+	}
+	if strings.Contains(rw.Body.String(), "BeforeRouter") == true {
+		t.Errorf(testName + " BeforeRouter ran in error")
+	}
+	if strings.Contains(rw.Body.String(), "BeforeExec") == true {
+		t.Errorf(testName + " BeforeExec ran in error")
+	}
+}
+
+// Execution point: FinishRouter
+// expectation: only first FinishRouter function is executed, match as router handles
+func TestFilterFinishRouterMultiFirstOnly(t *testing.T) {
+	testName := "TestFilterFinishRouterMultiFirstOnly"
+	url := "/finishRouterMultiFirstOnly"
+
+	mux := NewControllerRegister()
+	mux.InsertFilter(url, FinishRouter, beegoFinishRouter1)
+	mux.InsertFilter(url, FinishRouter, beegoFinishRouter2)
+
+	mux.Get(url, beegoFilterFunc)
+
+	rw, r := testRequest("GET", url)
+	mux.ServeHTTP(rw, r)
+
+	if strings.Contains(rw.Body.String(), "FinishRouter1") == false {
+		t.Errorf(testName + " FinishRouter1 did not run")
+	}
+	if strings.Contains(rw.Body.String(), "hello") == false {
+		t.Errorf(testName + " handler did not run properly")
+	}
+	// not expected in body
+	if strings.Contains(rw.Body.String(), "FinishRouter2") == true {
+		t.Errorf(testName + " FinishRouter2 did run")
+	}
+}
+
+// Execution point: FinishRouter
+// expectation: both FinishRouter functions execute, match as router handles
+func TestFilterFinishRouterMulti(t *testing.T) {
+	testName := "TestFilterFinishRouterMulti"
+	url := "/finishRouterMulti"
+
+	mux := NewControllerRegister()
+	mux.InsertFilter(url, FinishRouter, beegoFinishRouter1, false)
+	mux.InsertFilter(url, FinishRouter, beegoFinishRouter2)
+
+	mux.Get(url, beegoFilterFunc)
+
+	rw, r := testRequest("GET", url)
+	mux.ServeHTTP(rw, r)
+
+	if strings.Contains(rw.Body.String(), "FinishRouter1") == false {
+		t.Errorf(testName + " FinishRouter1 did not run")
+	}
+	if strings.Contains(rw.Body.String(), "hello") == false {
+		t.Errorf(testName + " handler did not run properly")
+	}
+	if strings.Contains(rw.Body.String(), "FinishRouter2") == false {
+		t.Errorf(testName + " FinishRouter2 did not run properly")
+	}
+}
+
+func beegoFilterNoOutput(ctx *context.Context) {
+	return
+}
+func beegoBeforeRouter1(ctx *context.Context) {
+	ctx.WriteString("|BeforeRouter1")
+}
+func beegoBeforeRouter2(ctx *context.Context) {
+	ctx.WriteString("|BeforeRouter2")
+}
+func beegoBeforeExec1(ctx *context.Context) {
+	ctx.WriteString("|BeforeExec1")
+}
+func beegoBeforeExec2(ctx *context.Context) {
+	ctx.WriteString("|BeforeExec2")
+}
+func beegoAfterExec1(ctx *context.Context) {
+	ctx.WriteString("|AfterExec1")
+}
+func beegoAfterExec2(ctx *context.Context) {
+	ctx.WriteString("|AfterExec2")
+}
+func beegoFinishRouter1(ctx *context.Context) {
+	ctx.WriteString("|FinishRouter1")
+}
+func beegoFinishRouter2(ctx *context.Context) {
+	ctx.WriteString("|FinishRouter2")
 }

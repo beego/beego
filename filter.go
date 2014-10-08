@@ -17,9 +17,10 @@ package beego
 // FilterRouter defines filter operation before controller handler execution.
 // it can match patterned url and do filter function when action arrives.
 type FilterRouter struct {
-	filterFunc FilterFunc
-	tree       *Tree
-	pattern    string
+	filterFunc     FilterFunc
+	tree           *Tree
+	pattern        string
+	returnOnOutput bool
 }
 
 // ValidRouter check current request is valid for this filter.
