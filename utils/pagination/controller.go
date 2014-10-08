@@ -18,16 +18,9 @@ import (
 	"github.com/astaxie/beego/context"
 )
 
-type PaginationController interface {
-	GetCtx() *context.Context
-	GetData() map[interface{}]interface{}
-}
-
-// Instantiates a Paginator and assigns it to controller.Data["paginator"].
-func SetPaginator(controller PaginationController, per int, nums int64) (paginator *Paginator) {
-	request := controller.GetCtx().Request
-	paginator = NewPaginator(request, per, nums)
-	data := controller.GetData()
-	data["paginator"] = paginator
+// Instantiates a Paginator and assigns it to context.Input.Data["paginator"].
+func SetPaginator(context *context.Context, per int, nums int64) (paginator *Paginator) {
+	paginator = NewPaginator(context.Request, per, nums)
+	context.Input.Data["paginator"] = paginator
 	return
 }

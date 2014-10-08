@@ -18,7 +18,7 @@ In your beego.Controller:
  func (this *PostsController) ListAllPosts() {
      // sets this.Data["paginator"] with the current offset (from the url query param)
      postsPerPage := 20
-     paginator := pagination.SetPaginator(this, postsPerPage, CountPosts())
+     paginator := pagination.SetPaginator(this.Ctx, postsPerPage, CountPosts())
 
      // fetch the next 20 posts
      this.Data["posts"] = ListPostsByOffsetAndLimit(paginator.Offset(), postsPerPage)
