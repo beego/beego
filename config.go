@@ -288,8 +288,11 @@ func init() {
 func ParseConfig() (err error) {
 	AppConfig = newAppConfig(AppConfigProvider, AppConfigPath)
 
+	envRunMode := os.Getenv("BEEGO_RUNMODE")
 	// set the runmode first
-	if runmode := AppConfig.String("RunMode"); runmode != "" {
+	if envRunMode != "" {
+		RunMode = envRunMode
+	} else if runmode := AppConfig.String("RunMode"); runmode != "" {
 		RunMode = runmode
 	}
 
