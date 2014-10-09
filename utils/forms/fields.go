@@ -62,12 +62,12 @@ func initCommonFields() {
 	datetimeFunc := func(fSet *FieldSet) {
 		fSet.Field = func() template.HTML {
 			t := fSet.Value.(time.Time)
-			tval := beego.Date(t, beego.DateTimeFormat)
+			tval := beego.Date(t, DateTimeFormat)
 			if tval == "0001-01-01 00:00:00" {
 				t = time.Now()
 			}
 			if fSet.Type == "date" {
-				tval = beego.Date(t, beego.DateOnlyFormat)
+				tval = beego.Date(t, DateOnlyFormat)
 			}
 			return template.HTML(fmt.Sprintf(
 				`<input id="%s" name="%s" type="%s" value="%s" class="form-control"%s%s>`,

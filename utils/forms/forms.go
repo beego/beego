@@ -351,13 +351,13 @@ outFor:
 		case reflect.Struct:
 			if fT.Type.String() == "time.Time" {
 				if len(value) > 10 {
-					t, err := beego.DateParse(value, beego.DateTimeFormat)
+					t, err := beego.DateParse(value, DateTimeFormat)
 					if err != nil {
 						continue
 					}
 					f.Set(reflect.ValueOf(t))
 				} else {
-					t, err := beego.DateParse(value, beego.DateOnlyFormat)
+					t, err := beego.DateParse(value, DateOnlyFormat)
 					if err != nil {
 						continue
 					}
