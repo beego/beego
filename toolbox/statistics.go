@@ -15,6 +15,7 @@
 package toolbox
 
 import (
+	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -109,6 +110,31 @@ func (m *UrlMap) GetMap() map[string]interface{} {
 	}
 	content["Data"] = resultLists
 	return content
+}
+
+func (m *UrlMap) GetMapJSON() ([]byte, error) {
+	return json.Marshal(m)
+}
+
+func (m UrlMap) MarshalJSON() ([]byte, error) {
+
+	resultLists := make([]map[string]interface{}, 0)
+
+	for k, v := range m.urlmap {
+		for kk, vv := range v {
+			result := map[string]interface{}{
+				"request_url": k,
+				"method":      kk,
+				"times":       vv.RequestNum,
+				"total_time":  toS(vv.TotalTime),
+				"max_time":    toS(vv.MaxTime),
+				"min_time":    toS(vv.MinTime),
+				"avg_time":    toS(time.Duration(int64(vv.TotalTime) / vv.RequestNum)),
+			}
+			resultLists = append(resultLists, result)
+		}
+	}
+	return json.Marshal(resultLists)
 }
 
 // global statistics data map
