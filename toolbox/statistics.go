@@ -15,7 +15,6 @@
 package toolbox
 
 import (
-	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -112,11 +111,7 @@ func (m *UrlMap) GetMap() map[string]interface{} {
 	return content
 }
 
-func (m *UrlMap) GetMapJSON() ([]byte, error) {
-	return json.Marshal(m)
-}
-
-func (m UrlMap) MarshalJSON() ([]byte, error) {
+func (m *UrlMap) GetMapData() []map[string]interface{} {
 
 	resultLists := make([]map[string]interface{}, 0)
 
@@ -134,7 +129,7 @@ func (m UrlMap) MarshalJSON() ([]byte, error) {
 			resultLists = append(resultLists, result)
 		}
 	}
-	return json.Marshal(resultLists)
+	return resultLists
 }
 
 // global statistics data map

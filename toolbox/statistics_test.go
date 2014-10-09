@@ -15,6 +15,7 @@
 package toolbox
 
 import (
+	"encoding/json"
 	"testing"
 	"time"
 )
@@ -29,9 +30,11 @@ func TestStatics(t *testing.T) {
 	StatisticsMap.AddStatistics("DELETE", "/api/user", "&admin.user", time.Duration(1400))
 	t.Log(StatisticsMap.GetMap())
 
-	jsonString, err := StatisticsMap.GetMapJSON()
+	data := StatisticsMap.GetMapData()
+	b, err := json.Marshal(data)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	t.Log(string(jsonString))
+
+	t.Log(string(b))
 }
