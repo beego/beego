@@ -47,6 +47,7 @@ Setup the controller (controllers/users.go)
   package controllers
 
   import (
+    "github.com/beego/i18n"
     "github.com/astaxie/beego"
     "github.com/astaxie/beego/utils/forms"
 
@@ -55,6 +56,15 @@ Setup the controller (controllers/users.go)
 
   type UsersController struct {
     beego.Controller
+    i18n.Locale
+  }
+
+  func (this *UsersController) GetCtx() *context.Context {
+    return this.Ctx
+  }
+
+  func (this *UsersController) GetLocale() forms.FormLocaler {
+    return this.Locale
   }
 
   func (this *UsersController) Prepare() {

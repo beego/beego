@@ -27,10 +27,9 @@ type FormController interface {
 	GetSession(name interface{}) interface{}
 	SetSession(name interface{}, value interface{})
 	GetCtx() *context.Context
-	GetData() map[interface{}]interface{}
-	GetLocale() FormLocaler
 	Input() url.Values
-	Tr(format string, args ...interface{}) string
+	GetLocale() FormLocaler
+	Tr(format string, args ...interface{}) string // from i18n
 }
 
 // check form once, void re-submit
@@ -77,8 +76,8 @@ func FormOnceCreate(controller FormController, args ...bool) {
 		value = GetRandomString(10)
 		controller.SetSession("form_once", value)
 	}
-	controller.GetData()["once_token"] = value
-	controller.GetData()["once_html"] = template.HTML(`<input type="hidden" name="_once" value="` + value + `">`)
+	controller.GetCtx().Input.Data["once_token"] = value
+	controller.GetCtx().Input.Data["once_html"] = template.HTML(`<input type="hidden" name="_once" value="` + value + `">`)
 }
 
 func validForm(controller FormController, form interface{}, names ...string) (bool, map[string]*validation.ValidationError) {
@@ -90,7 +89,7 @@ func validForm(controller FormController, form interface{}, names ...string) (bo
 	if len(names) > 0 {
 		name = names[0]
 	}
-	controller.GetData()[name] = form
+	controller.GetCtx().Input.Data[name] = form
 
 	errName := name + "Error"
 
@@ -103,7 +102,7 @@ func validForm(controller FormController, form interface{}, names ...string) (bo
 	valid := validation.Validation{}
 	if ok, _ := valid.Valid(form); !ok {
 		errs := valid.ErrorMap()
-		controller.GetData()[errName] = &valid
+		controller.GetCtx().Input.Data[errName] = &valid
 		return false, errs
 	}
 	return true, nil
@@ -133,7 +132,7 @@ func setFormSets(controller FormController, form interface{}, errs map[string]*v
 		name = names[0]
 	}
 	name += "Sets"
-	controller.GetData()[name] = formSets
+	controller.GetCtx().Input.Data[name] = formSets
 
 	return formSets
 }
@@ -147,11 +146,11 @@ func SetFormError(controller FormController, form interface{}, fieldName, errMsg
 	errName := name + "Error"
 	setsName := name + "Sets"
 
-	if valid, ok := controller.GetData()[errName].(*validation.Validation); ok {
+	if valid, ok := controller.GetCtx().Input.Data[errName].(*validation.Validation); ok {
 		valid.SetError(fieldName, controller.Tr(errMsg))
 	}
 
-	if fSets, ok := controller.GetData()[setsName].(*FormSets); ok {
+	if fSets, ok := controller.GetCtx().Input.Data[setsName].(*FormSets); ok {
 		fSets.SetError(fieldName, errMsg)
 	}
 }

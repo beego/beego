@@ -25,8 +25,6 @@ import (
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/validation"
-	//
-	// "github.com/beego/wetalk/setting"
 )
 
 type FormLocaler interface {
