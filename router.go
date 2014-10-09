@@ -381,13 +381,20 @@ func (p *ControllerRegistor) AddAutoPrefix(prefix string, c ControllerInterface)
 }
 
 // Add a FilterFunc with pattern rule and action constant.
-func (p *ControllerRegistor) InsertFilter(pattern string, pos int, filter FilterFunc) error {
+// The bool params is for setting the returnOnOutput value (false allows multiple filters to execute)
+func (p *ControllerRegistor) InsertFilter(pattern string, pos int, filter FilterFunc, params ...bool) error {
+
 	mr := new(FilterRouter)
 	mr.tree = NewTree()
 	mr.pattern = pattern
 	mr.filterFunc = filter
 	if !RouterCaseSensitive {
 		pattern = strings.ToLower(pattern)
+	}
+	if len(params) == 0 {
+		mr.returnOnOutput = true
+	} else {
+		mr.returnOnOutput = params[0]
 	}
 	mr.tree.AddRouter(pattern, true)
 	return p.insertFilterRouter(pos, mr)
@@ -587,7 +594,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 					if ok, p := filterR.ValidRouter(urlPath); ok {
 						context.Input.Params = p
 						filterR.filterFunc(context)
-						if w.started {
+						if filterR.returnOnOutput && w.started {
 							return true
 						}
 					}

@@ -318,9 +318,10 @@ func DelStaticPath(url string) *App {
 
 // InsertFilter adds a FilterFunc with pattern condition and action constant.
 // The pos means action constant including
-// beego.BeforeRouter, beego.AfterStatic, beego.BeforeExec, beego.AfterExec and beego.FinishRouter.
-func InsertFilter(pattern string, pos int, filter FilterFunc) *App {
-	BeeApp.Handlers.InsertFilter(pattern, pos, filter)
+// beego.BeforeStatic, beego.BeforeRouter, beego.BeforeExec, beego.AfterExec and beego.FinishRouter.
+// The bool params is for setting the returnOnOutput value (false allows multiple filters to execute)
+func InsertFilter(pattern string, pos int, filter FilterFunc, params ...bool) *App {
+	BeeApp.Handlers.InsertFilter(pattern, pos, filter, params...)
 	return BeeApp
 }
 
