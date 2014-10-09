@@ -26,7 +26,6 @@ import (
 	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/session"
 	"github.com/astaxie/beego/utils"
-	"github.com/kelseyhightower/envconfig"
 )
 
 var (
@@ -84,14 +83,9 @@ var (
 	RouterCaseSensitive    bool   // router case sensitive default is true
 )
 
-type (
-	beegoAppConfig struct {
-		innerConfig config.ConfigContainer
-	}
-	beegoEnvConfig struct {
-		RunMode string
-	}
-)
+type beegoAppConfig struct {
+	innerConfig config.ConfigContainer
+}
 
 func newAppConfig(AppConfigProvider, AppConfigPath string) *beegoAppConfig {
 	ac, err := config.NewConfig(AppConfigProvider, AppConfigPath)
@@ -294,15 +288,10 @@ func init() {
 func ParseConfig() (err error) {
 	AppConfig = newAppConfig(AppConfigProvider, AppConfigPath)
 
-	var ec beegoEnvConfig
-	err = envconfig.Process("beego", &ec)
-	if err != nil {
-		return err
-	}
-
+	envRunMode := os.Getenv("BEEGO_RUNMODE")
 	// set the runmode first
-	if ec.RunMode != "" {
-		RunMode = ec.RunMode
+	if envRunMode != "" {
+		RunMode = envRunMode
 	} else if runmode := AppConfig.String("RunMode"); runmode != "" {
 		RunMode = runmode
 	}
