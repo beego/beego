@@ -180,7 +180,7 @@ func (e *Email) AttachFile(args ...string) (a *Attachment, err error) {
 // Parameters include an io.Reader, the desired filename for the attachment, and the Content-Type.
 func (e *Email) Attach(r io.Reader, filename string, args ...string) (a *Attachment, err error) {
 	if len(args) < 1 && len(args) > 2 {
-		err = errors.New("Must specify a file type and number of parameters can not exceed at least two")
+		err = errors.New("Must specify the file type and number of parameters can not exceed at least two")
 		return
 	}
 	c := args[0] //Content-Type
