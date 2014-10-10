@@ -158,16 +158,14 @@ func (e *Email) Bytes() ([]byte, error) {
 
 // Add attach file to the send mail
 func (e *Email) AttachFile(args ...string) (a *Attachment, err error) {
-	argsLength := len(args)
-	if argsLength < 1 || argsLength > 2 {
+	if len(args) < 1 || len(args) > 2 {
 		return
 	}
 	filename := args[0]
 	id := ""
-	if argsLength > 1 {
+	if len(args) > 1 {
 		id = args[1]
 	}
-	id = args[1]
 	f, err := os.Open(filename)
 	if err != nil {
 		return
@@ -179,18 +177,15 @@ func (e *Email) AttachFile(args ...string) (a *Attachment, err error) {
 
 // Attach is used to attach content from an io.Reader to the email.
 // Parameters include an io.Reader, the desired filename for the attachment, and the Content-Type.
-func (e *Email) Attach(r io.Reader, filename string, ci ...string) (a *Attachment, err error) {
-	args := ci
-	argsLength := len(args)
-	if argsLength < 1 || argsLength > 2 {
+func (e *Email) Attach(r io.Reader, filename string, args ...string) (a *Attachment, err error) {
+	if len(args) < 1 || len(args) > 2 {
 		return
 	}
-	c := args[0]
+	c := args[0]         //Content-Type
 	id := ""
-	if argsLength > 1 {
-		id = args[1]
+	if len(args) > 1 {
+		id = args[1]     //Content-ID
 	}
-	id = args[1]
 	var buffer bytes.Buffer
 	if _, err = io.Copy(&buffer, r); err != nil {
 		return
