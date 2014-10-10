@@ -157,19 +157,19 @@ func (e *Email) Bytes() ([]byte, error) {
 }
 
 // Add attach file to the send mail
-func (e *Email) AttachFile(filename string) (a *Attachment, err error) {
+func (e *Email) AttachFile(filename string, id string) (a *Attachment, err error) {
 	f, err := os.Open(filename)
 	if err != nil {
 		return
 	}
 	ct := mime.TypeByExtension(filepath.Ext(filename))
 	basename := path.Base(filename)
-	return e.Attach(f, basename, ct)
+	return e.Attach(f, basename, ct, id)
 }
 
 // Attach is used to attach content from an io.Reader to the email.
 // Parameters include an io.Reader, the desired filename for the attachment, and the Content-Type.
-func (e *Email) Attach(r io.Reader, filename string, c string) (a *Attachment, err error) {
+func (e *Email) Attach(r io.Reader, filename string, c string, id string) (a *Attachment, err error) {
 	var buffer bytes.Buffer
 	if _, err = io.Copy(&buffer, r); err != nil {
 		return
@@ -186,7 +186,12 @@ func (e *Email) Attach(r io.Reader, filename string, c string) (a *Attachment, e
 		// If the Content-Type is blank, set the Content-Type to "application/octet-stream"
 		at.Header.Set("Content-Type", "application/octet-stream")
 	}
-	at.Header.Set("Content-Disposition", fmt.Sprintf("attachment;\r\n filename=\"%s\"", filename))
+	if id != "" {
+		at.Header.Set("Content-Disposition", fmt.Sprintf("inline;\r\n filename=\"%s\"", filename))
+		at.Header.Set("Content-ID", fmt.Sprintf("<%s>", id))
+	}else {
+		at.Header.Set("Content-Disposition", fmt.Sprintf("attachment;\r\n filename=\"%s\"", filename))
+	}
 	at.Header.Set("Content-Transfer-Encoding", "base64")
 	e.Attachments = append(e.Attachments, at)
 	return at, nil
@@ -269,7 +274,7 @@ func qpEscape(dest []byte, c byte) {
 	const nums = "0123456789ABCDEF"
 	dest[0] = '='
 	dest[1] = nums[(c&0xf0)>>4]
-	dest[2] = nums[(c & 0xf)]
+	dest[2] = nums[(c&0xf)]
 }
 
 // headerToBytes enumerates the key and values in the header, and writes the results to the IO Writer
