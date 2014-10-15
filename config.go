@@ -477,6 +477,5 @@ func ParseConfig() (err error) {
 	if casesensitive, err := AppConfig.Bool("RouterCaseSensitive"); err == nil {
 		RouterCaseSensitive = casesensitive
 	}
-
 	return nil
 }
