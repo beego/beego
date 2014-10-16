@@ -109,7 +109,7 @@ func (rs *RedisSessionStore) SessionRelease(w http.ResponseWriter) {
 		return
 	}
 
-	c.Do("SET", rs.sid, string(b), "EX", rs.maxlifetime)
+	c.Do("SETEX", rs.sid, rs.maxlifetime, string(b))
 }
 
 // redis session provider
