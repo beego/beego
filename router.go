@@ -626,7 +626,21 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	if !findrouter {
-		if t, ok := p.routers[r.Method]; ok {
+		http_method := ""
+
+		if r.Method == "POST" && context.Input.Query("_method") == "PUT" {
+			http_method = "PUT"
+		}
+
+		if r.Method == "POST" && context.Input.Query("_method") == "DELETE" {
+			http_method = "DELETE"
+		}
+
+		if http_method != "PUT" && http_method != "DELETE" {
+			http_method = r.Method
+		}
+
+		if t, ok := p.routers[http_method]; ok {
 			runObject, p := t.Match(r.URL.Path)
 			if r, ok := runObject.(*controllerInfo); ok {
 				routerInfo = r
