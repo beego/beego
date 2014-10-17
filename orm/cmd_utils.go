@@ -257,7 +257,7 @@ func getColumnDefault(fi *fieldInfo) string {
 	t = " DEFAULT '%s' "
 
 	// These defaults will be useful if there no config value orm:"default" and NOT NULL is on
-	switch fieldType {
+	switch fi.fieldType {
 		case TypeDateField:
 			d = "0000-00-00"
 			
