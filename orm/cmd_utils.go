@@ -273,13 +273,13 @@ func getColumnDefault(fi *fieldInfo) string {
 	
 	if fi.colDefault {
 		if !fi.initial.Exist() {
-			v = fmt.Strintf(t, "")
+			v = fmt.Srintf(t, "")
 		} else {
-			v = fmt.Strintf(t, fi.initial.String())
+			v = fmt.Sprintf(t, fi.initial.String())
 		}
 	} else {
 		if !fi.null {
-			v = fmt.Strintf(t, d)
+			v = fmt.Sprintf(t, d)
 		}
 	}
 	
