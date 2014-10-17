@@ -67,8 +67,7 @@ func (ini *IniConfig) Parse(name string) (ConfigContainer, error) {
 	var comment bytes.Buffer
 	buf := bufio.NewReader(file)
 	section := DEFAULT_SECTION
-	head := make([]byte, 3)
-	head, err = buf.Peek(3)
+	head, err := buf.Peek(3)
 	if err == nil && head[0] == 239 && head[1] == 187 && head[2] == 191 {
 		for i := 1; i <= 3; i++ {
 			buf.ReadByte()
