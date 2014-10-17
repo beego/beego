@@ -266,14 +266,14 @@ func getColumnDefault(fi *fieldInfo) string {
 	
 		case TypeBooleanField, TypeBitField, TypeSmallIntegerField, TypeIntegerField,
 		TypeBigIntegerField, TypePositiveBitField, TypePositiveSmallIntegerField, 
-		TypePositiveIntegerField, TypePositiveBigIntegerField, TypeFloatField:
+		TypePositiveIntegerField, TypePositiveBigIntegerField, TypeFloatField,
 		TypeDecimalField:
 			d = "0"
 	}
 	
 	if fi.colDefault {
 		if !fi.initial.Exist() {
-			v = fmt.Srintf(t, "")
+			v = fmt.Sprintf(t, "")
 		} else {
 			v = fmt.Sprintf(t, fi.initial.String())
 		}
