@@ -61,6 +61,7 @@ var (
 	SessionAutoSetCookie   bool             // auto setcookie
 	SessionDomain          string           // the cookie domain default is empty
 	UseFcgi                bool
+	UseStdIo               bool
 	MaxMemory              int64
 	EnableGzip             bool // flag of enable gzip
 	DirectoryIndex         bool // flag of display directory index. default is false.
@@ -241,6 +242,7 @@ func init() {
 	SessionAutoSetCookie = true
 
 	UseFcgi = false
+	UseStdIo = false
 
 	MaxMemory = 1 << 26 //64MB
 

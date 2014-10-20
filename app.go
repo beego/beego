@@ -55,15 +55,24 @@ func (app *App) Run() {
 	endRunning := make(chan bool, 1)
 
 	if UseFcgi {
-		if HttpPort == 0 {
-			l, err = net.Listen("unix", addr)
+		if UseStdIo {
+			err = fcgi.Serve(nil, app.Handlers) // standard I/O
+			if err == nil {
+				BeeLogger.Info("Use FCGI via standard I/O")
+			} else {
+				BeeLogger.Info("Cannot use FCGI via standard I/O", err)
+			}
 		} else {
-			l, err = net.Listen("tcp", addr)
+			if HttpPort == 0 {
+				l, err = net.Listen("unix", addr)
+			} else {
+				l, err = net.Listen("tcp", addr)
+			}
+			if err != nil {
+				BeeLogger.Critical("Listen: ", err)
+			}
+			err = fcgi.Serve(l, app.Handlers)
 		}
-		if err != nil {
-			BeeLogger.Critical("Listen: ", err)
-		}
-		err = fcgi.Serve(l, app.Handlers)
 	} else {
 		app.Server.Addr = addr
 		app.Server.Handler = app.Handlers
