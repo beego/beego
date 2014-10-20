@@ -364,6 +364,9 @@ func initBeforeHttpRun() {
 		}
 	}
 
+	//init mime
+	AddAPPStartHook(initMime)
+
 	// do hooks function
 	for _, hk := range hooks {
 		err := hk()
@@ -409,9 +412,6 @@ func initBeforeHttpRun() {
 		Get("/docs", serverDocs)
 		Get("/docs/*", serverDocs)
 	}
-
-	//init mime
-	AddAPPStartHook(initMime)
 }
 
 // this function is for test package init
