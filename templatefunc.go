@@ -380,11 +380,19 @@ func RenderForm(obj interface{}) template.HTML {
 
 // renderFormField returns a string containing HTML of a single form field.
 func renderFormField(label, name, fType string, value interface{}, id string, class string) string {
-	if isValidForInput(fType) {
-		return fmt.Sprintf(`%v<input id="%v" class="%v" name="%v" type="%v" value="%v">`, label, id, class, name, fType, value)
+	if id != "" {
+		id = "id=\"" + id + "\""
 	}
 
-	return fmt.Sprintf(`%v<%v id="%v" class="%v" name="%v">%v</%v>`, label, fType, id, class, name, value, fType)
+	if class != "" {
+		class = "class=\"" + class + "\""
+	}
+
+	if isValidForInput(fType) {
+		return fmt.Sprintf(`%v<input %v %v name="%v" type="%v" value="%v">`, label, id, class, name, fType, value)
+	}
+
+	return fmt.Sprintf(`%v<%v %v %v name="%v">%v</%v>`, label, fType, id, class, name, value, fType)
 }
 
 // isValidForInput checks if fType is a valid value for the `type` property of an HTML input element.
