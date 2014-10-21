@@ -210,11 +210,6 @@ func (c *Captcha) Verify(id string, challenge string) (success bool) {
 		return
 	}
 
-	defer func() {
-		// finally remove it
-		c.store.Delete(key)
-	}()
-
 	if len(chars) != len(challenge) {
 		return
 	}
@@ -226,6 +221,16 @@ func (c *Captcha) Verify(id string, challenge string) (success bool) {
 	}
 
 	return true
+}
+
+// del store key
+func (c *Captcha) DelKey(id string)  {
+	if len(id) == 0 {
+		return
+	}
+
+	key := c.key(id)
+	c.store.Delete(key)
 }
 
 // create a new captcha.Captcha
