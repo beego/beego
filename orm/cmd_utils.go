@@ -254,6 +254,11 @@ func getColumnDefault(fi *fieldInfo) string {
 		v, t, d        string
 	)
 	
+	// Skip default attribute if field is in relations
+	if fi.rel || fi.reverse {
+		return v
+	}
+	
 	t = " DEFAULT '%s' "
 
 	// These defaults will be useful if there no config value orm:"default" and NOT NULL is on
