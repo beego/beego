@@ -116,6 +116,7 @@ type fieldInfo struct {
 	null                bool
 	index               bool
 	unique              bool
+	colDefault          bool
 	initial             StrTo
 	size                int
 	auto_now            bool
@@ -279,6 +280,11 @@ checkType:
 	fi.auto = attrs["auto"]
 	fi.pk = attrs["pk"]
 	fi.unique = attrs["unique"]
+
+	// Mark object property if there is attribute "default" in the orm configuration
+	if _, ok := tags["default"]; ok {
+		fi.colDefault = true
+	}
 
 	switch fieldType {
 	case RelManyToMany, RelReverseMany, RelReverseOne:
