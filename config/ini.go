@@ -48,6 +48,10 @@ type IniConfig struct {
 
 // ParseFile creates a new Config and parses the file configuration from the named file.
 func (ini *IniConfig) Parse(name string) (ConfigContainer, error) {
+	return ini.parseFile(name)
+}
+
+func (ini *IniConfig) parseFile(name string) (*IniConfigContainer, error) {
 	file, err := os.Open(name)
 	if err != nil {
 		return nil, err
@@ -66,6 +70,7 @@ func (ini *IniConfig) Parse(name string) (ConfigContainer, error) {
 
 	var comment bytes.Buffer
 	buf := bufio.NewReader(file)
+	// check the BOM
 	head, err := buf.Peek(3)
 	if err == nil && head[0] == 239 && head[1] == 187 && head[2] == 191 {
 		for i := 1; i <= 3; i++ {
@@ -114,13 +119,48 @@ func (ini *IniConfig) Parse(name string) (ConfigContainer, error) {
 			cfg.data[section] = make(map[string]string)
 		}
 		keyValue := bytes.SplitN(line, bEqual, 2)
+
+		key := string(bytes.TrimSpace(keyValue[0])) // key name case insensitive
+		key = strings.ToLower(key)
+
+		// handle include "other.conf"
+		if len(keyValue) == 1 && strings.HasPrefix(key, "include") {
+			includefiles := strings.Fields(key)
+			if includefiles[0] == "include" && len(includefiles) == 2 {
+				otherfile := strings.Trim(includefiles[1], "\"")
+				if !path.IsAbs(otherfile) {
+					otherfile = path.Join(path.Dir(name), otherfile)
+				}
+				i, err := ini.parseFile(otherfile)
+				if err != nil {
+					return nil, err
+				}
+				for sec, dt := range i.data {
+					if _, ok := cfg.data[sec]; !ok {
+						cfg.data[sec] = make(map[string]string)
+					}
+					for k, v := range dt {
+						cfg.data[sec][k] = v
+					}
+				}
+				for sec, comm := range i.sectionComment {
+					cfg.sectionComment[sec] = comm
+				}
+				for k, comm := range i.keyComment {
+					cfg.keyComment[k] = comm
+				}
+				continue
+			}
+		}
+
+		if len(keyValue) != 2 {
+			return nil, errors.New("read the content error: \"" + string(line) + "\", should key = val")
+		}
 		val := bytes.TrimSpace(keyValue[1])
 		if bytes.HasPrefix(val, bDQuote) {
 			val = bytes.Trim(val, `"`)
 		}
 
-		key := string(bytes.TrimSpace(keyValue[0])) // key name case insensitive
-		key = strings.ToLower(key)
 		cfg.data[section][key] = string(val)
 		if comment.Len() > 0 {
 			cfg.keyComment[section+"."+key] = comment.String()

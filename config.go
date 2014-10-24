@@ -88,13 +88,13 @@ type beegoAppConfig struct {
 	innerConfig config.ConfigContainer
 }
 
-func newAppConfig(AppConfigProvider, AppConfigPath string) *beegoAppConfig {
+func newAppConfig(AppConfigProvider, AppConfigPath string) (*beegoAppConfig, error) {
 	ac, err := config.NewConfig(AppConfigProvider, AppConfigPath)
 	if err != nil {
-		ac = config.NewFakeConfig()
+		return nil, err
 	}
 	rac := &beegoAppConfig{ac}
-	return rac
+	return rac, nil
 }
 
 func (b *beegoAppConfig) Set(key, val string) error {
@@ -281,15 +281,19 @@ func init() {
 	err = ParseConfig()
 	if err != nil && !os.IsNotExist(err) {
 		// for init if doesn't have app.conf will not panic
-		Info(err)
+		ac := config.NewFakeConfig()
+		AppConfig = &beegoAppConfig{ac}
+		Warning(err)
 	}
 }
 
 // ParseConfig parsed default config file.
 // now only support ini, next will support json.
 func ParseConfig() (err error) {
-	AppConfig = newAppConfig(AppConfigProvider, AppConfigPath)
-
+	AppConfig, err = newAppConfig(AppConfigProvider, AppConfigPath)
+	if err != nil {
+		return err
+	}
 	envRunMode := os.Getenv("BEEGO_RUNMODE")
 	// set the runmode first
 	if envRunMode != "" {
