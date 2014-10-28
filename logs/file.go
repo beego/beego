@@ -89,7 +89,7 @@ func NewFileWriter() LoggerInterface {
 	// use MuxWriter instead direct use os.File for lock write when rotate
 	w.mw = new(MuxWriter)
 	// set MuxWriter as Logger's io.Writer
-	w.Logger = log.New(w.mw, "", log.Ldate|log.Ltime)
+	w.Logger = log.New(w.mw, "", log.Ldate|log.Ltime|log.Lshortfile)
 	return w
 }
 

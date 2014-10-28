@@ -51,7 +51,7 @@ type ConsoleWriter struct {
 // create ConsoleWriter returning as LoggerInterface.
 func NewConsole() LoggerInterface {
 	cw := new(ConsoleWriter)
-	cw.lg = log.New(os.Stdout, "", log.Ldate|log.Ltime)
+	cw.lg = log.New(os.Stdout, "", log.Ldate|log.Ltime|log.Lshortfile)
 	cw.Level = LevelDebug
 	return cw
 }
