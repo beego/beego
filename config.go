@@ -189,6 +189,10 @@ func ParseConfig() (err error) {
 		return err
 	} else {
 
+		if runmode, _ := GetConfig("string", "RunMode"); runmode != "" {
+			RunMode = runmode.(string)
+		}
+
 		if v, err := GetConfig("string", "HttpAddr"); err == nil {
 			HttpAddr = v.(string)
 		}
@@ -207,10 +211,6 @@ func ParseConfig() (err error) {
 
 		if appname, _ := GetConfig("string", "AppName"); appname != "" {
 			AppName = appname.(string)
-		}
-
-		if runmode, _ := GetConfig("string", "RunMode"); runmode != "" {
-			RunMode = runmode.(string)
 		}
 
 		if autorender, err := GetConfig("bool", "AutoRender"); err == nil {
