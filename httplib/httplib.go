@@ -275,7 +275,7 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 		} else {
 			b.url = b.url + "?" + paramBody
 		}
-	} else if b.req.Method == "POST" && b.req.Body == nil && len(paramBody) > 0 {
+	} else if b.req.Method == "POST" && b.req.Body == nil {
 		if len(b.files) > 0 {
 			bodyBuf := &bytes.Buffer{}
 			bodyWriter := multipart.NewWriter(bodyBuf)
@@ -303,7 +303,7 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 			b.Header("Content-Type", contentType)
 			b.req.Body = ioutil.NopCloser(bodyBuf)
 			b.req.ContentLength = int64(bodyBuf.Len())
-		} else {
+		} else if len(paramBody) > 0 {
 			b.Header("Content-Type", "application/x-www-form-urlencoded")
 			b.Body(paramBody)
 		}
