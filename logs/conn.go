@@ -99,7 +99,7 @@ func (c *ConnWriter) connect() error {
 	}
 
 	c.innerWriter = conn
-	c.lg = log.New(conn, "", log.Ldate|log.Ltime|log.Lshortfile)
+	c.lg = log.New(conn, "", log.Ldate|log.Ltime)
 	return nil
 }
 

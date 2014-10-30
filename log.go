@@ -38,6 +38,11 @@ func SetLevel(l int) {
 	BeeLogger.SetLevel(l)
 }
 
+func SetLogFuncCall(b bool) {
+	BeeLogger.EnableFuncCallDepth(b)
+	BeeLogger.SetLogFuncCallDepth(3)
+}
+
 // logger references the used application logger.
 var BeeLogger *logs.BeeLogger
 
