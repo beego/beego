@@ -37,6 +37,7 @@ import (
 	"encoding/xml"
 	"io"
 	"io/ioutil"
+	"log"
 	"mime/multipart"
 	"net"
 	"net/http"
@@ -277,32 +278,33 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 		}
 	} else if b.req.Method == "POST" && b.req.Body == nil {
 		if len(b.files) > 0 {
-			bodyBuf := &bytes.Buffer{}
-			bodyWriter := multipart.NewWriter(bodyBuf)
-			for formname, filename := range b.files {
-				fileWriter, err := bodyWriter.CreateFormFile(formname, filename)
-				if err != nil {
-					return nil, err
+			pr, pw := io.Pipe()
+			bodyWriter := multipart.NewWriter(pw)
+			go func() {
+				for formname, filename := range b.files {
+					fileWriter, err := bodyWriter.CreateFormFile(formname, filename)
+					if err != nil {
+						log.Fatal(err)
+					}
+					fh, err := os.Open(filename)
+					if err != nil {
+						log.Fatal(err)
+					}
+					//iocopy
+					_, err = io.Copy(fileWriter, fh)
+					fh.Close()
+					if err != nil {
+						log.Fatal(err)
+					}
 				}
-				fh, err := os.Open(filename)
-				if err != nil {
-					return nil, err
+				for k, v := range b.params {
+					bodyWriter.WriteField(k, v)
 				}
-				//iocopy
-				_, err = io.Copy(fileWriter, fh)
-				fh.Close()
-				if err != nil {
-					return nil, err
-				}
-			}
-			for k, v := range b.params {
-				bodyWriter.WriteField(k, v)
-			}
-			contentType := bodyWriter.FormDataContentType()
-			bodyWriter.Close()
-			b.Header("Content-Type", contentType)
-			b.req.Body = ioutil.NopCloser(bodyBuf)
-			b.req.ContentLength = int64(bodyBuf.Len())
+				bodyWriter.Close()
+				pw.Close()
+			}()
+			b.Header("Content-Type", bodyWriter.FormDataContentType())
+			b.req.Body = ioutil.NopCloser(pr)
 		} else if len(paramBody) > 0 {
 			b.Header("Content-Type", "application/x-www-form-urlencoded")
 			b.Body(paramBody)
