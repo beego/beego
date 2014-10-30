@@ -34,6 +34,7 @@ func testConsoleCalls(bl *BeeLogger) {
 // without a log level specification.
 func TestConsole(t *testing.T) {
 	log1 := NewLogger(10000)
+	log1.EnableFuncCallDepth(true)
 	log1.SetLogger("console", "")
 	testConsoleCalls(log1)
 
@@ -44,6 +45,7 @@ func TestConsole(t *testing.T) {
 
 func BenchmarkConsole(b *testing.B) {
 	log := NewLogger(10000)
+	log.EnableFuncCallDepth(true)
 	log.SetLogger("console", "")
 	for i := 0; i < b.N; i++ {
 		log.Debug("debug")
