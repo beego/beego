@@ -31,6 +31,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/middleware"
 	"github.com/astaxie/beego/utils"
 )
@@ -69,7 +70,8 @@ func (ctx *Context) Abort(status int, body string) {
 		panic(e)
 	}
 	// last panic user string
-	panic(body)
+	ctx.ResponseWriter.Write([]byte(body))
+	panic(beego.USERSTOPRUN)
 }
 
 // Write string to response body.

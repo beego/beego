@@ -831,7 +831,9 @@ func (p *ControllerRegistor) recoverPanic(rw http.ResponseWriter, r *http.Reques
 		if err == USERSTOPRUN {
 			return
 		}
-		if _, ok := err.(middleware.HTTPException); ok {
+		if he, ok := err.(middleware.HTTPException); ok {
+			rw.WriteHeader(he.StatusCode)
+			rw.Write([]byte(he.Description))
 			// catch intented errors, only for HTTP 4XX and 5XX
 		} else {
 			if RunMode == "dev" {
@@ -863,9 +865,10 @@ func (p *ControllerRegistor) recoverPanic(rw http.ResponseWriter, r *http.Reques
 				} else {
 					// in production model show all infomation
 					if ErrorsShow {
-						handler := p.getErrorHandler(fmt.Sprint(err))
-						handler(rw, r)
-						return
+						if handler, ok := middleware.ErrorMaps[fmt.Sprint(err)]; ok {
+							handler(rw, r)
+							return
+						}
 					} else {
 						Critical("the request url is ", r.URL.Path)
 						Critical("Handler crashed with error", err)
@@ -882,24 +885,6 @@ func (p *ControllerRegistor) recoverPanic(rw http.ResponseWriter, r *http.Reques
 
 		}
 	}
-}
-
-// there always should be error handler that sets error code accordingly for all unhandled errors.
-// in order to have custom UI for error page it's necessary to override "500" error.
-func (p *ControllerRegistor) getErrorHandler(errorCode string) func(rw http.ResponseWriter, r *http.Request) {
-	handler := middleware.SimpleServerError
-	ok := true
-	if errorCode != "" {
-		handler, ok = middleware.ErrorMaps[errorCode]
-		if !ok {
-			handler, ok = middleware.ErrorMaps["500"]
-		}
-		if !ok || handler == nil {
-			handler = middleware.SimpleServerError
-		}
-	}
-
-	return handler
 }
 
 //responseWriter is a wrapper for the http.ResponseWriter
