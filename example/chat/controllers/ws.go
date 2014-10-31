@@ -150,12 +150,12 @@ type WSController struct {
 }
 
 var upgrader = websocket.Upgrader{
-    ReadBufferSize:  1024,
-    WriteBufferSize: 1024,
+	ReadBufferSize:  1024,
+	WriteBufferSize: 1024,
 }
 
 func (this *WSController) Get() {
-	ws, err := upgrader.Upgrade(this.Ctx.ResponseWriter, this.Ctx.Request,nil)
+	ws, err := upgrader.Upgrade(this.Ctx.ResponseWriter, this.Ctx.Request, nil)
 	if _, ok := err.(websocket.HandshakeError); ok {
 		http.Error(this.Ctx.ResponseWriter, "Not a websocket handshake", 400)
 		return
