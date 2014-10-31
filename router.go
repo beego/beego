@@ -33,6 +33,7 @@ import (
 	"github.com/astaxie/beego/middleware"
 	"github.com/astaxie/beego/toolbox"
 	"github.com/astaxie/beego/utils"
+	"github.com/astaxie/beego/httplib"
 )
 
 const (
@@ -556,7 +557,14 @@ func (p *ControllerRegistor) geturl(t *Tree, url, controllName, methodName strin
 }
 
 // Implement http.Handler interface.
-func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (p *ControllerRegistor) ServeHTTP(originalRw http.ResponseWriter, r *http.Request) {
+	rw := httplib.NewSyncedResponseWriter(originalRw)
+	defer func() {
+		if !rw.IsHeaderWritten() {
+			rw.SendHeader()
+		}
+	}()
+
 	defer p.recoverPanic(rw, r)
 	starttime := time.Now()
 	var runrouter reflect.Type
