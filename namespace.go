@@ -217,7 +217,7 @@ func (n *Namespace) Namespace(ns ...*Namespace) *Namespace {
 				n.handlers.routers[k] = t
 			}
 		}
-		if n.handlers.enableFilter {
+		if ni.handlers.enableFilter {
 			for pos, filterList := range ni.handlers.filters {
 				for _, mr := range filterList {
 					t := NewTree()
