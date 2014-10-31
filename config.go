@@ -277,7 +277,7 @@ func init() {
 	if err != nil {
 		fmt.Println("init console log error:", err)
 	}
-	BeeLogger.SetLogFuncCallDepth(true)
+	SetLogFuncCall(true)
 
 	err = ParseConfig()
 	if err != nil && !os.IsNotExist(err) {
