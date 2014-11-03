@@ -72,10 +72,30 @@ var (
 		"SetSecureCookie", "XsrfToken", "CheckXsrfCookie", "XsrfFormHtml",
 		"GetControllerAndAction"}
 
-	url_placeholder = "{{placeholder}}"
-
-	FilterRouterLog func(*beecontext.Context) bool
+	url_placeholder                = "{{placeholder}}"
+	DefaultLogFilter FilterHandler = &logFilter{}
 )
+
+type FilterHandler interface {
+	Filter(*beecontext.Context) bool
+}
+
+// default log filter static file will not show
+type logFilter struct {
+}
+
+func (l *logFilter) Filter(ctx *beecontext.Context) bool {
+	requestPath := path.Clean(ctx.Input.Request.URL.Path)
+	if requestPath == "/favicon.ico" || requestPath == "/robots.txt" {
+		return true
+	}
+	for prefix, _ := range StaticDir {
+		if strings.HasPrefix(requestPath, prefix) {
+			return true
+		}
+	}
+	return false
+}
 
 // To append a slice's value into "exceptMethod", for controller's methods shouldn't reflect to AutoRouter
 func ExceptMethodAppend(action string) {
@@ -815,7 +835,7 @@ Admin:
 		} else {
 			devinfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s |", r.Method, r.URL.Path, timeend.String(), "notmatch")
 		}
-		if FilterRouterLog == nil || !FilterRouterLog(context) {
+		if DefaultLogFilter == nil || !DefaultLogFilter.Filter(context) {
 			Debug(devinfo)
 		}
 	}
