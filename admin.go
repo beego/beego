@@ -458,7 +458,7 @@ func (admin *adminApp) Run() {
 	for p, f := range admin.routers {
 		http.Handle(p, f)
 	}
-	BeeLogger.Info("Running on %s", addr)
+	BeeLogger.Info("Admin server Running on %s", addr)
 	err := http.ListenAndServe(addr, nil)
 	if err != nil {
 		BeeLogger.Critical("Admin ListenAndServe: ", err)
