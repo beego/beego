@@ -40,6 +40,7 @@ var (
 	EnableHttpListen       bool
 	HttpAddr               string
 	HttpPort               int
+	ListenTCP4             bool
 	EnableHttpTLS          bool
 	HttpsPort              int
 	HttpCertFile           string
@@ -307,6 +308,10 @@ func ParseConfig() (err error) {
 
 	if v, err := AppConfig.Int("HttpPort"); err == nil {
 		HttpPort = v
+	}
+
+	if v, err := AppConfig.Bool("ListenTCP4"); err == nil {
+		ListenTCP4 = v
 	}
 
 	if v, err := AppConfig.Bool("EnableHttpListen"); err == nil {
