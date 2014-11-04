@@ -382,8 +382,37 @@ func (c *Controller) GetStrings(key string) []string {
 	return []string{}
 }
 
-// GetInt returns input value as int64.
-func (c *Controller) GetInt(key string) (int64, error) {
+// GetInt returns input as an int
+func (c *Controller) GetInt(key string) (int, error) {
+	return strconv.Atoi(c.Ctx.Input.Query(key))
+}
+
+// GetInt8 return input as an int8
+func (c *Controller) GetInt8(key string) (int8, error) {
+	i64, err := strconv.ParseInt(c.Ctx.Input.Query(key), 10, 8)
+	i8 := int8(i64)
+
+	return i8, err
+}
+
+// GetInt16 returns input as an int16
+func (c *Controller) GetInt16(key string) (int16, error) {
+	i64, err := strconv.ParseInt(c.Ctx.Input.Query(key), 10, 16)
+	i16 := int16(i64)
+
+	return i16, err
+}
+
+// GetInt32 returns input as an int32
+func (c *Controller) GetInt32(key string) (int32, error) {
+	i64, err := strconv.ParseInt(c.Ctx.Input.Query(key), 10, 32)
+	i32 := int32(i64)
+
+	return i32, err
+}
+
+// GetInt64 returns input value as int64.
+func (c *Controller) GetInt64(key string) (int64, error) {
 	return strconv.ParseInt(c.Ctx.Input.Query(key), 10, 64)
 }
 

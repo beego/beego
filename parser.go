@@ -42,6 +42,7 @@ func init() {
 
 var (
 	lastupdateFilename string = "lastupdate.tmp"
+	commentFilename    string = "commentsRouter.go"
 	pkgLastupdate      map[string]int64
 	genInfoList        map[string][]ControllerComments
 )
@@ -52,6 +53,8 @@ func init() {
 }
 
 func parserPkg(pkgRealpath, pkgpath string) error {
+	rep := strings.NewReplacer("/", "_", ".", "_")
+	commentFilename = rep.Replace(pkgpath) + "_" + commentFilename
 	if !compareFile(pkgRealpath) {
 		Info(pkgRealpath + " don't has updated")
 		return nil
@@ -155,7 +158,7 @@ func genRouterCode() {
 		}
 	}
 	if globalinfo != "" {
-		f, err := os.Create(path.Join(workPath, "routers", "commentsRouter.go"))
+		f, err := os.Create(path.Join(workPath, "routers", commentFilename))
 		if err != nil {
 			panic(err)
 		}
@@ -165,7 +168,7 @@ func genRouterCode() {
 }
 
 func compareFile(pkgRealpath string) bool {
-	if !utils.FileExists(path.Join(workPath, "routers", "commentsRouter.go")) {
+	if !utils.FileExists(path.Join(workPath, "routers", commentFilename)) {
 		return true
 	}
 	if utils.FileExists(path.Join(workPath, lastupdateFilename)) {

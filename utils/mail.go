@@ -157,19 +157,37 @@ func (e *Email) Bytes() ([]byte, error) {
 }
 
 // Add attach file to the send mail
-func (e *Email) AttachFile(filename string) (a *Attachment, err error) {
+func (e *Email) AttachFile(args ...string) (a *Attachment, err error) {
+	if len(args) < 1 && len(args) > 2 {
+		err = errors.New("Must specify a file name and number of parameters can not exceed at least two")
+		return
+	}
+	filename := args[0]
+	id := ""
+	if len(args) > 1 {
+		id = args[1]
+	}
 	f, err := os.Open(filename)
 	if err != nil {
 		return
 	}
 	ct := mime.TypeByExtension(filepath.Ext(filename))
 	basename := path.Base(filename)
-	return e.Attach(f, basename, ct)
+	return e.Attach(f, basename, ct, id)
 }
 
 // Attach is used to attach content from an io.Reader to the email.
 // Parameters include an io.Reader, the desired filename for the attachment, and the Content-Type.
-func (e *Email) Attach(r io.Reader, filename string, c string) (a *Attachment, err error) {
+func (e *Email) Attach(r io.Reader, filename string, args ...string) (a *Attachment, err error) {
+	if len(args) < 1 && len(args) > 2 {
+		err = errors.New("Must specify the file type and number of parameters can not exceed at least two")
+		return
+	}
+	c := args[0] //Content-Type
+	id := ""
+	if len(args) > 1 {
+		id = args[1] //Content-ID
+	}
 	var buffer bytes.Buffer
 	if _, err = io.Copy(&buffer, r); err != nil {
 		return
@@ -186,7 +204,12 @@ func (e *Email) Attach(r io.Reader, filename string, c string) (a *Attachment, e
 		// If the Content-Type is blank, set the Content-Type to "application/octet-stream"
 		at.Header.Set("Content-Type", "application/octet-stream")
 	}
-	at.Header.Set("Content-Disposition", fmt.Sprintf("attachment;\r\n filename=\"%s\"", filename))
+	if id != "" {
+		at.Header.Set("Content-Disposition", fmt.Sprintf("inline;\r\n filename=\"%s\"", filename))
+		at.Header.Set("Content-ID", fmt.Sprintf("<%s>", id))
+	} else {
+		at.Header.Set("Content-Disposition", fmt.Sprintf("attachment;\r\n filename=\"%s\"", filename))
+	}
 	at.Header.Set("Content-Transfer-Encoding", "base64")
 	e.Attachments = append(e.Attachments, at)
 	return at, nil
@@ -269,7 +292,7 @@ func qpEscape(dest []byte, c byte) {
 	const nums = "0123456789ABCDEF"
 	dest[0] = '='
 	dest[1] = nums[(c&0xf0)>>4]
-	dest[2] = nums[(c & 0xf)]
+	dest[2] = nums[(c&0xf)]
 }
 
 // headerToBytes enumerates the key and values in the header, and writes the results to the IO Writer
