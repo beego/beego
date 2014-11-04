@@ -56,8 +56,6 @@ var (
 	SessionName            string           // the cookie name when saving session id into cookie.
 	SessionGCMaxLifetime   int64            // session gc time for auto cleaning expired session.
 	SessionSavePath        string           // if use mysql/redis/file provider, define save path to connection info.
-	SessionHashFunc        string           // session hash generation func.
-	SessionHashKey         string           // session hash salt string.
 	SessionCookieLifeTime  int              // the life time of session id in cookie.
 	SessionAutoSetCookie   bool             // auto setcookie
 	SessionDomain          string           // the cookie domain default is empty
@@ -237,8 +235,6 @@ func init() {
 	SessionName = "beegosessionID"
 	SessionGCMaxLifetime = 3600
 	SessionSavePath = ""
-	SessionHashFunc = "sha1"
-	SessionHashKey = "beegoserversessionkey"
 	SessionCookieLifeTime = 0 //set cookie default is the brower life
 	SessionAutoSetCookie = true
 
@@ -352,14 +348,6 @@ func ParseConfig() (err error) {
 
 	if sesssavepath := AppConfig.String("SessionSavePath"); sesssavepath != "" {
 		SessionSavePath = sesssavepath
-	}
-
-	if sesshashfunc := AppConfig.String("SessionHashFunc"); sesshashfunc != "" {
-		SessionHashFunc = sesshashfunc
-	}
-
-	if sesshashkey := AppConfig.String("SessionHashKey"); sesshashkey != "" {
-		SessionHashKey = sesshashkey
 	}
 
 	if sessMaxLifeTime, err := AppConfig.Int64("SessionGCMaxLifetime"); err == nil && sessMaxLifeTime != 0 {

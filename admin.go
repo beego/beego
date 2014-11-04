@@ -113,8 +113,6 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 			m["SessionName"] = SessionName
 			m["SessionGCMaxLifetime"] = SessionGCMaxLifetime
 			m["SessionSavePath"] = SessionSavePath
-			m["SessionHashFunc"] = SessionHashFunc
-			m["SessionHashKey"] = SessionHashKey
 			m["SessionCookieLifeTime"] = SessionCookieLifeTime
 			m["UseFcgi"] = UseFcgi
 			m["MaxMemory"] = MaxMemory

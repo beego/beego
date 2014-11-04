@@ -383,8 +383,6 @@ func initBeforeHttpRun() {
 				`"gclifetime":` + strconv.FormatInt(SessionGCMaxLifetime, 10) + `,` +
 				`"providerConfig":"` + filepath.ToSlash(SessionSavePath) + `",` +
 				`"secure":` + strconv.FormatBool(EnableHttpTLS) + `,` +
-				`"sessionIDHashFunc":"` + SessionHashFunc + `",` +
-				`"sessionIDHashKey":"` + SessionHashKey + `",` +
 				`"enableSetCookie":` + strconv.FormatBool(SessionAutoSetCookie) + `,` +
 				`"domain":"` + SessionDomain + `",` +
 				`"cookieLifeTime":` + strconv.Itoa(SessionCookieLifeTime) + `}`
