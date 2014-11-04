@@ -644,7 +644,13 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	// session init
 	if SessionOn {
-		context.Input.CruSession = GlobalSessions.SessionStart(w, r)
+		var err error
+		context.Input.CruSession, err = GlobalSessions.SessionStart(w, r)
+		if err != nil {
+			Error(err)
+			middleware.Exception("503", rw, r, "")
+			return
+		}
 		defer func() {
 			context.Input.CruSession.SessionRelease(w)
 		}()
@@ -888,6 +894,11 @@ func (p *ControllerRegistor) recoverPanic(rw http.ResponseWriter, r *http.Reques
 						if handler, ok := middleware.ErrorMaps[fmt.Sprint(err)]; ok {
 							handler(rw, r)
 							return
+						} else if handler, ok := middleware.ErrorMaps["503"]; ok {
+							handler(rw, r)
+							return
+						} else {
+							rw.Write([]byte(fmt.Sprint(err)))
 						}
 					} else {
 						Critical("the request url is ", r.URL.Path)
