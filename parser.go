@@ -53,7 +53,8 @@ func init() {
 }
 
 func parserPkg(pkgRealpath, pkgpath string) error {
-	commentFilename = strings.Replace(pkgpath, "/", "_", -1) + "_" + commentFilename
+	rep := strings.NewReplacer("/", "_", ".", "_")
+	commentFilename = rep.Replace(pkgpath) + "_" + commentFilename
 	if !compareFile(pkgRealpath) {
 		Info(pkgRealpath + " don't has updated")
 		return nil
