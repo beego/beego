@@ -302,6 +302,14 @@ func ParseForm(form url.Values, obj interface{}) error {
 
 		switch fieldT.Type.Kind() {
 		case reflect.Bool:
+			if strings.ToLower(value) == "on" || strings.ToLower(value) == "1" || strings.ToLower(value) == "yes" {
+				fieldV.SetBool(true)
+				continue
+			}
+			if strings.ToLower(value) == "off" || strings.ToLower(value) == "0" || strings.ToLower(value) == "no" {
+				fieldV.SetBool(false)
+				continue
+			}
 			b, err := strconv.ParseBool(value)
 			if err != nil {
 				return err
@@ -329,6 +337,19 @@ func ParseForm(form url.Values, obj interface{}) error {
 			fieldV.Set(reflect.ValueOf(value))
 		case reflect.String:
 			fieldV.SetString(value)
+		case reflect.Struct:
+			switch fieldT.Type.String() {
+			case "time.Time":
+				format := time.RFC3339
+				if len(tags) > 1 {
+					format = tags[1]
+				}
+				t, err := time.Parse(format, value)
+				if err != nil {
+					return err
+				}
+				fieldV.Set(reflect.ValueOf(t))
+			}
 		}
 	}
 	return nil
