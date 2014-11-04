@@ -452,8 +452,8 @@ func (p *ControllerRegistor) UrlFor(endpoint string, values ...string) string {
 	}
 	controllName := strings.Join(paths[:len(paths)-1], "/")
 	methodName := paths[len(paths)-1]
-	for _, t := range p.routers {
-		ok, url := p.geturl(t, "/", controllName, methodName, params)
+	for m, t := range p.routers {
+		ok, url := p.geturl(t, "/", controllName, methodName, params, m)
 		if ok {
 			return url
 		}
@@ -461,17 +461,17 @@ func (p *ControllerRegistor) UrlFor(endpoint string, values ...string) string {
 	return ""
 }
 
-func (p *ControllerRegistor) geturl(t *Tree, url, controllName, methodName string, params map[string]string) (bool, string) {
+func (p *ControllerRegistor) geturl(t *Tree, url, controllName, methodName string, params map[string]string, httpMethod string) (bool, string) {
 	for k, subtree := range t.fixrouters {
 		u := path.Join(url, k)
-		ok, u := p.geturl(subtree, u, controllName, methodName, params)
+		ok, u := p.geturl(subtree, u, controllName, methodName, params, httpMethod)
 		if ok {
 			return ok, u
 		}
 	}
 	if t.wildcard != nil {
-		url = path.Join(url, url_placeholder)
-		ok, u := p.geturl(t.wildcard, url, controllName, methodName, params)
+		u := path.Join(url, url_placeholder)
+		ok, u := p.geturl(t.wildcard, u, controllName, methodName, params, httpMethod)
 		if ok {
 			return ok, u
 		}
@@ -491,8 +491,8 @@ func (p *ControllerRegistor) geturl(t *Tree, url, controllName, methodName strin
 					}
 				}
 				if !find {
-					for _, md := range c.methods {
-						if md == methodName {
+					for m, md := range c.methods {
+						if (m == "*" || m == httpMethod) && md == methodName {
 							find = true
 						}
 					}
