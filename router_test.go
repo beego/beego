@@ -27,33 +27,33 @@ type TestController struct {
 	Controller
 }
 
-func (this *TestController) Get() {
-	this.Data["Username"] = "astaxie"
-	this.Ctx.Output.Body([]byte("ok"))
+func (tc *TestController) Get() {
+	tc.Data["Username"] = "astaxie"
+	tc.Ctx.Output.Body([]byte("ok"))
 }
 
-func (this *TestController) Post() {
-	this.Ctx.Output.Body([]byte(this.Ctx.Input.Query(":name")))
+func (tc *TestController) Post() {
+	tc.Ctx.Output.Body([]byte(tc.Ctx.Input.Query(":name")))
 }
 
-func (this *TestController) Param() {
-	this.Ctx.Output.Body([]byte(this.Ctx.Input.Query(":name")))
+func (tc *TestController) Param() {
+	tc.Ctx.Output.Body([]byte(tc.Ctx.Input.Query(":name")))
 }
 
-func (this *TestController) List() {
-	this.Ctx.Output.Body([]byte("i am list"))
+func (tc *TestController) List() {
+	tc.Ctx.Output.Body([]byte("i am list"))
 }
 
-func (this *TestController) Params() {
-	this.Ctx.Output.Body([]byte(this.Ctx.Input.Params["0"] + this.Ctx.Input.Params["1"] + this.Ctx.Input.Params["2"]))
+func (tc *TestController) Params() {
+	tc.Ctx.Output.Body([]byte(tc.Ctx.Input.Params["0"] + tc.Ctx.Input.Params["1"] + tc.Ctx.Input.Params["2"]))
 }
 
-func (this *TestController) Myext() {
-	this.Ctx.Output.Body([]byte(this.Ctx.Input.Param(":ext")))
+func (tc *TestController) Myext() {
+	tc.Ctx.Output.Body([]byte(tc.Ctx.Input.Param(":ext")))
 }
 
-func (this *TestController) GetUrl() {
-	this.Ctx.Output.Body([]byte(this.UrlFor(".Myext")))
+func (tc *TestController) GetUrl() {
+	tc.Ctx.Output.Body([]byte(tc.UrlFor(".Myext")))
 }
 
 func (t *TestController) GetParams() {
