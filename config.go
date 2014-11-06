@@ -277,7 +277,7 @@ func init() {
 	SetLogFuncCall(true)
 
 	err = ParseConfig()
-	if err != nil && !os.IsNotExist(err) {
+	if err != nil && os.IsNotExist(err) {
 		// for init if doesn't have app.conf will not panic
 		ac := config.NewFakeConfig()
 		AppConfig = &beegoAppConfig{ac}
