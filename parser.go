@@ -51,7 +51,6 @@ const COMMENTFL = "commentsRouter.go"
 
 func init() {
 	pkgLastupdate = make(map[string]int64)
-	genInfoList = make(map[string][]ControllerComments)
 }
 
 func parserPkg(pkgRealpath, pkgpath string) error {
@@ -61,6 +60,7 @@ func parserPkg(pkgRealpath, pkgpath string) error {
 		Info(pkgRealpath + " don't has updated")
 		return nil
 	}
+	genInfoList = make(map[string][]ControllerComments)
 	fileSet := token.NewFileSet()
 	astPkgs, err := parser.ParseDir(fileSet, pkgRealpath, func(info os.FileInfo) bool {
 		name := info.Name()
