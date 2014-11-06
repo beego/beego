@@ -47,7 +47,7 @@ var (
 	genInfoList        map[string][]ControllerComments
 )
 
-const COMMENTFL = "commentsRouter.go"
+const COMMENTFL = "commentsRouter_"
 
 func init() {
 	pkgLastupdate = make(map[string]int64)
@@ -55,7 +55,7 @@ func init() {
 
 func parserPkg(pkgRealpath, pkgpath string) error {
 	rep := strings.NewReplacer("/", "_", ".", "_")
-	commentFilename = rep.Replace(pkgpath) + "_" + COMMENTFL
+	commentFilename = COMMENTFL + rep.Replace(pkgpath) + ".go"
 	if !compareFile(pkgRealpath) {
 		Info(pkgRealpath + " don't has updated")
 		return nil
