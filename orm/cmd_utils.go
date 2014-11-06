@@ -104,7 +104,11 @@ func getColumnAddQuery(al *alias, fi *fieldInfo) string {
 		typ += " " + "NOT NULL"
 	}
 
-	return fmt.Sprintf("ALTER TABLE %s%s%s ADD COLUMN %s%s%s %s", Q, fi.mi.table, Q, Q, fi.column, Q, typ)
+	return fmt.Sprintf("ALTER TABLE %s%s%s ADD COLUMN %s%s%s %s %s", 
+		Q, fi.mi.table, Q, 
+		Q, fi.column, Q, 
+		typ, getColumnDefault(fi),
+	)
 }
 
 // create database creation string.
@@ -155,6 +159,9 @@ func getDbCreateSql(al *alias) (sqls []string, tableIndexes map[string][]dbIndex
 				//if fi.initial.String() != "" {
 				//	column += " DEFAULT " + fi.initial.String()
 				//}
+				
+				// Append attribute DEFAULT
+				column += getColumnDefault(fi)
 
 				if fi.unique {
 					column += " " + "UNIQUE"
@@ -238,4 +245,45 @@ func getDbCreateSql(al *alias) (sqls []string, tableIndexes map[string][]dbIndex
 	}
 
 	return
+}
+
+
+// Get string value for the attribute "DEFAULT" for the CREATE, ALTER commands
+func getColumnDefault(fi *fieldInfo) string {
+	var (
+		v, t, d string
+	)
+
+	// Skip default attribute if field is in relations
+	if fi.rel || fi.reverse {
+		return v
+	}
+
+	t = " DEFAULT '%s' "
+
+	// These defaults will be useful if there no config value orm:"default" and NOT NULL is on
+	switch fi.fieldType {
+		case TypeDateField, TypeDateTimeField:
+			return v;
+	
+		case TypeBooleanField, TypeBitField, TypeSmallIntegerField, TypeIntegerField,
+		TypeBigIntegerField, TypePositiveBitField, TypePositiveSmallIntegerField, 
+		TypePositiveIntegerField, TypePositiveBigIntegerField, TypeFloatField,
+		TypeDecimalField:
+			d = "0"
+	}
+	
+	if fi.colDefault {
+		if !fi.initial.Exist() {
+			v = fmt.Sprintf(t, "")
+		} else {
+			v = fmt.Sprintf(t, fi.initial.String())
+		}
+	} else {
+		if !fi.null {
+			v = fmt.Sprintf(t, d)
+		}
+	}
+
+	return v
 }
