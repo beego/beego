@@ -858,7 +858,6 @@ func (p *ControllerRegistor) recoverPanic(rw http.ResponseWriter, r *http.Reques
 			return
 		}
 		if he, ok := err.(middleware.HTTPException); ok {
-			rw.WriteHeader(he.StatusCode)
 			rw.Write([]byte(he.Description))
 			// catch intented errors, only for HTTP 4XX and 5XX
 		} else {
