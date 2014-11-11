@@ -84,14 +84,13 @@ func (rc *RedisCache) Get(key string) interface{} {
 // put cache to redis.
 func (rc *RedisCache) Put(key string, val interface{}, timeout int64) error {
 	var err error
-	if _, err = rc.do("SET", key, val); err != nil {
+	if _, err = rc.do("SETEX", key, timeout, val); err != nil {
 		return err
 	}
 
 	if _, err = rc.do("HSET", rc.key, key, true); err != nil {
 		return err
 	}
-	_, err = rc.do("EXPIRE", key, timeout)
 	return err
 }
 

@@ -38,7 +38,7 @@ import (
 )
 
 // beego web framework version.
-const VERSION = "1.4.1"
+const VERSION = "1.4.2"
 
 type hookfunc func() error //hook function to run
 var hooks []hookfunc       //hook function slice to store the hookfunc
@@ -308,15 +308,20 @@ func SetStaticPath(url string, path string) *App {
 
 // DelStaticPath removes the static folder setting in this url pattern in beego application.
 func DelStaticPath(url string) *App {
+	if !strings.HasPrefix(url, "/") {
+		url = "/" + url
+	}
+	url = strings.TrimRight(url, "/")
 	delete(StaticDir, url)
 	return BeeApp
 }
 
 // InsertFilter adds a FilterFunc with pattern condition and action constant.
 // The pos means action constant including
-// beego.BeforeRouter, beego.AfterStatic, beego.BeforeExec, beego.AfterExec and beego.FinishRouter.
-func InsertFilter(pattern string, pos int, filter FilterFunc) *App {
-	BeeApp.Handlers.InsertFilter(pattern, pos, filter)
+// beego.BeforeStatic, beego.BeforeRouter, beego.BeforeExec, beego.AfterExec and beego.FinishRouter.
+// The bool params is for setting the returnOnOutput value (false allows multiple filters to execute)
+func InsertFilter(pattern string, pos int, filter FilterFunc, params ...bool) *App {
+	BeeApp.Handlers.InsertFilter(pattern, pos, filter, params...)
 	return BeeApp
 }
 
@@ -359,6 +364,9 @@ func initBeforeHttpRun() {
 		}
 	}
 
+	//init mime
+	AddAPPStartHook(initMime)
+
 	// do hooks function
 	for _, hk := range hooks {
 		err := hk()
@@ -373,10 +381,8 @@ func initBeforeHttpRun() {
 		if sessionConfig == "" {
 			sessionConfig = `{"cookieName":"` + SessionName + `",` +
 				`"gclifetime":` + strconv.FormatInt(SessionGCMaxLifetime, 10) + `,` +
-				`"providerConfig":"` + SessionSavePath + `",` +
+				`"providerConfig":"` + filepath.ToSlash(SessionSavePath) + `",` +
 				`"secure":` + strconv.FormatBool(EnableHttpTLS) + `,` +
-				`"sessionIDHashFunc":"` + SessionHashFunc + `",` +
-				`"sessionIDHashKey":"` + SessionHashKey + `",` +
 				`"enableSetCookie":` + strconv.FormatBool(SessionAutoSetCookie) + `,` +
 				`"domain":"` + SessionDomain + `",` +
 				`"cookieLifeTime":` + strconv.Itoa(SessionCookieLifeTime) + `}`
@@ -404,9 +410,6 @@ func initBeforeHttpRun() {
 		Get("/docs", serverDocs)
 		Get("/docs/*", serverDocs)
 	}
-
-	//init mime
-	AddAPPStartHook(initMime)
 }
 
 // this function is for test package init

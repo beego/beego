@@ -31,6 +31,7 @@ func serverStaticRouter(ctx *context.Context) {
 		return
 	}
 	requestPath := path.Clean(ctx.Input.Request.URL.Path)
+	i := 0
 	for prefix, staticDir := range StaticDir {
 		if len(prefix) == 0 {
 			continue
@@ -41,8 +42,13 @@ func serverStaticRouter(ctx *context.Context) {
 				http.ServeFile(ctx.ResponseWriter, ctx.Request, file)
 				return
 			} else {
-				http.NotFound(ctx.ResponseWriter, ctx.Request)
-				return
+				i++
+				if i == len(StaticDir) {
+					http.NotFound(ctx.ResponseWriter, ctx.Request)
+					return
+				} else {
+					continue
+				}
 			}
 		}
 		if strings.HasPrefix(requestPath, prefix) {
@@ -59,9 +65,20 @@ func serverStaticRouter(ctx *context.Context) {
 				return
 			}
 			//if the request is dir and DirectoryIndex is false then
-			if finfo.IsDir() && !DirectoryIndex {
-				middleware.Exception("403", ctx.ResponseWriter, ctx.Request, "403 Forbidden")
-				return
+			if finfo.IsDir() {
+				if !DirectoryIndex {
+					middleware.Exception("403", ctx.ResponseWriter, ctx.Request, "403 Forbidden")
+					return
+				} else if ctx.Input.Request.URL.Path[len(ctx.Input.Request.URL.Path)-1] != '/' {
+					http.Redirect(ctx.ResponseWriter, ctx.Request, ctx.Input.Request.URL.Path+"/", 302)
+					return
+				}
+			} else if strings.HasSuffix(requestPath, "/index.html") {
+				file := path.Join(staticDir, requestPath)
+				if utils.FileExists(file) {
+					http.ServeFile(ctx.ResponseWriter, ctx.Request, file)
+					return
+				}
 			}
 
 			//This block obtained from (https://github.com/smithfox/beego) - it should probably get merged into astaxie/beego after a pull request
