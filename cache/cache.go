@@ -52,9 +52,9 @@ type Cache interface {
 	// delete cached value by key.
 	Delete(key string) error
 	// increase cached int value by key, as a counter.
-	Incr(key string) (uint64, error)
+	Incr(key string) (int64, error)
 	// decrease cached int value by key, as a counter.
-	Decr(key string) (uint64, error)
+	Decr(key string) (int64, error)
 	// check if cached value exists or not.
 	IsExist(key string) bool
 	// clear all cache.
@@ -74,9 +74,9 @@ type HashCache interface {
 	// get all the fields and values in a hash
 	HGetAll(key string) ([]interface{}, error)
 	// increment the value under a particular field from a hash recored by the specified delta
-	HIncrBy(key, field string, delta uint64) (uint64, error)
+	HIncrBy(key, field string, delta uint64) (int64, error)
 	// decrement the value under a particular field from a hash recored by the specified delta
-	HDecrBy(key, field string, delta uint64) (uint64, error)
+	HDecrBy(key, field string, delta uint64) (int64, error)
 }
 
 var adapters = make(map[string]Cache)

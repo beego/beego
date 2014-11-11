@@ -89,23 +89,33 @@ func (rc *MemcacheCache) Delete(key string) error {
 }
 
 // increase counter.
-func (rc *MemcacheCache) Incr(key string) (uint64, error) {
+func (rc *MemcacheCache) Incr(key string) (int64, error) {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
 			return 0, err
 		}
 	}
-	return rc.conn.Increment(key, 1)
+
+	if value, err := rc.conn.Increment(key, 1); err == nil {
+		return int64(value), nil
+	} else {
+		return 0, err
+	}
 }
 
 // decrease counter.
-func (rc *MemcacheCache) Decr(key string) (uint64, error) {
+func (rc *MemcacheCache) Decr(key string) (int64, error) {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
 			return 0, err
 		}
 	}
-	return rc.conn.Decrement(key, 1)
+
+	if value, err := rc.conn.Decrement(key, 1); err == nil {
+		return int64(value), nil
+	} else {
+		return 0, err
+	}
 }
 
 // check value exists in memcache.

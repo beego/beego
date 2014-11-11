@@ -119,14 +119,14 @@ func (rc *RedisCache) IsExist(key string) bool {
 }
 
 // increase counter in redis.
-func (rc *RedisCache) Incr(key string) (uint64, error) {
-	counter, err := redis.Uint64(rc.do("INCRBY", key, 1))
+func (rc *RedisCache) Incr(key string) (int64, error) {
+	counter, err := redis.Int64(rc.do("INCRBY", key, 1))
 	return counter, err
 }
 
 // decrease counter in redis.
-func (rc *RedisCache) Decr(key string) (uint64, error) {
-	counter, err := redis.Uint64(rc.do("INCRBY", key, -1))
+func (rc *RedisCache) Decr(key string) (int64, error) {
+	counter, err := redis.Int64(rc.do("INCRBY", key, -1))
 	return counter, err
 }
 

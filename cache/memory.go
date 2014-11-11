@@ -91,29 +91,29 @@ func (bc *MemoryCache) Delete(name string) error {
 	return nil
 }
 
-func convertToCounter(value interface{}) (converted uint64, err error) {
+func convertToCounter(value interface{}) (converted int64, err error) {
 	switch value.(type) {
 	case uint64:
-		converted = value.(uint64)
+		converted = int64(value.(uint64))
 	case int:
-		converted = uint64(value.(int))
+		converted = int64(value.(int))
 	case int32:
-		converted = uint64(value.(int32))
+		converted = int64(value.(int32))
 	case uint:
-		converted = uint64(value.(uint))
+		converted = int64(value.(uint))
 	case uint32:
-		converted = uint64(value.(uint32))
+		converted = int64(value.(uint32))
 	case int64:
-		converted = uint64(value.(int64))
+		converted = value.(int64)
 	default:
-		err = errors.New("value cannot be converted to uint64")
+		err = errors.New("value cannot be converted to int64")
 	}
 	return
 }
 
 // Increase cache counter in memory.
 // it supports int,int64,int32,uint,uint64,uint32.
-func (bc *MemoryCache) Incr(key string) (uint64, error) {
+func (bc *MemoryCache) Incr(key string) (int64, error) {
 	bc.lock.RLock()
 	defer bc.lock.RUnlock()
 	itm, ok := bc.items[key]
@@ -132,7 +132,7 @@ func (bc *MemoryCache) Incr(key string) (uint64, error) {
 }
 
 // Decrease counter in memory.
-func (bc *MemoryCache) Decr(key string) (uint64, error) {
+func (bc *MemoryCache) Decr(key string) (int64, error) {
 	bc.lock.RLock()
 	defer bc.lock.RUnlock()
 	itm, ok := bc.items[key]
@@ -143,13 +143,9 @@ func (bc *MemoryCache) Decr(key string) (uint64, error) {
 	if err != nil {
 		return 0, err
 	} else {
-		if counter == 0 {
-			return 0, errors.New("item val is less than 0")
-		} else {
-			counter -= 1
-			itm.val = counter
-			return counter, nil
-		}
+		counter -= 1
+		itm.val = counter
+		return counter, nil
 	}
 }
 
