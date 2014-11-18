@@ -194,7 +194,7 @@ func (input *BeegoInput) Refer() string {
 // if aa.bb.domain.com, returns aa.bb .
 func (input *BeegoInput) SubDomains() string {
 	parts := strings.Split(input.Host(), ".")
-	return strings.Join(parts[len(parts)-2:], ".")
+	return strings.Join(parts[:len(parts)-2], ".")
 }
 
 // Port returns request client port.
