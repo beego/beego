@@ -217,6 +217,7 @@ func Allow(opts *Options) beego.FilterFunc {
 				ctx.Output.Header(key, value)
 			}
 			ctx.Output.SetStatus(http.StatusOK)
+			ctx.WriteString("")
 			return
 		}
 		headers = opts.Header(origin)
