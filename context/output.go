@@ -20,7 +20,6 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"encoding/xml"
-	"errors"
 	"fmt"
 	"html/template"
 	"io"
@@ -192,7 +191,7 @@ func (output *BeegoOutput) Json(data interface{}, hasIndent bool, coding bool) e
 	var content []byte
 	var err error
 	if hasIndent {
-		content, err = json.MarshalIndent(data, "", "  ")
+		content, err = json.MarshalIndent(data, "", "    ")
 	} else {
 		content, err = json.Marshal(data)
 	}
@@ -208,22 +207,24 @@ func (output *BeegoOutput) Json(data interface{}, hasIndent bool, coding bool) e
 }
 
 // Jsonp writes jsonp to response body.
-func (output *BeegoOutput) Jsonp(data interface{}, hasIndent bool) error {
+func (output *BeegoOutput) Jsonp(data interface{}, hasIndent bool, coding bool) error {
+	return output.JsonpEx(data, hasIndent, coding, "callback")
+}
+
+// Jsonp writes jsonp to response body.
+// Support a extended param "callback" to specify the callback function name.
+func (output *BeegoOutput) JsonpEx(data interface{}, hasIndent bool, coding bool, callback string) error {
 	output.Header("Content-Type", "application/javascript; charset=utf-8")
 	var content []byte
 	var err error
 	if hasIndent {
-		content, err = json.MarshalIndent(data, "", "  ")
+		content, err = json.MarshalIndent(data, "", "    ")
 	} else {
 		content, err = json.Marshal(data)
 	}
 	if err != nil {
 		http.Error(output.Context.ResponseWriter, err.Error(), http.StatusInternalServerError)
 		return err
-	}
-	callback := output.Context.Input.Query("callback")
-	if callback == "" {
-		return errors.New(`"callback" parameter required`)
 	}
 	callback_content := bytes.NewBufferString(" " + template.JSEscapeString(callback))
 	callback_content.WriteString("(")
@@ -239,7 +240,7 @@ func (output *BeegoOutput) Xml(data interface{}, hasIndent bool) error {
 	var content []byte
 	var err error
 	if hasIndent {
-		content, err = xml.MarshalIndent(data, "", "  ")
+		content, err = xml.MarshalIndent(data, "", "    ")
 	} else {
 		content, err = xml.Marshal(data)
 	}
