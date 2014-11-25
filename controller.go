@@ -316,7 +316,16 @@ func (c *Controller) ServeJson(encoding ...bool) {
 }
 
 // ServeJsonp sends a jsonp response.
-func (c *Controller) ServeJsonp(callback string, encoding ...bool) {
+func (c *Controller) ServeJsonp(encoding ...bool) {
+	var hasencoding bool
+	if len(encoding) > 0 && encoding[0] == true {
+		hasencoding = true
+	}
+	c.ServeJsonpEx("callback", hasencoding)
+}
+
+// ServeJsonp sends a jsonp response.
+func (c *Controller) ServeJsonpEx(callbackParam string, encoding ...bool) {
 	var hasIndent bool
 	var hasencoding bool
 	if RunMode == "prod" {
@@ -326,6 +335,10 @@ func (c *Controller) ServeJsonp(callback string, encoding ...bool) {
 	}
 	if len(encoding) > 0 && encoding[0] == true {
 		hasencoding = true
+	}
+	callback := c.GetString(callbackParam)
+	if callback == "" {
+		callback = "_callback"
 	}
 	c.Ctx.Output.JsonpEx(c.Data["jsonp"], hasIndent, hasencoding, callback)
 }
