@@ -69,7 +69,8 @@ func (ctx *Context) Abort(status int, body string) {
 		panic(e)
 	}
 	// last panic user string
-	panic(body)
+	ctx.ResponseWriter.Write([]byte(body))
+	panic("User stop run")
 }
 
 // Write string to response body.

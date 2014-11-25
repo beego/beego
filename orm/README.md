@@ -6,8 +6,6 @@ A powerful orm framework for go.
 
 It is heavily influenced by Django ORM, SQLAlchemy.
 
-now, beta, unstable, may be changing some api make your app build failed.
-
 **Support Database:**
 
 * MySQL: [github.com/go-sql-driver/mysql](https://github.com/go-sql-driver/mysql)
