@@ -111,7 +111,7 @@ func Dir(filepath string) string {
 		p = path.Dir(p)
 		p = strings.Replace(p, `/`, `\`, -1)
 	} else {
-		p = path.Dir(p)
+		p = path.Dir(filepath)
 	}
 	return p
 }
