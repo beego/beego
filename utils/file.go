@@ -19,8 +19,11 @@ import (
 	"errors"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"regexp"
+	"runtime"
+	"strings"
 )
 
 // SelfPath gets compiled executable file absolute path
@@ -98,4 +101,17 @@ func GrepFile(patten string, filename string) (lines []string, err error) {
 		}
 	}
 	return lines, nil
+}
+
+// get the directory of path
+func Dir(filepath string) string {
+	p := ""
+	if runtime.GOOS == "windows" {
+		p = strings.Replace(filepath, `\`, "/", -1)
+		p = path.Dir(p)
+		p = strings.Replace(p, `/`, `\`, -1)
+	} else {
+		p = path.Dir(filepath)
+	}
+	return p
 }

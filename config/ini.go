@@ -19,6 +19,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"github.com/astaxie/beego/utils"
 	"io"
 	"io/ioutil"
 	"os"
@@ -129,7 +130,7 @@ func (ini *IniConfig) parseFile(name string) (*IniConfigContainer, error) {
 			if includefiles[0] == "include" && len(includefiles) == 2 {
 				otherfile := strings.Trim(includefiles[1], "\"")
 				if !path.IsAbs(otherfile) {
-					otherfile = path.Join(path.Dir(name), otherfile)
+					otherfile = path.Join(utils.Dir(name), otherfile)
 				}
 				i, err := ini.parseFile(otherfile)
 				if err != nil {
