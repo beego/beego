@@ -17,6 +17,7 @@ package utils
 import (
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"testing"
 )
 
@@ -72,4 +73,23 @@ func TestGrepFile(t *testing.T) {
 	if !reflect.DeepEqual(lines, []string{"hello", "world"}) {
 		t.Errorf("expect [hello world], but receive %v", lines)
 	}
+}
+
+func TestDir(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		dir2 := Dir(`D:\a\b\c\d.e`)
+		if `D:\a\b\c` != dir2 {
+			t.Error("Dir() not matched expect path", dir2)
+		} else {
+			t.Log("passed")
+		}
+	} else {
+		dir1 := Dir(`/usr/local/nginx/sbin/nginx`)
+		if "/usr/local/nginx/sbin" != dir1 {
+			t.Error("Dir() not matched expect path", dir1)
+		} else {
+			t.Log("passed")
+		}
+	}
+
 }
