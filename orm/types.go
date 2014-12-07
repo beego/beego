@@ -43,6 +43,7 @@ type Ormer interface {
 	Update(interface{}, ...string) (int64, error)
 	Delete(interface{}) (int64, error)
 	LoadRelated(interface{}, string, ...interface{}) (int64, error)
+	QueryRelated(md interface{}, name string) QuerySeter
 	QueryM2M(interface{}, string) QueryM2Mer
 	QueryTable(interface{}) QuerySeter
 	Using(string) error
