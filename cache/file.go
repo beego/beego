@@ -92,8 +92,6 @@ func (fc *FileCache) StartAndGC(config string) error {
 
 // Init will make new dir for file cache if not exist.
 func (fc *FileCache) Init() {
-	app := filepath.Dir(os.Args[0])
-	fc.CachePath = filepath.Join(app, fc.CachePath)
 	if ok, _ := exists(fc.CachePath); !ok { // todo : error handle
 		_ = os.MkdirAll(fc.CachePath, os.ModePerm) // todo : error handle
 	}
