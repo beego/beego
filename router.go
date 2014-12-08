@@ -153,7 +153,7 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingM
 					if val := reflectVal.MethodByName(colon[1]); val.IsValid() {
 						methods[strings.ToUpper(m)] = colon[1]
 					} else {
-						panic(colon[1] + " method doesn't exist in the controller " + t.Name())
+						panic("'" + colon[1] + "' method doesn't exist in the controller " + t.Name())
 					}
 				} else {
 					panic(v + " is an invalid method mapping. Method doesn't exist " + m)
