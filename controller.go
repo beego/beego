@@ -368,6 +368,15 @@ func (c *Controller) GetString(key string) string {
 	return c.Ctx.Input.Query(key)
 }
 
+// GetStringWithDefault returns the input value by key string with default value.
+func (c *Controller) GetStringWithDefault(key, default string) string {
+	val := this.GetString(key)
+	if val=="" {
+		return default
+	}
+	return val
+}
+
 // GetStrings returns the input string slice by key string.
 // it's designed for multi-value input field such as checkbox(input[type=checkbox]), multi-selection.
 func (c *Controller) GetStrings(key string) []string {
