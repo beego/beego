@@ -27,7 +27,7 @@ import (
 	"github.com/astaxie/beego/session"
 )
 
-// BeegoInput operates the http request header ,data ,cookie and body.
+// BeegoInput operates the http request header, data, cookie and body.
 // it also contains router params and current session.
 type BeegoInput struct {
 	CruSession    session.SessionStore
@@ -153,12 +153,12 @@ func (input *BeegoInput) IsSecure() bool {
 	return input.Scheme() == "https"
 }
 
-// IsSecure returns boolean of this request is in webSocket.
+// IsWebsocket returns boolean of this request is in webSocket.
 func (input *BeegoInput) IsWebsocket() bool {
 	return input.Header("Upgrade") == "websocket"
 }
 
-// IsSecure returns boolean of whether file uploads in this request or not..
+// IsUpload returns boolean of whether file uploads in this request or not..
 func (input *BeegoInput) IsUpload() bool {
 	return strings.Contains(input.Header("Content-Type"), "multipart/form-data")
 }
@@ -189,16 +189,24 @@ func (input *BeegoInput) Proxy() []string {
 	return []string{}
 }
 
+// Referer returns http referer header.
+func (input *BeegoInput) Referer() string {
+	return input.Header("Referer")
+}
+
 // Refer returns http referer header.
 func (input *BeegoInput) Refer() string {
-	return input.Header("Referer")
+	return input.Referer()
 }
 
 // SubDomains returns sub domain string.
 // if aa.bb.domain.com, returns aa.bb .
 func (input *BeegoInput) SubDomains() string {
 	parts := strings.Split(input.Host(), ".")
-	return strings.Join(parts[len(parts)-2:], ".")
+	if len(parts) >= 3 {
+		return strings.Join(parts[:len(parts)-2], ".")
+	}
+	return ""
 }
 
 // Port returns request client port.
@@ -237,6 +245,7 @@ func (input *BeegoInput) Query(key string) string {
 }
 
 // Header returns request header item string by a given string.
+// if non-existed, return empty string.
 func (input *BeegoInput) Header(key string) string {
 	return input.Request.Header.Get(key)
 }
@@ -252,11 +261,12 @@ func (input *BeegoInput) Cookie(key string) string {
 }
 
 // Session returns current session item value by a given key.
+// if non-existed, return empty string.
 func (input *BeegoInput) Session(key interface{}) interface{} {
 	return input.CruSession.Get(key)
 }
 
-// Body returns the raw request body data as bytes.
+// CopyBody returns the raw request body data as bytes.
 func (input *BeegoInput) CopyBody() []byte {
 	requestbody, _ := ioutil.ReadAll(input.Request.Body)
 	input.Request.Body.Close()
