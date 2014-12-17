@@ -289,7 +289,7 @@ func (c *Controller) StopRun() {
 
 // UrlFor does another controller handler in this request function.
 // it goes to this controller method if endpoint is not clear.
-func (c *Controller) UrlFor(endpoint string, values ...string) string {
+func (c *Controller) UrlFor(endpoint string, values ...interface{}) string {
 	if len(endpoint) <= 0 {
 		return ""
 	}
