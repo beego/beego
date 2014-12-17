@@ -21,6 +21,7 @@ import (
 
 var jsoncontext = `{
 "appname": "beeapi",
+"testnames": "foo;bar",
 "httpport": 8080,
 "mysqlport": 3600,
 "PI": 3.1415976,
@@ -28,8 +29,8 @@ var jsoncontext = `{
 "autorender": false,
 "copyrequestbody": true,
 "database": {
-        "host": "host",                 
-        "port": "port",                 
+        "host": "host",
+        "port": "port",
         "database": "database",
         "username": "username",
         "password": "password",
@@ -122,6 +123,12 @@ func TestJson(t *testing.T) {
 	if jsonconf.String("runmode") != "dev" {
 		t.Fatal("runmode not equal to dev")
 	}
+	if v := jsonconf.Strings("unknown"); len(v) > 0 {
+		t.Fatal("unknown strings, the length should be 0")
+	}
+	if v := jsonconf.Strings("testnames"); len(v) != 2 {
+		t.Fatal("testnames length should be 2")
+	}
 	if v, err := jsonconf.Bool("autorender"); err != nil || v != false {
 		t.Error(v)
 		t.Fatal(err)
@@ -178,5 +185,9 @@ func TestJson(t *testing.T) {
 
 	if _, err := jsonconf.Bool("unknown"); err == nil {
 		t.Error("unknown keys should return an error when expecting a Bool")
+	}
+
+	if !jsonconf.DefaultBool("unknow", true) {
+		t.Error("unknown keys with default value wrong")
 	}
 }
