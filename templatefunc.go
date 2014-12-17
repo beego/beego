@@ -246,7 +246,7 @@ func Htmlunquote(src string) string {
 //	/user/John%20Doe
 //
 //  more detail http://beego.me/docs/mvc/controller/urlbuilding.md
-func UrlFor(endpoint string, values ...string) string {
+func UrlFor(endpoint string, values ...interface{}) string {
 	return BeeApp.Handlers.UrlFor(endpoint, values...)
 }
 
