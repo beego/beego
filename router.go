@@ -429,7 +429,7 @@ func (p *ControllerRegistor) insertFilterRouter(pos int, mr *FilterRouter) error
 
 // UrlFor does another controller handler in this request function.
 // it can access any controller method.
-func (p *ControllerRegistor) UrlFor(endpoint string, values ...string) string {
+func (p *ControllerRegistor) UrlFor(endpoint string, values ...interface{}) string {
 	paths := strings.Split(endpoint, ".")
 	if len(paths) <= 1 {
 		Warn("urlfor endpoint must like path.controller.method")
@@ -444,9 +444,9 @@ func (p *ControllerRegistor) UrlFor(endpoint string, values ...string) string {
 		key := ""
 		for k, v := range values {
 			if k%2 == 0 {
-				key = v
+				key = fmt.Sprint(v)
 			} else {
-				params[key] = v
+				params[key] = fmt.Sprint(v)
 			}
 		}
 	}
