@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"time"
 	"reflect"
 	"strconv"
 	"strings"
@@ -70,6 +71,7 @@ type Controller struct {
 	XSRFExpire     int
 	AppController  interface{}
 	EnableRender   bool
+	renderTime     time.Duration
 	EnableXSRF     bool
 	methodMapping  map[string]func() //method:routertree
 }
@@ -91,6 +93,7 @@ type ControllerInterface interface {
 	CheckXsrfCookie() bool
 	HandlerFunc(fn string) bool
 	URLMapping()
+	GetRenderTime() time.Duration
 }
 
 // Init generates default values of controller operations.
@@ -167,6 +170,11 @@ func (c *Controller) HandlerFunc(fnname string) bool {
 func (c *Controller) URLMapping() {
 }
 
+// Return time duration in template render
+func (c *Controller) GetRenderTime() time.Duration {
+	return c.renderTime
+}
+
 func (c *Controller) Mapping(method string, fn func()) {
 	c.methodMapping[method] = fn
 }
@@ -195,6 +203,7 @@ func (c *Controller) RenderString() (string, error) {
 
 // RenderBytes returns the bytes of rendered template string. Do not send out response.
 func (c *Controller) RenderBytes() ([]byte, error) {
+	startAt := time.Now()
 	//if the controller has set layout, then first get the tplname's content set the content to the layout
 	if c.Layout != "" {
 		if c.TplNames == "" {
@@ -240,6 +249,7 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 			return nil, err
 		}
 		icontent, _ := ioutil.ReadAll(ibytes)
+		c.renderTime = time.Since(startAt)
 		return icontent, nil
 	} else {
 		if c.TplNames == "" {
@@ -258,6 +268,7 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 			return nil, err
 		}
 		icontent, _ := ioutil.ReadAll(ibytes)
+		c.renderTime = time.Since(startAt)
 		return icontent, nil
 	}
 }
@@ -364,66 +375,143 @@ func (c *Controller) ParseForm(obj interface{}) error {
 }
 
 // GetString returns the input value by key string.
-func (c *Controller) GetString(key string) string {
-	return c.Ctx.Input.Query(key)
+func (c *Controller) GetString(key string, def ...string) string {
+	var defv string
+	if len(def) > 0 {
+		defv = def[0]
+	}
+
+	if v := c.Ctx.Input.Query(key); v != "" {
+		return v
+	} else {
+		return defv
+	}
 }
 
 // GetStrings returns the input string slice by key string.
 // it's designed for multi-value input field such as checkbox(input[type=checkbox]), multi-selection.
-func (c *Controller) GetStrings(key string) []string {
+func (c *Controller) GetStrings(key string, def ...[]string) []string {
+	var defv []string
+	if len(def) > 0 {
+		defv = def[0]
+	}
+
 	f := c.Input()
 	if f == nil {
-		return []string{}
+		return defv
 	}
+
 	vs := f[key]
 	if len(vs) > 0 {
 		return vs
+	} else {
+		return defv
 	}
-	return []string{}
 }
 
 // GetInt returns input as an int
-func (c *Controller) GetInt(key string) (int, error) {
-	return strconv.Atoi(c.Ctx.Input.Query(key))
+func (c *Controller) GetInt(key string, def ...int) (int, error) {
+	var defv int
+	if len(def) > 0 {
+		defv = def[0]
+	}
+
+	if strv := c.Ctx.Input.Query(key); strv != "" {
+		return strconv.Atoi(strv)
+	} else {
+		return defv, nil
+	}
 }
 
 // GetInt8 return input as an int8
-func (c *Controller) GetInt8(key string) (int8, error) {
-	i64, err := strconv.ParseInt(c.Ctx.Input.Query(key), 10, 8)
-	i8 := int8(i64)
+func (c *Controller) GetInt8(key string, def ...int8) (int8, error) {
+	var defv int8
+	if len(def) > 0 {
+		defv = def[0]
+	}
 
-	return i8, err
+	if strv := c.Ctx.Input.Query(key); strv != "" {
+		i64, err := strconv.ParseInt(strv, 10, 8)
+		i8 := int8(i64)
+		return i8, err
+	} else {
+		return defv, nil
+	}
 }
 
 // GetInt16 returns input as an int16
-func (c *Controller) GetInt16(key string) (int16, error) {
-	i64, err := strconv.ParseInt(c.Ctx.Input.Query(key), 10, 16)
-	i16 := int16(i64)
+func (c *Controller) GetInt16(key string, def ...int16) (int16, error) {
+	var defv int16
+	if len(def) > 0 {
+		defv = def[0]
+	}
 
-	return i16, err
+	if strv := c.Ctx.Input.Query(key); strv != "" {
+		i64, err := strconv.ParseInt(strv, 10, 16)
+		i16 := int16(i64)
+
+		return i16, err
+	} else {
+		return defv, nil
+	}
 }
 
 // GetInt32 returns input as an int32
-func (c *Controller) GetInt32(key string) (int32, error) {
-	i64, err := strconv.ParseInt(c.Ctx.Input.Query(key), 10, 32)
-	i32 := int32(i64)
+func (c *Controller) GetInt32(key string, def ...int32) (int32, error) {
+	var defv int32
+	if len(def) > 0 {
+		defv = def[0]
+	}
 
-	return i32, err
+	if strv := c.Ctx.Input.Query(key); strv != "" {
+		i64, err := strconv.ParseInt(c.Ctx.Input.Query(key), 10, 32)
+		i32 := int32(i64)
+		return i32, err
+	} else {
+		return defv, nil
+	}
 }
 
 // GetInt64 returns input value as int64.
-func (c *Controller) GetInt64(key string) (int64, error) {
-	return strconv.ParseInt(c.Ctx.Input.Query(key), 10, 64)
+func (c *Controller) GetInt64(key string, def ...int64) (int64, error) {
+	var defv int64
+	if len(def) > 0 {
+		defv = def[0]
+	}
+
+	if strv := c.Ctx.Input.Query(key); strv != "" {
+		return strconv.ParseInt(strv, 10, 64)
+	} else {
+		return defv, nil
+	}
 }
 
 // GetBool returns input value as bool.
-func (c *Controller) GetBool(key string) (bool, error) {
-	return strconv.ParseBool(c.Ctx.Input.Query(key))
+func (c *Controller) GetBool(key string, def ...bool) (bool, error) {
+	var defv bool
+	if len(def) > 0 {
+		defv = def[0]
+	}
+
+	if strv := c.Ctx.Input.Query(key); strv != "" {
+		return strconv.ParseBool(strv)
+	} else {
+		return defv, nil
+	}
 }
 
 // GetFloat returns input value as float64.
-func (c *Controller) GetFloat(key string) (float64, error) {
-	return strconv.ParseFloat(c.Ctx.Input.Query(key), 64)
+func (c *Controller) GetFloat(key string, def ...float64) (float64, error) {
+	var defv float64
+	if len(def) > 0 {
+		defv = def[0]
+	}
+
+	if strv := c.Ctx.Input.Query(key); strv != "" {
+		return strconv.ParseFloat(c.Ctx.Input.Query(key), 64)
+	} else {
+		return defv, nil
+	}
 }
 
 // GetFile returns the file data in file upload field named as key.
