@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"time"
 	"reflect"
 	"strconv"
 	"strings"
@@ -70,6 +71,7 @@ type Controller struct {
 	XSRFExpire     int
 	AppController  interface{}
 	EnableRender   bool
+	renderTime     time.Duration
 	EnableXSRF     bool
 	methodMapping  map[string]func() //method:routertree
 }
@@ -91,6 +93,7 @@ type ControllerInterface interface {
 	CheckXsrfCookie() bool
 	HandlerFunc(fn string) bool
 	URLMapping()
+	GetRenderTime() time.Duration
 }
 
 // Init generates default values of controller operations.
@@ -167,6 +170,11 @@ func (c *Controller) HandlerFunc(fnname string) bool {
 func (c *Controller) URLMapping() {
 }
 
+// Return time duration in template render
+func (c *Controller) GetRenderTime() time.Duration {
+	return c.renderTime
+}
+
 func (c *Controller) Mapping(method string, fn func()) {
 	c.methodMapping[method] = fn
 }
@@ -195,6 +203,7 @@ func (c *Controller) RenderString() (string, error) {
 
 // RenderBytes returns the bytes of rendered template string. Do not send out response.
 func (c *Controller) RenderBytes() ([]byte, error) {
+	startAt := time.Now()
 	//if the controller has set layout, then first get the tplname's content set the content to the layout
 	if c.Layout != "" {
 		if c.TplNames == "" {
@@ -240,6 +249,7 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 			return nil, err
 		}
 		icontent, _ := ioutil.ReadAll(ibytes)
+		c.renderTime = time.Since(startAt)
 		return icontent, nil
 	} else {
 		if c.TplNames == "" {
@@ -258,6 +268,7 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 			return nil, err
 		}
 		icontent, _ := ioutil.ReadAll(ibytes)
+		c.renderTime = time.Since(startAt)
 		return icontent, nil
 	}
 }
