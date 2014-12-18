@@ -583,6 +583,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	var findrouter bool
 	var runMethod string
 	var routerInfo *controllerInfo
+	var renderTime time.Duration
 
 	w := &responseWriter{writer: rw}
 
@@ -807,6 +808,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 			// finish all runrouter. release resource
 			execController.Finish()
+			renderTime = execController.GetRenderTime()
 		}
 
 		//execute middleware filters
@@ -831,15 +833,17 @@ Admin:
 	}
 
 	if RunMode == "dev" {
+		var timeString = timeend.String() + "(render " + renderTime.String() + ")"
+
 		var devinfo string
 		if findrouter {
 			if routerInfo != nil {
-				devinfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s | % -40s |", r.Method, r.URL.Path, timeend.String(), "match", routerInfo.pattern)
+				devinfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s | % -40s |", r.Method, r.URL.Path, timeString, "match", routerInfo.pattern)
 			} else {
-				devinfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s |", r.Method, r.URL.Path, timeend.String(), "match")
+				devinfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s |", r.Method, r.URL.Path, timeString, "match")
 			}
 		} else {
-			devinfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s |", r.Method, r.URL.Path, timeend.String(), "notmatch")
+			devinfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s |", r.Method, r.URL.Path, timeString, "notmatch")
 		}
 		if DefaultLogFilter == nil || !DefaultLogFilter.Filter(context) {
 			Debug(devinfo)
