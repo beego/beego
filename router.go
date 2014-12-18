@@ -796,12 +796,10 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 					}
 				}
 
-				//render template
-				if !w.started && context.Output.Status == 0 {
-					if AutoRender {
-						if err := execController.Render(); err != nil {
-							panic(err)
-						}
+				// Auto render template
+				if context.Output.Status == 0 && AutoRender {
+					if err := execController.Render(); err != nil {
+						panic(err)
 					}
 				}
 			}
