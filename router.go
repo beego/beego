@@ -583,6 +583,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	var findrouter bool
 	var runMethod string
 	var routerInfo *controllerInfo
+	var renderTime time.Duration
 
 	w := &responseWriter{writer: rw}
 
@@ -795,18 +796,17 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 					}
 				}
 
-				//render template
-				if !w.started && context.Output.Status == 0 {
-					if AutoRender {
-						if err := execController.Render(); err != nil {
-							panic(err)
-						}
+				// Auto render template
+				if context.Output.Status == 0 && AutoRender {
+					if err := execController.Render(); err != nil {
+						panic(err)
 					}
 				}
 			}
 
 			// finish all runrouter. release resource
 			execController.Finish()
+			renderTime = execController.GetRenderTime()
 		}
 
 		//execute middleware filters
@@ -831,16 +831,18 @@ Admin:
 	}
 
 	if RunMode == "dev" {
-		var devinfo string
+		var matchStatus string
 		if findrouter {
-			if routerInfo != nil {
-				devinfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s | % -40s |", r.Method, r.URL.Path, timeend.String(), "match", routerInfo.pattern)
-			} else {
-				devinfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s |", r.Method, r.URL.Path, timeend.String(), "match")
-			}
-		} else {
-			devinfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s |", r.Method, r.URL.Path, timeend.String(), "notmatch")
+			matchStatus = "Match by"
 		}
+
+		routerString := ""
+		if routerInfo != nil {
+			routerString = routerInfo.pattern
+		}
+
+		//TODO:Make the format better
+		devinfo := fmt.Sprintf("|%-7s|%-40s|%-11s(render %-11s) %s %s", r.Method, r.URL.Path, timeend, renderTime, matchStatus, routerString)
 		if DefaultLogFilter == nil || !DefaultLogFilter.Filter(context) {
 			Debug(devinfo)
 		}
