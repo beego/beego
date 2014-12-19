@@ -422,6 +422,9 @@ func (leaf *leafInfo) match(wildcardValues []string) (ok bool, params map[string
 // "/admin/" -> ["admin"]
 // "/admin/users" -> ["admin", "users"]
 func splitPath(key string) []string {
+	if key == "" {
+		return []string{}
+	}
 	elements := strings.Split(key, "/")
 	if elements[0] == "" {
 		elements = elements[1:]
