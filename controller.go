@@ -363,7 +363,7 @@ func (c *Controller) ParseForm(obj interface{}) error {
 	return ParseForm(c.Input(), obj)
 }
 
-// GetString returns the input value by key string.
+// GetString returns the input value by key string or the default value while it's present and input is blank
 func (c *Controller) GetString(key string, def ...string) string {
 	var defv string
 	if len(def) > 0 {
@@ -377,7 +377,7 @@ func (c *Controller) GetString(key string, def ...string) string {
 	}
 }
 
-// GetStrings returns the input string slice by key string.
+// GetStrings returns the input string slice by key string or the default value while it's present and input is blank
 // it's designed for multi-value input field such as checkbox(input[type=checkbox]), multi-selection.
 func (c *Controller) GetStrings(key string, def ...[]string) []string {
 	var defv []string
@@ -398,7 +398,7 @@ func (c *Controller) GetStrings(key string, def ...[]string) []string {
 	}
 }
 
-// GetInt returns input as an int
+// GetInt returns input as an int or the default value while it's present and input is blank
 func (c *Controller) GetInt(key string, def ...int) (int, error) {
 	var defv int
 	if len(def) > 0 {
@@ -412,7 +412,7 @@ func (c *Controller) GetInt(key string, def ...int) (int, error) {
 	}
 }
 
-// GetInt8 return input as an int8
+// GetInt8 return input as an int8 or the default value while it's present and input is blank
 func (c *Controller) GetInt8(key string, def ...int8) (int8, error) {
 	var defv int8
 	if len(def) > 0 {
@@ -428,7 +428,7 @@ func (c *Controller) GetInt8(key string, def ...int8) (int8, error) {
 	}
 }
 
-// GetInt16 returns input as an int16
+// GetInt16 returns input as an int16 or the default value while it's present and input is blank
 func (c *Controller) GetInt16(key string, def ...int16) (int16, error) {
 	var defv int16
 	if len(def) > 0 {
@@ -445,7 +445,7 @@ func (c *Controller) GetInt16(key string, def ...int16) (int16, error) {
 	}
 }
 
-// GetInt32 returns input as an int32
+// GetInt32 returns input as an int32 or the default value while it's present and input is blank
 func (c *Controller) GetInt32(key string, def ...int32) (int32, error) {
 	var defv int32
 	if len(def) > 0 {
@@ -461,7 +461,7 @@ func (c *Controller) GetInt32(key string, def ...int32) (int32, error) {
 	}
 }
 
-// GetInt64 returns input value as int64.
+// GetInt64 returns input value as int64 or the default value while it's present and input is blank.
 func (c *Controller) GetInt64(key string, def ...int64) (int64, error) {
 	var defv int64
 	if len(def) > 0 {
@@ -475,7 +475,7 @@ func (c *Controller) GetInt64(key string, def ...int64) (int64, error) {
 	}
 }
 
-// GetBool returns input value as bool.
+// GetBool returns input value as bool or the default value while it's present and input is blank.
 func (c *Controller) GetBool(key string, def ...bool) (bool, error) {
 	var defv bool
 	if len(def) > 0 {
@@ -489,7 +489,7 @@ func (c *Controller) GetBool(key string, def ...bool) (bool, error) {
 	}
 }
 
-// GetFloat returns input value as float64.
+// GetFloat returns input value as float64 or the default value while it's present and input is blank.
 func (c *Controller) GetFloat(key string, def ...float64) (float64, error) {
 	var defv float64
 	if len(def) > 0 {
