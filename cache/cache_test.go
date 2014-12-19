@@ -15,6 +15,7 @@
 package cache
 
 import (
+	"os"
 	"testing"
 	"time"
 )
@@ -67,7 +68,7 @@ func TestCache(t *testing.T) {
 }
 
 func TestFileCache(t *testing.T) {
-	bm, err := NewCache("file", `{"CachePath":"/cache","FileSuffix":".bin","DirectoryLevel":2,"EmbedExpiry":0}`)
+	bm, err := NewCache("file", `{"CachePath":"cache","FileSuffix":".bin","DirectoryLevel":2,"EmbedExpiry":0}`)
 	if err != nil {
 		t.Error("init err")
 	}
@@ -112,4 +113,5 @@ func TestFileCache(t *testing.T) {
 	if v := bm.Get("astaxie"); v.(string) != "author" {
 		t.Error("get err")
 	}
+	os.RemoveAll("cache")
 }
