@@ -42,6 +42,9 @@ func init() {
 	beegoTplFuncMap["dateformat"] = DateFormat
 	beegoTplFuncMap["date"] = Date
 	beegoTplFuncMap["compare"] = Compare
+	beegoTplFuncMap["compare_not"] = CompareNot
+	beegoTplFuncMap["not_nil"] = NotNil
+	beegoTplFuncMap["not_null"] = NotNil
 	beegoTplFuncMap["substr"] = Substr
 	beegoTplFuncMap["html2str"] = Html2str
 	beegoTplFuncMap["str2html"] = Str2html
