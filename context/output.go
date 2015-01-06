@@ -49,6 +49,22 @@ func (output *BeegoOutput) Header(key, val string) {
 	output.Context.ResponseWriter.Header().Set(key, val)
 }
 
+// Flush current output buffer to the client
+func (output *BeegoOutput) Flush() {
+	flusher,ok := output.Context.ResponseWriter.(http.Flusher)
+	if ok {
+		flusher.Flush()
+	}
+}
+
+// Write response content into the buffer directly
+func (output *BeegoOutput) Write(content []byte) {
+	output_writer,ok := output.Context.ResponseWriter.(io.Writer)
+	if ok {
+		output_writer.Write(content)
+	}
+}
+
 // Body sets response body content.
 // if EnableGzip, compress content string.
 // it sends out response body directly.
