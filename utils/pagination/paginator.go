@@ -114,7 +114,7 @@ func (p *Paginator) Pages() []int {
 
 // Returns URL for a given page index.
 func (p *Paginator) PageLink(page int) string {
-	link, _ := url.ParseRequestURI(p.Request.RequestURI)
+	link, _ := url.ParseRequestURI(p.Request.URL.String())
 	values := link.Query()
 	if page == 1 {
 		values.Del("p")

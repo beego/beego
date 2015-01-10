@@ -110,7 +110,7 @@ func (b *beegoAppConfig) String(key string) string {
 
 func (b *beegoAppConfig) Strings(key string) []string {
 	v := b.innerConfig.Strings(RunMode + "::" + key)
-	if len(v) == 0 {
+	if v[0] == "" {
 		return b.innerConfig.Strings(key)
 	}
 	return v

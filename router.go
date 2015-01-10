@@ -153,7 +153,7 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingM
 					if val := reflectVal.MethodByName(colon[1]); val.IsValid() {
 						methods[strings.ToUpper(m)] = colon[1]
 					} else {
-						panic(colon[1] + " method doesn't exist in the controller " + t.Name())
+						panic("'" + colon[1] + "' method doesn't exist in the controller " + t.Name())
 					}
 				} else {
 					panic(v + " is an invalid method mapping. Method doesn't exist " + m)
@@ -429,7 +429,7 @@ func (p *ControllerRegistor) insertFilterRouter(pos int, mr *FilterRouter) error
 
 // UrlFor does another controller handler in this request function.
 // it can access any controller method.
-func (p *ControllerRegistor) UrlFor(endpoint string, values ...string) string {
+func (p *ControllerRegistor) UrlFor(endpoint string, values ...interface{}) string {
 	paths := strings.Split(endpoint, ".")
 	if len(paths) <= 1 {
 		Warn("urlfor endpoint must like path.controller.method")
@@ -444,9 +444,9 @@ func (p *ControllerRegistor) UrlFor(endpoint string, values ...string) string {
 		key := ""
 		for k, v := range values {
 			if k%2 == 0 {
-				key = v
+				key = fmt.Sprint(v)
 			} else {
-				params[key] = v
+				params[key] = fmt.Sprint(v)
 			}
 		}
 	}
@@ -858,7 +858,6 @@ func (p *ControllerRegistor) recoverPanic(rw http.ResponseWriter, r *http.Reques
 			return
 		}
 		if he, ok := err.(middleware.HTTPException); ok {
-			rw.WriteHeader(he.StatusCode)
 			rw.Write([]byte(he.Description))
 			// catch intented errors, only for HTTP 4XX and 5XX
 		} else {
