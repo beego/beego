@@ -328,7 +328,7 @@ func Exception(errcode string, w http.ResponseWriter, r *http.Request, msg strin
 		if err != nil {
 			isint = 500
 		}
-		if isint == 400 {
+		if isint == 404 {
 			msg = "404 page not found"
 		}
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
