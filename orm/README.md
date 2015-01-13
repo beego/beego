@@ -117,7 +117,7 @@ o.Begin()
 ...
 user := User{Name: "slene"}
 id, err := o.Insert(&user)
-if err != nil {
+if err == nil {
 	o.Commit()
 } else {
 	o.Rollback()
