@@ -72,7 +72,7 @@ func TestDate(t *testing.T) {
 	}
 }
 
-func TestCompare(t *testing.T) {
+func TestCompareRelated(t *testing.T) {
 	if !Compare("abc", "abc") {
 		t.Error("should be equal")
 	}
@@ -82,6 +82,15 @@ func TestCompare(t *testing.T) {
 	if !Compare("1", 1) {
 		t.Error("should be equal")
 	}
+    if CompareNot("abc", "abc") {
+        t.Error("should be equal")
+    }
+    if !CompareNot("abc", "aBc") {
+        t.Error("should be not equal")
+    }
+    if !NotNil("a string") {
+        t.Error("should not be nil")
+    }
 }
 
 func TestHtmlquote(t *testing.T) {
