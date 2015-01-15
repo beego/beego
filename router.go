@@ -592,7 +592,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	// init context
 	context := &beecontext.Context{
-		ResponseWriter: w,
+		ResponseWriter: rw,
 		Request:        r,
 		Input:          beecontext.NewInput(r),
 		Output:         beecontext.NewOutput(),
