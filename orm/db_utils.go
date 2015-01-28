@@ -40,7 +40,7 @@ func getExistPk(mi *modelInfo, ind reflect.Value) (column string, value interfac
 		value = vu
 	} else if fi.fieldType&IsIntegerField > 0 {
 		vu := v.Int()
-		exist = vu > 0
+		exist = true
 		value = vu
 	} else {
 		vu := v.String()
