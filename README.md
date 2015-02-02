@@ -19,7 +19,7 @@ More info [beego.me](http://beego.me)
 * Auto API documents
 * Annotation router
 * Namespace
-* Powerful develop tools
+* Powerful development tools
 * Full stack for Web & API
 
 ## Documentation
