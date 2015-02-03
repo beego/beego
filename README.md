@@ -3,7 +3,7 @@
 [![Build Status](https://drone.io/github.com/astaxie/beego/status.png)](https://drone.io/github.com/astaxie/beego/latest)
 [![GoDoc](http://godoc.org/github.com/astaxie/beego?status.svg)](http://godoc.org/github.com/astaxie/beego)
 
-beego is an open-source, high-performance, modularity, full-stack web framework.
+beego is an open-source, high-performance, modular, full-stack web framework.
 
 More info [beego.me](http://beego.me)
 
@@ -19,7 +19,7 @@ More info [beego.me](http://beego.me)
 * Auto API documents
 * Annotation router
 * Namespace
-* Powerful develop tools
+* Powerful development tools
 * Full stack for Web & API
 
 ## Documentation
