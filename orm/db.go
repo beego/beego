@@ -351,17 +351,33 @@ func (d *dbBase) Read(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Lo
 
 // execute insert sql dbQuerier with given struct reflect.Value.
 func (d *dbBase) Insert(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location) (int64, error) {
+	return d.InsertOrReplace(q, mi, ind, tz, false)
+}
+
+func (d *dbBase) Replace(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location) (int64, error) {
+	return d.InsertOrReplace(q, mi, ind, tz, true)
+}
+
+func (d *dbBase) InsertOrReplace(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location, isReplace bool) (int64, error) {
 	names := make([]string, 0, len(mi.fields.dbcols)-1)
 	values, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, &names, tz)
 	if err != nil {
 		return 0, err
 	}
 
-	return d.InsertValue(q, mi, false, names, values)
+	return d.InsertOrReplaceValue(q, mi, false, isReplace, names, values)
 }
 
 // multi-insert sql with given slice struct reflect.Value.
 func (d *dbBase) InsertMulti(q dbQuerier, mi *modelInfo, sind reflect.Value, bulk int, tz *time.Location) (int64, error) {
+	return d.InsertOrReplaceMulti(q, mi, sind, bulk, tz, false)
+}
+
+func (d *dbBase) ReplaceMulti(q dbQuerier, mi *modelInfo, sind reflect.Value, bulk int, tz *time.Location) (int64, error) {
+	return d.InsertOrReplaceMulti(q, mi, sind, bulk, tz, true)
+}
+
+func (d *dbBase) InsertOrReplaceMulti(q dbQuerier, mi *modelInfo, sind reflect.Value, bulk int, tz *time.Location, isReplace bool) (int64, error) {
 	var (
 		cnt    int64
 		nums   int
@@ -405,7 +421,7 @@ func (d *dbBase) InsertMulti(q dbQuerier, mi *modelInfo, sind reflect.Value, bul
 		}
 
 		if i > 1 && i%bulk == 0 || length == i {
-			num, err := d.InsertValue(q, mi, true, names, values[:nums])
+			num, err := d.InsertOrReplaceValue(q, mi, true, isReplace, names, values[:nums])
 			if err != nil {
 				return cnt, err
 			}
@@ -420,6 +436,10 @@ func (d *dbBase) InsertMulti(q dbQuerier, mi *modelInfo, sind reflect.Value, bul
 // execute insert sql with given struct and given values.
 // insert the given values, not the field values in struct.
 func (d *dbBase) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []string, values []interface{}) (int64, error) {
+	return d.InsertOrReplaceValue(q, mi, isMulti, false, names, values)
+}
+
+func (d *dbBase) InsertOrReplaceValue(q dbQuerier, mi *modelInfo, isMulti bool, isReplace bool, names []string, values []interface{}) (int64, error) {
 	Q := d.ins.TableQuote()
 
 	marks := make([]string, len(names))
@@ -437,7 +457,12 @@ func (d *dbBase) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []s
 		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
 	}
 
-	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s)", Q, mi.table, Q, Q, columns, Q, qmarks)
+	var insertOrReplaceCommand string = "INSERT"
+	if isReplace {
+		insertOrReplaceCommand = "REPLACE"
+	}
+
+	query := fmt.Sprintf("%s INTO %s%s%s (%s%s%s) VALUES (%s)", insertOrReplaceCommand, Q, mi.table, Q, Q, columns, Q, qmarks)
 
 	d.ins.ReplaceMarks(&query)
 

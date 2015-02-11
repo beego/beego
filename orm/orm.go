@@ -164,6 +164,14 @@ func (o *orm) setPk(mi *modelInfo, ind reflect.Value, id int64) {
 
 // insert some models to database
 func (o *orm) InsertMulti(bulk int, mds interface{}) (int64, error) {
+	return o.InsertOrReplaceMulti(bulk, mds, false)
+}
+
+func (o *orm) ReplaceMulti(bulk int, mds interface{}) (int64, error) {
+	return o.InsertOrReplaceMulti(bulk, mds, true)
+}
+
+func (o *orm) InsertOrReplaceMulti(bulk int, mds interface{}, isReplace bool) (int64, error) {
 	var cnt int64
 
 	sind := reflect.Indirect(reflect.ValueOf(mds))
@@ -181,7 +189,7 @@ func (o *orm) InsertMulti(bulk int, mds interface{}) (int64, error) {
 		for i := 0; i < sind.Len(); i++ {
 			ind := sind.Index(i)
 			mi, _ := o.getMiInd(ind.Interface(), false)
-			id, err := o.alias.DbBaser.Insert(o.db, mi, ind, o.alias.TZ)
+			id, err := o.alias.DbBaser.InsertOrReplace(o.db, mi, ind, o.alias.TZ, isReplace)
 			if err != nil {
 				return cnt, err
 			}
@@ -192,7 +200,7 @@ func (o *orm) InsertMulti(bulk int, mds interface{}) (int64, error) {
 		}
 	} else {
 		mi, _ := o.getMiInd(sind.Index(0).Interface(), false)
-		return o.alias.DbBaser.InsertMulti(o.db, mi, sind, bulk, o.alias.TZ)
+		return o.alias.DbBaser.InsertOrReplaceMulti(o.db, mi, sind, bulk, o.alias.TZ, isReplace)
 	}
 	return cnt, nil
 }
