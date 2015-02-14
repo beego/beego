@@ -845,27 +845,6 @@ func TestOffset(t *testing.T) {
 	throwFail(t, AssertIs(num, 2))
 }
 
-func TestGroupBy(t *testing.T) {
-	var users []*User
-	var maps []Params
-	qs := dORM.QueryTable("user")
-	num, err := qs.GroupBy("is_staff").Filter("user_name", "nobody").Count()
-	throwFail(t, err)
-	throwFail(t, AssertIs(num, 1))
-
-	num, err = qs.GroupBy("is_staff").Count()
-	throwFail(t, err)
-	throwFail(t, AssertIs(num, 2))
-
-	num, err = qs.GroupBy("is_staff").Values(&maps)
-	throwFail(t, err)
-	throwFail(t, AssertIs(num, 2))
-
-	num, err = qs.GroupBy("profile__age").Filter("user_name", "astaxie").All(&users)
-	throwFail(t, err)
-	throwFail(t, AssertIs(num, 1))
-}
-
 func TestOrderBy(t *testing.T) {
 	qs := dORM.QueryTable("user")
 	num, err := qs.OrderBy("-status").Filter("user_name", "nobody").Count()
