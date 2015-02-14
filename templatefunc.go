@@ -139,6 +139,14 @@ func Compare(a, b interface{}) (equal bool) {
 	return
 }
 
+func CompareNot(a, b interface{}) (equal bool) {
+    return ! Compare(a, b)
+}
+
+func NotNil(a interface{}) (is_nil bool) {
+    return CompareNot(a, nil)
+}
+
 func Config(returnType, key string, defaultVal interface{}) (value interface{}, err error) {
 	switch returnType {
 	case "String":
