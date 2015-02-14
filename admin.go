@@ -397,7 +397,7 @@ func taskStatus(rw http.ResponseWriter, req *http.Request) {
 			if err != nil {
 				data["Message"] = []string{"error", fmt.Sprintf("%s", err)}
 			}
-			data["Message"] = []string{"success", fmt.Sprintf("%s run success,Now the Status is %s", taskname, t.GetStatus())}
+			data["Message"] = []string{"success", fmt.Sprintf("%s run success,Now the Status is <br>%s", taskname, t.GetStatus())}
 		} else {
 			data["Message"] = []string{"warning", fmt.Sprintf("there's no task which named: %s", taskname)}
 		}
@@ -410,12 +410,14 @@ func taskStatus(rw http.ResponseWriter, req *http.Request) {
 	var fields = []string{
 		fmt.Sprintf("Task Name"),
 		fmt.Sprintf("Task Spec"),
-		fmt.Sprintf("Task Function"),
+		fmt.Sprintf("Task Status"),
+		fmt.Sprintf("Last Time"),
 		fmt.Sprintf(""),
 	}
 	for tname, tk := range toolbox.AdminTaskList {
 		result = []string{
 			fmt.Sprintf("%s", tname),
+			fmt.Sprintf("%s", tk.GetSpec()),
 			fmt.Sprintf("%s", tk.GetStatus()),
 			fmt.Sprintf("%s", tk.GetPrev().String()),
 		}
