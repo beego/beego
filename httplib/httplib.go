@@ -253,30 +253,20 @@ func (b *BeegoHttpRequest) Body(data interface{}) *BeegoHttpRequest {
 	return b
 }
 
-func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
-	if b.resp.StatusCode != 0 {
-		return b.resp, nil
-	}
-	var paramBody string
-	if len(b.params) > 0 {
-		var buf bytes.Buffer
-		for k, v := range b.params {
-			buf.WriteString(url.QueryEscape(k))
-			buf.WriteByte('=')
-			buf.WriteString(url.QueryEscape(v))
-			buf.WriteByte('&')
-		}
-		paramBody = buf.String()
-		paramBody = paramBody[0 : len(paramBody)-1]
-	}
-
+func (b *BeegoHttpRequest) buildUrl(paramBody string) {
+	// build GET url with query string
 	if b.req.Method == "GET" && len(paramBody) > 0 {
 		if strings.Index(b.url, "?") != -1 {
 			b.url += "&" + paramBody
 		} else {
 			b.url = b.url + "?" + paramBody
 		}
-	} else if b.req.Method == "POST" && b.req.Body == nil {
+		return
+	}
+
+	// build POST url and body
+	if b.req.Method == "POST" && b.req.Body == nil {
+		// with files
 		if len(b.files) > 0 {
 			pr, pw := io.Pipe()
 			bodyWriter := multipart.NewWriter(pw)
@@ -305,12 +295,35 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 			}()
 			b.Header("Content-Type", bodyWriter.FormDataContentType())
 			b.req.Body = ioutil.NopCloser(pr)
-		} else if len(paramBody) > 0 {
+			return
+		}
+
+		// with params
+		if len(paramBody) > 0 {
 			b.Header("Content-Type", "application/x-www-form-urlencoded")
 			b.Body(paramBody)
 		}
 	}
+}
 
+func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
+	if b.resp.StatusCode != 0 {
+		return b.resp, nil
+	}
+	var paramBody string
+	if len(b.params) > 0 {
+		var buf bytes.Buffer
+		for k, v := range b.params {
+			buf.WriteString(url.QueryEscape(k))
+			buf.WriteByte('=')
+			buf.WriteString(url.QueryEscape(v))
+			buf.WriteByte('&')
+		}
+		paramBody = buf.String()
+		paramBody = paramBody[0 : len(paramBody)-1]
+	}
+
+	b.buildUrl(paramBody)
 	url, err := url.Parse(b.url)
 	if err != nil {
 		return nil, err
@@ -342,14 +355,12 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 		}
 	}
 
-	var jar http.CookieJar
+	var jar http.CookieJar = nil
 	if b.setting.EnableCookie {
 		if defaultCookieJar == nil {
 			createDefaultCookie()
 		}
 		jar = defaultCookieJar
-	} else {
-		jar = nil
 	}
 
 	client := &http.Client{
@@ -402,12 +413,11 @@ func (b *BeegoHttpRequest) Bytes() ([]byte, error) {
 		return nil, nil
 	}
 	defer resp.Body.Close()
-	data, err := ioutil.ReadAll(resp.Body)
+	b.body, err = ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
-	b.body = data
-	return data, nil
+	return b.body, nil
 }
 
 // ToFile saves the body data in response to one file.
@@ -438,8 +448,7 @@ func (b *BeegoHttpRequest) ToJson(v interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = json.Unmarshal(data, v)
-	return err
+	return json.Unmarshal(data, v)
 }
 
 // ToXml returns the map that marshals from the body bytes as xml in response .
@@ -449,8 +458,7 @@ func (b *BeegoHttpRequest) ToXml(v interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = xml.Unmarshal(data, v)
-	return err
+	return xml.Unmarshal(data, v)
 }
 
 // Response executes request client gets response mannually.

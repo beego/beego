@@ -25,7 +25,8 @@ import (
 )
 
 const (
-	subjectPhrase = "Diagnostic message from server"
+// no usage
+// subjectPhrase = "Diagnostic message from server"
 )
 
 // smtpWriter implements LoggerInterface and is used to send emails via given SMTP-server.
@@ -146,9 +147,7 @@ func (s *SmtpWriter) WriteMsg(msg string, level int) error {
 	mailmsg := []byte("To: " + strings.Join(s.RecipientAddresses, ";") + "\r\nFrom: " + s.FromAddress + "<" + s.FromAddress +
 		">\r\nSubject: " + s.Subject + "\r\n" + content_type + "\r\n\r\n" + fmt.Sprintf(".%s", time.Now().Format("2006-01-02 15:04:05")) + msg)
 
-	err := s.sendMail(s.Host, auth, s.FromAddress, s.RecipientAddresses, mailmsg)
-
-	return err
+	return s.sendMail(s.Host, auth, s.FromAddress, s.RecipientAddresses, mailmsg)
 }
 
 // implementing method. empty.

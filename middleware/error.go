@@ -323,17 +323,15 @@ func Exception(errcode string, w http.ResponseWriter, r *http.Request, msg strin
 		w.WriteHeader(isint)
 		h(w, r)
 		return
-	} else {
-		isint, err := strconv.Atoi(errcode)
-		if err != nil {
-			isint = 500
-		}
-		if isint == 404 {
-			msg = "404 page not found"
-		}
-		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-		w.WriteHeader(isint)
-		fmt.Fprintln(w, msg)
-		return
 	}
+	isint, err := strconv.Atoi(errcode)
+	if err != nil {
+		isint = 500
+	}
+	if isint == 404 {
+		msg = "404 page not found"
+	}
+	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(isint)
+	fmt.Fprintln(w, msg)
 }

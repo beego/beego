@@ -123,11 +123,7 @@ func (w *FileLogWriter) startLogger() error {
 		return err
 	}
 	w.mw.SetFd(fd)
-	err = w.initFd()
-	if err != nil {
-		return err
-	}
-	return nil
+	return w.initFd()
 }
 
 func (w *FileLogWriter) docheck(size int) {
@@ -170,14 +166,13 @@ func (w *FileLogWriter) initFd() error {
 	}
 	w.maxsize_cursize = int(finfo.Size())
 	w.daily_opendate = time.Now().Day()
+	w.maxlines_curlines = 0
 	if finfo.Size() > 0 {
 		count, err := w.lines()
 		if err != nil {
 			return err
 		}
 		w.maxlines_curlines = count
-	} else {
-		w.maxlines_curlines = 0
 	}
 	return nil
 }
