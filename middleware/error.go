@@ -334,6 +334,4 @@ func Exception(errcode string, w http.ResponseWriter, r *http.Request, msg strin
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(isint)
 	fmt.Fprintln(w, msg)
-	return
-
 }
