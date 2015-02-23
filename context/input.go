@@ -72,11 +72,11 @@ func (input *BeegoInput) Site() string {
 func (input *BeegoInput) Scheme() string {
 	if input.Request.URL.Scheme != "" {
 		return input.Request.URL.Scheme
-	} else if input.Request.TLS == nil {
-		return "http"
-	} else {
-		return "https"
 	}
+	if input.Request.TLS == nil {
+		return "http"
+	}
+	return "https"
 }
 
 // Domain returns host name.
