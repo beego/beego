@@ -210,8 +210,54 @@ func init() {
 	ErrorMaps = make(map[string]*errorInfo)
 }
 
+// show 401 unauthorized error.
+func unauthorized(rw http.ResponseWriter, r *http.Request) {
+	t, _ := template.New("beegoerrortemp").Parse(errtpl)
+	data := make(map[string]interface{})
+	data["Title"] = "Unauthorized"
+	data["Content"] = template.HTML("<br>The page you have requested can't be authorized." +
+		"<br>Perhaps you are here because:" +
+		"<br><br><ul>" +
+		"<br>The credentials you supplied are incorrect" +
+		"<br>There are errors in the website address" +
+		"</ul>")
+	data["BeegoVersion"] = VERSION
+	t.Execute(rw, data)
+}
+
+// show 402 Payment Required
+func paymentRequired(rw http.ResponseWriter, r *http.Request) {
+	t, _ := template.New("beegoerrortemp").Parse(errtpl)
+	data := make(map[string]interface{})
+	data["Title"] = "Payment Required"
+	data["Content"] = template.HTML("<br>The page you have requested Payment Required." +
+		"<br>Perhaps you are here because:" +
+		"<br><br><ul>" +
+		"<br>The credentials you supplied are incorrect" +
+		"<br>There are errors in the website address" +
+		"</ul>")
+	data["BeegoVersion"] = VERSION
+	t.Execute(rw, data)
+}
+
+// show 403 forbidden error.
+func forbidden(rw http.ResponseWriter, r *http.Request) {
+	t, _ := template.New("beegoerrortemp").Parse(errtpl)
+	data := make(map[string]interface{})
+	data["Title"] = "Forbidden"
+	data["Content"] = template.HTML("<br>The page you have requested is forbidden." +
+		"<br>Perhaps you are here because:" +
+		"<br><br><ul>" +
+		"<br>Your address may be blocked" +
+		"<br>The site may be disabled" +
+		"<br>You need to log in" +
+		"</ul>")
+	data["BeegoVersion"] = VERSION
+	t.Execute(rw, data)
+}
+
 // show 404 notfound error.
-func NotFound(rw http.ResponseWriter, r *http.Request) {
+func notFound(rw http.ResponseWriter, r *http.Request) {
 	t, _ := template.New("beegoerrortemp").Parse(errtpl)
 	data := make(map[string]interface{})
 	data["Title"] = "Page Not Found"
@@ -224,45 +270,66 @@ func NotFound(rw http.ResponseWriter, r *http.Request) {
 		"<br>You like 404 pages" +
 		"</ul>")
 	data["BeegoVersion"] = VERSION
-	//rw.WriteHeader(http.StatusNotFound)
 	t.Execute(rw, data)
 }
 
-// show 401 unauthorized error.
-func Unauthorized(rw http.ResponseWriter, r *http.Request) {
+// show 405 Method Not Allowed
+func methodNotAllowed(rw http.ResponseWriter, r *http.Request) {
 	t, _ := template.New("beegoerrortemp").Parse(errtpl)
 	data := make(map[string]interface{})
-	data["Title"] = "Unauthorized"
-	data["Content"] = template.HTML("<br>The page you have requested can't be authorized." +
+	data["Title"] = "Method Not Allowed"
+	data["Content"] = template.HTML("<br>The method you have requested Not Allowed." +
 		"<br>Perhaps you are here because:" +
 		"<br><br><ul>" +
-		"<br>The credentials you supplied are incorrect" +
-		"<br>There are errors in the website address" +
+		"<br>The method specified in the Request-Line is not allowed for the resource identified by the Request-URI" +
+		"<br>The response MUST include an Allow header containing a list of valid methods for the requested resource." +
 		"</ul>")
 	data["BeegoVersion"] = VERSION
-	//rw.WriteHeader(http.StatusUnauthorized)
 	t.Execute(rw, data)
 }
 
-// show 403 forbidden error.
-func Forbidden(rw http.ResponseWriter, r *http.Request) {
+// show 500 internal server error.
+func internalServerError(rw http.ResponseWriter, r *http.Request) {
 	t, _ := template.New("beegoerrortemp").Parse(errtpl)
 	data := make(map[string]interface{})
-	data["Title"] = "Forbidden"
-	data["Content"] = template.HTML("<br>The page you have requested is forbidden." +
-		"<br>Perhaps you are here because:" +
+	data["Title"] = "Internal Server Error"
+	data["Content"] = template.HTML("<br>The page you have requested is down right now." +
 		"<br><br><ul>" +
-		"<br>Your address may be blocked" +
-		"<br>The site may be disabled" +
-		"<br>You need to log in" +
-		"</ul>")
+		"<br>Please try again later and report the error to the website administrator" +
+		"<br></ul>")
 	data["BeegoVersion"] = VERSION
-	//rw.WriteHeader(http.StatusForbidden)
+	t.Execute(rw, data)
+}
+
+// show 501 Not Implemented.
+func notImplemented(rw http.ResponseWriter, r *http.Request) {
+	t, _ := template.New("beegoerrortemp").Parse(errtpl)
+	data := make(map[string]interface{})
+	data["Title"] = "Not Implemented"
+	data["Content"] = template.HTML("<br>The page you have requested is Not Implemented." +
+		"<br><br><ul>" +
+		"<br>Please try again later and report the error to the website administrator" +
+		"<br></ul>")
+	data["BeegoVersion"] = VERSION
+	t.Execute(rw, data)
+}
+
+// show 502 Bad Gateway.
+func badGateway(rw http.ResponseWriter, r *http.Request) {
+	t, _ := template.New("beegoerrortemp").Parse(errtpl)
+	data := make(map[string]interface{})
+	data["Title"] = "Bad Gateway"
+	data["Content"] = template.HTML("<br>The page you have requested is down right now." +
+		"<br><br><ul>" +
+		"<br>The server, while acting as a gateway or proxy, received an invalid response from the upstream server it accessed in attempting to fulfill the request." +
+		"<br>Please try again later and report the error to the website administrator" +
+		"<br></ul>")
+	data["BeegoVersion"] = VERSION
 	t.Execute(rw, data)
 }
 
 // show 503 service unavailable error.
-func ServiceUnavailable(rw http.ResponseWriter, r *http.Request) {
+func serviceUnavailable(rw http.ResponseWriter, r *http.Request) {
 	t, _ := template.New("beegoerrortemp").Parse(errtpl)
 	data := make(map[string]interface{})
 	data["Title"] = "Service Unavailable"
@@ -273,49 +340,62 @@ func ServiceUnavailable(rw http.ResponseWriter, r *http.Request) {
 		"<br>Please try again later." +
 		"</ul>")
 	data["BeegoVersion"] = VERSION
-	//rw.WriteHeader(http.StatusServiceUnavailable)
 	t.Execute(rw, data)
 }
 
-// show 500 internal server error.
-func InternalServerError(rw http.ResponseWriter, r *http.Request) {
+// show 504 Gateway Timeout.
+func gatewayTimeout(rw http.ResponseWriter, r *http.Request) {
 	t, _ := template.New("beegoerrortemp").Parse(errtpl)
 	data := make(map[string]interface{})
-	data["Title"] = "Internal Server Error"
-	data["Content"] = template.HTML("<br>The page you have requested is down right now." +
+	data["Title"] = "Gateway Timeout"
+	data["Content"] = template.HTML("<br>The page you have requested is unavailable." +
+		"<br>Perhaps you are here because:" +
 		"<br><br><ul>" +
-		"<br>Please try again later and report the error to the website administrator" +
-		"<br></ul>")
+		"<br><br>The server, while acting as a gateway or proxy, did not receive a timely response from the upstream server specified by the URI." +
+		"<br>Please try again later." +
+		"</ul>")
 	data["BeegoVersion"] = VERSION
-	//rw.WriteHeader(http.StatusInternalServerError)
 	t.Execute(rw, data)
-}
-
-// show 500 internal error with simple text string.
-func SimpleServerError(rw http.ResponseWriter, r *http.Request) {
-	http.Error(rw, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }
 
 // register default error http handlers, 404,401,403,500 and 503.
 func registerDefaultErrorHandler() {
-	if _, ok := ErrorMaps["404"]; !ok {
-		Errorhandler("404", NotFound)
+	if _, ok := ErrorMaps["401"]; !ok {
+		Errorhandler("401", unauthorized)
 	}
 
-	if _, ok := ErrorMaps["401"]; !ok {
-		Errorhandler("401", Unauthorized)
+	if _, ok := ErrorMaps["402"]; !ok {
+		Errorhandler("402", paymentRequired)
 	}
 
 	if _, ok := ErrorMaps["403"]; !ok {
-		Errorhandler("403", Forbidden)
+		Errorhandler("403", forbidden)
 	}
 
-	if _, ok := ErrorMaps["503"]; !ok {
-		Errorhandler("503", ServiceUnavailable)
+	if _, ok := ErrorMaps["404"]; !ok {
+		Errorhandler("404", notFound)
+	}
+
+	if _, ok := ErrorMaps["405"]; !ok {
+		Errorhandler("405", methodNotAllowed)
 	}
 
 	if _, ok := ErrorMaps["500"]; !ok {
-		Errorhandler("500", InternalServerError)
+		Errorhandler("500", internalServerError)
+	}
+	if _, ok := ErrorMaps["501"]; !ok {
+		Errorhandler("501", notImplemented)
+	}
+	if _, ok := ErrorMaps["502"]; !ok {
+		Errorhandler("502", badGateway)
+	}
+
+	if _, ok := ErrorMaps["503"]; !ok {
+		Errorhandler("503", serviceUnavailable)
+	}
+
+	if _, ok := ErrorMaps["504"]; !ok {
+		Errorhandler("504", gatewayTimeout)
 	}
 }
 
