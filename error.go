@@ -12,20 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package middleware
+package beego
 
 import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"reflect"
 	"runtime"
 	"strconv"
+	"strings"
+
+	"github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/utils"
 )
 
-var (
-	AppName string
-	VERSION string
+const (
+	errorTypeHandler = iota
+	errorTypeController
 )
+
 var tpl = `
 <!DOCTYPE html>
 <html>
@@ -76,18 +82,18 @@ var tpl = `
 `
 
 // render default application error page with error and stack string.
-func ShowErr(err interface{}, rw http.ResponseWriter, r *http.Request, Stack string) {
+func showErr(err interface{}, ctx *context.Context, Stack string) {
 	t, _ := template.New("beegoerrortemp").Parse(tpl)
 	data := make(map[string]string)
 	data["AppError"] = AppName + ":" + fmt.Sprint(err)
-	data["RequestMethod"] = r.Method
-	data["RequestURL"] = r.RequestURI
-	data["RemoteAddr"] = r.RemoteAddr
+	data["RequestMethod"] = ctx.Input.Method()
+	data["RequestURL"] = ctx.Input.Uri()
+	data["RemoteAddr"] = ctx.Input.IP()
 	data["Stack"] = Stack
 	data["BeegoVersion"] = VERSION
 	data["GoVersion"] = runtime.Version()
-	rw.WriteHeader(500)
-	t.Execute(rw, data)
+	ctx.Output.SetStatus(500)
+	t.Execute(ctx.ResponseWriter, data)
 }
 
 var errtpl = `
@@ -190,11 +196,18 @@ var errtpl = `
 </html>
 `
 
+type errorInfo struct {
+	controllerType reflect.Type
+	handler        http.HandlerFunc
+	method         string
+	errorType      int
+}
+
 // map of http handlers for each error string.
-var ErrorMaps map[string]http.HandlerFunc
+var ErrorMaps map[string]*errorInfo
 
 func init() {
-	ErrorMaps = make(map[string]http.HandlerFunc)
+	ErrorMaps = make(map[string]*errorInfo)
 }
 
 // show 404 notfound error.
@@ -283,55 +296,115 @@ func SimpleServerError(rw http.ResponseWriter, r *http.Request) {
 	http.Error(rw, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }
 
-// add http handler for given error string.
-func Errorhandler(err string, h http.HandlerFunc) {
-	ErrorMaps[err] = h
-}
-
 // register default error http handlers, 404,401,403,500 and 503.
-func RegisterErrorHandler() {
+func registerDefaultErrorHandler() {
 	if _, ok := ErrorMaps["404"]; !ok {
-		ErrorMaps["404"] = NotFound
+		Errorhandler("404", NotFound)
 	}
 
 	if _, ok := ErrorMaps["401"]; !ok {
-		ErrorMaps["401"] = Unauthorized
+		Errorhandler("401", Unauthorized)
 	}
 
 	if _, ok := ErrorMaps["403"]; !ok {
-		ErrorMaps["403"] = Forbidden
+		Errorhandler("403", Forbidden)
 	}
 
 	if _, ok := ErrorMaps["503"]; !ok {
-		ErrorMaps["503"] = ServiceUnavailable
+		Errorhandler("503", ServiceUnavailable)
 	}
 
 	if _, ok := ErrorMaps["500"]; !ok {
-		ErrorMaps["500"] = InternalServerError
+		Errorhandler("500", InternalServerError)
 	}
+}
+
+// ErrorHandler registers http.HandlerFunc to each http err code string.
+// usage:
+// 	beego.ErrorHandler("404",NotFound)
+//	beego.ErrorHandler("500",InternalServerError)
+func Errorhandler(code string, h http.HandlerFunc) *App {
+	errinfo := &errorInfo{}
+	errinfo.errorType = errorTypeHandler
+	errinfo.handler = h
+	errinfo.method = code
+	ErrorMaps[code] = errinfo
+	return BeeApp
+}
+
+// ErrorController registers ControllerInterface to each http err code string.
+// usage:
+// 	beego.ErrorHandler(&controllers.ErrorController{})
+func ErrorController(c ControllerInterface) *App {
+	reflectVal := reflect.ValueOf(c)
+	rt := reflectVal.Type()
+	ct := reflect.Indirect(reflectVal).Type()
+	for i := 0; i < rt.NumMethod(); i++ {
+		if !utils.InSlice(rt.Method(i).Name, exceptMethod) && strings.HasPrefix(rt.Method(i).Name, "Error") {
+			errinfo := &errorInfo{}
+			errinfo.errorType = errorTypeController
+			errinfo.controllerType = ct
+			errinfo.method = rt.Method(i).Name
+			errname := strings.TrimPrefix(rt.Method(i).Name, "Error")
+			ErrorMaps[errname] = errinfo
+		}
+	}
+	return BeeApp
 }
 
 // show error string as simple text message.
 // if error string is empty, show 500 error as default.
-func Exception(errcode string, w http.ResponseWriter, r *http.Request, msg string) {
+func exception(errcode string, ctx *context.Context) {
+	code, err := strconv.Atoi(errcode)
+	if err != nil {
+		code = 503
+	}
+	ctx.ResponseWriter.WriteHeader(code)
 	if h, ok := ErrorMaps[errcode]; ok {
-		isint, err := strconv.Atoi(errcode)
-		if err != nil {
-			isint = 500
-		}
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.WriteHeader(isint)
-		h(w, r)
+		executeError(h, ctx)
+		return
+	} else if h, ok := ErrorMaps["503"]; ok {
+		executeError(h, ctx)
+		return
+	} else {
+		ctx.WriteString(errcode)
+	}
+}
+
+func executeError(err *errorInfo, ctx *context.Context) {
+	if err.errorType == errorTypeHandler {
+		err.handler(ctx.ResponseWriter, ctx.Request)
 		return
 	}
-	isint, err := strconv.Atoi(errcode)
-	if err != nil {
-		isint = 500
+	if err.errorType == errorTypeController {
+		//Invoke the request handler
+		vc := reflect.New(err.controllerType)
+		execController, ok := vc.Interface().(ControllerInterface)
+		if !ok {
+			panic("controller is not ControllerInterface")
+		}
+		//call the controller init function
+		execController.Init(ctx, err.controllerType.Name(), err.method, vc.Interface())
+
+		//call prepare function
+		execController.Prepare()
+
+		execController.URLMapping()
+
+		in := make([]reflect.Value, 0)
+		method := vc.MethodByName(err.method)
+		method.Call(in)
+
+		//render template
+		if ctx.Output.Status == 0 {
+			if AutoRender {
+				if err := execController.Render(); err != nil {
+					panic(err)
+				}
+			}
+		}
+
+		// finish all runrouter. release resource
+		execController.Finish()
 	}
-	if isint == 404 {
-		msg = "404 page not found"
-	}
-	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
-	w.WriteHeader(isint)
-	fmt.Fprintln(w, msg)
 }

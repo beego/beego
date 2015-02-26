@@ -81,6 +81,7 @@ var (
 	AppConfigProvider      string // config provider
 	EnableDocs             bool   // enable generate docs & server docs API Swagger
 	RouterCaseSensitive    bool   // router case sensitive default is true
+	AccessLogs             bool   // print access logs, default is false
 )
 
 type beegoAppConfig struct {

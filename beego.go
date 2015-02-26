@@ -33,7 +33,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/astaxie/beego/middleware"
 	"github.com/astaxie/beego/session"
 )
 
@@ -280,15 +279,6 @@ func Handler(rootpath string, h http.Handler, options ...interface{}) *App {
 	return BeeApp
 }
 
-// ErrorHandler registers http.HandlerFunc to each http err code string.
-// usage:
-// 	beego.ErrorHandler("404",NotFound)
-//	beego.ErrorHandler("500",InternalServerError)
-func Errorhandler(err string, h http.HandlerFunc) *App {
-	middleware.Errorhandler(err, h)
-	return BeeApp
-}
-
 // SetViewsPath sets view directory path in beego application.
 func SetViewsPath(path string) *App {
 	ViewsPath = path
@@ -402,9 +392,7 @@ func initBeforeHttpRun() {
 		}
 	}
 
-	middleware.VERSION = VERSION
-	middleware.AppName = AppName
-	middleware.RegisterErrorHandler()
+	registerDefaultErrorHandler()
 
 	if EnableDocs {
 		Get("/docs", serverDocs)
