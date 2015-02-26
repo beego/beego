@@ -30,7 +30,6 @@ import (
 	"time"
 
 	beecontext "github.com/astaxie/beego/context"
-	"github.com/astaxie/beego/middleware"
 	"github.com/astaxie/beego/toolbox"
 	"github.com/astaxie/beego/utils"
 )
@@ -153,7 +152,7 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingM
 					if val := reflectVal.MethodByName(colon[1]); val.IsValid() {
 						methods[strings.ToUpper(m)] = colon[1]
 					} else {
-						panic(colon[1] + " method doesn't exist in the controller " + t.Name())
+						panic("'" + colon[1] + "' method doesn't exist in the controller " + t.Name())
 					}
 				} else {
 					panic(v + " is an invalid method mapping. Method doesn't exist " + m)
@@ -429,7 +428,7 @@ func (p *ControllerRegistor) insertFilterRouter(pos int, mr *FilterRouter) error
 
 // UrlFor does another controller handler in this request function.
 // it can access any controller method.
-func (p *ControllerRegistor) UrlFor(endpoint string, values ...string) string {
+func (p *ControllerRegistor) UrlFor(endpoint string, values ...interface{}) string {
 	paths := strings.Split(endpoint, ".")
 	if len(paths) <= 1 {
 		Warn("urlfor endpoint must like path.controller.method")
@@ -444,9 +443,9 @@ func (p *ControllerRegistor) UrlFor(endpoint string, values ...string) string {
 		key := ""
 		for k, v := range values {
 			if k%2 == 0 {
-				key = v
+				key = fmt.Sprint(v)
 			} else {
-				params[key] = v
+				params[key] = fmt.Sprint(v)
 			}
 		}
 	}
@@ -577,7 +576,6 @@ func (p *ControllerRegistor) geturl(t *Tree, url, controllName, methodName strin
 
 // Implement http.Handler interface.
 func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
-	defer p.recoverPanic(rw, r)
 	starttime := time.Now()
 	var runrouter reflect.Type
 	var findrouter bool
@@ -599,6 +597,8 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 	context.Output.Context = context
 	context.Output.EnableGzip = EnableGzip
+
+	defer p.recoverPanic(context)
 
 	var urlPath string
 	if !RouterCaseSensitive {
@@ -648,7 +648,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		context.Input.CruSession, err = GlobalSessions.SessionStart(w, r)
 		if err != nil {
 			Error(err)
-			middleware.Exception("503", rw, r, "")
+			exception("503", context)
 			return
 		}
 		defer func() {
@@ -703,7 +703,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	//if no matches to url, throw a not found exception
 	if !findrouter {
-		middleware.Exception("404", rw, r, "")
+		exception("404", context)
 		goto Admin
 	}
 
@@ -719,7 +719,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 					isRunable = true
 					routerInfo.runfunction(context)
 				} else {
-					middleware.Exception("405", rw, r, "Method Not Allowed")
+					exception("405", context)
 					goto Admin
 				}
 			} else if routerInfo.routerType == routerTypeHandler {
@@ -830,7 +830,7 @@ Admin:
 		}
 	}
 
-	if RunMode == "dev" {
+	if RunMode == "dev" || AccessLogs {
 		var devinfo string
 		if findrouter {
 			if routerInfo != nil {
@@ -852,28 +852,51 @@ Admin:
 	}
 }
 
-func (p *ControllerRegistor) recoverPanic(rw http.ResponseWriter, r *http.Request) {
+func (p *ControllerRegistor) recoverPanic(context *beecontext.Context) {
 	if err := recover(); err != nil {
 		if err == USERSTOPRUN {
 			return
 		}
-		if he, ok := err.(middleware.HTTPException); ok {
-			rw.WriteHeader(he.StatusCode)
-			rw.Write([]byte(he.Description))
-			// catch intented errors, only for HTTP 4XX and 5XX
-		} else {
-			if RunMode == "dev" {
-				if !RecoverPanic {
-					panic(err)
-				} else {
-					if ErrorsShow {
-						if handler, ok := middleware.ErrorMaps[fmt.Sprint(err)]; ok {
-							handler(rw, r)
-							return
-						}
+		if RunMode == "dev" {
+			if !RecoverPanic {
+				panic(err)
+			} else {
+				if ErrorsShow {
+					if handler, ok := ErrorMaps[fmt.Sprint(err)]; ok {
+						executeError(handler, context)
+						return
 					}
-					var stack string
-					Critical("the request url is ", r.URL.Path)
+				}
+				var stack string
+				Critical("the request url is ", context.Input.Url())
+				Critical("Handler crashed with error", err)
+				for i := 1; ; i++ {
+					_, file, line, ok := runtime.Caller(i)
+					if !ok {
+						break
+					}
+					Critical(fmt.Sprintf("%s:%d", file, line))
+					stack = stack + fmt.Sprintln(fmt.Sprintf("%s:%d", file, line))
+				}
+				showErr(err, context, stack)
+			}
+		} else {
+			if !RecoverPanic {
+				panic(err)
+			} else {
+				// in production model show all infomation
+				if ErrorsShow {
+					if handler, ok := ErrorMaps[fmt.Sprint(err)]; ok {
+						executeError(handler, context)
+						return
+					} else if handler, ok := ErrorMaps["503"]; ok {
+						executeError(handler, context)
+						return
+					} else {
+						context.WriteString(fmt.Sprint(err))
+					}
+				} else {
+					Critical("the request url is ", context.Input.Url())
 					Critical("Handler crashed with error", err)
 					for i := 1; ; i++ {
 						_, file, line, ok := runtime.Caller(i)
@@ -881,39 +904,9 @@ func (p *ControllerRegistor) recoverPanic(rw http.ResponseWriter, r *http.Reques
 							break
 						}
 						Critical(fmt.Sprintf("%s:%d", file, line))
-						stack = stack + fmt.Sprintln(fmt.Sprintf("%s:%d", file, line))
-					}
-					middleware.ShowErr(err, rw, r, stack)
-				}
-			} else {
-				if !RecoverPanic {
-					panic(err)
-				} else {
-					// in production model show all infomation
-					if ErrorsShow {
-						if handler, ok := middleware.ErrorMaps[fmt.Sprint(err)]; ok {
-							handler(rw, r)
-							return
-						} else if handler, ok := middleware.ErrorMaps["503"]; ok {
-							handler(rw, r)
-							return
-						} else {
-							rw.Write([]byte(fmt.Sprint(err)))
-						}
-					} else {
-						Critical("the request url is ", r.URL.Path)
-						Critical("Handler crashed with error", err)
-						for i := 1; ; i++ {
-							_, file, line, ok := runtime.Caller(i)
-							if !ok {
-								break
-							}
-							Critical(fmt.Sprintf("%s:%d", file, line))
-						}
 					}
 				}
 			}
-
 		}
 	}
 }

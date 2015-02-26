@@ -15,10 +15,11 @@
 package logs
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"os"
 	"path/filepath"
@@ -122,11 +123,7 @@ func (w *FileLogWriter) startLogger() error {
 		return err
 	}
 	w.mw.SetFd(fd)
-	err = w.initFd()
-	if err != nil {
-		return err
-	}
-	return nil
+	return w.initFd()
 }
 
 func (w *FileLogWriter) docheck(size int) {
@@ -169,16 +166,42 @@ func (w *FileLogWriter) initFd() error {
 	}
 	w.maxsize_cursize = int(finfo.Size())
 	w.daily_opendate = time.Now().Day()
+	w.maxlines_curlines = 0
 	if finfo.Size() > 0 {
-		content, err := ioutil.ReadFile(w.Filename)
+		count, err := w.lines()
 		if err != nil {
 			return err
 		}
-		w.maxlines_curlines = len(strings.Split(string(content), "\n"))
-	} else {
-		w.maxlines_curlines = 0
+		w.maxlines_curlines = count
 	}
 	return nil
+}
+
+func (w *FileLogWriter) lines() (int, error) {
+	fd, err := os.Open(w.Filename)
+	if err != nil {
+		return 0, err
+	}
+	defer fd.Close()
+
+	buf := make([]byte, 32768) // 32k
+	count := 0
+	lineSep := []byte{'\n'}
+
+	for {
+		c, err := fd.Read(buf)
+		if err != nil && err != io.EOF {
+			return count, err
+		}
+
+		count += bytes.Count(buf[:c], lineSep)
+
+		if err == io.EOF {
+			break
+		}
+	}
+
+	return count, nil
 }
 
 // DoRotate means it need to write file in new file.

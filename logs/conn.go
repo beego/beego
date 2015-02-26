@@ -43,11 +43,7 @@ func NewConn() LoggerInterface {
 // init connection writer with json config.
 // json config only need key "level".
 func (c *ConnWriter) Init(jsonconfig string) error {
-	err := json.Unmarshal([]byte(jsonconfig), c)
-	if err != nil {
-		return err
-	}
-	return nil
+	return json.Unmarshal([]byte(jsonconfig), c)
 }
 
 // write message in connection.
@@ -77,10 +73,9 @@ func (c *ConnWriter) Flush() {
 
 // destroy connection writer and close tcp listener.
 func (c *ConnWriter) Destroy() {
-	if c.innerWriter == nil {
-		return
+	if c.innerWriter != nil {
+		c.innerWriter.Close()
 	}
-	c.innerWriter.Close()
 }
 
 func (c *ConnWriter) connect() error {

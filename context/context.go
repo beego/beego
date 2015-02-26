@@ -31,7 +31,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/astaxie/beego/middleware"
 	"github.com/astaxie/beego/utils"
 )
 
@@ -53,24 +52,10 @@ func (ctx *Context) Redirect(status int, localurl string) {
 }
 
 // Abort stops this request.
-// if middleware.ErrorMaps exists, panic body.
-// if middleware.HTTPExceptionMaps exists, panic HTTPException struct with status and body string.
+// if beego.ErrorMaps exists, panic body.
 func (ctx *Context) Abort(status int, body string) {
 	ctx.ResponseWriter.WriteHeader(status)
-	// first panic from ErrorMaps, is is user defined error functions.
-	if _, ok := middleware.ErrorMaps[body]; ok {
-		panic(body)
-	}
-	// second panic from HTTPExceptionMaps, it is system defined functions.
-	if e, ok := middleware.HTTPExceptionMaps[status]; ok {
-		if len(body) >= 1 {
-			e.Description = body
-		}
-		panic(e)
-	}
-	// last panic user string
-	ctx.ResponseWriter.Write([]byte(body))
-	panic("User stop run")
+	panic(body)
 }
 
 // Write string to response body.
@@ -155,8 +140,11 @@ func (ctx *Context) CheckXsrfCookie() bool {
 	}
 	if token == "" {
 		ctx.Abort(403, "'_xsrf' argument missing from POST")
-	} else if ctx._xsrf_token != token {
+		return false
+	}
+	if ctx._xsrf_token != token {
 		ctx.Abort(403, "XSRF cookie does not match POST argument")
+		return false
 	}
 	return true
 }

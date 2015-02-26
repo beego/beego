@@ -139,6 +139,14 @@ func Compare(a, b interface{}) (equal bool) {
 	return
 }
 
+func CompareNot(a, b interface{}) (equal bool) {
+    return ! Compare(a, b)
+}
+
+func NotNil(a interface{}) (is_nil bool) {
+    return CompareNot(a, nil)
+}
+
 func Config(returnType, key string, defaultVal interface{}) (value interface{}, err error) {
 	switch returnType {
 	case "String":
@@ -246,7 +254,7 @@ func Htmlunquote(src string) string {
 //	/user/John%20Doe
 //
 //  more detail http://beego.me/docs/mvc/controller/urlbuilding.md
-func UrlFor(endpoint string, values ...string) string {
+func UrlFor(endpoint string, values ...interface{}) string {
 	return BeeApp.Handlers.UrlFor(endpoint, values...)
 }
 
@@ -350,10 +358,31 @@ func ParseForm(form url.Values, obj interface{}) error {
 				}
 				fieldV.Set(reflect.ValueOf(t))
 			}
+		case reflect.Slice:
+			if fieldT.Type == sliceOfInts {
+				formVals := form[tag]
+				fieldV.Set(reflect.MakeSlice(reflect.SliceOf(reflect.TypeOf(int(1))), len(formVals), len(formVals)))
+				for i := 0; i < len(formVals); i++ {
+					val, err := strconv.Atoi(formVals[i])
+					if err != nil {
+						return err
+					}
+					fieldV.Index(i).SetInt(int64(val))
+				}
+			} else if fieldT.Type == sliceOfStrings {
+				formVals := form[tag]
+				fieldV.Set(reflect.MakeSlice(reflect.SliceOf(reflect.TypeOf("")), len(formVals), len(formVals)))
+				for i := 0; i < len(formVals); i++ {
+					fieldV.Index(i).SetString(formVals[i])
+				}
+			}
 		}
 	}
 	return nil
 }
+
+var sliceOfInts = reflect.TypeOf([]int(nil))
+var sliceOfStrings = reflect.TypeOf([]string(nil))
 
 var unKind = map[reflect.Kind]bool{
 	reflect.Uintptr:       true,

@@ -50,9 +50,10 @@ type ConsoleWriter struct {
 
 // create ConsoleWriter returning as LoggerInterface.
 func NewConsole() LoggerInterface {
-	cw := new(ConsoleWriter)
-	cw.lg = log.New(os.Stdout, "", log.Ldate|log.Ltime)
-	cw.Level = LevelDebug
+	cw := &ConsoleWriter{
+		lg:    log.New(os.Stdout, "", log.Ldate|log.Ltime),
+		Level: LevelDebug,
+	}
 	return cw
 }
 
@@ -62,11 +63,7 @@ func (c *ConsoleWriter) Init(jsonconfig string) error {
 	if len(jsonconfig) == 0 {
 		return nil
 	}
-	err := json.Unmarshal([]byte(jsonconfig), c)
-	if err != nil {
-		return err
-	}
-	return nil
+	return json.Unmarshal([]byte(jsonconfig), c)
 }
 
 // write message in console.
@@ -76,9 +73,10 @@ func (c *ConsoleWriter) WriteMsg(msg string, level int) error {
 	}
 	if goos := runtime.GOOS; goos == "windows" {
 		c.lg.Println(msg)
-	} else {
-		c.lg.Println(colors[level](msg))
+		return nil
 	}
+	c.lg.Println(colors[level](msg))
+
 	return nil
 }
 
