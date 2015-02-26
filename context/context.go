@@ -31,7 +31,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/utils"
 )
 
@@ -56,13 +55,7 @@ func (ctx *Context) Redirect(status int, localurl string) {
 // if beego.ErrorMaps exists, panic body.
 func (ctx *Context) Abort(status int, body string) {
 	ctx.ResponseWriter.WriteHeader(status)
-	// first panic from ErrorMaps, is is user defined error functions.
-	if _, ok := beego.ErrorMaps[body]; ok {
-		panic(body)
-	}
-	// last panic user string
-	ctx.ResponseWriter.Write([]byte(body))
-	panic(beego.USERSTOPRUN)
+	panic(body)
 }
 
 // Write string to response body.

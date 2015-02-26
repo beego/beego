@@ -270,16 +270,22 @@ func (c *Controller) Redirect(url string, code int) {
 // Aborts stops controller handler and show the error data if code is defined in ErrorMap or code string.
 func (c *Controller) Abort(code string) {
 	status, err := strconv.Atoi(code)
-	if err == nil {
-		c.Ctx.Abort(status, code)
-	} else {
-		c.Ctx.Abort(200, code)
+	if err != nil {
+		status = 200
 	}
+	c.CustomAbort(status, code)
 }
 
 // CustomAbort stops controller handler and show the error data, it's similar Aborts, but support status code and body.
 func (c *Controller) CustomAbort(status int, body string) {
-	c.Ctx.Abort(status, body)
+	c.Ctx.ResponseWriter.WriteHeader(status)
+	// first panic from ErrorMaps, is is user defined error functions.
+	if _, ok := ErrorMaps[body]; ok {
+		panic(body)
+	}
+	// last panic user string
+	c.Ctx.ResponseWriter.Write([]byte(body))
+	panic(USERSTOPRUN)
 }
 
 // StopRun makes panic of USERSTOPRUN error and go to recover function if defined.
