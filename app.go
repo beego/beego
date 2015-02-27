@@ -19,7 +19,10 @@ import (
 	"net"
 	"net/http"
 	"net/http/fcgi"
+	"os"
 	"time"
+
+	"github.com/astaxie/beego/utils"
 )
 
 // App defines beego application with a new PatternServeMux.
@@ -59,6 +62,10 @@ func (app *App) Run() {
 			}
 		} else {
 			if HttpPort == 0 {
+				// remove the Socket file before start
+				if utils.FileExists(addr) {
+					os.Remove(addr)
+				}
 				l, err = net.Listen("unix", addr)
 			} else {
 				l, err = net.Listen("tcp", addr)
