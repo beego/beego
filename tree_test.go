@@ -149,7 +149,11 @@ func TestAddTree2(t *testing.T) {
 }
 
 func TestSplitPath(t *testing.T) {
-	a := splitPath("/")
+	a := splitPath("")
+	if len(a) != 0 {
+		t.Fatal("/ should retrun []")
+	}
+	a = splitPath("/")
 	if len(a) != 0 {
 		t.Fatal("/ should retrun []")
 	}

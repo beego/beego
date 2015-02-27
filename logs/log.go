@@ -292,9 +292,9 @@ func (bl *BeeLogger) Close() {
 					fmt.Println("ERROR, unable to WriteMsg (while closing logger):", err)
 				}
 			}
-		} else {
-			break
+			continue
 		}
+		break
 	}
 	for _, l := range bl.outputs {
 		l.Flush()

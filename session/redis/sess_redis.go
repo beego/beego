@@ -118,12 +118,13 @@ type RedisProvider struct {
 	savePath    string
 	poolsize    int
 	password    string
+	dbNum       int
 	poollist    *redis.Pool
 }
 
 // init redis session
-// savepath like redis server addr,pool size,password
-// e.g. 127.0.0.1:6379,100,astaxie
+// savepath like redis server addr,pool size,password,dbnum
+// e.g. 127.0.0.1:6379,100,astaxie,0
 func (rp *RedisProvider) SessionInit(maxlifetime int64, savePath string) error {
 	rp.maxlifetime = maxlifetime
 	configs := strings.Split(savePath, ",")
@@ -143,6 +144,16 @@ func (rp *RedisProvider) SessionInit(maxlifetime int64, savePath string) error {
 	if len(configs) > 2 {
 		rp.password = configs[2]
 	}
+	if len(configs) > 3 {
+		dbnum, err := strconv.Atoi(configs[1])
+		if err != nil || dbnum < 0 {
+			rp.dbNum = 0
+		} else {
+			rp.dbNum = dbnum
+		}
+	} else {
+		rp.dbNum = 0
+	}
 	rp.poollist = redis.NewPool(func() (redis.Conn, error) {
 		c, err := redis.Dial("tcp", rp.savePath)
 		if err != nil {
@@ -153,6 +164,11 @@ func (rp *RedisProvider) SessionInit(maxlifetime int64, savePath string) error {
 				c.Close()
 				return nil, err
 			}
+		}
+		_, err = c.Do("SELECT", rp.dbNum)
+		if err != nil {
+			c.Close()
+			return nil, err
 		}
 		return c, err
 	}, rp.poolsize)

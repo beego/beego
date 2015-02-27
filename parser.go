@@ -57,7 +57,7 @@ func parserPkg(pkgRealpath, pkgpath string) error {
 	rep := strings.NewReplacer("/", "_", ".", "_")
 	commentFilename = COMMENTFL + rep.Replace(pkgpath) + ".go"
 	if !compareFile(pkgRealpath) {
-		Info(pkgRealpath + " don't has updated")
+		Info(pkgRealpath + " has not changed, not reloading")
 		return nil
 	}
 	genInfoList = make(map[string][]ControllerComments)

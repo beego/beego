@@ -2,6 +2,8 @@ package session
 
 import (
 	"net/http"
+	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/astaxie/beego/session"
@@ -74,19 +76,29 @@ func (ls *LedisSessionStore) SessionRelease(w http.ResponseWriter) {
 type LedisProvider struct {
 	maxlifetime int64
 	savePath    string
+	db          int
 }
 
 // init ledis session
 // savepath like ledis server saveDataPath,pool size
 // e.g. 127.0.0.1:6379,100,astaxie
 func (lp *LedisProvider) SessionInit(maxlifetime int64, savePath string) error {
+	var err error
 	lp.maxlifetime = maxlifetime
-	lp.savePath = savePath
+	configs := strings.Split(savepath, ",")
+	if len(configs) == 1 {
+		lp.savePath = configs[0]
+	} else if len(configs) == 2 {
+		lp.savePath = configs[0]
+		lp.db, err = strconv.Atoi(configs[1])
+		if err != nil {
+			return err
+		}
+	}
 	cfg := new(config.Config)
 	cfg.DataDir = lp.savePath
-	var err error
 	nowLedis, err := ledis.Open(cfg)
-	c, err = nowLedis.Select(0)
+	c, err = nowLedis.Select(lp.db)
 	if err != nil {
 		println(err)
 		return nil

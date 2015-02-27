@@ -32,6 +32,7 @@ package redis
 import (
 	"encoding/json"
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/garyburd/redigo/redis"
@@ -48,6 +49,7 @@ var (
 type RedisCache struct {
 	p        *redis.Pool // redis connection pool
 	conninfo string
+	dbNum    int
 	key      string
 }
 
@@ -137,7 +139,7 @@ func (rc *RedisCache) ClearAll() error {
 }
 
 // start redis cache adapter.
-// config is like {"key":"collection key","conn":"connection info"}
+// config is like {"key":"collection key","conn":"connection info","dbNum":"0"}
 // the cache item in redis are stored forever,
 // so no gc operation.
 func (rc *RedisCache) StartAndGC(config string) error {
@@ -151,9 +153,12 @@ func (rc *RedisCache) StartAndGC(config string) error {
 	if _, ok := cf["conn"]; !ok {
 		return errors.New("config has no conn key")
 	}
-
+	if _, ok := cf["dbNum"]; !ok {
+		cf["dbNum"] = "0"
+	}
 	rc.key = cf["key"]
 	rc.conninfo = cf["conn"]
+	rc.dbNum, _ = strconv.Atoi(cf["dbNum"])
 	rc.connectInit()
 
 	c := rc.p.Get()
@@ -166,6 +171,11 @@ func (rc *RedisCache) StartAndGC(config string) error {
 func (rc *RedisCache) connectInit() {
 	dialFunc := func() (c redis.Conn, err error) {
 		c, err = redis.Dial("tcp", rc.conninfo)
+		_, selecterr := c.Do("SELECT", rc.dbNum)
+		if selecterr != nil {
+			c.Close()
+			return nil, selecterr
+		}
 		return
 	}
 	// initialize a new pool

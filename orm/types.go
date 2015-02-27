@@ -51,7 +51,6 @@ type Ormer interface {
 	Rollback() error
 	Raw(string, ...interface{}) RawSeter
 	Driver() Driver
-	GetDB() dbQuerier
 }
 
 // insert prepared statement

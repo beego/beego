@@ -34,7 +34,6 @@ type Translation struct {
 }
 
 func NewLocale(filepath string, defaultlocal string) *Translation {
-	i18n := make(map[string]map[string]string)
 	file, err := os.Open(filepath)
 	if err != nil {
 		panic("open " + filepath + " err :" + err.Error())
@@ -43,8 +42,9 @@ func NewLocale(filepath string, defaultlocal string) *Translation {
 	if err != nil {
 		panic("read " + filepath + " err :" + err.Error())
 	}
-	err = json.Unmarshal(data, &i18n)
-	if err != nil {
+
+	i18n := make(map[string]map[string]string)
+	if err = json.Unmarshal(data, &i18n); err != nil {
 		panic("json.Unmarshal " + filepath + " err :" + err.Error())
 	}
 	return &Translation{
