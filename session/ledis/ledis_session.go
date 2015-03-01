@@ -85,7 +85,7 @@ type LedisProvider struct {
 func (lp *LedisProvider) SessionInit(maxlifetime int64, savePath string) error {
 	var err error
 	lp.maxlifetime = maxlifetime
-	configs := strings.Split(savepath, ",")
+	configs := strings.Split(savePath, ",")
 	if len(configs) == 1 {
 		lp.savePath = configs[0]
 	} else if len(configs) == 2 {
