@@ -22,7 +22,6 @@ import (
 	"strings"
 
 	"github.com/astaxie/beego/context"
-	"github.com/astaxie/beego/middleware"
 	"github.com/astaxie/beego/utils"
 )
 
@@ -67,7 +66,7 @@ func serverStaticRouter(ctx *context.Context) {
 			//if the request is dir and DirectoryIndex is false then
 			if finfo.IsDir() {
 				if !DirectoryIndex {
-					middleware.Exception("403", ctx.ResponseWriter, ctx.Request, "403 Forbidden")
+					exception("403", ctx)
 					return
 				} else if ctx.Input.Request.URL.Path[len(ctx.Input.Request.URL.Path)-1] != '/' {
 					http.Redirect(ctx.ResponseWriter, ctx.Request, ctx.Input.Request.URL.Path+"/", 302)

@@ -30,7 +30,6 @@ import (
 	"time"
 
 	beecontext "github.com/astaxie/beego/context"
-	"github.com/astaxie/beego/middleware"
 	"github.com/astaxie/beego/toolbox"
 	"github.com/astaxie/beego/utils"
 )
@@ -72,10 +71,30 @@ var (
 		"SetSecureCookie", "XsrfToken", "CheckXsrfCookie", "XsrfFormHtml",
 		"GetControllerAndAction"}
 
-	url_placeholder = "{{placeholder}}"
-
-	FilterRouterLog func(*beecontext.Context) bool
+	url_placeholder                = "{{placeholder}}"
+	DefaultLogFilter FilterHandler = &logFilter{}
 )
+
+type FilterHandler interface {
+	Filter(*beecontext.Context) bool
+}
+
+// default log filter static file will not show
+type logFilter struct {
+}
+
+func (l *logFilter) Filter(ctx *beecontext.Context) bool {
+	requestPath := path.Clean(ctx.Input.Request.URL.Path)
+	if requestPath == "/favicon.ico" || requestPath == "/robots.txt" {
+		return true
+	}
+	for prefix, _ := range StaticDir {
+		if strings.HasPrefix(requestPath, prefix) {
+			return true
+		}
+	}
+	return false
+}
 
 // To append a slice's value into "exceptMethod", for controller's methods shouldn't reflect to AutoRouter
 func ExceptMethodAppend(action string) {
@@ -133,7 +152,7 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingM
 					if val := reflectVal.MethodByName(colon[1]); val.IsValid() {
 						methods[strings.ToUpper(m)] = colon[1]
 					} else {
-						panic(colon[1] + " method doesn't exist in the controller " + t.Name())
+						panic("'" + colon[1] + "' method doesn't exist in the controller " + t.Name())
 					}
 				} else {
 					panic(v + " is an invalid method mapping. Method doesn't exist " + m)
@@ -409,7 +428,7 @@ func (p *ControllerRegistor) insertFilterRouter(pos int, mr *FilterRouter) error
 
 // UrlFor does another controller handler in this request function.
 // it can access any controller method.
-func (p *ControllerRegistor) UrlFor(endpoint string, values ...string) string {
+func (p *ControllerRegistor) UrlFor(endpoint string, values ...interface{}) string {
 	paths := strings.Split(endpoint, ".")
 	if len(paths) <= 1 {
 		Warn("urlfor endpoint must like path.controller.method")
@@ -424,16 +443,16 @@ func (p *ControllerRegistor) UrlFor(endpoint string, values ...string) string {
 		key := ""
 		for k, v := range values {
 			if k%2 == 0 {
-				key = v
+				key = fmt.Sprint(v)
 			} else {
-				params[key] = v
+				params[key] = fmt.Sprint(v)
 			}
 		}
 	}
 	controllName := strings.Join(paths[:len(paths)-1], "/")
 	methodName := paths[len(paths)-1]
-	for _, t := range p.routers {
-		ok, url := p.geturl(t, "/", controllName, methodName, params)
+	for m, t := range p.routers {
+		ok, url := p.geturl(t, "/", controllName, methodName, params, m)
 		if ok {
 			return url
 		}
@@ -441,17 +460,17 @@ func (p *ControllerRegistor) UrlFor(endpoint string, values ...string) string {
 	return ""
 }
 
-func (p *ControllerRegistor) geturl(t *Tree, url, controllName, methodName string, params map[string]string) (bool, string) {
+func (p *ControllerRegistor) geturl(t *Tree, url, controllName, methodName string, params map[string]string, httpMethod string) (bool, string) {
 	for k, subtree := range t.fixrouters {
 		u := path.Join(url, k)
-		ok, u := p.geturl(subtree, u, controllName, methodName, params)
+		ok, u := p.geturl(subtree, u, controllName, methodName, params, httpMethod)
 		if ok {
 			return ok, u
 		}
 	}
 	if t.wildcard != nil {
-		url = path.Join(url, url_placeholder)
-		ok, u := p.geturl(t.wildcard, url, controllName, methodName, params)
+		u := path.Join(url, url_placeholder)
+		ok, u := p.geturl(t.wildcard, u, controllName, methodName, params, httpMethod)
 		if ok {
 			return ok, u
 		}
@@ -471,8 +490,8 @@ func (p *ControllerRegistor) geturl(t *Tree, url, controllName, methodName strin
 					}
 				}
 				if !find {
-					for _, md := range c.methods {
-						if md == methodName {
+					for m, md := range c.methods {
+						if (m == "*" || m == httpMethod) && md == methodName {
 							find = true
 						}
 					}
@@ -557,7 +576,6 @@ func (p *ControllerRegistor) geturl(t *Tree, url, controllName, methodName strin
 
 // Implement http.Handler interface.
 func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
-	defer p.recoverPanic(rw, r)
 	starttime := time.Now()
 	var runrouter reflect.Type
 	var findrouter bool
@@ -579,6 +597,8 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 	context.Output.Context = context
 	context.Output.EnableGzip = EnableGzip
+
+	defer p.recoverPanic(context)
 
 	var urlPath string
 	if !RouterCaseSensitive {
@@ -624,7 +644,13 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	// session init
 	if SessionOn {
-		context.Input.CruSession = GlobalSessions.SessionStart(w, r)
+		var err error
+		context.Input.CruSession, err = GlobalSessions.SessionStart(w, r)
+		if err != nil {
+			Error(err)
+			exception("503", context)
+			return
+		}
 		defer func() {
 			context.Input.CruSession.SessionRelease(w)
 		}()
@@ -677,7 +703,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	//if no matches to url, throw a not found exception
 	if !findrouter {
-		middleware.Exception("404", rw, r, "")
+		exception("404", context)
 		goto Admin
 	}
 
@@ -693,7 +719,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 					isRunable = true
 					routerInfo.runfunction(context)
 				} else {
-					middleware.Exception("405", rw, r, "Method Not Allowed")
+					exception("405", context)
 					goto Admin
 				}
 			} else if routerInfo.routerType == routerTypeHandler {
@@ -804,7 +830,7 @@ Admin:
 		}
 	}
 
-	if RunMode == "dev" {
+	if RunMode == "dev" || AccessLogs {
 		var devinfo string
 		if findrouter {
 			if routerInfo != nil {
@@ -815,7 +841,7 @@ Admin:
 		} else {
 			devinfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s |", r.Method, r.URL.Path, timeend.String(), "notmatch")
 		}
-		if FilterRouterLog == nil || !FilterRouterLog(context) {
+		if DefaultLogFilter == nil || !DefaultLogFilter.Filter(context) {
 			Debug(devinfo)
 		}
 	}
@@ -826,26 +852,51 @@ Admin:
 	}
 }
 
-func (p *ControllerRegistor) recoverPanic(rw http.ResponseWriter, r *http.Request) {
+func (p *ControllerRegistor) recoverPanic(context *beecontext.Context) {
 	if err := recover(); err != nil {
 		if err == USERSTOPRUN {
 			return
 		}
-		if _, ok := err.(middleware.HTTPException); ok {
-			// catch intented errors, only for HTTP 4XX and 5XX
-		} else {
-			if RunMode == "dev" {
-				if !RecoverPanic {
-					panic(err)
-				} else {
-					if ErrorsShow {
-						if handler, ok := middleware.ErrorMaps[fmt.Sprint(err)]; ok {
-							handler(rw, r)
-							return
-						}
+		if RunMode == "dev" {
+			if !RecoverPanic {
+				panic(err)
+			} else {
+				if ErrorsShow {
+					if handler, ok := ErrorMaps[fmt.Sprint(err)]; ok {
+						executeError(handler, context)
+						return
 					}
-					var stack string
-					Critical("the request url is ", r.URL.Path)
+				}
+				var stack string
+				Critical("the request url is ", context.Input.Url())
+				Critical("Handler crashed with error", err)
+				for i := 1; ; i++ {
+					_, file, line, ok := runtime.Caller(i)
+					if !ok {
+						break
+					}
+					Critical(fmt.Sprintf("%s:%d", file, line))
+					stack = stack + fmt.Sprintln(fmt.Sprintf("%s:%d", file, line))
+				}
+				showErr(err, context, stack)
+			}
+		} else {
+			if !RecoverPanic {
+				panic(err)
+			} else {
+				// in production model show all infomation
+				if ErrorsShow {
+					if handler, ok := ErrorMaps[fmt.Sprint(err)]; ok {
+						executeError(handler, context)
+						return
+					} else if handler, ok := ErrorMaps["503"]; ok {
+						executeError(handler, context)
+						return
+					} else {
+						context.WriteString(fmt.Sprint(err))
+					}
+				} else {
+					Critical("the request url is ", context.Input.Url())
 					Critical("Handler crashed with error", err)
 					for i := 1; ; i++ {
 						_, file, line, ok := runtime.Caller(i)
@@ -853,53 +904,11 @@ func (p *ControllerRegistor) recoverPanic(rw http.ResponseWriter, r *http.Reques
 							break
 						}
 						Critical(fmt.Sprintf("%s:%d", file, line))
-						stack = stack + fmt.Sprintln(fmt.Sprintf("%s:%d", file, line))
-					}
-					middleware.ShowErr(err, rw, r, stack)
-				}
-			} else {
-				if !RecoverPanic {
-					panic(err)
-				} else {
-					// in production model show all infomation
-					if ErrorsShow {
-						handler := p.getErrorHandler(fmt.Sprint(err))
-						handler(rw, r)
-						return
-					} else {
-						Critical("the request url is ", r.URL.Path)
-						Critical("Handler crashed with error", err)
-						for i := 1; ; i++ {
-							_, file, line, ok := runtime.Caller(i)
-							if !ok {
-								break
-							}
-							Critical(fmt.Sprintf("%s:%d", file, line))
-						}
 					}
 				}
 			}
-
 		}
 	}
-}
-
-// there always should be error handler that sets error code accordingly for all unhandled errors.
-// in order to have custom UI for error page it's necessary to override "500" error.
-func (p *ControllerRegistor) getErrorHandler(errorCode string) func(rw http.ResponseWriter, r *http.Request) {
-	handler := middleware.SimpleServerError
-	ok := true
-	if errorCode != "" {
-		handler, ok = middleware.ErrorMaps[errorCode]
-		if !ok {
-			handler, ok = middleware.ErrorMaps["500"]
-		}
-		if !ok || handler == nil {
-			handler = middleware.SimpleServerError
-		}
-	}
-
-	return handler
 }
 
 //responseWriter is a wrapper for the http.ResponseWriter

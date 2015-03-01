@@ -19,13 +19,11 @@ import (
 	"net"
 	"net/http"
 	"net/http/fcgi"
+	"os"
 	"time"
 
-	"github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/utils"
 )
-
-// FilterFunc defines filter function type.
-type FilterFunc func(*context.Context)
 
 // App defines beego application with a new PatternServeMux.
 type App struct {
@@ -64,6 +62,10 @@ func (app *App) Run() {
 			}
 		} else {
 			if HttpPort == 0 {
+				// remove the Socket file before start
+				if utils.FileExists(addr) {
+					os.Remove(addr)
+				}
 				l, err = net.Listen("unix", addr)
 			} else {
 				l, err = net.Listen("tcp", addr)
@@ -85,7 +87,7 @@ func (app *App) Run() {
 				if HttpsPort != 0 {
 					app.Server.Addr = fmt.Sprintf("%s:%d", HttpAddr, HttpsPort)
 				}
-				BeeLogger.Info("Running on %s", app.Server.Addr)
+				BeeLogger.Info("https server Running on %s", app.Server.Addr)
 				err := app.Server.ListenAndServeTLS(HttpCertFile, HttpKeyFile)
 				if err != nil {
 					BeeLogger.Critical("ListenAndServeTLS: ", err)
@@ -98,12 +100,29 @@ func (app *App) Run() {
 		if EnableHttpListen {
 			go func() {
 				app.Server.Addr = addr
-				BeeLogger.Info("Running on %s", app.Server.Addr)
-				err := app.Server.ListenAndServe()
-				if err != nil {
-					BeeLogger.Critical("ListenAndServe: ", err)
-					time.Sleep(100 * time.Microsecond)
-					endRunning <- true
+				BeeLogger.Info("http server Running on %s", app.Server.Addr)
+				if ListenTCP4 && HttpAddr == "" {
+					ln, err := net.Listen("tcp4", app.Server.Addr)
+					if err != nil {
+						BeeLogger.Critical("ListenAndServe: ", err)
+						time.Sleep(100 * time.Microsecond)
+						endRunning <- true
+						return
+					}
+					err = app.Server.Serve(ln)
+					if err != nil {
+						BeeLogger.Critical("ListenAndServe: ", err)
+						time.Sleep(100 * time.Microsecond)
+						endRunning <- true
+						return
+					}
+				} else {
+					err := app.Server.ListenAndServe()
+					if err != nil {
+						BeeLogger.Critical("ListenAndServe: ", err)
+						time.Sleep(100 * time.Microsecond)
+						endRunning <- true
+					}
 				}
 			}()
 		}

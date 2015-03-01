@@ -40,6 +40,7 @@ var (
 	EnableHttpListen       bool
 	HttpAddr               string
 	HttpPort               int
+	ListenTCP4             bool
 	EnableHttpTLS          bool
 	HttpsPort              int
 	HttpCertFile           string
@@ -55,8 +56,6 @@ var (
 	SessionName            string           // the cookie name when saving session id into cookie.
 	SessionGCMaxLifetime   int64            // session gc time for auto cleaning expired session.
 	SessionSavePath        string           // if use mysql/redis/file provider, define save path to connection info.
-	SessionHashFunc        string           // session hash generation func.
-	SessionHashKey         string           // session hash salt string.
 	SessionCookieLifeTime  int              // the life time of session id in cookie.
 	SessionAutoSetCookie   bool             // auto setcookie
 	SessionDomain          string           // the cookie domain default is empty
@@ -82,6 +81,7 @@ var (
 	AppConfigProvider      string // config provider
 	EnableDocs             bool   // enable generate docs & server docs API Swagger
 	RouterCaseSensitive    bool   // router case sensitive default is true
+	AccessLogs             bool   // print access logs, default is false
 )
 
 type beegoAppConfig struct {
@@ -111,7 +111,7 @@ func (b *beegoAppConfig) String(key string) string {
 
 func (b *beegoAppConfig) Strings(key string) []string {
 	v := b.innerConfig.Strings(RunMode + "::" + key)
-	if len(v) == 0 {
+	if v[0] == "" {
 		return b.innerConfig.Strings(key)
 	}
 	return v
@@ -236,8 +236,6 @@ func init() {
 	SessionName = "beegosessionID"
 	SessionGCMaxLifetime = 3600
 	SessionSavePath = ""
-	SessionHashFunc = "sha1"
-	SessionHashKey = "beegoserversessionkey"
 	SessionCookieLifeTime = 0 //set cookie default is the brower life
 	SessionAutoSetCookie = true
 
@@ -277,9 +275,10 @@ func init() {
 	if err != nil {
 		fmt.Println("init console log error:", err)
 	}
+	SetLogFuncCall(true)
 
 	err = ParseConfig()
-	if err != nil && !os.IsNotExist(err) {
+	if err != nil && os.IsNotExist(err) {
 		// for init if doesn't have app.conf will not panic
 		ac := config.NewFakeConfig()
 		AppConfig = &beegoAppConfig{ac}
@@ -306,6 +305,10 @@ func ParseConfig() (err error) {
 
 	if v, err := AppConfig.Int("HttpPort"); err == nil {
 		HttpPort = v
+	}
+
+	if v, err := AppConfig.Bool("ListenTCP4"); err == nil {
+		ListenTCP4 = v
 	}
 
 	if v, err := AppConfig.Bool("EnableHttpListen"); err == nil {
@@ -346,14 +349,6 @@ func ParseConfig() (err error) {
 
 	if sesssavepath := AppConfig.String("SessionSavePath"); sesssavepath != "" {
 		SessionSavePath = sesssavepath
-	}
-
-	if sesshashfunc := AppConfig.String("SessionHashFunc"); sesshashfunc != "" {
-		SessionHashFunc = sesshashfunc
-	}
-
-	if sesshashkey := AppConfig.String("SessionHashKey"); sesshashkey != "" {
-		SessionHashKey = sesshashkey
 	}
 
 	if sessMaxLifeTime, err := AppConfig.Int64("SessionGCMaxLifetime"); err == nil && sessMaxLifeTime != 0 {

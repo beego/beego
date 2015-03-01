@@ -72,7 +72,7 @@ func TestDate(t *testing.T) {
 	}
 }
 
-func TestCompare(t *testing.T) {
+func TestCompareRelated(t *testing.T) {
 	if !Compare("abc", "abc") {
 		t.Error("should be equal")
 	}
@@ -82,6 +82,15 @@ func TestCompare(t *testing.T) {
 	if !Compare("1", 1) {
 		t.Error("should be equal")
 	}
+    if CompareNot("abc", "abc") {
+        t.Error("should be equal")
+    }
+    if !CompareNot("abc", "aBc") {
+        t.Error("should be not equal")
+    }
+    if !NotNil("a string") {
+        t.Error("should not be nil")
+    }
 }
 
 func TestHtmlquote(t *testing.T) {
@@ -102,12 +111,14 @@ func TestHtmlunquote(t *testing.T) {
 
 func TestParseForm(t *testing.T) {
 	type user struct {
-		Id    int         `form:"-"`
-		tag   string      `form:"tag"`
-		Name  interface{} `form:"username"`
-		Age   int         `form:"age,text"`
-		Email string
-		Intro string `form:",textarea"`
+		Id      int         `form:"-"`
+		tag     string      `form:"tag"`
+		Name    interface{} `form:"username"`
+		Age     int         `form:"age,text"`
+		Email   string
+		Intro   string    `form:",textarea"`
+		StrBool bool      `form:"strbool"`
+		Date    time.Time `form:"date,2006-01-02"`
 	}
 
 	u := user{}
@@ -119,6 +130,8 @@ func TestParseForm(t *testing.T) {
 		"age":      []string{"40"},
 		"Email":    []string{"test@gmail.com"},
 		"Intro":    []string{"I am an engineer!"},
+		"strbool":  []string{"yes"},
+		"date":     []string{"2014-11-12"},
 	}
 	if err := ParseForm(form, u); err == nil {
 		t.Fatal("nothing will be changed")
@@ -143,6 +156,13 @@ func TestParseForm(t *testing.T) {
 	}
 	if u.Intro != "I am an engineer!" {
 		t.Errorf("Intro should equal `I am an engineer!` but got `%v`", u.Intro)
+	}
+	if u.StrBool != true {
+		t.Errorf("strboll should equal `true`, but got `%v`", u.StrBool)
+	}
+	y, m, d := u.Date.Date()
+	if y != 2014 || m.String() != "November" || d != 12 {
+		t.Errorf("Date should equal `2014-11-12`, but got `%v`", u.Date.String())
 	}
 }
 

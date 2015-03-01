@@ -489,10 +489,6 @@ func (o *orm) Driver() Driver {
 	return driver(o.alias.Name)
 }
 
-func (o *orm) GetDB() dbQuerier {
-	panic(ErrNotImplement)
-}
-
 // create new orm
 func NewOrm() Ormer {
 	BootStrap() // execute only once

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <title>Chat Example</title>
-<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<script src="//code.jquery.com/jquery-2.1.3.min.js"></script>
 <script type="text/javascript">
     $(function() {
 

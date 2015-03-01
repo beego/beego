@@ -33,82 +33,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/astaxie/beego/middleware"
 	"github.com/astaxie/beego/session"
 )
 
 // beego web framework version.
-const VERSION = "1.4.1"
+const VERSION = "1.4.3"
 
 type hookfunc func() error //hook function to run
 var hooks []hookfunc       //hook function slice to store the hookfunc
-
-type groupRouter struct {
-	pattern        string
-	controller     ControllerInterface
-	mappingMethods string
-}
-
-// RouterGroups which will store routers
-type GroupRouters []groupRouter
-
-// Get a new GroupRouters
-func NewGroupRouters() GroupRouters {
-	return make(GroupRouters, 0)
-}
-
-// Add Router in the GroupRouters
-// it is for plugin or module to register router
-func (gr *GroupRouters) AddRouter(pattern string, c ControllerInterface, mappingMethod ...string) {
-	var newRG groupRouter
-	if len(mappingMethod) > 0 {
-		newRG = groupRouter{
-			pattern,
-			c,
-			mappingMethod[0],
-		}
-	} else {
-		newRG = groupRouter{
-			pattern,
-			c,
-			"",
-		}
-	}
-	*gr = append(*gr, newRG)
-}
-
-func (gr *GroupRouters) AddAuto(c ControllerInterface) {
-	newRG := groupRouter{
-		"",
-		c,
-		"",
-	}
-	*gr = append(*gr, newRG)
-}
-
-// AddGroupRouter with the prefix
-// it will register the router in BeeApp
-// the follow code is write in modules:
-// GR:=NewGroupRouters()
-// GR.AddRouter("/login",&UserController,"get:Login")
-// GR.AddRouter("/logout",&UserController,"get:Logout")
-// GR.AddRouter("/register",&UserController,"get:Reg")
-// the follow code is write in app:
-// import "github.com/beego/modules/auth"
-// AddRouterGroup("/admin", auth.GR)
-func AddGroupRouter(prefix string, groups GroupRouters) *App {
-	for _, v := range groups {
-		if v.pattern == "" {
-			BeeApp.Handlers.AddAutoPrefix(prefix, v.controller)
-		} else if v.mappingMethods != "" {
-			BeeApp.Handlers.Add(prefix+v.pattern, v.controller, v.mappingMethods)
-		} else {
-			BeeApp.Handlers.Add(prefix+v.pattern, v.controller)
-		}
-
-	}
-	return BeeApp
-}
 
 // Router adds a patterned controller handler to BeeApp.
 // it's an alias method of App.Router.
@@ -280,15 +212,6 @@ func Handler(rootpath string, h http.Handler, options ...interface{}) *App {
 	return BeeApp
 }
 
-// ErrorHandler registers http.HandlerFunc to each http err code string.
-// usage:
-// 	beego.ErrorHandler("404",NotFound)
-//	beego.ErrorHandler("500",InternalServerError)
-func Errorhandler(err string, h http.HandlerFunc) *App {
-	middleware.Errorhandler(err, h)
-	return BeeApp
-}
-
 // SetViewsPath sets view directory path in beego application.
 func SetViewsPath(path string) *App {
 	ViewsPath = path
@@ -383,8 +306,6 @@ func initBeforeHttpRun() {
 				`"gclifetime":` + strconv.FormatInt(SessionGCMaxLifetime, 10) + `,` +
 				`"providerConfig":"` + filepath.ToSlash(SessionSavePath) + `",` +
 				`"secure":` + strconv.FormatBool(EnableHttpTLS) + `,` +
-				`"sessionIDHashFunc":"` + SessionHashFunc + `",` +
-				`"sessionIDHashKey":"` + SessionHashKey + `",` +
 				`"enableSetCookie":` + strconv.FormatBool(SessionAutoSetCookie) + `,` +
 				`"domain":"` + SessionDomain + `",` +
 				`"cookieLifeTime":` + strconv.Itoa(SessionCookieLifeTime) + `}`
@@ -404,9 +325,7 @@ func initBeforeHttpRun() {
 		}
 	}
 
-	middleware.VERSION = VERSION
-	middleware.AppName = AppName
-	middleware.RegisterErrorHandler()
+	registerDefaultErrorHandler()
 
 	if EnableDocs {
 		Get("/docs", serverDocs)

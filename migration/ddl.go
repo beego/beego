@@ -12,15 +12,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pagination
+package migration
 
-import (
-	"github.com/astaxie/beego/context"
-)
+type Table struct {
+	TableName string
+	Columns   []*Column
+}
 
-// Instantiates a Paginator and assigns it to context.Input.Data["paginator"].
-func SetPaginator(context *context.Context, per int, nums int64) (paginator *Paginator) {
-	paginator = NewPaginator(context.Request, per, nums)
-	context.Input.Data["paginator"] = &paginator
-	return
+func (t *Table) Create() string {
+	return ""
+}
+
+func (t *Table) Drop() string {
+	return ""
+}
+
+type Column struct {
+	Name    string
+	Type    string
+	Default interface{}
+}
+
+func Create(tbname string, columns ...Column) string {
+	return ""
+}
+
+func Drop(tbname string, columns ...Column) string {
+	return ""
+}
+
+func TableDDL(tbname string, columns ...Column) string {
+	return ""
 }

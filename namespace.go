@@ -19,7 +19,6 @@ import (
 	"strings"
 
 	beecontext "github.com/astaxie/beego/context"
-	"github.com/astaxie/beego/middleware"
 )
 
 type namespaceCond func(*beecontext.Context) bool
@@ -57,7 +56,7 @@ func NewNamespace(prefix string, params ...innnerNamespace) *Namespace {
 func (n *Namespace) Cond(cond namespaceCond) *Namespace {
 	fn := func(ctx *beecontext.Context) {
 		if !cond(ctx) {
-			middleware.Exception("405", ctx.ResponseWriter, ctx.Request, "Method not allowed")
+			exception("405", ctx)
 		}
 	}
 	if v, ok := n.handlers.filters[BeforeRouter]; ok {
@@ -217,7 +216,7 @@ func (n *Namespace) Namespace(ns ...*Namespace) *Namespace {
 				n.handlers.routers[k] = t
 			}
 		}
-		if n.handlers.enableFilter {
+		if ni.handlers.enableFilter {
 			for pos, filterList := range ni.handlers.filters {
 				for _, mr := range filterList {
 					t := NewTree()
