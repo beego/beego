@@ -207,6 +207,42 @@ func (output *BeegoOutput) Json(data interface{}, hasIndent bool, coding bool) e
 	return nil
 }
 
+// JsonApi writes json to response body.
+// if coding is true, it converts utf-8 to \u0000 type.
+// supports custom charset + jsonapi extensions
+func (output *BeegoOutput) JsonApi(data interface{}, hasIndent bool, coding bool, charset string, extensions []string) error {
+	var exts string
+	if charset != "" {
+		charset = "charset=" + charset
+	}
+	if len(extensions) > 0 {
+		for i, ext := range extensions {
+			if i > 0 {
+				exts += ","
+			}
+			exts += ext
+		}
+		exts = "ext=" + exts + "; "
+	}
+	output.Header("Content-Type", "application/vnd.api+json; " + exts + charset)
+	var content []byte
+	var err error
+	if hasIndent {
+		content, err = json.MarshalIndent(data, "", "  ")
+	} else {
+		content, err = json.Marshal(data)
+	}
+	if err != nil {
+		http.Error(output.Context.ResponseWriter, err.Error(), http.StatusInternalServerError)
+		return err
+	}
+	if coding {
+		content = []byte(stringsToJson(string(content)))
+	}
+	output.Body(content)
+	return nil
+}
+
 // Jsonp writes jsonp to response body.
 func (output *BeegoOutput) Jsonp(data interface{}, hasIndent bool) error {
 	output.Header("Content-Type", "application/javascript; charset=utf-8")
