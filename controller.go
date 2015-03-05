@@ -321,6 +321,21 @@ func (c *Controller) ServeJson(encoding ...bool) {
 	c.Ctx.Output.Json(c.Data["json"], hasIndent, hasencoding)
 }
 
+// ServeJsonAPI sends a JSONAPI response with custom encoding charset.
+func (c *Controller) ServeJsonApi(charset string, extensions []string, encoding ...bool) {
+	var hasIndent bool
+	var hasencoding bool
+	if RunMode == "prod" {
+		hasIndent = false
+	} else {
+		hasIndent = true
+	}
+	if len(encoding) > 0 && encoding[0] == true {
+		hasencoding = true
+	}
+	c.Ctx.Output.JsonApi(c.Data["json"], hasIndent, hasencoding, charset, extensions)
+}
+
 // ServeJsonp sends a jsonp response.
 func (c *Controller) ServeJsonp() {
 	var hasIndent bool
