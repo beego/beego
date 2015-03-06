@@ -253,6 +253,22 @@ func (b *BeegoHttpRequest) Body(data interface{}) *BeegoHttpRequest {
 	return b
 }
 
+
+// JsonBody adds request raw body encoding by JSON.
+func (b *BeegoHttpRequest) JsonBody(obj interface{}) (*BeegoHttpRequest, error) {
+	if b.req.Body == nil && obj != nil {
+		buf := bytes.NewBuffer(nil)
+		enc := json.NewEncoder(buf)
+		if err := enc.Encode(obj); err != nil {
+			return b, err
+		}
+		b.req.Body = ioutil.NopCloser(buf)
+		b.req.ContentLength = int64(buf.Len())
+		b.req.Header.Set("Content-Type", "application/json")
+	}
+	return b, nil
+}
+
 func (b *BeegoHttpRequest) buildUrl(paramBody string) {
 	// build GET url with query string
 	if b.req.Method == "GET" && len(paramBody) > 0 {
