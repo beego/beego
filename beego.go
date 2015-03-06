@@ -336,13 +336,13 @@ func initBeforeHttpRun() {
 // this function is for test package init
 func TestBeegoInit(apppath string) {
 	AppPath = apppath
-	RunMode = "test"
 	AppConfigPath = filepath.Join(AppPath, "conf", "app.conf")
 	err := ParseConfig()
 	if err != nil && !os.IsNotExist(err) {
 		// for init if doesn't have app.conf will not panic
 		Info(err)
 	}
+	RunMode = "test"
 	os.Chdir(AppPath)
 	initBeforeHttpRun()
 }

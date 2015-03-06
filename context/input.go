@@ -268,6 +268,9 @@ func (input *BeegoInput) Session(key interface{}) interface{} {
 
 // CopyBody returns the raw request body data as bytes.
 func (input *BeegoInput) CopyBody() []byte {
+	if input.Request.Body == nil {
+		return []byte{}
+	}
 	requestbody, _ := ioutil.ReadAll(input.Request.Body)
 	input.Request.Body.Close()
 	bf := bytes.NewBuffer(requestbody)
