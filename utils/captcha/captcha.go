@@ -132,21 +132,20 @@ func (c *Captcha) Handler(ctx *context.Context) {
 
 	key := c.key(id)
 
-	if v, ok := c.store.Get(key).([]byte); ok {
-		chars = v
-	} else {
-		ctx.Output.SetStatus(404)
-		ctx.WriteString("captcha not found")
-		return
-	}
-
-	// reload captcha
 	if len(ctx.Input.Query("reload")) > 0 {
 		chars = c.genRandChars()
 		if err := c.store.Put(key, chars, c.Expiration); err != nil {
 			ctx.Output.SetStatus(500)
 			ctx.WriteString("captcha reload error")
 			beego.Error("Reload Create Captcha Error:", err)
+			return
+		}
+	} else {
+		if v, ok := c.store.Get(key).([]byte); ok {
+			chars = v
+		} else {
+			ctx.Output.SetStatus(404)
+			ctx.WriteString("captcha not found")
 			return
 		}
 	}
