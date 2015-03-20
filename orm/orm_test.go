@@ -586,29 +586,29 @@ func TestInsertTestData(t *testing.T) {
 	throwFail(t, AssertIs(id, 4))
 
 	tags := []*Tag{
-		&Tag{Name: "golang", BestPost: &Post{Id: 2}},
-		&Tag{Name: "example"},
-		&Tag{Name: "format"},
-		&Tag{Name: "c++"},
+		{Name: "golang", BestPost: &Post{Id: 2}},
+		{Name: "example"},
+		{Name: "format"},
+		{Name: "c++"},
 	}
 
 	posts := []*Post{
-		&Post{User: users[0], Tags: []*Tag{tags[0]}, Title: "Introduction", Content: `Go is a new language. Although it borrows ideas from existing languages, it has unusual properties that make effective Go programs different in character from programs written in its relatives. A straightforward translation of a C++ or Java program into Go is unlikely to produce a satisfactory result—Java programs are written in Java, not Go. On the other hand, thinking about the problem from a Go perspective could produce a successful but quite different program. In other words, to write Go well, it's important to understand its properties and idioms. It's also important to know the established conventions for programming in Go, such as naming, formatting, program construction, and so on, so that programs you write will be easy for other Go programmers to understand.
+		{User: users[0], Tags: []*Tag{tags[0]}, Title: "Introduction", Content: `Go is a new language. Although it borrows ideas from existing languages, it has unusual properties that make effective Go programs different in character from programs written in its relatives. A straightforward translation of a C++ or Java program into Go is unlikely to produce a satisfactory result—Java programs are written in Java, not Go. On the other hand, thinking about the problem from a Go perspective could produce a successful but quite different program. In other words, to write Go well, it's important to understand its properties and idioms. It's also important to know the established conventions for programming in Go, such as naming, formatting, program construction, and so on, so that programs you write will be easy for other Go programmers to understand.
 This document gives tips for writing clear, idiomatic Go code. It augments the language specification, the Tour of Go, and How to Write Go Code, all of which you should read first.`},
-		&Post{User: users[1], Tags: []*Tag{tags[0], tags[1]}, Title: "Examples", Content: `The Go package sources are intended to serve not only as the core library but also as examples of how to use the language. Moreover, many of the packages contain working, self-contained executable examples you can run directly from the golang.org web site, such as this one (click on the word "Example" to open it up). If you have a question about how to approach a problem or how something might be implemented, the documentation, code and examples in the library can provide answers, ideas and background.`},
-		&Post{User: users[1], Tags: []*Tag{tags[0], tags[2]}, Title: "Formatting", Content: `Formatting issues are the most contentious but the least consequential. People can adapt to different formatting styles but it's better if they don't have to, and less time is devoted to the topic if everyone adheres to the same style. The problem is how to approach this Utopia without a long prescriptive style guide.
+		{User: users[1], Tags: []*Tag{tags[0], tags[1]}, Title: "Examples", Content: `The Go package sources are intended to serve not only as the core library but also as examples of how to use the language. Moreover, many of the packages contain working, self-contained executable examples you can run directly from the golang.org web site, such as this one (click on the word "Example" to open it up). If you have a question about how to approach a problem or how something might be implemented, the documentation, code and examples in the library can provide answers, ideas and background.`},
+		{User: users[1], Tags: []*Tag{tags[0], tags[2]}, Title: "Formatting", Content: `Formatting issues are the most contentious but the least consequential. People can adapt to different formatting styles but it's better if they don't have to, and less time is devoted to the topic if everyone adheres to the same style. The problem is how to approach this Utopia without a long prescriptive style guide.
 With Go we take an unusual approach and let the machine take care of most formatting issues. The gofmt program (also available as go fmt, which operates at the package level rather than source file level) reads a Go program and emits the source in a standard style of indentation and vertical alignment, retaining and if necessary reformatting comments. If you want to know how to handle some new layout situation, run gofmt; if the answer doesn't seem right, rearrange your program (or file a bug about gofmt), don't work around it.`},
-		&Post{User: users[2], Tags: []*Tag{tags[3]}, Title: "Commentary", Content: `Go provides C-style /* */ block comments and C++-style // line comments. Line comments are the norm; block comments appear mostly as package comments, but are useful within an expression or to disable large swaths of code.
+		{User: users[2], Tags: []*Tag{tags[3]}, Title: "Commentary", Content: `Go provides C-style /* */ block comments and C++-style // line comments. Line comments are the norm; block comments appear mostly as package comments, but are useful within an expression or to disable large swaths of code.
 The program—and web server—godoc processes Go source files to extract documentation about the contents of the package. Comments that appear before top-level declarations, with no intervening newlines, are extracted along with the declaration to serve as explanatory text for the item. The nature and style of these comments determines the quality of the documentation godoc produces.`},
 	}
 
 	comments := []*Comment{
-		&Comment{Post: posts[0], Content: "a comment"},
-		&Comment{Post: posts[1], Content: "yes"},
-		&Comment{Post: posts[1]},
-		&Comment{Post: posts[1]},
-		&Comment{Post: posts[2]},
-		&Comment{Post: posts[2]},
+		{Post: posts[0], Content: "a comment"},
+		{Post: posts[1], Content: "yes"},
+		{Post: posts[1]},
+		{Post: posts[1]},
+		{Post: posts[2]},
+		{Post: posts[2]},
 	}
 
 	for _, tag := range tags {
@@ -1248,7 +1248,7 @@ func TestQueryM2M(t *testing.T) {
 	post := Post{Id: 4}
 	m2m := dORM.QueryM2M(&post, "Tags")
 
-	tag1 := []*Tag{&Tag{Name: "TestTag1"}, &Tag{Name: "TestTag2"}}
+	tag1 := []*Tag{{Name: "TestTag1"}, {Name: "TestTag2"}}
 	tag2 := &Tag{Name: "TestTag3"}
 	tag3 := []interface{}{&Tag{Name: "TestTag4"}}
 
@@ -1311,7 +1311,7 @@ func TestQueryM2M(t *testing.T) {
 
 	m2m = dORM.QueryM2M(&tag, "Posts")
 
-	post1 := []*Post{&Post{Title: "TestPost1"}, &Post{Title: "TestPost2"}}
+	post1 := []*Post{{Title: "TestPost1"}, {Title: "TestPost2"}}
 	post2 := &Post{Title: "TestPost3"}
 	post3 := []interface{}{&Post{Title: "TestPost4"}}
 

@@ -88,7 +88,7 @@ func (l *logFilter) Filter(ctx *beecontext.Context) bool {
 	if requestPath == "/favicon.ico" || requestPath == "/robots.txt" {
 		return true
 	}
-	for prefix, _ := range StaticDir {
+	for prefix := range StaticDir {
 		if strings.HasPrefix(requestPath, prefix) {
 			return true
 		}
@@ -171,7 +171,7 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingM
 			p.addToRouter(m, pattern, route)
 		}
 	} else {
-		for k, _ := range methods {
+		for k := range methods {
 			if k == "*" {
 				for _, m := range HTTPMETHOD {
 					p.addToRouter(m, pattern, route)
@@ -332,7 +332,7 @@ func (p *ControllerRegistor) AddMethod(method, pattern string, f FilterFunc) {
 		methods[strings.ToUpper(method)] = strings.ToUpper(method)
 	}
 	route.methods = methods
-	for k, _ := range methods {
+	for k := range methods {
 		if k == "*" {
 			for _, m := range HTTPMETHOD {
 				p.addToRouter(m, pattern, route)

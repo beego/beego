@@ -292,7 +292,7 @@ func qpEscape(dest []byte, c byte) {
 	const nums = "0123456789ABCDEF"
 	dest[0] = '='
 	dest[1] = nums[(c&0xf0)>>4]
-	dest[2] = nums[(c&0xf)]
+	dest[2] = nums[(c & 0xf)]
 }
 
 // headerToBytes enumerates the key and values in the header, and writes the results to the IO Writer

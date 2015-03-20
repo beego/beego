@@ -179,7 +179,6 @@ func (rp *MemProvider) SessionRegenerate(oldsid, sid string) (session.SessionSto
 	} else {
 		client.Delete(oldsid)
 		item.Key = sid
-		item.Value = item.Value
 		item.Expiration = int32(rp.maxlifetime)
 		client.Set(item)
 		contain = item.Value
