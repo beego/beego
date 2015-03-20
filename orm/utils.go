@@ -195,7 +195,7 @@ func snakeString(s string) string {
 		}
 		data = append(data, d)
 	}
-	return strings.ToLower(string(data[:len(data)]))
+	return strings.ToLower(string(data[:]))
 }
 
 // camel string, xx_yy to XxYy
@@ -220,7 +220,7 @@ func camelString(s string) string {
 		}
 		data = append(data, d)
 	}
-	return string(data[:len(data)])
+	return string(data[:])
 }
 
 type argString []string

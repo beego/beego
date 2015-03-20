@@ -585,7 +585,7 @@ func (o *rawSet) readValues(container interface{}, needCols []string) (int64, er
 
 				cols = columns
 				refs = make([]interface{}, len(cols))
-				for i, _ := range refs {
+				for i := range refs {
 					var ref sql.NullString
 					refs[i] = &ref
 
@@ -711,7 +711,7 @@ func (o *rawSet) queryRowsTo(container interface{}, keyCol, valueCol string) (in
 			} else {
 				cols = columns
 				refs = make([]interface{}, len(cols))
-				for i, _ := range refs {
+				for i := range refs {
 					if keyCol == cols[i] {
 						keyIndex = i
 					}
