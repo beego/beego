@@ -33,7 +33,7 @@ import (
 var (
 	acceptsHtmlRegex = regexp.MustCompile(`(text/html|application/xhtml\+xml)(?:,|$)`)
 	acceptsXmlRegex  = regexp.MustCompile(`(application/xml|text/xml)(?:,|$)`)
-	acceptsJsonRegex = regexp.MustCompile(`(application/json)(?:,|$)?`)
+	acceptsJsonRegex = regexp.MustCompile(`(application/json)(?:,|$)`)
 )
 
 // BeegoInput operates the http request header, data, cookie and body.
