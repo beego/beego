@@ -148,9 +148,6 @@ func (bl *BeeLogger) DelLogger(adaptername string) error {
 }
 
 func (bl *BeeLogger) writerMsg(loglevel int, msg string) error {
-	if loglevel > bl.level {
-		return nil
-	}
 	lm := new(logMsg)
 	lm.level = loglevel
 	if bl.enableFuncCallDepth {
