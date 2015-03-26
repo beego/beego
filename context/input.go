@@ -21,10 +21,19 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/astaxie/beego/session"
+)
+
+// Regexes for checking the accept headers
+// TODO make sure these are correct
+var (
+	acceptsHtmlRegex = regexp.MustCompile(`(text/html|application/xhtml\+xml)(?:,|$)`)
+	acceptsXmlRegex  = regexp.MustCompile(`(application/xml|text/xml)(?:,|$)`)
+	acceptsJsonRegex = regexp.MustCompile(`(application/json)(?:,|$)`)
 )
 
 // BeegoInput operates the http request header, data, cookie and body.
@@ -161,6 +170,21 @@ func (input *BeegoInput) IsWebsocket() bool {
 // IsUpload returns boolean of whether file uploads in this request or not..
 func (input *BeegoInput) IsUpload() bool {
 	return strings.Contains(input.Header("Content-Type"), "multipart/form-data")
+}
+
+// Checks if request accepts html response
+func (input *BeegoInput) AcceptsHtml() bool {
+	return acceptsHtmlRegex.MatchString(input.Header("Accept"))
+}
+
+// Checks if request accepts xml response
+func (input *BeegoInput) AcceptsXml() bool {
+	return acceptsXmlRegex.MatchString(input.Header("Accept"))
+}
+
+// Checks if request accepts json response
+func (input *BeegoInput) AcceptsJson() bool {
+	return acceptsJsonRegex.MatchString(input.Header("Accept"))
 }
 
 // IP returns request client ip.
