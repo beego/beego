@@ -107,6 +107,7 @@ type Validation struct {
 // Clean all ValidationError.
 func (v *Validation) Clear() {
 	v.Errors = []*ValidationError{}
+ 	v.ErrorsMap = nil
 }
 
 // Has ValidationError nor not.
