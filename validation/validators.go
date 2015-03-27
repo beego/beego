@@ -64,8 +64,8 @@ func (r Required) IsSatisfied(obj interface{}) bool {
 	if str, ok := obj.(string); ok {
 		return len(str) > 0
 	}
-	if b, ok := obj.(bool); ok {
-		return b
+	if _, ok := obj.(bool); ok {
+		return true
 	}
 	if i, ok := obj.(int); ok {
 		return i != 0
