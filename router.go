@@ -862,8 +862,8 @@ func (p *ControllerRegistor) recoverPanic(context *beecontext.Context) {
 				panic(err)
 			} else {
 				if ErrorsShow {
-					if handler, ok := ErrorMaps[fmt.Sprint(err)]; ok {
-						executeError(handler, context)
+					if _, ok := ErrorMaps[fmt.Sprint(err)]; ok {
+						exception(fmt.Sprint(err), context)
 						return
 					}
 				}
@@ -886,15 +886,7 @@ func (p *ControllerRegistor) recoverPanic(context *beecontext.Context) {
 			} else {
 				// in production model show all infomation
 				if ErrorsShow {
-					if handler, ok := ErrorMaps[fmt.Sprint(err)]; ok {
-						executeError(handler, context)
-						return
-					} else if handler, ok := ErrorMaps["503"]; ok {
-						executeError(handler, context)
-						return
-					} else {
-						context.WriteString(fmt.Sprint(err))
-					}
+					exception(fmt.Sprint(err), context)
 				} else {
 					Critical("the request url is ", context.Input.Url())
 					Critical("Handler crashed with error", err)
