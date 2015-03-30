@@ -439,24 +439,26 @@ func exception(errcode string, ctx *context.Context) {
 	if err != nil {
 		code = 503
 	}
-	ctx.ResponseWriter.WriteHeader(code)
 	if h, ok := ErrorMaps[errcode]; ok {
-		executeError(h, ctx)
+		executeError(h, ctx, code)
 		return
 	} else if h, ok := ErrorMaps["503"]; ok {
-		executeError(h, ctx)
+		executeError(h, ctx, code)
 		return
 	} else {
+		ctx.ResponseWriter.WriteHeader(code)
 		ctx.WriteString(errcode)
 	}
 }
 
-func executeError(err *errorInfo, ctx *context.Context) {
+func executeError(err *errorInfo, ctx *context.Context, code int) {
 	if err.errorType == errorTypeHandler {
+		ctx.ResponseWriter.WriteHeader(code)
 		err.handler(ctx.ResponseWriter, ctx.Request)
 		return
 	}
 	if err.errorType == errorTypeController {
+		ctx.Output.SetStatus(code)
 		//Invoke the request handler
 		vc := reflect.New(err.controllerType)
 		execController, ok := vc.Interface().(ControllerInterface)
@@ -476,11 +478,9 @@ func executeError(err *errorInfo, ctx *context.Context) {
 		method.Call(in)
 
 		//render template
-		if ctx.Output.Status == 0 {
-			if AutoRender {
-				if err := execController.Render(); err != nil {
-					panic(err)
-				}
+		if AutoRender {
+			if err := execController.Render(); err != nil {
+				panic(err)
 			}
 		}
 
