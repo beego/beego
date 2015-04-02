@@ -151,6 +151,7 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 			Domain:   manager.config.Domain}
 		if manager.config.CookieLifeTime >= 0 {
 			cookie.MaxAge = manager.config.CookieLifeTime
+			cookie.Expires = time.Now().Add(time.Duration(manager.config.CookieLifeTime) * time.Second)
 		}
 		if manager.config.EnableSetCookie {
 			http.SetCookie(w, cookie)
@@ -177,6 +178,7 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 				Domain:   manager.config.Domain}
 			if manager.config.CookieLifeTime >= 0 {
 				cookie.MaxAge = manager.config.CookieLifeTime
+				cookie.Expires = time.Now().Add(time.Duration(manager.config.CookieLifeTime) * time.Second)
 			}
 			if manager.config.EnableSetCookie {
 				http.SetCookie(w, cookie)
