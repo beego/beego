@@ -137,7 +137,7 @@ func getRegFuncs(tag, key string) (vfs []ValidFunc, str string, err error) {
 	if err != nil {
 		return
 	}
-	vfs = []ValidFunc{ValidFunc{"Match", []interface{}{reg, key + ".Match"}}}
+	vfs = []ValidFunc{{"Match", []interface{}{reg, key + ".Match"}}}
 	str = strings.TrimSpace(tag[:index]) + strings.TrimSpace(tag[end+len("/)"):])
 	return
 }

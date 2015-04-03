@@ -149,8 +149,9 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 			HttpOnly: true,
 			Secure:   manager.config.Secure,
 			Domain:   manager.config.Domain}
-		if manager.config.CookieLifeTime >= 0 {
+		if manager.config.CookieLifeTime > 0 {
 			cookie.MaxAge = manager.config.CookieLifeTime
+			cookie.Expires = time.Now().Add(time.Duration(manager.config.CookieLifeTime) * time.Second)
 		}
 		if manager.config.EnableSetCookie {
 			http.SetCookie(w, cookie)
@@ -175,8 +176,9 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 				HttpOnly: true,
 				Secure:   manager.config.Secure,
 				Domain:   manager.config.Domain}
-			if manager.config.CookieLifeTime >= 0 {
+			if manager.config.CookieLifeTime > 0 {
 				cookie.MaxAge = manager.config.CookieLifeTime
+				cookie.Expires = time.Now().Add(time.Duration(manager.config.CookieLifeTime) * time.Second)
 			}
 			if manager.config.EnableSetCookie {
 				http.SetCookie(w, cookie)
@@ -241,8 +243,9 @@ func (manager *Manager) SessionRegenerateId(w http.ResponseWriter, r *http.Reque
 		cookie.HttpOnly = true
 		cookie.Path = "/"
 	}
-	if manager.config.CookieLifeTime >= 0 {
+	if manager.config.CookieLifeTime > 0 {
 		cookie.MaxAge = manager.config.CookieLifeTime
+		cookie.Expires = time.Now().Add(time.Duration(manager.config.CookieLifeTime) * time.Second)
 	}
 	http.SetCookie(w, cookie)
 	r.AddCookie(cookie)

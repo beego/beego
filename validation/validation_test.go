@@ -26,6 +26,12 @@ func TestRequired(t *testing.T) {
 	if valid.Required(nil, "nil").Ok {
 		t.Error("nil object should be false")
 	}
+	if !valid.Required(true, "bool").Ok {
+		t.Error("Bool value should always return true")
+	}
+	if !valid.Required(false, "bool").Ok {
+		t.Error("Bool value should always return true")
+	}
 	if valid.Required("", "string").Ok {
 		t.Error("\"'\" string should be false")
 	}

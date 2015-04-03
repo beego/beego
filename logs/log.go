@@ -148,9 +148,6 @@ func (bl *BeeLogger) DelLogger(adaptername string) error {
 }
 
 func (bl *BeeLogger) writerMsg(loglevel int, msg string) error {
-	if loglevel > bl.level {
-		return nil
-	}
 	lm := new(logMsg)
 	lm.level = loglevel
 	if bl.enableFuncCallDepth {
@@ -207,48 +204,72 @@ func (bl *BeeLogger) startLogger() {
 
 // Log EMERGENCY level message.
 func (bl *BeeLogger) Emergency(format string, v ...interface{}) {
+	if LevelEmergency > bl.level {
+		return
+	}
 	msg := fmt.Sprintf("[M] "+format, v...)
 	bl.writerMsg(LevelEmergency, msg)
 }
 
 // Log ALERT level message.
 func (bl *BeeLogger) Alert(format string, v ...interface{}) {
+	if LevelAlert > bl.level {
+		return
+	}
 	msg := fmt.Sprintf("[A] "+format, v...)
 	bl.writerMsg(LevelAlert, msg)
 }
 
 // Log CRITICAL level message.
 func (bl *BeeLogger) Critical(format string, v ...interface{}) {
+	if LevelCritical > bl.level {
+		return
+	}
 	msg := fmt.Sprintf("[C] "+format, v...)
 	bl.writerMsg(LevelCritical, msg)
 }
 
 // Log ERROR level message.
 func (bl *BeeLogger) Error(format string, v ...interface{}) {
+	if LevelError > bl.level {
+		return
+	}
 	msg := fmt.Sprintf("[E] "+format, v...)
 	bl.writerMsg(LevelError, msg)
 }
 
 // Log WARNING level message.
 func (bl *BeeLogger) Warning(format string, v ...interface{}) {
+	if LevelWarning > bl.level {
+		return
+	}
 	msg := fmt.Sprintf("[W] "+format, v...)
 	bl.writerMsg(LevelWarning, msg)
 }
 
 // Log NOTICE level message.
 func (bl *BeeLogger) Notice(format string, v ...interface{}) {
+	if LevelNotice > bl.level {
+		return
+	}
 	msg := fmt.Sprintf("[N] "+format, v...)
 	bl.writerMsg(LevelNotice, msg)
 }
 
 // Log INFORMATIONAL level message.
 func (bl *BeeLogger) Informational(format string, v ...interface{}) {
+	if LevelInformational > bl.level {
+		return
+	}
 	msg := fmt.Sprintf("[I] "+format, v...)
 	bl.writerMsg(LevelInformational, msg)
 }
 
 // Log DEBUG level message.
 func (bl *BeeLogger) Debug(format string, v ...interface{}) {
+	if LevelDebug > bl.level {
+		return
+	}
 	msg := fmt.Sprintf("[D] "+format, v...)
 	bl.writerMsg(LevelDebug, msg)
 }

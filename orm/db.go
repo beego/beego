@@ -324,7 +324,7 @@ func (d *dbBase) Read(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Lo
 	query := fmt.Sprintf("SELECT %s%s%s FROM %s%s%s WHERE %s%s%s = ?", Q, sels, Q, Q, mi.table, Q, Q, wheres, Q)
 
 	refs := make([]interface{}, colsNum)
-	for i, _ := range refs {
+	for i := range refs {
 		var ref interface{}
 		refs[i] = &ref
 	}
@@ -423,7 +423,7 @@ func (d *dbBase) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []s
 	Q := d.ins.TableQuote()
 
 	marks := make([]string, len(names))
-	for i, _ := range marks {
+	for i := range marks {
 		marks[i] = "?"
 	}
 
@@ -693,7 +693,7 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	}
 
 	marks := make([]string, len(args))
-	for i, _ := range marks {
+	for i := range marks {
 		marks[i] = "?"
 	}
 	sql := fmt.Sprintf("IN (%s)", strings.Join(marks, ", "))
@@ -824,7 +824,7 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 	}
 
 	refs := make([]interface{}, colsNum)
-	for i, _ := range refs {
+	for i := range refs {
 		var ref interface{}
 		refs[i] = &ref
 	}
@@ -964,7 +964,7 @@ func (d *dbBase) GenerateOperatorSql(mi *modelInfo, fi *fieldInfo, operator stri
 	switch operator {
 	case "in":
 		marks := make([]string, len(params))
-		for i, _ := range marks {
+		for i := range marks {
 			marks[i] = "?"
 		}
 		sql = fmt.Sprintf("IN (%s)", strings.Join(marks, ", "))
@@ -1460,7 +1460,7 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 	}
 
 	refs := make([]interface{}, len(cols))
-	for i, _ := range refs {
+	for i := range refs {
 		var ref interface{}
 		refs[i] = &ref
 	}
