@@ -98,6 +98,10 @@ func newAppConfig(AppConfigProvider, AppConfigPath string) (*beegoAppConfig, err
 }
 
 func (b *beegoAppConfig) Set(key, val string) error {
+	err := b.innerConfig.Set(RunMode+"::"+key, val)
+	if err == nil {
+		return err
+	}
 	return b.innerConfig.Set(key, val)
 }
 
@@ -150,26 +154,50 @@ func (b *beegoAppConfig) Float(key string) (float64, error) {
 }
 
 func (b *beegoAppConfig) DefaultString(key string, defaultval string) string {
+	v := b.String(key)
+	if v != "" {
+		return v
+	}
 	return b.innerConfig.DefaultString(key, defaultval)
 }
 
 func (b *beegoAppConfig) DefaultStrings(key string, defaultval []string) []string {
+	v := b.Strings(key)
+	if len(v) != 0 {
+		return v
+	}
 	return b.innerConfig.DefaultStrings(key, defaultval)
 }
 
 func (b *beegoAppConfig) DefaultInt(key string, defaultval int) int {
+	v, err := b.Int(key)
+	if err == nil {
+		return v
+	}
 	return b.innerConfig.DefaultInt(key, defaultval)
 }
 
 func (b *beegoAppConfig) DefaultInt64(key string, defaultval int64) int64 {
+	v, err := b.Int64(key)
+	if err == nil {
+		return v
+	}
 	return b.innerConfig.DefaultInt64(key, defaultval)
 }
 
 func (b *beegoAppConfig) DefaultBool(key string, defaultval bool) bool {
+	v, err := b.Bool(key)
+	if err == nil {
+		return v
+	}
 	return b.innerConfig.DefaultBool(key, defaultval)
 }
 
 func (b *beegoAppConfig) DefaultFloat(key string, defaultval float64) float64 {
+	v, err := b.Float(key)
+	if err == nil {
+		return v
+	}
 	return b.innerConfig.DefaultFloat(key, defaultval)
 }
 
