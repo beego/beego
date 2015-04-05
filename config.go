@@ -158,7 +158,7 @@ func (b *beegoAppConfig) DefaultString(key string, defaultval string) string {
 	if v != "" {
 		return v
 	}
-	return b.innerConfig.DefaultString(key, defaultval)
+	return defaultval
 }
 
 func (b *beegoAppConfig) DefaultStrings(key string, defaultval []string) []string {
@@ -166,7 +166,7 @@ func (b *beegoAppConfig) DefaultStrings(key string, defaultval []string) []strin
 	if len(v) != 0 {
 		return v
 	}
-	return b.innerConfig.DefaultStrings(key, defaultval)
+	return defaultval
 }
 
 func (b *beegoAppConfig) DefaultInt(key string, defaultval int) int {
@@ -174,7 +174,7 @@ func (b *beegoAppConfig) DefaultInt(key string, defaultval int) int {
 	if err == nil {
 		return v
 	}
-	return b.innerConfig.DefaultInt(key, defaultval)
+	return defaultval
 }
 
 func (b *beegoAppConfig) DefaultInt64(key string, defaultval int64) int64 {
@@ -182,7 +182,7 @@ func (b *beegoAppConfig) DefaultInt64(key string, defaultval int64) int64 {
 	if err == nil {
 		return v
 	}
-	return b.innerConfig.DefaultInt64(key, defaultval)
+	return defaultval
 }
 
 func (b *beegoAppConfig) DefaultBool(key string, defaultval bool) bool {
@@ -190,7 +190,7 @@ func (b *beegoAppConfig) DefaultBool(key string, defaultval bool) bool {
 	if err == nil {
 		return v
 	}
-	return b.innerConfig.DefaultBool(key, defaultval)
+	return defaultval
 }
 
 func (b *beegoAppConfig) DefaultFloat(key string, defaultval float64) float64 {
@@ -198,7 +198,7 @@ func (b *beegoAppConfig) DefaultFloat(key string, defaultval float64) float64 {
 	if err == nil {
 		return v
 	}
-	return b.innerConfig.DefaultFloat(key, defaultval)
+	return defaultval
 }
 
 func (b *beegoAppConfig) DIY(key string) (interface{}, error) {
