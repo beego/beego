@@ -91,71 +91,62 @@ func (bc *MemoryCache) Delete(name string) error {
 	return nil
 }
 
+func convertToCounter(value interface{}) (converted int64, err error) {
+	switch value.(type) {
+	case uint64:
+		converted = int64(value.(uint64))
+	case int:
+		converted = int64(value.(int))
+	case int32:
+		converted = int64(value.(int32))
+	case uint:
+		converted = int64(value.(uint))
+	case uint32:
+		converted = int64(value.(uint32))
+	case int64:
+		converted = value.(int64)
+	default:
+		err = errors.New("value cannot be converted to int64")
+	}
+	return
+}
+
 // Increase cache counter in memory.
 // it supports int,int64,int32,uint,uint64,uint32.
-func (bc *MemoryCache) Incr(key string) error {
+func (bc *MemoryCache) Incr(key string) (int64, error) {
 	bc.lock.RLock()
 	defer bc.lock.RUnlock()
 	itm, ok := bc.items[key]
 	if !ok {
-		return errors.New("key not exist")
+		return 0, errors.New("key not exist")
 	}
-	switch itm.val.(type) {
-	case int:
-		itm.val = itm.val.(int) + 1
-	case int64:
-		itm.val = itm.val.(int64) + 1
-	case int32:
-		itm.val = itm.val.(int32) + 1
-	case uint:
-		itm.val = itm.val.(uint) + 1
-	case uint32:
-		itm.val = itm.val.(uint32) + 1
-	case uint64:
-		itm.val = itm.val.(uint64) + 1
-	default:
-		return errors.New("item val is not int int64 int32")
+
+	counter, err := convertToCounter(itm.val)
+	if err != nil {
+		return 0, err
+	} else {
+		counter += 1
+		itm.val = counter
+		return counter, nil
 	}
-	return nil
 }
 
 // Decrease counter in memory.
-func (bc *MemoryCache) Decr(key string) error {
+func (bc *MemoryCache) Decr(key string) (int64, error) {
 	bc.lock.RLock()
 	defer bc.lock.RUnlock()
 	itm, ok := bc.items[key]
 	if !ok {
-		return errors.New("key not exist")
+		return 0, errors.New("key not exist")
 	}
-	switch itm.val.(type) {
-	case int:
-		itm.val = itm.val.(int) - 1
-	case int64:
-		itm.val = itm.val.(int64) - 1
-	case int32:
-		itm.val = itm.val.(int32) - 1
-	case uint:
-		if itm.val.(uint) > 0 {
-			itm.val = itm.val.(uint) - 1
-		} else {
-			return errors.New("item val is less than 0")
-		}
-	case uint32:
-		if itm.val.(uint32) > 0 {
-			itm.val = itm.val.(uint32) - 1
-		} else {
-			return errors.New("item val is less than 0")
-		}
-	case uint64:
-		if itm.val.(uint64) > 0 {
-			itm.val = itm.val.(uint64) - 1
-		} else {
-			return errors.New("item val is less than 0")
-		}
-	default:
-		return errors.New("item val is not int int64 int32")
+	counter, err := convertToCounter(itm.val)
+	if err != nil {
+		return 0, err
+	} else {
+		counter -= 1
+		itm.val = counter
+		return counter, nil
 	}
-	return nil
 }
 
 // check cache exist in memory.
