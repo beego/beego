@@ -70,18 +70,23 @@ func (t *Tree) addtree(segments []string, tree *Tree, wildcards []string, reg st
 				} else {
 					regexpStr = "/" + regexpStr
 				}
-			} else {
-				for _, w := range wildcards {
-					if w == "." || w == ":" {
-						continue
+			} else if reg != "" {
+				if seg == "*.*" {
+					regexpStr = "([^.]+).(.+)"
+				} else {
+					for _, w := range params {
+						if w == "." || w == ":" {
+							continue
+						}
+						regexpStr = "([^/]+)/" + regexpStr
 					}
-					regexpStr = "([^/]+)/" + regexpStr
 				}
 			}
-			reg = strings.Trim(reg+regexpStr, "/")
+			reg = strings.Trim(reg+"/"+regexpStr, "/")
 			filterTreeWithPrefix(tree, append(wildcards, params...), reg)
 			t.wildcard = tree
 		} else {
+			reg = strings.Trim(reg+"/"+regexpStr, "/")
 			filterTreeWithPrefix(tree, append(wildcards, params...), reg)
 			t.fixrouters[seg] = tree
 		}
@@ -104,23 +109,23 @@ func (t *Tree) addtree(segments []string, tree *Tree, wildcards []string, reg st
 						rr = rr + "([^/]+)/"
 					}
 				}
-				regexpStr = rr + regexpStr + "/"
+				regexpStr = rr + regexpStr
 			} else {
-				regexpStr = "/" + regexpStr + "/"
+				regexpStr = "/" + regexpStr
 			}
-		} else {
-			for _, w := range wildcards {
-				if w == "." || w == ":" {
-					continue
-				}
-				if w == ":splat" {
-					regexpStr = "(.+)/" + regexpStr
-				} else {
+		} else if reg != "" {
+			if seg == "*.*" {
+				regexpStr = "([^.]+).(.+)"
+			} else {
+				for _, w := range params {
+					if w == "." || w == ":" {
+						continue
+					}
 					regexpStr = "([^/]+)/" + regexpStr
 				}
 			}
 		}
-		reg = reg + regexpStr
+		reg = strings.TrimRight(strings.TrimRight(reg, "/")+"/"+regexpStr, "/")
 		t.wildcard.addtree(segments[1:], tree, append(wildcards, params...), reg)
 	} else {
 		subTree := NewTree()
@@ -140,7 +145,7 @@ func filterTreeWithPrefix(t *Tree, wildcards []string, reg string) {
 		if reg != "" {
 			if l.regexps != nil {
 				l.wildcards = append(wildcards, l.wildcards...)
-				l.regexps = regexp.MustCompile("^" + reg + strings.Trim(l.regexps.String(), "^$") + "$")
+				l.regexps = regexp.MustCompile("^" + reg + "/" + strings.Trim(l.regexps.String(), "^$") + "$")
 			} else {
 				for _, v := range l.wildcards {
 					if v == ":" || v == "." {
@@ -248,7 +253,6 @@ func (t *Tree) addseg(segments []string, route interface{}, wildcards []string, 
 						regexpStr = "/([^/]+)" + regexpStr
 					}
 				}
-
 			}
 			t.wildcard.addseg(segments[1:], route, append(wildcards, params...), reg+regexpStr)
 		} else {
