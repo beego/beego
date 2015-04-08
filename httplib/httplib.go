@@ -168,7 +168,7 @@ func (b *BeegoHttpRequest) Debug(isdebug bool) *BeegoHttpRequest {
 }
 
 // return the DumpRequest
-func (b *BeegoHttpRequest) DumpRequest() {
+func (b *BeegoHttpRequest) DumpRequest() (dump []byte, err error) {
 	return httputil.DumpRequest(b.req, true)
 }
 
