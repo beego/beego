@@ -167,6 +167,11 @@ func (b *BeegoHttpRequest) Debug(isdebug bool) *BeegoHttpRequest {
 	return b
 }
 
+// return the DumpRequest
+func (b *BeegoHttpRequest) DumpRequest() {
+	return httputil.DumpRequest(b.req, true)
+}
+
 // SetTimeout sets connect time out and read-write time out for BeegoRequest.
 func (b *BeegoHttpRequest) SetTimeout(connectTimeout, readWriteTimeout time.Duration) *BeegoHttpRequest {
 	b.setting.ConnectTimeout = connectTimeout
