@@ -184,6 +184,12 @@ func (b *BeegoHttpRequest) Header(key, value string) *BeegoHttpRequest {
 	return b
 }
 
+// Set HOST
+func (b *BeegoHttpRequest) SetHost(host string) *BeegoHttpRequest {
+	b.req.Host = host
+	return b
+}
+
 // Set the protocol version for incoming requests.
 // Client requests always use HTTP/1.1.
 func (b *BeegoHttpRequest) SetProtocolVersion(vers string) *BeegoHttpRequest {
@@ -252,7 +258,6 @@ func (b *BeegoHttpRequest) Body(data interface{}) *BeegoHttpRequest {
 	}
 	return b
 }
-
 
 // JsonBody adds request raw body encoding by JSON.
 func (b *BeegoHttpRequest) JsonBody(obj interface{}) (*BeegoHttpRequest, error) {
