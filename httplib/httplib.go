@@ -135,6 +135,7 @@ type BeegoHttpRequest struct {
 	setting BeegoHttpSettings
 	resp    *http.Response
 	body    []byte
+	dump    []byte
 }
 
 // Change request settings
@@ -168,8 +169,8 @@ func (b *BeegoHttpRequest) Debug(isdebug bool) *BeegoHttpRequest {
 }
 
 // return the DumpRequest
-func (b *BeegoHttpRequest) DumpRequest() (dump []byte, err error) {
-	return httputil.DumpRequest(b.req, true)
+func (b *BeegoHttpRequest) DumpRequest() []byte {
+	return b.dump
 }
 
 // SetTimeout sets connect time out and read-write time out for BeegoRequest.
@@ -405,6 +406,7 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 		if err != nil {
 			println(err.Error())
 		}
+		b.dump = dump
 		println(string(dump))
 	}
 
