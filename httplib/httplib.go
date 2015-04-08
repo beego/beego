@@ -32,6 +32,7 @@ package httplib
 
 import (
 	"bytes"
+	"compress/gzip"
 	"crypto/tls"
 	"encoding/json"
 	"encoding/xml"
@@ -50,7 +51,7 @@ import (
 	"time"
 )
 
-var defaultSetting = BeegoHttpSettings{false, "beegoServer", 60 * time.Second, 60 * time.Second, nil, nil, nil, false}
+var defaultSetting = BeegoHttpSettings{false, "beegoServer", 60 * time.Second, 60 * time.Second, nil, nil, nil, false, true}
 var defaultCookieJar http.CookieJar
 var settingMutex sync.Mutex
 
@@ -122,6 +123,7 @@ type BeegoHttpSettings struct {
 	Proxy            func(*http.Request) (*url.URL, error)
 	Transport        http.RoundTripper
 	EnableCookie     bool
+	Gzip             bool
 }
 
 // BeegoHttpRequest provides more useful methods for requesting one url than http.Request.
@@ -434,7 +436,15 @@ func (b *BeegoHttpRequest) Bytes() ([]byte, error) {
 		return nil, nil
 	}
 	defer resp.Body.Close()
-	b.body, err = ioutil.ReadAll(resp.Body)
+	if b.setting.Gzip && resp.Header.Get("Content-Encoding") == "gzip" {
+		reader, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		b.body, err = ioutil.ReadAll(reader)
+	} else {
+		b.body, err = ioutil.ReadAll(resp.Body)
+	}
 	if err != nil {
 		return nil, err
 	}
