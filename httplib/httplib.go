@@ -407,7 +407,6 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 			println(err.Error())
 		}
 		b.dump = dump
-		println(string(dump))
 	}
 
 	resp, err := client.Do(b.req)
