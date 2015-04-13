@@ -181,6 +181,11 @@ func (bl *BeeLogger) SetLogFuncCallDepth(d int) {
 	bl.loggerFuncCallDepth = d
 }
 
+// get log funcCallDepth for wrapper
+func (bl *BeeLogger) GetLogFuncCallDepth() int {
+	return bl.loggerFuncCallDepth
+}
+
 // enable log funcCallDepth
 func (bl *BeeLogger) EnableFuncCallDepth(b bool) {
 	bl.enableFuncCallDepth = b
