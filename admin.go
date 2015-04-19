@@ -333,7 +333,6 @@ func profIndex(rw http.ResponseWriter, r *http.Request) {
 			tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
 		}
 		tmpl.Execute(rw, data)
-	} else {
 	}
 }
 
