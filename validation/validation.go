@@ -339,7 +339,6 @@ func (v *Validation) Valid(obj interface{}) (b bool, err error) {
 // Step1: Validate by v.Valid
 // Step2: If pass on step1, then reflect obj's fields
 // Step3: Do the Recursively validation to all struct or struct pointer fields
-// Anonymous fields will be ignored
 func (v *Validation) RecursiveValid(objc interface{}) (bool, error) {
 	//Step 1: validate obj itself firstly
 	// fails if objc is not struct
