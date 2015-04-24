@@ -349,3 +349,33 @@ func TestValid(t *testing.T) {
 		t.Errorf("Message key should be `Name.Match` but got %s", valid.Errors[0].Key)
 	}
 }
+
+func TestRecursiveValid(t *testing.T) {
+	type User struct {
+		Id   int
+		Name string `valid:"Required;Match(/^(test)?\\w*@(/test/);com$/)"`
+		Age  int    `valid:"Required;Range(1, 140)"`
+	}
+
+	type AnonymouseUser struct {
+		Id2   int
+		Name2 string `valid:"Required;Match(/^(test)?\\w*@(/test/);com$/)"`
+		Age2  int    `valid:"Required;Range(1, 140)"`
+	}
+
+	type Account struct {
+		Password string `valid:"Required"`
+		U        User
+		AnonymouseUser
+	}
+	valid := Validation{}
+
+	u := Account{Password: "abc123_", U: User{}}
+	b, err := valid.RecursiveValid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b {
+		t.Error("validation should not be passed")
+	}
+}

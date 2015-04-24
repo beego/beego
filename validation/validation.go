@@ -334,3 +334,42 @@ func (v *Validation) Valid(obj interface{}) (b bool, err error) {
 
 	return !v.HasErrors(), nil
 }
+
+// Recursively validate a struct.
+// Step1: Validate by v.Valid
+// Step2: If pass on step1, then reflect obj's fields
+// Step3: Do the Recursively validation to all struct or struct pointer fields
+// Anonymous fields will be ignored
+func (v *Validation) RecursiveValid(objc interface{}) (bool, error) {
+	//Step 1: validate obj itself firstly
+	pass, err := v.Valid(objc)
+	if err != nil || false == pass {
+		return pass, err // Stop recursive validation
+	} else { //pass
+		// Step 2: Validate struct's struct fields
+		objT := reflect.TypeOf(objc)
+		objV := reflect.ValueOf(objc)
+		if isStruct(objT) || isStructPtr(objT) {
+
+			if isStructPtr(objT) {
+				objT = objT.Elem()
+				objV = objV.Elem()
+			}
+
+			for i := 0; i < objT.NumField(); i++ {
+
+				t := objT.Field(i).Type
+
+				if isStruct(t) || isStructPtr(t) {
+					// Step 3: do the recursive validation
+					// Only valid the Public field recursively
+					if objV.Field(i).CanInterface() {
+						pass, err = v.RecursiveValid(objV.Field(i).Interface())
+					}
+				}
+			}
+		}
+
+		return pass, err
+	}
+}
