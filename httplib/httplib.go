@@ -51,7 +51,7 @@ import (
 	"time"
 )
 
-var defaultSetting = BeegoHttpSettings{false, "beegoServer", 60 * time.Second, 60 * time.Second, nil, nil, nil, false, true}
+var defaultSetting = BeegoHttpSettings{UserAgent: "beegoServer", ConnectionTimeout: 60 * time.Second, ReadWriteTimeout: 60 * time.Second, Giz: true}
 var defaultCookieJar http.CookieJar
 var settingMutex sync.Mutex
 
