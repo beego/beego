@@ -51,7 +51,7 @@ import (
 	"time"
 )
 
-var defaultSetting = BeegoHttpSettings{UserAgent: "beegoServer", ConnectTimeoutt: 60 * time.Second, ReadWriteTimeout: 60 * time.Second, Gzip: true}
+var defaultSetting = BeegoHttpSettings{UserAgent: "beegoServer", ConnectTimeout: 60 * time.Second, ReadWriteTimeout: 60 * time.Second, Gzip: true}
 var defaultCookieJar http.CookieJar
 var settingMutex sync.Mutex
 
@@ -88,7 +88,7 @@ func newBeegoRequest(url, method string) *BeegoHttpRequest {
 	return &BeegoHttpRequest{
 		url:     url,
 		req:     &req,
-		paras:   map[string]string{},
+		params:   map[string]string{},
 		files:   map[string]string{},
 		setting: defaultSetting,
 		resp:    &resp,
