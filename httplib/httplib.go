@@ -65,14 +65,8 @@ func createDefaultCookie() {
 // Overwrite default settings
 func SetDefaultSetting(setting BeegoHttpSettings) {
 	settingMutex.Lock()
-	defer settingMutex.Unlock()
 	defaultSetting = setting
-	if defaultSetting.ConnectTimeout == 0 {
-		defaultSetting.ConnectTimeout = 60 * time.Second
-	}
-	if defaultSetting.ReadWriteTimeout == 0 {
-		defaultSetting.ReadWriteTimeout = 60 * time.Second
-	}
+	settingMutex.Unlock()
 }
 
 // return *BeegoHttpRequest with specific method
@@ -262,11 +256,11 @@ func (b *BeegoHttpRequest) PostFile(formname, filename string) *BeegoHttpRequest
 // it supports string and []byte.
 func (b *BeegoHttpRequest) Body(data interface{}) *BeegoHttpRequest {
 	switch t := data.(type) {
-	case string:
+		case string:
 		bf := bytes.NewBufferString(t)
 		b.req.Body = ioutil.NopCloser(bf)
 		b.req.ContentLength = int64(len(t))
-	case []byte:
+		case []byte:
 		bf := bytes.NewBuffer(t)
 		b.req.Body = ioutil.NopCloser(bf)
 		b.req.ContentLength = int64(len(t))
