@@ -58,8 +58,8 @@ var settingMutex sync.Mutex
 // createDefaultCookie creates a global cookiejar to store cookies.
 func createDefaultCookie() {
 	settingMutex.Lock()
-	defer settingMutex.Unlock()
 	defaultCookieJar, _ = cookiejar.New(nil)
+	settingMutex.Unlock()
 }
 
 // Overwrite default settings
