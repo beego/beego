@@ -85,7 +85,14 @@ func newBeegoRequest(url, method string) *BeegoHttpRequest {
 		ProtoMajor: 1,
 		ProtoMinor: 1,
 	}
-	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting, &resp, nil, nil}
+	return &BeegoHttpRequest{
+		url:     url,
+		req:     &req,
+		paras:   map[string]string{},
+		files:   map[string]string{},
+		setting: defaultSetting,
+		resp:    &resp,
+	}
 }
 
 // Get returns *BeegoHttpRequest with GET method.
@@ -157,14 +164,14 @@ func (b *BeegoHttpRequest) SetEnableCookie(enable bool) *BeegoHttpRequest {
 }
 
 // SetUserAgent sets User-Agent header field
-func (b *BeegoHttpRequest) SetUserAgent(useragent string) *BeegoHttpRequest {
-	b.setting.UserAgent = useragent
+func (b *BeegoHttpRequest) SetUserAgent(userAgent string) *BeegoHttpRequest {
+	b.setting.UserAgent = userAgent
 	return b
 }
 
 // Debug sets show debug or not when executing request.
-func (b *BeegoHttpRequest) Debug(isdebug bool) *BeegoHttpRequest {
-	b.setting.ShowDebug = isdebug
+func (b *BeegoHttpRequest) Debug(isDebug bool) *BeegoHttpRequest {
+	b.setting.ShowDebug = isDebug
 	return b
 }
 
@@ -409,12 +416,8 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 		b.dump = dump
 	}
 
-	resp, err := client.Do(b.req)
-	if err != nil {
-		return nil, err
-	}
-	b.resp = resp
-	return resp, nil
+	b.resp, err = client.Do(b.req)
+	return b.resp, err
 }
 
 // String returns the body string in response.
@@ -435,11 +438,8 @@ func (b *BeegoHttpRequest) Bytes() ([]byte, error) {
 		return b.body, nil
 	}
 	resp, err := b.getResponse()
-	if err != nil {
+	if resp == nil || resp.Body == nil {
 		return nil, err
-	}
-	if resp.Body == nil {
-		return nil, nil
 	}
 	defer resp.Body.Close()
 	if b.setting.Gzip && resp.Header.Get("Content-Encoding") == "gzip" {
@@ -451,29 +451,24 @@ func (b *BeegoHttpRequest) Bytes() ([]byte, error) {
 	} else {
 		b.body, err = ioutil.ReadAll(resp.Body)
 	}
-	if err != nil {
-		return nil, err
-	}
-	return b.body, nil
+	return b.body, err
 }
 
 // ToFile saves the body data in response to one file.
 // it calls Response inner.
 func (b *BeegoHttpRequest) ToFile(filename string) error {
+	resp, err := b.getResponse()
+	if resp == nil || resp.Body == nil {
+		return err
+	}
+	defer resp.Body.Close()
+
 	f, err := os.Create(filename)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
 
-	resp, err := b.getResponse()
-	if err != nil {
-		return err
-	}
-	if resp.Body == nil {
-		return nil
-	}
-	defer resp.Body.Close()
 	_, err = io.Copy(f, resp.Body)
 	return err
 }
@@ -510,7 +505,7 @@ func TimeoutDialer(cTimeout time.Duration, rwTimeout time.Duration) func(net, ad
 		if err != nil {
 			return nil, err
 		}
-		conn.SetDeadline(time.Now().Add(rwTimeout))
-		return conn, nil
+		err = conn.SetDeadline(time.Now().Add(rwTimeout))
+		return conn, err
 	}
 }
