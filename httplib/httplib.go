@@ -36,6 +36,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"encoding/xml"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"log"
@@ -278,12 +279,15 @@ func (b *BeegoHttpRequest) JsonBody(obj interface{}) (*BeegoHttpRequest, error) 
 }
 
 func (b *BeegoHttpRequest) buildUrl(paramBody string) {
+	if paramBody == "" {
+		return
+	}
 	// build GET url with query string
-	if b.req.Method == "GET" && len(paramBody) > 0 {
-		if strings.Index(b.url, "?") != -1 {
-			b.url += "&" + paramBody
-		} else {
+	if b.req.Method == "GET" {
+		if strings.Index(b.url, "?") == -1 {
 			b.url = b.url + "?" + paramBody
+		} else {
+			b.url += "&" + paramBody
 		}
 		return
 	}
@@ -336,18 +340,14 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 	}
 	var paramBody string
 	if len(b.params) > 0 {
-		var buf bytes.Buffer
 		for k, v := range b.params {
-			buf.WriteString(url.QueryEscape(k))
-			buf.WriteByte('=')
-			buf.WriteString(url.QueryEscape(v))
-			buf.WriteByte('&')
+			paramBody += fmt.Sprintf("&%s=%v", url.QueryEscape(k), url.QueryEscape(v))
 		}
-		paramBody = buf.String()
-		paramBody = paramBody[0 : len(paramBody)-1]
+		paramBody = paramBody[1:]
 	}
 
 	b.buildUrl(paramBody)
+
 	url, err := url.Parse(b.url)
 	if err != nil {
 		return nil, err
@@ -399,7 +399,7 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 	if b.setting.ShowDebug {
 		dump, err := httputil.DumpRequest(b.req, true)
 		if err != nil {
-			println(err.Error())
+			log.Println(err.Error())
 		}
 		b.dump = dump
 	}
