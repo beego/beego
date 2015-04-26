@@ -357,6 +357,13 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 
 	trans := b.setting.Transport
 
+	if b.setting.ConnectTimeout == 0 {
+		b.setting.ConnectTimeout = 30 * time.Second
+	}
+	if b.setting.ReadWriteTimeout == 0 {
+		b.setting.ReadWriteTimeout = 30 * time.Second
+	}
+
 	if trans == nil {
 		// create default transport
 		trans = &http.Transport{
