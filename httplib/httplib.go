@@ -47,26 +47,20 @@ import (
 	"net/url"
 	"os"
 	"strings"
-	"sync"
 	"time"
 )
 
 var defaultSetting = BeegoHttpSettings{UserAgent: "beegoServer", ConnectTimeout: 60 * time.Second, ReadWriteTimeout: 60 * time.Second, Gzip: true}
 var defaultCookieJar http.CookieJar
-var settingMutex sync.Mutex
 
 // createDefaultCookie creates a global cookiejar to store cookies.
 func createDefaultCookie() {
-	settingMutex.Lock()
 	defaultCookieJar, _ = cookiejar.New(nil)
-	settingMutex.Unlock()
 }
 
 // Overwrite default settings
 func SetDefaultSetting(setting BeegoHttpSettings) {
-	settingMutex.Lock()
 	defaultSetting = setting
-	settingMutex.Unlock()
 }
 
 // return *BeegoHttpRequest with specific method
@@ -82,7 +76,7 @@ func newBeegoRequest(url, method string) *BeegoHttpRequest {
 	return &BeegoHttpRequest{
 		url:     url,
 		req:     &req,
-		params:   map[string]string{},
+		params:  map[string]string{},
 		files:   map[string]string{},
 		setting: defaultSetting,
 		resp:    &resp,
@@ -256,11 +250,11 @@ func (b *BeegoHttpRequest) PostFile(formname, filename string) *BeegoHttpRequest
 // it supports string and []byte.
 func (b *BeegoHttpRequest) Body(data interface{}) *BeegoHttpRequest {
 	switch t := data.(type) {
-		case string:
+	case string:
 		bf := bytes.NewBufferString(t)
 		b.req.Body = ioutil.NopCloser(bf)
 		b.req.ContentLength = int64(len(t))
-		case []byte:
+	case []byte:
 		bf := bytes.NewBuffer(t)
 		b.req.Body = ioutil.NopCloser(bf)
 		b.req.ContentLength = int64(len(t))
