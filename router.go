@@ -577,10 +577,12 @@ func (p *ControllerRegistor) geturl(t *Tree, url, controllName, methodName strin
 // Implement http.Handler interface.
 func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	starttime := time.Now()
-	var runrouter reflect.Type
-	var findrouter bool
-	var runMethod string
-	var routerInfo *controllerInfo
+	var (
+		matchFound bool
+		runRouter  reflect.Type
+		runMethod  string
+		routerInfo *controllerInfo
+	)
 
 	w := &responseWriter{writer: rw}
 
@@ -600,13 +602,12 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	defer p.recoverPanic(context)
 
-	var urlPath string
+	urlPath := r.URL.Path
 	if !RouterCaseSensitive {
-		urlPath = strings.ToLower(r.URL.Path)
-	} else {
-		urlPath = r.URL.Path
+		urlPath = strings.ToLower(urlPath)
 	}
-	// defined filter function
+
+	// do_filter executes the filter functions for the given phase
 	do_filter := func(pos int) (started bool) {
 		if p.enableFilter {
 			if l, ok := p.filters[pos]; ok {
@@ -625,20 +626,20 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		return false
 	}
 
-	// filter wrong httpmethod
+	// filter invalid HTTP methods
 	if _, ok := HTTPMETHOD[r.Method]; !ok {
 		http.Error(w, "Method Not Allowed", 405)
 		goto Admin
 	}
 
-	// filter for static file
+	// execute filters for static files
 	if do_filter(BeforeStatic) {
 		goto Admin
 	}
 
 	serverStaticRouter(context)
 	if w.started {
-		findrouter = true
+		matchFound = true
 		goto Admin
 	}
 
@@ -668,27 +669,18 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	if context.Input.RunController != nil && context.Input.RunMethod != "" {
-		findrouter = true
+		matchFound = true
 		runMethod = context.Input.RunMethod
-		runrouter = context.Input.RunController
+		runRouter = context.Input.RunController
 	}
 
-	if !findrouter {
-		http_method := r.Method
-
-		if http_method == "POST" && context.Input.Query("_method") == "PUT" {
-			http_method = "PUT"
-		}
-
-		if http_method == "POST" && context.Input.Query("_method") == "DELETE" {
-			http_method = "DELETE"
-		}
-
+	if !matchFound {
+		http_method := getRequestMethod(context.Input)
 		if t, ok := p.routers[http_method]; ok {
 			runObject, p := t.Match(urlPath)
 			if r, ok := runObject.(*controllerInfo); ok {
 				routerInfo = r
-				findrouter = true
+				matchFound = true
 				if splat, ok := p[":splat"]; ok {
 					splatlist := strings.Split(splat, "/")
 					for k, v := range splatlist {
@@ -701,69 +693,58 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	}
 
-	//if no matches to url, throw a not found exception
-	if !findrouter {
+	// a "not found" exception is thrown in case no match was found
+	if !matchFound {
 		exception("404", context)
 		goto Admin
 	}
 
-	if findrouter {
-		//execute middleware filters
+	if matchFound && (runRouter == nil || runMethod == "") {
+		// execute middleware filters
 		if do_filter(BeforeExec) {
 			goto Admin
 		}
-		isRunable := false
+
 		if routerInfo != nil {
-			if routerInfo.routerType == routerTypeRESTFul {
+			switch routerInfo.routerType {
+			case routerTypeRESTFul:
 				if _, ok := routerInfo.methods[r.Method]; ok {
-					isRunable = true
 					routerInfo.runfunction(context)
 				} else {
 					exception("405", context)
 					goto Admin
 				}
-			} else if routerInfo.routerType == routerTypeHandler {
-				isRunable = true
+
+			case routerTypeHandler:
 				routerInfo.handler.ServeHTTP(rw, r)
-			} else {
-				runrouter = routerInfo.controllerType
-				method := r.Method
-				if r.Method == "POST" && context.Input.Query("_method") == "PUT" {
-					method = "PUT"
-				}
-				if r.Method == "POST" && context.Input.Query("_method") == "DELETE" {
-					method = "DELETE"
-				}
-				if m, ok := routerInfo.methods[method]; ok {
-					runMethod = m
-				} else if m, ok = routerInfo.methods["*"]; ok {
-					runMethod = m
-				} else {
-					runMethod = method
-				}
+
+			default:
+				runRouter = routerInfo.controllerType
+				runMethod = determineRouterMethod(routerInfo, context)
 			}
 		}
 
-		// also defined runrouter & runMethod from filter
-		if !isRunable {
-			//Invoke the request handler
-			vc := reflect.New(runrouter)
+		// internal assertion to catch bugs
+		if (runRouter != nil && runMethod == "") || (runRouter == nil && runMethod != "") {
+			panic("either none or both of runRouter and runMethod must be set")
+		}
+
+		// runRouter & runMethod can also be set by a BeforeStatic or BeforeRouter filter.
+		if runRouter != nil && runMethod != "" {
+			// Invoke the request handler
+			vc := reflect.New(runRouter)
 			execController, ok := vc.Interface().(ControllerInterface)
 			if !ok {
-				panic("controller is not ControllerInterface")
+				panic("controller does not implement ControllerInterface")
 			}
 
-			//call the controller init function
-			execController.Init(context, runrouter.Name(), runMethod, vc.Interface())
-
-			//call prepare function
+			execController.Init(context, runRouter.Name(), runMethod, vc.Interface())
 			execController.Prepare()
 
-			//if XSRF is Enable then check cookie where there has any cookie in the  request's cookie _csrf
 			if EnableXSRF {
 				execController.XsrfToken()
-				if r.Method == "POST" || r.Method == "DELETE" || r.Method == "PUT" ||
-					(r.Method == "POST" && (context.Input.Query("_method") == "DELETE" || context.Input.Query("_method") == "PUT")) {
+				http_method := getRequestMethod(context.Input)
+				if http_method == "POST" || http_method == "DELETE" || http_method == "PUT" {
 					execController.CheckXsrfCookie()
 				}
 			}
@@ -771,31 +752,8 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			execController.URLMapping()
 
 			if !w.started {
-				//exec main logic
-				switch runMethod {
-				case "GET":
-					execController.Get()
-				case "POST":
-					execController.Post()
-				case "DELETE":
-					execController.Delete()
-				case "PUT":
-					execController.Put()
-				case "HEAD":
-					execController.Head()
-				case "PATCH":
-					execController.Patch()
-				case "OPTIONS":
-					execController.Options()
-				default:
-					if !execController.HandlerFunc(runMethod) {
-						in := make([]reflect.Value, 0)
-						method := vc.MethodByName(runMethod)
-						method.Call(in)
-					}
-				}
+				runControllerMethod(execController, vc, runMethod)
 
-				//render template
 				if !w.started && context.Output.Status == 0 {
 					if AutoRender {
 						if err := execController.Render(); err != nil {
@@ -805,11 +763,10 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				}
 			}
 
-			// finish all runrouter. release resource
 			execController.Finish()
 		}
 
-		//execute middleware filters
+		// execute middleware filters
 		if do_filter(AfterExec) {
 			goto Admin
 		}
@@ -819,20 +776,20 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 Admin:
 	timeend := time.Since(starttime)
-	//admin module record QPS
+	// record QPS for the admin module
 	if EnableAdmin {
 		if FilterMonitorFunc(r.Method, r.URL.Path, timeend) {
-			if runrouter != nil {
-				go toolbox.StatisticsMap.AddStatistics(r.Method, r.URL.Path, runrouter.Name(), timeend)
-			} else {
-				go toolbox.StatisticsMap.AddStatistics(r.Method, r.URL.Path, "", timeend)
+			routerName := ""
+			if runRouter != nil {
+				routerName = runRouter.Name()
 			}
+			go toolbox.StatisticsMap.AddStatistics(r.Method, r.URL.Path, routerName, timeend)
 		}
 	}
 
 	if RunMode == "dev" || AccessLogs {
 		var devinfo string
-		if findrouter {
+		if matchFound {
 			if routerInfo != nil {
 				devinfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s | % -40s |", r.Method, r.URL.Path, timeend.String(), "match", routerInfo.pattern)
 			} else {
@@ -846,9 +803,57 @@ Admin:
 		}
 	}
 
-	// Call WriteHeader if status code has been set changed
+	// Call WriteHeader if status code has been set
 	if context.Output.Status != 0 {
 		w.writer.WriteHeader(context.Output.Status)
+	}
+}
+
+func determineRouterMethod(routerInfo *controllerInfo, context *beecontext.Context) string {
+	method := getRequestMethod(context.Input)
+	if m, ok := routerInfo.methods[method]; ok {
+		return m
+	}
+	if m, ok := routerInfo.methods["*"]; ok {
+		return m
+	}
+	return method
+}
+
+func getRequestMethod(input *beecontext.BeegoInput) string {
+	if input.IsPost() {
+		switch input.Query("_method") {
+		case "PUT":
+			return "PUT"
+		case "DELETE":
+			return "DELETE"
+		}
+	}
+	return input.Method()
+}
+
+func runControllerMethod(controller ControllerInterface, vc reflect.Value, method string) {
+	switch method {
+	case "GET":
+		controller.Get()
+	case "POST":
+		controller.Post()
+	case "DELETE":
+		controller.Delete()
+	case "PUT":
+		controller.Put()
+	case "HEAD":
+		controller.Head()
+	case "PATCH":
+		controller.Patch()
+	case "OPTIONS":
+		controller.Options()
+	default:
+		if !controller.HandlerFunc(method) {
+			in := make([]reflect.Value, 0)
+			method := vc.MethodByName(method)
+			method.Call(in)
+		}
 	}
 }
 
