@@ -300,21 +300,8 @@ func (c *IniConfigContainer) SaveConfigFile(filename string) (err error) {
 	defer f.Close()
 
 	buf := bytes.NewBuffer(nil)
-	for section, dt := range c.data {
-		// Write section comments.
-		if v, ok := c.sectionComment[section]; ok {
-			if _, err = buf.WriteString(string(bNumComment) + v + lineBreak); err != nil {
-				return err
-			}
-		}
-
-		if section != DEFAULT_SECTION {
-			// Write section name.
-			if _, err = buf.WriteString(string(sectionStart) + section + string(sectionEnd) + lineBreak); err != nil {
-				return err
-			}
-		}
-
+	// Save default section at first place
+	if dt, ok := c.data[DEFAULT_SECTION]; ok {
 		for key, val := range dt {
 			if key != " " {
 				// Write key comments.
@@ -334,6 +321,43 @@ func (c *IniConfigContainer) SaveConfigFile(filename string) (err error) {
 		// Put a line between sections.
 		if _, err = buf.WriteString(lineBreak); err != nil {
 			return err
+		}
+	}
+	// Save named sections
+	for section, dt := range c.data {
+		if section != DEFAULT_SECTION {
+			// Write section comments.
+			if v, ok := c.sectionComment[section]; ok {
+				if _, err = buf.WriteString(string(bNumComment) + v + lineBreak); err != nil {
+					return err
+				}
+			}
+
+			// Write section name.
+			if _, err = buf.WriteString(string(sectionStart) + section + string(sectionEnd) + lineBreak); err != nil {
+				return err
+			}
+
+			for key, val := range dt {
+				if key != " " {
+					// Write key comments.
+					if v, ok := c.keyComment[key]; ok {
+						if _, err = buf.WriteString(string(bNumComment) + v + lineBreak); err != nil {
+							return err
+						}
+					}
+
+					// Write key and value.
+					if _, err = buf.WriteString(key + string(bEqual) + val + lineBreak); err != nil {
+						return err
+					}
+				}
+			}
+
+			// Put a line between sections.
+			if _, err = buf.WriteString(lineBreak); err != nil {
+				return err
+			}
 		}
 	}
 
