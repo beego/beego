@@ -699,12 +699,16 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		goto Admin
 	}
 
-	if matchFound && (runRouter == nil || runMethod == "") {
+	// If matchFound is true then it holds that:
+	// (routerInfo != nil || (runRouter != nil && runMethod != ""))
+	if matchFound {
 		// execute middleware filters
 		if do_filter(BeforeExec) {
 			goto Admin
 		}
 
+		// routerInfo is non-nil only if context.Input.RunMethod and context.Input.RunMethod are nil.
+		// Therefore runMethod and runController have not been set yet.
 		if routerInfo != nil {
 			switch routerInfo.routerType {
 			case routerTypeRESTFul:
