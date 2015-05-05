@@ -92,7 +92,7 @@ func showErr(err interface{}, ctx *context.Context, Stack string) {
 	data["Stack"] = Stack
 	data["BeegoVersion"] = VERSION
 	data["GoVersion"] = runtime.Version()
-	ctx.Output.SetStatus(500)
+	ctx.ResponseWriter.WriteHeader(500)
 	t.Execute(ctx.ResponseWriter, data)
 }
 
