@@ -40,6 +40,7 @@ var mimemaps map[string]string = map[string]string{
 	".ani":         "application/x-navi-animation",
 	".aos":         "application/x-nokia-9000-communicator-add-on-software",
 	".aps":         "application/mime",
+	".apk":         "application/vnd.android.package-archive",
 	".arc":         "application/x-arc-compressed",
 	".arj":         "application/arj",
 	".art":         "image/x-jg",
