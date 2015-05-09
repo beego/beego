@@ -145,7 +145,7 @@ func (rp *RedisProvider) SessionInit(maxlifetime int64, savePath string) error {
 		rp.password = configs[2]
 	}
 	if len(configs) > 3 {
-		dbnum, err := strconv.Atoi(configs[1])
+		dbnum, err := strconv.Atoi(configs[3])
 		if err != nil || dbnum < 0 {
 			rp.dbNum = 0
 		} else {
