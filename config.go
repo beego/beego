@@ -82,6 +82,7 @@ var (
 	EnableDocs             bool   // enable generate docs & server docs API Swagger
 	RouterCaseSensitive    bool   // router case sensitive default is true
 	AccessLogs             bool   // print access logs, default is false
+	Graceful               bool   // use graceful start the server
 )
 
 type beegoAppConfig struct {
@@ -508,6 +509,9 @@ func ParseConfig() (err error) {
 
 	if casesensitive, err := AppConfig.Bool("RouterCaseSensitive"); err == nil {
 		RouterCaseSensitive = casesensitive
+	}
+	if graceful, err := AppConfig.Bool("Graceful"); err == nil {
+		Graceful = graceful
 	}
 	return nil
 }
