@@ -19,9 +19,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"text/template"
 	"time"
 
+	"github.com/astaxie/beego/grace"
 	"github.com/astaxie/beego/toolbox"
 	"github.com/astaxie/beego/utils"
 )
@@ -458,8 +460,14 @@ func (admin *adminApp) Run() {
 		http.Handle(p, f)
 	}
 	BeeLogger.Info("Admin server Running on %s", addr)
-	err := http.ListenAndServe(addr, nil)
+
+	var err error
+	if Graceful {
+		err = grace.ListenAndServe(addr, nil)
+	} else {
+		err = http.ListenAndServe(addr, nil)
+	}
 	if err != nil {
-		BeeLogger.Critical("Admin ListenAndServe: ", err)
+		BeeLogger.Critical("Admin ListenAndServe: ", err, fmt.Sprint(os.Getpid()))
 	}
 }
