@@ -147,7 +147,7 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 			Value:    url.QueryEscape(sid),
 			Path:     "/",
 			HttpOnly: true,
-			Secure:   manager.config.Secure,
+			Secure:   manager.isSecure(r),
 			Domain:   manager.config.Domain}
 		if manager.config.CookieLifeTime > 0 {
 			cookie.MaxAge = manager.config.CookieLifeTime
@@ -174,7 +174,7 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 				Value:    url.QueryEscape(sid),
 				Path:     "/",
 				HttpOnly: true,
-				Secure:   manager.config.Secure,
+				Secure:   manager.isSecure(r),
 				Domain:   manager.config.Domain}
 			if manager.config.CookieLifeTime > 0 {
 				cookie.MaxAge = manager.config.CookieLifeTime
@@ -233,7 +233,7 @@ func (manager *Manager) SessionRegenerateId(w http.ResponseWriter, r *http.Reque
 			Value:    url.QueryEscape(sid),
 			Path:     "/",
 			HttpOnly: true,
-			Secure:   manager.config.Secure,
+			Secure:   manager.isSecure(r),
 			Domain:   manager.config.Domain,
 		}
 	} else {
@@ -269,4 +269,18 @@ func (manager *Manager) sessionId(r *http.Request) (string, error) {
 		return "", fmt.Errorf("Could not successfully read from the system CSPRNG.")
 	}
 	return hex.EncodeToString(b), nil
+}
+
+// Set cookie with https.
+func (manager *Manager) isSecure(req *http.Request) bool {
+	if !manager.config.Secure {
+		return false
+	}
+	if req.URL.Scheme != "" {
+		return req.URL.Scheme == "https"
+	}
+	if req.TLS == nil {
+		return false
+	}
+	return true
 }
