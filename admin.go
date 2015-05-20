@@ -468,6 +468,6 @@ func (admin *adminApp) Run() {
 		err = http.ListenAndServe(addr, nil)
 	}
 	if err != nil {
-		BeeLogger.Critical("Admin ListenAndServe: ", err, fmt.Sprint(os.Getpid()))
+		BeeLogger.Critical("Admin ListenAndServe: ", err, fmt.Sprintf("%d", os.Getpid()))
 	}
 }
