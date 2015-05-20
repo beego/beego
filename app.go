@@ -93,7 +93,7 @@ func (app *App) Run() {
 					server.Server = app.Server
 					err := server.ListenAndServeTLS(HttpCertFile, HttpKeyFile)
 					if err != nil {
-						BeeLogger.Critical("ListenAndServeTLS: ", err)
+						BeeLogger.Critical("ListenAndServeTLS: ", err, fmt.Sprintf("%d", os.Getpid()))
 						time.Sleep(100 * time.Microsecond)
 						endRunning <- true
 					}
@@ -108,7 +108,7 @@ func (app *App) Run() {
 					}
 					err := server.ListenAndServe()
 					if err != nil {
-						BeeLogger.Critical("ListenAndServe: ", err, fmt.Sprint(os.Getpid()))
+						BeeLogger.Critical("ListenAndServe: ", err, fmt.Sprintf("%d", os.Getpid()))
 						time.Sleep(100 * time.Microsecond)
 						endRunning <- true
 					}
