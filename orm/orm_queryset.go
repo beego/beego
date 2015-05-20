@@ -122,7 +122,7 @@ func (o querySet) RelatedSel(params ...interface{}) QuerySeter {
 		for _, p := range params {
 			switch val := p.(type) {
 			case string:
-				related = append(o.related, val)
+				related = append(related, val)
 			case int:
 				o.relDepth = val
 			default:
