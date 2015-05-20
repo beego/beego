@@ -99,7 +99,7 @@ func init() {
 }
 
 type graceServer struct {
-	http.Server
+	*http.Server
 	GraceListener    net.Listener
 	SignalHooks      map[int]map[os.Signal][]func()
 	tlsInnerListener *graceListener
@@ -151,7 +151,7 @@ func NewServer(addr string, handler http.Handler) (srv *graceServer) {
 		state:   STATE_INIT,
 		Network: "tcp",
 	}
-
+	srv.Server = &http.Server{}
 	srv.Server.Addr = addr
 	srv.Server.ReadTimeout = DefaultReadTimeOut
 	srv.Server.WriteTimeout = DefaultWriteTimeOut

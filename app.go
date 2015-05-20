@@ -78,15 +78,19 @@ func (app *App) Run() {
 		}
 	} else {
 		if Graceful {
+			app.Server.Addr = addr
+			app.Server.Handler = app.Handlers
+			app.Server.ReadTimeout = time.Duration(HttpServerTimeOut) * time.Second
+			app.Server.WriteTimeout = time.Duration(HttpServerTimeOut) * time.Second
 			if EnableHttpTLS {
 				go func() {
 					time.Sleep(20 * time.Microsecond)
 					if HttpsPort != 0 {
 						addr = fmt.Sprintf("%s:%d", HttpAddr, HttpsPort)
+						app.Server.Addr = addr
 					}
 					server := grace.NewServer(addr, app.Handlers)
-					server.Server.ReadTimeout = time.Duration(HttpServerTimeOut) * time.Second
-					server.Server.WriteTimeout = time.Duration(HttpServerTimeOut) * time.Second
+					server.Server = app.Server
 					err := server.ListenAndServeTLS(HttpCertFile, HttpKeyFile)
 					if err != nil {
 						BeeLogger.Critical("ListenAndServeTLS: ", err)
@@ -98,8 +102,7 @@ func (app *App) Run() {
 			if EnableHttpListen {
 				go func() {
 					server := grace.NewServer(addr, app.Handlers)
-					server.Server.ReadTimeout = time.Duration(HttpServerTimeOut) * time.Second
-					server.Server.WriteTimeout = time.Duration(HttpServerTimeOut) * time.Second
+					server.Server = app.Server
 					if ListenTCP4 && HttpAddr == "" {
 						server.Network = "tcp4"
 					}
