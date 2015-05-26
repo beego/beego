@@ -148,6 +148,50 @@ func TestAddTree2(t *testing.T) {
 	}
 }
 
+func TestAddTree3(t *testing.T) {
+	tr := NewTree()
+	tr.AddRouter("/create", "astaxie")
+	tr.AddRouter("/shop/:sd/account", "astaxie")
+	t3 := NewTree()
+	t3.AddTree("/table/:num", tr)
+	obj, param := t3.Match("/table/123/shop/123/account")
+	if obj == nil || obj.(string) != "astaxie" {
+		t.Fatal("/table/:num/shop/:sd/account can't get obj ")
+	}
+	if param == nil {
+		t.Fatal("get param error")
+	}
+	if param[":num"] != "123" || param[":sd"] != "123" {
+		t.Fatal("get :num :sd param error")
+	}
+	obj, param = t3.Match("/table/123/create")
+	if obj == nil || obj.(string) != "astaxie" {
+		t.Fatal("/table/:num/create can't get obj ")
+	}
+}
+
+func TestAddTree4(t *testing.T) {
+	tr := NewTree()
+	tr.AddRouter("/create", "astaxie")
+	tr.AddRouter("/shop/:sd/:account", "astaxie")
+	t4 := NewTree()
+	t4.AddTree("/:info:int/:num/:id", tr)
+	obj, param := t4.Match("/12/123/456/shop/123/account")
+	if obj == nil || obj.(string) != "astaxie" {
+		t.Fatal("/:info:int/:num/:id/shop/:sd/:account can't get obj ")
+	}
+	if param == nil {
+		t.Fatal("get param error")
+	}
+	if param[":info"] != "12" || param[":num"] != "123" || param[":id"] != "456" || param[":sd"] != "123" || param[":account"] != "account" {
+		t.Fatal("get :info :num :id :sd :account param error")
+	}
+	obj, param = t4.Match("/12/123/456/create")
+	if obj == nil || obj.(string) != "astaxie" {
+		t.Fatal("/:info:int/:num/:id/create can't get obj ")
+	}
+}
+
 func TestSplitPath(t *testing.T) {
 	a := splitPath("")
 	if len(a) != 0 {

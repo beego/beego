@@ -202,7 +202,7 @@ func (bc *MemoryCache) vaccuum() {
 		if bc.items == nil {
 			return
 		}
-		for name, _ := range bc.items {
+		for name := range bc.items {
 			bc.item_expired(name)
 		}
 	}

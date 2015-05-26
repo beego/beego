@@ -242,14 +242,14 @@ type User struct {
 
 func (u *User) TableIndex() [][]string {
 	return [][]string{
-		[]string{"Id", "UserName"},
-		[]string{"Id", "Created"},
+		{"Id", "UserName"},
+		{"Id", "Created"},
 	}
 }
 
 func (u *User) TableUnique() [][]string {
 	return [][]string{
-		[]string{"UserName", "Email"},
+		{"UserName", "Email"},
 	}
 }
 
@@ -287,7 +287,7 @@ type Post struct {
 
 func (u *Post) TableIndex() [][]string {
 	return [][]string{
-		[]string{"Id", "Created"},
+		{"Id", "Created"},
 	}
 }
 

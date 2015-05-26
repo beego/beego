@@ -29,6 +29,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // BeegoOutput does work for sending response header.
@@ -98,28 +99,30 @@ func (output *BeegoOutput) Body(content []byte) {
 func (output *BeegoOutput) Cookie(name string, value string, others ...interface{}) {
 	var b bytes.Buffer
 	fmt.Fprintf(&b, "%s=%s", sanitizeName(name), sanitizeValue(value))
-	if len(others) > 0 {
-		switch v := others[0].(type) {
-		case int:
-			if v > 0 {
-				fmt.Fprintf(&b, "; Max-Age=%d", v)
-			} else if v < 0 {
-				fmt.Fprintf(&b, "; Max-Age=0")
-			}
-		case int64:
-			if v > 0 {
-				fmt.Fprintf(&b, "; Max-Age=%d", v)
-			} else if v < 0 {
-				fmt.Fprintf(&b, "; Max-Age=0")
-			}
-		case int32:
-			if v > 0 {
-				fmt.Fprintf(&b, "; Max-Age=%d", v)
-			} else if v < 0 {
-				fmt.Fprintf(&b, "; Max-Age=0")
-			}
-		}
-	}
+
+    //fix cookie not work in IE
+    if len(others) > 0 {
+        switch v := others[0].(type) {
+            case int:
+            if v > 0 {
+                fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(v) * time.Second).UTC().Format(time.RFC1123), v)
+            } else if v < 0 {
+                fmt.Fprintf(&b, "; Max-Age=0")
+            }
+            case int64:
+            if v > 0 {
+                fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(v) * time.Second).UTC().Format(time.RFC1123), v)
+            } else if v < 0 {
+                fmt.Fprintf(&b, "; Max-Age=0")
+            }
+            case int32:
+            if v > 0 {
+                fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(v) * time.Second).UTC().Format(time.RFC1123), v)
+            } else if v < 0 {
+                fmt.Fprintf(&b, "; Max-Age=0")
+            }
+        }
+    }
 
 	// the settings below
 	// Path, Domain, Secure, HttpOnly

@@ -32,6 +32,7 @@ package httplib
 
 import (
 	"bytes"
+	"compress/gzip"
 	"crypto/tls"
 	"encoding/json"
 	"encoding/xml"
@@ -50,7 +51,7 @@ import (
 	"time"
 )
 
-var defaultSetting = BeegoHttpSettings{false, "beegoServer", 60 * time.Second, 60 * time.Second, nil, nil, nil, false}
+var defaultSetting = BeegoHttpSettings{false, "beegoServer", 60 * time.Second, 60 * time.Second, nil, nil, nil, false, true}
 var defaultCookieJar http.CookieJar
 var settingMutex sync.Mutex
 
@@ -84,7 +85,7 @@ func newBeegoRequest(url, method string) *BeegoHttpRequest {
 		ProtoMajor: 1,
 		ProtoMinor: 1,
 	}
-	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting, &resp, nil}
+	return &BeegoHttpRequest{url, &req, map[string]string{}, map[string]string{}, defaultSetting, &resp, nil, nil}
 }
 
 // Get returns *BeegoHttpRequest with GET method.
@@ -122,6 +123,7 @@ type BeegoHttpSettings struct {
 	Proxy            func(*http.Request) (*url.URL, error)
 	Transport        http.RoundTripper
 	EnableCookie     bool
+	Gzip             bool
 }
 
 // BeegoHttpRequest provides more useful methods for requesting one url than http.Request.
@@ -133,6 +135,7 @@ type BeegoHttpRequest struct {
 	setting BeegoHttpSettings
 	resp    *http.Response
 	body    []byte
+	dump    []byte
 }
 
 // Change request settings
@@ -165,6 +168,11 @@ func (b *BeegoHttpRequest) Debug(isdebug bool) *BeegoHttpRequest {
 	return b
 }
 
+// return the DumpRequest
+func (b *BeegoHttpRequest) DumpRequest() []byte {
+	return b.dump
+}
+
 // SetTimeout sets connect time out and read-write time out for BeegoRequest.
 func (b *BeegoHttpRequest) SetTimeout(connectTimeout, readWriteTimeout time.Duration) *BeegoHttpRequest {
 	b.setting.ConnectTimeout = connectTimeout
@@ -181,6 +189,12 @@ func (b *BeegoHttpRequest) SetTLSClientConfig(config *tls.Config) *BeegoHttpRequ
 // Header add header item string in request.
 func (b *BeegoHttpRequest) Header(key, value string) *BeegoHttpRequest {
 	b.req.Header.Set(key, value)
+	return b
+}
+
+// Set HOST
+func (b *BeegoHttpRequest) SetHost(host string) *BeegoHttpRequest {
+	b.req.Host = host
 	return b
 }
 
@@ -251,6 +265,21 @@ func (b *BeegoHttpRequest) Body(data interface{}) *BeegoHttpRequest {
 		b.req.ContentLength = int64(len(t))
 	}
 	return b
+}
+
+// JsonBody adds request raw body encoding by JSON.
+func (b *BeegoHttpRequest) JsonBody(obj interface{}) (*BeegoHttpRequest, error) {
+	if b.req.Body == nil && obj != nil {
+		buf := bytes.NewBuffer(nil)
+		enc := json.NewEncoder(buf)
+		if err := enc.Encode(obj); err != nil {
+			return b, err
+		}
+		b.req.Body = ioutil.NopCloser(buf)
+		b.req.ContentLength = int64(buf.Len())
+		b.req.Header.Set("Content-Type", "application/json")
+	}
+	return b, nil
 }
 
 func (b *BeegoHttpRequest) buildUrl(paramBody string) {
@@ -377,7 +406,7 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 		if err != nil {
 			println(err.Error())
 		}
-		println(string(dump))
+		b.dump = dump
 	}
 
 	resp, err := client.Do(b.req)
@@ -413,7 +442,15 @@ func (b *BeegoHttpRequest) Bytes() ([]byte, error) {
 		return nil, nil
 	}
 	defer resp.Body.Close()
-	b.body, err = ioutil.ReadAll(resp.Body)
+	if b.setting.Gzip && resp.Header.Get("Content-Encoding") == "gzip" {
+		reader, err := gzip.NewReader(resp.Body)
+		if err != nil {
+			return nil, err
+		}
+		b.body, err = ioutil.ReadAll(reader)
+	} else {
+		b.body, err = ioutil.ReadAll(resp.Body)
+	}
 	if err != nil {
 		return nil, err
 	}
