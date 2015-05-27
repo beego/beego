@@ -133,19 +133,13 @@ func NewServer(addr string, handler http.Handler) (srv *graceServer) {
 		SignalHooks: map[int]map[os.Signal][]func(){
 			PRE_SIGNAL: map[os.Signal][]func(){
 				syscall.SIGHUP:  []func(){},
-				syscall.SIGUSR1: []func(){},
-				syscall.SIGUSR2: []func(){},
 				syscall.SIGINT:  []func(){},
 				syscall.SIGTERM: []func(){},
-				syscall.SIGTSTP: []func(){},
 			},
 			POST_SIGNAL: map[os.Signal][]func(){
 				syscall.SIGHUP:  []func(){},
-				syscall.SIGUSR1: []func(){},
-				syscall.SIGUSR2: []func(){},
 				syscall.SIGINT:  []func(){},
 				syscall.SIGTERM: []func(){},
-				syscall.SIGTSTP: []func(){},
 			},
 		},
 		state:   STATE_INIT,
@@ -208,16 +202,24 @@ func (srv *graceServer) ListenAndServe() (err error) {
 	l, err := srv.getListener(addr)
 	if err != nil {
 		log.Println(err)
-		return
+		return err
 	}
 
 	srv.GraceListener = newGraceListener(l, srv)
 
 	if srv.isChild {
-		syscall.Kill(syscall.Getppid(), syscall.SIGTERM)
+		process, err := os.FindProcess(os.Getppid())
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+		err = process.Kill()
+		if err != nil {
+			return err
+		}
 	}
 
-	log.Println(syscall.Getpid(), srv.Addr)
+	log.Println(os.Getpid(), srv.Addr)
 	return srv.Serve()
 }
 
@@ -255,17 +257,24 @@ func (srv *graceServer) ListenAndServeTLS(certFile, keyFile string) (err error) 
 	l, err := srv.getListener(addr)
 	if err != nil {
 		log.Println(err)
-		return
+		return err
 	}
 
 	srv.tlsInnerListener = newGraceListener(l, srv)
 	srv.GraceListener = tls.NewListener(srv.tlsInnerListener, config)
 
 	if srv.isChild {
-		syscall.Kill(syscall.Getppid(), syscall.SIGTERM)
+		process, err := os.FindProcess(os.Getppid())
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+		err = process.Kill()
+		if err != nil {
+			return err
+		}
 	}
-
-	log.Println(syscall.Getpid(), srv.Addr)
+	log.Println(os.Getpid(), srv.Addr)
 	return srv.Serve()
 }
 
@@ -303,11 +312,8 @@ func (srv *graceServer) handleSignals() {
 	signal.Notify(
 		srv.sigChan,
 		syscall.SIGHUP,
-		syscall.SIGUSR1,
-		syscall.SIGUSR2,
 		syscall.SIGINT,
 		syscall.SIGTERM,
-		syscall.SIGTSTP,
 	)
 
 	pid := syscall.Getpid()
@@ -321,19 +327,12 @@ func (srv *graceServer) handleSignals() {
 			if err != nil {
 				log.Println("Fork err:", err)
 			}
-		case syscall.SIGUSR1:
-			log.Println(pid, "Received SIGUSR1.")
-		case syscall.SIGUSR2:
-			log.Println(pid, "Received SIGUSR2.")
-			srv.serverTimeout(0 * time.Second)
 		case syscall.SIGINT:
 			log.Println(pid, "Received SIGINT.")
 			srv.shutdown()
 		case syscall.SIGTERM:
 			log.Println(pid, "Received SIGTERM.")
 			srv.shutdown()
-		case syscall.SIGTSTP:
-			log.Println(pid, "Received SIGTSTP.")
 		default:
 			log.Printf("Received %v: nothing i care about...\n", sig)
 		}
