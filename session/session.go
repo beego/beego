@@ -143,12 +143,14 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 			return nil, errs
 		}
 		session, err = manager.provider.SessionRead(sid)
-		cookie = &http.Cookie{Name: manager.config.CookieName,
+		cookie = &http.Cookie{
+			Name:     manager.config.CookieName,
 			Value:    url.QueryEscape(sid),
 			Path:     "/",
 			HttpOnly: true,
 			Secure:   manager.isSecure(r),
-			Domain:   manager.config.Domain}
+			Domain:   manager.config.Domain,
+		}
 		if manager.config.CookieLifeTime > 0 {
 			cookie.MaxAge = manager.config.CookieLifeTime
 			cookie.Expires = time.Now().Add(time.Duration(manager.config.CookieLifeTime) * time.Second)
@@ -170,12 +172,14 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 				return nil, err
 			}
 			session, err = manager.provider.SessionRead(sid)
-			cookie = &http.Cookie{Name: manager.config.CookieName,
+			cookie = &http.Cookie{
+				Name:     manager.config.CookieName,
 				Value:    url.QueryEscape(sid),
 				Path:     "/",
 				HttpOnly: true,
 				Secure:   manager.isSecure(r),
-				Domain:   manager.config.Domain}
+				Domain:   manager.config.Domain,
+			}
 			if manager.config.CookieLifeTime > 0 {
 				cookie.MaxAge = manager.config.CookieLifeTime
 				cookie.Expires = time.Now().Add(time.Duration(manager.config.CookieLifeTime) * time.Second)
