@@ -65,6 +65,35 @@ func TestCache(t *testing.T) {
 	if bm.IsExist("astaxie") {
 		t.Error("delete err")
 	}
+
+	//test GetMulti
+	if err = bm.Put("astaxie", "author", 10); err != nil {
+		t.Error("set Error", err)
+	}
+	if !bm.IsExist("astaxie") {
+		t.Error("check err")
+	}
+	if v := bm.Get("astaxie"); v.(string) != "author" {
+		t.Error("get err")
+	}
+
+	if err = bm.Put("astaxie1", "author1", 10); err != nil {
+		t.Error("set Error", err)
+	}
+	if !bm.IsExist("astaxie1") {
+		t.Error("check err")
+	}
+
+	vv := bm.GetMulti([]string{"astaxie", "astaxie1"})
+	if len(vv) != 2 {
+		t.Error("GetMulti ERROR")
+	}
+	if vv[0].(string) != "author" {
+		t.Error("GetMulti ERROR")
+	}
+	if vv[1].(string) != "author1" {
+		t.Error("GetMulti ERROR")
+	}
 }
 
 func TestFileCache(t *testing.T) {
@@ -102,6 +131,7 @@ func TestFileCache(t *testing.T) {
 	if bm.IsExist("astaxie") {
 		t.Error("delete err")
 	}
+
 	//test string
 	if err = bm.Put("astaxie", "author", 10); err != nil {
 		t.Error("set Error", err)
@@ -109,9 +139,28 @@ func TestFileCache(t *testing.T) {
 	if !bm.IsExist("astaxie") {
 		t.Error("check err")
 	}
-
 	if v := bm.Get("astaxie"); v.(string) != "author" {
 		t.Error("get err")
 	}
+
+	//test GetMulti
+	if err = bm.Put("astaxie1", "author1", 10); err != nil {
+		t.Error("set Error", err)
+	}
+	if !bm.IsExist("astaxie1") {
+		t.Error("check err")
+	}
+
+	vv := bm.GetMulti([]string{"astaxie", "astaxie1"})
+	if len(vv) != 2 {
+		t.Error("GetMulti ERROR")
+	}
+	if vv[0].(string) != "author" {
+		t.Error("GetMulti ERROR")
+	}
+	if vv[1].(string) != "author1" {
+		t.Error("GetMulti ERROR")
+	}
+
 	os.RemoveAll("cache")
 }

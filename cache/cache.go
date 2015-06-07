@@ -47,6 +47,8 @@ import (
 type Cache interface {
 	// get cached value by key.
 	Get(key string) interface{}
+	// GetMulti is a batch version of Get.
+	GetMulti(keys []string) []interface{}
 	// set cached value with key and expire time.
 	Put(key string, val interface{}, timeout int64) error
 	// delete cached value by key.

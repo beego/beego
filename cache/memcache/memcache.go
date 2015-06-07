@@ -63,6 +63,32 @@ func (rc *MemcacheCache) Get(key string) interface{} {
 	return nil
 }
 
+// get value from memcache.
+func (rc *MemcacheCache) GetMulti(keys []string) []interface{} {
+	size := len(keys)
+	var rv []interface{}
+	if rc.conn == nil {
+		if err := rc.connectInit(); err != nil {
+			for i := 0; i < size; i++ {
+				rv = append(rv, err)
+			}
+			return rv
+		}
+	}
+	mv, err := rc.conn.GetMulti(keys)
+	if err == nil {
+		for _, v := range mv {
+			rv = append(rv, string(v.Value))
+		}
+		return rv
+	} else {
+		for i := 0; i < size; i++ {
+			rv = append(rv, err)
+		}
+		return rv
+	}
+}
+
 // put value to memcache. only support string.
 func (rc *MemcacheCache) Put(key string, val interface{}, timeout int64) error {
 	if rc.conn == nil {
