@@ -51,6 +51,7 @@ type RedisCache struct {
 	conninfo string
 	dbNum    int
 	key      string
+	password string
 }
 
 // create new redis cache with default collection name.
@@ -149,16 +150,20 @@ func (rc *RedisCache) StartAndGC(config string) error {
 	if _, ok := cf["key"]; !ok {
 		cf["key"] = DefaultKey
 	}
-
 	if _, ok := cf["conn"]; !ok {
 		return errors.New("config has no conn key")
 	}
 	if _, ok := cf["dbNum"]; !ok {
 		cf["dbNum"] = "0"
 	}
+	if _, ok := cf["password"]; !ok {
+		cf["password"] = ""
+	}
 	rc.key = cf["key"]
 	rc.conninfo = cf["conn"]
 	rc.dbNum, _ = strconv.Atoi(cf["dbNum"])
+	rc.password = cf["password"]
+
 	rc.connectInit()
 
 	c := rc.p.Get()
@@ -171,6 +176,17 @@ func (rc *RedisCache) StartAndGC(config string) error {
 func (rc *RedisCache) connectInit() {
 	dialFunc := func() (c redis.Conn, err error) {
 		c, err = redis.Dial("tcp", rc.conninfo)
+		if err != nil {
+			return nil, err
+		}
+
+		if rc.password != "" {
+			if _, err := c.Do("AUTH", rc.password); err != nil {
+				c.Close()
+				return nil, err
+			}
+		}
+
 		_, selecterr := c.Do("SELECT", rc.dbNum)
 		if selecterr != nil {
 			c.Close()
