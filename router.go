@@ -857,47 +857,28 @@ func (p *ControllerRegistor) recoverPanic(context *beecontext.Context) {
 		if err == USERSTOPRUN {
 			return
 		}
-		if RunMode == "dev" {
-			if !RecoverPanic {
-				panic(err)
-			} else {
-				if ErrorsShow {
-					if _, ok := ErrorMaps[fmt.Sprint(err)]; ok {
-						exception(fmt.Sprint(err), context)
-						return
-					}
-				}
-				var stack string
-				Critical("the request url is ", context.Input.Url())
-				Critical("Handler crashed with error", err)
-				for i := 1; ; i++ {
-					_, file, line, ok := runtime.Caller(i)
-					if !ok {
-						break
-					}
-					Critical(fmt.Sprintf("%s:%d", file, line))
-					stack = stack + fmt.Sprintln(fmt.Sprintf("%s:%d", file, line))
-				}
-				showErr(err, context, stack)
-			}
+		if !RecoverPanic {
+			panic(err)
 		} else {
-			if !RecoverPanic {
-				panic(err)
-			} else {
-				// in production model show all infomation
-				if ErrorsShow {
+			if ErrorsShow {
+				if _, ok := ErrorMaps[fmt.Sprint(err)]; ok {
 					exception(fmt.Sprint(err), context)
-				} else {
-					Critical("the request url is ", context.Input.Url())
-					Critical("Handler crashed with error", err)
-					for i := 1; ; i++ {
-						_, file, line, ok := runtime.Caller(i)
-						if !ok {
-							break
-						}
-						Critical(fmt.Sprintf("%s:%d", file, line))
-					}
+					return
 				}
+			}
+			var stack string
+			Critical("the request url is ", context.Input.Url())
+			Critical("Handler crashed with error", err)
+			for i := 1; ; i++ {
+				_, file, line, ok := runtime.Caller(i)
+				if !ok {
+					break
+				}
+				Critical(fmt.Sprintf("%s:%d", file, line))
+				stack = stack + fmt.Sprintln(fmt.Sprintf("%s:%d", file, line))
+			}
+			if RunMode == "dev" {
+				showErr(err, context, stack)
 			}
 		}
 	}
