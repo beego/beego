@@ -64,6 +64,16 @@ func (bc *MemoryCache) Get(name string) interface{} {
 	return nil
 }
 
+// GetMulti gets caches from memory.
+// if non-existed or expired, return nil.
+func (bc *MemoryCache) GetMulti(names []string) []interface{} {
+	var rc []interface{}
+	for _, name := range names {
+		rc = append(rc, bc.Get(name))
+	}
+	return rc
+}
+
 // Put cache to memory.
 // if expired is 0, it will be cleaned by next gc operation ( default gc clock is 1 minute).
 func (bc *MemoryCache) Put(name string, value interface{}, expired int64) error {

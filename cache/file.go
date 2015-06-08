@@ -132,6 +132,16 @@ func (fc *FileCache) Get(key string) interface{} {
 	return to.Data
 }
 
+// GetMulti gets values from file cache.
+// if non-exist or expired, return empty string.
+func (fc *FileCache) GetMulti(keys []string) []interface{} {
+	var rc []interface{}
+	for _, key := range keys {
+		rc = append(rc, fc.Get(key))
+	}
+	return rc
+}
+
 // Put value into file cache.
 // timeout means how long to keep this file, unit of ms.
 // if timeout equals FileCacheEmbedExpiry(default is 0), cache this item forever.

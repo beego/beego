@@ -75,6 +75,39 @@ func (rc *RedisCache) Get(key string) interface{} {
 	return nil
 }
 
+// GetMulti get cache from redis.
+func (rc *RedisCache) GetMulti(keys []string) []interface{} {
+	size := len(keys)
+	var rv []interface{}
+	c := rc.p.Get()
+	defer c.Close()
+	var err error
+	for _, key := range keys {
+		err = c.Send("GET", key)
+		if err != nil {
+			goto ERROR
+		}
+	}
+	if err = c.Flush(); err != nil {
+		goto ERROR
+	}
+	for i := 0; i < size; i++ {
+		if v, err := c.Receive(); err == nil {
+			rv = append(rv, v.([]byte))
+		} else {
+			rv = append(rv, err)
+		}
+	}
+	return rv
+ERROR:
+	rv = rv[0:0]
+	for i := 0; i < size; i++ {
+		rv = append(rv, nil)
+	}
+
+	return rv
+}
+
 // put cache to redis.
 func (rc *RedisCache) Put(key string, val interface{}, timeout int64) error {
 	var err error
