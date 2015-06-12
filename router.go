@@ -612,10 +612,9 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			if l, ok := p.filters[pos]; ok {
 				for _, filterR := range l {
 					if ok, p := filterR.ValidRouter(urlPath); ok {
-						for k, v := range context.Input.Params {
-							p[k] = v
+						for k, v := range p {
+							context.Input.Params[k] = v
 						}
-						context.Input.Params = p
 						filterR.filterFunc(context)
 						if filterR.returnOnOutput && w.started {
 							return true
