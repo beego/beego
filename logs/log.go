@@ -92,6 +92,7 @@ type BeeLogger struct {
 	level               int
 	enableFuncCallDepth bool
 	loggerFuncCallDepth int
+	asynchronous        bool
 	msg                 chan *logMsg
 	outputs             map[string]LoggerInterface
 }
@@ -110,7 +111,11 @@ func NewLogger(channellen int64) *BeeLogger {
 	bl.loggerFuncCallDepth = 2
 	bl.msg = make(chan *logMsg, channellen)
 	bl.outputs = make(map[string]LoggerInterface)
-	//bl.SetLogger("console", "") // default output to console
+	return bl
+}
+
+func (bl *BeeLogger) Async() *BeeLogger {
+	bl.asynchronous = true
 	go bl.startLogger()
 	return bl
 }
@@ -164,7 +169,17 @@ func (bl *BeeLogger) writerMsg(loglevel int, msg string) error {
 	} else {
 		lm.msg = msg
 	}
-	bl.msg <- lm
+	if bl.asynchronous {
+		bl.msg <- lm
+	} else {
+		for name, l := range bl.outputs {
+			err := l.WriteMsg(lm.msg, lm.level)
+			if err != nil {
+				fmt.Println("unable to WriteMsg to adapter:", name, err)
+				return err
+			}
+		}
+	}
 	return nil
 }
 
