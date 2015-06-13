@@ -29,6 +29,8 @@ var sqliteOperators = map[string]string{
 	"gte":         ">= ?",
 	"lt":          "< ?",
 	"lte":         "<= ?",
+	"eq":          "= ?",
+	"ne":          "!= ?",
 	"startswith":  "LIKE ? ESCAPE '\\'",
 	"endswith":    "LIKE ? ESCAPE '\\'",
 	"istartswith": "LIKE ? ESCAPE '\\'",

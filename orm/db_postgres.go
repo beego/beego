@@ -29,6 +29,8 @@ var postgresOperators = map[string]string{
 	"gte":         ">= ?",
 	"lt":          "< ?",
 	"lte":         "<= ?",
+	"eq":          "= ?",
+	"ne":          "!= ?",
 	"startswith":  "LIKE ?",
 	"endswith":    "LIKE ?",
 	"istartswith": "LIKE UPPER(?)",
