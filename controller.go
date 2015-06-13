@@ -499,6 +499,41 @@ func (c *Controller) GetFile(key string) (multipart.File, *multipart.FileHeader,
 	return c.Ctx.Request.FormFile(key)
 }
 
+// GetFiles return multi-upload files
+// files, err:=c.Getfiles("myfiles")
+//	if err != nil {
+//		http.Error(w, err.Error(), http.StatusNoContent)
+//		return
+//	}
+// for i, _ := range files {
+//	//for each fileheader, get a handle to the actual file
+//	file, err := files[i].Open()
+//	defer file.Close()
+//	if err != nil {
+//		http.Error(w, err.Error(), http.StatusInternalServerError)
+//		return
+//	}
+//	//create destination file making sure the path is writeable.
+//	dst, err := os.Create("upload/" + files[i].Filename)
+//	defer dst.Close()
+//	if err != nil {
+//		http.Error(w, err.Error(), http.StatusInternalServerError)
+//		return
+//	}
+//	//copy the uploaded file to the destination file
+//	if _, err := io.Copy(dst, file); err != nil {
+//		http.Error(w, err.Error(), http.StatusInternalServerError)
+//		return
+//	}
+// }
+func (c *Controller) GetFiles(key string) ([]*multipart.FileHeader, error) {
+	files, ok := c.Ctx.Request.MultipartForm.File["key"]
+	if ok {
+		return files, nil
+	}
+	return nil, http.ErrMissingFile
+}
+
 // SaveToFile saves uploaded file to new path.
 // it only operates the first one of mutil-upload form file field.
 func (c *Controller) SaveToFile(fromfile, tofile string) error {
