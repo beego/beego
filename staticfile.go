@@ -58,7 +58,7 @@ func serverStaticRouter(ctx *context.Context) {
 			finfo, err := os.Stat(file)
 			if err != nil {
 				if RunMode == "dev" {
-					Warn(err)
+					Warn("Can't find the file:", file, err)
 				}
 				http.NotFound(ctx.ResponseWriter, ctx.Request)
 				return
