@@ -157,15 +157,12 @@ func (bl *BeeLogger) writerMsg(loglevel int, msg string) error {
 	lm.level = loglevel
 	if bl.enableFuncCallDepth {
 		_, file, line, ok := runtime.Caller(bl.loggerFuncCallDepth)
-		if _, filename := path.Split(file); filename == "log.go" && (line == 97 || line == 83) {
-			_, file, line, ok = runtime.Caller(bl.loggerFuncCallDepth + 1)
+		if !ok {
+			file = "???"
+			line = 0
 		}
-		if ok {
-			_, filename := path.Split(file)
-			lm.msg = fmt.Sprintf("[%s:%d] %s", filename, line, msg)
-		} else {
-			lm.msg = msg
-		}
+		_, filename := path.Split(file)
+		lm.msg = fmt.Sprintf("[%s:%d] %s", filename, line, msg)
 	} else {
 		lm.msg = msg
 	}
