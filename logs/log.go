@@ -295,8 +295,7 @@ func (bl *BeeLogger) Debug(format string, v ...interface{}) {
 }
 
 // Log WARN level message.
-//
-// Deprecated: compatibility alias for Warning(), Will be removed in 1.5.0.
+// compatibility alias for Warning()
 func (bl *BeeLogger) Warn(format string, v ...interface{}) {
 	if LevelWarning > bl.level {
 		return
@@ -306,8 +305,7 @@ func (bl *BeeLogger) Warn(format string, v ...interface{}) {
 }
 
 // Log INFO level message.
-//
-// Deprecated: compatibility alias for Informational(), Will be removed in 1.5.0.
+// compatibility alias for Informational()
 func (bl *BeeLogger) Info(format string, v ...interface{}) {
 	if LevelInformational > bl.level {
 		return
@@ -317,8 +315,7 @@ func (bl *BeeLogger) Info(format string, v ...interface{}) {
 }
 
 // Log TRACE level message.
-//
-// Deprecated: compatibility alias for Debug(), Will be removed in 1.5.0.
+// compatibility alias for Debug()
 func (bl *BeeLogger) Trace(format string, v ...interface{}) {
 	if LevelDebug > bl.level {
 		return
