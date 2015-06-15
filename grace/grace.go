@@ -42,6 +42,7 @@
 package grace
 
 import (
+	"crypto/tls"
 	"flag"
 	"net/http"
 	"os"
@@ -146,5 +147,14 @@ func ListenAndServe(addr string, handler http.Handler) error {
 // refer http.ListenAndServeTLS
 func ListenAndServeTLS(addr string, certFile string, keyFile string, handler http.Handler) error {
 	server := NewServer(addr, handler)
-	return server.ListenAndServeTLS(certFile, keyFile)
+	if server.TLSConfig == nil {
+		server.TLSConfig = &tls.Config{}
+	}
+	var err error
+	server.TLSConfig.Certificates = make([]tls.Certificate, 1)
+	server.TLSConfig.Certificates[0], err = tls.LoadX509KeyPair(certFile, keyFile)
+	if err != nil {
+		return err
+	}
+	return server.ListenAndServeTLS()
 }

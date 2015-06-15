@@ -29,13 +29,13 @@ import (
 // App defines beego application with a new PatternServeMux.
 type App struct {
 	Handlers *ControllerRegistor
-	Server   *http.Server
+	Server   *TLSServer
 }
 
 // NewApp returns a new beego application.
 func NewApp() *App {
 	cr := NewControllerRegister()
-	app := &App{Handlers: cr, Server: &http.Server{}}
+	app := &App{Handlers: cr, Server: &TLSServer{Server: &http.Server{}}}
 	return app
 }
 
@@ -91,7 +91,13 @@ func (app *App) Run() {
 					}
 					server := grace.NewServer(addr, app.Handlers)
 					server.Server = app.Server
-					err := server.ListenAndServeTLS(HttpCertFile, HttpKeyFile)
+					tlsconfig, err := NewTLSConfigServer()
+					if err != nil {
+						BeeLogger.Critical("NewTLSConfigServer: ", err, fmt.Sprintf("%d", os.Getpid()))
+						time.Sleep(100 * time.Microsecond)
+						endRunning <- true
+					}
+					err = tlsconfig.ListenAndServeTLS(server)
 					if err != nil {
 						BeeLogger.Critical("ListenAndServeTLS: ", err, fmt.Sprintf("%d", os.Getpid()))
 						time.Sleep(100 * time.Microsecond)
@@ -126,8 +132,9 @@ func (app *App) Run() {
 					if HttpsPort != 0 {
 						app.Server.Addr = fmt.Sprintf("%s:%d", HttpAddr, HttpsPort)
 					}
+					tlsconfig, err := NewTLSConfigServer()
 					BeeLogger.Info("https server Running on %s", app.Server.Addr)
-					err := app.Server.ListenAndServeTLS(HttpCertFile, HttpKeyFile)
+					err = app.Server.ListenAndServeTLS(HttpCertFile, HttpKeyFile)
 					if err != nil {
 						BeeLogger.Critical("ListenAndServeTLS: ", err)
 						time.Sleep(100 * time.Microsecond)

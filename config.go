@@ -43,10 +43,14 @@ var (
 	ListenTCP4             bool
 	EnableHttpTLS          bool
 	HttpsPort              int
-	HttpCertFile           string
-	HttpKeyFile            string
-	RecoverPanic           bool // flag of auto recover panic
-	AutoRender             bool // flag of render template automatically
+	HttpsCertFile          string
+	HttpsKeyFile           string
+	TLSMinVersion          string
+	TLSMaxVersion          string
+	TLSPreferServerCipher  bool
+	TLSCiphers             []string //server supported Ciphers
+	RecoverPanic           bool     // flag of auto recover panic
+	AutoRender             bool     // flag of render template automatically
 	ViewsPath              string
 	AppConfig              *beegoAppConfig
 	RunMode                string           // run mode, "dev" or "prod"
@@ -250,6 +254,14 @@ func init() {
 
 	HttpsPort = 10443
 
+	TLSMinVersion = "tls1.0"
+
+	TLSMaxVersion = "tls1.2"
+
+	TLSPreferServerCipher = true
+
+	TLSCiphers = []string{"ECDHE-RSA-AES128-GCM-SHA256", "ECDHE-ECDSA-AES128-GCM-SHA256", "ECDHE-RSA-AES128-CBC-SHA", "ECDHE-RSA-AES256-CBC-SHA", "ECDHE-ECDSA-AES256-CBC-SHA", "ECDHE-ECDSA-AES128-CBC-SHA", "RSA-AES128-CBC-SHA", "RSA-AES256-CBC-SHA", "ECDHE-RSA-3DES-EDE-CBC-SHA", "RSA-3DES-EDE-CBC-SHA"}
+
 	AppName = "beego"
 
 	RunMode = "dev" //default runmod
@@ -440,12 +452,28 @@ func ParseConfig() (err error) {
 		HttpsPort = httpsport
 	}
 
-	if certfile := AppConfig.String("HttpCertFile"); certfile != "" {
-		HttpCertFile = certfile
+	if certfile := AppConfig.String("HttpsCertFile"); certfile != "" {
+		HttpsCertFile = certfile
 	}
 
-	if keyfile := AppConfig.String("HttpKeyFile"); keyfile != "" {
-		HttpKeyFile = keyfile
+	if keyfile := AppConfig.String("HttpsKeyFile"); keyfile != "" {
+		HttpsKeyFile = keyfile
+	}
+
+	if minversion := AppConfig.String("TLSMinVersion"); defaultsupportedProtocols[minversion] != 0 {
+		TLSMinVersion = minversion
+	}
+
+	if maxversion := AppConfig.String("TLSMaxVersion"); defaultsupportedProtocols[maxversion] != 0 {
+		TLSMaxVersion = maxversion
+	}
+
+	if preferservercipher, err := AppConfig.Bool("TLSMaxVersion"); err == nil {
+		TLSPreferServerCipher = preferservercipher
+	}
+
+	if ciphers := AppConfig.Strings("TLSCiphers"); len(ciphers) > 0 {
+		TLSCiphers = ciphers
 	}
 
 	if serverName := AppConfig.String("BeegoServerName"); serverName != "" {
