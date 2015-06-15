@@ -298,21 +298,33 @@ func (bl *BeeLogger) Debug(format string, v ...interface{}) {
 //
 // Deprecated: compatibility alias for Warning(), Will be removed in 1.5.0.
 func (bl *BeeLogger) Warn(format string, v ...interface{}) {
-	bl.Warning(format, v...)
+	if LevelWarning > bl.level {
+		return
+	}
+	msg := fmt.Sprintf("[W] "+format, v...)
+	bl.writerMsg(LevelWarning, msg)
 }
 
 // Log INFO level message.
 //
 // Deprecated: compatibility alias for Informational(), Will be removed in 1.5.0.
 func (bl *BeeLogger) Info(format string, v ...interface{}) {
-	bl.Informational(format, v...)
+	if LevelInformational > bl.level {
+		return
+	}
+	msg := fmt.Sprintf("[I] "+format, v...)
+	bl.writerMsg(LevelInformational, msg)
 }
 
 // Log TRACE level message.
 //
 // Deprecated: compatibility alias for Debug(), Will be removed in 1.5.0.
 func (bl *BeeLogger) Trace(format string, v ...interface{}) {
-	bl.Debug(format, v...)
+	if LevelDebug > bl.level {
+		return
+	}
+	msg := fmt.Sprintf("[D] "+format, v...)
+	bl.writerMsg(LevelDebug, msg)
 }
 
 // flush all chan data.
