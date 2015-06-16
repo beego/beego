@@ -36,26 +36,25 @@ func (srv *TLSServer) TLSConfigServer() (err error) {
 	srv.TLSPreferServerCipherSuites = TLSPreferServerCipher
 	srv.TLSMinVersion = defaultsupportedProtocols[TLSMinVersion]
 	srv.TLSMaxVersion = defaultsupportedProtocols[TLSMaxVersion]
-
 	for _, value := range TLSCiphers {
 		srv.TLSCiphers = append(srv.TLSCiphers, supportedCiphersMap[value])
 	}
+
 	if len(srv.TLSCiphers) < 1 {
 		srv.TLSCiphers = defaultsupportedCiphers
 	}
 
 	if HttpsCertFile != "" && HttpsKeyFile != "" {
-		var err error
 		srv.Certificate, err = tls.LoadX509KeyPair(HttpsCertFile, HttpsKeyFile)
 		if err != nil {
 			return err
 		}
-		return nil
-	}
-	HttpsCertContent, HttpsKeyContent := AppConfig.String("HttpsCertContent"), AppConfig.String("HttpsKeyContent")
-	srv.Certificate, err = tls.X509KeyPair([]byte(HttpsCertContent), []byte(HttpsKeyContent))
-	if err != nil {
-		return err
+	} else {
+		HttpsCertContent, HttpsKeyContent := AppConfig.String("HttpsCertContent"), AppConfig.String("HttpsKeyContent")
+		srv.Certificate, err = tls.X509KeyPair([]byte(HttpsCertContent), []byte(HttpsKeyContent))
+		if err != nil {
+			return err
+		}
 	}
 	srv.TLSConfig = &tls.Config{
 		CipherSuites:             srv.TLSCiphers,
@@ -83,13 +82,13 @@ func (srv *TLSServer) ListenAndServeTLS() error {
 		addr = ":https"
 	}
 
-	config := &tls.Config{}
 	if srv.TLSConfig == nil {
 		return errors.New("Not Configured TLSConfig")
 	}
 	if len(srv.TLSConfig.Certificates) < 1 {
 		return errors.New("SSL certificate information is not configured")
 	}
+	config := &tls.Config{}
 	*config = *srv.TLSConfig
 	if config.NextProtos == nil {
 		config.NextProtos = []string{"http/1.1"}

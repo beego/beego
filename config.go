@@ -468,11 +468,11 @@ func ParseConfig() (err error) {
 		TLSMaxVersion = maxversion
 	}
 
-	if preferservercipher, err := AppConfig.Bool("TLSMaxVersion"); err == nil {
+	if preferservercipher, err := AppConfig.Bool("TLSPreferServerCipher"); err == nil {
 		TLSPreferServerCipher = preferservercipher
 	}
 
-	if ciphers := AppConfig.Strings("TLSCiphers"); len(ciphers) > 0 {
+	if ciphers := AppConfig.Strings("TLSCiphers"); len(ciphers) > 0 && ciphers[0] != "" {
 		TLSCiphers = ciphers
 	}
 
