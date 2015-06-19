@@ -527,7 +527,7 @@ func (c *Controller) GetFile(key string) (multipart.File, *multipart.FileHeader,
 //	}
 // }
 func (c *Controller) GetFiles(key string) ([]*multipart.FileHeader, error) {
-	files, ok := c.Ctx.Request.MultipartForm.File["key"]
+	files, ok := c.Ctx.Request.MultipartForm.File[key]
 	if ok {
 		return files, nil
 	}

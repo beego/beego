@@ -37,7 +37,7 @@ import (
 )
 
 // beego web framework version.
-const VERSION = "1.4.3"
+const VERSION = "1.5.0"
 
 type hookfunc func() error //hook function to run
 var hooks []hookfunc       //hook function slice to store the hookfunc
@@ -336,7 +336,7 @@ func initBeforeHttpRun() {
 // this function is for test package init
 func TestBeegoInit(apppath string) {
 	AppPath = apppath
-	RunMode = "test"
+	os.Setenv("BEEGO_RUNMODE", "test")
 	AppConfigPath = filepath.Join(AppPath, "conf", "app.conf")
 	err := ParseConfig()
 	if err != nil && !os.IsNotExist(err) {

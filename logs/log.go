@@ -157,15 +157,12 @@ func (bl *BeeLogger) writerMsg(loglevel int, msg string) error {
 	lm.level = loglevel
 	if bl.enableFuncCallDepth {
 		_, file, line, ok := runtime.Caller(bl.loggerFuncCallDepth)
-		if _, filename := path.Split(file); filename == "log.go" && (line == 97 || line == 83) {
-			_, file, line, ok = runtime.Caller(bl.loggerFuncCallDepth + 1)
+		if !ok {
+			file = "???"
+			line = 0
 		}
-		if ok {
-			_, filename := path.Split(file)
-			lm.msg = fmt.Sprintf("[%s:%d] %s", filename, line, msg)
-		} else {
-			lm.msg = msg
-		}
+		_, filename := path.Split(file)
+		lm.msg = fmt.Sprintf("[%s:%d] %s", filename, line, msg)
 	} else {
 		lm.msg = msg
 	}
@@ -295,24 +292,33 @@ func (bl *BeeLogger) Debug(format string, v ...interface{}) {
 }
 
 // Log WARN level message.
-//
-// Deprecated: compatibility alias for Warning(), Will be removed in 1.5.0.
+// compatibility alias for Warning()
 func (bl *BeeLogger) Warn(format string, v ...interface{}) {
-	bl.Warning(format, v...)
+	if LevelWarning > bl.level {
+		return
+	}
+	msg := fmt.Sprintf("[W] "+format, v...)
+	bl.writerMsg(LevelWarning, msg)
 }
 
 // Log INFO level message.
-//
-// Deprecated: compatibility alias for Informational(), Will be removed in 1.5.0.
+// compatibility alias for Informational()
 func (bl *BeeLogger) Info(format string, v ...interface{}) {
-	bl.Informational(format, v...)
+	if LevelInformational > bl.level {
+		return
+	}
+	msg := fmt.Sprintf("[I] "+format, v...)
+	bl.writerMsg(LevelInformational, msg)
 }
 
 // Log TRACE level message.
-//
-// Deprecated: compatibility alias for Debug(), Will be removed in 1.5.0.
+// compatibility alias for Debug()
 func (bl *BeeLogger) Trace(format string, v ...interface{}) {
-	bl.Debug(format, v...)
+	if LevelDebug > bl.level {
+		return
+	}
+	msg := fmt.Sprintf("[D] "+format, v...)
+	bl.writerMsg(LevelDebug, msg)
 }
 
 // flush all chan data.
