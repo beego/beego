@@ -616,6 +616,9 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 					}
 					if ok, params := filterR.ValidRouter(urlPath); ok {
 						for k, v := range params {
+							if context.Input.Params == nil {
+								context.Input.Params = make(map[string]string)	
+							}
 							context.Input.Params[k] = v
 						}
 						filterR.filterFunc(context)
@@ -699,7 +702,9 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 						p[strconv.Itoa(k)] = v
 					}
 				}
-				context.Input.Params = p
+				if p != nil {
+					context.Input.Params = p
+				}
 			}
 		}
 
