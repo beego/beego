@@ -47,6 +47,8 @@ import (
 type Cache interface {
 	// get cached value by key.
 	Get(key string) interface{}
+	// GetMulti is a batch version of Get.
+	GetMulti(keys []string) []interface{}
 	// set cached value with key and expire time.
 	Put(key string, val interface{}, timeout int64) error
 	// delete cached value by key.
@@ -81,13 +83,13 @@ func Register(name string, adapter Cache) {
 // Create a new cache driver by adapter name and config string.
 // config need to be correct JSON as string: {"interval":360}.
 // it will start gc automatically.
-func NewCache(adapterName, config string) (adapter Cache, e error) {
+func NewCache(adapterName, config string) (adapter Cache, err error) {
 	adapter, ok := adapters[adapterName]
 	if !ok {
-		e = fmt.Errorf("cache: unknown adapter name %q (forgot to import?)", adapterName)
+		err = fmt.Errorf("cache: unknown adapter name %q (forgot to import?)", adapterName)
 		return
 	}
-	err := adapter.StartAndGC(config)
+	err = adapter.StartAndGC(config)
 	if err != nil {
 		adapter = nil
 	}

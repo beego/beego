@@ -33,6 +33,8 @@ type bounds struct {
 var (
 	AdminTaskList map[string]Tasker
 	stop          chan bool
+	changed       chan bool
+	isstart       bool
 	seconds       = bounds{0, 59, nil}
 	minutes       = bounds{0, 59, nil}
 	hours         = bounds{0, 23, nil}
@@ -82,6 +84,7 @@ type TaskFunc func() error
 
 // task interface
 type Tasker interface {
+	GetSpec() string
 	GetStatus() string
 	Run() error
 	SetNext(time.Time)
@@ -100,6 +103,7 @@ type taskerr struct {
 type Task struct {
 	Taskname string
 	Spec     *Schedule
+	SpecStr  string
 	DoFunc   TaskFunc
 	Prev     time.Time
 	Next     time.Time
@@ -114,16 +118,22 @@ func NewTask(tname string, spec string, f TaskFunc) *Task {
 		Taskname: tname,
 		DoFunc:   f,
 		ErrLimit: 100,
+		SpecStr:  spec,
 	}
 	task.SetCron(spec)
 	return task
+}
+
+//get spec string
+func (s *Task) GetSpec() string {
+	return s.SpecStr
 }
 
 // get current task status
 func (tk *Task) GetStatus() string {
 	var str string
 	for _, v := range tk.Errlist {
-		str += v.t.String() + ":" + v.errinfo + "\n"
+		str += v.t.String() + ":" + v.errinfo + "<br>"
 	}
 	return str
 }
@@ -379,6 +389,7 @@ func dayMatches(s *Schedule, t time.Time) bool {
 
 // start all tasks
 func StartTask() {
+	isstart = true
 	go run()
 }
 
@@ -411,6 +422,8 @@ func run() {
 				e.SetNext(effective)
 			}
 			continue
+		case <-changed:
+			continue
 		case <-stop:
 			return
 		}
@@ -419,12 +432,24 @@ func run() {
 
 // start all tasks
 func StopTask() {
+	isstart = false
 	stop <- true
 }
 
 // add task with name
 func AddTask(taskname string, t Tasker) {
 	AdminTaskList[taskname] = t
+	if isstart {
+		changed <- true
+	}
+}
+
+// add task with name
+func DeleteTask(taskname string) {
+	delete(AdminTaskList, taskname)
+	if isstart {
+		changed <- true
+	}
 }
 
 // sort map for tasker
@@ -578,4 +603,5 @@ func all(r bounds) uint64 {
 func init() {
 	AdminTaskList = make(map[string]Tasker)
 	stop = make(chan bool)
+	changed = make(chan bool)
 }

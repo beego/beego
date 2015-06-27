@@ -78,9 +78,9 @@ func Warning(v ...interface{}) {
 	BeeLogger.Warning(generateFmtStr(len(v)), v...)
 }
 
-// Deprecated: compatibility alias for Warning(), Will be removed in 1.5.0.
+// compatibility alias for Warning()
 func Warn(v ...interface{}) {
-	Warning(v...)
+	BeeLogger.Warn(generateFmtStr(len(v)), v...)
 }
 
 func Notice(v ...interface{}) {
@@ -92,9 +92,9 @@ func Informational(v ...interface{}) {
 	BeeLogger.Informational(generateFmtStr(len(v)), v...)
 }
 
-// Deprecated: compatibility alias for Warning(), Will be removed in 1.5.0.
+// compatibility alias for Warning()
 func Info(v ...interface{}) {
-	Informational(v...)
+	BeeLogger.Info(generateFmtStr(len(v)), v...)
 }
 
 // Debug logs a message at debug level.
@@ -103,7 +103,7 @@ func Debug(v ...interface{}) {
 }
 
 // Trace logs a message at trace level.
-// Deprecated: compatibility alias for Warning(), Will be removed in 1.5.0.
+// compatibility alias for Warning()
 func Trace(v ...interface{}) {
 	BeeLogger.Trace(generateFmtStr(len(v)), v...)
 }

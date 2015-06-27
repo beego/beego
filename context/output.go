@@ -29,6 +29,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 )
 
 // BeegoOutput does work for sending response header.
@@ -98,28 +99,30 @@ func (output *BeegoOutput) Body(content []byte) {
 func (output *BeegoOutput) Cookie(name string, value string, others ...interface{}) {
 	var b bytes.Buffer
 	fmt.Fprintf(&b, "%s=%s", sanitizeName(name), sanitizeValue(value))
-	if len(others) > 0 {
-		switch v := others[0].(type) {
-		case int:
-			if v > 0 {
-				fmt.Fprintf(&b, "; Max-Age=%d", v)
-			} else if v < 0 {
-				fmt.Fprintf(&b, "; Max-Age=0")
-			}
-		case int64:
-			if v > 0 {
-				fmt.Fprintf(&b, "; Max-Age=%d", v)
-			} else if v < 0 {
-				fmt.Fprintf(&b, "; Max-Age=0")
-			}
-		case int32:
-			if v > 0 {
-				fmt.Fprintf(&b, "; Max-Age=%d", v)
-			} else if v < 0 {
-				fmt.Fprintf(&b, "; Max-Age=0")
-			}
-		}
-	}
+
+    //fix cookie not work in IE
+    if len(others) > 0 {
+        switch v := others[0].(type) {
+            case int:
+            if v > 0 {
+                fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(v) * time.Second).UTC().Format(time.RFC1123), v)
+            } else if v < 0 {
+                fmt.Fprintf(&b, "; Max-Age=0")
+            }
+            case int64:
+            if v > 0 {
+                fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(v) * time.Second).UTC().Format(time.RFC1123), v)
+            } else if v < 0 {
+                fmt.Fprintf(&b, "; Max-Age=0")
+            }
+            case int32:
+            if v > 0 {
+                fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(v) * time.Second).UTC().Format(time.RFC1123), v)
+            } else if v < 0 {
+                fmt.Fprintf(&b, "; Max-Age=0")
+            }
+        }
+    }
 
 	// the settings below
 	// Path, Domain, Secure, HttpOnly
@@ -188,7 +191,7 @@ func sanitizeValue(v string) string {
 // Json writes json to response body.
 // if coding is true, it converts utf-8 to \u0000 type.
 func (output *BeegoOutput) Json(data interface{}, hasIndent bool, coding bool) error {
-	output.Header("Content-Type", "application/json;charset=UTF-8")
+	output.Header("Content-Type", "application/json; charset=utf-8")
 	var content []byte
 	var err error
 	if hasIndent {
@@ -209,7 +212,7 @@ func (output *BeegoOutput) Json(data interface{}, hasIndent bool, coding bool) e
 
 // Jsonp writes jsonp to response body.
 func (output *BeegoOutput) Jsonp(data interface{}, hasIndent bool) error {
-	output.Header("Content-Type", "application/javascript;charset=UTF-8")
+	output.Header("Content-Type", "application/javascript; charset=utf-8")
 	var content []byte
 	var err error
 	if hasIndent {
@@ -235,7 +238,7 @@ func (output *BeegoOutput) Jsonp(data interface{}, hasIndent bool) error {
 
 // Xml writes xml string to response body.
 func (output *BeegoOutput) Xml(data interface{}, hasIndent bool) error {
-	output.Header("Content-Type", "application/xml;charset=UTF-8")
+	output.Header("Content-Type", "application/xml; charset=utf-8")
 	var content []byte
 	var err error
 	if hasIndent {

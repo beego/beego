@@ -14,18 +14,26 @@
 
 package beego
 
-// FilterRouter defines filter operation before controller handler execution.
-// it can match patterned url and do filter function when action arrives.
+import "github.com/astaxie/beego/context"
+
+// FilterFunc defines a filter function which is invoked before the controller handler is executed.
+type FilterFunc func(*context.Context)
+
+// FilterRouter defines a filter operation which is invoked before the controller handler is executed.
+// It can match the URL against a pattern, and execute a filter function
+// when a request with a matching URL arrives.
 type FilterRouter struct {
-	filterFunc FilterFunc
-	tree       *Tree
-	pattern    string
+	filterFunc     FilterFunc
+	tree           *Tree
+	pattern        string
+	returnOnOutput bool
 }
 
-// ValidRouter check current request is valid for this filter.
-// if matched, returns parsed params in this request by defined filter router pattern.
-func (f *FilterRouter) ValidRouter(router string) (bool, map[string]string) {
-	isok, params := f.tree.Match(router)
+// ValidRouter checks if the current request is matched by this filter.
+// If the request is matched, the values of the URL parameters defined
+// by the filter pattern are also returned.
+func (f *FilterRouter) ValidRouter(url string) (bool, map[string]string) {
+	isok, params := f.tree.Match(url)
 	if isok == nil {
 		return false, nil
 	}

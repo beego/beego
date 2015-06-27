@@ -14,13 +14,13 @@
 
 // beego is an open-source, high-performance, modularity, full-stack web framework
 //
-//		package main
+// package main
 //
-// 		import "github.com/astaxie/beego"
+// import "github.com/astaxie/beego"
 //
-//		 func main() {
-//  			  beego.Run()
-// 		}
+// func main() {
+//  	beego.Run()
+// }
 //
 // more infomation: http://beego.me
 package beego
@@ -33,82 +33,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/astaxie/beego/middleware"
 	"github.com/astaxie/beego/session"
 )
 
 // beego web framework version.
-const VERSION = "1.4.0"
+const VERSION = "1.5.0"
 
 type hookfunc func() error //hook function to run
 var hooks []hookfunc       //hook function slice to store the hookfunc
-
-type groupRouter struct {
-	pattern        string
-	controller     ControllerInterface
-	mappingMethods string
-}
-
-// RouterGroups which will store routers
-type GroupRouters []groupRouter
-
-// Get a new GroupRouters
-func NewGroupRouters() GroupRouters {
-	return make(GroupRouters, 0)
-}
-
-// Add Router in the GroupRouters
-// it is for plugin or module to register router
-func (gr *GroupRouters) AddRouter(pattern string, c ControllerInterface, mappingMethod ...string) {
-	var newRG groupRouter
-	if len(mappingMethod) > 0 {
-		newRG = groupRouter{
-			pattern,
-			c,
-			mappingMethod[0],
-		}
-	} else {
-		newRG = groupRouter{
-			pattern,
-			c,
-			"",
-		}
-	}
-	*gr = append(*gr, newRG)
-}
-
-func (gr *GroupRouters) AddAuto(c ControllerInterface) {
-	newRG := groupRouter{
-		"",
-		c,
-		"",
-	}
-	*gr = append(*gr, newRG)
-}
-
-// AddGroupRouter with the prefix
-// it will register the router in BeeApp
-// the follow code is write in modules:
-// GR:=NewGroupRouters()
-// GR.AddRouter("/login",&UserController,"get:Login")
-// GR.AddRouter("/logout",&UserController,"get:Logout")
-// GR.AddRouter("/register",&UserController,"get:Reg")
-// the follow code is write in app:
-// import "github.com/beego/modules/auth"
-// AddRouterGroup("/admin", auth.GR)
-func AddGroupRouter(prefix string, groups GroupRouters) *App {
-	for _, v := range groups {
-		if v.pattern == "" {
-			BeeApp.Handlers.AddAutoPrefix(prefix, v.controller)
-		} else if v.mappingMethods != "" {
-			BeeApp.Handlers.Add(prefix+v.pattern, v.controller, v.mappingMethods)
-		} else {
-			BeeApp.Handlers.Add(prefix+v.pattern, v.controller)
-		}
-
-	}
-	return BeeApp
-}
 
 // Router adds a patterned controller handler to BeeApp.
 // it's an alias method of App.Router.
@@ -280,15 +212,6 @@ func Handler(rootpath string, h http.Handler, options ...interface{}) *App {
 	return BeeApp
 }
 
-// ErrorHandler registers http.HandlerFunc to each http err code string.
-// usage:
-// 	beego.ErrorHandler("404",NotFound)
-//	beego.ErrorHandler("500",InternalServerError)
-func Errorhandler(err string, h http.HandlerFunc) *App {
-	middleware.Errorhandler(err, h)
-	return BeeApp
-}
-
 // SetViewsPath sets view directory path in beego application.
 func SetViewsPath(path string) *App {
 	ViewsPath = path
@@ -308,15 +231,20 @@ func SetStaticPath(url string, path string) *App {
 
 // DelStaticPath removes the static folder setting in this url pattern in beego application.
 func DelStaticPath(url string) *App {
+	if !strings.HasPrefix(url, "/") {
+		url = "/" + url
+	}
+	url = strings.TrimRight(url, "/")
 	delete(StaticDir, url)
 	return BeeApp
 }
 
 // InsertFilter adds a FilterFunc with pattern condition and action constant.
 // The pos means action constant including
-// beego.BeforeRouter, beego.AfterStatic, beego.BeforeExec, beego.AfterExec and beego.FinishRouter.
-func InsertFilter(pattern string, pos int, filter FilterFunc) *App {
-	BeeApp.Handlers.InsertFilter(pattern, pos, filter)
+// beego.BeforeStatic, beego.BeforeRouter, beego.BeforeExec, beego.AfterExec and beego.FinishRouter.
+// The bool params is for setting the returnOnOutput value (false allows multiple filters to execute)
+func InsertFilter(pattern string, pos int, filter FilterFunc, params ...bool) *App {
+	BeeApp.Handlers.InsertFilter(pattern, pos, filter, params...)
 	return BeeApp
 }
 
@@ -359,6 +287,9 @@ func initBeforeHttpRun() {
 		}
 	}
 
+	//init mime
+	AddAPPStartHook(initMime)
+
 	// do hooks function
 	for _, hk := range hooks {
 		err := hk()
@@ -373,10 +304,8 @@ func initBeforeHttpRun() {
 		if sessionConfig == "" {
 			sessionConfig = `{"cookieName":"` + SessionName + `",` +
 				`"gclifetime":` + strconv.FormatInt(SessionGCMaxLifetime, 10) + `,` +
-				`"providerConfig":"` + SessionSavePath + `",` +
+				`"providerConfig":"` + filepath.ToSlash(SessionSavePath) + `",` +
 				`"secure":` + strconv.FormatBool(EnableHttpTLS) + `,` +
-				`"sessionIDHashFunc":"` + SessionHashFunc + `",` +
-				`"sessionIDHashKey":"` + SessionHashKey + `",` +
 				`"enableSetCookie":` + strconv.FormatBool(SessionAutoSetCookie) + `,` +
 				`"domain":"` + SessionDomain + `",` +
 				`"cookieLifeTime":` + strconv.Itoa(SessionCookieLifeTime) + `}`
@@ -396,23 +325,18 @@ func initBeforeHttpRun() {
 		}
 	}
 
-	middleware.VERSION = VERSION
-	middleware.AppName = AppName
-	middleware.RegisterErrorHandler()
+	registerDefaultErrorHandler()
 
 	if EnableDocs {
 		Get("/docs", serverDocs)
 		Get("/docs/*", serverDocs)
 	}
-
-	//init mime
-	AddAPPStartHook(initMime)
 }
 
 // this function is for test package init
 func TestBeegoInit(apppath string) {
 	AppPath = apppath
-	RunMode = "test"
+	os.Setenv("BEEGO_RUNMODE", "test")
 	AppConfigPath = filepath.Join(AppPath, "conf", "app.conf")
 	err := ParseConfig()
 	if err != nil && !os.IsNotExist(err) {

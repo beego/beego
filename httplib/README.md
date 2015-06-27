@@ -6,53 +6,71 @@ httplib is an libs help you to curl remote url.
 ## GET
 you can use Get to crawl data.
 
-	import "httplib"
+	import "github.com/astaxie/beego/httplib"
 	
 	str, err := httplib.Get("http://beego.me/").String()
 	if err != nil {
-		t.Fatal(err)
+        	// error
 	}
 	fmt.Println(str)
 	
 ## POST
 POST data to remote url
 
-	b:=httplib.Post("http://beego.me/")
-	b.Param("username","astaxie")
-	b.Param("password","123456")
-	str, err := b.String()
+	req := httplib.Post("http://beego.me/")
+	req.Param("username","astaxie")
+	req.Param("password","123456")
+	str, err := req.String()
 	if err != nil {
-		t.Fatal(err)
+        	// error
 	}
 	fmt.Println(str)
 
-## set timeout
-you can set timeout in request.default is 60 seconds.
+## Set timeout
 
-set Get timeout:
+The default timeout is `60` seconds, function prototype:
 
+	SetTimeout(connectTimeout, readWriteTimeout time.Duration)
+
+Exmaple:
+
+	// GET
 	httplib.Get("http://beego.me/").SetTimeout(100 * time.Second, 30 * time.Second)
 	
-set post timeout:	
-	
+	// POST
 	httplib.Post("http://beego.me/").SetTimeout(100 * time.Second, 30 * time.Second)
 
-- first param is connectTimeout.
-- second param is readWriteTimeout
 
-## debug
-if you want to debug the request info, set the debug on
+## Debug
+
+If you want to debug the request info, set the debug on
 
 	httplib.Get("http://beego.me/").Debug(true)
 	
-## support HTTPS client
-if request url is https. You can set the client support TSL:
+## Set HTTP Basic Auth
+
+	str, err := Get("http://beego.me/").SetBasicAuth("user", "passwd").String()
+	if err != nil {
+        	// error
+	}
+	fmt.Println(str)
+	
+## Set HTTPS
+
+If request url is https, You can set the client support TSL:
 
 	httplib.SetTLSClientConfig(&tls.Config{InsecureSkipVerify: true})
 	
-more info about the tls.Config please visit http://golang.org/pkg/crypto/tls/#Config	
-		
-## set cookie
+More info about the `tls.Config` please visit http://golang.org/pkg/crypto/tls/#Config	
+
+## Set HTTP Version
+
+some servers need to specify the protocol version of HTTP
+
+	httplib.Get("http://beego.me/").SetProtocolVersion("HTTP/1.1")
+	
+## Set Cookie
+
 some http request need setcookie. So set it like this:
 
 	cookie := &http.Cookie{}
@@ -60,21 +78,20 @@ some http request need setcookie. So set it like this:
 	cookie.Value  = "astaxie"
 	httplib.Get("http://beego.me/").SetCookie(cookie)
 
-## upload file
-httplib support mutil file upload, use `b.PostFile()`
+## Upload file
 
-	b:=httplib.Post("http://beego.me/")
-	b.Param("username","astaxie")
-	b.Param("password","123456")
-	b.PostFile("uploadfile1", "httplib.pdf")
-	b.PostFile("uploadfile2", "httplib.txt")
-	str, err := b.String()
+httplib support mutil file upload, use `req.PostFile()`
+
+	req := httplib.Post("http://beego.me/")
+	req.Param("username","astaxie")
+	req.PostFile("uploadfile1", "httplib.pdf")
+	str, err := req.String()
 	if err != nil {
-		t.Fatal(err)
+        	// error
 	}
 	fmt.Println(str)
 
-## set HTTP version
-some servers need to specify the protocol version of HTTP
 
-	httplib.Get("http://beego.me/").SetProtocolVersion("HTTP/1.1")
+See godoc for further documentation and examples.
+
+* [godoc.org/github.com/astaxie/beego/httplib](https://godoc.org/github.com/astaxie/beego/httplib)

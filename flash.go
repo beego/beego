@@ -32,6 +32,24 @@ func NewFlash() *FlashData {
 	}
 }
 
+// Set message to flash
+func (fd *FlashData) Set(key string, msg string, args ...interface{}) {
+	if len(args) == 0 {
+		fd.Data[key] = msg
+	} else {
+		fd.Data[key] = fmt.Sprintf(msg, args...)
+	}
+}
+
+// Success writes success message to flash.
+func (fd *FlashData) Success(msg string, args ...interface{}) {
+	if len(args) == 0 {
+		fd.Data["success"] = msg
+	} else {
+		fd.Data["success"] = fmt.Sprintf(msg, args...)
+	}
+}
+
 // Notice writes notice message to flash.
 func (fd *FlashData) Notice(msg string, args ...interface{}) {
 	if len(args) == 0 {

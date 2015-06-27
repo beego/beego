@@ -92,6 +92,7 @@ type BeeLogger struct {
 	level               int
 	enableFuncCallDepth bool
 	loggerFuncCallDepth int
+	asynchronous        bool
 	msg                 chan *logMsg
 	outputs             map[string]LoggerInterface
 }
@@ -110,7 +111,11 @@ func NewLogger(channellen int64) *BeeLogger {
 	bl.loggerFuncCallDepth = 2
 	bl.msg = make(chan *logMsg, channellen)
 	bl.outputs = make(map[string]LoggerInterface)
-	//bl.SetLogger("console", "") // default output to console
+	return bl
+}
+
+func (bl *BeeLogger) Async() *BeeLogger {
+	bl.asynchronous = true
 	go bl.startLogger()
 	return bl
 }
@@ -148,23 +153,30 @@ func (bl *BeeLogger) DelLogger(adaptername string) error {
 }
 
 func (bl *BeeLogger) writerMsg(loglevel int, msg string) error {
-	if loglevel > bl.level {
-		return nil
-	}
 	lm := new(logMsg)
 	lm.level = loglevel
 	if bl.enableFuncCallDepth {
 		_, file, line, ok := runtime.Caller(bl.loggerFuncCallDepth)
-		if ok {
-			_, filename := path.Split(file)
-			lm.msg = fmt.Sprintf("[%s:%d] %s", filename, line, msg)
-		} else {
-			lm.msg = msg
+		if !ok {
+			file = "???"
+			line = 0
 		}
+		_, filename := path.Split(file)
+		lm.msg = fmt.Sprintf("[%s:%d] %s", filename, line, msg)
 	} else {
 		lm.msg = msg
 	}
-	bl.msg <- lm
+	if bl.asynchronous {
+		bl.msg <- lm
+	} else {
+		for name, l := range bl.outputs {
+			err := l.WriteMsg(lm.msg, lm.level)
+			if err != nil {
+				fmt.Println("unable to WriteMsg to adapter:", name, err)
+				return err
+			}
+		}
+	}
 	return nil
 }
 
@@ -181,6 +193,11 @@ func (bl *BeeLogger) SetLogFuncCallDepth(d int) {
 	bl.loggerFuncCallDepth = d
 }
 
+// get log funcCallDepth for wrapper
+func (bl *BeeLogger) GetLogFuncCallDepth() int {
+	return bl.loggerFuncCallDepth
+}
+
 // enable log funcCallDepth
 func (bl *BeeLogger) EnableFuncCallDepth(b bool) {
 	bl.enableFuncCallDepth = b
@@ -193,7 +210,10 @@ func (bl *BeeLogger) startLogger() {
 		select {
 		case bm := <-bl.msg:
 			for _, l := range bl.outputs {
-				l.WriteMsg(bm.msg, bm.level)
+				err := l.WriteMsg(bm.msg, bm.level)
+				if err != nil {
+					fmt.Println("ERROR, unable to WriteMsg:", err)
+				}
 			}
 		}
 	}
@@ -201,71 +221,104 @@ func (bl *BeeLogger) startLogger() {
 
 // Log EMERGENCY level message.
 func (bl *BeeLogger) Emergency(format string, v ...interface{}) {
-	msg := fmt.Sprintf("[D] "+format, v...)
+	if LevelEmergency > bl.level {
+		return
+	}
+	msg := fmt.Sprintf("[M] "+format, v...)
 	bl.writerMsg(LevelEmergency, msg)
 }
 
 // Log ALERT level message.
 func (bl *BeeLogger) Alert(format string, v ...interface{}) {
-	msg := fmt.Sprintf("[D] "+format, v...)
+	if LevelAlert > bl.level {
+		return
+	}
+	msg := fmt.Sprintf("[A] "+format, v...)
 	bl.writerMsg(LevelAlert, msg)
 }
 
 // Log CRITICAL level message.
 func (bl *BeeLogger) Critical(format string, v ...interface{}) {
+	if LevelCritical > bl.level {
+		return
+	}
 	msg := fmt.Sprintf("[C] "+format, v...)
 	bl.writerMsg(LevelCritical, msg)
 }
 
 // Log ERROR level message.
 func (bl *BeeLogger) Error(format string, v ...interface{}) {
+	if LevelError > bl.level {
+		return
+	}
 	msg := fmt.Sprintf("[E] "+format, v...)
 	bl.writerMsg(LevelError, msg)
 }
 
 // Log WARNING level message.
 func (bl *BeeLogger) Warning(format string, v ...interface{}) {
+	if LevelWarning > bl.level {
+		return
+	}
 	msg := fmt.Sprintf("[W] "+format, v...)
 	bl.writerMsg(LevelWarning, msg)
 }
 
 // Log NOTICE level message.
 func (bl *BeeLogger) Notice(format string, v ...interface{}) {
-	msg := fmt.Sprintf("[W] "+format, v...)
+	if LevelNotice > bl.level {
+		return
+	}
+	msg := fmt.Sprintf("[N] "+format, v...)
 	bl.writerMsg(LevelNotice, msg)
 }
 
 // Log INFORMATIONAL level message.
 func (bl *BeeLogger) Informational(format string, v ...interface{}) {
+	if LevelInformational > bl.level {
+		return
+	}
 	msg := fmt.Sprintf("[I] "+format, v...)
 	bl.writerMsg(LevelInformational, msg)
 }
 
 // Log DEBUG level message.
 func (bl *BeeLogger) Debug(format string, v ...interface{}) {
+	if LevelDebug > bl.level {
+		return
+	}
 	msg := fmt.Sprintf("[D] "+format, v...)
 	bl.writerMsg(LevelDebug, msg)
 }
 
 // Log WARN level message.
-//
-// Deprecated: compatibility alias for Warning(), Will be removed in 1.5.0.
+// compatibility alias for Warning()
 func (bl *BeeLogger) Warn(format string, v ...interface{}) {
-	bl.Warning(format, v...)
+	if LevelWarning > bl.level {
+		return
+	}
+	msg := fmt.Sprintf("[W] "+format, v...)
+	bl.writerMsg(LevelWarning, msg)
 }
 
 // Log INFO level message.
-//
-// Deprecated: compatibility alias for Informational(), Will be removed in 1.5.0.
+// compatibility alias for Informational()
 func (bl *BeeLogger) Info(format string, v ...interface{}) {
-	bl.Informational(format, v...)
+	if LevelInformational > bl.level {
+		return
+	}
+	msg := fmt.Sprintf("[I] "+format, v...)
+	bl.writerMsg(LevelInformational, msg)
 }
 
 // Log TRACE level message.
-//
-// Deprecated: compatibility alias for Debug(), Will be removed in 1.5.0.
+// compatibility alias for Debug()
 func (bl *BeeLogger) Trace(format string, v ...interface{}) {
-	bl.Debug(format, v...)
+	if LevelDebug > bl.level {
+		return
+	}
+	msg := fmt.Sprintf("[D] "+format, v...)
+	bl.writerMsg(LevelDebug, msg)
 }
 
 // flush all chan data.
@@ -281,11 +334,14 @@ func (bl *BeeLogger) Close() {
 		if len(bl.msg) > 0 {
 			bm := <-bl.msg
 			for _, l := range bl.outputs {
-				l.WriteMsg(bm.msg, bm.level)
+				err := l.WriteMsg(bm.msg, bm.level)
+				if err != nil {
+					fmt.Println("ERROR, unable to WriteMsg (while closing logger):", err)
+				}
 			}
-		} else {
-			break
+			continue
 		}
+		break
 	}
 	for _, l := range bl.outputs {
 		l.Flush()

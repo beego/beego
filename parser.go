@@ -24,6 +24,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"sort"
 	"strings"
 
 	"github.com/astaxie/beego/utils"
@@ -36,26 +37,31 @@ import (
 )
 
 func init() {
-	{{.globalinfo}}
+{{.globalinfo}}
 }
 `
 
 var (
 	lastupdateFilename string = "lastupdate.tmp"
+	commentFilename    string
 	pkgLastupdate      map[string]int64
 	genInfoList        map[string][]ControllerComments
 )
 
+const COMMENTFL = "commentsRouter_"
+
 func init() {
 	pkgLastupdate = make(map[string]int64)
-	genInfoList = make(map[string][]ControllerComments)
 }
 
 func parserPkg(pkgRealpath, pkgpath string) error {
+	rep := strings.NewReplacer("/", "_", ".", "_")
+	commentFilename = COMMENTFL + rep.Replace(pkgpath) + ".go"
 	if !compareFile(pkgRealpath) {
-		Info(pkgRealpath + " don't has updated")
+		Info(pkgRealpath + " has not changed, not reloading")
 		return nil
 	}
+	genInfoList = make(map[string][]ControllerComments)
 	fileSet := token.NewFileSet()
 	astPkgs, err := parser.ParseDir(fileSet, pkgRealpath, func(info os.FileInfo) bool {
 		name := info.Name()
@@ -124,7 +130,13 @@ func genRouterCode() {
 	os.Mkdir(path.Join(workPath, "routers"), 0755)
 	Info("generate router from comments")
 	var globalinfo string
-	for k, cList := range genInfoList {
+	sortKey := make([]string, 0)
+	for k, _ := range genInfoList {
+		sortKey = append(sortKey, k)
+	}
+	sort.Strings(sortKey)
+	for _, k := range sortKey {
+		cList := genInfoList[k]
 		for _, c := range cList {
 			allmethod := "nil"
 			if len(c.AllowHTTPMethods) > 0 {
@@ -148,14 +160,14 @@ func genRouterCode() {
 	beego.GlobalControllerRouter["` + k + `"] = append(beego.GlobalControllerRouter["` + k + `"],
 		beego.ControllerComments{
 			"` + strings.TrimSpace(c.Method) + `",
-			"` + c.Router + `",
+			` + "`" + c.Router + "`" + `,
 			` + allmethod + `,
 			` + params + `})
 `
 		}
 	}
 	if globalinfo != "" {
-		f, err := os.Create(path.Join(workPath, "routers", "commentsRouter.go"))
+		f, err := os.Create(path.Join(workPath, "routers", commentFilename))
 		if err != nil {
 			panic(err)
 		}
@@ -165,7 +177,7 @@ func genRouterCode() {
 }
 
 func compareFile(pkgRealpath string) bool {
-	if !utils.FileExists(path.Join(workPath, "routers", "commentsRouter.go")) {
+	if !utils.FileExists(path.Join(workPath, "routers", commentFilename)) {
 		return true
 	}
 	if utils.FileExists(path.Join(workPath, lastupdateFilename)) {

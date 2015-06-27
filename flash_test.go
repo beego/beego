@@ -25,12 +25,12 @@ type TestFlashController struct {
 	Controller
 }
 
-func (this *TestFlashController) TestWriteFlash() {
+func (t *TestFlashController) TestWriteFlash() {
 	flash := NewFlash()
 	flash.Notice("TestFlashString")
-	flash.Store(&this.Controller)
+	flash.Store(&t.Controller)
 	// we choose to serve json because we don't want to load a template html file
-	this.ServeJson(true)
+	t.ServeJson(true)
 }
 
 func TestFlashHeader(t *testing.T) {

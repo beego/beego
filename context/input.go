@@ -21,13 +21,22 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/astaxie/beego/session"
 )
 
-// BeegoInput operates the http request header ,data ,cookie and body.
+// Regexes for checking the accept headers
+// TODO make sure these are correct
+var (
+	acceptsHtmlRegex = regexp.MustCompile(`(text/html|application/xhtml\+xml)(?:,|$)`)
+	acceptsXmlRegex  = regexp.MustCompile(`(application/xml|text/xml)(?:,|$)`)
+	acceptsJsonRegex = regexp.MustCompile(`(application/json)(?:,|$)`)
+)
+
+// BeegoInput operates the http request header, data, cookie and body.
 // it also contains router params and current session.
 type BeegoInput struct {
 	CruSession    session.SessionStore
@@ -60,7 +69,7 @@ func (input *BeegoInput) Uri() string {
 
 // Url returns request url path (without query string, fragment).
 func (input *BeegoInput) Url() string {
-	return input.Request.URL.String()
+	return input.Request.URL.Path
 }
 
 // Site returns base site url as scheme://domain type.
@@ -72,11 +81,11 @@ func (input *BeegoInput) Site() string {
 func (input *BeegoInput) Scheme() string {
 	if input.Request.URL.Scheme != "" {
 		return input.Request.URL.Scheme
-	} else if input.Request.TLS == nil {
-		return "http"
-	} else {
-		return "https"
 	}
+	if input.Request.TLS == nil {
+		return "http"
+	}
+	return "https"
 }
 
 // Domain returns host name.
@@ -153,14 +162,29 @@ func (input *BeegoInput) IsSecure() bool {
 	return input.Scheme() == "https"
 }
 
-// IsSecure returns boolean of this request is in webSocket.
+// IsWebsocket returns boolean of this request is in webSocket.
 func (input *BeegoInput) IsWebsocket() bool {
 	return input.Header("Upgrade") == "websocket"
 }
 
-// IsSecure returns boolean of whether file uploads in this request or not..
+// IsUpload returns boolean of whether file uploads in this request or not..
 func (input *BeegoInput) IsUpload() bool {
 	return strings.Contains(input.Header("Content-Type"), "multipart/form-data")
+}
+
+// Checks if request accepts html response
+func (input *BeegoInput) AcceptsHtml() bool {
+	return acceptsHtmlRegex.MatchString(input.Header("Accept"))
+}
+
+// Checks if request accepts xml response
+func (input *BeegoInput) AcceptsXml() bool {
+	return acceptsXmlRegex.MatchString(input.Header("Accept"))
+}
+
+// Checks if request accepts json response
+func (input *BeegoInput) AcceptsJson() bool {
+	return acceptsJsonRegex.MatchString(input.Header("Accept"))
 }
 
 // IP returns request client ip.
@@ -189,16 +213,24 @@ func (input *BeegoInput) Proxy() []string {
 	return []string{}
 }
 
+// Referer returns http referer header.
+func (input *BeegoInput) Referer() string {
+	return input.Header("Referer")
+}
+
 // Refer returns http referer header.
 func (input *BeegoInput) Refer() string {
-	return input.Header("Referer")
+	return input.Referer()
 }
 
 // SubDomains returns sub domain string.
 // if aa.bb.domain.com, returns aa.bb .
 func (input *BeegoInput) SubDomains() string {
 	parts := strings.Split(input.Host(), ".")
-	return strings.Join(parts[len(parts)-2:], ".")
+	if len(parts) >= 3 {
+		return strings.Join(parts[:len(parts)-2], ".")
+	}
+	return ""
 }
 
 // Port returns request client port.
@@ -237,6 +269,7 @@ func (input *BeegoInput) Query(key string) string {
 }
 
 // Header returns request header item string by a given string.
+// if non-existed, return empty string.
 func (input *BeegoInput) Header(key string) string {
 	return input.Request.Header.Get(key)
 }
@@ -252,11 +285,12 @@ func (input *BeegoInput) Cookie(key string) string {
 }
 
 // Session returns current session item value by a given key.
+// if non-existed, return empty string.
 func (input *BeegoInput) Session(key interface{}) interface{} {
 	return input.CruSession.Get(key)
 }
 
-// Body returns the raw request body data as bytes.
+// CopyBody returns the raw request body data as bytes.
 func (input *BeegoInput) CopyBody() []byte {
 	requestbody, _ := ioutil.ReadAll(input.Request.Body)
 	input.Request.Body.Close()
@@ -296,7 +330,7 @@ func (input *BeegoInput) ParseFormOrMulitForm(maxMemory int64) error {
 // Bind data from request.Form[key] to dest
 // like /?id=123&isok=true&ft=1.2&ol[0]=1&ol[1]=2&ul[]=str&ul[]=array&user.Name=astaxie
 // var id int  beegoInput.Bind(&id, "id")  id ==123
-// var isok bool  beegoInput.Bind(&isok, "isok")  id ==true
+// var isok bool  beegoInput.Bind(&isok, "isok")  isok ==true
 // var ft float64  beegoInput.Bind(&ft, "ft")  ft ==1.2
 // ol := make([]int, 0, 2)  beegoInput.Bind(&ol, "ol")  ol ==[1 2]
 // ul := make([]string, 0, 2)  beegoInput.Bind(&ul, "ul")  ul ==[str array]

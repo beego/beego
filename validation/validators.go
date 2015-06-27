@@ -64,8 +64,8 @@ func (r Required) IsSatisfied(obj interface{}) bool {
 	if str, ok := obj.(string); ok {
 		return len(str) > 0
 	}
-	if b, ok := obj.(bool); ok {
-		return b
+	if _, ok := obj.(bool); ok {
+		return true
 	}
 	if i, ok := obj.(int); ok {
 		return i != 0
@@ -457,7 +457,7 @@ func (b Base64) GetLimitValue() interface{} {
 }
 
 // just for chinese mobile phone number
-var mobilePattern = regexp.MustCompile("^((\\+86)|(86))?(1(([35][0-9])|(47)|[8][012356789]))\\d{8}$")
+var mobilePattern = regexp.MustCompile("^((\\+86)|(86))?(1(([35][0-9])|[8][0-9]|[7][67]|[4][579]))\\d{8}$")
 
 type Mobile struct {
 	Match

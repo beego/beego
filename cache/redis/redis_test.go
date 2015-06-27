@@ -67,6 +67,7 @@ func TestRedisCache(t *testing.T) {
 	if bm.IsExist("astaxie") {
 		t.Error("delete err")
 	}
+
 	//test string
 	if err = bm.Put("astaxie", "author", 10); err != nil {
 		t.Error("set Error", err)
@@ -78,6 +79,26 @@ func TestRedisCache(t *testing.T) {
 	if v, _ := redis.String(bm.Get("astaxie"), err); v != "author" {
 		t.Error("get err")
 	}
+
+	//test GetMulti
+	if err = bm.Put("astaxie1", "author1", 10); err != nil {
+		t.Error("set Error", err)
+	}
+	if !bm.IsExist("astaxie1") {
+		t.Error("check err")
+	}
+
+	vv := bm.GetMulti([]string{"astaxie", "astaxie1"})
+	if len(vv) != 2 {
+		t.Error("GetMulti ERROR")
+	}
+	if v, _ := redis.String(vv[0], nil); v != "author" {
+		t.Error("GetMulti ERROR")
+	}
+	if v, _ := redis.String(vv[1], nil); v != "author1" {
+		t.Error("GetMulti ERROR")
+	}
+
 	// test clear all
 	if err = bm.ClearAll(); err != nil {
 		t.Error("clear all err")

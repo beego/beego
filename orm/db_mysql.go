@@ -30,6 +30,8 @@ var mysqlOperators = map[string]string{
 	"gte":         ">= ?",
 	"lt":          "< ?",
 	"lte":         "<= ?",
+	"eq":          "= ?",
+	"ne":          "!= ?",
 	"startswith":  "LIKE BINARY ?",
 	"endswith":    "LIKE BINARY ?",
 	"istartswith": "LIKE ?",

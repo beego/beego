@@ -92,8 +92,6 @@ func (fc *FileCache) StartAndGC(config string) error {
 
 // Init will make new dir for file cache if not exist.
 func (fc *FileCache) Init() {
-	app := filepath.Dir(os.Args[0])
-	fc.CachePath = filepath.Join(app, fc.CachePath)
 	if ok, _ := exists(fc.CachePath); !ok { // todo : error handle
 		_ = os.MkdirAll(fc.CachePath, os.ModePerm) // todo : error handle
 	}
@@ -132,6 +130,16 @@ func (fc *FileCache) Get(key string) interface{} {
 		return ""
 	}
 	return to.Data
+}
+
+// GetMulti gets values from file cache.
+// if non-exist or expired, return empty string.
+func (fc *FileCache) GetMulti(keys []string) []interface{} {
+	var rc []interface{}
+	for _, key := range keys {
+		rc = append(rc, fc.Get(key))
+	}
+	return rc
 }
 
 // Put value into file cache.

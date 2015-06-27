@@ -270,16 +270,22 @@ func (c *Controller) Redirect(url string, code int) {
 // Aborts stops controller handler and show the error data if code is defined in ErrorMap or code string.
 func (c *Controller) Abort(code string) {
 	status, err := strconv.Atoi(code)
-	if err == nil {
-		c.Ctx.Abort(status, code)
-	} else {
-		c.Ctx.Abort(200, code)
+	if err != nil {
+		status = 200
 	}
+	c.CustomAbort(status, code)
 }
 
 // CustomAbort stops controller handler and show the error data, it's similar Aborts, but support status code and body.
 func (c *Controller) CustomAbort(status int, body string) {
-	c.Ctx.Abort(status, body)
+	c.Ctx.ResponseWriter.WriteHeader(status)
+	// first panic from ErrorMaps, is is user defined error functions.
+	if _, ok := ErrorMaps[body]; ok {
+		panic(body)
+	}
+	// last panic user string
+	c.Ctx.ResponseWriter.Write([]byte(body))
+	panic(USERSTOPRUN)
 }
 
 // StopRun makes panic of USERSTOPRUN error and go to recover function if defined.
@@ -289,7 +295,7 @@ func (c *Controller) StopRun() {
 
 // UrlFor does another controller handler in this request function.
 // it goes to this controller method if endpoint is not clear.
-func (c *Controller) UrlFor(endpoint string, values ...string) string {
+func (c *Controller) UrlFor(endpoint string, values ...interface{}) string {
 	if len(endpoint) <= 0 {
 		return ""
 	}
@@ -363,44 +369,169 @@ func (c *Controller) ParseForm(obj interface{}) error {
 	return ParseForm(c.Input(), obj)
 }
 
-// GetString returns the input value by key string.
-func (c *Controller) GetString(key string) string {
-	return c.Ctx.Input.Query(key)
+// GetString returns the input value by key string or the default value while it's present and input is blank
+func (c *Controller) GetString(key string, def ...string) string {
+	var defv string
+	if len(def) > 0 {
+		defv = def[0]
+	}
+
+	if v := c.Ctx.Input.Query(key); v != "" {
+		return v
+	} else {
+		return defv
+	}
 }
 
-// GetStrings returns the input string slice by key string.
+// GetStrings returns the input string slice by key string or the default value while it's present and input is blank
 // it's designed for multi-value input field such as checkbox(input[type=checkbox]), multi-selection.
-func (c *Controller) GetStrings(key string) []string {
+func (c *Controller) GetStrings(key string, def ...[]string) []string {
+	var defv []string
+	if len(def) > 0 {
+		defv = def[0]
+	}
+
 	f := c.Input()
 	if f == nil {
-		return []string{}
+		return defv
 	}
+
 	vs := f[key]
 	if len(vs) > 0 {
 		return vs
+	} else {
+		return defv
 	}
-	return []string{}
 }
 
-// GetInt returns input value as int64.
-func (c *Controller) GetInt(key string) (int64, error) {
-	return strconv.ParseInt(c.Ctx.Input.Query(key), 10, 64)
+// GetInt returns input as an int or the default value while it's present and input is blank
+func (c *Controller) GetInt(key string, def ...int) (int, error) {
+	if strv := c.Ctx.Input.Query(key); strv != "" {
+		return strconv.Atoi(strv)
+	} else if len(def) > 0 {
+		return def[0], nil
+	} else {
+		return strconv.Atoi(strv)
+	}
 }
 
-// GetBool returns input value as bool.
-func (c *Controller) GetBool(key string) (bool, error) {
-	return strconv.ParseBool(c.Ctx.Input.Query(key))
+// GetInt8 return input as an int8 or the default value while it's present and input is blank
+func (c *Controller) GetInt8(key string, def ...int8) (int8, error) {
+	if strv := c.Ctx.Input.Query(key); strv != "" {
+		i64, err := strconv.ParseInt(strv, 10, 8)
+		i8 := int8(i64)
+		return i8, err
+	} else if len(def) > 0 {
+		return def[0], nil
+	} else {
+		i64, err := strconv.ParseInt(strv, 10, 8)
+		i8 := int8(i64)
+		return i8, err
+	}
 }
 
-// GetFloat returns input value as float64.
-func (c *Controller) GetFloat(key string) (float64, error) {
-	return strconv.ParseFloat(c.Ctx.Input.Query(key), 64)
+// GetInt16 returns input as an int16 or the default value while it's present and input is blank
+func (c *Controller) GetInt16(key string, def ...int16) (int16, error) {
+	if strv := c.Ctx.Input.Query(key); strv != "" {
+		i64, err := strconv.ParseInt(strv, 10, 16)
+		i16 := int16(i64)
+		return i16, err
+	} else if len(def) > 0 {
+		return def[0], nil
+	} else {
+		i64, err := strconv.ParseInt(strv, 10, 16)
+		i16 := int16(i64)
+		return i16, err
+	}
+}
+
+// GetInt32 returns input as an int32 or the default value while it's present and input is blank
+func (c *Controller) GetInt32(key string, def ...int32) (int32, error) {
+	if strv := c.Ctx.Input.Query(key); strv != "" {
+		i64, err := strconv.ParseInt(c.Ctx.Input.Query(key), 10, 32)
+		i32 := int32(i64)
+		return i32, err
+	} else if len(def) > 0 {
+		return def[0], nil
+	} else {
+		i64, err := strconv.ParseInt(c.Ctx.Input.Query(key), 10, 32)
+		i32 := int32(i64)
+		return i32, err
+	}
+}
+
+// GetInt64 returns input value as int64 or the default value while it's present and input is blank.
+func (c *Controller) GetInt64(key string, def ...int64) (int64, error) {
+	if strv := c.Ctx.Input.Query(key); strv != "" {
+		return strconv.ParseInt(strv, 10, 64)
+	} else if len(def) > 0 {
+		return def[0], nil
+	} else {
+		return strconv.ParseInt(strv, 10, 64)
+	}
+}
+
+// GetBool returns input value as bool or the default value while it's present and input is blank.
+func (c *Controller) GetBool(key string, def ...bool) (bool, error) {
+	if strv := c.Ctx.Input.Query(key); strv != "" {
+		return strconv.ParseBool(strv)
+	} else if len(def) > 0 {
+		return def[0], nil
+	} else {
+		return strconv.ParseBool(strv)
+	}
+}
+
+// GetFloat returns input value as float64 or the default value while it's present and input is blank.
+func (c *Controller) GetFloat(key string, def ...float64) (float64, error) {
+	if strv := c.Ctx.Input.Query(key); strv != "" {
+		return strconv.ParseFloat(strv, 64)
+	} else if len(def) > 0 {
+		return def[0], nil
+	} else {
+		return strconv.ParseFloat(strv, 64)
+	}
 }
 
 // GetFile returns the file data in file upload field named as key.
 // it returns the first one of multi-uploaded files.
 func (c *Controller) GetFile(key string) (multipart.File, *multipart.FileHeader, error) {
 	return c.Ctx.Request.FormFile(key)
+}
+
+// GetFiles return multi-upload files
+// files, err:=c.Getfiles("myfiles")
+//	if err != nil {
+//		http.Error(w, err.Error(), http.StatusNoContent)
+//		return
+//	}
+// for i, _ := range files {
+//	//for each fileheader, get a handle to the actual file
+//	file, err := files[i].Open()
+//	defer file.Close()
+//	if err != nil {
+//		http.Error(w, err.Error(), http.StatusInternalServerError)
+//		return
+//	}
+//	//create destination file making sure the path is writeable.
+//	dst, err := os.Create("upload/" + files[i].Filename)
+//	defer dst.Close()
+//	if err != nil {
+//		http.Error(w, err.Error(), http.StatusInternalServerError)
+//		return
+//	}
+//	//copy the uploaded file to the destination file
+//	if _, err := io.Copy(dst, file); err != nil {
+//		http.Error(w, err.Error(), http.StatusInternalServerError)
+//		return
+//	}
+// }
+func (c *Controller) GetFiles(key string) ([]*multipart.FileHeader, error) {
+	files, ok := c.Ctx.Request.MultipartForm.File[key]
+	if ok {
+		return files, nil
+	}
+	return nil, http.ErrMissingFile
 }
 
 // SaveToFile saves uploaded file to new path.

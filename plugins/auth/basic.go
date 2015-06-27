@@ -27,6 +27,7 @@
 //
 //
 // Advanced Usage:
+//
 //	func SecretAuth(username, password string) bool {
 //		return username == "astaxie" && password == "helloBeego"
 //	}

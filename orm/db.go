@@ -44,6 +44,8 @@ var (
 		"gte":         true,
 		"lt":          true,
 		"lte":         true,
+		"eq":          true,
+		"nq":          true,
 		"startswith":  true,
 		"endswith":    true,
 		"istartswith": true,
@@ -122,6 +124,12 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 					if nb.Valid {
 						value = nb.Bool
 					}
+				} else if field.Kind() == reflect.Ptr {
+					if field.IsNil() {
+						value = nil
+					} else {
+						value = field.Elem().Bool()
+					}
 				} else {
 					value = field.Bool()
 				}
@@ -131,6 +139,12 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 					if ns.Valid {
 						value = ns.String
 					}
+				} else if field.Kind() == reflect.Ptr {
+					if field.IsNil() {
+						value = nil
+					} else {
+						value = field.Elem().String()
+					}
 				} else {
 					value = field.String()
 				}
@@ -139,6 +153,12 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 					value = nil
 					if nf.Valid {
 						value = nf.Float64
+					}
+				} else if field.Kind() == reflect.Ptr {
+					if field.IsNil() {
+						value = nil
+					} else {
+						value = field.Elem().Float()
 					}
 				} else {
 					vu := field.Interface()
@@ -161,12 +181,26 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 			default:
 				switch {
 				case fi.fieldType&IsPostiveIntegerField > 0:
-					value = field.Uint()
+					if field.Kind() == reflect.Ptr {
+						if field.IsNil() {
+							value = nil
+						} else {
+							value = field.Elem().Uint()
+						}
+					} else {
+						value = field.Uint()
+					}
 				case fi.fieldType&IsIntegerField > 0:
 					if ni, ok := field.Interface().(sql.NullInt64); ok {
 						value = nil
 						if ni.Valid {
 							value = ni.Int64
+						}
+					} else if field.Kind() == reflect.Ptr {
+						if field.IsNil() {
+							value = nil
+						} else {
+							value = field.Elem().Int()
 						}
 					} else {
 						value = field.Int()
@@ -292,7 +326,7 @@ func (d *dbBase) Read(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Lo
 	query := fmt.Sprintf("SELECT %s%s%s FROM %s%s%s WHERE %s%s%s = ?", Q, sels, Q, Q, mi.table, Q, Q, wheres, Q)
 
 	refs := make([]interface{}, colsNum)
-	for i, _ := range refs {
+	for i := range refs {
 		var ref interface{}
 		refs[i] = &ref
 	}
@@ -391,7 +425,7 @@ func (d *dbBase) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []s
 	Q := d.ins.TableQuote()
 
 	marks := make([]string, len(names))
-	for i, _ := range marks {
+	for i := range marks {
 		marks[i] = "?"
 	}
 
@@ -661,7 +695,7 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	}
 
 	marks := make([]string, len(args))
-	for i, _ := range marks {
+	for i := range marks {
 		marks[i] = "?"
 	}
 	sql := fmt.Sprintf("IN (%s)", strings.Join(marks, ", "))
@@ -792,7 +826,7 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 	}
 
 	refs := make([]interface{}, colsNum)
-	for i, _ := range refs {
+	for i := range refs {
 		var ref interface{}
 		refs[i] = &ref
 	}
@@ -932,7 +966,7 @@ func (d *dbBase) GenerateOperatorSql(mi *modelInfo, fi *fieldInfo, operator stri
 	switch operator {
 	case "in":
 		marks := make([]string, len(params))
-		for i, _ := range marks {
+		for i := range marks {
 			marks[i] = "?"
 		}
 		sql = fmt.Sprintf("IN (%s)", strings.Join(marks, ", "))
@@ -1177,6 +1211,11 @@ setValue:
 					nb.Valid = true
 				}
 				field.Set(reflect.ValueOf(nb))
+			} else if field.Kind() == reflect.Ptr {
+				if value != nil {
+					v := value.(bool)
+					field.Set(reflect.ValueOf(&v))
+				}
 			} else {
 				if value == nil {
 					value = false
@@ -1194,6 +1233,11 @@ setValue:
 					ns.Valid = true
 				}
 				field.Set(reflect.ValueOf(ns))
+			} else if field.Kind() == reflect.Ptr {
+				if value != nil {
+					v := value.(string)
+					field.Set(reflect.ValueOf(&v))
+				}
 			} else {
 				if value == nil {
 					value = ""
@@ -1207,6 +1251,56 @@ setValue:
 				value = time.Time{}
 			}
 			field.Set(reflect.ValueOf(value))
+		}
+	case fieldType == TypePositiveBitField && field.Kind() == reflect.Ptr:
+		if value != nil {
+			v := uint8(value.(uint64))
+			field.Set(reflect.ValueOf(&v))
+		}
+	case fieldType == TypePositiveSmallIntegerField && field.Kind() == reflect.Ptr:
+		if value != nil {
+			v := uint16(value.(uint64))
+			field.Set(reflect.ValueOf(&v))
+		}
+	case fieldType == TypePositiveIntegerField && field.Kind() == reflect.Ptr:
+		if value != nil {
+			if field.Type() == reflect.TypeOf(new(uint)) {
+				v := uint(value.(uint64))
+				field.Set(reflect.ValueOf(&v))
+			} else {
+				v := uint32(value.(uint64))
+				field.Set(reflect.ValueOf(&v))
+			}
+		}
+	case fieldType == TypePositiveBigIntegerField && field.Kind() == reflect.Ptr:
+		if value != nil {
+			v := value.(uint64)
+			field.Set(reflect.ValueOf(&v))
+		}
+	case fieldType == TypeBitField && field.Kind() == reflect.Ptr:
+		if value != nil {
+			v := int8(value.(int64))
+			field.Set(reflect.ValueOf(&v))
+		}
+	case fieldType == TypeSmallIntegerField && field.Kind() == reflect.Ptr:
+		if value != nil {
+			v := int16(value.(int64))
+			field.Set(reflect.ValueOf(&v))
+		}
+	case fieldType == TypeIntegerField && field.Kind() == reflect.Ptr:
+		if value != nil {
+			if field.Type() == reflect.TypeOf(new(int)) {
+				v := int(value.(int64))
+				field.Set(reflect.ValueOf(&v))
+			} else {
+				v := int32(value.(int64))
+				field.Set(reflect.ValueOf(&v))
+			}
+		}
+	case fieldType == TypeBigIntegerField && field.Kind() == reflect.Ptr:
+		if value != nil {
+			v := value.(int64)
+			field.Set(reflect.ValueOf(&v))
 		}
 	case fieldType&IsIntegerField > 0:
 		if fieldType&IsPostiveIntegerField > 0 {
@@ -1244,6 +1338,16 @@ setValue:
 					nf.Valid = true
 				}
 				field.Set(reflect.ValueOf(nf))
+			} else if field.Kind() == reflect.Ptr {
+				if value != nil {
+					if field.Type() == reflect.TypeOf(new(float32)) {
+						v := float32(value.(float64))
+						field.Set(reflect.ValueOf(&v))
+					} else {
+						v := value.(float64)
+						field.Set(reflect.ValueOf(&v))
+					}
+				}
 			} else {
 
 				if value == nil {
@@ -1358,7 +1462,7 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 	}
 
 	refs := make([]interface{}, len(cols))
-	for i, _ := range refs {
+	for i := range refs {
 		var ref interface{}
 		refs[i] = &ref
 	}

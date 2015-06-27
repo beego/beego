@@ -83,13 +83,16 @@ func (m *UrlMap) AddStatistics(requestMethod, requestUrl, requestController stri
 }
 
 // put url statistics result in io.Writer
-func (m *UrlMap) GetMap() [][]string {
+func (m *UrlMap) GetMap() map[string]interface{} {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
-	resultLists := make([][]string, 0)
 
-	var result = []string{"requestUrl", "method", "times", "used", "max used", "min used", "avg used"}
-	resultLists = append(resultLists, result)
+	var fields = []string{"requestUrl", "method", "times", "used", "max used", "min used", "avg used"}
+
+	resultLists := make([][]string, 0)
+	content := make(map[string]interface{})
+	content["Fields"] = fields
+
 	for k, v := range m.urlmap {
 		for kk, vv := range v {
 			result := []string{
@@ -100,6 +103,28 @@ func (m *UrlMap) GetMap() [][]string {
 				fmt.Sprintf("% -16s", toS(vv.MaxTime)),
 				fmt.Sprintf("% -16s", toS(vv.MinTime)),
 				fmt.Sprintf("% -16s", toS(time.Duration(int64(vv.TotalTime)/vv.RequestNum))),
+			}
+			resultLists = append(resultLists, result)
+		}
+	}
+	content["Data"] = resultLists
+	return content
+}
+
+func (m *UrlMap) GetMapData() []map[string]interface{} {
+
+	resultLists := make([]map[string]interface{}, 0)
+
+	for k, v := range m.urlmap {
+		for kk, vv := range v {
+			result := map[string]interface{}{
+				"request_url": k,
+				"method":      kk,
+				"times":       vv.RequestNum,
+				"total_time":  toS(vv.TotalTime),
+				"max_time":    toS(vv.MaxTime),
+				"min_time":    toS(vv.MinTime),
+				"avg_time":    toS(time.Duration(int64(vv.TotalTime) / vv.RequestNum)),
 			}
 			resultLists = append(resultLists, result)
 		}
