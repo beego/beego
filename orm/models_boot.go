@@ -269,7 +269,10 @@ func bootStrap() {
 				if found == false {
 				mForC:
 					for _, ffi := range fi.relModelInfo.fields.fieldsByType[RelManyToMany] {
-						if ffi.relModelInfo == mi {
+						conditions := fi.relThrough != "" && fi.relThrough == ffi.relThrough ||
+							fi.relTable != "" && fi.relTable == ffi.relTable ||
+							fi.relThrough == "" && fi.relTable == ""
+						if ffi.relModelInfo == mi && conditions {
 							found = true
 
 							fi.reverseField = ffi.reverseFieldInfoTwo.name
