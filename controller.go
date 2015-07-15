@@ -454,24 +454,24 @@ func (c *Controller) GetInt64(key string, def ...int64) (int64, error) {
 
 // GetBool returns input value as bool or the default value while it's present and input is blank.
 func (c *Controller) GetBool(key string, def ...bool) (bool, error) {
-	if strv := c.Ctx.Input.Query(key); strv != "" {
-		return strconv.ParseBool(strv)
-	} else if len(def) > 0 {
-		return def[0], nil
-	} else {
-		return strconv.ParseBool(strv)
+	strv := c.Ctx.Input.Query(key)
+	if strv == "" {
+		if len(def) > 0 {
+			return def[0], nil
+		}
 	}
+	return strconv.ParseBool(strv)
 }
 
 // GetFloat returns input value as float64 or the default value while it's present and input is blank.
 func (c *Controller) GetFloat(key string, def ...float64) (float64, error) {
-	if strv := c.Ctx.Input.Query(key); strv != "" {
-		return strconv.ParseFloat(strv, 64)
-	} else if len(def) > 0 {
-		return def[0], nil
-	} else {
-		return strconv.ParseFloat(strv, 64)
+	strv := c.Ctx.Input.Query(key)
+	if strv == "" {
+		if len(def) > 0 {
+			return def[0], nil
+		}
 	}
+	return strconv.ParseFloat(strv, 64)
 }
 
 // GetFile returns the file data in file upload field named as key.
