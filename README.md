@@ -7,9 +7,30 @@ beego is an open-source, high-performance, modular, full-stack web framework.
 
 More info [beego.me](http://beego.me)
 
-## Installation
+##Quick Start
+######Download and install
 
     go get github.com/astaxie/beego
+
+######Create file `hello.go`
+```go
+package main
+
+import "github.com/astaxie/beego"
+
+func main(){
+    beego.Run()
+}
+```
+######Build and run
+```bash
+    go build hello.go
+    ./hello
+```
+######Congratulations! 
+You just built your first beego app.
+Open your browser and visit `http://localhost:8000`.
+Please see [Documentation](http://beego.me/docs) for more.
 
 ## Features
 
