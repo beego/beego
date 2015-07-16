@@ -29,13 +29,13 @@ import (
 // App defines beego application with a new PatternServeMux.
 type App struct {
 	Handlers *ControllerRegistor
-	Server   *http.Server
+	Server   *TLSServer
 }
 
 // NewApp returns a new beego application.
 func NewApp() *App {
 	cr := NewControllerRegister()
-	app := &App{Handlers: cr, Server: &http.Server{}}
+	app := &App{Handlers: cr, Server: &TLSServer{Server: &http.Server{}}}
 	return app
 }
 
@@ -89,9 +89,15 @@ func (app *App) Run() {
 						addr = fmt.Sprintf("%s:%d", HttpAddr, HttpsPort)
 						app.Server.Addr = addr
 					}
+					err := app.Server.TLSConfigServer()
+					if err != nil {
+						BeeLogger.Critical("TLSConfigServer: ", err, fmt.Sprintf("%d", os.Getpid()))
+						time.Sleep(100 * time.Microsecond)
+						endRunning <- true
+					}
 					server := grace.NewServer(addr, app.Handlers)
-					server.Server = app.Server
-					err := server.ListenAndServeTLS(HttpCertFile, HttpKeyFile)
+					server.Server = app.Server.Server
+					err = server.ListenAndServeTLS()
 					if err != nil {
 						BeeLogger.Critical("ListenAndServeTLS: ", err, fmt.Sprintf("%d", os.Getpid()))
 						time.Sleep(100 * time.Microsecond)
@@ -102,7 +108,7 @@ func (app *App) Run() {
 			if EnableHttpListen {
 				go func() {
 					server := grace.NewServer(addr, app.Handlers)
-					server.Server = app.Server
+					server.Server = app.Server.Server
 					if ListenTCP4 && HttpAddr == "" {
 						server.Network = "tcp4"
 					}
@@ -126,8 +132,14 @@ func (app *App) Run() {
 					if HttpsPort != 0 {
 						app.Server.Addr = fmt.Sprintf("%s:%d", HttpAddr, HttpsPort)
 					}
+					err := app.Server.TLSConfigServer()
+					if err != nil {
+						BeeLogger.Critical("TLSConfigServer: ", err)
+						time.Sleep(100 * time.Microsecond)
+						endRunning <- true
+					}
 					BeeLogger.Info("https server Running on %s", app.Server.Addr)
-					err := app.Server.ListenAndServeTLS(HttpCertFile, HttpKeyFile)
+					err = app.Server.ListenAndServeTLS()
 					if err != nil {
 						BeeLogger.Critical("ListenAndServeTLS: ", err)
 						time.Sleep(100 * time.Microsecond)

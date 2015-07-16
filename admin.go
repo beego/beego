@@ -104,8 +104,12 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 			m["HttpAddr"] = HttpAddr
 			m["HttpPort"] = HttpPort
 			m["HttpTLS"] = EnableHttpTLS
-			m["HttpCertFile"] = HttpCertFile
-			m["HttpKeyFile"] = HttpKeyFile
+			m["HttpsCertFile"] = HttpsCertFile
+			m["HttpsKeyFile"] = HttpsKeyFile
+			m["TLSMinVersion"] = TLSMinVersion
+			m["TLSMaxVersion"] = TLSMaxVersion
+			m["TLSPreferServerCipher"] = TLSPreferServerCipher
+			m["TLSCiphers"] = TLSCiphers
 			m["RecoverPanic"] = RecoverPanic
 			m["AutoRender"] = AutoRender
 			m["ViewsPath"] = ViewsPath

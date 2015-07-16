@@ -83,24 +83,23 @@ func (srv *graceServer) ListenAndServe() (err error) {
 // CA's certificate.
 //
 // If srv.Addr is blank, ":https" is used.
-func (srv *graceServer) ListenAndServeTLS(certFile, keyFile string) (err error) {
+func (srv *graceServer) ListenAndServeTLS() (err error) {
 	addr := srv.Addr
 	if addr == "" {
 		addr = ":https"
 	}
 
 	config := &tls.Config{}
-	if srv.TLSConfig != nil {
-		*config = *srv.TLSConfig
+	if srv.TLSConfig == nil {
+		return fmt.Errorf("Not Configured TLSConfig")
 	}
+	if len(srv.TLSConfig.Certificates) < 1 {
+
+		return fmt.Errorf("SSL certificate information is not configured")
+	}
+	*config = *srv.TLSConfig
 	if config.NextProtos == nil {
 		config.NextProtos = []string{"http/1.1"}
-	}
-
-	config.Certificates = make([]tls.Certificate, 1)
-	config.Certificates[0], err = tls.LoadX509KeyPair(certFile, keyFile)
-	if err != nil {
-		return
 	}
 
 	go srv.handleSignals()
