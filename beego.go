@@ -12,17 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// beego is an open-source, high-performance, modular, full-stack web framework
-//
-// 	package main
-//
-// 	import "github.com/astaxie/beego"
-//
-// 	func main() {
-//   beego.Run()
-// 	}
-//
-// more infomation: http://beego.me
 package beego
 
 import (
