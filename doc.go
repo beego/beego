@@ -1,13 +1,15 @@
-package beego
 /*
-beego is an open-source, high-performance, modularity, full-stack web framework
+beego is an open-source, high-performance, modular,
+full-stack web framework
 
-    package main
-    import "github.com/astaxie/beego"
+	package main
 
-    func main() {
-     beego.Run()
-    }
+	import "github.com/astaxie/beego"
+
+	func main() {
+	 beego.Run()
+	}
 
 more infomation: http://beego.me
 */
+package beego
