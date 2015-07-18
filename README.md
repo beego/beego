@@ -3,7 +3,8 @@
 [![Build Status](https://drone.io/github.com/astaxie/beego/status.png)](https://drone.io/github.com/astaxie/beego/latest)
 [![GoDoc](http://godoc.org/github.com/astaxie/beego?status.svg)](http://godoc.org/github.com/astaxie/beego)
 
-beego is an open-source, high-performance, modular, full-stack web framework.
+beego is used for rapid development of RESTful APIs, web apps and backend services in Go.
+It is inspired by Tornado, Sinatra and Flask. beego has some Go-specific features such as interfaces and struct embedding.
 
 More info [beego.me](http://beego.me)
 
