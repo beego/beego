@@ -814,7 +814,11 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 		}
 	}
 
-	query := fmt.Sprintf("SELECT %s FROM %s%s%s T0 %s%s%s%s", sels, Q, mi.table, Q, join, where, orderBy, limit)
+	sqlSelect := "SELECT"
+	if qs.distinct {
+		sqlSelect += " DISTINCT"
+	}
+	query := fmt.Sprintf("%s %s FROM %s%s%s T0 %s%s%s%s", sqlSelect, sels, Q, mi.table, Q, join, where, orderBy, limit)
 
 	d.ins.ReplaceMarks(&query)
 
