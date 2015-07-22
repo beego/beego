@@ -61,6 +61,7 @@ type querySet struct {
 	limit    int64
 	offset   int64
 	orders   []string
+	distinct bool
 	orm      *orm
 }
 
@@ -112,24 +113,30 @@ func (o querySet) OrderBy(exprs ...string) QuerySeter {
 	return &o
 }
 
+// add DISTINCT to SELECT
+func (o querySet) Distinct() QuerySeter {
+	o.distinct = true
+	return &o
+}
+
 // set relation model to query together.
 // it will query relation models and assign to parent model.
 func (o querySet) RelatedSel(params ...interface{}) QuerySeter {
-    if len(params) == 0 {
-        o.relDepth = DefaultRelsDepth
-    } else {
-        for _, p := range params {
-            switch val := p.(type) {
-            case string:
-                o.related = append(o.related, val)
-            case int:
-                o.relDepth = val
-            default:
-                panic(fmt.Errorf("<QuerySeter.RelatedSel> wrong param kind: %v", val))
-            }
-        }
-    }
-    return &o
+	if len(params) == 0 {
+		o.relDepth = DefaultRelsDepth
+	} else {
+		for _, p := range params {
+			switch val := p.(type) {
+			case string:
+				o.related = append(o.related, val)
+			case int:
+				o.relDepth = val
+			default:
+				panic(fmt.Errorf("<QuerySeter.RelatedSel> wrong param kind: %v", val))
+			}
+		}
+	}
+	return &o
 }
 
 // set condition to QuerySeter.
