@@ -306,11 +306,13 @@ func initBeforeHttpRun() {
 		}
 		go GlobalSessions.GC()
 	}
-
-	err := BuildTemplate(ViewsPath)
-	if err != nil {
-		if RunMode == "dev" {
-			Warn(err)
+	
+	if AutoRender {
+		err := BuildTemplate(ViewsPath)
+		if err != nil {
+			if RunMode == "dev" {
+				Warn(err)
+			}
 		}
 	}
 
