@@ -200,8 +200,19 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		if c.TplNames == "" {
 			c.TplNames = strings.ToLower(c.controllerName) + "/" + strings.ToLower(c.actionName) + "." + c.TplExt
 		}
+		
 		if RunMode == "dev" {
-			BuildTemplate(ViewsPath)
+			buildFiles := make([]string, 1)
+			buildFiles = append(buildFiles, c.TplNames)
+			if c.LayoutSections != nil {
+				for _, sectionTpl := range c.LayoutSections {
+					if sectionTpl == "" {
+						continue
+					}
+					buildFiles = append(buildFiles, sectionTpl)
+				}
+			}
+			BuildTemplate(ViewsPath, buildFiles...)
 		}
 		newbytes := bytes.NewBufferString("")
 		if _, ok := BeeTemplates[c.TplNames]; !ok {
@@ -246,7 +257,7 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 			c.TplNames = strings.ToLower(c.controllerName) + "/" + strings.ToLower(c.actionName) + "." + c.TplExt
 		}
 		if RunMode == "dev" {
-			BuildTemplate(ViewsPath)
+			BuildTemplate(ViewsPath, c.TplNames)
 		}
 		ibytes := bytes.NewBufferString("")
 		if _, ok := BeeTemplates[c.TplNames]; !ok {

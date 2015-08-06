@@ -123,7 +123,7 @@ func TestRelativeTemplate(t *testing.T) {
 			f.Close()
 		}
 	}
-	if err := BuildTemplate(dir); err != nil {
+	if err := BuildTemplate(dir, files[1]); err != nil {
 		t.Fatal(err)
 	}
 	if err := BeeTemplates["easyui/rbac/user.tpl"].ExecuteTemplate(os.Stdout, "easyui/rbac/user.tpl", nil); err != nil {
