@@ -147,6 +147,8 @@ func (mp *MysqlProvider) SessionRead(sid string) (session.SessionStore, error) {
 	if err == sql.ErrNoRows {
 		c.Exec("insert into session(`session_key`,`session_data`,`session_expiry`) values(?,?,?)",
 			sid, "", time.Now().Unix())
+	} else if err != nil {
+		return nil, err
 	}
 	var kv map[interface{}]interface{}
 	if len(sessiondata) == 0 {
