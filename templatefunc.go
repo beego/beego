@@ -698,29 +698,36 @@ func MapGet(arg1 interface{}, arg2 ...interface{}) (interface{}, error) {
 
 		storedVal := arg1Val.MapIndex(arg2Val)
 
-		var result interface{}
+		
+		if storedVal.IsValid() {
+			var result interface{}
 
-		switch arg1Type.Elem().Kind() {
-		case reflect.Bool:
-			result = storedVal.Bool()
-		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			result = storedVal.Int()
-		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
-			result = storedVal.Uint()
-		case reflect.Float32, reflect.Float64:
-			result = storedVal.Float()
-		case reflect.String:
-			result = storedVal.String()
-		default:
-			result = storedVal.Interface()
-		}
+			switch arg1Type.Elem().Kind() {
+				case reflect.Bool:
+				result = storedVal.Bool()
+				case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+				result = storedVal.Int()
+				case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+				result = storedVal.Uint()
+				case reflect.Float32, reflect.Float64:
+				result = storedVal.Float()
+				case reflect.String:
+				result = storedVal.String()
+				default:
+				result = storedVal.Interface()
+			}
 
-		// if there is more keys, handle this recursively
-		if len(arg2) > 1 {
-			return MapGet(result, arg2[1:]...)
+			// if there is more keys, handle this recursively
+			if len(arg2) > 1 {
+				return MapGet(result, arg2[1:]...)
+			} else {
+				return result, nil
+			}
 		} else {
-			return result, nil
+			return nil, nil
 		}
+
+
 	} else {
 		return nil, nil
 	}
