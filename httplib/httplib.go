@@ -272,13 +272,8 @@ func (b *BeegoHttpRequest) SetProxy(proxy func(*http.Request) (*url.URL, error))
 
 // Param adds query param in to request.
 // params build query string as ?key1=value1&key2=value2...
-func (b *BeegoHttpRequest) Param(key, value interface{}) *BeegoHttpRequest {
-    	switch value.(type) {
-    	case string:
-        	b.params[key.(string)] = value.(string)
-    	case []string:
-        	b.params[key.(string)] = value.([]string)
-    	}
+func (b *BeegoHttpRequest) Param(key string, value interface{}) *BeegoHttpRequest {
+	b.params[key] = value
 	return b
 }
 
