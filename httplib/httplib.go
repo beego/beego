@@ -100,8 +100,8 @@ func NewBeegoRequest(rawurl, method string) *BeegoHttpRequest {
 	return &BeegoHttpRequest{
 		url:     rawurl,
 		req:     &req,
-		params:  map[string]string{},
-		files:   map[string]string{},
+        	params:  map[string]interface{}{},
+        	files:   map[string]string{},
 		setting: defaultSetting,
 		resp:    &resp,
 	}
@@ -150,7 +150,7 @@ type BeegoHttpSettings struct {
 type BeegoHttpRequest struct {
 	url     string
 	req     *http.Request
-	params  map[string]string
+    	params  map[string]interface{}
 	files   map[string]string
 	setting BeegoHttpSettings
 	resp    *http.Response
@@ -272,8 +272,13 @@ func (b *BeegoHttpRequest) SetProxy(proxy func(*http.Request) (*url.URL, error))
 
 // Param adds query param in to request.
 // params build query string as ?key1=value1&key2=value2...
-func (b *BeegoHttpRequest) Param(key, value string) *BeegoHttpRequest {
-	b.params[key] = value
+func (b *BeegoHttpRequest) Param(key, value interface{}) *BeegoHttpRequest {
+    	switch value.(type) {
+    	case string:
+        	b.params[key.(string)] = value.(string)
+    	case []string:
+        	b.params[key.(string)] = value.([]string)
+    	}
 	return b
 }
 
@@ -348,7 +353,14 @@ func (b *BeegoHttpRequest) buildUrl(paramBody string) {
 					}
 				}
 				for k, v := range b.params {
-					bodyWriter.WriteField(k, v)
+                    			switch v.(type) {
+                    			case string:
+                        			bodyWriter.WriteField(k, v.(string))
+                    			case []string:
+                        			for _, vv := range v.([]string) {
+                            				bodyWriter.WriteField(k, vv)
+                        			}
+                    			}
 				}
 				bodyWriter.Close()
 				pw.Close()
@@ -383,10 +395,20 @@ func (b *BeegoHttpRequest) SendOut() (*http.Response, error) {
 	if len(b.params) > 0 {
 		var buf bytes.Buffer
 		for k, v := range b.params {
-			buf.WriteString(url.QueryEscape(k))
-			buf.WriteByte('=')
-			buf.WriteString(url.QueryEscape(v))
-			buf.WriteByte('&')
+            		switch v.(type) {
+            		case string:
+                		buf.WriteString(url.QueryEscape(k))
+                		buf.WriteByte('=')
+                		buf.WriteString(url.QueryEscape(v.(string)))
+                		buf.WriteByte('&')
+            		case []string:
+                		for _, vv := range v.([]string) {
+                    			buf.WriteString(url.QueryEscape(k))
+                    			buf.WriteByte('=')
+                    			buf.WriteString(url.QueryEscape(vv))
+                    			buf.WriteByte('&')
+                		}
+            		}
 		}
 		paramBody = buf.String()
 		paramBody = paramBody[0 : len(paramBody)-1]
