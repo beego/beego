@@ -931,6 +931,13 @@ func (w *responseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 	return hj.Hijack()
 }
 
+func (w *responseWriter) Flush() {
+	f, ok := w.writer.(http.Flusher)
+	if ok {
+		f.Flush()
+	}
+}
+
 func tourl(params map[string]string) string {
 	if len(params) == 0 {
 		return ""
