@@ -28,7 +28,7 @@ import (
 
 // App defines beego application with a new PatternServeMux.
 type App struct {
-	Handlers *ControllerRegistor
+	Handlers *ControllerRegister
 	Server   *http.Server
 }
 

@@ -74,12 +74,6 @@ func SetDefaultSetting(setting BeegoHttpSettings) {
 	settingMutex.Lock()
 	defer settingMutex.Unlock()
 	defaultSetting = setting
-	if defaultSetting.ConnectTimeout == 0 {
-		defaultSetting.ConnectTimeout = 60 * time.Second
-	}
-	if defaultSetting.ReadWriteTimeout == 0 {
-		defaultSetting.ReadWriteTimeout = 60 * time.Second
-	}
 }
 
 // return *BeegoHttpRequest with specific method

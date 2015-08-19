@@ -23,16 +23,16 @@ import (
 
 type namespaceCond func(*beecontext.Context) bool
 
-type innnerNamespace func(*Namespace)
+type innerNamespace func(*Namespace)
 
 // Namespace is store all the info
 type Namespace struct {
 	prefix   string
-	handlers *ControllerRegistor
+	handlers *ControllerRegister
 }
 
 // get new Namespace
-func NewNamespace(prefix string, params ...innnerNamespace) *Namespace {
+func NewNamespace(prefix string, params ...innerNamespace) *Namespace {
 	ns := &Namespace{
 		prefix:   prefix,
 		handlers: NewControllerRegister(),
@@ -276,112 +276,112 @@ func addPrefix(t *Tree, prefix string) {
 }
 
 // Namespace Condition
-func NSCond(cond namespaceCond) innnerNamespace {
+func NSCond(cond namespaceCond) innerNamespace {
 	return func(ns *Namespace) {
 		ns.Cond(cond)
 	}
 }
 
 // Namespace BeforeRouter filter
-func NSBefore(filiterList ...FilterFunc) innnerNamespace {
+func NSBefore(filiterList ...FilterFunc) innerNamespace {
 	return func(ns *Namespace) {
 		ns.Filter("before", filiterList...)
 	}
 }
 
 // Namespace FinishRouter filter
-func NSAfter(filiterList ...FilterFunc) innnerNamespace {
+func NSAfter(filiterList ...FilterFunc) innerNamespace {
 	return func(ns *Namespace) {
 		ns.Filter("after", filiterList...)
 	}
 }
 
 // Namespace Include ControllerInterface
-func NSInclude(cList ...ControllerInterface) innnerNamespace {
+func NSInclude(cList ...ControllerInterface) innerNamespace {
 	return func(ns *Namespace) {
 		ns.Include(cList...)
 	}
 }
 
 // Namespace Router
-func NSRouter(rootpath string, c ControllerInterface, mappingMethods ...string) innnerNamespace {
+func NSRouter(rootpath string, c ControllerInterface, mappingMethods ...string) innerNamespace {
 	return func(ns *Namespace) {
 		ns.Router(rootpath, c, mappingMethods...)
 	}
 }
 
 // Namespace Get
-func NSGet(rootpath string, f FilterFunc) innnerNamespace {
+func NSGet(rootpath string, f FilterFunc) innerNamespace {
 	return func(ns *Namespace) {
 		ns.Get(rootpath, f)
 	}
 }
 
 // Namespace Post
-func NSPost(rootpath string, f FilterFunc) innnerNamespace {
+func NSPost(rootpath string, f FilterFunc) innerNamespace {
 	return func(ns *Namespace) {
 		ns.Post(rootpath, f)
 	}
 }
 
 // Namespace Head
-func NSHead(rootpath string, f FilterFunc) innnerNamespace {
+func NSHead(rootpath string, f FilterFunc) innerNamespace {
 	return func(ns *Namespace) {
 		ns.Head(rootpath, f)
 	}
 }
 
 // Namespace Put
-func NSPut(rootpath string, f FilterFunc) innnerNamespace {
+func NSPut(rootpath string, f FilterFunc) innerNamespace {
 	return func(ns *Namespace) {
 		ns.Put(rootpath, f)
 	}
 }
 
 // Namespace Delete
-func NSDelete(rootpath string, f FilterFunc) innnerNamespace {
+func NSDelete(rootpath string, f FilterFunc) innerNamespace {
 	return func(ns *Namespace) {
 		ns.Delete(rootpath, f)
 	}
 }
 
 // Namespace Any
-func NSAny(rootpath string, f FilterFunc) innnerNamespace {
+func NSAny(rootpath string, f FilterFunc) innerNamespace {
 	return func(ns *Namespace) {
 		ns.Any(rootpath, f)
 	}
 }
 
 // Namespace Options
-func NSOptions(rootpath string, f FilterFunc) innnerNamespace {
+func NSOptions(rootpath string, f FilterFunc) innerNamespace {
 	return func(ns *Namespace) {
 		ns.Options(rootpath, f)
 	}
 }
 
 // Namespace Patch
-func NSPatch(rootpath string, f FilterFunc) innnerNamespace {
+func NSPatch(rootpath string, f FilterFunc) innerNamespace {
 	return func(ns *Namespace) {
 		ns.Patch(rootpath, f)
 	}
 }
 
 //Namespace AutoRouter
-func NSAutoRouter(c ControllerInterface) innnerNamespace {
+func NSAutoRouter(c ControllerInterface) innerNamespace {
 	return func(ns *Namespace) {
 		ns.AutoRouter(c)
 	}
 }
 
 // Namespace AutoPrefix
-func NSAutoPrefix(prefix string, c ControllerInterface) innnerNamespace {
+func NSAutoPrefix(prefix string, c ControllerInterface) innerNamespace {
 	return func(ns *Namespace) {
 		ns.AutoPrefix(prefix, c)
 	}
 }
 
 // Namespace add sub Namespace
-func NSNamespace(prefix string, params ...innnerNamespace) innnerNamespace {
+func NSNamespace(prefix string, params ...innerNamespace) innerNamespace {
 	return func(ns *Namespace) {
 		n := NewNamespace(prefix, params...)
 		ns.Namespace(n)
