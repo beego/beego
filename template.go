@@ -54,6 +54,7 @@ func init() {
 	beegoTplFuncMap["assets_js"] = AssetsJs
 	beegoTplFuncMap["assets_css"] = AssetsCss
 	beegoTplFuncMap["config"] = Config
+	beegoTplFuncMap["map_get"] = MapGet
 
 	// go1.2 added template funcs
 	// Comparisons
