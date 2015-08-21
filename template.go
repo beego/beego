@@ -148,7 +148,7 @@ func BuildTemplate(dir string, files... string) error {
 	}
 	for _, v := range self.files {
 		for _, file := range v {
-			if (files == nil || utils.InSlice(file, files)) {
+			if (len(files) == 0 || utils.InSlice(file, files)) {
 				t, err := getTemplate(self.root, file, v...)
 				if err != nil {
 					Trace("parse template err:", file, err)
