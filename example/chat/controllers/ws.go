@@ -54,14 +54,13 @@ func (c *connection) readPump() {
 	}()
 	c.ws.SetReadLimit(maxMessageSize)
 	c.ws.SetReadDeadline(time.Now().Add(readWait))
+	c.ws.SetPongHandler(func(string) error { c.ws.SetReadDeadline(time.Now().Add(readWait)); return nil })
 	for {
 		op, r, err := c.ws.NextReader()
 		if err != nil {
 			break
 		}
 		switch op {
-		case websocket.PongMessage:
-			c.ws.SetReadDeadline(time.Now().Add(readWait))
 		case websocket.TextMessage:
 			message, err := ioutil.ReadAll(r)
 			if err != nil {
