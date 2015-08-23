@@ -110,22 +110,22 @@ type controllerInfo struct {
 	routerType     int
 }
 
-// ControllerRegistor containers registered router rules, controller handlers and filters.
-type ControllerRegistor struct {
+// ControllerRegister containers registered router rules, controller handlers and filters.
+type ControllerRegister struct {
 	routers      map[string]*Tree
 	enableFilter bool
 	filters      map[int][]*FilterRouter
 }
 
-// NewControllerRegister returns a new ControllerRegistor.
-func NewControllerRegister() *ControllerRegistor {
-	return &ControllerRegistor{
+// NewControllerRegister returns a new ControllerRegister.
+func NewControllerRegister() *ControllerRegister {
+	return &ControllerRegister{
 		routers: make(map[string]*Tree),
 		filters: make(map[int][]*FilterRouter),
 	}
 }
 
-// Add controller handler and pattern rules to ControllerRegistor.
+// Add controller handler and pattern rules to ControllerRegister.
 // usage:
 //	default methods is the same name as method
 //	Add("/user",&UserController{})
@@ -135,7 +135,7 @@ func NewControllerRegister() *ControllerRegistor {
 //	Add("/api/delete",&RestController{},"delete:DeleteFood")
 //	Add("/api",&RestController{},"get,post:ApiFunc")
 //	Add("/simple",&SimpleController{},"get:GetFunc;post:PostFunc")
-func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingMethods ...string) {
+func (p *ControllerRegister) Add(pattern string, c ControllerInterface, mappingMethods ...string) {
 	reflectVal := reflect.ValueOf(c)
 	t := reflect.Indirect(reflectVal).Type()
 	methods := make(map[string]string)
@@ -183,7 +183,7 @@ func (p *ControllerRegistor) Add(pattern string, c ControllerInterface, mappingM
 	}
 }
 
-func (p *ControllerRegistor) addToRouter(method, pattern string, r *controllerInfo) {
+func (p *ControllerRegister) addToRouter(method, pattern string, r *controllerInfo) {
 	if !RouterCaseSensitive {
 		pattern = strings.ToLower(pattern)
 	}
@@ -198,7 +198,7 @@ func (p *ControllerRegistor) addToRouter(method, pattern string, r *controllerIn
 
 // only when the Runmode is dev will generate router file in the router/auto.go from the controller
 // Include(&BankAccount{}, &OrderController{},&RefundController{},&ReceiptController{})
-func (p *ControllerRegistor) Include(cList ...ControllerInterface) {
+func (p *ControllerRegister) Include(cList ...ControllerInterface) {
 	if RunMode == "dev" {
 		skip := make(map[string]bool, 10)
 		for _, c := range cList {
@@ -243,7 +243,7 @@ func (p *ControllerRegistor) Include(cList ...ControllerInterface) {
 //    Get("/", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (p *ControllerRegistor) Get(pattern string, f FilterFunc) {
+func (p *ControllerRegister) Get(pattern string, f FilterFunc) {
 	p.AddMethod("get", pattern, f)
 }
 
@@ -252,7 +252,7 @@ func (p *ControllerRegistor) Get(pattern string, f FilterFunc) {
 //    Post("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (p *ControllerRegistor) Post(pattern string, f FilterFunc) {
+func (p *ControllerRegister) Post(pattern string, f FilterFunc) {
 	p.AddMethod("post", pattern, f)
 }
 
@@ -261,7 +261,7 @@ func (p *ControllerRegistor) Post(pattern string, f FilterFunc) {
 //    Put("/api/:id", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (p *ControllerRegistor) Put(pattern string, f FilterFunc) {
+func (p *ControllerRegister) Put(pattern string, f FilterFunc) {
 	p.AddMethod("put", pattern, f)
 }
 
@@ -270,7 +270,7 @@ func (p *ControllerRegistor) Put(pattern string, f FilterFunc) {
 //    Delete("/api/:id", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (p *ControllerRegistor) Delete(pattern string, f FilterFunc) {
+func (p *ControllerRegister) Delete(pattern string, f FilterFunc) {
 	p.AddMethod("delete", pattern, f)
 }
 
@@ -279,7 +279,7 @@ func (p *ControllerRegistor) Delete(pattern string, f FilterFunc) {
 //    Head("/api/:id", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (p *ControllerRegistor) Head(pattern string, f FilterFunc) {
+func (p *ControllerRegister) Head(pattern string, f FilterFunc) {
 	p.AddMethod("head", pattern, f)
 }
 
@@ -288,7 +288,7 @@ func (p *ControllerRegistor) Head(pattern string, f FilterFunc) {
 //    Patch("/api/:id", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (p *ControllerRegistor) Patch(pattern string, f FilterFunc) {
+func (p *ControllerRegister) Patch(pattern string, f FilterFunc) {
 	p.AddMethod("patch", pattern, f)
 }
 
@@ -297,7 +297,7 @@ func (p *ControllerRegistor) Patch(pattern string, f FilterFunc) {
 //    Options("/api/:id", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (p *ControllerRegistor) Options(pattern string, f FilterFunc) {
+func (p *ControllerRegister) Options(pattern string, f FilterFunc) {
 	p.AddMethod("options", pattern, f)
 }
 
@@ -306,7 +306,7 @@ func (p *ControllerRegistor) Options(pattern string, f FilterFunc) {
 //    Any("/api/:id", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (p *ControllerRegistor) Any(pattern string, f FilterFunc) {
+func (p *ControllerRegister) Any(pattern string, f FilterFunc) {
 	p.AddMethod("*", pattern, f)
 }
 
@@ -315,7 +315,7 @@ func (p *ControllerRegistor) Any(pattern string, f FilterFunc) {
 //    AddMethod("get","/api/:id", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (p *ControllerRegistor) AddMethod(method, pattern string, f FilterFunc) {
+func (p *ControllerRegister) AddMethod(method, pattern string, f FilterFunc) {
 	if _, ok := HTTPMETHOD[strings.ToUpper(method)]; method != "*" && !ok {
 		panic("not support http method: " + method)
 	}
@@ -344,7 +344,7 @@ func (p *ControllerRegistor) AddMethod(method, pattern string, f FilterFunc) {
 }
 
 // add user defined Handler
-func (p *ControllerRegistor) Handler(pattern string, h http.Handler, options ...interface{}) {
+func (p *ControllerRegister) Handler(pattern string, h http.Handler, options ...interface{}) {
 	route := &controllerInfo{}
 	route.pattern = pattern
 	route.routerType = routerTypeHandler
@@ -359,21 +359,21 @@ func (p *ControllerRegistor) Handler(pattern string, h http.Handler, options ...
 	}
 }
 
-// Add auto router to ControllerRegistor.
+// Add auto router to ControllerRegister.
 // example beego.AddAuto(&MainContorlller{}),
 // MainController has method List and Page.
 // visit the url /main/list to execute List function
 // /main/page to execute Page function.
-func (p *ControllerRegistor) AddAuto(c ControllerInterface) {
+func (p *ControllerRegister) AddAuto(c ControllerInterface) {
 	p.AddAutoPrefix("/", c)
 }
 
-// Add auto router to ControllerRegistor with prefix.
+// Add auto router to ControllerRegister with prefix.
 // example beego.AddAutoPrefix("/admin",&MainContorlller{}),
 // MainController has method List and Page.
 // visit the url /admin/main/list to execute List function
 // /admin/main/page to execute Page function.
-func (p *ControllerRegistor) AddAutoPrefix(prefix string, c ControllerInterface) {
+func (p *ControllerRegister) AddAutoPrefix(prefix string, c ControllerInterface) {
 	reflectVal := reflect.ValueOf(c)
 	rt := reflectVal.Type()
 	ct := reflect.Indirect(reflectVal).Type()
@@ -401,7 +401,7 @@ func (p *ControllerRegistor) AddAutoPrefix(prefix string, c ControllerInterface)
 
 // Add a FilterFunc with pattern rule and action constant.
 // The bool params is for setting the returnOnOutput value (false allows multiple filters to execute)
-func (p *ControllerRegistor) InsertFilter(pattern string, pos int, filter FilterFunc, params ...bool) error {
+func (p *ControllerRegister) InsertFilter(pattern string, pos int, filter FilterFunc, params ...bool) error {
 
 	mr := new(FilterRouter)
 	mr.tree = NewTree()
@@ -420,7 +420,7 @@ func (p *ControllerRegistor) InsertFilter(pattern string, pos int, filter Filter
 }
 
 // add Filter into
-func (p *ControllerRegistor) insertFilterRouter(pos int, mr *FilterRouter) error {
+func (p *ControllerRegister) insertFilterRouter(pos int, mr *FilterRouter) error {
 	p.filters[pos] = append(p.filters[pos], mr)
 	p.enableFilter = true
 	return nil
@@ -428,7 +428,7 @@ func (p *ControllerRegistor) insertFilterRouter(pos int, mr *FilterRouter) error
 
 // UrlFor does another controller handler in this request function.
 // it can access any controller method.
-func (p *ControllerRegistor) UrlFor(endpoint string, values ...interface{}) string {
+func (p *ControllerRegister) UrlFor(endpoint string, values ...interface{}) string {
 	paths := strings.Split(endpoint, ".")
 	if len(paths) <= 1 {
 		Warn("urlfor endpoint must like path.controller.method")
@@ -460,7 +460,7 @@ func (p *ControllerRegistor) UrlFor(endpoint string, values ...interface{}) stri
 	return ""
 }
 
-func (p *ControllerRegistor) geturl(t *Tree, url, controllName, methodName string, params map[string]string, httpMethod string) (bool, string) {
+func (p *ControllerRegister) geturl(t *Tree, url, controllName, methodName string, params map[string]string, httpMethod string) (bool, string) {
 	for k, subtree := range t.fixrouters {
 		u := path.Join(url, k)
 		ok, u := p.geturl(subtree, u, controllName, methodName, params, httpMethod)
@@ -575,7 +575,7 @@ func (p *ControllerRegistor) geturl(t *Tree, url, controllName, methodName strin
 }
 
 // Implement http.Handler interface.
-func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	starttime := time.Now()
 	var runrouter reflect.Type
 	var findrouter bool
@@ -861,7 +861,7 @@ Admin:
 	}
 }
 
-func (p *ControllerRegistor) recoverPanic(context *beecontext.Context) {
+func (p *ControllerRegister) recoverPanic(context *beecontext.Context) {
 	if err := recover(); err != nil {
 		if err == USERSTOPRUN {
 			return
@@ -929,6 +929,13 @@ func (w *responseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 		return nil, nil, errors.New("webserver doesn't support hijacking")
 	}
 	return hj.Hijack()
+}
+
+func (w *responseWriter) Flush() {
+	f, ok := w.writer.(http.Flusher)
+	if ok {
+		f.Flush()
+	}
 }
 
 func tourl(params map[string]string) string {

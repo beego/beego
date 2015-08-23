@@ -54,6 +54,7 @@ func init() {
 	beegoTplFuncMap["assets_js"] = AssetsJs
 	beegoTplFuncMap["assets_css"] = AssetsCss
 	beegoTplFuncMap["config"] = Config
+	beegoTplFuncMap["map_get"] = MapGet
 
 	// go1.2 added template funcs
 	// Comparisons
@@ -127,7 +128,7 @@ func AddTemplateExt(ext string) {
 
 // build all template files in a directory.
 // it makes beego can render any template file in view directory.
-func BuildTemplate(dir string) error {
+func BuildTemplate(dir string, files... string) error {
 	if _, err := os.Stat(dir); err != nil {
 		if os.IsNotExist(err) {
 			return nil
@@ -148,11 +149,13 @@ func BuildTemplate(dir string) error {
 	}
 	for _, v := range self.files {
 		for _, file := range v {
-			t, err := getTemplate(self.root, file, v...)
-			if err != nil {
-				Trace("parse template err:", file, err)
-			} else {
-				BeeTemplates[file] = t
+			if (len(files) == 0 || utils.InSlice(file, files)) {
+				t, err := getTemplate(self.root, file, v...)
+				if err != nil {
+					Trace("parse template err:", file, err)
+				} else {
+					BeeTemplates[file] = t
+				}
 			}
 		}
 	}

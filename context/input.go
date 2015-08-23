@@ -353,7 +353,7 @@ func (input *BeegoInput) Bind(dest interface{}, key string) error {
 }
 
 func (input *BeegoInput) bind(key string, typ reflect.Type) reflect.Value {
-	rv := reflect.Zero(reflect.TypeOf(0))
+	rv := reflect.Zero(typ)
 	switch typ.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		val := input.Query(key)
@@ -398,7 +398,7 @@ func (input *BeegoInput) bind(key string, typ reflect.Type) reflect.Value {
 }
 
 func (input *BeegoInput) bindValue(val string, typ reflect.Type) reflect.Value {
-	rv := reflect.Zero(reflect.TypeOf(0))
+	rv := reflect.Zero(typ)
 	switch typ.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		rv = input.bindInt(val, typ)

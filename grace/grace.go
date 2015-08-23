@@ -32,7 +32,7 @@
 //      mux := http.NewServeMux()
 //      mux.HandleFunc("/hello", handler)
 //
-//	    err := grace.ListenAndServe("localhost:8080", mux1)
+//	    err := grace.ListenAndServe("localhost:8080", mux)
 //      if err != nil {
 //		   log.Println(err)
 //	    }
