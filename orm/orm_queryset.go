@@ -122,21 +122,21 @@ func (o querySet) Distinct() QuerySeter {
 // set relation model to query together.
 // it will query relation models and assign to parent model.
 func (o querySet) RelatedSel(params ...interface{}) QuerySeter {
-	if len(params) == 0 {
-		o.relDepth = DefaultRelsDepth
-	} else {
-		for _, p := range params {
-			switch val := p.(type) {
-			case string:
-				o.related = append(o.related, val)
-			case int:
-				o.relDepth = val
-			default:
-				panic(fmt.Errorf("<QuerySeter.RelatedSel> wrong param kind: %v", val))
-			}
-		}
-	}
-	return &o
+    if len(params) == 0 {
+        o.relDepth = DefaultRelsDepth
+    } else {
+        for _, p := range params {
+            switch val := p.(type) {
+            case string:
+                o.related = append(o.related, val)
+            case int:
+                o.relDepth = val
+            default:
+                panic(fmt.Errorf("<QuerySeter.RelatedSel> wrong param kind: %v", val))
+            }
+        }
+    }
+    return &o
 }
 
 // set condition to QuerySeter.
