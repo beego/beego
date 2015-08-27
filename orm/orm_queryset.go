@@ -61,6 +61,7 @@ type querySet struct {
 	limit    int64
 	offset   int64
 	orders   []string
+	distinct bool
 	orm      *orm
 }
 
@@ -109,6 +110,12 @@ func (o querySet) Offset(offset interface{}) QuerySeter {
 // "column" means ASC, "-column" means DESC.
 func (o querySet) OrderBy(exprs ...string) QuerySeter {
 	o.orders = exprs
+	return &o
+}
+
+// add DISTINCT to SELECT
+func (o querySet) Distinct() QuerySeter {
+	o.distinct = true
 	return &o
 }
 
