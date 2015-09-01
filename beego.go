@@ -259,6 +259,8 @@ func AddAPPStartHook(hf hookfunc) {
 // beego.Run(":8089")
 // beego.Run("127.0.0.1:8089")
 func Run(params ...string) {
+	initBeforeHttpRun()
+	
 	if len(params) > 0 && params[0] != "" {
 		strs := strings.Split(params[0], ":")
 		if len(strs) > 0 && strs[0] != "" {
@@ -268,7 +270,6 @@ func Run(params ...string) {
 			HttpPort, _ = strconv.Atoi(strs[1])
 		}
 	}
-	initBeforeHttpRun()
 
 	if EnableAdmin {
 		go beeAdminApp.Run()
