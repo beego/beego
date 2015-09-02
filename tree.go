@@ -200,6 +200,7 @@ func (t *Tree) addseg(segments []string, route interface{}, wildcards []string, 
 			filterCards := []string{}
 			for _, v := range wildcards {
 				if v == ":" || v == "." {
+					t.leaves = append(t.leaves, &leafInfo{runObject: route, wildcards: []string{v}})
 					continue
 				}
 				filterCards = append(filterCards, v)
