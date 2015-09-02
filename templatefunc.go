@@ -352,7 +352,7 @@ func ParseForm(form url.Values, obj interface{}) error {
 				if len(tags) > 1 {
 					format = tags[1]
 				}
-				t, err := time.Parse(format, value)
+				t, err := time.ParseInLocation(format, value, time.Local)
 				if err != nil {
 					return err
 				}
