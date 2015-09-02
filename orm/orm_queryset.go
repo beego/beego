@@ -61,6 +61,7 @@ type querySet struct {
 	limit    int64
 	offset   int64
 	orders   []string
+	groups   []string
 	orm      *orm
 }
 
@@ -109,6 +110,12 @@ func (o querySet) Offset(offset interface{}) QuerySeter {
 // "column" means ASC, "-column" means DESC.
 func (o querySet) OrderBy(exprs ...string) QuerySeter {
 	o.orders = exprs
+	return &o
+}
+
+// add GROUP expression
+func (o querySet) GroupBy(exprs ...string) QuerySeter {
+	o.groups = exprs
 	return &o
 }
 

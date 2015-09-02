@@ -390,6 +390,30 @@ func (t *dbTables) getCondSql(cond *Condition, sub bool, tz *time.Location) (whe
 	return
 }
 
+// generate group sql.
+func (t *dbTables) getGroupSql(groups []string) (groupSql string) {
+	if len(groups)  == 0 {
+		return
+	}
+
+	Q := t.base.TableQuote()
+
+	groupSqls := make([]string, 0, len(groups))
+	for _, group := range groups {
+		exprs := strings.Split(group, ExprSep)
+
+		index, _, fi, suc := t.parseExprs(t.mi, exprs)
+		if suc == false {
+			panic(fmt.Errorf("unknown field/column name `%s`", strings.Join(exprs, ExprSep)))
+		}
+
+		groupSqls = append(groupSqls, fmt.Sprintf("%s.%s%s%s", index, Q, fi.column, Q))
+	}
+
+	groupSql = fmt.Sprintf("GROUP BY %s ", strings.Join(groupSqls, ", "))
+	return
+}
+
 // generate order sql.
 func (t *dbTables) getOrderSql(orders []string) (orderSql string) {
 	if len(orders) == 0 {
