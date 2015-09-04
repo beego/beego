@@ -922,6 +922,16 @@ func (w *responseWriter) WriteHeader(code int) {
 	w.writer.WriteHeader(code)
 }
 
+// Implements Flush()
+func (w *responseWriter) Flush() {
+        w.writer.(http.Flusher).Flush()
+}
+
+// Implements CloseNotify()
+func (w *responseWriter) CloseNotify() <-chan bool {
+        return w.writer.(http.CloseNotifier).CloseNotify()
+}
+
 // hijacker for http
 func (w *responseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 	hj, ok := w.writer.(http.Hijacker)
