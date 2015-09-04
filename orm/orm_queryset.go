@@ -60,6 +60,7 @@ type querySet struct {
 	relDepth int
 	limit    int64
 	offset   int64
+	groups   []string
 	orders   []string
 	distinct bool
 	orm      *orm
@@ -103,6 +104,12 @@ func (o querySet) Limit(limit interface{}, args ...interface{}) QuerySeter {
 // add OFFSET value
 func (o querySet) Offset(offset interface{}) QuerySeter {
 	o.setOffset(offset)
+	return &o
+}
+
+// add GROUP expression
+func (o querySet) GroupBy(exprs ...string) QuerySeter {
+	o.groups = exprs
 	return &o
 }
 
