@@ -31,9 +31,9 @@ const (
 
 // smtpWriter implements LoggerInterface and is used to send emails via given SMTP-server.
 type SmtpWriter struct {
-	Username           string   `json:"Username"`
+	Username           string   `json:"username"`
 	Password           string   `json:"password"`
-	Host               string   `json:"Host"`
+	Host               string   `json:"host"`
 	Subject            string   `json:"subject"`
 	FromAddress        string   `json:"fromAddress"`
 	RecipientAddresses []string `json:"sendTos"`
