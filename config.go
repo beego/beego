@@ -29,7 +29,6 @@ import (
 )
 
 var (
-	BeeApp                 *App // beego application
 	AppName                string
 	AppPath                string
 	workPath               string
@@ -215,9 +214,6 @@ func (b *beegoAppConfig) SaveConfigFile(filename string) error {
 }
 
 func init() {
-	// create beego application
-	BeeApp = NewApp()
-
 	workPath, _ = os.Getwd()
 	workPath, _ = filepath.Abs(workPath)
 	// initialize default configurations
