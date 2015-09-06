@@ -23,7 +23,7 @@ import (
 	"time"
 )
 
-func TestRedisCache(t *testing.T) {
+func TestMemcacheCache(t *testing.T) {
 	bm, err := cache.NewCache("memcache", `{"conn": "127.0.0.1:11211"}`)
 	if err != nil {
 		t.Error("init err")
