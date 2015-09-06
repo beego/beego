@@ -208,6 +208,11 @@ func (t *Tree) addseg(segments []string, route interface{}, wildcards []string, 
 		} else {
 			t.leaves = append(t.leaves, &leafInfo{runObject: route, wildcards: wildcards})
 		}
+		for i, v := range wildcards {
+			if v==":" && i!=0{
+				t.leaves = append(t.leaves, &leafInfo{runObject: route, wildcards: wildcards[:i+1]})
+			}
+		}
 	} else {
 		seg := segments[0]
 		iswild, params, regexpStr := splitSegment(seg)
