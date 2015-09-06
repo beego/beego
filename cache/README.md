@@ -43,7 +43,7 @@ interval means the gc time. The cache will check at each time interval, whether 
 
 ## Memcache adapter
 
-Memcache adapter use the vitess's [Memcache](http://code.google.com/p/vitess/go/memcache) client.
+Memcache adapter use the [gomemcache](http://github.com/bradfitz/gomemcache) client.
 
 Configure like this:
 
