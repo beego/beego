@@ -31,7 +31,8 @@ var (
 	hooks = make([]hookfunc, 0) //hook function slice to store the hookfunc
 )
 
-// The hookfunc will run in beego.Run()
+// AddAPPStartHook is used to register the hookfunc
+// The hookfuncs will run in beego.Run()
 // such as sessionInit, middlerware start, buildtemplate, admin start
 func AddAPPStartHook(hf hookfunc) {
 	hooks = append(hooks, hf)
@@ -42,7 +43,7 @@ func AddAPPStartHook(hf hookfunc) {
 // beego.Run(":8089")
 // beego.Run("127.0.0.1:8089")
 func Run(params ...string) {
-	initBeforeHttpRun()
+	initBeforeHTTPRun()
 
 	if len(params) > 0 && params[0] != "" {
 		strs := strings.Split(params[0], ":")
@@ -57,7 +58,7 @@ func Run(params ...string) {
 	BeeApp.Run()
 }
 
-func initBeforeHttpRun() {
+func initBeforeHTTPRun() {
 	// if AppConfigPath not In the conf/app.conf reParse config
 	if AppConfigPath != filepath.Join(AppPath, "conf", "app.conf") {
 		err := ParseConfig()
@@ -82,7 +83,7 @@ func initBeforeHttpRun() {
 	}
 }
 
-// this function is for test package init
+// TestBeegoInit is for test package init
 func TestBeegoInit(apppath string) {
 	AppPath = apppath
 	os.Setenv("BEEGO_RUNMODE", "test")
@@ -93,5 +94,5 @@ func TestBeegoInit(apppath string) {
 		Info(err)
 	}
 	os.Chdir(AppPath)
-	initBeforeHttpRun()
+	initBeforeHTTPRun()
 }

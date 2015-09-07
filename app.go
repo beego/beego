@@ -28,6 +28,7 @@ import (
 )
 
 var (
+	// BeeApp is an application instance
 	BeeApp *App
 )
 
@@ -202,7 +203,7 @@ func Router(rootpath string, c ControllerInterface, mappingMethods ...string) *A
 	return BeeApp
 }
 
-// Router add list from
+// Include will generate router file in the router/xxx.go from the controller's comments
 // usage:
 // beego.Include(&BankAccount{}, &OrderController{},&RefundController{},&ReceiptController{})
 // type BankAccount struct{
@@ -261,7 +262,7 @@ func AutoPrefix(prefix string, c ControllerInterface) *App {
 	return BeeApp
 }
 
-// register router for Get method
+// Get used to register router for Get method
 // usage:
 //    beego.Get("/", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
@@ -271,7 +272,7 @@ func Get(rootpath string, f FilterFunc) *App {
 	return BeeApp
 }
 
-// register router for Post method
+// Post used to register router for Post method
 // usage:
 //    beego.Post("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
@@ -281,7 +282,7 @@ func Post(rootpath string, f FilterFunc) *App {
 	return BeeApp
 }
 
-// register router for Delete method
+// Delete used to register router for Delete method
 // usage:
 //    beego.Delete("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
@@ -291,7 +292,7 @@ func Delete(rootpath string, f FilterFunc) *App {
 	return BeeApp
 }
 
-// register router for Put method
+// Put used to register router for Put method
 // usage:
 //    beego.Put("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
@@ -301,7 +302,7 @@ func Put(rootpath string, f FilterFunc) *App {
 	return BeeApp
 }
 
-// register router for Head method
+// Head used to register router for Head method
 // usage:
 //    beego.Head("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
@@ -311,7 +312,7 @@ func Head(rootpath string, f FilterFunc) *App {
 	return BeeApp
 }
 
-// register router for Options method
+// Options used to register router for Options method
 // usage:
 //    beego.Options("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
@@ -321,7 +322,7 @@ func Options(rootpath string, f FilterFunc) *App {
 	return BeeApp
 }
 
-// register router for Patch method
+// Patch used to register router for Patch method
 // usage:
 //    beego.Patch("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
@@ -331,7 +332,7 @@ func Patch(rootpath string, f FilterFunc) *App {
 	return BeeApp
 }
 
-// register router for all method
+// Any used to register router for all methods
 // usage:
 //    beego.Any("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
@@ -341,7 +342,7 @@ func Any(rootpath string, f FilterFunc) *App {
 	return BeeApp
 }
 
-// register router for own Handler
+// Handler used to register a Handler router
 // usage:
 //    beego.Handler("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")

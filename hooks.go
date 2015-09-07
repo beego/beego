@@ -71,8 +71,7 @@ func registerSession() error {
 				`"domain":"` + SessionDomain + `",` +
 				`"cookieLifeTime":` + strconv.Itoa(SessionCookieLifeTime) + `}`
 		}
-		GlobalSessions, err = session.NewManager(SessionProvider,
-			sessionConfig)
+		GlobalSessions, err = session.NewManager(SessionProvider, sessionConfig)
 		if err != nil {
 			return err
 		}

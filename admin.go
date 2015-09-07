@@ -314,14 +314,14 @@ func profIndex(rw http.ResponseWriter, r *http.Request) {
 		data["Content"] = result.String()
 
 		if format == "json" && command == "gc summary" {
-			dataJson, err := json.Marshal(data)
+			dataJSON, err := json.Marshal(data)
 			if err != nil {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
 				return
 			}
 
 			rw.Header().Set("Content-Type", "application/json")
-			rw.Write(dataJson)
+			rw.Write(dataJSON)
 			return
 		}
 
