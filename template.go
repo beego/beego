@@ -128,7 +128,7 @@ func AddTemplateExt(ext string) {
 
 // build all template files in a directory.
 // it makes beego can render any template file in view directory.
-func BuildTemplate(dir string, files... string) error {
+func BuildTemplate(dir string, files ...string) error {
 	if _, err := os.Stat(dir); err != nil {
 		if os.IsNotExist(err) {
 			return nil
@@ -149,7 +149,7 @@ func BuildTemplate(dir string, files... string) error {
 	}
 	for _, v := range self.files {
 		for _, file := range v {
-			if (len(files) == 0 || utils.InSlice(file, files)) {
+			if len(files) == 0 || utils.InSlice(file, files) {
 				t, err := getTemplate(self.root, file, v...)
 				if err != nil {
 					Trace("parse template err:", file, err)
@@ -262,4 +262,31 @@ func _getTemplate(t0 *template.Template, root string, submods [][]string, others
 
 	}
 	return
+}
+
+// SetViewsPath sets view directory path in beego application.
+func SetViewsPath(path string) *App {
+	ViewsPath = path
+	return BeeApp
+}
+
+// SetStaticPath sets static directory path and proper url pattern in beego application.
+// if beego.SetStaticPath("static","public"), visit /static/* to load static file in folder "public".
+func SetStaticPath(url string, path string) *App {
+	if !strings.HasPrefix(url, "/") {
+		url = "/" + url
+	}
+	url = strings.TrimRight(url, "/")
+	StaticDir[url] = path
+	return BeeApp
+}
+
+// DelStaticPath removes the static folder setting in this url pattern in beego application.
+func DelStaticPath(url string) *App {
+	if !strings.HasPrefix(url, "/") {
+		url = "/" + url
+	}
+	url = strings.TrimRight(url, "/")
+	delete(StaticDir, url)
+	return BeeApp
 }

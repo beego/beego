@@ -100,30 +100,3 @@ func initBeforeHttpRun() {
 		}
 	}
 }
-
-// SetViewsPath sets view directory path in beego application.
-func SetViewsPath(path string) *App {
-	ViewsPath = path
-	return BeeApp
-}
-
-// SetStaticPath sets static directory path and proper url pattern in beego application.
-// if beego.SetStaticPath("static","public"), visit /static/* to load static file in folder "public".
-func SetStaticPath(url string, path string) *App {
-	if !strings.HasPrefix(url, "/") {
-		url = "/" + url
-	}
-	url = strings.TrimRight(url, "/")
-	StaticDir[url] = path
-	return BeeApp
-}
-
-// DelStaticPath removes the static folder setting in this url pattern in beego application.
-func DelStaticPath(url string) *App {
-	if !strings.HasPrefix(url, "/") {
-		url = "/" + url
-	}
-	url = strings.TrimRight(url, "/")
-	delete(StaticDir, url)
-	return BeeApp
-}
