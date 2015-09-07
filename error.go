@@ -358,47 +358,6 @@ func gatewayTimeout(rw http.ResponseWriter, r *http.Request) {
 	t.Execute(rw, data)
 }
 
-// register default error http handlers, 404,401,403,500 and 503.
-func registerDefaultErrorHandler() {
-	if _, ok := ErrorMaps["401"]; !ok {
-		Errorhandler("401", unauthorized)
-	}
-
-	if _, ok := ErrorMaps["402"]; !ok {
-		Errorhandler("402", paymentRequired)
-	}
-
-	if _, ok := ErrorMaps["403"]; !ok {
-		Errorhandler("403", forbidden)
-	}
-
-	if _, ok := ErrorMaps["404"]; !ok {
-		Errorhandler("404", notFound)
-	}
-
-	if _, ok := ErrorMaps["405"]; !ok {
-		Errorhandler("405", methodNotAllowed)
-	}
-
-	if _, ok := ErrorMaps["500"]; !ok {
-		Errorhandler("500", internalServerError)
-	}
-	if _, ok := ErrorMaps["501"]; !ok {
-		Errorhandler("501", notImplemented)
-	}
-	if _, ok := ErrorMaps["502"]; !ok {
-		Errorhandler("502", badGateway)
-	}
-
-	if _, ok := ErrorMaps["503"]; !ok {
-		Errorhandler("503", serviceUnavailable)
-	}
-
-	if _, ok := ErrorMaps["504"]; !ok {
-		Errorhandler("504", gatewayTimeout)
-	}
-}
-
 // ErrorHandler registers http.HandlerFunc to each http err code string.
 // usage:
 // 	beego.ErrorHandler("404",NotFound)
