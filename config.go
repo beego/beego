@@ -29,59 +29,115 @@ import (
 )
 
 var (
-	AppName                string
-	AppPath                string
-	workPath               string
-	AppConfigPath          string
-	StaticDir              map[string]string
-	TemplateCache          map[string]*template.Template // template caching map
-	StaticExtensionsToGzip []string                      // files with should be compressed with gzip (.js,.css,etc)
-	EnableHttpListen       bool
-	HttpAddr               string
-	HttpPort               int
-	ListenTCP4             bool
-	EnableHttpTLS          bool
-	HttpsPort              int
-	HttpCertFile           string
-	HttpKeyFile            string
-	RecoverPanic           bool // flag of auto recover panic
-	AutoRender             bool // flag of render template automatically
-	ViewsPath              string
-	AppConfig              *beegoAppConfig
-	RunMode                string           // run mode, "dev" or "prod"
-	GlobalSessions         *session.Manager // global session mananger
-	SessionOn              bool             // flag of starting session auto. default is false.
-	SessionProvider        string           // default session provider, memory, mysql , redis ,etc.
-	SessionName            string           // the cookie name when saving session id into cookie.
-	SessionGCMaxLifetime   int64            // session gc time for auto cleaning expired session.
-	SessionSavePath        string           // if use mysql/redis/file provider, define save path to connection info.
-	SessionCookieLifeTime  int              // the life time of session id in cookie.
-	SessionAutoSetCookie   bool             // auto setcookie
-	SessionDomain          string           // the cookie domain default is empty
-	UseFcgi                bool
-	UseStdIo               bool
-	MaxMemory              int64
-	EnableGzip             bool // flag of enable gzip
-	DirectoryIndex         bool // flag of display directory index. default is false.
-	HttpServerTimeOut      int64
-	ErrorsShow             bool   // flag of show errors in page. if true, show error and trace info in page rendered with error template.
-	XSRFKEY                string // xsrf hash salt string.
-	EnableXSRF             bool   // flag of enable xsrf.
-	XSRFExpire             int    // the expiry of xsrf value.
-	CopyRequestBody        bool   // flag of copy raw request body in context.
-	TemplateLeft           string
-	TemplateRight          string
-	BeegoServerName        string // beego server name exported in response header.
-	EnableAdmin            bool   // flag of enable admin module to log every request info.
-	AdminHttpAddr          string // http server configurations for admin module.
-	AdminHttpPort          int
-	FlashName              string // name of the flash variable found in response header and cookie
-	FlashSeperator         string // used to seperate flash key:value
-	AppConfigProvider      string // config provider
-	EnableDocs             bool   // enable generate docs & server docs API Swagger
-	RouterCaseSensitive    bool   // router case sensitive default is true
-	AccessLogs             bool   // print access logs, default is false
-	Graceful               bool   // use graceful start the server
+	// AccessLogs represent whether output the access logs, default is false
+	AccessLogs bool
+	// AdminHTTPAddr is address for admin
+	AdminHTTPAddr string
+	// AdminHTTPPort is listens port for admin
+	AdminHTTPPort int
+	// AppConfig is the instance of Config, store the config information from file
+	AppConfig *beegoAppConfig
+	// AppName represent Application name, always the project folder name
+	AppName string
+	// AppPath is the path to the application
+	AppPath string
+	// AppConfigPath is the path to the config files
+	AppConfigPath string
+	// AppConfigProvider is the provider for the config, default is ini
+	AppConfigProvider string
+	// AutoRender is a flag of render template automatically. It's always turn off in API application
+	// default is true
+	AutoRender bool
+	// BeegoServerName exported in response header.
+	BeegoServerName string
+	// CopyRequestBody is just useful for raw request body in context. default is false
+	CopyRequestBody bool
+	// DirectoryIndex wheather display directory index. default is false.
+	DirectoryIndex bool
+	// EnableAdmin means turn on admin module to log every request info.
+	EnableAdmin bool
+	// EnableDocs enable generate docs & server docs API Swagger
+	EnableDocs bool
+	// EnableErrorsShow wheather show errors in page. if true, show error and trace info in page rendered with error template.
+	EnableErrorsShow bool
+	// EnabelFcgi turn on the fcgi Listen, default is false
+	EnabelFcgi bool
+	// EnableGzip means gzip the response
+	EnableGzip bool
+	// EnableHTTPListen represent whether turn on the HTTP, default is true
+	EnableHTTPListen bool
+	// EnableHTTPTLS represent whether turn on the HTTPS, default is true
+	EnableHTTPTLS bool
+	// EnableStdIo works with EnabelFcgi Use FCGI via standard I/O
+	EnableStdIo bool
+	// EnableXSRF whether turn on xsrf. default is false
+	EnableXSRF bool
+	// FlashName is the name of the flash variable found in response header and cookie
+	FlashName string
+	// FlashSeperator used to seperate flash key:value, default is BEEGOFLASH
+	FlashSeperator string
+	// GlobalSessions is the instance for the session manager
+	GlobalSessions *session.Manager
+	// Graceful means use graceful module to start the server
+	Graceful bool
+	// workPath is always the same as AppPath, but sometime when it started with other
+	// program, like supervisor
+	workPath string
+	// ListenTCP4 represent only Listen in TCP4, default is false
+	ListenTCP4 bool
+	// MaxMemory The whole request body is parsed and up to a total of maxMemory
+	// bytes of its file parts are stored in memory, with the remainder stored on disk in temporary files
+	MaxMemory int64
+	// HTTPAddr is the TCP network address addr for HTTP
+	HTTPAddr string
+	// HTTPPort is listens port for HTTP
+	HTTPPort int
+	// HTTPSPort is listens port for HTTPS
+	HTTPSPort int
+	// HTTPCertFile is the path to certificate file
+	HTTPCertFile string
+	// HTTPKeyFile is the path to private key file
+	HTTPKeyFile string
+	// HTTPServerTimeOut HTTP server timeout. default is 0, no timeout
+	HTTPServerTimeOut int64
+	// RecoverPanic is a flag for auto recover panic, default is true
+	RecoverPanic bool
+	// RouterCaseSensitive means whether router case sensitive, default is true
+	RouterCaseSensitive bool
+	// RunMode represent the staging, "dev" or "prod"
+	RunMode string
+	// SessionOn means whether turn on the session auto when application started. default is false.
+	SessionOn bool
+	// SessionProvider means session provider, e.q memory, mysql, redis,etc.
+	SessionProvider string
+	// SessionName is the cookie name when saving session id into cookie.
+	SessionName string
+	// SessionGCMaxLifetime for auto cleaning expired session.
+	SessionGCMaxLifetime int64
+	// SessionProviderConfig is for the provider config, define save path or connection info.
+	SessionProviderConfig string
+	// SessionCookieLifeTime means the life time of session id in cookie.
+	SessionCookieLifeTime int
+	// SessionAutoSetCookie auto setcookie
+	SessionAutoSetCookie bool
+	// SessionDomain means the cookie domain default is empty
+	SessionDomain string
+	// StaticDir store the static path, key is path, value is the folder
+	StaticDir map[string]string
+	// StaticExtensionsToGzip stores the extensions which need to gzip(.js,.css,etc)
+	StaticExtensionsToGzip []string
+	// TemplateCache store the caching template
+	TemplateCache map[string]*template.Template
+	// TemplateLeft left delimiter
+	TemplateLeft string
+	// TemplateRight right delimiter
+	TemplateRight string
+	// ViewsPath means the template folder
+	ViewsPath string
+	// XSRFKEY xsrf hash salt string.
+	XSRFKEY string
+	// XSRFExpire is the expiry of xsrf value.
+	XSRFExpire int
 )
 
 type beegoAppConfig struct {
@@ -239,12 +295,12 @@ func init() {
 	TemplateCache = make(map[string]*template.Template)
 
 	// set this to 0.0.0.0 to make this app available to externally
-	EnableHttpListen = true //default enable http Listen
+	EnableHTTPListen = true //default enable http Listen
 
-	HttpAddr = ""
-	HttpPort = 8080
+	HTTPAddr = ""
+	HTTPPort = 8080
 
-	HttpsPort = 10443
+	HTTPSPort = 10443
 
 	AppName = "beego"
 
@@ -260,20 +316,15 @@ func init() {
 	SessionProvider = "memory"
 	SessionName = "beegosessionID"
 	SessionGCMaxLifetime = 3600
-	SessionSavePath = ""
+	SessionProviderConfig = ""
 	SessionCookieLifeTime = 0 //set cookie default is the brower life
 	SessionAutoSetCookie = true
 
-	UseFcgi = false
-	UseStdIo = false
-
 	MaxMemory = 1 << 26 //64MB
 
-	EnableGzip = false
+	HTTPServerTimeOut = 0
 
-	HttpServerTimeOut = 0
-
-	ErrorsShow = true
+	EnableErrorsShow = true
 
 	XSRFKEY = "beegoxsrf"
 	XSRFExpire = 0
@@ -284,8 +335,8 @@ func init() {
 	BeegoServerName = "beegoServer:" + VERSION
 
 	EnableAdmin = false
-	AdminHttpAddr = "127.0.0.1"
-	AdminHttpPort = 8088
+	AdminHTTPAddr = "127.0.0.1"
+	AdminHTTPPort = 8088
 
 	FlashName = "BEEGO_FLASH"
 	FlashSeperator = "BEEGOFLASH"
@@ -326,18 +377,18 @@ func ParseConfig() (err error) {
 		RunMode = runmode
 	}
 
-	HttpAddr = AppConfig.String("HttpAddr")
+	HTTPAddr = AppConfig.String("HTTPAddr")
 
-	if v, err := AppConfig.Int("HttpPort"); err == nil {
-		HttpPort = v
+	if v, err := AppConfig.Int("HTTPPort"); err == nil {
+		HTTPPort = v
 	}
 
 	if v, err := AppConfig.Bool("ListenTCP4"); err == nil {
 		ListenTCP4 = v
 	}
 
-	if v, err := AppConfig.Bool("EnableHttpListen"); err == nil {
-		EnableHttpListen = v
+	if v, err := AppConfig.Bool("EnableHTTPListen"); err == nil {
+		EnableHTTPListen = v
 	}
 
 	if maxmemory, err := AppConfig.Int64("MaxMemory"); err == nil {
@@ -372,8 +423,8 @@ func ParseConfig() (err error) {
 		SessionName = sessName
 	}
 
-	if sesssavepath := AppConfig.String("SessionSavePath"); sesssavepath != "" {
-		SessionSavePath = sesssavepath
+	if sessProvConfig := AppConfig.String("SessionProviderConfig"); sessProvConfig != "" {
+		SessionProviderConfig = sessProvConfig
 	}
 
 	if sessMaxLifeTime, err := AppConfig.Int64("SessionGCMaxLifetime"); err == nil && sessMaxLifeTime != 0 {
@@ -384,8 +435,8 @@ func ParseConfig() (err error) {
 		SessionCookieLifeTime = sesscookielifetime
 	}
 
-	if usefcgi, err := AppConfig.Bool("UseFcgi"); err == nil {
-		UseFcgi = usefcgi
+	if enabelFcgi, err := AppConfig.Bool("EnabelFcgi"); err == nil {
+		EnabelFcgi = enabelFcgi
 	}
 
 	if enablegzip, err := AppConfig.Bool("EnableGzip"); err == nil {
@@ -396,12 +447,12 @@ func ParseConfig() (err error) {
 		DirectoryIndex = directoryindex
 	}
 
-	if timeout, err := AppConfig.Int64("HttpServerTimeOut"); err == nil {
-		HttpServerTimeOut = timeout
+	if timeout, err := AppConfig.Int64("HTTPServerTimeOut"); err == nil {
+		HTTPServerTimeOut = timeout
 	}
 
-	if errorsshow, err := AppConfig.Bool("ErrorsShow"); err == nil {
-		ErrorsShow = errorsshow
+	if errorsshow, err := AppConfig.Bool("EnableErrorsShow"); err == nil {
+		EnableErrorsShow = errorsshow
 	}
 
 	if copyrequestbody, err := AppConfig.Bool("CopyRequestBody"); err == nil {
@@ -428,20 +479,20 @@ func ParseConfig() (err error) {
 		TemplateRight = tplright
 	}
 
-	if httptls, err := AppConfig.Bool("EnableHttpTLS"); err == nil {
-		EnableHttpTLS = httptls
+	if httptls, err := AppConfig.Bool("EnableHTTPTLS"); err == nil {
+		EnableHTTPTLS = httptls
 	}
 
-	if httpsport, err := AppConfig.Int("HttpsPort"); err == nil {
-		HttpsPort = httpsport
+	if httpsport, err := AppConfig.Int("HTTPSPort"); err == nil {
+		HTTPSPort = httpsport
 	}
 
-	if certfile := AppConfig.String("HttpCertFile"); certfile != "" {
-		HttpCertFile = certfile
+	if certfile := AppConfig.String("HTTPCertFile"); certfile != "" {
+		HTTPCertFile = certfile
 	}
 
-	if keyfile := AppConfig.String("HttpKeyFile"); keyfile != "" {
-		HttpKeyFile = keyfile
+	if keyfile := AppConfig.String("HTTPKeyFile"); keyfile != "" {
+		HTTPKeyFile = keyfile
 	}
 
 	if serverName := AppConfig.String("BeegoServerName"); serverName != "" {
@@ -491,12 +542,12 @@ func ParseConfig() (err error) {
 		EnableAdmin = enableadmin
 	}
 
-	if adminhttpaddr := AppConfig.String("AdminHttpAddr"); adminhttpaddr != "" {
-		AdminHttpAddr = adminhttpaddr
+	if adminhttpaddr := AppConfig.String("AdminHTTPAddr"); adminhttpaddr != "" {
+		AdminHTTPAddr = adminhttpaddr
 	}
 
-	if adminhttpport, err := AppConfig.Int("AdminHttpPort"); err == nil {
-		AdminHttpPort = adminhttpport
+	if adminhttpport, err := AppConfig.Int("AdminHTTPPort"); err == nil {
+		AdminHTTPPort = adminhttpport
 	}
 
 	if enabledocs, err := AppConfig.Bool("EnableDocs"); err == nil {

@@ -617,7 +617,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 					if ok, params := filterR.ValidRouter(urlPath); ok {
 						for k, v := range params {
 							if context.Input.Params == nil {
-								context.Input.Params = make(map[string]string)	
+								context.Input.Params = make(map[string]string)
 							}
 							context.Input.Params[k] = v
 						}
@@ -869,7 +869,7 @@ func (p *ControllerRegister) recoverPanic(context *beecontext.Context) {
 		if !RecoverPanic {
 			panic(err)
 		} else {
-			if ErrorsShow {
+			if EnableErrorsShow {
 				if _, ok := ErrorMaps[fmt.Sprint(err)]; ok {
 					exception(fmt.Sprint(err), context)
 					return

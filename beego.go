@@ -48,10 +48,10 @@ func Run(params ...string) {
 	if len(params) > 0 && params[0] != "" {
 		strs := strings.Split(params[0], ":")
 		if len(strs) > 0 && strs[0] != "" {
-			HttpAddr = strs[0]
+			HTTPAddr = strs[0]
 		}
 		if len(strs) > 1 && strs[1] != "" {
-			HttpPort, _ = strconv.Atoi(strs[1])
+			HTTPPort, _ = strconv.Atoi(strs[1])
 		}
 	}
 
