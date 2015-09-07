@@ -67,7 +67,7 @@ func initBeforeHttpRun() {
 		}
 	}
 
-	//init mime
+	//init hooks
 	AddAPPStartHook(registerMime)
 	AddAPPStartHook(registerDefaultErrorHandler)
 	AddAPPStartHook(registerSession)
@@ -75,7 +75,6 @@ func initBeforeHttpRun() {
 	AddAPPStartHook(registerTemplate)
 	AddAPPStartHook(registerAdmin)
 
-	// do hooks function
 	for _, hk := range hooks {
 		if err := hk(); err != nil {
 			panic(err)
