@@ -98,3 +98,10 @@ func registerDocs() error {
 	}
 	return nil
 }
+
+func registerAdmin() error {
+	if EnableAdmin {
+		go beeAdminApp.Run()
+	}
+	return nil
+}

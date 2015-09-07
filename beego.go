@@ -54,25 +54,7 @@ func Run(params ...string) {
 		}
 	}
 
-	if EnableAdmin {
-		go beeAdminApp.Run()
-	}
-
 	BeeApp.Run()
-}
-
-// this function is for test package init
-func TestBeegoInit(apppath string) {
-	AppPath = apppath
-	os.Setenv("BEEGO_RUNMODE", "test")
-	AppConfigPath = filepath.Join(AppPath, "conf", "app.conf")
-	err := ParseConfig()
-	if err != nil && !os.IsNotExist(err) {
-		// for init if doesn't have app.conf will not panic
-		Info(err)
-	}
-	os.Chdir(AppPath)
-	initBeforeHttpRun()
 }
 
 func initBeforeHttpRun() {
@@ -91,12 +73,26 @@ func initBeforeHttpRun() {
 	AddAPPStartHook(registerSession)
 	AddAPPStartHook(registerDocs)
 	AddAPPStartHook(registerTemplate)
+	AddAPPStartHook(registerAdmin)
 
 	// do hooks function
 	for _, hk := range hooks {
-		err := hk()
-		if err != nil {
+		if err := hk(); err != nil {
 			panic(err)
 		}
 	}
+}
+
+// this function is for test package init
+func TestBeegoInit(apppath string) {
+	AppPath = apppath
+	os.Setenv("BEEGO_RUNMODE", "test")
+	AppConfigPath = filepath.Join(AppPath, "conf", "app.conf")
+	err := ParseConfig()
+	if err != nil && !os.IsNotExist(err) {
+		// for init if doesn't have app.conf will not panic
+		Info(err)
+	}
+	os.Chdir(AppPath)
+	initBeforeHttpRun()
 }
