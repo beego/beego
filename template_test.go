@@ -20,11 +20,11 @@ import (
 	"testing"
 )
 
-var header string = `{{define "header"}}
+var header = `{{define "header"}}
 <h1>Hello, astaxie!</h1>
 {{end}}`
 
-var index string = `<!DOCTYPE html>
+var index = `<!DOCTYPE html>
 <html>
   <head>
     <title>beego welcome template</title>
@@ -37,7 +37,7 @@ var index string = `<!DOCTYPE html>
 </html>
 `
 
-var block string = `{{define "block"}}
+var block = `{{define "block"}}
 <h1>Hello, blocks!</h1>
 {{end}}`
 
@@ -82,7 +82,7 @@ func TestTemplate(t *testing.T) {
 	os.RemoveAll(dir)
 }
 
-var menu string = `<div class="menu">
+var menu = `<div class="menu">
 <ul>
 <li>menu1</li>
 <li>menu2</li>
@@ -90,7 +90,7 @@ var menu string = `<div class="menu">
 </ul>
 </div>
 `
-var user string = `<!DOCTYPE html>
+var user = `<!DOCTYPE html>
 <html>
   <head>
     <title>beego welcome template</title>

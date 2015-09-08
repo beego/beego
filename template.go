@@ -28,17 +28,14 @@ import (
 )
 
 var (
-	beegoTplFuncMap template.FuncMap
-	// beego template caching map and supported template file extensions.
-	BeeTemplates   map[string]*template.Template
-	BeeTemplateExt []string
+	beegoTplFuncMap = make(template.FuncMap)
+	// BeeTemplates caching map and supported template file extensions.
+	BeeTemplates = make(map[string]*template.Template)
+	// BeeTemplateExt stores the template extention which will build
+	BeeTemplateExt = []string{"tpl", "html"}
 )
 
 func init() {
-	BeeTemplates = make(map[string]*template.Template)
-	beegoTplFuncMap = make(template.FuncMap)
-	BeeTemplateExt = make([]string, 0)
-	BeeTemplateExt = append(BeeTemplateExt, "tpl", "html")
 	beegoTplFuncMap["dateformat"] = DateFormat
 	beegoTplFuncMap["date"] = Date
 	beegoTplFuncMap["compare"] = Compare
@@ -79,7 +76,7 @@ type templatefile struct {
 	files map[string][]string
 }
 
-func (self *templatefile) visit(paths string, f os.FileInfo, err error) error {
+func (tf *templatefile) visit(paths string, f os.FileInfo, err error) error {
 	if f == nil {
 		return err
 	}
@@ -92,21 +89,21 @@ func (self *templatefile) visit(paths string, f os.FileInfo, err error) error {
 
 	replace := strings.NewReplacer("\\", "/")
 	a := []byte(paths)
-	a = a[len([]byte(self.root)):]
+	a = a[len([]byte(tf.root)):]
 	file := strings.TrimLeft(replace.Replace(string(a)), "/")
 	subdir := filepath.Dir(file)
-	if _, ok := self.files[subdir]; ok {
-		self.files[subdir] = append(self.files[subdir], file)
+	if _, ok := tf.files[subdir]; ok {
+		tf.files[subdir] = append(tf.files[subdir], file)
 	} else {
 		m := make([]string, 1)
 		m[0] = file
-		self.files[subdir] = m
+		tf.files[subdir] = m
 	}
 
 	return nil
 }
 
-// return this path contains supported template extension of beego or not.
+// HasTemplateExt return this path contains supported template extension of beego or not.
 func HasTemplateExt(paths string) bool {
 	for _, v := range BeeTemplateExt {
 		if strings.HasSuffix(paths, "."+v) {
@@ -116,7 +113,7 @@ func HasTemplateExt(paths string) bool {
 	return false
 }
 
-// add new extension for template.
+// AddTemplateExt add new extension for template.
 func AddTemplateExt(ext string) {
 	for _, v := range BeeTemplateExt {
 		if v == ext {
@@ -126,15 +123,14 @@ func AddTemplateExt(ext string) {
 	BeeTemplateExt = append(BeeTemplateExt, ext)
 }
 
-// build all template files in a directory.
+// BuildTemplate will build all template files in a directory.
 // it makes beego can render any template file in view directory.
 func BuildTemplate(dir string, files ...string) error {
 	if _, err := os.Stat(dir); err != nil {
 		if os.IsNotExist(err) {
 			return nil
-		} else {
-			return errors.New("dir open err")
 		}
+		return errors.New("dir open err")
 	}
 	self := &templatefile{
 		root:  dir,
