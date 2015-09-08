@@ -140,11 +140,11 @@ func Compare(a, b interface{}) (equal bool) {
 }
 
 func CompareNot(a, b interface{}) (equal bool) {
-    return ! Compare(a, b)
+	return !Compare(a, b)
 }
 
 func NotNil(a interface{}) (is_nil bool) {
-    return CompareNot(a, nil)
+	return CompareNot(a, nil)
 }
 
 func Config(returnType, key string, defaultVal interface{}) (value interface{}, err error) {
@@ -237,14 +237,14 @@ func Htmlunquote(src string) string {
 	return strings.TrimSpace(text)
 }
 
-// UrlFor returns url string with another registered controller handler with params.
+// URLFor returns url string with another registered controller handler with params.
 //	usage:
 //
-//	UrlFor(".index")
-//	print UrlFor("index")
+//	URLFor(".index")
+//	print URLFor("index")
 //  router /login
-//	print UrlFor("login")
-//	print UrlFor("login", "next","/"")
+//	print URLFor("login")
+//	print URLFor("login", "next","/"")
 //  router /profile/:username
 //	print UrlFor("profile", ":username","John Doe")
 //	result:
@@ -254,7 +254,7 @@ func Htmlunquote(src string) string {
 //	/user/John%20Doe
 //
 //  more detail http://beego.me/docs/mvc/controller/urlbuilding.md
-func UrlFor(endpoint string, values ...interface{}) string {
+func URLFor(endpoint string, values ...interface{}) string {
 	return BeeApp.Handlers.UrlFor(endpoint, values...)
 }
 
@@ -698,22 +698,21 @@ func MapGet(arg1 interface{}, arg2 ...interface{}) (interface{}, error) {
 
 		storedVal := arg1Val.MapIndex(arg2Val)
 
-		
 		if storedVal.IsValid() {
 			var result interface{}
 
 			switch arg1Type.Elem().Kind() {
-				case reflect.Bool:
+			case reflect.Bool:
 				result = storedVal.Bool()
-				case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 				result = storedVal.Int()
-				case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
+			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uintptr:
 				result = storedVal.Uint()
-				case reflect.Float32, reflect.Float64:
+			case reflect.Float32, reflect.Float64:
 				result = storedVal.Float()
-				case reflect.String:
+			case reflect.String:
 				result = storedVal.String()
-				default:
+			default:
 				result = storedVal.Interface()
 			}
 
@@ -726,7 +725,6 @@ func MapGet(arg1 interface{}, arg2 ...interface{}) (interface{}, error) {
 		} else {
 			return nil, nil
 		}
-
 
 	} else {
 		return nil, nil

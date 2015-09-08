@@ -863,7 +863,7 @@ Admin:
 
 func (p *ControllerRegister) recoverPanic(context *beecontext.Context) {
 	if err := recover(); err != nil {
-		if err == USERSTOPRUN {
+		if err == ErrAbort {
 			return
 		}
 		if !RecoverPanic {

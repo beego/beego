@@ -65,7 +65,7 @@ func init() {
 	beegoTplFuncMap["lt"] = lt // <
 	beegoTplFuncMap["ne"] = ne // !=
 
-	beegoTplFuncMap["urlfor"] = UrlFor // !=
+	beegoTplFuncMap["urlfor"] = URLFor // !=
 }
 
 // AddFuncMap let user to register a func in the template.
