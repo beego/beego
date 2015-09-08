@@ -22,6 +22,10 @@ import (
 	"github.com/astaxie/beego/utils"
 )
 
+// Tree has three elements: FixRouter/wildcard/leaves
+// fixRouter sotres Fixed Router
+// wildcard stores params
+// leaves store the endpoint information
 type Tree struct {
 	//search fix route first
 	fixrouters map[string]*Tree
@@ -33,13 +37,14 @@ type Tree struct {
 	leaves []*leafInfo
 }
 
+// NewTree return a new Tree
 func NewTree() *Tree {
 	return &Tree{
 		fixrouters: make(map[string]*Tree),
 	}
 }
 
-// add Tree to the exist Tree
+// AddTree will add tree to the exist Tree
 // prefix should has no params
 func (t *Tree) AddTree(prefix string, tree *Tree) {
 	t.addtree(splitPath(prefix), tree, nil, "")
@@ -187,7 +192,7 @@ func filterTreeWithPrefix(t *Tree, wildcards []string, reg string) {
 	}
 }
 
-// call addseg function
+// AddRouter call addseg function
 func (t *Tree) AddRouter(pattern string, runObject interface{}) {
 	t.addseg(splitPath(pattern), runObject, nil, "")
 }
@@ -266,7 +271,7 @@ func (t *Tree) addseg(segments []string, route interface{}, wildcards []string, 
 	}
 }
 
-// match router to runObject & params
+// Match router to runObject & params
 func (t *Tree) Match(pattern string) (runObject interface{}, params map[string]string) {
 	if len(pattern) == 0 || pattern[0] != '/' {
 		return nil, nil
@@ -349,7 +354,7 @@ func (leaf *leafInfo) match(wildcardValues []string) (ok bool, params map[string
 						continue
 					}
 					params[v] = ""
-					j += 1
+					j++
 				}
 				return true, params
 			}
@@ -402,7 +407,7 @@ func (leaf *leafInfo) match(wildcardValues []string) (ok bool, params map[string
 				return false, nil
 			}
 			params[v] = wildcardValues[j]
-			j += 1
+			j++
 		}
 		if len(params) != len(wildcardValues) {
 			return false, nil
@@ -453,9 +458,8 @@ func splitSegment(key string) (bool, []string, string) {
 	if strings.HasPrefix(key, "*") {
 		if key == "*.*" {
 			return true, []string{".", ":path", ":ext"}, ""
-		} else {
-			return true, []string{":splat"}, ""
 		}
+		return true, []string{":splat"}, ""
 	}
 	if strings.ContainsAny(key, ":") {
 		var paramsNum int
@@ -469,7 +473,7 @@ func splitSegment(key string) (bool, []string, string) {
 		reg := regexp.MustCompile(`[a-zA-Z0-9_]+`)
 		for i, v := range key {
 			if skipnum > 0 {
-				skipnum -= 1
+				skipnum--
 				continue
 			}
 			if start {
@@ -483,7 +487,7 @@ func splitSegment(key string) (bool, []string, string) {
 							startexp = false
 							skipnum = 3
 							param = make([]rune, 0)
-							paramsNum += 1
+							paramsNum++
 							continue
 						}
 					}
@@ -491,7 +495,7 @@ func splitSegment(key string) (bool, []string, string) {
 						if key[i+1:i+7] == "string" {
 							out = append(out, []rune(`([\w]+)`)...)
 							params = append(params, ":"+string(param))
-							paramsNum += 1
+							paramsNum++
 							start = false
 							startexp = false
 							skipnum = 6
@@ -509,7 +513,7 @@ func splitSegment(key string) (bool, []string, string) {
 					out = append(out, []rune(`(.+)`)...)
 					params = append(params, ":"+string(param))
 					param = make([]rune, 0)
-					paramsNum += 1
+					paramsNum++
 					start = false
 					startexp = false
 				}
@@ -527,7 +531,7 @@ func splitSegment(key string) (bool, []string, string) {
 				startexp = true
 				start = false
 				params = append(params, ":"+string(param))
-				paramsNum += 1
+				paramsNum++
 				expt = make([]rune, 0)
 				expt = append(expt, '(')
 			} else if v == ')' {
@@ -548,7 +552,6 @@ func splitSegment(key string) (bool, []string, string) {
 			params = append(params, ":"+string(param))
 		}
 		return true, params, string(out)
-	} else {
-		return false, nil, ""
 	}
+	return false, nil, ""
 }
