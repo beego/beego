@@ -255,7 +255,7 @@ func Htmlunquote(src string) string {
 //
 //  more detail http://beego.me/docs/mvc/controller/urlbuilding.md
 func URLFor(endpoint string, values ...interface{}) string {
-	return BeeApp.Handlers.UrlFor(endpoint, values...)
+	return BeeApp.Handlers.URLFor(endpoint, values...)
 }
 
 // returns script tag with src string.

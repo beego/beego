@@ -34,8 +34,8 @@ import (
 	"github.com/astaxie/beego/utils"
 )
 
+// default filter execution points
 const (
-	// default filter execution points
 	BeforeStatic = iota
 	BeforeRouter
 	BeforeExec
@@ -50,7 +50,7 @@ const (
 )
 
 var (
-	// supported http methods.
+	// HTTPMETHOD list the supported http methods.
 	HTTPMETHOD = map[string]string{
 		"GET":     "GET",
 		"POST":    "POST",
@@ -71,10 +71,12 @@ var (
 		"SetSecureCookie", "XsrfToken", "CheckXsrfCookie", "XsrfFormHtml",
 		"GetControllerAndAction"}
 
-	url_placeholder                = "{{placeholder}}"
-	DefaultLogFilter FilterHandler = &logFilter{}
+	urlPlaceholder = "{{placeholder}}"
+	// DefaultAccessLogFilter will skip the accesslog if return true
+	DefaultAccessLogFilter FilterHandler = &logFilter{}
 )
 
+// FilterHandler is an interface for
 type FilterHandler interface {
 	Filter(*beecontext.Context) bool
 }
@@ -96,7 +98,7 @@ func (l *logFilter) Filter(ctx *beecontext.Context) bool {
 	return false
 }
 
-// To append a slice's value into "exceptMethod", for controller's methods shouldn't reflect to AutoRouter
+// ExceptMethodAppend to append a slice's value into "exceptMethod", for controller's methods shouldn't reflect to AutoRouter
 func ExceptMethodAppend(action string) {
 	exceptMethod = append(exceptMethod, action)
 }
@@ -196,7 +198,7 @@ func (p *ControllerRegister) addToRouter(method, pattern string, r *controllerIn
 	}
 }
 
-// only when the Runmode is dev will generate router file in the router/auto.go from the controller
+// Include only when the Runmode is dev will generate router file in the router/auto.go from the controller
 // Include(&BankAccount{}, &OrderController{},&RefundController{},&ReceiptController{})
 func (p *ControllerRegister) Include(cList ...ControllerInterface) {
 	if RunMode == "dev" {
@@ -238,7 +240,7 @@ func (p *ControllerRegister) Include(cList ...ControllerInterface) {
 	}
 }
 
-// add get method
+// Get add get method
 // usage:
 //    Get("/", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
@@ -247,7 +249,7 @@ func (p *ControllerRegister) Get(pattern string, f FilterFunc) {
 	p.AddMethod("get", pattern, f)
 }
 
-// add post method
+// Post add post method
 // usage:
 //    Post("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
@@ -256,7 +258,7 @@ func (p *ControllerRegister) Post(pattern string, f FilterFunc) {
 	p.AddMethod("post", pattern, f)
 }
 
-// add put method
+// Put add put method
 // usage:
 //    Put("/api/:id", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
@@ -265,7 +267,7 @@ func (p *ControllerRegister) Put(pattern string, f FilterFunc) {
 	p.AddMethod("put", pattern, f)
 }
 
-// add delete method
+// Delete add delete method
 // usage:
 //    Delete("/api/:id", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
@@ -274,7 +276,7 @@ func (p *ControllerRegister) Delete(pattern string, f FilterFunc) {
 	p.AddMethod("delete", pattern, f)
 }
 
-// add head method
+// Head add head method
 // usage:
 //    Head("/api/:id", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
@@ -283,7 +285,7 @@ func (p *ControllerRegister) Head(pattern string, f FilterFunc) {
 	p.AddMethod("head", pattern, f)
 }
 
-// add patch method
+// Patch add patch method
 // usage:
 //    Patch("/api/:id", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
@@ -292,7 +294,7 @@ func (p *ControllerRegister) Patch(pattern string, f FilterFunc) {
 	p.AddMethod("patch", pattern, f)
 }
 
-// add options method
+// Options add options method
 // usage:
 //    Options("/api/:id", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
@@ -301,7 +303,7 @@ func (p *ControllerRegister) Options(pattern string, f FilterFunc) {
 	p.AddMethod("options", pattern, f)
 }
 
-// add all method
+// Any add all method
 // usage:
 //    Any("/api/:id", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
@@ -310,7 +312,7 @@ func (p *ControllerRegister) Any(pattern string, f FilterFunc) {
 	p.AddMethod("*", pattern, f)
 }
 
-// add http method router
+// AddMethod add http method router
 // usage:
 //    AddMethod("get","/api/:id", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
@@ -343,7 +345,7 @@ func (p *ControllerRegister) AddMethod(method, pattern string, f FilterFunc) {
 	}
 }
 
-// add user defined Handler
+// Handler add user defined Handler
 func (p *ControllerRegister) Handler(pattern string, h http.Handler, options ...interface{}) {
 	route := &controllerInfo{}
 	route.pattern = pattern
@@ -359,7 +361,7 @@ func (p *ControllerRegister) Handler(pattern string, h http.Handler, options ...
 	}
 }
 
-// Add auto router to ControllerRegister.
+// AddAuto router to ControllerRegister.
 // example beego.AddAuto(&MainContorlller{}),
 // MainController has method List and Page.
 // visit the url /main/list to execute List function
@@ -368,7 +370,7 @@ func (p *ControllerRegister) AddAuto(c ControllerInterface) {
 	p.AddAutoPrefix("/", c)
 }
 
-// Add auto router to ControllerRegister with prefix.
+// AddAutoPrefix Add auto router to ControllerRegister with prefix.
 // example beego.AddAutoPrefix("/admin",&MainContorlller{}),
 // MainController has method List and Page.
 // visit the url /admin/main/list to execute List function
@@ -399,7 +401,7 @@ func (p *ControllerRegister) AddAutoPrefix(prefix string, c ControllerInterface)
 	}
 }
 
-// Add a FilterFunc with pattern rule and action constant.
+// InsertFilter Add a FilterFunc with pattern rule and action constant.
 // The bool params is for setting the returnOnOutput value (false allows multiple filters to execute)
 func (p *ControllerRegister) InsertFilter(pattern string, pos int, filter FilterFunc, params ...bool) error {
 
@@ -426,9 +428,9 @@ func (p *ControllerRegister) insertFilterRouter(pos int, mr *FilterRouter) error
 	return nil
 }
 
-// UrlFor does another controller handler in this request function.
+// URLFor does another controller handler in this request function.
 // it can access any controller method.
-func (p *ControllerRegister) UrlFor(endpoint string, values ...interface{}) string {
+func (p *ControllerRegister) URLFor(endpoint string, values ...interface{}) string {
 	paths := strings.Split(endpoint, ".")
 	if len(paths) <= 1 {
 		Warn("urlfor endpoint must like path.controller.method")
@@ -469,7 +471,7 @@ func (p *ControllerRegister) geturl(t *Tree, url, controllName, methodName strin
 		}
 	}
 	if t.wildcard != nil {
-		u := path.Join(url, url_placeholder)
+		u := path.Join(url, urlPlaceholder)
 		ok, u := p.geturl(t.wildcard, u, controllName, methodName, params, httpMethod)
 		if ok {
 			return ok, u
@@ -499,22 +501,21 @@ func (p *ControllerRegister) geturl(t *Tree, url, controllName, methodName strin
 				if find {
 					if l.regexps == nil {
 						if len(l.wildcards) == 0 {
-							return true, strings.Replace(url, "/"+url_placeholder, "", 1) + tourl(params)
+							return true, strings.Replace(url, "/"+urlPlaceholder, "", 1) + tourl(params)
 						}
 						if len(l.wildcards) == 1 {
 							if v, ok := params[l.wildcards[0]]; ok {
 								delete(params, l.wildcards[0])
-								return true, strings.Replace(url, url_placeholder, v, 1) + tourl(params)
-							} else {
-								return false, ""
+								return true, strings.Replace(url, urlPlaceholder, v, 1) + tourl(params)
 							}
+							return false, ""
 						}
 						if len(l.wildcards) == 3 && l.wildcards[0] == "." {
 							if p, ok := params[":path"]; ok {
 								if e, isok := params[":ext"]; isok {
 									delete(params, ":path")
 									delete(params, ":ext")
-									return true, strings.Replace(url, url_placeholder, p+"."+e, -1) + tourl(params)
+									return true, strings.Replace(url, urlPlaceholder, p+"."+e, -1) + tourl(params)
 								}
 							}
 						}
@@ -526,45 +527,43 @@ func (p *ControllerRegister) geturl(t *Tree, url, controllName, methodName strin
 							}
 							if u, ok := params[v]; ok {
 								delete(params, v)
-								url = strings.Replace(url, url_placeholder, u, 1)
+								url = strings.Replace(url, urlPlaceholder, u, 1)
 							} else {
 								if canskip {
 									canskip = false
 									continue
-								} else {
-									return false, ""
 								}
+								return false, ""
 							}
 						}
 						return true, url + tourl(params)
-					} else {
-						var i int
-						var startreg bool
-						regurl := ""
-						for _, v := range strings.Trim(l.regexps.String(), "^$") {
-							if v == '(' {
-								startreg = true
-								continue
-							} else if v == ')' {
-								startreg = false
-								if v, ok := params[l.wildcards[i]]; ok {
-									delete(params, l.wildcards[i])
-									regurl = regurl + v
-									i++
-								} else {
-									break
-								}
-							} else if !startreg {
-								regurl = string(append([]rune(regurl), v))
+					}
+					var i int
+					var startreg bool
+					regurl := ""
+					for _, v := range strings.Trim(l.regexps.String(), "^$") {
+						if v == '(' {
+							startreg = true
+							continue
+						} else if v == ')' {
+							startreg = false
+							if v, ok := params[l.wildcards[i]]; ok {
+								delete(params, l.wildcards[i])
+								regurl = regurl + v
+								i++
+							} else {
+								break
 							}
+						} else if !startreg {
+							regurl = string(append([]rune(regurl), v))
 						}
-						if l.regexps.MatchString(regurl) {
-							ps := strings.Split(regurl, "/")
-							for _, p := range ps {
-								url = strings.Replace(url, url_placeholder, p, 1)
-							}
-							return true, url + tourl(params)
+					}
+					if l.regexps.MatchString(regurl) {
+						ps := strings.Split(regurl, "/")
+						for _, p := range ps {
+							url = strings.Replace(url, urlPlaceholder, p, 1)
 						}
+						return true, url + tourl(params)
 					}
 				}
 			}
@@ -607,7 +606,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		urlPath = r.URL.Path
 	}
 	// defined filter function
-	do_filter := func(pos int) (started bool) {
+	doFilter := func(pos int) (started bool) {
 		if p.enableFilter {
 			if l, ok := p.filters[pos]; ok {
 				for _, filterR := range l {
@@ -639,7 +638,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	// filter for static file
-	if do_filter(BeforeStatic) {
+	if doFilter(BeforeStatic) {
 		goto Admin
 	}
 
@@ -670,7 +669,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		context.Input.ParseFormOrMulitForm(MaxMemory)
 	}
 
-	if do_filter(BeforeRouter) {
+	if doFilter(BeforeRouter) {
 		goto Admin
 	}
 
@@ -681,17 +680,17 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	if !findrouter {
-		http_method := r.Method
+		httpMethod := r.Method
 
-		if http_method == "POST" && context.Input.Query("_method") == "PUT" {
-			http_method = "PUT"
+		if httpMethod == "POST" && context.Input.Query("_method") == "PUT" {
+			httpMethod = "PUT"
 		}
 
-		if http_method == "POST" && context.Input.Query("_method") == "DELETE" {
-			http_method = "DELETE"
+		if httpMethod == "POST" && context.Input.Query("_method") == "DELETE" {
+			httpMethod = "DELETE"
 		}
 
-		if t, ok := p.routers[http_method]; ok {
+		if t, ok := p.routers[httpMethod]; ok {
 			runObject, p := t.Match(urlPath)
 			if r, ok := runObject.(*controllerInfo); ok {
 				routerInfo = r
@@ -718,7 +717,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	if findrouter {
 		//execute middleware filters
-		if do_filter(BeforeExec) {
+		if doFilter(BeforeExec) {
 			goto Admin
 		}
 		isRunable := false
@@ -798,7 +797,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 					execController.Options()
 				default:
 					if !execController.HandlerFunc(runMethod) {
-						in := make([]reflect.Value, 0)
+						var in []reflect.Value
 						method := vc.MethodByName(runMethod)
 						method.Call(in)
 					}
@@ -819,12 +818,12 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}
 
 		//execute middleware filters
-		if do_filter(AfterExec) {
+		if doFilter(AfterExec) {
 			goto Admin
 		}
 	}
 
-	do_filter(FinishRouter)
+	doFilter(FinishRouter)
 
 Admin:
 	timeend := time.Since(starttime)
@@ -850,7 +849,7 @@ Admin:
 		} else {
 			devinfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s |", r.Method, r.URL.Path, timeend.String(), "notmatch")
 		}
-		if DefaultLogFilter == nil || !DefaultLogFilter.Filter(context) {
+		if DefaultAccessLogFilter == nil || !DefaultAccessLogFilter.Filter(context) {
 			Debug(devinfo)
 		}
 	}
