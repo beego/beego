@@ -362,7 +362,7 @@ func gatewayTimeout(rw http.ResponseWriter, r *http.Request) {
 // usage:
 // 	beego.ErrorHandler("404",NotFound)
 //	beego.ErrorHandler("500",InternalServerError)
-func Errorhandler(code string, h http.HandlerFunc) *App {
+func ErrorHandler(code string, h http.HandlerFunc) *App {
 	errinfo := &errorInfo{}
 	errinfo.errorType = errorTypeHandler
 	errinfo.handler = h
@@ -373,7 +373,7 @@ func Errorhandler(code string, h http.HandlerFunc) *App {
 
 // ErrorController registers ControllerInterface to each http err code string.
 // usage:
-// 	beego.ErrorHandler(&controllers.ErrorController{})
+// 	beego.ErrorController(&controllers.ErrorController{})
 func ErrorController(c ControllerInterface) *App {
 	reflectVal := reflect.ValueOf(c)
 	rt := reflectVal.Type()
@@ -431,7 +431,7 @@ func executeError(err *errorInfo, ctx *context.Context, code int) {
 
 		execController.URLMapping()
 
-		in := make([]reflect.Value, 0)
+		var in []reflect.Value
 		method := vc.MethodByName(err.method)
 		method.Call(in)
 

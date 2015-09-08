@@ -14,7 +14,7 @@
 
 package beego
 
-var mimemaps map[string]string = map[string]string{
+var mimemaps = map[string]string{
 	".3dm":         "x-world/x-3dmf",
 	".3dmf":        "x-world/x-3dmf",
 	".7z":          "application/x-7z-compressed",

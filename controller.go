@@ -88,8 +88,8 @@ type ControllerInterface interface {
 	Options()
 	Finish()
 	Render() error
-	XsrfToken() string
-	CheckXsrfCookie() bool
+	XSRFToken() string
+	CheckXSRFCookie() bool
 	HandlerFunc(fn string) bool
 	URLMapping()
 }

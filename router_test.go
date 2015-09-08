@@ -53,7 +53,7 @@ func (tc *TestController) Myext() {
 }
 
 func (tc *TestController) GetUrl() {
-	tc.Ctx.Output.Body([]byte(tc.UrlFor(".Myext")))
+	tc.Ctx.Output.Body([]byte(tc.URLFor(".Myext")))
 }
 
 func (t *TestController) GetParams() {
@@ -76,7 +76,7 @@ type JsonController struct {
 
 func (this *JsonController) Prepare() {
 	this.Data["json"] = "prepare"
-	this.ServeJson(true)
+	this.ServeJSON(true)
 }
 
 func (this *JsonController) Get() {
