@@ -43,13 +43,13 @@ func init() {
 	beegoTplFuncMap["not_nil"] = NotNil
 	beegoTplFuncMap["not_null"] = NotNil
 	beegoTplFuncMap["substr"] = Substr
-	beegoTplFuncMap["html2str"] = Html2str
+	beegoTplFuncMap["html2str"] = HTML2str
 	beegoTplFuncMap["str2html"] = Str2html
 	beegoTplFuncMap["htmlquote"] = Htmlquote
 	beegoTplFuncMap["htmlunquote"] = Htmlunquote
 	beegoTplFuncMap["renderform"] = RenderForm
 	beegoTplFuncMap["assets_js"] = AssetsJs
-	beegoTplFuncMap["assets_css"] = AssetsCss
+	beegoTplFuncMap["assets_css"] = AssetsCSS
 	beegoTplFuncMap["config"] = Config
 	beegoTplFuncMap["map_get"] = MapGet
 

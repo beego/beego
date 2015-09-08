@@ -40,7 +40,7 @@ func TestHtml2str(t *testing.T) {
 
 
 	\n`
-	if Html2str(h) != "123\\n\n\\n" {
+	if HTML2str(h) != "123\\n\n\\n" {
 		t.Error("should be equal")
 	}
 }
@@ -82,15 +82,15 @@ func TestCompareRelated(t *testing.T) {
 	if !Compare("1", 1) {
 		t.Error("should be equal")
 	}
-    if CompareNot("abc", "abc") {
-        t.Error("should be equal")
-    }
-    if !CompareNot("abc", "aBc") {
-        t.Error("should be not equal")
-    }
-    if !NotNil("a string") {
-        t.Error("should not be nil")
-    }
+	if CompareNot("abc", "abc") {
+		t.Error("should be equal")
+	}
+	if !CompareNot("abc", "aBc") {
+		t.Error("should be not equal")
+	}
+	if !NotNil("a string") {
+		t.Error("should not be nil")
+	}
 }
 
 func TestHtmlquote(t *testing.T) {
@@ -111,7 +111,7 @@ func TestHtmlunquote(t *testing.T) {
 
 func TestParseForm(t *testing.T) {
 	type user struct {
-		Id      int         `form:"-"`
+		ID      int         `form:"-"`
 		tag     string      `form:"tag"`
 		Name    interface{} `form:"username"`
 		Age     int         `form:"age,text"`
@@ -123,7 +123,7 @@ func TestParseForm(t *testing.T) {
 
 	u := user{}
 	form := url.Values{
-		"Id":       []string{"1"},
+		"ID":       []string{"1"},
 		"-":        []string{"1"},
 		"tag":      []string{"no"},
 		"username": []string{"test"},
@@ -139,8 +139,8 @@ func TestParseForm(t *testing.T) {
 	if err := ParseForm(form, &u); err != nil {
 		t.Fatal(err)
 	}
-	if u.Id != 0 {
-		t.Errorf("Id should equal 0 but got %v", u.Id)
+	if u.ID != 0 {
+		t.Errorf("ID should equal 0 but got %v", u.ID)
 	}
 	if len(u.tag) != 0 {
 		t.Errorf("tag's length should equal 0 but got %v", len(u.tag))
@@ -168,7 +168,7 @@ func TestParseForm(t *testing.T) {
 
 func TestRenderForm(t *testing.T) {
 	type user struct {
-		Id      int         `form:"-"`
+		ID      int         `form:"-"`
 		tag     string      `form:"tag"`
 		Name    interface{} `form:"username"`
 		Age     int         `form:"age,text,年龄："`
