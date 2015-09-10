@@ -20,8 +20,8 @@
 //
 // Usage:
 // import(
-//   _ "github.com/astaxie/beego/session/couchbase"
-//   "github.com/astaxie/beego/session"
+//   _ "github.com/dvwallin/beego/session/couchbase"
+//   "github.com/dvwallin/beego/session"
 // )
 //
 //	func init() {
@@ -37,9 +37,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/couchbaselabs/go-couchbase"
-
-	"github.com/astaxie/beego/session"
+	"github.com/dvwallin/beego/session"
 )
 
 var couchbpder = &CouchbaseProvider{}

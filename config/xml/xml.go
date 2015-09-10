@@ -20,8 +20,8 @@
 //
 // Usage:
 // import(
-//   _ "github.com/astaxie/beego/config/xml"
-//   "github.com/astaxie/beego/config"
+//   _ "github.com/dvwallin/beego/config/xml"
+//   "github.com/dvwallin/beego/config"
 // )
 //
 //  cnf, err := config.NewConfig("xml", "config.xml")
@@ -41,8 +41,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/astaxie/beego/config"
 	"github.com/beego/x2j"
+	"github.com/dvwallin/beego/config"
 )
 
 // XmlConfig is a xml config parser and implements Config interface.

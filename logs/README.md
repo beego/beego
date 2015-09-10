@@ -4,7 +4,7 @@ logs is a Go logs manager. It can use many logs adapters. The repo is inspired b
 
 ## How to install?
 
-	go get github.com/astaxie/beego/logs
+	go get github.com/dvwallin/beego/logs
 
 
 ## What adapters are supported?
@@ -17,7 +17,7 @@ As of now this logs support console, file,smtp and conn.
 First you must import it
 
 	import (
-		"github.com/astaxie/beego/logs"
+		"github.com/dvwallin/beego/logs"
 	)
 
 Then init a Log (example with console adapter)

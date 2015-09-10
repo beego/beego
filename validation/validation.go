@@ -15,7 +15,7 @@
 // package for validations
 //
 //	import (
-//		"github.com/astaxie/beego/validation"
+//		"github.com/dvwallin/beego/validation"
 //		"log"
 //	)
 //
@@ -107,7 +107,7 @@ type Validation struct {
 // Clean all ValidationError.
 func (v *Validation) Clear() {
 	v.Errors = []*ValidationError{}
- 	v.ErrorsMap = nil
+	v.ErrorsMap = nil
 }
 
 // Has ValidationError nor not.

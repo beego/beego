@@ -21,8 +21,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/astaxie/beego/context"
-	"github.com/astaxie/beego/utils"
+	"github.com/dvwallin/beego/context"
+	"github.com/dvwallin/beego/utils"
 )
 
 func serverStaticRouter(ctx *context.Context) {
@@ -80,7 +80,7 @@ func serverStaticRouter(ctx *context.Context) {
 				}
 			}
 
-			//This block obtained from (https://github.com/smithfox/beego) - it should probably get merged into astaxie/beego after a pull request
+			//This block obtained from (https://github.com/smithfox/beego) - it should probably get merged into dvwallin/beego after a pull request
 			isStaticFileToCompress := false
 			if StaticExtensionsToGzip != nil && len(StaticExtensionsToGzip) > 0 {
 				for _, statExtension := range StaticExtensionsToGzip {

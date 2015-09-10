@@ -20,7 +20,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/astaxie/beego/context"
+	"github.com/dvwallin/beego/context"
 )
 
 type TestController struct {
@@ -28,7 +28,7 @@ type TestController struct {
 }
 
 func (tc *TestController) Get() {
-	tc.Data["Username"] = "astaxie"
+	tc.Data["Username"] = "dvwallin"
 	tc.Ctx.Output.Body([]byte("ok"))
 }
 
@@ -80,7 +80,7 @@ func (this *JsonController) Prepare() {
 }
 
 func (this *JsonController) Get() {
-	this.Data["Username"] = "astaxie"
+	this.Data["Username"] = "dvwallin"
 	this.Ctx.Output.Body([]byte("ok"))
 }
 
@@ -114,9 +114,9 @@ func TestUrlFor2(t *testing.T) {
 	handler.Add("/v1/:username/edit", &TestController{}, "get:GetUrl")
 	handler.Add("/v1/:v(.+)_cms/ttt_:id(.+)_:page(.+).html", &TestController{}, "*:Param")
 	handler.Add("/:year:int/:month:int/:title/:entid", &TestController{})
-	if handler.UrlFor("TestController.GetUrl", ":username", "astaxie") != "/v1/astaxie/edit" {
+	if handler.UrlFor("TestController.GetUrl", ":username", "dvwallin") != "/v1/dvwallin/edit" {
 		Info(handler.UrlFor("TestController.GetUrl"))
-		t.Errorf("TestController.List must equal to /v1/astaxie/edit")
+		t.Errorf("TestController.List must equal to /v1/dvwallin/edit")
 	}
 
 	if handler.UrlFor("TestController.List", ":v", "za", ":id", "12", ":page", "123") !=
@@ -150,14 +150,14 @@ func TestUserFunc(t *testing.T) {
 }
 
 func TestPostFunc(t *testing.T) {
-	r, _ := http.NewRequest("POST", "/astaxie", nil)
+	r, _ := http.NewRequest("POST", "/dvwallin", nil)
 	w := httptest.NewRecorder()
 
 	handler := NewControllerRegister()
 	handler.Add("/:name", &TestController{})
 	handler.ServeHTTP(w, r)
-	if w.Body.String() != "astaxie" {
-		t.Errorf("post func should astaxie")
+	if w.Body.String() != "dvwallin" {
+		t.Errorf("post func should dvwallin")
 	}
 }
 

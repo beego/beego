@@ -29,9 +29,9 @@ import (
 	"strings"
 	"time"
 
-	beecontext "github.com/astaxie/beego/context"
-	"github.com/astaxie/beego/toolbox"
-	"github.com/astaxie/beego/utils"
+	beecontext "github.com/dvwallin/beego/context"
+	"github.com/dvwallin/beego/toolbox"
+	"github.com/dvwallin/beego/utils"
 )
 
 const (
@@ -617,7 +617,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 					if ok, params := filterR.ValidRouter(urlPath); ok {
 						for k, v := range params {
 							if context.Input.Params == nil {
-								context.Input.Params = make(map[string]string)	
+								context.Input.Params = make(map[string]string)
 							}
 							context.Input.Params[k] = v
 						}
