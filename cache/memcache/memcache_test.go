@@ -17,10 +17,11 @@ package memcache
 import (
 	_ "github.com/bradfitz/gomemcache/memcache"
 
-	"github.com/astaxie/beego/cache"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/dvwallin/beego/cache"
 )
 
 func TestRedisCache(t *testing.T) {
