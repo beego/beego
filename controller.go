@@ -327,7 +327,7 @@ func (c *Controller) ServeJSON(encoding ...bool) {
 	if len(encoding) > 0 && encoding[0] == true {
 		hasencoding = true
 	}
-	c.Ctx.Output.Json(c.Data["json"], hasIndent, hasencoding)
+	c.Ctx.Output.JSON(c.Data["json"], hasIndent, hasencoding)
 }
 
 // ServeJSONP sends a jsonp response.
@@ -338,7 +338,7 @@ func (c *Controller) ServeJSONP() {
 	} else {
 		hasIndent = true
 	}
-	c.Ctx.Output.Jsonp(c.Data["jsonp"], hasIndent)
+	c.Ctx.Output.JSONP(c.Data["jsonp"], hasIndent)
 }
 
 // ServeXML sends xml response.
@@ -349,7 +349,7 @@ func (c *Controller) ServeXML() {
 	} else {
 		hasIndent = true
 	}
-	c.Ctx.Output.Xml(c.Data["xml"], hasIndent)
+	c.Ctx.Output.XML(c.Data["xml"], hasIndent)
 }
 
 // ServeFormatted serve Xml OR Json, depending on the value of the Accept header
@@ -630,7 +630,7 @@ func (c *Controller) XSRFToken() string {
 		} else {
 			expire = int64(XSRFExpire)
 		}
-		c._xsrfToken = c.Ctx.XsrfToken(XSRFKEY, expire)
+		c._xsrfToken = c.Ctx.XSRFToken(XSRFKEY, expire)
 	}
 	return c._xsrfToken
 }
@@ -642,7 +642,7 @@ func (c *Controller) CheckXSRFCookie() bool {
 	if !c.EnableXSRF {
 		return true
 	}
-	return c.Ctx.CheckXsrfCookie()
+	return c.Ctx.CheckXSRFCookie()
 }
 
 // XSRFFormHTML writes an input field contains xsrf token value.

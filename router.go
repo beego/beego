@@ -875,7 +875,7 @@ func (p *ControllerRegister) recoverPanic(context *beecontext.Context) {
 				}
 			}
 			var stack string
-			Critical("the request url is ", context.Input.Url())
+			Critical("the request url is ", context.Input.URL())
 			Critical("Handler crashed with error", err)
 			for i := 1; ; i++ {
 				_, file, line, ok := runtime.Caller(i)

@@ -87,7 +87,7 @@ func showErr(err interface{}, ctx *context.Context, Stack string) {
 	data := make(map[string]string)
 	data["AppError"] = AppName + ":" + fmt.Sprint(err)
 	data["RequestMethod"] = ctx.Input.Method()
-	data["RequestURL"] = ctx.Input.Uri()
+	data["RequestURL"] = ctx.Input.URI()
 	data["RemoteAddr"] = ctx.Input.IP()
 	data["Stack"] = Stack
 	data["BeegoVersion"] = VERSION
