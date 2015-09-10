@@ -25,6 +25,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/pingcap/tidb"
 )
 
 // A slice string field.
@@ -345,6 +346,7 @@ var (
 	IsMysql    = DBARGS.Driver == "mysql"
 	IsSqlite   = DBARGS.Driver == "sqlite3"
 	IsPostgres = DBARGS.Driver == "postgres"
+	IsTidb     = DBARGS.Driver == "tidb"
 )
 
 var (
@@ -364,6 +366,7 @@ Default DB Drivers.
    mysql: https://github.com/go-sql-driver/mysql
  sqlite3: https://github.com/mattn/go-sqlite3
 postgres: https://github.com/lib/pq
+tidb: https://github.com/pingcap/tidb
 
 usage:
 
@@ -371,6 +374,7 @@ go get -u github.com/astaxie/beego/orm
 go get -u github.com/go-sql-driver/mysql
 go get -u github.com/mattn/go-sqlite3
 go get -u github.com/lib/pq
+go get -u github.com/pingcap/tidb
 
 #### MySQL
 mysql -u root -e 'create database orm_test;'
@@ -390,6 +394,12 @@ psql -c 'create database orm_test;' -U postgres
 export ORM_DRIVER=postgres
 export ORM_SOURCE="user=postgres dbname=orm_test sslmode=disable"
 go test -v github.com/astaxie/beego/orm
+
+#### TiDB
+export ORM_DRIVER=tidb
+export ORM_SOURCE='memory://test'
+go test -v github.com/astaxie/beego/orm
+
 `)
 		os.Exit(2)
 	}
