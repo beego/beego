@@ -77,7 +77,10 @@ func parserPkg(pkgRealpath, pkgpath string) error {
 				switch specDecl := d.(type) {
 				case *ast.FuncDecl:
 					if specDecl.Recv != nil {
-						parserComments(specDecl.Doc, specDecl.Name.String(), fmt.Sprint(specDecl.Recv.List[0].Type.(*ast.StarExpr).X), pkgpath)
+						exp, ok := specDecl.Recv.List[0].Type.(*ast.StarExpr) // Check that the type is correct first beforing throwing to parser
+						if ok {
+							parserComments(specDecl.Doc, specDecl.Name.String(), fmt.Sprint(exp.X), pkgpath)
+						}
 					}
 				}
 			}
