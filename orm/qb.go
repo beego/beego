@@ -46,8 +46,8 @@ type QueryBuilder interface {
 func NewQueryBuilder(driver string) (qb QueryBuilder, err error) {
 	if driver == "mysql" {
 		qb = new(MySQLQueryBuilder)
-	} else if driver == "mysql" {
-		qb = new(MySQLQueryBuilder)
+	} else if driver == "tidb" {
+		qb = new(TiDBQueryBuilder)
 	} else if driver == "postgres" {
 		err = errors.New("postgres query builder is not supported yet!")
 	} else if driver == "sqlite" {
