@@ -802,6 +802,7 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 	tables.parseRelated(qs.related, qs.relDepth)
 
 	where, args := tables.getCondSql(cond, false, tz)
+	groupBy := tables.getGroupSql(qs.groups)
 	orderBy := tables.getOrderSql(qs.orders)
 	limit := tables.getLimitSql(mi, offset, rlimit)
 	join := tables.getJoinSql()
@@ -814,7 +815,11 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 		}
 	}
 
-	query := fmt.Sprintf("SELECT %s FROM %s%s%s T0 %s%s%s%s", sels, Q, mi.table, Q, join, where, orderBy, limit)
+	sqlSelect := "SELECT"
+	if qs.distinct {
+		sqlSelect += " DISTINCT"
+	}
+	query := fmt.Sprintf("%s %s FROM %s%s%s T0 %s%s%s%s%s", sqlSelect, sels, Q, mi.table, Q, join, where, groupBy, orderBy, limit)
 
 	d.ins.ReplaceMarks(&query)
 
@@ -1444,13 +1449,14 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 	}
 
 	where, args := tables.getCondSql(cond, false, tz)
+	groupBy := tables.getGroupSql(qs.groups)
 	orderBy := tables.getOrderSql(qs.orders)
 	limit := tables.getLimitSql(mi, qs.offset, qs.limit)
 	join := tables.getJoinSql()
 
 	sels := strings.Join(cols, ", ")
 
-	query := fmt.Sprintf("SELECT %s FROM %s%s%s T0 %s%s%s%s", sels, Q, mi.table, Q, join, where, orderBy, limit)
+	query := fmt.Sprintf("SELECT %s FROM %s%s%s T0 %s%s%s%s%s", sels, Q, mi.table, Q, join, where, groupBy,orderBy, limit)
 
 	d.ins.ReplaceMarks(&query)
 

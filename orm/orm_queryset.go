@@ -60,7 +60,9 @@ type querySet struct {
 	relDepth int
 	limit    int64
 	offset   int64
+	groups   []string
 	orders   []string
+	distinct bool
 	orm      *orm
 }
 
@@ -105,10 +107,22 @@ func (o querySet) Offset(offset interface{}) QuerySeter {
 	return &o
 }
 
+// add GROUP expression
+func (o querySet) GroupBy(exprs ...string) QuerySeter {
+	o.groups = exprs
+	return &o
+}
+
 // add ORDER expression.
 // "column" means ASC, "-column" means DESC.
 func (o querySet) OrderBy(exprs ...string) QuerySeter {
 	o.orders = exprs
+	return &o
+}
+
+// add DISTINCT to SELECT
+func (o querySet) Distinct() QuerySeter {
+	o.distinct = true
 	return &o
 }
 

@@ -31,9 +31,9 @@ import (
 // Regexes for checking the accept headers
 // TODO make sure these are correct
 var (
-	acceptsHtmlRegex = regexp.MustCompile(`(text/html|application/xhtml\+xml)(?:,|$)`)
-	acceptsXmlRegex  = regexp.MustCompile(`(application/xml|text/xml)(?:,|$)`)
-	acceptsJsonRegex = regexp.MustCompile(`(application/json)(?:,|$)`)
+	acceptsHTMLRegex = regexp.MustCompile(`(text/html|application/xhtml\+xml)(?:,|$)`)
+	acceptsXMLRegex  = regexp.MustCompile(`(application/xml|text/xml)(?:,|$)`)
+	acceptsJSONRegex = regexp.MustCompile(`(application/json)(?:,|$)`)
 )
 
 // BeegoInput operates the http request header, data, cookie and body.
@@ -62,13 +62,13 @@ func (input *BeegoInput) Protocol() string {
 	return input.Request.Proto
 }
 
-// Uri returns full request url with query string, fragment.
-func (input *BeegoInput) Uri() string {
+// URI returns full request url with query string, fragment.
+func (input *BeegoInput) URI() string {
 	return input.Request.RequestURI
 }
 
-// Url returns request url path (without query string, fragment).
-func (input *BeegoInput) Url() string {
+// URL returns request url path (without query string, fragment).
+func (input *BeegoInput) URL() string {
 	return input.Request.URL.Path
 }
 
@@ -117,37 +117,37 @@ func (input *BeegoInput) Is(method string) bool {
 	return input.Method() == method
 }
 
-// Is this a GET method request?
+// IsGet Is this a GET method request?
 func (input *BeegoInput) IsGet() bool {
 	return input.Is("GET")
 }
 
-// Is this a POST method request?
+// IsPost Is this a POST method request?
 func (input *BeegoInput) IsPost() bool {
 	return input.Is("POST")
 }
 
-// Is this a Head method request?
+// IsHead Is this a Head method request?
 func (input *BeegoInput) IsHead() bool {
 	return input.Is("HEAD")
 }
 
-// Is this a OPTIONS method request?
+// IsOptions Is this a OPTIONS method request?
 func (input *BeegoInput) IsOptions() bool {
 	return input.Is("OPTIONS")
 }
 
-// Is this a PUT method request?
+// IsPut Is this a PUT method request?
 func (input *BeegoInput) IsPut() bool {
 	return input.Is("PUT")
 }
 
-// Is this a DELETE method request?
+// IsDelete Is this a DELETE method request?
 func (input *BeegoInput) IsDelete() bool {
 	return input.Is("DELETE")
 }
 
-// Is this a PATCH method request?
+// IsPatch Is this a PATCH method request?
 func (input *BeegoInput) IsPatch() bool {
 	return input.Is("PATCH")
 }
@@ -172,19 +172,19 @@ func (input *BeegoInput) IsUpload() bool {
 	return strings.Contains(input.Header("Content-Type"), "multipart/form-data")
 }
 
-// Checks if request accepts html response
-func (input *BeegoInput) AcceptsHtml() bool {
-	return acceptsHtmlRegex.MatchString(input.Header("Accept"))
+// AcceptsHTML Checks if request accepts html response
+func (input *BeegoInput) AcceptsHTML() bool {
+	return acceptsHTMLRegex.MatchString(input.Header("Accept"))
 }
 
-// Checks if request accepts xml response
-func (input *BeegoInput) AcceptsXml() bool {
-	return acceptsXmlRegex.MatchString(input.Header("Accept"))
+// AcceptsXML Checks if request accepts xml response
+func (input *BeegoInput) AcceptsXML() bool {
+	return acceptsXMLRegex.MatchString(input.Header("Accept"))
 }
 
-// Checks if request accepts json response
-func (input *BeegoInput) AcceptsJson() bool {
-	return acceptsJsonRegex.MatchString(input.Header("Accept"))
+// AcceptsJSON Checks if request accepts json response
+func (input *BeegoInput) AcceptsJSON() bool {
+	return acceptsJSONRegex.MatchString(input.Header("Accept"))
 }
 
 // IP returns request client ip.
@@ -314,7 +314,7 @@ func (input *BeegoInput) SetData(key, val interface{}) {
 	input.Data[key] = val
 }
 
-// parseForm or parseMultiForm based on Content-type
+// ParseFormOrMulitForm parseForm or parseMultiForm based on Content-type
 func (input *BeegoInput) ParseFormOrMulitForm(maxMemory int64) error {
 	// Parse the body depending on the content type.
 	if strings.Contains(input.Header("Content-Type"), "multipart/form-data") {
@@ -353,7 +353,7 @@ func (input *BeegoInput) Bind(dest interface{}, key string) error {
 }
 
 func (input *BeegoInput) bind(key string, typ reflect.Type) reflect.Value {
-	rv := reflect.Zero(reflect.TypeOf(0))
+	rv := reflect.Zero(typ)
 	switch typ.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		val := input.Query(key)
@@ -398,7 +398,7 @@ func (input *BeegoInput) bind(key string, typ reflect.Type) reflect.Value {
 }
 
 func (input *BeegoInput) bindValue(val string, typ reflect.Type) reflect.Value {
-	rv := reflect.Zero(reflect.TypeOf(0))
+	rv := reflect.Zero(typ)
 	switch typ.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		rv = input.bindInt(val, typ)

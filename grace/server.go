@@ -15,7 +15,8 @@ import (
 	"time"
 )
 
-type graceServer struct {
+// Server embedded http.Server
+type Server struct {
 	*http.Server
 	GraceListener    net.Listener
 	SignalHooks      map[int]map[os.Signal][]func()
@@ -30,19 +31,19 @@ type graceServer struct {
 // Serve accepts incoming connections on the Listener l,
 // creating a new service goroutine for each.
 // The service goroutines read requests and then call srv.Handler to reply to them.
-func (srv *graceServer) Serve() (err error) {
-	srv.state = STATE_RUNNING
+func (srv *Server) Serve() (err error) {
+	srv.state = StateRunning
 	err = srv.Server.Serve(srv.GraceListener)
 	log.Println(syscall.Getpid(), "Waiting for connections to finish...")
 	srv.wg.Wait()
-	srv.state = STATE_TERMINATE
+	srv.state = StateTerminate
 	return
 }
 
 // ListenAndServe listens on the TCP network address srv.Addr and then calls Serve
 // to handle requests on incoming connections. If srv.Addr is blank, ":http" is
 // used.
-func (srv *graceServer) ListenAndServe() (err error) {
+func (srv *Server) ListenAndServe() (err error) {
 	addr := srv.Addr
 	if addr == "" {
 		addr = ":http"
@@ -83,7 +84,7 @@ func (srv *graceServer) ListenAndServe() (err error) {
 // CA's certificate.
 //
 // If srv.Addr is blank, ":https" is used.
-func (srv *graceServer) ListenAndServeTLS(certFile, keyFile string) (err error) {
+func (srv *Server) ListenAndServeTLS(certFile, keyFile string) (err error) {
 	addr := srv.Addr
 	if addr == "" {
 		addr = ":https"
@@ -131,9 +132,9 @@ func (srv *graceServer) ListenAndServeTLS(certFile, keyFile string) (err error) 
 
 // getListener either opens a new socket to listen on, or takes the acceptor socket
 // it got passed when restarted.
-func (srv *graceServer) getListener(laddr string) (l net.Listener, err error) {
+func (srv *Server) getListener(laddr string) (l net.Listener, err error) {
 	if srv.isChild {
-		var ptrOffset uint = 0
+		var ptrOffset uint
 		if len(socketPtrOffsetMap) > 0 {
 			ptrOffset = socketPtrOffsetMap[laddr]
 			log.Println("laddr", laddr, "ptr offset", socketPtrOffsetMap[laddr])
@@ -157,7 +158,7 @@ func (srv *graceServer) getListener(laddr string) (l net.Listener, err error) {
 
 // handleSignals listens for os Signals and calls any hooked in function that the
 // user had registered with the signal.
-func (srv *graceServer) handleSignals() {
+func (srv *Server) handleSignals() {
 	var sig os.Signal
 
 	signal.Notify(
@@ -170,7 +171,7 @@ func (srv *graceServer) handleSignals() {
 	pid := syscall.Getpid()
 	for {
 		sig = <-srv.sigChan
-		srv.signalHooks(PRE_SIGNAL, sig)
+		srv.signalHooks(PreSignal, sig)
 		switch sig {
 		case syscall.SIGHUP:
 			log.Println(pid, "Received SIGHUP. forking.")
@@ -187,11 +188,11 @@ func (srv *graceServer) handleSignals() {
 		default:
 			log.Printf("Received %v: nothing i care about...\n", sig)
 		}
-		srv.signalHooks(POST_SIGNAL, sig)
+		srv.signalHooks(PostSignal, sig)
 	}
 }
 
-func (srv *graceServer) signalHooks(ppFlag int, sig os.Signal) {
+func (srv *Server) signalHooks(ppFlag int, sig os.Signal) {
 	if _, notSet := srv.SignalHooks[ppFlag][sig]; !notSet {
 		return
 	}
@@ -204,12 +205,12 @@ func (srv *graceServer) signalHooks(ppFlag int, sig os.Signal) {
 // shutdown closes the listener so that no new connections are accepted. it also
 // starts a goroutine that will serverTimeout (stop all running requests) the server
 // after DefaultTimeout.
-func (srv *graceServer) shutdown() {
-	if srv.state != STATE_RUNNING {
+func (srv *Server) shutdown() {
+	if srv.state != StateRunning {
 		return
 	}
 
-	srv.state = STATE_SHUTTING_DOWN
+	srv.state = StateShuttingDown
 	if DefaultTimeout >= 0 {
 		go srv.serverTimeout(DefaultTimeout)
 	}
@@ -224,26 +225,26 @@ func (srv *graceServer) shutdown() {
 // serverTimeout forces the server to shutdown in a given timeout - whether it
 // finished outstanding requests or not. if Read/WriteTimeout are not set or the
 // max header size is very big a connection could hang
-func (srv *graceServer) serverTimeout(d time.Duration) {
+func (srv *Server) serverTimeout(d time.Duration) {
 	defer func() {
 		if r := recover(); r != nil {
 			log.Println("WaitGroup at 0", r)
 		}
 	}()
-	if srv.state != STATE_SHUTTING_DOWN {
+	if srv.state != StateShuttingDown {
 		return
 	}
 	time.Sleep(d)
 	log.Println("[STOP - Hammer Time] Forcefully shutting down parent")
 	for {
-		if srv.state == STATE_TERMINATE {
+		if srv.state == StateTerminate {
 			break
 		}
 		srv.wg.Done()
 	}
 }
 
-func (srv *graceServer) fork() (err error) {
+func (srv *Server) fork() (err error) {
 	regLock.Lock()
 	defer regLock.Unlock()
 	if runningServersForked {
