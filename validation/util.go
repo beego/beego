@@ -23,7 +23,8 @@ import (
 )
 
 const (
-	VALIDTAG = "valid"
+	// ValidTag struct tag
+	ValidTag = "valid"
 )
 
 var (
@@ -55,16 +56,16 @@ func init() {
 	}
 }
 
-// Valid function type
+// ValidFunc Valid function type
 type ValidFunc struct {
 	Name   string
 	Params []interface{}
 }
 
-// Validate function map
+// Funcs Validate function map
 type Funcs map[string]reflect.Value
 
-// validate values with named type string
+// Call validate values with named type string
 func (f Funcs) Call(name string, params ...interface{}) (result []reflect.Value, err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -96,7 +97,7 @@ func isStructPtr(t reflect.Type) bool {
 }
 
 func getValidFuncs(f reflect.StructField) (vfs []ValidFunc, err error) {
-	tag := f.Tag.Get(VALIDTAG)
+	tag := f.Tag.Get(ValidTag)
 	if len(tag) == 0 {
 		return
 	}

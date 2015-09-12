@@ -302,7 +302,7 @@ func TestZipCode(t *testing.T) {
 
 func TestValid(t *testing.T) {
 	type user struct {
-		Id   int
+		ID   int
 		Name string `valid:"Required;Match(/^(test)?\\w*@(/test/);com$/)"`
 		Age  int    `valid:"Required;Range(1, 140)"`
 	}
@@ -352,13 +352,13 @@ func TestValid(t *testing.T) {
 
 func TestRecursiveValid(t *testing.T) {
 	type User struct {
-		Id   int
+		ID   int
 		Name string `valid:"Required;Match(/^(test)?\\w*@(/test/);com$/)"`
 		Age  int    `valid:"Required;Range(1, 140)"`
 	}
 
 	type AnonymouseUser struct {
-		Id2   int
+		ID2   int
 		Name2 string `valid:"Required;Match(/^(test)?\\w*@(/test/);com$/)"`
 		Age2  int    `valid:"Required;Range(1, 140)"`
 	}
