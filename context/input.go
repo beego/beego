@@ -39,7 +39,7 @@ var (
 // BeegoInput operates the http request header, data, cookie and body.
 // it also contains router params and current session.
 type BeegoInput struct {
-	CruSession    session.SessionStore
+	CruSession    session.Store
 	Params        map[string]string
 	Data          map[interface{}]interface{} // store some values in this context when calling context in filter or controller.
 	Request       *http.Request

@@ -1,4 +1,5 @@
-package session
+// Package ledis provide session Provider
+package ledis
 
 import (
 	"net/http"
@@ -11,59 +12,58 @@ import (
 	"github.com/siddontang/ledisdb/ledis"
 )
 
-var ledispder = &LedisProvider{}
+var ledispder = &Provider{}
 var c *ledis.DB
 
-// ledis session store
-type LedisSessionStore struct {
+// SessionStore ledis session store
+type SessionStore struct {
 	sid         string
 	lock        sync.RWMutex
 	values      map[interface{}]interface{}
 	maxlifetime int64
 }
 
-// set value in ledis session
-func (ls *LedisSessionStore) Set(key, value interface{}) error {
+// Set value in ledis session
+func (ls *SessionStore) Set(key, value interface{}) error {
 	ls.lock.Lock()
 	defer ls.lock.Unlock()
 	ls.values[key] = value
 	return nil
 }
 
-// get value in ledis session
-func (ls *LedisSessionStore) Get(key interface{}) interface{} {
+// Get value in ledis session
+func (ls *SessionStore) Get(key interface{}) interface{} {
 	ls.lock.RLock()
 	defer ls.lock.RUnlock()
 	if v, ok := ls.values[key]; ok {
 		return v
-	} else {
-		return nil
 	}
+	return nil
 }
 
-// delete value in ledis session
-func (ls *LedisSessionStore) Delete(key interface{}) error {
+// Delete value in ledis session
+func (ls *SessionStore) Delete(key interface{}) error {
 	ls.lock.Lock()
 	defer ls.lock.Unlock()
 	delete(ls.values, key)
 	return nil
 }
 
-// clear all values in ledis session
-func (ls *LedisSessionStore) Flush() error {
+// Flush clear all values in ledis session
+func (ls *SessionStore) Flush() error {
 	ls.lock.Lock()
 	defer ls.lock.Unlock()
 	ls.values = make(map[interface{}]interface{})
 	return nil
 }
 
-// get ledis session id
-func (ls *LedisSessionStore) SessionID() string {
+// SessionID get ledis session id
+func (ls *SessionStore) SessionID() string {
 	return ls.sid
 }
 
-// save session values to ledis
-func (ls *LedisSessionStore) SessionRelease(w http.ResponseWriter) {
+// SessionRelease save session values to ledis
+func (ls *SessionStore) SessionRelease(w http.ResponseWriter) {
 	b, err := session.EncodeGob(ls.values)
 	if err != nil {
 		return
@@ -72,17 +72,17 @@ func (ls *LedisSessionStore) SessionRelease(w http.ResponseWriter) {
 	c.Expire([]byte(ls.sid), ls.maxlifetime)
 }
 
-// ledis session provider
-type LedisProvider struct {
+// Provider ledis session provider
+type Provider struct {
 	maxlifetime int64
 	savePath    string
 	db          int
 }
 
-// init ledis session
+// SessionInit init ledis session
 // savepath like ledis server saveDataPath,pool size
 // e.g. 127.0.0.1:6379,100,astaxie
-func (lp *LedisProvider) SessionInit(maxlifetime int64, savePath string) error {
+func (lp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 	var err error
 	lp.maxlifetime = maxlifetime
 	configs := strings.Split(savePath, ",")
@@ -106,8 +106,8 @@ func (lp *LedisProvider) SessionInit(maxlifetime int64, savePath string) error {
 	return nil
 }
 
-// read ledis session by sid
-func (lp *LedisProvider) SessionRead(sid string) (session.SessionStore, error) {
+// SessionRead read ledis session by sid
+func (lp *Provider) SessionRead(sid string) (session.Store, error) {
 	kvs, err := c.Get([]byte(sid))
 	var kv map[interface{}]interface{}
 	if len(kvs) == 0 {
@@ -118,22 +118,21 @@ func (lp *LedisProvider) SessionRead(sid string) (session.SessionStore, error) {
 			return nil, err
 		}
 	}
-	ls := &LedisSessionStore{sid: sid, values: kv, maxlifetime: lp.maxlifetime}
+	ls := &SessionStore{sid: sid, values: kv, maxlifetime: lp.maxlifetime}
 	return ls, nil
 }
 
-// check ledis session exist by sid
-func (lp *LedisProvider) SessionExist(sid string) bool {
+// SessionExist check ledis session exist by sid
+func (lp *Provider) SessionExist(sid string) bool {
 	count, _ := c.Exists([]byte(sid))
 	if count == 0 {
 		return false
-	} else {
-		return true
 	}
+	return true
 }
 
-// generate new sid for ledis session
-func (lp *LedisProvider) SessionRegenerate(oldsid, sid string) (session.SessionStore, error) {
+// SessionRegenerate generate new sid for ledis session
+func (lp *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error) {
 	count, _ := c.Exists([]byte(sid))
 	if count == 0 {
 		// oldsid doesn't exists, set the new sid directly
@@ -156,23 +155,23 @@ func (lp *LedisProvider) SessionRegenerate(oldsid, sid string) (session.SessionS
 			return nil, err
 		}
 	}
-	ls := &LedisSessionStore{sid: sid, values: kv, maxlifetime: lp.maxlifetime}
+	ls := &SessionStore{sid: sid, values: kv, maxlifetime: lp.maxlifetime}
 	return ls, nil
 }
 
-// delete ledis session by id
-func (lp *LedisProvider) SessionDestroy(sid string) error {
+// SessionDestroy delete ledis session by id
+func (lp *Provider) SessionDestroy(sid string) error {
 	c.Del([]byte(sid))
 	return nil
 }
 
-// Impelment method, no used.
-func (lp *LedisProvider) SessionGC() {
+// SessionGC Impelment method, no used.
+func (lp *Provider) SessionGC() {
 	return
 }
 
-// @todo
-func (lp *LedisProvider) SessionAll() int {
+// SessionAll return all active session
+func (lp *Provider) SessionAll() int {
 	return 0
 }
 func init() {

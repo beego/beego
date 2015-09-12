@@ -67,7 +67,7 @@ type Controller struct {
 	TplExt         string
 	_xsrfToken     string
 	gotofunc       string
-	CruSession     session.SessionStore
+	CruSession     session.Store
 	XSRFExpire     int
 	AppController  interface{}
 	EnableRender   bool
@@ -559,7 +559,7 @@ func (c *Controller) SaveToFile(fromfile, tofile string) error {
 }
 
 // StartSession starts session and load old session data info this controller.
-func (c *Controller) StartSession() session.SessionStore {
+func (c *Controller) StartSession() session.Store {
 	if c.CruSession == nil {
 		c.CruSession = c.Ctx.Input.CruSession
 	}
@@ -596,7 +596,7 @@ func (c *Controller) SessionRegenerateID() {
 	if c.CruSession != nil {
 		c.CruSession.SessionRelease(c.Ctx.ResponseWriter)
 	}
-	c.CruSession = GlobalSessions.SessionRegenerateId(c.Ctx.ResponseWriter, c.Ctx.Request)
+	c.CruSession = GlobalSessions.SessionRegenerateID(c.Ctx.ResponseWriter, c.Ctx.Request)
 	c.Ctx.Input.CruSession = c.CruSession
 }
 

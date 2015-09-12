@@ -178,11 +178,11 @@ func decodeCookie(block cipher.Block, hashKey, name, value string, gcmaxlifetime
 		return nil, err
 	}
 	// 5. DecodeGob.
-	if dst, err := DecodeGob(b); err != nil {
+	dst, err := DecodeGob(b)
+	if err != nil {
 		return nil, err
-	} else {
-		return dst, nil
 	}
+	return dst, nil
 }
 
 // Encoding -------------------------------------------------------------------
