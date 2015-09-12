@@ -33,7 +33,7 @@
 //		// maybe store in configure, maybe in database
 //	}
 //
-//	beego.InsertFilter("*", beego.BeforeRouter,apiauth.APIAuthWithFunc(getAppSecret, 360))
+//	beego.InsertFilter("*", beego.BeforeRouter,apiauth.APISecretAuth(getAppSecret, 360))
 //
 // Infomation:
 //
@@ -68,8 +68,10 @@ import (
 	"github.com/astaxie/beego/context"
 )
 
-type AppIdToAppSecret func(string) string
+// AppIDToAppSecret is used to get appsecret throw appid
+type AppIDToAppSecret func(string) string
 
+// APIBaiscAuth use the basic appid/appkey as the AppIdToAppSecret
 func APIBaiscAuth(appid, appkey string) beego.FilterFunc {
 	ft := func(aid string) string {
 		if aid == appid {
@@ -77,10 +79,11 @@ func APIBaiscAuth(appid, appkey string) beego.FilterFunc {
 		}
 		return ""
 	}
-	return APIAuthWithFunc(ft, 300)
+	return APISecretAuth(ft, 300)
 }
 
-func APIAuthWithFunc(f AppIdToAppSecret, timeout int) beego.FilterFunc {
+// APISecretAuth use AppIdToAppSecret verify and
+func APISecretAuth(f AppIDToAppSecret, timeout int) beego.FilterFunc {
 	return func(ctx *context.Context) {
 		if ctx.Input.Query("appid") == "" {
 			ctx.ResponseWriter.WriteHeader(403)
@@ -116,13 +119,14 @@ func APIAuthWithFunc(f AppIdToAppSecret, timeout int) beego.FilterFunc {
 			return
 		}
 		if ctx.Input.Query("signature") !=
-			Signature(appsecret, ctx.Input.Method(), ctx.Request.Form, ctx.Input.Uri()) {
+			Signature(appsecret, ctx.Input.Method(), ctx.Request.Form, ctx.Input.URI()) {
 			ctx.ResponseWriter.WriteHeader(403)
 			ctx.WriteString("auth failed")
 		}
 	}
 }
 
+// Signature used to generate signature with the appsecret/method/params/RequestURI
 func Signature(appsecret, method string, params url.Values, RequestURI string) (result string) {
 	var query string
 	pa := make(map[string]string)
@@ -139,11 +143,11 @@ func Signature(appsecret, method string, params url.Values, RequestURI string) (
 			query = fmt.Sprintf("%v%v%v", query, vs.Keys[i], vs.Vals[i])
 		}
 	}
-	string_to_sign := fmt.Sprintf("%v\n%v\n%v\n", method, query, RequestURI)
+	stringToSign := fmt.Sprintf("%v\n%v\n%v\n", method, query, RequestURI)
 
 	sha256 := sha256.New
 	hash := hmac.New(sha256, []byte(appsecret))
-	hash.Write([]byte(string_to_sign))
+	hash.Write([]byte(stringToSign))
 	return base64.StdEncoding.EncodeToString(hash.Sum(nil))
 }
 

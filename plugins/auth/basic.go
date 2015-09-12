@@ -46,6 +46,7 @@ import (
 
 var defaultRealm = "Authorization Required"
 
+// Basic is the http basic auth
 func Basic(username string, password string) beego.FilterFunc {
 	secrets := func(user, pass string) bool {
 		return user == username && pass == password
@@ -53,6 +54,7 @@ func Basic(username string, password string) beego.FilterFunc {
 	return NewBasicAuthenticator(secrets, defaultRealm)
 }
 
+// NewBasicAuthenticator return the BasicAuth
 func NewBasicAuthenticator(secrets SecretProvider, Realm string) beego.FilterFunc {
 	return func(ctx *context.Context) {
 		a := &BasicAuth{Secrets: secrets, Realm: Realm}
@@ -62,17 +64,19 @@ func NewBasicAuthenticator(secrets SecretProvider, Realm string) beego.FilterFun
 	}
 }
 
+// SecretProvider is the SecretProvider function
 type SecretProvider func(user, pass string) bool
 
+// BasicAuth store the SecretProvider and Realm
 type BasicAuth struct {
 	Secrets SecretProvider
 	Realm   string
 }
 
-//Checks the username/password combination from the request. Returns
-//either an empty string (authentication failed) or the name of the
-//authenticated user.
-//Supports MD5 and SHA1 password entries
+// CheckAuth Checks the username/password combination from the request. Returns
+// either an empty string (authentication failed) or the name of the
+// authenticated user.
+// Supports MD5 and SHA1 password entries
 func (a *BasicAuth) CheckAuth(r *http.Request) string {
 	s := strings.SplitN(r.Header.Get("Authorization"), " ", 2)
 	if len(s) != 2 || s[0] != "Basic" {
@@ -94,8 +98,8 @@ func (a *BasicAuth) CheckAuth(r *http.Request) string {
 	return ""
 }
 
-//http.Handler for BasicAuth which initiates the authentication process
-//(or requires reauthentication).
+// RequireAuth http.Handler for BasicAuth which initiates the authentication process
+// (or requires reauthentication).
 func (a *BasicAuth) RequireAuth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("WWW-Authenticate", `Basic realm="`+a.Realm+`"`)
 	w.WriteHeader(401)

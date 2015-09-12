@@ -50,17 +50,17 @@
 //		beego.AddNamespace(ns)
 //	}
 //
-
 package jwt
 
 import (
+	"io/ioutil"
+	"net/http"
+	"time"
+
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/logs"
 	goJwt "github.com/dgrijalva/jwt-go"
-	"io/ioutil"
-	"net/http"
-	"time"
 )
 
 // Options for the JWT Auth
@@ -70,11 +70,13 @@ type Options struct {
 	WhiteList      []string
 }
 
+// RSAKeys store PrivateKey and PublicKey
 var RSAKeys struct {
 	PrivateKey []byte
 	PublicKey  []byte
 }
 
+// AuthRequest retunn FilterFunc
 func AuthRequest(o *Options) beego.FilterFunc {
 	RSAKeys.PrivateKey, _ = ioutil.ReadFile(o.PrivateKeyPath)
 	RSAKeys.PublicKey, _ = ioutil.ReadFile(o.PublicKeyPath)
@@ -101,26 +103,29 @@ func AuthRequest(o *Options) beego.FilterFunc {
 	}
 }
 
-// oprations for Jwt
-type JwtController struct {
+// Controller oprations for Jwt
+type Controller struct {
 	beego.Controller
 }
 
-func (this *JwtController) URLMapping() {
-	this.Mapping("IssueToken", this.IssueToken)
+// URLMapping is used to mapping the string to method
+func (c *Controller) URLMapping() {
+	c.Mapping("IssueToken", c.IssueToken)
 }
 
+// IssueToken function
 // @Title IssueToken
 // @Description Issue a Json Web Token
 // @Success 200 string
 // @Failure 403 no privilege to access
 // @Failure 500 server inner error
 // @router /issue-token [get]
-func (this *JwtController) IssueToken() {
-	this.Data["json"] = CreateToken()
-	this.ServeJson()
+func (c *Controller) IssueToken() {
+	c.Data["json"] = CreateToken()
+	c.ServeJSON()
 }
 
+// CreateToken return the token
 func CreateToken() map[string]string {
 	log := logs.NewLogger(10000)
 	log.SetLogger("console", "")
