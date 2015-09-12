@@ -19,10 +19,10 @@ import (
 )
 
 const (
-	od_CASCADE            = "cascade"
-	od_SET_NULL           = "set_null"
-	od_SET_DEFAULT        = "set_default"
-	od_DO_NOTHING         = "do_nothing"
+	odCascade             = "cascade"
+	odSetNULL             = "set_null"
+	odSetDefault          = "set_default"
+	odDoNothing           = "do_nothing"
 	defaultStructTagName  = "orm"
 	defaultStructTagDelim = ";"
 )
@@ -113,7 +113,7 @@ func (mc *_modelCache) clean() {
 	mc.done = false
 }
 
-// Clean model cache. Then you can re-RegisterModel.
+// ResetModelCache Clean model cache. Then you can re-RegisterModel.
 // Common use this api for test case.
 func ResetModelCache() {
 	modelCache.clean()

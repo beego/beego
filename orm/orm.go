@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package orm provide ORM for MySQL/PostgreSQL/sqlite
 // Simple Usage
 //
 //	package main
@@ -59,12 +60,13 @@ import (
 	"time"
 )
 
+// DebugQueries define the debug
 const (
-	Debug_Queries = iota
+	DebugQueries = iota
 )
 
+// Define common vars
 var (
-	// DebugLevel       = Debug_Queries
 	Debug            = false
 	DebugLog         = NewLog(os.Stderr)
 	DefaultRowsLimit = 1000
@@ -79,7 +81,10 @@ var (
 	ErrNotImplement  = errors.New("have not implement")
 )
 
+// Params stores the Params
 type Params map[string]interface{}
+
+// ParamsList stores paramslist
 type ParamsList []interface{}
 
 type orm struct {
@@ -188,7 +193,7 @@ func (o *orm) InsertMulti(bulk int, mds interface{}) (int64, error) {
 
 			o.setPk(mi, ind, id)
 
-			cnt += 1
+			cnt++
 		}
 	} else {
 		mi, _ := o.getMiInd(sind.Index(0).Interface(), false)
@@ -489,7 +494,7 @@ func (o *orm) Driver() Driver {
 	return driver(o.alias.Name)
 }
 
-// create new orm
+// NewOrm create new orm
 func NewOrm() Ormer {
 	BootStrap() // execute only once
 
@@ -501,7 +506,7 @@ func NewOrm() Ormer {
 	return o
 }
 
-// create a new ormer object with specify *sql.DB for query
+// NewOrmWithDB create a new ormer object with specify *sql.DB for query
 func NewOrmWithDB(driverName, aliasName string, db *sql.DB) (Ormer, error) {
 	var al *alias
 

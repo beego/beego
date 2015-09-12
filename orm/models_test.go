@@ -76,21 +76,21 @@ func (e *SliceStringField) RawValue() interface{} {
 var _ Fielder = new(SliceStringField)
 
 // A json field.
-type JsonField struct {
+type JSONField struct {
 	Name string
 	Data string
 }
 
-func (e *JsonField) String() string {
+func (e *JSONField) String() string {
 	data, _ := json.Marshal(e)
 	return string(data)
 }
 
-func (e *JsonField) FieldType() int {
+func (e *JSONField) FieldType() int {
 	return TypeTextField
 }
 
-func (e *JsonField) SetRaw(value interface{}) error {
+func (e *JSONField) SetRaw(value interface{}) error {
 	switch d := value.(type) {
 	case string:
 		return json.Unmarshal([]byte(d), e)
@@ -99,14 +99,14 @@ func (e *JsonField) SetRaw(value interface{}) error {
 	}
 }
 
-func (e *JsonField) RawValue() interface{} {
+func (e *JSONField) RawValue() interface{} {
 	return e.String()
 }
 
-var _ Fielder = new(JsonField)
+var _ Fielder = new(JSONField)
 
 type Data struct {
-	Id       int
+	ID       int `orm:"column(id)"`
 	Boolean  bool
 	Char     string    `orm:"size(50)"`
 	Text     string    `orm:"type(text)"`
@@ -130,7 +130,7 @@ type Data struct {
 }
 
 type DataNull struct {
-	Id          int
+	ID          int             `orm:"column(id)"`
 	Boolean     bool            `orm:"null"`
 	Char        string          `orm:"null;size(50)"`
 	Text        string          `orm:"null;type(text)"`
@@ -193,7 +193,7 @@ type Float32 float64
 type Float64 float64
 
 type DataCustom struct {
-	Id      int
+	ID      int `orm:"column(id)"`
 	Boolean Boolean
 	Char    string `orm:"size(50)"`
 	Text    string `orm:"type(text)"`
@@ -216,28 +216,28 @@ type DataCustom struct {
 
 // only for mysql
 type UserBig struct {
-	Id   uint64
+	ID   uint64 `orm:"column(id)"`
 	Name string
 }
 
 type User struct {
-	Id         int
-	UserName   string `orm:"size(30);unique"`
-	Email      string `orm:"size(100)"`
-	Password   string `orm:"size(100)"`
-	Status     int16  `orm:"column(Status)"`
-	IsStaff    bool
-	IsActive   bool      `orm:"default(1)"`
-	Created    time.Time `orm:"auto_now_add;type(date)"`
-	Updated    time.Time `orm:"auto_now"`
-	Profile    *Profile  `orm:"null;rel(one);on_delete(set_null)"`
-	Posts      []*Post   `orm:"reverse(many)" json:"-"`
-	ShouldSkip string    `orm:"-"`
-	Nums       int
-	Langs      SliceStringField `orm:"size(100)"`
-	Extra      JsonField        `orm:"type(text)"`
-	unexport   bool             `orm:"-"`
-	unexport_  bool
+	ID           int    `orm:"column(id)"`
+	UserName     string `orm:"size(30);unique"`
+	Email        string `orm:"size(100)"`
+	Password     string `orm:"size(100)"`
+	Status       int16  `orm:"column(Status)"`
+	IsStaff      bool
+	IsActive     bool      `orm:"default(1)"`
+	Created      time.Time `orm:"auto_now_add;type(date)"`
+	Updated      time.Time `orm:"auto_now"`
+	Profile      *Profile  `orm:"null;rel(one);on_delete(set_null)"`
+	Posts        []*Post   `orm:"reverse(many)" json:"-"`
+	ShouldSkip   string    `orm:"-"`
+	Nums         int
+	Langs        SliceStringField `orm:"size(100)"`
+	Extra        JSONField        `orm:"type(text)"`
+	unexport     bool             `orm:"-"`
+	unexportBool bool
 }
 
 func (u *User) TableIndex() [][]string {
@@ -259,7 +259,7 @@ func NewUser() *User {
 }
 
 type Profile struct {
-	Id       int
+	ID       int `orm:"column(id)"`
 	Age      int16
 	Money    float64
 	User     *User `orm:"reverse(one)" json:"-"`
@@ -276,7 +276,7 @@ func NewProfile() *Profile {
 }
 
 type Post struct {
-	Id      int
+	ID      int       `orm:"column(id)"`
 	User    *User     `orm:"rel(fk)"`
 	Title   string    `orm:"size(60)"`
 	Content string    `orm:"type(text)"`
@@ -297,7 +297,7 @@ func NewPost() *Post {
 }
 
 type Tag struct {
-	Id       int
+	ID       int     `orm:"column(id)"`
 	Name     string  `orm:"size(30)"`
 	BestPost *Post   `orm:"rel(one);null"`
 	Posts    []*Post `orm:"reverse(many)" json:"-"`
@@ -309,7 +309,7 @@ func NewTag() *Tag {
 }
 
 type PostTags struct {
-	Id   int
+	ID   int   `orm:"column(id)"`
 	Post *Post `orm:"rel(fk)"`
 	Tag  *Tag  `orm:"rel(fk)"`
 }
@@ -319,7 +319,7 @@ func (m *PostTags) TableName() string {
 }
 
 type Comment struct {
-	Id      int
+	ID      int       `orm:"column(id)"`
 	Post    *Post     `orm:"rel(fk);column(post)"`
 	Content string    `orm:"type(text)"`
 	Parent  *Comment  `orm:"null;rel(fk)"`
@@ -397,7 +397,7 @@ go test -v github.com/astaxie/beego/orm
 	RegisterDataBase("default", DBARGS.Driver, DBARGS.Source, 20)
 
 	alias := getDbAlias("default")
-	if alias.Driver == DR_MySQL {
+	if alias.Driver == DRMySQL {
 		alias.Engine = "INNODB"
 	}
 

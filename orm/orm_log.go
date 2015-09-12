@@ -23,11 +23,12 @@ import (
 	"time"
 )
 
+// Log implement the log.Logger
 type Log struct {
 	*log.Logger
 }
 
-// set io.Writer to create a Logger.
+// NewLog set io.Writer to create a Logger.
 func NewLog(out io.Writer) *Log {
 	d := new(Log)
 	d.Logger = log.New(out, "[ORM]", 1e9)
@@ -41,7 +42,7 @@ func debugLogQueies(alias *alias, operaton, query string, t time.Time, err error
 	if err != nil {
 		flag = "FAIL"
 	}
-	con := fmt.Sprintf(" - %s - [Queries/%s] - [%s / %11s / %7.1fms] - [%s]", t.Format(format_DateTime), alias.Name, flag, operaton, elsp, query)
+	con := fmt.Sprintf(" - %s - [Queries/%s] - [%s / %11s / %7.1fms] - [%s]", t.Format(formatDateTime), alias.Name, flag, operaton, elsp, query)
 	cons := make([]string, 0, len(args))
 	for _, arg := range args {
 		cons = append(cons, fmt.Sprintf("%v", arg))
