@@ -42,12 +42,12 @@ type pointerInfo struct {
 	used []int
 }
 
-// print the data in console
+// Display print the data in console
 func Display(data ...interface{}) {
 	display(true, data...)
 }
 
-// return data print string
+// GetDisplayString return data print string
 func GetDisplayString(data ...interface{}) string {
 	return display(false, data...)
 }
@@ -91,7 +91,7 @@ func fomateinfo(headlen int, data ...interface{}) []byte {
 	for k, v := range data {
 		var buf2 = new(bytes.Buffer)
 		var pointers *pointerInfo
-		var interfaces []reflect.Value = make([]reflect.Value, 0, 10)
+		var interfaces = make([]reflect.Value, 0, 10)
 
 		printKeyValue(buf2, reflect.ValueOf(v), &pointers, &interfaces, nil, true, "    ", 1)
 
@@ -385,7 +385,7 @@ func printPointerInfo(buf *bytes.Buffer, headlen int, pointers *pointerInfo) {
 		if len(p.used) > 0 {
 			anyused = true
 		}
-		pointerNum += 1
+		pointerNum++
 		p.n = pointerNum
 	}
 

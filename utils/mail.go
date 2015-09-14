@@ -80,7 +80,7 @@ func NewEMail(config string) *Email {
 	return e
 }
 
-// Make all send information to byte
+// Bytes Make all send information to byte
 func (e *Email) Bytes() ([]byte, error) {
 	buff := &bytes.Buffer{}
 	w := multipart.NewWriter(buff)
@@ -156,7 +156,7 @@ func (e *Email) Bytes() ([]byte, error) {
 	return buff.Bytes(), nil
 }
 
-// Add attach file to the send mail
+// AttachFile Add attach file to the send mail
 func (e *Email) AttachFile(args ...string) (a *Attachment, err error) {
 	if len(args) < 1 && len(args) > 2 {
 		err = errors.New("Must specify a file name and number of parameters can not exceed at least two")
@@ -215,6 +215,7 @@ func (e *Email) Attach(r io.Reader, filename string, args ...string) (a *Attachm
 	return at, nil
 }
 
+// Send will send out the mail
 func (e *Email) Send() error {
 	if e.Auth == nil {
 		e.Auth = smtp.PlainAuth(e.Identity, e.Username, e.Password, e.Host)
