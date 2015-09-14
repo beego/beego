@@ -1,6 +1,5 @@
 /*
-
-The pagination package provides utilities to setup a paginator within the
+Package pagination provides utilities to setup a paginator within the
 context of a http request.
 
 Usage
