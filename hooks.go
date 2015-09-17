@@ -5,6 +5,8 @@ import (
 	"path/filepath"
 	"strconv"
 
+	"net/http"
+
 	"github.com/astaxie/beego/session"
 )
 
@@ -18,42 +20,20 @@ func registerMime() error {
 
 // register default error http handlers, 404,401,403,500 and 503.
 func registerDefaultErrorHandler() error {
-	if _, ok := ErrorMaps["401"]; !ok {
-		ErrorHandler("401", unauthorized)
-	}
 
-	if _, ok := ErrorMaps["402"]; !ok {
-		ErrorHandler("402", paymentRequired)
-	}
-
-	if _, ok := ErrorMaps["403"]; !ok {
-		ErrorHandler("403", forbidden)
-	}
-
-	if _, ok := ErrorMaps["404"]; !ok {
-		ErrorHandler("404", notFound)
-	}
-
-	if _, ok := ErrorMaps["405"]; !ok {
-		ErrorHandler("405", methodNotAllowed)
-	}
-
-	if _, ok := ErrorMaps["500"]; !ok {
-		ErrorHandler("500", internalServerError)
-	}
-	if _, ok := ErrorMaps["501"]; !ok {
-		ErrorHandler("501", notImplemented)
-	}
-	if _, ok := ErrorMaps["502"]; !ok {
-		ErrorHandler("502", badGateway)
-	}
-
-	if _, ok := ErrorMaps["503"]; !ok {
-		ErrorHandler("503", serviceUnavailable)
-	}
-
-	if _, ok := ErrorMaps["504"]; !ok {
-		ErrorHandler("504", gatewayTimeout)
+	for e, h := range map[string]func(http.ResponseWriter, *http.Request){
+		"401": unauthorized,
+		"402": paymentRequired,
+		"403": forbidden,
+		"404": notFound,
+		"405": methodNotAllowed,
+		"500": internalServerError,
+		"501": notImplemented,
+		"502": badGateway,
+		"503": serviceUnavailable,
+		"504": gatewayTimeout,
+	} {
+		ErrorHandler(e, h)
 	}
 	return nil
 }
