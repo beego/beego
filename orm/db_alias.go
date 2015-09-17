@@ -31,6 +31,7 @@ const (
 	DR_Sqlite                     // sqlite
 	DR_Oracle                     // oracle
 	DR_Postgres                   // pgsql
+	DR_TiDB                       // TiDB
 )
 
 // database driver string.
@@ -56,12 +57,14 @@ var (
 		"mysql":    DR_MySQL,
 		"postgres": DR_Postgres,
 		"sqlite3":  DR_Sqlite,
+		"tidb":     DR_TiDB,
 	}
 	dbBasers = map[DriverType]dbBaser{
 		DR_MySQL:    newdbBaseMysql(),
 		DR_Sqlite:   newdbBaseSqlite(),
 		DR_Oracle:   newdbBaseMysql(),
 		DR_Postgres: newdbBasePostgres(),
+		DR_TiDB:     newdbBaseTiDB(),
 	}
 )
 

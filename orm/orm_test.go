@@ -26,6 +26,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/juju/errors"
 )
 
 var _ = os.PathSeparator
@@ -133,6 +135,7 @@ func throwFail(t *testing.T, err error, args ...interface{}) {
 			}
 			con += " " + strings.Join(parts, ", ")
 		}
+		t.Error(errors.ErrorStack(err))
 		t.Error(con)
 		t.Fail()
 	}
@@ -172,7 +175,7 @@ func TestSyncDb(t *testing.T) {
 	RegisterModel(new(UserBig))
 	RegisterModel(new(PostTags))
 
-	err := RunSyncdb("default", true, false)
+	err := RunSyncdb("default", true, true)
 	throwFail(t, err)
 
 	modelCache.clean()
@@ -702,7 +705,7 @@ func TestOperators(t *testing.T) {
 
 	var shouldNum int
 
-	if IsSqlite {
+	if IsSqlite || IsTidb {
 		shouldNum = 2
 	} else {
 		shouldNum = 0
@@ -740,7 +743,7 @@ func TestOperators(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
 
-	if IsSqlite {
+	if IsSqlite || IsTidb {
 		shouldNum = 1
 	} else {
 		shouldNum = 0
@@ -758,7 +761,7 @@ func TestOperators(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 2))
 
-	if IsSqlite {
+	if IsSqlite || IsTidb {
 		shouldNum = 2
 	} else {
 		shouldNum = 0
@@ -972,6 +975,7 @@ func TestValuesList(t *testing.T) {
 }
 
 func TestValuesFlat(t *testing.T) {
+
 	var list ParamsList
 	qs := dORM.QueryTable("user")
 
@@ -986,6 +990,11 @@ func TestValuesFlat(t *testing.T) {
 }
 
 func TestRelatedSel(t *testing.T) {
+	if IsTidb {
+		// Tidb do not support foreign key now
+		return
+	}
+
 	qs := dORM.QueryTable("user")
 	num, err := qs.Filter("profile__age", 28).Count()
 	throwFail(t, err)
