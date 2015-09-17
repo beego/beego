@@ -33,7 +33,9 @@ func registerDefaultErrorHandler() error {
 		"503": serviceUnavailable,
 		"504": gatewayTimeout,
 	} {
-		ErrorHandler(e, h)
+		if _, ok := ErrorMaps[e]; !ok {
+			ErrorHandler(e, h)
+		}
 	}
 	return nil
 }
