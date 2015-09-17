@@ -26,8 +26,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	"github.com/juju/errors"
 )
 
 var _ = os.PathSeparator
@@ -135,7 +133,6 @@ func throwFail(t *testing.T, err error, args ...interface{}) {
 			}
 			con += " " + strings.Join(parts, ", ")
 		}
-		t.Error(errors.ErrorStack(err))
 		t.Error(con)
 		t.Fail()
 	}
@@ -175,7 +172,7 @@ func TestSyncDb(t *testing.T) {
 	RegisterModel(new(UserBig))
 	RegisterModel(new(PostTags))
 
-	err := RunSyncdb("default", true, true)
+	err := RunSyncdb("default", true, false)
 	throwFail(t, err)
 
 	modelCache.clean()
