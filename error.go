@@ -204,7 +204,7 @@ type errorInfo struct {
 }
 
 // map of http handlers for each error string.
-var ErrorMaps map[string]*errorInfo = make(map[string]*errorInfo, 10)
+var ErrorMaps = make(map[string]*errorInfo, 10)
 
 // show 401 unauthorized error.
 func unauthorized(rw http.ResponseWriter, r *http.Request) {
@@ -390,7 +390,7 @@ func ErrorController(c ControllerInterface) *App {
 // show error string as simple text message.
 // if error string is empty, show 503 or 500 error as default.
 func exception(errCode string, ctx *context.Context) {
-	for ec, _ := range []string{errCode, "503", "500"} {
+	for _, ec := range []string{errCode, "503", "500"} {
 		code, _ := strconv.Atoi(errCode)
 		if code == 0 {
 			code = 503
