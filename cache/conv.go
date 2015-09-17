@@ -98,15 +98,3 @@ func GetBool(v interface{}) bool {
 	}
 	return false
 }
-
-// getByteArray convert interface to byte slice.
-func getByteArray(v interface{}) []byte {
-	switch result := v.(type) {
-	case []byte:
-		return result
-	case string:
-		return []byte(result)
-	default:
-		return nil
-	}
-}

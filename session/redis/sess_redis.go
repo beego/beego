@@ -48,8 +48,6 @@ var redispder = &Provider{}
 // redis max pool size
 var MaxPoolSize = 100
 
-var redisPool chan redis.Conn
-
 // SessionStore redis session store
 type SessionStore struct {
 	p           *redis.Pool

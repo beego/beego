@@ -518,7 +518,6 @@ const (
 	complexKind
 	intKind
 	floatKind
-	integerKind
 	stringKind
 	uintKind
 )

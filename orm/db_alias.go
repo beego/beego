@@ -63,7 +63,7 @@ var (
 	dbBasers = map[DriverType]dbBaser{
 		DRMySQL:    newdbBaseMysql(),
 		DRSqlite:   newdbBaseSqlite(),
-		DROracle:   newdbBaseMysql(),
+		DROracle:   newdbBaseOracle(),
 		DRPostgres: newdbBasePostgres(),
 		DRTiDB:     newdbBaseTidb(),
 	}

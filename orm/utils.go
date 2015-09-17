@@ -249,28 +249,10 @@ func (a argInt) Get(i int, args ...int) (r int) {
 	return
 }
 
-type argAny []interface{}
-
-// get interface by index from interface slice
-func (a argAny) Get(i int, args ...interface{}) (r interface{}) {
-	if i >= 0 && i < len(a) {
-		r = a[i]
-	}
-	if len(args) > 0 {
-		r = args[0]
-	}
-	return
-}
-
 // parse time to string with location
 func timeParse(dateString, format string) (time.Time, error) {
 	tp, err := time.ParseInLocation(format, dateString, DefaultTimeLoc)
 	return tp, err
-}
-
-// format time string
-func timeFormat(t time.Time, format string) string {
-	return t.Format(format)
 }
 
 // get pointer indirect type

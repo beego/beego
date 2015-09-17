@@ -26,12 +26,6 @@ var (
 	dunno     = []byte("???")
 	centerDot = []byte("·")
 	dot       = []byte(".")
-	lbr       = []byte("{")
-	lbrn      = []byte("{\n")
-	com       = []byte(",")
-	comn      = []byte(",\n")
-	rbr       = []byte("}")
-	comnrbr   = []byte(",\n}")
 )
 
 type pointerInfo struct {
@@ -376,8 +370,8 @@ func printKeyValue(buf *bytes.Buffer, val reflect.Value, pointers **pointerInfo,
 	}
 }
 
-// dump pointer value
-func printPointerInfo(buf *bytes.Buffer, headlen int, pointers *pointerInfo) {
+// PrintPointerInfo dump pointer value
+func PrintPointerInfo(buf *bytes.Buffer, headlen int, pointers *pointerInfo) {
 	var anyused = false
 	var pointerNum = 0
 
@@ -444,8 +438,8 @@ func printPointerInfo(buf *bytes.Buffer, headlen int, pointers *pointerInfo) {
 	}
 }
 
-// get stack bytes
-func stack(skip int, indent string) []byte {
+// Stack get stack bytes
+func Stack(skip int, indent string) []byte {
 	var buf = new(bytes.Buffer)
 
 	for i := skip; ; i++ {
