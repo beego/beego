@@ -40,15 +40,13 @@ func serverStaticRouter(ctx *context.Context) {
 			if utils.FileExists(file) {
 				http.ServeFile(ctx.ResponseWriter, ctx.Request, file)
 				return
-			} else {
-				i++
-				if i == len(StaticDir) {
-					http.NotFound(ctx.ResponseWriter, ctx.Request)
-					return
-				} else {
-					continue
-				}
 			}
+			i++
+			if i == len(StaticDir) {
+				http.NotFound(ctx.ResponseWriter, ctx.Request)
+				return
+			}
+			continue
 		}
 		if strings.HasPrefix(requestPath, prefix) {
 			if len(requestPath) > len(prefix) && requestPath[len(prefix)] != '/' {

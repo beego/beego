@@ -205,15 +205,20 @@ func (w *FileLogWriter) lines() (int, error) {
 }
 
 // DoRotate means it need to write file in new file.
-// new file name like xx.log.2013-01-01.2
+// new file name like xx.2013-01-01.2.log
 func (w *FileLogWriter) DoRotate() error {
 	_, err := os.Lstat(w.Filename)
 	if err == nil { // file exists
 		// Find the next available number
 		num := 1
 		fname := ""
+		suffix := filepath.Ext(w.Filename)
+		filenameOnly := strings.TrimSuffix(w.Filename, suffix)
+		if suffix == "" {
+			suffix = ".log"
+		}
 		for ; err == nil && num <= 999; num++ {
-			fname = w.Filename + fmt.Sprintf(".%s.%03d", time.Now().Format("2006-01-02"), num)
+			fname = filenameOnly + fmt.Sprintf(".%s.%03d%s", time.Now().Format("2006-01-02"), num, suffix)
 			_, err = os.Lstat(fname)
 		}
 		// return error if the last file checked still existed

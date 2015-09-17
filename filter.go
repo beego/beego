@@ -39,7 +39,6 @@ func (f *FilterRouter) ValidRouter(url string) (bool, map[string]string) {
 	}
 	if isok, ok := isok.(bool); ok {
 		return isok, params
-	} else {
-		return false, nil
 	}
+	return false, nil
 }

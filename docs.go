@@ -20,20 +20,21 @@ import (
 	"github.com/astaxie/beego/context"
 )
 
-var GlobalDocApi map[string]interface{}
+// GlobalDocAPI store the swagger api documents
+var GlobalDocAPI map[string]interface{}
 
 func init() {
 	if EnableDocs {
-		GlobalDocApi = make(map[string]interface{})
+		GlobalDocAPI = make(map[string]interface{})
 	}
 }
 
 func serverDocs(ctx *context.Context) {
 	var obj interface{}
 	if splat := ctx.Input.Param(":splat"); splat == "" {
-		obj = GlobalDocApi["Root"]
+		obj = GlobalDocAPI["Root"]
 	} else {
-		if v, ok := GlobalDocApi[splat]; ok {
+		if v, ok := GlobalDocAPI[splat]; ok {
 			obj = v
 		}
 	}

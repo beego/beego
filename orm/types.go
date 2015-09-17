@@ -66,7 +66,9 @@ type QuerySeter interface {
 	SetCond(*Condition) QuerySeter
 	Limit(interface{}, ...interface{}) QuerySeter
 	Offset(interface{}) QuerySeter
+	GroupBy(...string) QuerySeter
 	OrderBy(...string) QuerySeter
+	Distinct() QuerySeter
 	RelatedSel(...interface{}) QuerySeter
 	Count() (int64, error)
 	Exist() bool

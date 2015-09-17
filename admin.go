@@ -101,11 +101,11 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 			m["AppConfigPath"] = AppConfigPath
 			m["StaticDir"] = StaticDir
 			m["StaticExtensionsToGzip"] = StaticExtensionsToGzip
-			m["HttpAddr"] = HttpAddr
-			m["HttpPort"] = HttpPort
-			m["HttpTLS"] = EnableHttpTLS
-			m["HttpCertFile"] = HttpCertFile
-			m["HttpKeyFile"] = HttpKeyFile
+			m["HTTPAddr"] = HTTPAddr
+			m["HTTPPort"] = HTTPPort
+			m["HTTPTLS"] = EnableHTTPTLS
+			m["HTTPCertFile"] = HTTPCertFile
+			m["HTTPKeyFile"] = HTTPKeyFile
 			m["RecoverPanic"] = RecoverPanic
 			m["AutoRender"] = AutoRender
 			m["ViewsPath"] = ViewsPath
@@ -114,14 +114,14 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 			m["SessionProvider"] = SessionProvider
 			m["SessionName"] = SessionName
 			m["SessionGCMaxLifetime"] = SessionGCMaxLifetime
-			m["SessionSavePath"] = SessionSavePath
+			m["SessionProviderConfig"] = SessionProviderConfig
 			m["SessionCookieLifeTime"] = SessionCookieLifeTime
-			m["UseFcgi"] = UseFcgi
+			m["EnabelFcgi"] = EnabelFcgi
 			m["MaxMemory"] = MaxMemory
 			m["EnableGzip"] = EnableGzip
 			m["DirectoryIndex"] = DirectoryIndex
-			m["HttpServerTimeOut"] = HttpServerTimeOut
-			m["ErrorsShow"] = ErrorsShow
+			m["HTTPServerTimeOut"] = HTTPServerTimeOut
+			m["EnableErrorsShow"] = EnableErrorsShow
 			m["XSRFKEY"] = XSRFKEY
 			m["EnableXSRF"] = EnableXSRF
 			m["XSRFExpire"] = XSRFExpire
@@ -130,8 +130,8 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 			m["TemplateRight"] = TemplateRight
 			m["BeegoServerName"] = BeegoServerName
 			m["EnableAdmin"] = EnableAdmin
-			m["AdminHttpAddr"] = AdminHttpAddr
-			m["AdminHttpPort"] = AdminHttpPort
+			m["AdminHTTPAddr"] = AdminHTTPAddr
+			m["AdminHTTPPort"] = AdminHTTPPort
 
 			tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
 			tmpl = template.Must(tmpl.Parse(configTpl))
@@ -314,14 +314,14 @@ func profIndex(rw http.ResponseWriter, r *http.Request) {
 		data["Content"] = result.String()
 
 		if format == "json" && command == "gc summary" {
-			dataJson, err := json.Marshal(data)
+			dataJSON, err := json.Marshal(data)
 			if err != nil {
 				http.Error(rw, err.Error(), http.StatusInternalServerError)
 				return
 			}
 
 			rw.Header().Set("Content-Type", "application/json")
-			rw.Write(dataJson)
+			rw.Write(dataJSON)
 			return
 		}
 
@@ -451,10 +451,10 @@ func (admin *adminApp) Run() {
 	if len(toolbox.AdminTaskList) > 0 {
 		toolbox.StartTask()
 	}
-	addr := AdminHttpAddr
+	addr := AdminHTTPAddr
 
-	if AdminHttpPort != 0 {
-		addr = fmt.Sprintf("%s:%d", AdminHttpAddr, AdminHttpPort)
+	if AdminHTTPPort != 0 {
+		addr = fmt.Sprintf("%s:%d", AdminHTTPAddr, AdminHTTPPort)
 	}
 	for p, f := range admin.routers {
 		http.Handle(p, f)

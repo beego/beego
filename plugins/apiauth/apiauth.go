@@ -83,41 +83,41 @@ func APIBaiscAuth(appid, appkey string) beego.FilterFunc {
 func APIAuthWithFunc(f AppIdToAppSecret, timeout int) beego.FilterFunc {
 	return func(ctx *context.Context) {
 		if ctx.Input.Query("appid") == "" {
-			ctx.Output.SetStatus(403)
+			ctx.ResponseWriter.WriteHeader(403)
 			ctx.WriteString("miss query param: appid")
 			return
 		}
 		appsecret := f(ctx.Input.Query("appid"))
 		if appsecret == "" {
-			ctx.Output.SetStatus(403)
+			ctx.ResponseWriter.WriteHeader(403)
 			ctx.WriteString("not exist this appid")
 			return
 		}
 		if ctx.Input.Query("signature") == "" {
-			ctx.Output.SetStatus(403)
+			ctx.ResponseWriter.WriteHeader(403)
 			ctx.WriteString("miss query param: signature")
 			return
 		}
 		if ctx.Input.Query("timestamp") == "" {
-			ctx.Output.SetStatus(403)
+			ctx.ResponseWriter.WriteHeader(403)
 			ctx.WriteString("miss query param: timestamp")
 			return
 		}
 		u, err := time.Parse("2006-01-02 15:04:05", ctx.Input.Query("timestamp"))
 		if err != nil {
-			ctx.Output.SetStatus(403)
+			ctx.ResponseWriter.WriteHeader(403)
 			ctx.WriteString("timestamp format is error, should 2006-01-02 15:04:05")
 			return
 		}
 		t := time.Now()
 		if t.Sub(u).Seconds() > float64(timeout) {
-			ctx.Output.SetStatus(403)
+			ctx.ResponseWriter.WriteHeader(403)
 			ctx.WriteString("timeout! the request time is long ago, please try again")
 			return
 		}
 		if ctx.Input.Query("signature") !=
 			Signature(appsecret, ctx.Input.Method(), ctx.Request.Form, ctx.Input.Uri()) {
-			ctx.Output.SetStatus(403)
+			ctx.ResponseWriter.WriteHeader(403)
 			ctx.WriteString("auth failed")
 		}
 	}

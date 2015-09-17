@@ -34,18 +34,19 @@ import (
 
 //commonly used mime-types
 const (
-	applicationJson = "application/json"
-	applicationXml  = "application/xml"
-	textXml         = "text/xml"
+	applicationJSON = "application/json"
+	applicationXML  = "application/xml"
+	textXML         = "text/xml"
 )
 
 var (
-	// custom error when user stop request handler manually.
-	USERSTOPRUN                                            = errors.New("User stop run")
-	GlobalControllerRouter map[string][]ControllerComments = make(map[string][]ControllerComments) //pkgpath+controller:comments
+	// ErrAbort custom error when user stop request handler manually.
+	ErrAbort = errors.New("User stop run")
+	// GlobalControllerRouter store comments with controller. pkgpath+controller:comments
+	GlobalControllerRouter = make(map[string][]ControllerComments)
 )
 
-// store the comment for the controller method
+// ControllerComments store the comment for the controller method
 type ControllerComments struct {
 	Method           string
 	Router           string
@@ -64,7 +65,7 @@ type Controller struct {
 	Layout         string
 	LayoutSections map[string]string // the key is the section name and the value is the template name
 	TplExt         string
-	_xsrf_token    string
+	_xsrfToken     string
 	gotofunc       string
 	CruSession     session.SessionStore
 	XSRFExpire     int
@@ -87,8 +88,8 @@ type ControllerInterface interface {
 	Options()
 	Finish()
 	Render() error
-	XsrfToken() string
-	CheckXsrfCookie() bool
+	XSRFToken() string
+	CheckXSRFCookie() bool
 	HandlerFunc(fn string) bool
 	URLMapping()
 }
@@ -153,20 +154,20 @@ func (c *Controller) Options() {
 	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", 405)
 }
 
-// call function fn
+// HandlerFunc call function with the name
 func (c *Controller) HandlerFunc(fnname string) bool {
 	if v, ok := c.methodMapping[fnname]; ok {
 		v()
 		return true
-	} else {
-		return false
 	}
+	return false
 }
 
 // URLMapping register the internal Controller router.
 func (c *Controller) URLMapping() {
 }
 
+// Mapping the method to function
 func (c *Controller) Mapping(method string, fn func()) {
 	c.methodMapping[method] = fn
 }
@@ -177,13 +178,11 @@ func (c *Controller) Render() error {
 		return nil
 	}
 	rb, err := c.RenderBytes()
-
 	if err != nil {
 		return err
-	} else {
-		c.Ctx.Output.Header("Content-Type", "text/html; charset=utf-8")
-		c.Ctx.Output.Body(rb)
 	}
+	c.Ctx.Output.Header("Content-Type", "text/html; charset=utf-8")
+	c.Ctx.Output.Body(rb)
 	return nil
 }
 
@@ -200,8 +199,19 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		if c.TplNames == "" {
 			c.TplNames = strings.ToLower(c.controllerName) + "/" + strings.ToLower(c.actionName) + "." + c.TplExt
 		}
+
 		if RunMode == "dev" {
-			BuildTemplate(ViewsPath)
+			buildFiles := make([]string, 1)
+			buildFiles = append(buildFiles, c.TplNames)
+			if c.LayoutSections != nil {
+				for _, sectionTpl := range c.LayoutSections {
+					if sectionTpl == "" {
+						continue
+					}
+					buildFiles = append(buildFiles, sectionTpl)
+				}
+			}
+			BuildTemplate(ViewsPath, buildFiles...)
 		}
 		newbytes := bytes.NewBufferString("")
 		if _, ok := BeeTemplates[c.TplNames]; !ok {
@@ -241,25 +251,25 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		}
 		icontent, _ := ioutil.ReadAll(ibytes)
 		return icontent, nil
-	} else {
-		if c.TplNames == "" {
-			c.TplNames = strings.ToLower(c.controllerName) + "/" + strings.ToLower(c.actionName) + "." + c.TplExt
-		}
-		if RunMode == "dev" {
-			BuildTemplate(ViewsPath)
-		}
-		ibytes := bytes.NewBufferString("")
-		if _, ok := BeeTemplates[c.TplNames]; !ok {
-			panic("can't find templatefile in the path:" + c.TplNames)
-		}
-		err := BeeTemplates[c.TplNames].ExecuteTemplate(ibytes, c.TplNames, c.Data)
-		if err != nil {
-			Trace("template Execute err:", err)
-			return nil, err
-		}
-		icontent, _ := ioutil.ReadAll(ibytes)
-		return icontent, nil
 	}
+
+	if c.TplNames == "" {
+		c.TplNames = strings.ToLower(c.controllerName) + "/" + strings.ToLower(c.actionName) + "." + c.TplExt
+	}
+	if RunMode == "dev" {
+		BuildTemplate(ViewsPath, c.TplNames)
+	}
+	ibytes := bytes.NewBufferString("")
+	if _, ok := BeeTemplates[c.TplNames]; !ok {
+		panic("can't find templatefile in the path:" + c.TplNames)
+	}
+	err := BeeTemplates[c.TplNames].ExecuteTemplate(ibytes, c.TplNames, c.Data)
+	if err != nil {
+		Trace("template Execute err:", err)
+		return nil, err
+	}
+	icontent, _ := ioutil.ReadAll(ibytes)
+	return icontent, nil
 }
 
 // Redirect sends the redirection response to url with status code.
@@ -267,7 +277,7 @@ func (c *Controller) Redirect(url string, code int) {
 	c.Ctx.Redirect(code, url)
 }
 
-// Aborts stops controller handler and show the error data if code is defined in ErrorMap or code string.
+// Abort stops controller handler and show the error data if code is defined in ErrorMap or code string.
 func (c *Controller) Abort(code string) {
 	status, err := strconv.Atoi(code)
 	if err != nil {
@@ -285,29 +295,28 @@ func (c *Controller) CustomAbort(status int, body string) {
 	}
 	// last panic user string
 	c.Ctx.ResponseWriter.Write([]byte(body))
-	panic(USERSTOPRUN)
+	panic(ErrAbort)
 }
 
 // StopRun makes panic of USERSTOPRUN error and go to recover function if defined.
 func (c *Controller) StopRun() {
-	panic(USERSTOPRUN)
+	panic(ErrAbort)
 }
 
-// UrlFor does another controller handler in this request function.
+// URLFor does another controller handler in this request function.
 // it goes to this controller method if endpoint is not clear.
-func (c *Controller) UrlFor(endpoint string, values ...interface{}) string {
+func (c *Controller) URLFor(endpoint string, values ...interface{}) string {
 	if len(endpoint) <= 0 {
 		return ""
 	}
 	if endpoint[0] == '.' {
-		return UrlFor(reflect.Indirect(reflect.ValueOf(c.AppController)).Type().Name()+endpoint, values...)
-	} else {
-		return UrlFor(endpoint, values...)
+		return URLFor(reflect.Indirect(reflect.ValueOf(c.AppController)).Type().Name()+endpoint, values...)
 	}
+	return URLFor(endpoint, values...)
 }
 
-// ServeJson sends a json response with encoding charset.
-func (c *Controller) ServeJson(encoding ...bool) {
+// ServeJSON sends a json response with encoding charset.
+func (c *Controller) ServeJSON(encoding ...bool) {
 	var hasIndent bool
 	var hasencoding bool
 	if RunMode == "prod" {
@@ -321,8 +330,8 @@ func (c *Controller) ServeJson(encoding ...bool) {
 	c.Ctx.Output.Json(c.Data["json"], hasIndent, hasencoding)
 }
 
-// ServeJsonp sends a jsonp response.
-func (c *Controller) ServeJsonp() {
+// ServeJSONP sends a jsonp response.
+func (c *Controller) ServeJSONP() {
 	var hasIndent bool
 	if RunMode == "prod" {
 		hasIndent = false
@@ -332,8 +341,8 @@ func (c *Controller) ServeJsonp() {
 	c.Ctx.Output.Jsonp(c.Data["jsonp"], hasIndent)
 }
 
-// ServeXml sends xml response.
-func (c *Controller) ServeXml() {
+// ServeXML sends xml response.
+func (c *Controller) ServeXML() {
 	var hasIndent bool
 	if RunMode == "prod" {
 		hasIndent = false
@@ -347,12 +356,12 @@ func (c *Controller) ServeXml() {
 func (c *Controller) ServeFormatted() {
 	accept := c.Ctx.Input.Header("Accept")
 	switch accept {
-	case applicationJson:
-		c.ServeJson()
-	case applicationXml, textXml:
-		c.ServeXml()
+	case applicationJSON:
+		c.ServeJSON()
+	case applicationXML, textXML:
+		c.ServeXML()
 	default:
-		c.ServeJson()
+		c.ServeJSON()
 	}
 }
 
@@ -378,9 +387,8 @@ func (c *Controller) GetString(key string, def ...string) string {
 
 	if v := c.Ctx.Input.Query(key); v != "" {
 		return v
-	} else {
-		return defv
 	}
+	return defv
 }
 
 // GetStrings returns the input string slice by key string or the default value while it's present and input is blank
@@ -399,9 +407,8 @@ func (c *Controller) GetStrings(key string, def ...[]string) []string {
 	vs := f[key]
 	if len(vs) > 0 {
 		return vs
-	} else {
-		return defv
 	}
+	return defv
 }
 
 // GetInt returns input as an int or the default value while it's present and input is blank
@@ -575,7 +582,7 @@ func (c *Controller) GetSession(name interface{}) interface{} {
 	return c.CruSession.Get(name)
 }
 
-// SetSession removes value from session.
+// DelSession removes value from session.
 func (c *Controller) DelSession(name interface{}) {
 	if c.CruSession == nil {
 		c.StartSession()
@@ -614,34 +621,34 @@ func (c *Controller) SetSecureCookie(Secret, name, value string, others ...inter
 	c.Ctx.SetSecureCookie(Secret, name, value, others...)
 }
 
-// XsrfToken creates a xsrf token string and returns.
-func (c *Controller) XsrfToken() string {
-	if c._xsrf_token == "" {
+// XSRFToken creates a CSRF token string and returns.
+func (c *Controller) XSRFToken() string {
+	if c._xsrfToken == "" {
 		var expire int64
 		if c.XSRFExpire > 0 {
 			expire = int64(c.XSRFExpire)
 		} else {
 			expire = int64(XSRFExpire)
 		}
-		c._xsrf_token = c.Ctx.XsrfToken(XSRFKEY, expire)
+		c._xsrfToken = c.Ctx.XsrfToken(XSRFKEY, expire)
 	}
-	return c._xsrf_token
+	return c._xsrfToken
 }
 
-// CheckXsrfCookie checks xsrf token in this request is valid or not.
+// CheckXSRFCookie checks xsrf token in this request is valid or not.
 // the token can provided in request header "X-Xsrftoken" and "X-CsrfToken"
 // or in form field value named as "_xsrf".
-func (c *Controller) CheckXsrfCookie() bool {
+func (c *Controller) CheckXSRFCookie() bool {
 	if !c.EnableXSRF {
 		return true
 	}
 	return c.Ctx.CheckXsrfCookie()
 }
 
-// XsrfFormHtml writes an input field contains xsrf token value.
-func (c *Controller) XsrfFormHtml() string {
+// XSRFFormHTML writes an input field contains xsrf token value.
+func (c *Controller) XSRFFormHTML() string {
 	return "<input type=\"hidden\" name=\"_xsrf\" value=\"" +
-		c._xsrf_token + "\"/>"
+		c._xsrfToken + "\"/>"
 }
 
 // GetControllerAndAction gets the executing controller name and action name.

@@ -88,12 +88,12 @@ func Register(name string, adapter Config) {
 
 // adapterName is ini/json/xml/yaml.
 // filename is the config file path.
-func NewConfig(adapterName, fileaname string) (ConfigContainer, error) {
+func NewConfig(adapterName, filename string) (ConfigContainer, error) {
 	adapter, ok := adapters[adapterName]
 	if !ok {
 		return nil, fmt.Errorf("config: unknown adaptername %q (forgotten import?)", adapterName)
 	}
-	return adapter.Parse(fileaname)
+	return adapter.Parse(filename)
 }
 
 // adapterName is ini/json/xml/yaml.

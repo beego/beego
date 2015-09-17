@@ -74,12 +74,6 @@ func SetDefaultSetting(setting BeegoHttpSettings) {
 	settingMutex.Lock()
 	defer settingMutex.Unlock()
 	defaultSetting = setting
-	if defaultSetting.ConnectTimeout == 0 {
-		defaultSetting.ConnectTimeout = 60 * time.Second
-	}
-	if defaultSetting.ReadWriteTimeout == 0 {
-		defaultSetting.ReadWriteTimeout = 60 * time.Second
-	}
 }
 
 // return *BeegoHttpRequest with specific method
@@ -100,7 +94,7 @@ func NewBeegoRequest(rawurl, method string) *BeegoHttpRequest {
 	return &BeegoHttpRequest{
 		url:     rawurl,
 		req:     &req,
-		params:  map[string]string{},
+		params:  map[string][]string{},
 		files:   map[string]string{},
 		setting: defaultSetting,
 		resp:    &resp,
@@ -150,7 +144,7 @@ type BeegoHttpSettings struct {
 type BeegoHttpRequest struct {
 	url     string
 	req     *http.Request
-	params  map[string]string
+	params  map[string][]string
 	files   map[string]string
 	setting BeegoHttpSettings
 	resp    *http.Response
@@ -273,7 +267,11 @@ func (b *BeegoHttpRequest) SetProxy(proxy func(*http.Request) (*url.URL, error))
 // Param adds query param in to request.
 // params build query string as ?key1=value1&key2=value2...
 func (b *BeegoHttpRequest) Param(key, value string) *BeegoHttpRequest {
-	b.params[key] = value
+	if param, ok := b.params[key]; ok {
+		b.params[key] = append(param, value)
+	} else {
+		b.params[key] = []string{value}
+	}
 	return b
 }
 
@@ -348,7 +346,9 @@ func (b *BeegoHttpRequest) buildUrl(paramBody string) {
 					}
 				}
 				for k, v := range b.params {
-					bodyWriter.WriteField(k, v)
+					for _, vv := range v {
+						bodyWriter.WriteField(k, vv)
+					}
 				}
 				bodyWriter.Close()
 				pw.Close()
@@ -383,10 +383,12 @@ func (b *BeegoHttpRequest) SendOut() (*http.Response, error) {
 	if len(b.params) > 0 {
 		var buf bytes.Buffer
 		for k, v := range b.params {
-			buf.WriteString(url.QueryEscape(k))
-			buf.WriteByte('=')
-			buf.WriteString(url.QueryEscape(v))
-			buf.WriteByte('&')
+			for _, vv := range v {
+				buf.WriteString(url.QueryEscape(k))
+				buf.WriteByte('=')
+				buf.WriteString(url.QueryEscape(vv))
+				buf.WriteByte('&')
+			}
 		}
 		paramBody = buf.String()
 		paramBody = paramBody[0 : len(paramBody)-1]

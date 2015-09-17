@@ -19,6 +19,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestResponse(t *testing.T) {
@@ -153,6 +154,7 @@ func TestWithSetting(t *testing.T) {
 	setting.EnableCookie = true
 	setting.UserAgent = v
 	setting.Transport = nil
+	setting.ReadWriteTimeout = 5 * time.Second
 	SetDefaultSetting(setting)
 
 	str, err := Get("http://httpbin.org/get").String()
