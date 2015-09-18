@@ -19,7 +19,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"net/http"
 )
 
 // beego web framework version.
