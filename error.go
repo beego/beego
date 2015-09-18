@@ -376,13 +376,14 @@ func ErrorController(c ControllerInterface) *App {
 	rt := reflectVal.Type()
 	ct := reflect.Indirect(reflectVal).Type()
 	for i := 0; i < rt.NumMethod(); i++ {
-		if !utils.InSlice(rt.Method(i).Name, exceptMethod) && strings.HasPrefix(rt.Method(i).Name, "Error") {
+		methodName := rt.Method(i).Name
+		if !utils.InSlice(methodName, exceptMethod) && strings.HasPrefix(methodName, "Error") {
 			errinfo := &errorInfo{}
 			errinfo.errorType = errorTypeController
 			errinfo.controllerType = ct
-			errinfo.method = rt.Method(i).Name
-			errname := strings.TrimPrefix(rt.Method(i).Name, "Error")
-			ErrorMaps[errname] = errinfo
+			errinfo.method = methodName
+			errName := strings.TrimPrefix(methodName, "Error")
+			ErrorMaps[errName] = errinfo
 		}
 	}
 	return BeeApp
