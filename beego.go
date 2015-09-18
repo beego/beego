@@ -15,6 +15,7 @@
 package beego
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -45,14 +46,11 @@ func AddAPPStartHook(hf hookfunc) {
 func Run(params ...string) {
 	initBeforeHTTPRun()
 
-	if len(params) > 0 && params[0] != "" {
-		strs := strings.Split(params[0], ":")
-		if len(strs) > 0 && strs[0] != "" {
-			HTTPAddr = strs[0]
-		}
-		if len(strs) > 1 && strs[1] != "" {
-			HTTPPort, _ = strconv.Atoi(strs[1])
-		}
+	params = append(params, fmt.Sprintf("%s:%d", HTTPAddr, HTTPPort))
+	addr := strings.Split(params[0], ":")
+	if len(addr) == 2 {
+		HTTPAddr = addr[0]
+		HTTPPort, _ = strconv.Atoi(addr[1])
 	}
 
 	BeeApp.Run()
