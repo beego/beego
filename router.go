@@ -109,7 +109,7 @@ type controllerInfo struct {
 	controllerType reflect.Type
 	methods        map[string]string
 	handler        http.Handler
-	runFunction FilterFunc
+	runFunction    FilterFunc
 	routerType     int
 }
 
