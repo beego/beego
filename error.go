@@ -204,6 +204,7 @@ type errorInfo struct {
 }
 
 // map of http handlers for each error string.
+// there is 10 kinds default error(40x and 50x)
 var ErrorMaps = make(map[string]*errorInfo, 10)
 
 // show 401 unauthorized error.
