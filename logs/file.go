@@ -53,6 +53,8 @@ type fileLogWriter struct {
 	startLock sync.Mutex // Only one log can write to the file
 
 	Level int `json:"level"`
+
+	Perm os.FileMode `json:"perm"`
 }
 
 // MuxWriter is an *os.File writer with locker.
@@ -86,6 +88,7 @@ func newFileWriter() Logger {
 		Maxdays:  7,
 		Rotate:   true,
 		Level:    LevelTrace,
+		Perm:     0660,
 	}
 	// use MuxWriter instead direct use os.File for lock write when rotate
 	w.mw = new(MuxWriter)
@@ -102,7 +105,8 @@ func newFileWriter() Logger {
 //	"maxsize":1<<30,
 //	"daily":true,
 //	"maxdays":15,
-//	"rotate":true
+//	"rotate":true,
+//  "perm":0600
 //	}
 func (w *fileLogWriter) Init(jsonconfig string) error {
 	err := json.Unmarshal([]byte(jsonconfig), w)
@@ -154,7 +158,7 @@ func (w *fileLogWriter) WriteMsg(msg string, level int) error {
 
 func (w *fileLogWriter) createLogFile() (*os.File, error) {
 	// Open the log file
-	fd, err := os.OpenFile(w.Filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0660)
+	fd, err := os.OpenFile(w.Filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, w.Perm)
 	return fd, err
 }
 
