@@ -63,14 +63,13 @@ var (
 		"CONNECT": "CONNECT",
 	}
 	// these beego.Controller's methods shouldn't reflect to AutoRouter
-	exceptMethod = func() []string {
-		methods := []string{}
-		rv := reflect.TypeOf(&Controller{})
-		for i := 0; i < rv.NumMethod(); i++ {
-			methods = append(methods, rv.Method(i).Name)
-		}
-		return methods
-	}()
+	exceptMethod = []string{"Init", "Prepare", "Finish", "Render", "RenderString",
+		"RenderBytes", "Redirect", "Abort", "StopRun", "UrlFor", "ServeJson", "ServeJsonp",
+		"ServeXml", "Input", "ParseForm", "GetString", "GetStrings", "GetInt", "GetBool",
+		"GetFloat", "GetFile", "SaveToFile", "StartSession", "SetSession", "GetSession",
+		"DelSession", "SessionRegenerateID", "DestroySession", "IsAjax", "GetSecureCookie",
+		"SetSecureCookie", "XsrfToken", "CheckXsrfCookie", "XsrfFormHtml",
+		"GetControllerAndAction"}
 
 	urlPlaceholder = "{{placeholder}}"
 	// DefaultAccessLogFilter will skip the accesslog if return true
