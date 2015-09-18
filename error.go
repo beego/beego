@@ -390,18 +390,19 @@ func ErrorController(c ControllerInterface) *App {
 // show error string as simple text message.
 // if error string is empty, show 503 or 500 error as default.
 func exception(errCode string, ctx *context.Context) {
-	code, _ := strconv.Atoi(errCode)
-	if code == 0 {
-		code = 503
-	}
 	for _, ec := range []string{errCode, "503", "500"} {
+		code, _ := strconv.Atoi(ec)
+		if code == 0 {
+			code = 503
+		}
 		if h, ok := ErrorMaps[ec]; ok {
 			executeError(h, ctx, code)
 			return
 		}
 	}
 	//if 50x error has been removed from errorMap
-	ctx.ResponseWriter.WriteHeader(code)
+	//set 503 as default
+	ctx.ResponseWriter.WriteHeader(503)
 	ctx.WriteString(errCode)
 }
 
