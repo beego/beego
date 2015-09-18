@@ -130,21 +130,6 @@ func TestGetBool(t *testing.T) {
 	}
 }
 
-func TestGetByteArray(t *testing.T) {
-	var b = []byte("test")
-	var t1 = []byte("test")
-	if !byteArrayEquals(b, getByteArray(t1)) {
-		t.Error("get byte array from byte array error")
-	}
-	var t2 = "test"
-	if !byteArrayEquals(b, getByteArray(t2)) {
-		t.Error("get byte array from string error")
-	}
-	if nil != getByteArray(nil) {
-		t.Error("get byte array from nil error")
-	}
-}
-
 func byteArrayEquals(a []byte, b []byte) bool {
 	if len(a) != len(b) {
 		return false
