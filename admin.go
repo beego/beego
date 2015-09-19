@@ -65,24 +65,15 @@ func init() {
 // AdminIndex is the default http.Handler for admin module.
 // it matches url pattern "/".
 func adminIndex(rw http.ResponseWriter, r *http.Request) {
-	tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
-	tmpl = template.Must(tmpl.Parse(indexTpl))
-	tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
-	data := make(map[interface{}]interface{})
-	tmpl.Execute(rw, data)
+	execTpl(rw, map[interface{}]interface{}{}, indexTpl, defaultScriptsTpl)
 }
 
 // QpsIndex is the http.Handler for writing qbs statistics map result info in http.ResponseWriter.
 // it's registered with url pattern "/qbs" in admin module.
 func qpsIndex(rw http.ResponseWriter, r *http.Request) {
-	tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
-	tmpl = template.Must(tmpl.Parse(qpsTpl))
-	tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
 	data := make(map[interface{}]interface{})
 	data["Content"] = toolbox.StatisticsMap.GetMap()
-
-	tmpl.Execute(rw, data)
-
+	execTpl(rw, data, qpsTpl, defaultScriptsTpl)
 }
 
 // ListConf is the http.Handler of displaying all beego configuration values as key/value pair.
@@ -167,11 +158,7 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 			content["Methods"] = methods
 			data["Content"] = content
 			data["Title"] = "Routers"
-
-			tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
-			tmpl = template.Must(tmpl.Parse(routerAndFilterTpl))
-			tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
-			tmpl.Execute(rw, data)
+			execTpl(rw, data, routerAndFilterTpl, defaultScriptsTpl)
 		case "filter":
 			content := make(map[string]interface{})
 
@@ -186,65 +173,25 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 
 			if BeeApp.Handlers.enableFilter {
 				var filterType string
-
-				if bf, ok := BeeApp.Handlers.filters[BeforeRouter]; ok {
-					filterType = "Before Router"
-					filterTypes = append(filterTypes, filterType)
-					resultList := new([][]string)
-					for _, f := range bf {
-
-						var result = []string{
-							fmt.Sprintf("%s", f.pattern),
-							fmt.Sprintf("%s", utils.GetFuncName(f.filterFunc)),
+				for k, fr := range map[int]string{
+					BeforeStatic: "Before Static",
+					BeforeRouter: "Before Router",
+					BeforeExec:   "Before Exec",
+					AfterExec:    "After Exec",
+					FinishRouter: "Finish Router"} {
+					if bf, ok := BeeApp.Handlers.filters[k]; ok {
+						filterType = fr
+						filterTypes = append(filterTypes, filterType)
+						resultList := new([][]string)
+						for _, f := range bf {
+							var result = []string{
+								fmt.Sprintf("%s", f.pattern),
+								fmt.Sprintf("%s", utils.GetFuncName(f.filterFunc)),
+							}
+							*resultList = append(*resultList, result)
 						}
-						*resultList = append(*resultList, result)
+						filterTypeData[filterType] = resultList
 					}
-					filterTypeData[filterType] = resultList
-				}
-
-				if bf, ok := BeeApp.Handlers.filters[BeforeExec]; ok {
-					filterType = "Before Exec"
-					filterTypes = append(filterTypes, filterType)
-					resultList := new([][]string)
-					for _, f := range bf {
-
-						var result = []string{
-							fmt.Sprintf("%s", f.pattern),
-							fmt.Sprintf("%s", utils.GetFuncName(f.filterFunc)),
-						}
-						*resultList = append(*resultList, result)
-					}
-					filterTypeData[filterType] = resultList
-				}
-
-				if bf, ok := BeeApp.Handlers.filters[AfterExec]; ok {
-					filterType = "After Exec"
-					filterTypes = append(filterTypes, filterType)
-					resultList := new([][]string)
-					for _, f := range bf {
-
-						var result = []string{
-							fmt.Sprintf("%s", f.pattern),
-							fmt.Sprintf("%s", utils.GetFuncName(f.filterFunc)),
-						}
-						*resultList = append(*resultList, result)
-					}
-					filterTypeData[filterType] = resultList
-				}
-
-				if bf, ok := BeeApp.Handlers.filters[FinishRouter]; ok {
-					filterType = "Finish Router"
-					filterTypes = append(filterTypes, filterType)
-					resultList := new([][]string)
-					for _, f := range bf {
-
-						var result = []string{
-							fmt.Sprintf("%s", f.pattern),
-							fmt.Sprintf("%s", utils.GetFuncName(f.filterFunc)),
-						}
-						*resultList = append(*resultList, result)
-					}
-					filterTypeData[filterType] = resultList
 				}
 			}
 
@@ -253,11 +200,7 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 
 			data["Content"] = content
 			data["Title"] = "Filters"
-			tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
-			tmpl = template.Must(tmpl.Parse(routerAndFilterTpl))
-			tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
-			tmpl.Execute(rw, data)
-
+			execTpl(rw, data, routerAndFilterTpl, defaultScriptsTpl)
 		default:
 			rw.Write([]byte("command not support"))
 		}
@@ -306,7 +249,7 @@ func profIndex(rw http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	command := r.Form.Get("command")
 	format := r.Form.Get("format")
-	data := make(map[string]interface{})
+	data := make(map[interface{}]interface{})
 
 	var result bytes.Buffer
 	if command != "" {
@@ -326,15 +269,11 @@ func profIndex(rw http.ResponseWriter, r *http.Request) {
 		}
 
 		data["Title"] = command
-		tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
-		tmpl = template.Must(tmpl.Parse(profillingTpl))
+		defaultTpl := defaultScriptsTpl
 		if command == "gc summary" {
-			tmpl = template.Must(tmpl.Parse(gcAjaxTpl))
-		} else {
-
-			tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
+			defaultTpl = gcAjaxTpl
 		}
-		tmpl.Execute(rw, data)
+		execTpl(rw, data, profillingTpl, defaultTpl)
 	}
 }
 
@@ -376,11 +315,7 @@ func healthcheck(rw http.ResponseWriter, req *http.Request) {
 	content["Data"] = resultList
 	data["Content"] = content
 	data["Title"] = "Health Check"
-	tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
-	tmpl = template.Must(tmpl.Parse(healthCheckTpl))
-	tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
-	tmpl.Execute(rw, data)
-
+	execTpl(rw, data, healthCheckTpl, defaultScriptsTpl)
 }
 
 // TaskStatus is a http.Handler with running task status (task name, status and the last execution).
@@ -429,9 +364,14 @@ func taskStatus(rw http.ResponseWriter, req *http.Request) {
 	content["Data"] = resultList
 	data["Content"] = content
 	data["Title"] = "Tasks"
+	execTpl(rw, data, tasksTpl, defaultScriptsTpl)
+}
+
+func execTpl(rw http.ResponseWriter, data map[interface{}]interface{}, tpls ...string) {
 	tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
-	tmpl = template.Must(tmpl.Parse(tasksTpl))
-	tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
+	for _, tpl := range tpls {
+		tmpl = template.Must(tmpl.Parse(tpl))
+	}
 	tmpl.Execute(rw, data)
 }
 
