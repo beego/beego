@@ -40,6 +40,7 @@ func AddAPPStartHook(hf hookfunc) {
 
 // Run beego application.
 // beego.Run() default run on HttpPort
+// beego.Run("localhost")
 // beego.Run(":8089")
 // beego.Run("127.0.0.1:8089")
 func Run(params ...string) {

@@ -108,7 +108,7 @@ type controllerInfo struct {
 	controllerType reflect.Type
 	methods        map[string]string
 	handler        http.Handler
-	runfunction    FilterFunc
+	runFunction    FilterFunc
 	routerType     int
 }
 
@@ -324,7 +324,7 @@ func (p *ControllerRegister) AddMethod(method, pattern string, f FilterFunc) {
 	route := &controllerInfo{}
 	route.pattern = pattern
 	route.routerType = routerTypeRESTFul
-	route.runfunction = f
+	route.runFunction = f
 	methods := make(map[string]string)
 	if method == "*" {
 		for _, val := range HTTPMETHOD {
@@ -725,7 +725,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			if routerInfo.routerType == routerTypeRESTFul {
 				if _, ok := routerInfo.methods[r.Method]; ok {
 					isRunable = true
-					routerInfo.runfunction(context)
+					routerInfo.runFunction(context)
 				} else {
 					exception("405", context)
 					goto Admin

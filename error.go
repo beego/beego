@@ -204,6 +204,7 @@ type errorInfo struct {
 }
 
 // map of http handlers for each error string.
+// there is 10 kinds default error(40x and 50x)
 var ErrorMaps = make(map[string]*errorInfo, 10)
 
 // show 401 unauthorized error.
@@ -375,13 +376,14 @@ func ErrorController(c ControllerInterface) *App {
 	rt := reflectVal.Type()
 	ct := reflect.Indirect(reflectVal).Type()
 	for i := 0; i < rt.NumMethod(); i++ {
-		if !utils.InSlice(rt.Method(i).Name, exceptMethod) && strings.HasPrefix(rt.Method(i).Name, "Error") {
+		methodName := rt.Method(i).Name
+		if !utils.InSlice(methodName, exceptMethod) && strings.HasPrefix(methodName, "Error") {
 			errinfo := &errorInfo{}
 			errinfo.errorType = errorTypeController
 			errinfo.controllerType = ct
-			errinfo.method = rt.Method(i).Name
-			errname := strings.TrimPrefix(rt.Method(i).Name, "Error")
-			ErrorMaps[errname] = errinfo
+			errinfo.method = methodName
+			errName := strings.TrimPrefix(methodName, "Error")
+			ErrorMaps[errName] = errinfo
 		}
 	}
 	return BeeApp
@@ -390,18 +392,22 @@ func ErrorController(c ControllerInterface) *App {
 // show error string as simple text message.
 // if error string is empty, show 503 or 500 error as default.
 func exception(errCode string, ctx *context.Context) {
-	code, _ := strconv.Atoi(errCode)
-	if code == 0 {
-		code = 503
+	atoi := func(code string) int {
+		v, err := strconv.Atoi(code)
+		if err == nil {
+			return v
+		}
+		return 503
 	}
+
 	for _, ec := range []string{errCode, "503", "500"} {
 		if h, ok := ErrorMaps[ec]; ok {
-			executeError(h, ctx, code)
+			executeError(h, ctx, atoi(ec))
 			return
 		}
 	}
 	//if 50x error has been removed from errorMap
-	ctx.ResponseWriter.WriteHeader(code)
+	ctx.ResponseWriter.WriteHeader(atoi(errCode))
 	ctx.WriteString(errCode)
 }
 
