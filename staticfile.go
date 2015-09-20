@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -29,7 +30,7 @@ func serverStaticRouter(ctx *context.Context) {
 	if ctx.Input.Method() != "GET" && ctx.Input.Method() != "HEAD" {
 		return
 	}
-	requestPath := path.Clean(ctx.Input.Request.URL.Path)
+	requestPath := filepath.Clean(ctx.Input.Request.URL.Path)
 	i := 0
 	for prefix, staticDir := range StaticDir {
 		if len(prefix) == 0 {
