@@ -74,7 +74,15 @@ func serverStaticRouter(ctx *context.Context) {
 			} else if strings.HasSuffix(requestPath, "/index.html") {
 				file := path.Join(staticDir, requestPath)
 				if utils.FileExists(file) {
-					http.ServeFile(ctx.ResponseWriter, ctx.Request, file)
+					oFile, err := os.Open(file)
+					if err != nil {
+						if RunMode == "dev" {
+							Warn("Can't open the file:", file, err)
+						}
+						http.NotFound(ctx.ResponseWriter, ctx.Request)
+					}
+					defer oFile.Close()
+					http.ServeContent(ctx.ResponseWriter, ctx.Request, file, finfo.ModTime(), oFile)
 					return
 				}
 			}
