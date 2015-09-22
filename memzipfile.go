@@ -15,6 +15,7 @@
 package beego
 
 import (
+	"bufio"
 	"bytes"
 	"compress/flate"
 	"compress/gzip"
@@ -49,57 +50,26 @@ func openMemZipFile(path string, zip string) (*memFile, error) {
 
 	modTime := osFileInfo.ModTime()
 	fileSize := osFileInfo.Size()
+	mapKey := zip + ":" + path
 	lock.RLock()
-	cfi, ok := menFileInfoMap[zip+":"+path]
+	cfi, ok := menFileInfoMap[mapKey]
 	lock.RUnlock()
 	if !(ok && cfi.ModTime() == modTime && cfi.fileSize == fileSize) {
-		var content []byte
-		if zip == "gzip" {
-			var zipBuf bytes.Buffer
-			gzipWriter, e := gzip.NewWriterLevel(&zipBuf, gzip.BestCompression)
-			if e != nil {
-				return nil, e
-			}
-			_, e = io.Copy(gzipWriter, osFile)
-			gzipWriter.Close()
-			if e != nil {
-				return nil, e
-			}
-			content, e = ioutil.ReadAll(&zipBuf)
-			if e != nil {
-				return nil, e
-			}
-		} else if zip == "deflate" {
-			var zipBuf bytes.Buffer
-			deflateWriter, e := flate.NewWriter(&zipBuf, flate.BestCompression)
-			if e != nil {
-				return nil, e
-			}
-			_, e = io.Copy(deflateWriter, osFile)
-			deflateWriter.Close()
-			if e != nil {
-				return nil, e
-			}
-			content, e = ioutil.ReadAll(&zipBuf)
-			if e != nil {
-				return nil, e
-			}
-		} else {
-			content, e = ioutil.ReadAll(osFile)
-			if e != nil {
-				return nil, e
-			}
-		}
-
-		cfi = &memFileInfo{osFileInfo, modTime, content, int64(len(content)), fileSize}
 		lock.Lock()
 		defer lock.Unlock()
-		menFileInfoMap[zip+":"+path] = cfi
+		if cfi, ok = menFileInfoMap[mapKey]; !ok {
+			cfi, e = newMenFileInfo(osFile, osFileInfo, zip)
+			if e != nil {
+				return nil, e
+			}
+			menFileInfoMap[mapKey] = cfi
+		}
 	}
+
 	return &memFile{fi: cfi, offset: 0}, nil
 }
 
-// MemFileInfo contains a compressed file bytes and file information.
+// memFileInfo contains a compressed file bytes and file information.
 // it implements os.FileInfo interface.
 type memFileInfo struct {
 	os.FileInfo
@@ -107,6 +77,49 @@ type memFileInfo struct {
 	content     []byte
 	contentSize int64
 	fileSize    int64
+}
+
+// newMenFileInfo return a memFileInfo from file by zip type
+func newMenFileInfo(file *os.File, fileInfo os.FileInfo, zip string) (*memFileInfo, error) {
+	var content []byte
+	var zipBuf bytes.Buffer
+	var fileWriter io.Writer
+	var err error
+
+	switch zip {
+	case "gzip":
+		fileWriter, err = gzip.NewWriterLevel(&zipBuf, gzip.BestCompression)
+	case "deflate":
+		fileWriter, err = flate.NewWriter(&zipBuf, flate.BestCompression)
+	default:
+		fileWriter = bufio.NewWriter(&zipBuf)
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = io.Copy(fileWriter, file)
+	if err != nil {
+		return nil, err
+	}
+
+	switch fileWriter.(type) {
+	case io.WriteCloser:
+		fileWriter.(io.WriteCloser).Close()
+	}
+
+	content, err = ioutil.ReadAll(&zipBuf)
+	if err != nil {
+		return nil, err
+	}
+
+	return &memFileInfo{
+		FileInfo:    fileInfo,
+		modTime:     fileInfo.ModTime(),
+		content:     content,
+		contentSize: int64(len(content)),
+		fileSize:    fileInfo.Size(),
+	}, nil
 }
 
 // Name returns the compressed filename.
