@@ -4,7 +4,7 @@ import "net"
 
 type graceConn struct {
 	net.Conn
-	server *graceServer
+	server *Server
 }
 
 func (c graceConn) Close() error {

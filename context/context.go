@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package context provide the context utils
 // Usage:
 //
 //	import "github.com/astaxie/beego/context"
@@ -34,14 +35,14 @@ import (
 	"github.com/astaxie/beego/utils"
 )
 
-// Http request context struct including BeegoInput, BeegoOutput, http.Request and http.ResponseWriter.
+// Context Http request context struct including BeegoInput, BeegoOutput, http.Request and http.ResponseWriter.
 // BeegoInput and BeegoOutput provides some api to operate request and response more easily.
 type Context struct {
 	Input          *BeegoInput
 	Output         *BeegoOutput
 	Request        *http.Request
 	ResponseWriter http.ResponseWriter
-	_xsrf_token    string
+	_xsrfToken     string
 }
 
 // Redirect does redirection to localurl with http header status code.
@@ -58,25 +59,25 @@ func (ctx *Context) Abort(status int, body string) {
 	panic(body)
 }
 
-// Write string to response body.
+// WriteString Write string to response body.
 // it sends response body.
 func (ctx *Context) WriteString(content string) {
 	ctx.ResponseWriter.Write([]byte(content))
 }
 
-// Get cookie from request by a given key.
+// GetCookie Get cookie from request by a given key.
 // It's alias of BeegoInput.Cookie.
 func (ctx *Context) GetCookie(key string) string {
 	return ctx.Input.Cookie(key)
 }
 
-// Set cookie for response.
+// SetCookie Set cookie for response.
 // It's alias of BeegoOutput.Cookie.
 func (ctx *Context) SetCookie(name string, value string, others ...interface{}) {
 	ctx.Output.Cookie(name, value, others...)
 }
 
-// Get secure cookie from request by a given key.
+// GetSecureCookie Get secure cookie from request by a given key.
 func (ctx *Context) GetSecureCookie(Secret, key string) (string, bool) {
 	val := ctx.Input.Cookie(key)
 	if val == "" {
@@ -103,7 +104,7 @@ func (ctx *Context) GetSecureCookie(Secret, key string) (string, bool) {
 	return string(res), true
 }
 
-// Set Secure cookie for response.
+// SetSecureCookie Set Secure cookie for response.
 func (ctx *Context) SetSecureCookie(Secret, name, value string, others ...interface{}) {
 	vs := base64.URLEncoding.EncodeToString([]byte(value))
 	timestamp := strconv.FormatInt(time.Now().UnixNano(), 10)
@@ -114,23 +115,23 @@ func (ctx *Context) SetSecureCookie(Secret, name, value string, others ...interf
 	ctx.Output.Cookie(name, cookie, others...)
 }
 
-// XsrfToken creates a xsrf token string and returns.
-func (ctx *Context) XsrfToken(key string, expire int64) string {
-	if ctx._xsrf_token == "" {
+// XSRFToken creates a xsrf token string and returns.
+func (ctx *Context) XSRFToken(key string, expire int64) string {
+	if ctx._xsrfToken == "" {
 		token, ok := ctx.GetSecureCookie(key, "_xsrf")
 		if !ok {
 			token = string(utils.RandomCreateBytes(32))
 			ctx.SetSecureCookie(key, "_xsrf", token, expire)
 		}
-		ctx._xsrf_token = token
+		ctx._xsrfToken = token
 	}
-	return ctx._xsrf_token
+	return ctx._xsrfToken
 }
 
-// CheckXsrfCookie checks xsrf token in this request is valid or not.
+// CheckXSRFCookie checks xsrf token in this request is valid or not.
 // the token can provided in request header "X-Xsrftoken" and "X-CsrfToken"
 // or in form field value named as "_xsrf".
-func (ctx *Context) CheckXsrfCookie() bool {
+func (ctx *Context) CheckXSRFCookie() bool {
 	token := ctx.Input.Query("_xsrf")
 	if token == "" {
 		token = ctx.Request.Header.Get("X-Xsrftoken")
@@ -142,7 +143,7 @@ func (ctx *Context) CheckXsrfCookie() bool {
 		ctx.Abort(403, "'_xsrf' argument missing from POST")
 		return false
 	}
-	if ctx._xsrf_token != token {
+	if ctx._xsrfToken != token {
 		ctx.Abort(403, "XSRF cookie does not match POST argument")
 		return false
 	}

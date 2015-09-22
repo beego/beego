@@ -19,8 +19,8 @@ import (
 	"reflect"
 )
 
-// convert any numeric value to int64
-func ToInt64(value interface{}) (d int64, err error) {
+// ToInt64 convert any numeric value to int64
+func toInt64(value interface{}) (d int64, err error) {
 	val := reflect.ValueOf(value)
 	switch value.(type) {
 	case int, int8, int16, int32, int64:

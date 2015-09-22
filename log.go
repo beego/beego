@@ -32,18 +32,18 @@ const (
 	LevelDebug
 )
 
-// SetLogLevel sets the global log level used by the simple
-// logger.
+// SetLevel sets the global log level used by the simple logger.
 func SetLevel(l int) {
 	BeeLogger.SetLevel(l)
 }
 
+// SetLogFuncCall set the CallDepth, default is 3
 func SetLogFuncCall(b bool) {
 	BeeLogger.EnableFuncCallDepth(b)
 	BeeLogger.SetLogFuncCallDepth(3)
 }
 
-// logger references the used application logger.
+// BeeLogger references the used application logger.
 var BeeLogger *logs.BeeLogger
 
 // SetLogger sets a new logger.
@@ -55,10 +55,12 @@ func SetLogger(adaptername string, config string) error {
 	return nil
 }
 
+// Emergency logs a message at emergency level.
 func Emergency(v ...interface{}) {
 	BeeLogger.Emergency(generateFmtStr(len(v)), v...)
 }
 
+// Alert logs a message at alert level.
 func Alert(v ...interface{}) {
 	BeeLogger.Alert(generateFmtStr(len(v)), v...)
 }
@@ -78,21 +80,22 @@ func Warning(v ...interface{}) {
 	BeeLogger.Warning(generateFmtStr(len(v)), v...)
 }
 
-// compatibility alias for Warning()
+// Warn compatibility alias for Warning()
 func Warn(v ...interface{}) {
 	BeeLogger.Warn(generateFmtStr(len(v)), v...)
 }
 
+// Notice logs a message at notice level.
 func Notice(v ...interface{}) {
 	BeeLogger.Notice(generateFmtStr(len(v)), v...)
 }
 
-// Info logs a message at info level.
+// Informational logs a message at info level.
 func Informational(v ...interface{}) {
 	BeeLogger.Informational(generateFmtStr(len(v)), v...)
 }
 
-// compatibility alias for Warning()
+// Info compatibility alias for Warning()
 func Info(v ...interface{}) {
 	BeeLogger.Info(generateFmtStr(len(v)), v...)
 }

@@ -28,8 +28,10 @@ import (
 	"time"
 )
 
-var gmfim map[string]*memFileInfo = make(map[string]*memFileInfo)
-var lock sync.RWMutex
+var (
+	gmfim = make(map[string]*memFileInfo)
+	lock  sync.RWMutex
+)
 
 // OpenMemZipFile returns MemFile object with a compressed static file.
 // it's used for serve static file if gzip enable.

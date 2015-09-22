@@ -87,7 +87,7 @@ func showErr(err interface{}, ctx *context.Context, Stack string) {
 	data := make(map[string]string)
 	data["AppError"] = AppName + ":" + fmt.Sprint(err)
 	data["RequestMethod"] = ctx.Input.Method()
-	data["RequestURL"] = ctx.Input.Uri()
+	data["RequestURL"] = ctx.Input.URI()
 	data["RemoteAddr"] = ctx.Input.IP()
 	data["Stack"] = Stack
 	data["BeegoVersion"] = VERSION
@@ -204,11 +204,8 @@ type errorInfo struct {
 }
 
 // map of http handlers for each error string.
-var ErrorMaps map[string]*errorInfo
-
-func init() {
-	ErrorMaps = make(map[string]*errorInfo)
-}
+// there is 10 kinds default error(40x and 50x)
+var ErrorMaps = make(map[string]*errorInfo, 10)
 
 // show 401 unauthorized error.
 func unauthorized(rw http.ResponseWriter, r *http.Request) {
@@ -358,52 +355,11 @@ func gatewayTimeout(rw http.ResponseWriter, r *http.Request) {
 	t.Execute(rw, data)
 }
 
-// register default error http handlers, 404,401,403,500 and 503.
-func registerDefaultErrorHandler() {
-	if _, ok := ErrorMaps["401"]; !ok {
-		Errorhandler("401", unauthorized)
-	}
-
-	if _, ok := ErrorMaps["402"]; !ok {
-		Errorhandler("402", paymentRequired)
-	}
-
-	if _, ok := ErrorMaps["403"]; !ok {
-		Errorhandler("403", forbidden)
-	}
-
-	if _, ok := ErrorMaps["404"]; !ok {
-		Errorhandler("404", notFound)
-	}
-
-	if _, ok := ErrorMaps["405"]; !ok {
-		Errorhandler("405", methodNotAllowed)
-	}
-
-	if _, ok := ErrorMaps["500"]; !ok {
-		Errorhandler("500", internalServerError)
-	}
-	if _, ok := ErrorMaps["501"]; !ok {
-		Errorhandler("501", notImplemented)
-	}
-	if _, ok := ErrorMaps["502"]; !ok {
-		Errorhandler("502", badGateway)
-	}
-
-	if _, ok := ErrorMaps["503"]; !ok {
-		Errorhandler("503", serviceUnavailable)
-	}
-
-	if _, ok := ErrorMaps["504"]; !ok {
-		Errorhandler("504", gatewayTimeout)
-	}
-}
-
 // ErrorHandler registers http.HandlerFunc to each http err code string.
 // usage:
 // 	beego.ErrorHandler("404",NotFound)
 //	beego.ErrorHandler("500",InternalServerError)
-func Errorhandler(code string, h http.HandlerFunc) *App {
+func ErrorHandler(code string, h http.HandlerFunc) *App {
 	errinfo := &errorInfo{}
 	errinfo.errorType = errorTypeHandler
 	errinfo.handler = h
@@ -414,46 +370,49 @@ func Errorhandler(code string, h http.HandlerFunc) *App {
 
 // ErrorController registers ControllerInterface to each http err code string.
 // usage:
-// 	beego.ErrorHandler(&controllers.ErrorController{})
+// 	beego.ErrorController(&controllers.ErrorController{})
 func ErrorController(c ControllerInterface) *App {
 	reflectVal := reflect.ValueOf(c)
 	rt := reflectVal.Type()
 	ct := reflect.Indirect(reflectVal).Type()
 	for i := 0; i < rt.NumMethod(); i++ {
-		if !utils.InSlice(rt.Method(i).Name, exceptMethod) && strings.HasPrefix(rt.Method(i).Name, "Error") {
+		methodName := rt.Method(i).Name
+		if !utils.InSlice(methodName, exceptMethod) && strings.HasPrefix(methodName, "Error") {
 			errinfo := &errorInfo{}
 			errinfo.errorType = errorTypeController
 			errinfo.controllerType = ct
-			errinfo.method = rt.Method(i).Name
-			errname := strings.TrimPrefix(rt.Method(i).Name, "Error")
-			ErrorMaps[errname] = errinfo
+			errinfo.method = methodName
+			errName := strings.TrimPrefix(methodName, "Error")
+			ErrorMaps[errName] = errinfo
 		}
 	}
 	return BeeApp
 }
 
 // show error string as simple text message.
-// if error string is empty, show 500 error as default.
-func exception(errcode string, ctx *context.Context) {
-	code, err := strconv.Atoi(errcode)
-	if err != nil {
-		code = 503
+// if error string is empty, show 503 or 500 error as default.
+func exception(errCode string, ctx *context.Context) {
+	atoi := func(code string) int {
+		v, err := strconv.Atoi(code)
+		if err == nil {
+			return v
+		}
+		return 503
 	}
-	if h, ok := ErrorMaps[errcode]; ok {
-		executeError(h, ctx, code)
-		return
-	} else if h, ok := ErrorMaps["503"]; ok {
-		executeError(h, ctx, code)
-		return
-	} else {
-		ctx.ResponseWriter.WriteHeader(code)
-		ctx.WriteString(errcode)
+
+	for _, ec := range []string{errCode, "503", "500"} {
+		if h, ok := ErrorMaps[ec]; ok {
+			executeError(h, ctx, atoi(ec))
+			return
+		}
 	}
+	//if 50x error has been removed from errorMap
+	ctx.ResponseWriter.WriteHeader(atoi(errCode))
+	ctx.WriteString(errCode)
 }
 
 func executeError(err *errorInfo, ctx *context.Context, code int) {
 	if err.errorType == errorTypeHandler {
-		ctx.ResponseWriter.WriteHeader(code)
 		err.handler(ctx.ResponseWriter, ctx.Request)
 		return
 	}
@@ -473,7 +432,7 @@ func executeError(err *errorInfo, ctx *context.Context, code int) {
 
 		execController.URLMapping()
 
-		in := make([]reflect.Value, 0)
+		var in []reflect.Value
 		method := vc.MethodByName(err.method)
 		method.Call(in)
 

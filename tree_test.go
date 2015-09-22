@@ -26,6 +26,12 @@ var routers []testinfo
 
 func init() {
 	routers = make([]testinfo, 0)
+	routers = append(routers, testinfo{"/topic/?:auth:int", "/topic", nil})
+	routers = append(routers, testinfo{"/topic/?:auth:int", "/topic/123", map[string]string{":auth":"123"}})
+	routers = append(routers, testinfo{"/topic/:id/?:auth", "/topic/1", map[string]string{":id": "1"}})
+	routers = append(routers, testinfo{"/topic/:id/?:auth", "/topic/1/2", map[string]string{":id": "1",":auth":"2"}})
+	routers = append(routers, testinfo{"/topic/:id/?:auth:int", "/topic/1", map[string]string{":id": "1"}})
+	routers = append(routers, testinfo{"/topic/:id/?:auth:int", "/topic/1/123", map[string]string{":id": "1",":auth":"123"}})
 	routers = append(routers, testinfo{"/:id", "/123", map[string]string{":id": "123"}})
 	routers = append(routers, testinfo{"/hello/?:id", "/hello", map[string]string{":id": ""}})
 	routers = append(routers, testinfo{"/", "/", nil})

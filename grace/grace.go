@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package grace use to hot reload
 // Description: http://grisha.org/blog/2014/06/03/graceful-restart-in-golang/
 //
 // Usage:
@@ -32,7 +33,7 @@
 //      mux := http.NewServeMux()
 //      mux.HandleFunc("/hello", handler)
 //
-//	    err := grace.ListenAndServe("localhost:8080", mux1)
+//	    err := grace.ListenAndServe("localhost:8080", mux)
 //      if err != nil {
 //		   log.Println(err)
 //	    }
@@ -52,26 +53,36 @@ import (
 )
 
 const (
-	PRE_SIGNAL = iota
-	POST_SIGNAL
+	// PreSignal is the position to add filter before signal
+	PreSignal = iota
+	// PostSignal is the position to add filter after signal
+	PostSignal
 
-	STATE_INIT
-	STATE_RUNNING
-	STATE_SHUTTING_DOWN
-	STATE_TERMINATE
+	// StateInit represent the application inited
+	StateInit
+	// StateRunning represent the application is running
+	StateRunning
+	// StateShuttingDown represent the application is shutting down
+	StateShuttingDown
+	// StateTerminate represent the application is killed
+	StateTerminate
 )
 
 var (
 	regLock              *sync.Mutex
-	runningServers       map[string]*graceServer
+	runningServers       map[string]*Server
 	runningServersOrder  []string
 	socketPtrOffsetMap   map[string]uint
 	runningServersForked bool
 
-	DefaultReadTimeOut    time.Duration
-	DefaultWriteTimeOut   time.Duration
+	// DefaultReadTimeOut is the HTTP read timeout
+	DefaultReadTimeOut time.Duration
+	// DefaultWriteTimeOut is the HTTP Write timeout
+	DefaultWriteTimeOut time.Duration
+	// DefaultMaxHeaderBytes is the Max HTTP Herder size, default is 0, no limit
 	DefaultMaxHeaderBytes int
-	DefaultTimeout        time.Duration
+	// DefaultTimeout is the shutdown server's timeout. default is 60s
+	DefaultTimeout time.Duration
 
 	isChild     bool
 	socketOrder string
@@ -81,7 +92,7 @@ func init() {
 	regLock = &sync.Mutex{}
 	flag.BoolVar(&isChild, "graceful", false, "listen on open fd (after forking)")
 	flag.StringVar(&socketOrder, "socketorder", "", "previous initialization order - used when more than one listener was started")
-	runningServers = make(map[string]*graceServer)
+	runningServers = make(map[string]*Server)
 	runningServersOrder = []string{}
 	socketPtrOffsetMap = make(map[string]uint)
 
@@ -91,7 +102,7 @@ func init() {
 }
 
 // NewServer returns a new graceServer.
-func NewServer(addr string, handler http.Handler) (srv *graceServer) {
+func NewServer(addr string, handler http.Handler) (srv *Server) {
 	regLock.Lock()
 	defer regLock.Unlock()
 	if !flag.Parsed() {
@@ -105,23 +116,23 @@ func NewServer(addr string, handler http.Handler) (srv *graceServer) {
 		socketPtrOffsetMap[addr] = uint(len(runningServersOrder))
 	}
 
-	srv = &graceServer{
+	srv = &Server{
 		wg:      sync.WaitGroup{},
 		sigChan: make(chan os.Signal),
 		isChild: isChild,
 		SignalHooks: map[int]map[os.Signal][]func(){
-			PRE_SIGNAL: map[os.Signal][]func(){
+			PreSignal: map[os.Signal][]func(){
 				syscall.SIGHUP:  []func(){},
 				syscall.SIGINT:  []func(){},
 				syscall.SIGTERM: []func(){},
 			},
-			POST_SIGNAL: map[os.Signal][]func(){
+			PostSignal: map[os.Signal][]func(){
 				syscall.SIGHUP:  []func(){},
 				syscall.SIGINT:  []func(){},
 				syscall.SIGTERM: []func(){},
 			},
 		},
-		state:   STATE_INIT,
+		state:   StateInit,
 		Network: "tcp",
 	}
 	srv.Server = &http.Server{}
@@ -137,13 +148,13 @@ func NewServer(addr string, handler http.Handler) (srv *graceServer) {
 	return
 }
 
-// refer http.ListenAndServe
+// ListenAndServe refer http.ListenAndServe
 func ListenAndServe(addr string, handler http.Handler) error {
 	server := NewServer(addr, handler)
 	return server.ListenAndServe()
 }
 
-// refer http.ListenAndServeTLS
+// ListenAndServeTLS refer http.ListenAndServeTLS
 func ListenAndServeTLS(addr string, certFile string, keyFile string, handler http.Handler) error {
 	server := NewServer(addr, handler)
 	return server.ListenAndServeTLS(certFile, keyFile)

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package config is used to parse config
 // Usage:
 // import(
 //   "github.com/astaxie/beego/config"
@@ -45,8 +46,8 @@ import (
 	"fmt"
 )
 
-// ConfigContainer defines how to get and set value from configuration raw data.
-type ConfigContainer interface {
+// Configer defines how to get and set value from configuration raw data.
+type Configer interface {
 	Set(key, val string) error   // support section::key type in given key when using ini type.
 	String(key string) string    // support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
 	Strings(key string) []string //get string slice
@@ -65,10 +66,10 @@ type ConfigContainer interface {
 	SaveConfigFile(filename string) error
 }
 
-// Config is the adapter interface for parsing config file to get raw data to ConfigContainer.
+// Config is the adapter interface for parsing config file to get raw data to Configer.
 type Config interface {
-	Parse(key string) (ConfigContainer, error)
-	ParseData(data []byte) (ConfigContainer, error)
+	Parse(key string) (Configer, error)
+	ParseData(data []byte) (Configer, error)
 }
 
 var adapters = make(map[string]Config)
@@ -86,19 +87,19 @@ func Register(name string, adapter Config) {
 	adapters[name] = adapter
 }
 
-// adapterName is ini/json/xml/yaml.
+// NewConfig adapterName is ini/json/xml/yaml.
 // filename is the config file path.
-func NewConfig(adapterName, fileaname string) (ConfigContainer, error) {
+func NewConfig(adapterName, filename string) (Configer, error) {
 	adapter, ok := adapters[adapterName]
 	if !ok {
 		return nil, fmt.Errorf("config: unknown adaptername %q (forgotten import?)", adapterName)
 	}
-	return adapter.Parse(fileaname)
+	return adapter.Parse(filename)
 }
 
-// adapterName is ini/json/xml/yaml.
+// NewConfigData adapterName is ini/json/xml/yaml.
 // data is the config data.
-func NewConfigData(adapterName string, data []byte) (ConfigContainer, error) {
+func NewConfigData(adapterName string, data []byte) (Configer, error) {
 	adapter, ok := adapters[adapterName]
 	if !ok {
 		return nil, fmt.Errorf("config: unknown adaptername %q (forgotten import?)", adapterName)

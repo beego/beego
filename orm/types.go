@@ -20,13 +20,13 @@ import (
 	"time"
 )
 
-// database driver
+// Driver define database driver
 type Driver interface {
 	Name() string
 	Type() DriverType
 }
 
-// field info
+// Fielder define field info
 type Fielder interface {
 	String() string
 	FieldType() int
@@ -34,7 +34,7 @@ type Fielder interface {
 	RawValue() interface{}
 }
 
-// orm struct
+// Ormer define the orm interface
 type Ormer interface {
 	Read(interface{}, ...string) error
 	ReadOrCreate(interface{}, string, ...string) (bool, int64, error)
@@ -53,20 +53,22 @@ type Ormer interface {
 	Driver() Driver
 }
 
-// insert prepared statement
+// Inserter insert prepared statement
 type Inserter interface {
 	Insert(interface{}) (int64, error)
 	Close() error
 }
 
-// query seter
+// QuerySeter query seter
 type QuerySeter interface {
 	Filter(string, ...interface{}) QuerySeter
 	Exclude(string, ...interface{}) QuerySeter
 	SetCond(*Condition) QuerySeter
 	Limit(interface{}, ...interface{}) QuerySeter
 	Offset(interface{}) QuerySeter
+	GroupBy(...string) QuerySeter
 	OrderBy(...string) QuerySeter
+	Distinct() QuerySeter
 	RelatedSel(...interface{}) QuerySeter
 	Count() (int64, error)
 	Exist() bool
@@ -82,7 +84,7 @@ type QuerySeter interface {
 	RowsToStruct(interface{}, string, string) (int64, error)
 }
 
-// model to model query struct
+// QueryM2Mer model to model query struct
 type QueryM2Mer interface {
 	Add(...interface{}) (int64, error)
 	Remove(...interface{}) (int64, error)
@@ -91,13 +93,13 @@ type QueryM2Mer interface {
 	Count() (int64, error)
 }
 
-// raw query statement
+// RawPreparer raw query statement
 type RawPreparer interface {
 	Exec(...interface{}) (sql.Result, error)
 	Close() error
 }
 
-// raw query seter
+// RawSeter raw query seter
 type RawSeter interface {
 	Exec() (sql.Result, error)
 	QueryRow(...interface{}) error
@@ -111,7 +113,7 @@ type RawSeter interface {
 	Prepare() (RawPreparer, error)
 }
 
-// statement querier
+// stmtQuerier statement querier
 type stmtQuerier interface {
 	Close() error
 	Exec(args ...interface{}) (sql.Result, error)
@@ -160,8 +162,8 @@ type dbBaser interface {
 	UpdateBatch(dbQuerier, *querySet, *modelInfo, *Condition, Params, *time.Location) (int64, error)
 	DeleteBatch(dbQuerier, *querySet, *modelInfo, *Condition, *time.Location) (int64, error)
 	Count(dbQuerier, *querySet, *modelInfo, *Condition, *time.Location) (int64, error)
-	OperatorSql(string) string
-	GenerateOperatorSql(*modelInfo, *fieldInfo, string, []interface{}, *time.Location) (string, []interface{})
+	OperatorSQL(string) string
+	GenerateOperatorSQL(*modelInfo, *fieldInfo, string, []interface{}, *time.Location) (string, []interface{})
 	GenerateOperatorLeftCol(*fieldInfo, string, *string)
 	PrepareInsert(dbQuerier, *modelInfo) (stmtQuerier, string, error)
 	ReadValues(dbQuerier, *querySet, *modelInfo, *Condition, []string, interface{}, *time.Location) (int64, error)

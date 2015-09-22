@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -29,7 +30,7 @@ func serverStaticRouter(ctx *context.Context) {
 	if ctx.Input.Method() != "GET" && ctx.Input.Method() != "HEAD" {
 		return
 	}
-	requestPath := path.Clean(ctx.Input.Request.URL.Path)
+	requestPath := filepath.Clean(ctx.Input.Request.URL.Path)
 	i := 0
 	for prefix, staticDir := range StaticDir {
 		if len(prefix) == 0 {
@@ -40,15 +41,13 @@ func serverStaticRouter(ctx *context.Context) {
 			if utils.FileExists(file) {
 				http.ServeFile(ctx.ResponseWriter, ctx.Request, file)
 				return
-			} else {
-				i++
-				if i == len(StaticDir) {
-					http.NotFound(ctx.ResponseWriter, ctx.Request)
-					return
-				} else {
-					continue
-				}
 			}
+			i++
+			if i == len(StaticDir) {
+				http.NotFound(ctx.ResponseWriter, ctx.Request)
+				return
+			}
+			continue
 		}
 		if strings.HasPrefix(requestPath, prefix) {
 			if len(requestPath) > len(prefix) && requestPath[len(prefix)] != '/' {
@@ -75,7 +74,15 @@ func serverStaticRouter(ctx *context.Context) {
 			} else if strings.HasSuffix(requestPath, "/index.html") {
 				file := path.Join(staticDir, requestPath)
 				if utils.FileExists(file) {
-					http.ServeFile(ctx.ResponseWriter, ctx.Request, file)
+					oFile, err := os.Open(file)
+					if err != nil {
+						if RunMode == "dev" {
+							Warn("Can't open the file:", file, err)
+						}
+						http.NotFound(ctx.ResponseWriter, ctx.Request)
+					}
+					defer oFile.Close()
+					http.ServeContent(ctx.ResponseWriter, ctx.Request, file, finfo.ModTime(), oFile)
 					return
 				}
 			}

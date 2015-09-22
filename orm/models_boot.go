@@ -51,19 +51,16 @@ func registerModel(prefix string, model interface{}) {
 	}
 
 	info := newModelInfo(val)
-
 	if info.fields.pk == nil {
 	outFor:
 		for _, fi := range info.fields.fieldsDB {
-			if fi.name == "Id" {
-				if fi.sf.Tag.Get(defaultStructTagName) == "" {
-					switch fi.addrValue.Elem().Kind() {
-					case reflect.Int, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint32, reflect.Uint64:
-						fi.auto = true
-						fi.pk = true
-						info.fields.pk = fi
-						break outFor
-					}
+			if strings.ToLower(fi.name) == "id" {
+				switch fi.addrValue.Elem().Kind() {
+				case reflect.Int, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint32, reflect.Uint64:
+					fi.auto = true
+					fi.pk = true
+					info.fields.pk = fi
+					break outFor
 				}
 			}
 		}
@@ -298,12 +295,12 @@ end:
 	}
 }
 
-// register models
+// RegisterModel register models
 func RegisterModel(models ...interface{}) {
 	RegisterModelWithPrefix("", models...)
 }
 
-// register models with a prefix
+// RegisterModelWithPrefix register models with a prefix
 func RegisterModelWithPrefix(prefix string, models ...interface{}) {
 	if modelCache.done {
 		panic(fmt.Errorf("RegisterModel must be run before BootStrap"))
@@ -314,7 +311,7 @@ func RegisterModelWithPrefix(prefix string, models ...interface{}) {
 	}
 }
 
-// bootrap models.
+// BootStrap bootrap models.
 // make all model parsed and can not add more models
 func BootStrap() {
 	if modelCache.done {

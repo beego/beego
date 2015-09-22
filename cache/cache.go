@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package cache provide a Cache interface and some implemetn engine
 // Usage:
 //
 // import(
@@ -80,7 +81,7 @@ func Register(name string, adapter Cache) {
 	adapters[name] = adapter
 }
 
-// Create a new cache driver by adapter name and config string.
+// NewCache Create a new cache driver by adapter name and config string.
 // config need to be correct JSON as string: {"interval":360}.
 // it will start gc automatically.
 func NewCache(adapterName, config string) (adapter Cache, err error) {

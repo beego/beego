@@ -103,7 +103,7 @@ func TestFileRotate(t *testing.T) {
 	log.Critical("critical")
 	log.Emergency("emergency")
 	time.Sleep(time.Second * 4)
-	rotatename := "test3.log" + fmt.Sprintf(".%s.%03d", time.Now().Format("2006-01-02"), 1)
+	rotatename := "test3" + fmt.Sprintf(".%s.%03d", time.Now().Format("2006-01-02"), 1) + ".log"
 	b, err := exists(rotatename)
 	if !b || err != nil {
 		t.Fatal("rotate not generated")

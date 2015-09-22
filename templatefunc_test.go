@@ -40,7 +40,7 @@ func TestHtml2str(t *testing.T) {
 
 
 	\n`
-	if Html2str(h) != "123\\n\n\\n" {
+	if HTML2str(h) != "123\\n\n\\n" {
 		t.Error("should be equal")
 	}
 }
@@ -82,15 +82,15 @@ func TestCompareRelated(t *testing.T) {
 	if !Compare("1", 1) {
 		t.Error("should be equal")
 	}
-    if CompareNot("abc", "abc") {
-        t.Error("should be equal")
-    }
-    if !CompareNot("abc", "aBc") {
-        t.Error("should be not equal")
-    }
-    if !NotNil("a string") {
-        t.Error("should not be nil")
-    }
+	if CompareNot("abc", "abc") {
+		t.Error("should be equal")
+	}
+	if !CompareNot("abc", "aBc") {
+		t.Error("should be not equal")
+	}
+	if !NotNil("a string") {
+		t.Error("should not be nil")
+	}
 }
 
 func TestHtmlquote(t *testing.T) {
@@ -111,7 +111,7 @@ func TestHtmlunquote(t *testing.T) {
 
 func TestParseForm(t *testing.T) {
 	type user struct {
-		Id      int         `form:"-"`
+		ID      int         `form:"-"`
 		tag     string      `form:"tag"`
 		Name    interface{} `form:"username"`
 		Age     int         `form:"age,text"`
@@ -123,7 +123,7 @@ func TestParseForm(t *testing.T) {
 
 	u := user{}
 	form := url.Values{
-		"Id":       []string{"1"},
+		"ID":       []string{"1"},
 		"-":        []string{"1"},
 		"tag":      []string{"no"},
 		"username": []string{"test"},
@@ -139,8 +139,8 @@ func TestParseForm(t *testing.T) {
 	if err := ParseForm(form, &u); err != nil {
 		t.Fatal(err)
 	}
-	if u.Id != 0 {
-		t.Errorf("Id should equal 0 but got %v", u.Id)
+	if u.ID != 0 {
+		t.Errorf("ID should equal 0 but got %v", u.ID)
 	}
 	if len(u.tag) != 0 {
 		t.Errorf("tag's length should equal 0 but got %v", len(u.tag))
@@ -168,7 +168,7 @@ func TestParseForm(t *testing.T) {
 
 func TestRenderForm(t *testing.T) {
 	type user struct {
-		Id      int         `form:"-"`
+		ID      int         `form:"-"`
 		tag     string      `form:"tag"`
 		Name    interface{} `form:"username"`
 		Age     int         `form:"age,text,年龄："`
@@ -242,5 +242,82 @@ func TestParseFormTag(t *testing.T) {
 	label, name, fType, id, class, ignored = parseFormTag(objT.Field(4))
 	if ignored == false {
 		t.Errorf("Form Tag that should be ignored was not correctly parsed.")
+	}
+}
+
+func TestMapGet(t *testing.T) {
+	// test one level map
+	m1 := map[string]int64{
+		"a": 1,
+		"1": 2,
+	}
+
+	if res, err := MapGet(m1, "a"); err == nil {
+		if res.(int64) != 1 {
+			t.Errorf("Should return 1, but return %v", res)
+		}
+	} else {
+		t.Errorf("Error happens %v", err)
+	}
+
+	if res, err := MapGet(m1, "1"); err == nil {
+		if res.(int64) != 2 {
+			t.Errorf("Should return 2, but return %v", res)
+		}
+	} else {
+		t.Errorf("Error happens %v", err)
+	}
+
+	if res, err := MapGet(m1, 1); err == nil {
+		if res.(int64) != 2 {
+			t.Errorf("Should return 2, but return %v", res)
+		}
+	} else {
+		t.Errorf("Error happens %v", err)
+	}
+
+	// test 2 level map
+	m2 := map[string]interface{}{
+		"1": map[string]float64{
+			"2": 3.5,
+		},
+	}
+
+	if res, err := MapGet(m2, 1, 2); err == nil {
+		if res.(float64) != 3.5 {
+			t.Errorf("Should return 3.5, but return %v", res)
+		}
+	} else {
+		t.Errorf("Error happens %v", err)
+	}
+
+	// test 5 level map
+	m5 := map[string]interface{}{
+		"1": map[string]interface{}{
+			"2": map[string]interface{}{
+				"3": map[string]interface{}{
+					"4": map[string]interface{}{
+						"5": 1.2,
+					},
+				},
+			},
+		},
+	}
+
+	if res, err := MapGet(m5, 1, 2, 3, 4, 5); err == nil {
+		if res.(float64) != 1.2 {
+			t.Errorf("Should return 1.2, but return %v", res)
+		}
+	} else {
+		t.Errorf("Error happens %v", err)
+	}
+
+	// check whether element not exists in map
+	if res, err := MapGet(m5, 5, 4, 3, 2, 1); err == nil {
+		if res != nil {
+			t.Errorf("Should return nil, but return %v", res)
+		}
+	} else {
+		t.Errorf("Error happens %v", err)
 	}
 }
