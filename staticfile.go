@@ -34,9 +34,9 @@ func serverStaticRouter(ctx *context.Context) {
 
 	// special processing : favicon.ico/robots.txt  can be in any static dir
 	if requestPath == "/favicon.ico" || requestPath == "/robots.txt" {
-
-		if utils.FileExists("./" + requestPath) {
-			http.ServeFile(ctx.ResponseWriter, ctx.Request, "./"+requestPath)
+		file := path.Join(".", requestPath)
+		if utils.FileExists(file) {
+			http.ServeFile(ctx.ResponseWriter, ctx.Request, file)
 			return
 		}
 
