@@ -29,72 +29,72 @@ import (
 )
 
 var (
-	gmfim = make(map[string]*memFileInfo)
-	lock  sync.RWMutex
+	menFileInfoMap = make(map[string]*memFileInfo)
+	lock           sync.RWMutex
 )
 
-// OpenMemZipFile returns MemFile object with a compressed static file.
+// openMemZipFile returns MemFile object with a compressed static file.
 // it's used for serve static file if gzip enable.
 func openMemZipFile(path string, zip string) (*memFile, error) {
-	osfile, e := os.Open(path)
+	osFile, e := os.Open(path)
 	if e != nil {
 		return nil, e
 	}
-	defer osfile.Close()
+	defer osFile.Close()
 
-	osfileinfo, e := osfile.Stat()
+	osFileInfo, e := osFile.Stat()
 	if e != nil {
 		return nil, e
 	}
 
-	modtime := osfileinfo.ModTime()
-	fileSize := osfileinfo.Size()
+	modTime := osFileInfo.ModTime()
+	fileSize := osFileInfo.Size()
 	lock.RLock()
-	cfi, ok := gmfim[zip+":"+path]
+	cfi, ok := menFileInfoMap[zip+":"+path]
 	lock.RUnlock()
-	if !(ok && cfi.ModTime() == modtime && cfi.fileSize == fileSize) {
+	if !(ok && cfi.ModTime() == modTime && cfi.fileSize == fileSize) {
 		var content []byte
 		if zip == "gzip" {
-			var zipbuf bytes.Buffer
-			gzipwriter, e := gzip.NewWriterLevel(&zipbuf, gzip.BestCompression)
+			var zipBuf bytes.Buffer
+			gzipWriter, e := gzip.NewWriterLevel(&zipBuf, gzip.BestCompression)
 			if e != nil {
 				return nil, e
 			}
-			_, e = io.Copy(gzipwriter, osfile)
-			gzipwriter.Close()
+			_, e = io.Copy(gzipWriter, osFile)
+			gzipWriter.Close()
 			if e != nil {
 				return nil, e
 			}
-			content, e = ioutil.ReadAll(&zipbuf)
+			content, e = ioutil.ReadAll(&zipBuf)
 			if e != nil {
 				return nil, e
 			}
 		} else if zip == "deflate" {
-			var zipbuf bytes.Buffer
-			deflatewriter, e := flate.NewWriter(&zipbuf, flate.BestCompression)
+			var zipBuf bytes.Buffer
+			deflateWriter, e := flate.NewWriter(&zipBuf, flate.BestCompression)
 			if e != nil {
 				return nil, e
 			}
-			_, e = io.Copy(deflatewriter, osfile)
-			deflatewriter.Close()
+			_, e = io.Copy(deflateWriter, osFile)
+			deflateWriter.Close()
 			if e != nil {
 				return nil, e
 			}
-			content, e = ioutil.ReadAll(&zipbuf)
+			content, e = ioutil.ReadAll(&zipBuf)
 			if e != nil {
 				return nil, e
 			}
 		} else {
-			content, e = ioutil.ReadAll(osfile)
+			content, e = ioutil.ReadAll(osFile)
 			if e != nil {
 				return nil, e
 			}
 		}
 
-		cfi = &memFileInfo{osfileinfo, modtime, content, int64(len(content)), fileSize}
+		cfi = &memFileInfo{osFileInfo, modTime, content, int64(len(content)), fileSize}
 		lock.Lock()
 		defer lock.Unlock()
-		gmfim[zip+":"+path] = cfi
+		menFileInfoMap[zip+":"+path] = cfi
 	}
 	return &memFile{fi: cfi, offset: 0}, nil
 }
@@ -139,7 +139,7 @@ func (fi *memFileInfo) Sys() interface{} {
 	return nil
 }
 
-// MemFile contains MemFileInfo and bytes offset when reading.
+// memFile contains MemFileInfo and bytes offset when reading.
 // it implements io.Reader,io.ReadCloser and io.Seeker.
 type memFile struct {
 	fi     *memFileInfo
@@ -198,7 +198,7 @@ func (f *memFile) Seek(offset int64, whence int) (ret int64, err error) {
 	return f.offset, nil
 }
 
-// GetAcceptEncodingZip returns accept encoding format in http header.
+// getAcceptEncodingZip returns accept encoding format in http header.
 // zip is first, then deflate if both accepted.
 // If no accepted, return empty string.
 func getAcceptEncodingZip(r *http.Request) string {
@@ -206,9 +206,9 @@ func getAcceptEncodingZip(r *http.Request) string {
 	ss = strings.ToLower(ss)
 	if strings.Contains(ss, "gzip") {
 		return "gzip"
-	} else if strings.Contains(ss, "deflate") {
-		return "deflate"
-	} else {
-		return ""
 	}
+	if strings.Contains(ss, "deflate") {
+		return "deflate"
+	}
+	return ""
 }
