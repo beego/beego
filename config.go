@@ -523,18 +523,16 @@ func ParseConfig() (err error) {
 
 	if sgz := AppConfig.String("StaticExtensionsToGzip"); sgz != "" {
 		extensions := strings.Split(sgz, ",")
-		if len(extensions) > 0 {
-			StaticExtensionsToGzip = []string{}
-			for _, ext := range extensions {
-				if len(ext) == 0 {
-					continue
-				}
-				extWithDot := ext
-				if extWithDot[:1] != "." {
-					extWithDot = "." + extWithDot
-				}
-				StaticExtensionsToGzip = append(StaticExtensionsToGzip, extWithDot)
+		for _, ext := range extensions {
+			ext = strings.TrimSpace(ext)
+			if ext == "" {
+				continue
 			}
+			ext = strings.ToLower(ext)
+			if !strings.HasPrefix(ext, ".") {
+				ext = "." + ext
+			}
+			StaticExtensionsToGzip = append(StaticExtensionsToGzip, ext)
 		}
 	}
 
