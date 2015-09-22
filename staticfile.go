@@ -82,19 +82,17 @@ func serverStaticRouter(ctx *context.Context) {
 			}
 
 			if strings.HasSuffix(requestPath, "/index.html") {
-				if utils.FileExists(filePath) {
-					fileReader, err := os.Open(filePath)
-					if err != nil {
-						if RunMode == "dev" {
-							Warn("Can't open the file:", filePath, err)
-						}
-						http.NotFound(ctx.ResponseWriter, ctx.Request)
-						return
+				fileReader, err := os.Open(filePath)
+				if err != nil {
+					if RunMode == "dev" {
+						Warn("Can't open the file:", filePath, err)
 					}
-					defer fileReader.Close()
-					http.ServeContent(ctx.ResponseWriter, ctx.Request, filePath, fileInfo.ModTime(), fileReader)
+					http.NotFound(ctx.ResponseWriter, ctx.Request)
 					return
 				}
+				defer fileReader.Close()
+				http.ServeContent(ctx.ResponseWriter, ctx.Request, filePath, fileInfo.ModTime(), fileReader)
+				return
 			}
 
 			isStaticFileToCompress := false
