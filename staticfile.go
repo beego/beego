@@ -133,6 +133,7 @@ func serverStaticRouter(ctx *context.Context) {
 			}
 
 			http.ServeContent(ctx.ResponseWriter, ctx.Request, filePath, fileInfo.ModTime(), memZipFile)
+			return
 		}
 	}
 }
