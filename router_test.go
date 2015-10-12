@@ -333,6 +333,18 @@ func TestRouterHandler(t *testing.T) {
 	}
 }
 
+func TestRouterHandlerAll(t *testing.T) {
+	r, _ := http.NewRequest("POST", "/sayhi/a/b/c", nil)
+	w := httptest.NewRecorder()
+
+	handler := NewControllerRegister()
+	handler.Handler("/sayhi", http.HandlerFunc(sayhello), true)
+	handler.ServeHTTP(w, r)
+	if w.Body.String() != "sayhello" {
+		t.Errorf("TestRouterHandler can't run")
+	}
+}
+
 //
 // Benchmarks NewApp:
 //

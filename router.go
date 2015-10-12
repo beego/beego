@@ -353,7 +353,7 @@ func (p *ControllerRegister) Handler(pattern string, h http.Handler, options ...
 	route.handler = h
 	if len(options) > 0 {
 		if _, ok := options[0].(bool); ok {
-			pattern = path.Join(pattern, "?:all")
+			pattern = path.Join(pattern, "?:all(.*)")
 		}
 	}
 	for _, m := range HTTPMETHOD {
