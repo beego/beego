@@ -640,8 +640,8 @@ func (c *Controller) CheckXsrfCookie() bool {
 
 // XsrfFormHtml writes an input field contains xsrf token value.
 func (c *Controller) XsrfFormHtml() string {
-	return "<input type=\"hidden\" name=\"_xsrf\" value=\"" +
-		c._xsrf_token + "\"/>"
+	return `<input type="hidden" name="_xsrf" value="` +
+		c.XsrfToken() + `" />`
 }
 
 // GetControllerAndAction gets the executing controller name and action name.
