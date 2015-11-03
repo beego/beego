@@ -107,7 +107,7 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 			m["SessionGCMaxLifetime"] = SessionGCMaxLifetime
 			m["SessionProviderConfig"] = SessionProviderConfig
 			m["SessionCookieLifeTime"] = SessionCookieLifeTime
-			m["EnabelFcgi"] = EnabelFcgi
+			m["EnableFcgi"] = EnableFcgi
 			m["MaxMemory"] = MaxMemory
 			m["EnableGzip"] = EnableGzip
 			m["DirectoryIndex"] = DirectoryIndex
