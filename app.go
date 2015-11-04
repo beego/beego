@@ -64,7 +64,7 @@ func (app *App) Run() {
 	)
 	endRunning := make(chan bool, 1)
 
-	if EnabelFcgi {
+	if EnableFcgi {
 		if EnableStdIo {
 			err = fcgi.Serve(nil, app.Handlers) // standard I/O
 			if err == nil {
