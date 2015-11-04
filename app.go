@@ -117,7 +117,7 @@ func (app *App) Run() {
 					server := grace.NewServer(addr, app.Handlers)
 					server.Server.ReadTimeout = app.Server.ReadTimeout
 					server.Server.WriteTimeout = app.Server.WriteTimeout
-					if ListenTCP4 && HTTPAddr == "" {
+					if ListenTCP4 {
 						server.Network = "tcp4"
 					}
 					err := server.ListenAndServe()
@@ -154,7 +154,7 @@ func (app *App) Run() {
 				go func() {
 					app.Server.Addr = addr
 					BeeLogger.Info("http server Running on %s", app.Server.Addr)
-					if ListenTCP4 && HTTPAddr == "" {
+					if ListenTCP4 {
 						ln, err := net.Listen("tcp4", app.Server.Addr)
 						if err != nil {
 							BeeLogger.Critical("ListenAndServe: ", err)
