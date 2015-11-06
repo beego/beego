@@ -529,7 +529,6 @@ func ParseConfig() (err error) {
 			if ext == "" {
 				continue
 			}
-			ext = strings.ToLower(ext)
 			if !strings.HasPrefix(ext, ".") {
 				ext = "." + ext
 			}

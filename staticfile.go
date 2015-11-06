@@ -96,9 +96,8 @@ func serverStaticRouter(ctx *context.Context) {
 			}
 
 			isStaticFileToCompress := false
-			lowerFileName := strings.ToLower(filePath)
 			for _, statExtension := range StaticExtensionsToGzip {
-				if strings.HasSuffix(lowerFileName, statExtension) {
+				if strings.HasSuffix(strings.ToLower(filePath), strings.ToLower(statExtension)) {
 					isStaticFileToCompress = true
 					break
 				}

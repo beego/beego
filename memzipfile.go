@@ -206,9 +206,9 @@ func getAcceptEncodingZip(r *http.Request) string {
 	ss = strings.ToLower(ss)
 	if strings.Contains(ss, "gzip") {
 		return "gzip"
-	}
-	if strings.Contains(ss, "deflate") {
+	} else if strings.Contains(ss, "deflate") {
 		return "deflate"
+	} else {
+		return ""
 	}
-	return ""
 }
