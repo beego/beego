@@ -101,10 +101,17 @@ func (m *Migration) Exec(name, status string) error {
 }
 
 func (m *Migration) addOrUpdateRecord(name, status string) error {
+	var err error
+	var p orm.RawPreparer
 	o := orm.NewOrm()
 	if status == "down" {
 		status = "rollback"
-		p, err := o.Raw("update migrations set `status` = ?, `rollback_statements` = ?, `created_at` = ? where name = ?").Prepare()
+		switch o.Driver().Type() {
+		case orm.DR_Postgres:
+			p, err = o.Raw("update migrations set status = ?, rollback_statements = ?, created_at = ? where name = ?").Prepare()
+		default: // MySQL
+			p, err = o.Raw("update migrations set `status` = ?, `rollback_statements` = ?, `created_at` = ? where name = ?").Prepare()
+		}
 		if err != nil {
 			return nil
 		}
@@ -112,7 +119,12 @@ func (m *Migration) addOrUpdateRecord(name, status string) error {
 		return err
 	} else {
 		status = "update"
-		p, err := o.Raw("insert into migrations(`name`, `created_at`, `statements`, `status`) values(?,?,?,?)").Prepare()
+		switch o.Driver().Type() {
+		case orm.DR_Postgres:
+			p, err = o.Raw("insert into migrations(name, created_at, statements, status) values(?,?,?,?)").Prepare()
+		default: // MySQL
+			p, err = o.Raw("insert into migrations(`name`, `created_at`, `statements`, `status`) values(?,?,?,?)").Prepare()
+		}
 		if err != nil {
 			return err
 		}
