@@ -74,6 +74,33 @@ func (r Required) IsSatisfied(obj interface{}) bool {
 	if i, ok := obj.(int); ok {
 		return i != 0
 	}
+	if i, ok := obj.(uint); ok {
+		return i != 0
+	}
+	if i, ok := obj.(int8); ok {
+		return i != 0
+	}
+	if i, ok := obj.(uint8); ok {
+		return i != 0
+	}
+	if i, ok := obj.(int16); ok {
+		return i != 0
+	}
+	if i, ok := obj.(uint16); ok {
+		return i != 0
+	}
+	if i, ok := obj.(uint32); ok {
+		return i != 0
+	}
+	if i, ok := obj.(int32); ok {
+		return i != 0
+	}
+	if i, ok := obj.(int64); ok {
+		return i != 0
+	}
+	if i, ok := obj.(uint64); ok {
+		return i != 0
+	}
 	if t, ok := obj.(time.Time); ok {
 		return !t.IsZero()
 	}

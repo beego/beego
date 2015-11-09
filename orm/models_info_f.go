@@ -223,6 +223,11 @@ checkType:
 				break checkType
 			case "many":
 				fieldType = RelReverseMany
+				if tv := tags["rel_table"]; tv != "" {
+					fi.relTable = tv
+				} else if tv := tags["rel_through"]; tv != "" {
+					fi.relThrough = tv
+				}
 				break checkType
 			default:
 				err = fmt.Errorf("error")

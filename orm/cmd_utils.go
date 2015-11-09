@@ -45,13 +45,14 @@ func getDbDropSQL(al *alias) (sqls []string) {
 func getColumnTyp(al *alias, fi *fieldInfo) (col string) {
 	T := al.DbBaser.DbTypes()
 	fieldType := fi.fieldType
+	fieldSize := fi.size
 
 checkColumn:
 	switch fieldType {
 	case TypeBooleanField:
 		col = T["bool"]
 	case TypeCharField:
-		col = fmt.Sprintf(T["string"], fi.size)
+		col = fmt.Sprintf(T["string"], fieldSize)
 	case TypeTextField:
 		col = T["string-text"]
 	case TypeDateField:
@@ -89,6 +90,7 @@ checkColumn:
 		}
 	case RelForeignKey, RelOneToOne:
 		fieldType = fi.relModelInfo.fields.pk.fieldType
+		fieldSize = fi.relModelInfo.fields.pk.size
 		goto checkColumn
 	}
 

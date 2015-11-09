@@ -15,10 +15,7 @@
 package beego
 
 import (
-	"bufio"
-	"errors"
 	"fmt"
-	"net"
 	"net/http"
 	"os"
 	"path"
@@ -353,7 +350,7 @@ func (p *ControllerRegister) Handler(pattern string, h http.Handler, options ...
 	route.handler = h
 	if len(options) > 0 {
 		if _, ok := options[0].(bool); ok {
-			pattern = path.Join(pattern, "?:all")
+			pattern = path.Join(pattern, "?:all(.*)")
 		}
 	}
 	for _, m := range HTTPMETHOD {
@@ -581,7 +578,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	var runMethod string
 	var routerInfo *controllerInfo
 
-	w := &responseWriter{writer: rw}
+	w := &responseWriter{rw, false, 0}
 
 	if RunMode == "dev" {
 		w.Header().Set("Server", BeegoServerName)
@@ -856,7 +853,7 @@ Admin:
 
 	// Call WriteHeader if status code has been set changed
 	if context.Output.Status != 0 {
-		w.writer.WriteHeader(context.Output.Status)
+		w.WriteHeader(context.Output.Status)
 	}
 }
 
@@ -895,14 +892,14 @@ func (p *ControllerRegister) recoverPanic(context *beecontext.Context) {
 //responseWriter is a wrapper for the http.ResponseWriter
 //started set to true if response was written to then don't execute other handler
 type responseWriter struct {
-	writer  http.ResponseWriter
+	http.ResponseWriter
 	started bool
 	status  int
 }
 
 // Header returns the header map that will be sent by WriteHeader.
 func (w *responseWriter) Header() http.Header {
-	return w.writer.Header()
+	return w.ResponseWriter.Header()
 }
 
 // Write writes the data to the connection as part of an HTTP reply,
@@ -910,7 +907,7 @@ func (w *responseWriter) Header() http.Header {
 // started means the response has sent out.
 func (w *responseWriter) Write(p []byte) (int, error) {
 	w.started = true
-	return w.writer.Write(p)
+	return w.ResponseWriter.Write(p)
 }
 
 // WriteHeader sends an HTTP response header with status code,
@@ -918,23 +915,7 @@ func (w *responseWriter) Write(p []byte) (int, error) {
 func (w *responseWriter) WriteHeader(code int) {
 	w.status = code
 	w.started = true
-	w.writer.WriteHeader(code)
-}
-
-// hijacker for http
-func (w *responseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
-	hj, ok := w.writer.(http.Hijacker)
-	if !ok {
-		return nil, nil, errors.New("webserver doesn't support hijacking")
-	}
-	return hj.Hijack()
-}
-
-func (w *responseWriter) Flush() {
-	f, ok := w.writer.(http.Flusher)
-	if ok {
-		f.Flush()
-	}
+	w.ResponseWriter.WriteHeader(code)
 }
 
 func tourl(params map[string]string) string {

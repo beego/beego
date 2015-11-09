@@ -64,7 +64,7 @@ func (app *App) Run() {
 	)
 	endRunning := make(chan bool, 1)
 
-	if EnabelFcgi {
+	if EnableFcgi {
 		if EnableStdIo {
 			err = fcgi.Serve(nil, app.Handlers) // standard I/O
 			if err == nil {
@@ -89,6 +89,7 @@ func (app *App) Run() {
 		}
 	} else {
 		if Graceful {
+			httpsAddr := addr
 			app.Server.Addr = addr
 			app.Server.Handler = app.Handlers
 			app.Server.ReadTimeout = time.Duration(HTTPServerTimeOut) * time.Second
@@ -97,11 +98,12 @@ func (app *App) Run() {
 				go func() {
 					time.Sleep(20 * time.Microsecond)
 					if HTTPSPort != 0 {
-						addr = fmt.Sprintf("%s:%d", HTTPAddr, HTTPSPort)
-						app.Server.Addr = addr
+						httpsAddr = fmt.Sprintf("%s:%d", HTTPAddr, HTTPSPort)
+						app.Server.Addr = httpsAddr
 					}
-					server := grace.NewServer(addr, app.Handlers)
-					server.Server = app.Server
+					server := grace.NewServer(httpsAddr, app.Handlers)
+					server.Server.ReadTimeout = app.Server.ReadTimeout
+					server.Server.WriteTimeout = app.Server.WriteTimeout
 					err := server.ListenAndServeTLS(HTTPCertFile, HTTPKeyFile)
 					if err != nil {
 						BeeLogger.Critical("ListenAndServeTLS: ", err, fmt.Sprintf("%d", os.Getpid()))
@@ -113,8 +115,9 @@ func (app *App) Run() {
 			if EnableHTTPListen {
 				go func() {
 					server := grace.NewServer(addr, app.Handlers)
-					server.Server = app.Server
-					if ListenTCP4 && HTTPAddr == "" {
+					server.Server.ReadTimeout = app.Server.ReadTimeout
+					server.Server.WriteTimeout = app.Server.WriteTimeout
+					if ListenTCP4 {
 						server.Network = "tcp4"
 					}
 					err := server.ListenAndServe()
@@ -151,7 +154,7 @@ func (app *App) Run() {
 				go func() {
 					app.Server.Addr = addr
 					BeeLogger.Info("http server Running on %s", app.Server.Addr)
-					if ListenTCP4 && HTTPAddr == "" {
+					if ListenTCP4 {
 						ln, err := net.Listen("tcp4", app.Server.Addr)
 						if err != nil {
 							BeeLogger.Critical("ListenAndServe: ", err)

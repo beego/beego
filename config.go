@@ -60,15 +60,15 @@ var (
 	EnableDocs bool
 	// EnableErrorsShow wheather show errors in page. if true, show error and trace info in page rendered with error template.
 	EnableErrorsShow bool
-	// EnabelFcgi turn on the fcgi Listen, default is false
-	EnabelFcgi bool
+	// EnableFcgi turn on the fcgi Listen, default is false
+	EnableFcgi bool
 	// EnableGzip means gzip the response
 	EnableGzip bool
 	// EnableHTTPListen represent whether turn on the HTTP, default is true
 	EnableHTTPListen bool
 	// EnableHTTPTLS represent whether turn on the HTTPS, default is true
 	EnableHTTPTLS bool
-	// EnableStdIo works with EnabelFcgi Use FCGI via standard I/O
+	// EnableStdIo works with EnableFcgi Use FCGI via standard I/O
 	EnableStdIo bool
 	// EnableXSRF whether turn on xsrf. default is false
 	EnableXSRF bool
@@ -435,8 +435,8 @@ func ParseConfig() (err error) {
 		SessionCookieLifeTime = sesscookielifetime
 	}
 
-	if enabelFcgi, err := AppConfig.Bool("EnabelFcgi"); err == nil {
-		EnabelFcgi = enabelFcgi
+	if enableFcgi, err := AppConfig.Bool("EnableFcgi"); err == nil {
+		EnableFcgi = enableFcgi
 	}
 
 	if enablegzip, err := AppConfig.Bool("EnableGzip"); err == nil {
@@ -529,7 +529,6 @@ func ParseConfig() (err error) {
 			if ext == "" {
 				continue
 			}
-			ext = strings.ToLower(ext)
 			if !strings.HasPrefix(ext, ".") {
 				ext = "." + ext
 			}

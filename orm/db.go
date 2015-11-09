@@ -488,7 +488,8 @@ func (d *dbBase) Update(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.
 
 	d.ins.ReplaceMarks(&query)
 
-	if res, err := q.Exec(query, setValues...); err == nil {
+	res, err := q.Exec(query, setValues...)
+	if err == nil {
 		return res.RowsAffected()
 	}
 	return 0, err
