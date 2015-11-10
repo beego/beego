@@ -36,10 +36,10 @@ func Test_ExtractEncoding(t *testing.T) {
 	if parseEncoding(&http.Request{Header: map[string][]string{"Accept-Encoding": []string{"gzip;q=0,deflate"}}}) != "deflate" {
 		t.Fail()
 	}
-	if parseEncoding(&http.Request{Header: map[string][]string{"Accept-Encoding": []string{"deflate;q=0.5,gzip;q=0.5,identity"}}}) != "identity" {
+	if parseEncoding(&http.Request{Header: map[string][]string{"Accept-Encoding": []string{"deflate;q=0.5,gzip;q=0.5,identity"}}}) != "" {
 		t.Fail()
 	}
-	if parseEncoding(&http.Request{Header: map[string][]string{"Accept-Encoding": []string{"*"}}}) != "*" {
+	if parseEncoding(&http.Request{Header: map[string][]string{"Accept-Encoding": []string{"*"}}}) != "gzip" {
 		t.Fail()
 	}
 }
