@@ -15,16 +15,12 @@
 package beego
 
 import (
-	"bufio"
+	"beego/acceptencoder"
 	"bytes"
-	"compress/flate"
-	"compress/gzip"
 	"errors"
 	"io"
 	"io/ioutil"
-	"net/http"
 	"os"
-	"strings"
 	"sync"
 	"time"
 )
@@ -83,36 +79,17 @@ type memFileInfo struct {
 func newMenFileInfo(file *os.File, fileInfo os.FileInfo, zip string) (*memFileInfo, error) {
 	var content []byte
 	var zipBuf bytes.Buffer
-	var fileWriter io.Writer
 	var err error
 
-	switch zip {
-	case "gzip":
-		fileWriter, err = gzip.NewWriterLevel(&zipBuf, gzip.BestCompression)
-	case "deflate":
-		fileWriter, err = flate.NewWriter(&zipBuf, flate.BestCompression)
-	default:
-		fileWriter = bufio.NewWriter(&zipBuf)
-	}
+	_, _, err = acceptencoder.WriteFile(zip, &zipBuf, file)
 	if err != nil {
 		return nil, err
-	}
-
-	_, err = io.Copy(fileWriter, file)
-	if err != nil {
-		return nil, err
-	}
-
-	switch fileWriter.(type) {
-	case io.WriteCloser:
-		fileWriter.(io.WriteCloser).Close()
 	}
 
 	content, err = ioutil.ReadAll(&zipBuf)
 	if err != nil {
 		return nil, err
 	}
-
 	return &memFileInfo{
 		FileInfo:    fileInfo,
 		modTime:     fileInfo.ModTime(),
@@ -209,19 +186,4 @@ func (f *memFile) Seek(offset int64, whence int) (ret int64, err error) {
 	}
 	f.offset = offset
 	return f.offset, nil
-}
-
-// getAcceptEncodingZip returns accept encoding format in http header.
-// zip is first, then deflate if both accepted.
-// If no accepted, return empty string.
-func getAcceptEncodingZip(r *http.Request) string {
-	ss := r.Header.Get("Accept-Encoding")
-	ss = strings.ToLower(ss)
-	if strings.Contains(ss, "gzip") {
-		return "gzip"
-	} else if strings.Contains(ss, "deflate") {
-		return "deflate"
-	} else {
-		return ""
-	}
 }

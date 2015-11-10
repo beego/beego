@@ -15,9 +15,8 @@
 package context
 
 import (
+	"beego/acceptencoder"
 	"bytes"
-	"compress/flate"
-	"compress/gzip"
 	"encoding/json"
 	"encoding/xml"
 	"errors"
@@ -55,25 +54,12 @@ func (output *BeegoOutput) Header(key, val string) {
 // it sends out response body directly.
 func (output *BeegoOutput) Body(content []byte) {
 	outputWriter := output.Context.ResponseWriter.(io.Writer)
-	if output.EnableGzip == true && output.Context.Input.Header("Accept-Encoding") != "" {
-		splitted := strings.SplitN(output.Context.Input.Header("Accept-Encoding"), ",", -1)
-		encodings := make([]string, len(splitted))
-
-		for i, val := range splitted {
-			encodings[i] = strings.TrimSpace(val)
-		}
-		for _, val := range encodings {
-			if val == "gzip" {
-				output.Header("Content-Encoding", "gzip")
-				outputWriter, _ = gzip.NewWriterLevel(output.Context.ResponseWriter, gzip.BestSpeed)
-
-				break
-			} else if val == "deflate" {
-				output.Header("Content-Encoding", "deflate")
-				outputWriter, _ = flate.NewWriter(output.Context.ResponseWriter, flate.BestSpeed)
-				break
-			}
-		}
+	var encoding string
+	if output.EnableGzip {
+		encoding = acceptencoder.ParseEncoding(output.Context.Input.Request)
+	}
+	if b, n, _ := acceptencoder.WriteBody(encoding, outputWriter, content); b {
+		output.Header("Content-Encoding", n)
 	} else {
 		output.Header("Content-Length", strconv.Itoa(len(content)))
 	}
@@ -83,14 +69,6 @@ func (output *BeegoOutput) Body(content []byte) {
 	if output.Status != 0 {
 		output.Context.ResponseWriter.WriteHeader(output.Status)
 		output.Status = 0
-	}
-
-	outputWriter.Write(content)
-	switch outputWriter.(type) {
-	case *gzip.Writer:
-		outputWriter.(*gzip.Writer).Close()
-	case *flate.Writer:
-		outputWriter.(*flate.Writer).Close()
 	}
 }
 

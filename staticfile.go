@@ -15,6 +15,7 @@
 package beego
 
 import (
+	"beego/acceptencoder"
 	"net/http"
 	"os"
 	"path"
@@ -111,7 +112,7 @@ func serverStaticRouter(ctx *context.Context) {
 			//to compress file
 			var contentEncoding string
 			if EnableGzip {
-				contentEncoding = getAcceptEncodingZip(ctx.Request)
+				contentEncoding = acceptencoder.ParseEncoding(ctx.Request)
 			}
 
 			memZipFile, err := openMemZipFile(filePath, contentEncoding)
@@ -123,12 +124,10 @@ func serverStaticRouter(ctx *context.Context) {
 				return
 			}
 
-			if contentEncoding == "gzip" {
-				ctx.Output.Header("Content-Encoding", "gzip")
-			} else if contentEncoding == "deflate" {
-				ctx.Output.Header("Content-Encoding", "deflate")
-			} else {
+			if contentEncoding == "" {
 				ctx.Output.Header("Content-Length", strconv.FormatInt(fileInfo.Size(), 10))
+			} else {
+				ctx.Output.Header("Content-Encoding", contentEncoding)
 			}
 
 			http.ServeContent(ctx.ResponseWriter, ctx.Request, filePath, fileInfo.ModTime(), memZipFile)
