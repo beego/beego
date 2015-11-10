@@ -15,7 +15,6 @@
 package beego
 
 import (
-	"beego/acceptencoder"
 	"bytes"
 	"errors"
 	"io"
@@ -23,6 +22,8 @@ import (
 	"os"
 	"sync"
 	"time"
+
+	"github.com/astaxie/beego/acceptencoder"
 )
 
 var (

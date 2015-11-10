@@ -15,7 +15,6 @@
 package beego
 
 import (
-	"beego/acceptencoder"
 	"net/http"
 	"os"
 	"path"
@@ -23,6 +22,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/astaxie/beego/acceptencoder"
 	"github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/utils"
 )

@@ -15,7 +15,6 @@
 package context
 
 import (
-	"beego/acceptencoder"
 	"bytes"
 	"encoding/json"
 	"encoding/xml"
@@ -29,6 +28,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/astaxie/beego/acceptencoder"
 )
 
 // BeegoOutput does work for sending response header.
