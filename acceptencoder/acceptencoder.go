@@ -26,11 +26,6 @@ import (
 	"gopkg.in/bufio.v1"
 )
 
-type q struct {
-	name  string
-	value float64
-}
-
 // WriteFile reads from file and writes to writer by the specific encoding(gzip/deflate)
 
 func WriteFile(encoding string, writer io.Writer, file *os.File) (bool, string, error) {
@@ -55,6 +50,9 @@ func writeLevel(encoding string, writer io.Writer, reader io.Reader, level int) 
 	case "deflate":
 		outputWriter, err = flate.NewWriter(writer, level)
 	default:
+		// all the other compress methods will ignore
+		// such as the deprecated compress and chrome-only sdch
+		encoding = ""
 		outputWriter = writer.(io.Writer)
 	}
 	if err != nil {
@@ -81,6 +79,10 @@ func ParseEncoding(r *http.Request) string {
 	return parseEncoding(r)
 }
 
+type q struct {
+	name  string
+	value float64
+}
 
 func parseEncoding(r *http.Request) string {
 	acceptEncoding := r.Header.Get("Accept-Encoding")
