@@ -32,7 +32,7 @@ func Test_ExtractEncoding(t *testing.T) {
 		t.Fail()
 	}
 
-	if parseEncoding("deflate;q=0.5,gzip;q=0.5,identity") != "identity" {
+	if parseEncoding("deflate;q=0.5,gzip;q=0.5,identity") != "" {
 		t.Fail()
 	}
 
