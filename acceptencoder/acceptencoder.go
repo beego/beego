@@ -23,7 +23,7 @@ import (
 	"strconv"
 	"strings"
 
-	"gopkg.in/bufio.v1"
+	"bytes"
 )
 
 // WriteFile reads from file and writes to writer by the specific encoding(gzip/deflate)
@@ -35,7 +35,7 @@ func WriteFile(encoding string, writer io.Writer, file *os.File) (bool, string, 
 // WriteBody reads  writes content to writer by the specific encoding(gzip/deflate)
 
 func WriteBody(encoding string, writer io.Writer, content []byte) (bool, string, error) {
-	return writeLevel(encoding, writer, bufio.NewBuffer(content), flate.BestSpeed)
+	return writeLevel(encoding, writer, bytes.NewBuffer(content), flate.BestSpeed)
 }
 
 // writeLevel reads from reader,writes to writer by specific encoding and compress level
@@ -84,6 +84,15 @@ type q struct {
 	value float64
 }
 
+var (
+	encodingMap = map[string]string{ // all the other compress methods will ignore
+		"gzip":     "gzip",
+		"deflate":  "deflate",
+		"*":        "gzip", // * means any compress will accept,we prefer gzip
+		"identity": "",     // identity means none-compress
+	}
+)
+
 func parseEncoding(r *http.Request) string {
 	acceptEncoding := r.Header.Get("Accept-Encoding")
 	if acceptEncoding == "" {
@@ -110,11 +119,5 @@ func parseEncoding(r *http.Request) string {
 			}
 		}
 	}
-	if lastQ.name == "*" {
-		return "gzip"
-	}
-	if lastQ.name == "identity" {
-		return ""
-	}
-	return lastQ.name
+	return encodingMap[lastQ.name]
 }
