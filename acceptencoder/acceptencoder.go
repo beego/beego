@@ -44,16 +44,11 @@ func WriteBody(encoding string, writer io.Writer, content []byte) (bool, string,
 func writeLevel(encoding string, writer io.Writer, reader io.Reader, level int) (bool, string, error) {
 	var outputWriter io.Writer
 	var err error
-	switch encoding {
-	case "gzip":
-		outputWriter, err = gzip.NewWriterLevel(writer, level)
-	case "deflate":
-		outputWriter, err = flate.NewWriter(writer, level)
-	default:
-		// all the other compress methods will ignore
-		// such as the deprecated compress and chrome-only sdch
+	if cf, ok := encodingCompressMap[encoding]; ok {
+		outputWriter, err = cf(writer, level)
+	} else {
 		encoding = ""
-		outputWriter = writer.(io.Writer)
+		outputWriter, err = noneCompress(writer, level)
 	}
 	if err != nil {
 		return false, "", err
@@ -83,13 +78,24 @@ type q struct {
 	name  string
 	value float64
 }
+type compressFunc func(io.Writer, int) (io.Writer, error)
+
+func noneCompress(wr io.Writer, level int) (io.Writer, error) {
+	return wr, nil
+}
+func gzipCompress(wr io.Writer, level int) (io.Writer, error) {
+	return gzip.NewWriterLevel(wr, level)
+}
+func deflateCompress(wr io.Writer, level int) (io.Writer, error) {
+	return flate.NewWriter(wr, level)
+}
 
 var (
-	encodingMap = map[string]string{ // all the other compress methods will ignore
-		"gzip":     "gzip",
-		"deflate":  "deflate",
-		"*":        "gzip", // * means any compress will accept,we prefer gzip
-		"identity": "",     // identity means none-compress
+	encodingCompressMap = map[string]compressFunc{ // all the other compress methods will ignore
+		"gzip":     gzipCompress,
+		"deflate":  deflateCompress,
+		"*":        gzipCompress, // * means any compress will accept,we prefer gzip
+		"identity": noneCompress, // identity means none-compress
 	}
 )
 
@@ -119,5 +125,9 @@ func parseEncoding(r *http.Request) string {
 			}
 		}
 	}
-	return encodingMap[lastQ.name]
+	if _, ok := encodingCompressMap[lastQ.name]; ok {
+		return lastQ.name
+	} else {
+		return ""
+	}
 }
