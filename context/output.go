@@ -80,25 +80,21 @@ func (output *BeegoOutput) Cookie(name string, value string, others ...interface
 
 	//fix cookie not work in IE
 	if len(others) > 0 {
+		var maxAge int64
+
 		switch v := others[0].(type) {
 		case int:
-			if v > 0 {
-				fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(v)*time.Second).UTC().Format(time.RFC1123), v)
-			} else if v <= 0 {
-				fmt.Fprintf(&b, "; Max-Age=0")
-			}
-		case int64:
-			if v > 0 {
-				fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(v)*time.Second).UTC().Format(time.RFC1123), v)
-			} else if v <= 0 {
-				fmt.Fprintf(&b, "; Max-Age=0")
-			}
+			maxAge = int64(v)
 		case int32:
-			if v > 0 {
-				fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(v)*time.Second).UTC().Format(time.RFC1123), v)
-			} else if v <= 0 {
-				fmt.Fprintf(&b, "; Max-Age=0")
-			}
+			maxAge = int64(v)
+		case int64:
+			maxAge = v
+		}
+
+		if maxAge > 0 {
+			fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(maxAge)*time.Second).UTC().Format(time.RFC1123), maxAge)
+		} else if maxAge <= 0 {
+			fmt.Fprintf(&b, "; Max-Age=0")
 		}
 	}
 
