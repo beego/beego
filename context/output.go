@@ -28,8 +28,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/astaxie/beego/acceptencoder"
 )
 
 // BeegoOutput does work for sending response header.
@@ -57,9 +55,9 @@ func (output *BeegoOutput) Body(content []byte) {
 	outputWriter := output.Context.ResponseWriter.(io.Writer)
 	var encoding string
 	if output.EnableGzip {
-		encoding = acceptencoder.ParseEncoding(output.Context.Input.Request)
+		encoding = ParseEncoding(output.Context.Input.Request)
 	}
-	if b, n, _ := acceptencoder.WriteBody(encoding, outputWriter, content); b {
+	if b, n, _ := WriteBody(encoding, outputWriter, content); b {
 		output.Header("Content-Encoding", n)
 	} else {
 		output.Header("Content-Length", strconv.Itoa(len(content)))
