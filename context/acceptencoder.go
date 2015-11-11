@@ -23,28 +23,34 @@ import (
 	"strconv"
 	"strings"
 
-	"bytes"
+	"fmt"
+	"io/ioutil"
 )
 
 // WriteFile reads from file and writes to writer by the specific encoding(gzip/deflate)
 
 func WriteFile(encoding string, writer io.Writer, file *os.File) (bool, string, error) {
-	return writeLevel(encoding, writer, file, flate.BestCompression)
+	content, err := ioutil.ReadAll(file)
+	if err != nil {
+		return false, "", err
+	}
+	return writeLevel(encoding, writer, content, flate.BestCompression)
 }
 
 // WriteBody reads  writes content to writer by the specific encoding(gzip/deflate)
 
 func WriteBody(encoding string, writer io.Writer, content []byte) (bool, string, error) {
-	return writeLevel(encoding, writer, bytes.NewBuffer(content), flate.BestSpeed)
+	return writeLevel(encoding, writer, content, flate.BestSpeed)
 }
 
 // writeLevel reads from reader,writes to writer by specific encoding and compress level
 // the compress level is defined by deflate package
 
-func writeLevel(encoding string, writer io.Writer, reader io.Reader, level int) (bool, string, error) {
+func writeLevel(encoding string, writer io.Writer, content []byte, level int) (bool, string, error) {
 	var outputWriter io.Writer
 	var err error
 	if cf, ok := encoderMap[encoding]; ok {
+		fmt.Println("write level", encoding)
 		outputWriter, err = cf.encode(writer, level)
 	} else {
 		encoding = ""
@@ -53,9 +59,7 @@ func writeLevel(encoding string, writer io.Writer, reader io.Reader, level int) 
 	if err != nil {
 		return false, "", err
 	}
-	if _, err = io.Copy(outputWriter, reader); err != nil {
-		return false, "", err
-	}
+	outputWriter.Write(content)
 	switch outputWriter.(type) {
 	case io.WriteCloser:
 		outputWriter.(io.WriteCloser).Close()
