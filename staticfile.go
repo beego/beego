@@ -87,7 +87,7 @@ func serverStaticRouter(ctx *context.Context) {
 }
 
 type serveContentHolder struct {
-	*strings.Reader
+	*bytes.Reader
 	modTime  time.Time
 	size     int64
 	encoding string
@@ -120,7 +120,7 @@ func openFile(filePath string, fi os.FileInfo, acceptEncoding string) (bool, str
 		if err != nil {
 			return false, "", nil, err
 		}
-		mapFile = &serveContentHolder{Reader: strings.NewReader(string(bufferWriter.Bytes())), modTime: fi.ModTime(), size: int64(bufferWriter.Len()), encoding: n}
+		mapFile = &serveContentHolder{Reader: bytes.NewReader(bufferWriter.Bytes()), modTime: fi.ModTime(), size: int64(bufferWriter.Len()), encoding: n}
 		staticFileMap[mapKey] = mapFile
 	}
 
