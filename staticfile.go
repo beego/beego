@@ -127,6 +127,8 @@ func openFile(filePath string, fi os.FileInfo, acceptEncoding string) (bool, str
 	return mapFile.encoding != "", mapFile.encoding, mapFile, nil
 }
 
+// isStaticCompress detect static files
+
 func isStaticCompress(filePath string) bool {
 	for _, statExtension := range StaticExtensionsToGzip {
 		if strings.HasSuffix(strings.ToLower(filePath), strings.ToLower(statExtension)) {
@@ -136,6 +138,8 @@ func isStaticCompress(filePath string) bool {
 	return false
 }
 
+// searchFile search the file by url path
+// if none the static file prefix matches ,return notStaticRequestErr
 func searchFile(ctx *context.Context) (string, os.FileInfo, error) {
 	requestPath := filepath.Clean(ctx.Input.Request.URL.Path)
 	// special processing : favicon.ico/robots.txt  can be in any static dir
@@ -170,6 +174,10 @@ func searchFile(ctx *context.Context) (string, os.FileInfo, error) {
 	}
 	return "", nil, notStaticRequestErr
 }
+
+// lookupFile find the file to serve
+// if the file is dir ,search the index.html as default file( MUST NOT A DIR also)
+// if the index.html not exist or is a dir, give a forbidden response depending on  DirectoryIndex
 
 func lookupFile(ctx *context.Context) (bool, string, os.FileInfo, error) {
 	fp, fi, err := searchFile(ctx)
