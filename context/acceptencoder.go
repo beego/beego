@@ -25,6 +25,26 @@ import (
 	"strings"
 )
 
+type acceptEncoder struct {
+	name   string
+	encode func(io.Writer, int) (io.Writer, error)
+}
+
+var (
+	noneCompressEncoder    = acceptEncoder{"", func(wr io.Writer, level int) (io.Writer, error) { return wr, nil }}
+	gzipCompressEncoder    = acceptEncoder{"gzip", func(wr io.Writer, level int) (io.Writer, error) { return gzip.NewWriterLevel(wr, level) }}
+	deflateCompressEncoder = acceptEncoder{"deflate", func(wr io.Writer, level int) (io.Writer, error) { return flate.NewWriter(wr, level) }}
+)
+
+var (
+	encoderMap = map[string]acceptEncoder{ // all the other compress methods will ignore
+		"gzip":     gzipCompressEncoder,
+		"deflate":  deflateCompressEncoder,
+		"*":        gzipCompressEncoder, // * means any compress will accept,we prefer gzip
+		"identity": noneCompressEncoder, // identity means none-compress
+	}
+)
+
 // WriteFile reads from file and writes to writer by the specific encoding(gzip/deflate)
 
 func WriteFile(encoding string, writer io.Writer, file *os.File) (bool, string, error) {
@@ -43,16 +63,23 @@ func WriteBody(encoding string, writer io.Writer, content []byte) (bool, string,
 func writeLevel(encoding string, writer io.Writer, reader io.Reader, level int) (bool, string, error) {
 	var outputWriter io.Writer
 	var err error
+	var ce = noneCompressEncoder
+
 	if cf, ok := encoderMap[encoding]; ok {
-		outputWriter, err = cf.encode(writer, level)
-	} else {
-		encoding = ""
-		outputWriter, err = noneCompress(writer, level)
+		ce = cf
 	}
+	encoding = ce.name
+	outputWriter, err = ce.encode(writer, level)
+
 	if err != nil {
 		return false, "", err
 	}
-	io.Copy(outputWriter, reader)
+
+	_, err = io.Copy(outputWriter, reader)
+	if err != nil {
+		return false, "", err
+	}
+
 	switch outputWriter.(type) {
 	case io.WriteCloser:
 		outputWriter.(io.WriteCloser).Close()
@@ -75,30 +102,6 @@ type q struct {
 	name  string
 	value float64
 }
-
-func noneCompress(wr io.Writer, level int) (io.Writer, error) {
-	return wr, nil
-}
-func gzipCompress(wr io.Writer, level int) (io.Writer, error) {
-	return gzip.NewWriterLevel(wr, level)
-}
-func deflateCompress(wr io.Writer, level int) (io.Writer, error) {
-	return flate.NewWriter(wr, level)
-}
-
-type acceptEncoder struct {
-	name   string
-	encode func(io.Writer, int) (io.Writer, error)
-}
-
-var (
-	encoderMap = map[string]acceptEncoder{ // all the other compress methods will ignore
-		"gzip":     acceptEncoder{"gzip", gzipCompress},
-		"deflate":  acceptEncoder{"deflate", deflateCompress},
-		"*":        acceptEncoder{"gzip", gzipCompress}, // * means any compress will accept,we prefer gzip
-		"identity": acceptEncoder{"", noneCompress},     // identity means none-compress
-	}
-)
 
 func parseEncoding(r *http.Request) string {
 	acceptEncoding := r.Header.Get("Accept-Encoding")
