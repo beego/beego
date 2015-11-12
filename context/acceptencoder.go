@@ -23,7 +23,6 @@ import (
 	"strconv"
 	"strings"
 
-	"fmt"
 	"io/ioutil"
 )
 
@@ -50,7 +49,6 @@ func writeLevel(encoding string, writer io.Writer, content []byte, level int) (b
 	var outputWriter io.Writer
 	var err error
 	if cf, ok := encoderMap[encoding]; ok {
-		fmt.Println("write level", encoding)
 		outputWriter, err = cf.encode(writer, level)
 	} else {
 		encoding = ""
