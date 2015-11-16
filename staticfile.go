@@ -107,7 +107,6 @@ func openFile(filePath string, fi os.FileInfo, acceptEncoding string) (bool, str
 		}
 	}
 	mapLock.Lock()
-	delete(staticFileMap, mapKey)
 	defer mapLock.Unlock()
 	if mapFile, ok = staticFileMap[mapKey]; !ok {
 		file, err := os.Open(filePath)
