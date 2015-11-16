@@ -100,15 +100,13 @@ var (
 
 func openFile(filePath string, fi os.FileInfo, acceptEncoding string) (bool, string, *serveContentHolder, error) {
 	mapKey := acceptEncoding + ":" + filePath
-	mapFile, ok := staticFileMap[mapKey]
-	if ok {
-		if mapFile.modTime == fi.ModTime() && mapFile.size == fi.Size() {
-			return mapFile.encoding != "", mapFile.encoding, mapFile, nil
-		}
+	mapFile, _ := staticFileMap[mapKey]
+	if isOk(mapFile, fi) {
+		return mapFile.encoding != "", mapFile.encoding, mapFile, nil
 	}
 	mapLock.Lock()
 	defer mapLock.Unlock()
-	if mapFile, ok = staticFileMap[mapKey]; !ok {
+	if mapFile, _ = staticFileMap[mapKey]; !isOk(mapFile, fi) {
 		file, err := os.Open(filePath)
 		if err != nil {
 			return false, "", nil, err
@@ -124,6 +122,13 @@ func openFile(filePath string, fi os.FileInfo, acceptEncoding string) (bool, str
 	}
 
 	return mapFile.encoding != "", mapFile.encoding, mapFile, nil
+}
+
+func isOk(s *serveContentHolder, fi os.FileInfo) bool {
+	if s == nil {
+		return false
+	}
+	return s.modTime == fi.ModTime() && s.size == fi.Size()
 }
 
 // isStaticCompress detect static files
