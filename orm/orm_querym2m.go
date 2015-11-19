@@ -44,14 +44,19 @@ func (o *queryM2M) Add(mds ...interface{}) (int64, error) {
 	dbase := orm.alias.DbBaser
 
 	var models []interface{}
-	last_md_col_name := mi.fields.dbcols[len(mi.fields.dbcols)-1]
-	last_md := mds[len(mds)-1]
-	var v3 interface{}
-	var names []string
-	var values []interface{}
-	if reflect.Indirect(reflect.ValueOf(last_md)).Kind() != reflect.Struct {
-		v3 = (last_md)
-		mds = mds[:len(mds)-1]
+	var other_values []interface{}
+	var other_names []string
+
+	for _, colname := range mi.fields.dbcols {
+		if colname != mfi.column && colname != rfi.column && colname != fi.mi.fields.pk.column {
+			other_names = append(other_names, colname)
+		}
+	}
+	for i, md := range mds {
+		if reflect.Indirect(reflect.ValueOf(md)).Kind() != reflect.Struct && i > 0 {
+			other_values = append(other_values, md)
+			mds = append(mds[:i], mds[i+1:]...)
+		}
 	}
 	for _, md := range mds {
 		val := reflect.ValueOf(md)
@@ -71,15 +76,10 @@ func (o *queryM2M) Add(mds ...interface{}) (int64, error) {
 	if exist == false {
 		panic(ErrMissPK)
 	}
-	if v3 != nil {
-		names = []string{mfi.column, rfi.column, last_md_col_name}
 
-		values = make([]interface{}, 0, len(models)*3)
-	} else {
-		names = []string{mfi.column, rfi.column}
+	names := []string{mfi.column, rfi.column}
 
-		values = make([]interface{}, 0, len(models)*2)
-	}
+	values := make([]interface{}, 0, len(models)*2)
 	for _, md := range models {
 
 		ind := reflect.Indirect(reflect.ValueOf(md))
@@ -92,16 +92,13 @@ func (o *queryM2M) Add(mds ...interface{}) (int64, error) {
 				panic(ErrMissPK)
 			}
 		}
-		if v3 == nil {
-			values = append(values, v1, v2)
-		} else {
-			values = append(values, v1, v2, v3)
-		}
+		values = append(values, v1, v2)
 
 	}
+	names = append(names, other_names...)
+	values = append(values, other_values...)
 	return dbase.InsertValue(orm.db, mi, true, names, values)
 }
-
 
 // remove models following the origin model relationship
 func (o *queryM2M) Remove(mds ...interface{}) (int64, error) {
