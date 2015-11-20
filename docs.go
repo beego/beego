@@ -21,12 +21,10 @@ import (
 )
 
 // GlobalDocAPI store the swagger api documents
-var GlobalDocAPI map[string]interface{}
+var GlobalDocAPI map[string]interface{}=make(map[string]interface{})
 
 func init() {
-	if EnableDocs {
-		GlobalDocAPI = make(map[string]interface{})
-	}
+
 }
 
 func serverDocs(ctx *context.Context) {
