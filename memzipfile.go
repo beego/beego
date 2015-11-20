@@ -109,7 +109,7 @@ type memFileInfo struct {
 
 // Name returns the compressed filename.
 func (fi *memFileInfo) Name() string {
-	return fi.Name()
+	return fi.FileInfo.Name()
 }
 
 // Size returns the raw file content size, not compressed size.
@@ -119,7 +119,7 @@ func (fi *memFileInfo) Size() int64 {
 
 // Mode returns file mode.
 func (fi *memFileInfo) Mode() os.FileMode {
-	return fi.Mode()
+	return fi.FileInfo.Mode()
 }
 
 // ModTime returns the last modified time of raw file.
@@ -129,7 +129,7 @@ func (fi *memFileInfo) ModTime() time.Time {
 
 // IsDir returns the compressing file is a directory or not.
 func (fi *memFileInfo) IsDir() bool {
-	return fi.IsDir()
+	return fi.FileInfo.IsDir()
 }
 
 // return nil. implement the os.FileInfo interface method.
