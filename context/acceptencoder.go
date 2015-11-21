@@ -46,20 +46,17 @@ var (
 )
 
 // WriteFile reads from file and writes to writer by the specific encoding(gzip/deflate)
-
 func WriteFile(encoding string, writer io.Writer, file *os.File) (bool, string, error) {
 	return writeLevel(encoding, writer, file, flate.BestCompression)
 }
 
 // WriteBody reads  writes content to writer by the specific encoding(gzip/deflate)
-
 func WriteBody(encoding string, writer io.Writer, content []byte) (bool, string, error) {
 	return writeLevel(encoding, writer, bytes.NewReader(content), flate.BestSpeed)
 }
 
 // writeLevel reads from reader,writes to writer by specific encoding and compress level
 // the compress level is defined by deflate package
-
 func writeLevel(encoding string, writer io.Writer, reader io.Reader, level int) (bool, string, error) {
 	var outputWriter io.Writer
 	var err error
@@ -90,7 +87,6 @@ func writeLevel(encoding string, writer io.Writer, reader io.Reader, level int) 
 // ParseEncoding will extract the right encoding for response
 // the Accept-Encoding's sec is here:
 // http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html#sec14.3
-
 func ParseEncoding(r *http.Request) string {
 	if r == nil {
 		return ""

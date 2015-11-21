@@ -132,7 +132,6 @@ func isOk(s *serveContentHolder, fi os.FileInfo) bool {
 }
 
 // isStaticCompress detect static files
-
 func isStaticCompress(filePath string) bool {
 	for _, statExtension := range StaticExtensionsToGzip {
 		if strings.HasSuffix(strings.ToLower(filePath), strings.ToLower(statExtension)) {
@@ -182,7 +181,6 @@ func searchFile(ctx *context.Context) (string, os.FileInfo, error) {
 // lookupFile find the file to serve
 // if the file is dir ,search the index.html as default file( MUST NOT A DIR also)
 // if the index.html not exist or is a dir, give a forbidden response depending on  DirectoryIndex
-
 func lookupFile(ctx *context.Context) (bool, string, os.FileInfo, error) {
 	fp, fi, err := searchFile(ctx)
 	if fp == "" || fi == nil {
