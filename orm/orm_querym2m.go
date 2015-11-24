@@ -44,20 +44,7 @@ func (o *queryM2M) Add(mds ...interface{}) (int64, error) {
 	dbase := orm.alias.DbBaser
 
 	var models []interface{}
-	var other_values []interface{}
-	var other_names []string
 
-	for _, colname := range mi.fields.dbcols {
-		if colname != mfi.column && colname != rfi.column && colname != fi.mi.fields.pk.column {
-			other_names = append(other_names, colname)
-		}
-	}
-	for i, md := range mds {
-		if reflect.Indirect(reflect.ValueOf(md)).Kind() != reflect.Struct && i > 0 {
-			other_values = append(other_values, md)
-			mds = append(mds[:i], mds[i+1:]...)
-		}
-	}
 	for _, md := range mds {
 		val := reflect.ValueOf(md)
 		if val.Kind() == reflect.Slice || val.Kind() == reflect.Array {
@@ -80,9 +67,11 @@ func (o *queryM2M) Add(mds ...interface{}) (int64, error) {
 	names := []string{mfi.column, rfi.column}
 
 	values := make([]interface{}, 0, len(models)*2)
+
 	for _, md := range models {
 
 		ind := reflect.Indirect(reflect.ValueOf(md))
+
 		var v2 interface{}
 		if ind.Kind() != reflect.Struct {
 			v2 = ind.Interface()
@@ -92,11 +81,11 @@ func (o *queryM2M) Add(mds ...interface{}) (int64, error) {
 				panic(ErrMissPK)
 			}
 		}
+
 		values = append(values, v1, v2)
 
 	}
-	names = append(names, other_names...)
-	values = append(values, other_values...)
+
 	return dbase.InsertValue(orm.db, mi, true, names, values)
 }
 
