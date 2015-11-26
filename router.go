@@ -897,10 +897,6 @@ type responseWriter struct {
 	status  int
 }
 
-// Header returns the header map that will be sent by WriteHeader.
-func (w *responseWriter) Header() http.Header {
-	return w.ResponseWriter.Header()
-}
 
 // Write writes the data to the connection as part of an HTTP reply,
 // and sets `started` to true.

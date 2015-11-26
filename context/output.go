@@ -66,7 +66,6 @@ func (output *BeegoOutput) Body(content []byte) {
 			if val == "gzip" {
 				output.Header("Content-Encoding", "gzip")
 				outputWriter, _ = gzip.NewWriterLevel(output.Context.ResponseWriter, gzip.BestSpeed)
-
 				break
 			} else if val == "deflate" {
 				output.Header("Content-Encoding", "deflate")
@@ -86,11 +85,8 @@ func (output *BeegoOutput) Body(content []byte) {
 	}
 
 	outputWriter.Write(content)
-	switch outputWriter.(type) {
-	case *gzip.Writer:
-		outputWriter.(*gzip.Writer).Close()
-	case *flate.Writer:
-		outputWriter.(*flate.Writer).Close()
+	if c, ok := outputWriter.(io.Closer); ok {
+		c.Close()
 	}
 }
 
