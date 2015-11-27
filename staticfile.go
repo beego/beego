@@ -18,20 +18,18 @@ import (
 	"net/http"
 	"os"
 	"path"
-	"path/filepath"
 	"strconv"
 	"strings"
-
 	"github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/utils"
 )
 
 func serverStaticRouter(ctx *context.Context) {
+
 	if ctx.Input.Method() != "GET" && ctx.Input.Method() != "HEAD" {
 		return
 	}
-	requestPath := filepath.Clean(ctx.Input.Request.URL.Path)
-
+	requestPath := path.Clean(ctx.Input.Request.URL.Path)
 	// special processing : favicon.ico/robots.txt  can be in any static dir
 	if requestPath == "/favicon.ico" || requestPath == "/robots.txt" {
 		file := path.Join(".", requestPath)
