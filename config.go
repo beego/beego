@@ -312,7 +312,9 @@ func init() {
 		ac := config.NewFakeConfig()
 		AppConfig = &beegoAppConfig{ac}
 		Warning(err)
-	}
+	} else {
+        Warning(err)
+    }
 }
 
 // ParseConfig parsed default config file.
