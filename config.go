@@ -308,13 +308,13 @@ func init() {
 
 	err = ParseConfig()
 	if err != nil {
-        if os.IsNotExist(err) {
-		    // for init if doesn't have app.conf will not panic
-		    ac := config.NewFakeConfig()
-		    AppConfig = &beegoAppConfig{ac}
-        }
+		if os.IsNotExist(err) {
+			// for init if doesn't have app.conf will not panic
+			ac := config.NewFakeConfig()
+			AppConfig = &beegoAppConfig{ac}
+		}
 		Warning(err)
-    }
+	}
 }
 
 // ParseConfig parsed default config file.
