@@ -717,18 +717,18 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		if doFilter(BeforeExec) {
 			goto Admin
 		}
-		isRunable := false
+		isRunnable := false
 		if routerInfo != nil {
 			if routerInfo.routerType == routerTypeRESTFul {
 				if _, ok := routerInfo.methods[r.Method]; ok {
-					isRunable = true
+					isRunnable = true
 					routerInfo.runFunction(context)
 				} else {
 					exception("405", context)
 					goto Admin
 				}
 			} else if routerInfo.routerType == routerTypeHandler {
-				isRunable = true
+				isRunnable = true
 				routerInfo.handler.ServeHTTP(rw, r)
 			} else {
 				runrouter = routerInfo.controllerType
@@ -750,7 +750,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}
 
 		// also defined runrouter & runMethod from filter
-		if !isRunable {
+		if !isRunnable {
 			//Invoke the request handler
 			vc := reflect.New(runrouter)
 			execController, ok := vc.Interface().(ControllerInterface)
