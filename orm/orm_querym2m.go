@@ -55,7 +55,7 @@ func (o *queryM2M) Add(mds ...interface{}) (int64, error) {
 	for i, md := range mds {
 		if reflect.Indirect(reflect.ValueOf(md)).Kind() != reflect.Struct && i > 0 {
 			other_values = append(other_values, md)
-			mds = append(mds[:1], mds[2:]...)
+			mds = append(mds[:i], mds[i+1:]...)
 		}
 	}
 	for _, md := range mds {
