@@ -16,8 +16,6 @@ package context
 
 import (
 	"bytes"
-	"compress/flate"
-	"compress/gzip"
 	"encoding/json"
 	"encoding/xml"
 	"errors"
@@ -54,29 +52,16 @@ func (output *BeegoOutput) Header(key, val string) {
 // if EnableGzip, compress content string.
 // it sends out response body directly.
 func (output *BeegoOutput) Body(content []byte) {
-	outputWriter := output.Context.ResponseWriter.(io.Writer)
-	if output.EnableGzip == true && output.Context.Input.Header("Accept-Encoding") != "" {
-		splitted := strings.SplitN(output.Context.Input.Header("Accept-Encoding"), ",", -1)
-		encodings := make([]string, len(splitted))
-
-		for i, val := range splitted {
-			encodings[i] = strings.TrimSpace(val)
-		}
-		for _, val := range encodings {
-			if val == "gzip" {
-				output.Header("Content-Encoding", "gzip")
-				outputWriter, _ = gzip.NewWriterLevel(output.Context.ResponseWriter, gzip.BestSpeed)
-				break
-			} else if val == "deflate" {
-				output.Header("Content-Encoding", "deflate")
-				outputWriter, _ = flate.NewWriter(output.Context.ResponseWriter, flate.BestSpeed)
-				break
-			}
-		}
+	var encoding string
+	var buf = &bytes.Buffer{}
+	if output.EnableGzip {
+		encoding = ParseEncoding(output.Context.Input.Request)
+	}
+	if b, n, _ := WriteBody(encoding, buf, content); b {
+		output.Header("Content-Encoding", n)
 	} else {
 		output.Header("Content-Length", strconv.Itoa(len(content)))
 	}
-
 	// Write status code if it has been set manually
 	// Set it to 0 afterwards to prevent "multiple response.WriteHeader calls"
 	if output.Status != 0 {
@@ -84,10 +69,7 @@ func (output *BeegoOutput) Body(content []byte) {
 		output.Status = 0
 	}
 
-	outputWriter.Write(content)
-	if c, ok := outputWriter.(io.Closer); ok {
-		c.Close()
-	}
+	io.Copy(output.Context.ResponseWriter, buf)
 }
 
 // Cookie sets cookie value via given key.
@@ -98,25 +80,21 @@ func (output *BeegoOutput) Cookie(name string, value string, others ...interface
 
 	//fix cookie not work in IE
 	if len(others) > 0 {
+		var maxAge int64
+
 		switch v := others[0].(type) {
 		case int:
-			if v > 0 {
-				fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(v)*time.Second).UTC().Format(time.RFC1123), v)
-			} else if v <= 0 {
-				fmt.Fprintf(&b, "; Max-Age=0")
-			}
-		case int64:
-			if v > 0 {
-				fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(v)*time.Second).UTC().Format(time.RFC1123), v)
-			} else if v <= 0 {
-				fmt.Fprintf(&b, "; Max-Age=0")
-			}
+			maxAge = int64(v)
 		case int32:
-			if v > 0 {
-				fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(v)*time.Second).UTC().Format(time.RFC1123), v)
-			} else if v <= 0 {
-				fmt.Fprintf(&b, "; Max-Age=0")
-			}
+			maxAge = int64(v)
+		case int64:
+			maxAge = v
+		}
+
+		if maxAge > 0 {
+			fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(maxAge)*time.Second).UTC().Format(time.RFC1123), maxAge)
+		} else {
+			fmt.Fprintf(&b, "; Max-Age=0")
 		}
 	}
 
