@@ -53,18 +53,18 @@ import (
 )
 
 const (
-	// PreSignal is the position to add filter before signal
+// PreSignal is the position to add filter before signal
 	PreSignal = iota
-	// PostSignal is the position to add filter after signal
+// PostSignal is the position to add filter after signal
 	PostSignal
 
-	// StateInit represent the application inited
+// StateInit represent the application inited
 	StateInit
-	// StateRunning represent the application is running
+// StateRunning represent the application is running
 	StateRunning
-	// StateShuttingDown represent the application is shutting down
+// StateShuttingDown represent the application is shutting down
 	StateShuttingDown
-	// StateTerminate represent the application is killed
+// StateTerminate represent the application is killed
 	StateTerminate
 )
 
@@ -75,34 +75,36 @@ var (
 	socketPtrOffsetMap   map[string]uint
 	runningServersForked bool
 
-	// DefaultReadTimeOut is the HTTP read timeout
+// DefaultReadTimeOut is the HTTP read timeout
 	DefaultReadTimeOut time.Duration
-	// DefaultWriteTimeOut is the HTTP Write timeout
+// DefaultWriteTimeOut is the HTTP Write timeout
 	DefaultWriteTimeOut time.Duration
-	// DefaultMaxHeaderBytes is the Max HTTP Herder size, default is 0, no limit
+// DefaultMaxHeaderBytes is the Max HTTP Herder size, default is 0, no limit
 	DefaultMaxHeaderBytes int
-	// DefaultTimeout is the shutdown server's timeout. default is 60s
+// DefaultTimeout is the shutdown server's timeout. default is 60s
 	DefaultTimeout time.Duration
 
-	isChild     bool
+	isChild bool
 	socketOrder string
+	once sync.Once
 )
 
 func init() {
+	DefaultMaxHeaderBytes = 0
+	DefaultTimeout = 60 * time.Second
+}
+func onceInit() {
 	regLock = &sync.Mutex{}
 	flag.BoolVar(&isChild, "graceful", false, "listen on open fd (after forking)")
 	flag.StringVar(&socketOrder, "socketorder", "", "previous initialization order - used when more than one listener was started")
 	runningServers = make(map[string]*Server)
 	runningServersOrder = []string{}
 	socketPtrOffsetMap = make(map[string]uint)
-
-	DefaultMaxHeaderBytes = 0
-
-	DefaultTimeout = 60 * time.Second
 }
 
 // NewServer returns a new graceServer.
 func NewServer(addr string, handler http.Handler) (srv *Server) {
+	once.Do(onceInit)
 	regLock.Lock()
 	defer regLock.Unlock()
 	if !flag.Parsed() {

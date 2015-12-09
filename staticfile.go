@@ -144,7 +144,7 @@ func isStaticCompress(filePath string) bool {
 // searchFile search the file by url path
 // if none the static file prefix matches ,return notStaticRequestErr
 func searchFile(ctx *context.Context) (string, os.FileInfo, error) {
-	requestPath := filepath.Clean(ctx.Input.Request.URL.Path)
+	requestPath := filepath.ToSlash(filepath.Clean(ctx.Input.Request.URL.Path))
 	// special processing : favicon.ico/robots.txt  can be in any static dir
 	if requestPath == "/favicon.ico" || requestPath == "/robots.txt" {
 		file := path.Join(".", requestPath)
