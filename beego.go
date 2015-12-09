@@ -15,10 +15,13 @@
 package beego
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"github.com/astaxie/beego/logs"
 )
 
 // beego web framework version.
@@ -49,10 +52,10 @@ func Run(params ...string) {
 	if len(params) > 0 && params[0] != "" {
 		strs := strings.Split(params[0], ":")
 		if len(strs) > 0 && strs[0] != "" {
-			HTTPAddr = strs[0]
+			BConfig.Listen.HTTPAddr = strs[0]
 		}
 		if len(strs) > 1 && strs[1] != "" {
-			HTTPPort, _ = strconv.Atoi(strs[1])
+			BConfig.Listen.HTTPPort, _ = strconv.Atoi(strs[1])
 		}
 	}
 
@@ -60,14 +63,21 @@ func Run(params ...string) {
 }
 
 func initBeforeHTTPRun() {
-	// if AppConfigPath not In the conf/app.conf reParse config
-	if AppConfigPath != filepath.Join(AppPath, "conf", "app.conf") {
-		err := ParseConfig()
-		if err != nil && AppConfigPath != filepath.Join(workPath, "conf", "app.conf") {
-			// configuration is critical to app, panic here if parse failed
-			panic(err)
+	// if AppConfigPath is setted or conf/app.conf exist
+	err := ParseConfig()
+	if err != nil {
+		panic(err)
+	}
+	//init log
+	BeeLogger = logs.NewLogger(10000)
+	for adaptor, config := range BConfig.Log.Output {
+		err = BeeLogger.SetLogger(adaptor, config)
+		if err != nil {
+			fmt.Printf("%s with the config `%s` got err:%s\n", adaptor, config, err)
 		}
 	}
+
+	SetLogFuncCall(BConfig.Log.FileLineNum)
 
 	//init hooks
 	AddAPPStartHook(registerMime)
@@ -85,15 +95,9 @@ func initBeforeHTTPRun() {
 }
 
 // TestBeegoInit is for test package init
-func TestBeegoInit(apppath string) {
-	AppPath = apppath
+func TestBeegoInit(ap string) {
 	os.Setenv("BEEGO_RUNMODE", "test")
-	AppConfigPath = filepath.Join(AppPath, "conf", "app.conf")
-	err := ParseConfig()
-	if err != nil && !os.IsNotExist(err) {
-		// for init if doesn't have app.conf will not panic
-		Info(err)
-	}
-	os.Chdir(AppPath)
+	AppConfigPath = filepath.Join(ap, "conf", "app.conf")
+	os.Chdir(ap)
 	initBeforeHTTPRun()
 }

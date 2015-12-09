@@ -49,7 +49,7 @@ func serverStaticRouter(ctx *context.Context) {
 	}
 
 	if filePath == "" || fileInfo == nil {
-		if RunMode == "dev" {
+		if BConfig.RunMode == "dev" {
 			Warn("Can't find/open the file:", filePath, err)
 		}
 		http.NotFound(ctx.ResponseWriter, ctx.Request)
@@ -61,14 +61,14 @@ func serverStaticRouter(ctx *context.Context) {
 		return
 	}
 
-	var enableCompress = EnableGzip && isStaticCompress(filePath)
+	var enableCompress = BConfig.EnableGzip && isStaticCompress(filePath)
 	var acceptEncoding string
 	if enableCompress {
 		acceptEncoding = context.ParseEncoding(ctx.Request)
 	}
 	b, n, sch, err := openFile(filePath, fileInfo, acceptEncoding)
 	if err != nil {
-		if RunMode == "dev" {
+		if BConfig.RunMode == "dev" {
 			Warn("Can't compress the file:", filePath, err)
 		}
 		http.NotFound(ctx.ResponseWriter, ctx.Request)
@@ -133,7 +133,7 @@ func isOk(s *serveContentHolder, fi os.FileInfo) bool {
 
 // isStaticCompress detect static files
 func isStaticCompress(filePath string) bool {
-	for _, statExtension := range StaticExtensionsToGzip {
+	for _, statExtension := range BConfig.WebConfig.StaticExtensionsToGzip {
 		if strings.HasSuffix(strings.ToLower(filePath), strings.ToLower(statExtension)) {
 			return true
 		}
@@ -151,7 +151,7 @@ func searchFile(ctx *context.Context) (string, os.FileInfo, error) {
 		if fi, _ := os.Stat(file); fi != nil {
 			return file, fi, nil
 		}
-		for _, staticDir := range StaticDir {
+		for _, staticDir := range BConfig.WebConfig.StaticDir {
 			filePath := path.Join(staticDir, requestPath)
 			if fi, _ := os.Stat(filePath); fi != nil {
 				return filePath, fi, nil
@@ -160,7 +160,7 @@ func searchFile(ctx *context.Context) (string, os.FileInfo, error) {
 		return "", nil, errors.New(requestPath + " file not find")
 	}
 
-	for prefix, staticDir := range StaticDir {
+	for prefix, staticDir := range BConfig.WebConfig.StaticDir {
 		if len(prefix) == 0 {
 			continue
 		}
@@ -193,5 +193,5 @@ func lookupFile(ctx *context.Context) (bool, string, os.FileInfo, error) {
 	if ifi, _ := os.Stat(ifp); ifi != nil && ifi.Mode().IsRegular() {
 		return false, ifp, ifi, err
 	}
-	return !DirectoryIndex, fp, fi, err
+	return !BConfig.WebConfig.DirectoryIndex, fp, fi, err
 }

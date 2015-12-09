@@ -41,19 +41,19 @@ func registerDefaultErrorHandler() error {
 }
 
 func registerSession() error {
-	if SessionOn {
+	if BConfig.WebConfig.Session.SessionOn {
 		var err error
 		sessionConfig := AppConfig.String("sessionConfig")
 		if sessionConfig == "" {
-			sessionConfig = `{"cookieName":"` + SessionName + `",` +
-				`"gclifetime":` + strconv.FormatInt(SessionGCMaxLifetime, 10) + `,` +
-				`"providerConfig":"` + filepath.ToSlash(SessionProviderConfig) + `",` +
-				`"secure":` + strconv.FormatBool(EnableHTTPTLS) + `,` +
-				`"enableSetCookie":` + strconv.FormatBool(SessionAutoSetCookie) + `,` +
-				`"domain":"` + SessionDomain + `",` +
-				`"cookieLifeTime":` + strconv.Itoa(SessionCookieLifeTime) + `}`
+			sessionConfig = `{"cookieName":"` + BConfig.WebConfig.Session.SessionName + `",` +
+				`"gclifetime":` + strconv.FormatInt(BConfig.WebConfig.Session.SessionGCMaxLifetime, 10) + `,` +
+				`"providerConfig":"` + filepath.ToSlash(BConfig.WebConfig.Session.SessionProviderConfig) + `",` +
+				`"secure":` + strconv.FormatBool(BConfig.Listen.HTTPSEnable) + `,` +
+				`"enableSetCookie":` + strconv.FormatBool(BConfig.WebConfig.Session.SessionAutoSetCookie) + `,` +
+				`"domain":"` + BConfig.WebConfig.Session.SessionDomain + `",` +
+				`"cookieLifeTime":` + strconv.Itoa(BConfig.WebConfig.Session.SessionCookieLifeTime) + `}`
 		}
-		GlobalSessions, err = session.NewManager(SessionProvider, sessionConfig)
+		GlobalSessions, err = session.NewManager(BConfig.WebConfig.Session.SessionProvider, sessionConfig)
 		if err != nil {
 			return err
 		}
@@ -63,9 +63,9 @@ func registerSession() error {
 }
 
 func registerTemplate() error {
-	if AutoRender {
-		err := BuildTemplate(ViewsPath)
-		if err != nil && RunMode == "dev" {
+	if BConfig.WebConfig.AutoRender {
+		err := BuildTemplate(BConfig.WebConfig.ViewsPath)
+		if err != nil && BConfig.RunMode == "dev" {
 			Warn(err)
 		}
 	}
@@ -73,7 +73,7 @@ func registerTemplate() error {
 }
 
 func registerDocs() error {
-	if EnableDocs {
+	if BConfig.WebConfig.EnableDocs {
 		Get("/docs", serverDocs)
 		Get("/docs/*", serverDocs)
 	}
@@ -81,7 +81,7 @@ func registerDocs() error {
 }
 
 func registerAdmin() error {
-	if EnableAdmin {
+	if BConfig.Listen.AdminEnable {
 		go beeAdminApp.Run()
 	}
 	return nil

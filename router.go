@@ -87,7 +87,7 @@ func (l *logFilter) Filter(ctx *beecontext.Context) bool {
 	if requestPath == "/favicon.ico" || requestPath == "/robots.txt" {
 		return true
 	}
-	for prefix := range StaticDir {
+	for prefix := range BConfig.WebConfig.StaticDir {
 		if strings.HasPrefix(requestPath, prefix) {
 			return true
 		}
@@ -183,7 +183,7 @@ func (p *ControllerRegister) Add(pattern string, c ControllerInterface, mappingM
 }
 
 func (p *ControllerRegister) addToRouter(method, pattern string, r *controllerInfo) {
-	if !RouterCaseSensitive {
+	if !BConfig.RouterCaseSensitive {
 		pattern = strings.ToLower(pattern)
 	}
 	if t, ok := p.routers[method]; ok {
@@ -198,7 +198,7 @@ func (p *ControllerRegister) addToRouter(method, pattern string, r *controllerIn
 // Include only when the Runmode is dev will generate router file in the router/auto.go from the controller
 // Include(&BankAccount{}, &OrderController{},&RefundController{},&ReceiptController{})
 func (p *ControllerRegister) Include(cList ...ControllerInterface) {
-	if RunMode == "dev" {
+	if BConfig.RunMode == "dev" {
 		skip := make(map[string]bool, 10)
 		for _, c := range cList {
 			reflectVal := reflect.ValueOf(c)
@@ -406,7 +406,7 @@ func (p *ControllerRegister) InsertFilter(pattern string, pos int, filter Filter
 	mr.tree = NewTree()
 	mr.pattern = pattern
 	mr.filterFunc = filter
-	if !RouterCaseSensitive {
+	if !BConfig.RouterCaseSensitive {
 		pattern = strings.ToLower(pattern)
 	}
 	if len(params) == 0 {
@@ -580,8 +580,8 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	w := &responseWriter{rw, false, 0}
 
-	if RunMode == "dev" {
-		w.Header().Set("Server", BeegoServerName)
+	if BConfig.RunMode == "dev" {
+		w.Header().Set("Server", BConfig.ServerName)
 	}
 
 	// init context
@@ -592,12 +592,12 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		Output:         beecontext.NewOutput(),
 	}
 	context.Output.Context = context
-	context.Output.EnableGzip = EnableGzip
+	context.Output.EnableGzip = BConfig.EnableGzip
 
 	defer p.recoverPanic(context)
 
 	var urlPath string
-	if !RouterCaseSensitive {
+	if !BConfig.RouterCaseSensitive {
 		urlPath = strings.ToLower(r.URL.Path)
 	} else {
 		urlPath = r.URL.Path
@@ -646,7 +646,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	// session init
-	if SessionOn {
+	if BConfig.WebConfig.Session.SessionOn {
 		var err error
 		context.Input.CruSession, err = GlobalSessions.SessionStart(w, r)
 		if err != nil {
@@ -660,10 +660,10 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	if r.Method != "GET" && r.Method != "HEAD" {
-		if CopyRequestBody && !context.Input.IsUpload() {
+		if BConfig.CopyRequestBody && !context.Input.IsUpload() {
 			context.Input.CopyBody()
 		}
-		context.Input.ParseFormOrMulitForm(MaxMemory)
+		context.Input.ParseFormOrMulitForm(BConfig.MaxMemory)
 	}
 
 	if doFilter(BeforeRouter) {
@@ -765,7 +765,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			execController.Prepare()
 
 			//if XSRF is Enable then check cookie where there has any cookie in the  request's cookie _csrf
-			if EnableXSRF {
+			if BConfig.WebConfig.EnableXSRF {
 				execController.XSRFToken()
 				if r.Method == "POST" || r.Method == "DELETE" || r.Method == "PUT" ||
 					(r.Method == "POST" && (context.Input.Query("_method") == "DELETE" || context.Input.Query("_method") == "PUT")) {
@@ -802,7 +802,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 				//render template
 				if !w.started && context.Output.Status == 0 {
-					if AutoRender {
+					if BConfig.WebConfig.AutoRender {
 						if err := execController.Render(); err != nil {
 							panic(err)
 						}
@@ -825,7 +825,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 Admin:
 	timeend := time.Since(starttime)
 	//admin module record QPS
-	if EnableAdmin {
+	if BConfig.Listen.AdminEnable {
 		if FilterMonitorFunc(r.Method, r.URL.Path, timeend) {
 			if runrouter != nil {
 				go toolbox.StatisticsMap.AddStatistics(r.Method, r.URL.Path, runrouter.Name(), timeend)
@@ -835,7 +835,7 @@ Admin:
 		}
 	}
 
-	if RunMode == "dev" || AccessLogs {
+	if BConfig.RunMode == "dev" || BConfig.Log.AccessLogs {
 		var devinfo string
 		if findrouter {
 			if routerInfo != nil {
@@ -862,10 +862,10 @@ func (p *ControllerRegister) recoverPanic(context *beecontext.Context) {
 		if err == ErrAbort {
 			return
 		}
-		if !RecoverPanic {
+		if !BConfig.RecoverPanic {
 			panic(err)
 		} else {
-			if EnableErrorsShow {
+			if BConfig.EnableErrorsShow {
 				if _, ok := ErrorMaps[fmt.Sprint(err)]; ok {
 					exception(fmt.Sprint(err), context)
 					return
@@ -882,7 +882,7 @@ func (p *ControllerRegister) recoverPanic(context *beecontext.Context) {
 				Critical(fmt.Sprintf("%s:%d", file, line))
 				stack = stack + fmt.Sprintln(fmt.Sprintf("%s:%d", file, line))
 			}
-			if RunMode == "dev" {
+			if BConfig.RunMode == "dev" {
 				showErr(err, context, stack)
 			}
 		}

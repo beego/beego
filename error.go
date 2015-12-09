@@ -85,7 +85,7 @@ var tpl = `
 func showErr(err interface{}, ctx *context.Context, Stack string) {
 	t, _ := template.New("beegoerrortemp").Parse(tpl)
 	data := make(map[string]string)
-	data["AppError"] = AppName + ":" + fmt.Sprint(err)
+	data["AppError"] = BConfig.AppName + ":" + fmt.Sprint(err)
 	data["RequestMethod"] = ctx.Input.Method()
 	data["RequestURL"] = ctx.Input.URI()
 	data["RemoteAddr"] = ctx.Input.IP()
@@ -437,7 +437,7 @@ func executeError(err *errorInfo, ctx *context.Context, code int) {
 		method.Call(in)
 
 		//render template
-		if AutoRender {
+		if BConfig.WebConfig.AutoRender {
 			if err := execController.Render(); err != nil {
 				panic(err)
 			}

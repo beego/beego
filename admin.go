@@ -85,50 +85,11 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 		data := make(map[interface{}]interface{})
 		switch command {
 		case "conf":
-			m := make(map[string]interface{})
-
-			m["AppName"] = AppName
-			m["AppPath"] = AppPath
-			m["AppConfigPath"] = AppConfigPath
-			m["StaticDir"] = StaticDir
-			m["StaticExtensionsToGzip"] = StaticExtensionsToGzip
-			m["HTTPAddr"] = HTTPAddr
-			m["HTTPPort"] = HTTPPort
-			m["HTTPTLS"] = EnableHTTPTLS
-			m["HTTPCertFile"] = HTTPCertFile
-			m["HTTPKeyFile"] = HTTPKeyFile
-			m["RecoverPanic"] = RecoverPanic
-			m["AutoRender"] = AutoRender
-			m["ViewsPath"] = ViewsPath
-			m["RunMode"] = RunMode
-			m["SessionOn"] = SessionOn
-			m["SessionProvider"] = SessionProvider
-			m["SessionName"] = SessionName
-			m["SessionGCMaxLifetime"] = SessionGCMaxLifetime
-			m["SessionProviderConfig"] = SessionProviderConfig
-			m["SessionCookieLifeTime"] = SessionCookieLifeTime
-			m["EnableFcgi"] = EnableFcgi
-			m["MaxMemory"] = MaxMemory
-			m["EnableGzip"] = EnableGzip
-			m["DirectoryIndex"] = DirectoryIndex
-			m["HTTPServerTimeOut"] = HTTPServerTimeOut
-			m["EnableErrorsShow"] = EnableErrorsShow
-			m["XSRFKEY"] = XSRFKEY
-			m["EnableXSRF"] = EnableXSRF
-			m["XSRFExpire"] = XSRFExpire
-			m["CopyRequestBody"] = CopyRequestBody
-			m["TemplateLeft"] = TemplateLeft
-			m["TemplateRight"] = TemplateRight
-			m["BeegoServerName"] = BeegoServerName
-			m["EnableAdmin"] = EnableAdmin
-			m["AdminHTTPAddr"] = AdminHTTPAddr
-			m["AdminHTTPPort"] = AdminHTTPPort
-
 			tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
 			tmpl = template.Must(tmpl.Parse(configTpl))
 			tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
 
-			data["Content"] = m
+			data["Content"] = BConfig
 
 			tmpl.Execute(rw, data)
 
@@ -391,10 +352,10 @@ func (admin *adminApp) Run() {
 	if len(toolbox.AdminTaskList) > 0 {
 		toolbox.StartTask()
 	}
-	addr := AdminHTTPAddr
+	addr := BConfig.Listen.AdminAddr
 
-	if AdminHTTPPort != 0 {
-		addr = fmt.Sprintf("%s:%d", AdminHTTPAddr, AdminHTTPPort)
+	if BConfig.Listen.AdminPort != 0 {
+		addr = fmt.Sprintf("%s:%d", BConfig.Listen.AdminAddr, BConfig.Listen.AdminPort)
 	}
 	for p, f := range admin.routers {
 		http.Handle(p, f)
@@ -402,7 +363,7 @@ func (admin *adminApp) Run() {
 	BeeLogger.Info("Admin server Running on %s", addr)
 
 	var err error
-	if Graceful {
+	if BConfig.Listen.Graceful {
 		err = grace.ListenAndServe(addr, nil)
 	} else {
 		err = http.ListenAndServe(addr, nil)

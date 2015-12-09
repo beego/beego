@@ -200,7 +200,7 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 			c.TplNames = strings.ToLower(c.controllerName) + "/" + strings.ToLower(c.actionName) + "." + c.TplExt
 		}
 
-		if RunMode == "dev" {
+		if BConfig.RunMode == "dev" {
 			buildFiles := make([]string, 1)
 			buildFiles = append(buildFiles, c.TplNames)
 			if c.LayoutSections != nil {
@@ -211,7 +211,7 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 					buildFiles = append(buildFiles, sectionTpl)
 				}
 			}
-			BuildTemplate(ViewsPath, buildFiles...)
+			BuildTemplate(BConfig.WebConfig.ViewsPath, buildFiles...)
 		}
 		newbytes := bytes.NewBufferString("")
 		if _, ok := BeeTemplates[c.TplNames]; !ok {
@@ -256,8 +256,8 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 	if c.TplNames == "" {
 		c.TplNames = strings.ToLower(c.controllerName) + "/" + strings.ToLower(c.actionName) + "." + c.TplExt
 	}
-	if RunMode == "dev" {
-		BuildTemplate(ViewsPath, c.TplNames)
+	if BConfig.RunMode == "dev" {
+		BuildTemplate(BConfig.WebConfig.ViewsPath, c.TplNames)
 	}
 	ibytes := bytes.NewBufferString("")
 	if _, ok := BeeTemplates[c.TplNames]; !ok {
@@ -319,7 +319,7 @@ func (c *Controller) URLFor(endpoint string, values ...interface{}) string {
 func (c *Controller) ServeJSON(encoding ...bool) {
 	var hasIndent bool
 	var hasencoding bool
-	if RunMode == "prod" {
+	if BConfig.RunMode == "prod" {
 		hasIndent = false
 	} else {
 		hasIndent = true
@@ -333,7 +333,7 @@ func (c *Controller) ServeJSON(encoding ...bool) {
 // ServeJSONP sends a jsonp response.
 func (c *Controller) ServeJSONP() {
 	var hasIndent bool
-	if RunMode == "prod" {
+	if BConfig.RunMode == "prod" {
 		hasIndent = false
 	} else {
 		hasIndent = true
@@ -344,7 +344,7 @@ func (c *Controller) ServeJSONP() {
 // ServeXML sends xml response.
 func (c *Controller) ServeXML() {
 	var hasIndent bool
-	if RunMode == "prod" {
+	if BConfig.RunMode == "prod" {
 		hasIndent = false
 	} else {
 		hasIndent = true
@@ -628,9 +628,9 @@ func (c *Controller) XSRFToken() string {
 		if c.XSRFExpire > 0 {
 			expire = int64(c.XSRFExpire)
 		} else {
-			expire = int64(XSRFExpire)
+			expire = int64(BConfig.WebConfig.XSRFExpire)
 		}
-		c._xsrfToken = c.Ctx.XSRFToken(XSRFKEY, expire)
+		c._xsrfToken = c.Ctx.XSRFToken(BConfig.WebConfig.XSRFKEY, expire)
 	}
 	return c._xsrfToken
 }

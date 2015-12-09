@@ -24,7 +24,7 @@ import (
 var GlobalDocAPI map[string]interface{}
 
 func init() {
-	if EnableDocs {
+	if BConfig.WebConfig.EnableDocs {
 		GlobalDocAPI = make(map[string]interface{})
 	}
 }

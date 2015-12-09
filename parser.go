@@ -130,7 +130,7 @@ func parserComments(comments *ast.CommentGroup, funcName, controllerName, pkgpat
 }
 
 func genRouterCode() {
-	os.Mkdir(path.Join(workPath, "routers"), 0755)
+	os.Mkdir("routers", 0755)
 	Info("generate router from comments")
 	var (
 		globalinfo string
@@ -172,7 +172,7 @@ func genRouterCode() {
 		}
 	}
 	if globalinfo != "" {
-		f, err := os.Create(path.Join(workPath, "routers", commentFilename))
+		f, err := os.Create(path.Join("routers", commentFilename))
 		if err != nil {
 			panic(err)
 		}
@@ -182,11 +182,11 @@ func genRouterCode() {
 }
 
 func compareFile(pkgRealpath string) bool {
-	if !utils.FileExists(path.Join(workPath, "routers", commentFilename)) {
+	if !utils.FileExists(path.Join("routers", commentFilename)) {
 		return true
 	}
-	if utils.FileExists(path.Join(workPath, lastupdateFilename)) {
-		content, err := ioutil.ReadFile(path.Join(workPath, lastupdateFilename))
+	if utils.FileExists(lastupdateFilename) {
+		content, err := ioutil.ReadFile(lastupdateFilename)
 		if err != nil {
 			return true
 		}
@@ -214,7 +214,7 @@ func savetoFile(pkgRealpath string) {
 	if err != nil {
 		return
 	}
-	ioutil.WriteFile(path.Join(workPath, lastupdateFilename), d, os.ModePerm)
+	ioutil.WriteFile(lastupdateFilename, d, os.ModePerm)
 }
 
 func getpathTime(pkgRealpath string) (lastupdate int64, err error) {

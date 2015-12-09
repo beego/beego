@@ -176,7 +176,7 @@ func getTplDeep(root, file, parent string, t *template.Template) (*template.Temp
 	if err != nil {
 		return nil, [][]string{}, err
 	}
-	reg := regexp.MustCompile(TemplateLeft + "[ ]*template[ ]+\"([^\"]+)\"")
+	reg := regexp.MustCompile(BConfig.WebConfig.TemplateLeft + "[ ]*template[ ]+\"([^\"]+)\"")
 	allsub := reg.FindAllStringSubmatch(string(data), -1)
 	for _, m := range allsub {
 		if len(m) == 2 {
@@ -197,7 +197,7 @@ func getTplDeep(root, file, parent string, t *template.Template) (*template.Temp
 }
 
 func getTemplate(root, file string, others ...string) (t *template.Template, err error) {
-	t = template.New(file).Delims(TemplateLeft, TemplateRight).Funcs(beegoTplFuncMap)
+	t = template.New(file).Delims(BConfig.WebConfig.TemplateLeft, BConfig.WebConfig.TemplateRight).Funcs(beegoTplFuncMap)
 	var submods [][]string
 	t, submods, err = getTplDeep(root, file, "", t)
 	if err != nil {
@@ -239,7 +239,7 @@ func _getTemplate(t0 *template.Template, root string, submods [][]string, others
 				if err != nil {
 					continue
 				}
-				reg := regexp.MustCompile(TemplateLeft + "[ ]*define[ ]+\"([^\"]+)\"")
+				reg := regexp.MustCompile(BConfig.WebConfig.TemplateLeft + "[ ]*define[ ]+\"([^\"]+)\"")
 				allsub := reg.FindAllStringSubmatch(string(data), -1)
 				for _, sub := range allsub {
 					if len(sub) == 2 && sub[1] == m[1] {
@@ -262,7 +262,7 @@ func _getTemplate(t0 *template.Template, root string, submods [][]string, others
 
 // SetViewsPath sets view directory path in beego application.
 func SetViewsPath(path string) *App {
-	ViewsPath = path
+	BConfig.WebConfig.ViewsPath = path
 	return BeeApp
 }
 
@@ -273,7 +273,7 @@ func SetStaticPath(url string, path string) *App {
 		url = "/" + url
 	}
 	url = strings.TrimRight(url, "/")
-	StaticDir[url] = path
+	BConfig.WebConfig.StaticDir[url] = path
 	return BeeApp
 }
 
@@ -283,6 +283,6 @@ func DelStaticPath(url string) *App {
 		url = "/" + url
 	}
 	url = strings.TrimRight(url, "/")
-	delete(StaticDir, url)
+	delete(BConfig.WebConfig.StaticDir, url)
 	return BeeApp
 }
