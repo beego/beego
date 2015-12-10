@@ -24,6 +24,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	beecontext "github.com/astaxie/beego/context"
@@ -83,7 +84,7 @@ type logFilter struct {
 }
 
 func (l *logFilter) Filter(ctx *beecontext.Context) bool {
-	requestPath := path.Clean(ctx.Input.Request.URL.Path)
+	requestPath := path.Clean(ctx.Request.URL.Path)
 	if requestPath == "/favicon.ico" || requestPath == "/robots.txt" {
 		return true
 	}
@@ -114,14 +115,19 @@ type ControllerRegister struct {
 	routers      map[string]*Tree
 	enableFilter bool
 	filters      map[int][]*FilterRouter
+	pool         sync.Pool
 }
 
 // NewControllerRegister returns a new ControllerRegister.
 func NewControllerRegister() *ControllerRegister {
-	return &ControllerRegister{
+	cr := &ControllerRegister{
 		routers: make(map[string]*Tree),
 		filters: make(map[int][]*FilterRouter),
 	}
+	cr.pool.New = func() interface{} {
+		return beecontext.NewContext()
+	}
+	return cr
 }
 
 // Add controller handler and pattern rules to ControllerRegister.
@@ -132,7 +138,7 @@ func NewControllerRegister() *ControllerRegister {
 //	Add("/api/create",&RestController{},"post:CreateFood")
 //	Add("/api/update",&RestController{},"put:UpdateFood")
 //	Add("/api/delete",&RestController{},"delete:DeleteFood")
-//	Add("/api",&RestController{},"get,post:ApiFunc")
+//	Add("/api",&RestController{},"get,post:ApiFunc"
 //	Add("/simple",&SimpleController{},"get:GetFunc;post:PostFunc")
 func (p *ControllerRegister) Add(pattern string, c ControllerInterface, mappingMethods ...string) {
 	reflectVal := reflect.ValueOf(c)
@@ -573,26 +579,18 @@ func (p *ControllerRegister) geturl(t *Tree, url, controllName, methodName strin
 // Implement http.Handler interface.
 func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	starttime := time.Now()
-	var runrouter reflect.Type
-	var findrouter bool
-	var runMethod string
-	var routerInfo *controllerInfo
-
-	w := &responseWriter{rw, false, 0}
-
+	var (
+		runrouter  reflect.Type
+		findrouter bool
+		runMethod  string
+		routerInfo *controllerInfo
+		w          = &responseWriter{rw, false, 0}
+	)
 	if BConfig.RunMode == "dev" {
 		w.Header().Set("Server", BConfig.ServerName)
 	}
-
-	// init context
-	context := &beecontext.Context{
-		ResponseWriter: w,
-		Request:        r,
-		Input:          beecontext.NewInput(r),
-		Output:         beecontext.NewOutput(),
-	}
-	context.Output.Context = context
-	context.Output.EnableGzip = BConfig.EnableGzip
+	context := p.pool.Get().(*beecontext.Context)
+	context.Reset(w, r)
 
 	defer p.recoverPanic(context)
 
@@ -670,23 +668,14 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		goto Admin
 	}
 
-	if context.Input.RunController != nil && context.Input.RunMethod != "" {
-		findrouter = true
-		runMethod = context.Input.RunMethod
-		runrouter = context.Input.RunController
-	}
-
 	if !findrouter {
 		httpMethod := r.Method
-
 		if httpMethod == "POST" && context.Input.Query("_method") == "PUT" {
 			httpMethod = "PUT"
 		}
-
 		if httpMethod == "POST" && context.Input.Query("_method") == "DELETE" {
 			httpMethod = "DELETE"
 		}
-
 		if t, ok := p.routers[httpMethod]; ok {
 			runObject, p := t.Match(urlPath)
 			if r, ok := runObject.(*controllerInfo); ok {
@@ -896,7 +885,6 @@ type responseWriter struct {
 	started bool
 	status  int
 }
-
 
 // Write writes the data to the connection as part of an HTTP reply,
 // and sets `started` to true.

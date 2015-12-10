@@ -35,6 +35,14 @@ import (
 	"github.com/astaxie/beego/utils"
 )
 
+// NewContext return the Context with Input and Output
+func NewContext() *Context {
+	return &Context{
+		Input:  NewInput(),
+		Output: NewOutput(),
+	}
+}
+
 // Context Http request context struct including BeegoInput, BeegoOutput, http.Request and http.ResponseWriter.
 // BeegoInput and BeegoOutput provides some api to operate request and response more easily.
 type Context struct {
@@ -43,6 +51,14 @@ type Context struct {
 	Request        *http.Request
 	ResponseWriter http.ResponseWriter
 	_xsrfToken     string
+}
+
+// Reset init Context, BeegoInput and BeegoOutput
+func (ctx *Context) Reset(rw http.ResponseWriter, r *http.Request) {
+	ctx.Request = r
+	ctx.ResponseWriter = rw
+	ctx.Input.Reset(ctx)
+	ctx.Output.Reset(ctx)
 }
 
 // Redirect does redirection to localurl with http header status code.

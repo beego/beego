@@ -21,13 +21,7 @@ import (
 )
 
 // GlobalDocAPI store the swagger api documents
-var GlobalDocAPI map[string]interface{}
-
-func init() {
-	if BConfig.WebConfig.EnableDocs {
-		GlobalDocAPI = make(map[string]interface{})
-	}
-}
+var GlobalDocAPI = make(map[string]interface{})
 
 func serverDocs(ctx *context.Context) {
 	var obj interface{}

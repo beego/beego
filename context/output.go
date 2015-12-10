@@ -43,6 +43,12 @@ func NewOutput() *BeegoOutput {
 	return &BeegoOutput{}
 }
 
+// Reset init BeegoOutput
+func (output *BeegoOutput) Reset(ctx *Context) {
+	output.Context = ctx
+	output.Status = 0
+}
+
 // Header sets response header item string via given key.
 func (output *BeegoOutput) Header(key, val string) {
 	output.Context.ResponseWriter.Header().Set(key, val)
@@ -55,7 +61,7 @@ func (output *BeegoOutput) Body(content []byte) {
 	var encoding string
 	var buf = &bytes.Buffer{}
 	if output.EnableGzip {
-		encoding = ParseEncoding(output.Context.Input.Request)
+		encoding = ParseEncoding(output.Context.Request)
 	}
 	if b, n, _ := WriteBody(encoding, buf, content); b {
 		output.Header("Content-Encoding", n)
