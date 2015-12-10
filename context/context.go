@@ -49,14 +49,14 @@ type Context struct {
 	Input          *BeegoInput
 	Output         *BeegoOutput
 	Request        *http.Request
-	ResponseWriter http.ResponseWriter
+	ResponseWriter *Response
 	_xsrfToken     string
 }
 
 // Reset init Context, BeegoInput and BeegoOutput
 func (ctx *Context) Reset(rw http.ResponseWriter, r *http.Request) {
 	ctx.Request = r
-	ctx.ResponseWriter = rw
+	ctx.ResponseWriter = &Response{rw, false, 0}
 	ctx.Input.Reset(ctx)
 	ctx.Output.Reset(ctx)
 }
@@ -163,4 +163,28 @@ func (ctx *Context) CheckXSRFCookie() bool {
 		return false
 	}
 	return true
+}
+
+//Response is a wrapper for the http.ResponseWriter
+//started set to true if response was written to then don't execute other handler
+type Response struct {
+	http.ResponseWriter
+	Started bool
+	Status  int
+}
+
+// Write writes the data to the connection as part of an HTTP reply,
+// and sets `started` to true.
+// started means the response has sent out.
+func (w *Response) Write(p []byte) (int, error) {
+	w.Started = true
+	return w.ResponseWriter.Write(p)
+}
+
+// WriteHeader sends an HTTP response header with status code,
+// and sets `started` to true.
+func (w *Response) WriteHeader(code int) {
+	w.Status = code
+	w.Started = true
+	w.ResponseWriter.WriteHeader(code)
 }
