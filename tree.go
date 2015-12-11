@@ -19,6 +19,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/utils"
 )
 
@@ -277,64 +278,60 @@ func (t *Tree) addseg(segments []string, route interface{}, wildcards []string, 
 }
 
 // Match router to runObject & params
-func (t *Tree) Match(pattern string) (runObject interface{}, params map[string]string) {
+func (t *Tree) Match(pattern string, ctx *context.Context) (runObject interface{}) {
 	if len(pattern) == 0 || pattern[0] != '/' {
-		return nil, nil
+		return nil
 	}
 
-	return t.match(splitPath(pattern), nil)
+	return t.match(splitPath(pattern), nil, ctx)
 }
 
-func (t *Tree) match(segments []string, wildcardValues []string) (runObject interface{}, params map[string]string) {
+func (t *Tree) match(segments []string, wildcardValues []string, ctx *context.Context) (runObject interface{}) {
 	// Handle leaf nodes:
 	if len(segments) == 0 {
 		for _, l := range t.leaves {
-			if ok, pa := l.match(wildcardValues); ok {
-				return l.runObject, pa
+			if ok := l.match(wildcardValues, ctx); ok {
+				return l.runObject
 			}
 		}
 		if t.wildcard != nil {
 			for _, l := range t.wildcard.leaves {
-				if ok, pa := l.match(wildcardValues); ok {
-					return l.runObject, pa
+				if ok := l.match(wildcardValues, ctx); ok {
+					return l.runObject
 				}
 			}
-
 		}
-		return nil, nil
+		return nil
 	}
 
 	seg, segs := segments[0], segments[1:]
 
 	subTree, ok := t.fixrouters[seg]
 	if ok {
-		runObject, params = subTree.match(segs, wildcardValues)
+		runObject = subTree.match(segs, wildcardValues, ctx)
 	} else if len(segs) == 0 { //.json .xml
 		if subindex := strings.LastIndex(seg, "."); subindex != -1 {
 			subTree, ok = t.fixrouters[seg[:subindex]]
 			if ok {
-				runObject, params = subTree.match(segs, wildcardValues)
+				runObject = subTree.match(segs, wildcardValues, ctx)
 				if runObject != nil {
-					if params == nil {
-						params = make(map[string]string)
-					}
-					params[":ext"] = seg[subindex+1:]
-					return runObject, params
+					ctx.Input.Params[":ext"] = seg[subindex+1:]
+					return runObject
 				}
 			}
 		}
 	}
 	if runObject == nil && t.wildcard != nil {
-		runObject, params = t.wildcard.match(segs, append(wildcardValues, seg))
+		runObject = t.wildcard.match(segs, append(wildcardValues, seg), ctx)
 	}
 	if runObject == nil {
 		for _, l := range t.leaves {
-			if ok, pa := l.match(append(wildcardValues, segments...)); ok {
-				return l.runObject, pa
+			if ok := l.match(append(wildcardValues, segments...), ctx); ok {
+				return l.runObject
 			}
 		}
 	}
-	return runObject, params
+	return runObject
 }
 
 type leafInfo struct {
@@ -347,47 +344,43 @@ type leafInfo struct {
 	runObject interface{}
 }
 
-func (leaf *leafInfo) match(wildcardValues []string) (ok bool, params map[string]string) {
+func (leaf *leafInfo) match(wildcardValues []string, ctx *context.Context) (ok bool) {
 	if leaf.regexps == nil {
 		// has error
 		if len(wildcardValues) == 0 && len(leaf.wildcards) > 0 {
 			if utils.InSlice(":", leaf.wildcards) {
-				params = make(map[string]string)
 				j := 0
 				for _, v := range leaf.wildcards {
 					if v == ":" {
 						continue
 					}
-					params[v] = ""
+					ctx.Input.Params[v] = ""
 					j++
 				}
-				return true, params
+				return true
 			}
-			return false, nil
+			return false
 		} else if len(wildcardValues) == 0 { // static path
-			return true, nil
+			return true
 		}
 		// match *
 		if len(leaf.wildcards) == 1 && leaf.wildcards[0] == ":splat" {
-			params = make(map[string]string)
-			params[":splat"] = path.Join(wildcardValues...)
-			return true, params
+			ctx.Input.Params[":splat"] = path.Join(wildcardValues...)
+			return true
 		}
 		// match *.*
 		if len(leaf.wildcards) == 3 && leaf.wildcards[0] == "." {
-			params = make(map[string]string)
 			lastone := wildcardValues[len(wildcardValues)-1]
 			strs := strings.SplitN(lastone, ".", 2)
 			if len(strs) == 2 {
-				params[":ext"] = strs[1]
+				ctx.Input.Params[":ext"] = strs[1]
 			} else {
-				params[":ext"] = ""
+				ctx.Input.Params[":ext"] = ""
 			}
-			params[":path"] = path.Join(wildcardValues[:len(wildcardValues)-1]...) + "/" + strs[0]
-			return true, params
+			ctx.Input.Params[":path"] = path.Join(wildcardValues[:len(wildcardValues)-1]...) + "/" + strs[0]
+			return true
 		}
 		// match :id
-		params = make(map[string]string)
 		j := 0
 		for _, v := range leaf.wildcards {
 			if v == ":" {
@@ -397,38 +390,37 @@ func (leaf *leafInfo) match(wildcardValues []string) (ok bool, params map[string
 				lastone := wildcardValues[len(wildcardValues)-1]
 				strs := strings.SplitN(lastone, ".", 2)
 				if len(strs) == 2 {
-					params[":ext"] = strs[1]
+					ctx.Input.Params[":ext"] = strs[1]
 				} else {
-					params[":ext"] = ""
+					ctx.Input.Params[":ext"] = ""
 				}
 				if len(wildcardValues[j:]) == 1 {
-					params[":path"] = strs[0]
+					ctx.Input.Params[":path"] = strs[0]
 				} else {
-					params[":path"] = path.Join(wildcardValues[j:]...) + "/" + strs[0]
+					ctx.Input.Params[":path"] = path.Join(wildcardValues[j:]...) + "/" + strs[0]
 				}
-				return true, params
+				return true
 			}
 			if len(wildcardValues) <= j {
-				return false, nil
+				return false
 			}
-			params[v] = wildcardValues[j]
+			ctx.Input.Params[v] = wildcardValues[j]
 			j++
 		}
-		if len(params) != len(wildcardValues) {
-			return false, nil
+		if len(ctx.Input.Params) != len(wildcardValues) {
+			return false
 		}
-		return true, params
+		return true
 	}
 
 	if !leaf.regexps.MatchString(path.Join(wildcardValues...)) {
-		return false, nil
+		return false
 	}
-	params = make(map[string]string)
 	matches := leaf.regexps.FindStringSubmatch(path.Join(wildcardValues...))
 	for i, match := range matches[1:] {
-		params[leaf.wildcards[i]] = match
+		ctx.Input.Params[leaf.wildcards[i]] = match
 	}
-	return true, params
+	return true
 }
 
 // "/" -> []

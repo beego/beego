@@ -583,13 +583,7 @@ func (p *ControllerRegister) execFilter(context *beecontext.Context, pos int, ur
 				if filterR.returnOnOutput && context.ResponseWriter.Started {
 					return true
 				}
-				if ok, params := filterR.ValidRouter(urlPath); ok {
-					for k, v := range params {
-						if context.Input.Params == nil {
-							context.Input.Params = make(map[string]string)
-						}
-						context.Input.Params[k] = v
-					}
+				if ok := filterR.ValidRouter(urlPath, context); ok {
 					filterR.filterFunc(context)
 				}
 				if filterR.returnOnOutput && context.ResponseWriter.Started {
@@ -677,18 +671,15 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			httpMethod = "DELETE"
 		}
 		if t, ok := p.routers[httpMethod]; ok {
-			runObject, p := t.Match(urlPath)
+			runObject := t.Match(urlPath, context)
 			if r, ok := runObject.(*controllerInfo); ok {
 				routerInfo = r
 				findrouter = true
-				if splat, ok := p[":splat"]; ok {
+				if splat, ok := context.Input.Params[":splat"]; ok {
 					splatlist := strings.Split(splat, "/")
 					for k, v := range splatlist {
-						p[strconv.Itoa(k)] = v
+						context.Input.Params[strconv.Itoa(k)] = v
 					}
-				}
-				if p != nil {
-					context.Input.Params = p
 				}
 			}
 		}
