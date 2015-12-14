@@ -75,26 +75,23 @@ var (
 
 	isChild     bool
 	socketOrder string
-	once        sync.Once
 )
 
 func init() {
-	DefaultMaxHeaderBytes = 0
-	DefaultTimeout = 60 * time.Second
-}
-
-func onceInit() {
 	regLock = &sync.Mutex{}
 	flag.BoolVar(&isChild, "graceful", false, "listen on open fd (after forking)")
 	flag.StringVar(&socketOrder, "socketorder", "", "previous initialization order - used when more than one listener was started")
 	runningServers = make(map[string]*graceServer)
 	runningServersOrder = []string{}
 	socketPtrOffsetMap = make(map[string]uint)
+
+	DefaultMaxHeaderBytes = 0
+
+	DefaultTimeout = 60 * time.Second
 }
 
 // NewServer returns a new graceServer.
 func NewServer(addr string, handler http.Handler) (srv *graceServer) {
-	once.Do(onceInit)
 	regLock.Lock()
 	defer regLock.Unlock()
 	if !flag.Parsed() {
