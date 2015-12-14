@@ -17,6 +17,7 @@ package context
 import (
 	"bytes"
 	"errors"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -291,8 +292,9 @@ func (input *BeegoInput) Session(key interface{}) interface{} {
 }
 
 // CopyBody returns the raw request body data as bytes.
-func (input *BeegoInput) CopyBody() []byte {
-	requestbody, _ := ioutil.ReadAll(input.Request.Body)
+func (input *BeegoInput) CopyBody(MaxMemory int64) []byte {
+	safe := &io.LimitedReader{R: input.Request.Body, N: MaxMemory}
+	requestbody, _ := ioutil.ReadAll(safe)
 	input.Request.Body.Close()
 	bf := bytes.NewBuffer(requestbody)
 	input.Request.Body = ioutil.NopCloser(bf)
