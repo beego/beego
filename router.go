@@ -617,7 +617,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 					if ok, params := filterR.ValidRouter(urlPath); ok {
 						for k, v := range params {
 							if context.Input.Params == nil {
-								context.Input.Params = make(map[string]string)	
+								context.Input.Params = make(map[string]string)
 							}
 							context.Input.Params[k] = v
 						}
@@ -665,7 +665,7 @@ func (p *ControllerRegistor) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	if r.Method != "GET" && r.Method != "HEAD" {
 		if CopyRequestBody && !context.Input.IsUpload() {
-			context.Input.CopyBody()
+			context.Input.CopyBody(MaxMemory)
 		}
 		context.Input.ParseFormOrMulitForm(MaxMemory)
 	}
