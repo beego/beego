@@ -246,7 +246,7 @@ type QuerySeter interface {
 	RowsToStruct(ptrStruct interface{}, keyCol, valueCol string) (int64, error)
 }
 
-// model to model query struct
+// QueryM2Mer model to model query struct
 // all operations are on the m2m table only, will not affect the origin model table
 type QueryM2Mer interface {
 	// add models to origin models when creating queryM2M.
@@ -282,7 +282,7 @@ type RawPreparer interface {
 	Close() error
 }
 
-// raw query seter
+// RawSeter raw query seter
 // create From Ormer.Raw
 // for example:
 //  sql := fmt.Sprintf("SELECT %sid%s,%sname%s FROM %suser%s WHERE id = ?",Q,Q,Q,Q,Q,Q)
