@@ -35,6 +35,19 @@ var (
 	testDateTime = formatDateTime + " -0700"
 )
 
+type argAny []interface{}
+
+// get interface by index from interface slice
+func (a argAny) Get(i int, args ...interface{}) (r interface{}) {
+	if i >= 0 && i < len(a) {
+		r = a[i]
+	}
+	if len(args) > 0 {
+		r = args[0]
+	}
+	return
+}
+
 func ValuesCompare(is bool, a interface{}, args ...interface{}) (ok bool, err error) {
 	if len(args) == 0 {
 		return false, fmt.Errorf("miss args")
@@ -171,6 +184,9 @@ func TestSyncDb(t *testing.T) {
 	RegisterModel(new(Comment))
 	RegisterModel(new(UserBig))
 	RegisterModel(new(PostTags))
+	RegisterModel(new(Group))
+	RegisterModel(new(Permission))
+	RegisterModel(new(GroupPermissions))
 
 	err := RunSyncdb("default", true, false)
 	throwFail(t, err)
@@ -187,6 +203,9 @@ func TestRegisterModels(t *testing.T) {
 	RegisterModel(new(Comment))
 	RegisterModel(new(UserBig))
 	RegisterModel(new(PostTags))
+	RegisterModel(new(Group))
+	RegisterModel(new(Permission))
+	RegisterModel(new(GroupPermissions))
 
 	BootStrap()
 
@@ -635,6 +654,45 @@ The program—and web server—godoc processes Go source files to extract docume
 		throwFail(t, err)
 		throwFail(t, AssertIs(id > 0, true))
 	}
+
+	permissions := []*Permission{
+		{Name: "writePosts"},
+		{Name: "readComments"},
+		{Name: "readPosts"},
+	}
+
+	groups := []*Group{
+		{
+			GID:         "g1",
+			Name:        "admins",
+			Permissions: []*Permission{permissions[0], permissions[1], permissions[2]},
+		},
+		{
+			GID:         "g2",
+			Name:        "users",
+			Permissions: []*Permission{permissions[1], permissions[2]},
+		},
+	}
+
+	for _, permission := range permissions {
+		id, err := dORM.Insert(permission)
+		throwFail(t, err)
+		throwFail(t, AssertIs(id > 0, true))
+	}
+
+	for _, group := range groups {
+		id, err := dORM.Insert(group)
+		throwFail(t, err)
+		throwFail(t, AssertIs(id > 0, true))
+
+		num := len(group.Permissions)
+		if num > 0 {
+			nums, err := dORM.QueryM2M(group, "permissions").Add(group.Permissions)
+			throwFailNow(t, err)
+			throwFailNow(t, AssertIs(nums, num))
+		}
+	}
+
 }
 
 func TestCustomField(t *testing.T) {
@@ -1396,6 +1454,18 @@ func TestQueryRelate(t *testing.T) {
 	// num, err = dORM.QueryTable("Tag").Filter("Posts__Post", 2).Count()
 	// throwFailNow(t, err)
 	// throwFailNow(t, AssertIs(num, 2))
+}
+
+func TestPkManyRelated(t *testing.T) {
+	permission := &Permission{Name: "readPosts"}
+	err := dORM.Read(permission, "Name")
+	throwFailNow(t, err)
+
+	var groups []*Group
+	qs := dORM.QueryTable("Group")
+	num, err := qs.Filter("Permissions__Permission", permission.ID).All(&groups)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 2))
 }
 
 func TestPrepareInsert(t *testing.T) {
