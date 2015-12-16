@@ -45,6 +45,7 @@ func init() {
 	routers = append(routers, testinfo{"/*", "/customer/2009/12/11", map[string]string{":splat": "customer/2009/12/11"}})
 	routers = append(routers, testinfo{"/aa/*/bb", "/aa/2009/bb", map[string]string{":splat": "2009"}})
 	routers = append(routers, testinfo{"/cc/*/dd", "/cc/2009/11/dd", map[string]string{":splat": "2009/11"}})
+	routers = append(routers, testinfo{"/cc/:id/*", "/cc/2009/11/dd", map[string]string{":id": "2009", ":splat": "11/dd"}})
 	routers = append(routers, testinfo{"/ee/:year/*/ff", "/ee/2009/11/ff", map[string]string{":year": "2009", ":splat": "11"}})
 	routers = append(routers, testinfo{"/thumbnail/:size/uploads/*",
 		"/thumbnail/100x100/uploads/items/2014/04/20/dPRCdChkUd651t1Hvs18.jpg",
@@ -76,14 +77,14 @@ func TestTreeRouters(t *testing.T) {
 		ctx := context.NewContext()
 		obj := tr.Match(r.requesturl, ctx)
 		if obj == nil || obj.(string) != "astaxie" {
-			t.Fatal(r.url + " can't get obj ")
+			t.Fatal(r.url+" can't get obj, Expect ", r.requesturl)
 		}
 		if r.params != nil {
 			for k, v := range r.params {
-				if vv, ok := ctx.Input.Params[k]; !ok {
+				if vv := ctx.Input.Param(k); vv != v {
+					t.Fatal("The Rule: " + r.url + "\nThe RequestURL:" + r.requesturl + "\nThe Key is " + k + ", The Value should be: " + v + ", but get: " + vv)
+				} else if vv == "" && v != "" {
 					t.Fatal(r.url + "    " + r.requesturl + " get param empty:" + k)
-				} else if vv != v {
-					t.Fatal(r.url + "     " + r.requesturl + " should be:" + v + " get param:" + vv)
 				}
 			}
 		}
@@ -101,10 +102,10 @@ func TestAddTree(t *testing.T) {
 	if obj == nil || obj.(string) != "astaxie" {
 		t.Fatal("/v1/zl/shop/:id/account can't get obj ")
 	}
-	if len(ctx.Input.Params) == 0 {
+	if ctx.Input.ParamsLen() == 0 {
 		t.Fatal("get param error")
 	}
-	if ctx.Input.Params[":id"] != "123" {
+	if ctx.Input.Param(":id") != "123" {
 		t.Fatal("get :id param error")
 	}
 	ctx.Input.Reset(ctx)
@@ -112,10 +113,10 @@ func TestAddTree(t *testing.T) {
 	if obj == nil || obj.(string) != "astaxie" {
 		t.Fatal("/v1/zl//shop/:sd/ttt_:id(.+)_:page(.+).html can't get obj ")
 	}
-	if len(ctx.Input.Params) == 0 {
+	if ctx.Input.ParamsLen() == 0 {
 		t.Fatal("get param error")
 	}
-	if ctx.Input.Params[":sd"] != "123" || ctx.Input.Params[":id"] != "1" || ctx.Input.Params[":page"] != "12" {
+	if ctx.Input.Param(":sd") != "123" || ctx.Input.Param(":id") != "1" || ctx.Input.Param(":page") != "12" {
 		t.Fatal("get :sd :id :page param error")
 	}
 
@@ -126,10 +127,10 @@ func TestAddTree(t *testing.T) {
 	if obj == nil || obj.(string) != "astaxie" {
 		t.Fatal("/v1/:shopid/shop/:id/account can't get obj ")
 	}
-	if len(ctx.Input.Params) == 0 {
+	if ctx.Input.ParamsLen() == 0 {
 		t.Fatal("get param error")
 	}
-	if ctx.Input.Params[":id"] != "123" || ctx.Input.Params[":shopid"] != "zl" {
+	if ctx.Input.Param(":id") != "123" || ctx.Input.Param(":shopid") != "zl" {
 		t.Fatal("get :id :shopid param error")
 	}
 	ctx.Input.Reset(ctx)
@@ -137,10 +138,10 @@ func TestAddTree(t *testing.T) {
 	if obj == nil || obj.(string) != "astaxie" {
 		t.Fatal("/v1/:shopid/shop/:sd/ttt_:id(.+)_:page(.+).html can't get obj ")
 	}
-	if len(ctx.Input.Params) == 0 {
+	if ctx.Input.ParamsLen() == 0 {
 		t.Fatal("get :shopid param error")
 	}
-	if ctx.Input.Params[":sd"] != "123" || ctx.Input.Params[":id"] != "1" || ctx.Input.Params[":page"] != "12" || ctx.Input.Params[":shopid"] != "zl" {
+	if ctx.Input.Param(":sd") != "123" || ctx.Input.Param(":id") != "1" || ctx.Input.Param(":page") != "12" || ctx.Input.Param(":shopid") != "zl" {
 		t.Fatal("get :sd :id :page :shopid param error")
 	}
 }
@@ -156,10 +157,10 @@ func TestAddTree2(t *testing.T) {
 	if obj == nil || obj.(string) != "astaxie" {
 		t.Fatal("/:version(v1|v2)/:prefix/shop/:id/account can't get obj ")
 	}
-	if len(ctx.Input.Params) == 0 {
+	if ctx.Input.ParamsLen() == 0 {
 		t.Fatal("get param error")
 	}
-	if ctx.Input.Params[":id"] != "123" || ctx.Input.Params[":prefix"] != "zl" || ctx.Input.Params[":version"] != "v1" {
+	if ctx.Input.Param(":id") != "123" || ctx.Input.Param(":prefix") != "zl" || ctx.Input.Param(":version") != "v1" {
 		t.Fatal("get :id :prefix :version param error")
 	}
 }
@@ -175,10 +176,10 @@ func TestAddTree3(t *testing.T) {
 	if obj == nil || obj.(string) != "astaxie" {
 		t.Fatal("/table/:num/shop/:sd/account can't get obj ")
 	}
-	if len(ctx.Input.Params) == 0 {
+	if ctx.Input.ParamsLen() == 0 {
 		t.Fatal("get param error")
 	}
-	if ctx.Input.Params[":num"] != "123" || ctx.Input.Params[":sd"] != "123" {
+	if ctx.Input.Param(":num") != "123" || ctx.Input.Param(":sd") != "123" {
 		t.Fatal("get :num :sd param error")
 	}
 	ctx.Input.Reset(ctx)
@@ -199,10 +200,12 @@ func TestAddTree4(t *testing.T) {
 	if obj == nil || obj.(string) != "astaxie" {
 		t.Fatal("/:info:int/:num/:id/shop/:sd/:account can't get obj ")
 	}
-	if len(ctx.Input.Params) == 0 {
+	if ctx.Input.ParamsLen() == 0 {
 		t.Fatal("get param error")
 	}
-	if ctx.Input.Params[":info"] != "12" || ctx.Input.Params[":num"] != "123" || ctx.Input.Params[":id"] != "456" || ctx.Input.Params[":sd"] != "123" || ctx.Input.Params[":account"] != "account" {
+	if ctx.Input.Param(":info") != "12" || ctx.Input.Param(":num") != "123" ||
+		ctx.Input.Param(":id") != "456" || ctx.Input.Param(":sd") != "123" ||
+		ctx.Input.Param(":account") != "account" {
 		t.Fatal("get :info :num :id :sd :account param error")
 	}
 	ctx.Input.Reset(ctx)

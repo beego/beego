@@ -466,8 +466,8 @@ func (p *ControllerRegister) URLFor(endpoint string, values ...interface{}) stri
 }
 
 func (p *ControllerRegister) geturl(t *Tree, url, controllName, methodName string, params map[string]string, httpMethod string) (bool, string) {
-	for k, subtree := range t.fixrouters {
-		u := path.Join(url, k)
+	for _, subtree := range t.fixrouters {
+		u := path.Join(url, subtree.prefix)
 		ok, u := p.geturl(subtree, u, controllName, methodName, params, httpMethod)
 		if ok {
 			return ok, u
@@ -675,10 +675,10 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			if r, ok := runObject.(*controllerInfo); ok {
 				routerInfo = r
 				findrouter = true
-				if splat, ok := context.Input.Params[":splat"]; ok {
+				if splat := context.Input.Param(":splat"); splat != "" {
 					splatlist := strings.Split(splat, "/")
 					for k, v := range splatlist {
-						context.Input.Params[strconv.Itoa(k)] = v
+						context.Input.SetParam(strconv.Itoa(k), v)
 					}
 				}
 			}
