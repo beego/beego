@@ -288,7 +288,8 @@ func (t *Tree) Match(pattern string, ctx *context.Context) (runObject interface{
 	if len(pattern) == 0 || pattern[0] != '/' {
 		return nil
 	}
-	return t.match(pattern, nil, ctx)
+	w := make([]string, 0, 20)
+	return t.match(pattern, w, ctx)
 }
 
 func (t *Tree) match(pattern string, wildcardValues []string, ctx *context.Context) (runObject interface{}) {
