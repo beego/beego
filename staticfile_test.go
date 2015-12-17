@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"compress/flate"
 	"compress/gzip"
-	"compress/zlib"
 	"io"
 	"io/ioutil"
 	"os"
@@ -44,7 +43,7 @@ func TestOpenStaticFileGzip_1(t *testing.T) {
 func TestOpenStaticFileDeflate_1(t *testing.T) {
 	file, _ := os.Open(licenseFile)
 	var zipBuf bytes.Buffer
-	fileWriter, _ := zlib.NewWriterLevel(&zipBuf, flate.BestCompression)
+	fileWriter, _ := flate.NewWriter(&zipBuf, flate.BestCompression)
 	io.Copy(fileWriter, file)
 	fileWriter.Close()
 	content, _ := ioutil.ReadAll(&zipBuf)
