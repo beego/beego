@@ -186,7 +186,7 @@ func (t *dbTables) getJoinSQL() (join string) {
 		table = jt.mi.table
 
 		switch {
-		case jt.fi.fieldType == RelManyToMany || jt.fi.reverse && jt.fi.reverseFieldInfo.fieldType == RelManyToMany:
+		case jt.fi.fieldType == RelManyToMany || jt.fi.fieldType == RelReverseMany || jt.fi.reverse && jt.fi.reverseFieldInfo.fieldType == RelManyToMany:
 			c1 = jt.fi.mi.fields.pk.column
 			for _, ffi := range jt.mi.fields.fieldsRel {
 				if jt.fi.mi == ffi.relModelInfo {

@@ -332,6 +332,24 @@ func NewComment() *Comment {
 	return obj
 }
 
+type Group struct {
+	GID         string `orm:"pk;column(gid);size(32);unique"`
+	Name        string
+	Permissions []*Permission `orm:"reverse(many)" json:"-"`
+}
+
+type Permission struct {
+	ID     int `orm:"column(id)"`
+	Name   string
+	Groups []*Group `orm:"rel(m2m);rel_through(github.com/astaxie/beego/orm.GroupPermissions)"`
+}
+
+type GroupPermissions struct {
+	ID         int         `orm:"column(id)"`
+	Group      *Group      `orm:"rel(fk)"`
+	Permission *Permission `orm:"rel(fk)"`
+}
+
 var DBARGS = struct {
 	Driver string
 	Source string
