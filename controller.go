@@ -105,7 +105,7 @@ func (c *Controller) Init(ctx *context.Context, controllerName, actionName strin
 	c.AppController = app
 	c.EnableRender = true
 	c.EnableXSRF = true
-	c.Data = ctx.Input.Data
+	c.Data = ctx.Input.Data()
 	c.methodMapping = make(map[string]func())
 }
 

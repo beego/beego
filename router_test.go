@@ -45,7 +45,7 @@ func (tc *TestController) List() {
 }
 
 func (tc *TestController) Params() {
-	tc.Ctx.Output.Body([]byte(tc.Ctx.Input.Params["0"] + tc.Ctx.Input.Params["1"] + tc.Ctx.Input.Params["2"]))
+	tc.Ctx.Output.Body([]byte(tc.Ctx.Input.Param("0") + tc.Ctx.Input.Param("1") + tc.Ctx.Input.Param("2")))
 }
 
 func (tc *TestController) Myext() {

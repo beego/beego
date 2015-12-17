@@ -21,7 +21,8 @@ import (
 )
 
 func TestGetInt(t *testing.T) {
-	i := &context.BeegoInput{Params: map[string]string{"age": "40"}}
+	i := context.NewInput()
+	i.SetParam("age", "40")
 	ctx := &context.Context{Input: i}
 	ctrlr := Controller{Ctx: ctx}
 	val, _ := ctrlr.GetInt("age")
@@ -31,7 +32,8 @@ func TestGetInt(t *testing.T) {
 }
 
 func TestGetInt8(t *testing.T) {
-	i := &context.BeegoInput{Params: map[string]string{"age": "40"}}
+	i := context.NewInput()
+	i.SetParam("age", "40")
 	ctx := &context.Context{Input: i}
 	ctrlr := Controller{Ctx: ctx}
 	val, _ := ctrlr.GetInt8("age")
@@ -42,7 +44,8 @@ func TestGetInt8(t *testing.T) {
 }
 
 func TestGetInt16(t *testing.T) {
-	i := &context.BeegoInput{Params: map[string]string{"age": "40"}}
+	i := context.NewInput()
+	i.SetParam("age", "40")
 	ctx := &context.Context{Input: i}
 	ctrlr := Controller{Ctx: ctx}
 	val, _ := ctrlr.GetInt16("age")
@@ -52,7 +55,8 @@ func TestGetInt16(t *testing.T) {
 }
 
 func TestGetInt32(t *testing.T) {
-	i := &context.BeegoInput{Params: map[string]string{"age": "40"}}
+	i := context.NewInput()
+	i.SetParam("age", "40")
 	ctx := &context.Context{Input: i}
 	ctrlr := Controller{Ctx: ctx}
 	val, _ := ctrlr.GetInt32("age")
@@ -62,7 +66,8 @@ func TestGetInt32(t *testing.T) {
 }
 
 func TestGetInt64(t *testing.T) {
-	i := &context.BeegoInput{Params: map[string]string{"age": "40"}}
+	i := context.NewInput()
+	i.SetParam("age", "40")
 	ctx := &context.Context{Input: i}
 	ctrlr := Controller{Ctx: ctx}
 	val, _ := ctrlr.GetInt64("age")
