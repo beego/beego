@@ -18,7 +18,6 @@ import (
 	"bytes"
 	"compress/flate"
 	"compress/gzip"
-	"compress/zlib"
 	"io"
 	"net/http"
 	"os"
@@ -32,13 +31,9 @@ type acceptEncoder struct {
 }
 
 var (
-	noneCompressEncoder = acceptEncoder{"", func(wr io.Writer, level int) (io.Writer, error) { return wr, nil }}
-	gzipCompressEncoder = acceptEncoder{"gzip", func(wr io.Writer, level int) (io.Writer, error) { return gzip.NewWriterLevel(wr, level) }}
-	//according to the sec :http://tools.ietf.org/html/rfc2616#section-3.5 ,the deflate compress in http is zlib indeed
-	//deflate
-	//The "zlib" format defined in RFC 1950 [31] in combination with
-	//the "deflate" compression mechanism described in RFC 1951 [29].
-	deflateCompressEncoder = acceptEncoder{"deflate", func(wr io.Writer, level int) (io.Writer, error) { return zlib.NewWriterLevel(wr, level) }}
+	noneCompressEncoder    = acceptEncoder{"", func(wr io.Writer, level int) (io.Writer, error) { return wr, nil }}
+	gzipCompressEncoder    = acceptEncoder{"gzip", func(wr io.Writer, level int) (io.Writer, error) { return gzip.NewWriterLevel(wr, level) }}
+	deflateCompressEncoder = acceptEncoder{"deflate", func(wr io.Writer, level int) (io.Writer, error) { return flate.NewWriter(wr, level) }}
 )
 
 var (
