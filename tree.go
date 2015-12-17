@@ -334,7 +334,7 @@ func (t *Tree) match(pattern string, wildcardValues []string, ctx *context.Conte
 			}
 		}
 	}
-	if runObject == nil {
+	if runObject == nil && len(t.fixrouters) > 0 {
 		// Filter the .json .xml .html extension
 		for _, str := range allowSuffixExt {
 			if strings.HasSuffix(seg, str) {
@@ -353,7 +353,7 @@ func (t *Tree) match(pattern string, wildcardValues []string, ctx *context.Conte
 		runObject = t.wildcard.match(pattern, append(wildcardValues, seg), ctx)
 	}
 
-	if runObject == nil {
+	if runObject == nil && len(t.leaves) > 0 {
 		wildcardValues = append(wildcardValues, seg)
 		start, i := 0, 0
 		for ; i < len(pattern); i++ {
