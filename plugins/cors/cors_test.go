@@ -225,8 +225,8 @@ func Benchmark_WithoutCORS(b *testing.B) {
 		ctx.Output.SetStatus(500)
 	})
 	b.ResetTimer()
-	for i := 0; i < 100; i++ {
-		r, _ := http.NewRequest("PUT", "/foo", nil)
+	r, _ := http.NewRequest("PUT", "/foo", nil)
+	for i := 0; i < b.N; i++ {
 		handler.ServeHTTP(recorder, r)
 	}
 }
@@ -246,8 +246,8 @@ func Benchmark_WithCORS(b *testing.B) {
 		ctx.Output.SetStatus(500)
 	})
 	b.ResetTimer()
-	for i := 0; i < 100; i++ {
-		r, _ := http.NewRequest("PUT", "/foo", nil)
+	r, _ := http.NewRequest("PUT", "/foo", nil)
+	for i := 0; i < b.N; i++ {
 		handler.ServeHTTP(recorder, r)
 	}
 }
