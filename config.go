@@ -294,7 +294,7 @@ func (b *beegoAppConfig) String(key string) string {
 
 func (b *beegoAppConfig) Strings(key string) []string {
 	if v := b.innerConfig.Strings(BConfig.RunMode + "::" + key); v[0] != "" {
-		return v[0]
+		return v
 	}
 	return b.innerConfig.Strings(key)
 }
