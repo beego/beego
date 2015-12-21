@@ -19,7 +19,6 @@ import (
 	"errors"
 	"html/template"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net/http"
 	"net/url"
@@ -57,22 +56,31 @@ type ControllerComments struct {
 // Controller defines some basic http request handler operations, such as
 // http context, template and view, session and xsrf.
 type Controller struct {
-	Ctx            *context.Context
-	Data           map[interface{}]interface{}
+	// context data
+	Ctx  *context.Context
+	Data map[interface{}]interface{}
+
+	// route controller info
 	controllerName string
 	actionName     string
+	methodMapping  map[string]func() //method:routertree
+	gotofunc       string
+	AppController  interface{}
+
+	// template data
 	TplNames       string
 	Layout         string
 	LayoutSections map[string]string // the key is the section name and the value is the template name
 	TplExt         string
-	_xsrfToken     string
-	gotofunc       string
-	CruSession     session.Store
-	XSRFExpire     int
-	AppController  interface{}
 	EnableRender   bool
-	EnableXSRF     bool
-	methodMapping  map[string]func() //method:routertree
+
+	// xsrf data
+	_xsrfToken string
+	XSRFExpire int
+	EnableXSRF bool
+
+	// session
+	CruSession session.Store
 }
 
 // ControllerInterface is an interface to uniform all controller handler.
@@ -110,14 +118,10 @@ func (c *Controller) Init(ctx *context.Context, controllerName, actionName strin
 }
 
 // Prepare runs after Init before request function execution.
-func (c *Controller) Prepare() {
-
-}
+func (c *Controller) Prepare() {}
 
 // Finish runs after request function execution.
-func (c *Controller) Finish() {
-
-}
+func (c *Controller) Finish() {}
 
 // Get adds a request function to handle GET request.
 func (c *Controller) Get() {
@@ -164,8 +168,7 @@ func (c *Controller) HandlerFunc(fnname string) bool {
 }
 
 // URLMapping register the internal Controller router.
-func (c *Controller) URLMapping() {
-}
+func (c *Controller) URLMapping() {}
 
 // Mapping the method to function
 func (c *Controller) Mapping(method string, fn func()) {
@@ -195,14 +198,14 @@ func (c *Controller) RenderString() (string, error) {
 // RenderBytes returns the bytes of rendered template string. Do not send out response.
 func (c *Controller) RenderBytes() ([]byte, error) {
 	//if the controller has set layout, then first get the tplname's content set the content to the layout
+	var buf bytes.Buffer
 	if c.Layout != "" {
 		if c.TplNames == "" {
 			c.TplNames = strings.ToLower(c.controllerName) + "/" + strings.ToLower(c.actionName) + "." + c.TplExt
 		}
 
 		if BConfig.RunMode == "dev" {
-			buildFiles := make([]string, 1)
-			buildFiles = append(buildFiles, c.TplNames)
+			buildFiles := []string{c.TplNames}
 			if c.LayoutSections != nil {
 				for _, sectionTpl := range c.LayoutSections {
 					if sectionTpl == "" {
@@ -213,17 +216,15 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 			}
 			BuildTemplate(BConfig.WebConfig.ViewsPath, buildFiles...)
 		}
-		newbytes := bytes.NewBufferString("")
 		if _, ok := BeeTemplates[c.TplNames]; !ok {
 			panic("can't find templatefile in the path:" + c.TplNames)
 		}
-		err := BeeTemplates[c.TplNames].ExecuteTemplate(newbytes, c.TplNames, c.Data)
+		err := BeeTemplates[c.TplNames].ExecuteTemplate(&buf, c.TplNames, c.Data)
 		if err != nil {
 			Trace("template Execute err:", err)
 			return nil, err
 		}
-		tplcontent, _ := ioutil.ReadAll(newbytes)
-		c.Data["LayoutContent"] = template.HTML(string(tplcontent))
+		c.Data["LayoutContent"] = template.HTML(buf.String())
 
 		if c.LayoutSections != nil {
 			for sectionName, sectionTpl := range c.LayoutSections {
@@ -232,25 +233,23 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 					continue
 				}
 
-				sectionBytes := bytes.NewBufferString("")
-				err = BeeTemplates[sectionTpl].ExecuteTemplate(sectionBytes, sectionTpl, c.Data)
+				buf.Reset()
+				err = BeeTemplates[sectionTpl].ExecuteTemplate(&buf, sectionTpl, c.Data)
 				if err != nil {
 					Trace("template Execute err:", err)
 					return nil, err
 				}
-				sectionContent, _ := ioutil.ReadAll(sectionBytes)
-				c.Data[sectionName] = template.HTML(string(sectionContent))
+				c.Data[sectionName] = template.HTML(buf.String())
 			}
 		}
 
-		ibytes := bytes.NewBufferString("")
-		err = BeeTemplates[c.Layout].ExecuteTemplate(ibytes, c.Layout, c.Data)
+		buf.Reset()
+		err = BeeTemplates[c.Layout].ExecuteTemplate(&buf, c.Layout, c.Data)
 		if err != nil {
 			Trace("template Execute err:", err)
 			return nil, err
 		}
-		icontent, _ := ioutil.ReadAll(ibytes)
-		return icontent, nil
+		return buf.Bytes(), nil
 	}
 
 	if c.TplNames == "" {
@@ -259,17 +258,16 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 	if BConfig.RunMode == "dev" {
 		BuildTemplate(BConfig.WebConfig.ViewsPath, c.TplNames)
 	}
-	ibytes := bytes.NewBufferString("")
 	if _, ok := BeeTemplates[c.TplNames]; !ok {
 		panic("can't find templatefile in the path:" + c.TplNames)
 	}
-	err := BeeTemplates[c.TplNames].ExecuteTemplate(ibytes, c.TplNames, c.Data)
+	buf.Reset()
+	err := BeeTemplates[c.TplNames].ExecuteTemplate(&buf, c.TplNames, c.Data)
 	if err != nil {
 		Trace("template Execute err:", err)
 		return nil, err
 	}
-	icontent, _ := ioutil.ReadAll(ibytes)
-	return icontent, nil
+	return buf.Bytes(), nil
 }
 
 // Redirect sends the redirection response to url with status code.
@@ -306,7 +304,7 @@ func (c *Controller) StopRun() {
 // URLFor does another controller handler in this request function.
 // it goes to this controller method if endpoint is not clear.
 func (c *Controller) URLFor(endpoint string, values ...interface{}) string {
-	if len(endpoint) <= 0 {
+	if len(endpoint) == 0 {
 		return ""
 	}
 	if endpoint[0] == '.' {
@@ -317,37 +315,33 @@ func (c *Controller) URLFor(endpoint string, values ...interface{}) string {
 
 // ServeJSON sends a json response with encoding charset.
 func (c *Controller) ServeJSON(encoding ...bool) {
-	var hasIndent bool
-	var hasencoding bool
+	var (
+		hasIndent   = true
+		hasEncoding = false
+	)
 	if BConfig.RunMode == "prod" {
 		hasIndent = false
-	} else {
-		hasIndent = true
 	}
 	if len(encoding) > 0 && encoding[0] == true {
-		hasencoding = true
+		hasEncoding = true
 	}
-	c.Ctx.Output.JSON(c.Data["json"], hasIndent, hasencoding)
+	c.Ctx.Output.JSON(c.Data["json"], hasIndent, hasEncoding)
 }
 
 // ServeJSONP sends a jsonp response.
 func (c *Controller) ServeJSONP() {
-	var hasIndent bool
+	hasIndent := true
 	if BConfig.RunMode == "prod" {
 		hasIndent = false
-	} else {
-		hasIndent = true
 	}
 	c.Ctx.Output.JSONP(c.Data["jsonp"], hasIndent)
 }
 
 // ServeXML sends xml response.
 func (c *Controller) ServeXML() {
-	var hasIndent bool
+	hasIndent := true
 	if BConfig.RunMode == "prod" {
 		hasIndent = false
-	} else {
-		hasIndent = true
 	}
 	c.Ctx.Output.XML(c.Data["xml"], hasIndent)
 }
@@ -380,15 +374,13 @@ func (c *Controller) ParseForm(obj interface{}) error {
 
 // GetString returns the input value by key string or the default value while it's present and input is blank
 func (c *Controller) GetString(key string, def ...string) string {
-	var defv string
-	if len(def) > 0 {
-		defv = def[0]
-	}
-
 	if v := c.Ctx.Input.Query(key); v != "" {
 		return v
 	}
-	return defv
+	if len(def) > 0 {
+		return def[0]
+	}
+	return ""
 }
 
 // GetStrings returns the input string slice by key string or the default value while it's present and input is blank
@@ -399,15 +391,14 @@ func (c *Controller) GetStrings(key string, def ...[]string) []string {
 		defv = def[0]
 	}
 
-	f := c.Input()
-	if f == nil {
+	if f := c.Input(); f == nil {
 		return defv
+	} else {
+		if vs := f[key]; len(vs) > 0 {
+			return vs
+		}
 	}
 
-	vs := f[key]
-	if len(vs) > 0 {
-		return vs
-	}
 	return defv
 }
 
@@ -511,8 +502,7 @@ func (c *Controller) GetFile(key string) (multipart.File, *multipart.FileHeader,
 //	}
 // }
 func (c *Controller) GetFiles(key string) ([]*multipart.FileHeader, error) {
-	files, ok := c.Ctx.Request.MultipartForm.File[key]
-	if ok {
+	if files, ok := c.Ctx.Request.MultipartForm.File[key]; ok {
 		return files, nil
 	}
 	return nil, http.ErrMissingFile
@@ -601,11 +591,9 @@ func (c *Controller) SetSecureCookie(Secret, name, value string, others ...inter
 // XSRFToken creates a CSRF token string and returns.
 func (c *Controller) XSRFToken() string {
 	if c._xsrfToken == "" {
-		var expire int64
+		expire := int64(BConfig.WebConfig.XSRFExpire)
 		if c.XSRFExpire > 0 {
 			expire = int64(c.XSRFExpire)
-		} else {
-			expire = int64(BConfig.WebConfig.XSRFExpire)
 		}
 		c._xsrfToken = c.Ctx.XSRFToken(BConfig.WebConfig.XSRFKEY, expire)
 	}
@@ -629,6 +617,6 @@ func (c *Controller) XSRFFormHTML() string {
 }
 
 // GetControllerAndAction gets the executing controller name and action name.
-func (c *Controller) GetControllerAndAction() (controllerName, actionName string) {
+func (c *Controller) GetControllerAndAction() (string, string) {
 	return c.controllerName, c.actionName
 }

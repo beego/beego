@@ -275,7 +275,6 @@ type QueryM2Mer interface {
 	Count() (int64, error)
 }
 
-
 // RawPreparer raw query statement
 type RawPreparer interface {
 	Exec(...interface{}) (sql.Result, error)
