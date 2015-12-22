@@ -23,10 +23,13 @@
 package context
 
 import (
+	"bufio"
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/base64"
+	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -187,4 +190,28 @@ func (w *Response) WriteHeader(code int) {
 	w.Status = code
 	w.Started = true
 	w.ResponseWriter.WriteHeader(code)
+}
+
+// Hijack hijacker for http
+func (w *Response) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	hj, ok := w.ResponseWriter.(http.Hijacker)
+	if !ok {
+		return nil, nil, errors.New("webserver doesn't support hijacking")
+	}
+	return hj.Hijack()
+}
+
+// Flush http.Flusher
+func (w *Response) Flush() {
+	if f, ok := w.ResponseWriter.(http.Flusher); ok {
+		f.Flush()
+	}
+}
+
+// CloseNotify http.CloseNotifier
+func (w *Response) CloseNotify() <-chan bool {
+	if cn, ok := w.ResponseWriter.(http.CloseNotifier); ok {
+		return cn.CloseNotify()
+	}
+	return nil
 }
