@@ -1,11 +1,10 @@
 package beego
 
 import (
+	"encoding/json"
 	"mime"
-	"path/filepath"
-	"strconv"
-
 	"net/http"
+	"path/filepath"
 
 	"github.com/astaxie/beego/session"
 )
@@ -20,8 +19,7 @@ func registerMime() error {
 
 // register default error http handlers, 404,401,403,500 and 503.
 func registerDefaultErrorHandler() error {
-
-	for e, h := range map[string]func(http.ResponseWriter, *http.Request){
+	m := map[string]func(http.ResponseWriter, *http.Request){
 		"401": unauthorized,
 		"402": paymentRequired,
 		"403": forbidden,
@@ -32,7 +30,8 @@ func registerDefaultErrorHandler() error {
 		"502": badGateway,
 		"503": serviceUnavailable,
 		"504": gatewayTimeout,
-	} {
+	}
+	for e, h := range m {
 		if _, ok := ErrorMaps[e]; !ok {
 			ErrorHandler(e, h)
 		}
@@ -45,16 +44,22 @@ func registerSession() error {
 		var err error
 		sessionConfig := AppConfig.String("sessionConfig")
 		if sessionConfig == "" {
-			sessionConfig = `{"cookieName":"` + BConfig.WebConfig.Session.SessionName + `",` +
-				`"gclifetime":` + strconv.FormatInt(BConfig.WebConfig.Session.SessionGCMaxLifetime, 10) + `,` +
-				`"providerConfig":"` + filepath.ToSlash(BConfig.WebConfig.Session.SessionProviderConfig) + `",` +
-				`"secure":` + strconv.FormatBool(BConfig.Listen.HTTPSEnable) + `,` +
-				`"enableSetCookie":` + strconv.FormatBool(BConfig.WebConfig.Session.SessionAutoSetCookie) + `,` +
-				`"domain":"` + BConfig.WebConfig.Session.SessionDomain + `",` +
-				`"cookieLifeTime":` + strconv.Itoa(BConfig.WebConfig.Session.SessionCookieLifeTime) + `}`
+			conf := map[string]interface{}{
+				"cookieName":      BConfig.WebConfig.Session.SessionName,
+				"gclifetime":      BConfig.WebConfig.Session.SessionGCMaxLifetime,
+				"providerConfig":  filepath.ToSlash(BConfig.WebConfig.Session.SessionProviderConfig),
+				"secure":          BConfig.Listen.HTTPSEnable,
+				"enableSetCookie": BConfig.WebConfig.Session.SessionAutoSetCookie,
+				"domain":          BConfig.WebConfig.Session.SessionDomain,
+				"cookieLifeTime":  BConfig.WebConfig.Session.SessionCookieLifeTime,
+			}
+			confBytes, err := json.Marshal(conf)
+			if err != nil {
+				return err
+			}
+			sessionConfig = string(confBytes)
 		}
-		GlobalSessions, err = session.NewManager(BConfig.WebConfig.Session.SessionProvider, sessionConfig)
-		if err != nil {
+		if GlobalSessions, err = session.NewManager(BConfig.WebConfig.Session.SessionProvider, sessionConfig); err != nil {
 			return err
 		}
 		go GlobalSessions.GC()
@@ -64,9 +69,11 @@ func registerSession() error {
 
 func registerTemplate() error {
 	if BConfig.WebConfig.AutoRender {
-		err := BuildTemplate(BConfig.WebConfig.ViewsPath)
-		if err != nil && BConfig.RunMode == "dev" {
-			Warn(err)
+		if err := BuildTemplate(BConfig.WebConfig.ViewsPath); err != nil {
+			if BConfig.RunMode == "dev" {
+				Warn(err)
+			}
+			return err
 		}
 	}
 	return nil
