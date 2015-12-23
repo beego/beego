@@ -15,8 +15,6 @@
 package beego
 
 import (
-	"encoding/json"
-
 	"github.com/astaxie/beego/context"
 )
 
@@ -33,14 +31,8 @@ func serverDocs(ctx *context.Context) {
 		}
 	}
 	if obj != nil {
-		bt, err := json.Marshal(obj)
-		if err != nil {
-			ctx.Output.SetStatus(504)
-			return
-		}
-		ctx.Output.Header("Content-Type", "application/json;charset=UTF-8")
 		ctx.Output.Header("Access-Control-Allow-Origin", "*")
-		ctx.Output.Body(bt)
+		ctx.Output.JSON(obj, false, false)
 		return
 	}
 	ctx.Output.SetStatus(404)
