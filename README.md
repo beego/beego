@@ -26,6 +26,7 @@ More info [beego.me](http://beego.me)
 
 * [English](http://beego.me/docs/intro/)
 * [中文文档](http://beego.me/docs/intro/)
+* [Русский](http://beego.me/docs/intro/)
 
 ## Community
 
