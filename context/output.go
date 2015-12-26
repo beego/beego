@@ -34,6 +34,7 @@ import (
 
 // BeegoOutput does work for sending response header.
 type BeegoOutput struct {
+	Content    []byte
 	Context    *Context
 	Status     int
 	EnableGzip bool
@@ -54,6 +55,8 @@ func (output *BeegoOutput) Header(key, val string) {
 // if EnableGzip, compress content string.
 // it sends out response body directly.
 func (output *BeegoOutput) Body(content []byte) {
+	// add content to local var for middleware use
+	output.Content = content
 	output_writer := output.Context.ResponseWriter.(io.Writer)
 	if output.EnableGzip == true && output.Context.Input.Header("Accept-Encoding") != "" {
 		splitted := strings.SplitN(output.Context.Input.Header("Accept-Encoding"), ",", -1)
@@ -100,29 +103,29 @@ func (output *BeegoOutput) Cookie(name string, value string, others ...interface
 	var b bytes.Buffer
 	fmt.Fprintf(&b, "%s=%s", sanitizeName(name), sanitizeValue(value))
 
-    //fix cookie not work in IE
-    if len(others) > 0 {
-        switch v := others[0].(type) {
-            case int:
-            if v > 0 {
-                fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(v) * time.Second).UTC().Format(time.RFC1123), v)
-            } else if v < 0 {
-                fmt.Fprintf(&b, "; Max-Age=0")
-            }
-            case int64:
-            if v > 0 {
-                fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(v) * time.Second).UTC().Format(time.RFC1123), v)
-            } else if v < 0 {
-                fmt.Fprintf(&b, "; Max-Age=0")
-            }
-            case int32:
-            if v > 0 {
-                fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(v) * time.Second).UTC().Format(time.RFC1123), v)
-            } else if v < 0 {
-                fmt.Fprintf(&b, "; Max-Age=0")
-            }
-        }
-    }
+	//fix cookie not work in IE
+	if len(others) > 0 {
+		switch v := others[0].(type) {
+		case int:
+			if v > 0 {
+				fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(v)*time.Second).UTC().Format(time.RFC1123), v)
+			} else if v < 0 {
+				fmt.Fprintf(&b, "; Max-Age=0")
+			}
+		case int64:
+			if v > 0 {
+				fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(v)*time.Second).UTC().Format(time.RFC1123), v)
+			} else if v < 0 {
+				fmt.Fprintf(&b, "; Max-Age=0")
+			}
+		case int32:
+			if v > 0 {
+				fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(v)*time.Second).UTC().Format(time.RFC1123), v)
+			} else if v < 0 {
+				fmt.Fprintf(&b, "; Max-Age=0")
+			}
+		}
+	}
 
 	// the settings below
 	// Path, Domain, Secure, HttpOnly
