@@ -32,6 +32,7 @@ import (
 
 // BeegoOutput does work for sending response header.
 type BeegoOutput struct {
+	Content []byte
 	Context    *Context
 	Status     int
 	EnableGzip bool
@@ -58,6 +59,7 @@ func (output *BeegoOutput) Header(key, val string) {
 // if EnableGzip, compress content string.
 // it sends out response body directly.
 func (output *BeegoOutput) Body(content []byte) {
+	output.Content = content
 	var encoding string
 	var buf = &bytes.Buffer{}
 	if output.EnableGzip {
