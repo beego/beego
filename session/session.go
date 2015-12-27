@@ -156,9 +156,9 @@ func (manager *Manager) getSid(r *http.Request) (string, error) {
 	return url.QueryUnescape(cookie.Value)
 }
 
-// Start session. generate or read the session id from http request.
+// SessionStart generate or read the session id from http request.
 // if session id exists, return SessionStore with this id.
-func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (session SessionStore, err error) {
+func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (session Store, err error) {
 	sid, errs := manager.getSid(r)
 	if errs != nil {
 		return nil, errs
@@ -169,7 +169,7 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 	}
 
 	// Generate a new session
-	sid, errs = manager.sessionId(r)
+	sid, errs = manager.sessionID(r)
 	if errs != nil {
 		return nil, errs
 	}
