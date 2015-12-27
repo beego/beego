@@ -33,6 +33,7 @@ type BeegoConfig struct {
 	RecoverPanic        bool
 	CopyRequestBody     bool
 	EnableGzip          bool
+	EnableStoreContent  bool
 	MaxMemory           int64
 	EnableErrorsShow    bool
 	Listen              Listen
@@ -117,6 +118,7 @@ func init() {
 		RecoverPanic:        true,
 		CopyRequestBody:     false,
 		EnableGzip:          false,
+		EnableStoreContent:  false,
 		MaxMemory:           1 << 26, //64MB
 		EnableErrorsShow:    true,
 		Listen: Listen{
@@ -197,6 +199,7 @@ func ParseConfig() (err error) {
 	BConfig.RouterCaseSensitive = AppConfig.DefaultBool("RouterCaseSensitive", BConfig.RouterCaseSensitive)
 	BConfig.ServerName = AppConfig.DefaultString("BeegoServerName", BConfig.ServerName)
 	BConfig.EnableGzip = AppConfig.DefaultBool("EnableGzip", BConfig.EnableGzip)
+	BConfig.EnableStoreContent = AppConfig.DefaultBool("EnableStoreContent", BConfig.EnableStoreContent)
 	BConfig.EnableErrorsShow = AppConfig.DefaultBool("EnableErrorsShow", BConfig.EnableErrorsShow)
 	BConfig.CopyRequestBody = AppConfig.DefaultBool("CopyRequestBody", BConfig.CopyRequestBody)
 	BConfig.MaxMemory = AppConfig.DefaultInt64("MaxMemory", BConfig.MaxMemory)
