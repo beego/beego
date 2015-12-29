@@ -24,8 +24,14 @@ import (
 	"github.com/astaxie/beego/logs"
 )
 
-// beego web framework version.
-const VERSION = "1.5.0"
+const (
+	// beego web framework version.
+	VERSION = "1.5.0"
+
+	// beego run modes
+	DEV  = "dev"
+	PROD = "prod"
+)
 
 //hook function to run
 type hookfunc func() error

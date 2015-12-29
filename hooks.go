@@ -70,7 +70,7 @@ func registerSession() error {
 func registerTemplate() error {
 	if BConfig.WebConfig.AutoRender {
 		if err := BuildTemplate(BConfig.WebConfig.ViewsPath); err != nil {
-			if BConfig.RunMode == "dev" {
+			if BConfig.RunMode == DEV {
 				Warn(err)
 			}
 			return err

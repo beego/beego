@@ -17,6 +17,8 @@ package config
 import (
 	"os"
 	"testing"
+
+	"github.com/astaxie/beego"
 )
 
 var jsoncontext = `{
@@ -120,7 +122,7 @@ func TestJson(t *testing.T) {
 		t.Error(pi)
 		t.Fatal(err)
 	}
-	if jsonconf.String("runmode") != "dev" {
+	if jsonconf.String("runmode") != beego.DEV {
 		t.Fatal("runmode not equal to dev")
 	}
 	if v := jsonconf.Strings("unknown"); len(v) > 0 {

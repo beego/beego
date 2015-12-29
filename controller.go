@@ -204,7 +204,7 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 			c.TplNames = strings.ToLower(c.controllerName) + "/" + strings.ToLower(c.actionName) + "." + c.TplExt
 		}
 
-		if BConfig.RunMode == "dev" {
+		if BConfig.RunMode == DEV {
 			buildFiles := []string{c.TplNames}
 			if c.LayoutSections != nil {
 				for _, sectionTpl := range c.LayoutSections {
@@ -255,7 +255,7 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 	if c.TplNames == "" {
 		c.TplNames = strings.ToLower(c.controllerName) + "/" + strings.ToLower(c.actionName) + "." + c.TplExt
 	}
-	if BConfig.RunMode == "dev" {
+	if BConfig.RunMode == DEV {
 		BuildTemplate(BConfig.WebConfig.ViewsPath, c.TplNames)
 	}
 	if _, ok := BeeTemplates[c.TplNames]; !ok {
@@ -319,7 +319,7 @@ func (c *Controller) ServeJSON(encoding ...bool) {
 		hasIndent   = true
 		hasEncoding = false
 	)
-	if BConfig.RunMode == "prod" {
+	if BConfig.RunMode == PROD {
 		hasIndent = false
 	}
 	if len(encoding) > 0 && encoding[0] == true {
@@ -331,7 +331,7 @@ func (c *Controller) ServeJSON(encoding ...bool) {
 // ServeJSONP sends a jsonp response.
 func (c *Controller) ServeJSONP() {
 	hasIndent := true
-	if BConfig.RunMode == "prod" {
+	if BConfig.RunMode == PROD {
 		hasIndent = false
 	}
 	c.Ctx.Output.JSONP(c.Data["jsonp"], hasIndent)
@@ -340,7 +340,7 @@ func (c *Controller) ServeJSONP() {
 // ServeXML sends xml response.
 func (c *Controller) ServeXML() {
 	hasIndent := true
-	if BConfig.RunMode == "prod" {
+	if BConfig.RunMode == PROD {
 		hasIndent = false
 	}
 	c.Ctx.Output.XML(c.Data["xml"], hasIndent)

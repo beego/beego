@@ -18,6 +18,7 @@ import (
 	"os"
 	"testing"
 
+	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/config"
 )
 
@@ -62,7 +63,7 @@ func TestYaml(t *testing.T) {
 		t.Error(pi)
 		t.Fatal(err)
 	}
-	if yamlconf.String("runmode") != "dev" {
+	if yamlconf.String("runmode") != beego.DEV {
 		t.Fatal("runmode not equal to dev")
 	}
 	if v, err := yamlconf.Bool("autorender"); err != nil || v != false {

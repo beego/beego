@@ -204,7 +204,7 @@ func (p *ControllerRegister) addToRouter(method, pattern string, r *controllerIn
 // Include only when the Runmode is dev will generate router file in the router/auto.go from the controller
 // Include(&BankAccount{}, &OrderController{},&RefundController{},&ReceiptController{})
 func (p *ControllerRegister) Include(cList ...ControllerInterface) {
-	if BConfig.RunMode == "dev" {
+	if BConfig.RunMode == DEV {
 		skip := make(map[string]bool, 10)
 		for _, c := range cList {
 			reflectVal := reflect.ValueOf(c)
@@ -609,7 +609,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	defer p.pool.Put(context)
 	defer p.recoverPanic(context)
 
-	if BConfig.RunMode == "dev" {
+	if BConfig.RunMode == DEV {
 		context.Output.Header("Server", BConfig.ServerName)
 	}
 
@@ -815,7 +815,7 @@ Admin:
 		}
 	}
 
-	if BConfig.RunMode == "dev" || BConfig.Log.AccessLogs {
+	if BConfig.RunMode == DEV || BConfig.Log.AccessLogs {
 		var devinfo string
 		if findrouter {
 			if routerInfo != nil {
@@ -862,7 +862,7 @@ func (p *ControllerRegister) recoverPanic(context *beecontext.Context) {
 				Critical(fmt.Sprintf("%s:%d", file, line))
 				stack = stack + fmt.Sprintln(fmt.Sprintf("%s:%d", file, line))
 			}
-			if BConfig.RunMode == "dev" {
+			if BConfig.RunMode == DEV {
 				showErr(err, context, stack)
 			}
 		}

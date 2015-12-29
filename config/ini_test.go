@@ -17,6 +17,8 @@ package config
 import (
 	"os"
 	"testing"
+
+	"github.com/astaxie/beego"
 )
 
 var inicontext = `
@@ -67,7 +69,7 @@ func TestIni(t *testing.T) {
 		t.Error(pi)
 		t.Fatal(err)
 	}
-	if iniconf.String("runmode") != "dev" {
+	if iniconf.String("runmode") != beego.DEV {
 		t.Fatal("runmode not equal to dev")
 	}
 	if v, err := iniconf.Bool("autorender"); err != nil || v != false {
