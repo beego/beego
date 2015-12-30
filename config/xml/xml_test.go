@@ -18,7 +18,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/config"
 )
 
@@ -66,7 +65,7 @@ func TestXML(t *testing.T) {
 		t.Error(pi)
 		t.Fatal(err)
 	}
-	if xmlconf.String("runmode") != beego.DEV {
+	if xmlconf.String("runmode") != "dev" {
 		t.Fatal("runmode not equal to dev")
 	}
 	if v, err := xmlconf.Bool("autorender"); err != nil || v != false {
