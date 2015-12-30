@@ -49,7 +49,7 @@ func serverStaticRouter(ctx *context.Context) {
 	}
 
 	if filePath == "" || fileInfo == nil {
-		if BConfig.RunMode == "dev" {
+		if BConfig.RunMode == DEV {
 			Warn("Can't find/open the file:", filePath, err)
 		}
 		http.NotFound(ctx.ResponseWriter, ctx.Request)
@@ -68,7 +68,7 @@ func serverStaticRouter(ctx *context.Context) {
 	}
 	b, n, sch, err := openFile(filePath, fileInfo, acceptEncoding)
 	if err != nil {
-		if BConfig.RunMode == "dev" {
+		if BConfig.RunMode == DEV {
 			Warn("Can't compress the file:", filePath, err)
 		}
 		http.NotFound(ctx.ResponseWriter, ctx.Request)
