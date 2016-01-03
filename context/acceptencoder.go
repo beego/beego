@@ -40,9 +40,9 @@ func (n nopResetWriter) Reset(w io.Writer) {
 	//do nothing
 }
 
-type encodeFunc func(io.Writer, int) (resetWriter, error)
 type acceptEncoder struct {
 	name                string
+	levelEncode         func(int) resetWriter
 	bestSpeedPool       *sync.Pool
 	bestCompressionPool *sync.Pool
 }
@@ -52,10 +52,13 @@ func (ac acceptEncoder) encode(wr io.Writer, level int) (resetWriter, error) {
 		return nopResetWriter{wr}, nil
 	}
 	var rwr resetWriter
-	if level == flate.BestSpeed {
+	switch level {
+	case flate.BestSpeed:
 		rwr = ac.bestSpeedPool.Get().(resetWriter)
-	} else {
+	case flate.BestCompression:
 		rwr = ac.bestCompressionPool.Get().(resetWriter)
+	default:
+		rwr = ac.levelEncode(level)
 	}
 	rwr.Reset(wr)
 	return rwr, nil
@@ -75,8 +78,9 @@ func (ac acceptEncoder) put(wr resetWriter, level int) {
 }
 
 var (
-	noneCompressEncoder = acceptEncoder{"", nil, nil}
+	noneCompressEncoder = acceptEncoder{"", nil, nil, nil}
 	gzipCompressEncoder = acceptEncoder{"gzip",
+		func(level int) resetWriter { wr, _ := gzip.NewWriterLevel(nil, level); return wr },
 		&sync.Pool{
 			New: func() interface{} { wr, _ := gzip.NewWriterLevel(nil, flate.BestSpeed); return wr },
 		},
@@ -90,6 +94,7 @@ var (
 	//The "zlib" format defined in RFC 1950 [31] in combination with
 	//the "deflate" compression mechanism described in RFC 1951 [29].
 	deflateCompressEncoder = acceptEncoder{"deflate",
+		func(level int) resetWriter { wr, _ := zlib.NewWriterLevel(nil, level); return wr },
 		&sync.Pool{
 			New: func() interface{} { wr, _ := zlib.NewWriterLevel(nil, flate.BestSpeed); return wr },
 		},
