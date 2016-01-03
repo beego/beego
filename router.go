@@ -664,12 +664,6 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	if !findrouter {
 		httpMethod := r.Method
-		if httpMethod == "POST" && context.Input.Query("_method") == "PUT" {
-			httpMethod = "PUT"
-		}
-		if httpMethod == "POST" && context.Input.Query("_method") == "DELETE" {
-			httpMethod = "DELETE"
-		}
 		if t, ok := p.routers[httpMethod]; ok {
 			runObject := t.Match(urlPath, context)
 			if r, ok := runObject.(*controllerInfo); ok {
