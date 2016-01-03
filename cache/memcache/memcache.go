@@ -58,7 +58,7 @@ func (rc *MemcacheCache) Get(key string) interface{} {
 		}
 	}
 	if item, err := rc.conn.Get(key); err == nil {
-		return string(item.Value)
+		return item.Value
 	}
 	return nil
 }
@@ -78,7 +78,7 @@ func (rc *MemcacheCache) GetMulti(keys []string) []interface{} {
 	mv, err := rc.conn.GetMulti(keys)
 	if err == nil {
 		for _, v := range mv {
-			rv = append(rv, string(v.Value))
+			rv = append(rv, v.Value)
 		}
 		return rv
 	} else {
@@ -89,18 +89,14 @@ func (rc *MemcacheCache) GetMulti(keys []string) []interface{} {
 	}
 }
 
-// put value to memcache. only support string.
+// put value to memcache.
 func (rc *MemcacheCache) Put(key string, val interface{}, timeout int64) error {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
 			return err
 		}
 	}
-	v, ok := val.(string)
-	if !ok {
-		return errors.New("val must string")
-	}
-	item := memcache.Item{Key: key, Value: []byte(v), Expiration: int32(timeout)}
+	item := memcache.Item{Key: key, Value: []byte(val), Expiration: int32(timeout)}
 	return rc.conn.Set(&item)
 }
 
