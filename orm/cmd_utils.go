@@ -271,6 +271,7 @@ func getColumnDefault(fi *fieldInfo) string {
 		TypeBigIntegerField, TypePositiveBitField, TypePositiveSmallIntegerField,
 		TypePositiveIntegerField, TypePositiveBigIntegerField, TypeFloatField,
 		TypeDecimalField:
+		t = " DEFAULT %s "
 		d = "0"
 	}
 
