@@ -609,6 +609,8 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	defer p.pool.Put(context)
 	defer p.recoverPanic(context)
 
+	context.Output.EnableGzip=BConfig.EnableGzip
+
 	if BConfig.RunMode == DEV {
 		context.Output.Header("Server", BConfig.ServerName)
 	}
