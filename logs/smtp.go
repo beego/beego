@@ -43,7 +43,7 @@ func newSMTPWriter() Logger {
 // Init smtp writer with json config.
 // config like:
 //	{
-//		"Username":"example@gmail.com",
+//		"sername":"example@gmail.com",
 //		"password:"password",
 //		"host":"smtp.gmail.com:465",
 //		"subject":"email title",
