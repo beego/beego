@@ -47,9 +47,9 @@ type acceptEncoder struct {
 	bestCompressionPool *sync.Pool
 }
 
-func (ac acceptEncoder) encode(wr io.Writer, level int) (resetWriter, error) {
+func (ac acceptEncoder) encode(wr io.Writer, level int) resetWriter {
 	if ac.bestSpeedPool == nil || ac.bestCompressionPool == nil {
-		return nopResetWriter{wr}, nil
+		return nopResetWriter{wr}
 	}
 	var rwr resetWriter
 	switch level {
@@ -61,7 +61,7 @@ func (ac acceptEncoder) encode(wr io.Writer, level int) (resetWriter, error) {
 		rwr = ac.levelEncode(level)
 	}
 	rwr.Reset(wr)
-	return rwr, nil
+	return rwr
 }
 
 func (ac acceptEncoder) put(wr resetWriter, level int) {
@@ -134,12 +134,8 @@ func writeLevel(encoding string, writer io.Writer, reader io.Reader, level int) 
 		ce = cf
 	}
 	encoding = ce.name
-	outputWriter, err = ce.encode(writer, level)
+	outputWriter = ce.encode(writer, level)
 	defer ce.put(outputWriter, level)
-
-	if err != nil {
-		return false, "", err
-	}
 
 	_, err = io.Copy(outputWriter, reader)
 	if err != nil {
