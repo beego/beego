@@ -82,7 +82,7 @@ func NewBeegoRequest(rawurl, method string) *BeegoHTTPRequest {
 	var resp http.Response
 	u, err := url.Parse(rawurl)
 	if err != nil {
-		log.Fatal(err)
+		log.Println("Httplib:", err)
 	}
 	req := http.Request{
 		URL:        u,
@@ -334,17 +334,17 @@ func (b *BeegoHTTPRequest) buildURL(paramBody string) {
 				for formname, filename := range b.files {
 					fileWriter, err := bodyWriter.CreateFormFile(formname, filename)
 					if err != nil {
-						log.Fatal(err)
+						log.Println("Httplib:", err)
 					}
 					fh, err := os.Open(filename)
 					if err != nil {
-						log.Fatal(err)
+						log.Println("Httplib:", err)
 					}
 					//iocopy
 					_, err = io.Copy(fileWriter, fh)
 					fh.Close()
 					if err != nil {
-						log.Fatal(err)
+						log.Println("Httplib:", err)
 					}
 				}
 				for k, v := range b.params {
