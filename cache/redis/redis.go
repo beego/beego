@@ -55,7 +55,7 @@ type Cache struct {
 }
 
 // NewRedisCache create new redis cache with default collection name.
-func NewRedisCache() *Cache {
+func NewRedisCache() cache.Cache {
 	return &Cache{key: DefaultKey}
 }
 
@@ -236,5 +236,5 @@ func (rc *Cache) connectInit() {
 }
 
 func init() {
-	cache.Register("redis", NewRedisCache())
+	cache.Register("redis", NewRedisCache)
 }

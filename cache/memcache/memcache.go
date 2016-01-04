@@ -46,7 +46,7 @@ type Cache struct {
 }
 
 // NewMemCache create new memcache adapter.
-func NewMemCache() *Cache {
+func NewMemCache() cache.Cache {
 	return &Cache{}
 }
 
@@ -184,5 +184,5 @@ func (rc *Cache) connectInit() error {
 }
 
 func init() {
-	cache.Register("memcache", NewMemCache())
+	cache.Register("memcache", NewMemCache)
 }

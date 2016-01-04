@@ -29,10 +29,6 @@ import (
 	"time"
 )
 
-func init() {
-	Register("file", NewFileCache())
-}
-
 // FileCacheItem is basic unit of file cache adapter.
 // it contains data and expire time.
 type FileCacheItem struct {
@@ -59,7 +55,7 @@ type FileCache struct {
 
 // NewFileCache Create new file cache with no config.
 // the level and expiry need set in method StartAndGC as config string.
-func NewFileCache() *FileCache {
+func NewFileCache() Cache {
 	//    return &FileCache{CachePath:FileCachePath, FileSuffix:FileCacheFileSuffix}
 	return &FileCache{}
 }
@@ -271,4 +267,8 @@ func GobDecode(data []byte, to *FileCacheItem) error {
 	buf := bytes.NewBuffer(data)
 	dec := gob.NewDecoder(buf)
 	return dec.Decode(&to)
+}
+
+func init() {
+	Register("file", NewFileCache)
 }
