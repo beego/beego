@@ -41,7 +41,7 @@ Direct Use:
 			}
 		}
 		// or use like this
-		if v := valid.Max(u.Age, 140); !v.Ok {
+		if v := valid.Max(u.Age, 140, "ageMax"); !v.Ok {
 			log.Println(v.Error.Key, v.Error.Message)
 		}
 	}
