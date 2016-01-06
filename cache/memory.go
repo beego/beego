@@ -106,7 +106,7 @@ func (bc *MemoryCache) Delete(name string) error {
 }
 
 // Incr increase cache counter in memory.
-// it supports int,int64,int32,uint,uint64,uint32.
+// it supports int,int32,int64,uint,uint32,uint64.
 func (bc *MemoryCache) Incr(key string) error {
 	bc.lock.RLock()
 	defer bc.lock.RUnlock()
@@ -117,10 +117,10 @@ func (bc *MemoryCache) Incr(key string) error {
 	switch itm.val.(type) {
 	case int:
 		itm.val = itm.val.(int) + 1
-	case int64:
-		itm.val = itm.val.(int64) + 1
 	case int32:
 		itm.val = itm.val.(int32) + 1
+	case int64:
+		itm.val = itm.val.(int64) + 1
 	case uint:
 		itm.val = itm.val.(uint) + 1
 	case uint32:
@@ -128,7 +128,7 @@ func (bc *MemoryCache) Incr(key string) error {
 	case uint64:
 		itm.val = itm.val.(uint64) + 1
 	default:
-		return errors.New("item val is not int int64 int32")
+		return errors.New("item val is not (u)int (u)int32 (u)int64")
 	}
 	return nil
 }
