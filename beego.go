@@ -20,16 +20,15 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-
-	"github.com/astaxie/beego/logs"
 )
 
 const (
-	// beego web framework version.
-	VERSION = "1.5.0"
+	// VERSION represent beego web framework version.
+	VERSION = "1.6.0"
 
-	// beego run modes
-	DEV  = "dev"
+	// DEV is for develop
+	DEV = "dev"
+	// PROD is for production
 	PROD = "prod"
 )
 
@@ -75,7 +74,6 @@ func initBeforeHTTPRun() {
 		panic(err)
 	}
 	//init log
-	BeeLogger = logs.NewLogger(10000)
 	for adaptor, config := range BConfig.Log.Output {
 		err = BeeLogger.SetLogger(adaptor, config)
 		if err != nil {
