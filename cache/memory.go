@@ -79,6 +79,10 @@ func (bc *MemoryCache) GetMulti(names []string) []interface{} {
 func (bc *MemoryCache) Put(name string, value interface{}, expired int64) error {
 	bc.lock.Lock()
 	defer bc.lock.Unlock()
+	if expired == 0 {
+		//ten years,behave as the file cache
+		expired = 86400 * 365 * 10
+	}
 	bc.items[name] = &MemoryItem{
 		val:        value,
 		Lastaccess: time.Now(),
