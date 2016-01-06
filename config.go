@@ -168,6 +168,7 @@ func init() {
 			Output:      map[string]string{"console": ""},
 		},
 	}
+	ParseConfig()
 }
 
 // ParseConfig parsed default config file.
