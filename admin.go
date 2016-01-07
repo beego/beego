@@ -89,11 +89,63 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 	data := make(map[interface{}]interface{})
 	switch command {
 	case "conf":
+		m := make(map[string]interface{})
+		m["AppConfigPath"] = AppConfigPath
+		m["AppConfigProvider"] = AppConfigProvider
+		m["BConfig.AppName"] = BConfig.AppName
+		m["BConfig.RunMode"] = BConfig.RunMode
+		m["BConfig.RouterCaseSensitive"] = BConfig.RouterCaseSensitive
+		m["BConfig.ServerName"] = BConfig.ServerName
+		m["BConfig.RecoverPanic"] = BConfig.RecoverPanic
+		m["BConfig.CopyRequestBody"] = BConfig.CopyRequestBody
+		m["BConfig.EnableGzip"] = BConfig.EnableGzip
+		m["BConfig.MaxMemory"] = BConfig.MaxMemory
+		m["BConfig.EnableErrorsShow"] = BConfig.EnableErrorsShow
+		m["BConfig.Listen.Graceful"] = BConfig.Listen.Graceful
+		m["BConfig.Listen.ServerTimeOut"] = BConfig.Listen.ServerTimeOut
+		m["BConfig.Listen.ListenTCP4"] = BConfig.Listen.ListenTCP4
+		m["BConfig.Listen.HTTPEnable"] = BConfig.Listen.HTTPEnable
+		m["BConfig.Listen.HTTPAddr"] = BConfig.Listen.HTTPAddr
+		m["BConfig.Listen.HTTPPort"] = BConfig.Listen.HTTPPort
+		m["BConfig.Listen.HTTPSEnable"] = BConfig.Listen.HTTPSEnable
+		m["BConfig.Listen.HTTPSAddr"] = BConfig.Listen.HTTPSAddr
+		m["BConfig.Listen.HTTPSPort"] = BConfig.Listen.HTTPSPort
+		m["BConfig.Listen.HTTPSCertFile"] = BConfig.Listen.HTTPSCertFile
+		m["BConfig.Listen.HTTPSKeyFile"] = BConfig.Listen.HTTPSKeyFile
+		m["BConfig.Listen.AdminEnable"] = BConfig.Listen.AdminEnable
+		m["BConfig.Listen.AdminAddr"] = BConfig.Listen.AdminAddr
+		m["BConfig.Listen.AdminPort"] = BConfig.Listen.AdminPort
+		m["BConfig.Listen.EnableFcgi"] = BConfig.Listen.EnableFcgi
+		m["BConfig.Listen.EnableStdIo"] = BConfig.Listen.EnableStdIo
+		m["BConfig.WebConfig.AutoRender"] = BConfig.WebConfig.AutoRender
+		m["BConfig.WebConfig.EnableDocs"] = BConfig.WebConfig.EnableDocs
+		m["BConfig.WebConfig.FlashName"] = BConfig.WebConfig.FlashName
+		m["BConfig.WebConfig.FlashSeperator"] = BConfig.WebConfig.FlashSeperator
+		m["BConfig.WebConfig.DirectoryIndex"] = BConfig.WebConfig.DirectoryIndex
+		m["BConfig.WebConfig.StaticDir"] = BConfig.WebConfig.StaticDir
+		m["BConfig.WebConfig.StaticExtensionsToGzip"] = BConfig.WebConfig.StaticExtensionsToGzip
+		m["BConfig.WebConfig.TemplateLeft"] = BConfig.WebConfig.TemplateLeft
+		m["BConfig.WebConfig.TemplateRight"] = BConfig.WebConfig.TemplateRight
+		m["BConfig.WebConfig.ViewsPath"] = BConfig.WebConfig.ViewsPath
+		m["BConfig.WebConfig.EnableXSRF"] = BConfig.WebConfig.EnableXSRF
+		m["BConfig.WebConfig.XSRFKEY"] = BConfig.WebConfig.XSRFKEY
+		m["BConfig.WebConfig.XSRFExpire"] = BConfig.WebConfig.XSRFExpire
+		m["BConfig.WebConfig.Session.SessionOn"] = BConfig.WebConfig.Session.SessionOn
+		m["BConfig.WebConfig.Session.SessionProvider"] = BConfig.WebConfig.Session.SessionProvider
+		m["BConfig.WebConfig.Session.SessionName"] = BConfig.WebConfig.Session.SessionName
+		m["BConfig.WebConfig.Session.SessionGCMaxLifetime"] = BConfig.WebConfig.Session.SessionGCMaxLifetime
+		m["BConfig.WebConfig.Session.SessionProviderConfig"] = BConfig.WebConfig.Session.SessionProviderConfig
+		m["BConfig.WebConfig.Session.SessionCookieLifeTime"] = BConfig.WebConfig.Session.SessionCookieLifeTime
+		m["BConfig.WebConfig.Session.SessionAutoSetCookie"] = BConfig.WebConfig.Session.SessionAutoSetCookie
+		m["BConfig.WebConfig.Session.SessionDomain"] = BConfig.WebConfig.Session.SessionDomain
+		m["BConfig.Log.AccessLogs"] = BConfig.Log.AccessLogs
+		m["BConfig.Log.FileLineNum"] = BConfig.Log.FileLineNum
+		m["BConfig.Log.Outputs"] = BConfig.Log.Outputs
 		tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
 		tmpl = template.Must(tmpl.Parse(configTpl))
 		tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
 
-		data["Content"] = BConfig
+		data["Content"] = m
 
 		tmpl.Execute(rw, data)
 

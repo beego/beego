@@ -90,7 +90,7 @@ type SessionConfig struct {
 type LogConfig struct {
 	AccessLogs  bool
 	FileLineNum bool
-	Output      map[string]string // Store Adaptor : config
+	Outputs     map[string]string // Store Adaptor : config
 }
 
 var (
@@ -165,7 +165,7 @@ func init() {
 		Log: LogConfig{
 			AccessLogs:  false,
 			FileLineNum: true,
-			Output:      map[string]string{"console": ""},
+			Outputs:     map[string]string{"console": ""},
 		},
 	}
 	ParseConfig()
@@ -215,6 +215,7 @@ func ParseConfig() (err error) {
 	BConfig.Listen.AdminAddr = AppConfig.DefaultString("AdminHTTPAddr", BConfig.Listen.AdminAddr)
 	BConfig.Listen.AdminPort = AppConfig.DefaultInt("AdminHTTPPort", BConfig.Listen.AdminPort)
 	BConfig.Listen.EnableFcgi = AppConfig.DefaultBool("EnableFcgi", BConfig.Listen.EnableFcgi)
+	BConfig.Listen.EnableStdIo = AppConfig.DefaultBool("EnableStdIo", BConfig.Listen.EnableStdIo)
 	BConfig.Listen.ServerTimeOut = AppConfig.DefaultInt64("HTTPServerTimeOut", BConfig.Listen.ServerTimeOut)
 	BConfig.WebConfig.AutoRender = AppConfig.DefaultBool("AutoRender", BConfig.WebConfig.AutoRender)
 	BConfig.WebConfig.ViewsPath = AppConfig.DefaultString("ViewsPath", BConfig.WebConfig.ViewsPath)

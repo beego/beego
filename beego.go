@@ -74,7 +74,7 @@ func initBeforeHTTPRun() {
 		panic(err)
 	}
 	//init log
-	for adaptor, config := range BConfig.Log.Output {
+	for adaptor, config := range BConfig.Log.Outputs {
 		err = BeeLogger.SetLogger(adaptor, config)
 		if err != nil {
 			fmt.Printf("%s with the config `%s` got err:%s\n", adaptor, config, err)
