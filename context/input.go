@@ -274,6 +274,17 @@ func (input *BeegoInput) Param(key string) string {
 	return ""
 }
 
+// Params returns the map[key]value.
+func (input *BeegoInput) Params() map[string]string {
+	m := make(map[string]string)
+	for i, v := range input.pnames {
+		if i <= len(input.pvalues) {
+			m[v] = input.pvalues[i]
+		}
+	}
+	return m
+}
+
 // SetParam will set the param with key and value
 func (input *BeegoInput) SetParam(key, val string) {
 	input.pvalues = append(input.pvalues, val)
