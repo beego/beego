@@ -98,15 +98,18 @@ func (rs *SessionStore) SessionID() string {
 
 // SessionRelease save session values to redis
 func (rs *SessionStore) SessionRelease(w http.ResponseWriter) {
-	c := rs.p.Get()
-	defer c.Close()
 
 	b, err := session.EncodeGob(rs.values)
 	if err != nil {
 		return
 	}
 
-	c.Do("SETEX", rs.sid, rs.maxlifetime, string(b))
+	c := rs.p.Get()
+	defer c.Close()
+	// Update session value if exists or error.
+	if existed, err := redis.Bool(c.Do("EXISTS", rs.sid)); existed || err != nil {
+		c.Do("SETEX", rs.sid, rs.maxlifetime, string(b))
+	}
 }
 
 // Provider redis session provider
