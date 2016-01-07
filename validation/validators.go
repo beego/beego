@@ -46,6 +46,38 @@ var MessageTmpls = map[string]string{
 	"ZipCode":      "Must be valid zipcode",
 }
 
+// set default messages
+// if not set, the default messages are
+//  "Required":     "Can not be empty",
+//  "Min":          "Minimum is %d",
+//  "Max":          "Maximum is %d",
+//  "Range":        "Range is %d to %d",
+//  "MinSize":      "Minimum size is %d",
+//  "MaxSize":      "Maximum size is %d",
+//  "Length":       "Required length is %d",
+//  "Alpha":        "Must be valid alpha characters",
+//  "Numeric":      "Must be valid numeric characters",
+//  "AlphaNumeric": "Must be valid alpha or numeric characters",
+//  "Match":        "Must match %s",
+//  "NoMatch":      "Must not match %s",
+//  "AlphaDash":    "Must be valid alpha or numeric or dash(-_) characters",
+//  "Email":        "Must be a valid email address",
+//  "IP":           "Must be a valid ip address",
+//  "Base64":       "Must be valid base64 characters",
+//  "Mobile":       "Must be valid mobile number",
+//  "Tel":          "Must be valid telephone number",
+//  "Phone":        "Must be valid telephone or mobile phone number",
+//  "ZipCode":      "Must be valid zipcode",
+func SetDefaultMessage(msg map[string]string) {
+	if len(msg) == 0 {
+		return
+	}
+
+	for name := range msg {
+		MessageTmpls[name] = msg[name]
+	}
+}
+
 // Validator interface
 type Validator interface {
 	IsSatisfied(interface{}) bool
@@ -556,7 +588,7 @@ func (b Base64) GetLimitValue() interface{} {
 }
 
 // just for chinese mobile phone number
-var mobilePattern = regexp.MustCompile("^((\\+86)|(86))?(1(([35][0-9])|[8][0-9]|[7][067]|[4][579]))\\d{8}$")
+var mobilePattern = regexp.MustCompile("^((\\+86)|(86))?(1(([35][0-9])|[8][0-9]|[7][0679]|[4][579]))\\d{8}$")
 
 // Mobile check struct
 type Mobile struct {
