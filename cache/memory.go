@@ -64,7 +64,6 @@ func (bc *MemoryCache) Get(name string) interface{} {
 	defer bc.RUnlock()
 	if itm, ok := bc.items[name]; ok {
 		if itm.isExpire() {
-			go bc.Delete(name)
 			return nil
 		}
 		return itm.val
