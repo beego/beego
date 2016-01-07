@@ -137,7 +137,10 @@ func NewManager(provideName, config string) (*Manager, error) {
 // if session id exists, return SessionStore with this id.
 func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (session SessionStore, err error) {
 	cookie, errs := r.Cookie(manager.config.CookieName)
-	if errs != nil || cookie.Value == "" {
+
+	// Get new sessionid if session cookie is nil or sessionID is emtpy or cookie is expired.
+	if errs != nil || len(cookie.Value) == 0 || cookie.MaxAge < 0 {
+
 		sid, errs := manager.sessionId(r)
 		if errs != nil {
 			return nil, errs
@@ -201,12 +204,15 @@ func (manager *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
 	} else {
 		manager.provider.SessionDestroy(cookie.Value)
 		expiration := time.Now()
-		cookie := http.Cookie{Name: manager.config.CookieName,
+		cookie := &http.Cookie{Name: manager.config.CookieName,
 			Path:     "/",
 			HttpOnly: true,
 			Expires:  expiration,
 			MaxAge:   -1}
-		http.SetCookie(w, &cookie)
+
+		if manager.config.EnableSetCookie {
+			http.SetCookie(w, cookie)
+		}
 	}
 }
 
@@ -230,7 +236,7 @@ func (manager *Manager) SessionRegenerateId(w http.ResponseWriter, r *http.Reque
 		return
 	}
 	cookie, err := r.Cookie(manager.config.CookieName)
-	if err != nil && cookie.Value == "" {
+	if err != nil || cookie == nil || len(cookie.Value) == 0 {
 		//delete old cookie
 		session, _ = manager.provider.SessionRead(sid)
 		cookie = &http.Cookie{Name: manager.config.CookieName,
