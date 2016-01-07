@@ -22,7 +22,7 @@
 //
 //	func main(){
 //		// apiauth every request
-//		beego.InsertFilter("*", beego.BeforeRouter,apiauth.APIBaiscAuth("appid","appkey"))
+//		beego.InsertFilter("*", beego.BeforeRouter,apiauth.APIBasicAuth("appid","appkey"))
 //		beego.Run()
 //	}
 //
@@ -70,7 +70,7 @@ import (
 
 type AppIdToAppSecret func(string) string
 
-func APIBaiscAuth(appid, appkey string) beego.FilterFunc {
+func APIBasicAuth(appid, appkey string) beego.FilterFunc {
 	ft := func(aid string) string {
 		if aid == appid {
 			return appkey
