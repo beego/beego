@@ -37,11 +37,11 @@
 // }
 //
 // func (this *MainController) Get() {
-// 	this.TplNames = "index.tpl"
+// 	this.TplName = "index.tpl"
 // }
 //
 // func (this *MainController) Post() {
-// 	this.TplNames = "index.tpl"
+// 	this.TplName = "index.tpl"
 //
 // 	this.Data["Success"] = cpt.VerifyReq(this.Ctx.Request)
 // }

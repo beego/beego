@@ -68,7 +68,7 @@ type Controller struct {
 	AppController  interface{}
 
 	// template data
-	TplNames       string
+	TplName        string
 	Layout         string
 	LayoutSections map[string]string // the key is the section name and the value is the template name
 	TplExt         string
@@ -105,7 +105,7 @@ type ControllerInterface interface {
 // Init generates default values of controller operations.
 func (c *Controller) Init(ctx *context.Context, controllerName, actionName string, app interface{}) {
 	c.Layout = ""
-	c.TplNames = ""
+	c.TplName = ""
 	c.controllerName = controllerName
 	c.actionName = actionName
 	c.Ctx = ctx
@@ -200,12 +200,12 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 	//if the controller has set layout, then first get the tplname's content set the content to the layout
 	var buf bytes.Buffer
 	if c.Layout != "" {
-		if c.TplNames == "" {
-			c.TplNames = strings.ToLower(c.controllerName) + "/" + strings.ToLower(c.actionName) + "." + c.TplExt
+		if c.TplName == "" {
+			c.TplName = strings.ToLower(c.controllerName) + "/" + strings.ToLower(c.actionName) + "." + c.TplExt
 		}
 
 		if BConfig.RunMode == DEV {
-			buildFiles := []string{c.TplNames}
+			buildFiles := []string{c.TplName}
 			if c.LayoutSections != nil {
 				for _, sectionTpl := range c.LayoutSections {
 					if sectionTpl == "" {
@@ -216,10 +216,10 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 			}
 			BuildTemplate(BConfig.WebConfig.ViewsPath, buildFiles...)
 		}
-		if _, ok := BeeTemplates[c.TplNames]; !ok {
-			panic("can't find templatefile in the path:" + c.TplNames)
+		if _, ok := BeeTemplates[c.TplName]; !ok {
+			panic("can't find templatefile in the path:" + c.TplName)
 		}
-		err := BeeTemplates[c.TplNames].ExecuteTemplate(&buf, c.TplNames, c.Data)
+		err := BeeTemplates[c.TplName].ExecuteTemplate(&buf, c.TplName, c.Data)
 		if err != nil {
 			Trace("template Execute err:", err)
 			return nil, err
@@ -252,17 +252,17 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		return buf.Bytes(), nil
 	}
 
-	if c.TplNames == "" {
-		c.TplNames = strings.ToLower(c.controllerName) + "/" + strings.ToLower(c.actionName) + "." + c.TplExt
+	if c.TplName == "" {
+		c.TplName = strings.ToLower(c.controllerName) + "/" + strings.ToLower(c.actionName) + "." + c.TplExt
 	}
 	if BConfig.RunMode == DEV {
-		BuildTemplate(BConfig.WebConfig.ViewsPath, c.TplNames)
+		BuildTemplate(BConfig.WebConfig.ViewsPath, c.TplName)
 	}
-	if _, ok := BeeTemplates[c.TplNames]; !ok {
-		panic("can't find templatefile in the path:" + c.TplNames)
+	if _, ok := BeeTemplates[c.TplName]; !ok {
+		panic("can't find templatefile in the path:" + c.TplName)
 	}
 	buf.Reset()
-	err := BeeTemplates[c.TplNames].ExecuteTemplate(&buf, c.TplNames, c.Data)
+	err := BeeTemplates[c.TplName].ExecuteTemplate(&buf, c.TplName, c.Data)
 	if err != nil {
 		Trace("template Execute err:", err)
 		return nil, err
