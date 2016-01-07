@@ -27,11 +27,11 @@ var (
 	DefaultEvery = 60 // 1 minute
 )
 
-// MemoryItem store enery cache item.
+// MemoryItem store memory cache item.
 type MemoryItem struct {
-	val        interface{}
-	cratedTime time.Time
-	lifespan   int64
+	val         interface{}
+	createdTime time.Time
+	lifespan    int64
 }
 
 func (mi *MemoryItem) isExpire() bool {
@@ -39,7 +39,7 @@ func (mi *MemoryItem) isExpire() bool {
 	if mi.lifespan == 0 {
 		return false
 	}
-	return time.Now().Unix()-mi.cratedTime.Unix() > mi.lifespan
+	return time.Now().Unix()-mi.createdTime.Unix() > mi.lifespan
 }
 
 // MemoryCache is Memory cache adapter.
@@ -88,7 +88,7 @@ func (bc *MemoryCache) Put(name string, value interface{}, lifespan int64) error
 	defer bc.Unlock()
 	bc.items[name] = &MemoryItem{
 		val:        value,
-		cratedTime: time.Now(),
+		createdTime: time.Now(),
 		lifespan:   lifespan,
 	}
 	return nil
