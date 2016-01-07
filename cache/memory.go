@@ -34,6 +34,14 @@ type MemoryItem struct {
 	expired    int64
 }
 
+func (mi *MemoryItem) isExpire() bool {
+	// expired==0 means never
+	if mi.expired == 0 {
+		return false
+	}
+	return time.Now().Unix()-mi.Lastaccess.Unix() > mi.expired
+}
+
 // MemoryCache is Memory cache adapter.
 // it contains a RW locker for safe map storage.
 type MemoryCache struct {
@@ -55,7 +63,7 @@ func (bc *MemoryCache) Get(name string) interface{} {
 	bc.RLock()
 	defer bc.RUnlock()
 	if itm, ok := bc.items[name]; ok {
-		if (time.Now().Unix() - itm.Lastaccess.Unix()) > itm.expired {
+		if itm.isExpire() {
 			go bc.Delete(name)
 			return nil
 		}
@@ -222,15 +230,12 @@ func (bc *MemoryCache) vaccuum() {
 func (bc *MemoryCache) itemExpired(name string) bool {
 	bc.Lock()
 	defer bc.Unlock()
+
 	itm, ok := bc.items[name]
 	if !ok {
 		return true
 	}
-	// expired==0 means never
-	if itm.expired==0{
-		return false
-	}
-	if time.Now().Unix()-itm.Lastaccess.Unix() >= itm.expired {
+	if itm.isExpire() {
 		delete(bc.items, name)
 		return true
 	}
