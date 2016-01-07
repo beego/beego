@@ -27,17 +27,25 @@ var (
 	DefaultEvery = 60 // 1 minute
 )
 
-// MemoryItem store enery cache item.
+// MemoryItem store memory cache item.
 type MemoryItem struct {
-	val        interface{}
-	Lastaccess time.Time
-	expired    int64
+	val         interface{}
+	createdTime time.Time
+	lifespan    int64
+}
+
+func (mi *MemoryItem) isExpire() bool {
+	// 0 means forever
+	if mi.lifespan == 0 {
+		return false
+	}
+	return time.Now().Unix()-mi.createdTime.Unix() > mi.lifespan
 }
 
 // MemoryCache is Memory cache adapter.
 // it contains a RW locker for safe map storage.
 type MemoryCache struct {
-	lock  sync.RWMutex
+	sync.RWMutex
 	dur   time.Duration
 	items map[string]*MemoryItem
 	Every int // run an expiration check Every clock time
@@ -52,11 +60,10 @@ func NewMemoryCache() Cache {
 // Get cache from memory.
 // if non-existed or expired, return nil.
 func (bc *MemoryCache) Get(name string) interface{} {
-	bc.lock.RLock()
-	defer bc.lock.RUnlock()
+	bc.RLock()
+	defer bc.RUnlock()
 	if itm, ok := bc.items[name]; ok {
-		if (time.Now().Unix() - itm.Lastaccess.Unix()) > itm.expired {
-			go bc.Delete(name)
+		if itm.isExpire() {
 			return nil
 		}
 		return itm.val
@@ -75,22 +82,22 @@ func (bc *MemoryCache) GetMulti(names []string) []interface{} {
 }
 
 // Put cache to memory.
-// if expired is 0, it will be cleaned by next gc operation ( default gc clock is 1 minute).
-func (bc *MemoryCache) Put(name string, value interface{}, expired int64) error {
-	bc.lock.Lock()
-	defer bc.lock.Unlock()
+// if lifespan is 0, it will be forever till restart.
+func (bc *MemoryCache) Put(name string, value interface{}, lifespan int64) error {
+	bc.Lock()
+	defer bc.Unlock()
 	bc.items[name] = &MemoryItem{
 		val:        value,
-		Lastaccess: time.Now(),
-		expired:    expired,
+		createdTime: time.Now(),
+		lifespan:   lifespan,
 	}
 	return nil
 }
 
 // Delete cache in memory.
 func (bc *MemoryCache) Delete(name string) error {
-	bc.lock.Lock()
-	defer bc.lock.Unlock()
+	bc.Lock()
+	defer bc.Unlock()
 	if _, ok := bc.items[name]; !ok {
 		return errors.New("key not exist")
 	}
@@ -102,10 +109,10 @@ func (bc *MemoryCache) Delete(name string) error {
 }
 
 // Incr increase cache counter in memory.
-// it supports int,int64,int32,uint,uint64,uint32.
+// it supports int,int32,int64,uint,uint32,uint64.
 func (bc *MemoryCache) Incr(key string) error {
-	bc.lock.RLock()
-	defer bc.lock.RUnlock()
+	bc.RLock()
+	defer bc.RUnlock()
 	itm, ok := bc.items[key]
 	if !ok {
 		return errors.New("key not exist")
@@ -113,10 +120,10 @@ func (bc *MemoryCache) Incr(key string) error {
 	switch itm.val.(type) {
 	case int:
 		itm.val = itm.val.(int) + 1
-	case int64:
-		itm.val = itm.val.(int64) + 1
 	case int32:
 		itm.val = itm.val.(int32) + 1
+	case int64:
+		itm.val = itm.val.(int64) + 1
 	case uint:
 		itm.val = itm.val.(uint) + 1
 	case uint32:
@@ -124,15 +131,15 @@ func (bc *MemoryCache) Incr(key string) error {
 	case uint64:
 		itm.val = itm.val.(uint64) + 1
 	default:
-		return errors.New("item val is not int int64 int32")
+		return errors.New("item val is not (u)int (u)int32 (u)int64")
 	}
 	return nil
 }
 
 // Decr decrease counter in memory.
 func (bc *MemoryCache) Decr(key string) error {
-	bc.lock.RLock()
-	defer bc.lock.RUnlock()
+	bc.RLock()
+	defer bc.RUnlock()
 	itm, ok := bc.items[key]
 	if !ok {
 		return errors.New("key not exist")
@@ -170,16 +177,18 @@ func (bc *MemoryCache) Decr(key string) error {
 
 // IsExist check cache exist in memory.
 func (bc *MemoryCache) IsExist(name string) bool {
-	bc.lock.RLock()
-	defer bc.lock.RUnlock()
-	_, ok := bc.items[name]
-	return ok
+	bc.RLock()
+	defer bc.RUnlock()
+	if v, ok := bc.items[name]; ok {
+		return !v.isExpire()
+	}
+	return false
 }
 
 // ClearAll will delete all cache in memory.
 func (bc *MemoryCache) ClearAll() error {
-	bc.lock.Lock()
-	defer bc.lock.Unlock()
+	bc.Lock()
+	defer bc.Unlock()
 	bc.items = make(map[string]*MemoryItem)
 	return nil
 }
@@ -220,13 +229,14 @@ func (bc *MemoryCache) vaccuum() {
 
 // itemExpired returns true if an item is expired.
 func (bc *MemoryCache) itemExpired(name string) bool {
-	bc.lock.Lock()
-	defer bc.lock.Unlock()
+	bc.Lock()
+	defer bc.Unlock()
+
 	itm, ok := bc.items[name]
 	if !ok {
 		return true
 	}
-	if time.Now().Unix()-itm.Lastaccess.Unix() >= itm.expired {
+	if itm.isExpire() {
 		delete(bc.items, name)
 		return true
 	}
