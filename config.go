@@ -207,6 +207,7 @@ func ParseConfig() (err error) {
 	BConfig.Listen.ListenTCP4 = AppConfig.DefaultBool("ListenTCP4", BConfig.Listen.ListenTCP4)
 	BConfig.Listen.HTTPEnable = AppConfig.DefaultBool("EnableHTTPListen", BConfig.Listen.HTTPEnable)
 	BConfig.Listen.HTTPSEnable = AppConfig.DefaultBool("EnableHTTPTLS", BConfig.Listen.HTTPSEnable)
+	BConfig.Listen.HTTPSAddr = AppConfig.DefaultInt("HTTPSAddr", BConfig.Listen.HTTPSAddr)
 	BConfig.Listen.HTTPSPort = AppConfig.DefaultInt("HTTPSPort", BConfig.Listen.HTTPSPort)
 	BConfig.Listen.HTTPSCertFile = AppConfig.DefaultString("HTTPCertFile", BConfig.Listen.HTTPSCertFile)
 	BConfig.Listen.HTTPSKeyFile = AppConfig.DefaultString("HTTPKeyFile", BConfig.Listen.HTTPSKeyFile)
