@@ -37,7 +37,7 @@ type MemoryItem struct {
 // MemoryCache is Memory cache adapter.
 // it contains a RW locker for safe map storage.
 type MemoryCache struct {
-	lock  sync.RWMutex
+	sync.RWMutex
 	dur   time.Duration
 	items map[string]*MemoryItem
 	Every int // run an expiration check Every clock time
@@ -52,8 +52,8 @@ func NewMemoryCache() Cache {
 // Get cache from memory.
 // if non-existed or expired, return nil.
 func (bc *MemoryCache) Get(name string) interface{} {
-	bc.lock.RLock()
-	defer bc.lock.RUnlock()
+	bc.RLock()
+	defer bc.RUnlock()
 	if itm, ok := bc.items[name]; ok {
 		if (time.Now().Unix() - itm.Lastaccess.Unix()) > itm.expired {
 			go bc.Delete(name)
@@ -77,12 +77,8 @@ func (bc *MemoryCache) GetMulti(names []string) []interface{} {
 // Put cache to memory.
 // if expired is 0, it will be cleaned by next gc operation ( default gc clock is 1 minute).
 func (bc *MemoryCache) Put(name string, value interface{}, expired int64) error {
-	bc.lock.Lock()
-	defer bc.lock.Unlock()
-	if expired == 0 {
-		//ten years,behave as the file cache
-		expired = 86400 * 365 * 10
-	}
+	bc.Lock()
+	defer bc.Unlock()
 	bc.items[name] = &MemoryItem{
 		val:        value,
 		Lastaccess: time.Now(),
@@ -93,8 +89,8 @@ func (bc *MemoryCache) Put(name string, value interface{}, expired int64) error 
 
 // Delete cache in memory.
 func (bc *MemoryCache) Delete(name string) error {
-	bc.lock.Lock()
-	defer bc.lock.Unlock()
+	bc.Lock()
+	defer bc.Unlock()
 	if _, ok := bc.items[name]; !ok {
 		return errors.New("key not exist")
 	}
@@ -108,8 +104,8 @@ func (bc *MemoryCache) Delete(name string) error {
 // Incr increase cache counter in memory.
 // it supports int,int32,int64,uint,uint32,uint64.
 func (bc *MemoryCache) Incr(key string) error {
-	bc.lock.RLock()
-	defer bc.lock.RUnlock()
+	bc.RLock()
+	defer bc.RUnlock()
 	itm, ok := bc.items[key]
 	if !ok {
 		return errors.New("key not exist")
@@ -135,8 +131,8 @@ func (bc *MemoryCache) Incr(key string) error {
 
 // Decr decrease counter in memory.
 func (bc *MemoryCache) Decr(key string) error {
-	bc.lock.RLock()
-	defer bc.lock.RUnlock()
+	bc.RLock()
+	defer bc.RUnlock()
 	itm, ok := bc.items[key]
 	if !ok {
 		return errors.New("key not exist")
@@ -174,16 +170,16 @@ func (bc *MemoryCache) Decr(key string) error {
 
 // IsExist check cache exist in memory.
 func (bc *MemoryCache) IsExist(name string) bool {
-	bc.lock.RLock()
-	defer bc.lock.RUnlock()
+	bc.RLock()
+	defer bc.RUnlock()
 	_, ok := bc.items[name]
 	return ok
 }
 
 // ClearAll will delete all cache in memory.
 func (bc *MemoryCache) ClearAll() error {
-	bc.lock.Lock()
-	defer bc.lock.Unlock()
+	bc.Lock()
+	defer bc.Unlock()
 	bc.items = make(map[string]*MemoryItem)
 	return nil
 }
@@ -224,11 +220,15 @@ func (bc *MemoryCache) vaccuum() {
 
 // itemExpired returns true if an item is expired.
 func (bc *MemoryCache) itemExpired(name string) bool {
-	bc.lock.Lock()
-	defer bc.lock.Unlock()
+	bc.Lock()
+	defer bc.Unlock()
 	itm, ok := bc.items[name]
 	if !ok {
 		return true
+	}
+	// expired==0 means never
+	if itm.expired==0{
+		return false
 	}
 	if time.Now().Unix()-itm.Lastaccess.Unix() >= itm.expired {
 		delete(bc.items, name)
