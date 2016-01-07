@@ -82,14 +82,14 @@ func (bc *MemoryCache) GetMulti(names []string) []interface{} {
 }
 
 // Put cache to memory.
-// if expired is 0, it will be cleaned by next gc operation ( default gc clock is 1 minute).
-func (bc *MemoryCache) Put(name string, value interface{}, expired int64) error {
+// if lifespan is 0, it will be forever till restart.
+func (bc *MemoryCache) Put(name string, value interface{}, lifespan int64) error {
 	bc.Lock()
 	defer bc.Unlock()
 	bc.items[name] = &MemoryItem{
 		val:        value,
 		cratedTime: time.Now(),
-		lifespan:    expired,
+		lifespan:   lifespan,
 	}
 	return nil
 }
@@ -179,8 +179,10 @@ func (bc *MemoryCache) Decr(key string) error {
 func (bc *MemoryCache) IsExist(name string) bool {
 	bc.RLock()
 	defer bc.RUnlock()
-	_, ok := bc.items[name]
-	return ok
+	if v, ok := bc.items[name]; ok {
+		return !v.isExpire()
+	}
+	return false
 }
 
 // ClearAll will delete all cache in memory.
