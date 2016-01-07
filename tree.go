@@ -468,7 +468,8 @@ func splitPath(key string) []string {
 // ":name:string" -> true, [:name], ([\w]+)
 // ":id([0-9]+)" -> true, [:id], ([0-9]+)
 // ":id([0-9]+)_:name" -> true, [:id :name], ([0-9]+)_(.+)
-// "cms_:id_:page.html" -> true, [:id :page], cms_(.+)_(.+).html
+// "cms_:id_:page.html" -> true, [:id_ :page], cms_(.+)(.+).html
+// "cms_:id(.+)_:page.html" -> true, [:id :page], cms_(.+)_(.+).html
 // "*" -> true, [:splat], ""
 // "*.*" -> true,[. :path :ext], ""      . meaning separator
 func splitSegment(key string) (bool, []string, string) {
