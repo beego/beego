@@ -22,7 +22,7 @@
 //
 // Use it like this:
 //
-//	bm.Put("astaxie", 1, 10)
+//	bm.Put("astaxie", 1, time.Duration(time.Second * 10))
 //	bm.Get("astaxie")
 //	bm.IsExist("astaxie")
 //	bm.Delete("astaxie")
@@ -32,13 +32,14 @@ package cache
 
 import (
 	"fmt"
+	"time"
 )
 
 // Cache interface contains all behaviors for cache adapter.
 // usage:
 //	cache.Register("file",cache.NewFileCache()) // this operation is run in init method of file.go.
 //	c,err := cache.NewCache("file","{....}")
-//	c.Put("key",value,3600)
+//	c.Put("key",value, time.Duration(time.Second * 3600))
 //	v := c.Get("key")
 //
 //	c.Incr("counter")  // now is 1
@@ -50,7 +51,7 @@ type Cache interface {
 	// GetMulti is a batch version of Get.
 	GetMulti(keys []string) []interface{}
 	// set cached value with key and expire time.
-	Put(key string, val interface{}, timeout int64) error
+	Put(key string, val interface{}, timeout time.Duration) error
 	// delete cached value by key.
 	Delete(key string) error
 	// increase cached int value by key, as a counter.

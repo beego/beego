@@ -42,10 +42,10 @@ type FileCacheItem struct {
 }
 
 var (
-	FileCachePath           string = "cache" // cache directory
-	FileCacheFileSuffix     string = ".bin"  // cache file suffix
-	FileCacheDirectoryLevel int    = 2       // cache file deep level if auto generated cache files.
-	FileCacheEmbedExpiry    int64  = 0       // cache expire time, default is no expire forever.
+	FileCachePath           string        = "cache" // cache directory
+	FileCacheFileSuffix     string        = ".bin"  // cache file suffix
+	FileCacheDirectoryLevel int           = 2       // cache file deep level if auto generated cache files.
+	FileCacheEmbedExpiry    time.Duration = 0       // cache expire time, default is no expire forever.
 )
 
 // FileCache is cache adapter for file storage.
@@ -79,7 +79,7 @@ func (fc *FileCache) StartAndGC(config string) error {
 		cfg["DirectoryLevel"] = strconv.Itoa(FileCacheDirectoryLevel)
 	}
 	if _, ok := cfg["EmbedExpiry"]; !ok {
-		cfg["EmbedExpiry"] = strconv.FormatInt(FileCacheEmbedExpiry, 10)
+		cfg["EmbedExpiry"] = strconv.FormatInt(int64(FileCacheEmbedExpiry.Seconds()), 10)
 	}
 	fc.CachePath = cfg["CachePath"]
 	fc.FileSuffix = cfg["FileSuffix"]
@@ -145,14 +145,14 @@ func (fc *FileCache) GetMulti(keys []string) []interface{} {
 // Put value into file cache.
 // timeout means how long to keep this file, unit of ms.
 // if timeout equals FileCacheEmbedExpiry(default is 0), cache this item forever.
-func (fc *FileCache) Put(key string, val interface{}, timeout int64) error {
+func (fc *FileCache) Put(key string, val interface{}, timeout time.Duration) error {
 	gob.Register(val)
 
 	item := FileCacheItem{Data: val}
 	if timeout == FileCacheEmbedExpiry {
 		item.Expired = time.Now().Unix() + (86400 * 365 * 10) // ten years
 	} else {
-		item.Expired = time.Now().Unix() + timeout
+		item.Expired = time.Now().Unix() + int64(timeout.Seconds())
 	}
 	item.Lastaccess = time.Now().Unix()
 	data, err := Gob_encode(item)

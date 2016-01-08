@@ -90,7 +90,7 @@ func (rc *MemcacheCache) GetMulti(keys []string) []interface{} {
 }
 
 // put value to memcache. only support string.
-func (rc *MemcacheCache) Put(key string, val interface{}, timeout int64) error {
+func (rc *MemcacheCache) Put(key string, val interface{}, timeout time.Duration) error {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
 			return err
@@ -100,7 +100,7 @@ func (rc *MemcacheCache) Put(key string, val interface{}, timeout int64) error {
 	if !ok {
 		return errors.New("val must string")
 	}
-	item := memcache.Item{Key: key, Value: []byte(v), Expiration: int32(timeout)}
+	item := memcache.Item{Key: key, Value: []byte(v), Expiration: int32(timeout.Seconds())}
 	return rc.conn.Set(&item)
 }
 

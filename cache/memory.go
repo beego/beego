@@ -17,7 +17,6 @@ package cache
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"sync"
 	"time"
 )
@@ -55,7 +54,7 @@ func (bc *MemoryCache) Get(name string) interface{} {
 	bc.lock.RLock()
 	defer bc.lock.RUnlock()
 	if itm, ok := bc.items[name]; ok {
-		if (time.Now().Unix() - itm.Lastaccess.Unix()) > itm.expired {
+		if time.Now().Sub(itm.Lastaccess).Nanoseconds() > itm.expired {
 			go bc.Delete(name)
 			return nil
 		}
@@ -76,13 +75,13 @@ func (bc *MemoryCache) GetMulti(names []string) []interface{} {
 
 // Put cache to memory.
 // if expired is 0, it will be cleaned by next gc operation ( default gc clock is 1 minute).
-func (bc *MemoryCache) Put(name string, value interface{}, expired int64) error {
+func (bc *MemoryCache) Put(name string, value interface{}, expired time.Duration) error {
 	bc.lock.Lock()
 	defer bc.lock.Unlock()
 	bc.items[name] = &MemoryItem{
 		val:        value,
 		Lastaccess: time.Now(),
-		expired:    expired,
+		expired:    expired.Nanoseconds(),
 	}
 	return nil
 }
@@ -192,10 +191,7 @@ func (bc *MemoryCache) StartAndGC(config string) error {
 		cf = make(map[string]int)
 		cf["interval"] = DefaultEvery
 	}
-	dur, err := time.ParseDuration(fmt.Sprintf("%ds", cf["interval"]))
-	if err != nil {
-		return err
-	}
+	dur := time.Second * time.Duration(cf["interval"])
 	bc.Every = cf["interval"]
 	bc.dur = dur
 	go bc.vaccuum()
@@ -226,7 +222,7 @@ func (bc *MemoryCache) item_expired(name string) bool {
 	if !ok {
 		return true
 	}
-	if time.Now().Unix()-itm.Lastaccess.Unix() >= itm.expired {
+	if time.Now().Sub(itm.Lastaccess).Nanoseconds() >= itm.expired {
 		delete(bc.items, name)
 		return true
 	}
