@@ -54,6 +54,8 @@ checkColumn:
 		col = fmt.Sprintf(T["string"], fi.size)
 	case TypeTextField:
 		col = T["string-text"]
+	case TypeTimeField:
+		col = T["time.Time-clock"]
 	case TypeDateField:
 		col = T["time.Time-date"]
 	case TypeDateTimeField:
@@ -263,7 +265,7 @@ func getColumnDefault(fi *fieldInfo) string {
 
 	// These defaults will be useful if there no config value orm:"default" and NOT NULL is on
 	switch fi.fieldType {
-		case TypeDateField, TypeDateTimeField:
+		case TypeTimeField, TypeDateField, TypeDateTimeField:
 			return v;
 	
 		case TypeBooleanField, TypeBitField, TypeSmallIntegerField, TypeIntegerField,

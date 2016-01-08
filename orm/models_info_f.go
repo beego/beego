@@ -243,6 +243,9 @@ checkType:
 		if fieldType == TypeDateTimeField && tags["type"] == "date" {
 			fieldType = TypeDateField
 		}
+		if fieldType == TypeTimeField && tags["type"] == "time" {
+			fieldType = TypeTimeField
+		}
 	}
 
 	switch fieldType {
@@ -348,7 +351,7 @@ checkType:
 	case TypeTextField:
 		fi.index = false
 		fi.unique = false
-	case TypeDateField, TypeDateTimeField:
+	case TypeTimeField, TypeDateField, TypeDateTimeField:
 		if attrs["auto_now"] {
 			fi.auto_now = true
 		} else if attrs["auto_now_add"] {
@@ -401,7 +404,7 @@ checkType:
 		fi.index = false
 	}
 
-	if fi.auto || fi.pk || fi.unique || fieldType == TypeDateField || fieldType == TypeDateTimeField {
+	if fi.auto || fi.pk || fi.unique || fieldType == TypeTimeField || fieldType == TypeDateField || fieldType == TypeDateTimeField {
 		// can not set default
 		initial.Clear()
 	}
