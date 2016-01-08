@@ -32,6 +32,8 @@ const (
 	TypeTextField
 
 	// time.Time
+	TypeTimeField
+	// time.Time
 	TypeDateField
 	// time.Time
 	TypeDateTimeField
@@ -150,6 +152,60 @@ func (e *CharField) RawValue() interface{} {
 }
 
 var _ Fielder = new(CharField)
+
+
+// A time, represented in go by a time.Time instance.
+// only date values like 10:00:00
+// Has a few extra, optional attr tag:
+//
+// auto_now:
+// Automatically set the field to now every time the object is saved. Useful for “last-modified” timestamps.
+// Note that the current date is always used; it’s not just a default value that you can override.
+//
+// auto_now_add:
+// Automatically set the field to now when the object is first created. Useful for creation of timestamps.
+// Note that the current date is always used; it’s not just a default value that you can override.
+//
+// eg: `orm:"auto_now"` or `orm:"auto_now_add"`
+type TimeField time.Time
+
+func (e TimeField) Value() time.Time {
+	return time.Time(e)
+}
+
+func (e *TimeField) Set(d time.Time) {
+	*e = TimeField(d)
+}
+
+func (e *TimeField) String() string {
+	return e.Value().String()
+}
+
+func (e *TimeField) FieldType() int {
+	return TypeDateField
+}
+
+func (e *TimeField) SetRaw(value interface{}) error {
+	switch d := value.(type) {
+	case time.Time:
+		e.Set(d)
+	case string:
+		v, err := timeParse(d, format_Time)
+		if err != nil {
+			e.Set(v)
+		}
+		return err
+	default:
+		return errors.New(fmt.Sprintf("<TimeField.SetRaw> unknown value `%s`", value))
+	}
+	return nil
+}
+
+func (e *TimeField) RawValue() interface{} {
+	return e.Value()
+}
+
+var _ Fielder = new(TimeField)
 
 // A date, represented in go by a time.Time instance.
 // only date values like 2006-01-02
