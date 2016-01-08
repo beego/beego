@@ -147,7 +147,7 @@ func (fc *FileCache) Put(key string, val interface{}, timeout time.Duration) err
 
 	item := FileCacheItem{Data: val}
 	if timeout == FileCacheEmbedExpiry {
-		item.Expired = time.Now().Add(time.Second * (86400 * 365 * 10)) // ten years
+		item.Expired = time.Now().Add((86400 * 365 * 10) * time.Second) // ten years
 	} else {
 		item.Expired = time.Now().Add(timeout)
 	}

@@ -100,7 +100,7 @@ func (rc *Cache) Put(key string, val interface{}, timeout time.Duration) error {
 	if !ok {
 		return errors.New("val must string")
 	}
-	item := memcache.Item{Key: key, Value: []byte(v), Expiration: int32(timeout.Seconds())}
+	item := memcache.Item{Key: key, Value: []byte(v), Expiration: int32(timeout/time.Second)}
 	return rc.conn.Set(&item)
 }
 

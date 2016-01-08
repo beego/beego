@@ -200,7 +200,7 @@ func (bc *MemoryCache) StartAndGC(config string) error {
 		cf = make(map[string]int)
 		cf["interval"] = DefaultEvery
 	}
-	dur := time.Second * time.Duration(cf["interval"])
+	dur :=  time.Duration(cf["interval"]) * time.Second
 	bc.Every = cf["interval"]
 	bc.dur = dur
 	go bc.vaccuum()

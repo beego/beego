@@ -23,7 +23,7 @@
 //
 // Use it like this:
 //
-//	bm.Put("astaxie", 1, time.Second * 10)
+//	bm.Put("astaxie", 1, 10 * time.Second)
 //	bm.Get("astaxie")
 //	bm.IsExist("astaxie")
 //	bm.Delete("astaxie")
@@ -40,7 +40,7 @@ import (
 // usage:
 //	cache.Register("file",cache.NewFileCache) // this operation is run in init method of file.go.
 //	c,err := cache.NewCache("file","{....}")
-//	c.Put("key",value, time.Second * 3600)
+//	c.Put("key",value, 3600 * time.Second)
 //	v := c.Get("key")
 //
 //	c.Incr("counter")  // now is 1
