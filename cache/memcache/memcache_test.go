@@ -28,7 +28,7 @@ func TestRedisCache(t *testing.T) {
 	if err != nil {
 		t.Error("init err")
 	}
-	timeoutDuration := time.Duration(time.Second * 10)
+	timeoutDuration := time.Second * 10
 	if err = bm.Put("astaxie", "1", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}

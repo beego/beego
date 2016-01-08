@@ -22,7 +22,7 @@
 //
 // Use it like this:
 //
-//	bm.Put("astaxie", 1, time.Duration(time.Second * 10))
+//	bm.Put("astaxie", 1, time.Second * 10)
 //	bm.Get("astaxie")
 //	bm.IsExist("astaxie")
 //	bm.Delete("astaxie")
