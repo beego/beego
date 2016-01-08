@@ -37,7 +37,7 @@ import (
 	"strings"
 	"sync"
 
-	"gh.apple.com/md/go-couchbase"
+	couchbase "github.com/couchbase/go-couchbase"
 
 	"github.com/astaxie/beego/session"
 )
