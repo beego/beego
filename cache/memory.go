@@ -17,7 +17,6 @@ package cache
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"sync"
 	"time"
 )
@@ -31,7 +30,7 @@ var (
 type MemoryItem struct {
 	val         interface{}
 	createdTime time.Time
-	lifespan    int64
+	lifespan    time.Duration
 }
 
 func (mi *MemoryItem) isExpire() bool {
@@ -39,7 +38,7 @@ func (mi *MemoryItem) isExpire() bool {
 	if mi.lifespan == 0 {
 		return false
 	}
-	return time.Now().Unix()-mi.createdTime.Unix() > mi.lifespan
+	return time.Now().Sub(mi.createdTime) > mi.lifespan
 }
 
 // MemoryCache is Memory cache adapter.
@@ -83,7 +82,7 @@ func (bc *MemoryCache) GetMulti(names []string) []interface{} {
 
 // Put cache to memory.
 // if lifespan is 0, it will be forever till restart.
-func (bc *MemoryCache) Put(name string, value interface{}, lifespan int64) error {
+func (bc *MemoryCache) Put(name string, value interface{}, lifespan time.Duration) error {
 	bc.Lock()
 	defer bc.Unlock()
 	bc.items[name] = &MemoryItem{
@@ -201,10 +200,7 @@ func (bc *MemoryCache) StartAndGC(config string) error {
 		cf = make(map[string]int)
 		cf["interval"] = DefaultEvery
 	}
-	dur, err := time.ParseDuration(fmt.Sprintf("%ds", cf["interval"]))
-	if err != nil {
-		return err
-	}
+	dur := time.Second * time.Duration(cf["interval"])
 	bc.Every = cf["interval"]
 	bc.dur = dur
 	go bc.vaccuum()
