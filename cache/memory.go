@@ -87,9 +87,9 @@ func (bc *MemoryCache) Put(name string, value interface{}, lifespan int64) error
 	bc.Lock()
 	defer bc.Unlock()
 	bc.items[name] = &MemoryItem{
-		val:        value,
+		val:         value,
 		createdTime: time.Now(),
-		lifespan:   lifespan,
+		lifespan:    lifespan,
 	}
 	return nil
 }
