@@ -20,7 +20,7 @@
 // )
 //
 //	func init() {
-//      globalSessions, _ = session.NewManager("memory", `{"cookieName":"gosessionid", "enableSetCookie,omitempty": true, "gclifetime":3600, "maxLifetime": 3600, "secure": false, "sessionIDHashFunc": "sha1", "sessionIDHashKey": "", "cookieLifeTime": 3600, "providerConfig": ""}`)
+//      globalSessions, _ = session.NewManager("memory", `{"cookieName":"gosessionid", "enableSetCookie,omitempty": true, "gclifetime":3600, "maxLifetime": 3600, "secure": false, "cookieLifeTime": 3600, "providerConfig": ""}`)
 //		go globalSessions.GC()
 //	}
 //
@@ -169,7 +169,7 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 	}
 
 	// Generate a new session
-	sid, errs = manager.sessionID(r)
+	sid, errs = manager.sessionID()
 	if errs != nil {
 		return nil, errs
 	}
@@ -229,7 +229,7 @@ func (manager *Manager) GC() {
 
 // SessionRegenerateID Regenerate a session id for this SessionStore who's id is saving in http request.
 func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Request) (session Store) {
-	sid, err := manager.sessionID(r)
+	sid, err := manager.sessionID()
 	if err != nil {
 		return
 	}
@@ -272,7 +272,7 @@ func (manager *Manager) SetSecure(secure bool) {
 	manager.config.Secure = secure
 }
 
-func (manager *Manager) sessionID(r *http.Request) (string, error) {
+func (manager *Manager) sessionID() (string, error) {
 	b := make([]byte, manager.config.SessionIDLength)
 	n, err := rand.Read(b)
 	if n != len(b) || err != nil {
