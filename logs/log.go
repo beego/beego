@@ -38,6 +38,7 @@ import (
 	"os"
 	"path"
 	"runtime"
+	"strconv"
 	"sync"
 )
 
@@ -189,7 +190,7 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string) error {
 			line = 0
 		}
 		_, filename := path.Split(file)
-		msg = fmt.Sprintf("[%s:%d] %s", filename, line, msg)
+		msg = "[" + filename + ":" + strconv.FormatInt(int64(line), 10) + "]" + msg
 	} else {
 		msg = msg
 	}
