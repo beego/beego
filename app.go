@@ -100,7 +100,7 @@ func (app *App) Run() {
 	if BConfig.Listen.Graceful {
 		httpsAddr := BConfig.Listen.HTTPSAddr
 		app.Server.Addr = httpsAddr
-		if BConfig.Listen.HTTPSEnable {
+		if BConfig.Listen.EnableHTTPS {
 			go func() {
 				time.Sleep(20 * time.Microsecond)
 				if BConfig.Listen.HTTPSPort != 0 {
@@ -117,7 +117,7 @@ func (app *App) Run() {
 				}
 			}()
 		}
-		if BConfig.Listen.HTTPEnable {
+		if BConfig.Listen.EnableHTTP {
 			go func() {
 				server := grace.NewServer(addr, app.Handlers)
 				server.Server.ReadTimeout = app.Server.ReadTimeout
@@ -138,7 +138,7 @@ func (app *App) Run() {
 
 	// run normal mode
 	app.Server.Addr = addr
-	if BConfig.Listen.HTTPSEnable {
+	if BConfig.Listen.EnableHTTPS {
 		go func() {
 			time.Sleep(20 * time.Microsecond)
 			if BConfig.Listen.HTTPSPort != 0 {
@@ -152,7 +152,7 @@ func (app *App) Run() {
 			}
 		}()
 	}
-	if BConfig.Listen.HTTPEnable {
+	if BConfig.Listen.EnableHTTP {
 		go func() {
 			app.Server.Addr = addr
 			BeeLogger.Info("http server Running on %s", app.Server.Addr)
