@@ -35,6 +35,7 @@ package logs
 
 import (
 	"fmt"
+	"os"
 	"path"
 	"runtime"
 	"sync"
@@ -95,7 +96,12 @@ type BeeLogger struct {
 	loggerFuncCallDepth int
 	asynchronous        bool
 	msg                 chan *logMsg
-	outputs             map[string]Logger
+	outputs             []*nameLogger
+}
+
+type nameLogger struct {
+	Logger
+	name string
 }
 
 type logMsg struct {
@@ -104,14 +110,13 @@ type logMsg struct {
 }
 
 // NewLogger returns a new BeeLogger.
-// channellen means the number of messages in chan.
+// channelLen means the number of messages in chan(used where asynchronous is true).
 // if the buffering chan is full, logger adapters write to file or other way.
-func NewLogger(channellen int64) *BeeLogger {
+func NewLogger(channelLen int64) *BeeLogger {
 	bl := new(BeeLogger)
 	bl.level = LevelDebug
 	bl.loggerFuncCallDepth = 2
-	bl.msg = make(chan *logMsg, channellen)
-	bl.outputs = make(map[string]Logger)
+	bl.msg = make(chan *logMsg, channelLen)
 	return bl
 }
 
@@ -124,33 +129,40 @@ func (bl *BeeLogger) Async() *BeeLogger {
 
 // SetLogger provides a given logger adapter into BeeLogger with config string.
 // config need to be correct JSON as string: {"interval":360}.
-func (bl *BeeLogger) SetLogger(adaptername string, config string) error {
+func (bl *BeeLogger) SetLogger(adapterName string, config string) error {
 	bl.lock.Lock()
 	defer bl.lock.Unlock()
-	if log, ok := adapters[adaptername]; ok {
+	if log, ok := adapters[adapterName]; ok {
 		lg := log()
 		err := lg.Init(config)
-		bl.outputs[adaptername] = lg
 		if err != nil {
-			fmt.Println("logs.BeeLogger.SetLogger: " + err.Error())
+			fmt.Fprintln(os.Stderr, "logs.BeeLogger.SetLogger: "+err.Error())
 			return err
 		}
+		bl.outputs = append(bl.outputs, &nameLogger{name: adapterName, Logger: lg})
 	} else {
-		return fmt.Errorf("logs: unknown adaptername %q (forgotten Register?)", adaptername)
+		return fmt.Errorf("logs: unknown adaptername %q (forgotten Register?)", adapterName)
 	}
 	return nil
 }
 
 // DelLogger remove a logger adapter in BeeLogger.
-func (bl *BeeLogger) DelLogger(adaptername string) error {
+func (bl *BeeLogger) DelLogger(adapterName string) error {
 	bl.lock.Lock()
 	defer bl.lock.Unlock()
-	if lg, ok := bl.outputs[adaptername]; ok {
-		lg.Destroy()
-		delete(bl.outputs, adaptername)
-		return nil
+	outputs := []*nameLogger{}
+	for _, lg := range bl.outputs {
+		if lg.name == adapterName {
+			lg.Destroy()
+		} else {
+			outputs = append(outputs, lg)
+		}
 	}
-	return fmt.Errorf("logs: unknown adaptername %q (forgotten Register?)", adaptername)
+	if len(outputs) == len(bl.outputs) {
+		return fmt.Errorf("logs: unknown adaptername %q (forgotten Register?)", adapterName)
+	}
+	bl.outputs = outputs
+	return nil
 }
 
 func (bl *BeeLogger) writerMsg(loglevel int, msg string) error {
@@ -170,10 +182,10 @@ func (bl *BeeLogger) writerMsg(loglevel int, msg string) error {
 	if bl.asynchronous {
 		bl.msg <- lm
 	} else {
-		for name, l := range bl.outputs {
+		for _, l := range bl.outputs {
 			err := l.WriteMsg(lm.msg, lm.level)
 			if err != nil {
-				fmt.Println("unable to WriteMsg to adapter:", name, err)
+				fmt.Println("unable to WriteMsg to adapter:", l.name, err)
 				return err
 			}
 		}
