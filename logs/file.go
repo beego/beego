@@ -131,17 +131,20 @@ func (w *fileLogWriter) startLogger() error {
 
 func (w *fileLogWriter) doCheck(size int) {
 	w.startLock.Lock()
-	defer w.startLock.Unlock()
-	if w.Rotate && ((w.MaxLines > 0 && w.maxLinesCurLines >= w.MaxLines) ||
-		(w.MaxSize > 0 && w.maxSizeCurSize >= w.MaxSize) ||
-		(w.Daily && time.Now().Day() != w.dailyOpenDate)) {
-		if err := w.DoRotate(); err != nil {
-			fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
-			return
+	if w.Rotate {
+		if (w.MaxLines > 0 && w.maxLinesCurLines >= w.MaxLines) ||
+			(w.MaxSize > 0 && w.maxSizeCurSize >= w.MaxSize) ||
+			(w.Daily && time.Now().Day() != w.dailyOpenDate) {
+			if err := w.DoRotate(); err != nil {
+				fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
+				w.startLock.Unlock()
+				return
+			}
 		}
 	}
 	w.maxLinesCurLines++
 	w.maxSizeCurSize += size
+	w.startLock.Unlock()
 }
 
 // WriteMsg write logger message into file.
@@ -163,14 +166,14 @@ func (w *fileLogWriter) createLogFile() (*os.File, error) {
 
 func (w *fileLogWriter) initFd() error {
 	fd := w.fd
-	finfo, err := fd.Stat()
+	fInfo, err := fd.Stat()
 	if err != nil {
 		return fmt.Errorf("get stat err: %s\n", err)
 	}
-	w.maxSizeCurSize = int(finfo.Size())
+	w.maxSizeCurSize = int(fInfo.Size())
 	w.dailyOpenDate = time.Now().Day()
 	w.maxLinesCurLines = 0
-	if finfo.Size() > 0 {
+	if fInfo.Size() > 0 {
 		count, err := w.lines()
 		if err != nil {
 			return err
@@ -211,7 +214,8 @@ func (w *fileLogWriter) lines() (int, error) {
 // new file name like xx.2013-01-01.2.log
 func (w *fileLogWriter) DoRotate() error {
 	_, err := os.Lstat(w.Filename)
-	if err == nil { // file exists
+	if err == nil {
+		// file exists
 		// Find the next available number
 		num := 1
 		fName := ""
@@ -237,7 +241,7 @@ func (w *fileLogWriter) DoRotate() error {
 		fd.Close()
 
 		// close fd before rename
-		// Rename the file to its newfound home
+		// Rename the file to its new found name
 		err = os.Rename(w.Filename, fName)
 		if err != nil {
 			return fmt.Errorf("Rotate: %s\n", err)
@@ -260,8 +264,7 @@ func (w *fileLogWriter) deleteOldLog() {
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) (returnErr error) {
 		defer func() {
 			if r := recover(); r != nil {
-				returnErr = fmt.Errorf("Unable to delete old log '%s', error: %+v", path, r)
-				fmt.Println(returnErr)
+				fmt.Fprintf(os.Stderr, "Unable to delete old log '%s', error: %+v", path, r)
 			}
 		}()
 
