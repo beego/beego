@@ -131,3 +131,13 @@ func BenchmarkFile(b *testing.B) {
 	}
 	os.Remove("test4.log")
 }
+
+func BenchmarkAsynchronousFile(b *testing.B) {
+	log := NewLogger(100000)
+	log.SetLogger("file", `{"filename":"test4.log"}`)
+	log.Async()
+	for i := 0; i < b.N; i++ {
+		log.Debug("debug")
+	}
+	os.Remove("test4.log")
+}
