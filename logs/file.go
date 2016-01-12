@@ -32,29 +32,29 @@ import (
 // It writes messages by lines limit, file size limit, or time frequency.
 type fileLogWriter struct {
 	*log.Logger
-	mw *MuxWriter
+	mw               *MuxWriter
 	// The opened file
-	Filename string `json:"filename"`
+	Filename         string `json:"filename"`
 
-	Maxlines         int `json:"maxlines"`
-	maxlinesCurlines int
+	MaxLines         int `json:"maxlines"`
+	maxLinesCurLines int
 
 	// Rotate at size
-	Maxsize        int `json:"maxsize"`
-	maxsizeCursize int
+	MaxSize          int `json:"maxsize"`
+	maxSizeCurSize   int
 
 	// Rotate daily
-	Daily         bool  `json:"daily"`
-	Maxdays       int64 `json:"maxdays"`
-	dailyOpendate int
+	Daily            bool  `json:"daily"`
+	MaxDays          int64 `json:"maxdays"`
+	dailyOpenDate    int
 
-	Rotate bool `json:"rotate"`
+	Rotate           bool `json:"rotate"`
 
-	startLock sync.Mutex // Only one log can write to the file
+	startLock        sync.Mutex // Only one log can write to the file
 
-	Level int `json:"level"`
+	Level            int `json:"level"`
 
-	Perm os.FileMode `json:"perm"`
+	Perm             os.FileMode `json:"perm"`
 }
 
 // MuxWriter is an *os.File writer with locker.
@@ -63,7 +63,7 @@ type MuxWriter struct {
 	fd *os.File
 }
 
-// write to os.File.
+// Write to os.File.
 func (l *MuxWriter) Write(b []byte) (int, error) {
 	l.Lock()
 	defer l.Unlock()
@@ -82,10 +82,10 @@ func (l *MuxWriter) SetFd(fd *os.File) {
 func newFileWriter() Logger {
 	w := &fileLogWriter{
 		Filename: "",
-		Maxlines: 1000000,
-		Maxsize:  1 << 28, //256 MB
+		MaxLines: 1000000,
+		MaxSize:  1 << 28, //256 MB
 		Daily:    true,
-		Maxdays:  7,
+		MaxDays:  7,
 		Rotate:   true,
 		Level:    LevelTrace,
 		Perm:     0660,
@@ -98,18 +98,18 @@ func newFileWriter() Logger {
 }
 
 // Init file logger with json config.
-// jsonconfig like:
+// jsonConfig like:
 //	{
 //	"filename":"logs/beego.log",
-//	"maxlines":10000,
+//	"maxLines":10000,
 //	"maxsize":1<<30,
 //	"daily":true,
-//	"maxdays":15,
+//	"maxDays":15,
 //	"rotate":true,
-//  "perm":0600
+//  	"perm":0600
 //	}
-func (w *fileLogWriter) Init(jsonconfig string) error {
-	err := json.Unmarshal([]byte(jsonconfig), w)
+func (w *fileLogWriter) Init(jsonConfig string) error {
+	err := json.Unmarshal([]byte(jsonConfig), w)
 	if err != nil {
 		return err
 	}
@@ -130,19 +130,19 @@ func (w *fileLogWriter) startLogger() error {
 	return w.initFd()
 }
 
-func (w *fileLogWriter) docheck(size int) {
+func (w *fileLogWriter) doCheck(size int) {
 	w.startLock.Lock()
 	defer w.startLock.Unlock()
-	if w.Rotate && ((w.Maxlines > 0 && w.maxlinesCurlines >= w.Maxlines) ||
-		(w.Maxsize > 0 && w.maxsizeCursize >= w.Maxsize) ||
-		(w.Daily && time.Now().Day() != w.dailyOpendate)) {
+	if w.Rotate && ((w.MaxLines > 0 && w.maxLinesCurLines >= w.MaxLines) ||
+		(w.MaxSize > 0 && w.maxSizeCurSize >= w.MaxSize) ||
+		(w.Daily && time.Now().Day() != w.dailyOpenDate)) {
 		if err := w.DoRotate(); err != nil {
 			fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
 			return
 		}
 	}
-	w.maxlinesCurlines++
-	w.maxsizeCursize += size
+	w.maxLinesCurLines++
+	w.maxSizeCurSize += size
 }
 
 // WriteMsg write logger message into file.
@@ -151,7 +151,7 @@ func (w *fileLogWriter) WriteMsg(msg string, level int) error {
 		return nil
 	}
 	n := 24 + len(msg) // 24 stand for the length "2013/06/23 21:00:22 [T] "
-	w.docheck(n)
+	w.doCheck(n)
 	w.Logger.Println(msg)
 	return nil
 }
@@ -168,15 +168,15 @@ func (w *fileLogWriter) initFd() error {
 	if err != nil {
 		return fmt.Errorf("get stat err: %s\n", err)
 	}
-	w.maxsizeCursize = int(finfo.Size())
-	w.dailyOpendate = time.Now().Day()
-	w.maxlinesCurlines = 0
+	w.maxSizeCurSize = int(finfo.Size())
+	w.dailyOpenDate = time.Now().Day()
+	w.maxLinesCurLines = 0
 	if finfo.Size() > 0 {
 		count, err := w.lines()
 		if err != nil {
 			return err
 		}
-		w.maxlinesCurlines = count
+		w.maxLinesCurLines = count
 	}
 	return nil
 }
@@ -266,7 +266,7 @@ func (w *fileLogWriter) deleteOldLog() {
 			}
 		}()
 
-		if !info.IsDir() && info.ModTime().Unix() < (time.Now().Unix()-60*60*24*w.Maxdays) {
+		if !info.IsDir() && info.ModTime().Unix() < (time.Now().Unix()-60*60*24*w.MaxDays) {
 			if strings.HasPrefix(filepath.Base(path), filepath.Base(w.Filename)) {
 				os.Remove(path)
 			}
@@ -275,7 +275,7 @@ func (w *fileLogWriter) deleteOldLog() {
 	})
 }
 
-// Destroy close the file desciption, close file writer.
+// Destroy close the file description, close file writer.
 func (w *fileLogWriter) Destroy() {
 	w.mw.fd.Close()
 }
