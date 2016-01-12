@@ -185,9 +185,10 @@ func (w *fileLogWriter) WriteMsg(msg string, level int) error {
 	buf[17] = byte('0' + t)
 	buf[18] = byte('0' + s - t*10)
 	msg = string(buf[0:]) + msg + "\n"
+
 	w.doCheck(len(msg))
-	w.fd.Write([]byte(msg))
-	return nil
+	_, err := w.fd.Write([]byte(msg))
+	return err
 }
 
 func (w *fileLogWriter) createLogFile() (*os.File, error) {
