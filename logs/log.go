@@ -95,7 +95,7 @@ type BeeLogger struct {
 	enableFuncCallDepth bool
 	loggerFuncCallDepth int
 	asynchronous        bool
-	msg                 chan *logMsg
+	msgChan             chan *logMsg
 	outputs             []*nameLogger
 }
 
@@ -109,6 +109,8 @@ type logMsg struct {
 	msg   string
 }
 
+var logMsgPool *sync.Pool
+
 // NewLogger returns a new BeeLogger.
 // channelLen means the number of messages in chan(used where asynchronous is true).
 // if the buffering chan is full, logger adapters write to file or other way.
@@ -116,13 +118,18 @@ func NewLogger(channelLen int64) *BeeLogger {
 	bl := new(BeeLogger)
 	bl.level = LevelDebug
 	bl.loggerFuncCallDepth = 2
-	bl.msg = make(chan *logMsg, channelLen)
+	bl.msgChan = make(chan *logMsg, channelLen)
 	return bl
 }
 
 // Async set the log to asynchronous and start the goroutine
 func (bl *BeeLogger) Async() *BeeLogger {
 	bl.asynchronous = true
+	logMsgPool = &sync.Pool{
+		New: func() interface{} {
+			return &logMsg{}
+		},
+	}
 	go bl.startLogger()
 	return bl
 }
@@ -187,10 +194,10 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string) error {
 		msg = msg
 	}
 	if bl.asynchronous {
-		lm := new(logMsg)
+		lm := logMsgPool.Get().(*logMsg)
 		lm.level = logLevel
 		lm.msg = msg
-		bl.msg <- lm
+		bl.msgChan <- lm
 	} else {
 		bl.writeToLoggers(msg, logLevel)
 	}
@@ -224,8 +231,9 @@ func (bl *BeeLogger) EnableFuncCallDepth(b bool) {
 func (bl *BeeLogger) startLogger() {
 	for {
 		select {
-		case bm := <-bl.msg:
+		case bm := <-bl.msgChan:
 			bl.writeToLoggers(bm.msg, bm.level)
+			logMsgPool.Put(bm)
 		}
 	}
 }
@@ -342,9 +350,10 @@ func (bl *BeeLogger) Flush() {
 // Close close logger, flush all chan data and destroy all adapters in BeeLogger.
 func (bl *BeeLogger) Close() {
 	for {
-		if len(bl.msg) > 0 {
-			bm := <-bl.msg
+		if len(bl.msgChan) > 0 {
+			bm := <-bl.msgChan
 			bl.writeToLoggers(bm.msg, bm.level)
+			logMsgPool.Put(bm)
 			continue
 		}
 		break
