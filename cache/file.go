@@ -33,8 +33,8 @@ import (
 // it contains data and expire time.
 type FileCacheItem struct {
 	Data       interface{}
-	Lastaccess int64
-	Expired    int64
+	Lastaccess time.Time
+	Expired    time.Time
 }
 
 // FileCache Config
@@ -42,7 +42,7 @@ var (
 	FileCachePath           = "cache" // cache directory
 	FileCacheFileSuffix     = ".bin"  // cache file suffix
 	FileCacheDirectoryLevel = 2       // cache file deep level if auto generated cache files.
-	FileCacheEmbedExpiry    int64     // cache expire time, default is no expire forever.
+	FileCacheEmbedExpiry    time.Duration = 0     // cache expire time, default is no expire forever.
 )
 
 // FileCache is cache adapter for file storage.
@@ -76,7 +76,7 @@ func (fc *FileCache) StartAndGC(config string) error {
 		cfg["DirectoryLevel"] = strconv.Itoa(FileCacheDirectoryLevel)
 	}
 	if _, ok := cfg["EmbedExpiry"]; !ok {
-		cfg["EmbedExpiry"] = strconv.FormatInt(FileCacheEmbedExpiry, 10)
+		cfg["EmbedExpiry"] = strconv.FormatInt(int64(FileCacheEmbedExpiry.Seconds()), 10)
 	}
 	fc.CachePath = cfg["CachePath"]
 	fc.FileSuffix = cfg["FileSuffix"]
@@ -123,7 +123,7 @@ func (fc *FileCache) Get(key string) interface{} {
 	}
 	var to FileCacheItem
 	GobDecode(fileData, &to)
-	if to.Expired < time.Now().Unix() {
+	if to.Expired.Before(time.Now()) {
 		return ""
 	}
 	return to.Data
@@ -142,16 +142,16 @@ func (fc *FileCache) GetMulti(keys []string) []interface{} {
 // Put value into file cache.
 // timeout means how long to keep this file, unit of ms.
 // if timeout equals FileCacheEmbedExpiry(default is 0), cache this item forever.
-func (fc *FileCache) Put(key string, val interface{}, timeout int64) error {
+func (fc *FileCache) Put(key string, val interface{}, timeout time.Duration) error {
 	gob.Register(val)
 
 	item := FileCacheItem{Data: val}
 	if timeout == FileCacheEmbedExpiry {
-		item.Expired = time.Now().Unix() + (86400 * 365 * 10) // ten years
+		item.Expired = time.Now().Add((86400 * 365 * 10) * time.Second) // ten years
 	} else {
-		item.Expired = time.Now().Unix() + timeout
+		item.Expired = time.Now().Add(timeout)
 	}
-	item.Lastaccess = time.Now().Unix()
+	item.Lastaccess = time.Now()
 	data, err := GobEncode(item)
 	if err != nil {
 		return err

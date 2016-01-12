@@ -37,6 +37,7 @@ import (
 	"github.com/bradfitz/gomemcache/memcache"
 
 	"github.com/astaxie/beego/cache"
+	"time"
 )
 
 // Cache Memcache adapter.
@@ -89,7 +90,7 @@ func (rc *Cache) GetMulti(keys []string) []interface{} {
 }
 
 // Put put value to memcache. only support string.
-func (rc *Cache) Put(key string, val interface{}, timeout int64) error {
+func (rc *Cache) Put(key string, val interface{}, timeout time.Duration) error {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
 			return err
@@ -99,7 +100,7 @@ func (rc *Cache) Put(key string, val interface{}, timeout int64) error {
 	if !ok {
 		return errors.New("val must string")
 	}
-	item := memcache.Item{Key: key, Value: []byte(v), Expiration: int32(timeout)}
+	item := memcache.Item{Key: key, Value: []byte(v), Expiration: int32(timeout/time.Second)}
 	return rc.conn.Set(&item)
 }
 

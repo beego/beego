@@ -109,9 +109,9 @@ ERROR:
 }
 
 // Put put cache to redis.
-func (rc *Cache) Put(key string, val interface{}, timeout int64) error {
+func (rc *Cache) Put(key string, val interface{}, timeout time.Duration) error {
 	var err error
-	if _, err = rc.do("SETEX", key, timeout, val); err != nil {
+	if _, err = rc.do("SETEX", key, int64(timeout/time.Second), val); err != nil {
 		return err
 	}
 
