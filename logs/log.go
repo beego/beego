@@ -174,9 +174,7 @@ func (bl *BeeLogger) writeToLoggers(msg string, level int) {
 	}
 }
 
-func (bl *BeeLogger) writeMsg(loglevel int, msg string) error {
-	lm := new(logMsg)
-	lm.level = loglevel
+func (bl *BeeLogger) writeMsg(logLevel int, msg string) error {
 	if bl.enableFuncCallDepth {
 		_, file, line, ok := runtime.Caller(bl.loggerFuncCallDepth)
 		if !ok {
@@ -184,14 +182,17 @@ func (bl *BeeLogger) writeMsg(loglevel int, msg string) error {
 			line = 0
 		}
 		_, filename := path.Split(file)
-		lm.msg = fmt.Sprintf("[%s:%d] %s", filename, line, msg)
+		msg = fmt.Sprintf("[%s:%d] %s", filename, line, msg)
 	} else {
-		lm.msg = msg
+		msg = msg
 	}
 	if bl.asynchronous {
+		lm := new(logMsg)
+		lm.level = logLevel
+		lm.msg = msg
 		bl.msg <- lm
 	} else {
-		bl.writeToLoggers(msg, loglevel)
+		bl.writeToLoggers(msg, logLevel)
 	}
 	return nil
 }
