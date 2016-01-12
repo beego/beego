@@ -32,32 +32,32 @@ import (
 // It writes messages by lines limit, file size limit, or time frequency.
 type fileLogWriter struct {
 	*log.Logger
-	mw               *MuxWriter
+	*MuxWriter
 	// The opened file
-	Filename         string `json:"filename"`
+	Filename string `json:"filename"`
 
 	MaxLines         int `json:"maxlines"`
 	maxLinesCurLines int
 
 	// Rotate at size
-	MaxSize          int `json:"maxsize"`
-	maxSizeCurSize   int
+	MaxSize        int `json:"maxsize"`
+	maxSizeCurSize int
 
 	// Rotate daily
-	Daily            bool  `json:"daily"`
-	MaxDays          int64 `json:"maxdays"`
-	dailyOpenDate    int
+	Daily         bool  `json:"daily"`
+	MaxDays       int64 `json:"maxdays"`
+	dailyOpenDate int
 
-	Rotate           bool `json:"rotate"`
+	Rotate bool `json:"rotate"`
 
-	startLock        sync.Mutex // Only one log can write to the file
+	startLock sync.Mutex // Only one log can write to the file
 
-	Level            int `json:"level"`
+	Level int `json:"level"`
 
-	Perm             os.FileMode `json:"perm"`
+	Perm os.FileMode `json:"perm"`
 }
 
-// MuxWriter is an *os.File writer with locker.
+// MuxWriter is an *os.File writer with locker,lock write when rotate
 type MuxWriter struct {
 	sync.Mutex
 	fd *os.File
@@ -81,19 +81,18 @@ func (l *MuxWriter) SetFd(fd *os.File) {
 // NewFileWriter create a FileLogWriter returning as LoggerInterface.
 func newFileWriter() Logger {
 	w := &fileLogWriter{
-		Filename: "",
-		MaxLines: 1000000,
-		MaxSize:  1 << 28, //256 MB
-		Daily:    true,
-		MaxDays:  7,
-		Rotate:   true,
-		Level:    LevelTrace,
-		Perm:     0660,
+		Filename:  "",
+		MaxLines:  1000000,
+		MaxSize:   1 << 28, //256 MB
+		Daily:     true,
+		MaxDays:   7,
+		Rotate:    true,
+		Level:     LevelTrace,
+		Perm:      0660,
+		MuxWriter: new(MuxWriter),
 	}
-	// use MuxWriter instead direct use os.File for lock write when rotate
-	w.mw = new(MuxWriter)
 	// set MuxWriter as Logger's io.Writer
-	w.Logger = log.New(w.mw, "", log.Ldate|log.Ltime)
+	w.Logger = log.New(w, "", log.Ldate|log.Ltime)
 	return w
 }
 
@@ -126,7 +125,7 @@ func (w *fileLogWriter) startLogger() error {
 	if err != nil {
 		return err
 	}
-	w.mw.SetFd(fd)
+	w.SetFd(fd)
 	return w.initFd()
 }
 
@@ -163,7 +162,7 @@ func (w *fileLogWriter) createLogFile() (*os.File, error) {
 }
 
 func (w *fileLogWriter) initFd() error {
-	fd := w.mw.fd
+	fd := w.fd
 	finfo, err := fd.Stat()
 	if err != nil {
 		return fmt.Errorf("get stat err: %s\n", err)
@@ -215,15 +214,15 @@ func (w *fileLogWriter) DoRotate() error {
 	if err == nil { // file exists
 		// Find the next available number
 		num := 1
-		fname := ""
+		fName := ""
 		suffix := filepath.Ext(w.Filename)
 		filenameOnly := strings.TrimSuffix(w.Filename, suffix)
 		if suffix == "" {
 			suffix = ".log"
 		}
 		for ; err == nil && num <= 999; num++ {
-			fname = filenameOnly + fmt.Sprintf(".%s.%03d%s", time.Now().Format("2006-01-02"), num, suffix)
-			_, err = os.Lstat(fname)
+			fName = filenameOnly + fmt.Sprintf(".%s.%03d%s", time.Now().Format("2006-01-02"), num, suffix)
+			_, err = os.Lstat(fName)
 		}
 		// return error if the last file checked still existed
 		if err == nil {
@@ -231,15 +230,15 @@ func (w *fileLogWriter) DoRotate() error {
 		}
 
 		// block Logger's io.Writer
-		w.mw.Lock()
-		defer w.mw.Unlock()
+		w.Lock()
+		defer w.Unlock()
 
-		fd := w.mw.fd
+		fd := w.fd
 		fd.Close()
 
 		// close fd before rename
 		// Rename the file to its newfound home
-		err = os.Rename(w.Filename, fname)
+		err = os.Rename(w.Filename, fName)
 		if err != nil {
 			return fmt.Errorf("Rotate: %s\n", err)
 		}
@@ -277,14 +276,14 @@ func (w *fileLogWriter) deleteOldLog() {
 
 // Destroy close the file description, close file writer.
 func (w *fileLogWriter) Destroy() {
-	w.mw.fd.Close()
+	w.fd.Close()
 }
 
 // Flush flush file logger.
 // there are no buffering messages in file logger in memory.
 // flush file means sync file from disk.
 func (w *fileLogWriter) Flush() {
-	w.mw.fd.Sync()
+	w.fd.Sync()
 }
 
 func init() {
