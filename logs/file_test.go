@@ -141,3 +141,26 @@ func BenchmarkAsynchronousFile(b *testing.B) {
 	}
 	os.Remove("test4.log")
 }
+
+func BenchmarkCallDepthFile(b *testing.B) {
+	log := NewLogger(100000)
+	log.SetLogger("file", `{"filename":"test4.log"}`)
+	log.EnableFuncCallDepth(true)
+	log.SetLogFuncCallDepth(2)
+	for i := 0; i < b.N; i++ {
+		log.Debug("debug")
+	}
+	os.Remove("test4.log")
+}
+
+func BenchmarkAsynchronousCallDepthFile(b *testing.B) {
+	log := NewLogger(100000)
+	log.SetLogger("file", `{"filename":"test4.log"}`)
+	log.EnableFuncCallDepth(true)
+	log.SetLogFuncCallDepth(2)
+	log.Async()
+	for i := 0; i < b.N; i++ {
+		log.Debug("debug")
+	}
+	os.Remove("test4.log")
+}
