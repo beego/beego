@@ -48,7 +48,7 @@ type fileLogWriter struct {
 
 	Rotate bool `json:"rotate"`
 
-	startLock sync.Mutex // Only one log can write to the file
+	startLock sync.Mutex // atomic incr maxLinesCurLines and maxSizeCurSize
 
 	Level int `json:"level"`
 
@@ -58,22 +58,23 @@ type fileLogWriter struct {
 // MuxWriter is an *os.File writer with locker,lock write when rotate
 type MuxWriter struct {
 	sync.Mutex
-	fd *os.File
+	fileWriter *os.File
 }
 
 // Write to os.File.
-func (l *MuxWriter) Write(b []byte) (int, error) {
-	l.Lock()
-	defer l.Unlock()
-	return l.fd.Write(b)
+func (mw *MuxWriter) Write(b []byte) (int, error) {
+	mw.Lock()
+	n, e := mw.fileWriter.Write(b)
+	mw.Unlock()
+	return n, e
 }
 
-// SetFd set os.File in writer.
-func (l *MuxWriter) SetFd(fd *os.File) {
-	if l.fd != nil {
-		l.fd.Close()
+// SetFileWriter set os.File in writer.
+func (mw *MuxWriter) SetFileWriter(fd *os.File) {
+	if mw.fileWriter != nil {
+		mw.fileWriter.Close()
 	}
-	l.fd = fd
+	mw.fileWriter = fd
 }
 
 // NewFileWriter create a FileLogWriter returning as LoggerInterface.
@@ -117,11 +118,11 @@ func (w *fileLogWriter) Init(jsonConfig string) error {
 
 // start file logger. create log file and set to locker-inside file writer.
 func (w *fileLogWriter) startLogger() error {
-	fd, err := w.createLogFile()
+	file, err := w.createLogFile()
 	if err != nil {
 		return err
 	}
-	w.SetFd(fd)
+	w.SetFileWriter(file)
 	return w.initFd()
 }
 
@@ -151,7 +152,7 @@ func (w *fileLogWriter) WriteMsg(msg string, level int) error {
 	y, mo, d := now.Date()
 	h, mi, s := now.Clock()
 	//len(2006/01/02 15:03:04)==19
-	var buf [19]byte
+	var buf [20]byte
 	t := 3
 	for y >= 10 {
 		p := y / 10
@@ -184,10 +185,11 @@ func (w *fileLogWriter) WriteMsg(msg string, level int) error {
 	t = s / 10
 	buf[17] = byte('0' + t)
 	buf[18] = byte('0' + s - t*10)
+	buf[18] = ' '
 	msg = string(buf[0:]) + msg + "\n"
 
 	w.doCheck(len(msg))
-	_, err := w.fd.Write([]byte(msg))
+	_, err := w.Write([]byte(msg))
 	return err
 }
 
@@ -198,7 +200,7 @@ func (w *fileLogWriter) createLogFile() (*os.File, error) {
 }
 
 func (w *fileLogWriter) initFd() error {
-	fd := w.fd
+	fd := w.fileWriter
 	fInfo, err := fd.Stat()
 	if err != nil {
 		return fmt.Errorf("get stat err: %s\n", err)
@@ -270,7 +272,7 @@ func (w *fileLogWriter) DoRotate() error {
 		w.Lock()
 		defer w.Unlock()
 
-		fd := w.fd
+		fd := w.fileWriter
 		fd.Close()
 
 		// close fd before rename
@@ -312,14 +314,14 @@ func (w *fileLogWriter) deleteOldLog() {
 
 // Destroy close the file description, close file writer.
 func (w *fileLogWriter) Destroy() {
-	w.fd.Close()
+	w.fileWriter.Close()
 }
 
 // Flush flush file logger.
 // there are no buffering messages in file logger in memory.
 // flush file means sync file from disk.
 func (w *fileLogWriter) Flush() {
-	w.fd.Sync()
+	w.fileWriter.Sync()
 }
 
 func init() {
