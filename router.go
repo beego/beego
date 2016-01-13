@@ -609,7 +609,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	defer p.pool.Put(context)
 	defer p.recoverPanic(context)
 
-	context.Output.EnableGzip=BConfig.EnableGzip
+	context.Output.EnableGzip = BConfig.EnableGzip
 
 	if BConfig.RunMode == DEV {
 		context.Output.Header("Server", BConfig.ServerName)
@@ -800,7 +800,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 Admin:
 	timeDur := time.Since(startTime)
 	//admin module record QPS
-	if BConfig.Listen.AdminEnable {
+	if BConfig.Listen.EnableAdmin {
 		if FilterMonitorFunc(r.Method, r.URL.Path, timeDur) {
 			if runRouter != nil {
 				go toolbox.StatisticsMap.AddStatistics(r.Method, r.URL.Path, runRouter.Name(), timeDur)

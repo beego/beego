@@ -64,6 +64,7 @@ import (
 	"net/http"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/cache"
@@ -78,7 +79,7 @@ var (
 const (
 	// default captcha attributes
 	challengeNums    = 6
-	expiration       = 600
+	expiration       = 600 * time.Second
 	fieldIDName      = "captcha_id"
 	fieldCaptchaName = "captcha"
 	cachePrefix      = "captcha_"
@@ -106,7 +107,7 @@ type Captcha struct {
 	ChallengeNums int
 
 	// captcha expiration seconds
-	Expiration int64
+	Expiration time.Duration
 
 	// cache key prefix
 	CachePrefix string

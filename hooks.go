@@ -48,7 +48,7 @@ func registerSession() error {
 				"cookieName":      BConfig.WebConfig.Session.SessionName,
 				"gclifetime":      BConfig.WebConfig.Session.SessionGCMaxLifetime,
 				"providerConfig":  filepath.ToSlash(BConfig.WebConfig.Session.SessionProviderConfig),
-				"secure":          BConfig.Listen.HTTPSEnable,
+				"secure":          BConfig.Listen.EnableHTTPS,
 				"enableSetCookie": BConfig.WebConfig.Session.SessionAutoSetCookie,
 				"domain":          BConfig.WebConfig.Session.SessionDomain,
 				"cookieLifeTime":  BConfig.WebConfig.Session.SessionCookieLifeTime,
@@ -88,7 +88,7 @@ func registerDocs() error {
 }
 
 func registerAdmin() error {
-	if BConfig.Listen.AdminEnable {
+	if BConfig.Listen.EnableAdmin {
 		go beeAdminApp.Run()
 	}
 	return nil

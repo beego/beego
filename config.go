@@ -44,15 +44,15 @@ type Listen struct {
 	Graceful      bool // Graceful means use graceful module to start the server
 	ServerTimeOut int64
 	ListenTCP4    bool
-	HTTPEnable    bool
+	EnableHTTP    bool
 	HTTPAddr      string
 	HTTPPort      int
-	HTTPSEnable   bool
+	EnableHTTPS   bool
 	HTTPSAddr     string
 	HTTPSPort     int
 	HTTPSCertFile string
 	HTTPSKeyFile  string
-	AdminEnable   bool
+	EnableAdmin   bool
 	AdminAddr     string
 	AdminPort     int
 	EnableFcgi    bool
@@ -123,15 +123,15 @@ func init() {
 			Graceful:      false,
 			ServerTimeOut: 0,
 			ListenTCP4:    false,
-			HTTPEnable:    true,
+			EnableHTTP:    true,
 			HTTPAddr:      "",
 			HTTPPort:      8080,
-			HTTPSEnable:   false,
+			EnableHTTPS:   false,
 			HTTPSAddr:     "",
 			HTTPSPort:     10443,
 			HTTPSCertFile: "",
 			HTTPSKeyFile:  "",
-			AdminEnable:   false,
+			EnableAdmin:   false,
 			AdminAddr:     "",
 			AdminPort:     8088,
 			EnableFcgi:    false,
@@ -196,7 +196,7 @@ func ParseConfig() (err error) {
 	BConfig.AppName = AppConfig.DefaultString("AppName", BConfig.AppName)
 	BConfig.RecoverPanic = AppConfig.DefaultBool("RecoverPanic", BConfig.RecoverPanic)
 	BConfig.RouterCaseSensitive = AppConfig.DefaultBool("RouterCaseSensitive", BConfig.RouterCaseSensitive)
-	BConfig.ServerName = AppConfig.DefaultString("BeegoServerName", BConfig.ServerName)
+	BConfig.ServerName = AppConfig.DefaultString("ServerName", BConfig.ServerName)
 	BConfig.EnableGzip = AppConfig.DefaultBool("EnableGzip", BConfig.EnableGzip)
 	BConfig.EnableErrorsShow = AppConfig.DefaultBool("EnableErrorsShow", BConfig.EnableErrorsShow)
 	BConfig.CopyRequestBody = AppConfig.DefaultBool("CopyRequestBody", BConfig.CopyRequestBody)
@@ -205,18 +205,18 @@ func ParseConfig() (err error) {
 	BConfig.Listen.HTTPAddr = AppConfig.String("HTTPAddr")
 	BConfig.Listen.HTTPPort = AppConfig.DefaultInt("HTTPPort", BConfig.Listen.HTTPPort)
 	BConfig.Listen.ListenTCP4 = AppConfig.DefaultBool("ListenTCP4", BConfig.Listen.ListenTCP4)
-	BConfig.Listen.HTTPEnable = AppConfig.DefaultBool("EnableHTTPListen", BConfig.Listen.HTTPEnable)
-	BConfig.Listen.HTTPSEnable = AppConfig.DefaultBool("EnableHTTPTLS", BConfig.Listen.HTTPSEnable)
+	BConfig.Listen.EnableHTTP = AppConfig.DefaultBool("EnableHTTP", BConfig.Listen.EnableHTTP)
+	BConfig.Listen.EnableHTTPS = AppConfig.DefaultBool("EnableHTTPS", BConfig.Listen.EnableHTTPS)
 	BConfig.Listen.HTTPSAddr = AppConfig.DefaultString("HTTPSAddr", BConfig.Listen.HTTPSAddr)
 	BConfig.Listen.HTTPSPort = AppConfig.DefaultInt("HTTPSPort", BConfig.Listen.HTTPSPort)
-	BConfig.Listen.HTTPSCertFile = AppConfig.DefaultString("HTTPCertFile", BConfig.Listen.HTTPSCertFile)
-	BConfig.Listen.HTTPSKeyFile = AppConfig.DefaultString("HTTPKeyFile", BConfig.Listen.HTTPSKeyFile)
-	BConfig.Listen.AdminEnable = AppConfig.DefaultBool("EnableAdmin", BConfig.Listen.AdminEnable)
-	BConfig.Listen.AdminAddr = AppConfig.DefaultString("AdminHTTPAddr", BConfig.Listen.AdminAddr)
-	BConfig.Listen.AdminPort = AppConfig.DefaultInt("AdminHTTPPort", BConfig.Listen.AdminPort)
+	BConfig.Listen.HTTPSCertFile = AppConfig.DefaultString("HTTPSCertFile", BConfig.Listen.HTTPSCertFile)
+	BConfig.Listen.HTTPSKeyFile = AppConfig.DefaultString("HTTPSKeyFile", BConfig.Listen.HTTPSKeyFile)
+	BConfig.Listen.EnableAdmin = AppConfig.DefaultBool("EnableAdmin", BConfig.Listen.EnableAdmin)
+	BConfig.Listen.AdminAddr = AppConfig.DefaultString("AdminAddr", BConfig.Listen.AdminAddr)
+	BConfig.Listen.AdminPort = AppConfig.DefaultInt("AdminPort", BConfig.Listen.AdminPort)
 	BConfig.Listen.EnableFcgi = AppConfig.DefaultBool("EnableFcgi", BConfig.Listen.EnableFcgi)
 	BConfig.Listen.EnableStdIo = AppConfig.DefaultBool("EnableStdIo", BConfig.Listen.EnableStdIo)
-	BConfig.Listen.ServerTimeOut = AppConfig.DefaultInt64("HTTPServerTimeOut", BConfig.Listen.ServerTimeOut)
+	BConfig.Listen.ServerTimeOut = AppConfig.DefaultInt64("ServerTimeOut", BConfig.Listen.ServerTimeOut)
 	BConfig.WebConfig.AutoRender = AppConfig.DefaultBool("AutoRender", BConfig.WebConfig.AutoRender)
 	BConfig.WebConfig.ViewsPath = AppConfig.DefaultString("ViewsPath", BConfig.WebConfig.ViewsPath)
 	BConfig.WebConfig.DirectoryIndex = AppConfig.DefaultBool("DirectoryIndex", BConfig.WebConfig.DirectoryIndex)
