@@ -14,9 +14,7 @@
 
 package orm
 
-import (
-	"reflect"
-)
+import "reflect"
 
 // model to model struct
 type queryM2M struct {
@@ -48,7 +46,8 @@ func (o *queryM2M) Add(mds ...interface{}) (int64, error) {
 	var other_names []string
 
 	for _, colname := range mi.fields.dbcols {
-		if colname != mfi.column && colname != rfi.column && colname != fi.mi.fields.pk.column {
+		if colname != mfi.column && colname != rfi.column && colname != fi.mi.fields.pk.column &&
+			mi.fields.columns[colname] != mi.fields.pk {
 			other_names = append(other_names, colname)
 		}
 	}
