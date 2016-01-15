@@ -335,7 +335,7 @@ func NewComment() *Comment {
 }
 
 type Group struct {
-	GID         string `orm:"pk;column(gid);size(32);unique"`
+	ID          int `orm:"column(gid);size(32)"`
 	Name        string
 	Permissions []*Permission `orm:"reverse(many)" json:"-"`
 }

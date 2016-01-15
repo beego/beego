@@ -663,12 +663,10 @@ The program—and web server—godoc processes Go source files to extract docume
 
 	groups := []*Group{
 		{
-			GID:         "g1",
 			Name:        "admins",
 			Permissions: []*Permission{permissions[0], permissions[1], permissions[2]},
 		},
 		{
-			GID:         "g2",
 			Name:        "users",
 			Permissions: []*Permission{permissions[1], permissions[2]},
 		},
@@ -683,7 +681,7 @@ The program—and web server—godoc processes Go source files to extract docume
 	for _, group := range groups {
 		_, err := dORM.Insert(group)
 		throwFail(t, err)
-		//throwFail(t, AssertIs(id > 0, true))
+		throwFail(t, AssertIs(id > 0, true))
 
 		num := len(group.Permissions)
 		if num > 0 {
