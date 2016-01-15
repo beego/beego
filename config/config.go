@@ -29,12 +29,12 @@
 //  cnf.Int64(key string) (int64, error)
 //  cnf.Bool(key string) (bool, error)
 //  cnf.Float(key string) (float64, error)
-//  cnf.DefaultString(key string, defaultval string) string
-//  cnf.DefaultStrings(key string, defaultval []string) []string
-//  cnf.DefaultInt(key string, defaultval int) int
-//  cnf.DefaultInt64(key string, defaultval int64) int64
-//  cnf.DefaultBool(key string, defaultval bool) bool
-//  cnf.DefaultFloat(key string, defaultval float64) float64
+//  cnf.DefaultString(key string, defaultVal string) string
+//  cnf.DefaultStrings(key string, defaultVal []string) []string
+//  cnf.DefaultInt(key string, defaultVal int) int
+//  cnf.DefaultInt64(key string, defaultVal int64) int64
+//  cnf.DefaultBool(key string, defaultVal bool) bool
+//  cnf.DefaultFloat(key string, defaultVal float64) float64
 //  cnf.DIY(key string) (interface{}, error)
 //  cnf.GetSection(section string) (map[string]string, error)
 //  cnf.SaveConfigFile(filename string) error
@@ -48,19 +48,19 @@ import (
 
 // Configer defines how to get and set value from configuration raw data.
 type Configer interface {
-	Set(key, val string) error   // support section::key type in given key when using ini type.
-	String(key string) string    // support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
+	Set(key, val string) error   //support section::key type in given key when using ini type.
+	String(key string) string    //support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
 	Strings(key string) []string //get string slice
 	Int(key string) (int, error)
 	Int64(key string) (int64, error)
 	Bool(key string) (bool, error)
 	Float(key string) (float64, error)
-	DefaultString(key string, defaultval string) string      // support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
-	DefaultStrings(key string, defaultval []string) []string //get string slice
-	DefaultInt(key string, defaultval int) int
-	DefaultInt64(key string, defaultval int64) int64
-	DefaultBool(key string, defaultval bool) bool
-	DefaultFloat(key string, defaultval float64) float64
+	DefaultString(key string, defaultVal string) string      // support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
+	DefaultStrings(key string, defaultVal []string) []string //get string slice
+	DefaultInt(key string, defaultVal int) int
+	DefaultInt64(key string, defaultVal int64) int64
+	DefaultBool(key string, defaultVal bool) bool
+	DefaultFloat(key string, defaultVal float64) float64
 	DIY(key string) (interface{}, error)
 	GetSection(section string) (map[string]string, error)
 	SaveConfigFile(filename string) error

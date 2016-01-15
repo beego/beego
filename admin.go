@@ -120,7 +120,7 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 		m["BConfig.WebConfig.AutoRender"] = BConfig.WebConfig.AutoRender
 		m["BConfig.WebConfig.EnableDocs"] = BConfig.WebConfig.EnableDocs
 		m["BConfig.WebConfig.FlashName"] = BConfig.WebConfig.FlashName
-		m["BConfig.WebConfig.FlashSeperator"] = BConfig.WebConfig.FlashSeperator
+		m["BConfig.WebConfig.FlashSeparator"] = BConfig.WebConfig.FlashSeparator
 		m["BConfig.WebConfig.DirectoryIndex"] = BConfig.WebConfig.DirectoryIndex
 		m["BConfig.WebConfig.StaticDir"] = BConfig.WebConfig.StaticDir
 		m["BConfig.WebConfig.StaticExtensionsToGzip"] = BConfig.WebConfig.StaticExtensionsToGzip
@@ -128,7 +128,7 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 		m["BConfig.WebConfig.TemplateRight"] = BConfig.WebConfig.TemplateRight
 		m["BConfig.WebConfig.ViewsPath"] = BConfig.WebConfig.ViewsPath
 		m["BConfig.WebConfig.EnableXSRF"] = BConfig.WebConfig.EnableXSRF
-		m["BConfig.WebConfig.XSRFKEY"] = BConfig.WebConfig.XSRFKEY
+		m["BConfig.WebConfig.XSRFKEY"] = BConfig.WebConfig.XSRFKey
 		m["BConfig.WebConfig.XSRFExpire"] = BConfig.WebConfig.XSRFExpire
 		m["BConfig.WebConfig.Session.SessionOn"] = BConfig.WebConfig.Session.SessionOn
 		m["BConfig.WebConfig.Session.SessionProvider"] = BConfig.WebConfig.Session.SessionProvider
