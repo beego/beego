@@ -264,15 +264,18 @@ func getColumnDefault(fi *fieldInfo) string {
 
 	// These defaults will be useful if there no config value orm:"default" and NOT NULL is on
 	switch fi.fieldType {
-	case TypeDateField, TypeDateTimeField:
+	case TypeDateField, TypeDateTimeField, TypeTextField:
 		return v
 
-	case TypeBooleanField, TypeBitField, TypeSmallIntegerField, TypeIntegerField,
+	case TypeBitField, TypeSmallIntegerField, TypeIntegerField,
 		TypeBigIntegerField, TypePositiveBitField, TypePositiveSmallIntegerField,
 		TypePositiveIntegerField, TypePositiveBigIntegerField, TypeFloatField,
 		TypeDecimalField:
 		t = " DEFAULT %s "
 		d = "0"
+	case TypeBooleanField:
+		t = " DEFAULT %s "
+		d = "FALSE"
 	}
 
 	if fi.colDefault {
