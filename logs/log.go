@@ -206,14 +206,11 @@ func (bl *BeeLogger) EnableFuncCallDepth(b bool) {
 // start logger chan reading.
 // when chan is not empty, write logs.
 func (bl *BeeLogger) startLogger() {
-	for {
-		select {
-		case bm := <-bl.msg:
-			for _, l := range bl.outputs {
-				err := l.WriteMsg(bm.msg, bm.level)
-				if err != nil {
-					fmt.Println("ERROR, unable to WriteMsg:", err)
-				}
+	for bm := range bl.msg {
+		for _, l := range bl.outputs {
+			err := l.WriteMsg(bm.msg, bm.level)
+			if err != nil {
+				fmt.Println("ERROR, unable to WriteMsg:", err)
 			}
 		}
 	}
