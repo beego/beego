@@ -228,12 +228,9 @@ func (bl *BeeLogger) EnableFuncCallDepth(b bool) {
 // start logger chan reading.
 // when chan is not empty, write logs.
 func (bl *BeeLogger) startLogger() {
-	for {
-		select {
-		case bm := <-bl.msgChan:
-			bl.writeToLoggers(bm.msg, bm.level)
-			logMsgPool.Put(bm)
-		}
+	for bm := range bl.msgChan {
+		bl.writeToLoggers(bm.msg, bm.level)
+		logMsgPool.Put(bm)
 	}
 }
 
