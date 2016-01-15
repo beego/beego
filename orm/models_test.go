@@ -230,7 +230,7 @@ type User struct {
 	Password     string `orm:"size(100)"`
 	Status       int16  `orm:"column(Status)"`
 	IsStaff      bool
-	IsActive     bool      `orm:"default(1)"`
+	IsActive     bool      `orm:"default(true)"`
 	Created      time.Time `orm:"auto_now_add;type(date)"`
 	Updated      time.Time `orm:"auto_now"`
 	Profile      *Profile  `orm:"null;rel(one);on_delete(set_null)"`
