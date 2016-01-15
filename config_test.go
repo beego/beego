@@ -23,7 +23,7 @@ func TestDefaults(t *testing.T) {
 		t.Errorf("FlashName was not set to default.")
 	}
 
-	if BConfig.WebConfig.FlashSeperator != "BEEGOFLASH" {
+	if BConfig.WebConfig.FlashSeparator != "BEEGOFLASH" {
 		t.Errorf("FlashName was not set to default.")
 	}
 }

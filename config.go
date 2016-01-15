@@ -63,7 +63,7 @@ type WebConfig struct {
 	AutoRender             bool
 	EnableDocs             bool
 	FlashName              string
-	FlashSeperator         string
+	FlashSeparator         string
 	DirectoryIndex         bool
 	StaticDir              map[string]string
 	StaticExtensionsToGzip []string
@@ -71,7 +71,7 @@ type WebConfig struct {
 	TemplateRight          string
 	ViewsPath              string
 	EnableXSRF             bool
-	XSRFKEY                string
+	XSRFKey                string
 	XSRFExpire             int
 	Session                SessionConfig
 }
@@ -141,7 +141,7 @@ func init() {
 			AutoRender:             true,
 			EnableDocs:             false,
 			FlashName:              "BEEGO_FLASH",
-			FlashSeperator:         "BEEGOFLASH",
+			FlashSeparator:         "BEEGOFLASH",
 			DirectoryIndex:         false,
 			StaticDir:              map[string]string{"/static": "static"},
 			StaticExtensionsToGzip: []string{".css", ".js"},
@@ -149,7 +149,7 @@ func init() {
 			TemplateRight:          "}}",
 			ViewsPath:              "views",
 			EnableXSRF:             false,
-			XSRFKEY:                "beegoxsrf",
+			XSRFKey:                "beegoxsrf",
 			XSRFExpire:             0,
 			Session: SessionConfig{
 				SessionOn:             false,
@@ -221,9 +221,9 @@ func ParseConfig() (err error) {
 	BConfig.WebConfig.ViewsPath = AppConfig.DefaultString("ViewsPath", BConfig.WebConfig.ViewsPath)
 	BConfig.WebConfig.DirectoryIndex = AppConfig.DefaultBool("DirectoryIndex", BConfig.WebConfig.DirectoryIndex)
 	BConfig.WebConfig.FlashName = AppConfig.DefaultString("FlashName", BConfig.WebConfig.FlashName)
-	BConfig.WebConfig.FlashSeperator = AppConfig.DefaultString("FlashSeperator", BConfig.WebConfig.FlashSeperator)
+	BConfig.WebConfig.FlashSeparator = AppConfig.DefaultString("FlashSeparator", BConfig.WebConfig.FlashSeparator)
 	BConfig.WebConfig.EnableDocs = AppConfig.DefaultBool("EnableDocs", BConfig.WebConfig.EnableDocs)
-	BConfig.WebConfig.XSRFKEY = AppConfig.DefaultString("XSRFKEY", BConfig.WebConfig.XSRFKEY)
+	BConfig.WebConfig.XSRFKey = AppConfig.DefaultString("XSRFKEY", BConfig.WebConfig.XSRFKey)
 	BConfig.WebConfig.EnableXSRF = AppConfig.DefaultBool("EnableXSRF", BConfig.WebConfig.EnableXSRF)
 	BConfig.WebConfig.XSRFExpire = AppConfig.DefaultInt("XSRFExpire", BConfig.WebConfig.XSRFExpire)
 	BConfig.WebConfig.TemplateLeft = AppConfig.DefaultString("TemplateLeft", BConfig.WebConfig.TemplateLeft)
