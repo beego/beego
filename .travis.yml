@@ -9,10 +9,9 @@ services:
   - postgresql
   - memcached
 env:
-  - ORM_DRIVER=sqlite3  ORM_SOURCE=$TRAVIS_BUILD_DIR/orm_test.db
+  - ORM_DRIVER=sqlite3   ORM_SOURCE=$TRAVIS_BUILD_DIR/orm_test.db
   - ORM_DRIVER=mysql    ORM_SOURCE="root:@/orm_test?charset=utf8"
   - ORM_DRIVER=postgres ORM_SOURCE="user=postgres dbname=orm_test sslmode=disable"
-  - ORM_DRIVER=tidb     ORM_SOURCE="memory://test/test"
 install:
   - go get github.com/lib/pq
   - go get github.com/go-sql-driver/mysql
@@ -25,7 +24,6 @@ install:
   - go get github.com/couchbase/go-couchbase
   - go get github.com/siddontang/ledisdb/config
   - go get github.com/siddontang/ledisdb/ledis
-  - go get github.com/pingcap/tidb
 before_script:
   - sh -c "if [ '$ORM_DRIVER' = 'postgres' ]; then psql -c 'create database orm_test;' -U postgres; fi"
   - sh -c "if [ '$ORM_DRIVER' = 'mysql' ]; then mysql -u root -e 'create database orm_test;'; fi"
