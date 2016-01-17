@@ -204,7 +204,7 @@ type errorInfo struct {
 	errorType      int
 }
 
-// map of http handlers for each error string.
+// ErrorMaps holds map of http handlers for each error string.
 // there is 10 kinds default error(40x and 50x)
 var ErrorMaps = make(map[string]*errorInfo, 10)
 

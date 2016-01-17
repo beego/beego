@@ -16,6 +16,7 @@ package beego
 
 import (
 	"bytes"
+	"errors"
 	"net/http"
 	"os"
 	"path"
@@ -23,15 +24,12 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-
-	"errors"
-
 	"time"
 
 	"github.com/astaxie/beego/context"
 )
 
-var notStaticRequestErr = errors.New("request not a static file request")
+var errNotStaticRequest = errors.New("request not a static file request")
 
 func serverStaticRouter(ctx *context.Context) {
 	if ctx.Input.Method() != "GET" && ctx.Input.Method() != "HEAD" {
@@ -39,7 +37,7 @@ func serverStaticRouter(ctx *context.Context) {
 	}
 
 	forbidden, filePath, fileInfo, err := lookupFile(ctx)
-	if err == notStaticRequestErr {
+	if err == errNotStaticRequest {
 		return
 	}
 
@@ -175,7 +173,7 @@ func searchFile(ctx *context.Context) (string, os.FileInfo, error) {
 			return filePath, fi, err
 		}
 	}
-	return "", nil, notStaticRequestErr
+	return "", nil, errNotStaticRequest
 }
 
 // lookupFile find the file to serve

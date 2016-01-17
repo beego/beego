@@ -25,7 +25,8 @@ import (
 	"github.com/astaxie/beego/utils"
 )
 
-type BeegoConfig struct {
+// BeegoConfig is the main struct for BConfig
+type Config struct {
 	AppName             string //Application name
 	RunMode             string //Running Mode: dev | prod
 	RouterCaseSensitive bool
@@ -40,6 +41,7 @@ type BeegoConfig struct {
 	Log                 LogConfig
 }
 
+// Listen holds for http and https related config
 type Listen struct {
 	Graceful      bool // Graceful means use graceful module to start the server
 	ServerTimeOut int64
@@ -59,6 +61,7 @@ type Listen struct {
 	EnableStdIo   bool // EnableStdIo works with EnableFcgi Use FCGI via standard I/O
 }
 
+// WebConfig holds web related config
 type WebConfig struct {
 	AutoRender             bool
 	EnableDocs             bool
@@ -76,6 +79,7 @@ type WebConfig struct {
 	Session                SessionConfig
 }
 
+// SessionConfig holds session related config
 type SessionConfig struct {
 	SessionOn             bool
 	SessionProvider       string
@@ -87,6 +91,7 @@ type SessionConfig struct {
 	SessionDomain         string
 }
 
+// LogConfig holds Log related config
 type LogConfig struct {
 	AccessLogs  bool
 	FileLineNum bool
@@ -95,7 +100,7 @@ type LogConfig struct {
 
 var (
 	// BConfig is the default config for Application
-	BConfig *BeegoConfig
+	BConfig *Config
 	// AppConfig is the instance of Config, store the config information from file
 	AppConfig *beegoAppConfig
 	// AppConfigPath is the path to the config files
@@ -109,7 +114,7 @@ var (
 )
 
 func init() {
-	BConfig = &BeegoConfig{
+	BConfig = &Config{
 		AppName:             "beego",
 		RunMode:             DEV,
 		RouterCaseSensitive: true,

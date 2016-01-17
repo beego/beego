@@ -30,7 +30,7 @@
 // more docs: http://beego.me/docs/module/toolbox.md
 package toolbox
 
-// health checker map
+// AdminCheckList holds health checker map
 var AdminCheckList map[string]HealthChecker
 
 // HealthChecker health checker interface

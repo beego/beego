@@ -46,7 +46,7 @@ var MessageTmpls = map[string]string{
 	"ZipCode":      "Must be valid zipcode",
 }
 
-// set default messages
+// SetDefaultMessage set default messages
 // if not set, the default messages are
 //  "Required":     "Can not be empty",
 //  "Min":          "Minimum is %d",

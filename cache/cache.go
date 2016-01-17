@@ -67,14 +67,15 @@ type Cache interface {
 	StartAndGC(config string) error
 }
 
-type CacheInstance func() Cache
+// Instance is a function create a new Cache Instance
+type Instance func() Cache
 
-var adapters = make(map[string]CacheInstance)
+var adapters = make(map[string]Instance)
 
 // Register makes a cache adapter available by the adapter name.
 // If Register is called twice with the same name or if driver is nil,
 // it panics.
-func Register(name string, adapter CacheInstance) {
+func Register(name string, adapter Instance) {
 	if adapter == nil {
 		panic("cache: Register adapter is nil")
 	}

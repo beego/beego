@@ -56,9 +56,10 @@ func init() {
 	}
 }
 
+// CustomFunc is for custom validate function
 type CustomFunc func(v *Validation, obj interface{}, key string)
 
-// Add a custom function to validation
+// AddCustomFunc Add a custom function to validation
 // The name can not be:
 //   Clear
 //   HasErrors

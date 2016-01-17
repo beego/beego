@@ -393,10 +393,8 @@ func (c *Controller) GetStrings(key string, def ...[]string) []string {
 
 	if f := c.Input(); f == nil {
 		return defv
-	} else {
-		if vs := f[key]; len(vs) > 0 {
-			return vs
-		}
+	} else if vs := f[key]; len(vs) > 0 {
+		return vs
 	}
 
 	return defv

@@ -45,7 +45,7 @@ import (
 
 var redispder = &Provider{}
 
-// redis max pool size
+// MaxPoolSize redis max pool size
 var MaxPoolSize = 100
 
 // SessionStore redis session store

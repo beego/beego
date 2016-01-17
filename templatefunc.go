@@ -149,8 +149,8 @@ func NotNil(a interface{}) (isNil bool) {
 	return CompareNot(a, nil)
 }
 
-// Config get the Appconfig
-func Config(returnType, key string, defaultVal interface{}) (value interface{}, err error) {
+// GetConfig get the Appconfig
+func GetConfig(returnType, key string, defaultVal interface{}) (value interface{}, err error) {
 	switch returnType {
 	case "String":
 		value = AppConfig.String(key)
