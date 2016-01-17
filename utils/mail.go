@@ -103,8 +103,8 @@ func (e *Email) Bytes() ([]byte, error) {
 	}
 
 	e.Headers.Set("Content-Type", fmt.Sprintf("multipart/mixed;\r\n boundary=%s\r\n", w.Boundary()))
-	fmt.Fprintf(w, "%s:", "Content-Type")
-	fmt.Fprintf(w, " %s\r\n", fmt.Sprintf("multipart/mixed;\r\n boundary=%s\r\n", w.Boundary()))
+	fmt.Fprintf(buff, "%s:", "Content-Type")
+	fmt.Fprintf(buff, " %s\r\n", fmt.Sprintf("multipart/mixed;\r\n boundary=%s\r\n", w.Boundary()))
 
 	// Start the multipart/mixed part
 	fmt.Fprintf(buff, "--%s\r\n", w.Boundary())
