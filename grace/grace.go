@@ -118,15 +118,15 @@ func NewServer(addr string, handler http.Handler) (srv *Server) {
 		sigChan: make(chan os.Signal),
 		isChild: isChild,
 		SignalHooks: map[int]map[os.Signal][]func(){
-			PreSignal: map[os.Signal][]func(){
-				syscall.SIGHUP:  []func(){},
-				syscall.SIGINT:  []func(){},
-				syscall.SIGTERM: []func(){},
+			PreSignal: {
+				syscall.SIGHUP:  {},
+				syscall.SIGINT:  {},
+				syscall.SIGTERM: {},
 			},
-			PostSignal: map[os.Signal][]func(){
-				syscall.SIGHUP:  []func(){},
-				syscall.SIGINT:  []func(){},
-				syscall.SIGTERM: []func(){},
+			PostSignal: {
+				syscall.SIGHUP:  {},
+				syscall.SIGINT:  {},
+				syscall.SIGTERM: {},
 			},
 		},
 		state:   StateInit,

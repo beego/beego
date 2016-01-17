@@ -20,26 +20,25 @@ import (
 )
 
 func Test_ExtractEncoding(t *testing.T) {
-	if parseEncoding(&http.Request{Header: map[string][]string{"Accept-Encoding": []string{"gzip,deflate"}}}) != "gzip" {
+	if parseEncoding(&http.Request{Header: map[string][]string{"Accept-Encoding": {"gzip,deflate"}}}) != "gzip" {
 		t.Fail()
 	}
-	if parseEncoding(&http.Request{Header: map[string][]string{"Accept-Encoding": []string{"deflate,gzip"}}}) != "deflate" {
+	if parseEncoding(&http.Request{Header: map[string][]string{"Accept-Encoding": {"deflate,gzip"}}}) != "deflate" {
 		t.Fail()
 	}
-	if parseEncoding(&http.Request{Header: map[string][]string{"Accept-Encoding": []string{"gzip;q=.5,deflate"}}}) != "deflate" {
+	if parseEncoding(&http.Request{Header: map[string][]string{"Accept-Encoding": {"gzip;q=.5,deflate"}}}) != "deflate" {
 		t.Fail()
 	}
-	if parseEncoding(&http.Request{Header: map[string][]string{"Accept-Encoding": []string{"gzip;q=.5,deflate;q=0.3"}}}) != "gzip" {
+	if parseEncoding(&http.Request{Header: map[string][]string{"Accept-Encoding": {"gzip;q=.5,deflate;q=0.3"}}}) != "gzip" {
 		t.Fail()
 	}
-
-	if parseEncoding(&http.Request{Header: map[string][]string{"Accept-Encoding": []string{"gzip;q=0,deflate"}}}) != "deflate" {
+	if parseEncoding(&http.Request{Header: map[string][]string{"Accept-Encoding": {"gzip;q=0,deflate"}}}) != "deflate" {
 		t.Fail()
 	}
-	if parseEncoding(&http.Request{Header: map[string][]string{"Accept-Encoding": []string{"deflate;q=0.5,gzip;q=0.5,identity"}}}) != "" {
+	if parseEncoding(&http.Request{Header: map[string][]string{"Accept-Encoding": {"deflate;q=0.5,gzip;q=0.5,identity"}}}) != "" {
 		t.Fail()
 	}
-	if parseEncoding(&http.Request{Header: map[string][]string{"Accept-Encoding": []string{"*"}}}) != "gzip" {
+	if parseEncoding(&http.Request{Header: map[string][]string{"Accept-Encoding": {"*"}}}) != "gzip" {
 		t.Fail()
 	}
 }

@@ -86,9 +86,9 @@ func (bc *MemoryCache) Put(name string, value interface{}, lifespan time.Duratio
 	bc.Lock()
 	defer bc.Unlock()
 	bc.items[name] = &MemoryItem{
-		val:        value,
+		val:         value,
 		createdTime: time.Now(),
-		lifespan:   lifespan,
+		lifespan:    lifespan,
 	}
 	return nil
 }
@@ -200,7 +200,7 @@ func (bc *MemoryCache) StartAndGC(config string) error {
 		cf = make(map[string]int)
 		cf["interval"] = DefaultEvery
 	}
-	dur :=  time.Duration(cf["interval"]) * time.Second
+	dur := time.Duration(cf["interval"]) * time.Second
 	bc.Every = cf["interval"]
 	bc.dur = dur
 	go bc.vaccuum()
