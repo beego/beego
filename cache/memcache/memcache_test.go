@@ -17,10 +17,11 @@ package memcache
 import (
 	_ "github.com/bradfitz/gomemcache/memcache"
 
-	"github.com/astaxie/beego/cache"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/astaxie/beego/cache"
 )
 
 func TestMemcacheCache(t *testing.T) {
@@ -93,10 +94,10 @@ func TestMemcacheCache(t *testing.T) {
 	if len(vv) != 2 {
 		t.Error("GetMulti ERROR")
 	}
-	if vv[0].(string) != "author" {
+	if vv[0].(string) != "author" && vv[0].(string) != "author1" {
 		t.Error("GetMulti ERROR")
 	}
-	if vv[1].(string) != "author1" {
+	if vv[1].(string) != "author1" && vv[1].(string) != "author" {
 		t.Error("GetMulti ERROR")
 	}
 
