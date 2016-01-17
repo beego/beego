@@ -42,4 +42,3 @@ func TestConsole(t *testing.T) {
 	log2.SetLogger("console", `{"level":3}`)
 	testConsoleCalls(log2)
 }
-

@@ -80,7 +80,7 @@ func TestDestorySessionCookie(t *testing.T) {
 		t.Fatal("get cookie session id is not the same again.")
 	}
 
-	// After destory session , will get a new session id .
+	// After destroy session , will get a new session id .
 	globalSessions.SessionDestroy(w, r1)
 	r2, _ := http.NewRequest("GET", "/", nil)
 	r2.Header.Set("Cookie", w.Header().Get("Set-Cookie"))
@@ -91,6 +91,6 @@ func TestDestorySessionCookie(t *testing.T) {
 		t.Fatal("session start error")
 	}
 	if newSession.SessionID() == session.SessionID() {
-		t.Fatal("after destory session and reqeust again ,get cookie session id is same.")
+		t.Fatal("after destroy session and reqeust again ,get cookie session id is same.")
 	}
 }

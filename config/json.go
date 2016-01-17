@@ -164,7 +164,7 @@ func (c *JSONConfigContainer) String(key string) string {
 // DefaultString returns the string value for a given key.
 // if err != nil return defaltval
 func (c *JSONConfigContainer) DefaultString(key string, defaultval string) string {
-	// TODO FIXME should not use "" to replace non existance
+	// TODO FIXME should not use "" to replace non existence
 	if v := c.String(key); v != "" {
 		return v
 	}

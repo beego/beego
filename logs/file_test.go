@@ -130,7 +130,6 @@ func BenchmarkFile(b *testing.B) {
 	os.Remove("test4.log")
 }
 
-
 func BenchmarkFileAsynchronous(b *testing.B) {
 	log := NewLogger(100000)
 	log.SetLogger("file", `{"filename":"test4.log"}`)
@@ -168,7 +167,7 @@ func BenchmarkFileOnGoroutine(b *testing.B) {
 	log := NewLogger(100000)
 	log.SetLogger("file", `{"filename":"test4.log"}`)
 	for i := 0; i < b.N; i++ {
-	go	log.Debug("debug")
+		go log.Debug("debug")
 	}
 	os.Remove("test4.log")
 }

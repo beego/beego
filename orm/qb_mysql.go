@@ -20,7 +20,7 @@ import (
 	"strings"
 )
 
-// CommaSpace is the seperation
+// CommaSpace is the separation
 const CommaSpace = ", "
 
 // MySQLQueryBuilder is the SQL build

@@ -41,7 +41,7 @@
 //
 // 1. appid
 //
-//		 appid is asigned to the application
+//		 appid is assigned to the application
 //
 // 2. signature
 //

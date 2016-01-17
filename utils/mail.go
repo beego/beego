@@ -96,12 +96,16 @@ func (e *Email) Bytes() ([]byte, error) {
 		e.Headers.Set("Disposition-Notification-To", strings.Join(e.ReadReceipt, ","))
 	}
 	e.Headers.Set("MIME-Version", "1.0")
-	e.Headers.Set("Content-Type", fmt.Sprintf("multipart/mixed;\r\n boundary=%s\r\n", w.Boundary()))
 
 	// Write the envelope headers (including any custom headers)
 	if err := headerToBytes(buff, e.Headers); err != nil {
 		return nil, fmt.Errorf("Failed to render message headers: %s", err)
 	}
+
+	e.Headers.Set("Content-Type", fmt.Sprintf("multipart/mixed;\r\n boundary=%s\r\n", w.Boundary()))
+	fmt.Fprintf(w, "%s:", "Content-Type")
+	fmt.Fprintf(w, " %s\r\n", fmt.Sprintf("multipart/mixed;\r\n boundary=%s\r\n", w.Boundary()))
+
 	// Start the multipart/mixed part
 	fmt.Fprintf(buff, "--%s\r\n", w.Boundary())
 	header := textproto.MIMEHeader{}

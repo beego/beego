@@ -23,8 +23,8 @@ type ResourceListing struct {
 	APIVersion     string `json:"apiVersion"`
 	SwaggerVersion string `json:"swaggerVersion"` // e.g 1.2
 	// BasePath       string `json:"basePath"`  obsolete in 1.1
-	APIs           []APIRef   `json:"apis"`
-	Info           Information `json:"info"`
+	APIs []APIRef    `json:"apis"`
+	Info Information `json:"info"`
 }
 
 // APIRef description the api path and description
