@@ -133,7 +133,7 @@ func (m *URLMap) GetMapData() []map[string]interface{} {
 	return resultLists
 }
 
-// global statistics data map
+// StatisticsMap hosld global statistics data map
 var StatisticsMap *URLMap
 
 func init() {

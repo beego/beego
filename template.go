@@ -50,7 +50,7 @@ func init() {
 	beegoTplFuncMap["renderform"] = RenderForm
 	beegoTplFuncMap["assets_js"] = AssetsJs
 	beegoTplFuncMap["assets_css"] = AssetsCSS
-	beegoTplFuncMap["config"] = Config
+	beegoTplFuncMap["config"] = GetConfig
 	beegoTplFuncMap["map_get"] = MapGet
 
 	// go1.2 added template funcs

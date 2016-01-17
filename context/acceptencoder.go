@@ -192,7 +192,6 @@ func parseEncoding(r *http.Request) string {
 	}
 	if cf, ok := encoderMap[lastQ.name]; ok {
 		return cf.name
-	} else {
-		return ""
 	}
+	return ""
 }

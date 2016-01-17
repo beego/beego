@@ -504,12 +504,12 @@ func (p *ControllerRegister) geturl(t *Tree, url, controllName, methodName strin
 				if find {
 					if l.regexps == nil {
 						if len(l.wildcards) == 0 {
-							return true, strings.Replace(url, "/"+urlPlaceholder, "", 1) + toUrl(params)
+							return true, strings.Replace(url, "/"+urlPlaceholder, "", 1) + toURL(params)
 						}
 						if len(l.wildcards) == 1 {
 							if v, ok := params[l.wildcards[0]]; ok {
 								delete(params, l.wildcards[0])
-								return true, strings.Replace(url, urlPlaceholder, v, 1) + toUrl(params)
+								return true, strings.Replace(url, urlPlaceholder, v, 1) + toURL(params)
 							}
 							return false, ""
 						}
@@ -518,7 +518,7 @@ func (p *ControllerRegister) geturl(t *Tree, url, controllName, methodName strin
 								if e, isok := params[":ext"]; isok {
 									delete(params, ":path")
 									delete(params, ":ext")
-									return true, strings.Replace(url, urlPlaceholder, p+"."+e, -1) + toUrl(params)
+									return true, strings.Replace(url, urlPlaceholder, p+"."+e, -1) + toURL(params)
 								}
 							}
 						}
@@ -539,7 +539,7 @@ func (p *ControllerRegister) geturl(t *Tree, url, controllName, methodName strin
 								return false, ""
 							}
 						}
-						return true, url + toUrl(params)
+						return true, url + toURL(params)
 					}
 					var i int
 					var startreg bool
@@ -566,7 +566,7 @@ func (p *ControllerRegister) geturl(t *Tree, url, controllName, methodName strin
 						for _, p := range ps {
 							url = strings.Replace(url, urlPlaceholder, p, 1)
 						}
-						return true, url + toUrl(params)
+						return true, url + toURL(params)
 					}
 				}
 			}
@@ -864,7 +864,7 @@ func (p *ControllerRegister) recoverPanic(context *beecontext.Context) {
 	}
 }
 
-func toUrl(params map[string]string) string {
+func toURL(params map[string]string) string {
 	if len(params) == 0 {
 		return ""
 	}
