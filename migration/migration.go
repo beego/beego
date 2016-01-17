@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// migration package for migration
+// Package migration is used for migration
 //
 // The table structure is as follow:
 //
@@ -39,8 +39,8 @@ import (
 
 // const the data format for the bee generate migration datatype
 const (
-	M_DATE_FORMAT    = "20060102_150405"
-	M_DB_DATE_FORMAT = "2006-01-02 15:04:05"
+	DateFormat   = "20060102_150405"
+	DBDateFormat = "2006-01-02 15:04:05"
 )
 
 // Migrationer is an interface for all Migration struct
@@ -60,24 +60,24 @@ func init() {
 	migrationMap = make(map[string]Migrationer)
 }
 
-// the basic type which will implement the basic type
+// Migration the basic type which will implement the basic type
 type Migration struct {
 	sqls    []string
 	Created string
 }
 
-// implement in the Inheritance struct for upgrade
+// Up implement in the Inheritance struct for upgrade
 func (m *Migration) Up() {
 
 }
 
-// implement in the Inheritance struct for down
+// Down implement in the Inheritance struct for down
 func (m *Migration) Down() {
 
 }
 
-// add sql want to execute
-func (m *Migration) Sql(sql string) {
+// SQL add sql want to execute
+func (m *Migration) SQL(sql string) {
 	m.sqls = append(m.sqls, sql)
 }
 
@@ -86,7 +86,7 @@ func (m *Migration) Reset() {
 	m.sqls = make([]string, 0)
 }
 
-// execute the sql already add in the sql
+// Exec execute the sql already add in the sql
 func (m *Migration) Exec(name, status string) error {
 	o := orm.NewOrm()
 	for _, s := range m.sqls {
@@ -104,33 +104,32 @@ func (m *Migration) addOrUpdateRecord(name, status string) error {
 	o := orm.NewOrm()
 	if status == "down" {
 		status = "rollback"
-		p, err := o.Raw("update migrations set `status` = ?, `rollback_statements` = ?, `created_at` = ? where name = ?").Prepare()
+		p, err := o.Raw("update migrations set status = ?, rollback_statements = ?, created_at = ? where name = ?").Prepare()
 		if err != nil {
 			return nil
 		}
-		_, err = p.Exec(status, strings.Join(m.sqls, "; "), time.Now().Format(M_DB_DATE_FORMAT), name)
-		return err
-	} else {
-		status = "update"
-		p, err := o.Raw("insert into migrations(`name`, `created_at`, `statements`, `status`) values(?,?,?,?)").Prepare()
-		if err != nil {
-			return err
-		}
-		_, err = p.Exec(name, time.Now().Format(M_DB_DATE_FORMAT), strings.Join(m.sqls, "; "), status)
+		_, err = p.Exec(status, strings.Join(m.sqls, "; "), time.Now().Format(DBDateFormat), name)
 		return err
 	}
+	status = "update"
+	p, err := o.Raw("insert into migrations(name, created_at, statements, status) values(?,?,?,?)").Prepare()
+	if err != nil {
+		return err
+	}
+	_, err = p.Exec(name, time.Now().Format(DBDateFormat), strings.Join(m.sqls, "; "), status)
+	return err
 }
 
-// get the unixtime from the Created
+// GetCreated get the unixtime from the Created
 func (m *Migration) GetCreated() int64 {
-	t, err := time.Parse(M_DATE_FORMAT, m.Created)
+	t, err := time.Parse(DateFormat, m.Created)
 	if err != nil {
 		return 0
 	}
 	return t.Unix()
 }
 
-// register the Migration in the map
+// Register register the Migration in the map
 func Register(name string, m Migrationer) error {
 	if _, ok := migrationMap[name]; ok {
 		return errors.New("already exist name:" + name)
@@ -139,7 +138,7 @@ func Register(name string, m Migrationer) error {
 	return nil
 }
 
-// upgrate the migration from lasttime
+// Upgrade upgrate the migration from lasttime
 func Upgrade(lasttime int64) error {
 	sm := sortMap(migrationMap)
 	i := 0
@@ -163,7 +162,7 @@ func Upgrade(lasttime int64) error {
 	return nil
 }
 
-//rollback the migration by the name
+// Rollback rollback the migration by the name
 func Rollback(name string) error {
 	if v, ok := migrationMap[name]; ok {
 		beego.Info("start rollback")
@@ -178,14 +177,13 @@ func Rollback(name string) error {
 		beego.Info("end rollback")
 		time.Sleep(2 * time.Second)
 		return nil
-	} else {
-		beego.Error("not exist the migrationMap name:" + name)
-		time.Sleep(2 * time.Second)
-		return errors.New("not exist the migrationMap name:" + name)
 	}
+	beego.Error("not exist the migrationMap name:" + name)
+	time.Sleep(2 * time.Second)
+	return errors.New("not exist the migrationMap name:" + name)
 }
 
-// reset all migration
+// Reset reset all migration
 // run all migration's down function
 func Reset() error {
 	sm := sortMap(migrationMap)
@@ -214,7 +212,7 @@ func Reset() error {
 	return nil
 }
 
-// first Reset, then Upgrade
+// Refresh first Reset, then Upgrade
 func Refresh() error {
 	err := Reset()
 	if err != nil {

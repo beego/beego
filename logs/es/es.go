@@ -12,7 +12,8 @@ import (
 	"github.com/belogik/goes"
 )
 
-func NewES() logs.LoggerInterface {
+// NewES return a LoggerInterface
+func NewES() logs.Logger {
 	cw := &esLogger{
 		Level: logs.LevelDebug,
 	}
@@ -46,6 +47,7 @@ func (el *esLogger) Init(jsonconfig string) error {
 	return nil
 }
 
+// WriteMsg will write the msg and level into es
 func (el *esLogger) WriteMsg(msg string, level int) error {
 	if level > el.Level {
 		return nil
@@ -63,10 +65,12 @@ func (el *esLogger) WriteMsg(msg string, level int) error {
 	return err
 }
 
+// Destroy is a empty method
 func (el *esLogger) Destroy() {
 
 }
 
+// Flush is a empty method
 func (el *esLogger) Flush() {
 
 }

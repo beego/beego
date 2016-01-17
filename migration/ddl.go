@@ -14,33 +14,40 @@
 
 package migration
 
+// Table store the tablename and Column
 type Table struct {
 	TableName string
 	Columns   []*Column
 }
 
+// Create return the create sql
 func (t *Table) Create() string {
 	return ""
 }
 
+// Drop return the drop sql
 func (t *Table) Drop() string {
 	return ""
 }
 
+// Column define the columns name type and Default
 type Column struct {
 	Name    string
 	Type    string
 	Default interface{}
 }
 
+// Create return create sql with the provided tbname and columns
 func Create(tbname string, columns ...Column) string {
 	return ""
 }
 
+// Drop return the drop sql with the provided tbname and columns
 func Drop(tbname string, columns ...Column) string {
 	return ""
 }
 
+// TableDDL is still in think
 func TableDDL(tbname string, columns ...Column) string {
 	return ""
 }

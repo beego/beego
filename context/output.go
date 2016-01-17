@@ -16,8 +16,6 @@ package context
 
 import (
 	"bytes"
-	"compress/flate"
-	"compress/gzip"
 	"encoding/json"
 	"encoding/xml"
 	"errors"
@@ -45,6 +43,12 @@ func NewOutput() *BeegoOutput {
 	return &BeegoOutput{}
 }
 
+// Reset init BeegoOutput
+func (output *BeegoOutput) Reset(ctx *Context) {
+	output.Context = ctx
+	output.Status = 0
+}
+
 // Header sets response header item string via given key.
 func (output *BeegoOutput) Header(key, val string) {
 	output.Context.ResponseWriter.Header().Set(key, val)
@@ -54,30 +58,16 @@ func (output *BeegoOutput) Header(key, val string) {
 // if EnableGzip, compress content string.
 // it sends out response body directly.
 func (output *BeegoOutput) Body(content []byte) {
-	output_writer := output.Context.ResponseWriter.(io.Writer)
-	if output.EnableGzip == true && output.Context.Input.Header("Accept-Encoding") != "" {
-		splitted := strings.SplitN(output.Context.Input.Header("Accept-Encoding"), ",", -1)
-		encodings := make([]string, len(splitted))
-
-		for i, val := range splitted {
-			encodings[i] = strings.TrimSpace(val)
-		}
-		for _, val := range encodings {
-			if val == "gzip" {
-				output.Header("Content-Encoding", "gzip")
-				output_writer, _ = gzip.NewWriterLevel(output.Context.ResponseWriter, gzip.BestSpeed)
-
-				break
-			} else if val == "deflate" {
-				output.Header("Content-Encoding", "deflate")
-				output_writer, _ = flate.NewWriter(output.Context.ResponseWriter, flate.BestSpeed)
-				break
-			}
-		}
+	var encoding string
+	var buf = &bytes.Buffer{}
+	if output.EnableGzip {
+		encoding = ParseEncoding(output.Context.Request)
+	}
+	if b, n, _ := WriteBody(encoding, buf, content); b {
+		output.Header("Content-Encoding", n)
 	} else {
 		output.Header("Content-Length", strconv.Itoa(len(content)))
 	}
-
 	// Write status code if it has been set manually
 	// Set it to 0 afterwards to prevent "multiple response.WriteHeader calls"
 	if output.Status != 0 {
@@ -85,13 +75,7 @@ func (output *BeegoOutput) Body(content []byte) {
 		output.Status = 0
 	}
 
-	output_writer.Write(content)
-	switch output_writer.(type) {
-	case *gzip.Writer:
-		output_writer.(*gzip.Writer).Close()
-	case *flate.Writer:
-		output_writer.(*flate.Writer).Close()
-	}
+	io.Copy(output.Context.ResponseWriter, buf)
 }
 
 // Cookie sets cookie value via given key.
@@ -100,29 +84,25 @@ func (output *BeegoOutput) Cookie(name string, value string, others ...interface
 	var b bytes.Buffer
 	fmt.Fprintf(&b, "%s=%s", sanitizeName(name), sanitizeValue(value))
 
-    //fix cookie not work in IE
-    if len(others) > 0 {
-        switch v := others[0].(type) {
-            case int:
-            if v > 0 {
-                fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(v) * time.Second).UTC().Format(time.RFC1123), v)
-            } else if v < 0 {
-                fmt.Fprintf(&b, "; Max-Age=0")
-            }
-            case int64:
-            if v > 0 {
-                fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(v) * time.Second).UTC().Format(time.RFC1123), v)
-            } else if v < 0 {
-                fmt.Fprintf(&b, "; Max-Age=0")
-            }
-            case int32:
-            if v > 0 {
-                fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(v) * time.Second).UTC().Format(time.RFC1123), v)
-            } else if v < 0 {
-                fmt.Fprintf(&b, "; Max-Age=0")
-            }
-        }
-    }
+	//fix cookie not work in IE
+	if len(others) > 0 {
+		var maxAge int64
+
+		switch v := others[0].(type) {
+		case int:
+			maxAge = int64(v)
+		case int32:
+			maxAge = int64(v)
+		case int64:
+			maxAge = v
+		}
+
+		if maxAge > 0 {
+			fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(maxAge)*time.Second).UTC().Format(time.RFC1123), maxAge)
+		} else {
+			fmt.Fprintf(&b, "; Max-Age=0")
+		}
+	}
 
 	// the settings below
 	// Path, Domain, Secure, HttpOnly
@@ -188,9 +168,9 @@ func sanitizeValue(v string) string {
 	return cookieValueSanitizer.Replace(v)
 }
 
-// Json writes json to response body.
+// JSON writes json to response body.
 // if coding is true, it converts utf-8 to \u0000 type.
-func (output *BeegoOutput) Json(data interface{}, hasIndent bool, coding bool) error {
+func (output *BeegoOutput) JSON(data interface{}, hasIndent bool, coding bool) error {
 	output.Header("Content-Type", "application/json; charset=utf-8")
 	var content []byte
 	var err error
@@ -204,14 +184,14 @@ func (output *BeegoOutput) Json(data interface{}, hasIndent bool, coding bool) e
 		return err
 	}
 	if coding {
-		content = []byte(stringsToJson(string(content)))
+		content = []byte(stringsToJSON(string(content)))
 	}
 	output.Body(content)
 	return nil
 }
 
-// Jsonp writes jsonp to response body.
-func (output *BeegoOutput) Jsonp(data interface{}, hasIndent bool) error {
+// JSONP writes jsonp to response body.
+func (output *BeegoOutput) JSONP(data interface{}, hasIndent bool) error {
 	output.Header("Content-Type", "application/javascript; charset=utf-8")
 	var content []byte
 	var err error
@@ -228,16 +208,16 @@ func (output *BeegoOutput) Jsonp(data interface{}, hasIndent bool) error {
 	if callback == "" {
 		return errors.New(`"callback" parameter required`)
 	}
-	callback_content := bytes.NewBufferString(" " + template.JSEscapeString(callback))
-	callback_content.WriteString("(")
-	callback_content.Write(content)
-	callback_content.WriteString(");\r\n")
-	output.Body(callback_content.Bytes())
+	callbackContent := bytes.NewBufferString(" " + template.JSEscapeString(callback))
+	callbackContent.WriteString("(")
+	callbackContent.Write(content)
+	callbackContent.WriteString(");\r\n")
+	output.Body(callbackContent.Bytes())
 	return nil
 }
 
-// Xml writes xml string to response body.
-func (output *BeegoOutput) Xml(data interface{}, hasIndent bool) error {
+// XML writes xml string to response body.
+func (output *BeegoOutput) XML(data interface{}, hasIndent bool) error {
 	output.Header("Content-Type", "application/xml; charset=utf-8")
 	var content []byte
 	var err error
@@ -331,7 +311,7 @@ func (output *BeegoOutput) IsNotFound(status int) bool {
 	return output.Status == 404
 }
 
-// IsClient returns boolean of this request client sends error data.
+// IsClientError returns boolean of this request client sends error data.
 // HTTP 4xx means forbidden.
 func (output *BeegoOutput) IsClientError(status int) bool {
 	return output.Status >= 400 && output.Status < 500
@@ -343,7 +323,7 @@ func (output *BeegoOutput) IsServerError(status int) bool {
 	return output.Status >= 500 && output.Status < 600
 }
 
-func stringsToJson(str string) string {
+func stringsToJSON(str string) string {
 	rs := []rune(str)
 	jsons := ""
 	for _, r := range rs {
@@ -357,7 +337,7 @@ func stringsToJson(str string) string {
 	return jsons
 }
 
-// Sessions sets session item value with given key.
+// Session sets session item value with given key.
 func (output *BeegoOutput) Session(name interface{}, value interface{}) {
 	output.Context.Input.CruSession.Set(name, value)
 }

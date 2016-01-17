@@ -15,107 +15,183 @@
 package beego
 
 import (
+	"bytes"
 	"net/http"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
+
+	"errors"
+
+	"time"
 
 	"github.com/astaxie/beego/context"
-	"github.com/astaxie/beego/utils"
 )
+
+var notStaticRequestErr = errors.New("request not a static file request")
 
 func serverStaticRouter(ctx *context.Context) {
 	if ctx.Input.Method() != "GET" && ctx.Input.Method() != "HEAD" {
 		return
 	}
-	requestPath := path.Clean(ctx.Input.Request.URL.Path)
-	i := 0
-	for prefix, staticDir := range StaticDir {
+
+	forbidden, filePath, fileInfo, err := lookupFile(ctx)
+	if err == notStaticRequestErr {
+		return
+	}
+
+	if forbidden {
+		exception("403", ctx)
+		return
+	}
+
+	if filePath == "" || fileInfo == nil {
+		if BConfig.RunMode == DEV {
+			Warn("Can't find/open the file:", filePath, err)
+		}
+		http.NotFound(ctx.ResponseWriter, ctx.Request)
+		return
+	}
+	if fileInfo.IsDir() {
+		//serveFile will list dir
+		http.ServeFile(ctx.ResponseWriter, ctx.Request, filePath)
+		return
+	}
+
+	var enableCompress = BConfig.EnableGzip && isStaticCompress(filePath)
+	var acceptEncoding string
+	if enableCompress {
+		acceptEncoding = context.ParseEncoding(ctx.Request)
+	}
+	b, n, sch, err := openFile(filePath, fileInfo, acceptEncoding)
+	if err != nil {
+		if BConfig.RunMode == DEV {
+			Warn("Can't compress the file:", filePath, err)
+		}
+		http.NotFound(ctx.ResponseWriter, ctx.Request)
+		return
+	}
+
+	if b {
+		ctx.Output.Header("Content-Encoding", n)
+	} else {
+		ctx.Output.Header("Content-Length", strconv.FormatInt(sch.size, 10))
+	}
+
+	http.ServeContent(ctx.ResponseWriter, ctx.Request, filePath, sch.modTime, sch)
+	return
+
+}
+
+type serveContentHolder struct {
+	*bytes.Reader
+	modTime  time.Time
+	size     int64
+	encoding string
+}
+
+var (
+	staticFileMap = make(map[string]*serveContentHolder)
+	mapLock       sync.Mutex
+)
+
+func openFile(filePath string, fi os.FileInfo, acceptEncoding string) (bool, string, *serveContentHolder, error) {
+	mapKey := acceptEncoding + ":" + filePath
+	mapFile, _ := staticFileMap[mapKey]
+	if isOk(mapFile, fi) {
+		return mapFile.encoding != "", mapFile.encoding, mapFile, nil
+	}
+	mapLock.Lock()
+	defer mapLock.Unlock()
+	if mapFile, _ = staticFileMap[mapKey]; !isOk(mapFile, fi) {
+		file, err := os.Open(filePath)
+		if err != nil {
+			return false, "", nil, err
+		}
+		defer file.Close()
+		var bufferWriter bytes.Buffer
+		_, n, err := context.WriteFile(acceptEncoding, &bufferWriter, file)
+		if err != nil {
+			return false, "", nil, err
+		}
+		mapFile = &serveContentHolder{Reader: bytes.NewReader(bufferWriter.Bytes()), modTime: fi.ModTime(), size: int64(bufferWriter.Len()), encoding: n}
+		staticFileMap[mapKey] = mapFile
+	}
+
+	return mapFile.encoding != "", mapFile.encoding, mapFile, nil
+}
+
+func isOk(s *serveContentHolder, fi os.FileInfo) bool {
+	if s == nil {
+		return false
+	}
+	return s.modTime == fi.ModTime() && s.size == fi.Size()
+}
+
+// isStaticCompress detect static files
+func isStaticCompress(filePath string) bool {
+	for _, statExtension := range BConfig.WebConfig.StaticExtensionsToGzip {
+		if strings.HasSuffix(strings.ToLower(filePath), strings.ToLower(statExtension)) {
+			return true
+		}
+	}
+	return false
+}
+
+// searchFile search the file by url path
+// if none the static file prefix matches ,return notStaticRequestErr
+func searchFile(ctx *context.Context) (string, os.FileInfo, error) {
+	requestPath := filepath.ToSlash(filepath.Clean(ctx.Request.URL.Path))
+	// special processing : favicon.ico/robots.txt  can be in any static dir
+	if requestPath == "/favicon.ico" || requestPath == "/robots.txt" {
+		file := path.Join(".", requestPath)
+		if fi, _ := os.Stat(file); fi != nil {
+			return file, fi, nil
+		}
+		for _, staticDir := range BConfig.WebConfig.StaticDir {
+			filePath := path.Join(staticDir, requestPath)
+			if fi, _ := os.Stat(filePath); fi != nil {
+				return filePath, fi, nil
+			}
+		}
+		return "", nil, errors.New(requestPath + " file not find")
+	}
+
+	for prefix, staticDir := range BConfig.WebConfig.StaticDir {
 		if len(prefix) == 0 {
 			continue
 		}
-		if requestPath == "/favicon.ico" || requestPath == "/robots.txt" {
-			file := path.Join(staticDir, requestPath)
-			if utils.FileExists(file) {
-				http.ServeFile(ctx.ResponseWriter, ctx.Request, file)
-				return
-			} else {
-				i++
-				if i == len(StaticDir) {
-					http.NotFound(ctx.ResponseWriter, ctx.Request)
-					return
-				} else {
-					continue
-				}
-			}
+		if !strings.Contains(requestPath, prefix) {
+			continue
 		}
-		if strings.HasPrefix(requestPath, prefix) {
-			if len(requestPath) > len(prefix) && requestPath[len(prefix)] != '/' {
-				continue
-			}
-			file := path.Join(staticDir, requestPath[len(prefix):])
-			finfo, err := os.Stat(file)
-			if err != nil {
-				if RunMode == "dev" {
-					Warn("Can't find the file:", file, err)
-				}
-				http.NotFound(ctx.ResponseWriter, ctx.Request)
-				return
-			}
-			//if the request is dir and DirectoryIndex is false then
-			if finfo.IsDir() {
-				if !DirectoryIndex {
-					exception("403", ctx)
-					return
-				} else if ctx.Input.Request.URL.Path[len(ctx.Input.Request.URL.Path)-1] != '/' {
-					http.Redirect(ctx.ResponseWriter, ctx.Request, ctx.Input.Request.URL.Path+"/", 302)
-					return
-				}
-			} else if strings.HasSuffix(requestPath, "/index.html") {
-				file := path.Join(staticDir, requestPath)
-				if utils.FileExists(file) {
-					http.ServeFile(ctx.ResponseWriter, ctx.Request, file)
-					return
-				}
-			}
-
-			//This block obtained from (https://github.com/smithfox/beego) - it should probably get merged into astaxie/beego after a pull request
-			isStaticFileToCompress := false
-			if StaticExtensionsToGzip != nil && len(StaticExtensionsToGzip) > 0 {
-				for _, statExtension := range StaticExtensionsToGzip {
-					if strings.HasSuffix(strings.ToLower(file), strings.ToLower(statExtension)) {
-						isStaticFileToCompress = true
-						break
-					}
-				}
-			}
-
-			if isStaticFileToCompress {
-				var contentEncoding string
-				if EnableGzip {
-					contentEncoding = getAcceptEncodingZip(ctx.Request)
-				}
-
-				memzipfile, err := openMemZipFile(file, contentEncoding)
-				if err != nil {
-					return
-				}
-
-				if contentEncoding == "gzip" {
-					ctx.Output.Header("Content-Encoding", "gzip")
-				} else if contentEncoding == "deflate" {
-					ctx.Output.Header("Content-Encoding", "deflate")
-				} else {
-					ctx.Output.Header("Content-Length", strconv.FormatInt(finfo.Size(), 10))
-				}
-
-				http.ServeContent(ctx.ResponseWriter, ctx.Request, file, finfo.ModTime(), memzipfile)
-
-			} else {
-				http.ServeFile(ctx.ResponseWriter, ctx.Request, file)
-			}
-			return
+		if len(requestPath) > len(prefix) && requestPath[len(prefix)] != '/' {
+			continue
+		}
+		filePath := path.Join(staticDir, requestPath[len(prefix):])
+		if fi, err := os.Stat(filePath); fi != nil {
+			return filePath, fi, err
 		}
 	}
+	return "", nil, notStaticRequestErr
+}
+
+// lookupFile find the file to serve
+// if the file is dir ,search the index.html as default file( MUST NOT A DIR also)
+// if the index.html not exist or is a dir, give a forbidden response depending on  DirectoryIndex
+func lookupFile(ctx *context.Context) (bool, string, os.FileInfo, error) {
+	fp, fi, err := searchFile(ctx)
+	if fp == "" || fi == nil {
+		return false, "", nil, err
+	}
+	if !fi.IsDir() {
+		return false, fp, fi, err
+	}
+	ifp := filepath.Join(fp, "index.html")
+	if ifi, _ := os.Stat(ifp); ifi != nil && ifi.Mode().IsRegular() {
+		return false, ifp, ifi, err
+	}
+	return !BConfig.WebConfig.DirectoryIndex, fp, fi, err
 }

@@ -20,10 +20,16 @@ import (
 	"testing"
 
 	"github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/logs"
 )
 
+func init() {
+	BeeLogger = logs.NewLogger(10000)
+	BeeLogger.SetLogger("console", "")
+}
+
 var FilterUser = func(ctx *context.Context) {
-	ctx.Output.Body([]byte("i am " + ctx.Input.Params[":last"] + ctx.Input.Params[":first"]))
+	ctx.Output.Body([]byte("i am " + ctx.Input.Param(":last") + ctx.Input.Param(":first")))
 }
 
 func TestFilter(t *testing.T) {

@@ -116,7 +116,7 @@ func SliceIntersect(slice1, slice2 []interface{}) (diffslice []interface{}) {
 	return
 }
 
-// SliceChuck separates one slice to some sized slice.
+// SliceChunk separates one slice to some sized slice.
 func SliceChunk(slice []interface{}, size int) (chunkslice [][]interface{}) {
 	if size >= len(slice) {
 		chunkslice = append(chunkslice, slice)

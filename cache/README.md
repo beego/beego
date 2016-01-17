@@ -26,7 +26,7 @@ Then init a Cache (example with memory adapter)
 
 Use it like this:	
 	
-	bm.Put("astaxie", 1, 10)
+	bm.Put("astaxie", 1, 10 * time.Second)
 	bm.Get("astaxie")
 	bm.IsExist("astaxie")
 	bm.Delete("astaxie")
@@ -43,7 +43,7 @@ interval means the gc time. The cache will check at each time interval, whether 
 
 ## Memcache adapter
 
-Memcache adapter use the vitess's [Memcache](http://code.google.com/p/vitess/go/memcache) client.
+Memcache adapter use the [gomemcache](http://github.com/bradfitz/gomemcache) client.
 
 Configure like this:
 
@@ -52,7 +52,7 @@ Configure like this:
 
 ## Redis adapter
 
-Redis adapter use the [redigo](http://github.com/garyburd/redigo/redis) client.
+Redis adapter use the [redigo](http://github.com/garyburd/redigo) client.
 
 Configure like this:
 

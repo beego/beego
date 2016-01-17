@@ -23,7 +23,8 @@ import (
 )
 
 const (
-	VALIDTAG = "valid"
+	// ValidTag struct tag
+	ValidTag = "valid"
 )
 
 var (
@@ -55,16 +56,37 @@ func init() {
 	}
 }
 
-// Valid function type
+type CustomFunc func(v *Validation, obj interface{}, key string)
+
+// Add a custom function to validation
+// The name can not be:
+//   Clear
+//   HasErrors
+//   ErrorMap
+//   Error
+//   Check
+//   Valid
+//   NoMatch
+// If the name is same with exists function, it will replace the origin valid function
+func AddCustomFunc(name string, f CustomFunc) error {
+	if unFuncs[name] {
+		return fmt.Errorf("invalid function name: %s", name)
+	}
+
+	funcs[name] = reflect.ValueOf(f)
+	return nil
+}
+
+// ValidFunc Valid function type
 type ValidFunc struct {
 	Name   string
 	Params []interface{}
 }
 
-// Validate function map
+// Funcs Validate function map
 type Funcs map[string]reflect.Value
 
-// validate values with named type string
+// Call validate values with named type string
 func (f Funcs) Call(name string, params ...interface{}) (result []reflect.Value, err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -96,12 +118,11 @@ func isStructPtr(t reflect.Type) bool {
 }
 
 func getValidFuncs(f reflect.StructField) (vfs []ValidFunc, err error) {
-	tag := f.Tag.Get(VALIDTAG)
+	tag := f.Tag.Get(ValidTag)
 	if len(tag) == 0 {
 		return
 	}
 	if vfs, tag, err = getRegFuncs(tag, f.Name); err != nil {
-		fmt.Printf("%+v\n", err)
 		return
 	}
 	fs := strings.Split(tag, ";")
@@ -213,7 +234,7 @@ func trim(name, key string, s []string) (ts []interface{}, err error) {
 	for i := 0; i < len(s); i++ {
 		var param interface{}
 		// skip *Validation and obj params
-		if param, err = magic(fn.Type().In(i+2), strings.TrimSpace(s[i])); err != nil {
+		if param, err = parseParam(fn.Type().In(i+2), strings.TrimSpace(s[i])); err != nil {
 			return
 		}
 		ts[i] = param
@@ -223,7 +244,7 @@ func trim(name, key string, s []string) (ts []interface{}, err error) {
 }
 
 // modify the parameters's type to adapt the function input parameters' type
-func magic(t reflect.Type, s string) (i interface{}, err error) {
+func parseParam(t reflect.Type, s string) (i interface{}, err error) {
 	switch t.Kind() {
 	case reflect.Int:
 		i, err = strconv.Atoi(s)

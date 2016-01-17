@@ -28,19 +28,20 @@ func TestRedisCache(t *testing.T) {
 	if err != nil {
 		t.Error("init err")
 	}
-	if err = bm.Put("astaxie", 1, 10); err != nil {
+	timeoutDuration := 10 * time.Second
+	if err = bm.Put("astaxie", 1, timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
 	if !bm.IsExist("astaxie") {
 		t.Error("check err")
 	}
 
-	time.Sleep(10 * time.Second)
+	time.Sleep(11 * time.Second)
 
 	if bm.IsExist("astaxie") {
 		t.Error("check err")
 	}
-	if err = bm.Put("astaxie", 1, 10); err != nil {
+	if err = bm.Put("astaxie", 1, timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
 
@@ -69,7 +70,7 @@ func TestRedisCache(t *testing.T) {
 	}
 
 	//test string
-	if err = bm.Put("astaxie", "author", 10); err != nil {
+	if err = bm.Put("astaxie", "author", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
 	if !bm.IsExist("astaxie") {
@@ -81,7 +82,7 @@ func TestRedisCache(t *testing.T) {
 	}
 
 	//test GetMulti
-	if err = bm.Put("astaxie1", "author1", 10); err != nil {
+	if err = bm.Put("astaxie1", "author1", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
 	if !bm.IsExist("astaxie1") {

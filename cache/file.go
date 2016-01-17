@@ -29,23 +29,20 @@ import (
 	"time"
 )
 
-func init() {
-	Register("file", NewFileCache())
-}
-
 // FileCacheItem is basic unit of file cache adapter.
 // it contains data and expire time.
 type FileCacheItem struct {
 	Data       interface{}
-	Lastaccess int64
-	Expired    int64
+	Lastaccess time.Time
+	Expired    time.Time
 }
 
+// FileCache Config
 var (
-	FileCachePath           string = "cache" // cache directory
-	FileCacheFileSuffix     string = ".bin"  // cache file suffix
-	FileCacheDirectoryLevel int    = 2       // cache file deep level if auto generated cache files.
-	FileCacheEmbedExpiry    int64  = 0       // cache expire time, default is no expire forever.
+	FileCachePath           = "cache" // cache directory
+	FileCacheFileSuffix     = ".bin"  // cache file suffix
+	FileCacheDirectoryLevel = 2       // cache file deep level if auto generated cache files.
+	FileCacheEmbedExpiry    time.Duration = 0     // cache expire time, default is no expire forever.
 )
 
 // FileCache is cache adapter for file storage.
@@ -56,14 +53,14 @@ type FileCache struct {
 	EmbedExpiry    int
 }
 
-// Create new file cache with no config.
+// NewFileCache Create new file cache with no config.
 // the level and expiry need set in method StartAndGC as config string.
-func NewFileCache() *FileCache {
+func NewFileCache() Cache {
 	//    return &FileCache{CachePath:FileCachePath, FileSuffix:FileCacheFileSuffix}
 	return &FileCache{}
 }
 
-// Start and begin gc for file cache.
+// StartAndGC will start and begin gc for file cache.
 // the config need to be like {CachePath:"/cache","FileSuffix":".bin","DirectoryLevel":2,"EmbedExpiry":0}
 func (fc *FileCache) StartAndGC(config string) error {
 
@@ -79,7 +76,7 @@ func (fc *FileCache) StartAndGC(config string) error {
 		cfg["DirectoryLevel"] = strconv.Itoa(FileCacheDirectoryLevel)
 	}
 	if _, ok := cfg["EmbedExpiry"]; !ok {
-		cfg["EmbedExpiry"] = strconv.FormatInt(FileCacheEmbedExpiry, 10)
+		cfg["EmbedExpiry"] = strconv.FormatInt(int64(FileCacheEmbedExpiry.Seconds()), 10)
 	}
 	fc.CachePath = cfg["CachePath"]
 	fc.FileSuffix = cfg["FileSuffix"]
@@ -120,13 +117,13 @@ func (fc *FileCache) getCacheFileName(key string) string {
 // Get value from file cache.
 // if non-exist or expired, return empty string.
 func (fc *FileCache) Get(key string) interface{} {
-	fileData, err := File_get_contents(fc.getCacheFileName(key))
+	fileData, err := FileGetContents(fc.getCacheFileName(key))
 	if err != nil {
 		return ""
 	}
 	var to FileCacheItem
-	Gob_decode(fileData, &to)
-	if to.Expired < time.Now().Unix() {
+	GobDecode(fileData, &to)
+	if to.Expired.Before(time.Now()) {
 		return ""
 	}
 	return to.Data
@@ -145,21 +142,21 @@ func (fc *FileCache) GetMulti(keys []string) []interface{} {
 // Put value into file cache.
 // timeout means how long to keep this file, unit of ms.
 // if timeout equals FileCacheEmbedExpiry(default is 0), cache this item forever.
-func (fc *FileCache) Put(key string, val interface{}, timeout int64) error {
+func (fc *FileCache) Put(key string, val interface{}, timeout time.Duration) error {
 	gob.Register(val)
 
 	item := FileCacheItem{Data: val}
 	if timeout == FileCacheEmbedExpiry {
-		item.Expired = time.Now().Unix() + (86400 * 365 * 10) // ten years
+		item.Expired = time.Now().Add((86400 * 365 * 10) * time.Second) // ten years
 	} else {
-		item.Expired = time.Now().Unix() + timeout
+		item.Expired = time.Now().Add(timeout)
 	}
-	item.Lastaccess = time.Now().Unix()
-	data, err := Gob_encode(item)
+	item.Lastaccess = time.Now()
+	data, err := GobEncode(item)
 	if err != nil {
 		return err
 	}
-	return File_put_contents(fc.getCacheFileName(key), data)
+	return FilePutContents(fc.getCacheFileName(key), data)
 }
 
 // Delete file cache value.
@@ -171,7 +168,7 @@ func (fc *FileCache) Delete(key string) error {
 	return nil
 }
 
-// Increase cached int value.
+// Incr will increase cached int value.
 // fc value is saving forever unless Delete.
 func (fc *FileCache) Incr(key string) error {
 	data := fc.Get(key)
@@ -185,7 +182,7 @@ func (fc *FileCache) Incr(key string) error {
 	return nil
 }
 
-// Decrease cached int value.
+// Decr will decrease cached int value.
 func (fc *FileCache) Decr(key string) error {
 	data := fc.Get(key)
 	var decr int
@@ -198,13 +195,13 @@ func (fc *FileCache) Decr(key string) error {
 	return nil
 }
 
-// Check value is exist.
+// IsExist check value is exist.
 func (fc *FileCache) IsExist(key string) bool {
 	ret, _ := exists(fc.getCacheFileName(key))
 	return ret
 }
 
-// Clean cached files.
+// ClearAll will clean cached files.
 // not implemented.
 func (fc *FileCache) ClearAll() error {
 	return nil
@@ -222,9 +219,9 @@ func exists(path string) (bool, error) {
 	return false, err
 }
 
-// Get bytes to file.
+// FileGetContents Get bytes to file.
 // if non-exist, create this file.
-func File_get_contents(filename string) (data []byte, e error) {
+func FileGetContents(filename string) (data []byte, e error) {
 	f, e := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, os.ModePerm)
 	if e != nil {
 		return
@@ -242,9 +239,9 @@ func File_get_contents(filename string) (data []byte, e error) {
 	return
 }
 
-// Put bytes to file.
+// FilePutContents Put bytes to file.
 // if non-exist, create this file.
-func File_put_contents(filename string, content []byte) error {
+func FilePutContents(filename string, content []byte) error {
 	fp, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, os.ModePerm)
 	if err != nil {
 		return err
@@ -254,8 +251,8 @@ func File_put_contents(filename string, content []byte) error {
 	return err
 }
 
-// Gob encodes file cache item.
-func Gob_encode(data interface{}) ([]byte, error) {
+// GobEncode Gob encodes file cache item.
+func GobEncode(data interface{}) ([]byte, error) {
 	buf := bytes.NewBuffer(nil)
 	enc := gob.NewEncoder(buf)
 	err := enc.Encode(data)
@@ -265,9 +262,13 @@ func Gob_encode(data interface{}) ([]byte, error) {
 	return buf.Bytes(), err
 }
 
-// Gob decodes file cache item.
-func Gob_decode(data []byte, to *FileCacheItem) error {
+// GobDecode Gob decodes file cache item.
+func GobDecode(data []byte, to *FileCacheItem) error {
 	buf := bytes.NewBuffer(data)
 	dec := gob.NewDecoder(buf)
 	return dec.Decode(&to)
+}
+
+func init() {
+	Register("file", NewFileCache)
 }

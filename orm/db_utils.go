@@ -24,9 +24,8 @@ import (
 func getDbAlias(name string) *alias {
 	if al, ok := dataBaseCache.get(name); ok {
 		return al
-	} else {
-		panic(fmt.Errorf("unknown DataBase alias name %s", name))
 	}
+	panic(fmt.Errorf("unknown DataBase alias name %s", name))
 }
 
 // get pk column info.
@@ -80,19 +79,19 @@ outFor:
 					var err error
 					if len(v) >= 19 {
 						s := v[:19]
-						t, err = time.ParseInLocation(format_DateTime, s, DefaultTimeLoc)
+						t, err = time.ParseInLocation(formatDateTime, s, DefaultTimeLoc)
 					} else {
 						s := v
 						if len(v) > 10 {
 							s = v[:10]
 						}
-						t, err = time.ParseInLocation(format_Date, s, tz)
+						t, err = time.ParseInLocation(formatDate, s, tz)
 					}
 					if err == nil {
 						if fi.fieldType == TypeDateField {
-							v = t.In(tz).Format(format_Date)
+							v = t.In(tz).Format(formatDate)
 						} else {
-							v = t.In(tz).Format(format_DateTime)
+							v = t.In(tz).Format(formatDateTime)
 						}
 					}
 				}
@@ -137,9 +136,9 @@ outFor:
 		case reflect.Struct:
 			if v, ok := arg.(time.Time); ok {
 				if fi != nil && fi.fieldType == TypeDateField {
-					arg = v.In(tz).Format(format_Date)
+					arg = v.In(tz).Format(formatDate)
 				} else {
-					arg = v.In(tz).Format(format_DateTime)
+					arg = v.In(tz).Format(formatDateTime)
 				}
 			} else {
 				typ := val.Type()
