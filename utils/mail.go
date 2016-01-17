@@ -231,6 +231,7 @@ func (e *Email) Send() error {
 	if err != nil {
 		return err
 	}
+	e.From = from.String()
 	raw, err := e.Bytes()
 	if err != nil {
 		return err
