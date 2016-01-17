@@ -158,7 +158,7 @@ func (c *Captcha) Handler(ctx *context.Context) {
 	}
 }
 
-// CreateCaptchaHTML tempalte func for output html
+// CreateCaptchaHTML template func for output html
 func (c *Captcha) CreateCaptchaHTML() template.HTML {
 	value, err := c.CreateCaptcha()
 	if err != nil {
@@ -255,7 +255,7 @@ func NewCaptcha(urlPrefix string, store cache.Cache) *Captcha {
 }
 
 // NewWithFilter create a new captcha.Captcha and auto AddFilter for serve captacha image
-// and add a tempalte func for output html
+// and add a template func for output html
 func NewWithFilter(urlPrefix string, store cache.Cache) *Captcha {
 	cpt := NewCaptcha(urlPrefix, store)
 

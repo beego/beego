@@ -670,7 +670,7 @@ func MapGet(arg1 interface{}, arg2 ...interface{}) (interface{}, error) {
 
 	if arg1Type.Kind() == reflect.Map && len(arg2) > 0 {
 		// check whether arg2[0] type equals to arg1 key type
-		// if they are different, make convertion
+		// if they are different, make conversion
 		arg2Val := reflect.ValueOf(arg2[0])
 		arg2Type := reflect.TypeOf(arg2[0])
 		if arg2Type.Kind() != arg1Type.Key().Kind() {

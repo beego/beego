@@ -19,7 +19,7 @@ import (
 	"strings"
 )
 
-// ExprSep define the expression seperation
+// ExprSep define the expression separation
 const (
 	ExprSep = "__"
 )

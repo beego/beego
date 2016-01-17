@@ -31,7 +31,7 @@ var (
 	beegoTplFuncMap = make(template.FuncMap)
 	// BeeTemplates caching map and supported template file extensions.
 	BeeTemplates = make(map[string]*template.Template)
-	// BeeTemplateExt stores the template extention which will build
+	// BeeTemplateExt stores the template extension which will build
 	BeeTemplateExt = []string{"tpl", "html"}
 )
 
