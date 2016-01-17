@@ -25,7 +25,7 @@ import (
 	"github.com/astaxie/beego/utils"
 )
 
-// BeegoConfig is the main struct for BConfig
+// Config is the main struct for BConfig
 type Config struct {
 	AppName             string //Application name
 	RunMode             string //Running Mode: dev | prod
