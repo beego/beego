@@ -650,7 +650,9 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			return
 		}
 		defer func() {
-			context.Input.CruSession.SessionRelease(rw)
+			if context.Input.CruSession != nil {
+				context.Input.CruSession.SessionRelease(rw)
+			}
 		}()
 	}
 

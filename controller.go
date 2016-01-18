@@ -568,6 +568,7 @@ func (c *Controller) SessionRegenerateID() {
 // DestroySession cleans session data and session cookie.
 func (c *Controller) DestroySession() {
 	c.Ctx.Input.CruSession.Flush()
+	c.Ctx.Input.CruSession = nil
 	GlobalSessions.SessionDestroy(c.Ctx.ResponseWriter, c.Ctx.Request)
 }
 
