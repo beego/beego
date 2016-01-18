@@ -321,7 +321,8 @@ func (p *ControllerRegister) Any(pattern string, f FilterFunc) {
 //          ctx.Output.Body("hello world")
 //    })
 func (p *ControllerRegister) AddMethod(method, pattern string, f FilterFunc) {
-	if _, ok := HTTPMETHOD[strings.ToUpper(method)]; method != "*" && !ok {
+	method = strings.ToUpper(method)
+	if _, ok := HTTPMETHOD[method]; method != "*" && !ok {
 		panic("not support http method: " + method)
 	}
 	route := &controllerInfo{}
@@ -334,7 +335,7 @@ func (p *ControllerRegister) AddMethod(method, pattern string, f FilterFunc) {
 			methods[val] = val
 		}
 	} else {
-		methods[strings.ToUpper(method)] = strings.ToUpper(method)
+		methods[method] = method
 	}
 	route.methods = methods
 	for k := range methods {
