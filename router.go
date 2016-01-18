@@ -640,6 +640,13 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		goto Admin
 	}
 
+	if r.Method != "GET" && r.Method != "HEAD" {
+		if BConfig.CopyRequestBody && !context.Input.IsUpload() {
+			context.Input.CopyBody(BConfig.MaxMemory)
+		}
+		context.Input.ParseFormOrMulitForm(BConfig.MaxMemory)
+	}
+
 	// session init
 	if BConfig.WebConfig.Session.SessionOn {
 		var err error
@@ -654,13 +661,6 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				context.Input.CruSession.SessionRelease(rw)
 			}
 		}()
-	}
-
-	if r.Method != "GET" && r.Method != "HEAD" {
-		if BConfig.CopyRequestBody && !context.Input.IsUpload() {
-			context.Input.CopyBody(BConfig.MaxMemory)
-		}
-		context.Input.ParseFormOrMulitForm(BConfig.MaxMemory)
 	}
 
 	if p.execFilter(context, BeforeRouter, urlPath) {
