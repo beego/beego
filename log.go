@@ -32,19 +32,19 @@ const (
 	LevelDebug
 )
 
-// SetLogLevel sets the global log level used by the simple
-// logger.
+// BeeLogger references the used application logger.
+var BeeLogger = logs.NewLogger(100)
+
+// SetLevel sets the global log level used by the simple logger.
 func SetLevel(l int) {
 	BeeLogger.SetLevel(l)
 }
 
+// SetLogFuncCall set the CallDepth, default is 3
 func SetLogFuncCall(b bool) {
 	BeeLogger.EnableFuncCallDepth(b)
 	BeeLogger.SetLogFuncCallDepth(3)
 }
-
-// logger references the used application logger.
-var BeeLogger *logs.BeeLogger
 
 // SetLogger sets a new logger.
 func SetLogger(adaptername string, config string) error {
@@ -55,10 +55,12 @@ func SetLogger(adaptername string, config string) error {
 	return nil
 }
 
+// Emergency logs a message at emergency level.
 func Emergency(v ...interface{}) {
 	BeeLogger.Emergency(generateFmtStr(len(v)), v...)
 }
 
+// Alert logs a message at alert level.
 func Alert(v ...interface{}) {
 	BeeLogger.Alert(generateFmtStr(len(v)), v...)
 }
@@ -78,23 +80,24 @@ func Warning(v ...interface{}) {
 	BeeLogger.Warning(generateFmtStr(len(v)), v...)
 }
 
-// Deprecated: compatibility alias for Warning(), Will be removed in 1.5.0.
+// Warn compatibility alias for Warning()
 func Warn(v ...interface{}) {
-	Warning(v...)
+	BeeLogger.Warn(generateFmtStr(len(v)), v...)
 }
 
+// Notice logs a message at notice level.
 func Notice(v ...interface{}) {
 	BeeLogger.Notice(generateFmtStr(len(v)), v...)
 }
 
-// Info logs a message at info level.
+// Informational logs a message at info level.
 func Informational(v ...interface{}) {
 	BeeLogger.Informational(generateFmtStr(len(v)), v...)
 }
 
-// Deprecated: compatibility alias for Warning(), Will be removed in 1.5.0.
+// Info compatibility alias for Warning()
 func Info(v ...interface{}) {
-	Informational(v...)
+	BeeLogger.Info(generateFmtStr(len(v)), v...)
 }
 
 // Debug logs a message at debug level.
@@ -103,7 +106,7 @@ func Debug(v ...interface{}) {
 }
 
 // Trace logs a message at trace level.
-// Deprecated: compatibility alias for Warning(), Will be removed in 1.5.0.
+// compatibility alias for Warning()
 func Trace(v ...interface{}) {
 	BeeLogger.Trace(generateFmtStr(len(v)), v...)
 }

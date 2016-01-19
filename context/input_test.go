@@ -17,12 +17,15 @@ package context
 import (
 	"fmt"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
 func TestParse(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/?id=123&isok=true&ft=1.2&ol[0]=1&ol[1]=2&ul[]=str&ul[]=array&user.Name=astaxie", nil)
-	beegoInput := NewInput(r)
+	beegoInput := NewInput()
+	beegoInput.Context = NewContext()
+	beegoInput.Context.Reset(httptest.NewRecorder(), r)
 	beegoInput.ParseFormOrMulitForm(1 << 20)
 
 	var id int
@@ -73,7 +76,9 @@ func TestParse(t *testing.T) {
 
 func TestSubDomain(t *testing.T) {
 	r, _ := http.NewRequest("GET", "http://www.example.com/?id=123&isok=true&ft=1.2&ol[0]=1&ol[1]=2&ul[]=str&ul[]=array&user.Name=astaxie", nil)
-	beegoInput := NewInput(r)
+	beegoInput := NewInput()
+	beegoInput.Context = NewContext()
+	beegoInput.Context.Reset(httptest.NewRecorder(), r)
 
 	subdomain := beegoInput.SubDomains()
 	if subdomain != "www" {
@@ -81,13 +86,13 @@ func TestSubDomain(t *testing.T) {
 	}
 
 	r, _ = http.NewRequest("GET", "http://localhost/", nil)
-	beegoInput.Request = r
+	beegoInput.Context.Request = r
 	if beegoInput.SubDomains() != "" {
 		t.Fatal("Subdomain parse error, should be empty, got " + beegoInput.SubDomains())
 	}
 
 	r, _ = http.NewRequest("GET", "http://aa.bb.example.com/", nil)
-	beegoInput.Request = r
+	beegoInput.Context.Request = r
 	if beegoInput.SubDomains() != "aa.bb" {
 		t.Fatal("Subdomain parse error, got " + beegoInput.SubDomains())
 	}
@@ -101,13 +106,13 @@ func TestSubDomain(t *testing.T) {
 	*/
 
 	r, _ = http.NewRequest("GET", "http://example.com/", nil)
-	beegoInput.Request = r
+	beegoInput.Context.Request = r
 	if beegoInput.SubDomains() != "" {
 		t.Fatal("Subdomain parse error, got " + beegoInput.SubDomains())
 	}
 
 	r, _ = http.NewRequest("GET", "http://aa.bb.cc.dd.example.com/", nil)
-	beegoInput.Request = r
+	beegoInput.Context.Request = r
 	if beegoInput.SubDomains() != "aa.bb.cc.dd" {
 		t.Fatal("Subdomain parse error, got " + beegoInput.SubDomains())
 	}

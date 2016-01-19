@@ -15,7 +15,6 @@
 package orm
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"reflect"
@@ -72,13 +71,13 @@ func newModelInfo(val reflect.Value) (info *modelInfo) {
 
 		added := info.fields.Add(fi)
 		if added == false {
-			err = errors.New(fmt.Sprintf("duplicate column name: %s", fi.column))
+			err = fmt.Errorf("duplicate column name: %s", fi.column)
 			break
 		}
 
 		if fi.pk {
 			if info.fields.pk != nil {
-				err = errors.New(fmt.Sprintf("one model must have one pk field only"))
+				err = fmt.Errorf("one model must have one pk field only")
 				break
 			} else {
 				info.fields.pk = fi

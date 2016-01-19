@@ -30,6 +30,8 @@ var mysqlOperators = map[string]string{
 	"gte":         ">= ?",
 	"lt":          "< ?",
 	"lte":         "<= ?",
+	"eq":          "= ?",
+	"ne":          "!= ?",
 	"startswith":  "LIKE BINARY ?",
 	"endswith":    "LIKE BINARY ?",
 	"istartswith": "LIKE ?",
@@ -65,7 +67,7 @@ type dbBaseMysql struct {
 var _ dbBaser = new(dbBaseMysql)
 
 // get mysql operator.
-func (d *dbBaseMysql) OperatorSql(operator string) string {
+func (d *dbBaseMysql) OperatorSQL(operator string) string {
 	return mysqlOperators[operator]
 }
 

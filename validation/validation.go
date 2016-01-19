@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// package for validations
+// Package validation for validations
 //
 //	import (
 //		"github.com/astaxie/beego/validation"
@@ -38,7 +38,7 @@
 //			}
 //		}
 //		// or use like this
-//		if v := valid.Max(u.Age, 140); !v.Ok {
+//		if v := valid.Max(u.Age, 140, "ageMax"); !v.Ok {
 //			log.Println(v.Error.Key, v.Error.Message)
 //		}
 //	}
@@ -53,41 +53,43 @@ import (
 	"strings"
 )
 
+// ValidFormer valid interface
 type ValidFormer interface {
 	Valid(*Validation)
 }
 
-type ValidationError struct {
+// Error show the error
+type Error struct {
 	Message, Key, Name, Field, Tmpl string
 	Value                           interface{}
 	LimitValue                      interface{}
 }
 
-// Returns the Message.
-func (e *ValidationError) String() string {
+// String Returns the Message.
+func (e *Error) String() string {
 	if e == nil {
 		return ""
 	}
 	return e.Message
 }
 
-// A ValidationResult is returned from every validation method.
+// Result is returned from every validation method.
 // It provides an indication of success, and a pointer to the Error (if any).
-type ValidationResult struct {
-	Error *ValidationError
+type Result struct {
+	Error *Error
 	Ok    bool
 }
 
-// Get ValidationResult by given key string.
-func (r *ValidationResult) Key(key string) *ValidationResult {
+// Key Get Result by given key string.
+func (r *Result) Key(key string) *Result {
 	if r.Error != nil {
 		r.Error.Key = key
 	}
 	return r
 }
 
-// Set ValidationResult message by string or format string with args
-func (r *ValidationResult) Message(message string, args ...interface{}) *ValidationResult {
+// Message Set Result message by string or format string with args
+func (r *Result) Message(message string, args ...interface{}) *Result {
 	if r.Error != nil {
 		if len(args) == 0 {
 			r.Error.Message = message
@@ -100,141 +102,142 @@ func (r *ValidationResult) Message(message string, args ...interface{}) *Validat
 
 // A Validation context manages data validation and error messages.
 type Validation struct {
-	Errors    []*ValidationError
-	ErrorsMap map[string]*ValidationError
+	Errors    []*Error
+	ErrorsMap map[string]*Error
 }
 
-// Clean all ValidationError.
+// Clear Clean all ValidationError.
 func (v *Validation) Clear() {
-	v.Errors = []*ValidationError{}
+	v.Errors = []*Error{}
+	v.ErrorsMap = nil
 }
 
-// Has ValidationError nor not.
+// HasErrors Has ValidationError nor not.
 func (v *Validation) HasErrors() bool {
 	return len(v.Errors) > 0
 }
 
-// Return the errors mapped by key.
+// ErrorMap Return the errors mapped by key.
 // If there are multiple validation errors associated with a single key, the
 // first one "wins".  (Typically the first validation will be the more basic).
-func (v *Validation) ErrorMap() map[string]*ValidationError {
+func (v *Validation) ErrorMap() map[string]*Error {
 	return v.ErrorsMap
 }
 
-// Add an error to the validation context.
-func (v *Validation) Error(message string, args ...interface{}) *ValidationResult {
-	result := (&ValidationResult{
+// Error Add an error to the validation context.
+func (v *Validation) Error(message string, args ...interface{}) *Result {
+	result := (&Result{
 		Ok:    false,
-		Error: &ValidationError{},
+		Error: &Error{},
 	}).Message(message, args...)
 	v.Errors = append(v.Errors, result.Error)
 	return result
 }
 
-// Test that the argument is non-nil and non-empty (if string or list)
-func (v *Validation) Required(obj interface{}, key string) *ValidationResult {
+// Required Test that the argument is non-nil and non-empty (if string or list)
+func (v *Validation) Required(obj interface{}, key string) *Result {
 	return v.apply(Required{key}, obj)
 }
 
-// Test that the obj is greater than min if obj's type is int
-func (v *Validation) Min(obj interface{}, min int, key string) *ValidationResult {
+// Min Test that the obj is greater than min if obj's type is int
+func (v *Validation) Min(obj interface{}, min int, key string) *Result {
 	return v.apply(Min{min, key}, obj)
 }
 
-// Test that the obj is less than max if obj's type is int
-func (v *Validation) Max(obj interface{}, max int, key string) *ValidationResult {
+// Max Test that the obj is less than max if obj's type is int
+func (v *Validation) Max(obj interface{}, max int, key string) *Result {
 	return v.apply(Max{max, key}, obj)
 }
 
-// Test that the obj is between mni and max if obj's type is int
-func (v *Validation) Range(obj interface{}, min, max int, key string) *ValidationResult {
+// Range Test that the obj is between mni and max if obj's type is int
+func (v *Validation) Range(obj interface{}, min, max int, key string) *Result {
 	return v.apply(Range{Min{Min: min}, Max{Max: max}, key}, obj)
 }
 
-// Test that the obj is longer than min size if type is string or slice
-func (v *Validation) MinSize(obj interface{}, min int, key string) *ValidationResult {
+// MinSize Test that the obj is longer than min size if type is string or slice
+func (v *Validation) MinSize(obj interface{}, min int, key string) *Result {
 	return v.apply(MinSize{min, key}, obj)
 }
 
-// Test that the obj is shorter than max size if type is string or slice
-func (v *Validation) MaxSize(obj interface{}, max int, key string) *ValidationResult {
+// MaxSize Test that the obj is shorter than max size if type is string or slice
+func (v *Validation) MaxSize(obj interface{}, max int, key string) *Result {
 	return v.apply(MaxSize{max, key}, obj)
 }
 
-// Test that the obj is same length to n if type is string or slice
-func (v *Validation) Length(obj interface{}, n int, key string) *ValidationResult {
+// Length Test that the obj is same length to n if type is string or slice
+func (v *Validation) Length(obj interface{}, n int, key string) *Result {
 	return v.apply(Length{n, key}, obj)
 }
 
-// Test that the obj is [a-zA-Z] if type is string
-func (v *Validation) Alpha(obj interface{}, key string) *ValidationResult {
+// Alpha Test that the obj is [a-zA-Z] if type is string
+func (v *Validation) Alpha(obj interface{}, key string) *Result {
 	return v.apply(Alpha{key}, obj)
 }
 
-// Test that the obj is [0-9] if type is string
-func (v *Validation) Numeric(obj interface{}, key string) *ValidationResult {
+// Numeric Test that the obj is [0-9] if type is string
+func (v *Validation) Numeric(obj interface{}, key string) *Result {
 	return v.apply(Numeric{key}, obj)
 }
 
-// Test that the obj is [0-9a-zA-Z] if type is string
-func (v *Validation) AlphaNumeric(obj interface{}, key string) *ValidationResult {
+// AlphaNumeric Test that the obj is [0-9a-zA-Z] if type is string
+func (v *Validation) AlphaNumeric(obj interface{}, key string) *Result {
 	return v.apply(AlphaNumeric{key}, obj)
 }
 
-// Test that the obj matches regexp if type is string
-func (v *Validation) Match(obj interface{}, regex *regexp.Regexp, key string) *ValidationResult {
+// Match Test that the obj matches regexp if type is string
+func (v *Validation) Match(obj interface{}, regex *regexp.Regexp, key string) *Result {
 	return v.apply(Match{regex, key}, obj)
 }
 
-// Test that the obj doesn't match regexp if type is string
-func (v *Validation) NoMatch(obj interface{}, regex *regexp.Regexp, key string) *ValidationResult {
+// NoMatch Test that the obj doesn't match regexp if type is string
+func (v *Validation) NoMatch(obj interface{}, regex *regexp.Regexp, key string) *Result {
 	return v.apply(NoMatch{Match{Regexp: regex}, key}, obj)
 }
 
-// Test that the obj is [0-9a-zA-Z_-] if type is string
-func (v *Validation) AlphaDash(obj interface{}, key string) *ValidationResult {
+// AlphaDash Test that the obj is [0-9a-zA-Z_-] if type is string
+func (v *Validation) AlphaDash(obj interface{}, key string) *Result {
 	return v.apply(AlphaDash{NoMatch{Match: Match{Regexp: alphaDashPattern}}, key}, obj)
 }
 
-// Test that the obj is email address if type is string
-func (v *Validation) Email(obj interface{}, key string) *ValidationResult {
+// Email Test that the obj is email address if type is string
+func (v *Validation) Email(obj interface{}, key string) *Result {
 	return v.apply(Email{Match{Regexp: emailPattern}, key}, obj)
 }
 
-// Test that the obj is IP address if type is string
-func (v *Validation) IP(obj interface{}, key string) *ValidationResult {
+// IP Test that the obj is IP address if type is string
+func (v *Validation) IP(obj interface{}, key string) *Result {
 	return v.apply(IP{Match{Regexp: ipPattern}, key}, obj)
 }
 
-// Test that the obj is base64 encoded if type is string
-func (v *Validation) Base64(obj interface{}, key string) *ValidationResult {
+// Base64 Test that the obj is base64 encoded if type is string
+func (v *Validation) Base64(obj interface{}, key string) *Result {
 	return v.apply(Base64{Match{Regexp: base64Pattern}, key}, obj)
 }
 
-// Test that the obj is chinese mobile number if type is string
-func (v *Validation) Mobile(obj interface{}, key string) *ValidationResult {
+// Mobile Test that the obj is chinese mobile number if type is string
+func (v *Validation) Mobile(obj interface{}, key string) *Result {
 	return v.apply(Mobile{Match{Regexp: mobilePattern}, key}, obj)
 }
 
-// Test that the obj is chinese telephone number if type is string
-func (v *Validation) Tel(obj interface{}, key string) *ValidationResult {
+// Tel Test that the obj is chinese telephone number if type is string
+func (v *Validation) Tel(obj interface{}, key string) *Result {
 	return v.apply(Tel{Match{Regexp: telPattern}, key}, obj)
 }
 
-// Test that the obj is chinese mobile or telephone number if type is string
-func (v *Validation) Phone(obj interface{}, key string) *ValidationResult {
+// Phone Test that the obj is chinese mobile or telephone number if type is string
+func (v *Validation) Phone(obj interface{}, key string) *Result {
 	return v.apply(Phone{Mobile{Match: Match{Regexp: mobilePattern}},
 		Tel{Match: Match{Regexp: telPattern}}, key}, obj)
 }
 
-// Test that the obj is chinese zip code if type is string
-func (v *Validation) ZipCode(obj interface{}, key string) *ValidationResult {
+// ZipCode Test that the obj is chinese zip code if type is string
+func (v *Validation) ZipCode(obj interface{}, key string) *Result {
 	return v.apply(ZipCode{Match{Regexp: zipCodePattern}, key}, obj)
 }
 
-func (v *Validation) apply(chk Validator, obj interface{}) *ValidationResult {
+func (v *Validation) apply(chk Validator, obj interface{}) *Result {
 	if chk.IsSatisfied(obj) {
-		return &ValidationResult{Ok: true}
+		return &Result{Ok: true}
 	}
 
 	// Add the error to the validation context.
@@ -248,7 +251,7 @@ func (v *Validation) apply(chk Validator, obj interface{}) *ValidationResult {
 		Name = parts[1]
 	}
 
-	err := &ValidationError{
+	err := &Error{
 		Message:    chk.DefaultMessage(),
 		Key:        key,
 		Name:       Name,
@@ -260,34 +263,34 @@ func (v *Validation) apply(chk Validator, obj interface{}) *ValidationResult {
 	v.setError(err)
 
 	// Also return it in the result.
-	return &ValidationResult{
+	return &Result{
 		Ok:    false,
 		Error: err,
 	}
 }
 
-func (v *Validation) setError(err *ValidationError) {
+func (v *Validation) setError(err *Error) {
 	v.Errors = append(v.Errors, err)
 	if v.ErrorsMap == nil {
-		v.ErrorsMap = make(map[string]*ValidationError)
+		v.ErrorsMap = make(map[string]*Error)
 	}
 	if _, ok := v.ErrorsMap[err.Field]; !ok {
 		v.ErrorsMap[err.Field] = err
 	}
 }
 
-// Set error message for one field in ValidationError
-func (v *Validation) SetError(fieldName string, errMsg string) *ValidationError {
-	err := &ValidationError{Key: fieldName, Field: fieldName, Tmpl: errMsg, Message: errMsg}
+// SetError Set error message for one field in ValidationError
+func (v *Validation) SetError(fieldName string, errMsg string) *Error {
+	err := &Error{Key: fieldName, Field: fieldName, Tmpl: errMsg, Message: errMsg}
 	v.setError(err)
 	return err
 }
 
-// Apply a group of validators to a field, in order, and return the
+// Check Apply a group of validators to a field, in order, and return the
 // ValidationResult from the first one that fails, or the last one that
 // succeeds.
-func (v *Validation) Check(obj interface{}, checks ...Validator) *ValidationResult {
-	var result *ValidationResult
+func (v *Validation) Check(obj interface{}, checks ...Validator) *Result {
+	var result *Result
 	for _, check := range checks {
 		result = v.apply(check, obj)
 		if !result.Ok {
@@ -297,7 +300,7 @@ func (v *Validation) Check(obj interface{}, checks ...Validator) *ValidationResu
 	return result
 }
 
-// Validate a struct.
+// Valid Validate a struct.
 // the obj parameter must be a struct or a struct pointer
 func (v *Validation) Valid(obj interface{}) (b bool, err error) {
 	objT := reflect.TypeOf(obj)
@@ -332,4 +335,40 @@ func (v *Validation) Valid(obj interface{}) (b bool, err error) {
 	}
 
 	return !v.HasErrors(), nil
+}
+
+// RecursiveValid Recursively validate a struct.
+// Step1: Validate by v.Valid
+// Step2: If pass on step1, then reflect obj's fields
+// Step3: Do the Recursively validation to all struct or struct pointer fields
+func (v *Validation) RecursiveValid(objc interface{}) (bool, error) {
+	//Step 1: validate obj itself firstly
+	// fails if objc is not struct
+	pass, err := v.Valid(objc)
+	if err != nil || false == pass {
+		return pass, err // Stop recursive validation
+	}
+	// Step 2: Validate struct's struct fields
+	objT := reflect.TypeOf(objc)
+	objV := reflect.ValueOf(objc)
+
+	if isStructPtr(objT) {
+		objT = objT.Elem()
+		objV = objV.Elem()
+	}
+
+	for i := 0; i < objT.NumField(); i++ {
+
+		t := objT.Field(i).Type
+
+		// Recursive applies to struct or pointer to structs fields
+		if isStruct(t) || isStructPtr(t) {
+			// Step 3: do the recursive validation
+			// Only valid the Public field recursively
+			if objV.Field(i).CanInterface() {
+				pass, err = v.RecursiveValid(objV.Field(i).Interface())
+			}
+		}
+	}
+	return pass, err
 }

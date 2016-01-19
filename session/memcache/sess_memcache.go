@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// package memcache for session provider
+// Package memcache for session provider
 //
 // depend on github.com/bradfitz/gomemcache/memcache
 //
@@ -30,7 +30,7 @@
 //	}
 //
 // more docs: http://beego.me/docs/module/session.md
-package session
+package memcache
 
 import (
 	"net/http"
@@ -45,56 +45,55 @@ import (
 var mempder = &MemProvider{}
 var client *memcache.Client
 
-// memcache session store
-type MemcacheSessionStore struct {
+// SessionStore memcache session store
+type SessionStore struct {
 	sid         string
 	lock        sync.RWMutex
 	values      map[interface{}]interface{}
 	maxlifetime int64
 }
 
-// set value in memcache session
-func (rs *MemcacheSessionStore) Set(key, value interface{}) error {
+// Set value in memcache session
+func (rs *SessionStore) Set(key, value interface{}) error {
 	rs.lock.Lock()
 	defer rs.lock.Unlock()
 	rs.values[key] = value
 	return nil
 }
 
-// get value in memcache session
-func (rs *MemcacheSessionStore) Get(key interface{}) interface{} {
+// Get value in memcache session
+func (rs *SessionStore) Get(key interface{}) interface{} {
 	rs.lock.RLock()
 	defer rs.lock.RUnlock()
 	if v, ok := rs.values[key]; ok {
 		return v
-	} else {
-		return nil
 	}
+	return nil
 }
 
-// delete value in memcache session
-func (rs *MemcacheSessionStore) Delete(key interface{}) error {
+// Delete value in memcache session
+func (rs *SessionStore) Delete(key interface{}) error {
 	rs.lock.Lock()
 	defer rs.lock.Unlock()
 	delete(rs.values, key)
 	return nil
 }
 
-// clear all values in memcache session
-func (rs *MemcacheSessionStore) Flush() error {
+// Flush clear all values in memcache session
+func (rs *SessionStore) Flush() error {
 	rs.lock.Lock()
 	defer rs.lock.Unlock()
 	rs.values = make(map[interface{}]interface{})
 	return nil
 }
 
-// get memcache session id
-func (rs *MemcacheSessionStore) SessionID() string {
+// SessionID get memcache session id
+func (rs *SessionStore) SessionID() string {
 	return rs.sid
 }
 
-// save session values to memcache
-func (rs *MemcacheSessionStore) SessionRelease(w http.ResponseWriter) {
+// SessionRelease save session values to memcache
+func (rs *SessionStore) SessionRelease(w http.ResponseWriter) {
 	b, err := session.EncodeGob(rs.values)
 	if err != nil {
 		return
@@ -103,7 +102,7 @@ func (rs *MemcacheSessionStore) SessionRelease(w http.ResponseWriter) {
 	client.Set(&item)
 }
 
-// memcahe session provider
+// MemProvider memcache session provider
 type MemProvider struct {
 	maxlifetime int64
 	conninfo    []string
@@ -111,7 +110,7 @@ type MemProvider struct {
 	password    string
 }
 
-// init memcache session
+// SessionInit init memcache session
 // savepath like
 // e.g. 127.0.0.1:9090
 func (rp *MemProvider) SessionInit(maxlifetime int64, savePath string) error {
@@ -121,16 +120,17 @@ func (rp *MemProvider) SessionInit(maxlifetime int64, savePath string) error {
 	return nil
 }
 
-// read memcache session by sid
-func (rp *MemProvider) SessionRead(sid string) (session.SessionStore, error) {
+// SessionRead read memcache session by sid
+func (rp *MemProvider) SessionRead(sid string) (session.Store, error) {
 	if client == nil {
 		if err := rp.connectInit(); err != nil {
 			return nil, err
 		}
 	}
 	item, err := client.Get(sid)
-	if err != nil {
-		return nil, err
+	if err != nil && err == memcache.ErrCacheMiss {
+		rs := &SessionStore{sid: sid, values: make(map[interface{}]interface{}), maxlifetime: rp.maxlifetime}
+		return rs, nil
 	}
 	var kv map[interface{}]interface{}
 	if len(item.Value) == 0 {
@@ -141,12 +141,11 @@ func (rp *MemProvider) SessionRead(sid string) (session.SessionStore, error) {
 			return nil, err
 		}
 	}
-
-	rs := &MemcacheSessionStore{sid: sid, values: kv, maxlifetime: rp.maxlifetime}
+	rs := &SessionStore{sid: sid, values: kv, maxlifetime: rp.maxlifetime}
 	return rs, nil
 }
 
-// check memcache session exist by sid
+// SessionExist check memcache session exist by sid
 func (rp *MemProvider) SessionExist(sid string) bool {
 	if client == nil {
 		if err := rp.connectInit(); err != nil {
@@ -155,13 +154,12 @@ func (rp *MemProvider) SessionExist(sid string) bool {
 	}
 	if item, err := client.Get(sid); err != nil || len(item.Value) == 0 {
 		return false
-	} else {
-		return true
 	}
+	return true
 }
 
-// generate new sid for memcache session
-func (rp *MemProvider) SessionRegenerate(oldsid, sid string) (session.SessionStore, error) {
+// SessionRegenerate generate new sid for memcache session
+func (rp *MemProvider) SessionRegenerate(oldsid, sid string) (session.Store, error) {
 	if client == nil {
 		if err := rp.connectInit(); err != nil {
 			return nil, err
@@ -179,7 +177,6 @@ func (rp *MemProvider) SessionRegenerate(oldsid, sid string) (session.SessionSto
 	} else {
 		client.Delete(oldsid)
 		item.Key = sid
-		item.Value = item.Value
 		item.Expiration = int32(rp.maxlifetime)
 		client.Set(item)
 		contain = item.Value
@@ -196,11 +193,11 @@ func (rp *MemProvider) SessionRegenerate(oldsid, sid string) (session.SessionSto
 		}
 	}
 
-	rs := &MemcacheSessionStore{sid: sid, values: kv, maxlifetime: rp.maxlifetime}
+	rs := &SessionStore{sid: sid, values: kv, maxlifetime: rp.maxlifetime}
 	return rs, nil
 }
 
-// delete memcache session by id
+// SessionDestroy delete memcache session by id
 func (rp *MemProvider) SessionDestroy(sid string) error {
 	if client == nil {
 		if err := rp.connectInit(); err != nil {
@@ -220,12 +217,12 @@ func (rp *MemProvider) connectInit() error {
 	return nil
 }
 
-// Impelment method, no used.
+// SessionGC Impelment method, no used.
 func (rp *MemProvider) SessionGC() {
 	return
 }
 
-// @todo
+// SessionAll return all activeSession
 func (rp *MemProvider) SessionAll() int {
 	return 0
 }

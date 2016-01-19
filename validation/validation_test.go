@@ -26,6 +26,12 @@ func TestRequired(t *testing.T) {
 	if valid.Required(nil, "nil").Ok {
 		t.Error("nil object should be false")
 	}
+	if !valid.Required(true, "bool").Ok {
+		t.Error("Bool value should always return true")
+	}
+	if !valid.Required(false, "bool").Ok {
+		t.Error("Bool value should always return true")
+	}
 	if valid.Required("", "string").Ok {
 		t.Error("\"'\" string should be false")
 	}
@@ -296,7 +302,7 @@ func TestZipCode(t *testing.T) {
 
 func TestValid(t *testing.T) {
 	type user struct {
-		Id   int
+		ID   int
 		Name string `valid:"Required;Match(/^(test)?\\w*@(/test/);com$/)"`
 		Age  int    `valid:"Required;Range(1, 140)"`
 	}
@@ -341,5 +347,35 @@ func TestValid(t *testing.T) {
 	}
 	if valid.Errors[0].Key != "Age.Range" {
 		t.Errorf("Message key should be `Name.Match` but got %s", valid.Errors[0].Key)
+	}
+}
+
+func TestRecursiveValid(t *testing.T) {
+	type User struct {
+		ID   int
+		Name string `valid:"Required;Match(/^(test)?\\w*@(/test/);com$/)"`
+		Age  int    `valid:"Required;Range(1, 140)"`
+	}
+
+	type AnonymouseUser struct {
+		ID2   int
+		Name2 string `valid:"Required;Match(/^(test)?\\w*@(/test/);com$/)"`
+		Age2  int    `valid:"Required;Range(1, 140)"`
+	}
+
+	type Account struct {
+		Password string `valid:"Required"`
+		U        User
+		AnonymouseUser
+	}
+	valid := Validation{}
+
+	u := Account{Password: "abc123_", U: User{}}
+	b, err := valid.RecursiveValid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b {
+		t.Error("validation should not be passed")
 	}
 }

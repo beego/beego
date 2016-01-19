@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package captcha implements generation and verification of image CAPTCHAs.
 // an example for use captcha
 //
 // ```
@@ -36,11 +37,11 @@
 // }
 //
 // func (this *MainController) Get() {
-// 	this.TplNames = "index.tpl"
+// 	this.TplName = "index.tpl"
 // }
 //
 // func (this *MainController) Post() {
-// 	this.TplNames = "index.tpl"
+// 	this.TplName = "index.tpl"
 //
 // 	this.Data["Success"] = cpt.VerifyReq(this.Ctx.Request)
 // }
@@ -63,6 +64,7 @@ import (
 	"net/http"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/cache"
@@ -77,8 +79,8 @@ var (
 const (
 	// default captcha attributes
 	challengeNums    = 6
-	expiration       = 600
-	fieldIdName      = "captcha_id"
+	expiration       = 600 * time.Second
+	fieldIDName      = "captcha_id"
 	fieldCaptchaName = "captcha"
 	cachePrefix      = "captcha_"
 	defaultURLPrefix = "/captcha/"
@@ -93,7 +95,7 @@ type Captcha struct {
 	URLPrefix string
 
 	// specify captcha id input field name
-	FieldIdName string
+	FieldIDName string
 	// specify captcha result input field name
 	FieldCaptchaName string
 
@@ -105,7 +107,7 @@ type Captcha struct {
 	ChallengeNums int
 
 	// captcha expiration seconds
-	Expiration int64
+	Expiration time.Duration
 
 	// cache key prefix
 	CachePrefix string
@@ -121,7 +123,7 @@ func (c *Captcha) genRandChars() []byte {
 	return utils.RandomCreateBytes(c.ChallengeNums, defaultChars...)
 }
 
-// beego filter handler for serve captcha image
+// Handler beego filter handler for serve captcha image
 func (c *Captcha) Handler(ctx *context.Context) {
 	var chars []byte
 
@@ -132,21 +134,20 @@ func (c *Captcha) Handler(ctx *context.Context) {
 
 	key := c.key(id)
 
-	if v, ok := c.store.Get(key).([]byte); ok {
-		chars = v
-	} else {
-		ctx.Output.SetStatus(404)
-		ctx.WriteString("captcha not found")
-		return
-	}
-
-	// reload captcha
 	if len(ctx.Input.Query("reload")) > 0 {
 		chars = c.genRandChars()
 		if err := c.store.Put(key, chars, c.Expiration); err != nil {
 			ctx.Output.SetStatus(500)
 			ctx.WriteString("captcha reload error")
 			beego.Error("Reload Create Captcha Error:", err)
+			return
+		}
+	} else {
+		if v, ok := c.store.Get(key).([]byte); ok {
+			chars = v
+		} else {
+			ctx.Output.SetStatus(404)
+			ctx.WriteString("captcha not found")
 			return
 		}
 	}
@@ -157,8 +158,8 @@ func (c *Captcha) Handler(ctx *context.Context) {
 	}
 }
 
-// tempalte func for output html
-func (c *Captcha) CreateCaptchaHtml() template.HTML {
+// CreateCaptchaHTML template func for output html
+func (c *Captcha) CreateCaptchaHTML() template.HTML {
 	value, err := c.CreateCaptcha()
 	if err != nil {
 		beego.Error("Create Captcha Error:", err)
@@ -169,10 +170,10 @@ func (c *Captcha) CreateCaptchaHtml() template.HTML {
 	return template.HTML(fmt.Sprintf(`<input type="hidden" name="%s" value="%s">`+
 		`<a class="captcha" href="javascript:">`+
 		`<img onclick="this.src=('%s%s.png?reload='+(new Date()).getTime())" class="captcha-img" src="%s%s.png">`+
-		`</a>`, c.FieldIdName, value, c.URLPrefix, value, c.URLPrefix, value))
+		`</a>`, c.FieldIDName, value, c.URLPrefix, value, c.URLPrefix, value))
 }
 
-// create a new captcha id
+// CreateCaptcha create a new captcha id
 func (c *Captcha) CreateCaptcha() (string, error) {
 	// generate captcha id
 	id := string(utils.RandomCreateBytes(15))
@@ -188,13 +189,13 @@ func (c *Captcha) CreateCaptcha() (string, error) {
 	return id, nil
 }
 
-// verify from a request
+// VerifyReq verify from a request
 func (c *Captcha) VerifyReq(req *http.Request) bool {
 	req.ParseForm()
-	return c.Verify(req.Form.Get(c.FieldIdName), req.Form.Get(c.FieldCaptchaName))
+	return c.Verify(req.Form.Get(c.FieldIDName), req.Form.Get(c.FieldCaptchaName))
 }
 
-// direct verify id and challenge string
+// Verify direct verify id and challenge string
 func (c *Captcha) Verify(id string, challenge string) (success bool) {
 	if len(challenge) == 0 || len(id) == 0 {
 		return
@@ -228,11 +229,11 @@ func (c *Captcha) Verify(id string, challenge string) (success bool) {
 	return true
 }
 
-// create a new captcha.Captcha
+// NewCaptcha create a new captcha.Captcha
 func NewCaptcha(urlPrefix string, store cache.Cache) *Captcha {
 	cpt := &Captcha{}
 	cpt.store = store
-	cpt.FieldIdName = fieldIdName
+	cpt.FieldIDName = fieldIDName
 	cpt.FieldCaptchaName = fieldCaptchaName
 	cpt.ChallengeNums = challengeNums
 	cpt.Expiration = expiration
@@ -253,8 +254,8 @@ func NewCaptcha(urlPrefix string, store cache.Cache) *Captcha {
 	return cpt
 }
 
-// create a new captcha.Captcha and auto AddFilter for serve captacha image
-// and add a tempalte func for output html
+// NewWithFilter create a new captcha.Captcha and auto AddFilter for serve captacha image
+// and add a template func for output html
 func NewWithFilter(urlPrefix string, store cache.Cache) *Captcha {
 	cpt := NewCaptcha(urlPrefix, store)
 
@@ -262,7 +263,7 @@ func NewWithFilter(urlPrefix string, store cache.Cache) *Captcha {
 	beego.InsertFilter(cpt.URLPrefix+"*", beego.BeforeRouter, cpt.Handler)
 
 	// add to template func map
-	beego.AddFuncMap("create_captcha", cpt.CreateCaptchaHtml)
+	beego.AddFuncMap("create_captcha", cpt.CreateCaptchaHTML)
 
 	return cpt
 }

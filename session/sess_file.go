@@ -32,7 +32,7 @@ var (
 	gcmaxlifetime int64
 )
 
-// File session store
+// FileSessionStore File session store
 type FileSessionStore struct {
 	sid    string
 	lock   sync.RWMutex
@@ -53,9 +53,8 @@ func (fs *FileSessionStore) Get(key interface{}) interface{} {
 	defer fs.lock.RUnlock()
 	if v, ok := fs.values[key]; ok {
 		return v
-	} else {
-		return nil
 	}
+	return nil
 }
 
 // Delete value in file session by given key
@@ -66,7 +65,7 @@ func (fs *FileSessionStore) Delete(key interface{}) error {
 	return nil
 }
 
-// Clean all values in file session
+// Flush Clean all values in file session
 func (fs *FileSessionStore) Flush() error {
 	fs.lock.Lock()
 	defer fs.lock.Unlock()
@@ -74,12 +73,12 @@ func (fs *FileSessionStore) Flush() error {
 	return nil
 }
 
-// Get file session store id
+// SessionID Get file session store id
 func (fs *FileSessionStore) SessionID() string {
 	return fs.sid
 }
 
-// Write file session to local file with Gob string
+// SessionRelease Write file session to local file with Gob string
 func (fs *FileSessionStore) SessionRelease(w http.ResponseWriter) {
 	b, err := EncodeGob(fs.values)
 	if err != nil {
@@ -100,14 +99,14 @@ func (fs *FileSessionStore) SessionRelease(w http.ResponseWriter) {
 	f.Close()
 }
 
-// File session provider
+// FileProvider File session provider
 type FileProvider struct {
 	lock        sync.RWMutex
 	maxlifetime int64
 	savePath    string
 }
 
-// Init file session provider.
+// SessionInit Init file session provider.
 // savePath sets the session files path.
 func (fp *FileProvider) SessionInit(maxlifetime int64, savePath string) error {
 	fp.maxlifetime = maxlifetime
@@ -115,10 +114,10 @@ func (fp *FileProvider) SessionInit(maxlifetime int64, savePath string) error {
 	return nil
 }
 
-// Read file session by sid.
+// SessionRead Read file session by sid.
 // if file is not exist, create it.
 // the file path is generated from sid string.
-func (fp *FileProvider) SessionRead(sid string) (SessionStore, error) {
+func (fp *FileProvider) SessionRead(sid string) (Store, error) {
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()
 
@@ -154,7 +153,7 @@ func (fp *FileProvider) SessionRead(sid string) (SessionStore, error) {
 	return ss, nil
 }
 
-// Check file session exist.
+// SessionExist Check file session exist.
 // it checkes the file named from sid exist or not.
 func (fp *FileProvider) SessionExist(sid string) bool {
 	filepder.lock.Lock()
@@ -163,12 +162,11 @@ func (fp *FileProvider) SessionExist(sid string) bool {
 	_, err := os.Stat(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid))
 	if err == nil {
 		return true
-	} else {
-		return false
 	}
+	return false
 }
 
-// Remove all files in this save path
+// SessionDestroy Remove all files in this save path
 func (fp *FileProvider) SessionDestroy(sid string) error {
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()
@@ -176,7 +174,7 @@ func (fp *FileProvider) SessionDestroy(sid string) error {
 	return nil
 }
 
-// Recycle files in save path
+// SessionGC Recycle files in save path
 func (fp *FileProvider) SessionGC() {
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()
@@ -185,7 +183,7 @@ func (fp *FileProvider) SessionGC() {
 	filepath.Walk(fp.savePath, gcpath)
 }
 
-// Get active file session number.
+// SessionAll Get active file session number.
 // it walks save path to count files.
 func (fp *FileProvider) SessionAll() int {
 	a := &activeSession{}
@@ -199,9 +197,9 @@ func (fp *FileProvider) SessionAll() int {
 	return a.total
 }
 
-// Generate new sid for file session.
+// SessionRegenerate Generate new sid for file session.
 // it delete old file and create new file named from new sid.
-func (fp *FileProvider) SessionRegenerate(oldsid, sid string) (SessionStore, error) {
+func (fp *FileProvider) SessionRegenerate(oldsid, sid string) (Store, error) {
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()
 
@@ -269,14 +267,14 @@ type activeSession struct {
 	total int
 }
 
-func (self *activeSession) visit(paths string, f os.FileInfo, err error) error {
+func (as *activeSession) visit(paths string, f os.FileInfo, err error) error {
 	if err != nil {
 		return err
 	}
 	if f.IsDir() {
 		return nil
 	}
-	self.total = self.total + 1
+	as.total = as.total + 1
 	return nil
 }
 

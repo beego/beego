@@ -165,14 +165,14 @@ func (o *rawSet) setFieldValue(ind reflect.Value, value interface{}) {
 			if str != "" {
 				if len(str) >= 19 {
 					str = str[:19]
-					t, err := time.ParseInLocation(format_DateTime, str, o.orm.alias.TZ)
+					t, err := time.ParseInLocation(formatDateTime, str, o.orm.alias.TZ)
 					if err == nil {
 						t = t.In(DefaultTimeLoc)
 						ind.Set(reflect.ValueOf(t))
 					}
 				} else if len(str) >= 10 {
 					str = str[:10]
-					t, err := time.ParseInLocation(format_Date, str, DefaultTimeLoc)
+					t, err := time.ParseInLocation(formatDate, str, DefaultTimeLoc)
 					if err == nil {
 						ind.Set(reflect.ValueOf(t))
 					}
@@ -255,12 +255,13 @@ func (o *rawSet) loopSetRefs(refs []interface{}, sInds []reflect.Value, nIndsPtr
 
 // query data and map to container
 func (o *rawSet) QueryRow(containers ...interface{}) error {
-	refs := make([]interface{}, 0, len(containers))
-	sInds := make([]reflect.Value, 0)
-	eTyps := make([]reflect.Type, 0)
-
+	var (
+		refs  = make([]interface{}, 0, len(containers))
+		sInds []reflect.Value
+		eTyps []reflect.Type
+		sMi   *modelInfo
+	)
 	structMode := false
-	var sMi *modelInfo
 	for _, container := range containers {
 		val := reflect.ValueOf(container)
 		ind := reflect.Indirect(val)
@@ -385,12 +386,13 @@ func (o *rawSet) QueryRow(containers ...interface{}) error {
 
 // query data rows and map to container
 func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
-	refs := make([]interface{}, 0, len(containers))
-	sInds := make([]reflect.Value, 0)
-	eTyps := make([]reflect.Type, 0)
-
+	var (
+		refs  = make([]interface{}, 0, len(containers))
+		sInds []reflect.Value
+		eTyps []reflect.Type
+		sMi   *modelInfo
+	)
 	structMode := false
-	var sMi *modelInfo
 	for _, container := range containers {
 		val := reflect.ValueOf(container)
 		sInd := reflect.Indirect(val)
@@ -557,10 +559,9 @@ func (o *rawSet) readValues(container interface{}, needCols []string) (int64, er
 	args := getFlatParams(nil, o.args, o.orm.alias.TZ)
 
 	var rs *sql.Rows
-	if r, err := o.orm.db.Query(query, args...); err != nil {
+	rs, err := o.orm.db.Query(query, args...)
+	if err != nil {
 		return 0, err
-	} else {
-		rs = r
 	}
 
 	defer rs.Close()
@@ -574,30 +575,30 @@ func (o *rawSet) readValues(container interface{}, needCols []string) (int64, er
 
 	for rs.Next() {
 		if cnt == 0 {
-			if columns, err := rs.Columns(); err != nil {
+			columns, err := rs.Columns()
+			if err != nil {
 				return 0, err
+			}
+			if len(needCols) > 0 {
+				indexs = make([]int, 0, len(needCols))
 			} else {
+				indexs = make([]int, 0, len(columns))
+			}
+
+			cols = columns
+			refs = make([]interface{}, len(cols))
+			for i := range refs {
+				var ref sql.NullString
+				refs[i] = &ref
+
 				if len(needCols) > 0 {
-					indexs = make([]int, 0, len(needCols))
-				} else {
-					indexs = make([]int, 0, len(columns))
-				}
-
-				cols = columns
-				refs = make([]interface{}, len(cols))
-				for i, _ := range refs {
-					var ref sql.NullString
-					refs[i] = &ref
-
-					if len(needCols) > 0 {
-						for _, c := range needCols {
-							if c == cols[i] {
-								indexs = append(indexs, i)
-							}
+					for _, c := range needCols {
+						if c == cols[i] {
+							indexs = append(indexs, i)
 						}
-					} else {
-						indexs = append(indexs, i)
 					}
+				} else {
+					indexs = append(indexs, i)
 				}
 			}
 		}
@@ -684,11 +685,9 @@ func (o *rawSet) queryRowsTo(container interface{}, keyCol, valueCol string) (in
 
 	args := getFlatParams(nil, o.args, o.orm.alias.TZ)
 
-	var rs *sql.Rows
-	if r, err := o.orm.db.Query(query, args...); err != nil {
+	rs, err := o.orm.db.Query(query, args...)
+	if err != nil {
 		return 0, err
-	} else {
-		rs = r
 	}
 
 	defer rs.Close()
@@ -706,32 +705,29 @@ func (o *rawSet) queryRowsTo(container interface{}, keyCol, valueCol string) (in
 
 	for rs.Next() {
 		if cnt == 0 {
-			if columns, err := rs.Columns(); err != nil {
+			columns, err := rs.Columns()
+			if err != nil {
 				return 0, err
-			} else {
-				cols = columns
-				refs = make([]interface{}, len(cols))
-				for i, _ := range refs {
-					if keyCol == cols[i] {
-						keyIndex = i
-					}
-
-					if typ == 1 || keyIndex == i {
-						var ref sql.NullString
-						refs[i] = &ref
-					} else {
-						var ref interface{}
-						refs[i] = &ref
-					}
-
-					if valueCol == cols[i] {
-						valueIndex = i
-					}
+			}
+			cols = columns
+			refs = make([]interface{}, len(cols))
+			for i := range refs {
+				if keyCol == cols[i] {
+					keyIndex = i
 				}
-
-				if keyIndex == -1 || valueIndex == -1 {
-					panic(fmt.Errorf("<RawSeter> RowsTo unknown key, value column name `%s: %s`", keyCol, valueCol))
+				if typ == 1 || keyIndex == i {
+					var ref sql.NullString
+					refs[i] = &ref
+				} else {
+					var ref interface{}
+					refs[i] = &ref
 				}
+				if valueCol == cols[i] {
+					valueIndex = i
+				}
+			}
+			if keyIndex == -1 || valueIndex == -1 {
+				panic(fmt.Errorf("<RawSeter> RowsTo unknown key, value column name `%s: %s`", keyCol, valueCol))
 			}
 		}
 

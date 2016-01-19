@@ -25,7 +25,8 @@ func TestCache(t *testing.T) {
 	if err != nil {
 		t.Error("init err")
 	}
-	if err = bm.Put("astaxie", 1, 10); err != nil {
+	timeoutDuration := 10 * time.Second
+	if err = bm.Put("astaxie", 1, timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
 	if !bm.IsExist("astaxie") {
@@ -42,7 +43,7 @@ func TestCache(t *testing.T) {
 		t.Error("check err")
 	}
 
-	if err = bm.Put("astaxie", 1, 10); err != nil {
+	if err = bm.Put("astaxie", 1, timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
 
@@ -64,6 +65,35 @@ func TestCache(t *testing.T) {
 	bm.Delete("astaxie")
 	if bm.IsExist("astaxie") {
 		t.Error("delete err")
+	}
+
+	//test GetMulti
+	if err = bm.Put("astaxie", "author", timeoutDuration); err != nil {
+		t.Error("set Error", err)
+	}
+	if !bm.IsExist("astaxie") {
+		t.Error("check err")
+	}
+	if v := bm.Get("astaxie"); v.(string) != "author" {
+		t.Error("get err")
+	}
+
+	if err = bm.Put("astaxie1", "author1", timeoutDuration); err != nil {
+		t.Error("set Error", err)
+	}
+	if !bm.IsExist("astaxie1") {
+		t.Error("check err")
+	}
+
+	vv := bm.GetMulti([]string{"astaxie", "astaxie1"})
+	if len(vv) != 2 {
+		t.Error("GetMulti ERROR")
+	}
+	if vv[0].(string) != "author" {
+		t.Error("GetMulti ERROR")
+	}
+	if vv[1].(string) != "author1" {
+		t.Error("GetMulti ERROR")
 	}
 }
 
@@ -72,7 +102,8 @@ func TestFileCache(t *testing.T) {
 	if err != nil {
 		t.Error("init err")
 	}
-	if err = bm.Put("astaxie", 1, 10); err != nil {
+	timeoutDuration := 10 * time.Second
+	if err = bm.Put("astaxie", 1, timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
 	if !bm.IsExist("astaxie") {
@@ -102,16 +133,36 @@ func TestFileCache(t *testing.T) {
 	if bm.IsExist("astaxie") {
 		t.Error("delete err")
 	}
+
 	//test string
-	if err = bm.Put("astaxie", "author", 10); err != nil {
+	if err = bm.Put("astaxie", "author", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
 	if !bm.IsExist("astaxie") {
 		t.Error("check err")
 	}
-
 	if v := bm.Get("astaxie"); v.(string) != "author" {
 		t.Error("get err")
 	}
+
+	//test GetMulti
+	if err = bm.Put("astaxie1", "author1", timeoutDuration); err != nil {
+		t.Error("set Error", err)
+	}
+	if !bm.IsExist("astaxie1") {
+		t.Error("check err")
+	}
+
+	vv := bm.GetMulti([]string{"astaxie", "astaxie1"})
+	if len(vv) != 2 {
+		t.Error("GetMulti ERROR")
+	}
+	if vv[0].(string) != "author" {
+		t.Error("GetMulti ERROR")
+	}
+	if vv[1].(string) != "author1" {
+		t.Error("GetMulti ERROR")
+	}
+
 	os.RemoveAll("cache")
 }

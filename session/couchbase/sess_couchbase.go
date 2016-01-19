@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// package couchbase for session provider
+// Package couchbase for session provider
 //
 // depend on github.com/couchbaselabs/go-couchbasee
 //
@@ -30,21 +30,22 @@
 //	}
 //
 // more docs: http://beego.me/docs/module/session.md
-package session
+package couchbase
 
 import (
 	"net/http"
 	"strings"
 	"sync"
 
-	"github.com/couchbaselabs/go-couchbase"
+	couchbase "github.com/couchbase/go-couchbase"
 
 	"github.com/astaxie/beego/session"
 )
 
-var couchbpder = &CouchbaseProvider{}
+var couchbpder = &Provider{}
 
-type CouchbaseSessionStore struct {
+// SessionStore store each session
+type SessionStore struct {
 	b           *couchbase.Bucket
 	sid         string
 	lock        sync.RWMutex
@@ -52,7 +53,8 @@ type CouchbaseSessionStore struct {
 	maxlifetime int64
 }
 
-type CouchbaseProvider struct {
+// Provider couchabse provided
+type Provider struct {
 	maxlifetime int64
 	savePath    string
 	pool        string
@@ -60,42 +62,47 @@ type CouchbaseProvider struct {
 	b           *couchbase.Bucket
 }
 
-func (cs *CouchbaseSessionStore) Set(key, value interface{}) error {
+// Set value to couchabse session
+func (cs *SessionStore) Set(key, value interface{}) error {
 	cs.lock.Lock()
 	defer cs.lock.Unlock()
 	cs.values[key] = value
 	return nil
 }
 
-func (cs *CouchbaseSessionStore) Get(key interface{}) interface{} {
+// Get value from couchabse session
+func (cs *SessionStore) Get(key interface{}) interface{} {
 	cs.lock.RLock()
 	defer cs.lock.RUnlock()
 	if v, ok := cs.values[key]; ok {
 		return v
-	} else {
-		return nil
 	}
+	return nil
 }
 
-func (cs *CouchbaseSessionStore) Delete(key interface{}) error {
+// Delete value in couchbase session by given key
+func (cs *SessionStore) Delete(key interface{}) error {
 	cs.lock.Lock()
 	defer cs.lock.Unlock()
 	delete(cs.values, key)
 	return nil
 }
 
-func (cs *CouchbaseSessionStore) Flush() error {
+// Flush Clean all values in couchbase session
+func (cs *SessionStore) Flush() error {
 	cs.lock.Lock()
 	defer cs.lock.Unlock()
 	cs.values = make(map[interface{}]interface{})
 	return nil
 }
 
-func (cs *CouchbaseSessionStore) SessionID() string {
+// SessionID Get couchbase session store id
+func (cs *SessionStore) SessionID() string {
 	return cs.sid
 }
 
-func (cs *CouchbaseSessionStore) SessionRelease(w http.ResponseWriter) {
+// SessionRelease Write couchbase session with Gob string
+func (cs *SessionStore) SessionRelease(w http.ResponseWriter) {
 	defer cs.b.Close()
 
 	bo, err := session.EncodeGob(cs.values)
@@ -106,7 +113,7 @@ func (cs *CouchbaseSessionStore) SessionRelease(w http.ResponseWriter) {
 	cs.b.Set(cs.sid, int(cs.maxlifetime), bo)
 }
 
-func (cp *CouchbaseProvider) getBucket() *couchbase.Bucket {
+func (cp *Provider) getBucket() *couchbase.Bucket {
 	c, err := couchbase.Connect(cp.savePath)
 	if err != nil {
 		return nil
@@ -125,10 +132,10 @@ func (cp *CouchbaseProvider) getBucket() *couchbase.Bucket {
 	return bucket
 }
 
-// init couchbase session
+// SessionInit init couchbase session
 // savepath like couchbase server REST/JSON URL
 // e.g. http://host:port/, Pool, Bucket
-func (cp *CouchbaseProvider) SessionInit(maxlifetime int64, savePath string) error {
+func (cp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 	cp.maxlifetime = maxlifetime
 	configs := strings.Split(savePath, ",")
 	if len(configs) > 0 {
@@ -144,8 +151,8 @@ func (cp *CouchbaseProvider) SessionInit(maxlifetime int64, savePath string) err
 	return nil
 }
 
-// read couchbase session by sid
-func (cp *CouchbaseProvider) SessionRead(sid string) (session.SessionStore, error) {
+// SessionRead read couchbase session by sid
+func (cp *Provider) SessionRead(sid string) (session.Store, error) {
 	cp.b = cp.getBucket()
 
 	var doc []byte
@@ -161,11 +168,13 @@ func (cp *CouchbaseProvider) SessionRead(sid string) (session.SessionStore, erro
 		}
 	}
 
-	cs := &CouchbaseSessionStore{b: cp.b, sid: sid, values: kv, maxlifetime: cp.maxlifetime}
+	cs := &SessionStore{b: cp.b, sid: sid, values: kv, maxlifetime: cp.maxlifetime}
 	return cs, nil
 }
 
-func (cp *CouchbaseProvider) SessionExist(sid string) bool {
+// SessionExist Check couchbase session exist.
+// it checkes sid exist or not.
+func (cp *Provider) SessionExist(sid string) bool {
 	cp.b = cp.getBucket()
 	defer cp.b.Close()
 
@@ -173,12 +182,12 @@ func (cp *CouchbaseProvider) SessionExist(sid string) bool {
 
 	if err := cp.b.Get(sid, &doc); err != nil || doc == nil {
 		return false
-	} else {
-		return true
 	}
+	return true
 }
 
-func (cp *CouchbaseProvider) SessionRegenerate(oldsid, sid string) (session.SessionStore, error) {
+// SessionRegenerate remove oldsid and use sid to generate new session
+func (cp *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error) {
 	cp.b = cp.getBucket()
 
 	var doc []byte
@@ -206,11 +215,12 @@ func (cp *CouchbaseProvider) SessionRegenerate(oldsid, sid string) (session.Sess
 		}
 	}
 
-	cs := &CouchbaseSessionStore{b: cp.b, sid: sid, values: kv, maxlifetime: cp.maxlifetime}
+	cs := &SessionStore{b: cp.b, sid: sid, values: kv, maxlifetime: cp.maxlifetime}
 	return cs, nil
 }
 
-func (cp *CouchbaseProvider) SessionDestroy(sid string) error {
+// SessionDestroy Remove bucket in this couchbase
+func (cp *Provider) SessionDestroy(sid string) error {
 	cp.b = cp.getBucket()
 	defer cp.b.Close()
 
@@ -218,11 +228,13 @@ func (cp *CouchbaseProvider) SessionDestroy(sid string) error {
 	return nil
 }
 
-func (cp *CouchbaseProvider) SessionGC() {
+// SessionGC Recycle
+func (cp *Provider) SessionGC() {
 	return
 }
 
-func (cp *CouchbaseProvider) SessionAll() int {
+// SessionAll return all active session
+func (cp *Provider) SessionAll() int {
 	return 0
 }
 

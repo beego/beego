@@ -119,8 +119,8 @@ type fieldInfo struct {
 	colDefault          bool
 	initial             StrTo
 	size                int
-	auto_now            bool
-	auto_now_add        bool
+	autoNow             bool
+	autoNowAdd          bool
 	rel                 bool
 	reverse             bool
 	reverseField        string
@@ -223,6 +223,11 @@ checkType:
 				break checkType
 			case "many":
 				fieldType = RelReverseMany
+				if tv := tags["rel_table"]; tv != "" {
+					fi.relTable = tv
+				} else if tv := tags["rel_through"]; tv != "" {
+					fi.relThrough = tv
+				}
 				break checkType
 			default:
 				err = fmt.Errorf("error")
@@ -309,20 +314,20 @@ checkType:
 
 	if fi.rel && fi.dbcol {
 		switch onDelete {
-		case od_CASCADE, od_DO_NOTHING:
-		case od_SET_DEFAULT:
+		case odCascade, odDoNothing:
+		case odSetDefault:
 			if initial.Exist() == false {
 				err = errors.New("on_delete: set_default need set field a default value")
 				goto end
 			}
-		case od_SET_NULL:
+		case odSetNULL:
 			if fi.null == false {
 				err = errors.New("on_delete: set_null need set field null")
 				goto end
 			}
 		default:
 			if onDelete == "" {
-				onDelete = od_CASCADE
+				onDelete = odCascade
 			} else {
 				err = fmt.Errorf("on_delete value expected choice in `cascade,set_null,set_default,do_nothing`, unknown `%s`", onDelete)
 				goto end
@@ -350,9 +355,9 @@ checkType:
 		fi.unique = false
 	case TypeDateField, TypeDateTimeField:
 		if attrs["auto_now"] {
-			fi.auto_now = true
+			fi.autoNow = true
 		} else if attrs["auto_now_add"] {
-			fi.auto_now_add = true
+			fi.autoNowAdd = true
 		}
 	case TypeFloatField:
 	case TypeDecimalField:

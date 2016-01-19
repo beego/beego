@@ -51,7 +51,7 @@ func SliceRandList(min, max int) []int {
 	t0 := time.Now()
 	rand.Seed(int64(t0.Nanosecond()))
 	list := rand.Perm(length)
-	for index, _ := range list {
+	for index := range list {
 		list[index] += min
 	}
 	return list
@@ -116,7 +116,7 @@ func SliceIntersect(slice1, slice2 []interface{}) (diffslice []interface{}) {
 	return
 }
 
-// SliceChuck separates one slice to some sized slice.
+// SliceChunk separates one slice to some sized slice.
 func SliceChunk(slice []interface{}, size int) (chunkslice [][]interface{}) {
 	if size >= len(slice) {
 		chunkslice = append(chunkslice, slice)
