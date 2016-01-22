@@ -176,7 +176,7 @@ func init() {
 	ParseConfig()
 	// init logger
 	for k, v := range BConfig.Log.Outputs {
-		BeeLogger.SetLogger(k, v)
+		SetLogger(k, v)
 	}
 }
 
