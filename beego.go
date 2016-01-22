@@ -68,10 +68,12 @@ func Run(params ...string) {
 
 func initBeforeHTTPRun() {
 	// if AppConfigPath is setted or conf/app.conf exist
+	/*
 	err := ParseConfig()
 	if err != nil {
 		panic(err)
 	}
+	*/
 
 	SetLogFuncCall(BConfig.Log.FileLineNum)
 
