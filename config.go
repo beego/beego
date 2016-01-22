@@ -180,9 +180,10 @@ func init() {
 // now only support ini, next will support json.
 func ParseConfig() (err error) {
 	if AppConfigPath == "" {
-		if utils.FileExists(filepath.Join("conf", "app.conf")) {
-			AppConfigPath = filepath.Join("conf", "app.conf")
-		} else {
+		// initialize default configurations
+		AppPath, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+		AppConfigPath = filepath.Join(AppPath, "conf", "app.conf")
+		if !utils.FileExists(AppConfigPath) {
 			AppConfig = &beegoAppConfig{config.NewFakeConfig()}
 			return
 		}
