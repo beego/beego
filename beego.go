@@ -73,6 +73,8 @@ func initBeforeHTTPRun() {
 		panic(err)
 	}
 
+	SetLogFuncCall(BConfig.Log.FileLineNum)
+
 	//init hooks
 	AddAPPStartHook(registerMime)
 	AddAPPStartHook(registerDefaultErrorHandler)
