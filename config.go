@@ -103,6 +103,8 @@ var (
 	BConfig *Config
 	// AppConfig is the instance of Config, store the config information from file
 	AppConfig *beegoAppConfig
+	// AppPath is the absolute path to the app
+	AppPath string
 	// AppConfigPath is the path to the config files
 	AppConfigPath string
 	// AppConfigProvider is the provider for the config, default is ini
@@ -179,9 +181,16 @@ func init() {
 // ParseConfig parsed default config file.
 // now only support ini, next will support json.
 func ParseConfig() (err error) {
+	AppPath, _ := filepath.Abs(filepath.Dir(os.Args[0]))
+	workPath, _ := os.Getwd()
+	workPath, _ = filepath.Abs(workPath)
+
+	if workPath != AppPath {
+		os.Chdir(AppPath)
+	}
+
 	if AppConfigPath == "" {
 		// initialize default configurations
-		AppPath, _ := filepath.Abs(filepath.Dir(os.Args[0]))
 		AppConfigPath = filepath.Join(AppPath, "conf", "app.conf")
 		if !utils.FileExists(AppConfigPath) {
 			AppConfig = &beegoAppConfig{config.NewFakeConfig()}
