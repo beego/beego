@@ -174,6 +174,10 @@ func init() {
 		},
 	}
 	ParseConfig()
+	// init logger
+	for k, v := range BConfig.Log.Outputs {
+		SetLogger(k, v)
+	}
 }
 
 // ParseConfig parsed default config file.
@@ -242,6 +246,8 @@ func ParseConfig() (err error) {
 	BConfig.WebConfig.Session.SessionCookieLifeTime = AppConfig.DefaultInt("SessionCookieLifeTime", BConfig.WebConfig.Session.SessionCookieLifeTime)
 	BConfig.WebConfig.Session.SessionAutoSetCookie = AppConfig.DefaultBool("SessionAutoSetCookie", BConfig.WebConfig.Session.SessionAutoSetCookie)
 	BConfig.WebConfig.Session.SessionDomain = AppConfig.DefaultString("SessionDomain", BConfig.WebConfig.Session.SessionDomain)
+	BConfig.Log.AccessLogs = AppConfig.DefaultBool("LogAccessLogs", BConfig.Log.AccessLogs)
+	BConfig.Log.FileLineNum = AppConfig.DefaultBool("LogFileLineNum", BConfig.Log.FileLineNum)
 
 	if sd := AppConfig.String("StaticDir"); sd != "" {
 		for k := range BConfig.WebConfig.StaticDir {
@@ -274,6 +280,18 @@ func ParseConfig() (err error) {
 			BConfig.WebConfig.StaticExtensionsToGzip = fileExts
 		}
 	}
+
+	if lo := AppConfig.String("LogOutputs"); lo != "" {
+		los := strings.Split(lo, ";")
+		for _, v := range los {
+			if logType2Config := strings.SplitN(v, ",", 2); len(logType2Config) == 2 {
+				BConfig.Log.Outputs[logType2Config[0]] = logType2Config[1]
+			} else {
+				continue
+			}
+		}
+	}
+
 	return nil
 }
 
