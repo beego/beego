@@ -182,6 +182,13 @@ func init() {
 // now only support ini, next will support json.
 func ParseConfig() (err error) {
 	AppPath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
+	workPath, _ := os.Getwd()
+	workPath, _ = filepath.Abs(workPath)
+
+	if workPath != AppPath {
+		os.Chdir(AppPath)
+	}
+
 	if AppConfigPath == "" {
 		// initialize default configurations
 		AppConfigPath = filepath.Join(AppPath, "conf", "app.conf")
