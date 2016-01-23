@@ -40,6 +40,7 @@ import (
 	"runtime"
 	"strconv"
 	"sync"
+	"time"
 )
 
 // RFC5424 log message levels.
@@ -68,7 +69,7 @@ type loggerType func() Logger
 // Logger defines the behavior of a log provider.
 type Logger interface {
 	Init(config string) error
-	WriteMsg(msg string, level int) error
+	WriteMsg(when time.Time, msg string, level int) error
 	Destroy()
 	Flush()
 }
@@ -108,6 +109,7 @@ type nameLogger struct {
 type logMsg struct {
 	level int
 	msg   string
+	when time.Time
 }
 
 var logMsgPool *sync.Pool
@@ -173,16 +175,16 @@ func (bl *BeeLogger) DelLogger(adapterName string) error {
 	return nil
 }
 
-func (bl *BeeLogger) writeToLoggers(msg string, level int) {
+func (bl *BeeLogger) writeToLoggers(when time.Time, msg string, level int) {
 	for _, l := range bl.outputs {
-		err := l.WriteMsg(msg, level)
+		err := l.WriteMsg(when, msg, level)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "unable to WriteMsg to adapter:%v,error:%v\n", l.name, err)
 		}
 	}
 }
 
-func (bl *BeeLogger) writeMsg(logLevel int, msg string) error {
+func (bl *BeeLogger) writeMsg(logLevel int, msg string, when time.Time) error {
 	if bl.enableFuncCallDepth {
 		_, file, line, ok := runtime.Caller(bl.loggerFuncCallDepth)
 		if !ok {
@@ -196,9 +198,10 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string) error {
 		lm := logMsgPool.Get().(*logMsg)
 		lm.level = logLevel
 		lm.msg = msg
+		lm.when = when
 		bl.msgChan <- lm
 	} else {
-		bl.writeToLoggers(msg, logLevel)
+		bl.writeToLoggers(when, msg, logLevel)
 	}
 	return nil
 }
@@ -231,7 +234,7 @@ func (bl *BeeLogger) startLogger() {
 	for {
 		select {
 		case bm := <-bl.msgChan:
-			bl.writeToLoggers(bm.msg, bm.level)
+			bl.writeToLoggers(bm.when, bm.msg, bm.level)
 			logMsgPool.Put(bm)
 		}
 	}
@@ -243,7 +246,7 @@ func (bl *BeeLogger) Emergency(format string, v ...interface{}) {
 		return
 	}
 	msg := fmt.Sprintf("[M] "+format, v...)
-	bl.writeMsg(LevelEmergency, msg)
+	bl.writeMsg(LevelEmergency, msg, time.Now())
 }
 
 // Alert Log ALERT level message.
@@ -252,7 +255,7 @@ func (bl *BeeLogger) Alert(format string, v ...interface{}) {
 		return
 	}
 	msg := fmt.Sprintf("[A] "+format, v...)
-	bl.writeMsg(LevelAlert, msg)
+	bl.writeMsg(LevelAlert, msg, time.Now())
 }
 
 // Critical Log CRITICAL level message.
@@ -261,7 +264,7 @@ func (bl *BeeLogger) Critical(format string, v ...interface{}) {
 		return
 	}
 	msg := fmt.Sprintf("[C] "+format, v...)
-	bl.writeMsg(LevelCritical, msg)
+	bl.writeMsg(LevelCritical, msg, time.Now())
 }
 
 // Error Log ERROR level message.
@@ -270,7 +273,7 @@ func (bl *BeeLogger) Error(format string, v ...interface{}) {
 		return
 	}
 	msg := fmt.Sprintf("[E] "+format, v...)
-	bl.writeMsg(LevelError, msg)
+	bl.writeMsg(LevelError, msg, time.Now())
 }
 
 // Warning Log WARNING level message.
@@ -279,7 +282,7 @@ func (bl *BeeLogger) Warning(format string, v ...interface{}) {
 		return
 	}
 	msg := fmt.Sprintf("[W] "+format, v...)
-	bl.writeMsg(LevelWarning, msg)
+	bl.writeMsg(LevelWarning, msg, time.Now())
 }
 
 // Notice Log NOTICE level message.
@@ -288,7 +291,7 @@ func (bl *BeeLogger) Notice(format string, v ...interface{}) {
 		return
 	}
 	msg := fmt.Sprintf("[N] "+format, v...)
-	bl.writeMsg(LevelNotice, msg)
+	bl.writeMsg(LevelNotice, msg, time.Now())
 }
 
 // Informational Log INFORMATIONAL level message.
@@ -297,7 +300,7 @@ func (bl *BeeLogger) Informational(format string, v ...interface{}) {
 		return
 	}
 	msg := fmt.Sprintf("[I] "+format, v...)
-	bl.writeMsg(LevelInformational, msg)
+	bl.writeMsg(LevelInformational, msg, time.Now())
 }
 
 // Debug Log DEBUG level message.
@@ -306,7 +309,7 @@ func (bl *BeeLogger) Debug(format string, v ...interface{}) {
 		return
 	}
 	msg := fmt.Sprintf("[D] "+format, v...)
-	bl.writeMsg(LevelDebug, msg)
+	bl.writeMsg(LevelDebug, msg, time.Now())
 }
 
 // Warn Log WARN level message.
@@ -316,7 +319,7 @@ func (bl *BeeLogger) Warn(format string, v ...interface{}) {
 		return
 	}
 	msg := fmt.Sprintf("[W] "+format, v...)
-	bl.writeMsg(LevelWarning, msg)
+	bl.writeMsg(LevelWarning, msg, time.Now())
 }
 
 // Info Log INFO level message.
@@ -326,7 +329,7 @@ func (bl *BeeLogger) Info(format string, v ...interface{}) {
 		return
 	}
 	msg := fmt.Sprintf("[I] "+format, v...)
-	bl.writeMsg(LevelInformational, msg)
+	bl.writeMsg(LevelInformational, msg, time.Now())
 }
 
 // Trace Log TRACE level message.
@@ -336,7 +339,7 @@ func (bl *BeeLogger) Trace(format string, v ...interface{}) {
 		return
 	}
 	msg := fmt.Sprintf("[D] "+format, v...)
-	bl.writeMsg(LevelDebug, msg)
+	bl.writeMsg(LevelDebug, msg, time.Now())
 }
 
 // Flush flush all chan data.
@@ -351,7 +354,7 @@ func (bl *BeeLogger) Close() {
 	for {
 		if len(bl.msgChan) > 0 {
 			bm := <-bl.msgChan
-			bl.writeToLoggers(bm.msg, bm.level)
+			bl.writeToLoggers(bm.when, bm.msg, bm.level)
 			logMsgPool.Put(bm)
 			continue
 		}
@@ -361,4 +364,46 @@ func (bl *BeeLogger) Close() {
 		l.Flush()
 		l.Destroy()
 	}
+}
+
+func formatLogTime(when time.Time) string {
+	y, mo, d := when.Date()
+	h, mi, s := when.Clock()
+	//len(2006/01/02 15:03:04)==19
+	var buf [20]byte
+	t := 3
+	for y >= 10 {
+		p := y / 10
+		buf[t] = byte('0' + y - p*10)
+		y = p
+		t--
+	}
+	buf[0] = byte('0' + y)
+	buf[4] = '/'
+	if mo > 9 {
+		buf[5] = '1'
+		buf[6] = byte('0' + mo - 9)
+	} else {
+		buf[5] = '0'
+		buf[6] = byte('0' + mo)
+	}
+	buf[7] = '/'
+	t = d / 10
+	buf[8] = byte('0' + t)
+	buf[9] = byte('0' + d - t*10)
+	buf[10] = ' '
+	t = h / 10
+	buf[11] = byte('0' + t)
+	buf[12] = byte('0' + h - t*10)
+	buf[13] = ':'
+	t = mi / 10
+	buf[14] = byte('0' + t)
+	buf[15] = byte('0' + mi - t*10)
+	buf[16] = ':'
+	t = s / 10
+	buf[17] = byte('0' + t)
+	buf[18] = byte('0' + s - t*10)
+	buf[19] = ' '
+
+	return string(buf[0:])
 }

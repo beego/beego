@@ -19,6 +19,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"time"
 )
 
 // connWriter implements LoggerInterface.
@@ -48,7 +49,7 @@ func (c *connWriter) Init(jsonconfig string) error {
 
 // WriteMsg write message in connection.
 // if connection is down, try to re-connect.
-func (c *connWriter) WriteMsg(msg string, level int) error {
+func (c *connWriter) WriteMsg(when time.Time, msg string, level int) error {
 	if level > c.Level {
 		return nil
 	}
@@ -62,6 +63,10 @@ func (c *connWriter) WriteMsg(msg string, level int) error {
 	if c.ReconnectOnMsg {
 		defer c.innerWriter.Close()
 	}
+
+	logTimeStr := formatLogTime(when)
+	msg = logTimeStr + msg
+
 	c.lg.Println(msg)
 	return nil
 }
@@ -94,7 +99,7 @@ func (c *connWriter) connect() error {
 	}
 
 	c.innerWriter = conn
-	c.lg = log.New(conn, "", log.Ldate|log.Ltime)
+	c.lg = log.New(conn, "", 0)
 	return nil
 }
 
