@@ -17,6 +17,7 @@ package config
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -70,12 +71,9 @@ type JSONConfigContainer struct {
 func (c *JSONConfigContainer) Bool(key string) (bool, error) {
 	val := c.getData(key)
 	if val != nil {
-		if v, ok := val.(bool); ok {
-			return v, nil
-		}
-		return false, errors.New("not bool value")
+		return ParseBool(val)
 	}
-	return false, errors.New("not exist key:" + key)
+	return false, fmt.Errorf("not exist key: %q", key)
 }
 
 // DefaultBool return the bool value if has no error
