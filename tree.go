@@ -15,12 +15,11 @@
 package beego
 
 import (
+	"github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/utils"
 	"path"
 	"regexp"
 	"strings"
-
-	"github.com/astaxie/beego/context"
-	"github.com/astaxie/beego/utils"
 )
 
 var (
@@ -438,7 +437,9 @@ func (leaf *leafInfo) match(wildcardValues []string, ctx *context.Context) (ok b
 	}
 	matches := leaf.regexps.FindStringSubmatch(path.Join(wildcardValues...))
 	for i, match := range matches[1:] {
-		ctx.Input.SetParam(leaf.wildcards[i], match)
+		if i < len(leaf.wildcards) {
+			ctx.Input.SetParam(leaf.wildcards[i], match)
+		}
 	}
 	return true
 }
@@ -536,13 +537,19 @@ func splitSegment(key string) (bool, []string, string) {
 					continue
 				}
 			}
-			if v == ':' {
+			// Escape Sequence '\'
+			if i > 0 && key[i-1] == '\\' {
+				out = append(out, v)
+			} else if v == ':' {
 				param = make([]rune, 0)
 				start = true
 			} else if v == '(' {
 				startexp = true
 				start = false
-				params = append(params, ":"+string(param))
+				if len(param) > 0 {
+					params = append(params, ":"+string(param))
+					param = make([]rune, 0)
+				}
 				paramsNum++
 				expt = make([]rune, 0)
 				expt = append(expt, '(')
