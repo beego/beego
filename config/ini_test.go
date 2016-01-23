@@ -15,6 +15,7 @@
 package config
 
 import (
+	"io/ioutil"
 	"os"
 	"testing"
 )
@@ -100,4 +101,55 @@ func TestIni(t *testing.T) {
 		t.Fatal("get first params error not equat to one")
 	}
 
+}
+
+func TestIniSave(t *testing.T) {
+
+	const (
+		inicontext = `
+app = app
+;comment one
+#comment two
+# comment three
+appname = beeapi
+httpport = 8080
+# DB Info
+# enable db
+[dbinfo]
+# db type name
+# suport mysql,sqlserver
+name = mysql
+`
+
+		saveResult = `app=app
+#comment one
+#comment two
+# comment three
+appname=beeapi
+httpport=8080
+
+# DB Info
+# enable db
+[dbinfo]
+# db type name
+# suport mysql,sqlserver
+name=mysql
+
+`
+	)
+	cfg, err := NewConfigData("ini", []byte(inicontext))
+	if err != nil {
+		t.Fatal(err)
+	}
+	name := "newIniConfig.ini"
+	if err := cfg.SaveConfigFile(name); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(name)
+
+	if data, err := ioutil.ReadFile(name); err != nil {
+		t.Fatal(err)
+	} else if string(data) != saveResult {
+		t.Fatal("different after save ini config file.")
+	}
 }
