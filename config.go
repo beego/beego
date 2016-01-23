@@ -185,18 +185,17 @@ func ParseConfig() (err error) {
 	workPath, _ := os.Getwd()
 	workPath, _ = filepath.Abs(workPath)
 
-	if workPath != AppPath {
-		os.Chdir(AppPath)
-	}
-
 	if AppConfigPath == "" {
 		// initialize default configurations
 		AppConfigPath = filepath.Join(AppPath, "conf", "app.conf")
-		if !utils.FileExists(AppConfigPath) {
+		if utils.FileExists(AppConfigPath) && workPath != AppPath {
+			os.Chdir(AppPath)
+		} else {
 			AppConfig = &beegoAppConfig{config.NewFakeConfig()}
 			return
 		}
 	}
+
 	AppConfig, err = newAppConfig(AppConfigProvider, AppConfigPath)
 	if err != nil {
 		return err
