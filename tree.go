@@ -420,7 +420,11 @@ func (leaf *leafInfo) match(wildcardValues []string, ctx *context.Context) (ok b
 			if len(strs) == 2 {
 				ctx.Input.SetParam(":ext", strs[1])
 			}
-			ctx.Input.SetParam(":path", path.Join(path.Join(wildcardValues[index:len(wildcardValues)-1]...), strs[0]))
+			if index > (len(wildcardValues) - 1) {
+				ctx.Input.SetParam(":path", "")
+			} else {
+				ctx.Input.SetParam(":path", path.Join(path.Join(wildcardValues[index:len(wildcardValues)-1]...), strs[0]))
+			}
 			return true
 		}
 		// match :id
