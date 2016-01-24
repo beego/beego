@@ -15,11 +15,12 @@
 package beego
 
 import (
-	"github.com/astaxie/beego/context"
-	"github.com/astaxie/beego/utils"
 	"path"
 	"regexp"
 	"strings"
+
+	"github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/utils"
 )
 
 var (

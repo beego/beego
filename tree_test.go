@@ -15,9 +15,10 @@
 package beego
 
 import (
-	"github.com/astaxie/beego/context"
 	"strings"
 	"testing"
+
+	"github.com/astaxie/beego/context"
 )
 
 type testinfo struct {
