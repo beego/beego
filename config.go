@@ -103,6 +103,8 @@ var (
 	BConfig *Config
 	// AppConfig is the instance of Config, store the config information from file
 	AppConfig *beegoAppConfig
+	// AppPath is the absolute path to the app
+	AppPath string
 	// AppConfigPath is the path to the config files
 	AppConfigPath string
 	// AppConfigProvider is the provider for the config, default is ini
@@ -111,9 +113,15 @@ var (
 	TemplateCache map[string]*template.Template
 	// GlobalSessions is the instance for the session manager
 	GlobalSessions *session.Manager
+
+	workPath string
 )
 
 func init() {
+	AppPath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
+	workPath, _ = os.Getwd()
+	workPath, _ = filepath.Abs(workPath)
+
 	BConfig = &Config{
 		AppName:             "beego",
 		RunMode:             DEV,
@@ -181,13 +189,17 @@ func init() {
 func ParseConfig() (err error) {
 	if AppConfigPath == "" {
 		// initialize default configurations
-		AppPath, _ := filepath.Abs(filepath.Dir(os.Args[0]))
 		AppConfigPath = filepath.Join(AppPath, "conf", "app.conf")
 		if !utils.FileExists(AppConfigPath) {
 			AppConfig = &beegoAppConfig{config.NewFakeConfig()}
 			return
 		}
 	}
+
+	if workPath != AppPath {
+		os.Chdir(AppPath)
+	}
+
 	AppConfig, err = newAppConfig(AppConfigProvider, AppConfigPath)
 	if err != nil {
 		return err
