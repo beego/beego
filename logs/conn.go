@@ -64,8 +64,7 @@ func (c *connWriter) WriteMsg(when time.Time, msg string, level int) error {
 		defer c.innerWriter.Close()
 	}
 
-	logTimeStr := formatLogTime(when)
-	msg = logTimeStr + msg
+	msg = formatLogTime(when) + msg
 
 	c.lg.Println(msg)
 	return nil

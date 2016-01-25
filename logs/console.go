@@ -74,10 +74,7 @@ func (c *consoleWriter) WriteMsg(when time.Time, msg string, level int) error {
 	if level > c.Level {
 		return nil
 	}
-
-	logTimeStr := formatLogTime(when)
-	msg = logTimeStr + msg
-
+	msg = formatLogTime(when) + msg
 	if goos := runtime.GOOS; goos == "windows" {
 		c.lg.Println(msg)
 		return nil
