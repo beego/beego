@@ -231,11 +231,10 @@ func (e *Email) Send() error {
 	if e.From == "" || len(to) == 0 {
 		return errors.New("Must specify at least one From address and one To address")
 	}
-	from, err := mail.ParseAddress(e.From)
+	from, err := mail.ParseAddress(e.Username)
 	if err != nil {
 		return err
 	}
-	e.From = from.String()
 	raw, err := e.Bytes()
 	if err != nil {
 		return err
