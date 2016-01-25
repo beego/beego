@@ -19,6 +19,7 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"time"
 )
 
 // brush is a color join function
@@ -53,7 +54,7 @@ type consoleWriter struct {
 // NewConsole create ConsoleWriter returning as LoggerInterface.
 func NewConsole() Logger {
 	cw := &consoleWriter{
-		lg:    log.New(os.Stdout, "", log.Ldate|log.Ltime),
+		lg:    log.New(os.Stdout, "", 0),
 		Level: LevelDebug,
 	}
 	return cw
@@ -69,10 +70,11 @@ func (c *consoleWriter) Init(jsonconfig string) error {
 }
 
 // WriteMsg write message in console.
-func (c *consoleWriter) WriteMsg(msg string, level int) error {
+func (c *consoleWriter) WriteMsg(when time.Time, msg string, level int) error {
 	if level > c.Level {
 		return nil
 	}
+	msg = formatLogTime(when) + msg
 	if goos := runtime.GOOS; goos == "windows" {
 		c.lg.Println(msg)
 		return nil

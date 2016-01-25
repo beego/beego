@@ -114,50 +114,14 @@ func (w *fileLogWriter) needRotate(size int, day int) bool {
 }
 
 // WriteMsg write logger message into file.
-func (w *fileLogWriter) WriteMsg(msg string, level int) error {
+func (w *fileLogWriter) WriteMsg(when time.Time, msg string, level int) error {
 	if level > w.Level {
 		return nil
 	}
 	//2016/01/12 21:34:33
-	now := time.Now()
-	y, mo, d := now.Date()
-	h, mi, s := now.Clock()
-	//len(2006/01/02 15:03:04)==19
-	var buf [20]byte
-	t := 3
-	for y >= 10 {
-		p := y / 10
-		buf[t] = byte('0' + y - p*10)
-		y = p
-		t--
-	}
-	buf[0] = byte('0' + y)
-	buf[4] = '/'
-	if mo > 9 {
-		buf[5] = '1'
-		buf[6] = byte('0' + mo - 9)
-	} else {
-		buf[5] = '0'
-		buf[6] = byte('0' + mo)
-	}
-	buf[7] = '/'
-	t = d / 10
-	buf[8] = byte('0' + t)
-	buf[9] = byte('0' + d - t*10)
-	buf[10] = ' '
-	t = h / 10
-	buf[11] = byte('0' + t)
-	buf[12] = byte('0' + h - t*10)
-	buf[13] = ':'
-	t = mi / 10
-	buf[14] = byte('0' + t)
-	buf[15] = byte('0' + mi - t*10)
-	buf[16] = ':'
-	t = s / 10
-	buf[17] = byte('0' + t)
-	buf[18] = byte('0' + s - t*10)
-	buf[19] = ' '
-	msg = string(buf[0:]) + msg + "\n"
+	// now := time.Now()
+	d := when.Day()
+	msg = formatLogTime(when) + msg + "\n"
 
 	if w.Rotate {
 		if w.needRotate(len(msg), d) {
