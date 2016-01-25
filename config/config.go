@@ -113,7 +113,6 @@ func NewConfigData(adapterName string, data []byte) (Configer, error) {
 // 0, 0.0, f, F, FALSE, false, False, NO, no, No, N,n, OFF, off, Off.
 // Any other value returns an error.
 func ParseBool(val interface{}) (value bool, err error) {
-
 	if val != nil {
 		switch v := val.(type) {
 		case bool:
@@ -140,7 +139,6 @@ func ParseBool(val interface{}) (value bool, err error) {
 			}
 		}
 		return false, fmt.Errorf("parsing %q: invalid syntax", val)
-	} else {
-		return false, fmt.Errorf("parsing <nil>: invalid syntax")
 	}
+	return false, fmt.Errorf("parsing <nil>: invalid syntax")
 }

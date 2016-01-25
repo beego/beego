@@ -123,9 +123,8 @@ type ConfigContainer struct {
 func (c *ConfigContainer) Bool(key string) (bool, error) {
 	if v, ok := c.data[key]; ok {
 		return config.ParseBool(v)
-	} else {
-		return false, fmt.Errorf("not exist key: %q", key)
 	}
+	return false, fmt.Errorf("not exist key: %q", key)
 }
 
 // DefaultBool return the bool value if has no error
