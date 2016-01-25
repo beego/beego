@@ -162,6 +162,12 @@ type QuerySeter interface {
 	//	qs.RelatedSel("profile").One(&user)
 	//	user.Profile.Age = 32
 	RelatedSel(params ...interface{}) QuerySeter
+	// Set Distinct
+	// for example:
+	//  o.QueryTable("policy").Filter("Groups__Group__Users__User", user).
+	//    Distinct().
+	//    All(&permissions)
+	Distinct() QuerySeter
 	// return QuerySeter execution result number
 	// for example:
 	//	num, err = qs.Filter("profile__age__gt", 28).Count()
