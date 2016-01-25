@@ -25,8 +25,7 @@ install:
   - go get github.com/couchbase/go-couchbase
   - go get github.com/siddontang/ledisdb/config
   - go get github.com/siddontang/ledisdb/ledis
-  - go get code.google.com/p/go.tools/cmd/vet
-  - go get code.google.com/p/go.tools/cmd/cover
+  - go get golang.org/x/tools/cmd/vet
   - go get github.com/golang/lint/golint
 before_script:
   - sh -c "if [ '$ORM_DRIVER' = 'postgres' ]; then psql -c 'create database orm_test;' -U postgres; fi"
