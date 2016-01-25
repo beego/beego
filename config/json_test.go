@@ -162,7 +162,7 @@ func TestJson(t *testing.T) {
 			value, err = jsonconf.DIY(k)
 		}
 		if err != nil {
-			t.Fatalf("get key %q value fatal,%V err %s", k, v, err)
+			t.Fatalf("get key %q value fatal,%v err %s", k, v, err)
 		} else if fmt.Sprintf("%v", v) != fmt.Sprintf("%v", value) {
 			t.Fatalf("get key %q value, want %v got %v .", k, v, value)
 		}
