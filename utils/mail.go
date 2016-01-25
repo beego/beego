@@ -74,9 +74,6 @@ func NewEMail(config string) *Email {
 	if err != nil {
 		return nil
 	}
-	if e.From == "" {
-		e.From = e.Username
-	}
 	return e
 }
 
@@ -228,13 +225,19 @@ func (e *Email) Send() error {
 	to := make([]string, 0, len(e.To)+len(e.Cc)+len(e.Bcc))
 	to = append(append(append(to, e.To...), e.Cc...), e.Bcc...)
 	// Check to make sure there is at least one recipient and one "From" address
-	if e.From == "" || len(to) == 0 {
-		return errors.New("Must specify at least one From address and one To address")
+	if len(to) == 0 {
+		return errors.New("Must specify at least one To address")
 	}
+
 	from, err := mail.ParseAddress(e.Username)
 	if err != nil {
 		return err
 	}
+
+	if len(e.From) == 0 {
+		e.From = from.String()
+	}
+
 	raw, err := e.Bytes()
 	if err != nil {
 		return err
