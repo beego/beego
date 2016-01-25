@@ -126,7 +126,7 @@ func (s *SMTPWriter) sendMail(hostAddressWithPort string, auth smtp.Auth, fromAd
 
 // WriteMsg write message in smtp writer.
 // it will send an email with subject and only this message.
-func (s *SMTPWriter) WriteMsg(msg string, level int) error {
+func (s *SMTPWriter) WriteMsg(when time.Time, msg string, level int) error {
 	if level > s.Level {
 		return nil
 	}
@@ -140,7 +140,7 @@ func (s *SMTPWriter) WriteMsg(msg string, level int) error {
 	// and send the email all in one step.
 	contentType := "Content-Type: text/plain" + "; charset=UTF-8"
 	mailmsg := []byte("To: " + strings.Join(s.RecipientAddresses, ";") + "\r\nFrom: " + s.FromAddress + "<" + s.FromAddress +
-		">\r\nSubject: " + s.Subject + "\r\n" + contentType + "\r\n\r\n" + fmt.Sprintf(".%s", time.Now().Format("2006-01-02 15:04:05")) + msg)
+		">\r\nSubject: " + s.Subject + "\r\n" + contentType + "\r\n\r\n" + fmt.Sprintf(".%s", when.Format("2006-01-02 15:04:05")) + msg)
 
 	return s.sendMail(s.Host, auth, s.FromAddress, s.RecipientAddresses, mailmsg)
 }
