@@ -194,7 +194,7 @@ type IniConfigContainer struct {
 
 // Bool returns the boolean value for a given key.
 func (c *IniConfigContainer) Bool(key string) (bool, error) {
-	return strconv.ParseBool(c.getdata(key))
+	return ParseBool(c.getdata(key))
 }
 
 // DefaultBool returns the boolean value for a given key.

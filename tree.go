@@ -420,7 +420,11 @@ func (leaf *leafInfo) match(wildcardValues []string, ctx *context.Context) (ok b
 			if len(strs) == 2 {
 				ctx.Input.SetParam(":ext", strs[1])
 			}
-			ctx.Input.SetParam(":path", path.Join(path.Join(wildcardValues[index:len(wildcardValues)-1]...), strs[0]))
+			if index > (len(wildcardValues) - 1) {
+				ctx.Input.SetParam(":path", "")
+			} else {
+				ctx.Input.SetParam(":path", path.Join(path.Join(wildcardValues[index:len(wildcardValues)-1]...), strs[0]))
+			}
 			return true
 		}
 		// match :id
@@ -448,17 +452,11 @@ func (leaf *leafInfo) match(wildcardValues []string, ctx *context.Context) (ok b
 // "/admin/" -> ["admin"]
 // "/admin/users" -> ["admin", "users"]
 func splitPath(key string) []string {
+	key = strings.Trim(key, "/ ")
 	if key == "" {
 		return []string{}
 	}
-	elements := strings.Split(key, "/")
-	if elements[0] == "" {
-		elements = elements[1:]
-	}
-	if elements[len(elements)-1] == "" {
-		elements = elements[:len(elements)-1]
-	}
-	return elements
+	return strings.Split(key, "/")
 }
 
 // "admin" -> false, nil, ""
