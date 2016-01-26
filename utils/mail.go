@@ -31,10 +31,13 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 const (
 	maxLineLength = 76
+
+	upperhex = "0123456789ABCDEF"
 )
 
 // Email is the type used for email messages
@@ -238,8 +241,7 @@ func (e *Email) Send() error {
 		e.From = e.Username
 	}
 	// use mail's RFC 2047 to encode any string
-	sub := mail.Address{Name: e.Subject, Address: ""}
-	e.Subject = strings.TrimRight(sub.String(), " <@>")
+	e.Subject = qEncode("utf-8", e.Subject)
 
 	raw, err := e.Bytes()
 	if err != nil {
@@ -346,4 +348,74 @@ func base64Wrap(w io.Writer, b []byte) {
 		out = append(out, "\r\n"...)
 		w.Write(out)
 	}
+}
+
+// Encode returns the encoded-word form of s. If s is ASCII without special
+// characters, it is returned unchanged. The provided charset is the IANA
+// charset name of s. It is case insensitive.
+// RFC 2047 encoded-word
+func qEncode(charset, s string) string {
+	if !needsEncoding(s) {
+		return s
+	}
+	return encodeWord(charset, s)
+}
+
+func needsEncoding(s string) bool {
+	for _, b := range s {
+		if (b < ' ' || b > '~') && b != '\t' {
+			return true
+		}
+	}
+	return false
+}
+
+// encodeWord encodes a string into an encoded-word.
+func encodeWord(charset, s string) string {
+	buf := getBuffer()
+
+	buf.WriteString("=?")
+	buf.WriteString(charset)
+	buf.WriteByte('?')
+	buf.WriteByte('q')
+	buf.WriteByte('?')
+
+	enc := make([]byte, 3)
+	for i := 0; i < len(s); i++ {
+		b := s[i]
+		switch {
+		case b == ' ':
+			buf.WriteByte('_')
+		case b <= '~' && b >= '!' && b != '=' && b != '?' && b != '_':
+			buf.WriteByte(b)
+		default:
+			enc[0] = '='
+			enc[1] = upperhex[b>>4]
+			enc[2] = upperhex[b&0x0f]
+			buf.Write(enc)
+		}
+	}
+	buf.WriteString("?=")
+
+	es := buf.String()
+	putBuffer(buf)
+	return es
+}
+
+var bufPool = sync.Pool{
+	New: func() interface{} {
+		return new(bytes.Buffer)
+	},
+}
+
+func getBuffer() *bytes.Buffer {
+	return bufPool.Get().(*bytes.Buffer)
+}
+
+func putBuffer(buf *bytes.Buffer) {
+	if buf.Len() > 1024 {
+		return
+	}
+	buf.Reset()
+	bufPool.Put(buf)
 }
