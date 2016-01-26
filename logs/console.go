@@ -35,14 +35,14 @@ func newBrush(color string) brush {
 }
 
 var colors = []brush{
-	newBrush("1;37"), // Emergency	white
-	newBrush("1;36"), // Alert			cyan
-	newBrush("1;35"), // Critical   magenta
-	newBrush("1;31"), // Error      red
-	newBrush("1;33"), // Warning    yellow
-	newBrush("1;32"), // Notice			green
-	newBrush("1;34"), // Informational	blue
-	newBrush("1;34"), // Debug      blue
+	newBrush("1;37"), // Emergency          white
+	newBrush("1;36"), // Alert              cyan
+	newBrush("1;35"), // Critical           magenta
+	newBrush("1;31"), // Error              red
+	newBrush("1;33"), // Warning            yellow
+	newBrush("1;32"), // Notice             green
+	newBrush("1;34"), // Informational      blue
+	newBrush("1;34"), // Debug              blue
 }
 
 // consoleWriter implements LoggerInterface and writes messages to terminal.
@@ -61,12 +61,12 @@ func NewConsole() Logger {
 }
 
 // Init init console logger.
-// jsonconfig like '{"level":LevelTrace}'.
-func (c *consoleWriter) Init(jsonconfig string) error {
-	if len(jsonconfig) == 0 {
+// jsonConfig like '{"level":LevelTrace}'.
+func (c *consoleWriter) Init(jsonConfig string) error {
+	if len(jsonConfig) == 0 {
 		return nil
 	}
-	return json.Unmarshal([]byte(jsonconfig), c)
+	return json.Unmarshal([]byte(jsonConfig), c)
 }
 
 // WriteMsg write message in console.
@@ -75,7 +75,7 @@ func (c *consoleWriter) WriteMsg(when time.Time, msg string, level int) error {
 		return nil
 	}
 	msg = formatLogTime(when) + msg
-	if goos := runtime.GOOS; goos == "windows" {
+	if runtime.GOOS == "windows" {
 		c.lg.Println(msg)
 		return nil
 	}
