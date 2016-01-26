@@ -361,4 +361,5 @@ func (bl *BeeLogger) Close() {
 		l.Flush()
 		l.Destroy()
 	}
+	bl.outputs = nil
 }
