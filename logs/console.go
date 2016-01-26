@@ -35,14 +35,14 @@ func newBrush(color string) brush {
 }
 
 var colors = []brush{
-	newBrush("1;37"), // Emergency		white
-	newBrush("1;36"), // Alert		cyan
-	newBrush("1;35"), // Critical   	magenta
-	newBrush("1;31"), // Error      	red
-	newBrush("1;33"), // Warning    	yellow
-	newBrush("1;32"), // Notice		green
-	newBrush("1;34"), // Informational	blue
-	newBrush("1;34"), // Debug      	blue
+	newBrush("1;37"), // Emergency          white
+	newBrush("1;36"), // Alert              cyan
+	newBrush("1;35"), // Critical           magenta
+	newBrush("1;31"), // Error              red
+	newBrush("1;33"), // Warning            yellow
+	newBrush("1;32"), // Notice             green
+	newBrush("1;34"), // Informational      blue
+	newBrush("1;34"), // Debug              blue
 }
 
 // consoleWriter implements LoggerInterface and writes messages to terminal.
