@@ -15,7 +15,6 @@
 package beego
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -76,15 +75,6 @@ func initBeforeHTTPRun() {
 	}
 	*/
 	var err error
-	//init log
-	for adaptor, config := range BConfig.Log.Outputs {
-		err = BeeLogger.SetLogger(adaptor, config)
-		if err != nil {
-			fmt.Printf("%s with the config `%s` got err:%s\n", adaptor, config, err)
-		}
-	}
-
-	SetLogFuncCall(BConfig.Log.FileLineNum)
 
 	//init hooks
 	AddAPPStartHook(registerMime)
@@ -95,7 +85,7 @@ func initBeforeHTTPRun() {
 	AddAPPStartHook(registerAdmin)
 
 	for _, hk := range hooks {
-		if err := hk(); err != nil {
+		if err = hk(); err != nil {
 			panic(err)
 		}
 	}
