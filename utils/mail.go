@@ -235,11 +235,11 @@ func (e *Email) Send() error {
 	}
 
 	if len(e.From) == 0 {
-		e.From = from.String()
+		e.From = e.Username
 	}
-	// use mail's RFC 5322 to encode any string
-	sub := mail.Address{e.Subject, ""}
-	e.Subject = strings.Trim(sub.String(), " <@>")
+	// use mail's RFC 2047 to encode any string
+	sub := mail.Address{Name: e.Subject, Address: ""}
+	e.Subject = strings.TrimRight(sub.String(), " <@>")
 
 	raw, err := e.Bytes()
 	if err != nil {
