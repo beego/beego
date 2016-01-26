@@ -127,7 +127,7 @@ func (w *fileLogWriter) WriteMsg(when time.Time, msg string, level int) error {
 		if w.needRotate(len(msg), d) {
 			w.Lock()
 			if w.needRotate(len(msg), d) {
-				if err := w.doRotate(); err != nil {
+				if err := w.doRotate(when); err != nil {
 					fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
 				}
 
@@ -200,7 +200,7 @@ func (w *fileLogWriter) lines() (int, error) {
 
 // DoRotate means it need to write file in new file.
 // new file name like xx.2013-01-01.2.log
-func (w *fileLogWriter) doRotate() error {
+func (w *fileLogWriter) doRotate(logTime time.Time) error {
 	_, err := os.Lstat(w.Filename)
 	if err != nil {
 		return err
@@ -215,7 +215,7 @@ func (w *fileLogWriter) doRotate() error {
 		suffix = ".log"
 	}
 	for ; err == nil && num <= 999; num++ {
-		fName = filenameOnly + fmt.Sprintf(".%s.%03d%s", time.Now().Format("2006-01-02"), num, suffix)
+		fName = filenameOnly + fmt.Sprintf(".%s.%03d%s", logTime.Format("2006-01-02"), num, suffix)
 		_, err = os.Lstat(fName)
 	}
 	// return error if the last file checked still existed
