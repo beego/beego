@@ -43,20 +43,17 @@ type Config struct {
 	WebConfig           WebConfig
 	Log                 LogConfig
 
-	configFileMap map[string]config.Configer
+	configFiles map[string]config.Configer
 }
 
 // Load return Configer
 // you can load the specific config file by run mode
 func (c *Config) Load(configFile string) (cf config.Configer, err error) {
-
-	if c, ok := c.configFileMap[configFile]; ok {
+	if c, ok := c.configFiles[configFile]; ok {
 		cf = c
 		return
 	}
-
 	fullPathFile := filepath.Join(confDir, c.RunMode, configFile)
-
 	if !utils.FileExists(fullPathFile) {
 		fullPathFile = filepath.Join(confDir, configFile)
 		if !utils.FileExists(fullPathFile) {
@@ -64,14 +61,11 @@ func (c *Config) Load(configFile string) (cf config.Configer, err error) {
 			return
 		}
 	}
-
-	adapter := filepath.Ext(fullPathFile)
-
+	adapter := strings.TrimLeft(filepath.Ext(fullPathFile), ".")
 	cf, err = config.NewConfig(adapter, fullPathFile)
 	if err != nil {
-		c.configFileMap[configFile] = cf
+		c.configFiles[configFile] = cf
 	}
-
 	return
 }
 
