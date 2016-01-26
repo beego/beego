@@ -43,6 +43,7 @@ func TestSpec(t *testing.T) {
 	AddTask("tk1", tk1)
 	AddTask("tk2", tk2)
 	AddTask("tk3", tk3)
+
 	StartTask()
 	defer StopTask()
 
