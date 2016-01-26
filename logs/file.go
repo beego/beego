@@ -118,19 +118,16 @@ func (w *fileLogWriter) WriteMsg(when time.Time, msg string, level int) error {
 	if level > w.Level {
 		return nil
 	}
-	//2016/01/12 21:34:33
-	// now := time.Now()
-	d := when.Day()
 	msg = formatLogTime(when) + msg + "\n"
 
 	if w.Rotate {
+		d := when.Day()
 		if w.needRotate(len(msg), d) {
 			w.Lock()
 			if w.needRotate(len(msg), d) {
 				if err := w.doRotate(when); err != nil {
 					fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
 				}
-
 			}
 			w.Unlock()
 		}
