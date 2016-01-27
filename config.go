@@ -312,7 +312,7 @@ func parseConfig(appConfigPath string) (err error) {
 }
 
 // LoadAppConfig allow developer to apply a config file
-func LoadAppConfig(configPath string, adapterName string) error {
+func LoadAppConfig(adapterName string, configPath string) error {
 	absConfigPath, err := filepath.Abs(configPath)
 	if err != nil {
 		return err
