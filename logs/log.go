@@ -365,6 +365,7 @@ func (bl *BeeLogger) Close() {
 		l.Flush()
 		l.Destroy()
 	}
+	bl.outputs = nil
 }
 
 func formatLogTime(when time.Time) string {
