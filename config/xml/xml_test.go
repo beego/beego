@@ -100,7 +100,7 @@ func TestXML(t *testing.T) {
 		t.Fatal("get name error")
 	}
 
-	if xmlconf.String("path") == os.Getenv("GOROOT") {
+	if xmlconf.String("path") != os.Getenv("GOROOT") {
 		t.Fatal("get path error")
 	}
 
