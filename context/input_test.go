@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 )
 
@@ -116,4 +117,57 @@ func TestSubDomain(t *testing.T) {
 	if beegoInput.SubDomains() != "aa.bb.cc.dd" {
 		t.Fatal("Subdomain parse error, got " + beegoInput.SubDomains())
 	}
+}
+
+func TestParams(t *testing.T) {
+	inp := NewInput()
+
+	inp.SetParam("p1", "val1_ver1")
+	inp.SetParam("p2", "val2_ver1")
+	inp.SetParam("p3", "val3_ver1")
+	if l := inp.ParamsLen(); l != 3 {
+		t.Fatalf("Input.ParamsLen wrong value: %d, expected %d", l, 3)
+	}
+
+	if val := inp.Param("p1"); val != "val1_ver1" {
+		t.Fatalf("Input.Param wrong value: %s, expected %s", val, "val1_ver1")
+	}
+	if val := inp.Param("p3"); val != "val3_ver1" {
+		t.Fatalf("Input.Param wrong value: %s, expected %s", val, "val3_ver1")
+	}
+	vals := inp.Params()
+	expected := map[string]string{
+		"p1": "val1_ver1",
+		"p2": "val2_ver1",
+		"p3": "val3_ver1",
+	}
+	if !reflect.DeepEqual(vals, expected) {
+		t.Fatalf("Input.Params wrong value: %s, expected %s", vals, expected)
+	}
+
+	// overwriting existing params
+	inp.SetParam("p1", "val1_ver2")
+	inp.SetParam("p2", "val2_ver2")
+	expected = map[string]string{
+		"p1": "val1_ver2",
+		"p2": "val2_ver2",
+		"p3": "val3_ver1",
+	}
+	vals = inp.Params()
+	if !reflect.DeepEqual(vals, expected) {
+		t.Fatalf("Input.Params wrong value: %s, expected %s", vals, expected)
+	}
+
+	if l := inp.ParamsLen(); l != 3 {
+		t.Fatalf("Input.ParamsLen wrong value: %d, expected %d", l, 3)
+	}
+
+	if val := inp.Param("p1"); val != "val1_ver2" {
+		t.Fatalf("Input.Param wrong value: %s, expected %s", val, "val1_ver2")
+	}
+
+	if val := inp.Param("p2"); val != "val2_ver2" {
+		t.Fatalf("Input.Param wrong value: %s, expected %s", val, "val1_ver2")
+	}
+
 }
