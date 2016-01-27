@@ -85,7 +85,7 @@ func initBeforeHTTPRun() {
 // TestBeegoInit is for test package init
 func TestBeegoInit(ap string) {
 	os.Setenv("BEEGO_RUNMODE", "test")
-	AppConfigPath = filepath.Join(ap, "conf", "app.conf")
+	appConfigPath = filepath.Join(ap, "conf", "app.conf")
 	os.Chdir(ap)
 	initBeforeHTTPRun()
 }

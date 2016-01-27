@@ -106,16 +106,16 @@ var (
 	AppConfig *beegoAppConfig
 	// AppPath is the absolute path to the app
 	AppPath string
-	// AppConfigPath is the path to the config files
-	AppConfigPath string
-	// AppConfigProvider is the provider for the config, default is ini
-	AppConfigProvider = "ini"
 	// TemplateCache stores template caching
 	TemplateCache map[string]*template.Template
 	// GlobalSessions is the instance for the session manager
 	GlobalSessions *session.Manager
 
 	workPath string
+	// appConfigPath is the path to the config files
+	appConfigPath string
+	// appConfigProvider is the provider for the config, default is ini
+	appConfigProvider = "ini"
 )
 
 func init() {
@@ -187,18 +187,18 @@ func init() {
 		},
 	}
 
-	AppConfigPath = filepath.Join(AppPath, "conf", "app.conf")
-	if !utils.FileExists(AppConfigPath) {
+	appConfigPath = filepath.Join(AppPath, "conf", "app.conf")
+	if !utils.FileExists(appConfigPath) {
 		AppConfig = &beegoAppConfig{config.NewFakeConfig()}
 		return
 	}
 
-	parseConfig(AppConfigPath)
+	parseConfig(appConfigPath)
 }
 
 // now only support ini, next will support json.
 func parseConfig(appConfigPath string) (err error) {
-	AppConfig, err = newAppConfig(AppConfigProvider, appConfigPath)
+	AppConfig, err = newAppConfig(appConfigProvider, appConfigPath)
 	if err != nil {
 		return err
 	}
@@ -312,7 +312,7 @@ func parseConfig(appConfigPath string) (err error) {
 }
 
 // LoadAppConfig allow developer to apply a config file
-func LoadAppConfig(adapterName string, configPath string) error {
+func LoadAppConfig(adapterName, configPath string) error {
 	absConfigPath, err := filepath.Abs(configPath)
 	if err != nil {
 		return err
@@ -322,22 +322,22 @@ func LoadAppConfig(adapterName string, configPath string) error {
 		return fmt.Errorf("the target config file: %s don't exist!", configPath)
 	}
 
-	if absConfigPath == AppConfigPath {
+	if absConfigPath == appConfigPath {
 		return nil
 	}
 
-	AppConfigPath = absConfigPath
-	AppConfigProvider = adapterName
+	appConfigPath = absConfigPath
+	appConfigProvider = adapterName
 
-	return parseConfig(AppConfigPath)
+	return parseConfig(appConfigPath)
 }
 
 type beegoAppConfig struct {
 	innerConfig config.Configer
 }
 
-func newAppConfig(AppConfigProvider, AppConfigPath string) (*beegoAppConfig, error) {
-	ac, err := config.NewConfig(AppConfigProvider, AppConfigPath)
+func newAppConfig(appConfigProvider, appConfigPath string) (*beegoAppConfig, error) {
+	ac, err := config.NewConfig(appConfigProvider, appConfigPath)
 	if err != nil {
 		return nil, err
 	}
