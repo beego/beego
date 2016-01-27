@@ -8,9 +8,11 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"path/filepath"
 )
 
-const licenseFile = "./LICENSE"
+var currentWorkDir, _ = os.Getwd()
+var licenseFile = filepath.Join(currentWorkDir, "LICENSE")
 
 func testOpenFile(encoding string, content []byte, t *testing.T) {
 	fi, _ := os.Stat(licenseFile)
