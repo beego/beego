@@ -47,8 +47,9 @@ var colors = []brush{
 
 // consoleWriter implements LoggerInterface and writes messages to terminal.
 type consoleWriter struct {
-	lg    *log.Logger
-	Level int `json:"level"`
+	lg      *log.Logger
+	Level   int  `json:"level"`
+	NoColor bool `json:"noColor"`
 }
 
 // NewConsole create ConsoleWriter returning as LoggerInterface.
@@ -75,7 +76,7 @@ func (c *consoleWriter) WriteMsg(when time.Time, msg string, level int) error {
 		return nil
 	}
 	msg = formatLogTime(when) + msg
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == "windows" || c.NoColor {
 		c.lg.Println(msg)
 		return nil
 	}
