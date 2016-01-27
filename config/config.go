@@ -44,6 +44,8 @@ package config
 
 import (
 	"fmt"
+	"os"
+	"strings"
 )
 
 // Configer defines how to get and set value from configuration raw data.
@@ -105,6 +107,24 @@ func NewConfigData(adapterName string, data []byte) (Configer, error) {
 		return nil, fmt.Errorf("config: unknown adaptername %q (forgotten import?)", adapterName)
 	}
 	return adapter.ParseData(data)
+}
+
+const envKeySign = "$ENV_"
+
+// Getenv return environment variable if env has prefix "$ENV_".
+func Getenv(env interface{}) (string, bool) {
+	if env == nil {
+		return "", false
+	}
+
+	// Onley support string key.
+	if key, ok := env.(string); ok {
+		if len(key) > len(envKeySign) && strings.HasPrefix(key, envKeySign) {
+			key = strings.TrimLeft(key, envKeySign)
+			return os.Getenv(key), true
+		}
+	}
+	return "", false
 }
 
 // ParseBool returns the boolean value represented by the string.

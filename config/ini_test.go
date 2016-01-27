@@ -42,11 +42,13 @@ needlogin = ON
 enableSession = Y
 enableCookie = N
 flag = 1
+path = $ENV_GOROOT
 [demo]
 key1="asta"
 key2 = "xie"
 CaseInsensitive = true
 peers = one;two;three
+password = $ENV_GOROOT
 `
 
 		keyValue = map[string]interface{}{
@@ -64,10 +66,12 @@ peers = one;two;three
 			"enableSession":         true,
 			"enableCookie":          false,
 			"flag":                  true,
+			"path":                  os.Getenv("GOROOT"),
 			"demo::key1":            "asta",
 			"demo::key2":            "xie",
 			"demo::CaseInsensitive": true,
 			"demo::peers":           []string{"one", "two", "three"},
+			"demo::password":        os.Getenv("GOROOT"),
 			"null":                  "",
 			"demo2::key1":           "",
 			"error":                 "",
@@ -140,6 +144,7 @@ httpport = 8080
 # db type name
 # suport mysql,sqlserver
 name = mysql
+path = $ENV_GOROOT
 `
 
 		saveResult = `
@@ -156,6 +161,7 @@ httpport=8080
 # db type name
 # suport mysql,sqlserver
 name=mysql
+path=$ENV_GOROOT
 `
 	)
 	cfg, err := NewConfigData("ini", []byte(inicontext))

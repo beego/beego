@@ -16,13 +16,16 @@ package xml
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/astaxie/beego/config"
 )
 
-//xml parse should incluce in <config></config> tags
-var xmlcontext = `<?xml version="1.0" encoding="UTF-8"?>
+func TestXML(t *testing.T) {
+
+	//xml parse should incluce in <config></config> tags
+	var xmlcontext = `<?xml version="1.0" encoding="UTF-8"?>
 <config>
 <appname>beeapi</appname>
 <httpport>8080</httpport>
@@ -31,10 +34,24 @@ var xmlcontext = `<?xml version="1.0" encoding="UTF-8"?>
 <runmode>dev</runmode>
 <autorender>false</autorender>
 <copyrequestbody>true</copyrequestbody>
+<path>$ENV_GOROOT</path>
+<dbinfo>
+	<db>beego</db>
+	<pwd>$ENV_GOROOT</pwd>
+	<url>localhost</url>
+	<detail>
+		<d1>value1</d1>
+		<d2>$ENV_GOROOT</d2>
+		<d3></d3>
+	</detail>
+	<group>
+		<id>001</id>
+		<name>gp2</name>
+	</group>
+</dbinfo>
 </config>
 `
 
-func TestXML(t *testing.T) {
 	f, err := os.Create("testxml.conf")
 	if err != nil {
 		t.Fatal(err)
@@ -81,5 +98,17 @@ func TestXML(t *testing.T) {
 	}
 	if xmlconf.String("name") != "astaxie" {
 		t.Fatal("get name error")
+	}
+
+	if xmlconf.String("path") == os.Getenv("GOROOT") {
+		t.Fatal("get path error")
+	}
+
+	if dbinfo, err := xmlconf.GetSection("dbinfo"); err != nil {
+		t.Fatal(err)
+	} else if dbinfo["pwd"] != os.Getenv("GOROOT") {
+		t.Fatal("get pwd error")
+	} else if strings.Contains(dbinfo["detail"], os.Getenv("GOROOT")) == false {
+		t.Fatal("get goroot path error")
 	}
 }

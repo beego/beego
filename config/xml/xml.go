@@ -92,7 +92,7 @@ type ConfigContainer struct {
 
 // Bool returns the boolean value for a given key.
 func (c *ConfigContainer) Bool(key string) (bool, error) {
-	if v, ok := c.data[key]; ok {
+	if v := c.getData(key); v != nil {
 		return config.ParseBool(v)
 	}
 	return false, fmt.Errorf("not exist key: %q", key)
@@ -110,7 +110,7 @@ func (c *ConfigContainer) DefaultBool(key string, defaultval bool) bool {
 
 // Int returns the integer value for a given key.
 func (c *ConfigContainer) Int(key string) (int, error) {
-	return strconv.Atoi(c.data[key].(string))
+	return strconv.Atoi(c.getData(key).(string))
 }
 
 // DefaultInt returns the integer value for a given key.
@@ -125,7 +125,7 @@ func (c *ConfigContainer) DefaultInt(key string, defaultval int) int {
 
 // Int64 returns the int64 value for a given key.
 func (c *ConfigContainer) Int64(key string) (int64, error) {
-	return strconv.ParseInt(c.data[key].(string), 10, 64)
+	return strconv.ParseInt(c.getData(key).(string), 10, 64)
 }
 
 // DefaultInt64 returns the int64 value for a given key.
@@ -141,7 +141,7 @@ func (c *ConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
 
 // Float returns the float value for a given key.
 func (c *ConfigContainer) Float(key string) (float64, error) {
-	return strconv.ParseFloat(c.data[key].(string), 64)
+	return strconv.ParseFloat(c.getData(key).(string), 64)
 }
 
 // DefaultFloat returns the float64 value for a given key.
@@ -156,7 +156,7 @@ func (c *ConfigContainer) DefaultFloat(key string, defaultval float64) float64 {
 
 // String returns the string value for a given key.
 func (c *ConfigContainer) String(key string) string {
-	if v, ok := c.data[key].(string); ok {
+	if v, ok := c.getData(key).(string); ok {
 		return v
 	}
 	return ""
@@ -190,7 +190,28 @@ func (c *ConfigContainer) DefaultStrings(key string, defaultval []string) []stri
 // GetSection returns map for the given section
 func (c *ConfigContainer) GetSection(section string) (map[string]string, error) {
 	if v, ok := c.data[section]; ok {
-		return v.(map[string]string), nil
+
+		var interfaceToStr func(map[string]interface{}) map[string]string
+
+		interfaceToStr = func(values map[string]interface{}) map[string]string {
+			strValues := make(map[string]string, len(values))
+			for k, vv := range values {
+				if vv == nil {
+					strValues[k] = ""
+				} else if env, ok := config.Getenv(vv); ok {
+					strValues[k] = env
+				} else if str, ok := vv.(string); ok {
+					strValues[k] = str
+				} else if m, ok := vv.(map[string]interface{}); ok {
+					strValues[k] = fmt.Sprintf("%v", interfaceToStr(m))
+				} else {
+					// TODO: no better.
+					strValues[k] = fmt.Sprintf("%v", vv)
+				}
+			}
+			return strValues
+		}
+		return interfaceToStr(v.(map[string]interface{})), nil
 	}
 	return nil, errors.New("not exist setction")
 }
@@ -225,6 +246,18 @@ func (c *ConfigContainer) DIY(key string) (v interface{}, err error) {
 		return v, nil
 	}
 	return nil, errors.New("not exist key")
+}
+
+// Get Data
+func (c *ConfigContainer) getData(key string) interface{} {
+	if v, ok := c.data[key]; ok {
+		if env, ok := config.Getenv(v); ok {
+			return env
+		}
+		return v
+
+	}
+	return nil
 }
 
 func init() {

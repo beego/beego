@@ -250,11 +250,18 @@ func (c *JSONConfigContainer) getData(key string) interface{} {
 				}
 			}
 		}
+		if env, ok := Getenv(curValue); ok {
+			return env
+		}
 		return curValue
 	}
 	if v, ok := c.data[key]; ok {
+		if env, ok := Getenv(v); ok {
+			return env
+		}
 		return v
 	}
+
 	return nil
 }
 

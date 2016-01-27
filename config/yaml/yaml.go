@@ -121,10 +121,12 @@ type ConfigContainer struct {
 
 // Bool returns the boolean value for a given key.
 func (c *ConfigContainer) Bool(key string) (bool, error) {
-	if v, ok := c.data[key]; ok {
+
+	if v, err := c.getData(key); err != nil {
+		return false, err
+	} else {
 		return config.ParseBool(v)
 	}
-	return false, fmt.Errorf("not exist key: %q", key)
 }
 
 // DefaultBool return the bool value if has no error
@@ -139,8 +141,12 @@ func (c *ConfigContainer) DefaultBool(key string, defaultval bool) bool {
 
 // Int returns the integer value for a given key.
 func (c *ConfigContainer) Int(key string) (int, error) {
-	if v, ok := c.data[key].(int64); ok {
-		return int(v), nil
+	if v, err := c.getData(key); err != nil {
+		return 0, err
+	} else if vv, ok := v.(int); ok {
+		return vv, nil
+	} else if vv, ok := v.(int64); ok {
+		return int(vv), nil
 	}
 	return 0, errors.New("not int value")
 }
@@ -157,8 +163,10 @@ func (c *ConfigContainer) DefaultInt(key string, defaultval int) int {
 
 // Int64 returns the int64 value for a given key.
 func (c *ConfigContainer) Int64(key string) (int64, error) {
-	if v, ok := c.data[key].(int64); ok {
-		return v, nil
+	if v, err := c.getData(key); err != nil {
+		return 0, err
+	} else if vv, ok := v.(int64); ok {
+		return vv, nil
 	}
 	return 0, errors.New("not bool value")
 }
@@ -175,8 +183,14 @@ func (c *ConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
 
 // Float returns the float value for a given key.
 func (c *ConfigContainer) Float(key string) (float64, error) {
-	if v, ok := c.data[key].(float64); ok {
-		return v, nil
+	if v, err := c.getData(key); err != nil {
+		return 0.0, err
+	} else if vv, ok := v.(float64); ok {
+		return vv, nil
+	} else if vv, ok := v.(int); ok {
+		return float64(vv), nil
+	} else if vv, ok := v.(int64); ok {
+		return float64(vv), nil
 	}
 	return 0.0, errors.New("not float64 value")
 }
@@ -193,8 +207,10 @@ func (c *ConfigContainer) DefaultFloat(key string, defaultval float64) float64 {
 
 // String returns the string value for a given key.
 func (c *ConfigContainer) String(key string) string {
-	if v, ok := c.data[key].(string); ok {
-		return v
+	if v, err := c.getData(key); err == nil {
+		if vv, ok := v.(string); ok {
+			return vv
+		}
 	}
 	return ""
 }
@@ -228,7 +244,27 @@ func (c *ConfigContainer) DefaultStrings(key string, defaultval []string) []stri
 func (c *ConfigContainer) GetSection(section string) (map[string]string, error) {
 	v, ok := c.data[section]
 	if ok {
-		return v.(map[string]string), nil
+		var interfaceToStr func(map[string]interface{}) map[string]string
+
+		interfaceToStr = func(values map[string]interface{}) map[string]string {
+			strValues := make(map[string]string, len(values))
+			for k, vv := range values {
+				if vv == nil {
+					strValues[k] = ""
+				} else if env, ok := config.Getenv(vv); ok {
+					strValues[k] = env
+				} else if str, ok := vv.(string); ok {
+					strValues[k] = str
+				} else if m, ok := vv.(map[string]interface{}); ok {
+					strValues[k] = fmt.Sprintf("%v", interfaceToStr(m))
+				} else {
+					// TODO: no better.
+					strValues[k] = fmt.Sprintf("%v", vv)
+				}
+			}
+			return strValues
+		}
+		return interfaceToStr(v.(map[string]interface{})), nil
 	}
 	return nil, errors.New("not exist setction")
 }
@@ -255,10 +291,23 @@ func (c *ConfigContainer) Set(key, val string) error {
 
 // DIY returns the raw value by a given key.
 func (c *ConfigContainer) DIY(key string) (v interface{}, err error) {
-	if v, ok := c.data[key]; ok {
-		return v, nil
+	return c.getData(key)
+}
+
+func (c *ConfigContainer) getData(key string) (interface{}, error) {
+
+	if len(key) == 0 {
+		return nil, errors.New("key is emtpy")
 	}
-	return nil, errors.New("not exist key")
+
+	if v, ok := c.data[key]; ok {
+		if env, ok := config.Getenv(v); ok {
+			return env, nil
+		} else {
+			return v, nil
+		}
+	}
+	return nil, fmt.Errorf("not exist key %q", key)
 }
 
 func init() {

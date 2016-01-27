@@ -16,12 +16,16 @@ package yaml
 
 import (
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/astaxie/beego/config"
 )
 
-var yamlcontext = `
+func TestYaml(t *testing.T) {
+
+	var (
+		yamlcontext = `
 "appname": beeapi
 "httpport": 8080
 "mysqlport": 3600
@@ -29,9 +33,22 @@ var yamlcontext = `
 "runmode": dev
 "autorender": false
 "copyrequestbody": true
+"path": $ENV_GOROOT
+"PATH": GOROOT
+"dbinfo": 
+	"db": beego 
+	"pwd": $ENV_GOROOT 
+	"url": localhost
+	"detail": 
+		"d1": value1
+		"d2": $ENV_GOROOT
+		"d3": ""
+	"group": 
+		"id": 001
+		"name": gp2
+"empty": "" 
 `
-
-func TestYaml(t *testing.T) {
+	)
 	f, err := os.Create("testyaml.conf")
 	if err != nil {
 		t.Fatal(err)
@@ -47,6 +64,7 @@ func TestYaml(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if yamlconf.String("appname") != "beeapi" {
 		t.Fatal("appname not equal to beeapi")
 	}
@@ -78,5 +96,13 @@ func TestYaml(t *testing.T) {
 	}
 	if yamlconf.String("name") != "astaxie" {
 		t.Fatal("get name error")
+	}
+
+	if dbinfo, err := yamlconf.GetSection("dbinfo"); err != nil {
+		t.Fatal(err)
+	} else if dbinfo["pwd"] != os.Getenv("GOROOT") {
+		t.Fatal("get pwd error")
+	} else if strings.Contains(dbinfo["detail"], os.Getenv("GOROOT")) == false {
+		t.Fatal("get GOROOT path error")
 	}
 }

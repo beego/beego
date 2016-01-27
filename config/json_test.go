@@ -86,16 +86,18 @@ func TestJson(t *testing.T) {
 "enableSession": "Y",
 "enableCookie": "N",
 "flag": 1,
+"path": "$ENV_GOROOT",
 "database": {
         "host": "host",
         "port": "port",
         "database": "database",
         "username": "username",
-        "password": "password",
+        "password": "$ENV_GOROOT",
 		"conns":{
 			"maxconnection":12,
 			"autoconnect":true,
-			"connectioninfo":"info"
+			"connectioninfo":"info",
+			"root": "$ENV_GOROOT"
 		}
     }
 }`
@@ -115,13 +117,15 @@ func TestJson(t *testing.T) {
 			"enableSession":                   true,
 			"enableCookie":                    false,
 			"flag":                            true,
+			"path":                            os.Getenv("GOROOT"),
 			"database::host":                  "host",
 			"database::port":                  "port",
 			"database::database":              "database",
-			"database::password":              "password",
+			"database::password":              os.Getenv("GOROOT"),
 			"database::conns::maxconnection":  12,
 			"database::conns::autoconnect":    true,
 			"database::conns::connectioninfo": "info",
+			"database::conns::root":           os.Getenv("GOROOT"),
 			"unknown":                         "",
 		}
 	)

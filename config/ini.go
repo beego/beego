@@ -286,6 +286,11 @@ func (c *IniConfigContainer) DefaultStrings(key string, defaultval []string) []s
 // GetSection returns map for the given section
 func (c *IniConfigContainer) GetSection(section string) (map[string]string, error) {
 	if v, ok := c.data[section]; ok {
+		for k, vv := range v {
+			if env, ok := Getenv(vv); ok {
+				v[k] = env
+			}
+		}
 		return v, nil
 	}
 	return nil, errors.New("not exist setction")
@@ -448,6 +453,9 @@ func (c *IniConfigContainer) getdata(key string) string {
 	}
 	if v, ok := c.data[section]; ok {
 		if vv, ok := v[k]; ok {
+			if env, ok := Getenv(vv); ok {
+				return env
+			}
 			return vv
 		}
 	}
