@@ -67,15 +67,6 @@ func Run(params ...string) {
 }
 
 func initBeforeHTTPRun() {
-	// if AppConfigPath is setted or conf/app.conf exist
-	/*
-	err := ParseConfig()
-	if err != nil {
-		panic(err)
-	}
-	*/
-	var err error
-
 	//init hooks
 	AddAPPStartHook(registerMime)
 	AddAPPStartHook(registerDefaultErrorHandler)
@@ -85,7 +76,7 @@ func initBeforeHTTPRun() {
 	AddAPPStartHook(registerAdmin)
 
 	for _, hk := range hooks {
-		if err = hk(); err != nil {
+		if err := hk(); err != nil {
 			panic(err)
 		}
 	}

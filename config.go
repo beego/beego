@@ -20,7 +20,6 @@ import (
 	"path/filepath"
 	"strings"
 	"fmt"
-	"errors"
 
 	"github.com/astaxie/beego/config"
 	"github.com/astaxie/beego/session"
@@ -320,7 +319,7 @@ func LoadAppConfig(configPath string, adapterName string) error {
 	}
 
 	if !utils.FileExists(absConfigPath) {
-		return errors.New(fmt.Sprintf("the target config file: %s don't exist!", configPath))
+		return fmt.Errorf("the target config file: %s don't exist!", configPath)
 	}
 
 	if absConfigPath == AppConfigPath {
