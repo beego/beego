@@ -124,6 +124,10 @@ func init() {
 	workPath, _ = os.Getwd()
 	workPath, _ = filepath.Abs(workPath)
 
+	if workPath != AppPath {
+		os.Chdir(AppPath)
+	}
+
 	BConfig = &Config{
 		AppName:             "beego",
 		RunMode:             DEV,
@@ -195,10 +199,6 @@ func init() {
 
 // now only support ini, next will support json.
 func parseConfig(appConfigPath string) (err error) {
-	if workPath != AppPath {
-		os.Chdir(AppPath)
-	}
-
 	AppConfig, err = newAppConfig(AppConfigProvider, appConfigPath)
 	if err != nil {
 		return err
