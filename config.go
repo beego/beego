@@ -15,6 +15,7 @@
 package beego
 
 import (
+	"errors"
 	"html/template"
 	"os"
 	"path/filepath"
@@ -24,6 +25,8 @@ import (
 	"github.com/astaxie/beego/session"
 	"github.com/astaxie/beego/utils"
 )
+
+const confDir = "conf"
 
 // Config is the main struct for BConfig
 type Config struct {
@@ -39,6 +42,31 @@ type Config struct {
 	Listen              Listen
 	WebConfig           WebConfig
 	Log                 LogConfig
+
+	configFiles map[string]config.Configer
+}
+
+// Load return Configer
+// you can load the specific config file by run mode
+func (c *Config) Load(configFile string) (cf config.Configer, err error) {
+	if c, ok := c.configFiles[configFile]; ok {
+		cf = c
+		return
+	}
+	fullPathFile := filepath.Join(confDir, c.RunMode, configFile)
+	if !utils.FileExists(fullPathFile) {
+		fullPathFile = filepath.Join(confDir, configFile)
+		if !utils.FileExists(fullPathFile) {
+			err = errors.New(fullPathFile + " not found")
+			return
+		}
+	}
+	adapter := strings.TrimLeft(filepath.Ext(fullPathFile), ".")
+	cf, err = config.NewConfig(adapter, fullPathFile)
+	if err != nil {
+		c.configFiles[configFile] = cf
+	}
+	return
 }
 
 // Listen holds for http and https related config
@@ -189,7 +217,7 @@ func init() {
 func ParseConfig() (err error) {
 	if AppConfigPath == "" {
 		// initialize default configurations
-		AppConfigPath = filepath.Join(AppPath, "conf", "app.conf")
+		AppConfigPath = filepath.Join(AppPath, confDir, "app.conf")
 		if !utils.FileExists(AppConfigPath) {
 			AppConfig = &beegoAppConfig{config.NewFakeConfig()}
 			return

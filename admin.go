@@ -88,7 +88,7 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 
 	data := make(map[interface{}]interface{})
 	switch command {
-	case "conf":
+	case confDir:
 		m := make(map[string]interface{})
 		m["AppConfigPath"] = AppConfigPath
 		m["AppConfigProvider"] = AppConfigProvider
