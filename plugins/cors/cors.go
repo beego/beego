@@ -36,6 +36,7 @@
 package cors
 
 import (
+	"net/http"
 	"regexp"
 	"strconv"
 	"strings"
@@ -215,6 +216,7 @@ func Allow(opts *Options) beego.FilterFunc {
 			for key, value := range headers {
 				ctx.Output.Header(key, value)
 			}
+			ctx.ResponseWriter.WriteHeader(http.StatusOK)
 			return
 		}
 		headers = opts.Header(origin)
