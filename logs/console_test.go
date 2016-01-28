@@ -46,6 +46,6 @@ func TestConsole(t *testing.T) {
 // Test console without color
 func TestConsoleNoColor(t *testing.T) {
 	log := NewLogger(100)
-	log.SetLogger("console", `{"noColor":true}`)
+	log.SetLogger("console", `{"color":false}`)
 	testConsoleCalls(log)
 }
