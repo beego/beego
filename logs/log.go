@@ -98,6 +98,8 @@ type BeeLogger struct {
 	loggerFuncCallDepth int
 	asynchronous        bool
 	msgChan             chan *logMsg
+	signalChan			chan string
+	wg					sync.WaitGroup
 	outputs             []*nameLogger
 }
 
@@ -122,6 +124,8 @@ func NewLogger(channelLen int64) *BeeLogger {
 	bl.level = LevelDebug
 	bl.loggerFuncCallDepth = 2
 	bl.msgChan = make(chan *logMsg, channelLen)
+	bl.signalChan = make(chan string, 1)
+	bl.wg.Add(1)
 	return bl
 }
 
@@ -237,6 +241,27 @@ func (bl *BeeLogger) startLogger() {
 		case bm := <-bl.msgChan:
 			bl.writeToLoggers(bm.when, bm.msg, bm.level)
 			logMsgPool.Put(bm)
+		case sg := <-bl.signalChan:
+			// Now should only send "flush" or "close" to bl.signalChan
+			for {
+				if len(bl.msgChan) > 0 {
+					bm := <-bl.msgChan
+					bl.writeToLoggers(bm.when, bm.msg, bm.level)
+					logMsgPool.Put(bm)
+					continue
+				}
+				break
+			}
+			for _, l := range bl.outputs {
+				l.Flush()
+			}
+			if sg == "close" {
+				for _, l := range bl.outputs {
+					l.Destroy()
+				}
+				bl.outputs = nil
+			}
+			bl.wg.Done()
 		}
 	}
 }
@@ -345,27 +370,16 @@ func (bl *BeeLogger) Trace(format string, v ...interface{}) {
 
 // Flush flush all chan data.
 func (bl *BeeLogger) Flush() {
-	for _, l := range bl.outputs {
-		l.Flush()
-	}
+	bl.signalChan <- "flush"
+	bl.wg.Wait()
+	bl.wg.Add(1)
 }
 
 // Close close logger, flush all chan data and destroy all adapters in BeeLogger.
 func (bl *BeeLogger) Close() {
-	for {
-		if len(bl.msgChan) > 0 {
-			bm := <-bl.msgChan
-			bl.writeToLoggers(bm.when, bm.msg, bm.level)
-			logMsgPool.Put(bm)
-			continue
-		}
-		break
-	}
-	for _, l := range bl.outputs {
-		l.Flush()
-		l.Destroy()
-	}
-	bl.outputs = nil
+	bl.signalChan <- "close"
+	bl.wg.Wait()
+	bl.wg.Add(1)
 }
 
 func formatLogTime(when time.Time) string {
