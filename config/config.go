@@ -119,9 +119,8 @@ func Getenv(env interface{}) (string, bool) {
 
 	// Onley support string key.
 	if key, ok := env.(string); ok {
-		if len(key) > len(envKeySign) && strings.HasPrefix(key, envKeySign) {
-			key = strings.TrimLeft(key, envKeySign)
-			return os.Getenv(key), true
+		if envKey := strings.TrimPrefix(key, envKeySign); envKey != key {
+			return os.Getenv(envKey), true
 		}
 	}
 	return "", false
