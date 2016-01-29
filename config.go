@@ -19,6 +19,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"fmt"
 
 	"github.com/astaxie/beego/config"
 	"github.com/astaxie/beego/session"
@@ -105,22 +106,26 @@ var (
 	AppConfig *beegoAppConfig
 	// AppPath is the absolute path to the app
 	AppPath string
-	// AppConfigPath is the path to the config files
-	AppConfigPath string
-	// AppConfigProvider is the provider for the config, default is ini
-	AppConfigProvider = "ini"
 	// TemplateCache stores template caching
 	TemplateCache map[string]*template.Template
 	// GlobalSessions is the instance for the session manager
 	GlobalSessions *session.Manager
 
 	workPath string
+	// appConfigPath is the path to the config files
+	appConfigPath string
+	// appConfigProvider is the provider for the config, default is ini
+	appConfigProvider = "ini"
 )
 
 func init() {
 	AppPath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
 	workPath, _ = os.Getwd()
 	workPath, _ = filepath.Abs(workPath)
+
+	if workPath != AppPath {
+		os.Chdir(AppPath)
+	}
 
 	BConfig = &Config{
 		AppName:             "beego",
@@ -181,26 +186,19 @@ func init() {
 			Outputs:     map[string]string{"console": ""},
 		},
 	}
-	ParseConfig()
+
+	appConfigPath = filepath.Join(AppPath, "conf", "app.conf")
+	if !utils.FileExists(appConfigPath) {
+		AppConfig = &beegoAppConfig{config.NewFakeConfig()}
+		return
+	}
+
+	parseConfig(appConfigPath)
 }
 
-// ParseConfig parsed default config file.
 // now only support ini, next will support json.
-func ParseConfig() (err error) {
-	if AppConfigPath == "" {
-		// initialize default configurations
-		AppConfigPath = filepath.Join(AppPath, "conf", "app.conf")
-		if !utils.FileExists(AppConfigPath) {
-			AppConfig = &beegoAppConfig{config.NewFakeConfig()}
-			return
-		}
-	}
-
-	if workPath != AppPath {
-		os.Chdir(AppPath)
-	}
-
-	AppConfig, err = newAppConfig(AppConfigProvider, AppConfigPath)
+func parseConfig(appConfigPath string) (err error) {
+	AppConfig, err = newAppConfig(appConfigProvider, appConfigPath)
 	if err != nil {
 		return err
 	}
@@ -254,6 +252,8 @@ func ParseConfig() (err error) {
 	BConfig.WebConfig.Session.SessionCookieLifeTime = AppConfig.DefaultInt("SessionCookieLifeTime", BConfig.WebConfig.Session.SessionCookieLifeTime)
 	BConfig.WebConfig.Session.SessionAutoSetCookie = AppConfig.DefaultBool("SessionAutoSetCookie", BConfig.WebConfig.Session.SessionAutoSetCookie)
 	BConfig.WebConfig.Session.SessionDomain = AppConfig.DefaultString("SessionDomain", BConfig.WebConfig.Session.SessionDomain)
+	BConfig.Log.AccessLogs = AppConfig.DefaultBool("LogAccessLogs", BConfig.Log.AccessLogs)
+	BConfig.Log.FileLineNum = AppConfig.DefaultBool("LogFileLineNum", BConfig.Log.FileLineNum)
 
 	if sd := AppConfig.String("StaticDir"); sd != "" {
 		for k := range BConfig.WebConfig.StaticDir {
@@ -286,15 +286,58 @@ func ParseConfig() (err error) {
 			BConfig.WebConfig.StaticExtensionsToGzip = fileExts
 		}
 	}
+
+	if lo := AppConfig.String("LogOutputs"); lo != "" {
+		los := strings.Split(lo, ";")
+		for _, v := range los {
+			if logType2Config := strings.SplitN(v, ",", 2); len(logType2Config) == 2 {
+				BConfig.Log.Outputs[logType2Config[0]] = logType2Config[1]
+			} else {
+				continue
+			}
+		}
+	}
+
+	//init log
+	BeeLogger.Close()
+	for adaptor, config := range BConfig.Log.Outputs {
+		err = BeeLogger.SetLogger(adaptor, config)
+		if err != nil {
+			fmt.Printf("%s with the config `%s` got err:%s\n", adaptor, config, err)
+		}
+	}
+	SetLogFuncCall(BConfig.Log.FileLineNum)
+
 	return nil
+}
+
+// LoadAppConfig allow developer to apply a config file
+func LoadAppConfig(adapterName, configPath string) error {
+	absConfigPath, err := filepath.Abs(configPath)
+	if err != nil {
+		return err
+	}
+
+	if !utils.FileExists(absConfigPath) {
+		return fmt.Errorf("the target config file: %s don't exist!", configPath)
+	}
+
+	if absConfigPath == appConfigPath {
+		return nil
+	}
+
+	appConfigPath = absConfigPath
+	appConfigProvider = adapterName
+
+	return parseConfig(appConfigPath)
 }
 
 type beegoAppConfig struct {
 	innerConfig config.Configer
 }
 
-func newAppConfig(AppConfigProvider, AppConfigPath string) (*beegoAppConfig, error) {
-	ac, err := config.NewConfig(AppConfigProvider, AppConfigPath)
+func newAppConfig(appConfigProvider, appConfigPath string) (*beegoAppConfig, error) {
+	ac, err := config.NewConfig(appConfigProvider, appConfigPath)
 	if err != nil {
 		return nil, err
 	}
