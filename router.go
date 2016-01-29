@@ -862,6 +862,8 @@ func (p *ControllerRegister) recoverPanic(context *beecontext.Context) {
 			}
 			if BConfig.RunMode == DEV {
 				showErr(err, context, stack)
+			} else {
+				context.ResponseWriter.WriteHeader(500)
 			}
 		}
 	}
