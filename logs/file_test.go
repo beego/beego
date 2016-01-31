@@ -23,7 +23,7 @@ import (
 	"time"
 )
 
-func TestFile(t *testing.T) {
+func TestFile1(t *testing.T) {
 	log := NewLogger(10000)
 	log.SetLogger("file", `{"filename":"test.log"}`)
 	log.Debug("debug")
@@ -34,25 +34,24 @@ func TestFile(t *testing.T) {
 	log.Alert("alert")
 	log.Critical("critical")
 	log.Emergency("emergency")
-	time.Sleep(time.Second * 4)
 	f, err := os.Open("test.log")
 	if err != nil {
 		t.Fatal(err)
 	}
 	b := bufio.NewReader(f)
-	linenum := 0
+	lineNum := 0
 	for {
 		line, _, err := b.ReadLine()
 		if err != nil {
 			break
 		}
 		if len(line) > 0 {
-			linenum++
+			lineNum++
 		}
 	}
 	var expected = LevelDebug + 1
-	if linenum != expected {
-		t.Fatal(linenum, "not "+strconv.Itoa(expected)+" lines")
+	if lineNum != expected {
+		t.Fatal(lineNum, "not "+strconv.Itoa(expected)+" lines")
 	}
 	os.Remove("test.log")
 }
@@ -68,25 +67,24 @@ func TestFile2(t *testing.T) {
 	log.Alert("alert")
 	log.Critical("critical")
 	log.Emergency("emergency")
-	time.Sleep(time.Second * 4)
 	f, err := os.Open("test2.log")
 	if err != nil {
 		t.Fatal(err)
 	}
 	b := bufio.NewReader(f)
-	linenum := 0
+	lineNum := 0
 	for {
 		line, _, err := b.ReadLine()
 		if err != nil {
 			break
 		}
 		if len(line) > 0 {
-			linenum++
+			lineNum++
 		}
 	}
 	var expected = LevelError + 1
-	if linenum != expected {
-		t.Fatal(linenum, "not "+strconv.Itoa(expected)+" lines")
+	if lineNum != expected {
+		t.Fatal(lineNum, "not "+strconv.Itoa(expected)+" lines")
 	}
 	os.Remove("test2.log")
 }
@@ -102,13 +100,13 @@ func TestFileRotate(t *testing.T) {
 	log.Alert("alert")
 	log.Critical("critical")
 	log.Emergency("emergency")
-	time.Sleep(time.Second * 4)
-	rotatename := "test3.log" + fmt.Sprintf(".%s.%03d", time.Now().Format("2006-01-02"), 1)
-	b, err := exists(rotatename)
+	rotateName := "test3" + fmt.Sprintf(".%s.%03d", time.Now().Format("2006-01-02"), 1) + ".log"
+	b, err := exists(rotateName)
 	if !b || err != nil {
+		os.Remove("test3.log")
 		t.Fatal("rotate not generated")
 	}
-	os.Remove(rotatename)
+	os.Remove(rotateName)
 	os.Remove("test3.log")
 }
 
@@ -128,6 +126,48 @@ func BenchmarkFile(b *testing.B) {
 	log.SetLogger("file", `{"filename":"test4.log"}`)
 	for i := 0; i < b.N; i++ {
 		log.Debug("debug")
+	}
+	os.Remove("test4.log")
+}
+
+func BenchmarkFileAsynchronous(b *testing.B) {
+	log := NewLogger(100000)
+	log.SetLogger("file", `{"filename":"test4.log"}`)
+	log.Async()
+	for i := 0; i < b.N; i++ {
+		log.Debug("debug")
+	}
+	os.Remove("test4.log")
+}
+
+func BenchmarkFileCallDepth(b *testing.B) {
+	log := NewLogger(100000)
+	log.SetLogger("file", `{"filename":"test4.log"}`)
+	log.EnableFuncCallDepth(true)
+	log.SetLogFuncCallDepth(2)
+	for i := 0; i < b.N; i++ {
+		log.Debug("debug")
+	}
+	os.Remove("test4.log")
+}
+
+func BenchmarkFileAsynchronousCallDepth(b *testing.B) {
+	log := NewLogger(100000)
+	log.SetLogger("file", `{"filename":"test4.log"}`)
+	log.EnableFuncCallDepth(true)
+	log.SetLogFuncCallDepth(2)
+	log.Async()
+	for i := 0; i < b.N; i++ {
+		log.Debug("debug")
+	}
+	os.Remove("test4.log")
+}
+
+func BenchmarkFileOnGoroutine(b *testing.B) {
+	log := NewLogger(100000)
+	log.SetLogger("file", `{"filename":"test4.log"}`)
+	for i := 0; i < b.N; i++ {
+		go log.Debug("debug")
 	}
 	os.Remove("test4.log")
 }

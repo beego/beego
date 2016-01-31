@@ -240,6 +240,7 @@ var font = [][]byte{
 	},
 }
 
+// Image struct
 type Image struct {
 	*image.Paletted
 	numWidth  int

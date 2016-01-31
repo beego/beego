@@ -17,18 +17,20 @@ package memcache
 import (
 	_ "github.com/bradfitz/gomemcache/memcache"
 
-	"github.com/astaxie/beego/cache"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/astaxie/beego/cache"
 )
 
-func TestRedisCache(t *testing.T) {
+func TestMemcacheCache(t *testing.T) {
 	bm, err := cache.NewCache("memcache", `{"conn": "127.0.0.1:11211"}`)
 	if err != nil {
 		t.Error("init err")
 	}
-	if err = bm.Put("astaxie", "1", 10); err != nil {
+	timeoutDuration := 10 * time.Second
+	if err = bm.Put("astaxie", "1", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
 	if !bm.IsExist("astaxie") {
@@ -40,7 +42,7 @@ func TestRedisCache(t *testing.T) {
 	if bm.IsExist("astaxie") {
 		t.Error("check err")
 	}
-	if err = bm.Put("astaxie", "1", 10); err != nil {
+	if err = bm.Put("astaxie", "1", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
 
@@ -69,7 +71,7 @@ func TestRedisCache(t *testing.T) {
 	}
 
 	//test string
-	if err = bm.Put("astaxie", "author", 10); err != nil {
+	if err = bm.Put("astaxie", "author", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
 	if !bm.IsExist("astaxie") {
@@ -81,7 +83,7 @@ func TestRedisCache(t *testing.T) {
 	}
 
 	//test GetMulti
-	if err = bm.Put("astaxie1", "author1", 10); err != nil {
+	if err = bm.Put("astaxie1", "author1", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
 	if !bm.IsExist("astaxie1") {
@@ -92,10 +94,10 @@ func TestRedisCache(t *testing.T) {
 	if len(vv) != 2 {
 		t.Error("GetMulti ERROR")
 	}
-	if vv[0].(string) != "author" {
+	if vv[0].(string) != "author" && vv[0].(string) != "author1" {
 		t.Error("GetMulti ERROR")
 	}
-	if vv[1].(string) != "author1" {
+	if vv[1].(string) != "author1" && vv[1].(string) != "author" {
 		t.Error("GetMulti ERROR")
 	}
 

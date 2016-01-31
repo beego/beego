@@ -32,14 +32,12 @@ type FilterRouter struct {
 // ValidRouter checks if the current request is matched by this filter.
 // If the request is matched, the values of the URL parameters defined
 // by the filter pattern are also returned.
-func (f *FilterRouter) ValidRouter(url string) (bool, map[string]string) {
-	isok, params := f.tree.Match(url)
-	if isok == nil {
-		return false, nil
+func (f *FilterRouter) ValidRouter(url string, ctx *context.Context) bool {
+	isOk := f.tree.Match(url, ctx)
+	if isOk != nil {
+		if b, ok := isOk.(bool); ok {
+			return b
+		}
 	}
-	if isok, ok := isok.(bool); ok {
-		return isok, params
-	} else {
-		return false, nil
-	}
+	return false
 }

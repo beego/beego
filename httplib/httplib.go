@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package httplib is used as http.Client
 // Usage:
 //
 // import "github.com/astaxie/beego/httplib"
@@ -51,7 +52,7 @@ import (
 	"time"
 )
 
-var defaultSetting = BeegoHttpSettings{
+var defaultSetting = BeegoHTTPSettings{
 	UserAgent:        "beegoServer",
 	ConnectTimeout:   60 * time.Second,
 	ReadWriteTimeout: 60 * time.Second,
@@ -69,25 +70,19 @@ func createDefaultCookie() {
 	defaultCookieJar, _ = cookiejar.New(nil)
 }
 
-// Overwrite default settings
-func SetDefaultSetting(setting BeegoHttpSettings) {
+// SetDefaultSetting Overwrite default settings
+func SetDefaultSetting(setting BeegoHTTPSettings) {
 	settingMutex.Lock()
 	defer settingMutex.Unlock()
 	defaultSetting = setting
-	if defaultSetting.ConnectTimeout == 0 {
-		defaultSetting.ConnectTimeout = 60 * time.Second
-	}
-	if defaultSetting.ReadWriteTimeout == 0 {
-		defaultSetting.ReadWriteTimeout = 60 * time.Second
-	}
 }
 
-// return *BeegoHttpRequest with specific method
-func NewBeegoRequest(rawurl, method string) *BeegoHttpRequest {
+// NewBeegoRequest return *BeegoHttpRequest with specific method
+func NewBeegoRequest(rawurl, method string) *BeegoHTTPRequest {
 	var resp http.Response
 	u, err := url.Parse(rawurl)
 	if err != nil {
-		log.Fatal(err)
+		log.Println("Httplib:", err)
 	}
 	req := http.Request{
 		URL:        u,
@@ -97,10 +92,10 @@ func NewBeegoRequest(rawurl, method string) *BeegoHttpRequest {
 		ProtoMajor: 1,
 		ProtoMinor: 1,
 	}
-	return &BeegoHttpRequest{
+	return &BeegoHTTPRequest{
 		url:     rawurl,
 		req:     &req,
-		params:  map[string]string{},
+		params:  map[string][]string{},
 		files:   map[string]string{},
 		setting: defaultSetting,
 		resp:    &resp,
@@ -108,37 +103,37 @@ func NewBeegoRequest(rawurl, method string) *BeegoHttpRequest {
 }
 
 // Get returns *BeegoHttpRequest with GET method.
-func Get(url string) *BeegoHttpRequest {
+func Get(url string) *BeegoHTTPRequest {
 	return NewBeegoRequest(url, "GET")
 }
 
 // Post returns *BeegoHttpRequest with POST method.
-func Post(url string) *BeegoHttpRequest {
+func Post(url string) *BeegoHTTPRequest {
 	return NewBeegoRequest(url, "POST")
 }
 
 // Put returns *BeegoHttpRequest with PUT method.
-func Put(url string) *BeegoHttpRequest {
+func Put(url string) *BeegoHTTPRequest {
 	return NewBeegoRequest(url, "PUT")
 }
 
 // Delete returns *BeegoHttpRequest DELETE method.
-func Delete(url string) *BeegoHttpRequest {
+func Delete(url string) *BeegoHTTPRequest {
 	return NewBeegoRequest(url, "DELETE")
 }
 
 // Head returns *BeegoHttpRequest with HEAD method.
-func Head(url string) *BeegoHttpRequest {
+func Head(url string) *BeegoHTTPRequest {
 	return NewBeegoRequest(url, "HEAD")
 }
 
-// BeegoHttpSettings
-type BeegoHttpSettings struct {
+// BeegoHTTPSettings is the http.Client setting
+type BeegoHTTPSettings struct {
 	ShowDebug        bool
 	UserAgent        string
 	ConnectTimeout   time.Duration
 	ReadWriteTimeout time.Duration
-	TlsClientConfig  *tls.Config
+	TLSClientConfig  *tls.Config
 	Proxy            func(*http.Request) (*url.URL, error)
 	Transport        http.RoundTripper
 	EnableCookie     bool
@@ -146,92 +141,92 @@ type BeegoHttpSettings struct {
 	DumpBody         bool
 }
 
-// BeegoHttpRequest provides more useful methods for requesting one url than http.Request.
-type BeegoHttpRequest struct {
+// BeegoHTTPRequest provides more useful methods for requesting one url than http.Request.
+type BeegoHTTPRequest struct {
 	url     string
 	req     *http.Request
-	params  map[string]string
+	params  map[string][]string
 	files   map[string]string
-	setting BeegoHttpSettings
+	setting BeegoHTTPSettings
 	resp    *http.Response
 	body    []byte
 	dump    []byte
 }
 
-// get request
-func (b *BeegoHttpRequest) GetRequest() *http.Request {
+// GetRequest return the request object
+func (b *BeegoHTTPRequest) GetRequest() *http.Request {
 	return b.req
 }
 
-// Change request settings
-func (b *BeegoHttpRequest) Setting(setting BeegoHttpSettings) *BeegoHttpRequest {
+// Setting Change request settings
+func (b *BeegoHTTPRequest) Setting(setting BeegoHTTPSettings) *BeegoHTTPRequest {
 	b.setting = setting
 	return b
 }
 
 // SetBasicAuth sets the request's Authorization header to use HTTP Basic Authentication with the provided username and password.
-func (b *BeegoHttpRequest) SetBasicAuth(username, password string) *BeegoHttpRequest {
+func (b *BeegoHTTPRequest) SetBasicAuth(username, password string) *BeegoHTTPRequest {
 	b.req.SetBasicAuth(username, password)
 	return b
 }
 
 // SetEnableCookie sets enable/disable cookiejar
-func (b *BeegoHttpRequest) SetEnableCookie(enable bool) *BeegoHttpRequest {
+func (b *BeegoHTTPRequest) SetEnableCookie(enable bool) *BeegoHTTPRequest {
 	b.setting.EnableCookie = enable
 	return b
 }
 
 // SetUserAgent sets User-Agent header field
-func (b *BeegoHttpRequest) SetUserAgent(useragent string) *BeegoHttpRequest {
+func (b *BeegoHTTPRequest) SetUserAgent(useragent string) *BeegoHTTPRequest {
 	b.setting.UserAgent = useragent
 	return b
 }
 
 // Debug sets show debug or not when executing request.
-func (b *BeegoHttpRequest) Debug(isdebug bool) *BeegoHttpRequest {
+func (b *BeegoHTTPRequest) Debug(isdebug bool) *BeegoHTTPRequest {
 	b.setting.ShowDebug = isdebug
 	return b
 }
 
-// Dump Body.
-func (b *BeegoHttpRequest) DumpBody(isdump bool) *BeegoHttpRequest {
+// DumpBody setting whether need to Dump the Body.
+func (b *BeegoHTTPRequest) DumpBody(isdump bool) *BeegoHTTPRequest {
 	b.setting.DumpBody = isdump
 	return b
 }
 
-// return the DumpRequest
-func (b *BeegoHttpRequest) DumpRequest() []byte {
+// DumpRequest return the DumpRequest
+func (b *BeegoHTTPRequest) DumpRequest() []byte {
 	return b.dump
 }
 
 // SetTimeout sets connect time out and read-write time out for BeegoRequest.
-func (b *BeegoHttpRequest) SetTimeout(connectTimeout, readWriteTimeout time.Duration) *BeegoHttpRequest {
+func (b *BeegoHTTPRequest) SetTimeout(connectTimeout, readWriteTimeout time.Duration) *BeegoHTTPRequest {
 	b.setting.ConnectTimeout = connectTimeout
 	b.setting.ReadWriteTimeout = readWriteTimeout
 	return b
 }
 
 // SetTLSClientConfig sets tls connection configurations if visiting https url.
-func (b *BeegoHttpRequest) SetTLSClientConfig(config *tls.Config) *BeegoHttpRequest {
-	b.setting.TlsClientConfig = config
+func (b *BeegoHTTPRequest) SetTLSClientConfig(config *tls.Config) *BeegoHTTPRequest {
+	b.setting.TLSClientConfig = config
 	return b
 }
 
 // Header add header item string in request.
-func (b *BeegoHttpRequest) Header(key, value string) *BeegoHttpRequest {
+func (b *BeegoHTTPRequest) Header(key, value string) *BeegoHTTPRequest {
 	b.req.Header.Set(key, value)
 	return b
 }
 
-// Set HOST
-func (b *BeegoHttpRequest) SetHost(host string) *BeegoHttpRequest {
+// SetHost set the request host
+func (b *BeegoHTTPRequest) SetHost(host string) *BeegoHTTPRequest {
 	b.req.Host = host
 	return b
 }
 
-// Set the protocol version for incoming requests.
+// SetProtocolVersion Set the protocol version for incoming requests.
 // Client requests always use HTTP/1.1.
-func (b *BeegoHttpRequest) SetProtocolVersion(vers string) *BeegoHttpRequest {
+func (b *BeegoHTTPRequest) SetProtocolVersion(vers string) *BeegoHTTPRequest {
 	if len(vers) == 0 {
 		vers = "HTTP/1.1"
 	}
@@ -247,44 +242,49 @@ func (b *BeegoHttpRequest) SetProtocolVersion(vers string) *BeegoHttpRequest {
 }
 
 // SetCookie add cookie into request.
-func (b *BeegoHttpRequest) SetCookie(cookie *http.Cookie) *BeegoHttpRequest {
+func (b *BeegoHTTPRequest) SetCookie(cookie *http.Cookie) *BeegoHTTPRequest {
 	b.req.Header.Add("Cookie", cookie.String())
 	return b
 }
 
-// Set transport to
-func (b *BeegoHttpRequest) SetTransport(transport http.RoundTripper) *BeegoHttpRequest {
+// SetTransport set the setting transport
+func (b *BeegoHTTPRequest) SetTransport(transport http.RoundTripper) *BeegoHTTPRequest {
 	b.setting.Transport = transport
 	return b
 }
 
-// Set http proxy
+// SetProxy set the http proxy
 // example:
 //
 //	func(req *http.Request) (*url.URL, error) {
 // 		u, _ := url.ParseRequestURI("http://127.0.0.1:8118")
 // 		return u, nil
 // 	}
-func (b *BeegoHttpRequest) SetProxy(proxy func(*http.Request) (*url.URL, error)) *BeegoHttpRequest {
+func (b *BeegoHTTPRequest) SetProxy(proxy func(*http.Request) (*url.URL, error)) *BeegoHTTPRequest {
 	b.setting.Proxy = proxy
 	return b
 }
 
 // Param adds query param in to request.
 // params build query string as ?key1=value1&key2=value2...
-func (b *BeegoHttpRequest) Param(key, value string) *BeegoHttpRequest {
-	b.params[key] = value
+func (b *BeegoHTTPRequest) Param(key, value string) *BeegoHTTPRequest {
+	if param, ok := b.params[key]; ok {
+		b.params[key] = append(param, value)
+	} else {
+		b.params[key] = []string{value}
+	}
 	return b
 }
 
-func (b *BeegoHttpRequest) PostFile(formname, filename string) *BeegoHttpRequest {
+// PostFile add a post file to the request
+func (b *BeegoHTTPRequest) PostFile(formname, filename string) *BeegoHTTPRequest {
 	b.files[formname] = filename
 	return b
 }
 
 // Body adds request raw body.
 // it supports string and []byte.
-func (b *BeegoHttpRequest) Body(data interface{}) *BeegoHttpRequest {
+func (b *BeegoHTTPRequest) Body(data interface{}) *BeegoHTTPRequest {
 	switch t := data.(type) {
 	case string:
 		bf := bytes.NewBufferString(t)
@@ -298,8 +298,8 @@ func (b *BeegoHttpRequest) Body(data interface{}) *BeegoHttpRequest {
 	return b
 }
 
-// JsonBody adds request raw body encoding by JSON.
-func (b *BeegoHttpRequest) JsonBody(obj interface{}) (*BeegoHttpRequest, error) {
+// JSONBody adds request raw body encoding by JSON.
+func (b *BeegoHTTPRequest) JSONBody(obj interface{}) (*BeegoHTTPRequest, error) {
 	if b.req.Body == nil && obj != nil {
 		buf := bytes.NewBuffer(nil)
 		enc := json.NewEncoder(buf)
@@ -313,7 +313,7 @@ func (b *BeegoHttpRequest) JsonBody(obj interface{}) (*BeegoHttpRequest, error) 
 	return b, nil
 }
 
-func (b *BeegoHttpRequest) buildUrl(paramBody string) {
+func (b *BeegoHTTPRequest) buildURL(paramBody string) {
 	// build GET url with query string
 	if b.req.Method == "GET" && len(paramBody) > 0 {
 		if strings.Index(b.url, "?") != -1 {
@@ -334,21 +334,23 @@ func (b *BeegoHttpRequest) buildUrl(paramBody string) {
 				for formname, filename := range b.files {
 					fileWriter, err := bodyWriter.CreateFormFile(formname, filename)
 					if err != nil {
-						log.Fatal(err)
+						log.Println("Httplib:", err)
 					}
 					fh, err := os.Open(filename)
 					if err != nil {
-						log.Fatal(err)
+						log.Println("Httplib:", err)
 					}
 					//iocopy
 					_, err = io.Copy(fileWriter, fh)
 					fh.Close()
 					if err != nil {
-						log.Fatal(err)
+						log.Println("Httplib:", err)
 					}
 				}
 				for k, v := range b.params {
-					bodyWriter.WriteField(k, v)
+					for _, vv := range v {
+						bodyWriter.WriteField(k, vv)
+					}
 				}
 				bodyWriter.Close()
 				pw.Close()
@@ -366,11 +368,11 @@ func (b *BeegoHttpRequest) buildUrl(paramBody string) {
 	}
 }
 
-func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
+func (b *BeegoHTTPRequest) getResponse() (*http.Response, error) {
 	if b.resp.StatusCode != 0 {
 		return b.resp, nil
 	}
-	resp, err := b.SendOut()
+	resp, err := b.DoRequest()
 	if err != nil {
 		return nil, err
 	}
@@ -378,21 +380,24 @@ func (b *BeegoHttpRequest) getResponse() (*http.Response, error) {
 	return resp, nil
 }
 
-func (b *BeegoHttpRequest) SendOut() (*http.Response, error) {
+// DoRequest will do the client.Do
+func (b *BeegoHTTPRequest) DoRequest() (*http.Response, error) {
 	var paramBody string
 	if len(b.params) > 0 {
 		var buf bytes.Buffer
 		for k, v := range b.params {
-			buf.WriteString(url.QueryEscape(k))
-			buf.WriteByte('=')
-			buf.WriteString(url.QueryEscape(v))
-			buf.WriteByte('&')
+			for _, vv := range v {
+				buf.WriteString(url.QueryEscape(k))
+				buf.WriteByte('=')
+				buf.WriteString(url.QueryEscape(vv))
+				buf.WriteByte('&')
+			}
 		}
 		paramBody = buf.String()
 		paramBody = paramBody[0 : len(paramBody)-1]
 	}
 
-	b.buildUrl(paramBody)
+	b.buildURL(paramBody)
 	url, err := url.Parse(b.url)
 	if err != nil {
 		return nil, err
@@ -405,7 +410,7 @@ func (b *BeegoHttpRequest) SendOut() (*http.Response, error) {
 	if trans == nil {
 		// create default transport
 		trans = &http.Transport{
-			TLSClientConfig: b.setting.TlsClientConfig,
+			TLSClientConfig: b.setting.TLSClientConfig,
 			Proxy:           b.setting.Proxy,
 			Dial:            TimeoutDialer(b.setting.ConnectTimeout, b.setting.ReadWriteTimeout),
 		}
@@ -413,7 +418,7 @@ func (b *BeegoHttpRequest) SendOut() (*http.Response, error) {
 		// if b.transport is *http.Transport then set the settings.
 		if t, ok := trans.(*http.Transport); ok {
 			if t.TLSClientConfig == nil {
-				t.TLSClientConfig = b.setting.TlsClientConfig
+				t.TLSClientConfig = b.setting.TLSClientConfig
 			}
 			if t.Proxy == nil {
 				t.Proxy = b.setting.Proxy
@@ -424,7 +429,7 @@ func (b *BeegoHttpRequest) SendOut() (*http.Response, error) {
 		}
 	}
 
-	var jar http.CookieJar = nil
+	var jar http.CookieJar
 	if b.setting.EnableCookie {
 		if defaultCookieJar == nil {
 			createDefaultCookie()
@@ -453,7 +458,7 @@ func (b *BeegoHttpRequest) SendOut() (*http.Response, error) {
 
 // String returns the body string in response.
 // it calls Response inner.
-func (b *BeegoHttpRequest) String() (string, error) {
+func (b *BeegoHTTPRequest) String() (string, error) {
 	data, err := b.Bytes()
 	if err != nil {
 		return "", err
@@ -464,7 +469,7 @@ func (b *BeegoHttpRequest) String() (string, error) {
 
 // Bytes returns the body []byte in response.
 // it calls Response inner.
-func (b *BeegoHttpRequest) Bytes() ([]byte, error) {
+func (b *BeegoHTTPRequest) Bytes() ([]byte, error) {
 	if b.body != nil {
 		return b.body, nil
 	}
@@ -490,7 +495,7 @@ func (b *BeegoHttpRequest) Bytes() ([]byte, error) {
 
 // ToFile saves the body data in response to one file.
 // it calls Response inner.
-func (b *BeegoHttpRequest) ToFile(filename string) error {
+func (b *BeegoHTTPRequest) ToFile(filename string) error {
 	f, err := os.Create(filename)
 	if err != nil {
 		return err
@@ -509,9 +514,9 @@ func (b *BeegoHttpRequest) ToFile(filename string) error {
 	return err
 }
 
-// ToJson returns the map that marshals from the body bytes as json in response .
+// ToJSON returns the map that marshals from the body bytes as json in response .
 // it calls Response inner.
-func (b *BeegoHttpRequest) ToJson(v interface{}) error {
+func (b *BeegoHTTPRequest) ToJSON(v interface{}) error {
 	data, err := b.Bytes()
 	if err != nil {
 		return err
@@ -519,9 +524,9 @@ func (b *BeegoHttpRequest) ToJson(v interface{}) error {
 	return json.Unmarshal(data, v)
 }
 
-// ToXml returns the map that marshals from the body bytes as xml in response .
+// ToXML returns the map that marshals from the body bytes as xml in response .
 // it calls Response inner.
-func (b *BeegoHttpRequest) ToXml(v interface{}) error {
+func (b *BeegoHTTPRequest) ToXML(v interface{}) error {
 	data, err := b.Bytes()
 	if err != nil {
 		return err
@@ -530,7 +535,7 @@ func (b *BeegoHttpRequest) ToXml(v interface{}) error {
 }
 
 // Response executes request client gets response mannually.
-func (b *BeegoHttpRequest) Response() (*http.Response, error) {
+func (b *BeegoHTTPRequest) Response() (*http.Response, error) {
 	return b.getResponse()
 }
 

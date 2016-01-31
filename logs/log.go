@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package logs provide a general log interface
 // Usage:
 //
 // import "github.com/astaxie/beego/logs"
@@ -34,8 +35,10 @@ package logs
 
 import (
 	"fmt"
+	"os"
 	"path"
 	"runtime"
+	"strconv"
 	"sync"
 )
 
@@ -60,10 +63,10 @@ const (
 	LevelWarn  = LevelWarning
 )
 
-type loggerType func() LoggerInterface
+type loggerType func() Logger
 
-// LoggerInterface defines the behavior of a log provider.
-type LoggerInterface interface {
+// Logger defines the behavior of a log provider.
+type Logger interface {
 	Init(config string) error
 	WriteMsg(msg string, level int) error
 	Destroy()
@@ -93,8 +96,13 @@ type BeeLogger struct {
 	enableFuncCallDepth bool
 	loggerFuncCallDepth int
 	asynchronous        bool
-	msg                 chan *logMsg
-	outputs             map[string]LoggerInterface
+	msgChan             chan *logMsg
+	outputs             []*nameLogger
+}
+
+type nameLogger struct {
+	Logger
+	name string
 }
 
 type logMsg struct {
@@ -102,59 +110,79 @@ type logMsg struct {
 	msg   string
 }
 
+var logMsgPool *sync.Pool
+
 // NewLogger returns a new BeeLogger.
-// channellen means the number of messages in chan.
+// channelLen means the number of messages in chan(used where asynchronous is true).
 // if the buffering chan is full, logger adapters write to file or other way.
-func NewLogger(channellen int64) *BeeLogger {
+func NewLogger(channelLen int64) *BeeLogger {
 	bl := new(BeeLogger)
 	bl.level = LevelDebug
 	bl.loggerFuncCallDepth = 2
-	bl.msg = make(chan *logMsg, channellen)
-	bl.outputs = make(map[string]LoggerInterface)
+	bl.msgChan = make(chan *logMsg, channelLen)
 	return bl
 }
 
+// Async set the log to asynchronous and start the goroutine
 func (bl *BeeLogger) Async() *BeeLogger {
 	bl.asynchronous = true
+	logMsgPool = &sync.Pool{
+		New: func() interface{} {
+			return &logMsg{}
+		},
+	}
 	go bl.startLogger()
 	return bl
 }
 
 // SetLogger provides a given logger adapter into BeeLogger with config string.
 // config need to be correct JSON as string: {"interval":360}.
-func (bl *BeeLogger) SetLogger(adaptername string, config string) error {
+func (bl *BeeLogger) SetLogger(adapterName string, config string) error {
 	bl.lock.Lock()
 	defer bl.lock.Unlock()
-	if log, ok := adapters[adaptername]; ok {
+	if log, ok := adapters[adapterName]; ok {
 		lg := log()
 		err := lg.Init(config)
-		bl.outputs[adaptername] = lg
 		if err != nil {
-			fmt.Println("logs.BeeLogger.SetLogger: " + err.Error())
+			fmt.Fprintln(os.Stderr, "logs.BeeLogger.SetLogger: "+err.Error())
 			return err
 		}
+		bl.outputs = append(bl.outputs, &nameLogger{name: adapterName, Logger: lg})
 	} else {
-		return fmt.Errorf("logs: unknown adaptername %q (forgotten Register?)", adaptername)
+		return fmt.Errorf("logs: unknown adaptername %q (forgotten Register?)", adapterName)
 	}
 	return nil
 }
 
-// remove a logger adapter in BeeLogger.
-func (bl *BeeLogger) DelLogger(adaptername string) error {
+// DelLogger remove a logger adapter in BeeLogger.
+func (bl *BeeLogger) DelLogger(adapterName string) error {
 	bl.lock.Lock()
 	defer bl.lock.Unlock()
-	if lg, ok := bl.outputs[adaptername]; ok {
-		lg.Destroy()
-		delete(bl.outputs, adaptername)
-		return nil
-	} else {
-		return fmt.Errorf("logs: unknown adaptername %q (forgotten Register?)", adaptername)
+	outputs := []*nameLogger{}
+	for _, lg := range bl.outputs {
+		if lg.name == adapterName {
+			lg.Destroy()
+		} else {
+			outputs = append(outputs, lg)
+		}
+	}
+	if len(outputs) == len(bl.outputs) {
+		return fmt.Errorf("logs: unknown adaptername %q (forgotten Register?)", adapterName)
+	}
+	bl.outputs = outputs
+	return nil
+}
+
+func (bl *BeeLogger) writeToLoggers(msg string, level int) {
+	for _, l := range bl.outputs {
+		err := l.WriteMsg(msg, level)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "unable to WriteMsg to adapter:%v,error:%v\n", l.name, err)
+		}
 	}
 }
 
-func (bl *BeeLogger) writerMsg(loglevel int, msg string) error {
-	lm := new(logMsg)
-	lm.level = loglevel
+func (bl *BeeLogger) writeMsg(logLevel int, msg string) error {
 	if bl.enableFuncCallDepth {
 		_, file, line, ok := runtime.Caller(bl.loggerFuncCallDepth)
 		if !ok {
@@ -162,43 +190,37 @@ func (bl *BeeLogger) writerMsg(loglevel int, msg string) error {
 			line = 0
 		}
 		_, filename := path.Split(file)
-		lm.msg = fmt.Sprintf("[%s:%d] %s", filename, line, msg)
-	} else {
-		lm.msg = msg
+		msg = "[" + filename + ":" + strconv.FormatInt(int64(line), 10) + "]" + msg
 	}
 	if bl.asynchronous {
-		bl.msg <- lm
+		lm := logMsgPool.Get().(*logMsg)
+		lm.level = logLevel
+		lm.msg = msg
+		bl.msgChan <- lm
 	} else {
-		for name, l := range bl.outputs {
-			err := l.WriteMsg(lm.msg, lm.level)
-			if err != nil {
-				fmt.Println("unable to WriteMsg to adapter:", name, err)
-				return err
-			}
-		}
+		bl.writeToLoggers(msg, logLevel)
 	}
 	return nil
 }
 
-// Set log message level.
-//
+// SetLevel Set log message level.
 // If message level (such as LevelDebug) is higher than logger level (such as LevelWarning),
 // log providers will not even be sent the message.
 func (bl *BeeLogger) SetLevel(l int) {
 	bl.level = l
 }
 
-// set log funcCallDepth
+// SetLogFuncCallDepth set log funcCallDepth
 func (bl *BeeLogger) SetLogFuncCallDepth(d int) {
 	bl.loggerFuncCallDepth = d
 }
 
-// get log funcCallDepth for wrapper
+// GetLogFuncCallDepth return log funcCallDepth for wrapper
 func (bl *BeeLogger) GetLogFuncCallDepth() int {
 	return bl.loggerFuncCallDepth
 }
 
-// enable log funcCallDepth
+// EnableFuncCallDepth enable log funcCallDepth
 func (bl *BeeLogger) EnableFuncCallDepth(b bool) {
 	bl.enableFuncCallDepth = b
 }
@@ -208,137 +230,129 @@ func (bl *BeeLogger) EnableFuncCallDepth(b bool) {
 func (bl *BeeLogger) startLogger() {
 	for {
 		select {
-		case bm := <-bl.msg:
-			for _, l := range bl.outputs {
-				err := l.WriteMsg(bm.msg, bm.level)
-				if err != nil {
-					fmt.Println("ERROR, unable to WriteMsg:", err)
-				}
-			}
+		case bm := <-bl.msgChan:
+			bl.writeToLoggers(bm.msg, bm.level)
+			logMsgPool.Put(bm)
 		}
 	}
 }
 
-// Log EMERGENCY level message.
+// Emergency Log EMERGENCY level message.
 func (bl *BeeLogger) Emergency(format string, v ...interface{}) {
 	if LevelEmergency > bl.level {
 		return
 	}
 	msg := fmt.Sprintf("[M] "+format, v...)
-	bl.writerMsg(LevelEmergency, msg)
+	bl.writeMsg(LevelEmergency, msg)
 }
 
-// Log ALERT level message.
+// Alert Log ALERT level message.
 func (bl *BeeLogger) Alert(format string, v ...interface{}) {
 	if LevelAlert > bl.level {
 		return
 	}
 	msg := fmt.Sprintf("[A] "+format, v...)
-	bl.writerMsg(LevelAlert, msg)
+	bl.writeMsg(LevelAlert, msg)
 }
 
-// Log CRITICAL level message.
+// Critical Log CRITICAL level message.
 func (bl *BeeLogger) Critical(format string, v ...interface{}) {
 	if LevelCritical > bl.level {
 		return
 	}
 	msg := fmt.Sprintf("[C] "+format, v...)
-	bl.writerMsg(LevelCritical, msg)
+	bl.writeMsg(LevelCritical, msg)
 }
 
-// Log ERROR level message.
+// Error Log ERROR level message.
 func (bl *BeeLogger) Error(format string, v ...interface{}) {
 	if LevelError > bl.level {
 		return
 	}
 	msg := fmt.Sprintf("[E] "+format, v...)
-	bl.writerMsg(LevelError, msg)
+	bl.writeMsg(LevelError, msg)
 }
 
-// Log WARNING level message.
+// Warning Log WARNING level message.
 func (bl *BeeLogger) Warning(format string, v ...interface{}) {
 	if LevelWarning > bl.level {
 		return
 	}
 	msg := fmt.Sprintf("[W] "+format, v...)
-	bl.writerMsg(LevelWarning, msg)
+	bl.writeMsg(LevelWarning, msg)
 }
 
-// Log NOTICE level message.
+// Notice Log NOTICE level message.
 func (bl *BeeLogger) Notice(format string, v ...interface{}) {
 	if LevelNotice > bl.level {
 		return
 	}
 	msg := fmt.Sprintf("[N] "+format, v...)
-	bl.writerMsg(LevelNotice, msg)
+	bl.writeMsg(LevelNotice, msg)
 }
 
-// Log INFORMATIONAL level message.
+// Informational Log INFORMATIONAL level message.
 func (bl *BeeLogger) Informational(format string, v ...interface{}) {
 	if LevelInformational > bl.level {
 		return
 	}
 	msg := fmt.Sprintf("[I] "+format, v...)
-	bl.writerMsg(LevelInformational, msg)
+	bl.writeMsg(LevelInformational, msg)
 }
 
-// Log DEBUG level message.
+// Debug Log DEBUG level message.
 func (bl *BeeLogger) Debug(format string, v ...interface{}) {
 	if LevelDebug > bl.level {
 		return
 	}
 	msg := fmt.Sprintf("[D] "+format, v...)
-	bl.writerMsg(LevelDebug, msg)
+	bl.writeMsg(LevelDebug, msg)
 }
 
-// Log WARN level message.
+// Warn Log WARN level message.
 // compatibility alias for Warning()
 func (bl *BeeLogger) Warn(format string, v ...interface{}) {
 	if LevelWarning > bl.level {
 		return
 	}
 	msg := fmt.Sprintf("[W] "+format, v...)
-	bl.writerMsg(LevelWarning, msg)
+	bl.writeMsg(LevelWarning, msg)
 }
 
-// Log INFO level message.
+// Info Log INFO level message.
 // compatibility alias for Informational()
 func (bl *BeeLogger) Info(format string, v ...interface{}) {
 	if LevelInformational > bl.level {
 		return
 	}
 	msg := fmt.Sprintf("[I] "+format, v...)
-	bl.writerMsg(LevelInformational, msg)
+	bl.writeMsg(LevelInformational, msg)
 }
 
-// Log TRACE level message.
+// Trace Log TRACE level message.
 // compatibility alias for Debug()
 func (bl *BeeLogger) Trace(format string, v ...interface{}) {
 	if LevelDebug > bl.level {
 		return
 	}
 	msg := fmt.Sprintf("[D] "+format, v...)
-	bl.writerMsg(LevelDebug, msg)
+	bl.writeMsg(LevelDebug, msg)
 }
 
-// flush all chan data.
+// Flush flush all chan data.
 func (bl *BeeLogger) Flush() {
 	for _, l := range bl.outputs {
 		l.Flush()
 	}
 }
 
-// close logger, flush all chan data and destroy all adapters in BeeLogger.
+// Close close logger, flush all chan data and destroy all adapters in BeeLogger.
 func (bl *BeeLogger) Close() {
 	for {
-		if len(bl.msg) > 0 {
-			bm := <-bl.msg
-			for _, l := range bl.outputs {
-				err := l.WriteMsg(bm.msg, bm.level)
-				if err != nil {
-					fmt.Println("ERROR, unable to WriteMsg (while closing logger):", err)
-				}
-			}
+		if len(bl.msgChan) > 0 {
+			bm := <-bl.msgChan
+			bl.writeToLoggers(bm.msg, bm.level)
+			logMsgPool.Put(bm)
 			continue
 		}
 		break

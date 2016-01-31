@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// package postgresql for session provider
+// Package postgres for session provider
 //
 // depends on github.com/lib/pq:
 //
@@ -27,9 +27,9 @@
 // session_expiry	timestamp NOT NULL,
 // CONSTRAINT session_key PRIMARY KEY(session_key)
 // );
-
+//
 // will be activated with these settings in app.conf:
-
+//
 // SessionOn = true
 // SessionProvider = postgresql
 // SessionSavePath = "user=a password=b dbname=c sslmode=disable"
@@ -48,7 +48,7 @@
 //	}
 //
 // more docs: http://beego.me/docs/module/session.md
-package session
+package postgres
 
 import (
 	"database/sql"
@@ -57,64 +57,63 @@ import (
 	"time"
 
 	"github.com/astaxie/beego/session"
-
+	// import postgresql Driver
 	_ "github.com/lib/pq"
 )
 
-var postgresqlpder = &PostgresqlProvider{}
+var postgresqlpder = &Provider{}
 
-// postgresql session store
-type PostgresqlSessionStore struct {
+// SessionStore postgresql session store
+type SessionStore struct {
 	c      *sql.DB
 	sid    string
 	lock   sync.RWMutex
 	values map[interface{}]interface{}
 }
 
-// set value in postgresql session.
+// Set value in postgresql session.
 // it is temp value in map.
-func (st *PostgresqlSessionStore) Set(key, value interface{}) error {
+func (st *SessionStore) Set(key, value interface{}) error {
 	st.lock.Lock()
 	defer st.lock.Unlock()
 	st.values[key] = value
 	return nil
 }
 
-// get value from postgresql session
-func (st *PostgresqlSessionStore) Get(key interface{}) interface{} {
+// Get value from postgresql session
+func (st *SessionStore) Get(key interface{}) interface{} {
 	st.lock.RLock()
 	defer st.lock.RUnlock()
 	if v, ok := st.values[key]; ok {
 		return v
-	} else {
-		return nil
 	}
+	return nil
 }
 
-// delete value in postgresql session
-func (st *PostgresqlSessionStore) Delete(key interface{}) error {
+// Delete value in postgresql session
+func (st *SessionStore) Delete(key interface{}) error {
 	st.lock.Lock()
 	defer st.lock.Unlock()
 	delete(st.values, key)
 	return nil
 }
 
-// clear all values in postgresql session
-func (st *PostgresqlSessionStore) Flush() error {
+// Flush clear all values in postgresql session
+func (st *SessionStore) Flush() error {
 	st.lock.Lock()
 	defer st.lock.Unlock()
 	st.values = make(map[interface{}]interface{})
 	return nil
 }
 
-// get session id of this postgresql session store
-func (st *PostgresqlSessionStore) SessionID() string {
+// SessionID get session id of this postgresql session store
+func (st *SessionStore) SessionID() string {
 	return st.sid
 }
 
-// save postgresql session values to database.
+// SessionRelease save postgresql session values to database.
 // must call this method to save values to database.
-func (st *PostgresqlSessionStore) SessionRelease(w http.ResponseWriter) {
+func (st *SessionStore) SessionRelease(w http.ResponseWriter) {
 	defer st.c.Close()
 	b, err := session.EncodeGob(st.values)
 	if err != nil {
@@ -125,14 +124,14 @@ func (st *PostgresqlSessionStore) SessionRelease(w http.ResponseWriter) {
 
 }
 
-// postgresql session provider
-type PostgresqlProvider struct {
+// Provider postgresql session provider
+type Provider struct {
 	maxlifetime int64
 	savePath    string
 }
 
 // connect to postgresql
-func (mp *PostgresqlProvider) connectInit() *sql.DB {
+func (mp *Provider) connectInit() *sql.DB {
 	db, e := sql.Open("postgres", mp.savePath)
 	if e != nil {
 		return nil
@@ -140,16 +139,16 @@ func (mp *PostgresqlProvider) connectInit() *sql.DB {
 	return db
 }
 
-// init postgresql session.
+// SessionInit init postgresql session.
 // savepath is the connection string of postgresql.
-func (mp *PostgresqlProvider) SessionInit(maxlifetime int64, savePath string) error {
+func (mp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 	mp.maxlifetime = maxlifetime
 	mp.savePath = savePath
 	return nil
 }
 
-// get postgresql session by sid
-func (mp *PostgresqlProvider) SessionRead(sid string) (session.SessionStore, error) {
+// SessionRead get postgresql session by sid
+func (mp *Provider) SessionRead(sid string) (session.Store, error) {
 	c := mp.connectInit()
 	row := c.QueryRow("select session_data from session where session_key=$1", sid)
 	var sessiondata []byte
@@ -174,12 +173,12 @@ func (mp *PostgresqlProvider) SessionRead(sid string) (session.SessionStore, err
 			return nil, err
 		}
 	}
-	rs := &PostgresqlSessionStore{c: c, sid: sid, values: kv}
+	rs := &SessionStore{c: c, sid: sid, values: kv}
 	return rs, nil
 }
 
-// check postgresql session exist
-func (mp *PostgresqlProvider) SessionExist(sid string) bool {
+// SessionExist check postgresql session exist
+func (mp *Provider) SessionExist(sid string) bool {
 	c := mp.connectInit()
 	defer c.Close()
 	row := c.QueryRow("select session_data from session where session_key=$1", sid)
@@ -188,13 +187,12 @@ func (mp *PostgresqlProvider) SessionExist(sid string) bool {
 
 	if err == sql.ErrNoRows {
 		return false
-	} else {
-		return true
 	}
+	return true
 }
 
-// generate new sid for postgresql session
-func (mp *PostgresqlProvider) SessionRegenerate(oldsid, sid string) (session.SessionStore, error) {
+// SessionRegenerate generate new sid for postgresql session
+func (mp *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error) {
 	c := mp.connectInit()
 	row := c.QueryRow("select session_data from session where session_key=$1", oldsid)
 	var sessiondata []byte
@@ -213,28 +211,28 @@ func (mp *PostgresqlProvider) SessionRegenerate(oldsid, sid string) (session.Ses
 			return nil, err
 		}
 	}
-	rs := &PostgresqlSessionStore{c: c, sid: sid, values: kv}
+	rs := &SessionStore{c: c, sid: sid, values: kv}
 	return rs, nil
 }
 
-// delete postgresql session by sid
-func (mp *PostgresqlProvider) SessionDestroy(sid string) error {
+// SessionDestroy delete postgresql session by sid
+func (mp *Provider) SessionDestroy(sid string) error {
 	c := mp.connectInit()
 	c.Exec("DELETE FROM session where session_key=$1", sid)
 	c.Close()
 	return nil
 }
 
-// delete expired values in postgresql session
-func (mp *PostgresqlProvider) SessionGC() {
+// SessionGC delete expired values in postgresql session
+func (mp *Provider) SessionGC() {
 	c := mp.connectInit()
 	c.Exec("DELETE from session where EXTRACT(EPOCH FROM (current_timestamp - session_expiry)) > $1", mp.maxlifetime)
 	c.Close()
 	return
 }
 
-// count values in postgresql session
-func (mp *PostgresqlProvider) SessionAll() int {
+// SessionAll count values in postgresql session
+func (mp *Provider) SessionAll() int {
 	c := mp.connectInit()
 	defer c.Close()
 	var total int

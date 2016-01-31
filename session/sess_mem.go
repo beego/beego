@@ -23,7 +23,7 @@ import (
 
 var mempder = &MemProvider{list: list.New(), sessions: make(map[string]*list.Element)}
 
-// memory session store.
+// MemSessionStore memory session store.
 // it saved sessions in a map in memory.
 type MemSessionStore struct {
 	sid          string                      //session id
@@ -32,7 +32,7 @@ type MemSessionStore struct {
 	lock         sync.RWMutex
 }
 
-// set value to memory session
+// Set value to memory session
 func (st *MemSessionStore) Set(key, value interface{}) error {
 	st.lock.Lock()
 	defer st.lock.Unlock()
@@ -40,18 +40,17 @@ func (st *MemSessionStore) Set(key, value interface{}) error {
 	return nil
 }
 
-// get value from memory session by key
+// Get value from memory session by key
 func (st *MemSessionStore) Get(key interface{}) interface{} {
 	st.lock.RLock()
 	defer st.lock.RUnlock()
 	if v, ok := st.value[key]; ok {
 		return v
-	} else {
-		return nil
 	}
+	return nil
 }
 
-// delete in memory session by key
+// Delete in memory session by key
 func (st *MemSessionStore) Delete(key interface{}) error {
 	st.lock.Lock()
 	defer st.lock.Unlock()
@@ -59,7 +58,7 @@ func (st *MemSessionStore) Delete(key interface{}) error {
 	return nil
 }
 
-// clear all values in memory session
+// Flush clear all values in memory session
 func (st *MemSessionStore) Flush() error {
 	st.lock.Lock()
 	defer st.lock.Unlock()
@@ -67,15 +66,16 @@ func (st *MemSessionStore) Flush() error {
 	return nil
 }
 
-// get this id of memory session store
+// SessionID get this id of memory session store
 func (st *MemSessionStore) SessionID() string {
 	return st.sid
 }
 
-// Implement method, no used.
+// SessionRelease Implement method, no used.
 func (st *MemSessionStore) SessionRelease(w http.ResponseWriter) {
 }
 
+// MemProvider Implement the provider interface
 type MemProvider struct {
 	lock        sync.RWMutex             // locker
 	sessions    map[string]*list.Element // map in memory
@@ -84,44 +84,42 @@ type MemProvider struct {
 	savePath    string
 }
 
-// init memory session
+// SessionInit init memory session
 func (pder *MemProvider) SessionInit(maxlifetime int64, savePath string) error {
 	pder.maxlifetime = maxlifetime
 	pder.savePath = savePath
 	return nil
 }
 
-// get memory session store by sid
-func (pder *MemProvider) SessionRead(sid string) (SessionStore, error) {
+// SessionRead get memory session store by sid
+func (pder *MemProvider) SessionRead(sid string) (Store, error) {
 	pder.lock.RLock()
 	if element, ok := pder.sessions[sid]; ok {
 		go pder.SessionUpdate(sid)
 		pder.lock.RUnlock()
 		return element.Value.(*MemSessionStore), nil
-	} else {
-		pder.lock.RUnlock()
-		pder.lock.Lock()
-		newsess := &MemSessionStore{sid: sid, timeAccessed: time.Now(), value: make(map[interface{}]interface{})}
-		element := pder.list.PushBack(newsess)
-		pder.sessions[sid] = element
-		pder.lock.Unlock()
-		return newsess, nil
 	}
+	pder.lock.RUnlock()
+	pder.lock.Lock()
+	newsess := &MemSessionStore{sid: sid, timeAccessed: time.Now(), value: make(map[interface{}]interface{})}
+	element := pder.list.PushBack(newsess)
+	pder.sessions[sid] = element
+	pder.lock.Unlock()
+	return newsess, nil
 }
 
-// check session store exist in memory session by sid
+// SessionExist check session store exist in memory session by sid
 func (pder *MemProvider) SessionExist(sid string) bool {
 	pder.lock.RLock()
 	defer pder.lock.RUnlock()
 	if _, ok := pder.sessions[sid]; ok {
 		return true
-	} else {
-		return false
 	}
+	return false
 }
 
-// generate new sid for session store in memory session
-func (pder *MemProvider) SessionRegenerate(oldsid, sid string) (SessionStore, error) {
+// SessionRegenerate generate new sid for session store in memory session
+func (pder *MemProvider) SessionRegenerate(oldsid, sid string) (Store, error) {
 	pder.lock.RLock()
 	if element, ok := pder.sessions[oldsid]; ok {
 		go pder.SessionUpdate(oldsid)
@@ -132,18 +130,17 @@ func (pder *MemProvider) SessionRegenerate(oldsid, sid string) (SessionStore, er
 		delete(pder.sessions, oldsid)
 		pder.lock.Unlock()
 		return element.Value.(*MemSessionStore), nil
-	} else {
-		pder.lock.RUnlock()
-		pder.lock.Lock()
-		newsess := &MemSessionStore{sid: sid, timeAccessed: time.Now(), value: make(map[interface{}]interface{})}
-		element := pder.list.PushBack(newsess)
-		pder.sessions[sid] = element
-		pder.lock.Unlock()
-		return newsess, nil
 	}
+	pder.lock.RUnlock()
+	pder.lock.Lock()
+	newsess := &MemSessionStore{sid: sid, timeAccessed: time.Now(), value: make(map[interface{}]interface{})}
+	element := pder.list.PushBack(newsess)
+	pder.sessions[sid] = element
+	pder.lock.Unlock()
+	return newsess, nil
 }
 
-// delete session store in memory session by id
+// SessionDestroy delete session store in memory session by id
 func (pder *MemProvider) SessionDestroy(sid string) error {
 	pder.lock.Lock()
 	defer pder.lock.Unlock()
@@ -155,7 +152,7 @@ func (pder *MemProvider) SessionDestroy(sid string) error {
 	return nil
 }
 
-// clean expired session stores in memory session
+// SessionGC clean expired session stores in memory session
 func (pder *MemProvider) SessionGC() {
 	pder.lock.RLock()
 	for {
@@ -177,12 +174,12 @@ func (pder *MemProvider) SessionGC() {
 	pder.lock.RUnlock()
 }
 
-// get count number of memory session
+// SessionAll get count number of memory session
 func (pder *MemProvider) SessionAll() int {
 	return pder.list.Len()
 }
 
-// expand time of session store by id in memory session
+// SessionUpdate expand time of session store by id in memory session
 func (pder *MemProvider) SessionUpdate(sid string) error {
 	pder.lock.Lock()
 	defer pder.lock.Unlock()

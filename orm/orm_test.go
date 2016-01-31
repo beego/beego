@@ -31,13 +31,26 @@ import (
 var _ = os.PathSeparator
 
 var (
-	test_Date     = format_Date + " -0700"
-	test_DateTime = format_DateTime + " -0700"
+	testDate     = formatDate + " -0700"
+	testDateTime = formatDateTime + " -0700"
 )
 
-func ValuesCompare(is bool, a interface{}, args ...interface{}) (err error, ok bool) {
+type argAny []interface{}
+
+// get interface by index from interface slice
+func (a argAny) Get(i int, args ...interface{}) (r interface{}) {
+	if i >= 0 && i < len(a) {
+		r = a[i]
+	}
+	if len(args) > 0 {
+		r = args[0]
+	}
+	return
+}
+
+func ValuesCompare(is bool, a interface{}, args ...interface{}) (ok bool, err error) {
 	if len(args) == 0 {
-		return fmt.Errorf("miss args"), false
+		return false, fmt.Errorf("miss args")
 	}
 	b := args[0]
 	arg := argAny(args)
@@ -71,21 +84,21 @@ func ValuesCompare(is bool, a interface{}, args ...interface{}) (err error, ok b
 
 wrongArg:
 	if err != nil {
-		return err, false
+		return false, err
 	}
 
-	return nil, true
+	return true, nil
 }
 
 func AssertIs(a interface{}, args ...interface{}) error {
-	if err, ok := ValuesCompare(true, a, args...); ok == false {
+	if ok, err := ValuesCompare(true, a, args...); ok == false {
 		return err
 	}
 	return nil
 }
 
 func AssertNot(a interface{}, args ...interface{}) error {
-	if err, ok := ValuesCompare(false, a, args...); ok == false {
+	if ok, err := ValuesCompare(false, a, args...); ok == false {
 		return err
 	}
 	return nil
@@ -171,8 +184,11 @@ func TestSyncDb(t *testing.T) {
 	RegisterModel(new(Comment))
 	RegisterModel(new(UserBig))
 	RegisterModel(new(PostTags))
+	RegisterModel(new(Group))
+	RegisterModel(new(Permission))
+	RegisterModel(new(GroupPermissions))
 
-	err := RunSyncdb("default", true, false)
+	err := RunSyncdb("default", true, Debug)
 	throwFail(t, err)
 
 	modelCache.clean()
@@ -187,6 +203,9 @@ func TestRegisterModels(t *testing.T) {
 	RegisterModel(new(Comment))
 	RegisterModel(new(UserBig))
 	RegisterModel(new(PostTags))
+	RegisterModel(new(Group))
+	RegisterModel(new(Permission))
+	RegisterModel(new(GroupPermissions))
 
 	BootStrap()
 
@@ -208,7 +227,7 @@ func TestModelSyntax(t *testing.T) {
 	}
 }
 
-var Data_Values = map[string]interface{}{
+var DataValues = map[string]interface{}{
 	"Boolean":  true,
 	"Char":     "char",
 	"Text":     "text",
@@ -235,7 +254,7 @@ func TestDataTypes(t *testing.T) {
 	d := Data{}
 	ind := reflect.Indirect(reflect.ValueOf(&d))
 
-	for name, value := range Data_Values {
+	for name, value := range DataValues {
 		e := ind.FieldByName(name)
 		e.Set(reflect.ValueOf(value))
 	}
@@ -244,22 +263,22 @@ func TestDataTypes(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(id, 1))
 
-	d = Data{Id: 1}
+	d = Data{ID: 1}
 	err = dORM.Read(&d)
 	throwFail(t, err)
 
 	ind = reflect.Indirect(reflect.ValueOf(&d))
 
-	for name, value := range Data_Values {
+	for name, value := range DataValues {
 		e := ind.FieldByName(name)
 		vu := e.Interface()
 		switch name {
 		case "Date":
-			vu = vu.(time.Time).In(DefaultTimeLoc).Format(test_Date)
-			value = value.(time.Time).In(DefaultTimeLoc).Format(test_Date)
+			vu = vu.(time.Time).In(DefaultTimeLoc).Format(testDate)
+			value = value.(time.Time).In(DefaultTimeLoc).Format(testDate)
 		case "DateTime":
-			vu = vu.(time.Time).In(DefaultTimeLoc).Format(test_DateTime)
-			value = value.(time.Time).In(DefaultTimeLoc).Format(test_DateTime)
+			vu = vu.(time.Time).In(DefaultTimeLoc).Format(testDateTime)
+			value = value.(time.Time).In(DefaultTimeLoc).Format(testDateTime)
 		}
 		throwFail(t, AssertIs(vu == value, true), value, vu)
 	}
@@ -278,7 +297,7 @@ func TestNullDataTypes(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(id, 1))
 
-	d = DataNull{Id: 1}
+	d = DataNull{ID: 1}
 	err = dORM.Read(&d)
 	throwFail(t, err)
 
@@ -309,7 +328,7 @@ func TestNullDataTypes(t *testing.T) {
 	_, err = dORM.Raw(`INSERT INTO data_null (boolean) VALUES (?)`, nil).Exec()
 	throwFail(t, err)
 
-	d = DataNull{Id: 2}
+	d = DataNull{ID: 2}
 	err = dORM.Read(&d)
 	throwFail(t, err)
 
@@ -362,7 +381,7 @@ func TestNullDataTypes(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(id, 3))
 
-	d = DataNull{Id: 3}
+	d = DataNull{ID: 3}
 	err = dORM.Read(&d)
 	throwFail(t, err)
 
@@ -402,7 +421,7 @@ func TestDataCustomTypes(t *testing.T) {
 	d := DataCustom{}
 	ind := reflect.Indirect(reflect.ValueOf(&d))
 
-	for name, value := range Data_Values {
+	for name, value := range DataValues {
 		e := ind.FieldByName(name)
 		if !e.IsValid() {
 			continue
@@ -414,13 +433,13 @@ func TestDataCustomTypes(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(id, 1))
 
-	d = DataCustom{Id: 1}
+	d = DataCustom{ID: 1}
 	err = dORM.Read(&d)
 	throwFail(t, err)
 
 	ind = reflect.Indirect(reflect.ValueOf(&d))
 
-	for name, value := range Data_Values {
+	for name, value := range DataValues {
 		e := ind.FieldByName(name)
 		if !e.IsValid() {
 			continue
@@ -451,7 +470,7 @@ func TestCRUD(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(id, 1))
 
-	u := &User{Id: user.Id}
+	u := &User{ID: user.ID}
 	err = dORM.Read(u)
 	throwFail(t, err)
 
@@ -461,8 +480,8 @@ func TestCRUD(t *testing.T) {
 	throwFail(t, AssertIs(u.Status, 3))
 	throwFail(t, AssertIs(u.IsStaff, true))
 	throwFail(t, AssertIs(u.IsActive, true))
-	throwFail(t, AssertIs(u.Created.In(DefaultTimeLoc), user.Created.In(DefaultTimeLoc), test_Date))
-	throwFail(t, AssertIs(u.Updated.In(DefaultTimeLoc), user.Updated.In(DefaultTimeLoc), test_DateTime))
+	throwFail(t, AssertIs(u.Created.In(DefaultTimeLoc), user.Created.In(DefaultTimeLoc), testDate))
+	throwFail(t, AssertIs(u.Updated.In(DefaultTimeLoc), user.Updated.In(DefaultTimeLoc), testDateTime))
 
 	user.UserName = "astaxie"
 	user.Profile = profile
@@ -470,11 +489,11 @@ func TestCRUD(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
 
-	u = &User{Id: user.Id}
+	u = &User{ID: user.ID}
 	err = dORM.Read(u)
 	throwFailNow(t, err)
 	throwFail(t, AssertIs(u.UserName, "astaxie"))
-	throwFail(t, AssertIs(u.Profile.Id, profile.Id))
+	throwFail(t, AssertIs(u.Profile.ID, profile.ID))
 
 	u = &User{UserName: "astaxie", Password: "pass"}
 	err = dORM.Read(u, "UserName")
@@ -487,7 +506,7 @@ func TestCRUD(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
 
-	u = &User{Id: user.Id}
+	u = &User{ID: user.ID}
 	err = dORM.Read(u)
 	throwFailNow(t, err)
 	throwFail(t, AssertIs(u.UserName, "QQ"))
@@ -497,7 +516,7 @@ func TestCRUD(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
 
-	u = &User{Id: user.Id}
+	u = &User{ID: user.ID}
 	err = dORM.Read(u)
 	throwFail(t, err)
 	throwFail(t, AssertIs(true, u.Profile == nil))
@@ -506,7 +525,7 @@ func TestCRUD(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
 
-	u = &User{Id: 100}
+	u = &User{ID: 100}
 	err = dORM.Read(u)
 	throwFail(t, AssertIs(err, ErrNoRows))
 
@@ -516,7 +535,7 @@ func TestCRUD(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(id, 1))
 
-	ub = UserBig{Id: 1}
+	ub = UserBig{ID: 1}
 	err = dORM.Read(&ub)
 	throwFail(t, err)
 	throwFail(t, AssertIs(ub.Name, "name"))
@@ -586,7 +605,7 @@ func TestInsertTestData(t *testing.T) {
 	throwFail(t, AssertIs(id, 4))
 
 	tags := []*Tag{
-		{Name: "golang", BestPost: &Post{Id: 2}},
+		{Name: "golang", BestPost: &Post{ID: 2}},
 		{Name: "example"},
 		{Name: "format"},
 		{Name: "c++"},
@@ -635,10 +654,47 @@ The program—and web server—godoc processes Go source files to extract docume
 		throwFail(t, err)
 		throwFail(t, AssertIs(id > 0, true))
 	}
+
+	permissions := []*Permission{
+		{Name: "writePosts"},
+		{Name: "readComments"},
+		{Name: "readPosts"},
+	}
+
+	groups := []*Group{
+		{
+			Name:        "admins",
+			Permissions: []*Permission{permissions[0], permissions[1], permissions[2]},
+		},
+		{
+			Name:        "users",
+			Permissions: []*Permission{permissions[1], permissions[2]},
+		},
+	}
+
+	for _, permission := range permissions {
+		id, err := dORM.Insert(permission)
+		throwFail(t, err)
+		throwFail(t, AssertIs(id > 0, true))
+	}
+
+	for _, group := range groups {
+		_, err := dORM.Insert(group)
+		throwFail(t, err)
+		throwFail(t, AssertIs(id > 0, true))
+
+		num := len(group.Permissions)
+		if num > 0 {
+			nums, err := dORM.QueryM2M(group, "permissions").Add(group.Permissions)
+			throwFailNow(t, err)
+			throwFailNow(t, AssertIs(nums, num))
+		}
+	}
+
 }
 
 func TestCustomField(t *testing.T) {
-	user := User{Id: 2}
+	user := User{ID: 2}
 	err := dORM.Read(&user)
 	throwFailNow(t, err)
 
@@ -648,7 +704,7 @@ func TestCustomField(t *testing.T) {
 	_, err = dORM.Update(&user, "Langs", "Extra")
 	throwFailNow(t, err)
 
-	user = User{Id: 2}
+	user = User{ID: 2}
 	err = dORM.Read(&user)
 	throwFailNow(t, err)
 	throwFailNow(t, AssertIs(len(user.Langs), 2))
@@ -702,7 +758,7 @@ func TestOperators(t *testing.T) {
 
 	var shouldNum int
 
-	if IsSqlite {
+	if IsSqlite || IsTidb {
 		shouldNum = 2
 	} else {
 		shouldNum = 0
@@ -740,7 +796,7 @@ func TestOperators(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
 
-	if IsSqlite {
+	if IsSqlite || IsTidb {
 		shouldNum = 1
 	} else {
 		shouldNum = 0
@@ -758,7 +814,7 @@ func TestOperators(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 2))
 
-	if IsSqlite {
+	if IsSqlite || IsTidb {
 		shouldNum = 2
 	} else {
 		shouldNum = 0
@@ -889,9 +945,9 @@ func TestAll(t *testing.T) {
 	throwFailNow(t, AssertIs(users2[0].UserName, "slene"))
 	throwFailNow(t, AssertIs(users2[1].UserName, "astaxie"))
 	throwFailNow(t, AssertIs(users2[2].UserName, "nobody"))
-	throwFailNow(t, AssertIs(users2[0].Id, 0))
-	throwFailNow(t, AssertIs(users2[1].Id, 0))
-	throwFailNow(t, AssertIs(users2[2].Id, 0))
+	throwFailNow(t, AssertIs(users2[0].ID, 0))
+	throwFailNow(t, AssertIs(users2[1].ID, 0))
+	throwFailNow(t, AssertIs(users2[2].ID, 0))
 	throwFailNow(t, AssertIs(users2[0].Profile == nil, false))
 	throwFailNow(t, AssertIs(users2[1].Profile == nil, false))
 	throwFailNow(t, AssertIs(users2[2].Profile == nil, true))
@@ -986,6 +1042,10 @@ func TestValuesFlat(t *testing.T) {
 }
 
 func TestRelatedSel(t *testing.T) {
+	if IsTidb {
+		// Skip it. TiDB does not support relation now.
+		return
+	}
 	qs := dORM.QueryTable("user")
 	num, err := qs.Filter("profile__age", 28).Count()
 	throwFail(t, err)
@@ -1112,7 +1172,7 @@ func TestReverseQuery(t *testing.T) {
 
 func TestLoadRelated(t *testing.T) {
 	// load reverse foreign key
-	user := User{Id: 3}
+	user := User{ID: 3}
 
 	err := dORM.Read(&user)
 	throwFailNow(t, err)
@@ -1121,7 +1181,7 @@ func TestLoadRelated(t *testing.T) {
 	throwFailNow(t, err)
 	throwFailNow(t, AssertIs(num, 2))
 	throwFailNow(t, AssertIs(len(user.Posts), 2))
-	throwFailNow(t, AssertIs(user.Posts[0].User.Id, 3))
+	throwFailNow(t, AssertIs(user.Posts[0].User.ID, 3))
 
 	num, err = dORM.LoadRelated(&user, "Posts", true)
 	throwFailNow(t, err)
@@ -1143,8 +1203,8 @@ func TestLoadRelated(t *testing.T) {
 	throwFailNow(t, AssertIs(user.Posts[0].Title, "Formatting"))
 
 	// load reverse one to one
-	profile := Profile{Id: 3}
-	profile.BestPost = &Post{Id: 2}
+	profile := Profile{ID: 3}
+	profile.BestPost = &Post{ID: 2}
 	num, err = dORM.Update(&profile, "BestPost")
 	throwFailNow(t, err)
 	throwFailNow(t, AssertIs(num, 1))
@@ -1183,7 +1243,7 @@ func TestLoadRelated(t *testing.T) {
 	throwFailNow(t, AssertIs(user.Profile.BestPost == nil, false))
 	throwFailNow(t, AssertIs(user.Profile.BestPost.Title, "Examples"))
 
-	post := Post{Id: 2}
+	post := Post{ID: 2}
 
 	// load rel foreign key
 	err = dORM.Read(&post)
@@ -1204,7 +1264,7 @@ func TestLoadRelated(t *testing.T) {
 	throwFailNow(t, AssertIs(post.User.Profile.Age, 30))
 
 	// load rel m2m
-	post = Post{Id: 2}
+	post = Post{ID: 2}
 
 	err = dORM.Read(&post)
 	throwFailNow(t, err)
@@ -1224,7 +1284,7 @@ func TestLoadRelated(t *testing.T) {
 	throwFailNow(t, AssertIs(post.Tags[0].BestPost.User.UserName, "astaxie"))
 
 	// load reverse m2m
-	tag := Tag{Id: 1}
+	tag := Tag{ID: 1}
 
 	err = dORM.Read(&tag)
 	throwFailNow(t, err)
@@ -1233,19 +1293,19 @@ func TestLoadRelated(t *testing.T) {
 	throwFailNow(t, err)
 	throwFailNow(t, AssertIs(num, 3))
 	throwFailNow(t, AssertIs(tag.Posts[0].Title, "Introduction"))
-	throwFailNow(t, AssertIs(tag.Posts[0].User.Id, 2))
+	throwFailNow(t, AssertIs(tag.Posts[0].User.ID, 2))
 	throwFailNow(t, AssertIs(tag.Posts[0].User.Profile == nil, true))
 
 	num, err = dORM.LoadRelated(&tag, "Posts", true)
 	throwFailNow(t, err)
 	throwFailNow(t, AssertIs(num, 3))
 	throwFailNow(t, AssertIs(tag.Posts[0].Title, "Introduction"))
-	throwFailNow(t, AssertIs(tag.Posts[0].User.Id, 2))
+	throwFailNow(t, AssertIs(tag.Posts[0].User.ID, 2))
 	throwFailNow(t, AssertIs(tag.Posts[0].User.UserName, "slene"))
 }
 
 func TestQueryM2M(t *testing.T) {
-	post := Post{Id: 4}
+	post := Post{ID: 4}
 	m2m := dORM.QueryM2M(&post, "Tags")
 
 	tag1 := []*Tag{{Name: "TestTag1"}, {Name: "TestTag2"}}
@@ -1319,7 +1379,7 @@ func TestQueryM2M(t *testing.T) {
 
 	for _, post := range posts {
 		p := post.(*Post)
-		p.User = &User{Id: 1}
+		p.User = &User{ID: 1}
 		_, err := dORM.Insert(post)
 		throwFailNow(t, err)
 	}
@@ -1394,6 +1454,18 @@ func TestQueryRelate(t *testing.T) {
 	// throwFailNow(t, AssertIs(num, 2))
 }
 
+func TestPkManyRelated(t *testing.T) {
+	permission := &Permission{Name: "readPosts"}
+	err := dORM.Read(permission, "Name")
+	throwFailNow(t, err)
+
+	var groups []*Group
+	qs := dORM.QueryTable("Group")
+	num, err := qs.Filter("Permissions__Permission", permission.ID).All(&groups)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 2))
+}
+
 func TestPrepareInsert(t *testing.T) {
 	qs := dORM.QueryTable("user")
 	i, err := qs.PrepareInsert()
@@ -1459,10 +1531,10 @@ func TestRawQueryRow(t *testing.T) {
 		Decimal  float64
 	)
 
-	data_values := make(map[string]interface{}, len(Data_Values))
+	dataValues := make(map[string]interface{}, len(DataValues))
 
-	for k, v := range Data_Values {
-		data_values[strings.ToLower(k)] = v
+	for k, v := range DataValues {
+		dataValues[strings.ToLower(k)] = v
 	}
 
 	Q := dDbBaser.TableQuote()
@@ -1488,14 +1560,14 @@ func TestRawQueryRow(t *testing.T) {
 			throwFail(t, AssertIs(id, 1))
 		case "date":
 			v = v.(time.Time).In(DefaultTimeLoc)
-			value := data_values[col].(time.Time).In(DefaultTimeLoc)
-			throwFail(t, AssertIs(v, value, test_Date))
+			value := dataValues[col].(time.Time).In(DefaultTimeLoc)
+			throwFail(t, AssertIs(v, value, testDate))
 		case "datetime":
 			v = v.(time.Time).In(DefaultTimeLoc)
-			value := data_values[col].(time.Time).In(DefaultTimeLoc)
-			throwFail(t, AssertIs(v, value, test_DateTime))
+			value := dataValues[col].(time.Time).In(DefaultTimeLoc)
+			throwFail(t, AssertIs(v, value, testDateTime))
 		default:
-			throwFail(t, AssertIs(v, data_values[col]))
+			throwFail(t, AssertIs(v, dataValues[col]))
 		}
 	}
 
@@ -1529,16 +1601,16 @@ func TestQueryRows(t *testing.T) {
 
 	ind := reflect.Indirect(reflect.ValueOf(datas[0]))
 
-	for name, value := range Data_Values {
+	for name, value := range DataValues {
 		e := ind.FieldByName(name)
 		vu := e.Interface()
 		switch name {
 		case "Date":
-			vu = vu.(time.Time).In(DefaultTimeLoc).Format(test_Date)
-			value = value.(time.Time).In(DefaultTimeLoc).Format(test_Date)
+			vu = vu.(time.Time).In(DefaultTimeLoc).Format(testDate)
+			value = value.(time.Time).In(DefaultTimeLoc).Format(testDate)
 		case "DateTime":
-			vu = vu.(time.Time).In(DefaultTimeLoc).Format(test_DateTime)
-			value = value.(time.Time).In(DefaultTimeLoc).Format(test_DateTime)
+			vu = vu.(time.Time).In(DefaultTimeLoc).Format(testDateTime)
+			value = value.(time.Time).In(DefaultTimeLoc).Format(testDateTime)
 		}
 		throwFail(t, AssertIs(vu == value, true), value, vu)
 	}
@@ -1553,16 +1625,16 @@ func TestQueryRows(t *testing.T) {
 
 	ind = reflect.Indirect(reflect.ValueOf(datas2[0]))
 
-	for name, value := range Data_Values {
+	for name, value := range DataValues {
 		e := ind.FieldByName(name)
 		vu := e.Interface()
 		switch name {
 		case "Date":
-			vu = vu.(time.Time).In(DefaultTimeLoc).Format(test_Date)
-			value = value.(time.Time).In(DefaultTimeLoc).Format(test_Date)
+			vu = vu.(time.Time).In(DefaultTimeLoc).Format(testDate)
+			value = value.(time.Time).In(DefaultTimeLoc).Format(testDate)
 		case "DateTime":
-			vu = vu.(time.Time).In(DefaultTimeLoc).Format(test_DateTime)
-			value = value.(time.Time).In(DefaultTimeLoc).Format(test_DateTime)
+			vu = vu.(time.Time).In(DefaultTimeLoc).Format(testDateTime)
+			value = value.(time.Time).In(DefaultTimeLoc).Format(testDateTime)
 		}
 		throwFail(t, AssertIs(vu == value, true), value, vu)
 	}
@@ -1699,25 +1771,25 @@ func TestUpdate(t *testing.T) {
 	throwFail(t, AssertIs(num, 1))
 
 	num, err = qs.Filter("user_name", "slene").Update(Params{
-		"Nums": ColValue(Col_Add, 100),
+		"Nums": ColValue(ColAdd, 100),
 	})
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
 
 	num, err = qs.Filter("user_name", "slene").Update(Params{
-		"Nums": ColValue(Col_Minus, 50),
+		"Nums": ColValue(ColMinus, 50),
 	})
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
 
 	num, err = qs.Filter("user_name", "slene").Update(Params{
-		"Nums": ColValue(Col_Multiply, 3),
+		"Nums": ColValue(ColMultiply, 3),
 	})
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
 
 	num, err = qs.Filter("user_name", "slene").Update(Params{
-		"Nums": ColValue(Col_Except, 5),
+		"Nums": ColValue(ColExcept, 5),
 	})
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
@@ -1838,15 +1910,15 @@ func TestReadOrCreate(t *testing.T) {
 	throwFail(t, AssertIs(u.Status, 7))
 	throwFail(t, AssertIs(u.IsStaff, false))
 	throwFail(t, AssertIs(u.IsActive, true))
-	throwFail(t, AssertIs(u.Created.In(DefaultTimeLoc), u.Created.In(DefaultTimeLoc), test_Date))
-	throwFail(t, AssertIs(u.Updated.In(DefaultTimeLoc), u.Updated.In(DefaultTimeLoc), test_DateTime))
+	throwFail(t, AssertIs(u.Created.In(DefaultTimeLoc), u.Created.In(DefaultTimeLoc), testDate))
+	throwFail(t, AssertIs(u.Updated.In(DefaultTimeLoc), u.Updated.In(DefaultTimeLoc), testDateTime))
 
 	nu := &User{UserName: u.UserName, Email: "someotheremail@gmail.com"}
 	created, pk, err = dORM.ReadOrCreate(nu, "UserName")
 	throwFail(t, err)
 	throwFail(t, AssertIs(created, false))
-	throwFail(t, AssertIs(nu.Id, u.Id))
-	throwFail(t, AssertIs(pk, u.Id))
+	throwFail(t, AssertIs(nu.ID, u.ID))
+	throwFail(t, AssertIs(pk, u.ID))
 	throwFail(t, AssertIs(nu.UserName, u.UserName))
 	throwFail(t, AssertIs(nu.Email, u.Email)) // should contain the value in the table, not the one specified above
 	throwFail(t, AssertIs(nu.Password, u.Password))

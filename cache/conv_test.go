@@ -27,7 +27,7 @@ func TestGetString(t *testing.T) {
 	if "test2" != GetString(t2) {
 		t.Error("get string from byte array error")
 	}
-	var t3 int = 1
+	var t3 = 1
 	if "1" != GetString(t3) {
 		t.Error("get string from int error")
 	}
@@ -35,7 +35,7 @@ func TestGetString(t *testing.T) {
 	if "1" != GetString(t4) {
 		t.Error("get string from int64 error")
 	}
-	var t5 float64 = 1.1
+	var t5 = 1.1
 	if "1.1" != GetString(t5) {
 		t.Error("get string from float64 error")
 	}
@@ -46,7 +46,7 @@ func TestGetString(t *testing.T) {
 }
 
 func TestGetInt(t *testing.T) {
-	var t1 int = 1
+	var t1 = 1
 	if 1 != GetInt(t1) {
 		t.Error("get int from int error")
 	}
@@ -69,7 +69,7 @@ func TestGetInt(t *testing.T) {
 
 func TestGetInt64(t *testing.T) {
 	var i int64 = 1
-	var t1 int = 1
+	var t1 = 1
 	if i != GetInt64(t1) {
 		t.Error("get int64 from int error")
 	}
@@ -91,12 +91,12 @@ func TestGetInt64(t *testing.T) {
 }
 
 func TestGetFloat64(t *testing.T) {
-	var f float64 = 1.11
+	var f = 1.11
 	var t1 float32 = 1.11
 	if f != GetFloat64(t1) {
 		t.Error("get float64 from float32 error")
 	}
-	var t2 float64 = 1.11
+	var t2 = 1.11
 	if f != GetFloat64(t2) {
 		t.Error("get float64 from float64 error")
 	}
@@ -106,7 +106,7 @@ func TestGetFloat64(t *testing.T) {
 	}
 
 	var f2 float64 = 1
-	var t4 int = 1
+	var t4 = 1
 	if f2 != GetFloat64(t4) {
 		t.Error("get float64 from int error")
 	}
@@ -127,21 +127,6 @@ func TestGetBool(t *testing.T) {
 	}
 	if false != GetBool(nil) {
 		t.Error("get bool from nil error")
-	}
-}
-
-func TestGetByteArray(t *testing.T) {
-	var b = []byte("test")
-	var t1 = []byte("test")
-	if !byteArrayEquals(b, getByteArray(t1)) {
-		t.Error("get byte array from byte array error")
-	}
-	var t2 = "test"
-	if !byteArrayEquals(b, getByteArray(t2)) {
-		t.Error("get byte array from string error")
-	}
-	if nil != getByteArray(nil) {
-		t.Error("get byte array from nil error")
 	}
 }
 

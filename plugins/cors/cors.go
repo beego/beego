@@ -24,7 +24,7 @@
 //		// - PUT and PATCH methods
 //		// - Origin header
 //		// - Credentials share
-//		beego.InsertFilter("*", beego.BeforeRouter,cors.Allow(&cors.Options{
+//		beego.InsertFilter("*", beego.BeforeRouter, cors.Allow(&cors.Options{
 //			AllowOrigins:     []string{"https://*.foo.com"},
 //			AllowMethods:     []string{"PUT", "PATCH"},
 //			AllowHeaders:     []string{"Origin"},
@@ -216,8 +216,7 @@ func Allow(opts *Options) beego.FilterFunc {
 			for key, value := range headers {
 				ctx.Output.Header(key, value)
 			}
-			ctx.Output.SetStatus(http.StatusOK)
-			ctx.WriteString("")
+			ctx.ResponseWriter.WriteHeader(http.StatusOK)
 			return
 		}
 		headers = opts.Header(origin)

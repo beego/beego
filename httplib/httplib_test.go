@@ -19,6 +19,7 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestResponse(t *testing.T) {
@@ -149,10 +150,11 @@ func TestWithUserAgent(t *testing.T) {
 
 func TestWithSetting(t *testing.T) {
 	v := "beego"
-	var setting BeegoHttpSettings
+	var setting BeegoHTTPSettings
 	setting.EnableCookie = true
 	setting.UserAgent = v
 	setting.Transport = nil
+	setting.ReadWriteTimeout = 5 * time.Second
 	SetDefaultSetting(setting)
 
 	str, err := Get("http://httpbin.org/get").String()
@@ -176,11 +178,11 @@ func TestToJson(t *testing.T) {
 	t.Log(resp)
 
 	// httpbin will return http remote addr
-	type Ip struct {
+	type IP struct {
 		Origin string `json:"origin"`
 	}
-	var ip Ip
-	err = req.ToJson(&ip)
+	var ip IP
+	err = req.ToJSON(&ip)
 	if err != nil {
 		t.Fatal(err)
 	}

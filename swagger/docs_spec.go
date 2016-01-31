@@ -12,53 +12,59 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// swagger struct definition
+// Package swagger struct definition
 package swagger
 
+// SwaggerVersion show the current swagger version
 const SwaggerVersion = "1.2"
 
+// ResourceListing list the resource
 type ResourceListing struct {
-	ApiVersion     string `json:"apiVersion"`
+	APIVersion     string `json:"apiVersion"`
 	SwaggerVersion string `json:"swaggerVersion"` // e.g 1.2
 	// BasePath       string `json:"basePath"`  obsolete in 1.1
-	Apis  []ApiRef   `json:"apis"`
-	Infos Infomation `json:"info"`
+	APIs []APIRef    `json:"apis"`
+	Info Information `json:"info"`
 }
 
-type ApiRef struct {
+// APIRef description the api path and description
+type APIRef struct {
 	Path        string `json:"path"` // relative or absolute, must start with /
 	Description string `json:"description"`
 }
 
-type Infomation struct {
+// Information show the API Information
+type Information struct {
 	Title             string `json:"title,omitempty"`
 	Description       string `json:"description,omitempty"`
 	Contact           string `json:"contact,omitempty"`
-	TermsOfServiceUrl string `json:"termsOfServiceUrl,omitempty"`
+	TermsOfServiceURL string `json:"termsOfServiceUrl,omitempty"`
 	License           string `json:"license,omitempty"`
-	LicenseUrl        string `json:"licenseUrl,omitempty"`
+	LicenseURL        string `json:"licenseUrl,omitempty"`
 }
 
-// https://github.com/wordnik/swagger-core/blob/scala_2.10-1.3-RC3/schemas/api-declaration-schema.json
-type ApiDeclaration struct {
-	ApiVersion     string           `json:"apiVersion"`
+// APIDeclaration see https://github.com/wordnik/swagger-core/blob/scala_2.10-1.3-RC3/schemas/api-declaration-schema.json
+type APIDeclaration struct {
+	APIVersion     string           `json:"apiVersion"`
 	SwaggerVersion string           `json:"swaggerVersion"`
 	BasePath       string           `json:"basePath"`
 	ResourcePath   string           `json:"resourcePath"` // must start with /
 	Consumes       []string         `json:"consumes,omitempty"`
 	Produces       []string         `json:"produces,omitempty"`
-	Apis           []Api            `json:"apis,omitempty"`
+	APIs           []API            `json:"apis,omitempty"`
 	Models         map[string]Model `json:"models,omitempty"`
 }
 
-type Api struct {
+// API show tha API struct
+type API struct {
 	Path        string      `json:"path"` // relative or absolute, must start with /
 	Description string      `json:"description"`
 	Operations  []Operation `json:"operations,omitempty"`
 }
 
+// Operation desc the Operation
 type Operation struct {
-	HttpMethod string `json:"httpMethod"`
+	HTTPMethod string `json:"httpMethod"`
 	Nickname   string `json:"nickname"`
 	Type       string `json:"type"` // in 1.1 = DataType
 	// ResponseClass    string            `json:"responseClass"` obsolete in 1.2
@@ -72,15 +78,18 @@ type Operation struct {
 	Protocols        []Protocol        `json:"protocols,omitempty"`
 }
 
+// Protocol support which Protocol
 type Protocol struct {
 }
 
+// ResponseMessage Show the
 type ResponseMessage struct {
 	Code          int    `json:"code"`
 	Message       string `json:"message"`
 	ResponseModel string `json:"responseModel"`
 }
 
+// Parameter desc the request parameters
 type Parameter struct {
 	ParamType     string `json:"paramType"` // path,query,body,header,form
 	Name          string `json:"name"`
@@ -94,17 +103,20 @@ type Parameter struct {
 	Maximum       int    `json:"maximum"`
 }
 
+// ErrorResponse desc response
 type ErrorResponse struct {
 	Code   int    `json:"code"`
 	Reason string `json:"reason"`
 }
 
+// Model define the data model
 type Model struct {
-	Id         string                   `json:"id"`
+	ID         string                   `json:"id"`
 	Required   []string                 `json:"required,omitempty"`
 	Properties map[string]ModelProperty `json:"properties"`
 }
 
+// ModelProperty define the properties
 type ModelProperty struct {
 	Type        string            `json:"type"`
 	Description string            `json:"description"`
@@ -112,20 +124,20 @@ type ModelProperty struct {
 	Format      string            `json:"format"`
 }
 
-// https://github.com/wordnik/swagger-core/wiki/authorizations
+// Authorization see https://github.com/wordnik/swagger-core/wiki/authorizations
 type Authorization struct {
 	LocalOAuth OAuth  `json:"local-oauth"`
-	ApiKey     ApiKey `json:"apiKey"`
+	APIKey     APIKey `json:"apiKey"`
 }
 
-// https://github.com/wordnik/swagger-core/wiki/authorizations
+// OAuth see https://github.com/wordnik/swagger-core/wiki/authorizations
 type OAuth struct {
 	Type       string               `json:"type"`   // e.g. oauth2
 	Scopes     []string             `json:"scopes"` // e.g. PUBLIC
 	GrantTypes map[string]GrantType `json:"grantTypes"`
 }
 
-// https://github.com/wordnik/swagger-core/wiki/authorizations
+// GrantType see https://github.com/wordnik/swagger-core/wiki/authorizations
 type GrantType struct {
 	LoginEndpoint        Endpoint `json:"loginEndpoint"`
 	TokenName            string   `json:"tokenName"` // e.g. access_code
@@ -133,16 +145,16 @@ type GrantType struct {
 	TokenEndpoint        Endpoint `json:"tokenEndpoint"`
 }
 
-// https://github.com/wordnik/swagger-core/wiki/authorizations
+// Endpoint see https://github.com/wordnik/swagger-core/wiki/authorizations
 type Endpoint struct {
-	Url              string `json:"url"`
-	ClientIdName     string `json:"clientIdName"`
+	URL              string `json:"url"`
+	ClientIDName     string `json:"clientIdName"`
 	ClientSecretName string `json:"clientSecretName"`
 	TokenName        string `json:"tokenName"`
 }
 
-// https://github.com/wordnik/swagger-core/wiki/authorizations
-type ApiKey struct {
+// APIKey see https://github.com/wordnik/swagger-core/wiki/authorizations
+type APIKey struct {
 	Type   string `json:"type"`   // e.g. apiKey
 	PassAs string `json:"passAs"` // e.g. header
 }
