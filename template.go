@@ -272,7 +272,9 @@ func SetStaticPath(url string, path string) *App {
 	if !strings.HasPrefix(url, "/") {
 		url = "/" + url
 	}
-	url = strings.TrimRight(url, "/")
+	if url != "/" {
+		url = strings.TrimRight(url, "/")
+	}
 	BConfig.WebConfig.StaticDir[url] = path
 	return BeeApp
 }
@@ -282,7 +284,9 @@ func DelStaticPath(url string) *App {
 	if !strings.HasPrefix(url, "/") {
 		url = "/" + url
 	}
-	url = strings.TrimRight(url, "/")
+	if url != "/" {
+		url = strings.TrimRight(url, "/")
+	}
 	delete(BConfig.WebConfig.StaticDir, url)
 	return BeeApp
 }
