@@ -15,11 +15,11 @@
 package beego
 
 import (
+	"fmt"
 	"html/template"
 	"os"
 	"path/filepath"
 	"strings"
-	"fmt"
 
 	"github.com/astaxie/beego/config"
 	"github.com/astaxie/beego/session"
@@ -299,7 +299,7 @@ func parseConfig(appConfigPath string) (err error) {
 	}
 
 	//init log
-	BeeLogger.Close()
+	BeeLogger.Reset()
 	for adaptor, config := range BConfig.Log.Outputs {
 		err = BeeLogger.SetLogger(adaptor, config)
 		if err != nil {
