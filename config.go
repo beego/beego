@@ -319,7 +319,7 @@ func LoadAppConfig(adapterName, configPath string) error {
 	}
 
 	if !utils.FileExists(absConfigPath) {
-		return fmt.Errorf("the target config file: %s don't exist!", configPath)
+		return fmt.Errorf("the target config file: %s don't exist", configPath)
 	}
 
 	if absConfigPath == appConfigPath {
