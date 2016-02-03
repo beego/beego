@@ -23,12 +23,12 @@ import (
 	"sync"
 )
 
-// JsonConfig is a json config parser and implements Config interface.
-type JsonConfig struct {
+// JSONConfig is a json config parser and implements Config interface.
+type JSONConfig struct {
 }
 
 // Parse returns a ConfigContainer with parsed json config map.
-func (js *JsonConfig) Parse(filename string) (ConfigContainer, error) {
+func (js *JSONConfig) Parse(filename string) (Configer, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -43,8 +43,8 @@ func (js *JsonConfig) Parse(filename string) (ConfigContainer, error) {
 }
 
 // ParseData returns a ConfigContainer with json string
-func (js *JsonConfig) ParseData(data []byte) (ConfigContainer, error) {
-	x := &JsonConfigContainer{
+func (js *JSONConfig) ParseData(data []byte) (Configer, error) {
+	x := &JSONConfigContainer{
 		data: make(map[string]interface{}),
 	}
 	err := json.Unmarshal(data, &x.data)
@@ -59,15 +59,15 @@ func (js *JsonConfig) ParseData(data []byte) (ConfigContainer, error) {
 	return x, nil
 }
 
-// A Config represents the json configuration.
+// JSONConfigContainer A Config represents the json configuration.
 // Only when get value, support key as section:name type.
-type JsonConfigContainer struct {
+type JSONConfigContainer struct {
 	data map[string]interface{}
 	sync.RWMutex
 }
 
 // Bool returns the boolean value for a given key.
-func (c *JsonConfigContainer) Bool(key string) (bool, error) {
+func (c *JSONConfigContainer) Bool(key string) (bool, error) {
 	val := c.getData(key)
 	if val != nil {
 		if v, ok := val.(bool); ok {
@@ -80,7 +80,7 @@ func (c *JsonConfigContainer) Bool(key string) (bool, error) {
 
 // DefaultBool return the bool value if has no error
 // otherwise return the defaultval
-func (c *JsonConfigContainer) DefaultBool(key string, defaultval bool) bool {
+func (c *JSONConfigContainer) DefaultBool(key string, defaultval bool) bool {
 	if v, err := c.Bool(key); err == nil {
 		return v
 	}
@@ -88,7 +88,7 @@ func (c *JsonConfigContainer) DefaultBool(key string, defaultval bool) bool {
 }
 
 // Int returns the integer value for a given key.
-func (c *JsonConfigContainer) Int(key string) (int, error) {
+func (c *JSONConfigContainer) Int(key string) (int, error) {
 	val := c.getData(key)
 	if val != nil {
 		if v, ok := val.(float64); ok {
@@ -101,7 +101,7 @@ func (c *JsonConfigContainer) Int(key string) (int, error) {
 
 // DefaultInt returns the integer value for a given key.
 // if err != nil return defaltval
-func (c *JsonConfigContainer) DefaultInt(key string, defaultval int) int {
+func (c *JSONConfigContainer) DefaultInt(key string, defaultval int) int {
 	if v, err := c.Int(key); err == nil {
 		return v
 	}
@@ -109,7 +109,7 @@ func (c *JsonConfigContainer) DefaultInt(key string, defaultval int) int {
 }
 
 // Int64 returns the int64 value for a given key.
-func (c *JsonConfigContainer) Int64(key string) (int64, error) {
+func (c *JSONConfigContainer) Int64(key string) (int64, error) {
 	val := c.getData(key)
 	if val != nil {
 		if v, ok := val.(float64); ok {
@@ -122,7 +122,7 @@ func (c *JsonConfigContainer) Int64(key string) (int64, error) {
 
 // DefaultInt64 returns the int64 value for a given key.
 // if err != nil return defaltval
-func (c *JsonConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
+func (c *JSONConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
 	if v, err := c.Int64(key); err == nil {
 		return v
 	}
@@ -130,7 +130,7 @@ func (c *JsonConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
 }
 
 // Float returns the float value for a given key.
-func (c *JsonConfigContainer) Float(key string) (float64, error) {
+func (c *JSONConfigContainer) Float(key string) (float64, error) {
 	val := c.getData(key)
 	if val != nil {
 		if v, ok := val.(float64); ok {
@@ -143,7 +143,7 @@ func (c *JsonConfigContainer) Float(key string) (float64, error) {
 
 // DefaultFloat returns the float64 value for a given key.
 // if err != nil return defaltval
-func (c *JsonConfigContainer) DefaultFloat(key string, defaultval float64) float64 {
+func (c *JSONConfigContainer) DefaultFloat(key string, defaultval float64) float64 {
 	if v, err := c.Float(key); err == nil {
 		return v
 	}
@@ -151,7 +151,7 @@ func (c *JsonConfigContainer) DefaultFloat(key string, defaultval float64) float
 }
 
 // String returns the string value for a given key.
-func (c *JsonConfigContainer) String(key string) string {
+func (c *JSONConfigContainer) String(key string) string {
 	val := c.getData(key)
 	if val != nil {
 		if v, ok := val.(string); ok {
@@ -163,8 +163,8 @@ func (c *JsonConfigContainer) String(key string) string {
 
 // DefaultString returns the string value for a given key.
 // if err != nil return defaltval
-func (c *JsonConfigContainer) DefaultString(key string, defaultval string) string {
-	// TODO FIXME should not use "" to replace non existance
+func (c *JSONConfigContainer) DefaultString(key string, defaultval string) string {
+	// TODO FIXME should not use "" to replace non existence
 	if v := c.String(key); v != "" {
 		return v
 	}
@@ -172,7 +172,7 @@ func (c *JsonConfigContainer) DefaultString(key string, defaultval string) strin
 }
 
 // Strings returns the []string value for a given key.
-func (c *JsonConfigContainer) Strings(key string) []string {
+func (c *JSONConfigContainer) Strings(key string) []string {
 	stringVal := c.String(key)
 	if stringVal == "" {
 		return []string{}
@@ -182,7 +182,7 @@ func (c *JsonConfigContainer) Strings(key string) []string {
 
 // DefaultStrings returns the []string value for a given key.
 // if err != nil return defaltval
-func (c *JsonConfigContainer) DefaultStrings(key string, defaultval []string) []string {
+func (c *JSONConfigContainer) DefaultStrings(key string, defaultval []string) []string {
 	if v := c.Strings(key); len(v) > 0 {
 		return v
 	}
@@ -190,7 +190,7 @@ func (c *JsonConfigContainer) DefaultStrings(key string, defaultval []string) []
 }
 
 // GetSection returns map for the given section
-func (c *JsonConfigContainer) GetSection(section string) (map[string]string, error) {
+func (c *JSONConfigContainer) GetSection(section string) (map[string]string, error) {
 	if v, ok := c.data[section]; ok {
 		return v.(map[string]string), nil
 	}
@@ -198,7 +198,7 @@ func (c *JsonConfigContainer) GetSection(section string) (map[string]string, err
 }
 
 // SaveConfigFile save the config into file
-func (c *JsonConfigContainer) SaveConfigFile(filename string) (err error) {
+func (c *JSONConfigContainer) SaveConfigFile(filename string) (err error) {
 	// Write configuration file by filename.
 	f, err := os.Create(filename)
 	if err != nil {
@@ -214,7 +214,7 @@ func (c *JsonConfigContainer) SaveConfigFile(filename string) (err error) {
 }
 
 // Set writes a new value for key.
-func (c *JsonConfigContainer) Set(key, val string) error {
+func (c *JSONConfigContainer) Set(key, val string) error {
 	c.Lock()
 	defer c.Unlock()
 	c.data[key] = val
@@ -222,7 +222,7 @@ func (c *JsonConfigContainer) Set(key, val string) error {
 }
 
 // DIY returns the raw value by a given key.
-func (c *JsonConfigContainer) DIY(key string) (v interface{}, err error) {
+func (c *JSONConfigContainer) DIY(key string) (v interface{}, err error) {
 	val := c.getData(key)
 	if val != nil {
 		return val, nil
@@ -231,7 +231,7 @@ func (c *JsonConfigContainer) DIY(key string) (v interface{}, err error) {
 }
 
 // section.key or key
-func (c *JsonConfigContainer) getData(key string) interface{} {
+func (c *JSONConfigContainer) getData(key string) interface{} {
 	if len(key) == 0 {
 		return nil
 	}
@@ -261,5 +261,5 @@ func (c *JsonConfigContainer) getData(key string) interface{} {
 }
 
 func init() {
-	Register("json", &JsonConfig{})
+	Register("json", &JSONConfig{})
 }

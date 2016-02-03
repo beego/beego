@@ -15,49 +15,28 @@
 package orm
 
 import (
-	"errors"
 	"fmt"
 	"strconv"
 	"time"
 )
 
+// Define the Type enum
 const (
-	// bool
 	TypeBooleanField = 1 << iota
-
-	// string
 	TypeCharField
-
-	// string
 	TypeTextField
-
-	// time.Time
 	TypeDateField
-	// time.Time
 	TypeDateTimeField
-
-	// int8
 	TypeBitField
-	// int16
 	TypeSmallIntegerField
-	// int32
 	TypeIntegerField
-	// int64
 	TypeBigIntegerField
-	// uint8
 	TypePositiveBitField
-	// uint16
 	TypePositiveSmallIntegerField
-	// uint32
 	TypePositiveIntegerField
-	// uint64
 	TypePositiveBigIntegerField
-
-	// float64
 	TypeFloatField
-	// float64
 	TypeDecimalField
-
 	RelForeignKey
 	RelOneToOne
 	RelManyToMany
@@ -65,6 +44,7 @@ const (
 	RelReverseMany
 )
 
+// Define some logic enum
 const (
 	IsIntegerField        = ^-TypePositiveBigIntegerField >> 4 << 5
 	IsPostiveIntegerField = ^-TypePositiveBigIntegerField >> 8 << 9
@@ -72,25 +52,30 @@ const (
 	IsFieldType           = ^-RelReverseMany<<1 + 1
 )
 
-// A true/false field.
+// BooleanField A true/false field.
 type BooleanField bool
 
+// Value return the BooleanField
 func (e BooleanField) Value() bool {
 	return bool(e)
 }
 
+// Set will set the BooleanField
 func (e *BooleanField) Set(d bool) {
 	*e = BooleanField(d)
 }
 
+// String format the Bool to string
 func (e *BooleanField) String() string {
 	return strconv.FormatBool(e.Value())
 }
 
+// FieldType return BooleanField the type
 func (e *BooleanField) FieldType() int {
 	return TypeBooleanField
 }
 
+// SetRaw set the interface to bool
 func (e *BooleanField) SetRaw(value interface{}) error {
 	switch d := value.(type) {
 	case bool:
@@ -102,56 +87,65 @@ func (e *BooleanField) SetRaw(value interface{}) error {
 		}
 		return err
 	default:
-		return errors.New(fmt.Sprintf("<BooleanField.SetRaw> unknown value `%s`", value))
+		return fmt.Errorf("<BooleanField.SetRaw> unknown value `%s`", value)
 	}
 	return nil
 }
 
+// RawValue return the current value
 func (e *BooleanField) RawValue() interface{} {
 	return e.Value()
 }
 
+// verify the BooleanField implement the Fielder interface
 var _ Fielder = new(BooleanField)
 
-// A string field
+// CharField A string field
 // required values tag: size
 // The size is enforced at the database level and in models’s validation.
 // eg: `orm:"size(120)"`
 type CharField string
 
+// Value return the CharField's Value
 func (e CharField) Value() string {
 	return string(e)
 }
 
+// Set CharField value
 func (e *CharField) Set(d string) {
 	*e = CharField(d)
 }
 
+// String return the CharField
 func (e *CharField) String() string {
 	return e.Value()
 }
 
+// FieldType return the enum type
 func (e *CharField) FieldType() int {
 	return TypeCharField
 }
 
+// SetRaw set the interface to string
 func (e *CharField) SetRaw(value interface{}) error {
 	switch d := value.(type) {
 	case string:
 		e.Set(d)
 	default:
-		return errors.New(fmt.Sprintf("<CharField.SetRaw> unknown value `%s`", value))
+		return fmt.Errorf("<CharField.SetRaw> unknown value `%s`", value)
 	}
 	return nil
 }
 
+// RawValue return the CharField value
 func (e *CharField) RawValue() interface{} {
 	return e.Value()
 }
 
+// verify CharField implement Fielder
 var _ Fielder = new(CharField)
 
-// A date, represented in go by a time.Time instance.
+// DateField A date, represented in go by a time.Time instance.
 // only date values like 2006-01-02
 // Has a few extra, optional attr tag:
 //
@@ -166,106 +160,125 @@ var _ Fielder = new(CharField)
 // eg: `orm:"auto_now"` or `orm:"auto_now_add"`
 type DateField time.Time
 
+// Value return the time.Time
 func (e DateField) Value() time.Time {
 	return time.Time(e)
 }
 
+// Set set the DateField's value
 func (e *DateField) Set(d time.Time) {
 	*e = DateField(d)
 }
 
+// String convert datatime to string
 func (e *DateField) String() string {
 	return e.Value().String()
 }
 
+// FieldType return enum type Date
 func (e *DateField) FieldType() int {
 	return TypeDateField
 }
 
+// SetRaw convert the interface to time.Time. Allow string and time.Time
 func (e *DateField) SetRaw(value interface{}) error {
 	switch d := value.(type) {
 	case time.Time:
 		e.Set(d)
 	case string:
-		v, err := timeParse(d, format_Date)
+		v, err := timeParse(d, formatDate)
 		if err != nil {
 			e.Set(v)
 		}
 		return err
 	default:
-		return errors.New(fmt.Sprintf("<DateField.SetRaw> unknown value `%s`", value))
+		return fmt.Errorf("<DateField.SetRaw> unknown value `%s`", value)
 	}
 	return nil
 }
 
+// RawValue return Date value
 func (e *DateField) RawValue() interface{} {
 	return e.Value()
 }
 
+// verify DateField implement fielder interface
 var _ Fielder = new(DateField)
 
-// A date, represented in go by a time.Time instance.
+// DateTimeField A date, represented in go by a time.Time instance.
 // datetime values like 2006-01-02 15:04:05
 // Takes the same extra arguments as DateField.
 type DateTimeField time.Time
 
+// Value return the datatime value
 func (e DateTimeField) Value() time.Time {
 	return time.Time(e)
 }
 
+// Set set the time.Time to datatime
 func (e *DateTimeField) Set(d time.Time) {
 	*e = DateTimeField(d)
 }
 
+// String return the time's String
 func (e *DateTimeField) String() string {
 	return e.Value().String()
 }
 
+// FieldType return the enum TypeDateTimeField
 func (e *DateTimeField) FieldType() int {
 	return TypeDateTimeField
 }
 
+// SetRaw convert the string or time.Time to DateTimeField
 func (e *DateTimeField) SetRaw(value interface{}) error {
 	switch d := value.(type) {
 	case time.Time:
 		e.Set(d)
 	case string:
-		v, err := timeParse(d, format_DateTime)
+		v, err := timeParse(d, formatDateTime)
 		if err != nil {
 			e.Set(v)
 		}
 		return err
 	default:
-		return errors.New(fmt.Sprintf("<DateTimeField.SetRaw> unknown value `%s`", value))
+		return fmt.Errorf("<DateTimeField.SetRaw> unknown value `%s`", value)
 	}
 	return nil
 }
 
+// RawValue return the datatime value
 func (e *DateTimeField) RawValue() interface{} {
 	return e.Value()
 }
 
+// verify datatime implement fielder
 var _ Fielder = new(DateTimeField)
 
-// A floating-point number represented in go by a float32 value.
+// FloatField A floating-point number represented in go by a float32 value.
 type FloatField float64
 
+// Value return the FloatField value
 func (e FloatField) Value() float64 {
 	return float64(e)
 }
 
+// Set the Float64
 func (e *FloatField) Set(d float64) {
 	*e = FloatField(d)
 }
 
+// String return the string
 func (e *FloatField) String() string {
 	return ToStr(e.Value(), -1, 32)
 }
 
+// FieldType return the enum type
 func (e *FloatField) FieldType() int {
 	return TypeFloatField
 }
 
+// SetRaw converter interface Float64 float32 or string to FloatField
 func (e *FloatField) SetRaw(value interface{}) error {
 	switch d := value.(type) {
 	case float32:
@@ -278,36 +291,43 @@ func (e *FloatField) SetRaw(value interface{}) error {
 			e.Set(v)
 		}
 	default:
-		return errors.New(fmt.Sprintf("<FloatField.SetRaw> unknown value `%s`", value))
+		return fmt.Errorf("<FloatField.SetRaw> unknown value `%s`", value)
 	}
 	return nil
 }
 
+// RawValue return the FloatField value
 func (e *FloatField) RawValue() interface{} {
 	return e.Value()
 }
 
+// verify FloatField implement Fielder
 var _ Fielder = new(FloatField)
 
-// -32768 to 32767
+// SmallIntegerField -32768 to 32767
 type SmallIntegerField int16
 
+// Value return int16 value
 func (e SmallIntegerField) Value() int16 {
 	return int16(e)
 }
 
+// Set the SmallIntegerField value
 func (e *SmallIntegerField) Set(d int16) {
 	*e = SmallIntegerField(d)
 }
 
+// String convert smallint to string
 func (e *SmallIntegerField) String() string {
 	return ToStr(e.Value())
 }
 
+// FieldType return enum type SmallIntegerField
 func (e *SmallIntegerField) FieldType() int {
 	return TypeSmallIntegerField
 }
 
+// SetRaw convert interface int16/string to int16
 func (e *SmallIntegerField) SetRaw(value interface{}) error {
 	switch d := value.(type) {
 	case int16:
@@ -318,36 +338,43 @@ func (e *SmallIntegerField) SetRaw(value interface{}) error {
 			e.Set(v)
 		}
 	default:
-		return errors.New(fmt.Sprintf("<SmallIntegerField.SetRaw> unknown value `%s`", value))
+		return fmt.Errorf("<SmallIntegerField.SetRaw> unknown value `%s`", value)
 	}
 	return nil
 }
 
+// RawValue return smallint value
 func (e *SmallIntegerField) RawValue() interface{} {
 	return e.Value()
 }
 
+// verify SmallIntegerField implement Fielder
 var _ Fielder = new(SmallIntegerField)
 
-// -2147483648 to 2147483647
+// IntegerField -2147483648 to 2147483647
 type IntegerField int32
 
+// Value return the int32
 func (e IntegerField) Value() int32 {
 	return int32(e)
 }
 
+// Set IntegerField value
 func (e *IntegerField) Set(d int32) {
 	*e = IntegerField(d)
 }
 
+// String convert Int32 to string
 func (e *IntegerField) String() string {
 	return ToStr(e.Value())
 }
 
+// FieldType return the enum type
 func (e *IntegerField) FieldType() int {
 	return TypeIntegerField
 }
 
+// SetRaw convert interface int32/string to int32
 func (e *IntegerField) SetRaw(value interface{}) error {
 	switch d := value.(type) {
 	case int32:
@@ -358,36 +385,43 @@ func (e *IntegerField) SetRaw(value interface{}) error {
 			e.Set(v)
 		}
 	default:
-		return errors.New(fmt.Sprintf("<IntegerField.SetRaw> unknown value `%s`", value))
+		return fmt.Errorf("<IntegerField.SetRaw> unknown value `%s`", value)
 	}
 	return nil
 }
 
+// RawValue return IntegerField value
 func (e *IntegerField) RawValue() interface{} {
 	return e.Value()
 }
 
+// verify IntegerField implement Fielder
 var _ Fielder = new(IntegerField)
 
-// -9223372036854775808 to 9223372036854775807.
+// BigIntegerField -9223372036854775808 to 9223372036854775807.
 type BigIntegerField int64
 
+// Value return int64
 func (e BigIntegerField) Value() int64 {
 	return int64(e)
 }
 
+// Set the BigIntegerField value
 func (e *BigIntegerField) Set(d int64) {
 	*e = BigIntegerField(d)
 }
 
+// String convert BigIntegerField to string
 func (e *BigIntegerField) String() string {
 	return ToStr(e.Value())
 }
 
+// FieldType return enum type
 func (e *BigIntegerField) FieldType() int {
 	return TypeBigIntegerField
 }
 
+// SetRaw convert interface int64/string to int64
 func (e *BigIntegerField) SetRaw(value interface{}) error {
 	switch d := value.(type) {
 	case int64:
@@ -398,36 +432,43 @@ func (e *BigIntegerField) SetRaw(value interface{}) error {
 			e.Set(v)
 		}
 	default:
-		return errors.New(fmt.Sprintf("<BigIntegerField.SetRaw> unknown value `%s`", value))
+		return fmt.Errorf("<BigIntegerField.SetRaw> unknown value `%s`", value)
 	}
 	return nil
 }
 
+// RawValue return BigIntegerField value
 func (e *BigIntegerField) RawValue() interface{} {
 	return e.Value()
 }
 
+// verify BigIntegerField implement Fielder
 var _ Fielder = new(BigIntegerField)
 
-// 0 to 65535
+// PositiveSmallIntegerField 0 to 65535
 type PositiveSmallIntegerField uint16
 
+// Value return uint16
 func (e PositiveSmallIntegerField) Value() uint16 {
 	return uint16(e)
 }
 
+// Set PositiveSmallIntegerField value
 func (e *PositiveSmallIntegerField) Set(d uint16) {
 	*e = PositiveSmallIntegerField(d)
 }
 
+// String convert uint16 to string
 func (e *PositiveSmallIntegerField) String() string {
 	return ToStr(e.Value())
 }
 
+// FieldType return enum type
 func (e *PositiveSmallIntegerField) FieldType() int {
 	return TypePositiveSmallIntegerField
 }
 
+// SetRaw convert Interface uint16/string to uint16
 func (e *PositiveSmallIntegerField) SetRaw(value interface{}) error {
 	switch d := value.(type) {
 	case uint16:
@@ -438,36 +479,43 @@ func (e *PositiveSmallIntegerField) SetRaw(value interface{}) error {
 			e.Set(v)
 		}
 	default:
-		return errors.New(fmt.Sprintf("<PositiveSmallIntegerField.SetRaw> unknown value `%s`", value))
+		return fmt.Errorf("<PositiveSmallIntegerField.SetRaw> unknown value `%s`", value)
 	}
 	return nil
 }
 
+// RawValue returns PositiveSmallIntegerField value
 func (e *PositiveSmallIntegerField) RawValue() interface{} {
 	return e.Value()
 }
 
+// verify PositiveSmallIntegerField implement Fielder
 var _ Fielder = new(PositiveSmallIntegerField)
 
-// 0 to 4294967295
+// PositiveIntegerField 0 to 4294967295
 type PositiveIntegerField uint32
 
+// Value return PositiveIntegerField value. Uint32
 func (e PositiveIntegerField) Value() uint32 {
 	return uint32(e)
 }
 
+// Set the PositiveIntegerField value
 func (e *PositiveIntegerField) Set(d uint32) {
 	*e = PositiveIntegerField(d)
 }
 
+// String convert PositiveIntegerField to string
 func (e *PositiveIntegerField) String() string {
 	return ToStr(e.Value())
 }
 
+// FieldType return enum type
 func (e *PositiveIntegerField) FieldType() int {
 	return TypePositiveIntegerField
 }
 
+// SetRaw convert interface uint32/string to Uint32
 func (e *PositiveIntegerField) SetRaw(value interface{}) error {
 	switch d := value.(type) {
 	case uint32:
@@ -478,36 +526,43 @@ func (e *PositiveIntegerField) SetRaw(value interface{}) error {
 			e.Set(v)
 		}
 	default:
-		return errors.New(fmt.Sprintf("<PositiveIntegerField.SetRaw> unknown value `%s`", value))
+		return fmt.Errorf("<PositiveIntegerField.SetRaw> unknown value `%s`", value)
 	}
 	return nil
 }
 
+// RawValue return the PositiveIntegerField Value
 func (e *PositiveIntegerField) RawValue() interface{} {
 	return e.Value()
 }
 
+// verify PositiveIntegerField implement Fielder
 var _ Fielder = new(PositiveIntegerField)
 
-// 0 to 18446744073709551615
+// PositiveBigIntegerField 0 to 18446744073709551615
 type PositiveBigIntegerField uint64
 
+// Value return uint64
 func (e PositiveBigIntegerField) Value() uint64 {
 	return uint64(e)
 }
 
+// Set PositiveBigIntegerField value
 func (e *PositiveBigIntegerField) Set(d uint64) {
 	*e = PositiveBigIntegerField(d)
 }
 
+// String convert PositiveBigIntegerField to string
 func (e *PositiveBigIntegerField) String() string {
 	return ToStr(e.Value())
 }
 
+// FieldType return enum type
 func (e *PositiveBigIntegerField) FieldType() int {
 	return TypePositiveIntegerField
 }
 
+// SetRaw convert interface uint64/string to Uint64
 func (e *PositiveBigIntegerField) SetRaw(value interface{}) error {
 	switch d := value.(type) {
 	case uint64:
@@ -518,48 +573,57 @@ func (e *PositiveBigIntegerField) SetRaw(value interface{}) error {
 			e.Set(v)
 		}
 	default:
-		return errors.New(fmt.Sprintf("<PositiveBigIntegerField.SetRaw> unknown value `%s`", value))
+		return fmt.Errorf("<PositiveBigIntegerField.SetRaw> unknown value `%s`", value)
 	}
 	return nil
 }
 
+// RawValue return PositiveBigIntegerField value
 func (e *PositiveBigIntegerField) RawValue() interface{} {
 	return e.Value()
 }
 
+// verify PositiveBigIntegerField implement Fielder
 var _ Fielder = new(PositiveBigIntegerField)
 
-// A large text field.
+// TextField A large text field.
 type TextField string
 
+// Value return TextField value
 func (e TextField) Value() string {
 	return string(e)
 }
 
+// Set the TextField value
 func (e *TextField) Set(d string) {
 	*e = TextField(d)
 }
 
+// String convert TextField to string
 func (e *TextField) String() string {
 	return e.Value()
 }
 
+// FieldType return enum type
 func (e *TextField) FieldType() int {
 	return TypeTextField
 }
 
+// SetRaw convert interface string to string
 func (e *TextField) SetRaw(value interface{}) error {
 	switch d := value.(type) {
 	case string:
 		e.Set(d)
 	default:
-		return errors.New(fmt.Sprintf("<TextField.SetRaw> unknown value `%s`", value))
+		return fmt.Errorf("<TextField.SetRaw> unknown value `%s`", value)
 	}
 	return nil
 }
 
+// RawValue return TextField value
 func (e *TextField) RawValue() interface{} {
 	return e.Value()
 }
 
+// verify TextField implement Fielder
 var _ Fielder = new(TextField)

@@ -80,7 +80,7 @@ func NewEMail(config string) *Email {
 	return e
 }
 
-// Make all send information to byte
+// Bytes Make all send information to byte
 func (e *Email) Bytes() ([]byte, error) {
 	buff := &bytes.Buffer{}
 	w := multipart.NewWriter(buff)
@@ -96,12 +96,16 @@ func (e *Email) Bytes() ([]byte, error) {
 		e.Headers.Set("Disposition-Notification-To", strings.Join(e.ReadReceipt, ","))
 	}
 	e.Headers.Set("MIME-Version", "1.0")
-	e.Headers.Set("Content-Type", fmt.Sprintf("multipart/mixed;\r\n boundary=%s\r\n", w.Boundary()))
 
 	// Write the envelope headers (including any custom headers)
 	if err := headerToBytes(buff, e.Headers); err != nil {
 		return nil, fmt.Errorf("Failed to render message headers: %s", err)
 	}
+
+	e.Headers.Set("Content-Type", fmt.Sprintf("multipart/mixed;\r\n boundary=%s\r\n", w.Boundary()))
+	fmt.Fprintf(buff, "%s:", "Content-Type")
+	fmt.Fprintf(buff, " %s\r\n", fmt.Sprintf("multipart/mixed;\r\n boundary=%s\r\n", w.Boundary()))
+
 	// Start the multipart/mixed part
 	fmt.Fprintf(buff, "--%s\r\n", w.Boundary())
 	header := textproto.MIMEHeader{}
@@ -156,7 +160,7 @@ func (e *Email) Bytes() ([]byte, error) {
 	return buff.Bytes(), nil
 }
 
-// Add attach file to the send mail
+// AttachFile Add attach file to the send mail
 func (e *Email) AttachFile(args ...string) (a *Attachment, err error) {
 	if len(args) < 1 && len(args) > 2 {
 		err = errors.New("Must specify a file name and number of parameters can not exceed at least two")
@@ -215,6 +219,7 @@ func (e *Email) Attach(r io.Reader, filename string, args ...string) (a *Attachm
 	return at, nil
 }
 
+// Send will send out the mail
 func (e *Email) Send() error {
 	if e.Auth == nil {
 		e.Auth = smtp.PlainAuth(e.Identity, e.Username, e.Password, e.Host)
@@ -230,6 +235,7 @@ func (e *Email) Send() error {
 	if err != nil {
 		return err
 	}
+	e.From = from.String()
 	raw, err := e.Bytes()
 	if err != nil {
 		return err

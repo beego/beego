@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// package yaml for config provider
+// Package yaml for config provider
 //
 // depend on github.com/beego/goyaml2
 //
@@ -46,22 +46,23 @@ import (
 	"github.com/beego/goyaml2"
 )
 
-// YAMLConfig is a yaml config parser and implements Config interface.
-type YAMLConfig struct{}
+// Config is a yaml config parser and implements Config interface.
+type Config struct{}
 
 // Parse returns a ConfigContainer with parsed yaml config map.
-func (yaml *YAMLConfig) Parse(filename string) (y config.ConfigContainer, err error) {
+func (yaml *Config) Parse(filename string) (y config.Configer, err error) {
 	cnf, err := ReadYmlReader(filename)
 	if err != nil {
 		return
 	}
-	y = &YAMLConfigContainer{
+	y = &ConfigContainer{
 		data: cnf,
 	}
 	return
 }
 
-func (yaml *YAMLConfig) ParseData(data []byte) (config.ConfigContainer, error) {
+// ParseData parse yaml data
+func (yaml *Config) ParseData(data []byte) (config.Configer, error) {
 	// Save memory data to temporary file
 	tmpName := path.Join(os.TempDir(), "beego", fmt.Sprintf("%d", time.Now().Nanosecond()))
 	os.MkdirAll(path.Dir(tmpName), os.ModePerm)
@@ -71,7 +72,7 @@ func (yaml *YAMLConfig) ParseData(data []byte) (config.ConfigContainer, error) {
 	return yaml.Parse(tmpName)
 }
 
-// Read yaml file to map.
+// ReadYmlReader Read yaml file to map.
 // if json like, use json package, unless goyaml2 package.
 func ReadYmlReader(path string) (cnf map[string]interface{}, err error) {
 	f, err := os.Open(path)
@@ -112,14 +113,14 @@ func ReadYmlReader(path string) (cnf map[string]interface{}, err error) {
 	return
 }
 
-// A Config represents the yaml configuration.
-type YAMLConfigContainer struct {
+// ConfigContainer A Config represents the yaml configuration.
+type ConfigContainer struct {
 	data map[string]interface{}
 	sync.Mutex
 }
 
 // Bool returns the boolean value for a given key.
-func (c *YAMLConfigContainer) Bool(key string) (bool, error) {
+func (c *ConfigContainer) Bool(key string) (bool, error) {
 	if v, ok := c.data[key].(bool); ok {
 		return v, nil
 	}
@@ -128,16 +129,16 @@ func (c *YAMLConfigContainer) Bool(key string) (bool, error) {
 
 // DefaultBool return the bool value if has no error
 // otherwise return the defaultval
-func (c *YAMLConfigContainer) DefaultBool(key string, defaultval bool) bool {
-	if v, err := c.Bool(key); err != nil {
+func (c *ConfigContainer) DefaultBool(key string, defaultval bool) bool {
+	v, err := c.Bool(key)
+	if err != nil {
 		return defaultval
-	} else {
-		return v
 	}
+	return v
 }
 
 // Int returns the integer value for a given key.
-func (c *YAMLConfigContainer) Int(key string) (int, error) {
+func (c *ConfigContainer) Int(key string) (int, error) {
 	if v, ok := c.data[key].(int64); ok {
 		return int(v), nil
 	}
@@ -146,16 +147,16 @@ func (c *YAMLConfigContainer) Int(key string) (int, error) {
 
 // DefaultInt returns the integer value for a given key.
 // if err != nil return defaltval
-func (c *YAMLConfigContainer) DefaultInt(key string, defaultval int) int {
-	if v, err := c.Int(key); err != nil {
+func (c *ConfigContainer) DefaultInt(key string, defaultval int) int {
+	v, err := c.Int(key)
+	if err != nil {
 		return defaultval
-	} else {
-		return v
 	}
+	return v
 }
 
 // Int64 returns the int64 value for a given key.
-func (c *YAMLConfigContainer) Int64(key string) (int64, error) {
+func (c *ConfigContainer) Int64(key string) (int64, error) {
 	if v, ok := c.data[key].(int64); ok {
 		return v, nil
 	}
@@ -164,16 +165,16 @@ func (c *YAMLConfigContainer) Int64(key string) (int64, error) {
 
 // DefaultInt64 returns the int64 value for a given key.
 // if err != nil return defaltval
-func (c *YAMLConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
-	if v, err := c.Int64(key); err != nil {
+func (c *ConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
+	v, err := c.Int64(key)
+	if err != nil {
 		return defaultval
-	} else {
-		return v
 	}
+	return v
 }
 
 // Float returns the float value for a given key.
-func (c *YAMLConfigContainer) Float(key string) (float64, error) {
+func (c *ConfigContainer) Float(key string) (float64, error) {
 	if v, ok := c.data[key].(float64); ok {
 		return v, nil
 	}
@@ -182,16 +183,16 @@ func (c *YAMLConfigContainer) Float(key string) (float64, error) {
 
 // DefaultFloat returns the float64 value for a given key.
 // if err != nil return defaltval
-func (c *YAMLConfigContainer) DefaultFloat(key string, defaultval float64) float64 {
-	if v, err := c.Float(key); err != nil {
+func (c *ConfigContainer) DefaultFloat(key string, defaultval float64) float64 {
+	v, err := c.Float(key)
+	if err != nil {
 		return defaultval
-	} else {
-		return v
 	}
+	return v
 }
 
 // String returns the string value for a given key.
-func (c *YAMLConfigContainer) String(key string) string {
+func (c *ConfigContainer) String(key string) string {
 	if v, ok := c.data[key].(string); ok {
 		return v
 	}
@@ -200,40 +201,40 @@ func (c *YAMLConfigContainer) String(key string) string {
 
 // DefaultString returns the string value for a given key.
 // if err != nil return defaltval
-func (c *YAMLConfigContainer) DefaultString(key string, defaultval string) string {
-	if v := c.String(key); v == "" {
+func (c *ConfigContainer) DefaultString(key string, defaultval string) string {
+	v := c.String(key)
+	if v == "" {
 		return defaultval
-	} else {
-		return v
 	}
+	return v
 }
 
 // Strings returns the []string value for a given key.
-func (c *YAMLConfigContainer) Strings(key string) []string {
+func (c *ConfigContainer) Strings(key string) []string {
 	return strings.Split(c.String(key), ";")
 }
 
 // DefaultStrings returns the []string value for a given key.
 // if err != nil return defaltval
-func (c *YAMLConfigContainer) DefaultStrings(key string, defaultval []string) []string {
-	if v := c.Strings(key); len(v) == 0 {
+func (c *ConfigContainer) DefaultStrings(key string, defaultval []string) []string {
+	v := c.Strings(key)
+	if len(v) == 0 {
 		return defaultval
-	} else {
-		return v
 	}
+	return v
 }
 
 // GetSection returns map for the given section
-func (c *YAMLConfigContainer) GetSection(section string) (map[string]string, error) {
-	if v, ok := c.data[section]; ok {
+func (c *ConfigContainer) GetSection(section string) (map[string]string, error) {
+	v, ok := c.data[section]
+	if ok {
 		return v.(map[string]string), nil
-	} else {
-		return nil, errors.New("not exist setction")
 	}
+	return nil, errors.New("not exist setction")
 }
 
 // SaveConfigFile save the config into file
-func (c *YAMLConfigContainer) SaveConfigFile(filename string) (err error) {
+func (c *ConfigContainer) SaveConfigFile(filename string) (err error) {
 	// Write configuration file by filename.
 	f, err := os.Create(filename)
 	if err != nil {
@@ -244,8 +245,8 @@ func (c *YAMLConfigContainer) SaveConfigFile(filename string) (err error) {
 	return err
 }
 
-// WriteValue writes a new value for key.
-func (c *YAMLConfigContainer) Set(key, val string) error {
+// Set writes a new value for key.
+func (c *ConfigContainer) Set(key, val string) error {
 	c.Lock()
 	defer c.Unlock()
 	c.data[key] = val
@@ -253,7 +254,7 @@ func (c *YAMLConfigContainer) Set(key, val string) error {
 }
 
 // DIY returns the raw value by a given key.
-func (c *YAMLConfigContainer) DIY(key string) (v interface{}, err error) {
+func (c *ConfigContainer) DIY(key string) (v interface{}, err error) {
 	if v, ok := c.data[key]; ok {
 		return v, nil
 	}
@@ -261,5 +262,5 @@ func (c *YAMLConfigContainer) DIY(key string) (v interface{}, err error) {
 }
 
 func init() {
-	config.Register("yaml", &YAMLConfig{})
+	config.Register("yaml", &Config{})
 }

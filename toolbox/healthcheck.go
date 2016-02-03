@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// toolbox healthcheck
+// Package toolbox healthcheck
 //
 // type DatabaseCheck struct {
 // }
@@ -30,15 +30,15 @@
 // more docs: http://beego.me/docs/module/toolbox.md
 package toolbox
 
-// health checker map
+// AdminCheckList holds health checker map
 var AdminCheckList map[string]HealthChecker
 
-// health checker interface
+// HealthChecker health checker interface
 type HealthChecker interface {
 	Check() error
 }
 
-// add health checker with name string
+// AddHealthCheck add health checker with name string
 func AddHealthCheck(name string, hc HealthChecker) {
 	AdminCheckList[name] = hc
 }

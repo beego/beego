@@ -16,6 +16,7 @@ package orm
 
 import "errors"
 
+// QueryBuilder is the Query builder interface
 type QueryBuilder interface {
 	Select(fields ...string) QueryBuilder
 	From(tables ...string) QueryBuilder
@@ -43,15 +44,18 @@ type QueryBuilder interface {
 	String() string
 }
 
+// NewQueryBuilder return the QueryBuilder
 func NewQueryBuilder(driver string) (qb QueryBuilder, err error) {
 	if driver == "mysql" {
 		qb = new(MySQLQueryBuilder)
+	} else if driver == "tidb" {
+		qb = new(TiDBQueryBuilder)
 	} else if driver == "postgres" {
-		err = errors.New("postgres query builder is not supported yet!")
+		err = errors.New("postgres query builder is not supported yet")
 	} else if driver == "sqlite" {
-		err = errors.New("sqlite query builder is not supported yet!")
+		err = errors.New("sqlite query builder is not supported yet")
 	} else {
-		err = errors.New("unknown driver for query builder!")
+		err = errors.New("unknown driver for query builder")
 	}
 	return
 }

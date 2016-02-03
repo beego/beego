@@ -42,12 +42,3 @@ func TestConsole(t *testing.T) {
 	log2.SetLogger("console", `{"level":3}`)
 	testConsoleCalls(log2)
 }
-
-func BenchmarkConsole(b *testing.B) {
-	log := NewLogger(10000)
-	log.EnableFuncCallDepth(true)
-	log.SetLogger("console", "")
-	for i := 0; i < b.N; i++ {
-		log.Debug("debug")
-	}
-}

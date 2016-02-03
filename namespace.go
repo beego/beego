@@ -23,16 +23,17 @@ import (
 
 type namespaceCond func(*beecontext.Context) bool
 
-type innnerNamespace func(*Namespace)
+// LinkNamespace used as link action
+type LinkNamespace func(*Namespace)
 
 // Namespace is store all the info
 type Namespace struct {
 	prefix   string
-	handlers *ControllerRegistor
+	handlers *ControllerRegister
 }
 
-// get new Namespace
-func NewNamespace(prefix string, params ...innnerNamespace) *Namespace {
+// NewNamespace get new Namespace
+func NewNamespace(prefix string, params ...LinkNamespace) *Namespace {
 	ns := &Namespace{
 		prefix:   prefix,
 		handlers: NewControllerRegister(),
@@ -43,7 +44,7 @@ func NewNamespace(prefix string, params ...innnerNamespace) *Namespace {
 	return ns
 }
 
-// set condtion function
+// Cond set condtion function
 // if cond return true can run this namespace, else can't
 // usage:
 // ns.Cond(func (ctx *context.Context) bool{
@@ -72,7 +73,7 @@ func (n *Namespace) Cond(cond namespaceCond) *Namespace {
 	return n
 }
 
-// add filter in the Namespace
+// Filter add filter in the Namespace
 // action has before & after
 // FilterFunc
 // usage:
@@ -95,98 +96,98 @@ func (n *Namespace) Filter(action string, filter ...FilterFunc) *Namespace {
 	return n
 }
 
-// same as beego.Rourer
+// Router same as beego.Rourer
 // refer: https://godoc.org/github.com/astaxie/beego#Router
 func (n *Namespace) Router(rootpath string, c ControllerInterface, mappingMethods ...string) *Namespace {
 	n.handlers.Add(rootpath, c, mappingMethods...)
 	return n
 }
 
-// same as beego.AutoRouter
+// AutoRouter same as beego.AutoRouter
 // refer: https://godoc.org/github.com/astaxie/beego#AutoRouter
 func (n *Namespace) AutoRouter(c ControllerInterface) *Namespace {
 	n.handlers.AddAuto(c)
 	return n
 }
 
-// same as beego.AutoPrefix
+// AutoPrefix same as beego.AutoPrefix
 // refer: https://godoc.org/github.com/astaxie/beego#AutoPrefix
 func (n *Namespace) AutoPrefix(prefix string, c ControllerInterface) *Namespace {
 	n.handlers.AddAutoPrefix(prefix, c)
 	return n
 }
 
-// same as beego.Get
+// Get same as beego.Get
 // refer: https://godoc.org/github.com/astaxie/beego#Get
 func (n *Namespace) Get(rootpath string, f FilterFunc) *Namespace {
 	n.handlers.Get(rootpath, f)
 	return n
 }
 
-// same as beego.Post
+// Post same as beego.Post
 // refer: https://godoc.org/github.com/astaxie/beego#Post
 func (n *Namespace) Post(rootpath string, f FilterFunc) *Namespace {
 	n.handlers.Post(rootpath, f)
 	return n
 }
 
-// same as beego.Delete
+// Delete same as beego.Delete
 // refer: https://godoc.org/github.com/astaxie/beego#Delete
 func (n *Namespace) Delete(rootpath string, f FilterFunc) *Namespace {
 	n.handlers.Delete(rootpath, f)
 	return n
 }
 
-// same as beego.Put
+// Put same as beego.Put
 // refer: https://godoc.org/github.com/astaxie/beego#Put
 func (n *Namespace) Put(rootpath string, f FilterFunc) *Namespace {
 	n.handlers.Put(rootpath, f)
 	return n
 }
 
-// same as beego.Head
+// Head same as beego.Head
 // refer: https://godoc.org/github.com/astaxie/beego#Head
 func (n *Namespace) Head(rootpath string, f FilterFunc) *Namespace {
 	n.handlers.Head(rootpath, f)
 	return n
 }
 
-// same as beego.Options
+// Options same as beego.Options
 // refer: https://godoc.org/github.com/astaxie/beego#Options
 func (n *Namespace) Options(rootpath string, f FilterFunc) *Namespace {
 	n.handlers.Options(rootpath, f)
 	return n
 }
 
-// same as beego.Patch
+// Patch same as beego.Patch
 // refer: https://godoc.org/github.com/astaxie/beego#Patch
 func (n *Namespace) Patch(rootpath string, f FilterFunc) *Namespace {
 	n.handlers.Patch(rootpath, f)
 	return n
 }
 
-// same as beego.Any
+// Any same as beego.Any
 // refer: https://godoc.org/github.com/astaxie/beego#Any
 func (n *Namespace) Any(rootpath string, f FilterFunc) *Namespace {
 	n.handlers.Any(rootpath, f)
 	return n
 }
 
-// same as beego.Handler
+// Handler same as beego.Handler
 // refer: https://godoc.org/github.com/astaxie/beego#Handler
 func (n *Namespace) Handler(rootpath string, h http.Handler) *Namespace {
 	n.handlers.Handler(rootpath, h)
 	return n
 }
 
-// add include class
+// Include add include class
 // refer: https://godoc.org/github.com/astaxie/beego#Include
 func (n *Namespace) Include(cList ...ControllerInterface) *Namespace {
 	n.handlers.Include(cList...)
 	return n
 }
 
-// nest Namespace
+// Namespace add nest Namespace
 // usage:
 //ns := beego.NewNamespace(“/v1”).
 //Namespace(
@@ -230,7 +231,7 @@ func (n *Namespace) Namespace(ns ...*Namespace) *Namespace {
 	return n
 }
 
-// register Namespace into beego.Handler
+// AddNamespace register Namespace into beego.Handler
 // support multi Namespace
 func AddNamespace(nl ...*Namespace) {
 	for _, n := range nl {
@@ -275,113 +276,113 @@ func addPrefix(t *Tree, prefix string) {
 
 }
 
-// Namespace Condition
-func NSCond(cond namespaceCond) innnerNamespace {
+// NSCond is Namespace Condition
+func NSCond(cond namespaceCond) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Cond(cond)
 	}
 }
 
-// Namespace BeforeRouter filter
-func NSBefore(filiterList ...FilterFunc) innnerNamespace {
+// NSBefore Namespace BeforeRouter filter
+func NSBefore(filiterList ...FilterFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Filter("before", filiterList...)
 	}
 }
 
-// Namespace FinishRouter filter
-func NSAfter(filiterList ...FilterFunc) innnerNamespace {
+// NSAfter add Namespace FinishRouter filter
+func NSAfter(filiterList ...FilterFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Filter("after", filiterList...)
 	}
 }
 
-// Namespace Include ControllerInterface
-func NSInclude(cList ...ControllerInterface) innnerNamespace {
+// NSInclude Namespace Include ControllerInterface
+func NSInclude(cList ...ControllerInterface) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Include(cList...)
 	}
 }
 
-// Namespace Router
-func NSRouter(rootpath string, c ControllerInterface, mappingMethods ...string) innnerNamespace {
+// NSRouter call Namespace Router
+func NSRouter(rootpath string, c ControllerInterface, mappingMethods ...string) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Router(rootpath, c, mappingMethods...)
 	}
 }
 
-// Namespace Get
-func NSGet(rootpath string, f FilterFunc) innnerNamespace {
+// NSGet call Namespace Get
+func NSGet(rootpath string, f FilterFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Get(rootpath, f)
 	}
 }
 
-// Namespace Post
-func NSPost(rootpath string, f FilterFunc) innnerNamespace {
+// NSPost call Namespace Post
+func NSPost(rootpath string, f FilterFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Post(rootpath, f)
 	}
 }
 
-// Namespace Head
-func NSHead(rootpath string, f FilterFunc) innnerNamespace {
+// NSHead call Namespace Head
+func NSHead(rootpath string, f FilterFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Head(rootpath, f)
 	}
 }
 
-// Namespace Put
-func NSPut(rootpath string, f FilterFunc) innnerNamespace {
+// NSPut call Namespace Put
+func NSPut(rootpath string, f FilterFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Put(rootpath, f)
 	}
 }
 
-// Namespace Delete
-func NSDelete(rootpath string, f FilterFunc) innnerNamespace {
+// NSDelete call Namespace Delete
+func NSDelete(rootpath string, f FilterFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Delete(rootpath, f)
 	}
 }
 
-// Namespace Any
-func NSAny(rootpath string, f FilterFunc) innnerNamespace {
+// NSAny call Namespace Any
+func NSAny(rootpath string, f FilterFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Any(rootpath, f)
 	}
 }
 
-// Namespace Options
-func NSOptions(rootpath string, f FilterFunc) innnerNamespace {
+// NSOptions call Namespace Options
+func NSOptions(rootpath string, f FilterFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Options(rootpath, f)
 	}
 }
 
-// Namespace Patch
-func NSPatch(rootpath string, f FilterFunc) innnerNamespace {
+// NSPatch call Namespace Patch
+func NSPatch(rootpath string, f FilterFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Patch(rootpath, f)
 	}
 }
 
-//Namespace AutoRouter
-func NSAutoRouter(c ControllerInterface) innnerNamespace {
+// NSAutoRouter call Namespace AutoRouter
+func NSAutoRouter(c ControllerInterface) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.AutoRouter(c)
 	}
 }
 
-// Namespace AutoPrefix
-func NSAutoPrefix(prefix string, c ControllerInterface) innnerNamespace {
+// NSAutoPrefix call Namespace AutoPrefix
+func NSAutoPrefix(prefix string, c ControllerInterface) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.AutoPrefix(prefix, c)
 	}
 }
 
-// Namespace add sub Namespace
-func NSNamespace(prefix string, params ...innnerNamespace) innnerNamespace {
+// NSNamespace add sub Namespace
+func NSNamespace(prefix string, params ...LinkNamespace) LinkNamespace {
 	return func(ns *Namespace) {
 		n := NewNamespace(prefix, params...)
 		ns.Namespace(n)

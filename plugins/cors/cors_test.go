@@ -25,21 +25,23 @@ import (
 	"github.com/astaxie/beego/context"
 )
 
-type HttpHeaderGuardRecorder struct {
+// HTTPHeaderGuardRecorder is httptest.ResponseRecorder with own http.Header
+type HTTPHeaderGuardRecorder struct {
 	*httptest.ResponseRecorder
 	savedHeaderMap http.Header
 }
 
-func NewRecorder() *HttpHeaderGuardRecorder {
-	return &HttpHeaderGuardRecorder{httptest.NewRecorder(), nil}
+// NewRecorder return HttpHeaderGuardRecorder
+func NewRecorder() *HTTPHeaderGuardRecorder {
+	return &HTTPHeaderGuardRecorder{httptest.NewRecorder(), nil}
 }
 
-func (gr *HttpHeaderGuardRecorder) WriteHeader(code int) {
+func (gr *HTTPHeaderGuardRecorder) WriteHeader(code int) {
 	gr.ResponseRecorder.WriteHeader(code)
 	gr.savedHeaderMap = gr.ResponseRecorder.Header()
 }
 
-func (gr *HttpHeaderGuardRecorder) Header() http.Header {
+func (gr *HTTPHeaderGuardRecorder) Header() http.Header {
 	if gr.savedHeaderMap != nil {
 		// headers were written. clone so we don't get updates
 		clone := make(http.Header)
@@ -47,9 +49,8 @@ func (gr *HttpHeaderGuardRecorder) Header() http.Header {
 			clone[k] = v
 		}
 		return clone
-	} else {
-		return gr.ResponseRecorder.Header()
 	}
+	return gr.ResponseRecorder.Header()
 }
 
 func Test_AllowAll(t *testing.T) {
@@ -219,13 +220,13 @@ func Test_Preflight(t *testing.T) {
 func Benchmark_WithoutCORS(b *testing.B) {
 	recorder := httptest.NewRecorder()
 	handler := beego.NewControllerRegister()
-	beego.RunMode = "prod"
+	beego.BConfig.RunMode = beego.PROD
 	handler.Any("/foo", func(ctx *context.Context) {
 		ctx.Output.SetStatus(500)
 	})
 	b.ResetTimer()
-	for i := 0; i < 100; i++ {
-		r, _ := http.NewRequest("PUT", "/foo", nil)
+	r, _ := http.NewRequest("PUT", "/foo", nil)
+	for i := 0; i < b.N; i++ {
 		handler.ServeHTTP(recorder, r)
 	}
 }
@@ -233,7 +234,7 @@ func Benchmark_WithoutCORS(b *testing.B) {
 func Benchmark_WithCORS(b *testing.B) {
 	recorder := httptest.NewRecorder()
 	handler := beego.NewControllerRegister()
-	beego.RunMode = "prod"
+	beego.BConfig.RunMode = beego.PROD
 	handler.InsertFilter("*", beego.BeforeRouter, Allow(&Options{
 		AllowAllOrigins:  true,
 		AllowCredentials: true,
@@ -245,8 +246,8 @@ func Benchmark_WithCORS(b *testing.B) {
 		ctx.Output.SetStatus(500)
 	})
 	b.ResetTimer()
-	for i := 0; i < 100; i++ {
-		r, _ := http.NewRequest("PUT", "/foo", nil)
+	r, _ := http.NewRequest("PUT", "/foo", nil)
+	for i := 0; i < b.N; i++ {
 		handler.ServeHTTP(recorder, r)
 	}
 }
