@@ -17,6 +17,7 @@ package logs
 import (
 	"encoding/json"
 	"time"
+	"fmt"
 )
 
 // A filesLogWriter manages several fileLogWriter
@@ -56,14 +57,20 @@ func (f *filesLogWriter) Init(config string) error {
 
 	json.Unmarshal([]byte(config), f)
 
+	jsonMap := map[string]interface{}{}
+
+	json.Unmarshal([]byte(config), &jsonMap)
+
 	for i := LevelEmergency; i < LevelDebug+1; i++ {
 		for _, v := range f.Separate {
 			if v == levelNames[i] {
+				jsonMap["filename"] = f.fullLogWriter.fileNameOnly + "." + levelNames[i] + f.fullLogWriter.suffix
+				jsonMap["level"] = i
+				bs, _ := json.Marshal(jsonMap)
 				writer = newFileWriter().(*fileLogWriter)
-				writer.Init(config)
-				writer.Level = i
-				writer.fileNameOnly += "." + levelNames[i]
+				writer.Init(string(bs))
 				f.writers[i] = writer
+				fmt.Println(writer.Filename)
 			}
 		}
 	}
@@ -107,5 +114,5 @@ func newFilesWriter() Logger {
 }
 
 func init() {
-	Register("files", NewConn)
+	Register("files", newFilesWriter)
 }
