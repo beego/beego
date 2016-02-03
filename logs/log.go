@@ -64,6 +64,8 @@ const (
 	LevelWarn  = LevelWarning
 )
 
+var levelNames = [...]string{"emergency", "alert", "critical", "error", "warning", "notice", "info", "debug"}
+
 type loggerType func() Logger
 
 // Logger defines the behavior of a log provider.
@@ -109,7 +111,7 @@ type nameLogger struct {
 type logMsg struct {
 	level int
 	msg   string
-	when time.Time
+	when  time.Time
 }
 
 var logMsgPool *sync.Pool

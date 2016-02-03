@@ -53,6 +53,8 @@ type fileLogWriter struct {
 	Level int `json:"level"`
 
 	Perm os.FileMode `json:"perm"`
+
+	fileNameOnly, suffix string // like "project.log", project is fileNameOnly and .log is suffix
 }
 
 // newFileWriter create a FileLogWriter returning as LoggerInterface.
@@ -88,6 +90,11 @@ func (w *fileLogWriter) Init(jsonConfig string) error {
 	}
 	if len(w.Filename) == 0 {
 		return errors.New("jsonconfig must have filename")
+	}
+	w.suffix = filepath.Ext(w.Filename)
+	w.fileNameOnly = strings.TrimSuffix(w.Filename, w.suffix)
+	if w.suffix == "" {
+		w.suffix = ".log"
 	}
 	err = w.startLogger()
 	return err
@@ -205,18 +212,13 @@ func (w *fileLogWriter) doRotate(logTime time.Time) error {
 	// Find the next available number
 	num := 1
 	fName := ""
-	suffix := filepath.Ext(w.Filename)
-	filenameOnly := strings.TrimSuffix(w.Filename, suffix)
-	if suffix == "" {
-		suffix = ".log"
-	}
 	if w.MaxLines > 0 || w.MaxSize > 0 {
 		for ; err == nil && num <= 999; num++ {
-			fName = filenameOnly + fmt.Sprintf(".%s.%03d%s", logTime.Format("2006-01-02"), num, suffix)
+			fName = w.fileNameOnly + fmt.Sprintf(".%s.%03d%s", logTime.Format("2006-01-02"), num, w.suffix)
 			_, err = os.Lstat(fName)
 		}
 	} else {
-		fName = fmt.Sprintf("%s.%s.%s", filenameOnly, logTime.Format("2006-01-02"), suffix)
+		fName = fmt.Sprintf("%s.%s.%s", w.fileNameOnly, logTime.Format("2006-01-02"), w.suffix)
 		_, err = os.Lstat(fName)
 	}
 	// return error if the last file checked still existed
