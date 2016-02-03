@@ -210,8 +210,13 @@ func (w *fileLogWriter) doRotate(logTime time.Time) error {
 	if suffix == "" {
 		suffix = ".log"
 	}
-	for ; err == nil && num <= 999; num++ {
-		fName = filenameOnly + fmt.Sprintf(".%s.%03d%s", logTime.Format("2006-01-02"), num, suffix)
+	if w.MaxLines > 0 || w.MaxSize > 0 {
+		for ; err == nil && num <= 999; num++ {
+			fName = filenameOnly + fmt.Sprintf(".%s.%03d%s", logTime.Format("2006-01-02"), num, suffix)
+			_, err = os.Lstat(fName)
+		}
+	} else {
+		fName = fmt.Sprintf("%s.%s.%s", filenameOnly, logTime.Format("2006-01-02"), suffix)
 		_, err = os.Lstat(fName)
 	}
 	// return error if the last file checked still existed
