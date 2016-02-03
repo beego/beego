@@ -118,13 +118,11 @@ func (w *fileLogWriter) WriteMsg(when time.Time, msg string, level int) error {
 	if level > w.Level {
 		return nil
 	}
-	msg = formatLogTime(when) + msg + "\n"
-
+	h, d := formatTimeHeader(when)
 	if w.Rotate {
-		d := when.Day()
-		if w.needRotate(len(msg), d) {
+		if w.needRotate(len(h)+len(msg)+1, d) {
 			w.Lock()
-			if w.needRotate(len(msg), d) {
+			if w.needRotate(len(h)+len(msg)+1, d) {
 				if err := w.doRotate(when); err != nil {
 					fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
 				}
@@ -134,7 +132,7 @@ func (w *fileLogWriter) WriteMsg(when time.Time, msg string, level int) error {
 	}
 
 	w.Lock()
-	_, err := w.fileWriter.Write([]byte(msg))
+	_, err := w.fileWriter.Write(append(append(h, msg...), '\n'))
 	if err == nil {
 		w.maxLinesCurLines++
 		w.maxSizeCurSize += len(msg)

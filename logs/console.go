@@ -16,7 +16,6 @@ package logs
 
 import (
 	"encoding/json"
-	"log"
 	"os"
 	"runtime"
 	"time"
@@ -47,7 +46,7 @@ var colors = []brush{
 
 // consoleWriter implements LoggerInterface and writes messages to terminal.
 type consoleWriter struct {
-	lg       *log.Logger
+	lg       *logWriter
 	Level    int  `json:"level"`
 	Colorful bool `json:"color"` //this filed is useful only when system's terminal supports color
 }
@@ -55,7 +54,7 @@ type consoleWriter struct {
 // NewConsole create ConsoleWriter returning as LoggerInterface.
 func NewConsole() Logger {
 	cw := &consoleWriter{
-		lg:       log.New(os.Stdout, "", 0),
+		lg:       newLogWriter(os.Stdout),
 		Level:    LevelDebug,
 		Colorful: true,
 	}
@@ -80,12 +79,10 @@ func (c *consoleWriter) WriteMsg(when time.Time, msg string, level int) error {
 	if level > c.Level {
 		return nil
 	}
-	msg = formatLogTime(when) + msg
 	if c.Colorful {
-		c.lg.Println(colors[level](msg))
-	} else {
-		c.lg.Println(msg)
+		msg = colors[level](msg)
 	}
+	c.lg.println(when, msg)
 	return nil
 }
 
