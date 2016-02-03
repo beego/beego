@@ -55,7 +55,7 @@ type fileLogWriter struct {
 	Perm os.FileMode `json:"perm"`
 }
 
-// NewFileWriter create a FileLogWriter returning as LoggerInterface.
+// newFileWriter create a FileLogWriter returning as LoggerInterface.
 func newFileWriter() Logger {
 	w := &fileLogWriter{
 		Filename: "",
