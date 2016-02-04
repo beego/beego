@@ -119,11 +119,42 @@ func Getenv(env interface{}) (string, bool) {
 
 	// Onley support string key.
 	if key, ok := env.(string); ok {
+
 		if envKey := strings.TrimPrefix(key, envKeySign); envKey != key {
 			return os.Getenv(envKey), true
 		}
 	}
 	return "", false
+}
+
+// ConvertToStringMap convert interface to string config value only for map[string]interface{} config info.
+func ConvertToStringMap(m map[string]interface{}) map[string]string {
+	items := make(map[string]string, len(m))
+	if m == nil || len(m) == 0 {
+		return items
+	}
+
+	var s string
+	for k, v := range m {
+		s = ""
+		if v == nil {
+			s = ""
+		} else if str, ok := v.(string); ok {
+			s = str
+		} else if m, ok := v.(map[string]interface{}); ok {
+			s = fmt.Sprintf("%+v", ConvertToStringMap(m))
+		} else {
+			s = fmt.Sprintf("%+v", v)
+		}
+
+		if len(s) > 0 {
+			if env, ok := Getenv(s); ok {
+				s = env
+			}
+		}
+		items[k] = s
+	}
+	return items
 }
 
 // ParseBool returns the boolean value represented by the string.

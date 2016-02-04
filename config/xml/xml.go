@@ -190,28 +190,7 @@ func (c *ConfigContainer) DefaultStrings(key string, defaultval []string) []stri
 // GetSection returns map for the given section
 func (c *ConfigContainer) GetSection(section string) (map[string]string, error) {
 	if v, ok := c.data[section]; ok {
-
-		var interfaceToStr func(map[string]interface{}) map[string]string
-
-		interfaceToStr = func(values map[string]interface{}) map[string]string {
-			strValues := make(map[string]string, len(values))
-			for k, vv := range values {
-				if vv == nil {
-					strValues[k] = ""
-				} else if env, ok := config.Getenv(vv); ok {
-					strValues[k] = env
-				} else if str, ok := vv.(string); ok {
-					strValues[k] = str
-				} else if m, ok := vv.(map[string]interface{}); ok {
-					strValues[k] = fmt.Sprintf("%v", interfaceToStr(m))
-				} else {
-					// TODO: no better.
-					strValues[k] = fmt.Sprintf("%v", vv)
-				}
-			}
-			return strValues
-		}
-		return interfaceToStr(v.(map[string]interface{})), nil
+		return config.ConvertToStringMap(v.(map[string]interface{})), nil
 	}
 	return nil, errors.New("not exist setction")
 }
