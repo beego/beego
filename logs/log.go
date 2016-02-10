@@ -189,8 +189,9 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string) error {
 			file = "???"
 			line = 0
 		}
-		_, filename := path.Split(file)
-		msg = "[" + filename + ":" + strconv.FormatInt(int64(line), 10) + "]" + msg
+		folder, filename := path.Split(file)
+        foldername := path.Base(folder)
+		msg = "[" + foldername + "/"  + filename + ":" + strconv.FormatInt(int64(line), 10) + "]" + msg
 	}
 	if bl.asynchronous {
 		lm := logMsgPool.Get().(*logMsg)
