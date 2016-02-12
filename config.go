@@ -15,11 +15,11 @@
 package beego
 
 import (
+	"fmt"
 	"html/template"
 	"os"
 	"path/filepath"
 	"strings"
-	"fmt"
 
 	"github.com/astaxie/beego/config"
 	"github.com/astaxie/beego/session"
