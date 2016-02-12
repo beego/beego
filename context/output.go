@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
-	"io"
 	"mime"
 	"net/http"
 	"path/filepath"
@@ -75,7 +74,7 @@ func (output *BeegoOutput) Body(content []byte) {
 		output.Status = 0
 	}
 
-	io.Copy(output.Context.ResponseWriter, buf)
+	output.Context.ResponseWriter.Copy(buf)
 }
 
 // Cookie sets cookie value via given key.
