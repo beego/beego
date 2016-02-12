@@ -205,7 +205,7 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		}
 
 		if BConfig.RunMode == DEV {
-			buildFiles := []string{c.TplName}
+			buildFiles := []string{c.TplName, c.Layout}
 			if c.LayoutSections != nil {
 				for _, sectionTpl := range c.LayoutSections {
 					if sectionTpl == "" {
