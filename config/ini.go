@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"path"
 	"strconv"
@@ -134,7 +135,9 @@ func (ini *IniConfig) parseFile(name string) (*IniConfigContainer, error) {
 				}
 				i, err := ini.parseFile(otherfile)
 				if err != nil {
-					return nil, err
+					// ignore error
+					log.Printf("[warn] handle config %q error, %s \n", key, err.Error())
+					continue
 				}
 				for sec, dt := range i.data {
 					if _, ok := cfg.data[sec]; !ok {
