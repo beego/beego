@@ -85,7 +85,7 @@ func (fd *FlashData) Store(c *Controller) {
 	for key, value := range fd.Data {
 		flashValue += "\x00" + key + "\x23" + BConfig.WebConfig.FlashSeparator + "\x23" + value + "\x00"
 	}
-	c.Ctx.SetCookie(BConfig.WebConfig.FlashName, url.QueryEscape(flashValue), 0, "/")
+	c.Ctx.SetCookie(BConfig.WebConfig.FlashName, url.QueryEscape(flashValue), -1, "/")
 }
 
 // ReadFromRequest parsed flash data from encoded values in cookie.
@@ -103,7 +103,7 @@ func ReadFromRequest(c *Controller) *FlashData {
 			}
 		}
 		//read one time then delete it
-		c.Ctx.SetCookie(BConfig.WebConfig.FlashName, "", -1, "/")
+		c.Ctx.SetCookie(BConfig.WebConfig.FlashName, "", 0, "/")
 	}
 	c.Data["flash"] = flash.Data
 	return flash
