@@ -26,6 +26,12 @@ import (
 	"time"
 )
 
+// StrLen returns the number of characters in str.
+// The purpose of this function is to support CJK character counts.
+func StrLen(s string) int {
+	return len([]rune(s))
+}
+
 // Substr returns the substr from start to length.
 func Substr(s string, start, length int) string {
 	bt := []rune(s)

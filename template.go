@@ -42,6 +42,7 @@ func init() {
 	beegoTplFuncMap["compare_not"] = CompareNot
 	beegoTplFuncMap["not_nil"] = NotNil
 	beegoTplFuncMap["not_null"] = NotNil
+	beegoTplFuncMap["strlen"] = StrLen
 	beegoTplFuncMap["substr"] = Substr
 	beegoTplFuncMap["html2str"] = HTML2str
 	beegoTplFuncMap["str2html"] = Str2html
