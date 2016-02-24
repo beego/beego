@@ -187,6 +187,10 @@ func (w *Response) Write(p []byte) (int, error) {
 // WriteHeader sends an HTTP response header with status code,
 // and sets `started` to true.
 func (w *Response) WriteHeader(code int) {
+	if w.Status > 0 {
+		//prevent multiple response.WriteHeader calls
+		return
+	}
 	w.Status = code
 	w.Started = true
 	w.ResponseWriter.WriteHeader(code)
