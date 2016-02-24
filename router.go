@@ -616,6 +616,8 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		context.Output.Header("Server", BConfig.ServerName)
 	}
 
+	context.Output.Header("Content-Type", "text/html; charset=utf-8")
+
 	var urlPath string
 	if !BConfig.RouterCaseSensitive {
 		urlPath = strings.ToLower(r.URL.Path)
