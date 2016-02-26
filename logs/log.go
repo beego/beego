@@ -121,7 +121,7 @@ var logMsgPool *sync.Pool
 func NewLogger(channelLen int64) *BeeLogger {
 	bl := new(BeeLogger)
 	bl.level = LevelDebug
-	bl.loggerFuncCallDepth = DefultCallDepth
+	bl.loggerFuncCallDepth = DefultLogFuncCallDepth
 	bl.msgChan = make(chan *logMsg, channelLen)
 	return bl
 }
