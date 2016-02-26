@@ -221,6 +221,18 @@ func TestAddTree4(t *testing.T) {
 	}
 }
 
+// Test for issue #1595
+func TestAddTree5(t *testing.T) {
+	tr := NewTree()
+	tr.AddRouter("/v1/shop/:id", "shopdetail")
+	tr.AddRouter("/v1/shop/", "shophome")
+	ctx := context.NewContext()
+	obj := tr.Match("/v1/shop/", ctx)
+	if obj == nil || obj.(string) != "shophome" {
+		t.Fatal("url /v1/shop/ need match router /v1/shop/ ")
+	}
+}
+
 func TestSplitPath(t *testing.T) {
 	a := splitPath("")
 	if len(a) != 0 {
