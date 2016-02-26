@@ -74,6 +74,8 @@ func (ctx *Context) Redirect(status int, localurl string) {
 // Abort stops this request.
 // if beego.ErrorMaps exists, panic body.
 func (ctx *Context) Abort(status int, body string) {
+	ctx.ResponseWriter.WriteHeader(status)
+	ctx.ResponseWriter.Write([]byte(body))
 	panic(body)
 }
 
