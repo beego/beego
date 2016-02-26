@@ -44,7 +44,8 @@ import (
 
 // RFC5424 log message levels.
 const (
-	LevelEmergency = iota
+	LevelCustom = iota // for custom
+	LevelEmergency
 	LevelAlert
 	LevelCritical
 	LevelError
@@ -52,6 +53,8 @@ const (
 	LevelNotice
 	LevelInformational
 	LevelDebug
+	CallDepthForCustom     = 1 // callDepth for custom
+	DefultLogFuncCallDepth = 2 // default callDepth
 )
 
 // Legacy loglevel constants to ensure backwards compatibility.
@@ -118,7 +121,7 @@ var logMsgPool *sync.Pool
 func NewLogger(channelLen int64) *BeeLogger {
 	bl := new(BeeLogger)
 	bl.level = LevelDebug
-	bl.loggerFuncCallDepth = 2
+	bl.loggerFuncCallDepth = DefultLogFuncCallDepth
 	bl.msgChan = make(chan *logMsg, channelLen)
 	return bl
 }
@@ -183,8 +186,13 @@ func (bl *BeeLogger) writeToLoggers(msg string, level int) {
 }
 
 func (bl *BeeLogger) writeMsg(logLevel int, msg string) error {
-	if bl.enableFuncCallDepth {
-		_, file, line, ok := runtime.Caller(bl.loggerFuncCallDepth)
+	return bl.WriteMsg(bl.enableFuncCallDepth, bl.loggerFuncCallDepth+1, logLevel, msg)
+}
+
+//The custom to writeMsg
+func (bl *BeeLogger) WriteMsg(enableFuncCallDepth bool, loggerFuncCallDepth int, logLevel int, msg string) error {
+	if enableFuncCallDepth {
+		_, file, line, ok := runtime.Caller(loggerFuncCallDepth)
 		if !ok {
 			file = "???"
 			line = 0
