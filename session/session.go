@@ -201,7 +201,7 @@ func (manager *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
 	if err != nil || cookie.Value == "" {
 		return
 	}
-	// fix bug: cookie.Value has been urlencoded, so should be decoded here
+
 	sid, _ := url.QueryUnescape(cookie.Value)
 	manager.provider.SessionDestroy(sid)
 	if manager.config.EnableSetCookie {

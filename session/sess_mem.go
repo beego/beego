@@ -102,7 +102,6 @@ func (pder *MemProvider) SessionRead(sid string) (Store, error) {
 	pder.lock.RUnlock()
 	pder.lock.Lock()
 	newsess := &MemSessionStore{sid: sid, timeAccessed: time.Now(), value: make(map[interface{}]interface{})}
-	// fix bug: new session should be pushed into the head of list(more fresh)
 	element := pder.list.PushFront(newsess)
 	pder.sessions[sid] = element
 	pder.lock.Unlock()
@@ -135,7 +134,6 @@ func (pder *MemProvider) SessionRegenerate(oldsid, sid string) (Store, error) {
 	pder.lock.RUnlock()
 	pder.lock.Lock()
 	newsess := &MemSessionStore{sid: sid, timeAccessed: time.Now(), value: make(map[interface{}]interface{})}
-	// fix bug: new session should be pushed into the head of list(more fresh)
 	element := pder.list.PushFront(newsess)
 	pder.sessions[sid] = element
 	pder.lock.Unlock()
