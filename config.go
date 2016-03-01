@@ -294,7 +294,7 @@ func parseConfig(appConfigPath string) (err error) {
 	}
 
 	//init log
-	BeeLogger.Close()
+	BeeLogger.Reset()
 	for adaptor, config := range BConfig.Log.Outputs {
 		err = BeeLogger.SetLogger(adaptor, config)
 		if err != nil {

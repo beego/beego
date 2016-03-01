@@ -265,15 +265,14 @@ func (t *Tree) addseg(segments []string, route interface{}, wildcards []string, 
 			}
 			t.wildcard.addseg(segments[1:], route, append(wildcards, params...), reg+regexpStr)
 		} else {
-			var ok bool
 			var subTree *Tree
-			for _, subTree = range t.fixrouters {
-				if t.prefix == seg {
-					ok = true
+			for _, sub := range t.fixrouters {
+				if sub.prefix == seg {
+					subTree = sub
 					break
 				}
 			}
-			if !ok {
+			if subTree == nil {
 				subTree = NewTree()
 				subTree.prefix = seg
 				t.fixrouters = append(t.fixrouters, subTree)
