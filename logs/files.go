@@ -55,10 +55,10 @@ func (f *filesLogWriter) Init(config string) error {
 	f.fullLogWriter = writer
 	f.writers[LevelDebug+1] = writer
 
+	//unmarshal "separate" field to f.Separate
 	json.Unmarshal([]byte(config), f)
 
 	jsonMap := map[string]interface{}{}
-
 	json.Unmarshal([]byte(config), &jsonMap)
 
 	for i := LevelEmergency; i < LevelDebug+1; i++ {
@@ -70,7 +70,6 @@ func (f *filesLogWriter) Init(config string) error {
 				writer = newFileWriter().(*fileLogWriter)
 				writer.Init(string(bs))
 				f.writers[i] = writer
-				fmt.Println(writer.Filename)
 			}
 		}
 	}
