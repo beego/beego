@@ -218,7 +218,7 @@ func (w *fileLogWriter) doRotate(logTime time.Time) error {
 			_, err = os.Lstat(fName)
 		}
 	} else {
-		fName = fmt.Sprintf("%s.%s.%s", w.fileNameOnly, logTime.Format("2006-01-02"), w.suffix)
+		fName = fmt.Sprintf("%s.%s%s", w.fileNameOnly, logTime.Format("2006-01-02"), w.suffix)
 		_, err = os.Lstat(fName)
 	}
 	// return error if the last file checked still existed
