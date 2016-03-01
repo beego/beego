@@ -17,7 +17,6 @@ package logs
 import (
 	"encoding/json"
 	"time"
-	"fmt"
 )
 
 // A filesLogWriter manages several fileLogWriter
