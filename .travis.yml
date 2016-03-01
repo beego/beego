@@ -23,7 +23,6 @@ install:
   - go get github.com/beego/x2j
   - go get github.com/beego/goyaml2
   - go get github.com/belogik/goes
-  - go get github.com/couchbase/go-couchbase
   - go get github.com/siddontang/ledisdb/config
   - go get github.com/siddontang/ledisdb/ledis
   - go get golang.org/x/tools/cmd/vet
