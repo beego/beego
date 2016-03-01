@@ -37,7 +37,7 @@ import (
 	"strings"
 	"sync"
 
-	couchbase "github.com/beego/go-couchbase"
+	couchbase "github.com/couchbase/go-couchbase"
 
 	"github.com/astaxie/beego/session"
 )
