@@ -23,6 +23,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/astaxie/beego/utils"
 )
@@ -30,7 +31,8 @@ import (
 var (
 	beegoTplFuncMap = make(template.FuncMap)
 	// BeeTemplates caching map and supported template file extensions.
-	BeeTemplates = make(map[string]*template.Template)
+	BeeTemplates  = make(map[string]*template.Template)
+	templatesLock sync.Mutex
 	// BeeTemplateExt stores the template extension which will build
 	BeeTemplateExt = []string{"tpl", "html"}
 )
@@ -62,21 +64,25 @@ func init() {
 	beegoTplFuncMap["lt"] = lt // <
 	beegoTplFuncMap["ne"] = ne // !=
 
-	beegoTplFuncMap["urlfor"] = URLFor // !=
+	beegoTplFuncMap["urlfor"] = URLFor // build a URL to match a Controller and it's method
 }
 
 // AddFuncMap let user to register a func in the template.
-func AddFuncMap(key string, funname interface{}) error {
-	beegoTplFuncMap[key] = funname
+func AddFuncMap(key string, fn interface{}) error {
+	beegoTplFuncMap[key] = fn
 	return nil
 }
 
-type templatefile struct {
+type templateFile struct {
 	root  string
 	files map[string][]string
 }
 
-func (tf *templatefile) visit(paths string, f os.FileInfo, err error) error {
+// visit will make the paths into two part,the first is subDir (without tf.root),the second is full path(without tf.root).
+// if tf.root="views" and
+// paths is "views/errors/404.html",the subDir will be "errors",the file will be "errors/404.html"
+// paths is "views/admin/errors/404.html",the subDir will be "admin/errors",the file will be "admin/errors/404.html"
+func (tf *templateFile) visit(paths string, f os.FileInfo, err error) error {
 	if f == nil {
 		return err
 	}
@@ -88,18 +94,10 @@ func (tf *templatefile) visit(paths string, f os.FileInfo, err error) error {
 	}
 
 	replace := strings.NewReplacer("\\", "/")
-	a := []byte(paths)
-	a = a[len([]byte(tf.root)):]
-	file := strings.TrimLeft(replace.Replace(string(a)), "/")
-	subdir := filepath.Dir(file)
-	if _, ok := tf.files[subdir]; ok {
-		tf.files[subdir] = append(tf.files[subdir], file)
-	} else {
-		m := make([]string, 1)
-		m[0] = file
-		tf.files[subdir] = m
-	}
+	file := strings.TrimLeft(replace.Replace(paths[len(tf.root):]), "/")
+	subDir := filepath.Dir(file)
 
+	tf.files[subDir] = append(tf.files[subDir], file)
 	return nil
 }
 
@@ -132,7 +130,7 @@ func BuildTemplate(dir string, files ...string) error {
 		}
 		return errors.New("dir open err")
 	}
-	self := &templatefile{
+	self := &templateFile{
 		root:  dir,
 		files: make(map[string][]string),
 	}
@@ -146,12 +144,14 @@ func BuildTemplate(dir string, files ...string) error {
 	for _, v := range self.files {
 		for _, file := range v {
 			if len(files) == 0 || utils.InSlice(file, files) {
+				templatesLock.Lock()
 				t, err := getTemplate(self.root, file, v...)
 				if err != nil {
 					Trace("parse template err:", file, err)
 				} else {
 					BeeTemplates[file] = t
 				}
+				templatesLock.Unlock()
 			}
 		}
 	}
@@ -159,16 +159,16 @@ func BuildTemplate(dir string, files ...string) error {
 }
 
 func getTplDeep(root, file, parent string, t *template.Template) (*template.Template, [][]string, error) {
-	var fileabspath string
+	var fileAbsPath string
 	if filepath.HasPrefix(file, "../") {
-		fileabspath = filepath.Join(root, filepath.Dir(parent), file)
+		fileAbsPath = filepath.Join(root, filepath.Dir(parent), file)
 	} else {
-		fileabspath = filepath.Join(root, file)
+		fileAbsPath = filepath.Join(root, file)
 	}
-	if e := utils.FileExists(fileabspath); !e {
+	if e := utils.FileExists(fileAbsPath); !e {
 		panic("can't find template file:" + file)
 	}
-	data, err := ioutil.ReadFile(fileabspath)
+	data, err := ioutil.ReadFile(fileAbsPath)
 	if err != nil {
 		return nil, [][]string{}, err
 	}
@@ -177,11 +177,11 @@ func getTplDeep(root, file, parent string, t *template.Template) (*template.Temp
 		return nil, [][]string{}, err
 	}
 	reg := regexp.MustCompile(BConfig.WebConfig.TemplateLeft + "[ ]*template[ ]+\"([^\"]+)\"")
-	allsub := reg.FindAllStringSubmatch(string(data), -1)
-	for _, m := range allsub {
+	allSub := reg.FindAllStringSubmatch(string(data), -1)
+	for _, m := range allSub {
 		if len(m) == 2 {
-			tlook := t.Lookup(m[1])
-			if tlook != nil {
+			tl := t.Lookup(m[1])
+			if tl != nil {
 				continue
 			}
 			if !HasTemplateExt(m[1]) {
@@ -193,17 +193,17 @@ func getTplDeep(root, file, parent string, t *template.Template) (*template.Temp
 			}
 		}
 	}
-	return t, allsub, nil
+	return t, allSub, nil
 }
 
 func getTemplate(root, file string, others ...string) (t *template.Template, err error) {
 	t = template.New(file).Delims(BConfig.WebConfig.TemplateLeft, BConfig.WebConfig.TemplateRight).Funcs(beegoTplFuncMap)
-	var submods [][]string
-	t, submods, err = getTplDeep(root, file, "", t)
+	var subMods [][]string
+	t, subMods, err = getTplDeep(root, file, "", t)
 	if err != nil {
 		return nil, err
 	}
-	t, err = _getTemplate(t, root, submods, others...)
+	t, err = _getTemplate(t, root, subMods, others...)
 
 	if err != nil {
 		return nil, err
@@ -211,44 +211,44 @@ func getTemplate(root, file string, others ...string) (t *template.Template, err
 	return
 }
 
-func _getTemplate(t0 *template.Template, root string, submods [][]string, others ...string) (t *template.Template, err error) {
+func _getTemplate(t0 *template.Template, root string, subMods [][]string, others ...string) (t *template.Template, err error) {
 	t = t0
-	for _, m := range submods {
+	for _, m := range subMods {
 		if len(m) == 2 {
-			templ := t.Lookup(m[1])
-			if templ != nil {
+			tpl := t.Lookup(m[1])
+			if tpl != nil {
 				continue
 			}
 			//first check filename
-			for _, otherfile := range others {
-				if otherfile == m[1] {
-					var submods1 [][]string
-					t, submods1, err = getTplDeep(root, otherfile, "", t)
+			for _, otherFile := range others {
+				if otherFile == m[1] {
+					var subMods1 [][]string
+					t, subMods1, err = getTplDeep(root, otherFile, "", t)
 					if err != nil {
 						Trace("template parse file err:", err)
-					} else if submods1 != nil && len(submods1) > 0 {
-						t, err = _getTemplate(t, root, submods1, others...)
+					} else if subMods1 != nil && len(subMods1) > 0 {
+						t, err = _getTemplate(t, root, subMods1, others...)
 					}
 					break
 				}
 			}
 			//second check define
-			for _, otherfile := range others {
-				fileabspath := filepath.Join(root, otherfile)
-				data, err := ioutil.ReadFile(fileabspath)
+			for _, otherFile := range others {
+				fileAbsPath := filepath.Join(root, otherFile)
+				data, err := ioutil.ReadFile(fileAbsPath)
 				if err != nil {
 					continue
 				}
 				reg := regexp.MustCompile(BConfig.WebConfig.TemplateLeft + "[ ]*define[ ]+\"([^\"]+)\"")
-				allsub := reg.FindAllStringSubmatch(string(data), -1)
-				for _, sub := range allsub {
+				allSub := reg.FindAllStringSubmatch(string(data), -1)
+				for _, sub := range allSub {
 					if len(sub) == 2 && sub[1] == m[1] {
-						var submods1 [][]string
-						t, submods1, err = getTplDeep(root, otherfile, "", t)
+						var subMods1 [][]string
+						t, subMods1, err = getTplDeep(root, otherFile, "", t)
 						if err != nil {
 							Trace("template parse file err:", err)
-						} else if submods1 != nil && len(submods1) > 0 {
-							t, err = _getTemplate(t, root, submods1, others...)
+						} else if subMods1 != nil && len(subMods1) > 0 {
+							t, err = _getTemplate(t, root, subMods1, others...)
 						}
 						break
 					}
@@ -272,7 +272,9 @@ func SetStaticPath(url string, path string) *App {
 	if !strings.HasPrefix(url, "/") {
 		url = "/" + url
 	}
-	url = strings.TrimRight(url, "/")
+	if url != "/" {
+		url = strings.TrimRight(url, "/")
+	}
 	BConfig.WebConfig.StaticDir[url] = path
 	return BeeApp
 }
@@ -282,7 +284,9 @@ func DelStaticPath(url string) *App {
 	if !strings.HasPrefix(url, "/") {
 		url = "/" + url
 	}
-	url = strings.TrimRight(url, "/")
+	if url != "/" {
+		url = strings.TrimRight(url, "/")
+	}
 	delete(BConfig.WebConfig.StaticDir, url)
 	return BeeApp
 }

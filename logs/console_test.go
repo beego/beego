@@ -28,6 +28,7 @@ func testConsoleCalls(bl *BeeLogger) {
 	bl.Notice("notice")
 	bl.Informational("informational")
 	bl.Debug("debug")
+	bl.OutputMsg("2016y03m02d 22h46M21s [CUSTOM] custom", LevelCustom)
 }
 
 // Test console logging by visually comparing the lines being output with and
@@ -41,4 +42,11 @@ func TestConsole(t *testing.T) {
 	log2 := NewLogger(100)
 	log2.SetLogger("console", `{"level":3}`)
 	testConsoleCalls(log2)
+}
+
+// Test console without color
+func TestConsoleNoColor(t *testing.T) {
+	log := NewLogger(100)
+	log.SetLogger("console", `{"color":false}`)
+	testConsoleCalls(log)
 }

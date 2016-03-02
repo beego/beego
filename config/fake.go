@@ -82,7 +82,7 @@ func (c *fakeConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
 }
 
 func (c *fakeConfigContainer) Bool(key string) (bool, error) {
-	return strconv.ParseBool(c.getData(key))
+	return ParseBool(c.getData(key))
 }
 
 func (c *fakeConfigContainer) DefaultBool(key string, defaultval bool) bool {

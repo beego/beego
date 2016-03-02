@@ -92,7 +92,10 @@ type ConfigContainer struct {
 
 // Bool returns the boolean value for a given key.
 func (c *ConfigContainer) Bool(key string) (bool, error) {
-	return strconv.ParseBool(c.data[key].(string))
+	if v, ok := c.data[key]; ok {
+		return config.ParseBool(v)
+	}
+	return false, fmt.Errorf("not exist key: %q", key)
 }
 
 // DefaultBool return the bool value if has no error

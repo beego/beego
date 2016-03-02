@@ -15,6 +15,7 @@
 package beego
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/astaxie/beego/context"
@@ -57,6 +58,9 @@ func init() {
 		"/dl/48/48/05ac66d9bda00a3acf948c43e306fc9a.jpg",
 		map[string]string{":width": "48", ":height": "48", ":ext": "jpg", ":path": "05ac66d9bda00a3acf948c43e306fc9a"}})
 	routers = append(routers, testinfo{"/v1/shop/:id:int", "/v1/shop/123", map[string]string{":id": "123"}})
+	routers = append(routers, testinfo{"/v1/shop/:id\\((a|b|c)\\)", "/v1/shop/123(a)", map[string]string{":id": "123"}})
+	routers = append(routers, testinfo{"/v1/shop/:id\\((a|b|c)\\)", "/v1/shop/123(b)", map[string]string{":id": "123"}})
+	routers = append(routers, testinfo{"/v1/shop/:id\\((a|b|c)\\)", "/v1/shop/123(c)", map[string]string{":id": "123"}})
 	routers = append(routers, testinfo{"/:year:int/:month:int/:id/:endid", "/1111/111/aaa/aaa", map[string]string{":year": "1111", ":month": "111", ":id": "aaa", ":endid": "aaa"}})
 	routers = append(routers, testinfo{"/v1/shop/:id/:name", "/v1/shop/123/nike", map[string]string{":id": "123", ":name": "nike"}})
 	routers = append(routers, testinfo{"/v1/shop/:id/account", "/v1/shop/123/account", map[string]string{":id": "123"}})
@@ -217,6 +221,18 @@ func TestAddTree4(t *testing.T) {
 	}
 }
 
+// Test for issue #1595
+func TestAddTree5(t *testing.T) {
+	tr := NewTree()
+	tr.AddRouter("/v1/shop/:id", "shopdetail")
+	tr.AddRouter("/v1/shop/", "shophome")
+	ctx := context.NewContext()
+	obj := tr.Match("/v1/shop/", ctx)
+	if obj == nil || obj.(string) != "shophome" {
+		t.Fatal("url /v1/shop/ need match router /v1/shop/ ")
+	}
+}
+
 func TestSplitPath(t *testing.T) {
 	a := splitPath("")
 	if len(a) != 0 {
@@ -245,48 +261,31 @@ func TestSplitPath(t *testing.T) {
 }
 
 func TestSplitSegment(t *testing.T) {
-	b, w, r := splitSegment("admin")
-	if b || len(w) != 0 || r != "" {
-		t.Fatal("admin should return false, nil, ''")
+
+	items := map[string]struct {
+		isReg  bool
+		params []string
+		regStr string
+	}{
+		"admin":                      {false, nil, ""},
+		"*":                          {true, []string{":splat"}, ""},
+		"*.*":                        {true, []string{".", ":path", ":ext"}, ""},
+		":id":                        {true, []string{":id"}, ""},
+		"?:id":                       {true, []string{":", ":id"}, ""},
+		":id:int":                    {true, []string{":id"}, "([0-9]+)"},
+		":name:string":               {true, []string{":name"}, `([\w]+)`},
+		":id([0-9]+)":                {true, []string{":id"}, `([0-9]+)`},
+		":id([0-9]+)_:name":          {true, []string{":id", ":name"}, `([0-9]+)_(.+)`},
+		":id(.+)_cms.html":           {true, []string{":id"}, `(.+)_cms.html`},
+		"cms_:id(.+)_:page(.+).html": {true, []string{":id", ":page"}, `cms_(.+)_(.+).html`},
+		`:app(a|b|c)`:                {true, []string{":app"}, `(a|b|c)`},
+		`:app\((a|b|c)\)`:            {true, []string{":app"}, `(.+)\((a|b|c)\)`},
 	}
-	b, w, r = splitSegment("*")
-	if !b || len(w) != 1 || w[0] != ":splat" || r != "" {
-		t.Fatal("* should return true, [:splat], ''")
-	}
-	b, w, r = splitSegment("*.*")
-	if !b || len(w) != 3 || w[1] != ":path" || w[2] != ":ext" || w[0] != "." || r != "" {
-		t.Fatal("admin should return true,[. :path :ext], ''")
-	}
-	b, w, r = splitSegment(":id")
-	if !b || len(w) != 1 || w[0] != ":id" || r != "" {
-		t.Fatal(":id should return true, [:id], ''")
-	}
-	b, w, r = splitSegment("?:id")
-	if !b || len(w) != 2 || w[0] != ":" || w[1] != ":id" || r != "" {
-		t.Fatal("?:id should return true, [: :id], ''")
-	}
-	b, w, r = splitSegment(":id:int")
-	if !b || len(w) != 1 || w[0] != ":id" || r != "([0-9]+)" {
-		t.Fatal(":id:int should return true, [:id], '([0-9]+)'")
-	}
-	b, w, r = splitSegment(":name:string")
-	if !b || len(w) != 1 || w[0] != ":name" || r != `([\w]+)` {
-		t.Fatal(`:name:string should return true, [:name], '([\w]+)'`)
-	}
-	b, w, r = splitSegment(":id([0-9]+)")
-	if !b || len(w) != 1 || w[0] != ":id" || r != `([0-9]+)` {
-		t.Fatal(`:id([0-9]+) should return true, [:id], '([0-9]+)'`)
-	}
-	b, w, r = splitSegment(":id([0-9]+)_:name")
-	if !b || len(w) != 2 || w[0] != ":id" || w[1] != ":name" || r != `([0-9]+)_(.+)` {
-		t.Fatal(`:id([0-9]+)_:name should return true, [:id :name], '([0-9]+)_(.+)'`)
-	}
-	b, w, r = splitSegment(":id(.+)_cms.html")
-	if !b || len(w) != 1 || w[0] != ":id" || r != `(.+)_cms.html` {
-		t.Fatal(":id_cms.html should return true, [:id], '(.+)_cms.html'")
-	}
-	b, w, r = splitSegment("cms_:id(.+)_:page(.+).html")
-	if !b || len(w) != 2 || w[0] != ":id" || w[1] != ":page" || r != `cms_(.+)_(.+).html` {
-		t.Fatal(":id_cms.html should return true, [:id :page], cms_(.+)_(.+).html")
+
+	for pattern, v := range items {
+		b, w, r := splitSegment(pattern)
+		if b != v.isReg || r != v.regStr || strings.Join(w, ",") != strings.Join(v.params, ",") {
+			t.Fatalf("%s should return %t,%s,%q, got %t,%s,%q", pattern, v.isReg, v.params, v.regStr, b, w, r)
+		}
 	}
 }

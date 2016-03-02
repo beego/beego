@@ -287,6 +287,13 @@ func (input *BeegoInput) Params() map[string]string {
 
 // SetParam will set the param with key and value
 func (input *BeegoInput) SetParam(key, val string) {
+	// check if already exists
+	for i, v := range input.pnames {
+		if v == key && i <= len(input.pvalues) {
+			input.pvalues[i] = val
+			return
+		}
+	}
 	input.pvalues = append(input.pvalues, val)
 	input.pnames = append(input.pnames, key)
 }
