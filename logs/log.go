@@ -98,6 +98,8 @@ type BeeLogger struct {
 	loggerFuncCallDepth int
 	asynchronous        bool
 	msgChan             chan *logMsg
+	signalChan          chan string
+	wg                  sync.WaitGroup
 	outputs             []*nameLogger
 }
 
@@ -109,7 +111,7 @@ type nameLogger struct {
 type logMsg struct {
 	level int
 	msg   string
-	when time.Time
+	when  time.Time
 }
 
 var logMsgPool *sync.Pool
@@ -122,6 +124,7 @@ func NewLogger(channelLen int64) *BeeLogger {
 	bl.level = LevelDebug
 	bl.loggerFuncCallDepth = 2
 	bl.msgChan = make(chan *logMsg, channelLen)
+	bl.signalChan = make(chan string, 1)
 	return bl
 }
 
@@ -133,6 +136,7 @@ func (bl *BeeLogger) Async() *BeeLogger {
 			return &logMsg{}
 		},
 	}
+	bl.wg.Add(1)
 	go bl.startLogger()
 	return bl
 }
@@ -232,11 +236,26 @@ func (bl *BeeLogger) EnableFuncCallDepth(b bool) {
 // start logger chan reading.
 // when chan is not empty, write logs.
 func (bl *BeeLogger) startLogger() {
+	gameOver := false
 	for {
 		select {
 		case bm := <-bl.msgChan:
 			bl.writeToLoggers(bm.when, bm.msg, bm.level)
 			logMsgPool.Put(bm)
+		case sg := <-bl.signalChan:
+			// Now should only send "flush" or "close" to bl.signalChan
+			bl.flush()
+			if sg == "close" {
+				for _, l := range bl.outputs {
+					l.Destroy()
+				}
+				bl.outputs = nil
+				gameOver = true
+			}
+			bl.wg.Done()
+		}
+		if gameOver {
+			break
 		}
 	}
 }
@@ -345,13 +364,41 @@ func (bl *BeeLogger) Trace(format string, v ...interface{}) {
 
 // Flush flush all chan data.
 func (bl *BeeLogger) Flush() {
-	for _, l := range bl.outputs {
-		l.Flush()
+	if bl.asynchronous {
+		bl.signalChan <- "flush"
+		bl.wg.Wait()
+		bl.wg.Add(1)
+		return
 	}
+	bl.flush()
 }
 
 // Close close logger, flush all chan data and destroy all adapters in BeeLogger.
 func (bl *BeeLogger) Close() {
+	if bl.asynchronous {
+		bl.signalChan <- "close"
+		bl.wg.Wait()
+	} else {
+		bl.flush()
+		for _, l := range bl.outputs {
+			l.Destroy()
+		}
+		bl.outputs = nil
+	}
+	close(bl.msgChan)
+	close(bl.signalChan)
+}
+
+// Reset close all outputs, and set bl.outputs to nil
+func (bl *BeeLogger) Reset() {
+	bl.Flush()
+	for _, l := range bl.outputs {
+		l.Destroy()
+	}
+	bl.outputs = nil
+}
+
+func (bl *BeeLogger) flush() {
 	for {
 		if len(bl.msgChan) > 0 {
 			bm := <-bl.msgChan
@@ -363,9 +410,7 @@ func (bl *BeeLogger) Close() {
 	}
 	for _, l := range bl.outputs {
 		l.Flush()
-		l.Destroy()
 	}
-	bl.outputs = nil
 }
 
 func formatLogTime(when time.Time) string {
