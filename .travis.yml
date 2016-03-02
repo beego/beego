@@ -2,9 +2,9 @@ language: go
 
 go:
   - tip
+  - 1.6.0
   - 1.5.3
   - 1.4.3
-  - 1.3.3
 services:
   - redis-server
   - mysql
@@ -21,9 +21,9 @@ install:
   - go get github.com/bradfitz/gomemcache/memcache
   - go get github.com/garyburd/redigo/redis
   - go get github.com/beego/x2j
+  - go get github.com/couchbase/go-couchbase
   - go get github.com/beego/goyaml2
   - go get github.com/belogik/goes
-  - go get github.com/couchbase/go-couchbase
   - go get github.com/siddontang/ledisdb/config
   - go get github.com/siddontang/ledisdb/ledis
   - go get golang.org/x/tools/cmd/vet
