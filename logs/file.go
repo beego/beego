@@ -118,7 +118,7 @@ func (w *fileLogWriter) WriteMsg(when time.Time, msg string, level int) error {
 	if level > w.Level {
 		return nil
 	}
-	msg = formatLogTime(when) + msg + "\n"
+	msg = msg + "\n"
 
 	if w.Rotate {
 		d := when.Day()

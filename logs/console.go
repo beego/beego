@@ -35,6 +35,7 @@ func newBrush(color string) brush {
 }
 
 var colors = []brush{
+	newBrush("1;37"), // Custom          	white
 	newBrush("1;37"), // Emergency          white
 	newBrush("1;36"), // Alert              cyan
 	newBrush("1;35"), // Critical           magenta
@@ -80,7 +81,6 @@ func (c *consoleWriter) WriteMsg(when time.Time, msg string, level int) error {
 	if level > c.Level {
 		return nil
 	}
-	msg = formatLogTime(when) + msg
 	if c.Colorful {
 		c.lg.Println(colors[level](msg))
 	} else {
