@@ -270,7 +270,11 @@ func (c *IniConfigContainer) DefaultString(key string, defaultval string) string
 
 // Strings returns the []string value for a given key.
 func (c *IniConfigContainer) Strings(key string) []string {
-	return strings.Split(c.String(key), ";")
+	v := c.String(key)
+	if v == "" {
+		return []string{}
+	}
+	return strings.Split(v, ";")
 }
 
 // DefaultStrings returns the []string value for a given key.

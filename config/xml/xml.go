@@ -174,7 +174,11 @@ func (c *ConfigContainer) DefaultString(key string, defaultval string) string {
 
 // Strings returns the []string value for a given key.
 func (c *ConfigContainer) Strings(key string) []string {
-	return strings.Split(c.String(key), ";")
+	v := c.String(key)
+	if v == "" {
+		return []string{}
+	}
+	return strings.Split(v, ";")
 }
 
 // DefaultStrings returns the []string value for a given key.

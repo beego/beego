@@ -82,4 +82,7 @@ func TestXML(t *testing.T) {
 	if xmlconf.String("name") != "astaxie" {
 		t.Fatal("get name error")
 	}
+	if len(xmlconf.Strings("emptystrings")) != 0 {
+		t.Fatal("get emtpy strings error")
+	}
 }
