@@ -188,7 +188,9 @@ func init() {
 		return
 	}
 
-	parseConfig(appConfigPath)
+	if err := parseConfig(appConfigPath); err != nil {
+		panic(err)
+	}
 }
 
 // now only support ini, next will support json.
