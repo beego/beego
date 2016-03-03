@@ -28,7 +28,7 @@ func testConsoleCalls(bl *BeeLogger) {
 	bl.Notice("notice")
 	bl.Informational("informational")
 	bl.Debug("debug")
-	bl.OutputMsg("2016y03m02d 22h46M21s [CUSTOM] custom", LevelCustom)
+	bl.OutputMsg("[CUSTOM] custom", LevelCustom)
 }
 
 // Test console logging by visually comparing the lines being output with and

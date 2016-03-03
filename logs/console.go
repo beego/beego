@@ -81,6 +81,7 @@ func (c *consoleWriter) WriteMsg(when time.Time, msg string, level int) error {
 	if level > c.Level {
 		return nil
 	}
+	msg = formatLogTime(when) + msg
 	if c.Colorful {
 		c.lg.Println(colors[level](msg))
 	} else {

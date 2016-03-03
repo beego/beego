@@ -34,7 +34,7 @@ func TestFile1(t *testing.T) {
 	log.Alert("alert")
 	log.Critical("critical")
 	log.Emergency("emergency")
-	log.OutputMsg("2016y03m02d 22h46M21s [CUSTOM] custom", LevelCustom)
+	log.OutputMsg("[CUSTOM] custom", LevelCustom)
 	f, err := os.Open("test.log")
 	if err != nil {
 		t.Fatal(err)
@@ -68,7 +68,7 @@ func TestFile2(t *testing.T) {
 	log.Alert("alert")
 	log.Critical("critical")
 	log.Emergency("emergency")
-	log.OutputMsg("2016y03m02d 22h46M21s [CUSTOM] custom", LevelCustom)
+	log.OutputMsg("[CUSTOM] custom", LevelCustom)
 	f, err := os.Open("test2.log")
 	if err != nil {
 		t.Fatal(err)

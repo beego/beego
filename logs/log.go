@@ -207,9 +207,6 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string) {
 //open output log for custom
 func (bl *BeeLogger) OutputMsg(msg string, logLevel int) {
 	when := time.Now()
-	if LevelCustom != logLevel {
-		msg = formatLogTime(when) + msg
-	}
 	if bl.asynchronous {
 		lm := logMsgPool.Get().(*logMsg)
 		lm.level = logLevel
