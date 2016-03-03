@@ -45,7 +45,8 @@ import (
 
 // RFC5424 log message levels.
 const (
-	LevelEmergency = iota
+	LevelCustom = iota //level for custom
+	LevelEmergency
 	LevelAlert
 	LevelCritical
 	LevelError
@@ -53,6 +54,7 @@ const (
 	LevelNotice
 	LevelInformational
 	LevelDebug
+	DefaultLoggerFuncCallDepth = 2
 )
 
 // Legacy loglevel constants to ensure backwards compatibility.
@@ -122,7 +124,7 @@ var logMsgPool *sync.Pool
 func NewLogger(channelLen int64) *BeeLogger {
 	bl := new(BeeLogger)
 	bl.level = LevelDebug
-	bl.loggerFuncCallDepth = 2
+	bl.loggerFuncCallDepth = DefaultLoggerFuncCallDepth
 	bl.msgChan = make(chan *logMsg, channelLen)
 	bl.signalChan = make(chan string, 1)
 	return bl
@@ -188,8 +190,8 @@ func (bl *BeeLogger) writeToLoggers(when time.Time, msg string, level int) {
 	}
 }
 
-func (bl *BeeLogger) writeMsg(logLevel int, msg string) error {
-	when := time.Now()
+func (bl *BeeLogger) writeMsg(logLevel int, msg string) {
+
 	if bl.enableFuncCallDepth {
 		_, file, line, ok := runtime.Caller(bl.loggerFuncCallDepth)
 		if !ok {
@@ -199,6 +201,12 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string) error {
 		_, filename := path.Split(file)
 		msg = "[" + filename + ":" + strconv.FormatInt(int64(line), 10) + "]" + msg
 	}
+	bl.OutputMsg(msg, logLevel)
+}
+
+//open output log for custom
+func (bl *BeeLogger) OutputMsg(msg string, logLevel int) {
+	when := time.Now()
 	if bl.asynchronous {
 		lm := logMsgPool.Get().(*logMsg)
 		lm.level = logLevel
@@ -208,7 +216,6 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string) error {
 	} else {
 		bl.writeToLoggers(when, msg, logLevel)
 	}
-	return nil
 }
 
 // SetLevel Set log message level.
