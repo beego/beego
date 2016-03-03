@@ -176,7 +176,7 @@ func (c *ConfigContainer) DefaultString(key string, defaultval string) string {
 func (c *ConfigContainer) Strings(key string) []string {
 	v := c.String(key)
 	if v == "" {
-		return []string{}
+		return nil
 	}
 	return strings.Split(v, ";")
 }
@@ -185,7 +185,7 @@ func (c *ConfigContainer) Strings(key string) []string {
 // if err != nil return defaltval
 func (c *ConfigContainer) DefaultStrings(key string, defaultval []string) []string {
 	v := c.Strings(key)
-	if len(v) == 0 {
+	if v == nil {
 		return defaultval
 	}
 	return v

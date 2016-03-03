@@ -80,7 +80,7 @@ func TestYaml(t *testing.T) {
 		t.Fatal("get name error")
 	}
 
-	if len(yamlconf.Strings("emptystrings")) != 0 {
+	if yamlconf.Strings("emptystrings") != nil {
 		t.Fatal("get emtpy strings error")
 	}
 }
