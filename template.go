@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -37,12 +38,19 @@ var (
 	beeTemplateExt = []string{"tpl", "html"}
 )
 
-func getTemplateByName(name string) *template.Template {
-	if BConfig.RunMode == "dev" {
+func executeTemplate(wr io.Writer, name string, data interface{}) error {
+	if BConfig.RunMode == DEV {
 		templatesLock.RLock()
 		defer templatesLock.RUnlock()
 	}
-	return beeTemplates[name]
+	if t, ok := beeTemplates[name]; ok {
+		err := t.ExecuteTemplate(wr, name, data)
+		if err != nil {
+			Trace("template Execute err:", err)
+		}
+		return err
+	}
+	panic("can't find templatefile in the path:" + name)
 }
 
 func init() {
