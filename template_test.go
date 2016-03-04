@@ -70,10 +70,10 @@ func TestTemplate(t *testing.T) {
 	if err := BuildTemplate(dir); err != nil {
 		t.Fatal(err)
 	}
-	if len(BeeTemplates) != 3 {
-		t.Fatalf("should be 3 but got %v", len(BeeTemplates))
+	if len(beeTemplates) != 3 {
+		t.Fatalf("should be 3 but got %v", len(beeTemplates))
 	}
-	if err := BeeTemplates["index.tpl"].ExecuteTemplate(os.Stdout, "index.tpl", nil); err != nil {
+	if err := beeTemplates["index.tpl"].ExecuteTemplate(os.Stdout, "index.tpl", nil); err != nil {
 		t.Fatal(err)
 	}
 	for _, name := range files {
@@ -126,7 +126,7 @@ func TestRelativeTemplate(t *testing.T) {
 	if err := BuildTemplate(dir, files[1]); err != nil {
 		t.Fatal(err)
 	}
-	if err := BeeTemplates["easyui/rbac/user.tpl"].ExecuteTemplate(os.Stdout, "easyui/rbac/user.tpl", nil); err != nil {
+	if err := beeTemplates["easyui/rbac/user.tpl"].ExecuteTemplate(os.Stdout, "easyui/rbac/user.tpl", nil); err != nil {
 		t.Fatal(err)
 	}
 	for _, name := range files {

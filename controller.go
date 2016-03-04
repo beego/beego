@@ -199,6 +199,7 @@ func (c *Controller) RenderString() (string, error) {
 func (c *Controller) RenderBytes() ([]byte, error) {
 	//if the controller has set layout, then first get the tplname's content set the content to the layout
 	var buf bytes.Buffer
+	var err error
 	if c.Layout != "" {
 		if c.TplName == "" {
 			c.TplName = strings.ToLower(c.controllerName) + "/" + strings.ToLower(c.actionName) + "." + c.TplExt
@@ -216,13 +217,14 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 			}
 			BuildTemplate(BConfig.WebConfig.ViewsPath, buildFiles...)
 		}
-		if _, ok := BeeTemplates[c.TplName]; !ok {
+		if t := getTemplateByName(c.TplName); t == nil {
 			panic("can't find templatefile in the path:" + c.TplName)
-		}
-		err := BeeTemplates[c.TplName].ExecuteTemplate(&buf, c.TplName, c.Data)
-		if err != nil {
-			Trace("template Execute err:", err)
-			return nil, err
+		} else {
+			err = t.ExecuteTemplate(&buf, c.TplName, c.Data)
+			if err != nil {
+				Trace("template Execute err:", err)
+				return nil, err
+			}
 		}
 		c.Data["LayoutContent"] = template.HTML(buf.String())
 
@@ -234,7 +236,7 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 				}
 
 				buf.Reset()
-				err = BeeTemplates[sectionTpl].ExecuteTemplate(&buf, sectionTpl, c.Data)
+				err = getTemplateByName(sectionTpl).ExecuteTemplate(&buf, sectionTpl, c.Data)
 				if err != nil {
 					Trace("template Execute err:", err)
 					return nil, err
@@ -244,7 +246,7 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		}
 
 		buf.Reset()
-		err = BeeTemplates[c.Layout].ExecuteTemplate(&buf, c.Layout, c.Data)
+		err = getTemplateByName(c.Layout).ExecuteTemplate(&buf, c.Layout, c.Data)
 		if err != nil {
 			Trace("template Execute err:", err)
 			return nil, err
@@ -258,14 +260,15 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 	if BConfig.RunMode == DEV {
 		BuildTemplate(BConfig.WebConfig.ViewsPath, c.TplName)
 	}
-	if _, ok := BeeTemplates[c.TplName]; !ok {
+	if t := getTemplateByName(c.TplName); t == nil {
 		panic("can't find templatefile in the path:" + c.TplName)
-	}
-	buf.Reset()
-	err := BeeTemplates[c.TplName].ExecuteTemplate(&buf, c.TplName, c.Data)
-	if err != nil {
-		Trace("template Execute err:", err)
-		return nil, err
+	} else {
+		buf.Reset()
+		err = t.ExecuteTemplate(&buf, c.TplName, c.Data)
+		if err != nil {
+			Trace("template Execute err:", err)
+			return nil, err
+		}
 	}
 	return buf.Bytes(), nil
 }
