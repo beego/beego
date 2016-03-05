@@ -842,27 +842,33 @@ func (p *ControllerRegister) recoverPanic(context *beecontext.Context) {
 		}
 		if !BConfig.RecoverPanic {
 			panic(err)
-		} else {
-			if BConfig.EnableErrorsShow {
-				if _, ok := ErrorMaps[fmt.Sprint(err)]; ok {
-					exception(fmt.Sprint(err), context)
-					return
-				}
+		}
+
+		if BConfig.EnableErrorsShow {
+			if _, ok := ErrorMaps[fmt.Sprint(err)]; ok {
+				exception(fmt.Sprint(err), context)
+				return
 			}
-			var stack string
-			Critical("the request url is ", context.Input.URL())
-			Critical("Handler crashed with error", err)
-			for i := 1; ; i++ {
-				_, file, line, ok := runtime.Caller(i)
-				if !ok {
-					break
-				}
-				Critical(fmt.Sprintf("%s:%d", file, line))
-				stack = stack + fmt.Sprintln(fmt.Sprintf("%s:%d", file, line))
-			}
+		}
+		Critical("the request url is ", context.Input.URL())
+		Critical("Handler crashed with error", err)
+		if !context.ResponseWriter.Started {
 			if BConfig.RunMode == DEV {
+				var stack string
+				for i := 1; ; i++ {
+					_, file, line, ok := runtime.Caller(i)
+					if !ok {
+						break
+					}
+					Critical(fmt.Sprintf("%s:%d", file, line))
+					stack = stack + fmt.Sprintln(fmt.Sprintf("%s:%d", file, line))
+				}
 				showErr(err, context, stack)
+			} else {
+				context.ResponseWriter.WriteHeader(http.StatusInternalServerError)
+				context.ResponseWriter.Write([]byte(http.StatusText(http.StatusInternalServerError)))
 			}
+			return
 		}
 	}
 }
