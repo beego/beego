@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -30,12 +31,27 @@ import (
 
 var (
 	beegoTplFuncMap = make(template.FuncMap)
-	// BeeTemplates caching map and supported template file extensions.
-	BeeTemplates  = make(map[string]*template.Template)
-	templatesLock sync.Mutex
-	// BeeTemplateExt stores the template extension which will build
-	BeeTemplateExt = []string{"tpl", "html"}
+	// beeTemplates caching map and supported template file extensions.
+	beeTemplates  = make(map[string]*template.Template)
+	templatesLock sync.RWMutex
+	// beeTemplateExt stores the template extension which will build
+	beeTemplateExt = []string{"tpl", "html"}
 )
+
+func executeTemplate(wr io.Writer, name string, data interface{}) error {
+	if BConfig.RunMode == DEV {
+		templatesLock.RLock()
+		defer templatesLock.RUnlock()
+	}
+	if t, ok := beeTemplates[name]; ok {
+		err := t.ExecuteTemplate(wr, name, data)
+		if err != nil {
+			Trace("template Execute err:", err)
+		}
+		return err
+	}
+	panic("can't find templatefile in the path:" + name)
+}
 
 func init() {
 	beegoTplFuncMap["dateformat"] = DateFormat
@@ -55,7 +71,6 @@ func init() {
 	beegoTplFuncMap["config"] = GetConfig
 	beegoTplFuncMap["map_get"] = MapGet
 
-	// go1.2 added template funcs
 	// Comparisons
 	beegoTplFuncMap["eq"] = eq // ==
 	beegoTplFuncMap["ge"] = ge // >=
@@ -103,7 +118,7 @@ func (tf *templateFile) visit(paths string, f os.FileInfo, err error) error {
 
 // HasTemplateExt return this path contains supported template extension of beego or not.
 func HasTemplateExt(paths string) bool {
-	for _, v := range BeeTemplateExt {
+	for _, v := range beeTemplateExt {
 		if strings.HasSuffix(paths, "."+v) {
 			return true
 		}
@@ -113,12 +128,12 @@ func HasTemplateExt(paths string) bool {
 
 // AddTemplateExt add new extension for template.
 func AddTemplateExt(ext string) {
-	for _, v := range BeeTemplateExt {
+	for _, v := range beeTemplateExt {
 		if v == ext {
 			return
 		}
 	}
-	BeeTemplateExt = append(BeeTemplateExt, ext)
+	beeTemplateExt = append(beeTemplateExt, ext)
 }
 
 // BuildTemplate will build all template files in a directory.
@@ -149,7 +164,7 @@ func BuildTemplate(dir string, files ...string) error {
 				if err != nil {
 					Trace("parse template err:", file, err)
 				} else {
-					BeeTemplates[file] = t
+					beeTemplates[file] = t
 				}
 				templatesLock.Unlock()
 			}
