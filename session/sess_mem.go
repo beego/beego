@@ -102,7 +102,7 @@ func (pder *MemProvider) SessionRead(sid string) (Store, error) {
 	pder.lock.RUnlock()
 	pder.lock.Lock()
 	newsess := &MemSessionStore{sid: sid, timeAccessed: time.Now(), value: make(map[interface{}]interface{})}
-	element := pder.list.PushBack(newsess)
+	element := pder.list.PushFront(newsess)
 	pder.sessions[sid] = element
 	pder.lock.Unlock()
 	return newsess, nil
@@ -134,7 +134,7 @@ func (pder *MemProvider) SessionRegenerate(oldsid, sid string) (Store, error) {
 	pder.lock.RUnlock()
 	pder.lock.Lock()
 	newsess := &MemSessionStore{sid: sid, timeAccessed: time.Now(), value: make(map[interface{}]interface{})}
-	element := pder.list.PushBack(newsess)
+	element := pder.list.PushFront(newsess)
 	pder.sessions[sid] = element
 	pder.lock.Unlock()
 	return newsess, nil

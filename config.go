@@ -16,7 +16,10 @@ package beego
 
 import (
 	"fmt"
+<<<<<<< HEAD
 	"html/template"
+=======
+>>>>>>> astaxie/develop
 	"os"
 	"path/filepath"
 	"strings"
@@ -106,12 +109,9 @@ var (
 	AppConfig *beegoAppConfig
 	// AppPath is the absolute path to the app
 	AppPath string
-	// TemplateCache stores template caching
-	TemplateCache map[string]*template.Template
 	// GlobalSessions is the instance for the session manager
 	GlobalSessions *session.Manager
 
-	workPath string
 	// appConfigPath is the path to the config files
 	appConfigPath string
 	// appConfigProvider is the provider for the config, default is ini
@@ -120,12 +120,8 @@ var (
 
 func init() {
 	AppPath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
-	workPath, _ = os.Getwd()
-	workPath, _ = filepath.Abs(workPath)
 
-	if workPath != AppPath {
-		os.Chdir(AppPath)
-	}
+	os.Chdir(AppPath)
 
 	BConfig = &Config{
 		AppName:             "beego",
@@ -175,7 +171,7 @@ func init() {
 				SessionName:           "beegosessionID",
 				SessionGCMaxLifetime:  3600,
 				SessionProviderConfig: "",
-				SessionCookieLifeTime: 0, //set cookie default is the brower life
+				SessionCookieLifeTime: 0, //set cookie default is the browser life
 				SessionAutoSetCookie:  true,
 				SessionDomain:         "",
 			},
@@ -189,11 +185,13 @@ func init() {
 
 	appConfigPath = filepath.Join(AppPath, "conf", "app.conf")
 	if !utils.FileExists(appConfigPath) {
-		AppConfig = &beegoAppConfig{config.NewFakeConfig()}
+		AppConfig = &beegoAppConfig{innerConfig: config.NewFakeConfig()}
 		return
 	}
 
-	parseConfig(appConfigPath)
+	if err := parseConfig(appConfigPath); err != nil {
+		panic(err)
+	}
 }
 
 // now only support ini, next will support json.
@@ -202,11 +200,11 @@ func parseConfig(appConfigPath string) (err error) {
 	if err != nil {
 		return err
 	}
-	// set the runmode first
+	// set the run mode first
 	if envRunMode := os.Getenv("BEEGO_RUNMODE"); envRunMode != "" {
 		BConfig.RunMode = envRunMode
-	} else if runmode := AppConfig.String("RunMode"); runmode != "" {
-		BConfig.RunMode = runmode
+	} else if runMode := AppConfig.String("RunMode"); runMode != "" {
+		BConfig.RunMode = runMode
 	}
 
 	BConfig.AppName = AppConfig.DefaultString("AppName", BConfig.AppName)
@@ -299,7 +297,7 @@ func parseConfig(appConfigPath string) (err error) {
 	}
 
 	//init log
-	BeeLogger.Close()
+	BeeLogger.Reset()
 	for adaptor, config := range BConfig.Log.Outputs {
 		err = BeeLogger.SetLogger(adaptor, config)
 		if err != nil {
@@ -393,46 +391,46 @@ func (b *beegoAppConfig) Float(key string) (float64, error) {
 	return b.innerConfig.Float(key)
 }
 
-func (b *beegoAppConfig) DefaultString(key string, defaultval string) string {
+func (b *beegoAppConfig) DefaultString(key string, defaultVal string) string {
 	if v := b.String(key); v != "" {
 		return v
 	}
-	return defaultval
+	return defaultVal
 }
 
-func (b *beegoAppConfig) DefaultStrings(key string, defaultval []string) []string {
+func (b *beegoAppConfig) DefaultStrings(key string, defaultVal []string) []string {
 	if v := b.Strings(key); len(v) != 0 {
 		return v
 	}
-	return defaultval
+	return defaultVal
 }
 
-func (b *beegoAppConfig) DefaultInt(key string, defaultval int) int {
+func (b *beegoAppConfig) DefaultInt(key string, defaultVal int) int {
 	if v, err := b.Int(key); err == nil {
 		return v
 	}
-	return defaultval
+	return defaultVal
 }
 
-func (b *beegoAppConfig) DefaultInt64(key string, defaultval int64) int64 {
+func (b *beegoAppConfig) DefaultInt64(key string, defaultVal int64) int64 {
 	if v, err := b.Int64(key); err == nil {
 		return v
 	}
-	return defaultval
+	return defaultVal
 }
 
-func (b *beegoAppConfig) DefaultBool(key string, defaultval bool) bool {
+func (b *beegoAppConfig) DefaultBool(key string, defaultVal bool) bool {
 	if v, err := b.Bool(key); err == nil {
 		return v
 	}
-	return defaultval
+	return defaultVal
 }
 
-func (b *beegoAppConfig) DefaultFloat(key string, defaultval float64) float64 {
+func (b *beegoAppConfig) DefaultFloat(key string, defaultVal float64) float64 {
 	if v, err := b.Float(key); err == nil {
 		return v
 	}
-	return defaultval
+	return defaultVal
 }
 
 func (b *beegoAppConfig) DIY(key string) (interface{}, error) {
