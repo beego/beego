@@ -17,6 +17,7 @@ package config
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -70,12 +71,9 @@ type JSONConfigContainer struct {
 func (c *JSONConfigContainer) Bool(key string) (bool, error) {
 	val := c.getData(key)
 	if val != nil {
-		if v, ok := val.(bool); ok {
-			return v, nil
-		}
-		return false, errors.New("not bool value")
+		return ParseBool(val)
 	}
-	return false, errors.New("not exist key:" + key)
+	return false, fmt.Errorf("not exist key: %q", key)
 }
 
 // DefaultBool return the bool value if has no error
@@ -175,7 +173,7 @@ func (c *JSONConfigContainer) DefaultString(key string, defaultval string) strin
 func (c *JSONConfigContainer) Strings(key string) []string {
 	stringVal := c.String(key)
 	if stringVal == "" {
-		return []string{}
+		return nil
 	}
 	return strings.Split(c.String(key), ";")
 }
@@ -183,7 +181,7 @@ func (c *JSONConfigContainer) Strings(key string) []string {
 // DefaultStrings returns the []string value for a given key.
 // if err != nil return defaltval
 func (c *JSONConfigContainer) DefaultStrings(key string, defaultval []string) []string {
-	if v := c.Strings(key); len(v) > 0 {
+	if v := c.Strings(key); v != nil {
 		return v
 	}
 	return defaultval

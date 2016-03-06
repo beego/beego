@@ -37,7 +37,7 @@ func TestMemcacheCache(t *testing.T) {
 		t.Error("check err")
 	}
 
-	time.Sleep(10 * time.Second)
+	time.Sleep(11 * time.Second)
 
 	if bm.IsExist("astaxie") {
 		t.Error("check err")

@@ -46,12 +46,16 @@ func (c *fakeConfigContainer) DefaultString(key string, defaultval string) strin
 }
 
 func (c *fakeConfigContainer) Strings(key string) []string {
-	return strings.Split(c.getData(key), ";")
+	v := c.getData(key)
+	if v == "" {
+		return nil
+	}
+	return strings.Split(v, ";")
 }
 
 func (c *fakeConfigContainer) DefaultStrings(key string, defaultval []string) []string {
 	v := c.Strings(key)
-	if len(v) == 0 {
+	if v == nil {
 		return defaultval
 	}
 	return v
@@ -82,7 +86,7 @@ func (c *fakeConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
 }
 
 func (c *fakeConfigContainer) Bool(key string) (bool, error) {
-	return strconv.ParseBool(c.getData(key))
+	return ParseBool(c.getData(key))
 }
 
 func (c *fakeConfigContainer) DefaultBool(key string, defaultval bool) bool {

@@ -201,7 +201,9 @@ func (manager *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
 	if err != nil || cookie.Value == "" {
 		return
 	}
-	manager.provider.SessionDestroy(cookie.Value)
+
+	sid, _ := url.QueryUnescape(cookie.Value)
+	manager.provider.SessionDestroy(sid)
 	if manager.config.EnableSetCookie {
 		expiration := time.Now()
 		cookie = &http.Cookie{Name: manager.config.CookieName,

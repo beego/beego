@@ -90,16 +90,15 @@ func (srv *Server) ListenAndServeTLS(certFile, keyFile string) (err error) {
 		addr = ":https"
 	}
 
-	config := &tls.Config{}
-	if srv.TLSConfig != nil {
-		*config = *srv.TLSConfig
+	if srv.TLSConfig == nil {
+		srv.TLSConfig = &tls.Config{}
 	}
-	if config.NextProtos == nil {
-		config.NextProtos = []string{"http/1.1"}
+	if srv.TLSConfig.NextProtos == nil {
+		srv.TLSConfig.NextProtos = []string{"http/1.1"}
 	}
 
-	config.Certificates = make([]tls.Certificate, 1)
-	config.Certificates[0], err = tls.LoadX509KeyPair(certFile, keyFile)
+	srv.TLSConfig.Certificates = make([]tls.Certificate, 1)
+	srv.TLSConfig.Certificates[0], err = tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
 		return
 	}
@@ -113,7 +112,7 @@ func (srv *Server) ListenAndServeTLS(certFile, keyFile string) (err error) {
 	}
 
 	srv.tlsInnerListener = newGraceListener(l, srv)
-	srv.GraceListener = tls.NewListener(srv.tlsInnerListener, config)
+	srv.GraceListener = tls.NewListener(srv.tlsInnerListener, srv.TLSConfig)
 
 	if srv.isChild {
 		process, err := os.FindProcess(os.Getppid())

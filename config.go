@@ -15,7 +15,7 @@
 package beego
 
 import (
-	"html/template"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -103,17 +103,22 @@ var (
 	BConfig *Config
 	// AppConfig is the instance of Config, store the config information from file
 	AppConfig *beegoAppConfig
-	// AppConfigPath is the path to the config files
-	AppConfigPath string
-	// AppConfigProvider is the provider for the config, default is ini
-	AppConfigProvider = "ini"
-	// TemplateCache stores template caching
-	TemplateCache map[string]*template.Template
+	// AppPath is the absolute path to the app
+	AppPath string
 	// GlobalSessions is the instance for the session manager
 	GlobalSessions *session.Manager
+
+	// appConfigPath is the path to the config files
+	appConfigPath string
+	// appConfigProvider is the provider for the config, default is ini
+	appConfigProvider = "ini"
 )
 
 func init() {
+	AppPath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
+
+	os.Chdir(AppPath)
+
 	BConfig = &Config{
 		AppName:             "beego",
 		RunMode:             DEV,
@@ -162,7 +167,7 @@ func init() {
 				SessionName:           "beegosessionID",
 				SessionGCMaxLifetime:  3600,
 				SessionProviderConfig: "",
-				SessionCookieLifeTime: 0, //set cookie default is the brower life
+				SessionCookieLifeTime: 0, //set cookie default is the browser life
 				SessionAutoSetCookie:  true,
 				SessionDomain:         "",
 			},
@@ -173,29 +178,29 @@ func init() {
 			Outputs:     map[string]string{"console": ""},
 		},
 	}
-	ParseConfig()
+
+	appConfigPath = filepath.Join(AppPath, "conf", "app.conf")
+	if !utils.FileExists(appConfigPath) {
+		AppConfig = &beegoAppConfig{innerConfig: config.NewFakeConfig()}
+		return
+	}
+
+	if err := parseConfig(appConfigPath); err != nil {
+		panic(err)
+	}
 }
 
-// ParseConfig parsed default config file.
 // now only support ini, next will support json.
-func ParseConfig() (err error) {
-	if AppConfigPath == "" {
-		if utils.FileExists(filepath.Join("conf", "app.conf")) {
-			AppConfigPath = filepath.Join("conf", "app.conf")
-		} else {
-			AppConfig = &beegoAppConfig{config.NewFakeConfig()}
-			return
-		}
-	}
-	AppConfig, err = newAppConfig(AppConfigProvider, AppConfigPath)
+func parseConfig(appConfigPath string) (err error) {
+	AppConfig, err = newAppConfig(appConfigProvider, appConfigPath)
 	if err != nil {
 		return err
 	}
-	// set the runmode first
+	// set the run mode first
 	if envRunMode := os.Getenv("BEEGO_RUNMODE"); envRunMode != "" {
 		BConfig.RunMode = envRunMode
-	} else if runmode := AppConfig.String("RunMode"); runmode != "" {
-		BConfig.RunMode = runmode
+	} else if runMode := AppConfig.String("RunMode"); runMode != "" {
+		BConfig.RunMode = runMode
 	}
 
 	BConfig.AppName = AppConfig.DefaultString("AppName", BConfig.AppName)
@@ -241,6 +246,8 @@ func ParseConfig() (err error) {
 	BConfig.WebConfig.Session.SessionCookieLifeTime = AppConfig.DefaultInt("SessionCookieLifeTime", BConfig.WebConfig.Session.SessionCookieLifeTime)
 	BConfig.WebConfig.Session.SessionAutoSetCookie = AppConfig.DefaultBool("SessionAutoSetCookie", BConfig.WebConfig.Session.SessionAutoSetCookie)
 	BConfig.WebConfig.Session.SessionDomain = AppConfig.DefaultString("SessionDomain", BConfig.WebConfig.Session.SessionDomain)
+	BConfig.Log.AccessLogs = AppConfig.DefaultBool("LogAccessLogs", BConfig.Log.AccessLogs)
+	BConfig.Log.FileLineNum = AppConfig.DefaultBool("LogFileLineNum", BConfig.Log.FileLineNum)
 
 	if sd := AppConfig.String("StaticDir"); sd != "" {
 		for k := range BConfig.WebConfig.StaticDir {
@@ -273,15 +280,58 @@ func ParseConfig() (err error) {
 			BConfig.WebConfig.StaticExtensionsToGzip = fileExts
 		}
 	}
+
+	if lo := AppConfig.String("LogOutputs"); lo != "" {
+		los := strings.Split(lo, ";")
+		for _, v := range los {
+			if logType2Config := strings.SplitN(v, ",", 2); len(logType2Config) == 2 {
+				BConfig.Log.Outputs[logType2Config[0]] = logType2Config[1]
+			} else {
+				continue
+			}
+		}
+	}
+
+	//init log
+	BeeLogger.Reset()
+	for adaptor, config := range BConfig.Log.Outputs {
+		err = BeeLogger.SetLogger(adaptor, config)
+		if err != nil {
+			fmt.Printf("%s with the config `%s` got err:%s\n", adaptor, config, err)
+		}
+	}
+	SetLogFuncCall(BConfig.Log.FileLineNum)
+
 	return nil
+}
+
+// LoadAppConfig allow developer to apply a config file
+func LoadAppConfig(adapterName, configPath string) error {
+	absConfigPath, err := filepath.Abs(configPath)
+	if err != nil {
+		return err
+	}
+
+	if !utils.FileExists(absConfigPath) {
+		return fmt.Errorf("the target config file: %s don't exist", configPath)
+	}
+
+	if absConfigPath == appConfigPath {
+		return nil
+	}
+
+	appConfigPath = absConfigPath
+	appConfigProvider = adapterName
+
+	return parseConfig(appConfigPath)
 }
 
 type beegoAppConfig struct {
 	innerConfig config.Configer
 }
 
-func newAppConfig(AppConfigProvider, AppConfigPath string) (*beegoAppConfig, error) {
-	ac, err := config.NewConfig(AppConfigProvider, AppConfigPath)
+func newAppConfig(appConfigProvider, appConfigPath string) (*beegoAppConfig, error) {
+	ac, err := config.NewConfig(appConfigProvider, appConfigPath)
 	if err != nil {
 		return nil, err
 	}
@@ -337,46 +387,46 @@ func (b *beegoAppConfig) Float(key string) (float64, error) {
 	return b.innerConfig.Float(key)
 }
 
-func (b *beegoAppConfig) DefaultString(key string, defaultval string) string {
+func (b *beegoAppConfig) DefaultString(key string, defaultVal string) string {
 	if v := b.String(key); v != "" {
 		return v
 	}
-	return defaultval
+	return defaultVal
 }
 
-func (b *beegoAppConfig) DefaultStrings(key string, defaultval []string) []string {
+func (b *beegoAppConfig) DefaultStrings(key string, defaultVal []string) []string {
 	if v := b.Strings(key); len(v) != 0 {
 		return v
 	}
-	return defaultval
+	return defaultVal
 }
 
-func (b *beegoAppConfig) DefaultInt(key string, defaultval int) int {
+func (b *beegoAppConfig) DefaultInt(key string, defaultVal int) int {
 	if v, err := b.Int(key); err == nil {
 		return v
 	}
-	return defaultval
+	return defaultVal
 }
 
-func (b *beegoAppConfig) DefaultInt64(key string, defaultval int64) int64 {
+func (b *beegoAppConfig) DefaultInt64(key string, defaultVal int64) int64 {
 	if v, err := b.Int64(key); err == nil {
 		return v
 	}
-	return defaultval
+	return defaultVal
 }
 
-func (b *beegoAppConfig) DefaultBool(key string, defaultval bool) bool {
+func (b *beegoAppConfig) DefaultBool(key string, defaultVal bool) bool {
 	if v, err := b.Bool(key); err == nil {
 		return v
 	}
-	return defaultval
+	return defaultVal
 }
 
-func (b *beegoAppConfig) DefaultFloat(key string, defaultval float64) float64 {
+func (b *beegoAppConfig) DefaultFloat(key string, defaultVal float64) float64 {
 	if v, err := b.Float(key); err == nil {
 		return v
 	}
-	return defaultval
+	return defaultVal
 }
 
 func (b *beegoAppConfig) DIY(key string) (interface{}, error) {

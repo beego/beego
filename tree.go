@@ -141,7 +141,7 @@ func (t *Tree) addtree(segments []string, tree *Tree, wildcards []string, reg st
 				regexpStr = "([^.]+).(.+)"
 				params = params[1:]
 			} else {
-				for range params {
+				for _ = range params {
 					regexpStr = "([^/]+)/" + regexpStr
 				}
 			}
@@ -254,7 +254,7 @@ func (t *Tree) addseg(segments []string, route interface{}, wildcards []string, 
 					regexpStr = "/([^.]+).(.+)"
 					params = params[1:]
 				} else {
-					for range params {
+					for _ = range params {
 						regexpStr = "/([^/]+)" + regexpStr
 					}
 				}
@@ -265,15 +265,14 @@ func (t *Tree) addseg(segments []string, route interface{}, wildcards []string, 
 			}
 			t.wildcard.addseg(segments[1:], route, append(wildcards, params...), reg+regexpStr)
 		} else {
-			var ok bool
 			var subTree *Tree
-			for _, subTree = range t.fixrouters {
-				if t.prefix == seg {
-					ok = true
+			for _, sub := range t.fixrouters {
+				if sub.prefix == seg {
+					subTree = sub
 					break
 				}
 			}
-			if !ok {
+			if subTree == nil {
 				subTree = NewTree()
 				subTree.prefix = seg
 				t.fixrouters = append(t.fixrouters, subTree)
@@ -420,7 +419,11 @@ func (leaf *leafInfo) match(wildcardValues []string, ctx *context.Context) (ok b
 			if len(strs) == 2 {
 				ctx.Input.SetParam(":ext", strs[1])
 			}
-			ctx.Input.SetParam(":path", path.Join(path.Join(wildcardValues[index:len(wildcardValues)-1]...), strs[0]))
+			if index > (len(wildcardValues) - 1) {
+				ctx.Input.SetParam(":path", "")
+			} else {
+				ctx.Input.SetParam(":path", path.Join(path.Join(wildcardValues[index:len(wildcardValues)-1]...), strs[0]))
+			}
 			return true
 		}
 		// match :id
@@ -438,7 +441,9 @@ func (leaf *leafInfo) match(wildcardValues []string, ctx *context.Context) (ok b
 	}
 	matches := leaf.regexps.FindStringSubmatch(path.Join(wildcardValues...))
 	for i, match := range matches[1:] {
-		ctx.Input.SetParam(leaf.wildcards[i], match)
+		if i < len(leaf.wildcards) {
+			ctx.Input.SetParam(leaf.wildcards[i], match)
+		}
 	}
 	return true
 }
@@ -448,17 +453,11 @@ func (leaf *leafInfo) match(wildcardValues []string, ctx *context.Context) (ok b
 // "/admin/" -> ["admin"]
 // "/admin/users" -> ["admin", "users"]
 func splitPath(key string) []string {
+	key = strings.Trim(key, "/ ")
 	if key == "" {
 		return []string{}
 	}
-	elements := strings.Split(key, "/")
-	if elements[0] == "" {
-		elements = elements[1:]
-	}
-	if elements[len(elements)-1] == "" {
-		elements = elements[:len(elements)-1]
-	}
-	return elements
+	return strings.Split(key, "/")
 }
 
 // "admin" -> false, nil, ""
@@ -542,13 +541,19 @@ func splitSegment(key string) (bool, []string, string) {
 					continue
 				}
 			}
-			if v == ':' {
+			// Escape Sequence '\'
+			if i > 0 && key[i-1] == '\\' {
+				out = append(out, v)
+			} else if v == ':' {
 				param = make([]rune, 0)
 				start = true
 			} else if v == '(' {
 				startexp = true
 				start = false
-				params = append(params, ":"+string(param))
+				if len(param) > 0 {
+					params = append(params, ":"+string(param))
+					param = make([]rune, 0)
+				}
 				paramsNum++
 				expt = make([]rune, 0)
 				expt = append(expt, '(')

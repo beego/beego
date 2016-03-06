@@ -27,7 +27,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"unicode"
 )
 
 var (
@@ -97,9 +96,11 @@ func (ini *IniConfig) parseFile(name string) (*IniConfigContainer, error) {
 		}
 		if bComment != nil {
 			line = bytes.TrimLeft(line, string(bComment))
-			line = bytes.TrimLeftFunc(line, unicode.IsSpace)
+			// Need append to a new line if multi-line comments.
+			if comment.Len() > 0 {
+				comment.WriteByte('\n')
+			}
 			comment.Write(line)
-			comment.WriteByte('\n')
 			continue
 		}
 
@@ -194,7 +195,7 @@ type IniConfigContainer struct {
 
 // Bool returns the boolean value for a given key.
 func (c *IniConfigContainer) Bool(key string) (bool, error) {
-	return strconv.ParseBool(c.getdata(key))
+	return ParseBool(c.getdata(key))
 }
 
 // DefaultBool returns the boolean value for a given key.
@@ -268,15 +269,20 @@ func (c *IniConfigContainer) DefaultString(key string, defaultval string) string
 }
 
 // Strings returns the []string value for a given key.
+// Return nil if config value does not exist or is empty.
 func (c *IniConfigContainer) Strings(key string) []string {
-	return strings.Split(c.String(key), ";")
+	v := c.String(key)
+	if v == "" {
+		return nil
+	}
+	return strings.Split(v, ";")
 }
 
 // DefaultStrings returns the []string value for a given key.
 // if err != nil return defaltval
 func (c *IniConfigContainer) DefaultStrings(key string, defaultval []string) []string {
 	v := c.Strings(key)
-	if len(v) == 0 {
+	if v == nil {
 		return defaultval
 	}
 	return v
@@ -299,14 +305,35 @@ func (c *IniConfigContainer) SaveConfigFile(filename string) (err error) {
 	}
 	defer f.Close()
 
+	// Get section or key comments. Fixed #1607
+	getCommentStr := func(section, key string) string {
+		comment, ok := "", false
+		if len(key) == 0 {
+			comment, ok = c.sectionComment[section]
+		} else {
+			comment, ok = c.keyComment[section+"."+key]
+		}
+
+		if ok {
+			// Empty comment
+			if len(comment) == 0 || len(strings.TrimSpace(comment)) == 0 {
+				return string(bNumComment)
+			}
+			prefix := string(bNumComment)
+			// Add the line head character "#"
+			return prefix + strings.Replace(comment, lineBreak, lineBreak+prefix, -1)
+		}
+		return ""
+	}
+
 	buf := bytes.NewBuffer(nil)
 	// Save default section at first place
 	if dt, ok := c.data[defaultSection]; ok {
 		for key, val := range dt {
 			if key != " " {
 				// Write key comments.
-				if v, ok := c.keyComment[key]; ok {
-					if _, err = buf.WriteString(string(bNumComment) + v + lineBreak); err != nil {
+				if v := getCommentStr(defaultSection, key); len(v) > 0 {
+					if _, err = buf.WriteString(v + lineBreak); err != nil {
 						return err
 					}
 				}
@@ -327,8 +354,8 @@ func (c *IniConfigContainer) SaveConfigFile(filename string) (err error) {
 	for section, dt := range c.data {
 		if section != defaultSection {
 			// Write section comments.
-			if v, ok := c.sectionComment[section]; ok {
-				if _, err = buf.WriteString(string(bNumComment) + v + lineBreak); err != nil {
+			if v := getCommentStr(section, ""); len(v) > 0 {
+				if _, err = buf.WriteString(v + lineBreak); err != nil {
 					return err
 				}
 			}
@@ -341,8 +368,8 @@ func (c *IniConfigContainer) SaveConfigFile(filename string) (err error) {
 			for key, val := range dt {
 				if key != " " {
 					// Write key comments.
-					if v, ok := c.keyComment[key]; ok {
-						if _, err = buf.WriteString(string(bNumComment) + v + lineBreak); err != nil {
+					if v := getCommentStr(section, key); len(v) > 0 {
+						if _, err = buf.WriteString(v + lineBreak); err != nil {
 							return err
 						}
 					}
