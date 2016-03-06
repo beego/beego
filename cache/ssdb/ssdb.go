@@ -50,8 +50,9 @@ func (rc *Cache) GetMulti(keys []string) []interface{} {
 		}
 	}
 	res, err := rc.conn.Do("multi_get", keys)
+	res_size := len(res)
 	if err == nil {
-		for i := 1; i < size*2; i += 2 {
+		for i := 1; i < res_size; i += 2 {
 			values = append(values, string(res[i+1]))
 		}
 		return values
