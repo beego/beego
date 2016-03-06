@@ -187,9 +187,13 @@ func (w *Response) Write(p []byte) (int, error) {
 // WriteHeader sends an HTTP response header with status code,
 // and sets `started` to true.
 func (w *Response) WriteHeader(code int) {
-	w.Status = code
-	w.Started = true
-	w.ResponseWriter.WriteHeader(code)
+	// Write status code if it has been set manually
+	// Set it to 0 afterwards to prevent "multiple response.WriteHeader calls"
+	if w.Status == 0 {
+		w.Status = code
+		w.Started = true
+		w.ResponseWriter.WriteHeader(code)
+	}
 }
 
 // Hijack hijacker for http
