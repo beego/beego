@@ -16,10 +16,6 @@ package beego
 
 import (
 	"fmt"
-<<<<<<< HEAD
-	"html/template"
-=======
->>>>>>> astaxie/develop
 	"os"
 	"path/filepath"
 	"strings"
