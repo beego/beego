@@ -10,6 +10,7 @@ services:
   - mysql
   - postgresql
   - memcached
+  - ssdb
 env:
   - ORM_DRIVER=sqlite3   ORM_SOURCE=$TRAVIS_BUILD_DIR/orm_test.db
   - ORM_DRIVER=mysql    ORM_SOURCE="root:@/orm_test?charset=utf8"
