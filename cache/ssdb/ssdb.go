@@ -50,9 +50,9 @@ func (rc *Cache) GetMulti(keys []string) []interface{} {
 		}
 	}
 	res, err := rc.conn.Do("multi_get", keys)
-	res_size := len(res)
+	resSize := len(res)
 	if err == nil {
-		for i := 1; i < res_size; i += 2 {
+		for i := 1; i < resSize; i += 2 {
 			values = append(values, string(res[i+1]))
 		}
 		return values
@@ -154,9 +154,9 @@ func (rc *Cache) IsExist(key string) bool {
 	}
 	if resp[1] == "1" {
 		return true
-	} else {
-		return false
 	}
+	return false
+
 }
 
 // ClearAll clear all cached in memcache.
@@ -166,8 +166,8 @@ func (rc *Cache) ClearAll() error {
 			return err
 		}
 	}
-	key_start, key_end, limit := "", "", 50
-	resp, err := rc.Scan(key_start, key_end, limit)
+	keyStart, keyEnd, limit := "", "", 50
+	resp, err := rc.Scan(keyStart, keyEnd, limit)
 	for err == nil {
 		size := len(resp)
 		if size == 1 {
@@ -181,20 +181,20 @@ func (rc *Cache) ClearAll() error {
 		if e != nil {
 			return e
 		}
-		key_start = resp[size-2]
-		resp, err = rc.Scan(key_start, key_end, limit)
+		keyStart = resp[size-2]
+		resp, err = rc.Scan(keyStart, keyEnd, limit)
 	}
 	return err
 }
 
 // Scan key all cached in ssdb.
-func (rc *Cache) Scan(key_start string, key_end string, limit int) ([]string, error) {
+func (rc *Cache) Scan(keyStart string, keyEnd string, limit int) ([]string, error) {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
 			return nil, err
 		}
 	}
-	resp, err := rc.conn.Do("scan", key_start, key_end, limit)
+	resp, err := rc.conn.Do("scan", keyStart, keyEnd, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -221,9 +221,9 @@ func (rc *Cache) StartAndGC(config string) error {
 
 // connect to memcache and keep the connection.
 func (rc *Cache) connectInit() error {
-	conninfo_array := strings.Split(rc.conninfo[0], ":")
-	host := conninfo_array[0]
-	port, e := strconv.Atoi(conninfo_array[1])
+	conninfoArray := strings.Split(rc.conninfo[0], ":")
+	host := conninfoArray[0]
+	port, e := strconv.Atoi(conninfoArray[1])
 	if e != nil {
 		return e
 	}
