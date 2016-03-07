@@ -19,6 +19,7 @@ import (
 	"log"
 	"os"
 	"runtime"
+	"time"
 )
 
 // brush is a color join function
@@ -34,46 +35,49 @@ func newBrush(color string) brush {
 }
 
 var colors = []brush{
-	newBrush("1;37"), // Emergency	white
-	newBrush("1;36"), // Alert			cyan
-	newBrush("1;35"), // Critical   magenta
-	newBrush("1;31"), // Error      red
-	newBrush("1;33"), // Warning    yellow
-	newBrush("1;32"), // Notice			green
-	newBrush("1;34"), // Informational	blue
-	newBrush("1;34"), // Debug      blue
+	newBrush("1;37"), // Emergency          white
+	newBrush("1;36"), // Alert              cyan
+	newBrush("1;35"), // Critical           magenta
+	newBrush("1;31"), // Error              red
+	newBrush("1;33"), // Warning            yellow
+	newBrush("1;32"), // Notice             green
+	newBrush("1;34"), // Informational      blue
+	newBrush("1;34"), // Debug              blue
 }
 
 // consoleWriter implements LoggerInterface and writes messages to terminal.
 type consoleWriter struct {
 	lg    *log.Logger
-	Level int `json:"level"`
+	Level int  `json:"level"`
+	Color bool `json:"color"`
 }
 
 // NewConsole create ConsoleWriter returning as LoggerInterface.
 func NewConsole() Logger {
 	cw := &consoleWriter{
-		lg:    log.New(os.Stdout, "", log.Ldate|log.Ltime),
+		lg:    log.New(os.Stdout, "", 0),
 		Level: LevelDebug,
+		Color: true,
 	}
 	return cw
 }
 
 // Init init console logger.
-// jsonconfig like '{"level":LevelTrace}'.
-func (c *consoleWriter) Init(jsonconfig string) error {
-	if len(jsonconfig) == 0 {
+// jsonConfig like '{"level":LevelTrace}'.
+func (c *consoleWriter) Init(jsonConfig string) error {
+	if len(jsonConfig) == 0 {
 		return nil
 	}
-	return json.Unmarshal([]byte(jsonconfig), c)
+	return json.Unmarshal([]byte(jsonConfig), c)
 }
 
 // WriteMsg write message in console.
-func (c *consoleWriter) WriteMsg(msg string, level int) error {
+func (c *consoleWriter) WriteMsg(when time.Time, msg string, level int) error {
 	if level > c.Level {
 		return nil
 	}
-	if goos := runtime.GOOS; goos == "windows" {
+	msg = formatLogTime(when) + msg
+	if runtime.GOOS == "windows" || !c.Color {
 		c.lg.Println(msg)
 		return nil
 	}

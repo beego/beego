@@ -130,7 +130,7 @@ func parserComments(comments *ast.CommentGroup, funcName, controllerName, pkgpat
 }
 
 func genRouterCode() {
-	os.Mkdir("routers", 0755)
+	os.Mkdir(path.Join(AppPath, "routers"), 0755)
 	Info("generate router from comments")
 	var (
 		globalinfo string
@@ -172,7 +172,7 @@ func genRouterCode() {
 		}
 	}
 	if globalinfo != "" {
-		f, err := os.Create(path.Join("routers", commentFilename))
+		f, err := os.Create(path.Join(AppPath, "routers", commentFilename))
 		if err != nil {
 			panic(err)
 		}
@@ -182,7 +182,7 @@ func genRouterCode() {
 }
 
 func compareFile(pkgRealpath string) bool {
-	if !utils.FileExists(path.Join("routers", commentFilename)) {
+	if !utils.FileExists(path.Join(AppPath, "routers", commentFilename)) {
 		return true
 	}
 	if utils.FileExists(lastupdateFilename) {
