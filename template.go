@@ -31,13 +31,13 @@ import (
 
 var (
 	beegoTplFuncMap = make(template.FuncMap)
-	// beeTemplates caching map and supported template file extensions.
+// beeTemplates caching map and supported template file extensions.
 	beeTemplates = make(map[string]TemplateI)
 	templatesLock sync.RWMutex
-	// beeTemplateExt stores the template extension which will build
+// beeTemplateExt stores the template extension which will build
 	beeTemplateExt = []string{"tpl", "html"}
-	// BeeTemplatePreprocessors stores associations of extension -> preprocessor handler
-	BeeTemplateEngines = map[string]func(root, path string) (TemplateI, error){}
+// BeeTemplatePreprocessors stores associations of extension -> preprocessor handler
+	BeeTemplateEngines = map[string]func(root, path string, funcs template.FuncMap) (TemplateI, error){}
 )
 
 func executeTemplate(wr io.Writer, name string, data interface{}) error {
@@ -169,7 +169,7 @@ func BuildTemplate(dir string, files ...string) error {
 				fileExt := filepath.Ext(file)[1:]
 				var t TemplateI
 				if fn, ok := BeeTemplateEngines[fileExt]; ok {
-					t, err = fn(self.root, file)
+					t, err = fn(self.root, file, beegoTplFuncMap)
 				}else {
 					t, err = getTemplate(self.root, file, v...)
 				}
@@ -318,7 +318,7 @@ func DelStaticPath(url string) *App {
 	return BeeApp
 }
 
-func AddTemplateEngine(extension string, fn func(root, path string) (TemplateI, error)) *App {
+func AddTemplateEngine(extension string, fn func(root, path string, funcs template.FuncMap) (TemplateI, error)) *App {
 	AddTemplateExt(extension)
 	BeeTemplateEngines[extension] = fn
 	return BeeApp
