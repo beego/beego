@@ -27,7 +27,7 @@ func NewSsdbCache() cache.Cache {
 func (rc *Cache) Get(key string) interface{} {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
-			panic(err)
+			return nil
 		}
 	}
 	value, err := rc.conn.Get(key)
