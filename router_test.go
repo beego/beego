@@ -65,6 +65,11 @@ func (tc *TestController) GetManyRouter() {
 	tc.Ctx.WriteString(tc.Ctx.Input.Query(":id") + tc.Ctx.Input.Query(":page"))
 }
 
+func (tc *TestController) GetEmptyBody() {
+	var res []byte
+	tc.Ctx.Output.Body(res)
+}
+
 type ResStatus struct {
 	Code int
 	Msg  string
@@ -236,6 +241,21 @@ func TestManyRoute(t *testing.T) {
 
 	if body != "3212" {
 		t.Errorf("url param set to [%s];", body)
+	}
+}
+
+// Test for issue #1669
+func TestEmptyResponse(t *testing.T) {
+
+	r, _ := http.NewRequest("GET", "/beego-empty.html", nil)
+	w := httptest.NewRecorder()
+
+	handler := NewControllerRegister()
+	handler.Add("/beego-empty.html", &TestController{}, "get:GetEmptyBody")
+	handler.ServeHTTP(w, r)
+
+	if body := w.Body.String(); body != "" {
+		t.Error("want empty body")
 	}
 }
 

@@ -185,8 +185,7 @@ func (c *Controller) Render() error {
 		return err
 	}
 	c.Ctx.Output.Header("Content-Type", "text/html; charset=utf-8")
-	c.Ctx.Output.Body(rb)
-	return nil
+	return c.Ctx.Output.Body(rb)
 }
 
 // RenderString returns the rendered template string. Do not send out response.
