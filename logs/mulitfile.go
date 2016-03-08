@@ -112,5 +112,5 @@ func newFilesWriter() Logger {
 }
 
 func init() {
-	Register("files", newFilesWriter)
+	Register("mulitfile", newFilesWriter)
 }
