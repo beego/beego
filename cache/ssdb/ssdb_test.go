@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func TestMemcacheCache(t *testing.T) {
+func TestSsdbcacheCache(t *testing.T) {
 	ssdb, err := cache.NewCache("ssdb", `{"conn": "127.0.0.1:8888"}`)
 	if err != nil {
 		t.Error("init err")
