@@ -53,9 +53,11 @@ type fileLogWriter struct {
 	Level int `json:"level"`
 
 	Perm os.FileMode `json:"perm"`
+
+	fileNameOnly, suffix string // like "project.log", project is fileNameOnly and .log is suffix
 }
 
-// NewFileWriter create a FileLogWriter returning as LoggerInterface.
+// newFileWriter create a FileLogWriter returning as LoggerInterface.
 func newFileWriter() Logger {
 	w := &fileLogWriter{
 		Filename: "",
@@ -89,6 +91,11 @@ func (w *fileLogWriter) Init(jsonConfig string) error {
 	if len(w.Filename) == 0 {
 		return errors.New("jsonconfig must have filename")
 	}
+	w.suffix = filepath.Ext(w.Filename)
+	w.fileNameOnly = strings.TrimSuffix(w.Filename, w.suffix)
+	if w.suffix == "" {
+		w.suffix = ".log"
+	}
 	err = w.startLogger()
 	return err
 }
@@ -118,10 +125,9 @@ func (w *fileLogWriter) WriteMsg(when time.Time, msg string, level int) error {
 	if level > w.Level {
 		return nil
 	}
-	msg = formatLogTime(when) + msg + "\n"
-
+	h, d := formatTimeHeader(when)
+	msg = string(h) + msg + "\n"
 	if w.Rotate {
-		d := when.Day()
 		if w.needRotate(len(msg), d) {
 			w.Lock()
 			if w.needRotate(len(msg), d) {
@@ -196,7 +202,7 @@ func (w *fileLogWriter) lines() (int, error) {
 }
 
 // DoRotate means it need to write file in new file.
-// new file name like xx.2013-01-01.2.log
+// new file name like xx.2013-01-01.log (daily) or xx.001.log (by line or size)
 func (w *fileLogWriter) doRotate(logTime time.Time) error {
 	_, err := os.Lstat(w.Filename)
 	if err != nil {
@@ -206,13 +212,13 @@ func (w *fileLogWriter) doRotate(logTime time.Time) error {
 	// Find the next available number
 	num := 1
 	fName := ""
-	suffix := filepath.Ext(w.Filename)
-	filenameOnly := strings.TrimSuffix(w.Filename, suffix)
-	if suffix == "" {
-		suffix = ".log"
-	}
-	for ; err == nil && num <= 999; num++ {
-		fName = filenameOnly + fmt.Sprintf(".%s.%03d%s", logTime.Format("2006-01-02"), num, suffix)
+	if w.MaxLines > 0 || w.MaxSize > 0 {
+		for ; err == nil && num <= 999; num++ {
+			fName = w.fileNameOnly + fmt.Sprintf(".%s.%03d%s", logTime.Format("2006-01-02"), num, w.suffix)
+			_, err = os.Lstat(fName)
+		}
+	} else {
+		fName = fmt.Sprintf("%s.%s%s", w.fileNameOnly, logTime.Format("2006-01-02"), w.suffix)
 		_, err = os.Lstat(fName)
 	}
 	// return error if the last file checked still existed
@@ -250,7 +256,8 @@ func (w *fileLogWriter) deleteOldLog() {
 		}()
 
 		if !info.IsDir() && info.ModTime().Unix() < (time.Now().Unix()-60*60*24*w.MaxDays) {
-			if strings.HasPrefix(filepath.Base(path), filepath.Base(w.Filename)) {
+			if strings.HasPrefix(filepath.Base(path), w.fileNameOnly) &&
+				strings.HasSuffix(filepath.Base(path), w.suffix) {
 				os.Remove(path)
 			}
 		}
