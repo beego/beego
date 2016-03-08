@@ -5,9 +5,9 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/ssdb/gossdb/ssdb"
-	"time"
 
 	"github.com/astaxie/beego/cache"
 )
