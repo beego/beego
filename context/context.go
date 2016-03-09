@@ -175,16 +175,14 @@ func (ctx *Context) CheckXSRFCookie() bool {
 //started set to true if response was written to then don't execute other handler
 type Response struct {
 	http.ResponseWriter
-	Started     bool
-	Status      int
-	wroteHeader bool
+	Started bool
+	Status  int
 }
 
 func (r *Response) reset(rw http.ResponseWriter) {
 	r.ResponseWriter = rw
 	r.Status = 0
 	r.Started = false
-	r.wroteHeader = false
 }
 
 // Write writes the data to the connection as part of an HTTP reply,
@@ -192,11 +190,6 @@ func (r *Response) reset(rw http.ResponseWriter) {
 // started means the response has sent out.
 func (w *Response) Write(p []byte) (int, error) {
 	w.Started = true
-	if !w.wroteHeader {
-		w.ResponseWriter.WriteHeader(w.Status)
-		//prevent multiple response.WriteHeader calls
-		w.wroteHeader = true
-	}
 	return w.ResponseWriter.Write(p)
 }
 
@@ -204,10 +197,12 @@ func (w *Response) Write(p []byte) (int, error) {
 // and sets `started` to true.
 func (w *Response) WriteHeader(code int) {
 	if w.Status > 0 {
+		//prevent multiple response.WriteHeader calls
 		return
 	}
 	w.Status = code
 	w.Started = true
+	w.ResponseWriter.WriteHeader(w.Status)
 }
 
 // Hijack hijacker for http
