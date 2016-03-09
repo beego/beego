@@ -34,14 +34,14 @@ import (
 //commonly used mime-types
 const (
 	applicationJSON = "application/json"
-	applicationXML = "application/xml"
-	textXML = "text/xml"
+	applicationXML  = "application/xml"
+	textXML         = "text/xml"
 )
 
 var (
-// ErrAbort custom error when user stop request handler manually.
+	// ErrAbort custom error when user stop request handler manually.
 	ErrAbort = errors.New("User stop run")
-// GlobalControllerRouter store comments with controller. pkgpath+controller:comments
+	// GlobalControllerRouter store comments with controller. pkgpath+controller:comments
 	GlobalControllerRouter = make(map[string][]ControllerComments)
 )
 
@@ -56,31 +56,31 @@ type ControllerComments struct {
 // Controller defines some basic http request handler operations, such as
 // http context, template and view, session and xsrf.
 type Controller struct {
-					 // context data
-	Ctx            *context.Context
-	Data           map[interface{}]interface{}
+	// context data
+	Ctx  *context.Context
+	Data map[interface{}]interface{}
 
-					 // route controller info
+	// route controller info
 	controllerName string
 	actionName     string
 	methodMapping  map[string]func() //method:routertree
 	gotofunc       string
 	AppController  interface{}
 
-					 // template data
+	// template data
 	TplName        string
 	Layout         string
 	LayoutSections map[string]string // the key is the section name and the value is the template name
 	TplExt         string
 	EnableRender   bool
 
-					 // xsrf data
-	_xsrfToken     string
-	XSRFExpire     int
-	EnableXSRF     bool
+	// xsrf data
+	_xsrfToken string
+	XSRFExpire int
+	EnableXSRF bool
 
-					 // session
-	CruSession     session.Store
+	// session
+	CruSession session.Store
 }
 
 // ControllerInterface is an interface to uniform all controller handler.
@@ -284,7 +284,7 @@ func (c *Controller) URLFor(endpoint string, values ...interface{}) string {
 		return ""
 	}
 	if endpoint[0] == '.' {
-		return URLFor(reflect.Indirect(reflect.ValueOf(c.AppController)).Type().Name() + endpoint, values...)
+		return URLFor(reflect.Indirect(reflect.ValueOf(c.AppController)).Type().Name()+endpoint, values...)
 	}
 	return URLFor(endpoint, values...)
 }
@@ -292,7 +292,7 @@ func (c *Controller) URLFor(endpoint string, values ...interface{}) string {
 // ServeJSON sends a json response with encoding charset.
 func (c *Controller) ServeJSON(encoding ...bool) {
 	var (
-		hasIndent = true
+		hasIndent   = true
 		hasEncoding = false
 	)
 	if BConfig.RunMode == PROD {
@@ -490,7 +490,7 @@ func (c *Controller) SaveToFile(fromfile, tofile string) error {
 		return err
 	}
 	defer file.Close()
-	f, err := os.OpenFile(tofile, os.O_WRONLY | os.O_CREATE | os.O_TRUNC, 0666)
+	f, err := os.OpenFile(tofile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		return err
 	}
@@ -588,7 +588,7 @@ func (c *Controller) CheckXSRFCookie() bool {
 // XSRFFormHTML writes an input field contains xsrf token value.
 func (c *Controller) XSRFFormHTML() string {
 	return `<input type="hidden" name="_xsrf" value="` +
-	c.XSRFToken() + `" />`
+		c.XSRFToken() + `" />`
 }
 
 // GetControllerAndAction gets the executing controller name and action name.
