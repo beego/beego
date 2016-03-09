@@ -24,11 +24,13 @@ package context
 
 import (
 	"bufio"
+	"bytes"
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"strconv"
@@ -191,6 +193,14 @@ func (r *Response) reset(rw http.ResponseWriter) {
 func (w *Response) Write(p []byte) (int, error) {
 	w.Started = true
 	return w.ResponseWriter.Write(p)
+}
+
+// Write writes the data to the connection as part of an HTTP reply,
+// and sets `started` to true.
+// started means the response has sent out.
+func (w *Response) Copy(buf *bytes.Buffer) (int64, error) {
+	w.Started = true
+	return io.Copy(w.ResponseWriter, buf)
 }
 
 // WriteHeader sends an HTTP response header with status code,

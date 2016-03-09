@@ -71,6 +71,7 @@ peers = one;two;three
 			"null":                  "",
 			"demo2::key1":           "",
 			"error":                 "",
+			"emptystrings":          []string{},
 		}
 	)
 
