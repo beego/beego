@@ -212,7 +212,7 @@ func (w *Response) WriteHeader(code int) {
 	}
 	w.Status = code
 	w.Started = true
-	w.ResponseWriter.WriteHeader(w.Status)
+	w.ResponseWriter.WriteHeader(code)
 }
 
 // Hijack hijacker for http

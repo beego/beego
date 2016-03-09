@@ -24,7 +24,7 @@ import (
 // means if the file name in configuration is project.log filesLogWriter will create project.error.log/project.debug.log
 // and write the error-level logs to project.error.log and write the debug-level logs to project.debug.log
 // the rotate attribute also  acts like fileLogWriter
-type mulitFileLogWriter struct {
+type multiFileLogWriter struct {
 	writers       [LevelDebug + 1 + 1]*fileLogWriter // the last one for fullLogWriter
 	fullLogWriter *fileLogWriter
 	Separate      []string `json:"separate"`
@@ -45,7 +45,7 @@ var levelNames = [...]string{"emergency", "alert", "critical", "error", "warning
 //	"separate":["emergency", "alert", "critical", "error", "warning", "notice", "info", "debug"],
 //	}
 
-func (f *mulitFileLogWriter) Init(config string) error {
+func (f *multiFileLogWriter) Init(config string) error {
 	writer := newFileWriter().(*fileLogWriter)
 	err := writer.Init(config)
 	if err != nil {
@@ -76,7 +76,7 @@ func (f *mulitFileLogWriter) Init(config string) error {
 	return nil
 }
 
-func (f *mulitFileLogWriter) Destroy() {
+func (f *multiFileLogWriter) Destroy() {
 	for i := 0; i < len(f.writers); i++ {
 		if f.writers[i] != nil {
 			f.writers[i].Destroy()
@@ -84,7 +84,7 @@ func (f *mulitFileLogWriter) Destroy() {
 	}
 }
 
-func (f *mulitFileLogWriter) WriteMsg(when time.Time, msg string, level int) error {
+func (f *multiFileLogWriter) WriteMsg(when time.Time, msg string, level int) error {
 	if f.fullLogWriter != nil {
 		f.fullLogWriter.WriteMsg(when, msg, level)
 	}
@@ -98,7 +98,7 @@ func (f *mulitFileLogWriter) WriteMsg(when time.Time, msg string, level int) err
 	return nil
 }
 
-func (f *mulitFileLogWriter) Flush() {
+func (f *multiFileLogWriter) Flush() {
 	for i := 0; i < len(f.writers); i++ {
 		if f.writers[i] != nil {
 			f.writers[i].Flush()
@@ -108,9 +108,9 @@ func (f *mulitFileLogWriter) Flush() {
 
 // newFilesWriter create a FileLogWriter returning as LoggerInterface.
 func newFilesWriter() Logger {
-	return &mulitFileLogWriter{}
+	return &multiFileLogWriter{}
 }
 
 func init() {
-	Register("mulitfile", newFilesWriter)
+	Register("multifile", newFilesWriter)
 }

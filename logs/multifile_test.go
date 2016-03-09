@@ -24,7 +24,7 @@ import (
 
 func TestFiles_1(t *testing.T) {
 	log := NewLogger(10000)
-	log.SetLogger("mulitfile", `{"filename":"test.log","separate":["emergency", "alert", "critical", "error", "warning", "notice", "info", "debug"]}`)
+	log.SetLogger("multifile", `{"filename":"test.log","separate":["emergency", "alert", "critical", "error", "warning", "notice", "info", "debug"]}`)
 	log.Debug("debug")
 	log.Informational("info")
 	log.Notice("notice")
