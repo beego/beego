@@ -229,12 +229,15 @@ func (c *Controller) renderTemplate() (bytes.Buffer, error) {
 	}
 	if BConfig.RunMode == DEV {
 		buildFiles := []string{c.TplName}
-		if c.Layout != "" && c.LayoutSections != nil {
-			for _, sectionTpl := range c.LayoutSections {
-				if sectionTpl == "" {
-					continue
+		if c.Layout != "" {
+			buildFiles = append(buildFiles, c.Layout)
+			if c.LayoutSections != nil {
+				for _, sectionTpl := range c.LayoutSections {
+					if sectionTpl == "" {
+						continue
+					}
+					buildFiles = append(buildFiles, sectionTpl)
 				}
-				buildFiles = append(buildFiles, sectionTpl)
 			}
 		}
 		BuildTemplate(BConfig.WebConfig.ViewsPath, buildFiles...)
