@@ -7,8 +7,8 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
-	"testing"
 	"path/filepath"
+	"testing"
 )
 
 var currentWorkDir, _ = os.Getwd()
