@@ -301,13 +301,12 @@ func (b *BeegoHTTPRequest) Body(data interface{}) *BeegoHTTPRequest {
 // JSONBody adds request raw body encoding by JSON.
 func (b *BeegoHTTPRequest) JSONBody(obj interface{}) (*BeegoHTTPRequest, error) {
 	if b.req.Body == nil && obj != nil {
-		buf := bytes.NewBuffer(nil)
-		enc := json.NewEncoder(buf)
-		if err := enc.Encode(obj); err != nil {
+		byts, err := json.Marshal(obj)
+		if err != nil {
 			return b, err
 		}
-		b.req.Body = ioutil.NopCloser(buf)
-		b.req.ContentLength = int64(buf.Len())
+		b.req.Body = ioutil.NopCloser(bytes.NewReader(byts))
+		b.req.ContentLength = int64(len(byts))
 		b.req.Header.Set("Content-Type", "application/json")
 	}
 	return b, nil
