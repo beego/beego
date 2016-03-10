@@ -342,7 +342,7 @@ func (o *rawSet) QueryRow(containers ...interface{}) error {
 				for _, col := range columns {
 					if fi := sMi.fields.GetByColumn(col); fi != nil {
 						value := reflect.ValueOf(columnsMp[col]).Elem().Interface()
-						o.setFieldValue(ind.FieldByIndex([]int{fi.fieldIndex}), value)
+						o.setFieldValue(ind.FieldByIndex(fi.fieldIndex), value)
 					}
 				}
 			} else {
@@ -480,7 +480,7 @@ func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
 				for _, col := range columns {
 					if fi := sMi.fields.GetByColumn(col); fi != nil {
 						value := reflect.ValueOf(columnsMp[col]).Elem().Interface()
-						o.setFieldValue(ind.FieldByIndex([]int{fi.fieldIndex}), value)
+						o.setFieldValue(ind.FieldByIndex(fi.fieldIndex), value)
 					}
 				}
 			} else {

@@ -36,11 +36,6 @@ type modelInfo struct {
 
 // new model info
 func newModelInfo(val reflect.Value) (info *modelInfo) {
-	var (
-		err error
-		fi  *fieldInfo
-		sf  reflect.StructField
-	)
 
 	info = &modelInfo{}
 	info.fields = newFields()
@@ -53,13 +48,31 @@ func newModelInfo(val reflect.Value) (info *modelInfo) {
 	info.name = typ.Name()
 	info.fullName = getFullName(typ)
 
+	addModelFields(info, ind, "", []int{})
+
+	return
+}
+
+func addModelFields(info *modelInfo, ind reflect.Value, mName string, index []int) {
+	var (
+		err error
+		fi  *fieldInfo
+		sf  reflect.StructField
+	)
+
 	for i := 0; i < ind.NumField(); i++ {
 		field := ind.Field(i)
 		sf = ind.Type().Field(i)
 		if sf.PkgPath != "" {
 			continue
 		}
-		fi, err = newFieldInfo(info, field, sf)
+		// add anonymous struct fields
+		if sf.Anonymous {
+			addModelFields(info, field, mName+"."+sf.Name, append(index, i))
+			continue
+		}
+
+		fi, err = newFieldInfo(info, field, sf, mName)
 
 		if err != nil {
 			if err == errSkipField {
@@ -84,7 +97,7 @@ func newModelInfo(val reflect.Value) (info *modelInfo) {
 			}
 		}
 
-		fi.fieldIndex = i
+		fi.fieldIndex = append(index, i)
 		fi.mi = info
 		fi.inModel = true
 	}
@@ -93,8 +106,6 @@ func newModelInfo(val reflect.Value) (info *modelInfo) {
 		fmt.Println(fmt.Errorf("field: %s.%s, %s", ind.Type(), sf.Name, err))
 		os.Exit(2)
 	}
-
-	return
 }
 
 // combine related model info to new model info.
