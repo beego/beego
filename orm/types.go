@@ -148,6 +148,10 @@ type QuerySeter interface {
 	// add OFFSET value
 	// same as Limit function's args[0]
 	Offset(offset interface{}) QuerySeter
+	// add GROUP BY expression
+	// for example:
+	//	qs.GroupBy("id")
+	GroupBy(exprs ...string) QuerySeter
 	// add ORDER expression.
 	// "column" means ASC, "-column" means DESC.
 	// for example:

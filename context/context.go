@@ -24,11 +24,13 @@ package context
 
 import (
 	"bufio"
+	"bytes"
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"net/http"
 	"strconv"
@@ -59,7 +61,10 @@ type Context struct {
 // Reset init Context, BeegoInput and BeegoOutput
 func (ctx *Context) Reset(rw http.ResponseWriter, r *http.Request) {
 	ctx.Request = r
-	ctx.ResponseWriter = &Response{rw, false, 0}
+	if ctx.ResponseWriter == nil {
+		ctx.ResponseWriter = &Response{}
+	}
+	ctx.ResponseWriter.reset(rw)
 	ctx.Input.Reset(ctx)
 	ctx.Output.Reset(ctx)
 }
@@ -176,6 +181,12 @@ type Response struct {
 	Status  int
 }
 
+func (r *Response) reset(rw http.ResponseWriter) {
+	r.ResponseWriter = rw
+	r.Status = 0
+	r.Started = false
+}
+
 // Write writes the data to the connection as part of an HTTP reply,
 // and sets `started` to true.
 // started means the response has sent out.
@@ -184,9 +195,21 @@ func (w *Response) Write(p []byte) (int, error) {
 	return w.ResponseWriter.Write(p)
 }
 
+// Write writes the data to the connection as part of an HTTP reply,
+// and sets `started` to true.
+// started means the response has sent out.
+func (w *Response) Copy(buf *bytes.Buffer) (int64, error) {
+	w.Started = true
+	return io.Copy(w.ResponseWriter, buf)
+}
+
 // WriteHeader sends an HTTP response header with status code,
 // and sets `started` to true.
 func (w *Response) WriteHeader(code int) {
+	if w.Status > 0 {
+		//prevent multiple response.WriteHeader calls
+		return
+	}
 	w.Status = code
 	w.Started = true
 	w.ResponseWriter.WriteHeader(code)

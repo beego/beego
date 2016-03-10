@@ -99,7 +99,6 @@ func TestXML(t *testing.T) {
 	if xmlconf.String("name") != "astaxie" {
 		t.Fatal("get name error")
 	}
-
 	if xmlconf.String("path") != os.Getenv("GOROOT") {
 		t.Fatal("get path error")
 	}
@@ -110,5 +109,8 @@ func TestXML(t *testing.T) {
 		t.Fatal("get pwd error")
 	} else if strings.Contains(dbinfo["detail"], os.Getenv("GOROOT")) == false {
 		t.Fatal("get goroot path error")
+	}
+	if xmlconf.Strings("emptystrings") != nil {
+		t.Fatal("get emtpy strings error")
 	}
 }

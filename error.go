@@ -424,6 +424,7 @@ func exception(errCode string, ctx *context.Context) {
 
 func executeError(err *errorInfo, ctx *context.Context, code int) {
 	if err.errorType == errorTypeHandler {
+		ctx.ResponseWriter.WriteHeader(code)
 		err.handler(ctx.ResponseWriter, ctx.Request)
 		return
 	}

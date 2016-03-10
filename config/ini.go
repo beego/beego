@@ -269,15 +269,20 @@ func (c *IniConfigContainer) DefaultString(key string, defaultval string) string
 }
 
 // Strings returns the []string value for a given key.
+// Return nil if config value does not exist or is empty.
 func (c *IniConfigContainer) Strings(key string) []string {
-	return strings.Split(c.String(key), ";")
+	v := c.String(key)
+	if v == "" {
+		return nil
+	}
+	return strings.Split(v, ";")
 }
 
 // DefaultStrings returns the []string value for a given key.
 // if err != nil return defaltval
 func (c *IniConfigContainer) DefaultStrings(key string, defaultval []string) []string {
 	v := c.Strings(key)
-	if len(v) == 0 {
+	if v == nil {
 		return defaultval
 	}
 	return v

@@ -54,12 +54,16 @@ func (c *fakeConfigContainer) DefaultString(key string, defaultval string) strin
 }
 
 func (c *fakeConfigContainer) Strings(key string) []string {
-	return strings.Split(c.String(key), ";")
+	v := c.String(key)
+	if v == "" {
+		return nil
+	}
+	return strings.Split(v, ";")
 }
 
 func (c *fakeConfigContainer) DefaultStrings(key string, defaultval []string) []string {
 	v := c.Strings(key)
-	if len(v) == 0 {
+	if v == nil {
 		return defaultval
 	}
 	return v

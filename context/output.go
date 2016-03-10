@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
-	"io"
 	"mime"
 	"net/http"
 	"path/filepath"
@@ -57,7 +56,7 @@ func (output *BeegoOutput) Header(key, val string) {
 // Body sets response body content.
 // if EnableGzip, compress content string.
 // it sends out response body directly.
-func (output *BeegoOutput) Body(content []byte) {
+func (output *BeegoOutput) Body(content []byte) error {
 	var encoding string
 	var buf = &bytes.Buffer{}
 	if output.EnableGzip {
@@ -75,7 +74,8 @@ func (output *BeegoOutput) Body(content []byte) {
 		output.Status = 0
 	}
 
-	io.Copy(output.Context.ResponseWriter, buf)
+	_, err := output.Context.ResponseWriter.Copy(buf)
+	return err
 }
 
 // Cookie sets cookie value via given key.
@@ -97,9 +97,10 @@ func (output *BeegoOutput) Cookie(name string, value string, others ...interface
 			maxAge = v
 		}
 
-		if maxAge > 0 {
+		switch {
+		case maxAge > 0:
 			fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(maxAge)*time.Second).UTC().Format(time.RFC1123), maxAge)
-		} else {
+		case maxAge < 0:
 			fmt.Fprintf(&b, "; Max-Age=0")
 		}
 	}
@@ -186,8 +187,7 @@ func (output *BeegoOutput) JSON(data interface{}, hasIndent bool, coding bool) e
 	if coding {
 		content = []byte(stringsToJSON(string(content)))
 	}
-	output.Body(content)
-	return nil
+	return output.Body(content)
 }
 
 // JSONP writes jsonp to response body.
@@ -212,8 +212,7 @@ func (output *BeegoOutput) JSONP(data interface{}, hasIndent bool) error {
 	callbackContent.WriteString("(")
 	callbackContent.Write(content)
 	callbackContent.WriteString(");\r\n")
-	output.Body(callbackContent.Bytes())
-	return nil
+	return output.Body(callbackContent.Bytes())
 }
 
 // XML writes xml string to response body.
@@ -230,8 +229,7 @@ func (output *BeegoOutput) XML(data interface{}, hasIndent bool) error {
 		http.Error(output.Context.ResponseWriter, err.Error(), http.StatusInternalServerError)
 		return err
 	}
-	output.Body(content)
-	return nil
+	return output.Body(content)
 }
 
 // Download forces response for download file.

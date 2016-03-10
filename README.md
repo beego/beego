@@ -53,6 +53,7 @@ Please see [Documentation](http://beego.me/docs) for more.
 ## Community
 
 * [http://beego.me/community](http://beego.me/community)
+* Welcome to join us in Slack: [https://beego.slack.com](https://beego.slack.com), you can get invited from [here](https://github.com/beego/beedoc/issues/232)
 
 ## LICENSE
 

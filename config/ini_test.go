@@ -75,6 +75,7 @@ password = $ENV_GOROOT
 			"null":                  "",
 			"demo2::key1":           "",
 			"error":                 "",
+			"emptystrings":          []string{},
 		}
 	)
 

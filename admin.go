@@ -90,8 +90,8 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 	switch command {
 	case "conf":
 		m := make(map[string]interface{})
-		m["AppConfigPath"] = AppConfigPath
-		m["AppConfigProvider"] = AppConfigProvider
+		m["AppConfigPath"] = appConfigPath
+		m["AppConfigProvider"] = appConfigProvider
 		m["BConfig.AppName"] = BConfig.AppName
 		m["BConfig.RunMode"] = BConfig.RunMode
 		m["BConfig.RouterCaseSensitive"] = BConfig.RouterCaseSensitive

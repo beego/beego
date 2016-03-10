@@ -105,4 +105,8 @@ func TestYaml(t *testing.T) {
 	} else if strings.Contains(dbinfo["detail"], os.Getenv("GOROOT")) == false {
 		t.Fatal("get GOROOT path error")
 	}
+
+	if yamlconf.Strings("emptystrings") != nil {
+		t.Fatal("get emtpy strings error")
+	}
 }

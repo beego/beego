@@ -185,8 +185,7 @@ func (c *Controller) Render() error {
 		return err
 	}
 	c.Ctx.Output.Header("Content-Type", "text/html; charset=utf-8")
-	c.Ctx.Output.Body(rb)
-	return nil
+	return c.Ctx.Output.Body(rb)
 }
 
 // RenderString returns the rendered template string. Do not send out response.
@@ -197,33 +196,9 @@ func (c *Controller) RenderString() (string, error) {
 
 // RenderBytes returns the bytes of rendered template string. Do not send out response.
 func (c *Controller) RenderBytes() ([]byte, error) {
-	//if the controller has set layout, then first get the tplname's content set the content to the layout
-	var buf bytes.Buffer
-	if c.Layout != "" {
-		if c.TplName == "" {
-			c.TplName = strings.ToLower(c.controllerName) + "/" + strings.ToLower(c.actionName) + "." + c.TplExt
-		}
-
-		if BConfig.RunMode == DEV {
-			buildFiles := []string{c.TplName}
-			if c.LayoutSections != nil {
-				for _, sectionTpl := range c.LayoutSections {
-					if sectionTpl == "" {
-						continue
-					}
-					buildFiles = append(buildFiles, sectionTpl)
-				}
-			}
-			BuildTemplate(BConfig.WebConfig.ViewsPath, buildFiles...)
-		}
-		if _, ok := BeeTemplates[c.TplName]; !ok {
-			panic("can't find templatefile in the path:" + c.TplName)
-		}
-		err := BeeTemplates[c.TplName].ExecuteTemplate(&buf, c.TplName, c.Data)
-		if err != nil {
-			Trace("template Execute err:", err)
-			return nil, err
-		}
+	buf, err := c.renderTemplate()
+	//if the controller has set layout, then first get the tplName's content set the content to the layout
+	if err == nil && c.Layout != "" {
 		c.Data["LayoutContent"] = template.HTML(buf.String())
 
 		if c.LayoutSections != nil {
@@ -232,11 +207,9 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 					c.Data[sectionName] = ""
 					continue
 				}
-
 				buf.Reset()
-				err = BeeTemplates[sectionTpl].ExecuteTemplate(&buf, sectionTpl, c.Data)
+				err = executeTemplate(&buf, sectionTpl, c.Data)
 				if err != nil {
-					Trace("template Execute err:", err)
 					return nil, err
 				}
 				c.Data[sectionName] = template.HTML(buf.String())
@@ -244,30 +217,32 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		}
 
 		buf.Reset()
-		err = BeeTemplates[c.Layout].ExecuteTemplate(&buf, c.Layout, c.Data)
-		if err != nil {
-			Trace("template Execute err:", err)
-			return nil, err
-		}
-		return buf.Bytes(), nil
+		executeTemplate(&buf, c.Layout, c.Data)
 	}
+	return buf.Bytes(), err
+}
 
+func (c *Controller) renderTemplate() (bytes.Buffer, error) {
+	var buf bytes.Buffer
 	if c.TplName == "" {
 		c.TplName = strings.ToLower(c.controllerName) + "/" + strings.ToLower(c.actionName) + "." + c.TplExt
 	}
 	if BConfig.RunMode == DEV {
-		BuildTemplate(BConfig.WebConfig.ViewsPath, c.TplName)
+		buildFiles := []string{c.TplName}
+		if c.Layout != "" {
+			buildFiles = append(buildFiles, c.Layout)
+			if c.LayoutSections != nil {
+				for _, sectionTpl := range c.LayoutSections {
+					if sectionTpl == "" {
+						continue
+					}
+					buildFiles = append(buildFiles, sectionTpl)
+				}
+			}
+		}
+		BuildTemplate(BConfig.WebConfig.ViewsPath, buildFiles...)
 	}
-	if _, ok := BeeTemplates[c.TplName]; !ok {
-		panic("can't find templatefile in the path:" + c.TplName)
-	}
-	buf.Reset()
-	err := BeeTemplates[c.TplName].ExecuteTemplate(&buf, c.TplName, c.Data)
-	if err != nil {
-		Trace("template Execute err:", err)
-		return nil, err
-	}
-	return buf.Bytes(), nil
+	return buf, executeTemplate(&buf, c.TplName, c.Data)
 }
 
 // Redirect sends the redirection response to url with status code.
@@ -286,7 +261,7 @@ func (c *Controller) Abort(code string) {
 
 // CustomAbort stops controller handler and show the error data, it's similar Aborts, but support status code and body.
 func (c *Controller) CustomAbort(status int, body string) {
-	c.Ctx.ResponseWriter.WriteHeader(status)
+	c.Ctx.Output.Status = status
 	// first panic from ErrorMaps, is is user defined error functions.
 	if _, ok := ErrorMaps[body]; ok {
 		panic(body)

@@ -187,6 +187,7 @@ func TestSyncDb(t *testing.T) {
 	RegisterModel(new(Group))
 	RegisterModel(new(Permission))
 	RegisterModel(new(GroupPermissions))
+	RegisterModel(new(InLine))
 
 	err := RunSyncdb("default", true, Debug)
 	throwFail(t, err)
@@ -206,6 +207,7 @@ func TestRegisterModels(t *testing.T) {
 	RegisterModel(new(Group))
 	RegisterModel(new(Permission))
 	RegisterModel(new(GroupPermissions))
+	RegisterModel(new(InLine))
 
 	BootStrap()
 
@@ -1927,4 +1929,26 @@ func TestReadOrCreate(t *testing.T) {
 	throwFail(t, AssertIs(nu.IsActive, u.IsActive))
 
 	dORM.Delete(u)
+}
+
+func TestInLine(t *testing.T) {
+	name := "inline"
+	email := "hello@go.com"
+	inline := NewInLine()
+	inline.Name = name
+	inline.Email = email
+
+	id, err := dORM.Insert(inline)
+	throwFail(t, err)
+	throwFail(t, AssertIs(id, 1))
+
+	il := NewInLine()
+	il.Id = 1
+	err = dORM.Read(il)
+	throwFail(t, err)
+
+	throwFail(t, AssertIs(il.Name, name))
+	throwFail(t, AssertIs(il.Email, email))
+	throwFail(t, AssertIs(il.Created.In(DefaultTimeLoc), inline.Created.In(DefaultTimeLoc), testDate))
+	throwFail(t, AssertIs(il.Updated.In(DefaultTimeLoc), inline.Updated.In(DefaultTimeLoc), testDateTime))
 }
