@@ -1943,7 +1943,7 @@ func TestInLine(t *testing.T) {
 	throwFail(t, AssertIs(id, 1))
 
 	il := NewInLine()
-	il.Id = 1
+	il.ID = 1
 	err = dORM.Read(il)
 	throwFail(t, err)
 
