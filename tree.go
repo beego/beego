@@ -390,7 +390,7 @@ type leafInfo struct {
 func (leaf *leafInfo) match(wildcardValues []string, ctx *context.Context) (ok bool) {
 	//fmt.Println("Leaf:", wildcardValues, leaf.wildcards, leaf.regexps)
 	if leaf.regexps == nil {
-		if len(wildcardValues) == 0 { // static path
+		if len(wildcardValues) == 0 && len(leaf.wildcards) == 0 { // static path
 			return true
 		}
 		// match *
