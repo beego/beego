@@ -352,7 +352,7 @@ type GroupPermissions struct {
 }
 
 type ModelID struct {
-	Id int64
+	ID int64
 }
 
 type ModelBase struct {
