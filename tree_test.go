@@ -97,6 +97,21 @@ func TestTreeRouters(t *testing.T) {
 	}
 }
 
+func TestStaticPath(t *testing.T) {
+	tr := NewTree()
+	tr.AddRouter("/topic/:id", "wildcard")
+	tr.AddRouter("/topic", "static")
+	ctx := context.NewContext()
+	obj := tr.Match("/topic", ctx)
+	if obj == nil || obj.(string) != "static" {
+		t.Fatal("/topic is  a static route")
+	}
+	obj = tr.Match("/topic/1", ctx)
+	if obj == nil || obj.(string) != "wildcard" {
+		t.Fatal("/topic/1 is a wildcard route")
+	}
+}
+
 func TestAddTree(t *testing.T) {
 	tr := NewTree()
 	tr.AddRouter("/shop/:id/account", "astaxie")
