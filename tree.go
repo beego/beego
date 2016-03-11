@@ -141,7 +141,7 @@ func (t *Tree) addtree(segments []string, tree *Tree, wildcards []string, reg st
 				regexpStr = "([^.]+).(.+)"
 				params = params[1:]
 			} else {
-				for _ = range params {
+				for range params {
 					regexpStr = "([^/]+)/" + regexpStr
 				}
 			}
@@ -254,7 +254,7 @@ func (t *Tree) addseg(segments []string, route interface{}, wildcards []string, 
 					regexpStr = "/([^.]+).(.+)"
 					params = params[1:]
 				} else {
-					for _ = range params {
+					for range params {
 						regexpStr = "/([^/]+)" + regexpStr
 					}
 				}

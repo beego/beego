@@ -152,7 +152,7 @@ func (bl *BeeLogger) SetLogger(adapterName string, config string) error {
 			return fmt.Errorf("logs: duplicate adaptername %q (you have set this logger before)", adapterName)
 		}
 	}
-	
+
 	log, ok := adapters[adapterName]
 	if !ok {
 		return fmt.Errorf("logs: unknown adaptername %q (forgotten Register?)", adapterName)
