@@ -146,17 +146,25 @@ func (bl *BeeLogger) Async() *BeeLogger {
 func (bl *BeeLogger) SetLogger(adapterName string, config string) error {
 	bl.lock.Lock()
 	defer bl.lock.Unlock()
-	if log, ok := adapters[adapterName]; ok {
-		lg := log()
-		err := lg.Init(config)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "logs.BeeLogger.SetLogger: "+err.Error())
-			return err
+
+	for _, l := range bl.outputs {
+		if l.name == adapterName {
+			return fmt.Errorf("logs: duplicate adaptername %q (you have set this logger before)", adapterName)
 		}
-		bl.outputs = append(bl.outputs, &nameLogger{name: adapterName, Logger: lg})
-	} else {
+	}
+	
+	log, ok := adapters[adapterName]
+	if !ok {
 		return fmt.Errorf("logs: unknown adaptername %q (forgotten Register?)", adapterName)
 	}
+
+	lg := log()
+	err := lg.Init(config)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "logs.BeeLogger.SetLogger: "+err.Error())
+		return err
+	}
+	bl.outputs = append(bl.outputs, &nameLogger{name: adapterName, Logger: lg})
 	return nil
 }
 
