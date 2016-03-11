@@ -388,3 +388,10 @@ func NSNamespace(prefix string, params ...LinkNamespace) LinkNamespace {
 		ns.Namespace(n)
 	}
 }
+
+// NSHandler add handler
+func NSHandler(rootpath string, h http.Handler) LinkNamespace {
+	return func(ns *Namespace) {
+		ns.Handler(rootpath, h)
+	}
+}
