@@ -802,9 +802,9 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	p.execFilter(context, FinishRouter, urlPath)
 
 Admin:
-	timeDur := time.Since(startTime)
 	//admin module record QPS
 	if BConfig.Listen.EnableAdmin {
+		timeDur := time.Since(startTime)
 		if FilterMonitorFunc(r.Method, r.URL.Path, timeDur) {
 			if runRouter != nil {
 				go toolbox.StatisticsMap.AddStatistics(r.Method, r.URL.Path, runRouter.Name(), timeDur)
@@ -815,6 +815,7 @@ Admin:
 	}
 
 	if BConfig.RunMode == DEV || BConfig.Log.AccessLogs {
+		timeDur := time.Since(startTime)
 		var devInfo string
 		if findRouter {
 			if routerInfo != nil {
