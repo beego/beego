@@ -196,6 +196,22 @@ func (bl *BeeLogger) writeToLoggers(when time.Time, msg string, level int) {
 	}
 }
 
+func (bl *BeeLogger) Write(p []byte) (n int, err error) {
+	if len(p) == 0 {
+		return 0, nil
+	}
+	// writeMsg will always add a '\n' character
+	if p[len(p)-1] == '\n' {
+		p = p[0 : len(p)-1]
+	}
+	// set LevelCritical to ensure all log message will be write out
+	err = bl.writeMsg(LevelCritical, string(p))
+	if err == nil {
+		return len(p), err
+	}
+	return 0, err
+}
+
 func (bl *BeeLogger) writeMsg(logLevel int, msg string) error {
 	when := time.Now()
 	if bl.enableFuncCallDepth {
@@ -205,7 +221,7 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string) error {
 			line = 0
 		}
 		_, filename := path.Split(file)
-		msg = "[" + filename + ":" + strconv.FormatInt(int64(line), 10) + "]" + msg
+		msg = "[" + filename + ":" + strconv.FormatInt(int64(line), 10) + "] " + msg
 	}
 	if bl.asynchronous {
 		lm := logMsgPool.Get().(*logMsg)
