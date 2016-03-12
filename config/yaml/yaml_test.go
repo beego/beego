@@ -15,8 +15,8 @@
 package yaml
 
 import (
+	"fmt"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/astaxie/beego/config"
@@ -33,21 +33,38 @@ func TestYaml(t *testing.T) {
 "runmode": dev
 "autorender": false
 "copyrequestbody": true
-"path": $ENV_GOROOT
 "PATH": GOROOT
-"dbinfo": 
-	"db": beego 
-	"pwd": $ENV_GOROOT 
-	"url": localhost
-	"detail": 
-		"d1": value1
-		"d2": $ENV_GOROOT
-		"d3": ""
-	"group": 
-		"id": 001
-		"name": gp2
+"path1": $$GOROOT
+"path2": $$GOROOT||/home/go
+"path3": $$GOROOT$$GOPATH2||/home/go
+"token1": $$TOKEN
+"token2": $$TOKEN||
+"token3": $$TOKEN||astaxie
+"token4": token$$TOKEN
+"token5": $$TOKEN$$TOKEN||TOKEN
 "empty": "" 
 `
+
+		keyValue = map[string]interface{}{
+			"appname":         "beeapi",
+			"httpport":        8080,
+			"mysqlport":       int64(3600),
+			"PI":              3.1415976,
+			"runmode":         "dev",
+			"autorender":      false,
+			"copyrequestbody": true,
+			"PATH":            "GOROOT",
+			"path1":           os.Getenv("GOROOT"),
+			"path2":           os.Getenv("GOROOT"),
+			"path3":           "/home/go",
+			"token1":          "",
+			"token2":          "",
+			"token3":          "astaxie",
+			"token4":          "token$$TOKEN",
+			"token5":          "TOKEN",
+			"error":           "",
+			"emptystrings":    []string{},
+		}
 	)
 	f, err := os.Create("testyaml.conf")
 	if err != nil {
@@ -68,29 +85,38 @@ func TestYaml(t *testing.T) {
 	if yamlconf.String("appname") != "beeapi" {
 		t.Fatal("appname not equal to beeapi")
 	}
-	if port, err := yamlconf.Int("httpport"); err != nil || port != 8080 {
-		t.Error(port)
-		t.Fatal(err)
+
+	for k, v := range keyValue {
+
+		var (
+			value interface{}
+			err   error
+		)
+
+		switch v.(type) {
+		case int:
+			value, err = yamlconf.Int(k)
+		case int64:
+			value, err = yamlconf.Int64(k)
+		case float64:
+			value, err = yamlconf.Float(k)
+		case bool:
+			value, err = yamlconf.Bool(k)
+		case []string:
+			value = yamlconf.Strings(k)
+		case string:
+			value = yamlconf.String(k)
+		default:
+			value, err = yamlconf.DIY(k)
+		}
+		if err != nil {
+			t.Errorf("get key %q value fatal,%v err %s", k, v, err)
+		} else if fmt.Sprintf("%v", v) != fmt.Sprintf("%v", value) {
+			t.Errorf("get key %q value, want %v got %v .", k, v, value)
+		}
+
 	}
-	if port, err := yamlconf.Int64("mysqlport"); err != nil || port != 3600 {
-		t.Error(port)
-		t.Fatal(err)
-	}
-	if pi, err := yamlconf.Float("PI"); err != nil || pi != 3.1415976 {
-		t.Error(pi)
-		t.Fatal(err)
-	}
-	if yamlconf.String("runmode") != "dev" {
-		t.Fatal("runmode not equal to dev")
-	}
-	if v, err := yamlconf.Bool("autorender"); err != nil || v != false {
-		t.Error(v)
-		t.Fatal(err)
-	}
-	if v, err := yamlconf.Bool("copyrequestbody"); err != nil || v != true {
-		t.Error(v)
-		t.Fatal(err)
-	}
+
 	if err = yamlconf.Set("name", "astaxie"); err != nil {
 		t.Fatal(err)
 	}
@@ -98,15 +124,4 @@ func TestYaml(t *testing.T) {
 		t.Fatal("get name error")
 	}
 
-	if dbinfo, err := yamlconf.GetSection("dbinfo"); err != nil {
-		t.Fatal(err)
-	} else if dbinfo["pwd"] != os.Getenv("GOROOT") {
-		t.Fatal("get pwd error")
-	} else if strings.Contains(dbinfo["detail"], os.Getenv("GOROOT")) == false {
-		t.Fatal("get GOROOT path error")
-	}
-
-	if yamlconf.Strings("emptystrings") != nil {
-		t.Fatal("get emtpy strings error")
-	}
 }

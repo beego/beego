@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package xml for config provider
+// Package xml for config provider.
 //
-// depend on github.com/beego/x2j
+// depend on github.com/beego/x2j.
 //
-// go install github.com/beego/x2j
+// go install github.com/beego/x2j.
 //
 // Usage:
-// import(
-//   _ "github.com/astaxie/beego/config/xml"
-//   "github.com/astaxie/beego/config"
-// )
+//  import(
+//    _ "github.com/astaxie/beego/config/xml"
+//      "github.com/astaxie/beego/config"
+//  )
 //
 //  cnf, err := config.NewConfig("xml", "config.xml")
 //
-//  more docs http://beego.me/docs/module/config.md
+//More docs http://beego.me/docs/module/config.md
 package xml
 
 import (
@@ -69,7 +69,7 @@ func (xc *Config) Parse(filename string) (config.Configer, error) {
 		return nil, err
 	}
 
-	x.data = d["config"].(map[string]interface{})
+	x.data = config.ChooseRealValueForMap(d["config"].(map[string]interface{}))
 	return x, nil
 }
 
@@ -92,7 +92,7 @@ type ConfigContainer struct {
 
 // Bool returns the boolean value for a given key.
 func (c *ConfigContainer) Bool(key string) (bool, error) {
-	if v := c.getData(key); v != nil {
+	if v := c.data[key]; v != nil {
 		return config.ParseBool(v)
 	}
 	return false, fmt.Errorf("not exist key: %q", key)
@@ -110,7 +110,7 @@ func (c *ConfigContainer) DefaultBool(key string, defaultval bool) bool {
 
 // Int returns the integer value for a given key.
 func (c *ConfigContainer) Int(key string) (int, error) {
-	return strconv.Atoi(c.getData(key).(string))
+	return strconv.Atoi(c.data[key].(string))
 }
 
 // DefaultInt returns the integer value for a given key.
@@ -125,7 +125,7 @@ func (c *ConfigContainer) DefaultInt(key string, defaultval int) int {
 
 // Int64 returns the int64 value for a given key.
 func (c *ConfigContainer) Int64(key string) (int64, error) {
-	return strconv.ParseInt(c.getData(key).(string), 10, 64)
+	return strconv.ParseInt(c.data[key].(string), 10, 64)
 }
 
 // DefaultInt64 returns the int64 value for a given key.
@@ -141,7 +141,7 @@ func (c *ConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
 
 // Float returns the float value for a given key.
 func (c *ConfigContainer) Float(key string) (float64, error) {
-	return strconv.ParseFloat(c.getData(key).(string), 64)
+	return strconv.ParseFloat(c.data[key].(string), 64)
 }
 
 // DefaultFloat returns the float64 value for a given key.
@@ -156,7 +156,7 @@ func (c *ConfigContainer) DefaultFloat(key string, defaultval float64) float64 {
 
 // String returns the string value for a given key.
 func (c *ConfigContainer) String(key string) string {
-	if v, ok := c.getData(key).(string); ok {
+	if v, ok := c.data[key].(string); ok {
 		return v
 	}
 	return ""
@@ -194,7 +194,7 @@ func (c *ConfigContainer) DefaultStrings(key string, defaultval []string) []stri
 // GetSection returns map for the given section
 func (c *ConfigContainer) GetSection(section string) (map[string]string, error) {
 	if v, ok := c.data[section]; ok {
-		return config.ConvertToStringMap(v.(map[string]interface{})), nil
+		return v.(map[string]string), nil
 	}
 	return nil, errors.New("not exist setction")
 }
@@ -229,18 +229,6 @@ func (c *ConfigContainer) DIY(key string) (v interface{}, err error) {
 		return v, nil
 	}
 	return nil, errors.New("not exist key")
-}
-
-// Get Data
-func (c *ConfigContainer) getData(key string) interface{} {
-	if v, ok := c.data[key]; ok {
-		if env, ok := config.Getenv(v); ok {
-			return env
-		}
-		return v
-
-	}
-	return nil
 }
 
 func init() {

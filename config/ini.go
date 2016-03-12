@@ -162,7 +162,7 @@ func (ini *IniConfig) parseFile(name string) (*IniConfigContainer, error) {
 			val = bytes.Trim(val, `"`)
 		}
 
-		cfg.data[section][key] = string(val)
+		cfg.data[section][key] = ChooseRealValue(string(val))
 		if comment.Len() > 0 {
 			cfg.keyComment[section+"."+key] = comment.String()
 			comment.Reset()
@@ -291,17 +291,14 @@ func (c *IniConfigContainer) DefaultStrings(key string, defaultval []string) []s
 // GetSection returns map for the given section
 func (c *IniConfigContainer) GetSection(section string) (map[string]string, error) {
 	if v, ok := c.data[section]; ok {
-		for k, vv := range v {
-			if env, ok := Getenv(vv); ok {
-				v[k] = env
-			}
-		}
 		return v, nil
 	}
 	return nil, errors.New("not exist setction")
 }
 
-// SaveConfigFile save the config into file
+// SaveConfigFile save the config into file.
+//
+// BUG(env): The environment variable config item will be saved with real value in SaveConfigFile Funcation.
 func (c *IniConfigContainer) SaveConfigFile(filename string) (err error) {
 	// Write configuration file by filename.
 	f, err := os.Create(filename)
@@ -458,9 +455,6 @@ func (c *IniConfigContainer) getdata(key string) string {
 	}
 	if v, ok := c.data[section]; ok {
 		if vv, ok := v[k]; ok {
-			if env, ok := Getenv(vv); ok {
-				return env
-			}
 			return vv
 		}
 	}

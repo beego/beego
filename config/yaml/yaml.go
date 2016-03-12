@@ -19,14 +19,14 @@
 // go install github.com/beego/goyaml2
 //
 // Usage:
-// import(
+//  import(
 //   _ "github.com/astaxie/beego/config/yaml"
-//   "github.com/astaxie/beego/config"
-// )
+//     "github.com/astaxie/beego/config"
+//  )
 //
 //  cnf, err := config.NewConfig("yaml", "config.yaml")
 //
-//  more docs http://beego.me/docs/module/config.md
+//More docs http://beego.me/docs/module/config.md
 package yaml
 
 import (
@@ -110,6 +110,7 @@ func ReadYmlReader(path string) (cnf map[string]interface{}, err error) {
 		log.Println("Not a Map? >> ", string(buf), data)
 		cnf = nil
 	}
+	cnf = config.ChooseRealValueForMap(cnf)
 	return
 }
 
@@ -248,7 +249,7 @@ func (c *ConfigContainer) DefaultStrings(key string, defaultval []string) []stri
 func (c *ConfigContainer) GetSection(section string) (map[string]string, error) {
 
 	if v, ok := c.data[section]; ok {
-		return config.ConvertToStringMap(v.(map[string]interface{})), nil
+		return v.(map[string]string), nil
 	}
 	return nil, errors.New("not exist setction")
 }
@@ -285,11 +286,7 @@ func (c *ConfigContainer) getData(key string) (interface{}, error) {
 	}
 
 	if v, ok := c.data[key]; ok {
-		if env, ok := config.Getenv(v); ok {
-			return env, nil
-		} else {
-			return v, nil
-		}
+		return v, nil
 	}
 	return nil, fmt.Errorf("not exist key %q", key)
 }

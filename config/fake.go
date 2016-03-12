@@ -25,15 +25,7 @@ type fakeConfigContainer struct {
 }
 
 func (c *fakeConfigContainer) getData(key string) string {
-	if len(key) == 0 {
-		return ""
-	}
-
-	v := c.data[strings.ToLower(key)]
-	if env, ok := Getenv(v); ok {
-		return env
-	}
-	return v
+	return c.data[strings.ToLower(key)]
 }
 
 func (c *fakeConfigContainer) Set(key, val string) error {

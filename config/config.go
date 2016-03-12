@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package config is used to parse config
+// Package config is used to parse config.
 // Usage:
-// import(
-//   "github.com/astaxie/beego/config"
-// )
+//  import "github.com/astaxie/beego/config"
+//Examples.
 //
 //  cnf, err := config.NewConfig("ini", "config.conf")
 //
@@ -38,8 +37,7 @@
 //  cnf.DIY(key string) (interface{}, error)
 //  cnf.GetSection(section string) (map[string]string, error)
 //  cnf.SaveConfigFile(filename string) error
-//
-//  more docs http://beego.me/docs/module/config.md
+//More docs http://beego.me/docs/module/config.md
 package config
 
 import (
@@ -109,52 +107,61 @@ func NewConfigData(adapterName string, data []byte) (Configer, error) {
 	return adapter.ParseData(data)
 }
 
-const envKeySign = "$ENV_"
-
-// Getenv return environment variable if env has prefix "$ENV_".
-func Getenv(env interface{}) (string, bool) {
-	if env == nil {
-		return "", false
-	}
-
-	// Onley support string key.
-	if key, ok := env.(string); ok {
-
-		if envKey := strings.TrimPrefix(key, envKeySign); envKey != key {
-			return os.Getenv(envKey), true
+// ChooseRealValueForMap convert all string value with environment variable.
+func ChooseRealValueForMap(m map[string]interface{}) map[string]interface{} {
+	for k, v := range m {
+		switch value := v.(type) {
+		case string:
+			m[k] = ChooseRealValue(value)
+		case map[string]interface{}:
+			m[k] = ChooseRealValueForMap(value)
+		case map[string]string:
+			for k2, v2 := range value {
+				value[k2] = ChooseRealValue(v2)
+			}
+			m[k] = value
 		}
 	}
-	return "", false
+	return m
 }
 
-// ConvertToStringMap convert interface to string config value only for map[string]interface{} config info.
-func ConvertToStringMap(m map[string]interface{}) map[string]string {
-	items := make(map[string]string, len(m))
-	if m == nil || len(m) == 0 {
-		return items
+// ChooseRealValue returns value of convert with environment variable.
+//
+// Return environment variable if value start with "$$".
+// Return default value if environment variable is empty or not exist.
+//
+// It accept value formats "$$env" , "$$env||" , "$$env||defaultValue" , "defaultvalue".
+// Examples:
+//	v1 := config.ChooseRealValue("$$GOROOT")			// return the GOROOT environment variable.
+//	v2 := config.ChooseRealValue("$$GOAsta||/usr/local/go/")	// return the default value "/usr/local/go/".
+//	v3 := config.ChooseRealValue("Astaxie")				// return the value "Astaxie".
+func ChooseRealValue(value string) (realValue string) {
+	realValue = value
+
+	if value == "" {
+		return
 	}
 
-	var s string
-	for k, v := range m {
-		s = ""
-		if v == nil {
-			s = ""
-		} else if str, ok := v.(string); ok {
-			s = str
-		} else if m, ok := v.(map[string]interface{}); ok {
-			s = fmt.Sprintf("%+v", ConvertToStringMap(m))
-		} else {
-			s = fmt.Sprintf("%+v", v)
-		}
+	sign := "$$" // Environment variable identifier.
+	sep := "||"  // Environment variable and default value separator.
 
-		if len(s) > 0 {
-			if env, ok := Getenv(s); ok {
-				s = env
-			}
-		}
-		items[k] = s
+	// Not use environment variable.
+	if strings.HasPrefix(value, sign) == false {
+		return
 	}
-	return items
+
+	sepIndex := strings.Index(value, sep)
+	if sepIndex == -1 {
+		realValue = os.Getenv(string(value[len(sign):]))
+	} else {
+		realValue = os.Getenv(string(value[len(sign):sepIndex]))
+		// Find defalut value.
+		if realValue == "" {
+			realValue = string(value[sepIndex+len(sep):])
+		}
+	}
+
+	return
 }
 
 // ParseBool returns the boolean value represented by the string.

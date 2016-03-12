@@ -15,8 +15,8 @@
 package xml
 
 import (
+	"fmt"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/astaxie/beego/config"
@@ -24,8 +24,9 @@ import (
 
 func TestXML(t *testing.T) {
 
-	//xml parse should incluce in <config></config> tags
-	var xmlcontext = `<?xml version="1.0" encoding="UTF-8"?>
+	var (
+		//xml parse should incluce in <config></config> tags
+		xmlcontext = `<?xml version="1.0" encoding="UTF-8"?>
 <config>
 <appname>beeapi</appname>
 <httpport>8080</httpport>
@@ -34,23 +35,36 @@ func TestXML(t *testing.T) {
 <runmode>dev</runmode>
 <autorender>false</autorender>
 <copyrequestbody>true</copyrequestbody>
-<path>$ENV_GOROOT</path>
-<dbinfo>
-	<db>beego</db>
-	<pwd>$ENV_GOROOT</pwd>
-	<url>localhost</url>
-	<detail>
-		<d1>value1</d1>
-		<d2>$ENV_GOROOT</d2>
-		<d3></d3>
-	</detail>
-	<group>
-		<id>001</id>
-		<name>gp2</name>
-	</group>
-</dbinfo>
+<path1>$$GOROOT</path1>
+<path2>$$GOROOT||/home/go</path2>
+<path3>$$GOROOT$$GOPATH2||/home/go</path3>
+<token1>$$TOKEN</token1>
+<token2>$$TOKEN||</token2>
+<token3>$$TOKEN||astaxie</token3>
+<token4>token$$TOKEN</token4>
+<token5>$$TOKEN$$TOKEN||TOKEN</token5>
 </config>
 `
+		keyValue = map[string]interface{}{
+			"appname":         "beeapi",
+			"httpport":        8080,
+			"mysqlport":       int64(3600),
+			"PI":              3.1415976,
+			"runmode":         "dev",
+			"autorender":      false,
+			"copyrequestbody": true,
+			"path1":           os.Getenv("GOROOT"),
+			"path2":           os.Getenv("GOROOT"),
+			"path3":           "/home/go",
+			"token1":          "",
+			"token2":          "",
+			"token3":          "astaxie",
+			"token4":          "token$$TOKEN",
+			"token5":          "TOKEN",
+			"error":           "",
+			"emptystrings":    []string{},
+		}
+	)
 
 	f, err := os.Create("testxml.conf")
 	if err != nil {
@@ -67,50 +81,42 @@ func TestXML(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if xmlconf.String("appname") != "beeapi" {
-		t.Fatal("appname not equal to beeapi")
+
+	for k, v := range keyValue {
+
+		var (
+			value interface{}
+			err   error
+		)
+
+		switch v.(type) {
+		case int:
+			value, err = xmlconf.Int(k)
+		case int64:
+			value, err = xmlconf.Int64(k)
+		case float64:
+			value, err = xmlconf.Float(k)
+		case bool:
+			value, err = xmlconf.Bool(k)
+		case []string:
+			value = xmlconf.Strings(k)
+		case string:
+			value = xmlconf.String(k)
+		default:
+			value, err = xmlconf.DIY(k)
+		}
+		if err != nil {
+			t.Errorf("get key %q value fatal,%v err %s", k, v, err)
+		} else if fmt.Sprintf("%v", v) != fmt.Sprintf("%v", value) {
+			t.Errorf("get key %q value, want %v got %v .", k, v, value)
+		}
+
 	}
-	if port, err := xmlconf.Int("httpport"); err != nil || port != 8080 {
-		t.Error(port)
-		t.Fatal(err)
-	}
-	if port, err := xmlconf.Int64("mysqlport"); err != nil || port != 3600 {
-		t.Error(port)
-		t.Fatal(err)
-	}
-	if pi, err := xmlconf.Float("PI"); err != nil || pi != 3.1415976 {
-		t.Error(pi)
-		t.Fatal(err)
-	}
-	if xmlconf.String("runmode") != "dev" {
-		t.Fatal("runmode not equal to dev")
-	}
-	if v, err := xmlconf.Bool("autorender"); err != nil || v != false {
-		t.Error(v)
-		t.Fatal(err)
-	}
-	if v, err := xmlconf.Bool("copyrequestbody"); err != nil || v != true {
-		t.Error(v)
-		t.Fatal(err)
-	}
+
 	if err = xmlconf.Set("name", "astaxie"); err != nil {
 		t.Fatal(err)
 	}
 	if xmlconf.String("name") != "astaxie" {
 		t.Fatal("get name error")
-	}
-	if xmlconf.String("path") != os.Getenv("GOROOT") {
-		t.Fatal("get path error")
-	}
-
-	if dbinfo, err := xmlconf.GetSection("dbinfo"); err != nil {
-		t.Fatal(err)
-	} else if dbinfo["pwd"] != os.Getenv("GOROOT") {
-		t.Fatal("get pwd error")
-	} else if strings.Contains(dbinfo["detail"], os.Getenv("GOROOT")) == false {
-		t.Fatal("get goroot path error")
-	}
-	if xmlconf.Strings("emptystrings") != nil {
-		t.Fatal("get emtpy strings error")
 	}
 }
