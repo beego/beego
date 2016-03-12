@@ -16,7 +16,6 @@ package beego
 
 import (
 	"fmt"
-	"html/template"
 	"os"
 	"path/filepath"
 	"strings"
@@ -106,8 +105,6 @@ var (
 	AppConfig *beegoAppConfig
 	// AppPath is the absolute path to the app
 	AppPath string
-	// TemplateCache stores template caching
-	TemplateCache map[string]*template.Template
 	// GlobalSessions is the instance for the session manager
 	GlobalSessions *session.Manager
 
@@ -188,7 +185,9 @@ func init() {
 		return
 	}
 
-	parseConfig(appConfigPath)
+	if err := parseConfig(appConfigPath); err != nil {
+		panic(err)
+	}
 }
 
 // now only support ini, next will support json.

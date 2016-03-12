@@ -59,6 +59,7 @@ var (
 		"postgres": DRPostgres,
 		"sqlite3":  DRSqlite,
 		"tidb":     DRTiDB,
+		"oracle":   DROracle,
 	}
 	dbBasers = map[DriverType]dbBaser{
 		DRMySQL:    newdbBaseMysql(),
@@ -151,7 +152,7 @@ func detectTZ(al *alias) {
 			al.Engine = "INNODB"
 		}
 
-	case DRSqlite:
+	case DRSqlite, DROracle:
 		al.TZ = time.UTC
 
 	case DRPostgres:

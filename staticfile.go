@@ -93,12 +93,14 @@ type serveContentHolder struct {
 
 var (
 	staticFileMap = make(map[string]*serveContentHolder)
-	mapLock       sync.Mutex
+	mapLock       sync.RWMutex
 )
 
 func openFile(filePath string, fi os.FileInfo, acceptEncoding string) (bool, string, *serveContentHolder, error) {
 	mapKey := acceptEncoding + ":" + filePath
+	mapLock.RLock()
 	mapFile, _ := staticFileMap[mapKey]
+	mapLock.RUnlock()
 	if isOk(mapFile, fi) {
 		return mapFile.encoding != "", mapFile.encoding, mapFile, nil
 	}

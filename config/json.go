@@ -173,7 +173,7 @@ func (c *JSONConfigContainer) DefaultString(key string, defaultval string) strin
 func (c *JSONConfigContainer) Strings(key string) []string {
 	stringVal := c.String(key)
 	if stringVal == "" {
-		return []string{}
+		return nil
 	}
 	return strings.Split(c.String(key), ";")
 }
@@ -181,7 +181,7 @@ func (c *JSONConfigContainer) Strings(key string) []string {
 // DefaultStrings returns the []string value for a given key.
 // if err != nil return defaltval
 func (c *JSONConfigContainer) DefaultStrings(key string, defaultval []string) []string {
-	if v := c.Strings(key); len(v) > 0 {
+	if v := c.Strings(key); v != nil {
 		return v
 	}
 	return defaultval

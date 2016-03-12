@@ -79,4 +79,8 @@ func TestYaml(t *testing.T) {
 	if yamlconf.String("name") != "astaxie" {
 		t.Fatal("get name error")
 	}
+
+	if yamlconf.Strings("emptystrings") != nil {
+		t.Fatal("get emtpy strings error")
+	}
 }

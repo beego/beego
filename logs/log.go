@@ -146,17 +146,25 @@ func (bl *BeeLogger) Async() *BeeLogger {
 func (bl *BeeLogger) SetLogger(adapterName string, config string) error {
 	bl.lock.Lock()
 	defer bl.lock.Unlock()
-	if log, ok := adapters[adapterName]; ok {
-		lg := log()
-		err := lg.Init(config)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, "logs.BeeLogger.SetLogger: "+err.Error())
-			return err
+
+	for _, l := range bl.outputs {
+		if l.name == adapterName {
+			return fmt.Errorf("logs: duplicate adaptername %q (you have set this logger before)", adapterName)
 		}
-		bl.outputs = append(bl.outputs, &nameLogger{name: adapterName, Logger: lg})
-	} else {
+	}
+
+	log, ok := adapters[adapterName]
+	if !ok {
 		return fmt.Errorf("logs: unknown adaptername %q (forgotten Register?)", adapterName)
 	}
+
+	lg := log()
+	err := lg.Init(config)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "logs.BeeLogger.SetLogger: "+err.Error())
+		return err
+	}
+	bl.outputs = append(bl.outputs, &nameLogger{name: adapterName, Logger: lg})
 	return nil
 }
 
@@ -411,46 +419,4 @@ func (bl *BeeLogger) flush() {
 	for _, l := range bl.outputs {
 		l.Flush()
 	}
-}
-
-func formatLogTime(when time.Time) string {
-	y, mo, d := when.Date()
-	h, mi, s := when.Clock()
-	//len(2006/01/02 15:03:04)==19
-	var buf [20]byte
-	t := 3
-	for y >= 10 {
-		p := y / 10
-		buf[t] = byte('0' + y - p*10)
-		y = p
-		t--
-	}
-	buf[0] = byte('0' + y)
-	buf[4] = '/'
-	if mo > 9 {
-		buf[5] = '1'
-		buf[6] = byte('0' + mo - 9)
-	} else {
-		buf[5] = '0'
-		buf[6] = byte('0' + mo)
-	}
-	buf[7] = '/'
-	t = d / 10
-	buf[8] = byte('0' + t)
-	buf[9] = byte('0' + d - t*10)
-	buf[10] = ' '
-	t = h / 10
-	buf[11] = byte('0' + t)
-	buf[12] = byte('0' + h - t*10)
-	buf[13] = ':'
-	t = mi / 10
-	buf[14] = byte('0' + t)
-	buf[15] = byte('0' + mi - t*10)
-	buf[16] = ':'
-	t = s / 10
-	buf[17] = byte('0' + t)
-	buf[18] = byte('0' + s - t*10)
-	buf[19] = ' '
-
-	return string(buf[0:])
 }

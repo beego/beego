@@ -102,7 +102,7 @@ func newFields() *fields {
 // single field info
 type fieldInfo struct {
 	mi                  *modelInfo
-	fieldIndex          int
+	fieldIndex          []int
 	fieldType           int
 	dbcol               bool
 	inModel             bool
@@ -138,7 +138,7 @@ type fieldInfo struct {
 }
 
 // new field info
-func newFieldInfo(mi *modelInfo, field reflect.Value, sf reflect.StructField) (fi *fieldInfo, err error) {
+func newFieldInfo(mi *modelInfo, field reflect.Value, sf reflect.StructField, mName string) (fi *fieldInfo, err error) {
 	var (
 		tag       string
 		tagValue  string
@@ -278,7 +278,7 @@ checkType:
 	fi.column = getColumnName(fieldType, addrField, sf, tags["column"])
 	fi.addrValue = addrField
 	fi.sf = sf
-	fi.fullName = mi.fullName + "." + sf.Name
+	fi.fullName = mi.fullName + mName + "." + sf.Name
 
 	fi.null = attrs["null"]
 	fi.index = attrs["index"]

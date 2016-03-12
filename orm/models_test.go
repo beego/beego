@@ -25,7 +25,6 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
-
 	// As tidb can't use go get, so disable the tidb testing now
 	// _ "github.com/pingcap/tidb"
 )
@@ -350,6 +349,30 @@ type GroupPermissions struct {
 	ID         int         `orm:"column(id)"`
 	Group      *Group      `orm:"rel(fk)"`
 	Permission *Permission `orm:"rel(fk)"`
+}
+
+type ModelID struct {
+	ID int64
+}
+
+type ModelBase struct {
+	ModelID
+
+	Created time.Time `orm:"auto_now_add;type(datetime)"`
+	Updated time.Time `orm:"auto_now;type(datetime)"`
+}
+
+type InLine struct {
+	// Common Fields
+	ModelBase
+
+	// Other Fields
+	Name  string `orm:"unique"`
+	Email string
+}
+
+func NewInLine() *InLine {
+	return new(InLine)
 }
 
 var DBARGS = struct {

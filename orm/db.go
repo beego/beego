@@ -113,7 +113,7 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 	if fi.pk {
 		_, value, _ = getExistPk(mi, ind)
 	} else {
-		field := ind.Field(fi.fieldIndex)
+		field := ind.FieldByIndex(fi.fieldIndex)
 		if fi.isFielder {
 			f := field.Addr().Interface().(Fielder)
 			value = f.RawValue()
@@ -517,9 +517,9 @@ func (d *dbBase) Delete(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.
 		if num > 0 {
 			if mi.fields.pk.auto {
 				if mi.fields.pk.fieldType&IsPostiveIntegerField > 0 {
-					ind.Field(mi.fields.pk.fieldIndex).SetUint(0)
+					ind.FieldByIndex(mi.fields.pk.fieldIndex).SetUint(0)
 				} else {
-					ind.Field(mi.fields.pk.fieldIndex).SetInt(0)
+					ind.FieldByIndex(mi.fields.pk.fieldIndex).SetInt(0)
 				}
 			}
 			err := d.deleteRels(q, mi, []interface{}{pkValue}, tz)
@@ -859,13 +859,13 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 							mmi = fi.relModelInfo
 							field := last
 							if last.Kind() != reflect.Invalid {
-								field = reflect.Indirect(last.Field(fi.fieldIndex))
+								field = reflect.Indirect(last.FieldByIndex(fi.fieldIndex))
 								if field.IsValid() {
 									d.setColsValues(mmi, &field, mmi.fields.dbcols, trefs[:len(mmi.fields.dbcols)], tz)
 									for _, fi := range mmi.fields.fieldsReverse {
 										if fi.inModel && fi.reverseFieldInfo.mi == lastm {
 											if fi.reverseFieldInfo != nil {
-												f := field.Field(fi.fieldIndex)
+												f := field.FieldByIndex(fi.fieldIndex)
 												if f.Kind() == reflect.Ptr {
 													f.Set(last.Addr())
 												}
@@ -1014,7 +1014,7 @@ func (d *dbBase) setColsValues(mi *modelInfo, ind *reflect.Value, cols []string,
 
 		fi := mi.fields.GetByColumn(column)
 
-		field := ind.Field(fi.fieldIndex)
+		field := ind.FieldByIndex(fi.fieldIndex)
 
 		value, err := d.convertValueFromDB(fi, val, tz)
 		if err != nil {
@@ -1350,7 +1350,7 @@ setValue:
 			fieldType = fi.relModelInfo.fields.pk.fieldType
 			mf := reflect.New(fi.relModelInfo.addrField.Elem().Type())
 			field.Set(mf)
-			f := mf.Elem().Field(fi.relModelInfo.fields.pk.fieldIndex)
+			f := mf.Elem().FieldByIndex(fi.relModelInfo.fields.pk.fieldIndex)
 			field = f
 			goto setValue
 		}

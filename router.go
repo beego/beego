@@ -607,6 +607,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	)
 	context := p.pool.Get().(*beecontext.Context)
 	context.Reset(rw, r)
+
 	defer p.pool.Put(context)
 	defer p.recoverPanic(context)
 
