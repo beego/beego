@@ -375,6 +375,18 @@ func NewInLine() *InLine {
 	return new(InLine)
 }
 
+type InLineOneToOne struct {
+	// Common Fields
+	ModelBase
+
+	Note   string
+	InLine *InLine `orm:"rel(fk);column(inline)"`
+}
+
+func NewInLineOneToOne() *InLineOneToOne {
+	return new(InLineOneToOne)
+}
+
 var DBARGS = struct {
 	Driver string
 	Source string
