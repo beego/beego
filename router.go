@@ -783,7 +783,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				if !context.ResponseWriter.Started && context.Output.Status == 0 {
 					if BConfig.WebConfig.AutoRender {
 						if err := execController.Render(); err != nil {
-							panic(err)
+							Error(err)
 						}
 					}
 				}
