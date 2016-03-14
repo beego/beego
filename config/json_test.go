@@ -86,9 +86,9 @@ func TestJson(t *testing.T) {
 "enableSession": "Y",
 "enableCookie": "N",
 "flag": 1,
-"path1": "$$GOROOT",
-"path2": "$$GOROOT||/home/go",
-"path3": "$$GOROOT$$GOPATH2||/home/go",
+"path1": "$$GOPATH",
+"path2": "$$GOPATH||/home/go",
+"path3": "$$GOPATH$$GOPATH2||/home/go",
 "token1": "$$TOKEN",
 "token2": "$$TOKEN||",
 "token3": "$$TOKEN||astaxie",
@@ -99,12 +99,12 @@ func TestJson(t *testing.T) {
         "port": "port",
         "database": "database",
         "username": "username",
-        "password": "$$GOROOT",
+        "password": "$$GOPATH",
 		"conns":{
 			"maxconnection":12,
 			"autoconnect":true,
 			"connectioninfo":"info",
-			"root": "$$GOROOT"
+			"root": "$$GOPATH"
 		}
     }
 }`
@@ -124,8 +124,8 @@ func TestJson(t *testing.T) {
 			"enableSession":                   true,
 			"enableCookie":                    false,
 			"flag":                            true,
-			"path1":                           os.Getenv("GOROOT"),
-			"path2":                           os.Getenv("GOROOT"),
+			"path1":                           os.Getenv("GOPATH"),
+			"path2":                           os.Getenv("GOPATH"),
 			"path3":                           "/home/go",
 			"token1":                          "",
 			"token2":                          "",
@@ -135,11 +135,11 @@ func TestJson(t *testing.T) {
 			"database::host":                  "host",
 			"database::port":                  "port",
 			"database::database":              "database",
-			"database::password":              os.Getenv("GOROOT"),
+			"database::password":              os.Getenv("GOPATH"),
 			"database::conns::maxconnection":  12,
 			"database::conns::autoconnect":    true,
 			"database::conns::connectioninfo": "info",
-			"database::conns::root":           os.Getenv("GOROOT"),
+			"database::conns::root":           os.Getenv("GOPATH"),
 			"unknown":                         "",
 		}
 	)

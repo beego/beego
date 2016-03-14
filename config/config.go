@@ -132,7 +132,7 @@ func ChooseRealValueForMap(m map[string]interface{}) map[string]interface{} {
 //
 // It accept value formats "$$env" , "$$env||" , "$$env||defaultValue" , "defaultvalue".
 // Examples:
-//	v1 := config.ChooseRealValue("$$GOROOT")			// return the GOROOT environment variable.
+//	v1 := config.ChooseRealValue("$$GOPATH")			// return the GOPATH environment variable.
 //	v2 := config.ChooseRealValue("$$GOAsta||/usr/local/go/")	// return the default value "/usr/local/go/".
 //	v3 := config.ChooseRealValue("Astaxie")				// return the value "Astaxie".
 func ChooseRealValue(value string) (realValue string) {

@@ -42,9 +42,9 @@ needlogin = ON
 enableSession = Y
 enableCookie = N
 flag = 1
-path1 = $$GOROOT
-path2 = $$GOROOT||/home/go
-path3 = $$GOROOT$$GOPATH2||/home/go
+path1 = $$GOPATH
+path2 = $$GOPATH||/home/go
+path3 = $$GOPATH$$GOPATH2||/home/go
 token1 = $$TOKEN
 token2 = $$TOKEN||
 token3 = $$TOKEN||astaxie
@@ -55,7 +55,7 @@ key1="asta"
 key2 = "xie"
 CaseInsensitive = true
 peers = one;two;three
-password = $$GOROOT
+password = $$GOPATH
 `
 
 		keyValue = map[string]interface{}{
@@ -73,8 +73,8 @@ password = $$GOROOT
 			"enableSession":         true,
 			"enableCookie":          false,
 			"flag":                  true,
-			"path1":                 os.Getenv("GOROOT"),
-			"path2":                 os.Getenv("GOROOT"),
+			"path1":                 os.Getenv("GOPATH"),
+			"path2":                 os.Getenv("GOPATH"),
 			"path3":                 "/home/go",
 			"token1":                "",
 			"token2":                "",
@@ -85,7 +85,7 @@ password = $$GOROOT
 			"demo::key2":            "xie",
 			"demo::CaseInsensitive": true,
 			"demo::peers":           []string{"one", "two", "three"},
-			"demo::password":        os.Getenv("GOROOT"),
+			"demo::password":        os.Getenv("GOPATH"),
 			"null":                  "",
 			"demo2::key1":           "",
 			"error":                 "",

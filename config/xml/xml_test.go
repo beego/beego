@@ -35,9 +35,9 @@ func TestXML(t *testing.T) {
 <runmode>dev</runmode>
 <autorender>false</autorender>
 <copyrequestbody>true</copyrequestbody>
-<path1>$$GOROOT</path1>
-<path2>$$GOROOT||/home/go</path2>
-<path3>$$GOROOT$$GOPATH2||/home/go</path3>
+<path1>$$GOPATH</path1>
+<path2>$$GOPATH||/home/go</path2>
+<path3>$$GOPATH$$GOPATH2||/home/go</path3>
 <token1>$$TOKEN</token1>
 <token2>$$TOKEN||</token2>
 <token3>$$TOKEN||astaxie</token3>
@@ -53,8 +53,8 @@ func TestXML(t *testing.T) {
 			"runmode":         "dev",
 			"autorender":      false,
 			"copyrequestbody": true,
-			"path1":           os.Getenv("GOROOT"),
-			"path2":           os.Getenv("GOROOT"),
+			"path1":           os.Getenv("GOPATH"),
+			"path2":           os.Getenv("GOPATH"),
 			"path3":           "/home/go",
 			"token1":          "",
 			"token2":          "",
