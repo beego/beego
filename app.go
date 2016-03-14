@@ -16,6 +16,7 @@ package beego
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"net/http/fcgi"
@@ -95,6 +96,7 @@ func (app *App) Run() {
 	app.Server.Handler = app.Handlers
 	app.Server.ReadTimeout = time.Duration(BConfig.Listen.ServerTimeOut) * time.Second
 	app.Server.WriteTimeout = time.Duration(BConfig.Listen.ServerTimeOut) * time.Second
+	app.Server.ErrorLog = log.New(BeeLogger, "", 0)
 
 	// run graceful mode
 	if BConfig.Listen.Graceful {
