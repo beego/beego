@@ -114,7 +114,7 @@ type controllerInfo struct {
 type ControllerRegister struct {
 	routers      map[string]*Tree
 	enableFilter bool
-	filters      map[int][]*FilterRouter
+	filters      [5][]*FilterRouter
 	pool         sync.Pool
 }
 
@@ -122,7 +122,6 @@ type ControllerRegister struct {
 func NewControllerRegister() *ControllerRegister {
 	cr := &ControllerRegister{
 		routers: make(map[string]*Tree),
-		filters: make(map[int][]*FilterRouter),
 	}
 	cr.pool.New = func() interface{} {
 		return beecontext.NewContext()
@@ -408,7 +407,6 @@ func (p *ControllerRegister) AddAutoPrefix(prefix string, c ControllerInterface)
 // InsertFilter Add a FilterFunc with pattern rule and action constant.
 // The bool params is for setting the returnOnOutput value (false allows multiple filters to execute)
 func (p *ControllerRegister) InsertFilter(pattern string, pos int, filter FilterFunc, params ...bool) error {
-
 	mr := new(FilterRouter)
 	mr.tree = NewTree()
 	mr.pattern = pattern
@@ -426,9 +424,13 @@ func (p *ControllerRegister) InsertFilter(pattern string, pos int, filter Filter
 }
 
 // add Filter into
-func (p *ControllerRegister) insertFilterRouter(pos int, mr *FilterRouter) error {
-	p.filters[pos] = append(p.filters[pos], mr)
+func (p *ControllerRegister) insertFilterRouter(pos int, mr *FilterRouter) (err error) {
+	if pos < BeforeStatic || pos > FinishRouter {
+		err = fmt.Errorf("can not find your filter postion")
+		return
+	}
 	p.enableFilter = true
+	p.filters[pos] = append(p.filters[pos], mr)
 	return nil
 }
 
@@ -577,20 +579,16 @@ func (p *ControllerRegister) geturl(t *Tree, url, controllName, methodName strin
 	return false, ""
 }
 
-func (p *ControllerRegister) execFilter(context *beecontext.Context, pos int, urlPath string) (started bool) {
-	if p.enableFilter {
-		if l, ok := p.filters[pos]; ok {
-			for _, filterR := range l {
-				if filterR.returnOnOutput && context.ResponseWriter.Started {
-					return true
-				}
-				if ok := filterR.ValidRouter(urlPath, context); ok {
-					filterR.filterFunc(context)
-				}
-				if filterR.returnOnOutput && context.ResponseWriter.Started {
-					return true
-				}
-			}
+func (p *ControllerRegister) execFilter(context *beecontext.Context, urlPath string, l []*FilterRouter) (started bool) {
+	for _, filterR := range l {
+		if filterR.returnOnOutput && context.ResponseWriter.Started {
+			return true
+		}
+		if ok := filterR.ValidRouter(urlPath, context); ok {
+			filterR.filterFunc(context)
+		}
+		if filterR.returnOnOutput && context.ResponseWriter.Started {
+			return true
 		}
 	}
 	return false
@@ -617,11 +615,10 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		context.Output.Header("Server", BConfig.ServerName)
 	}
 
-	var urlPath string
+	var urlPath = r.URL.Path
+
 	if !BConfig.RouterCaseSensitive {
 		urlPath = strings.ToLower(r.URL.Path)
-	} else {
-		urlPath = r.URL.Path
 	}
 
 	// filter wrong http method
@@ -631,7 +628,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	// filter for static file
-	if p.execFilter(context, BeforeStatic, urlPath) {
+	if fs := p.filters[BeforeStatic]; len(fs) > 0 && p.execFilter(context, urlPath, fs) {
 		goto Admin
 	}
 
@@ -663,8 +660,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			}
 		}()
 	}
-
-	if p.execFilter(context, BeforeRouter, urlPath) {
+	if fs := p.filters[BeforeRouter]; len(fs) > 0 && p.execFilter(context, urlPath, fs) {
 		goto Admin
 	}
 
@@ -693,7 +689,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	if findRouter {
 		//execute middleware filters
-		if p.execFilter(context, BeforeExec, urlPath) {
+		if fs := p.filters[BeforeExec]; len(fs) > 0 && p.execFilter(context, urlPath, fs) {
 			goto Admin
 		}
 		isRunnable := false
@@ -794,12 +790,13 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}
 
 		//execute middleware filters
-		if p.execFilter(context, AfterExec, urlPath) {
+		if fs := p.filters[AfterExec]; len(fs) > 0 && p.execFilter(context, urlPath, fs) {
 			goto Admin
 		}
 	}
-
-	p.execFilter(context, FinishRouter, urlPath)
+	if fs := p.filters[FinishRouter]; len(fs) > 0 && p.execFilter(context, urlPath, fs) {
+		goto Admin
+	}
 
 Admin:
 	//admin module record QPS
