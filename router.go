@@ -618,7 +618,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	var urlPath = r.URL.Path
 
 	if !BConfig.RouterCaseSensitive {
-		urlPath = strings.ToLower(r.URL.Path)
+		urlPath = strings.ToLower(urlPath)
 	}
 
 	// filter wrong http method
