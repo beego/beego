@@ -115,7 +115,6 @@ type ControllerRegister struct {
 	routers      map[string]*Tree
 	enableFilter bool
 	filters      [FinishRouter + 1][]*FilterRouter
-	filterFlag   [FinishRouter + 1]bool
 	pool         sync.Pool
 }
 
@@ -431,7 +430,6 @@ func (p *ControllerRegister) insertFilterRouter(pos int, mr *FilterRouter) (err 
 		return
 	}
 	p.enableFilter = true
-	p.filterFlag[pos] = true
 	p.filters[pos] = append(p.filters[pos], mr)
 	return nil
 }
@@ -630,7 +628,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	// filter for static file
-	if p.filterFlag[BeforeStatic] && p.execFilter(context, urlPath, BeforeStatic) {
+	if len(p.filters[BeforeStatic]) > 0 && p.execFilter(context, urlPath, BeforeStatic) {
 		goto Admin
 	}
 
@@ -663,7 +661,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			}
 		}()
 	}
-	if p.filterFlag[BeforeRouter] && p.execFilter(context, urlPath, BeforeRouter) {
+	if len(p.filters[BeforeRouter]) > 0 && p.execFilter(context, urlPath, BeforeRouter) {
 		goto Admin
 	}
 
@@ -692,7 +690,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	if findRouter {
 		//execute middleware filters
-		if p.filterFlag[BeforeExec] && p.execFilter(context, urlPath, BeforeExec) {
+		if len(p.filters[BeforeExec]) > 0 && p.execFilter(context, urlPath, BeforeExec) {
 			goto Admin
 		}
 		isRunnable := false
@@ -793,11 +791,11 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}
 
 		//execute middleware filters
-		if p.filterFlag[AfterExec] && p.execFilter(context, urlPath, AfterExec) {
+		if len(p.filters[AfterExec]) > 0 && p.execFilter(context, urlPath, AfterExec) {
 			goto Admin
 		}
 	}
-	if p.filterFlag[FinishRouter] && p.execFilter(context, urlPath, FinishRouter) {
+	if len(p.filters[FinishRouter]) > 0 && p.execFilter(context, urlPath, FinishRouter) {
 		goto Admin
 	}
 
