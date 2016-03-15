@@ -652,7 +652,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		if err != nil {
 			Error(err)
 			exception("503", context)
-			return
+			goto Admin
 		}
 		defer func() {
 			if context.Input.CruSession != nil {
