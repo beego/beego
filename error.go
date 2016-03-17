@@ -388,7 +388,10 @@ func exception(errCode string, ctx *context.Context) {
 		if err == nil {
 			return v
 		}
-		return 503
+		if ctx.Output.Status == 0 {
+			return 503
+		}
+		return ctx.Output.Status
 	}
 
 	for _, ec := range []string{errCode, "503", "500"} {
