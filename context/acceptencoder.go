@@ -30,13 +30,13 @@ import (
 )
 
 var (
-//Content will only be compressed if content length is either unknown or greater than minGzipSize.
+	//Content will only be compressed if content length is either unknown or greater than minGzipSize.
 	gzipMinLength int
-//Default size==20B like nginx
-	defaultGzipMinLength=20
-//The compression level used for deflate compression. (0-9).
+	//Default size==20B like nginx
+	defaultGzipMinLength = 20
+	//The compression level used for deflate compression. (0-9).
 	gzipCompressLevel int
-//List of HTTP methods to compress. If not set, only GET requests are compressed.
+	//List of HTTP methods to compress. If not set, only GET requests are compressed.
 	includedMethods map[string]bool
 	getMethodOnly   bool
 )
@@ -96,9 +96,11 @@ func (ac acceptEncoder) put(wr resetWriter, level int) {
 		return
 	}
 	wr.Reset(nil)
+
 	//notice
 	//compressionLevel==BestCompression DOES NOT MATTER
 	//sync.Pool will not memory leak
+
 	switch level {
 	case gzipCompressLevel:
 		ac.customCompressLevelPool.Put(wr)
@@ -116,10 +118,10 @@ var (
 		bestCompressionPool:     &sync.Pool{New: func() interface{} { wr, _ := gzip.NewWriterLevel(nil, flate.BestCompression); return wr }},
 	}
 
-//according to the sec :http://tools.ietf.org/html/rfc2616#section-3.5 ,the deflate compress in http is zlib indeed
-//deflate
-//The "zlib" format defined in RFC 1950 [31] in combination with
-//the "deflate" compression mechanism described in RFC 1951 [29].
+	//according to the sec :http://tools.ietf.org/html/rfc2616#section-3.5 ,the deflate compress in http is zlib indeed
+	//deflate
+	//The "zlib" format defined in RFC 1950 [31] in combination with
+	//the "deflate" compression mechanism described in RFC 1951 [29].
 	deflateCompressEncoder = acceptEncoder{
 		name:                    "deflate",
 		levelEncode:             func(level int) resetWriter { wr, _ := zlib.NewWriterLevel(nil, level); return wr },
