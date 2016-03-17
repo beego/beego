@@ -32,7 +32,7 @@ import (
 var (
 	//Content will only be compressed if content length is either unknown or greater than gzipMinLength.
 	gzipMinLength int
-	//Default size==20B like nginx
+	//Default size==20B same as nginx
 	defaultGzipMinLength = 20
 	//The compression level used for deflate compression. (0-9).
 	gzipCompressLevel int
@@ -43,7 +43,7 @@ var (
 
 func InitGzip(cf config.Configer) {
 	gzipMinLength = cf.DefaultInt("gzipMinLength", defaultGzipMinLength)
-	gzipCompressLevel = cf.DefaultInt("gzipCompressLevel", flate.DefaultCompression)
+	gzipCompressLevel = cf.DefaultInt("gzipCompressLevel", flate.BestSpeed)
 	if gzipCompressLevel < flate.DefaultCompression || gzipCompressLevel > flate.BestCompression {
 		gzipCompressLevel = flate.BestSpeed
 	}
