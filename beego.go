@@ -22,12 +22,12 @@ import (
 )
 
 const (
-// VERSION represent beego web framework version.
+	// VERSION represent beego web framework version.
 	VERSION = "1.6.1"
 
-// DEV is for develop
+	// DEV is for develop
 	DEV = "dev"
-// PROD is for production
+	// PROD is for production
 	PROD = "prod"
 )
 
