@@ -25,7 +25,34 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/astaxie/beego/config"
 )
+
+var (
+//Content will only be compressed if content length is either unknown or greater than minGzipSize.
+	gzipMinLength int
+//Default size==20B like nginx
+	defaultGzipMinLength=20
+//The compression level used for deflate compression. (0-9).
+	gzipCompressLevel int
+//List of HTTP methods to compress. If not set, only GET requests are compressed.
+	includedMethods map[string]bool
+	getMethodOnly   bool
+)
+
+func InitGzip(cf config.Configer) {
+	gzipMinLength = cf.DefaultInt("gzipMinLength", defaultGzipMinLength)
+	gzipCompressLevel = cf.DefaultInt("gzipCompressLevel", flate.DefaultCompression)
+	if gzipCompressLevel < flate.DefaultCompression || gzipCompressLevel > flate.BestCompression {
+		gzipCompressLevel = flate.BestSpeed
+	}
+	methods := cf.DefaultStrings("includedMethods", []string{"GET"})
+	getMethodOnly = len(methods) == 1 && strings.ToUpper(methods[0]) == "GET"
+	for _, v := range methods {
+		includedMethods[strings.ToUpper(v)] = true
+	}
+}
 
 type resetWriter interface {
 	io.Writer
@@ -41,20 +68,20 @@ func (n nopResetWriter) Reset(w io.Writer) {
 }
 
 type acceptEncoder struct {
-	name                string
-	levelEncode         func(int) resetWriter
-	bestSpeedPool       *sync.Pool
-	bestCompressionPool *sync.Pool
+	name                    string
+	levelEncode             func(int) resetWriter
+	customCompressLevelPool *sync.Pool
+	bestCompressionPool     *sync.Pool
 }
 
 func (ac acceptEncoder) encode(wr io.Writer, level int) resetWriter {
-	if ac.bestSpeedPool == nil || ac.bestCompressionPool == nil {
+	if ac.customCompressLevelPool == nil || ac.bestCompressionPool == nil {
 		return nopResetWriter{wr}
 	}
 	var rwr resetWriter
 	switch level {
 	case flate.BestSpeed:
-		rwr = ac.bestSpeedPool.Get().(resetWriter)
+		rwr = ac.customCompressLevelPool.Get().(resetWriter)
 	case flate.BestCompression:
 		rwr = ac.bestCompressionPool.Get().(resetWriter)
 	default:
@@ -65,13 +92,16 @@ func (ac acceptEncoder) encode(wr io.Writer, level int) resetWriter {
 }
 
 func (ac acceptEncoder) put(wr resetWriter, level int) {
-	if ac.bestSpeedPool == nil || ac.bestCompressionPool == nil {
+	if ac.customCompressLevelPool == nil || ac.bestCompressionPool == nil {
 		return
 	}
 	wr.Reset(nil)
+	//notice
+	//compressionLevel==BestCompression DOES NOT MATTER
+	//sync.Pool will not memory leak
 	switch level {
-	case flate.BestSpeed:
-		ac.bestSpeedPool.Put(wr)
+	case gzipCompressLevel:
+		ac.customCompressLevelPool.Put(wr)
 	case flate.BestCompression:
 		ac.bestCompressionPool.Put(wr)
 	}
@@ -79,28 +109,22 @@ func (ac acceptEncoder) put(wr resetWriter, level int) {
 
 var (
 	noneCompressEncoder = acceptEncoder{"", nil, nil, nil}
-	gzipCompressEncoder = acceptEncoder{"gzip",
-		func(level int) resetWriter { wr, _ := gzip.NewWriterLevel(nil, level); return wr },
-		&sync.Pool{
-			New: func() interface{} { wr, _ := gzip.NewWriterLevel(nil, flate.BestSpeed); return wr },
-		},
-		&sync.Pool{
-			New: func() interface{} { wr, _ := gzip.NewWriterLevel(nil, flate.BestCompression); return wr },
-		},
+	gzipCompressEncoder = acceptEncoder{
+		name:                    "gzip",
+		levelEncode:             func(level int) resetWriter { wr, _ := gzip.NewWriterLevel(nil, level); return wr },
+		customCompressLevelPool: &sync.Pool{New: func() interface{} { wr, _ := gzip.NewWriterLevel(nil, gzipCompressLevel); return wr }},
+		bestCompressionPool:     &sync.Pool{New: func() interface{} { wr, _ := gzip.NewWriterLevel(nil, flate.BestCompression); return wr }},
 	}
 
-	//according to the sec :http://tools.ietf.org/html/rfc2616#section-3.5 ,the deflate compress in http is zlib indeed
-	//deflate
-	//The "zlib" format defined in RFC 1950 [31] in combination with
-	//the "deflate" compression mechanism described in RFC 1951 [29].
-	deflateCompressEncoder = acceptEncoder{"deflate",
-		func(level int) resetWriter { wr, _ := zlib.NewWriterLevel(nil, level); return wr },
-		&sync.Pool{
-			New: func() interface{} { wr, _ := zlib.NewWriterLevel(nil, flate.BestSpeed); return wr },
-		},
-		&sync.Pool{
-			New: func() interface{} { wr, _ := zlib.NewWriterLevel(nil, flate.BestCompression); return wr },
-		},
+//according to the sec :http://tools.ietf.org/html/rfc2616#section-3.5 ,the deflate compress in http is zlib indeed
+//deflate
+//The "zlib" format defined in RFC 1950 [31] in combination with
+//the "deflate" compression mechanism described in RFC 1951 [29].
+	deflateCompressEncoder = acceptEncoder{
+		name:                    "deflate",
+		levelEncode:             func(level int) resetWriter { wr, _ := zlib.NewWriterLevel(nil, level); return wr },
+		customCompressLevelPool: &sync.Pool{New: func() interface{} { wr, _ := zlib.NewWriterLevel(nil, gzipCompressLevel); return wr }},
+		bestCompressionPool:     &sync.Pool{New: func() interface{} { wr, _ := zlib.NewWriterLevel(nil, flate.BestCompression); return wr }},
 	}
 )
 
@@ -120,7 +144,11 @@ func WriteFile(encoding string, writer io.Writer, file *os.File) (bool, string, 
 
 // WriteBody reads  writes content to writer by the specific encoding(gzip/deflate)
 func WriteBody(encoding string, writer io.Writer, content []byte) (bool, string, error) {
-	return writeLevel(encoding, writer, bytes.NewReader(content), flate.BestSpeed)
+	if encoding == "" || len(content) < gzipMinLength {
+		_, err := writer.Write(content)
+		return false, "", err
+	}
+	return writeLevel(encoding, writer, bytes.NewReader(content), gzipCompressLevel)
 }
 
 // writeLevel reads from reader,writes to writer by specific encoding and compress level
@@ -156,7 +184,10 @@ func ParseEncoding(r *http.Request) string {
 	if r == nil {
 		return ""
 	}
-	return parseEncoding(r)
+	if (getMethodOnly && r.Method == "GET") || includedMethods[r.Method] {
+		return parseEncoding(r)
+	}
+	return ""
 }
 
 type q struct {
