@@ -159,7 +159,7 @@ func (o *orm) Insert(md interface{}) (int64, error) {
 // set auto pk field
 func (o *orm) setPk(mi *modelInfo, ind reflect.Value, id int64) {
 	if mi.fields.pk.auto {
-		if mi.fields.pk.fieldType&IsPostiveIntegerField > 0 {
+		if mi.fields.pk.fieldType&IsPositiveIntegerField > 0 {
 			ind.FieldByIndex(mi.fields.pk.fieldIndex).SetUint(uint64(id))
 		} else {
 			ind.FieldByIndex(mi.fields.pk.fieldIndex).SetInt(id)
