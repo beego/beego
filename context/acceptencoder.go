@@ -30,7 +30,7 @@ import (
 )
 
 var (
-	//Content will only be compressed if content length is either unknown or greater than minGzipSize.
+	//Content will only be compressed if content length is either unknown or greater than gzipMinLength.
 	gzipMinLength int
 	//Default size==20B like nginx
 	defaultGzipMinLength = 20
