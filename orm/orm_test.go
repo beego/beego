@@ -188,6 +188,7 @@ func TestSyncDb(t *testing.T) {
 	RegisterModel(new(Permission))
 	RegisterModel(new(GroupPermissions))
 	RegisterModel(new(InLine))
+	RegisterModel(new(InLineOneToOne))
 
 	err := RunSyncdb("default", true, Debug)
 	throwFail(t, err)
@@ -208,6 +209,7 @@ func TestRegisterModels(t *testing.T) {
 	RegisterModel(new(Permission))
 	RegisterModel(new(GroupPermissions))
 	RegisterModel(new(InLine))
+	RegisterModel(new(InLineOneToOne))
 
 	BootStrap()
 
@@ -1951,4 +1953,41 @@ func TestInLine(t *testing.T) {
 	throwFail(t, AssertIs(il.Email, email))
 	throwFail(t, AssertIs(il.Created.In(DefaultTimeLoc), inline.Created.In(DefaultTimeLoc), testDate))
 	throwFail(t, AssertIs(il.Updated.In(DefaultTimeLoc), inline.Updated.In(DefaultTimeLoc), testDateTime))
+}
+
+func TestInLineOneToOne(t *testing.T) {
+	name := "121"
+	email := "121@go.com"
+	inline := NewInLine()
+	inline.Name = name
+	inline.Email = email
+
+	id, err := dORM.Insert(inline)
+	throwFail(t, err)
+	throwFail(t, AssertIs(id, 2))
+
+	note := "one2one"
+	il121 := NewInLineOneToOne()
+	il121.Note = note
+	il121.InLine = inline
+	_, err = dORM.Insert(il121)
+	throwFail(t, err)
+	throwFail(t, AssertIs(il121.ID, 1))
+
+	il := NewInLineOneToOne()
+	err = dORM.QueryTable(il).Filter("Id", 1).RelatedSel().One(il)
+
+	throwFail(t, err)
+	throwFail(t, AssertIs(il.Note, note))
+	throwFail(t, AssertIs(il.InLine.ID, id))
+	throwFail(t, AssertIs(il.InLine.Name, name))
+	throwFail(t, AssertIs(il.InLine.Email, email))
+
+	rinline := NewInLine()
+	err = dORM.QueryTable(rinline).Filter("InLineOneToOne__Id", 1).One(rinline)
+
+	throwFail(t, err)
+	throwFail(t, AssertIs(rinline.ID, id))
+	throwFail(t, AssertIs(rinline.Name, name))
+	throwFail(t, AssertIs(rinline.Email, email))
 }
