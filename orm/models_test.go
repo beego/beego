@@ -387,6 +387,11 @@ func NewInLineOneToOne() *InLineOneToOne {
 	return new(InLineOneToOne)
 }
 
+type IntegerPk struct {
+	Id    int64 `orm:"pk"`
+	Value string
+}
+
 var DBARGS = struct {
 	Driver string
 	Source string

@@ -19,6 +19,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -189,6 +190,7 @@ func TestSyncDb(t *testing.T) {
 	RegisterModel(new(GroupPermissions))
 	RegisterModel(new(InLine))
 	RegisterModel(new(InLineOneToOne))
+	RegisterModel(new(IntegerPk))
 
 	err := RunSyncdb("default", true, Debug)
 	throwFail(t, err)
@@ -210,6 +212,7 @@ func TestRegisterModels(t *testing.T) {
 	RegisterModel(new(GroupPermissions))
 	RegisterModel(new(InLine))
 	RegisterModel(new(InLineOneToOne))
+	RegisterModel(new(IntegerPk))
 
 	BootStrap()
 
@@ -1990,4 +1993,23 @@ func TestInLineOneToOne(t *testing.T) {
 	throwFail(t, AssertIs(rinline.ID, id))
 	throwFail(t, AssertIs(rinline.Name, name))
 	throwFail(t, AssertIs(rinline.Email, email))
+}
+
+func TestIntegerPk(t *testing.T) {
+	its := []IntegerPk{
+		{Id: math.MinInt64, Value: "-"},
+		{Id: 0, Value: "0"},
+		{Id: math.MaxInt64, Value: "+"},
+	}
+
+	num, err := dORM.InsertMulti(len(its), its)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, len(its)))
+
+	for _, intPk := range its {
+		out := IntegerPk{Id: intPk.Id}
+		err = dORM.Read(&out)
+		throwFail(t, err)
+		throwFail(t, AssertIs(out.Value, intPk.Value))
+	}
 }
