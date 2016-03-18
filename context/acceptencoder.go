@@ -48,7 +48,7 @@ func InitGzip(cf config.Configer) {
 		gzipCompressLevel = flate.BestSpeed
 	}
 	methods := cf.DefaultStrings("includedMethods", []string{"GET"})
-	getMethodOnly = len(methods) == 1 && strings.ToUpper(methods[0]) == "GET"
+	getMethodOnly = (len(methods) == 0) || (len(methods) == 1 && strings.ToUpper(methods[0]) == "GET")
 	for _, v := range methods {
 		includedMethods[strings.ToUpper(v)] = true
 	}
