@@ -49,6 +49,7 @@ func InitGzip(cf config.Configer) {
 	}
 	methods := cf.DefaultStrings("includedMethods", []string{"GET"})
 	getMethodOnly = (len(methods) == 0) || (len(methods) == 1 && strings.ToUpper(methods[0]) == "GET")
+	includedMethods = make(map[string]bool, len(methods))
 	for _, v := range methods {
 		includedMethods[strings.ToUpper(v)] = true
 	}
