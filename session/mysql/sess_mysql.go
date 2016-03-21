@@ -45,6 +45,7 @@ import (
 	"net/http"
 	"sync"
 	"time"
+	"log"
 
 	"github.com/astaxie/beego/session"
 	// import mysql driver
@@ -111,10 +112,15 @@ func (st *SessionStore) SessionRelease(w http.ResponseWriter) {
 	defer st.c.Close()
 	b, err := session.EncodeGob(st.values)
 	if err != nil {
+		log.Println(err)
 		return
 	}
-	st.c.Exec("UPDATE "+TableName+" set `session_data`=?, `session_expiry`=? where session_key=?",
+	_, err = st.c.Exec("UPDATE "+TableName+" set `session_data`=?, `session_expiry`=? where session_key=?",
 		b, time.Now().Unix(), st.sid)
+
+	if err != nil {
+		log.Println(err)
+	}		
 
 }
 
@@ -126,8 +132,9 @@ type Provider struct {
 
 // connect to mysql
 func (mp *Provider) connectInit() *sql.DB {
-	db, e := sql.Open("mysql", mp.savePath)
-	if e != nil {
+	db, err := sql.Open("mysql", mp.savePath)
+	if err != nil {
+		log.Println(err)
 		return nil
 	}
 	return db
