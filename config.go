@@ -103,6 +103,8 @@ var (
 	BConfig *Config
 	// AppConfig is the instance of Config, store the config information from file
 	AppConfig *beegoAppConfig
+	// Common config
+	CommonConfig *beegoAppConfig
 	// AppPath is the absolute path to the app
 	AppPath string
 	// GlobalSessions is the instance for the session manager
@@ -180,6 +182,15 @@ func init() {
 	}
 
 	appConfigPath = filepath.Join(AppPath, "conf", "app.conf")
+	commonConfigPath := filepath.Join(AppPath, "conf", "common.conf")
+	if utils.FileExists(commonConfigPath) {
+		CommonConfig, err := newAppConfig(appConfigProvider, commonConfigPath)
+		confdir := CommonConfig.String("confdir")
+		if err == nil && confdir != "" {
+			appConfigPath = filepath.Join(AppPath, confdir, "app.conf")
+		}
+	}
+
 	if !utils.FileExists(appConfigPath) {
 		AppConfig = &beegoAppConfig{innerConfig: config.NewFakeConfig()}
 		return
