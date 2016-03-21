@@ -68,14 +68,7 @@ func (output *BeegoOutput) Body(content []byte) error {
 	} else {
 		output.Header("Content-Length", strconv.Itoa(len(content)))
 	}
-	// Write status code if it has been set manually
-	// Set it to 0 afterwards to prevent "multiple response.WriteHeader calls"
-	if output.Status != 0 {
-		output.Context.ResponseWriter.WriteHeader(output.Status)
-		output.Status = 0
-	} else {
-		output.Context.ResponseWriter.Started = true
-	}
+	output.Context.ResponseWriter.WriteHeader(output.Status)
 	io.Copy(output.Context.ResponseWriter, buf)
 	return nil
 }
