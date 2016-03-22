@@ -25,15 +25,13 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-
-	"github.com/astaxie/beego/config"
 )
 
 var (
-	//Content will only be compressed if content length is either unknown or greater than gzipMinLength.
-	gzipMinLength int
 	//Default size==20B same as nginx
 	defaultGzipMinLength = 20
+	//Content will only be compressed if content length is either unknown or greater than gzipMinLength.
+	gzipMinLength = defaultGzipMinLength
 	//The compression level used for deflate compression. (0-9).
 	gzipCompressLevel int
 	//List of HTTP methods to compress. If not set, only GET requests are compressed.
@@ -41,13 +39,14 @@ var (
 	getMethodOnly   bool
 )
 
-func InitGzip(cf config.Configer) {
-	gzipMinLength = cf.DefaultInt("gzipMinLength", defaultGzipMinLength)
-	gzipCompressLevel = cf.DefaultInt("gzipCompressLevel", flate.BestSpeed)
+func InitGzip(minLength, compressLevel int, methods []string) {
+	if minLength >= 0 {
+		gzipMinLength = minLength
+	}
+	gzipCompressLevel = compressLevel
 	if gzipCompressLevel < flate.DefaultCompression || gzipCompressLevel > flate.BestCompression {
 		gzipCompressLevel = flate.BestSpeed
 	}
-	methods := cf.DefaultStrings("includedMethods", []string{"GET"})
 	getMethodOnly = (len(methods) == 0) || (len(methods) == 1 && strings.ToUpper(methods[0]) == "GET")
 	includedMethods = make(map[string]bool, len(methods))
 	for _, v := range methods {
