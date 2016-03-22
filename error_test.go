@@ -26,10 +26,12 @@ type errorTestController struct {
 	Controller
 }
 
+const parseCodeError = "parse code error"
+
 func (ec *errorTestController) Get() {
 	errorCode, err := ec.GetInt("code")
 	if err != nil {
-		ec.Abort("parse code error")
+		ec.Abort(parseCodeError)
 	}
 	if errorCode != 0 {
 		ec.CustomAbort(errorCode, ec.GetString("code"))
@@ -66,13 +68,12 @@ func TestErrorCode_02(t *testing.T) {
 	handler.ServeHTTP(w, r)
 	if w.Code != 404 {
 		t.Fail()
-
 	}
 }
 
 func TestErrorCode_03(t *testing.T) {
 	registerDefaultErrorHandler()
-	r, _ := http.NewRequest("GET", "/error?code=crash", nil)
+	r, _ := http.NewRequest("GET", "/error?code=panic", nil)
 	w := httptest.NewRecorder()
 
 	handler := NewControllerRegister()
@@ -81,7 +82,7 @@ func TestErrorCode_03(t *testing.T) {
 	if w.Code != 200 {
 		t.Fail()
 	}
-	if string(w.Body.Bytes()) != "parse code error" {
+	if string(w.Body.Bytes()) != parseCodeError {
 		t.Fail()
 	}
 }
