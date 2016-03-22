@@ -44,7 +44,7 @@ func InitGzip(minLength, compressLevel int, methods []string) {
 		gzipMinLength = minLength
 	}
 	gzipCompressLevel = compressLevel
-	if gzipCompressLevel < flate.DefaultCompression || gzipCompressLevel > flate.BestCompression {
+	if gzipCompressLevel < flate.NoCompression || gzipCompressLevel > flate.BestCompression {
 		gzipCompressLevel = flate.BestSpeed
 	}
 	getMethodOnly = (len(methods) == 0) || (len(methods) == 1 && strings.ToUpper(methods[0]) == "GET")
