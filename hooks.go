@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/session"
 )
 
@@ -88,6 +89,17 @@ func registerDocs() error {
 func registerAdmin() error {
 	if BConfig.Listen.EnableAdmin {
 		go beeAdminApp.Run()
+	}
+	return nil
+}
+
+func registerGzip() error {
+	if BConfig.EnableGzip {
+		context.InitGzip(
+			AppConfig.DefaultInt("gzipMinLength", -1),
+			AppConfig.DefaultInt("gzipCompressLevel", -1),
+			AppConfig.DefaultStrings("includedMethods", []string{"GET"}),
+		)
 	}
 	return nil
 }
