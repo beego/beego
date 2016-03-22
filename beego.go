@@ -89,5 +89,6 @@ func TestBeegoInit(ap string) {
 	os.Setenv("BEEGO_RUNMODE", "test")
 	appConfigPath = filepath.Join(ap, "conf", "app.conf")
 	os.Chdir(ap)
+	LoadAppConfig(appConfigProvider, appConfigPath)
 	initBeforeHTTPRun()
 }
