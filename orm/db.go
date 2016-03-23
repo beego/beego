@@ -181,7 +181,7 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 				}
 			default:
 				switch {
-				case fi.fieldType&IsPostiveIntegerField > 0:
+				case fi.fieldType&IsPositiveIntegerField > 0:
 					if field.Kind() == reflect.Ptr {
 						if field.IsNil() {
 							value = nil
@@ -516,7 +516,7 @@ func (d *dbBase) Delete(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.
 		}
 		if num > 0 {
 			if mi.fields.pk.auto {
-				if mi.fields.pk.fieldType&IsPostiveIntegerField > 0 {
+				if mi.fields.pk.fieldType&IsPositiveIntegerField > 0 {
 					ind.FieldByIndex(mi.fields.pk.fieldIndex).SetUint(0)
 				} else {
 					ind.FieldByIndex(mi.fields.pk.fieldIndex).SetInt(0)
@@ -1140,7 +1140,7 @@ setValue:
 				tErr = err
 				goto end
 			}
-			if fieldType&IsPostiveIntegerField > 0 {
+			if fieldType&IsPositiveIntegerField > 0 {
 				v, _ := str.Uint64()
 				value = v
 			} else {
@@ -1292,7 +1292,7 @@ setValue:
 			field.Set(reflect.ValueOf(&v))
 		}
 	case fieldType&IsIntegerField > 0:
-		if fieldType&IsPostiveIntegerField > 0 {
+		if fieldType&IsPositiveIntegerField > 0 {
 			if isNative {
 				if value == nil {
 					value = uint64(0)
