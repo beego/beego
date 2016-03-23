@@ -141,7 +141,7 @@ func (o *orm) ReadOrCreate(md interface{}, col1 string, cols ...string) (bool, i
 	}
 
 	id, vid := int64(0), ind.FieldByIndex(mi.fields.pk.fieldIndex)
-	if mi.fields.pk.fieldType&IsPostiveIntegerField > 0 {
+	if mi.fields.pk.fieldType&IsPositiveIntegerField > 0 {
 		id = int64(vid.Uint())
 	} else {
 		id = vid.Int()

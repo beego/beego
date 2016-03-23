@@ -191,6 +191,7 @@ func TestSyncDb(t *testing.T) {
 	RegisterModel(new(InLine))
 	RegisterModel(new(InLineOneToOne))
 	RegisterModel(new(IntegerPk))
+	RegisterModel(new(UintPk))
 
 	err := RunSyncdb("default", true, Debug)
 	throwFail(t, err)
@@ -213,6 +214,7 @@ func TestRegisterModels(t *testing.T) {
 	RegisterModel(new(InLine))
 	RegisterModel(new(InLineOneToOne))
 	RegisterModel(new(IntegerPk))
+	RegisterModel(new(UintPk))
 
 	BootStrap()
 
@@ -2012,4 +2014,27 @@ func TestIntegerPk(t *testing.T) {
 		throwFail(t, err)
 		throwFail(t, AssertIs(out.Value, intPk.Value))
 	}
+}
+
+func TestUintPk(t *testing.T) {
+	name := "go"
+	u := &UintPk{
+		Id:   8,
+		Name: name,
+	}
+
+	created, pk, err := dORM.ReadOrCreate(u, "Id")
+	throwFail(t, err)
+	throwFail(t, AssertIs(created, true))
+	throwFail(t, AssertIs(u.Name, name))
+
+	nu := &UintPk{Id: 8}
+	created, pk, err = dORM.ReadOrCreate(nu, "Id")
+	throwFail(t, err)
+	throwFail(t, AssertIs(created, false))
+	throwFail(t, AssertIs(nu.Id, u.Id))
+	throwFail(t, AssertIs(pk, u.Id))
+	throwFail(t, AssertIs(nu.Name, name))
+
+	dORM.Delete(u)
 }
