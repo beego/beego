@@ -196,7 +196,7 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 				BeforeExec:   "Before Exec",
 				AfterExec:    "After Exec",
 				FinishRouter: "Finish Router"} {
-				if bf, ok := BeeApp.Handlers.filters[k]; ok {
+				if bf := BeeApp.Handlers.filters[k]; len(bf) > 0 {
 					filterType = fr
 					filterTypes = append(filterTypes, filterType)
 					resultList := new([][]string)

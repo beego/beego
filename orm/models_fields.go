@@ -46,10 +46,10 @@ const (
 
 // Define some logic enum
 const (
-	IsIntegerField        = ^-TypePositiveBigIntegerField >> 4 << 5
-	IsPostiveIntegerField = ^-TypePositiveBigIntegerField >> 8 << 9
-	IsRelField            = ^-RelReverseMany >> 14 << 15
-	IsFieldType           = ^-RelReverseMany<<1 + 1
+	IsIntegerField         = ^-TypePositiveBigIntegerField >> 4 << 5
+	IsPositiveIntegerField = ^-TypePositiveBigIntegerField >> 8 << 9
+	IsRelField             = ^-RelReverseMany >> 14 << 15
+	IsFieldType            = ^-RelReverseMany<<1 + 1
 )
 
 // BooleanField A true/false field.
