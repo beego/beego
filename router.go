@@ -842,27 +842,26 @@ func (p *ControllerRegister) recoverPanic(context *beecontext.Context) {
 		}
 		if !BConfig.RecoverPanic {
 			panic(err)
-		} else {
-			if BConfig.EnableErrorsShow {
-				if _, ok := ErrorMaps[fmt.Sprint(err)]; ok {
-					exception(fmt.Sprint(err), context)
-					return
-				}
+		}
+		if BConfig.EnableErrorsShow {
+			if _, ok := ErrorMaps[fmt.Sprint(err)]; ok {
+				exception(fmt.Sprint(err), context)
+				return
 			}
-			var stack string
-			Critical("the request url is ", context.Input.URL())
-			Critical("Handler crashed with error", err)
-			for i := 1; ; i++ {
-				_, file, line, ok := runtime.Caller(i)
-				if !ok {
-					break
-				}
-				Critical(fmt.Sprintf("%s:%d", file, line))
-				stack = stack + fmt.Sprintln(fmt.Sprintf("%s:%d", file, line))
+		}
+		var stack string
+		Critical("the request url is ", context.Input.URL())
+		Critical("Handler crashed with error", err)
+		for i := 1; ; i++ {
+			_, file, line, ok := runtime.Caller(i)
+			if !ok {
+				break
 			}
-			if BConfig.RunMode == DEV {
-				showErr(err, context, stack)
-			}
+			Critical(fmt.Sprintf("%s:%d", file, line))
+			stack = stack + fmt.Sprintln(fmt.Sprintf("%s:%d", file, line))
+		}
+		if BConfig.RunMode == DEV {
+			showErr(err, context, stack)
 		}
 	}
 }
