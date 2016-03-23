@@ -2013,3 +2013,24 @@ func TestIntegerPk(t *testing.T) {
 		throwFail(t, AssertIs(out.Value, intPk.Value))
 	}
 }
+
+func TestInsertAuto(t *testing.T) {
+	u := &User{
+		UserName: "autoPre",
+		Email:    "autoPre@gmail.com",
+	}
+
+	id, err := dORM.Insert(u)
+	throwFail(t, err)
+
+	id += 100
+	su := &User{
+		ID:       int(id),
+		UserName: "auto",
+		Email:    "auto@gmail.com",
+	}
+
+	sid, err := dORM.Insert(su)
+	throwFail(t, err)
+	throwFail(t, AssertIs(id, sid))
+}
