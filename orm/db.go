@@ -72,11 +72,11 @@ var _ dbBaser = new(dbBase)
 
 // get struct columns values as interface slice.
 func (d *dbBase) collectValues(mi *modelInfo, ind reflect.Value, cols []string, skipAuto bool, insert bool, names *[]string, tz *time.Location) (values []interface{}, err error) {
-	var columns []string
-
-	if names != nil {
-		columns = *names
+	if names == nil {
+		ns := make([]string, 0, len(cols))
+		names = &ns
 	}
+	values = make([]interface{}, 0, len(cols))
 
 	for _, column := range cols {
 		var fi *fieldInfo
@@ -93,15 +93,20 @@ func (d *dbBase) collectValues(mi *modelInfo, ind reflect.Value, cols []string, 
 			return nil, err
 		}
 
-		if names != nil {
-			columns = append(columns, column)
+		// ignore empty value auto field
+		if fi.auto {
+			if fi.fieldType&IsPositiveIntegerField > 0 {
+				if vu, ok := value.(uint64); !ok || vu == 0 {
+					continue
+				}
+			} else {
+				if vu, ok := value.(int64); !ok || vu == 0 {
+					continue
+				}
+			}
 		}
 
-		values = append(values, value)
-	}
-
-	if names != nil {
-		*names = columns
+		*names, values = append(*names, column), append(values, value)
 	}
 
 	return
@@ -349,8 +354,8 @@ func (d *dbBase) Read(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Lo
 
 // execute insert sql dbQuerier with given struct reflect.Value.
 func (d *dbBase) Insert(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location) (int64, error) {
-	names := make([]string, 0, len(mi.fields.dbcols)-1)
-	values, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, &names, tz)
+	names := make([]string, 0, len(mi.fields.dbcols))
+	values, err := d.collectValues(mi, ind, mi.fields.dbcols, false, true, &names, tz)
 	if err != nil {
 		return 0, err
 	}
