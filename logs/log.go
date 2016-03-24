@@ -457,7 +457,7 @@ func (bl *BeeLogger) flush() {
 }
 
 // BeeLogger references the used application logger.
-var beeLogger = NewLogger(100)
+var beeLogger = NewLogger()
 
 // GetLogger returns the default BeeLogger
 func GetBeeLogger() *BeeLogger {
