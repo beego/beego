@@ -35,10 +35,12 @@ package logs
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"path"
 	"runtime"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
@@ -53,6 +55,15 @@ const (
 	LevelNotice
 	LevelInformational
 	LevelDebug
+)
+
+const (
+	AdapterConsole   = "console"
+	AdapterFile      = "file"
+	AdapterMultiFile = "multifile"
+	AdapterMail      = "stmp"
+	AdapterConn      = "conn"
+	AdaterEs         = "es"
 )
 
 // Legacy loglevel constants to ensure backwards compatibility.
@@ -94,6 +105,7 @@ func Register(name string, log loggerType) {
 type BeeLogger struct {
 	lock                sync.Mutex
 	level               int
+	msgChanLen          int64
 	enableFuncCallDepth bool
 	loggerFuncCallDepth int
 	asynchronous        bool
@@ -119,11 +131,14 @@ var logMsgPool *sync.Pool
 // NewLogger returns a new BeeLogger.
 // channelLen means the number of messages in chan(used where asynchronous is true).
 // if the buffering chan is full, logger adapters write to file or other way.
-func NewLogger(channelLen int64) *BeeLogger {
+func NewLogger(channelLens ...int64) *BeeLogger {
 	bl := new(BeeLogger)
 	bl.level = LevelDebug
 	bl.loggerFuncCallDepth = 2
-	bl.msgChan = make(chan *logMsg, channelLen)
+	bl.msgChanLen = append(channelLens, 0)[0]
+	if bl.msgChanLen < 0 {
+		bl.msgChanLen = 0
+	}
 	bl.signalChan = make(chan string, 1)
 	return bl
 }
@@ -131,6 +146,7 @@ func NewLogger(channelLen int64) *BeeLogger {
 // Async set the log to asynchronous and start the goroutine
 func (bl *BeeLogger) Async() *BeeLogger {
 	bl.asynchronous = true
+	bl.msgChan = make(chan *logMsg, bl.msgChanLen)
 	logMsgPool = &sync.Pool{
 		New: func() interface{} {
 			return &logMsg{}
@@ -143,7 +159,8 @@ func (bl *BeeLogger) Async() *BeeLogger {
 
 // SetLogger provides a given logger adapter into BeeLogger with config string.
 // config need to be correct JSON as string: {"interval":360}.
-func (bl *BeeLogger) SetLogger(adapterName string, config string) error {
+func (bl *BeeLogger) SetLogger(adapterName string, configs ...string) error {
+	config := append(configs, "{}")[0]
 	bl.lock.Lock()
 	defer bl.lock.Unlock()
 
@@ -402,6 +419,7 @@ func (bl *BeeLogger) Close() {
 	if bl.asynchronous {
 		bl.signalChan <- "close"
 		bl.wg.Wait()
+		close(bl.msgChan)
 	} else {
 		bl.flush()
 		for _, l := range bl.outputs {
@@ -409,7 +427,6 @@ func (bl *BeeLogger) Close() {
 		}
 		bl.outputs = nil
 	}
-	close(bl.msgChan)
 	close(bl.signalChan)
 }
 
@@ -423,16 +440,155 @@ func (bl *BeeLogger) Reset() {
 }
 
 func (bl *BeeLogger) flush() {
-	for {
-		if len(bl.msgChan) > 0 {
-			bm := <-bl.msgChan
-			bl.writeToLoggers(bm.when, bm.msg, bm.level)
-			logMsgPool.Put(bm)
-			continue
+	if bl.asynchronous {
+		for {
+			if len(bl.msgChan) > 0 {
+				bm := <-bl.msgChan
+				bl.writeToLoggers(bm.when, bm.msg, bm.level)
+				logMsgPool.Put(bm)
+				continue
+			}
+			break
 		}
-		break
 	}
 	for _, l := range bl.outputs {
 		l.Flush()
 	}
+}
+
+// BeeLogger references the used application logger.
+var beeLogger = NewLogger(100)
+
+// GetLogger returns the default BeeLogger
+func GetBeeLogger() *BeeLogger {
+	return beeLogger
+}
+
+var beeLoggerMap = struct {
+	sync.RWMutex
+	logs map[string]*log.Logger
+}{
+	logs: map[string]*log.Logger{},
+}
+
+// GetLogger returns the default BeeLogger
+func GetLogger(prefixes ...string) *log.Logger {
+	prefix := append(prefixes, "")[0]
+	if prefix != "" {
+		prefix = fmt.Sprintf(`[%s] `, prefix)
+	}
+	beeLoggerMap.RLock()
+	l, ok := beeLoggerMap.logs[prefix]
+	if ok {
+		beeLoggerMap.RUnlock()
+		return l
+	}
+	beeLoggerMap.RUnlock()
+	beeLoggerMap.Lock()
+	defer beeLoggerMap.Unlock()
+	l, ok = beeLoggerMap.logs[prefix]
+	if !ok {
+		l = log.New(beeLogger, prefix, 0)
+		beeLoggerMap.logs[prefix] = l
+	}
+	return l
+}
+
+// Reset will remove all the adapter
+func Reset() {
+	beeLogger.Reset()
+}
+
+// SetLevel sets the global log level used by the simple logger.
+func SetLevel(l int) {
+	beeLogger.SetLevel(l)
+}
+
+// SetLogFuncCall set the CallDepth, default is 3
+func SetLogFuncCall(b bool) {
+	beeLogger.EnableFuncCallDepth(b)
+	beeLogger.SetLogFuncCallDepth(3)
+}
+
+// SetLogger sets a new logger.
+func SetLogger(adaptername string, config string) error {
+	err := beeLogger.SetLogger(adaptername, config)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// Emergency logs a message at emergency level.
+func Emergency(f interface{}, v ...interface{}) {
+	beeLogger.Emergency(logf(f, v...))
+}
+
+// Alert logs a message at alert level.
+func Alert(f interface{}, v ...interface{}) {
+	beeLogger.Alert(logf(f, v...))
+}
+
+// Critical logs a message at critical level.
+func Critical(f interface{}, v ...interface{}) {
+	beeLogger.Critical(logf(f, v...))
+}
+
+// Error logs a message at error level.
+func Error(f interface{}, v ...interface{}) {
+	beeLogger.Error(logf(f, v...))
+}
+
+// Warning logs a message at warning level.
+func Warning(f interface{}, v ...interface{}) {
+	beeLogger.Warning(logf(f, v...))
+}
+
+// Warn compatibility alias for Warning()
+func Warn(f interface{}, v ...interface{}) {
+	beeLogger.Warn(logf(f, v...))
+}
+
+// Notice logs a message at notice level.
+func Notice(f interface{}, v ...interface{}) {
+	beeLogger.Notice(logf(f, v...))
+}
+
+// Informational logs a message at info level.
+func Informational(f interface{}, v ...interface{}) {
+	beeLogger.Informational(logf(f, v...))
+}
+
+// Info compatibility alias for Warning()
+func Info(f interface{}, v ...interface{}) {
+	fmt.Print()
+	beeLogger.Info(logf(f, v...))
+}
+
+// Debug logs a message at debug level.
+func Debug(f interface{}, v ...interface{}) {
+	beeLogger.Debug(logf(f, v...))
+}
+
+// Trace logs a message at trace level.
+// compatibility alias for Warning()
+func Trace(f interface{}, v ...interface{}) {
+	beeLogger.Trace(logf(f, v...))
+}
+
+func logf(f interface{}, v ...interface{}) string {
+	var msg string
+	switch f.(type) {
+	case string:
+		msg = f.(string)
+		if strings.Contains(msg, "%") && !strings.Contains(msg, "%%") {
+			//format string
+		} else {
+			//do not contain format char
+			msg += strings.Repeat(" %v", len(v))
+		}
+	default:
+		msg = fmt.Sprint(f) + strings.Repeat(" %v", len(v))
+	}
+	return fmt.Sprintf(msg, v...)
 }
