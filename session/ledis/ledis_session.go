@@ -100,7 +100,7 @@ func (lp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 	nowLedis, err := ledis.Open(cfg)
 	c, err = nowLedis.Select(lp.db)
 	if err != nil {
-		println(err)
+		session.SLogger.Println(err)
 		return nil
 	}
 	return nil

@@ -32,8 +32,11 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"io"
+	"log"
 	"net/http"
 	"net/url"
+	"os"
 	"time"
 )
 
@@ -60,6 +63,8 @@ type Provider interface {
 }
 
 var provides = make(map[string]Provider)
+
+var SLogger = newSessionLog(os.Stderr)
 
 // Register makes a session provide available by the provided name.
 // If Register is called twice with the same name or if driver is nil,
@@ -295,4 +300,16 @@ func (manager *Manager) isSecure(req *http.Request) bool {
 		return false
 	}
 	return true
+}
+
+// Log implement the log.Logger
+type sessionLog struct {
+	*log.Logger
+}
+
+// NewLog set io.Writer to create a Logger for session.
+func newSessionLog(out io.Writer) *sessionLog {
+	sl := new(sessionLog)
+	sl.Logger = log.New(out, "[SESSION]", 1e9)
+	return sl
 }

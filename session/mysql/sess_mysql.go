@@ -1,3 +1,4 @@
+
 // Copyright 2014 beego Author. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -111,11 +112,14 @@ func (st *SessionStore) SessionRelease(w http.ResponseWriter) {
 	defer st.c.Close()
 	b, err := session.EncodeGob(st.values)
 	if err != nil {
+		session.SLogger.Println(err)
 		return
 	}
-	st.c.Exec("UPDATE "+TableName+" set `session_data`=?, `session_expiry`=? where session_key=?",
+	_, err = st.c.Exec("UPDATE "+TableName+" set `session_data`=?, `session_expiry`=? where session_key=?",
 		b, time.Now().Unix(), st.sid)
-
+	if err != nil {
+		session.SLogger.Println(err)
+	}
 }
 
 // Provider mysql session provider
@@ -128,6 +132,7 @@ type Provider struct {
 func (mp *Provider) connectInit() *sql.DB {
 	db, e := sql.Open("mysql", mp.savePath)
 	if e != nil {
+		session.SLogger.Println(e)
 		return nil
 	}
 	return db
@@ -223,6 +228,7 @@ func (mp *Provider) SessionAll() int {
 	var total int
 	err := c.QueryRow("SELECT count(*) as num from " + TableName).Scan(&total)
 	if err != nil {
+		session.SLogger.Println(err)
 		return 0
 	}
 	return total
