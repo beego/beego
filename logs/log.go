@@ -511,8 +511,8 @@ func SetLogFuncCall(b bool) {
 }
 
 // SetLogger sets a new logger.
-func SetLogger(adaptername string, config string) error {
-	err := beeLogger.SetLogger(adaptername, config)
+func SetLogger(adapter string, config ...string) error {
+	err := beeLogger.SetLogger(adapter, config...)
 	if err != nil {
 		return err
 	}
