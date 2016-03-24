@@ -521,62 +521,62 @@ func SetLogger(adaptername string, config string) error {
 
 // Emergency logs a message at emergency level.
 func Emergency(f interface{}, v ...interface{}) {
-	beeLogger.Emergency(logf(f, v...))
+	beeLogger.Emergency(formatLog(f, v...))
 }
 
 // Alert logs a message at alert level.
 func Alert(f interface{}, v ...interface{}) {
-	beeLogger.Alert(logf(f, v...))
+	beeLogger.Alert(formatLog(f, v...))
 }
 
 // Critical logs a message at critical level.
 func Critical(f interface{}, v ...interface{}) {
-	beeLogger.Critical(logf(f, v...))
+	beeLogger.Critical(formatLog(f, v...))
 }
 
 // Error logs a message at error level.
 func Error(f interface{}, v ...interface{}) {
-	beeLogger.Error(logf(f, v...))
+	beeLogger.Error(formatLog(f, v...))
 }
 
 // Warning logs a message at warning level.
 func Warning(f interface{}, v ...interface{}) {
-	beeLogger.Warning(logf(f, v...))
+	beeLogger.Warning(formatLog(f, v...))
 }
 
 // Warn compatibility alias for Warning()
 func Warn(f interface{}, v ...interface{}) {
-	beeLogger.Warn(logf(f, v...))
+	beeLogger.Warn(formatLog(f, v...))
 }
 
 // Notice logs a message at notice level.
 func Notice(f interface{}, v ...interface{}) {
-	beeLogger.Notice(logf(f, v...))
+	beeLogger.Notice(formatLog(f, v...))
 }
 
 // Informational logs a message at info level.
 func Informational(f interface{}, v ...interface{}) {
-	beeLogger.Informational(logf(f, v...))
+	beeLogger.Informational(formatLog(f, v...))
 }
 
 // Info compatibility alias for Warning()
 func Info(f interface{}, v ...interface{}) {
 	fmt.Print()
-	beeLogger.Info(logf(f, v...))
+	beeLogger.Info(formatLog(f, v...))
 }
 
 // Debug logs a message at debug level.
 func Debug(f interface{}, v ...interface{}) {
-	beeLogger.Debug(logf(f, v...))
+	beeLogger.Debug(formatLog(f, v...))
 }
 
 // Trace logs a message at trace level.
 // compatibility alias for Warning()
 func Trace(f interface{}, v ...interface{}) {
-	beeLogger.Trace(logf(f, v...))
+	beeLogger.Trace(formatLog(f, v...))
 }
 
-func logf(f interface{}, v ...interface{}) string {
+func formatLog(f interface{}, v ...interface{}) string {
 	var msg string
 	switch f.(type) {
 	case string:
