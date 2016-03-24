@@ -597,6 +597,9 @@ func formatLog(f interface{}, v ...interface{}) string {
 	switch f.(type) {
 	case string:
 		msg = f.(string)
+		if len(v) == 0 {
+			return msg
+		}
 		if strings.Contains(msg, "%") && !strings.Contains(msg, "%%") {
 			//format string
 		} else {
@@ -604,7 +607,11 @@ func formatLog(f interface{}, v ...interface{}) string {
 			msg += strings.Repeat(" %v", len(v))
 		}
 	default:
-		msg = fmt.Sprint(f) + strings.Repeat(" %v", len(v))
+		msg = fmt.Sprint(f)
+		if len(v) == 0 {
+			return msg
+		}
+		msg += strings.Repeat(" %v", len(v))
 	}
 	return fmt.Sprintf(msg, v...)
 }
