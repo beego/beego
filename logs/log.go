@@ -56,14 +56,16 @@ const (
 	LevelInformational
 	LevelDebug
 )
+const levelCustom = -1
 
+// Name for adapter with beego official support
 const (
 	AdapterConsole   = "console"
 	AdapterFile      = "file"
 	AdapterMultiFile = "multifile"
 	AdapterMail      = "stmp"
 	AdapterConn      = "conn"
-	AdaterEs         = "es"
+	AdapterEs        = "es"
 )
 
 // Legacy loglevel constants to ensure backwards compatibility.
@@ -75,7 +77,7 @@ const (
 	LevelWarn  = LevelWarning
 )
 
-type loggerType func() Logger
+type newLoggerFunc func() Logger
 
 // Logger defines the behavior of a log provider.
 type Logger interface {
@@ -85,12 +87,13 @@ type Logger interface {
 	Flush()
 }
 
-var adapters = make(map[string]loggerType)
+var adapters = make(map[string]newLoggerFunc)
+var levelPrefix = [LevelDebug + 1]string{"[M] ", "[A] ", "[C] ", "[E] ", "[W] ", "[N] ", "[I] ", "[D] "}
 
 // Register makes a log provide available by the provided name.
 // If Register is called twice with the same name or if driver is nil,
 // it panics.
-func Register(name string, log loggerType) {
+func Register(name string, log newLoggerFunc) {
 	if log == nil {
 		panic("logs: Register provide is nil")
 	}
@@ -222,14 +225,18 @@ func (bl *BeeLogger) Write(p []byte) (n int, err error) {
 		p = p[0 : len(p)-1]
 	}
 	// set LevelCritical to ensure all log message will be write out
-	err = bl.writeMsg(LevelCritical, string(p))
+	err = bl.writeMsg(levelCustom, string(p))
 	if err == nil {
 		return len(p), err
 	}
 	return 0, err
 }
 
-func (bl *BeeLogger) writeMsg(logLevel int, msg string) error {
+func (bl *BeeLogger) writeMsg(logLevel int, msg string, v ...interface{}) error {
+	if logLevel != levelCustom {
+		msg = levelPrefix[logLevel] + msg
+	}
+	msg = fmt.Sprintf(msg, v...)
 	when := time.Now()
 	if bl.enableFuncCallDepth {
 		_, file, line, ok := runtime.Caller(bl.loggerFuncCallDepth)
@@ -561,7 +568,6 @@ func Informational(f interface{}, v ...interface{}) {
 
 // Info compatibility alias for Warning()
 func Info(f interface{}, v ...interface{}) {
-	fmt.Print()
 	beeLogger.Info(formatLog(f, v...))
 }
 
