@@ -238,7 +238,6 @@ func (output *BeegoOutput) XML(data interface{}, hasIndent bool) error {
 // Download forces response for download file.
 // it prepares the download response header automatically.
 func (output *BeegoOutput) Download(file string, filename ...string) {
-
 	// check get file error, file not found or other error.
 	if _, err := os.Stat(file); err != nil {
 		http.ServeFile(output.Context.ResponseWriter, output.Context.Request, file)
