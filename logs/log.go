@@ -475,7 +475,7 @@ var beeLoggerMap = struct {
 func GetLogger(prefixes ...string) *log.Logger {
 	prefix := append(prefixes, "")[0]
 	if prefix != "" {
-		prefix = fmt.Sprintf(`[%s] `, prefix)
+		prefix = fmt.Sprintf(`[%s] `, strings.ToUpper(prefix))
 	}
 	beeLoggerMap.RLock()
 	l, ok := beeLoggerMap.logs[prefix]
