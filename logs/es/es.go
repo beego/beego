@@ -76,5 +76,5 @@ func (el *esLogger) Flush() {
 }
 
 func init() {
-	logs.Register("es", NewES)
+	logs.Register(logs.AdaterEs, NewES)
 }
