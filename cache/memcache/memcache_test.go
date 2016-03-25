@@ -30,7 +30,7 @@ func TestMemcacheCache(t *testing.T) {
 		t.Error("init err")
 	}
 	timeoutDuration := 10 * time.Second
-	if err = bm.Put("astaxie", "1", timeoutDuration); err != nil {
+	if err = bm.Put("astaxie", "1", timeoutDuration*time.Second); err != nil {
 		t.Error("set Error", err)
 	}
 	if !bm.IsExist("astaxie") {
@@ -42,7 +42,7 @@ func TestMemcacheCache(t *testing.T) {
 	if bm.IsExist("astaxie") {
 		t.Error("check err")
 	}
-	if err = bm.Put("astaxie", "1", timeoutDuration); err != nil {
+	if err = bm.Put("astaxie", "1", timeoutDuration*time.Second); err != nil {
 		t.Error("set Error", err)
 	}
 
@@ -71,7 +71,7 @@ func TestMemcacheCache(t *testing.T) {
 	}
 
 	//test string
-	if err = bm.Put("astaxie", "author", timeoutDuration); err != nil {
+	if err = bm.Put("astaxie", "author", timeoutDuration*time.Second); err != nil {
 		t.Error("set Error", err)
 	}
 	if !bm.IsExist("astaxie") {
@@ -83,7 +83,7 @@ func TestMemcacheCache(t *testing.T) {
 	}
 
 	//test GetMulti
-	if err = bm.Put("astaxie1", "author1", timeoutDuration); err != nil {
+	if err = bm.Put("astaxie1", "author1", timeoutDuration*time.Second); err != nil {
 		t.Error("set Error", err)
 	}
 	if !bm.IsExist("astaxie1") {
