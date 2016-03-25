@@ -120,6 +120,8 @@ type BeeLogger struct {
 	outputs             []*nameLogger
 }
 
+const defaultAsyncMsgLen = 1e3
+
 type nameLogger struct {
 	Logger
 	name string
@@ -157,6 +159,9 @@ func (bl *BeeLogger) Async() *BeeLogger {
 		return bl
 	}
 	bl.asynchronous = true
+	if bl.msgChanLen <= 0 {
+		bl.msgChanLen = defaultAsyncMsgLen
+	}
 	bl.msgChan = make(chan *logMsg, bl.msgChanLen)
 	logMsgPool = &sync.Pool{
 		New: func() interface{} {
@@ -250,6 +255,11 @@ func (bl *BeeLogger) Write(p []byte) (n int, err error) {
 }
 
 func (bl *BeeLogger) writeMsg(logLevel int, msg string, v ...interface{}) error {
+	if !beeLogger.init {
+		bl.lock.Lock()
+		bl.setLogger(AdapterConsole)
+		bl.lock.Unlock()
+	}
 	if logLevel == levelLoggerImpl {
 		// set to emergency to ensure all log will be print out correctly
 		logLevel = LevelEmergency
@@ -465,12 +475,8 @@ func (bl *BeeLogger) flush() {
 	}
 }
 
-// BeeLogger references the used application logger.
-var beeLogger *BeeLogger
-
-func init() {
-	beeLogger = NewLogger()
-}
+// beeLogger references the used application logger.
+var beeLogger *BeeLogger = NewLogger()
 
 // GetLogger returns the default BeeLogger
 func GetBeeLogger() *BeeLogger {

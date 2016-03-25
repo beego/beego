@@ -32,6 +32,9 @@ const (
 	LevelDebug
 )
 
+// BeeLogger references the used application logger.
+var BeeLogger = logs.GetBeeLogger()
+
 // SetLevel sets the global log level used by the simple logger.
 func SetLevel(l int) {
 	logs.SetLevel(l)
