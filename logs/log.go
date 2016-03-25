@@ -143,8 +143,8 @@ func NewLogger(channelLens ...int64) *BeeLogger {
 	bl.level = LevelDebug
 	bl.loggerFuncCallDepth = 2
 	bl.msgChanLen = append(channelLens, 0)[0]
-	if bl.msgChanLen < 0 {
-		bl.msgChanLen = 0
+	if bl.msgChanLen <= 0 {
+		bl.msgChanLen = defaultAsyncMsgLen
 	}
 	bl.signalChan = make(chan string, 1)
 	bl.setLogger(AdapterConsole)
@@ -159,9 +159,6 @@ func (bl *BeeLogger) Async() *BeeLogger {
 		return bl
 	}
 	bl.asynchronous = true
-	if bl.msgChanLen <= 0 {
-		bl.msgChanLen = defaultAsyncMsgLen
-	}
 	bl.msgChan = make(chan *logMsg, bl.msgChanLen)
 	logMsgPool = &sync.Pool{
 		New: func() interface{} {
