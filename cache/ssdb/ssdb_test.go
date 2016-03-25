@@ -18,9 +18,9 @@ func TestSsdbcacheCache(t *testing.T) {
 	if ssdb.IsExist("ssdb") {
 		t.Error("check err")
 	}
-	timeoutDuration := 10
+	timeoutDuration := 10 * time.Second
 	//timeoutDuration := -10*time.Second   if timeoutDuration is negtive,it means permanent
-	if err = ssdb.Put("ssdb", "ssdb", timeoutDuration*time.Second); err != nil {
+	if err = ssdb.Put("ssdb", "ssdb", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
 	if !ssdb.IsExist("ssdb") {
@@ -28,7 +28,7 @@ func TestSsdbcacheCache(t *testing.T) {
 	}
 
 	// Get test done
-	if err = ssdb.Put("ssdb", "ssdb", timeoutDuration*time.Second); err != nil {
+	if err = ssdb.Put("ssdb", "ssdb", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
 
@@ -37,7 +37,7 @@ func TestSsdbcacheCache(t *testing.T) {
 	}
 
 	//inc/dec test done
-	if err = ssdb.Put("ssdb", "2", timeoutDuration*time.Second); err != nil {
+	if err = ssdb.Put("ssdb", "2", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
 	if err = ssdb.Incr("ssdb"); err != nil {
@@ -53,7 +53,7 @@ func TestSsdbcacheCache(t *testing.T) {
 	}
 
 	// test del
-	if err = ssdb.Put("ssdb", "3", timeoutDuration*time.Second); err != nil {
+	if err = ssdb.Put("ssdb", "3", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
 	if v, err := strconv.Atoi(ssdb.Get("ssdb").(string)); err != nil || v != 3 {
