@@ -64,7 +64,8 @@ type Provider interface {
 
 var provides = make(map[string]Provider)
 
-var SLogger = newSessionLog(os.Stderr)
+// SLogger a helpful variable to log information about session
+var SLogger = NewSessionLog(os.Stderr)
 
 // Register makes a session provide available by the provided name.
 // If Register is called twice with the same name or if driver is nil,
@@ -303,13 +304,13 @@ func (manager *Manager) isSecure(req *http.Request) bool {
 }
 
 // Log implement the log.Logger
-type sessionLog struct {
+type Log struct {
 	*log.Logger
 }
 
-// NewLog set io.Writer to create a Logger for session.
-func newSessionLog(out io.Writer) *sessionLog {
-	sl := new(sessionLog)
+// NewSessionLog set io.Writer to create a Logger for session.
+func NewSessionLog(out io.Writer) *Log {
+	sl := new(Log)
 	sl.Logger = log.New(out, "[SESSION]", 1e9)
 	return sl
 }
