@@ -282,5 +282,5 @@ func (w *fileLogWriter) Flush() {
 }
 
 func init() {
-	Register("file", newFileWriter)
+	Register(AdapterFile, newFileWriter)
 }

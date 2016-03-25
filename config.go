@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/astaxie/beego/config"
+	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/session"
 	"github.com/astaxie/beego/utils"
 )
@@ -293,14 +294,14 @@ func parseConfig(appConfigPath string) (err error) {
 	}
 
 	//init log
-	BeeLogger.Reset()
+	logs.Reset()
 	for adaptor, config := range BConfig.Log.Outputs {
-		err = BeeLogger.SetLogger(adaptor, config)
+		err = logs.SetLogger(adaptor, config)
 		if err != nil {
 			fmt.Printf("%s with the config `%s` got err:%s\n", adaptor, config, err)
 		}
 	}
-	SetLogFuncCall(BConfig.Log.FileLineNum)
+	logs.SetLogFuncCall(BConfig.Log.FileLineNum)
 
 	return nil
 }

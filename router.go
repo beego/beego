@@ -28,6 +28,7 @@ import (
 	"time"
 
 	beecontext "github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/toolbox"
 	"github.com/astaxie/beego/utils"
 )
@@ -439,11 +440,11 @@ func (p *ControllerRegister) insertFilterRouter(pos int, mr *FilterRouter) (err 
 func (p *ControllerRegister) URLFor(endpoint string, values ...interface{}) string {
 	paths := strings.Split(endpoint, ".")
 	if len(paths) <= 1 {
-		Warn("urlfor endpoint must like path.controller.method")
+		logs.Warn("urlfor endpoint must like path.controller.method")
 		return ""
 	}
 	if len(values)%2 != 0 {
-		Warn("urlfor params must key-value pair")
+		logs.Warn("urlfor params must key-value pair")
 		return ""
 	}
 	params := make(map[string]string)
@@ -651,7 +652,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		var err error
 		context.Input.CruSession, err = GlobalSessions.SessionStart(rw, r)
 		if err != nil {
-			Error(err)
+			logs.Error(err)
 			exception("503", context)
 			goto Admin
 		}
@@ -780,7 +781,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				if !context.ResponseWriter.Started && context.Output.Status == 0 {
 					if BConfig.WebConfig.AutoRender {
 						if err := execController.Render(); err != nil {
-							Error(err)
+							logs.Error(err)
 						}
 					}
 				}
@@ -825,7 +826,7 @@ Admin:
 			devInfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s |", r.Method, r.URL.Path, timeDur.String(), "notmatch")
 		}
 		if DefaultAccessLogFilter == nil || !DefaultAccessLogFilter.Filter(context) {
-			Debug(devInfo)
+			logs.Debug(devInfo)
 		}
 	}
 
@@ -850,14 +851,14 @@ func (p *ControllerRegister) recoverPanic(context *beecontext.Context) {
 			}
 		}
 		var stack string
-		Critical("the request url is ", context.Input.URL())
-		Critical("Handler crashed with error", err)
+		logs.Critical("the request url is ", context.Input.URL())
+		logs.Critical("Handler crashed with error", err)
 		for i := 1; ; i++ {
 			_, file, line, ok := runtime.Caller(i)
 			if !ok {
 				break
 			}
-			Critical(fmt.Sprintf("%s:%d", file, line))
+			logs.Critical(fmt.Sprintf("%s:%d", file, line))
 			stack = stack + fmt.Sprintln(fmt.Sprintf("%s:%d", file, line))
 		}
 		if BConfig.RunMode == DEV {
