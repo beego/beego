@@ -18,8 +18,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/garyburd/redigo/redis"
 	"github.com/astaxie/beego/cache"
+	"github.com/garyburd/redigo/redis"
 )
 
 func TestRedisCache(t *testing.T) {
@@ -27,7 +27,7 @@ func TestRedisCache(t *testing.T) {
 	if err != nil {
 		t.Error("init err")
 	}
-	timeoutDuration := 10 * time.Second
+	timeoutDuration := 10
 	if err = bm.Put("astaxie", 1, timeoutDuration*time.Second); err != nil {
 		t.Error("set Error", err)
 	}

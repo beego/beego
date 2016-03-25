@@ -25,7 +25,7 @@ func TestCache(t *testing.T) {
 	if err != nil {
 		t.Error("init err")
 	}
-	timeoutDuration := 10 * time.Second
+	timeoutDuration := 10
 	if err = bm.Put("astaxie", 1, timeoutDuration*time.Second); err != nil {
 		t.Error("set Error", err)
 	}
@@ -102,7 +102,7 @@ func TestFileCache(t *testing.T) {
 	if err != nil {
 		t.Error("init err")
 	}
-	timeoutDuration := 10 * time.Second
+	timeoutDuration := 10
 	if err = bm.Put("astaxie", 1, timeoutDuration*time.Second); err != nil {
 		t.Error("set Error", err)
 	}

@@ -18,7 +18,7 @@ func TestSsdbcacheCache(t *testing.T) {
 	if ssdb.IsExist("ssdb") {
 		t.Error("check err")
 	}
-	timeoutDuration := 10 * time.Second
+	timeoutDuration := 10
 	//timeoutDuration := -10*time.Second   if timeoutDuration is negtive,it means permanent
 	if err = ssdb.Put("ssdb", "ssdb", timeoutDuration*time.Second); err != nil {
 		t.Error("set Error", err)
