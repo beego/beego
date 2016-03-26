@@ -140,7 +140,14 @@ func (o *orm) ReadOrCreate(md interface{}, col1 string, cols ...string) (bool, i
 		return (err == nil), id, err
 	}
 
-	return false, ind.FieldByIndex(mi.fields.pk.fieldIndex).Int(), err
+	id, vid := int64(0), ind.FieldByIndex(mi.fields.pk.fieldIndex)
+	if mi.fields.pk.fieldType&IsPositiveIntegerField > 0 {
+		id = int64(vid.Uint())
+	} else {
+		id = vid.Int()
+	}
+
+	return false, id, err
 }
 
 // insert model data to database

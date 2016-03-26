@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/session"
 )
 
@@ -71,7 +72,7 @@ func registerSession() error {
 func registerTemplate() error {
 	if err := BuildTemplate(BConfig.WebConfig.ViewsPath); err != nil {
 		if BConfig.RunMode == DEV {
-			Warn(err)
+			logs.Warn(err)
 		}
 		return err
 	}

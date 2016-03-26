@@ -392,6 +392,11 @@ type IntegerPk struct {
 	Value string
 }
 
+type UintPk struct {
+	Id   uint32 `orm:"pk"`
+	Name string
+}
+
 var DBARGS = struct {
 	Driver string
 	Source string
