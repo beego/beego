@@ -2032,9 +2032,26 @@ func TestInsertAuto(t *testing.T) {
 		Email:    "auto@gmail.com",
 	}
 
-	sid, err := dORM.Insert(su)
+	nid, err := dORM.Insert(su)
 	throwFail(t, err)
-	throwFail(t, AssertIs(id, sid))
+	throwFail(t, AssertIs(nid, id))
+
+	users := []User{
+		{ID: int(id + 100), UserName: "auto_100"},
+		{ID: int(id + 110), UserName: "auto_110"},
+		{ID: int(id + 120), UserName: "auto_120"},
+	}
+	num, err := dORM.InsertMulti(100, users)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 3))
+
+	u = &User{
+		UserName: "auto_121",
+	}
+
+	nid, err = dORM.Insert(u)
+	throwFail(t, err)
+	throwFail(t, AssertIs(nid, id+120+1))
 }
 
 func TestUintPk(t *testing.T) {

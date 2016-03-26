@@ -386,16 +386,14 @@ func (d *dbBase) InsertMulti(q dbQuerier, mi *modelInfo, sind reflect.Value, bul
 		// }
 
 		if i == 1 {
-			vus, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, &names, tz)
+			vus, err := d.collectValues(mi, ind, mi.fields.dbcols, false, true, &names, tz)
 			if err != nil {
 				return cnt, err
 			}
 			values = make([]interface{}, bulk*len(vus))
 			nums += copy(values, vus)
-
 		} else {
-
-			vus, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, nil, tz)
+			vus, err := d.collectValues(mi, ind, mi.fields.dbcols, false, true, nil, tz)
 			if err != nil {
 				return cnt, err
 			}
