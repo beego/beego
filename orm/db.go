@@ -71,7 +71,7 @@ type dbBase struct {
 var _ dbBaser = new(dbBase)
 
 // get struct columns values as interface slice.
-func (d *dbBase) collectValues(mi *modelInfo, ind reflect.Value, cols []string, skipAuto bool, insert bool, names *[]string, tz *time.Location) (values []interface{}, err error) {
+func (d *dbBase) collectValues(mi *modelInfo, ind reflect.Value, cols []string, skipAuto bool, insert bool, names *[]string, tz *time.Location) (values []interface{}, autoFields []string, err error) {
 	if names == nil {
 		ns := make([]string, 0, len(cols))
 		names = &ns
@@ -90,11 +90,11 @@ func (d *dbBase) collectValues(mi *modelInfo, ind reflect.Value, cols []string, 
 		}
 		value, err := d.collectFieldValue(mi, fi, ind, insert, tz)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		// ignore empty value auto field
-		if fi.auto {
+		if insert && fi.auto {
 			if fi.fieldType&IsPositiveIntegerField > 0 {
 				if vu, ok := value.(uint64); !ok || vu == 0 {
 					continue
@@ -104,6 +104,7 @@ func (d *dbBase) collectValues(mi *modelInfo, ind reflect.Value, cols []string, 
 					continue
 				}
 			}
+			autoFields = append(autoFields, fi.column)
 		}
 
 		*names, values = append(*names, column), append(values, value)
@@ -278,7 +279,7 @@ func (d *dbBase) PrepareInsert(q dbQuerier, mi *modelInfo) (stmtQuerier, string,
 
 // insert struct with prepared statement and given struct reflect value.
 func (d *dbBase) InsertStmt(stmt stmtQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location) (int64, error) {
-	values, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, nil, tz)
+	values, _, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, nil, tz)
 	if err != nil {
 		return 0, err
 	}
@@ -305,7 +306,7 @@ func (d *dbBase) Read(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Lo
 	if len(cols) > 0 {
 		var err error
 		whereCols = make([]string, 0, len(cols))
-		args, err = d.collectValues(mi, ind, cols, false, false, &whereCols, tz)
+		args, _, err = d.collectValues(mi, ind, cols, false, false, &whereCols, tz)
 		if err != nil {
 			return err
 		}
@@ -355,12 +356,20 @@ func (d *dbBase) Read(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Lo
 // execute insert sql dbQuerier with given struct reflect.Value.
 func (d *dbBase) Insert(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location) (int64, error) {
 	names := make([]string, 0, len(mi.fields.dbcols))
-	values, err := d.collectValues(mi, ind, mi.fields.dbcols, false, true, &names, tz)
+	values, autoFields, err := d.collectValues(mi, ind, mi.fields.dbcols, false, true, &names, tz)
 	if err != nil {
 		return 0, err
 	}
 
-	return d.InsertValue(q, mi, false, names, values)
+	id, err := d.InsertValue(q, mi, false, names, values)
+	if err != nil {
+		return 0, err
+	}
+
+	if len(autoFields) > 0 {
+		err = d.ins.setval(q, mi, autoFields)
+	}
+	return id, err
 }
 
 // multi-insert sql with given slice struct reflect.Value.
@@ -374,7 +383,7 @@ func (d *dbBase) InsertMulti(q dbQuerier, mi *modelInfo, sind reflect.Value, bul
 
 	// typ := reflect.Indirect(mi.addrField).Type()
 
-	length := sind.Len()
+	length, autoFields := sind.Len(), make([]string, 0, 1)
 
 	for i := 1; i <= length; i++ {
 
@@ -386,14 +395,18 @@ func (d *dbBase) InsertMulti(q dbQuerier, mi *modelInfo, sind reflect.Value, bul
 		// }
 
 		if i == 1 {
-			vus, err := d.collectValues(mi, ind, mi.fields.dbcols, false, true, &names, tz)
+			var (
+				vus []interface{}
+				err error
+			)
+			vus, autoFields, err = d.collectValues(mi, ind, mi.fields.dbcols, false, true, &names, tz)
 			if err != nil {
 				return cnt, err
 			}
 			values = make([]interface{}, bulk*len(vus))
 			nums += copy(values, vus)
 		} else {
-			vus, err := d.collectValues(mi, ind, mi.fields.dbcols, false, true, nil, tz)
+			vus, _, err := d.collectValues(mi, ind, mi.fields.dbcols, false, true, nil, tz)
 			if err != nil {
 				return cnt, err
 			}
@@ -415,7 +428,12 @@ func (d *dbBase) InsertMulti(q dbQuerier, mi *modelInfo, sind reflect.Value, bul
 		}
 	}
 
-	return cnt, nil
+	var err error
+	if len(autoFields) > 0 {
+		err = d.ins.setval(q, mi, autoFields)
+	}
+
+	return cnt, err
 }
 
 // execute insert sql with given struct and given values.
@@ -475,7 +493,7 @@ func (d *dbBase) Update(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.
 		setNames = make([]string, 0, len(cols))
 	}
 
-	setValues, err := d.collectValues(mi, ind, cols, true, false, &setNames, tz)
+	setValues, _, err := d.collectValues(mi, ind, cols, true, false, &setNames, tz)
 	if err != nil {
 		return 0, err
 	}
@@ -1563,6 +1581,11 @@ func (d *dbBase) ReplaceMarks(query *string) {
 // flag of RETURNING sql.
 func (d *dbBase) HasReturningID(*modelInfo, *string) bool {
 	return false
+}
+
+// sync auto key
+func (d *dbBase) setval(db dbQuerier, mi *modelInfo, autoFields []string) error {
+	return nil
 }
 
 // convert time from db.
