@@ -2016,6 +2016,44 @@ func TestIntegerPk(t *testing.T) {
 	}
 }
 
+func TestInsertAuto(t *testing.T) {
+	u := &User{
+		UserName: "autoPre",
+		Email:    "autoPre@gmail.com",
+	}
+
+	id, err := dORM.Insert(u)
+	throwFail(t, err)
+
+	id += 100
+	su := &User{
+		ID:       int(id),
+		UserName: "auto",
+		Email:    "auto@gmail.com",
+	}
+
+	nid, err := dORM.Insert(su)
+	throwFail(t, err)
+	throwFail(t, AssertIs(nid, id))
+
+	users := []User{
+		{ID: int(id + 100), UserName: "auto_100"},
+		{ID: int(id + 110), UserName: "auto_110"},
+		{ID: int(id + 120), UserName: "auto_120"},
+	}
+	num, err := dORM.InsertMulti(100, users)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 3))
+
+	u = &User{
+		UserName: "auto_121",
+	}
+
+	nid, err = dORM.Insert(u)
+	throwFail(t, err)
+	throwFail(t, AssertIs(nid, id+120+1))
+}
+
 func TestUintPk(t *testing.T) {
 	name := "go"
 	u := &UintPk{

@@ -135,6 +135,25 @@ func (d *dbBasePostgres) HasReturningID(mi *modelInfo, query *string) bool {
 	return true
 }
 
+// sync auto key
+func (d *dbBasePostgres) setval(db dbQuerier, mi *modelInfo, autoFields []string) error {
+	if len(autoFields) == 0 {
+		return nil
+	}
+
+	Q := d.ins.TableQuote()
+	for _, name := range autoFields {
+		query := fmt.Sprintf("SELECT setval(pg_get_serial_sequence('%s', '%s'), (SELECT MAX(%s%s%s) FROM %s%s%s));",
+			mi.table, name,
+			Q, name, Q,
+			Q, mi.table, Q)
+		if _, err := db.Exec(query); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // show table sql for postgresql.
 func (d *dbBasePostgres) ShowTablesQuery() string {
 	return "SELECT table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema NOT IN ('pg_catalog', 'information_schema')"
