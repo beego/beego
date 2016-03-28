@@ -152,13 +152,16 @@ func NewLogger(channelLens ...int64) *BeeLogger {
 }
 
 // Async set the log to asynchronous and start the goroutine
-func (bl *BeeLogger) Async() *BeeLogger {
+func (bl *BeeLogger) Async(msgLen ...int64) *BeeLogger {
 	bl.lock.Lock()
 	defer bl.lock.Unlock()
 	if bl.asynchronous {
 		return bl
 	}
 	bl.asynchronous = true
+	if len(msgLen) > 0 && msgLen[0] > 0 {
+		bl.msgChanLen = msgLen[0]
+	}
 	bl.msgChan = make(chan *logMsg, bl.msgChanLen)
 	logMsgPool = &sync.Pool{
 		New: func() interface{} {
@@ -515,8 +518,8 @@ func Reset() {
 	beeLogger.Reset()
 }
 
-func Async() *BeeLogger {
-	return beeLogger.Async()
+func Async(msgLen ...int64) *BeeLogger {
+	return beeLogger.Async(msgLen...)
 }
 
 // SetLevel sets the global log level used by the simple logger.
@@ -524,10 +527,20 @@ func SetLevel(l int) {
 	beeLogger.SetLevel(l)
 }
 
+// EnableFuncCallDepth enable log funcCallDepth
+func EnableFuncCallDepth(b bool) {
+	beeLogger.enableFuncCallDepth = b
+}
+
 // SetLogFuncCall set the CallDepth, default is 3
 func SetLogFuncCall(b bool) {
 	beeLogger.EnableFuncCallDepth(b)
 	beeLogger.SetLogFuncCallDepth(3)
+}
+
+// SetLogFuncCallDepth set log funcCallDepth
+func SetLogFuncCallDepth(d int) {
+	beeLogger.loggerFuncCallDepth = d
 }
 
 // SetLogger sets a new logger.
