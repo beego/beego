@@ -42,20 +42,14 @@ needlogin = ON
 enableSession = Y
 enableCookie = N
 flag = 1
-path1 = $$GOPATH
-path2 = $$GOPATH||/home/go
-path3 = $$GOPATH$$GOPATH2||/home/go
-token1 = $$TOKEN
-token2 = $$TOKEN||
-token3 = $$TOKEN||astaxie
-token4 = token$$TOKEN
-token5 = $$TOKEN$$TOKEN||TOKEN
+path1 = ${GOPATH}
+path2 = ${GOPATH||/home/go}
 [demo]
 key1="asta"
 key2 = "xie"
 CaseInsensitive = true
 peers = one;two;three
-password = $$GOPATH
+password = ${GOPATH}
 `
 
 		keyValue = map[string]interface{}{
@@ -75,12 +69,6 @@ password = $$GOPATH
 			"flag":                  true,
 			"path1":                 os.Getenv("GOPATH"),
 			"path2":                 os.Getenv("GOPATH"),
-			"path3":                 "/home/go",
-			"token1":                "",
-			"token2":                "",
-			"token3":                "astaxie",
-			"token4":                "token$$TOKEN",
-			"token5":                "TOKEN",
 			"demo::key1":            "asta",
 			"demo::key2":            "xie",
 			"demo::CaseInsensitive": true,

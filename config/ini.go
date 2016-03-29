@@ -166,7 +166,7 @@ func (ini *IniConfig) parseFile(name string) (*IniConfigContainer, error) {
 			val = bytes.Trim(val, `"`)
 		}
 
-		cfg.data[section][key] = ChooseRealValue(string(val))
+		cfg.data[section][key] = ExpandValueEnv(string(val))
 		if comment.Len() > 0 {
 			cfg.keyComment[section+"."+key] = comment.String()
 			comment.Reset()

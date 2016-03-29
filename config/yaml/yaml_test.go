@@ -34,14 +34,8 @@ func TestYaml(t *testing.T) {
 "autorender": false
 "copyrequestbody": true
 "PATH": GOPATH
-"path1": $$GOPATH
-"path2": $$GOPATH||/home/go
-"path3": $$GOPATH$$GOPATH2||/home/go
-"token1": $$TOKEN
-"token2": $$TOKEN||
-"token3": $$TOKEN||astaxie
-"token4": token$$TOKEN
-"token5": $$TOKEN$$TOKEN||TOKEN
+"path1": ${GOPATH}
+"path2": ${GOPATH||/home/go}
 "empty": "" 
 `
 
@@ -56,12 +50,6 @@ func TestYaml(t *testing.T) {
 			"PATH":            "GOPATH",
 			"path1":           os.Getenv("GOPATH"),
 			"path2":           os.Getenv("GOPATH"),
-			"path3":           "/home/go",
-			"token1":          "",
-			"token2":          "",
-			"token3":          "astaxie",
-			"token4":          "token$$TOKEN",
-			"token5":          "TOKEN",
 			"error":           "",
 			"emptystrings":    []string{},
 		}

@@ -110,7 +110,7 @@ func ReadYmlReader(path string) (cnf map[string]interface{}, err error) {
 		log.Println("Not a Map? >> ", string(buf), data)
 		cnf = nil
 	}
-	cnf = config.ChooseRealValueForMap(cnf)
+	cnf = config.ExpandValueEnvForMap(cnf)
 	return
 }
 

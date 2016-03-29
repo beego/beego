@@ -86,25 +86,19 @@ func TestJson(t *testing.T) {
 "enableSession": "Y",
 "enableCookie": "N",
 "flag": 1,
-"path1": "$$GOPATH",
-"path2": "$$GOPATH||/home/go",
-"path3": "$$GOPATH$$GOPATH2||/home/go",
-"token1": "$$TOKEN",
-"token2": "$$TOKEN||",
-"token3": "$$TOKEN||astaxie",
-"token4": "token$$TOKEN",
-"token5": "$$TOKEN$$TOKEN||TOKEN",
+"path1": "${GOPATH}",
+"path2": "${GOPATH||/home/go}",
 "database": {
         "host": "host",
         "port": "port",
         "database": "database",
         "username": "username",
-        "password": "$$GOPATH",
+        "password": "${GOPATH}",
 		"conns":{
 			"maxconnection":12,
 			"autoconnect":true,
 			"connectioninfo":"info",
-			"root": "$$GOPATH"
+			"root": "${GOPATH}"
 		}
     }
 }`
@@ -126,12 +120,6 @@ func TestJson(t *testing.T) {
 			"flag":                            true,
 			"path1":                           os.Getenv("GOPATH"),
 			"path2":                           os.Getenv("GOPATH"),
-			"path3":                           "/home/go",
-			"token1":                          "",
-			"token2":                          "",
-			"token3":                          "astaxie",
-			"token4":                          "token$$TOKEN",
-			"token5":                          "TOKEN",
 			"database::host":                  "host",
 			"database::port":                  "port",
 			"database::database":              "database",

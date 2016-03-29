@@ -35,14 +35,8 @@ func TestXML(t *testing.T) {
 <runmode>dev</runmode>
 <autorender>false</autorender>
 <copyrequestbody>true</copyrequestbody>
-<path1>$$GOPATH</path1>
-<path2>$$GOPATH||/home/go</path2>
-<path3>$$GOPATH$$GOPATH2||/home/go</path3>
-<token1>$$TOKEN</token1>
-<token2>$$TOKEN||</token2>
-<token3>$$TOKEN||astaxie</token3>
-<token4>token$$TOKEN</token4>
-<token5>$$TOKEN$$TOKEN||TOKEN</token5>
+<path1>${GOPATH}</path1>
+<path2>${GOPATH||/home/go}</path2>
 </config>
 `
 		keyValue = map[string]interface{}{
@@ -55,12 +49,6 @@ func TestXML(t *testing.T) {
 			"copyrequestbody": true,
 			"path1":           os.Getenv("GOPATH"),
 			"path2":           os.Getenv("GOPATH"),
-			"path3":           "/home/go",
-			"token1":          "",
-			"token2":          "",
-			"token3":          "astaxie",
-			"token4":          "token$$TOKEN",
-			"token5":          "TOKEN",
 			"error":           "",
 			"emptystrings":    []string{},
 		}

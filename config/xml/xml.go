@@ -69,7 +69,7 @@ func (xc *Config) Parse(filename string) (config.Configer, error) {
 		return nil, err
 	}
 
-	x.data = config.ChooseRealValueForMap(d["config"].(map[string]interface{}))
+	x.data = config.ExpandValueEnvForMap(d["config"].(map[string]interface{}))
 	return x, nil
 }
 

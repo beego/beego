@@ -43,7 +43,6 @@ package config
 import (
 	"fmt"
 	"os"
-	"strings"
 )
 
 // Configer defines how to get and set value from configuration raw data.
@@ -107,17 +106,17 @@ func NewConfigData(adapterName string, data []byte) (Configer, error) {
 	return adapter.ParseData(data)
 }
 
-// ChooseRealValueForMap convert all string value with environment variable.
-func ChooseRealValueForMap(m map[string]interface{}) map[string]interface{} {
+// ExpandValueEnvForMap convert all string value with environment variable.
+func ExpandValueEnvForMap(m map[string]interface{}) map[string]interface{} {
 	for k, v := range m {
 		switch value := v.(type) {
 		case string:
-			m[k] = ChooseRealValue(value)
+			m[k] = ExpandValueEnv(value)
 		case map[string]interface{}:
-			m[k] = ChooseRealValueForMap(value)
+			m[k] = ExpandValueEnvForMap(value)
 		case map[string]string:
 			for k2, v2 := range value {
-				value[k2] = ChooseRealValue(v2)
+				value[k2] = ExpandValueEnv(v2)
 			}
 			m[k] = value
 		}
@@ -125,40 +124,46 @@ func ChooseRealValueForMap(m map[string]interface{}) map[string]interface{} {
 	return m
 }
 
-// ChooseRealValue returns value of convert with environment variable.
+// ExpandValueEnv returns value of convert with environment variable.
 //
-// Return environment variable if value start with "$$".
+// Return environment variable if value start with "${" and end with "}".
 // Return default value if environment variable is empty or not exist.
 //
-// It accept value formats "$$env" , "$$env||" , "$$env||defaultValue" , "defaultvalue".
+// It accept value formats "${env}" , "${env||}}" , "${env||defaultValue}" , "defaultvalue".
 // Examples:
-//	v1 := config.ChooseRealValue("$$GOPATH")			// return the GOPATH environment variable.
-//	v2 := config.ChooseRealValue("$$GOAsta||/usr/local/go/")	// return the default value "/usr/local/go/".
-//	v3 := config.ChooseRealValue("Astaxie")				// return the value "Astaxie".
-func ChooseRealValue(value string) (realValue string) {
+//	v1 := config.ExpandValueEnv("${GOPATH}")			// return the GOPATH environment variable.
+//	v2 := config.ExpandValueEnv("${GOAsta||/usr/local/go}")	// return the default value "/usr/local/go/".
+//	v3 := config.ExpandValueEnv("Astaxie")				// return the value "Astaxie".
+func ExpandValueEnv(value string) (realValue string) {
 	realValue = value
 
-	if value == "" {
+	vLen := len(value)
+	// 3 = ${}
+	if vLen < 3 {
+		return
+	}
+	// Need start with "${" and end with "}", then return.
+	if value[0] != '$' || value[1] != '{' || value[vLen-1] != '}' {
 		return
 	}
 
-	sign := "$$" // Environment variable identifier.
-	sep := "||"  // Environment variable and default value separator.
-
-	// Not use environment variable.
-	if strings.HasPrefix(value, sign) == false {
-		return
-	}
-
-	sepIndex := strings.Index(value, sep)
-	if sepIndex == -1 {
-		realValue = os.Getenv(string(value[len(sign):]))
-	} else {
-		realValue = os.Getenv(string(value[len(sign):sepIndex]))
-		// Find defalut value.
-		if realValue == "" {
-			realValue = string(value[sepIndex+len(sep):])
+	key := ""
+	defalutV := ""
+	// value start with "${"
+	for i := 2; i < vLen; i++ {
+		if value[i] == '|' && (i+1 < vLen && value[i+1] == '|') {
+			key = value[2:i]
+			defalutV = value[i+2 : vLen-1] // other string is default value.
+			break
+		} else if value[i] == '}' {
+			key = value[2:i]
+			break
 		}
+	}
+
+	realValue = os.Getenv(key)
+	if realValue == "" {
+		realValue = defalutV
 	}
 
 	return
