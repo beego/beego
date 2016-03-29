@@ -106,6 +106,8 @@ var (
 	AppConfig *beegoAppConfig
 	// AppPath is the absolute path to the app
 	AppPath string
+	// workPath is the absolute path of the current dir
+	workPath string
 	// GlobalSessions is the instance for the session manager
 	GlobalSessions *session.Manager
 
@@ -118,7 +120,8 @@ var (
 func init() {
 	AppPath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
 
-	os.Chdir(AppPath)
+	workPath, _ = os.Getwd()
+	workPath, _ = filepath.Abs(workPath)
 
 	BConfig = &Config{
 		AppName:             "beego",
@@ -180,10 +183,13 @@ func init() {
 		},
 	}
 
-	appConfigPath = filepath.Join(AppPath, "conf", "app.conf")
+	appConfigPath = filepath.Join(workPath, "conf", "app.conf")
 	if !utils.FileExists(appConfigPath) {
-		AppConfig = &beegoAppConfig{innerConfig: config.NewFakeConfig()}
-		return
+		appConfigPath = filepath.Join(AppPath, "conf", "app.conf")
+		if !utils.FileExists(appConfigPath) {
+			AppConfig = &beegoAppConfig{innerConfig: config.NewFakeConfig()}
+			return
+		}
 	}
 
 	if err := parseConfig(appConfigPath); err != nil {
