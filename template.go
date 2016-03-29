@@ -167,9 +167,11 @@ func BuildTemplate(dir string, files ...string) error {
 		for _, file := range v {
 			if buildAllFiles || utils.InSlice(file, files) {
 				templatesLock.Lock()
-				fileExt := filepath.Ext(file)[1:]
+				ext := filepath.Ext(file)
 				var t TemplateRenderer
-				if fn, ok := beeTemplateEngines[fileExt]; ok {
+				if len(ext) == 0 {
+					t, err = getTemplate(self.root, file, v...)
+				} else if fn, ok := beeTemplateEngines[ext[1:]]; ok {
 					t, err = fn(self.root, file, beegoTplFuncMap)
 				} else {
 					t, err = getTemplate(self.root, file, v...)
