@@ -82,6 +82,10 @@ func (ini *IniConfig) parseFile(name string) (*IniConfigContainer, error) {
 		if err == io.EOF {
 			break
 		}
+		//It might be a good idea to throw a error on all unknonw errors?
+		if _, ok := err.(*os.PathError); ok {
+			return nil, err
+		}
 		if bytes.Equal(line, bEmpty) {
 			continue
 		}

@@ -352,7 +352,7 @@ type GroupPermissions struct {
 }
 
 type ModelID struct {
-	Id int64
+	ID int64
 }
 
 type ModelBase struct {
@@ -373,6 +373,28 @@ type InLine struct {
 
 func NewInLine() *InLine {
 	return new(InLine)
+}
+
+type InLineOneToOne struct {
+	// Common Fields
+	ModelBase
+
+	Note   string
+	InLine *InLine `orm:"rel(fk);column(inline)"`
+}
+
+func NewInLineOneToOne() *InLineOneToOne {
+	return new(InLineOneToOne)
+}
+
+type IntegerPk struct {
+	Id    int64 `orm:"pk"`
+	Value string
+}
+
+type UintPk struct {
+	Id   uint32 `orm:"pk"`
+	Name string
 }
 
 var DBARGS = struct {

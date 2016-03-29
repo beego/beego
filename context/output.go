@@ -21,8 +21,10 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"io"
 	"mime"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -72,10 +74,11 @@ func (output *BeegoOutput) Body(content []byte) error {
 	if output.Status != 0 {
 		output.Context.ResponseWriter.WriteHeader(output.Status)
 		output.Status = 0
+	} else {
+		output.Context.ResponseWriter.Started = true
 	}
-
-	_, err := output.Context.ResponseWriter.Copy(buf)
-	return err
+	io.Copy(output.Context.ResponseWriter, buf)
+	return nil
 }
 
 // Cookie sets cookie value via given key.
@@ -235,6 +238,12 @@ func (output *BeegoOutput) XML(data interface{}, hasIndent bool) error {
 // Download forces response for download file.
 // it prepares the download response header automatically.
 func (output *BeegoOutput) Download(file string, filename ...string) {
+	// check get file error, file not found or other error.
+	if _, err := os.Stat(file); err != nil {
+		http.ServeFile(output.Context.ResponseWriter, output.Context.Request, file)
+		return
+	}
+
 	output.Header("Content-Description", "File Transfer")
 	output.Header("Content-Type", "application/octet-stream")
 	if len(filename) > 0 && filename[0] != "" {

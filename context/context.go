@@ -24,13 +24,11 @@ package context
 
 import (
 	"bufio"
-	"bytes"
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"io"
 	"net"
 	"net/http"
 	"strconv"
@@ -79,6 +77,7 @@ func (ctx *Context) Redirect(status int, localurl string) {
 // Abort stops this request.
 // if beego.ErrorMaps exists, panic body.
 func (ctx *Context) Abort(status int, body string) {
+	ctx.Output.SetStatus(status)
 	panic(body)
 }
 
@@ -190,34 +189,26 @@ func (r *Response) reset(rw http.ResponseWriter) {
 // Write writes the data to the connection as part of an HTTP reply,
 // and sets `started` to true.
 // started means the response has sent out.
-func (w *Response) Write(p []byte) (int, error) {
-	w.Started = true
-	return w.ResponseWriter.Write(p)
-}
-
-// Write writes the data to the connection as part of an HTTP reply,
-// and sets `started` to true.
-// started means the response has sent out.
-func (w *Response) Copy(buf *bytes.Buffer) (int64, error) {
-	w.Started = true
-	return io.Copy(w.ResponseWriter, buf)
+func (r *Response) Write(p []byte) (int, error) {
+	r.Started = true
+	return r.ResponseWriter.Write(p)
 }
 
 // WriteHeader sends an HTTP response header with status code,
 // and sets `started` to true.
-func (w *Response) WriteHeader(code int) {
-	if w.Status > 0 {
+func (r *Response) WriteHeader(code int) {
+	if r.Status > 0 {
 		//prevent multiple response.WriteHeader calls
 		return
 	}
-	w.Status = code
-	w.Started = true
-	w.ResponseWriter.WriteHeader(code)
+	r.Status = code
+	r.Started = true
+	r.ResponseWriter.WriteHeader(code)
 }
 
 // Hijack hijacker for http
-func (w *Response) Hijack() (net.Conn, *bufio.ReadWriter, error) {
-	hj, ok := w.ResponseWriter.(http.Hijacker)
+func (r *Response) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	hj, ok := r.ResponseWriter.(http.Hijacker)
 	if !ok {
 		return nil, nil, errors.New("webserver doesn't support hijacking")
 	}
@@ -225,15 +216,15 @@ func (w *Response) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 }
 
 // Flush http.Flusher
-func (w *Response) Flush() {
-	if f, ok := w.ResponseWriter.(http.Flusher); ok {
+func (r *Response) Flush() {
+	if f, ok := r.ResponseWriter.(http.Flusher); ok {
 		f.Flush()
 	}
 }
 
 // CloseNotify http.CloseNotifier
-func (w *Response) CloseNotify() <-chan bool {
-	if cn, ok := w.ResponseWriter.(http.CloseNotifier); ok {
+func (r *Response) CloseNotify() <-chan bool {
+	if cn, ok := r.ResponseWriter.(http.CloseNotifier); ok {
 		return cn.CloseNotify()
 	}
 	return nil

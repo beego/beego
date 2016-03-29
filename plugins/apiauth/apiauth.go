@@ -35,7 +35,7 @@
 //
 //	beego.InsertFilter("*", beego.BeforeRouter,apiauth.APISecretAuth(getAppSecret, 360))
 //
-// Infomation:
+// Information:
 //
 // In the request user should include these params in the query
 //

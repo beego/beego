@@ -44,7 +44,7 @@ func NewNamespace(prefix string, params ...LinkNamespace) *Namespace {
 	return ns
 }
 
-// Cond set condtion function
+// Cond set condition function
 // if cond return true can run this namespace, else can't
 // usage:
 // ns.Cond(func (ctx *context.Context) bool{
@@ -60,7 +60,7 @@ func (n *Namespace) Cond(cond namespaceCond) *Namespace {
 			exception("405", ctx)
 		}
 	}
-	if v, ok := n.handlers.filters[BeforeRouter]; ok {
+	if v := n.handlers.filters[BeforeRouter]; len(v) > 0 {
 		mr := new(FilterRouter)
 		mr.tree = NewTree()
 		mr.pattern = "*"
@@ -386,5 +386,12 @@ func NSNamespace(prefix string, params ...LinkNamespace) LinkNamespace {
 	return func(ns *Namespace) {
 		n := NewNamespace(prefix, params...)
 		ns.Namespace(n)
+	}
+}
+
+// NSHandler add handler
+func NSHandler(rootpath string, h http.Handler) LinkNamespace {
+	return func(ns *Namespace) {
+		ns.Handler(rootpath, h)
 	}
 }

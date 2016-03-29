@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/astaxie/beego/config"
+	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/session"
 	"github.com/astaxie/beego/utils"
 )
@@ -293,14 +294,14 @@ func parseConfig(appConfigPath string) (err error) {
 	}
 
 	//init log
-	BeeLogger.Reset()
+	logs.Reset()
 	for adaptor, config := range BConfig.Log.Outputs {
-		err = BeeLogger.SetLogger(adaptor, config)
+		err = logs.SetLogger(adaptor, config)
 		if err != nil {
 			fmt.Printf("%s with the config `%s` got err:%s\n", adaptor, config, err)
 		}
 	}
-	SetLogFuncCall(BConfig.Log.FileLineNum)
+	logs.SetLogFuncCall(BConfig.Log.FileLineNum)
 
 	return nil
 }
@@ -314,10 +315,6 @@ func LoadAppConfig(adapterName, configPath string) error {
 
 	if !utils.FileExists(absConfigPath) {
 		return fmt.Errorf("the target config file: %s don't exist", configPath)
-	}
-
-	if absConfigPath == appConfigPath {
-		return nil
 	}
 
 	appConfigPath = absConfigPath
@@ -353,7 +350,7 @@ func (b *beegoAppConfig) String(key string) string {
 }
 
 func (b *beegoAppConfig) Strings(key string) []string {
-	if v := b.innerConfig.Strings(BConfig.RunMode + "::" + key); v[0] != "" {
+	if v := b.innerConfig.Strings(BConfig.RunMode + "::" + key); len(v) > 0 {
 		return v
 	}
 	return b.innerConfig.Strings(key)

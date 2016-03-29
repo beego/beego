@@ -56,7 +56,7 @@ func NewConsole() Logger {
 	cw := &consoleWriter{
 		lg:       newLogWriter(os.Stdout),
 		Level:    LevelDebug,
-		Colorful: true,
+		Colorful: runtime.GOOS != "windows",
 	}
 	return cw
 }
@@ -97,5 +97,5 @@ func (c *consoleWriter) Flush() {
 }
 
 func init() {
-	Register("console", NewConsole)
+	Register(AdapterConsole, NewConsole)
 }
