@@ -52,19 +52,21 @@ const s2 = `012345678901234567890123456789012345678901234567890123456789`
 func formatTimeHeader(when time.Time) ([]byte, int) {
 	y, mo, d := when.Date()
 	h, mi, s := when.Clock()
-	//len("2006/01/02 15:03:04 ")==20
+	//len("2006/01/02 15:04:05 ")==20
 	var buf [20]byte
 
+	//change to '3' after 984 years, LOL
 	buf[0] = '2'
+	//change to '1' after 84 years,  LOL
 	buf[1] = '0'
 	buf[2] = y1[y-2000]
 	buf[3] = y2[y-2000]
 	buf[4] = '/'
-	buf[5] = mo1[mo]
-	buf[6] = mo2[mo]
+	buf[5] = mo1[mo-1]
+	buf[6] = mo2[mo-1]
 	buf[7] = '/'
-	buf[8] = d1[d]
-	buf[9] = d2[d]
+	buf[8] = d1[d-1]
+	buf[9] = d2[d-1]
 	buf[10] = ' '
 	buf[11] = h1[h]
 	buf[12] = h2[h]
