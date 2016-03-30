@@ -175,9 +175,7 @@ func init() {
 			Outputs:     map[string]string{"console": ""},
 		},
 	}
-
 	var err error
-
 	if AppPath, err = filepath.Abs(filepath.Dir(os.Args[0])); err != nil {
 		panic(err)
 	}
@@ -185,7 +183,6 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-
 	appConfigPath = filepath.Join(workPath, "conf", "app.conf")
 	if !utils.FileExists(appConfigPath) {
 		appConfigPath = filepath.Join(AppPath, "conf", "app.conf")
@@ -194,7 +191,6 @@ func init() {
 			return
 		}
 	}
-
 	if err = parseConfig(appConfigPath); err != nil {
 		panic(err)
 	}
