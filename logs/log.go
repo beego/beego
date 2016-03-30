@@ -255,7 +255,7 @@ func (bl *BeeLogger) Write(p []byte) (n int, err error) {
 }
 
 func (bl *BeeLogger) writeMsg(logLevel int, msg string, v ...interface{}) error {
-	if !beeLogger.init {
+	if !bl.init {
 		bl.lock.Lock()
 		bl.setLogger(AdapterConsole)
 		bl.lock.Unlock()
