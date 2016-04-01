@@ -41,7 +41,10 @@ var (
 	beeTemplateEngines = map[string]templateHandler{}
 )
 
-func executeTemplate(wr io.Writer, name string, data interface{}) error {
+// ExecuteTemplate applies the template with name  to the specified data object,
+// writing the output to wr.
+// A template will be executed safely in parallel.
+func ExecuteTemplate(wr io.Writer, name string, data interface{}) error {
 	if BConfig.RunMode == DEV {
 		templatesLock.RLock()
 		defer templatesLock.RUnlock()
