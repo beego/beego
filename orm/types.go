@@ -420,4 +420,5 @@ type dbBaser interface {
 	ShowColumnsQuery(string) string
 	IndexExists(dbQuerier, string, string) bool
 	collectFieldValue(*modelInfo, *fieldInfo, reflect.Value, bool, *time.Location) (interface{}, error)
+	setval(dbQuerier, *modelInfo, []string) error
 }

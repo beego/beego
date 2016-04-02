@@ -19,6 +19,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -188,6 +189,9 @@ func TestSyncDb(t *testing.T) {
 	RegisterModel(new(Permission))
 	RegisterModel(new(GroupPermissions))
 	RegisterModel(new(InLine))
+	RegisterModel(new(InLineOneToOne))
+	RegisterModel(new(IntegerPk))
+	RegisterModel(new(UintPk))
 
 	err := RunSyncdb("default", true, Debug)
 	throwFail(t, err)
@@ -208,6 +212,9 @@ func TestRegisterModels(t *testing.T) {
 	RegisterModel(new(Permission))
 	RegisterModel(new(GroupPermissions))
 	RegisterModel(new(InLine))
+	RegisterModel(new(InLineOneToOne))
+	RegisterModel(new(IntegerPk))
+	RegisterModel(new(UintPk))
 
 	BootStrap()
 
@@ -1951,4 +1958,121 @@ func TestInLine(t *testing.T) {
 	throwFail(t, AssertIs(il.Email, email))
 	throwFail(t, AssertIs(il.Created.In(DefaultTimeLoc), inline.Created.In(DefaultTimeLoc), testDate))
 	throwFail(t, AssertIs(il.Updated.In(DefaultTimeLoc), inline.Updated.In(DefaultTimeLoc), testDateTime))
+}
+
+func TestInLineOneToOne(t *testing.T) {
+	name := "121"
+	email := "121@go.com"
+	inline := NewInLine()
+	inline.Name = name
+	inline.Email = email
+
+	id, err := dORM.Insert(inline)
+	throwFail(t, err)
+	throwFail(t, AssertIs(id, 2))
+
+	note := "one2one"
+	il121 := NewInLineOneToOne()
+	il121.Note = note
+	il121.InLine = inline
+	_, err = dORM.Insert(il121)
+	throwFail(t, err)
+	throwFail(t, AssertIs(il121.ID, 1))
+
+	il := NewInLineOneToOne()
+	err = dORM.QueryTable(il).Filter("Id", 1).RelatedSel().One(il)
+
+	throwFail(t, err)
+	throwFail(t, AssertIs(il.Note, note))
+	throwFail(t, AssertIs(il.InLine.ID, id))
+	throwFail(t, AssertIs(il.InLine.Name, name))
+	throwFail(t, AssertIs(il.InLine.Email, email))
+
+	rinline := NewInLine()
+	err = dORM.QueryTable(rinline).Filter("InLineOneToOne__Id", 1).One(rinline)
+
+	throwFail(t, err)
+	throwFail(t, AssertIs(rinline.ID, id))
+	throwFail(t, AssertIs(rinline.Name, name))
+	throwFail(t, AssertIs(rinline.Email, email))
+}
+
+func TestIntegerPk(t *testing.T) {
+	its := []IntegerPk{
+		{Id: math.MinInt64, Value: "-"},
+		{Id: 0, Value: "0"},
+		{Id: math.MaxInt64, Value: "+"},
+	}
+
+	num, err := dORM.InsertMulti(len(its), its)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, len(its)))
+
+	for _, intPk := range its {
+		out := IntegerPk{Id: intPk.Id}
+		err = dORM.Read(&out)
+		throwFail(t, err)
+		throwFail(t, AssertIs(out.Value, intPk.Value))
+	}
+}
+
+func TestInsertAuto(t *testing.T) {
+	u := &User{
+		UserName: "autoPre",
+		Email:    "autoPre@gmail.com",
+	}
+
+	id, err := dORM.Insert(u)
+	throwFail(t, err)
+
+	id += 100
+	su := &User{
+		ID:       int(id),
+		UserName: "auto",
+		Email:    "auto@gmail.com",
+	}
+
+	nid, err := dORM.Insert(su)
+	throwFail(t, err)
+	throwFail(t, AssertIs(nid, id))
+
+	users := []User{
+		{ID: int(id + 100), UserName: "auto_100"},
+		{ID: int(id + 110), UserName: "auto_110"},
+		{ID: int(id + 120), UserName: "auto_120"},
+	}
+	num, err := dORM.InsertMulti(100, users)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 3))
+
+	u = &User{
+		UserName: "auto_121",
+	}
+
+	nid, err = dORM.Insert(u)
+	throwFail(t, err)
+	throwFail(t, AssertIs(nid, id+120+1))
+}
+
+func TestUintPk(t *testing.T) {
+	name := "go"
+	u := &UintPk{
+		Id:   8,
+		Name: name,
+	}
+
+	created, pk, err := dORM.ReadOrCreate(u, "Id")
+	throwFail(t, err)
+	throwFail(t, AssertIs(created, true))
+	throwFail(t, AssertIs(u.Name, name))
+
+	nu := &UintPk{Id: 8}
+	created, pk, err = dORM.ReadOrCreate(nu, "Id")
+	throwFail(t, err)
+	throwFail(t, AssertIs(created, false))
+	throwFail(t, AssertIs(nu.Id, u.Id))
+	throwFail(t, AssertIs(pk, u.Id))
+	throwFail(t, AssertIs(nu.Name, name))
+
+	dORM.Delete(u)
 }
