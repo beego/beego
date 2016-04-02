@@ -24,6 +24,7 @@ import (
 )
 
 const (
+	formatTime     = "15:04:05"
 	formatDate     = "2006-01-02"
 	formatDateTime = "2006-01-02 15:04:05"
 )
@@ -175,7 +176,7 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 						value = field.Float()
 					}
 				}
-			case TypeDateField, TypeDateTimeField:
+			case TypeTimeField, TypeDateField, TypeDateTimeField:
 				value = field.Interface()
 				if t, ok := value.(time.Time); ok {
 					d.ins.TimeToDB(&t, tz)
@@ -229,7 +230,7 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 			}
 		}
 		switch fi.fieldType {
-		case TypeDateField, TypeDateTimeField:
+		case TypeTimeField, TypeDateField, TypeDateTimeField:
 			if fi.autoNow || fi.autoNowAdd && insert {
 				if insert {
 					if t, ok := value.(time.Time); ok && !t.IsZero() {
@@ -1098,7 +1099,7 @@ setValue:
 		} else {
 			value = str.String()
 		}
-	case fieldType == TypeDateField || fieldType == TypeDateTimeField:
+	case fieldType == TypeTimeField || fieldType == TypeDateField || fieldType == TypeDateTimeField:
 		if str == nil {
 			switch t := val.(type) {
 			case time.Time:
@@ -1118,15 +1119,20 @@ setValue:
 			if len(s) >= 19 {
 				s = s[:19]
 				t, err = time.ParseInLocation(formatDateTime, s, tz)
-			} else {
+			} else if len(s) >= 10 {
 				if len(s) > 10 {
 					s = s[:10]
 				}
 				t, err = time.ParseInLocation(formatDate, s, tz)
+			} else if len(s) >= 8 {
+				if len(s) > 8 {
+					s = s[:8]
+				}
+				t, err = time.ParseInLocation(formatTime, s, tz)
 			}
 			t = t.In(DefaultTimeLoc)
 
-			if err != nil && s != "0000-00-00" && s != "0000-00-00 00:00:00" {
+			if err != nil && s != "00:00:00" && s != "0000-00-00" && s != "0000-00-00 00:00:00" {
 				tErr = err
 				goto end
 			}
@@ -1255,7 +1261,7 @@ setValue:
 				field.SetString(value.(string))
 			}
 		}
-	case fieldType == TypeDateField || fieldType == TypeDateTimeField:
+	case fieldType == TypeTimeField || fieldType == TypeDateField || fieldType == TypeDateTimeField:
 		if isNative {
 			if value == nil {
 				value = time.Time{}
