@@ -341,7 +341,7 @@ func responseError(rw http.ResponseWriter, r *http.Request, errCode int, errCont
 	data := map[string]interface{}{
 		"Title":        http.StatusText(errCode),
 		"BeegoVersion": VERSION,
-		"Content":      errContent,
+		"Content":      template.HTML(errContent),
 	}
 	t.Execute(rw, data)
 }
