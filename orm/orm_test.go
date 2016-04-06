@@ -34,6 +34,7 @@ var _ = os.PathSeparator
 var (
 	testDate     = formatDate + " -0700"
 	testDateTime = formatDateTime + " -0700"
+	testTime     = formatTime + " -0700"
 )
 
 type argAny []interface{}
@@ -240,6 +241,7 @@ var DataValues = map[string]interface{}{
 	"Boolean":  true,
 	"Char":     "char",
 	"Text":     "text",
+	"Time":     time.Now(),
 	"Date":     time.Now(),
 	"DateTime": time.Now(),
 	"Byte":     byte(1<<8 - 1),
@@ -267,7 +269,6 @@ func TestDataTypes(t *testing.T) {
 		e := ind.FieldByName(name)
 		e.Set(reflect.ValueOf(value))
 	}
-
 	id, err := dORM.Insert(&d)
 	throwFail(t, err)
 	throwFail(t, AssertIs(id, 1))
@@ -288,6 +289,9 @@ func TestDataTypes(t *testing.T) {
 		case "DateTime":
 			vu = vu.(time.Time).In(DefaultTimeLoc).Format(testDateTime)
 			value = value.(time.Time).In(DefaultTimeLoc).Format(testDateTime)
+		case "Time":
+			vu = vu.(time.Time).In(DefaultTimeLoc).Format(testTime)
+			value = value.(time.Time).In(DefaultTimeLoc).Format(testTime)
 		}
 		throwFail(t, AssertIs(vu == value, true), value, vu)
 	}
@@ -1521,6 +1525,7 @@ func TestRawQueryRow(t *testing.T) {
 		Boolean  bool
 		Char     string
 		Text     string
+		Time     time.Time
 		Date     time.Time
 		DateTime time.Time
 		Byte     byte
@@ -1549,14 +1554,14 @@ func TestRawQueryRow(t *testing.T) {
 	Q := dDbBaser.TableQuote()
 
 	cols := []string{
-		"id", "boolean", "char", "text", "date", "datetime", "byte", "rune", "int", "int8", "int16", "int32",
+		"id", "boolean", "char", "text", "time", "date", "datetime", "byte", "rune", "int", "int8", "int16", "int32",
 		"int64", "uint", "uint8", "uint16", "uint32", "uint64", "float32", "float64", "decimal",
 	}
 	sep := fmt.Sprintf("%s, %s", Q, Q)
 	query := fmt.Sprintf("SELECT %s%s%s FROM data WHERE id = ?", Q, strings.Join(cols, sep), Q)
 	var id int
 	values := []interface{}{
-		&id, &Boolean, &Char, &Text, &Date, &DateTime, &Byte, &Rune, &Int, &Int8, &Int16, &Int32,
+		&id, &Boolean, &Char, &Text, &Time, &Date, &DateTime, &Byte, &Rune, &Int, &Int8, &Int16, &Int32,
 		&Int64, &Uint, &Uint8, &Uint16, &Uint32, &Uint64, &Float32, &Float64, &Decimal,
 	}
 	err := dORM.Raw(query, 1).QueryRow(values...)
@@ -1567,6 +1572,10 @@ func TestRawQueryRow(t *testing.T) {
 		switch col {
 		case "id":
 			throwFail(t, AssertIs(id, 1))
+		case "time":
+			v = v.(time.Time).In(DefaultTimeLoc)
+			value := dataValues[col].(time.Time).In(DefaultTimeLoc)
+			throwFail(t, AssertIs(v, value, testTime))
 		case "date":
 			v = v.(time.Time).In(DefaultTimeLoc)
 			value := dataValues[col].(time.Time).In(DefaultTimeLoc)
@@ -1614,6 +1623,9 @@ func TestQueryRows(t *testing.T) {
 		e := ind.FieldByName(name)
 		vu := e.Interface()
 		switch name {
+		case "Time":
+			vu = vu.(time.Time).In(DefaultTimeLoc).Format(testTime)
+			value = value.(time.Time).In(DefaultTimeLoc).Format(testTime)
 		case "Date":
 			vu = vu.(time.Time).In(DefaultTimeLoc).Format(testDate)
 			value = value.(time.Time).In(DefaultTimeLoc).Format(testDate)
@@ -1638,6 +1650,9 @@ func TestQueryRows(t *testing.T) {
 		e := ind.FieldByName(name)
 		vu := e.Interface()
 		switch name {
+		case "Time":
+			vu = vu.(time.Time).In(DefaultTimeLoc).Format(testTime)
+			value = value.(time.Time).In(DefaultTimeLoc).Format(testTime)
 		case "Date":
 			vu = vu.(time.Time).In(DefaultTimeLoc).Format(testDate)
 			value = value.(time.Time).In(DefaultTimeLoc).Format(testDate)
