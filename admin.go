@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/astaxie/beego/grace"
+	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/toolbox"
 	"github.com/astaxie/beego/utils"
 )
@@ -196,7 +197,7 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 				BeforeExec:   "Before Exec",
 				AfterExec:    "After Exec",
 				FinishRouter: "Finish Router"} {
-				if bf, ok := BeeApp.Handlers.filters[k]; ok {
+				if bf := BeeApp.Handlers.filters[k]; len(bf) > 0 {
 					filterType = fr
 					filterTypes = append(filterTypes, filterType)
 					resultList := new([][]string)
@@ -410,7 +411,7 @@ func (admin *adminApp) Run() {
 	for p, f := range admin.routers {
 		http.Handle(p, f)
 	}
-	BeeLogger.Info("Admin server Running on %s", addr)
+	logs.Info("Admin server Running on %s", addr)
 
 	var err error
 	if BConfig.Listen.Graceful {
@@ -419,6 +420,6 @@ func (admin *adminApp) Run() {
 		err = http.ListenAndServe(addr, nil)
 	}
 	if err != nil {
-		BeeLogger.Critical("Admin ListenAndServe: ", err, fmt.Sprintf("%d", os.Getpid()))
+		logs.Critical("Admin ListenAndServe: ", err, fmt.Sprintf("%d", os.Getpid()))
 	}
 }

@@ -140,7 +140,14 @@ func (o *orm) ReadOrCreate(md interface{}, col1 string, cols ...string) (bool, i
 		return (err == nil), id, err
 	}
 
-	return false, ind.FieldByIndex(mi.fields.pk.fieldIndex).Int(), err
+	id, vid := int64(0), ind.FieldByIndex(mi.fields.pk.fieldIndex)
+	if mi.fields.pk.fieldType&IsPositiveIntegerField > 0 {
+		id = int64(vid.Uint())
+	} else {
+		id = vid.Int()
+	}
+
+	return false, id, err
 }
 
 // insert model data to database
@@ -159,7 +166,7 @@ func (o *orm) Insert(md interface{}) (int64, error) {
 // set auto pk field
 func (o *orm) setPk(mi *modelInfo, ind reflect.Value, id int64) {
 	if mi.fields.pk.auto {
-		if mi.fields.pk.fieldType&IsPostiveIntegerField > 0 {
+		if mi.fields.pk.fieldType&IsPositiveIntegerField > 0 {
 			ind.FieldByIndex(mi.fields.pk.fieldIndex).SetUint(uint64(id))
 		} else {
 			ind.FieldByIndex(mi.fields.pk.fieldIndex).SetInt(id)

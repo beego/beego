@@ -30,7 +30,7 @@ import (
 // fileLogWriter implements LoggerInterface.
 // It writes messages by lines limit, file size limit, or time frequency.
 type fileLogWriter struct {
-	sync.Mutex // write log order by order and  atomic incr maxLinesCurLines and maxSizeCurSize
+	sync.RWMutex // write log order by order and  atomic incr maxLinesCurLines and maxSizeCurSize
 	// The opened file
 	Filename   string `json:"filename"`
 	fileWriter *os.File
@@ -60,14 +60,11 @@ type fileLogWriter struct {
 // newFileWriter create a FileLogWriter returning as LoggerInterface.
 func newFileWriter() Logger {
 	w := &fileLogWriter{
-		Filename: "",
-		MaxLines: 1000000,
-		MaxSize:  1 << 28, //256 MB
-		Daily:    true,
-		MaxDays:  7,
-		Rotate:   true,
-		Level:    LevelTrace,
-		Perm:     0660,
+		Daily:   true,
+		MaxDays: 7,
+		Rotate:  true,
+		Level:   LevelTrace,
+		Perm:    0660,
 	}
 	return w
 }
@@ -77,7 +74,7 @@ func newFileWriter() Logger {
 //	{
 //	"filename":"logs/beego.log",
 //	"maxLines":10000,
-//	"maxsize":1<<30,
+//	"maxsize":1024,
 //	"daily":true,
 //	"maxDays":15,
 //	"rotate":true,
@@ -128,7 +125,9 @@ func (w *fileLogWriter) WriteMsg(when time.Time, msg string, level int) error {
 	h, d := formatTimeHeader(when)
 	msg = string(h) + msg + "\n"
 	if w.Rotate {
+		w.RLock()
 		if w.needRotate(len(msg), d) {
+			w.RUnlock()
 			w.Lock()
 			if w.needRotate(len(msg), d) {
 				if err := w.doRotate(when); err != nil {
@@ -136,6 +135,8 @@ func (w *fileLogWriter) WriteMsg(when time.Time, msg string, level int) error {
 				}
 			}
 			w.Unlock()
+		} else {
+			w.RUnlock()
 		}
 	}
 
@@ -255,8 +256,8 @@ func (w *fileLogWriter) deleteOldLog() {
 			}
 		}()
 
-		if !info.IsDir() && info.ModTime().Unix() < (time.Now().Unix()-60*60*24*w.MaxDays) {
-			if strings.HasPrefix(filepath.Base(path), w.fileNameOnly) &&
+		if !info.IsDir() && info.ModTime().Add(24*time.Hour*time.Duration(w.MaxDays)).Before(time.Now()) {
+			if strings.HasPrefix(filepath.Base(path), filepath.Base(w.fileNameOnly)) &&
 				strings.HasSuffix(filepath.Base(path), w.suffix) {
 				os.Remove(path)
 			}
@@ -278,5 +279,5 @@ func (w *fileLogWriter) Flush() {
 }
 
 func init() {
-	Register("file", newFileWriter)
+	Register(AdapterFile, newFileWriter)
 }

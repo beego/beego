@@ -112,6 +112,7 @@ type Data struct {
 	Boolean  bool
 	Char     string    `orm:"size(50)"`
 	Text     string    `orm:"type(text)"`
+	Time     time.Time `orm:"type(time)"`
 	Date     time.Time `orm:"type(date)"`
 	DateTime time.Time `orm:"column(datetime)"`
 	Byte     byte
@@ -136,6 +137,7 @@ type DataNull struct {
 	Boolean     bool            `orm:"null"`
 	Char        string          `orm:"null;size(50)"`
 	Text        string          `orm:"null;type(text)"`
+	Time        time.Time       `orm:"null;type(time)"`
 	Date        time.Time       `orm:"null;type(date)"`
 	DateTime    time.Time       `orm:"null;column(datetime)"`
 	Byte        byte            `orm:"null"`
@@ -373,6 +375,28 @@ type InLine struct {
 
 func NewInLine() *InLine {
 	return new(InLine)
+}
+
+type InLineOneToOne struct {
+	// Common Fields
+	ModelBase
+
+	Note   string
+	InLine *InLine `orm:"rel(fk);column(inline)"`
+}
+
+func NewInLineOneToOne() *InLineOneToOne {
+	return new(InLineOneToOne)
+}
+
+type IntegerPk struct {
+	Id    int64 `orm:"pk"`
+	Value string
+}
+
+type UintPk struct {
+	Id   uint32 `orm:"pk"`
+	Name string
 }
 
 var DBARGS = struct {
