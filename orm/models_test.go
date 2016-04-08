@@ -112,6 +112,8 @@ type Data struct {
 	Boolean  bool
 	Char     string    `orm:"size(50)"`
 	Text     string    `orm:"type(text)"`
+	Json     string    `orm:"type(json);default({\"name\":\"json\"})"`
+	Jsonb    string    `orm:"type(jsonb)"`
 	Time     time.Time `orm:"type(time)"`
 	Date     time.Time `orm:"type(date)"`
 	DateTime time.Time `orm:"column(datetime)"`
@@ -137,6 +139,8 @@ type DataNull struct {
 	Boolean     bool            `orm:"null"`
 	Char        string          `orm:"null;size(50)"`
 	Text        string          `orm:"null;type(text)"`
+	Json        string          `orm:"type(json);null"`
+	Jsonb       string          `orm:"type(jsonb);null"`
 	Time        time.Time       `orm:"null;type(time)"`
 	Date        time.Time       `orm:"null;type(date)"`
 	DateTime    time.Time       `orm:"null;column(datetime)"`

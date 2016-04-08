@@ -241,6 +241,8 @@ var DataValues = map[string]interface{}{
 	"Boolean":  true,
 	"Char":     "char",
 	"Text":     "text",
+	"Json":     `{"name":"json"}`,
+	"Jsonb":    `{"name": "jsonb"}`,
 	"Time":     time.Now(),
 	"Date":     time.Now(),
 	"DateTime": time.Now(),
@@ -266,6 +268,9 @@ func TestDataTypes(t *testing.T) {
 	ind := reflect.Indirect(reflect.ValueOf(&d))
 
 	for name, value := range DataValues {
+		if name == "Json" {
+			continue
+		}
 		e := ind.FieldByName(name)
 		e.Set(reflect.ValueOf(value))
 	}
@@ -310,9 +315,17 @@ func TestNullDataTypes(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(id, 1))
 
+	data := `{"ok":1,"data":{"arr":[1,2],"msg":"gopher"}}`
+	d = DataNull{ID: 1, Json: data}
+	num, err := dORM.Update(&d)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
 	d = DataNull{ID: 1}
 	err = dORM.Read(&d)
 	throwFail(t, err)
+
+	throwFail(t, AssertIs(d.Json, data))
 
 	throwFail(t, AssertIs(d.NullBool.Valid, false))
 	throwFail(t, AssertIs(d.NullString.Valid, false))
