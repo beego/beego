@@ -141,7 +141,7 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 				} else {
 					value = field.Bool()
 				}
-			case TypeCharField, TypeTextField:
+			case TypeCharField, TypeTextField, TypeJsonField, TypeJsonbField:
 				if ns, ok := field.Interface().(sql.NullString); ok {
 					value = nil
 					if ns.Valid {
@@ -245,6 +245,14 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 					f.SetRaw(tnow.In(DefaultTimeLoc))
 				} else {
 					field.Set(reflect.ValueOf(tnow.In(DefaultTimeLoc)))
+				}
+			}
+		case TypeJsonField, TypeJsonbField:
+			if s, ok := value.(string); (ok && len(s) == 0) || value == nil {
+				if fi.colDefault && fi.initial.Exist() {
+					value = fi.initial.String()
+				} else {
+					value = nil
 				}
 			}
 		}
@@ -1093,7 +1101,7 @@ setValue:
 			}
 			value = b
 		}
-	case fieldType == TypeCharField || fieldType == TypeTextField:
+	case fieldType == TypeCharField || fieldType == TypeTextField || fieldType == TypeJsonField || fieldType == TypeJsonbField:
 		if str == nil {
 			value = ToStr(val)
 		} else {
@@ -1239,7 +1247,7 @@ setValue:
 				field.SetBool(value.(bool))
 			}
 		}
-	case fieldType == TypeCharField || fieldType == TypeTextField:
+	case fieldType == TypeCharField || fieldType == TypeTextField || fieldType == TypeJsonField || fieldType == TypeJsonbField:
 		if isNative {
 			if ns, ok := field.Interface().(sql.NullString); ok {
 				if value == nil {

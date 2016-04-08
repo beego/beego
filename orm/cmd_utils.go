@@ -90,6 +90,18 @@ checkColumn:
 		} else {
 			col = fmt.Sprintf(s, fi.digits, fi.decimals)
 		}
+	case TypeJsonField:
+		if al.Driver != DRPostgres {
+			fieldType = TypeCharField
+			goto checkColumn
+		}
+		col = T["json"]
+	case TypeJsonbField:
+		if al.Driver != DRPostgres {
+			fieldType = TypeCharField
+			goto checkColumn
+		}
+		col = T["jsonb"]
 	case RelForeignKey, RelOneToOne:
 		fieldType = fi.relModelInfo.fields.pk.fieldType
 		fieldSize = fi.relModelInfo.fields.pk.size
@@ -278,6 +290,8 @@ func getColumnDefault(fi *fieldInfo) string {
 	case TypeBooleanField:
 		t = " DEFAULT %s "
 		d = "FALSE"
+	case TypeJsonField, TypeJsonbField:
+		d = "{}"
 	}
 
 	if fi.colDefault {

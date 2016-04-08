@@ -38,6 +38,8 @@ const (
 	TypePositiveBigIntegerField
 	TypeFloatField
 	TypeDecimalField
+	TypeJsonField
+	TypeJsonbField
 	RelForeignKey
 	RelOneToOne
 	RelManyToMany
@@ -49,7 +51,7 @@ const (
 const (
 	IsIntegerField         = ^-TypePositiveBigIntegerField >> 5 << 6
 	IsPositiveIntegerField = ^-TypePositiveBigIntegerField >> 9 << 10
-	IsRelField             = ^-RelReverseMany >> 15 << 16
+	IsRelField             = ^-RelReverseMany >> 17 << 18
 	IsFieldType            = ^-RelReverseMany<<1 + 1
 )
 
@@ -681,3 +683,87 @@ func (e *TextField) RawValue() interface{} {
 
 // verify TextField implement Fielder
 var _ Fielder = new(TextField)
+
+// JsonField postgres json field.
+type JsonField string
+
+// Value return JsonField value
+func (j JsonField) Value() string {
+	return string(j)
+}
+
+// Set the JsonField value
+func (j *JsonField) Set(d string) {
+	*j = JsonField(d)
+}
+
+// String convert JsonField to string
+func (j *JsonField) String() string {
+	return j.Value()
+}
+
+// FieldType return enum type
+func (j *JsonField) FieldType() int {
+	return TypeJsonField
+}
+
+// SetRaw convert interface string to string
+func (j *JsonField) SetRaw(value interface{}) error {
+	switch d := value.(type) {
+	case string:
+		j.Set(d)
+	default:
+		return fmt.Errorf("<JsonField.SetRaw> unknown value `%s`", value)
+	}
+	return nil
+}
+
+// RawValue return JsonField value
+func (j *JsonField) RawValue() interface{} {
+	return j.Value()
+}
+
+// verify JsonField implement Fielder
+var _ Fielder = new(JsonField)
+
+// JsonbField postgres json field.
+type JsonbField string
+
+// Value return JsonbField value
+func (j JsonbField) Value() string {
+	return string(j)
+}
+
+// Set the JsonbField value
+func (j *JsonbField) Set(d string) {
+	*j = JsonbField(d)
+}
+
+// String convert JsonbField to string
+func (j *JsonbField) String() string {
+	return j.Value()
+}
+
+// FieldType return enum type
+func (j *JsonbField) FieldType() int {
+	return TypeJsonbField
+}
+
+// SetRaw convert interface string to string
+func (j *JsonbField) SetRaw(value interface{}) error {
+	switch d := value.(type) {
+	case string:
+		j.Set(d)
+	default:
+		return fmt.Errorf("<JsonbField.SetRaw> unknown value `%s`", value)
+	}
+	return nil
+}
+
+// RawValue return JsonbField value
+func (j *JsonbField) RawValue() interface{} {
+	return j.Value()
+}
+
+// verify JsonbField implement Fielder
+var _ Fielder = new(JsonbField)
