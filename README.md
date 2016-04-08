@@ -30,7 +30,7 @@ func main(){
 ```
 ######Congratulations! 
 You just built your first beego app.
-Open your browser and visit `http://localhost:8000`.
+Open your browser and visit `http://localhost:8080`.
 Please see [Documentation](http://beego.me/docs) for more.
 
 ## Features
