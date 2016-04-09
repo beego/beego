@@ -90,7 +90,7 @@ checkColumn:
 		} else {
 			col = fmt.Sprintf(s, fi.digits, fi.decimals)
 		}
-	case TypeJsonField:
+	case TypeJSONField:
 		if al.Driver != DRPostgres {
 			fieldType = TypeCharField
 			goto checkColumn
@@ -290,7 +290,7 @@ func getColumnDefault(fi *fieldInfo) string {
 	case TypeBooleanField:
 		t = " DEFAULT %s "
 		d = "FALSE"
-	case TypeJsonField, TypeJsonbField:
+	case TypeJSONField, TypeJsonbField:
 		d = "{}"
 	}
 

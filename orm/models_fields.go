@@ -38,7 +38,7 @@ const (
 	TypePositiveBigIntegerField
 	TypeFloatField
 	TypeDecimalField
-	TypeJsonField
+	TypeJSONField
 	TypeJsonbField
 	RelForeignKey
 	RelOneToOne
@@ -148,7 +148,7 @@ func (e *CharField) RawValue() interface{} {
 // verify CharField implement Fielder
 var _ Fielder = new(CharField)
 
-// A time, represented in go by a time.Time instance.
+// TimeField A time, represented in go by a time.Time instance.
 // only time values like 10:00:00
 // Has a few extra, optional attr tag:
 //
@@ -163,22 +163,27 @@ var _ Fielder = new(CharField)
 // eg: `orm:"auto_now"` or `orm:"auto_now_add"`
 type TimeField time.Time
 
+// Value return the time.Time
 func (e TimeField) Value() time.Time {
 	return time.Time(e)
 }
 
+// Set set the TimeField's value
 func (e *TimeField) Set(d time.Time) {
 	*e = TimeField(d)
 }
 
+// String convert time to string
 func (e *TimeField) String() string {
 	return e.Value().String()
 }
 
+// FieldType return enum type Date
 func (e *TimeField) FieldType() int {
 	return TypeDateField
 }
 
+// SetRaw convert the interface to time.Time. Allow string and time.Time
 func (e *TimeField) SetRaw(value interface{}) error {
 	switch d := value.(type) {
 	case time.Time:
@@ -195,6 +200,7 @@ func (e *TimeField) SetRaw(value interface{}) error {
 	return nil
 }
 
+// RawValue return time value
 func (e *TimeField) RawValue() interface{} {
 	return e.Value()
 }
@@ -684,47 +690,47 @@ func (e *TextField) RawValue() interface{} {
 // verify TextField implement Fielder
 var _ Fielder = new(TextField)
 
-// JsonField postgres json field.
-type JsonField string
+// JSONField postgres json field.
+type JSONField string
 
-// Value return JsonField value
-func (j JsonField) Value() string {
+// Value return JSONField value
+func (j JSONField) Value() string {
 	return string(j)
 }
 
-// Set the JsonField value
-func (j *JsonField) Set(d string) {
-	*j = JsonField(d)
+// Set the JSONField value
+func (j *JSONField) Set(d string) {
+	*j = JSONField(d)
 }
 
-// String convert JsonField to string
-func (j *JsonField) String() string {
+// String convert JSONField to string
+func (j *JSONField) String() string {
 	return j.Value()
 }
 
 // FieldType return enum type
-func (j *JsonField) FieldType() int {
-	return TypeJsonField
+func (j *JSONField) FieldType() int {
+	return TypeJSONField
 }
 
 // SetRaw convert interface string to string
-func (j *JsonField) SetRaw(value interface{}) error {
+func (j *JSONField) SetRaw(value interface{}) error {
 	switch d := value.(type) {
 	case string:
 		j.Set(d)
 	default:
-		return fmt.Errorf("<JsonField.SetRaw> unknown value `%s`", value)
+		return fmt.Errorf("<JSONField.SetRaw> unknown value `%s`", value)
 	}
 	return nil
 }
 
-// RawValue return JsonField value
-func (j *JsonField) RawValue() interface{} {
+// RawValue return JSONField value
+func (j *JSONField) RawValue() interface{} {
 	return j.Value()
 }
 
-// verify JsonField implement Fielder
-var _ Fielder = new(JsonField)
+// verify JSONField implement Fielder
+var _ Fielder = new(JSONField)
 
 // JsonbField postgres json field.
 type JsonbField string

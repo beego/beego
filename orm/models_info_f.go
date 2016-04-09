@@ -244,7 +244,7 @@ checkType:
 			case "text":
 				fieldType = TypeTextField
 			case "json":
-				fieldType = TypeJsonField
+				fieldType = TypeJSONField
 			case "jsonb":
 				fieldType = TypeJsonbField
 			}
@@ -349,7 +349,7 @@ checkType:
 
 	switch fieldType {
 	case TypeBooleanField:
-	case TypeCharField, TypeJsonField, TypeJsonbField:
+	case TypeCharField, TypeJSONField, TypeJsonbField:
 		if size != "" {
 			v, e := StrTo(size).Int32()
 			if e != nil {

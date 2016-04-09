@@ -241,7 +241,7 @@ var DataValues = map[string]interface{}{
 	"Boolean":  true,
 	"Char":     "char",
 	"Text":     "text",
-	"Json":     `{"name":"json"}`,
+	"JSON":     `{"name":"json"}`,
 	"Jsonb":    `{"name": "jsonb"}`,
 	"Time":     time.Now(),
 	"Date":     time.Now(),
@@ -268,7 +268,7 @@ func TestDataTypes(t *testing.T) {
 	ind := reflect.Indirect(reflect.ValueOf(&d))
 
 	for name, value := range DataValues {
-		if name == "Json" {
+		if name == "JSON" {
 			continue
 		}
 		e := ind.FieldByName(name)
@@ -316,7 +316,7 @@ func TestNullDataTypes(t *testing.T) {
 	throwFail(t, AssertIs(id, 1))
 
 	data := `{"ok":1,"data":{"arr":[1,2],"msg":"gopher"}}`
-	d = DataNull{ID: 1, Json: data}
+	d = DataNull{ID: 1, JSON: data}
 	num, err := dORM.Update(&d)
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
@@ -325,7 +325,7 @@ func TestNullDataTypes(t *testing.T) {
 	err = dORM.Read(&d)
 	throwFail(t, err)
 
-	throwFail(t, AssertIs(d.Json, data))
+	throwFail(t, AssertIs(d.JSON, data))
 
 	throwFail(t, AssertIs(d.NullBool.Valid, false))
 	throwFail(t, AssertIs(d.NullString.Valid, false))
@@ -2027,9 +2027,9 @@ func TestInLineOneToOne(t *testing.T) {
 
 func TestIntegerPk(t *testing.T) {
 	its := []IntegerPk{
-		{Id: math.MinInt64, Value: "-"},
-		{Id: 0, Value: "0"},
-		{Id: math.MaxInt64, Value: "+"},
+		{ID: math.MinInt64, Value: "-"},
+		{ID: 0, Value: "0"},
+		{ID: math.MaxInt64, Value: "+"},
 	}
 
 	num, err := dORM.InsertMulti(len(its), its)
@@ -2037,7 +2037,7 @@ func TestIntegerPk(t *testing.T) {
 	throwFail(t, AssertIs(num, len(its)))
 
 	for _, intPk := range its {
-		out := IntegerPk{Id: intPk.Id}
+		out := IntegerPk{ID: intPk.ID}
 		err = dORM.Read(&out)
 		throwFail(t, err)
 		throwFail(t, AssertIs(out.Value, intPk.Value))
@@ -2085,21 +2085,21 @@ func TestInsertAuto(t *testing.T) {
 func TestUintPk(t *testing.T) {
 	name := "go"
 	u := &UintPk{
-		Id:   8,
+		ID:   8,
 		Name: name,
 	}
 
-	created, pk, err := dORM.ReadOrCreate(u, "Id")
+	created, pk, err := dORM.ReadOrCreate(u, "ID")
 	throwFail(t, err)
 	throwFail(t, AssertIs(created, true))
 	throwFail(t, AssertIs(u.Name, name))
 
-	nu := &UintPk{Id: 8}
-	created, pk, err = dORM.ReadOrCreate(nu, "Id")
+	nu := &UintPk{ID: 8}
+	created, pk, err = dORM.ReadOrCreate(nu, "ID")
 	throwFail(t, err)
 	throwFail(t, AssertIs(created, false))
-	throwFail(t, AssertIs(nu.Id, u.Id))
-	throwFail(t, AssertIs(pk, u.Id))
+	throwFail(t, AssertIs(nu.ID, u.ID))
+	throwFail(t, AssertIs(pk, u.ID))
 	throwFail(t, AssertIs(nu.Name, name))
 
 	dORM.Delete(u)
