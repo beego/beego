@@ -72,7 +72,6 @@ func initBeforeHTTPRun() {
 	AddAPPStartHook(registerMime)
 	AddAPPStartHook(registerDefaultErrorHandler)
 	AddAPPStartHook(registerSession)
-	AddAPPStartHook(registerDocs)
 	AddAPPStartHook(registerTemplate)
 	AddAPPStartHook(registerAdmin)
 	AddAPPStartHook(registerGzip)

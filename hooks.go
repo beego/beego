@@ -79,14 +79,6 @@ func registerTemplate() error {
 	return nil
 }
 
-func registerDocs() error {
-	if BConfig.WebConfig.EnableDocs {
-		Get("/docs", serverDocs)
-		Get("/docs/*", serverDocs)
-	}
-	return nil
-}
-
 func registerAdmin() error {
 	if BConfig.Listen.EnableAdmin {
 		go beeAdminApp.Run()
