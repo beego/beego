@@ -45,3 +45,5 @@ after_script:
   - rm -rf ./res/var/*
 script:
   - go test -v ./...
+addons:
+  postgresql: "9.4"
