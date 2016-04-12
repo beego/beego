@@ -47,6 +47,7 @@ type fileLogWriter struct {
 	Daily         bool  `json:"daily"`
 	MaxDays       int64 `json:"maxdays"`
 	dailyOpenDate int
+	dailyOpenTime time.Time
 
 	Rotate bool `json:"rotate"`
 
@@ -163,7 +164,8 @@ func (w *fileLogWriter) initFd() error {
 		return fmt.Errorf("get stat err: %s\n", err)
 	}
 	w.maxSizeCurSize = int(fInfo.Size())
-	w.dailyOpenDate = time.Now().Day()
+	w.dailyOpenTime = time.Now()
+	w.dailyOpenDate = w.dailyOpenTime.Day()
 	w.maxLinesCurLines = 0
 	if fInfo.Size() > 0 {
 		count, err := w.lines()
@@ -205,22 +207,29 @@ func (w *fileLogWriter) lines() (int, error) {
 // DoRotate means it need to write file in new file.
 // new file name like xx.2013-01-01.log (daily) or xx.001.log (by line or size)
 func (w *fileLogWriter) doRotate(logTime time.Time) error {
-	_, err := os.Lstat(w.Filename)
-	if err != nil {
-		return err
-	}
 	// file exists
 	// Find the next available number
 	num := 1
 	fName := ""
+
+	_, err := os.Lstat(w.Filename)
+	if err != nil {
+		//even if the file is not exist or other ,we should RESTART the logger
+		goto RESTART_LOGGER
+	}
+
 	if w.MaxLines > 0 || w.MaxSize > 0 {
 		for ; err == nil && num <= 999; num++ {
 			fName = w.fileNameOnly + fmt.Sprintf(".%s.%03d%s", logTime.Format("2006-01-02"), num, w.suffix)
 			_, err = os.Lstat(fName)
 		}
 	} else {
-		fName = fmt.Sprintf("%s.%s%s", w.fileNameOnly, logTime.Format("2006-01-02"), w.suffix)
+		fName = fmt.Sprintf("%s.%s%s", w.fileNameOnly, w.dailyOpenTime.Format("2006-01-02"), w.suffix)
 		_, err = os.Lstat(fName)
+		for ; err == nil && num <= 999; num++ {
+			fName = w.fileNameOnly + fmt.Sprintf(".%s.%03d%s", w.dailyOpenTime.Format("2006-01-02"), num, w.suffix)
+			_, err = os.Lstat(fName)
+		}
 	}
 	// return error if the last file checked still existed
 	if err == nil {
@@ -232,16 +241,18 @@ func (w *fileLogWriter) doRotate(logTime time.Time) error {
 
 	// Rename the file to its new found name
 	// even if occurs error,we MUST guarantee to  restart new logger
-	renameErr := os.Rename(w.Filename, fName)
+	err = os.Rename(w.Filename, fName)
 	// re-start logger
+RESTART_LOGGER:
+
 	startLoggerErr := w.startLogger()
 	go w.deleteOldLog()
 
 	if startLoggerErr != nil {
 		return fmt.Errorf("Rotate StartLogger: %s\n", startLoggerErr)
 	}
-	if renameErr != nil {
-		return fmt.Errorf("Rotate: %s\n", renameErr)
+	if err != nil {
+		return fmt.Errorf("Rotate: %s\n", err)
 	}
 	return nil
 
