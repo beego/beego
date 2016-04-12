@@ -65,6 +65,7 @@ func (ctx *Context) Reset(rw http.ResponseWriter, r *http.Request) {
 	ctx.ResponseWriter.reset(rw)
 	ctx.Input.Reset(ctx)
 	ctx.Output.Reset(ctx)
+	ctx._xsrfToken = ""
 }
 
 // Redirect does redirection to localurl with http header status code.
