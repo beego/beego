@@ -119,6 +119,7 @@ type fieldInfo struct {
 	colDefault          bool
 	initial             StrTo
 	size                int
+	toText              bool
 	autoNow             bool
 	autoNowAdd          bool
 	rel                 bool
@@ -359,6 +360,7 @@ checkType:
 			}
 		} else {
 			fi.size = 255
+			fi.toText = true
 		}
 	case TypeTextField:
 		fi.index = false

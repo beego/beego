@@ -52,7 +52,11 @@ checkColumn:
 	case TypeBooleanField:
 		col = T["bool"]
 	case TypeCharField:
-		col = fmt.Sprintf(T["string"], fieldSize)
+		if al.Driver == DRPostgres && fi.toText {
+			col = T["string-text"]
+		} else {
+			col = fmt.Sprintf(T["string"], fieldSize)
+		}
 	case TypeTextField:
 		col = T["string-text"]
 	case TypeTimeField:
