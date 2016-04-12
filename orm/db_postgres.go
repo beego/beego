@@ -56,6 +56,8 @@ var postgresTypes = map[string]string{
 	"uint64":          `bigint CHECK("%COL%" >= 0)`,
 	"float64":         "double precision",
 	"float64-decimal": "numeric(%d, %d)",
+	"json":            "json",
+	"jsonb":           "jsonb",
 }
 
 // postgresql dbBaser.

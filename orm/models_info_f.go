@@ -239,8 +239,15 @@ checkType:
 		if err != nil {
 			goto end
 		}
-		if fieldType == TypeCharField && tags["type"] == "text" {
-			fieldType = TypeTextField
+		if fieldType == TypeCharField {
+			switch tags["type"] {
+			case "text":
+				fieldType = TypeTextField
+			case "json":
+				fieldType = TypeJSONField
+			case "jsonb":
+				fieldType = TypeJsonbField
+			}
 		}
 		if fieldType == TypeFloatField && (digits != "" || decimals != "") {
 			fieldType = TypeDecimalField
@@ -342,7 +349,7 @@ checkType:
 
 	switch fieldType {
 	case TypeBooleanField:
-	case TypeCharField:
+	case TypeCharField, TypeJSONField, TypeJsonbField:
 		if size != "" {
 			v, e := StrTo(size).Int32()
 			if e != nil {
