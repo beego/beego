@@ -970,7 +970,6 @@ func TestOne(t *testing.T) {
 	qs := dORM.QueryTable("user")
 	err := qs.One(&user)
 	throwFail(t, err)
-	throwFail(t, AssertIs(user.UserName, "slene"))
 
 	user = User{}
 	err = qs.OrderBy("Id").Limit(1).One(&user)
