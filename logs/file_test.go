@@ -89,7 +89,7 @@ func TestFile2(t *testing.T) {
 	os.Remove("test2.log")
 }
 
-func TestFileRotate(t *testing.T) {
+func TestFileRotate_01(t *testing.T) {
 	log := NewLogger(10000)
 	log.SetLogger("file", `{"filename":"test3.log","maxlines":4}`)
 	log.Debug("debug")
@@ -108,6 +108,43 @@ func TestFileRotate(t *testing.T) {
 	}
 	os.Remove(rotateName)
 	os.Remove("test3.log")
+}
+
+func TestFileRotate_02(t *testing.T) {
+	fn1 := "rotate_day.log"
+	fn2 := "rotate_day." + time.Now().Add(-24*time.Hour).Format("2006-01-02") + ".log"
+	testFileRotate(t, fn1, fn2)
+}
+
+func TestFileRotate_03(t *testing.T) {
+	fn1 := "rotate_day.log"
+	fn := "rotate_day." + time.Now().Add(-24*time.Hour).Format("2006-01-02") + ".log"
+	os.Create(fn)
+	fn2 := "rotate_day." + time.Now().Add(-24*time.Hour).Format("2006-01-02") + ".001.log"
+	testFileRotate(t, fn1, fn2)
+	os.Remove(fn)
+}
+
+func testFileRotate(t *testing.T, fn1, fn2 string) {
+	fw := &fileLogWriter{
+		Daily:   true,
+		MaxDays: 7,
+		Rotate:  true,
+		Level:   LevelTrace,
+		Perm:    0660,
+	}
+	fw.Init(fmt.Sprintf(`{"filename":"%v","maxdays":1}`, fn1))
+	fw.dailyOpenTime = time.Now().Add(-24 * time.Hour)
+	fw.dailyOpenDate = fw.dailyOpenTime.Day()
+	fw.WriteMsg(time.Now(), "this is a msg for test", LevelDebug)
+
+	for _, file := range []string{fn1, fn2} {
+		_, err := os.Stat(file)
+		if err != nil {
+			t.FailNow()
+		}
+		os.Remove(file)
+	}
 }
 
 func exists(path string) (bool, error) {
