@@ -191,7 +191,7 @@ func (o *orm) InsertMulti(bulk int, mds interface{}) (int64, error) {
 
 	if bulk <= 1 {
 		for i := 0; i < sind.Len(); i++ {
-			ind := sind.Index(i)
+			ind := reflect.Indirect(sind.Index(i))
 			mi, _ := o.getMiInd(ind.Interface(), false)
 			id, err := o.alias.DbBaser.Insert(o.db, mi, ind, o.alias.TZ)
 			if err != nil {
