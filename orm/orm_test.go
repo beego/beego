@@ -2042,6 +2042,12 @@ func TestIntegerPk(t *testing.T) {
 		throwFail(t, err)
 		throwFail(t, AssertIs(out.Value, intPk.Value))
 	}
+
+	num, err = dORM.InsertMulti(1, []*IntegerPk{&IntegerPk{
+		ID: 1, Value: "ok",
+	}})
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
 }
 
 func TestInsertAuto(t *testing.T) {
