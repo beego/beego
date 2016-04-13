@@ -210,7 +210,7 @@ func parseConfig(appConfigPath string) (err error) {
 		BConfig.RunMode = runMode
 	}
 
-	for _, i := range []interface{}{BConfig, &BConfig.Listen, &BConfig.WebConfig, &BConfig.Log} {
+	for _, i := range []interface{}{BConfig, &BConfig.Listen, &BConfig.WebConfig, &BConfig.Log, &BConfig.WebConfig.Session} {
 		assignConfig(i, AppConfig)
 	}
 
