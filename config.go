@@ -117,7 +117,30 @@ var (
 )
 
 func init() {
-	BConfig = &Config{
+	BConfig = newBConfig()
+	var err error
+	if AppPath, err = filepath.Abs(filepath.Dir(os.Args[0])); err != nil {
+		panic(err)
+	}
+	workPath, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	appConfigPath = filepath.Join(workPath, "conf", "app.conf")
+	if !utils.FileExists(appConfigPath) {
+		appConfigPath = filepath.Join(AppPath, "conf", "app.conf")
+		if !utils.FileExists(appConfigPath) {
+			AppConfig = &beegoAppConfig{innerConfig: config.NewFakeConfig()}
+			return
+		}
+	}
+	if err = parseConfig(appConfigPath); err != nil {
+		panic(err)
+	}
+}
+
+func newBConfig() *Config {
+	return &Config{
 		AppName:             "beego",
 		RunMode:             DEV,
 		RouterCaseSensitive: true,
@@ -176,25 +199,6 @@ func init() {
 			Outputs:     map[string]string{"console": ""},
 		},
 	}
-	var err error
-	if AppPath, err = filepath.Abs(filepath.Dir(os.Args[0])); err != nil {
-		panic(err)
-	}
-	workPath, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
-	appConfigPath = filepath.Join(workPath, "conf", "app.conf")
-	if !utils.FileExists(appConfigPath) {
-		appConfigPath = filepath.Join(AppPath, "conf", "app.conf")
-		if !utils.FileExists(appConfigPath) {
-			AppConfig = &beegoAppConfig{innerConfig: config.NewFakeConfig()}
-			return
-		}
-	}
-	if err = parseConfig(appConfigPath); err != nil {
-		panic(err)
-	}
 }
 
 // now only support ini, next will support json.
@@ -203,21 +207,23 @@ func parseConfig(appConfigPath string) (err error) {
 	if err != nil {
 		return err
 	}
+	return assignConfig(AppConfig)
+}
+
+func assignConfig(ac config.Configer) error {
 	// set the run mode first
 	if envRunMode := os.Getenv("BEEGO_RUNMODE"); envRunMode != "" {
 		BConfig.RunMode = envRunMode
-	} else if runMode := AppConfig.String("RunMode"); runMode != "" {
+	} else if runMode := ac.String("RunMode"); runMode != "" {
 		BConfig.RunMode = runMode
 	}
 
 	for _, i := range []interface{}{BConfig, &BConfig.Listen, &BConfig.WebConfig, &BConfig.Log, &BConfig.WebConfig.Session} {
-		assignConfig(i, AppConfig)
+		assignSingleConfig(i, ac)
 	}
 
-	if sd := AppConfig.String("StaticDir"); sd != "" {
-		for k := range BConfig.WebConfig.StaticDir {
-			delete(BConfig.WebConfig.StaticDir, k)
-		}
+	if sd := ac.String("StaticDir"); sd != "" {
+		BConfig.WebConfig.StaticDir = map[string]string{}
 		sds := strings.Fields(sd)
 		for _, v := range sds {
 			if url2fsmap := strings.SplitN(v, ":", 2); len(url2fsmap) == 2 {
@@ -228,7 +234,7 @@ func parseConfig(appConfigPath string) (err error) {
 		}
 	}
 
-	if sgz := AppConfig.String("StaticExtensionsToGzip"); sgz != "" {
+	if sgz := ac.String("StaticExtensionsToGzip"); sgz != "" {
 		extensions := strings.Split(sgz, ",")
 		fileExts := []string{}
 		for _, ext := range extensions {
@@ -246,7 +252,7 @@ func parseConfig(appConfigPath string) (err error) {
 		}
 	}
 
-	if lo := AppConfig.String("LogOutputs"); lo != "" {
+	if lo := ac.String("LogOutputs"); lo != "" {
 		los := strings.Split(lo, ";")
 		for _, v := range los {
 			if logType2Config := strings.SplitN(v, ",", 2); len(logType2Config) == 2 {
@@ -260,7 +266,7 @@ func parseConfig(appConfigPath string) (err error) {
 	//init log
 	logs.Reset()
 	for adaptor, config := range BConfig.Log.Outputs {
-		err = logs.SetLogger(adaptor, config)
+		err := logs.SetLogger(adaptor, config)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "%s with the config `%s` got err:%s\n", adaptor, config, err)
 		}
@@ -270,7 +276,7 @@ func parseConfig(appConfigPath string) (err error) {
 	return nil
 }
 
-func assignConfig(p interface{}, ac config.Configer) {
+func assignSingleConfig(p interface{}, ac config.Configer) {
 	pt := reflect.TypeOf(p)
 	if pt.Kind() != reflect.Ptr {
 		return
@@ -295,9 +301,8 @@ func assignConfig(p interface{}, ac config.Configer) {
 		case reflect.Bool:
 			pf.SetBool(ac.DefaultBool(name, pf.Bool()))
 		case reflect.Struct:
-			//do nothing here
 		default:
-			logs.Critical("beego not support such kind of config filed", pt.Name(), pf.Kind())
+			//do nothing here
 		}
 	}
 
