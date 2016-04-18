@@ -261,7 +261,7 @@ func (c *Controller) Abort(code string) {
 
 // CustomAbort stops controller handler and show the error data, it's similar Aborts, but support status code and body.
 func (c *Controller) CustomAbort(status int, body string) {
-	// first panic from ErrorMaps, is is user defined error functions.
+	// first panic from ErrorMaps, it is user defined error functions.
 	if _, ok := ErrorMaps[body]; ok {
 		c.Ctx.Output.Status = status
 		panic(body)
