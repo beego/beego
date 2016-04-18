@@ -115,11 +115,11 @@ func TestAssignConfig_03(t *testing.T) {
 	ac.Set("RunMode", "online")
 	ac.Set("StaticDir", "download:down download2:down2")
 	ac.Set("StaticExtensionsToGzip", ".css,.js,.html,.jpg,.png")
-	ac.Set("LogOutputs", `"file": ""`)
 	assignConfig(ac)
 
 
-	//t.Logf("%#v",BConfig)
+	t.Logf("%#v",BConfig)
+
 	if BConfig.AppName != "test_app" {
 		t.FailNow()
 	}
@@ -127,16 +127,13 @@ func TestAssignConfig_03(t *testing.T) {
 	if BConfig.RunMode != "online" {
 		t.FailNow()
 	}
-	if BConfig.WebConfig.StaticDir["download"] != "down" {
+	if BConfig.WebConfig.StaticDir["/download"] != "down" {
 		t.FailNow()
 	}
 	if BConfig.WebConfig.StaticDir["download2"] != "down2" {
 		t.FailNow()
 	}
 	if len(BConfig.WebConfig.StaticExtensionsToGzip) != 5 {
-		t.FailNow()
-	}
-	if _, ok := BConfig.Log.Outputs["file"]; !ok {
 		t.FailNow()
 	}
 }
