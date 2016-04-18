@@ -130,7 +130,7 @@ func TestAssignConfig_03(t *testing.T) {
 	if BConfig.WebConfig.StaticDir["/download"] != "down" {
 		t.FailNow()
 	}
-	if BConfig.WebConfig.StaticDir["download2"] != "down2" {
+	if BConfig.WebConfig.StaticDir["/download2"] != "down2" {
 		t.FailNow()
 	}
 	if len(BConfig.WebConfig.StaticExtensionsToGzip) != 5 {
