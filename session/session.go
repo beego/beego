@@ -155,6 +155,15 @@ func (manager *Manager) getSid(r *http.Request) (string, error) {
 		}
 
 		sid := r.FormValue(manager.config.CookieName)
+		// yuyongsheng, 2016-04-07 19:33, check & get from request header by key: manager.config.CookieName
+		if sid == "" {
+			sids, isFound := r.Header[manager.config.CookieName]
+			if !isFound || len(sids) == 0 {
+				return "", nil
+			}
+			return sids[0], nil
+		}
+		// yuyongsheng, 2016-04-07 19:33, add end
 		return sid, nil
 	}
 
@@ -198,6 +207,9 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 	}
 	r.AddCookie(cookie)
 
+	r.Header.Set(manager.config.CookieName, sid)
+	w.Header().Set(manager.config.CookieName, sid)
+
 	return
 }
 
@@ -220,6 +232,9 @@ func (manager *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
 
 		http.SetCookie(w, cookie)
 	}
+
+	r.Header.Del(manager.config.CookieName)
+	w.Header().Del(manager.config.CookieName)
 }
 
 // GetSessionStore Get SessionStore by its id.
@@ -267,6 +282,10 @@ func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Reque
 		http.SetCookie(w, cookie)
 	}
 	r.AddCookie(cookie)
+
+	r.Header.Set(manager.config.CookieName, sid)
+	w.Header().Set(manager.config.CookieName, sid)
+
 	return
 }
 
