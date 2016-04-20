@@ -167,7 +167,7 @@ func init() {
 			Session: SessionConfig{
 				SessionOn:               false,
 				SessionProvider:         "memory",
-				SessionName:             "beegoSessionId",
+				SessionName:             "beegosessionID",
 				SessionGCMaxLifetime:    3600,
 				SessionProviderConfig:   "",
 				SessionCookieLifeTime:   0, //set cookie default is the browser life
