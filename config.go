@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 
 	"github.com/astaxie/beego/config"
@@ -116,7 +117,30 @@ var (
 )
 
 func init() {
-	BConfig = &Config{
+	BConfig = newBConfig()
+	var err error
+	if AppPath, err = filepath.Abs(filepath.Dir(os.Args[0])); err != nil {
+		panic(err)
+	}
+	workPath, err := os.Getwd()
+	if err != nil {
+		panic(err)
+	}
+	appConfigPath = filepath.Join(workPath, "conf", "app.conf")
+	if !utils.FileExists(appConfigPath) {
+		appConfigPath = filepath.Join(AppPath, "conf", "app.conf")
+		if !utils.FileExists(appConfigPath) {
+			AppConfig = &beegoAppConfig{innerConfig: config.NewFakeConfig()}
+			return
+		}
+	}
+	if err = parseConfig(appConfigPath); err != nil {
+		panic(err)
+	}
+}
+
+func newBConfig() *Config {
+	return &Config{
 		AppName:             "beego",
 		RunMode:             DEV,
 		RouterCaseSensitive: true,
@@ -175,25 +199,6 @@ func init() {
 			Outputs:     map[string]string{"console": ""},
 		},
 	}
-	var err error
-	if AppPath, err = filepath.Abs(filepath.Dir(os.Args[0])); err != nil {
-		panic(err)
-	}
-	workPath, err := os.Getwd()
-	if err != nil {
-		panic(err)
-	}
-	appConfigPath = filepath.Join(workPath, "conf", "app.conf")
-	if !utils.FileExists(appConfigPath) {
-		appConfigPath = filepath.Join(AppPath, "conf", "app.conf")
-		if !utils.FileExists(appConfigPath) {
-			AppConfig = &beegoAppConfig{innerConfig: config.NewFakeConfig()}
-			return
-		}
-	}
-	if err = parseConfig(appConfigPath); err != nil {
-		panic(err)
-	}
 }
 
 // now only support ini, next will support json.
@@ -202,63 +207,23 @@ func parseConfig(appConfigPath string) (err error) {
 	if err != nil {
 		return err
 	}
+	return assignConfig(AppConfig)
+}
+
+func assignConfig(ac config.Configer) error {
 	// set the run mode first
 	if envRunMode := os.Getenv("BEEGO_RUNMODE"); envRunMode != "" {
 		BConfig.RunMode = envRunMode
-	} else if runMode := AppConfig.String("RunMode"); runMode != "" {
+	} else if runMode := ac.String("RunMode"); runMode != "" {
 		BConfig.RunMode = runMode
 	}
 
-	BConfig.AppName = AppConfig.DefaultString("AppName", BConfig.AppName)
-	BConfig.RecoverPanic = AppConfig.DefaultBool("RecoverPanic", BConfig.RecoverPanic)
-	BConfig.RouterCaseSensitive = AppConfig.DefaultBool("RouterCaseSensitive", BConfig.RouterCaseSensitive)
-	BConfig.ServerName = AppConfig.DefaultString("ServerName", BConfig.ServerName)
-	BConfig.EnableGzip = AppConfig.DefaultBool("EnableGzip", BConfig.EnableGzip)
-	BConfig.EnableErrorsShow = AppConfig.DefaultBool("EnableErrorsShow", BConfig.EnableErrorsShow)
-	BConfig.CopyRequestBody = AppConfig.DefaultBool("CopyRequestBody", BConfig.CopyRequestBody)
-	BConfig.MaxMemory = AppConfig.DefaultInt64("MaxMemory", BConfig.MaxMemory)
-	BConfig.Listen.Graceful = AppConfig.DefaultBool("Graceful", BConfig.Listen.Graceful)
-	BConfig.Listen.HTTPAddr = AppConfig.String("HTTPAddr")
-	BConfig.Listen.HTTPPort = AppConfig.DefaultInt("HTTPPort", BConfig.Listen.HTTPPort)
-	BConfig.Listen.ListenTCP4 = AppConfig.DefaultBool("ListenTCP4", BConfig.Listen.ListenTCP4)
-	BConfig.Listen.EnableHTTP = AppConfig.DefaultBool("EnableHTTP", BConfig.Listen.EnableHTTP)
-	BConfig.Listen.EnableHTTPS = AppConfig.DefaultBool("EnableHTTPS", BConfig.Listen.EnableHTTPS)
-	BConfig.Listen.HTTPSAddr = AppConfig.DefaultString("HTTPSAddr", BConfig.Listen.HTTPSAddr)
-	BConfig.Listen.HTTPSPort = AppConfig.DefaultInt("HTTPSPort", BConfig.Listen.HTTPSPort)
-	BConfig.Listen.HTTPSCertFile = AppConfig.DefaultString("HTTPSCertFile", BConfig.Listen.HTTPSCertFile)
-	BConfig.Listen.HTTPSKeyFile = AppConfig.DefaultString("HTTPSKeyFile", BConfig.Listen.HTTPSKeyFile)
-	BConfig.Listen.EnableAdmin = AppConfig.DefaultBool("EnableAdmin", BConfig.Listen.EnableAdmin)
-	BConfig.Listen.AdminAddr = AppConfig.DefaultString("AdminAddr", BConfig.Listen.AdminAddr)
-	BConfig.Listen.AdminPort = AppConfig.DefaultInt("AdminPort", BConfig.Listen.AdminPort)
-	BConfig.Listen.EnableFcgi = AppConfig.DefaultBool("EnableFcgi", BConfig.Listen.EnableFcgi)
-	BConfig.Listen.EnableStdIo = AppConfig.DefaultBool("EnableStdIo", BConfig.Listen.EnableStdIo)
-	BConfig.Listen.ServerTimeOut = AppConfig.DefaultInt64("ServerTimeOut", BConfig.Listen.ServerTimeOut)
-	BConfig.WebConfig.AutoRender = AppConfig.DefaultBool("AutoRender", BConfig.WebConfig.AutoRender)
-	BConfig.WebConfig.ViewsPath = AppConfig.DefaultString("ViewsPath", BConfig.WebConfig.ViewsPath)
-	BConfig.WebConfig.DirectoryIndex = AppConfig.DefaultBool("DirectoryIndex", BConfig.WebConfig.DirectoryIndex)
-	BConfig.WebConfig.FlashName = AppConfig.DefaultString("FlashName", BConfig.WebConfig.FlashName)
-	BConfig.WebConfig.FlashSeparator = AppConfig.DefaultString("FlashSeparator", BConfig.WebConfig.FlashSeparator)
-	BConfig.WebConfig.EnableDocs = AppConfig.DefaultBool("EnableDocs", BConfig.WebConfig.EnableDocs)
-	BConfig.WebConfig.XSRFKey = AppConfig.DefaultString("XSRFKEY", BConfig.WebConfig.XSRFKey)
-	BConfig.WebConfig.EnableXSRF = AppConfig.DefaultBool("EnableXSRF", BConfig.WebConfig.EnableXSRF)
-	BConfig.WebConfig.XSRFExpire = AppConfig.DefaultInt("XSRFExpire", BConfig.WebConfig.XSRFExpire)
-	BConfig.WebConfig.TemplateLeft = AppConfig.DefaultString("TemplateLeft", BConfig.WebConfig.TemplateLeft)
-	BConfig.WebConfig.TemplateRight = AppConfig.DefaultString("TemplateRight", BConfig.WebConfig.TemplateRight)
-	BConfig.WebConfig.Session.SessionOn = AppConfig.DefaultBool("SessionOn", BConfig.WebConfig.Session.SessionOn)
-	BConfig.WebConfig.Session.SessionProvider = AppConfig.DefaultString("SessionProvider", BConfig.WebConfig.Session.SessionProvider)
-	BConfig.WebConfig.Session.SessionName = AppConfig.DefaultString("SessionName", BConfig.WebConfig.Session.SessionName)
-	BConfig.WebConfig.Session.SessionProviderConfig = AppConfig.DefaultString("SessionProviderConfig", BConfig.WebConfig.Session.SessionProviderConfig)
-	BConfig.WebConfig.Session.SessionGCMaxLifetime = AppConfig.DefaultInt64("SessionGCMaxLifetime", BConfig.WebConfig.Session.SessionGCMaxLifetime)
-	BConfig.WebConfig.Session.SessionCookieLifeTime = AppConfig.DefaultInt("SessionCookieLifeTime", BConfig.WebConfig.Session.SessionCookieLifeTime)
-	BConfig.WebConfig.Session.SessionAutoSetCookie = AppConfig.DefaultBool("SessionAutoSetCookie", BConfig.WebConfig.Session.SessionAutoSetCookie)
-	BConfig.WebConfig.Session.SessionDomain = AppConfig.DefaultString("SessionDomain", BConfig.WebConfig.Session.SessionDomain)
-	BConfig.Log.AccessLogs = AppConfig.DefaultBool("LogAccessLogs", BConfig.Log.AccessLogs)
-	BConfig.Log.FileLineNum = AppConfig.DefaultBool("LogFileLineNum", BConfig.Log.FileLineNum)
+	for _, i := range []interface{}{BConfig, &BConfig.Listen, &BConfig.WebConfig, &BConfig.Log, &BConfig.WebConfig.Session} {
+		assignSingleConfig(i, ac)
+	}
 
-	if sd := AppConfig.String("StaticDir"); sd != "" {
-		for k := range BConfig.WebConfig.StaticDir {
-			delete(BConfig.WebConfig.StaticDir, k)
-		}
+	if sd := ac.String("StaticDir"); sd != "" {
+		BConfig.WebConfig.StaticDir = map[string]string{}
 		sds := strings.Fields(sd)
 		for _, v := range sds {
 			if url2fsmap := strings.SplitN(v, ":", 2); len(url2fsmap) == 2 {
@@ -269,7 +234,7 @@ func parseConfig(appConfigPath string) (err error) {
 		}
 	}
 
-	if sgz := AppConfig.String("StaticExtensionsToGzip"); sgz != "" {
+	if sgz := ac.String("StaticExtensionsToGzip"); sgz != "" {
 		extensions := strings.Split(sgz, ",")
 		fileExts := []string{}
 		for _, ext := range extensions {
@@ -287,7 +252,7 @@ func parseConfig(appConfigPath string) (err error) {
 		}
 	}
 
-	if lo := AppConfig.String("LogOutputs"); lo != "" {
+	if lo := ac.String("LogOutputs"); lo != "" {
 		los := strings.Split(lo, ";")
 		for _, v := range los {
 			if logType2Config := strings.SplitN(v, ",", 2); len(logType2Config) == 2 {
@@ -301,14 +266,46 @@ func parseConfig(appConfigPath string) (err error) {
 	//init log
 	logs.Reset()
 	for adaptor, config := range BConfig.Log.Outputs {
-		err = logs.SetLogger(adaptor, config)
+		err := logs.SetLogger(adaptor, config)
 		if err != nil {
-			fmt.Printf("%s with the config `%s` got err:%s\n", adaptor, config, err)
+			fmt.Fprintln(os.Stderr, "%s with the config `%s` got err:%s\n", adaptor, config, err)
 		}
 	}
 	logs.SetLogFuncCall(BConfig.Log.FileLineNum)
 
 	return nil
+}
+
+func assignSingleConfig(p interface{}, ac config.Configer) {
+	pt := reflect.TypeOf(p)
+	if pt.Kind() != reflect.Ptr {
+		return
+	}
+	pt = pt.Elem()
+	if pt.Kind() != reflect.Struct {
+		return
+	}
+	pv := reflect.ValueOf(p).Elem()
+
+	for i := 0; i < pt.NumField(); i++ {
+		pf := pv.Field(i)
+		if !pf.CanSet() {
+			continue
+		}
+		name := pt.Field(i).Name
+		switch pf.Kind() {
+		case reflect.String:
+			pf.SetString(ac.DefaultString(name, pf.String()))
+		case reflect.Int, reflect.Int64:
+			pf.SetInt(int64(ac.DefaultInt64(name, pf.Int())))
+		case reflect.Bool:
+			pf.SetBool(ac.DefaultBool(name, pf.Bool()))
+		case reflect.Struct:
+		default:
+			//do nothing here
+		}
+	}
+
 }
 
 // LoadAppConfig allow developer to apply a config file
