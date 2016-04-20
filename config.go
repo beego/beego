@@ -81,14 +81,17 @@ type WebConfig struct {
 
 // SessionConfig holds session related config
 type SessionConfig struct {
-	SessionOn             bool
-	SessionProvider       string
-	SessionName           string
-	SessionGCMaxLifetime  int64
-	SessionProviderConfig string
-	SessionCookieLifeTime int
-	SessionAutoSetCookie  bool
-	SessionDomain         string
+	SessionOn               bool
+	SessionProvider         string
+	SessionName             string
+	SessionGCMaxLifetime    int64
+	SessionProviderConfig   string
+	SessionCookieLifeTime   int
+	SessionAutoSetCookie    bool
+	SessionDomain           string
+	EnableSidInHttpHeader   bool //	enable store/get the sessionId into/from http headers
+	SessionNameInHttpHeader string
+	EnableSidInUrlQuery     bool //	enable get the sessionId from Url Query params
 }
 
 // LogConfig holds Log related config
@@ -162,14 +165,17 @@ func init() {
 			XSRFKey:                "beegoxsrf",
 			XSRFExpire:             0,
 			Session: SessionConfig{
-				SessionOn:             false,
-				SessionProvider:       "memory",
-				SessionName:           "beegosessionID",
-				SessionGCMaxLifetime:  3600,
-				SessionProviderConfig: "",
-				SessionCookieLifeTime: 0, //set cookie default is the browser life
-				SessionAutoSetCookie:  true,
-				SessionDomain:         "",
+				SessionOn:               false,
+				SessionProvider:         "memory",
+				SessionName:             "beegosessionID",
+				SessionGCMaxLifetime:    3600,
+				SessionProviderConfig:   "",
+				SessionCookieLifeTime:   0, //set cookie default is the browser life
+				SessionAutoSetCookie:    true,
+				SessionDomain:           "",
+				EnableSidInHttpHeader:   false, //	enable store/get the sessionId into/from http headers
+				SessionNameInHttpHeader: "Beegosessionid",
+				EnableSidInUrlQuery:     false, //	enable get the sessionId from Url Query params
 			},
 		},
 		Log: LogConfig{
@@ -246,6 +252,9 @@ func parseConfig(appConfigPath string) (err error) {
 	BConfig.WebConfig.Session.SessionCookieLifeTime = AppConfig.DefaultInt("SessionCookieLifeTime", BConfig.WebConfig.Session.SessionCookieLifeTime)
 	BConfig.WebConfig.Session.SessionAutoSetCookie = AppConfig.DefaultBool("SessionAutoSetCookie", BConfig.WebConfig.Session.SessionAutoSetCookie)
 	BConfig.WebConfig.Session.SessionDomain = AppConfig.DefaultString("SessionDomain", BConfig.WebConfig.Session.SessionDomain)
+	BConfig.WebConfig.Session.EnableSidInHttpHeader = AppConfig.DefaultBool("EnableSidInHttpHeader", BConfig.WebConfig.Session.EnableSidInHttpHeader)
+	BConfig.WebConfig.Session.SessionNameInHttpHeader = AppConfig.DefaultString("SessionNameInHttpHeader", BConfig.WebConfig.Session.SessionNameInHttpHeader)
+	BConfig.WebConfig.Session.EnableSidInUrlQuery = AppConfig.DefaultBool("EnableSidInUrlQuery", BConfig.WebConfig.Session.EnableSidInUrlQuery)
 	BConfig.Log.AccessLogs = AppConfig.DefaultBool("LogAccessLogs", BConfig.Log.AccessLogs)
 	BConfig.Log.FileLineNum = AppConfig.DefaultBool("LogFileLineNum", BConfig.Log.FileLineNum)
 
