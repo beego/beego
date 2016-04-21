@@ -83,14 +83,17 @@ type WebConfig struct {
 
 // SessionConfig holds session related config
 type SessionConfig struct {
-	SessionOn             bool
-	SessionProvider       string
-	SessionName           string
-	SessionGCMaxLifetime  int64
-	SessionProviderConfig string
-	SessionCookieLifeTime int
-	SessionAutoSetCookie  bool
-	SessionDomain         string
+	SessionOn               bool
+	SessionProvider         string
+	SessionName             string
+	SessionGCMaxLifetime    int64
+	SessionProviderConfig   string
+	SessionCookieLifeTime   int
+	SessionAutoSetCookie    bool
+	SessionDomain           string
+	EnableSidInHttpHeader   bool //	enable store/get the sessionId into/from http headers
+	SessionNameInHttpHeader string
+	EnableSidInUrlQuery     bool //	enable get the sessionId from Url Query params
 }
 
 // LogConfig holds Log related config
@@ -183,14 +186,17 @@ func newBConfig() *Config {
 			XSRFKey:                "beegoxsrf",
 			XSRFExpire:             0,
 			Session: SessionConfig{
-				SessionOn:             false,
-				SessionProvider:       "memory",
-				SessionName:           "beegosessionID",
-				SessionGCMaxLifetime:  3600,
-				SessionProviderConfig: "",
-				SessionCookieLifeTime: 0, //set cookie default is the browser life
-				SessionAutoSetCookie:  true,
-				SessionDomain:         "",
+				SessionOn:               false,
+				SessionProvider:         "memory",
+				SessionName:             "beegosessionID",
+				SessionGCMaxLifetime:    3600,
+				SessionProviderConfig:   "",
+				SessionCookieLifeTime:   0, //set cookie default is the browser life
+				SessionAutoSetCookie:    true,
+				SessionDomain:           "",
+				EnableSidInHttpHeader:   false, //	enable store/get the sessionId into/from http headers
+				SessionNameInHttpHeader: "Beegosessionid",
+				EnableSidInUrlQuery:     false, //	enable get the sessionId from Url Query params
 			},
 		},
 		Log: LogConfig{
