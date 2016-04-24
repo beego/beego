@@ -115,9 +115,7 @@ var (
 )
 
 func init() {
-	AppPath, _ = filepath.Abs(filepath.Dir(os.Args[0]))
-
-	os.Chdir(AppPath)
+	AppPath, _ = os.Getwd()
 
 	BConfig = &Config{
 		AppName:             "beego",
