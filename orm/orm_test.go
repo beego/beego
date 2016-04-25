@@ -975,11 +975,13 @@ func TestOne(t *testing.T) {
 	err = qs.OrderBy("Id").Limit(1).One(&user)
 	throwFailNow(t, err)
 	throwFail(t, AssertIs(user.UserName, "slene"))
+	throwFail(t, AssertNot(err, ErrMultiRows))
 
 	user = User{}
 	err = qs.OrderBy("-Id").Limit(100).One(&user)
 	throwFailNow(t, err)
 	throwFail(t, AssertIs(user.UserName, "nobody"))
+	throwFail(t, AssertNot(err, ErrMultiRows))
 
 	err = qs.Filter("user_name", "nothing").One(&user)
 	throwFail(t, AssertIs(err, ErrNoRows))

@@ -200,6 +200,10 @@ func (o *querySet) One(container interface{}, cols ...string) error {
 	if num == 0 {
 		return ErrNoRows
 	}
+
+	if num > 1 {
+		return ErrMultiRows
+	}
 	return nil
 }
 
