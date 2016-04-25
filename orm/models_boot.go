@@ -24,7 +24,7 @@ import (
 
 // register models.
 // prefix means table name prefix.
-func registerModel(prefix string, model interface{}) {
+func registerModel(prefix string, suffix string, model interface{}) {
 	val := reflect.ValueOf(model)
 	ind := reflect.Indirect(val)
 	typ := ind.Type()
@@ -37,6 +37,9 @@ func registerModel(prefix string, model interface{}) {
 
 	if prefix != "" {
 		table = prefix + table
+	}
+	if suffix != "" {
+		table = table + suffix
 	}
 
 	name := getFullName(typ)
@@ -310,7 +313,29 @@ func RegisterModelWithPrefix(prefix string, models ...interface{}) {
 	}
 
 	for _, model := range models {
-		registerModel(prefix, model)
+		registerModel(prefix, "", model)
+	}
+}
+
+// RegisterModelWithSuffix register models with a prefix and suffix
+func RegisterModelWithPrefixSuffix(prefix string, suffix string, models ...interface{}) {
+	if modelCache.done {
+		panic(fmt.Errorf("RegisterModel must be run before BootStrap"))
+	}
+
+	for _, model := range models {
+		registerModel(prefix, suffix, model)
+	}
+}
+
+// RegisterModelWithSuffix register models with a suffix
+func RegisterModelWithSuffix(suffix string, models ...interface{}) {
+	if modelCache.done {
+		panic(fmt.Errorf("RegisterModel must be run before BootStrap"))
+	}
+
+	for _, model := range models {
+		registerModel("", suffix, model)
 	}
 }
 
