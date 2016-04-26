@@ -389,11 +389,16 @@ func dayMatches(s *Schedule, t time.Time) bool {
 
 // StartTask start all tasks
 func StartTask() {
+    if isstart {
+        //If already started， no need to start another goroutine.
+        return
+    }
 	isstart = true
 	go run()
 }
 
 func run() {
+
 	now := time.Now().Local()
 	for _, t := range AdminTaskList {
 		t.SetNext(now)
@@ -417,7 +422,7 @@ func run() {
 				if e.GetNext() != effective {
 					break
 				}
-				go e.Run()
+        go e.Run()
 				e.SetPrev(e.GetNext())
 				e.SetNext(effective)
 			}
@@ -432,8 +437,11 @@ func run() {
 
 // StopTask stop all tasks
 func StopTask() {
-	isstart = false
-	stop <- true
+    if(isstart){
+        isstart = false
+        stop <- true
+    }
+
 }
 
 // AddTask add task with name
