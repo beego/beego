@@ -137,12 +137,14 @@ func (app *App) Run() {
 	}
 
 	// run normal mode
-	app.Server.Addr = addr
 	if BConfig.Listen.EnableHTTPS {
 		go func() {
 			time.Sleep(20 * time.Microsecond)
 			if BConfig.Listen.HTTPSPort != 0 {
 				app.Server.Addr = fmt.Sprintf("%s:%d", BConfig.Listen.HTTPSAddr, BConfig.Listen.HTTPSPort)
+			} else if BConfig.Listen.EnableHTTP {
+				BeeLogger.Info("Start https server error, confict with http.Please reset https port")
+				return
 			}
 			BeeLogger.Info("https server Running on %s", app.Server.Addr)
 			if err := app.Server.ListenAndServeTLS(BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile); err != nil {
