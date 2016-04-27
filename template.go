@@ -94,6 +94,16 @@ func AddFuncMap(key string, fn interface{}) error {
 	return nil
 }
 
+// BeegoTplFuncMap returns a copy of the beego template func map, which may then be used for
+// rendering templates directly (e.g., with another template engine).
+func BeegoTplFuncMap() template.FuncMap {
+	mapCopy := make(template.FuncMap)
+	for k, v := range beegoTplFuncMap {
+		mapCopy[k] = v
+	}
+	return mapCopy
+}
+
 type templateHandler func(root, path string, funcs template.FuncMap) (TemplateRenderer, error)
 type TemplateRenderer interface {
 	ExecuteTemplate(wr io.Writer, name string, data interface{}) error
