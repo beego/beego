@@ -24,6 +24,7 @@ import (
 	"io"
 	"mime"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -244,13 +245,15 @@ func (output *BeegoOutput) Download(file string, filename ...string) {
 		return
 	}
 
+	var fName string
+	if len(filename) > 0 && filename[0] != "" {
+		fName = filename[0]
+	} else {
+		fName = filepath.Base(file)
+	}
+	output.Header("Content-Disposition", "attachment; filename="+url.QueryEscape(fName))
 	output.Header("Content-Description", "File Transfer")
 	output.Header("Content-Type", "application/octet-stream")
-	if len(filename) > 0 && filename[0] != "" {
-		output.Header("Content-Disposition", "attachment; filename="+filename[0])
-	} else {
-		output.Header("Content-Disposition", "attachment; filename="+filepath.Base(file))
-	}
 	output.Header("Content-Transfer-Encoding", "binary")
 	output.Header("Expires", "0")
 	output.Header("Cache-Control", "must-revalidate")
