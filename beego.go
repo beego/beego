@@ -72,7 +72,6 @@ func initBeforeHTTPRun() {
 	AddAPPStartHook(registerMime)
 	AddAPPStartHook(registerDefaultErrorHandler)
 	AddAPPStartHook(registerSession)
-	AddAPPStartHook(registerDocs)
 	AddAPPStartHook(registerTemplate)
 	AddAPPStartHook(registerAdmin)
 	AddAPPStartHook(registerGzip)
@@ -86,9 +85,11 @@ func initBeforeHTTPRun() {
 
 // TestBeegoInit is for test package init
 func TestBeegoInit(ap string) {
-	os.Setenv("BEEGO_RUNMODE", "test")
 	appConfigPath = filepath.Join(ap, "conf", "app.conf")
 	os.Chdir(ap)
-	LoadAppConfig(appConfigProvider, appConfigPath)
+	if err := LoadAppConfig(appConfigProvider, appConfigPath); err != nil {
+		panic(err)
+	}
+	BConfig.RunMode = "test"
 	initBeforeHTTPRun()
 }

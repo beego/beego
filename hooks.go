@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/session"
 )
 
@@ -46,13 +47,16 @@ func registerSession() error {
 		sessionConfig := AppConfig.String("sessionConfig")
 		if sessionConfig == "" {
 			conf := map[string]interface{}{
-				"cookieName":      BConfig.WebConfig.Session.SessionName,
-				"gclifetime":      BConfig.WebConfig.Session.SessionGCMaxLifetime,
-				"providerConfig":  filepath.ToSlash(BConfig.WebConfig.Session.SessionProviderConfig),
-				"secure":          BConfig.Listen.EnableHTTPS,
-				"enableSetCookie": BConfig.WebConfig.Session.SessionAutoSetCookie,
-				"domain":          BConfig.WebConfig.Session.SessionDomain,
-				"cookieLifeTime":  BConfig.WebConfig.Session.SessionCookieLifeTime,
+				"cookieName":              BConfig.WebConfig.Session.SessionName,
+				"gclifetime":              BConfig.WebConfig.Session.SessionGCMaxLifetime,
+				"providerConfig":          filepath.ToSlash(BConfig.WebConfig.Session.SessionProviderConfig),
+				"secure":                  BConfig.Listen.EnableHTTPS,
+				"enableSetCookie":         BConfig.WebConfig.Session.SessionAutoSetCookie,
+				"domain":                  BConfig.WebConfig.Session.SessionDomain,
+				"cookieLifeTime":          BConfig.WebConfig.Session.SessionCookieLifeTime,
+				"enableSidInHttpHeader":   BConfig.WebConfig.Session.EnableSidInHttpHeader,
+				"sessionNameInHttpHeader": BConfig.WebConfig.Session.SessionNameInHttpHeader,
+				"enableSidInUrlQuery":     BConfig.WebConfig.Session.EnableSidInUrlQuery,
 			}
 			confBytes, err := json.Marshal(conf)
 			if err != nil {
@@ -71,17 +75,9 @@ func registerSession() error {
 func registerTemplate() error {
 	if err := BuildTemplate(BConfig.WebConfig.ViewsPath); err != nil {
 		if BConfig.RunMode == DEV {
-			Warn(err)
+			logs.Warn(err)
 		}
 		return err
-	}
-	return nil
-}
-
-func registerDocs() error {
-	if BConfig.WebConfig.EnableDocs {
-		Get("/docs", serverDocs)
-		Get("/docs/*", serverDocs)
 	}
 	return nil
 }

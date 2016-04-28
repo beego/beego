@@ -78,40 +78,43 @@ func (e *SliceStringField) RawValue() interface{} {
 var _ Fielder = new(SliceStringField)
 
 // A json field.
-type JSONField struct {
+type JSONFieldTest struct {
 	Name string
 	Data string
 }
 
-func (e *JSONField) String() string {
+func (e *JSONFieldTest) String() string {
 	data, _ := json.Marshal(e)
 	return string(data)
 }
 
-func (e *JSONField) FieldType() int {
+func (e *JSONFieldTest) FieldType() int {
 	return TypeTextField
 }
 
-func (e *JSONField) SetRaw(value interface{}) error {
+func (e *JSONFieldTest) SetRaw(value interface{}) error {
 	switch d := value.(type) {
 	case string:
 		return json.Unmarshal([]byte(d), e)
 	default:
-		return fmt.Errorf("<JsonField.SetRaw> unknown value `%v`", value)
+		return fmt.Errorf("<JSONField.SetRaw> unknown value `%v`", value)
 	}
 }
 
-func (e *JSONField) RawValue() interface{} {
+func (e *JSONFieldTest) RawValue() interface{} {
 	return e.String()
 }
 
-var _ Fielder = new(JSONField)
+var _ Fielder = new(JSONFieldTest)
 
 type Data struct {
 	ID       int `orm:"column(id)"`
 	Boolean  bool
 	Char     string    `orm:"size(50)"`
 	Text     string    `orm:"type(text)"`
+	JSON     string    `orm:"type(json);default({\"name\":\"json\"})"`
+	Jsonb    string    `orm:"type(jsonb)"`
+	Time     time.Time `orm:"type(time)"`
 	Date     time.Time `orm:"type(date)"`
 	DateTime time.Time `orm:"column(datetime)"`
 	Byte     byte
@@ -136,6 +139,9 @@ type DataNull struct {
 	Boolean     bool            `orm:"null"`
 	Char        string          `orm:"null;size(50)"`
 	Text        string          `orm:"null;type(text)"`
+	JSON        string          `orm:"type(json);null"`
+	Jsonb       string          `orm:"type(jsonb);null"`
+	Time        time.Time       `orm:"null;type(time)"`
 	Date        time.Time       `orm:"null;type(date)"`
 	DateTime    time.Time       `orm:"null;column(datetime)"`
 	Byte        byte            `orm:"null"`
@@ -237,7 +243,7 @@ type User struct {
 	ShouldSkip   string    `orm:"-"`
 	Nums         int
 	Langs        SliceStringField `orm:"size(100)"`
-	Extra        JSONField        `orm:"type(text)"`
+	Extra        JSONFieldTest    `orm:"type(text)"`
 	unexport     bool             `orm:"-"`
 	unexportBool bool
 }
@@ -388,8 +394,13 @@ func NewInLineOneToOne() *InLineOneToOne {
 }
 
 type IntegerPk struct {
-	Id    int64 `orm:"pk"`
+	ID    int64 `orm:"pk"`
 	Value string
+}
+
+type UintPk struct {
+	ID   uint32 `orm:"pk"`
+	Name string
 }
 
 var DBARGS = struct {

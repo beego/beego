@@ -208,7 +208,7 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 					continue
 				}
 				buf.Reset()
-				err = executeTemplate(&buf, sectionTpl, c.Data)
+				err = ExecuteTemplate(&buf, sectionTpl, c.Data)
 				if err != nil {
 					return nil, err
 				}
@@ -217,7 +217,7 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		}
 
 		buf.Reset()
-		executeTemplate(&buf, c.Layout, c.Data)
+		ExecuteTemplate(&buf, c.Layout, c.Data)
 	}
 	return buf.Bytes(), err
 }
@@ -242,7 +242,7 @@ func (c *Controller) renderTemplate() (bytes.Buffer, error) {
 		}
 		BuildTemplate(BConfig.WebConfig.ViewsPath, buildFiles...)
 	}
-	return buf, executeTemplate(&buf, c.TplName, c.Data)
+	return buf, ExecuteTemplate(&buf, c.TplName, c.Data)
 }
 
 // Redirect sends the redirection response to url with status code.
@@ -261,7 +261,7 @@ func (c *Controller) Abort(code string) {
 
 // CustomAbort stops controller handler and show the error data, it's similar Aborts, but support status code and body.
 func (c *Controller) CustomAbort(status int, body string) {
-	// first panic from ErrorMaps, is is user defined error functions.
+	// first panic from ErrorMaps, it is user defined error functions.
 	if _, ok := ErrorMaps[body]; ok {
 		c.Ctx.Output.Status = status
 		panic(body)

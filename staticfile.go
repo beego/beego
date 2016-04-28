@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/logs"
 )
 
 var errNotStaticRequest = errors.New("request not a static file request")
@@ -48,7 +49,7 @@ func serverStaticRouter(ctx *context.Context) {
 
 	if filePath == "" || fileInfo == nil {
 		if BConfig.RunMode == DEV {
-			Warn("Can't find/open the file:", filePath, err)
+			logs.Warn("Can't find/open the file:", filePath, err)
 		}
 		http.NotFound(ctx.ResponseWriter, ctx.Request)
 		return
@@ -72,7 +73,7 @@ func serverStaticRouter(ctx *context.Context) {
 	b, n, sch, err := openFile(filePath, fileInfo, acceptEncoding)
 	if err != nil {
 		if BConfig.RunMode == DEV {
-			Warn("Can't compress the file:", filePath, err)
+			logs.Warn("Can't compress the file:", filePath, err)
 		}
 		http.NotFound(ctx.ResponseWriter, ctx.Request)
 		return

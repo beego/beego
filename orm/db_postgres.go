@@ -56,6 +56,8 @@ var postgresTypes = map[string]string{
 	"uint64":          `bigint CHECK("%COL%" >= 0)`,
 	"float64":         "double precision",
 	"float64-decimal": "numeric(%d, %d)",
+	"json":            "json",
+	"jsonb":           "jsonb",
 }
 
 // postgresql dbBaser.
@@ -123,14 +125,35 @@ func (d *dbBasePostgres) ReplaceMarks(query *string) {
 }
 
 // make returning sql support for postgresql.
-func (d *dbBasePostgres) HasReturningID(mi *modelInfo, query *string) (has bool) {
-	if mi.fields.pk.auto {
-		if query != nil {
-			*query = fmt.Sprintf(`%s RETURNING "%s"`, *query, mi.fields.pk.column)
-		}
-		has = true
+func (d *dbBasePostgres) HasReturningID(mi *modelInfo, query *string) bool {
+	fi := mi.fields.pk
+	if fi.fieldType&IsPositiveIntegerField == 0 && fi.fieldType&IsIntegerField == 0 {
+		return false
 	}
-	return
+
+	if query != nil {
+		*query = fmt.Sprintf(`%s RETURNING "%s"`, *query, fi.column)
+	}
+	return true
+}
+
+// sync auto key
+func (d *dbBasePostgres) setval(db dbQuerier, mi *modelInfo, autoFields []string) error {
+	if len(autoFields) == 0 {
+		return nil
+	}
+
+	Q := d.ins.TableQuote()
+	for _, name := range autoFields {
+		query := fmt.Sprintf("SELECT setval(pg_get_serial_sequence('%s', '%s'), (SELECT MAX(%s%s%s) FROM %s%s%s));",
+			mi.table, name,
+			Q, name, Q,
+			Q, mi.table, Q)
+		if _, err := db.Exec(query); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 // show table sql for postgresql.

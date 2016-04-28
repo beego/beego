@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package xml for config provider
+// Package xml for config provider.
 //
-// depend on github.com/beego/x2j
+// depend on github.com/beego/x2j.
 //
-// go install github.com/beego/x2j
+// go install github.com/beego/x2j.
 //
 // Usage:
-// import(
-//   _ "github.com/astaxie/beego/config/xml"
-//   "github.com/astaxie/beego/config"
-// )
+//  import(
+//    _ "github.com/astaxie/beego/config/xml"
+//      "github.com/astaxie/beego/config"
+//  )
 //
 //  cnf, err := config.NewConfig("xml", "config.xml")
 //
-//  more docs http://beego.me/docs/module/config.md
+//More docs http://beego.me/docs/module/config.md
 package xml
 
 import (
@@ -69,7 +69,7 @@ func (xc *Config) Parse(filename string) (config.Configer, error) {
 		return nil, err
 	}
 
-	x.data = d["config"].(map[string]interface{})
+	x.data = config.ExpandValueEnvForMap(d["config"].(map[string]interface{}))
 	return x, nil
 }
 
@@ -92,7 +92,7 @@ type ConfigContainer struct {
 
 // Bool returns the boolean value for a given key.
 func (c *ConfigContainer) Bool(key string) (bool, error) {
-	if v, ok := c.data[key]; ok {
+	if v := c.data[key]; v != nil {
 		return config.ParseBool(v)
 	}
 	return false, fmt.Errorf("not exist key: %q", key)

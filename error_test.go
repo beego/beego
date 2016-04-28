@@ -41,7 +41,7 @@ func (ec *errorTestController) Get() {
 
 func TestErrorCode_01(t *testing.T) {
 	registerDefaultErrorHandler()
-	for k, _ := range ErrorMaps {
+	for k := range ErrorMaps {
 		r, _ := http.NewRequest("GET", "/error?code="+k, nil)
 		w := httptest.NewRecorder()
 
