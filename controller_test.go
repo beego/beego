@@ -17,7 +17,11 @@ package beego
 import (
 	"testing"
 
+	"net/http"
+	"net/http/httptest"
+
 	"github.com/astaxie/beego/context"
+	"fmt"
 )
 
 func TestGetInt(t *testing.T) {
@@ -73,5 +77,48 @@ func TestGetInt64(t *testing.T) {
 	val, _ := ctrlr.GetInt64("age")
 	if val != 40 {
 		t.Errorf("TestGeetInt64 expect 40,get %T,%v", val, val)
+	}
+}
+
+type testController struct {
+	Controller
+}
+
+func (t *testController) Get() {
+	typ := t.GetString("type")
+	code, _ := t.GetInt("code")
+	switch typ {
+	case "abort":
+		t.Abort(fmt.Sprint(code))
+	default:
+		t.CustomAbort(code, t.GetString("body"))
+	}
+}
+
+func TestController_Abort_01(t *testing.T) {
+	mux := NewControllerRegister()
+	mux.Add("/test", &testController{})
+	hrw := httptest.NewRecorder()
+	r, _ := http.NewRequest("GET", "http://example.com/test?type=abort&code=401", nil)
+	mux.ServeHTTP(hrw, r)
+	if hrw.Code != 401 {
+		t.Log(hrw.Code)
+		t.FailNow()
+	}
+}
+
+func TestController_Abort_02(t *testing.T) {
+	mux := NewControllerRegister()
+	mux.Add("/test", &testController{})
+	hrw := httptest.NewRecorder()
+	r, _ := http.NewRequest("GET", "http://example.com/test?type=default&code=501&body=testController", nil)
+	mux.ServeHTTP(hrw, r)
+	if hrw.Code != 501{
+		t.Log(hrw.Code)
+		t.FailNow()
+	}
+	if string(hrw.Body.Bytes())!="testController"{
+		t.Log(string(hrw.Body.Bytes()))
+		t.FailNow()
 	}
 }
