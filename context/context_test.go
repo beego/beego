@@ -16,32 +16,34 @@ package context
 
 import (
 	"net/http"
-	"net/http/httptest"
 	"testing"
+	"net/http/httptest"
 )
 
 func TestXsrfReset_01(t *testing.T) {
 	r := &http.Request{}
 	c := NewContext()
 	c.Request = r
-	c.ResponseWriter = &Response{}
-	c.ResponseWriter.reset(httptest.NewRecorder())
+	c.ResponseWriter=httptest.NewRecorder()
 	c.Output.Reset(c)
 	c.Input.Reset(c)
 	c.XSRFToken("key", 16)
 	if c._xsrfToken == "" {
 		t.FailNow()
 	}
+	c.Reset(httptest.NewRecorder(),r)
 	token := c._xsrfToken
-	c.Reset(&Response{ResponseWriter: httptest.NewRecorder()}, r)
 	if c._xsrfToken != "" {
+		t.Log(c._xsrfToken)
 		t.FailNow()
 	}
 	c.XSRFToken("key", 16)
 	if c._xsrfToken == "" {
+		t.Log(c._xsrfToken)
 		t.FailNow()
 	}
 	if token == c._xsrfToken {
+		t.Log(c._xsrfToken)
 		t.FailNow()
 	}
 }
