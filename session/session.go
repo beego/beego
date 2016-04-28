@@ -132,17 +132,13 @@ func NewManager(provideName, config string) (*Manager, error) {
 
 	if cf.EnableSidInHttpHeader {
 		if cf.SessionNameInHttpHeader == "" {
-			err = errors.New("SessionNameInHttpHeader is empty")
-			panic(err)
-			return nil, err
+			panic(errors.New("SessionNameInHttpHeader is empty"))
 		}
 
 		strMimeHeader := textproto.CanonicalMIMEHeaderKey(cf.SessionNameInHttpHeader)
 		if cf.SessionNameInHttpHeader != strMimeHeader {
 			strErrMsg := "SessionNameInHttpHeader (" + cf.SessionNameInHttpHeader + ") has the wrong format, it should be like this : " + strMimeHeader
-			err = errors.New(strErrMsg)
-			panic(err)
-			return nil, err
+			panic(errors.New(strErrMsg))
 		}
 	}
 

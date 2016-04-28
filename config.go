@@ -274,7 +274,7 @@ func assignConfig(ac config.Configer) error {
 	for adaptor, config := range BConfig.Log.Outputs {
 		err := logs.SetLogger(adaptor, config)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, "%s with the config `%s` got err:%s\n", adaptor, config, err)
+			fmt.Fprintln(os.Stderr, fmt.Sprintf("%s with the config %q got err:%s", adaptor, config, err.Error()))
 		}
 	}
 	logs.SetLogFuncCall(BConfig.Log.FileLineNum)
