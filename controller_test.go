@@ -90,6 +90,8 @@ func (t *testController) Get() {
 	switch typ {
 	case "abort":
 		t.Abort(fmt.Sprint(code))
+	case "abort-content":
+		t.Ctx.Abort(code,t.GetString("body"))
 	default:
 		t.CustomAbort(code, t.GetString("body"))
 	}
@@ -121,4 +123,38 @@ func TestController_Abort_02(t *testing.T) {
 		t.Log(string(hrw.Body.Bytes()))
 		t.FailNow()
 	}
+}
+
+func TestController_Abort_03(t *testing.T) {
+	mux := NewControllerRegister()
+	mux.Add("/test", &testController{})
+	hrw := httptest.NewRecorder()
+	registerDefaultErrorHandler()
+	r, _ := http.NewRequest("GET", "http://example.com/test?type=default&code=501&body=testController", nil)
+	mux.ServeHTTP(hrw, r)
+	if hrw.Code != 501{
+		t.Log(hrw.Code)
+		t.FailNow()
+	}
+	if string(hrw.Body.Bytes())!="testController"{
+		t.Log(string(hrw.Body.Bytes()))
+		t.FailNow()
+	}
+}
+
+func TestController_Abort_04(t *testing.T) {
+	mux := NewControllerRegister()
+	mux.Add("/test", &testController{})
+	hrw := httptest.NewRecorder()
+	registerDefaultErrorHandler()
+	r, _ := http.NewRequest("GET", "http://example.com/test?type=abort-content&code=501&body=501", nil)
+	mux.ServeHTTP(hrw, r)
+	if hrw.Code != 501{
+		t.Log(hrw.Code)
+		t.FailNow()
+	}
+	//if string(hrw.Body.Bytes())!="testController"{
+	//	t.Log(string(hrw.Body.Bytes()))
+	//	t.FailNow()
+	//}
 }
