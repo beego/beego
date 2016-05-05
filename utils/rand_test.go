@@ -1,4 +1,4 @@
-// Copyright 2014 beego Author. All Rights Reserved.
+// Copyright 2016 beego Author. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,28 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package beego
+package utils
 
-import (
-	"github.com/astaxie/beego/context"
-)
+import "testing"
 
-// GlobalDocAPI store the swagger api documents
-var GlobalDocAPI = make(map[string]interface{})
+func TestRand_01(t *testing.T) {
+	bs0 := RandomCreateBytes(16)
+	bs1 := RandomCreateBytes(16)
 
-func serverDocs(ctx *context.Context) {
-	var obj interface{}
-	if splat := ctx.Input.Param(":splat"); splat == "" {
-		obj = GlobalDocAPI["Root"]
-	} else {
-		if v, ok := GlobalDocAPI[splat]; ok {
-			obj = v
-		}
+	t.Log(string(bs0), string(bs1))
+	if string(bs0) == string(bs1) {
+		t.FailNow()
 	}
-	if obj != nil {
-		ctx.Output.Header("Access-Control-Allow-Origin", "*")
-		ctx.Output.JSON(obj, false, false)
-		return
+
+	bs0 = RandomCreateBytes(4, []byte(`a`)...)
+
+	if string(bs0) != "aaaa" {
+		t.FailNow()
 	}
-	ctx.Output.SetStatus(404)
 }

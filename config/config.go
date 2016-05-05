@@ -12,11 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package config is used to parse config
+// Package config is used to parse config.
 // Usage:
-// import(
-//   "github.com/astaxie/beego/config"
-// )
+//  import "github.com/astaxie/beego/config"
+//Examples.
 //
 //  cnf, err := config.NewConfig("ini", "config.conf")
 //
@@ -38,12 +37,12 @@
 //  cnf.DIY(key string) (interface{}, error)
 //  cnf.GetSection(section string) (map[string]string, error)
 //  cnf.SaveConfigFile(filename string) error
-//
-//  more docs http://beego.me/docs/module/config.md
+//More docs http://beego.me/docs/module/config.md
 package config
 
 import (
 	"fmt"
+	"os"
 )
 
 // Configer defines how to get and set value from configuration raw data.
@@ -105,6 +104,69 @@ func NewConfigData(adapterName string, data []byte) (Configer, error) {
 		return nil, fmt.Errorf("config: unknown adaptername %q (forgotten import?)", adapterName)
 	}
 	return adapter.ParseData(data)
+}
+
+// ExpandValueEnvForMap convert all string value with environment variable.
+func ExpandValueEnvForMap(m map[string]interface{}) map[string]interface{} {
+	for k, v := range m {
+		switch value := v.(type) {
+		case string:
+			m[k] = ExpandValueEnv(value)
+		case map[string]interface{}:
+			m[k] = ExpandValueEnvForMap(value)
+		case map[string]string:
+			for k2, v2 := range value {
+				value[k2] = ExpandValueEnv(v2)
+			}
+			m[k] = value
+		}
+	}
+	return m
+}
+
+// ExpandValueEnv returns value of convert with environment variable.
+//
+// Return environment variable if value start with "${" and end with "}".
+// Return default value if environment variable is empty or not exist.
+//
+// It accept value formats "${env}" , "${env||}}" , "${env||defaultValue}" , "defaultvalue".
+// Examples:
+//	v1 := config.ExpandValueEnv("${GOPATH}")			// return the GOPATH environment variable.
+//	v2 := config.ExpandValueEnv("${GOAsta||/usr/local/go}")	// return the default value "/usr/local/go/".
+//	v3 := config.ExpandValueEnv("Astaxie")				// return the value "Astaxie".
+func ExpandValueEnv(value string) (realValue string) {
+	realValue = value
+
+	vLen := len(value)
+	// 3 = ${}
+	if vLen < 3 {
+		return
+	}
+	// Need start with "${" and end with "}", then return.
+	if value[0] != '$' || value[1] != '{' || value[vLen-1] != '}' {
+		return
+	}
+
+	key := ""
+	defalutV := ""
+	// value start with "${"
+	for i := 2; i < vLen; i++ {
+		if value[i] == '|' && (i+1 < vLen && value[i+1] == '|') {
+			key = value[2:i]
+			defalutV = value[i+2 : vLen-1] // other string is default value.
+			break
+		} else if value[i] == '}' {
+			key = value[2:i]
+			break
+		}
+	}
+
+	realValue = os.Getenv(key)
+	if realValue == "" {
+		realValue = defalutV
+	}
+
+	return
 }
 
 // ParseBool returns the boolean value represented by the string.

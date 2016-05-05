@@ -26,19 +26,25 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/utils"
 )
 
 var (
 	beegoTplFuncMap = make(template.FuncMap)
 	// beeTemplates caching map and supported template file extensions.
-	beeTemplates  = make(map[string]*template.Template)
+	beeTemplates  = make(map[string]TemplateRenderer)
 	templatesLock sync.RWMutex
 	// beeTemplateExt stores the template extension which will build
 	beeTemplateExt = []string{"tpl", "html"}
+	// beeTemplatePreprocessors stores associations of extension -> preprocessor handler
+	beeTemplateEngines = map[string]templateHandler{}
 )
 
-func executeTemplate(wr io.Writer, name string, data interface{}) error {
+// ExecuteTemplate applies the template with name  to the specified data object,
+// writing the output to wr.
+// A template will be executed safely in parallel.
+func ExecuteTemplate(wr io.Writer, name string, data interface{}) error {
 	if BConfig.RunMode == DEV {
 		templatesLock.RLock()
 		defer templatesLock.RUnlock()
@@ -46,7 +52,7 @@ func executeTemplate(wr io.Writer, name string, data interface{}) error {
 	if t, ok := beeTemplates[name]; ok {
 		err := t.ExecuteTemplate(wr, name, data)
 		if err != nil {
-			Trace("template Execute err:", err)
+			logs.Trace("template Execute err:", err)
 		}
 		return err
 	}
@@ -88,6 +94,10 @@ func AddFuncMap(key string, fn interface{}) error {
 	return nil
 }
 
+type templateHandler func(root, path string, funcs template.FuncMap) (TemplateRenderer, error)
+type TemplateRenderer interface {
+	ExecuteTemplate(wr io.Writer, name string, data interface{}) error
+}
 type templateFile struct {
 	root  string
 	files map[string][]string
@@ -156,13 +166,22 @@ func BuildTemplate(dir string, files ...string) error {
 		fmt.Printf("filepath.Walk() returned %v\n", err)
 		return err
 	}
+	buildAllFiles := len(files) == 0
 	for _, v := range self.files {
 		for _, file := range v {
-			if len(files) == 0 || utils.InSlice(file, files) {
+			if buildAllFiles || utils.InSlice(file, files) {
 				templatesLock.Lock()
-				t, err := getTemplate(self.root, file, v...)
+				ext := filepath.Ext(file)
+				var t TemplateRenderer
+				if len(ext) == 0 {
+					t, err = getTemplate(self.root, file, v...)
+				} else if fn, ok := beeTemplateEngines[ext[1:]]; ok {
+					t, err = fn(self.root, file, beegoTplFuncMap)
+				} else {
+					t, err = getTemplate(self.root, file, v...)
+				}
 				if err != nil {
-					Trace("parse template err:", file, err)
+					logs.Trace("parse template err:", file, err)
 				} else {
 					beeTemplates[file] = t
 				}
@@ -240,7 +259,7 @@ func _getTemplate(t0 *template.Template, root string, subMods [][]string, others
 					var subMods1 [][]string
 					t, subMods1, err = getTplDeep(root, otherFile, "", t)
 					if err != nil {
-						Trace("template parse file err:", err)
+						logs.Trace("template parse file err:", err)
 					} else if subMods1 != nil && len(subMods1) > 0 {
 						t, err = _getTemplate(t, root, subMods1, others...)
 					}
@@ -261,7 +280,7 @@ func _getTemplate(t0 *template.Template, root string, subMods [][]string, others
 						var subMods1 [][]string
 						t, subMods1, err = getTplDeep(root, otherFile, "", t)
 						if err != nil {
-							Trace("template parse file err:", err)
+							logs.Trace("template parse file err:", err)
 						} else if subMods1 != nil && len(subMods1) > 0 {
 							t, err = _getTemplate(t, root, subMods1, others...)
 						}
@@ -303,5 +322,11 @@ func DelStaticPath(url string) *App {
 		url = strings.TrimRight(url, "/")
 	}
 	delete(BConfig.WebConfig.StaticDir, url)
+	return BeeApp
+}
+
+func AddTemplateEngine(extension string, fn templateHandler) *App {
+	AddTemplateExt(extension)
+	beeTemplateEngines[extension] = fn
 	return BeeApp
 }

@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	"github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/logs"
 )
 
 type TestController struct {
@@ -94,7 +95,7 @@ func TestUrlFor(t *testing.T) {
 	handler.Add("/api/list", &TestController{}, "*:List")
 	handler.Add("/person/:last/:first", &TestController{}, "*:Param")
 	if a := handler.URLFor("TestController.List"); a != "/api/list" {
-		Info(a)
+		logs.Info(a)
 		t.Errorf("TestController.List must equal to /api/list")
 	}
 	if a := handler.URLFor("TestController.Param", ":last", "xie", ":first", "asta"); a != "/person/xie/asta" {
@@ -120,24 +121,24 @@ func TestUrlFor2(t *testing.T) {
 	handler.Add("/v1/:v(.+)_cms/ttt_:id(.+)_:page(.+).html", &TestController{}, "*:Param")
 	handler.Add("/:year:int/:month:int/:title/:entid", &TestController{})
 	if handler.URLFor("TestController.GetURL", ":username", "astaxie") != "/v1/astaxie/edit" {
-		Info(handler.URLFor("TestController.GetURL"))
+		logs.Info(handler.URLFor("TestController.GetURL"))
 		t.Errorf("TestController.List must equal to /v1/astaxie/edit")
 	}
 
 	if handler.URLFor("TestController.List", ":v", "za", ":id", "12", ":page", "123") !=
 		"/v1/za/cms_12_123.html" {
-		Info(handler.URLFor("TestController.List"))
+		logs.Info(handler.URLFor("TestController.List"))
 		t.Errorf("TestController.List must equal to /v1/za/cms_12_123.html")
 	}
 	if handler.URLFor("TestController.Param", ":v", "za", ":id", "12", ":page", "123") !=
 		"/v1/za_cms/ttt_12_123.html" {
-		Info(handler.URLFor("TestController.Param"))
+		logs.Info(handler.URLFor("TestController.Param"))
 		t.Errorf("TestController.List must equal to /v1/za_cms/ttt_12_123.html")
 	}
 	if handler.URLFor("TestController.Get", ":year", "1111", ":month", "11",
 		":title", "aaaa", ":entid", "aaaa") !=
 		"/1111/11/aaaa/aaaa" {
-		Info(handler.URLFor("TestController.Get"))
+		logs.Info(handler.URLFor("TestController.Get"))
 		t.Errorf("TestController.Get must equal to /1111/11/aaaa/aaaa")
 	}
 }
