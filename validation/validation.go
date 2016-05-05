@@ -73,6 +73,10 @@ func (e *Error) String() string {
 	return e.Message
 }
 
+// Implement Error interface.
+// Return e.String()
+func (e *Error) Error() string { return e.String() }
+
 // Result is returned from every validation method.
 // It provides an indication of success, and a pointer to the Error (if any).
 type Result struct {
