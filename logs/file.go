@@ -167,6 +167,9 @@ func (w *fileLogWriter) initFd() error {
 	w.dailyOpenTime = time.Now()
 	w.dailyOpenDate = w.dailyOpenTime.Day()
 	w.maxLinesCurLines = 0
+	if w.Daily {
+		go w.dailyRotate(w.dailyOpenTime)
+	}
 	if fInfo.Size() > 0 {
 		count, err := w.lines()
 		if err != nil {
@@ -175,6 +178,22 @@ func (w *fileLogWriter) initFd() error {
 		w.maxLinesCurLines = count
 	}
 	return nil
+}
+
+func (w *fileLogWriter) dailyRotate(openTime time.Time) {
+	y, m, d := openTime.Add(24 * time.Hour).Date()
+	nextDay := time.Date(y, m, d, 0, 0, 0, 0, openTime.Location())
+	tm := time.NewTimer(time.Duration(nextDay.UnixNano() - openTime.UnixNano() + 100))
+	select {
+	case <-tm.C:
+		w.Lock()
+		if w.needRotate(0, time.Now().Day()) {
+			if err := w.doRotate(time.Now()); err != nil {
+				fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
+			}
+		}
+		w.Unlock()
+	}
 }
 
 func (w *fileLogWriter) lines() (int, error) {
