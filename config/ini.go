@@ -286,7 +286,7 @@ func (c *IniConfigContainer) GetSection(section string) (map[string]string, erro
 	if v, ok := c.data[section]; ok {
 		return v, nil
 	} else {
-		return nil, errors.New("not exist setction")
+		return nil, errors.New("not exist section")
 	}
 }
 
