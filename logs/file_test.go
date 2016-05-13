@@ -25,7 +25,7 @@ import (
 
 func TestFilePerm(t *testing.T) {
 	log := NewLogger(10000)
-	log.SetLogger("file", `{"filename":"test-perm.log", "perm": "0600"}`)
+	log.SetLogger("file", `{"filename":"test.log", "perm": "0600"}`)
 	log.Debug("debug")
 	log.Informational("info")
 	log.Notice("notice")
@@ -34,26 +34,14 @@ func TestFilePerm(t *testing.T) {
 	log.Alert("alert")
 	log.Critical("critical")
 	log.Emergency("emergency")
-	f, err := os.Open("test-perm.log")
+	file, err := os.Stat("test.log")
 	if err != nil {
 		t.Fatal(err)
 	}
-	b := bufio.NewReader(f)
-	lineNum := 0
-	for {
-		line, _, err := b.ReadLine()
-		if err != nil {
-			break
-		}
-		if len(line) > 0 {
-			lineNum++
-		}
+	if file.Mode() != 0600{
+		t.Fatal("unexpected log file permission")
 	}
-	var expected = LevelDebug + 1
-	if lineNum != expected {
-		t.Fatal(lineNum, "not "+strconv.Itoa(expected)+" lines")
-	}
-	// os.Remove("test.log")
+	os.Remove("test.log")
 }
 func TestFile1(t *testing.T) {
 	log := NewLogger(10000)
