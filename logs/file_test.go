@@ -23,6 +23,38 @@ import (
 	"time"
 )
 
+func TestFilePerm(t *testing.T) {
+	log := NewLogger(10000)
+	log.SetLogger("file", `{"filename":"test-perm.log", "perm": "0600"}`)
+	log.Debug("debug")
+	log.Informational("info")
+	log.Notice("notice")
+	log.Warning("warning")
+	log.Error("error")
+	log.Alert("alert")
+	log.Critical("critical")
+	log.Emergency("emergency")
+	f, err := os.Open("test-perm.log")
+	if err != nil {
+		t.Fatal(err)
+	}
+	b := bufio.NewReader(f)
+	lineNum := 0
+	for {
+		line, _, err := b.ReadLine()
+		if err != nil {
+			break
+		}
+		if len(line) > 0 {
+			lineNum++
+		}
+	}
+	var expected = LevelDebug + 1
+	if lineNum != expected {
+		t.Fatal(lineNum, "not "+strconv.Itoa(expected)+" lines")
+	}
+	// os.Remove("test.log")
+}
 func TestFile1(t *testing.T) {
 	log := NewLogger(10000)
 	log.SetLogger("file", `{"filename":"test.log"}`)
