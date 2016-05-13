@@ -23,6 +23,26 @@ import (
 	"time"
 )
 
+func TestFilePerm(t *testing.T) {
+	log := NewLogger(10000)
+	log.SetLogger("file", `{"filename":"test.log", "perm": "0600"}`)
+	log.Debug("debug")
+	log.Informational("info")
+	log.Notice("notice")
+	log.Warning("warning")
+	log.Error("error")
+	log.Alert("alert")
+	log.Critical("critical")
+	log.Emergency("emergency")
+	file, err := os.Stat("test.log")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if file.Mode() != 0600{
+		t.Fatal("unexpected log file permission")
+	}
+	os.Remove("test.log")
+}
 func TestFile1(t *testing.T) {
 	log := NewLogger(10000)
 	log.SetLogger("file", `{"filename":"test.log"}`)
