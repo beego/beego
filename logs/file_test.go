@@ -24,6 +24,27 @@ import (
 	"time"
 )
 
+func TestFilePerm(t *testing.T) {
+	log := NewLogger(10000)
+	log.SetLogger("file", `{"filename":"test.log", "perm": "0600"}`)
+	log.Debug("debug")
+	log.Informational("info")
+	log.Notice("notice")
+	log.Warning("warning")
+	log.Error("error")
+	log.Alert("alert")
+	log.Critical("critical")
+	log.Emergency("emergency")
+	file, err := os.Stat("test.log")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if file.Mode() != 0600 {
+		t.Fatal("unexpected log file permission")
+	}
+	os.Remove("test.log")
+}
+
 func TestFile1(t *testing.T) {
 	log := NewLogger(10000)
 	log.SetLogger("file", `{"filename":"test.log"}`)
@@ -147,7 +168,7 @@ func testFileRotate(t *testing.T, fn1, fn2 string) {
 		MaxDays: 7,
 		Rotate:  true,
 		Level:   LevelTrace,
-		Perm:    0660,
+		Perm:    "0660",
 	}
 	fw.Init(fmt.Sprintf(`{"filename":"%v","maxdays":1}`, fn1))
 	fw.dailyOpenTime = time.Now().Add(-24 * time.Hour)
@@ -170,7 +191,7 @@ func testFileDailyRotate(t *testing.T, fn1, fn2 string) {
 		MaxDays: 7,
 		Rotate:  true,
 		Level:   LevelTrace,
-		Perm:    0660,
+		Perm:    "0660",
 	}
 	fw.Init(fmt.Sprintf(`{"filename":"%v","maxdays":1}`, fn1))
 	fw.dailyOpenTime = time.Now().Add(-24 * time.Hour)

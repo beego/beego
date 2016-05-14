@@ -22,6 +22,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -53,7 +54,8 @@ type fileLogWriter struct {
 
 	Level int `json:"level"`
 
-	Perm os.FileMode `json:"perm"`
+	Perm string `json:"perm"`
+	perm os.FileMode
 
 	fileNameOnly, suffix string // like "project.log", project is fileNameOnly and .log is suffix
 }
@@ -65,7 +67,8 @@ func newFileWriter() Logger {
 		MaxDays: 7,
 		Rotate:  true,
 		Level:   LevelTrace,
-		Perm:    0660,
+		Perm:    "0660",
+		perm:    0660,
 	}
 	return w
 }
@@ -89,6 +92,11 @@ func (w *fileLogWriter) Init(jsonConfig string) error {
 	if len(w.Filename) == 0 {
 		return errors.New("jsonconfig must have filename")
 	}
+	perm, err := strconv.ParseInt(w.Perm, 8, 64)
+	if err != nil {
+		return err
+	}
+	w.perm = os.FileMode(perm)
 	w.suffix = filepath.Ext(w.Filename)
 	w.fileNameOnly = strings.TrimSuffix(w.Filename, w.suffix)
 	if w.suffix == "" {
@@ -153,7 +161,7 @@ func (w *fileLogWriter) WriteMsg(when time.Time, msg string, level int) error {
 
 func (w *fileLogWriter) createLogFile() (*os.File, error) {
 	// Open the log file
-	fd, err := os.OpenFile(w.Filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, w.Perm)
+	fd, err := os.OpenFile(w.Filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, w.perm)
 	return fd, err
 }
 
