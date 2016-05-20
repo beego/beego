@@ -1,6 +1,7 @@
 package ssdb
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -21,6 +22,9 @@ type SsdbProvider struct {
 
 func (p *SsdbProvider) connectInit() error {
 	var err error
+	if p.host == "" || p.port == 0 {
+		return errors.New("SessionInit First")
+	}
 	p.client, err = ssdb.Connect(p.host, p.port)
 	if err != nil {
 		return err
@@ -98,7 +102,6 @@ func (p *SsdbProvider) SessionRegenerate(oldsid, sid string) (session.Store, err
 	if value == nil || len(value.(string)) == 0 {
 		kv = make(map[interface{}]interface{})
 	} else {
-		var err error
 		kv, err = session.DecodeGob([]byte(value.(string)))
 		if err != nil {
 			return nil, err
@@ -108,7 +111,7 @@ func (p *SsdbProvider) SessionRegenerate(oldsid, sid string) (session.Store, err
 			return nil, err
 		}
 	}
-	_, e := p.client.Do("setx", sid, value.(string), p.maxLifetime)
+	_, e := p.client.Do("setx", sid, value, p.maxLifetime)
 	if e != nil {
 		return nil, e
 	}

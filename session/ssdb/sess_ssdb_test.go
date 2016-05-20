@@ -1,7 +1,6 @@
 package ssdb
 
 import (
-	"fmt"
 	"net/http"
 	"testing"
 )
@@ -55,6 +54,4 @@ func Test(t *testing.T) {
 	if p.SessionExist("1") {
 		t.Error("SessionExist err")
 	}
-	fmt.Println(newS)
-
 }
