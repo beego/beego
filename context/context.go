@@ -70,10 +70,8 @@ func (ctx *Context) Reset(rw http.ResponseWriter, r *http.Request) {
 }
 
 // Redirect does redirection to localurl with http header status code.
-// It sends http response header directly.
 func (ctx *Context) Redirect(status int, localurl string) {
-	ctx.Output.Header("Location", localurl)
-	ctx.ResponseWriter.WriteHeader(status)
+	http.Redirect(ctx.ResponseWriter, ctx.Request, localurl, status)
 }
 
 // Abort stops this request.
