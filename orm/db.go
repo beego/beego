@@ -1475,7 +1475,11 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 
 	sels := strings.Join(cols, ", ")
 
-	query := fmt.Sprintf("SELECT %s FROM %s%s%s T0 %s%s%s%s%s", sels, Q, mi.table, Q, join, where, groupBy, orderBy, limit)
+	sqlSelect := "SELECT"
+	if qs.distinct {
+		sqlSelect += " DISTINCT"
+	}
+	query := fmt.Sprintf("%s %s FROM %s%s%s T0 %s%s%s%s%s", sqlSelect, sels, Q, mi.table, Q, join, where, groupBy, orderBy, limit)
 
 	d.ins.ReplaceMarks(&query)
 
