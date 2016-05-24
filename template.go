@@ -38,7 +38,8 @@ var (
 	// beeTemplateExt stores the template extension which will build
 	beeTemplateExt = []string{"tpl", "html"}
 	// beeTemplatePreprocessors stores associations of extension -> preprocessor handler
-	beeTemplateEngines = map[string]templatePreProcessor{})
+	beeTemplateEngines = map[string]templatePreProcessor{}
+)
 
 // ExecuteTemplate applies the template with name  to the specified data object,
 // writing the output to wr.
