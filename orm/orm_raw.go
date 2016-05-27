@@ -342,7 +342,13 @@ func (o *rawSet) QueryRow(containers ...interface{}) error {
 				for _, col := range columns {
 					if fi := sMi.fields.GetByColumn(col); fi != nil {
 						value := reflect.ValueOf(columnsMp[col]).Elem().Interface()
-						o.setFieldValue(ind.FieldByIndex(fi.fieldIndex), value)
+						field := ind.FieldByIndex(fi.fieldIndex)
+						if fi.fieldType&IsRelField > 0 {
+							mf := reflect.New(fi.relModelInfo.addrField.Elem().Type())
+							field.Set(mf)
+							field = mf.Elem().FieldByIndex(fi.relModelInfo.fields.pk.fieldIndex)
+						}
+						o.setFieldValue(field, value)
 					}
 				}
 			} else {
@@ -480,7 +486,13 @@ func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
 				for _, col := range columns {
 					if fi := sMi.fields.GetByColumn(col); fi != nil {
 						value := reflect.ValueOf(columnsMp[col]).Elem().Interface()
-						o.setFieldValue(ind.FieldByIndex(fi.fieldIndex), value)
+						field := ind.FieldByIndex(fi.fieldIndex)
+						if fi.fieldType&IsRelField > 0 {
+							mf := reflect.New(fi.relModelInfo.addrField.Elem().Type())
+							field.Set(mf)
+							field = mf.Elem().FieldByIndex(fi.relModelInfo.fields.pk.fieldIndex)
+						}
+						o.setFieldValue(field, value)
 					}
 				}
 			} else {
