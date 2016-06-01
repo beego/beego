@@ -148,7 +148,7 @@ func (app *App) Run() {
 				BeeLogger.Info("Start https server error, confict with http.Please reset https port")
 				return
 			}
-			logs.Info("https server Running on %s", app.Server.Addr)
+			logs.Info("https server Running on https://%s", app.Server.Addr)
 			if err := app.Server.ListenAndServeTLS(BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile); err != nil {
 				logs.Critical("ListenAndServeTLS: ", err)
 				time.Sleep(100 * time.Microsecond)
@@ -159,7 +159,7 @@ func (app *App) Run() {
 	if BConfig.Listen.EnableHTTP {
 		go func() {
 			app.Server.Addr = addr
-			logs.Info("http server Running on %s", app.Server.Addr)
+			logs.Info("http server Running on http://%s", app.Server.Addr)
 			if BConfig.Listen.ListenTCP4 {
 				ln, err := net.Listen("tcp4", app.Server.Addr)
 				if err != nil {

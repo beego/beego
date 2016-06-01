@@ -782,6 +782,8 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 					if BConfig.WebConfig.AutoRender {
 						if err := execController.Render(); err != nil {
 							logs.Error(err)
+							exception("503", context)
+							goto Admin
 						}
 					}
 				}
