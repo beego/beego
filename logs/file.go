@@ -22,6 +22,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -53,7 +54,7 @@ type fileLogWriter struct {
 
 	Level int `json:"level"`
 
-	Perm os.FileMode `json:"perm"`
+	Perm string `json:"perm"`
 
 	fileNameOnly, suffix string // like "project.log", project is fileNameOnly and .log is suffix
 }
@@ -65,7 +66,7 @@ func newFileWriter() Logger {
 		MaxDays: 7,
 		Rotate:  true,
 		Level:   LevelTrace,
-		Perm:    0660,
+		Perm:    "0660",
 	}
 	return w
 }
@@ -79,7 +80,7 @@ func newFileWriter() Logger {
 //	"daily":true,
 //	"maxDays":15,
 //	"rotate":true,
-//  	"perm":0600
+//  	"perm":"0600"
 //	}
 func (w *fileLogWriter) Init(jsonConfig string) error {
 	err := json.Unmarshal([]byte(jsonConfig), w)
@@ -153,7 +154,11 @@ func (w *fileLogWriter) WriteMsg(when time.Time, msg string, level int) error {
 
 func (w *fileLogWriter) createLogFile() (*os.File, error) {
 	// Open the log file
-	fd, err := os.OpenFile(w.Filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, w.Perm)
+	perm, err := strconv.ParseInt(w.Perm, 8, 64)
+	if err != nil {
+		return nil, err
+	}
+	fd, err := os.OpenFile(w.Filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(perm))
 	return fd, err
 }
 
@@ -167,6 +172,9 @@ func (w *fileLogWriter) initFd() error {
 	w.dailyOpenTime = time.Now()
 	w.dailyOpenDate = w.dailyOpenTime.Day()
 	w.maxLinesCurLines = 0
+	if w.Daily {
+		go w.dailyRotate(w.dailyOpenTime)
+	}
 	if fInfo.Size() > 0 {
 		count, err := w.lines()
 		if err != nil {
@@ -175,6 +183,22 @@ func (w *fileLogWriter) initFd() error {
 		w.maxLinesCurLines = count
 	}
 	return nil
+}
+
+func (w *fileLogWriter) dailyRotate(openTime time.Time) {
+	y, m, d := openTime.Add(24 * time.Hour).Date()
+	nextDay := time.Date(y, m, d, 0, 0, 0, 0, openTime.Location())
+	tm := time.NewTimer(time.Duration(nextDay.UnixNano() - openTime.UnixNano() + 100))
+	select {
+	case <-tm.C:
+		w.Lock()
+		if w.needRotate(0, time.Now().Day()) {
+			if err := w.doRotate(time.Now()); err != nil {
+				fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
+			}
+		}
+		w.Unlock()
+	}
 }
 
 func (w *fileLogWriter) lines() (int, error) {
