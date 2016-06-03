@@ -2117,3 +2117,47 @@ func TestUintPk(t *testing.T) {
 
 	dORM.Delete(u)
 }
+
+func TestSnake(t *testing.T) {
+	cases := map[string]string{
+		"i":           "i",
+		"I":           "i",
+		"iD":          "i_d",          //01
+		"ID":          "id",           //11  pre+curent=2
+		"NO":          "no",           //11
+		"NOO":         "noo",          //111   10
+		"NOOooOOoo":   "noo_oo_oo_oo", //111_00_11_00
+		"OrderNO":     "order_no",     //10000_11
+		"tagName":     "tag_name",     //000_1000
+		"tag_Name":    "tag_name",
+		"tag_name":    "tag_name",
+		"_tag_name":   "_tag_name",
+		"tag_666name": "tag_666name",
+		"tag_666Name": "tag_666_name",
+	}
+	for name, want := range cases {
+		got := snakeString(name)
+		throwFail(t, AssertIs(got, want))
+	}
+}
+
+func TestIgnoreCaseTag(t *testing.T) {
+	type testTagModel struct {
+		ID     int    `orm:"pk"`
+		NOO    string `orm:"column(n)"`
+		Name01 string `orm:"NULL"`
+		Name02 string `orm:"COLUMN(Name)"`
+		Name03 string `orm:"Column(name)"`
+	}
+	RegisterModel(&testTagModel{})
+	info, ok := modelCache.get("test_tag_model")
+	throwFail(t, AssertIs(ok, true))
+	throwFail(t, AssertNot(info, nil))
+	if t == nil {
+		return
+	}
+	throwFail(t, AssertIs(info.fields.GetByName("NOO").column, "n"))
+	throwFail(t, AssertIs(info.fields.GetByName("Name01").null, true))
+	throwFail(t, AssertIs(info.fields.GetByName("Name02").column, "Name"))
+	throwFail(t, AssertIs(info.fields.GetByName("Name03").column, "name"))
+}
