@@ -2122,13 +2122,13 @@ func TestSnake(t *testing.T) {
 	cases := map[string]string{
 		"i":           "i",
 		"I":           "i",
-		"iD":          "i_d",          //01
-		"ID":          "id",           //11  pre+curent=2
-		"NO":          "no",           //11
-		"NOO":         "noo",          //111   10
-		"NOOooOOoo":   "noo_oo_oo_oo", //111_00_11_00
-		"OrderNO":     "order_no",     //10000_11
-		"tagName":     "tag_name",     //000_1000
+		"iD":          "i_d",
+		"ID":          "id",
+		"NO":          "no",
+		"NOO":         "noo",
+		"NOOooOOoo":   "noo_oo_oo_oo",
+		"OrderNO":     "order_no",
+		"tagName":     "tag_name",
 		"tag_Name":    "tag_name",
 		"tag_name":    "tag_name",
 		"_tag_name":   "_tag_name",
@@ -2149,6 +2149,7 @@ func TestIgnoreCaseTag(t *testing.T) {
 		Name02 string `orm:"COLUMN(Name)"`
 		Name03 string `orm:"Column(name)"`
 	}
+	modelCache.clean()
 	RegisterModel(&testTagModel{})
 	info, ok := modelCache.get("test_tag_model")
 	throwFail(t, AssertIs(ok, true))
