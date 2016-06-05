@@ -1,0 +1,51 @@
+language: go
+
+go:
+  - tip
+  - 1.6.0
+  - 1.5.3
+  - 1.4.3
+services:
+  - redis-server
+  - mysql
+  - postgresql
+  - memcached
+env:
+  - ORM_DRIVER=sqlite3   ORM_SOURCE=$TRAVIS_BUILD_DIR/orm_test.db
+  - ORM_DRIVER=mysql    ORM_SOURCE="root:@/orm_test?charset=utf8"
+  - ORM_DRIVER=postgres ORM_SOURCE="user=postgres dbname=orm_test sslmode=disable"
+before_install:
+ - git clone git://github.com/ideawu/ssdb.git
+ - cd ssdb
+ - make
+ - cd ..
+install:
+  - go get github.com/lib/pq
+  - go get github.com/go-sql-driver/mysql
+  - go get github.com/mattn/go-sqlite3
+  - go get github.com/bradfitz/gomemcache/memcache
+  - go get github.com/garyburd/redigo/redis
+  - go get github.com/beego/x2j
+  - go get github.com/couchbase/go-couchbase
+  - go get github.com/beego/goyaml2
+  - go get github.com/belogik/goes
+  - go get github.com/siddontang/ledisdb/config
+  - go get github.com/siddontang/ledisdb/ledis
+  - go get golang.org/x/tools/cmd/vet
+  - go get github.com/golang/lint/golint
+  - go get github.com/ssdb/gossdb/ssdb
+before_script:
+  - sh -c "if [ '$ORM_DRIVER' = 'postgres' ]; then psql -c 'create database orm_test;' -U postgres; fi"
+  - sh -c "if [ '$ORM_DRIVER' = 'mysql' ]; then mysql -u root -e 'create database orm_test;'; fi"
+  - sh -c "if [ '$ORM_DRIVER' = 'sqlite' ]; then touch $TRAVIS_BUILD_DIR/orm_test.db; fi"
+  - mkdir -p res/var
+  - ./ssdb/ssdb-server ./ssdb/ssdb.conf -d
+after_script:
+  -killall -w ssdb-server
+  - rm -rf ./res/var/*
+script:
+  - go vet -x ./...
+  - $HOME/gopath/bin/golint ./...
+  - go test -v ./...
+notifications:
+  webhooks: https://hooks.pubu.im/services/z7m9bvybl3rgtg9

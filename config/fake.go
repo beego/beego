@@ -38,23 +38,27 @@ func (c *fakeConfigContainer) String(key string) string {
 }
 
 func (c *fakeConfigContainer) DefaultString(key string, defaultval string) string {
-	if v := c.getData(key); v == "" {
+	v := c.getData(key)
+	if v == "" {
 		return defaultval
-	} else {
-		return v
 	}
+	return v
 }
 
 func (c *fakeConfigContainer) Strings(key string) []string {
-	return strings.Split(c.getData(key), ";")
+	v := c.getData(key)
+	if v == "" {
+		return nil
+	}
+	return strings.Split(v, ";")
 }
 
 func (c *fakeConfigContainer) DefaultStrings(key string, defaultval []string) []string {
-	if v := c.Strings(key); len(v) == 0 {
+	v := c.Strings(key)
+	if v == nil {
 		return defaultval
-	} else {
-		return v
 	}
+	return v
 }
 
 func (c *fakeConfigContainer) Int(key string) (int, error) {
@@ -62,11 +66,11 @@ func (c *fakeConfigContainer) Int(key string) (int, error) {
 }
 
 func (c *fakeConfigContainer) DefaultInt(key string, defaultval int) int {
-	if v, err := c.Int(key); err != nil {
+	v, err := c.Int(key)
+	if err != nil {
 		return defaultval
-	} else {
-		return v
 	}
+	return v
 }
 
 func (c *fakeConfigContainer) Int64(key string) (int64, error) {
@@ -74,23 +78,23 @@ func (c *fakeConfigContainer) Int64(key string) (int64, error) {
 }
 
 func (c *fakeConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
-	if v, err := c.Int64(key); err != nil {
+	v, err := c.Int64(key)
+	if err != nil {
 		return defaultval
-	} else {
-		return v
 	}
+	return v
 }
 
 func (c *fakeConfigContainer) Bool(key string) (bool, error) {
-	return strconv.ParseBool(c.getData(key))
+	return ParseBool(c.getData(key))
 }
 
 func (c *fakeConfigContainer) DefaultBool(key string, defaultval bool) bool {
-	if v, err := c.Bool(key); err != nil {
+	v, err := c.Bool(key)
+	if err != nil {
 		return defaultval
-	} else {
-		return v
 	}
+	return v
 }
 
 func (c *fakeConfigContainer) Float(key string) (float64, error) {
@@ -98,11 +102,11 @@ func (c *fakeConfigContainer) Float(key string) (float64, error) {
 }
 
 func (c *fakeConfigContainer) DefaultFloat(key string, defaultval float64) float64 {
-	if v, err := c.Float(key); err != nil {
+	v, err := c.Float(key)
+	if err != nil {
 		return defaultval
-	} else {
-		return v
 	}
+	return v
 }
 
 func (c *fakeConfigContainer) DIY(key string) (interface{}, error) {
@@ -120,9 +124,10 @@ func (c *fakeConfigContainer) SaveConfigFile(filename string) error {
 	return errors.New("not implement in the fakeConfigContainer")
 }
 
-var _ ConfigContainer = new(fakeConfigContainer)
+var _ Configer = new(fakeConfigContainer)
 
-func NewFakeConfig() ConfigContainer {
+// NewFakeConfig return a fake Congiger
+func NewFakeConfig() Configer {
 	return &fakeConfigContainer{
 		data: make(map[string]string),
 	}

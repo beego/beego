@@ -15,11 +15,17 @@
 package config
 
 import (
+	"fmt"
+	"io/ioutil"
 	"os"
+	"strings"
 	"testing"
 )
 
-var inicontext = `
+func TestIni(t *testing.T) {
+
+	var (
+		inicontext = `
 ;comment one
 #comment two
 appname = beeapi
@@ -29,6 +35,13 @@ PI = 3.1415976
 runmode = "dev"
 autorender = false
 copyrequestbody = true
+session= on
+cookieon= off
+newreg = OFF
+needlogin = ON
+enableSession = Y
+enableCookie = N
+flag = 1
 [demo]
 key1="asta"
 key2 = "xie"
@@ -36,7 +49,32 @@ CaseInsensitive = true
 peers = one;two;three
 `
 
-func TestIni(t *testing.T) {
+		keyValue = map[string]interface{}{
+			"appname":               "beeapi",
+			"httpport":              8080,
+			"mysqlport":             int64(3600),
+			"pi":                    3.1415976,
+			"runmode":               "dev",
+			"autorender":            false,
+			"copyrequestbody":       true,
+			"session":               true,
+			"cookieon":              false,
+			"newreg":                false,
+			"needlogin":             true,
+			"enableSession":         true,
+			"enableCookie":          false,
+			"flag":                  true,
+			"demo::key1":            "asta",
+			"demo::key2":            "xie",
+			"demo::CaseInsensitive": true,
+			"demo::peers":           []string{"one", "two", "three"},
+			"null":                  "",
+			"demo2::key1":           "",
+			"error":                 "",
+			"emptystrings":          []string{},
+		}
+	)
+
 	f, err := os.Create("testini.conf")
 	if err != nil {
 		t.Fatal(err)
@@ -52,31 +90,31 @@ func TestIni(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if iniconf.String("appname") != "beeapi" {
-		t.Fatal("appname not equal to beeapi")
-	}
-	if port, err := iniconf.Int("httpport"); err != nil || port != 8080 {
-		t.Error(port)
-		t.Fatal(err)
-	}
-	if port, err := iniconf.Int64("mysqlport"); err != nil || port != 3600 {
-		t.Error(port)
-		t.Fatal(err)
-	}
-	if pi, err := iniconf.Float("PI"); err != nil || pi != 3.1415976 {
-		t.Error(pi)
-		t.Fatal(err)
-	}
-	if iniconf.String("runmode") != "dev" {
-		t.Fatal("runmode not equal to dev")
-	}
-	if v, err := iniconf.Bool("autorender"); err != nil || v != false {
-		t.Error(v)
-		t.Fatal(err)
-	}
-	if v, err := iniconf.Bool("copyrequestbody"); err != nil || v != true {
-		t.Error(v)
-		t.Fatal(err)
+	for k, v := range keyValue {
+		var err error
+		var value interface{}
+		switch v.(type) {
+		case int:
+			value, err = iniconf.Int(k)
+		case int64:
+			value, err = iniconf.Int64(k)
+		case float64:
+			value, err = iniconf.Float(k)
+		case bool:
+			value, err = iniconf.Bool(k)
+		case []string:
+			value = iniconf.Strings(k)
+		case string:
+			value = iniconf.String(k)
+		default:
+			value, err = iniconf.DIY(k)
+		}
+		if err != nil {
+			t.Fatalf("get key %q value fail,err %s", k, err)
+		} else if fmt.Sprintf("%v", v) != fmt.Sprintf("%v", value) {
+			t.Fatalf("get key %q value, want %v got %v .", k, v, value)
+		}
+
 	}
 	if err = iniconf.Set("name", "astaxie"); err != nil {
 		t.Fatal(err)
@@ -84,20 +122,63 @@ func TestIni(t *testing.T) {
 	if iniconf.String("name") != "astaxie" {
 		t.Fatal("get name error")
 	}
-	if iniconf.String("demo::key1") != "asta" {
-		t.Fatal("get demo.key1 error")
-	}
-	if iniconf.String("demo::key2") != "xie" {
-		t.Fatal("get demo.key2 error")
-	}
-	if v, err := iniconf.Bool("demo::caseinsensitive"); err != nil || v != true {
-		t.Fatal("get demo.caseinsensitive error")
-	}
 
-	if data := iniconf.Strings("demo::peers"); len(data) != 3 {
-		t.Fatal("get strings error", data)
-	} else if data[0] != "one" {
-		t.Fatal("get first params error not equat to one")
-	}
+}
 
+func TestIniSave(t *testing.T) {
+
+	const (
+		inicontext = `
+app = app
+;comment one
+#comment two
+# comment three
+appname = beeapi
+httpport = 8080
+# DB Info
+# enable db
+[dbinfo]
+# db type name
+# suport mysql,sqlserver
+name = mysql
+`
+
+		saveResult = `
+app=app
+#comment one
+#comment two
+# comment three
+appname=beeapi
+httpport=8080
+
+# DB Info
+# enable db
+[dbinfo]
+# db type name
+# suport mysql,sqlserver
+name=mysql
+`
+	)
+	cfg, err := NewConfigData("ini", []byte(inicontext))
+	if err != nil {
+		t.Fatal(err)
+	}
+	name := "newIniConfig.ini"
+	if err := cfg.SaveConfigFile(name); err != nil {
+		t.Fatal(err)
+	}
+	defer os.Remove(name)
+
+	if data, err := ioutil.ReadFile(name); err != nil {
+		t.Fatal(err)
+	} else {
+		cfgData := string(data)
+		datas := strings.Split(saveResult, "\n")
+		for _, line := range datas {
+			if strings.Contains(cfgData, line+"\n") == false {
+				t.Fatalf("different after save ini config file. need contains %q", line)
+			}
+		}
+
+	}
 }

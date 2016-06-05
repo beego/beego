@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package cache provide a Cache interface and some implemetn engine
 // Usage:
 //
 // import(
@@ -22,7 +23,7 @@
 //
 // Use it like this:
 //
-//	bm.Put("astaxie", 1, 10)
+//	bm.Put("astaxie", 1, 10 * time.Second)
 //	bm.Get("astaxie")
 //	bm.IsExist("astaxie")
 //	bm.Delete("astaxie")
@@ -32,13 +33,14 @@ package cache
 
 import (
 	"fmt"
+	"time"
 )
 
 // Cache interface contains all behaviors for cache adapter.
 // usage:
-//	cache.Register("file",cache.NewFileCache()) // this operation is run in init method of file.go.
+//	cache.Register("file",cache.NewFileCache) // this operation is run in init method of file.go.
 //	c,err := cache.NewCache("file","{....}")
-//	c.Put("key",value,3600)
+//	c.Put("key",value, 3600 * time.Second)
 //	v := c.Get("key")
 //
 //	c.Incr("counter")  // now is 1
@@ -47,8 +49,10 @@ import (
 type Cache interface {
 	// get cached value by key.
 	Get(key string) interface{}
+	// GetMulti is a batch version of Get.
+	GetMulti(keys []string) []interface{}
 	// set cached value with key and expire time.
-	Put(key string, val interface{}, timeout int64) error
+	Put(key string, val interface{}, timeout time.Duration) error
 	// delete cached value by key.
 	Delete(key string) error
 	// increase cached int value by key, as a counter.
@@ -63,12 +67,15 @@ type Cache interface {
 	StartAndGC(config string) error
 }
 
-var adapters = make(map[string]Cache)
+// Instance is a function create a new Cache Instance
+type Instance func() Cache
+
+var adapters = make(map[string]Instance)
 
 // Register makes a cache adapter available by the adapter name.
 // If Register is called twice with the same name or if driver is nil,
 // it panics.
-func Register(name string, adapter Cache) {
+func Register(name string, adapter Instance) {
 	if adapter == nil {
 		panic("cache: Register adapter is nil")
 	}
@@ -78,15 +85,16 @@ func Register(name string, adapter Cache) {
 	adapters[name] = adapter
 }
 
-// Create a new cache driver by adapter name and config string.
+// NewCache Create a new cache driver by adapter name and config string.
 // config need to be correct JSON as string: {"interval":360}.
 // it will start gc automatically.
 func NewCache(adapterName, config string) (adapter Cache, err error) {
-	adapter, ok := adapters[adapterName]
+	instanceFunc, ok := adapters[adapterName]
 	if !ok {
 		err = fmt.Errorf("cache: unknown adapter name %q (forgot to import?)", adapterName)
 		return
 	}
+	adapter = instanceFunc()
 	err = adapter.StartAndGC(config)
 	if err != nil {
 		adapter = nil

@@ -15,61 +15,63 @@
 package beego
 
 import (
-	"fmt"
+	"testing"
+
 	"github.com/astaxie/beego/context"
 )
 
-func ExampleGetInt() {
-
-	i := &context.BeegoInput{Params: map[string]string{"age": "40"}}
+func TestGetInt(t *testing.T) {
+	i := context.NewInput()
+	i.SetParam("age", "40")
 	ctx := &context.Context{Input: i}
 	ctrlr := Controller{Ctx: ctx}
-
 	val, _ := ctrlr.GetInt("age")
-	fmt.Printf("%T", val)
-	//Output: int
+	if val != 40 {
+		t.Errorf("TestGetInt expect 40,get %T,%v", val, val)
+	}
 }
 
-func ExampleGetInt8() {
-
-	i := &context.BeegoInput{Params: map[string]string{"age": "40"}}
+func TestGetInt8(t *testing.T) {
+	i := context.NewInput()
+	i.SetParam("age", "40")
 	ctx := &context.Context{Input: i}
 	ctrlr := Controller{Ctx: ctx}
-
 	val, _ := ctrlr.GetInt8("age")
-	fmt.Printf("%T", val)
+	if val != 40 {
+		t.Errorf("TestGetInt8 expect 40,get %T,%v", val, val)
+	}
 	//Output: int8
 }
 
-func ExampleGetInt16() {
-
-	i := &context.BeegoInput{Params: map[string]string{"age": "40"}}
+func TestGetInt16(t *testing.T) {
+	i := context.NewInput()
+	i.SetParam("age", "40")
 	ctx := &context.Context{Input: i}
 	ctrlr := Controller{Ctx: ctx}
-
 	val, _ := ctrlr.GetInt16("age")
-	fmt.Printf("%T", val)
-	//Output: int16
+	if val != 40 {
+		t.Errorf("TestGetInt16 expect 40,get %T,%v", val, val)
+	}
 }
 
-func ExampleGetInt32() {
-
-	i := &context.BeegoInput{Params: map[string]string{"age": "40"}}
+func TestGetInt32(t *testing.T) {
+	i := context.NewInput()
+	i.SetParam("age", "40")
 	ctx := &context.Context{Input: i}
 	ctrlr := Controller{Ctx: ctx}
-
 	val, _ := ctrlr.GetInt32("age")
-	fmt.Printf("%T", val)
-	//Output: int32
+	if val != 40 {
+		t.Errorf("TestGetInt32 expect 40,get %T,%v", val, val)
+	}
 }
 
-func ExampleGetInt64() {
-
-	i := &context.BeegoInput{Params: map[string]string{"age": "40"}}
+func TestGetInt64(t *testing.T) {
+	i := context.NewInput()
+	i.SetParam("age", "40")
 	ctx := &context.Context{Input: i}
 	ctrlr := Controller{Ctx: ctx}
-
 	val, _ := ctrlr.GetInt64("age")
-	fmt.Printf("%T", val)
-	//Output: int64
+	if val != 40 {
+		t.Errorf("TestGeetInt64 expect 40,get %T,%v", val, val)
+	}
 }

@@ -15,34 +15,14 @@
 package config
 
 import (
+	"fmt"
 	"os"
 	"testing"
 )
 
-var jsoncontext = `{
-"appname": "beeapi",
-"testnames": "foo;bar",
-"httpport": 8080,
-"mysqlport": 3600,
-"PI": 3.1415976,
-"runmode": "dev",
-"autorender": false,
-"copyrequestbody": true,
-"database": {
-        "host": "host",
-        "port": "port",
-        "database": "database",
-        "username": "username",
-        "password": "password",
-		"conns":{
-			"maxconnection":12,
-			"autoconnect":true,
-			"connectioninfo":"info"
-		}
-    }
-}`
+func TestJsonStartsWithArray(t *testing.T) {
 
-var jsoncontextwitharray = `[
+	const jsoncontextwitharray = `[
 	{
 		"url": "user",
 		"serviceAPI": "http://www.test.com/user"
@@ -52,8 +32,6 @@ var jsoncontextwitharray = `[
 		"serviceAPI": "http://www.test.com/employee"
 	}
 ]`
-
-func TestJsonStartsWithArray(t *testing.T) {
 	f, err := os.Create("testjsonWithArray.conf")
 	if err != nil {
 		t.Fatal(err)
@@ -90,6 +68,64 @@ func TestJsonStartsWithArray(t *testing.T) {
 }
 
 func TestJson(t *testing.T) {
+
+	var (
+		jsoncontext = `{
+"appname": "beeapi",
+"testnames": "foo;bar",
+"httpport": 8080,
+"mysqlport": 3600,
+"PI": 3.1415976, 
+"runmode": "dev",
+"autorender": false,
+"copyrequestbody": true,
+"session": "on",
+"cookieon": "off",
+"newreg": "OFF",
+"needlogin": "ON",
+"enableSession": "Y",
+"enableCookie": "N",
+"flag": 1,
+"database": {
+        "host": "host",
+        "port": "port",
+        "database": "database",
+        "username": "username",
+        "password": "password",
+		"conns":{
+			"maxconnection":12,
+			"autoconnect":true,
+			"connectioninfo":"info"
+		}
+    }
+}`
+		keyValue = map[string]interface{}{
+			"appname":                         "beeapi",
+			"testnames":                       []string{"foo", "bar"},
+			"httpport":                        8080,
+			"mysqlport":                       int64(3600),
+			"PI":                              3.1415976,
+			"runmode":                         "dev",
+			"autorender":                      false,
+			"copyrequestbody":                 true,
+			"session":                         true,
+			"cookieon":                        false,
+			"newreg":                          false,
+			"needlogin":                       true,
+			"enableSession":                   true,
+			"enableCookie":                    false,
+			"flag":                            true,
+			"database::host":                  "host",
+			"database::port":                  "port",
+			"database::database":              "database",
+			"database::password":              "password",
+			"database::conns::maxconnection":  12,
+			"database::conns::autoconnect":    true,
+			"database::conns::connectioninfo": "info",
+			"unknown":                         "",
+		}
+	)
+
 	f, err := os.Create("testjson.conf")
 	if err != nil {
 		t.Fatal(err)
@@ -105,37 +141,32 @@ func TestJson(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if jsonconf.String("appname") != "beeapi" {
-		t.Fatal("appname not equal to beeapi")
-	}
-	if port, err := jsonconf.Int("httpport"); err != nil || port != 8080 {
-		t.Error(port)
-		t.Fatal(err)
-	}
-	if port, err := jsonconf.Int64("mysqlport"); err != nil || port != 3600 {
-		t.Error(port)
-		t.Fatal(err)
-	}
-	if pi, err := jsonconf.Float("PI"); err != nil || pi != 3.1415976 {
-		t.Error(pi)
-		t.Fatal(err)
-	}
-	if jsonconf.String("runmode") != "dev" {
-		t.Fatal("runmode not equal to dev")
-	}
-	if v := jsonconf.Strings("unknown"); len(v) > 0 {
-		t.Fatal("unknown strings, the length should be 0")
-	}
-	if v := jsonconf.Strings("testnames"); len(v) != 2 {
-		t.Fatal("testnames length should be 2")
-	}
-	if v, err := jsonconf.Bool("autorender"); err != nil || v != false {
-		t.Error(v)
-		t.Fatal(err)
-	}
-	if v, err := jsonconf.Bool("copyrequestbody"); err != nil || v != true {
-		t.Error(v)
-		t.Fatal(err)
+
+	for k, v := range keyValue {
+		var err error
+		var value interface{}
+		switch v.(type) {
+		case int:
+			value, err = jsonconf.Int(k)
+		case int64:
+			value, err = jsonconf.Int64(k)
+		case float64:
+			value, err = jsonconf.Float(k)
+		case bool:
+			value, err = jsonconf.Bool(k)
+		case []string:
+			value = jsonconf.Strings(k)
+		case string:
+			value = jsonconf.String(k)
+		default:
+			value, err = jsonconf.DIY(k)
+		}
+		if err != nil {
+			t.Fatalf("get key %q value fatal,%v err %s", k, v, err)
+		} else if fmt.Sprintf("%v", v) != fmt.Sprintf("%v", value) {
+			t.Fatalf("get key %q value, want %v got %v .", k, v, value)
+		}
+
 	}
 	if err = jsonconf.Set("name", "astaxie"); err != nil {
 		t.Fatal(err)
@@ -143,15 +174,7 @@ func TestJson(t *testing.T) {
 	if jsonconf.String("name") != "astaxie" {
 		t.Fatal("get name error")
 	}
-	if jsonconf.String("database::host") != "host" {
-		t.Fatal("get database::host error")
-	}
-	if jsonconf.String("database::conns::connectioninfo") != "info" {
-		t.Fatal("get database::conns::connectioninfo error")
-	}
-	if maxconnection, err := jsonconf.Int("database::conns::maxconnection"); err != nil || maxconnection != 12 {
-		t.Fatal("get database::conns::maxconnection error")
-	}
+
 	if db, err := jsonconf.DIY("database"); err != nil {
 		t.Fatal(err)
 	} else if m, ok := db.(map[string]interface{}); !ok {

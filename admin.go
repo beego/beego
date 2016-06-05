@@ -19,9 +19,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"text/template"
 	"time"
 
+	"github.com/astaxie/beego/grace"
 	"github.com/astaxie/beego/toolbox"
 	"github.com/astaxie/beego/utils"
 )
@@ -63,24 +65,15 @@ func init() {
 // AdminIndex is the default http.Handler for admin module.
 // it matches url pattern "/".
 func adminIndex(rw http.ResponseWriter, r *http.Request) {
-	tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
-	tmpl = template.Must(tmpl.Parse(indexTpl))
-	tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
-	data := make(map[interface{}]interface{})
-	tmpl.Execute(rw, data)
+	execTpl(rw, map[interface{}]interface{}{}, indexTpl, defaultScriptsTpl)
 }
 
 // QpsIndex is the http.Handler for writing qbs statistics map result info in http.ResponseWriter.
 // it's registered with url pattern "/qbs" in admin module.
 func qpsIndex(rw http.ResponseWriter, r *http.Request) {
-	tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
-	tmpl = template.Must(tmpl.Parse(qpsTpl))
-	tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
 	data := make(map[interface{}]interface{})
 	data["Content"] = toolbox.StatisticsMap.GetMap()
-
-	tmpl.Execute(rw, data)
-
+	execTpl(rw, data, qpsTpl, defaultScriptsTpl)
 }
 
 // ListConf is the http.Handler of displaying all beego configuration values as key/value pair.
@@ -88,178 +81,145 @@ func qpsIndex(rw http.ResponseWriter, r *http.Request) {
 func listConf(rw http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	command := r.Form.Get("command")
-	if command != "" {
-		data := make(map[interface{}]interface{})
-		switch command {
-		case "conf":
-			m := make(map[string]interface{})
+	if command == "" {
+		rw.Write([]byte("command not support"))
+		return
+	}
 
-			m["AppName"] = AppName
-			m["AppPath"] = AppPath
-			m["AppConfigPath"] = AppConfigPath
-			m["StaticDir"] = StaticDir
-			m["StaticExtensionsToGzip"] = StaticExtensionsToGzip
-			m["HttpAddr"] = HttpAddr
-			m["HttpPort"] = HttpPort
-			m["HttpTLS"] = EnableHttpTLS
-			m["HttpCertFile"] = HttpCertFile
-			m["HttpKeyFile"] = HttpKeyFile
-			m["RecoverPanic"] = RecoverPanic
-			m["AutoRender"] = AutoRender
-			m["ViewsPath"] = ViewsPath
-			m["RunMode"] = RunMode
-			m["SessionOn"] = SessionOn
-			m["SessionProvider"] = SessionProvider
-			m["SessionName"] = SessionName
-			m["SessionGCMaxLifetime"] = SessionGCMaxLifetime
-			m["SessionSavePath"] = SessionSavePath
-			m["SessionCookieLifeTime"] = SessionCookieLifeTime
-			m["UseFcgi"] = UseFcgi
-			m["MaxMemory"] = MaxMemory
-			m["EnableGzip"] = EnableGzip
-			m["DirectoryIndex"] = DirectoryIndex
-			m["HttpServerTimeOut"] = HttpServerTimeOut
-			m["ErrorsShow"] = ErrorsShow
-			m["XSRFKEY"] = XSRFKEY
-			m["EnableXSRF"] = EnableXSRF
-			m["XSRFExpire"] = XSRFExpire
-			m["CopyRequestBody"] = CopyRequestBody
-			m["TemplateLeft"] = TemplateLeft
-			m["TemplateRight"] = TemplateRight
-			m["BeegoServerName"] = BeegoServerName
-			m["EnableAdmin"] = EnableAdmin
-			m["AdminHttpAddr"] = AdminHttpAddr
-			m["AdminHttpPort"] = AdminHttpPort
+	data := make(map[interface{}]interface{})
+	switch command {
+	case "conf":
+		m := make(map[string]interface{})
+		m["AppConfigPath"] = appConfigPath
+		m["AppConfigProvider"] = appConfigProvider
+		m["BConfig.AppName"] = BConfig.AppName
+		m["BConfig.RunMode"] = BConfig.RunMode
+		m["BConfig.RouterCaseSensitive"] = BConfig.RouterCaseSensitive
+		m["BConfig.ServerName"] = BConfig.ServerName
+		m["BConfig.RecoverPanic"] = BConfig.RecoverPanic
+		m["BConfig.CopyRequestBody"] = BConfig.CopyRequestBody
+		m["BConfig.EnableGzip"] = BConfig.EnableGzip
+		m["BConfig.MaxMemory"] = BConfig.MaxMemory
+		m["BConfig.EnableErrorsShow"] = BConfig.EnableErrorsShow
+		m["BConfig.Listen.Graceful"] = BConfig.Listen.Graceful
+		m["BConfig.Listen.ServerTimeOut"] = BConfig.Listen.ServerTimeOut
+		m["BConfig.Listen.ListenTCP4"] = BConfig.Listen.ListenTCP4
+		m["BConfig.Listen.EnableHTTP"] = BConfig.Listen.EnableHTTP
+		m["BConfig.Listen.HTTPAddr"] = BConfig.Listen.HTTPAddr
+		m["BConfig.Listen.HTTPPort"] = BConfig.Listen.HTTPPort
+		m["BConfig.Listen.EnableHTTPS"] = BConfig.Listen.EnableHTTPS
+		m["BConfig.Listen.HTTPSAddr"] = BConfig.Listen.HTTPSAddr
+		m["BConfig.Listen.HTTPSPort"] = BConfig.Listen.HTTPSPort
+		m["BConfig.Listen.HTTPSCertFile"] = BConfig.Listen.HTTPSCertFile
+		m["BConfig.Listen.HTTPSKeyFile"] = BConfig.Listen.HTTPSKeyFile
+		m["BConfig.Listen.EnableAdmin"] = BConfig.Listen.EnableAdmin
+		m["BConfig.Listen.AdminAddr"] = BConfig.Listen.AdminAddr
+		m["BConfig.Listen.AdminPort"] = BConfig.Listen.AdminPort
+		m["BConfig.Listen.EnableFcgi"] = BConfig.Listen.EnableFcgi
+		m["BConfig.Listen.EnableStdIo"] = BConfig.Listen.EnableStdIo
+		m["BConfig.WebConfig.AutoRender"] = BConfig.WebConfig.AutoRender
+		m["BConfig.WebConfig.EnableDocs"] = BConfig.WebConfig.EnableDocs
+		m["BConfig.WebConfig.FlashName"] = BConfig.WebConfig.FlashName
+		m["BConfig.WebConfig.FlashSeparator"] = BConfig.WebConfig.FlashSeparator
+		m["BConfig.WebConfig.DirectoryIndex"] = BConfig.WebConfig.DirectoryIndex
+		m["BConfig.WebConfig.StaticDir"] = BConfig.WebConfig.StaticDir
+		m["BConfig.WebConfig.StaticExtensionsToGzip"] = BConfig.WebConfig.StaticExtensionsToGzip
+		m["BConfig.WebConfig.TemplateLeft"] = BConfig.WebConfig.TemplateLeft
+		m["BConfig.WebConfig.TemplateRight"] = BConfig.WebConfig.TemplateRight
+		m["BConfig.WebConfig.ViewsPath"] = BConfig.WebConfig.ViewsPath
+		m["BConfig.WebConfig.EnableXSRF"] = BConfig.WebConfig.EnableXSRF
+		m["BConfig.WebConfig.XSRFKEY"] = BConfig.WebConfig.XSRFKey
+		m["BConfig.WebConfig.XSRFExpire"] = BConfig.WebConfig.XSRFExpire
+		m["BConfig.WebConfig.Session.SessionOn"] = BConfig.WebConfig.Session.SessionOn
+		m["BConfig.WebConfig.Session.SessionProvider"] = BConfig.WebConfig.Session.SessionProvider
+		m["BConfig.WebConfig.Session.SessionName"] = BConfig.WebConfig.Session.SessionName
+		m["BConfig.WebConfig.Session.SessionGCMaxLifetime"] = BConfig.WebConfig.Session.SessionGCMaxLifetime
+		m["BConfig.WebConfig.Session.SessionProviderConfig"] = BConfig.WebConfig.Session.SessionProviderConfig
+		m["BConfig.WebConfig.Session.SessionCookieLifeTime"] = BConfig.WebConfig.Session.SessionCookieLifeTime
+		m["BConfig.WebConfig.Session.SessionAutoSetCookie"] = BConfig.WebConfig.Session.SessionAutoSetCookie
+		m["BConfig.WebConfig.Session.SessionDomain"] = BConfig.WebConfig.Session.SessionDomain
+		m["BConfig.Log.AccessLogs"] = BConfig.Log.AccessLogs
+		m["BConfig.Log.FileLineNum"] = BConfig.Log.FileLineNum
+		m["BConfig.Log.Outputs"] = BConfig.Log.Outputs
+		tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
+		tmpl = template.Must(tmpl.Parse(configTpl))
+		tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
 
-			tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
-			tmpl = template.Must(tmpl.Parse(configTpl))
-			tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
+		data["Content"] = m
 
-			data["Content"] = m
+		tmpl.Execute(rw, data)
 
-			tmpl.Execute(rw, data)
-
-		case "router":
-			content := make(map[string]interface{})
-
-			var fields = []string{
-				fmt.Sprintf("Router Pattern"),
-				fmt.Sprintf("Methods"),
-				fmt.Sprintf("Controller"),
+	case "router":
+		var (
+			content = map[string]interface{}{
+				"Fields": []string{
+					"Router Pattern",
+					"Methods",
+					"Controller",
+				},
 			}
-			content["Fields"] = fields
+			methods     = []string{}
+			methodsData = make(map[string]interface{})
+		)
+		for method, t := range BeeApp.Handlers.routers {
 
-			methods := []string{}
-			methodsData := make(map[string]interface{})
-			for method, t := range BeeApp.Handlers.routers {
+			resultList := new([][]string)
 
-				resultList := new([][]string)
+			printTree(resultList, t)
 
-				printTree(resultList, t)
-
-				methods = append(methods, method)
-				methodsData[method] = resultList
-			}
-
-			content["Data"] = methodsData
-			content["Methods"] = methods
-			data["Content"] = content
-			data["Title"] = "Routers"
-
-			tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
-			tmpl = template.Must(tmpl.Parse(routerAndFilterTpl))
-			tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
-			tmpl.Execute(rw, data)
-		case "filter":
-			content := make(map[string]interface{})
-
-			var fields = []string{
-				fmt.Sprintf("Router Pattern"),
-				fmt.Sprintf("Filter Function"),
-			}
-			content["Fields"] = fields
-
-			filterTypes := []string{}
-			filterTypeData := make(map[string]interface{})
-
-			if BeeApp.Handlers.enableFilter {
-				var filterType string
-
-				if bf, ok := BeeApp.Handlers.filters[BeforeRouter]; ok {
-					filterType = "Before Router"
-					filterTypes = append(filterTypes, filterType)
-					resultList := new([][]string)
-					for _, f := range bf {
-
-						var result = []string{
-							fmt.Sprintf("%s", f.pattern),
-							fmt.Sprintf("%s", utils.GetFuncName(f.filterFunc)),
-						}
-						*resultList = append(*resultList, result)
-					}
-					filterTypeData[filterType] = resultList
-				}
-
-				if bf, ok := BeeApp.Handlers.filters[BeforeExec]; ok {
-					filterType = "Before Exec"
-					filterTypes = append(filterTypes, filterType)
-					resultList := new([][]string)
-					for _, f := range bf {
-
-						var result = []string{
-							fmt.Sprintf("%s", f.pattern),
-							fmt.Sprintf("%s", utils.GetFuncName(f.filterFunc)),
-						}
-						*resultList = append(*resultList, result)
-					}
-					filterTypeData[filterType] = resultList
-				}
-
-				if bf, ok := BeeApp.Handlers.filters[AfterExec]; ok {
-					filterType = "After Exec"
-					filterTypes = append(filterTypes, filterType)
-					resultList := new([][]string)
-					for _, f := range bf {
-
-						var result = []string{
-							fmt.Sprintf("%s", f.pattern),
-							fmt.Sprintf("%s", utils.GetFuncName(f.filterFunc)),
-						}
-						*resultList = append(*resultList, result)
-					}
-					filterTypeData[filterType] = resultList
-				}
-
-				if bf, ok := BeeApp.Handlers.filters[FinishRouter]; ok {
-					filterType = "Finish Router"
-					filterTypes = append(filterTypes, filterType)
-					resultList := new([][]string)
-					for _, f := range bf {
-
-						var result = []string{
-							fmt.Sprintf("%s", f.pattern),
-							fmt.Sprintf("%s", utils.GetFuncName(f.filterFunc)),
-						}
-						*resultList = append(*resultList, result)
-					}
-					filterTypeData[filterType] = resultList
-				}
-			}
-
-			content["Data"] = filterTypeData
-			content["Methods"] = filterTypes
-
-			data["Content"] = content
-			data["Title"] = "Filters"
-			tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
-			tmpl = template.Must(tmpl.Parse(routerAndFilterTpl))
-			tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
-			tmpl.Execute(rw, data)
-
-		default:
-			rw.Write([]byte("command not support"))
+			methods = append(methods, method)
+			methodsData[method] = resultList
 		}
-	} else {
+
+		content["Data"] = methodsData
+		content["Methods"] = methods
+		data["Content"] = content
+		data["Title"] = "Routers"
+		execTpl(rw, data, routerAndFilterTpl, defaultScriptsTpl)
+	case "filter":
+		var (
+			content = map[string]interface{}{
+				"Fields": []string{
+					"Router Pattern",
+					"Filter Function",
+				},
+			}
+			filterTypes    = []string{}
+			filterTypeData = make(map[string]interface{})
+		)
+
+		if BeeApp.Handlers.enableFilter {
+			var filterType string
+			for k, fr := range map[int]string{
+				BeforeStatic: "Before Static",
+				BeforeRouter: "Before Router",
+				BeforeExec:   "Before Exec",
+				AfterExec:    "After Exec",
+				FinishRouter: "Finish Router"} {
+				if bf, ok := BeeApp.Handlers.filters[k]; ok {
+					filterType = fr
+					filterTypes = append(filterTypes, filterType)
+					resultList := new([][]string)
+					for _, f := range bf {
+						var result = []string{
+							fmt.Sprintf("%s", f.pattern),
+							fmt.Sprintf("%s", utils.GetFuncName(f.filterFunc)),
+						}
+						*resultList = append(*resultList, result)
+					}
+					filterTypeData[filterType] = resultList
+				}
+			}
+		}
+
+		content["Data"] = filterTypeData
+		content["Methods"] = filterTypes
+
+		data["Content"] = content
+		data["Title"] = "Filters"
+		execTpl(rw, data, routerAndFilterTpl, defaultScriptsTpl)
+	default:
+		rw.Write([]byte("command not support"))
 	}
 }
 
@@ -274,23 +234,23 @@ func printTree(resultList *[][]string, t *Tree) {
 		if v, ok := l.runObject.(*controllerInfo); ok {
 			if v.routerType == routerTypeBeego {
 				var result = []string{
-					fmt.Sprintf("%s", v.pattern),
+					v.pattern,
 					fmt.Sprintf("%s", v.methods),
 					fmt.Sprintf("%s", v.controllerType),
 				}
 				*resultList = append(*resultList, result)
 			} else if v.routerType == routerTypeRESTFul {
 				var result = []string{
-					fmt.Sprintf("%s", v.pattern),
+					v.pattern,
 					fmt.Sprintf("%s", v.methods),
-					fmt.Sprintf(""),
+					"",
 				}
 				*resultList = append(*resultList, result)
 			} else if v.routerType == routerTypeHandler {
 				var result = []string{
-					fmt.Sprintf("%s", v.pattern),
-					fmt.Sprintf(""),
-					fmt.Sprintf(""),
+					v.pattern,
+					"",
+					"",
 				}
 				*resultList = append(*resultList, result)
 			}
@@ -303,54 +263,49 @@ func printTree(resultList *[][]string, t *Tree) {
 func profIndex(rw http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	command := r.Form.Get("command")
-	format := r.Form.Get("format")
-	data := make(map[string]interface{})
+	if command == "" {
+		return
+	}
 
-	var result bytes.Buffer
-	if command != "" {
-		toolbox.ProcessInput(command, &result)
-		data["Content"] = result.String()
+	var (
+		format = r.Form.Get("format")
+		data   = make(map[interface{}]interface{})
+		result bytes.Buffer
+	)
+	toolbox.ProcessInput(command, &result)
+	data["Content"] = result.String()
 
-		if format == "json" && command == "gc summary" {
-			dataJson, err := json.Marshal(data)
-			if err != nil {
-				http.Error(rw, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			rw.Header().Set("Content-Type", "application/json")
-			rw.Write(dataJson)
+	if format == "json" && command == "gc summary" {
+		dataJSON, err := json.Marshal(data)
+		if err != nil {
+			http.Error(rw, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		data["Title"] = command
-		tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
-		tmpl = template.Must(tmpl.Parse(profillingTpl))
-		if command == "gc summary" {
-			tmpl = template.Must(tmpl.Parse(gcAjaxTpl))
-		} else {
-
-			tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
-		}
-		tmpl.Execute(rw, data)
-	} else {
+		rw.Header().Set("Content-Type", "application/json")
+		rw.Write(dataJSON)
+		return
 	}
+
+	data["Title"] = command
+	defaultTpl := defaultScriptsTpl
+	if command == "gc summary" {
+		defaultTpl = gcAjaxTpl
+	}
+	execTpl(rw, data, profillingTpl, defaultTpl)
 }
 
 // Healthcheck is a http.Handler calling health checking and showing the result.
 // it's in "/healthcheck" pattern in admin module.
 func healthcheck(rw http.ResponseWriter, req *http.Request) {
-	data := make(map[interface{}]interface{})
-
-	var result = []string{}
-	fields := []string{
-		fmt.Sprintf("Name"),
-		fmt.Sprintf("Message"),
-		fmt.Sprintf("Status"),
-	}
-	resultList := new([][]string)
-
-	content := make(map[string]interface{})
+	var (
+		data       = make(map[interface{}]interface{})
+		result     = []string{}
+		resultList = new([][]string)
+		content    = map[string]interface{}{
+			"Fields": []string{"Name", "Message", "Status"},
+		}
+	)
 
 	for name, h := range toolbox.AdminCheckList {
 		if err := h.Check(); err != nil {
@@ -370,16 +325,10 @@ func healthcheck(rw http.ResponseWriter, req *http.Request) {
 		}
 		*resultList = append(*resultList, result)
 	}
-
-	content["Fields"] = fields
 	content["Data"] = resultList
 	data["Content"] = content
 	data["Title"] = "Health Check"
-	tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
-	tmpl = template.Must(tmpl.Parse(healthCheckTpl))
-	tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
-	tmpl.Execute(rw, data)
-
+	execTpl(rw, data, healthCheckTpl, defaultScriptsTpl)
 }
 
 // TaskStatus is a http.Handler with running task status (task name, status and the last execution).
@@ -391,10 +340,8 @@ func taskStatus(rw http.ResponseWriter, req *http.Request) {
 	req.ParseForm()
 	taskname := req.Form.Get("taskname")
 	if taskname != "" {
-
 		if t, ok := toolbox.AdminTaskList[taskname]; ok {
-			err := t.Run()
-			if err != nil {
+			if err := t.Run(); err != nil {
 				data["Message"] = []string{"error", fmt.Sprintf("%s", err)}
 			}
 			data["Message"] = []string{"success", fmt.Sprintf("%s run success,Now the Status is <br>%s", taskname, t.GetStatus())}
@@ -408,18 +355,18 @@ func taskStatus(rw http.ResponseWriter, req *http.Request) {
 	resultList := new([][]string)
 	var result = []string{}
 	var fields = []string{
-		fmt.Sprintf("Task Name"),
-		fmt.Sprintf("Task Spec"),
-		fmt.Sprintf("Task Status"),
-		fmt.Sprintf("Last Time"),
-		fmt.Sprintf(""),
+		"Task Name",
+		"Task Spec",
+		"Task Status",
+		"Last Time",
+		"",
 	}
 	for tname, tk := range toolbox.AdminTaskList {
 		result = []string{
-			fmt.Sprintf("%s", tname),
+			tname,
 			fmt.Sprintf("%s", tk.GetSpec()),
 			fmt.Sprintf("%s", tk.GetStatus()),
-			fmt.Sprintf("%s", tk.GetPrev().String()),
+			tk.GetPrev().String(),
 		}
 		*resultList = append(*resultList, result)
 	}
@@ -428,9 +375,14 @@ func taskStatus(rw http.ResponseWriter, req *http.Request) {
 	content["Data"] = resultList
 	data["Content"] = content
 	data["Title"] = "Tasks"
+	execTpl(rw, data, tasksTpl, defaultScriptsTpl)
+}
+
+func execTpl(rw http.ResponseWriter, data map[interface{}]interface{}, tpls ...string) {
 	tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
-	tmpl = template.Must(tmpl.Parse(tasksTpl))
-	tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
+	for _, tpl := range tpls {
+		tmpl = template.Must(tmpl.Parse(tpl))
+	}
 	tmpl.Execute(rw, data)
 }
 
@@ -450,17 +402,23 @@ func (admin *adminApp) Run() {
 	if len(toolbox.AdminTaskList) > 0 {
 		toolbox.StartTask()
 	}
-	addr := AdminHttpAddr
+	addr := BConfig.Listen.AdminAddr
 
-	if AdminHttpPort != 0 {
-		addr = fmt.Sprintf("%s:%d", AdminHttpAddr, AdminHttpPort)
+	if BConfig.Listen.AdminPort != 0 {
+		addr = fmt.Sprintf("%s:%d", BConfig.Listen.AdminAddr, BConfig.Listen.AdminPort)
 	}
 	for p, f := range admin.routers {
 		http.Handle(p, f)
 	}
 	BeeLogger.Info("Admin server Running on %s", addr)
-	err := http.ListenAndServe(addr, nil)
+
+	var err error
+	if BConfig.Listen.Graceful {
+		err = grace.ListenAndServe(addr, nil)
+	} else {
+		err = http.ListenAndServe(addr, nil)
+	}
 	if err != nil {
-		BeeLogger.Critical("Admin ListenAndServe: ", err)
+		BeeLogger.Critical("Admin ListenAndServe: ", err, fmt.Sprintf("%d", os.Getpid()))
 	}
 }

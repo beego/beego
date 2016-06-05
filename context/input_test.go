@@ -17,12 +17,16 @@ package context
 import (
 	"fmt"
 	"net/http"
+	"net/http/httptest"
+	"reflect"
 	"testing"
 )
 
 func TestParse(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/?id=123&isok=true&ft=1.2&ol[0]=1&ol[1]=2&ul[]=str&ul[]=array&user.Name=astaxie", nil)
-	beegoInput := NewInput(r)
+	beegoInput := NewInput()
+	beegoInput.Context = NewContext()
+	beegoInput.Context.Reset(httptest.NewRecorder(), r)
 	beegoInput.ParseFormOrMulitForm(1 << 20)
 
 	var id int
@@ -73,7 +77,9 @@ func TestParse(t *testing.T) {
 
 func TestSubDomain(t *testing.T) {
 	r, _ := http.NewRequest("GET", "http://www.example.com/?id=123&isok=true&ft=1.2&ol[0]=1&ol[1]=2&ul[]=str&ul[]=array&user.Name=astaxie", nil)
-	beegoInput := NewInput(r)
+	beegoInput := NewInput()
+	beegoInput.Context = NewContext()
+	beegoInput.Context.Reset(httptest.NewRecorder(), r)
 
 	subdomain := beegoInput.SubDomains()
 	if subdomain != "www" {
@@ -81,13 +87,13 @@ func TestSubDomain(t *testing.T) {
 	}
 
 	r, _ = http.NewRequest("GET", "http://localhost/", nil)
-	beegoInput.Request = r
+	beegoInput.Context.Request = r
 	if beegoInput.SubDomains() != "" {
 		t.Fatal("Subdomain parse error, should be empty, got " + beegoInput.SubDomains())
 	}
 
 	r, _ = http.NewRequest("GET", "http://aa.bb.example.com/", nil)
-	beegoInput.Request = r
+	beegoInput.Context.Request = r
 	if beegoInput.SubDomains() != "aa.bb" {
 		t.Fatal("Subdomain parse error, got " + beegoInput.SubDomains())
 	}
@@ -101,14 +107,67 @@ func TestSubDomain(t *testing.T) {
 	*/
 
 	r, _ = http.NewRequest("GET", "http://example.com/", nil)
-	beegoInput.Request = r
+	beegoInput.Context.Request = r
 	if beegoInput.SubDomains() != "" {
 		t.Fatal("Subdomain parse error, got " + beegoInput.SubDomains())
 	}
 
 	r, _ = http.NewRequest("GET", "http://aa.bb.cc.dd.example.com/", nil)
-	beegoInput.Request = r
+	beegoInput.Context.Request = r
 	if beegoInput.SubDomains() != "aa.bb.cc.dd" {
 		t.Fatal("Subdomain parse error, got " + beegoInput.SubDomains())
 	}
+}
+
+func TestParams(t *testing.T) {
+	inp := NewInput()
+
+	inp.SetParam("p1", "val1_ver1")
+	inp.SetParam("p2", "val2_ver1")
+	inp.SetParam("p3", "val3_ver1")
+	if l := inp.ParamsLen(); l != 3 {
+		t.Fatalf("Input.ParamsLen wrong value: %d, expected %d", l, 3)
+	}
+
+	if val := inp.Param("p1"); val != "val1_ver1" {
+		t.Fatalf("Input.Param wrong value: %s, expected %s", val, "val1_ver1")
+	}
+	if val := inp.Param("p3"); val != "val3_ver1" {
+		t.Fatalf("Input.Param wrong value: %s, expected %s", val, "val3_ver1")
+	}
+	vals := inp.Params()
+	expected := map[string]string{
+		"p1": "val1_ver1",
+		"p2": "val2_ver1",
+		"p3": "val3_ver1",
+	}
+	if !reflect.DeepEqual(vals, expected) {
+		t.Fatalf("Input.Params wrong value: %s, expected %s", vals, expected)
+	}
+
+	// overwriting existing params
+	inp.SetParam("p1", "val1_ver2")
+	inp.SetParam("p2", "val2_ver2")
+	expected = map[string]string{
+		"p1": "val1_ver2",
+		"p2": "val2_ver2",
+		"p3": "val3_ver1",
+	}
+	vals = inp.Params()
+	if !reflect.DeepEqual(vals, expected) {
+		t.Fatalf("Input.Params wrong value: %s, expected %s", vals, expected)
+	}
+
+	if l := inp.ParamsLen(); l != 3 {
+		t.Fatalf("Input.ParamsLen wrong value: %d, expected %d", l, 3)
+	}
+
+	if val := inp.Param("p1"); val != "val1_ver2" {
+		t.Fatalf("Input.Param wrong value: %s, expected %s", val, "val1_ver2")
+	}
+
+	if val := inp.Param("p2"); val != "val2_ver2" {
+		t.Fatalf("Input.Param wrong value: %s, expected %s", val, "val1_ver2")
+	}
+
 }

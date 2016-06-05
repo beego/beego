@@ -27,27 +27,26 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"unicode"
 )
 
 var (
-	DEFAULT_SECTION = "default"   // default section means if some ini items not in a section, make them in default section,
-	bNumComment     = []byte{'#'} // number signal
-	bSemComment     = []byte{';'} // semicolon signal
-	bEmpty          = []byte{}
-	bEqual          = []byte{'='} // equal signal
-	bDQuote         = []byte{'"'} // quote signal
-	sectionStart    = []byte{'['} // section start signal
-	sectionEnd      = []byte{']'} // section end signal
-	lineBreak       = "\n"
+	defaultSection = "default"   // default section means if some ini items not in a section, make them in default section,
+	bNumComment    = []byte{'#'} // number signal
+	bSemComment    = []byte{';'} // semicolon signal
+	bEmpty         = []byte{}
+	bEqual         = []byte{'='} // equal signal
+	bDQuote        = []byte{'"'} // quote signal
+	sectionStart   = []byte{'['} // section start signal
+	sectionEnd     = []byte{']'} // section end signal
+	lineBreak      = "\n"
 )
 
 // IniConfig implements Config to parse ini file.
 type IniConfig struct {
 }
 
-// ParseFile creates a new Config and parses the file configuration from the named file.
-func (ini *IniConfig) Parse(name string) (ConfigContainer, error) {
+// Parse creates a new Config and parses the file configuration from the named file.
+func (ini *IniConfig) Parse(name string) (Configer, error) {
 	return ini.parseFile(name)
 }
 
@@ -77,7 +76,7 @@ func (ini *IniConfig) parseFile(name string) (*IniConfigContainer, error) {
 			buf.ReadByte()
 		}
 	}
-	section := DEFAULT_SECTION
+	section := defaultSection
 	for {
 		line, _, err := buf.ReadLine()
 		if err == io.EOF {
@@ -97,9 +96,11 @@ func (ini *IniConfig) parseFile(name string) (*IniConfigContainer, error) {
 		}
 		if bComment != nil {
 			line = bytes.TrimLeft(line, string(bComment))
-			line = bytes.TrimLeftFunc(line, unicode.IsSpace)
+			// Need append to a new line if multi-line comments.
+			if comment.Len() > 0 {
+				comment.WriteByte('\n')
+			}
 			comment.Write(line)
-			comment.WriteByte('\n')
 			continue
 		}
 
@@ -171,7 +172,8 @@ func (ini *IniConfig) parseFile(name string) (*IniConfigContainer, error) {
 	return cfg, nil
 }
 
-func (ini *IniConfig) ParseData(data []byte) (ConfigContainer, error) {
+// ParseData parse ini the data
+func (ini *IniConfig) ParseData(data []byte) (Configer, error) {
 	// Save memory data to temporary file
 	tmpName := path.Join(os.TempDir(), "beego", fmt.Sprintf("%d", time.Now().Nanosecond()))
 	os.MkdirAll(path.Dir(tmpName), os.ModePerm)
@@ -181,7 +183,7 @@ func (ini *IniConfig) ParseData(data []byte) (ConfigContainer, error) {
 	return ini.Parse(tmpName)
 }
 
-// A Config represents the ini configuration.
+// IniConfigContainer A Config represents the ini configuration.
 // When set and get value, support key as section:name type.
 type IniConfigContainer struct {
 	filename       string
@@ -193,17 +195,17 @@ type IniConfigContainer struct {
 
 // Bool returns the boolean value for a given key.
 func (c *IniConfigContainer) Bool(key string) (bool, error) {
-	return strconv.ParseBool(c.getdata(key))
+	return ParseBool(c.getdata(key))
 }
 
 // DefaultBool returns the boolean value for a given key.
 // if err != nil return defaltval
 func (c *IniConfigContainer) DefaultBool(key string, defaultval bool) bool {
-	if v, err := c.Bool(key); err != nil {
+	v, err := c.Bool(key)
+	if err != nil {
 		return defaultval
-	} else {
-		return v
 	}
+	return v
 }
 
 // Int returns the integer value for a given key.
@@ -214,11 +216,11 @@ func (c *IniConfigContainer) Int(key string) (int, error) {
 // DefaultInt returns the integer value for a given key.
 // if err != nil return defaltval
 func (c *IniConfigContainer) DefaultInt(key string, defaultval int) int {
-	if v, err := c.Int(key); err != nil {
+	v, err := c.Int(key)
+	if err != nil {
 		return defaultval
-	} else {
-		return v
 	}
+	return v
 }
 
 // Int64 returns the int64 value for a given key.
@@ -229,11 +231,11 @@ func (c *IniConfigContainer) Int64(key string) (int64, error) {
 // DefaultInt64 returns the int64 value for a given key.
 // if err != nil return defaltval
 func (c *IniConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
-	if v, err := c.Int64(key); err != nil {
+	v, err := c.Int64(key)
+	if err != nil {
 		return defaultval
-	} else {
-		return v
 	}
+	return v
 }
 
 // Float returns the float value for a given key.
@@ -244,11 +246,11 @@ func (c *IniConfigContainer) Float(key string) (float64, error) {
 // DefaultFloat returns the float64 value for a given key.
 // if err != nil return defaltval
 func (c *IniConfigContainer) DefaultFloat(key string, defaultval float64) float64 {
-	if v, err := c.Float(key); err != nil {
+	v, err := c.Float(key)
+	if err != nil {
 		return defaultval
-	} else {
-		return v
 	}
+	return v
 }
 
 // String returns the string value for a given key.
@@ -259,35 +261,39 @@ func (c *IniConfigContainer) String(key string) string {
 // DefaultString returns the string value for a given key.
 // if err != nil return defaltval
 func (c *IniConfigContainer) DefaultString(key string, defaultval string) string {
-	if v := c.String(key); v == "" {
+	v := c.String(key)
+	if v == "" {
 		return defaultval
-	} else {
-		return v
 	}
+	return v
 }
 
 // Strings returns the []string value for a given key.
+// Return nil if config value does not exist or is empty.
 func (c *IniConfigContainer) Strings(key string) []string {
-	return strings.Split(c.String(key), ";")
+	v := c.String(key)
+	if v == "" {
+		return nil
+	}
+	return strings.Split(v, ";")
 }
 
 // DefaultStrings returns the []string value for a given key.
 // if err != nil return defaltval
 func (c *IniConfigContainer) DefaultStrings(key string, defaultval []string) []string {
-	if v := c.Strings(key); len(v) == 0 {
+	v := c.Strings(key)
+	if v == nil {
 		return defaultval
-	} else {
-		return v
 	}
+	return v
 }
 
 // GetSection returns map for the given section
 func (c *IniConfigContainer) GetSection(section string) (map[string]string, error) {
 	if v, ok := c.data[section]; ok {
 		return v, nil
-	} else {
-		return nil, errors.New("not exist setction")
 	}
+	return nil, errors.New("not exist setction")
 }
 
 // SaveConfigFile save the config into file
@@ -299,27 +305,35 @@ func (c *IniConfigContainer) SaveConfigFile(filename string) (err error) {
 	}
 	defer f.Close()
 
+	// Get section or key comments. Fixed #1607
+	getCommentStr := func(section, key string) string {
+		comment, ok := "", false
+		if len(key) == 0 {
+			comment, ok = c.sectionComment[section]
+		} else {
+			comment, ok = c.keyComment[section+"."+key]
+		}
+
+		if ok {
+			// Empty comment
+			if len(comment) == 0 || len(strings.TrimSpace(comment)) == 0 {
+				return string(bNumComment)
+			}
+			prefix := string(bNumComment)
+			// Add the line head character "#"
+			return prefix + strings.Replace(comment, lineBreak, lineBreak+prefix, -1)
+		}
+		return ""
+	}
+
 	buf := bytes.NewBuffer(nil)
-	for section, dt := range c.data {
-		// Write section comments.
-		if v, ok := c.sectionComment[section]; ok {
-			if _, err = buf.WriteString(string(bNumComment) + v + lineBreak); err != nil {
-				return err
-			}
-		}
-
-		if section != DEFAULT_SECTION {
-			// Write section name.
-			if _, err = buf.WriteString(string(sectionStart) + section + string(sectionEnd) + lineBreak); err != nil {
-				return err
-			}
-		}
-
+	// Save default section at first place
+	if dt, ok := c.data[defaultSection]; ok {
 		for key, val := range dt {
 			if key != " " {
 				// Write key comments.
-				if v, ok := c.keyComment[key]; ok {
-					if _, err = buf.WriteString(string(bNumComment) + v + lineBreak); err != nil {
+				if v := getCommentStr(defaultSection, key); len(v) > 0 {
+					if _, err = buf.WriteString(v + lineBreak); err != nil {
 						return err
 					}
 				}
@@ -336,6 +350,43 @@ func (c *IniConfigContainer) SaveConfigFile(filename string) (err error) {
 			return err
 		}
 	}
+	// Save named sections
+	for section, dt := range c.data {
+		if section != defaultSection {
+			// Write section comments.
+			if v := getCommentStr(section, ""); len(v) > 0 {
+				if _, err = buf.WriteString(v + lineBreak); err != nil {
+					return err
+				}
+			}
+
+			// Write section name.
+			if _, err = buf.WriteString(string(sectionStart) + section + string(sectionEnd) + lineBreak); err != nil {
+				return err
+			}
+
+			for key, val := range dt {
+				if key != " " {
+					// Write key comments.
+					if v := getCommentStr(section, key); len(v) > 0 {
+						if _, err = buf.WriteString(v + lineBreak); err != nil {
+							return err
+						}
+					}
+
+					// Write key and value.
+					if _, err = buf.WriteString(key + string(bEqual) + val + lineBreak); err != nil {
+						return err
+					}
+				}
+			}
+
+			// Put a line between sections.
+			if _, err = buf.WriteString(lineBreak); err != nil {
+				return err
+			}
+		}
+	}
 
 	if _, err = buf.WriteTo(f); err != nil {
 		return err
@@ -343,7 +394,7 @@ func (c *IniConfigContainer) SaveConfigFile(filename string) (err error) {
 	return nil
 }
 
-// WriteValue writes a new value for key.
+// Set writes a new value for key.
 // if write to one section, the key need be "section::key".
 // if the section is not existed, it panics.
 func (c *IniConfigContainer) Set(key, value string) error {
@@ -355,14 +406,14 @@ func (c *IniConfigContainer) Set(key, value string) error {
 
 	var (
 		section, k string
-		sectionKey []string = strings.Split(key, "::")
+		sectionKey = strings.Split(key, "::")
 	)
 
 	if len(sectionKey) >= 2 {
 		section = sectionKey[0]
 		k = sectionKey[1]
 	} else {
-		section = DEFAULT_SECTION
+		section = defaultSection
 		k = sectionKey[0]
 	}
 
@@ -391,13 +442,13 @@ func (c *IniConfigContainer) getdata(key string) string {
 
 	var (
 		section, k string
-		sectionKey []string = strings.Split(strings.ToLower(key), "::")
+		sectionKey = strings.Split(strings.ToLower(key), "::")
 	)
 	if len(sectionKey) >= 2 {
 		section = sectionKey[0]
 		k = sectionKey[1]
 	} else {
-		section = DEFAULT_SECTION
+		section = defaultSection
 		k = sectionKey[0]
 	}
 	if v, ok := c.data[section]; ok {

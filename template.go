@@ -18,27 +18,42 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/astaxie/beego/utils"
 )
 
 var (
-	beegoTplFuncMap template.FuncMap
-	// beego template caching map and supported template file extensions.
-	BeeTemplates   map[string]*template.Template
-	BeeTemplateExt []string
+	beegoTplFuncMap = make(template.FuncMap)
+	// beeTemplates caching map and supported template file extensions.
+	beeTemplates  = make(map[string]*template.Template)
+	templatesLock sync.RWMutex
+	// beeTemplateExt stores the template extension which will build
+	beeTemplateExt = []string{"tpl", "html"}
 )
 
+func executeTemplate(wr io.Writer, name string, data interface{}) error {
+	if BConfig.RunMode == DEV {
+		templatesLock.RLock()
+		defer templatesLock.RUnlock()
+	}
+	if t, ok := beeTemplates[name]; ok {
+		err := t.ExecuteTemplate(wr, name, data)
+		if err != nil {
+			Trace("template Execute err:", err)
+		}
+		return err
+	}
+	panic("can't find templatefile in the path:" + name)
+}
+
 func init() {
-	BeeTemplates = make(map[string]*template.Template)
-	beegoTplFuncMap = make(template.FuncMap)
-	BeeTemplateExt = make([]string, 0)
-	BeeTemplateExt = append(BeeTemplateExt, "tpl", "html")
 	beegoTplFuncMap["dateformat"] = DateFormat
 	beegoTplFuncMap["date"] = Date
 	beegoTplFuncMap["compare"] = Compare
@@ -46,16 +61,16 @@ func init() {
 	beegoTplFuncMap["not_nil"] = NotNil
 	beegoTplFuncMap["not_null"] = NotNil
 	beegoTplFuncMap["substr"] = Substr
-	beegoTplFuncMap["html2str"] = Html2str
+	beegoTplFuncMap["html2str"] = HTML2str
 	beegoTplFuncMap["str2html"] = Str2html
 	beegoTplFuncMap["htmlquote"] = Htmlquote
 	beegoTplFuncMap["htmlunquote"] = Htmlunquote
 	beegoTplFuncMap["renderform"] = RenderForm
 	beegoTplFuncMap["assets_js"] = AssetsJs
-	beegoTplFuncMap["assets_css"] = AssetsCss
-	beegoTplFuncMap["config"] = Config
+	beegoTplFuncMap["assets_css"] = AssetsCSS
+	beegoTplFuncMap["config"] = GetConfig
+	beegoTplFuncMap["map_get"] = MapGet
 
-	// go1.2 added template funcs
 	// Comparisons
 	beegoTplFuncMap["eq"] = eq // ==
 	beegoTplFuncMap["ge"] = ge // >=
@@ -64,21 +79,25 @@ func init() {
 	beegoTplFuncMap["lt"] = lt // <
 	beegoTplFuncMap["ne"] = ne // !=
 
-	beegoTplFuncMap["urlfor"] = UrlFor // !=
+	beegoTplFuncMap["urlfor"] = URLFor // build a URL to match a Controller and it's method
 }
 
 // AddFuncMap let user to register a func in the template.
-func AddFuncMap(key string, funname interface{}) error {
-	beegoTplFuncMap[key] = funname
+func AddFuncMap(key string, fn interface{}) error {
+	beegoTplFuncMap[key] = fn
 	return nil
 }
 
-type templatefile struct {
+type templateFile struct {
 	root  string
 	files map[string][]string
 }
 
-func (self *templatefile) visit(paths string, f os.FileInfo, err error) error {
+// visit will make the paths into two part,the first is subDir (without tf.root),the second is full path(without tf.root).
+// if tf.root="views" and
+// paths is "views/errors/404.html",the subDir will be "errors",the file will be "errors/404.html"
+// paths is "views/admin/errors/404.html",the subDir will be "admin/errors",the file will be "admin/errors/404.html"
+func (tf *templateFile) visit(paths string, f os.FileInfo, err error) error {
 	if f == nil {
 		return err
 	}
@@ -90,24 +109,16 @@ func (self *templatefile) visit(paths string, f os.FileInfo, err error) error {
 	}
 
 	replace := strings.NewReplacer("\\", "/")
-	a := []byte(paths)
-	a = a[len([]byte(self.root)):]
-	file := strings.TrimLeft(replace.Replace(string(a)), "/")
-	subdir := filepath.Dir(file)
-	if _, ok := self.files[subdir]; ok {
-		self.files[subdir] = append(self.files[subdir], file)
-	} else {
-		m := make([]string, 1)
-		m[0] = file
-		self.files[subdir] = m
-	}
+	file := strings.TrimLeft(replace.Replace(paths[len(tf.root):]), "/")
+	subDir := filepath.Dir(file)
 
+	tf.files[subDir] = append(tf.files[subDir], file)
 	return nil
 }
 
-// return this path contains supported template extension of beego or not.
+// HasTemplateExt return this path contains supported template extension of beego or not.
 func HasTemplateExt(paths string) bool {
-	for _, v := range BeeTemplateExt {
+	for _, v := range beeTemplateExt {
 		if strings.HasSuffix(paths, "."+v) {
 			return true
 		}
@@ -115,27 +126,26 @@ func HasTemplateExt(paths string) bool {
 	return false
 }
 
-// add new extension for template.
+// AddTemplateExt add new extension for template.
 func AddTemplateExt(ext string) {
-	for _, v := range BeeTemplateExt {
+	for _, v := range beeTemplateExt {
 		if v == ext {
 			return
 		}
 	}
-	BeeTemplateExt = append(BeeTemplateExt, ext)
+	beeTemplateExt = append(beeTemplateExt, ext)
 }
 
-// build all template files in a directory.
+// BuildTemplate will build all template files in a directory.
 // it makes beego can render any template file in view directory.
-func BuildTemplate(dir string) error {
+func BuildTemplate(dir string, files ...string) error {
 	if _, err := os.Stat(dir); err != nil {
 		if os.IsNotExist(err) {
 			return nil
-		} else {
-			return errors.New("dir open err")
 		}
+		return errors.New("dir open err")
 	}
-	self := &templatefile{
+	self := &templateFile{
 		root:  dir,
 		files: make(map[string][]string),
 	}
@@ -148,11 +158,15 @@ func BuildTemplate(dir string) error {
 	}
 	for _, v := range self.files {
 		for _, file := range v {
-			t, err := getTemplate(self.root, file, v...)
-			if err != nil {
-				Trace("parse template err:", file, err)
-			} else {
-				BeeTemplates[file] = t
+			if len(files) == 0 || utils.InSlice(file, files) {
+				templatesLock.Lock()
+				t, err := getTemplate(self.root, file, v...)
+				if err != nil {
+					Trace("parse template err:", file, err)
+				} else {
+					beeTemplates[file] = t
+				}
+				templatesLock.Unlock()
 			}
 		}
 	}
@@ -160,16 +174,16 @@ func BuildTemplate(dir string) error {
 }
 
 func getTplDeep(root, file, parent string, t *template.Template) (*template.Template, [][]string, error) {
-	var fileabspath string
+	var fileAbsPath string
 	if filepath.HasPrefix(file, "../") {
-		fileabspath = filepath.Join(root, filepath.Dir(parent), file)
+		fileAbsPath = filepath.Join(root, filepath.Dir(parent), file)
 	} else {
-		fileabspath = filepath.Join(root, file)
+		fileAbsPath = filepath.Join(root, file)
 	}
-	if e := utils.FileExists(fileabspath); !e {
+	if e := utils.FileExists(fileAbsPath); !e {
 		panic("can't find template file:" + file)
 	}
-	data, err := ioutil.ReadFile(fileabspath)
+	data, err := ioutil.ReadFile(fileAbsPath)
 	if err != nil {
 		return nil, [][]string{}, err
 	}
@@ -177,12 +191,12 @@ func getTplDeep(root, file, parent string, t *template.Template) (*template.Temp
 	if err != nil {
 		return nil, [][]string{}, err
 	}
-	reg := regexp.MustCompile(TemplateLeft + "[ ]*template[ ]+\"([^\"]+)\"")
-	allsub := reg.FindAllStringSubmatch(string(data), -1)
-	for _, m := range allsub {
+	reg := regexp.MustCompile(BConfig.WebConfig.TemplateLeft + "[ ]*template[ ]+\"([^\"]+)\"")
+	allSub := reg.FindAllStringSubmatch(string(data), -1)
+	for _, m := range allSub {
 		if len(m) == 2 {
-			tlook := t.Lookup(m[1])
-			if tlook != nil {
+			tl := t.Lookup(m[1])
+			if tl != nil {
 				continue
 			}
 			if !HasTemplateExt(m[1]) {
@@ -194,17 +208,17 @@ func getTplDeep(root, file, parent string, t *template.Template) (*template.Temp
 			}
 		}
 	}
-	return t, allsub, nil
+	return t, allSub, nil
 }
 
 func getTemplate(root, file string, others ...string) (t *template.Template, err error) {
-	t = template.New(file).Delims(TemplateLeft, TemplateRight).Funcs(beegoTplFuncMap)
-	var submods [][]string
-	t, submods, err = getTplDeep(root, file, "", t)
+	t = template.New(file).Delims(BConfig.WebConfig.TemplateLeft, BConfig.WebConfig.TemplateRight).Funcs(beegoTplFuncMap)
+	var subMods [][]string
+	t, subMods, err = getTplDeep(root, file, "", t)
 	if err != nil {
 		return nil, err
 	}
-	t, err = _getTemplate(t, root, submods, others...)
+	t, err = _getTemplate(t, root, subMods, others...)
 
 	if err != nil {
 		return nil, err
@@ -212,44 +226,44 @@ func getTemplate(root, file string, others ...string) (t *template.Template, err
 	return
 }
 
-func _getTemplate(t0 *template.Template, root string, submods [][]string, others ...string) (t *template.Template, err error) {
+func _getTemplate(t0 *template.Template, root string, subMods [][]string, others ...string) (t *template.Template, err error) {
 	t = t0
-	for _, m := range submods {
+	for _, m := range subMods {
 		if len(m) == 2 {
-			templ := t.Lookup(m[1])
-			if templ != nil {
+			tpl := t.Lookup(m[1])
+			if tpl != nil {
 				continue
 			}
 			//first check filename
-			for _, otherfile := range others {
-				if otherfile == m[1] {
-					var submods1 [][]string
-					t, submods1, err = getTplDeep(root, otherfile, "", t)
+			for _, otherFile := range others {
+				if otherFile == m[1] {
+					var subMods1 [][]string
+					t, subMods1, err = getTplDeep(root, otherFile, "", t)
 					if err != nil {
 						Trace("template parse file err:", err)
-					} else if submods1 != nil && len(submods1) > 0 {
-						t, err = _getTemplate(t, root, submods1, others...)
+					} else if subMods1 != nil && len(subMods1) > 0 {
+						t, err = _getTemplate(t, root, subMods1, others...)
 					}
 					break
 				}
 			}
 			//second check define
-			for _, otherfile := range others {
-				fileabspath := filepath.Join(root, otherfile)
-				data, err := ioutil.ReadFile(fileabspath)
+			for _, otherFile := range others {
+				fileAbsPath := filepath.Join(root, otherFile)
+				data, err := ioutil.ReadFile(fileAbsPath)
 				if err != nil {
 					continue
 				}
-				reg := regexp.MustCompile(TemplateLeft + "[ ]*define[ ]+\"([^\"]+)\"")
-				allsub := reg.FindAllStringSubmatch(string(data), -1)
-				for _, sub := range allsub {
+				reg := regexp.MustCompile(BConfig.WebConfig.TemplateLeft + "[ ]*define[ ]+\"([^\"]+)\"")
+				allSub := reg.FindAllStringSubmatch(string(data), -1)
+				for _, sub := range allSub {
 					if len(sub) == 2 && sub[1] == m[1] {
-						var submods1 [][]string
-						t, submods1, err = getTplDeep(root, otherfile, "", t)
+						var subMods1 [][]string
+						t, subMods1, err = getTplDeep(root, otherFile, "", t)
 						if err != nil {
 							Trace("template parse file err:", err)
-						} else if submods1 != nil && len(submods1) > 0 {
-							t, err = _getTemplate(t, root, submods1, others...)
+						} else if subMods1 != nil && len(subMods1) > 0 {
+							t, err = _getTemplate(t, root, subMods1, others...)
 						}
 						break
 					}
@@ -259,4 +273,35 @@ func _getTemplate(t0 *template.Template, root string, submods [][]string, others
 
 	}
 	return
+}
+
+// SetViewsPath sets view directory path in beego application.
+func SetViewsPath(path string) *App {
+	BConfig.WebConfig.ViewsPath = path
+	return BeeApp
+}
+
+// SetStaticPath sets static directory path and proper url pattern in beego application.
+// if beego.SetStaticPath("static","public"), visit /static/* to load static file in folder "public".
+func SetStaticPath(url string, path string) *App {
+	if !strings.HasPrefix(url, "/") {
+		url = "/" + url
+	}
+	if url != "/" {
+		url = strings.TrimRight(url, "/")
+	}
+	BConfig.WebConfig.StaticDir[url] = path
+	return BeeApp
+}
+
+// DelStaticPath removes the static folder setting in this url pattern in beego application.
+func DelStaticPath(url string) *App {
+	if !strings.HasPrefix(url, "/") {
+		url = "/" + url
+	}
+	if url != "/" {
+		url = strings.TrimRight(url, "/")
+	}
+	delete(BConfig.WebConfig.StaticDir, url)
+	return BeeApp
 }

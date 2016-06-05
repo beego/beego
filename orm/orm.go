@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Package orm provide ORM for MySQL/PostgreSQL/sqlite
 // Simple Usage
 //
 //	package main
@@ -59,12 +60,13 @@ import (
 	"time"
 )
 
+// DebugQueries define the debug
 const (
-	Debug_Queries = iota
+	DebugQueries = iota
 )
 
+// Define common vars
 var (
-	// DebugLevel       = Debug_Queries
 	Debug            = false
 	DebugLog         = NewLog(os.Stderr)
 	DefaultRowsLimit = 1000
@@ -79,7 +81,10 @@ var (
 	ErrNotImplement  = errors.New("have not implement")
 )
 
+// Params stores the Params
 type Params map[string]interface{}
+
+// ParamsList stores paramslist
 type ParamsList []interface{}
 
 type orm struct {
@@ -135,7 +140,7 @@ func (o *orm) ReadOrCreate(md interface{}, col1 string, cols ...string) (bool, i
 		return (err == nil), id, err
 	}
 
-	return false, ind.Field(mi.fields.pk.fieldIndex).Int(), err
+	return false, ind.FieldByIndex(mi.fields.pk.fieldIndex).Int(), err
 }
 
 // insert model data to database
@@ -155,9 +160,9 @@ func (o *orm) Insert(md interface{}) (int64, error) {
 func (o *orm) setPk(mi *modelInfo, ind reflect.Value, id int64) {
 	if mi.fields.pk.auto {
 		if mi.fields.pk.fieldType&IsPostiveIntegerField > 0 {
-			ind.Field(mi.fields.pk.fieldIndex).SetUint(uint64(id))
+			ind.FieldByIndex(mi.fields.pk.fieldIndex).SetUint(uint64(id))
 		} else {
-			ind.Field(mi.fields.pk.fieldIndex).SetInt(id)
+			ind.FieldByIndex(mi.fields.pk.fieldIndex).SetInt(id)
 		}
 	}
 }
@@ -188,7 +193,7 @@ func (o *orm) InsertMulti(bulk int, mds interface{}) (int64, error) {
 
 			o.setPk(mi, ind, id)
 
-			cnt += 1
+			cnt++
 		}
 	} else {
 		mi, _ := o.getMiInd(sind.Index(0).Interface(), false)
@@ -285,7 +290,7 @@ func (o *orm) LoadRelated(md interface{}, name string, args ...interface{}) (int
 		qs.orders = []string{order}
 	}
 
-	find := ind.Field(fi.fieldIndex)
+	find := ind.FieldByIndex(fi.fieldIndex)
 
 	var nums int64
 	var err error
@@ -489,7 +494,7 @@ func (o *orm) Driver() Driver {
 	return driver(o.alias.Name)
 }
 
-// create new orm
+// NewOrm create new orm
 func NewOrm() Ormer {
 	BootStrap() // execute only once
 
@@ -501,7 +506,7 @@ func NewOrm() Ormer {
 	return o
 }
 
-// create a new ormer object with specify *sql.DB for query
+// NewOrmWithDB create a new ormer object with specify *sql.DB for query
 func NewOrmWithDB(driverName, aliasName string, db *sql.DB) (Ormer, error) {
 	var al *alias
 

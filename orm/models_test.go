@@ -25,6 +25,8 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
+	// As tidb can't use go get, so disable the tidb testing now
+	// _ "github.com/pingcap/tidb"
 )
 
 // A slice string field.
@@ -76,21 +78,21 @@ func (e *SliceStringField) RawValue() interface{} {
 var _ Fielder = new(SliceStringField)
 
 // A json field.
-type JsonField struct {
+type JSONField struct {
 	Name string
 	Data string
 }
 
-func (e *JsonField) String() string {
+func (e *JSONField) String() string {
 	data, _ := json.Marshal(e)
 	return string(data)
 }
 
-func (e *JsonField) FieldType() int {
+func (e *JSONField) FieldType() int {
 	return TypeTextField
 }
 
-func (e *JsonField) SetRaw(value interface{}) error {
+func (e *JSONField) SetRaw(value interface{}) error {
 	switch d := value.(type) {
 	case string:
 		return json.Unmarshal([]byte(d), e)
@@ -99,14 +101,14 @@ func (e *JsonField) SetRaw(value interface{}) error {
 	}
 }
 
-func (e *JsonField) RawValue() interface{} {
+func (e *JSONField) RawValue() interface{} {
 	return e.String()
 }
 
-var _ Fielder = new(JsonField)
+var _ Fielder = new(JSONField)
 
 type Data struct {
-	Id       int
+	ID       int `orm:"column(id)"`
 	Boolean  bool
 	Char     string    `orm:"size(50)"`
 	Text     string    `orm:"type(text)"`
@@ -130,7 +132,7 @@ type Data struct {
 }
 
 type DataNull struct {
-	Id          int
+	ID          int             `orm:"column(id)"`
 	Boolean     bool            `orm:"null"`
 	Char        string          `orm:"null;size(50)"`
 	Text        string          `orm:"null;type(text)"`
@@ -193,7 +195,7 @@ type Float32 float64
 type Float64 float64
 
 type DataCustom struct {
-	Id      int
+	ID      int `orm:"column(id)"`
 	Boolean Boolean
 	Char    string `orm:"size(50)"`
 	Text    string `orm:"type(text)"`
@@ -216,40 +218,40 @@ type DataCustom struct {
 
 // only for mysql
 type UserBig struct {
-	Id   uint64
+	ID   uint64 `orm:"column(id)"`
 	Name string
 }
 
 type User struct {
-	Id         int
-	UserName   string `orm:"size(30);unique"`
-	Email      string `orm:"size(100)"`
-	Password   string `orm:"size(100)"`
-	Status     int16  `orm:"column(Status)"`
-	IsStaff    bool
-	IsActive   bool      `orm:"default(1)"`
-	Created    time.Time `orm:"auto_now_add;type(date)"`
-	Updated    time.Time `orm:"auto_now"`
-	Profile    *Profile  `orm:"null;rel(one);on_delete(set_null)"`
-	Posts      []*Post   `orm:"reverse(many)" json:"-"`
-	ShouldSkip string    `orm:"-"`
-	Nums       int
-	Langs      SliceStringField `orm:"size(100)"`
-	Extra      JsonField        `orm:"type(text)"`
-	unexport   bool             `orm:"-"`
-	unexport_  bool
+	ID           int    `orm:"column(id)"`
+	UserName     string `orm:"size(30);unique"`
+	Email        string `orm:"size(100)"`
+	Password     string `orm:"size(100)"`
+	Status       int16  `orm:"column(Status)"`
+	IsStaff      bool
+	IsActive     bool      `orm:"default(true)"`
+	Created      time.Time `orm:"auto_now_add;type(date)"`
+	Updated      time.Time `orm:"auto_now"`
+	Profile      *Profile  `orm:"null;rel(one);on_delete(set_null)"`
+	Posts        []*Post   `orm:"reverse(many)" json:"-"`
+	ShouldSkip   string    `orm:"-"`
+	Nums         int
+	Langs        SliceStringField `orm:"size(100)"`
+	Extra        JSONField        `orm:"type(text)"`
+	unexport     bool             `orm:"-"`
+	unexportBool bool
 }
 
 func (u *User) TableIndex() [][]string {
 	return [][]string{
-		[]string{"Id", "UserName"},
-		[]string{"Id", "Created"},
+		{"Id", "UserName"},
+		{"Id", "Created"},
 	}
 }
 
 func (u *User) TableUnique() [][]string {
 	return [][]string{
-		[]string{"UserName", "Email"},
+		{"UserName", "Email"},
 	}
 }
 
@@ -259,7 +261,7 @@ func NewUser() *User {
 }
 
 type Profile struct {
-	Id       int
+	ID       int `orm:"column(id)"`
 	Age      int16
 	Money    float64
 	User     *User `orm:"reverse(one)" json:"-"`
@@ -276,7 +278,7 @@ func NewProfile() *Profile {
 }
 
 type Post struct {
-	Id      int
+	ID      int       `orm:"column(id)"`
 	User    *User     `orm:"rel(fk)"`
 	Title   string    `orm:"size(60)"`
 	Content string    `orm:"type(text)"`
@@ -287,7 +289,7 @@ type Post struct {
 
 func (u *Post) TableIndex() [][]string {
 	return [][]string{
-		[]string{"Id", "Created"},
+		{"Id", "Created"},
 	}
 }
 
@@ -297,7 +299,7 @@ func NewPost() *Post {
 }
 
 type Tag struct {
-	Id       int
+	ID       int     `orm:"column(id)"`
 	Name     string  `orm:"size(30)"`
 	BestPost *Post   `orm:"rel(one);null"`
 	Posts    []*Post `orm:"reverse(many)" json:"-"`
@@ -309,7 +311,7 @@ func NewTag() *Tag {
 }
 
 type PostTags struct {
-	Id   int
+	ID   int   `orm:"column(id)"`
 	Post *Post `orm:"rel(fk)"`
 	Tag  *Tag  `orm:"rel(fk)"`
 }
@@ -319,7 +321,7 @@ func (m *PostTags) TableName() string {
 }
 
 type Comment struct {
-	Id      int
+	ID      int       `orm:"column(id)"`
 	Post    *Post     `orm:"rel(fk);column(post)"`
 	Content string    `orm:"type(text)"`
 	Parent  *Comment  `orm:"null;rel(fk)"`
@@ -329,6 +331,48 @@ type Comment struct {
 func NewComment() *Comment {
 	obj := new(Comment)
 	return obj
+}
+
+type Group struct {
+	ID          int `orm:"column(gid);size(32)"`
+	Name        string
+	Permissions []*Permission `orm:"reverse(many)" json:"-"`
+}
+
+type Permission struct {
+	ID     int `orm:"column(id)"`
+	Name   string
+	Groups []*Group `orm:"rel(m2m);rel_through(github.com/astaxie/beego/orm.GroupPermissions)"`
+}
+
+type GroupPermissions struct {
+	ID         int         `orm:"column(id)"`
+	Group      *Group      `orm:"rel(fk)"`
+	Permission *Permission `orm:"rel(fk)"`
+}
+
+type ModelID struct {
+	ID int64
+}
+
+type ModelBase struct {
+	ModelID
+
+	Created time.Time `orm:"auto_now_add;type(datetime)"`
+	Updated time.Time `orm:"auto_now;type(datetime)"`
+}
+
+type InLine struct {
+	// Common Fields
+	ModelBase
+
+	// Other Fields
+	Name  string `orm:"unique"`
+	Email string
+}
+
+func NewInLine() *InLine {
+	return new(InLine)
 }
 
 var DBARGS = struct {
@@ -345,6 +389,7 @@ var (
 	IsMysql    = DBARGS.Driver == "mysql"
 	IsSqlite   = DBARGS.Driver == "sqlite3"
 	IsPostgres = DBARGS.Driver == "postgres"
+	IsTidb     = DBARGS.Driver == "tidb"
 )
 
 var (
@@ -364,6 +409,7 @@ Default DB Drivers.
    mysql: https://github.com/go-sql-driver/mysql
  sqlite3: https://github.com/mattn/go-sqlite3
 postgres: https://github.com/lib/pq
+tidb: https://github.com/pingcap/tidb
 
 usage:
 
@@ -371,6 +417,7 @@ go get -u github.com/astaxie/beego/orm
 go get -u github.com/go-sql-driver/mysql
 go get -u github.com/mattn/go-sqlite3
 go get -u github.com/lib/pq
+go get -u github.com/pingcap/tidb
 
 #### MySQL
 mysql -u root -e 'create database orm_test;'
@@ -390,6 +437,12 @@ psql -c 'create database orm_test;' -U postgres
 export ORM_DRIVER=postgres
 export ORM_SOURCE="user=postgres dbname=orm_test sslmode=disable"
 go test -v github.com/astaxie/beego/orm
+
+#### TiDB
+export ORM_DRIVER=tidb
+export ORM_SOURCE='memory://test/test'
+go test -v github.com/astaxie/beego/orm
+
 `)
 		os.Exit(2)
 	}
@@ -397,7 +450,7 @@ go test -v github.com/astaxie/beego/orm
 	RegisterDataBase("default", DBARGS.Driver, DBARGS.Source, 20)
 
 	alias := getDbAlias("default")
-	if alias.Driver == DR_MySQL {
+	if alias.Driver == DRMySQL {
 		alias.Engine = "INNODB"
 	}
 

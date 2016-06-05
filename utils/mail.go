@@ -31,10 +31,13 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 const (
 	maxLineLength = 76
+
+	upperhex = "0123456789ABCDEF"
 )
 
 // Email is the type used for email messages
@@ -74,13 +77,10 @@ func NewEMail(config string) *Email {
 	if err != nil {
 		return nil
 	}
-	if e.From == "" {
-		e.From = e.Username
-	}
 	return e
 }
 
-// Make all send information to byte
+// Bytes Make all send information to byte
 func (e *Email) Bytes() ([]byte, error) {
 	buff := &bytes.Buffer{}
 	w := multipart.NewWriter(buff)
@@ -96,12 +96,16 @@ func (e *Email) Bytes() ([]byte, error) {
 		e.Headers.Set("Disposition-Notification-To", strings.Join(e.ReadReceipt, ","))
 	}
 	e.Headers.Set("MIME-Version", "1.0")
-	e.Headers.Set("Content-Type", fmt.Sprintf("multipart/mixed;\r\n boundary=%s\r\n", w.Boundary()))
 
 	// Write the envelope headers (including any custom headers)
 	if err := headerToBytes(buff, e.Headers); err != nil {
 		return nil, fmt.Errorf("Failed to render message headers: %s", err)
 	}
+
+	e.Headers.Set("Content-Type", fmt.Sprintf("multipart/mixed;\r\n boundary=%s\r\n", w.Boundary()))
+	fmt.Fprintf(buff, "%s:", "Content-Type")
+	fmt.Fprintf(buff, " %s\r\n", fmt.Sprintf("multipart/mixed;\r\n boundary=%s\r\n", w.Boundary()))
+
 	// Start the multipart/mixed part
 	fmt.Fprintf(buff, "--%s\r\n", w.Boundary())
 	header := textproto.MIMEHeader{}
@@ -156,7 +160,7 @@ func (e *Email) Bytes() ([]byte, error) {
 	return buff.Bytes(), nil
 }
 
-// Add attach file to the send mail
+// AttachFile Add attach file to the send mail
 func (e *Email) AttachFile(args ...string) (a *Attachment, err error) {
 	if len(args) < 1 && len(args) > 2 {
 		err = errors.New("Must specify a file name and number of parameters can not exceed at least two")
@@ -215,6 +219,7 @@ func (e *Email) Attach(r io.Reader, filename string, args ...string) (a *Attachm
 	return at, nil
 }
 
+// Send will send out the mail
 func (e *Email) Send() error {
 	if e.Auth == nil {
 		e.Auth = smtp.PlainAuth(e.Identity, e.Username, e.Password, e.Host)
@@ -223,13 +228,21 @@ func (e *Email) Send() error {
 	to := make([]string, 0, len(e.To)+len(e.Cc)+len(e.Bcc))
 	to = append(append(append(to, e.To...), e.Cc...), e.Bcc...)
 	// Check to make sure there is at least one recipient and one "From" address
-	if e.From == "" || len(to) == 0 {
-		return errors.New("Must specify at least one From address and one To address")
+	if len(to) == 0 {
+		return errors.New("Must specify at least one To address")
 	}
-	from, err := mail.ParseAddress(e.From)
+
+	from, err := mail.ParseAddress(e.Username)
 	if err != nil {
 		return err
 	}
+
+	if len(e.From) == 0 {
+		e.From = e.Username
+	}
+	// use mail's RFC 2047 to encode any string
+	e.Subject = qEncode("utf-8", e.Subject)
+
 	raw, err := e.Bytes()
 	if err != nil {
 		return err
@@ -292,7 +305,7 @@ func qpEscape(dest []byte, c byte) {
 	const nums = "0123456789ABCDEF"
 	dest[0] = '='
 	dest[1] = nums[(c&0xf0)>>4]
-	dest[2] = nums[(c&0xf)]
+	dest[2] = nums[(c & 0xf)]
 }
 
 // headerToBytes enumerates the key and values in the header, and writes the results to the IO Writer
@@ -335,4 +348,74 @@ func base64Wrap(w io.Writer, b []byte) {
 		out = append(out, "\r\n"...)
 		w.Write(out)
 	}
+}
+
+// Encode returns the encoded-word form of s. If s is ASCII without special
+// characters, it is returned unchanged. The provided charset is the IANA
+// charset name of s. It is case insensitive.
+// RFC 2047 encoded-word
+func qEncode(charset, s string) string {
+	if !needsEncoding(s) {
+		return s
+	}
+	return encodeWord(charset, s)
+}
+
+func needsEncoding(s string) bool {
+	for _, b := range s {
+		if (b < ' ' || b > '~') && b != '\t' {
+			return true
+		}
+	}
+	return false
+}
+
+// encodeWord encodes a string into an encoded-word.
+func encodeWord(charset, s string) string {
+	buf := getBuffer()
+
+	buf.WriteString("=?")
+	buf.WriteString(charset)
+	buf.WriteByte('?')
+	buf.WriteByte('q')
+	buf.WriteByte('?')
+
+	enc := make([]byte, 3)
+	for i := 0; i < len(s); i++ {
+		b := s[i]
+		switch {
+		case b == ' ':
+			buf.WriteByte('_')
+		case b <= '~' && b >= '!' && b != '=' && b != '?' && b != '_':
+			buf.WriteByte(b)
+		default:
+			enc[0] = '='
+			enc[1] = upperhex[b>>4]
+			enc[2] = upperhex[b&0x0f]
+			buf.Write(enc)
+		}
+	}
+	buf.WriteString("?=")
+
+	es := buf.String()
+	putBuffer(buf)
+	return es
+}
+
+var bufPool = sync.Pool{
+	New: func() interface{} {
+		return new(bytes.Buffer)
+	},
+}
+
+func getBuffer() *bytes.Buffer {
+	return bufPool.Get().(*bytes.Buffer)
+}
+
+func putBuffer(buf *bytes.Buffer) {
+	if buf.Len() > 1024 {
+		return
+	}
+	buf.Reset()
+	bufPool.Put(buf)
 }

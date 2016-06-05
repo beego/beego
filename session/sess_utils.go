@@ -43,6 +43,7 @@ func init() {
 	gob.Register(map[int]int64{})
 }
 
+// EncodeGob encode the obj to gob
 func EncodeGob(obj map[interface{}]interface{}) ([]byte, error) {
 	for _, v := range obj {
 		gob.Register(v)
@@ -56,6 +57,7 @@ func EncodeGob(obj map[interface{}]interface{}) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+// DecodeGob decode data to map
 func DecodeGob(encoded []byte) (map[interface{}]interface{}, error) {
 	buf := bytes.NewBuffer(encoded)
 	dec := gob.NewDecoder(buf)
@@ -178,11 +180,11 @@ func decodeCookie(block cipher.Block, hashKey, name, value string, gcmaxlifetime
 		return nil, err
 	}
 	// 5. DecodeGob.
-	if dst, err := DecodeGob(b); err != nil {
+	dst, err := DecodeGob(b)
+	if err != nil {
 		return nil, err
-	} else {
-		return dst, nil
 	}
+	return dst, nil
 }
 
 // Encoding -------------------------------------------------------------------
