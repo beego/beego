@@ -422,17 +422,18 @@ func RenderForm(obj interface{}) template.HTML {
 		fieldT := objT.Field(i)
 
 		label, name, fType, id, class, ignored := parseFormTag(fieldT)
+		required := parseMetaTag(fieldT)
 		if ignored {
 			continue
 		}
 
-		raw = append(raw, renderFormField(label, name, fType, fieldV.Interface(), id, class))
+		raw = append(raw, renderFormField(label, name, fType, fieldV.Interface(), id, class, required))
 	}
 	return template.HTML(strings.Join(raw, "</br>"))
 }
 
 // renderFormField returns a string containing HTML of a single form field.
-func renderFormField(label, name, fType string, value interface{}, id string, class string) string {
+func renderFormField(label, name, fType string, value interface{}, id string, class string, required bool) string {
 	if id != "" {
 		id = " id=\"" + id + "\""
 	}
@@ -441,8 +442,13 @@ func renderFormField(label, name, fType string, value interface{}, id string, cl
 		class = " class=\"" + class + "\""
 	}
 
+	requiredString := ""
+	if required {
+		requiredString = " required"
+	}
+
 	if isValidForInput(fType) {
-		return fmt.Sprintf(`%v<input%v%v name="%v" type="%v" value="%v">`, label, id, class, name, fType, value)
+		return fmt.Sprintf(`%v<input%v%v name="%v" type="%v" value="%v"%v>`, label, id, class, name, fType, value, requiredString)
 	}
 
 	return fmt.Sprintf(`%v<%v%v%v name="%v">%v</%v>`, label, fType, id, class, name, value, fType)
@@ -494,6 +500,21 @@ func parseFormTag(fieldT reflect.StructField) (label, name, fType string, id str
 		}
 		if len(tags[2]) > 0 {
 			label = tags[2]
+		}
+	}
+
+	return
+}
+
+// parseMetaTag takes the stuct-tag of a StructField and parses the `meta` value.
+// returned is the boolean of whether the field is required
+func parseMetaTag(fieldT reflect.StructField) (required bool) {
+	meta := strings.Split(fieldT.Tag.Get("meta"), ",")
+	required = false
+	switch len(meta) {
+	case 1:
+		if len(meta[0]) > 0 && meta[0] != "-" {
+			required = true
 		}
 	}
 	return
