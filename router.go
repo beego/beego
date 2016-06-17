@@ -816,18 +816,27 @@ Admin:
 	if BConfig.RunMode == DEV || BConfig.Log.AccessLogs {
 		timeDur := time.Since(startTime)
 		var devInfo string
+
+		statusCode := context.ResponseWriter.Status
+		if statusCode == 0 { statusCode = 200 }
+
+		statusColor := logs.ColorByStatus(statusCode)
+		methodColor := logs.ColorByMethod(r.Method)
+		resetColor := logs.ColorByMethod("")
+
 		if findRouter {
 			if routerInfo != nil {
-				devInfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s | % -40s |", r.Method, r.URL.Path, timeDur.String(), "match", routerInfo.pattern)
+				devInfo = fmt.Sprintf("|%s %3d %s|%7s|%8s|%s %s %-7s %-3s   r:%s", statusColor, statusCode, resetColor,
+					timeDur.String(), "match", methodColor, resetColor, r.Method, r.URL.Path, routerInfo.pattern)
 			} else {
-				devInfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s |", r.Method, r.URL.Path, timeDur.String(), "match")
+				devInfo = fmt.Sprintf("|%s %3d %s|%7s|%8s|%s %s %-7s %-3s", statusColor, statusCode, resetColor,
+					timeDur.String(), "match", methodColor, resetColor, r.Method, r.URL.Path)
 			}
 		} else {
-			devInfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s |", r.Method, r.URL.Path, timeDur.String(), "notmatch")
+			devInfo = fmt.Sprintf("|%s %3d %s|%7s|%8s|%s %s %-7s %-3s", statusColor, statusCode, resetColor,
+				timeDur.String(), "nomatch", methodColor, resetColor, r.Method, r.URL.Path)
 		}
-		if DefaultAccessLogFilter == nil || !DefaultAccessLogFilter.Filter(context) {
-			logs.Debug(devInfo)
-		}
+		logs.Debug(devInfo)
 	}
 
 	// Call WriteHeader if status code has been set changed
