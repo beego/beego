@@ -18,7 +18,6 @@ import (
 	"io"
 	"sync"
 	"time"
-	"net/http"
 )
 
 type logWriter struct {
