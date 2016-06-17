@@ -108,19 +108,19 @@ func ColorByStatus(code int) string {
 
 func ColorByMethod(method string) string {
 	switch method {
-	case http.MethodGet:
+	case "GET":
 		return blue
-	case http.MethodPost:
+	case "POST":
 		return cyan
-	case http.MethodPut:
+	case "PUT":
 		return yellow
-	case http.MethodDelete:
+	case "DELETE":
 		return red
-	case http.MethodPatch:
+	case "PATCH":
 		return green
-	case http.MethodHead:
+	case "HEAD":
 		return magenta
-	case http.MethodOptions:
+	case "OPTIONS":
 		return white
 	default:
 		return reset
