@@ -152,6 +152,10 @@ func (w *fileLogWriter) WriteMsg(when time.Time, msg string, level int) error {
 func (w *fileLogWriter) createLogFile() (*os.File, error) {
 	// Open the log file
 	fd, err := os.OpenFile(w.Filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, w.Perm)
+	if err == nil {
+		// Make sure file perm is user set perm cause of `os.OpenFile` will obey umask
+		os.Chmod(w.Filename, w.Perm)
+	}
 	return fd, err
 }
 
