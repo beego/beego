@@ -350,6 +350,9 @@ func TestNullDataTypes(t *testing.T) {
 	throwFail(t, AssertIs(d.Float32Ptr, nil))
 	throwFail(t, AssertIs(d.Float64Ptr, nil))
 	throwFail(t, AssertIs(d.DecimalPtr, nil))
+	throwFail(t, AssertIs(d.TimePtr, nil))
+	throwFail(t, AssertIs(d.DatePtr, nil))
+	throwFail(t, AssertIs(d.DateTimePtr, nil))
 
 	_, err = dORM.Raw(`INSERT INTO data_null (boolean) VALUES (?)`, nil).Exec()
 	throwFail(t, err)
@@ -376,6 +379,9 @@ func TestNullDataTypes(t *testing.T) {
 	float32Ptr := float32(42.0)
 	float64Ptr := float64(42.0)
 	decimalPtr := float64(42.0)
+	timePtr := time.Now()
+	datePtr := time.Now()
+	dateTimePtr := time.Now()
 
 	d = DataNull{
 		DateTime:    time.Now(),
@@ -401,6 +407,9 @@ func TestNullDataTypes(t *testing.T) {
 		Float32Ptr:  &float32Ptr,
 		Float64Ptr:  &float64Ptr,
 		DecimalPtr:  &decimalPtr,
+		TimePtr:     &timePtr,
+		DatePtr:     &datePtr,
+		DateTimePtr: &dateTimePtr,
 	}
 
 	id, err = dORM.Insert(&d)
@@ -441,6 +450,9 @@ func TestNullDataTypes(t *testing.T) {
 	throwFail(t, AssertIs(*d.Float32Ptr, float32Ptr))
 	throwFail(t, AssertIs(*d.Float64Ptr, float64Ptr))
 	throwFail(t, AssertIs(*d.DecimalPtr, decimalPtr))
+	throwFail(t, AssertIs((*d.TimePtr).Format(testTime), timePtr.Format(testTime)))
+	throwFail(t, AssertIs((*d.DatePtr).Format(testDate), datePtr.Format(testDate)))
+	throwFail(t, AssertIs((*d.DateTimePtr).Format(testDateTime), dateTimePtr.Format(testDateTime)))
 }
 
 func TestDataCustomTypes(t *testing.T) {
