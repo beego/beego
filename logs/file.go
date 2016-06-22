@@ -161,7 +161,7 @@ func (w *fileLogWriter) createLogFile() (*os.File, error) {
 	fd, err := os.OpenFile(w.Filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(perm))
 	if err == nil {
 		// Make sure file perm is user set perm cause of `os.OpenFile` will obey umask
-		os.Chmod(w.Filename, w.Perm)
+		os.Chmod(w.Filename, os.FileMode(perm))
 	}
 	return fd, err
 }

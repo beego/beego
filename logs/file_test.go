@@ -26,7 +26,8 @@ import (
 
 func TestFilePerm(t *testing.T) {
 	log := NewLogger(10000)
-	log.SetLogger("file", `{"filename":"test.log", "perm": "0600"}`)
+	// use 0666 as test perm cause the default umask is 022
+	log.SetLogger("file", `{"filename":"test.log", "perm": "0666"}`)
 	log.Debug("debug")
 	log.Informational("info")
 	log.Notice("notice")
@@ -39,7 +40,7 @@ func TestFilePerm(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if file.Mode() != 0600 {
+	if file.Mode() != 0666 {
 		t.Fatal("unexpected log file permission")
 	}
 	os.Remove("test.log")
