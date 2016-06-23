@@ -33,6 +33,7 @@ type Config struct {
 	ServerName          string
 	RecoverPanic        bool
 	CopyRequestBody     bool
+	AutoReadRequestBody bool
 	EnableGzip          bool
 	MaxMemory           int64
 	EnableErrorsShow    bool
@@ -126,6 +127,7 @@ func init() {
 		ServerName:          "beegoServer:" + VERSION,
 		RecoverPanic:        true,
 		CopyRequestBody:     false,
+		AutoReadRequestBody: true,
 		EnableGzip:          false,
 		MaxMemory:           1 << 26, //64MB
 		EnableErrorsShow:    true,
@@ -210,6 +212,7 @@ func parseConfig(appConfigPath string) (err error) {
 	BConfig.EnableGzip = AppConfig.DefaultBool("EnableGzip", BConfig.EnableGzip)
 	BConfig.EnableErrorsShow = AppConfig.DefaultBool("EnableErrorsShow", BConfig.EnableErrorsShow)
 	BConfig.CopyRequestBody = AppConfig.DefaultBool("CopyRequestBody", BConfig.CopyRequestBody)
+	BConfig.AutoReadRequestBody = AppConfig.DefaultBool("AutoReadRequestBody", BConfig.AutoReadRequestBody)
 	BConfig.MaxMemory = AppConfig.DefaultInt64("MaxMemory", BConfig.MaxMemory)
 	BConfig.Listen.Graceful = AppConfig.DefaultBool("Graceful", BConfig.Listen.Graceful)
 	BConfig.Listen.HTTPAddr = AppConfig.String("HTTPAddr")
