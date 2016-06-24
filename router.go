@@ -820,23 +820,29 @@ Admin:
 		statusCode := context.ResponseWriter.Status
 		if statusCode == 0 { statusCode = 200 }
 
-		statusColor := logs.ColorByStatus(statusCode)
-		methodColor := logs.ColorByMethod(r.Method)
-		resetColor := logs.ColorByMethod("")
+		iswin := (runtime.GOOS == "windows")
+		statusColor := logs.ColorByStatus(iswin, statusCode)
+		methodColor := logs.ColorByMethod(iswin, r.Method)
+		resetColor := logs.ColorByMethod(iswin, "")
 
 		if findRouter {
 			if routerInfo != nil {
-				devInfo = fmt.Sprintf("|%s %3d %s|%7s|%8s|%s %s %-7s %-3s   r:%s", statusColor, statusCode, resetColor,
-					timeDur.String(), "match", methodColor, resetColor, r.Method, r.URL.Path, routerInfo.pattern)
+					devInfo = fmt.Sprintf("|%s %3d %s|%13s|%8s|%s %s %-7s %-3s   r:%s", statusColor, statusCode,
+						resetColor, timeDur.String(), "match", methodColor, resetColor, r.Method, r.URL.Path,
+						routerInfo.pattern)
 			} else {
-				devInfo = fmt.Sprintf("|%s %3d %s|%7s|%8s|%s %s %-7s %-3s", statusColor, statusCode, resetColor,
+				devInfo = fmt.Sprintf("|%s %3d %s|%13s|%8s|%s %s %-7s %-3s", statusColor, statusCode, resetColor,
 					timeDur.String(), "match", methodColor, resetColor, r.Method, r.URL.Path)
 			}
 		} else {
-			devInfo = fmt.Sprintf("|%s %3d %s|%7s|%8s|%s %s %-7s %-3s", statusColor, statusCode, resetColor,
+			devInfo = fmt.Sprintf("|%s %3d %s|%13s|%8s|%s %s %-7s %-3s", statusColor, statusCode, resetColor,
 				timeDur.String(), "nomatch", methodColor, resetColor, r.Method, r.URL.Path)
 		}
-		logs.Debug(devInfo)
+		if iswin {
+			logs.W32Debug(devInfo)
+		} else {
+			logs.Debug(devInfo)
+		}
 	}
 
 	// Call WriteHeader if status code has been set changed

@@ -18,6 +18,9 @@ import (
 	"io"
 	"sync"
 	"time"
+	"github.com/shiena/ansicolor"
+	"fmt"
+	"os"
 )
 
 type logWriter struct {
@@ -59,14 +62,14 @@ func formatTimeHeader(when time.Time) ([]byte, int) {
 	buf[0] = '2'
 	//change to '1' after 84 years,  LOL
 	buf[1] = '0'
-	buf[2] = y1[y-2000]
-	buf[3] = y2[y-2000]
+	buf[2] = y1[y - 2000]
+	buf[3] = y2[y - 2000]
 	buf[4] = '/'
-	buf[5] = mo1[mo-1]
-	buf[6] = mo2[mo-1]
+	buf[5] = mo1[mo - 1]
+	buf[6] = mo2[mo - 1]
 	buf[7] = '/'
-	buf[8] = d1[d-1]
-	buf[9] = d2[d-1]
+	buf[8] = d1[d - 1]
+	buf[9] = d2[d - 1]
 	buf[10] = ' '
 	buf[11] = h1[h]
 	buf[12] = h2[h]
@@ -82,46 +85,69 @@ func formatTimeHeader(when time.Time) ([]byte, int) {
 }
 
 var (
-	green   = string([]byte{27, 91, 57, 55, 59, 52, 50, 109})
-	white   = string([]byte{27, 91, 57, 48, 59, 52, 55, 109})
-	yellow  = string([]byte{27, 91, 57, 55, 59, 52, 51, 109})
-	red     = string([]byte{27, 91, 57, 55, 59, 52, 49, 109})
-	blue    = string([]byte{27, 91, 57, 55, 59, 52, 52, 109})
-	magenta = string([]byte{27, 91, 57, 55, 59, 52, 53, 109})
-	cyan    = string([]byte{27, 91, 57, 55, 59, 52, 54, 109})
-	reset   = string([]byte{27, 91, 48, 109})
+	green 		= string([]byte{27, 91, 57, 55, 59, 52, 50, 109})
+	white 		= string([]byte{27, 91, 57, 48, 59, 52, 55, 109})
+	yellow 		= string([]byte{27, 91, 57, 55, 59, 52, 51, 109})
+	red 		= string([]byte{27, 91, 57, 55, 59, 52, 49, 109})
+	blue 		= string([]byte{27, 91, 57, 55, 59, 52, 52, 109})
+	magenta 	= string([]byte{27, 91, 57, 55, 59, 52, 53, 109})
+	cyan 		= string([]byte{27, 91, 57, 55, 59, 52, 54, 109})
+
+	w32Green 	= string([]byte{27, 91, 52, 50, 109})
+	w32White 	= string([]byte{27, 91, 52, 55, 109})
+	w32Yellow 	= string([]byte{27, 91, 52, 51, 109})
+	w32Red 		= string([]byte{27, 91, 52, 49, 109})
+	w32Blue 	= string([]byte{27, 91, 52, 52, 109})
+	w32Magenta 	= string([]byte{27, 91, 52, 53, 109})
+	w32Cyan 	= string([]byte{27, 91, 52, 54, 109})
+
+	reset 		= string([]byte{27, 91, 48, 109})
 )
 
-func ColorByStatus(code int) string {
+func ColorByStatus(cond bool, code int) string {
 	switch {
 	case code >= 200 && code < 300:
-		return green
+		return map[bool]string{true: green, false: w32Green}[cond]
 	case code >= 300 && code < 400:
-		return white
+		return map[bool]string{true: white, false: w32White}[cond]
 	case code >= 400 && code < 500:
-		return yellow
+		return map[bool]string{true: yellow, false: w32Yellow}[cond]
 	default:
-		return red
+		return map[bool]string{true: red, false: w32Red}[cond]
 	}
 }
 
-func ColorByMethod(method string) string {
+func ColorByMethod(cond bool, method string) string {
 	switch method {
 	case "GET":
-		return blue
+		return map[bool]string{true: blue, false: w32Blue}[cond]
 	case "POST":
-		return cyan
+		return map[bool]string{true: cyan, false: w32Cyan}[cond]
 	case "PUT":
-		return yellow
+		return map[bool]string{true: yellow, false: w32Yellow}[cond]
 	case "DELETE":
-		return red
+		return map[bool]string{true: red, false: w32Red}[cond]
 	case "PATCH":
-		return green
+		return map[bool]string{true: green, false: w32Green}[cond]
 	case "HEAD":
-		return magenta
+		return map[bool]string{true: magenta, false: w32Magenta}[cond]
 	case "OPTIONS":
-		return white
+		return map[bool]string{true: white, false: w32White}[cond]
 	default:
 		return reset
 	}
+}
+
+var mu sync.Mutex
+
+// Helper method to output colored logs in Windows terminals
+// using ansicolor (https://github.com/shiena/ansicolor)
+func W32Debug(msg string) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	current := time.Now()
+	w := ansicolor.NewAnsiColorWriter(os.Stdout)
+
+	fmt.Fprintf(w, "[beego] %v %s\n", current.Format("2006/01/02 - 15:04:05"), msg)
 }
