@@ -243,6 +243,9 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 				if fi.isFielder {
 					f := field.Addr().Interface().(Fielder)
 					f.SetRaw(tnow.In(DefaultTimeLoc))
+				} else if field.Kind() == reflect.Ptr {
+					v := tnow.In(DefaultTimeLoc)
+					field.Set(reflect.ValueOf(&v))
 				} else {
 					field.Set(reflect.ValueOf(tnow.In(DefaultTimeLoc)))
 				}
@@ -1273,8 +1276,14 @@ setValue:
 		if isNative {
 			if value == nil {
 				value = time.Time{}
+			} else if field.Kind() == reflect.Ptr {
+				if value != nil {
+					v := value.(time.Time)
+					field.Set(reflect.ValueOf(&v))
+				}
+			} else {
+				field.Set(reflect.ValueOf(value))
 			}
-			field.Set(reflect.ValueOf(value))
 		}
 	case fieldType == TypePositiveBitField && field.Kind() == reflect.Ptr:
 		if value != nil {

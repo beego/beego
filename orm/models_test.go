@@ -181,6 +181,9 @@ type DataNull struct {
 	Float32Ptr  *float32        `orm:"null"`
 	Float64Ptr  *float64        `orm:"null"`
 	DecimalPtr  *float64        `orm:"digits(8);decimals(4);null"`
+	TimePtr     *time.Time      `orm:"null;type(time)"`
+	DatePtr     *time.Time      `orm:"null;type(date)"`
+	DateTimePtr *time.Time      `orm:"null"`
 }
 
 type String string

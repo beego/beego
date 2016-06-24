@@ -137,6 +137,8 @@ func getFieldType(val reflect.Value) (ft int, err error) {
 		ft = TypeBooleanField
 	case reflect.TypeOf(new(string)):
 		ft = TypeCharField
+	case reflect.TypeOf(new(time.Time)):
+		ft = TypeDateTimeField
 	default:
 		elm := reflect.Indirect(val)
 		switch elm.Kind() {
