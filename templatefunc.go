@@ -421,8 +421,7 @@ func RenderForm(obj interface{}) template.HTML {
 
 		fieldT := objT.Field(i)
 
-		label, name, fType, id, class, ignored := parseFormTag(fieldT)
-		required := parseMetaTag(fieldT)
+		label, name, fType, id, class, ignored, required := parseFormTag(fieldT)
 		if ignored {
 			continue
 		}
@@ -467,7 +466,7 @@ func isValidForInput(fType string) bool {
 
 // parseFormTag takes the stuct-tag of a StructField and parses the `form` value.
 // returned are the form label, name-property, type and wether the field should be ignored.
-func parseFormTag(fieldT reflect.StructField) (label, name, fType string, id string, class string, ignored bool) {
+func parseFormTag(fieldT reflect.StructField) (label, name, fType string, id string, class string, ignored bool, required bool) {
 	tags := strings.Split(fieldT.Tag.Get("form"), ",")
 	label = fieldT.Name + ": "
 	name = fieldT.Name
@@ -475,6 +474,15 @@ func parseFormTag(fieldT reflect.StructField) (label, name, fType string, id str
 	ignored = false
 	id = fieldT.Tag.Get("id")
 	class = fieldT.Tag.Get("class")
+
+	meta := strings.Split(fieldT.Tag.Get("meta"), ",")
+	required = false
+	switch len(meta) {
+	case 1:
+		if len(meta[0]) > 0 && meta[0] != "-" {
+			required = true
+		}
+	}
 
 	switch len(tags) {
 	case 1:
@@ -503,20 +511,6 @@ func parseFormTag(fieldT reflect.StructField) (label, name, fType string, id str
 		}
 	}
 
-	return
-}
-
-// parseMetaTag takes the stuct-tag of a StructField and parses the `meta` value.
-// returned is the boolean of whether the field is required
-func parseMetaTag(fieldT reflect.StructField) (required bool) {
-	meta := strings.Split(fieldT.Tag.Get("meta"), ",")
-	required = false
-	switch len(meta) {
-	case 1:
-		if len(meta[0]) > 0 && meta[0] != "-" {
-			required = true
-		}
-	}
 	return
 }
 
