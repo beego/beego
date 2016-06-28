@@ -450,7 +450,7 @@ func renderFormField(label, name, fType string, value interface{}, id string, cl
 		return fmt.Sprintf(`%v<input%v%v name="%v" type="%v" value="%v"%v>`, label, id, class, name, fType, value, requiredString)
 	}
 
-	return fmt.Sprintf(`%v<%v%v%v name="%v">%v</%v>`, label, fType, id, class, name, value, fType)
+	return fmt.Sprintf(`%v<%v%v%v name="%v"%v>%v</%v>`, label, fType, id, class, name, requiredString, value, fType)
 }
 
 // isValidForInput checks if fType is a valid value for the `type` property of an HTML input element.
