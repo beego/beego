@@ -219,35 +219,42 @@ func TestParseFormTag(t *testing.T) {
 		OnlyLabel int `form:",,年龄："`
 		OnlyName  int `form:"name" id:"name" class:"form-name"`
 		Ignored   int `form:"-"`
+		Required  int `form:"name" meta:"true"`
 	}
 
 	objT := reflect.TypeOf(&user{}).Elem()
 
-	label, name, fType, id, class, ignored := parseFormTag(objT.Field(0))
+	label, name, fType, id, class, ignored, required := parseFormTag(objT.Field(0))
 	if !(name == "name" && label == "年龄：" && fType == "text" && ignored == false) {
 		t.Errorf("Form Tag with name, label and type was not correctly parsed.")
 	}
 
-	label, name, fType, id, class, ignored = parseFormTag(objT.Field(1))
+	label, name, fType, id, class, ignored, required = parseFormTag(objT.Field(1))
 	if !(name == "NoName" && label == "年龄：" && fType == "hidden" && ignored == false) {
 		t.Errorf("Form Tag with label and type but without name was not correctly parsed.")
 	}
 
-	label, name, fType, id, class, ignored = parseFormTag(objT.Field(2))
+	label, name, fType, id, class, ignored, required = parseFormTag(objT.Field(2))
 	if !(name == "OnlyLabel" && label == "年龄：" && fType == "text" && ignored == false) {
 		t.Errorf("Form Tag containing only label was not correctly parsed.")
 	}
 
-	label, name, fType, id, class, ignored = parseFormTag(objT.Field(3))
+	label, name, fType, id, class, ignored, required = parseFormTag(objT.Field(3))
 	if !(name == "name" && label == "OnlyName: " && fType == "text" && ignored == false &&
 		id == "name" && class == "form-name") {
 		t.Errorf("Form Tag containing only name was not correctly parsed.")
 	}
 
-	label, name, fType, id, class, ignored = parseFormTag(objT.Field(4))
+	label, name, fType, id, class, ignored, required = parseFormTag(objT.Field(4))
 	if ignored == false {
 		t.Errorf("Form Tag that should be ignored was not correctly parsed.")
 	}
+
+	label, name, fType, id, class, ignored, required = parseFormTag(objT.Field(5))
+	if !(name == "name" && required == true) {
+		t.Errorf("Form Tag containing only name and required was not correctly parsed.")
+	}
+
 }
 
 func TestMapGet(t *testing.T) {
