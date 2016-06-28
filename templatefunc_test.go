@@ -195,13 +195,18 @@ func TestRenderForm(t *testing.T) {
 }
 
 func TestRenderFormField(t *testing.T) {
-	html := renderFormField("Label: ", "Name", "text", "Value", "", "")
+	html := renderFormField("Label: ", "Name", "text", "Value", "", "", false)
 	if html != `Label: <input name="Name" type="text" value="Value">` {
 		t.Errorf("Wrong html output for input[type=text]: %v ", html)
 	}
 
-	html = renderFormField("Label: ", "Name", "textarea", "Value", "", "")
+	html = renderFormField("Label: ", "Name", "textarea", "Value", "", "", false)
 	if html != `Label: <textarea name="Name">Value</textarea>` {
+		t.Errorf("Wrong html output for textarea: %v ", html)
+	}
+
+	html = renderFormField("Label: ", "Name", "textarea", "Value", "", "", true)
+	if html != `Label: <textarea name="Name" required>Value</textarea>` {
 		t.Errorf("Wrong html output for textarea: %v ", html)
 	}
 }
