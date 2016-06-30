@@ -214,12 +214,14 @@ func TestRenderFormField(t *testing.T) {
 func TestParseFormTag(t *testing.T) {
 	// create struct to contain field with different types of struct-tag `form`
 	type user struct {
-		All       int `form:"name,text,年龄："`
-		NoName    int `form:",hidden,年龄："`
-		OnlyLabel int `form:",,年龄："`
-		OnlyName  int `form:"name" id:"name" class:"form-name"`
-		Ignored   int `form:"-"`
-		Required  int `form:"name" meta:"true"`
+		All            int `form:"name,text,年龄："`
+		NoName         int `form:",hidden,年龄："`
+		OnlyLabel      int `form:",,年龄："`
+		OnlyName       int `form:"name" id:"name" class:"form-name"`
+		Ignored        int `form:"-"`
+		Required       int `form:"name" required:"true"`
+		IgnoreRequired int `form:"name"`
+		NotRequired    int `form:"name" required:"false"`
 	}
 
 	objT := reflect.TypeOf(&user{}).Elem()
@@ -253,6 +255,16 @@ func TestParseFormTag(t *testing.T) {
 	label, name, fType, id, class, ignored, required = parseFormTag(objT.Field(5))
 	if !(name == "name" && required == true) {
 		t.Errorf("Form Tag containing only name and required was not correctly parsed.")
+	}
+
+	label, name, fType, id, class, ignored, required = parseFormTag(objT.Field(6))
+	if !(name == "name" && required == false) {
+		t.Errorf("Form Tag containing only name and ignore required was not correctly parsed.")
+	}
+
+	label, name, fType, id, class, ignored, required = parseFormTag(objT.Field(7))
+	if !(name == "name" && required == false) {
+		t.Errorf("Form Tag containing only name and not required was not correctly parsed.")
 	}
 
 }
