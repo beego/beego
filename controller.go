@@ -71,6 +71,7 @@ type Controller struct {
 	TplName        string
 	Layout         string
 	LayoutSections map[string]string // the key is the section name and the value is the template name
+	TplPrefix      string
 	TplExt         string
 	EnableRender   bool
 
@@ -226,6 +227,9 @@ func (c *Controller) renderTemplate() (bytes.Buffer, error) {
 	var buf bytes.Buffer
 	if c.TplName == "" {
 		c.TplName = strings.ToLower(c.controllerName) + "/" + strings.ToLower(c.actionName) + "." + c.TplExt
+		if c.TplPrefix != "" {
+			c.TplName = c.TplPrefix + c.TplName
+		}
 	}
 	if BConfig.RunMode == DEV {
 		buildFiles := []string{c.TplName}
