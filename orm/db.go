@@ -455,6 +455,57 @@ func (d *dbBase) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []s
 	return id, err
 }
 
+func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location) (int64, error) {
+
+	isMulti := false
+	names := make([]string, 0, len(mi.fields.dbcols)-1)
+	values, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, &names, tz)
+	values = append(values, values...)
+	if err != nil {
+		return 0, err
+	}
+
+	Q := d.ins.TableQuote()
+
+	marks := make([]string, len(names))
+	updates := make([]string, len(names))
+	for i := range marks {
+		marks[i] = "?"
+		updates[i] = names[i] + "=?"
+	}
+
+	sep := fmt.Sprintf("%s, %s", Q, Q)
+	qmarks := strings.Join(marks, ", ")
+	qus := strings.Join(updates, ", ")
+	columns := strings.Join(names, sep)
+
+	multi := len(values) / len(names)
+
+	if isMulti {
+		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
+	}
+
+	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s) ON DUPLICATE KEY UPDATE %s", Q, mi.table, Q, Q, columns, Q, qmarks, qus)
+
+	d.ins.ReplaceMarks(&query)
+
+	if isMulti || !d.ins.HasReturningID(mi, &query) {
+		res, err := q.Exec(query, values...)
+		if err == nil {
+			if isMulti {
+				return res.RowsAffected()
+			}
+			return res.LastInsertId()
+		}
+		return 0, err
+	}
+
+	row := q.QueryRow(query, values...)
+	var id int64
+	err = row.Scan(&id)
+	return id, err
+}
+
 // execute update sql dbQuerier with given struct reflect.Value.
 func (d *dbBase) Update(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location, cols []string) (int64, error) {
 	pkName, pkValue, ok := getExistPk(mi, ind)
