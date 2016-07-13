@@ -455,24 +455,52 @@ func (d *dbBase) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []s
 	return id, err
 }
 
-func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location) (int64, error) {
+func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location, dn string, args ...string) (int64, error) {
+	iouStr := ""
+	argsMap := map[string]string{}
+	fmt.Println(dn)
+	if dn == "mysql" {
+		iouStr = "ON DUPLICATE KEY UPDATE"
+	} else if dn == "postgres" && len(args) > 0 {
+		iouStr = fmt.Sprintf("ON CONFLICT (?) DO UPDATE SET", args[0])
+		args = args[1:]
+	} else {
+		return 0, fmt.Errorf("`%s` nonsupport insert or update in beego", dn)
+	}
+	for _, v := range args {
+		kv := strings.Split(v, "=")
+		if len(kv) == 2 {
+			argsMap[kv[0]] = kv[1]
+		}
+	}
 
 	isMulti := false
 	names := make([]string, 0, len(mi.fields.dbcols)-1)
+	Q := d.ins.TableQuote()
 	values, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, &names, tz)
-	values = append(values, values...)
+
 	if err != nil {
 		return 0, err
 	}
 
-	Q := d.ins.TableQuote()
-
 	marks := make([]string, len(names))
+	updateValues := make([]interface{}, 0)
 	updates := make([]string, len(names))
-	for i := range marks {
+	fmt.Println(names)
+	fmt.Println(len(names))
+	for i, v := range names {
+		fmt.Println(i)
 		marks[i] = "?"
-		updates[i] = names[i] + "=?"
+		if argsMap[v] != "" {
+			updates[i] = v + "=" + argsMap[v]
+		} else {
+			updates[i] = v + "=?"
+			updateValues = append(updateValues, values[i])
+			fmt.Println(values[i])
+		}
 	}
+
+	values = append(values, updateValues...)
 
 	sep := fmt.Sprintf("%s, %s", Q, Q)
 	qmarks := strings.Join(marks, ", ")
@@ -485,7 +513,7 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, t
 		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
 	}
 
-	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s) ON DUPLICATE KEY UPDATE %s", Q, mi.table, Q, Q, columns, Q, qmarks, qus)
+	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s) %s %s", Q, mi.table, Q, Q, columns, Q, qmarks, iouStr, qus)
 
 	d.ins.ReplaceMarks(&query)
 

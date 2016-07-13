@@ -156,9 +156,9 @@ func (o *orm) Insert(md interface{}) (int64, error) {
 	return id, nil
 }
 
-func (o *orm) InsertOrUpdate(md interface{}) (int64, error) {
+func (o *orm) InsertOrUpdate(md interface{}, colConflitAndArgs ...string) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
-	id, err := o.alias.DbBaser.InsertOrUpdate(o.db, mi, ind, o.alias.TZ)
+	id, err := o.alias.DbBaser.InsertOrUpdate(o.db, mi, ind, o.alias.TZ, o.alias.DriverName, colConflitAndArgs...)
 	if err != nil {
 		return id, err
 	}

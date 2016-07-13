@@ -53,7 +53,7 @@ type Ormer interface {
 	//  id, err = Ormer.Insert(user)
 	//  user must a pointer and Insert will set user's pk field
 	Insert(interface{}) (int64, error)
-	InsertOrUpdate(interface{}) (int64, error)
+	InsertOrUpdate(md interface{}, colConflitAndArgs ...string) (int64, error)
 	// insert some models to database
 	InsertMulti(bulk int, mds interface{}) (int64, error)
 	// update model to database.
@@ -392,7 +392,7 @@ type txEnder interface {
 type dbBaser interface {
 	Read(dbQuerier, *modelInfo, reflect.Value, *time.Location, []string) error
 	Insert(dbQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
-	InsertOrUpdate(dbQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
+	InsertOrUpdate(dbQuerier, *modelInfo, reflect.Value, *time.Location, string, ...string) (int64, error)
 	InsertMulti(dbQuerier, *modelInfo, reflect.Value, int, *time.Location) (int64, error)
 	InsertValue(dbQuerier, *modelInfo, bool, []string, []interface{}) (int64, error)
 	InsertStmt(stmtQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
