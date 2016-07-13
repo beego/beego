@@ -457,13 +457,13 @@ func (d *dbBase) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []s
 
 func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location, dn string, args ...string) (int64, error) {
 	iouStr := ""
+	mysql := "mysql"
+	postgres := "postgres"
 	argsMap := map[string]string{}
-	fmt.Println(dn)
-	if dn == "mysql" {
+	if dn == mysql {
 		iouStr = "ON DUPLICATE KEY UPDATE"
-	} else if dn == "postgres" && len(args) > 0 {
+	} else if dn == postgres && len(args) > 0 {
 		iouStr = fmt.Sprintf("ON CONFLICT (?) DO UPDATE SET", args[0])
-		args = args[1:]
 	} else {
 		return 0, fmt.Errorf("`%s` nonsupport insert or update in beego", dn)
 	}
@@ -486,17 +486,29 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, t
 	marks := make([]string, len(names))
 	updateValues := make([]interface{}, 0)
 	updates := make([]string, len(names))
-	fmt.Println(names)
-	fmt.Println(len(names))
 	for i, v := range names {
-		fmt.Println(i)
+		var conflitValue interface{}
+		if v == args[0] {
+			conflitValue = values[i]
+		}
 		marks[i] = "?"
-		if argsMap[v] != "" {
-			updates[i] = v + "=" + argsMap[v]
+		valueStr := argsMap[v]
+		if valueStr != "" {
+			switch dn {
+			case mysql:
+				updates[i] = v + "=" + valueStr
+				break
+			case postgres:
+				if conflitValue != nil {
+					updates[i] = fmt.Sprintf("?=(select ? from ? where ?=?)", v, valueStr, mi.table, args[0], conflitValue)
+				} else {
+					return 0, fmt.Errorf("`%s` must begin with `%s` in your struct", dn, args[0])
+				}
+				break
+			}
 		} else {
 			updates[i] = v + "=?"
 			updateValues = append(updateValues, values[i])
-			fmt.Println(values[i])
 		}
 	}
 
