@@ -455,6 +455,9 @@ func (d *dbBase) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []s
 	return id, err
 }
 
+//insert or update a row
+//If your primary key or unique column conflict will update
+//if no will insert
 func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location, dn string, args ...string) (int64, error) {
 	iouStr := ""
 	mysql := "mysql"
@@ -469,6 +472,7 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, t
 	} else {
 		return 0, fmt.Errorf("`%s` nonsupport insert or update in beego", dn)
 	}
+	//Get on the key-value pairs
 	for _, v := range args {
 		kv := strings.Split(v, "=")
 		if len(kv) == 2 {
@@ -502,7 +506,7 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, t
 				break
 			case postgres:
 				if conflitValue != nil {
-
+					//postgres ON CONFLICT DO UPDATE SET can`t use colu=colu+values
 					updates[i] = fmt.Sprintf("%s=(select %s from %s where %s = ? )", v, valueStr, mi.table, args[0])
 					updateValues = append(updateValues, conflitValue)
 				} else {
@@ -528,7 +532,7 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, t
 	if isMulti {
 		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
 	}
-
+	//conflitValue maybe is a int,can`t use fmt.Sprintf
 	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s) %s "+qupdates, Q, mi.table, Q, Q, columns, Q, qmarks, iouStr)
 
 	d.ins.ReplaceMarks(&query)
