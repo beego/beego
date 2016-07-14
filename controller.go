@@ -227,9 +227,9 @@ func (c *Controller) renderTemplate() (bytes.Buffer, error) {
 	var buf bytes.Buffer
 	if c.TplName == "" {
 		c.TplName = strings.ToLower(c.controllerName) + "/" + strings.ToLower(c.actionName) + "." + c.TplExt
-		if c.TplPrefix != "" {
-			c.TplName = c.TplPrefix + c.TplName
-		}
+	}
+	if c.TplPrefix != "" {
+		c.TplName = c.TplPrefix + c.TplName
 	}
 	if BConfig.RunMode == DEV {
 		buildFiles := []string{c.TplName}
