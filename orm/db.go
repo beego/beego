@@ -460,10 +460,12 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, t
 	mysql := "mysql"
 	postgres := "postgres"
 	argsMap := map[string]string{}
+	args0 := ""
 	if dn == mysql {
 		iouStr = "ON DUPLICATE KEY UPDATE"
 	} else if dn == postgres && len(args) > 0 {
-		iouStr = fmt.Sprintf("ON CONFLICT (?) DO UPDATE SET", args[0])
+		args0 = args[0]
+		iouStr = fmt.Sprintf("ON CONFLICT (%s) DO UPDATE SET", args0)
 	} else {
 		return 0, fmt.Errorf("`%s` nonsupport insert or update in beego", dn)
 	}
@@ -486,13 +488,13 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, t
 	marks := make([]string, len(names))
 	updateValues := make([]interface{}, 0)
 	updates := make([]string, len(names))
+	var conflitValue interface{}
 	for i, v := range names {
-		var conflitValue interface{}
-		if v == args[0] {
-			conflitValue = values[i]
-		}
 		marks[i] = "?"
 		valueStr := argsMap[v]
+		if v == args0 {
+			conflitValue = values[i]
+		}
 		if valueStr != "" {
 			switch dn {
 			case mysql:
@@ -500,9 +502,11 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, t
 				break
 			case postgres:
 				if conflitValue != nil {
-					updates[i] = fmt.Sprintf("?=(select ? from ? where ?=?)", v, valueStr, mi.table, args[0], conflitValue)
+
+					updates[i] = fmt.Sprintf("%s=(select %s from %s where %s = ? )", v, valueStr, mi.table, args[0])
+					updateValues = append(updateValues, conflitValue)
 				} else {
-					return 0, fmt.Errorf("`%s` must begin with `%s` in your struct", dn, args[0])
+					return 0, fmt.Errorf("`%s` must be in front of `%s` in your struct", args[0], v)
 				}
 				break
 			}
@@ -516,7 +520,7 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, t
 
 	sep := fmt.Sprintf("%s, %s", Q, Q)
 	qmarks := strings.Join(marks, ", ")
-	qus := strings.Join(updates, ", ")
+	qupdates := strings.Join(updates, ", ")
 	columns := strings.Join(names, sep)
 
 	multi := len(values) / len(names)
@@ -525,7 +529,7 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, t
 		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
 	}
 
-	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s) %s %s", Q, mi.table, Q, Q, columns, Q, qmarks, iouStr, qus)
+	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s) %s "+qupdates, Q, mi.table, Q, Q, columns, Q, qmarks, iouStr)
 
 	d.ins.ReplaceMarks(&query)
 
