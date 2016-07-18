@@ -695,6 +695,52 @@ The program—and web server—godoc processes Go source files to extract docume
 
 }
 
+func TestInsertOrUpdate(t *testing.T) {
+	user := User{UserName: "u", Status: 1, Password: "o"}
+	user1 := User{UserName: "u", Status: 2, Password: "o"}
+	user2 := User{UserName: "u", Status: 3, Password: "oo"}
+	dORM.Insert(&user)
+
+	//test1  普通操作
+	_, err := dORM.InsertOrUpdate(&user1)
+	throwFailNow(t, err)
+	test := User{UserName: "u"}
+	time.Sleep(time.Second * 1)
+	dORM.Read(&test, "UserName")
+	throwFailNow(t, AssertIs(user1.Status, test.Status))
+	//test2  普通操作
+	_, err = dORM.InsertOrUpdate(&user2)
+	throwFailNow(t, err)
+	time.Sleep(time.Second * 1)
+	dORM.Read(&test, "UserName")
+	throwFailNow(t, AssertIs(user2.Status, test.Status))
+	throwFailNow(t, AssertIs(user2.Password, strings.TrimSpace(test.Password)))
+	//test3  数字 + 操作
+	_, err = dORM.InsertOrUpdate(&user2, "UserName", "Status=Status+1")
+	throwFailNow(t, err)
+	time.Sleep(time.Second * 1)
+	dORM.Read(&test, "UserName")
+	throwFailNow(t, AssertIs(user2.Status+1, test.Status))
+	//test4  数字 - 操作
+	_, err = dORM.InsertOrUpdate(&user2, "UserName", "Status=Status-1")
+	throwFailNow(t, err)
+	time.Sleep(time.Second * 1)
+	dORM.Read(&test, "UserName")
+	throwFailNow(t, AssertIs((user2.Status+1)-1, test.Status))
+	//test5  数字 * 操作
+	_, err = dORM.InsertOrUpdate(&user2, "UserName", "Status=Status*3")
+	throwFailNow(t, err)
+	time.Sleep(time.Second * 1)
+	dORM.Read(&test, "UserName")
+	throwFailNow(t, AssertIs(((user2.Status+1)-1)*3, test.Status))
+	//test6  数字 / 操作
+	_, err = dORM.InsertOrUpdate(&user2, "UserName", "Status=Status/3")
+	throwFailNow(t, err)
+	time.Sleep(time.Second * 1)
+	dORM.Read(&test, "UserName")
+	throwFailNow(t, AssertIs((((user2.Status+1)-1)*3)/3, test.Status))
+}
+
 func TestCustomField(t *testing.T) {
 	user := User{ID: 2}
 	err := dORM.Read(&user)
