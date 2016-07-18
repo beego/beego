@@ -483,7 +483,7 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, t
 	isMulti := false
 	names := make([]string, 0, len(mi.fields.dbcols)-1)
 	Q := d.ins.TableQuote()
-	values, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, &names, tz)
+	values, _, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, &names, tz)
 
 	if err != nil {
 		return 0, err
