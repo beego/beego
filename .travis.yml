@@ -31,7 +31,7 @@ install:
   - go get github.com/belogik/goes
   - go get github.com/siddontang/ledisdb/config
   - go get github.com/siddontang/ledisdb/ledis
-#  - go get golang.org/x/tools/cmd/vet
+  - go get golang.org/x/tools/cmd/vet
   - go get github.com/golang/lint/golint
   - go get github.com/ssdb/gossdb/ssdb
 before_script:
