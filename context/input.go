@@ -89,6 +89,9 @@ func (input *BeegoInput) Site() string {
 
 // Scheme returns request scheme as "http" or "https".
 func (input *BeegoInput) Scheme() string {
+	if scheme := input.Header("X-Forwarded-Proto"); scheme != "" {
+		return scheme
+	}
 	if input.Context.Request.URL.Scheme != "" {
 		return input.Context.Request.URL.Scheme
 	}
