@@ -466,8 +466,8 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, t
 	args0 := ""
 	if dn == mysql {
 		iouStr = "ON DUPLICATE KEY UPDATE"
-	} else if dn == postgres{
-		if len(args) = 0 ||  len(strings.Split(args0, "=")) != 1 {
+	} else if dn == postgres {
+		if len(args) == 0 || (len(strings.Split(args0, "=")) != 1) {
 			return 0, fmt.Errorf("`%s` use insert or update must have a conflict column arg in first", dn)
 		} else {
 			args0 = args[0]
