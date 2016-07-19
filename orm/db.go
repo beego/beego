@@ -466,9 +466,13 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, t
 	args0 := ""
 	if dn == mysql {
 		iouStr = "ON DUPLICATE KEY UPDATE"
-	} else if dn == postgres && len(args) > 0 {
-		args0 = args[0]
-		iouStr = fmt.Sprintf("ON CONFLICT (%s) DO UPDATE SET", args0)
+	} else if dn == postgres{
+		if len(args) = 0 ||  len(strings.Split(args0, "=")) != 1 {
+			return 0, fmt.Errorf("`%s` use insert or update must have a conflict column arg in first", dn)
+		} else {
+			args0 = args[0]
+			iouStr = fmt.Sprintf("ON CONFLICT (%s) DO UPDATE SET", args0)
+		}
 	} else {
 		return 0, fmt.Errorf("`%s` nonsupport insert or update in beego", dn)
 	}
