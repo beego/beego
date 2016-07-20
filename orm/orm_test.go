@@ -2186,7 +2186,7 @@ func TestInsertOrUpdate(t *testing.T) {
 		fmt.Println("sqlite3 is nonsupport")
 		return
 	}
-	//test1  普通操作
+	//test1
 	_, err := dORM.InsertOrUpdate(&user1, "user_name")
 	if err != nil && (err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport insert or update in beego") {
 		fmt.Println(err)
@@ -2195,7 +2195,7 @@ func TestInsertOrUpdate(t *testing.T) {
 		dORM.Read(&test, "user_name")
 		throwFailNow(t, AssertIs(user1.Status, test.Status))
 	}
-	//test2  普通操作
+	//test2
 	_, err = dORM.InsertOrUpdate(&user2, "user_name")
 	if err != nil && (err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport insert or update in beego") {
 		fmt.Println(err)
@@ -2205,7 +2205,7 @@ func TestInsertOrUpdate(t *testing.T) {
 		throwFailNow(t, AssertIs(user2.Status, test.Status))
 		throwFailNow(t, AssertIs(user2.Password, strings.TrimSpace(test.Password)))
 	}
-	//test3  数字 + 操作
+	//test3 +
 	_, err = dORM.InsertOrUpdate(&user2, "user_name", "Status=Status+1")
 	if err != nil && (err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport insert or update in beego") {
 		fmt.Println(err)
@@ -2214,7 +2214,7 @@ func TestInsertOrUpdate(t *testing.T) {
 		dORM.Read(&test, "user_name")
 		throwFailNow(t, AssertIs(user2.Status+1, test.Status))
 	}
-	//test4  数字 - 操作
+	//test4 -
 	_, err = dORM.InsertOrUpdate(&user2, "user_name", "Status=Status-1")
 	if err != nil && (err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport insert or update in beego") {
 		fmt.Println(err)
@@ -2223,7 +2223,7 @@ func TestInsertOrUpdate(t *testing.T) {
 		dORM.Read(&test, "user_name")
 		throwFailNow(t, AssertIs((user2.Status+1)-1, test.Status))
 	}
-	//test5  数字 * 操作
+	//test5 *
 	_, err = dORM.InsertOrUpdate(&user2, "user_name", "Status=Status*3")
 	if err != nil && (err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport insert or update in beego") {
 		fmt.Println(err)
@@ -2232,7 +2232,7 @@ func TestInsertOrUpdate(t *testing.T) {
 		dORM.Read(&test, "user_name")
 		throwFailNow(t, AssertIs(((user2.Status+1)-1)*3, test.Status))
 	}
-	//test6  数字 / 操作
+	//test6 /
 	_, err = dORM.InsertOrUpdate(&user2, "user_name", "Status=Status/3")
 	if err != nil && (err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport insert or update in beego") {
 		fmt.Println(err)
