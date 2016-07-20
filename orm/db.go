@@ -503,7 +503,7 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, t
 		if len(args) == 0 || (len(strings.Split(args0, "=")) != 1) {
 			return 0, fmt.Errorf("`%s` use insert or update must have a conflict column arg in first", dn)
 		} else {
-			args0 = args[0]
+			args0 = strings.ToLower(args[0])
 			iouStr = fmt.Sprintf("ON CONFLICT (%s) DO UPDATE SET", args0)
 		}
 	} else {
@@ -513,7 +513,8 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, t
 	for _, v := range args {
 		kv := strings.Split(v, "=")
 		if len(kv) == 2 {
-			argsMap[kv[0]] = kv[1]
+			k := strings.ToLower(kv[0])
+			argsMap[k] = kv[1]
 		}
 	}
 
@@ -532,8 +533,9 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, t
 	var conflitValue interface{}
 	for i, v := range names {
 		marks[i] = "?"
-		valueStr := argsMap[v]
-		if strings.ToLower(v) == strings.ToLower(args0) {
+		vtl := strings.ToLower(v)
+		valueStr := argsMap[vtl]
+		if vtl == args0 {
 			conflitValue = values[i]
 		}
 		if valueStr != "" {
@@ -544,10 +546,10 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, t
 			case postgres:
 				if conflitValue != nil {
 					//postgres ON CONFLICT DO UPDATE SET can`t use colu=colu+values
-					updates[i] = fmt.Sprintf("%s=(select %s from %s where %s = ? )", v, valueStr, mi.table, args[0])
+					updates[i] = fmt.Sprintf("%s=(select %s from %s where %s = ? )", v, valueStr, mi.table, args0)
 					updateValues = append(updateValues, conflitValue)
 				} else {
-					return 0, fmt.Errorf("`%s` must be in front of `%s` in your struct", args[0], v)
+					return 0, fmt.Errorf("`%s` must be in front of `%s` in your struct", args0, v)
 				}
 				break
 			}
