@@ -731,6 +731,80 @@ The program—and web server—godoc processes Go source files to extract docume
 
 }
 
+func TestInsertOrUpdate(t *testing.T) {
+	user := User{UserName: "u", Status: 1, Password: "o"}
+	user1 := User{UserName: "u", Status: 2, Password: "o"}
+	user2 := User{UserName: "u", Status: 3, Password: "oo"}
+	dORM.Insert(&user)
+	fmt.Println(dORM.Driver().Name())
+	if dORM.Driver().Name() == "sqlite3" {
+		fmt.Println("sqlite3 is nonsupport")
+		return
+	}
+	//test1  普通操作
+	_, err := dORM.InsertOrUpdate(&user1, "UserName")
+	if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport insert or update in beego" {
+		fmt.Println(err)
+	} else {
+		throwFailNow(t, err)
+	}
+	test := User{UserName: "u"}
+	time.Sleep(time.Second * 1)
+	dORM.Read(&test, "UserName")
+	throwFailNow(t, AssertIs(user1.Status, test.Status))
+	//test2  普通操作
+	_, err = dORM.InsertOrUpdate(&user2, "UserName")
+	if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport insert or update in beego" {
+		fmt.Println(err)
+	} else {
+		throwFailNow(t, err)
+	}
+	time.Sleep(time.Second * 1)
+	dORM.Read(&test, "UserName")
+	throwFailNow(t, AssertIs(user2.Status, test.Status))
+	throwFailNow(t, AssertIs(user2.Password, strings.TrimSpace(test.Password)))
+	//test3  数字 + 操作
+	_, err = dORM.InsertOrUpdate(&user2, "UserName", "Status=Status+1")
+	if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport insert or update in beego" {
+		fmt.Println(err)
+	} else {
+		throwFailNow(t, err)
+	}
+	time.Sleep(time.Second * 1)
+	dORM.Read(&test, "UserName")
+	throwFailNow(t, AssertIs(user2.Status+1, test.Status))
+	//test4  数字 - 操作
+	_, err = dORM.InsertOrUpdate(&user2, "UserName", "Status=Status-1")
+	if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport insert or update in beego" {
+		fmt.Println(err)
+	} else {
+		throwFailNow(t, err)
+	}
+	time.Sleep(time.Second * 1)
+	dORM.Read(&test, "UserName")
+	throwFailNow(t, AssertIs((user2.Status+1)-1, test.Status))
+	//test5  数字 * 操作
+	_, err = dORM.InsertOrUpdate(&user2, "UserName", "Status=Status*3")
+	if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport insert or update in beego" {
+		fmt.Println(err)
+	} else {
+		throwFailNow(t, err)
+	}
+	time.Sleep(time.Second * 1)
+	dORM.Read(&test, "UserName")
+	throwFailNow(t, AssertIs(((user2.Status+1)-1)*3, test.Status))
+	//test6  数字 / 操作
+	_, err = dORM.InsertOrUpdate(&user2, "UserName", "Status=Status/3")
+	if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport insert or update in beego" {
+		fmt.Println(err)
+	} else {
+		throwFailNow(t, err)
+	}
+	time.Sleep(time.Second * 1)
+	dORM.Read(&test, "UserName")
+	throwFailNow(t, AssertIs((((user2.Status+1)-1)*3)/3, test.Status))
+}
+
 func TestCustomField(t *testing.T) {
 	user := User{ID: 2}
 	err := dORM.Read(&user)

@@ -163,6 +163,19 @@ func (o *orm) Insert(md interface{}) (int64, error) {
 	return id, nil
 }
 
+//insert or update data to database
+func (o *orm) InsertOrUpdate(md interface{}, colConflitAndArgs ...string) (int64, error) {
+	mi, ind := o.getMiInd(md, true)
+	id, err := o.alias.DbBaser.InsertOrUpdate(o.db, mi, ind, o.alias.TZ, o.alias.DriverName, colConflitAndArgs...)
+	if err != nil {
+		return id, err
+	}
+
+	o.setPk(mi, ind, id)
+
+	return id, nil
+}
+
 // set auto pk field
 func (o *orm) setPk(mi *modelInfo, ind reflect.Value, id int64) {
 	if mi.fields.pk.auto {

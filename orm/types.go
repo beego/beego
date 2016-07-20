@@ -53,6 +53,11 @@ type Ormer interface {
 	//  id, err = Ormer.Insert(user)
 	//  user must a pointer and Insert will set user's pk field
 	Insert(interface{}) (int64, error)
+	//mysql:InsertOrUpdate(model) or InsertOrUpdate(model,"colu=colu+value")
+	//if colu type is integer : can use(+-*/), string : convert(colu,"value")
+	//postgres: InsertOrUpdate(model,"conflictColumnName") or InsertOrUpdate(model,"conflictColumnName","colu=colu+value")
+	//if colu type is integer : can use(+-*/), string : colu || "value"
+	InsertOrUpdate(md interface{}, colConflitAndArgs ...string) (int64, error)
 	// insert some models to database
 	InsertMulti(bulk int, mds interface{}) (int64, error)
 	// update model to database.
@@ -393,6 +398,7 @@ type dbBaser interface {
 	Insert(dbQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
 	InsertMulti(dbQuerier, *modelInfo, reflect.Value, int, *time.Location) (int64, error)
 	InsertValue(dbQuerier, *modelInfo, bool, []string, []interface{}) (int64, error)
+	InsertOrUpdate(dbQuerier, *modelInfo, reflect.Value, *time.Location, string, ...string) (int64, error)
 	InsertStmt(stmtQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
 	Update(dbQuerier, *modelInfo, reflect.Value, *time.Location, []string) (int64, error)
 	Delete(dbQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
