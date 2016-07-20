@@ -533,7 +533,7 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, t
 	for i, v := range names {
 		marks[i] = "?"
 		valueStr := argsMap[v]
-		if v == args0 {
+		if strings.ToLower(v) == strings.ToLower(args0) {
 			conflitValue = values[i]
 		}
 		if valueStr != "" {
