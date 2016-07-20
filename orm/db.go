@@ -488,6 +488,112 @@ func (d *dbBase) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []s
 	return id, err
 }
 
+//insert or update a row
+//If your primary key or unique column conflict will update
+//if no will insert
+func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location, dn string, args ...string) (int64, error) {
+	iouStr := ""
+	mysql := "mysql"
+	postgres := "postgres"
+	argsMap := map[string]string{}
+	args0 := ""
+	if dn == mysql {
+		iouStr = "ON DUPLICATE KEY UPDATE"
+	} else if dn == postgres {
+		if len(args) == 0 || (len(strings.Split(args0, "=")) != 1) {
+			return 0, fmt.Errorf("`%s` use insert or update must have a conflict column arg in first", dn)
+		} else {
+			args0 = args[0]
+			iouStr = fmt.Sprintf("ON CONFLICT (%s) DO UPDATE SET", args0)
+		}
+	} else {
+		return 0, fmt.Errorf("`%s` nonsupport insert or update in beego", dn)
+	}
+	//Get on the key-value pairs
+	for _, v := range args {
+		kv := strings.Split(v, "=")
+		if len(kv) == 2 {
+			argsMap[kv[0]] = kv[1]
+		}
+	}
+
+	isMulti := false
+	names := make([]string, 0, len(mi.fields.dbcols)-1)
+	Q := d.ins.TableQuote()
+	values, _, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, &names, tz)
+
+	if err != nil {
+		return 0, err
+	}
+
+	marks := make([]string, len(names))
+	updateValues := make([]interface{}, 0)
+	updates := make([]string, len(names))
+	var conflitValue interface{}
+	for i, v := range names {
+		marks[i] = "?"
+		valueStr := argsMap[v]
+		if v == args0 {
+			conflitValue = values[i]
+		}
+		if valueStr != "" {
+			switch dn {
+			case mysql:
+				updates[i] = v + "=" + valueStr
+				break
+			case postgres:
+				if conflitValue != nil {
+					//postgres ON CONFLICT DO UPDATE SET can`t use colu=colu+values
+					updates[i] = fmt.Sprintf("%s=(select %s from %s where %s = ? )", v, valueStr, mi.table, args[0])
+					updateValues = append(updateValues, conflitValue)
+				} else {
+					return 0, fmt.Errorf("`%s` must be in front of `%s` in your struct", args[0], v)
+				}
+				break
+			}
+		} else {
+			updates[i] = v + "=?"
+			updateValues = append(updateValues, values[i])
+		}
+	}
+
+	values = append(values, updateValues...)
+
+	sep := fmt.Sprintf("%s, %s", Q, Q)
+	qmarks := strings.Join(marks, ", ")
+	qupdates := strings.Join(updates, ", ")
+	columns := strings.Join(names, sep)
+
+	multi := len(values) / len(names)
+
+	if isMulti {
+		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
+	}
+	//conflitValue maybe is a int,can`t use fmt.Sprintf
+	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s) %s "+qupdates, Q, mi.table, Q, Q, columns, Q, qmarks, iouStr)
+
+	d.ins.ReplaceMarks(&query)
+
+	if isMulti || !d.ins.HasReturningID(mi, &query) {
+		res, err := q.Exec(query, values...)
+		if err == nil {
+			if isMulti {
+				return res.RowsAffected()
+			}
+			return res.LastInsertId()
+		}
+		return 0, err
+	}
+
+	row := q.QueryRow(query, values...)
+	var id int64
+	err = row.Scan(&id)
+	if err.Error() == `pq: syntax error at or near "ON"` {
+		err = fmt.Errorf("postgres version must 9.5 or higher")
+	}
+	return id, err
+}
+
 // execute update sql dbQuerier with given struct reflect.Value.
 func (d *dbBase) Update(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location, cols []string) (int64, error) {
 	pkName, pkValue, ok := getExistPk(mi, ind)
