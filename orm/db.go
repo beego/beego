@@ -488,9 +488,9 @@ func (d *dbBase) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []s
 	return id, err
 }
 
-//insert or update a row
-//If your primary key or unique column conflict will update
-//if no will insert
+// InsertOrUpdate a row
+// If your primary key or unique column conflict will update
+// If no will insert
 func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location, dn string, args ...string) (int64, error) {
 	iouStr := ""
 	mysql := "mysql"
