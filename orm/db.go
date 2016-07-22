@@ -491,23 +491,24 @@ func (d *dbBase) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []s
 // InsertOrUpdate a row
 // If your primary key or unique column conflict will update
 // If no will insert
-func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location, driver DriverType, args ...string) (int64, error) {
+func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a *alias, args ...string) (int64, error) {
 	iouStr := ""
 	mysql := DRMySQL
 	postgres := DRPostgres
+	driver := a.Driver
 	argsMap := map[string]string{}
 	args0 := ""
 	if driver == mysql {
 		iouStr = "ON DUPLICATE KEY UPDATE"
 	} else if driver == postgres {
 		if len(args) == 0 || (len(strings.Split(args0, "=")) != 1) {
-			return 0, fmt.Errorf("`%s` use insert or update must have a conflict column arg in first", driver)
+			return 0, fmt.Errorf("`%s` use insert or update must have a conflict column arg in first", a.DriverName)
 		} else {
 			args0 = strings.ToLower(args[0])
 			iouStr = fmt.Sprintf("ON CONFLICT (%s) DO UPDATE SET", args0)
 		}
 	} else {
-		return 0, fmt.Errorf("`%s` nonsupport insert or update in beego", driver)
+		return 0, fmt.Errorf("`%s` nonsupport insert or update in beego", a.DriverName)
 	}
 	//Get on the key-value pairs
 	for _, v := range args {
@@ -521,7 +522,7 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, t
 	isMulti := false
 	names := make([]string, 0, len(mi.fields.dbcols)-1)
 	Q := d.ins.TableQuote()
-	values, _, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, &names, tz)
+	values, _, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, &names, a.TZ)
 
 	if err != nil {
 		return 0, err
