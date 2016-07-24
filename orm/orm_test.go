@@ -19,6 +19,7 @@ import (
 	"database/sql"
 	"fmt"
 	"io/ioutil"
+	"math"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -33,6 +34,7 @@ var _ = os.PathSeparator
 var (
 	testDate     = formatDate + " -0700"
 	testDateTime = formatDateTime + " -0700"
+	testTime     = formatTime + " -0700"
 )
 
 type argAny []interface{}
@@ -188,6 +190,9 @@ func TestSyncDb(t *testing.T) {
 	RegisterModel(new(Permission))
 	RegisterModel(new(GroupPermissions))
 	RegisterModel(new(InLine))
+	RegisterModel(new(InLineOneToOne))
+	RegisterModel(new(IntegerPk))
+	RegisterModel(new(UintPk))
 
 	err := RunSyncdb("default", true, Debug)
 	throwFail(t, err)
@@ -208,6 +213,9 @@ func TestRegisterModels(t *testing.T) {
 	RegisterModel(new(Permission))
 	RegisterModel(new(GroupPermissions))
 	RegisterModel(new(InLine))
+	RegisterModel(new(InLineOneToOne))
+	RegisterModel(new(IntegerPk))
+	RegisterModel(new(UintPk))
 
 	BootStrap()
 
@@ -233,6 +241,9 @@ var DataValues = map[string]interface{}{
 	"Boolean":  true,
 	"Char":     "char",
 	"Text":     "text",
+	"JSON":     `{"name":"json"}`,
+	"Jsonb":    `{"name": "jsonb"}`,
+	"Time":     time.Now(),
 	"Date":     time.Now(),
 	"DateTime": time.Now(),
 	"Byte":     byte(1<<8 - 1),
@@ -257,10 +268,12 @@ func TestDataTypes(t *testing.T) {
 	ind := reflect.Indirect(reflect.ValueOf(&d))
 
 	for name, value := range DataValues {
+		if name == "JSON" {
+			continue
+		}
 		e := ind.FieldByName(name)
 		e.Set(reflect.ValueOf(value))
 	}
-
 	id, err := dORM.Insert(&d)
 	throwFail(t, err)
 	throwFail(t, AssertIs(id, 1))
@@ -281,6 +294,9 @@ func TestDataTypes(t *testing.T) {
 		case "DateTime":
 			vu = vu.(time.Time).In(DefaultTimeLoc).Format(testDateTime)
 			value = value.(time.Time).In(DefaultTimeLoc).Format(testDateTime)
+		case "Time":
+			vu = vu.(time.Time).In(DefaultTimeLoc).Format(testTime)
+			value = value.(time.Time).In(DefaultTimeLoc).Format(testTime)
 		}
 		throwFail(t, AssertIs(vu == value, true), value, vu)
 	}
@@ -299,9 +315,17 @@ func TestNullDataTypes(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(id, 1))
 
+	data := `{"ok":1,"data":{"arr":[1,2],"msg":"gopher"}}`
+	d = DataNull{ID: 1, JSON: data}
+	num, err := dORM.Update(&d)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
 	d = DataNull{ID: 1}
 	err = dORM.Read(&d)
 	throwFail(t, err)
+
+	throwFail(t, AssertIs(d.JSON, data))
 
 	throwFail(t, AssertIs(d.NullBool.Valid, false))
 	throwFail(t, AssertIs(d.NullString.Valid, false))
@@ -326,6 +350,9 @@ func TestNullDataTypes(t *testing.T) {
 	throwFail(t, AssertIs(d.Float32Ptr, nil))
 	throwFail(t, AssertIs(d.Float64Ptr, nil))
 	throwFail(t, AssertIs(d.DecimalPtr, nil))
+	throwFail(t, AssertIs(d.TimePtr, nil))
+	throwFail(t, AssertIs(d.DatePtr, nil))
+	throwFail(t, AssertIs(d.DateTimePtr, nil))
 
 	_, err = dORM.Raw(`INSERT INTO data_null (boolean) VALUES (?)`, nil).Exec()
 	throwFail(t, err)
@@ -352,6 +379,9 @@ func TestNullDataTypes(t *testing.T) {
 	float32Ptr := float32(42.0)
 	float64Ptr := float64(42.0)
 	decimalPtr := float64(42.0)
+	timePtr := time.Now()
+	datePtr := time.Now()
+	dateTimePtr := time.Now()
 
 	d = DataNull{
 		DateTime:    time.Now(),
@@ -377,6 +407,9 @@ func TestNullDataTypes(t *testing.T) {
 		Float32Ptr:  &float32Ptr,
 		Float64Ptr:  &float64Ptr,
 		DecimalPtr:  &decimalPtr,
+		TimePtr:     &timePtr,
+		DatePtr:     &datePtr,
+		DateTimePtr: &dateTimePtr,
 	}
 
 	id, err = dORM.Insert(&d)
@@ -417,6 +450,9 @@ func TestNullDataTypes(t *testing.T) {
 	throwFail(t, AssertIs(*d.Float32Ptr, float32Ptr))
 	throwFail(t, AssertIs(*d.Float64Ptr, float64Ptr))
 	throwFail(t, AssertIs(*d.DecimalPtr, decimalPtr))
+	throwFail(t, AssertIs((*d.TimePtr).Format(testTime), timePtr.Format(testTime)))
+	throwFail(t, AssertIs((*d.DatePtr).Format(testDate), datePtr.Format(testDate)))
+	throwFail(t, AssertIs((*d.DateTimePtr).Format(testDateTime), dateTimePtr.Format(testDateTime)))
 }
 
 func TestDataCustomTypes(t *testing.T) {
@@ -1521,6 +1557,7 @@ func TestRawQueryRow(t *testing.T) {
 		Boolean  bool
 		Char     string
 		Text     string
+		Time     time.Time
 		Date     time.Time
 		DateTime time.Time
 		Byte     byte
@@ -1549,14 +1586,14 @@ func TestRawQueryRow(t *testing.T) {
 	Q := dDbBaser.TableQuote()
 
 	cols := []string{
-		"id", "boolean", "char", "text", "date", "datetime", "byte", "rune", "int", "int8", "int16", "int32",
+		"id", "boolean", "char", "text", "time", "date", "datetime", "byte", "rune", "int", "int8", "int16", "int32",
 		"int64", "uint", "uint8", "uint16", "uint32", "uint64", "float32", "float64", "decimal",
 	}
 	sep := fmt.Sprintf("%s, %s", Q, Q)
 	query := fmt.Sprintf("SELECT %s%s%s FROM data WHERE id = ?", Q, strings.Join(cols, sep), Q)
 	var id int
 	values := []interface{}{
-		&id, &Boolean, &Char, &Text, &Date, &DateTime, &Byte, &Rune, &Int, &Int8, &Int16, &Int32,
+		&id, &Boolean, &Char, &Text, &Time, &Date, &DateTime, &Byte, &Rune, &Int, &Int8, &Int16, &Int32,
 		&Int64, &Uint, &Uint8, &Uint16, &Uint32, &Uint64, &Float32, &Float64, &Decimal,
 	}
 	err := dORM.Raw(query, 1).QueryRow(values...)
@@ -1567,6 +1604,10 @@ func TestRawQueryRow(t *testing.T) {
 		switch col {
 		case "id":
 			throwFail(t, AssertIs(id, 1))
+		case "time":
+			v = v.(time.Time).In(DefaultTimeLoc)
+			value := dataValues[col].(time.Time).In(DefaultTimeLoc)
+			throwFail(t, AssertIs(v, value, testTime))
 		case "date":
 			v = v.(time.Time).In(DefaultTimeLoc)
 			value := dataValues[col].(time.Time).In(DefaultTimeLoc)
@@ -1614,6 +1655,9 @@ func TestQueryRows(t *testing.T) {
 		e := ind.FieldByName(name)
 		vu := e.Interface()
 		switch name {
+		case "Time":
+			vu = vu.(time.Time).In(DefaultTimeLoc).Format(testTime)
+			value = value.(time.Time).In(DefaultTimeLoc).Format(testTime)
 		case "Date":
 			vu = vu.(time.Time).In(DefaultTimeLoc).Format(testDate)
 			value = value.(time.Time).In(DefaultTimeLoc).Format(testDate)
@@ -1638,6 +1682,9 @@ func TestQueryRows(t *testing.T) {
 		e := ind.FieldByName(name)
 		vu := e.Interface()
 		switch name {
+		case "Time":
+			vu = vu.(time.Time).In(DefaultTimeLoc).Format(testTime)
+			value = value.(time.Time).In(DefaultTimeLoc).Format(testTime)
 		case "Date":
 			vu = vu.(time.Time).In(DefaultTimeLoc).Format(testDate)
 			value = value.(time.Time).In(DefaultTimeLoc).Format(testDate)
@@ -1958,4 +2005,172 @@ func TestInLine(t *testing.T) {
 	throwFail(t, AssertIs(il.Email, email))
 	throwFail(t, AssertIs(il.Created.In(DefaultTimeLoc), inline.Created.In(DefaultTimeLoc), testDate))
 	throwFail(t, AssertIs(il.Updated.In(DefaultTimeLoc), inline.Updated.In(DefaultTimeLoc), testDateTime))
+}
+
+func TestInLineOneToOne(t *testing.T) {
+	name := "121"
+	email := "121@go.com"
+	inline := NewInLine()
+	inline.Name = name
+	inline.Email = email
+
+	id, err := dORM.Insert(inline)
+	throwFail(t, err)
+	throwFail(t, AssertIs(id, 2))
+
+	note := "one2one"
+	il121 := NewInLineOneToOne()
+	il121.Note = note
+	il121.InLine = inline
+	_, err = dORM.Insert(il121)
+	throwFail(t, err)
+	throwFail(t, AssertIs(il121.ID, 1))
+
+	il := NewInLineOneToOne()
+	err = dORM.QueryTable(il).Filter("Id", 1).RelatedSel().One(il)
+
+	throwFail(t, err)
+	throwFail(t, AssertIs(il.Note, note))
+	throwFail(t, AssertIs(il.InLine.ID, id))
+	throwFail(t, AssertIs(il.InLine.Name, name))
+	throwFail(t, AssertIs(il.InLine.Email, email))
+
+	rinline := NewInLine()
+	err = dORM.QueryTable(rinline).Filter("InLineOneToOne__Id", 1).One(rinline)
+
+	throwFail(t, err)
+	throwFail(t, AssertIs(rinline.ID, id))
+	throwFail(t, AssertIs(rinline.Name, name))
+	throwFail(t, AssertIs(rinline.Email, email))
+}
+
+func TestIntegerPk(t *testing.T) {
+	its := []IntegerPk{
+		{ID: math.MinInt64, Value: "-"},
+		{ID: 0, Value: "0"},
+		{ID: math.MaxInt64, Value: "+"},
+	}
+
+	num, err := dORM.InsertMulti(len(its), its)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, len(its)))
+
+	for _, intPk := range its {
+		out := IntegerPk{ID: intPk.ID}
+		err = dORM.Read(&out)
+		throwFail(t, err)
+		throwFail(t, AssertIs(out.Value, intPk.Value))
+	}
+
+	num, err = dORM.InsertMulti(1, []*IntegerPk{&IntegerPk{
+		ID: 1, Value: "ok",
+	}})
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+}
+
+func TestInsertAuto(t *testing.T) {
+	u := &User{
+		UserName: "autoPre",
+		Email:    "autoPre@gmail.com",
+	}
+
+	id, err := dORM.Insert(u)
+	throwFail(t, err)
+
+	id += 100
+	su := &User{
+		ID:       int(id),
+		UserName: "auto",
+		Email:    "auto@gmail.com",
+	}
+
+	nid, err := dORM.Insert(su)
+	throwFail(t, err)
+	throwFail(t, AssertIs(nid, id))
+
+	users := []User{
+		{ID: int(id + 100), UserName: "auto_100"},
+		{ID: int(id + 110), UserName: "auto_110"},
+		{ID: int(id + 120), UserName: "auto_120"},
+	}
+	num, err := dORM.InsertMulti(100, users)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 3))
+
+	u = &User{
+		UserName: "auto_121",
+	}
+
+	nid, err = dORM.Insert(u)
+	throwFail(t, err)
+	throwFail(t, AssertIs(nid, id+120+1))
+}
+
+func TestUintPk(t *testing.T) {
+	name := "go"
+	u := &UintPk{
+		ID:   8,
+		Name: name,
+	}
+
+	created, pk, err := dORM.ReadOrCreate(u, "ID")
+	throwFail(t, err)
+	throwFail(t, AssertIs(created, true))
+	throwFail(t, AssertIs(u.Name, name))
+
+	nu := &UintPk{ID: 8}
+	created, pk, err = dORM.ReadOrCreate(nu, "ID")
+	throwFail(t, err)
+	throwFail(t, AssertIs(created, false))
+	throwFail(t, AssertIs(nu.ID, u.ID))
+	throwFail(t, AssertIs(pk, u.ID))
+	throwFail(t, AssertIs(nu.Name, name))
+
+	dORM.Delete(u)
+}
+
+func TestSnake(t *testing.T) {
+	cases := map[string]string{
+		"i":           "i",
+		"I":           "i",
+		"iD":          "i_d",
+		"ID":          "id",
+		"NO":          "no",
+		"NOO":         "noo",
+		"NOOooOOoo":   "noo_oo_oo_oo",
+		"OrderNO":     "order_no",
+		"tagName":     "tag_name",
+		"tag_Name":    "tag_name",
+		"tag_name":    "tag_name",
+		"_tag_name":   "_tag_name",
+		"tag_666name": "tag_666name",
+		"tag_666Name": "tag_666_name",
+	}
+	for name, want := range cases {
+		got := snakeString(name)
+		throwFail(t, AssertIs(got, want))
+	}
+}
+
+func TestIgnoreCaseTag(t *testing.T) {
+	type testTagModel struct {
+		ID     int    `orm:"pk"`
+		NOO    string `orm:"column(n)"`
+		Name01 string `orm:"NULL"`
+		Name02 string `orm:"COLUMN(Name)"`
+		Name03 string `orm:"Column(name)"`
+	}
+	modelCache.clean()
+	RegisterModel(&testTagModel{})
+	info, ok := modelCache.get("test_tag_model")
+	throwFail(t, AssertIs(ok, true))
+	throwFail(t, AssertNot(info, nil))
+	if t == nil {
+		return
+	}
+	throwFail(t, AssertIs(info.fields.GetByName("NOO").column, "n"))
+	throwFail(t, AssertIs(info.fields.GetByName("Name01").null, true))
+	throwFail(t, AssertIs(info.fields.GetByName("Name02").column, "Name"))
+	throwFail(t, AssertIs(info.fields.GetByName("Name03").column, "name"))
 }

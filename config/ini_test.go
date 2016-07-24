@@ -42,11 +42,14 @@ needlogin = ON
 enableSession = Y
 enableCookie = N
 flag = 1
+path1 = ${GOPATH}
+path2 = ${GOPATH||/home/go}
 [demo]
 key1="asta"
 key2 = "xie"
 CaseInsensitive = true
 peers = one;two;three
+password = ${GOPATH}
 `
 
 		keyValue = map[string]interface{}{
@@ -64,10 +67,13 @@ peers = one;two;three
 			"enableSession":         true,
 			"enableCookie":          false,
 			"flag":                  true,
+			"path1":                 os.Getenv("GOPATH"),
+			"path2":                 os.Getenv("GOPATH"),
 			"demo::key1":            "asta",
 			"demo::key2":            "xie",
 			"demo::CaseInsensitive": true,
 			"demo::peers":           []string{"one", "two", "three"},
+			"demo::password":        os.Getenv("GOPATH"),
 			"null":                  "",
 			"demo2::key1":           "",
 			"error":                 "",

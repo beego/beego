@@ -1,8 +1,7 @@
 language: go
 
 go:
-  - tip
-  - 1.6.0
+  - 1.6
   - 1.5.3
   - 1.4.3
 services:
@@ -31,21 +30,20 @@ install:
   - go get github.com/belogik/goes
   - go get github.com/siddontang/ledisdb/config
   - go get github.com/siddontang/ledisdb/ledis
-  - go get golang.org/x/tools/cmd/vet
-  - go get github.com/golang/lint/golint
   - go get github.com/ssdb/gossdb/ssdb
 before_script:
+  - psql --version
   - sh -c "if [ '$ORM_DRIVER' = 'postgres' ]; then psql -c 'create database orm_test;' -U postgres; fi"
   - sh -c "if [ '$ORM_DRIVER' = 'mysql' ]; then mysql -u root -e 'create database orm_test;'; fi"
   - sh -c "if [ '$ORM_DRIVER' = 'sqlite' ]; then touch $TRAVIS_BUILD_DIR/orm_test.db; fi"
+  - sh -c "if [ $(go version) == *1.[5-9]* ]; then go get github.com/golang/lint/golint; golint ./...; fi"
+  - sh -c "if [ $(go version) == *1.[5-9]* ]; then go tool vet .; fi"
   - mkdir -p res/var
   - ./ssdb/ssdb-server ./ssdb/ssdb.conf -d
 after_script:
   -killall -w ssdb-server
   - rm -rf ./res/var/*
 script:
-  - go vet -x ./...
-  - $HOME/gopath/bin/golint ./...
   - go test -v ./...
-notifications:
-  webhooks: https://hooks.pubu.im/services/z7m9bvybl3rgtg9
+addons:
+  postgresql: "9.4"
