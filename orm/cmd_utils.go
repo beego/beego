@@ -52,9 +52,15 @@ checkColumn:
 	case TypeBooleanField:
 		col = T["bool"]
 	case TypeCharField:
-		col = fmt.Sprintf(T["string"], fieldSize)
+		if al.Driver == DRPostgres && fi.toText {
+			col = T["string-text"]
+		} else {
+			col = fmt.Sprintf(T["string"], fieldSize)
+		}
 	case TypeTextField:
 		col = T["string-text"]
+	case TypeTimeField:
+		col = T["time.Time-clock"]
 	case TypeDateField:
 		col = T["time.Time-date"]
 	case TypeDateTimeField:
@@ -88,6 +94,18 @@ checkColumn:
 		} else {
 			col = fmt.Sprintf(s, fi.digits, fi.decimals)
 		}
+	case TypeJSONField:
+		if al.Driver != DRPostgres {
+			fieldType = TypeCharField
+			goto checkColumn
+		}
+		col = T["json"]
+	case TypeJsonbField:
+		if al.Driver != DRPostgres {
+			fieldType = TypeCharField
+			goto checkColumn
+		}
+		col = T["jsonb"]
 	case RelForeignKey, RelOneToOne:
 		fieldType = fi.relModelInfo.fields.pk.fieldType
 		fieldSize = fi.relModelInfo.fields.pk.size
@@ -264,7 +282,7 @@ func getColumnDefault(fi *fieldInfo) string {
 
 	// These defaults will be useful if there no config value orm:"default" and NOT NULL is on
 	switch fi.fieldType {
-	case TypeDateField, TypeDateTimeField, TypeTextField:
+	case TypeTimeField, TypeDateField, TypeDateTimeField, TypeTextField:
 		return v
 
 	case TypeBitField, TypeSmallIntegerField, TypeIntegerField,
@@ -276,6 +294,8 @@ func getColumnDefault(fi *fieldInfo) string {
 	case TypeBooleanField:
 		t = " DEFAULT %s "
 		d = "FALSE"
+	case TypeJSONField, TypeJsonbField:
+		d = "{}"
 	}
 
 	if fi.colDefault {
