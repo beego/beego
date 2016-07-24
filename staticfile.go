@@ -157,13 +157,10 @@ func searchFile(ctx *context.Context) (string, os.FileInfo, error) {
 				return filePath, fi, nil
 			}
 		}
-		return "", nil, errors.New(requestPath + " file not find")
+		return "", nil, errNotStaticRequest
 	}
 
 	for prefix, staticDir := range BConfig.WebConfig.StaticDir {
-		if len(prefix) == 0 {
-			continue
-		}
 		if !strings.Contains(requestPath, prefix) {
 			continue
 		}
