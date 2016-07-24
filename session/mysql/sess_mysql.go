@@ -115,7 +115,6 @@ func (st *SessionStore) SessionRelease(w http.ResponseWriter) {
 	}
 	st.c.Exec("UPDATE "+TableName+" set `session_data`=?, `session_expiry`=? where session_key=?",
 		b, time.Now().Unix(), st.sid)
-
 }
 
 // Provider mysql session provider

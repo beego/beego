@@ -181,18 +181,36 @@ func ToInt64(value interface{}) (d int64) {
 	return
 }
 
-// snake string, XxYy to xx_yy
+// snake string, XxYy to xx_yy , XxYY to xx_yy
 func snakeString(s string) string {
 	data := make([]byte, 0, len(s)*2)
-	j := false
 	num := len(s)
 	for i := 0; i < num; i++ {
 		d := s[i]
-		if i > 0 && d >= 'A' && d <= 'Z' && j {
-			data = append(data, '_')
-		}
-		if d != '_' {
-			j = true
+		if i > 0 && d != '_' && s[i-1] != '_' {
+			need := false
+			// upper as 1, lower as 0
+			// 		XX -> 11 -> 11
+			// 		Xx -> 10 -> 10
+			//		XxYyZZ -> 101011 -> 10_10_11
+			isUpper := d >= 'A' && d <= 'Z'
+			preIsUpper := s[i-1] >= 'A' && s[i-1] <= 'Z'
+			if isUpper {
+				// like : xxYy
+				if !preIsUpper {
+					need = true
+				}
+			} else {
+				if preIsUpper {
+					// ignore "Xy" in "xxXyy"
+					if i-2 >= 0 && s[i-2] >= 'A' && s[i-2] <= 'Z' {
+						need = true
+					}
+				}
+			}
+			if need {
+				data = append(data, '_')
+			}
 		}
 		data = append(data, d)
 	}
