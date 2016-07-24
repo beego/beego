@@ -66,7 +66,7 @@ func registerModel(prefix string, model interface{}) {
 		}
 
 		if info.fields.pk == nil {
-			fmt.Printf("<orm.RegisterModel> `%s` need a primary key field\n", name)
+			fmt.Printf("<orm.RegisterModel> `%s` need a primary key field, default use 'id' if not set\n", name)
 			os.Exit(2)
 		}
 

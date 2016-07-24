@@ -137,6 +137,8 @@ func getFieldType(val reflect.Value) (ft int, err error) {
 		ft = TypeBooleanField
 	case reflect.TypeOf(new(string)):
 		ft = TypeCharField
+	case reflect.TypeOf(new(time.Time)):
+		ft = TypeDateTimeField
 	default:
 		elm := reflect.Indirect(val)
 		switch elm.Kind() {
@@ -192,10 +194,10 @@ func parseStructTag(data string, attrs *map[string]bool, tags *map[string]string
 	tag := make(map[string]string)
 	for _, v := range strings.Split(data, defaultStructTagDelim) {
 		v = strings.TrimSpace(v)
-		if supportTag[v] == 1 {
-			attr[v] = true
+		if t := strings.ToLower(v); supportTag[t] == 1 {
+			attr[t] = true
 		} else if i := strings.Index(v, "("); i > 0 && strings.Index(v, ")") == len(v)-1 {
-			name := v[:i]
+			name := t[:i]
 			if supportTag[name] == 2 {
 				v = v[i+1 : len(v)-1]
 				tag[name] = v
