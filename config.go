@@ -233,9 +233,9 @@ func assignConfig(ac config.Configer) error {
 		sds := strings.Fields(sd)
 		for _, v := range sds {
 			if url2fsmap := strings.SplitN(v, ":", 2); len(url2fsmap) == 2 {
-				BConfig.WebConfig.StaticDir["/"+strings.TrimRight(url2fsmap[0], "/")] = url2fsmap[1]
+				BConfig.WebConfig.StaticDir["/"+strings.Trim(url2fsmap[0], "/")] = url2fsmap[1]
 			} else {
-				BConfig.WebConfig.StaticDir["/"+strings.TrimRight(url2fsmap[0], "/")] = url2fsmap[0]
+				BConfig.WebConfig.StaticDir["/"+strings.Trim(url2fsmap[0], "/")] = url2fsmap[0]
 			}
 		}
 	}
