@@ -492,30 +492,28 @@ func (d *dbBase) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []s
 // If your primary key or unique column conflict will update
 // If no will insert
 func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a *alias, args ...string) (int64, error) {
-	iouStr := ""
-	mysql := DRMySQL
-	postgres := DRPostgres
-	driver := a.Driver
-	argsMap := map[string]string{}
 	args0 := ""
-	if driver == mysql {
+	iouStr := ""
+	argsMap := map[string]string{}
+	switch a.Driver {
+	case DRMySQL:
 		iouStr = "ON DUPLICATE KEY UPDATE"
-	} else if driver == postgres {
-		if len(args) == 0 || (len(strings.Split(args0, "=")) != 1) {
-			return 0, fmt.Errorf("`%s` use insert or update must have a conflict column arg in first", a.DriverName)
+	case DRPostgres:
+		if len(args) == 0 {
+			return 0, fmt.Errorf("`%s` use InsertOrUpdate must have a conflict column", a.DriverName)
 		} else {
 			args0 = strings.ToLower(args[0])
 			iouStr = fmt.Sprintf("ON CONFLICT (%s) DO UPDATE SET", args0)
 		}
-	} else {
-		return 0, fmt.Errorf("`%s` nonsupport insert or update in beego", a.DriverName)
+	default:
+		return 0, fmt.Errorf("`%s` nonsupport InsertOrUpdate in beego", a.DriverName)
 	}
+
 	//Get on the key-value pairs
 	for _, v := range args {
 		kv := strings.Split(v, "=")
 		if len(kv) == 2 {
-			k := strings.ToLower(kv[0])
-			argsMap[k] = kv[1]
+			argsMap[strings.ToLower(kv[0])] = kv[1]
 		}
 	}
 
@@ -534,17 +532,15 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a
 	var conflitValue interface{}
 	for i, v := range names {
 		marks[i] = "?"
-		vtl := strings.ToLower(v)
-		valueStr := argsMap[vtl]
-		if vtl == args0 {
+		valueStr := argsMap[v]
+		if v == args0 {
 			conflitValue = values[i]
 		}
 		if valueStr != "" {
-			switch driver {
-			case mysql:
+			switch a.Driver {
+			case DRMySQL:
 				updates[i] = v + "=" + valueStr
-				break
-			case postgres:
+			case DRPostgres:
 				if conflitValue != nil {
 					//postgres ON CONFLICT DO UPDATE SET can`t use colu=colu+values
 					updates[i] = fmt.Sprintf("%s=(select %s from %s where %s = ? )", v, valueStr, mi.table, args0)
@@ -552,7 +548,6 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a
 				} else {
 					return 0, fmt.Errorf("`%s` must be in front of `%s` in your struct", args0, v)
 				}
-				break
 			}
 		} else {
 			updates[i] = v + "=?"
