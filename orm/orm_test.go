@@ -2187,19 +2187,26 @@ func TestInsertOrUpdate(t *testing.T) {
 		return
 	}
 	//test1
+test1:
 	_, err := dORM.InsertOrUpdate(&user1, "user_name")
-	if err != nil && (err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego") {
+	if err != nil {
 		fmt.Println(err)
-		return
+		if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego" {
+			goto test2
+		}
 	} else {
 		throwFailNow(t, err)
 		dORM.Read(&test, "user_name")
 		throwFailNow(t, AssertIs(user1.Status, test.Status))
 	}
 	//test2
+test2:
 	_, err = dORM.InsertOrUpdate(&user2, "user_name")
-	if err != nil && (err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego") {
+	if err != nil {
 		fmt.Println(err)
+		if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego" {
+			goto test3
+		}
 	} else {
 		throwFailNow(t, err)
 		dORM.Read(&test, "user_name")
@@ -2207,36 +2214,52 @@ func TestInsertOrUpdate(t *testing.T) {
 		throwFailNow(t, AssertIs(user2.Password, strings.TrimSpace(test.Password)))
 	}
 	//test3 +
-	_, err = dORM.InsertOrUpdate(&user2, "user_name", "Status=Status+1")
-	if err != nil && (err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego") {
+test3:
+	_, err = dORM.InsertOrUpdate(&user2, "user_name", "status=status+1")
+	if err != nil {
 		fmt.Println(err)
+		if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego" {
+			goto test4
+		}
 	} else {
 		throwFailNow(t, err)
 		dORM.Read(&test, "user_name")
 		throwFailNow(t, AssertIs(user2.Status+1, test.Status))
 	}
 	//test4 -
-	_, err = dORM.InsertOrUpdate(&user2, "user_name", "Status=Status-1")
-	if err != nil && (err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego") {
+test4:
+	_, err = dORM.InsertOrUpdate(&user2, "user_name", "status=status-1")
+	if err != nil {
 		fmt.Println(err)
+		if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego" {
+			goto test5
+		}
 	} else {
 		throwFailNow(t, err)
 		dORM.Read(&test, "user_name")
 		throwFailNow(t, AssertIs((user2.Status+1)-1, test.Status))
 	}
 	//test5 *
-	_, err = dORM.InsertOrUpdate(&user2, "user_name", "Status=Status*3")
-	if err != nil && (err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego") {
+test5:
+	_, err = dORM.InsertOrUpdate(&user2, "user_name", "status=status*3")
+	if err != nil {
 		fmt.Println(err)
+		if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego" {
+			goto test6
+		}
 	} else {
 		throwFailNow(t, err)
 		dORM.Read(&test, "user_name")
 		throwFailNow(t, AssertIs(((user2.Status+1)-1)*3, test.Status))
 	}
 	//test6 /
+test6:
 	_, err = dORM.InsertOrUpdate(&user2, "user_name", "Status=Status/3")
-	if err != nil && (err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego") {
+	if err != nil {
 		fmt.Println(err)
+		if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego" {
+			return
+		}
 	} else {
 		throwFailNow(t, err)
 		dORM.Read(&test, "user_name")
