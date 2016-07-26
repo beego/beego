@@ -57,7 +57,11 @@ func serverStaticRouter(ctx *context.Context) {
 	if fileInfo.IsDir() {
 		requestURL := ctx.Input.URL()
 		if requestURL[len(requestURL)-1] != '/' {
-			ctx.Redirect(302, requestURL+"/")
+			redirectURL := requestURL + "/"
+			if ctx.Request.URL.RawQuery != "" {
+				redirectURL = redirectURL + "?" + ctx.Request.URL.RawQuery
+			}
+			ctx.Redirect(302, redirectURL)
 		} else {
 			//serveFile will list dir
 			http.ServeFile(ctx.ResponseWriter, ctx.Request, filePath)
