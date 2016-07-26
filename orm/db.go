@@ -532,7 +532,7 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a
 	var conflitValue interface{}
 	for i, v := range names {
 		marks[i] = "?"
-		valueStr := argsMap[v]
+		valueStr := argsMap[strings.ToLower(v)]
 		if v == args0 {
 			conflitValue = values[i]
 		}
