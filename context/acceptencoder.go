@@ -209,9 +209,13 @@ func parseEncoding(r *http.Request) string {
 			continue
 		}
 		vs := strings.Split(v, ";")
+		var cf acceptEncoder
+		var ok bool
+		if cf, ok = encoderMap[vs[0]]; !ok {
+			continue
+		}
 		if len(vs) == 1 {
-			lastQ = q{vs[0], 1}
-			break
+			return cf.name
 		}
 		if len(vs) == 2 {
 			f, _ := strconv.ParseFloat(strings.Replace(vs[1], "q=", "", -1), 64)
@@ -219,12 +223,9 @@ func parseEncoding(r *http.Request) string {
 				continue
 			}
 			if f > lastQ.value {
-				lastQ = q{vs[0], f}
+				lastQ = q{cf.name, f}
 			}
 		}
 	}
-	if cf, ok := encoderMap[lastQ.name]; ok {
-		return cf.name
-	}
-	return ""
+	return lastQ.name
 }
