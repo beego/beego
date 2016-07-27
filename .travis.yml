@@ -31,7 +31,6 @@ install:
   - go get github.com/siddontang/ledisdb/config
   - go get github.com/siddontang/ledisdb/ledis
   - go get github.com/ssdb/gossdb/ssdb
-  - go get github.com/shiena/ansicolor
 before_script:
   - psql --version
   - sh -c "if [ '$ORM_DRIVER' = 'postgres' ]; then psql -c 'create database orm_test;' -U postgres; fi"

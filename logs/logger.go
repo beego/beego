@@ -18,7 +18,6 @@ import (
 	"io"
 	"sync"
 	"time"
-	"github.com/shiena/ansicolor"
 	"fmt"
 	"os"
 )
@@ -138,16 +137,16 @@ func ColorByMethod(cond bool, method string) string {
 	}
 }
 
+// Guard Mutex to guarantee atomicity of W32Debug(string) function
 var mu sync.Mutex
 
 // Helper method to output colored logs in Windows terminals
-// using ansicolor (https://github.com/shiena/ansicolor)
 func W32Debug(msg string) {
 	mu.Lock()
 	defer mu.Unlock()
 
 	current := time.Now()
-	w := ansicolor.NewAnsiColorWriter(os.Stdout)
+	w := NewAnsiColorWriter(os.Stdout)
 
 	fmt.Fprintf(w, "[beego] %v %s\n", current.Format("2006/01/02 - 15:04:05"), msg)
 }
