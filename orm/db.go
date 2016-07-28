@@ -747,9 +747,10 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 
 	Q := d.ins.TableQuote()
 
+	hasRel := len(qs.related) > 0 || qs.relDepth > 0
+
 	var tCols []string
 	if len(cols) > 0 {
-		hasRel := len(qs.related) > 0 || qs.relDepth > 0
 		tCols = make([]string, 0, len(cols))
 		var maps map[string]bool
 		if hasRel {
@@ -791,6 +792,11 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 	limit := tables.getLimitSQL(mi, offset, rlimit)
 	join := tables.getJoinSQL()
 
+	// if not has rel when just do not peform join 
+	if !hasRel {
+		join = ""
+	}
+	
 	for _, tbl := range tables.tables {
 		if tbl.sel {
 			colsNum += len(tbl.mi.fields.dbcols)
