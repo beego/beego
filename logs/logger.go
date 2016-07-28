@@ -38,18 +38,54 @@ func (lg *logWriter) println(when time.Time, msg string) {
 	lg.Unlock()
 }
 
-const y1 = `0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999`
-const y2 = `0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789`
-const mo1 = `000000000111`
-const mo2 = `123456789012`
-const d1 = `0000000001111111111222222222233`
-const d2 = `1234567890123456789012345678901`
-const h1 = `000000000011111111112222`
-const h2 = `012345678901234567890123`
-const mi1 = `000000000011111111112222222222333333333344444444445555555555`
-const mi2 = `012345678901234567890123456789012345678901234567890123456789`
-const s1 = `000000000011111111112222222222333333333344444444445555555555`
-const s2 = `012345678901234567890123456789012345678901234567890123456789`
+type outputMode int
+
+// DiscardNonColorEscSeq supports the divided color escape sequence.
+// But non-color escape sequence is not output.
+// Please use the OutputNonColorEscSeq If you want to output a non-color
+// escape sequences such as ncurses. However, it does not support the divided
+// color escape sequence.
+const (
+	_ outputMode = iota
+	DiscardNonColorEscSeq
+	OutputNonColorEscSeq
+)
+
+// NewAnsiColorWriter creates and initializes a new ansiColorWriter
+// using io.Writer w as its initial contents.
+// In the console of Windows, which change the foreground and background
+// colors of the text by the escape sequence.
+// In the console of other systems, which writes to w all text.
+func NewAnsiColorWriter(w io.Writer) io.Writer {
+	return NewModeAnsiColorWriter(w, DiscardNonColorEscSeq)
+}
+
+// NewModeAnsiColorWriter create and initializes a new ansiColorWriter
+// by specifying the outputMode.
+func NewModeAnsiColorWriter(w io.Writer, mode outputMode) io.Writer {
+	if _, ok := w.(*ansiColorWriter); !ok {
+		return &ansiColorWriter{
+			w:    w,
+			mode: mode,
+		}
+	}
+	return w
+}
+
+const (
+	y1 = `0000000000111111111122222222223333333333444444444455555555556666666666777777777788888888889999999999`
+	y2 = `0123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789`
+	mo1 = `000000000111`
+	mo2 = `123456789012`
+	d1 = `0000000001111111111222222222233`
+	d2 = `1234567890123456789012345678901`
+	h1 = `000000000011111111112222`
+	h2 = `012345678901234567890123`
+	mi1 = `000000000011111111112222222222333333333344444444445555555555`
+	mi2 = `012345678901234567890123456789012345678901234567890123456789`
+	s1 = `000000000011111111112222222222333333333344444444445555555555`
+	s2 = `012345678901234567890123456789012345678901234567890123456789`
+)
 
 func formatTimeHeader(when time.Time) ([]byte, int) {
 	y, mo, d := when.Date()
