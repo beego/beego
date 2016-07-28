@@ -790,11 +790,10 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 	groupBy := tables.getGroupSQL(qs.groups)
 	orderBy := tables.getOrderSQL(qs.orders)
 	limit := tables.getLimitSQL(mi, offset, rlimit)
-	join := tables.getJoinSQL()
-
+	join := "" 
 	// if not has rel when just do not peform join 
-	if !hasRel {
-		join = ""
+	if hasRel {
+		join = tables.getJoinSQL()
 	}
 	
 	for _, tbl := range tables.tables {
