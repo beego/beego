@@ -816,16 +816,31 @@ Admin:
 	if BConfig.RunMode == DEV || BConfig.Log.AccessLogs {
 		timeDur := time.Since(startTime)
 		var devInfo string
+
+		statusCode := context.ResponseWriter.Status
+		if statusCode == 0 { statusCode = 200 }
+
+		iswin := (runtime.GOOS == "windows")
+		statusColor := logs.ColorByStatus(iswin, statusCode)
+		methodColor := logs.ColorByMethod(iswin, r.Method)
+		resetColor := logs.ColorByMethod(iswin, "")
+
 		if findRouter {
 			if routerInfo != nil {
-				devInfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s | % -40s |", r.Method, r.URL.Path, timeDur.String(), "match", routerInfo.pattern)
+					devInfo = fmt.Sprintf("|%s %3d %s|%13s|%8s|%s %s %-7s %-3s   r:%s", statusColor, statusCode,
+						resetColor, timeDur.String(), "match", methodColor, resetColor, r.Method, r.URL.Path,
+						routerInfo.pattern)
 			} else {
-				devInfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s |", r.Method, r.URL.Path, timeDur.String(), "match")
+				devInfo = fmt.Sprintf("|%s %3d %s|%13s|%8s|%s %s %-7s %-3s", statusColor, statusCode, resetColor,
+					timeDur.String(), "match", methodColor, resetColor, r.Method, r.URL.Path)
 			}
 		} else {
-			devInfo = fmt.Sprintf("| % -10s | % -40s | % -16s | % -10s |", r.Method, r.URL.Path, timeDur.String(), "notmatch")
+			devInfo = fmt.Sprintf("|%s %3d %s|%13s|%8s|%s %s %-7s %-3s", statusColor, statusCode, resetColor,
+				timeDur.String(), "nomatch", methodColor, resetColor, r.Method, r.URL.Path)
 		}
-		if DefaultAccessLogFilter == nil || !DefaultAccessLogFilter.Filter(context) {
+		if iswin {
+			logs.W32Debug(devInfo)
+		} else {
 			logs.Debug(devInfo)
 		}
 	}
