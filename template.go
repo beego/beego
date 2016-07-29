@@ -50,22 +50,16 @@ func ExecuteTemplate(wr io.Writer, name string, data interface{}) error {
 		defer templatesLock.RUnlock()
 	}
 	if t, ok := beeTemplates[name]; ok {
+		var err error
 		if t.Lookup(name) != nil {
-			err := t.ExecuteTemplate(wr, name, data)
-			if err != nil {
-				logs.Trace("template Execute err:", err)
-			}
-			return err
+			err = t.ExecuteTemplate(wr, name, data)
 		} else {
-			err := t.Execute(wr, data)
-			if err != nil {
-				if err != nil {
-					logs.Trace("template Execute err:", err)
-				}
-				return err
-			}
+			err = t.Execute(wr, data)
 		}
-		return nil
+		if err != nil {
+			logs.Trace("template Execute err:", err)
+		}
+		return err
 	}
 	panic("can't find templatefile in the path:" + name)
 }
