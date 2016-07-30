@@ -19,7 +19,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/Maxgis/tree"
 	"github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/utils"
 )
@@ -575,7 +574,6 @@ func splitSegment(key string) (bool, []string, string) {
 			}
 			params = append(params, ":"+string(param))
 		}
-		tree.Print(string(out))
 		return true, params, string(out)
 	}
 	return false, nil, ""
