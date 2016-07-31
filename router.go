@@ -580,15 +580,15 @@ func (p *ControllerRegister) geturl(t *Tree, url, controllName, methodName strin
 	return false, ""
 }
 
-func (p *ControllerRegister) execFilter(context *beecontext.Context, urlPath string, pos int) (started bool) {
+func (p *ControllerRegister) execFilter(context *beecontext.Context, rw *responseWriter, urlPath string, pos int) (started bool) {
 	for _, filterR := range p.filters[pos] {
-		if filterR.returnOnOutput && context.ResponseWriter.Started {
+		if filterR.returnOnOutput && rw.started {
 			return true
 		}
 		if ok := filterR.ValidRouter(urlPath, context); ok {
 			filterR.filterFunc(context)
 		}
-		if filterR.returnOnOutput && context.ResponseWriter.Started {
+		if filterR.returnOnOutput && rw.started {
 			return true
 		}
 	}
@@ -596,13 +596,14 @@ func (p *ControllerRegister) execFilter(context *beecontext.Context, urlPath str
 }
 
 // Implement http.Handler interface.
-func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
+func (p *ControllerRegister) ServeHTTP(hrw http.ResponseWriter, r *http.Request) {
 	startTime := time.Now()
 	var (
 		runRouter  reflect.Type
 		findRouter bool
 		runMethod  string
 		routerInfo *controllerInfo
+		rw         = &responseWriter{rw: hrw}
 	)
 	context := p.pool.Get().(*beecontext.Context)
 	context.Reset(rw, r)
@@ -629,13 +630,13 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	// filter for static file
-	if len(p.filters[BeforeStatic]) > 0 && p.execFilter(context, urlPath, BeforeStatic) {
+	if len(p.filters[BeforeStatic]) > 0 && p.execFilter(context, rw, urlPath, BeforeStatic) {
 		goto Admin
 	}
 
 	serverStaticRouter(context)
 
-	if context.ResponseWriter.Started {
+	if rw.started {
 		findRouter = true
 		goto Admin
 	}
@@ -662,7 +663,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			}
 		}()
 	}
-	if len(p.filters[BeforeRouter]) > 0 && p.execFilter(context, urlPath, BeforeRouter) {
+	if len(p.filters[BeforeRouter]) > 0 && p.execFilter(context, rw, urlPath, BeforeRouter) {
 		goto Admin
 	}
 
@@ -691,7 +692,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	if findRouter {
 		//execute middleware filters
-		if len(p.filters[BeforeExec]) > 0 && p.execFilter(context, urlPath, BeforeExec) {
+		if len(p.filters[BeforeExec]) > 0 && p.execFilter(context, rw, urlPath, BeforeExec) {
 			goto Admin
 		}
 		isRunnable := false
@@ -752,7 +753,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 			execController.URLMapping()
 
-			if !context.ResponseWriter.Started {
+			if !rw.started {
 				//exec main logic
 				switch runMethod {
 				case "GET":
@@ -778,7 +779,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				}
 
 				//render template
-				if !context.ResponseWriter.Started && context.Output.Status == 0 {
+				if !rw.started && context.Output.Status == 0 {
 					if BConfig.WebConfig.AutoRender {
 						if err := execController.Render(); err != nil {
 							logs.Error(err)
@@ -792,11 +793,11 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}
 
 		//execute middleware filters
-		if len(p.filters[AfterExec]) > 0 && p.execFilter(context, urlPath, AfterExec) {
+		if len(p.filters[AfterExec]) > 0 && p.execFilter(context, rw, urlPath, AfterExec) {
 			goto Admin
 		}
 	}
-	if len(p.filters[FinishRouter]) > 0 && p.execFilter(context, urlPath, FinishRouter) {
+	if len(p.filters[FinishRouter]) > 0 && p.execFilter(context, rw, urlPath, FinishRouter) {
 		goto Admin
 	}
 

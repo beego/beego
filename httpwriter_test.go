@@ -12,38 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package context
+package beego
 
 import (
-	"net/http"
-	"testing"
 	"net/http/httptest"
+	"testing"
 )
 
-func TestXsrfReset_01(t *testing.T) {
-	r := &http.Request{}
-	c := NewContext()
-	c.Request = r
-	c.ResponseWriter=httptest.NewRecorder()
-	c.Output.Reset(c)
-	c.Input.Reset(c)
-	c.XSRFToken("key", 16)
-	if c._xsrfToken == "" {
-		t.FailNow()
-	}
-	c.Reset(httptest.NewRecorder(),r)
-	token := c._xsrfToken
-	if c._xsrfToken != "" {
-		t.Log(c._xsrfToken)
-		t.FailNow()
-	}
-	c.XSRFToken("key", 16)
-	if c._xsrfToken == "" {
-		t.Log(c._xsrfToken)
-		t.FailNow()
-	}
-	if token == c._xsrfToken {
-		t.Log(c._xsrfToken)
+func TestResponseWriter_WriteHeader(t *testing.T) {
+	var rw responseWriter
+	recorder := httptest.NewRecorder()
+	rw.reset(recorder)
+	rw.WriteHeader(404)
+	rw.Write([]byte(nil))
+	if recorder.Code != 404 {
 		t.FailNow()
 	}
 }
