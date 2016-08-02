@@ -1064,12 +1064,17 @@ func (d *dbBase) Count(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condition
 	tables.parseRelated(qs.related, qs.relDepth)
 
 	where, args := tables.getCondSQL(cond, false, tz)
+	groupBy := tables.getGroupSQL(qs.groups)
 	tables.getOrderSQL(qs.orders)
 	join := tables.getJoinSQL()
 
 	Q := d.ins.TableQuote()
 
-	query := fmt.Sprintf("SELECT COUNT(*) FROM %s%s%s T0 %s%s", Q, mi.table, Q, join, where)
+	query := fmt.Sprintf("SELECT COUNT(*) FROM %s%s%s T0 %s%s%s", Q, mi.table, Q, join, where, groupBy)
+
+	if groupBy != "" {
+		query = fmt.Sprintf("SELECT COUNT(*) FROM (%s) AS T", query)
+	}
 
 	d.ins.ReplaceMarks(&query)
 
