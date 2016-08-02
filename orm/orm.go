@@ -209,6 +209,19 @@ func (o *orm) InsertMulti(bulk int, mds interface{}) (int64, error) {
 	return cnt, nil
 }
 
+// InsertOrUpdate data to database
+func (o *orm) InsertOrUpdate(md interface{}, colConflitAndArgs ...string) (int64, error) {
+	mi, ind := o.getMiInd(md, true)
+	id, err := o.alias.DbBaser.InsertOrUpdate(o.db, mi, ind, o.alias, colConflitAndArgs...)
+	if err != nil {
+		return id, err
+	}
+
+	o.setPk(mi, ind, id)
+
+	return id, nil
+}
+
 // update model to database.
 // cols set the columns those want to update.
 func (o *orm) Update(md interface{}, cols ...string) (int64, error) {
