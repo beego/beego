@@ -380,6 +380,11 @@ func ErrorController(c ControllerInterface) *App {
 	return BeeApp
 }
 
+// Exception Write HttpStatus with errCode and Exec error handler if exist.
+func Exception(errCode uint64, ctx *context.Context) {
+	exception(strconv.FormatUint(errCode, 10), ctx)
+}
+
 // show error string as simple text message.
 // if error string is empty, show 503 or 500 error as default.
 func exception(errCode string, ctx *context.Context) {

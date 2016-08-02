@@ -86,11 +86,10 @@ func (ini *IniConfig) parseFile(name string) (*IniConfigContainer, error) {
 		if _, ok := err.(*os.PathError); ok {
 			return nil, err
 		}
+		line = bytes.TrimSpace(line)
 		if bytes.Equal(line, bEmpty) {
 			continue
 		}
-		line = bytes.TrimSpace(line)
-
 		var bComment []byte
 		switch {
 		case bytes.HasPrefix(line, bNumComment):

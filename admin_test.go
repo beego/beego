@@ -1,8 +1,8 @@
 package beego
 
 import (
-	"testing"
 	"fmt"
+	"testing"
 )
 
 func TestList_01(t *testing.T) {
@@ -11,8 +11,8 @@ func TestList_01(t *testing.T) {
 	t.Log(m)
 	om := oldMap()
 	for k, v := range om {
-		if fmt.Sprint(m[k])!= fmt.Sprint(v) {
-			t.Log(k, "old-key",v,"new-key", m[k])
+		if fmt.Sprint(m[k]) != fmt.Sprint(v) {
+			t.Log(k, "old-key", v, "new-key", m[k])
 			t.FailNow()
 		}
 	}
