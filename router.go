@@ -603,6 +603,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		findRouter bool
 		runMethod  string
 		routerInfo *controllerInfo
+		isRunnable bool
 	)
 	context := p.pool.Get().(*beecontext.Context)
 	context.Reset(rw, r)
@@ -666,136 +667,127 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		goto Admin
 	}
 
-	if !findRouter {
-		httpMethod := r.Method
-		if t, ok := p.routers[httpMethod]; ok {
-			runObject := t.Match(urlPath, context)
-			if r, ok := runObject.(*controllerInfo); ok {
-				routerInfo = r
-				findRouter = true
-				if splat := context.Input.Param(":splat"); splat != "" {
-					for k, v := range strings.Split(splat, "/") {
-						context.Input.SetParam(strconv.Itoa(k), v)
-					}
-				}
-			}
-		}
-
-	}
-
+	routerInfo, findRouter = p.FindRouter(context)
 	//if no matches to url, throw a not found exception
 	if !findRouter {
 		exception("404", context)
 		goto Admin
 	}
-
-	if findRouter {
-		//execute middleware filters
-		if len(p.filters[BeforeExec]) > 0 && p.execFilter(context, urlPath, BeforeExec) {
-			goto Admin
-		}
-		isRunnable := false
-		if routerInfo != nil {
-			if routerInfo.routerType == routerTypeRESTFul {
-				if _, ok := routerInfo.methods[r.Method]; ok {
-					isRunnable = true
-					routerInfo.runFunction(context)
-				} else {
-					exception("405", context)
-					goto Admin
-				}
-			} else if routerInfo.routerType == routerTypeHandler {
-				isRunnable = true
-				routerInfo.handler.ServeHTTP(rw, r)
-			} else {
-				runRouter = routerInfo.controllerType
-				method := r.Method
-				if r.Method == "POST" && context.Input.Query("_method") == "PUT" {
-					method = "PUT"
-				}
-				if r.Method == "POST" && context.Input.Query("_method") == "DELETE" {
-					method = "DELETE"
-				}
-				if m, ok := routerInfo.methods[method]; ok {
-					runMethod = m
-				} else if m, ok = routerInfo.methods["*"]; ok {
-					runMethod = m
-				} else {
-					runMethod = method
-				}
-			}
-		}
-
-		// also defined runRouter & runMethod from filter
-		if !isRunnable {
-			//Invoke the request handler
-			vc := reflect.New(runRouter)
-			execController, ok := vc.Interface().(ControllerInterface)
-			if !ok {
-				panic("controller is not ControllerInterface")
-			}
-
-			//call the controller init function
-			execController.Init(context, runRouter.Name(), runMethod, vc.Interface())
-
-			//call prepare function
-			execController.Prepare()
-
-			//if XSRF is Enable then check cookie where there has any cookie in the  request's cookie _csrf
-			if BConfig.WebConfig.EnableXSRF {
-				execController.XSRFToken()
-				if r.Method == "POST" || r.Method == "DELETE" || r.Method == "PUT" ||
-					(r.Method == "POST" && (context.Input.Query("_method") == "DELETE" || context.Input.Query("_method") == "PUT")) {
-					execController.CheckXSRFCookie()
-				}
-			}
-
-			execController.URLMapping()
-
-			if !context.ResponseWriter.Started {
-				//exec main logic
-				switch runMethod {
-				case "GET":
-					execController.Get()
-				case "POST":
-					execController.Post()
-				case "DELETE":
-					execController.Delete()
-				case "PUT":
-					execController.Put()
-				case "HEAD":
-					execController.Head()
-				case "PATCH":
-					execController.Patch()
-				case "OPTIONS":
-					execController.Options()
-				default:
-					if !execController.HandlerFunc(runMethod) {
-						var in []reflect.Value
-						method := vc.MethodByName(runMethod)
-						method.Call(in)
-					}
-				}
-
-				//render template
-				if !context.ResponseWriter.Started && context.Output.Status == 0 {
-					if BConfig.WebConfig.AutoRender {
-						if err := execController.Render(); err != nil {
-							logs.Error(err)
-						}
-					}
-				}
-			}
-
-			// finish all runRouter. release resource
-			execController.Finish()
-		}
-
-		//execute middleware filters
-		if len(p.filters[AfterExec]) > 0 && p.execFilter(context, urlPath, AfterExec) {
-			goto Admin
+	if splat := context.Input.Param(":splat"); splat != "" {
+		for k, v := range strings.Split(splat, "/") {
+			context.Input.SetParam(strconv.Itoa(k), v)
 		}
 	}
+
+	//store router pattern into context
+	context.Input.SetData("RouterPattern", routerInfo.pattern)
+
+	//execute middleware filters
+	if len(p.filters[BeforeExec]) > 0 && p.execFilter(context, urlPath, BeforeExec) {
+		goto Admin
+	}
+
+	if routerInfo != nil {
+		if routerInfo.routerType == routerTypeRESTFul {
+			if _, ok := routerInfo.methods[r.Method]; ok {
+				isRunnable = true
+				routerInfo.runFunction(context)
+			} else {
+				exception("405", context)
+				goto Admin
+			}
+		} else if routerInfo.routerType == routerTypeHandler {
+			isRunnable = true
+			routerInfo.handler.ServeHTTP(rw, r)
+		} else {
+			runRouter = routerInfo.controllerType
+			method := r.Method
+			if r.Method == "POST" && context.Input.Query("_method") == "PUT" {
+				method = "PUT"
+			}
+			if r.Method == "POST" && context.Input.Query("_method") == "DELETE" {
+				method = "DELETE"
+			}
+			if m, ok := routerInfo.methods[method]; ok {
+				runMethod = m
+			} else if m, ok = routerInfo.methods["*"]; ok {
+				runMethod = m
+			} else {
+				runMethod = method
+			}
+		}
+	}
+
+	// also defined runRouter & runMethod from filter
+	if !isRunnable {
+		//Invoke the request handler
+		vc := reflect.New(runRouter)
+		execController, ok := vc.Interface().(ControllerInterface)
+		if !ok {
+			panic("controller is not ControllerInterface")
+		}
+
+		//call the controller init function
+		execController.Init(context, runRouter.Name(), runMethod, vc.Interface())
+
+		//call prepare function
+		execController.Prepare()
+
+		//if XSRF is Enable then check cookie where there has any cookie in the  request's cookie _csrf
+		if BConfig.WebConfig.EnableXSRF {
+			execController.XSRFToken()
+			if r.Method == "POST" || r.Method == "DELETE" || r.Method == "PUT" ||
+				(r.Method == "POST" && (context.Input.Query("_method") == "DELETE" || context.Input.Query("_method") == "PUT")) {
+				execController.CheckXSRFCookie()
+			}
+		}
+
+		execController.URLMapping()
+
+		if !context.ResponseWriter.Started {
+			//exec main logic
+			switch runMethod {
+			case "GET":
+				execController.Get()
+			case "POST":
+				execController.Post()
+			case "DELETE":
+				execController.Delete()
+			case "PUT":
+				execController.Put()
+			case "HEAD":
+				execController.Head()
+			case "PATCH":
+				execController.Patch()
+			case "OPTIONS":
+				execController.Options()
+			default:
+				if !execController.HandlerFunc(runMethod) {
+					var in []reflect.Value
+					method := vc.MethodByName(runMethod)
+					method.Call(in)
+				}
+			}
+
+			//render template
+			if !context.ResponseWriter.Started && context.Output.Status == 0 {
+				if BConfig.WebConfig.AutoRender {
+					if err := execController.Render(); err != nil {
+						logs.Error(err)
+					}
+				}
+			}
+		}
+
+		// finish all runRouter. release resource
+		execController.Finish()
+	}
+
+	//execute middleware filters
+	if len(p.filters[AfterExec]) > 0 && p.execFilter(context, urlPath, AfterExec) {
+		goto Admin
+	}
+
 	if len(p.filters[FinishRouter]) > 0 && p.execFilter(context, urlPath, FinishRouter) {
 		goto Admin
 	}
@@ -849,6 +841,22 @@ Admin:
 	if context.Output.Status != 0 {
 		context.ResponseWriter.WriteHeader(context.Output.Status)
 	}
+}
+
+// FindRouter Find Router info for URL
+func (p *ControllerRegister) FindRouter(context *beecontext.Context) (routerInfo *controllerInfo, isFind bool) {
+	var urlPath = context.Input.URL()
+	if !BConfig.RouterCaseSensitive {
+		urlPath = strings.ToLower(urlPath)
+	}
+	httpMethod := context.Input.Method()
+	if t, ok := p.routers[httpMethod]; ok {
+		runObject := t.Match(urlPath, context)
+		if r, ok := runObject.(*controllerInfo); ok {
+			return r, true
+		}
+	}
+	return
 }
 
 func (p *ControllerRegister) recoverPanic(context *beecontext.Context) {

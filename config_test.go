@@ -117,8 +117,7 @@ func TestAssignConfig_03(t *testing.T) {
 	ac.Set("StaticExtensionsToGzip", ".css,.js,.html,.jpg,.png")
 	assignConfig(ac)
 
-
-	t.Logf("%#v",BConfig)
+	t.Logf("%#v", BConfig)
 
 	if BConfig.AppName != "test_app" {
 		t.FailNow()
