@@ -125,7 +125,7 @@ func init() {
 		RouterCaseSensitive: true,
 		ServerName:          "beegoServer:" + VERSION,
 		RecoverPanic:        true,
-		CopyRequestBody:     false,
+		CopyRequestBody:     true,
 		EnableGzip:          false,
 		MaxMemory:           1 << 26, //64MB
 		EnableErrorsShow:    true,
