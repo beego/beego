@@ -146,16 +146,10 @@ func (output *BeegoOutput) Cookie(name string, value string, others ...interface
 	}
 
 	// default false. for session cookie default true
-	httponly := false
 	if len(others) > 4 {
 		if v, ok := others[4].(bool); ok && v {
-			// HttpOnly = true
-			httponly = true
+			fmt.Fprintf(&b, "; HttpOnly")
 		}
-	}
-
-	if httponly {
-		fmt.Fprintf(&b, "; HttpOnly")
 	}
 
 	output.Context.ResponseWriter.Header().Add("Set-Cookie", b.String())
