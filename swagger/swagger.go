@@ -29,7 +29,7 @@ type Swagger struct {
 	Schemes             []string            `json:"schemes,omitempty"`
 	Consumes            []string            `json:"consumes,omitempty"`
 	Produces            []string            `json:"produces,omitempty"`
-	Paths               map[string]Item     `json:"paths"`
+	Paths               map[string]*Item    `json:"paths"`
 	Definitions         map[string]Schema   `json:"definitions,omitempty"`
 	SecurityDefinitions map[string]Scurity  `json:"securityDefinitions,omitempty"`
 	Security            map[string][]string `json:"security,omitempty"`
@@ -111,6 +111,7 @@ type Schema struct {
 
 // Propertie are taken from the JSON Schema definition but their definitions were adjusted to the Swagger Specification
 type Propertie struct {
+	Ref         string               `json:"$ref,omitempty"`
 	Title       string               `json:"title,omitempty"`
 	Description string               `json:"description,omitempty"`
 	Default     string               `json:"default,omitempty"`
