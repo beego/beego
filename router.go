@@ -406,19 +406,26 @@ func (p *ControllerRegister) AddAutoPrefix(prefix string, c ControllerInterface)
 }
 
 // InsertFilter Add a FilterFunc with pattern rule and action constant.
-// The bool params is for setting the returnOnOutput value (false allows multiple filters to execute)
+// params is for:
+//   1. setting the returnOnOutput value (false allows multiple filters to execute)
+//   2. determining whether or not params need to be reset.
 func (p *ControllerRegister) InsertFilter(pattern string, pos int, filter FilterFunc, params ...bool) error {
-	mr := new(FilterRouter)
-	mr.tree = NewTree()
-	mr.pattern = pattern
-	mr.filterFunc = filter
-	if !BConfig.RouterCaseSensitive {
-		pattern = strings.ToLower(pattern)
+	mr := &FilterRouter{
+		tree:           NewTree(),
+		pattern:        pattern,
+		filterFunc:     filter,
+		returnOnOutput: true,
 	}
-	if len(params) == 0 {
-		mr.returnOnOutput = true
-	} else {
+	if !BConfig.RouterCaseSensitive {
+		mr.pattern = strings.ToLower(pattern)
+	}
+
+	paramsLen := len(params)
+	if paramsLen > 0 {
 		mr.returnOnOutput = params[0]
+	}
+	if paramsLen > 1 {
+		mr.resetParams = params[1]
 	}
 	mr.tree.AddRouter(pattern, true)
 	return p.insertFilterRouter(pos, mr)
@@ -581,12 +588,22 @@ func (p *ControllerRegister) geturl(t *Tree, url, controllName, methodName strin
 }
 
 func (p *ControllerRegister) execFilter(context *beecontext.Context, urlPath string, pos int) (started bool) {
+	var preFilterParams map[string]string
 	for _, filterR := range p.filters[pos] {
 		if filterR.returnOnOutput && context.ResponseWriter.Started {
 			return true
 		}
+		if filterR.resetParams {
+			preFilterParams = context.Input.Params()
+		}
 		if ok := filterR.ValidRouter(urlPath, context); ok {
 			filterR.filterFunc(context)
+			if filterR.resetParams {
+				context.Input.ResetParams()
+				for k, v := range preFilterParams {
+					context.Input.SetParam(k, v)
+				}
+			}
 		}
 		if filterR.returnOnOutput && context.ResponseWriter.Started {
 			return true
@@ -810,7 +827,9 @@ Admin:
 		var devInfo string
 
 		statusCode := context.ResponseWriter.Status
-		if statusCode == 0 { statusCode = 200 }
+		if statusCode == 0 {
+			statusCode = 200
+		}
 
 		iswin := (runtime.GOOS == "windows")
 		statusColor := logs.ColorByStatus(iswin, statusCode)
@@ -819,9 +838,9 @@ Admin:
 
 		if findRouter {
 			if routerInfo != nil {
-					devInfo = fmt.Sprintf("|%s %3d %s|%13s|%8s|%s %s %-7s %-3s   r:%s", statusColor, statusCode,
-						resetColor, timeDur.String(), "match", methodColor, resetColor, r.Method, r.URL.Path,
-						routerInfo.pattern)
+				devInfo = fmt.Sprintf("|%s %3d %s|%13s|%8s|%s %s %-7s %-3s   r:%s", statusColor, statusCode,
+					resetColor, timeDur.String(), "match", methodColor, resetColor, r.Method, r.URL.Path,
+					routerInfo.pattern)
 			} else {
 				devInfo = fmt.Sprintf("|%s %3d %s|%13s|%8s|%s %s %-7s %-3s", statusColor, statusCode, resetColor,
 					timeDur.String(), "match", methodColor, resetColor, r.Method, r.URL.Path)
