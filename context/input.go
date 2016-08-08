@@ -301,6 +301,14 @@ func (input *BeegoInput) SetParam(key, val string) {
 	input.pnames = append(input.pnames, key)
 }
 
+// ResetParams clears any of the input's Params
+// This function is used to clear parameters so they may be reset between filter
+// passes.
+func (input *BeegoInput) ResetParams() {
+	input.pnames = input.pnames[:0]
+	input.pvalues = input.pvalues[:0]
+}
+
 // Query returns input data item string by a given string.
 func (input *BeegoInput) Query(key string) string {
 	if val := input.Param(key); val != "" {

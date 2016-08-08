@@ -27,6 +27,7 @@ type FilterRouter struct {
 	tree           *Tree
 	pattern        string
 	returnOnOutput bool
+	resetParams    bool
 }
 
 // ValidRouter checks if the current request is matched by this filter.
