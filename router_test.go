@@ -420,6 +420,74 @@ func testRequest(method, path string) (*httptest.ResponseRecorder, *http.Request
 	return recorder, request
 }
 
+// Expectation: A Filter with the correct configuration should be created given
+// specific parameters.
+func TestInsertFilter(t *testing.T) {
+	testName := "TestInsertFilter"
+
+	mux := NewControllerRegister()
+	mux.InsertFilter("*", BeforeRouter, func(*context.Context) {})
+	if !mux.filters[BeforeRouter][0].returnOnOutput {
+		t.Errorf(
+			"%s: passing no variadic params should set returnOnOutput to true",
+			testName)
+	}
+	if mux.filters[BeforeRouter][0].resetParams {
+		t.Errorf(
+			"%s: passing no variadic params should set resetParams to false",
+			testName)
+	}
+
+	mux = NewControllerRegister()
+	mux.InsertFilter("*", BeforeRouter, func(*context.Context) {}, false)
+	if mux.filters[BeforeRouter][0].returnOnOutput {
+		t.Errorf(
+			"%s: passing false as 1st variadic param should set returnOnOutput to false",
+			testName)
+	}
+
+	mux = NewControllerRegister()
+	mux.InsertFilter("*", BeforeRouter, func(*context.Context) {}, true, true)
+	if !mux.filters[BeforeRouter][0].resetParams {
+		t.Errorf(
+			"%s: passing true as 2nd variadic param should set resetParams to true",
+			testName)
+	}
+}
+
+// Expectation: the second variadic arg should cause the execution of the filter
+// to preserve the parameters from before its execution.
+func TestParamResetFilter(t *testing.T) {
+	testName := "TestParamResetFilter"
+	route := "/beego/*" // splat
+	path := "/beego/routes/routes"
+
+	mux := NewControllerRegister()
+
+	mux.InsertFilter("*", BeforeExec, beegoResetParams, true, true)
+
+	mux.Get(route, beegoHandleResetParams)
+
+	rw, r := testRequest("GET", path)
+	mux.ServeHTTP(rw, r)
+
+	// The two functions, `beegoResetParams` and `beegoHandleResetParams` add
+	// a response header of `Splat`.  The expectation here is that that Header
+	// value should match what the _request's_ router set, not the filter's.
+
+	headers := rw.HeaderMap
+	if len(headers["Splat"]) != 1 {
+		t.Errorf(
+			"%s: There was an error in the test. Splat param not set in Header",
+			testName)
+	}
+	if headers["Splat"][0] != "routes/routes" {
+		t.Errorf(
+			"%s: expected `:splat` param to be [routes/routes] but it was [%s]",
+			testName, headers["Splat"][0])
+	}
+}
+
 // Execution point: BeforeRouter
 // expectation: only BeforeRouter function is executed, notmatch output as router doesn't handle
 func TestFilterBeforeRouter(t *testing.T) {
@@ -611,4 +679,11 @@ func beegoFinishRouter1(ctx *context.Context) {
 }
 func beegoFinishRouter2(ctx *context.Context) {
 	ctx.WriteString("|FinishRouter2")
+}
+func beegoResetParams(ctx *context.Context) {
+	ctx.ResponseWriter.Header().Set("splat", ctx.Input.Param(":splat"))
+}
+
+func beegoHandleResetParams(ctx *context.Context) {
+	ctx.ResponseWriter.Header().Set("splat", ctx.Input.Param(":splat"))
 }
