@@ -34,15 +34,15 @@ type Swagger struct {
 	SecurityDefinitions map[string]Scurity  `json:"securityDefinitions,omitempty"`
 	Security            map[string][]string `json:"security,omitempty"`
 	Tags                []Tag               `json:"tags,omitempty"`
-	ExternalDocs        ExternalDocs        `json:"externalDocs,omitempty"`
+	ExternalDocs        *ExternalDocs       `json:"externalDocs,omitempty"`
 }
 
 // Information Provides metadata about the API. The metadata can be used by the clients if needed.
 type Information struct {
-	Title             string `json:"title,omitempty"`
-	Description       string `json:"description,omitempty"`
-	Version           string `json:"version,omitempty"`
-	TermsOfServiceURL string `json:"termsOfServiceUrl,omitempty"`
+	Title          string `json:"title,omitempty"`
+	Description    string `json:"description,omitempty"`
+	Version        string `json:"version,omitempty"`
+	TermsOfService string `json:"termsOfService,omitempty"`
 
 	Contact Contact `json:"contact,omitempty"`
 	License License `json:"license,omitempty"`
@@ -89,13 +89,13 @@ type Operation struct {
 
 // Parameter Describes a single operation parameter.
 type Parameter struct {
-	In          string `json:"in,omitempty"`
-	Name        string `json:"name,omitempty"`
-	Description string `json:"description,omitempty"`
-	Required    bool   `json:"required,omitempty"`
-	Schema      Schema `json:"schema,omitempty"`
-	Type        string `json:"type,omitempty"`
-	Format      string `json:"format,omitempty"`
+	In          string  `json:"in,omitempty"`
+	Name        string  `json:"name,omitempty"`
+	Description string  `json:"description,omitempty"`
+	Required    bool    `json:"required,omitempty"`
+	Schema      *Schema `json:"schema,omitempty"`
+	Type        string  `json:"type,omitempty"`
+	Format      string  `json:"format,omitempty"`
 }
 
 // Schema Object allows the definition of input and output data types.
@@ -111,23 +111,24 @@ type Schema struct {
 
 // Propertie are taken from the JSON Schema definition but their definitions were adjusted to the Swagger Specification
 type Propertie struct {
-	Ref         string               `json:"$ref,omitempty"`
-	Title       string               `json:"title,omitempty"`
-	Description string               `json:"description,omitempty"`
-	Default     string               `json:"default,omitempty"`
-	Type        string               `json:"type,omitempty"`
-	Example     string               `json:"example,omitempty"`
-	Required    []string             `json:"required,omitempty"`
-	Format      string               `json:"format,omitempty"`
-	ReadOnly    bool                 `json:"readOnly,omitempty"`
-	Properties  map[string]Propertie `json:"properties,omitempty"`
+	Ref                  string               `json:"$ref,omitempty"`
+	Title                string               `json:"title,omitempty"`
+	Description          string               `json:"description,omitempty"`
+	Default              string               `json:"default,omitempty"`
+	Type                 string               `json:"type,omitempty"`
+	Example              string               `json:"example,omitempty"`
+	Required             []string             `json:"required,omitempty"`
+	Format               string               `json:"format,omitempty"`
+	ReadOnly             bool                 `json:"readOnly,omitempty"`
+	Properties           map[string]Propertie `json:"properties,omitempty"`
+	AdditionalProperties *Propertie           `json:"additionalProperties,omitempty"`
 }
 
 // Response as they are returned from executing this operation.
 type Response struct {
-	Description string `json:"description,omitempty"`
-	Schema      Schema `json:"schema,omitempty"`
-	Ref         string `json:"$ref,omitempty"`
+	Description string  `json:"description,omitempty"`
+	Schema      *Schema `json:"schema,omitempty"`
+	Ref         string  `json:"$ref,omitempty"`
 }
 
 // Scurity Allows the definition of a security scheme that can be used by the operations
@@ -144,9 +145,9 @@ type Scurity struct {
 
 // Tag Allows adding meta data to a single tag that is used by the Operation Object
 type Tag struct {
-	Name         string       `json:"name,omitempty"`
-	Description  string       `json:"description,omitempty"`
-	ExternalDocs ExternalDocs `json:"externalDocs,omitempty"`
+	Name         string        `json:"name,omitempty"`
+	Description  string        `json:"description,omitempty"`
+	ExternalDocs *ExternalDocs `json:"externalDocs,omitempty"`
 }
 
 // ExternalDocs include Additional external documentation
