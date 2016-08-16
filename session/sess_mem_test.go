@@ -15,6 +15,7 @@
 package session
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -22,7 +23,12 @@ import (
 )
 
 func TestMem(t *testing.T) {
-	globalSessions, _ := NewManager("memory", `{"cookieName":"gosessionid","gclifetime":10}`)
+	config := `{"cookieName":"gosessionid","gclifetime":10, "enableSetCookie":true}`
+	conf := new(ManagerConfig)
+	if err := json.Unmarshal([]byte(config), conf); err != nil {
+		t.Fatal("json decode error", err)
+	}
+	globalSessions, _ := NewManager("memory", conf)
 	go globalSessions.GC()
 	r, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
