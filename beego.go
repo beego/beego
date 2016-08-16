@@ -23,7 +23,7 @@ import (
 
 const (
 	// VERSION represent beego web framework version.
-	VERSION = "1.6.1"
+	VERSION = "1.7.0"
 
 	// DEV is for develop
 	DEV = "dev"
