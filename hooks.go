@@ -45,26 +45,24 @@ func registerSession() error {
 	if BConfig.WebConfig.Session.SessionOn {
 		var err error
 		sessionConfig := AppConfig.String("sessionConfig")
+		conf := new(session.ManagerConfig)
 		if sessionConfig == "" {
-			conf := map[string]interface{}{
-				"cookieName":              BConfig.WebConfig.Session.SessionName,
-				"gclifetime":              BConfig.WebConfig.Session.SessionGCMaxLifetime,
-				"providerConfig":          filepath.ToSlash(BConfig.WebConfig.Session.SessionProviderConfig),
-				"secure":                  BConfig.Listen.EnableHTTPS,
-				"enableSetCookie":         BConfig.WebConfig.Session.SessionAutoSetCookie,
-				"domain":                  BConfig.WebConfig.Session.SessionDomain,
-				"cookieLifeTime":          BConfig.WebConfig.Session.SessionCookieLifeTime,
-				"enableSidInHttpHeader":   BConfig.WebConfig.Session.EnableSidInHttpHeader,
-				"sessionNameInHttpHeader": BConfig.WebConfig.Session.SessionNameInHttpHeader,
-				"enableSidInUrlQuery":     BConfig.WebConfig.Session.EnableSidInUrlQuery,
-			}
-			confBytes, err := json.Marshal(conf)
-			if err != nil {
+			conf.CookieName = BConfig.WebConfig.Session.SessionName
+			conf.EnableSetCookie = BConfig.WebConfig.Session.SessionAutoSetCookie
+			conf.Gclifetime = BConfig.WebConfig.Session.SessionGCMaxLifetime
+			conf.Secure = BConfig.Listen.EnableHTTPS
+			conf.CookieLifeTime = BConfig.WebConfig.Session.SessionCookieLifeTime
+			conf.ProviderConfig = filepath.ToSlash(BConfig.WebConfig.Session.SessionProviderConfig)
+			conf.Domain = BConfig.WebConfig.Session.SessionDomain
+			conf.EnableSidInHttpHeader = BConfig.WebConfig.Session.EnableSidInHttpHeader
+			conf.SessionNameInHttpHeader = BConfig.WebConfig.Session.SessionNameInHttpHeader
+			conf.EnableSidInUrlQuery = BConfig.WebConfig.Session.EnableSidInUrlQuery
+		} else {
+			if err = json.Unmarshal([]byte(sessionConfig), conf); err != nil {
 				return err
 			}
-			sessionConfig = string(confBytes)
 		}
-		if GlobalSessions, err = session.NewManager(BConfig.WebConfig.Session.SessionProvider, sessionConfig); err != nil {
+		if GlobalSessions, err = session.NewManager(BConfig.WebConfig.Session.SessionProvider, conf); err != nil {
 			return err
 		}
 		go GlobalSessions.GC()
