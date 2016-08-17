@@ -101,7 +101,7 @@ func parserComments(comments *ast.CommentGroup, funcName, controllerName, pkgpat
 				elements := strings.TrimLeft(t, "@router ")
 				e1 := strings.SplitN(elements, " ", 2)
 				if len(e1) < 1 {
-					return errors.New("you should has router infomation")
+					return errors.New("you should has router information")
 				}
 				key := pkgpath + ":" + controllerName
 				cc := ControllerComments{}
