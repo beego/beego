@@ -25,7 +25,7 @@ import (
 )
 
 type (
-	csiState 	int
+	csiState    int
 	parseResult int
 )
 
@@ -294,7 +294,7 @@ func changeColor(param []byte) parseResult {
 			case ansiBlinkOff:
 				winAttr.backgroundIntensity = 0
 			default:
-			// unknown code
+				// unknown code
 			}
 		case c.drawType == foreground:
 			winAttr.foregroundColor = c.code
@@ -420,7 +420,7 @@ func (cw *ansiColorWriter) Write(p []byte) (int, error) {
 	}
 
 	if cw.mode != DiscardNonColorEscSeq || cw.state == outsideCsiCode {
-		nw, err = cw.w.Write(p[first:len(p)])
+		nw, err = cw.w.Write(p[first:])
 		r += nw
 	}
 

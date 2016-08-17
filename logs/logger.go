@@ -95,9 +95,7 @@ func formatTimeHeader(when time.Time) ([]byte, int) {
 	//len("2006/01/02 15:04:05 ")==20
 	var buf [20]byte
 
-	//change to '3' after 984 years, LOL
 	buf[0] = y1[y/1000%10]
-	//change to '1' after 84 years,  LOL
 	buf[1] = y2[y/100]
 	buf[2] = y3[y-y/100*100]
 	buf[3] = y4[y-y/100*100]

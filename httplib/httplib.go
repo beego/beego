@@ -409,10 +409,10 @@ func (b *BeegoHTTPRequest) DoRequest() (*http.Response, error) {
 	if trans == nil {
 		// create default transport
 		trans = &http.Transport{
-			TLSClientConfig: 	b.setting.TLSClientConfig,
-			Proxy:           	b.setting.Proxy,
-			Dial:            	TimeoutDialer(b.setting.ConnectTimeout, b.setting.ReadWriteTimeout),
-			MaxIdleConnsPerHost: 	-1,
+			TLSClientConfig:     b.setting.TLSClientConfig,
+			Proxy:               b.setting.Proxy,
+			Dial:                TimeoutDialer(b.setting.ConnectTimeout, b.setting.ReadWriteTimeout),
+			MaxIdleConnsPerHost: -1,
 		}
 	} else {
 		// if b.transport is *http.Transport then set the settings.
