@@ -281,7 +281,7 @@ func (c *ConfigContainer) DIY(key string) (v interface{}, err error) {
 func (c *ConfigContainer) getData(key string) (interface{}, error) {
 
 	if len(key) == 0 {
-		return nil, errors.New("key is emtpy")
+		return nil, errors.New("key is empty")
 	}
 
 	if v, ok := c.data[key]; ok {
