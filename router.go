@@ -434,7 +434,7 @@ func (p *ControllerRegister) InsertFilter(pattern string, pos int, filter Filter
 // add Filter into
 func (p *ControllerRegister) insertFilterRouter(pos int, mr *FilterRouter) (err error) {
 	if pos < BeforeStatic || pos > FinishRouter {
-		err = fmt.Errorf("can not find your filter postion")
+		err = fmt.Errorf("can not find your filter position")
 		return
 	}
 	p.enableFilter = true
