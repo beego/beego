@@ -15,9 +15,9 @@
 package logs
 
 import (
+	"bytes"
 	"testing"
 	"time"
-	"bytes"
 )
 
 func TestFormatHeader_0(t *testing.T) {
