@@ -2062,7 +2062,7 @@ func TestIntegerPk(t *testing.T) {
 		throwFail(t, AssertIs(out.Value, intPk.Value))
 	}
 
-	num, err = dORM.InsertMulti(1, []*IntegerPk{&IntegerPk{
+	num, err = dORM.InsertMulti(1, []*IntegerPk{{
 		ID: 1, Value: "ok",
 	}})
 	throwFail(t, err)
