@@ -337,7 +337,7 @@ func (input *BeegoInput) Cookie(key string) string {
 }
 
 // Session returns current session item value by a given key.
-// if non-existed, return empty string.
+// if non-existed, return nil.
 func (input *BeegoInput) Session(key interface{}) interface{} {
 	return input.CruSession.Get(key)
 }
