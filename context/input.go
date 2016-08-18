@@ -344,6 +344,9 @@ func (input *BeegoInput) Session(key interface{}) interface{} {
 
 // CopyBody returns the raw request body data as bytes.
 func (input *BeegoInput) CopyBody(MaxMemory int64) []byte {
+	if input.Context.Request.Body == nil {
+		return []byte{}
+	}
 	safe := &io.LimitedReader{R: input.Context.Request.Body, N: MaxMemory}
 	requestbody, _ := ioutil.ReadAll(safe)
 	input.Context.Request.Body.Close()
