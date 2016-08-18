@@ -121,7 +121,7 @@ type Propertie struct {
 	Format               string               `json:"format,omitempty"`
 	ReadOnly             bool                 `json:"readOnly,omitempty"`
 	Properties           map[string]Propertie `json:"properties,omitempty"`
-	Items                []Propertie          `json:"items,omitempty"`
+	Items                *Propertie           `json:"items,omitempty"`
 	AdditionalProperties *Propertie           `json:"additionalProperties,omitempty"`
 }
 
