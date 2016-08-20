@@ -205,6 +205,10 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 	}
 
 	session, err = manager.provider.SessionRead(sid)
+	if errs != nil {
+		return nil, errs
+	}
+
 	cookie := &http.Cookie{
 		Name:     manager.config.CookieName,
 		Value:    url.QueryEscape(sid),
