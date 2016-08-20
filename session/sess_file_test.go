@@ -126,4 +126,6 @@ func TestFile(t *testing.T) {
 		t.Fatal("get coutry error")
 	}
 
+	sess4.SessionRelease(w4)
+
 }

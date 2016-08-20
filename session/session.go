@@ -205,7 +205,7 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 	}
 
 	session, err = manager.provider.SessionRead(sid)
-	if errs != nil {
+	if err != nil {
 		return nil, errs
 	}
 
