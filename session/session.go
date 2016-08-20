@@ -194,14 +194,12 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 		return nil, errs
 	}
 
-	if sid != "" && manager.provider.SessionExist(sid) {
-		return manager.provider.SessionRead(sid)
-	}
-
-	// Generate a new session
-	sid, errs = manager.sessionID()
-	if errs != nil {
-		return nil, errs
+	if sid == "" || !manager.provider.SessionExist(sid) {
+		// Generate a new session
+		sid, errs = manager.sessionID()
+		if errs != nil {
+			return nil, errs
+		}
 	}
 
 	session, err = manager.provider.SessionRead(sid)
