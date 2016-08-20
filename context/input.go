@@ -337,13 +337,16 @@ func (input *BeegoInput) Cookie(key string) string {
 }
 
 // Session returns current session item value by a given key.
-// if non-existed, return empty string.
+// if non-existed, return nil.
 func (input *BeegoInput) Session(key interface{}) interface{} {
 	return input.CruSession.Get(key)
 }
 
 // CopyBody returns the raw request body data as bytes.
 func (input *BeegoInput) CopyBody(MaxMemory int64) []byte {
+	if input.Context.Request.Body == nil {
+		return []byte{}
+	}
 	safe := &io.LimitedReader{R: input.Context.Request.Body, N: MaxMemory}
 	requestbody, _ := ioutil.ReadAll(safe)
 	input.Context.Request.Body.Close()

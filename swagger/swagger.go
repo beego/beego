@@ -117,6 +117,7 @@ type Schema struct {
 	Description string               `json:"description,omitempty"`
 	Required    []string             `json:"required,omitempty"`
 	Type        string               `json:"type,omitempty"`
+	Items       *Propertie           `json:"items,omitempty"`
 	Properties  map[string]Propertie `json:"properties,omitempty"`
 }
 
