@@ -89,13 +89,24 @@ type Operation struct {
 
 // Parameter Describes a single operation parameter.
 type Parameter struct {
-	In          string  `json:"in,omitempty"`
-	Name        string  `json:"name,omitempty"`
-	Description string  `json:"description,omitempty"`
-	Required    bool    `json:"required,omitempty"`
-	Schema      *Schema `json:"schema,omitempty"`
-	Type        string  `json:"type,omitempty"`
-	Format      string  `json:"format,omitempty"`
+	In          string          `json:"in,omitempty"`
+	Name        string          `json:"name,omitempty"`
+	Description string          `json:"description,omitempty"`
+	Required    bool            `json:"required,omitempty"`
+	Schema      *Schema         `json:"schema,omitempty"`
+	Type        string          `json:"type,omitempty"`
+	Format      string          `json:"format,omitempty"`
+	Items       *ParameterItems `json:"items,omitempty"`
+}
+
+// A limited subset of JSON-Schema's items object. It is used by parameter definitions that are not located in "body".
+// http://swagger.io/specification/#itemsObject
+type ParameterItems struct {
+	Type             string            `json:"type,omitempty"`
+	Format           string            `json:"format,omitempty"`
+	Items            []*ParameterItems `json:"items,omitempty"` //Required if type is "array". Describes the type of items in the array.
+	CollectionFormat string            `json:"collectionFormat,omitempty"`
+	Default          string            `json:"default,omitempty"`
 }
 
 // Schema Object allows the definition of input and output data types.
@@ -106,7 +117,7 @@ type Schema struct {
 	Description string               `json:"description,omitempty"`
 	Required    []string             `json:"required,omitempty"`
 	Type        string               `json:"type,omitempty"`
-	Items       *Propertie           `json:"items,omitempty"`
+	Items       *Schema              `json:"items,omitempty"`
 	Properties  map[string]Propertie `json:"properties,omitempty"`
 }
 
