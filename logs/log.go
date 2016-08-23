@@ -260,12 +260,7 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string, v ...interface{}) error 
 		bl.setLogger(AdapterConsole)
 		bl.lock.Unlock()
 	}
-	if logLevel == levelLoggerImpl {
-		// set to emergency to ensure all log will be print out correctly
-		logLevel = LevelEmergency
-	} else {
-		msg = levelPrefix[logLevel] + msg
-	}
+
 	if len(v) > 0 {
 		msg = fmt.Sprintf(msg, v...)
 	}
@@ -279,6 +274,15 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string, v ...interface{}) error 
 		_, filename := path.Split(file)
 		msg = "[" + filename + ":" + strconv.FormatInt(int64(line), 10) + "] " + msg
 	}
+
+	//set level info in front of filename info
+	if logLevel == levelLoggerImpl {
+		// set to emergency to ensure all log will be print out correctly
+		logLevel = LevelEmergency
+	} else {
+		msg = levelPrefix[logLevel] + msg
+	}
+
 	if bl.asynchronous {
 		lm := logMsgPool.Get().(*logMsg)
 		lm.level = logLevel
