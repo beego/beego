@@ -590,11 +590,14 @@ func (input *BeegoInput) bindStruct(params *url.Values, key string, typ reflect.
 	result := reflect.New(typ).Elem()
 	fieldValues := make(map[string]reflect.Value)
 	for reqKey, val := range *params {
-		if !strings.HasPrefix(reqKey, key+".") {
+		var fieldName string
+		if strings.HasPrefix(reqKey, key+".") {
+			fieldName = reqKey[len(key)+1:]
+		} else if strings.HasPrefix(reqKey, key+"[") && reqKey[len(reqKey)-1] == ']' {
+			fieldName = reqKey[len(key)+1 : len(reqKey)-1]
+		} else {
 			continue
 		}
-
-		fieldName := reqKey[len(key)+1:]
 
 		if _, ok := fieldValues[fieldName]; !ok {
 			// Time to bind this field.  Get it and make sure we can set it.
