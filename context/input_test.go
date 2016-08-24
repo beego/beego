@@ -75,6 +75,24 @@ func TestParse(t *testing.T) {
 	fmt.Println(user)
 }
 
+func TestParse2(t *testing.T) {
+	r, _ := http.NewRequest("GET", "/?user[0][Username]=Raph&user[1].Username=Leo&user[0].Password=123456&user[1][Password]=654321", nil)
+	beegoInput := NewInput()
+	beegoInput.Context = NewContext()
+	beegoInput.Context.Reset(httptest.NewRecorder(), r)
+	beegoInput.ParseFormOrMulitForm(1 << 20)
+	type User struct {
+		Username string
+		Password string
+	}
+	var users []User
+	err := beegoInput.Bind(&users, "user")
+	fmt.Println(users)
+	if err != nil || users[0].Username != "Raph" || users[0].Password != "123456" || users[1].Username != "Leo" || users[1].Password != "654321" {
+		t.Fatal("users info wrong")
+	}
+}
+
 func TestSubDomain(t *testing.T) {
 	r, _ := http.NewRequest("GET", "http://www.example.com/?id=123&isok=true&ft=1.2&ol[0]=1&ol[1]=2&ul[]=str&ul[]=array&user.Name=astaxie", nil)
 	beegoInput := NewInput()
