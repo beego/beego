@@ -74,8 +74,6 @@ func init() {
 	routers = append(routers, testinfo{"/v1/:v(.+)_cms/ttt_:id(.+)_:page(.+).html", "/v1/2_cms/ttt_123_1.html", map[string]string{":v": "2", ":id": "123", ":page": "1"}})
 	routers = append(routers, testinfo{"/api/projects/:pid/members/?:mid", "/api/projects/1/members", map[string]string{":pid": "1"}})
 	routers = append(routers, testinfo{"/api/projects/:pid/members/?:mid", "/api/projects/1/members/2", map[string]string{":pid": "1", ":mid": "2"}})
-	routers = append(routers, testinfo{"/view/:id_:page", "/view/12_33", map[string]string{":id": "12", ":page": "33"}})
-	routers = append(routers, testinfo{"/view/:id_:page.html", "/view/12_33.html", map[string]string{":id": "12", ":page": "33"}})
 }
 
 func TestTreeRouters(t *testing.T) {
