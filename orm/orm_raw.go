@@ -286,7 +286,7 @@ func (o *rawSet) QueryRow(containers ...interface{}) error {
 
 			structMode = true
 			fn := getFullName(typ)
-			if mi, ok := modelCache.getByFN(fn); ok {
+			if mi, ok := modelCache.getByFullName(fn); ok {
 				sMi = mi
 			}
 		} else {
@@ -355,12 +355,9 @@ func (o *rawSet) QueryRow(containers ...interface{}) error {
 				for i := 0; i < ind.NumField(); i++ {
 					f := ind.Field(i)
 					fe := ind.Type().Field(i)
-
-					var attrs map[string]bool
-					var tags map[string]string
-					parseStructTag(fe.Tag.Get("orm"), &attrs, &tags)
+					_, tags := parseStructTag(fe.Tag.Get(defaultStructTagName))
 					var col string
-					if col = tags["column"]; len(col) == 0 {
+					if col = tags["column"]; col == "" {
 						col = snakeString(fe.Name)
 					}
 					if v, ok := columnsMp[col]; ok {
@@ -422,7 +419,7 @@ func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
 
 			structMode = true
 			fn := getFullName(typ)
-			if mi, ok := modelCache.getByFN(fn); ok {
+			if mi, ok := modelCache.getByFullName(fn); ok {
 				sMi = mi
 			}
 		} else {
@@ -499,12 +496,9 @@ func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
 				for i := 0; i < ind.NumField(); i++ {
 					f := ind.Field(i)
 					fe := ind.Type().Field(i)
-
-					var attrs map[string]bool
-					var tags map[string]string
-					parseStructTag(fe.Tag.Get("orm"), &attrs, &tags)
+					_, tags := parseStructTag(fe.Tag.Get(defaultStructTagName))
 					var col string
-					if col = tags["column"]; len(col) == 0 {
+					if col = tags["column"]; col == "" {
 						col = snakeString(fe.Name)
 					}
 					if v, ok := columnsMp[col]; ok {

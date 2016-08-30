@@ -227,7 +227,7 @@ func TestModelSyntax(t *testing.T) {
 	user := &User{}
 	ind := reflect.ValueOf(user).Elem()
 	fn := getFullName(ind.Type())
-	mi, ok := modelCache.getByFN(fn)
+	mi, ok := modelCache.getByFullName(fn)
 	throwFail(t, AssertIs(ok, true))
 
 	mi, ok = modelCache.get("user")

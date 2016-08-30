@@ -26,12 +26,14 @@ import (
 // prefix means table name prefix.
 func registerModel(prefix string, model interface{}) {
 	val := reflect.ValueOf(model)
-	ind := reflect.Indirect(val)
-	typ := ind.Type()
+	typ := reflect.Indirect(val).Type()
 
 	if val.Kind() != reflect.Ptr {
 		panic(fmt.Errorf("<orm.RegisterModel> cannot use non-ptr model struct `%s`", getFullName(typ)))
 	}
+	// For this case:
+	// u := &User{}
+	// registerModel(&u)
 	if typ.Kind() == reflect.Ptr {
 		panic(fmt.Errorf("<orm.RegisterModel> only allow ptr model struct, it looks you use two reference to the struct `%s`", typ))
 	}
@@ -41,9 +43,9 @@ func registerModel(prefix string, model interface{}) {
 	if prefix != "" {
 		table = prefix + table
 	}
-
+	// models's fullname is pkgpath + struct name
 	name := getFullName(typ)
-	if _, ok := modelCache.getByFN(name); ok {
+	if _, ok := modelCache.getByFullName(name); ok {
 		fmt.Printf("<orm.RegisterModel> model `%s` repeat register, must be unique\n", name)
 		os.Exit(2)
 	}
@@ -110,7 +112,7 @@ func bootStrap() {
 				}
 
 				name := getFullName(elm)
-				mii, ok := modelCache.getByFN(name)
+				mii, ok := modelCache.getByFullName(name)
 				if ok == false || mii.pkg != elm.PkgPath() {
 					err = fmt.Errorf("can not found rel in field `%s`, `%s` may be miss register", fi.fullName, elm.String())
 					goto end
@@ -123,7 +125,7 @@ func bootStrap() {
 						msg := fmt.Sprintf("field `%s` wrong rel_through value `%s`", fi.fullName, fi.relThrough)
 						if i := strings.LastIndex(fi.relThrough, "."); i != -1 && len(fi.relThrough) > (i+1) {
 							pn := fi.relThrough[:i]
-							rmi, ok := modelCache.getByFN(fi.relThrough)
+							rmi, ok := modelCache.getByFullName(fi.relThrough)
 							if ok == false || pn != rmi.pkg {
 								err = errors.New(msg + " cannot find table")
 								goto end
