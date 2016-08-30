@@ -104,7 +104,7 @@ func (o *orm) getMiInd(md interface{}, needPtr bool) (mi *modelInfo, ind reflect
 		panic(fmt.Errorf("<Ormer> cannot use non-ptr model struct `%s`", getFullName(typ)))
 	}
 	name := getFullName(typ)
-	if mi, ok := modelCache.getByFN(name); ok {
+	if mi, ok := modelCache.getByFullName(name); ok {
 		return mi, ind
 	}
 	panic(fmt.Errorf("<Ormer> table: `%s` not found, maybe not RegisterModel", name))
@@ -427,7 +427,7 @@ func (o *orm) QueryTable(ptrStructOrTableName interface{}) (qs QuerySeter) {
 		}
 	} else {
 		name = getFullName(indirectType(reflect.TypeOf(ptrStructOrTableName)))
-		if mi, ok := modelCache.getByFN(name); ok {
+		if mi, ok := modelCache.getByFullName(name); ok {
 			qs = newQuerySet(o, mi)
 		}
 	}

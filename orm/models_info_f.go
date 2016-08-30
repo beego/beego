@@ -152,6 +152,10 @@ func newFieldInfo(mi *modelInfo, field reflect.Value, sf reflect.StructField, mN
 
 	fi = new(fieldInfo)
 
+	// if field which CanAddr is the follow type
+	//  A value is addressable if it is an element of a slice,
+	//  an element of an addressable array, a field of an
+	//  addressable struct, or the result of dereferencing a pointer.
 	addrField = field
 	if field.CanAddr() && field.Kind() != reflect.Ptr {
 		addrField = field.Addr()
@@ -162,7 +166,7 @@ func newFieldInfo(mi *modelInfo, field reflect.Value, sf reflect.StructField, mN
 		}
 	}
 
-	parseStructTag(sf.Tag.Get(defaultStructTagName), &attrs, &tags)
+	attrs, tags = parseStructTag(sf.Tag.Get(defaultStructTagName))
 
 	if _, ok := attrs["-"]; ok {
 		return nil, errSkipField
@@ -188,7 +192,7 @@ checkType:
 		}
 		fieldType = f.FieldType()
 		if fieldType&IsRelField > 0 {
-			err = fmt.Errorf("unsupport rel type custom field")
+			err = fmt.Errorf("unsupport type custom field, please refer to https://github.com/astaxie/beego/blob/master/orm/models_fields.go#L24-L42")
 			goto end
 		}
 	default:
