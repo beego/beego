@@ -145,7 +145,7 @@ outFor:
 			if v, ok := arg.(time.Time); ok {
 				if fi != nil && fi.fieldType == TypeDateField {
 					arg = v.In(tz).Format(formatDate)
-				} else if fi.fieldType == TypeDateTimeField {
+				} else if fi != nil && fi.fieldType == TypeDateTimeField {
 					arg = v.In(tz).Format(formatDateTime)
 				} else {
 					arg = v.In(tz).Format(formatTime)
