@@ -32,6 +32,9 @@ func registerModel(prefix string, model interface{}) {
 	if val.Kind() != reflect.Ptr {
 		panic(fmt.Errorf("<orm.RegisterModel> cannot use non-ptr model struct `%s`", getFullName(typ)))
 	}
+	if typ.Kind() == reflect.Ptr {
+		panic(fmt.Errorf("<orm.RegisterModel> only allow ptr model struct, it looks you use two reference to the struct `%s`", typ))
+	}
 
 	table := getTableName(val)
 
@@ -320,7 +323,6 @@ func BootStrap() {
 	if modelCache.done {
 		return
 	}
-
 	modelCache.Lock()
 	defer modelCache.Unlock()
 	bootStrap()
