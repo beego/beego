@@ -46,7 +46,7 @@ func TestMemcacheCache(t *testing.T) {
 		t.Error("set Error", err)
 	}
 
-	if v, err := strconv.Atoi(bm.Get("astaxie").(string)); err != nil || v != 1 {
+	if v, err := strconv.Atoi(string(bm.Get("astaxie").([]byte))); err != nil || v != 1 {
 		t.Error("get err")
 	}
 
@@ -54,7 +54,7 @@ func TestMemcacheCache(t *testing.T) {
 		t.Error("Incr Error", err)
 	}
 
-	if v, err := strconv.Atoi(bm.Get("astaxie").(string)); err != nil || v != 2 {
+	if v, err := strconv.Atoi(string(bm.Get("astaxie").([]byte))); err != nil || v != 2 {
 		t.Error("get err")
 	}
 
@@ -62,7 +62,7 @@ func TestMemcacheCache(t *testing.T) {
 		t.Error("Decr Error", err)
 	}
 
-	if v, err := strconv.Atoi(bm.Get("astaxie").(string)); err != nil || v != 1 {
+	if v, err := strconv.Atoi(string(bm.Get("astaxie").([]byte))); err != nil || v != 1 {
 		t.Error("get err")
 	}
 	bm.Delete("astaxie")
@@ -78,7 +78,7 @@ func TestMemcacheCache(t *testing.T) {
 		t.Error("check err")
 	}
 
-	if v := bm.Get("astaxie").(string); v != "author" {
+	if v := bm.Get("astaxie").([]byte); string(v) != "author" {
 		t.Error("get err")
 	}
 
@@ -94,10 +94,10 @@ func TestMemcacheCache(t *testing.T) {
 	if len(vv) != 2 {
 		t.Error("GetMulti ERROR")
 	}
-	if vv[0].(string) != "author" && vv[0].(string) != "author1" {
+	if string(vv[0].([]byte)) != "author" && string(vv[0].([]byte)) != "author1" {
 		t.Error("GetMulti ERROR")
 	}
-	if vv[1].(string) != "author1" && vv[1].(string) != "author" {
+	if string(vv[1].([]byte)) != "author1" && string(vv[1].([]byte)) != "author" {
 		t.Error("GetMulti ERROR")
 	}
 
