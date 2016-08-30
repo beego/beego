@@ -57,11 +57,11 @@ var (
 
 // model info collection
 type _modelCache struct {
-	sync.RWMutex
-	orders    []string
-	cache     map[string]*modelInfo
-	cacheByFN map[string]*modelInfo
-	done      bool
+	sync.RWMutex // only used outsite for bootStrap
+	orders       []string
+	cache        map[string]*modelInfo
+	cacheByFN    map[string]*modelInfo
+	done         bool
 }
 
 // get all model info
