@@ -70,11 +70,8 @@ func getTableEngine(val reflect.Value) string {
 	fun := val.MethodByName("TableEngine")
 	if fun.IsValid() {
 		vals := fun.Call([]reflect.Value{})
-		if len(vals) > 0 {
-			val := vals[0]
-			if val.Kind() == reflect.String {
-				return val.String()
-			}
+		if len(vals) > 0 && vals[0].Kind() == reflect.String {
+			return vals[0].String()
 		}
 	}
 	return ""
@@ -85,12 +82,9 @@ func getTableIndex(val reflect.Value) [][]string {
 	fun := val.MethodByName("TableIndex")
 	if fun.IsValid() {
 		vals := fun.Call([]reflect.Value{})
-		if len(vals) > 0 {
-			val := vals[0]
-			if val.CanInterface() {
-				if d, ok := val.Interface().([][]string); ok {
-					return d
-				}
+		if len(vals) > 0 && vals[0].CanInterface() {
+			if d, ok := vals[0].Interface().([][]string); ok {
+				return d
 			}
 		}
 	}
@@ -102,12 +96,9 @@ func getTableUnique(val reflect.Value) [][]string {
 	fun := val.MethodByName("TableUnique")
 	if fun.IsValid() {
 		vals := fun.Call([]reflect.Value{})
-		if len(vals) > 0 {
-			val := vals[0]
-			if val.CanInterface() {
-				if d, ok := val.Interface().([][]string); ok {
-					return d
-				}
+		if len(vals) > 0 && vals[0].CanInterface() {
+			if d, ok := vals[0].Interface().([][]string); ok {
+				return d
 			}
 		}
 	}

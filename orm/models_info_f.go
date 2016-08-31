@@ -143,7 +143,7 @@ func newFieldInfo(mi *modelInfo, field reflect.Value, sf reflect.StructField, mN
 	var (
 		tag       string
 		tagValue  string
-		initial   StrTo
+		initial   StrTo // store the default value
 		fieldType int
 		attrs     map[string]bool
 		tags      map[string]string
@@ -215,7 +215,7 @@ checkType:
 				}
 				break checkType
 			default:
-				err = fmt.Errorf("error")
+				err = fmt.Errorf("rel only allow these value: fk, one, m2m")
 				goto wrongTag
 			}
 		}
@@ -235,7 +235,7 @@ checkType:
 				}
 				break checkType
 			default:
-				err = fmt.Errorf("error")
+				err = fmt.Errorf("reverse only allow these value: one, many")
 				goto wrongTag
 			}
 		}
