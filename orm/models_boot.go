@@ -15,7 +15,6 @@
 package orm
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"reflect"
@@ -55,34 +54,34 @@ func registerModel(prefix string, model interface{}) {
 		os.Exit(2)
 	}
 
-	info := newModelInfo(val)
-	if info.fields.pk == nil {
+	mi := newModelInfo(val)
+	if mi.fields.pk == nil {
 	outFor:
-		for _, fi := range info.fields.fieldsDB {
+		for _, fi := range mi.fields.fieldsDB {
 			if strings.ToLower(fi.name) == "id" {
 				switch fi.addrValue.Elem().Kind() {
 				case reflect.Int, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint32, reflect.Uint64:
 					fi.auto = true
 					fi.pk = true
-					info.fields.pk = fi
+					mi.fields.pk = fi
 					break outFor
 				}
 			}
 		}
 
-		if info.fields.pk == nil {
+		if mi.fields.pk == nil {
 			fmt.Printf("<orm.RegisterModel> `%s` need a primary key field, default use 'id' if not set\n", name)
 			os.Exit(2)
 		}
 
 	}
 
-	info.table = table
-	info.pkg = typ.PkgPath()
-	info.model = model
-	info.manual = true
+	mi.table = table
+	mi.pkg = typ.PkgPath()
+	mi.model = model
+	mi.manual = true
 
-	modelCache.set(table, info)
+	modelCache.set(table, mi)
 }
 
 // boostrap models
@@ -90,12 +89,10 @@ func bootStrap() {
 	if modelCache.done {
 		return
 	}
-
 	var (
 		err    error
 		models map[string]*modelInfo
 	)
-
 	if dataBaseCache.getDefault() == nil {
 		err = fmt.Errorf("must have one register DataBase alias named `default`")
 		goto end
@@ -106,14 +103,13 @@ func bootStrap() {
 		for _, fi := range mi.fields.columns {
 			if fi.rel || fi.reverse {
 				elm := fi.addrValue.Type().Elem()
-				switch fi.fieldType {
-				case RelReverseMany, RelManyToMany:
+				if fi.fieldType == RelReverseMany || fi.fieldType == RelManyToMany {
 					elm = elm.Elem()
 				}
-
+				// check the rel or reverse model already register
 				name := getFullName(elm)
 				mii, ok := modelCache.getByFullName(name)
-				if ok == false || mii.pkg != elm.PkgPath() {
+				if !ok || mii.pkg != elm.PkgPath() {
 					err = fmt.Errorf("can not found rel in field `%s`, `%s` may be miss register", fi.fullName, elm.String())
 					goto end
 				}
@@ -122,20 +118,17 @@ func bootStrap() {
 				switch fi.fieldType {
 				case RelManyToMany:
 					if fi.relThrough != "" {
-						msg := fmt.Sprintf("field `%s` wrong rel_through value `%s`", fi.fullName, fi.relThrough)
 						if i := strings.LastIndex(fi.relThrough, "."); i != -1 && len(fi.relThrough) > (i+1) {
 							pn := fi.relThrough[:i]
 							rmi, ok := modelCache.getByFullName(fi.relThrough)
 							if ok == false || pn != rmi.pkg {
-								err = errors.New(msg + " cannot find table")
+								err = fmt.Errorf("field `%s` wrong rel_through value `%s` cannot find table", fi.fullName, fi.relThrough)
 								goto end
 							}
-
 							fi.relThroughModelInfo = rmi
 							fi.relTable = rmi.table
-
 						} else {
-							err = errors.New(msg)
+							err = fmt.Errorf("field `%s` wrong rel_through value `%s`", fi.fullName, fi.relThrough)
 							goto end
 						}
 					} else {
@@ -143,7 +136,6 @@ func bootStrap() {
 						if fi.relTable != "" {
 							i.table = fi.relTable
 						}
-
 						if v := modelCache.set(i.table, i); v != nil {
 							err = fmt.Errorf("the rel table name `%s` already registered, cannot be use, please change one", fi.relTable)
 							goto end

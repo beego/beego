@@ -107,9 +107,9 @@ func newM2MModelInfo(m1, m2 *modelInfo) (mi *modelInfo) {
 	mi.name = camelString(mi.table)
 	mi.fullName = m1.pkg + "." + mi.name
 
-	fa := new(fieldInfo)
-	f1 := new(fieldInfo)
-	f2 := new(fieldInfo)
+	fa := new(fieldInfo) // pk
+	f1 := new(fieldInfo) // m1 table RelForeignKey
+	f2 := new(fieldInfo) // m2 table RelForeignKey
 	fa.fieldType = TypeBigIntegerField
 	fa.auto = true
 	fa.pk = true
