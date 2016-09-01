@@ -280,15 +280,8 @@ func AssetsCSS(src string) template.HTML {
 }
 
 // ParseForm will parse form values to struct via tag.
-func ParseForm(form url.Values, obj interface{}) error {
-	objT := reflect.TypeOf(obj)
-	objV := reflect.ValueOf(obj)
-	if !isStructPtr(objT) {
-		return fmt.Errorf("%v must be  a struct pointer", obj)
-	}
-	objT = objT.Elem()
-	objV = objV.Elem()
-
+// Support for anonymous struct.
+func parseFormToStruct(form url.Values, objT reflect.Type, objV reflect.Value) error {
 	for i := 0; i < objT.NumField(); i++ {
 		fieldV := objV.Field(i)
 		if !fieldV.CanSet() {
@@ -296,6 +289,14 @@ func ParseForm(form url.Values, obj interface{}) error {
 		}
 
 		fieldT := objT.Field(i)
+		if fieldT.Anonymous && fieldT.Type.Kind() == reflect.Struct {
+			err := parseFormToStruct(form, fieldT.Type, fieldV)
+			if err != nil {
+				return err
+			}
+			continue
+		}
+
 		tags := strings.Split(fieldT.Tag.Get("form"), ",")
 		var tag string
 		if len(tags) == 0 || len(tags[0]) == 0 {
@@ -382,6 +383,19 @@ func ParseForm(form url.Values, obj interface{}) error {
 		}
 	}
 	return nil
+}
+
+// ParseForm will parse form values to struct via tag.
+func ParseForm(form url.Values, obj interface{}) error {
+	objT := reflect.TypeOf(obj)
+	objV := reflect.ValueOf(obj)
+	if !isStructPtr(objT) {
+		return fmt.Errorf("%v must be  a struct pointer", obj)
+	}
+	objT = objT.Elem()
+	objV = objV.Elem()
+
+	return parseFormToStruct(form, objT, objV)
 }
 
 var sliceOfInts = reflect.TypeOf([]int(nil))
