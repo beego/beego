@@ -110,6 +110,17 @@ func TestHtmlunquote(t *testing.T) {
 }
 
 func TestParseForm(t *testing.T) {
+	type ExtendInfo struct {
+		Hobby string `form:"hobby"`
+		Memo  string
+	}
+
+	type OtherInfo struct {
+		Organization string `form:"organization"`
+		Title        string `form:"title"`
+		ExtendInfo
+	}
+
 	type user struct {
 		ID      int         `form:"-"`
 		tag     string      `form:"tag"`
@@ -119,19 +130,24 @@ func TestParseForm(t *testing.T) {
 		Intro   string    `form:",textarea"`
 		StrBool bool      `form:"strbool"`
 		Date    time.Time `form:"date,2006-01-02"`
+		OtherInfo
 	}
 
 	u := user{}
 	form := url.Values{
-		"ID":       []string{"1"},
-		"-":        []string{"1"},
-		"tag":      []string{"no"},
-		"username": []string{"test"},
-		"age":      []string{"40"},
-		"Email":    []string{"test@gmail.com"},
-		"Intro":    []string{"I am an engineer!"},
-		"strbool":  []string{"yes"},
-		"date":     []string{"2014-11-12"},
+		"ID":           []string{"1"},
+		"-":            []string{"1"},
+		"tag":          []string{"no"},
+		"username":     []string{"test"},
+		"age":          []string{"40"},
+		"Email":        []string{"test@gmail.com"},
+		"Intro":        []string{"I am an engineer!"},
+		"strbool":      []string{"yes"},
+		"date":         []string{"2014-11-12"},
+		"organization": []string{"beego"},
+		"title":        []string{"CXO"},
+		"hobby":        []string{"Basketball"},
+		"memo":         []string{"nothing"},
 	}
 	if err := ParseForm(form, u); err == nil {
 		t.Fatal("nothing will be changed")
@@ -163,6 +179,18 @@ func TestParseForm(t *testing.T) {
 	y, m, d := u.Date.Date()
 	if y != 2014 || m.String() != "November" || d != 12 {
 		t.Errorf("Date should equal `2014-11-12`, but got `%v`", u.Date.String())
+	}
+	if u.Organization != "beego" {
+		t.Errorf("Organization should equal `beego`, but got `%v`", u.Organization)
+	}
+	if u.Title != "CXO" {
+		t.Errorf("Title should equal `CXO`, but got `%v`", u.Title)
+	}
+	if u.Hobby != "Basketball" {
+		t.Errorf("Hobby should equal `Basketball`, but got `%v`", u.Hobby)
+	}
+	if len(u.Memo) != 0 {
+		t.Errorf("Memo's length should equal 0 but got %v", len(u.Memo))
 	}
 }
 
