@@ -22,8 +22,9 @@ import (
 )
 
 // register models.
-// prefix means table name prefix.
-func registerModel(prefix string, model interface{}) {
+// PrefixOrSuffix means table name prefix or suffix.
+// isPrefix whether the prefix is prefix or suffix
+func registerModel(PrefixOrSuffix string, model interface{}, isPrefix bool) {
 	val := reflect.ValueOf(model)
 	typ := reflect.Indirect(val).Type()
 
@@ -39,8 +40,12 @@ func registerModel(prefix string, model interface{}) {
 
 	table := getTableName(val)
 
-	if prefix != "" {
-		table = prefix + table
+	if PrefixOrSuffix != "" {
+		if isPrefix {
+			table = PrefixOrSuffix + table
+		} else {
+			table = table + PrefixOrSuffix
+		}
 	}
 	// models's fullname is pkgpath + struct name
 	name := getFullName(typ)
@@ -213,7 +218,6 @@ func bootStrap() {
 						}
 					}
 				}
-
 				if fi.reverseFieldInfoTwo == nil {
 					err = fmt.Errorf("can not find m2m field for m2m model `%s`, ensure your m2m model defined correct",
 						fi.relThroughModelInfo.fullName)
@@ -297,17 +301,31 @@ end:
 
 // RegisterModel register models
 func RegisterModel(models ...interface{}) {
+	if modelCache.done {
+		panic(fmt.Errorf("RegisterModel must be run before BootStrap"))
+	}
 	RegisterModelWithPrefix("", models...)
 }
 
 // RegisterModelWithPrefix register models with a prefix
 func RegisterModelWithPrefix(prefix string, models ...interface{}) {
 	if modelCache.done {
-		panic(fmt.Errorf("RegisterModel must be run before BootStrap"))
+		panic(fmt.Errorf("RegisterModelWithPrefix must be run before BootStrap"))
 	}
 
 	for _, model := range models {
-		registerModel(prefix, model)
+		registerModel(prefix, model, true)
+	}
+}
+
+// RegisterModelWithSuffix register models with a suffix
+func RegisterModelWithSuffix(suffix string, models ...interface{}) {
+	if modelCache.done {
+		panic(fmt.Errorf("RegisterModelWithSuffix must be run before BootStrap"))
+	}
+
+	for _, model := range models {
+		registerModel(suffix, model, false)
 	}
 }
 
