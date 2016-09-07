@@ -66,7 +66,7 @@ const (
 	AdapterConsole   = "console"
 	AdapterFile      = "file"
 	AdapterMultiFile = "multifile"
-	AdapterMail      = "stmp"
+	AdapterMail      = "smtp"
 	AdapterConn      = "conn"
 	AdapterEs        = "es"
 )
