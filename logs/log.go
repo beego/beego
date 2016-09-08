@@ -69,6 +69,8 @@ const (
 	AdapterMail      = "smtp"
 	AdapterConn      = "conn"
 	AdapterEs        = "es"
+	AdapterJianLiao  = "jianliao"
+	AdapterSlack     = "slack"
 )
 
 // Legacy log level constants to ensure backwards compatibility.
