@@ -49,6 +49,8 @@ import (
 type Cache interface {
 	// get cached value by key.
 	Get(key string) interface{}
+	// get rest duration.
+	GetRestDuration(key string) time.Duration
 	// GetMulti is a batch version of Get.
 	GetMulti(keys []string) []interface{}
 	// set cached value with key and expire time.
