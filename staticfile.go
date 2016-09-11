@@ -196,9 +196,11 @@ func lookupFile(ctx *context.Context) (bool, string, os.FileInfo, error) {
 	if !fi.IsDir() {
 		return false, fp, fi, err
 	}
-	ifp := filepath.Join(fp, "index.html")
-	if ifi, _ := os.Stat(ifp); ifi != nil && ifi.Mode().IsRegular() {
-		return false, ifp, ifi, err
+	if requestURL := ctx.Input.URL(); requestURL[len(requestURL)-1] == '/' {
+		ifp := filepath.Join(fp, "index.html")
+		if ifi, _ := os.Stat(ifp); ifi != nil && ifi.Mode().IsRegular() {
+			return false, ifp, ifi, err
+		}
 	}
 	return !BConfig.WebConfig.DirectoryIndex, fp, fi, err
 }
