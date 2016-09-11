@@ -24,6 +24,7 @@ import (
 )
 
 const (
+	formatTime     = "15:04:05"
 	formatDate     = "2006-01-02"
 	formatDateTime = "2006-01-02 15:04:05"
 )
@@ -71,12 +72,12 @@ type dbBase struct {
 var _ dbBaser = new(dbBase)
 
 // get struct columns values as interface slice.
-func (d *dbBase) collectValues(mi *modelInfo, ind reflect.Value, cols []string, skipAuto bool, insert bool, names *[]string, tz *time.Location) (values []interface{}, err error) {
-	var columns []string
-
-	if names != nil {
-		columns = *names
+func (d *dbBase) collectValues(mi *modelInfo, ind reflect.Value, cols []string, skipAuto bool, insert bool, names *[]string, tz *time.Location) (values []interface{}, autoFields []string, err error) {
+	if names == nil {
+		ns := make([]string, 0, len(cols))
+		names = &ns
 	}
+	values = make([]interface{}, 0, len(cols))
 
 	for _, column := range cols {
 		var fi *fieldInfo
@@ -90,18 +91,24 @@ func (d *dbBase) collectValues(mi *modelInfo, ind reflect.Value, cols []string, 
 		}
 		value, err := d.collectFieldValue(mi, fi, ind, insert, tz)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
-		if names != nil {
-			columns = append(columns, column)
+		// ignore empty value auto field
+		if insert && fi.auto {
+			if fi.fieldType&IsPositiveIntegerField > 0 {
+				if vu, ok := value.(uint64); !ok || vu == 0 {
+					continue
+				}
+			} else {
+				if vu, ok := value.(int64); !ok || vu == 0 {
+					continue
+				}
+			}
+			autoFields = append(autoFields, fi.column)
 		}
 
-		values = append(values, value)
-	}
-
-	if names != nil {
-		*names = columns
+		*names, values = append(*names, column), append(values, value)
 	}
 
 	return
@@ -134,7 +141,7 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 				} else {
 					value = field.Bool()
 				}
-			case TypeCharField, TypeTextField:
+			case TypeCharField, TypeTextField, TypeJSONField, TypeJsonbField:
 				if ns, ok := field.Interface().(sql.NullString); ok {
 					value = nil
 					if ns.Valid {
@@ -169,7 +176,7 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 						value = field.Float()
 					}
 				}
-			case TypeDateField, TypeDateTimeField:
+			case TypeTimeField, TypeDateField, TypeDateTimeField:
 				value = field.Interface()
 				if t, ok := value.(time.Time); ok {
 					d.ins.TimeToDB(&t, tz)
@@ -181,7 +188,7 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 				}
 			default:
 				switch {
-				case fi.fieldType&IsPostiveIntegerField > 0:
+				case fi.fieldType&IsPositiveIntegerField > 0:
 					if field.Kind() == reflect.Ptr {
 						if field.IsNil() {
 							value = nil
@@ -223,7 +230,7 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 			}
 		}
 		switch fi.fieldType {
-		case TypeDateField, TypeDateTimeField:
+		case TypeTimeField, TypeDateField, TypeDateTimeField:
 			if fi.autoNow || fi.autoNowAdd && insert {
 				if insert {
 					if t, ok := value.(time.Time); ok && !t.IsZero() {
@@ -236,8 +243,19 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 				if fi.isFielder {
 					f := field.Addr().Interface().(Fielder)
 					f.SetRaw(tnow.In(DefaultTimeLoc))
+				} else if field.Kind() == reflect.Ptr {
+					v := tnow.In(DefaultTimeLoc)
+					field.Set(reflect.ValueOf(&v))
 				} else {
 					field.Set(reflect.ValueOf(tnow.In(DefaultTimeLoc)))
+				}
+			}
+		case TypeJSONField, TypeJsonbField:
+			if s, ok := value.(string); (ok && len(s) == 0) || value == nil {
+				if fi.colDefault && fi.initial.Exist() {
+					value = fi.initial.String()
+				} else {
+					value = nil
 				}
 			}
 		}
@@ -273,7 +291,7 @@ func (d *dbBase) PrepareInsert(q dbQuerier, mi *modelInfo) (stmtQuerier, string,
 
 // insert struct with prepared statement and given struct reflect value.
 func (d *dbBase) InsertStmt(stmt stmtQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location) (int64, error) {
-	values, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, nil, tz)
+	values, _, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, nil, tz)
 	if err != nil {
 		return 0, err
 	}
@@ -300,7 +318,7 @@ func (d *dbBase) Read(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Lo
 	if len(cols) > 0 {
 		var err error
 		whereCols = make([]string, 0, len(cols))
-		args, err = d.collectValues(mi, ind, cols, false, false, &whereCols, tz)
+		args, _, err = d.collectValues(mi, ind, cols, false, false, &whereCols, tz)
 		if err != nil {
 			return err
 		}
@@ -349,13 +367,21 @@ func (d *dbBase) Read(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Lo
 
 // execute insert sql dbQuerier with given struct reflect.Value.
 func (d *dbBase) Insert(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location) (int64, error) {
-	names := make([]string, 0, len(mi.fields.dbcols)-1)
-	values, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, &names, tz)
+	names := make([]string, 0, len(mi.fields.dbcols))
+	values, autoFields, err := d.collectValues(mi, ind, mi.fields.dbcols, false, true, &names, tz)
 	if err != nil {
 		return 0, err
 	}
 
-	return d.InsertValue(q, mi, false, names, values)
+	id, err := d.InsertValue(q, mi, false, names, values)
+	if err != nil {
+		return 0, err
+	}
+
+	if len(autoFields) > 0 {
+		err = d.ins.setval(q, mi, autoFields)
+	}
+	return id, err
 }
 
 // multi-insert sql with given slice struct reflect.Value.
@@ -369,7 +395,7 @@ func (d *dbBase) InsertMulti(q dbQuerier, mi *modelInfo, sind reflect.Value, bul
 
 	// typ := reflect.Indirect(mi.addrField).Type()
 
-	length := sind.Len()
+	length, autoFields := sind.Len(), make([]string, 0, 1)
 
 	for i := 1; i <= length; i++ {
 
@@ -381,16 +407,18 @@ func (d *dbBase) InsertMulti(q dbQuerier, mi *modelInfo, sind reflect.Value, bul
 		// }
 
 		if i == 1 {
-			vus, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, &names, tz)
+			var (
+				vus []interface{}
+				err error
+			)
+			vus, autoFields, err = d.collectValues(mi, ind, mi.fields.dbcols, false, true, &names, tz)
 			if err != nil {
 				return cnt, err
 			}
 			values = make([]interface{}, bulk*len(vus))
 			nums += copy(values, vus)
-
 		} else {
-
-			vus, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, nil, tz)
+			vus, _, err := d.collectValues(mi, ind, mi.fields.dbcols, false, true, nil, tz)
 			if err != nil {
 				return cnt, err
 			}
@@ -412,7 +440,12 @@ func (d *dbBase) InsertMulti(q dbQuerier, mi *modelInfo, sind reflect.Value, bul
 		}
 	}
 
-	return cnt, nil
+	var err error
+	if len(autoFields) > 0 {
+		err = d.ins.setval(q, mi, autoFields)
+	}
+
+	return cnt, err
 }
 
 // execute insert sql with given struct and given values.
@@ -455,6 +488,110 @@ func (d *dbBase) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []s
 	return id, err
 }
 
+// InsertOrUpdate a row
+// If your primary key or unique column conflict will update
+// If no will insert
+func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a *alias, args ...string) (int64, error) {
+	args0 := ""
+	iouStr := ""
+	argsMap := map[string]string{}
+	switch a.Driver {
+	case DRMySQL:
+		iouStr = "ON DUPLICATE KEY UPDATE"
+	case DRPostgres:
+		if len(args) == 0 {
+			return 0, fmt.Errorf("`%s` use InsertOrUpdate must have a conflict column", a.DriverName)
+		} else {
+			args0 = strings.ToLower(args[0])
+			iouStr = fmt.Sprintf("ON CONFLICT (%s) DO UPDATE SET", args0)
+		}
+	default:
+		return 0, fmt.Errorf("`%s` nonsupport InsertOrUpdate in beego", a.DriverName)
+	}
+
+	//Get on the key-value pairs
+	for _, v := range args {
+		kv := strings.Split(v, "=")
+		if len(kv) == 2 {
+			argsMap[strings.ToLower(kv[0])] = kv[1]
+		}
+	}
+
+	isMulti := false
+	names := make([]string, 0, len(mi.fields.dbcols)-1)
+	Q := d.ins.TableQuote()
+	values, _, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, &names, a.TZ)
+
+	if err != nil {
+		return 0, err
+	}
+
+	marks := make([]string, len(names))
+	updateValues := make([]interface{}, 0)
+	updates := make([]string, len(names))
+	var conflitValue interface{}
+	for i, v := range names {
+		marks[i] = "?"
+		valueStr := argsMap[strings.ToLower(v)]
+		if v == args0 {
+			conflitValue = values[i]
+		}
+		if valueStr != "" {
+			switch a.Driver {
+			case DRMySQL:
+				updates[i] = v + "=" + valueStr
+			case DRPostgres:
+				if conflitValue != nil {
+					//postgres ON CONFLICT DO UPDATE SET can`t use colu=colu+values
+					updates[i] = fmt.Sprintf("%s=(select %s from %s where %s = ? )", v, valueStr, mi.table, args0)
+					updateValues = append(updateValues, conflitValue)
+				} else {
+					return 0, fmt.Errorf("`%s` must be in front of `%s` in your struct", args0, v)
+				}
+			}
+		} else {
+			updates[i] = v + "=?"
+			updateValues = append(updateValues, values[i])
+		}
+	}
+
+	values = append(values, updateValues...)
+
+	sep := fmt.Sprintf("%s, %s", Q, Q)
+	qmarks := strings.Join(marks, ", ")
+	qupdates := strings.Join(updates, ", ")
+	columns := strings.Join(names, sep)
+
+	multi := len(values) / len(names)
+
+	if isMulti {
+		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
+	}
+	//conflitValue maybe is a int,can`t use fmt.Sprintf
+	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s) %s "+qupdates, Q, mi.table, Q, Q, columns, Q, qmarks, iouStr)
+
+	d.ins.ReplaceMarks(&query)
+
+	if isMulti || !d.ins.HasReturningID(mi, &query) {
+		res, err := q.Exec(query, values...)
+		if err == nil {
+			if isMulti {
+				return res.RowsAffected()
+			}
+			return res.LastInsertId()
+		}
+		return 0, err
+	}
+
+	row := q.QueryRow(query, values...)
+	var id int64
+	err = row.Scan(&id)
+	if err.Error() == `pq: syntax error at or near "ON"` {
+		err = fmt.Errorf("postgres version must 9.5 or higher")
+	}
+	return id, err
+}
+
 // execute update sql dbQuerier with given struct reflect.Value.
 func (d *dbBase) Update(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location, cols []string) (int64, error) {
 	pkName, pkValue, ok := getExistPk(mi, ind)
@@ -472,7 +609,7 @@ func (d *dbBase) Update(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.
 		setNames = make([]string, 0, len(cols))
 	}
 
-	setValues, err := d.collectValues(mi, ind, cols, true, false, &setNames, tz)
+	setValues, _, err := d.collectValues(mi, ind, cols, true, false, &setNames, tz)
 	if err != nil {
 		return 0, err
 	}
@@ -516,7 +653,7 @@ func (d *dbBase) Delete(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.
 		}
 		if num > 0 {
 			if mi.fields.pk.auto {
-				if mi.fields.pk.fieldType&IsPostiveIntegerField > 0 {
+				if mi.fields.pk.fieldType&IsPositiveIntegerField > 0 {
 					ind.FieldByIndex(mi.fields.pk.fieldIndex).SetUint(0)
 				} else {
 					ind.FieldByIndex(mi.fields.pk.fieldIndex).SetInt(0)
@@ -1076,13 +1213,13 @@ setValue:
 			}
 			value = b
 		}
-	case fieldType == TypeCharField || fieldType == TypeTextField:
+	case fieldType == TypeCharField || fieldType == TypeTextField || fieldType == TypeJSONField || fieldType == TypeJsonbField:
 		if str == nil {
 			value = ToStr(val)
 		} else {
 			value = str.String()
 		}
-	case fieldType == TypeDateField || fieldType == TypeDateTimeField:
+	case fieldType == TypeTimeField || fieldType == TypeDateField || fieldType == TypeDateTimeField:
 		if str == nil {
 			switch t := val.(type) {
 			case time.Time:
@@ -1102,15 +1239,20 @@ setValue:
 			if len(s) >= 19 {
 				s = s[:19]
 				t, err = time.ParseInLocation(formatDateTime, s, tz)
-			} else {
+			} else if len(s) >= 10 {
 				if len(s) > 10 {
 					s = s[:10]
 				}
 				t, err = time.ParseInLocation(formatDate, s, tz)
+			} else if len(s) >= 8 {
+				if len(s) > 8 {
+					s = s[:8]
+				}
+				t, err = time.ParseInLocation(formatTime, s, tz)
 			}
 			t = t.In(DefaultTimeLoc)
 
-			if err != nil && s != "0000-00-00" && s != "0000-00-00 00:00:00" {
+			if err != nil && s != "00:00:00" && s != "0000-00-00" && s != "0000-00-00 00:00:00" {
 				tErr = err
 				goto end
 			}
@@ -1145,7 +1287,7 @@ setValue:
 				tErr = err
 				goto end
 			}
-			if fieldType&IsPostiveIntegerField > 0 {
+			if fieldType&IsPositiveIntegerField > 0 {
 				v, _ := str.Uint64()
 				value = v
 			} else {
@@ -1217,7 +1359,7 @@ setValue:
 				field.SetBool(value.(bool))
 			}
 		}
-	case fieldType == TypeCharField || fieldType == TypeTextField:
+	case fieldType == TypeCharField || fieldType == TypeTextField || fieldType == TypeJSONField || fieldType == TypeJsonbField:
 		if isNative {
 			if ns, ok := field.Interface().(sql.NullString); ok {
 				if value == nil {
@@ -1239,12 +1381,18 @@ setValue:
 				field.SetString(value.(string))
 			}
 		}
-	case fieldType == TypeDateField || fieldType == TypeDateTimeField:
+	case fieldType == TypeTimeField || fieldType == TypeDateField || fieldType == TypeDateTimeField:
 		if isNative {
 			if value == nil {
 				value = time.Time{}
+			} else if field.Kind() == reflect.Ptr {
+				if value != nil {
+					v := value.(time.Time)
+					field.Set(reflect.ValueOf(&v))
+				}
+			} else {
+				field.Set(reflect.ValueOf(value))
 			}
-			field.Set(reflect.ValueOf(value))
 		}
 	case fieldType == TypePositiveBitField && field.Kind() == reflect.Ptr:
 		if value != nil {
@@ -1297,7 +1445,7 @@ setValue:
 			field.Set(reflect.ValueOf(&v))
 		}
 	case fieldType&IsIntegerField > 0:
-		if fieldType&IsPostiveIntegerField > 0 {
+		if fieldType&IsPositiveIntegerField > 0 {
 			if isNative {
 				if value == nil {
 					value = uint64(0)
@@ -1445,7 +1593,11 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 
 	sels := strings.Join(cols, ", ")
 
-	query := fmt.Sprintf("SELECT %s FROM %s%s%s T0 %s%s%s%s%s", sels, Q, mi.table, Q, join, where, groupBy, orderBy, limit)
+	sqlSelect := "SELECT"
+	if qs.distinct {
+		sqlSelect += " DISTINCT"
+	}
+	query := fmt.Sprintf("%s %s FROM %s%s%s T0 %s%s%s%s%s", sqlSelect, sels, Q, mi.table, Q, join, where, groupBy, orderBy, limit)
 
 	d.ins.ReplaceMarks(&query)
 
@@ -1565,6 +1717,11 @@ func (d *dbBase) ReplaceMarks(query *string) {
 // flag of RETURNING sql.
 func (d *dbBase) HasReturningID(*modelInfo, *string) bool {
 	return false
+}
+
+// sync auto key
+func (d *dbBase) setval(db dbQuerier, mi *modelInfo, autoFields []string) error {
+	return nil
 }
 
 // convert time from db.

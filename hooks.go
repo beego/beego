@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/session"
 )
 
@@ -43,23 +45,24 @@ func registerSession() error {
 	if BConfig.WebConfig.Session.SessionOn {
 		var err error
 		sessionConfig := AppConfig.String("sessionConfig")
+		conf := new(session.ManagerConfig)
 		if sessionConfig == "" {
-			conf := map[string]interface{}{
-				"cookieName":      BConfig.WebConfig.Session.SessionName,
-				"gclifetime":      BConfig.WebConfig.Session.SessionGCMaxLifetime,
-				"providerConfig":  filepath.ToSlash(BConfig.WebConfig.Session.SessionProviderConfig),
-				"secure":          BConfig.Listen.EnableHTTPS,
-				"enableSetCookie": BConfig.WebConfig.Session.SessionAutoSetCookie,
-				"domain":          BConfig.WebConfig.Session.SessionDomain,
-				"cookieLifeTime":  BConfig.WebConfig.Session.SessionCookieLifeTime,
-			}
-			confBytes, err := json.Marshal(conf)
-			if err != nil {
+			conf.CookieName = BConfig.WebConfig.Session.SessionName
+			conf.EnableSetCookie = BConfig.WebConfig.Session.SessionAutoSetCookie
+			conf.Gclifetime = BConfig.WebConfig.Session.SessionGCMaxLifetime
+			conf.Secure = BConfig.Listen.EnableHTTPS
+			conf.CookieLifeTime = BConfig.WebConfig.Session.SessionCookieLifeTime
+			conf.ProviderConfig = filepath.ToSlash(BConfig.WebConfig.Session.SessionProviderConfig)
+			conf.Domain = BConfig.WebConfig.Session.SessionDomain
+			conf.EnableSidInHttpHeader = BConfig.WebConfig.Session.EnableSidInHttpHeader
+			conf.SessionNameInHttpHeader = BConfig.WebConfig.Session.SessionNameInHttpHeader
+			conf.EnableSidInUrlQuery = BConfig.WebConfig.Session.EnableSidInUrlQuery
+		} else {
+			if err = json.Unmarshal([]byte(sessionConfig), conf); err != nil {
 				return err
 			}
-			sessionConfig = string(confBytes)
 		}
-		if GlobalSessions, err = session.NewManager(BConfig.WebConfig.Session.SessionProvider, sessionConfig); err != nil {
+		if GlobalSessions, err = session.NewManager(BConfig.WebConfig.Session.SessionProvider, conf); err != nil {
 			return err
 		}
 		go GlobalSessions.GC()
@@ -70,17 +73,9 @@ func registerSession() error {
 func registerTemplate() error {
 	if err := BuildTemplate(BConfig.WebConfig.ViewsPath); err != nil {
 		if BConfig.RunMode == DEV {
-			Warn(err)
+			logs.Warn(err)
 		}
 		return err
-	}
-	return nil
-}
-
-func registerDocs() error {
-	if BConfig.WebConfig.EnableDocs {
-		Get("/docs", serverDocs)
-		Get("/docs/*", serverDocs)
 	}
 	return nil
 }
@@ -88,6 +83,17 @@ func registerDocs() error {
 func registerAdmin() error {
 	if BConfig.Listen.EnableAdmin {
 		go beeAdminApp.Run()
+	}
+	return nil
+}
+
+func registerGzip() error {
+	if BConfig.EnableGzip {
+		context.InitGzip(
+			AppConfig.DefaultInt("gzipMinLength", -1),
+			AppConfig.DefaultInt("gzipCompressLevel", -1),
+			AppConfig.DefaultStrings("includedMethods", []string{"GET"}),
+		)
 	}
 	return nil
 }

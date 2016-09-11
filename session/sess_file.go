@@ -16,7 +16,6 @@ package session
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -82,6 +81,7 @@ func (fs *FileSessionStore) SessionID() string {
 func (fs *FileSessionStore) SessionRelease(w http.ResponseWriter) {
 	b, err := EncodeGob(fs.values)
 	if err != nil {
+		SLogger.Println(err)
 		return
 	}
 	_, err = os.Stat(path.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid))
@@ -90,6 +90,7 @@ func (fs *FileSessionStore) SessionRelease(w http.ResponseWriter) {
 		f, err = os.OpenFile(path.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid), os.O_RDWR, 0777)
 	} else if os.IsNotExist(err) {
 		f, err = os.Create(path.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid))
+
 	} else {
 		return
 	}
@@ -123,7 +124,7 @@ func (fp *FileProvider) SessionRead(sid string) (Store, error) {
 
 	err := os.MkdirAll(path.Join(fp.savePath, string(sid[0]), string(sid[1])), 0777)
 	if err != nil {
-		println(err.Error())
+		SLogger.Println(err.Error())
 	}
 	_, err = os.Stat(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid))
 	var f *os.File
@@ -191,7 +192,7 @@ func (fp *FileProvider) SessionAll() int {
 		return a.visit(path, f, err)
 	})
 	if err != nil {
-		fmt.Printf("filepath.Walk() returned %v\n", err)
+		SLogger.Printf("filepath.Walk() returned %v\n", err)
 		return 0
 	}
 	return a.total
@@ -205,11 +206,11 @@ func (fp *FileProvider) SessionRegenerate(oldsid, sid string) (Store, error) {
 
 	err := os.MkdirAll(path.Join(fp.savePath, string(oldsid[0]), string(oldsid[1])), 0777)
 	if err != nil {
-		println(err.Error())
+		SLogger.Println(err.Error())
 	}
 	err = os.MkdirAll(path.Join(fp.savePath, string(sid[0]), string(sid[1])), 0777)
 	if err != nil {
-		println(err.Error())
+		SLogger.Println(err.Error())
 	}
 	_, err = os.Stat(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid))
 	var newf *os.File

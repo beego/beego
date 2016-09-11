@@ -104,7 +104,7 @@ func (o *orm) getMiInd(md interface{}, needPtr bool) (mi *modelInfo, ind reflect
 		panic(fmt.Errorf("<Ormer> cannot use non-ptr model struct `%s`", getFullName(typ)))
 	}
 	name := getFullName(typ)
-	if mi, ok := modelCache.getByFN(name); ok {
+	if mi, ok := modelCache.getByFullName(name); ok {
 		return mi, ind
 	}
 	panic(fmt.Errorf("<Ormer> table: `%s` not found, maybe not RegisterModel", name))
@@ -140,7 +140,14 @@ func (o *orm) ReadOrCreate(md interface{}, col1 string, cols ...string) (bool, i
 		return (err == nil), id, err
 	}
 
-	return false, ind.FieldByIndex(mi.fields.pk.fieldIndex).Int(), err
+	id, vid := int64(0), ind.FieldByIndex(mi.fields.pk.fieldIndex)
+	if mi.fields.pk.fieldType&IsPositiveIntegerField > 0 {
+		id = int64(vid.Uint())
+	} else {
+		id = vid.Int()
+	}
+
+	return false, id, err
 }
 
 // insert model data to database
@@ -159,7 +166,7 @@ func (o *orm) Insert(md interface{}) (int64, error) {
 // set auto pk field
 func (o *orm) setPk(mi *modelInfo, ind reflect.Value, id int64) {
 	if mi.fields.pk.auto {
-		if mi.fields.pk.fieldType&IsPostiveIntegerField > 0 {
+		if mi.fields.pk.fieldType&IsPositiveIntegerField > 0 {
 			ind.FieldByIndex(mi.fields.pk.fieldIndex).SetUint(uint64(id))
 		} else {
 			ind.FieldByIndex(mi.fields.pk.fieldIndex).SetInt(id)
@@ -184,7 +191,7 @@ func (o *orm) InsertMulti(bulk int, mds interface{}) (int64, error) {
 
 	if bulk <= 1 {
 		for i := 0; i < sind.Len(); i++ {
-			ind := sind.Index(i)
+			ind := reflect.Indirect(sind.Index(i))
 			mi, _ := o.getMiInd(ind.Interface(), false)
 			id, err := o.alias.DbBaser.Insert(o.db, mi, ind, o.alias.TZ)
 			if err != nil {
@@ -200,6 +207,19 @@ func (o *orm) InsertMulti(bulk int, mds interface{}) (int64, error) {
 		return o.alias.DbBaser.InsertMulti(o.db, mi, sind, bulk, o.alias.TZ)
 	}
 	return cnt, nil
+}
+
+// InsertOrUpdate data to database
+func (o *orm) InsertOrUpdate(md interface{}, colConflitAndArgs ...string) (int64, error) {
+	mi, ind := o.getMiInd(md, true)
+	id, err := o.alias.DbBaser.InsertOrUpdate(o.db, mi, ind, o.alias, colConflitAndArgs...)
+	if err != nil {
+		return id, err
+	}
+
+	o.setPk(mi, ind, id)
+
+	return id, nil
 }
 
 // update model to database.
@@ -407,7 +427,7 @@ func (o *orm) QueryTable(ptrStructOrTableName interface{}) (qs QuerySeter) {
 		}
 	} else {
 		name = getFullName(indirectType(reflect.TypeOf(ptrStructOrTableName)))
-		if mi, ok := modelCache.getByFN(name); ok {
+		if mi, ok := modelCache.getByFullName(name); ok {
 			qs = newQuerySet(o, mi)
 		}
 	}

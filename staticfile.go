@@ -27,6 +27,7 @@ import (
 	"time"
 
 	"github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/logs"
 )
 
 var errNotStaticRequest = errors.New("request not a static file request")
@@ -48,14 +49,23 @@ func serverStaticRouter(ctx *context.Context) {
 
 	if filePath == "" || fileInfo == nil {
 		if BConfig.RunMode == DEV {
-			Warn("Can't find/open the file:", filePath, err)
+			logs.Warn("Can't find/open the file:", filePath, err)
 		}
 		http.NotFound(ctx.ResponseWriter, ctx.Request)
 		return
 	}
 	if fileInfo.IsDir() {
-		//serveFile will list dir
-		http.ServeFile(ctx.ResponseWriter, ctx.Request, filePath)
+		requestURL := ctx.Input.URL()
+		if requestURL[len(requestURL)-1] != '/' {
+			redirectURL := requestURL + "/"
+			if ctx.Request.URL.RawQuery != "" {
+				redirectURL = redirectURL + "?" + ctx.Request.URL.RawQuery
+			}
+			ctx.Redirect(302, redirectURL)
+		} else {
+			//serveFile will list dir
+			http.ServeFile(ctx.ResponseWriter, ctx.Request, filePath)
+		}
 		return
 	}
 
@@ -67,7 +77,7 @@ func serverStaticRouter(ctx *context.Context) {
 	b, n, sch, err := openFile(filePath, fileInfo, acceptEncoding)
 	if err != nil {
 		if BConfig.RunMode == DEV {
-			Warn("Can't compress the file:", filePath, err)
+			logs.Warn("Can't compress the file:", filePath, err)
 		}
 		http.NotFound(ctx.ResponseWriter, ctx.Request)
 		return
@@ -157,13 +167,10 @@ func searchFile(ctx *context.Context) (string, os.FileInfo, error) {
 				return filePath, fi, nil
 			}
 		}
-		return "", nil, errors.New(requestPath + " file not find")
+		return "", nil, errNotStaticRequest
 	}
 
 	for prefix, staticDir := range BConfig.WebConfig.StaticDir {
-		if len(prefix) == 0 {
-			continue
-		}
 		if !strings.Contains(requestPath, prefix) {
 			continue
 		}
@@ -189,9 +196,11 @@ func lookupFile(ctx *context.Context) (bool, string, os.FileInfo, error) {
 	if !fi.IsDir() {
 		return false, fp, fi, err
 	}
-	ifp := filepath.Join(fp, "index.html")
-	if ifi, _ := os.Stat(ifp); ifi != nil && ifi.Mode().IsRegular() {
-		return false, ifp, ifi, err
+	if requestURL := ctx.Input.URL(); requestURL[len(requestURL)-1] == '/' {
+		ifp := filepath.Join(fp, "index.html")
+		if ifi, _ := os.Stat(ifp); ifi != nil && ifi.Mode().IsRegular() {
+			return false, ifp, ifi, err
+		}
 	}
 	return !BConfig.WebConfig.DirectoryIndex, fp, fi, err
 }

@@ -21,8 +21,11 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"io"
 	"mime"
 	"net/http"
+	"net/url"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -72,10 +75,11 @@ func (output *BeegoOutput) Body(content []byte) error {
 	if output.Status != 0 {
 		output.Context.ResponseWriter.WriteHeader(output.Status)
 		output.Status = 0
+	} else {
+		output.Context.ResponseWriter.Started = true
 	}
-
-	_, err := output.Context.ResponseWriter.Copy(buf)
-	return err
+	io.Copy(output.Context.ResponseWriter, buf)
+	return nil
 }
 
 // Cookie sets cookie value via given key.
@@ -142,16 +146,10 @@ func (output *BeegoOutput) Cookie(name string, value string, others ...interface
 	}
 
 	// default false. for session cookie default true
-	httponly := false
 	if len(others) > 4 {
 		if v, ok := others[4].(bool); ok && v {
-			// HttpOnly = true
-			httponly = true
+			fmt.Fprintf(&b, "; HttpOnly")
 		}
-	}
-
-	if httponly {
-		fmt.Fprintf(&b, "; HttpOnly")
 	}
 
 	output.Context.ResponseWriter.Header().Add("Set-Cookie", b.String())
@@ -208,7 +206,8 @@ func (output *BeegoOutput) JSONP(data interface{}, hasIndent bool) error {
 	if callback == "" {
 		return errors.New(`"callback" parameter required`)
 	}
-	callbackContent := bytes.NewBufferString(" " + template.JSEscapeString(callback))
+	callback = template.JSEscapeString(callback)
+	callbackContent := bytes.NewBufferString(" if(window." + callback + ")" + callback)
 	callbackContent.WriteString("(")
 	callbackContent.Write(content)
 	callbackContent.WriteString(");\r\n")
@@ -235,13 +234,21 @@ func (output *BeegoOutput) XML(data interface{}, hasIndent bool) error {
 // Download forces response for download file.
 // it prepares the download response header automatically.
 func (output *BeegoOutput) Download(file string, filename ...string) {
+	// check get file error, file not found or other error.
+	if _, err := os.Stat(file); err != nil {
+		http.ServeFile(output.Context.ResponseWriter, output.Context.Request, file)
+		return
+	}
+
+	var fName string
+	if len(filename) > 0 && filename[0] != "" {
+		fName = filename[0]
+	} else {
+		fName = filepath.Base(file)
+	}
+	output.Header("Content-Disposition", "attachment; filename="+url.QueryEscape(fName))
 	output.Header("Content-Description", "File Transfer")
 	output.Header("Content-Type", "application/octet-stream")
-	if len(filename) > 0 && filename[0] != "" {
-		output.Header("Content-Disposition", "attachment; filename="+filename[0])
-	} else {
-		output.Header("Content-Disposition", "attachment; filename="+filepath.Base(file))
-	}
 	output.Header("Content-Transfer-Encoding", "binary")
 	output.Header("Expires", "0")
 	output.Header("Cache-Control", "must-revalidate")
@@ -269,55 +276,55 @@ func (output *BeegoOutput) SetStatus(status int) {
 
 // IsCachable returns boolean of this request is cached.
 // HTTP 304 means cached.
-func (output *BeegoOutput) IsCachable(status int) bool {
+func (output *BeegoOutput) IsCachable() bool {
 	return output.Status >= 200 && output.Status < 300 || output.Status == 304
 }
 
 // IsEmpty returns boolean of this request is empty.
 // HTTP 201，204 and 304 means empty.
-func (output *BeegoOutput) IsEmpty(status int) bool {
+func (output *BeegoOutput) IsEmpty() bool {
 	return output.Status == 201 || output.Status == 204 || output.Status == 304
 }
 
 // IsOk returns boolean of this request runs well.
 // HTTP 200 means ok.
-func (output *BeegoOutput) IsOk(status int) bool {
+func (output *BeegoOutput) IsOk() bool {
 	return output.Status == 200
 }
 
 // IsSuccessful returns boolean of this request runs successfully.
 // HTTP 2xx means ok.
-func (output *BeegoOutput) IsSuccessful(status int) bool {
+func (output *BeegoOutput) IsSuccessful() bool {
 	return output.Status >= 200 && output.Status < 300
 }
 
 // IsRedirect returns boolean of this request is redirection header.
 // HTTP 301,302,307 means redirection.
-func (output *BeegoOutput) IsRedirect(status int) bool {
+func (output *BeegoOutput) IsRedirect() bool {
 	return output.Status == 301 || output.Status == 302 || output.Status == 303 || output.Status == 307
 }
 
 // IsForbidden returns boolean of this request is forbidden.
 // HTTP 403 means forbidden.
-func (output *BeegoOutput) IsForbidden(status int) bool {
+func (output *BeegoOutput) IsForbidden() bool {
 	return output.Status == 403
 }
 
 // IsNotFound returns boolean of this request is not found.
 // HTTP 404 means forbidden.
-func (output *BeegoOutput) IsNotFound(status int) bool {
+func (output *BeegoOutput) IsNotFound() bool {
 	return output.Status == 404
 }
 
 // IsClientError returns boolean of this request client sends error data.
 // HTTP 4xx means forbidden.
-func (output *BeegoOutput) IsClientError(status int) bool {
+func (output *BeegoOutput) IsClientError() bool {
 	return output.Status >= 400 && output.Status < 500
 }
 
 // IsServerError returns boolean of this server handler errors.
 // HTTP 5xx means server internal error.
-func (output *BeegoOutput) IsServerError(status int) bool {
+func (output *BeegoOutput) IsServerError() bool {
 	return output.Status >= 500 && output.Status < 600
 }
 

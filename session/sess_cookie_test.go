@@ -15,6 +15,7 @@
 package session
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -23,7 +24,11 @@ import (
 
 func TestCookie(t *testing.T) {
 	config := `{"cookieName":"gosessionid","enableSetCookie":false,"gclifetime":3600,"ProviderConfig":"{\"cookieName\":\"gosessionid\",\"securityKey\":\"beegocookiehashkey\"}"}`
-	globalSessions, err := NewManager("cookie", config)
+	conf := new(ManagerConfig)
+	if err := json.Unmarshal([]byte(config), conf); err != nil {
+		t.Fatal("json decode error", err)
+	}
+	globalSessions, err := NewManager("cookie", conf)
 	if err != nil {
 		t.Fatal("init cookie session err", err)
 	}
@@ -56,7 +61,11 @@ func TestCookie(t *testing.T) {
 
 func TestDestorySessionCookie(t *testing.T) {
 	config := `{"cookieName":"gosessionid","enableSetCookie":true,"gclifetime":3600,"ProviderConfig":"{\"cookieName\":\"gosessionid\",\"securityKey\":\"beegocookiehashkey\"}"}`
-	globalSessions, err := NewManager("cookie", config)
+	conf := new(ManagerConfig)
+	if err := json.Unmarshal([]byte(config), conf); err != nil {
+		t.Fatal("json decode error", err)
+	}
+	globalSessions, err := NewManager("cookie", conf)
 	if err != nil {
 		t.Fatal("init cookie session err", err)
 	}

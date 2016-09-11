@@ -71,6 +71,7 @@ type Controller struct {
 	TplName        string
 	Layout         string
 	LayoutSections map[string]string // the key is the section name and the value is the template name
+	TplPrefix      string
 	TplExt         string
 	EnableRender   bool
 
@@ -208,7 +209,7 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 					continue
 				}
 				buf.Reset()
-				err = executeTemplate(&buf, sectionTpl, c.Data)
+				err = ExecuteTemplate(&buf, sectionTpl, c.Data)
 				if err != nil {
 					return nil, err
 				}
@@ -217,7 +218,7 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		}
 
 		buf.Reset()
-		executeTemplate(&buf, c.Layout, c.Data)
+		ExecuteTemplate(&buf, c.Layout, c.Data)
 	}
 	return buf.Bytes(), err
 }
@@ -226,6 +227,9 @@ func (c *Controller) renderTemplate() (bytes.Buffer, error) {
 	var buf bytes.Buffer
 	if c.TplName == "" {
 		c.TplName = strings.ToLower(c.controllerName) + "/" + strings.ToLower(c.actionName) + "." + c.TplExt
+	}
+	if c.TplPrefix != "" {
+		c.TplName = c.TplPrefix + c.TplName
 	}
 	if BConfig.RunMode == DEV {
 		buildFiles := []string{c.TplName}
@@ -242,7 +246,7 @@ func (c *Controller) renderTemplate() (bytes.Buffer, error) {
 		}
 		BuildTemplate(BConfig.WebConfig.ViewsPath, buildFiles...)
 	}
-	return buf, executeTemplate(&buf, c.TplName, c.Data)
+	return buf, ExecuteTemplate(&buf, c.TplName, c.Data)
 }
 
 // Redirect sends the redirection response to url with status code.
@@ -261,12 +265,13 @@ func (c *Controller) Abort(code string) {
 
 // CustomAbort stops controller handler and show the error data, it's similar Aborts, but support status code and body.
 func (c *Controller) CustomAbort(status int, body string) {
-	c.Ctx.Output.Status = status
-	// first panic from ErrorMaps, is is user defined error functions.
+	// first panic from ErrorMaps, it is user defined error functions.
 	if _, ok := ErrorMaps[body]; ok {
+		c.Ctx.Output.Status = status
 		panic(body)
 	}
 	// last panic user string
+	c.Ctx.ResponseWriter.WriteHeader(status)
 	c.Ctx.ResponseWriter.Write([]byte(body))
 	panic(ErrAbort)
 }

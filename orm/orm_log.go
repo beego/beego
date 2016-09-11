@@ -31,7 +31,7 @@ type Log struct {
 // NewLog set io.Writer to create a Logger.
 func NewLog(out io.Writer) *Log {
 	d := new(Log)
-	d.Logger = log.New(out, "[ORM]", 1e9)
+	d.Logger = log.New(out, "[ORM]", log.LstdFlags)
 	return d
 }
 

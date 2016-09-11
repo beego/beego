@@ -93,7 +93,11 @@ func showErr(err interface{}, ctx *context.Context, stack string) {
 		"BeegoVersion":  VERSION,
 		"GoVersion":     runtime.Version(),
 	}
-	ctx.ResponseWriter.WriteHeader(500)
+	if ctx.Output.Status != 0 {
+		ctx.ResponseWriter.WriteHeader(ctx.Output.Status)
+	} else {
+		ctx.ResponseWriter.WriteHeader(500)
+	}
 	t.Execute(ctx.ResponseWriter, data)
 }
 
@@ -210,159 +214,139 @@ var ErrorMaps = make(map[string]*errorInfo, 10)
 
 // show 401 unauthorized error.
 func unauthorized(rw http.ResponseWriter, r *http.Request) {
-	t, _ := template.New("beegoerrortemp").Parse(errtpl)
-	data := map[string]interface{}{
-		"Title":        http.StatusText(401),
-		"BeegoVersion": VERSION,
-	}
-	data["Content"] = template.HTML("<br>The page you have requested can't be authorized." +
-		"<br>Perhaps you are here because:" +
-		"<br><br><ul>" +
-		"<br>The credentials you supplied are incorrect" +
-		"<br>There are errors in the website address" +
-		"</ul>")
-	t.Execute(rw, data)
+	responseError(rw, r,
+		401,
+		"<br>The page you have requested can't be authorized."+
+			"<br>Perhaps you are here because:"+
+			"<br><br><ul>"+
+			"<br>The credentials you supplied are incorrect"+
+			"<br>There are errors in the website address"+
+			"</ul>",
+	)
 }
 
 // show 402 Payment Required
 func paymentRequired(rw http.ResponseWriter, r *http.Request) {
-	t, _ := template.New("beegoerrortemp").Parse(errtpl)
-	data := map[string]interface{}{
-		"Title":        http.StatusText(402),
-		"BeegoVersion": VERSION,
-	}
-	data["Content"] = template.HTML("<br>The page you have requested Payment Required." +
-		"<br>Perhaps you are here because:" +
-		"<br><br><ul>" +
-		"<br>The credentials you supplied are incorrect" +
-		"<br>There are errors in the website address" +
-		"</ul>")
-	t.Execute(rw, data)
+	responseError(rw, r,
+		402,
+		"<br>The page you have requested Payment Required."+
+			"<br>Perhaps you are here because:"+
+			"<br><br><ul>"+
+			"<br>The credentials you supplied are incorrect"+
+			"<br>There are errors in the website address"+
+			"</ul>",
+	)
 }
 
 // show 403 forbidden error.
 func forbidden(rw http.ResponseWriter, r *http.Request) {
-	t, _ := template.New("beegoerrortemp").Parse(errtpl)
-	data := map[string]interface{}{
-		"Title":        http.StatusText(403),
-		"BeegoVersion": VERSION,
-	}
-	data["Content"] = template.HTML("<br>The page you have requested is forbidden." +
-		"<br>Perhaps you are here because:" +
-		"<br><br><ul>" +
-		"<br>Your address may be blocked" +
-		"<br>The site may be disabled" +
-		"<br>You need to log in" +
-		"</ul>")
-	t.Execute(rw, data)
+	responseError(rw, r,
+		403,
+		"<br>The page you have requested is forbidden."+
+			"<br>Perhaps you are here because:"+
+			"<br><br><ul>"+
+			"<br>Your address may be blocked"+
+			"<br>The site may be disabled"+
+			"<br>You need to log in"+
+			"</ul>",
+	)
 }
 
-// show 404 notfound error.
+// show 404 not found error.
 func notFound(rw http.ResponseWriter, r *http.Request) {
-	t, _ := template.New("beegoerrortemp").Parse(errtpl)
-	data := map[string]interface{}{
-		"Title":        http.StatusText(404),
-		"BeegoVersion": VERSION,
-	}
-	data["Content"] = template.HTML("<br>The page you have requested has flown the coop." +
-		"<br>Perhaps you are here because:" +
-		"<br><br><ul>" +
-		"<br>The page has moved" +
-		"<br>The page no longer exists" +
-		"<br>You were looking for your puppy and got lost" +
-		"<br>You like 404 pages" +
-		"</ul>")
-	t.Execute(rw, data)
+	responseError(rw, r,
+		404,
+		"<br>The page you have requested has flown the coop."+
+			"<br>Perhaps you are here because:"+
+			"<br><br><ul>"+
+			"<br>The page has moved"+
+			"<br>The page no longer exists"+
+			"<br>You were looking for your puppy and got lost"+
+			"<br>You like 404 pages"+
+			"</ul>",
+	)
 }
 
 // show 405 Method Not Allowed
 func methodNotAllowed(rw http.ResponseWriter, r *http.Request) {
-	t, _ := template.New("beegoerrortemp").Parse(errtpl)
-	data := map[string]interface{}{
-		"Title":        http.StatusText(405),
-		"BeegoVersion": VERSION,
-	}
-	data["Content"] = template.HTML("<br>The method you have requested Not Allowed." +
-		"<br>Perhaps you are here because:" +
-		"<br><br><ul>" +
-		"<br>The method specified in the Request-Line is not allowed for the resource identified by the Request-URI" +
-		"<br>The response MUST include an Allow header containing a list of valid methods for the requested resource." +
-		"</ul>")
-	t.Execute(rw, data)
+	responseError(rw, r,
+		405,
+		"<br>The method you have requested Not Allowed."+
+			"<br>Perhaps you are here because:"+
+			"<br><br><ul>"+
+			"<br>The method specified in the Request-Line is not allowed for the resource identified by the Request-URI"+
+			"<br>The response MUST include an Allow header containing a list of valid methods for the requested resource."+
+			"</ul>",
+	)
 }
 
 // show 500 internal server error.
 func internalServerError(rw http.ResponseWriter, r *http.Request) {
-	t, _ := template.New("beegoerrortemp").Parse(errtpl)
-	data := map[string]interface{}{
-		"Title":        http.StatusText(500),
-		"BeegoVersion": VERSION,
-	}
-	data["Content"] = template.HTML("<br>The page you have requested is down right now." +
-		"<br><br><ul>" +
-		"<br>Please try again later and report the error to the website administrator" +
-		"<br></ul>")
-	t.Execute(rw, data)
+	responseError(rw, r,
+		500,
+		"<br>The page you have requested is down right now."+
+			"<br><br><ul>"+
+			"<br>Please try again later and report the error to the website administrator"+
+			"<br></ul>",
+	)
 }
 
 // show 501 Not Implemented.
 func notImplemented(rw http.ResponseWriter, r *http.Request) {
-	t, _ := template.New("beegoerrortemp").Parse(errtpl)
-	data := map[string]interface{}{
-		"Title":        http.StatusText(504),
-		"BeegoVersion": VERSION,
-	}
-	data["Content"] = template.HTML("<br>The page you have requested is Not Implemented." +
-		"<br><br><ul>" +
-		"<br>Please try again later and report the error to the website administrator" +
-		"<br></ul>")
-	t.Execute(rw, data)
+	responseError(rw, r,
+		501,
+		"<br>The page you have requested is Not Implemented."+
+			"<br><br><ul>"+
+			"<br>Please try again later and report the error to the website administrator"+
+			"<br></ul>",
+	)
 }
 
 // show 502 Bad Gateway.
 func badGateway(rw http.ResponseWriter, r *http.Request) {
-	t, _ := template.New("beegoerrortemp").Parse(errtpl)
-	data := map[string]interface{}{
-		"Title":        http.StatusText(502),
-		"BeegoVersion": VERSION,
-	}
-	data["Content"] = template.HTML("<br>The page you have requested is down right now." +
-		"<br><br><ul>" +
-		"<br>The server, while acting as a gateway or proxy, received an invalid response from the upstream server it accessed in attempting to fulfill the request." +
-		"<br>Please try again later and report the error to the website administrator" +
-		"<br></ul>")
-	t.Execute(rw, data)
+	responseError(rw, r,
+		502,
+		"<br>The page you have requested is down right now."+
+			"<br><br><ul>"+
+			"<br>The server, while acting as a gateway or proxy, received an invalid response from the upstream server it accessed in attempting to fulfill the request."+
+			"<br>Please try again later and report the error to the website administrator"+
+			"<br></ul>",
+	)
 }
 
 // show 503 service unavailable error.
 func serviceUnavailable(rw http.ResponseWriter, r *http.Request) {
-	t, _ := template.New("beegoerrortemp").Parse(errtpl)
-	data := map[string]interface{}{
-		"Title":        http.StatusText(503),
-		"BeegoVersion": VERSION,
-	}
-	data["Content"] = template.HTML("<br>The page you have requested is unavailable." +
-		"<br>Perhaps you are here because:" +
-		"<br><br><ul>" +
-		"<br><br>The page is overloaded" +
-		"<br>Please try again later." +
-		"</ul>")
-	t.Execute(rw, data)
+	responseError(rw, r,
+		503,
+		"<br>The page you have requested is unavailable."+
+			"<br>Perhaps you are here because:"+
+			"<br><br><ul>"+
+			"<br><br>The page is overloaded"+
+			"<br>Please try again later."+
+			"</ul>",
+	)
 }
 
 // show 504 Gateway Timeout.
 func gatewayTimeout(rw http.ResponseWriter, r *http.Request) {
+	responseError(rw, r,
+		504,
+		"<br>The page you have requested is unavailable"+
+			"<br>Perhaps you are here because:"+
+			"<br><br><ul>"+
+			"<br><br>The server, while acting as a gateway or proxy, did not receive a timely response from the upstream server specified by the URI."+
+			"<br>Please try again later."+
+			"</ul>",
+	)
+}
+
+func responseError(rw http.ResponseWriter, r *http.Request, errCode int, errContent string) {
 	t, _ := template.New("beegoerrortemp").Parse(errtpl)
 	data := map[string]interface{}{
-		"Title":        http.StatusText(504),
+		"Title":        http.StatusText(errCode),
 		"BeegoVersion": VERSION,
+		"Content":      template.HTML(errContent),
 	}
-	data["Content"] = template.HTML("<br>The page you have requested is unavailable." +
-		"<br>Perhaps you are here because:" +
-		"<br><br><ul>" +
-		"<br><br>The server, while acting as a gateway or proxy, did not receive a timely response from the upstream server specified by the URI." +
-		"<br>Please try again later." +
-		"</ul>")
 	t.Execute(rw, data)
 }
 
@@ -400,6 +384,11 @@ func ErrorController(c ControllerInterface) *App {
 	return BeeApp
 }
 
+// Exception Write HttpStatus with errCode and Exec error handler if exist.
+func Exception(errCode uint64, ctx *context.Context) {
+	exception(strconv.FormatUint(errCode, 10), ctx)
+}
+
 // show error string as simple text message.
 // if error string is empty, show 503 or 500 error as default.
 func exception(errCode string, ctx *context.Context) {
@@ -408,7 +397,10 @@ func exception(errCode string, ctx *context.Context) {
 		if err == nil {
 			return v
 		}
-		return 503
+		if ctx.Output.Status == 0 {
+			return 503
+		}
+		return ctx.Output.Status
 	}
 
 	for _, ec := range []string{errCode, "503", "500"} {
