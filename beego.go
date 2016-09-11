@@ -29,6 +29,11 @@ const (
 	DEV = "dev"
 	// PROD is for production
 	PROD = "prod"
+
+	// config dir
+	CFG_DIR = "conf"
+	// config file
+	CFG_FILE = "app.conf"
 )
 
 //hook function to run
@@ -85,7 +90,7 @@ func initBeforeHTTPRun() {
 
 // TestBeegoInit is for test package init
 func TestBeegoInit(ap string) {
-	appConfigPath = filepath.Join(ap, "conf", "app.conf")
+	appConfigPath = filepath.Join(ap, CFG_DIR, CFG_FILE)
 	os.Chdir(ap)
 	if err := LoadAppConfig(appConfigProvider, appConfigPath); err != nil {
 		panic(err)
