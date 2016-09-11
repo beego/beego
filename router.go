@@ -838,16 +838,16 @@ Admin:
 
 		if findRouter {
 			if routerInfo != nil {
-				devInfo = fmt.Sprintf("|%s %3d %s|%13s|%8s|%s %s %-7s %-3s   r:%s", statusColor, statusCode,
-					resetColor, timeDur.String(), "match", methodColor, resetColor, r.Method, r.URL.Path,
+				devInfo = fmt.Sprintf("|%s %3d %s|%13s|%8s|%s %-7s %s %-3s   r:%s", statusColor, statusCode,
+					resetColor, timeDur.String(), "match", methodColor, r.Method, resetColor, r.URL.Path,
 					routerInfo.pattern)
 			} else {
-				devInfo = fmt.Sprintf("|%s %3d %s|%13s|%8s|%s %s %-7s %-3s", statusColor, statusCode, resetColor,
-					timeDur.String(), "match", methodColor, resetColor, r.Method, r.URL.Path)
+				devInfo = fmt.Sprintf("|%s %3d %s|%13s|%8s|%s %-7s %s %-3s", statusColor, statusCode, resetColor,
+					timeDur.String(), "match", methodColor, r.Method, resetColor, r.URL.Path)
 			}
 		} else {
-			devInfo = fmt.Sprintf("|%s %3d %s|%13s|%8s|%s %s %-7s %-3s", statusColor, statusCode, resetColor,
-				timeDur.String(), "nomatch", methodColor, resetColor, r.Method, r.URL.Path)
+			devInfo = fmt.Sprintf("|%s %3d %s|%13s|%8s|%s %-7s %s %-3s", statusColor, statusCode, resetColor,
+				timeDur.String(), "nomatch", methodColor, r.Method, resetColor, r.URL.Path)
 		}
 		if iswin {
 			logs.W32Debug(devInfo)
