@@ -71,7 +71,7 @@ type Ormer interface {
 	//	num, err = Ormer.Update(&user, "Langs", "Extra")
 	Update(md interface{}, cols ...string) (int64, error)
 	// delete model in database
-	Delete(md interface{}) (int64, error)
+	Delete(md interface{}, cols ...string) (int64, error)
 	// load related models to md model.
 	// args are limit, offset int and order string.
 	//
@@ -401,7 +401,7 @@ type dbBaser interface {
 	InsertValue(dbQuerier, *modelInfo, bool, []string, []interface{}) (int64, error)
 	InsertStmt(stmtQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
 	Update(dbQuerier, *modelInfo, reflect.Value, *time.Location, []string) (int64, error)
-	Delete(dbQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
+	Delete(dbQuerier, *modelInfo, reflect.Value, *time.Location, []string) (int64, error)
 	ReadBatch(dbQuerier, *querySet, *modelInfo, *Condition, interface{}, *time.Location, []string) (int64, error)
 	SupportUpdateJoin() bool
 	UpdateBatch(dbQuerier, *querySet, *modelInfo, *Condition, Params, *time.Location) (int64, error)

@@ -234,9 +234,10 @@ func (o *orm) Update(md interface{}, cols ...string) (int64, error) {
 }
 
 // delete model in database
-func (o *orm) Delete(md interface{}) (int64, error) {
+// cols shows the delete conditions values read from. deafult is pk
+func (o *orm) Delete(md interface{}, cols ...string) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
-	num, err := o.alias.DbBaser.Delete(o.db, mi, ind, o.alias.TZ)
+	num, err := o.alias.DbBaser.Delete(o.db, mi, ind, o.alias.TZ,cols)
 	if err != nil {
 		return num, err
 	}
