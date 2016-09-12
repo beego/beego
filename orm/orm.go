@@ -122,7 +122,17 @@ func (o *orm) getFieldInfo(mi *modelInfo, name string) *fieldInfo {
 // read data to model
 func (o *orm) Read(md interface{}, cols ...string) error {
 	mi, ind := o.getMiInd(md, true)
-	err := o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols)
+	err := o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols, false)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// read data to model, like Read(), but use "SELECT FOR UPDATE" form
+func (o *orm) ReadForUpdate(md interface{}, cols ...string) error {
+	mi, ind := o.getMiInd(md, true)
+	err := o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols, true)
 	if err != nil {
 		return err
 	}
@@ -133,7 +143,7 @@ func (o *orm) Read(md interface{}, cols ...string) error {
 func (o *orm) ReadOrCreate(md interface{}, col1 string, cols ...string) (bool, int64, error) {
 	cols = append([]string{col1}, cols...)
 	mi, ind := o.getMiInd(md, true)
-	err := o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols)
+	err := o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols, false)
 	if err == ErrNoRows {
 		// Create
 		id, err := o.Insert(md)

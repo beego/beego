@@ -45,6 +45,9 @@ type Ormer interface {
 	// 	u = &User{UserName: "astaxie", Password: "pass"}
 	//	err = Ormer.Read(u, "UserName")
 	Read(md interface{}, cols ...string) error
+	// Like Read(), but with "FOR UPDATE" clause, useful in transaction.
+	// Some databases are not support this feature.
+	ReadForUpdate(md interface{}, cols ...string) error
 	// Try to read a row from the database, or insert one if it doesn't exist
 	ReadOrCreate(md interface{}, col1 string, cols ...string) (bool, int64, error)
 	// insert model data to database
@@ -394,7 +397,7 @@ type txEnder interface {
 
 // base database struct
 type dbBaser interface {
-	Read(dbQuerier, *modelInfo, reflect.Value, *time.Location, []string) error
+	Read(dbQuerier, *modelInfo, reflect.Value, *time.Location, []string, bool) error
 	Insert(dbQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
 	InsertOrUpdate(dbQuerier, *modelInfo, reflect.Value, *alias, ...string) (int64, error)
 	InsertMulti(dbQuerier, *modelInfo, reflect.Value, int, *time.Location) (int64, error)
