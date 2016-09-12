@@ -310,7 +310,7 @@ func (d *dbBase) InsertStmt(stmt stmtQuerier, mi *modelInfo, ind reflect.Value, 
 }
 
 // query sql ,read records and persist in dbBaser.
-func (d *dbBase) Read(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location, cols []string) error {
+func (d *dbBase) Read(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location, cols []string, isForUpdate bool) error {
 	var whereCols []string
 	var args []interface{}
 
@@ -341,7 +341,12 @@ func (d *dbBase) Read(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Lo
 	sep = fmt.Sprintf("%s = ? AND %s", Q, Q)
 	wheres := strings.Join(whereCols, sep)
 
-	query := fmt.Sprintf("SELECT %s%s%s FROM %s%s%s WHERE %s%s%s = ?", Q, sels, Q, Q, mi.table, Q, Q, wheres, Q)
+	forUpdate := ""
+	if isForUpdate {
+		forUpdate = "FOR UPDATE"
+	}
+
+	query := fmt.Sprintf("SELECT %s%s%s FROM %s%s%s WHERE %s%s%s = ? %s", Q, sels, Q, Q, mi.table, Q, Q, wheres, Q, forUpdate)
 
 	refs := make([]interface{}, colsNum)
 	for i := range refs {
