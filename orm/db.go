@@ -634,18 +634,36 @@ func (d *dbBase) Update(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.
 
 // execute delete sql dbQuerier with given struct reflect.Value.
 // delete index is pk.
-func (d *dbBase) Delete(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location) (int64, error) {
-	pkName, pkValue, ok := getExistPk(mi, ind)
-	if ok == false {
-		return 0, ErrMissPK
+func (d *dbBase) Delete(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location, cols []string) (int64, error) {
+	var whereCols []string
+	var args []interface{}
+	// if specify cols length > 0, then use it for where condition.
+	if len(cols) > 0 {
+		var err error
+		whereCols = make([]string, 0, len(cols))
+		args, _, err = d.collectValues(mi, ind, cols, false, false, &whereCols, tz)
+		if err != nil {
+			return 0, err
+		}
+	} else {
+		// default use pk value as where condtion.
+		pkColumn, pkValue, ok := getExistPk(mi, ind)
+		if ok == false {
+			return 0, ErrMissPK
+		}
+		whereCols = []string{pkColumn}
+		args = append(args, pkValue)
 	}
 
 	Q := d.ins.TableQuote()
 
-	query := fmt.Sprintf("DELETE FROM %s%s%s WHERE %s%s%s = ?", Q, mi.table, Q, Q, pkName, Q)
+	sep := fmt.Sprintf("%s = ? AND %s", Q, Q)
+	wheres := strings.Join(whereCols, sep)
+
+	query := fmt.Sprintf("DELETE FROM %s%s%s WHERE %s%s%s = ?", Q, mi.table, Q, Q, wheres, Q)
 
 	d.ins.ReplaceMarks(&query)
-	res, err := q.Exec(query, pkValue)
+	res, err := q.Exec(query, args...)
 	if err == nil {
 		num, err := res.RowsAffected()
 		if err != nil {
@@ -659,7 +677,7 @@ func (d *dbBase) Delete(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.
 					ind.FieldByIndex(mi.fields.pk.fieldIndex).SetInt(0)
 				}
 			}
-			err := d.deleteRels(q, mi, []interface{}{pkValue}, tz)
+			err := d.deleteRels(q, mi, args, tz)
 			if err != nil {
 				return num, err
 			}

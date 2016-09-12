@@ -577,6 +577,10 @@ func TestCRUD(t *testing.T) {
 	err = dORM.Read(&ub)
 	throwFail(t, err)
 	throwFail(t, AssertIs(ub.Name, "name"))
+
+	num, err = dORM.Delete(&ub, "name")
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
 }
 
 func TestInsertTestData(t *testing.T) {
