@@ -78,13 +78,14 @@ var qpsTpl = `{{define "content"}}
 	{{range $i, $elem := .Content.Data}}
 
 	<tr>
-		{{range $elem}}
-			<td>
-			{{.}}
-			</td>
-		{{end}}
+	    <td>{{index $elem 0}}</td>
+	    <td>{{index $elem 1}}</td>
+	    <td>{{index $elem 2}}</td>
+	    <td data-order="{{index $elem 3}}">{{index $elem 4}}</td>
+	    <td data-order="{{index $elem 5}}">{{index $elem 6}}</td>
+	    <td data-order="{{index $elem 7}}">{{index $elem 8}}</td>
+	    <td data-order="{{index $elem 9}}">{{index $elem 10}}</td>
 	</tr>
-
 	{{end}}
 	</tbody>
 
