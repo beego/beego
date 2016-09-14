@@ -22,19 +22,19 @@ package swagger
 
 // Swagger list the resource
 type Swagger struct {
-	SwaggerVersion      string              `json:"swagger,omitempty"`
-	Infos               Information         `json:"info"`
-	Host                string              `json:"host,omitempty"`
-	BasePath            string              `json:"basePath,omitempty"`
-	Schemes             []string            `json:"schemes,omitempty"`
-	Consumes            []string            `json:"consumes,omitempty"`
-	Produces            []string            `json:"produces,omitempty"`
-	Paths               map[string]*Item    `json:"paths"`
-	Definitions         map[string]Schema   `json:"definitions,omitempty"`
-	SecurityDefinitions map[string]Scurity  `json:"securityDefinitions,omitempty"`
-	Security            map[string][]string `json:"security,omitempty"`
-	Tags                []Tag               `json:"tags,omitempty"`
-	ExternalDocs        *ExternalDocs       `json:"externalDocs,omitempty"`
+	SwaggerVersion      string               `json:"swagger,omitempty"`
+	Infos               Information          `json:"info"`
+	Host                string               `json:"host,omitempty"`
+	BasePath            string               `json:"basePath,omitempty"`
+	Schemes             []string             `json:"schemes,omitempty"`
+	Consumes            []string             `json:"consumes,omitempty"`
+	Produces            []string             `json:"produces,omitempty"`
+	Paths               map[string]*Item     `json:"paths"`
+	Definitions         map[string]Schema    `json:"definitions,omitempty"`
+	SecurityDefinitions map[string]Security  `json:"securityDefinitions,omitempty"`
+	Security            map[string][]string  `json:"security,omitempty"`
+	Tags                []Tag                `json:"tags,omitempty"`
+	ExternalDocs        *ExternalDocs        `json:"externalDocs,omitempty"`
 }
 
 // Information Provides metadata about the API. The metadata can be used by the clients if needed.
@@ -44,8 +44,8 @@ type Information struct {
 	Version        string `json:"version,omitempty"`
 	TermsOfService string `json:"termsOfService,omitempty"`
 
-	Contact Contact `json:"contact,omitempty"`
-	License License `json:"license,omitempty"`
+	Contact Contact  `json:"contact,omitempty"`
+	License *License `json:"license,omitempty"`
 }
 
 // Contact information for the exposed API.
@@ -144,8 +144,8 @@ type Response struct {
 	Ref         string  `json:"$ref,omitempty"`
 }
 
-// Scurity Allows the definition of a security scheme that can be used by the operations
-type Scurity struct {
+// Security Allows the definition of a security scheme that can be used by the operations
+type Security struct {
 	Type             string            `json:"type,omitempty"` // Valid values are "basic", "apiKey" or "oauth2".
 	Description      string            `json:"description,omitempty"`
 	Name             string            `json:"name,omitempty"`
