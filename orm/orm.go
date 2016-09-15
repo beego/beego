@@ -68,7 +68,7 @@ const (
 // Define common vars
 var (
 	Debug            = false
-	DebugLog         = NewLog(os.Stderr)
+	DebugLog         = NewLog(os.Stdout)
 	DefaultRowsLimit = 1000
 	DefaultRelsDepth = 2
 	DefaultTimeLoc   = time.Local
