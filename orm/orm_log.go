@@ -42,7 +42,7 @@ func debugLogQueies(alias *alias, operaton, query string, t time.Time, err error
 	if err != nil {
 		flag = "FAIL"
 	}
-	con := fmt.Sprintf(" - %s - [Queries/%s] - [%s / %11s / %7.1fms] - [%s]", t.Format(formatDateTime), alias.Name, flag, operaton, elsp, query)
+	con := fmt.Sprintf(" -[Queries/%s] - [%s / %11s / %7.1fms] - [%s]", alias.Name, flag, operaton, elsp, query)
 	cons := make([]string, 0, len(args))
 	for _, arg := range args {
 		cons = append(cons, fmt.Sprintf("%v", arg))
