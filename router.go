@@ -838,15 +838,15 @@ Admin:
 
 		if findRouter {
 			if routerInfo != nil {
-				devInfo = fmt.Sprintf("|%s %3d %s|%13s|%8s|%s %-7s %s %-3s   r:%s", statusColor, statusCode,
+				devInfo = fmt.Sprintf("|%15s|%s %3d %s|%13s|%8s|%s %-7s %s %-3s   r:%s", context.Input.IP(), statusColor, statusCode,
 					resetColor, timeDur.String(), "match", methodColor, r.Method, resetColor, r.URL.Path,
 					routerInfo.pattern)
 			} else {
-				devInfo = fmt.Sprintf("|%s %3d %s|%13s|%8s|%s %-7s %s %-3s", statusColor, statusCode, resetColor,
+				devInfo = fmt.Sprintf("|%15s|%s %3d %s|%13s|%8s|%s %-7s %s %-3s", context.Input.IP(), statusColor, statusCode, resetColor,
 					timeDur.String(), "match", methodColor, r.Method, resetColor, r.URL.Path)
 			}
 		} else {
-			devInfo = fmt.Sprintf("|%s %3d %s|%13s|%8s|%s %-7s %s %-3s", statusColor, statusCode, resetColor,
+			devInfo = fmt.Sprintf("|%15s|%s %3d %s|%13s|%8s|%s %-7s %s %-3s", context.Input.IP(), statusColor, statusCode, resetColor,
 				timeDur.String(), "nomatch", methodColor, r.Method, resetColor, r.URL.Path)
 		}
 		if iswin {
