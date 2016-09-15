@@ -19,9 +19,11 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"runtime"
 	"strings"
 
 	"github.com/astaxie/beego/config"
+	"github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/session"
 	"github.com/astaxie/beego/utils"
@@ -34,6 +36,7 @@ type Config struct {
 	RouterCaseSensitive bool
 	ServerName          string
 	RecoverPanic        bool
+	RecoverFunc         func(*context.Context)
 	CopyRequestBody     bool
 	EnableGzip          bool
 	MaxMemory           int64
@@ -142,6 +145,37 @@ func init() {
 	}
 }
 
+func recoverPanic(ctx *context.Context) {
+	if err := recover(); err != nil {
+		if err == ErrAbort {
+			return
+		}
+		if !BConfig.RecoverPanic {
+			panic(err)
+		}
+		if BConfig.EnableErrorsShow {
+			if _, ok := ErrorMaps[fmt.Sprint(err)]; ok {
+				exception(fmt.Sprint(err), ctx)
+				return
+			}
+		}
+		var stack string
+		logs.Critical("the request url is ", ctx.Input.URL())
+		logs.Critical("Handler crashed with error", err)
+		for i := 1; ; i++ {
+			_, file, line, ok := runtime.Caller(i)
+			if !ok {
+				break
+			}
+			logs.Critical(fmt.Sprintf("%s:%d", file, line))
+			stack = stack + fmt.Sprintln(fmt.Sprintf("%s:%d", file, line))
+		}
+		if BConfig.RunMode == DEV {
+			showErr(err, ctx, stack)
+		}
+	}
+}
+
 func newBConfig() *Config {
 	return &Config{
 		AppName:             "beego",
@@ -149,6 +183,7 @@ func newBConfig() *Config {
 		RouterCaseSensitive: true,
 		ServerName:          "beegoServer:" + VERSION,
 		RecoverPanic:        true,
+		RecoverFunc:         recoverPanic,
 		CopyRequestBody:     false,
 		EnableGzip:          false,
 		MaxMemory:           1 << 26, //64MB

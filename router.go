@@ -626,7 +626,9 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	context.Reset(rw, r)
 
 	defer p.pool.Put(context)
-	defer p.recoverPanic(context)
+	if BConfig.RecoverFunc != nil {
+		defer BConfig.RecoverFunc(context)
+	}
 
 	context.Output.EnableGzip = BConfig.EnableGzip
 
@@ -876,37 +878,6 @@ func (p *ControllerRegister) FindRouter(context *beecontext.Context) (routerInfo
 		}
 	}
 	return
-}
-
-func (p *ControllerRegister) recoverPanic(context *beecontext.Context) {
-	if err := recover(); err != nil {
-		if err == ErrAbort {
-			return
-		}
-		if !BConfig.RecoverPanic {
-			panic(err)
-		}
-		if BConfig.EnableErrorsShow {
-			if _, ok := ErrorMaps[fmt.Sprint(err)]; ok {
-				exception(fmt.Sprint(err), context)
-				return
-			}
-		}
-		var stack string
-		logs.Critical("the request url is ", context.Input.URL())
-		logs.Critical("Handler crashed with error", err)
-		for i := 1; ; i++ {
-			_, file, line, ok := runtime.Caller(i)
-			if !ok {
-				break
-			}
-			logs.Critical(fmt.Sprintf("%s:%d", file, line))
-			stack = stack + fmt.Sprintln(fmt.Sprintf("%s:%d", file, line))
-		}
-		if BConfig.RunMode == DEV {
-			showErr(err, context, stack)
-		}
-	}
 }
 
 func toURL(params map[string]string) string {
