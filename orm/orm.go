@@ -68,7 +68,7 @@ const (
 // Define common vars
 var (
 	Debug            = false
-	DebugLog         = NewLog(os.Stderr)
+	DebugLog         = NewLog(os.Stdout)
 	DefaultRowsLimit = 1000
 	DefaultRelsDepth = 2
 	DefaultTimeLoc   = time.Local
@@ -247,7 +247,7 @@ func (o *orm) Update(md interface{}, cols ...string) (int64, error) {
 // cols shows the delete conditions values read from. deafult is pk
 func (o *orm) Delete(md interface{}, cols ...string) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
-	num, err := o.alias.DbBaser.Delete(o.db, mi, ind, o.alias.TZ,cols)
+	num, err := o.alias.DbBaser.Delete(o.db, mi, ind, o.alias.TZ, cols)
 	if err != nil {
 		return num, err
 	}
