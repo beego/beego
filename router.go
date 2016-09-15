@@ -685,8 +685,16 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	if len(p.filters[BeforeRouter]) > 0 && p.execFilter(context, urlPath, BeforeRouter) {
 		goto Admin
 	}
+	// User can define RunController and RunMethod in filter
+	if context.Input.RunController != nil && context.Input.RunMethod != "" {
+		findRouter = true
+		isRunnable = true
+		runMethod = context.Input.RunMethod
+		runRouter = context.Input.RunController
+	} else {
+		routerInfo, findRouter = p.FindRouter(context)
+	}
 
-	routerInfo, findRouter = p.FindRouter(context)
 	//if no matches to url, throw a not found exception
 	if !findRouter {
 		exception("404", context)
@@ -698,15 +706,16 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	//store router pattern into context
-	context.Input.SetData("RouterPattern", routerInfo.pattern)
-
 	//execute middleware filters
 	if len(p.filters[BeforeExec]) > 0 && p.execFilter(context, urlPath, BeforeExec) {
 		goto Admin
 	}
 
 	if routerInfo != nil {
+		if BConfig.RunMode == DEV {
+			//store router pattern into context
+			context.Input.SetData("RouterPattern", routerInfo.pattern)
+		}
 		if routerInfo.routerType == routerTypeRESTFul {
 			if _, ok := routerInfo.methods[r.Method]; ok {
 				isRunnable = true
