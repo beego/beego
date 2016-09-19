@@ -280,15 +280,8 @@ func AssetsCSS(src string) template.HTML {
 }
 
 // ParseForm will parse form values to struct via tag.
-func ParseForm(form url.Values, obj interface{}) error {
-	objT := reflect.TypeOf(obj)
-	objV := reflect.ValueOf(obj)
-	if !isStructPtr(objT) {
-		return fmt.Errorf("%v must be  a struct pointer", obj)
-	}
-	objT = objT.Elem()
-	objV = objV.Elem()
-
+// Support for anonymous struct.
+func parseFormToStruct(form url.Values, objT reflect.Type, objV reflect.Value) error {
 	for i := 0; i < objT.NumField(); i++ {
 		fieldV := objV.Field(i)
 		if !fieldV.CanSet() {
@@ -296,6 +289,14 @@ func ParseForm(form url.Values, obj interface{}) error {
 		}
 
 		fieldT := objT.Field(i)
+		if fieldT.Anonymous && fieldT.Type.Kind() == reflect.Struct {
+			err := parseFormToStruct(form, fieldT.Type, fieldV)
+			if err != nil {
+				return err
+			}
+			continue
+		}
+
 		tags := strings.Split(fieldT.Tag.Get("form"), ",")
 		var tag string
 		if len(tags) == 0 || len(tags[0]) == 0 {
@@ -384,6 +385,19 @@ func ParseForm(form url.Values, obj interface{}) error {
 	return nil
 }
 
+// ParseForm will parse form values to struct via tag.
+func ParseForm(form url.Values, obj interface{}) error {
+	objT := reflect.TypeOf(obj)
+	objV := reflect.ValueOf(obj)
+	if !isStructPtr(objT) {
+		return fmt.Errorf("%v must be  a struct pointer", obj)
+	}
+	objT = objT.Elem()
+	objV = objV.Elem()
+
+	return parseFormToStruct(form, objT, objV)
+}
+
 var sliceOfInts = reflect.TypeOf([]int(nil))
 var sliceOfStrings = reflect.TypeOf([]string(nil))
 
@@ -421,18 +435,18 @@ func RenderForm(obj interface{}) template.HTML {
 
 		fieldT := objT.Field(i)
 
-		label, name, fType, id, class, ignored := parseFormTag(fieldT)
+		label, name, fType, id, class, ignored, required := parseFormTag(fieldT)
 		if ignored {
 			continue
 		}
 
-		raw = append(raw, renderFormField(label, name, fType, fieldV.Interface(), id, class))
+		raw = append(raw, renderFormField(label, name, fType, fieldV.Interface(), id, class, required))
 	}
 	return template.HTML(strings.Join(raw, "</br>"))
 }
 
 // renderFormField returns a string containing HTML of a single form field.
-func renderFormField(label, name, fType string, value interface{}, id string, class string) string {
+func renderFormField(label, name, fType string, value interface{}, id string, class string, required bool) string {
 	if id != "" {
 		id = " id=\"" + id + "\""
 	}
@@ -441,11 +455,16 @@ func renderFormField(label, name, fType string, value interface{}, id string, cl
 		class = " class=\"" + class + "\""
 	}
 
-	if isValidForInput(fType) {
-		return fmt.Sprintf(`%v<input%v%v name="%v" type="%v" value="%v">`, label, id, class, name, fType, value)
+	requiredString := ""
+	if required {
+		requiredString = " required"
 	}
 
-	return fmt.Sprintf(`%v<%v%v%v name="%v">%v</%v>`, label, fType, id, class, name, value, fType)
+	if isValidForInput(fType) {
+		return fmt.Sprintf(`%v<input%v%v name="%v" type="%v" value="%v"%v>`, label, id, class, name, fType, value, requiredString)
+	}
+
+	return fmt.Sprintf(`%v<%v%v%v name="%v"%v>%v</%v>`, label, fType, id, class, name, requiredString, value, fType)
 }
 
 // isValidForInput checks if fType is a valid value for the `type` property of an HTML input element.
@@ -461,7 +480,7 @@ func isValidForInput(fType string) bool {
 
 // parseFormTag takes the stuct-tag of a StructField and parses the `form` value.
 // returned are the form label, name-property, type and wether the field should be ignored.
-func parseFormTag(fieldT reflect.StructField) (label, name, fType string, id string, class string, ignored bool) {
+func parseFormTag(fieldT reflect.StructField) (label, name, fType string, id string, class string, ignored bool, required bool) {
 	tags := strings.Split(fieldT.Tag.Get("form"), ",")
 	label = fieldT.Name + ": "
 	name = fieldT.Name
@@ -469,6 +488,12 @@ func parseFormTag(fieldT reflect.StructField) (label, name, fType string, id str
 	ignored = false
 	id = fieldT.Tag.Get("id")
 	class = fieldT.Tag.Get("class")
+
+	required = false
+	required_field := fieldT.Tag.Get("required")
+	if required_field != "-" && required_field != "" {
+		required, _ = strconv.ParseBool(required_field)
+	}
 
 	switch len(tags) {
 	case 1:
@@ -496,6 +521,7 @@ func parseFormTag(fieldT reflect.StructField) (label, name, fType string, id str
 			label = tags[2]
 		}
 	}
+
 	return
 }
 

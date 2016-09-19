@@ -29,31 +29,25 @@ type modelInfo struct {
 	model     interface{}
 	fields    *fields
 	manual    bool
-	addrField reflect.Value
+	addrField reflect.Value //store the original struct value
 	uniques   []string
 	isThrough bool
 }
 
 // new model info
-func newModelInfo(val reflect.Value) (info *modelInfo) {
-
-	info = &modelInfo{}
-	info.fields = newFields()
-
+func newModelInfo(val reflect.Value) (mi *modelInfo) {
+	mi = &modelInfo{}
+	mi.fields = newFields()
 	ind := reflect.Indirect(val)
-	typ := ind.Type()
-
-	info.addrField = val
-
-	info.name = typ.Name()
-	info.fullName = getFullName(typ)
-
-	addModelFields(info, ind, "", []int{})
-
+	mi.addrField = val
+	mi.name = ind.Type().Name()
+	mi.fullName = getFullName(ind.Type())
+	addModelFields(mi, ind, "", []int{})
 	return
 }
 
-func addModelFields(info *modelInfo, ind reflect.Value, mName string, index []int) {
+// index: FieldByIndex returns the nested field corresponding to index
+func addModelFields(mi *modelInfo, ind reflect.Value, mName string, index []int) {
 	var (
 		err error
 		fi  *fieldInfo
@@ -63,43 +57,39 @@ func addModelFields(info *modelInfo, ind reflect.Value, mName string, index []in
 	for i := 0; i < ind.NumField(); i++ {
 		field := ind.Field(i)
 		sf = ind.Type().Field(i)
+		// if the field is unexported skip
 		if sf.PkgPath != "" {
 			continue
 		}
 		// add anonymous struct fields
 		if sf.Anonymous {
-			addModelFields(info, field, mName+"."+sf.Name, append(index, i))
+			addModelFields(mi, field, mName+"."+sf.Name, append(index, i))
 			continue
 		}
 
-		fi, err = newFieldInfo(info, field, sf, mName)
-
-		if err != nil {
-			if err == errSkipField {
-				err = nil
-				continue
-			}
+		fi, err = newFieldInfo(mi, field, sf, mName)
+		if err == errSkipField {
+			err = nil
+			continue
+		} else if err != nil {
 			break
 		}
-
-		added := info.fields.Add(fi)
-		if added == false {
+		//record current field index
+		fi.fieldIndex = append(index, i)
+		fi.mi = mi
+		fi.inModel = true
+		if mi.fields.Add(fi) == false {
 			err = fmt.Errorf("duplicate column name: %s", fi.column)
 			break
 		}
-
 		if fi.pk {
-			if info.fields.pk != nil {
+			if mi.fields.pk != nil {
 				err = fmt.Errorf("one model must have one pk field only")
 				break
 			} else {
-				info.fields.pk = fi
+				mi.fields.pk = fi
 			}
 		}
-
-		fi.fieldIndex = append(index, i)
-		fi.mi = info
-		fi.inModel = true
 	}
 
 	if err != nil {
@@ -110,23 +100,23 @@ func addModelFields(info *modelInfo, ind reflect.Value, mName string, index []in
 
 // combine related model info to new model info.
 // prepare for relation models query.
-func newM2MModelInfo(m1, m2 *modelInfo) (info *modelInfo) {
-	info = new(modelInfo)
-	info.fields = newFields()
-	info.table = m1.table + "_" + m2.table + "s"
-	info.name = camelString(info.table)
-	info.fullName = m1.pkg + "." + info.name
+func newM2MModelInfo(m1, m2 *modelInfo) (mi *modelInfo) {
+	mi = new(modelInfo)
+	mi.fields = newFields()
+	mi.table = m1.table + "_" + m2.table + "s"
+	mi.name = camelString(mi.table)
+	mi.fullName = m1.pkg + "." + mi.name
 
-	fa := new(fieldInfo)
-	f1 := new(fieldInfo)
-	f2 := new(fieldInfo)
+	fa := new(fieldInfo) // pk
+	f1 := new(fieldInfo) // m1 table RelForeignKey
+	f2 := new(fieldInfo) // m2 table RelForeignKey
 	fa.fieldType = TypeBigIntegerField
 	fa.auto = true
 	fa.pk = true
 	fa.dbcol = true
 	fa.name = "Id"
 	fa.column = "id"
-	fa.fullName = info.fullName + "." + fa.name
+	fa.fullName = mi.fullName + "." + fa.name
 
 	f1.dbcol = true
 	f2.dbcol = true
@@ -134,8 +124,8 @@ func newM2MModelInfo(m1, m2 *modelInfo) (info *modelInfo) {
 	f2.fieldType = RelForeignKey
 	f1.name = camelString(m1.table)
 	f2.name = camelString(m2.table)
-	f1.fullName = info.fullName + "." + f1.name
-	f2.fullName = info.fullName + "." + f2.name
+	f1.fullName = mi.fullName + "." + f1.name
+	f2.fullName = mi.fullName + "." + f2.name
 	f1.column = m1.table + "_id"
 	f2.column = m2.table + "_id"
 	f1.rel = true
@@ -144,14 +134,14 @@ func newM2MModelInfo(m1, m2 *modelInfo) (info *modelInfo) {
 	f2.relTable = m2.table
 	f1.relModelInfo = m1
 	f2.relModelInfo = m2
-	f1.mi = info
-	f2.mi = info
+	f1.mi = mi
+	f2.mi = mi
 
-	info.fields.Add(fa)
-	info.fields.Add(f1)
-	info.fields.Add(f2)
-	info.fields.pk = fa
+	mi.fields.Add(fa)
+	mi.fields.Add(f1)
+	mi.fields.Add(f2)
+	mi.fields.pk = fa
 
-	info.uniques = []string{f1.column, f2.column}
+	mi.uniques = []string{f1.column, f2.column}
 	return
 }

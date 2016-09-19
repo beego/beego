@@ -68,7 +68,7 @@ const (
 // Define common vars
 var (
 	Debug            = false
-	DebugLog         = NewLog(os.Stderr)
+	DebugLog         = NewLog(os.Stdout)
 	DefaultRowsLimit = 1000
 	DefaultRelsDepth = 2
 	DefaultTimeLoc   = time.Local
@@ -104,7 +104,7 @@ func (o *orm) getMiInd(md interface{}, needPtr bool) (mi *modelInfo, ind reflect
 		panic(fmt.Errorf("<Ormer> cannot use non-ptr model struct `%s`", getFullName(typ)))
 	}
 	name := getFullName(typ)
-	if mi, ok := modelCache.getByFN(name); ok {
+	if mi, ok := modelCache.getByFullName(name); ok {
 		return mi, ind
 	}
 	panic(fmt.Errorf("<Ormer> table: `%s` not found, maybe not RegisterModel", name))
@@ -122,7 +122,17 @@ func (o *orm) getFieldInfo(mi *modelInfo, name string) *fieldInfo {
 // read data to model
 func (o *orm) Read(md interface{}, cols ...string) error {
 	mi, ind := o.getMiInd(md, true)
-	err := o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols)
+	err := o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols, false)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// read data to model, like Read(), but use "SELECT FOR UPDATE" form
+func (o *orm) ReadForUpdate(md interface{}, cols ...string) error {
+	mi, ind := o.getMiInd(md, true)
+	err := o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols, true)
 	if err != nil {
 		return err
 	}
@@ -133,7 +143,7 @@ func (o *orm) Read(md interface{}, cols ...string) error {
 func (o *orm) ReadOrCreate(md interface{}, col1 string, cols ...string) (bool, int64, error) {
 	cols = append([]string{col1}, cols...)
 	mi, ind := o.getMiInd(md, true)
-	err := o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols)
+	err := o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols, false)
 	if err == ErrNoRows {
 		// Create
 		id, err := o.Insert(md)
@@ -209,6 +219,19 @@ func (o *orm) InsertMulti(bulk int, mds interface{}) (int64, error) {
 	return cnt, nil
 }
 
+// InsertOrUpdate data to database
+func (o *orm) InsertOrUpdate(md interface{}, colConflitAndArgs ...string) (int64, error) {
+	mi, ind := o.getMiInd(md, true)
+	id, err := o.alias.DbBaser.InsertOrUpdate(o.db, mi, ind, o.alias, colConflitAndArgs...)
+	if err != nil {
+		return id, err
+	}
+
+	o.setPk(mi, ind, id)
+
+	return id, nil
+}
+
 // update model to database.
 // cols set the columns those want to update.
 func (o *orm) Update(md interface{}, cols ...string) (int64, error) {
@@ -221,9 +244,10 @@ func (o *orm) Update(md interface{}, cols ...string) (int64, error) {
 }
 
 // delete model in database
-func (o *orm) Delete(md interface{}) (int64, error) {
+// cols shows the delete conditions values read from. deafult is pk
+func (o *orm) Delete(md interface{}, cols ...string) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
-	num, err := o.alias.DbBaser.Delete(o.db, mi, ind, o.alias.TZ)
+	num, err := o.alias.DbBaser.Delete(o.db, mi, ind, o.alias.TZ, cols)
 	if err != nil {
 		return num, err
 	}
@@ -414,7 +438,7 @@ func (o *orm) QueryTable(ptrStructOrTableName interface{}) (qs QuerySeter) {
 		}
 	} else {
 		name = getFullName(indirectType(reflect.TypeOf(ptrStructOrTableName)))
-		if mi, ok := modelCache.getByFN(name); ok {
+		if mi, ok := modelCache.getByFullName(name); ok {
 			qs = newQuerySet(o, mi)
 		}
 	}

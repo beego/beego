@@ -146,16 +146,10 @@ func (output *BeegoOutput) Cookie(name string, value string, others ...interface
 	}
 
 	// default false. for session cookie default true
-	httponly := false
 	if len(others) > 4 {
 		if v, ok := others[4].(bool); ok && v {
-			// HttpOnly = true
-			httponly = true
+			fmt.Fprintf(&b, "; HttpOnly")
 		}
-	}
-
-	if httponly {
-		fmt.Fprintf(&b, "; HttpOnly")
 	}
 
 	output.Context.ResponseWriter.Header().Add("Set-Cookie", b.String())
@@ -212,7 +206,8 @@ func (output *BeegoOutput) JSONP(data interface{}, hasIndent bool) error {
 	if callback == "" {
 		return errors.New(`"callback" parameter required`)
 	}
-	callbackContent := bytes.NewBufferString(" " + template.JSEscapeString(callback))
+	callback = template.JSEscapeString(callback)
+	callbackContent := bytes.NewBufferString(" if(window." + callback + ")" + callback)
 	callbackContent.WriteString("(")
 	callbackContent.Write(content)
 	callbackContent.WriteString(");\r\n")

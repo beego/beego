@@ -80,7 +80,7 @@ type _dbCache struct {
 func (ac *_dbCache) add(name string, al *alias) (added bool) {
 	ac.mux.Lock()
 	defer ac.mux.Unlock()
-	if _, ok := ac.cache[name]; ok == false {
+	if _, ok := ac.cache[name]; !ok {
 		ac.cache[name] = al
 		added = true
 	}

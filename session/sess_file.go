@@ -88,10 +88,9 @@ func (fs *FileSessionStore) SessionRelease(w http.ResponseWriter) {
 	var f *os.File
 	if err == nil {
 		f, err = os.OpenFile(path.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid), os.O_RDWR, 0777)
-		SLogger.Println(err)
 	} else if os.IsNotExist(err) {
 		f, err = os.Create(path.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid))
-		SLogger.Println(err)
+
 	} else {
 		return
 	}

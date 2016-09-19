@@ -99,9 +99,13 @@ func (m *URLMap) GetMap() map[string]interface{} {
 				fmt.Sprintf("% -50s", k),
 				fmt.Sprintf("% -10s", kk),
 				fmt.Sprintf("% -16d", vv.RequestNum),
+				fmt.Sprintf("%d", vv.TotalTime),
 				fmt.Sprintf("% -16s", toS(vv.TotalTime)),
+				fmt.Sprintf("%d", vv.MaxTime),
 				fmt.Sprintf("% -16s", toS(vv.MaxTime)),
+				fmt.Sprintf("%d", vv.MinTime),
 				fmt.Sprintf("% -16s", toS(vv.MinTime)),
+				fmt.Sprintf("%d", time.Duration(int64(vv.TotalTime)/vv.RequestNum)),
 				fmt.Sprintf("% -16s", toS(time.Duration(int64(vv.TotalTime)/vv.RequestNum))),
 			}
 			resultLists = append(resultLists, result)

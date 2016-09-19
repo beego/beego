@@ -89,7 +89,7 @@ func TestCookieEncodeDecode(t *testing.T) {
 
 func TestParseConfig(t *testing.T) {
 	s := `{"cookieName":"gosessionid","gclifetime":3600}`
-	cf := new(managerConfig)
+	cf := new(ManagerConfig)
 	cf.EnableSetCookie = true
 	err := json.Unmarshal([]byte(s), cf)
 	if err != nil {
@@ -103,7 +103,7 @@ func TestParseConfig(t *testing.T) {
 	}
 
 	cc := `{"cookieName":"gosessionid","enableSetCookie":false,"gclifetime":3600,"ProviderConfig":"{\"cookieName\":\"gosessionid\",\"securityKey\":\"beegocookiehashkey\"}"}`
-	cf2 := new(managerConfig)
+	cf2 := new(ManagerConfig)
 	cf2.EnableSetCookie = true
 	err = json.Unmarshal([]byte(cc), cf2)
 	if err != nil {

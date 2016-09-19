@@ -243,6 +243,9 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 				if fi.isFielder {
 					f := field.Addr().Interface().(Fielder)
 					f.SetRaw(tnow.In(DefaultTimeLoc))
+				} else if field.Kind() == reflect.Ptr {
+					v := tnow.In(DefaultTimeLoc)
+					field.Set(reflect.ValueOf(&v))
 				} else {
 					field.Set(reflect.ValueOf(tnow.In(DefaultTimeLoc)))
 				}
@@ -307,7 +310,7 @@ func (d *dbBase) InsertStmt(stmt stmtQuerier, mi *modelInfo, ind reflect.Value, 
 }
 
 // query sql ,read records and persist in dbBaser.
-func (d *dbBase) Read(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location, cols []string) error {
+func (d *dbBase) Read(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location, cols []string, isForUpdate bool) error {
 	var whereCols []string
 	var args []interface{}
 
@@ -338,7 +341,12 @@ func (d *dbBase) Read(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Lo
 	sep = fmt.Sprintf("%s = ? AND %s", Q, Q)
 	wheres := strings.Join(whereCols, sep)
 
-	query := fmt.Sprintf("SELECT %s%s%s FROM %s%s%s WHERE %s%s%s = ?", Q, sels, Q, Q, mi.table, Q, Q, wheres, Q)
+	forUpdate := ""
+	if isForUpdate {
+		forUpdate = "FOR UPDATE"
+	}
+
+	query := fmt.Sprintf("SELECT %s%s%s FROM %s%s%s WHERE %s%s%s = ? %s", Q, sels, Q, Q, mi.table, Q, Q, wheres, Q, forUpdate)
 
 	refs := make([]interface{}, colsNum)
 	for i := range refs {
@@ -485,6 +493,110 @@ func (d *dbBase) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []s
 	return id, err
 }
 
+// InsertOrUpdate a row
+// If your primary key or unique column conflict will update
+// If no will insert
+func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a *alias, args ...string) (int64, error) {
+	args0 := ""
+	iouStr := ""
+	argsMap := map[string]string{}
+	switch a.Driver {
+	case DRMySQL:
+		iouStr = "ON DUPLICATE KEY UPDATE"
+	case DRPostgres:
+		if len(args) == 0 {
+			return 0, fmt.Errorf("`%s` use InsertOrUpdate must have a conflict column", a.DriverName)
+		} else {
+			args0 = strings.ToLower(args[0])
+			iouStr = fmt.Sprintf("ON CONFLICT (%s) DO UPDATE SET", args0)
+		}
+	default:
+		return 0, fmt.Errorf("`%s` nonsupport InsertOrUpdate in beego", a.DriverName)
+	}
+
+	//Get on the key-value pairs
+	for _, v := range args {
+		kv := strings.Split(v, "=")
+		if len(kv) == 2 {
+			argsMap[strings.ToLower(kv[0])] = kv[1]
+		}
+	}
+
+	isMulti := false
+	names := make([]string, 0, len(mi.fields.dbcols)-1)
+	Q := d.ins.TableQuote()
+	values, _, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, &names, a.TZ)
+
+	if err != nil {
+		return 0, err
+	}
+
+	marks := make([]string, len(names))
+	updateValues := make([]interface{}, 0)
+	updates := make([]string, len(names))
+	var conflitValue interface{}
+	for i, v := range names {
+		marks[i] = "?"
+		valueStr := argsMap[strings.ToLower(v)]
+		if v == args0 {
+			conflitValue = values[i]
+		}
+		if valueStr != "" {
+			switch a.Driver {
+			case DRMySQL:
+				updates[i] = v + "=" + valueStr
+			case DRPostgres:
+				if conflitValue != nil {
+					//postgres ON CONFLICT DO UPDATE SET can`t use colu=colu+values
+					updates[i] = fmt.Sprintf("%s=(select %s from %s where %s = ? )", v, valueStr, mi.table, args0)
+					updateValues = append(updateValues, conflitValue)
+				} else {
+					return 0, fmt.Errorf("`%s` must be in front of `%s` in your struct", args0, v)
+				}
+			}
+		} else {
+			updates[i] = v + "=?"
+			updateValues = append(updateValues, values[i])
+		}
+	}
+
+	values = append(values, updateValues...)
+
+	sep := fmt.Sprintf("%s, %s", Q, Q)
+	qmarks := strings.Join(marks, ", ")
+	qupdates := strings.Join(updates, ", ")
+	columns := strings.Join(names, sep)
+
+	multi := len(values) / len(names)
+
+	if isMulti {
+		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
+	}
+	//conflitValue maybe is a int,can`t use fmt.Sprintf
+	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s) %s "+qupdates, Q, mi.table, Q, Q, columns, Q, qmarks, iouStr)
+
+	d.ins.ReplaceMarks(&query)
+
+	if isMulti || !d.ins.HasReturningID(mi, &query) {
+		res, err := q.Exec(query, values...)
+		if err == nil {
+			if isMulti {
+				return res.RowsAffected()
+			}
+			return res.LastInsertId()
+		}
+		return 0, err
+	}
+
+	row := q.QueryRow(query, values...)
+	var id int64
+	err = row.Scan(&id)
+	if err.Error() == `pq: syntax error at or near "ON"` {
+		err = fmt.Errorf("postgres version must 9.5 or higher")
+	}
+	return id, err
+}
+
 // execute update sql dbQuerier with given struct reflect.Value.
 func (d *dbBase) Update(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location, cols []string) (int64, error) {
 	pkName, pkValue, ok := getExistPk(mi, ind)
@@ -527,18 +639,36 @@ func (d *dbBase) Update(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.
 
 // execute delete sql dbQuerier with given struct reflect.Value.
 // delete index is pk.
-func (d *dbBase) Delete(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location) (int64, error) {
-	pkName, pkValue, ok := getExistPk(mi, ind)
-	if ok == false {
-		return 0, ErrMissPK
+func (d *dbBase) Delete(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location, cols []string) (int64, error) {
+	var whereCols []string
+	var args []interface{}
+	// if specify cols length > 0, then use it for where condition.
+	if len(cols) > 0 {
+		var err error
+		whereCols = make([]string, 0, len(cols))
+		args, _, err = d.collectValues(mi, ind, cols, false, false, &whereCols, tz)
+		if err != nil {
+			return 0, err
+		}
+	} else {
+		// default use pk value as where condtion.
+		pkColumn, pkValue, ok := getExistPk(mi, ind)
+		if ok == false {
+			return 0, ErrMissPK
+		}
+		whereCols = []string{pkColumn}
+		args = append(args, pkValue)
 	}
 
 	Q := d.ins.TableQuote()
 
-	query := fmt.Sprintf("DELETE FROM %s%s%s WHERE %s%s%s = ?", Q, mi.table, Q, Q, pkName, Q)
+	sep := fmt.Sprintf("%s = ? AND %s", Q, Q)
+	wheres := strings.Join(whereCols, sep)
+
+	query := fmt.Sprintf("DELETE FROM %s%s%s WHERE %s%s%s = ?", Q, mi.table, Q, Q, wheres, Q)
 
 	d.ins.ReplaceMarks(&query)
-	res, err := q.Exec(query, pkValue)
+	res, err := q.Exec(query, args...)
 	if err == nil {
 		num, err := res.RowsAffected()
 		if err != nil {
@@ -552,7 +682,7 @@ func (d *dbBase) Delete(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.
 					ind.FieldByIndex(mi.fields.pk.fieldIndex).SetInt(0)
 				}
 			}
-			err := d.deleteRels(q, mi, []interface{}{pkValue}, tz)
+			err := d.deleteRels(q, mi, args, tz)
 			if err != nil {
 				return num, err
 			}
@@ -957,12 +1087,17 @@ func (d *dbBase) Count(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condition
 	tables.parseRelated(qs.related, qs.relDepth)
 
 	where, args := tables.getCondSQL(cond, false, tz)
+	groupBy := tables.getGroupSQL(qs.groups)
 	tables.getOrderSQL(qs.orders)
 	join := tables.getJoinSQL()
 
 	Q := d.ins.TableQuote()
 
-	query := fmt.Sprintf("SELECT COUNT(*) FROM %s%s%s T0 %s%s", Q, mi.table, Q, join, where)
+	query := fmt.Sprintf("SELECT COUNT(*) FROM %s%s%s T0 %s%s%s", Q, mi.table, Q, join, where, groupBy)
+
+	if groupBy != "" {
+		query = fmt.Sprintf("SELECT COUNT(*) FROM (%s) AS T", query)
+	}
 
 	d.ins.ReplaceMarks(&query)
 
@@ -1273,8 +1408,14 @@ setValue:
 		if isNative {
 			if value == nil {
 				value = time.Time{}
+			} else if field.Kind() == reflect.Ptr {
+				if value != nil {
+					v := value.(time.Time)
+					field.Set(reflect.ValueOf(&v))
+				}
+			} else {
+				field.Set(reflect.ValueOf(value))
 			}
-			field.Set(reflect.ValueOf(value))
 		}
 	case fieldType == TypePositiveBitField && field.Kind() == reflect.Ptr:
 		if value != nil {

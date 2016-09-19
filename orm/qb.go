@@ -19,6 +19,7 @@ import "errors"
 // QueryBuilder is the Query builder interface
 type QueryBuilder interface {
 	Select(fields ...string) QueryBuilder
+	ForUpdate() QueryBuilder
 	From(tables ...string) QueryBuilder
 	InnerJoin(table string) QueryBuilder
 	LeftJoin(table string) QueryBuilder
