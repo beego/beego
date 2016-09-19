@@ -359,6 +359,9 @@ func (m *Image) calculateSizes(width, height, ncount int) {
 	}
 	// Calculate dot size.
 	m.dotSize = int(nh / fh)
+	if m.dotSize < 1 {
+		m.dotSize = 1
+	}
 	// Save everything, making the actual width smaller by 1 dot to account
 	// for spacing between digits.
 	m.numWidth = int(nw) - m.dotSize

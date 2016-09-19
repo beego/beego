@@ -227,7 +227,7 @@ func TestModelSyntax(t *testing.T) {
 	user := &User{}
 	ind := reflect.ValueOf(user).Elem()
 	fn := getFullName(ind.Type())
-	mi, ok := modelCache.getByFN(fn)
+	mi, ok := modelCache.getByFullName(fn)
 	throwFail(t, AssertIs(ok, true))
 
 	mi, ok = modelCache.get("user")
@@ -350,6 +350,9 @@ func TestNullDataTypes(t *testing.T) {
 	throwFail(t, AssertIs(d.Float32Ptr, nil))
 	throwFail(t, AssertIs(d.Float64Ptr, nil))
 	throwFail(t, AssertIs(d.DecimalPtr, nil))
+	throwFail(t, AssertIs(d.TimePtr, nil))
+	throwFail(t, AssertIs(d.DatePtr, nil))
+	throwFail(t, AssertIs(d.DateTimePtr, nil))
 
 	_, err = dORM.Raw(`INSERT INTO data_null (boolean) VALUES (?)`, nil).Exec()
 	throwFail(t, err)
@@ -376,6 +379,9 @@ func TestNullDataTypes(t *testing.T) {
 	float32Ptr := float32(42.0)
 	float64Ptr := float64(42.0)
 	decimalPtr := float64(42.0)
+	timePtr := time.Now()
+	datePtr := time.Now()
+	dateTimePtr := time.Now()
 
 	d = DataNull{
 		DateTime:    time.Now(),
@@ -401,6 +407,9 @@ func TestNullDataTypes(t *testing.T) {
 		Float32Ptr:  &float32Ptr,
 		Float64Ptr:  &float64Ptr,
 		DecimalPtr:  &decimalPtr,
+		TimePtr:     &timePtr,
+		DatePtr:     &datePtr,
+		DateTimePtr: &dateTimePtr,
 	}
 
 	id, err = dORM.Insert(&d)
@@ -441,6 +450,9 @@ func TestNullDataTypes(t *testing.T) {
 	throwFail(t, AssertIs(*d.Float32Ptr, float32Ptr))
 	throwFail(t, AssertIs(*d.Float64Ptr, float64Ptr))
 	throwFail(t, AssertIs(*d.DecimalPtr, decimalPtr))
+	throwFail(t, AssertIs((*d.TimePtr).Format(testTime), timePtr.Format(testTime)))
+	throwFail(t, AssertIs((*d.DatePtr).Format(testDate), datePtr.Format(testDate)))
+	throwFail(t, AssertIs((*d.DateTimePtr).Format(testDateTime), dateTimePtr.Format(testDateTime)))
 }
 
 func TestDataCustomTypes(t *testing.T) {
@@ -565,6 +577,10 @@ func TestCRUD(t *testing.T) {
 	err = dORM.Read(&ub)
 	throwFail(t, err)
 	throwFail(t, AssertIs(ub.Name, "name"))
+
+	num, err = dORM.Delete(&ub, "name")
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
 }
 
 func TestInsertTestData(t *testing.T) {
@@ -2050,7 +2066,7 @@ func TestIntegerPk(t *testing.T) {
 		throwFail(t, AssertIs(out.Value, intPk.Value))
 	}
 
-	num, err = dORM.InsertMulti(1, []*IntegerPk{&IntegerPk{
+	num, err = dORM.InsertMulti(1, []*IntegerPk{{
 		ID: 1, Value: "ok",
 	}})
 	throwFail(t, err)
@@ -2116,4 +2132,135 @@ func TestUintPk(t *testing.T) {
 	throwFail(t, AssertIs(nu.Name, name))
 
 	dORM.Delete(u)
+}
+
+func TestSnake(t *testing.T) {
+	cases := map[string]string{
+		"i":           "i",
+		"I":           "i",
+		"iD":          "i_d",
+		"ID":          "i_d",
+		"NO":          "n_o",
+		"NOO":         "n_o_o",
+		"NOOooOOoo":   "n_o_ooo_o_ooo",
+		"OrderNO":     "order_n_o",
+		"tagName":     "tag_name",
+		"tag_Name":    "tag__name",
+		"tag_name":    "tag_name",
+		"_tag_name":   "_tag_name",
+		"tag_666name": "tag_666name",
+		"tag_666Name": "tag_666_name",
+	}
+	for name, want := range cases {
+		got := snakeString(name)
+		throwFail(t, AssertIs(got, want))
+	}
+}
+
+func TestIgnoreCaseTag(t *testing.T) {
+	type testTagModel struct {
+		ID     int    `orm:"pk"`
+		NOO    string `orm:"column(n)"`
+		Name01 string `orm:"NULL"`
+		Name02 string `orm:"COLUMN(Name)"`
+		Name03 string `orm:"Column(name)"`
+	}
+	modelCache.clean()
+	RegisterModel(&testTagModel{})
+	info, ok := modelCache.get("test_tag_model")
+	throwFail(t, AssertIs(ok, true))
+	throwFail(t, AssertNot(info, nil))
+	if t == nil {
+		return
+	}
+	throwFail(t, AssertIs(info.fields.GetByName("NOO").column, "n"))
+	throwFail(t, AssertIs(info.fields.GetByName("Name01").null, true))
+	throwFail(t, AssertIs(info.fields.GetByName("Name02").column, "Name"))
+	throwFail(t, AssertIs(info.fields.GetByName("Name03").column, "name"))
+}
+func TestInsertOrUpdate(t *testing.T) {
+	RegisterModel(new(User))
+	user := User{UserName: "unique_username133", Status: 1, Password: "o"}
+	user1 := User{UserName: "unique_username133", Status: 2, Password: "o"}
+	user2 := User{UserName: "unique_username133", Status: 3, Password: "oo"}
+	dORM.Insert(&user)
+	test := User{UserName: "unique_username133"}
+	fmt.Println(dORM.Driver().Name())
+	if dORM.Driver().Name() == "sqlite3" {
+		fmt.Println("sqlite3 is nonsupport")
+		return
+	}
+	//test1
+	_, err := dORM.InsertOrUpdate(&user1, "user_name")
+	if err != nil {
+		fmt.Println(err)
+		if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego" {
+		} else {
+			throwFailNow(t, err)
+		}
+	} else {
+		dORM.Read(&test, "user_name")
+		throwFailNow(t, AssertIs(user1.Status, test.Status))
+	}
+	//test2
+	_, err = dORM.InsertOrUpdate(&user2, "user_name")
+	if err != nil {
+		fmt.Println(err)
+		if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego" {
+		} else {
+			throwFailNow(t, err)
+		}
+	} else {
+		dORM.Read(&test, "user_name")
+		throwFailNow(t, AssertIs(user2.Status, test.Status))
+		throwFailNow(t, AssertIs(user2.Password, strings.TrimSpace(test.Password)))
+	}
+	//test3 +
+	_, err = dORM.InsertOrUpdate(&user2, "user_name", "status=status+1")
+	if err != nil {
+		fmt.Println(err)
+		if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego" {
+		} else {
+			throwFailNow(t, err)
+		}
+	} else {
+		dORM.Read(&test, "user_name")
+		throwFailNow(t, AssertIs(user2.Status+1, test.Status))
+	}
+	//test4 -
+	_, err = dORM.InsertOrUpdate(&user2, "user_name", "status=status-1")
+	if err != nil {
+		fmt.Println(err)
+		if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego" {
+		} else {
+			throwFailNow(t, err)
+		}
+	} else {
+		dORM.Read(&test, "user_name")
+		throwFailNow(t, AssertIs((user2.Status+1)-1, test.Status))
+	}
+	//test5 *
+	_, err = dORM.InsertOrUpdate(&user2, "user_name", "status=status*3")
+	if err != nil {
+		fmt.Println(err)
+		if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego" {
+		} else {
+			throwFailNow(t, err)
+		}
+	} else {
+		dORM.Read(&test, "user_name")
+		throwFailNow(t, AssertIs(((user2.Status+1)-1)*3, test.Status))
+	}
+	//test6 /
+	_, err = dORM.InsertOrUpdate(&user2, "user_name", "Status=Status/3")
+	if err != nil {
+		fmt.Println(err)
+		if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego" {
+		} else {
+			throwFailNow(t, err)
+		}
+	} else {
+		dORM.Read(&test, "user_name")
+		throwFailNow(t, AssertIs((((user2.Status+1)-1)*3)/3, test.Status))
+	}
 }

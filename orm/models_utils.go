@@ -22,25 +22,47 @@ import (
 	"time"
 )
 
+// 1 is attr
+// 2 is tag
+var supportTag = map[string]int{
+	"-":            1,
+	"null":         1,
+	"index":        1,
+	"unique":       1,
+	"pk":           1,
+	"auto":         1,
+	"auto_now":     1,
+	"auto_now_add": 1,
+	"size":         2,
+	"column":       2,
+	"default":      2,
+	"rel":          2,
+	"reverse":      2,
+	"rel_table":    2,
+	"rel_through":  2,
+	"digits":       2,
+	"decimals":     2,
+	"on_delete":    2,
+	"type":         2,
+}
+
 // get reflect.Type name with package path.
 func getFullName(typ reflect.Type) string {
 	return typ.PkgPath() + "." + typ.Name()
 }
 
-// get table name. method, or field name. auto snaked.
+// getTableName get struct table name.
+// If the struct implement the TableName, then get the result as tablename
+// else use the struct name which will apply snakeString.
 func getTableName(val reflect.Value) string {
-	ind := reflect.Indirect(val)
-	fun := val.MethodByName("TableName")
-	if fun.IsValid() {
+	if fun := val.MethodByName("TableName"); fun.IsValid() {
 		vals := fun.Call([]reflect.Value{})
-		if len(vals) > 0 {
-			val := vals[0]
-			if val.Kind() == reflect.String {
-				return val.String()
-			}
+		// has return and the first val is string
+		if len(vals) > 0 && vals[0].Kind() == reflect.String {
+			return vals[0].String()
 		}
 	}
-	return snakeString(ind.Type().Name())
+	return snakeString(reflect.Indirect(val).Type().Name())
 }
 
 // get table engine, mysiam or innodb.
@@ -48,11 +70,8 @@ func getTableEngine(val reflect.Value) string {
 	fun := val.MethodByName("TableEngine")
 	if fun.IsValid() {
 		vals := fun.Call([]reflect.Value{})
-		if len(vals) > 0 {
-			val := vals[0]
-			if val.Kind() == reflect.String {
-				return val.String()
-			}
+		if len(vals) > 0 && vals[0].Kind() == reflect.String {
+			return vals[0].String()
 		}
 	}
 	return ""
@@ -63,12 +82,9 @@ func getTableIndex(val reflect.Value) [][]string {
 	fun := val.MethodByName("TableIndex")
 	if fun.IsValid() {
 		vals := fun.Call([]reflect.Value{})
-		if len(vals) > 0 {
-			val := vals[0]
-			if val.CanInterface() {
-				if d, ok := val.Interface().([][]string); ok {
-					return d
-				}
+		if len(vals) > 0 && vals[0].CanInterface() {
+			if d, ok := vals[0].Interface().([][]string); ok {
+				return d
 			}
 		}
 	}
@@ -80,12 +96,9 @@ func getTableUnique(val reflect.Value) [][]string {
 	fun := val.MethodByName("TableUnique")
 	if fun.IsValid() {
 		vals := fun.Call([]reflect.Value{})
-		if len(vals) > 0 {
-			val := vals[0]
-			if val.CanInterface() {
-				if d, ok := val.Interface().([][]string); ok {
-					return d
-				}
+		if len(vals) > 0 && vals[0].CanInterface() {
+			if d, ok := vals[0].Interface().([][]string); ok {
+				return d
 			}
 		}
 	}
@@ -137,6 +150,8 @@ func getFieldType(val reflect.Value) (ft int, err error) {
 		ft = TypeBooleanField
 	case reflect.TypeOf(new(string)):
 		ft = TypeCharField
+	case reflect.TypeOf(new(time.Time)):
+		ft = TypeDateTimeField
 	default:
 		elm := reflect.Indirect(val)
 		switch elm.Kind() {
@@ -187,21 +202,25 @@ func getFieldType(val reflect.Value) (ft int, err error) {
 }
 
 // parse struct tag string
-func parseStructTag(data string, attrs *map[string]bool, tags *map[string]string) {
-	attr := make(map[string]bool)
-	tag := make(map[string]string)
+func parseStructTag(data string) (attrs map[string]bool, tags map[string]string) {
+	attrs = make(map[string]bool)
+	tags = make(map[string]string)
 	for _, v := range strings.Split(data, defaultStructTagDelim) {
+		if v == "" {
+			continue
+		}
 		v = strings.TrimSpace(v)
-		if supportTag[v] == 1 {
-			attr[v] = true
+		if t := strings.ToLower(v); supportTag[t] == 1 {
+			attrs[t] = true
 		} else if i := strings.Index(v, "("); i > 0 && strings.Index(v, ")") == len(v)-1 {
-			name := v[:i]
+			name := t[:i]
 			if supportTag[name] == 2 {
 				v = v[i+1 : len(v)-1]
-				tag[name] = v
+				tags[name] = v
 			}
+		} else {
+			DebugLog.Println("unsupport orm tag", v)
 		}
 	}
-	*attrs = attr
-	*tags = tag
+	return
 }

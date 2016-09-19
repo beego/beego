@@ -30,7 +30,6 @@ package session
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -82,7 +81,7 @@ func Register(name string, provide Provider) {
 	provides[name] = provide
 }
 
-type managerConfig struct {
+type ManagerConfig struct {
 	CookieName              string `json:"cookieName"`
 	EnableSetCookie         bool   `json:"enableSetCookie,omitempty"`
 	Gclifetime              int64  `json:"gclifetime"`
@@ -100,7 +99,7 @@ type managerConfig struct {
 // Manager contains Provider and its configuration.
 type Manager struct {
 	provider Provider
-	config   *managerConfig
+	config   *ManagerConfig
 }
 
 // NewManager Create new Manager with provider name and json config string.
@@ -115,17 +114,12 @@ type Manager struct {
 // 2. hashfunc  default sha1
 // 3. hashkey default beegosessionkey
 // 4. maxage default is none
-func NewManager(provideName, config string) (*Manager, error) {
+func NewManager(provideName string, cf *ManagerConfig) (*Manager, error) {
 	provider, ok := provides[provideName]
 	if !ok {
 		return nil, fmt.Errorf("session: unknown provide %q (forgotten import?)", provideName)
 	}
-	cf := new(managerConfig)
-	cf.EnableSetCookie = true
-	err := json.Unmarshal([]byte(config), cf)
-	if err != nil {
-		return nil, err
-	}
+
 	if cf.Maxlifetime == 0 {
 		cf.Maxlifetime = cf.Gclifetime
 	}
@@ -142,7 +136,7 @@ func NewManager(provideName, config string) (*Manager, error) {
 		}
 	}
 
-	err = provider.SessionInit(cf.Maxlifetime, cf.ProviderConfig)
+	err := provider.SessionInit(cf.Maxlifetime, cf.ProviderConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +160,7 @@ func NewManager(provideName, config string) (*Manager, error) {
 // otherwise return an valid session id.
 func (manager *Manager) getSid(r *http.Request) (string, error) {
 	cookie, errs := r.Cookie(manager.config.CookieName)
-	if errs != nil || cookie.Value == "" || cookie.MaxAge < 0 {
+	if errs != nil || cookie.Value == "" {
 		var sid string
 		if manager.config.EnableSidInUrlQuery {
 			errs := r.ParseForm()
@@ -211,6 +205,9 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 	}
 
 	session, err = manager.provider.SessionRead(sid)
+	if err != nil {
+		return nil, errs
+	}
 	cookie := &http.Cookie{
 		Name:     manager.config.CookieName,
 		Value:    url.QueryEscape(sid),
