@@ -98,6 +98,23 @@ func (d *commandSyncDb) Parse(args []string) {
 
 // run orm line command.
 func (d *commandSyncDb) Run() error {
+	if d.force {
+		if d.al.Driver == DRMySQL {
+			query := "SET FOREIGN_KEY_CHECKS = 0;"
+			_, err := d.al.DB.Exec(query)
+			if d.verbose {
+				query = "    " + strings.Join(strings.Split(query, "\n"), "\n    ")
+				fmt.Println(query)
+			}
+			if err != nil {
+				if d.rtOnError {
+					return err
+				}
+				fmt.Printf("    %s\n", err.Error())
+			}
+		}
+	}
+
 	var drops []string
 	if d.force {
 		drops = getDbDropSQL(d.al)
@@ -123,8 +140,28 @@ func (d *commandSyncDb) Run() error {
 			}
 		}
 	}
+	if d.force {
+		if d.al.Driver == DRMySQL {
+			query := "SET FOREIGN_KEY_CHECKS = 1;"
+			_, err := d.al.DB.Exec(query)
+			if d.verbose {
+				query = "    " + strings.Join(strings.Split(query, "\n"), "\n    ")
+				fmt.Println(query)
+			}
+			if err != nil {
+				if d.rtOnError {
+					return err
+				}
+				fmt.Printf("    %s\n", err.Error())
+			}
+		}
+	}
 
-	sqls, indexes := getDbCreateSQL(d.al)
+	sqls, indexes, fks := getDbCreateSQL(d.al)
+
+	for k, v := range sqls {
+		fmt.Println(k, " - ", v)
+	}
 
 	tables, err := d.al.DbBaser.GetTables(db)
 	if err != nil {
@@ -223,6 +260,19 @@ func (d *commandSyncDb) Run() error {
 			fmt.Println("")
 		}
 	}
+	for _, query := range fks {
+		_, err := db.Exec(query)
+		if d.verbose {
+			query = "    " + strings.Join(strings.Split(query, "\n"), "\n    ")
+			fmt.Println(query)
+		}
+		if err != nil {
+			if d.rtOnError {
+				return err
+			}
+			fmt.Printf("    %s\n", err.Error())
+		}
+	}
 
 	return nil
 }
@@ -245,7 +295,7 @@ func (d *commandSQLAll) Parse(args []string) {
 
 // run orm line command.
 func (d *commandSQLAll) Run() error {
-	sqls, indexes := getDbCreateSQL(d.al)
+	sqls, indexes, fks := getDbCreateSQL(d.al)
 	var all []string
 	for i, mi := range modelCache.allOrdered() {
 		queries := []string{sqls[i]}
@@ -254,6 +304,9 @@ func (d *commandSQLAll) Run() error {
 		}
 		sql := strings.Join(queries, "\n")
 		all = append(all, sql)
+	}
+	for _, v := range fks {
+		all = append(all, v)
 	}
 	fmt.Println(strings.Join(all, "\n\n"))
 
