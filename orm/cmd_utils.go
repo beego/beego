@@ -217,7 +217,28 @@ func getDbCreateSQL(al *alias) (sqls []string, tableIndexes map[string][]dbIndex
 				columns = append(columns, column)
 			}
 		}
-
+		if al.Driver == DRMySQL {
+			for _, fi := range mi.fields.fieldsDB {
+				if fi.relModelInfo != nil {
+					cols := make([]string, 0, len(fi.relModelInfo.fields.fields))
+					for _, fi := range fi.relModelInfo.fields.fields {
+						if fi.pk {
+							cols = append(cols, fi.column)
+						}
+					}
+					column := fmt.Sprintf("    FOREIGN KEY (%s%s%s) REFERENCES %s%s%s (%s%s%s)", Q, fi.column, Q, Q, fi.relModelInfo.table, Q, Q, strings.Join(cols, sep), Q)
+					switch fi.onDelete {
+					case "cascade":
+						column += " ON DELETE CASCADE"
+					case "set_null":
+						column += " ON DELETE SET NULL"
+					case "set_default":
+						column += " ON DELETE SET DEFAULT"
+					}
+					columns = append(columns, column)
+				}
+			}
+		}
 		sql += strings.Join(columns, ",\n")
 		sql += "\n)"
 
