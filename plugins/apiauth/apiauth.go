@@ -119,7 +119,7 @@ func APISecretAuth(f AppIDToAppSecret, timeout int) beego.FilterFunc {
 			return
 		}
 		if ctx.Input.Query("signature") !=
-			Signature(appsecret, ctx.Input.Method(), ctx.Request.Form, ctx.Input.URI()) {
+			Signature(appsecret, ctx.Input.Method(), ctx.Request.Form, ctx.Input.URL()) {
 			ctx.ResponseWriter.WriteHeader(403)
 			ctx.WriteString("auth failed")
 		}
@@ -127,7 +127,7 @@ func APISecretAuth(f AppIDToAppSecret, timeout int) beego.FilterFunc {
 }
 
 // Signature used to generate signature with the appsecret/method/params/RequestURI
-func Signature(appsecret, method string, params url.Values, RequestURI string) (result string) {
+func Signature(appsecret, method string, params url.Values, RequestURL string) (result string) {
 	var query string
 	pa := make(map[string]string)
 	for k, v := range params {
@@ -143,7 +143,7 @@ func Signature(appsecret, method string, params url.Values, RequestURI string) (
 			query = fmt.Sprintf("%v%v%v", query, vs.Keys[i], vs.Vals[i])
 		}
 	}
-	stringToSign := fmt.Sprintf("%v\n%v\n%v\n", method, query, RequestURI)
+	stringToSign := fmt.Sprintf("%v\n%v\n%v\n", method, query, RequestURL)
 
 	sha256 := sha256.New
 	hash := hmac.New(sha256, []byte(appsecret))
