@@ -103,6 +103,8 @@ func bootStrap() {
 		goto end
 	}
 
+	// set rel and reverse model
+	// RelManyToMany set the relTable
 	models = modelCache.all()
 	for _, mi := range models {
 		for _, fi := range mi.fields.columns {
@@ -155,6 +157,8 @@ func bootStrap() {
 		}
 	}
 
+	// check the rel filed while the relModelInfo also has filed point to current model
+	// if not exist, add a new field to the relModelInfo
 	models = modelCache.all()
 	for _, mi := range models {
 		for _, fi := range mi.fields.fieldsRel {
@@ -167,7 +171,6 @@ func bootStrap() {
 						break
 					}
 				}
-
 				if inModel == false {
 					rmi := fi.relModelInfo
 					ffi := new(fieldInfo)
