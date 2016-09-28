@@ -114,6 +114,8 @@ type controllerInfo struct {
 // ControllerRegister containers registered router rules, controller handlers and filters.
 type ControllerRegister struct {
 	routers      map[string]*Tree
+	enablePolicy bool
+	policies     map[string]*Tree
 	enableFilter bool
 	filters      [FinishRouter + 1][]*FilterRouter
 	pool         sync.Pool
@@ -122,7 +124,8 @@ type ControllerRegister struct {
 // NewControllerRegister returns a new ControllerRegister.
 func NewControllerRegister() *ControllerRegister {
 	cr := &ControllerRegister{
-		routers: make(map[string]*Tree),
+		routers:  make(map[string]*Tree),
+		policies: make(map[string]*Tree),
 	}
 	cr.pool.New = func() interface{} {
 		return beecontext.NewContext()
@@ -708,6 +711,11 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	//execute middleware filters
 	if len(p.filters[BeforeExec]) > 0 && p.execFilter(context, urlPath, BeforeExec) {
+		goto Admin
+	}
+
+	//check policies
+	if p.execPolicy(context, urlPath) {
 		goto Admin
 	}
 
