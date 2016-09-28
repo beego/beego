@@ -294,6 +294,10 @@ func assignConfig(ac config.Configer) error {
 	}
 
 	if lo := ac.String("LogOutputs"); lo != "" {
+		// if lo is not nil or empty
+		// means user has set his own LogOutputs
+		// clear the default setting to BConfig.Log.Outputs
+		BConfig.Log.Outputs = make(map[string]string)
 		los := strings.Split(lo, ";")
 		for _, v := range los {
 			if logType2Config := strings.SplitN(v, ",", 2); len(logType2Config) == 2 {
