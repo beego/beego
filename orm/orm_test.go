@@ -672,6 +672,13 @@ The program—and web server—godoc processes Go source files to extract docume
 		{Post: posts[2]},
 	}
 
+	for _, post := range posts {
+		id, err := dORM.Insert(post)
+		throwFail(t, err)
+		throwFail(t, AssertIs(id > 0, true))
+		post.ID = int(id)
+	}
+
 	for _, tag := range tags {
 		id, err := dORM.Insert(tag)
 		throwFail(t, err)
@@ -679,10 +686,6 @@ The program—and web server—godoc processes Go source files to extract docume
 	}
 
 	for _, post := range posts {
-		id, err := dORM.Insert(post)
-		throwFail(t, err)
-		throwFail(t, AssertIs(id > 0, true))
-
 		num := len(post.Tags)
 		if num > 0 {
 			nums, err := dORM.QueryM2M(post, "tags").Add(post.Tags)
@@ -1428,7 +1431,7 @@ func TestQueryM2M(t *testing.T) {
 
 	for _, post := range posts {
 		p := post.(*Post)
-		p.User = &User{ID: 1}
+		p.User = &User{ID: 2}
 		_, err := dORM.Insert(post)
 		throwFailNow(t, err)
 	}
