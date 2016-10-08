@@ -126,7 +126,7 @@ type Propertie struct {
 	Ref                  string               `json:"$ref,omitempty" yaml:"$ref,omitempty"`
 	Title                string               `json:"title,omitempty" yaml:"title,omitempty"`
 	Description          string               `json:"description,omitempty" yaml:"description,omitempty"`
-	Default              string               `json:"default,omitempty" yaml:"default,omitempty"`
+	Default              interface{}          `json:"default,omitempty" yaml:"default,omitempty"`
 	Type                 string               `json:"type,omitempty" yaml:"type,omitempty"`
 	Example              string               `json:"example,omitempty" yaml:"example,omitempty"`
 	Required             []string             `json:"required,omitempty" yaml:"required,omitempty"`
