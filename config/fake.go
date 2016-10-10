@@ -120,6 +120,10 @@ func (c *fakeConfigContainer) GetSection(section string) (map[string]string, err
 	return nil, errors.New("not implement in the fakeConfigContainer")
 }
 
+func (c *fakeConfigContainer) GetSections() ([]string, error) {
+	return nil, errors.New("not implement in the fakeConfigContainer")
+}
+
 func (c *fakeConfigContainer) SaveConfigFile(filename string) error {
 	return errors.New("not implement in the fakeConfigContainer")
 }

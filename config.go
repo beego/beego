@@ -477,6 +477,10 @@ func (b *beegoAppConfig) GetSection(section string) (map[string]string, error) {
 	return b.innerConfig.GetSection(section)
 }
 
+func (b *beegoAppConfig) GetSections() ([]string, error) {
+	return b.innerConfig.GetSections()
+}
+
 func (b *beegoAppConfig) SaveConfigFile(filename string) error {
 	return b.innerConfig.SaveConfigFile(filename)
 }
