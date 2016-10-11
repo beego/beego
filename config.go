@@ -94,7 +94,7 @@ type SessionConfig struct {
 	SessionCookieLifeTime   int
 	SessionAutoSetCookie    bool
 	SessionDomain           string
-	DisableHTTPOnly         bool // used to allow for cross domain cookies/javascript cookies.
+	SessionDisableHTTPOnly  bool // used to allow for cross domain cookies/javascript cookies.
 	EnableSidInHttpHeader   bool //	enable store/get the sessionId into/from http headers
 	SessionNameInHttpHeader string
 	EnableSidInUrlQuery     bool //	enable get the sessionId from Url Query params
@@ -227,7 +227,7 @@ func newBConfig() *Config {
 				SessionName:             "beegosessionID",
 				SessionGCMaxLifetime:    3600,
 				SessionProviderConfig:   "",
-				DisableHTTPOnly:         false,
+				SessionDisableHTTPOnly:  false,
 				SessionCookieLifeTime:   0, //set cookie default is the browser life
 				SessionAutoSetCookie:    true,
 				SessionDomain:           "",
