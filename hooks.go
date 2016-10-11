@@ -53,7 +53,7 @@ func registerSession() error {
 			conf.Secure = BConfig.Listen.EnableHTTPS
 			conf.CookieLifeTime = BConfig.WebConfig.Session.SessionCookieLifeTime
 			conf.ProviderConfig = filepath.ToSlash(BConfig.WebConfig.Session.SessionProviderConfig)
-			conf.DisableHTTPOnly = BConfig.WebConfig.Session.DisableHTTPOnly
+			conf.DisableHTTPOnly = BConfig.WebConfig.Session.SessionDisableHTTPOnly
 			conf.Domain = BConfig.WebConfig.Session.SessionDomain
 			conf.EnableSidInHttpHeader = BConfig.WebConfig.Session.EnableSidInHttpHeader
 			conf.SessionNameInHttpHeader = BConfig.WebConfig.Session.SessionNameInHttpHeader
