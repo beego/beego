@@ -55,9 +55,9 @@ func registerSession() error {
 			conf.ProviderConfig = filepath.ToSlash(BConfig.WebConfig.Session.SessionProviderConfig)
 			conf.DisableHTTPOnly = BConfig.WebConfig.Session.SessionDisableHTTPOnly
 			conf.Domain = BConfig.WebConfig.Session.SessionDomain
-			conf.EnableSidInHttpHeader = BConfig.WebConfig.Session.EnableSidInHttpHeader
-			conf.SessionNameInHttpHeader = BConfig.WebConfig.Session.SessionNameInHttpHeader
-			conf.EnableSidInUrlQuery = BConfig.WebConfig.Session.EnableSidInUrlQuery
+			conf.EnableSidInHttpHeader = BConfig.WebConfig.Session.SessionEnableSidInHTTPHeader
+			conf.SessionNameInHttpHeader = BConfig.WebConfig.Session.SessionNameInHTTPHeader
+			conf.EnableSidInUrlQuery = BConfig.WebConfig.Session.SessionEnableSidInURLQuery
 		} else {
 			if err = json.Unmarshal([]byte(sessionConfig), conf); err != nil {
 				return err
