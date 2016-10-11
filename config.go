@@ -86,18 +86,18 @@ type WebConfig struct {
 
 // SessionConfig holds session related config
 type SessionConfig struct {
-	SessionOn               bool
-	SessionProvider         string
-	SessionName             string
-	SessionGCMaxLifetime    int64
-	SessionProviderConfig   string
-	SessionCookieLifeTime   int
-	SessionAutoSetCookie    bool
-	SessionDomain           string
-	SessionDisableHTTPOnly  bool // used to allow for cross domain cookies/javascript cookies.
-	EnableSidInHttpHeader   bool //	enable store/get the sessionId into/from http headers
-	SessionNameInHttpHeader string
-	EnableSidInUrlQuery     bool //	enable get the sessionId from Url Query params
+	SessionOn                    bool
+	SessionProvider              string
+	SessionName                  string
+	SessionGCMaxLifetime         int64
+	SessionProviderConfig        string
+	SessionCookieLifeTime        int
+	SessionAutoSetCookie         bool
+	SessionDomain                string
+	SessionDisableHTTPOnly       bool // used to allow for cross domain cookies/javascript cookies.
+	SessionEnableSidInHTTPHeader bool //	enable store/get the sessionId into/from http headers
+	SessionNameInHTTPHeader      string
+	SessionEnableSidInURLQuery   bool //	enable get the sessionId from Url Query params
 }
 
 // LogConfig holds Log related config
@@ -222,18 +222,18 @@ func newBConfig() *Config {
 			XSRFKey:                "beegoxsrf",
 			XSRFExpire:             0,
 			Session: SessionConfig{
-				SessionOn:               false,
-				SessionProvider:         "memory",
-				SessionName:             "beegosessionID",
-				SessionGCMaxLifetime:    3600,
-				SessionProviderConfig:   "",
-				SessionDisableHTTPOnly:  false,
-				SessionCookieLifeTime:   0, //set cookie default is the browser life
-				SessionAutoSetCookie:    true,
-				SessionDomain:           "",
-				EnableSidInHttpHeader:   false, //	enable store/get the sessionId into/from http headers
-				SessionNameInHttpHeader: "Beegosessionid",
-				EnableSidInUrlQuery:     false, //	enable get the sessionId from Url Query params
+				SessionOn:                    false,
+				SessionProvider:              "memory",
+				SessionName:                  "beegosessionID",
+				SessionGCMaxLifetime:         3600,
+				SessionProviderConfig:        "",
+				SessionDisableHTTPOnly:       false,
+				SessionCookieLifeTime:        0, //set cookie default is the browser life
+				SessionAutoSetCookie:         true,
+				SessionDomain:                "",
+				SessionEnableSidInHTTPHeader: false, //	enable store/get the sessionId into/from http headers
+				SessionNameInHTTPHeader:      "Beegosessionid",
+				SessionEnableSidInURLQuery:   false, //	enable get the sessionId from Url Query params
 			},
 		},
 		Log: LogConfig{
