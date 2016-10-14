@@ -23,6 +23,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -132,8 +133,8 @@ func (ini *IniConfig) parseFile(name string) (*IniConfigContainer, error) {
 			includefiles := strings.Fields(key)
 			if includefiles[0] == "include" && len(includefiles) == 2 {
 				otherfile := strings.Trim(includefiles[1], "\"")
-				if !path.IsAbs(otherfile) {
-					otherfile = path.Join(path.Dir(name), otherfile)
+				if !filepath.IsAbs(otherfile) {
+					otherfile = filepath.Join(filepath.Dir(name), otherfile)
 				}
 				i, err := ini.parseFile(otherfile)
 				if err != nil {
