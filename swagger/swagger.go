@@ -97,6 +97,7 @@ type Parameter struct {
 	Type        string          `json:"type,omitempty" yaml:"type,omitempty"`
 	Format      string          `json:"format,omitempty" yaml:"format,omitempty"`
 	Items       *ParameterItems `json:"items,omitempty" yaml:"items,omitempty"`
+	Default     interface{}     `json:"default,omitempty" yaml:"default,omitempty"`
 }
 
 // A limited subset of JSON-Schema's items object. It is used by parameter definitions that are not located in "body".
