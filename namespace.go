@@ -68,7 +68,7 @@ func (n *Namespace) Cond(cond namespaceCond) *Namespace {
 		mr.tree.AddRouter("*", true)
 		n.handlers.filters[BeforeRouter] = append([]*FilterRouter{mr}, v...)
 	} else {
-		n.handlers.InsertFilter("*", BeforeRouter, fn)
+		n.handlers.InsertFilter("*", "*", BeforeRouter, fn)
 	}
 	return n
 }
@@ -91,7 +91,7 @@ func (n *Namespace) Filter(action string, filter ...FilterFunc) *Namespace {
 		a = FinishRouter
 	}
 	for _, f := range filter {
-		n.handlers.InsertFilter("*", a, f)
+		n.handlers.InsertFilter("*", "*", a, f)
 	}
 	return n
 }

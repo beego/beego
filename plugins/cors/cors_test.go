@@ -56,7 +56,7 @@ func (gr *HTTPHeaderGuardRecorder) Header() http.Header {
 func Test_AllowAll(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	handler := beego.NewControllerRegister()
-	handler.InsertFilter("*", beego.BeforeRouter, Allow(&Options{
+	handler.InsertFilter("*", "*", beego.BeforeRouter, Allow(&Options{
 		AllowAllOrigins: true,
 	}))
 	handler.Any("/foo", func(ctx *context.Context) {
@@ -73,7 +73,7 @@ func Test_AllowAll(t *testing.T) {
 func Test_AllowRegexMatch(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	handler := beego.NewControllerRegister()
-	handler.InsertFilter("*", beego.BeforeRouter, Allow(&Options{
+	handler.InsertFilter("*", "*", beego.BeforeRouter, Allow(&Options{
 		AllowOrigins: []string{"https://aaa.com", "https://*.foo.com"},
 	}))
 	handler.Any("/foo", func(ctx *context.Context) {
@@ -93,7 +93,7 @@ func Test_AllowRegexMatch(t *testing.T) {
 func Test_AllowRegexNoMatch(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	handler := beego.NewControllerRegister()
-	handler.InsertFilter("*", beego.BeforeRouter, Allow(&Options{
+	handler.InsertFilter("*", "*", beego.BeforeRouter, Allow(&Options{
 		AllowOrigins: []string{"https://*.foo.com"},
 	}))
 	handler.Any("/foo", func(ctx *context.Context) {
@@ -113,7 +113,7 @@ func Test_AllowRegexNoMatch(t *testing.T) {
 func Test_OtherHeaders(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	handler := beego.NewControllerRegister()
-	handler.InsertFilter("*", beego.BeforeRouter, Allow(&Options{
+	handler.InsertFilter("*", "*", beego.BeforeRouter, Allow(&Options{
 		AllowAllOrigins:  true,
 		AllowCredentials: true,
 		AllowMethods:     []string{"PATCH", "GET"},
@@ -157,7 +157,7 @@ func Test_OtherHeaders(t *testing.T) {
 func Test_DefaultAllowHeaders(t *testing.T) {
 	recorder := httptest.NewRecorder()
 	handler := beego.NewControllerRegister()
-	handler.InsertFilter("*", beego.BeforeRouter, Allow(&Options{
+	handler.InsertFilter("*", "*", beego.BeforeRouter, Allow(&Options{
 		AllowAllOrigins: true,
 	}))
 	handler.Any("/foo", func(ctx *context.Context) {
@@ -176,7 +176,7 @@ func Test_DefaultAllowHeaders(t *testing.T) {
 func Test_Preflight(t *testing.T) {
 	recorder := NewRecorder()
 	handler := beego.NewControllerRegister()
-	handler.InsertFilter("*", beego.BeforeRouter, Allow(&Options{
+	handler.InsertFilter("*", "*", beego.BeforeRouter, Allow(&Options{
 		AllowAllOrigins: true,
 		AllowMethods:    []string{"PUT", "PATCH"},
 		AllowHeaders:    []string{"Origin", "X-whatever", "X-CaseSensitive"},
@@ -235,7 +235,7 @@ func Benchmark_WithCORS(b *testing.B) {
 	recorder := httptest.NewRecorder()
 	handler := beego.NewControllerRegister()
 	beego.BConfig.RunMode = beego.PROD
-	handler.InsertFilter("*", beego.BeforeRouter, Allow(&Options{
+	handler.InsertFilter("*", "*", beego.BeforeRouter, Allow(&Options{
 		AllowAllOrigins:  true,
 		AllowCredentials: true,
 		AllowMethods:     []string{"PATCH", "GET"},
