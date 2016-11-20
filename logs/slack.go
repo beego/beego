@@ -44,10 +44,10 @@ func (s *SLACKWriter) WriteMsg(when time.Time, msg string, level int) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("Post webhook failed %s %d", resp.Status, resp.StatusCode)
 	}
-	resp.Body.Close()
 	return nil
 }
 
