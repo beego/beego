@@ -65,6 +65,7 @@ func oldMap() map[string]interface{} {
 	m["BConfig.WebConfig.Session.SessionCookieLifeTime"] = BConfig.WebConfig.Session.SessionCookieLifeTime
 	m["BConfig.WebConfig.Session.SessionAutoSetCookie"] = BConfig.WebConfig.Session.SessionAutoSetCookie
 	m["BConfig.WebConfig.Session.SessionDomain"] = BConfig.WebConfig.Session.SessionDomain
+	m["BConfig.WebConfig.Session.SessionDisableHTTPOnly"] = BConfig.WebConfig.Session.SessionDisableHTTPOnly
 	m["BConfig.Log.AccessLogs"] = BConfig.Log.AccessLogs
 	m["BConfig.Log.FileLineNum"] = BConfig.Log.FileLineNum
 	m["BConfig.Log.Outputs"] = BConfig.Log.Outputs
