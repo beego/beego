@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"reflect"
 	"strings"
 	"sync"
 )
@@ -196,6 +197,18 @@ func (c *JSONConfigContainer) GetSection(section string) (map[string]string, err
 		return v.(map[string]string), nil
 	}
 	return nil, errors.New("nonexist section " + section)
+}
+
+// GetSections returns all section name list
+func (c *JSONConfigContainer) GetSections() ([]string, error) {
+	var sections []string
+	for k, v := range c.data {
+		rv := reflect.ValueOf(v)
+		if rv.Kind() == reflect.Map {
+			sections = append(sections, k)
+		}
+	}
+	return sections, nil
 }
 
 // SaveConfigFile save the config into file

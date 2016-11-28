@@ -36,6 +36,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"reflect"
 	"strconv"
 	"strings"
 	"sync"
@@ -197,6 +198,18 @@ func (c *ConfigContainer) GetSection(section string) (map[string]string, error) 
 		return v.(map[string]string), nil
 	}
 	return nil, errors.New("not exist setction")
+}
+
+// GetSections returns all section name list
+func (c *ConfigContainer) GetSections() ([]string, error) {
+	var sections []string
+	for k, v := range c.data {
+		rv := reflect.ValueOf(v)
+		if rv.Kind() == reflect.Map {
+			sections = append(sections, k)
+		}
+	}
+	return sections, nil
 }
 
 // SaveConfigFile save the config into file

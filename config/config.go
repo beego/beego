@@ -36,6 +36,7 @@
 //  cnf.DefaultFloat(key string, defaultVal float64) float64
 //  cnf.DIY(key string) (interface{}, error)
 //  cnf.GetSection(section string) (map[string]string, error)
+//  cnf.GetSections() ([]string, error)
 //  cnf.SaveConfigFile(filename string) error
 //More docs http://beego.me/docs/module/config.md
 package config
@@ -62,6 +63,7 @@ type Configer interface {
 	DefaultFloat(key string, defaultVal float64) float64
 	DIY(key string) (interface{}, error)
 	GetSection(section string) (map[string]string, error)
+	GetSections() ([]string, error)
 	SaveConfigFile(filename string) error
 }
 
