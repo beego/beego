@@ -193,10 +193,14 @@ func (c *ConfigContainer) DefaultStrings(key string, defaultval []string) []stri
 
 // GetSection returns map for the given section
 func (c *ConfigContainer) GetSection(section string) (map[string]string, error) {
-	if v, ok := c.data[section]; ok {
-		return v.(map[string]string), nil
+	if v, ok := c.data[section].(map[string]interface{}); ok {
+		mapstr := make(map[string]string)
+		for k, val := range v {
+			mapstr[k] = config.ToString(val)
+		}
+		return mapstr, nil
 	}
-	return nil, errors.New("not exist setction")
+	return nil, fmt.Errorf("section '%s' not found", section)
 }
 
 // SaveConfigFile save the config into file
