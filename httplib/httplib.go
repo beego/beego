@@ -136,6 +136,7 @@ type BeegoHTTPSettings struct {
 	TLSClientConfig  *tls.Config
 	Proxy            func(*http.Request) (*url.URL, error)
 	Transport        http.RoundTripper
+	CheckRedirect    func(req *http.Request, via []*http.Request) error
 	EnableCookie     bool
 	Gzip             bool
 	DumpBody         bool
@@ -262,6 +263,15 @@ func (b *BeegoHTTPRequest) SetTransport(transport http.RoundTripper) *BeegoHTTPR
 // 	}
 func (b *BeegoHTTPRequest) SetProxy(proxy func(*http.Request) (*url.URL, error)) *BeegoHTTPRequest {
 	b.setting.Proxy = proxy
+	return b
+}
+
+// SetCheckRedirect specifies the policy for handling redirects.
+//
+// If CheckRedirect is nil, the Client uses its default policy,
+// which is to stop after 10 consecutive requests.
+func (b *BeegoHTTPRequest) SetCheckRedirect(redirect func(req *http.Request, via []*http.Request) error) *BeegoHTTPRequest {
+	b.setting.CheckRedirect = redirect
 	return b
 }
 
@@ -444,6 +454,10 @@ func (b *BeegoHTTPRequest) DoRequest() (*http.Response, error) {
 
 	if b.setting.UserAgent != "" && b.req.Header.Get("User-Agent") == "" {
 		b.req.Header.Set("User-Agent", b.setting.UserAgent)
+	}
+
+	if b.setting.CheckRedirect != nil {
+		client.CheckRedirect = b.setting.CheckRedirect
 	}
 
 	if b.setting.ShowDebug {

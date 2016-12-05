@@ -15,6 +15,8 @@
 package beego
 
 import (
+	"math"
+	"strconv"
 	"testing"
 
 	"github.com/astaxie/beego/context"
@@ -73,5 +75,49 @@ func TestGetInt64(t *testing.T) {
 	val, _ := ctrlr.GetInt64("age")
 	if val != 40 {
 		t.Errorf("TestGeetInt64 expect 40,get %T,%v", val, val)
+	}
+}
+
+func TestGetUint8(t *testing.T) {
+	i := context.NewInput()
+	i.SetParam("age", strconv.FormatUint(math.MaxUint8, 10))
+	ctx := &context.Context{Input: i}
+	ctrlr := Controller{Ctx: ctx}
+	val, _ := ctrlr.GetUint8("age")
+	if val != math.MaxUint8 {
+		t.Errorf("TestGetUint8 expect %v,get %T,%v", math.MaxUint8, val, val)
+	}
+}
+
+func TestGetUint16(t *testing.T) {
+	i := context.NewInput()
+	i.SetParam("age", strconv.FormatUint(math.MaxUint16, 10))
+	ctx := &context.Context{Input: i}
+	ctrlr := Controller{Ctx: ctx}
+	val, _ := ctrlr.GetUint16("age")
+	if val != math.MaxUint16 {
+		t.Errorf("TestGetUint16 expect %v,get %T,%v", math.MaxUint16, val, val)
+	}
+}
+
+func TestGetUint32(t *testing.T) {
+	i := context.NewInput()
+	i.SetParam("age", strconv.FormatUint(math.MaxUint32, 10))
+	ctx := &context.Context{Input: i}
+	ctrlr := Controller{Ctx: ctx}
+	val, _ := ctrlr.GetUint32("age")
+	if val != math.MaxUint32 {
+		t.Errorf("TestGetUint32 expect %v,get %T,%v", math.MaxUint32, val, val)
+	}
+}
+
+func TestGetUint64(t *testing.T) {
+	i := context.NewInput()
+	i.SetParam("age", strconv.FormatUint(math.MaxUint64, 10))
+	ctx := &context.Context{Input: i}
+	ctrlr := Controller{Ctx: ctx}
+	val, _ := ctrlr.GetUint64("age")
+	if val != math.MaxUint64 {
+		t.Errorf("TestGetUint64 expect %v,get %T,%v", uint64(math.MaxUint64), val, val)
 	}
 }

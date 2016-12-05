@@ -75,6 +75,19 @@ func (c *Condition) AndCond(cond *Condition) *Condition {
 	return c
 }
 
+// AndNotCond combine a AND NOT condition to current condition
+func (c *Condition) AndNotCond(cond *Condition) *Condition {
+	c = c.clone()
+	if c == cond {
+		panic(fmt.Errorf("<Condition.AndNotCond> cannot use self as sub cond"))
+	}
+
+	if cond != nil {
+		c.params = append(c.params, condValue{cond: cond, isCond: true, isNot: true})
+	}
+	return c
+}
+
 // Or add OR expression to condition
 func (c Condition) Or(expr string, args ...interface{}) *Condition {
 	if expr == "" || len(args) == 0 {
@@ -101,6 +114,19 @@ func (c *Condition) OrCond(cond *Condition) *Condition {
 	}
 	if cond != nil {
 		c.params = append(c.params, condValue{cond: cond, isCond: true, isOr: true})
+	}
+	return c
+}
+
+// OrNotCond combine a OR NOT condition to current condition
+func (c *Condition) OrNotCond(cond *Condition) *Condition {
+	c = c.clone()
+	if c == cond {
+		panic(fmt.Errorf("<Condition.OrNotCond> cannot use self as sub cond"))
+	}
+
+	if cond != nil {
+		c.params = append(c.params, condValue{cond: cond, isCond: true, isNot: true, isOr: true})
 	}
 	return c
 }
