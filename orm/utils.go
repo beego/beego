@@ -16,6 +16,7 @@ package orm
 
 import (
 	"fmt"
+	"math/big"
 	"reflect"
 	"strconv"
 	"strings"
@@ -87,6 +88,14 @@ func (f StrTo) Int32() (int32, error) {
 // Int64 string to int64
 func (f StrTo) Int64() (int64, error) {
 	v, err := strconv.ParseInt(f.String(), 10, 64)
+	if err != nil {
+		i := new(big.Int)
+		ni, ok := i.SetString(f.String(), 10) // octal
+		if !ok {
+			return int64(v), err
+		}
+		return ni.Int64(), nil
+	}
 	return int64(v), err
 }
 
@@ -117,6 +126,14 @@ func (f StrTo) Uint32() (uint32, error) {
 // Uint64 string to uint64
 func (f StrTo) Uint64() (uint64, error) {
 	v, err := strconv.ParseUint(f.String(), 10, 64)
+	if err != nil {
+		i := new(big.Int)
+		ni, ok := i.SetString(f.String(), 10)
+		if !ok {
+			return uint64(v), err
+		}
+		return ni.Uint64(), nil
+	}
 	return uint64(v), err
 }
 

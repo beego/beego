@@ -399,6 +399,16 @@ func (c *Controller) GetInt8(key string, def ...int8) (int8, error) {
 	return int8(i64), err
 }
 
+// GetUint8 return input as an uint8 or the default value while it's present and input is blank
+func (c *Controller) GetUint8(key string, def ...uint8) (uint8, error) {
+	strv := c.Ctx.Input.Query(key)
+	if len(strv) == 0 && len(def) > 0 {
+		return def[0], nil
+	}
+	u64, err := strconv.ParseUint(strv, 10, 8)
+	return uint8(u64), err
+}
+
 // GetInt16 returns input as an int16 or the default value while it's present and input is blank
 func (c *Controller) GetInt16(key string, def ...int16) (int16, error) {
 	strv := c.Ctx.Input.Query(key)
@@ -407,6 +417,16 @@ func (c *Controller) GetInt16(key string, def ...int16) (int16, error) {
 	}
 	i64, err := strconv.ParseInt(strv, 10, 16)
 	return int16(i64), err
+}
+
+// GetUint16 returns input as an uint16 or the default value while it's present and input is blank
+func (c *Controller) GetUint16(key string, def ...uint16) (uint16, error) {
+	strv := c.Ctx.Input.Query(key)
+	if len(strv) == 0 && len(def) > 0 {
+		return def[0], nil
+	}
+	u64, err := strconv.ParseUint(strv, 10, 16)
+	return uint16(u64), err
 }
 
 // GetInt32 returns input as an int32 or the default value while it's present and input is blank
@@ -419,6 +439,16 @@ func (c *Controller) GetInt32(key string, def ...int32) (int32, error) {
 	return int32(i64), err
 }
 
+// GetUint32 returns input as an uint32 or the default value while it's present and input is blank
+func (c *Controller) GetUint32(key string, def ...uint32) (uint32, error) {
+	strv := c.Ctx.Input.Query(key)
+	if len(strv) == 0 && len(def) > 0 {
+		return def[0], nil
+	}
+	u64, err := strconv.ParseUint(strv, 10, 32)
+	return uint32(u64), err
+}
+
 // GetInt64 returns input value as int64 or the default value while it's present and input is blank.
 func (c *Controller) GetInt64(key string, def ...int64) (int64, error) {
 	strv := c.Ctx.Input.Query(key)
@@ -426,6 +456,15 @@ func (c *Controller) GetInt64(key string, def ...int64) (int64, error) {
 		return def[0], nil
 	}
 	return strconv.ParseInt(strv, 10, 64)
+}
+
+// GetUint64 returns input value as uint64 or the default value while it's present and input is blank.
+func (c *Controller) GetUint64(key string, def ...uint64) (uint64, error) {
+	strv := c.Ctx.Input.Query(key)
+	if len(strv) == 0 && len(def) > 0 {
+		return def[0], nil
+	}
+	return strconv.ParseUint(strv, 10, 64)
 }
 
 // GetBool returns input value as bool or the default value while it's present and input is blank.
@@ -453,7 +492,7 @@ func (c *Controller) GetFile(key string) (multipart.File, *multipart.FileHeader,
 }
 
 // GetFiles return multi-upload files
-// files, err:=c.Getfiles("myfiles")
+// files, err:=c.GetFiles("myfiles")
 //	if err != nil {
 //		http.Error(w, err.Error(), http.StatusNoContent)
 //		return

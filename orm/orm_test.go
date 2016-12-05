@@ -909,6 +909,16 @@ func TestSetCond(t *testing.T) {
 	num, err = qs.SetCond(cond2).Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 2))
+
+	cond3 := cond.AndNotCond(cond.And("status__in", 1))
+	num, err = qs.SetCond(cond3).Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 2))
+
+	cond4 := cond.And("user_name", "slene").OrNotCond(cond.And("user_name", "slene"))
+	num, err = qs.SetCond(cond4).Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 3))
 }
 
 func TestLimit(t *testing.T) {
