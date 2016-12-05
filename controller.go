@@ -492,7 +492,7 @@ func (c *Controller) GetFile(key string) (multipart.File, *multipart.FileHeader,
 }
 
 // GetFiles return multi-upload files
-// files, err:=c.Getfiles("myfiles")
+// files, err:=c.GetFiles("myfiles")
 //	if err != nil {
 //		http.Error(w, err.Error(), http.StatusNoContent)
 //		return
