@@ -96,6 +96,120 @@ func (d *dbBaseMysql) IndexExists(db dbQuerier, table string, name string) bool 
 	return cnt > 0
 }
 
+// InsertOrUpdate a row
+// If your primary key or unique column conflict will update
+// If no will insert
+// Add "`" for mysql sql building
+func (d *dbBaseMysql) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a *alias, args ...string) (int64, error) {
+	args0 := ""
+	iouStr := ""
+	argsMap := map[string]string{}
+	switch a.Driver {
+	case DRMySQL:
+		iouStr = "ON DUPLICATE KEY UPDATE"
+	case DRPostgres:
+		if len(args) == 0 {
+			return 0, fmt.Errorf("`%s` use InsertOrUpdate must have a conflict column", a.DriverName)
+		} else {
+			args0 = strings.ToLower(args[0])
+			iouStr = fmt.Sprintf("ON CONFLICT (%s) DO UPDATE SET", args0)
+		}
+	default:
+		return 0, fmt.Errorf("`%s` nonsupport InsertOrUpdate in beego", a.DriverName)
+	}
+
+	//Get on the key-value pairs
+	for _, v := range args {
+		kv := strings.Split(v, "=")
+		if len(kv) == 2 {
+			argsMap[strings.ToLower(kv[0])] = kv[1]
+		}
+	}
+
+	isMulti := false
+	names := make([]string, 0, len(mi.fields.dbcols)-1)
+	Q := d.ins.TableQuote()
+	values, _, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, &names, a.TZ)
+
+	if err != nil {
+		return 0, err
+// InsertOrUpdate a row
+// If your primary key or unique column conflict will update
+// If no will insert
+// Add "`" for mysql sql building
+func (d *dbBaseMysql) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a *alias, args ...string) (int64, error) {
+
+	iouStr := ""
+	argsMap := map[string]string{}
+
+	iouStr = "ON DUPLICATE KEY UPDATE"
+
+	//Get on the key-value pairs
+	for _, v := range args {
+		kv := strings.Split(v, "=")
+		if len(kv) == 2 {
+			argsMap[strings.ToLower(kv[0])] = kv[1]
+		}
+	}
+
+	isMulti := false
+	names := make([]string, 0, len(mi.fields.dbcols)-1)
+	Q := d.ins.TableQuote()
+	values, _, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, &names, a.TZ)
+
+	if err != nil {
+		return 0, err
+	}
+
+	marks := make([]string, len(names))
+	updateValues := make([]interface{}, 0)
+	updates := make([]string, len(names))
+
+	for i, v := range names {
+		marks[i] = "?"
+		valueStr := argsMap[strings.ToLower(v)]
+		if valueStr != "" {
+			updates[i] = "`" + v + "`" + "=" + valueStr
+		} else {
+			updates[i] = "`" + v + "`" + "=?"
+			updateValues = append(updateValues, values[i])
+		}
+	}
+
+	values = append(values, updateValues...)
+
+	sep := fmt.Sprintf("%s, %s", Q, Q)
+	qmarks := strings.Join(marks, ", ")
+	qupdates := strings.Join(updates, ", ")
+	columns := strings.Join(names, sep)
+
+	multi := len(values) / len(names)
+
+	if isMulti {
+		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
+	}
+	//conflitValue maybe is a int,can`t use fmt.Sprintf
+	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s) %s "+qupdates, Q, mi.table, Q, Q, columns, Q, qmarks, iouStr)
+
+	d.ins.ReplaceMarks(&query)
+
+	if isMulti || !d.ins.HasReturningID(mi, &query) {
+		res, err := q.Exec(query, values...)
+		if err == nil {
+			if isMulti {
+				return res.RowsAffected()
+			}
+			return res.LastInsertId()
+		}
+		return 0, err
+	}
+
+	row := q.QueryRow(query, values...)
+	var id int64
+	err = row.Scan(&id)
+	return id, err
+}
+
 // create new mysql dbBaser.
 func newdbBaseMysql() dbBaser {
 	b := new(dbBaseMysql)
