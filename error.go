@@ -252,6 +252,30 @@ func forbidden(rw http.ResponseWriter, r *http.Request) {
 	)
 }
 
+// show 422 missing xsrf token
+func missingxsrf(rw http.ResponseWriter, r *http.Request) {
+	responseError(rw, r,
+		422,
+		"<br>The page you have requested is forbidden."+
+			"<br>Perhaps you are here because:"+
+			"<br><br><ul>"+
+			"<br>'_xsrf' argument missing from POST"+
+			"</ul>",
+	)
+}
+
+// show 417 invalid xsrf token
+func invalidxsrf(rw http.ResponseWriter, r *http.Request) {
+	responseError(rw, r,
+		417,
+		"<br>The page you have requested is forbidden."+
+			"<br>Perhaps you are here because:"+
+			"<br><br><ul>"+
+			"<br>expected XSRF not found"+
+			"</ul>",
+	)
+}
+
 // show 404 not found error.
 func notFound(rw http.ResponseWriter, r *http.Request) {
 	responseError(rw, r,
