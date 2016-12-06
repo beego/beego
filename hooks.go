@@ -32,6 +32,8 @@ func registerDefaultErrorHandler() error {
 		"502": badGateway,
 		"503": serviceUnavailable,
 		"504": gatewayTimeout,
+		"'_xsrf' argument missing from POST": missingxsrf,
+		"XSRF cookie does not match POST argument": invalidxsrf,
 	}
 	for e, h := range m {
 		if _, ok := ErrorMaps[e]; !ok {
