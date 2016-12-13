@@ -65,7 +65,9 @@ func (srv *Server) ListenAndServe() (err error) {
 			log.Println(err)
 			return err
 		}
-		err = process.Kill()
+		//Do not use process.Kill() it will force the pprocess exit.
+		//which lead to all the post handler not work at all.
+		err = process.Signal(syscall.SIGINT)
 		if err != nil {
 			return err
 		}
@@ -120,7 +122,7 @@ func (srv *Server) ListenAndServeTLS(certFile, keyFile string) (err error) {
 			log.Println(err)
 			return err
 		}
-		err = process.Kill()
+		err = process.Signal(syscall.SIGINT)
 		if err != nil {
 			return err
 		}
