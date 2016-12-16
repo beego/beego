@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"runtime"
 	"strings"
 	"sync"
 	"syscall"
@@ -242,6 +243,7 @@ func (srv *Server) serverTimeout(d time.Duration) {
 			break
 		}
 		srv.wg.Done()
+		runtime.Gosched()
 	}
 }
 
