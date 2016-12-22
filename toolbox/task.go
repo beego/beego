@@ -91,6 +91,8 @@ type Tasker interface {
 	GetNext() time.Time
 	SetPrev(time.Time)
 	GetPrev() time.Time
+	IsRunning() bool
+	IsDelay() bool
 }
 
 // task error
@@ -109,16 +111,19 @@ type Task struct {
 	Next     time.Time
 	Errlist  []*taskerr // like errtime:errinfo
 	ErrLimit int        // max length for the errlist, 0 stand for no limit
+	Running bool
+	Delay	bool
 }
 
-// NewTask add new task with name, time and func
-func NewTask(tname string, spec string, f TaskFunc) *Task {
+// NewTask add new task with name, time , func, 
+func NewTask(tname string, spec string, f TaskFunc, delayType bool) *Task {
 
 	task := &Task{
 		Taskname: tname,
 		DoFunc:   f,
 		ErrLimit: 100,
 		SpecStr:  spec,
+		Delay:    delayType,
 	}
 	task.SetCron(spec)
 	return task
@@ -140,6 +145,8 @@ func (t *Task) GetStatus() string {
 
 // Run run all tasks
 func (t *Task) Run() error {
+	t.Running = true
+	defer func() {t.Running = false}()
 	err := t.DoFunc()
 	if err != nil {
 		if t.ErrLimit > 0 && t.ErrLimit > len(t.Errlist) {
@@ -167,6 +174,16 @@ func (t *Task) SetPrev(now time.Time) {
 // GetPrev get prev time of this task
 func (t *Task) GetPrev() time.Time {
 	return t.Prev
+}
+
+// IsRunning get the status of current task, true means running
+func (t *Task) IsRunning() bool {
+	return t.Running
+}
+
+// IsDelay get the delayType of current task, true means delay excuting
+func (t *Task) IsDelay() bool {
+	return t.Delay
 }
 
 // six columns mean：
@@ -420,6 +437,12 @@ func run() {
 			for _, e := range sortList.Vals {
 				if e.GetNext() != effective {
 					break
+				}
+				// if the task it's running and it's delay type equals true, then ignore this calling
+				if e.IsRunning() && e.IsDelay() {
+					e.SetPrev(e.GetNext())
+					e.SetNext(effective)
+					continue
 				}
 				go e.Run()
 				e.SetPrev(e.GetNext())
