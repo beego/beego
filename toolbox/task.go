@@ -438,7 +438,7 @@ func run() {
 				if e.GetNext() != effective {
 					break
 				}
-				// if the task it's running and it's delay type equals true, then ignore this calling
+				// if the task is running and its delay type equals true, then ignore this calling
 				if e.IsRunning() && e.IsDelay() {
 					e.SetPrev(e.GetNext())
 					e.SetNext(effective)
