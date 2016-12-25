@@ -18,26 +18,6 @@ import (
 	"testing"
 )
 
-// camel string, xx_yy to XxYy
-func camelString(s string) string {
-	data := make([]byte, 0, len(s))
-	flag, num := true, len(s)-1
-	for i := 0; i <= num; i++ {
-		d := s[i]
-		if d == '_' {
-			flag = true
-			continue
-		} else if flag == true {
-			if d >= 'a' && d <= 'z' {
-				d = d - 32
-			}
-			flag = false
-		}
-		data = append(data, d)
-	}
-	return string(data[:])
-}
-
 func TestCamelString(t *testing.T) {
 	snake := []string{"pic_url", "hello_world_", "hello__World", "_HelLO_Word", "pic_url_1", "pic_url__1"}
 	camel := []string{"PicUrl", "HelloWorld", "HelloWorld", "HelLOWord", "PicUrl1", "PicUrl1"}
