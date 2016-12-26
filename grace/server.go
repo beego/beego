@@ -173,7 +173,8 @@ func (srv *Server) handleSignals() {
 	pid := syscall.Getpid()
 	for {
 		sig = <-srv.sigChan
-		srv.signalHooks(PreSignal, sig)
+		srv.wg.Add(1)
+		go srv.signalHooks(PreSignal, sig)
 		switch sig {
 		case syscall.SIGHUP:
 			log.Println(pid, "Received SIGHUP. forking.")
@@ -190,11 +191,15 @@ func (srv *Server) handleSignals() {
 		default:
 			log.Printf("Received %v: nothing i care about...\n", sig)
 		}
-		srv.signalHooks(PostSignal, sig)
+		go srv.signalHooks(PostSignal, sig)
+		srv.wg.Done()
 	}
 }
 
 func (srv *Server) signalHooks(ppFlag int, sig os.Signal) {
+	srv.wg.Add(1)
+	defer srv.wg.Done()
+
 	if _, notSet := srv.SignalHooks[ppFlag][sig]; !notSet {
 		return
 	}
