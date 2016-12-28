@@ -84,3 +84,10 @@ func (m *BeeMap) Items() map[interface{}]interface{} {
 	}
 	return r
 }
+
+// Count returns the number of items within the map.
+func (m *BeeMap) Count() int {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
+	return len(m.bm)
+}
