@@ -61,10 +61,8 @@ func (m *BeeMap) Set(k interface{}, v interface{}) bool {
 func (m *BeeMap) Check(k interface{}) bool {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
-	if _, ok := m.bm[k]; !ok {
-		return false
-	}
-	return true
+	_, ok := m.bm[k]
+	return ok
 }
 
 // Delete the given key and value.
