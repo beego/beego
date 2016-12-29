@@ -117,7 +117,7 @@ func bootStrap() {
 				name := getFullName(elm)
 				mii, ok := modelCache.getByFullName(name)
 				if !ok || mii.pkg != elm.PkgPath() {
-					err = fmt.Errorf("can not found rel in field `%s`, `%s` may be miss register", fi.fullName, elm.String())
+					err = fmt.Errorf("can not find rel in field `%s`, `%s` may be miss register", fi.fullName, elm.String())
 					goto end
 				}
 				fi.relModelInfo = mii
