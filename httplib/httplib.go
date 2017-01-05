@@ -480,7 +480,7 @@ func (b *BeegoHTTPRequest) DoRequest() (resp *http.Response, err error) {
 	// retries default value is 0, it will run once.
 	// retries equal to -1, it will run forever until success
 	// retries is setted, it will retries fixed times.
-	for i := 0; i == 0 || b.setting.Retries == -1 || i < b.setting.Retries; i++ {
+	for i := 0; b.setting.Retries == -1 || i <= b.setting.Retries; i++ {
 		resp, err = client.Do(b.req)
 		if err == nil {
 			break
