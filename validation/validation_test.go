@@ -35,6 +35,12 @@ func TestRequired(t *testing.T) {
 	if valid.Required("", "string").Ok {
 		t.Error("\"'\" string should be false")
 	}
+	if valid.Required(" ", "string").Ok {
+		t.Error("\" \" string should be false") // For #2361
+	}
+	if valid.Required("\n", "string").Ok {
+		t.Error("new line string should be false") // For #2361
+	}
 	if !valid.Required("astaxie", "string").Ok {
 		t.Error("string should be true")
 	}

@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"reflect"
 	"regexp"
+	"strings"
 	"time"
 	"unicode/utf8"
 )
@@ -98,7 +99,7 @@ func (r Required) IsSatisfied(obj interface{}) bool {
 	}
 
 	if str, ok := obj.(string); ok {
-		return len(str) > 0
+		return len(strings.TrimSpace(str)) > 0
 	}
 	if _, ok := obj.(bool); ok {
 		return true
