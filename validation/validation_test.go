@@ -348,6 +348,20 @@ func TestValid(t *testing.T) {
 	if valid.Errors[0].Key != "Age.Range" {
 		t.Errorf("Message key should be `Name.Match` but got %s", valid.Errors[0].Key)
 	}
+
+	// Test if spaces was trimmed
+	u = user{Name: "   \ntest@/test/;com ", Age: 40}
+	valid.Clear()
+	b, err = valid.Valid(&u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !b {
+		t.Error("validation should be passed")
+	}
+	if u.Name != "test@/test/;com" {
+		t.Errorf("validation should have trimmed `Name`, but returned %s", u.Name)
+	}
 }
 
 func TestRecursiveValid(t *testing.T) {

@@ -321,6 +321,15 @@ func (v *Validation) Valid(obj interface{}) (b bool, err error) {
 
 	for i := 0; i < objT.NumField(); i++ {
 		var vfs []ValidFunc
+		field := objV.Field(i)
+		// Trim spaces from string fields
+		if field.Kind() == reflect.String && field.CanSet() {
+			str := field.String()
+			trim := strings.TrimSpace(str)
+			if str != trim {
+				field.SetString(trim)
+			}
+		}
 		if vfs, err = getValidFuncs(objT.Field(i)); err != nil {
 			return
 		}
