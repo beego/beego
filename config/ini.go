@@ -184,6 +184,8 @@ func (ini *IniConfig) ParseData(data []byte) (Configer, error) {
 	if err := ioutil.WriteFile(tmpName, data, 0655); err != nil {
 		return nil, err
 	}
+	defer os.Remove(tmpName)
+
 	return ini.Parse(tmpName)
 }
 

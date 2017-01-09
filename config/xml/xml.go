@@ -81,6 +81,8 @@ func (xc *Config) ParseData(data []byte) (config.Configer, error) {
 	if err := ioutil.WriteFile(tmpName, data, 0655); err != nil {
 		return nil, err
 	}
+	defer os.Remove(tmpName)
+
 	return xc.Parse(tmpName)
 }
 
