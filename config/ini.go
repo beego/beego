@@ -18,16 +18,13 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
-	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 )
 
 var (
@@ -52,24 +49,26 @@ func (ini *IniConfig) Parse(name string) (Configer, error) {
 }
 
 func (ini *IniConfig) parseFile(name string) (*IniConfigContainer, error) {
-	file, err := os.Open(name)
+	data, err := ioutil.ReadFile(name)
 	if err != nil {
 		return nil, err
 	}
 
+	return ini.parseData(data)
+}
+
+func (ini *IniConfig) parseData(data []byte) (*IniConfigContainer, error) {
 	cfg := &IniConfigContainer{
-		file.Name(),
-		make(map[string]map[string]string),
-		make(map[string]string),
-		make(map[string]string),
-		sync.RWMutex{},
+		data:           make(map[string]map[string]string),
+		sectionComment: make(map[string]string),
+		keyComment:     make(map[string]string),
+		RWMutex:        sync.RWMutex{},
 	}
 	cfg.Lock()
 	defer cfg.Unlock()
-	defer file.Close()
 
 	var comment bytes.Buffer
-	buf := bufio.NewReader(file)
+	buf := bufio.NewReader(bytes.NewBuffer(data))
 	// check the BOM
 	head, err := buf.Peek(3)
 	if err == nil && head[0] == 239 && head[1] == 187 && head[2] == 191 {
@@ -130,16 +129,24 @@ func (ini *IniConfig) parseFile(name string) (*IniConfigContainer, error) {
 
 		// handle include "other.conf"
 		if len(keyValue) == 1 && strings.HasPrefix(key, "include") {
+
 			includefiles := strings.Fields(key)
 			if includefiles[0] == "include" && len(includefiles) == 2 {
+
 				otherfile := strings.Trim(includefiles[1], "\"")
 				if !filepath.IsAbs(otherfile) {
-					otherfile = filepath.Join(filepath.Dir(name), otherfile)
+					dir, err := os.Getwd()
+					if err != nil {
+						return nil, err
+					}
+					otherfile = filepath.Join(dir, otherfile)
 				}
+
 				i, err := ini.parseFile(otherfile)
 				if err != nil {
 					return nil, err
 				}
+
 				for sec, dt := range i.data {
 					if _, ok := cfg.data[sec]; !ok {
 						cfg.data[sec] = make(map[string]string)
@@ -148,12 +155,15 @@ func (ini *IniConfig) parseFile(name string) (*IniConfigContainer, error) {
 						cfg.data[sec][k] = v
 					}
 				}
+
 				for sec, comm := range i.sectionComment {
 					cfg.sectionComment[sec] = comm
 				}
+
 				for k, comm := range i.keyComment {
 					cfg.keyComment[k] = comm
 				}
+
 				continue
 			}
 		}
@@ -178,19 +188,12 @@ func (ini *IniConfig) parseFile(name string) (*IniConfigContainer, error) {
 
 // ParseData parse ini the data
 func (ini *IniConfig) ParseData(data []byte) (Configer, error) {
-	// Save memory data to temporary file
-	tmpName := path.Join(os.TempDir(), "beego", fmt.Sprintf("%d", time.Now().Nanosecond()))
-	os.MkdirAll(path.Dir(tmpName), os.ModePerm)
-	if err := ioutil.WriteFile(tmpName, data, 0655); err != nil {
-		return nil, err
-	}
-	return ini.Parse(tmpName)
+	return ini.parseData(data)
 }
 
 // IniConfigContainer A Config represents the ini configuration.
 // When set and get value, support key as section:name type.
 type IniConfigContainer struct {
-	filename       string
 	data           map[string]map[string]string // section=> key:val
 	sectionComment map[string]string            // section : comment
 	keyComment     map[string]string            // id: []{comment, key...}; id 1 is for main comment.
