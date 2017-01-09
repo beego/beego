@@ -69,6 +69,8 @@ func (yaml *Config) ParseData(data []byte) (config.Configer, error) {
 	if err := ioutil.WriteFile(tmpName, data, 0655); err != nil {
 		return nil, err
 	}
+	defer os.Remove(tmpName)
+
 	return yaml.Parse(tmpName)
 }
 
