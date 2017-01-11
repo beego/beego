@@ -54,10 +54,10 @@ func (ini *IniConfig) parseFile(name string) (*IniConfigContainer, error) {
 		return nil, err
 	}
 
-	return ini.parseData(data)
+	return ini.parseData(filepath.Dir(name), data)
 }
 
-func (ini *IniConfig) parseData(data []byte) (*IniConfigContainer, error) {
+func (ini *IniConfig) parseData(dir string, data []byte) (*IniConfigContainer, error) {
 	cfg := &IniConfigContainer{
 		data:           make(map[string]map[string]string),
 		sectionComment: make(map[string]string),
@@ -135,10 +135,6 @@ func (ini *IniConfig) parseData(data []byte) (*IniConfigContainer, error) {
 
 				otherfile := strings.Trim(includefiles[1], "\"")
 				if !filepath.IsAbs(otherfile) {
-					dir, err := os.Getwd()
-					if err != nil {
-						return nil, err
-					}
 					otherfile = filepath.Join(dir, otherfile)
 				}
 
@@ -187,8 +183,13 @@ func (ini *IniConfig) parseData(data []byte) (*IniConfigContainer, error) {
 }
 
 // ParseData parse ini the data
+// When include other.conf,other.conf is either absolute directory
+// or under beego in default temporary directory(/tmp/beego).
 func (ini *IniConfig) ParseData(data []byte) (Configer, error) {
-	return ini.parseData(data)
+	dir := filepath.Join(os.TempDir(), "beego")
+	os.MkdirAll(dir, os.ModePerm)
+
+	return ini.parseData(dir, data)
 }
 
 // IniConfigContainer A Config represents the ini configuration.
