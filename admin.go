@@ -22,6 +22,7 @@ import (
 	"os"
 	"text/template"
 	"time"
+	"github.com/astaxie/beego/context"
 
 	"reflect"
 
@@ -51,6 +52,7 @@ var beeAdminApp *adminApp
 // 	}
 // 	beego.FilterMonitorFunc = MyFilterMonitor.
 var FilterMonitorFunc func(string, string, time.Duration) bool
+var LogFunc func(*context.Context, time.Duration)
 
 func init() {
 	beeAdminApp = &adminApp{
@@ -63,6 +65,7 @@ func init() {
 	beeAdminApp.Route("/task", taskStatus)
 	beeAdminApp.Route("/listconf", listConf)
 	FilterMonitorFunc = func(string, string, time.Duration) bool { return true }
+	LogFunc = func(*context.Context, time.Duration) {}
 }
 
 // AdminIndex is the default http.Handler for admin module.

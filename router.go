@@ -877,6 +877,7 @@ Admin:
 	if context.Output.Status != 0 {
 		context.ResponseWriter.WriteHeader(context.Output.Status)
 	}
+	LogFunc(context, timeend)
 }
 
 // FindRouter Find Router info for URL
