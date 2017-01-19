@@ -30,6 +30,14 @@ import (
 	"github.com/astaxie/beego/utils"
 )
 
+//used to get the template data
+type Asset func(path string) ([]byte, error)
+
+//use the local file util to read the template
+func defaultAssetFunc(path string) ([]byte, error) {
+	return ioutil.ReadFile(path)
+}
+
 var (
 	beegoTplFuncMap = make(template.FuncMap)
 	// beeTemplates caching map and supported template file extensions.
@@ -39,7 +47,13 @@ var (
 	beeTemplateExt = []string{"tpl", "html"}
 	// beeTemplatePreprocessors stores associations of extension -> preprocessor handler
 	beeTemplateEngines = map[string]templatePreProcessor{}
+	// beego default asset func
+	beeTemplateAssetFunc = defaultAssetFunc
 )
+
+func SetTmplateAssetFunc(fnt Asset) {
+	beeTemplateAssetFunc = fnt
+}
 
 // ExecuteTemplate applies the template with name  to the specified data object,
 // writing the output to wr.
@@ -195,7 +209,7 @@ func BuildTemplate(dir string, files ...string) error {
 	return nil
 }
 
-func getTplDeep(root, file, parent string, t *template.Template) (*template.Template, [][]string, error) {
+func getTplDeep(root, file, parent string, t *template.Template, assetFunc Asset) (*template.Template, [][]string, error) {
 	var fileAbsPath string
 	if filepath.HasPrefix(file, "../") {
 		fileAbsPath = filepath.Join(root, filepath.Dir(parent), file)
@@ -205,7 +219,7 @@ func getTplDeep(root, file, parent string, t *template.Template) (*template.Temp
 	if e := utils.FileExists(fileAbsPath); !e {
 		panic("can't find template file:" + file)
 	}
-	data, err := ioutil.ReadFile(fileAbsPath)
+	data, err := assetFunc(fileAbsPath)
 	if err != nil {
 		return nil, [][]string{}, err
 	}
@@ -224,7 +238,7 @@ func getTplDeep(root, file, parent string, t *template.Template) (*template.Temp
 			if !HasTemplateExt(m[1]) {
 				continue
 			}
-			t, _, err = getTplDeep(root, m[1], file, t)
+			t, _, err = getTplDeep(root, m[1], file, t, beeTemplateAssetFunc)
 			if err != nil {
 				return nil, [][]string{}, err
 			}
@@ -236,7 +250,7 @@ func getTplDeep(root, file, parent string, t *template.Template) (*template.Temp
 func getTemplate(root, file string, others ...string) (t *template.Template, err error) {
 	t = template.New(file).Delims(BConfig.WebConfig.TemplateLeft, BConfig.WebConfig.TemplateRight).Funcs(beegoTplFuncMap)
 	var subMods [][]string
-	t, subMods, err = getTplDeep(root, file, "", t)
+	t, subMods, err = getTplDeep(root, file, "", t, beeTemplateAssetFunc)
 	if err != nil {
 		return nil, err
 	}
@@ -260,7 +274,7 @@ func _getTemplate(t0 *template.Template, root string, subMods [][]string, others
 			for _, otherFile := range others {
 				if otherFile == m[1] {
 					var subMods1 [][]string
-					t, subMods1, err = getTplDeep(root, otherFile, "", t)
+					t, subMods1, err = getTplDeep(root, otherFile, "", t, beeTemplateAssetFunc)
 					if err != nil {
 						logs.Trace("template parse file err:", err)
 					} else if subMods1 != nil && len(subMods1) > 0 {
@@ -281,7 +295,7 @@ func _getTemplate(t0 *template.Template, root string, subMods [][]string, others
 				for _, sub := range allSub {
 					if len(sub) == 2 && sub[1] == m[1] {
 						var subMods1 [][]string
-						t, subMods1, err = getTplDeep(root, otherFile, "", t)
+						t, subMods1, err = getTplDeep(root, otherFile, "", t, beeTemplateAssetFunc)
 						if err != nil {
 							logs.Trace("template parse file err:", err)
 						} else if subMods1 != nil && len(subMods1) > 0 {
