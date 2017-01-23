@@ -153,6 +153,11 @@ func (o querySet) SetCond(cond *Condition) QuerySeter {
 	return &o
 }
 
+// get condition from QuerySeter
+func (o querySet) GetCond() *Condition {
+	return o.cond
+}
+
 // return QuerySeter execution result number
 func (o *querySet) Count() (int64, error) {
 	return o.orm.alias.DbBaser.Count(o.orm.db, o, o.mi, o.cond, o.orm.alias.TZ)
