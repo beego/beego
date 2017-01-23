@@ -48,6 +48,7 @@ var (
 		"lte":         true,
 		"eq":          true,
 		"nq":          true,
+		"ne":	       true,
 		"startswith":  true,
 		"endswith":    true,
 		"istartswith": true,
