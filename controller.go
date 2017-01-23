@@ -185,7 +185,11 @@ func (c *Controller) Render() error {
 	if err != nil {
 		return err
 	}
-	c.Ctx.Output.Header("Content-Type", "text/html; charset=utf-8")
+
+	if c.Ctx.ResponseWriter.Header().Get("Content-Type") == "" {
+		c.Ctx.Output.Header("Content-Type", "text/html; charset=utf-8")
+	}
+
 	return c.Ctx.Output.Body(rb)
 }
 
