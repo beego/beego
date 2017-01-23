@@ -224,7 +224,7 @@ func getTplDeep(root, file, parent string, t *template.Template) (*template.Temp
 			if !HasTemplateExt(m[1]) {
 				continue
 			}
-			t, _, err = getTplDeep(root, m[1], file, t)
+			_, _, err = getTplDeep(root, m[1], file, t)
 			if err != nil {
 				return nil, [][]string{}, err
 			}
