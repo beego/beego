@@ -67,9 +67,12 @@ func (output *BeegoOutput) Body(content []byte) error {
 	}
 	if b, n, _ := WriteBody(encoding, buf, content); b {
 		output.Header("Content-Encoding", n)
+		output.Header("Content-Length", strconv.Itoa(buf.Len()))
 	} else {
 		output.Header("Content-Length", strconv.Itoa(len(content)))
 	}
+
+	
 	// Write status code if it has been set manually
 	// Set it to 0 afterwards to prevent "multiple response.WriteHeader calls"
 	if output.Status != 0 {
