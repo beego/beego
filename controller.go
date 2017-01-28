@@ -69,6 +69,7 @@ type Controller struct {
 
 	// template data
 	TplName        string
+	ViewsPath      string
 	Layout         string
 	LayoutSections map[string]string // the key is the section name and the value is the template name
 	TplPrefix      string
@@ -235,7 +236,7 @@ func (c *Controller) renderTemplate() (bytes.Buffer, error) {
 	if c.TplPrefix != "" {
 		c.TplName = c.TplPrefix + c.TplName
 	}
-	if BConfig.RunMode == DEV {
+	if BConfig.RunMode == DEV || c.ViewsPath != "" {
 		buildFiles := []string{c.TplName}
 		if c.Layout != "" {
 			buildFiles = append(buildFiles, c.Layout)
@@ -248,7 +249,11 @@ func (c *Controller) renderTemplate() (bytes.Buffer, error) {
 				}
 			}
 		}
-		BuildTemplate(BConfig.WebConfig.ViewsPath, buildFiles...)
+		viewsPath := BConfig.WebConfig.ViewsPath
+		if c.ViewsPath != "" {
+			viewsPath = c.ViewsPath
+		}
+		BuildTemplate(viewsPath, buildFiles...)
 	}
 	return buf, ExecuteTemplate(&buf, c.TplName, c.Data)
 }
