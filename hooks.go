@@ -72,7 +72,7 @@ func registerSession() error {
 }
 
 func registerTemplate() error {
-	if err := BuildTemplate(BConfig.WebConfig.ViewsPath); err != nil {
+	if err := AddViewPath(BConfig.WebConfig.ViewsPath); err != nil {
 		if BConfig.RunMode == DEV {
 			logs.Warn(err)
 		}
