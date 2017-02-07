@@ -28,7 +28,6 @@ import (
 	"strings"
 
 	"github.com/astaxie/beego/context"
-	"github.com/astaxie/beego/session"
 )
 
 //commonly used mime-types
@@ -79,9 +78,6 @@ type Controller struct {
 	_xsrfToken string
 	XSRFExpire int
 	EnableXSRF bool
-
-	// session
-	CruSession session.Store
 }
 
 // ControllerInterface is an interface to uniform all controller handler.
@@ -546,46 +542,28 @@ func (c *Controller) SaveToFile(fromfile, tofile string) error {
 	return nil
 }
 
-// StartSession starts session and load old session data info this controller.
-func (c *Controller) StartSession() session.Store {
-	if c.CruSession == nil {
-		c.CruSession = c.Ctx.Input.CruSession
-	}
-	return c.CruSession
-}
-
 // SetSession puts value into session.
 func (c *Controller) SetSession(name interface{}, value interface{}) {
-	if c.CruSession == nil {
-		c.StartSession()
-	}
-	c.CruSession.Set(name, value)
+	c.Ctx.Input.CruSession.Set(name, value)
 }
 
 // GetSession gets value from session.
 func (c *Controller) GetSession(name interface{}) interface{} {
-	if c.CruSession == nil {
-		c.StartSession()
-	}
-	return c.CruSession.Get(name)
+	return c.Ctx.Input.CruSession.Get(name)
 }
 
 // DelSession removes value from session.
 func (c *Controller) DelSession(name interface{}) {
-	if c.CruSession == nil {
-		c.StartSession()
-	}
-	c.CruSession.Delete(name)
+	c.Ctx.Input.CruSession.Delete(name)
 }
 
 // SessionRegenerateID regenerates session id for this session.
 // the session data have no changes.
 func (c *Controller) SessionRegenerateID() {
-	if c.CruSession != nil {
-		c.CruSession.SessionRelease(c.Ctx.ResponseWriter)
+	if c.Ctx.Input.CruSession != nil {
+		c.Ctx.Input.CruSession.SessionRelease(c.Ctx.ResponseWriter)
 	}
-	c.CruSession = GlobalSessions.SessionRegenerateID(c.Ctx.ResponseWriter, c.Ctx.Request)
-	c.Ctx.Input.CruSession = c.CruSession
+	c.Ctx.Input.CruSession = GlobalSessions.SessionRegenerateID(c.Ctx.ResponseWriter, c.Ctx.Request)
 }
 
 // DestroySession cleans session data and session cookie.

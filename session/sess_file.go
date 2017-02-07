@@ -33,9 +33,11 @@ var (
 
 // FileSessionStore File session store
 type FileSessionStore struct {
-	sid    string
-	lock   sync.RWMutex
-	values map[interface{}]interface{}
+	sid      string
+	lock     sync.RWMutex
+	values   map[interface{}]interface{}
+	count    int64
+	provider *FileProvider
 }
 
 // Set value to file session
@@ -79,6 +81,12 @@ func (fs *FileSessionStore) SessionID() string {
 
 // SessionRelease Write file session to local file with Gob string
 func (fs *FileSessionStore) SessionRelease(w http.ResponseWriter) {
+	fs.lock.Lock()
+	defer fs.lock.Unlock()
+	fs.count--
+	if fs.count == 0 {
+		delete(fs.provider.storemap, fs.sid)
+	}
 	b, err := EncodeGob(fs.values)
 	if err != nil {
 		SLogger.Println(err)
@@ -105,6 +113,7 @@ type FileProvider struct {
 	lock        sync.RWMutex
 	maxlifetime int64
 	savePath    string
+	storemap    map[string]*FileSessionStore
 }
 
 // SessionInit Init file session provider.
@@ -112,6 +121,7 @@ type FileProvider struct {
 func (fp *FileProvider) SessionInit(maxlifetime int64, savePath string) error {
 	fp.maxlifetime = maxlifetime
 	fp.savePath = savePath
+	fp.storemap = make(map[string]*FileSessionStore)
 	return nil
 }
 
@@ -121,6 +131,12 @@ func (fp *FileProvider) SessionInit(maxlifetime int64, savePath string) error {
 func (fp *FileProvider) SessionRead(sid string) (Store, error) {
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()
+	if ss, ok := fp.storemap[sid]; ok {
+		ss.lock.Lock()
+		ss.count++
+		ss.lock.Unlock()
+		return ss, nil
+	}
 
 	err := os.MkdirAll(path.Join(fp.savePath, string(sid[0]), string(sid[1])), 0777)
 	if err != nil {
@@ -150,7 +166,8 @@ func (fp *FileProvider) SessionRead(sid string) (Store, error) {
 		}
 	}
 	f.Close()
-	ss := &FileSessionStore{sid: sid, values: kv}
+	ss := &FileSessionStore{sid: sid, values: kv, count: 1, provider: fp}
+	fp.storemap[sid] = ss
 	return ss, nil
 }
 
@@ -246,7 +263,8 @@ func (fp *FileProvider) SessionRegenerate(oldsid, sid string) (Store, error) {
 			return nil, err
 		}
 	}
-	ss := &FileSessionStore{sid: sid, values: kv}
+	ss := &FileSessionStore{sid: sid, values: kv, count: 1, provider: fp}
+	fp.storemap[sid] = ss
 	return ss, nil
 }
 
