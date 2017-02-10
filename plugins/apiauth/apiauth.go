@@ -56,6 +56,7 @@
 package apiauth
 
 import (
+	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
@@ -128,53 +129,32 @@ func APISecretAuth(f AppIDToAppSecret, timeout int) beego.FilterFunc {
 
 // Signature used to generate signature with the appsecret/method/params/RequestURI
 func Signature(appsecret, method string, params url.Values, RequestURL string) (result string) {
-	var query string
+	var b bytes.Buffer
+	keys := make([]string, len(params))
 	pa := make(map[string]string)
 	for k, v := range params {
 		pa[k] = v[0]
+		keys = append(keys, k)
 	}
-	vs := mapSorter(pa)
-	vs.Sort()
-	for i := 0; i < vs.Len(); i++ {
-		if vs.Keys[i] == "signature" {
+
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		if key == "signature" {
 			continue
 		}
-		if vs.Keys[i] != "" && vs.Vals[i] != "" {
-			query = fmt.Sprintf("%v%v%v", query, vs.Keys[i], vs.Vals[i])
+
+		val := pa[key]
+		if key != "" && val != "" {
+			b.WriteString(key)
+			b.WriteString(val)
 		}
 	}
-	stringToSign := fmt.Sprintf("%v\n%v\n%v\n", method, query, RequestURL)
+
+	stringToSign := fmt.Sprintf("%v\n%v\n%v\n", method, b.String(), RequestURL)
 
 	sha256 := sha256.New
 	hash := hmac.New(sha256, []byte(appsecret))
 	hash.Write([]byte(stringToSign))
 	return base64.StdEncoding.EncodeToString(hash.Sum(nil))
-}
-
-type valSorter struct {
-	Keys []string
-	Vals []string
-}
-
-func mapSorter(m map[string]string) *valSorter {
-	vs := &valSorter{
-		Keys: make([]string, 0, len(m)),
-		Vals: make([]string, 0, len(m)),
-	}
-	for k, v := range m {
-		vs.Keys = append(vs.Keys, k)
-		vs.Vals = append(vs.Vals, v)
-	}
-	return vs
-}
-
-func (vs *valSorter) Sort() {
-	sort.Sort(vs)
-}
-
-func (vs *valSorter) Len() int           { return len(vs.Keys) }
-func (vs *valSorter) Less(i, j int) bool { return vs.Keys[i] < vs.Keys[j] }
-func (vs *valSorter) Swap(i, j int) {
-	vs.Vals[i], vs.Vals[j] = vs.Vals[j], vs.Vals[i]
-	vs.Keys[i], vs.Keys[j] = vs.Keys[j], vs.Keys[i]
 }
