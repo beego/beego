@@ -51,15 +51,22 @@ const (
 var (
 	// HTTPMETHOD list the supported http methods.
 	HTTPMETHOD = map[string]string{
-		"GET":     "GET",
-		"POST":    "POST",
-		"PUT":     "PUT",
-		"DELETE":  "DELETE",
-		"PATCH":   "PATCH",
-		"OPTIONS": "OPTIONS",
-		"HEAD":    "HEAD",
-		"TRACE":   "TRACE",
-		"CONNECT": "CONNECT",
+		"GET":       "GET",
+		"POST":      "POST",
+		"PUT":       "PUT",
+		"DELETE":    "DELETE",
+		"PATCH":     "PATCH",
+		"OPTIONS":   "OPTIONS",
+		"HEAD":      "HEAD",
+		"TRACE":     "TRACE",
+		"CONNECT":   "CONNECT",
+		"MKCOL":     "MKCOL",
+		"COPY":      "COPY",
+		"MOVE":      "MOVE",
+		"PROPFIND":  "PROPFIND",
+		"PROPPATCH": "PROPPATCH",
+		"LOCK":      "LOCK",
+		"UNLOCK":    "UNLOCK",
 	}
 	// these beego.Controller's methods shouldn't reflect to AutoRouter
 	exceptMethod = []string{"Init", "Prepare", "Finish", "Render", "RenderString",
