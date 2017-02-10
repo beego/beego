@@ -41,6 +41,7 @@ type Config struct {
 	EnableGzip          bool
 	MaxMemory           int64
 	EnableErrorsShow    bool
+	EnableErrorsRender  bool
 	Listen              Listen
 	WebConfig           WebConfig
 	Log                 LogConfig
@@ -171,7 +172,7 @@ func recoverPanic(ctx *context.Context) {
 			logs.Critical(fmt.Sprintf("%s:%d", file, line))
 			stack = stack + fmt.Sprintln(fmt.Sprintf("%s:%d", file, line))
 		}
-		if BConfig.RunMode == DEV {
+		if BConfig.RunMode == DEV && BConfig.EnableErrorsRender {
 			showErr(err, ctx, stack)
 		}
 	}
@@ -189,6 +190,7 @@ func newBConfig() *Config {
 		EnableGzip:          false,
 		MaxMemory:           1 << 26, //64MB
 		EnableErrorsShow:    true,
+		EnableErrorsRender:  true,
 		Listen: Listen{
 			Graceful:      false,
 			ServerTimeOut: 0,
