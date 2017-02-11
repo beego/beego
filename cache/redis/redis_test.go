@@ -99,6 +99,26 @@ func TestRedisCache(t *testing.T) {
 		t.Error("GetMulti ERROR")
 	}
 
+	genfunc := func() interface{} {
+		return "payload"
+	}
+	key := "key1"
+	payload := bm.Fetch(key, timeoutDuration, genfunc)
+	if value, _ := redis.String(payload, nil); value != "payload" {
+		t.Error("fetch error")
+	}
+	if v, _ := redis.String(bm.Get(key), err); v != "payload" {
+		t.Error("get err")
+	}
+	time.Sleep(11 * time.Second)
+	if v, _ := redis.String(bm.Get(key), err); v != "" {
+		t.Error("get err")
+	}
+	payload = bm.Fetch(key, timeoutDuration, genfunc)
+	if value, _ := redis.String(payload, nil); value != "payload" {
+		t.Error("fetch error")
+	}
+
 	// test clear all
 	if err = bm.ClearAll(); err != nil {
 		t.Error("clear all err")

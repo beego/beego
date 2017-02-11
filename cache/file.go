@@ -130,6 +130,17 @@ func (fc *FileCache) Get(key string) interface{} {
 	return to.Data
 }
 
+// Fetch value from file cache.
+// if non-exist or expired, generate new and return this.
+func (fc *FileCache) Fetch(key string, timeout time.Duration, genFunc func() interface{}) interface{} {
+	value := fc.Get(key)
+	if value == "" || value == nil {
+		fc.Put(key, genFunc(), timeout)
+		return fc.Get(key)
+	}
+	return value
+}
+
 // GetMulti gets values from file cache.
 // if non-exist or expired, return empty string.
 func (fc *FileCache) GetMulti(keys []string) []interface{} {

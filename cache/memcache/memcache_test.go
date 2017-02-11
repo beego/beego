@@ -101,6 +101,26 @@ func TestMemcacheCache(t *testing.T) {
 		t.Error("GetMulti ERROR")
 	}
 
+	genfunc := func() interface{} {
+		return "payload"
+	}
+	key := "key1"
+	payload := bm.Fetch(key, timeoutDuration, genfunc)
+	if string(payload.([]byte)) != "payload" {
+		t.Error("fetch error")
+	}
+	if string(bm.Get(key).([]byte)) != "payload" {
+		t.Error("get err")
+	}
+	time.Sleep(11 * time.Second)
+	if bm.Get(key) != nil {
+		t.Error("get err")
+	}
+	payload = bm.Fetch(key, timeoutDuration, genfunc)
+	if string(bm.Get(key).([]byte)) != "payload" {
+		t.Error("fetch error")
+	}
+
 	// test clear all
 	if err = bm.ClearAll(); err != nil {
 		t.Error("clear all err")

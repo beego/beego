@@ -94,6 +94,26 @@ func TestSsdbcacheCache(t *testing.T) {
 		t.Error("getmulti error")
 	}
 
+	genfunc := func() interface{} {
+		return "payload"
+	}
+	key := "key1"
+	payload := ssdb.Fetch(key, timeoutDuration, genfunc)
+	if payload.(string) != "payload" {
+		t.Error("fetch error")
+	}
+	if ssdb.Get(key).(string) != "payload" {
+		t.Error("get err")
+	}
+	time.Sleep(11 * time.Second)
+	if ssdb.Get(key) != nil {
+		t.Error("get err")
+	}
+	payload = ssdb.Fetch(key, timeoutDuration, genfunc)
+	if ssdb.Get(key).(string) != "payload" {
+		t.Error("fetch error")
+	}
+
 	// test clear all done
 	if err = ssdb.ClearAll(); err != nil {
 		t.Error("clear all err")

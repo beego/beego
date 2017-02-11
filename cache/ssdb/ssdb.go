@@ -23,7 +23,7 @@ func NewSsdbCache() cache.Cache {
 	return &Cache{}
 }
 
-// Get get value from memcache.
+// Get get value from ssdb.
 func (rc *Cache) Get(key string) interface{} {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
@@ -35,6 +35,17 @@ func (rc *Cache) Get(key string) interface{} {
 		return value
 	}
 	return nil
+}
+
+// Fetch value from ssdb.
+// if non-exist or expired, generate new and return this.
+func (rc *Cache) Fetch(key string, timeout time.Duration, genFunc func() interface{}) interface{} {
+	value := rc.Get(key)
+	if value == "" || value == nil {
+		rc.Put(key, genFunc(), timeout)
+		return rc.Get(key)
+	}
+	return value
 }
 
 // GetMulti get value from memcache.

@@ -63,6 +63,17 @@ func (rc *Cache) Get(key string) interface{} {
 	return nil
 }
 
+// Fetch value from memcache.
+// if non-exist or expired, generate new and return this.
+func (rc *Cache) Fetch(key string, timeout time.Duration, genFunc func() interface{}) interface{} {
+	value := rc.Get(key)
+	if value == "" || value == nil {
+		rc.Put(key, genFunc(), timeout)
+		return rc.Get(key)
+	}
+	return value
+}
+
 // GetMulti get value from memcache.
 func (rc *Cache) GetMulti(keys []string) []interface{} {
 	size := len(keys)

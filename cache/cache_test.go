@@ -95,6 +95,26 @@ func TestCache(t *testing.T) {
 	if vv[1].(string) != "author1" {
 		t.Error("GetMulti ERROR")
 	}
+
+	genfunc := func() interface{} {
+		return "payload"
+	}
+	key := "key1"
+	payload := bm.Fetch(key, timeoutDuration, genfunc)
+	if payload.(string) != "payload" {
+		t.Error("fetch error")
+	}
+	if bm.Get(key).(string) != "payload" {
+		t.Error("get err")
+	}
+	time.Sleep(11 * time.Second)
+	if bm.Get(key) != nil {
+		t.Error("get err")
+	}
+	payload = bm.Fetch(key, timeoutDuration, genfunc)
+	if bm.Get(key).(string) != "payload" {
+		t.Error("fetch error")
+	}
 }
 
 func TestFileCache(t *testing.T) {
@@ -162,6 +182,26 @@ func TestFileCache(t *testing.T) {
 	}
 	if vv[1].(string) != "author1" {
 		t.Error("GetMulti ERROR")
+	}
+
+	genfunc := func() interface{} {
+		return "payload"
+	}
+	key := "key1"
+	payload := bm.Fetch(key, timeoutDuration, genfunc)
+	if payload.(string) != "payload" {
+		t.Error("fetch error")
+	}
+	if bm.Get(key).(string) != "payload" {
+		t.Error("get err")
+	}
+	time.Sleep(11 * time.Second)
+	if bm.Get(key).(string) != "" {
+		t.Error("get err")
+	}
+	payload = bm.Fetch(key, timeoutDuration, genfunc)
+	if bm.Get(key).(string) != "payload" {
+		t.Error("fetch error")
 	}
 
 	os.RemoveAll("cache")

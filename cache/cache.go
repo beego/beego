@@ -49,6 +49,8 @@ import (
 type Cache interface {
 	// get cached value by key.
 	Get(key string) interface{}
+	// fetch cached value by key if not exist generate new cache payload.
+	Fetch(key string, timeout time.Duration, genFunc func() interface{}) interface{}
 	// GetMulti is a batch version of Get.
 	GetMulti(keys []string) []interface{}
 	// set cached value with key and expire time.

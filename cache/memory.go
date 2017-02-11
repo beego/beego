@@ -70,6 +70,17 @@ func (bc *MemoryCache) Get(name string) interface{} {
 	return nil
 }
 
+// Fetch value from memory.
+// if non-exist or expired, generate new and return this.
+func (bc *MemoryCache) Fetch(key string, timeout time.Duration, genFunc func() interface{}) interface{} {
+	value := bc.Get(key)
+	if value == "" || value == nil {
+		bc.Put(key, genFunc(), timeout)
+		return bc.Get(key)
+	}
+	return value
+}
+
 // GetMulti gets caches from memory.
 // if non-existed or expired, return nil.
 func (bc *MemoryCache) GetMulti(names []string) []interface{} {
