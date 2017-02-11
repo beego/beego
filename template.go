@@ -32,7 +32,8 @@ import (
 
 var (
 	beegoTplFuncMap = make(template.FuncMap)
-	// beeViewPathTemplates caching map and supported template file extensions.
+	beeViewPathTemplateLocked = false
+	// beeViewPathTemplates caching map and supported template file extensions per view
 	beeViewPathTemplates  = make(map[string]map[string]*template.Template)
 	templatesLock sync.RWMutex
 	// beeTemplateExt stores the template extension which will build
@@ -48,6 +49,9 @@ func ExecuteTemplate(wr io.Writer, name string, data interface{}) error {
 	return ExecuteViewPathTemplate(wr,name, BConfig.WebConfig.ViewsPath, data)
 }
 
+// ExecuteViewPathTemplate applies the template with name and from specific viewPath to the specified data object,
+// writing the output to wr.
+// A template will be executed safely in parallel.
 func ExecuteViewPathTemplate(wr io.Writer, name string, viewPath string, data interface{}) error {
 	if BConfig.RunMode == DEV {
 		templatesLock.RLock()
@@ -156,9 +160,19 @@ func AddTemplateExt(ext string) {
 	beeTemplateExt = append(beeTemplateExt, ext)
 }
 
+// AddViewPath adds a new path to the supported view paths. 
+//Can later be used by setting a controller ViewPath to this folder
+//will panic if called after beego.Run() 
 func AddViewPath(viewPath string) error {
+	if beeViewPathTemplateLocked {
+		panic("Can not add new view paths after beego.Run()")
+	}
 	beeViewPathTemplates[viewPath] = make(map[string]*template.Template)
 	return BuildTemplate(viewPath)
+}
+
+func lockViewPaths() {
+	beeViewPathTemplateLocked = true
 }
 
 // BuildTemplate will build all template files in a directory.
