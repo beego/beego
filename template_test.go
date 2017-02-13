@@ -67,9 +67,10 @@ func TestTemplate(t *testing.T) {
 			f.Close()
 		}
 	}
-	if err := BuildTemplate(dir); err != nil {
+	if err := AddViewPath(dir); err != nil {
 		t.Fatal(err)
 	}
+	beeTemplates := beeViewPathTemplates[dir]
 	if len(beeTemplates) != 3 {
 		t.Fatalf("should be 3 but got %v", len(beeTemplates))
 	}
@@ -103,6 +104,12 @@ var user = `<!DOCTYPE html>
 
 func TestRelativeTemplate(t *testing.T) {
 	dir := "_beeTmp"
+
+	//Just add dir to known viewPaths
+	if err := AddViewPath(dir); err != nil {
+		t.Fatal(err)
+	}
+
 	files := []string{
 		"easyui/public/menu.tpl",
 		"easyui/rbac/user.tpl",
@@ -126,6 +133,7 @@ func TestRelativeTemplate(t *testing.T) {
 	if err := BuildTemplate(dir, files[1]); err != nil {
 		t.Fatal(err)
 	}
+	beeTemplates := beeViewPathTemplates[dir]
 	if err := beeTemplates["easyui/rbac/user.tpl"].ExecuteTemplate(os.Stdout, "easyui/rbac/user.tpl", nil); err != nil {
 		t.Fatal(err)
 	}
