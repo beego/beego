@@ -153,7 +153,7 @@ func (v *Validation) Max(obj interface{}, max int, key string) *Result {
 	return v.apply(Max{max, key}, obj)
 }
 
-// Range Test that the obj is between mni and max if obj's type is int
+// Range Test that the obj is between min and max if obj's type is int
 func (v *Validation) Range(obj interface{}, min, max int, key string) *Result {
 	return v.apply(Range{Min{Min: min}, Max{Max: max}, key}, obj)
 }
@@ -171,6 +171,11 @@ func (v *Validation) MaxSize(obj interface{}, max int, key string) *Result {
 // Length Test that the obj is same length to n if type is string or slice
 func (v *Validation) Length(obj interface{}, n int, key string) *Result {
 	return v.apply(Length{n, key}, obj)
+}
+
+// LengthRange Test that the obj is between min and max if obj's type is int
+func (v *Validation) LengthRange(obj interface{}, min, max int, key string) *Result {
+	return v.apply(LengthRange{Min{Min: min}, Max{Max: max}, key}, obj)
 }
 
 // Alpha Test that the obj is [a-zA-Z] if type is string

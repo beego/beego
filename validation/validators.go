@@ -31,6 +31,7 @@ var MessageTmpls = map[string]string{
 	"MinSize":      "Minimum size is %d",
 	"MaxSize":      "Maximum size is %d",
 	"Length":       "Required length is %d",
+	"LengthRange":  "Length Range is %d to %d",
 	"Alpha":        "Must be valid alpha characters",
 	"Numeric":      "Must be valid numeric characters",
 	"AlphaNumeric": "Must be valid alpha or numeric characters",
@@ -684,4 +685,44 @@ func (z ZipCode) GetKey() string {
 // GetLimitValue return the limit value
 func (z ZipCode) GetLimitValue() interface{} {
 	return nil
+}
+
+
+// Range Requires an integer to be within Min, Max inclusive.
+type LengthRange struct {
+	Min int
+	Max int
+	Key string
+}
+
+// IsSatisfied judge whether obj is valid
+func (r LengthRange) IsSatisfied(obj interface{}) bool {
+	if str, ok := obj.(string); ok {
+		strLen := utf8.RuneCountInString(str)
+		if r.Min <= strLen && strLen <=r.Max{
+			return true
+		}
+	}
+	v := reflect.ValueOf(obj)
+	if v.Kind() == reflect.Slice {
+		if r.Min <= v.Len() && v.Len() <= r.Max{
+			return true
+		}
+	}
+	return false
+}
+
+// DefaultMessage return the default Range error message
+func (r LengthRange) DefaultMessage() string {
+	return fmt.Sprintf(MessageTmpls["LengthRange"], r.Min, r.Max)
+}
+
+// GetKey return the m.Key
+func (r LengthRange) GetKey() string {
+	return r.Key
+}
+
+// GetLimitValue return the limit value, Max
+func (r LengthRange) GetLimitValue() interface{} {
+	return []int{r.Min, r.Max}
 }
