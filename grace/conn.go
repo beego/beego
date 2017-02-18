@@ -28,7 +28,7 @@ func (c graceConn) Close() (err error) {
 	if err == nil {
 		c.server.wg.Done()
 	} else {
-		log.Panicln("close error:", err)
+		log.Panicln("graceConn error:", err)
 	}
 	return err
 }
