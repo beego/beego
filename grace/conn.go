@@ -2,6 +2,7 @@ package grace
 
 import (
 	"errors"
+	"log"
 	"net"
 )
 
@@ -23,6 +24,11 @@ func (c graceConn) Close() (err error) {
 			}
 		}
 	}()
-	c.server.wg.Done()
-	return c.Conn.Close()
+	err = c.Conn.Close()
+	if err == nil {
+		c.server.wg.Done()
+	} else {
+		log.Panicln("close error:", err)
+	}
+	return err
 }

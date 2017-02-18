@@ -1,6 +1,7 @@
 package grace
 
 import (
+	"context"
 	"crypto/tls"
 	"fmt"
 	"log"
@@ -233,12 +234,19 @@ func (srv *Server) serverTimeout(d time.Duration) {
 	if srv.state != StateShuttingDown {
 		return
 	}
-	time.Sleep(d)
+	log.Fatal("Graceful Shutdown, will shutdown in 30 sec")
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
+	if err := srv.Server.Shutdown(ctx); err != nil {
+		log.Panicln("shutdown error", err)
+	}
+	log.Panicln("Shutdown finish")
 	log.Println("[STOP - Hammer Time] Forcefully shutting down parent")
 	for {
 		if srv.state == StateTerminate {
 			break
 		}
+		time.Sleep(time.Millisecond * 100)
 		srv.wg.Done()
 	}
 }
