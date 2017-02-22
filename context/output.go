@@ -331,16 +331,17 @@ func (output *BeegoOutput) IsServerError() bool {
 
 func stringsToJSON(str string) string {
 	rs := []rune(str)
-	jsons := ""
+	var jsons bytes.Buffer
 	for _, r := range rs {
 		rint := int(r)
 		if rint < 128 {
-			jsons += string(r)
+			jsons.WriteRune(r)
 		} else {
-			jsons += "\\u" + strconv.FormatInt(int64(rint), 16) // json
+			jsons.WriteString("\\u")
+			jsons.WriteString(strconv.FormatInt(int64(rint), 16))
 		}
 	}
-	return jsons
+	return jsons.String()
 }
 
 // Session sets session item value with given key.
