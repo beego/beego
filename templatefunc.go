@@ -26,6 +26,12 @@ import (
 	"time"
 )
 
+const (
+	formatTime     = "15:04:05"
+	formatDate     = "2006-01-02"
+	formatDateTime = "2006-01-02 15:04:05"
+)
+
 // Substr returns the substr from start to length.
 func Substr(s string, start, length int) string {
 	bt := []rune(s)
@@ -352,11 +358,25 @@ func parseFormToStruct(form url.Values, objT reflect.Type, objV reflect.Value) e
 		case reflect.Struct:
 			switch fieldT.Type.String() {
 			case "time.Time":
-				format := time.RFC3339
-				if len(tags) > 1 {
-					format = tags[1]
+				var (
+					t   time.Time
+					err error
+				)
+				if len(value) >= 19 {
+					value = value[:19]
+					t, err = time.ParseInLocation(formatDateTime, value, time.Local)
+				} else if len(value) >= 10 {
+					if len(value) > 10 {
+						value = value[:10]
+					}
+					t, err = time.ParseInLocation(formatDate, value, time.Local)
+				} else if len(value) >= 8 {
+					if len(value) > 8 {
+						value = value[:8]
+					}
+					t, err = time.ParseInLocation(formatTime, value, time.Local)
 				}
-				t, err := time.ParseInLocation(format, value, time.Local)
+
 				if err != nil {
 					return err
 				}
