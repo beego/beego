@@ -256,7 +256,7 @@ func parseConfig(appConfigPath string) (err error) {
 }
 
 func assignConfig(ac config.Configer) error {
-	for _, i := range []interface{}{&BConfig.Listen, &BConfig.WebConfig, &BConfig.Log, &BConfig.WebConfig.Session} {
+	for _, i := range []interface{}{BConfig, &BConfig.Listen, &BConfig.WebConfig, &BConfig.Log, &BConfig.WebConfig.Session} {
 		assignSingleConfig(i, ac)
 	}
 	// set the run mode first
