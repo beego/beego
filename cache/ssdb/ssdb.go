@@ -152,7 +152,7 @@ func (rc *Cache) IsExist(key string) bool {
 	if err != nil {
 		return false
 	}
-	if resp[1] == "1" {
+	if len(resp) == 2 && resp[1] == "1" {
 		return true
 	}
 	return false
