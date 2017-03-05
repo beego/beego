@@ -252,7 +252,7 @@ func (c *ConfigContainer) GetSection(section string) (map[string]string, error) 
 	if v, ok := c.data[section]; ok {
 		return v.(map[string]string), nil
 	}
-	return nil, errors.New("not exist setction")
+	return nil, errors.New("not exist section")
 }
 
 // SaveConfigFile save the config into file
