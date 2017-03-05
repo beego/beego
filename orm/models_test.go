@@ -406,6 +406,11 @@ type UintPk struct {
 	Name string
 }
 
+type PtrPk struct {
+	ID       *IntegerPk `orm:"pk;rel(one)"`
+	Positive bool
+}
+
 var DBARGS = struct {
 	Driver string
 	Source string
