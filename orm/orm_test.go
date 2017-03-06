@@ -193,6 +193,7 @@ func TestSyncDb(t *testing.T) {
 	RegisterModel(new(InLineOneToOne))
 	RegisterModel(new(IntegerPk))
 	RegisterModel(new(UintPk))
+	RegisterModel(new(PtrPk))
 
 	err := RunSyncdb("default", true, Debug)
 	throwFail(t, err)
@@ -216,6 +217,7 @@ func TestRegisterModels(t *testing.T) {
 	RegisterModel(new(InLineOneToOne))
 	RegisterModel(new(IntegerPk))
 	RegisterModel(new(UintPk))
+	RegisterModel(new(PtrPk))
 
 	BootStrap()
 
@@ -2142,6 +2144,48 @@ func TestUintPk(t *testing.T) {
 	throwFail(t, AssertIs(nu.Name, name))
 
 	dORM.Delete(u)
+}
+
+func TestPtrPk(t *testing.T) {
+	parent := &IntegerPk{ID: 10, Value: "10"}
+
+	id, _ := dORM.Insert(parent)
+	if !IsMysql {
+		// MySql does not support last_insert_id in this case: see #2382
+		throwFail(t, AssertIs(id, 10))
+	}
+
+	ptr := PtrPk{ID: parent, Positive: true}
+	num, err := dORM.InsertMulti(2, []PtrPk{ptr})
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+	throwFail(t, AssertIs(ptr.ID, parent))
+
+	nptr := &PtrPk{ID: parent}
+	created, pk, err := dORM.ReadOrCreate(nptr, "ID")
+	throwFail(t, err)
+	throwFail(t, AssertIs(created, false))
+	throwFail(t, AssertIs(pk, 10))
+	throwFail(t, AssertIs(nptr.ID, parent))
+	throwFail(t, AssertIs(nptr.Positive, true))
+
+	nptr = &PtrPk{Positive: true}
+	created, pk, err = dORM.ReadOrCreate(nptr, "Positive")
+	throwFail(t, err)
+	throwFail(t, AssertIs(created, false))
+	throwFail(t, AssertIs(pk, 10))
+	throwFail(t, AssertIs(nptr.ID, parent))
+
+	nptr.Positive = false
+	num, err = dORM.Update(nptr)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+	throwFail(t, AssertIs(nptr.ID, parent))
+	throwFail(t, AssertIs(nptr.Positive, false))
+
+	num, err = dORM.Delete(nptr)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
 }
 
 func TestSnake(t *testing.T) {

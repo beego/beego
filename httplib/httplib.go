@@ -140,6 +140,7 @@ type BeegoHTTPSettings struct {
 	EnableCookie     bool
 	Gzip             bool
 	DumpBody         bool
+	Retries          int // if set to -1 means will retry forever
 }
 
 // BeegoHTTPRequest provides more useful methods for requesting one url than http.Request.
@@ -186,6 +187,15 @@ func (b *BeegoHTTPRequest) SetUserAgent(useragent string) *BeegoHTTPRequest {
 // Debug sets show debug or not when executing request.
 func (b *BeegoHTTPRequest) Debug(isdebug bool) *BeegoHTTPRequest {
 	b.setting.ShowDebug = isdebug
+	return b
+}
+
+// Retries sets Retries times.
+// default is 0 means no retried.
+// -1 means retried forever.
+// others means retried times.
+func (b *BeegoHTTPRequest) Retries(times int) *BeegoHTTPRequest {
+	b.setting.Retries = times
 	return b
 }
 
@@ -390,7 +400,7 @@ func (b *BeegoHTTPRequest) getResponse() (*http.Response, error) {
 }
 
 // DoRequest will do the client.Do
-func (b *BeegoHTTPRequest) DoRequest() (*http.Response, error) {
+func (b *BeegoHTTPRequest) DoRequest() (resp *http.Response, err error) {
 	var paramBody string
 	if len(b.params) > 0 {
 		var buf bytes.Buffer
@@ -467,7 +477,16 @@ func (b *BeegoHTTPRequest) DoRequest() (*http.Response, error) {
 		}
 		b.dump = dump
 	}
-	return client.Do(b.req)
+	// retries default value is 0, it will run once.
+	// retries equal to -1, it will run forever until success
+	// retries is setted, it will retries fixed times.
+	for i := 0; b.setting.Retries == -1 || i <= b.setting.Retries; i++ {
+		resp, err = client.Do(b.req)
+		if err == nil {
+			break
+		}
+	}
+	return resp, err
 }
 
 // String returns the body string in response.
