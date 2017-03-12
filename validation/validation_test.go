@@ -217,7 +217,7 @@ func TestEmail(t *testing.T) {
 	if valid.Email("@suchuangji@gmail.com", "email").Ok {
 		t.Error("\"@suchuangji@gmail.com\" is a valid email address should be false")
 	}
-	if valid.Email("@suchuangji@gmail.com", "email").Ok {
+	if valid.Email("suchuangji@gmail.com ok", "email").Ok {
 		t.Error("\"suchuangji@gmail.com ok\" is a valid email address should be false")
 	}
 }
