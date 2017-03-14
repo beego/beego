@@ -217,7 +217,7 @@ func BuildTemplate(dir string, files ...string) error {
 					t, err = getTemplate(self.root, file, v...)
 				}
 				if err != nil {
-					logs.Trace("parse template err:", file, err)
+					logs.Error("parse template err:", file, err)
 				} else {
 					beeTemplates[file] = t
 				}
