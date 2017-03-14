@@ -72,7 +72,7 @@ func ExecuteViewPathTemplate(wr io.Writer, name string, viewPath string, data in
 		}
 		panic("can't find templatefile in the path:" + viewPath + "/" + name)
 	}
-	panic("Uknown view path:" + viewPath)
+	panic("Unknown view path:" + viewPath)
 }
 
 func init() {
@@ -165,6 +165,9 @@ func AddTemplateExt(ext string) {
 //will panic if called after beego.Run() 
 func AddViewPath(viewPath string) error {
 	if beeViewPathTemplateLocked {
+		if _, exist := beeViewPathTemplates[viewPath]; exist {
+			return nil //Ignore if viewpath already exists
+		}
 		panic("Can not add new view paths after beego.Run()")
 	}
 	beeViewPathTemplates[viewPath] = make(map[string]*template.Template)
