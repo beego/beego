@@ -4,6 +4,8 @@ go:
   - 1.6
   - 1.5.3
   - 1.4.3
+  - 1.7
+  - 1.8
 services:
   - redis-server
   - mysql
