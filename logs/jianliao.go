@@ -25,11 +25,7 @@ func newJLWriter() Logger {
 
 // Init JLWriter with json config string
 func (s *JLWriter) Init(jsonconfig string) error {
-	err := json.Unmarshal([]byte(jsonconfig), s)
-	if err != nil {
-		return err
-	}
-	return nil
+	return json.Unmarshal([]byte(jsonconfig), s)
 }
 
 // WriteMsg write message in smtp writer.

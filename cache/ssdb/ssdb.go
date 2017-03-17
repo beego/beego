@@ -71,10 +71,7 @@ func (rc *Cache) DelMulti(keys []string) error {
 		}
 	}
 	_, err := rc.conn.Do("multi_del", keys)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // Put put value to memcache. only support string.
@@ -113,10 +110,7 @@ func (rc *Cache) Delete(key string) error {
 		}
 	}
 	_, err := rc.conn.Del(key)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // Incr increase counter.
@@ -229,10 +223,7 @@ func (rc *Cache) connectInit() error {
 	}
 	var err error
 	rc.conn, err = ssdb.Connect(host, port)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func init() {

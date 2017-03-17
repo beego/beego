@@ -26,10 +26,7 @@ func (p *SsdbProvider) connectInit() error {
 		return errors.New("SessionInit First")
 	}
 	p.client, err = ssdb.Connect(p.host, p.port)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func (p *SsdbProvider) SessionInit(maxLifetime int64, savePath string) error {
@@ -41,11 +38,7 @@ func (p *SsdbProvider) SessionInit(maxLifetime int64, savePath string) error {
 	if e != nil {
 		return e
 	}
-	err := p.connectInit()
-	if err != nil {
-		return err
-	}
-	return nil
+	return p.connectInit()
 }
 
 func (p *SsdbProvider) SessionRead(sid string) (session.Store, error) {
@@ -126,10 +119,7 @@ func (p *SsdbProvider) SessionDestroy(sid string) error {
 		}
 	}
 	_, err := p.client.Del(sid)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func (p *SsdbProvider) SessionGC() {

@@ -205,11 +205,7 @@ func (rp *MemProvider) SessionDestroy(sid string) error {
 		}
 	}
 
-	err := client.Delete(sid)
-	if err != nil {
-		return err
-	}
-	return nil
+	return client.Delete(sid)
 }
 
 func (rp *MemProvider) connectInit() error {
