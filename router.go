@@ -727,8 +727,10 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	if routerInfo != nil {
-		//store router pattern into context
-		context.Input.SetData("RouterPattern", routerInfo.pattern)
+		if BConfig.RunMode == DEV {
+			//store router pattern into context
+			context.Input.SetData("RouterPattern", routerInfo.pattern)
+		}
 		if routerInfo.routerType == routerTypeRESTFul {
 			if _, ok := routerInfo.methods[r.Method]; ok {
 				isRunnable = true
