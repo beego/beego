@@ -225,7 +225,7 @@ func camelString(s string) string {
 		if d == '_' {
 			flag = true
 			continue
-		} else if flag == true {
+		} else if flag {
 			if d >= 'a' && d <= 'z' {
 				d = d - 32
 			}
