@@ -474,7 +474,7 @@ func randomBrightness(c color.RGBA, max uint8) color.RGBA {
 		uint8(int(c.R) + n),
 		uint8(int(c.G) + n),
 		uint8(int(c.B) + n),
-		uint8(c.A),
+		c.A,
 	}
 }
 

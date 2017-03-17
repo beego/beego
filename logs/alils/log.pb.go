@@ -395,7 +395,7 @@ func sovLog(x uint64) (n int) {
 	return n
 }
 func sozLog(x uint64) (n int) {
-	return sovLog(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+	return sovLog((x << 1) ^ (x >> 63))
 }
 func (m *Log) Unmarshal(data []byte) error {
 	var hasFields [1]uint64
