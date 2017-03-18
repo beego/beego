@@ -53,7 +53,7 @@ func (rc *Cache) GetMulti(keys []string) []interface{} {
 	resSize := len(res)
 	if err == nil {
 		for i := 1; i < resSize; i += 2 {
-			values = append(values, string(res[i+1]))
+			values = append(values, res[i+1])
 		}
 		return values
 	}
@@ -169,7 +169,7 @@ func (rc *Cache) ClearAll() error {
 		}
 		keys := []string{}
 		for i := 1; i < size; i += 2 {
-			keys = append(keys, string(resp[i]))
+			keys = append(keys, resp[i])
 		}
 		_, e := rc.conn.Do("multi_del", keys)
 		if e != nil {
