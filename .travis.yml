@@ -2,8 +2,8 @@ language: go
 
 go:
   - 1.6
-  - 1.5.3
-  - 1.4.3
+  - 1.7
+  - 1.8
 services:
   - redis-server
   - mysql
@@ -34,6 +34,7 @@ install:
   - go get github.com/cloudflare/golz4
   - go get github.com/gogo/protobuf/proto
   - go get -u honnef.co/go/tools/cmd/gosimple
+  - go get -u github.com/mdempsky/unconvert
 before_script:
   - psql --version
   - sh -c "if [ '$ORM_DRIVER' = 'postgres' ]; then psql -c 'create database orm_test;' -U postgres; fi"
@@ -49,5 +50,6 @@ after_script:
 script:
   - go test -v ./...
   - gosimple -ignore "$(cat .gosimpleignore)" $(go list ./... | grep -v /vendor/)
+  - unconvert $(go list ./... | grep -v /vendor/)
 addons:
   postgresql: "9.4"

@@ -102,7 +102,7 @@ func (s *SMTPWriter) sendMail(hostAddressWithPort string, auth smtp.Auth, fromAd
 	if err != nil {
 		return err
 	}
-	_, err = w.Write([]byte(msgContent))
+	_, err = w.Write(msgContent)
 	if err != nil {
 		return err
 	}
