@@ -118,14 +118,14 @@ func TestGetFloat64(t *testing.T) {
 
 func TestGetBool(t *testing.T) {
 	var t1 = true
-	if true != GetBool(t1) {
+	if !GetBool(t1) {
 		t.Error("get bool from bool error")
 	}
 	var t2 = "true"
-	if true != GetBool(t2) {
+	if !GetBool(t2) {
 		t.Error("get bool from string error")
 	}
-	if false != GetBool(nil) {
+	if GetBool(nil) {
 		t.Error("get bool from nil error")
 	}
 }

@@ -171,10 +171,7 @@ func (mp *Provider) SessionExist(sid string) bool {
 	row := c.QueryRow("select session_data from "+TableName+" where session_key=?", sid)
 	var sessiondata []byte
 	err := row.Scan(&sessiondata)
-	if err == sql.ErrNoRows {
-		return false
-	}
-	return true
+	return !(err == sql.ErrNoRows)
 }
 
 // SessionRegenerate generate new sid for mysql session

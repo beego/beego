@@ -33,6 +33,7 @@ install:
   - go get github.com/ssdb/gossdb/ssdb
   - go get github.com/cloudflare/golz4
   - go get github.com/gogo/protobuf/proto
+  - go get -u honnef.co/go/tools/cmd/gosimple
   - go get -u github.com/mdempsky/unconvert
 before_script:
   - psql --version
@@ -48,6 +49,7 @@ after_script:
   - rm -rf ./res/var/*
 script:
   - go test -v ./...
+  - gosimple -ignore "$(cat .gosimpleignore)" $(go list ./... | grep -v /vendor/)
   - unconvert $(go list ./... | grep -v /vendor/)
 addons:
   postgresql: "9.4"
