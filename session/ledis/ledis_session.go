@@ -150,7 +150,7 @@ func (lp *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error)
 	if len(kvs) == 0 {
 		kv = make(map[interface{}]interface{})
 	} else {
-		kv, err = session.DecodeGob([]byte(kvs))
+		kv, err = session.DecodeGob(kvs)
 		if err != nil {
 			return nil, err
 		}
