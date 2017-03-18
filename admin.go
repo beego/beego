@@ -157,8 +157,8 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 					resultList := new([][]string)
 					for _, f := range bf {
 						var result = []string{
-							fmt.Sprintf("%s", f.pattern),
-							fmt.Sprintf("%s", utils.GetFuncName(f.filterFunc)),
+							f.pattern,
+							utils.GetFuncName(f.filterFunc),
 						}
 						*resultList = append(*resultList, result)
 					}
@@ -213,7 +213,7 @@ func printTree(resultList *[][]string, t *Tree) {
 				var result = []string{
 					v.pattern,
 					fmt.Sprintf("%s", v.methods),
-					fmt.Sprintf("%s", v.controllerType),
+					v.controllerType.String(),
 				}
 				*resultList = append(*resultList, result)
 			} else if v.routerType == routerTypeRESTFul {
@@ -287,16 +287,16 @@ func healthcheck(rw http.ResponseWriter, req *http.Request) {
 	for name, h := range toolbox.AdminCheckList {
 		if err := h.Check(); err != nil {
 			result = []string{
-				fmt.Sprintf("error"),
-				fmt.Sprintf("%s", name),
-				fmt.Sprintf("%s", err.Error()),
+				"error",
+				name,
+				err.Error(),
 			}
 
 		} else {
 			result = []string{
-				fmt.Sprintf("success"),
-				fmt.Sprintf("%s", name),
-				fmt.Sprintf("OK"),
+				"success",
+				name,
+				"OK",
 			}
 
 		}
@@ -341,8 +341,8 @@ func taskStatus(rw http.ResponseWriter, req *http.Request) {
 	for tname, tk := range toolbox.AdminTaskList {
 		result = []string{
 			tname,
-			fmt.Sprintf("%s", tk.GetSpec()),
-			fmt.Sprintf("%s", tk.GetStatus()),
+			tk.GetSpec(),
+			tk.GetStatus(),
 			tk.GetPrev().String(),
 		}
 		*resultList = append(*resultList, result)
