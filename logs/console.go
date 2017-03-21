@@ -41,7 +41,7 @@ var colors = []brush{
 	newBrush("1;33"), // Warning            yellow
 	newBrush("1;32"), // Notice             green
 	newBrush("1;34"), // Informational      blue
-	newBrush("1;34"), // Debug              blue
+	newBrush("1;44"), // Debug              Background blue
 }
 
 // consoleWriter implements LoggerInterface and writes messages to terminal.
