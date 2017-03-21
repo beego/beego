@@ -397,11 +397,8 @@ func (c *IniConfigContainer) SaveConfigFile(filename string) (err error) {
 			}
 		}
 	}
-
-	if _, err = buf.WriteTo(f); err != nil {
-		return err
-	}
-	return nil
+	_, err = buf.WriteTo(f)
+	return err
 }
 
 // Set writes a new value for key.
