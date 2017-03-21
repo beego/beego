@@ -46,26 +46,25 @@ func Substr(s string, start, length int) string {
 
 // HTML2str returns escaping text convert from html.
 func HTML2str(html string) string {
-	src := string(html)
 
 	re, _ := regexp.Compile("\\<[\\S\\s]+?\\>")
-	src = re.ReplaceAllStringFunc(src, strings.ToLower)
+	html = re.ReplaceAllStringFunc(html, strings.ToLower)
 
 	//remove STYLE
 	re, _ = regexp.Compile("\\<style[\\S\\s]+?\\</style\\>")
-	src = re.ReplaceAllString(src, "")
+	html = re.ReplaceAllString(html, "")
 
 	//remove SCRIPT
 	re, _ = regexp.Compile("\\<script[\\S\\s]+?\\</script\\>")
-	src = re.ReplaceAllString(src, "")
+	html = re.ReplaceAllString(html, "")
 
 	re, _ = regexp.Compile("\\<[\\S\\s]+?\\>")
-	src = re.ReplaceAllString(src, "\n")
+	html = re.ReplaceAllString(html, "\n")
 
 	re, _ = regexp.Compile("\\s{2,}")
-	src = re.ReplaceAllString(src, "\n")
+	html = re.ReplaceAllString(html, "\n")
 
-	return strings.TrimSpace(src)
+	return strings.TrimSpace(html)
 }
 
 // DateFormat takes a time and a layout string and returns a string with the formatted date. Used by the template parser as "dateformat"
@@ -193,15 +192,13 @@ func Str2html(raw string) template.HTML {
 }
 
 // Htmlquote returns quoted html string.
-func Htmlquote(src string) string {
+func Htmlquote(text string) string {
 	//HTML编码为实体符号
 	/*
 	   Encodes `text` for raw use in HTML.
 	       >>> htmlquote("<'&\\">")
 	       '&lt;&#39;&amp;&quot;&gt;'
 	*/
-
-	text := string(src)
 
 	text = strings.Replace(text, "&", "&amp;", -1) // Must be done first!
 	text = strings.Replace(text, "<", "&lt;", -1)
@@ -216,7 +213,7 @@ func Htmlquote(src string) string {
 }
 
 // Htmlunquote returns unquoted html string.
-func Htmlunquote(src string) string {
+func Htmlunquote(text string) string {
 	//实体符号解释为HTML
 	/*
 	   Decodes `text` that's HTML quoted.
@@ -227,7 +224,6 @@ func Htmlunquote(src string) string {
 	// strings.Replace(s, old, new, n)
 	// 在s字符串中，把old字符串替换为new字符串，n表示替换的次数，小于0表示全部替换
 
-	text := string(src)
 	text = strings.Replace(text, "&nbsp;", " ", -1)
 	text = strings.Replace(text, "&rdquo;", "”", -1)
 	text = strings.Replace(text, "&ldquo;", "“", -1)
@@ -262,19 +258,17 @@ func URLFor(endpoint string, values ...interface{}) string {
 }
 
 // AssetsJs returns script tag with src string.
-func AssetsJs(src string) template.HTML {
-	text := string(src)
+func AssetsJs(text string) template.HTML {
 
-	text = "<script src=\"" + src + "\"></script>"
+	text = "<script src=\"" + text + "\"></script>"
 
 	return template.HTML(text)
 }
 
 // AssetsCSS returns stylesheet link tag with src string.
-func AssetsCSS(src string) template.HTML {
-	text := string(src)
+func AssetsCSS(text string) template.HTML {
 
-	text = "<link href=\"" + src + "\" rel=\"stylesheet\" />"
+	text = "<link href=\"" + text + "\" rel=\"stylesheet\" />"
 
 	return template.HTML(text)
 }

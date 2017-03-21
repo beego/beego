@@ -21,11 +21,7 @@ func newSLACKWriter() Logger {
 
 // Init SLACKWriter with json config string
 func (s *SLACKWriter) Init(jsonconfig string) error {
-	err := json.Unmarshal([]byte(jsonconfig), s)
-	if err != nil {
-		return err
-	}
-	return nil
+	return json.Unmarshal([]byte(jsonconfig), s)
 }
 
 // WriteMsg write message in smtp writer.
