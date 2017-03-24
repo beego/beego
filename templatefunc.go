@@ -362,7 +362,10 @@ func parseFormToStruct(form url.Values, objT reflect.Type, objV reflect.Value) e
 					t   time.Time
 					err error
 				)
-				if len(value) >= 19 {
+				if len(value) >= 25 {
+					value = value[:25]
+					t, err = time.ParseInLocation(time.RFC3339, value, time.Local)
+				} else if len(value) >= 19 {
 					value = value[:19]
 					t, err = time.ParseInLocation(formatDateTime, value, time.Local)
 				} else if len(value) >= 10 {
