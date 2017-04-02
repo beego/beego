@@ -125,10 +125,7 @@ func (lp *Provider) SessionRead(sid string) (session.Store, error) {
 // SessionExist check ledis session exist by sid
 func (lp *Provider) SessionExist(sid string) bool {
 	count, _ := c.Exists([]byte(sid))
-	if count == 0 {
-		return false
-	}
-	return true
+	return !(count == 0)
 }
 
 // SessionRegenerate generate new sid for ledis session
@@ -150,7 +147,7 @@ func (lp *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error)
 	if len(kvs) == 0 {
 		kv = make(map[interface{}]interface{})
 	} else {
-		kv, err = session.DecodeGob([]byte(kvs))
+		kv, err = session.DecodeGob(kvs)
 		if err != nil {
 			return nil, err
 		}

@@ -12,7 +12,6 @@ It is inspired by Tornado, Sinatra and Flask. beego has some Go-specific feature
     go get github.com/astaxie/beego
 
 #### Create file `hello.go`
-
 ```go
 package main
 
@@ -22,10 +21,9 @@ func main(){
     beego.Run()
 }
 ```
-
 #### Build and run
 
-    go build main.go
+    go build hello.go
     ./hello
 
 #### Go to [http://localhost:8080](http://localhost:8080)

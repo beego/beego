@@ -223,7 +223,7 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		}
 
 		buf.Reset()
-		ExecuteViewPathTemplate(&buf, c.Layout, c.viewPath() ,c.Data)
+		ExecuteViewPathTemplate(&buf, c.Layout, c.viewPath(), c.Data)
 	}
 	return buf.Bytes(), err
 }
@@ -249,7 +249,7 @@ func (c *Controller) renderTemplate() (bytes.Buffer, error) {
 				}
 			}
 		}
-		BuildTemplate(c.viewPath() , buildFiles...)
+		BuildTemplate(c.viewPath(), buildFiles...)
 	}
 	return buf, ExecuteViewPathTemplate(&buf, c.TplName, c.viewPath(), c.Data)
 }
@@ -314,7 +314,7 @@ func (c *Controller) ServeJSON(encoding ...bool) {
 	if BConfig.RunMode == PROD {
 		hasIndent = false
 	}
-	if len(encoding) > 0 && encoding[0] == true {
+	if len(encoding) > 0 && encoding[0] {
 		hasEncoding = true
 	}
 	c.Ctx.Output.JSON(c.Data["json"], hasIndent, hasEncoding)
