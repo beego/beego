@@ -502,10 +502,10 @@ func TestFilterBeforeRouter(t *testing.T) {
 	rw, r := testRequest("GET", url)
 	mux.ServeHTTP(rw, r)
 
-	if strings.Contains(rw.Body.String(), "BeforeRouter1") == false {
+	if !strings.Contains(rw.Body.String(), "BeforeRouter1") {
 		t.Errorf(testName + " BeforeRouter did not run")
 	}
-	if strings.Contains(rw.Body.String(), "hello") == true {
+	if strings.Contains(rw.Body.String(), "hello") {
 		t.Errorf(testName + " BeforeRouter did not return properly")
 	}
 }
@@ -525,13 +525,13 @@ func TestFilterBeforeExec(t *testing.T) {
 	rw, r := testRequest("GET", url)
 	mux.ServeHTTP(rw, r)
 
-	if strings.Contains(rw.Body.String(), "BeforeExec1") == false {
+	if !strings.Contains(rw.Body.String(), "BeforeExec1") {
 		t.Errorf(testName + " BeforeExec did not run")
 	}
-	if strings.Contains(rw.Body.String(), "hello") == true {
+	if strings.Contains(rw.Body.String(), "hello") {
 		t.Errorf(testName + " BeforeExec did not return properly")
 	}
-	if strings.Contains(rw.Body.String(), "BeforeRouter") == true {
+	if strings.Contains(rw.Body.String(), "BeforeRouter") {
 		t.Errorf(testName + " BeforeRouter ran in error")
 	}
 }
@@ -552,16 +552,16 @@ func TestFilterAfterExec(t *testing.T) {
 	rw, r := testRequest("GET", url)
 	mux.ServeHTTP(rw, r)
 
-	if strings.Contains(rw.Body.String(), "AfterExec1") == false {
+	if !strings.Contains(rw.Body.String(), "AfterExec1") {
 		t.Errorf(testName + " AfterExec did not run")
 	}
-	if strings.Contains(rw.Body.String(), "hello") == false {
+	if !strings.Contains(rw.Body.String(), "hello") {
 		t.Errorf(testName + " handler did not run properly")
 	}
-	if strings.Contains(rw.Body.String(), "BeforeRouter") == true {
+	if strings.Contains(rw.Body.String(), "BeforeRouter") {
 		t.Errorf(testName + " BeforeRouter ran in error")
 	}
-	if strings.Contains(rw.Body.String(), "BeforeExec") == true {
+	if strings.Contains(rw.Body.String(), "BeforeExec") {
 		t.Errorf(testName + " BeforeExec ran in error")
 	}
 }
@@ -583,19 +583,19 @@ func TestFilterFinishRouter(t *testing.T) {
 	rw, r := testRequest("GET", url)
 	mux.ServeHTTP(rw, r)
 
-	if strings.Contains(rw.Body.String(), "FinishRouter1") == true {
+	if strings.Contains(rw.Body.String(), "FinishRouter1") {
 		t.Errorf(testName + " FinishRouter did not run")
 	}
-	if strings.Contains(rw.Body.String(), "hello") == false {
+	if !strings.Contains(rw.Body.String(), "hello") {
 		t.Errorf(testName + " handler did not run properly")
 	}
-	if strings.Contains(rw.Body.String(), "AfterExec1") == true {
+	if strings.Contains(rw.Body.String(), "AfterExec1") {
 		t.Errorf(testName + " AfterExec ran in error")
 	}
-	if strings.Contains(rw.Body.String(), "BeforeRouter") == true {
+	if strings.Contains(rw.Body.String(), "BeforeRouter") {
 		t.Errorf(testName + " BeforeRouter ran in error")
 	}
-	if strings.Contains(rw.Body.String(), "BeforeExec") == true {
+	if strings.Contains(rw.Body.String(), "BeforeExec") {
 		t.Errorf(testName + " BeforeExec ran in error")
 	}
 }
@@ -615,14 +615,14 @@ func TestFilterFinishRouterMultiFirstOnly(t *testing.T) {
 	rw, r := testRequest("GET", url)
 	mux.ServeHTTP(rw, r)
 
-	if strings.Contains(rw.Body.String(), "FinishRouter1") == false {
+	if !strings.Contains(rw.Body.String(), "FinishRouter1") {
 		t.Errorf(testName + " FinishRouter1 did not run")
 	}
-	if strings.Contains(rw.Body.String(), "hello") == false {
+	if !strings.Contains(rw.Body.String(), "hello") {
 		t.Errorf(testName + " handler did not run properly")
 	}
 	// not expected in body
-	if strings.Contains(rw.Body.String(), "FinishRouter2") == true {
+	if strings.Contains(rw.Body.String(), "FinishRouter2") {
 		t.Errorf(testName + " FinishRouter2 did run")
 	}
 }
@@ -642,13 +642,13 @@ func TestFilterFinishRouterMulti(t *testing.T) {
 	rw, r := testRequest("GET", url)
 	mux.ServeHTTP(rw, r)
 
-	if strings.Contains(rw.Body.String(), "FinishRouter1") == false {
+	if !strings.Contains(rw.Body.String(), "FinishRouter1") {
 		t.Errorf(testName + " FinishRouter1 did not run")
 	}
-	if strings.Contains(rw.Body.String(), "hello") == false {
+	if !strings.Contains(rw.Body.String(), "hello") {
 		t.Errorf(testName + " handler did not run properly")
 	}
-	if strings.Contains(rw.Body.String(), "FinishRouter2") == false {
+	if !strings.Contains(rw.Body.String(), "FinishRouter2") {
 		t.Errorf(testName + " FinishRouter2 did not run properly")
 	}
 }

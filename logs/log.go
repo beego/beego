@@ -275,7 +275,7 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string, v ...interface{}) error 
 			line = 0
 		}
 		_, filename := path.Split(file)
-		msg = "[" + filename + ":" + strconv.FormatInt(int64(line), 10) + "] " + msg
+		msg = "[" + filename + ":" + strconv.Itoa(line) + "] " + msg
 	}
 
 	//set level info in front of filename info
@@ -561,11 +561,7 @@ func SetLogFuncCallDepth(d int) {
 
 // SetLogger sets a new logger.
 func SetLogger(adapter string, config ...string) error {
-	err := beeLogger.SetLogger(adapter, config...)
-	if err != nil {
-		return err
-	}
-	return nil
+	return beeLogger.SetLogger(adapter, config...)
 }
 
 // Emergency logs a message at emergency level.
