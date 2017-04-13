@@ -207,7 +207,12 @@ func printKeyValue(buf *bytes.Buffer, val reflect.Value, pointers **pointerInfo,
 		fmt.Fprint(buf, "\"", val.String(), "\"")
 	case reflect.Interface:
 		var value = val.Elem()
-
+		
+		// fix #2558
+		for value.Kind() == reflect.Ptr {
+			value = value.Elem()
+		}
+		
 		if !value.IsValid() {
 			fmt.Fprint(buf, "nil")
 		} else {
