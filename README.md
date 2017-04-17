@@ -9,12 +9,12 @@ It is inspired by Tornado, Sinatra and Flask. beego has some Go-specific feature
 
 More info [beego.me](http://beego.me)
 
-##Quick Start
-######Download and install
+## Quick Start
+###### Download and install
 
     go get github.com/astaxie/beego
 
-######Create file `hello.go`
+###### Create file `hello.go`
 ```go
 package main
 
@@ -24,12 +24,12 @@ func main(){
     beego.Run()
 }
 ```
-######Build and run
+###### Build and run
 ```bash
     go build hello.go
     ./hello
 ```
-######Congratulations! 
+###### Congratulations! 
 You just built your first beego app.
 Open your browser and visit `http://localhost:8080`.
 Please see [Documentation](http://beego.me/docs) for more.
