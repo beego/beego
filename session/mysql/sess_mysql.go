@@ -150,6 +150,8 @@ func (mp *Provider) SessionRead(sid string) (session.Store, error) {
 	if err == sql.ErrNoRows {
 		c.Exec("insert into "+TableName+"(`session_key`,`session_data`,`session_expiry`) values(?,?,?)",
 			sid, "", time.Now().Unix())
+	} else if err != nil {
+		return nil, err
 	}
 	var kv map[interface{}]interface{}
 	if len(sessiondata) == 0 {
