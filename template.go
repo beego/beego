@@ -227,9 +227,12 @@ func BuildTemplate(dir string, files ...string) error {
 
 func getTplDeep(root, file, parent string, t *template.Template) (*template.Template, [][]string, error) {
 	var fileAbsPath string
+	var rParent string
 	if filepath.HasPrefix(file, "../") {
+		rParent = filepath.Join(filepath.Dir(parent), file)
 		fileAbsPath = filepath.Join(root, filepath.Dir(parent), file)
 	} else {
+		rParent = file
 		fileAbsPath = filepath.Join(root, file)
 	}
 	if e := utils.FileExists(fileAbsPath); !e {
@@ -254,7 +257,7 @@ func getTplDeep(root, file, parent string, t *template.Template) (*template.Temp
 			if !HasTemplateExt(m[1]) {
 				continue
 			}
-			_, _, err = getTplDeep(root, m[1], file, t)
+			_, _, err = getTplDeep(root, m[1], rParent, t)
 			if err != nil {
 				return nil, [][]string{}, err
 			}
