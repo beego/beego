@@ -166,7 +166,7 @@ func (rp *MemProvider) SessionRegenerate(oldsid, sid string) (session.Store, err
 		}
 	}
 	var contain []byte
-	if item, err := client.Get(sid); err != nil || len(item.Value) == 0 {
+	if item, err := client.Get(oldsid); err != nil || len(item.Value) == 0 {
 		// oldsid doesn't exists, set the new sid directly
 		// ignore error here, since if it return error
 		// the existed value will be 0
