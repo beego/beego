@@ -42,7 +42,7 @@ func init() {
 	routers = append(routers, testinfo{"/", "/", nil})
 	routers = append(routers, testinfo{"/customer/login", "/customer/login", nil})
 	routers = append(routers, testinfo{"/customer/login", "/customer/login.json", map[string]string{":ext": "json"}})
-	routers = append(routers, testinfo{"/*", "/customer/123", map[string]string{":splat": "customer/123"}})
+	routers = append(routers, testinfo{"/*", "/http://customer/123/", map[string]string{":splat": "http://customer/123/"}})
 	routers = append(routers, testinfo{"/*", "/customer/2009/12/11", map[string]string{":splat": "customer/2009/12/11"}})
 	routers = append(routers, testinfo{"/aa/*/bb", "/aa/2009/bb", map[string]string{":splat": "2009"}})
 	routers = append(routers, testinfo{"/cc/*/dd", "/cc/2009/11/dd", map[string]string{":splat": "2009/11"}})
