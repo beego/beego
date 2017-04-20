@@ -132,7 +132,7 @@ func getColumnAddQuery(al *alias, fi *fieldInfo) string {
 }
 
 // create database creation string.
-func getDbCreateSQL(al *alias) (sqls []string, tableIndexes map[string][]dbIndex) {
+func getDbCreateSQL(al *alias) (sqls []string, tableIndexes map[string][]dbIndex, fks []string) {
 	if len(modelCache.cache) == 0 {
 		fmt.Println("no Model found, need register your model")
 		os.Exit(2)
@@ -263,6 +263,37 @@ func getDbCreateSQL(al *alias) (sqls []string, tableIndexes map[string][]dbIndex
 		}
 
 	}
+
+	for _, mi := range modelCache.allOrdered() {
+		if al.Driver == DRMySQL {
+			for _, fi := range mi.fields.fieldsDB {
+				if fi.relModelInfo != nil {
+					cols := make([]string, 0, len(fi.relModelInfo.fields.fields))
+					for _, fi := range fi.relModelInfo.fields.fields {
+						if fi.pk {
+							cols = append(cols, fi.column)
+						}
+					}
+					sql := fmt.Sprintf("-- %s\n", strings.Repeat("-", 50))
+					sql += fmt.Sprintf("--  Foreign Key for `%s`\n", mi.fullName)
+					sql += fmt.Sprintf("-- %s\n", strings.Repeat("-", 50))
+
+					sql += fmt.Sprintf("ALTER TABLE %s%s%s ADD FOREIGN KEY (%s%s%s) REFERENCES %s%s%s (%s%s%s)", Q, mi.table, Q, Q, fi.column, Q, Q, fi.relModelInfo.table, Q, Q, strings.Join(cols, sep), Q)
+					switch fi.onDelete {
+					case "cascade":
+						sql += " ON DELETE CASCADE;"
+					case "set_null":
+						sql += " ON DELETE SET NULL;"
+					case "set_default":
+						sql += " ON DELETE SET DEFAULT;"
+					}
+					sql += "\n"
+					fks = append(fks, sql)
+				}
+			}
+		}
+	}
+
 
 	return
 }
