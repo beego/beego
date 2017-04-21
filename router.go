@@ -51,15 +51,22 @@ const (
 var (
 	// HTTPMETHOD list the supported http methods.
 	HTTPMETHOD = map[string]string{
-		"GET":     "GET",
-		"POST":    "POST",
-		"PUT":     "PUT",
-		"DELETE":  "DELETE",
-		"PATCH":   "PATCH",
-		"OPTIONS": "OPTIONS",
-		"HEAD":    "HEAD",
-		"TRACE":   "TRACE",
-		"CONNECT": "CONNECT",
+		"GET":       "GET",
+		"POST":      "POST",
+		"PUT":       "PUT",
+		"DELETE":    "DELETE",
+		"PATCH":     "PATCH",
+		"OPTIONS":   "OPTIONS",
+		"HEAD":      "HEAD",
+		"TRACE":     "TRACE",
+		"CONNECT":   "CONNECT",
+		"MKCOL":     "MKCOL",
+		"COPY":      "COPY",
+		"MOVE":      "MOVE",
+		"PROPFIND":  "PROPFIND",
+		"PROPPATCH": "PROPPATCH",
+		"LOCK":      "LOCK",
+		"UNLOCK":    "UNLOCK",
 	}
 	// these beego.Controller's methods shouldn't reflect to AutoRouter
 	exceptMethod = []string{"Init", "Prepare", "Finish", "Render", "RenderString",
@@ -114,6 +121,8 @@ type controllerInfo struct {
 // ControllerRegister containers registered router rules, controller handlers and filters.
 type ControllerRegister struct {
 	routers      map[string]*Tree
+	enablePolicy bool
+	policies     map[string]*Tree
 	enableFilter bool
 	filters      [FinishRouter + 1][]*FilterRouter
 	pool         sync.Pool
@@ -122,7 +131,8 @@ type ControllerRegister struct {
 // NewControllerRegister returns a new ControllerRegister.
 func NewControllerRegister() *ControllerRegister {
 	cr := &ControllerRegister{
-		routers: make(map[string]*Tree),
+		routers:  make(map[string]*Tree),
+		policies: make(map[string]*Tree),
 	}
 	cr.pool.New = func() interface{} {
 		return beecontext.NewContext()
@@ -711,11 +721,14 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		goto Admin
 	}
 
+	//check policies
+	if p.execPolicy(context, urlPath) {
+		goto Admin
+	}
+
 	if routerInfo != nil {
-		if BConfig.RunMode == DEV {
-			//store router pattern into context
-			context.Input.SetData("RouterPattern", routerInfo.pattern)
-		}
+		//store router pattern into context
+		context.Input.SetData("RouterPattern", routerInfo.pattern)
 		if routerInfo.routerType == routerTypeRESTFul {
 			if _, ok := routerInfo.methods[r.Method]; ok {
 				isRunnable = true

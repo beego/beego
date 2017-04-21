@@ -21,11 +21,7 @@ func newSLACKWriter() Logger {
 
 // Init SLACKWriter with json config string
 func (s *SLACKWriter) Init(jsonconfig string) error {
-	err := json.Unmarshal([]byte(jsonconfig), s)
-	if err != nil {
-		return err
-	}
-	return nil
+	return json.Unmarshal([]byte(jsonconfig), s)
 }
 
 // WriteMsg write message in smtp writer.
@@ -44,10 +40,10 @@ func (s *SLACKWriter) WriteMsg(when time.Time, msg string, level int) error {
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("Post webhook failed %s %d", resp.Status, resp.StatusCode)
 	}
-	resp.Body.Close()
 	return nil
 }
 

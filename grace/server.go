@@ -162,9 +162,7 @@ func (srv *Server) handleSignals() {
 
 	signal.Notify(
 		srv.sigChan,
-		syscall.SIGHUP,
-		syscall.SIGINT,
-		syscall.SIGTERM,
+		hookableSignals...,
 	)
 
 	pid := syscall.Getpid()
@@ -288,5 +286,21 @@ func (srv *Server) fork() (err error) {
 		log.Fatalf("Restart: Failed to launch, error: %v", err)
 	}
 
+	return
+}
+
+// RegisterSignalHook registers a function to be run PreSignal or PostSignal for a given signal.
+func (srv *Server) RegisterSignalHook(ppFlag int, sig os.Signal, f func()) (err error) {
+	if ppFlag != PreSignal && ppFlag != PostSignal {
+		err = fmt.Errorf("Invalid ppFlag argument. Must be either grace.PreSignal or grace.PostSignal.")
+		return
+	}
+	for _, s := range hookableSignals {
+		if s == sig {
+			srv.SignalHooks[ppFlag][sig] = append(srv.SignalHooks[ppFlag][sig], f)
+			return
+		}
+	}
+	err = fmt.Errorf("Signal '%v' is not supported.", sig)
 	return
 }

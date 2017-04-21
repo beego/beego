@@ -67,6 +67,7 @@ func (output *BeegoOutput) Body(content []byte) error {
 	}
 	if b, n, _ := WriteBody(encoding, buf, content); b {
 		output.Header("Content-Encoding", n)
+		output.Header("Content-Length", strconv.Itoa(buf.Len()))
 	} else {
 		output.Header("Content-Length", strconv.Itoa(len(content)))
 	}
@@ -104,7 +105,7 @@ func (output *BeegoOutput) Cookie(name string, value string, others ...interface
 		switch {
 		case maxAge > 0:
 			fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(maxAge)*time.Second).UTC().Format(time.RFC1123), maxAge)
-		case maxAge < 0:
+		case maxAge <= 0:
 			fmt.Fprintf(&b, "; Max-Age=0")
 		}
 	}
@@ -330,16 +331,17 @@ func (output *BeegoOutput) IsServerError() bool {
 
 func stringsToJSON(str string) string {
 	rs := []rune(str)
-	jsons := ""
+	var jsons bytes.Buffer
 	for _, r := range rs {
 		rint := int(r)
 		if rint < 128 {
-			jsons += string(r)
+			jsons.WriteRune(r)
 		} else {
-			jsons += "\\u" + strconv.FormatInt(int64(rint), 16) // json
+			jsons.WriteString("\\u")
+			jsons.WriteString(strconv.FormatInt(int64(rint), 16))
 		}
 	}
-	return jsons
+	return jsons.String()
 }
 
 // Session sets session item value with given key.

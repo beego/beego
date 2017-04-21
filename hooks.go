@@ -53,10 +53,11 @@ func registerSession() error {
 			conf.Secure = BConfig.Listen.EnableHTTPS
 			conf.CookieLifeTime = BConfig.WebConfig.Session.SessionCookieLifeTime
 			conf.ProviderConfig = filepath.ToSlash(BConfig.WebConfig.Session.SessionProviderConfig)
+			conf.DisableHTTPOnly = BConfig.WebConfig.Session.SessionDisableHTTPOnly
 			conf.Domain = BConfig.WebConfig.Session.SessionDomain
-			conf.EnableSidInHttpHeader = BConfig.WebConfig.Session.EnableSidInHttpHeader
-			conf.SessionNameInHttpHeader = BConfig.WebConfig.Session.SessionNameInHttpHeader
-			conf.EnableSidInUrlQuery = BConfig.WebConfig.Session.EnableSidInUrlQuery
+			conf.EnableSidInHttpHeader = BConfig.WebConfig.Session.SessionEnableSidInHTTPHeader
+			conf.SessionNameInHttpHeader = BConfig.WebConfig.Session.SessionNameInHTTPHeader
+			conf.EnableSidInUrlQuery = BConfig.WebConfig.Session.SessionEnableSidInURLQuery
 		} else {
 			if err = json.Unmarshal([]byte(sessionConfig), conf); err != nil {
 				return err
@@ -71,7 +72,8 @@ func registerSession() error {
 }
 
 func registerTemplate() error {
-	if err := BuildTemplate(BConfig.WebConfig.ViewsPath); err != nil {
+	defer lockViewPaths()
+	if err := AddViewPath(BConfig.WebConfig.ViewsPath); err != nil {
 		if BConfig.RunMode == DEV {
 			logs.Warn(err)
 		}

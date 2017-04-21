@@ -37,10 +37,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/astaxie/beego/config"
 	"github.com/beego/goyaml2"
@@ -63,26 +61,30 @@ func (yaml *Config) Parse(filename string) (y config.Configer, err error) {
 
 // ParseData parse yaml data
 func (yaml *Config) ParseData(data []byte) (config.Configer, error) {
-	// Save memory data to temporary file
-	tmpName := path.Join(os.TempDir(), "beego", fmt.Sprintf("%d", time.Now().Nanosecond()))
-	os.MkdirAll(path.Dir(tmpName), os.ModePerm)
-	if err := ioutil.WriteFile(tmpName, data, 0655); err != nil {
+	cnf, err := parseYML(data)
+	if err != nil {
 		return nil, err
 	}
-	return yaml.Parse(tmpName)
+
+	return &ConfigContainer{
+		data: cnf,
+	}, nil
 }
 
 // ReadYmlReader Read yaml file to map.
 // if json like, use json package, unless goyaml2 package.
 func ReadYmlReader(path string) (cnf map[string]interface{}, err error) {
-	f, err := os.Open(path)
+	buf, err := ioutil.ReadFile(path)
 	if err != nil {
 		return
 	}
-	defer f.Close()
 
-	buf, err := ioutil.ReadAll(f)
-	if err != nil || len(buf) < 3 {
+	return parseYML(buf)
+}
+
+// parseYML parse yaml formatted []byte to map.
+func parseYML(buf []byte) (cnf map[string]interface{}, err error) {
+	if len(buf) < 3 {
 		return
 	}
 
@@ -250,7 +252,7 @@ func (c *ConfigContainer) GetSection(section string) (map[string]string, error) 
 	if v, ok := c.data[section]; ok {
 		return v.(map[string]string), nil
 	}
-	return nil, errors.New("not exist setction")
+	return nil, errors.New("not exist section")
 }
 
 // SaveConfigFile save the config into file

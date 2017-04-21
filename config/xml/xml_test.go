@@ -37,6 +37,10 @@ func TestXML(t *testing.T) {
 <copyrequestbody>true</copyrequestbody>
 <path1>${GOPATH}</path1>
 <path2>${GOPATH||/home/go}</path2>
+<mysection>
+<id>1</id>
+<name>MySection</name>
+</mysection>
 </config>
 `
 		keyValue = map[string]interface{}{
@@ -65,9 +69,20 @@ func TestXML(t *testing.T) {
 	}
 	f.Close()
 	defer os.Remove("testxml.conf")
+
 	xmlconf, err := config.NewConfig("xml", "testxml.conf")
 	if err != nil {
 		t.Fatal(err)
+	}
+
+	var xmlsection map[string]string
+	xmlsection, err = xmlconf.GetSection("mysection")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(xmlsection) == 0 {
+		t.Error("section should not be empty")
 	}
 
 	for k, v := range keyValue {

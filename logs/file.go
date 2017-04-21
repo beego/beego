@@ -193,16 +193,14 @@ func (w *fileLogWriter) dailyRotate(openTime time.Time) {
 	y, m, d := openTime.Add(24 * time.Hour).Date()
 	nextDay := time.Date(y, m, d, 0, 0, 0, 0, openTime.Location())
 	tm := time.NewTimer(time.Duration(nextDay.UnixNano() - openTime.UnixNano() + 100))
-	select {
-	case <-tm.C:
-		w.Lock()
-		if w.needRotate(0, time.Now().Day()) {
-			if err := w.doRotate(time.Now()); err != nil {
-				fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
-			}
+	<-tm.C
+	w.Lock()
+	if w.needRotate(0, time.Now().Day()) {
+		if err := w.doRotate(time.Now()); err != nil {
+			fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
 		}
-		w.Unlock()
 	}
+	w.Unlock()
 }
 
 func (w *fileLogWriter) lines() (int, error) {
@@ -270,6 +268,7 @@ func (w *fileLogWriter) doRotate(logTime time.Time) error {
 	// Rename the file to its new found name
 	// even if occurs error,we MUST guarantee to  restart new logger
 	err = os.Rename(w.Filename, fName)
+	err = os.Chmod(fName, os.FileMode(0440))
 	// re-start logger
 RESTART_LOGGER:
 
