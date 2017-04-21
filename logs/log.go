@@ -71,6 +71,7 @@ const (
 	AdapterEs        = "es"
 	AdapterJianLiao  = "jianliao"
 	AdapterSlack     = "slack"
+	AdapterAliLS     = "alils"
 )
 
 // Legacy log level constants to ensure backwards compatibility.
@@ -274,7 +275,7 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string, v ...interface{}) error 
 			line = 0
 		}
 		_, filename := path.Split(file)
-		msg = "[" + filename + ":" + strconv.FormatInt(int64(line), 10) + "] " + msg
+		msg = "[" + filename + ":" + strconv.Itoa(line) + "] " + msg
 	}
 
 	//set level info in front of filename info
@@ -380,7 +381,10 @@ func (bl *BeeLogger) Error(format string, v ...interface{}) {
 
 // Warning Log WARNING level message.
 func (bl *BeeLogger) Warning(format string, v ...interface{}) {
-	bl.Warn(format, v...)
+	if LevelWarn > bl.level {
+		return
+	}
+	bl.writeMsg(LevelWarn, format, v...)
 }
 
 // Notice Log NOTICE level message.
@@ -393,7 +397,10 @@ func (bl *BeeLogger) Notice(format string, v ...interface{}) {
 
 // Informational Log INFORMATIONAL level message.
 func (bl *BeeLogger) Informational(format string, v ...interface{}) {
-	bl.Info(format, v...)
+	if LevelInfo > bl.level {
+		return
+	}
+	bl.writeMsg(LevelInfo, format, v...)
 }
 
 // Debug Log DEBUG level message.
@@ -425,7 +432,10 @@ func (bl *BeeLogger) Info(format string, v ...interface{}) {
 // Trace Log TRACE level message.
 // compatibility alias for Debug()
 func (bl *BeeLogger) Trace(format string, v ...interface{}) {
-	bl.Debug(format, v...)
+	if LevelDebug > bl.level {
+		return
+	}
+	bl.writeMsg(LevelDebug, format, v...)
 }
 
 // Flush flush all chan data.
@@ -551,11 +561,7 @@ func SetLogFuncCallDepth(d int) {
 
 // SetLogger sets a new logger.
 func SetLogger(adapter string, config ...string) error {
-	err := beeLogger.SetLogger(adapter, config...)
-	if err != nil {
-		return err
-	}
-	return nil
+	return beeLogger.SetLogger(adapter, config...)
 }
 
 // Emergency logs a message at emergency level.

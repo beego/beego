@@ -89,7 +89,7 @@ checkColumn:
 		col = T["float64"]
 	case TypeDecimalField:
 		s := T["float64-decimal"]
-		if strings.Index(s, "%d") == -1 {
+		if !strings.Contains(s, "%d") {
 			col = s
 		} else {
 			col = fmt.Sprintf(s, fi.digits, fi.decimals)
@@ -120,7 +120,7 @@ func getColumnAddQuery(al *alias, fi *fieldInfo) string {
 	Q := al.DbBaser.TableQuote()
 	typ := getColumnTyp(al, fi)
 
-	if fi.null == false {
+	if !fi.null {
 		typ += " " + "NOT NULL"
 	}
 
@@ -172,7 +172,7 @@ func getDbCreateSQL(al *alias) (sqls []string, tableIndexes map[string][]dbIndex
 			} else {
 				column += col
 
-				if fi.null == false {
+				if !fi.null {
 					column += " " + "NOT NULL"
 				}
 
@@ -192,7 +192,7 @@ func getDbCreateSQL(al *alias) (sqls []string, tableIndexes map[string][]dbIndex
 				}
 			}
 
-			if strings.Index(column, "%COL%") != -1 {
+			if strings.Contains(column, "%COL%") {
 				column = strings.Replace(column, "%COL%", fi.column, -1)
 			}
 

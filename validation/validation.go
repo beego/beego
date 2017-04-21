@@ -349,7 +349,7 @@ func (v *Validation) RecursiveValid(objc interface{}) (bool, error) {
 	//Step 1: validate obj itself firstly
 	// fails if objc is not struct
 	pass, err := v.Valid(objc)
-	if err != nil || false == pass {
+	if err != nil || !pass {
 		return pass, err // Stop recursive validation
 	}
 	// Step 2: Validate struct's struct fields

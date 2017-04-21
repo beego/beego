@@ -21,7 +21,7 @@ func newGraceListener(l net.Listener, srv *Server) (el *graceListener) {
 		server:   srv,
 	}
 	go func() {
-		_ = <-el.stop
+		<-el.stop
 		el.stopped = true
 		el.stop <- el.Listener.Close()
 	}()

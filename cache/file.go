@@ -22,6 +22,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -222,33 +223,13 @@ func exists(path string) (bool, error) {
 // FileGetContents Get bytes to file.
 // if non-exist, create this file.
 func FileGetContents(filename string) (data []byte, e error) {
-	f, e := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, os.ModePerm)
-	if e != nil {
-		return
-	}
-	defer f.Close()
-	stat, e := f.Stat()
-	if e != nil {
-		return
-	}
-	data = make([]byte, stat.Size())
-	result, e := f.Read(data)
-	if e != nil || int64(result) != stat.Size() {
-		return nil, e
-	}
-	return
+	return ioutil.ReadFile(filename)
 }
 
 // FilePutContents Put bytes to file.
 // if non-exist, create this file.
 func FilePutContents(filename string, content []byte) error {
-	fp, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, os.ModePerm)
-	if err != nil {
-		return err
-	}
-	defer fp.Close()
-	_, err = fp.Write(content)
-	return err
+	return ioutil.WriteFile(filename, content, os.ModePerm)
 }
 
 // GobEncode Gob encodes file cache item.

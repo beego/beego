@@ -41,6 +41,7 @@ type Config struct {
 	EnableGzip          bool
 	MaxMemory           int64
 	EnableErrorsShow    bool
+	EnableErrorsRender  bool
 	Listen              Listen
 	WebConfig           WebConfig
 	Log                 LogConfig
@@ -86,17 +87,18 @@ type WebConfig struct {
 
 // SessionConfig holds session related config
 type SessionConfig struct {
-	SessionOn               bool
-	SessionProvider         string
-	SessionName             string
-	SessionGCMaxLifetime    int64
-	SessionProviderConfig   string
-	SessionCookieLifeTime   int
-	SessionAutoSetCookie    bool
-	SessionDomain           string
-	EnableSidInHttpHeader   bool //	enable store/get the sessionId into/from http headers
-	SessionNameInHttpHeader string
-	EnableSidInUrlQuery     bool //	enable get the sessionId from Url Query params
+	SessionOn                    bool
+	SessionProvider              string
+	SessionName                  string
+	SessionGCMaxLifetime         int64
+	SessionProviderConfig        string
+	SessionCookieLifeTime        int
+	SessionAutoSetCookie         bool
+	SessionDomain                string
+	SessionDisableHTTPOnly       bool // used to allow for cross domain cookies/javascript cookies.
+	SessionEnableSidInHTTPHeader bool //	enable store/get the sessionId into/from http headers
+	SessionNameInHTTPHeader      string
+	SessionEnableSidInURLQuery   bool //	enable get the sessionId from Url Query params
 }
 
 // LogConfig holds Log related config
@@ -170,7 +172,7 @@ func recoverPanic(ctx *context.Context) {
 			logs.Critical(fmt.Sprintf("%s:%d", file, line))
 			stack = stack + fmt.Sprintln(fmt.Sprintf("%s:%d", file, line))
 		}
-		if BConfig.RunMode == DEV {
+		if BConfig.RunMode == DEV && BConfig.EnableErrorsRender {
 			showErr(err, ctx, stack)
 		}
 	}
@@ -188,6 +190,7 @@ func newBConfig() *Config {
 		EnableGzip:          false,
 		MaxMemory:           1 << 26, //64MB
 		EnableErrorsShow:    true,
+		EnableErrorsRender:  true,
 		Listen: Listen{
 			Graceful:      false,
 			ServerTimeOut: 0,
@@ -221,17 +224,18 @@ func newBConfig() *Config {
 			XSRFKey:                "beegoxsrf",
 			XSRFExpire:             0,
 			Session: SessionConfig{
-				SessionOn:               false,
-				SessionProvider:         "memory",
-				SessionName:             "beegosessionID",
-				SessionGCMaxLifetime:    3600,
-				SessionProviderConfig:   "",
-				SessionCookieLifeTime:   0, //set cookie default is the browser life
-				SessionAutoSetCookie:    true,
-				SessionDomain:           "",
-				EnableSidInHttpHeader:   false, //	enable store/get the sessionId into/from http headers
-				SessionNameInHttpHeader: "Beegosessionid",
-				EnableSidInUrlQuery:     false, //	enable get the sessionId from Url Query params
+				SessionOn:                    false,
+				SessionProvider:              "memory",
+				SessionName:                  "beegosessionID",
+				SessionGCMaxLifetime:         3600,
+				SessionProviderConfig:        "",
+				SessionDisableHTTPOnly:       false,
+				SessionCookieLifeTime:        0, //set cookie default is the browser life
+				SessionAutoSetCookie:         true,
+				SessionDomain:                "",
+				SessionEnableSidInHTTPHeader: false, //	enable store/get the sessionId into/from http headers
+				SessionNameInHTTPHeader:      "Beegosessionid",
+				SessionEnableSidInURLQuery:   false, //	enable get the sessionId from Url Query params
 			},
 		},
 		Log: LogConfig{
@@ -252,15 +256,14 @@ func parseConfig(appConfigPath string) (err error) {
 }
 
 func assignConfig(ac config.Configer) error {
+	for _, i := range []interface{}{BConfig, &BConfig.Listen, &BConfig.WebConfig, &BConfig.Log, &BConfig.WebConfig.Session} {
+		assignSingleConfig(i, ac)
+	}
 	// set the run mode first
 	if envRunMode := os.Getenv("BEEGO_RUNMODE"); envRunMode != "" {
 		BConfig.RunMode = envRunMode
 	} else if runMode := ac.String("RunMode"); runMode != "" {
 		BConfig.RunMode = runMode
-	}
-
-	for _, i := range []interface{}{BConfig, &BConfig.Listen, &BConfig.WebConfig, &BConfig.Log, &BConfig.WebConfig.Session} {
-		assignSingleConfig(i, ac)
 	}
 
 	if sd := ac.String("StaticDir"); sd != "" {
@@ -294,6 +297,10 @@ func assignConfig(ac config.Configer) error {
 	}
 
 	if lo := ac.String("LogOutputs"); lo != "" {
+		// if lo is not nil or empty
+		// means user has set his own LogOutputs
+		// clear the default setting to BConfig.Log.Outputs
+		BConfig.Log.Outputs = make(map[string]string)
 		los := strings.Split(lo, ";")
 		for _, v := range los {
 			if logType2Config := strings.SplitN(v, ",", 2); len(logType2Config) == 2 {
@@ -338,7 +345,7 @@ func assignSingleConfig(p interface{}, ac config.Configer) {
 		case reflect.String:
 			pf.SetString(ac.DefaultString(name, pf.String()))
 		case reflect.Int, reflect.Int64:
-			pf.SetInt(int64(ac.DefaultInt64(name, pf.Int())))
+			pf.SetInt(ac.DefaultInt64(name, pf.Int()))
 		case reflect.Bool:
 			pf.SetBool(ac.DefaultBool(name, pf.Bool()))
 		case reflect.Struct:

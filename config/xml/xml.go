@@ -35,11 +35,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/astaxie/beego/config"
 	"github.com/beego/x2j"
@@ -52,36 +50,26 @@ type Config struct{}
 
 // Parse returns a ConfigContainer with parsed xml config map.
 func (xc *Config) Parse(filename string) (config.Configer, error) {
-	file, err := os.Open(filename)
+	context, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
 
+	return xc.ParseData(context)
+}
+
+// ParseData xml data
+func (xc *Config) ParseData(data []byte) (config.Configer, error) {
 	x := &ConfigContainer{data: make(map[string]interface{})}
-	content, err := ioutil.ReadAll(file)
-	if err != nil {
-		return nil, err
-	}
 
-	d, err := x2j.DocToMap(string(content))
+	d, err := x2j.DocToMap(string(data))
 	if err != nil {
 		return nil, err
 	}
 
 	x.data = config.ExpandValueEnvForMap(d["config"].(map[string]interface{}))
-	return x, nil
-}
 
-// ParseData xml data
-func (xc *Config) ParseData(data []byte) (config.Configer, error) {
-	// Save memory data to temporary file
-	tmpName := path.Join(os.TempDir(), "beego", fmt.Sprintf("%d", time.Now().Nanosecond()))
-	os.MkdirAll(path.Dir(tmpName), os.ModePerm)
-	if err := ioutil.WriteFile(tmpName, data, 0655); err != nil {
-		return nil, err
-	}
-	return xc.Parse(tmpName)
+	return x, nil
 }
 
 // ConfigContainer A Config represents the xml configuration.
@@ -193,10 +181,14 @@ func (c *ConfigContainer) DefaultStrings(key string, defaultval []string) []stri
 
 // GetSection returns map for the given section
 func (c *ConfigContainer) GetSection(section string) (map[string]string, error) {
-	if v, ok := c.data[section]; ok {
-		return v.(map[string]string), nil
+	if v, ok := c.data[section].(map[string]interface{}); ok {
+		mapstr := make(map[string]string)
+		for k, val := range v {
+			mapstr[k] = config.ToString(val)
+		}
+		return mapstr, nil
 	}
-	return nil, errors.New("not exist setction")
+	return nil, fmt.Errorf("section '%s' not found", section)
 }
 
 // SaveConfigFile save the config into file

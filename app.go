@@ -348,9 +348,9 @@ func Any(rootpath string, f FilterFunc) *App {
 
 // Handler used to register a Handler router
 // usage:
-//    beego.Handler("/api", func(ctx *context.Context){
-//          ctx.Output.Body("hello world")
-//    })
+//    beego.Handler("/api", http.HandlerFunc(func (w http.ResponseWriter, r *http.Request) {
+//          fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
+//    }))
 func Handler(rootpath string, h http.Handler, options ...interface{}) *App {
 	BeeApp.Handlers.Handler(rootpath, h, options...)
 	return BeeApp
