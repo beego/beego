@@ -21,11 +21,17 @@ func Json(value interface{}, encoding ...bool) Renderer {
 	})
 }
 
-func Error(err error) Renderer {
+func errorRenderer(err error) Renderer {
 	return rendererFunc(func(ctx *beecontext.Context) {
 		ctx.Output.SetStatus(500)
 		ctx.WriteString(err.Error())
 	})
+}
+
+func Redirect(localurl string) statusCodeWithRender {
+	return statusCodeWithRender{302, func(ctx *beecontext.Context) {
+		ctx.Redirect(302, localurl)
+	}}
 }
 
 func RenderMethodResult(result interface{}, ctx *beecontext.Context) {
@@ -34,7 +40,7 @@ func RenderMethodResult(result interface{}, ctx *beecontext.Context) {
 		if !ok {
 			err, ok := result.(error)
 			if ok {
-				renderer = Error(err)
+				renderer = errorRenderer(err)
 			} else {
 				renderer = Json(result)
 			}
