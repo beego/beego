@@ -5,6 +5,7 @@ import (
 	"reflect"
 
 	beecontext "github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/logs"
 )
 
 //Keeps param information to be auto passed to controller methods
@@ -13,7 +14,7 @@ type MethodParam struct {
 	parser   paramParser
 	location paramLocation
 	required bool
-	defValue interface{}
+	defValue string
 }
 
 type paramLocation byte
@@ -38,6 +39,18 @@ func Int(name string, opts ...MethodParamOption) *MethodParam {
 	return newParam(name, intParser{}, opts)
 }
 
+func Float(name string, opts ...MethodParamOption) *MethodParam {
+	return newParam(name, floatParser{}, opts)
+}
+
+func Time(name string, opts ...MethodParamOption) *MethodParam {
+	return newParam(name, timeParser{}, opts)
+}
+
+func Json(name string, opts ...MethodParamOption) *MethodParam {
+	return newParam(name, jsonParser{}, opts)
+}
+
 func newParam(name string, parser paramParser, opts []MethodParamOption) (param *MethodParam) {
 	param = &MethodParam{name: name, parser: parser}
 	for _, option := range opts {
@@ -46,42 +59,47 @@ func newParam(name string, parser paramParser, opts []MethodParamOption) (param 
 	return
 }
 
-func ConvertParams(methodParams []*MethodParam, methodType reflect.Type, ctx *beecontext.Context) (result []reflect.Value) {
-	result = make([]reflect.Value, 0, len(methodParams))
-	i := 0
-	for _, p := range methodParams {
-		var strValue string
-		var value interface{}
-		switch p.location {
-		case body:
-			strValue = string(ctx.Input.RequestBody)
-		case header:
-			strValue = ctx.Input.Header(p.name)
-		default:
-			strValue = ctx.Input.Query(p.name)
+func convertParam(param *MethodParam, paramType reflect.Type, ctx *beecontext.Context) (result reflect.Value) {
+	var strValue string
+	var reflectValue reflect.Value
+	switch param.location {
+	case body:
+		strValue = string(ctx.Input.RequestBody)
+	case header:
+		strValue = ctx.Input.Header(param.name)
+	default:
+		strValue = ctx.Input.Query(param.name)
+	}
+
+	if strValue == "" {
+		if param.required {
+			ctx.Abort(400, fmt.Sprintf("Missing parameter %s", param.name))
+		} else {
+			strValue = param.defValue
+		}
+	}
+	if strValue == "" {
+		reflectValue = reflect.Zero(paramType)
+	} else {
+		value, err := param.parser.parse(strValue, paramType)
+		if err != nil {
+			logs.Debug(fmt.Sprintf("Error converting param %s to type %s. Value: %s, Parser: %s, Error: %s", param.name, paramType.Name(), strValue, reflect.TypeOf(param.parser).Name(), err))
+			ctx.Abort(400, fmt.Sprintf("Invalid parameter %s. Can not convert %s to type %s", param.name, strValue, paramType.Name()))
 		}
 
-		if strValue == "" {
-			if p.required {
-				ctx.Abort(400, "Missing argument "+p.name)
-			} else if p.defValue != nil {
-				value = p.defValue
-			} else {
-				value = p.parser.zeroValue()
-			}
-		} else {
-			var err error
-			value, err = p.parser.parse(strValue)
-			if err != nil {
-				//TODO: handle err
-			}
-		}
-		reflectValue, err := safeConvert(reflect.ValueOf(value), methodType.In(i))
+		reflectValue, err = safeConvert(reflect.ValueOf(value), paramType)
 		if err != nil {
-			//TODO: handle err
+			panic(err)
 		}
+	}
+	return reflectValue
+}
+
+func ConvertParams(methodParams []*MethodParam, methodType reflect.Type, ctx *beecontext.Context) (result []reflect.Value) {
+	result = make([]reflect.Value, 0, len(methodParams))
+	for i := 0; i < len(methodParams); i++ {
+		reflectValue := convertParam(methodParams[i], methodType.In(i), ctx)
 		result = append(result, reflectValue)
-		i++
 	}
 	return
 }

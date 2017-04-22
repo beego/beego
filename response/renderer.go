@@ -25,3 +25,12 @@ func (s StatusCode) Error() string {
 func (s StatusCode) Render(ctx *beecontext.Context) {
 	ctx.Output.SetStatus(int(s))
 }
+
+type statusCodeWithRender struct {
+	statusCode int
+	rendererFunc
+}
+
+func (s statusCodeWithRender) Error() string {
+	return strconv.Itoa(s.statusCode)
+}
