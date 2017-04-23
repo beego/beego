@@ -905,7 +905,7 @@ func (p *ControllerRegister) handleParamResponse(context *beecontext.Context, ex
 	//looping in reverse order for the case when both error and value are returned and error sets the response status code
 	for i := len(results) - 1; i >= 0; i-- {
 		result := results[i]
-		if !result.IsNil() {
+		if result.Kind() != reflect.Interface || !result.IsNil() {
 			resultValue := result.Interface()
 			response.RenderMethodResult(resultValue, context)
 		}

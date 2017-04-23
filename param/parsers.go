@@ -4,11 +4,18 @@ import (
 	"encoding/json"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 )
 
 type paramParser interface {
 	parse(value string, toType reflect.Type) (interface{}, error)
+}
+
+type parserFunc func(value string, toType reflect.Type) (interface{}, error)
+
+func (f parserFunc) parse(value string, toType reflect.Type) (interface{}, error) {
+	return f(value, toType)
 }
 
 type boolParser struct {
@@ -37,7 +44,11 @@ type floatParser struct {
 
 func (p floatParser) parse(value string, toType reflect.Type) (interface{}, error) {
 	if toType.Kind() == reflect.Float32 {
-		return strconv.ParseFloat(value, 32)
+		res, err := strconv.ParseFloat(value, 32)
+		if err != nil {
+			return nil, err
+		}
+		return float32(res), nil
 	}
 	return strconv.ParseFloat(value, 64)
 }
@@ -64,4 +75,20 @@ func (p jsonParser) parse(value string, toType reflect.Type) (interface{}, error
 		return nil, err
 	}
 	return pResult.Elem().Interface(), nil
+}
+
+func sliceParser(elemParser paramParser) paramParser {
+	return parserFunc(func(value string, toType reflect.Type) (interface{}, error) {
+		values := strings.Split(value, ",")
+		result := reflect.MakeSlice(toType, 0, len(values))
+		elemType := toType.Elem()
+		for _, v := range values {
+			parsedValue, err := elemParser.parse(v, elemType)
+			if err != nil {
+				return nil, err
+			}
+			result = reflect.Append(result, reflect.ValueOf(parsedValue))
+		}
+		return result.Interface(), nil
+	})
 }
