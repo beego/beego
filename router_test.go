@@ -654,32 +654,40 @@ func TestFilterFinishRouterMulti(t *testing.T) {
 }
 
 func beegoFilterNoOutput(ctx *context.Context) {
-	return
 }
+
 func beegoBeforeRouter1(ctx *context.Context) {
 	ctx.WriteString("|BeforeRouter1")
 }
+
 func beegoBeforeRouter2(ctx *context.Context) {
 	ctx.WriteString("|BeforeRouter2")
 }
+
 func beegoBeforeExec1(ctx *context.Context) {
 	ctx.WriteString("|BeforeExec1")
 }
+
 func beegoBeforeExec2(ctx *context.Context) {
 	ctx.WriteString("|BeforeExec2")
 }
+
 func beegoAfterExec1(ctx *context.Context) {
 	ctx.WriteString("|AfterExec1")
 }
+
 func beegoAfterExec2(ctx *context.Context) {
 	ctx.WriteString("|AfterExec2")
 }
+
 func beegoFinishRouter1(ctx *context.Context) {
 	ctx.WriteString("|FinishRouter1")
 }
+
 func beegoFinishRouter2(ctx *context.Context) {
 	ctx.WriteString("|FinishRouter2")
 }
+
 func beegoResetParams(ctx *context.Context) {
 	ctx.ResponseWriter.Header().Set("splat", ctx.Input.Param(":splat"))
 }

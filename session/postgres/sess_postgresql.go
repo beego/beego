@@ -224,7 +224,6 @@ func (mp *Provider) SessionGC() {
 	c := mp.connectInit()
 	c.Exec("DELETE from session where EXTRACT(EPOCH FROM (current_timestamp - session_expiry)) > $1", mp.maxlifetime)
 	c.Close()
-	return
 }
 
 // SessionAll count values in postgresql session
