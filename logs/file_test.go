@@ -162,7 +162,7 @@ func TestFileRotate_05(t *testing.T) {
 	testFileDailyRotate(t, fn1, fn2)
 	os.Remove(fn)
 }
-func TestFileRotate_06(t *testing.T) {//test file mode
+func TestFileRotate_06(t *testing.T) { //test file mode
 	log := NewLogger(10000)
 	log.SetLogger("file", `{"filename":"test3.log","maxlines":4}`)
 	log.Debug("debug")
@@ -174,7 +174,7 @@ func TestFileRotate_06(t *testing.T) {//test file mode
 	log.Critical("critical")
 	log.Emergency("emergency")
 	rotateName := "test3" + fmt.Sprintf(".%s.%03d", time.Now().Format("2006-01-02"), 1) + ".log"
-	s,_:=os.Lstat(rotateName)
+	s, _ := os.Lstat(rotateName)
 	if s.Mode() != 0440 {
 		os.Remove(rotateName)
 		os.Remove("test3.log")
