@@ -592,7 +592,7 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a
 	row := q.QueryRow(query, values...)
 	var id int64
 	err = row.Scan(&id)
-	if err.Error() == `pq: syntax error at or near "ON"` {
+	if err != nil && err.Error() == `pq: syntax error at or near "ON"` {
 		err = fmt.Errorf("postgres version must 9.5 or higher")
 	}
 	return id, err
