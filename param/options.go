@@ -19,7 +19,7 @@ var InBody MethodParamOption = func(p *MethodParam) {
 func Default(defValue interface{}) MethodParamOption {
 	return func(p *MethodParam) {
 		if defValue != nil {
-			p.defValue = fmt.Sprintf("%v", defValue)
+			p.defValue = fmt.Sprint(defValue)
 		}
 	}
 }
