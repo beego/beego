@@ -61,12 +61,10 @@ func (s *JLWriter) WriteMsg(when time.Time, msg string, level int) error {
 
 // Flush implementing method. empty.
 func (s *JLWriter) Flush() {
-	return
 }
 
 // Destroy implementing method. empty.
 func (s *JLWriter) Destroy() {
-	return
 }
 
 func init() {
