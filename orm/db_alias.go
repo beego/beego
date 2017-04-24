@@ -60,6 +60,8 @@ var (
 		"sqlite3":  DRSqlite,
 		"tidb":     DRTiDB,
 		"oracle":   DROracle,
+		"oci8":     DROracle, // github.com/mattn/go-oci8
+		"ora":      DROracle, //https://github.com/rana/ora
 	}
 	dbBasers = map[DriverType]dbBaser{
 		DRMySQL:    newdbBaseMysql(),
