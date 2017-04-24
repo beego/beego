@@ -30,13 +30,13 @@ func (p *SsdbProvider) connectInit() error {
 }
 
 func (p *SsdbProvider) SessionInit(maxLifetime int64, savePath string) error {
-	var e error = nil
 	p.maxLifetime = maxLifetime
 	address := strings.Split(savePath, ":")
 	p.host = address[0]
-	p.port, e = strconv.Atoi(address[1])
-	if e != nil {
-		return e
+
+	var err error
+	if p.port, err = strconv.Atoi(address[1]); err != nil {
+		return err
 	}
 	return p.connectInit()
 }
@@ -78,8 +78,8 @@ func (p *SsdbProvider) SessionExist(sid string) bool {
 		return false
 	}
 	return true
-
 }
+
 func (p *SsdbProvider) SessionRegenerate(oldsid, sid string) (session.Store, error) {
 	//conn.Do("setx", key, v, ttl)
 	if p.client == nil {
@@ -123,7 +123,6 @@ func (p *SsdbProvider) SessionDestroy(sid string) error {
 }
 
 func (p *SsdbProvider) SessionGC() {
-	return
 }
 
 func (p *SsdbProvider) SessionAll() int {

@@ -138,12 +138,10 @@ func (s *SMTPWriter) WriteMsg(when time.Time, msg string, level int) error {
 
 // Flush implementing method. empty.
 func (s *SMTPWriter) Flush() {
-	return
 }
 
 // Destroy implementing method. empty.
 func (s *SMTPWriter) Destroy() {
-	return
 }
 
 func init() {

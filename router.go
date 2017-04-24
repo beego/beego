@@ -17,7 +17,6 @@ package beego
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"path"
 	"path/filepath"
 	"reflect"
@@ -111,7 +110,8 @@ func ExceptMethodAppend(action string) {
 	exceptMethod = append(exceptMethod, action)
 }
 
-type controllerInfo struct {
+// ControllerInfo holds information about the controller.
+type ControllerInfo struct {
 	pattern        string
 	controllerType reflect.Type
 	methods        map[string]string
@@ -183,7 +183,7 @@ func (p *ControllerRegister) addWithMethodParams(pattern string, c ControllerInt
 		}
 	}
 
-	route := &controllerInfo{}
+	route := &ControllerInfo{}
 	route.pattern = pattern
 	route.methods = methods
 	route.routerType = routerTypeBeego
@@ -206,7 +206,7 @@ func (p *ControllerRegister) addWithMethodParams(pattern string, c ControllerInt
 	}
 }
 
-func (p *ControllerRegister) addToRouter(method, pattern string, r *controllerInfo) {
+func (p *ControllerRegister) addToRouter(method, pattern string, r *ControllerInfo) {
 	if !BConfig.RouterCaseSensitive {
 		pattern = strings.ToLower(pattern)
 	}
@@ -227,13 +227,11 @@ func (p *ControllerRegister) Include(cList ...ControllerInterface) {
 		for _, c := range cList {
 			reflectVal := reflect.ValueOf(c)
 			t := reflect.Indirect(reflectVal).Type()
-			gopath := os.Getenv("GOPATH")
-			if gopath == "" {
+			wgopath := utils.GetGOPATHs()
+			if len(wgopath) == 0 {
 				panic("you are in dev mode. So please set gopath")
 			}
 			pkgpath := ""
-
-			wgopath := filepath.SplitList(gopath)
 			for _, wg := range wgopath {
 				wg, _ = filepath.EvalSymlinks(filepath.Join(wg, "src", t.PkgPath()))
 				if utils.FileExists(wg) {
@@ -343,7 +341,7 @@ func (p *ControllerRegister) AddMethod(method, pattern string, f FilterFunc) {
 	if _, ok := HTTPMETHOD[method]; method != "*" && !ok {
 		panic("not support http method: " + method)
 	}
-	route := &controllerInfo{}
+	route := &ControllerInfo{}
 	route.pattern = pattern
 	route.routerType = routerTypeRESTFul
 	route.runFunction = f
@@ -369,7 +367,7 @@ func (p *ControllerRegister) AddMethod(method, pattern string, f FilterFunc) {
 
 // Handler add user defined Handler
 func (p *ControllerRegister) Handler(pattern string, h http.Handler, options ...interface{}) {
-	route := &controllerInfo{}
+	route := &ControllerInfo{}
 	route.pattern = pattern
 	route.routerType = routerTypeHandler
 	route.handler = h
@@ -404,7 +402,7 @@ func (p *ControllerRegister) AddAutoPrefix(prefix string, c ControllerInterface)
 	controllerName := strings.TrimSuffix(ct.Name(), "Controller")
 	for i := 0; i < rt.NumMethod(); i++ {
 		if !utils.InSlice(rt.Method(i).Name, exceptMethod) {
-			route := &controllerInfo{}
+			route := &ControllerInfo{}
 			route.routerType = routerTypeBeego
 			route.methods = map[string]string{"*": rt.Method(i).Name}
 			route.controllerType = ct
@@ -510,7 +508,7 @@ func (p *ControllerRegister) geturl(t *Tree, url, controllName, methodName strin
 		}
 	}
 	for _, l := range t.leaves {
-		if c, ok := l.runObject.(*controllerInfo); ok {
+		if c, ok := l.runObject.(*ControllerInfo); ok {
 			if c.routerType == routerTypeBeego &&
 				strings.HasSuffix(path.Join(c.controllerType.PkgPath(), c.controllerType.Name()), controllName) {
 				find := false
@@ -638,7 +636,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		findRouter   bool
 		runMethod    string
 		methodParams []*param.MethodParam
-		routerInfo   *controllerInfo
+		routerInfo   *ControllerInfo
 		isRunnable   bool
 	)
 	context := p.pool.Get().(*beecontext.Context)
@@ -679,7 +677,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		goto Admin
 	}
 
-	if r.Method != "GET" && r.Method != "HEAD" {
+	if r.Method != http.MethodGet && r.Method != http.MethodHead {
 		if BConfig.CopyRequestBody && !context.Input.IsUpload() {
 			context.Input.CopyBody(BConfig.MaxMemory)
 		}
@@ -753,11 +751,11 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			runRouter = routerInfo.controllerType
 			methodParams = routerInfo.methodParams
 			method := r.Method
-			if r.Method == "POST" && context.Input.Query("_method") == "PUT" {
-				method = "PUT"
+			if r.Method == http.MethodPost && context.Input.Query("_method") == http.MethodPost {
+				method = http.MethodPut
 			}
-			if r.Method == "POST" && context.Input.Query("_method") == "DELETE" {
-				method = "DELETE"
+			if r.Method == http.MethodPost && context.Input.Query("_method") == http.MethodDelete {
+				method = http.MethodDelete
 			}
 			if m, ok := routerInfo.methods[method]; ok {
 				runMethod = m
@@ -787,8 +785,8 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		//if XSRF is Enable then check cookie where there has any cookie in the  request's cookie _csrf
 		if BConfig.WebConfig.EnableXSRF {
 			execController.XSRFToken()
-			if r.Method == "POST" || r.Method == "DELETE" || r.Method == "PUT" ||
-				(r.Method == "POST" && (context.Input.Query("_method") == "DELETE" || context.Input.Query("_method") == "PUT")) {
+			if r.Method == http.MethodPost || r.Method == http.MethodDelete || r.Method == http.MethodPut ||
+				(r.Method == http.MethodPost && (context.Input.Query("_method") == http.MethodDelete || context.Input.Query("_method") == http.MethodPut)) {
 				execController.CheckXSRFCookie()
 			}
 		}
@@ -798,19 +796,19 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		if !context.ResponseWriter.Started {
 			//exec main logic
 			switch runMethod {
-			case "GET":
+			case http.MethodGet:
 				execController.Get()
-			case "POST":
+			case http.MethodPost:
 				execController.Post()
-			case "DELETE":
+			case http.MethodDelete:
 				execController.Delete()
-			case "PUT":
+			case http.MethodPut:
 				execController.Put()
-			case "HEAD":
+			case http.MethodHead:
 				execController.Head()
-			case "PATCH":
+			case http.MethodPatch:
 				execController.Patch()
-			case "OPTIONS":
+			case http.MethodOptions:
 				execController.Options()
 			default:
 				if !execController.HandlerFunc(runMethod) {
@@ -913,7 +911,7 @@ func (p *ControllerRegister) handleParamResponse(context *beecontext.Context, ex
 }
 
 // FindRouter Find Router info for URL
-func (p *ControllerRegister) FindRouter(context *beecontext.Context) (routerInfo *controllerInfo, isFind bool) {
+func (p *ControllerRegister) FindRouter(context *beecontext.Context) (routerInfo *ControllerInfo, isFind bool) {
 	var urlPath = context.Input.URL()
 	if !BConfig.RouterCaseSensitive {
 		urlPath = strings.ToLower(urlPath)
@@ -921,7 +919,7 @@ func (p *ControllerRegister) FindRouter(context *beecontext.Context) (routerInfo
 	httpMethod := context.Input.Method()
 	if t, ok := p.routers[httpMethod]; ok {
 		runObject := t.Match(urlPath, context)
-		if r, ok := runObject.(*controllerInfo); ok {
+		if r, ok := runObject.(*ControllerInfo); ok {
 			return r, true
 		}
 	}
