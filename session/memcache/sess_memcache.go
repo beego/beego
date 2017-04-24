@@ -215,7 +215,6 @@ func (rp *MemProvider) connectInit() error {
 
 // SessionGC Impelment method, no used.
 func (rp *MemProvider) SessionGC() {
-	return
 }
 
 // SessionAll return all activeSession
