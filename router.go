@@ -17,7 +17,6 @@ package beego
 import (
 	"fmt"
 	"net/http"
-	"os"
 	"path"
 	"path/filepath"
 	"reflect"
@@ -219,13 +218,11 @@ func (p *ControllerRegister) Include(cList ...ControllerInterface) {
 		for _, c := range cList {
 			reflectVal := reflect.ValueOf(c)
 			t := reflect.Indirect(reflectVal).Type()
-			gopath := os.Getenv("GOPATH")
-			if gopath == "" {
+			wgopath := utils.GetGOPATHs()
+			if len(wgopath) == 0 {
 				panic("you are in dev mode. So please set gopath")
 			}
 			pkgpath := ""
-
-			wgopath := filepath.SplitList(gopath)
 			for _, wg := range wgopath {
 				wg, _ = filepath.EvalSymlinks(filepath.Join(wg, "src", t.PkgPath()))
 				if utils.FileExists(wg) {
