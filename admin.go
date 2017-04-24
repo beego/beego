@@ -208,7 +208,7 @@ func printTree(resultList *[][]string, t *Tree) {
 		printTree(resultList, t.wildcard)
 	}
 	for _, l := range t.leaves {
-		if v, ok := l.runObject.(*controllerInfo); ok {
+		if v, ok := l.runObject.(*ControllerInfo); ok {
 			if v.routerType == routerTypeBeego {
 				var result = []string{
 					v.pattern,
@@ -276,8 +276,8 @@ func profIndex(rw http.ResponseWriter, r *http.Request) {
 // it's in "/healthcheck" pattern in admin module.
 func healthcheck(rw http.ResponseWriter, req *http.Request) {
 	var (
+		result     []string
 		data       = make(map[interface{}]interface{})
-		result     = []string{}
 		resultList = new([][]string)
 		content    = map[string]interface{}{
 			"Fields": []string{"Name", "Message", "Status"},
@@ -291,17 +291,16 @@ func healthcheck(rw http.ResponseWriter, req *http.Request) {
 				name,
 				err.Error(),
 			}
-
 		} else {
 			result = []string{
 				"success",
 				name,
 				"OK",
 			}
-
 		}
 		*resultList = append(*resultList, result)
 	}
+
 	content["Data"] = resultList
 	data["Content"] = content
 	data["Title"] = "Health Check"
@@ -330,7 +329,6 @@ func taskStatus(rw http.ResponseWriter, req *http.Request) {
 	// List Tasks
 	content := make(map[string]interface{})
 	resultList := new([][]string)
-	var result = []string{}
 	var fields = []string{
 		"Task Name",
 		"Task Spec",
@@ -339,7 +337,7 @@ func taskStatus(rw http.ResponseWriter, req *http.Request) {
 		"",
 	}
 	for tname, tk := range toolbox.AdminTaskList {
-		result = []string{
+		result := []string{
 			tname,
 			tk.GetSpec(),
 			tk.GetStatus(),

@@ -90,8 +90,6 @@ func serverStaticRouter(ctx *context.Context) {
 	}
 
 	http.ServeContent(ctx.ResponseWriter, ctx.Request, filePath, sch.modTime, sch)
-	return
-
 }
 
 type serveContentHolder struct {

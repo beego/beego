@@ -49,12 +49,10 @@ func (s *SLACKWriter) WriteMsg(when time.Time, msg string, level int) error {
 
 // Flush implementing method. empty.
 func (s *SLACKWriter) Flush() {
-	return
 }
 
 // Destroy implementing method. empty.
 func (s *SLACKWriter) Destroy() {
-	return
 }
 
 func init() {

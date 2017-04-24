@@ -421,7 +421,7 @@ func (c *IniConfigContainer) Set(key, value string) error {
 
 	var (
 		section, k string
-		sectionKey = strings.Split(key, "::")
+		sectionKey = strings.Split(strings.ToLower(key), "::")
 	)
 
 	if len(sectionKey) >= 2 {
