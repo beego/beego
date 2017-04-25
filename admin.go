@@ -105,29 +105,12 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 		tmpl.Execute(rw, data)
 
 	case "router":
-		var (
-			content = map[string]interface{}{
-				"Fields": []string{
-					"Router Pattern",
-					"Methods",
-					"Controller",
-				},
-			}
-			methods     = []string{}
-			methodsData = make(map[string]interface{})
-		)
-		for method, t := range BeeApp.Handlers.routers {
-
-			resultList := new([][]string)
-
-			printTree(resultList, t)
-
-			methods = append(methods, method)
-			methodsData[method] = resultList
+		content := PrintTree()
+		content["Fields"] = []string{
+			"Router Pattern",
+			"Methods",
+			"Controller",
 		}
-
-		content["Data"] = methodsData
-		content["Methods"] = methods
 		data["Content"] = content
 		data["Title"] = "Routers"
 		execTpl(rw, data, routerAndFilterTpl, defaultScriptsTpl)
@@ -198,6 +181,28 @@ func list(root string, p interface{}, m map[string]interface{}) {
 			m[key] = pv.Field(i).Interface()
 		}
 	}
+}
+
+// PrintTree prints all registered routers.
+func PrintTree() map[string]interface{} {
+	var (
+		content     = map[string]interface{}{}
+		methods     = []string{}
+		methodsData = make(map[string]interface{})
+	)
+	for method, t := range BeeApp.Handlers.routers {
+
+		resultList := new([][]string)
+
+		printTree(resultList, t)
+
+		methods = append(methods, method)
+		methodsData[method] = resultList
+	}
+
+	content["Data"] = methodsData
+	content["Methods"] = methods
+	return content
 }
 
 func printTree(resultList *[][]string, t *Tree) {
