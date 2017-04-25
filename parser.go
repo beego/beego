@@ -199,12 +199,11 @@ func parseComment(lines []*ast.Comment) (pc *parsedComment, err error) {
 				logs.Error("Invalid @Param format. Needs at least 4 parameters")
 			}
 			p := parsedParam{}
-			names := strings.Split(pv[0], "=")
-			funcParamName := names[0]
+			names := strings.SplitN(pv[0], "=>", 2)
+			p.name = names[0]
+			funcParamName := p.name
 			if len(names) > 1 {
-				p.name = names[1]
-			} else {
-				p.name = funcParamName
+				funcParamName = names[1]
 			}
 			p.location = pv[1]
 			p.datatype = pv[2]
