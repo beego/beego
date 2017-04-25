@@ -27,9 +27,9 @@ import (
 	"time"
 
 	beecontext "github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/context/param"
+	"github.com/astaxie/beego/context/response"
 	"github.com/astaxie/beego/logs"
-	"github.com/astaxie/beego/param"
-	"github.com/astaxie/beego/response"
 	"github.com/astaxie/beego/toolbox"
 	"github.com/astaxie/beego/utils"
 )
