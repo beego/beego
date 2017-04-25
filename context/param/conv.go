@@ -8,6 +8,15 @@ import (
 	"github.com/astaxie/beego/logs"
 )
 
+func ConvertParams(methodParams []*MethodParam, methodType reflect.Type, ctx *beecontext.Context) (result []reflect.Value) {
+	result = make([]reflect.Value, 0, len(methodParams))
+	for i := 0; i < len(methodParams); i++ {
+		reflectValue := convertParam(methodParams[i], methodType.In(i), ctx)
+		result = append(result, reflectValue)
+	}
+	return
+}
+
 func convertParam(param *MethodParam, paramType reflect.Type, ctx *beecontext.Context) (result reflect.Value) {
 	paramValue := getParamValue(param, ctx)
 	if paramValue == "" {
@@ -18,7 +27,7 @@ func convertParam(param *MethodParam, paramType reflect.Type, ctx *beecontext.Co
 		}
 	}
 
-	reflectValue, err := parseValue(paramValue, paramType)
+	reflectValue, err := parseValue(param, paramValue, paramType)
 	if err != nil {
 		logs.Debug(fmt.Sprintf("Error converting param %s to type %s. Value: %v, Error: %s", param.name, paramType, paramValue, err))
 		ctx.Abort(400, fmt.Sprintf("Invalid parameter %s. Can not convert %v to type %s", param.name, paramValue, paramType))
@@ -43,26 +52,18 @@ func getParamValue(param *MethodParam, ctx *beecontext.Context) string {
 	}
 }
 
-func parseValue(paramValue string, paramType reflect.Type) (result reflect.Value, err error) {
+func parseValue(param *MethodParam, paramValue string, paramType reflect.Type) (result reflect.Value, err error) {
 	if paramValue == "" {
 		return reflect.Zero(paramType), nil
 	} else {
-		value, err := parse(paramValue, paramType)
+		parser := getParser(param, paramType)
+		value, err := parser.parse(paramValue, paramType)
 		if err != nil {
 			return result, err
 		}
 
 		return safeConvert(reflect.ValueOf(value), paramType)
 	}
-}
-
-func ConvertParams(methodParams []*MethodParam, methodType reflect.Type, ctx *beecontext.Context) (result []reflect.Value) {
-	result = make([]reflect.Value, 0, len(methodParams))
-	for i := 0; i < len(methodParams); i++ {
-		reflectValue := convertParam(methodParams[i], methodType.In(i), ctx)
-		result = append(result, reflectValue)
-	}
-	return
 }
 
 func safeConvert(value reflect.Value, t reflect.Type) (result reflect.Value, err error) {

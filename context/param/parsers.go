@@ -12,12 +12,7 @@ type paramParser interface {
 	parse(value string, toType reflect.Type) (interface{}, error)
 }
 
-func parse(value string, t reflect.Type) (interface{}, error) {
-	parser := getParser(t)
-	return parser.parse(value, t)
-}
-
-func getParser(t reflect.Type) paramParser {
+func getParser(param *MethodParam, t reflect.Type) paramParser {
 	switch t.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
@@ -26,7 +21,10 @@ func getParser(t reflect.Type) paramParser {
 		if t.Elem().Kind() == reflect.Uint8 { //treat []byte as string
 			return stringParser{}
 		}
-		elemParser := getParser(t.Elem())
+		if param.location == body {
+			return jsonParser{}
+		}
+		elemParser := getParser(param, t.Elem())
 		if elemParser == (jsonParser{}) {
 			return elemParser
 		}
@@ -38,7 +36,7 @@ func getParser(t reflect.Type) paramParser {
 	case reflect.Float32, reflect.Float64:
 		return floatParser{}
 	case reflect.Ptr:
-		elemParser := getParser(t.Elem())
+		elemParser := getParser(param, t.Elem())
 		if elemParser == (jsonParser{}) {
 			return elemParser
 		}
