@@ -12,6 +12,45 @@ type paramParser interface {
 	parse(value string, toType reflect.Type) (interface{}, error)
 }
 
+func parse(value string, t reflect.Type) (interface{}, error) {
+	parser := getParser(t)
+	return parser.parse(value, t)
+}
+
+func getParser(t reflect.Type) paramParser {
+	switch t.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return intParser{}
+	case reflect.Slice:
+		if t.Elem().Kind() == reflect.Uint8 { //treat []byte as string
+			return stringParser{}
+		}
+		elemParser := getParser(t.Elem())
+		if elemParser == (jsonParser{}) {
+			return elemParser
+		}
+		return sliceParser(elemParser)
+	case reflect.Bool:
+		return boolParser{}
+	case reflect.String:
+		return stringParser{}
+	case reflect.Float32, reflect.Float64:
+		return floatParser{}
+	case reflect.Ptr:
+		elemParser := getParser(t.Elem())
+		if elemParser == (jsonParser{}) {
+			return elemParser
+		}
+		return ptrParser(elemParser)
+	default:
+		if t.PkgPath() == "time" && t.Name() == "Time" {
+			return timeParser{}
+		}
+		return jsonParser{}
+	}
+}
+
 type parserFunc func(value string, toType reflect.Type) (interface{}, error)
 
 func (f parserFunc) parse(value string, toType reflect.Type) (interface{}, error) {
@@ -90,5 +129,23 @@ func sliceParser(elemParser paramParser) paramParser {
 			result = reflect.Append(result, reflect.ValueOf(parsedValue))
 		}
 		return result.Interface(), nil
+	})
+}
+
+func ptrParser(elemParser paramParser) paramParser {
+	return parserFunc(func(value string, toType reflect.Type) (interface{}, error) {
+		parsedValue, err := elemParser.parse(value, toType.Elem())
+		if err != nil {
+			return nil, err
+		}
+		newValPtr := reflect.New(toType.Elem())
+		newVal := reflect.Indirect(newValPtr)
+		convertedVal, err := safeConvert(reflect.ValueOf(parsedValue), toType.Elem())
+		if err != nil {
+			return nil, err
+		}
+
+		newVal.Set(convertedVal)
+		return newValPtr.Interface(), nil
 	})
 }

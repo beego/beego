@@ -9,39 +9,51 @@ import (
 )
 
 func convertParam(param *MethodParam, paramType reflect.Type, ctx *beecontext.Context) (result reflect.Value) {
-	var strValue string
-	var reflectValue reflect.Value
-	switch param.location {
-	case body:
-		strValue = string(ctx.Input.RequestBody)
-	case header:
-		strValue = ctx.Input.Header(param.name)
-	default:
-		strValue = ctx.Input.Query(param.name)
-	}
-
-	if strValue == "" {
+	paramValue := getParamValue(param, ctx)
+	if paramValue == "" {
 		if param.required {
 			ctx.Abort(400, fmt.Sprintf("Missing parameter %s", param.name))
 		} else {
-			strValue = param.defValue
+			paramValue = param.defValue
 		}
 	}
-	if strValue == "" {
-		reflectValue = reflect.Zero(paramType)
+
+	reflectValue, err := parseValue(paramValue, paramType)
+	if err != nil {
+		logs.Debug(fmt.Sprintf("Error converting param %s to type %s. Value: %v, Error: %s", param.name, paramType, paramValue, err))
+		ctx.Abort(400, fmt.Sprintf("Invalid parameter %s. Can not convert %v to type %s", param.name, paramValue, paramType))
+	}
+
+	return reflectValue
+}
+
+func getParamValue(param *MethodParam, ctx *beecontext.Context) string {
+	switch param.location {
+	case body:
+		return string(ctx.Input.RequestBody)
+	case header:
+		return ctx.Input.Header(param.name)
+		// if strValue == "" && strings.Contains(param.name, "_") { //magically handle X-Headers?
+		// 	strValue = ctx.Input.Header(strings.Replace(param.name, "_", "-", -1))
+		// }
+	case path:
+		return ctx.Input.Query(":" + param.name)
+	default:
+		return ctx.Input.Query(param.name)
+	}
+}
+
+func parseValue(paramValue string, paramType reflect.Type) (result reflect.Value, err error) {
+	if paramValue == "" {
+		return reflect.Zero(paramType), nil
 	} else {
-		value, err := param.parser.parse(strValue, paramType)
+		value, err := parse(paramValue, paramType)
 		if err != nil {
-			logs.Debug(fmt.Sprintf("Error converting param %s to type %s. Value: %s, Error: %s", param.name, paramType, strValue, err))
-			ctx.Abort(400, fmt.Sprintf("Invalid parameter %s. Can not convert %s to type %s", param.name, strValue, paramType))
+			return result, err
 		}
 
-		reflectValue, err = safeConvert(reflect.ValueOf(value), paramType)
-		if err != nil {
-			panic(err)
-		}
+		return safeConvert(reflect.ValueOf(value), paramType)
 	}
-	return reflectValue
 }
 
 func ConvertParams(methodParams []*MethodParam, methodType reflect.Type, ctx *beecontext.Context) (result []reflect.Value) {
