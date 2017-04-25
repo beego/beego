@@ -118,13 +118,15 @@ func parserComments(f *ast.FuncDecl, controllerName, pkgpath string) error {
 		if err != nil {
 			return err
 		}
-		key := pkgpath + ":" + controllerName
-		cc := ControllerComments{}
-		cc.Method = f.Name.String()
-		cc.Router = parsedComment.routerPath
-		cc.AllowHTTPMethods = parsedComment.methods
-		cc.MethodParams = buildMethodParams(f.Type.Params.List, parsedComment)
-		genInfoList[key] = append(genInfoList[key], cc)
+		if parsedComment.routerPath != "" {
+			key := pkgpath + ":" + controllerName
+			cc := ControllerComments{}
+			cc.Method = f.Name.String()
+			cc.Router = parsedComment.routerPath
+			cc.AllowHTTPMethods = parsedComment.methods
+			cc.MethodParams = buildMethodParams(f.Type.Params.List, parsedComment)
+			genInfoList[key] = append(genInfoList[key], cc)
+		}
 
 	}
 	return nil
