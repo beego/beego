@@ -52,11 +52,7 @@ func newSMTPWriter() Logger {
 //		"level":LevelError
 //	}
 func (s *SMTPWriter) Init(jsonconfig string) error {
-	err := json.Unmarshal([]byte(jsonconfig), s)
-	if err != nil {
-		return err
-	}
-	return nil
+	return json.Unmarshal([]byte(jsonconfig), s)
 }
 
 func (s *SMTPWriter) getSMTPAuth(host string) smtp.Auth {
@@ -106,7 +102,7 @@ func (s *SMTPWriter) sendMail(hostAddressWithPort string, auth smtp.Auth, fromAd
 	if err != nil {
 		return err
 	}
-	_, err = w.Write([]byte(msgContent))
+	_, err = w.Write(msgContent)
 	if err != nil {
 		return err
 	}
@@ -116,12 +112,7 @@ func (s *SMTPWriter) sendMail(hostAddressWithPort string, auth smtp.Auth, fromAd
 		return err
 	}
 
-	err = client.Quit()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return client.Quit()
 }
 
 // WriteMsg write message in smtp writer.
@@ -147,12 +138,10 @@ func (s *SMTPWriter) WriteMsg(when time.Time, msg string, level int) error {
 
 // Flush implementing method. empty.
 func (s *SMTPWriter) Flush() {
-	return
 }
 
 // Destroy implementing method. empty.
 func (s *SMTPWriter) Destroy() {
-	return
 }
 
 func init() {

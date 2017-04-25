@@ -60,6 +60,8 @@ var (
 		"sqlite3":  DRSqlite,
 		"tidb":     DRTiDB,
 		"oracle":   DROracle,
+		"oci8":     DROracle, // github.com/mattn/go-oci8
+		"ora":      DROracle, //https://github.com/rana/ora
 	}
 	dbBasers = map[DriverType]dbBaser{
 		DRMySQL:    newdbBaseMysql(),
@@ -186,7 +188,7 @@ func addAliasWthDB(aliasName, driverName string, db *sql.DB) (*alias, error) {
 		return nil, fmt.Errorf("register db Ping `%s`, %s", aliasName, err.Error())
 	}
 
-	if dataBaseCache.add(aliasName, al) == false {
+	if !dataBaseCache.add(aliasName, al) {
 		return nil, fmt.Errorf("DataBase alias name `%s` already registered, cannot reuse", aliasName)
 	}
 
@@ -244,7 +246,7 @@ end:
 
 // RegisterDriver Register a database driver use specify driver name, this can be definition the driver is which database type.
 func RegisterDriver(driverName string, typ DriverType) error {
-	if t, ok := drivers[driverName]; ok == false {
+	if t, ok := drivers[driverName]; !ok {
 		drivers[driverName] = typ
 	} else {
 		if t != typ {
