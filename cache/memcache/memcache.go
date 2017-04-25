@@ -146,10 +146,7 @@ func (rc *Cache) IsExist(key string) bool {
 		}
 	}
 	_, err := rc.conn.Get(key)
-	if err != nil {
-		return false
-	}
-	return true
+	return !(err != nil)
 }
 
 // ClearAll clear all cached in memcache.

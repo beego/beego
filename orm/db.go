@@ -48,7 +48,7 @@ var (
 		"lte":         true,
 		"eq":          true,
 		"nq":          true,
-		"ne":	       true,
+		"ne":          true,
 		"startswith":  true,
 		"endswith":    true,
 		"istartswith": true,
@@ -87,7 +87,7 @@ func (d *dbBase) collectValues(mi *modelInfo, ind reflect.Value, cols []string, 
 		} else {
 			panic(fmt.Errorf("wrong db field/column name `%s` for model `%s`", column, mi.fullName))
 		}
-		if fi.dbcol == false || fi.auto && skipAuto {
+		if !fi.dbcol || fi.auto && skipAuto {
 			continue
 		}
 		value, err := d.collectFieldValue(mi, fi, ind, insert, tz)
@@ -224,7 +224,7 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 							value = nil
 						}
 					}
-					if fi.null == false && value == nil {
+					if !fi.null && value == nil {
 						return nil, fmt.Errorf("field `%s` cannot be NULL", fi.fullName)
 					}
 				}
@@ -271,7 +271,7 @@ func (d *dbBase) PrepareInsert(q dbQuerier, mi *modelInfo) (stmtQuerier, string,
 	dbcols := make([]string, 0, len(mi.fields.dbcols))
 	marks := make([]string, 0, len(mi.fields.dbcols))
 	for _, fi := range mi.fields.fieldsDB {
-		if fi.auto == false {
+		if !fi.auto {
 			dbcols = append(dbcols, fi.column)
 			marks = append(marks, "?")
 		}
@@ -326,7 +326,7 @@ func (d *dbBase) Read(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Lo
 	} else {
 		// default use pk value as where condtion.
 		pkColumn, pkValue, ok := getExistPk(mi, ind)
-		if ok == false {
+		if !ok {
 			return ErrMissPK
 		}
 		whereCols = []string{pkColumn}
@@ -592,7 +592,7 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a
 	row := q.QueryRow(query, values...)
 	var id int64
 	err = row.Scan(&id)
-	if err.Error() == `pq: syntax error at or near "ON"` {
+	if err != nil && err.Error() == `pq: syntax error at or near "ON"` {
 		err = fmt.Errorf("postgres version must 9.5 or higher")
 	}
 	return id, err
@@ -601,7 +601,7 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a
 // execute update sql dbQuerier with given struct reflect.Value.
 func (d *dbBase) Update(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location, cols []string) (int64, error) {
 	pkName, pkValue, ok := getExistPk(mi, ind)
-	if ok == false {
+	if !ok {
 		return 0, ErrMissPK
 	}
 
@@ -654,7 +654,7 @@ func (d *dbBase) Delete(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.
 	} else {
 		// default use pk value as where condtion.
 		pkColumn, pkValue, ok := getExistPk(mi, ind)
-		if ok == false {
+		if !ok {
 			return 0, ErrMissPK
 		}
 		whereCols = []string{pkColumn}
@@ -699,7 +699,7 @@ func (d *dbBase) UpdateBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	columns := make([]string, 0, len(params))
 	values := make([]interface{}, 0, len(params))
 	for col, val := range params {
-		if fi, ok := mi.fields.GetByAny(col); ok == false || fi.dbcol == false {
+		if fi, ok := mi.fields.GetByAny(col); !ok || !fi.dbcol {
 			panic(fmt.Errorf("wrong field/column name `%s`", col))
 		} else {
 			columns = append(columns, fi.column)
@@ -929,7 +929,7 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 		if hasRel {
 			for _, fi := range mi.fields.fieldsDB {
 				if fi.fieldType&IsRelField > 0 {
-					if maps[fi.column] == false {
+					if !maps[fi.column] {
 						tCols = append(tCols, fi.column)
 					}
 				}
@@ -987,7 +987,7 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 
 	var cnt int64
 	for rs.Next() {
-		if one && cnt == 0 || one == false {
+		if one && cnt == 0 || !one {
 			if err := rs.Scan(refs...); err != nil {
 				return 0, err
 			}
@@ -1067,7 +1067,7 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 		cnt++
 	}
 
-	if one == false {
+	if !one {
 		if cnt > 0 {
 			ind.Set(slice)
 		} else {
@@ -1357,7 +1357,7 @@ end:
 func (d *dbBase) setFieldValue(fi *fieldInfo, value interface{}, field reflect.Value) (interface{}, error) {
 
 	fieldType := fi.fieldType
-	isNative := fi.isFielder == false
+	isNative := !fi.isFielder
 
 setValue:
 	switch {
@@ -1533,7 +1533,7 @@ setValue:
 		}
 	}
 
-	if isNative == false {
+	if !isNative {
 		fd := field.Addr().Interface().(Fielder)
 		err := fd.SetRaw(value)
 		if err != nil {
@@ -1594,7 +1594,7 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 		infos = make([]*fieldInfo, 0, len(exprs))
 		for _, ex := range exprs {
 			index, name, fi, suc := tables.parseExprs(mi, strings.Split(ex, ExprSep))
-			if suc == false {
+			if !suc {
 				panic(fmt.Errorf("unknown field/column name `%s`", ex))
 			}
 			cols = append(cols, fmt.Sprintf("%s.%s%s%s %s%s%s", index, Q, fi.column, Q, Q, name, Q))
