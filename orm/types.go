@@ -145,6 +145,16 @@ type QuerySeter interface {
 	//	//sql-> WHERE T0.`profile_id` IS NOT NULL AND NOT T0.`Status` IN (?) OR T1.`age` >  2000
 	//	num, err := qs.SetCond(cond1).Count()
 	SetCond(*Condition) QuerySeter
+	// get condition from QuerySeter.
+	// sql's where condition
+	//  cond := orm.NewCondition()
+	//  cond = cond.And("profile__isnull", false).AndNot("status__in", 1)
+	//  qs = qs.SetCond(cond)
+	//  cond = qs.GetCond()
+	//  cond := cond.Or("profile__age__gt", 2000)
+	//  //sql-> WHERE T0.`profile_id` IS NOT NULL AND NOT T0.`Status` IN (?) OR T1.`age` >  2000
+	//  num, err := qs.SetCond(cond).Count()
+	GetCond() *Condition
 	// add LIMIT value.
 	// args[0] means offset, e.g. LIMIT num,offset.
 	// if Limit <= 0 then Limit will be set to default limit ,eg 1000
