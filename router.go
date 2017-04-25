@@ -908,6 +908,9 @@ func (p *ControllerRegister) handleParamResponse(context *beecontext.Context, ex
 			response.RenderMethodResult(resultValue, context)
 		}
 	}
+	if !context.ResponseWriter.Started && context.Output.Status == 0 {
+		context.Output.SetStatus(200)
+	}
 }
 
 // FindRouter Find Router info for URL

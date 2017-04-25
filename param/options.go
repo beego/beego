@@ -4,12 +4,18 @@ import (
 	"fmt"
 )
 
+type MethodParamOption func(*MethodParam)
+
 var IsRequired MethodParamOption = func(p *MethodParam) {
 	p.required = true
 }
 
 var InHeader MethodParamOption = func(p *MethodParam) {
 	p.location = header
+}
+
+var InPath MethodParamOption = func(p *MethodParam) {
+	p.location = path
 }
 
 var InBody MethodParamOption = func(p *MethodParam) {
