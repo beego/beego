@@ -1,9 +1,9 @@
 language: go
 
 go:
-  - 1.6
-  - 1.7
-  - 1.8
+  - 1.6.4
+  - 1.7.5
+  - 1.8.1
 services:
   - redis-server
   - mysql
