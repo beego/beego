@@ -145,9 +145,6 @@ func init() {
 	if err = parseConfig(appConfigPath); err != nil {
 		panic(err)
 	}
-	if err = os.Chdir(AppPath); err != nil {
-		panic(err)
-	}
 }
 
 func recoverPanic(ctx *context.Context) {
@@ -259,15 +256,14 @@ func parseConfig(appConfigPath string) (err error) {
 }
 
 func assignConfig(ac config.Configer) error {
+	for _, i := range []interface{}{BConfig, &BConfig.Listen, &BConfig.WebConfig, &BConfig.Log, &BConfig.WebConfig.Session} {
+		assignSingleConfig(i, ac)
+	}
 	// set the run mode first
 	if envRunMode := os.Getenv("BEEGO_RUNMODE"); envRunMode != "" {
 		BConfig.RunMode = envRunMode
 	} else if runMode := ac.String("RunMode"); runMode != "" {
 		BConfig.RunMode = runMode
-	}
-
-	for _, i := range []interface{}{BConfig, &BConfig.Listen, &BConfig.WebConfig, &BConfig.Log, &BConfig.WebConfig.Session} {
-		assignSingleConfig(i, ac)
 	}
 
 	if sd := ac.String("StaticDir"); sd != "" {
