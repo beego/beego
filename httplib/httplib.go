@@ -520,9 +520,9 @@ func (b *BeegoHTTPRequest) Bytes() ([]byte, error) {
 			return nil, err
 		}
 		b.body, err = ioutil.ReadAll(reader)
-	} else {
-		b.body, err = ioutil.ReadAll(resp.Body)
+		return b.body, err
 	}
+	b.body, err = ioutil.ReadAll(resp.Body)
 	return b.body, err
 }
 
