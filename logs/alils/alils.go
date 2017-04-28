@@ -2,11 +2,12 @@ package alils
 
 import (
 	"encoding/json"
-	"github.com/astaxie/beego/logs"
-	"github.com/gogo/protobuf/proto"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/astaxie/beego/logs"
+	"github.com/gogo/protobuf/proto"
 )
 
 const (
@@ -124,12 +125,10 @@ func (c *aliLSWriter) WriteMsg(when time.Time, msg string, level int) (err error
 
 		// 默认发到空Topic
 		if lg == nil {
-			topic = ""
 			content = msg
 			lg = c.group[0]
 		}
 	} else {
-		topic = ""
 		content = msg
 		lg = c.group[0]
 	}

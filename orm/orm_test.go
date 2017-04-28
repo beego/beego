@@ -135,7 +135,7 @@ func getCaller(skip int) string {
 	if i := strings.LastIndex(funName, "."); i > -1 {
 		funName = funName[i+1:]
 	}
-	return fmt.Sprintf("%s:%d: \n%s", fn, line, strings.Join(codes, "\n"))
+	return fmt.Sprintf("%s:%s:%d: \n%s", fn, funName, line, strings.Join(codes, "\n"))
 }
 
 func throwFail(t *testing.T, err error, args ...interface{}) {
@@ -1014,6 +1014,8 @@ func TestAll(t *testing.T) {
 	var users3 []*User
 	qs = dORM.QueryTable("user")
 	num, err = qs.Filter("user_name", "nothing").All(&users3)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 0))
 	throwFailNow(t, AssertIs(users3 == nil, false))
 }
 
