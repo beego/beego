@@ -1140,6 +1140,7 @@ func TestRelatedSel(t *testing.T) {
 	}
 
 	err = qs.Filter("user_name", "nobody").RelatedSel("profile").One(&user)
+	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
 	throwFail(t, AssertIs(user.Profile, nil))
 
@@ -1248,20 +1249,24 @@ func TestLoadRelated(t *testing.T) {
 
 	num, err = dORM.LoadRelated(&user, "Posts", true)
 	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 2))
 	throwFailNow(t, AssertIs(len(user.Posts), 2))
 	throwFailNow(t, AssertIs(user.Posts[0].User.UserName, "astaxie"))
 
 	num, err = dORM.LoadRelated(&user, "Posts", true, 1)
 	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 1))
 	throwFailNow(t, AssertIs(len(user.Posts), 1))
 
 	num, err = dORM.LoadRelated(&user, "Posts", true, 0, 0, "-Id")
 	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 2))
 	throwFailNow(t, AssertIs(len(user.Posts), 2))
 	throwFailNow(t, AssertIs(user.Posts[0].Title, "Formatting"))
 
 	num, err = dORM.LoadRelated(&user, "Posts", true, 1, 1, "Id")
 	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 1))
 	throwFailNow(t, AssertIs(len(user.Posts), 1))
 	throwFailNow(t, AssertIs(user.Posts[0].Title, "Formatting"))
 
@@ -1978,6 +1983,7 @@ func TestReadOrCreate(t *testing.T) {
 	created, pk, err := dORM.ReadOrCreate(u, "UserName")
 	throwFail(t, err)
 	throwFail(t, AssertIs(created, true))
+	throwFail(t, AssertIs(u.ID, pk))
 	throwFail(t, AssertIs(u.UserName, "Kyle"))
 	throwFail(t, AssertIs(u.Email, "kylemcc@gmail.com"))
 	throwFail(t, AssertIs(u.Password, "other_pass"))
@@ -2134,6 +2140,7 @@ func TestUintPk(t *testing.T) {
 
 	created, pk, err := dORM.ReadOrCreate(u, "ID")
 	throwFail(t, err)
+	throwFail(t, AssertIs(pk, u.ID))
 	throwFail(t, AssertIs(created, true))
 	throwFail(t, AssertIs(u.Name, name))
 
