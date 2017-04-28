@@ -1733,7 +1733,7 @@ func (d *dbBase) TableQuote() string {
 	return "`"
 }
 
-// replace value placeholer in parametered sql string.
+// replace value placeholder in parametered sql string.
 func (d *dbBase) ReplaceMarks(query *string) {
 	// default use `?` as mark, do nothing
 }
