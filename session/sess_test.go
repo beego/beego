@@ -74,8 +74,7 @@ func TestCookieEncodeDecode(t *testing.T) {
 	if err != nil {
 		t.Fatal("encodeCookie:", err)
 	}
-	dst := make(map[interface{}]interface{})
-	dst, err = decodeCookie(block, hashKey, securityName, str, 3600)
+	dst, err := decodeCookie(block, hashKey, securityName, str, 3600)
 	if err != nil {
 		t.Fatal("decodeCookie", err)
 	}

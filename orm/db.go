@@ -1110,7 +1110,7 @@ func (d *dbBase) Count(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condition
 
 // generate sql with replacing operator string placeholders and replaced values.
 func (d *dbBase) GenerateOperatorSQL(mi *modelInfo, fi *fieldInfo, operator string, args []interface{}, tz *time.Location) (string, []interface{}) {
-	sql := ""
+	var sql string
 	params := getFlatParams(fi, args, tz)
 
 	if len(params) == 0 {
