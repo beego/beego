@@ -159,7 +159,7 @@ var add = `{{ template "layout_blog.tpl" . }}
     <script src="/static/js/current.js"></script>
 {{ end}}`
 
-var layout_blog = `<!DOCTYPE html>
+var layoutBlog = `<!DOCTYPE html>
 <html>
 <head>
     <title>Lin Li</title>
@@ -231,7 +231,7 @@ func TestTemplateLayout(t *testing.T) {
 			if k == 0 {
 				f.WriteString(add)
 			} else if k == 1 {
-				f.WriteString(layout_blog)
+				f.WriteString(layoutBlog)
 			}
 			f.Close()
 		}

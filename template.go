@@ -365,6 +365,7 @@ func DelStaticPath(url string) *App {
 	return BeeApp
 }
 
+// AddTemplateEngine add a new templatePreProcessor which support extension
 func AddTemplateEngine(extension string, fn templatePreProcessor) *App {
 	AddTemplateExt(extension)
 	beeTemplateEngines[extension] = fn
