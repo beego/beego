@@ -176,16 +176,12 @@ func (rp *Provider) SessionRead(sid string) (session.Store, error) {
 	c := rp.poollist.Get()
 	defer c.Close()
 
-	var (
-		kv  map[interface{}]interface{}
-		kvs string
-		err error
-	)
+	var kv map[interface{}]interface{}
 
-	if kvs, err = redis.String(c.Do("GET", sid)); err != nil {
+	kvs, err := redis.String(c.Do("GET", sid))
+	if err != redis.ErrNil {
 		return nil, err
 	}
-
 	if len(kvs) == 0 {
 		kv = make(map[interface{}]interface{})
 	} else {

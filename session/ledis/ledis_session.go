@@ -113,13 +113,10 @@ func (lp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 func (lp *Provider) SessionRead(sid string) (session.Store, error) {
 	var (
 		kv  map[interface{}]interface{}
-		kvs []byte
 		err error
 	)
 
-	if kvs, err = c.Get([]byte(sid)); err != nil {
-		return nil, err
-	}
+	kvs, _ := c.Get([]byte(sid))
 
 	if len(kvs) == 0 {
 		kv = make(map[interface{}]interface{})
