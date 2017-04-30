@@ -250,7 +250,7 @@ func RegisterDriver(driverName string, typ DriverType) error {
 		drivers[driverName] = typ
 	} else {
 		if t != typ {
-			return fmt.Errorf("driverName `%s` db driver already registered and is other type\n", driverName)
+			return fmt.Errorf("driverName `%s` db driver already registered and is other type", driverName)
 		}
 	}
 	return nil
@@ -261,7 +261,7 @@ func SetDataBaseTZ(aliasName string, tz *time.Location) error {
 	if al, ok := dataBaseCache.get(aliasName); ok {
 		al.TZ = tz
 	} else {
-		return fmt.Errorf("DataBase alias name `%s` not registered\n", aliasName)
+		return fmt.Errorf("DataBase alias name `%s` not registered", aliasName)
 	}
 	return nil
 }
@@ -296,5 +296,5 @@ func GetDB(aliasNames ...string) (*sql.DB, error) {
 	if ok {
 		return al.DB, nil
 	}
-	return nil, fmt.Errorf("DataBase of alias name `%s` not found\n", name)
+	return nil, fmt.Errorf("DataBase of alias name `%s` not found", name)
 }

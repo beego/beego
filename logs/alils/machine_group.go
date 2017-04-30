@@ -8,18 +8,20 @@ import (
 	"net/http/httputil"
 )
 
-type MachinGroupAttribute struct {
+// MachineGroupAttribute define the Attribute
+type MachineGroupAttribute struct {
 	ExternalName string `json:"externalName"`
 	TopicName    string `json:"groupTopic"`
 }
 
+// MachineGroup define the machine Group
 type MachineGroup struct {
 	Name          string   `json:"groupName"`
 	Type          string   `json:"groupType"`
-	MachineIdType string   `json:"machineIdentifyType"`
-	MachineIdList []string `json:"machineList"`
+	MachineIDType string   `json:"machineIdentifyType"`
+	MachineIDList []string `json:"machineList"`
 
-	Attribute MachinGroupAttribute `json:"groupAttribute"`
+	Attribute MachineGroupAttribute `json:"groupAttribute"`
 
 	CreateTime     uint32
 	LastModifyTime uint32
@@ -27,12 +29,14 @@ type MachineGroup struct {
 	project *LogProject
 }
 
+// Machine define the Machine
 type Machine struct {
 	IP            string
-	UniqueId      string `json:"machine-uniqueid"`
-	UserdefinedId string `json:"userdefined-id"`
+	UniqueID      string `json:"machine-uniqueid"`
+	UserdefinedID string `json:"userdefined-id"`
 }
 
+// MachineList define the Machine List
 type MachineList struct {
 	Total    int
 	Machines []*Machine
