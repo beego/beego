@@ -507,10 +507,9 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a
 	case DRPostgres:
 		if len(args) == 0 {
 			return 0, fmt.Errorf("`%s` use InsertOrUpdate must have a conflict column", a.DriverName)
-		} else {
-			args0 = strings.ToLower(args[0])
-			iouStr = fmt.Sprintf("ON CONFLICT (%s) DO UPDATE SET", args0)
 		}
+		args0 = strings.ToLower(args[0])
+		iouStr = fmt.Sprintf("ON CONFLICT (%s) DO UPDATE SET", args0)
 	default:
 		return 0, fmt.Errorf("`%s` nonsupport InsertOrUpdate in beego", a.DriverName)
 	}

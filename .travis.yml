@@ -36,6 +36,7 @@ install:
   - go get -u honnef.co/go/tools/cmd/gosimple
   - go get -u github.com/mdempsky/unconvert
   - go get -u github.com/gordonklaus/ineffassign
+  - go get -u github.com/golang/lint/golint
 before_script:
   - psql --version
   - sh -c "if [ '$ORM_DRIVER' = 'postgres' ]; then psql -c 'create database orm_test;' -U postgres; fi"
@@ -54,5 +55,6 @@ script:
   - unconvert $(go list ./... | grep -v /vendor/)
   - ineffassign .
   - find . ! \( -path './vendor' -prune \) -type f -name '*.go' -print0 | xargs -0 gofmt -l -s
+  - golint ./...
 addons:
   postgresql: "9.4"

@@ -170,7 +170,7 @@ func (w *fileLogWriter) initFd() error {
 	fd := w.fileWriter
 	fInfo, err := fd.Stat()
 	if err != nil {
-		return fmt.Errorf("get stat err: %s\n", err)
+		return fmt.Errorf("get stat err: %s", err)
 	}
 	w.maxSizeCurSize = int(fInfo.Size())
 	w.dailyOpenTime = time.Now()
