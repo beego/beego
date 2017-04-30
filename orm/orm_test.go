@@ -2144,7 +2144,7 @@ func TestUintPk(t *testing.T) {
 	throwFail(t, AssertIs(u.Name, name))
 
 	nu := &UintPk{ID: 8}
-	created, pk, err = dORM.ReadOrCreate(nu, "ID")
+	created, pk, err := dORM.ReadOrCreate(nu, "ID")
 	throwFail(t, err)
 	throwFail(t, AssertIs(created, false))
 	throwFail(t, AssertIs(nu.ID, u.ID))
