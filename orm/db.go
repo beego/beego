@@ -507,10 +507,9 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a
 	case DRPostgres:
 		if len(args) == 0 {
 			return 0, fmt.Errorf("`%s` use InsertOrUpdate must have a conflict column", a.DriverName)
-		} else {
-			args0 = strings.ToLower(args[0])
-			iouStr = fmt.Sprintf("ON CONFLICT (%s) DO UPDATE SET", args0)
 		}
+		args0 = strings.ToLower(args[0])
+		iouStr = fmt.Sprintf("ON CONFLICT (%s) DO UPDATE SET", args0)
 	default:
 		return 0, fmt.Errorf("`%s` nonsupport InsertOrUpdate in beego", a.DriverName)
 	}
@@ -1110,7 +1109,7 @@ func (d *dbBase) Count(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condition
 
 // generate sql with replacing operator string placeholders and replaced values.
 func (d *dbBase) GenerateOperatorSQL(mi *modelInfo, fi *fieldInfo, operator string, args []interface{}, tz *time.Location) (string, []interface{}) {
-	sql := ""
+	var sql string
 	params := getFlatParams(fi, args, tz)
 
 	if len(params) == 0 {
@@ -1733,7 +1732,7 @@ func (d *dbBase) TableQuote() string {
 	return "`"
 }
 
-// replace value placeholer in parametered sql string.
+// replace value placeholder in parametered sql string.
 func (d *dbBase) ReplaceMarks(query *string) {
 	// default use `?` as mark, do nothing
 }

@@ -420,7 +420,7 @@ func (o *orm) getRelQs(md interface{}, mi *modelInfo, fi *fieldInfo) *querySet {
 // table name can be string or struct.
 // e.g. QueryTable("user"), QueryTable(&user{}) or QueryTable((*User)(nil)),
 func (o *orm) QueryTable(ptrStructOrTableName interface{}) (qs QuerySeter) {
-	name := ""
+	var name string
 	if table, ok := ptrStructOrTableName.(string); ok {
 		name = snakeString(table)
 		if mi, ok := modelCache.get(name); ok {

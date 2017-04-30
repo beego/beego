@@ -2,19 +2,23 @@ package alils
 
 import (
 	"encoding/json"
-	"github.com/astaxie/beego/logs"
-	"github.com/gogo/protobuf/proto"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/astaxie/beego/logs"
+	"github.com/gogo/protobuf/proto"
 )
 
 const (
-	CacheSize int    = 64
+	// CacheSize set the flush size
+	CacheSize int = 64
+	// Delimiter define the topic delimiter
 	Delimiter string = "##"
 )
 
-type AliLSConfig struct {
+// Config is the Config for Ali Log
+type Config struct {
 	Project   string   `json:"project"`
 	Endpoint  string   `json:"endpoint"`
 	KeyID     string   `json:"key_id"`
@@ -34,18 +38,17 @@ type aliLSWriter struct {
 	withMap  bool
 	groupMap map[string]*LogGroup
 	lock     *sync.Mutex
-	AliLSConfig
+	Config
 }
 
-// 创建提供Logger接口的日志服务
+// NewAliLS create a new Logger
 func NewAliLS() logs.Logger {
 	alils := new(aliLSWriter)
 	alils.Level = logs.LevelTrace
 	return alils
 }
 
-// 读取配置
-// 初始化必要的数据结构
+// Init parse config and init struct
 func (c *aliLSWriter) Init(jsonConfig string) (err error) {
 
 	json.Unmarshal([]byte(jsonConfig), c)
@@ -54,28 +57,26 @@ func (c *aliLSWriter) Init(jsonConfig string) (err error) {
 		c.FlushWhen = CacheSize
 	}
 
-	// 初始化Project
 	prj := &LogProject{
 		Name:            c.Project,
 		Endpoint:        c.Endpoint,
-		AccessKeyId:     c.KeyID,
+		AccessKeyID:     c.KeyID,
 		AccessKeySecret: c.KeySecret,
 	}
 
-	// 获取logstore
 	c.store, err = prj.GetLogStore(c.LogStore)
 	if err != nil {
 		return err
 	}
 
-	// 创建默认Log Group
+	// Create default Log Group
 	c.group = append(c.group, &LogGroup{
 		Topic:  proto.String(""),
 		Source: proto.String(c.Source),
 		Logs:   make([]*Log, 0, c.FlushWhen),
 	})
 
-	// 创建其它Log Group
+	// Create other Log Group
 	c.groupMap = make(map[string]*LogGroup)
 	for _, topic := range c.Topics {
 
@@ -113,7 +114,7 @@ func (c *aliLSWriter) WriteMsg(when time.Time, msg string, level int) (err error
 	var lg *LogGroup
 	if c.withMap {
 
-		// 解析出Topic，并匹配LogGroup
+		// Topic，LogGroup
 		strs := strings.SplitN(msg, Delimiter, 2)
 		if len(strs) == 2 {
 			pos := strings.LastIndex(strs[0], " ")
@@ -122,27 +123,24 @@ func (c *aliLSWriter) WriteMsg(when time.Time, msg string, level int) (err error
 			lg = c.groupMap[topic]
 		}
 
-		// 默认发到空Topic
+		// send to empty Topic
 		if lg == nil {
-			topic = ""
 			content = msg
 			lg = c.group[0]
 		}
 	} else {
-		topic = ""
 		content = msg
 		lg = c.group[0]
 	}
 
-	// 生成日志
-	c1 := &Log_Content{
+	c1 := &LogContent{
 		Key:   proto.String("msg"),
 		Value: proto.String(content),
 	}
 
 	l := &Log{
-		Time: proto.Uint32(uint32(when.Unix())), // 填写日志时间
-		Contents: []*Log_Content{
+		Time: proto.Uint32(uint32(when.Unix())),
+		Contents: []*LogContent{
 			c1,
 		},
 	}
@@ -151,7 +149,6 @@ func (c *aliLSWriter) WriteMsg(when time.Time, msg string, level int) (err error
 	lg.Logs = append(lg.Logs, l)
 	c.lock.Unlock()
 
-	// 满足条件则Flush
 	if len(lg.Logs) >= c.FlushWhen {
 		c.flush(lg)
 	}
@@ -162,7 +159,7 @@ func (c *aliLSWriter) WriteMsg(when time.Time, msg string, level int) (err error
 // Flush implementing method. empty.
 func (c *aliLSWriter) Flush() {
 
-	// flush所有group
+	// flush all group
 	for _, lg := range c.group {
 		c.flush(lg)
 	}
@@ -176,9 +173,6 @@ func (c *aliLSWriter) flush(lg *LogGroup) {
 
 	c.lock.Lock()
 	defer c.lock.Unlock()
-
-	// 把以上的LogGroup推送到SLS服务器，
-	// SLS服务器会根据该logstore的shard个数自动进行负载均衡。
 	err := c.store.PutLogs(lg)
 	if err != nil {
 		return

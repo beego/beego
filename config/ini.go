@@ -325,7 +325,10 @@ func (c *IniConfigContainer) SaveConfigFile(filename string) (err error) {
 
 	// Get section or key comments. Fixed #1607
 	getCommentStr := func(section, key string) string {
-		comment, ok := "", false
+		var (
+			comment string
+			ok      bool
+		)
 		if len(key) == 0 {
 			comment, ok = c.sectionComment[section]
 		} else {

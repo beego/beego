@@ -102,6 +102,14 @@ func TestSimpleDelete(t *testing.T) {
 	t.Log(str)
 }
 
+func TestSimpleDeleteParam(t *testing.T) {
+	str, err := Delete("http://httpbin.org/delete").Param("key", "val").String()
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(str)
+}
+
 func TestWithCookie(t *testing.T) {
 	v := "smallfish"
 	str, err := Get("http://httpbin.org/cookies/set?k1=" + v).SetEnableCookie(true).String()
