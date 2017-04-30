@@ -813,7 +813,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			default:
 				if !execController.HandlerFunc(runMethod) {
 					method := vc.MethodByName(runMethod)
-					var in []reflect.Value = param.ConvertParams(methodParams, method.Type(), context)
+					in := param.ConvertParams(methodParams, method.Type(), context)
 					out := method.Call(in)
 
 					//For backward compatibility we only handle response if we had incoming methodParams
