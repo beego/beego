@@ -8,6 +8,7 @@ import (
 	"github.com/astaxie/beego/logs"
 )
 
+// ConvertParams converts http method params to values that will be passed to the method controller as arguments
 func ConvertParams(methodParams []*MethodParam, methodType reflect.Type, ctx *beecontext.Context) (result []reflect.Value) {
 	result = make([]reflect.Value, 0, len(methodParams))
 	for i := 0; i < len(methodParams); i++ {
@@ -55,15 +56,14 @@ func getParamValue(param *MethodParam, ctx *beecontext.Context) string {
 func parseValue(param *MethodParam, paramValue string, paramType reflect.Type) (result reflect.Value, err error) {
 	if paramValue == "" {
 		return reflect.Zero(paramType), nil
-	} else {
-		parser := getParser(param, paramType)
-		value, err := parser.parse(paramValue, paramType)
-		if err != nil {
-			return result, err
-		}
-
-		return safeConvert(reflect.ValueOf(value), paramType)
 	}
+	parser := getParser(param, paramType)
+	value, err := parser.parse(paramValue, paramType)
+	if err != nil {
+		return result, err
+	}
+
+	return safeConvert(reflect.ValueOf(value), paramType)
 }
 
 func safeConvert(value reflect.Value, t reflect.Type) (result reflect.Value, err error) {

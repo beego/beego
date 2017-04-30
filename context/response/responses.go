@@ -4,7 +4,8 @@ import (
 	beecontext "github.com/astaxie/beego/context"
 )
 
-func Json(value interface{}, encoding ...bool) Renderer {
+// JSON renders value to the response as JSON
+func JSON(value interface{}, encoding ...bool) Renderer {
 	return rendererFunc(func(ctx *beecontext.Context) {
 		var (
 			hasIndent   = true
@@ -28,12 +29,14 @@ func errorRenderer(err error) Renderer {
 	})
 }
 
-func Redirect(localurl string) statusCodeWithRender {
+// Redirect renders http 302 with a URL
+func Redirect(localurl string) Renderer {
 	return statusCodeWithRender{302, func(ctx *beecontext.Context) {
 		ctx.Redirect(302, localurl)
 	}}
 }
 
+// RenderMethodResult renders the return value of a controller method to the output
 func RenderMethodResult(result interface{}, ctx *beecontext.Context) {
 	if result != nil {
 		renderer, ok := result.(Renderer)
@@ -42,7 +45,7 @@ func RenderMethodResult(result interface{}, ctx *beecontext.Context) {
 			if ok {
 				renderer = errorRenderer(err)
 			} else {
-				renderer = Json(result)
+				renderer = JSON(result)
 			}
 		}
 		renderer.Render(ctx)
