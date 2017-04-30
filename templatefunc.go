@@ -507,9 +507,9 @@ func parseFormTag(fieldT reflect.StructField) (label, name, fType string, id str
 	class = fieldT.Tag.Get("class")
 
 	required = false
-	required_field := fieldT.Tag.Get("required")
-	if required_field != "-" && required_field != "" {
-		required, _ = strconv.ParseBool(required_field)
+	requiredField := fieldT.Tag.Get("required")
+	if requiredField != "-" && requiredField != "" {
+		required, _ = strconv.ParseBool(requiredField)
 	}
 
 	switch len(tags) {

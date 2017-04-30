@@ -344,7 +344,7 @@ func (b *BeegoHTTPRequest) buildURL(paramBody string) {
 	}
 
 	// build POST/PUT/PATCH url and body
-	if (b.req.Method == "POST" || b.req.Method == "PUT" || b.req.Method == "PATCH") && b.req.Body == nil {
+	if (b.req.Method == "POST" || b.req.Method == "PUT" || b.req.Method == "PATCH" || b.req.Method == "DELETE") && b.req.Body == nil {
 		// with files
 		if len(b.files) > 0 {
 			pr, pw := io.Pipe()
@@ -520,9 +520,9 @@ func (b *BeegoHTTPRequest) Bytes() ([]byte, error) {
 			return nil, err
 		}
 		b.body, err = ioutil.ReadAll(reader)
-	} else {
-		b.body, err = ioutil.ReadAll(resp.Body)
+		return b.body, err
 	}
+	b.body, err = ioutil.ReadAll(resp.Body)
 	return b.body, err
 }
 

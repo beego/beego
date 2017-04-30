@@ -671,7 +671,7 @@ func (o *rawSet) queryRowsTo(container interface{}, keyCol, valueCol string) (in
 		ind  *reflect.Value
 	)
 
-	typ := 0
+	var typ int
 	switch container.(type) {
 	case *Params:
 		typ = 1

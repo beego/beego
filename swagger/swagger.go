@@ -100,7 +100,7 @@ type Parameter struct {
 	Default     interface{}     `json:"default,omitempty" yaml:"default,omitempty"`
 }
 
-// A limited subset of JSON-Schema's items object. It is used by parameter definitions that are not located in "body".
+// ParameterItems A limited subset of JSON-Schema's items object. It is used by parameter definitions that are not located in "body".
 // http://swagger.io/specification/#itemsObject
 type ParameterItems struct {
 	Type             string            `json:"type,omitempty" yaml:"type,omitempty"`

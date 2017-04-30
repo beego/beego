@@ -162,7 +162,9 @@ func (cp *Provider) SessionRead(sid string) (session.Store, error) {
 	)
 
 	err = cp.b.Get(sid, &doc)
-	if doc == nil {
+	if err != nil {
+		return nil, err
+	} else if doc == nil {
 		kv = make(map[interface{}]interface{})
 	} else {
 		kv, err = session.DecodeGob(doc)
