@@ -30,7 +30,7 @@ func errorRenderer(err error) Renderer {
 }
 
 // Redirect renders http 302 with a URL
-func Redirect(localurl string) Renderer {
+func Redirect(localurl string) error {
 	return statusCodeWithRender{302, func(ctx *beecontext.Context) {
 		ctx.Redirect(302, localurl)
 	}}
