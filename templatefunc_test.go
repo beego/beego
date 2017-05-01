@@ -254,43 +254,43 @@ func TestParseFormTag(t *testing.T) {
 
 	objT := reflect.TypeOf(&user{}).Elem()
 
-	label, name, fType, id, class, ignored, required := parseFormTag(objT.Field(0))
+	label, name, fType, _, _, ignored, _ := parseFormTag(objT.Field(0))
 	if !(name == "name" && label == "年龄：" && fType == "text" && !ignored) {
 		t.Errorf("Form Tag with name, label and type was not correctly parsed.")
 	}
 
-	label, name, fType, id, class, ignored, required = parseFormTag(objT.Field(1))
+	label, name, fType, _, _, ignored, _ = parseFormTag(objT.Field(1))
 	if !(name == "NoName" && label == "年龄：" && fType == "hidden" && !ignored) {
 		t.Errorf("Form Tag with label and type but without name was not correctly parsed.")
 	}
 
-	label, name, fType, id, class, ignored, required = parseFormTag(objT.Field(2))
+	label, name, fType, _, _, ignored, _ = parseFormTag(objT.Field(2))
 	if !(name == "OnlyLabel" && label == "年龄：" && fType == "text" && !ignored) {
 		t.Errorf("Form Tag containing only label was not correctly parsed.")
 	}
 
-	label, name, fType, id, class, ignored, required = parseFormTag(objT.Field(3))
+	label, name, fType, id, class, ignored, _ := parseFormTag(objT.Field(3))
 	if !(name == "name" && label == "OnlyName: " && fType == "text" && !ignored &&
 		id == "name" && class == "form-name") {
 		t.Errorf("Form Tag containing only name was not correctly parsed.")
 	}
 
-	label, name, fType, id, class, ignored, required = parseFormTag(objT.Field(4))
+	_, _, _, _, _, ignored, _ = parseFormTag(objT.Field(4))
 	if !ignored {
 		t.Errorf("Form Tag that should be ignored was not correctly parsed.")
 	}
 
-	label, name, fType, id, class, ignored, required = parseFormTag(objT.Field(5))
+	_, name, _, _, _, _, required := parseFormTag(objT.Field(5))
 	if !(name == "name" && required) {
 		t.Errorf("Form Tag containing only name and required was not correctly parsed.")
 	}
 
-	label, name, fType, id, class, ignored, required = parseFormTag(objT.Field(6))
+	_, name, _, _, _, _, required = parseFormTag(objT.Field(6))
 	if !(name == "name" && !required) {
 		t.Errorf("Form Tag containing only name and ignore required was not correctly parsed.")
 	}
 
-	label, name, fType, id, class, ignored, required = parseFormTag(objT.Field(7))
+	_, name, _, _, _, _, required = parseFormTag(objT.Field(7))
 	if !(name == "name" && !required) {
 		t.Errorf("Form Tag containing only name and not required was not correctly parsed.")
 	}
