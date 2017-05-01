@@ -307,8 +307,9 @@ func _getTemplate(t0 *template.Template, root string, subMods [][]string, others
 			}
 			//second check define
 			for _, otherFile := range others {
+				var data []byte
 				fileAbsPath := filepath.Join(root, otherFile)
-				data, err := ioutil.ReadFile(fileAbsPath)
+				data, err = ioutil.ReadFile(fileAbsPath)
 				if err != nil {
 					continue
 				}
@@ -364,6 +365,7 @@ func DelStaticPath(url string) *App {
 	return BeeApp
 }
 
+// AddTemplateEngine add a new templatePreProcessor which support extension
 func AddTemplateEngine(extension string, fn templatePreProcessor) *App {
 	AddTemplateExt(extension)
 	beeTemplateEngines[extension] = fn
