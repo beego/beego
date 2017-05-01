@@ -59,7 +59,10 @@ func NewBasicAuthenticator(secrets SecretProvider, Realm string) beego.FilterFun
 	return func(ctx *context.Context) {
 		a := &BasicAuth{Secrets: secrets, Realm: Realm}
 		if username := a.CheckAuth(ctx.Request); username == "" {
+			ctx.User = ""
 			a.RequireAuth(ctx.ResponseWriter, ctx.Request)
+		} else {
+			ctx.User = username
 		}
 	}
 }

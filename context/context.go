@@ -53,6 +53,7 @@ type Context struct {
 	Output         *BeegoOutput
 	Request        *http.Request
 	ResponseWriter *Response
+	User           string
 	_xsrfToken     string
 }
 
