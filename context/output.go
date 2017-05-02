@@ -257,6 +257,19 @@ func (output *BeegoOutput) Download(file string, filename ...string) {
 	http.ServeFile(output.Context.ResponseWriter, output.Context.Request, file)
 }
 
+// Download forces response for download content.
+// it prepares the download response header automatically.
+func (output *BeegoOutput) DownloadContent(file string, content io.ReadSeeker) {
+	output.Header("Content-Description", "File Transfer")
+	output.Header("Content-Type", "application/octet-stream")
+	output.Header("Content-Disposition", "attachment; filename="+filepath.Base(file))
+	output.Header("Content-Transfer-Encoding", "binary")
+	output.Header("Expires", "0")
+	output.Header("Cache-Control", "must-revalidate")
+	output.Header("Pragma", "public")
+	http.ServeContent(output.Context.ResponseWriter, output.Context.Request, file, time.Now(), content)
+}
+
 // ContentType sets the content type from ext string.
 // MIME type is given in mime package.
 func (output *BeegoOutput) ContentType(ext string) {
