@@ -95,6 +95,12 @@ func (rc *Cache) Put(key string, val interface{}, timeout time.Duration) error {
 			return err
 		}
 	}
+	ttl := int32(timeout / time.Second)
+	if ttl < 0{
+		ttl = 0
+	}else if ttl == 0 {
+		ttl = -1
+	}
 	item := memcache.Item{Key: key, Expiration: int32(timeout / time.Second)}
 	if v, ok := val.([]byte); ok {
 		item.Value = v

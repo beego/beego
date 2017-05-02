@@ -111,10 +111,14 @@ ERROR:
 // Put put cache to redis.
 func (rc *Cache) Put(key string, val interface{}, timeout time.Duration) error {
 	var err error
-	if _, err = rc.do("SETEX", key, int64(timeout/time.Second), val); err != nil {
+	if timeout < 0 {
+		 _, err = rc.do("SET", key, val)
+	}else{
+		_,err = rc.do("SETEX", key, int64(timeout/time.Second), val)
+	}
+	if err != nil {
 		return err
 	}
-
 	if _, err = rc.do("HSET", rc.key, key, true); err != nil {
 		return err
 	}
