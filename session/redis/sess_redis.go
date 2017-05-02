@@ -179,7 +179,7 @@ func (rp *Provider) SessionRead(sid string) (session.Store, error) {
 	var kv map[interface{}]interface{}
 
 	kvs, err := redis.String(c.Do("GET", sid))
-	if err != redis.ErrNil {
+	if err != nil && err != redis.ErrNil {
 		return nil, err
 	}
 	if len(kvs) == 0 {
