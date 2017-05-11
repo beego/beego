@@ -7,10 +7,10 @@ import (
 
 //MethodParam keeps param information to be auto passed to controller methods
 type MethodParam struct {
-	name     string
-	location paramLocation
-	required bool
-	defValue string
+	name         string
+	location     paramLocation
+	required     bool
+	defaultValue string
 }
 
 type paramLocation byte
@@ -57,8 +57,8 @@ func (mp *MethodParam) String() string {
 	case header:
 		options = append(options, "param.InHeader")
 	}
-	if mp.defValue != "" {
-		options = append(options, fmt.Sprintf(`param.Default("%s")`, mp.defValue))
+	if mp.defaultValue != "" {
+		options = append(options, fmt.Sprintf(`param.Default("%s")`, mp.defaultValue))
 	}
 	if len(options) > 0 {
 		result += ", "

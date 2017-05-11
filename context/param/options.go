@@ -28,10 +28,10 @@ var InBody MethodParamOption = func(p *MethodParam) {
 }
 
 // Default provides a default value for the http param
-func Default(defValue interface{}) MethodParamOption {
+func Default(defaultValue interface{}) MethodParamOption {
 	return func(p *MethodParam) {
-		if defValue != nil {
-			p.defValue = fmt.Sprint(defValue)
+		if defaultValue != nil {
+			p.defaultValue = fmt.Sprint(defaultValue)
 		}
 	}
 }

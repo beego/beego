@@ -24,7 +24,7 @@ func convertParam(param *MethodParam, paramType reflect.Type, ctx *beecontext.Co
 		if param.required {
 			ctx.Abort(400, fmt.Sprintf("Missing parameter %s", param.name))
 		} else {
-			paramValue = param.defValue
+			paramValue = param.defaultValue
 		}
 	}
 
@@ -43,9 +43,6 @@ func getParamValue(param *MethodParam, ctx *beecontext.Context) string {
 		return string(ctx.Input.RequestBody)
 	case header:
 		return ctx.Input.Header(param.name)
-		// if strValue == "" && strings.Contains(param.name, "_") { //magically handle X-Headers?
-		// 	strValue = ctx.Input.Header(strings.Replace(param.name, "_", "-", -1))
-		// }
 	case path:
 		return ctx.Input.Query(":" + param.name)
 	default:
