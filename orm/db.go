@@ -835,7 +835,7 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 		}
 		pkValue, err := d.convertValueFromDB(mi.fields.pk, reflect.ValueOf(ref).Interface(), tz)
 		if err != nil {
-			panic(fmt.Errorf("get pk value failed:  `%s` ", ref))
+			return 0, err
 		}
 		args = append(args, pkValue)
 		cnt++
