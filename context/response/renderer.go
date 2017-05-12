@@ -3,7 +3,14 @@ package response
 import (
 	"strconv"
 
+	"net/http"
+
 	beecontext "github.com/astaxie/beego/context"
+)
+
+const (
+	NotFound   StatusCode = http.StatusNotFound
+	BadRequest StatusCode = http.StatusBadRequest
 )
 
 // Renderer defines an http response renderer
