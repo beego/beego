@@ -8,15 +8,15 @@ import (
 //MethodParam keeps param information to be auto passed to controller methods
 type MethodParam struct {
 	name         string
-	location     paramLocation
+	in           paramType
 	required     bool
 	defaultValue string
 }
 
-type paramLocation byte
+type paramType byte
 
 const (
-	param paramLocation = iota
+	param paramType = iota
 	path
 	body
 	header
@@ -49,7 +49,7 @@ func (mp *MethodParam) String() string {
 	if mp.required {
 		options = append(options, "param.IsRequired")
 	}
-	switch mp.location {
+	switch mp.in {
 	case path:
 		options = append(options, "param.InPath")
 	case body:
