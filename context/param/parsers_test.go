@@ -43,7 +43,7 @@ func Test_Parsers(t *testing.T) {
 	checkParser(testDefinition{`1,2`, []int{1, 2}, sliceParser(intParser{})}, t)
 
 	//slice in body is parsed as json
-	checkParser(testDefinition{`["a","b"]`, []string{"a", "b"}, jsonParser{}}, t, MethodParam{location: body})
+	checkParser(testDefinition{`["a","b"]`, []string{"a", "b"}, jsonParser{}}, t, MethodParam{in: body})
 
 	//pointers
 	var someInt = 1

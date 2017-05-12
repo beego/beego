@@ -38,7 +38,7 @@ func convertParam(param *MethodParam, paramType reflect.Type, ctx *beecontext.Co
 }
 
 func getParamValue(param *MethodParam, ctx *beecontext.Context) string {
-	switch param.location {
+	switch param.in {
 	case body:
 		return string(ctx.Input.RequestBody)
 	case header:

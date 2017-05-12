@@ -21,7 +21,7 @@ func getParser(param *MethodParam, t reflect.Type) paramParser {
 		if t.Elem().Kind() == reflect.Uint8 { //treat []byte as string
 			return stringParser{}
 		}
-		if param.location == body {
+		if param.in == body {
 			return jsonParser{}
 		}
 		elemParser := getParser(param, t.Elem())
