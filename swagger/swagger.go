@@ -75,16 +75,17 @@ type Item struct {
 
 // Operation Describes a single API operation on a path.
 type Operation struct {
-	Tags        []string            `json:"tags,omitempty" yaml:"tags,omitempty"`
-	Summary     string              `json:"summary,omitempty" yaml:"summary,omitempty"`
-	Description string              `json:"description,omitempty" yaml:"description,omitempty"`
-	OperationID string              `json:"operationId,omitempty" yaml:"operationId,omitempty"`
-	Consumes    []string            `json:"consumes,omitempty" yaml:"consumes,omitempty"`
-	Produces    []string            `json:"produces,omitempty" yaml:"produces,omitempty"`
-	Schemes     []string            `json:"schemes,omitempty" yaml:"schemes,omitempty"`
-	Parameters  []Parameter         `json:"parameters,omitempty" yaml:"parameters,omitempty"`
-	Responses   map[string]Response `json:"responses,omitempty" yaml:"responses,omitempty"`
-	Deprecated  bool                `json:"deprecated,omitempty" yaml:"deprecated,omitempty"`
+	Tags        []string              `json:"tags,omitempty" yaml:"tags,omitempty"`
+	Summary     string                `json:"summary,omitempty" yaml:"summary,omitempty"`
+	Description string                `json:"description,omitempty" yaml:"description,omitempty"`
+	OperationID string                `json:"operationId,omitempty" yaml:"operationId,omitempty"`
+	Consumes    []string              `json:"consumes,omitempty" yaml:"consumes,omitempty"`
+	Produces    []string              `json:"produces,omitempty" yaml:"produces,omitempty"`
+	Schemes     []string              `json:"schemes,omitempty" yaml:"schemes,omitempty"`
+	Parameters  []Parameter           `json:"parameters,omitempty" yaml:"parameters,omitempty"`
+	Responses   map[string]Response   `json:"responses,omitempty" yaml:"responses,omitempty"`
+	Deprecated  bool                  `json:"deprecated,omitempty" yaml:"deprecated,omitempty"`
+	Security    []map[string]Security `json:"security,omitempty" yaml:"security,omitempty"`
 }
 
 // Parameter Describes a single operation parameter.
