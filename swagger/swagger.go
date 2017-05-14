@@ -22,18 +22,19 @@ package swagger
 
 // Swagger list the resource
 type Swagger struct {
-	SwaggerVersion      string              `json:"swagger,omitempty" yaml:"swagger,omitempty"`
-	Infos               Information         `json:"info" yaml:"info"`
-	Host                string              `json:"host,omitempty" yaml:"host,omitempty"`
-	BasePath            string              `json:"basePath,omitempty" yaml:"basePath,omitempty"`
-	Schemes             []string            `json:"schemes,omitempty" yaml:"schemes,omitempty"`
-	Consumes            []string            `json:"consumes,omitempty" yaml:"consumes,omitempty"`
-	Produces            []string            `json:"produces,omitempty" yaml:"produces,omitempty"`
-	Paths               map[string]*Item    `json:"paths" yaml:"paths"`
-	Definitions         map[string]Schema   `json:"definitions,omitempty" yaml:"definitions,omitempty"`
-	SecurityDefinitions map[string]Security `json:"securityDefinitions,omitempty" yaml:"securityDefinitions,omitempty"`
-	Tags                []Tag               `json:"tags,omitempty" yaml:"tags,omitempty"`
-	ExternalDocs        *ExternalDocs       `json:"externalDocs,omitempty" yaml:"externalDocs,omitempty"`
+	SwaggerVersion      string                `json:"swagger,omitempty" yaml:"swagger,omitempty"`
+	Infos               Information           `json:"info" yaml:"info"`
+	Host                string                `json:"host,omitempty" yaml:"host,omitempty"`
+	BasePath            string                `json:"basePath,omitempty" yaml:"basePath,omitempty"`
+	Schemes             []string              `json:"schemes,omitempty" yaml:"schemes,omitempty"`
+	Consumes            []string              `json:"consumes,omitempty" yaml:"consumes,omitempty"`
+	Produces            []string              `json:"produces,omitempty" yaml:"produces,omitempty"`
+	Paths               map[string]*Item      `json:"paths" yaml:"paths"`
+	Definitions         map[string]Schema     `json:"definitions,omitempty" yaml:"definitions,omitempty"`
+	SecurityDefinitions map[string]Security   `json:"securityDefinitions,omitempty" yaml:"securityDefinitions,omitempty"`
+	Security            []map[string][]string `json:"security,omitempty" yaml:"security,omitempty"`
+	Tags                []Tag                 `json:"tags,omitempty" yaml:"tags,omitempty"`
+	ExternalDocs        *ExternalDocs         `json:"externalDocs,omitempty" yaml:"externalDocs,omitempty"`
 }
 
 // Information Provides metadata about the API. The metadata can be used by the clients if needed.
