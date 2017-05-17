@@ -28,7 +28,6 @@ import (
 
 	beecontext "github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/context/param"
-	"github.com/astaxie/beego/context/response"
 	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/toolbox"
 	"github.com/astaxie/beego/utils"
@@ -905,7 +904,7 @@ func (p *ControllerRegister) handleParamResponse(context *beecontext.Context, ex
 		result := results[i]
 		if result.Kind() != reflect.Interface || !result.IsNil() {
 			resultValue := result.Interface()
-			response.RenderMethodResult(resultValue, context)
+			context.RenderMethodResult(resultValue)
 		}
 	}
 	if !context.ResponseWriter.Started && context.Output.Status == 0 {

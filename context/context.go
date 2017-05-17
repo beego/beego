@@ -171,6 +171,22 @@ func (ctx *Context) CheckXSRFCookie() bool {
 	return true
 }
 
+// RenderMethodResult renders the return value of a controller method to the output
+func (ctx *Context) RenderMethodResult(result interface{}) {
+	if result != nil {
+		renderer, ok := result.(Renderer)
+		if !ok {
+			err, ok := result.(error)
+			if ok {
+				renderer = errorRenderer(err)
+			} else {
+				renderer = jsonRenderer(result)
+			}
+		}
+		renderer.Render(ctx)
+	}
+}
+
 //Response is a wrapper for the http.ResponseWriter
 //started set to true if response was written to then don't execute other handler
 type Response struct {
