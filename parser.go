@@ -235,7 +235,7 @@ func getparams(str string) []string {
 	var start bool
 	var r []string
 	var quoted int8
-	for _, c := range []rune(str) {
+	for _, c := range str {
 		if unicode.IsSpace(c) && quoted == 0 {
 			if !start {
 				continue
