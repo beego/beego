@@ -343,9 +343,8 @@ func (output *BeegoOutput) IsServerError() bool {
 }
 
 func stringsToJSON(str string) string {
-	rs := []rune(str)
 	var jsons bytes.Buffer
-	for _, r := range rs {
+	for _, r := range str {
 		rint := int(r)
 		if rint < 128 {
 			jsons.WriteRune(r)
