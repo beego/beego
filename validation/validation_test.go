@@ -175,10 +175,10 @@ func TestAlphaNumeric(t *testing.T) {
 func TestMatch(t *testing.T) {
 	valid := Validation{}
 
-	if valid.Match("suchuangji@gmail", regexp.MustCompile("^\\w+@\\w+\\.\\w+$"), "match").Ok {
+	if valid.Match("suchuangji@gmail", regexp.MustCompile(`^\w+@\w+\.\w+$`), "match").Ok {
 		t.Error("\"suchuangji@gmail\" match \"^\\w+@\\w+\\.\\w+$\"  should be false")
 	}
-	if !valid.Match("suchuangji@gmail.com", regexp.MustCompile("^\\w+@\\w+\\.\\w+$"), "match").Ok {
+	if !valid.Match("suchuangji@gmail.com", regexp.MustCompile(`^\w+@\w+\.\w+$`), "match").Ok {
 		t.Error("\"suchuangji@gmail\" match \"^\\w+@\\w+\\.\\w+$\"  should be true")
 	}
 }
@@ -186,10 +186,10 @@ func TestMatch(t *testing.T) {
 func TestNoMatch(t *testing.T) {
 	valid := Validation{}
 
-	if valid.NoMatch("123@gmail", regexp.MustCompile("[^\\w\\d]"), "nomatch").Ok {
+	if valid.NoMatch("123@gmail", regexp.MustCompile(`[^\w\d]`), "nomatch").Ok {
 		t.Error("\"123@gmail\" not match \"[^\\w\\d]\"  should be false")
 	}
-	if !valid.NoMatch("123gmail", regexp.MustCompile("[^\\w\\d]"), "match").Ok {
+	if !valid.NoMatch("123gmail", regexp.MustCompile(`[^\w\d]`), "match").Ok {
 		t.Error("\"123@gmail\" not match \"[^\\w\\d@]\"  should be true")
 	}
 }
