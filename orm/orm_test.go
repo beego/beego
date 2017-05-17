@@ -1661,6 +1661,13 @@ func TestRawQueryRow(t *testing.T) {
 	throwFail(t, AssertIs(pid, nil))
 }
 
+// user_profile table
+type userProfile struct {
+	User
+	Age   int
+	Money float64
+}
+
 func TestQueryRows(t *testing.T) {
 	Q := dDbBaser.TableQuote()
 
@@ -1731,6 +1738,19 @@ func TestQueryRows(t *testing.T) {
 	throwFailNow(t, AssertIs(usernames[1], "astaxie"))
 	throwFailNow(t, AssertIs(ids[2], 4))
 	throwFailNow(t, AssertIs(usernames[2], "nobody"))
+
+	//test query rows by nested struct
+	var l []userProfile
+	query = fmt.Sprintf("SELECT * FROM %suser_profile%s LEFT JOIN %suser%s ON %suser_profile%s.%sid%s = %suser%s.%sid%s", Q, Q, Q, Q, Q, Q, Q, Q, Q, Q, Q, Q)
+	num, err = dORM.Raw(query).QueryRows(&l)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 2))
+	throwFailNow(t, AssertIs(len(l), 2))
+	throwFailNow(t, AssertIs(l[0].UserName, "slene"))
+	throwFailNow(t, AssertIs(l[0].Age, 28))
+	throwFailNow(t, AssertIs(l[1].UserName, "astaxie"))
+	throwFailNow(t, AssertIs(l[1].Age, 30))
+
 }
 
 func TestRawValues(t *testing.T) {
