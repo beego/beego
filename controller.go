@@ -531,8 +531,10 @@ func (c *Controller) GetFile(key string) (multipart.File, *multipart.FileHeader,
 //	}
 // }
 func (c *Controller) GetFiles(key string) ([]*multipart.FileHeader, error) {
-	if files, ok := c.Ctx.Request.MultipartForm.File[key]; ok {
-		return files, nil
+	if c.Ctx.Request.MultipartForm != nil && c.Ctx.Request.MultipartForm.File != nil {
+		if files, ok := c.Ctx.Request.MultipartForm.File[key]; ok {
+			return files, nil
+		}
 	}
 	return nil, http.ErrMissingFile
 }
