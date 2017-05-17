@@ -833,7 +833,11 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 		if err := rs.Scan(&ref); err != nil {
 			return 0, err
 		}
-		args = append(args, reflect.ValueOf(ref).Interface())
+		pkValue, err := d.convertValueFromDB(mi.fields.pk, reflect.ValueOf(ref).Interface(), tz)
+		if err != nil {
+			return 0, err
+		}
+		args = append(args, pkValue)
 		cnt++
 	}
 
