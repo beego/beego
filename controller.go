@@ -28,6 +28,7 @@ import (
 	"strings"
 
 	"github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/context/param"
 	"github.com/astaxie/beego/session"
 )
 
@@ -51,6 +52,7 @@ type ControllerComments struct {
 	Router           string
 	AllowHTTPMethods []string
 	Params           []map[string]string
+	MethodParams     []*param.MethodParam
 }
 
 // Controller defines some basic http request handler operations, such as
