@@ -1,11 +1,9 @@
-package httpResponse
+package context
 
 import (
 	"strconv"
 
 	"net/http"
-
-	beecontext "github.com/astaxie/beego/context"
 )
 
 const (
@@ -24,6 +22,6 @@ func (s StatusCode) Error() string {
 }
 
 // Render sets the http status code
-func (s StatusCode) Render(ctx *beecontext.Context) {
+func (s StatusCode) Render(ctx *Context) {
 	ctx.Output.SetStatus(int(s))
 }
