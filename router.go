@@ -116,6 +116,7 @@ type ControllerInfo struct {
 	handler        http.Handler
 	runFunction    FilterFunc
 	routerType     int
+	initialize     func() ControllerInterface
 }
 
 // ControllerRegister containers registered router rules, controller handlers and filters.
@@ -181,6 +182,27 @@ func (p *ControllerRegister) Add(pattern string, c ControllerInterface, mappingM
 	route.methods = methods
 	route.routerType = routerTypeBeego
 	route.controllerType = t
+	route.initialize = func() ControllerInterface {
+		vc := reflect.New(route.controllerType)
+		execController, ok := vc.Interface().(ControllerInterface)
+		if !ok {
+			panic("controller is not ControllerInterface")
+		}
+
+		elemVal := reflect.ValueOf(c).Elem()
+		elemType := reflect.TypeOf(c).Elem()
+		execElem := reflect.ValueOf(execController).Elem()
+
+		numOfFields := elemVal.NumField()
+		for i := 0; i < numOfFields; i++ {
+			fieldVal := elemVal.Field(i)
+			fieldType := elemType.Field(i)
+			execElem.FieldByName(fieldType.Name).Set(fieldVal)
+		}
+
+		return execController
+	}
+
 	if len(methods) == 0 {
 		for _, m := range HTTPMETHOD {
 			p.addToRouter(m, pattern, route)
@@ -760,14 +782,10 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	// also defined runRouter & runMethod from filter
 	if !isRunnable {
 		//Invoke the request handler
-		vc := reflect.New(runRouter)
-		execController, ok := vc.Interface().(ControllerInterface)
-		if !ok {
-			panic("controller is not ControllerInterface")
-		}
+		var execController ControllerInterface = routerInfo.initialize()
 
 		//call the controller init function
-		execController.Init(context, runRouter.Name(), runMethod, vc.Interface())
+		execController.Init(context, runRouter.Name(), runMethod, execController)
 
 		//call prepare function
 		execController.Prepare()
@@ -803,6 +821,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			default:
 				if !execController.HandlerFunc(runMethod) {
 					var in []reflect.Value
+					vc := reflect.ValueOf(execController)
 					method := vc.MethodByName(runMethod)
 					method.Call(in)
 				}
