@@ -168,6 +168,19 @@ func sanitizeValue(v string) string {
 	return cookieValueSanitizer.Replace(v)
 }
 
+func jsonRenderer(value interface{}) Renderer {
+	return rendererFunc(func(ctx *Context) {
+		ctx.Output.JSON(value, false, false)
+	})
+}
+
+func errorRenderer(err error) Renderer {
+	return rendererFunc(func(ctx *Context) {
+		ctx.Output.SetStatus(500)
+		ctx.WriteString(err.Error())
+	})
+}
+
 // JSON writes json to response body.
 // if coding is true, it converts utf-8 to \u0000 type.
 func (output *BeegoOutput) JSON(data interface{}, hasIndent bool, coding bool) error {
@@ -330,9 +343,8 @@ func (output *BeegoOutput) IsServerError() bool {
 }
 
 func stringsToJSON(str string) string {
-	rs := []rune(str)
 	var jsons bytes.Buffer
-	for _, r := range rs {
+	for _, r := range str {
 		rint := int(r)
 		if rint < 128 {
 			jsons.WriteRune(r)

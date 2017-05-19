@@ -33,6 +33,8 @@ install:
   - go get github.com/ssdb/gossdb/ssdb
   - go get github.com/cloudflare/golz4
   - go get github.com/gogo/protobuf/proto
+  - go get github.com/Knetic/govaluate
+  - go get github.com/hsluoyz/casbin
   - go get -u honnef.co/go/tools/cmd/gosimple
   - go get -u github.com/mdempsky/unconvert
   - go get -u github.com/gordonklaus/ineffassign
