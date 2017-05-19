@@ -32,6 +32,8 @@ func registerDefaultErrorHandler() error {
 		"502": badGateway,
 		"503": serviceUnavailable,
 		"504": gatewayTimeout,
+		"417": invalidxsrf,
+		"422": missingxsrf,
 	}
 	for e, h := range m {
 		if _, ok := ErrorMaps[e]; !ok {
