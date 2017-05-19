@@ -27,6 +27,7 @@ import (
 	"time"
 
 	beecontext "github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/context/param"
 	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/toolbox"
 	"github.com/astaxie/beego/utils"
@@ -117,6 +118,7 @@ type ControllerInfo struct {
 	runFunction    FilterFunc
 	routerType     int
 	initialize     func() ControllerInterface
+	methodParams   []*param.MethodParam
 }
 
 // ControllerRegister containers registered router rules, controller handlers and filters.
@@ -152,6 +154,10 @@ func NewControllerRegister() *ControllerRegister {
 //	Add("/api",&RestController{},"get,post:ApiFunc"
 //	Add("/simple",&SimpleController{},"get:GetFunc;post:PostFunc")
 func (p *ControllerRegister) Add(pattern string, c ControllerInterface, mappingMethods ...string) {
+	p.addWithMethodParams(pattern, c, nil, mappingMethods...)
+}
+
+func (p *ControllerRegister) addWithMethodParams(pattern string, c ControllerInterface, methodParams []*param.MethodParam, mappingMethods ...string) {
 	reflectVal := reflect.ValueOf(c)
 	t := reflect.Indirect(reflectVal).Type()
 	methods := make(map[string]string)
@@ -203,6 +209,7 @@ func (p *ControllerRegister) Add(pattern string, c ControllerInterface, mappingM
 		return execController
 	}
 
+	route.methodParams = methodParams
 	if len(methods) == 0 {
 		for _, m := range HTTPMETHOD {
 			p.addToRouter(m, pattern, route)
@@ -267,7 +274,7 @@ func (p *ControllerRegister) Include(cList ...ControllerInterface) {
 		key := t.PkgPath() + ":" + t.Name()
 		if comm, ok := GlobalControllerRouter[key]; ok {
 			for _, a := range comm {
-				p.Add(a.Router, c, strings.Join(a.AllowHTTPMethods, ",")+":"+a.Method)
+				p.addWithMethodParams(a.Router, c, a.MethodParams, strings.Join(a.AllowHTTPMethods, ",")+":"+a.Method)
 			}
 		}
 	}
@@ -646,11 +653,12 @@ func (p *ControllerRegister) execFilter(context *beecontext.Context, urlPath str
 func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	startTime := time.Now()
 	var (
-		runRouter  reflect.Type
-		findRouter bool
-		runMethod  string
-		routerInfo *ControllerInfo
-		isRunnable bool
+		runRouter    reflect.Type
+		findRouter   bool
+		runMethod    string
+		methodParams []*param.MethodParam
+		routerInfo   *ControllerInfo
+		isRunnable   bool
 	)
 	context := p.pool.Get().(*beecontext.Context)
 	context.Reset(rw, r)
@@ -762,6 +770,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			routerInfo.handler.ServeHTTP(rw, r)
 		} else {
 			runRouter = routerInfo.controllerType
+			methodParams = routerInfo.methodParams
 			method := r.Method
 			if r.Method == http.MethodPost && context.Input.Query("_method") == http.MethodPost {
 				method = http.MethodPut
@@ -782,7 +791,17 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	// also defined runRouter & runMethod from filter
 	if !isRunnable {
 		//Invoke the request handler
-		var execController ControllerInterface = routerInfo.initialize()
+		var execController ControllerInterface
+		if routerInfo.initialize != nil {
+			execController = routerInfo.initialize()
+		} else {
+			vc := reflect.New(runRouter)
+			var ok bool
+			execController, ok = vc.Interface().(ControllerInterface)
+			if !ok {
+				panic("controller is not ControllerInterface")
+			}
+		}
 
 		//call the controller init function
 		execController.Init(context, runRouter.Name(), runMethod, execController)
@@ -820,10 +839,15 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				execController.Options()
 			default:
 				if !execController.HandlerFunc(runMethod) {
-					var in []reflect.Value
 					vc := reflect.ValueOf(execController)
 					method := vc.MethodByName(runMethod)
-					method.Call(in)
+					in := param.ConvertParams(methodParams, method.Type(), context)
+					out := method.Call(in)
+
+					//For backward compatibility we only handle response if we had incoming methodParams
+					if methodParams != nil {
+						p.handleParamResponse(context, execController, out)
+					}
 				}
 			}
 
@@ -900,6 +924,20 @@ Admin:
 	// Call WriteHeader if status code has been set changed
 	if context.Output.Status != 0 {
 		context.ResponseWriter.WriteHeader(context.Output.Status)
+	}
+}
+
+func (p *ControllerRegister) handleParamResponse(context *beecontext.Context, execController ControllerInterface, results []reflect.Value) {
+	//looping in reverse order for the case when both error and value are returned and error sets the response status code
+	for i := len(results) - 1; i >= 0; i-- {
+		result := results[i]
+		if result.Kind() != reflect.Interface || !result.IsNil() {
+			resultValue := result.Interface()
+			context.RenderMethodResult(resultValue)
+		}
+	}
+	if !context.ResponseWriter.Started && context.Output.Status == 0 {
+		context.Output.SetStatus(200)
 	}
 }
 
