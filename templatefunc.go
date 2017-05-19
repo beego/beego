@@ -27,9 +27,10 @@ import (
 )
 
 const (
-	formatTime     = "15:04:05"
-	formatDate     = "2006-01-02"
-	formatDateTime = "2006-01-02 15:04:05"
+	formatTime      = "15:04:05"
+	formatDate      = "2006-01-02"
+	formatDateTime  = "2006-01-02 15:04:05"
+	formatDateTimeT = "2006-01-02T15:04:05"
 )
 
 // Substr returns the substr from start to length.
@@ -53,21 +54,21 @@ func Substr(s string, start, length int) string {
 // HTML2str returns escaping text convert from html.
 func HTML2str(html string) string {
 
-	re, _ := regexp.Compile("\\<[\\S\\s]+?\\>")
+	re, _ := regexp.Compile(`\<[\S\s]+?\>`)
 	html = re.ReplaceAllStringFunc(html, strings.ToLower)
 
 	//remove STYLE
-	re, _ = regexp.Compile("\\<style[\\S\\s]+?\\</style\\>")
+	re, _ = regexp.Compile(`\<style[\S\s]+?\</style\>`)
 	html = re.ReplaceAllString(html, "")
 
 	//remove SCRIPT
-	re, _ = regexp.Compile("\\<script[\\S\\s]+?\\</script\\>")
+	re, _ = regexp.Compile(`\<script[\S\s]+?\</script\>`)
 	html = re.ReplaceAllString(html, "")
 
-	re, _ = regexp.Compile("\\<[\\S\\s]+?\\>")
+	re, _ = regexp.Compile(`\<[\S\s]+?\>`)
 	html = re.ReplaceAllString(html, "\n")
 
-	re, _ = regexp.Compile("\\s{2,}")
+	re, _ = regexp.Compile(`\s{2,}`)
 	html = re.ReplaceAllString(html, "\n")
 
 	return strings.TrimSpace(html)
@@ -360,8 +361,13 @@ func parseFormToStruct(form url.Values, objT reflect.Type, objV reflect.Value) e
 					value = value[:25]
 					t, err = time.ParseInLocation(time.RFC3339, value, time.Local)
 				} else if len(value) >= 19 {
-					value = value[:19]
-					t, err = time.ParseInLocation(formatDateTime, value, time.Local)
+					if strings.Contains(value, "T") {
+						value = value[:19]
+						t, err = time.ParseInLocation(formatDateTimeT, value, time.Local)
+					} else {
+						value = value[:19]
+						t, err = time.ParseInLocation(formatDateTime, value, time.Local)
+					}
 				} else if len(value) >= 10 {
 					if len(value) > 10 {
 						value = value[:10]
@@ -373,7 +379,6 @@ func parseFormToStruct(form url.Values, objT reflect.Type, objV reflect.Value) e
 					}
 					t, err = time.ParseInLocation(formatTime, value, time.Local)
 				}
-
 				if err != nil {
 					return err
 				}
