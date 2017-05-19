@@ -27,9 +27,10 @@ import (
 )
 
 const (
-	formatTime     = "15:04:05"
-	formatDate     = "2006-01-02"
-	formatDateTime = "2006-01-02 15:04:05"
+	formatTime      = "15:04:05"
+	formatDate      = "2006-01-02"
+	formatDateTime  = "2006-01-02 15:04:05"
+	formatDateTimeT = "2006-01-02T15:04:05"
 )
 
 // Substr returns the substr from start to length.
@@ -360,8 +361,13 @@ func parseFormToStruct(form url.Values, objT reflect.Type, objV reflect.Value) e
 					value = value[:25]
 					t, err = time.ParseInLocation(time.RFC3339, value, time.Local)
 				} else if len(value) >= 19 {
-					value = value[:19]
-					t, err = time.ParseInLocation(formatDateTime, value, time.Local)
+					if strings.Contains(value, "T") {
+						value = value[:19]
+						t, err = time.ParseInLocation(formatDateTimeT, value, time.Local)
+					} else {
+						value = value[:19]
+						t, err = time.ParseInLocation(formatDateTime, value, time.Local)
+					}
 				} else if len(value) >= 10 {
 					if len(value) > 10 {
 						value = value[:10]
@@ -373,7 +379,6 @@ func parseFormToStruct(form url.Values, objT reflect.Type, objV reflect.Value) e
 					}
 					t, err = time.ParseInLocation(formatTime, value, time.Local)
 				}
-
 				if err != nil {
 					return err
 				}
