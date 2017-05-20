@@ -55,6 +55,12 @@ type ControllerComments struct {
 	MethodParams     []*param.MethodParam
 }
 
+// ControllerError stores the error info for the controller method
+type ControllerError struct {
+	Code int    `json:"code"`
+	Msg  string `json:"msg"`
+}
+
 // Controller defines some basic http request handler operations, such as
 // http context, template and view, session and xsrf.
 type Controller struct {
@@ -287,6 +293,15 @@ func (c *Controller) CustomAbort(status int, body string) {
 	// last panic user string
 	c.Ctx.ResponseWriter.WriteHeader(status)
 	c.Ctx.ResponseWriter.Write([]byte(body))
+	panic(ErrAbort)
+}
+
+// ApiAbort stops controller handler and returns formatted error info customized by user.
+func (c *Controller) ApiAbort(status int, body string) {
+	c.Ctx.ResponseWriter.WriteHeader(status)
+	err := ControllerError{Code: status, Msg: body}
+	c.Data["json"] = err
+	c.ServeJSON()
 	panic(ErrAbort)
 }
 
