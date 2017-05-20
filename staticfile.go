@@ -90,8 +90,6 @@ func serverStaticRouter(ctx *context.Context) {
 	}
 
 	http.ServeContent(ctx.ResponseWriter, ctx.Request, filePath, sch.modTime, sch)
-	return
-
 }
 
 type serveContentHolder struct {
@@ -109,14 +107,14 @@ var (
 func openFile(filePath string, fi os.FileInfo, acceptEncoding string) (bool, string, *serveContentHolder, error) {
 	mapKey := acceptEncoding + ":" + filePath
 	mapLock.RLock()
-	mapFile, _ := staticFileMap[mapKey]
+	mapFile := staticFileMap[mapKey]
 	mapLock.RUnlock()
 	if isOk(mapFile, fi) {
 		return mapFile.encoding != "", mapFile.encoding, mapFile, nil
 	}
 	mapLock.Lock()
 	defer mapLock.Unlock()
-	if mapFile, _ = staticFileMap[mapKey]; !isOk(mapFile, fi) {
+	if mapFile = staticFileMap[mapKey]; !isOk(mapFile, fi) {
 		file, err := os.Open(filePath)
 		if err != nil {
 			return false, "", nil, err

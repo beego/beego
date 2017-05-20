@@ -72,7 +72,7 @@ func GrepFile(patten string, filename string) (lines []string, err error) {
 	lines = make([]string, 0)
 	reader := bufio.NewReader(fd)
 	prefix := ""
-	isLongLine := false
+	var isLongLine bool
 	for {
 		byteLine, isPrefix, er := reader.ReadLine()
 		if er != nil && er != io.EOF {

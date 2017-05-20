@@ -93,14 +93,14 @@ wrongArg:
 }
 
 func AssertIs(a interface{}, args ...interface{}) error {
-	if ok, err := ValuesCompare(true, a, args...); ok == false {
+	if ok, err := ValuesCompare(true, a, args...); !ok {
 		return err
 	}
 	return nil
 }
 
 func AssertNot(a interface{}, args ...interface{}) error {
-	if ok, err := ValuesCompare(false, a, args...); ok == false {
+	if ok, err := ValuesCompare(false, a, args...); !ok {
 		return err
 	}
 	return nil
@@ -135,7 +135,7 @@ func getCaller(skip int) string {
 	if i := strings.LastIndex(funName, "."); i > -1 {
 		funName = funName[i+1:]
 	}
-	return fmt.Sprintf("%s:%d: \n%s", fn, line, strings.Join(codes, "\n"))
+	return fmt.Sprintf("%s:%s:%d: \n%s", fn, funName, line, strings.Join(codes, "\n"))
 }
 
 func throwFail(t *testing.T, err error, args ...interface{}) {
@@ -1014,6 +1014,8 @@ func TestAll(t *testing.T) {
 	var users3 []*User
 	qs = dORM.QueryTable("user")
 	num, err = qs.Filter("user_name", "nothing").All(&users3)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 0))
 	throwFailNow(t, AssertIs(users3 == nil, false))
 }
 
@@ -1138,6 +1140,7 @@ func TestRelatedSel(t *testing.T) {
 	}
 
 	err = qs.Filter("user_name", "nobody").RelatedSel("profile").One(&user)
+	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
 	throwFail(t, AssertIs(user.Profile, nil))
 
@@ -1246,20 +1249,24 @@ func TestLoadRelated(t *testing.T) {
 
 	num, err = dORM.LoadRelated(&user, "Posts", true)
 	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 2))
 	throwFailNow(t, AssertIs(len(user.Posts), 2))
 	throwFailNow(t, AssertIs(user.Posts[0].User.UserName, "astaxie"))
 
 	num, err = dORM.LoadRelated(&user, "Posts", true, 1)
 	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 1))
 	throwFailNow(t, AssertIs(len(user.Posts), 1))
 
 	num, err = dORM.LoadRelated(&user, "Posts", true, 0, 0, "-Id")
 	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 2))
 	throwFailNow(t, AssertIs(len(user.Posts), 2))
 	throwFailNow(t, AssertIs(user.Posts[0].Title, "Formatting"))
 
 	num, err = dORM.LoadRelated(&user, "Posts", true, 1, 1, "Id")
 	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 1))
 	throwFailNow(t, AssertIs(len(user.Posts), 1))
 	throwFailNow(t, AssertIs(user.Posts[0].Title, "Formatting"))
 
@@ -1654,6 +1661,13 @@ func TestRawQueryRow(t *testing.T) {
 	throwFail(t, AssertIs(pid, nil))
 }
 
+// user_profile table
+type userProfile struct {
+	User
+	Age   int
+	Money float64
+}
+
 func TestQueryRows(t *testing.T) {
 	Q := dDbBaser.TableQuote()
 
@@ -1724,6 +1738,19 @@ func TestQueryRows(t *testing.T) {
 	throwFailNow(t, AssertIs(usernames[1], "astaxie"))
 	throwFailNow(t, AssertIs(ids[2], 4))
 	throwFailNow(t, AssertIs(usernames[2], "nobody"))
+
+	//test query rows by nested struct
+	var l []userProfile
+	query = fmt.Sprintf("SELECT * FROM %suser_profile%s LEFT JOIN %suser%s ON %suser_profile%s.%sid%s = %suser%s.%sid%s", Q, Q, Q, Q, Q, Q, Q, Q, Q, Q, Q, Q)
+	num, err = dORM.Raw(query).QueryRows(&l)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 2))
+	throwFailNow(t, AssertIs(len(l), 2))
+	throwFailNow(t, AssertIs(l[0].UserName, "slene"))
+	throwFailNow(t, AssertIs(l[0].Age, 28))
+	throwFailNow(t, AssertIs(l[1].UserName, "astaxie"))
+	throwFailNow(t, AssertIs(l[1].Age, 30))
+
 }
 
 func TestRawValues(t *testing.T) {
@@ -1976,6 +2003,7 @@ func TestReadOrCreate(t *testing.T) {
 	created, pk, err := dORM.ReadOrCreate(u, "UserName")
 	throwFail(t, err)
 	throwFail(t, AssertIs(created, true))
+	throwFail(t, AssertIs(u.ID, pk))
 	throwFail(t, AssertIs(u.UserName, "Kyle"))
 	throwFail(t, AssertIs(u.Email, "kylemcc@gmail.com"))
 	throwFail(t, AssertIs(u.Password, "other_pass"))
@@ -2130,13 +2158,13 @@ func TestUintPk(t *testing.T) {
 		Name: name,
 	}
 
-	created, pk, err := dORM.ReadOrCreate(u, "ID")
+	created, _, err := dORM.ReadOrCreate(u, "ID")
 	throwFail(t, err)
 	throwFail(t, AssertIs(created, true))
 	throwFail(t, AssertIs(u.Name, name))
 
 	nu := &UintPk{ID: 8}
-	created, pk, err = dORM.ReadOrCreate(nu, "ID")
+	created, pk, err := dORM.ReadOrCreate(nu, "ID")
 	throwFail(t, err)
 	throwFail(t, AssertIs(created, false))
 	throwFail(t, AssertIs(nu.ID, u.ID))

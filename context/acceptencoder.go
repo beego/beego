@@ -39,6 +39,7 @@ var (
 	getMethodOnly   bool
 )
 
+// InitGzip init the gzipcompress
 func InitGzip(minLength, compressLevel int, methods []string) {
 	if minLength >= 0 {
 		gzipMinLength = minLength
