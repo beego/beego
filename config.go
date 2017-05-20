@@ -345,7 +345,7 @@ func assignSingleConfig(p interface{}, ac config.Configer) {
 		case reflect.String:
 			pf.SetString(ac.DefaultString(name, pf.String()))
 		case reflect.Int, reflect.Int64:
-			pf.SetInt(int64(ac.DefaultInt64(name, pf.Int())))
+			pf.SetInt(ac.DefaultInt64(name, pf.Int()))
 		case reflect.Bool:
 			pf.SetBool(ac.DefaultBool(name, pf.Bool()))
 		case reflect.Struct:

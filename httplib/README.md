@@ -32,7 +32,7 @@ The default timeout is `60` seconds, function prototype:
 
 	SetTimeout(connectTimeout, readWriteTimeout time.Duration)
 
-Exmaple:
+Example:
 
 	// GET
 	httplib.Get("http://beego.me/").SetTimeout(100 * time.Second, 30 * time.Second)

@@ -155,11 +155,16 @@ func (cp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 func (cp *Provider) SessionRead(sid string) (session.Store, error) {
 	cp.b = cp.getBucket()
 
-	var doc []byte
+	var (
+		kv  map[interface{}]interface{}
+		err error
+		doc []byte
+	)
 
-	err := cp.b.Get(sid, &doc)
-	var kv map[interface{}]interface{}
-	if doc == nil {
+	err = cp.b.Get(sid, &doc)
+	if err != nil {
+		return nil, err
+	} else if doc == nil {
 		kv = make(map[interface{}]interface{})
 	} else {
 		kv, err = session.DecodeGob(doc)
@@ -230,7 +235,6 @@ func (cp *Provider) SessionDestroy(sid string) error {
 
 // SessionGC Recycle
 func (cp *Provider) SessionGC() {
-	return
 }
 
 // SessionAll return all active session

@@ -24,9 +24,13 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
+	"strconv"
 	"strings"
+	"unicode"
 
+	"github.com/astaxie/beego/context/param"
 	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/utils"
 )
@@ -35,6 +39,7 @@ var globalRouterTemplate = `package routers
 
 import (
 	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/context/param"
 )
 
 func init() {
@@ -81,7 +86,7 @@ func parserPkg(pkgRealpath, pkgpath string) error {
 					if specDecl.Recv != nil {
 						exp, ok := specDecl.Recv.List[0].Type.(*ast.StarExpr) // Check that the type is correct first beforing throwing to parser
 						if ok {
-							parserComments(specDecl.Doc, specDecl.Name.String(), fmt.Sprint(exp.X), pkgpath)
+							parserComments(specDecl, fmt.Sprint(exp.X), pkgpath)
 						}
 					}
 				}
@@ -93,42 +98,167 @@ func parserPkg(pkgRealpath, pkgpath string) error {
 	return nil
 }
 
-func parserComments(comments *ast.CommentGroup, funcName, controllerName, pkgpath string) error {
-	if comments != nil && comments.List != nil {
-		for _, c := range comments.List {
-			t := strings.TrimSpace(strings.TrimLeft(c.Text, "//"))
-			if strings.HasPrefix(t, "@router") {
-				elements := strings.TrimLeft(t, "@router ")
-				e1 := strings.SplitN(elements, " ", 2)
-				if len(e1) < 1 {
-					return errors.New("you should has router information")
-				}
-				key := pkgpath + ":" + controllerName
-				cc := ControllerComments{}
-				cc.Method = funcName
-				cc.Router = e1[0]
-				if len(e1) == 2 && e1[1] != "" {
-					e1 = strings.SplitN(e1[1], " ", 2)
-					if len(e1) >= 1 {
-						cc.AllowHTTPMethods = strings.Split(strings.Trim(e1[0], "[]"), ",")
-					} else {
-						cc.AllowHTTPMethods = append(cc.AllowHTTPMethods, "get")
-					}
-				} else {
-					cc.AllowHTTPMethods = append(cc.AllowHTTPMethods, "get")
-				}
-				if len(e1) == 2 && e1[1] != "" {
-					keyval := strings.Split(strings.Trim(e1[1], "[]"), " ")
-					for _, kv := range keyval {
-						kk := strings.Split(kv, ":")
-						cc.Params = append(cc.Params, map[string]string{strings.Join(kk[:len(kk)-1], ":"): kk[len(kk)-1]})
-					}
-				}
-				genInfoList[key] = append(genInfoList[key], cc)
-			}
+type parsedComment struct {
+	routerPath string
+	methods    []string
+	params     map[string]parsedParam
+}
+
+type parsedParam struct {
+	name     string
+	datatype string
+	location string
+	defValue string
+	required bool
+}
+
+func parserComments(f *ast.FuncDecl, controllerName, pkgpath string) error {
+	if f.Doc != nil {
+		parsedComment, err := parseComment(f.Doc.List)
+		if err != nil {
+			return err
 		}
+		if parsedComment.routerPath != "" {
+			key := pkgpath + ":" + controllerName
+			cc := ControllerComments{}
+			cc.Method = f.Name.String()
+			cc.Router = parsedComment.routerPath
+			cc.AllowHTTPMethods = parsedComment.methods
+			cc.MethodParams = buildMethodParams(f.Type.Params.List, parsedComment)
+			genInfoList[key] = append(genInfoList[key], cc)
+		}
+
 	}
 	return nil
+}
+
+func buildMethodParams(funcParams []*ast.Field, pc *parsedComment) []*param.MethodParam {
+	result := make([]*param.MethodParam, 0, len(funcParams))
+	for _, fparam := range funcParams {
+		methodParam := buildMethodParam(fparam, pc)
+		result = append(result, methodParam)
+	}
+	return result
+}
+
+func buildMethodParam(fparam *ast.Field, pc *parsedComment) *param.MethodParam {
+	options := []param.MethodParamOption{}
+	name := fparam.Names[0].Name
+	if cparam, ok := pc.params[name]; ok {
+		//Build param from comment info
+		name = cparam.name
+		if cparam.required {
+			options = append(options, param.IsRequired)
+		}
+		switch cparam.location {
+		case "body":
+			options = append(options, param.InBody)
+		case "header":
+			options = append(options, param.InHeader)
+		case "path":
+			options = append(options, param.InPath)
+		}
+		if cparam.defValue != "" {
+			options = append(options, param.Default(cparam.defValue))
+		}
+	} else {
+		if paramInPath(name, pc.routerPath) {
+			options = append(options, param.InPath)
+		}
+	}
+	return param.New(name, options...)
+}
+
+func paramInPath(name, route string) bool {
+	return strings.HasSuffix(route, ":"+name) ||
+		strings.Contains(route, ":"+name+"/")
+}
+
+var routeRegex = regexp.MustCompile(`@router\s+(\S+)(?:\s+\[(\S+)\])?`)
+
+func parseComment(lines []*ast.Comment) (pc *parsedComment, err error) {
+	pc = &parsedComment{}
+	for _, c := range lines {
+		t := strings.TrimSpace(strings.TrimLeft(c.Text, "//"))
+		if strings.HasPrefix(t, "@router") {
+			matches := routeRegex.FindStringSubmatch(t)
+			if len(matches) == 3 {
+				pc.routerPath = matches[1]
+				methods := matches[2]
+				if methods == "" {
+					pc.methods = []string{"get"}
+					//pc.hasGet = true
+				} else {
+					pc.methods = strings.Split(methods, ",")
+					//pc.hasGet = strings.Contains(methods, "get")
+				}
+			} else {
+				return nil, errors.New("Router information is missing")
+			}
+		} else if strings.HasPrefix(t, "@Param") {
+			pv := getparams(strings.TrimSpace(strings.TrimLeft(t, "@Param")))
+			if len(pv) < 4 {
+				logs.Error("Invalid @Param format. Needs at least 4 parameters")
+			}
+			p := parsedParam{}
+			names := strings.SplitN(pv[0], "=>", 2)
+			p.name = names[0]
+			funcParamName := p.name
+			if len(names) > 1 {
+				funcParamName = names[1]
+			}
+			p.location = pv[1]
+			p.datatype = pv[2]
+			switch len(pv) {
+			case 5:
+				p.required, _ = strconv.ParseBool(pv[3])
+			case 6:
+				p.defValue = pv[3]
+				p.required, _ = strconv.ParseBool(pv[4])
+			}
+			if pc.params == nil {
+				pc.params = map[string]parsedParam{}
+			}
+			pc.params[funcParamName] = p
+		}
+	}
+	return
+}
+
+// direct copy from bee\g_docs.go
+// analisys params return []string
+// @Param	query		form	 string	true		"The email for login"
+// [query form string true "The email for login"]
+func getparams(str string) []string {
+	var s []rune
+	var j int
+	var start bool
+	var r []string
+	var quoted int8
+	for _, c := range str {
+		if unicode.IsSpace(c) && quoted == 0 {
+			if !start {
+				continue
+			} else {
+				start = false
+				j++
+				r = append(r, string(s))
+				s = make([]rune, 0)
+				continue
+			}
+		}
+
+		start = true
+		if c == '"' {
+			quoted ^= 1
+			continue
+		}
+		s = append(s, c)
+	}
+	if len(s) > 0 {
+		r = append(r, string(s))
+	}
+	return r
 }
 
 func genRouterCode(pkgRealpath string) {
@@ -163,12 +293,24 @@ func genRouterCode(pkgRealpath string) {
 				}
 				params = strings.TrimRight(params, ",") + "}"
 			}
+			methodParams := "param.Make("
+			if len(c.MethodParams) > 0 {
+				lines := make([]string, 0, len(c.MethodParams))
+				for _, m := range c.MethodParams {
+					lines = append(lines, fmt.Sprint(m))
+				}
+				methodParams += "\n				" +
+					strings.Join(lines, ",\n				") +
+					",\n			"
+			}
+			methodParams += ")"
 			globalinfo = globalinfo + `
 	beego.GlobalControllerRouter["` + k + `"] = append(beego.GlobalControllerRouter["` + k + `"],
 		beego.ControllerComments{
 			Method: "` + strings.TrimSpace(c.Method) + `",
 			` + "Router: `" + c.Router + "`" + `,
 			AllowHTTPMethods: ` + allmethod + `,
+			MethodParams: ` + methodParams + `,
 			Params: ` + params + `})
 `
 		}
