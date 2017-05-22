@@ -245,7 +245,7 @@ func getTplDeep(root, file, parent string, t *template.Template) (*template.Temp
 	if err != nil {
 		return nil, [][]string{}, err
 	}
-	t, err = t.New(file).Parse(string(data))
+	t, err = t.Parse(string(data))
 	if err != nil {
 		return nil, [][]string{}, err
 	}
