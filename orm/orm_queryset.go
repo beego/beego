@@ -63,6 +63,7 @@ type querySet struct {
 	offset   int64
 	groups   []string
 	orders   []string
+	calcRows bool
 	distinct bool
 	orm      *orm
 }
@@ -124,6 +125,12 @@ func (o querySet) OrderBy(exprs ...string) QuerySeter {
 // add DISTINCT to SELECT
 func (o querySet) Distinct() QuerySeter {
 	o.distinct = true
+	return &o
+}
+
+// add SQL_CALC_FOUND_ROWS to SELECT
+func (o querySet) CalcRows() QuerySeter {
+	o.calcRows = true
 	return &o
 }
 
