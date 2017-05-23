@@ -410,7 +410,9 @@ func (o *orm) getRelQs(md interface{}, mi *modelInfo, fi *fieldInfo) *querySet {
 	if fi.fieldType == RelManyToMany {
 		q.cond = q.cond.And(fi.reverseFieldInfoM2M.column+ExprSep+fi.reverseFieldInfo.column, md)
 	} else {
-		q.cond = q.cond.And(fi.reverseFieldInfo.column, md)
+		if fi.reverseFieldInfo != nil {
+			q.cond = q.cond.And(fi.reverseFieldInfo.column, md)
+		}
 	}
 
 	return q
