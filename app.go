@@ -361,6 +361,11 @@ func Handler(rootpath string, h http.Handler, options ...interface{}) *App {
 // beego.BeforeStatic, beego.BeforeRouter, beego.BeforeExec, beego.AfterExec and beego.FinishRouter.
 // The bool params is for setting the returnOnOutput value (false allows multiple filters to execute)
 func InsertFilter(pattern string, pos int, filter FilterFunc, params ...bool) *App {
-	BeeApp.Handlers.InsertFilter(pattern, pos, filter, params...)
+	BeeApp.Handlers.InsertFilter("*", pattern, pos, filter, params...)
+	return BeeApp
+}
+
+func InsertMethodFilter(method string, pattern string, pos int, filter FilterFunc, params ...bool) *App {
+	BeeApp.Handlers.InsertFilter(method, pattern, pos, filter, params...)
 	return BeeApp
 }

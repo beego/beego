@@ -424,10 +424,11 @@ func (p *ControllerRegister) AddAutoPrefix(prefix string, c ControllerInterface)
 // params is for:
 //   1. setting the returnOnOutput value (false allows multiple filters to execute)
 //   2. determining whether or not params need to be reset.
-func (p *ControllerRegister) InsertFilter(pattern string, pos int, filter FilterFunc, params ...bool) error {
+func (p *ControllerRegister) InsertFilter(method string, pattern string, pos int, filter FilterFunc, params ...bool) error {
 	mr := &FilterRouter{
 		tree:           NewTree(),
 		pattern:        pattern,
+		method:         method,
 		filterFunc:     filter,
 		returnOnOutput: true,
 	}

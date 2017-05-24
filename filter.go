@@ -26,6 +26,7 @@ type FilterRouter struct {
 	filterFunc     FilterFunc
 	tree           *Tree
 	pattern        string
+	method         string
 	returnOnOutput bool
 	resetParams    bool
 }
@@ -34,6 +35,9 @@ type FilterRouter struct {
 // If the request is matched, the values of the URL parameters defined
 // by the filter pattern are also returned.
 func (f *FilterRouter) ValidRouter(url string, ctx *context.Context) bool {
+	if f.method != "*" && ctx.Request.Method != f.method {
+		return false
+	}
 	isOk := f.tree.Match(url, ctx)
 	if isOk != nil {
 		if b, ok := isOk.(bool); ok {
