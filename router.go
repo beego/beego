@@ -664,6 +664,22 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		goto Admin
 	}
 
+	// session init
+	if BConfig.WebConfig.Session.SessionOn {
+		var err error
+		context.Input.CruSession, err = GlobalSessions.SessionStart(rw, r)
+		if err != nil {
+			logs.Error(err)
+			exception("503", context)
+			goto Admin
+		}
+		defer func() {
+			if context.Input.CruSession != nil {
+				context.Input.CruSession.SessionRelease(rw)
+			}
+		}()
+	}
+
 	// filter for static file
 	if len(p.filters[BeforeStatic]) > 0 && p.execFilter(context, urlPath, BeforeStatic) {
 		goto Admin
@@ -683,21 +699,6 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		context.Input.ParseFormOrMulitForm(BConfig.MaxMemory)
 	}
 
-	// session init
-	if BConfig.WebConfig.Session.SessionOn {
-		var err error
-		context.Input.CruSession, err = GlobalSessions.SessionStart(rw, r)
-		if err != nil {
-			logs.Error(err)
-			exception("503", context)
-			goto Admin
-		}
-		defer func() {
-			if context.Input.CruSession != nil {
-				context.Input.CruSession.SessionRelease(rw)
-			}
-		}()
-	}
 	if len(p.filters[BeforeRouter]) > 0 && p.execFilter(context, urlPath, BeforeRouter) {
 		goto Admin
 	}
