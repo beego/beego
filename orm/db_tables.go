@@ -358,7 +358,8 @@ func (t *dbTables) getCondSQL(cond *Condition, sub bool, tz *time.Location) (whe
 
 			num := len(exprs) - 1
 			operator := ""
-			if operators[exprs[num]] {
+			operator = t.base.OperatorSQL(exprs[num])
+			if operator != ""{
 				operator = exprs[num]
 				exprs = exprs[:num]
 			}
