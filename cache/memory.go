@@ -70,6 +70,20 @@ func (bc *MemoryCache) Get(name string) interface{} {
 	return nil
 }
 
+// GetRestDuration rest duration.
+// if non-exist or expired, return time.Duration 0.
+func (bc *MemoryCache) GetRestDuration(name string) time.Duration {
+	bc.RLock()
+	defer bc.RUnlock()
+	if itm, ok := bc.items[name]; ok {
+		if itm.isExpire() {
+			return 0
+		}
+		return itm.lifespan - time.Now().Sub(itm.createdTime)
+	}
+	return 0
+}
+
 // GetMulti gets caches from memory.
 // if non-existed or expired, return nil.
 func (bc *MemoryCache) GetMulti(names []string) []interface{} {

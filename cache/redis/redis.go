@@ -75,6 +75,14 @@ func (rc *Cache) Get(key string) interface{} {
 	return nil
 }
 
+// GetRestDuration rest duration by key.
+func (rc *Cache) GetRestDuration(key string) time.Duration {
+	if v, err := rc.do("TTL", key); err == nil {
+		return time.Duration(v.(int64))
+	}
+	return 0
+}
+
 // GetMulti get cache from redis.
 func (rc *Cache) GetMulti(keys []string) []interface{} {
 	size := len(keys)

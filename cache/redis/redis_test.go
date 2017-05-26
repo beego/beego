@@ -103,4 +103,12 @@ func TestRedisCache(t *testing.T) {
 	if err = bm.ClearAll(); err != nil {
 		t.Error("clear all err")
 	}
+
+	// test get rest duration
+	if err = bm.Put("astaxie", "author", timeoutDuration); err != nil {
+		t.Error("set Error", err)
+	}
+	if rest := bm.GetRestDuration("astaxie"); rest == 0 {
+		t.Error("get wrong rest duration")
+	}
 }

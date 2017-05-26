@@ -95,6 +95,14 @@ func TestCache(t *testing.T) {
 	if vv[1].(string) != "author1" {
 		t.Error("GetMulti ERROR")
 	}
+	// test get rest duration
+	if err = bm.Put("astaxie2", "author", timeoutDuration); err != nil {
+		t.Error("set Error", err)
+	}
+	if rest := bm.GetRestDuration("astaxie2"); rest <= 0 {
+		t.Error("get wrong rest duration", rest)
+	}
+
 }
 
 func TestFileCache(t *testing.T) {
@@ -164,5 +172,12 @@ func TestFileCache(t *testing.T) {
 		t.Error("GetMulti ERROR")
 	}
 
+	// test get rest duration
+	if err = bm.Put("astaxie2", "author", timeoutDuration); err != nil {
+		t.Error("set Error", err)
+	}
+	if rest := bm.GetRestDuration("astaxie2"); rest <= 0 {
+		t.Error("get wrong rest duration", rest)
+	}
 	os.RemoveAll("cache")
 }

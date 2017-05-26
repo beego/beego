@@ -130,6 +130,21 @@ func (fc *FileCache) Get(key string) interface{} {
 	return to.Data
 }
 
+// GetRestDuration rest duration.
+// if non-exist or expired, return time.Duration 0.
+func (fc *FileCache) GetRestDuration(key string) time.Duration {
+	fileData, err := FileGetContents(fc.getCacheFileName(key))
+	if err != nil {
+		return 0
+	}
+	var to FileCacheItem
+	GobDecode(fileData, &to)
+	if to.Expired.Before(time.Now()) {
+		return 0
+	}
+	return to.Expired.Sub(time.Now())
+}
+
 // GetMulti gets values from file cache.
 // if non-exist or expired, return empty string.
 func (fc *FileCache) GetMulti(keys []string) []interface{} {

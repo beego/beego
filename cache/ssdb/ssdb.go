@@ -37,6 +37,11 @@ func (rc *Cache) Get(key string) interface{} {
 	return nil
 }
 
+// GetRestDuration rest duration by key.
+func (rc *Cache) GetRestDuration(key string) time.Duration {
+	return 0
+}
+
 // GetMulti get value from memcache.
 func (rc *Cache) GetMulti(keys []string) []interface{} {
 	size := len(keys)
