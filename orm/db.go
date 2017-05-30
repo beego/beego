@@ -544,18 +544,18 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a
 		if valueStr != "" {
 			switch a.Driver {
 			case DRMySQL:
-				updates[i] = v + "=" + valueStr
+				updates[i] = fmt.Sprintf("`%s`=%s", v, valueStr)
 			case DRPostgres:
 				if conflitValue != nil {
 					//postgres ON CONFLICT DO UPDATE SET can`t use colu=colu+values
-					updates[i] = fmt.Sprintf("%s=(select %s from %s where %s = ? )", v, valueStr, mi.table, args0)
+					updates[i] = fmt.Sprintf("%s=(select `%s` from `%s` where `%s` = ? )", v, valueStr, mi.table, args0)
 					updateValues = append(updateValues, conflitValue)
 				} else {
 					return 0, fmt.Errorf("`%s` must be in front of `%s` in your struct", args0, v)
 				}
 			}
 		} else {
-			updates[i] = v + "=?"
+			updates[i] = fmt.Sprintf("`%s`=?", v)
 			updateValues = append(updateValues, values[i])
 		}
 	}
