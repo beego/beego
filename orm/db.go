@@ -964,6 +964,9 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 	}
 
 	sqlSelect := "SELECT"
+	if qs.calcRows {
+		sqlSelect += " SQL_CALC_FOUND_ROWS"
+	}
 	if qs.distinct {
 		sqlSelect += " DISTINCT"
 	}
