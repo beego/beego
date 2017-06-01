@@ -271,7 +271,7 @@ func (w *fileLogWriter) doRotate(logTime time.Time) error {
 	if err != nil {
 		goto RESTART_LOGGER
 	}
-	err = os.Chmod(fName, os.FileMode(0440))
+	err = os.Chmod(fName, os.FileMode(0444))
 	// re-start logger
 RESTART_LOGGER:
 

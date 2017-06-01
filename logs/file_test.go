@@ -175,7 +175,7 @@ func TestFileRotate_06(t *testing.T) { //test file mode
 	log.Emergency("emergency")
 	rotateName := "test3" + fmt.Sprintf(".%s.%03d", time.Now().Format("2006-01-02"), 1) + ".log"
 	s, _ := os.Lstat(rotateName)
-	if s.Mode() != 0440 {
+	if s.Mode() != 0444 {
 		os.Remove(rotateName)
 		os.Remove("test3.log")
 		t.Fatal("rotate file mode error")
