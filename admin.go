@@ -50,7 +50,7 @@ var beeAdminApp *adminApp
 //	 	return true
 // 	}
 // 	beego.FilterMonitorFunc = MyFilterMonitor.
-var FilterMonitorFunc func(string, string, time.Duration, int) bool
+var FilterMonitorFunc func(string, string, time.Duration, string, int) bool
 
 func init() {
 	beeAdminApp = &adminApp{
@@ -62,7 +62,7 @@ func init() {
 	beeAdminApp.Route("/healthcheck", healthcheck)
 	beeAdminApp.Route("/task", taskStatus)
 	beeAdminApp.Route("/listconf", listConf)
-	FilterMonitorFunc = func(string, string, time.Duration, int) bool { return true }
+	FilterMonitorFunc = func(string, string, time.Duration, string, int) bool { return true }
 }
 
 // AdminIndex is the default http.Handler for admin module.
