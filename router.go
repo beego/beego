@@ -849,11 +849,15 @@ Admin:
 	//admin module record QPS
 	if BConfig.Listen.EnableAdmin {
 		timeDur := time.Since(startTime)
+		pattern := ""
+		if routerInfo != nil {
+			pattern = routerInfo.pattern
+		}
 		statusCode := context.ResponseWriter.Status
 		if statusCode == 0 {
 			statusCode = 200
 		}
-		if FilterMonitorFunc(r.Method, r.URL.Path, timeDur, statusCode) {
+		if FilterMonitorFunc(r.Method, r.URL.Path, timeDur, pattern, statusCode) {
 			if runRouter != nil {
 				go toolbox.StatisticsMap.AddStatistics(r.Method, r.URL.Path, runRouter.Name(), timeDur)
 			} else {
