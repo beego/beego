@@ -119,6 +119,7 @@ func (c *Controller) Init(ctx *context.Context, controllerName, actionName strin
 	c.EnableXSRF = true
 	c.Data = ctx.Input.Data()
 	c.methodMapping = make(map[string]func())
+	c.CruSession = ctx.Input.CruSession
 }
 
 // Prepare runs after Init before request function execution.
@@ -558,6 +559,11 @@ func (c *Controller) SaveToFile(fromfile, tofile string) error {
 
 // StartSession starts session and load old session data info this controller.
 func (c *Controller) StartSession() session.Store {
+
+	if false == BConfig.WebConfig.Session.SessionOn {
+		panic("need to set SessionOn=true before use session")
+	}
+
 	if c.CruSession == nil {
 		c.CruSession = c.Ctx.Input.CruSession
 	}
