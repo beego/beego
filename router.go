@@ -767,7 +767,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	// also defined runRouter & runMethod from filter
-	if isRunnable {
+	if !isRunnable || findRouter {
 		//Invoke the request handler
 		vc := reflect.New(runRouter)
 		execController, ok := vc.Interface().(ControllerInterface)
