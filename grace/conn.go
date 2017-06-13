@@ -13,7 +13,7 @@ type graceConn struct {
 	closed bool
 }
 
-func (c graceConn) Close() (err error) {
+func (c *graceConn) Close() (err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			switch x := r.(type) {
