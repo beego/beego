@@ -3,11 +3,14 @@ package grace
 import (
 	"errors"
 	"net"
+	"sync"
 )
 
 type graceConn struct {
 	net.Conn
 	server *Server
+	m sync.Mutex
+	closed bool
 }
 
 func (c graceConn) Close() (err error) {
@@ -23,6 +26,14 @@ func (c graceConn) Close() (err error) {
 			}
 		}
 	}()
+	
+	c.m.Lock()
+	if c.closed {
+		c.m.Unlock()
+		return
+	}
 	c.server.wg.Done()
+	c.closed = true
+	c.m.Unlock()
 	return c.Conn.Close()
 }
