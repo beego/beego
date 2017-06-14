@@ -217,26 +217,31 @@ func (bc *MemoryCache) vaccuum() {
 		if bc.items == nil {
 			return
 		}
+		var expired_items []string
 		for name := range bc.items {
-			bc.itemExpired(name)
+			if bc.itemExpired(name) {
+				expired_items = append(expired_items, name)
+			}
+		}
+		if len(expired_items) != 0 {
+			bc.Lock()
+			defer bc.Unlock()
+			for _, name := range expired_items {
+				delete(bc.items, name)
+			}
 		}
 	}
 }
 
 // itemExpired returns true if an item is expired.
 func (bc *MemoryCache) itemExpired(name string) bool {
-	bc.Lock()
-	defer bc.Unlock()
-
-	itm, ok := bc.items[name]
-	if !ok {
+	bc.RLock()
+	defer bc.RUnlock()
+	if itm, ok := bc.items[name]; !ok {
 		return true
+	} else {
+		return itm.isExpire()
 	}
-	if itm.isExpire() {
-		delete(bc.items, name)
-		return true
-	}
-	return false
 }
 
 func init() {
