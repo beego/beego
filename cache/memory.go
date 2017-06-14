@@ -223,6 +223,7 @@ func (bc *MemoryCache) vaccuum() {
 	}
 }
 
+// expiredKeys returns key list which are expired.
 func (bc *MemoryCache) expiredKeys() (keys []string) {
 	bc.RLock()
 	defer bc.RUnlock()
@@ -234,6 +235,7 @@ func (bc *MemoryCache) expiredKeys() (keys []string) {
 	return
 }
 
+// clearItems removes all the items which key in keys.
 func (bc *MemoryCache) clearItems(keys []string) {
 	bc.Lock()
 	defer bc.Unlock()
