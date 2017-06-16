@@ -177,7 +177,7 @@ func jsonRenderer(value interface{}) Renderer {
 func errorRenderer(err error) Renderer {
 	return rendererFunc(func(ctx *Context) {
 		ctx.Output.SetStatus(500)
-		ctx.WriteString(err.Error())
+		ctx.Output.Body([]byte(err.Error()))
 	})
 }
 
