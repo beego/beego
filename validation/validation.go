@@ -144,17 +144,17 @@ func (v *Validation) Required(obj interface{}, key string) *Result {
 }
 
 // Min Test that the obj is greater than min if obj's type is int
-func (v *Validation) Min(obj interface{}, min int, key string) *Result {
+func (v *Validation) Min(obj interface{}, min int64, key string) *Result {
 	return v.apply(Min{min, key}, obj)
 }
 
 // Max Test that the obj is less than max if obj's type is int
-func (v *Validation) Max(obj interface{}, max int, key string) *Result {
+func (v *Validation) Max(obj interface{}, max int64, key string) *Result {
 	return v.apply(Max{max, key}, obj)
 }
 
 // Range Test that the obj is between mni and max if obj's type is int
-func (v *Validation) Range(obj interface{}, min, max int, key string) *Result {
+func (v *Validation) Range(obj interface{}, min, max int64, key string) *Result {
 	return v.apply(Range{Min{Min: min}, Max{Max: max}, key}, obj)
 }
 
