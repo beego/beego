@@ -249,6 +249,26 @@ func parseParam(t reflect.Type, s string) (i interface{}, err error) {
 	switch t.Kind() {
 	case reflect.Int:
 		i, err = strconv.Atoi(s)
+	case reflect.Int64:
+		i, err = strconv.ParseInt(s, 10, 64)
+	case reflect.Int32:
+		var v int64
+		v, err = strconv.ParseInt(s, 10, 32)
+		if err == nil {
+			i = int32(v)
+		}
+	case reflect.Int16:
+		var v int64
+		v, err = strconv.ParseInt(s, 10, 16)
+		if err == nil {
+			i = int16(v)
+		}
+	case reflect.Int8:
+		var v int64
+		v, err = strconv.ParseInt(s, 10, 8)
+		if err == nil {
+			i = int8(v)
+		}
 	case reflect.String:
 		i = s
 	case reflect.Ptr:
