@@ -56,7 +56,7 @@ type fileLogWriter struct {
 
 	Perm string `json:"perm"`
 
-	OtherPerm string `json:"otherperm"`
+	RotatePerm string `json:"rotateperm"`
 
 	fileNameOnly, suffix string // like "project.log", project is fileNameOnly and .log is suffix
 }
@@ -64,12 +64,12 @@ type fileLogWriter struct {
 // newFileWriter create a FileLogWriter returning as LoggerInterface.
 func newFileWriter() Logger {
 	w := &fileLogWriter{
-		Daily:     true,
-		MaxDays:   7,
-		Rotate:    true,
-		OtherPerm: "0440",
-		Level:     LevelTrace,
-		Perm:      "0660",
+		Daily:      true,
+		MaxDays:    7,
+		Rotate:     true,
+		RotatePerm: "0440",
+		Level:      LevelTrace,
+		Perm:       "0660",
 	}
 	return w
 }
@@ -240,7 +240,7 @@ func (w *fileLogWriter) doRotate(logTime time.Time) error {
 	// Find the next available number
 	num := 1
 	fName := ""
-	otherPerm, err := strconv.ParseInt(w.OtherPerm, 8, 64)
+	rotatePerm, err := strconv.ParseInt(w.RotatePerm, 8, 64)
 	if err != nil {
 		return err
 	}
@@ -279,7 +279,7 @@ func (w *fileLogWriter) doRotate(logTime time.Time) error {
 		goto RESTART_LOGGER
 	}
 
-	err = os.Chmod(fName, os.FileMode(otherPerm))
+	err = os.Chmod(fName, os.FileMode(rotatePerm))
 
 RESTART_LOGGER:
 
