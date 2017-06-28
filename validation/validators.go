@@ -161,24 +161,28 @@ func (r Required) GetLimitValue() interface{} {
 
 // Min check struct
 type Min struct {
-	Min int64
+	Min int
 	Key string
 }
 
 // IsSatisfied judge whether obj is valid
+// not support int64 on 32-bit platform
 func (m Min) IsSatisfied(obj interface{}) bool {
-	var v int64
+	var v int
 	switch obj.(type) {
 	case int64:
-		v = obj.(int64)
+		if wordsize == 32 {
+			return false
+		}
+		v = int(obj.(int64))
 	case int:
-		v = int64(obj.(int))
+		v = obj.(int)
 	case int32:
-		v = int64(obj.(int32))
+		v = int(obj.(int32))
 	case int16:
-		v = int64(obj.(int16))
+		v = int(obj.(int16))
 	case int8:
-		v = int64(obj.(int8))
+		v = int(obj.(int8))
 	default:
 		return false
 	}
@@ -203,24 +207,28 @@ func (m Min) GetLimitValue() interface{} {
 
 // Max validate struct
 type Max struct {
-	Max int64
+	Max int
 	Key string
 }
 
 // IsSatisfied judge whether obj is valid
+// not support int64 on 32-bit platform
 func (m Max) IsSatisfied(obj interface{}) bool {
-	var v int64
+	var v int
 	switch obj.(type) {
 	case int64:
-		v = obj.(int64)
+		if wordsize == 32 {
+			return false
+		}
+		v = int(obj.(int64))
 	case int:
-		v = int64(obj.(int))
+		v = obj.(int)
 	case int32:
-		v = int64(obj.(int32))
+		v = int(obj.(int32))
 	case int16:
-		v = int64(obj.(int16))
+		v = int(obj.(int16))
 	case int8:
-		v = int64(obj.(int8))
+		v = int(obj.(int8))
 	default:
 		return false
 	}
@@ -251,6 +259,7 @@ type Range struct {
 }
 
 // IsSatisfied judge whether obj is valid
+// not support int64 on 32-bit platform
 func (r Range) IsSatisfied(obj interface{}) bool {
 	return r.Min.IsSatisfied(obj) && r.Max.IsSatisfied(obj)
 }
@@ -267,7 +276,7 @@ func (r Range) GetKey() string {
 
 // GetLimitValue return the limit value, Max
 func (r Range) GetLimitValue() interface{} {
-	return []int64{r.Min.Min, r.Max.Max}
+	return []int{r.Min.Min, r.Max.Max}
 }
 
 // MinSize Requires an array or string to be at least a given length.

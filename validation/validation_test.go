@@ -64,10 +64,10 @@ func TestRequired(t *testing.T) {
 func TestMin(t *testing.T) {
 	valid := Validation{}
 
-	if valid.Min(int64(-1), int64(0), "min0").Ok {
+	if valid.Min(-1, 0, "min0").Ok {
 		t.Error("-1 is less than the minimum value of 0 should be false")
 	}
-	if !valid.Min(int64(1), int64(0), "min0").Ok {
+	if !valid.Min(1, 0, "min0").Ok {
 		t.Error("1 is greater or equal than the minimum value of 0 should be true")
 	}
 }
@@ -75,10 +75,10 @@ func TestMin(t *testing.T) {
 func TestMax(t *testing.T) {
 	valid := Validation{}
 
-	if valid.Max(int64(1), int64(0), "max0").Ok {
+	if valid.Max(1, 0, "max0").Ok {
 		t.Error("1 is greater than the minimum value of 0 should be false")
 	}
-	if !valid.Max(int64(-1), int64(0), "max0").Ok {
+	if !valid.Max(-1, 0, "max0").Ok {
 		t.Error("-1 is less or equal than the maximum value of 0 should be true")
 	}
 }
