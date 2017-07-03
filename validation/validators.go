@@ -23,6 +23,16 @@ import (
 	"unicode/utf8"
 )
 
+// CanSkipFuncs will skip valid if RequiredFirst is true and the struct field's value is empty
+var CanSkipFuncs = map[string]struct{}{
+	"Email":   struct{}{},
+	"IP":      struct{}{},
+	"Mobile":  struct{}{},
+	"Tel":     struct{}{},
+	"Phone":   struct{}{},
+	"ZipCode": struct{}{},
+}
+
 // MessageTmpls store commond validate template
 var MessageTmpls = map[string]string{
 	"Required":     "Can not be empty",

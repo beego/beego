@@ -64,6 +64,9 @@ Struct Tag Use:
 
 	func main() {
 		valid := validation.Validation{}
+		// ignore empty field valid
+		// see CanSkipFuncs
+		// valid := validation.Validation{RequiredFirst:true}
 		u := user{Name: "test", Age: 40}
 		b, err := valid.Valid(u)
 		if err != nil {
