@@ -185,11 +185,12 @@ func TestFileRotate_06(t *testing.T) { //test file mode
 }
 func testFileRotate(t *testing.T, fn1, fn2 string) {
 	fw := &fileLogWriter{
-		Daily:   true,
-		MaxDays: 7,
-		Rotate:  true,
-		Level:   LevelTrace,
-		Perm:    "0660",
+		Daily:      true,
+		MaxDays:    7,
+		Rotate:     true,
+		Level:      LevelTrace,
+		Perm:       "0660",
+		RotatePerm: "0440",
 	}
 	fw.Init(fmt.Sprintf(`{"filename":"%v","maxdays":1}`, fn1))
 	fw.dailyOpenTime = time.Now().Add(-24 * time.Hour)
@@ -208,11 +209,12 @@ func testFileRotate(t *testing.T, fn1, fn2 string) {
 
 func testFileDailyRotate(t *testing.T, fn1, fn2 string) {
 	fw := &fileLogWriter{
-		Daily:   true,
-		MaxDays: 7,
-		Rotate:  true,
-		Level:   LevelTrace,
-		Perm:    "0660",
+		Daily:      true,
+		MaxDays:    7,
+		Rotate:     true,
+		Level:      LevelTrace,
+		Perm:       "0660",
+		RotatePerm: "0440",
 	}
 	fw.Init(fmt.Sprintf(`{"filename":"%v","maxdays":1}`, fn1))
 	fw.dailyOpenTime = time.Now().Add(-24 * time.Hour)
