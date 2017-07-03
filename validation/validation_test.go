@@ -391,3 +391,54 @@ func TestRecursiveValid(t *testing.T) {
 		t.Error("validation should not be passed")
 	}
 }
+
+func TestSkipValid(t *testing.T) {
+	type User struct {
+		ID int
+
+		Email    string `valid:"Email"`
+		ReqEmail string `valid:"Required;Email"`
+
+		IP    string `valid:"IP"`
+		ReqIP string `valid:"Required;IP"`
+
+		Mobile    string `valid:"Mobile"`
+		ReqMobile string `valid:"Required;Mobile"`
+
+		Tel    string `valid:"Tel"`
+		ReqTel string `valid:"Required;Tel"`
+
+		Phone    string `valid:"Phone"`
+		ReqPhone string `valid:"Required;Phone"`
+
+		ZipCode    string `valid:"ZipCode"`
+		ReqZipCode string `valid:"Required;ZipCode"`
+	}
+
+	u := User{
+		ReqEmail:   "a@a.com",
+		ReqIP:      "127.0.0.1",
+		ReqMobile:  "18888888888",
+		ReqTel:     "02088888888",
+		ReqPhone:   "02088888888",
+		ReqZipCode: "510000",
+	}
+
+	valid := Validation{}
+	b, err := valid.Valid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b {
+		t.Fatal("validation should not be passed")
+	}
+
+	valid = Validation{RequiredFirst: true}
+	b, err = valid.Valid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !b {
+		t.Fatal("validation should be passed")
+	}
+}
