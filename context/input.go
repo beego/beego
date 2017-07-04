@@ -19,6 +19,7 @@ import (
 	"errors"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"net/url"
 	"reflect"
 	"regexp"
@@ -353,7 +354,7 @@ func (input *BeegoInput) CopyBody(MaxMemory int64) []byte {
 	requestbody, _ := ioutil.ReadAll(safe)
 	input.Context.Request.Body.Close()
 	bf := bytes.NewBuffer(requestbody)
-	input.Context.Request.Body = ioutil.NopCloser(bf)
+	input.Context.Request.Body = http.MaxBytesReader(input.Context.ResponseWriter, ioutil.NopCloser(bf), MaxMemory)
 	input.RequestBody = requestbody
 	return requestbody
 }
