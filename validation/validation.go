@@ -106,6 +106,11 @@ func (r *Result) Message(message string, args ...interface{}) *Result {
 
 // A Validation context manages data validation and error messages.
 type Validation struct {
+	// if this field set true, in struct tag valid
+	// if the struct field vale is empty
+	// it will skip those valid functions, see CanSkipFuncs
+	RequiredFirst bool
+
 	Errors    []*Error
 	ErrorsMap map[string]*Error
 }
@@ -324,7 +329,19 @@ func (v *Validation) Valid(obj interface{}) (b bool, err error) {
 		if vfs, err = getValidFuncs(objT.Field(i)); err != nil {
 			return
 		}
+
+		var hasReuired bool
 		for _, vf := range vfs {
+			if vf.Name == "Required" {
+				hasReuired = true
+			}
+
+			if !hasReuired && v.RequiredFirst && len(objV.Field(i).String()) == 0 {
+				if _, ok := CanSkipFuncs[vf.Name]; ok {
+					continue
+				}
+			}
+
 			if _, err = funcs.Call(vf.Name,
 				mergeParam(v, objV.Field(i).Interface(), vf.Params)...); err != nil {
 				return
