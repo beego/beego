@@ -183,7 +183,7 @@ func (c *Column) SetPrimary(m *Migration) *Column {
 //AddColumnsToUnique adds the columns to Unique Struct
 func (unique *Unique) AddColumnsToUnique(columns ...*Column) *Unique {
 
-	unique.Columns = append(unique.Columns, column...)
+	unique.Columns = append(unique.Columns, columns...)
 
 	return unique
 }
@@ -191,7 +191,7 @@ func (unique *Unique) AddColumnsToUnique(columns ...*Column) *Unique {
 //AddColumns adds columns to m struct
 func (m *Migration) AddColumns(columns ...*Column) *Migration {
 
-	m.Columns = append(m.Columns, column...)
+	m.Columns = append(m.Columns, columns...)
 
 	return m
 }
