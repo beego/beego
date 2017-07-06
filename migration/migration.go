@@ -52,18 +52,31 @@ type Migrationer interface {
 	GetCreated() int64
 }
 
+type Migration struct {
+	sqls           []string
+	Created        string
+	TableName      string
+	Engine         string
+	Charset        string
+	ModifyType     string
+	Columns        []*Column
+	Indexes        []*Index
+	Primary        []*Column
+	Uniques        []*Unique
+	Foreigns       []*Foreign
+	Renames        []*RenameColumn
+	RemoveColumns  []*Column
+	RemoveIndexes  []*Index
+	RemoveUniques  []*Unique
+	RemoveForeigns []*Foreign
+}
+
 var (
 	migrationMap map[string]Migrationer
 )
 
 func init() {
 	migrationMap = make(map[string]Migrationer)
-}
-
-// Migration the basic type which will implement the basic type
-type Migration struct {
-	sqls    []string
-	Created string
 }
 
 // Up implement in the Inheritance struct for upgrade
@@ -74,6 +87,11 @@ func (m *Migration) Up() {
 // Down implement in the Inheritance struct for down
 func (m *Migration) Down() {
 
+}
+
+func (m *Migration) Migrate(migrationType string) {
+	m.ModifyType = migrationType
+	m.sqls = append(m.sqls, m.GetSQL())
 }
 
 // SQL add sql want to execute
