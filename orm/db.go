@@ -379,7 +379,7 @@ func (d *dbBase) Insert(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.
 		return 0, err
 	}
 
-	id, err := d.InsertValue(q, mi, false, names, values)
+	id, err := d.ins.InsertValue(q, mi, false, names, values)
 	if err != nil {
 		return 0, err
 	}
