@@ -37,7 +37,7 @@ var beeAdminApp *adminApp
 // FilterMonitorFunc is default monitor filter when admin module is enable.
 // if this func returns, admin module records qbs for this request by condition of this function logic.
 // usage:
-// 	func MyFilterMonitor(method, requestPath string, t time.Duration, statusCode int) bool {
+// 	func MyFilterMonitor(method, requestPath string, t time.Duration, pattern string, statusCode int) bool {
 //	 	if method == "POST" {
 //			return false
 //	 	}
