@@ -63,6 +63,19 @@ type RenameColumn struct {
 	Column
 }
 
+// CreateTable creates the table on system
+func (m *Migration) CreateTable(tablename, engine, charset string, p ...func()) {
+	m.TableName = tablename
+	m.Engine = engine
+	m.Charset = charset
+	m.ModifyType = "create"
+}
+
+func (m *Migration) AlterTable(tablename string) {
+	m.TableName = tablename
+	m.ModifyType = "alter"
+}
+
 // NewCol creates a new standard column and attaches it to m struct
 func (m *Migration) NewCol(name string) *Column {
 	col := &Column{Name: name}

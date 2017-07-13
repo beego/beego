@@ -52,6 +52,7 @@ type Migrationer interface {
 	GetCreated() int64
 }
 
+//Migration defines the migrations by either SQL or DDL
 type Migration struct {
 	sqls           []string
 	Created        string
@@ -82,11 +83,24 @@ func init() {
 // Up implement in the Inheritance struct for upgrade
 func (m *Migration) Up() {
 
+	switch m.ModifyType {
+	case "reverse":
+		m.ModifyType = "alter"
+	case "delete":
+		m.ModifyType = "create"
+	}
+	m.sqls = append(m.sqls, m.GetSQL())
 }
 
 // Down implement in the Inheritance struct for down
 func (m *Migration) Down() {
-
+	switch m.ModifyType {
+	case "alter":
+		m.ModifyType = "reverse"
+	case "create":
+		m.ModifyType = "delete"
+	}
+	m.sqls = append(m.sqls, m.GetSQL())
 }
 
 //Migrate adds the SQL to the execution list
