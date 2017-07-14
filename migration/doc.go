@@ -1,5 +1,3 @@
-package migration
-
 /* Package migration enables you to generate migrations back and forth. It generates both migrations.
 
 
@@ -39,10 +37,5 @@ m.RenameColumn("from","to")...
 //Supports standard column methods, automatic reverse.
 m.ForeignCol("local_col","foreign_col","foreign_table")
 
-
-
-
-
-
-
 */
+package migration
