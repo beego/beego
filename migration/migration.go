@@ -94,7 +94,7 @@ func (m *Migration) Up() {
 
 // Down implement in the Inheritance struct for down
 func (m *Migration) Down() {
-	m.DDLSpec()
+
 	switch m.ModifyType {
 	case "alter":
 		m.ModifyType = "reverse"
