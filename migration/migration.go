@@ -80,9 +80,14 @@ func init() {
 	migrationMap = make(map[string]Migrationer)
 }
 
+//DDLSpec implement in the Inheritance struct for defining structure
+func (m *Migration) DDLSpec() {
+
+}
+
 // Up implement in the Inheritance struct for upgrade
 func (m *Migration) Up() {
-
+	m.DDLSpec()
 	switch m.ModifyType {
 	case "reverse":
 		m.ModifyType = "alter"
