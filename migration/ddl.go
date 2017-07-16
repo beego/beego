@@ -301,14 +301,11 @@ func (m *Migration) GetSQL() (sql string) {
 				}
 				sql += fmt.Sprintf(")")
 			}
-			for index, foreign := range m.Foreigns {
+			for _, foreign := range m.Foreigns {
 				sql += fmt.Sprintf(",\n `%s` %s %s %s %s %s", foreign.Name, foreign.DataType, foreign.Unsign, foreign.Null, foreign.Inc, foreign.Default)
 				sql += fmt.Sprintf(",\n KEY  `%s_%s_foreign`(`%s`),", m.TableName, foreign.Column.Name, foreign.Column.Name)
-				sql += fmt.Sprintf("\n CONSTRAINT  `%s_%s_foreign` FOREIGN KEY (`%s`) REFERENCES `%s` (`%s`)  %s %s", m.TableName, foreign.Column.Name, foreign.Column.Name, foreign.ForeignTable, foreign.ForeignColumn, foreign.OnDelete, foreign.OnUpdate)
+				sql += fmt.Sprintf("\n CONSTRAINT `%s_%s_foreign` FOREIGN KEY (`%s`) REFERENCES `%s` (`%s`)  %s %s", m.TableName, foreign.Column.Name, foreign.Column.Name, foreign.ForeignTable, foreign.ForeignColumn, foreign.OnDelete, foreign.OnUpdate)
 
-				if len(m.Foreigns) > index+1 {
-					sql += ","
-				}
 			}
 			sql += fmt.Sprintf(")ENGINE=%s DEFAULT CHARSET=%s;", m.Engine, m.Charset)
 			break
