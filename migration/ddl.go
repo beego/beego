@@ -151,7 +151,7 @@ func (c *Column) SetAuto(inc bool) *Column {
 //SetNullable sets the column to be null
 func (c *Column) SetNullable(null bool) *Column {
 	if null {
-		c.Null = "DEFAULT NULL"
+		c.Null = ""
 
 	} else {
 		c.Null = "NOT NULL"
@@ -182,7 +182,7 @@ func (c *Column) SetDataType(dataType string) *Column {
 //SetOldNullable allows reverting to previous nullable on reverse ms
 func (c *RenameColumn) SetOldNullable(null bool) *RenameColumn {
 	if null {
-		c.OldNull = "DEFAULT NULL"
+		c.OldNull = ""
 
 	} else {
 		c.OldNull = "NOT NULL"
