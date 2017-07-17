@@ -275,6 +275,7 @@ func genRouterCode(pkgRealpath string) {
 	sort.Strings(sortKey)
 	for _, k := range sortKey {
 		cList := genInfoList[k]
+		sort.Sort(ControllerCommentsSlice(cList))
 		for _, c := range cList {
 			allmethod := "nil"
 			if len(c.AllowHTTPMethods) > 0 {
