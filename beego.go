@@ -23,7 +23,7 @@ import (
 
 const (
 	// VERSION represent beego web framework version.
-	VERSION = "1.8.3"
+	VERSION = "1.9.0"
 
 	// DEV is for develop
 	DEV = "dev"
@@ -40,9 +40,9 @@ var (
 
 // AddAPPStartHook is used to register the hookfunc
 // The hookfuncs will run in beego.Run()
-// such as sessionInit, middlerware start, buildtemplate, admin start
-func AddAPPStartHook(hf hookfunc) {
-	hooks = append(hooks, hf)
+// such as initiating session , starting middleware , building template, starting admin control and so on.
+func AddAPPStartHook(hf ...hookfunc) {
+	hooks = append(hooks, hf...)
 }
 
 // Run beego application.
@@ -69,12 +69,14 @@ func Run(params ...string) {
 
 func initBeforeHTTPRun() {
 	//init hooks
-	AddAPPStartHook(registerMime)
-	AddAPPStartHook(registerDefaultErrorHandler)
-	AddAPPStartHook(registerSession)
-	AddAPPStartHook(registerTemplate)
-	AddAPPStartHook(registerAdmin)
-	AddAPPStartHook(registerGzip)
+	AddAPPStartHook(
+		registerMime,
+		registerDefaultErrorHandler,
+		registerSession,
+		registerTemplate,
+		registerAdmin,
+		registerGzip,
+	)
 
 	for _, hk := range hooks {
 		if err := hk(); err != nil {

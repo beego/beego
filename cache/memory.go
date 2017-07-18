@@ -217,26 +217,31 @@ func (bc *MemoryCache) vaccuum() {
 		if bc.items == nil {
 			return
 		}
-		for name := range bc.items {
-			bc.itemExpired(name)
+		if keys := bc.expiredKeys(); len(keys) != 0 {
+			bc.clearItems(keys)
 		}
 	}
 }
 
-// itemExpired returns true if an item is expired.
-func (bc *MemoryCache) itemExpired(name string) bool {
+// expiredKeys returns key list which are expired.
+func (bc *MemoryCache) expiredKeys() (keys []string) {
+	bc.RLock()
+	defer bc.RUnlock()
+	for key, itm := range bc.items {
+		if itm.isExpire() {
+			keys = append(keys, key)
+		}
+	}
+	return
+}
+
+// clearItems removes all the items which key in keys.
+func (bc *MemoryCache) clearItems(keys []string) {
 	bc.Lock()
 	defer bc.Unlock()
-
-	itm, ok := bc.items[name]
-	if !ok {
-		return true
+	for _, key := range keys {
+		delete(bc.items, key)
 	}
-	if itm.isExpire() {
-		delete(bc.items, name)
-		return true
-	}
-	return false
 }
 
 func init() {

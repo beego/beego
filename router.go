@@ -704,7 +704,6 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	// User can define RunController and RunMethod in filter
 	if context.Input.RunController != nil && context.Input.RunMethod != "" {
 		findRouter = true
-		isRunnable = true
 		runMethod = context.Input.RunMethod
 		runRouter = context.Input.RunController
 	} else {
@@ -849,7 +848,15 @@ Admin:
 	//admin module record QPS
 	if BConfig.Listen.EnableAdmin {
 		timeDur := time.Since(startTime)
-		if FilterMonitorFunc(r.Method, r.URL.Path, timeDur) {
+		pattern := ""
+		if routerInfo != nil {
+			pattern = routerInfo.pattern
+		}
+		statusCode := context.ResponseWriter.Status
+		if statusCode == 0 {
+			statusCode = 200
+		}
+		if FilterMonitorFunc(r.Method, r.URL.Path, timeDur, pattern, statusCode) {
 			if runRouter != nil {
 				go toolbox.StatisticsMap.AddStatistics(r.Method, r.URL.Path, runRouter.Name(), timeDur)
 			} else {

@@ -135,15 +135,16 @@ func parserComments(f *ast.FuncDecl, controllerName, pkgpath string) error {
 func buildMethodParams(funcParams []*ast.Field, pc *parsedComment) []*param.MethodParam {
 	result := make([]*param.MethodParam, 0, len(funcParams))
 	for _, fparam := range funcParams {
-		methodParam := buildMethodParam(fparam, pc)
-		result = append(result, methodParam)
+		for _, pName := range fparam.Names {
+			methodParam := buildMethodParam(fparam, pName.Name, pc)
+			result = append(result, methodParam)
+		}
 	}
 	return result
 }
 
-func buildMethodParam(fparam *ast.Field, pc *parsedComment) *param.MethodParam {
+func buildMethodParam(fparam *ast.Field, name string, pc *parsedComment) *param.MethodParam {
 	options := []param.MethodParamOption{}
-	name := fparam.Names[0].Name
 	if cparam, ok := pc.params[name]; ok {
 		//Build param from comment info
 		name = cparam.name
@@ -274,6 +275,7 @@ func genRouterCode(pkgRealpath string) {
 	sort.Strings(sortKey)
 	for _, k := range sortKey {
 		cList := genInfoList[k]
+		sort.Sort(ControllerCommentsSlice(cList))
 		for _, c := range cList {
 			allmethod := "nil"
 			if len(c.AllowHTTPMethods) > 0 {

@@ -56,17 +56,20 @@ type fileLogWriter struct {
 
 	Perm string `json:"perm"`
 
+	RotatePerm string `json:"rotateperm"`
+
 	fileNameOnly, suffix string // like "project.log", project is fileNameOnly and .log is suffix
 }
 
 // newFileWriter create a FileLogWriter returning as LoggerInterface.
 func newFileWriter() Logger {
 	w := &fileLogWriter{
-		Daily:   true,
-		MaxDays: 7,
-		Rotate:  true,
-		Level:   LevelTrace,
-		Perm:    "0660",
+		Daily:      true,
+		MaxDays:    7,
+		Rotate:     true,
+		RotatePerm: "0440",
+		Level:      LevelTrace,
+		Perm:       "0660",
 	}
 	return w
 }
@@ -237,8 +240,12 @@ func (w *fileLogWriter) doRotate(logTime time.Time) error {
 	// Find the next available number
 	num := 1
 	fName := ""
+	rotatePerm, err := strconv.ParseInt(w.RotatePerm, 8, 64)
+	if err != nil {
+		return err
+	}
 
-	_, err := os.Lstat(w.Filename)
+	_, err = os.Lstat(w.Filename)
 	if err != nil {
 		//even if the file is not exist or other ,we should RESTART the logger
 		goto RESTART_LOGGER
@@ -271,8 +278,9 @@ func (w *fileLogWriter) doRotate(logTime time.Time) error {
 	if err != nil {
 		goto RESTART_LOGGER
 	}
-	err = os.Chmod(fName, os.FileMode(0440))
-	// re-start logger
+
+	err = os.Chmod(fName, os.FileMode(rotatePerm))
+
 RESTART_LOGGER:
 
 	startLoggerErr := w.startLogger()
