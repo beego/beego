@@ -25,12 +25,12 @@ import (
 
 // CanSkipFuncs will skip valid if RequiredFirst is true and the struct field's value is empty
 var CanSkipFuncs = map[string]struct{}{
-	"Email":   struct{}{},
-	"IP":      struct{}{},
-	"Mobile":  struct{}{},
-	"Tel":     struct{}{},
-	"Phone":   struct{}{},
-	"ZipCode": struct{}{},
+	"Email":   {},
+	"IP":      {},
+	"Mobile":  {},
+	"Tel":     {},
+	"Phone":   {},
+	"ZipCode": {},
 }
 
 // MessageTmpls store commond validate template
