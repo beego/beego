@@ -55,6 +55,7 @@ type ControllerComments struct {
 	MethodParams     []*param.MethodParam
 }
 
+// ControllerCommentsSlice implements the sort interface
 type ControllerCommentsSlice []ControllerComments
 
 func (p ControllerCommentsSlice) Len() int           { return len(p) }

@@ -71,6 +71,7 @@ func (m *Migration) CreateTable(tablename, engine, charset string, p ...func()) 
 	m.ModifyType = "create"
 }
 
+// AlterTable set the ModifyType to alter
 func (m *Migration) AlterTable(tablename string) {
 	m.TableName = tablename
 	m.ModifyType = "alter"

@@ -9,7 +9,7 @@ import (
 type graceConn struct {
 	net.Conn
 	server *Server
-	m sync.Mutex
+	m      sync.Mutex
 	closed bool
 }
 
@@ -26,7 +26,7 @@ func (c *graceConn) Close() (err error) {
 			}
 		}
 	}()
-	
+
 	c.m.Lock()
 	if c.closed {
 		c.m.Unlock()

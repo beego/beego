@@ -45,8 +45,8 @@ var (
 		"Valid":     true,
 		"NoMatch":   true,
 	}
-
-	Int64On32Err = fmt.Errorf("not support int64 on 32-bit platform")
+	// ErrInt64On32 show 32 bit platform not support int64
+	ErrInt64On32 = fmt.Errorf("not support int64 on 32-bit platform")
 )
 
 func init() {
@@ -255,7 +255,7 @@ func parseParam(t reflect.Type, s string) (i interface{}, err error) {
 		i, err = strconv.Atoi(s)
 	case reflect.Int64:
 		if wordsize == 32 {
-			return nil, Int64On32Err
+			return nil, ErrInt64On32
 		}
 		i, err = strconv.ParseInt(s, 10, 64)
 	case reflect.Int32:
