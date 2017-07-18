@@ -17,7 +17,7 @@
 //	import(
 //		"github.com/astaxie/beego"
 //		"github.com/astaxie/beego/plugins/authz"
-//		"github.com/hsluoyz/casbin"
+//		"github.com/casbin/casbin"
 //	)
 //
 //	func main(){
@@ -42,7 +42,7 @@ package authz
 import (
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/context"
-	"github.com/hsluoyz/casbin"
+	"github.com/casbin/casbin"
 	"net/http"
 )
 

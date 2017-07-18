@@ -16,9 +16,11 @@ package context
 
 import (
 	"bytes"
+	"compress/gzip"
 	"errors"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"net/url"
 	"reflect"
 	"regexp"
@@ -349,11 +351,22 @@ func (input *BeegoInput) CopyBody(MaxMemory int64) []byte {
 	if input.Context.Request.Body == nil {
 		return []byte{}
 	}
+
+	var requestbody []byte
 	safe := &io.LimitedReader{R: input.Context.Request.Body, N: MaxMemory}
-	requestbody, _ := ioutil.ReadAll(safe)
+	if input.Header("Content-Encoding") == "gzip" {
+		reader, err := gzip.NewReader(safe)
+		if err != nil {
+			return nil
+		}
+		requestbody, _ = ioutil.ReadAll(reader)
+	} else {
+		requestbody, _ = ioutil.ReadAll(safe)
+	}
+
 	input.Context.Request.Body.Close()
 	bf := bytes.NewBuffer(requestbody)
-	input.Context.Request.Body = ioutil.NopCloser(bf)
+	input.Context.Request.Body = http.MaxBytesReader(input.Context.ResponseWriter, ioutil.NopCloser(bf), MaxMemory)
 	input.RequestBody = requestbody
 	return requestbody
 }

@@ -23,6 +23,16 @@ import (
 	"unicode/utf8"
 )
 
+// CanSkipFuncs will skip valid if RequiredFirst is true and the struct field's value is empty
+var CanSkipFuncs = map[string]struct{}{
+	"Email":   {},
+	"IP":      {},
+	"Mobile":  {},
+	"Tel":     {},
+	"Phone":   {},
+	"ZipCode": {},
+}
+
 // MessageTmpls store commond validate template
 var MessageTmpls = map[string]string{
 	"Required":     "Can not be empty",
@@ -166,12 +176,28 @@ type Min struct {
 }
 
 // IsSatisfied judge whether obj is valid
+// not support int64 on 32-bit platform
 func (m Min) IsSatisfied(obj interface{}) bool {
-	num, ok := obj.(int)
-	if ok {
-		return num >= m.Min
+	var v int
+	switch obj.(type) {
+	case int64:
+		if wordsize == 32 {
+			return false
+		}
+		v = int(obj.(int64))
+	case int:
+		v = obj.(int)
+	case int32:
+		v = int(obj.(int32))
+	case int16:
+		v = int(obj.(int16))
+	case int8:
+		v = int(obj.(int8))
+	default:
+		return false
 	}
-	return false
+
+	return v >= m.Min
 }
 
 // DefaultMessage return the default min error message
@@ -196,12 +222,28 @@ type Max struct {
 }
 
 // IsSatisfied judge whether obj is valid
+// not support int64 on 32-bit platform
 func (m Max) IsSatisfied(obj interface{}) bool {
-	num, ok := obj.(int)
-	if ok {
-		return num <= m.Max
+	var v int
+	switch obj.(type) {
+	case int64:
+		if wordsize == 32 {
+			return false
+		}
+		v = int(obj.(int64))
+	case int:
+		v = obj.(int)
+	case int32:
+		v = int(obj.(int32))
+	case int16:
+		v = int(obj.(int16))
+	case int8:
+		v = int(obj.(int8))
+	default:
+		return false
 	}
-	return false
+
+	return v <= m.Max
 }
 
 // DefaultMessage return the default max error message
@@ -227,6 +269,7 @@ type Range struct {
 }
 
 // IsSatisfied judge whether obj is valid
+// not support int64 on 32-bit platform
 func (r Range) IsSatisfied(obj interface{}) bool {
 	return r.Min.IsSatisfied(obj) && r.Max.IsSatisfied(obj)
 }
