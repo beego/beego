@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package logs provide a general log interface
+// package Log provide a general log interface
 // Usage:
 //
 // import "github.com/astaxie/beego/logs"
@@ -92,7 +92,7 @@ type Logger interface {
 }
 
 var adapters = make(map[string]newLoggerFunc)
-var levelPrefix = [LevelDebug + 1]string{"[M] ", "[A] ", "[C] ", "[E] ", "[W] ", "[N] ", "[I] ", "[D] "}
+var levelPrefix = [LevelDebug + 1]string{"<Emergency> ", "<Alert> ", "<Critical> ", "<Error> ", "<Warning> ", "<Notice> ", "<Info> ", "<Debug> "}
 
 // Register makes a log provide available by the provided name.
 // If Register is called twice with the same name or if driver is nil,

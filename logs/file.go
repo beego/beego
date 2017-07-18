@@ -63,7 +63,7 @@ type fileLogWriter struct {
 func newFileWriter() Logger {
 	w := &fileLogWriter{
 		Daily:   true,
-		MaxDays: 7,
+		MaxDays: 30,
 		Rotate:  true,
 		Level:   LevelTrace,
 		Perm:    "0660",
@@ -125,7 +125,8 @@ func (w *fileLogWriter) WriteMsg(when time.Time, msg string, level int) error {
 		return nil
 	}
 	h, d := formatTimeHeader(when)
-	msg = string(h) + msg + "\n"
+	//msg = string(h) + msg + "\n"
+	msg = string(h) + strings.Replace(msg, "\n", "", -1) + "\r\n"
 	if w.Rotate {
 		w.RLock()
 		if w.needRotate(len(msg), d) {
@@ -271,8 +272,8 @@ func (w *fileLogWriter) doRotate(logTime time.Time) error {
 	if err != nil {
 		goto RESTART_LOGGER
 	}
-	err = os.Chmod(fName, os.FileMode(0440))
 	// re-start logger
+	
 RESTART_LOGGER:
 
 	startLoggerErr := w.startLogger()
@@ -283,6 +284,24 @@ RESTART_LOGGER:
 	}
 	if err != nil {
 		return fmt.Errorf("Rotate: %s", err)
+	}
+	
+	// Will rorate the log after yesterday's compression into .zip format
+	// When the compression is successful, delete the original rotation after the log
+	err = os.Chdir(filepath.Dir(fName))
+	if err != nil {
+		return fmt.Errorf("Can't access to log directory: %s!", filepath.Dir(fName))
+	} else {
+		err := Zip.Make(strings.Replace(filepath.Base(fName), filepath.Ext(filepath.Base(fName)), ".zip", 1), []string{filepath.Dir(fName), filepath.Base(fName)})
+		if err != nil {
+			return err
+		}
+		
+		// Delete rotated but not compressed logs, like: xxx.xxxx-xx-xx.log
+		err = os.Remove(filepath.Base(fName))
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -301,8 +320,8 @@ func (w *fileLogWriter) deleteOldLog() {
 		}
 
 		if !info.IsDir() && info.ModTime().Add(24*time.Hour*time.Duration(w.MaxDays)).Before(time.Now()) {
-			if strings.HasPrefix(filepath.Base(path), filepath.Base(w.fileNameOnly)) &&
-				strings.HasSuffix(filepath.Base(path), w.suffix) {
+			if strings.HasPrefix(filepath.Base(path), fmt.Sprintf("%s.%s", filepath.Base(w.fileNameOnly), time.Now().Format("2006-01"))) &&
+				strings.HasSuffix(filepath.Base(path), ".zip") {
 				os.Remove(path)
 			}
 		}
