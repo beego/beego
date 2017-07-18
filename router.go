@@ -704,7 +704,6 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	// User can define RunController and RunMethod in filter
 	if context.Input.RunController != nil && context.Input.RunMethod != "" {
 		findRouter = true
-		isRunnable = true
 		runMethod = context.Input.RunMethod
 		runRouter = context.Input.RunController
 	} else {
