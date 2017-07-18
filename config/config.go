@@ -189,16 +189,16 @@ func ParseBool(val interface{}) (value bool, err error) {
 				return false, nil
 			}
 		case int8, int32, int64:
-			strV := fmt.Sprintf("%s", v)
+			strV := fmt.Sprintf("%d", v)
 			if strV == "1" {
 				return true, nil
 			} else if strV == "0" {
 				return false, nil
 			}
 		case float64:
-			if v == 1 {
+			if v == 1.0 {
 				return true, nil
-			} else if v == 0 {
+			} else if v == 0.0 {
 				return false, nil
 			}
 		}
