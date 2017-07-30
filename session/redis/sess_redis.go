@@ -33,10 +33,12 @@
 package redis
 
 import (
+	"container/list"
 	"net/http"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/astaxie/beego/session"
 
@@ -50,11 +52,12 @@ var MaxPoolSize = 100
 
 // SessionStore redis session store
 type SessionStore struct {
-	p           *redis.Pool
-	sid         string
-	lock        sync.RWMutex
-	values      map[interface{}]interface{}
-	maxlifetime int64
+	p            *redis.Pool
+	sid          string
+	lock         sync.RWMutex
+	values       map[interface{}]interface{}
+	maxlifetime  int64
+	timeAccessed time.Time
 }
 
 // Set value in redis session
@@ -98,6 +101,8 @@ func (rs *SessionStore) SessionID() string {
 
 // SessionRelease save session values to redis
 func (rs *SessionStore) SessionRelease(w http.ResponseWriter) {
+	rs.lock.Lock()
+	defer rs.lock.Unlock()
 	b, err := session.EncodeGob(rs.values)
 	if err != nil {
 		return
@@ -109,6 +114,9 @@ func (rs *SessionStore) SessionRelease(w http.ResponseWriter) {
 
 // Provider redis session provider
 type Provider struct {
+	lock        sync.RWMutex
+	sessions    map[string]*list.Element
+	list        *list.List // LRU for gc
 	maxlifetime int64
 	savePath    string
 	poolsize    int
@@ -121,6 +129,8 @@ type Provider struct {
 // savepath like redis server addr,pool size,password,dbnum
 // e.g. 127.0.0.1:6379,100,astaxie,0
 func (rp *Provider) SessionInit(maxlifetime int64, savePath string) error {
+	rp.sessions = make(map[string]*list.Element)
+	rp.list = list.New()
 	rp.maxlifetime = maxlifetime
 	configs := strings.Split(savePath, ",")
 	if len(configs) > 0 {
@@ -173,6 +183,14 @@ func (rp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 
 // SessionRead read redis session by sid
 func (rp *Provider) SessionRead(sid string) (session.Store, error) {
+	rp.lock.RLock()
+	if element, ok := rp.sessions[sid]; ok {
+		rp.lock.RUnlock()
+		go rp.SessionUpdate(sid)
+		return element.Value.(*SessionStore), nil
+	}
+	rp.lock.RUnlock()
+
 	c := rp.poollist.Get()
 	defer c.Close()
 
@@ -190,12 +208,33 @@ func (rp *Provider) SessionRead(sid string) (session.Store, error) {
 		}
 	}
 
-	rs := &SessionStore{p: rp.poollist, sid: sid, values: kv, maxlifetime: rp.maxlifetime}
-	return rs, nil
+	rp.lock.Lock()
+	defer rp.lock.Unlock()
+	if element, ok := rp.sessions[sid]; ok {
+		return element.Value.(*SessionStore), nil
+	}
+	newsess := &SessionStore{
+		p:            rp.poollist,
+		sid:          sid,
+		timeAccessed: time.Now(),
+		values:       kv,
+		maxlifetime:  rp.maxlifetime,
+	}
+	element := rp.list.PushFront(newsess)
+	rp.sessions[sid] = element
+
+	return newsess, nil
 }
 
 // SessionExist check redis session exist by sid
 func (rp *Provider) SessionExist(sid string) bool {
+	rp.lock.RLock()
+	if _, ok := rp.sessions[sid]; ok {
+		rp.lock.RUnlock()
+		return true
+	}
+	rp.lock.RUnlock()
+
 	c := rp.poollist.Get()
 	defer c.Close()
 
@@ -219,6 +258,16 @@ func (rp *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error)
 		c.Do("RENAME", oldsid, sid)
 		c.Do("EXPIRE", sid, rp.maxlifetime)
 	}
+
+	rp.lock.Lock()
+	if element, ok := rp.sessions[oldsid]; ok {
+		rp.sessions[sid] = element
+		delete(rp.sessions, oldsid)
+		rp.lock.Unlock()
+		go rp.SessionUpdate(sid)
+		return element.Value.(*SessionStore), nil
+	}
+	rp.lock.Unlock()
 	return rp.SessionRead(sid)
 }
 
@@ -228,16 +277,53 @@ func (rp *Provider) SessionDestroy(sid string) error {
 	defer c.Close()
 
 	c.Do("DEL", sid)
+
+	rp.lock.Lock()
+	defer rp.lock.Unlock()
+	if element, ok := rp.sessions[sid]; ok {
+		rp.list.Remove(element)
+		delete(rp.sessions, sid)
+	}
 	return nil
 }
 
 // SessionGC Impelment method, no used.
 func (rp *Provider) SessionGC() {
+	rp.lock.RLock()
+	for {
+		element := rp.list.Back()
+		if element == nil {
+			break
+		}
+		if (element.Value.(*SessionStore).timeAccessed.Unix() + rp.maxlifetime) < time.Now().Unix() {
+			rp.lock.RUnlock()
+			rp.lock.Lock()
+			rp.list.Remove(element)
+			delete(rp.sessions, element.Value.(*SessionStore).sid)
+			rp.lock.Unlock()
+			rp.lock.RLock()
+		} else {
+			break
+		}
+	}
+	rp.lock.RUnlock()
 }
 
 // SessionAll return all activeSession
 func (rp *Provider) SessionAll() int {
 	return 0
+}
+
+// SessionUpdate expand time of session store by id in memory session
+func (rp *Provider) SessionUpdate(sid string) error {
+	rp.lock.Lock()
+	defer rp.lock.Unlock()
+	if element, ok := rp.sessions[sid]; ok {
+		element.Value.(*SessionStore).timeAccessed = time.Now()
+		rp.list.MoveToFront(element)
+		return nil
+	}
+	return nil
 }
 
 func init() {
