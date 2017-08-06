@@ -28,7 +28,7 @@ var (
 )
 
 // Tree has three elements: FixRouter/wildcard/leaves
-// fixRouter sotres Fixed Router
+// fixRouter stores Fixed Router
 // wildcard stores params
 // leaves store the endpoint information
 type Tree struct {
