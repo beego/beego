@@ -39,6 +39,7 @@ install:
   - go get -u github.com/mdempsky/unconvert
   - go get -u github.com/gordonklaus/ineffassign
   - go get -u github.com/golang/lint/golint
+  - go get -u gopkg.in/mgo.v2
 before_script:
   - psql --version
   - sh -c "if [ '$ORM_DRIVER' = 'postgres' ]; then psql -c 'create database orm_test;' -U postgres; fi"
