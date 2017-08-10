@@ -22,6 +22,7 @@ type Provider struct {
 	mgoSession  *mgo.Session
 }
 
+// SessionInit connect mongodb
 func (p *Provider) SessionInit(maxLifetime int64, savePath string) error {
 	p.maxLifetime = maxLifetime
 	p.savePath = savePath
@@ -38,6 +39,7 @@ func (p *Provider) SessionInit(maxLifetime int64, savePath string) error {
 	return nil
 }
 
+// SessionRead read mongodb seesion by sid
 func (p *Provider) SessionRead(sid string) (session.Store, error) {
 	mgosession := p.mgoSession.Clone()
 	defer mgosession.Close()
@@ -66,24 +68,25 @@ func (p *Provider) SessionRead(sid string) (session.Store, error) {
 		if err != nil {
 			return nil, err
 		}
+
 	}
 
-	rs := &SessionStore{sid: sid, values: kv, maxLifetime: p.maxLifetime, mgoSession: p.mgoSession}
-	return rs, nil
+	return &SessionStore{sid: sid, values: kv, maxLifetime: p.maxLifetime, mgoSession: p.mgoSession}, nil
 }
+
+// SessionExist check mongodb session exist by id
 func (p *Provider) SessionExist(sid string) bool {
 	mgosession := p.mgoSession.Clone()
 	defer mgosession.Close()
 
 	var s interface{}
-	err := mgosession.DB("").C(collectionName).Find(bson.M{"session_key": sid}).One(&s)
-	if err != nil {
+	if mgosession.DB("").C(collectionName).Find(bson.M{"session_key": sid}).One(&s) != nil {
 		return false
 	}
-
 	return true
 }
 
+// SessionRegenerate generate new sid for mongodb session
 func (p *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error) {
 	mgosession := p.mgoSession.Clone()
 	defer mgosession.Close()
@@ -118,30 +121,27 @@ func (p *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error) 
 		}
 	}
 
-	rs := &SessionStore{sid: sid, values: kv, maxLifetime: p.maxLifetime, mgoSession: p.mgoSession}
-	return rs, nil
+	return &SessionStore{sid: sid, values: kv, maxLifetime: p.maxLifetime, mgoSession: p.mgoSession}, nil
 }
 
+// SessionDestroy remove mongodb session by sid
 func (p *Provider) SessionDestroy(sid string) error {
 	mgosession := p.mgoSession.Clone()
 	defer mgosession.Close()
 
 	err := mgosession.DB("").C(collectionName).Remove(bson.M{"session_key": sid})
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
+// SessionGC remove all expire mongodb seesion
 func (p *Provider) SessionGC() {
 	mgosession := p.mgoSession.Clone()
 	defer mgosession.Close()
 
 	mgosession.DB("").C(collectionName).RemoveAll(bson.M{"session_expire": bson.M{"$lt": time.Now().Unix()}})
-
-	return
 }
 
+// SessionGC return all mongodb session
 func (p *Provider) SessionAll() int {
 	mgosession := p.mgoSession.Clone()
 	defer mgosession.Close()
@@ -160,12 +160,15 @@ type SessionStore struct {
 	mgoSession  *mgo.Session
 }
 
+// Set set value in mongodb session
 func (s *SessionStore) Set(key, value interface{}) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	s.values[key] = value
 	return nil
 }
+
+// Get get value from mongodb session
 func (s *SessionStore) Get(key interface{}) interface{} {
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -175,6 +178,7 @@ func (s *SessionStore) Get(key interface{}) interface{} {
 	return nil
 }
 
+// Delete delete value in mongodb session
 func (s *SessionStore) Delete(key interface{}) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -182,16 +186,20 @@ func (s *SessionStore) Delete(key interface{}) error {
 	return nil
 }
 
+// Flush clear all values in mongodb session
 func (s *SessionStore) Flush() error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	s.values = make(map[interface{}]interface{})
 	return nil
 }
+
+// SessionID get mongodb session id
 func (s *SessionStore) SessionID() string {
 	return s.sid
 }
 
+// SessionRelease save session values mongodb
 func (s *SessionStore) SessionRelease(w http.ResponseWriter) {
 	mgosession := s.mgoSession.Clone()
 	defer mgosession.Close()
