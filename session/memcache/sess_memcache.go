@@ -128,9 +128,12 @@ func (rp *MemProvider) SessionRead(sid string) (session.Store, error) {
 		}
 	}
 	item, err := client.Get(sid)
-	if err != nil && err == memcache.ErrCacheMiss {
-		rs := &SessionStore{sid: sid, values: make(map[interface{}]interface{}), maxlifetime: rp.maxlifetime}
-		return rs, nil
+	if err != nil {
+		if err == memcache.ErrCacheMiss {
+			rs := &SessionStore{sid: sid, values: make(map[interface{}]interface{}), maxlifetime: rp.maxlifetime}
+			return rs, nil
+		}
+		return nil, err
 	}
 	var kv map[interface{}]interface{}
 	if len(item.Value) == 0 {
