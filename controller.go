@@ -111,6 +111,7 @@ type ControllerInterface interface {
 	CheckXSRFCookie() bool
 	HandlerFunc(fn string) bool
 	URLMapping()
+	ExceptionHandler(interface{})
 }
 
 // Init generates default values of controller operations.

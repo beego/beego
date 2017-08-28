@@ -43,7 +43,7 @@ const (
 )
 
 const (
-	routerTypeBeego = iota
+	routerTypeBeego   = iota
 	routerTypeRESTFul
 	routerTypeHandler
 )
@@ -792,6 +792,11 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		execController.URLMapping()
 
 		if !context.ResponseWriter.Started {
+			defer func() {
+				if e := recover(); nil != e {
+					execController.ExceptionHandler(e)
+				}
+			}()
 			//exec main logic
 			switch runMethod {
 			case http.MethodGet:
@@ -845,7 +850,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 Admin:
-	//admin module record QPS
+//admin module record QPS
 	if BConfig.Listen.EnableAdmin {
 		timeDur := time.Since(startTime)
 		pattern := ""
