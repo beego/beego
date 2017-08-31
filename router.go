@@ -117,6 +117,7 @@ type ControllerInfo struct {
 	handler        http.Handler
 	runFunction    FilterFunc
 	routerType     int
+	initialize     func() ControllerInterface
 	methodParams   []*param.MethodParam
 }
 
@@ -187,6 +188,27 @@ func (p *ControllerRegister) addWithMethodParams(pattern string, c ControllerInt
 	route.methods = methods
 	route.routerType = routerTypeBeego
 	route.controllerType = t
+	route.initialize = func() ControllerInterface {
+		vc := reflect.New(route.controllerType)
+		execController, ok := vc.Interface().(ControllerInterface)
+		if !ok {
+			panic("controller is not ControllerInterface")
+		}
+
+		elemVal := reflect.ValueOf(c).Elem()
+		elemType := reflect.TypeOf(c).Elem()
+		execElem := reflect.ValueOf(execController).Elem()
+
+		numOfFields := elemVal.NumField()
+		for i := 0; i < numOfFields; i++ {
+			fieldVal := elemVal.Field(i)
+			fieldType := elemType.Field(i)
+			execElem.FieldByName(fieldType.Name).Set(fieldVal)
+		}
+
+		return execController
+	}
+
 	route.methodParams = methodParams
 	if len(methods) == 0 {
 		for _, m := range HTTPMETHOD {
@@ -768,14 +790,20 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	// also defined runRouter & runMethod from filter
 	if !isRunnable {
 		//Invoke the request handler
-		vc := reflect.New(runRouter)
-		execController, ok := vc.Interface().(ControllerInterface)
-		if !ok {
-			panic("controller is not ControllerInterface")
+		var execController ControllerInterface
+		if routerInfo.initialize != nil {
+			execController = routerInfo.initialize()
+		} else {
+			vc := reflect.New(runRouter)
+			var ok bool
+			execController, ok = vc.Interface().(ControllerInterface)
+			if !ok {
+				panic("controller is not ControllerInterface")
+			}
 		}
 
 		//call the controller init function
-		execController.Init(context, runRouter.Name(), runMethod, vc.Interface())
+		execController.Init(context, runRouter.Name(), runMethod, execController)
 
 		//call prepare function
 		execController.Prepare()
@@ -810,6 +838,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				execController.Options()
 			default:
 				if !execController.HandlerFunc(runMethod) {
+					vc := reflect.ValueOf(execController)
 					method := vc.MethodByName(runMethod)
 					in := param.ConvertParams(methodParams, method.Type(), context)
 					out := method.Call(in)
