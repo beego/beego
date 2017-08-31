@@ -88,17 +88,14 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 	if errs != nil {
 		return nil, errs
 	}
-
 	if rawSid != "" && manager.provider.SessionExist(rawSid) {
 		return manager.provider.SessionRead(rawSid)
 	}
-
 	// Generate a new session
 	rawSid, errs = manager.idGenerator.GenerateSessionID()
 	if errs != nil {
 		return nil, errs
 	}
-
 	session, err = manager.provider.SessionRead(rawSid)
 	if err != nil {
 		return nil, err

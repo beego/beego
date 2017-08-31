@@ -694,7 +694,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}
 		defer func() {
 			if context.Input.CruSession != nil {
-				context.Input.CruSession.SessionRelease(rw)
+				context.Input.CruSession.Save()
 			}
 		}()
 	}

@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"time"
 	"sync"
-	"net/http"
 	"strings"
 )
 
@@ -41,7 +40,7 @@ type RedisOptions struct {
 
 func (r *redisProvider) SessionInit(gclifetime int64, config string, generator IdGeneration) error {
 	op := RedisOptions{}
-	if err := json.Unmarshal([]byte(config), op); nil != err {
+	if err := json.Unmarshal([]byte(config), &op); nil != err {
 		fmt.Printf("json decode error %s , start config %s", err, config)
 		return err
 	}
@@ -104,7 +103,7 @@ func (r *redisProvider) SessionRegenerate(oldrawSid, rawSid string) (Store, erro
 	oldKey := sessionStoreionKey(oldSid)
 	newKey := sessionStoreionKey(newSid)
 	if existed, _ := r.redisClient.Exists(oldKey).Result(); existed == 0 {
-		r.redisClient.SetXX(newKey, "", r.maxLifeTime)
+		r.redisClient.Set(newKey, "", r.maxLifeTime)
 	} else {
 		p := r.redisClient.Pipeline()
 		defer func() {
@@ -183,12 +182,13 @@ func (rs *SessionStore) SessionID() string {
 }
 
 // SessionRelease save session values to redis
-func (rs *SessionStore) SessionRelease(w http.ResponseWriter) {
+func (rs *SessionStore) Save() {
 	b, err := EncodeGob(rs.values)
 	if err != nil {
 		return
 	}
-	rs.redisClient.SetXX(sessionStoreionKey(rs.sid), b, rs.maxlifetime)
+	rs.redisClient.Set(sessionStoreionKey(rs.sid), b, rs.maxlifetime).Result()
+
 }
 
 func sessionStoreionKey(trueSid string) string {
