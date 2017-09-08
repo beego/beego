@@ -106,7 +106,7 @@ func printGC(memStats *runtime.MemStats, gcstats *debug.GCStats, w io.Writer) {
 
 	if gcstats.NumGC > 0 {
 		lastPause := gcstats.Pause[0]
-		elapsed := time.Now().Sub(startTime)
+		elapsed := time.Since(startTime)
 		overhead := float64(gcstats.PauseTotal) / float64(elapsed) * 100
 		allocatedRate := float64(memStats.TotalAlloc) / elapsed.Seconds()
 
@@ -123,7 +123,7 @@ func printGC(memStats *runtime.MemStats, gcstats *debug.GCStats, w io.Writer) {
 			toS(gcstats.PauseQuantiles[99]))
 	} else {
 		// while GC has disabled
-		elapsed := time.Now().Sub(startTime)
+		elapsed := time.Since(startTime)
 		allocatedRate := float64(memStats.TotalAlloc) / elapsed.Seconds()
 
 		fmt.Fprintf(w, "Alloc:%s Sys:%s Alloc(Rate):%s/s\n",

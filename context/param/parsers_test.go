@@ -75,7 +75,7 @@ func checkParser(def testDefinition, t *testing.T, methodParam ...MethodParam) {
 	}
 	convResult, err := safeConvert(reflect.ValueOf(result), toType)
 	if err != nil {
-		t.Errorf("Convertion error for %v. from value: %v, toType: %v, error: %v", def.strValue, result, toType, err)
+		t.Errorf("Conversion error for %v. from value: %v, toType: %v, error: %v", def.strValue, result, toType, err)
 		return
 	}
 	if !reflect.DeepEqual(convResult.Interface(), def.expectedValue) {
