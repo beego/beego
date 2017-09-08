@@ -227,7 +227,7 @@ func parseComment(lines []*ast.Comment) (pc *parsedComment, err error) {
 }
 
 // direct copy from bee\g_docs.go
-// analysis params return []string
+// analisys params return []string
 // @Param	query		form	 string	true		"The email for login"
 // [query form string true "The email for login"]
 func getparams(str string) []string {
