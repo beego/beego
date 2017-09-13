@@ -62,7 +62,7 @@ func disableEscapeHTML(i interface{}) {
 
 func AccessLog(r *AccessLogRecord, format string) {
 	var msg string
-s
+
 	switch format {
 
 	case apacheFormat:
