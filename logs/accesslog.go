@@ -19,14 +19,12 @@ import (
 	"encoding/json"
 	"time"
 	"fmt"
-	"github.com/mcuadros/go-version"
-	"runtime"
 )
 
 const (
-	ApacheFormatPattern = "%s - - [%s] \"%s %d %d\" %f %s %s\n"
-	ApacheFormat        = "APACHE_FORMAT"
-	JsonFormat          = "JSON_FORMAT"
+	apacheFormatPattern = "%s - - [%s] \"%s %d %d\" %f %s %s\n"
+	apacheFormat        = "APACHE_FORMAT"
+	jsonFormat          = "JSON_FORMAT"
 )
 
 type AccessLogRecord struct {
@@ -44,31 +42,43 @@ type AccessLogRecord struct {
 	RemoteUser     string        `json:"remote_user"`
 }
 
-func (r *AccessLogRecord) JSON() ([]byte, error) {
+func (r *AccessLogRecord) json() ([]byte, error) {
 	buffer := &bytes.Buffer{}
 	encoder := json.NewEncoder(buffer)
-	currentGoVersion := version.Normalize(runtime.Version()[2:])
-	if version.Compare("1.7", currentGoVersion, "<") {
-		encoder.SetEscapeHTML(false)
-	}
+	disableEscapeHTML(encoder)
+
 	err := encoder.Encode(r)
 	return buffer.Bytes(), err
 }
 
+func disableEscapeHTML(i interface{}) {
+	e, ok := i.(interface {
+		SetEscapeHTML(bool)
+	});
+	if ok {
+		e.SetEscapeHTML(false)
+	}
+}
+
 func AccessLog(r *AccessLogRecord, format string) {
 	var msg string
+s
+	switch format {
 
-	if format == ApacheFormat {
+	case apacheFormat:
 		timeFormatted := r.RequestTime.Format("02/Jan/2006 03:04:05")
-		msg = fmt.Sprintf(ApacheFormatPattern, r.RemoteAddr, timeFormatted, r.Request, r.Status, r.BodyBytesSent,
+		msg = fmt.Sprintf(apacheFormatPattern, r.RemoteAddr, timeFormatted, r.Request, r.Status, r.BodyBytesSent,
 			r.ElapsedTime.Seconds(), r.HttpReferrer, r.HttpUserAgent)
-	} else {
-		jsonData, err := r.JSON()
+	case jsonFormat:
+		fallthrough
+	default:
+		jsonData, err := r.json()
 		if err != nil {
 			msg = fmt.Sprintf(`{"Error": "%s"}`, err)
 		} else {
 			msg = string(jsonData)
 		}
 	}
+
 	beeLogger.Debug(msg)
 }

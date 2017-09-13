@@ -35,7 +35,6 @@ install:
   - go get github.com/gogo/protobuf/proto
   - go get github.com/Knetic/govaluate
   - go get github.com/casbin/casbin
-  - go get github.com/mcuadros/go-version
   - go get -u honnef.co/go/tools/cmd/gosimple
   - go get -u github.com/mdempsky/unconvert
   - go get -u github.com/gordonklaus/ineffassign
