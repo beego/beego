@@ -22,6 +22,7 @@ import (
 	"os"
 	"path"
 	"time"
+	"strings"
 
 	"github.com/astaxie/beego/grace"
 	"github.com/astaxie/beego/logs"
