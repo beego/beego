@@ -270,8 +270,6 @@ func findAndRemoveTree(paths []string, entryPointTree *Tree, method string) {
 			findAndRemoveTree(paths[1:], entryPointTree.fixrouters[i], method)
 		}
 	}
-	// No match
-	return
 }
 
 // Include will generate router file in the router/xxx.go from the controller's comments
