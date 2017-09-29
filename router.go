@@ -780,6 +780,8 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		//call prepare function
 		execController.Prepare()
 
+		injectPre(context, execController, runMethod)
+
 		//if XSRF is Enable then check cookie where there has any cookie in the  request's cookie _csrf
 		if BConfig.WebConfig.EnableXSRF {
 			execController.XSRFToken()
@@ -830,6 +832,8 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				}
 			}
 		}
+
+		injectPost(context, execController, runMethod)
 
 		// finish all runRouter. release resource
 		execController.Finish()
