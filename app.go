@@ -226,7 +226,7 @@ func UnregisterFixedRoute(fixedRoute string, method string) *App {
 			}
 			if BeeApp.Handlers.routers[m].prefix == strings.Trim(fixedRoute, "/ ") {
 				findAndRemoveSingleTree(BeeApp.Handlers.routers[m])
-				return BeeApp
+				continue
 			}
 			findAndRemoveTree(subPaths, BeeApp.Handlers.routers[m], m)
 		}
@@ -273,16 +273,16 @@ func findAndRemoveTree(paths []string, entryPointTree *Tree, method string) {
 }
 
 func findAndRemoveSingleTree(entryPointTree *Tree) {
-
-	if len(entryPointTree.fixrouters) > 0 {
-		// Remove the *Tree from the fixrouters slice
-		entryPointTree.fixrouters[0] = nil
-		entryPointTree.fixrouters = entryPointTree.fixrouters[1:]
+	if entryPointTree == nil {
+		return
 	}
-
-	if len(entryPointTree.leaves) > 0 {
-		entryPointTree.leaves[0] = nil
-		entryPointTree.leaves = entryPointTree.leaves[1:]
+	if len(entryPointTree.fixrouters) > 0 {
+		// If the route had children subtrees, remove just the functional leaf,
+		// to allow children to function as before
+		if len(entryPointTree.leaves) > 0 {
+			entryPointTree.leaves[0] = nil
+			entryPointTree.leaves = entryPointTree.leaves[1:]
+		}
 	}
 }
 
