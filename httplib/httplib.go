@@ -317,7 +317,19 @@ func (b *BeegoHTTPRequest) Body(data interface{}) *BeegoHTTPRequest {
 	}
 	return b
 }
-
+// XMLBody adds request raw body encoding by XML.
+func (b *BeegoHTTPRequest) XMLBody(obj interface{}) (*BeegoHTTPRequest, error) {
+	if b.req.Body == nil && obj != nil {
+		byts, err := xml.Marshal(obj)
+		if err != nil {
+			return b, err
+		}
+		b.req.Body = ioutil.NopCloser(bytes.NewReader(byts))
+		b.req.ContentLength = int64(len(byts))
+		b.req.Header.Set("Content-Type", "application/xml")
+	}
+	return b, nil
+}
 // JSONBody adds request raw body encoding by JSON.
 func (b *BeegoHTTPRequest) JSONBody(obj interface{}) (*BeegoHTTPRequest, error) {
 	if b.req.Body == nil && obj != nil {
