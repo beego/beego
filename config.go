@@ -25,7 +25,7 @@ import (
 	"github.com/astaxie/beego/config"
 	"github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/logs"
-	"github.com/astaxie/beego/session"
+	"github.com/mokeoo/beego/session"
 	"github.com/astaxie/beego/utils"
 )
 
@@ -93,6 +93,7 @@ type SessionConfig struct {
 	SessionGCMaxLifetime         int64
 	SessionProviderConfig        string
 	SessionCookieLifeTime        int
+	JwtSecKey                    string
 	SessionAutoSetCookie         bool
 	SessionDomain                string
 	SessionDisableHTTPOnly       bool // used to allow for cross domain cookies/javascript cookies.

@@ -29,7 +29,7 @@ import (
 
 	"github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/context/param"
-	"github.com/astaxie/beego/session"
+	"github.com/mokeoo/beego/session"
 )
 
 //commonly used mime-types
@@ -111,6 +111,7 @@ type ControllerInterface interface {
 	CheckXSRFCookie() bool
 	HandlerFunc(fn string) bool
 	URLMapping()
+	ExceptionHandler(interface{})
 }
 
 // Init generates default values of controller operations.
@@ -599,7 +600,7 @@ func (c *Controller) DelSession(name interface{}) {
 // the session data have no changes.
 func (c *Controller) SessionRegenerateID() {
 	if c.CruSession != nil {
-		c.CruSession.SessionRelease(c.Ctx.ResponseWriter)
+		c.CruSession.Save()
 	}
 	c.CruSession = GlobalSessions.SessionRegenerateID(c.Ctx.ResponseWriter, c.Ctx.Request)
 	c.Ctx.Input.CruSession = c.CruSession

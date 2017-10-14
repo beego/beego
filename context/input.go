@@ -27,7 +27,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/astaxie/beego/session"
+	"github.com/mokeoo/beego/session"
 )
 
 // Regexes for checking the accept headers
