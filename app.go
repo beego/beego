@@ -51,8 +51,10 @@ func NewApp() *App {
 	return app
 }
 
+type MiddleWare func(http.Handler) http.Handler
+
 // Run beego application.
-func (app *App) Run() {
+func (app *App) Run(mws ...MiddleWare) {
 	addr := BConfig.Listen.HTTPAddr
 
 	if BConfig.Listen.HTTPPort != 0 {
@@ -94,6 +96,12 @@ func (app *App) Run() {
 	}
 
 	app.Server.Handler = app.Handlers
+	for i:=len(mws)-1;i>=0;i-- {
+		if mws[i] == nil {
+			continue
+		}
+		app.Server.Handler = mws[i](app.Server.Handler)
+	}
 	app.Server.ReadTimeout = time.Duration(BConfig.Listen.ServerTimeOut) * time.Second
 	app.Server.WriteTimeout = time.Duration(BConfig.Listen.ServerTimeOut) * time.Second
 	app.Server.ErrorLog = logs.GetLogger("HTTP")
