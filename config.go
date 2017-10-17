@@ -41,6 +41,7 @@ type Config struct {
 	EnableGzip          bool
 	MaxMemory           int64
 	EnableErrorsShow    bool
+	EnableErrorsRender  bool
 	Listen              Listen
 	WebConfig           WebConfig
 	Log                 LogConfig
@@ -144,9 +145,6 @@ func init() {
 	if err = parseConfig(appConfigPath); err != nil {
 		panic(err)
 	}
-	if err = os.Chdir(AppPath); err != nil {
-		panic(err)
-	}
 }
 
 func recoverPanic(ctx *context.Context) {
@@ -174,7 +172,7 @@ func recoverPanic(ctx *context.Context) {
 			logs.Critical(fmt.Sprintf("%s:%d", file, line))
 			stack = stack + fmt.Sprintln(fmt.Sprintf("%s:%d", file, line))
 		}
-		if BConfig.RunMode == DEV {
+		if BConfig.RunMode == DEV && BConfig.EnableErrorsRender {
 			showErr(err, ctx, stack)
 		}
 	}
@@ -192,6 +190,7 @@ func newBConfig() *Config {
 		EnableGzip:          false,
 		MaxMemory:           1 << 26, //64MB
 		EnableErrorsShow:    true,
+		EnableErrorsRender:  true,
 		Listen: Listen{
 			Graceful:      false,
 			ServerTimeOut: 0,
@@ -257,15 +256,14 @@ func parseConfig(appConfigPath string) (err error) {
 }
 
 func assignConfig(ac config.Configer) error {
+	for _, i := range []interface{}{BConfig, &BConfig.Listen, &BConfig.WebConfig, &BConfig.Log, &BConfig.WebConfig.Session} {
+		assignSingleConfig(i, ac)
+	}
 	// set the run mode first
 	if envRunMode := os.Getenv("BEEGO_RUNMODE"); envRunMode != "" {
 		BConfig.RunMode = envRunMode
 	} else if runMode := ac.String("RunMode"); runMode != "" {
 		BConfig.RunMode = runMode
-	}
-
-	for _, i := range []interface{}{BConfig, &BConfig.Listen, &BConfig.WebConfig, &BConfig.Log, &BConfig.WebConfig.Session} {
-		assignSingleConfig(i, ac)
 	}
 
 	if sd := ac.String("StaticDir"); sd != "" {
@@ -347,7 +345,7 @@ func assignSingleConfig(p interface{}, ac config.Configer) {
 		case reflect.String:
 			pf.SetString(ac.DefaultString(name, pf.String()))
 		case reflect.Int, reflect.Int64:
-			pf.SetInt(int64(ac.DefaultInt64(name, pf.Int())))
+			pf.SetInt(ac.DefaultInt64(name, pf.Int()))
 		case reflect.Bool:
 			pf.SetBool(ac.DefaultBool(name, pf.Bool()))
 		case reflect.Struct:

@@ -71,6 +71,7 @@ const (
 	AdapterEs        = "es"
 	AdapterJianLiao  = "jianliao"
 	AdapterSlack     = "slack"
+	AdapterAliLS     = "alils"
 )
 
 // Legacy log level constants to ensure backwards compatibility.
@@ -274,7 +275,7 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string, v ...interface{}) error 
 			line = 0
 		}
 		_, filename := path.Split(file)
-		msg = "[" + filename + ":" + strconv.FormatInt(int64(line), 10) + "] " + msg
+		msg = "[" + filename + ":" + strconv.Itoa(line) + "] " + msg
 	}
 
 	//set level info in front of filename info
@@ -491,9 +492,9 @@ func (bl *BeeLogger) flush() {
 }
 
 // beeLogger references the used application logger.
-var beeLogger *BeeLogger = NewLogger()
+var beeLogger = NewLogger()
 
-// GetLogger returns the default BeeLogger
+// GetBeeLogger returns the default BeeLogger
 func GetBeeLogger() *BeeLogger {
 	return beeLogger
 }
@@ -533,6 +534,7 @@ func Reset() {
 	beeLogger.Reset()
 }
 
+// Async set the beelogger with Async mode and hold msglen messages
 func Async(msgLen ...int64) *BeeLogger {
 	return beeLogger.Async(msgLen...)
 }
@@ -560,11 +562,7 @@ func SetLogFuncCallDepth(d int) {
 
 // SetLogger sets a new logger.
 func SetLogger(adapter string, config ...string) error {
-	err := beeLogger.SetLogger(adapter, config...)
-	if err != nil {
-		return err
-	}
-	return nil
+	return beeLogger.SetLogger(adapter, config...)
 }
 
 // Emergency logs a message at emergency level.

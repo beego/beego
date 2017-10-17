@@ -162,14 +162,35 @@ func TestFileRotate_05(t *testing.T) {
 	testFileDailyRotate(t, fn1, fn2)
 	os.Remove(fn)
 }
-
+func TestFileRotate_06(t *testing.T) { //test file mode
+	log := NewLogger(10000)
+	log.SetLogger("file", `{"filename":"test3.log","maxlines":4}`)
+	log.Debug("debug")
+	log.Info("info")
+	log.Notice("notice")
+	log.Warning("warning")
+	log.Error("error")
+	log.Alert("alert")
+	log.Critical("critical")
+	log.Emergency("emergency")
+	rotateName := "test3" + fmt.Sprintf(".%s.%03d", time.Now().Format("2006-01-02"), 1) + ".log"
+	s, _ := os.Lstat(rotateName)
+	if s.Mode() != 0440 {
+		os.Remove(rotateName)
+		os.Remove("test3.log")
+		t.Fatal("rotate file mode error")
+	}
+	os.Remove(rotateName)
+	os.Remove("test3.log")
+}
 func testFileRotate(t *testing.T, fn1, fn2 string) {
 	fw := &fileLogWriter{
-		Daily:   true,
-		MaxDays: 7,
-		Rotate:  true,
-		Level:   LevelTrace,
-		Perm:    "0660",
+		Daily:      true,
+		MaxDays:    7,
+		Rotate:     true,
+		Level:      LevelTrace,
+		Perm:       "0660",
+		RotatePerm: "0440",
 	}
 	fw.Init(fmt.Sprintf(`{"filename":"%v","maxdays":1}`, fn1))
 	fw.dailyOpenTime = time.Now().Add(-24 * time.Hour)
@@ -188,11 +209,12 @@ func testFileRotate(t *testing.T, fn1, fn2 string) {
 
 func testFileDailyRotate(t *testing.T, fn1, fn2 string) {
 	fw := &fileLogWriter{
-		Daily:   true,
-		MaxDays: 7,
-		Rotate:  true,
-		Level:   LevelTrace,
-		Perm:    "0660",
+		Daily:      true,
+		MaxDays:    7,
+		Rotate:     true,
+		Level:      LevelTrace,
+		Perm:       "0660",
+		RotatePerm: "0440",
 	}
 	fw.Init(fmt.Sprintf(`{"filename":"%v","maxdays":1}`, fn1))
 	fw.dailyOpenTime = time.Now().Add(-24 * time.Hour)

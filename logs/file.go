@@ -56,17 +56,20 @@ type fileLogWriter struct {
 
 	Perm string `json:"perm"`
 
+	RotatePerm string `json:"rotateperm"`
+
 	fileNameOnly, suffix string // like "project.log", project is fileNameOnly and .log is suffix
 }
 
 // newFileWriter create a FileLogWriter returning as LoggerInterface.
 func newFileWriter() Logger {
 	w := &fileLogWriter{
-		Daily:   true,
-		MaxDays: 7,
-		Rotate:  true,
-		Level:   LevelTrace,
-		Perm:    "0660",
+		Daily:      true,
+		MaxDays:    7,
+		Rotate:     true,
+		RotatePerm: "0440",
+		Level:      LevelTrace,
+		Perm:       "0660",
 	}
 	return w
 }
@@ -170,7 +173,7 @@ func (w *fileLogWriter) initFd() error {
 	fd := w.fileWriter
 	fInfo, err := fd.Stat()
 	if err != nil {
-		return fmt.Errorf("get stat err: %s\n", err)
+		return fmt.Errorf("get stat err: %s", err)
 	}
 	w.maxSizeCurSize = int(fInfo.Size())
 	w.dailyOpenTime = time.Now()
@@ -193,16 +196,14 @@ func (w *fileLogWriter) dailyRotate(openTime time.Time) {
 	y, m, d := openTime.Add(24 * time.Hour).Date()
 	nextDay := time.Date(y, m, d, 0, 0, 0, 0, openTime.Location())
 	tm := time.NewTimer(time.Duration(nextDay.UnixNano() - openTime.UnixNano() + 100))
-	select {
-	case <-tm.C:
-		w.Lock()
-		if w.needRotate(0, time.Now().Day()) {
-			if err := w.doRotate(time.Now()); err != nil {
-				fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
-			}
+	<-tm.C
+	w.Lock()
+	if w.needRotate(0, time.Now().Day()) {
+		if err := w.doRotate(time.Now()); err != nil {
+			fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
 		}
-		w.Unlock()
 	}
+	w.Unlock()
 }
 
 func (w *fileLogWriter) lines() (int, error) {
@@ -239,8 +240,12 @@ func (w *fileLogWriter) doRotate(logTime time.Time) error {
 	// Find the next available number
 	num := 1
 	fName := ""
+	rotatePerm, err := strconv.ParseInt(w.RotatePerm, 8, 64)
+	if err != nil {
+		return err
+	}
 
-	_, err := os.Lstat(w.Filename)
+	_, err = os.Lstat(w.Filename)
 	if err != nil {
 		//even if the file is not exist or other ,we should RESTART the logger
 		goto RESTART_LOGGER
@@ -261,7 +266,7 @@ func (w *fileLogWriter) doRotate(logTime time.Time) error {
 	}
 	// return error if the last file checked still existed
 	if err == nil {
-		return fmt.Errorf("Rotate: Cannot find free log number to rename %s\n", w.Filename)
+		return fmt.Errorf("Rotate: Cannot find free log number to rename %s", w.Filename)
 	}
 
 	// close fileWriter before rename
@@ -270,20 +275,24 @@ func (w *fileLogWriter) doRotate(logTime time.Time) error {
 	// Rename the file to its new found name
 	// even if occurs error,we MUST guarantee to  restart new logger
 	err = os.Rename(w.Filename, fName)
-	// re-start logger
+	if err != nil {
+		goto RESTART_LOGGER
+	}
+
+	err = os.Chmod(fName, os.FileMode(rotatePerm))
+
 RESTART_LOGGER:
 
 	startLoggerErr := w.startLogger()
 	go w.deleteOldLog()
 
 	if startLoggerErr != nil {
-		return fmt.Errorf("Rotate StartLogger: %s\n", startLoggerErr)
+		return fmt.Errorf("Rotate StartLogger: %s", startLoggerErr)
 	}
 	if err != nil {
-		return fmt.Errorf("Rotate: %s\n", err)
+		return fmt.Errorf("Rotate: %s", err)
 	}
 	return nil
-
 }
 
 func (w *fileLogWriter) deleteOldLog() {
