@@ -155,7 +155,7 @@ func (fp *FileProvider) SessionRead(sid string) (Store, error) {
 }
 
 // SessionExist Check file session exist.
-// it checkes the file named from sid exist or not.
+// it checks the file named from sid exist or not.
 func (fp *FileProvider) SessionExist(sid string) bool {
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()

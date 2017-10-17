@@ -89,7 +89,7 @@ func registerModel(PrefixOrSuffix string, model interface{}, isPrefix bool) {
 	modelCache.set(table, mi)
 }
 
-// boostrap models
+// bootstrap models
 func bootStrap() {
 	if modelCache.done {
 		return
@@ -332,7 +332,7 @@ func RegisterModelWithSuffix(suffix string, models ...interface{}) {
 	}
 }
 
-// BootStrap bootrap models.
+// BootStrap bootstrap models.
 // make all model parsed and can not add more models
 func BootStrap() {
 	if modelCache.done {

@@ -40,7 +40,7 @@ var (
 
 // AddAPPStartHook is used to register the hookfunc
 // The hookfuncs will run in beego.Run()
-// such as sessionInit, middlerware start, buildtemplate, admin start
+// such as sessionInit, middleware start, buildtemplate, admin start
 func AddAPPStartHook(hf hookfunc) {
 	hooks = append(hooks, hf)
 }
