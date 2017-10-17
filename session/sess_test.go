@@ -74,8 +74,7 @@ func TestCookieEncodeDecode(t *testing.T) {
 	if err != nil {
 		t.Fatal("encodeCookie:", err)
 	}
-	dst := make(map[interface{}]interface{})
-	dst, err = decodeCookie(block, hashKey, securityName, str, 3600)
+	dst, err := decodeCookie(block, hashKey, securityName, str, 3600)
 	if err != nil {
 		t.Fatal("decodeCookie", err)
 	}
@@ -115,7 +114,7 @@ func TestParseConfig(t *testing.T) {
 	if cf2.Gclifetime != 3600 {
 		t.Fatal("parseconfig get gclifetime error")
 	}
-	if cf2.EnableSetCookie != false {
+	if cf2.EnableSetCookie {
 		t.Fatal("parseconfig get enableSetCookie error")
 	}
 	cconfig := new(cookieConfig)

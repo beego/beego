@@ -67,6 +67,7 @@ func (output *BeegoOutput) Body(content []byte) error {
 	}
 	if b, n, _ := WriteBody(encoding, buf, content); b {
 		output.Header("Content-Encoding", n)
+		output.Header("Content-Length", strconv.Itoa(buf.Len()))
 	} else {
 		output.Header("Content-Length", strconv.Itoa(len(content)))
 	}
@@ -165,6 +166,19 @@ var cookieValueSanitizer = strings.NewReplacer("\n", " ", "\r", " ", ";", " ")
 
 func sanitizeValue(v string) string {
 	return cookieValueSanitizer.Replace(v)
+}
+
+func jsonRenderer(value interface{}) Renderer {
+	return rendererFunc(func(ctx *Context) {
+		ctx.Output.JSON(value, false, false)
+	})
+}
+
+func errorRenderer(err error) Renderer {
+	return rendererFunc(func(ctx *Context) {
+		ctx.Output.SetStatus(500)
+		ctx.Output.Body([]byte(err.Error()))
+	})
 }
 
 // JSON writes json to response body.
@@ -329,17 +343,17 @@ func (output *BeegoOutput) IsServerError() bool {
 }
 
 func stringsToJSON(str string) string {
-	rs := []rune(str)
-	jsons := ""
-	for _, r := range rs {
+	var jsons bytes.Buffer
+	for _, r := range str {
 		rint := int(r)
 		if rint < 128 {
-			jsons += string(r)
+			jsons.WriteRune(r)
 		} else {
-			jsons += "\\u" + strconv.FormatInt(int64(rint), 16) // json
+			jsons.WriteString("\\u")
+			jsons.WriteString(strconv.FormatInt(int64(rint), 16))
 		}
 	}
-	return jsons
+	return jsons.String()
 }
 
 // Session sets session item value with given key.

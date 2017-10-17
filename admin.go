@@ -37,7 +37,7 @@ var beeAdminApp *adminApp
 // FilterMonitorFunc is default monitor filter when admin module is enable.
 // if this func returns, admin module records qbs for this request by condition of this function logic.
 // usage:
-// 	func MyFilterMonitor(method, requestPath string, t time.Duration) bool {
+// 	func MyFilterMonitor(method, requestPath string, t time.Duration, pattern string, statusCode int) bool {
 //	 	if method == "POST" {
 //			return false
 //	 	}
@@ -50,7 +50,7 @@ var beeAdminApp *adminApp
 //	 	return true
 // 	}
 // 	beego.FilterMonitorFunc = MyFilterMonitor.
-var FilterMonitorFunc func(string, string, time.Duration) bool
+var FilterMonitorFunc func(string, string, time.Duration, string, int) bool
 
 func init() {
 	beeAdminApp = &adminApp{
@@ -62,7 +62,7 @@ func init() {
 	beeAdminApp.Route("/healthcheck", healthcheck)
 	beeAdminApp.Route("/task", taskStatus)
 	beeAdminApp.Route("/listconf", listConf)
-	FilterMonitorFunc = func(string, string, time.Duration) bool { return true }
+	FilterMonitorFunc = func(string, string, time.Duration, string, int) bool { return true }
 }
 
 // AdminIndex is the default http.Handler for admin module.
@@ -105,29 +105,12 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 		tmpl.Execute(rw, data)
 
 	case "router":
-		var (
-			content = map[string]interface{}{
-				"Fields": []string{
-					"Router Pattern",
-					"Methods",
-					"Controller",
-				},
-			}
-			methods     = []string{}
-			methodsData = make(map[string]interface{})
-		)
-		for method, t := range BeeApp.Handlers.routers {
-
-			resultList := new([][]string)
-
-			printTree(resultList, t)
-
-			methods = append(methods, method)
-			methodsData[method] = resultList
+		content := PrintTree()
+		content["Fields"] = []string{
+			"Router Pattern",
+			"Methods",
+			"Controller",
 		}
-
-		content["Data"] = methodsData
-		content["Methods"] = methods
 		data["Content"] = content
 		data["Title"] = "Routers"
 		execTpl(rw, data, routerAndFilterTpl, defaultScriptsTpl)
@@ -157,8 +140,8 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 					resultList := new([][]string)
 					for _, f := range bf {
 						var result = []string{
-							fmt.Sprintf("%s", f.pattern),
-							fmt.Sprintf("%s", utils.GetFuncName(f.filterFunc)),
+							f.pattern,
+							utils.GetFuncName(f.filterFunc),
 						}
 						*resultList = append(*resultList, result)
 					}
@@ -200,6 +183,28 @@ func list(root string, p interface{}, m map[string]interface{}) {
 	}
 }
 
+// PrintTree prints all registered routers.
+func PrintTree() map[string]interface{} {
+	var (
+		content     = map[string]interface{}{}
+		methods     = []string{}
+		methodsData = make(map[string]interface{})
+	)
+	for method, t := range BeeApp.Handlers.routers {
+
+		resultList := new([][]string)
+
+		printTree(resultList, t)
+
+		methods = append(methods, method)
+		methodsData[method] = resultList
+	}
+
+	content["Data"] = methodsData
+	content["Methods"] = methods
+	return content
+}
+
 func printTree(resultList *[][]string, t *Tree) {
 	for _, tr := range t.fixrouters {
 		printTree(resultList, tr)
@@ -208,12 +213,12 @@ func printTree(resultList *[][]string, t *Tree) {
 		printTree(resultList, t.wildcard)
 	}
 	for _, l := range t.leaves {
-		if v, ok := l.runObject.(*controllerInfo); ok {
+		if v, ok := l.runObject.(*ControllerInfo); ok {
 			if v.routerType == routerTypeBeego {
 				var result = []string{
 					v.pattern,
 					fmt.Sprintf("%s", v.methods),
-					fmt.Sprintf("%s", v.controllerType),
+					v.controllerType.String(),
 				}
 				*resultList = append(*resultList, result)
 			} else if v.routerType == routerTypeRESTFul {
@@ -276,8 +281,8 @@ func profIndex(rw http.ResponseWriter, r *http.Request) {
 // it's in "/healthcheck" pattern in admin module.
 func healthcheck(rw http.ResponseWriter, req *http.Request) {
 	var (
+		result     []string
 		data       = make(map[interface{}]interface{})
-		result     = []string{}
 		resultList = new([][]string)
 		content    = map[string]interface{}{
 			"Fields": []string{"Name", "Message", "Status"},
@@ -287,21 +292,20 @@ func healthcheck(rw http.ResponseWriter, req *http.Request) {
 	for name, h := range toolbox.AdminCheckList {
 		if err := h.Check(); err != nil {
 			result = []string{
-				fmt.Sprintf("error"),
-				fmt.Sprintf("%s", name),
-				fmt.Sprintf("%s", err.Error()),
+				"error",
+				name,
+				err.Error(),
 			}
-
 		} else {
 			result = []string{
-				fmt.Sprintf("success"),
-				fmt.Sprintf("%s", name),
-				fmt.Sprintf("OK"),
+				"success",
+				name,
+				"OK",
 			}
-
 		}
 		*resultList = append(*resultList, result)
 	}
+
 	content["Data"] = resultList
 	data["Content"] = content
 	data["Title"] = "Health Check"
@@ -330,7 +334,6 @@ func taskStatus(rw http.ResponseWriter, req *http.Request) {
 	// List Tasks
 	content := make(map[string]interface{})
 	resultList := new([][]string)
-	var result = []string{}
 	var fields = []string{
 		"Task Name",
 		"Task Spec",
@@ -339,10 +342,10 @@ func taskStatus(rw http.ResponseWriter, req *http.Request) {
 		"",
 	}
 	for tname, tk := range toolbox.AdminTaskList {
-		result = []string{
+		result := []string{
 			tname,
-			fmt.Sprintf("%s", tk.GetSpec()),
-			fmt.Sprintf("%s", tk.GetStatus()),
+			tk.GetSpec(),
+			tk.GetStatus(),
 			tk.GetPrev().String(),
 		}
 		*resultList = append(*resultList, result)
