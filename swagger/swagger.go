@@ -141,7 +141,7 @@ type Propertie struct {
 
 // Response as they are returned from executing this operation.
 type Response struct {
-	Description string  `json:"description,omitempty" yaml:"description,omitempty"`
+	Description string  `json:"description" yaml:"description"`
 	Schema      *Schema `json:"schema,omitempty" yaml:"schema,omitempty"`
 	Ref         string  `json:"$ref,omitempty" yaml:"$ref,omitempty"`
 }
