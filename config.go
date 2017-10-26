@@ -134,9 +134,16 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	appConfigPath = filepath.Join(workPath, "conf", "app.conf")
+	var confFile = "app."
+	var hostEnv = os.Getenv("BEEGO_ENV")
+	if (len(hostEnv) != 0){
+		confFile += hostEnv+".conf"
+	}else{
+		confFile += "conf"
+	}
+	appConfigPath = filepath.Join(workPath, "conf", confFile)
 	if !utils.FileExists(appConfigPath) {
-		appConfigPath = filepath.Join(AppPath, "conf", "app.conf")
+		appConfigPath = filepath.Join(AppPath, "conf", confFile)
 		if !utils.FileExists(appConfigPath) {
 			AppConfig = &beegoAppConfig{innerConfig: config.NewFakeConfig()}
 			return
