@@ -134,10 +134,10 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-    var filename = "app.conf"
-    if os.Getenv("BEEGO_MODE") !=""{
-        filename= os.Getenv("BEEGO_MODE")+".app.conf"
-    }
+	var filename = "app.conf"
+	if os.Getenv("BEEGO_MODE") != "" {
+		filename = os.Getenv("BEEGO_MODE") + ".app.conf"
+	}
 	appConfigPath = filepath.Join(workPath, "conf", filename)
 	if !utils.FileExists(appConfigPath) {
 		appConfigPath = filepath.Join(AppPath, "conf", filename)
