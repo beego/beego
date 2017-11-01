@@ -144,7 +144,7 @@ var logMsgPool *sync.Pool
 func NewLogger(channelLens ...int64) *BeeLogger {
 	bl := new(BeeLogger)
 	bl.level = LevelDebug
-	bl.loggerFuncCallDepth = 2
+	bl.loggerFuncCallDepth = 3
 	bl.msgChanLen = append(channelLens, 0)[0]
 	if bl.msgChanLen <= 0 {
 		bl.msgChanLen = defaultAsyncMsgLen
@@ -552,7 +552,6 @@ func EnableFuncCallDepth(b bool) {
 // SetLogFuncCall set the CallDepth, default is 4
 func SetLogFuncCall(b bool) {
 	beeLogger.EnableFuncCallDepth(b)
-	beeLogger.SetLogFuncCallDepth(4)
 }
 
 // SetLogFuncCallDepth set log funcCallDepth
