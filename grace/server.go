@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"runtime"
 	"strings"
 	"sync"
 	"syscall"
@@ -65,7 +66,9 @@ func (srv *Server) ListenAndServe() (err error) {
 			log.Println(err)
 			return err
 		}
-		err = process.Kill()
+		//Do not use process.Kill() it will force the pprocess exit.
+		//which lead to all the post handler not work at all.
+		err = process.Signal(syscall.SIGINT)
 		if err != nil {
 			return err
 		}
@@ -120,7 +123,7 @@ func (srv *Server) ListenAndServeTLS(certFile, keyFile string) (err error) {
 			log.Println(err)
 			return err
 		}
-		err = process.Kill()
+		err = process.Signal(syscall.SIGINT)
 		if err != nil {
 			return err
 		}
@@ -168,7 +171,8 @@ func (srv *Server) handleSignals() {
 	pid := syscall.Getpid()
 	for {
 		sig = <-srv.sigChan
-		srv.signalHooks(PreSignal, sig)
+		srv.wg.Add(1)
+		go srv.signalHooks(PreSignal, sig)
 		switch sig {
 		case syscall.SIGHUP:
 			log.Println(pid, "Received SIGHUP. forking.")
@@ -185,11 +189,15 @@ func (srv *Server) handleSignals() {
 		default:
 			log.Printf("Received %v: nothing i care about...\n", sig)
 		}
-		srv.signalHooks(PostSignal, sig)
+		go srv.signalHooks(PostSignal, sig)
+		srv.wg.Done()
 	}
 }
 
 func (srv *Server) signalHooks(ppFlag int, sig os.Signal) {
+	srv.wg.Add(1)
+	defer srv.wg.Done()
+
 	if _, notSet := srv.SignalHooks[ppFlag][sig]; !notSet {
 		return
 	}
@@ -237,6 +245,7 @@ func (srv *Server) serverTimeout(d time.Duration) {
 			break
 		}
 		srv.wg.Done()
+		runtime.Gosched()
 	}
 }
 
