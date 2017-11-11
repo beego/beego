@@ -146,6 +146,9 @@ func (w *fileLogWriter) WriteMsg(when time.Time, msg string, level int) error {
 	}
 
 	w.Lock()
+	if _, err := os.Stat(w.fileWriter.Name()); os.IsNotExist(err) {
+		w.startLogger()
+	}
 	_, err := w.fileWriter.Write([]byte(msg))
 	if err == nil {
 		w.maxLinesCurLines++
