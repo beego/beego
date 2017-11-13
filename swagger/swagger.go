@@ -121,6 +121,7 @@ type Schema struct {
 	Type        string               `json:"type,omitempty" yaml:"type,omitempty"`
 	Items       *Schema              `json:"items,omitempty" yaml:"items,omitempty"`
 	Properties  map[string]Propertie `json:"properties,omitempty" yaml:"properties,omitempty"`
+	Enum        []interface{}        `json:"enum,omitempty" yaml:"enum,omitempty"`
 }
 
 // Propertie are taken from the JSON Schema definition but their definitions were adjusted to the Swagger Specification
