@@ -49,22 +49,24 @@ type Config struct {
 
 // Listen holds for http and https related config
 type Listen struct {
-	Graceful      bool // Graceful means use graceful module to start the server
-	ServerTimeOut int64
-	ListenTCP4    bool
-	EnableHTTP    bool
-	HTTPAddr      string
-	HTTPPort      int
-	EnableHTTPS   bool
-	HTTPSAddr     string
-	HTTPSPort     int
-	HTTPSCertFile string
-	HTTPSKeyFile  string
-	EnableAdmin   bool
-	AdminAddr     string
-	AdminPort     int
-	EnableFcgi    bool
-	EnableStdIo   bool // EnableStdIo works with EnableFcgi Use FCGI via standard I/O
+	Graceful          bool // Graceful means use graceful module to start the server
+	ServerTimeOut     int64
+	ListenTCP4        bool
+	EnableHTTP        bool
+	HTTPAddr          string
+	HTTPPort          int
+	EnableHTTPS       bool
+	EnableMutualHTTPS bool
+	HTTPSAddr         string
+	HTTPSPort         int
+	HTTPSCertFile     string
+	HTTPSKeyFile      string
+	TrustCaFile       string
+	EnableAdmin       bool
+	AdminAddr         string
+	AdminPort         int
+	EnableFcgi        bool
+	EnableStdIo       bool // EnableStdIo works with EnableFcgi Use FCGI via standard I/O
 }
 
 // WebConfig holds web related config
