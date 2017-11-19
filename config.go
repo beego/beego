@@ -106,6 +106,7 @@ type SessionConfig struct {
 // LogConfig holds Log related config
 type LogConfig struct {
 	AccessLogs  bool
+	AccessLogsFormat  string //access log format: JSON_FORMAT, APACHE_FORMAT or empty string
 	FileLineNum bool
 	Outputs     map[string]string // Store Adaptor : config
 }
@@ -246,6 +247,7 @@ func newBConfig() *Config {
 		},
 		Log: LogConfig{
 			AccessLogs:  false,
+			AccessLogsFormat:  "",
 			FileLineNum: true,
 			Outputs:     map[string]string{"console": ""},
 		},
