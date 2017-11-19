@@ -67,7 +67,7 @@ func (srv *Server) ListenAndServe() (err error) {
 			log.Println(err)
 			return err
 		}
-		err = process.Kill()
+		err = process.Signal(syscall.SIGTERM)
 		if err != nil {
 			return err
 		}
@@ -122,7 +122,7 @@ func (srv *Server) ListenAndServeTLS(certFile, keyFile string) (err error) {
 			log.Println(err)
 			return err
 		}
-		err = process.Kill()
+		err = process.Signal(syscall.SIGTERM)
 		if err != nil {
 			return err
 		}
