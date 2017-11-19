@@ -25,6 +25,7 @@ import (
 	"os"
 	"path"
 	"time"
+	"strings"
 
 	"github.com/astaxie/beego/grace"
 	"github.com/astaxie/beego/logs"
@@ -238,6 +239,84 @@ func (app *App) Run(mws ...MiddleWare) {
 func Router(rootpath string, c ControllerInterface, mappingMethods ...string) *App {
 	BeeApp.Handlers.Add(rootpath, c, mappingMethods...)
 	return BeeApp
+}
+
+// UnregisterFixedRoute unregisters the route with the specified fixedRoute. It is particularly useful
+// in web applications that inherit most routes from a base webapp via the underscore
+// import, and aim to overwrite only certain paths.
+// The method parameter can be empty or "*" for all HTTP methods, or a particular
+// method type (e.g. "GET" or "POST") for selective removal.
+//
+// Usage (replace "GET" with "*" for all methods):
+//  beego.UnregisterFixedRoute("/yourpreviouspath", "GET")
+//  beego.Router("/yourpreviouspath", yourControllerAddress, "get:GetNewPage")
+func UnregisterFixedRoute(fixedRoute string, method string) *App {
+	subPaths := splitPath(fixedRoute)
+	if method == "" || method == "*" {
+		for _, m := range HTTPMETHOD {
+			if _, ok := BeeApp.Handlers.routers[m]; !ok {
+				continue
+			}
+			if BeeApp.Handlers.routers[m].prefix == strings.Trim(fixedRoute, "/ ") {
+				findAndRemoveSingleTree(BeeApp.Handlers.routers[m])
+				continue
+			}
+			findAndRemoveTree(subPaths, BeeApp.Handlers.routers[m], m)
+		}
+		return BeeApp
+	}
+	// Single HTTP method
+	um := strings.ToUpper(method)
+	if _, ok := BeeApp.Handlers.routers[um]; ok {
+		if BeeApp.Handlers.routers[um].prefix == strings.Trim(fixedRoute, "/ ") {
+			findAndRemoveSingleTree(BeeApp.Handlers.routers[um])
+			return BeeApp
+		}
+		findAndRemoveTree(subPaths, BeeApp.Handlers.routers[um], um)
+	}
+	return BeeApp
+}
+
+func findAndRemoveTree(paths []string, entryPointTree *Tree, method string) {
+	for i := range entryPointTree.fixrouters {
+		if entryPointTree.fixrouters[i].prefix == paths[0] {
+			if len(paths) == 1 {
+				if len(entryPointTree.fixrouters[i].fixrouters) > 0 {
+					// If the route had children subtrees, remove just the functional leaf,
+					// to allow children to function as before
+					if len(entryPointTree.fixrouters[i].leaves) > 0 {
+						entryPointTree.fixrouters[i].leaves[0] = nil
+						entryPointTree.fixrouters[i].leaves = entryPointTree.fixrouters[i].leaves[1:]
+					}
+				} else {
+					// Remove the *Tree from the fixrouters slice
+					entryPointTree.fixrouters[i] = nil
+
+					if i == len(entryPointTree.fixrouters)-1 {
+						entryPointTree.fixrouters = entryPointTree.fixrouters[:i]
+					} else {
+						entryPointTree.fixrouters = append(entryPointTree.fixrouters[:i], entryPointTree.fixrouters[i+1:len(entryPointTree.fixrouters)]...)
+					}
+				}
+				return
+			}
+			findAndRemoveTree(paths[1:], entryPointTree.fixrouters[i], method)
+		}
+	}
+}
+
+func findAndRemoveSingleTree(entryPointTree *Tree) {
+	if entryPointTree == nil {
+		return
+	}
+	if len(entryPointTree.fixrouters) > 0 {
+		// If the route had children subtrees, remove just the functional leaf,
+		// to allow children to function as before
+		if len(entryPointTree.leaves) > 0 {
+			entryPointTree.leaves[0] = nil
+			entryPointTree.leaves = entryPointTree.leaves[1:]
+		}
+	}
 }
 
 // Include will generate router file in the router/xxx.go from the controller's comments
