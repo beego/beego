@@ -160,10 +160,13 @@ func (rp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 				return nil, err
 			}
 		}
-		_, err = c.Do("SELECT", rp.dbNum)
-		if err != nil {
-			c.Close()
-			return nil, err
+		//some redis proxy such as twemproxy is not support select command
+		if rp.dbNum > 0 {
+			_, err = c.Do("SELECT", rp.dbNum)
+			if err != nil {
+				c.Close()
+				return nil, err
+			}
 		}
 		return c, err
 	}, rp.poolsize)
