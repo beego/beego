@@ -55,6 +55,7 @@ func NewApp() *App {
 	return app
 }
 
+// MiddleWare function for http.Handler
 type MiddleWare func(http.Handler) http.Handler
 
 // Run beego application.

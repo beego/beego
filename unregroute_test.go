@@ -72,7 +72,7 @@ func (tc *TestPostUnregController) GetFixedLevel2() {
 // should remain intact, and continue to serve the original content.
 func TestUnregisterFixedRouteRoot(t *testing.T) {
 
-	var method string = "GET"
+	var method = "GET"
 
 	handler := NewControllerRegister()
 	handler.Add("/", &TestPreUnregController{}, "get:GetFixedRoot")
@@ -114,7 +114,7 @@ func TestUnregisterFixedRouteRoot(t *testing.T) {
 // should remain intact, and continue to serve the original content.
 func TestUnregisterFixedRouteLevel1(t *testing.T) {
 
-	var method string = "GET"
+	var method = "GET"
 
 	handler := NewControllerRegister()
 	handler.Add("/", &TestPreUnregController{}, "get:GetFixedRoot")
@@ -164,7 +164,7 @@ func TestUnregisterFixedRouteLevel1(t *testing.T) {
 // should remain intact, and continue to serve the original content.
 func TestUnregisterFixedRouteLevel2(t *testing.T) {
 
-	var method string = "GET"
+	var method = "GET"
 
 	handler := NewControllerRegister()
 	handler.Add("/", &TestPreUnregController{}, "get:GetFixedRoot")
