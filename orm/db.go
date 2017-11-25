@@ -522,7 +522,6 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a
 		}
 	}
 
-	isMulti := false
 	names := make([]string, 0, len(mi.fields.dbcols)-1)
 	Q := d.ins.TableQuote()
 	values, _, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, &names, a.TZ)
@@ -567,22 +566,14 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a
 	qupdates := strings.Join(updates, ", ")
 	columns := strings.Join(names, sep)
 
-	multi := len(values) / len(names)
-
-	if isMulti {
-		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
-	}
 	//conflitValue maybe is a int,can`t use fmt.Sprintf
 	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s) %s "+qupdates, Q, mi.table, Q, Q, columns, Q, qmarks, iouStr)
 
 	d.ins.ReplaceMarks(&query)
 
-	if isMulti || !d.ins.HasReturningID(mi, &query) {
+	if !d.ins.HasReturningID(mi, &query) {
 		res, err := q.Exec(query, values...)
 		if err == nil {
-			if isMulti {
-				return res.RowsAffected()
-			}
 			return res.LastInsertId()
 		}
 		return 0, err
@@ -849,8 +840,8 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	for i := range marks {
 		marks[i] = "?"
 	}
-	sql := fmt.Sprintf("IN (%s)", strings.Join(marks, ", "))
-	query = fmt.Sprintf("DELETE FROM %s%s%s WHERE %s%s%s %s", Q, mi.table, Q, Q, mi.fields.pk.column, Q, sql)
+	sqlPhrase := fmt.Sprintf("IN (%s)", strings.Join(marks, ", "))
+	query = fmt.Sprintf("DELETE FROM %s%s%s WHERE %s%s%s %s", Q, mi.table, Q, Q, mi.fields.pk.column, Q, sqlPhrase)
 
 	d.ins.ReplaceMarks(&query)
 	res, err := q.Exec(query, args...)
@@ -1113,7 +1104,7 @@ func (d *dbBase) Count(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condition
 
 // generate sql with replacing operator string placeholders and replaced values.
 func (d *dbBase) GenerateOperatorSQL(mi *modelInfo, fi *fieldInfo, operator string, args []interface{}, tz *time.Location) (string, []interface{}) {
-	var sql string
+	var sqlPhrase string
 	params := getFlatParams(fi, args, tz)
 
 	if len(params) == 0 {
@@ -1127,17 +1118,17 @@ func (d *dbBase) GenerateOperatorSQL(mi *modelInfo, fi *fieldInfo, operator stri
 		for i := range marks {
 			marks[i] = "?"
 		}
-		sql = fmt.Sprintf("IN (%s)", strings.Join(marks, ", "))
+		sqlPhrase = fmt.Sprintf("IN (%s)", strings.Join(marks, ", "))
 	case "between":
 		if len(params) != 2 {
 			panic(fmt.Errorf("operator `%s` need 2 args not %d", operator, len(params)))
 		}
-		sql = "BETWEEN ? AND ?"
+		sqlPhrase = "BETWEEN ? AND ?"
 	default:
 		if len(params) > 1 {
 			panic(fmt.Errorf("operator `%s` need 1 args not %d", operator, len(params)))
 		}
-		sql = d.ins.OperatorSQL(operator)
+		sqlPhrase = d.ins.OperatorSQL(operator)
 		switch operator {
 		case "exact":
 			if arg == nil {
@@ -1158,9 +1149,9 @@ func (d *dbBase) GenerateOperatorSQL(mi *modelInfo, fi *fieldInfo, operator stri
 		case "isnull":
 			if b, ok := arg.(bool); ok {
 				if b {
-					sql = "IS NULL"
+					sqlPhrase = "IS NULL"
 				} else {
-					sql = "IS NOT NULL"
+					sqlPhrase = "IS NOT NULL"
 				}
 				params = nil
 			} else {
@@ -1168,7 +1159,7 @@ func (d *dbBase) GenerateOperatorSQL(mi *modelInfo, fi *fieldInfo, operator stri
 			}
 		}
 	}
-	return sql, params
+	return sqlPhrase, params
 }
 
 // gernerate sql string with inner function, such as UPPER(text).

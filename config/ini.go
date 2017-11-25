@@ -29,15 +29,15 @@ import (
 )
 
 var (
-	defaultSection = "default"   // default section means if some ini items not in a section, make them in default section,
-	bNumComment    = []byte{'#'} // number signal
-	bSemComment    = []byte{';'} // semicolon signal
-	bEmpty         = []byte{}
-	bEqual         = []byte{'='} // equal signal
-	bDQuote        = []byte{'"'} // quote signal
-	sectionStart   = []byte{'['} // section start signal
-	sectionEnd     = []byte{']'} // section end signal
-	lineBreak      = "\n"
+	defaultSection  = "default"   // default section means if some ini items not in a section, make them in default section,
+	bNumComment        = []byte{'#'} // number signal
+	bSemComment        = []byte{';'} // semicolon signal
+	bEmpty         []byte
+	bEqual                  = []byte{'='} // equal signal
+	bDQuote                = []byte{'"'} // quote signal
+	sectionStart      = []byte{'['} // section start signal
+	sectionEnd          = []byte{']'} // section end signal
+	lineBreak            = "\n"
 )
 
 // IniConfig implements Config to parse ini file.

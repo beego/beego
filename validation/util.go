@@ -254,9 +254,6 @@ func parseParam(t reflect.Type, s string) (i interface{}, err error) {
 	case reflect.Int:
 		i, err = strconv.Atoi(s)
 	case reflect.Int64:
-		if wordsize == 32 {
-			return nil, ErrInt64On32
-		}
 		i, err = strconv.ParseInt(s, 10, 64)
 	case reflect.Int32:
 		var v int64

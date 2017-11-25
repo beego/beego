@@ -144,7 +144,7 @@ func buildMethodParams(funcParams []*ast.Field, pc *parsedComment) []*param.Meth
 }
 
 func buildMethodParam(fparam *ast.Field, name string, pc *parsedComment) *param.MethodParam {
-	options := []param.MethodParamOption{}
+	var options []param.MethodParamOption
 	if cparam, ok := pc.params[name]; ok {
 		//Build param from comment info
 		name = cparam.name

@@ -232,7 +232,7 @@ func BuildTemplate(dir string, files ...string) error {
 func getTplDeep(root, file, parent string, t *template.Template) (*template.Template, [][]string, error) {
 	var fileAbsPath string
 	var rParent string
-	if filepath.HasPrefix(file, "../") {
+	if strings.HasPrefix(file, "../") {
 		rParent = filepath.Join(filepath.Dir(parent), file)
 		fileAbsPath = filepath.Join(root, filepath.Dir(parent), file)
 	} else {

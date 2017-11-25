@@ -181,9 +181,6 @@ func (m Min) IsSatisfied(obj interface{}) bool {
 	var v int
 	switch obj.(type) {
 	case int64:
-		if wordsize == 32 {
-			return false
-		}
 		v = int(obj.(int64))
 	case int:
 		v = obj.(int)
@@ -227,9 +224,6 @@ func (m Max) IsSatisfied(obj interface{}) bool {
 	var v int
 	switch obj.(type) {
 	case int64:
-		if wordsize == 32 {
-			return false
-		}
 		v = int(obj.(int64))
 	case int:
 		v = obj.(int)

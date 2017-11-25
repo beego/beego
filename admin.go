@@ -122,7 +122,7 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 					"Filter Function",
 				},
 			}
-			filterTypes    = []string{}
+			filterTypes    []string
 			filterTypeData = make(map[string]interface{})
 		)
 
@@ -187,7 +187,7 @@ func list(root string, p interface{}, m map[string]interface{}) {
 func PrintTree() map[string]interface{} {
 	var (
 		content     = map[string]interface{}{}
-		methods     = []string{}
+		methods     []string
 		methodsData = make(map[string]interface{})
 	)
 	for method, t := range BeeApp.Handlers.routers {

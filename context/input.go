@@ -563,7 +563,7 @@ type sliceValue struct {
 func (input *BeegoInput) bindSlice(params *url.Values, key string, typ reflect.Type) reflect.Value {
 	maxIndex := -1
 	numNoIndex := 0
-	sliceValues := []sliceValue{}
+	var sliceValues []sliceValue
 	for reqKey, vals := range *params {
 		if !strings.HasPrefix(reqKey, key+"[") {
 			continue

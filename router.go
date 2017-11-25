@@ -26,7 +26,7 @@ import (
 	"sync"
 	"time"
 
-	beecontext "github.com/astaxie/beego/context"
+	beeContext "github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/context/param"
 	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/toolbox"
@@ -84,14 +84,14 @@ var (
 
 // FilterHandler is an interface for
 type FilterHandler interface {
-	Filter(*beecontext.Context) bool
+	Filter(*beeContext.Context) bool
 }
 
 // default log filter static file will not show
 type logFilter struct {
 }
 
-func (l *logFilter) Filter(ctx *beecontext.Context) bool {
+func (l *logFilter) Filter(ctx *beeContext.Context) bool {
 	requestPath := path.Clean(ctx.Request.URL.Path)
 	if requestPath == "/favicon.ico" || requestPath == "/robots.txt" {
 		return true
@@ -138,7 +138,7 @@ func NewControllerRegister() *ControllerRegister {
 		policies: make(map[string]*Tree),
 	}
 	cr.pool.New = func() interface{} {
-		return beecontext.NewContext()
+		return beeContext.NewContext()
 	}
 	return cr
 }
@@ -624,7 +624,7 @@ func (p *ControllerRegister) geturl(t *Tree, url, controllName, methodName strin
 	return false, ""
 }
 
-func (p *ControllerRegister) execFilter(context *beecontext.Context, urlPath string, pos int) (started bool) {
+func (p *ControllerRegister) execFilter(context *beeContext.Context, urlPath string, pos int) (started bool) {
 	var preFilterParams map[string]string
 	for _, filterR := range p.filters[pos] {
 		if filterR.returnOnOutput && context.ResponseWriter.Started {
@@ -660,7 +660,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		routerInfo   *ControllerInfo
 		isRunnable   bool
 	)
-	context := p.pool.Get().(*beecontext.Context)
+	context := p.pool.Get().(*beeContext.Context)
 	context.Reset(rw, r)
 
 	defer p.pool.Put(context)
@@ -901,7 +901,7 @@ Admin:
 		timeDur := time.Since(startTime)
 		var devInfo string
 
-		iswin := (runtime.GOOS == "windows")
+		iswin := runtime.GOOS == "windows"
 		statusColor := logs.ColorByStatus(iswin, statusCode)
 		methodColor := logs.ColorByMethod(iswin, r.Method)
 		resetColor := logs.ColorByMethod(iswin, "")
@@ -948,7 +948,7 @@ Admin:
 	}
 }
 
-func (p *ControllerRegister) handleParamResponse(context *beecontext.Context, execController ControllerInterface, results []reflect.Value) {
+func (p *ControllerRegister) handleParamResponse(context *beeContext.Context, execController ControllerInterface, results []reflect.Value) {
 	//looping in reverse order for the case when both error and value are returned and error sets the response status code
 	for i := len(results) - 1; i >= 0; i-- {
 		result := results[i]
@@ -963,7 +963,7 @@ func (p *ControllerRegister) handleParamResponse(context *beecontext.Context, ex
 }
 
 // FindRouter Find Router info for URL
-func (p *ControllerRegister) FindRouter(context *beecontext.Context) (routerInfo *ControllerInfo, isFind bool) {
+func (p *ControllerRegister) FindRouter(context *beeContext.Context) (routerInfo *ControllerInfo, isFind bool) {
 	var urlPath = context.Input.URL()
 	if !BConfig.RouterCaseSensitive {
 		urlPath = strings.ToLower(urlPath)

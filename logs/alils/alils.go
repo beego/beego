@@ -12,9 +12,9 @@ import (
 
 const (
 	// CacheSize set the flush size
-	CacheSize int = 64
+	CacheSize = 64
 	// Delimiter define the topic delimiter
-	Delimiter string = "##"
+	Delimiter = "##"
 )
 
 // Config is the Config for Ali Log

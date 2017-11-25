@@ -106,7 +106,7 @@ func (output *BeegoOutput) Cookie(name string, value string, others ...interface
 		case maxAge > 0:
 			fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(maxAge)*time.Second).UTC().Format(time.RFC1123), maxAge)
 		case maxAge < 0:
-			fmt.Fprintf(&b, "; Max-Age=0")
+			fmt.Fprint(&b, "; Max-Age=0")
 		}
 	}
 
@@ -142,14 +142,14 @@ func (output *BeegoOutput) Cookie(name string, value string, others ...interface
 			}
 		}
 		if secure {
-			fmt.Fprintf(&b, "; Secure")
+			fmt.Fprint(&b, "; Secure")
 		}
 	}
 
 	// default false. for session cookie default true
 	if len(others) > 4 {
 		if v, ok := others[4].(bool); ok && v {
-			fmt.Fprintf(&b, "; HttpOnly")
+			fmt.Fprint(&b, "; HttpOnly")
 		}
 	}
 

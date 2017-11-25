@@ -17,8 +17,8 @@ package logs
 import (
 	"bytes"
 	"encoding/json"
-	"time"
 	"fmt"
+	"time"
 )
 
 const (
@@ -54,7 +54,7 @@ func (r *AccessLogRecord) json() ([]byte, error) {
 func disableEscapeHTML(i interface{}) {
 	e, ok := i.(interface {
 		SetEscapeHTML(bool)
-	});
+	})
 	if ok {
 		e.SetEscapeHTML(false)
 	}

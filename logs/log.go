@@ -186,12 +186,12 @@ func (bl *BeeLogger) setLogger(adapterName string, configs ...string) error {
 		}
 	}
 
-	log, ok := adapters[adapterName]
+	logFn, ok := adapters[adapterName]
 	if !ok {
 		return fmt.Errorf("logs: unknown adaptername %q (forgotten Register?)", adapterName)
 	}
 
-	lg := log()
+	lg := logFn()
 	err := lg.Init(config)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "logs.BeeLogger.SetLogger: "+err.Error())
@@ -217,7 +217,7 @@ func (bl *BeeLogger) SetLogger(adapterName string, configs ...string) error {
 func (bl *BeeLogger) DelLogger(adapterName string) error {
 	bl.lock.Lock()
 	defer bl.lock.Unlock()
-	outputs := []*nameLogger{}
+	var outputs []*nameLogger
 	for _, lg := range bl.outputs {
 		if lg.name == adapterName {
 			lg.Destroy()

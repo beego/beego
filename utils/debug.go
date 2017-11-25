@@ -57,7 +57,7 @@ func display(displayed bool, data ...interface{}) string {
 
 	fmt.Fprintf(buf, "[Debug] at %s() [%s:%d]\n", function(pc), file, line)
 
-	fmt.Fprintf(buf, "\n[Variables]\n")
+	fmt.Fprint(buf, "\n[Variables]\n")
 
 	for i := 0; i < len(data); i += 2 {
 		var output = fomateinfo(len(data[i].(string))+3, data[i+1])

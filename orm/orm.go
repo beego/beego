@@ -139,7 +139,7 @@ func (o *orm) ReadOrCreate(md interface{}, col1 string, cols ...string) (bool, i
 	if err == ErrNoRows {
 		// Create
 		id, err := o.Insert(md)
-		return (err == nil), id, err
+		return err == nil, id, err
 	}
 
 	id, vid := int64(0), ind.FieldByIndex(mi.fields.pk.fieldIndex)

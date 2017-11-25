@@ -62,7 +62,7 @@ const (
 var (
 	defaultAllowHeaders = []string{"Origin", "Accept", "Content-Type", "Authorization"}
 	// Regex patterns are generated from AllowOrigins. These are used and generated internally.
-	allowOriginPatterns = []string{}
+	allowOriginPatterns []string
 )
 
 // Options represents Access Control options.

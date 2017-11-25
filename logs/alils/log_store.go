@@ -8,7 +8,7 @@ import (
 	"net/http/httputil"
 	"strconv"
 
-	lz4 "github.com/cloudflare/golz4"
+	"github.com/cloudflare/golz4"
 	"github.com/gogo/protobuf/proto"
 )
 

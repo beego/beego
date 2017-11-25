@@ -37,7 +37,7 @@ import (
 	"strings"
 	"sync"
 
-	couchbase "github.com/couchbase/go-couchbase"
+	"github.com/couchbase/go-couchbase"
 
 	"github.com/astaxie/beego/session"
 )
@@ -50,12 +50,12 @@ type SessionStore struct {
 	sid         string
 	lock        sync.RWMutex
 	values      map[interface{}]interface{}
-	maxlifetime int64
+	maxLifetime int64
 }
 
 // Provider couchabse provided
 type Provider struct {
-	maxlifetime int64
+	maxLifetime int64
 	savePath    string
 	pool        string
 	bucket      string
@@ -110,7 +110,7 @@ func (cs *SessionStore) SessionRelease(w http.ResponseWriter) {
 		return
 	}
 
-	cs.b.Set(cs.sid, int(cs.maxlifetime), bo)
+	cs.b.Set(cs.sid, int(cs.maxLifetime), bo)
 }
 
 func (cp *Provider) getBucket() *couchbase.Bucket {
@@ -136,7 +136,7 @@ func (cp *Provider) getBucket() *couchbase.Bucket {
 // savepath like couchbase server REST/JSON URL
 // e.g. http://host:port/, Pool, Bucket
 func (cp *Provider) SessionInit(maxlifetime int64, savePath string) error {
-	cp.maxlifetime = maxlifetime
+	cp.maxLifetime = maxlifetime
 	configs := strings.Split(savePath, ",")
 	if len(configs) > 0 {
 		cp.savePath = configs[0]
@@ -173,7 +173,7 @@ func (cp *Provider) SessionRead(sid string) (session.Store, error) {
 		}
 	}
 
-	cs := &SessionStore{b: cp.b, sid: sid, values: kv, maxlifetime: cp.maxlifetime}
+	cs := &SessionStore{b: cp.b, sid: sid, values: kv, maxLifetime: cp.maxLifetime}
 	return cs, nil
 }
 
@@ -197,13 +197,13 @@ func (cp *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error)
 
 	var doc []byte
 	if err := cp.b.Get(oldsid, &doc); err != nil || doc == nil {
-		cp.b.Set(sid, int(cp.maxlifetime), "")
+		cp.b.Set(sid, int(cp.maxLifetime), "")
 	} else {
 		err := cp.b.Delete(oldsid)
 		if err != nil {
 			return nil, err
 		}
-		_, _ = cp.b.Add(sid, int(cp.maxlifetime), doc)
+		_, _ = cp.b.Add(sid, int(cp.maxLifetime), doc)
 	}
 
 	err := cp.b.Get(sid, &doc)
@@ -220,7 +220,7 @@ func (cp *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error)
 		}
 	}
 
-	cs := &SessionStore{b: cp.b, sid: sid, values: kv, maxlifetime: cp.maxlifetime}
+	cs := &SessionStore{b: cp.b, sid: sid, values: kv, maxLifetime: cp.maxLifetime}
 	return cs, nil
 }
 

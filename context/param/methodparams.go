@@ -44,7 +44,7 @@ func Make(list ...*MethodParam) []*MethodParam {
 }
 
 func (mp *MethodParam) String() string {
-	options := []string{}
+	var options []string
 	result := "param.New(\"" + mp.name + "\""
 	if mp.required {
 		options = append(options, "param.IsRequired")

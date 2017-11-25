@@ -153,8 +153,8 @@ func Signature(appsecret, method string, params url.Values, RequestURL string) (
 
 	stringToSign := fmt.Sprintf("%v\n%v\n%v\n", method, b.String(), RequestURL)
 
-	sha256 := sha256.New
-	hash := hmac.New(sha256, []byte(appsecret))
+	sha256Hash := sha256.New
+	hash := hmac.New(sha256Hash, []byte(appsecret))
 	hash.Write([]byte(stringToSign))
 	return base64.StdEncoding.EncodeToString(hash.Sum(nil))
 }

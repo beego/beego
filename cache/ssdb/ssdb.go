@@ -167,7 +167,7 @@ func (rc *Cache) ClearAll() error {
 		if size == 1 {
 			return nil
 		}
-		keys := []string{}
+		var keys []string
 		for i := 1; i < size; i += 2 {
 			keys = append(keys, resp[i])
 		}

@@ -116,7 +116,6 @@ func (d *dbBaseMysql) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Val
 		}
 	}
 
-	isMulti := false
 	names := make([]string, 0, len(mi.fields.dbcols)-1)
 	Q := d.ins.TableQuote()
 	values, _, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, &names, a.TZ)
@@ -147,22 +146,14 @@ func (d *dbBaseMysql) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Val
 	qupdates := strings.Join(updates, ", ")
 	columns := strings.Join(names, sep)
 
-	multi := len(values) / len(names)
-
-	if isMulti {
-		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
-	}
 	//conflitValue maybe is a int,can`t use fmt.Sprintf
 	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s) %s "+qupdates, Q, mi.table, Q, Q, columns, Q, qmarks, iouStr)
 
 	d.ins.ReplaceMarks(&query)
 
-	if isMulti || !d.ins.HasReturningID(mi, &query) {
+	if !d.ins.HasReturningID(mi, &query) {
 		res, err := q.Exec(query, values...)
 		if err == nil {
-			if isMulti {
-				return res.RowsAffected()
-			}
 			return res.LastInsertId()
 		}
 		return 0, err

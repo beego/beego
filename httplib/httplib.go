@@ -317,6 +317,7 @@ func (b *BeegoHTTPRequest) Body(data interface{}) *BeegoHTTPRequest {
 	}
 	return b
 }
+
 // XMLBody adds request raw body encoding by XML.
 func (b *BeegoHTTPRequest) XMLBody(obj interface{}) (*BeegoHTTPRequest, error) {
 	if b.req.Body == nil && obj != nil {
@@ -330,6 +331,7 @@ func (b *BeegoHTTPRequest) XMLBody(obj interface{}) (*BeegoHTTPRequest, error) {
 	}
 	return b, nil
 }
+
 // JSONBody adds request raw body encoding by JSON.
 func (b *BeegoHTTPRequest) JSONBody(obj interface{}) (*BeegoHTTPRequest, error) {
 	if b.req.Body == nil && obj != nil {
@@ -429,12 +431,12 @@ func (b *BeegoHTTPRequest) DoRequest() (resp *http.Response, err error) {
 	}
 
 	b.buildURL(paramBody)
-	url, err := url.Parse(b.url)
+	parsedUrl, err := url.Parse(b.url)
 	if err != nil {
 		return nil, err
 	}
 
-	b.req.URL = url
+	b.req.URL = parsedUrl
 
 	trans := b.setting.Transport
 
