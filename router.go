@@ -915,10 +915,10 @@ Admin:
 				Host:           r.Host,
 				Status:         statusCode,
 				ElapsedTime:    timeDur,
-				HttpReferrer:   r.Header.Get("Referer"),
-				HttpUserAgent:  r.Header.Get("User-Agent"),
+				HTTPReferrer:   r.Header.Get("Referer"),
+				HTTPUserAgent:  r.Header.Get("User-Agent"),
 				RemoteUser:     r.Header.Get("Remote-User"),
-				BodyBytesSent: 0, //@todo this one is missing!
+				BodyBytesSent:  0, //@todo this one is missing!
 			}
 			logs.AccessLog(record, BConfig.Log.AccessLogsFormat)
 		}else {

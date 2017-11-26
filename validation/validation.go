@@ -278,7 +278,7 @@ func (v *Validation) apply(chk Validator, obj interface{}) *Result {
 	}
 }
 
-// Add independent error message for key
+// AddError adds independent error message for the provided key
 func (v *Validation) AddError(key, message string) {
 	Name := key
 	Field := ""

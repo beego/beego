@@ -131,7 +131,8 @@ func (srv *Server) ListenAndServeTLS(certFile, keyFile string) (err error) {
 	return srv.Serve()
 }
 
-//ListenAndServeMutualTLS
+// ListenAndServeMutualTLS listens on the TCP network address srv.Addr and then calls
+// Serve to handle requests on incoming mutual TLS connections.
 func (srv *Server) ListenAndServeMutualTLS(certFile, keyFile, trustFile string) (err error) {
 	addr := srv.Addr
 	if addr == "" {
