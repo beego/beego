@@ -43,7 +43,7 @@ const (
 )
 
 const (
-	routerTypeBeego   = iota
+	routerTypeBeego = iota
 	routerTypeRESTFul
 	routerTypeHandler
 )
@@ -788,7 +788,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	// also defined runRouter & runMethod from filter
-	if !isRunnable || findRouter {
+	if !isRunnable {
 		//Invoke the request handler
 		var execController ControllerInterface
 		if routerInfo.initialize != nil {
@@ -874,7 +874,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 Admin:
-//admin module record QPS
+	//admin module record QPS
 
 	statusCode := context.ResponseWriter.Status
 	if statusCode == 0 {
@@ -921,7 +921,7 @@ Admin:
 				BodyBytesSent:  0, //@todo this one is missing!
 			}
 			logs.AccessLog(record, BConfig.Log.AccessLogsFormat)
-		}else {
+		} else {
 			if findRouter {
 				if routerInfo != nil {
 					devInfo = fmt.Sprintf("|%15s|%s %3d %s|%13s|%8s|%s %-7s %s %-3s   r:%s", context.Input.IP(), statusColor, statusCode,
