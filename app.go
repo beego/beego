@@ -24,8 +24,8 @@ import (
 	"net/http/fcgi"
 	"os"
 	"path"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/astaxie/beego/grace"
 	"github.com/astaxie/beego/logs"
@@ -101,7 +101,7 @@ func (app *App) Run(mws ...MiddleWare) {
 	}
 
 	app.Server.Handler = app.Handlers
-	for i:=len(mws)-1;i>=0;i-- {
+	for i := len(mws) - 1; i >= 0; i-- {
 		if mws[i] == nil {
 			continue
 		}
@@ -254,7 +254,7 @@ func Router(rootpath string, c ControllerInterface, mappingMethods ...string) *A
 func UnregisterFixedRoute(fixedRoute string, method string) *App {
 	subPaths := splitPath(fixedRoute)
 	if method == "" || method == "*" {
-		for _, m := range HTTPMETHOD {
+		for m := range HTTPMETHOD {
 			if _, ok := BeeApp.Handlers.routers[m]; !ok {
 				continue
 			}
