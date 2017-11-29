@@ -50,23 +50,23 @@ const (
 
 var (
 	// HTTPMETHOD list the supported http methods.
-	HTTPMETHOD = map[string]string{
-		"GET":       "GET",
-		"POST":      "POST",
-		"PUT":       "PUT",
-		"DELETE":    "DELETE",
-		"PATCH":     "PATCH",
-		"OPTIONS":   "OPTIONS",
-		"HEAD":      "HEAD",
-		"TRACE":     "TRACE",
-		"CONNECT":   "CONNECT",
-		"MKCOL":     "MKCOL",
-		"COPY":      "COPY",
-		"MOVE":      "MOVE",
-		"PROPFIND":  "PROPFIND",
-		"PROPPATCH": "PROPPATCH",
-		"LOCK":      "LOCK",
-		"UNLOCK":    "UNLOCK",
+	HTTPMETHOD = map[string]bool{
+		"GET":       true,
+		"POST":      true,
+		"PUT":       true,
+		"DELETE":    true,
+		"PATCH":     true,
+		"OPTIONS":   true,
+		"HEAD":      true,
+		"TRACE":     true,
+		"CONNECT":   true,
+		"MKCOL":     true,
+		"COPY":      true,
+		"MOVE":      true,
+		"PROPFIND":  true,
+		"PROPPATCH": true,
+		"LOCK":      true,
+		"UNLOCK":    true,
 	}
 	// these beego.Controller's methods shouldn't reflect to AutoRouter
 	exceptMethod = []string{"Init", "Prepare", "Finish", "Render", "RenderString",
@@ -170,7 +170,7 @@ func (p *ControllerRegister) addWithMethodParams(pattern string, c ControllerInt
 			}
 			comma := strings.Split(colon[0], ",")
 			for _, m := range comma {
-				if _, ok := HTTPMETHOD[strings.ToUpper(m)]; m == "*" || ok {
+				if m == "*" || HTTPMETHOD[strings.ToUpper(m)] {
 					if val := reflectVal.MethodByName(colon[1]); val.IsValid() {
 						methods[strings.ToUpper(m)] = colon[1]
 					} else {
@@ -211,13 +211,13 @@ func (p *ControllerRegister) addWithMethodParams(pattern string, c ControllerInt
 
 	route.methodParams = methodParams
 	if len(methods) == 0 {
-		for _, m := range HTTPMETHOD {
+		for m := range HTTPMETHOD {
 			p.addToRouter(m, pattern, route)
 		}
 	} else {
 		for k := range methods {
 			if k == "*" {
-				for _, m := range HTTPMETHOD {
+				for m := range HTTPMETHOD {
 					p.addToRouter(m, pattern, route)
 				}
 			} else {
@@ -359,7 +359,7 @@ func (p *ControllerRegister) Any(pattern string, f FilterFunc) {
 //    })
 func (p *ControllerRegister) AddMethod(method, pattern string, f FilterFunc) {
 	method = strings.ToUpper(method)
-	if _, ok := HTTPMETHOD[method]; method != "*" && !ok {
+	if method != "*" && !HTTPMETHOD[method] {
 		panic("not support http method: " + method)
 	}
 	route := &ControllerInfo{}
@@ -368,7 +368,7 @@ func (p *ControllerRegister) AddMethod(method, pattern string, f FilterFunc) {
 	route.runFunction = f
 	methods := make(map[string]string)
 	if method == "*" {
-		for _, val := range HTTPMETHOD {
+		for val := range HTTPMETHOD {
 			methods[val] = val
 		}
 	} else {
@@ -377,7 +377,7 @@ func (p *ControllerRegister) AddMethod(method, pattern string, f FilterFunc) {
 	route.methods = methods
 	for k := range methods {
 		if k == "*" {
-			for _, m := range HTTPMETHOD {
+			for m := range HTTPMETHOD {
 				p.addToRouter(m, pattern, route)
 			}
 		} else {
@@ -397,7 +397,7 @@ func (p *ControllerRegister) Handler(pattern string, h http.Handler, options ...
 			pattern = path.Join(pattern, "?:all(.*)")
 		}
 	}
-	for _, m := range HTTPMETHOD {
+	for m := range HTTPMETHOD {
 		p.addToRouter(m, pattern, route)
 	}
 }
@@ -432,7 +432,7 @@ func (p *ControllerRegister) AddAutoPrefix(prefix string, c ControllerInterface)
 			patternFix := path.Join(prefix, strings.ToLower(controllerName), strings.ToLower(rt.Method(i).Name))
 			patternFixInit := path.Join(prefix, controllerName, rt.Method(i).Name)
 			route.pattern = pattern
-			for _, m := range HTTPMETHOD {
+			for m := range HTTPMETHOD {
 				p.addToRouter(m, pattern, route)
 				p.addToRouter(m, patternInit, route)
 				p.addToRouter(m, patternFix, route)
@@ -533,7 +533,7 @@ func (p *ControllerRegister) geturl(t *Tree, url, controllName, methodName strin
 			if c.routerType == routerTypeBeego &&
 				strings.HasSuffix(path.Join(c.controllerType.PkgPath(), c.controllerType.Name()), controllName) {
 				find := false
-				if _, ok := HTTPMETHOD[strings.ToUpper(methodName)]; ok {
+				if HTTPMETHOD[strings.ToUpper(methodName)] {
 					if len(c.methods) == 0 {
 						find = true
 					} else if m, ok := c.methods[strings.ToUpper(methodName)]; ok && m == strings.ToUpper(methodName) {
@@ -681,7 +681,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 	// filter wrong http method
-	if _, ok := HTTPMETHOD[r.Method]; !ok {
+	if !HTTPMETHOD[r.Method] {
 		http.Error(rw, "Method Not Allowed", 405)
 		goto Admin
 	}
