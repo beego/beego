@@ -117,6 +117,7 @@ type ControllerInfo struct {
 	handler        http.Handler
 	runFunction    FilterFunc
 	routerType     int
+	initialize     func() ControllerInterface
 	methodParams   []*param.MethodParam
 }
 
@@ -187,6 +188,27 @@ func (p *ControllerRegister) addWithMethodParams(pattern string, c ControllerInt
 	route.methods = methods
 	route.routerType = routerTypeBeego
 	route.controllerType = t
+	route.initialize = func() ControllerInterface {
+		vc := reflect.New(route.controllerType)
+		execController, ok := vc.Interface().(ControllerInterface)
+		if !ok {
+			panic("controller is not ControllerInterface")
+		}
+
+		elemVal := reflect.ValueOf(c).Elem()
+		elemType := reflect.TypeOf(c).Elem()
+		execElem := reflect.ValueOf(execController).Elem()
+
+		numOfFields := elemVal.NumField()
+		for i := 0; i < numOfFields; i++ {
+			fieldVal := elemVal.Field(i)
+			fieldType := elemType.Field(i)
+			execElem.FieldByName(fieldType.Name).Set(fieldVal)
+		}
+
+		return execController
+	}
+
 	route.methodParams = methodParams
 	if len(methods) == 0 {
 		for m := range HTTPMETHOD {
@@ -768,14 +790,20 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	// also defined runRouter & runMethod from filter
 	if !isRunnable {
 		//Invoke the request handler
-		vc := reflect.New(runRouter)
-		execController, ok := vc.Interface().(ControllerInterface)
-		if !ok {
-			panic("controller is not ControllerInterface")
+		var execController ControllerInterface
+		if routerInfo.initialize != nil {
+			execController = routerInfo.initialize()
+		} else {
+			vc := reflect.New(runRouter)
+			var ok bool
+			execController, ok = vc.Interface().(ControllerInterface)
+			if !ok {
+				panic("controller is not ControllerInterface")
+			}
 		}
 
 		//call the controller init function
-		execController.Init(context, runRouter.Name(), runMethod, vc.Interface())
+		execController.Init(context, runRouter.Name(), runMethod, execController)
 
 		//call prepare function
 		execController.Prepare()
@@ -810,6 +838,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				execController.Options()
 			default:
 				if !execController.HandlerFunc(runMethod) {
+					vc := reflect.ValueOf(execController)
 					method := vc.MethodByName(runMethod)
 					in := param.ConvertParams(methodParams, method.Type(), context)
 					out := method.Call(in)
@@ -846,16 +875,19 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 Admin:
 	//admin module record QPS
+
+	statusCode := context.ResponseWriter.Status
+	if statusCode == 0 {
+		statusCode = 200
+	}
+
 	if BConfig.Listen.EnableAdmin {
 		timeDur := time.Since(startTime)
 		pattern := ""
 		if routerInfo != nil {
 			pattern = routerInfo.pattern
 		}
-		statusCode := context.ResponseWriter.Status
-		if statusCode == 0 {
-			statusCode = 200
-		}
+
 		if FilterMonitorFunc(r.Method, r.URL.Path, timeDur, pattern, statusCode) {
 			if runRouter != nil {
 				go toolbox.StatisticsMap.AddStatistics(r.Method, r.URL.Path, runRouter.Name(), timeDur)
@@ -869,36 +901,47 @@ Admin:
 		timeDur := time.Since(startTime)
 		var devInfo string
 
-		statusCode := context.ResponseWriter.Status
-		if statusCode == 0 {
-			statusCode = 200
-		}
-
 		iswin := (runtime.GOOS == "windows")
 		statusColor := logs.ColorByStatus(iswin, statusCode)
 		methodColor := logs.ColorByMethod(iswin, r.Method)
 		resetColor := logs.ColorByMethod(iswin, "")
-
-		if findRouter {
-			if routerInfo != nil {
-				devInfo = fmt.Sprintf("|%15s|%s %3d %s|%13s|%8s|%s %-7s %s %-3s   r:%s", context.Input.IP(), statusColor, statusCode,
-					resetColor, timeDur.String(), "match", methodColor, r.Method, resetColor, r.URL.Path,
-					routerInfo.pattern)
+		if BConfig.Log.AccessLogsFormat != "" {
+			record := &logs.AccessLogRecord{
+				RemoteAddr:     context.Input.IP(),
+				RequestTime:    startTime,
+				RequestMethod:  r.Method,
+				Request:        fmt.Sprintf("%s %s %s", r.Method, r.RequestURI, r.Proto),
+				ServerProtocol: r.Proto,
+				Host:           r.Host,
+				Status:         statusCode,
+				ElapsedTime:    timeDur,
+				HTTPReferrer:   r.Header.Get("Referer"),
+				HTTPUserAgent:  r.Header.Get("User-Agent"),
+				RemoteUser:     r.Header.Get("Remote-User"),
+				BodyBytesSent:  0, //@todo this one is missing!
+			}
+			logs.AccessLog(record, BConfig.Log.AccessLogsFormat)
+		} else {
+			if findRouter {
+				if routerInfo != nil {
+					devInfo = fmt.Sprintf("|%15s|%s %3d %s|%13s|%8s|%s %-7s %s %-3s   r:%s", context.Input.IP(), statusColor, statusCode,
+						resetColor, timeDur.String(), "match", methodColor, r.Method, resetColor, r.URL.Path,
+						routerInfo.pattern)
+				} else {
+					devInfo = fmt.Sprintf("|%15s|%s %3d %s|%13s|%8s|%s %-7s %s %-3s", context.Input.IP(), statusColor, statusCode, resetColor,
+						timeDur.String(), "match", methodColor, r.Method, resetColor, r.URL.Path)
+				}
 			} else {
 				devInfo = fmt.Sprintf("|%15s|%s %3d %s|%13s|%8s|%s %-7s %s %-3s", context.Input.IP(), statusColor, statusCode, resetColor,
-					timeDur.String(), "match", methodColor, r.Method, resetColor, r.URL.Path)
+					timeDur.String(), "nomatch", methodColor, r.Method, resetColor, r.URL.Path)
 			}
-		} else {
-			devInfo = fmt.Sprintf("|%15s|%s %3d %s|%13s|%8s|%s %-7s %s %-3s", context.Input.IP(), statusColor, statusCode, resetColor,
-				timeDur.String(), "nomatch", methodColor, r.Method, resetColor, r.URL.Path)
-		}
-		if iswin {
-			logs.W32Debug(devInfo)
-		} else {
-			logs.Debug(devInfo)
+			if iswin {
+				logs.W32Debug(devInfo)
+			} else {
+				logs.Debug(devInfo)
+			}
 		}
 	}
-
 	// Call WriteHeader if status code has been set changed
 	if context.Output.Status != 0 {
 		context.ResponseWriter.WriteHeader(context.Output.Status)

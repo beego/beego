@@ -232,7 +232,7 @@ func (e *DateField) Set(d time.Time) {
 	*e = DateField(d)
 }
 
-// String convert datatime to string
+// String convert datetime to string
 func (e *DateField) String() string {
 	return e.Value().String()
 }
@@ -272,12 +272,12 @@ var _ Fielder = new(DateField)
 // Takes the same extra arguments as DateField.
 type DateTimeField time.Time
 
-// Value return the datatime value
+// Value return the datetime value
 func (e DateTimeField) Value() time.Time {
 	return time.Time(e)
 }
 
-// Set set the time.Time to datatime
+// Set set the time.Time to datetime
 func (e *DateTimeField) Set(d time.Time) {
 	*e = DateTimeField(d)
 }
@@ -309,12 +309,12 @@ func (e *DateTimeField) SetRaw(value interface{}) error {
 	return nil
 }
 
-// RawValue return the datatime value
+// RawValue return the datetime value
 func (e *DateTimeField) RawValue() interface{} {
 	return e.Value()
 }
 
-// verify datatime implement fielder
+// verify datetime implement fielder
 var _ Fielder = new(DateTimeField)
 
 // FloatField A floating-point number represented in go by a float32 value.
