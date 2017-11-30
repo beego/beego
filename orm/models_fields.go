@@ -50,9 +50,9 @@ const (
 
 // Define some logic enum
 const (
-	IsIntegerField         = ^-TypePositiveBigIntegerField >> 5 << 6
-	IsPositiveIntegerField = ^-TypePositiveBigIntegerField >> 9 << 10
-	IsRelField             = ^-RelReverseMany >> 17 << 18
+	IsIntegerField         = ^-TypePositiveBigIntegerField >> 6 << 7
+	IsPositiveIntegerField = ^-TypePositiveBigIntegerField >> 10 << 11
+	IsRelField             = ^-RelReverseMany >> 18 << 19
 	IsFieldType            = ^-RelReverseMany<<1 + 1
 )
 
