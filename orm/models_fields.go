@@ -23,6 +23,7 @@ import (
 // Define the Type enum
 const (
 	TypeBooleanField = 1 << iota
+	TypeVarCharField
 	TypeCharField
 	TypeTextField
 	TypeTimeField
@@ -126,7 +127,7 @@ func (e *CharField) String() string {
 
 // FieldType return the enum type
 func (e *CharField) FieldType() int {
-	return TypeCharField
+	return TypeVarCharField
 }
 
 // SetRaw set the interface to string
