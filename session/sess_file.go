@@ -78,6 +78,8 @@ func (fs *FileSessionStore) SessionID() string {
 
 // SessionRelease Write file session to local file with Gob string
 func (fs *FileSessionStore) SessionRelease(w http.ResponseWriter) {
+	filepder.lock.Lock()
+	defer filepder.lock.Unlock()
 	b, err := EncodeGob(fs.values)
 	if err != nil {
 		SLogger.Println(err)
