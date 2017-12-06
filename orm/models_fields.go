@@ -23,6 +23,7 @@ import (
 // Define the Type enum
 const (
 	TypeBooleanField = 1 << iota
+	TypeVarCharField
 	TypeCharField
 	TypeTextField
 	TypeTimeField
@@ -49,9 +50,9 @@ const (
 
 // Define some logic enum
 const (
-	IsIntegerField         = ^-TypePositiveBigIntegerField >> 5 << 6
-	IsPositiveIntegerField = ^-TypePositiveBigIntegerField >> 9 << 10
-	IsRelField             = ^-RelReverseMany >> 17 << 18
+	IsIntegerField         = ^-TypePositiveBigIntegerField >> 6 << 7
+	IsPositiveIntegerField = ^-TypePositiveBigIntegerField >> 10 << 11
+	IsRelField             = ^-RelReverseMany >> 18 << 19
 	IsFieldType            = ^-RelReverseMany<<1 + 1
 )
 
@@ -126,7 +127,7 @@ func (e *CharField) String() string {
 
 // FieldType return the enum type
 func (e *CharField) FieldType() int {
-	return TypeCharField
+	return TypeVarCharField
 }
 
 // SetRaw set the interface to string
