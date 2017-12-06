@@ -49,7 +49,7 @@ func (e *SliceStringField) String() string {
 }
 
 func (e *SliceStringField) FieldType() int {
-	return TypeCharField
+	return TypeVarCharField
 }
 
 func (e *SliceStringField) SetRaw(value interface{}) error {
