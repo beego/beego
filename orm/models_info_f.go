@@ -72,6 +72,7 @@ func (f *fields) GetByName(name string) *fieldInfo {
 
 // get field info by column name
 func (f *fields) GetByColumn(column string) *fieldInfo {
+	column = strings.ToLower(column)
 	return f.columns[column]
 }
 
