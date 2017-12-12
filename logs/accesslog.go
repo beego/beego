@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	apacheFormatPattern = "%s - - [%s] \"%s %d %d\" %f %s %s\n"
+	apacheFormatPattern = "%s - - [%s] \"%s %d %d\" %f %s %s"
 	apacheFormat        = "APACHE_FORMAT"
 	jsonFormat          = "JSON_FORMAT"
 )
