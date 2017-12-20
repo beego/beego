@@ -123,7 +123,7 @@ func (w *fileLogWriter) startLogger() error {
 	return w.initFd()
 }
 
-func (w *fileLogWriter) needRotate(size int, day int) bool {
+func (w *fileLogWriter) needRotateDaily(size int, day int) bool {
 	return (w.MaxLines > 0 && w.maxLinesCurLines >= w.MaxLines) ||
 		(w.MaxSize > 0 && w.maxSizeCurSize >= w.MaxSize) ||
 		(w.Daily && day != w.dailyOpenDate)
