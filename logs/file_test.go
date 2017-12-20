@@ -186,7 +186,7 @@ func TestFileDailyRotate_06(t *testing.T) { //test file mode
 
 func TestFileHourlyRotate_01(t *testing.T) {
 	log := NewLogger(10000)
-	log.SetLogger("file", `{"filename":"test3.log","maxlines":4}`)
+    log.SetLogger("file", `{"filename":"test3.log","hourly":true,"maxlines":4}`)
 	log.Debug("debug")
 	log.Info("info")
 	log.Notice("notice")
@@ -220,12 +220,12 @@ func TestFileHourlyRotate_03(t *testing.T) {
 	os.Remove(fn)
 }
 
-/*
 func TestFileHourlyRotate_04(t *testing.T) {
 	fn1 := "rotate_hour.log"
 	fn2 := "rotate_hour." + time.Now().Add(-1*time.Hour).Format("2006010215") + ".log"
 	testFileHourlyRotate(t, fn1, fn2)
 }
+
 func TestFileHourlyRotate_05(t *testing.T) {
 	fn1 := "rotate_hour.log"
 	fn := "rotate_hour." + time.Now().Add(-1*time.Hour).Format("2006010215") + ".log"
@@ -234,9 +234,10 @@ func TestFileHourlyRotate_05(t *testing.T) {
 	testFileHourlyRotate(t, fn1, fn2)
 	os.Remove(fn)
 }
+
 func TestFileHourlyRotate_06(t *testing.T) { //test file mode
 	log := NewLogger(10000)
-	log.SetLogger("file", `{"filename":"test3.log","maxlines":4}`)
+    log.SetLogger("file", `{"filename":"test3.log", "hourly":true, "maxlines":4}`)
 	log.Debug("debug")
 	log.Info("info")
 	log.Notice("notice")
@@ -255,7 +256,7 @@ func TestFileHourlyRotate_06(t *testing.T) { //test file mode
 	os.Remove(rotateName)
 	os.Remove("test3.log")
 }
-*/
+
 func testFileRotate(t *testing.T, fn1, fn2 string, daily, hourly bool) {
 	fw := &fileLogWriter{
 		Daily:      daily,
@@ -324,6 +325,37 @@ func testFileDailyRotate(t *testing.T, fn1, fn2 string) {
 	fw.Destroy()
 }
 
+func testFileHourlyRotate(t *testing.T, fn1, fn2 string) {
+	fw := &fileLogWriter{
+        Hourly:      true,
+        MaxHours:    168,
+		Rotate:     true,
+		Level:      LevelTrace,
+		Perm:       "0660",
+		RotatePerm: "0440",
+	}
+	fw.Init(fmt.Sprintf(`{"filename":"%v","maxhours":1}`, fn1))
+	fw.hourlyOpenTime = time.Now().Add(-1 * time.Hour)
+	fw.hourlyOpenDate = fw.hourlyOpenTime.Hour()
+	hour, _ := time.ParseInLocation("2006010215", time.Now().Format("2006010215"), fw.hourlyOpenTime.Location())
+	hour = hour.Add(-1 * time.Second)
+	fw.hourlyRotate(hour)
+	for _, file := range []string{fn1, fn2} {
+		_, err := os.Stat(file)
+		if err != nil {
+			t.FailNow()
+		}
+		content, err := ioutil.ReadFile(file)
+		if err != nil {
+			t.FailNow()
+		}
+		if len(content) > 0 {
+			t.FailNow()
+		}
+		os.Remove(file)
+	}
+	fw.Destroy()
+}
 func exists(path string) (bool, error) {
 	_, err := os.Stat(path)
 	if err == nil {
