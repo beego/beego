@@ -50,6 +50,12 @@ type fileLogWriter struct {
 	dailyOpenDate int
 	dailyOpenTime time.Time
 
+	// Rotate hourly
+	Hourly         bool  `json:"hourly"`
+	MaxHours       int64 `json:"maxhours"`
+	hourlyOpenDate int
+	hourlyOpenTime time.Time
+
 	Rotate bool `json:"rotate"`
 
 	Level int `json:"level"`
@@ -66,6 +72,8 @@ func newFileWriter() Logger {
 	w := &fileLogWriter{
 		Daily:      true,
 		MaxDays:    7,
+		Hourly:     false,
+		MaxHours:   168,
 		Rotate:     true,
 		RotatePerm: "0440",
 		Level:      LevelTrace,
@@ -76,15 +84,15 @@ func newFileWriter() Logger {
 
 // Init file logger with json config.
 // jsonConfig like:
-//	{
-//	"filename":"logs/beego.log",
-//	"maxLines":10000,
-//	"maxsize":1024,
-//	"daily":true,
-//	"maxDays":15,
-//	"rotate":true,
-//  	"perm":"0600"
-//	}
+//  {
+//  "filename":"logs/beego.log",
+//  "maxLines":10000,
+//  "maxsize":1024,
+//  "daily":true,
+//  "maxDays":15,
+//  "rotate":true,
+//      "perm":"0600"
+//  }
 func (w *fileLogWriter) Init(jsonConfig string) error {
 	err := json.Unmarshal([]byte(jsonConfig), w)
 	if err != nil {
@@ -119,6 +127,12 @@ func (w *fileLogWriter) needRotate(size int, day int) bool {
 	return (w.MaxLines > 0 && w.maxLinesCurLines >= w.MaxLines) ||
 		(w.MaxSize > 0 && w.maxSizeCurSize >= w.MaxSize) ||
 		(w.Daily && day != w.dailyOpenDate)
+}
+
+func (w *fileLogWriter) needRotateHourly(size int, hour int) bool {
+	return (w.MaxLines > 0 && w.maxLinesCurLines >= w.MaxLines) ||
+		(w.MaxSize > 0 && w.maxSizeCurSize >= w.MaxSize) ||
+		(w.Hourly && hour != w.hourlyOpenDate)
 
 }
 
@@ -127,14 +141,23 @@ func (w *fileLogWriter) WriteMsg(when time.Time, msg string, level int) error {
 	if level > w.Level {
 		return nil
 	}
-	h, d := formatTimeHeader(when)
-	msg = string(h) + msg + "\n"
+	hd, d, h := formatTimeHeader(when)
+	msg = string(hd) + msg + "\n"
 	if w.Rotate {
 		w.RLock()
-		if w.needRotate(len(msg), d) {
+		if w.needRotateHourly(len(msg), h) {
 			w.RUnlock()
 			w.Lock()
-			if w.needRotate(len(msg), d) {
+			if w.needRotateHourly(len(msg), h) {
+				if err := w.doRotate(when); err != nil {
+					fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
+				}
+			}
+			w.Unlock()
+		} else if w.needRotateDaily(len(msg), d) {
+			w.RUnlock()
+			w.Lock()
+			if w.needRotateDaily(len(msg), d) {
 				if err := w.doRotate(when); err != nil {
 					fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
 				}
@@ -178,8 +201,12 @@ func (w *fileLogWriter) initFd() error {
 	w.maxSizeCurSize = int(fInfo.Size())
 	w.dailyOpenTime = time.Now()
 	w.dailyOpenDate = w.dailyOpenTime.Day()
+	w.hourlyOpenTime = time.Now()
+	w.hourlyOpenDate = w.hourlyOpenTime.Hour()
 	w.maxLinesCurLines = 0
-	if w.Daily {
+	if w.Hourly {
+		go w.hourlyRotate(w.hourlyOpenTime)
+	} else if w.Daily {
 		go w.dailyRotate(w.dailyOpenTime)
 	}
 	if fInfo.Size() > 0 && w.MaxLines > 0 {
@@ -198,7 +225,22 @@ func (w *fileLogWriter) dailyRotate(openTime time.Time) {
 	tm := time.NewTimer(time.Duration(nextDay.UnixNano() - openTime.UnixNano() + 100))
 	<-tm.C
 	w.Lock()
-	if w.needRotate(0, time.Now().Day()) {
+	if w.needRotateDaily(0, time.Now().Day()) {
+		if err := w.doRotate(time.Now()); err != nil {
+			fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
+		}
+	}
+	w.Unlock()
+}
+
+func (w *fileLogWriter) hourlyRotate(openTime time.Time) {
+	y, m, d := openTime.Add(1 * time.Hour).Date()
+	h, _, _ := openTime.Add(1 * time.Hour).Clock()
+	nextHour := time.Date(y, m, d, h, 0, 0, 0, openTime.Location())
+	tm := time.NewTimer(time.Duration(nextHour.UnixNano() - openTime.UnixNano() + 100))
+	<-tm.C
+	w.Lock()
+	if w.needRotateHourly(0, time.Now().Hour()) {
 		if err := w.doRotate(time.Now()); err != nil {
 			fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
 		}
@@ -239,7 +281,10 @@ func (w *fileLogWriter) doRotate(logTime time.Time) error {
 	// file exists
 	// Find the next available number
 	num := 1
+	fmt.Println("num :", num)
 	fName := ""
+	format := ""
+	var openTime time.Time
 	rotatePerm, err := strconv.ParseInt(w.RotatePerm, 8, 64)
 	if err != nil {
 		return err
@@ -251,19 +296,29 @@ func (w *fileLogWriter) doRotate(logTime time.Time) error {
 		goto RESTART_LOGGER
 	}
 
+	if w.Hourly {
+		format = "2006010215"
+		openTime = w.hourlyOpenTime
+	} else if w.Daily {
+		format = "2006-01-02"
+		openTime = w.dailyOpenTime
+	}
+
 	if w.MaxLines > 0 || w.MaxSize > 0 {
 		for ; err == nil && num <= 999; num++ {
-			fName = w.fileNameOnly + fmt.Sprintf(".%s.%03d%s", logTime.Format("2006-01-02"), num, w.suffix)
+			fName = w.fileNameOnly + fmt.Sprintf(".%s.%03d%s", logTime.Format(format), num, w.suffix)
 			_, err = os.Lstat(fName)
 		}
 	} else {
-		fName = fmt.Sprintf("%s.%s%s", w.fileNameOnly, w.dailyOpenTime.Format("2006-01-02"), w.suffix)
+		fName = fmt.Sprintf("%s.%s%s", w.fileNameOnly, openTime.Format(format), w.suffix)
 		_, err = os.Lstat(fName)
+		fmt.Println("befor fName:", fName)
 		for ; err == nil && num <= 999; num++ {
-			fName = w.fileNameOnly + fmt.Sprintf(".%s.%03d%s", w.dailyOpenTime.Format("2006-01-02"), num, w.suffix)
+			fName = w.fileNameOnly + fmt.Sprintf(".%s.%03d%s", openTime.Format(format), num, w.suffix)
 			_, err = os.Lstat(fName)
 		}
 	}
+	fmt.Println("after fName:", fName)
 	// return error if the last file checked still existed
 	if err == nil {
 		return fmt.Errorf("Rotate: Cannot find free log number to rename %s", w.Filename)
@@ -314,6 +369,7 @@ func (w *fileLogWriter) deleteOldLog() {
 				os.Remove(path)
 			}
 		}
+		os.Exit(0)
 		return
 	})
 }
