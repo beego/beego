@@ -281,7 +281,6 @@ func (w *fileLogWriter) doRotate(logTime time.Time) error {
 	// file exists
 	// Find the next available number
 	num := 1
-	fmt.Println("num :", num)
 	fName := ""
 	format := ""
 	var openTime time.Time
@@ -312,13 +311,11 @@ func (w *fileLogWriter) doRotate(logTime time.Time) error {
 	} else {
 		fName = fmt.Sprintf("%s.%s%s", w.fileNameOnly, openTime.Format(format), w.suffix)
 		_, err = os.Lstat(fName)
-		fmt.Println("befor fName:", fName)
 		for ; err == nil && num <= 999; num++ {
 			fName = w.fileNameOnly + fmt.Sprintf(".%s.%03d%s", openTime.Format(format), num, w.suffix)
 			_, err = os.Lstat(fName)
 		}
 	}
-	fmt.Println("after fName:", fName)
 	// return error if the last file checked still existed
 	if err == nil {
 		return fmt.Errorf("Rotate: Cannot find free log number to rename %s", w.Filename)
@@ -362,14 +359,21 @@ func (w *fileLogWriter) deleteOldLog() {
 		if info == nil {
 			return
 		}
-
-		if !info.IsDir() && info.ModTime().Add(24*time.Hour*time.Duration(w.MaxDays)).Before(time.Now()) {
-			if strings.HasPrefix(filepath.Base(path), filepath.Base(w.fileNameOnly)) &&
-				strings.HasSuffix(filepath.Base(path), w.suffix) {
-				os.Remove(path)
-			}
-		}
-		os.Exit(0)
+        if w.Hourly {
+            if !info.IsDir() && info.ModTime().Add(1*time.Hour*time.Duration(w.MaxHours)).Before(time.Now()) {
+                if strings.HasPrefix(filepath.Base(path), filepath.Base(w.fileNameOnly)) &&
+                strings.HasSuffix(filepath.Base(path), w.suffix) {
+                    os.Remove(path)
+                }
+            }
+        } else if w.Daily {
+            if !info.IsDir() && info.ModTime().Add(24*time.Hour*time.Duration(w.MaxDays)).Before(time.Now()) {
+                if strings.HasPrefix(filepath.Base(path), filepath.Base(w.fileNameOnly)) &&
+                strings.HasSuffix(filepath.Base(path), w.suffix) {
+                    os.Remove(path)
+                }
+            }
+        }
 		return
 	})
 }
