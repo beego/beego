@@ -322,7 +322,7 @@ func (m *Migration) GetSQL() (sql string) {
 					sql += fmt.Sprintf("\n DROP COLUMN `%s`", column.Name)
 				}
 
-				if len(m.Columns) > index {
+				if len(m.Columns) > index+1 {
 					sql += ","
 				}
 			}
