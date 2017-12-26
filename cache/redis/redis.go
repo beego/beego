@@ -53,6 +53,7 @@ type Cache struct {
 	dbNum    int
 	key      string
 	password string
+	maxIdle  int
 }
 
 // NewRedisCache create new redis cache with default collection name.
@@ -169,10 +170,14 @@ func (rc *Cache) StartAndGC(config string) error {
 	if _, ok := cf["password"]; !ok {
 		cf["password"] = ""
 	}
+	if _, ok := cf["maxIdle"]; !ok {
+		cf["maxIdle"] = "3"
+	}
 	rc.key = cf["key"]
 	rc.conninfo = cf["conn"]
 	rc.dbNum, _ = strconv.Atoi(cf["dbNum"])
 	rc.password = cf["password"]
+	rc.maxIdle, _ = strconv.Atoi(cf["maxIdle"])
 
 	rc.connectInit()
 
@@ -206,7 +211,7 @@ func (rc *Cache) connectInit() {
 	}
 	// initialize a new pool
 	rc.p = &redis.Pool{
-		MaxIdle:     3,
+		MaxIdle:     rc.maxIdle,
 		IdleTimeout: 180 * time.Second,
 		Dial:        dialFunc,
 	}
