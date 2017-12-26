@@ -171,7 +171,7 @@ func (rc *Cache) StartAndGC(config string) error {
 		cf["password"] = ""
 	}
 	if _, ok := cf["maxIdle"]; !ok {
-		cf["maxIdle"] = ""
+		cf["maxIdle"] = "3"
 	}
 	rc.key = cf["key"]
 	rc.conninfo = cf["conn"]
