@@ -322,7 +322,7 @@ func (m *Migration) GetSQL() (sql string) {
 					sql += fmt.Sprintf("\n DROP COLUMN `%s`", column.Name)
 				}
 
-				if len(m.Columns) > index {
+				if len(m.Columns) > index+1 {
 					sql += ","
 				}
 			}
@@ -355,7 +355,7 @@ func (m *Migration) GetSQL() (sql string) {
 				} else {
 					sql += fmt.Sprintf("\n DROP COLUMN `%s`", column.Name)
 				}
-				if len(m.Columns) > index {
+				if len(m.Columns) > index+1 {
 					sql += ","
 				}
 			}
@@ -366,14 +366,14 @@ func (m *Migration) GetSQL() (sql string) {
 
 			for index, unique := range m.Uniques {
 				sql += fmt.Sprintf("\n DROP KEY `%s`", unique.Definition)
-				if len(m.Uniques) > index {
+				if len(m.Uniques) > index+1 {
 					sql += ","
 				}
 
 			}
 			for index, column := range m.Renames {
 				sql += fmt.Sprintf("\n CHANGE COLUMN `%s` `%s` %s %s %s %s", column.NewName, column.OldName, column.OldDataType, column.OldUnsign, column.OldNull, column.OldDefault)
-				if len(m.Renames) > index {
+				if len(m.Renames) > index+1 {
 					sql += ","
 				}
 			}
