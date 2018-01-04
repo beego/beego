@@ -79,6 +79,8 @@ var (
 	ErrStmtClosed    = errors.New("<QuerySeter> stmt already closed")
 	ErrArgs          = errors.New("<Ormer> args error may be empty")
 	ErrNotImplement  = errors.New("have not implement")
+	ErrHook          = errors.New("<Ormer.hook> invalid")
+	ErrHookExist     = errors.New("<Ormer.hook> already exist")
 )
 
 // Params stores the Params
@@ -88,9 +90,173 @@ type Params map[string]interface{}
 type ParamsList []interface{}
 
 type orm struct {
-	alias *alias
-	db    dbQuerier
-	isTx  bool
+	alias        *alias
+	db           dbQuerier
+	isTx         bool
+	beforeInsert map[string]HookFunc
+	afterInsert  map[string]HookFunc
+	beforeUpdate map[string]HookFunc
+	afterUpdate  map[string]HookFunc
+	beforeDelete map[string]HookFunc
+	afterDelete  map[string]HookFunc
+}
+
+type HookFunc func(md interface{}, cols ...string) error
+
+// add before insert hook to a db object
+func (o *orm) BeforeInsert(ptrStructOrTableName interface{}, hookFunc HookFunc) {
+	if hookFunc == nil {
+		panic(ErrHook)
+	}
+	var name string
+	if table, ok := ptrStructOrTableName.(string); ok {
+		name = snakeString(table)
+		if _, ok := modelCache.get(name); !ok {
+			// it's a invalid table name
+			panic(fmt.Errorf("<Ormer> table: `%s` not found, make sure it was registered with `RegisterModel()`", name))
+		}
+	} else {
+		name = getFullName(indirectType(reflect.TypeOf(ptrStructOrTableName)))
+		if _, ok := modelCache.get(name); !ok {
+			// it's a invalid table name
+			panic(fmt.Errorf("<Ormer> table: `%s` not found, make sure it was registered with `RegisterModel()`", name))
+		}
+	}
+	if _, ok := o.beforeInsert[name]; ok {
+		panic(ErrHookExist)
+	} else {
+		o.beforeInsert[name] = hookFunc
+	}
+}
+
+// add after insert hook to a db object
+func (o *orm) AfterInsert(ptrStructOrTableName interface{}, hookFunc HookFunc) {
+	if hookFunc == nil {
+		panic(ErrHook)
+	}
+	var name string
+	if table, ok := ptrStructOrTableName.(string); ok {
+		name = snakeString(table)
+		if _, ok := modelCache.get(name); !ok {
+			// it's a invalid table name
+			panic(fmt.Errorf("<Ormer> table: `%s` not found, make sure it was registered with `RegisterModel()`", name))
+		}
+	} else {
+		name = getFullName(indirectType(reflect.TypeOf(ptrStructOrTableName)))
+		if _, ok := modelCache.get(name); !ok {
+			// it's a invalid table name
+			panic(fmt.Errorf("<Ormer> table: `%s` not found, make sure it was registered with `RegisterModel()`", name))
+		}
+	}
+	if _, ok := o.afterInsert[name]; ok {
+		panic(ErrHookExist)
+	} else {
+		o.afterInsert[name] = hookFunc
+	}
+}
+
+// add before insert hook to a db object
+func (o *orm) BeforeUpdate(ptrStructOrTableName interface{}, hookFunc HookFunc) {
+	if hookFunc == nil {
+		panic(ErrHook)
+	}
+	var name string
+	if table, ok := ptrStructOrTableName.(string); ok {
+		name = snakeString(table)
+		if _, ok := modelCache.get(name); !ok {
+			// it's a invalid table name
+			panic(fmt.Errorf("<Ormer> table: `%s` not found, make sure it was registered with `RegisterModel()`", name))
+		}
+	} else {
+		name = getFullName(indirectType(reflect.TypeOf(ptrStructOrTableName)))
+		if _, ok := modelCache.get(name); !ok {
+			// it's a invalid table name
+			panic(fmt.Errorf("<Ormer> table: `%s` not found, make sure it was registered with `RegisterModel()`", name))
+		}
+	}
+	if _, ok := o.beforeUpdate[name]; ok {
+		panic(ErrHookExist)
+	} else {
+		o.beforeUpdate[name] = hookFunc
+	}
+}
+
+// add after insert hook to a db object
+func (o *orm) AfterUpdate(ptrStructOrTableName interface{}, hookFunc HookFunc) {
+	if hookFunc == nil {
+		panic(ErrHook)
+	}
+	var name string
+	if table, ok := ptrStructOrTableName.(string); ok {
+		name = snakeString(table)
+		if _, ok := modelCache.get(name); !ok {
+			// it's a invalid table name
+			panic(fmt.Errorf("<Ormer> table: `%s` not found, make sure it was registered with `RegisterModel()`", name))
+		}
+	} else {
+		name = getFullName(indirectType(reflect.TypeOf(ptrStructOrTableName)))
+		if _, ok := modelCache.get(name); !ok {
+			// it's a invalid table name
+			panic(fmt.Errorf("<Ormer> table: `%s` not found, make sure it was registered with `RegisterModel()`", name))
+		}
+	}
+	if _, ok := o.afterUpdate[name]; ok {
+		panic(ErrHookExist)
+	} else {
+		o.afterUpdate[name] = hookFunc
+	}
+}
+
+// add before insert hook to a db object
+func (o *orm) BeforeDelete(ptrStructOrTableName interface{}, hookFunc HookFunc) {
+	if hookFunc == nil {
+		panic(ErrHook)
+	}
+	var name string
+	if table, ok := ptrStructOrTableName.(string); ok {
+		name = snakeString(table)
+		if _, ok := modelCache.get(name); !ok {
+			// it's a invalid table name
+			panic(fmt.Errorf("<Ormer> table: `%s` not found, make sure it was registered with `RegisterModel()`", name))
+		}
+	} else {
+		name = getFullName(indirectType(reflect.TypeOf(ptrStructOrTableName)))
+		if _, ok := modelCache.get(name); !ok {
+			// it's a invalid table name
+			panic(fmt.Errorf("<Ormer> table: `%s` not found, make sure it was registered with `RegisterModel()`", name))
+		}
+	}
+	if _, ok := o.beforeDelete[name]; ok {
+		panic(ErrHookExist)
+	} else {
+		o.beforeDelete[name] = hookFunc
+	}
+}
+
+// add after insert hook to a db object
+func (o *orm) AfterDelete(ptrStructOrTableName interface{}, hookFunc HookFunc) {
+	if hookFunc == nil {
+		panic(ErrHook)
+	}
+	var name string
+	if table, ok := ptrStructOrTableName.(string); ok {
+		name = snakeString(table)
+		if _, ok := modelCache.get(name); !ok {
+			// it's a invalid table name
+			panic(fmt.Errorf("<Ormer> table: `%s` not found, make sure it was registered with `RegisterModel()`", name))
+		}
+	} else {
+		name = getFullName(indirectType(reflect.TypeOf(ptrStructOrTableName)))
+		if _, ok := modelCache.get(name); !ok {
+			// it's a invalid table name
+			panic(fmt.Errorf("<Ormer> table: `%s` not found, make sure it was registered with `RegisterModel()`", name))
+		}
+	}
+	if _, ok := o.afterDelete[name]; ok {
+		panic(ErrHookExist)
+	} else {
+		o.afterDelete[name] = hookFunc
+	}
 }
 
 var _ Ormer = new(orm)
@@ -156,6 +322,13 @@ func (o *orm) ReadOrCreate(md interface{}, col1 string, cols ...string) (bool, i
 
 // insert model data to database
 func (o *orm) Insert(md interface{}) (int64, error) {
+	name := getFullName(indirectType(reflect.TypeOf(md)))
+	if hookFunc, ok := o.beforeInsert[name]; ok {
+		hookErr := hookFunc(md)
+		if hookErr != nil {
+			return 0, hookErr
+		}
+	}
 	mi, ind := o.getMiInd(md, true)
 	id, err := o.alias.DbBaser.Insert(o.db, mi, ind, o.alias.TZ)
 	if err != nil {
@@ -163,7 +336,12 @@ func (o *orm) Insert(md interface{}) (int64, error) {
 	}
 
 	o.setPk(mi, ind, id)
-
+	if hookFunc, ok := o.afterInsert[name]; ok {
+		hookErr := hookFunc(md)
+		if hookErr != nil {
+			return 0, hookErr
+		}
+	}
 	return id, nil
 }
 
