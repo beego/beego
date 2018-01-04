@@ -12,28 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package beego
+// +build !windows
 
-import (
-	"github.com/astaxie/beego/context"
-)
+package logs
 
-// GlobalDocAPI store the swagger api documents
-var GlobalDocAPI = make(map[string]interface{})
+import "io"
 
-func serverDocs(ctx *context.Context) {
-	var obj interface{}
-	if splat := ctx.Input.Param(":splat"); splat == "" {
-		obj = GlobalDocAPI["Root"]
-	} else {
-		if v, ok := GlobalDocAPI[splat]; ok {
-			obj = v
-		}
-	}
-	if obj != nil {
-		ctx.Output.Header("Access-Control-Allow-Origin", "*")
-		ctx.Output.JSON(obj, false, false)
-		return
-	}
-	ctx.Output.SetStatus(404)
+type ansiColorWriter struct {
+	w    io.Writer
+	mode outputMode
+}
+
+func (cw *ansiColorWriter) Write(p []byte) (int, error) {
+	return cw.w.Write(p)
 }

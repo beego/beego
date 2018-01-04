@@ -153,6 +153,11 @@ func (o querySet) SetCond(cond *Condition) QuerySeter {
 	return &o
 }
 
+// get condition from QuerySeter
+func (o querySet) GetCond() *Condition {
+	return o.cond
+}
+
 // return QuerySeter execution result number
 func (o *querySet) Count() (int64, error) {
 	return o.orm.alias.DbBaser.Count(o.orm.db, o, o.mi, o.cond, o.orm.alias.TZ)
@@ -192,15 +197,17 @@ func (o *querySet) All(container interface{}, cols ...string) (int64, error) {
 // query one row data and map to containers.
 // cols means the columns when querying.
 func (o *querySet) One(container interface{}, cols ...string) error {
+	o.limit = 1
 	num, err := o.orm.alias.DbBaser.ReadBatch(o.orm.db, o, o.mi, o.cond, container, o.orm.alias.TZ, cols)
 	if err != nil {
 		return err
 	}
-	if num > 1 {
-		return ErrMultiRows
-	}
 	if num == 0 {
 		return ErrNoRows
+	}
+
+	if num > 1 {
+		return ErrMultiRows
 	}
 	return nil
 }

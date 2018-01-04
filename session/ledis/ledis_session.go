@@ -12,8 +12,10 @@ import (
 	"github.com/siddontang/ledisdb/ledis"
 )
 
-var ledispder = &Provider{}
-var c *ledis.DB
+var (
+	ledispder = &Provider{}
+	c         *ledis.DB
+)
 
 // SessionStore ledis session store
 type SessionStore struct {
@@ -97,27 +99,33 @@ func (lp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 	}
 	cfg := new(config.Config)
 	cfg.DataDir = lp.savePath
-	nowLedis, err := ledis.Open(cfg)
-	c, err = nowLedis.Select(lp.db)
+
+	var ledisInstance *ledis.Ledis
+	ledisInstance, err = ledis.Open(cfg)
 	if err != nil {
-		println(err)
-		return nil
+		return err
 	}
-	return nil
+	c, err = ledisInstance.Select(lp.db)
+	return err
 }
 
 // SessionRead read ledis session by sid
 func (lp *Provider) SessionRead(sid string) (session.Store, error) {
-	kvs, err := c.Get([]byte(sid))
-	var kv map[interface{}]interface{}
+	var (
+		kv  map[interface{}]interface{}
+		err error
+	)
+
+	kvs, _ := c.Get([]byte(sid))
+
 	if len(kvs) == 0 {
 		kv = make(map[interface{}]interface{})
 	} else {
-		kv, err = session.DecodeGob(kvs)
-		if err != nil {
+		if kv, err = session.DecodeGob(kvs); err != nil {
 			return nil, err
 		}
 	}
+
 	ls := &SessionStore{sid: sid, values: kv, maxlifetime: lp.maxlifetime}
 	return ls, nil
 }
@@ -125,10 +133,7 @@ func (lp *Provider) SessionRead(sid string) (session.Store, error) {
 // SessionExist check ledis session exist by sid
 func (lp *Provider) SessionExist(sid string) bool {
 	count, _ := c.Exists([]byte(sid))
-	if count == 0 {
-		return false
-	}
-	return true
+	return !(count == 0)
 }
 
 // SessionRegenerate generate new sid for ledis session
@@ -145,18 +150,7 @@ func (lp *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error)
 		c.Set([]byte(sid), data)
 		c.Expire([]byte(sid), lp.maxlifetime)
 	}
-	kvs, err := c.Get([]byte(sid))
-	var kv map[interface{}]interface{}
-	if len(kvs) == 0 {
-		kv = make(map[interface{}]interface{})
-	} else {
-		kv, err = session.DecodeGob([]byte(kvs))
-		if err != nil {
-			return nil, err
-		}
-	}
-	ls := &SessionStore{sid: sid, values: kv, maxlifetime: lp.maxlifetime}
-	return ls, nil
+	return lp.SessionRead(sid)
 }
 
 // SessionDestroy delete ledis session by id
@@ -167,7 +161,6 @@ func (lp *Provider) SessionDestroy(sid string) error {
 
 // SessionGC Impelment method, no used.
 func (lp *Provider) SessionGC() {
-	return
 }
 
 // SessionAll return all active session

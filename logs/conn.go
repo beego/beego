@@ -17,14 +17,14 @@ package logs
 import (
 	"encoding/json"
 	"io"
-	"log"
 	"net"
+	"time"
 )
 
 // connWriter implements LoggerInterface.
 // it writes messages in keep-live tcp connection.
 type connWriter struct {
-	lg             *log.Logger
+	lg             *logWriter
 	innerWriter    io.WriteCloser
 	ReconnectOnMsg bool   `json:"reconnectOnMsg"`
 	Reconnect      bool   `json:"reconnect"`
@@ -42,17 +42,17 @@ func NewConn() Logger {
 
 // Init init connection writer with json config.
 // json config only need key "level".
-func (c *connWriter) Init(jsonconfig string) error {
-	return json.Unmarshal([]byte(jsonconfig), c)
+func (c *connWriter) Init(jsonConfig string) error {
+	return json.Unmarshal([]byte(jsonConfig), c)
 }
 
 // WriteMsg write message in connection.
 // if connection is down, try to re-connect.
-func (c *connWriter) WriteMsg(msg string, level int) error {
+func (c *connWriter) WriteMsg(when time.Time, msg string, level int) error {
 	if level > c.Level {
 		return nil
 	}
-	if c.neddedConnectOnMsg() {
+	if c.needToConnectOnMsg() {
 		err := c.connect()
 		if err != nil {
 			return err
@@ -62,7 +62,8 @@ func (c *connWriter) WriteMsg(msg string, level int) error {
 	if c.ReconnectOnMsg {
 		defer c.innerWriter.Close()
 	}
-	c.lg.Println(msg)
+
+	c.lg.println(when, msg)
 	return nil
 }
 
@@ -94,11 +95,11 @@ func (c *connWriter) connect() error {
 	}
 
 	c.innerWriter = conn
-	c.lg = log.New(conn, "", log.Ldate|log.Ltime)
+	c.lg = newLogWriter(conn)
 	return nil
 }
 
-func (c *connWriter) neddedConnectOnMsg() bool {
+func (c *connWriter) needToConnectOnMsg() bool {
 	if c.Reconnect {
 		c.Reconnect = false
 		return true
@@ -112,5 +113,5 @@ func (c *connWriter) neddedConnectOnMsg() bool {
 }
 
 func init() {
-	Register("conn", NewConn)
+	Register(AdapterConn, NewConn)
 }

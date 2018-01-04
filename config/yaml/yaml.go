@@ -19,14 +19,14 @@
 // go install github.com/beego/goyaml2
 //
 // Usage:
-// import(
+//  import(
 //   _ "github.com/astaxie/beego/config/yaml"
-//   "github.com/astaxie/beego/config"
-// )
+//     "github.com/astaxie/beego/config"
+//  )
 //
 //  cnf, err := config.NewConfig("yaml", "config.yaml")
 //
-//  more docs http://beego.me/docs/module/config.md
+//More docs http://beego.me/docs/module/config.md
 package yaml
 
 import (
@@ -37,10 +37,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
-	"path"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/astaxie/beego/config"
 	"github.com/beego/goyaml2"
@@ -63,26 +61,30 @@ func (yaml *Config) Parse(filename string) (y config.Configer, err error) {
 
 // ParseData parse yaml data
 func (yaml *Config) ParseData(data []byte) (config.Configer, error) {
-	// Save memory data to temporary file
-	tmpName := path.Join(os.TempDir(), "beego", fmt.Sprintf("%d", time.Now().Nanosecond()))
-	os.MkdirAll(path.Dir(tmpName), os.ModePerm)
-	if err := ioutil.WriteFile(tmpName, data, 0655); err != nil {
+	cnf, err := parseYML(data)
+	if err != nil {
 		return nil, err
 	}
-	return yaml.Parse(tmpName)
+
+	return &ConfigContainer{
+		data: cnf,
+	}, nil
 }
 
 // ReadYmlReader Read yaml file to map.
 // if json like, use json package, unless goyaml2 package.
 func ReadYmlReader(path string) (cnf map[string]interface{}, err error) {
-	f, err := os.Open(path)
+	buf, err := ioutil.ReadFile(path)
 	if err != nil {
 		return
 	}
-	defer f.Close()
 
-	buf, err := ioutil.ReadAll(f)
-	if err != nil || len(buf) < 3 {
+	return parseYML(buf)
+}
+
+// parseYML parse yaml formatted []byte to map.
+func parseYML(buf []byte) (cnf map[string]interface{}, err error) {
+	if len(buf) < 3 {
 		return
 	}
 
@@ -110,6 +112,7 @@ func ReadYmlReader(path string) (cnf map[string]interface{}, err error) {
 		log.Println("Not a Map? >> ", string(buf), data)
 		cnf = nil
 	}
+	cnf = config.ExpandValueEnvForMap(cnf)
 	return
 }
 
@@ -121,10 +124,11 @@ type ConfigContainer struct {
 
 // Bool returns the boolean value for a given key.
 func (c *ConfigContainer) Bool(key string) (bool, error) {
-	if v, ok := c.data[key].(bool); ok {
-		return v, nil
+	v, err := c.getData(key)
+	if err != nil {
+		return false, err
 	}
-	return false, errors.New("not bool value")
+	return config.ParseBool(v)
 }
 
 // DefaultBool return the bool value if has no error
@@ -139,8 +143,12 @@ func (c *ConfigContainer) DefaultBool(key string, defaultval bool) bool {
 
 // Int returns the integer value for a given key.
 func (c *ConfigContainer) Int(key string) (int, error) {
-	if v, ok := c.data[key].(int64); ok {
-		return int(v), nil
+	if v, err := c.getData(key); err != nil {
+		return 0, err
+	} else if vv, ok := v.(int); ok {
+		return vv, nil
+	} else if vv, ok := v.(int64); ok {
+		return int(vv), nil
 	}
 	return 0, errors.New("not int value")
 }
@@ -157,8 +165,10 @@ func (c *ConfigContainer) DefaultInt(key string, defaultval int) int {
 
 // Int64 returns the int64 value for a given key.
 func (c *ConfigContainer) Int64(key string) (int64, error) {
-	if v, ok := c.data[key].(int64); ok {
-		return v, nil
+	if v, err := c.getData(key); err != nil {
+		return 0, err
+	} else if vv, ok := v.(int64); ok {
+		return vv, nil
 	}
 	return 0, errors.New("not bool value")
 }
@@ -175,8 +185,14 @@ func (c *ConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
 
 // Float returns the float value for a given key.
 func (c *ConfigContainer) Float(key string) (float64, error) {
-	if v, ok := c.data[key].(float64); ok {
-		return v, nil
+	if v, err := c.getData(key); err != nil {
+		return 0.0, err
+	} else if vv, ok := v.(float64); ok {
+		return vv, nil
+	} else if vv, ok := v.(int); ok {
+		return float64(vv), nil
+	} else if vv, ok := v.(int64); ok {
+		return float64(vv), nil
 	}
 	return 0.0, errors.New("not float64 value")
 }
@@ -193,8 +209,10 @@ func (c *ConfigContainer) DefaultFloat(key string, defaultval float64) float64 {
 
 // String returns the string value for a given key.
 func (c *ConfigContainer) String(key string) string {
-	if v, ok := c.data[key].(string); ok {
-		return v
+	if v, err := c.getData(key); err == nil {
+		if vv, ok := v.(string); ok {
+			return vv
+		}
 	}
 	return ""
 }
@@ -211,14 +229,18 @@ func (c *ConfigContainer) DefaultString(key string, defaultval string) string {
 
 // Strings returns the []string value for a given key.
 func (c *ConfigContainer) Strings(key string) []string {
-	return strings.Split(c.String(key), ";")
+	v := c.String(key)
+	if v == "" {
+		return nil
+	}
+	return strings.Split(v, ";")
 }
 
 // DefaultStrings returns the []string value for a given key.
 // if err != nil return defaltval
 func (c *ConfigContainer) DefaultStrings(key string, defaultval []string) []string {
 	v := c.Strings(key)
-	if len(v) == 0 {
+	if v == nil {
 		return defaultval
 	}
 	return v
@@ -226,11 +248,11 @@ func (c *ConfigContainer) DefaultStrings(key string, defaultval []string) []stri
 
 // GetSection returns map for the given section
 func (c *ConfigContainer) GetSection(section string) (map[string]string, error) {
-	v, ok := c.data[section]
-	if ok {
+
+	if v, ok := c.data[section]; ok {
 		return v.(map[string]string), nil
 	}
-	return nil, errors.New("not exist setction")
+	return nil, errors.New("not exist section")
 }
 
 // SaveConfigFile save the config into file
@@ -255,10 +277,19 @@ func (c *ConfigContainer) Set(key, val string) error {
 
 // DIY returns the raw value by a given key.
 func (c *ConfigContainer) DIY(key string) (v interface{}, err error) {
+	return c.getData(key)
+}
+
+func (c *ConfigContainer) getData(key string) (interface{}, error) {
+
+	if len(key) == 0 {
+		return nil, errors.New("key is empty")
+	}
+
 	if v, ok := c.data[key]; ok {
 		return v, nil
 	}
-	return nil, errors.New("not exist key")
+	return nil, fmt.Errorf("not exist key %q", key)
 }
 
 func init() {

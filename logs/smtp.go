@@ -52,11 +52,7 @@ func newSMTPWriter() Logger {
 //		"level":LevelError
 //	}
 func (s *SMTPWriter) Init(jsonconfig string) error {
-	err := json.Unmarshal([]byte(jsonconfig), s)
-	if err != nil {
-		return err
-	}
-	return nil
+	return json.Unmarshal([]byte(jsonconfig), s)
 }
 
 func (s *SMTPWriter) getSMTPAuth(host string) smtp.Auth {
@@ -106,7 +102,7 @@ func (s *SMTPWriter) sendMail(hostAddressWithPort string, auth smtp.Auth, fromAd
 	if err != nil {
 		return err
 	}
-	_, err = w.Write([]byte(msgContent))
+	_, err = w.Write(msgContent)
 	if err != nil {
 		return err
 	}
@@ -116,17 +112,12 @@ func (s *SMTPWriter) sendMail(hostAddressWithPort string, auth smtp.Auth, fromAd
 		return err
 	}
 
-	err = client.Quit()
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return client.Quit()
 }
 
 // WriteMsg write message in smtp writer.
 // it will send an email with subject and only this message.
-func (s *SMTPWriter) WriteMsg(msg string, level int) error {
+func (s *SMTPWriter) WriteMsg(when time.Time, msg string, level int) error {
 	if level > s.Level {
 		return nil
 	}
@@ -140,21 +131,19 @@ func (s *SMTPWriter) WriteMsg(msg string, level int) error {
 	// and send the email all in one step.
 	contentType := "Content-Type: text/plain" + "; charset=UTF-8"
 	mailmsg := []byte("To: " + strings.Join(s.RecipientAddresses, ";") + "\r\nFrom: " + s.FromAddress + "<" + s.FromAddress +
-		">\r\nSubject: " + s.Subject + "\r\n" + contentType + "\r\n\r\n" + fmt.Sprintf(".%s", time.Now().Format("2006-01-02 15:04:05")) + msg)
+		">\r\nSubject: " + s.Subject + "\r\n" + contentType + "\r\n\r\n" + fmt.Sprintf(".%s", when.Format("2006-01-02 15:04:05")) + msg)
 
 	return s.sendMail(s.Host, auth, s.FromAddress, s.RecipientAddresses, mailmsg)
 }
 
 // Flush implementing method. empty.
 func (s *SMTPWriter) Flush() {
-	return
 }
 
 // Destroy implementing method. empty.
 func (s *SMTPWriter) Destroy() {
-	return
 }
 
 func init() {
-	Register("smtp", newSMTPWriter)
+	Register(AdapterMail, newSMTPWriter)
 }

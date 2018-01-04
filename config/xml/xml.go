@@ -12,21 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package xml for config provider
+// Package xml for config provider.
 //
-// depend on github.com/beego/x2j
+// depend on github.com/beego/x2j.
 //
-// go install github.com/beego/x2j
+// go install github.com/beego/x2j.
 //
 // Usage:
-// import(
-//   _ "github.com/astaxie/beego/config/xml"
-//   "github.com/astaxie/beego/config"
-// )
+//  import(
+//    _ "github.com/astaxie/beego/config/xml"
+//      "github.com/astaxie/beego/config"
+//  )
 //
 //  cnf, err := config.NewConfig("xml", "config.xml")
 //
-//  more docs http://beego.me/docs/module/config.md
+//More docs http://beego.me/docs/module/config.md
 package xml
 
 import (
@@ -35,11 +35,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path"
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/astaxie/beego/config"
 	"github.com/beego/x2j"
@@ -52,36 +50,26 @@ type Config struct{}
 
 // Parse returns a ConfigContainer with parsed xml config map.
 func (xc *Config) Parse(filename string) (config.Configer, error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	x := &ConfigContainer{data: make(map[string]interface{})}
-	content, err := ioutil.ReadAll(file)
+	context, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
 
-	d, err := x2j.DocToMap(string(content))
-	if err != nil {
-		return nil, err
-	}
-
-	x.data = d["config"].(map[string]interface{})
-	return x, nil
+	return xc.ParseData(context)
 }
 
 // ParseData xml data
 func (xc *Config) ParseData(data []byte) (config.Configer, error) {
-	// Save memory data to temporary file
-	tmpName := path.Join(os.TempDir(), "beego", fmt.Sprintf("%d", time.Now().Nanosecond()))
-	os.MkdirAll(path.Dir(tmpName), os.ModePerm)
-	if err := ioutil.WriteFile(tmpName, data, 0655); err != nil {
+	x := &ConfigContainer{data: make(map[string]interface{})}
+
+	d, err := x2j.DocToMap(string(data))
+	if err != nil {
 		return nil, err
 	}
-	return xc.Parse(tmpName)
+
+	x.data = config.ExpandValueEnvForMap(d["config"].(map[string]interface{}))
+
+	return x, nil
 }
 
 // ConfigContainer A Config represents the xml configuration.
@@ -92,7 +80,10 @@ type ConfigContainer struct {
 
 // Bool returns the boolean value for a given key.
 func (c *ConfigContainer) Bool(key string) (bool, error) {
-	return strconv.ParseBool(c.data[key].(string))
+	if v := c.data[key]; v != nil {
+		return config.ParseBool(v)
+	}
+	return false, fmt.Errorf("not exist key: %q", key)
 }
 
 // DefaultBool return the bool value if has no error
@@ -171,14 +162,18 @@ func (c *ConfigContainer) DefaultString(key string, defaultval string) string {
 
 // Strings returns the []string value for a given key.
 func (c *ConfigContainer) Strings(key string) []string {
-	return strings.Split(c.String(key), ";")
+	v := c.String(key)
+	if v == "" {
+		return nil
+	}
+	return strings.Split(v, ";")
 }
 
 // DefaultStrings returns the []string value for a given key.
 // if err != nil return defaltval
 func (c *ConfigContainer) DefaultStrings(key string, defaultval []string) []string {
 	v := c.Strings(key)
-	if len(v) == 0 {
+	if v == nil {
 		return defaultval
 	}
 	return v
@@ -186,10 +181,14 @@ func (c *ConfigContainer) DefaultStrings(key string, defaultval []string) []stri
 
 // GetSection returns map for the given section
 func (c *ConfigContainer) GetSection(section string) (map[string]string, error) {
-	if v, ok := c.data[section]; ok {
-		return v.(map[string]string), nil
+	if v, ok := c.data[section].(map[string]interface{}); ok {
+		mapstr := make(map[string]string)
+		for k, val := range v {
+			mapstr[k] = config.ToString(val)
+		}
+		return mapstr, nil
 	}
-	return nil, errors.New("not exist setction")
+	return nil, fmt.Errorf("section '%s' not found", section)
 }
 
 // SaveConfigFile save the config into file
