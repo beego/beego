@@ -80,7 +80,6 @@ var (
 	ErrArgs          = errors.New("<Ormer> args error may be empty")
 	ErrNotImplement  = errors.New("have not implement")
 	ErrHook          = errors.New("<Ormer.hook> invalid")
-	ErrHookExist     = errors.New("<Ormer.hook> already exist")
 )
 
 // Params stores the Params
@@ -95,7 +94,7 @@ type orm struct {
 	isTx         bool
 	beforeInsert map[string]HookFunc
 	afterInsert  map[string]HookFunc
-	beforeUpdate map[string]HookFunc
+	beforeUpdate map[string]HookFunc // can not add or delete update cols
 	afterUpdate  map[string]HookFunc
 	beforeDelete map[string]HookFunc
 	afterDelete  map[string]HookFunc
@@ -123,7 +122,7 @@ func (o *orm) BeforeInsert(ptrStructOrTableName interface{}, hookFunc HookFunc) 
 		}
 	}
 	if _, ok := o.beforeInsert[name]; ok {
-		panic(ErrHookExist)
+		panic(fmt.Errorf("<Ormer.hook> hook BeforeInsert: `%s` already exist, make sure it was not called more than once for one table", name))
 	} else {
 		o.beforeInsert[name] = hookFunc
 	}
@@ -149,7 +148,7 @@ func (o *orm) AfterInsert(ptrStructOrTableName interface{}, hookFunc HookFunc) {
 		}
 	}
 	if _, ok := o.afterInsert[name]; ok {
-		panic(ErrHookExist)
+		panic(fmt.Errorf("<Ormer.hook> hook AfterInsert: `%s` already exist, make sure it was not called more than once for one table", name))
 	} else {
 		o.afterInsert[name] = hookFunc
 	}
@@ -175,7 +174,7 @@ func (o *orm) BeforeUpdate(ptrStructOrTableName interface{}, hookFunc HookFunc) 
 		}
 	}
 	if _, ok := o.beforeUpdate[name]; ok {
-		panic(ErrHookExist)
+		panic(fmt.Errorf("<Ormer.hook> hook BeforeUpdate: `%s` already exist, make sure it was not called more than once for one table", name))
 	} else {
 		o.beforeUpdate[name] = hookFunc
 	}
@@ -201,7 +200,7 @@ func (o *orm) AfterUpdate(ptrStructOrTableName interface{}, hookFunc HookFunc) {
 		}
 	}
 	if _, ok := o.afterUpdate[name]; ok {
-		panic(ErrHookExist)
+		panic(fmt.Errorf("<Ormer.hook> hook AfterUpdate: `%s` already exist, make sure it was not called more than once for one table", name))
 	} else {
 		o.afterUpdate[name] = hookFunc
 	}
@@ -227,7 +226,7 @@ func (o *orm) BeforeDelete(ptrStructOrTableName interface{}, hookFunc HookFunc) 
 		}
 	}
 	if _, ok := o.beforeDelete[name]; ok {
-		panic(ErrHookExist)
+		panic(fmt.Errorf("<Ormer.hook> hook BeforeDelete: `%s` already exist, make sure it was not called more than once for one table", name))
 	} else {
 		o.beforeDelete[name] = hookFunc
 	}
@@ -253,7 +252,7 @@ func (o *orm) AfterDelete(ptrStructOrTableName interface{}, hookFunc HookFunc) {
 		}
 	}
 	if _, ok := o.afterDelete[name]; ok {
-		panic(ErrHookExist)
+		panic(fmt.Errorf("<Ormer.hook> hook AfterDelete: `%s` already exist, make sure it was not called more than once for one table", name))
 	} else {
 		o.afterDelete[name] = hookFunc
 	}
@@ -322,25 +321,23 @@ func (o *orm) ReadOrCreate(md interface{}, col1 string, cols ...string) (bool, i
 
 // insert model data to database
 func (o *orm) Insert(md interface{}) (int64, error) {
-	name := getFullName(indirectType(reflect.TypeOf(md)))
+	mi, ind := o.getMiInd(md, true)
+	name := mi.fullName
 	if hookFunc, ok := o.beforeInsert[name]; ok {
 		hookErr := hookFunc(md)
 		if hookErr != nil {
 			return 0, hookErr
 		}
 	}
-	mi, ind := o.getMiInd(md, true)
 	id, err := o.alias.DbBaser.Insert(o.db, mi, ind, o.alias.TZ)
 	if err != nil {
 		return id, err
 	}
-
 	o.setPk(mi, ind, id)
 	if hookFunc, ok := o.afterInsert[name]; ok {
-		hookErr := hookFunc(md)
-		if hookErr != nil {
-			return 0, hookErr
-		}
+		go func(md interface{}) {
+			hookFunc(md)
+		}(md)
 	}
 	return id, nil
 }
@@ -408,19 +405,47 @@ func (o *orm) InsertOrUpdate(md interface{}, colConflitAndArgs ...string) (int64
 // cols set the columns those want to update.
 func (o *orm) Update(md interface{}, cols ...string) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
-	return o.alias.DbBaser.Update(o.db, mi, ind, o.alias.TZ, cols)
+	name := mi.fullName
+	if hookFunc, ok := o.beforeUpdate[name]; ok {
+		hookErr := hookFunc(md, cols...)
+		if hookErr != nil {
+			return 0, hookErr
+		}
+	}
+	num, err := o.alias.DbBaser.Update(o.db, mi, ind, o.alias.TZ, cols)
+	if err != nil {
+		return num, err
+	}
+	if hookFunc, ok := o.afterUpdate[name]; ok {
+		go func(md interface{}, cols ...string) {
+			hookFunc(md, cols...)
+		}(md, cols...)
+	}
+	return num, err
 }
 
 // delete model in database
 // cols shows the delete conditions values read from. default is pk
 func (o *orm) Delete(md interface{}, cols ...string) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
+	name := mi.fullName
+	if hookFunc, ok := o.beforeDelete[name]; ok {
+		hookErr := hookFunc(md, cols...)
+		if hookErr != nil {
+			return 0, hookErr
+		}
+	}
 	num, err := o.alias.DbBaser.Delete(o.db, mi, ind, o.alias.TZ, cols)
 	if err != nil {
 		return num, err
 	}
 	if num > 0 {
 		o.setPk(mi, ind, 0)
+	}
+	if hookFunc, ok := o.afterDelete[name]; ok {
+		go func(md interface{}, cols ...string) {
+			hookFunc(md, cols...)
+		}(md, cols...)
 	}
 	return num, nil
 }
