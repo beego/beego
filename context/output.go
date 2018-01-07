@@ -325,13 +325,13 @@ func (output *BeegoOutput) IsForbidden() bool {
 }
 
 // IsNotFound returns boolean of this request is not found.
-// HTTP 404 means forbidden.
+// HTTP 404 means not found.
 func (output *BeegoOutput) IsNotFound() bool {
 	return output.Status == 404
 }
 
 // IsClientError returns boolean of this request client sends error data.
-// HTTP 4xx means forbidden.
+// HTTP 4xx means client error.
 func (output *BeegoOutput) IsClientError() bool {
 	return output.Status >= 400 && output.Status < 500
 }
