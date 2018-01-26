@@ -245,7 +245,17 @@ func (v *Validation) ZipCode(obj interface{}, key string) *Result {
 }
 
 func (v *Validation) apply(chk Validator, obj interface{}) *Result {
-	if chk.IsSatisfied(obj) {
+	if reflect.TypeOf(obj).Kind() == reflect.Ptr {
+		if reflect.ValueOf(obj).IsNil() {
+			if "Required" != chk.GetKey() {
+				return &Result{Ok: true}
+			}
+		} else {
+			if chk.IsSatisfied(reflect.ValueOf(obj).Elem().Interface()) {
+				return &Result{Ok: true}
+			}
+		}
+	} else if chk.IsSatisfied(obj) {
 		return &Result{Ok: true}
 	}
 
