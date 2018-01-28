@@ -442,3 +442,56 @@ func TestSkipValid(t *testing.T) {
 		t.Fatal("validation should be passed")
 	}
 }
+
+func TestPointer(t *testing.T) {
+	type User struct {
+		ID int
+
+		Email    *string `valid:"Email"`
+		ReqEmail *string `valid:"Required;Email"`
+	}
+
+	u := User{
+		ReqEmail: nil,
+		Email:	  nil,
+	}
+
+	valid := Validation{}
+	b, err := valid.Valid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b {
+		t.Fatal("validation should not be passed")
+	}
+
+	validEmail := "a@a.com"
+	u = User{
+		ReqEmail: &validEmail,
+		Email:	  nil,
+	}
+
+	valid = Validation{RequiredFirst: true}
+	b, err = valid.Valid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !b {
+		t.Fatal("validation should be passed")
+	}
+
+	invalidEmail := "a@a"
+	u = User{
+		ReqEmail: &validEmail,
+		Email:	  &invalidEmail,
+	}
+
+	valid = Validation{}
+	b, err = valid.Valid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b {
+		t.Fatal("validation should not be passed")
+	}
+}
