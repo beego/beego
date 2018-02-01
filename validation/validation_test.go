@@ -480,7 +480,35 @@ func TestPointer(t *testing.T) {
 		t.Fatal("validation should be passed")
 	}
 
+	u = User{
+		ReqEmail: &validEmail,
+		Email:	  nil,
+	}
+
+	valid = Validation{}
+	b, err = valid.Valid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !b {
+		t.Fatal("validation should be passed")
+	}
+
 	invalidEmail := "a@a"
+	u = User{
+		ReqEmail: &validEmail,
+		Email:	  &invalidEmail,
+	}
+
+	valid = Validation{RequiredFirst: true}
+	b, err = valid.Valid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b {
+		t.Fatal("validation should not be passed")
+	}
+
 	u = User{
 		ReqEmail: &validEmail,
 		Email:	  &invalidEmail,
