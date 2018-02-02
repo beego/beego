@@ -245,14 +245,13 @@ func (v *Validation) ZipCode(obj interface{}, key string) *Result {
 }
 
 func (v *Validation) apply(chk Validator, obj interface{}) *Result {
-	validatorName := reflect.TypeOf(chk).Name()
 	if nil == obj {
 		if chk.IsSatisfied(obj) {
 			return &Result{Ok: true}
 		}
 	} else if reflect.TypeOf(obj).Kind() == reflect.Ptr {
 		if reflect.ValueOf(obj).IsNil() {
-			if "Required" != validatorName {
+			if chk.IsSatisfied(nil) {
 				return &Result{Ok: true}
 			}
 		} else {
@@ -372,7 +371,18 @@ func (v *Validation) Valid(obj interface{}) (b bool, err error) {
 				hasReuired = true
 			}
 
-			if !hasReuired && v.RequiredFirst && len(objV.Field(i).String()) == 0 {
+			currentField := objV.Field(i).Interface()
+			if objV.Field(i).Kind() == reflect.Ptr {
+				if objV.Field(i).IsNil() {
+					currentField = ""
+				} else {
+					currentField = objV.Field(i).Elem().Interface()
+				}
+			}
+
+
+			chk := Required{""}.IsSatisfied(currentField)
+			if !hasReuired && v.RequiredFirst && !chk {
 				if _, ok := CanSkipFuncs[vf.Name]; ok {
 					continue
 				}
@@ -428,4 +438,10 @@ func (v *Validation) RecursiveValid(objc interface{}) (bool, error) {
 		}
 	}
 	return pass, err
+}
+
+func (v *Validation) CanSkipAlso(skipFunc string) {
+	if _, ok := CanSkipFuncs[skipFunc]; !ok {
+		CanSkipFuncs[skipFunc] = struct{}{}
+	}
 }

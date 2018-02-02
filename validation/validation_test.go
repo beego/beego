@@ -490,8 +490,8 @@ func TestPointer(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !b {
-		t.Fatal("validation should be passed")
+	if b {
+		t.Fatal("validation should not be passed")
 	}
 
 	invalidEmail := "a@a"
@@ -523,3 +523,41 @@ func TestPointer(t *testing.T) {
 		t.Fatal("validation should not be passed")
 	}
 }
+
+
+func TestCanSkipAlso(t *testing.T) {
+	type User struct {
+		ID int
+
+		Email    	string `valid:"Email"`
+		ReqEmail 	string `valid:"Required;Email"`
+		MatchRange	int 	`valid:"Range(10, 20)"`
+	}
+
+	u := User{
+		ReqEmail: 	"a@a.com",
+		Email:    	"",
+		MatchRange: 0,
+	}
+
+	valid := Validation{RequiredFirst: true}
+	b, err := valid.Valid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b {
+		t.Fatal("validation should not be passed")
+	}
+
+	valid = Validation{RequiredFirst: true}
+	valid.CanSkipAlso("Range")
+	b, err = valid.Valid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !b {
+		t.Fatal("validation should be passed")
+	}
+
+}
+
