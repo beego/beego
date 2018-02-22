@@ -98,9 +98,9 @@ type SessionConfig struct {
 	SessionAutoSetCookie         bool
 	SessionDomain                string
 	SessionDisableHTTPOnly       bool // used to allow for cross domain cookies/javascript cookies.
-	SessionEnableSidInHTTPHeader bool //	enable store/get the sessionId into/from http headers
+	SessionEnableSidInHTTPHeader bool // enable store/get the sessionId into/from http headers
 	SessionNameInHTTPHeader      string
-	SessionEnableSidInURLQuery   bool //	enable get the sessionId from Url Query params
+	SessionEnableSidInURLQuery   bool // enable get the sessionId from Url Query params
 }
 
 // LogConfig holds Log related config
@@ -138,8 +138,8 @@ func init() {
 		panic(err)
 	}
 	var filename = "app.conf"
-	if os.Getenv("BEEGO_MODE") != "" {
-		filename = os.Getenv("BEEGO_MODE") + ".app.conf"
+	if os.Getenv("BEEGO_RUNMODE") != "" {
+		filename = os.Getenv("BEEGO_RUNMODE") + ".app.conf"
 	}
 	appConfigPath = filepath.Join(workPath, "conf", filename)
 	if !utils.FileExists(appConfigPath) {
@@ -240,9 +240,9 @@ func newBConfig() *Config {
 				SessionCookieLifeTime:        0, //set cookie default is the browser life
 				SessionAutoSetCookie:         true,
 				SessionDomain:                "",
-				SessionEnableSidInHTTPHeader: false, //	enable store/get the sessionId into/from http headers
+				SessionEnableSidInHTTPHeader: false, // enable store/get the sessionId into/from http headers
 				SessionNameInHTTPHeader:      "Beegosessionid",
-				SessionEnableSidInURLQuery:   false, //	enable get the sessionId from Url Query params
+				SessionEnableSidInURLQuery:   false, // enable get the sessionId from Url Query params
 			},
 		},
 		Log: LogConfig{
