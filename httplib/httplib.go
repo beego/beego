@@ -320,7 +320,7 @@ func (b *BeegoHTTPRequest) Body(data interface{}) *BeegoHTTPRequest {
 
 // JSONBody adds request raw body encoding by JSON.
 func (b *BeegoHTTPRequest) JSONBody(obj interface{}) (*BeegoHTTPRequest, error) {
-	if b.req.Body == nil && obj != nil {
+	if obj != nil {
 		byts, err := json.Marshal(obj)
 		if err != nil {
 			return b, err
