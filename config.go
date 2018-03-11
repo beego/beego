@@ -188,7 +188,7 @@ func recoverPanic(ctx *context.Context) {
 func newBConfig() *Config {
 	return &Config{
 		AppName:             "beego",
-		RunMode:             DEV,
+		RunMode:             PROD,
 		RouterCaseSensitive: true,
 		ServerName:          "beegoServer:" + VERSION,
 		RecoverPanic:        true,
