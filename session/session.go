@@ -30,10 +30,14 @@ package session
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"encoding/json"
+	"errors"
 	"fmt"
+	"io"
+	"log"
 	"net/http"
+	"net/textproto"
 	"net/url"
+	"os"
 	"time"
 )
 
@@ -61,6 +65,9 @@ type Provider interface {
 
 var provides = make(map[string]Provider)
 
+// SLogger a helpful variable to log information about session
+var SLogger = NewSessionLog(os.Stderr)
+
 // Register makes a session provide available by the provided name.
 // If Register is called twice with the same name or if driver is nil,
 // it panics.
@@ -74,22 +81,27 @@ func Register(name string, provide Provider) {
 	provides[name] = provide
 }
 
-type managerConfig struct {
-	CookieName      string `json:"cookieName"`
-	EnableSetCookie bool   `json:"enableSetCookie,omitempty"`
-	Gclifetime      int64  `json:"gclifetime"`
-	Maxlifetime     int64  `json:"maxLifetime"`
-	Secure          bool   `json:"secure"`
-	CookieLifeTime  int    `json:"cookieLifeTime"`
-	ProviderConfig  string `json:"providerConfig"`
-	Domain          string `json:"domain"`
-	SessionIDLength int64  `json:"sessionIDLength"`
+// ManagerConfig define the session config
+type ManagerConfig struct {
+	CookieName              string `json:"cookieName"`
+	EnableSetCookie         bool   `json:"enableSetCookie,omitempty"`
+	Gclifetime              int64  `json:"gclifetime"`
+	Maxlifetime             int64  `json:"maxLifetime"`
+	DisableHTTPOnly         bool   `json:"disableHTTPOnly"`
+	Secure                  bool   `json:"secure"`
+	CookieLifeTime          int    `json:"cookieLifeTime"`
+	ProviderConfig          string `json:"providerConfig"`
+	Domain                  string `json:"domain"`
+	SessionIDLength         int64  `json:"sessionIDLength"`
+	EnableSidInHTTPHeader   bool   `json:"EnableSidInHTTPHeader"`
+	SessionNameInHTTPHeader string `json:"SessionNameInHTTPHeader"`
+	EnableSidInURLQuery     bool   `json:"EnableSidInURLQuery"`
 }
 
 // Manager contains Provider and its configuration.
 type Manager struct {
 	provider Provider
-	config   *managerConfig
+	config   *ManagerConfig
 }
 
 // NewManager Create new Manager with provider name and json config string.
@@ -104,21 +116,29 @@ type Manager struct {
 // 2. hashfunc  default sha1
 // 3. hashkey default beegosessionkey
 // 4. maxage default is none
-func NewManager(provideName, config string) (*Manager, error) {
+func NewManager(provideName string, cf *ManagerConfig) (*Manager, error) {
 	provider, ok := provides[provideName]
 	if !ok {
 		return nil, fmt.Errorf("session: unknown provide %q (forgotten import?)", provideName)
 	}
-	cf := new(managerConfig)
-	cf.EnableSetCookie = true
-	err := json.Unmarshal([]byte(config), cf)
-	if err != nil {
-		return nil, err
-	}
+
 	if cf.Maxlifetime == 0 {
 		cf.Maxlifetime = cf.Gclifetime
 	}
-	err = provider.SessionInit(cf.Maxlifetime, cf.ProviderConfig)
+
+	if cf.EnableSidInHTTPHeader {
+		if cf.SessionNameInHTTPHeader == "" {
+			panic(errors.New("SessionNameInHTTPHeader is empty"))
+		}
+
+		strMimeHeader := textproto.CanonicalMIMEHeaderKey(cf.SessionNameInHTTPHeader)
+		if cf.SessionNameInHTTPHeader != strMimeHeader {
+			strErrMsg := "SessionNameInHTTPHeader (" + cf.SessionNameInHTTPHeader + ") has the wrong format, it should be like this : " + strMimeHeader
+			panic(errors.New(strErrMsg))
+		}
+	}
+
+	err := provider.SessionInit(cf.Maxlifetime, cf.ProviderConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -142,13 +162,25 @@ func NewManager(provideName, config string) (*Manager, error) {
 // otherwise return an valid session id.
 func (manager *Manager) getSid(r *http.Request) (string, error) {
 	cookie, errs := r.Cookie(manager.config.CookieName)
-	if errs != nil || cookie.Value == "" || cookie.MaxAge < 0 {
-		errs := r.ParseForm()
-		if errs != nil {
-			return "", errs
+	if errs != nil || cookie.Value == "" {
+		var sid string
+		if manager.config.EnableSidInURLQuery {
+			errs := r.ParseForm()
+			if errs != nil {
+				return "", errs
+			}
+
+			sid = r.FormValue(manager.config.CookieName)
 		}
 
-		sid := r.FormValue(manager.config.CookieName)
+		// if not found in Cookie / param, then read it from request headers
+		if manager.config.EnableSidInHTTPHeader && sid == "" {
+			sids, isFound := r.Header[manager.config.SessionNameInHTTPHeader]
+			if isFound && len(sids) != 0 {
+				return sids[0], nil
+			}
+		}
+
 		return sid, nil
 	}
 
@@ -175,11 +207,14 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 	}
 
 	session, err = manager.provider.SessionRead(sid)
+	if err != nil {
+		return nil, err
+	}
 	cookie := &http.Cookie{
 		Name:     manager.config.CookieName,
 		Value:    url.QueryEscape(sid),
 		Path:     "/",
-		HttpOnly: true,
+		HttpOnly: !manager.config.DisableHTTPOnly,
 		Secure:   manager.isSecure(r),
 		Domain:   manager.config.Domain,
 	}
@@ -192,21 +227,33 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 	}
 	r.AddCookie(cookie)
 
+	if manager.config.EnableSidInHTTPHeader {
+		r.Header.Set(manager.config.SessionNameInHTTPHeader, sid)
+		w.Header().Set(manager.config.SessionNameInHTTPHeader, sid)
+	}
+
 	return
 }
 
 // SessionDestroy Destroy session by its id in http request cookie.
 func (manager *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
+	if manager.config.EnableSidInHTTPHeader {
+		r.Header.Del(manager.config.SessionNameInHTTPHeader)
+		w.Header().Del(manager.config.SessionNameInHTTPHeader)
+	}
+
 	cookie, err := r.Cookie(manager.config.CookieName)
 	if err != nil || cookie.Value == "" {
 		return
 	}
-	manager.provider.SessionDestroy(cookie.Value)
+
+	sid, _ := url.QueryUnescape(cookie.Value)
+	manager.provider.SessionDestroy(sid)
 	if manager.config.EnableSetCookie {
 		expiration := time.Now()
 		cookie = &http.Cookie{Name: manager.config.CookieName,
 			Path:     "/",
-			HttpOnly: true,
+			HttpOnly: !manager.config.DisableHTTPOnly,
 			Expires:  expiration,
 			MaxAge:   -1}
 
@@ -240,7 +287,7 @@ func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Reque
 		cookie = &http.Cookie{Name: manager.config.CookieName,
 			Value:    url.QueryEscape(sid),
 			Path:     "/",
-			HttpOnly: true,
+			HttpOnly: !manager.config.DisableHTTPOnly,
 			Secure:   manager.isSecure(r),
 			Domain:   manager.config.Domain,
 		}
@@ -259,6 +306,12 @@ func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Reque
 		http.SetCookie(w, cookie)
 	}
 	r.AddCookie(cookie)
+
+	if manager.config.EnableSidInHTTPHeader {
+		r.Header.Set(manager.config.SessionNameInHTTPHeader, sid)
+		w.Header().Set(manager.config.SessionNameInHTTPHeader, sid)
+	}
+
 	return
 }
 
@@ -276,7 +329,7 @@ func (manager *Manager) sessionID() (string, error) {
 	b := make([]byte, manager.config.SessionIDLength)
 	n, err := rand.Read(b)
 	if n != len(b) || err != nil {
-		return "", fmt.Errorf("Could not successfully read from the system CSPRNG.")
+		return "", fmt.Errorf("Could not successfully read from the system CSPRNG")
 	}
 	return hex.EncodeToString(b), nil
 }
@@ -293,4 +346,16 @@ func (manager *Manager) isSecure(req *http.Request) bool {
 		return false
 	}
 	return true
+}
+
+// Log implement the log.Logger
+type Log struct {
+	*log.Logger
+}
+
+// NewSessionLog set io.Writer to create a Logger for session.
+func NewSessionLog(out io.Writer) *Log {
+	sl := new(Log)
+	sl.Logger = log.New(out, "[SESSION]", 1e9)
+	return sl
 }

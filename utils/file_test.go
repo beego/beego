@@ -41,7 +41,7 @@ func TestFileExists(t *testing.T) {
 	}
 
 	if FileExists(noExistedFile) {
-		t.Errorf("Wierd, how could this file exists: %s", noExistedFile)
+		t.Errorf("Weird, how could this file exists: %s", noExistedFile)
 	}
 }
 
@@ -52,9 +52,9 @@ func TestSearchFile(t *testing.T) {
 	}
 	t.Log(path)
 
-	path, err = SearchFile(noExistedFile, ".")
+	_, err = SearchFile(noExistedFile, ".")
 	if err == nil {
-		t.Errorf("err shouldnot be nil, got path: %s", SelfDir())
+		t.Errorf("err shouldnt be nil, got path: %s", SelfDir())
 	}
 }
 

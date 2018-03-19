@@ -17,11 +17,34 @@ package logs
 import (
 	"bufio"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strconv"
 	"testing"
 	"time"
 )
+
+func TestFilePerm(t *testing.T) {
+	log := NewLogger(10000)
+	// use 0666 as test perm cause the default umask is 022
+	log.SetLogger("file", `{"filename":"test.log", "perm": "0666"}`)
+	log.Debug("debug")
+	log.Informational("info")
+	log.Notice("notice")
+	log.Warning("warning")
+	log.Error("error")
+	log.Alert("alert")
+	log.Critical("critical")
+	log.Emergency("emergency")
+	file, err := os.Stat("test.log")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if file.Mode() != 0666 {
+		t.Fatal("unexpected log file permission")
+	}
+	os.Remove("test.log")
+}
 
 func TestFile1(t *testing.T) {
 	log := NewLogger(10000)
@@ -89,7 +112,7 @@ func TestFile2(t *testing.T) {
 	os.Remove("test2.log")
 }
 
-func TestFileRotate(t *testing.T) {
+func TestFileRotate_01(t *testing.T) {
 	log := NewLogger(10000)
 	log.SetLogger("file", `{"filename":"test3.log","maxlines":4}`)
 	log.Debug("debug")
@@ -108,6 +131,112 @@ func TestFileRotate(t *testing.T) {
 	}
 	os.Remove(rotateName)
 	os.Remove("test3.log")
+}
+
+func TestFileRotate_02(t *testing.T) {
+	fn1 := "rotate_day.log"
+	fn2 := "rotate_day." + time.Now().Add(-24*time.Hour).Format("2006-01-02") + ".log"
+	testFileRotate(t, fn1, fn2)
+}
+
+func TestFileRotate_03(t *testing.T) {
+	fn1 := "rotate_day.log"
+	fn := "rotate_day." + time.Now().Add(-24*time.Hour).Format("2006-01-02") + ".log"
+	os.Create(fn)
+	fn2 := "rotate_day." + time.Now().Add(-24*time.Hour).Format("2006-01-02") + ".001.log"
+	testFileRotate(t, fn1, fn2)
+	os.Remove(fn)
+}
+
+func TestFileRotate_04(t *testing.T) {
+	fn1 := "rotate_day.log"
+	fn2 := "rotate_day." + time.Now().Add(-24*time.Hour).Format("2006-01-02") + ".log"
+	testFileDailyRotate(t, fn1, fn2)
+}
+
+func TestFileRotate_05(t *testing.T) {
+	fn1 := "rotate_day.log"
+	fn := "rotate_day." + time.Now().Add(-24*time.Hour).Format("2006-01-02") + ".log"
+	os.Create(fn)
+	fn2 := "rotate_day." + time.Now().Add(-24*time.Hour).Format("2006-01-02") + ".001.log"
+	testFileDailyRotate(t, fn1, fn2)
+	os.Remove(fn)
+}
+func TestFileRotate_06(t *testing.T) { //test file mode
+	log := NewLogger(10000)
+	log.SetLogger("file", `{"filename":"test3.log","maxlines":4}`)
+	log.Debug("debug")
+	log.Info("info")
+	log.Notice("notice")
+	log.Warning("warning")
+	log.Error("error")
+	log.Alert("alert")
+	log.Critical("critical")
+	log.Emergency("emergency")
+	rotateName := "test3" + fmt.Sprintf(".%s.%03d", time.Now().Format("2006-01-02"), 1) + ".log"
+	s, _ := os.Lstat(rotateName)
+	if s.Mode() != 0440 {
+		os.Remove(rotateName)
+		os.Remove("test3.log")
+		t.Fatal("rotate file mode error")
+	}
+	os.Remove(rotateName)
+	os.Remove("test3.log")
+}
+func testFileRotate(t *testing.T, fn1, fn2 string) {
+	fw := &fileLogWriter{
+		Daily:      true,
+		MaxDays:    7,
+		Rotate:     true,
+		Level:      LevelTrace,
+		Perm:       "0660",
+		RotatePerm: "0440",
+	}
+	fw.Init(fmt.Sprintf(`{"filename":"%v","maxdays":1}`, fn1))
+	fw.dailyOpenTime = time.Now().Add(-24 * time.Hour)
+	fw.dailyOpenDate = fw.dailyOpenTime.Day()
+	fw.WriteMsg(time.Now(), "this is a msg for test", LevelDebug)
+
+	for _, file := range []string{fn1, fn2} {
+		_, err := os.Stat(file)
+		if err != nil {
+			t.FailNow()
+		}
+		os.Remove(file)
+	}
+	fw.Destroy()
+}
+
+func testFileDailyRotate(t *testing.T, fn1, fn2 string) {
+	fw := &fileLogWriter{
+		Daily:      true,
+		MaxDays:    7,
+		Rotate:     true,
+		Level:      LevelTrace,
+		Perm:       "0660",
+		RotatePerm: "0440",
+	}
+	fw.Init(fmt.Sprintf(`{"filename":"%v","maxdays":1}`, fn1))
+	fw.dailyOpenTime = time.Now().Add(-24 * time.Hour)
+	fw.dailyOpenDate = fw.dailyOpenTime.Day()
+	today, _ := time.ParseInLocation("2006-01-02", time.Now().Format("2006-01-02"), fw.dailyOpenTime.Location())
+	today = today.Add(-1 * time.Second)
+	fw.dailyRotate(today)
+	for _, file := range []string{fn1, fn2} {
+		_, err := os.Stat(file)
+		if err != nil {
+			t.FailNow()
+		}
+		content, err := ioutil.ReadFile(file)
+		if err != nil {
+			t.FailNow()
+		}
+		if len(content) > 0 {
+			t.FailNow()
+		}
+		os.Remove(file)
+	}
+	fw.Destroy()
 }
 
 func exists(path string) (bool, error) {

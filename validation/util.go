@@ -25,6 +25,8 @@ import (
 const (
 	// ValidTag struct tag
 	ValidTag = "valid"
+
+	wordsize = 32 << (^uint(0) >> 32 & 1)
 )
 
 var (
@@ -43,6 +45,8 @@ var (
 		"Valid":     true,
 		"NoMatch":   true,
 	}
+	// ErrInt64On32 show 32 bit platform not support int64
+	ErrInt64On32 = fmt.Errorf("not support int64 on 32-bit platform")
 )
 
 func init() {
@@ -249,16 +253,39 @@ func parseParam(t reflect.Type, s string) (i interface{}, err error) {
 	switch t.Kind() {
 	case reflect.Int:
 		i, err = strconv.Atoi(s)
+	case reflect.Int64:
+		if wordsize == 32 {
+			return nil, ErrInt64On32
+		}
+		i, err = strconv.ParseInt(s, 10, 64)
+	case reflect.Int32:
+		var v int64
+		v, err = strconv.ParseInt(s, 10, 32)
+		if err == nil {
+			i = int32(v)
+		}
+	case reflect.Int16:
+		var v int64
+		v, err = strconv.ParseInt(s, 10, 16)
+		if err == nil {
+			i = int16(v)
+		}
+	case reflect.Int8:
+		var v int64
+		v, err = strconv.ParseInt(s, 10, 8)
+		if err == nil {
+			i = int8(v)
+		}
 	case reflect.String:
 		i = s
 	case reflect.Ptr:
 		if t.Elem().String() != "regexp.Regexp" {
-			err = fmt.Errorf("does not support %s", t.Elem().String())
+			err = fmt.Errorf("not support %s", t.Elem().String())
 			return
 		}
 		i, err = regexp.Compile(s)
 	default:
-		err = fmt.Errorf("does not support %s", t.Kind().String())
+		err = fmt.Errorf("not support %s", t.Kind().String())
 	}
 	return
 }

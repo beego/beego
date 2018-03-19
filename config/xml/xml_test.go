@@ -15,14 +15,18 @@
 package xml
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
 	"github.com/astaxie/beego/config"
 )
 
-//xml parse should incluce in <config></config> tags
-var xmlcontext = `<?xml version="1.0" encoding="UTF-8"?>
+func TestXML(t *testing.T) {
+
+	var (
+		//xml parse should incluce in <config></config> tags
+		xmlcontext = `<?xml version="1.0" encoding="UTF-8"?>
 <config>
 <appname>beeapi</appname>
 <httpport>8080</httpport>
@@ -31,10 +35,29 @@ var xmlcontext = `<?xml version="1.0" encoding="UTF-8"?>
 <runmode>dev</runmode>
 <autorender>false</autorender>
 <copyrequestbody>true</copyrequestbody>
+<path1>${GOPATH}</path1>
+<path2>${GOPATH||/home/go}</path2>
+<mysection>
+<id>1</id>
+<name>MySection</name>
+</mysection>
 </config>
 `
+		keyValue = map[string]interface{}{
+			"appname":         "beeapi",
+			"httpport":        8080,
+			"mysqlport":       int64(3600),
+			"PI":              3.1415976,
+			"runmode":         "dev",
+			"autorender":      false,
+			"copyrequestbody": true,
+			"path1":           os.Getenv("GOPATH"),
+			"path2":           os.Getenv("GOPATH"),
+			"error":           "",
+			"emptystrings":    []string{},
+		}
+	)
 
-func TestXML(t *testing.T) {
 	f, err := os.Create("testxml.conf")
 	if err != nil {
 		t.Fatal(err)
@@ -46,36 +69,53 @@ func TestXML(t *testing.T) {
 	}
 	f.Close()
 	defer os.Remove("testxml.conf")
+
 	xmlconf, err := config.NewConfig("xml", "testxml.conf")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if xmlconf.String("appname") != "beeapi" {
-		t.Fatal("appname not equal to beeapi")
-	}
-	if port, err := xmlconf.Int("httpport"); err != nil || port != 8080 {
-		t.Error(port)
+
+	var xmlsection map[string]string
+	xmlsection, err = xmlconf.GetSection("mysection")
+	if err != nil {
 		t.Fatal(err)
 	}
-	if port, err := xmlconf.Int64("mysqlport"); err != nil || port != 3600 {
-		t.Error(port)
-		t.Fatal(err)
+
+	if len(xmlsection) == 0 {
+		t.Error("section should not be empty")
 	}
-	if pi, err := xmlconf.Float("PI"); err != nil || pi != 3.1415976 {
-		t.Error(pi)
-		t.Fatal(err)
+
+	for k, v := range keyValue {
+
+		var (
+			value interface{}
+			err   error
+		)
+
+		switch v.(type) {
+		case int:
+			value, err = xmlconf.Int(k)
+		case int64:
+			value, err = xmlconf.Int64(k)
+		case float64:
+			value, err = xmlconf.Float(k)
+		case bool:
+			value, err = xmlconf.Bool(k)
+		case []string:
+			value = xmlconf.Strings(k)
+		case string:
+			value = xmlconf.String(k)
+		default:
+			value, err = xmlconf.DIY(k)
+		}
+		if err != nil {
+			t.Errorf("get key %q value fatal,%v err %s", k, v, err)
+		} else if fmt.Sprintf("%v", v) != fmt.Sprintf("%v", value) {
+			t.Errorf("get key %q value, want %v got %v .", k, v, value)
+		}
+
 	}
-	if xmlconf.String("runmode") != "dev" {
-		t.Fatal("runmode not equal to dev")
-	}
-	if v, err := xmlconf.Bool("autorender"); err != nil || v != false {
-		t.Error(v)
-		t.Fatal(err)
-	}
-	if v, err := xmlconf.Bool("copyrequestbody"); err != nil || v != true {
-		t.Error(v)
-		t.Fatal(err)
-	}
+
 	if err = xmlconf.Set("name", "astaxie"); err != nil {
 		t.Fatal(err)
 	}

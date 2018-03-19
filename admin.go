@@ -23,7 +23,10 @@ import (
 	"text/template"
 	"time"
 
+	"reflect"
+
 	"github.com/astaxie/beego/grace"
+	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/toolbox"
 	"github.com/astaxie/beego/utils"
 )
@@ -34,7 +37,7 @@ var beeAdminApp *adminApp
 // FilterMonitorFunc is default monitor filter when admin module is enable.
 // if this func returns, admin module records qbs for this request by condition of this function logic.
 // usage:
-// 	func MyFilterMonitor(method, requestPath string, t time.Duration) bool {
+// 	func MyFilterMonitor(method, requestPath string, t time.Duration, pattern string, statusCode int) bool {
 //	 	if method == "POST" {
 //			return false
 //	 	}
@@ -47,7 +50,7 @@ var beeAdminApp *adminApp
 //	 	return true
 // 	}
 // 	beego.FilterMonitorFunc = MyFilterMonitor.
-var FilterMonitorFunc func(string, string, time.Duration) bool
+var FilterMonitorFunc func(string, string, time.Duration, string, int) bool
 
 func init() {
 	beeAdminApp = &adminApp{
@@ -59,7 +62,7 @@ func init() {
 	beeAdminApp.Route("/healthcheck", healthcheck)
 	beeAdminApp.Route("/task", taskStatus)
 	beeAdminApp.Route("/listconf", listConf)
-	FilterMonitorFunc = func(string, string, time.Duration) bool { return true }
+	FilterMonitorFunc = func(string, string, time.Duration, string, int) bool { return true }
 }
 
 // AdminIndex is the default http.Handler for admin module.
@@ -90,57 +93,9 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 	switch command {
 	case "conf":
 		m := make(map[string]interface{})
-		m["AppConfigPath"] = AppConfigPath
-		m["AppConfigProvider"] = AppConfigProvider
-		m["BConfig.AppName"] = BConfig.AppName
-		m["BConfig.RunMode"] = BConfig.RunMode
-		m["BConfig.RouterCaseSensitive"] = BConfig.RouterCaseSensitive
-		m["BConfig.ServerName"] = BConfig.ServerName
-		m["BConfig.RecoverPanic"] = BConfig.RecoverPanic
-		m["BConfig.CopyRequestBody"] = BConfig.CopyRequestBody
-		m["BConfig.EnableGzip"] = BConfig.EnableGzip
-		m["BConfig.MaxMemory"] = BConfig.MaxMemory
-		m["BConfig.EnableErrorsShow"] = BConfig.EnableErrorsShow
-		m["BConfig.Listen.Graceful"] = BConfig.Listen.Graceful
-		m["BConfig.Listen.ServerTimeOut"] = BConfig.Listen.ServerTimeOut
-		m["BConfig.Listen.ListenTCP4"] = BConfig.Listen.ListenTCP4
-		m["BConfig.Listen.EnableHTTP"] = BConfig.Listen.EnableHTTP
-		m["BConfig.Listen.HTTPAddr"] = BConfig.Listen.HTTPAddr
-		m["BConfig.Listen.HTTPPort"] = BConfig.Listen.HTTPPort
-		m["BConfig.Listen.EnableHTTPS"] = BConfig.Listen.EnableHTTPS
-		m["BConfig.Listen.HTTPSAddr"] = BConfig.Listen.HTTPSAddr
-		m["BConfig.Listen.HTTPSPort"] = BConfig.Listen.HTTPSPort
-		m["BConfig.Listen.HTTPSCertFile"] = BConfig.Listen.HTTPSCertFile
-		m["BConfig.Listen.HTTPSKeyFile"] = BConfig.Listen.HTTPSKeyFile
-		m["BConfig.Listen.EnableAdmin"] = BConfig.Listen.EnableAdmin
-		m["BConfig.Listen.AdminAddr"] = BConfig.Listen.AdminAddr
-		m["BConfig.Listen.AdminPort"] = BConfig.Listen.AdminPort
-		m["BConfig.Listen.EnableFcgi"] = BConfig.Listen.EnableFcgi
-		m["BConfig.Listen.EnableStdIo"] = BConfig.Listen.EnableStdIo
-		m["BConfig.WebConfig.AutoRender"] = BConfig.WebConfig.AutoRender
-		m["BConfig.WebConfig.EnableDocs"] = BConfig.WebConfig.EnableDocs
-		m["BConfig.WebConfig.FlashName"] = BConfig.WebConfig.FlashName
-		m["BConfig.WebConfig.FlashSeparator"] = BConfig.WebConfig.FlashSeparator
-		m["BConfig.WebConfig.DirectoryIndex"] = BConfig.WebConfig.DirectoryIndex
-		m["BConfig.WebConfig.StaticDir"] = BConfig.WebConfig.StaticDir
-		m["BConfig.WebConfig.StaticExtensionsToGzip"] = BConfig.WebConfig.StaticExtensionsToGzip
-		m["BConfig.WebConfig.TemplateLeft"] = BConfig.WebConfig.TemplateLeft
-		m["BConfig.WebConfig.TemplateRight"] = BConfig.WebConfig.TemplateRight
-		m["BConfig.WebConfig.ViewsPath"] = BConfig.WebConfig.ViewsPath
-		m["BConfig.WebConfig.EnableXSRF"] = BConfig.WebConfig.EnableXSRF
-		m["BConfig.WebConfig.XSRFKEY"] = BConfig.WebConfig.XSRFKey
-		m["BConfig.WebConfig.XSRFExpire"] = BConfig.WebConfig.XSRFExpire
-		m["BConfig.WebConfig.Session.SessionOn"] = BConfig.WebConfig.Session.SessionOn
-		m["BConfig.WebConfig.Session.SessionProvider"] = BConfig.WebConfig.Session.SessionProvider
-		m["BConfig.WebConfig.Session.SessionName"] = BConfig.WebConfig.Session.SessionName
-		m["BConfig.WebConfig.Session.SessionGCMaxLifetime"] = BConfig.WebConfig.Session.SessionGCMaxLifetime
-		m["BConfig.WebConfig.Session.SessionProviderConfig"] = BConfig.WebConfig.Session.SessionProviderConfig
-		m["BConfig.WebConfig.Session.SessionCookieLifeTime"] = BConfig.WebConfig.Session.SessionCookieLifeTime
-		m["BConfig.WebConfig.Session.SessionAutoSetCookie"] = BConfig.WebConfig.Session.SessionAutoSetCookie
-		m["BConfig.WebConfig.Session.SessionDomain"] = BConfig.WebConfig.Session.SessionDomain
-		m["BConfig.Log.AccessLogs"] = BConfig.Log.AccessLogs
-		m["BConfig.Log.FileLineNum"] = BConfig.Log.FileLineNum
-		m["BConfig.Log.Outputs"] = BConfig.Log.Outputs
+		list("BConfig", BConfig, m)
+		m["AppConfigPath"] = appConfigPath
+		m["AppConfigProvider"] = appConfigProvider
 		tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
 		tmpl = template.Must(tmpl.Parse(configTpl))
 		tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
@@ -150,29 +105,12 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 		tmpl.Execute(rw, data)
 
 	case "router":
-		var (
-			content = map[string]interface{}{
-				"Fields": []string{
-					"Router Pattern",
-					"Methods",
-					"Controller",
-				},
-			}
-			methods     = []string{}
-			methodsData = make(map[string]interface{})
-		)
-		for method, t := range BeeApp.Handlers.routers {
-
-			resultList := new([][]string)
-
-			printTree(resultList, t)
-
-			methods = append(methods, method)
-			methodsData[method] = resultList
+		content := PrintTree()
+		content["Fields"] = []string{
+			"Router Pattern",
+			"Methods",
+			"Controller",
 		}
-
-		content["Data"] = methodsData
-		content["Methods"] = methods
 		data["Content"] = content
 		data["Title"] = "Routers"
 		execTpl(rw, data, routerAndFilterTpl, defaultScriptsTpl)
@@ -196,14 +134,14 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 				BeforeExec:   "Before Exec",
 				AfterExec:    "After Exec",
 				FinishRouter: "Finish Router"} {
-				if bf, ok := BeeApp.Handlers.filters[k]; ok {
+				if bf := BeeApp.Handlers.filters[k]; len(bf) > 0 {
 					filterType = fr
 					filterTypes = append(filterTypes, filterType)
 					resultList := new([][]string)
 					for _, f := range bf {
 						var result = []string{
-							fmt.Sprintf("%s", f.pattern),
-							fmt.Sprintf("%s", utils.GetFuncName(f.filterFunc)),
+							f.pattern,
+							utils.GetFuncName(f.filterFunc),
 						}
 						*resultList = append(*resultList, result)
 					}
@@ -223,6 +161,50 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func list(root string, p interface{}, m map[string]interface{}) {
+	pt := reflect.TypeOf(p)
+	pv := reflect.ValueOf(p)
+	if pt.Kind() == reflect.Ptr {
+		pt = pt.Elem()
+		pv = pv.Elem()
+	}
+	for i := 0; i < pv.NumField(); i++ {
+		var key string
+		if root == "" {
+			key = pt.Field(i).Name
+		} else {
+			key = root + "." + pt.Field(i).Name
+		}
+		if pv.Field(i).Kind() == reflect.Struct {
+			list(key, pv.Field(i).Interface(), m)
+		} else {
+			m[key] = pv.Field(i).Interface()
+		}
+	}
+}
+
+// PrintTree prints all registered routers.
+func PrintTree() map[string]interface{} {
+	var (
+		content     = map[string]interface{}{}
+		methods     = []string{}
+		methodsData = make(map[string]interface{})
+	)
+	for method, t := range BeeApp.Handlers.routers {
+
+		resultList := new([][]string)
+
+		printTree(resultList, t)
+
+		methods = append(methods, method)
+		methodsData[method] = resultList
+	}
+
+	content["Data"] = methodsData
+	content["Methods"] = methods
+	return content
+}
+
 func printTree(resultList *[][]string, t *Tree) {
 	for _, tr := range t.fixrouters {
 		printTree(resultList, tr)
@@ -231,12 +213,12 @@ func printTree(resultList *[][]string, t *Tree) {
 		printTree(resultList, t.wildcard)
 	}
 	for _, l := range t.leaves {
-		if v, ok := l.runObject.(*controllerInfo); ok {
+		if v, ok := l.runObject.(*ControllerInfo); ok {
 			if v.routerType == routerTypeBeego {
 				var result = []string{
 					v.pattern,
 					fmt.Sprintf("%s", v.methods),
-					fmt.Sprintf("%s", v.controllerType),
+					v.controllerType.String(),
 				}
 				*resultList = append(*resultList, result)
 			} else if v.routerType == routerTypeRESTFul {
@@ -299,8 +281,8 @@ func profIndex(rw http.ResponseWriter, r *http.Request) {
 // it's in "/healthcheck" pattern in admin module.
 func healthcheck(rw http.ResponseWriter, req *http.Request) {
 	var (
+		result     []string
 		data       = make(map[interface{}]interface{})
-		result     = []string{}
 		resultList = new([][]string)
 		content    = map[string]interface{}{
 			"Fields": []string{"Name", "Message", "Status"},
@@ -310,21 +292,20 @@ func healthcheck(rw http.ResponseWriter, req *http.Request) {
 	for name, h := range toolbox.AdminCheckList {
 		if err := h.Check(); err != nil {
 			result = []string{
-				fmt.Sprintf("error"),
-				fmt.Sprintf("%s", name),
-				fmt.Sprintf("%s", err.Error()),
+				"error",
+				name,
+				err.Error(),
 			}
-
 		} else {
 			result = []string{
-				fmt.Sprintf("success"),
-				fmt.Sprintf("%s", name),
-				fmt.Sprintf("OK"),
+				"success",
+				name,
+				"OK",
 			}
-
 		}
 		*resultList = append(*resultList, result)
 	}
+
 	content["Data"] = resultList
 	data["Content"] = content
 	data["Title"] = "Health Check"
@@ -353,7 +334,6 @@ func taskStatus(rw http.ResponseWriter, req *http.Request) {
 	// List Tasks
 	content := make(map[string]interface{})
 	resultList := new([][]string)
-	var result = []string{}
 	var fields = []string{
 		"Task Name",
 		"Task Spec",
@@ -362,10 +342,10 @@ func taskStatus(rw http.ResponseWriter, req *http.Request) {
 		"",
 	}
 	for tname, tk := range toolbox.AdminTaskList {
-		result = []string{
+		result := []string{
 			tname,
-			fmt.Sprintf("%s", tk.GetSpec()),
-			fmt.Sprintf("%s", tk.GetStatus()),
+			tk.GetSpec(),
+			tk.GetStatus(),
 			tk.GetPrev().String(),
 		}
 		*resultList = append(*resultList, result)
@@ -410,7 +390,7 @@ func (admin *adminApp) Run() {
 	for p, f := range admin.routers {
 		http.Handle(p, f)
 	}
-	BeeLogger.Info("Admin server Running on %s", addr)
+	logs.Info("Admin server Running on %s", addr)
 
 	var err error
 	if BConfig.Listen.Graceful {
@@ -419,6 +399,6 @@ func (admin *adminApp) Run() {
 		err = http.ListenAndServe(addr, nil)
 	}
 	if err != nil {
-		BeeLogger.Critical("Admin ListenAndServe: ", err, fmt.Sprintf("%d", os.Getpid()))
+		logs.Critical("Admin ListenAndServe: ", err, fmt.Sprintf("%d", os.Getpid()))
 	}
 }

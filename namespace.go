@@ -44,7 +44,7 @@ func NewNamespace(prefix string, params ...LinkNamespace) *Namespace {
 	return ns
 }
 
-// Cond set condtion function
+// Cond set condition function
 // if cond return true can run this namespace, else can't
 // usage:
 // ns.Cond(func (ctx *context.Context) bool{
@@ -60,7 +60,7 @@ func (n *Namespace) Cond(cond namespaceCond) *Namespace {
 			exception("405", ctx)
 		}
 	}
-	if v, ok := n.handlers.filters[BeforeRouter]; ok {
+	if v := n.handlers.filters[BeforeRouter]; len(v) > 0 {
 		mr := new(FilterRouter)
 		mr.tree = NewTree()
 		mr.pattern = "*"
@@ -267,13 +267,12 @@ func addPrefix(t *Tree, prefix string) {
 		addPrefix(t.wildcard, prefix)
 	}
 	for _, l := range t.leaves {
-		if c, ok := l.runObject.(*controllerInfo); ok {
+		if c, ok := l.runObject.(*ControllerInfo); ok {
 			if !strings.HasPrefix(c.pattern, prefix) {
 				c.pattern = prefix + c.pattern
 			}
 		}
 	}
-
 }
 
 // NSCond is Namespace Condition
@@ -284,16 +283,16 @@ func NSCond(cond namespaceCond) LinkNamespace {
 }
 
 // NSBefore Namespace BeforeRouter filter
-func NSBefore(filiterList ...FilterFunc) LinkNamespace {
+func NSBefore(filterList ...FilterFunc) LinkNamespace {
 	return func(ns *Namespace) {
-		ns.Filter("before", filiterList...)
+		ns.Filter("before", filterList...)
 	}
 }
 
 // NSAfter add Namespace FinishRouter filter
-func NSAfter(filiterList ...FilterFunc) LinkNamespace {
+func NSAfter(filterList ...FilterFunc) LinkNamespace {
 	return func(ns *Namespace) {
-		ns.Filter("after", filiterList...)
+		ns.Filter("after", filterList...)
 	}
 }
 
@@ -386,5 +385,12 @@ func NSNamespace(prefix string, params ...LinkNamespace) LinkNamespace {
 	return func(ns *Namespace) {
 		n := NewNamespace(prefix, params...)
 		ns.Namespace(n)
+	}
+}
+
+// NSHandler add handler
+func NSHandler(rootpath string, h http.Handler) LinkNamespace {
+	return func(ns *Namespace) {
+		ns.Handler(rootpath, h)
 	}
 }

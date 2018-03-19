@@ -32,15 +32,17 @@ func getDbAlias(name string) *alias {
 func getExistPk(mi *modelInfo, ind reflect.Value) (column string, value interface{}, exist bool) {
 	fi := mi.fields.pk
 
-	v := ind.Field(fi.fieldIndex)
-	if fi.fieldType&IsPostiveIntegerField > 0 {
+	v := ind.FieldByIndex(fi.fieldIndex)
+	if fi.fieldType&IsPositiveIntegerField > 0 {
 		vu := v.Uint()
 		exist = vu > 0
 		value = vu
 	} else if fi.fieldType&IsIntegerField > 0 {
 		vu := v.Int()
-		exist = vu > 0
+		exist = true
 		value = vu
+	} else if fi.fieldType&IsRelField > 0 {
+		_, value, exist = getExistPk(fi.relModelInfo, reflect.Indirect(v))
 	} else {
 		vu := v.String()
 		exist = vu != ""
@@ -74,24 +76,32 @@ outFor:
 		case reflect.String:
 			v := val.String()
 			if fi != nil {
-				if fi.fieldType == TypeDateField || fi.fieldType == TypeDateTimeField {
+				if fi.fieldType == TypeTimeField || fi.fieldType == TypeDateField || fi.fieldType == TypeDateTimeField {
 					var t time.Time
 					var err error
 					if len(v) >= 19 {
 						s := v[:19]
 						t, err = time.ParseInLocation(formatDateTime, s, DefaultTimeLoc)
-					} else {
+					} else if len(v) >= 10 {
 						s := v
 						if len(v) > 10 {
 							s = v[:10]
 						}
 						t, err = time.ParseInLocation(formatDate, s, tz)
+					} else {
+						s := v
+						if len(s) > 8 {
+							s = v[:8]
+						}
+						t, err = time.ParseInLocation(formatTime, s, tz)
 					}
 					if err == nil {
 						if fi.fieldType == TypeDateField {
 							v = t.In(tz).Format(formatDate)
-						} else {
+						} else if fi.fieldType == TypeDateTimeField {
 							v = t.In(tz).Format(formatDateTime)
+						} else {
+							v = t.In(tz).Format(formatTime)
 						}
 					}
 				}
@@ -137,6 +147,10 @@ outFor:
 			if v, ok := arg.(time.Time); ok {
 				if fi != nil && fi.fieldType == TypeDateField {
 					arg = v.In(tz).Format(formatDate)
+				} else if fi != nil && fi.fieldType == TypeDateTimeField {
+					arg = v.In(tz).Format(formatDateTime)
+				} else if fi != nil && fi.fieldType == TypeTimeField {
+					arg = v.In(tz).Format(formatTime)
 				} else {
 					arg = v.In(tz).Format(formatDateTime)
 				}
@@ -144,7 +158,7 @@ outFor:
 				typ := val.Type()
 				name := getFullName(typ)
 				var value interface{}
-				if mmi, ok := modelCache.getByFN(name); ok {
+				if mmi, ok := modelCache.getByFullName(name); ok {
 					if _, vu, exist := getExistPk(mmi, val); exist {
 						value = vu
 					}

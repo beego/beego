@@ -23,8 +23,10 @@ import (
 // Define the Type enum
 const (
 	TypeBooleanField = 1 << iota
+	TypeVarCharField
 	TypeCharField
 	TypeTextField
+	TypeTimeField
 	TypeDateField
 	TypeDateTimeField
 	TypeBitField
@@ -37,6 +39,8 @@ const (
 	TypePositiveBigIntegerField
 	TypeFloatField
 	TypeDecimalField
+	TypeJSONField
+	TypeJsonbField
 	RelForeignKey
 	RelOneToOne
 	RelManyToMany
@@ -46,10 +50,10 @@ const (
 
 // Define some logic enum
 const (
-	IsIntegerField        = ^-TypePositiveBigIntegerField >> 4 << 5
-	IsPostiveIntegerField = ^-TypePositiveBigIntegerField >> 8 << 9
-	IsRelField            = ^-RelReverseMany >> 14 << 15
-	IsFieldType           = ^-RelReverseMany<<1 + 1
+	IsIntegerField         = ^-TypePositiveBigIntegerField >> 6 << 7
+	IsPositiveIntegerField = ^-TypePositiveBigIntegerField >> 10 << 11
+	IsRelField             = ^-RelReverseMany >> 18 << 19
+	IsFieldType            = ^-RelReverseMany<<1 + 1
 )
 
 // BooleanField A true/false field.
@@ -123,7 +127,7 @@ func (e *CharField) String() string {
 
 // FieldType return the enum type
 func (e *CharField) FieldType() int {
-	return TypeCharField
+	return TypeVarCharField
 }
 
 // SetRaw set the interface to string
@@ -144,6 +148,65 @@ func (e *CharField) RawValue() interface{} {
 
 // verify CharField implement Fielder
 var _ Fielder = new(CharField)
+
+// TimeField A time, represented in go by a time.Time instance.
+// only time values like 10:00:00
+// Has a few extra, optional attr tag:
+//
+// auto_now:
+// Automatically set the field to now every time the object is saved. Useful for “last-modified” timestamps.
+// Note that the current date is always used; it’s not just a default value that you can override.
+//
+// auto_now_add:
+// Automatically set the field to now when the object is first created. Useful for creation of timestamps.
+// Note that the current date is always used; it’s not just a default value that you can override.
+//
+// eg: `orm:"auto_now"` or `orm:"auto_now_add"`
+type TimeField time.Time
+
+// Value return the time.Time
+func (e TimeField) Value() time.Time {
+	return time.Time(e)
+}
+
+// Set set the TimeField's value
+func (e *TimeField) Set(d time.Time) {
+	*e = TimeField(d)
+}
+
+// String convert time to string
+func (e *TimeField) String() string {
+	return e.Value().String()
+}
+
+// FieldType return enum type Date
+func (e *TimeField) FieldType() int {
+	return TypeDateField
+}
+
+// SetRaw convert the interface to time.Time. Allow string and time.Time
+func (e *TimeField) SetRaw(value interface{}) error {
+	switch d := value.(type) {
+	case time.Time:
+		e.Set(d)
+	case string:
+		v, err := timeParse(d, formatTime)
+		if err != nil {
+			e.Set(v)
+		}
+		return err
+	default:
+		return fmt.Errorf("<TimeField.SetRaw> unknown value `%s`", value)
+	}
+	return nil
+}
+
+// RawValue return time value
+func (e *TimeField) RawValue() interface{} {
+	return e.Value()
+}
+
+var _ Fielder = new(TimeField)
 
 // DateField A date, represented in go by a time.Time instance.
 // only date values like 2006-01-02
@@ -170,7 +233,7 @@ func (e *DateField) Set(d time.Time) {
 	*e = DateField(d)
 }
 
-// String convert datatime to string
+// String convert datetime to string
 func (e *DateField) String() string {
 	return e.Value().String()
 }
@@ -210,12 +273,12 @@ var _ Fielder = new(DateField)
 // Takes the same extra arguments as DateField.
 type DateTimeField time.Time
 
-// Value return the datatime value
+// Value return the datetime value
 func (e DateTimeField) Value() time.Time {
 	return time.Time(e)
 }
 
-// Set set the time.Time to datatime
+// Set set the time.Time to datetime
 func (e *DateTimeField) Set(d time.Time) {
 	*e = DateTimeField(d)
 }
@@ -247,12 +310,12 @@ func (e *DateTimeField) SetRaw(value interface{}) error {
 	return nil
 }
 
-// RawValue return the datatime value
+// RawValue return the datetime value
 func (e *DateTimeField) RawValue() interface{} {
 	return e.Value()
 }
 
-// verify datatime implement fielder
+// verify datetime implement fielder
 var _ Fielder = new(DateTimeField)
 
 // FloatField A floating-point number represented in go by a float32 value.
@@ -627,3 +690,87 @@ func (e *TextField) RawValue() interface{} {
 
 // verify TextField implement Fielder
 var _ Fielder = new(TextField)
+
+// JSONField postgres json field.
+type JSONField string
+
+// Value return JSONField value
+func (j JSONField) Value() string {
+	return string(j)
+}
+
+// Set the JSONField value
+func (j *JSONField) Set(d string) {
+	*j = JSONField(d)
+}
+
+// String convert JSONField to string
+func (j *JSONField) String() string {
+	return j.Value()
+}
+
+// FieldType return enum type
+func (j *JSONField) FieldType() int {
+	return TypeJSONField
+}
+
+// SetRaw convert interface string to string
+func (j *JSONField) SetRaw(value interface{}) error {
+	switch d := value.(type) {
+	case string:
+		j.Set(d)
+	default:
+		return fmt.Errorf("<JSONField.SetRaw> unknown value `%s`", value)
+	}
+	return nil
+}
+
+// RawValue return JSONField value
+func (j *JSONField) RawValue() interface{} {
+	return j.Value()
+}
+
+// verify JSONField implement Fielder
+var _ Fielder = new(JSONField)
+
+// JsonbField postgres json field.
+type JsonbField string
+
+// Value return JsonbField value
+func (j JsonbField) Value() string {
+	return string(j)
+}
+
+// Set the JsonbField value
+func (j *JsonbField) Set(d string) {
+	*j = JsonbField(d)
+}
+
+// String convert JsonbField to string
+func (j *JsonbField) String() string {
+	return j.Value()
+}
+
+// FieldType return enum type
+func (j *JsonbField) FieldType() int {
+	return TypeJsonbField
+}
+
+// SetRaw convert interface string to string
+func (j *JsonbField) SetRaw(value interface{}) error {
+	switch d := value.(type) {
+	case string:
+		j.Set(d)
+	default:
+		return fmt.Errorf("<JsonbField.SetRaw> unknown value `%s`", value)
+	}
+	return nil
+}
+
+// RawValue return JsonbField value
+func (j *JsonbField) RawValue() interface{} {
+	return j.Value()
+}
+
+// verify JsonbField implement Fielder
+var _ Fielder = new(JsonbField)

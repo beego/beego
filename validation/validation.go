@@ -73,6 +73,10 @@ func (e *Error) String() string {
 	return e.Message
 }
 
+// Implement Error interface.
+// Return e.String()
+func (e *Error) Error() string { return e.String() }
+
 // Result is returned from every validation method.
 // It provides an indication of success, and a pointer to the Error (if any).
 type Result struct {
@@ -102,8 +106,13 @@ func (r *Result) Message(message string, args ...interface{}) *Result {
 
 // A Validation context manages data validation and error messages.
 type Validation struct {
+	// if this field set true, in struct tag valid
+	// if the struct field vale is empty
+	// it will skip those valid functions, see CanSkipFuncs
+	RequiredFirst bool
+
 	Errors    []*Error
-	ErrorsMap map[string]*Error
+	ErrorsMap map[string][]*Error
 }
 
 // Clear Clean all ValidationError.
@@ -120,7 +129,7 @@ func (v *Validation) HasErrors() bool {
 // ErrorMap Return the errors mapped by key.
 // If there are multiple validation errors associated with a single key, the
 // first one "wins".  (Typically the first validation will be the more basic).
-func (v *Validation) ErrorMap() map[string]*Error {
+func (v *Validation) ErrorMap() map[string][]*Error {
 	return v.ErrorsMap
 }
 
@@ -269,14 +278,35 @@ func (v *Validation) apply(chk Validator, obj interface{}) *Result {
 	}
 }
 
+// AddError adds independent error message for the provided key
+func (v *Validation) AddError(key, message string) {
+	Name := key
+	Field := ""
+
+	parts := strings.Split(key, ".")
+	if len(parts) == 2 {
+		Field = parts[0]
+		Name = parts[1]
+	}
+
+	err := &Error{
+		Message: message,
+		Key:     key,
+		Name:    Name,
+		Field:   Field,
+	}
+	v.setError(err)
+}
+
 func (v *Validation) setError(err *Error) {
 	v.Errors = append(v.Errors, err)
 	if v.ErrorsMap == nil {
-		v.ErrorsMap = make(map[string]*Error)
+		v.ErrorsMap = make(map[string][]*Error)
 	}
 	if _, ok := v.ErrorsMap[err.Field]; !ok {
-		v.ErrorsMap[err.Field] = err
+		v.ErrorsMap[err.Field] = []*Error{}
 	}
+	v.ErrorsMap[err.Field] = append(v.ErrorsMap[err.Field], err)
 }
 
 // SetError Set error message for one field in ValidationError
@@ -320,7 +350,19 @@ func (v *Validation) Valid(obj interface{}) (b bool, err error) {
 		if vfs, err = getValidFuncs(objT.Field(i)); err != nil {
 			return
 		}
+
+		var hasReuired bool
 		for _, vf := range vfs {
+			if vf.Name == "Required" {
+				hasReuired = true
+			}
+
+			if !hasReuired && v.RequiredFirst && len(objV.Field(i).String()) == 0 {
+				if _, ok := CanSkipFuncs[vf.Name]; ok {
+					continue
+				}
+			}
+
 			if _, err = funcs.Call(vf.Name,
 				mergeParam(v, objV.Field(i).Interface(), vf.Params)...); err != nil {
 				return
@@ -345,7 +387,7 @@ func (v *Validation) RecursiveValid(objc interface{}) (bool, error) {
 	//Step 1: validate obj itself firstly
 	// fails if objc is not struct
 	pass, err := v.Valid(objc)
-	if err != nil || false == pass {
+	if err != nil || !pass {
 		return pass, err // Stop recursive validation
 	}
 	// Step 2: Validate struct's struct fields

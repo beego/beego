@@ -33,7 +33,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/orm"
 )
 
@@ -52,6 +52,26 @@ type Migrationer interface {
 	GetCreated() int64
 }
 
+//Migration defines the migrations by either SQL or DDL
+type Migration struct {
+	sqls           []string
+	Created        string
+	TableName      string
+	Engine         string
+	Charset        string
+	ModifyType     string
+	Columns        []*Column
+	Indexes        []*Index
+	Primary        []*Column
+	Uniques        []*Unique
+	Foreigns       []*Foreign
+	Renames        []*RenameColumn
+	RemoveColumns  []*Column
+	RemoveIndexes  []*Index
+	RemoveUniques  []*Unique
+	RemoveForeigns []*Foreign
+}
+
 var (
 	migrationMap map[string]Migrationer
 )
@@ -60,20 +80,34 @@ func init() {
 	migrationMap = make(map[string]Migrationer)
 }
 
-// Migration the basic type which will implement the basic type
-type Migration struct {
-	sqls    []string
-	Created string
-}
-
 // Up implement in the Inheritance struct for upgrade
 func (m *Migration) Up() {
 
+	switch m.ModifyType {
+	case "reverse":
+		m.ModifyType = "alter"
+	case "delete":
+		m.ModifyType = "create"
+	}
+	m.sqls = append(m.sqls, m.GetSQL())
 }
 
 // Down implement in the Inheritance struct for down
 func (m *Migration) Down() {
 
+	switch m.ModifyType {
+	case "alter":
+		m.ModifyType = "reverse"
+	case "create":
+		m.ModifyType = "delete"
+	}
+	m.sqls = append(m.sqls, m.GetSQL())
+}
+
+//Migrate adds the SQL to the execution list
+func (m *Migration) Migrate(migrationType string) {
+	m.ModifyType = migrationType
+	m.sqls = append(m.sqls, m.GetSQL())
 }
 
 // SQL add sql want to execute
@@ -90,7 +124,7 @@ func (m *Migration) Reset() {
 func (m *Migration) Exec(name, status string) error {
 	o := orm.NewOrm()
 	for _, s := range m.sqls {
-		beego.Info("exec sql:", s)
+		logs.Info("exec sql:", s)
 		r := o.Raw(s)
 		_, err := r.Exec()
 		if err != nil {
@@ -138,26 +172,26 @@ func Register(name string, m Migrationer) error {
 	return nil
 }
 
-// Upgrade upgrate the migration from lasttime
+// Upgrade upgrade the migration from lasttime
 func Upgrade(lasttime int64) error {
 	sm := sortMap(migrationMap)
 	i := 0
 	for _, v := range sm {
 		if v.created > lasttime {
-			beego.Info("start upgrade", v.name)
+			logs.Info("start upgrade", v.name)
 			v.m.Reset()
 			v.m.Up()
 			err := v.m.Exec(v.name, "up")
 			if err != nil {
-				beego.Error("execute error:", err)
+				logs.Error("execute error:", err)
 				time.Sleep(2 * time.Second)
 				return err
 			}
-			beego.Info("end upgrade:", v.name)
+			logs.Info("end upgrade:", v.name)
 			i++
 		}
 	}
-	beego.Info("total success upgrade:", i, " migration")
+	logs.Info("total success upgrade:", i, " migration")
 	time.Sleep(2 * time.Second)
 	return nil
 }
@@ -165,20 +199,20 @@ func Upgrade(lasttime int64) error {
 // Rollback rollback the migration by the name
 func Rollback(name string) error {
 	if v, ok := migrationMap[name]; ok {
-		beego.Info("start rollback")
+		logs.Info("start rollback")
 		v.Reset()
 		v.Down()
 		err := v.Exec(name, "down")
 		if err != nil {
-			beego.Error("execute error:", err)
+			logs.Error("execute error:", err)
 			time.Sleep(2 * time.Second)
 			return err
 		}
-		beego.Info("end rollback")
+		logs.Info("end rollback")
 		time.Sleep(2 * time.Second)
 		return nil
 	}
-	beego.Error("not exist the migrationMap name:" + name)
+	logs.Error("not exist the migrationMap name:" + name)
 	time.Sleep(2 * time.Second)
 	return errors.New("not exist the migrationMap name:" + name)
 }
@@ -191,23 +225,23 @@ func Reset() error {
 	for j := len(sm) - 1; j >= 0; j-- {
 		v := sm[j]
 		if isRollBack(v.name) {
-			beego.Info("skip the", v.name)
+			logs.Info("skip the", v.name)
 			time.Sleep(1 * time.Second)
 			continue
 		}
-		beego.Info("start reset:", v.name)
+		logs.Info("start reset:", v.name)
 		v.m.Reset()
 		v.m.Down()
 		err := v.m.Exec(v.name, "down")
 		if err != nil {
-			beego.Error("execute error:", err)
+			logs.Error("execute error:", err)
 			time.Sleep(2 * time.Second)
 			return err
 		}
 		i++
-		beego.Info("end reset:", v.name)
+		logs.Info("end reset:", v.name)
 	}
-	beego.Info("total success reset:", i, " migration")
+	logs.Info("total success reset:", i, " migration")
 	time.Sleep(2 * time.Second)
 	return nil
 }
@@ -216,7 +250,7 @@ func Reset() error {
 func Refresh() error {
 	err := Reset()
 	if err != nil {
-		beego.Error("execute error:", err)
+		logs.Error("execute error:", err)
 		time.Sleep(2 * time.Second)
 		return err
 	}
@@ -265,7 +299,7 @@ func isRollBack(name string) bool {
 	var maps []orm.Params
 	num, err := o.Raw("select * from migrations where `name` = ? order by id_migration desc", name).Values(&maps)
 	if err != nil {
-		beego.Info("get name has error", err)
+		logs.Info("get name has error", err)
 		return false
 	}
 	if num <= 0 {

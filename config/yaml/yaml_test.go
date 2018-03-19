@@ -15,13 +15,17 @@
 package yaml
 
 import (
+	"fmt"
 	"os"
 	"testing"
 
 	"github.com/astaxie/beego/config"
 )
 
-var yamlcontext = `
+func TestYaml(t *testing.T) {
+
+	var (
+		yamlcontext = `
 "appname": beeapi
 "httpport": 8080
 "mysqlport": 3600
@@ -29,9 +33,27 @@ var yamlcontext = `
 "runmode": dev
 "autorender": false
 "copyrequestbody": true
+"PATH": GOPATH
+"path1": ${GOPATH}
+"path2": ${GOPATH||/home/go}
+"empty": "" 
 `
 
-func TestYaml(t *testing.T) {
+		keyValue = map[string]interface{}{
+			"appname":         "beeapi",
+			"httpport":        8080,
+			"mysqlport":       int64(3600),
+			"PI":              3.1415976,
+			"runmode":         "dev",
+			"autorender":      false,
+			"copyrequestbody": true,
+			"PATH":            "GOPATH",
+			"path1":           os.Getenv("GOPATH"),
+			"path2":           os.Getenv("GOPATH"),
+			"error":           "",
+			"emptystrings":    []string{},
+		}
+	)
 	f, err := os.Create("testyaml.conf")
 	if err != nil {
 		t.Fatal(err)
@@ -47,36 +69,47 @@ func TestYaml(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if yamlconf.String("appname") != "beeapi" {
 		t.Fatal("appname not equal to beeapi")
 	}
-	if port, err := yamlconf.Int("httpport"); err != nil || port != 8080 {
-		t.Error(port)
-		t.Fatal(err)
+
+	for k, v := range keyValue {
+
+		var (
+			value interface{}
+			err   error
+		)
+
+		switch v.(type) {
+		case int:
+			value, err = yamlconf.Int(k)
+		case int64:
+			value, err = yamlconf.Int64(k)
+		case float64:
+			value, err = yamlconf.Float(k)
+		case bool:
+			value, err = yamlconf.Bool(k)
+		case []string:
+			value = yamlconf.Strings(k)
+		case string:
+			value = yamlconf.String(k)
+		default:
+			value, err = yamlconf.DIY(k)
+		}
+		if err != nil {
+			t.Errorf("get key %q value fatal,%v err %s", k, v, err)
+		} else if fmt.Sprintf("%v", v) != fmt.Sprintf("%v", value) {
+			t.Errorf("get key %q value, want %v got %v .", k, v, value)
+		}
+
 	}
-	if port, err := yamlconf.Int64("mysqlport"); err != nil || port != 3600 {
-		t.Error(port)
-		t.Fatal(err)
-	}
-	if pi, err := yamlconf.Float("PI"); err != nil || pi != 3.1415976 {
-		t.Error(pi)
-		t.Fatal(err)
-	}
-	if yamlconf.String("runmode") != "dev" {
-		t.Fatal("runmode not equal to dev")
-	}
-	if v, err := yamlconf.Bool("autorender"); err != nil || v != false {
-		t.Error(v)
-		t.Fatal(err)
-	}
-	if v, err := yamlconf.Bool("copyrequestbody"); err != nil || v != true {
-		t.Error(v)
-		t.Fatal(err)
-	}
+
 	if err = yamlconf.Set("name", "astaxie"); err != nil {
 		t.Fatal(err)
 	}
 	if yamlconf.String("name") != "astaxie" {
 		t.Fatal("get name error")
 	}
+
 }

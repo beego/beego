@@ -61,8 +61,8 @@ func TestNamespaceNest(t *testing.T) {
 	ns.Namespace(
 		NewNamespace("/admin").
 			Get("/order", func(ctx *context.Context) {
-			ctx.Output.Body([]byte("order"))
-		}),
+				ctx.Output.Body([]byte("order"))
+			}),
 	)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
@@ -79,8 +79,8 @@ func TestNamespaceNestParam(t *testing.T) {
 	ns.Namespace(
 		NewNamespace("/admin").
 			Get("/order/:id", func(ctx *context.Context) {
-			ctx.Output.Body([]byte(ctx.Input.Param(":id")))
-		}),
+				ctx.Output.Body([]byte(ctx.Input.Param(":id")))
+			}),
 	)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
@@ -124,8 +124,8 @@ func TestNamespaceFilter(t *testing.T) {
 		ctx.Output.Body([]byte("this is Filter"))
 	}).
 		Get("/user/:id", func(ctx *context.Context) {
-		ctx.Output.Body([]byte(ctx.Input.Param(":id")))
-	})
+			ctx.Output.Body([]byte(ctx.Input.Param(":id")))
+		})
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != "this is Filter" {
@@ -139,10 +139,7 @@ func TestNamespaceCond(t *testing.T) {
 
 	ns := NewNamespace("/v2")
 	ns.Cond(func(ctx *context.Context) bool {
-		if ctx.Input.Domain() == "beego.me" {
-			return true
-		}
-		return false
+		return ctx.Input.Domain() == "beego.me"
 	}).
 		AutoRouter(&TestController{})
 	AddNamespace(ns)

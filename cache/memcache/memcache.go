@@ -33,12 +33,10 @@ import (
 	"encoding/json"
 	"errors"
 	"strings"
-
-	"github.com/bradfitz/gomemcache/memcache"
-
 	"time"
 
 	"github.com/astaxie/beego/cache"
+	"github.com/bradfitz/gomemcache/memcache"
 )
 
 // Cache Memcache adapter.
@@ -60,7 +58,7 @@ func (rc *Cache) Get(key string) interface{} {
 		}
 	}
 	if item, err := rc.conn.Get(key); err == nil {
-		return string(item.Value)
+		return item.Value
 	}
 	return nil
 }
@@ -80,7 +78,7 @@ func (rc *Cache) GetMulti(keys []string) []interface{} {
 	mv, err := rc.conn.GetMulti(keys)
 	if err == nil {
 		for _, v := range mv {
-			rv = append(rv, string(v.Value))
+			rv = append(rv, v.Value)
 		}
 		return rv
 	}
@@ -90,18 +88,21 @@ func (rc *Cache) GetMulti(keys []string) []interface{} {
 	return rv
 }
 
-// Put put value to memcache. only support string.
+// Put put value to memcache.
 func (rc *Cache) Put(key string, val interface{}, timeout time.Duration) error {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
 			return err
 		}
 	}
-	v, ok := val.(string)
-	if !ok {
-		return errors.New("val must string")
+	item := memcache.Item{Key: key, Expiration: int32(timeout / time.Second)}
+	if v, ok := val.([]byte); ok {
+		item.Value = v
+	} else if str, ok := val.(string); ok {
+		item.Value = []byte(str)
+	} else {
+		return errors.New("val only support string and []byte")
 	}
-	item := memcache.Item{Key: key, Value: []byte(v), Expiration: int32(timeout / time.Second)}
 	return rc.conn.Set(&item)
 }
 
@@ -145,10 +146,7 @@ func (rc *Cache) IsExist(key string) bool {
 		}
 	}
 	_, err := rc.conn.Get(key)
-	if err != nil {
-		return false
-	}
-	return true
+	return !(err != nil)
 }
 
 // ClearAll clear all cached in memcache.

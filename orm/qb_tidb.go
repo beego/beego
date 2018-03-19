@@ -31,6 +31,12 @@ func (qb *TiDBQueryBuilder) Select(fields ...string) QueryBuilder {
 	return qb
 }
 
+// ForUpdate add the FOR UPDATE clause
+func (qb *TiDBQueryBuilder) ForUpdate() QueryBuilder {
+	qb.Tokens = append(qb.Tokens, "FOR UPDATE")
+	return qb
+}
+
 // From join the tables
 func (qb *TiDBQueryBuilder) From(tables ...string) QueryBuilder {
 	qb.Tokens = append(qb.Tokens, "FROM", strings.Join(tables, CommaSpace))
