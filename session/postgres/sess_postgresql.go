@@ -90,6 +90,13 @@ func (st *SessionStore) Get(key interface{}) interface{} {
 	return nil
 }
 
+// GetKeys all key-value from session
+func (st *SessionStore) GetAll() map[interface{}]interface{} {
+	st.lock.RLock()
+	defer st.lock.RUnlock()
+	return st.value
+}
+
 // Delete value in postgresql session
 func (st *SessionStore) Delete(key interface{}) error {
 	st.lock.Lock()

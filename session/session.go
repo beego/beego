@@ -49,6 +49,7 @@ type Store interface {
 	SessionID() string                    //back current sessionID
 	SessionRelease(w http.ResponseWriter) // release the resource & save data to provider & return the data
 	Flush() error                         //delete all data
+	GetAll() map[interface{}]interface{}  //get all key-value from session
 }
 
 // Provider contains global session methods and saved SessionStores.

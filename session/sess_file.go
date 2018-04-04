@@ -55,6 +55,13 @@ func (fs *FileSessionStore) Get(key interface{}) interface{} {
 	return nil
 }
 
+// GetKeys all key-value from session
+func (fs *FileSessionStore) GetAll() map[interface{}]interface{} {
+	fs.lock.RLock()
+	defer fs.lock.RUnlock()
+	return fs.values
+}
+
 // Delete value in file session by given key
 func (fs *FileSessionStore) Delete(key interface{}) error {
 	fs.lock.Lock()

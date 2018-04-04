@@ -43,6 +43,13 @@ func (ls *SessionStore) Get(key interface{}) interface{} {
 	return nil
 }
 
+// GetKeys all key-value from session
+func (ls *SessionStore) GetAll() map[interface{}]interface{} {
+	ls.lock.RLock()
+	defer ls.lock.RUnlock()
+	return ls.value
+}
+
 // Delete value in ledis session
 func (ls *SessionStore) Delete(key interface{}) error {
 	ls.lock.Lock()

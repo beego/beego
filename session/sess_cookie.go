@@ -51,6 +51,13 @@ func (st *CookieSessionStore) Get(key interface{}) interface{} {
 	return nil
 }
 
+// GetKeys all key-value from session
+func (st *CookieSessionStore) GetAll() map[interface{}]interface{} {
+	st.lock.RLock()
+	defer st.lock.RUnlock()
+	return st.values
+}
+
 // Delete value in cookie session
 func (st *CookieSessionStore) Delete(key interface{}) error {
 	st.lock.Lock()
