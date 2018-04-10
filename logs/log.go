@@ -629,7 +629,7 @@ func formatLog(f interface{}, v ...interface{}) string {
 		if len(v) == 0 {
 			return msg
 		}
-		if strings.Contains(msg, "%") && !strings.Contains(msg, "%%") {
+		if strings.Contains(strings.Replace(msg, "%%", "", -1), "%") {
 			//format string
 		} else {
 			//do not contain format char
