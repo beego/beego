@@ -290,7 +290,6 @@ func (c *ConfigContainer) getData(key string) (interface{}, error) {
 	for _, k := range keys {
 		if v, ok := tmpData[k]; ok {
 			switch v.(type) {
-
 			case map[string]interface{}:
 				{
 					tmpData = v.(map[string]interface{})
