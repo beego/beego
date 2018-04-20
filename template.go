@@ -217,6 +217,7 @@ func BuildTemplate(dir string, files ...string) error {
 					t, err = getTemplate(self.root, file, v...)
 				}
 				if err != nil {
+					templatesLock.Unlock()
 					logs.Error("parse template err:", file, err)
 					templatesLock.Unlock()
 					return err
