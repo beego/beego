@@ -504,11 +504,7 @@ func GetBeeLogger() *BeeLogger {
 	return beeLogger
 }
 
-var beeLoggerMap = struct {
-	logs *sync.Map
-}{
-	logs:&sync.Map{},
-}
+var beeLoggerMap = &sync.Map{}
 
 // GetLogger returns the default BeeLogger
 func GetLogger(prefixes ...string) *log.Logger {
@@ -516,14 +512,14 @@ func GetLogger(prefixes ...string) *log.Logger {
 	if prefix != "" {
 		prefix = fmt.Sprintf(`[%s] `, strings.ToUpper(prefix))
 	}
-	l, ok := beeLoggerMap.logs.Load(prefix)
+	l, ok := beeLoggerMap.Load(prefix)
 	if ok {
 		return l.(*log.Logger)
 	}
-	l, ok = beeLoggerMap.logs.Load(prefix)
+	l, ok = beeLoggerMap.Load(prefix)
 	if !ok {
 		l = log.New(beeLogger, prefix, 0)
-		beeLoggerMap.logs.Store(prefix, l)
+		beeLoggerMap.Store(prefix, l)
 	}
 	return l.(*log.Logger)
 }
