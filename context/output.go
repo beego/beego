@@ -182,8 +182,8 @@ func errorRenderer(err error) Renderer {
 }
 
 // JSON writes json to response body.
-// if coding is true, it converts utf-8 to \u0000 type.
-func (output *BeegoOutput) JSON(data interface{}, hasIndent bool, coding bool) error {
+// if encoding is true, it converts utf-8 to \u0000 type.
+func (output *BeegoOutput) JSON(data interface{}, hasIndent bool, encoding bool) error {
 	output.Header("Content-Type", "application/json; charset=utf-8")
 	var content []byte
 	var err error
@@ -196,7 +196,7 @@ func (output *BeegoOutput) JSON(data interface{}, hasIndent bool, coding bool) e
 		http.Error(output.Context.ResponseWriter, err.Error(), http.StatusInternalServerError)
 		return err
 	}
-	if coding {
+	if encoding {
 		content = []byte(stringsToJSON(string(content)))
 	}
 	return output.Body(content)
@@ -325,13 +325,13 @@ func (output *BeegoOutput) IsForbidden() bool {
 }
 
 // IsNotFound returns boolean of this request is not found.
-// HTTP 404 means forbidden.
+// HTTP 404 means not found.
 func (output *BeegoOutput) IsNotFound() bool {
 	return output.Status == 404
 }
 
 // IsClientError returns boolean of this request client sends error data.
-// HTTP 4xx means forbidden.
+// HTTP 4xx means client error.
 func (output *BeegoOutput) IsClientError() bool {
 	return output.Status >= 400 && output.Status < 500
 }

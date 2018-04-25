@@ -167,7 +167,7 @@ func (app *App) Run(mws ...MiddleWare) {
 			if BConfig.Listen.HTTPSPort != 0 {
 				app.Server.Addr = fmt.Sprintf("%s:%d", BConfig.Listen.HTTPSAddr, BConfig.Listen.HTTPSPort)
 			} else if BConfig.Listen.EnableHTTP {
-				BeeLogger.Info("Start https server error, confict with http.Please reset https port")
+				BeeLogger.Info("Start https server error, conflict with http.Please reset https port")
 				return
 			}
 			logs.Info("https server Running on https://%s", app.Server.Addr)

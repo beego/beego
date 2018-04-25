@@ -1,9 +1,10 @@
 language: go
 
 go:
-  - 1.7.5
-  - 1.8.5
-  - 1.9.2
+  - "1.7.5"
+  - "1.8.5"
+  - "1.9.2"
+  - "1.10"
 services:
   - redis-server
   - mysql
@@ -22,7 +23,7 @@ install:
   - go get github.com/go-sql-driver/mysql
   - go get github.com/mattn/go-sqlite3
   - go get github.com/bradfitz/gomemcache/memcache
-  - go get github.com/garyburd/redigo/redis
+  - go get github.com/gomodule/redigo/redis
   - go get github.com/beego/x2j
   - go get github.com/couchbase/go-couchbase
   - go get github.com/beego/goyaml2

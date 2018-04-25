@@ -31,7 +31,7 @@ func TestFormatHeader_0(t *testing.T) {
 			break
 		}
 		h, _ := formatTimeHeader(tm)
-		if tm.Format("2006/01/02 15:04:05.999 ") != string(h) {
+		if tm.Format("2006/01/02 15:04:05.000 ") != string(h) {
 			t.Log(tm)
 			t.FailNow()
 		}
@@ -49,7 +49,7 @@ func TestFormatHeader_1(t *testing.T) {
 			break
 		}
 		h, _ := formatTimeHeader(tm)
-		if tm.Format("2006/01/02 15:04:05.999 ") != string(h) {
+		if tm.Format("2006/01/02 15:04:05.000 ") != string(h) {
 			t.Log(tm)
 			t.FailNow()
 		}
