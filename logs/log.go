@@ -505,10 +505,9 @@ func GetBeeLogger() *BeeLogger {
 }
 
 var beeLoggerMap = struct {
-	sync.RWMutex
-	logs map[string]*log.Logger
+	logs *sync.Map
 }{
-	logs: map[string]*log.Logger{},
+	logs:&sync.Map{},
 }
 
 // GetLogger returns the default BeeLogger
@@ -517,21 +516,16 @@ func GetLogger(prefixes ...string) *log.Logger {
 	if prefix != "" {
 		prefix = fmt.Sprintf(`[%s] `, strings.ToUpper(prefix))
 	}
-	beeLoggerMap.RLock()
-	l, ok := beeLoggerMap.logs[prefix]
+	l, ok := beeLoggerMap.logs.Load(prefix)
 	if ok {
-		beeLoggerMap.RUnlock()
-		return l
+		return l.(*log.Logger)
 	}
-	beeLoggerMap.RUnlock()
-	beeLoggerMap.Lock()
-	defer beeLoggerMap.Unlock()
-	l, ok = beeLoggerMap.logs[prefix]
+	l, ok = beeLoggerMap.logs.Load(prefix)
 	if !ok {
 		l = log.New(beeLogger, prefix, 0)
-		beeLoggerMap.logs[prefix] = l
+		beeLoggerMap.logs.Store(prefix, l)
 	}
-	return l
+	return l.(*log.Logger)
 }
 
 // Reset will remove all the adapter
