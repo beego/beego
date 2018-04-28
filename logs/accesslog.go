@@ -16,9 +16,10 @@ package logs
 
 import (
 	"bytes"
+	"strings"
 	"encoding/json"
-	"time"
 	"fmt"
+	"time"
 )
 
 const (
@@ -53,10 +54,9 @@ func (r *AccessLogRecord) json() ([]byte, error) {
 }
 
 func disableEscapeHTML(i interface{}) {
-	e, ok := i.(interface {
+	if e, ok := i.(interface {
 		SetEscapeHTML(bool)
-	});
-	if ok {
+	}); ok {
 		e.SetEscapeHTML(false)
 	}
 }
@@ -81,6 +81,5 @@ func AccessLog(r *AccessLogRecord, format string) {
 			msg = string(jsonData)
 		}
 	}
-
-	beeLogger.Debug(msg)
+	beeLogger.writeMsg(levelLoggerImpl, strings.TrimSpace(msg))
 }
