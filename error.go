@@ -93,11 +93,6 @@ func showErr(err interface{}, ctx *context.Context, stack string) {
 		"BeegoVersion":  VERSION,
 		"GoVersion":     runtime.Version(),
 	}
-	if ctx.Output.Status != 0 {
-		ctx.ResponseWriter.WriteHeader(ctx.Output.Status)
-	} else {
-		ctx.ResponseWriter.WriteHeader(500)
-	}
 	t.Execute(ctx.ResponseWriter, data)
 }
 
