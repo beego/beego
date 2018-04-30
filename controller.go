@@ -272,7 +272,9 @@ func (c *Controller) viewPath() string {
 
 // Redirect sends the redirection response to url with status code.
 func (c *Controller) Redirect(url string, code int) {
+	logAccess(c.Ctx, nil, code)
 	c.Ctx.Redirect(code, url)
+	panic(ErrAbort)
 }
 
 // Abort stops controller handler and show the error data if code is defined in ErrorMap or code string.
