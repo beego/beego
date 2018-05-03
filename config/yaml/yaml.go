@@ -285,9 +285,22 @@ func (c *ConfigContainer) getData(key string) (interface{}, error) {
 	if len(key) == 0 {
 		return nil, errors.New("key is empty")
 	}
+	keys := strings.Split(key, ".")
+	tmpData := c.data
+	for _, k := range keys {
+		if v, ok := tmpData[k]; ok {
+			switch v.(type) {
+			case map[string]interface{}:
+				{
+					tmpData = v.(map[string]interface{})
+				}
+			default:
+				{
+					return v, nil
+				}
 
-	if v, ok := c.data[key]; ok {
-		return v, nil
+			}
+		}
 	}
 	return nil, fmt.Errorf("not exist key %q", key)
 }
