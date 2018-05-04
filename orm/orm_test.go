@@ -2297,6 +2297,11 @@ func TestInsertOrUpdate(t *testing.T) {
 		throwFailNow(t, AssertIs(user2.Status, test.Status))
 		throwFailNow(t, AssertIs(user2.Password, strings.TrimSpace(test.Password)))
 	}
+
+	//postgres ON CONFLICT DO UPDATE SET can`t use colu=colu+values
+	if IsPostgres {
+		return
+	}
 	//test3 +
 	_, err = dORM.InsertOrUpdate(&user2, "user_name", "status=status+1")
 	if err != nil {
