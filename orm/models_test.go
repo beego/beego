@@ -477,9 +477,7 @@ go test -v github.com/astaxie/beego/orm
 #### TiDB
 export ORM_DRIVER=tidb
 export ORM_SOURCE='memory://test/test'
-go test -v github.com/astaxie/beego/orm
-
-`)
+go test -v github.com/astaxie/beego/orm`)
 		os.Exit(2)
 	}
 
