@@ -22,6 +22,7 @@ install:
   - go get github.com/mattn/go-sqlite3
   - go get github.com/bradfitz/gomemcache/memcache
   - go get github.com/gomodule/redigo/redis
+  - go get github.com/go-redis/redis
   - go get github.com/beego/x2j
   - go get github.com/couchbase/go-couchbase
   - go get github.com/beego/goyaml2
