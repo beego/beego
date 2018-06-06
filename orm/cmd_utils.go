@@ -197,6 +197,10 @@ func getDbCreateSQL(al *alias) (sqls []string, tableIndexes map[string][]dbIndex
 			if strings.Contains(column, "%COL%") {
 				column = strings.Replace(column, "%COL%", fi.column, -1)
 			}
+			
+			if fi.description != "" {
+				column += " " + fmt.Sprintf("COMMENT '%s'",fi.description)
+			}
 
 			columns = append(columns, column)
 		}
