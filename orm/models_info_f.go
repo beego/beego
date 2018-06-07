@@ -136,6 +136,7 @@ type fieldInfo struct {
 	decimals            int
 	isFielder           bool // implement Fielder interface
 	onDelete            string
+	description         string
 }
 
 // new field info
@@ -300,6 +301,7 @@ checkType:
 	fi.sf = sf
 	fi.fullName = mi.fullName + mName + "." + sf.Name
 
+	fi.description = sf.Tag.Get("description")
 	fi.null = attrs["null"]
 	fi.index = attrs["index"]
 	fi.auto = attrs["auto"]
