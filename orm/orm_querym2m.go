@@ -42,6 +42,7 @@ func (o *queryM2M) Add(mds ...interface{}) (int64, error) {
 	dbase := orm.alias.DbBaser
 
 	var models []interface{}
+	var tempMds []interface{}
 	var otherValues []interface{}
 	var otherNames []string
 
@@ -54,9 +55,11 @@ func (o *queryM2M) Add(mds ...interface{}) (int64, error) {
 	for i, md := range mds {
 		if reflect.Indirect(reflect.ValueOf(md)).Kind() != reflect.Struct && i > 0 {
 			otherValues = append(otherValues, md)
-			mds = append(mds[:i], mds[i+1:]...)
+		} else {
+			tempMds = append(tempMds, md)
 		}
 	}
+	mds = tempMds
 	for _, md := range mds {
 		val := reflect.ValueOf(md)
 		if val.Kind() == reflect.Slice || val.Kind() == reflect.Array {
