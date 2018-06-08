@@ -79,6 +79,7 @@ func (o *queryM2M) Add(mds ...interface{}) (int64, error) {
 	names := []string{mfi.column, rfi.column}
 
 	values := make([]interface{}, 0, len(models)*2)
+	values = append(values, v1)
 	for _, md := range models {
 
 		ind := reflect.Indirect(reflect.ValueOf(md))
@@ -91,8 +92,7 @@ func (o *queryM2M) Add(mds ...interface{}) (int64, error) {
 				panic(ErrMissPK)
 			}
 		}
-		values = append(values, v1, v2)
-
+		values = append(values, v2)
 	}
 	names = append(names, otherNames...)
 	values = append(values, otherValues...)
