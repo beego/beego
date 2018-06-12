@@ -260,7 +260,7 @@ func (output *BeegoOutput) Download(file string, filename ...string) {
 	} else {
 		fName = filepath.Base(file)
 	}
-	output.Header("Content-Disposition", "attachment; filename="+url.QueryEscape(fName))
+	output.Header("Content-Disposition", "attachment; filename="+url.PathEscape(fName))
 	output.Header("Content-Description", "File Transfer")
 	output.Header("Content-Type", "application/octet-stream")
 	output.Header("Content-Transfer-Encoding", "binary")
