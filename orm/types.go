@@ -190,6 +190,10 @@ type QuerySeter interface {
 	//    Distinct().
 	//    All(&permissions)
 	Distinct() QuerySeter
+	// set FOR UPDATE to query.
+	// for example:
+	//  o.QueryTable("user").Filter("uid", uid).ForUpdate().All(&users)
+	ForUpdate() QuerySeter
 	// return QuerySeter execution result number
 	// for example:
 	//	num, err = qs.Filter("profile__age__gt", 28).Count()
