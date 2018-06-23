@@ -350,6 +350,11 @@ func stringsToJSON(str string) string {
 			jsons.WriteRune(r)
 		} else {
 			jsons.WriteString("\\u")
+			if rint < 0x100 {
+				jsons.WriteString("00")
+			} else if rint < 0x1000 {
+				jsons.WriteString("0")
+			}
 			jsons.WriteString(strconv.FormatInt(int64(rint), 16))
 		}
 	}
