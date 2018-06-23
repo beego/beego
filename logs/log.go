@@ -47,7 +47,7 @@ import (
 
 // RFC5424 log message levels.
 const (
-	LevelEmergency = iota
+	LevelEmergency     = iota
 	LevelAlert
 	LevelCritical
 	LevelError
@@ -116,6 +116,7 @@ type BeeLogger struct {
 	enableFuncCallDepth bool
 	loggerFuncCallDepth int
 	asynchronous        bool
+	prefix              string
 	msgChanLen          int64
 	msgChan             chan *logMsg
 	signalChan          chan string
@@ -247,7 +248,7 @@ func (bl *BeeLogger) Write(p []byte) (n int, err error) {
 	}
 	// writeMsg will always add a '\n' character
 	if p[len(p)-1] == '\n' {
-		p = p[0 : len(p)-1]
+		p = p[0: len(p)-1]
 	}
 	// set levelLoggerImpl to ensure all log message will be write out
 	err = bl.writeMsg(levelLoggerImpl, string(p))
@@ -267,6 +268,9 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string, v ...interface{}) error 
 	if len(v) > 0 {
 		msg = fmt.Sprintf(msg, v...)
 	}
+
+	msg = bl.prefix + " " + msg
+
 	when := time.Now()
 	if bl.enableFuncCallDepth {
 		_, file, line, ok := runtime.Caller(bl.loggerFuncCallDepth)
@@ -305,6 +309,11 @@ func (bl *BeeLogger) SetLevel(l int) {
 	bl.level = l
 }
 
+// GetLevel Get Current log message level.
+func (bl *BeeLogger) GetLevel() int {
+	return bl.level
+}
+
 // SetLogFuncCallDepth set log funcCallDepth
 func (bl *BeeLogger) SetLogFuncCallDepth(d int) {
 	bl.loggerFuncCallDepth = d
@@ -318,6 +327,11 @@ func (bl *BeeLogger) GetLogFuncCallDepth() int {
 // EnableFuncCallDepth enable log funcCallDepth
 func (bl *BeeLogger) EnableFuncCallDepth(b bool) {
 	bl.enableFuncCallDepth = b
+}
+
+// set prefix
+func (bl *BeeLogger) SetPrefix(s string) {
+	bl.prefix = s
 }
 
 // start logger chan reading.
@@ -542,6 +556,11 @@ func Async(msgLen ...int64) *BeeLogger {
 // SetLevel sets the global log level used by the simple logger.
 func SetLevel(l int) {
 	beeLogger.SetLevel(l)
+}
+
+// SetPrefix sets the prefix
+func SetPrefix(s string) {
+	beeLogger.SetPrefix(s)
 }
 
 // EnableFuncCallDepth enable log funcCallDepth
