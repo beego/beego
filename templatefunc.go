@@ -17,6 +17,7 @@ package beego
 import (
 	"errors"
 	"fmt"
+	"html"
 	"html/template"
 	"net/url"
 	"reflect"
@@ -84,24 +85,24 @@ func DateFormat(t time.Time, layout string) (datestring string) {
 var datePatterns = []string{
 	// year
 	"Y", "2006", // A full numeric representation of a year, 4 digits   Examples: 1999 or 2003
-	"y", "06", //A two digit representation of a year   Examples: 99 or 03
+	"y", "06",   //A two digit representation of a year   Examples: 99 or 03
 
 	// month
-	"m", "01", // Numeric representation of a month, with leading zeros 01 through 12
-	"n", "1", // Numeric representation of a month, without leading zeros   1 through 12
-	"M", "Jan", // A short textual representation of a month, three letters Jan through Dec
+	"m", "01",      // Numeric representation of a month, with leading zeros 01 through 12
+	"n", "1",       // Numeric representation of a month, without leading zeros   1 through 12
+	"M", "Jan",     // A short textual representation of a month, three letters Jan through Dec
 	"F", "January", // A full textual representation of a month, such as January or March   January through December
 
 	// day
 	"d", "02", // Day of the month, 2 digits with leading zeros 01 to 31
-	"j", "2", // Day of the month without leading zeros 1 to 31
+	"j", "2",  // Day of the month without leading zeros 1 to 31
 
 	// week
-	"D", "Mon", // A textual representation of a day, three letters Mon through Sun
+	"D", "Mon",    // A textual representation of a day, three letters Mon through Sun
 	"l", "Monday", // A full textual representation of the day of the week  Sunday through Saturday
 
 	// time
-	"g", "3", // 12-hour format of an hour without leading zeros    1 through 12
+	"g", "3",  // 12-hour format of an hour without leading zeros    1 through 12
 	"G", "15", // 24-hour format of an hour without leading zeros   0 through 23
 	"h", "03", // 12-hour format of an hour with leading zeros  01 through 12
 	"H", "15", // 24-hour format of an hour with leading zeros  00 through 23
@@ -207,14 +208,12 @@ func Htmlquote(text string) string {
 	       '&lt;&#39;&amp;&quot;&gt;'
 	*/
 
-	text = strings.Replace(text, "&", "&amp;", -1) // Must be done first!
-	text = strings.Replace(text, "<", "&lt;", -1)
-	text = strings.Replace(text, ">", "&gt;", -1)
-	text = strings.Replace(text, "'", "&#39;", -1)
-	text = strings.Replace(text, "\"", "&quot;", -1)
-	text = strings.Replace(text, "“", "&ldquo;", -1)
-	text = strings.Replace(text, "”", "&rdquo;", -1)
-	text = strings.Replace(text, " ", "&nbsp;", -1)
+	text = html.EscapeString(text)
+	text = strings.NewReplacer(
+		`“`, "&ldquo;",
+		`”`, "&rdquo;",
+		` `, "&nbsp;",
+	).Replace(text)
 
 	return strings.TrimSpace(text)
 }
@@ -228,17 +227,7 @@ func Htmlunquote(text string) string {
 	       '<\\'&">'
 	*/
 
-	// strings.Replace(s, old, new, n)
-	// 在s字符串中，把old字符串替换为new字符串，n表示替换的次数，小于0表示全部替换
-
-	text = strings.Replace(text, "&nbsp;", " ", -1)
-	text = strings.Replace(text, "&rdquo;", "”", -1)
-	text = strings.Replace(text, "&ldquo;", "“", -1)
-	text = strings.Replace(text, "&quot;", "\"", -1)
-	text = strings.Replace(text, "&#39;", "'", -1)
-	text = strings.Replace(text, "&gt;", ">", -1)
-	text = strings.Replace(text, "&lt;", "<", -1)
-	text = strings.Replace(text, "&amp;", "&", -1) // Must be done last!
+	text = html.UnescapeString(text)
 
 	return strings.TrimSpace(text)
 }
