@@ -111,6 +111,9 @@ type Validation struct {
 	// it will skip those valid functions, see CanSkipFuncs
 	RequiredFirst bool
 
+	// The object being evaluated (set in Valid())
+	FormObj interface{}
+
 	Errors    []*Error
 	ErrorsMap map[string][]*Error
 }
@@ -345,19 +348,22 @@ func (v *Validation) Valid(obj interface{}) (b bool, err error) {
 		return
 	}
 
+	// Tie the object to the validator.
+	v.FormObj = obj
+
 	for i := 0; i < objT.NumField(); i++ {
 		var vfs []ValidFunc
 		if vfs, err = getValidFuncs(objT.Field(i)); err != nil {
 			return
 		}
 
-		var hasReuired bool
+		var hasRequired bool
 		for _, vf := range vfs {
 			if vf.Name == "Required" {
-				hasReuired = true
+				hasRequired = true
 			}
 
-			if !hasReuired && v.RequiredFirst && len(objV.Field(i).String()) == 0 {
+			if !hasRequired && v.RequiredFirst && len(objV.Field(i).String()) == 0 {
 				if _, ok := CanSkipFuncs[vf.Name]; ok {
 					continue
 				}
