@@ -14,9 +14,9 @@
 
 // Package redis for cache provider
 //
-// depend on github.com/garyburd/redigo/redis
+// depend on github.com/gomodule/redigo/redis
 //
-// go install github.com/garyburd/redigo/redis
+// go install github.com/gomodule/redigo/redis
 //
 // Usage:
 // import(
@@ -36,7 +36,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/garyburd/redigo/redis"
+	"github.com/gomodule/redigo/redis"
 
 	"github.com/astaxie/beego/cache"
 )

@@ -202,10 +202,10 @@ func (p *ControllerRegister) addWithMethodParams(pattern string, c ControllerInt
 		numOfFields := elemVal.NumField()
 		for i := 0; i < numOfFields; i++ {
 			fieldType := elemType.Field(i)
-
-			if execElem.FieldByName(fieldType.Name).CanSet() {
+			elemField := execElem.FieldByName(fieldType.Name)
+			if elemField.CanSet() {
 				fieldVal := elemVal.Field(i)
-				execElem.FieldByName(fieldType.Name).Set(fieldVal)
+				elemField.Set(fieldVal)
 			}
 		}
 

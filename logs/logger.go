@@ -93,7 +93,7 @@ const (
 func formatTimeHeader(when time.Time) ([]byte, int) {
 	y, mo, d := when.Date()
 	h, mi, s := when.Clock()
-	ns := when.Nanosecond()/1000000
+	ns := when.Nanosecond() / 1000000
 	//len("2006/01/02 15:04:05.123 ")==24
 	var buf [24]byte
 
