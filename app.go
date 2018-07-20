@@ -126,25 +126,22 @@ func (app *App) Run(mws ...MiddleWare) {
 				server := grace.NewServer(httpsAddr, app.Handlers)
 				server.Server.ReadTimeout = app.Server.ReadTimeout
 				server.Server.WriteTimeout = app.Server.WriteTimeout
-				if BConfig.Listen.AutoTLS {
-					m := autocert.Manager{
-						Prompt:     autocert.AcceptTOS,
-						HostPolicy: autocert.HostWhitelist(BConfig.Listen.Domains...),
-						Cache:      autocert.DirCache(BConfig.Listen.TLSCacheDir),
-					}
-
-					app.Server.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
-
-					BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile = "", ""
-
-				} else if BConfig.Listen.EnableMutualHTTPS {
-
+				if BConfig.Listen.EnableMutualHTTPS {
 					if err := server.ListenAndServeMutualTLS(BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile, BConfig.Listen.TrustCaFile); err != nil {
 						logs.Critical("ListenAndServeTLS: ", err, fmt.Sprintf("%d", os.Getpid()))
 						time.Sleep(100 * time.Microsecond)
 						endRunning <- true
 					}
 				} else {
+					if BConfig.Listen.AutoTLS {
+						m := autocert.Manager{
+							Prompt:     autocert.AcceptTOS,
+							HostPolicy: autocert.HostWhitelist(BConfig.Listen.Domains...),
+							Cache:      autocert.DirCache(BConfig.Listen.TLSCacheDir),
+						}
+						app.Server.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
+						BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile = "", ""
+					}
 					if err := server.ListenAndServeTLS(BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile); err != nil {
 						logs.Critical("ListenAndServeTLS: ", err, fmt.Sprintf("%d", os.Getpid()))
 						time.Sleep(100 * time.Microsecond)
@@ -174,7 +171,6 @@ func (app *App) Run(mws ...MiddleWare) {
 
 	// run normal mode
 	if BConfig.Listen.EnableHTTPS || BConfig.Listen.EnableMutualHTTPS {
-
 		go func() {
 			time.Sleep(1000 * time.Microsecond)
 			if BConfig.Listen.HTTPSPort != 0 {
@@ -190,11 +186,8 @@ func (app *App) Run(mws ...MiddleWare) {
 					HostPolicy: autocert.HostWhitelist(BConfig.Listen.Domains...),
 					Cache:      autocert.DirCache(BConfig.Listen.TLSCacheDir),
 				}
-
 				app.Server.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
-
 				BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile = "", ""
-
 			} else if BConfig.Listen.EnableMutualHTTPS {
 				pool := x509.NewCertPool()
 				data, err := ioutil.ReadFile(BConfig.Listen.TrustCaFile)
