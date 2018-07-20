@@ -50,6 +50,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"gopkg.in/yaml.v2"
 )
 
 var defaultSetting = BeegoHTTPSettings{
@@ -332,6 +333,20 @@ func (b *BeegoHTTPRequest) XMLBody(obj interface{}) (*BeegoHTTPRequest, error) {
 	return b, nil
 }
 
+// YAMLBody adds request raw body encoding by YAML.
+func (b *BeegoHTTPRequest) YAMLBody(obj interface{}) (*BeegoHTTPRequest, error) {
+	if b.req.Body == nil && obj != nil {
+		byts, err := yaml.Marshal(obj)
+		if err != nil {
+			return b, err
+		}
+		b.req.Body = ioutil.NopCloser(bytes.NewReader(byts))
+		b.req.ContentLength = int64(len(byts))
+		b.req.Header.Set("Content-Type", "application/x+yaml")
+	}
+	return b, nil
+}
+
 // JSONBody adds request raw body encoding by JSON.
 func (b *BeegoHTTPRequest) JSONBody(obj interface{}) (*BeegoHTTPRequest, error) {
 	if b.req.Body == nil && obj != nil {
@@ -431,12 +446,12 @@ func (b *BeegoHTTPRequest) DoRequest() (resp *http.Response, err error) {
 	}
 
 	b.buildURL(paramBody)
-	url, err := url.Parse(b.url)
+	urlParsed, err := url.Parse(b.url)
 	if err != nil {
 		return nil, err
 	}
 
-	b.req.URL = url
+	b.req.URL = urlParsed
 
 	trans := b.setting.Transport
 
@@ -579,6 +594,16 @@ func (b *BeegoHTTPRequest) ToXML(v interface{}) error {
 		return err
 	}
 	return xml.Unmarshal(data, v)
+}
+
+// ToYAML returns the map that marshals from the body bytes as yaml in response .
+// it calls Response inner.
+func (b *BeegoHTTPRequest) ToYAML(v interface{}) error {
+	data, err := b.Bytes()
+	if err != nil {
+		return err
+	}
+	return yaml.Unmarshal(data, v)
 }
 
 // Response executes request client gets response mannually.
