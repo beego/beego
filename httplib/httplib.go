@@ -446,7 +446,7 @@ func (b *BeegoHTTPRequest) DoRequest() (resp *http.Response, err error) {
 			TLSClientConfig:     b.setting.TLSClientConfig,
 			Proxy:               b.setting.Proxy,
 			Dial:                TimeoutDialer(b.setting.ConnectTimeout, b.setting.ReadWriteTimeout),
-			MaxIdleConnsPerHost: -1,
+			MaxIdleConnsPerHost: 100,
 		}
 	} else {
 		// if b.transport is *http.Transport then set the settings.
