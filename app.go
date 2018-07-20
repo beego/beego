@@ -191,6 +191,10 @@ func (app *App) Run(mws ...MiddleWare) {
 			}
 		}()
 	}
+
+	// fix data race on app.Server.Addr
+	time.Sleep(1000 * time.Microsecond)
+
 	if BConfig.Listen.EnableHTTP {
 		go func() {
 			app.Server.Addr = addr
