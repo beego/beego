@@ -275,6 +275,19 @@ func (c *Controller) Redirect(url string, code int) {
 	c.Ctx.Redirect(code, url)
 }
 
+// Set the data depending on the accepted
+func (c *Controller) SetData(data interface{}) {
+	accept := c.Ctx.Input.Header("Accept")
+	switch accept {
+	case applicationJSON:
+		c.Data["json"] = data
+	case applicationXML, textXML:
+		c.Data["xml"] = data
+	default:
+		c.Data["json"] = data
+	}
+}
+
 // Abort stops controller handler and show the error data if code is defined in ErrorMap or code string.
 func (c *Controller) Abort(code string) {
 	status, err := strconv.Atoi(code)
