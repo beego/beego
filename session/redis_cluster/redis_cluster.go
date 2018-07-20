@@ -14,51 +14,48 @@
 
 // Package redis for session provider
 //
-// depend on github.com/gomodule/redigo/redis
+// depend on github.com/go-redis/redis
 //
-// go install github.com/gomodule/redigo/redis
+// go install github.com/go-redis/redis
 //
 // Usage:
 // import(
-//   _ "github.com/astaxie/beego/session/redis"
+//   _ "github.com/astaxie/beego/session/redis_cluster"
 //   "github.com/astaxie/beego/session"
 // )
 //
-// 	func init() {
-// 		globalSessions, _ = session.NewManager("redis", ``{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig":"127.0.0.1:7070"}``)
-// 		go globalSessions.GC()
-// 	}
+//	func init() {
+//		globalSessions, _ = session.NewManager("redis_cluster", ``{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig":"127.0.0.1:7070;127.0.0.1:7071"}``)
+//		go globalSessions.GC()
+//	}
 //
 // more docs: http://beego.me/docs/module/session.md
-package redis
-
+package redis_cluster
 import (
 	"net/http"
 	"strconv"
 	"strings"
 	"sync"
-	"time"
-
 	"github.com/astaxie/beego/session"
-
-	"github.com/gomodule/redigo/redis"
+	rediss "github.com/go-redis/redis"
+	"time"
 )
 
 var redispder = &Provider{}
 
-// MaxPoolSize redis max pool size
-var MaxPoolSize = 100
+// MaxPoolSize redis_cluster max pool size
+var MaxPoolSize = 1000
 
-// SessionStore redis session store
+// SessionStore redis_cluster session store
 type SessionStore struct {
-	p           *redis.Pool
+	p           *rediss.ClusterClient
 	sid         string
 	lock        sync.RWMutex
 	values      map[interface{}]interface{}
 	maxlifetime int64
 }
 
-// Set value in redis session
+// Set value in redis_cluster session
 func (rs *SessionStore) Set(key, value interface{}) error {
 	rs.lock.Lock()
 	defer rs.lock.Unlock()
@@ -66,7 +63,7 @@ func (rs *SessionStore) Set(key, value interface{}) error {
 	return nil
 }
 
-// Get value in redis session
+// Get value in redis_cluster session
 func (rs *SessionStore) Get(key interface{}) interface{} {
 	rs.lock.RLock()
 	defer rs.lock.RUnlock()
@@ -76,7 +73,7 @@ func (rs *SessionStore) Get(key interface{}) interface{} {
 	return nil
 }
 
-// Delete value in redis session
+// Delete value in redis_cluster session
 func (rs *SessionStore) Delete(key interface{}) error {
 	rs.lock.Lock()
 	defer rs.lock.Unlock()
@@ -84,7 +81,7 @@ func (rs *SessionStore) Delete(key interface{}) error {
 	return nil
 }
 
-// Flush clear all values in redis session
+// Flush clear all values in redis_cluster session
 func (rs *SessionStore) Flush() error {
 	rs.lock.Lock()
 	defer rs.lock.Unlock()
@@ -92,35 +89,34 @@ func (rs *SessionStore) Flush() error {
 	return nil
 }
 
-// SessionID get redis session id
+// SessionID get redis_cluster session id
 func (rs *SessionStore) SessionID() string {
 	return rs.sid
 }
 
-// SessionRelease save session values to redis
+// SessionRelease save session values to redis_cluster
 func (rs *SessionStore) SessionRelease(w http.ResponseWriter) {
 	b, err := session.EncodeGob(rs.values)
 	if err != nil {
 		return
 	}
-	c := rs.p.Get()
-	defer c.Close()
-	c.Do("SETEX", rs.sid, rs.maxlifetime, string(b))
+	c := rs.p
+	c.Set(rs.sid, string(b), time.Duration(rs.maxlifetime) * time.Second)
 }
 
-// Provider redis session provider
+// Provider redis_cluster session provider
 type Provider struct {
 	maxlifetime int64
 	savePath    string
 	poolsize    int
 	password    string
 	dbNum       int
-	poollist    *redis.Pool
+	poollist    *rediss.ClusterClient
 }
 
-// SessionInit init redis session
-// savepath like redis server addr,pool size,password,dbnum,IdleTimeout second
-// e.g. 127.0.0.1:6379,100,astaxie,0,30
+// SessionInit init redis_cluster session
+// savepath like redis server addr,pool size,password,dbnum
+// e.g. 127.0.0.1:6379;127.0.0.1:6380,100,test,0
 func (rp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 	rp.maxlifetime = maxlifetime
 	configs := strings.Split(savePath, ",")
@@ -150,52 +146,20 @@ func (rp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 	} else {
 		rp.dbNum = 0
 	}
-	var idleTimeout time.Duration = 0
-	if len(configs) > 4 {
-		timeout, err := strconv.Atoi(configs[4])
-		if err == nil && timeout > 0 {
-			idleTimeout = time.Duration(timeout) * time.Second
-		}
-	}
-	rp.poollist = &redis.Pool{
-		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", rp.savePath)
-			if err != nil {
-				return nil, err
-			}
-			if rp.password != "" {
-				if _, err = c.Do("AUTH", rp.password); err != nil {
-					c.Close()
-					return nil, err
-				}
-			}
-			// some redis proxy such as twemproxy is not support select command
-			if rp.dbNum > 0 {
-				_, err = c.Do("SELECT", rp.dbNum)
-				if err != nil {
-					c.Close()
-					return nil, err
-				}
-			}
-			return c, err
-		},
-		MaxIdle: rp.poolsize,
-	}
-
-	rp.poollist.IdleTimeout = idleTimeout
-
-	return rp.poollist.Get().Err()
+	
+	rp.poollist = rediss.NewClusterClient(&rediss.ClusterOptions{
+		Addrs:    strings.Split(rp.savePath, ";"),
+		Password:  rp.password,
+		PoolSize: rp.poolsize,
+	})
+	return rp.poollist.Ping().Err()
 }
 
-// SessionRead read redis session by sid
+// SessionRead read redis_cluster session by sid
 func (rp *Provider) SessionRead(sid string) (session.Store, error) {
-	c := rp.poollist.Get()
-	defer c.Close()
-
 	var kv map[interface{}]interface{}
-
-	kvs, err := redis.String(c.Do("GET", sid))
-	if err != nil && err != redis.ErrNil {
+	kvs, err := rp.poollist.Get(sid).Result()
+	if err != nil && err != rediss.Nil {
 		return nil, err
 	}
 	if len(kvs) == 0 {
@@ -210,40 +174,35 @@ func (rp *Provider) SessionRead(sid string) (session.Store, error) {
 	return rs, nil
 }
 
-// SessionExist check redis session exist by sid
+// SessionExist check redis_cluster session exist by sid
 func (rp *Provider) SessionExist(sid string) bool {
-	c := rp.poollist.Get()
-	defer c.Close()
-
-	if existed, err := redis.Int(c.Do("EXISTS", sid)); err != nil || existed == 0 {
+	c := rp.poollist
+	if existed, err := c.Exists(sid).Result(); err != nil || existed == 0 {
 		return false
 	}
 	return true
 }
 
-// SessionRegenerate generate new sid for redis session
+// SessionRegenerate generate new sid for redis_cluster session
 func (rp *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error) {
-	c := rp.poollist.Get()
-	defer c.Close()
-
-	if existed, _ := redis.Int(c.Do("EXISTS", oldsid)); existed == 0 {
+	c := rp.poollist
+	
+	if existed, err := c.Exists(oldsid).Result(); err != nil || existed == 0 {
 		// oldsid doesn't exists, set the new sid directly
 		// ignore error here, since if it return error
 		// the existed value will be 0
-		c.Do("SET", sid, "", "EX", rp.maxlifetime)
+		c.Set(sid, "", time.Duration(rp.maxlifetime) * time.Second)
 	} else {
-		c.Do("RENAME", oldsid, sid)
-		c.Do("EXPIRE", sid, rp.maxlifetime)
+		c.Rename(oldsid, sid)
+		c.Expire(sid, time.Duration(rp.maxlifetime) * time.Second)
 	}
 	return rp.SessionRead(sid)
 }
 
 // SessionDestroy delete redis session by id
 func (rp *Provider) SessionDestroy(sid string) error {
-	c := rp.poollist.Get()
-	defer c.Close()
-
-	c.Do("DEL", sid)
+	c := rp.poollist
+	c.Del(sid)
 	return nil
 }
 
@@ -257,5 +216,5 @@ func (rp *Provider) SessionAll() int {
 }
 
 func init() {
-	session.Register("redis", redispder)
+	session.Register("redis_cluster", redispder)
 }
