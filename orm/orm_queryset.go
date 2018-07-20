@@ -55,16 +55,17 @@ func ColValue(opt operator, value interface{}) interface{} {
 
 // real query struct
 type querySet struct {
-	mi       *modelInfo
-	cond     *Condition
-	related  []string
-	relDepth int
-	limit    int64
-	offset   int64
-	groups   []string
-	orders   []string
-	distinct bool
-	orm      *orm
+	mi        *modelInfo
+	cond      *Condition
+	related   []string
+	relDepth  int
+	limit     int64
+	offset    int64
+	groups    []string
+	orders    []string
+	distinct  bool
+	forupdate bool
+	orm       *orm
 }
 
 var _ QuerySeter = new(querySet)
@@ -124,6 +125,12 @@ func (o querySet) OrderBy(exprs ...string) QuerySeter {
 // add DISTINCT to SELECT
 func (o querySet) Distinct() QuerySeter {
 	o.distinct = true
+	return &o
+}
+
+// add FOR UPDATE to SELECT
+func (o querySet) ForUpdate() QuerySeter {
+	o.forupdate = true
 	return &o
 }
 
@@ -191,7 +198,11 @@ func (o *querySet) PrepareInsert() (Inserter, error) {
 // query all data and map to containers.
 // cols means the columns when querying.
 func (o *querySet) All(container interface{}, cols ...string) (int64, error) {
-	return o.orm.alias.DbBaser.ReadBatch(o.orm.db, o, o.mi, o.cond, container, o.orm.alias.TZ, cols)
+	num, err := o.orm.alias.DbBaser.ReadBatch(o.orm.db, o, o.mi, o.cond, container, o.orm.alias.TZ, cols)
+	if num == 0 {
+		return 0, ErrNoRows
+	}
+	return num, err
 }
 
 // query one row data and map to containers.

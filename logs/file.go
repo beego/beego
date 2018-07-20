@@ -40,6 +40,9 @@ type fileLogWriter struct {
 	MaxLines         int `json:"maxlines"`
 	maxLinesCurLines int
 
+	MaxFiles         int `json:"maxfiles"`
+	MaxFilesCurFiles int
+
 	// Rotate at size
 	MaxSize        int `json:"maxsize"`
 	maxSizeCurSize int
@@ -70,6 +73,9 @@ func newFileWriter() Logger {
 		RotatePerm: "0440",
 		Level:      LevelTrace,
 		Perm:       "0660",
+		MaxLines:   10000000,
+		MaxFiles:   999,
+		MaxSize:    1 << 28,
 	}
 	return w
 }
@@ -238,7 +244,7 @@ func (w *fileLogWriter) lines() (int, error) {
 func (w *fileLogWriter) doRotate(logTime time.Time) error {
 	// file exists
 	// Find the next available number
-	num := 1
+	num := w.MaxFilesCurFiles + 1
 	fName := ""
 	rotatePerm, err := strconv.ParseInt(w.RotatePerm, 8, 64)
 	if err != nil {
@@ -251,18 +257,16 @@ func (w *fileLogWriter) doRotate(logTime time.Time) error {
 		goto RESTART_LOGGER
 	}
 
+	// only when one of them be setted, then the file would be splited
 	if w.MaxLines > 0 || w.MaxSize > 0 {
-		for ; err == nil && num <= 999; num++ {
+		for ; err == nil && num <= w.MaxFiles; num++ {
 			fName = w.fileNameOnly + fmt.Sprintf(".%s.%03d%s", logTime.Format("2006-01-02"), num, w.suffix)
 			_, err = os.Lstat(fName)
 		}
 	} else {
-		fName = fmt.Sprintf("%s.%s%s", w.fileNameOnly, w.dailyOpenTime.Format("2006-01-02"), w.suffix)
+		fName = w.fileNameOnly + fmt.Sprintf(".%s.%03d%s", w.dailyOpenTime.Format("2006-01-02"), num, w.suffix)
 		_, err = os.Lstat(fName)
-		for ; err == nil && num <= 999; num++ {
-			fName = w.fileNameOnly + fmt.Sprintf(".%s.%03d%s", w.dailyOpenTime.Format("2006-01-02"), num, w.suffix)
-			_, err = os.Lstat(fName)
-		}
+		w.MaxFilesCurFiles = num
 	}
 	// return error if the last file checked still existed
 	if err == nil {
@@ -308,7 +312,7 @@ func (w *fileLogWriter) deleteOldLog() {
 			return
 		}
 
-		if !info.IsDir() && info.ModTime().Add(24*time.Hour*time.Duration(w.MaxDays)).Before(time.Now()) {
+		if !info.IsDir() && info.ModTime().Add(24 * time.Hour * time.Duration(w.MaxDays)).Before(time.Now()) {
 			if strings.HasPrefix(filepath.Base(path), filepath.Base(w.fileNameOnly)) &&
 				strings.HasSuffix(filepath.Base(path), w.suffix) {
 				os.Remove(path)

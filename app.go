@@ -24,8 +24,8 @@ import (
 	"net/http/fcgi"
 	"os"
 	"path"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/astaxie/beego/grace"
 	"github.com/astaxie/beego/logs"
@@ -101,7 +101,7 @@ func (app *App) Run(mws ...MiddleWare) {
 	}
 
 	app.Server.Handler = app.Handlers
-	for i:=len(mws)-1;i>=0;i-- {
+	for i := len(mws) - 1; i >= 0; i-- {
 		if mws[i] == nil {
 			continue
 		}
@@ -167,7 +167,7 @@ func (app *App) Run(mws ...MiddleWare) {
 			if BConfig.Listen.HTTPSPort != 0 {
 				app.Server.Addr = fmt.Sprintf("%s:%d", BConfig.Listen.HTTPSAddr, BConfig.Listen.HTTPSPort)
 			} else if BConfig.Listen.EnableHTTP {
-				BeeLogger.Info("Start https server error, confict with http.Please reset https port")
+				BeeLogger.Info("Start https server error, conflict with http.Please reset https port")
 				return
 			}
 			logs.Info("https server Running on https://%s", app.Server.Addr)
