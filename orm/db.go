@@ -305,7 +305,7 @@ func (d *dbBase) InsertStmt(stmt stmtQuerier, mi *modelInfo, ind reflect.Value, 
 	}
 	res, err := stmt.Exec(values...)
 	if err == nil {
-		return res.LastInsertId()
+		return res.RowsAffected()
 	}
 	return 0, err
 }
@@ -481,10 +481,7 @@ func (d *dbBase) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []s
 	if isMulti || !d.ins.HasReturningID(mi, &query) {
 		res, err := q.Exec(query, values...)
 		if err == nil {
-			if isMulti {
-				return res.RowsAffected()
-			}
-			return res.LastInsertId()
+			return res.RowsAffected()
 		}
 		return 0, err
 	}
@@ -580,10 +577,7 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a
 	if isMulti || !d.ins.HasReturningID(mi, &query) {
 		res, err := q.Exec(query, values...)
 		if err == nil {
-			if isMulti {
-				return res.RowsAffected()
-			}
-			return res.LastInsertId()
+			return res.RowsAffected()
 		}
 		return 0, err
 	}
