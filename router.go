@@ -943,7 +943,7 @@ func (p *ControllerRegister) handleParamResponse(context *beecontext.Context, ex
 			context.RenderMethodResult(resultValue)
 		}
 	}
-	if !context.ResponseWriter.Started && context.Output.Status == 0 {
+	if !context.ResponseWriter.Started && len(results) > 0 && context.Output.Status == 0 {
 		context.Output.SetStatus(200)
 	}
 }
