@@ -50,6 +50,13 @@ func (st *MemSessionStore) Get(key interface{}) interface{} {
 	return nil
 }
 
+// GetKeys all key-value from session
+func (st *MemSessionStore) GetAll() map[interface{}]interface{} {
+	st.lock.RLock()
+	defer st.lock.RUnlock()
+	return st.value
+}
+
 // Delete in memory session by key
 func (st *MemSessionStore) Delete(key interface{}) error {
 	st.lock.Lock()

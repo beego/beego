@@ -164,6 +164,13 @@ func (s *SessionStore) Get(key interface{}) interface{} {
 	return nil
 }
 
+// GetKeys all key-value from session
+func (s *SessionStore) GetAll() map[interface{}]interface{} {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+	return s.value
+}
+
 // Delete the key in session store
 func (s *SessionStore) Delete(key interface{}) error {
 	s.lock.Lock()

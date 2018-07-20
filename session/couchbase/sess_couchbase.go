@@ -80,6 +80,13 @@ func (cs *SessionStore) Get(key interface{}) interface{} {
 	return nil
 }
 
+// GetKeys all key-value from session
+func (cs *SessionStore) GetAll() map[interface{}]interface{} {
+	cs.lock.RLock()
+	defer cs.lock.RUnlock()
+	return cs.value
+}
+
 // Delete value in couchbase session by given key
 func (cs *SessionStore) Delete(key interface{}) error {
 	cs.lock.Lock()
