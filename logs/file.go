@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -167,6 +168,10 @@ func (w *fileLogWriter) createLogFile() (*os.File, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	filepath := path.Dir(w.Filename)
+	os.MkdirAll(filepath, os.FileMode(perm))
+
 	fd, err := os.OpenFile(w.Filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(perm))
 	if err == nil {
 		// Make sure file perm is user set perm cause of `os.OpenFile` will obey umask
