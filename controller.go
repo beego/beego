@@ -272,7 +272,22 @@ func (c *Controller) viewPath() string {
 
 // Redirect sends the redirection response to url with status code.
 func (c *Controller) Redirect(url string, code int) {
+	logAccess(c.Ctx, nil, code)
 	c.Ctx.Redirect(code, url)
+	panic(ErrAbort)
+}
+
+// Set the data depending on the accepted
+func (c *Controller) SetData(data interface{}) {
+	accept := c.Ctx.Input.Header("Accept")
+	switch accept {
+	case applicationJSON:
+		c.Data["json"] = data
+	case applicationXML, textXML:
+		c.Data["xml"] = data
+	default:
+		c.Data["json"] = data
+	}
 }
 
 // Abort stops controller handler and show the error data if code is defined in ErrorMap or code string.

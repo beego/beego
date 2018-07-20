@@ -365,10 +365,10 @@ func (v *Validation) Valid(obj interface{}) (b bool, err error) {
 			return
 		}
 
-		var hasReuired bool
+		var hasRequired bool
 		for _, vf := range vfs {
 			if vf.Name == "Required" {
-				hasReuired = true
+				hasRequired = true
 			}
 
 			currentField := objV.Field(i).Interface()
@@ -382,7 +382,7 @@ func (v *Validation) Valid(obj interface{}) (b bool, err error) {
 
 
 			chk := Required{""}.IsSatisfied(currentField)
-			if !hasReuired && v.RequiredFirst && !chk {
+			if !hasRequired && v.RequiredFirst && !chk {
 				if _, ok := CanSkipFuncs[vf.Name]; ok {
 					continue
 				}
