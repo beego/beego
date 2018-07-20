@@ -36,6 +36,7 @@ import (
 const (
 	applicationJSON = "application/json"
 	applicationXML  = "application/xml"
+	applicationYAML  = "application/x-yaml"
 	textXML         = "text/xml"
 )
 
@@ -362,6 +363,11 @@ func (c *Controller) ServeXML() {
 	c.Ctx.Output.XML(c.Data["xml"], hasIndent)
 }
 
+// ServeXML sends xml response.
+func (c *Controller) ServeYAML() {
+	c.Ctx.Output.YAML(c.Data["yaml"])
+}
+
 // ServeFormatted serve Xml OR Json, depending on the value of the Accept header
 func (c *Controller) ServeFormatted() {
 	accept := c.Ctx.Input.Header("Accept")
@@ -370,6 +376,8 @@ func (c *Controller) ServeFormatted() {
 		c.ServeJSON()
 	case applicationXML, textXML:
 		c.ServeXML()
+	case applicationYAML:
+		c.ServeYAML()
 	default:
 		c.ServeJSON()
 	}
