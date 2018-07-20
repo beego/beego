@@ -318,6 +318,7 @@ func (b *BeegoHTTPRequest) Body(data interface{}) *BeegoHTTPRequest {
 	}
 	return b
 }
+
 // XMLBody adds request raw body encoding by XML.
 func (b *BeegoHTTPRequest) XMLBody(obj interface{}) (*BeegoHTTPRequest, error) {
 	if b.req.Body == nil && obj != nil {
@@ -331,6 +332,7 @@ func (b *BeegoHTTPRequest) XMLBody(obj interface{}) (*BeegoHTTPRequest, error) {
 	}
 	return b, nil
 }
+
 // YAMLBody adds request raw body encoding by YAML.
 func (b *BeegoHTTPRequest) YAMLBody(obj interface{}) (*BeegoHTTPRequest, error) {
 	if b.req.Body == nil && obj != nil {
@@ -344,6 +346,7 @@ func (b *BeegoHTTPRequest) YAMLBody(obj interface{}) (*BeegoHTTPRequest, error) 
 	}
 	return b, nil
 }
+
 // JSONBody adds request raw body encoding by JSON.
 func (b *BeegoHTTPRequest) JSONBody(obj interface{}) (*BeegoHTTPRequest, error) {
 	if b.req.Body == nil && obj != nil {
@@ -458,7 +461,7 @@ func (b *BeegoHTTPRequest) DoRequest() (resp *http.Response, err error) {
 			TLSClientConfig:     b.setting.TLSClientConfig,
 			Proxy:               b.setting.Proxy,
 			Dial:                TimeoutDialer(b.setting.ConnectTimeout, b.setting.ReadWriteTimeout),
-			MaxIdleConnsPerHost: -1,
+			MaxIdleConnsPerHost: 100,
 		}
 	} else {
 		// if b.transport is *http.Transport then set the settings.

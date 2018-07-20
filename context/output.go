@@ -275,7 +275,7 @@ func (output *BeegoOutput) Download(file string, filename ...string) {
 	} else {
 		fName = filepath.Base(file)
 	}
-	output.Header("Content-Disposition", "attachment; filename="+url.QueryEscape(fName))
+	output.Header("Content-Disposition", "attachment; filename="+url.PathEscape(fName))
 	output.Header("Content-Description", "File Transfer")
 	output.Header("Content-Type", "application/octet-stream")
 	output.Header("Content-Transfer-Encoding", "binary")
@@ -365,6 +365,11 @@ func stringsToJSON(str string) string {
 			jsons.WriteRune(r)
 		} else {
 			jsons.WriteString("\\u")
+			if rint < 0x100 {
+				jsons.WriteString("00")
+			} else if rint < 0x1000 {
+				jsons.WriteString("0")
+			}
 			jsons.WriteString(strconv.FormatInt(int64(rint), 16))
 		}
 	}

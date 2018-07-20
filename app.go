@@ -24,8 +24,8 @@ import (
 	"net/http/fcgi"
 	"os"
 	"path"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/astaxie/beego/grace"
 	"github.com/astaxie/beego/logs"
@@ -101,7 +101,7 @@ func (app *App) Run(mws ...MiddleWare) {
 	}
 
 	app.Server.Handler = app.Handlers
-	for i:=len(mws)-1;i>=0;i-- {
+	for i := len(mws) - 1; i >= 0; i-- {
 		if mws[i] == nil {
 			continue
 		}
@@ -117,7 +117,7 @@ func (app *App) Run(mws ...MiddleWare) {
 		app.Server.Addr = httpsAddr
 		if BConfig.Listen.EnableHTTPS || BConfig.Listen.EnableMutualHTTPS {
 			go func() {
-				time.Sleep(20 * time.Microsecond)
+				time.Sleep(1000 * time.Microsecond)
 				if BConfig.Listen.HTTPSPort != 0 {
 					httpsAddr = fmt.Sprintf("%s:%d", BConfig.Listen.HTTPSAddr, BConfig.Listen.HTTPSPort)
 					app.Server.Addr = httpsAddr
@@ -163,7 +163,7 @@ func (app *App) Run(mws ...MiddleWare) {
 	// run normal mode
 	if BConfig.Listen.EnableHTTPS || BConfig.Listen.EnableMutualHTTPS {
 		go func() {
-			time.Sleep(20 * time.Microsecond)
+			time.Sleep(1000 * time.Microsecond)
 			if BConfig.Listen.HTTPSPort != 0 {
 				app.Server.Addr = fmt.Sprintf("%s:%d", BConfig.Listen.HTTPSAddr, BConfig.Listen.HTTPSPort)
 			} else if BConfig.Listen.EnableHTTP {
