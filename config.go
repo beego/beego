@@ -247,7 +247,7 @@ func newBConfig() *Config {
 		},
 		Log: LogConfig{
 			AccessLogs:       false,
-			AccessLogsFormat: "APACHE_FORMAT",
+			AccessLogsFormat: "",
 			FileLineNum:      true,
 			Outputs:          map[string]string{"console": ""},
 		},
