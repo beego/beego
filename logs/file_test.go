@@ -135,7 +135,7 @@ func TestFileRotate_01(t *testing.T) {
 
 func TestFileRotate_02(t *testing.T) {
 	fn1 := "rotate_day.log"
-	fn2 := "rotate_day." + time.Now().Add(-24*time.Hour).Format("2006-01-02") + ".log"
+	fn2 := "rotate_day." + time.Now().Add(-24*time.Hour).Format("2006-01-02") + ".001.log"
 	testFileRotate(t, fn1, fn2)
 }
 
@@ -150,7 +150,7 @@ func TestFileRotate_03(t *testing.T) {
 
 func TestFileRotate_04(t *testing.T) {
 	fn1 := "rotate_day.log"
-	fn2 := "rotate_day." + time.Now().Add(-24*time.Hour).Format("2006-01-02") + ".log"
+	fn2 := "rotate_day." + time.Now().Add(-24*time.Hour).Format("2006-01-02") + ".001.log"
 	testFileDailyRotate(t, fn1, fn2)
 }
 
@@ -200,6 +200,7 @@ func testFileRotate(t *testing.T, fn1, fn2 string) {
 	for _, file := range []string{fn1, fn2} {
 		_, err := os.Stat(file)
 		if err != nil {
+			t.Log(err)
 			t.FailNow()
 		}
 		os.Remove(file)

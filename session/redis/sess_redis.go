@@ -37,6 +37,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/astaxie/beego/session"
 
@@ -118,8 +119,8 @@ type Provider struct {
 }
 
 // SessionInit init redis session
-// savepath like redis server addr,pool size,password,dbnum
-// e.g. 127.0.0.1:6379,100,astaxie,0
+// savepath like redis server addr,pool size,password,dbnum,IdleTimeout second
+// e.g. 127.0.0.1:6379,100,astaxie,0,30
 func (rp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 	rp.maxlifetime = maxlifetime
 	configs := strings.Split(savePath, ",")
@@ -149,6 +150,13 @@ func (rp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 	} else {
 		rp.dbNum = 0
 	}
+	var idleTimeout time.Duration = 0
+	if len(configs) > 4 {
+		timeout, err := strconv.Atoi(configs[4])
+		if err == nil && timeout > 0 {
+			idleTimeout = time.Duration(timeout) * time.Second
+		}
+	}
 	rp.poollist = &redis.Pool{
 		Dial: func() (redis.Conn, error) {
 			c, err := redis.Dial("tcp", rp.savePath)
@@ -171,8 +179,10 @@ func (rp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 			}
 			return c, err
 		},
-		MaxIdle:         rp.poolsize,
+		MaxIdle: rp.poolsize,
 	}
+
+	rp.poollist.IdleTimeout = idleTimeout
 
 	return rp.poollist.Get().Err()
 }
