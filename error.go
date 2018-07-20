@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	errorTypeHandler = iota
+	errorTypeHandler    = iota
 	errorTypeController
 )
 
@@ -92,11 +92,6 @@ func showErr(err interface{}, ctx *context.Context, stack string) {
 		"Stack":         stack,
 		"BeegoVersion":  VERSION,
 		"GoVersion":     runtime.Version(),
-	}
-	if ctx.Output.Status != 0 {
-		ctx.ResponseWriter.WriteHeader(ctx.Output.Status)
-	} else {
-		ctx.ResponseWriter.WriteHeader(500)
 	}
 	t.Execute(ctx.ResponseWriter, data)
 }
@@ -439,6 +434,9 @@ func exception(errCode string, ctx *context.Context) {
 }
 
 func executeError(err *errorInfo, ctx *context.Context, code int) {
+	//make sure to log the error in the access log
+	logAccess(ctx, nil, code)
+
 	if err.errorType == errorTypeHandler {
 		ctx.ResponseWriter.WriteHeader(code)
 		err.handler(ctx.ResponseWriter, ctx.Request)

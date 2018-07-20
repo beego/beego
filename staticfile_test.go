@@ -16,7 +16,7 @@ var licenseFile = filepath.Join(currentWorkDir, "LICENSE")
 
 func testOpenFile(encoding string, content []byte, t *testing.T) {
 	fi, _ := os.Stat(licenseFile)
-	b, n, sch, err := openFile(licenseFile, fi, encoding)
+	b, n, sch, reader, err := openFile(licenseFile, fi, encoding)
 	if err != nil {
 		t.Log(err)
 		t.Fail()
@@ -24,7 +24,7 @@ func testOpenFile(encoding string, content []byte, t *testing.T) {
 
 	t.Log("open static file encoding "+n, b)
 
-	assetOpenFileAndContent(sch, content, t)
+	assetOpenFileAndContent(sch, reader, content, t)
 }
 func TestOpenStaticFile_1(t *testing.T) {
 	file, _ := os.Open(licenseFile)
@@ -53,13 +53,13 @@ func TestOpenStaticFileDeflate_1(t *testing.T) {
 	testOpenFile("deflate", content, t)
 }
 
-func assetOpenFileAndContent(sch *serveContentHolder, content []byte, t *testing.T) {
+func assetOpenFileAndContent(sch *serveContentHolder, reader *serveContentReader, content []byte, t *testing.T) {
 	t.Log(sch.size, len(content))
 	if sch.size != int64(len(content)) {
 		t.Log("static content file size not same")
 		t.Fail()
 	}
-	bs, _ := ioutil.ReadAll(sch)
+	bs, _ := ioutil.ReadAll(reader)
 	for i, v := range content {
 		if v != bs[i] {
 			t.Log("content not same")

@@ -67,6 +67,7 @@ func oldMap() map[string]interface{} {
 	m["BConfig.WebConfig.Session.SessionDomain"] = BConfig.WebConfig.Session.SessionDomain
 	m["BConfig.WebConfig.Session.SessionDisableHTTPOnly"] = BConfig.WebConfig.Session.SessionDisableHTTPOnly
 	m["BConfig.Log.AccessLogs"] = BConfig.Log.AccessLogs
+	m["BConfig.Log.EnableStaticLogs"] = BConfig.Log.EnableStaticLogs
 	m["BConfig.Log.AccessLogsFormat"] = BConfig.Log.AccessLogsFormat
 	m["BConfig.Log.FileLineNum"] = BConfig.Log.FileLineNum
 	m["BConfig.Log.Outputs"] = BConfig.Log.Outputs
