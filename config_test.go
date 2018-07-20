@@ -75,7 +75,7 @@ func TestAssignConfig_02(t *testing.T) {
 
 	jcf := &config.JSONConfig{}
 	bs, _ = json.Marshal(configMap)
-	ac, _ := jcf.ParseData([]byte(bs))
+	ac, _ := jcf.ParseData(bs)
 
 	for _, i := range []interface{}{_BConfig, &_BConfig.Listen, &_BConfig.WebConfig, &_BConfig.Log, &_BConfig.WebConfig.Session} {
 		assignSingleConfig(i, ac)
