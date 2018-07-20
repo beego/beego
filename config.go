@@ -182,7 +182,11 @@ func recoverPanic(ctx *context.Context) {
 		if BConfig.RunMode == DEV && BConfig.EnableErrorsRender {
 			showErr(err, ctx, stack)
 		}
-		ctx.ResponseWriter.WriteHeader(500)
+		if ctx.Output.Status != 0 {
+			ctx.ResponseWriter.WriteHeader(ctx.Output.Status)
+		} else {
+			ctx.ResponseWriter.WriteHeader(500)
+		}
 	}
 }
 
