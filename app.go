@@ -30,6 +30,7 @@ import (
 	"github.com/astaxie/beego/grace"
 	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/utils"
+	"golang.org/x/crypto/acme/autocert"
 )
 
 var (
@@ -125,7 +126,18 @@ func (app *App) Run(mws ...MiddleWare) {
 				server := grace.NewServer(httpsAddr, app.Handlers)
 				server.Server.ReadTimeout = app.Server.ReadTimeout
 				server.Server.WriteTimeout = app.Server.WriteTimeout
-				if BConfig.Listen.EnableMutualHTTPS {
+				if BConfig.Listen.AutoTLS {
+					m := autocert.Manager{
+						Prompt:     autocert.AcceptTOS,
+						HostPolicy: autocert.HostWhitelist(BConfig.Listen.Domains...),
+						Cache:      autocert.DirCache(BConfig.Listen.TLSCacheDir),
+					}
+
+					app.Server.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
+
+					BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile = "", ""
+
+				} else if BConfig.Listen.EnableMutualHTTPS {
 
 					if err := server.ListenAndServeMutualTLS(BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile, BConfig.Listen.TrustCaFile); err != nil {
 						logs.Critical("ListenAndServeTLS: ", err, fmt.Sprintf("%d", os.Getpid()))
@@ -162,16 +174,28 @@ func (app *App) Run(mws ...MiddleWare) {
 
 	// run normal mode
 	if BConfig.Listen.EnableHTTPS || BConfig.Listen.EnableMutualHTTPS {
+
 		go func() {
 			time.Sleep(1000 * time.Microsecond)
 			if BConfig.Listen.HTTPSPort != 0 {
 				app.Server.Addr = fmt.Sprintf("%s:%d", BConfig.Listen.HTTPSAddr, BConfig.Listen.HTTPSPort)
 			} else if BConfig.Listen.EnableHTTP {
-				BeeLogger.Info("Start https server error, conflict with http.Please reset https port")
+				BeeLogger.Info("Start https server error, conflict with http. Please reset https port")
 				return
 			}
 			logs.Info("https server Running on https://%s", app.Server.Addr)
-			if BConfig.Listen.EnableMutualHTTPS {
+			if BConfig.Listen.AutoTLS {
+				m := autocert.Manager{
+					Prompt:     autocert.AcceptTOS,
+					HostPolicy: autocert.HostWhitelist(BConfig.Listen.Domains...),
+					Cache:      autocert.DirCache(BConfig.Listen.TLSCacheDir),
+				}
+
+				app.Server.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
+
+				BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile = "", ""
+
+			} else if BConfig.Listen.EnableMutualHTTPS {
 				pool := x509.NewCertPool()
 				data, err := ioutil.ReadFile(BConfig.Listen.TrustCaFile)
 				if err != nil {
@@ -190,6 +214,7 @@ func (app *App) Run(mws ...MiddleWare) {
 				endRunning <- true
 			}
 		}()
+
 	}
 	if BConfig.Listen.EnableHTTP {
 		go func() {
