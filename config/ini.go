@@ -215,7 +215,7 @@ func (c *IniConfigContainer) Bool(key string) (bool, error) {
 }
 
 // DefaultBool returns the boolean value for a given key.
-// if err != nil return defaltval
+// if err != nil return defaultval
 func (c *IniConfigContainer) DefaultBool(key string, defaultval bool) bool {
 	v, err := c.Bool(key)
 	if err != nil {
@@ -230,7 +230,7 @@ func (c *IniConfigContainer) Int(key string) (int, error) {
 }
 
 // DefaultInt returns the integer value for a given key.
-// if err != nil return defaltval
+// if err != nil return defaultval
 func (c *IniConfigContainer) DefaultInt(key string, defaultval int) int {
 	v, err := c.Int(key)
 	if err != nil {
@@ -245,7 +245,7 @@ func (c *IniConfigContainer) Int64(key string) (int64, error) {
 }
 
 // DefaultInt64 returns the int64 value for a given key.
-// if err != nil return defaltval
+// if err != nil return defaultval
 func (c *IniConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
 	v, err := c.Int64(key)
 	if err != nil {
@@ -260,7 +260,7 @@ func (c *IniConfigContainer) Float(key string) (float64, error) {
 }
 
 // DefaultFloat returns the float64 value for a given key.
-// if err != nil return defaltval
+// if err != nil return defaultval
 func (c *IniConfigContainer) DefaultFloat(key string, defaultval float64) float64 {
 	v, err := c.Float(key)
 	if err != nil {
@@ -275,7 +275,7 @@ func (c *IniConfigContainer) String(key string) string {
 }
 
 // DefaultString returns the string value for a given key.
-// if err != nil return defaltval
+// if err != nil return defaultval
 func (c *IniConfigContainer) DefaultString(key string, defaultval string) string {
 	v := c.String(key)
 	if v == "" {
@@ -295,7 +295,7 @@ func (c *IniConfigContainer) Strings(key string) []string {
 }
 
 // DefaultStrings returns the []string value for a given key.
-// if err != nil return defaltval
+// if err != nil return defaultval
 func (c *IniConfigContainer) DefaultStrings(key string, defaultval []string) []string {
 	v := c.Strings(key)
 	if v == nil {
@@ -314,7 +314,7 @@ func (c *IniConfigContainer) GetSection(section string) (map[string]string, erro
 
 // SaveConfigFile save the config into file.
 //
-// BUG(env): The environment variable config item will be saved with real value in SaveConfigFile Funcation.
+// BUG(env): The environment variable config item will be saved with real value in SaveConfigFile Function.
 func (c *IniConfigContainer) SaveConfigFile(filename string) (err error) {
 	// Write configuration file by filename.
 	f, err := os.Create(filename)

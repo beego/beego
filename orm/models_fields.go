@@ -86,7 +86,7 @@ func (e *BooleanField) SetRaw(value interface{}) error {
 		e.Set(d)
 	case string:
 		v, err := StrTo(d).Bool()
-		if err != nil {
+		if err == nil {
 			e.Set(v)
 		}
 		return err
@@ -191,7 +191,7 @@ func (e *TimeField) SetRaw(value interface{}) error {
 		e.Set(d)
 	case string:
 		v, err := timeParse(d, formatTime)
-		if err != nil {
+		if err == nil {
 			e.Set(v)
 		}
 		return err
@@ -250,7 +250,7 @@ func (e *DateField) SetRaw(value interface{}) error {
 		e.Set(d)
 	case string:
 		v, err := timeParse(d, formatDate)
-		if err != nil {
+		if err == nil {
 			e.Set(v)
 		}
 		return err
@@ -300,7 +300,7 @@ func (e *DateTimeField) SetRaw(value interface{}) error {
 		e.Set(d)
 	case string:
 		v, err := timeParse(d, formatDateTime)
-		if err != nil {
+		if err == nil {
 			e.Set(v)
 		}
 		return err
@@ -350,9 +350,10 @@ func (e *FloatField) SetRaw(value interface{}) error {
 		e.Set(d)
 	case string:
 		v, err := StrTo(d).Float64()
-		if err != nil {
+		if err == nil {
 			e.Set(v)
 		}
+		return err
 	default:
 		return fmt.Errorf("<FloatField.SetRaw> unknown value `%s`", value)
 	}
@@ -397,9 +398,10 @@ func (e *SmallIntegerField) SetRaw(value interface{}) error {
 		e.Set(d)
 	case string:
 		v, err := StrTo(d).Int16()
-		if err != nil {
+		if err == nil {
 			e.Set(v)
 		}
+		return err
 	default:
 		return fmt.Errorf("<SmallIntegerField.SetRaw> unknown value `%s`", value)
 	}
@@ -444,9 +446,10 @@ func (e *IntegerField) SetRaw(value interface{}) error {
 		e.Set(d)
 	case string:
 		v, err := StrTo(d).Int32()
-		if err != nil {
+		if err == nil {
 			e.Set(v)
 		}
+		return err
 	default:
 		return fmt.Errorf("<IntegerField.SetRaw> unknown value `%s`", value)
 	}
@@ -491,9 +494,10 @@ func (e *BigIntegerField) SetRaw(value interface{}) error {
 		e.Set(d)
 	case string:
 		v, err := StrTo(d).Int64()
-		if err != nil {
+		if err == nil {
 			e.Set(v)
 		}
+		return err
 	default:
 		return fmt.Errorf("<BigIntegerField.SetRaw> unknown value `%s`", value)
 	}
@@ -538,9 +542,10 @@ func (e *PositiveSmallIntegerField) SetRaw(value interface{}) error {
 		e.Set(d)
 	case string:
 		v, err := StrTo(d).Uint16()
-		if err != nil {
+		if err == nil {
 			e.Set(v)
 		}
+		return err
 	default:
 		return fmt.Errorf("<PositiveSmallIntegerField.SetRaw> unknown value `%s`", value)
 	}
@@ -585,9 +590,10 @@ func (e *PositiveIntegerField) SetRaw(value interface{}) error {
 		e.Set(d)
 	case string:
 		v, err := StrTo(d).Uint32()
-		if err != nil {
+		if err == nil {
 			e.Set(v)
 		}
+		return err
 	default:
 		return fmt.Errorf("<PositiveIntegerField.SetRaw> unknown value `%s`", value)
 	}
@@ -632,9 +638,10 @@ func (e *PositiveBigIntegerField) SetRaw(value interface{}) error {
 		e.Set(d)
 	case string:
 		v, err := StrTo(d).Uint64()
-		if err != nil {
+		if err == nil {
 			e.Set(v)
 		}
+		return err
 	default:
 		return fmt.Errorf("<PositiveBigIntegerField.SetRaw> unknown value `%s`", value)
 	}

@@ -30,6 +30,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"gopkg.in/yaml.v2"
 )
 
 // BeegoOutput does work for sending response header.
@@ -182,8 +183,8 @@ func errorRenderer(err error) Renderer {
 }
 
 // JSON writes json to response body.
-// if coding is true, it converts utf-8 to \u0000 type.
-func (output *BeegoOutput) JSON(data interface{}, hasIndent bool, coding bool) error {
+// if encoding is true, it converts utf-8 to \u0000 type.
+func (output *BeegoOutput) JSON(data interface{}, hasIndent bool, encoding bool) error {
 	output.Header("Content-Type", "application/json; charset=utf-8")
 	var content []byte
 	var err error
@@ -196,8 +197,22 @@ func (output *BeegoOutput) JSON(data interface{}, hasIndent bool, coding bool) e
 		http.Error(output.Context.ResponseWriter, err.Error(), http.StatusInternalServerError)
 		return err
 	}
-	if coding {
+	if encoding {
 		content = []byte(stringsToJSON(string(content)))
+	}
+	return output.Body(content)
+}
+
+
+// YAML writes yaml to response body.
+func (output *BeegoOutput) YAML(data interface{}) error {
+	output.Header("Content-Type", "application/application/x-yaml; charset=utf-8")
+	var content []byte
+	var err error
+	content, err = yaml.Marshal(data)
+	if err != nil {
+		http.Error(output.Context.ResponseWriter, err.Error(), http.StatusInternalServerError)
+		return err
 	}
 	return output.Body(content)
 }
@@ -260,7 +275,7 @@ func (output *BeegoOutput) Download(file string, filename ...string) {
 	} else {
 		fName = filepath.Base(file)
 	}
-	output.Header("Content-Disposition", "attachment; filename="+url.QueryEscape(fName))
+	output.Header("Content-Disposition", "attachment; filename="+url.PathEscape(fName))
 	output.Header("Content-Description", "File Transfer")
 	output.Header("Content-Type", "application/octet-stream")
 	output.Header("Content-Transfer-Encoding", "binary")
@@ -325,13 +340,13 @@ func (output *BeegoOutput) IsForbidden() bool {
 }
 
 // IsNotFound returns boolean of this request is not found.
-// HTTP 404 means forbidden.
+// HTTP 404 means not found.
 func (output *BeegoOutput) IsNotFound() bool {
 	return output.Status == 404
 }
 
 // IsClientError returns boolean of this request client sends error data.
-// HTTP 4xx means forbidden.
+// HTTP 4xx means client error.
 func (output *BeegoOutput) IsClientError() bool {
 	return output.Status >= 400 && output.Status < 500
 }
@@ -350,6 +365,11 @@ func stringsToJSON(str string) string {
 			jsons.WriteRune(r)
 		} else {
 			jsons.WriteString("\\u")
+			if rint < 0x100 {
+				jsons.WriteString("00")
+			} else if rint < 0x1000 {
+				jsons.WriteString("0")
+			}
 			jsons.WriteString(strconv.FormatInt(int64(rint), 16))
 		}
 	}
