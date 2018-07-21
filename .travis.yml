@@ -1,9 +1,8 @@
 language: go
 
 go:
-  - 1.7.5
-  - 1.8.5
-  - 1.9.2
+  - "1.9.2"
+  - "1.10.3"
 services:
   - redis-server
   - mysql
@@ -22,10 +21,11 @@ install:
   - go get github.com/go-sql-driver/mysql
   - go get github.com/mattn/go-sqlite3
   - go get github.com/bradfitz/gomemcache/memcache
-  - go get github.com/garyburd/redigo/redis
+  - go get github.com/gomodule/redigo/redis
   - go get github.com/beego/x2j
   - go get github.com/couchbase/go-couchbase
   - go get github.com/beego/goyaml2
+  - go get gopkg.in/yaml.v2
   - go get github.com/belogik/goes
   - go get github.com/siddontang/ledisdb/config
   - go get github.com/siddontang/ledisdb/ledis
@@ -38,6 +38,7 @@ install:
   - go get -u github.com/mdempsky/unconvert
   - go get -u github.com/gordonklaus/ineffassign
   - go get -u github.com/golang/lint/golint
+  - go get -u github.com/go-redis/redis
 before_script:
   - psql --version
   - sh -c "if [ '$ORM_DRIVER' = 'postgres' ]; then psql -c 'create database orm_test;' -U postgres; fi"
