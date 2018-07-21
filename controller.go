@@ -36,7 +36,7 @@ import (
 const (
 	applicationJSON = "application/json"
 	applicationXML  = "application/xml"
-	applicationYAML  = "application/x-yaml"
+	applicationYAML = "application/x-yaml"
 	textXML         = "text/xml"
 )
 
