@@ -119,7 +119,7 @@ func parseYML(buf []byte) (cnf map[string]interface{}, err error) {
 // ConfigContainer A Config represents the yaml configuration.
 type ConfigContainer struct {
 	data map[string]interface{}
-	sync.Mutex
+	sync.RWMutex
 }
 
 // Bool returns the boolean value for a given key.
@@ -285,6 +285,9 @@ func (c *ConfigContainer) getData(key string) (interface{}, error) {
 	if len(key) == 0 {
 		return nil, errors.New("key is empty")
 	}
+	c.RLock()
+	defer c.RUnlock()
+
 	keys := strings.Split(key, ".")
 	tmpData := c.data
 	for _, k := range keys {
