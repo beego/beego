@@ -15,6 +15,7 @@
 package orm
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"io"
@@ -147,6 +148,13 @@ func (d *dbQueryLog) Begin() (*sql.Tx, error) {
 	a := time.Now()
 	tx, err := d.db.(txer).Begin()
 	debugLogQueies(d.alias, "db.Begin", "START TRANSACTION", a, err)
+	return tx, err
+}
+
+func (d *dbQueryLog) BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error) {
+	a := time.Now()
+	tx, err := d.db.(txer).BeginTx(ctx, opts)
+	debugLogQueies(d.alias, "db.BeginTx", "START TRANSACTION", a, err)
 	return tx, err
 }
 

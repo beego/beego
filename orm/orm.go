@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// +build go1.8
+
 // Package orm provide ORM for MySQL/PostgreSQL/sqlite
 // Simple Usage
 //
@@ -52,6 +54,7 @@
 package orm
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -458,11 +461,15 @@ func (o *orm) Using(name string) error {
 
 // begin transaction
 func (o *orm) Begin() error {
+	return o.BeginTx(context.Background(), nil)
+}
+
+func (o *orm) BeginTx(ctx context.Context, opts *sql.TxOptions) error {
 	if o.isTx {
 		return ErrTxHasBegan
 	}
 	var tx *sql.Tx
-	tx, err := o.db.(txer).Begin()
+	tx, err := o.db.(txer).BeginTx(ctx, opts)
 	if err != nil {
 		return err
 	}
