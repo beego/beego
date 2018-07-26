@@ -1,9 +1,8 @@
 language: go
 
 go:
-  - 1.7.5
-  - 1.8.5
-  - 1.9.2
+  - "1.9.7"
+  - "1.10.3"
 services:
   - redis-server
   - mysql
@@ -22,10 +21,11 @@ install:
   - go get github.com/go-sql-driver/mysql
   - go get github.com/mattn/go-sqlite3
   - go get github.com/bradfitz/gomemcache/memcache
-  - go get github.com/garyburd/redigo/redis
+  - go get github.com/gomodule/redigo/redis
   - go get github.com/beego/x2j
   - go get github.com/couchbase/go-couchbase
   - go get github.com/beego/goyaml2
+  - go get gopkg.in/yaml.v2
   - go get github.com/belogik/goes
   - go get github.com/siddontang/ledisdb/config
   - go get github.com/siddontang/ledisdb/ledis
@@ -38,13 +38,14 @@ install:
   - go get -u github.com/mdempsky/unconvert
   - go get -u github.com/gordonklaus/ineffassign
   - go get -u github.com/golang/lint/golint
+  - go get -u github.com/go-redis/redis
 before_script:
   - psql --version
   - sh -c "if [ '$ORM_DRIVER' = 'postgres' ]; then psql -c 'create database orm_test;' -U postgres; fi"
   - sh -c "if [ '$ORM_DRIVER' = 'mysql' ]; then mysql -u root -e 'create database orm_test;'; fi"
   - sh -c "if [ '$ORM_DRIVER' = 'sqlite' ]; then touch $TRAVIS_BUILD_DIR/orm_test.db; fi"
-  - sh -c "if [ $(go version) == *1.[5-9]* ]; then go get github.com/golang/lint/golint; golint ./...; fi"
-  - sh -c "if [ $(go version) == *1.[5-9]* ]; then go tool vet .; fi"
+  - sh -c "go get github.com/golang/lint/golint; golint ./...;"
+  - sh -c "go tool vet ."
   - mkdir -p res/var
   - ./ssdb/ssdb-server ./ssdb/ssdb.conf -d
 after_script:
@@ -58,4 +59,4 @@ script:
   - find . ! \( -path './vendor' -prune \) -type f -name '*.go' -print0 | xargs -0 gofmt -l -s
   - golint ./...
 addons:
-  postgresql: "9.4"
+  postgresql: "9.6"

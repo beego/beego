@@ -15,6 +15,7 @@
 package orm
 
 import (
+	"context"
 	"database/sql"
 	"reflect"
 	"time"
@@ -106,6 +107,17 @@ type Ormer interface {
 	// 	...
 	// 	err = o.Rollback()
 	Begin() error
+	// begin transaction with provided context and option
+	// the provided context is used until the transaction is committed or rolled back.
+	// if the context is canceled, the transaction will be rolled back.
+	// the provided TxOptions is optional and may be nil if defaults should be used.
+	// if a non-default isolation level is used that the driver doesn't support, an error will be returned.
+	// for example:
+	//  o := NewOrm()
+	// 	err := o.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
+	//  ...
+	//  err = o.Rollback()
+	BeginTx(ctx context.Context, opts *sql.TxOptions) error
 	// commit transaction
 	Commit() error
 	// rollback transaction
@@ -190,6 +202,10 @@ type QuerySeter interface {
 	//    Distinct().
 	//    All(&permissions)
 	Distinct() QuerySeter
+	// set FOR UPDATE to query.
+	// for example:
+	//  o.QueryTable("user").Filter("uid", uid).ForUpdate().All(&users)
+	ForUpdate() QuerySeter
 	// return QuerySeter execution result number
 	// for example:
 	//	num, err = qs.Filter("profile__age__gt", 28).Count()
@@ -397,6 +413,7 @@ type dbQuerier interface {
 // transaction beginner
 type txer interface {
 	Begin() (*sql.Tx, error)
+	BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error)
 }
 
 // transaction ending

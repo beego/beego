@@ -75,7 +75,8 @@ func addModelFields(mi *modelInfo, ind reflect.Value, mName string, index []int)
 			break
 		}
 		//record current field index
-		fi.fieldIndex = append(index, i)
+		fi.fieldIndex = append(fi.fieldIndex, index...)
+		fi.fieldIndex = append(fi.fieldIndex, i)
 		fi.mi = mi
 		fi.inModel = true
 		if !mi.fields.Add(fi) {

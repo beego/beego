@@ -695,3 +695,30 @@ func beegoResetParams(ctx *context.Context) {
 func beegoHandleResetParams(ctx *context.Context) {
 	ctx.ResponseWriter.Header().Set("splat", ctx.Input.Param(":splat"))
 }
+
+// YAML
+type YAMLController struct {
+	Controller
+}
+
+func (jc *YAMLController) Prepare() {
+	jc.Data["yaml"] = "prepare"
+	jc.ServeYAML()
+}
+
+func (jc *YAMLController) Get() {
+	jc.Data["Username"] = "astaxie"
+	jc.Ctx.Output.Body([]byte("ok"))
+}
+
+func TestYAMLPrepare(t *testing.T) {
+	r, _ := http.NewRequest("GET", "/yaml/list", nil)
+	w := httptest.NewRecorder()
+
+	handler := NewControllerRegister()
+	handler.Add("/yaml/list", &YAMLController{})
+	handler.ServeHTTP(w, r)
+	if strings.TrimSpace(w.Body.String()) != "prepare" {
+		t.Errorf(w.Body.String())
+	}
+}
