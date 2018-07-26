@@ -207,7 +207,7 @@ func TestFileHourlyRotate_01(t *testing.T) {
 
 func TestFileHourlyRotate_02(t *testing.T) {
 	fn1 := "rotate_hour.log"
-	fn2 := "rotate_hour." + time.Now().Add(-1*time.Hour).Format("2006010215") + ".log"
+	fn2 := "rotate_hour." + time.Now().Add(-1*time.Hour).Format("2006010215") + ".001.log"
 	testFileRotate(t, fn1, fn2, false, true)
 }
 
@@ -222,7 +222,7 @@ func TestFileHourlyRotate_03(t *testing.T) {
 
 func TestFileHourlyRotate_04(t *testing.T) {
 	fn1 := "rotate_hour.log"
-	fn2 := "rotate_hour." + time.Now().Add(-1*time.Hour).Format("2006010215") + ".log"
+	fn2 := "rotate_hour." + time.Now().Add(-1*time.Hour).Format("2006010215") + ".001.log"
 	testFileHourlyRotate(t, fn1, fn2)
 }
 
