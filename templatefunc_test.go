@@ -94,7 +94,7 @@ func TestCompareRelated(t *testing.T) {
 }
 
 func TestHtmlquote(t *testing.T) {
-	h := `&lt;&#39;&nbsp;&rdquo;&ldquo;&amp;&quot;&gt;`
+	h := `&lt;&#39;&nbsp;&rdquo;&ldquo;&amp;&#34;&gt;`
 	s := `<' ”“&">`
 	if Htmlquote(s) != h {
 		t.Error("should be equal")
@@ -102,8 +102,8 @@ func TestHtmlquote(t *testing.T) {
 }
 
 func TestHtmlunquote(t *testing.T) {
-	h := `&lt;&#39;&nbsp;&rdquo;&ldquo;&amp;&quot;&gt;`
-	s := `<' ”“&">`
+	h := `&lt;&#39;&nbsp;&rdquo;&ldquo;&amp;&#34;&gt;`
+	s := `<' ”“&">`
 	if Htmlunquote(h) != s {
 		t.Error("should be equal")
 	}

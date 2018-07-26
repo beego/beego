@@ -52,7 +52,7 @@ Configure like this:
 
 ## Redis adapter
 
-Redis adapter use the [redigo](http://github.com/garyburd/redigo) client.
+Redis adapter use the [redigo](http://github.com/gomodule/redigo) client.
 
 Configure like this:
 

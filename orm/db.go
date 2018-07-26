@@ -536,6 +536,8 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a
 	updates := make([]string, len(names))
 	var conflitValue interface{}
 	for i, v := range names {
+		// identifier in database may not be case-sensitive, so quote it
+		v = fmt.Sprintf("%s%s%s", Q, v, Q)
 		marks[i] = "?"
 		valueStr := argsMap[strings.ToLower(v)]
 		if v == args0 {
@@ -968,6 +970,10 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 		sqlSelect += " DISTINCT"
 	}
 	query := fmt.Sprintf("%s %s FROM %s%s%s T0 %s%s%s%s%s", sqlSelect, sels, Q, mi.table, Q, join, where, groupBy, orderBy, limit)
+
+	if qs.forupdate {
+		query += " FOR UPDATE"
+	}
 
 	d.ins.ReplaceMarks(&query)
 
