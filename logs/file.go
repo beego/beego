@@ -306,7 +306,6 @@ func (w *fileLogWriter) doRotate(logTime time.Time) error {
 		goto RESTART_LOGGER
 	}
 
-<<<<<<< HEAD
 	if w.Hourly {
 		format = "2006010215"
 		openTime = w.hourlyOpenTime
@@ -315,31 +314,18 @@ func (w *fileLogWriter) doRotate(logTime time.Time) error {
 		openTime = w.dailyOpenTime
 	}
 
+	// only when one of them be setted, then the file would be splited
 	if w.MaxLines > 0 || w.MaxSize > 0 {
-		for ; err == nil && num <= 999; num++ {
+		for ; err == nil && num <= w.MaxFiles; num++ {
 			fName = w.fileNameOnly + fmt.Sprintf(".%s.%03d%s", logTime.Format(format), num, w.suffix)
 			_, err = os.Lstat(fName)
 		}
 	} else {
-		fName = fmt.Sprintf("%s.%s%s", w.fileNameOnly, openTime.Format(format), w.suffix)
-		_, err = os.Lstat(fName)
-		for ; err == nil && num <= 999; num++ {
-			fName = w.fileNameOnly + fmt.Sprintf(".%s.%03d%s", openTime.Format(format), num, w.suffix)
-			_, err = os.Lstat(fName)
-		}
-=======
-	// only when one of them be setted, then the file would be splited
-	if w.MaxLines > 0 || w.MaxSize > 0 {
-		for ; err == nil && num <= w.MaxFiles; num++ {
-			fName = w.fileNameOnly + fmt.Sprintf(".%s.%03d%s", logTime.Format("2006-01-02"), num, w.suffix)
-			_, err = os.Lstat(fName)
-		}
-	} else {
-		fName = w.fileNameOnly + fmt.Sprintf(".%s.%03d%s", w.dailyOpenTime.Format("2006-01-02"), num, w.suffix)
+		fName = w.fileNameOnly + fmt.Sprintf(".%s.%03d%s", openTime.Format(format), num, w.suffix)
 		_, err = os.Lstat(fName)
 		w.MaxFilesCurFiles = num
->>>>>>> old/develop
 	}
+
 	// return error if the last file checked still existed
 	if err == nil {
 		return fmt.Errorf("Rotate: Cannot find free log number to rename %s", w.Filename)
@@ -383,31 +369,21 @@ func (w *fileLogWriter) deleteOldLog() {
 		if info == nil {
 			return
 		}
-<<<<<<< HEAD
         if w.Hourly {
-            if !info.IsDir() && info.ModTime().Add(1*time.Hour*time.Duration(w.MaxHours)).Before(time.Now()) {
+            if !info.IsDir() && info.ModTime().Add(1 * time.Hour * time.Duration(w.MaxHours)).Before(time.Now()) {
                 if strings.HasPrefix(filepath.Base(path), filepath.Base(w.fileNameOnly)) &&
                 strings.HasSuffix(filepath.Base(path), w.suffix) {
                     os.Remove(path)
                 }
             }
         } else if w.Daily {
-            if !info.IsDir() && info.ModTime().Add(24*time.Hour*time.Duration(w.MaxDays)).Before(time.Now()) {
+            if !info.IsDir() && info.ModTime().Add(24 * time.Hour * time.Duration(w.MaxDays)).Before(time.Now()) {
                 if strings.HasPrefix(filepath.Base(path), filepath.Base(w.fileNameOnly)) &&
                 strings.HasSuffix(filepath.Base(path), w.suffix) {
                     os.Remove(path)
                 }
             }
         }
-=======
-
-		if !info.IsDir() && info.ModTime().Add(24 * time.Hour * time.Duration(w.MaxDays)).Before(time.Now()) {
-			if strings.HasPrefix(filepath.Base(path), filepath.Base(w.fileNameOnly)) &&
-				strings.HasSuffix(filepath.Base(path), w.suffix) {
-				os.Remove(path)
-			}
-		}
->>>>>>> old/develop
 		return
 	})
 }
