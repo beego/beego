@@ -43,7 +43,7 @@ const (
 )
 
 const (
-	routerTypeBeego   = iota
+	routerTypeBeego = iota
 	routerTypeRESTFul
 	routerTypeHandler
 )
@@ -683,22 +683,97 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		urlPath = strings.ToLower(urlPath)
 	}
 
+	defer func() {
+		if err := recover(); err != nil {
+			if err != ErrAbort {
+				logs.Error(err)
+			}
+		}
+
+		//admin module record QPS
+		//execute middleware filters
+		if len(p.filters[AfterExec]) > 0 && p.execFilter(context, urlPath, AfterExec) {
+			// goto Admin
+		}
+
+		if len(p.filters[FinishRouter]) > 0 && p.execFilter(context, urlPath, FinishRouter) {
+			// goto Admin
+		}
+
+		statusCode := context.ResponseWriter.Status
+		if statusCode == 0 {
+			statusCode = 200
+		}
+
+		logAccess(context, &startTime, statusCode)
+
+		if BConfig.Listen.EnableAdmin {
+			timeDur := time.Since(startTime)
+			pattern := ""
+			if routerInfo != nil {
+				pattern = routerInfo.pattern
+			}
+
+			if FilterMonitorFunc(r.Method, r.URL.Path, timeDur, pattern, statusCode) {
+				if runRouter != nil {
+					go toolbox.StatisticsMap.AddStatistics(r.Method, r.URL.Path, runRouter.Name(), timeDur)
+				} else {
+					go toolbox.StatisticsMap.AddStatistics(r.Method, r.URL.Path, "", timeDur)
+				}
+			}
+		}
+
+		if BConfig.RunMode == DEV && !BConfig.Log.AccessLogs {
+			var devInfo string
+			timeDur := time.Since(startTime)
+			iswin := (runtime.GOOS == "windows")
+			statusColor := logs.ColorByStatus(iswin, statusCode)
+			methodColor := logs.ColorByMethod(iswin, r.Method)
+			resetColor := logs.ColorByMethod(iswin, "")
+			if findRouter {
+				if routerInfo != nil {
+					devInfo = fmt.Sprintf("|%15s|%s %3d %s|%13s|%8s|%s %-7s %s %-3s   r:%s", context.Input.IP(), statusColor, statusCode,
+						resetColor, timeDur.String(), "match", methodColor, r.Method, resetColor, r.URL.Path,
+						routerInfo.pattern)
+				} else {
+					devInfo = fmt.Sprintf("|%15s|%s %3d %s|%13s|%8s|%s %-7s %s %-3s", context.Input.IP(), statusColor, statusCode, resetColor,
+						timeDur.String(), "match", methodColor, r.Method, resetColor, r.URL.Path)
+				}
+			} else {
+				devInfo = fmt.Sprintf("|%15s|%s %3d %s|%13s|%8s|%s %-7s %s %-3s", context.Input.IP(), statusColor, statusCode, resetColor,
+					timeDur.String(), "nomatch", methodColor, r.Method, resetColor, r.URL.Path)
+			}
+			if iswin {
+				logs.W32Debug(devInfo)
+			} else {
+				logs.Debug(devInfo)
+			}
+		}
+		// Call WriteHeader if status code has been set changed
+		if context.Output.Status != 0 {
+			context.ResponseWriter.WriteHeader(context.Output.Status)
+		}
+	}()
+
 	// filter wrong http method
 	if !HTTPMETHOD[r.Method] {
 		http.Error(rw, "Method Not Allowed", 405)
-		goto Admin
+		// goto Admin
+		return
 	}
 
 	// filter for static file
 	if len(p.filters[BeforeStatic]) > 0 && p.execFilter(context, urlPath, BeforeStatic) {
-		goto Admin
+		// goto Admin
+		return
 	}
 
 	serverStaticRouter(context)
 
 	if context.ResponseWriter.Started {
 		findRouter = true
-		goto Admin
+		// goto Admin
+		return
 	}
 
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
@@ -715,7 +790,8 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		if err != nil {
 			logs.Error(err)
 			exception("503", context)
-			goto Admin
+			// goto Admin
+			return
 		}
 		defer func() {
 			if context.Input.CruSession != nil {
@@ -724,7 +800,8 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}()
 	}
 	if len(p.filters[BeforeRouter]) > 0 && p.execFilter(context, urlPath, BeforeRouter) {
-		goto Admin
+		// goto Admin
+		return
 	}
 	// User can define RunController and RunMethod in filter
 	if context.Input.RunController != nil && context.Input.RunMethod != "" {
@@ -738,7 +815,8 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	//if no matches to url, throw a not found exception
 	if !findRouter {
 		exception("404", context)
-		goto Admin
+		// goto Admin
+		return
 	}
 	if splat := context.Input.Param(":splat"); splat != "" {
 		for k, v := range strings.Split(splat, "/") {
@@ -748,12 +826,14 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	//execute middleware filters
 	if len(p.filters[BeforeExec]) > 0 && p.execFilter(context, urlPath, BeforeExec) {
-		goto Admin
+		// goto Admin
+		return
 	}
 
 	//check policies
 	if p.execPolicy(context, urlPath) {
-		goto Admin
+		// goto Admin
+		return
 	}
 
 	if routerInfo != nil {
@@ -765,7 +845,8 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				routerInfo.runFunction(context)
 			} else {
 				exception("405", context)
-				goto Admin
+				// goto Admin
+				return
 			}
 		} else if routerInfo.routerType == routerTypeHandler {
 			isRunnable = true
@@ -840,6 +921,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			case http.MethodOptions:
 				execController.Options()
 			default:
+
 				if !execController.HandlerFunc(runMethod) {
 					vc := reflect.ValueOf(execController)
 					method := vc.MethodByName(runMethod)
@@ -867,71 +949,6 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		execController.Finish()
 	}
 
-	//execute middleware filters
-	if len(p.filters[AfterExec]) > 0 && p.execFilter(context, urlPath, AfterExec) {
-		goto Admin
-	}
-
-	if len(p.filters[FinishRouter]) > 0 && p.execFilter(context, urlPath, FinishRouter) {
-		goto Admin
-	}
-
-Admin:
-//admin module record QPS
-
-	statusCode := context.ResponseWriter.Status
-	if statusCode == 0 {
-		statusCode = 200
-	}
-
-	logAccess(context, &startTime, statusCode)
-
-	if BConfig.Listen.EnableAdmin {
-		timeDur := time.Since(startTime)
-		pattern := ""
-		if routerInfo != nil {
-			pattern = routerInfo.pattern
-		}
-
-		if FilterMonitorFunc(r.Method, r.URL.Path, timeDur, pattern, statusCode) {
-			if runRouter != nil {
-				go toolbox.StatisticsMap.AddStatistics(r.Method, r.URL.Path, runRouter.Name(), timeDur)
-			} else {
-				go toolbox.StatisticsMap.AddStatistics(r.Method, r.URL.Path, "", timeDur)
-			}
-		}
-	}
-
-	if BConfig.RunMode == DEV && !BConfig.Log.AccessLogs {
-		var devInfo string
-		timeDur := time.Since(startTime)
-		iswin := (runtime.GOOS == "windows")
-		statusColor := logs.ColorByStatus(iswin, statusCode)
-		methodColor := logs.ColorByMethod(iswin, r.Method)
-		resetColor := logs.ColorByMethod(iswin, "")
-		if findRouter {
-			if routerInfo != nil {
-				devInfo = fmt.Sprintf("|%15s|%s %3d %s|%13s|%8s|%s %-7s %s %-3s   r:%s", context.Input.IP(), statusColor, statusCode,
-					resetColor, timeDur.String(), "match", methodColor, r.Method, resetColor, r.URL.Path,
-					routerInfo.pattern)
-			} else {
-				devInfo = fmt.Sprintf("|%15s|%s %3d %s|%13s|%8s|%s %-7s %s %-3s", context.Input.IP(), statusColor, statusCode, resetColor,
-					timeDur.String(), "match", methodColor, r.Method, resetColor, r.URL.Path)
-			}
-		} else {
-			devInfo = fmt.Sprintf("|%15s|%s %3d %s|%13s|%8s|%s %-7s %s %-3s", context.Input.IP(), statusColor, statusCode, resetColor,
-				timeDur.String(), "nomatch", methodColor, r.Method, resetColor, r.URL.Path)
-		}
-		if iswin {
-			logs.W32Debug(devInfo)
-		} else {
-			logs.Debug(devInfo)
-		}
-	}
-	// Call WriteHeader if status code has been set changed
-	if context.Output.Status != 0 {
-		context.ResponseWriter.WriteHeader(context.Output.Status)
-	}
 }
 
 func (p *ControllerRegister) handleParamResponse(context *beecontext.Context, execController ControllerInterface, results []reflect.Value) {
