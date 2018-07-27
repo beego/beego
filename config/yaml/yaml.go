@@ -290,12 +290,15 @@ func (c *ConfigContainer) getData(key string) (interface{}, error) {
 
 	keys := strings.Split(key, ".")
 	tmpData := c.data
-	for _, k := range keys {
+	for idx, k := range keys {
 		if v, ok := tmpData[k]; ok {
 			switch v.(type) {
 			case map[string]interface{}:
 				{
 					tmpData = v.(map[string]interface{})
+					if idx == len(keys) - 1 {
+						return tmpData, nil
+					}
 				}
 			default:
 				{
