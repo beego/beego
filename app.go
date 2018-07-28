@@ -24,12 +24,13 @@ import (
 	"net/http/fcgi"
 	"os"
 	"path"
-	"time"
 	"strings"
+	"time"
 
 	"github.com/astaxie/beego/grace"
 	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/utils"
+	"golang.org/x/crypto/acme/autocert"
 )
 
 var (
@@ -55,6 +56,7 @@ func NewApp() *App {
 	return app
 }
 
+// MiddleWare function for http.Handler
 type MiddleWare func(http.Handler) http.Handler
 
 // Run beego application.
@@ -100,7 +102,7 @@ func (app *App) Run(mws ...MiddleWare) {
 	}
 
 	app.Server.Handler = app.Handlers
-	for i:=len(mws)-1;i>=0;i-- {
+	for i := len(mws) - 1; i >= 0; i-- {
 		if mws[i] == nil {
 			continue
 		}
@@ -116,7 +118,7 @@ func (app *App) Run(mws ...MiddleWare) {
 		app.Server.Addr = httpsAddr
 		if BConfig.Listen.EnableHTTPS || BConfig.Listen.EnableMutualHTTPS {
 			go func() {
-				time.Sleep(20 * time.Microsecond)
+				time.Sleep(1000 * time.Microsecond)
 				if BConfig.Listen.HTTPSPort != 0 {
 					httpsAddr = fmt.Sprintf("%s:%d", BConfig.Listen.HTTPSAddr, BConfig.Listen.HTTPSPort)
 					app.Server.Addr = httpsAddr
@@ -125,13 +127,21 @@ func (app *App) Run(mws ...MiddleWare) {
 				server.Server.ReadTimeout = app.Server.ReadTimeout
 				server.Server.WriteTimeout = app.Server.WriteTimeout
 				if BConfig.Listen.EnableMutualHTTPS {
-
 					if err := server.ListenAndServeMutualTLS(BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile, BConfig.Listen.TrustCaFile); err != nil {
 						logs.Critical("ListenAndServeTLS: ", err, fmt.Sprintf("%d", os.Getpid()))
 						time.Sleep(100 * time.Microsecond)
 						endRunning <- true
 					}
 				} else {
+					if BConfig.Listen.AutoTLS {
+						m := autocert.Manager{
+							Prompt:     autocert.AcceptTOS,
+							HostPolicy: autocert.HostWhitelist(BConfig.Listen.Domains...),
+							Cache:      autocert.DirCache(BConfig.Listen.TLSCacheDir),
+						}
+						app.Server.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
+						BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile = "", ""
+					}
 					if err := server.ListenAndServeTLS(BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile); err != nil {
 						logs.Critical("ListenAndServeTLS: ", err, fmt.Sprintf("%d", os.Getpid()))
 						time.Sleep(100 * time.Microsecond)
@@ -162,15 +172,23 @@ func (app *App) Run(mws ...MiddleWare) {
 	// run normal mode
 	if BConfig.Listen.EnableHTTPS || BConfig.Listen.EnableMutualHTTPS {
 		go func() {
-			time.Sleep(20 * time.Microsecond)
+			time.Sleep(1000 * time.Microsecond)
 			if BConfig.Listen.HTTPSPort != 0 {
 				app.Server.Addr = fmt.Sprintf("%s:%d", BConfig.Listen.HTTPSAddr, BConfig.Listen.HTTPSPort)
 			} else if BConfig.Listen.EnableHTTP {
-				BeeLogger.Info("Start https server error, confict with http.Please reset https port")
+				BeeLogger.Info("Start https server error, conflict with http. Please reset https port")
 				return
 			}
 			logs.Info("https server Running on https://%s", app.Server.Addr)
-			if BConfig.Listen.EnableMutualHTTPS {
+			if BConfig.Listen.AutoTLS {
+				m := autocert.Manager{
+					Prompt:     autocert.AcceptTOS,
+					HostPolicy: autocert.HostWhitelist(BConfig.Listen.Domains...),
+					Cache:      autocert.DirCache(BConfig.Listen.TLSCacheDir),
+				}
+				app.Server.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
+				BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile = "", ""
+			} else if BConfig.Listen.EnableMutualHTTPS {
 				pool := x509.NewCertPool()
 				data, err := ioutil.ReadFile(BConfig.Listen.TrustCaFile)
 				if err != nil {
@@ -189,6 +207,7 @@ func (app *App) Run(mws ...MiddleWare) {
 				endRunning <- true
 			}
 		}()
+
 	}
 	if BConfig.Listen.EnableHTTP {
 		go func() {
@@ -253,7 +272,7 @@ func Router(rootpath string, c ControllerInterface, mappingMethods ...string) *A
 func UnregisterFixedRoute(fixedRoute string, method string) *App {
 	subPaths := splitPath(fixedRoute)
 	if method == "" || method == "*" {
-		for _, m := range HTTPMETHOD {
+		for m := range HTTPMETHOD {
 			if _, ok := BeeApp.Handlers.routers[m]; !ok {
 				continue
 			}

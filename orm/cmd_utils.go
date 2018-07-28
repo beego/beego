@@ -51,12 +51,14 @@ checkColumn:
 	switch fieldType {
 	case TypeBooleanField:
 		col = T["bool"]
-	case TypeCharField:
+	case TypeVarCharField:
 		if al.Driver == DRPostgres && fi.toText {
 			col = T["string-text"]
 		} else {
 			col = fmt.Sprintf(T["string"], fieldSize)
 		}
+	case TypeCharField:
+		col = fmt.Sprintf(T["string-char"], fieldSize)
 	case TypeTextField:
 		col = T["string-text"]
 	case TypeTimeField:
@@ -96,13 +98,13 @@ checkColumn:
 		}
 	case TypeJSONField:
 		if al.Driver != DRPostgres {
-			fieldType = TypeCharField
+			fieldType = TypeVarCharField
 			goto checkColumn
 		}
 		col = T["json"]
 	case TypeJsonbField:
 		if al.Driver != DRPostgres {
-			fieldType = TypeCharField
+			fieldType = TypeVarCharField
 			goto checkColumn
 		}
 		col = T["jsonb"]
@@ -194,6 +196,10 @@ func getDbCreateSQL(al *alias) (sqls []string, tableIndexes map[string][]dbIndex
 
 			if strings.Contains(column, "%COL%") {
 				column = strings.Replace(column, "%COL%", fi.column, -1)
+			}
+			
+			if fi.description != "" {
+				column += " " + fmt.Sprintf("COMMENT '%s'",fi.description)
 			}
 
 			columns = append(columns, column)

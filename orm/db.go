@@ -142,7 +142,7 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 				} else {
 					value = field.Bool()
 				}
-			case TypeCharField, TypeTextField, TypeJSONField, TypeJsonbField:
+			case TypeVarCharField, TypeCharField, TypeTextField, TypeJSONField, TypeJsonbField:
 				if ns, ok := field.Interface().(sql.NullString); ok {
 					value = nil
 					if ns.Valid {
@@ -535,6 +535,8 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a
 	updates := make([]string, len(names))
 	var conflitValue interface{}
 	for i, v := range names {
+		// identifier in database may not be case-sensitive, so quote it
+		v = fmt.Sprintf("%s%s%s", Q, v, Q)
 		marks[i] = "?"
 		valueStr := argsMap[strings.ToLower(v)]
 		if v == args0 {
@@ -960,6 +962,10 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 	}
 	query := fmt.Sprintf("%s %s FROM %s%s%s T0 %s%s%s%s%s", sqlSelect, sels, Q, mi.table, Q, join, where, groupBy, orderBy, limit)
 
+	if qs.forupdate {
+		query += " FOR UPDATE"
+	}
+
 	d.ins.ReplaceMarks(&query)
 
 	var rs *sql.Rows
@@ -1231,7 +1237,7 @@ setValue:
 			}
 			value = b
 		}
-	case fieldType == TypeCharField || fieldType == TypeTextField || fieldType == TypeJSONField || fieldType == TypeJsonbField:
+	case fieldType == TypeVarCharField || fieldType == TypeCharField || fieldType == TypeTextField || fieldType == TypeJSONField || fieldType == TypeJsonbField:
 		if str == nil {
 			value = ToStr(val)
 		} else {
@@ -1377,7 +1383,7 @@ setValue:
 				field.SetBool(value.(bool))
 			}
 		}
-	case fieldType == TypeCharField || fieldType == TypeTextField || fieldType == TypeJSONField || fieldType == TypeJsonbField:
+	case fieldType == TypeVarCharField || fieldType == TypeCharField || fieldType == TypeTextField || fieldType == TypeJSONField || fieldType == TypeJsonbField:
 		if isNative {
 			if ns, ok := field.Interface().(sql.NullString); ok {
 				if value == nil {

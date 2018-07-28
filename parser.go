@@ -114,20 +114,21 @@ type parsedParam struct {
 
 func parserComments(f *ast.FuncDecl, controllerName, pkgpath string) error {
 	if f.Doc != nil {
-		parsedComment, err := parseComment(f.Doc.List)
+		parsedComments, err := parseComment(f.Doc.List)
 		if err != nil {
 			return err
 		}
-		if parsedComment.routerPath != "" {
-			key := pkgpath + ":" + controllerName
-			cc := ControllerComments{}
-			cc.Method = f.Name.String()
-			cc.Router = parsedComment.routerPath
-			cc.AllowHTTPMethods = parsedComment.methods
-			cc.MethodParams = buildMethodParams(f.Type.Params.List, parsedComment)
-			genInfoList[key] = append(genInfoList[key], cc)
+		for _, parsedComment := range parsedComments {
+			if parsedComment.routerPath != "" {
+				key := pkgpath + ":" + controllerName
+				cc := ControllerComments{}
+				cc.Method = f.Name.String()
+				cc.Router = parsedComment.routerPath
+				cc.AllowHTTPMethods = parsedComment.methods
+				cc.MethodParams = buildMethodParams(f.Type.Params.List, parsedComment)
+				genInfoList[key] = append(genInfoList[key], cc)
+			}
 		}
-
 	}
 	return nil
 }
@@ -177,26 +178,13 @@ func paramInPath(name, route string) bool {
 
 var routeRegex = regexp.MustCompile(`@router\s+(\S+)(?:\s+\[(\S+)\])?`)
 
-func parseComment(lines []*ast.Comment) (pc *parsedComment, err error) {
-	pc = &parsedComment{}
+func parseComment(lines []*ast.Comment) (pcs []*parsedComment, err error) {
+	pcs = []*parsedComment{}
+	params := map[string]parsedParam{}
+
 	for _, c := range lines {
 		t := strings.TrimSpace(strings.TrimLeft(c.Text, "//"))
-		if strings.HasPrefix(t, "@router") {
-			matches := routeRegex.FindStringSubmatch(t)
-			if len(matches) == 3 {
-				pc.routerPath = matches[1]
-				methods := matches[2]
-				if methods == "" {
-					pc.methods = []string{"get"}
-					//pc.hasGet = true
-				} else {
-					pc.methods = strings.Split(methods, ",")
-					//pc.hasGet = strings.Contains(methods, "get")
-				}
-			} else {
-				return nil, errors.New("Router information is missing")
-			}
-		} else if strings.HasPrefix(t, "@Param") {
+		if strings.HasPrefix(t, "@Param") {
 			pv := getparams(strings.TrimSpace(strings.TrimLeft(t, "@Param")))
 			if len(pv) < 4 {
 				logs.Error("Invalid @Param format. Needs at least 4 parameters")
@@ -217,10 +205,32 @@ func parseComment(lines []*ast.Comment) (pc *parsedComment, err error) {
 				p.defValue = pv[3]
 				p.required, _ = strconv.ParseBool(pv[4])
 			}
-			if pc.params == nil {
-				pc.params = map[string]parsedParam{}
+			params[funcParamName] = p
+		}
+	}
+
+	for _, c := range lines {
+		var pc = &parsedComment{}
+		pc.params = params
+
+		t := strings.TrimSpace(strings.TrimLeft(c.Text, "//"))
+		if strings.HasPrefix(t, "@router") {
+			t := strings.TrimSpace(strings.TrimLeft(c.Text, "//"))
+			matches := routeRegex.FindStringSubmatch(t)
+			if len(matches) == 3 {
+				pc.routerPath = matches[1]
+				methods := matches[2]
+				if methods == "" {
+					pc.methods = []string{"get"}
+					//pc.hasGet = true
+				} else {
+					pc.methods = strings.Split(methods, ",")
+					//pc.hasGet = strings.Contains(methods, "get")
+				}
+				pcs = append(pcs, pc)
+			} else {
+				return nil, errors.New("Router information is missing")
 			}
-			pc.params[funcParamName] = p
 		}
 	}
 	return

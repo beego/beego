@@ -76,6 +76,18 @@ func adminIndex(rw http.ResponseWriter, r *http.Request) {
 func qpsIndex(rw http.ResponseWriter, r *http.Request) {
 	data := make(map[interface{}]interface{})
 	data["Content"] = toolbox.StatisticsMap.GetMap()
+
+	// do html escape before display path, avoid xss
+	if content, ok := (data["Content"]).(map[string]interface{}); ok {
+		if resultLists, ok := (content["Data"]).([][]string); ok {
+			for i := range resultLists {
+				if len(resultLists[i]) > 0 {
+					resultLists[i][0] = template.HTMLEscapeString(resultLists[i][0])
+				}
+			}
+		}
+	}
+
 	execTpl(rw, data, qpsTpl, defaultScriptsTpl)
 }
 
