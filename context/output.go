@@ -20,6 +20,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v2"
 	"html/template"
 	"io"
 	"mime"
@@ -30,7 +31,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"gopkg.in/yaml.v2"
 )
 
 // BeegoOutput does work for sending response header.
@@ -202,7 +202,6 @@ func (output *BeegoOutput) JSON(data interface{}, hasIndent bool, encoding bool)
 	}
 	return output.Body(content)
 }
-
 
 // YAML writes yaml to response body.
 func (output *BeegoOutput) YAML(data interface{}) error {

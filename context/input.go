@@ -204,6 +204,7 @@ func (input *BeegoInput) AcceptsXML() bool {
 func (input *BeegoInput) AcceptsJSON() bool {
 	return acceptsJSONRegex.MatchString(input.Header("Accept"))
 }
+
 // AcceptsYAML Checks if request accepts json response
 func (input *BeegoInput) AcceptsYAML() bool {
 	return acceptsYAMLRegex.MatchString(input.Header("Accept"))

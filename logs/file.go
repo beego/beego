@@ -317,7 +317,7 @@ func (w *fileLogWriter) deleteOldLog() {
 			return
 		}
 
-		if !info.IsDir() && info.ModTime().Add(24 * time.Hour * time.Duration(w.MaxDays)).Before(time.Now()) {
+		if !info.IsDir() && info.ModTime().Add(24*time.Hour*time.Duration(w.MaxDays)).Before(time.Now()) {
 			if strings.HasPrefix(filepath.Base(path), filepath.Base(w.fileNameOnly)) &&
 				strings.HasSuffix(filepath.Base(path), w.suffix) {
 				os.Remove(path)

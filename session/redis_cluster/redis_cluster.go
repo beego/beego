@@ -31,13 +31,14 @@
 //
 // more docs: http://beego.me/docs/module/session.md
 package redis_cluster
+
 import (
+	"github.com/astaxie/beego/session"
+	rediss "github.com/go-redis/redis"
 	"net/http"
 	"strconv"
 	"strings"
 	"sync"
-	"github.com/astaxie/beego/session"
-	rediss "github.com/go-redis/redis"
 	"time"
 )
 
@@ -101,7 +102,7 @@ func (rs *SessionStore) SessionRelease(w http.ResponseWriter) {
 		return
 	}
 	c := rs.p
-	c.Set(rs.sid, string(b), time.Duration(rs.maxlifetime) * time.Second)
+	c.Set(rs.sid, string(b), time.Duration(rs.maxlifetime)*time.Second)
 }
 
 // Provider redis_cluster session provider
@@ -146,10 +147,10 @@ func (rp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 	} else {
 		rp.dbNum = 0
 	}
-	
+
 	rp.poollist = rediss.NewClusterClient(&rediss.ClusterOptions{
 		Addrs:    strings.Split(rp.savePath, ";"),
-		Password:  rp.password,
+		Password: rp.password,
 		PoolSize: rp.poolsize,
 	})
 	return rp.poollist.Ping().Err()
@@ -186,15 +187,15 @@ func (rp *Provider) SessionExist(sid string) bool {
 // SessionRegenerate generate new sid for redis_cluster session
 func (rp *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error) {
 	c := rp.poollist
-	
+
 	if existed, err := c.Exists(oldsid).Result(); err != nil || existed == 0 {
 		// oldsid doesn't exists, set the new sid directly
 		// ignore error here, since if it return error
 		// the existed value will be 0
-		c.Set(sid, "", time.Duration(rp.maxlifetime) * time.Second)
+		c.Set(sid, "", time.Duration(rp.maxlifetime)*time.Second)
 	} else {
 		c.Rename(oldsid, sid)
-		c.Expire(sid, time.Duration(rp.maxlifetime) * time.Second)
+		c.Expire(sid, time.Duration(rp.maxlifetime)*time.Second)
 	}
 	return rp.SessionRead(sid)
 }

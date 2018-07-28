@@ -975,7 +975,7 @@ func toURL(params map[string]string) string {
 	return strings.TrimRight(u, "&")
 }
 
-func logAccess(ctx *beecontext.Context, startTime *time.Time, statusCode int) {
+func logAccess(ctx *beeContext.Context, startTime *time.Time, statusCode int) {
 	//Skip logging if AccessLogs config is false
 	if !BConfig.Log.AccessLogs {
 		return

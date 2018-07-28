@@ -380,7 +380,6 @@ func (v *Validation) Valid(obj interface{}) (b bool, err error) {
 				}
 			}
 
-
 			chk := Required{""}.IsSatisfied(currentField)
 			if !hasRequired && v.RequiredFirst && !chk {
 				if _, ok := CanSkipFuncs[vf.Name]; ok {

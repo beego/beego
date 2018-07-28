@@ -47,7 +47,7 @@ import (
 
 // RFC5424 log message levels.
 const (
-	LevelEmergency     = iota
+	LevelEmergency = iota
 	LevelAlert
 	LevelCritical
 	LevelError
@@ -248,7 +248,7 @@ func (bl *BeeLogger) Write(p []byte) (n int, err error) {
 	}
 	// writeMsg will always add a '\n' character
 	if p[len(p)-1] == '\n' {
-		p = p[0: len(p)-1]
+		p = p[0 : len(p)-1]
 	}
 	// set levelLoggerImpl to ensure all log message will be write out
 	err = bl.writeMsg(levelLoggerImpl, string(p))

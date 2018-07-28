@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	errorTypeHandler    = iota
+	errorTypeHandler = iota
 	errorTypeController
 )
 
