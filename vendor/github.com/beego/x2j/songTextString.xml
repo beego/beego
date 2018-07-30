@@ -1,0 +1,29 @@
+<msg mtype="alert" mpriority="1">
+	<text>help me!</text>
+	<song title="A Long Time" author="Mayer Hawthorne">
+		<verses>
+			<verse name="verse 1" no="1">
+				<line no="1">Henry was a renegade</line>
+				<line no="2">Didn't like to play it safe</line>
+				<line no="3">One component at a time</line>
+				<line no="4">There's got to be a better way</line>
+				<line no="5">Oh, people came from miles around</line>
+				<line no="6">Searching for a steady job</line>
+				<line no="7">Welcome to the Motor Town</line>
+				<line no="8">Booming like an atom bomb</line>
+			</verse>
+			<verse name="verse 2" no="2">
+				<line no="1">Oh, Henry was the end of the story</line>
+				<line no="2">Then everything went wrong</line>
+				<line no="3">And we'll return it to its former glory</line>
+				<line no="4">But it just takes so long</line>
+			</verse>
+		</verses>
+		<chorus>
+			<line no="1">It's going to take a long time</line>
+			<line no="2">It's going to take it, but we'll make it one day</line>
+			<line no="3">It's going to take a long time</line>
+			<line no="4">It's going to take it, but we'll make it one day</line>
+		</chorus>
+	</song>
+</msg>

@@ -1,0 +1,157 @@
+x2j.go - Unmarshal dynamic / arbitrary XML docs and extract values (using wildcards, if necessary).
+
+ANNOUNCEMENTS
+
+20 December 2013:
+
+Non-UTF8 character sets supported via the X2jCharsetReader variable.
+
+12 December 2013:
+
+For symmetry, the package j2x has functions that marshal JSON strings and
+map[string]interface{} values to XML encoded strings: http://godoc.org/github.com/clbanning/j2x.
+
+Also, ToTree(), ToMap(), ToJson(), ToJsonIndent(), ReaderValuesFromTagPath() and ReaderValuesForTag() use io.Reader instead of string or []byte.
+
+If you want to process a stream of XML messages check out XmlMsgsFromReader().
+
+MOTIVATION
+
+I make extensive use of JSON for messaging and typically unmarshal the messages into
+map[string]interface{} variables.  This is easily done using json.Unmarshal from the
+standard Go libraries.  Unfortunately, many legacy solutions use structured
+XML messages; in those environments the applications would have to be refitted to
+interoperate with my components.
+
+The better solution is to just provide an alternative HTTP handler that receives
+XML doc messages and parses it into a map[string]interface{} variable and then reuse
+all the JSON-based code.  The Go xml.Unmarshal() function does not provide the same
+option of unmarshaling XML messages into map[string]interface{} variables. So I wrote
+a couple of small functions to fill this gap.
+
+Of course, once the XML doc was unmarshal'd into a map[string]interface{} variable it
+was just a matter of calling json.Marshal() to provide it as a JSON string.  Hence 'x2j'
+rather than just 'x2m'.
+
+USAGE
+
+The package is fairly well self-documented. (http://godoc.org/github.com/clbanning/x2j)  
+The one really useful function is:
+
+    - Unmarshal(doc []byte, v interface{}) error  
+      where v is a pointer to a variable of type 'map[string]interface{}', 'string', or
+      any other type supported by xml.Unmarshal().
+
+To retrieve a value for specific tag use: 
+
+    - DocValue(doc, path string, attrs ...string) (interface{},error) 
+    - MapValue(m map[string]interface{}, path string, attr map[string]interface{}, recast ...bool) (interface{}, error)
+
+The 'path' argument is a period-separated tag hierarchy - also known as dot-notation.
+It is the program's responsibility to cast the returned value to the proper type; possible 
+types are the normal JSON unmarshaling types: string, float64, bool, []interface, map[string]interface{}.  
+
+To retrieve all values associated with a tag occurring anywhere in the XML document use:
+
+    - ValuesForTag(doc, tag string) ([]interface{}, error)
+    - ValuesForKey(m map[string]interface{}, key string) []interface{}
+
+    Demos: http://play.golang.org/p/m8zP-cpk0O
+           http://play.golang.org/p/cIteTS1iSg
+           http://play.golang.org/p/vd8pMiI21b
+
+Returned values should be one of map[string]interface, []interface{}, or string.
+
+All the values assocated with a tag-path that may include one or more wildcard characters - 
+'*' - can also be retrieved using:
+
+    - ValuesFromTagPath(doc, path string, getAttrs ...bool) ([]interface{}, error)
+    - ValuesFromKeyPath(map[string]interface{}, path string, getAttrs ...bool) []interface{}
+
+    Demos: http://play.golang.org/p/kUQnZ8VuhS
+           http://play.golang.org/p/l1aMHYtz7G
+
+NOTE: care should be taken when using "*" at the end of a path - i.e., "books.book.*".  See
+the x2jpath_test.go case on how the wildcard returns all key values and collapses list values;
+the same message structure can load a []interface{} or a map[string]interface{} (or an interface{}) 
+value for a tag.
+
+See the test cases in "x2jpath_test.go" and programs in "example" subdirectory for more.
+
+XML PARSING CONVENTIONS
+
+   - Attributes are parsed to map[string]interface{} values by prefixing a hyphen, '-',
+     to the attribute label.
+   - If the element is a simple element and has attributes, the element value
+     is given the key '#text' for its map[string]interface{} representation.  (See
+     the 'atomFeedString.xml' test data, below.)
+
+BULK PROCESSING OF MESSAGE FILES
+
+Sometime messages may be logged into files for transmission via FTP (e.g.) and subsequent
+processing. You can use the bulk XML message processor to convert files of XML messages into 
+map[string]interface{} values with custom processing and error handler functions.  See
+the notes and test code for:
+
+   - XmlMsgsFromFile(fname string, phandler func(map[string]interface{}) bool, ehandler func(error) bool,recast ...bool) error
+
+IMPLEMENTATION NOTES
+
+Nothing fancy here, just brute force.
+
+   - Use xml.Decoder to parse the XML doc and build a tree.
+   - Walk the tree and load values into a map[string]interface{} variable, 'm', as
+     appropriate.
+   - Use json.Marshaler to convert 'm' to JSON.
+
+As for testing:
+
+   - Copy an XML doc into 'x2j_test.xml'.
+   - Run "go test" and you'll get a full dump.
+     ("pathTestString.xml" and "atomFeedString.xml" are test data from "read_test.go"
+     in the encoding/xml directory of the standard package library.)
+
+USES
+
+   - putting a XML API on our message hub middleware (http://jsonhub.net)
+   - loading XML data into NoSQL database, such as, mongoDB
+
+PERFORMANCE IMPROVEMENTS WITH GO 1.1 and 1.2
+
+Upgrading to Go 1.1 environment results in performance improvements for XML and JSON
+unmarshalling, in general.  The x2j package gets an average performance boost of 40%.
+
+                           ----- Go 1.0.2 -----   ----------- Go 1.1 -----------
+                            iterations  ns/op      iterations  ns/op  % improved
+Benchmark_UseXml-4            100000    18776        200000    10377     45%
+Benchmark_UseX2j-4             50000    55323         50000    33958     39%
+Benchmark_UseJson-4          1000000     2257       1000000     1484     34%
+Benchmark_UseJsonToMap-4     1000000     2531       1000000     1566     38%
+BenchmarkBig_UseXml-4         100000    28918        100000    15876     45%
+BenchmarkBig_UseX2j-4          20000    86338         50000    52661     39%
+BenchmarkBig_UseJson-4        500000     4448       1000000     2664     40%
+BenchmarkBig_UseJsonToMap-4   200000     9076        500000     5753     37%
+BenchmarkBig3_UseXml-4         50000    42224        100000    24686     42%
+BenchmarkBig3_UseX2j-4         10000   147407         20000    84332     43%
+BenchmarkBig3_UseJson-4       500000     5921        500000     3930     34%
+BenchmarkBig3_UseJsonToMap-4  200000    13037        200000     8670     33%
+
+The x2j package gets an additional 15-20% performance boost going to Go 1.2.
+
+                           ------ Go 1.1 ------   ----------- Go 1.2 -----------
+                            iterations  ns/op      iterations  ns/op  % improved
+Benchmark_UseXml-4            200000    10377        200000    11031     -6%
+Benchmark_UseX2j-4             50000    33958        100000    29188     14%
+Benchmark_UseJson-4          1000000     1484       1000000     1347      9%
+Benchmark_UseJsonToMap-4     1000000     1566       1000000     1434      8%
+BenchmarkBig_UseXml-4         100000    15876        100000    16585     -4%
+BenchmarkBig_UseX2j-4          50000    52661         50000    43452     17%
+BenchmarkBig_UseJson-4       1000000     2664       1000000     2523      5%
+BenchmarkBig_UseJsonToMap-4   500000     5753        500000     4992     13%
+BenchmarkBig3_UseXml-4        100000    24686        100000    24348      1%
+BenchmarkBig3_UseX2j-4         20000    84332         50000    66736     21%
+BenchmarkBig3_UseJson-4       500000     3930        500000     3733      5%
+BenchmarkBig3_UseJsonToMap-4  200000     8670        200000     7810     10%
+
+
+
