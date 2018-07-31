@@ -40,7 +40,6 @@ func TestSsdbcacheCache(t *testing.T) {
 	if err = ssdb.Put("ssdb", "2", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
-
 	if err = ssdb.Incr("ssdb"); err != nil {
 		t.Error("incr Error", err)
 	}
@@ -49,28 +48,8 @@ func TestSsdbcacheCache(t *testing.T) {
 		t.Error("get err")
 	}
 
-	if err = ssdb.IncrBy("ssdb", 2); err != nil {
-		t.Error("incr Error", err)
-	}
-
-	if v, err := strconv.Atoi(ssdb.Get("ssdb").(string)); err != nil || v != 5 {
-		t.Error("get err")
-	}
-
-	if err = ssdb.DecrBy("ssdb", 2); err != nil {
-		t.Error("decr error")
-	}
-
-	if v, err := strconv.Atoi(ssdb.Get("ssdb").(string)); err != nil || v != 3 {
-		t.Error("get err")
-	}
-
 	if err = ssdb.Decr("ssdb"); err != nil {
 		t.Error("decr error")
-	}
-
-	if v, err := strconv.Atoi(ssdb.Get("ssdb").(string)); err != nil || v != 2 {
-		t.Error("get err")
 	}
 
 	// test del

@@ -127,21 +127,6 @@ func (rc *Cache) Incr(key string) error {
 	return err
 }
 
-// IncrBy increase counter by num.
-func (rc *Cache) IncrBy(key string, num int) error {
-	if num < 1 {
-		return errors.New("increase num should be a positive number")
-	}
-
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return err
-		}
-	}
-	_, err := rc.conn.Increment(key, uint64(num))
-	return err
-}
-
 // Decr decrease counter.
 func (rc *Cache) Decr(key string) error {
 	if rc.conn == nil {
@@ -150,21 +135,6 @@ func (rc *Cache) Decr(key string) error {
 		}
 	}
 	_, err := rc.conn.Decrement(key, 1)
-	return err
-}
-
-// DecrBy decrease counter by num.
-func (rc *Cache) DecrBy(key string, num int) error {
-	if num < 1 {
-		return errors.New("decrease num should be a positive number")
-	}
-
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return err
-		}
-	}
-	_, err := rc.conn.Decrement(key, uint64(num))
 	return err
 }
 
