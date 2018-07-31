@@ -59,6 +59,10 @@ type Cache interface {
 	Incr(key string) error
 	// decrease cached int value by key, as a counter.
 	Decr(key string) error
+	// increase cached with int value by key, as a counter.
+	IncrBy(key string, num int) error
+	// decrease cached with int value by key, as a counter.
+	DecrBy(key string, num int) error
 	// check if cached value exists or not.
 	IsExist(key string) bool
 	// clear all cache.

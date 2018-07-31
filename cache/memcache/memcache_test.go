@@ -58,6 +58,22 @@ func TestMemcacheCache(t *testing.T) {
 		t.Error("get err")
 	}
 
+	if err = bm.IncrBy("astaxie", 2); err != nil {
+		t.Error("Incr Error", err)
+	}
+
+	if v, err := strconv.Atoi(string(bm.Get("astaxie").([]byte))); err != nil || v != 4 {
+		t.Error("get err")
+	}
+
+	if err = bm.DecrBy("astaxie", 2); err != nil {
+		t.Error("Decr Error", err)
+	}
+
+	if v, err := strconv.Atoi(string(bm.Get("astaxie").([]byte))); err != nil || v != 2 {
+		t.Error("get err")
+	}
+
 	if err = bm.Decr("astaxie"); err != nil {
 		t.Error("Decr Error", err)
 	}
@@ -65,6 +81,7 @@ func TestMemcacheCache(t *testing.T) {
 	if v, err := strconv.Atoi(string(bm.Get("astaxie").([]byte))); err != nil || v != 1 {
 		t.Error("get err")
 	}
+
 	bm.Delete("astaxie")
 	if bm.IsExist("astaxie") {
 		t.Error("delete err")
