@@ -31,6 +31,12 @@
 			"path": "google.golang.org/appengine/cloudsql",
 			"revision": "b1f26356af11148e710935ed1ac8a7f5702c7612",
 			"revisionTime": "2018-05-21T22:34:13Z"
+		},
+		{
+			"checksumSHA1": "ZSWoOPUNRr5+3dhkLK3C4cZAQPk=",
+			"path": "gopkg.in/yaml.v2",
+			"revision": "5420a8b6744d3b0345ab293f6fcba19c978f1183",
+			"revisionTime": "2018-03-28T19:50:20Z"
 		}
 	],
 	"rootPath": "github.com/astaxie/beego"
