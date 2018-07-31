@@ -12,10 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// +build go1.8
+
 package orm
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"fmt"
 	"io/ioutil"
@@ -452,9 +455,9 @@ func TestNullDataTypes(t *testing.T) {
 	throwFail(t, AssertIs(*d.Float32Ptr, float32Ptr))
 	throwFail(t, AssertIs(*d.Float64Ptr, float64Ptr))
 	throwFail(t, AssertIs(*d.DecimalPtr, decimalPtr))
-	throwFail(t, AssertIs((*d.TimePtr).Format(testTime), timePtr.Format(testTime)))
-	throwFail(t, AssertIs((*d.DatePtr).Format(testDate), datePtr.Format(testDate)))
-	throwFail(t, AssertIs((*d.DateTimePtr).Format(testDateTime), dateTimePtr.Format(testDateTime)))
+	throwFail(t, AssertIs((*d.TimePtr).UTC().Format(testTime), timePtr.UTC().Format(testTime)))
+	throwFail(t, AssertIs((*d.DatePtr).UTC().Format(testDate), datePtr.UTC().Format(testDate)))
+	throwFail(t, AssertIs((*d.DateTimePtr).UTC().Format(testDateTime), dateTimePtr.UTC().Format(testDateTime)))
 }
 
 func TestDataCustomTypes(t *testing.T) {
@@ -1990,6 +1993,66 @@ func TestTransaction(t *testing.T) {
 
 }
 
+func TestTransactionIsolationLevel(t *testing.T) {
+	// this test worked when database support transaction isolation level
+	if IsSqlite {
+		return
+	}
+
+	o1 := NewOrm()
+	o2 := NewOrm()
+
+	// start two transaction with isolation level repeatable read
+	err := o1.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
+	throwFail(t, err)
+	err = o2.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
+	throwFail(t, err)
+
+	// o1 insert tag
+	var tag Tag
+	tag.Name = "test-transaction"
+	id, err := o1.Insert(&tag)
+	throwFail(t, err)
+	throwFail(t, AssertIs(id > 0, true))
+
+	// o2 query tag table, no result
+	num, err := o2.QueryTable("tag").Filter("name", "test-transaction").Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 0))
+
+	// o1 commit
+	o1.Commit()
+
+	// o2 query tag table, still no result
+	num, err = o2.QueryTable("tag").Filter("name", "test-transaction").Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 0))
+
+	// o2 commit and query tag table, get the result
+	o2.Commit()
+	num, err = o2.QueryTable("tag").Filter("name", "test-transaction").Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	num, err = o1.QueryTable("tag").Filter("name", "test-transaction").Delete()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+}
+
+func TestBeginTxWithContextCanceled(t *testing.T) {
+	o := NewOrm()
+	ctx, cancel := context.WithCancel(context.Background())
+	o.BeginTx(ctx, nil)
+	id, err := o.Insert(&Tag{Name: "test-context"})
+	throwFail(t, err)
+	throwFail(t, AssertIs(id > 0, true))
+
+	// cancel the context before commit to make it error
+	cancel()
+	err = o.Commit()
+	throwFail(t, AssertIs(err, context.Canceled))
+}
+
 func TestReadOrCreate(t *testing.T) {
 	u := &User{
 		UserName: "Kyle",
@@ -2260,6 +2323,7 @@ func TestIgnoreCaseTag(t *testing.T) {
 	throwFail(t, AssertIs(info.fields.GetByName("Name02").column, "Name"))
 	throwFail(t, AssertIs(info.fields.GetByName("Name03").column, "name"))
 }
+
 func TestInsertOrUpdate(t *testing.T) {
 	RegisterModel(new(User))
 	user := User{UserName: "unique_username133", Status: 1, Password: "o"}
@@ -2296,6 +2360,11 @@ func TestInsertOrUpdate(t *testing.T) {
 		dORM.Read(&test, "user_name")
 		throwFailNow(t, AssertIs(user2.Status, test.Status))
 		throwFailNow(t, AssertIs(user2.Password, strings.TrimSpace(test.Password)))
+	}
+
+	//postgres ON CONFLICT DO UPDATE SET can`t use colu=colu+values
+	if IsPostgres {
+		return
 	}
 	//test3 +
 	_, err = dORM.InsertOrUpdate(&user2, "user_name", "status=status+1")
