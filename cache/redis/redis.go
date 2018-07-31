@@ -128,27 +128,9 @@ func (rc *Cache) Incr(key string) error {
 	return err
 }
 
-// IncrBy increase counter in redis by num.
-func (rc *Cache) IncrBy(key string, num int) error {
-	if num < 1 {
-		return errors.New("increase num should be a positive number")
-	}
-	_, err := redis.Bool(rc.do("INCRBY", key, num))
-	return err
-}
-
 // Decr decrease counter in redis.
 func (rc *Cache) Decr(key string) error {
 	_, err := redis.Bool(rc.do("INCRBY", key, -1))
-	return err
-}
-
-// DecrBy decrease counter in redis by num.
-func (rc *Cache) DecrBy(key string, num int) error {
-	if num < 1 {
-		return errors.New("decrease num should be a positive number")
-	}
-	_, err := redis.Bool(rc.do("DECRBY", key, num))
 	return err
 }
 

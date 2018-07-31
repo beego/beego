@@ -56,22 +56,6 @@ func TestRedisCache(t *testing.T) {
 		t.Error("get err")
 	}
 
-	if err = bm.IncrBy("astaxie", 2); err != nil {
-		t.Error("Incr Error", err)
-	}
-
-	if v, _ := redis.Int(bm.Get("astaxie"), err); v != 4 {
-		t.Error("get err")
-	}
-
-	if err = bm.DecrBy("astaxie", 2); err != nil {
-		t.Error("Decr Error", err)
-	}
-
-	if v, _ := redis.Int(bm.Get("astaxie"), err); v != 2 {
-		t.Error("get err")
-	}
-
 	if err = bm.Decr("astaxie"); err != nil {
 		t.Error("Decr Error", err)
 	}
@@ -79,7 +63,6 @@ func TestRedisCache(t *testing.T) {
 	if v, _ := redis.Int(bm.Get("astaxie"), err); v != 1 {
 		t.Error("get err")
 	}
-
 	bm.Delete("astaxie")
 	if bm.IsExist("astaxie") {
 		t.Error("delete err")

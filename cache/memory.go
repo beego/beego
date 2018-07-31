@@ -135,39 +135,6 @@ func (bc *MemoryCache) Incr(key string) error {
 	return nil
 }
 
-// IncrBy increase cache counter in memory by num.
-// it supports int,int32,int64,uint,uint32,uint64.
-func (bc *MemoryCache) IncrBy(key string, num int) error {
-	bc.RLock()
-	defer bc.RUnlock()
-	itm, ok := bc.items[key]
-	if !ok {
-		return errors.New("key not exist")
-	}
-
-	if num < 1 {
-		return errors.New("increase num should be a positive number")
-	}
-
-	switch itm.val.(type) {
-	case int:
-		itm.val = itm.val.(int) + num
-	case int32:
-		itm.val = itm.val.(int32) + int32(num)
-	case int64:
-		itm.val = itm.val.(int64) + int64(num)
-	case uint:
-		itm.val = itm.val.(uint) + uint(num)
-	case uint32:
-		itm.val = itm.val.(uint32) + uint32(num)
-	case uint64:
-		itm.val = itm.val.(uint64) + uint64(num)
-	default:
-		return errors.New("item val is not (u)int (u)int32 (u)int64")
-	}
-	return nil
-}
-
 // Decr decrease counter in memory.
 func (bc *MemoryCache) Decr(key string) error {
 	bc.RLock()
@@ -198,50 +165,6 @@ func (bc *MemoryCache) Decr(key string) error {
 	case uint64:
 		if itm.val.(uint64) > 0 {
 			itm.val = itm.val.(uint64) - 1
-		} else {
-			return errors.New("item val is less than 0")
-		}
-	default:
-		return errors.New("item val is not int int64 int32")
-	}
-	return nil
-}
-
-// DecrBy decrease counter in memory by num.
-func (bc *MemoryCache) DecrBy(key string, num int) error {
-	bc.RLock()
-	defer bc.RUnlock()
-	itm, ok := bc.items[key]
-	if !ok {
-		return errors.New("key not exist")
-	}
-
-	if num < 1 {
-		return errors.New("decrease num should be a positive number")
-	}
-
-	switch itm.val.(type) {
-	case int:
-		itm.val = itm.val.(int) - int(num)
-	case int64:
-		itm.val = itm.val.(int64) - int64(num)
-	case int32:
-		itm.val = itm.val.(int32) - int32(num)
-	case uint:
-		if itm.val.(uint) > 0 {
-			itm.val = itm.val.(uint) - uint(num)
-		} else {
-			return errors.New("item val is less than 0")
-		}
-	case uint32:
-		if itm.val.(uint32) > 0 {
-			itm.val = itm.val.(uint32) - uint32(num)
-		} else {
-			return errors.New("item val is less than 0")
-		}
-	case uint64:
-		if itm.val.(uint64) > 0 {
-			itm.val = itm.val.(uint64) - uint64(num)
 		} else {
 			return errors.New("item val is less than 0")
 		}
