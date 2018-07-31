@@ -536,6 +536,8 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a
 	updates := make([]string, len(names))
 	var conflitValue interface{}
 	for i, v := range names {
+		// identifier in database may not be case-sensitive, so quote it
+		v = fmt.Sprintf("%s%s%s", Q, v, Q)
 		marks[i] = "?"
 		valueStr := argsMap[strings.ToLower(v)]
 		if v == args0 {
