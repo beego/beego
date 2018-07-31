@@ -20,7 +20,6 @@ import (
 	"encoding/gob"
 	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -184,24 +183,6 @@ func (fc *FileCache) Incr(key string) error {
 	return nil
 }
 
-// IncrBy will increase cached int value by num.
-// fc value is saving forever unless Delete.
-func (fc *FileCache) IncrBy(key string, num int) error {
-	if num < 1 {
-		return errors.New("increase num should be a positive number")
-	}
-
-	data := fc.Get(key)
-	var incr int
-	if reflect.TypeOf(data).Name() != "int" {
-		incr = 0
-	} else {
-		incr = data.(int) + int(num)
-	}
-	fc.Put(key, incr, FileCacheEmbedExpiry)
-	return nil
-}
-
 // Decr will decrease cached int value.
 func (fc *FileCache) Decr(key string) error {
 	data := fc.Get(key)
@@ -210,23 +191,6 @@ func (fc *FileCache) Decr(key string) error {
 		decr = 0
 	} else {
 		decr = data.(int) - 1
-	}
-	fc.Put(key, decr, FileCacheEmbedExpiry)
-	return nil
-}
-
-// DecrBy will decrease cached int value.
-func (fc *FileCache) DecrBy(key string, num int) error {
-	if num < 1 {
-		return errors.New("decrease num should be a positive number")
-	}
-
-	data := fc.Get(key)
-	var decr int
-	if reflect.TypeOf(data).Name() != "int" || data.(int)-1 <= 0 {
-		decr = 0
-	} else {
-		decr = data.(int) - int(num)
 	}
 	fc.Put(key, decr, FileCacheEmbedExpiry)
 	return nil

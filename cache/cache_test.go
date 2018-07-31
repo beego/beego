@@ -37,7 +37,7 @@ func TestCache(t *testing.T) {
 		t.Error("get err")
 	}
 
-	time.Sleep(10 * time.Second)
+	time.Sleep(30 * time.Second)
 
 	if bm.IsExist("astaxie") {
 		t.Error("check err")
@@ -55,22 +55,6 @@ func TestCache(t *testing.T) {
 		t.Error("get err")
 	}
 
-	if err = bm.IncrBy("astaxie", 2); err != nil {
-		t.Error("Incr Error", err)
-	}
-
-	if v := bm.Get("astaxie"); v.(int) != 4 {
-		t.Error("get err")
-	}
-
-	if err = bm.DecrBy("astaxie", 2); err != nil {
-		t.Error("Decr Error", err)
-	}
-
-	if v := bm.Get("astaxie"); v.(int) != 2 {
-		t.Error("get err")
-	}
-
 	if err = bm.Decr("astaxie"); err != nil {
 		t.Error("Decr Error", err)
 	}
@@ -78,7 +62,6 @@ func TestCache(t *testing.T) {
 	if v := bm.Get("astaxie"); v.(int) != 1 {
 		t.Error("get err")
 	}
-
 	bm.Delete("astaxie")
 	if bm.IsExist("astaxie") {
 		t.Error("delete err")
@@ -139,22 +122,6 @@ func TestFileCache(t *testing.T) {
 		t.Error("get err")
 	}
 
-	if err = bm.IncrBy("astaxie", 2); err != nil {
-		t.Error("Incr Error", err)
-	}
-
-	if v := bm.Get("astaxie"); v.(int) != 4 {
-		t.Error("get err")
-	}
-
-	if err = bm.DecrBy("astaxie", 2); err != nil {
-		t.Error("Decr Error", err)
-	}
-
-	if v := bm.Get("astaxie"); v.(int) != 2 {
-		t.Error("get err")
-	}
-
 	if err = bm.Decr("astaxie"); err != nil {
 		t.Error("Decr Error", err)
 	}
@@ -162,7 +129,6 @@ func TestFileCache(t *testing.T) {
 	if v := bm.Get("astaxie"); v.(int) != 1 {
 		t.Error("get err")
 	}
-
 	bm.Delete("astaxie")
 	if bm.IsExist("astaxie") {
 		t.Error("delete err")
