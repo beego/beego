@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"reflect"
 	"time"
-	"github.com/astaxie/beego"
 )
 
 // raw sql string prepared statement
@@ -317,7 +316,7 @@ func (o *rawSet) QueryRow(containers ...interface{}) error {
 				return err
 			}
 
-			columnsMp := make(beego.M, len(columns))
+			columnsMp := make(map[string]interface{}, len(columns))
 
 			refs = make([]interface{}, 0, len(columns))
 			for _, col := range columns {
@@ -452,7 +451,7 @@ func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
 				return 0, err
 			}
 
-			columnsMp := make(beego.M, len(columns))
+			columnsMp := make(map[string]interface{}, len(columns))
 
 			refs = make([]interface{}, 0, len(columns))
 			for _, col := range columns {
@@ -812,7 +811,7 @@ func (o *rawSet) ValuesFlat(container *ParamsList, cols ...string) (int64, error
 // name  | value
 // total | 100
 // found | 200
-// to beego.M{
+// to map[string]interface{}{
 // 	"total": 100,
 // 	"found": 200,
 // }

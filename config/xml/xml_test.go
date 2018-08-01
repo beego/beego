@@ -19,7 +19,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/config"
 )
 
@@ -44,7 +43,7 @@ func TestXML(t *testing.T) {
 </mysection>
 </config>
 `
-		keyValue = beego.M{
+		keyValue = map[string]interface{}{
 			"appname":         "beeapi",
 			"httpport":        8080,
 			"mysqlport":       int64(3600),

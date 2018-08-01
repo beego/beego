@@ -18,7 +18,6 @@ import (
 	"fmt"
 	"os"
 	"testing"
-	"github.com/astaxie/beego"
 )
 
 func TestJsonStartsWithArray(t *testing.T) {
@@ -56,12 +55,12 @@ func TestJsonStartsWithArray(t *testing.T) {
 	if rootArrayCasted == nil {
 		t.Error("array from root is nil")
 	} else {
-		elem := rootArrayCasted[0].(beego.M)
+		elem := rootArrayCasted[0].(map[string]interface{})
 		if elem["url"] != "user" || elem["serviceAPI"] != "http://www.test.com/user" {
 			t.Error("array[0] values are not valid")
 		}
 
-		elem2 := rootArrayCasted[1].(beego.M)
+		elem2 := rootArrayCasted[1].(map[string]interface{})
 		if elem2["url"] != "employee" || elem2["serviceAPI"] != "http://www.test.com/employee" {
 			t.Error("array[1] values are not valid")
 		}
@@ -103,7 +102,7 @@ func TestJson(t *testing.T) {
 		}
     }
 }`
-		keyValue = beego.M{
+		keyValue = map[string]interface{}{
 			"appname":                         "beeapi",
 			"testnames":                       []string{"foo", "bar"},
 			"httpport":                        8080,
@@ -184,9 +183,9 @@ func TestJson(t *testing.T) {
 
 	if db, err := jsonconf.DIY("database"); err != nil {
 		t.Fatal(err)
-	} else if m, ok := db.(beego.M); !ok {
+	} else if m, ok := db.(map[string]interface{}); !ok {
 		t.Log(db)
-		t.Fatal("db not beego.M")
+		t.Fatal("db not map[string]interface{}")
 	} else {
 		if m["host"].(string) != "host" {
 			t.Fatal("get host err")

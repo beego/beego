@@ -30,13 +30,12 @@ import (
 	"time"
 
 	"github.com/astaxie/beego/utils"
-	"github.com/astaxie/beego"
 )
 
 func init() {
 	gob.Register([]interface{}{})
 	gob.Register(map[int]interface{}{})
-	gob.Register(beego.M{})
+	gob.Register(map[string]interface{}{})
 	gob.Register(map[interface{}]interface{}{})
 	gob.Register(map[string]string{})
 	gob.Register(map[int]string{})

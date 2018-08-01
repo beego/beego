@@ -61,7 +61,6 @@ import (
 	"os"
 	"reflect"
 	"time"
-	"github.com/astaxie/beego"
 )
 
 // DebugQueries define the debug
@@ -86,7 +85,7 @@ var (
 )
 
 // Params stores the Params
-type Params beego.M
+type Params map[string]interface{}
 
 // ParamsList stores paramslist
 type ParamsList []interface{}

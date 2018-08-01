@@ -272,7 +272,7 @@ type QuerySeter interface {
 	// name  | value
 	// total | 100
 	// found | 200
-	// to beego.M{
+	// to map[string]interface{}{
 	// 	"total": 100,
 	// 	"found": 200,
 	// }
@@ -362,7 +362,7 @@ type RawSeter interface {
 	// name  | value
 	// total | 100
 	// found | 200
-	// to beego.M{
+	// to map[string]interface{}{
 	// 	"total": 100,
 	// 	"found": 200,
 	// }

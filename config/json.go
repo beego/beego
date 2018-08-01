@@ -22,7 +22,6 @@ import (
 	"os"
 	"strings"
 	"sync"
-	"github.com/astaxie/beego"
 )
 
 // JSONConfig is a json config parser and implements Config interface.
@@ -47,7 +46,7 @@ func (js *JSONConfig) Parse(filename string) (Configer, error) {
 // ParseData returns a ConfigContainer with json string
 func (js *JSONConfig) ParseData(data []byte) (Configer, error) {
 	x := &JSONConfigContainer{
-		data: make(beego.M),
+		data: make(map[string]interface{}),
 	}
 	err := json.Unmarshal(data, &x.data)
 	if err != nil {
@@ -67,7 +66,7 @@ func (js *JSONConfig) ParseData(data []byte) (Configer, error) {
 // JSONConfigContainer A Config represents the json configuration.
 // Only when get value, support key as section:name type.
 type JSONConfigContainer struct {
-	data beego.M
+	data map[string]interface{}
 	sync.RWMutex
 }
 
@@ -248,7 +247,7 @@ func (c *JSONConfigContainer) getData(key string) interface{} {
 			return nil
 		}
 		for _, key := range sectionKeys[1:] {
-			if v, ok := curValue.(beego.M); ok {
+			if v, ok := curValue.(map[string]interface{}); ok {
 				if curValue, ok = v[key]; !ok {
 					return nil
 				}

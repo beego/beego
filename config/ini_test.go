@@ -20,7 +20,6 @@ import (
 	"os"
 	"strings"
 	"testing"
-	"github.com/astaxie/beego"
 )
 
 func TestIni(t *testing.T) {
@@ -53,7 +52,7 @@ peers = one;two;three
 password = ${GOPATH}
 `
 
-		keyValue = beego.M{
+		keyValue = map[string]interface{}{
 			"appname":               "beeapi",
 			"httpport":              8080,
 			"mysqlport":             int64(3600),

@@ -30,7 +30,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-	"github.com/astaxie/beego"
 )
 
 var _ = os.PathSeparator
@@ -243,7 +242,7 @@ func TestModelSyntax(t *testing.T) {
 	}
 }
 
-var DataValues = beego.M{
+var DataValues = map[string]interface{}{
 	"Boolean":  true,
 	"Char":     "char",
 	"Text":     "text",
@@ -1604,7 +1603,7 @@ func TestRawQueryRow(t *testing.T) {
 		Decimal  float64
 	)
 
-	dataValues := make(beego.M, len(DataValues))
+	dataValues := make(map[string]interface{}, len(DataValues))
 
 	for k, v := range DataValues {
 		dataValues[strings.ToLower(k)] = v
