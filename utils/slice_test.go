@@ -27,3 +27,37 @@ func TestInSlice(t *testing.T) {
 		t.Error("should be false")
 	}
 }
+
+func TestInSliceIface(t *testing.T) {
+	sl := []string{"A", "b"}
+	if !InSliceIface("A", sl) {
+		t.Error("should be true")
+	}
+	if InSliceIface("B", sl) {
+		t.Error("should be false")
+	}
+
+	newsl := []interface{}{"A", "b"}
+	if !InSliceIface("A", newsl) {
+		t.Error("should be true")
+	}
+	if InSliceIface("B", newsl) {
+		t.Error("should be false")
+	}
+
+	if InSliceIface("B", "C") {
+		t.Error("should be false")
+	}
+}
+
+func TestSliceDiff(t *testing.T) {
+	var sl1 = []interface{}{"A", "b"}
+	var sl2 = []interface{}{"A", "c"}
+
+	var sl3 = SliceDiff(sl1, sl2)
+	for _, v := range sl3 {
+		if v != "b" {
+			t.Error("should be b")
+		}
+	}
+}

@@ -16,7 +16,10 @@ package utils
 
 import (
 	"math/rand"
+	"reflect"
 	"time"
+
+	"github.com/astaxie/beego"
 )
 
 type reducetype func(interface{}) interface{}
@@ -33,9 +36,15 @@ func InSlice(v string, sl []string) bool {
 }
 
 // InSliceIface checks given interface in interface slice.
-func InSliceIface(v interface{}, sl []interface{}) bool {
-	for _, vv := range sl {
-		if vv == v {
+func InSliceIface(v interface{}, sl interface{}) bool {
+	var value = reflect.ValueOf(sl)
+	if value.Kind() != reflect.Slice {
+		beego.BeeLogger.Error("sl should be slice %v", sl)
+		return false
+	}
+
+	for i := 0; i < value.Len(); i++ {
+		if v == value.Index(i).Interface() {
 			return true
 		}
 	}
