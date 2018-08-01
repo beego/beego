@@ -491,7 +491,7 @@ func splitSegment(key string) (bool, []string, string) {
 		var param []rune
 		var expt []rune
 		var skipnum int
-		params := []string{}
+		var params []string
 		reg := regexp.MustCompile(`[a-zA-Z0-9_]+`)
 		for i, v := range key {
 			if skipnum > 0 {

@@ -41,6 +41,7 @@ import (
 
 	"github.com/astaxie/beego/config"
 	"github.com/beego/x2j"
+	"github.com/astaxie/beego"
 )
 
 // Config is a xml config parser and implements Config interface.
@@ -60,21 +61,21 @@ func (xc *Config) Parse(filename string) (config.Configer, error) {
 
 // ParseData xml data
 func (xc *Config) ParseData(data []byte) (config.Configer, error) {
-	x := &ConfigContainer{data: make(map[string]interface{})}
+	x := &ConfigContainer{data: make(beego.M)}
 
 	d, err := x2j.DocToMap(string(data))
 	if err != nil {
 		return nil, err
 	}
 
-	x.data = config.ExpandValueEnvForMap(d["config"].(map[string]interface{}))
+	x.data = config.ExpandValueEnvForMap(d["config"].(beego.M))
 
 	return x, nil
 }
 
 // ConfigContainer A Config represents the xml configuration.
 type ConfigContainer struct {
-	data map[string]interface{}
+	data beego.M
 	sync.Mutex
 }
 
@@ -181,7 +182,7 @@ func (c *ConfigContainer) DefaultStrings(key string, defaultval []string) []stri
 
 // GetSection returns map for the given section
 func (c *ConfigContainer) GetSection(section string) (map[string]string, error) {
-	if v, ok := c.data[section].(map[string]interface{}); ok {
+	if v, ok := c.data[section].(beego.M); ok {
 		mapstr := make(map[string]string)
 		for k, val := range v {
 			mapstr[k] = config.ToString(val)

@@ -45,6 +45,7 @@ import (
 	"os"
 	"reflect"
 	"time"
+	"github.com/astaxie/beego"
 )
 
 // Configer defines how to get and set value from configuration raw data.
@@ -109,12 +110,12 @@ func NewConfigData(adapterName string, data []byte) (Configer, error) {
 }
 
 // ExpandValueEnvForMap convert all string value with environment variable.
-func ExpandValueEnvForMap(m map[string]interface{}) map[string]interface{} {
+func ExpandValueEnvForMap(m beego.M) map[string]interface{} {
 	for k, v := range m {
 		switch value := v.(type) {
 		case string:
 			m[k] = ExpandValueEnv(value)
-		case map[string]interface{}:
+		case beego.M:
 			m[k] = ExpandValueEnvForMap(value)
 		case map[string]string:
 			for k2, v2 := range value {

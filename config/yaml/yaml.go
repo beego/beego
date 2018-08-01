@@ -40,6 +40,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/config"
 	"github.com/beego/goyaml2"
 )
@@ -73,7 +74,7 @@ func (yaml *Config) ParseData(data []byte) (config.Configer, error) {
 
 // ReadYmlReader Read yaml file to map.
 // if json like, use json package, unless goyaml2 package.
-func ReadYmlReader(path string) (cnf map[string]interface{}, err error) {
+func ReadYmlReader(path string) (cnf beego.M, err error) {
 	buf, err := ioutil.ReadFile(path)
 	if err != nil {
 		return
@@ -83,7 +84,7 @@ func ReadYmlReader(path string) (cnf map[string]interface{}, err error) {
 }
 
 // parseYML parse yaml formatted []byte to map.
-func parseYML(buf []byte) (cnf map[string]interface{}, err error) {
+func parseYML(buf []byte) (cnf beego.M, err error) {
 	if len(buf) < 3 {
 		return
 	}
@@ -107,7 +108,7 @@ func parseYML(buf []byte) (cnf map[string]interface{}, err error) {
 		log.Println("Goyaml2 output nil? Pls report bug\n" + string(buf))
 		return
 	}
-	cnf, ok := data.(map[string]interface{})
+	cnf, ok := data.(beego.M)
 	if !ok {
 		log.Println("Not a Map? >> ", string(buf), data)
 		cnf = nil
@@ -118,7 +119,7 @@ func parseYML(buf []byte) (cnf map[string]interface{}, err error) {
 
 // ConfigContainer A Config represents the yaml configuration.
 type ConfigContainer struct {
-	data map[string]interface{}
+	data beego.M
 	sync.RWMutex
 }
 
@@ -293,9 +294,9 @@ func (c *ConfigContainer) getData(key string) (interface{}, error) {
 	for idx, k := range keys {
 		if v, ok := tmpData[k]; ok {
 			switch v.(type) {
-			case map[string]interface{}:
+			case beego.M:
 				{
-					tmpData = v.(map[string]interface{})
+					tmpData = v.(beego.M)
 					if idx == len(keys) - 1 {
 						return tmpData, nil
 					}

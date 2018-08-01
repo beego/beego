@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/logs"
 	"github.com/belogik/goes"
 )
@@ -53,7 +54,7 @@ func (el *esLogger) WriteMsg(when time.Time, msg string, level int) error {
 		return nil
 	}
 
-	vals := make(map[string]interface{})
+	vals := make(beego.M)
 	vals["@timestamp"] = when.Format(time.RFC3339)
 	vals["@msg"] = msg
 	d := goes.Document{

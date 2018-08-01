@@ -248,7 +248,7 @@ func (o *querySet) ValuesFlat(result *ParamsList, expr string) (int64, error) {
 // name  | value
 // total | 100
 // found | 200
-// to map[string]interface{}{
+// to beego.M{
 // 	"total": 100,
 // 	"found": 200,
 // }
