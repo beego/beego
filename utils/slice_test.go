@@ -48,6 +48,25 @@ func TestInSliceIface(t *testing.T) {
 	if InSliceIface("B", "C") {
 		t.Error("should be false")
 	}
+
+	type testStruct struct {
+		name string
+		age  int
+	}
+	xiaoming := &testStruct{name: "xiaoming", age: 10}
+	lilei := &testStruct{name: "lilei", age: 11}
+	hanmeimei := &testStruct{name: "hanmeimei", age: 11}
+
+	testSlice := make([]*testStruct, 2, 2)
+	testSlice[0] = hanmeimei
+	testSlice[1] = lilei
+	if !InSliceIface(lilei, testSlice) {
+		t.Error("should be true")
+	}
+
+	if InSliceIface(xiaoming, testSlice) {
+		t.Error("should be false")
+	}
 }
 
 func TestSliceDiff(t *testing.T) {
