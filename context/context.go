@@ -244,3 +244,11 @@ func (r *Response) CloseNotify() <-chan bool {
 	}
 	return nil
 }
+
+// Pusher http.Pusher
+func (r *Response) Pusher() (pusher http.Pusher) {
+	if pusher, ok := r.ResponseWriter.(http.Pusher); ok {
+		return pusher
+	}
+	return nil
+}
