@@ -26,6 +26,7 @@ func TestNewBeeMap(t *testing.T) {
 }
 
 func TestSet(t *testing.T) {
+	safeMap = NewBeeMap()
 	if ok := safeMap.Set("astaxie", 1); !ok {
 		t.Error("expected", true, "got", false)
 	}
