@@ -203,12 +203,12 @@ func (bc *MemoryCache) StartAndGC(config string) error {
 	dur := time.Duration(cf["interval"]) * time.Second
 	bc.Every = cf["interval"]
 	bc.dur = dur
-	go bc.vaccuum()
+	go bc.vacuum()
 	return nil
 }
 
 // check expiration.
-func (bc *MemoryCache) vaccuum() {
+func (bc *MemoryCache) vacuum() {
 	if bc.Every < 1 {
 		return
 	}
