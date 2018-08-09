@@ -1011,13 +1011,13 @@ func TestAll(t *testing.T) {
 
 	qs = dORM.QueryTable("user")
 	num, err = qs.Filter("user_name", "nothing").All(&users)
-	throwFailNow(t, AssertIs(err, ErrNoRows))
+	throwFailNow(t, err)
 	throwFailNow(t, AssertIs(num, 0))
 
 	var users3 []*User
 	qs = dORM.QueryTable("user")
 	num, err = qs.Filter("user_name", "nothing").All(&users3)
-	throwFailNow(t, AssertIs(err, ErrNoRows))
+	throwFailNow(t, err)
 	throwFailNow(t, AssertIs(num, 0))
 	throwFailNow(t, AssertIs(users3 == nil, false))
 }
