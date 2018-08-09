@@ -198,11 +198,7 @@ func (o *querySet) PrepareInsert() (Inserter, error) {
 // query all data and map to containers.
 // cols means the columns when querying.
 func (o *querySet) All(container interface{}, cols ...string) (int64, error) {
-	num, err := o.orm.alias.DbBaser.ReadBatch(o.orm.db, o, o.mi, o.cond, container, o.orm.alias.TZ, cols)
-	if num == 0 {
-		return 0, ErrNoRows
-	}
-	return num, err
+	return o.orm.alias.DbBaser.ReadBatch(o.orm.db, o, o.mi, o.cond, container, o.orm.alias.TZ, cols)
 }
 
 // query one row data and map to containers.
