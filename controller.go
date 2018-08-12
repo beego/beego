@@ -275,7 +275,6 @@ func (c *Controller) viewPath() string {
 func (c *Controller) Redirect(url string, code int) {
 	logAccess(c.Ctx, nil, code)
 	c.Ctx.Redirect(code, url)
-	panic(ErrAbort)
 }
 
 // Set the data depending on the accepted
