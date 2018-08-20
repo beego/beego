@@ -260,6 +260,19 @@ func (output *BeegoOutput) XML(data interface{}, hasIndent bool) error {
 	return output.Body(content)
 }
 
+// ServeFormatted serve YAML, XML OR JSON, depending on the value of the Accept header
+func (output *BeegoOutput) ServeFormatted(data interface{}, hasIndent bool, hasEncode ...bool) {
+	accept := output.Context.Input.Header("Accept")
+	switch accept {
+	case ApplicationYAML:
+		output.YAML(data)
+	case ApplicationXML, TextXML:
+		output.XML(data, hasIndent)
+	default:
+		output.JSON(data, hasIndent, len(hasEncode) > 0 && hasEncode[0])
+	}
+}
+
 // Download forces response for download file.
 // it prepares the download response header automatically.
 func (output *BeegoOutput) Download(file string, filename ...string) {
