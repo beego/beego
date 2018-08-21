@@ -38,6 +38,7 @@ var (
 	acceptsXMLRegex  = regexp.MustCompile(`(application/xml|text/xml)(?:,|$)`)
 	acceptsJSONRegex = regexp.MustCompile(`(application/json)(?:,|$)`)
 	acceptsYAMLRegex = regexp.MustCompile(`(application/x-yaml)(?:,|$)`)
+	acceptsPROTOBUFRegex = regexp.MustCompile(`(application/x-protobuf)(?:,|$)`)
 	maxParam         = 50
 )
 
@@ -204,10 +205,17 @@ func (input *BeegoInput) AcceptsXML() bool {
 func (input *BeegoInput) AcceptsJSON() bool {
 	return acceptsJSONRegex.MatchString(input.Header("Accept"))
 }
-// AcceptsYAML Checks if request accepts json response
+
+// AcceptsYAML Checks if request accepts yaml response
 func (input *BeegoInput) AcceptsYAML() bool {
 	return acceptsYAMLRegex.MatchString(input.Header("Accept"))
 }
+
+// AcceptsPROTOBUF Checks if request accepts protobuf response
+func (input *BeegoInput) AcceptsPROTOBUF() bool {
+	return acceptsPROTOBUFRegex.MatchString(input.Header("Accept"))
+}
+
 
 // IP returns request client ip.
 // if in proxy, return first proxy id.

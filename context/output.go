@@ -30,7 +30,9 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
 	"gopkg.in/yaml.v2"
+	"github.com/golang/protobuf/proto"
 )
 
 // BeegoOutput does work for sending response header.
@@ -203,10 +205,22 @@ func (output *BeegoOutput) JSON(data interface{}, hasIndent bool, encoding bool)
 	return output.Body(content)
 }
 
+// PROTOBUF writes protobuf to response body.
+func (output *BeegoOutput) PROTOBUF(data interface{}) error {
+	output.Header("Content-Type", "application/x-protobuf; charset=utf-8")
+	var content []byte
+	var err error
+	content, err = proto.Marshal(data.(proto.Message))
+	if err != nil {
+		http.Error(output.Context.ResponseWriter, err.Error(), http.StatusInternalServerError)
+		return err
+	}
+	return output.Body(content)
+}
 
 // YAML writes yaml to response body.
 func (output *BeegoOutput) YAML(data interface{}) error {
-	output.Header("Content-Type", "application/application/x-yaml; charset=utf-8")
+	output.Header("Content-Type", "application/x-yaml; charset=utf-8")
 	var content []byte
 	var err error
 	content, err = yaml.Marshal(data)

@@ -34,10 +34,11 @@ import (
 
 //commonly used mime-types
 const (
-	applicationJSON = "application/json"
-	applicationXML  = "application/xml"
-	applicationYAML = "application/x-yaml"
-	textXML         = "text/xml"
+	applicationJSON     = "application/json"
+	applicationXML      = "application/xml"
+	applicationYAML     = "application/x-yaml"
+	applicationPROTOBUF = "application/x-protobuf"
+	textXML             = "text/xml"
 )
 
 var (
@@ -367,6 +368,11 @@ func (c *Controller) ServeYAML() {
 	c.Ctx.Output.YAML(c.Data["yaml"])
 }
 
+// ServePROTOBUF sends protobuf response.
+func (c *Controller) ServePROTOBUF() {
+	c.Ctx.Output.PROTOBUF(c.Data["protobuf"])
+}
+
 // ServeFormatted serve Xml OR Json, depending on the value of the Accept header
 func (c *Controller) ServeFormatted() {
 	accept := c.Ctx.Input.Header("Accept")
@@ -377,6 +383,8 @@ func (c *Controller) ServeFormatted() {
 		c.ServeXML()
 	case applicationYAML:
 		c.ServeYAML()
+	case applicationPROTOBUF:
+		c.ServePROTOBUF()
 	default:
 		c.ServeJSON()
 	}
