@@ -16,7 +16,7 @@
 //
 // Usage:
 // import(
-//   "github.com/astaxie/beego/session"
+//   "github.com/hsoshiant/beego/session"
 // )
 //
 //	func init() {
@@ -150,6 +150,10 @@ func NewManager(provideName string, cf *ManagerConfig) (*Manager, error) {
 		provider,
 		cf,
 	}, nil
+}
+
+func (manager *Manager) GetProvider() Provider {
+	return manager.provider
 }
 
 // getSid retrieves session identifier from HTTP Request.
