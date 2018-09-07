@@ -43,7 +43,7 @@ const (
 )
 
 const (
-	routerTypeBeego   = iota
+	routerTypeBeego = iota
 	routerTypeRESTFul
 	routerTypeHandler
 )
@@ -277,6 +277,10 @@ func (p *ControllerRegister) Include(cList ...ControllerInterface) {
 		key := t.PkgPath() + ":" + t.Name()
 		if comm, ok := GlobalControllerRouter[key]; ok {
 			for _, a := range comm {
+				for _, f := range a.Filters {
+					p.InsertFilter(f.Pattern, f.Pos, f.Filter, f.ReturnOnOutput, f.ResetParams)
+				}
+
 				p.addWithMethodParams(a.Router, c, a.MethodParams, strings.Join(a.AllowHTTPMethods, ",")+":"+a.Method)
 			}
 		}
@@ -877,7 +881,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 Admin:
-//admin module record QPS
+	//admin module record QPS
 
 	statusCode := context.ResponseWriter.Status
 	if statusCode == 0 {
