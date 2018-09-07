@@ -132,13 +132,13 @@ func (w *fileLogWriter) startLogger() error {
 
 func (w *fileLogWriter) needRotateDaily(size int, day int) bool {
 	return (w.MaxLines > 0 && w.maxLinesCurLines >= w.MaxLines) ||
-		(w.MaxSize > 0 && w.maxSizeCurSize >= w.MaxSize) ||
+		(w.MaxSize > 0 && w.maxSizeCurSize + size >= w.MaxSize) ||
 		(w.Daily && day != w.dailyOpenDate)
 }
 
 func (w *fileLogWriter) needRotateHourly(size int, hour int) bool {
 	return (w.MaxLines > 0 && w.maxLinesCurLines >= w.MaxLines) ||
-		(w.MaxSize > 0 && w.maxSizeCurSize >= w.MaxSize) ||
+		(w.MaxSize > 0 && w.maxSizeCurSize + size >= w.MaxSize) ||
 		(w.Hourly && hour != w.hourlyOpenDate)
 
 }
