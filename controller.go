@@ -47,10 +47,37 @@ var (
 	GlobalControllerRouter = make(map[string][]ControllerComments)
 )
 
+// ControllerFilter store the filter for controller
+type ControllerFilter struct {
+	Pattern        string
+	Pos            int
+	Filter         FilterFunc
+	ReturnOnOutput bool
+	ResetParams    bool
+}
+
+// ControllerFilterComments store the comment for controller level filter
+type ControllerFilterComments struct {
+	Pattern        string
+	Pos            int
+	Filter         string // NOQA
+	ReturnOnOutput bool
+	ResetParams    bool
+}
+
+// ControllerImportComments store the import comment for controller needed
+type ControllerImportComments struct {
+	ImportPath  string
+	ImportAlias string
+}
+
 // ControllerComments store the comment for the controller method
 type ControllerComments struct {
 	Method           string
 	Router           string
+	Filters          []*ControllerFilter
+	ImportComments   []*ControllerImportComments
+	FilterComments   []*ControllerFilterComments
 	AllowHTTPMethods []string
 	Params           []map[string]string
 	MethodParams     []*param.MethodParam
