@@ -3,6 +3,7 @@ language: go
 go:
   - "1.9.7"
   - "1.10.3"
+  - "1.11"
 services:
   - redis-server
   - mysql
