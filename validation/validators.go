@@ -632,7 +632,7 @@ func (b Base64) GetLimitValue() interface{} {
 }
 
 // just for chinese mobile phone number
-var mobilePattern = regexp.MustCompile(`^((\+86)|(86))?(1(([35][0-9])|[8][0-9]|[7][06789]|[4][579]))\d{8}$`)
+var mobilePattern = regexp.MustCompile(`^((\+86)|(86))?(13[0-9]|14[5-9]|15[012356789]|166|17[0-8]|18[0-9]|19[8-9])[0-9]{8}$`)
 
 // Mobile check struct
 type Mobile struct {
