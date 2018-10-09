@@ -335,9 +335,7 @@ func (o *orm) Insert(md interface{}) (int64, error) {
 	}
 	o.setPk(mi, ind, id)
 	if hookFunc, ok := o.afterInsert[name]; ok {
-		go func(md interface{}) {
-			hookFunc(md)
-		}(md)
+		return id, hookFunc(md)
 	}
 	return id, nil
 }
@@ -417,9 +415,7 @@ func (o *orm) Update(md interface{}, cols ...string) (int64, error) {
 		return num, err
 	}
 	if hookFunc, ok := o.afterUpdate[name]; ok {
-		go func(md interface{}, cols ...string) {
-			hookFunc(md, cols...)
-		}(md, cols...)
+		return id, hookFunc(md, cols...)
 	}
 	return num, err
 }
@@ -443,9 +439,7 @@ func (o *orm) Delete(md interface{}, cols ...string) (int64, error) {
 		o.setPk(mi, ind, 0)
 	}
 	if hookFunc, ok := o.afterDelete[name]; ok {
-		go func(md interface{}, cols ...string) {
-			hookFunc(md, cols...)
-		}(md, cols...)
+		return num, hookFunc(md, cols...)
 	}
 	return num, nil
 }
