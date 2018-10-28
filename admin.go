@@ -35,7 +35,7 @@ import (
 var beeAdminApp *adminApp
 
 // FilterMonitorFunc is default monitor filter when admin module is enable.
-// if this func returns, admin module records qbs for this request by condition of this function logic.
+// if this func returns, admin module records qps for this request by condition of this function logic.
 // usage:
 // 	func MyFilterMonitor(method, requestPath string, t time.Duration, pattern string, statusCode int) bool {
 //	 	if method == "POST" {
@@ -71,8 +71,8 @@ func adminIndex(rw http.ResponseWriter, _ *http.Request) {
 	execTpl(rw, map[interface{}]interface{}{}, indexTpl, defaultScriptsTpl)
 }
 
-// QpsIndex is the http.Handler for writing qbs statistics map result info in http.ResponseWriter.
-// it's registered with url pattern "/qbs" in admin module.
+// QpsIndex is the http.Handler for writing qps statistics map result info in http.ResponseWriter.
+// it's registered with url pattern "/qps" in admin module.
 func qpsIndex(rw http.ResponseWriter, _ *http.Request) {
 	data := make(map[interface{}]interface{})
 	data["Content"] = toolbox.StatisticsMap.GetMap()
