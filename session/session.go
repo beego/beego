@@ -334,7 +334,7 @@ func (manager *Manager) sessionID() (string, error) {
 	}
 	sid := hex.EncodeToString(b)
 	if manager.config.SessionIDPrefix != "" {
-		sid = manager.config.SessionIDPrefix + sid
+		return manager.config.SessionIDPrefix + sid
 	}
 	return sid, nil
 }
