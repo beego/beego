@@ -40,6 +40,7 @@ var (
 	beeTemplateExt = []string{"tpl", "html"}
 	// beeTemplatePreprocessors stores associations of extension -> preprocessor handler
 	beeTemplateEngines = map[string]templatePreProcessor{}
+	beeTemplateFS      = defaultFSFunc
 )
 
 // ExecuteTemplate applies the template with name  to the specified data object,
@@ -181,7 +182,15 @@ func lockViewPaths() {
 // BuildTemplate will build all template files in a directory.
 // it makes beego can render any template file in view directory.
 func BuildTemplate(dir string, files ...string) error {
-	if _, err := os.Stat(dir); err != nil {
+	var err error
+	fs := beeTemplateFS()
+	f, err := fs.Open(dir)
+	if err != nil {
+		return errors.New("dir open err")
+	}
+	defer f.Close()
+
+	if _, err := f.Stat(); err != nil {
 		if os.IsNotExist(err) {
 			return nil
 		}
@@ -195,7 +204,7 @@ func BuildTemplate(dir string, files ...string) error {
 		root:  dir,
 		files: make(map[string][]string),
 	}
-	err := filepath.Walk(dir, func(path string, f os.FileInfo, err error) error {
+	err = fs.Walk(dir, func(path string, f os.FileInfo, err error) error {
 		return self.visit(path, f, err)
 	})
 	if err != nil {
@@ -210,11 +219,11 @@ func BuildTemplate(dir string, files ...string) error {
 				ext := filepath.Ext(file)
 				var t *template.Template
 				if len(ext) == 0 {
-					t, err = getTemplate(self.root, file, v...)
+					t, err = getTemplate(self.root, fs, file, v...)
 				} else if fn, ok := beeTemplateEngines[ext[1:]]; ok {
 					t, err = fn(self.root, file, beegoTplFuncMap)
 				} else {
-					t, err = getTemplate(self.root, file, v...)
+					t, err = getTemplate(self.root, fs, file, v...)
 				}
 				if err != nil {
 					logs.Error("parse template err:", file, err)
@@ -229,9 +238,10 @@ func BuildTemplate(dir string, files ...string) error {
 	return nil
 }
 
-func getTplDeep(root, file, parent string, t *template.Template) (*template.Template, [][]string, error) {
+func getTplDeep(root string, fs IFileSystem, file string, parent string, t *template.Template) (*template.Template, [][]string, error) {
 	var fileAbsPath string
 	var rParent string
+	var err error
 	if filepath.HasPrefix(file, "../") {
 		rParent = filepath.Join(filepath.Dir(parent), file)
 		fileAbsPath = filepath.Join(root, filepath.Dir(parent), file)
@@ -239,10 +249,11 @@ func getTplDeep(root, file, parent string, t *template.Template) (*template.Temp
 		rParent = file
 		fileAbsPath = filepath.Join(root, file)
 	}
-	if e := utils.FileExists(fileAbsPath); !e {
+	f, err := fs.Open(fileAbsPath)
+	if err != nil {
 		panic("can't find template file:" + file)
 	}
-	data, err := ioutil.ReadFile(fileAbsPath)
+	data, err := ioutil.ReadAll(f)
 	if err != nil {
 		return nil, [][]string{}, err
 	}
@@ -261,7 +272,7 @@ func getTplDeep(root, file, parent string, t *template.Template) (*template.Temp
 			if !HasTemplateExt(m[1]) {
 				continue
 			}
-			_, _, err = getTplDeep(root, m[1], rParent, t)
+			_, _, err = getTplDeep(root, fs, m[1], rParent, t)
 			if err != nil {
 				return nil, [][]string{}, err
 			}
@@ -270,14 +281,14 @@ func getTplDeep(root, file, parent string, t *template.Template) (*template.Temp
 	return t, allSub, nil
 }
 
-func getTemplate(root, file string, others ...string) (t *template.Template, err error) {
+func getTemplate(root string, fs IFileSystem, file string, others ...string) (t *template.Template, err error) {
 	t = template.New(file).Delims(BConfig.WebConfig.TemplateLeft, BConfig.WebConfig.TemplateRight).Funcs(beegoTplFuncMap)
 	var subMods [][]string
-	t, subMods, err = getTplDeep(root, file, "", t)
+	t, subMods, err = getTplDeep(root, fs, file, "", t)
 	if err != nil {
 		return nil, err
 	}
-	t, err = _getTemplate(t, root, subMods, others...)
+	t, err = _getTemplate(t, root, fs, subMods, others...)
 
 	if err != nil {
 		return nil, err
@@ -285,7 +296,7 @@ func getTemplate(root, file string, others ...string) (t *template.Template, err
 	return
 }
 
-func _getTemplate(t0 *template.Template, root string, subMods [][]string, others ...string) (t *template.Template, err error) {
+func _getTemplate(t0 *template.Template, root string, fs IFileSystem, subMods [][]string, others ...string) (t *template.Template, err error) {
 	t = t0
 	for _, m := range subMods {
 		if len(m) == 2 {
@@ -297,11 +308,11 @@ func _getTemplate(t0 *template.Template, root string, subMods [][]string, others
 			for _, otherFile := range others {
 				if otherFile == m[1] {
 					var subMods1 [][]string
-					t, subMods1, err = getTplDeep(root, otherFile, "", t)
+					t, subMods1, err = getTplDeep(root, fs, otherFile, "", t)
 					if err != nil {
 						logs.Trace("template parse file err:", err)
 					} else if len(subMods1) > 0 {
-						t, err = _getTemplate(t, root, subMods1, others...)
+						t, err = _getTemplate(t, root, fs, subMods1, others...)
 					}
 					break
 				}
@@ -310,20 +321,21 @@ func _getTemplate(t0 *template.Template, root string, subMods [][]string, others
 			for _, otherFile := range others {
 				var data []byte
 				fileAbsPath := filepath.Join(root, otherFile)
-				data, err = ioutil.ReadFile(fileAbsPath)
+				f, err := fs.Open(fileAbsPath)
 				if err != nil {
 					continue
 				}
+				data, err = ioutil.ReadAll(f)
 				reg := regexp.MustCompile(BConfig.WebConfig.TemplateLeft + "[ ]*define[ ]+\"([^\"]+)\"")
 				allSub := reg.FindAllStringSubmatch(string(data), -1)
 				for _, sub := range allSub {
 					if len(sub) == 2 && sub[1] == m[1] {
 						var subMods1 [][]string
-						t, subMods1, err = getTplDeep(root, otherFile, "", t)
+						t, subMods1, err = getTplDeep(root, fs, otherFile, "", t)
 						if err != nil {
 							logs.Trace("template parse file err:", err)
 						} else if len(subMods1) > 0 {
-							t, err = _getTemplate(t, root, subMods1, others...)
+							t, err = _getTemplate(t, root, fs, subMods1, others...)
 						}
 						break
 					}
@@ -333,6 +345,15 @@ func _getTemplate(t0 *template.Template, root string, subMods [][]string, others
 
 	}
 	return
+}
+
+type templateFSFunc func() IFileSystem
+
+func defaultFSFunc() IFileSystem {
+	return FileSystem{}
+}
+func SetTemplateFSFunc(fnt templateFSFunc) {
+	beeTemplateFS = fnt
 }
 
 // SetViewsPath sets view directory path in beego application.
