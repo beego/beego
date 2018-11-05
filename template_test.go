@@ -105,7 +105,7 @@ var user = `<!DOCTYPE html>
 
 func TestRelativeTemplate(t *testing.T) {
 	dir := "_beeTmp"
-	os.Mkdir(dir, 0777)
+
 	//Just add dir to known viewPaths
 	if err := AddViewPath(dir); err != nil {
 		t.Fatal(err)
