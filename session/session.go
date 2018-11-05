@@ -332,8 +332,7 @@ func (manager *Manager) sessionID() (string, error) {
 	if n != len(b) || err != nil {
 		return "", fmt.Errorf("Could not successfully read from the system CSPRNG")
 	}
-	sid := hex.EncodeToString(b)
-	return manager.config.SessionIDPrefix + sid, nil
+	return manager.config.SessionIDPrefix + hex.EncodeToString(b), nil
 }
 
 // Set cookie with https.
