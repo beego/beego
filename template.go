@@ -185,13 +185,13 @@ func BuildTemplate(dir string, files ...string) error {
 	var err error
 	fs := beeTemplateFS()
 	f, err := fs.Open(dir)
+	defer f.Close()
 	if err != nil {
 		if os.IsNotExist(err) {
 			return nil
 		}
 		return errors.New("dir open err")
 	}
-	defer f.Close()
 
 	beeTemplates, ok := beeViewPathTemplates[dir]
 	if !ok {
@@ -247,6 +247,7 @@ func getTplDeep(root string, fs IFileSystem, file string, parent string, t *temp
 		fileAbsPath = filepath.Join(root, file)
 	}
 	f, err := fs.Open(fileAbsPath)
+	defer f.Close()
 	if err != nil {
 		panic("can't find template file:" + file)
 	}
@@ -320,9 +321,11 @@ func _getTemplate(t0 *template.Template, root string, fs IFileSystem, subMods []
 				fileAbsPath := filepath.Join(root, otherFile)
 				f, err := fs.Open(fileAbsPath)
 				if err != nil {
+					f.Close()
 					continue
 				}
 				data, err = ioutil.ReadAll(f)
+				f.Close()
 				reg := regexp.MustCompile(BConfig.WebConfig.TemplateLeft + "[ ]*define[ ]+\"([^\"]+)\"")
 				allSub := reg.FindAllStringSubmatch(string(data), -1)
 				for _, sub := range allSub {
