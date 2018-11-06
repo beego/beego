@@ -20,6 +20,7 @@ import (
 	"html/template"
 	"io"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -201,7 +202,7 @@ func BuildTemplate(dir string, files ...string) error {
 		root:  dir,
 		files: make(map[string][]string),
 	}
-	err = fs.Walk(dir, func(path string, f os.FileInfo, err error) error {
+	err = Walk(fs, dir, func(path string, f os.FileInfo, err error) error {
 		return self.visit(path, f, err)
 	})
 	if err != nil {
@@ -235,7 +236,7 @@ func BuildTemplate(dir string, files ...string) error {
 	return nil
 }
 
-func getTplDeep(root string, fs IFileSystem, file string, parent string, t *template.Template) (*template.Template, [][]string, error) {
+func getTplDeep(root string, fs http.FileSystem, file string, parent string, t *template.Template) (*template.Template, [][]string, error) {
 	var fileAbsPath string
 	var rParent string
 	var err error
@@ -279,7 +280,7 @@ func getTplDeep(root string, fs IFileSystem, file string, parent string, t *temp
 	return t, allSub, nil
 }
 
-func getTemplate(root string, fs IFileSystem, file string, others ...string) (t *template.Template, err error) {
+func getTemplate(root string, fs http.FileSystem, file string, others ...string) (t *template.Template, err error) {
 	t = template.New(file).Delims(BConfig.WebConfig.TemplateLeft, BConfig.WebConfig.TemplateRight).Funcs(beegoTplFuncMap)
 	var subMods [][]string
 	t, subMods, err = getTplDeep(root, fs, file, "", t)
@@ -294,7 +295,7 @@ func getTemplate(root string, fs IFileSystem, file string, others ...string) (t 
 	return
 }
 
-func _getTemplate(t0 *template.Template, root string, fs IFileSystem, subMods [][]string, others ...string) (t *template.Template, err error) {
+func _getTemplate(t0 *template.Template, root string, fs http.FileSystem, subMods [][]string, others ...string) (t *template.Template, err error) {
 	t = t0
 	for _, m := range subMods {
 		if len(m) == 2 {
@@ -347,9 +348,9 @@ func _getTemplate(t0 *template.Template, root string, fs IFileSystem, subMods []
 	return
 }
 
-type templateFSFunc func() IFileSystem
+type templateFSFunc func() http.FileSystem
 
-func defaultFSFunc() IFileSystem {
+func defaultFSFunc() http.FileSystem {
 	return FileSystem{}
 }
 func SetTemplateFSFunc(fnt templateFSFunc) {
