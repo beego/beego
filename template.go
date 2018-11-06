@@ -206,7 +206,7 @@ func BuildTemplate(dir string, files ...string) error {
 		return self.visit(path, f, err)
 	})
 	if err != nil {
-		fmt.Printf("filepath.Walk() returned %v\n", err)
+		fmt.Printf("Walk() returned %v\n", err)
 		return err
 	}
 	buildAllFiles := len(files) == 0
