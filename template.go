@@ -327,6 +327,10 @@ func _getTemplate(t0 *template.Template, root string, fs http.FileSystem, subMod
 				}
 				data, err = ioutil.ReadAll(f)
 				f.Close()
+				if err != nil {
+					logs.Trace("template parse file err:", err)
+					continue
+				}
 				reg := regexp.MustCompile(BConfig.WebConfig.TemplateLeft + "[ ]*define[ ]+\"([^\"]+)\"")
 				allSub := reg.FindAllStringSubmatch(string(data), -1)
 				for _, sub := range allSub {
@@ -337,6 +341,9 @@ func _getTemplate(t0 *template.Template, root string, fs http.FileSystem, subMod
 							logs.Trace("template parse file err:", err)
 						} else if len(subMods1) > 0 {
 							t, err = _getTemplate(t, root, fs, subMods1, others...)
+							if err != nil {
+								logs.Trace("template parse file err:", err)
+							}
 						}
 						break
 					}

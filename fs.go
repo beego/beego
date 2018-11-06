@@ -40,6 +40,13 @@ func walk(fs http.FileSystem, path string, info os.FileInfo, walkFn filepath.Wal
 
 	dir, err := fs.Open(path)
 	defer dir.Close()
+	if err == nil {
+		err1 := walkFn(path, info, err)
+		if err1 != nil {
+			return err1
+		}
+		return err
+	}
 	dirs, err := dir.Readdir(-1)
 	err1 := walkFn(path, info, err)
 	// If err != nil, walk can't walk into this directory.
