@@ -41,8 +41,7 @@ func walk(fs http.FileSystem, path string, info os.FileInfo, walkFn filepath.Wal
 	dir, err := fs.Open(path)
 	defer dir.Close()
 	if err != nil {
-		err1 := walkFn(path, info, err)
-		if err1 != nil {
+		if err1 := walkFn(path, info, err); err1 != nil {
 			return err1
 		}
 		return err
@@ -62,8 +61,7 @@ func walk(fs http.FileSystem, path string, info os.FileInfo, walkFn filepath.Wal
 
 	for _, fileInfo := range dirs {
 		filename := filepath.Join(path, fileInfo.Name())
-		err = walk(fs, filename, fileInfo, walkFn)
-		if err != nil {
+		if err = walk(fs, filename, fileInfo, walkFn); err != nil {
 			if !fileInfo.IsDir() || err != filepath.SkipDir {
 				return err
 			}
