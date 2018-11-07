@@ -323,12 +323,13 @@ func _getTemplate(t0 *template.Template, root string, fs http.FileSystem, subMod
 				f, err := fs.Open(fileAbsPath)
 				if err != nil {
 					f.Close()
+					logs.Trace("template file parse error, not success open file:", err)
 					continue
 				}
 				data, err = ioutil.ReadAll(f)
 				f.Close()
 				if err != nil {
-					logs.Trace("template parse file err:", err)
+					logs.Trace("template file parse error, not success read file:", err)
 					continue
 				}
 				reg := regexp.MustCompile(BConfig.WebConfig.TemplateLeft + "[ ]*define[ ]+\"([^\"]+)\"")
