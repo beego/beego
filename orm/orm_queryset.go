@@ -79,6 +79,15 @@ func (o querySet) Filter(expr string, args ...interface{}) QuerySeter {
 	return &o
 }
 
+// add raw sql to querySeter.
+func (o querySet) FilterRaw(expr string, sql string) QuerySeter {
+	if o.cond == nil {
+		o.cond = NewCondition()
+	}
+	o.cond = o.cond.Raw(expr, sql)
+	return &o
+}
+
 // add NOT condition to querySeter.
 func (o querySet) Exclude(expr string, args ...interface{}) QuerySeter {
 	if o.cond == nil {

@@ -147,6 +147,11 @@ type QuerySeter interface {
 	// 	 // time compare
 	//	qs.Filter("created", time.Now())
 	Filter(string, ...interface{}) QuerySeter
+	// add raw sql to querySeter.
+	// for example:
+	// qs.FilterRaw("user_id IN (SELECT id FROM profile WHERE age>=18)")
+	// //sql-> WHERE user_id IN (SELECT id FROM profile WHERE age>=18)
+	FilterRaw(string, string) QuerySeter
 	// add NOT condition to querySeter.
 	// have the same usage as Filter
 	Exclude(string, ...interface{}) QuerySeter
