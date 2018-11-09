@@ -798,7 +798,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	if !isRunnable {
 		//Invoke the request handler
 		var execController ControllerInterface
-		if routerInfo.initialize != nil {
+		if routerInfo != nil && routerInfo.initialize != nil {
 			execController = routerInfo.initialize()
 		} else {
 			vc := reflect.New(runRouter)
