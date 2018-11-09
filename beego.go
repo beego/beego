@@ -31,7 +31,7 @@ const (
 	PROD = "prod"
 )
 
-// Map shortcut
+// M is Map shortcut
 type M map[string]interface{}
 
 // Hook function to run

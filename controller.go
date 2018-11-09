@@ -296,7 +296,7 @@ func (c *Controller) Redirect(url string, code int) {
 	c.Ctx.Redirect(code, url)
 }
 
-// Set the data depending on the accepted
+// SetData set the data depending on the accepted
 func (c *Controller) SetData(data interface{}) {
 	accept := c.Ctx.Input.Header("Accept")
 	switch accept {
@@ -370,7 +370,7 @@ func (c *Controller) ServeXML() {
 	c.Ctx.Output.XML(c.Data["xml"], hasIndent)
 }
 
-// ServeXML sends xml response.
+// ServeYAML sends yaml response.
 func (c *Controller) ServeYAML() {
 	c.Ctx.Output.YAML(c.Data["yaml"])
 }
