@@ -1,0 +1,35 @@
+language: go
+
+go:
+  - 1.1
+  - 1.2
+  - 1.3
+  - 1.4.2
+  - 1.4.3
+  - 1.5
+  - 1.5.1
+
+env:
+  matrix:
+    - ES_VERSION=1.0.3 GROOVY_VER=2.0.0
+    - ES_VERSION=1.1.2 GROOVY_VER=2.0.0
+    - ES_VERSION=1.2.1 GROOVY_VER=2.2.0
+    - ES_VERSION=1.3.4
+    - ES_VERSION=1.4.4
+    - ES_VERSION=1.5.2
+    - ES_VERSION=1.6.0
+    - ES_VERSION=1.7.0
+
+before_script:
+  - mkdir ${HOME}/elasticsearch
+  - wget https://download.elastic.co/elasticsearch/elasticsearch/elasticsearch-${ES_VERSION}.tar.gz
+  - tar -xzf elasticsearch-${ES_VERSION}.tar.gz -C ${HOME}/elasticsearch
+  - "echo 'script.groovy.sandbox.enabled: true' >> ${HOME}/elasticsearch/elasticsearch-${ES_VERSION}/config/elasticsearch.yml"
+  - 'if [[ "${ES_VERSION}" < "1.3" ]]; then ${HOME}/elasticsearch/elasticsearch-${ES_VERSION}/bin/plugin --install elasticsearch/elasticsearch-lang-groovy/${GROOVY_VER}; fi'
+  - ${HOME}/elasticsearch/elasticsearch-${ES_VERSION}/bin/elasticsearch >/dev/null &
+
+install:
+  - go get gopkg.in/check.v1
+
+script:
+  - make test
