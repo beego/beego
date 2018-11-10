@@ -39,6 +39,7 @@ import (
 	"github.com/gomodule/redigo/redis"
 
 	"github.com/astaxie/beego/cache"
+	"strings"
 )
 
 var (
@@ -164,6 +165,14 @@ func (rc *Cache) StartAndGC(config string) error {
 	if _, ok := cf["conn"]; !ok {
 		return errors.New("config has no conn key")
 	}
+
+	// Format redis://<password>@<host>:<port>
+	cf["conn"] = strings.Replace(cf["conn"], "redis://", "", 1)
+	if i := strings.Index(cf["conn"], "@"); i > -1 {
+		cf["password"] = cf["conn"][0:i]
+		cf["conn"] = cf["conn"][i+1:]
+	}
+
 	if _, ok := cf["dbNum"]; !ok {
 		cf["dbNum"] = "0"
 	}

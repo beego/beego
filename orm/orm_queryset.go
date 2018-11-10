@@ -79,6 +79,15 @@ func (o querySet) Filter(expr string, args ...interface{}) QuerySeter {
 	return &o
 }
 
+// add raw sql to querySeter.
+func (o querySet) FilterRaw(expr string, sql string) QuerySeter {
+	if o.cond == nil {
+		o.cond = NewCondition()
+	}
+	o.cond = o.cond.Raw(expr, sql)
+	return &o
+}
+
 // add NOT condition to querySeter.
 func (o querySet) Exclude(expr string, args ...interface{}) QuerySeter {
 	if o.cond == nil {
@@ -198,11 +207,7 @@ func (o *querySet) PrepareInsert() (Inserter, error) {
 // query all data and map to containers.
 // cols means the columns when querying.
 func (o *querySet) All(container interface{}, cols ...string) (int64, error) {
-	num, err := o.orm.alias.DbBaser.ReadBatch(o.orm.db, o, o.mi, o.cond, container, o.orm.alias.TZ, cols)
-	if num == 0 {
-		return 0, ErrNoRows
-	}
-	return num, err
+	return o.orm.alias.DbBaser.ReadBatch(o.orm.db, o, o.mi, o.cond, container, o.orm.alias.TZ, cols)
 }
 
 // query one row data and map to containers.
