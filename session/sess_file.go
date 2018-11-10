@@ -21,6 +21,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 )
@@ -127,6 +128,9 @@ func (fp *FileProvider) SessionInit(maxlifetime int64, savePath string) error {
 // if file is not exist, create it.
 // the file path is generated from sid string.
 func (fp *FileProvider) SessionRead(sid string) (Store, error) {
+	if strings.ContainsAny(sid, "./") {
+		return nil, nil
+	}
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()
 

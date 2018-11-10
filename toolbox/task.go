@@ -428,6 +428,9 @@ func run() {
 			continue
 		case <-changed:
 			now = time.Now().Local()
+			for _, t := range AdminTaskList {
+				t.SetNext(now)
+			}
 			continue
 		case <-stop:
 			return

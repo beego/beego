@@ -31,7 +31,10 @@ const (
 	PROD = "prod"
 )
 
-//hook function to run
+// M is Map shortcut
+type M map[string]interface{}
+
+// Hook function to run
 type hookfunc func() error
 
 var (

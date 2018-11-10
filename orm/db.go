@@ -928,7 +928,7 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 					maps[fi.column] = true
 				}
 			} else {
-				panic(fmt.Errorf("wrong field/column name `%s`", col))
+				return 0, fmt.Errorf("wrong field/column name `%s`", col)
 			}
 		}
 		if hasRel {
