@@ -16,6 +16,8 @@ package httplib
 
 import (
 	"io/ioutil"
+	"net"
+	"net/http"
 	"os"
 	"strings"
 	"testing"
@@ -161,7 +163,16 @@ func TestWithSetting(t *testing.T) {
 	var setting BeegoHTTPSettings
 	setting.EnableCookie = true
 	setting.UserAgent = v
-	setting.Transport = nil
+	setting.Transport = &http.Transport{
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          50,
+		IdleConnTimeout:       90 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
 	setting.ReadWriteTimeout = 5 * time.Second
 	SetDefaultSetting(setting)
 
