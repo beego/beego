@@ -449,6 +449,7 @@ func StopTask() {
 
 // AddTask add task with name
 func AddTask(taskname string, t Tasker) {
+	t.SetNext(time.Now().Local())
 	AdminTaskList[taskname] = t
 	if isstart {
 		changed <- true
