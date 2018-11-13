@@ -548,6 +548,9 @@ func NewOrmWithDB(driverName, aliasName string, db *sql.DB) (Ormer, error) {
 
 	al.Name = aliasName
 	al.DriverName = driverName
+	al.DB = db
+	
+	detectTZ(al)
 
 	o := new(orm)
 	o.alias = al
