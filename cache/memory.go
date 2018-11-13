@@ -209,7 +209,11 @@ func (bc *MemoryCache) StartAndGC(config string) error {
 
 // check expiration.
 func (bc *MemoryCache) vacuum() {
-	if bc.Every < 1 {
+	bc.RLock()
+	every := bc.Every
+	bc.RUnlock()
+
+	if every < 1 {
 		return
 	}
 	for {
