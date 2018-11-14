@@ -154,6 +154,11 @@ func NewManager(provideName string, cf *ManagerConfig) (*Manager, error) {
 	}, nil
 }
 
+// GetProvider return current manager's provider
+func (manager *Manager) GetProvider() Provider {
+	return manager.provider
+}
+
 // getSid retrieves session identifier from HTTP Request.
 // First try to retrieve id by reading from cookie, session cookie name is configurable,
 // if not exist, then retrieve id from querying parameters.
