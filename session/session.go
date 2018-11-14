@@ -152,6 +152,7 @@ func NewManager(provideName string, cf *ManagerConfig) (*Manager, error) {
 	}, nil
 }
 
+// GetProvider return current manager's provider
 func (manager *Manager) GetProvider() Provider {
 	return manager.provider
 }
