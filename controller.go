@@ -296,7 +296,7 @@ func (c *Controller) Redirect(url string, code int) {
 	c.Ctx.Redirect(code, url)
 }
 
-// SetData set the data depending on the accepted
+// Set the data depending on the accepted
 func (c *Controller) SetData(data interface{}) {
 	accept := c.Ctx.Input.Header("Accept")
 	switch accept {
@@ -370,7 +370,7 @@ func (c *Controller) ServeXML() {
 	c.Ctx.Output.XML(c.Data["xml"], hasIndent)
 }
 
-// ServeYAML sends yaml response.
+// ServeXML sends xml response.
 func (c *Controller) ServeYAML() {
 	c.Ctx.Output.YAML(c.Data["yaml"])
 }
@@ -398,7 +398,8 @@ func (c *Controller) ParseForm(obj interface{}) error {
 // GetString returns the input value by key string or the default value while it's present and input is blank
 func (c *Controller) GetString(key string, def ...string) string {
 	if v := c.Ctx.Input.Query(key); v != "" {
-		return v
+		vv := strings.Split(v, "=")[1]
+		return vv
 	}
 	if len(def) > 0 {
 		return def[0]
