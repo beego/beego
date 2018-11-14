@@ -296,7 +296,7 @@ func (c *Controller) Redirect(url string, code int) {
 	c.Ctx.Redirect(code, url)
 }
 
-// Set the data depending on the accepted
+// SetData set the data depending on the accepted
 func (c *Controller) SetData(data interface{}) {
 	accept := c.Ctx.Input.Header("Accept")
 	switch accept {
