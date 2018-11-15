@@ -370,7 +370,7 @@ func (c *Controller) ServeXML() {
 	c.Ctx.Output.XML(c.Data["xml"], hasIndent)
 }
 
-// ServeXML sends xml response.
+// ServeXML sends yaml response.
 func (c *Controller) ServeYAML() {
 	c.Ctx.Output.YAML(c.Data["yaml"])
 }
