@@ -15,6 +15,7 @@
 package orm
 
 import (
+	"context"
 	"fmt"
 )
 
@@ -55,17 +56,19 @@ func ColValue(opt operator, value interface{}) interface{} {
 
 // real query struct
 type querySet struct {
-	mi        *modelInfo
-	cond      *Condition
-	related   []string
-	relDepth  int
-	limit     int64
-	offset    int64
-	groups    []string
-	orders    []string
-	distinct  bool
-	forupdate bool
-	orm       *orm
+	mi         *modelInfo
+	cond       *Condition
+	related    []string
+	relDepth   int
+	limit      int64
+	offset     int64
+	groups     []string
+	orders     []string
+	distinct   bool
+	forupdate  bool
+	orm        *orm
+	ctx        context.Context
+	forContext bool
 }
 
 var _ QuerySeter = new(querySet)
@@ -264,6 +267,13 @@ func (o *querySet) RowsToMap(result *Params, keyCol, valueCol string) (int64, er
 // }
 func (o *querySet) RowsToStruct(ptrStruct interface{}, keyCol, valueCol string) (int64, error) {
 	panic(ErrNotImplement)
+}
+
+// set context to QuerySeter.
+func (o querySet) WithContext(ctx context.Context) QuerySeter {
+	o.ctx = ctx
+	o.forContext = true
+	return &o
 }
 
 // create new QuerySeter.

@@ -390,16 +390,23 @@ type RawSeter interface {
 type stmtQuerier interface {
 	Close() error
 	Exec(args ...interface{}) (sql.Result, error)
+	//ExecContext(ctx context.Context, args ...interface{}) (sql.Result, error)
 	Query(args ...interface{}) (*sql.Rows, error)
+	//QueryContext(args ...interface{}) (*sql.Rows, error)
 	QueryRow(args ...interface{}) *sql.Row
+	//QueryRowContext(ctx context.Context, args ...interface{}) *sql.Row
 }
 
 // db querier
 type dbQuerier interface {
 	Prepare(query string) (*sql.Stmt, error)
+	PrepareContext(ctx context.Context, query string) (*sql.Stmt, error)
 	Exec(query string, args ...interface{}) (sql.Result, error)
+	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
 	Query(query string, args ...interface{}) (*sql.Rows, error)
+	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
 	QueryRow(query string, args ...interface{}) *sql.Row
+	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
 }
 
 // type DB interface {
