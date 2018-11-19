@@ -899,6 +899,18 @@ func TestOperators(t *testing.T) {
 	num, err = qs.Filter("id__between", []int{2, 3}).Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 2))
+
+	num, err = qs.FilterRaw("user_name", "= 'slene'").Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	num, err = qs.FilterRaw("status", "IN (1, 2)").Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 2))
+
+	num, err = qs.FilterRaw("profile_id", "IN (SELECT id FROM user_profile WHERE age=30)").Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
 }
 
 func TestSetCond(t *testing.T) {
@@ -922,6 +934,11 @@ func TestSetCond(t *testing.T) {
 
 	cond4 := cond.And("user_name", "slene").OrNotCond(cond.And("user_name", "slene"))
 	num, err = qs.SetCond(cond4).Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 3))
+
+	cond5 := cond.Raw("user_name", "= 'slene'").OrNotCond(cond.And("user_name", "slene"))
+	num, err = qs.SetCond(cond5).Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 3))
 }
@@ -1011,13 +1028,13 @@ func TestAll(t *testing.T) {
 
 	qs = dORM.QueryTable("user")
 	num, err = qs.Filter("user_name", "nothing").All(&users)
-	throwFailNow(t, AssertIs(err, ErrNoRows))
+	throwFailNow(t, err)
 	throwFailNow(t, AssertIs(num, 0))
 
 	var users3 []*User
 	qs = dORM.QueryTable("user")
 	num, err = qs.Filter("user_name", "nothing").All(&users3)
-	throwFailNow(t, AssertIs(err, ErrNoRows))
+	throwFailNow(t, err)
 	throwFailNow(t, AssertIs(num, 0))
 	throwFailNow(t, AssertIs(users3 == nil, false))
 }

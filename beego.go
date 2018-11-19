@@ -23,7 +23,7 @@ import (
 
 const (
 	// VERSION represent beego web framework version.
-	VERSION = "1.10.1"
+	VERSION = "1.11.0"
 
 	// DEV is for develop
 	DEV = "dev"
@@ -31,7 +31,10 @@ const (
 	PROD = "prod"
 )
 
-//hook function to run
+// M is Map shortcut
+type M map[string]interface{}
+
+// Hook function to run
 type hookfunc func() error
 
 var (

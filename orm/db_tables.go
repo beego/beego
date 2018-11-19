@@ -372,7 +372,13 @@ func (t *dbTables) getCondSQL(cond *Condition, sub bool, tz *time.Location) (whe
 				operator = "exact"
 			}
 
-			operSQL, args := t.base.GenerateOperatorSQL(mi, fi, operator, p.args, tz)
+			var operSQL string
+			var args []interface{}
+			if p.isRaw {
+				operSQL = p.sql
+			} else {
+				operSQL, args = t.base.GenerateOperatorSQL(mi, fi, operator, p.args, tz)
+			}
 
 			leftCol := fmt.Sprintf("%s.%s%s%s", index, Q, fi.column, Q)
 			t.base.GenerateOperatorLeftCol(fi, operator, &leftCol)
