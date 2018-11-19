@@ -764,7 +764,7 @@ func (d *dbBase) UpdateBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	d.ins.ReplaceMarks(&query)
 	var err error
 	var res sql.Result
-	if qs.forContext {
+	if qs != nil && qs.forContext {
 		res, err = q.ExecContext(qs.ctx, query, values...)
 	} else {
 		res, err = q.Exec(query, values...)
@@ -862,7 +862,7 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 
 	d.ins.ReplaceMarks(&query)
 	var res sql.Result
-	if qs.forContext {
+	if qs != nil && qs.forContext {
 		res, err = q.ExecContext(qs.ctx, query, args...)
 	} else {
 		res, err = q.Exec(query, args...)
@@ -990,7 +990,7 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 
 	var rs *sql.Rows
 	var err error
-	if qs.forContext {
+	if qs != nil && qs.forContext {
 		rs, err = q.QueryContext(qs.ctx, query, args...)
 		if err != nil {
 			return 0, err
@@ -1130,7 +1130,7 @@ func (d *dbBase) Count(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condition
 	d.ins.ReplaceMarks(&query)
 
 	var row *sql.Row
-	if qs.forContext {
+	if qs != nil && qs.forContext {
 		row = q.QueryRowContext(qs.ctx, query, args...)
 	} else {
 		row = q.QueryRow(query, args...)
