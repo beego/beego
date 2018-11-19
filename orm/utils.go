@@ -198,7 +198,7 @@ func ToInt64(value interface{}) (d int64) {
 	return
 }
 
-// snake string, XxYy to xx_yy , XxYY to xx_yy
+// snake string, XxYy to xx_yy , XxYY to xx_y_y
 func snakeString(s string) string {
 	data := make([]byte, 0, len(s)*2)
 	j := false

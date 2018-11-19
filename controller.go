@@ -32,14 +32,6 @@ import (
 	"github.com/astaxie/beego/session"
 )
 
-//commonly used mime-types
-const (
-	applicationJSON = "application/json"
-	applicationXML  = "application/xml"
-	applicationYAML = "application/x-yaml"
-	textXML         = "text/xml"
-)
-
 var (
 	// ErrAbort custom error when user stop request handler manually.
 	ErrAbort = errors.New("User stop run")
@@ -47,10 +39,37 @@ var (
 	GlobalControllerRouter = make(map[string][]ControllerComments)
 )
 
+// ControllerFilter store the filter for controller
+type ControllerFilter struct {
+	Pattern        string
+	Pos            int
+	Filter         FilterFunc
+	ReturnOnOutput bool
+	ResetParams    bool
+}
+
+// ControllerFilterComments store the comment for controller level filter
+type ControllerFilterComments struct {
+	Pattern        string
+	Pos            int
+	Filter         string // NOQA
+	ReturnOnOutput bool
+	ResetParams    bool
+}
+
+// ControllerImportComments store the import comment for controller needed
+type ControllerImportComments struct {
+	ImportPath  string
+	ImportAlias string
+}
+
 // ControllerComments store the comment for the controller method
 type ControllerComments struct {
 	Method           string
 	Router           string
+	Filters          []*ControllerFilter
+	ImportComments   []*ControllerImportComments
+	FilterComments   []*ControllerFilterComments
 	AllowHTTPMethods []string
 	Params           []map[string]string
 	MethodParams     []*param.MethodParam
@@ -275,16 +294,15 @@ func (c *Controller) viewPath() string {
 func (c *Controller) Redirect(url string, code int) {
 	logAccess(c.Ctx, nil, code)
 	c.Ctx.Redirect(code, url)
-	panic(ErrAbort)
 }
 
-// Set the data depending on the accepted
+// SetData set the data depending on the accepted
 func (c *Controller) SetData(data interface{}) {
 	accept := c.Ctx.Input.Header("Accept")
 	switch accept {
-	case applicationJSON:
-		c.Data["json"] = data
-	case applicationXML, textXML:
+	case context.ApplicationYAML:
+		c.Data["yaml"] = data
+	case context.ApplicationXML, context.TextXML:
 		c.Data["xml"] = data
 	default:
 		c.Data["json"] = data
@@ -333,54 +351,35 @@ func (c *Controller) URLFor(endpoint string, values ...interface{}) string {
 // ServeJSON sends a json response with encoding charset.
 func (c *Controller) ServeJSON(encoding ...bool) {
 	var (
-		hasIndent   = true
-		hasEncoding = false
+		hasIndent   = BConfig.RunMode != PROD
+		hasEncoding = len(encoding) > 0 && encoding[0]
 	)
-	if BConfig.RunMode == PROD {
-		hasIndent = false
-	}
-	if len(encoding) > 0 && encoding[0] {
-		hasEncoding = true
-	}
+
 	c.Ctx.Output.JSON(c.Data["json"], hasIndent, hasEncoding)
 }
 
 // ServeJSONP sends a jsonp response.
 func (c *Controller) ServeJSONP() {
-	hasIndent := true
-	if BConfig.RunMode == PROD {
-		hasIndent = false
-	}
+	hasIndent := BConfig.RunMode != PROD
 	c.Ctx.Output.JSONP(c.Data["jsonp"], hasIndent)
 }
 
 // ServeXML sends xml response.
 func (c *Controller) ServeXML() {
-	hasIndent := true
-	if BConfig.RunMode == PROD {
-		hasIndent = false
-	}
+	hasIndent := BConfig.RunMode != PROD
 	c.Ctx.Output.XML(c.Data["xml"], hasIndent)
 }
 
-// ServeXML sends xml response.
+// ServeYAML sends yaml response.
 func (c *Controller) ServeYAML() {
 	c.Ctx.Output.YAML(c.Data["yaml"])
 }
 
-// ServeFormatted serve Xml OR Json, depending on the value of the Accept header
-func (c *Controller) ServeFormatted() {
-	accept := c.Ctx.Input.Header("Accept")
-	switch accept {
-	case applicationJSON:
-		c.ServeJSON()
-	case applicationXML, textXML:
-		c.ServeXML()
-	case applicationYAML:
-		c.ServeYAML()
-	default:
-		c.ServeJSON()
-	}
+// ServeFormatted serve YAML, XML OR JSON, depending on the value of the Accept header
+func (c *Controller) ServeFormatted(encoding ...bool) {
+	hasIndent := BConfig.RunMode != PROD
+	hasEncoding := len(encoding) > 0 && encoding[0]
+	c.Ctx.Output.ServeFormatted(c.Data, hasIndent, hasEncoding)
 }
 
 // Input returns the input data map from POST or PUT request body and query string.
