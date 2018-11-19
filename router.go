@@ -890,8 +890,9 @@ Admin:
 
 	logAccess(context, &startTime, statusCode)
 
+	timeDur := time.Since(startTime)
+	context.ResponseWriter.Elapsed = timeDur
 	if BConfig.Listen.EnableAdmin {
-		timeDur := time.Since(startTime)
 		pattern := ""
 		if routerInfo != nil {
 			pattern = routerInfo.pattern
@@ -908,7 +909,6 @@ Admin:
 
 	if BConfig.RunMode == DEV && !BConfig.Log.AccessLogs {
 		var devInfo string
-		timeDur := time.Since(startTime)
 		iswin := (runtime.GOOS == "windows")
 		statusColor := logs.ColorByStatus(iswin, statusCode)
 		methodColor := logs.ColorByMethod(iswin, r.Method)
