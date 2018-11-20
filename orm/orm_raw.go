@@ -358,7 +358,7 @@ func (o *rawSet) QueryRow(containers ...interface{}) error {
 					_, tags := parseStructTag(fe.Tag.Get(defaultStructTagName))
 					var col string
 					if col = tags["column"]; col == "" {
-						col = snakeString(fe.Name)
+						col = nameStrategyMap[nameStrategy](fe.Name)
 					}
 					if v, ok := columnsMp[col]; ok {
 						value := reflect.ValueOf(v).Elem().Interface()
@@ -509,7 +509,7 @@ func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
 						_, tags := parseStructTag(fe.Tag.Get(defaultStructTagName))
 						var col string
 						if col = tags["column"]; col == "" {
-							col = snakeString(fe.Name)
+							col = nameStrategyMap[nameStrategy](fe.Name)
 						}
 						if v, ok := columnsMp[col]; ok {
 							value := reflect.ValueOf(v).Elem().Interface()
