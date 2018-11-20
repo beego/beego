@@ -527,6 +527,7 @@ func NewOrm() Ormer {
 	BootStrap() // execute only once
 
 	o := new(orm)
+	fmt.Println("Going to bootstrap DEFAULT")
 	err := o.Using("default")
 	if err != nil {
 		panic(err)
@@ -552,6 +553,7 @@ func NewOrmWithDB(driverName, aliasName string, db *sql.DB) (Ormer, error) {
 
 	detectTZ(al)
 
+	BootStrap()
 	o := new(orm)
 	o.alias = al
 

@@ -98,9 +98,10 @@ func bootStrap() {
 		err    error
 		models map[string]*modelInfo
 	)
+
 	if dataBaseCache.getDefault() == nil {
-		err = fmt.Errorf("must have one register DataBase alias named `default`")
-		goto end
+		fmt.Println("WARNING: Should have one register DataBase alias named `default`")
+
 	}
 
 	// set rel and reverse model
