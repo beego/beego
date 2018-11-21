@@ -18,6 +18,7 @@ import (
 	"database/sql"
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 )
 
@@ -321,7 +322,7 @@ func (o *rawSet) QueryRow(containers ...interface{}) error {
 			refs = make([]interface{}, 0, len(columns))
 			for _, col := range columns {
 				var ref interface{}
-				columnsMp[col] = &ref
+				columnsMp[strings.ToLower(col)] = &ref
 				refs = append(refs, &ref)
 			}
 
@@ -456,7 +457,7 @@ func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
 			refs = make([]interface{}, 0, len(columns))
 			for _, col := range columns {
 				var ref interface{}
-				columnsMp[col] = &ref
+				columnsMp[strings.ToLower(col)] = &ref
 				refs = append(refs, &ref)
 			}
 
