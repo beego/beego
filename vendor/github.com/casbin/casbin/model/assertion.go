@@ -18,8 +18,8 @@ import (
 	"errors"
 	"strings"
 
+	"github.com/casbin/casbin/log"
 	"github.com/casbin/casbin/rbac"
-	"github.com/casbin/casbin/util"
 )
 
 // Assertion represents an expression in a section of the model.
@@ -55,6 +55,6 @@ func (ast *Assertion) buildRoleLinks(rm rbac.RoleManager) {
 		}
 	}
 
-	util.LogPrint("Role links for: " + ast.Key)
+	log.LogPrint("Role links for: " + ast.Key)
 	ast.RM.PrintRoles()
 }

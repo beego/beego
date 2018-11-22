@@ -19,6 +19,7 @@ import (
 	"strings"
 
 	"github.com/casbin/casbin/config"
+	"github.com/casbin/casbin/log"
 	"github.com/casbin/casbin/util"
 )
 
@@ -120,10 +121,10 @@ func (model Model) LoadModelFromText(text string) {
 
 // PrintModel prints the model to the log.
 func (model Model) PrintModel() {
-	util.LogPrint("Model:")
+	log.LogPrint("Model:")
 	for k, v := range model {
 		for i, j := range v {
-			util.LogPrintf("%s.%s: %s", k, i, j.Value)
+			log.LogPrintf("%s.%s: %s", k, i, j.Value)
 		}
 	}
 }

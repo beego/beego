@@ -18,8 +18,8 @@ import (
 	"errors"
 	"sync"
 
+	"github.com/casbin/casbin/log"
 	"github.com/casbin/casbin/rbac"
-	"github.com/casbin/casbin/util"
 )
 
 // RoleManager provides a default implementation for the RoleManager interface
@@ -123,7 +123,7 @@ func (rm *RoleManager) GetRoles(name string, domain ...string) ([]string, error)
 	}
 
 	if !rm.hasRole(name) {
-		return nil, errors.New("error: name does not exist")
+		return []string{}, nil
 	}
 
 	roles := rm.createRole(name).getRoles()
@@ -166,7 +166,7 @@ func (rm *RoleManager) PrintRoles() error {
 		}
 		return true
 	})
-	util.LogPrint(line)
+	log.LogPrint(line)
 	return nil
 }
 
