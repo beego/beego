@@ -19,8 +19,8 @@ import (
 	"fmt"
 
 	"github.com/Knetic/govaluate"
-
 	"github.com/casbin/casbin/effect"
+	"github.com/casbin/casbin/log"
 	"github.com/casbin/casbin/model"
 	"github.com/casbin/casbin/persist"
 	"github.com/casbin/casbin/persist/file-adapter"
@@ -53,8 +53,6 @@ type Enforcer struct {
 // e := casbin.NewEnforcer("path/to/basic_model.conf", a)
 func NewEnforcer(params ...interface{}) *Enforcer {
 	e := &Enforcer{}
-	e.rm = defaultrolemanager.NewRoleManager(10)
-	e.eft = effect.NewDefaultEffector()
 
 	parsedParamLen := 0
 	if len(params) >= 1 {
@@ -67,28 +65,28 @@ func NewEnforcer(params ...interface{}) *Enforcer {
 	}
 
 	if len(params)-parsedParamLen == 2 {
-		switch params[0].(type) {
+		switch p0 := params[0].(type) {
 		case string:
-			switch params[1].(type) {
+			switch p1 := params[1].(type) {
 			case string:
-				e.InitWithFile(params[0].(string), params[1].(string))
+				e.InitWithFile(p0, p1)
 			default:
-				e.InitWithAdapter(params[0].(string), params[1].(persist.Adapter))
+				e.InitWithAdapter(p0, p1.(persist.Adapter))
 			}
 		default:
 			switch params[1].(type) {
 			case string:
 				panic("Invalid parameters for enforcer.")
 			default:
-				e.InitWithModelAndAdapter(params[0].(model.Model), params[1].(persist.Adapter))
+				e.InitWithModelAndAdapter(p0.(model.Model), params[1].(persist.Adapter))
 			}
 		}
 	} else if len(params)-parsedParamLen == 1 {
-		switch params[0].(type) {
+		switch p0 := params[0].(type) {
 		case string:
-			e.InitWithFile(params[0].(string), "")
+			e.InitWithFile(p0, "")
 		default:
-			e.InitWithModelAndAdapter(params[0].(model.Model), nil)
+			e.InitWithModelAndAdapter(p0.(model.Model), nil)
 		}
 	} else if len(params)-parsedParamLen == 0 {
 		e.InitWithFile("", "")
@@ -116,7 +114,6 @@ func (e *Enforcer) InitWithAdapter(modelPath string, adapter persist.Adapter) {
 // InitWithModelAndAdapter initializes an enforcer with a model and a database adapter.
 func (e *Enforcer) InitWithModelAndAdapter(m model.Model, adapter persist.Adapter) {
 	e.adapter = adapter
-	e.watcher = nil
 
 	e.model = m
 	e.model.PrintModel()
@@ -131,6 +128,10 @@ func (e *Enforcer) InitWithModelAndAdapter(m model.Model, adapter persist.Adapte
 }
 
 func (e *Enforcer) initialize() {
+	e.rm = defaultrolemanager.NewRoleManager(10)
+	e.eft = effect.NewDefaultEffector()
+	e.watcher = nil
+
 	e.enabled = true
 	e.autoSave = true
 	e.autoBuildRoleLinks = true
@@ -226,9 +227,9 @@ func (e *Enforcer) LoadFilteredPolicy(filter interface{}) error {
 	var filteredAdapter persist.FilteredAdapter
 
 	// Attempt to cast the Adapter as a FilteredAdapter
-	switch e.adapter.(type) {
+	switch adapter := e.adapter.(type) {
 	case persist.FilteredAdapter:
-		filteredAdapter = e.adapter.(persist.FilteredAdapter)
+		filteredAdapter = adapter
 	default:
 		return errors.New("filtered policies are not supported by this adapter")
 	}
@@ -271,9 +272,9 @@ func (e *Enforcer) EnableEnforce(enable bool) {
 	e.enabled = enable
 }
 
-// EnableLog changes whether to print Casbin log to the standard output.
+// EnableLog changes whether Casbin will log messages to the Logger.
 func (e *Enforcer) EnableLog(enable bool) {
-	util.EnableLog = enable
+	log.GetLogger().EnableLog(enable)
 }
 
 // EnableAutoSave controls whether to save a policy rule automatically to the adapter when it is added or removed.
@@ -311,7 +312,10 @@ func (e *Enforcer) Enforce(rvals ...interface{}) bool {
 	}
 
 	expString := e.model["m"]["m"].Value
-	expression, _ := govaluate.NewEvaluableExpressionWithFunctions(expString, functions)
+	expression, err := govaluate.NewEvaluableExpressionWithFunctions(expString, functions)
+	if err != nil {
+		panic(err)
+	}
 
 	var policyEffects []effect.Effect
 	var matcherResults []float64
@@ -320,7 +324,7 @@ func (e *Enforcer) Enforce(rvals ...interface{}) bool {
 		matcherResults = make([]float64, policyLen)
 
 		for i, pvals := range e.model["p"]["p"].Policy {
-			// util.LogPrint("Policy Rule: ", pvals)
+			// log.LogPrint("Policy Rule: ", pvals)
 
 			parameters := make(map[string]interface{}, 8)
 			for j, token := range e.model["r"]["r"].Tokens {
@@ -331,25 +335,25 @@ func (e *Enforcer) Enforce(rvals ...interface{}) bool {
 			}
 
 			result, err := expression.Evaluate(parameters)
-			// util.LogPrint("Result: ", result)
+			// log.LogPrint("Result: ", result)
 
 			if err != nil {
 				policyEffects[i] = effect.Indeterminate
 				panic(err)
 			}
 
-			switch result.(type) {
+			switch result := result.(type) {
 			case bool:
-				if !result.(bool) {
+				if !result {
 					policyEffects[i] = effect.Indeterminate
 					continue
 				}
 			case float64:
-				if result.(float64) == 0 {
+				if result == 0 {
 					policyEffects[i] = effect.Indeterminate
 					continue
 				} else {
-					matcherResults[i] = result.(float64)
+					matcherResults[i] = result
 				}
 			default:
 				panic(errors.New("matcher result should be bool, int or float"))
@@ -385,7 +389,7 @@ func (e *Enforcer) Enforce(rvals ...interface{}) bool {
 		}
 
 		result, err := expression.Evaluate(parameters)
-		// util.LogPrint("Result: ", result)
+		// log.LogPrint("Result: ", result)
 
 		if err != nil {
 			policyEffects[0] = effect.Indeterminate
@@ -399,16 +403,15 @@ func (e *Enforcer) Enforce(rvals ...interface{}) bool {
 		}
 	}
 
-	// util.LogPrint("Rule Results: ", policyEffects)
+	// log.LogPrint("Rule Results: ", policyEffects)
 
 	result, err := e.eft.MergeEffects(e.model["e"]["e"].Value, policyEffects, matcherResults)
 	if err != nil {
 		panic(err)
 	}
 
-	// only generate the request --> result string if the message
-	// is going to be logged.
-	if util.EnableLog {
+	// Log request.
+	if log.GetLogger().IsEnabled() {
 		reqStr := "Request: "
 		for i, rval := range rvals {
 			if i != len(rvals)-1 {
@@ -418,7 +421,7 @@ func (e *Enforcer) Enforce(rvals ...interface{}) bool {
 			}
 		}
 		reqStr += fmt.Sprintf(" ---> %t", result)
-		util.LogPrint(reqStr)
+		log.LogPrint(reqStr)
 	}
 
 	return result

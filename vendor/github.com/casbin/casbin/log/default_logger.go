@@ -1,4 +1,4 @@
-// Copyright 2017 The casbin Authors. All Rights Reserved.
+// Copyright 2018 The casbin Authors. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,23 +12,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package util
+package log
 
 import "log"
 
-// EnableLog controls whether to print log to console.
-var EnableLog = true
+// DefaultLogger is the implementation for a Logger using golang log.
+type DefaultLogger struct {
+	enable bool
+}
 
-// LogPrint prints the log.
-func LogPrint(v ...interface{}) {
-	if EnableLog {
+func (l *DefaultLogger) EnableLog(enable bool) {
+	l.enable = enable
+}
+
+func (l *DefaultLogger) IsEnabled() bool {
+	return l.enable
+}
+
+func (l *DefaultLogger) Print(v ...interface{}) {
+	if l.enable {
 		log.Print(v...)
 	}
 }
 
-// LogPrintf prints the log with the format.
-func LogPrintf(format string, v ...interface{}) {
-	if EnableLog {
+func (l *DefaultLogger) Printf(format string, v ...interface{}) {
+	if l.enable {
 		log.Printf(format, v...)
 	}
 }

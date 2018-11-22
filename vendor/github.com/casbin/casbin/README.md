@@ -18,11 +18,10 @@ Casbin is a powerful and efficient open-source access control library for Golang
 
 ## All the languages supported by Casbin:
 
-- Golang: [Casbin](https://github.com/casbin/casbin) (production-ready)
-- Java: [jCasbin](https://github.com/casbin/jcasbin) (production-ready)
-- PHP: [PHP-Casbin](https://github.com/sstutz/php-casbin) (experimental)
-- Node.js: [node-casbin](https://github.com/casbin/node-casbin) (WIP)
-- C++: xCasbin (WIP)
+[![golang](https://casbin.org/docs/assets/langs/golang.png)](https://github.com/casbin/casbin) | [![java](https://casbin.org/docs/assets/langs/java.png)](https://github.com/casbin/jcasbin) | [![nodejs](https://casbin.org/docs/assets/langs/nodejs.png)](https://github.com/casbin/node-casbin) | [![php](https://casbin.org/docs/assets/langs/php.png)](https://github.com/php-casbin/php-casbin)
+----|----|----|----
+[Casbin](https://github.com/casbin/casbin) | [jCasbin](https://github.com/casbin/jcasbin) | [node-Casbin](https://github.com/casbin/node-casbin) | [PHP-Casbin](https://github.com/php-casbin/php-casbin)
+production-ready | production-ready | production-ready | production-ready
 
 ## Table of contents
 
@@ -81,9 +80,6 @@ e = some(where (p.eft == allow))
 [matchers]
 m = r.sub == p.sub && r.obj == p.obj && r.act == p.act
 
-# We also support multi-line mode by appending '\' in the end:
-# m = r.sub == p.sub && r.obj == p.obj \ 
-#  && r.act == p.act
 ```
 
 An example policy for ACL model is like:
@@ -97,6 +93,27 @@ It means:
 
 - alice can read data1
 - bob can write data2
+
+We also support multi-line mode by appending '\\'  in the end:  
+
+```ini
+# Matchers
+[matchers]
+m = r.sub == p.sub && r.obj == p.obj \ 
+  && r.act == p.act
+```
+
+Further more, if you are using ABAC,  you can try operator `in` like following in Casbin **golang** edition (jCasbin and Node-Casbin are not supported yet):
+
+```ini
+# Matchers
+[matchers]
+m = r.obj == p.obj && r.act == p.act || r.obj in ('data2', 'data3')
+```
+
+But you **SHOULD** make sure that the length of the array is **MORE** than **1**, otherwise there will cause it to panic.
+
+For more operators, you may take a look at [govaluate](https://github.com/Knetic/govaluate)
 
 ## Features
 
@@ -121,7 +138,7 @@ go get github.com/casbin/casbin
 
 ## Documentation
 
-For documentation, please see: [Our Wiki](https://github.com/casbin/casbin/wiki)
+https://casbin.org/docs/en/overview
 
 ## Online editor
 
@@ -129,12 +146,7 @@ You can also use the online editor (http://casbin.org/editor/) to write your Cas
 
 ## Tutorials
 
-- [Basic Role-Based HTTP Authorization in Go with Casbin](https://zupzup.org/casbin-http-role-auth) (or [Chinese translation](https://studygolang.com/articles/12323))
-- [Policy enforcements on Kubernetes with Banzai Cloud's Pipeline and Casbin](https://banzaicloud.com/blog/policy-enforcement-k8s/)
-- [Using Casbin with Beego: 1. Get started and test (in Chinese)](https://blog.csdn.net/hotqin888/article/details/78460385)
-- [Using Casbin with Beego: 2. Policy storage (in Chinese)](https://blog.csdn.net/hotqin888/article/details/78571240)
-- [Using Casbin with Beego: 3. Policy query (in Chinese)](https://blog.csdn.net/hotqin888/article/details/78992250)
-- [Using Casbin with Beego: 4. Policy update (in Chinese)](https://blog.csdn.net/hotqin888/article/details/80032538)
+https://casbin.org/docs/en/tutorials
 
 ## Get started
 
@@ -189,7 +201,7 @@ In Casbin, the policy storage is implemented as an adapter (aka middleware for C
 
 Adapter | Type | Author | Description
 ----|------|----|----
-[File Adapter (built-in)](https://github.com/casbin/casbin/wiki/Policy-persistence#file-adapter) | File | Casbin | Persistence for [.CSV (Comma-Separated Values)](https://en.wikipedia.org/wiki/Comma-separated_values) files
+[File Adapter (built-in)](https://casbin.org/docs/en/policy-storage#file-adapter-built-in) | File | Casbin | Persistence for [.CSV (Comma-Separated Values)](https://en.wikipedia.org/wiki/Comma-separated_values) files
 [Filtered File Adapter (built-in)](https://github.com/casbin/casbin#policy-enforcement-at-scale) | File | [@faceless-saint](https://github.com/faceless-saint) | Persistence for [.CSV (Comma-Separated Values)](https://en.wikipedia.org/wiki/Comma-separated_values) files with policy subset loading support
 [Xorm Adapter](https://github.com/casbin/xorm-adapter) | ORM | Casbin | MySQL, PostgreSQL, TiDB, SQLite, SQL Server, Oracle are supported by [Xorm](https://github.com/go-xorm/xorm/)
 [Gorm Adapter](https://github.com/casbin/gorm-adapter) | ORM | Casbin | MySQL, PostgreSQL, Sqlite3, SQL Server are supported by [Gorm](https://github.com/jinzhu/gorm/)
@@ -208,7 +220,7 @@ Adapter | Type | Author | Description
 [Minio/AWS S3 Adapter](https://github.com/Soluto/casbin-minio-adapter) | Object storage | [Soluto](https://github.com/Soluto) | Persistence for [Minio](https://github.com/minio/minio) and [Amazon S3](https://aws.amazon.com/s3/)
 [Bolt Adapter](https://github.com/wirepair/bolt-adapter) | KV store | [@wirepair](https://github.com/wirepair) | Persistence for [Bolt](https://github.com/boltdb/bolt)
 
-For details of adapters, please refer to the documentation: https://github.com/casbin/casbin/wiki/Policy-persistence
+For details of adapters, please refer to the documentation: https://casbin.org/docs/en/policy-storage
 
 ## Policy enforcement at scale
 
@@ -311,9 +323,9 @@ Priority | [priority_model.conf](https://github.com/casbin/casbin/blob/master/ex
 
 ## How to use Casbin as a service?
 
-- [Go-Simple-API-Gateway](https://github.com/Soontao/go-simple-api-gateway): A simple API gateway written by golang, supports for authentication and authorization
-- [Casbin Server](https://github.com/casbin/casbin-server): Casbin as a Service via RESTful, only exposed permission checking API
-- [middleware-acl](https://github.com/luk4z7/middleware-acl): RESTful access control middleware based on Casbin
+- [Casbin Server](https://github.com/casbin/casbin-server): The official ``Casbin as a Service`` solution based on [gRPC](https://grpc.io/), both Management API and RBAC API are provided.
+- [Go-Simple-API-Gateway](https://github.com/Soontao/go-simple-api-gateway): A simple API gateway written by golang, supports for authentication and authorization.
+- [middleware-acl](https://github.com/luk4z7/middleware-acl): RESTful access control middleware based on Casbin.
 
 ## Our adopters
 
@@ -342,6 +354,7 @@ Priority | [priority_model.conf](https://github.com/casbin/casbin/blob/master/ex
 - [Skydive](https://github.com/skydive-project/skydive): An open source real-time network topology and protocols analyzer, via direct integration, see: [model (in code)](https://github.com/skydive-project/skydive/blob/master/config/config.go#L136-L140), [policy rules](https://github.com/skydive-project/skydive/blob/master/rbac/policy.csv)
 - [Zenpress](https://github.com/insionng/zenpress): A CMS system written in Golang, via direct integration, see: [model](https://github.com/insionng/zenpress/blob/master/content/config/rbac_model.conf), [policy rules (in Gorm)](https://github.com/insionng/zenpress/blob/master/model/user.go#L53-L77)
 - [Argo CD](https://github.com/argoproj/argo-cd): GitOps continuous delivery for Kubernetes, via direct integration, see: [model](https://github.com/argoproj/argo-cd/blob/master/util/rbac/model.conf), [policy rules](https://github.com/argoproj/argo-cd/blob/master/util/rbac/builtin-policy.csv)
+- [Muxi Cloud](https://github.com/muxiyun/Mae): PaaS of Muxi Cloud, an easier way to manage Kubernetes cluster, via direct integration, see: [model](https://github.com/muxiyun/Mae/blob/master/conf/casbinmodel.conf), [policy rules (in code)](https://github.com/muxiyun/Mae/blob/master/pkg/casbin/initPolicy.go#L21-L95)
 - [EngineerCMS](https://github.com/3xxx/EngineerCMS): A CMS to manage knowledge for engineers, via direct integration, see: [model](https://github.com/3xxx/EngineerCMS/blob/master/conf/rbac_model.conf), [policy rules (in SQLite)](https://github.com/3xxx/EngineerCMS/blob/master/database/engineer.db)
 - [Cyber Auth API](https://github.com/CyberlifeCN/cyber-auth-api): A Golang authentication API project, via direct integration, see: [model](https://github.com/CyberlifeCN/cyber-auth-api/blob/master/conf/authz_model.conf), [policy rules](https://github.com/CyberlifeCN/cyber-auth-api/blob/master/conf/authz_policy.csv)
 - [IRIS Community](https://github.com/irisnet/iris-community): Website for IRIS Community Activities, via direct integration, see: [model](https://github.com/irisnet/iris-community/blob/master/authz/authz_model.conf), [policy rules](https://github.com/irisnet/iris-community/blob/master/authz/authz_policy.csv)
@@ -349,7 +362,7 @@ Priority | [priority_model.conf](https://github.com/casbin/casbin/blob/master/ex
 
 ## License
 
-This project is licensed under the [Apache 2.0 license](https://github.com/casbin/casbin/blob/master/LICENSE).
+This project is licensed under the [Apache 2.0 license](LICENSE).
 
 ## Contact
 
@@ -357,10 +370,3 @@ If you have any issues or feature requests, please contact us. PR is welcomed.
 - https://github.com/casbin/casbin/issues
 - hsluoyz@gmail.com
 - Tencent QQ group: [546057381](//shang.qq.com/wpa/qunwpa?idkey=8ac8b91fc97ace3d383d0035f7aa06f7d670fd8e8d4837347354a31c18fac885)
-
-## Donation
-
-[![Patreon](https://hsluoyz.github.io/donation/patreon.png)](http://www.patreon.com/yangluo)
-
-![Alipay](https://hsluoyz.github.io/donation/donate_alipay.png)
-![Wechat](https://hsluoyz.github.io/donation/donate_weixin.png)

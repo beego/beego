@@ -8,9 +8,10 @@ github.com/beego/x2j
 github.com/belogik/goes
 # github.com/bradfitz/gomemcache v0.0.0-20180710155616-bc664df96737
 github.com/bradfitz/gomemcache/memcache
-# github.com/casbin/casbin v1.6.0
+# github.com/casbin/casbin v1.7.0
 github.com/casbin/casbin
 github.com/casbin/casbin/effect
+github.com/casbin/casbin/log
 github.com/casbin/casbin/model
 github.com/casbin/casbin/persist
 github.com/casbin/casbin/persist/file-adapter
@@ -34,6 +35,8 @@ github.com/cupcake/rdb/nopdecoder
 github.com/cupcake/rdb/crc64
 # github.com/edsrzf/mmap-go v0.0.0-20170320065105-0bce6a688712
 github.com/edsrzf/mmap-go
+# github.com/elazarl/go-bindata-assetfs v0.0.0-20180223110309-38087fe4dafb
+github.com/elazarl/go-bindata-assetfs
 # github.com/go-redis/redis v6.14.2+incompatible
 github.com/go-redis/redis
 github.com/go-redis/redis/internal
@@ -43,7 +46,7 @@ github.com/go-redis/redis/internal/pool
 github.com/go-redis/redis/internal/proto
 github.com/go-redis/redis/internal/singleflight
 github.com/go-redis/redis/internal/util
-# github.com/go-sql-driver/mysql v1.4.0
+# github.com/go-sql-driver/mysql v1.4.1
 github.com/go-sql-driver/mysql
 # github.com/gogo/protobuf v1.1.1
 github.com/gogo/protobuf/proto
@@ -97,13 +100,13 @@ github.com/syndtr/goleveldb/leveldb/memdb
 github.com/syndtr/goleveldb/leveldb/table
 # github.com/wendal/errors v0.0.0-20130201093226-f66c77a7882b
 github.com/wendal/errors
-# golang.org/x/crypto v0.0.0-20180723164146-c126467f60eb
+# golang.org/x/crypto v0.0.0-20181112202954-3d3f9f413869
 golang.org/x/crypto/acme/autocert
 golang.org/x/crypto/acme
 golang.org/x/crypto/pbkdf2
-# golang.org/x/net v0.0.0-20180906233101-161cd47e91fd
+# golang.org/x/net v0.0.0-20181114220301-adae6a3d119a
 golang.org/x/net/context
-# google.golang.org/appengine v1.1.0
+# google.golang.org/appengine v1.3.0
 google.golang.org/appengine/cloudsql
 # gopkg.in/yaml.v2 v2.2.1
 gopkg.in/yaml.v2

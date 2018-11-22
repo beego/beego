@@ -46,8 +46,9 @@ const (
 	// ALPNProto is the ALPN protocol name used by a CA server when validating
 	// tls-alpn-01 challenges.
 	//
-	// Package users must ensure their servers can negotiate the ACME ALPN
-	// in order for tls-alpn-01 challenge verifications to succeed.
+	// Package users must ensure their servers can negotiate the ACME ALPN in
+	// order for tls-alpn-01 challenge verifications to succeed.
+	// See the crypto/tls package's Config.NextProtos field.
 	ALPNProto = "acme-tls/1"
 )
 
@@ -76,6 +77,10 @@ const (
 type Client struct {
 	// Key is the account key used to register with a CA and sign requests.
 	// Key.Public() must return a *rsa.PublicKey or *ecdsa.PublicKey.
+	//
+	// The following algorithms are supported:
+	// RS256, ES256, ES384 and ES512.
+	// See RFC7518 for more details about the algorithms.
 	Key crypto.Signer
 
 	// HTTPClient optionally specifies an HTTP client to use
