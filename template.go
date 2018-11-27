@@ -361,6 +361,8 @@ type templateFSFunc func() http.FileSystem
 func defaultFSFunc() http.FileSystem {
 	return FileSystem{}
 }
+
+// SetTemplateFSFunc set default filesystem function
 func SetTemplateFSFunc(fnt templateFSFunc) {
 	beeTemplateFS = fnt
 }

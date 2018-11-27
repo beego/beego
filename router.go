@@ -133,14 +133,15 @@ type ControllerRegister struct {
 
 // NewControllerRegister returns a new ControllerRegister.
 func NewControllerRegister() *ControllerRegister {
-	cr := &ControllerRegister{
+	return &ControllerRegister{
 		routers:  make(map[string]*Tree),
 		policies: make(map[string]*Tree),
+		pool: sync.Pool{
+			New: func() interface{} {
+				return beecontext.NewContext()
+			},
+		},
 	}
-	cr.pool.New = func() interface{} {
-		return beecontext.NewContext()
-	}
-	return cr
 }
 
 // Add controller handler and pattern rules to ControllerRegister.
