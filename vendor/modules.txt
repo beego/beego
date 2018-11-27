@@ -21,9 +21,9 @@ github.com/casbin/casbin/util
 github.com/casbin/casbin/config
 # github.com/cloudflare/golz4 v0.0.0-20150217214814-ef862a3cdc58
 github.com/cloudflare/golz4
-# github.com/couchbase/go-couchbase v0.0.0-20181019154153-595f46701cbc
+# github.com/couchbase/go-couchbase v0.0.0-20181122212707-3e9b6e1258bb
 github.com/couchbase/go-couchbase
-# github.com/couchbase/gomemcached v0.0.0-20180723192129-20e69a1ee160
+# github.com/couchbase/gomemcached v0.0.0-20181122193126-5125a94a666c
 github.com/couchbase/gomemcached
 github.com/couchbase/gomemcached/client
 # github.com/couchbase/goutils v0.0.0-20180530154633-e865a1461c8a
@@ -35,7 +35,7 @@ github.com/cupcake/rdb/nopdecoder
 github.com/cupcake/rdb/crc64
 # github.com/edsrzf/mmap-go v0.0.0-20170320065105-0bce6a688712
 github.com/edsrzf/mmap-go
-# github.com/elazarl/go-bindata-assetfs v0.0.0-20180223110309-38087fe4dafb
+# github.com/elazarl/go-bindata-assetfs v1.0.0
 github.com/elazarl/go-bindata-assetfs
 # github.com/go-redis/redis v6.14.2+incompatible
 github.com/go-redis/redis
@@ -85,7 +85,7 @@ github.com/siddontang/ledisdb/store/rocksdb
 github.com/siddontang/rdb
 # github.com/ssdb/gossdb v0.0.0-20180723034631-88f6b59b84ec
 github.com/ssdb/gossdb/ssdb
-# github.com/syndtr/goleveldb v0.0.0-20181105012736-f9080354173f
+# github.com/syndtr/goleveldb v0.0.0-20181127023241-353a9fca669c
 github.com/syndtr/goleveldb/leveldb
 github.com/syndtr/goleveldb/leveldb/cache
 github.com/syndtr/goleveldb/leveldb/filter
@@ -100,7 +100,7 @@ github.com/syndtr/goleveldb/leveldb/memdb
 github.com/syndtr/goleveldb/leveldb/table
 # github.com/wendal/errors v0.0.0-20130201093226-f66c77a7882b
 github.com/wendal/errors
-# golang.org/x/crypto v0.0.0-20181112202954-3d3f9f413869
+# golang.org/x/crypto v0.0.0-20181126163421-e657309f52e7
 golang.org/x/crypto/acme/autocert
 golang.org/x/crypto/acme
 golang.org/x/crypto/pbkdf2

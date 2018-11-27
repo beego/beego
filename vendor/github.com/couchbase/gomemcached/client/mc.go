@@ -581,7 +581,9 @@ func (c *Client) GetBulk(vb uint16, keys []string, rv map[string]*gomemcached.MC
 						return
 					}
 					// continue receiving in case of KEY_ENOENT
-				} else if res.Opcode == gomemcached.GET {
+				} else if res.Opcode == gomemcached.GET ||
+					res.Opcode == gomemcached.SUBDOC_GET ||
+					res.Opcode == gomemcached.SUBDOC_MULTI_LOOKUP {
 					opaque := res.Opaque - opStart
 					if opaque < 0 || opaque >= uint32(len(keys)) {
 						// Every now and then we seem to be seeing an invalid opaque
@@ -598,12 +600,6 @@ func (c *Client) GetBulk(vb uint16, keys []string, rv map[string]*gomemcached.MC
 				if res.Opcode == gomemcached.NOOP {
 					ok = false
 				}
-
-				if res.Opcode == gomemcached.SUBDOC_GET || res.Opcode == gomemcached.SUBDOC_MULTI_LOOKUP {
-					opaque := res.Opaque - opStart
-					rv[keys[opaque]] = res
-				}
-
 			}
 		}
 	}()
