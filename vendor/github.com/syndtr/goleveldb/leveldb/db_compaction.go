@@ -663,7 +663,7 @@ type cCmd interface {
 }
 
 type cAuto struct {
-	// Note for table compaction, an empty ackC represents it's a compaction waiting command.
+	// Note for table compaction, an non-empty ackC represents it's a compaction waiting command.
 	ackC chan<- error
 }
 
@@ -844,7 +844,12 @@ func (db *DB) tCompaction() {
 			switch cmd := x.(type) {
 			case cAuto:
 				if cmd.ackC != nil {
-					waitQ = append(waitQ, x)
+					// Check the write pause state before caching it.
+					if db.resumeWrite() {
+						x.ack(nil)
+					} else {
+						waitQ = append(waitQ, x)
+					}
 				} else {
 					ackQ = append(ackQ, x)
 				}

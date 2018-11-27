@@ -129,17 +129,20 @@ func (b *Bucket) Do(k string, f func(mc *memcached.Client, vb uint16) error) (er
 			err = f(conn, uint16(vb))
 		}
 
-		var st gomemcached.Status
 		var retry bool
+		discard := isOutOfBoundsError(err)
 
 		// MB-30967 / MB-31001 implement back off for transient errors
 		if i, ok := err.(*gomemcached.MCResponse); ok {
-			st = i.Status
-			switch st {
+			switch i.Status {
 			case gomemcached.NOT_MY_VBUCKET:
 				b.Refresh()
+				// MB-28842: in case of NMVB, check if the node is still part of the map
+				// and ditch the connection if it isn't.
+				discard = b.checkVBmap(pool.Node())
 				retry = true
 			case gomemcached.NOT_SUPPORTED:
+				discard = true
 				retry = true
 			case gomemcached.ENOMEM:
 				fallthrough
@@ -151,9 +154,7 @@ func (b *Bucket) Do(k string, f func(mc *memcached.Client, vb uint16) error) (er
 			}
 		}
 
-		// MB-28842: in case of NMVB, check if the node is still part of the map
-		// and ditch the connection if it isn't.
-		if st == gomemcached.NOT_MY_VBUCKET && b.checkVBmap(pool.Node()) {
+		if discard {
 			pool.Discard(conn)
 		} else {
 			pool.Return(conn)
@@ -338,7 +339,7 @@ func isConnError(err error) bool {
 }
 
 func isOutOfBoundsError(err error) bool {
-	return strings.Contains(err.Error(), "Out of Bounds error")
+	return err != nil && strings.Contains(err.Error(), "Out of Bounds error")
 
 }
 
@@ -459,6 +460,7 @@ func (b *Bucket) doBulkGet(vb uint16, keys []string, reqDeadline time.Time,
 			case error:
 				if isOutOfBoundsError(err) {
 					// We got an out of bound error, retry the operation
+					discard = true
 					return nil
 				} else if isConnError(err) && backOff(backOffAttempts, MaxBackOffRetries, backOffDuration, true) {
 					backOffAttempts++

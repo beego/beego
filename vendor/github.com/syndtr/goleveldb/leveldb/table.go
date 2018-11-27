@@ -290,11 +290,12 @@ func (x *tFilesSortByNum) Less(i, j int) bool {
 
 // Table operations.
 type tOps struct {
-	s      *session
-	noSync bool
-	cache  *cache.Cache
-	bcache *cache.Cache
-	bpool  *util.BufferPool
+	s            *session
+	noSync       bool
+	evictRemoved bool
+	cache        *cache.Cache
+	bcache       *cache.Cache
+	bpool        *util.BufferPool
 }
 
 // Creates an empty table and returns table writer.
@@ -422,7 +423,7 @@ func (t *tOps) remove(f *tFile) {
 		} else {
 			t.s.logf("table@remove removed @%d", f.fd.Num)
 		}
-		if t.bcache != nil {
+		if t.evictRemoved && t.bcache != nil {
 			t.bcache.EvictNS(uint64(f.fd.Num))
 		}
 	})
@@ -459,11 +460,12 @@ func newTableOps(s *session) *tOps {
 		bpool = util.NewBufferPool(s.o.GetBlockSize() + 5)
 	}
 	return &tOps{
-		s:      s,
-		noSync: s.o.GetNoSync(),
-		cache:  cache.NewCache(cacher),
-		bcache: bcache,
-		bpool:  bpool,
+		s:            s,
+		noSync:       s.o.GetNoSync(),
+		evictRemoved: s.o.GetBlockCacheEvictRemoved(),
+		cache:        cache.NewCache(cacher),
+		bcache:       bcache,
+		bpool:        bpool,
 	}
 }
 
