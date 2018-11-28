@@ -51,7 +51,7 @@ before_script:
   - mkdir -p res/var
   - ./ssdb/ssdb-server ./ssdb/ssdb.conf -d
 after_script:
-  -killall -w ssdb-server
+  - killall -w ssdb-server
   - rm -rf ./res/var/*
 script:
   - go test -v ./...
