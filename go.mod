@@ -29,8 +29,11 @@ require (
 	github.com/ssdb/gossdb v0.0.0-20180723034631-88f6b59b84ec
 	github.com/syndtr/goleveldb v0.0.0-20181127023241-353a9fca669c // indirect
 	github.com/wendal/errors v0.0.0-20130201093226-f66c77a7882b // indirect
-	golang.org/x/crypto v0.0.0-20181126163421-e657309f52e7
+	golang.org/x/crypto v0.0.0-20181127143415-eb0de9b17e85
 	golang.org/x/net v0.0.0-20181114220301-adae6a3d119a // indirect
-	google.golang.org/appengine v1.3.0 // indirect
 	gopkg.in/yaml.v2 v2.2.1
 )
+
+replace golang.org/x/crypto v0.0.0-20181127143415-eb0de9b17e85 => github.com/golang/crypto v0.0.0-20181127143415-eb0de9b17e85
+
+replace gopkg.in/yaml.v2 v2.2.1 => github.com/go-yaml/yaml v0.0.0-20180328195020-5420a8b6744d
