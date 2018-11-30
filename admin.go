@@ -20,10 +20,9 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"reflect"
 	"text/template"
 	"time"
-
-	"reflect"
 
 	"github.com/astaxie/beego/grace"
 	"github.com/astaxie/beego/logs"

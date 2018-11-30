@@ -11,7 +11,7 @@ import (
 	"github.com/astaxie/beego/session"
 )
 
-//
+// register MIME type with content type
 func registerMime() error {
 	for k, v := range mimemaps {
 		mime.AddExtensionType(k, v)

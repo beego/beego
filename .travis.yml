@@ -1,7 +1,6 @@
 language: go
 
 go:
-  - "1.9.x"
   - "1.10.x"
   - "1.11.x"
 services:
@@ -51,7 +50,7 @@ before_script:
   - mkdir -p res/var
   - ./ssdb/ssdb-server ./ssdb/ssdb.conf -d
 after_script:
-  -killall -w ssdb-server
+  - killall -w ssdb-server
   - rm -rf ./res/var/*
 script:
   - go test -v ./...

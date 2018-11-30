@@ -133,14 +133,15 @@ type ControllerRegister struct {
 
 // NewControllerRegister returns a new ControllerRegister.
 func NewControllerRegister() *ControllerRegister {
-	cr := &ControllerRegister{
+	return &ControllerRegister{
 		routers:  make(map[string]*Tree),
 		policies: make(map[string]*Tree),
+		pool: sync.Pool{
+			New: func() interface{} {
+				return beecontext.NewContext()
+			},
+		},
 	}
-	cr.pool.New = func() interface{} {
-		return beecontext.NewContext()
-	}
-	return cr
 }
 
 // Add controller handler and pattern rules to ControllerRegister.
@@ -890,8 +891,9 @@ Admin:
 
 	logAccess(context, &startTime, statusCode)
 
+	timeDur := time.Since(startTime)
+	context.ResponseWriter.Elapsed = timeDur
 	if BConfig.Listen.EnableAdmin {
-		timeDur := time.Since(startTime)
 		pattern := ""
 		if routerInfo != nil {
 			pattern = routerInfo.pattern
@@ -908,7 +910,6 @@ Admin:
 
 	if BConfig.RunMode == DEV && !BConfig.Log.AccessLogs {
 		var devInfo string
-		timeDur := time.Since(startTime)
 		iswin := (runtime.GOOS == "windows")
 		statusColor := logs.ColorByStatus(iswin, statusCode)
 		methodColor := logs.ColorByMethod(iswin, r.Method)
