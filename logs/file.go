@@ -89,6 +89,8 @@ func newFileWriter() Logger {
 	return w
 }
 
+var NewFileWriter func() Logger = newFileWriter
+
 // Init file logger with json config.
 // jsonConfig like:
 //  {
