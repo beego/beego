@@ -1012,5 +1012,5 @@ func logAccess(ctx *beecontext.Context, startTime *time.Time, statusCode int) {
 		RemoteUser:     r.Header.Get("Remote-User"),
 		BodyBytesSent:  0, //@todo this one is missing!
 	}
-	logs.AccessLog(record, BConfig.Log.AccessLogsFormat)
+	logs.AccessLog(1, record, BConfig.Log.AccessLogsFormat)
 }
