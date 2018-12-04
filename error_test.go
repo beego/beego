@@ -50,9 +50,11 @@ func TestErrorCode_01(t *testing.T) {
 		handler.ServeHTTP(w, r)
 		code, _ := strconv.Atoi(k)
 		if w.Code != code {
+			t.Fatalf("Expected code %d but got %d", code, w.Code)
 			t.Fail()
 		}
 		if !strings.Contains(w.Body.String(), http.StatusText(code)) {
+			t.Fatalf("Expected body contains %d, but got %s", code, w.Body.String())
 			t.Fail()
 		}
 	}

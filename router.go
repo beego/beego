@@ -82,6 +82,25 @@ var (
 	DefaultAccessLogFilter FilterHandler = &logFilter{}
 )
 
+// context for invoke request
+type invokeContext struct {
+	context      *beecontext.Context
+	request      *http.Request
+	runRouter    reflect.Type
+	findRouter   bool
+	runMethod    string
+	methodParams []*param.MethodParam
+	routerInfo   *ControllerInfo
+}
+
+// determine if need check XSRF Cookie
+func (ctx *invokeContext) isRequireCheckXSRFCookie() bool {
+	return (ctx.request.Method == http.MethodPost ||
+		ctx.request.Method == http.MethodDelete ||
+		ctx.request.Method == http.MethodPut ||
+		(ctx.request.Method == http.MethodPost && (ctx.context.Input.Query("_method") == http.MethodDelete || ctx.context.Input.Query("_method") == http.MethodPut)))
+}
+
 // FilterHandler is an interface for
 type FilterHandler interface {
 	Filter(*beecontext.Context) bool
@@ -659,16 +678,13 @@ func (p *ControllerRegister) execFilter(context *beecontext.Context, urlPath str
 // Implement http.Handler interface.
 func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	startTime := time.Now()
-	var (
-		runRouter    reflect.Type
-		findRouter   bool
-		runMethod    string
-		methodParams []*param.MethodParam
-		routerInfo   *ControllerInfo
-		isRunnable   bool
-	)
+	var isRunnable bool
 	context := p.pool.Get().(*beecontext.Context)
 	context.Reset(rw, r)
+
+	invokeCtx := &invokeContext{}
+	invokeCtx.request = r
+	invokeCtx.context = context
 
 	defer p.pool.Put(context)
 	if BConfig.RecoverFunc != nil {
@@ -681,7 +697,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		context.Output.Header("Server", BConfig.ServerName)
 	}
 
-	var urlPath = r.URL.Path
+	var urlPath = invokeCtx.request.URL.Path
 
 	if !BConfig.RouterCaseSensitive {
 		urlPath = strings.ToLower(urlPath)
@@ -701,11 +717,11 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	serverStaticRouter(context)
 
 	if context.ResponseWriter.Started {
-		findRouter = true
+		invokeCtx.findRouter = true
 		goto Admin
 	}
 
-	if r.Method != http.MethodGet && r.Method != http.MethodHead {
+	if invokeCtx.request.Method != http.MethodGet && invokeCtx.request.Method != http.MethodHead {
 		if BConfig.CopyRequestBody && !context.Input.IsUpload() {
 			context.Input.CopyBody(BConfig.MaxMemory)
 		}
@@ -732,15 +748,15 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 	// User can define RunController and RunMethod in filter
 	if context.Input.RunController != nil && context.Input.RunMethod != "" {
-		findRouter = true
-		runMethod = context.Input.RunMethod
-		runRouter = context.Input.RunController
+		invokeCtx.findRouter = true
+		invokeCtx.runMethod = context.Input.RunMethod
+		invokeCtx.runRouter = context.Input.RunController
 	} else {
-		routerInfo, findRouter = p.FindRouter(context)
+		invokeCtx.routerInfo, invokeCtx.findRouter = p.FindRouter(context)
 	}
 
 	//if no matches to url, throw a not found exception
-	if !findRouter {
+	if !invokeCtx.findRouter {
 		exception("404", context)
 		goto Admin
 	}
@@ -760,115 +776,43 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		goto Admin
 	}
 
-	if routerInfo != nil {
+	if invokeCtx.routerInfo != nil {
 		//store router pattern into context
-		context.Input.SetData("RouterPattern", routerInfo.pattern)
-		if routerInfo.routerType == routerTypeRESTFul {
-			if _, ok := routerInfo.methods[r.Method]; ok {
+		context.Input.SetData("RouterPattern", invokeCtx.routerInfo.pattern)
+		if invokeCtx.routerInfo.routerType == routerTypeRESTFul {
+			if _, ok := invokeCtx.routerInfo.methods[invokeCtx.request.Method]; ok {
 				isRunnable = true
-				routerInfo.runFunction(context)
+				invokeCtx.routerInfo.runFunction(context)
 			} else {
 				exception("405", context)
 				goto Admin
 			}
-		} else if routerInfo.routerType == routerTypeHandler {
+		} else if invokeCtx.routerInfo.routerType == routerTypeHandler {
 			isRunnable = true
-			routerInfo.handler.ServeHTTP(rw, r)
+			invokeCtx.routerInfo.handler.ServeHTTP(rw, r)
 		} else {
-			runRouter = routerInfo.controllerType
-			methodParams = routerInfo.methodParams
-			method := r.Method
-			if r.Method == http.MethodPost && context.Input.Query("_method") == http.MethodPost {
+			invokeCtx.runRouter = invokeCtx.routerInfo.controllerType
+			invokeCtx.methodParams = invokeCtx.routerInfo.methodParams
+			method := invokeCtx.request.Method
+			if invokeCtx.request.Method == http.MethodPost && context.Input.Query("_method") == http.MethodPost {
 				method = http.MethodPut
 			}
-			if r.Method == http.MethodPost && context.Input.Query("_method") == http.MethodDelete {
+			if invokeCtx.request.Method == http.MethodPost && context.Input.Query("_method") == http.MethodDelete {
 				method = http.MethodDelete
 			}
-			if m, ok := routerInfo.methods[method]; ok {
-				runMethod = m
-			} else if m, ok = routerInfo.methods["*"]; ok {
-				runMethod = m
+			if m, ok := invokeCtx.routerInfo.methods[method]; ok {
+				invokeCtx.runMethod = m
+			} else if m, ok = invokeCtx.routerInfo.methods["*"]; ok {
+				invokeCtx.runMethod = m
 			} else {
-				runMethod = method
+				invokeCtx.runMethod = method
 			}
 		}
 	}
 
-	// also defined runRouter & runMethod from filter
+	// also defined invokeCtx.runRouter & invokeCtx.runMethod from filter
 	if !isRunnable {
-		//Invoke the request handler
-		var execController ControllerInterface
-		if routerInfo != nil && routerInfo.initialize != nil {
-			execController = routerInfo.initialize()
-		} else {
-			vc := reflect.New(runRouter)
-			var ok bool
-			execController, ok = vc.Interface().(ControllerInterface)
-			if !ok {
-				panic("controller is not ControllerInterface")
-			}
-		}
-
-		//call the controller init function
-		execController.Init(context, runRouter.Name(), runMethod, execController)
-
-		//call prepare function
-		execController.Prepare()
-
-		//if XSRF is Enable then check cookie where there has any cookie in the  request's cookie _csrf
-		if BConfig.WebConfig.EnableXSRF {
-			execController.XSRFToken()
-			if r.Method == http.MethodPost || r.Method == http.MethodDelete || r.Method == http.MethodPut ||
-				(r.Method == http.MethodPost && (context.Input.Query("_method") == http.MethodDelete || context.Input.Query("_method") == http.MethodPut)) {
-				execController.CheckXSRFCookie()
-			}
-		}
-
-		execController.URLMapping()
-
-		if !context.ResponseWriter.Started {
-			//exec main logic
-			switch runMethod {
-			case http.MethodGet:
-				execController.Get()
-			case http.MethodPost:
-				execController.Post()
-			case http.MethodDelete:
-				execController.Delete()
-			case http.MethodPut:
-				execController.Put()
-			case http.MethodHead:
-				execController.Head()
-			case http.MethodPatch:
-				execController.Patch()
-			case http.MethodOptions:
-				execController.Options()
-			default:
-				if !execController.HandlerFunc(runMethod) {
-					vc := reflect.ValueOf(execController)
-					method := vc.MethodByName(runMethod)
-					in := param.ConvertParams(methodParams, method.Type(), context)
-					out := method.Call(in)
-
-					//For backward compatibility we only handle response if we had incoming methodParams
-					if methodParams != nil {
-						p.handleParamResponse(context, execController, out)
-					}
-				}
-			}
-
-			//render template
-			if !context.ResponseWriter.Started && context.Output.Status == 0 {
-				if BConfig.WebConfig.AutoRender {
-					if err := execController.Render(); err != nil {
-						logs.Error(err)
-					}
-				}
-			}
-		}
-
-		// finish all runRouter. release resource
-		execController.Finish()
+		p.invokeRequestHandler(invokeCtx)
 	}
 
 	//execute middleware filters
@@ -894,14 +838,14 @@ Admin:
 	context.ResponseWriter.Elapsed = timeDur
 	if BConfig.Listen.EnableAdmin {
 		pattern := ""
-		if routerInfo != nil {
-			pattern = routerInfo.pattern
+		if invokeCtx.routerInfo != nil {
+			pattern = invokeCtx.routerInfo.pattern
 		}
 
-		if FilterMonitorFunc(r.Method, r.URL.Path, timeDur, pattern, statusCode) {
+		if FilterMonitorFunc(invokeCtx.request.Method, invokeCtx.request.URL.Path, timeDur, pattern, statusCode) {
 			routerName := ""
-			if runRouter != nil {
-				routerName = runRouter.Name()
+			if invokeCtx.runRouter != nil {
+				routerName = invokeCtx.runRouter.Name()
 			}
 			go toolbox.StatisticsMap.AddStatistics(r.Method, r.URL.Path, routerName, timeDur)
 		}
@@ -913,7 +857,7 @@ Admin:
 			context.Input.IP(),
 			logs.ColorByStatus(statusCode), statusCode, logs.ResetColor(),
 			timeDur.String(),
-			match[findRouter],
+			match[invokeCtx.findRouter],
 			logs.ColorByMethod(r.Method), r.Method, logs.ResetColor(),
 			r.URL.Path)
 		if routerInfo != nil {
@@ -939,6 +883,92 @@ func (p *ControllerRegister) handleParamResponse(context *beecontext.Context, ex
 	}
 	if !context.ResponseWriter.Started && len(results) > 0 && context.Output.Status == 0 {
 		context.Output.SetStatus(200)
+	}
+}
+
+//Invoke the request handler
+func (p *ControllerRegister) invokeRequestHandler(invokeCtx *invokeContext) {
+	context := invokeCtx.context
+	runRouter := invokeCtx.runRouter
+	runMethod := invokeCtx.runMethod
+	routerInfo := invokeCtx.routerInfo
+	methodParams := invokeCtx.methodParams
+
+	var execController ControllerInterface
+	if routerInfo != nil && routerInfo.initialize != nil {
+		execController = routerInfo.initialize()
+	} else {
+		vc := reflect.New(runRouter)
+		var ok bool
+		execController, ok = vc.Interface().(ControllerInterface)
+		if !ok {
+			panic("controller is not ControllerInterface")
+		}
+	}
+
+	//call the controller init function
+	execController.Init(context, runRouter.Name(), runMethod, execController)
+
+	//call prepare function
+	execController.Prepare()
+
+	defer func() {
+		// finish all invokeCtx.runRouter. release resource
+		execController.Finish()
+		if BConfig.RecoverFunc != nil {
+			BConfig.RecoverFunc(context)
+		}
+	}()
+
+	//if XSRF is Enable then check cookie where there has any cookie in the  request's cookie _csrf
+	if BConfig.WebConfig.EnableXSRF {
+		execController.XSRFToken()
+		if invokeCtx.isRequireCheckXSRFCookie() {
+			execController.CheckXSRFCookie()
+		}
+	}
+
+	execController.URLMapping()
+
+	if !context.ResponseWriter.Started {
+		//exec main logic
+		switch runMethod {
+		case http.MethodGet:
+			execController.Get()
+		case http.MethodPost:
+			execController.Post()
+		case http.MethodDelete:
+			execController.Delete()
+		case http.MethodPut:
+			execController.Put()
+		case http.MethodHead:
+			execController.Head()
+		case http.MethodPatch:
+			execController.Patch()
+		case http.MethodOptions:
+			execController.Options()
+		default:
+			if !execController.HandlerFunc(runMethod) {
+				vc := reflect.ValueOf(execController)
+				method := vc.MethodByName(runMethod)
+				in := param.ConvertParams(methodParams, method.Type(), context)
+				out := method.Call(in)
+
+				//For backward compatibility we only handle response if we had incoming methodParams
+				if methodParams != nil {
+					p.handleParamResponse(context, execController, out)
+				}
+			}
+		}
+
+		//render template
+		if !context.ResponseWriter.Started && context.Output.Status == 0 {
+			if BConfig.WebConfig.AutoRender {
+				if err := execController.Render(); err != nil {
+					logs.Error(err)
+				}
+			}
+		}
 	}
 }
 

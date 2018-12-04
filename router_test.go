@@ -624,6 +624,35 @@ func TestFilterFinishRouterMultiFirstOnly(t *testing.T) {
 }
 
 // Execution point: FinishRouter
+// expectation: FinishRouter function is executed even ErrAbort panic occurred
+func TestFilterFinishRouterAfterStopRun(t *testing.T) {
+	testName := "TestFilterFinishRouter"
+	url := "/finishRouter"
+
+	mux := NewControllerRegister()
+	mux.InsertFilter(url, AfterExec, beegoFilterNoOutput)
+	mux.InsertFilter(url, FinishRouter, beegoFinishRouter1)
+
+	mux.Get(url, func(ctx *context.Context) {
+		ctx.WriteString("hello")
+		panic(ErrAbort)
+	})
+
+	rw, r := testRequest("GET", url)
+	mux.ServeHTTP(rw, r)
+
+	if strings.Contains(rw.Body.String(), "FinishRouter1") {
+		t.Errorf(testName + " FinishRouter did not run")
+	}
+	if !strings.Contains(rw.Body.String(), "hello") {
+		t.Errorf(testName + " handler did not run properly")
+	}
+	if strings.Contains(rw.Body.String(), "AfterExec1") {
+		t.Errorf(testName + " AfterExec ran in error")
+	}
+}
+
+// Execution point: FinishRouter
 // expectation: both FinishRouter functions execute, match as router handles
 func TestFilterFinishRouterMulti(t *testing.T) {
 	testName := "TestFilterFinishRouterMulti"
