@@ -6,7 +6,7 @@ import (
 )
 
 func TestList_01(t *testing.T) {
-	m := make(map[string]interface{})
+	m := make(M)
 	list("BConfig", BConfig, m)
 	t.Log(m)
 	om := oldMap()
@@ -18,8 +18,8 @@ func TestList_01(t *testing.T) {
 	}
 }
 
-func oldMap() map[string]interface{} {
-	m := make(map[string]interface{})
+func oldMap() M {
+	m := make(M)
 	m["BConfig.AppName"] = BConfig.AppName
 	m["BConfig.RunMode"] = BConfig.RunMode
 	m["BConfig.RouterCaseSensitive"] = BConfig.RouterCaseSensitive

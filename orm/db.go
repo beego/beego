@@ -762,7 +762,13 @@ func (d *dbBase) UpdateBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	}
 
 	d.ins.ReplaceMarks(&query)
-	res, err := q.Exec(query, values...)
+	var err error
+	var res sql.Result
+	if qs != nil && qs.forContext {
+		res, err = q.ExecContext(qs.ctx, query, values...)
+	} else {
+		res, err = q.Exec(query, values...)
+	}
 	if err == nil {
 		return res.RowsAffected()
 	}
@@ -851,11 +857,16 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	for i := range marks {
 		marks[i] = "?"
 	}
-	sql := fmt.Sprintf("IN (%s)", strings.Join(marks, ", "))
-	query = fmt.Sprintf("DELETE FROM %s%s%s WHERE %s%s%s %s", Q, mi.table, Q, Q, mi.fields.pk.column, Q, sql)
+	sqlIn := fmt.Sprintf("IN (%s)", strings.Join(marks, ", "))
+	query = fmt.Sprintf("DELETE FROM %s%s%s WHERE %s%s%s %s", Q, mi.table, Q, Q, mi.fields.pk.column, Q, sqlIn)
 
 	d.ins.ReplaceMarks(&query)
-	res, err := q.Exec(query, args...)
+	var res sql.Result
+	if qs != nil && qs.forContext {
+		res, err = q.ExecContext(qs.ctx, query, args...)
+	} else {
+		res, err = q.Exec(query, args...)
+	}
 	if err == nil {
 		num, err := res.RowsAffected()
 		if err != nil {
@@ -928,7 +939,7 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 					maps[fi.column] = true
 				}
 			} else {
-				panic(fmt.Errorf("wrong field/column name `%s`", col))
+				return 0, fmt.Errorf("wrong field/column name `%s`", col)
 			}
 		}
 		if hasRel {
@@ -978,11 +989,18 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 	d.ins.ReplaceMarks(&query)
 
 	var rs *sql.Rows
-	r, err := q.Query(query, args...)
-	if err != nil {
-		return 0, err
+	var err error
+	if qs != nil && qs.forContext {
+		rs, err = q.QueryContext(qs.ctx, query, args...)
+		if err != nil {
+			return 0, err
+		}
+	} else {
+		rs, err = q.Query(query, args...)
+		if err != nil {
+			return 0, err
+		}
 	}
-	rs = r
 
 	refs := make([]interface{}, colsNum)
 	for i := range refs {
@@ -1111,8 +1129,12 @@ func (d *dbBase) Count(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condition
 
 	d.ins.ReplaceMarks(&query)
 
-	row := q.QueryRow(query, args...)
-
+	var row *sql.Row
+	if qs != nil && qs.forContext {
+		row = q.QueryRowContext(qs.ctx, query, args...)
+	} else {
+		row = q.QueryRow(query, args...)
+	}
 	err = row.Scan(&cnt)
 	return
 }

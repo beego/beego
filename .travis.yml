@@ -1,8 +1,8 @@
 language: go
 
 go:
-  - "1.9.7"
-  - "1.10.3"
+  - "1.10.x"
+  - "1.11.x"
 services:
   - redis-server
   - mysql
@@ -34,6 +34,7 @@ install:
   - go get github.com/gogo/protobuf/proto
   - go get github.com/Knetic/govaluate
   - go get github.com/casbin/casbin
+  - go get github.com/elazarl/go-bindata-assetfs
   - go get -u honnef.co/go/tools/cmd/gosimple
   - go get -u github.com/mdempsky/unconvert
   - go get -u github.com/gordonklaus/ineffassign
@@ -49,7 +50,7 @@ before_script:
   - mkdir -p res/var
   - ./ssdb/ssdb-server ./ssdb/ssdb.conf -d
 after_script:
-  -killall -w ssdb-server
+  - killall -w ssdb-server
   - rm -rf ./res/var/*
 script:
   - go test -v ./...

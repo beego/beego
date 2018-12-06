@@ -361,7 +361,7 @@ func gatewayTimeout(rw http.ResponseWriter, r *http.Request) {
 
 func responseError(rw http.ResponseWriter, r *http.Request, errCode int, errContent string) {
 	t, _ := template.New("beegoerrortemp").Parse(errtpl)
-	data := map[string]interface{}{
+	data := M{
 		"Title":        http.StatusText(errCode),
 		"BeegoVersion": VERSION,
 		"Content":      template.HTML(errContent),

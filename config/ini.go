@@ -78,15 +78,37 @@ func (ini *IniConfig) parseData(dir string, data []byte) (*IniConfigContainer, e
 		}
 	}
 	section := defaultSection
+	tmpBuf := bytes.NewBuffer(nil)
 	for {
-		line, _, err := buf.ReadLine()
-		if err == io.EOF {
+		tmpBuf.Reset()
+
+		shouldBreak := false
+		for {
+			tmp, isPrefix, err := buf.ReadLine()
+			if err == io.EOF {
+				shouldBreak = true
+				break
+			}
+
+			//It might be a good idea to throw a error on all unknonw errors?
+			if _, ok := err.(*os.PathError); ok {
+				return nil, err
+			}
+
+			tmpBuf.Write(tmp)
+			if isPrefix {
+				continue
+			}
+
+			if !isPrefix {
+				break
+			}
+		}
+		if shouldBreak {
 			break
 		}
-		//It might be a good idea to throw a error on all unknonw errors?
-		if _, ok := err.(*os.PathError); ok {
-			return nil, err
-		}
+
+		line := tmpBuf.Bytes()
 		line = bytes.TrimSpace(line)
 		if bytes.Equal(line, bEmpty) {
 			continue

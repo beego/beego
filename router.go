@@ -43,7 +43,7 @@ const (
 )
 
 const (
-	routerTypeBeego   = iota
+	routerTypeBeego = iota
 	routerTypeRESTFul
 	routerTypeHandler
 )
@@ -133,14 +133,15 @@ type ControllerRegister struct {
 
 // NewControllerRegister returns a new ControllerRegister.
 func NewControllerRegister() *ControllerRegister {
-	cr := &ControllerRegister{
+	return &ControllerRegister{
 		routers:  make(map[string]*Tree),
 		policies: make(map[string]*Tree),
+		pool: sync.Pool{
+			New: func() interface{} {
+				return beecontext.NewContext()
+			},
+		},
 	}
-	cr.pool.New = func() interface{} {
-		return beecontext.NewContext()
-	}
-	return cr
 }
 
 // Add controller handler and pattern rules to ControllerRegister.
@@ -277,6 +278,10 @@ func (p *ControllerRegister) Include(cList ...ControllerInterface) {
 		key := t.PkgPath() + ":" + t.Name()
 		if comm, ok := GlobalControllerRouter[key]; ok {
 			for _, a := range comm {
+				for _, f := range a.Filters {
+					p.InsertFilter(f.Pattern, f.Pos, f.Filter, f.ReturnOnOutput, f.ResetParams)
+				}
+
 				p.addWithMethodParams(a.Router, c, a.MethodParams, strings.Join(a.AllowHTTPMethods, ",")+":"+a.Method)
 			}
 		}
@@ -794,7 +799,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	if !isRunnable {
 		//Invoke the request handler
 		var execController ControllerInterface
-		if routerInfo.initialize != nil {
+		if routerInfo != nil && routerInfo.initialize != nil {
 			execController = routerInfo.initialize()
 		} else {
 			vc := reflect.New(runRouter)
@@ -877,7 +882,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 Admin:
-//admin module record QPS
+	//admin module record QPS
 
 	statusCode := context.ResponseWriter.Status
 	if statusCode == 0 {
@@ -886,8 +891,9 @@ Admin:
 
 	logAccess(context, &startTime, statusCode)
 
+	timeDur := time.Since(startTime)
+	context.ResponseWriter.Elapsed = timeDur
 	if BConfig.Listen.EnableAdmin {
-		timeDur := time.Since(startTime)
 		pattern := ""
 		if routerInfo != nil {
 			pattern = routerInfo.pattern
@@ -904,7 +910,6 @@ Admin:
 
 	if BConfig.RunMode == DEV && !BConfig.Log.AccessLogs {
 		var devInfo string
-		timeDur := time.Since(startTime)
 		iswin := (runtime.GOOS == "windows")
 		statusColor := logs.ColorByStatus(iswin, statusCode)
 		methodColor := logs.ColorByMethod(iswin, r.Method)

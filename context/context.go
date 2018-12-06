@@ -38,6 +38,14 @@ import (
 	"github.com/astaxie/beego/utils"
 )
 
+//commonly used mime-types
+const (
+	ApplicationJSON = "application/json"
+	ApplicationXML  = "application/xml"
+	ApplicationYAML = "application/x-yaml"
+	TextXML         = "text/xml"
+)
+
 // NewContext return the Context with Input and Output
 func NewContext() *Context {
 	return &Context{
@@ -193,6 +201,7 @@ type Response struct {
 	http.ResponseWriter
 	Started bool
 	Status  int
+	Elapsed time.Duration
 }
 
 func (r *Response) reset(rw http.ResponseWriter) {

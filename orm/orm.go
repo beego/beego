@@ -425,7 +425,7 @@ func (o *orm) getRelQs(md interface{}, mi *modelInfo, fi *fieldInfo) *querySet {
 func (o *orm) QueryTable(ptrStructOrTableName interface{}) (qs QuerySeter) {
 	var name string
 	if table, ok := ptrStructOrTableName.(string); ok {
-		name = snakeString(table)
+		name = nameStrategyMap[defaultNameStrategy](table)
 		if mi, ok := modelCache.get(name); ok {
 			qs = newQuerySet(o, mi)
 		}
@@ -548,6 +548,9 @@ func NewOrmWithDB(driverName, aliasName string, db *sql.DB) (Ormer, error) {
 
 	al.Name = aliasName
 	al.DriverName = driverName
+	al.DB = db
+
+	detectTZ(al)
 
 	o := new(orm)
 	o.alias = al
