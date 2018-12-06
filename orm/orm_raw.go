@@ -152,7 +152,7 @@ func (o *rawSet) setFieldValue(ind reflect.Value, value interface{}) {
 			ind.Set(reflect.Zero(ind.Type()))
 			return
 		}
-		switch indi := ind.Interface().(type) {
+		switch ind.Interface().(type) {
 		case time.Time:
 			var str string
 			switch d := value.(type) {
@@ -180,25 +180,15 @@ func (o *rawSet) setFieldValue(ind reflect.Value, value interface{}) {
 					}
 				}
 			}
-		case sql.NullString:
-			err := indi.Scan(value)
-			if err == nil {
-				ind.Set(reflect.ValueOf(indi))
+		case sql.NullString, sql.NullInt64, sql.NullFloat64, sql.NullBool:
+			indi := reflect.New(ind.Type()).Interface()
+			sc, ok := indi.(sql.Scanner)
+			if !ok {
+				return
 			}
-		case sql.NullInt64:
-			err := indi.Scan(value)
+			err := sc.Scan(value)
 			if err == nil {
-				ind.Set(reflect.ValueOf(indi))
-			}
-		case sql.NullFloat64:
-			err := indi.Scan(value)
-			if err == nil {
-				ind.Set(reflect.ValueOf(indi))
-			}
-		case sql.NullBool:
-			err := indi.Scan(value)
-			if err == nil {
-				ind.Set(reflect.ValueOf(indi))
+				ind.Set(reflect.Indirect(reflect.ValueOf(sc)))
 			}
 		}
 	}
