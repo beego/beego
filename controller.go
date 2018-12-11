@@ -350,11 +350,8 @@ func (c *Controller) URLFor(endpoint string, values ...interface{}) string {
 
 // ServeJSON sends a json response with encoding charset.
 func (c *Controller) ServeJSON(encoding ...bool) {
-	var (
-		hasIndent   = BConfig.RunMode != PROD
-		hasEncoding = len(encoding) > 0 && encoding[0]
-	)
-
+	hasIndent   := BConfig.RunMode != PROD
+	hasEncoding := len(encoding) > 0 && encoding[0]
 	c.Ctx.Output.JSON(c.Data["json"], hasIndent, hasEncoding)
 }
 
@@ -377,9 +374,15 @@ func (c *Controller) ServeYAML() {
 
 // ServeFormatted serve YAML, XML OR JSON, depending on the value of the Accept header
 func (c *Controller) ServeFormatted(encoding ...bool) {
-	hasIndent := BConfig.RunMode != PROD
-	hasEncoding := len(encoding) > 0 && encoding[0]
-	c.Ctx.Output.ServeFormatted(c.Data, hasIndent, hasEncoding)
+	accept := c.Ctx.Input.Header("Accept")
+	switch accept {
+	case context.ApplicationXML, context.TextXML:
+		c.ServeXML()
+	case context.ApplicationYAML:
+		c.ServeYAML()
+	default:
+		c.ServeJSON(encoding...)
+	}
 }
 
 // Input returns the input data map from POST or PUT request body and query string.

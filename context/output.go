@@ -20,6 +20,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"gopkg.in/yaml.v2"
 	"html/template"
 	"io"
 	"mime"
@@ -30,7 +31,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"gopkg.in/yaml.v2"
 )
 
 // BeegoOutput does work for sending response header.
@@ -105,7 +105,7 @@ func (output *BeegoOutput) Cookie(name string, value string, others ...interface
 
 		switch {
 		case maxAge > 0:
-			fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(maxAge)*time.Second).UTC().Format(time.RFC1123), maxAge)
+			fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(maxAge) * time.Second).UTC().Format(time.RFC1123), maxAge)
 		case maxAge < 0:
 			fmt.Fprintf(&b, "; Max-Age=0")
 		}
@@ -202,7 +202,6 @@ func (output *BeegoOutput) JSON(data interface{}, hasIndent bool, encoding bool)
 	}
 	return output.Body(content)
 }
-
 
 // YAML writes yaml to response body.
 func (output *BeegoOutput) YAML(data interface{}) error {
