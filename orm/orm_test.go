@@ -1679,6 +1679,31 @@ func TestRawQueryRow(t *testing.T) {
 	throwFail(t, AssertIs(uid, 4))
 	throwFail(t, AssertIs(*status, 3))
 	throwFail(t, AssertIs(pid, nil))
+
+	// test for sql.Null* fields
+	nData := &DataNull{
+		NullString:  sql.NullString{String: "test sql.null", Valid: true},
+		NullBool:    sql.NullBool{Bool: true, Valid: true},
+		NullInt64:   sql.NullInt64{Int64: 42, Valid: true},
+		NullFloat64: sql.NullFloat64{Float64: 42.42, Valid: true},
+	}
+	newId, err := dORM.Insert(nData)
+	throwFailNow(t, err)
+
+	var nd *DataNull
+	query = fmt.Sprintf("SELECT * FROM %sdata_null%s where id=?", Q, Q)
+	err = dORM.Raw(query, newId).QueryRow(&nd)
+	throwFailNow(t, err)
+
+	throwFailNow(t, AssertNot(nd, nil))
+	throwFail(t, AssertIs(nd.NullBool.Valid, true))
+	throwFail(t, AssertIs(nd.NullBool.Bool, true))
+	throwFail(t, AssertIs(nd.NullString.Valid, true))
+	throwFail(t, AssertIs(nd.NullString.String, "test sql.null"))
+	throwFail(t, AssertIs(nd.NullInt64.Valid, true))
+	throwFail(t, AssertIs(nd.NullInt64.Int64, 42))
+	throwFail(t, AssertIs(nd.NullFloat64.Valid, true))
+	throwFail(t, AssertIs(nd.NullFloat64.Float64, 42.42))
 }
 
 // user_profile table
@@ -1771,6 +1796,32 @@ func TestQueryRows(t *testing.T) {
 	throwFailNow(t, AssertIs(l[1].UserName, "astaxie"))
 	throwFailNow(t, AssertIs(l[1].Age, 30))
 
+	// test for sql.Null* fields
+	nData := &DataNull{
+		NullString:  sql.NullString{String: "test sql.null", Valid: true},
+		NullBool:    sql.NullBool{Bool: true, Valid: true},
+		NullInt64:   sql.NullInt64{Int64: 42, Valid: true},
+		NullFloat64: sql.NullFloat64{Float64: 42.42, Valid: true},
+	}
+	newId, err := dORM.Insert(nData)
+	throwFailNow(t, err)
+
+	var nDataList []*DataNull
+	query = fmt.Sprintf("SELECT * FROM %sdata_null%s where id=?", Q, Q)
+	num, err = dORM.Raw(query, newId).QueryRows(&nDataList)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 1))
+
+	nd := nDataList[0]
+	throwFailNow(t, AssertNot(nd, nil))
+	throwFail(t, AssertIs(nd.NullBool.Valid, true))
+	throwFail(t, AssertIs(nd.NullBool.Bool, true))
+	throwFail(t, AssertIs(nd.NullString.Valid, true))
+	throwFail(t, AssertIs(nd.NullString.String, "test sql.null"))
+	throwFail(t, AssertIs(nd.NullInt64.Valid, true))
+	throwFail(t, AssertIs(nd.NullInt64.Int64, 42))
+	throwFail(t, AssertIs(nd.NullFloat64.Valid, true))
+	throwFail(t, AssertIs(nd.NullFloat64.Float64, 42.42))
 }
 
 func TestRawValues(t *testing.T) {
