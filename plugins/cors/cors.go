@@ -63,6 +63,7 @@ var (
 	defaultAllowHeaders = []string{"Origin", "Accept", "Content-Type", "Authorization"}
 	// Regex patterns are generated from AllowOrigins. These are used and generated internally.
 	allowOriginPatterns = []string{}
+	allowOriginRegs     = []*regexp.Regexp{}
 )
 
 // Options represents Access Control options.
@@ -177,8 +178,8 @@ func (o *Options) PreflightHeader(origin, rMethod, rHeaders string) (headers map
 // IsOriginAllowed looks up if the origin matches one of the patterns
 // generated from Options.AllowOrigins patterns.
 func (o *Options) IsOriginAllowed(origin string) (allowed bool) {
-	for _, pattern := range allowOriginPatterns {
-		allowed, _ = regexp.MatchString(pattern, origin)
+	for _, pattern := range allowOriginRegs {
+		allowed = pattern.MatchString(origin)
 		if allowed {
 			return
 		}
@@ -197,7 +198,7 @@ func Allow(opts *Options) beego.FilterFunc {
 		pattern := regexp.QuoteMeta(origin)
 		pattern = strings.Replace(pattern, "\\*", ".*", -1)
 		pattern = strings.Replace(pattern, "\\?", ".", -1)
-		allowOriginPatterns = append(allowOriginPatterns, "^"+pattern+"$")
+		allowOriginRegs = append(allowOriginRegs, regexp.MustCompile("^"+pattern+"$"))
 	}
 
 	return func(ctx *context.Context) {
