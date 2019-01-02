@@ -142,7 +142,10 @@ func (t *Task) GetStatus() string {
 func (t *Task) Run() error {
 	err := t.DoFunc()
 	if err != nil {
-		if t.ErrLimit > 0 && t.ErrLimit > len(t.Errlist) {
+		if t.ErrLimit > 0 {
+			if t.ErrLimit <= len(t.Errlist) {
+				t.Errlist = t.Errlist[1:]
+			}
 			t.Errlist = append(t.Errlist, &taskerr{t: t.Next, errinfo: err.Error()})
 		}
 	}
