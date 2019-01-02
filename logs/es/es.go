@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/astaxie/beego/logs"
-	"github.com/belogik/goes"
+	"github.com/OwnLocal/goes"
 )
 
 // NewES return a LoggerInterface
