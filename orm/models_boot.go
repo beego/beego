@@ -236,40 +236,36 @@ func bootStrap() {
 		for _, fi := range mi.fields.fieldsReverse {
 			switch fi.fieldType {
 			case RelReverseOne:
-				found := false
-			mForA:
-				for _, ffi := range fi.relModelInfo.fields.fieldsByType[RelOneToOne] {
-					if ffi.relModelInfo == mi {
-						found = true
-						fi.reverseField = ffi.name
-						fi.reverseFieldInfo = ffi
+				{
+					found := false
+					for _, ffi := range fi.relModelInfo.fields.fieldsByType[RelOneToOne] {
+						if ffi.relModelInfo == mi {
+							found = true
+							fi.reverseField = ffi.name
+							fi.reverseFieldInfo = ffi
 
-						ffi.reverseField = fi.name
-						ffi.reverseFieldInfo = fi
-						break mForA
+							ffi.reverseField = fi.name
+							ffi.reverseFieldInfo = fi
+						}
 					}
-				}
-				if !found {
-					err = fmt.Errorf("reverse field `%s` not found in model `%s`", fi.fullName, fi.relModelInfo.fullName)
-					goto end
+					if !found {
+						err = fmt.Errorf("reverse field `%s` not found in model `%s`", fi.fullName, fi.relModelInfo.fullName)
+						goto end
+					}
 				}
 			case RelReverseMany:
-				found := false
-			mForB:
-				for _, ffi := range fi.relModelInfo.fields.fieldsByType[RelForeignKey] {
-					if ffi.relModelInfo == mi {
-						found = true
-						fi.reverseField = ffi.name
-						fi.reverseFieldInfo = ffi
+				{
+					found := false
+					for _, ffi := range fi.relModelInfo.fields.fieldsByType[RelForeignKey] {
+						if ffi.relModelInfo == mi {
+							found = true
+							fi.reverseField = ffi.name
+							fi.reverseFieldInfo = ffi
 
-						ffi.reverseField = fi.name
-						ffi.reverseFieldInfo = fi
-
-						break mForB
+							ffi.reverseField = fi.name
+							ffi.reverseFieldInfo = fi
+						}
 					}
-				}
-				if !found {
-				mForC:
 					for _, ffi := range fi.relModelInfo.fields.fieldsByType[RelManyToMany] {
 						conditions := fi.relThrough != "" && fi.relThrough == ffi.relThrough ||
 							fi.relTable != "" && fi.relTable == ffi.relTable ||
@@ -283,14 +279,12 @@ func bootStrap() {
 							fi.reverseFieldInfoTwo = ffi.reverseFieldInfo
 							fi.reverseFieldInfoM2M = ffi
 							ffi.reverseFieldInfoM2M = fi
-
-							break mForC
 						}
 					}
-				}
-				if !found {
-					err = fmt.Errorf("reverse field for `%s` not found in model `%s`", fi.fullName, fi.relModelInfo.fullName)
-					goto end
+					if !found {
+						err = fmt.Errorf("reverse field for `%s` not found in model `%s`", fi.fullName, fi.relModelInfo.fullName)
+						goto end
+					}
 				}
 			}
 		}
