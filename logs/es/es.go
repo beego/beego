@@ -8,8 +8,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/astaxie/beego/logs"
 	"github.com/OwnLocal/goes"
+	"github.com/astaxie/beego/logs"
 )
 
 // NewES return a LoggerInterface
@@ -21,7 +21,7 @@ func NewES() logs.Logger {
 }
 
 type esLogger struct {
-	*goes.Connection
+	*goes.Client
 	DSN   string `json:"dsn"`
 	Level int    `json:"level"`
 }
@@ -41,8 +41,8 @@ func (el *esLogger) Init(jsonconfig string) error {
 	} else if host, port, err := net.SplitHostPort(u.Host); err != nil {
 		return err
 	} else {
-		conn := goes.NewConnection(host, port)
-		el.Connection = conn
+		conn := goes.NewClient(host, port)
+		el.Client = conn
 	}
 	return nil
 }
@@ -78,3 +78,4 @@ func (el *esLogger) Flush() {
 func init() {
 	logs.Register(logs.AdapterEs, NewES)
 }
+
