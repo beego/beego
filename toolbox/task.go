@@ -138,7 +138,7 @@ func (t *Task) GetStatus() string {
 	return str
 }
 
-// Run run all tasks
+// Run run all tasks, append error list
 func (t *Task) Run() error {
 	err := t.DoFunc()
 	if err != nil {
