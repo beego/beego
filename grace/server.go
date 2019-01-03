@@ -34,6 +34,11 @@ type Server struct {
 // creating a new service goroutine for each.
 // The service goroutines read requests and then call srv.Handler to reply to them.
 func (srv *Server) Serve() (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			log.Println("wait group counter is negative", r)
+		}
+	}()
 	srv.state = StateRunning
 	err = srv.Server.Serve(srv.GraceListener)
 	log.Println(syscall.Getpid(), "Waiting for connections to finish...")
