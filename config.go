@@ -407,9 +407,6 @@ func newAppConfig(appConfigProvider, appConfigPath string) (*beegoAppConfig, err
 }
 
 func (b *beegoAppConfig) Set(key, val string) error {
-	if err := b.innerConfig.Set(BConfig.RunMode+"::"+key, val); err != nil {
-		return err
-	}
 	return b.innerConfig.Set(key, val)
 }
 
