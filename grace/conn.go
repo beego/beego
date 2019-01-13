@@ -28,12 +28,11 @@ func (c *graceConn) Close() (err error) {
 	}()
 
 	c.m.Lock()
+	defer c.m.Unlock()
 	if c.closed {
-		c.m.Unlock()
 		return
 	}
 	c.server.wg.Done()
 	c.closed = true
-	c.m.Unlock()
 	return c.Conn.Close()
 }
