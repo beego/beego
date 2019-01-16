@@ -30,7 +30,7 @@ import (
 	"github.com/astaxie/beego/grace"
 	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/utils"
-	"golang.org/x/crypto/acme/autocert"
+	//"golang.org/x/crypto/acme/autocert"
 )
 
 var (
@@ -181,12 +181,12 @@ func (app *App) Run(mws ...MiddleWare) {
 			}
 			logs.Info("https server Running on https://%s", app.Server.Addr)
 			if BConfig.Listen.AutoTLS {
-				m := autocert.Manager{
-					Prompt:     autocert.AcceptTOS,
-					HostPolicy: autocert.HostWhitelist(BConfig.Listen.Domains...),
-					Cache:      autocert.DirCache(BConfig.Listen.TLSCacheDir),
-				}
-				app.Server.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
+				//m := autocert.Manager{
+				//	Prompt:     autocert.AcceptTOS,
+				//	HostPolicy: autocert.HostWhitelist(BConfig.Listen.Domains...),
+				//	Cache:      autocert.DirCache(BConfig.Listen.TLSCacheDir),
+				//}
+				//app.Server.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
 				BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile = "", ""
 			} else if BConfig.Listen.EnableMutualHTTPS {
 				pool := x509.NewCertPool()
