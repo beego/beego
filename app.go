@@ -134,12 +134,12 @@ func (app *App) Run(mws ...MiddleWare) {
 					}
 				} else {
 					if BConfig.Listen.AutoTLS {
-						m := autocert.Manager{
-							Prompt:     autocert.AcceptTOS,
-							HostPolicy: autocert.HostWhitelist(BConfig.Listen.Domains...),
-							Cache:      autocert.DirCache(BConfig.Listen.TLSCacheDir),
-						}
-						app.Server.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
+						//m := autocert.Manager{
+						//	Prompt:     autocert.AcceptTOS,
+						//	HostPolicy: autocert.HostWhitelist(BConfig.Listen.Domains...),
+						//	Cache:      autocert.DirCache(BConfig.Listen.TLSCacheDir),
+						//}
+						//app.Server.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
 						BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile = "", ""
 					}
 					if err := server.ListenAndServeTLS(BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile); err != nil {
