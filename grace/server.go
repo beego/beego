@@ -1,6 +1,7 @@
 package grace
 
 import (
+	"context"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
@@ -12,39 +13,37 @@ import (
 	"os/exec"
 	"os/signal"
 	"strings"
-	"sync"
 	"syscall"
-	"time"
 )
 
 // Server embedded http.Server
 type Server struct {
 	*http.Server
-	GraceListener    net.Listener
-	SignalHooks      map[int]map[os.Signal][]func()
-	tlsInnerListener *graceListener
-	wg               sync.WaitGroup
-	sigChan          chan os.Signal
-	isChild          bool
-	state            uint8
-	Network          string
+	ln           net.Listener
+	SignalHooks  map[int]map[os.Signal][]func()
+	sigChan      chan os.Signal
+	isChild      bool
+	state        uint8
+	Network      string
+	terminalChan chan error
 }
 
 // Serve accepts incoming connections on the Listener l,
 // creating a new service goroutine for each.
 // The service goroutines read requests and then call srv.Handler to reply to them.
 func (srv *Server) Serve() (err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			log.Println("wait group counter is negative", r)
-		}
-	}()
 	srv.state = StateRunning
-	err = srv.Server.Serve(srv.GraceListener)
-	log.Println(syscall.Getpid(), "Waiting for connections to finish...")
-	srv.wg.Wait()
-	srv.state = StateTerminate
-	return
+	defer func() { srv.state = StateTerminate }()
+
+	// When Shutdown is called, Serve, ListenAndServe, and ListenAndServeTLS
+	// immediately return ErrServerClosed. Make sure the program doesn't exit
+	// and waits instead for Shutdown to return.
+	if err = srv.Server.Serve(srv.ln); err != nil && err != http.ErrServerClosed {
+		return err
+	}
+
+	// wait for Shutdown to return
+	return <-srv.terminalChan
 }
 
 // ListenAndServe listens on the TCP network address srv.Addr and then calls Serve
@@ -58,13 +57,11 @@ func (srv *Server) ListenAndServe() (err error) {
 
 	go srv.handleSignals()
 
-	l, err := srv.getListener(addr)
+	srv.ln, err = srv.getListener(addr)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
-
-	srv.GraceListener = newGraceListener(l, srv)
 
 	if srv.isChild {
 		process, err := os.FindProcess(os.Getppid())
@@ -112,14 +109,12 @@ func (srv *Server) ListenAndServeTLS(certFile, keyFile string) (err error) {
 
 	go srv.handleSignals()
 
-	l, err := srv.getListener(addr)
+	ln, err := srv.getListener(addr)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
-
-	srv.tlsInnerListener = newGraceListener(l, srv)
-	srv.GraceListener = tls.NewListener(srv.tlsInnerListener, srv.TLSConfig)
+	srv.ln = tls.NewListener(ln, srv.TLSConfig)
 
 	if srv.isChild {
 		process, err := os.FindProcess(os.Getppid())
@@ -132,6 +127,7 @@ func (srv *Server) ListenAndServeTLS(certFile, keyFile string) (err error) {
 			return err
 		}
 	}
+
 	log.Println(os.Getpid(), srv.Addr)
 	return srv.Serve()
 }
@@ -168,14 +164,12 @@ func (srv *Server) ListenAndServeMutualTLS(certFile, keyFile, trustFile string) 
 	log.Println("Mutual HTTPS")
 	go srv.handleSignals()
 
-	l, err := srv.getListener(addr)
+	ln, err := srv.getListener(addr)
 	if err != nil {
 		log.Println(err)
 		return err
 	}
-
-	srv.tlsInnerListener = newGraceListener(l, srv)
-	srv.GraceListener = tls.NewListener(srv.tlsInnerListener, srv.TLSConfig)
+	srv.ln = tls.NewListener(ln, srv.TLSConfig)
 
 	if srv.isChild {
 		process, err := os.FindProcess(os.Getppid())
@@ -188,6 +182,7 @@ func (srv *Server) ListenAndServeMutualTLS(certFile, keyFile, trustFile string) 
 			return err
 		}
 	}
+
 	log.Println(os.Getpid(), srv.Addr)
 	return srv.Serve()
 }
@@ -270,37 +265,12 @@ func (srv *Server) shutdown() {
 	}
 
 	srv.state = StateShuttingDown
+	log.Println(syscall.Getpid(), "Waiting for connections to finish...")
+	ctx := context.Background()
 	if DefaultTimeout >= 0 {
-		go srv.serverTimeout(DefaultTimeout)
+		ctx, _ = context.WithTimeout(context.Background(), DefaultTimeout)
 	}
-	err := srv.GraceListener.Close()
-	if err != nil {
-		log.Println(syscall.Getpid(), "Listener.Close() error:", err)
-	} else {
-		log.Println(syscall.Getpid(), srv.GraceListener.Addr(), "Listener closed.")
-	}
-}
-
-// serverTimeout forces the server to shutdown in a given timeout - whether it
-// finished outstanding requests or not. if Read/WriteTimeout are not set or the
-// max header size is very big a connection could hang
-func (srv *Server) serverTimeout(d time.Duration) {
-	defer func() {
-		if r := recover(); r != nil {
-			log.Println("WaitGroup at 0", r)
-		}
-	}()
-	if srv.state != StateShuttingDown {
-		return
-	}
-	time.Sleep(d)
-	log.Println("[STOP - Hammer Time] Forcefully shutting down parent")
-	for {
-		if srv.state == StateTerminate {
-			break
-		}
-		srv.wg.Done()
-	}
+	srv.terminalChan <- srv.Server.Shutdown(ctx)
 }
 
 func (srv *Server) fork() (err error) {
@@ -314,12 +284,8 @@ func (srv *Server) fork() (err error) {
 	var files = make([]*os.File, len(runningServers))
 	var orderArgs = make([]string, len(runningServers))
 	for _, srvPtr := range runningServers {
-		switch srvPtr.GraceListener.(type) {
-		case *graceListener:
-			files[socketPtrOffsetMap[srvPtr.Server.Addr]] = srvPtr.GraceListener.(*graceListener).File()
-		default:
-			files[socketPtrOffsetMap[srvPtr.Server.Addr]] = srvPtr.tlsInnerListener.File()
-		}
+		f, _ := srvPtr.ln.(*net.TCPListener).File()
+		files[socketPtrOffsetMap[srvPtr.Server.Addr]] = f
 		orderArgs[socketPtrOffsetMap[srvPtr.Server.Addr]] = srvPtr.Server.Addr
 	}
 
