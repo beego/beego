@@ -268,7 +268,9 @@ func (srv *Server) shutdown() {
 	log.Println(syscall.Getpid(), "Waiting for connections to finish...")
 	ctx := context.Background()
 	if DefaultTimeout >= 0 {
-		ctx, _ = context.WithTimeout(context.Background(), DefaultTimeout)
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(context.Background(), DefaultTimeout)
+		defer cancel()
 	}
 	srv.terminalChan <- srv.Server.Shutdown(ctx)
 }
