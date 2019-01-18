@@ -39,9 +39,11 @@ func (srv *Server) Serve() (err error) {
 	// immediately return ErrServerClosed. Make sure the program doesn't exit
 	// and waits instead for Shutdown to return.
 	if err = srv.Server.Serve(srv.ln); err != nil && err != http.ErrServerClosed {
+		log.Println(syscall.Getpid(), "Server.Serve() error:", err)
 		return err
 	}
 
+	log.Println(syscall.Getpid(), srv.ln.Addr(), "Listener closed.")
 	// wait for Shutdown to return
 	return <-srv.terminalChan
 }
