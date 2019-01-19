@@ -128,7 +128,7 @@ type Ormer interface {
 	//	// update user testing's name to slene
 	Raw(query string, args ...interface{}) RawSeter
 	Driver() Driver
-	DBStats() sql.DBStats
+	DBStats() *sql.DBStats
 }
 
 // Inserter insert prepared statement
