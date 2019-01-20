@@ -81,6 +81,18 @@ func registerModel(PrefixOrSuffix string, model interface{}, isPrefix bool) {
 
 	}
 
+	for _, fi := range mi.fields.fieldsDB {
+		if fi.rel {
+			if PrefixOrSuffix != "" {
+				if isPrefix {
+					fi.fkTable = PrefixOrSuffix + fi.fkTable
+				} else {
+					fi.fkTable = fi.fkTable + PrefixOrSuffix
+				}
+			}
+		}
+	}
+
 	mi.table = table
 	mi.pkg = typ.PkgPath()
 	mi.model = model

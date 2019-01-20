@@ -257,6 +257,13 @@ func SetNameStrategy(s string) {
 	nameStrategy = s
 }
 
+// converst *pkg1.pkg2.StructName to StructName
+func stripPrefixes(in string) string  {
+	in = strings.Trim(in, "*")
+	toks := strings.Split(in, ".")
+	return toks[len(toks)-1]
+}
+
 // camel string, xx_yy to XxYy
 func camelString(s string) string {
 	data := make([]byte, 0, len(s))

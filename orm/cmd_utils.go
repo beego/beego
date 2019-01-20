@@ -189,6 +189,10 @@ func getDbCreateSQL(al *alias) (sqls []string, tableIndexes map[string][]dbIndex
 					column += " " + "UNIQUE"
 				}
 
+				if fi.rel {
+					column += " " + "REFERENCES "+fi.fkTable
+				}
+
 				if fi.index {
 					sqlIndexes = append(sqlIndexes, []string{fi.column})
 				}

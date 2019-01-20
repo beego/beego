@@ -74,6 +74,11 @@ func addModelFields(mi *modelInfo, ind reflect.Value, mName string, index []int)
 		} else if err != nil {
 			break
 		}
+
+                if fi.rel && field.Kind() == reflect.Ptr {
+                        fi.fkTable = snakeString(stripPrefixes(field.Type().String()))
+                }
+
 		//record current field index
 		fi.fieldIndex = append(fi.fieldIndex, index...)
 		fi.fieldIndex = append(fi.fieldIndex, i)

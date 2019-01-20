@@ -132,6 +132,7 @@ type fieldInfo struct {
 	relThrough          string
 	relThroughModelInfo *modelInfo
 	relModelInfo        *modelInfo
+        fkTable             string
 	digits              int
 	decimals            int
 	isFielder           bool // implement Fielder interface
