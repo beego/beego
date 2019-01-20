@@ -14,6 +14,7 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 )
 
 // Server embedded http.Server
@@ -116,7 +117,7 @@ func (srv *Server) ListenAndServeTLS(certFile, keyFile string) (err error) {
 		log.Println(err)
 		return err
 	}
-	srv.ln = tls.NewListener(ln, srv.TLSConfig)
+	srv.ln = tls.NewListener(tcpKeepAliveListener{ln.(*net.TCPListener)}, srv.TLSConfig)
 
 	if srv.isChild {
 		process, err := os.FindProcess(os.Getppid())
@@ -171,7 +172,7 @@ func (srv *Server) ListenAndServeMutualTLS(certFile, keyFile, trustFile string) 
 		log.Println(err)
 		return err
 	}
-	srv.ln = tls.NewListener(ln, srv.TLSConfig)
+	srv.ln = tls.NewListener(tcpKeepAliveListener{ln.(*net.TCPListener)}, srv.TLSConfig)
 
 	if srv.isChild {
 		process, err := os.FindProcess(os.Getppid())
@@ -213,6 +214,20 @@ func (srv *Server) getListener(laddr string) (l net.Listener, err error) {
 		}
 	}
 	return
+}
+
+type tcpKeepAliveListener struct {
+	*net.TCPListener
+}
+
+func (ln tcpKeepAliveListener) Accept() (c net.Conn, err error) {
+	tc, err := ln.AcceptTCP()
+	if err != nil {
+		return
+	}
+	tc.SetKeepAlive(true)
+	tc.SetKeepAlivePeriod(3 * time.Minute)
+	return tc, nil
 }
 
 // handleSignals listens for os Signals and calls any hooked in function that the
