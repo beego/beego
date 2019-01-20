@@ -106,6 +106,18 @@ func getTableUnique(val reflect.Value) [][]string {
 	return nil
 }
 
+// get whether the table needs to be created for the database alias
+func isTableForDB(val reflect.Value, db string) bool {
+        fun := val.MethodByName("IsTableForDB")
+        if fun.IsValid() {
+                vals := fun.Call([]reflect.Value{reflect.ValueOf(db)})
+                if len(vals) > 0 && vals[0].Kind() == reflect.Bool {
+                        return vals[0].Bool()
+                }
+        }
+        return true
+}
+
 // get snaked column name
 func getColumnName(ft int, addrField reflect.Value, sf reflect.StructField, col string) string {
 	column := col
