@@ -513,7 +513,7 @@ func (p *ControllerRegister) URLFor(endpoint string, values ...interface{}) stri
 	controllerName := strings.Join(paths[:len(paths)-1], "/")
 	methodName := paths[len(paths)-1]
 	for m, t := range p.routers {
-		ok, url := p.getUrl(t, "/", controllerName, methodName, params, m)
+		ok, url := p.getURL(t, "/", controllerName, methodName, params, m)
 		if ok {
 			return url
 		}
@@ -521,17 +521,17 @@ func (p *ControllerRegister) URLFor(endpoint string, values ...interface{}) stri
 	return ""
 }
 
-func (p *ControllerRegister) getUrl(t *Tree, url, controllerName, methodName string, params map[string]string, httpMethod string) (bool, string) {
+func (p *ControllerRegister) getURL(t *Tree, url, controllerName, methodName string, params map[string]string, httpMethod string) (bool, string) {
 	for _, subtree := range t.fixrouters {
 		u := path.Join(url, subtree.prefix)
-		ok, u := p.getUrl(subtree, u, controllerName, methodName, params, httpMethod)
+		ok, u := p.getURL(subtree, u, controllerName, methodName, params, httpMethod)
 		if ok {
 			return ok, u
 		}
 	}
 	if t.wildcard != nil {
 		u := path.Join(url, urlPlaceholder)
-		ok, u := p.getUrl(t.wildcard, u, controllerName, methodName, params, httpMethod)
+		ok, u := p.getURL(t.wildcard, u, controllerName, methodName, params, httpMethod)
 		if ok {
 			return ok, u
 		}
@@ -599,7 +599,7 @@ func (p *ControllerRegister) getUrl(t *Tree, url, controllerName, methodName str
 					}
 					var i int
 					var startReg bool
-					regUrl := ""
+					regURL := ""
 					for _, v := range strings.Trim(l.regexps.String(), "^$") {
 						if v == '(' {
 							startReg = true
@@ -608,17 +608,17 @@ func (p *ControllerRegister) getUrl(t *Tree, url, controllerName, methodName str
 							startReg = false
 							if v, ok := params[l.wildcards[i]]; ok {
 								delete(params, l.wildcards[i])
-								regUrl = regUrl + v
+								regURL = regURL + v
 								i++
 							} else {
 								break
 							}
 						} else if !startReg {
-							regUrl = string(append([]rune(regUrl), v))
+							regURL = string(append([]rune(regURL), v))
 						}
 					}
-					if l.regexps.MatchString(regUrl) {
-						ps := strings.Split(regUrl, "/")
+					if l.regexps.MatchString(regURL) {
+						ps := strings.Split(regURL, "/")
 						for _, p := range ps {
 							url = strings.Replace(url, urlPlaceholder, p, 1)
 						}
