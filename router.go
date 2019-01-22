@@ -690,7 +690,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	// filter wrong http method
 	if !HTTPMETHOD[r.Method] {
-		http.Error(rw, "Method Not Allowed", 405)
+		http.Error(rw, "Method Not Allowed", http.StatusMethodNotAllowed)
 		goto Admin
 	}
 
