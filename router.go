@@ -15,6 +15,7 @@
 package beego
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"path"
@@ -479,8 +480,7 @@ func (p *ControllerRegister) InsertFilter(pattern string, pos int, filter Filter
 // add Filter into
 func (p *ControllerRegister) insertFilterRouter(pos int, mr *FilterRouter) (err error) {
 	if pos < BeforeStatic || pos > FinishRouter {
-		err = fmt.Errorf("can not find your filter position")
-		return
+		return errors.New("can not find your filter position")
 	}
 	p.enableFilter = true
 	p.filters[pos] = append(p.filters[pos], mr)
