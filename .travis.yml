@@ -55,7 +55,7 @@ after_script:
   - rm -rf ./res/var/*
 script:
   - go test -v ./...
-  - staticcheck -show-ignored  $(go list ./... | grep -v /vendor/)
+  - staticcheck -show-ignored
   - unconvert $(go list ./... | grep -v /vendor/)
   - ineffassign .
   - find . ! \( -path './vendor' -prune \) -type f -name '*.go' -print0 | xargs -0 gofmt -l -s
