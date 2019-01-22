@@ -259,9 +259,9 @@ func parseComment(lines []*ast.Comment) (pcs []*parsedComment, err error) {
 	imports := []parsedImport{}
 
 	for _, c := range lines {
-		t := strings.TrimSpace(strings.TrimLeft(c.Text, "//"))
+		t := strings.TrimSpace(strings.TrimPrefix(c.Text, "//"))
 		if strings.HasPrefix(t, "@Param") {
-			pv := getparams(strings.TrimSpace(strings.TrimLeft(t, "@Param")))
+			pv := getparams(strings.TrimSpace(strings.TrimPrefix(t, "@Param")))
 			if len(pv) < 4 {
 				logs.Error("Invalid @Param format. Needs at least 4 parameters")
 			}
@@ -286,7 +286,7 @@ func parseComment(lines []*ast.Comment) (pcs []*parsedComment, err error) {
 	}
 
 	for _, c := range lines {
-		t := strings.TrimSpace(strings.TrimLeft(c.Text, "//"))
+		t := strings.TrimSpace(strings.TrimPrefix(c.Text, "//"))
 		if strings.HasPrefix(t, "@Import") {
 			iv := getparams(strings.TrimSpace(strings.TrimLeft(t, "@Import")))
 			if len(iv) == 0 || len(iv) > 2 {
@@ -307,9 +307,9 @@ func parseComment(lines []*ast.Comment) (pcs []*parsedComment, err error) {
 
 filterLoop:
 	for _, c := range lines {
-		t := strings.TrimSpace(strings.TrimLeft(c.Text, "//"))
+		t := strings.TrimSpace(strings.TrimLeft(c.Text, "/"))
 		if strings.HasPrefix(t, "@Filter") {
-			fv := getparams(strings.TrimSpace(strings.TrimLeft(t, "@Filter")))
+			fv := getparams(strings.TrimSpace(strings.TrimPrefix(t, "@Filter")))
 			if len(fv) < 3 {
 				logs.Error("Invalid @Filter format. Needs at least 3 parameters")
 				continue filterLoop
@@ -349,9 +349,9 @@ filterLoop:
 		pc.filters = filters
 		pc.imports = imports
 
-		t := strings.TrimSpace(strings.TrimLeft(c.Text, "//"))
+		t := strings.TrimSpace(strings.TrimLeft(c.Text, "/"))
 		if strings.HasPrefix(t, "@router") {
-			t := strings.TrimSpace(strings.TrimLeft(c.Text, "//"))
+			t := strings.TrimSpace(strings.TrimLeft(c.Text, "/"))
 			matches := routeRegex.FindStringSubmatch(t)
 			if len(matches) == 3 {
 				pc.routerPath = matches[1]
