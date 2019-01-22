@@ -510,10 +510,10 @@ func (p *ControllerRegister) URLFor(endpoint string, values ...interface{}) stri
 			}
 		}
 	}
-	controllName := strings.Join(paths[:len(paths)-1], "/")
+	controllerName := strings.Join(paths[:len(paths)-1], "/")
 	methodName := paths[len(paths)-1]
 	for m, t := range p.routers {
-		ok, url := p.geturl(t, "/", controllName, methodName, params, m)
+		ok, url := p.getUrl(t, "/", controllerName, methodName, params, m)
 		if ok {
 			return url
 		}
@@ -521,17 +521,17 @@ func (p *ControllerRegister) URLFor(endpoint string, values ...interface{}) stri
 	return ""
 }
 
-func (p *ControllerRegister) geturl(t *Tree, url, controllName, methodName string, params map[string]string, httpMethod string) (bool, string) {
+func (p *ControllerRegister) getUrl(t *Tree, url, controllerName, methodName string, params map[string]string, httpMethod string) (bool, string) {
 	for _, subtree := range t.fixrouters {
 		u := path.Join(url, subtree.prefix)
-		ok, u := p.geturl(subtree, u, controllName, methodName, params, httpMethod)
+		ok, u := p.getUrl(subtree, u, controllerName, methodName, params, httpMethod)
 		if ok {
 			return ok, u
 		}
 	}
 	if t.wildcard != nil {
 		u := path.Join(url, urlPlaceholder)
-		ok, u := p.geturl(t.wildcard, u, controllName, methodName, params, httpMethod)
+		ok, u := p.getUrl(t.wildcard, u, controllerName, methodName, params, httpMethod)
 		if ok {
 			return ok, u
 		}
@@ -539,7 +539,7 @@ func (p *ControllerRegister) geturl(t *Tree, url, controllName, methodName strin
 	for _, l := range t.leaves {
 		if c, ok := l.runObject.(*ControllerInfo); ok {
 			if c.routerType == routerTypeBeego &&
-				strings.HasSuffix(path.Join(c.controllerType.PkgPath(), c.controllerType.Name()), controllName) {
+				strings.HasSuffix(path.Join(c.controllerType.PkgPath(), c.controllerType.Name()), controllerName) {
 				find := false
 				if HTTPMETHOD[strings.ToUpper(methodName)] {
 					if len(c.methods) == 0 {
@@ -578,18 +578,18 @@ func (p *ControllerRegister) geturl(t *Tree, url, controllName, methodName strin
 								}
 							}
 						}
-						canskip := false
+						canSkip := false
 						for _, v := range l.wildcards {
 							if v == ":" {
-								canskip = true
+								canSkip = true
 								continue
 							}
 							if u, ok := params[v]; ok {
 								delete(params, v)
 								url = strings.Replace(url, urlPlaceholder, u, 1)
 							} else {
-								if canskip {
-									canskip = false
+								if canSkip {
+									canSkip = false
 									continue
 								}
 								return false, ""
@@ -598,27 +598,27 @@ func (p *ControllerRegister) geturl(t *Tree, url, controllName, methodName strin
 						return true, url + toURL(params)
 					}
 					var i int
-					var startreg bool
-					regurl := ""
+					var startReg bool
+					regUrl := ""
 					for _, v := range strings.Trim(l.regexps.String(), "^$") {
 						if v == '(' {
-							startreg = true
+							startReg = true
 							continue
 						} else if v == ')' {
-							startreg = false
+							startReg = false
 							if v, ok := params[l.wildcards[i]]; ok {
 								delete(params, l.wildcards[i])
-								regurl = regurl + v
+								regUrl = regUrl + v
 								i++
 							} else {
 								break
 							}
-						} else if !startreg {
-							regurl = string(append([]rune(regurl), v))
+						} else if !startReg {
+							regUrl = string(append([]rune(regUrl), v))
 						}
 					}
-					if l.regexps.MatchString(regurl) {
-						ps := strings.Split(regurl, "/")
+					if l.regexps.MatchString(regUrl) {
+						ps := strings.Split(regUrl, "/")
 						for _, p := range ps {
 							url = strings.Replace(url, urlPlaceholder, p, 1)
 						}
