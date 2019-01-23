@@ -291,7 +291,7 @@ func (output *BeegoOutput) Download(file string, filename ...string) {
 	//https://tools.ietf.org/html/rfc6266#section-4.3
 	fn := url.PathEscape(fName)
 	if fName == fn {
-		output.Header("Content-Disposition", "attachment; filename="+fn)
+		fn = "filename=" + fn
 	} else {
 		/**
 		  The parameters "filename" and "filename*" differ only in that
@@ -299,8 +299,9 @@ func (output *BeegoOutput) Download(file string, filename ...string) {
 		  of characters not present in the ISO-8859-1 character set
 		  ([ISO-8859-1]).
 		*/
-		output.Header("Content-Disposition", "attachment; filename*=utf-8''"+fn)
+		fn = "filename=" + fName + "; filename*=utf-8''" + fn
 	}
+	output.Header("Content-Disposition", "attachment; "+fn)
 	output.Header("Content-Description", "File Transfer")
 	output.Header("Content-Type", "application/octet-stream")
 	output.Header("Content-Transfer-Encoding", "binary")
