@@ -197,7 +197,6 @@ func TestParseForm(t *testing.T) {
 func TestRenderForm(t *testing.T) {
 	type user struct {
 		ID      int         `form:"-"`
-		tag     string      `form:"tag"`
 		Name    interface{} `form:"username"`
 		Age     int         `form:"age,text,年龄："`
 		Sex     string

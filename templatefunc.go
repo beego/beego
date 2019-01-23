@@ -172,7 +172,7 @@ func GetConfig(returnType, key string, defaultVal interface{}) (value interface{
 	case "DIY":
 		value, err = AppConfig.DIY(key)
 	default:
-		err = errors.New("Config keys must be of type String, Bool, Int, Int64, Float, or DIY")
+		err = errors.New("config keys must be of type String, Bool, Int, Int64, Float, or DIY")
 	}
 
 	if err != nil {
