@@ -1,10 +1,11 @@
 package redis_sentinel
 
 import (
-	"github.com/astaxie/beego/session"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/astaxie/beego/session"
 )
 
 func TestRedisSentinel(t *testing.T) {
@@ -15,9 +16,14 @@ func TestRedisSentinel(t *testing.T) {
 		Maxlifetime:     3600,
 		Secure:          false,
 		CookieLifeTime:  3600,
-		ProviderConfig:  "119.23.132.234:26379,100,,0,master",
+		ProviderConfig:  "127.0.0.1:6379,100,,0,master",
 	}
-	globalSessions, _ := session.NewManager("redis_sentinel", sessionConfig)
+	globalSessions, e := session.NewManager("redis_sentinel", sessionConfig)
+	if e != nil {
+		t.Log(e)
+		return
+	}
+	//todo test if e==nil
 	go globalSessions.GC()
 
 	r, _ := http.NewRequest("GET", "/", nil)
