@@ -232,7 +232,7 @@ func TestModelSyntax(t *testing.T) {
 	user := &User{}
 	ind := reflect.ValueOf(user).Elem()
 	fn := getFullName(ind.Type())
-	mi, ok := modelCache.getByFullName(fn)
+	_, ok := modelCache.getByFullName(fn)
 	throwFail(t, AssertIs(ok, true))
 
 	mi, ok = modelCache.get("user")
@@ -764,10 +764,10 @@ func TestCustomField(t *testing.T) {
 
 func TestExpr(t *testing.T) {
 	user := &User{}
-	qs := dORM.QueryTable(user)
-	qs = dORM.QueryTable((*User)(nil))
-	qs = dORM.QueryTable("User")
-	qs = dORM.QueryTable("user")
+	dORM.QueryTable(user)
+	dORM.QueryTable((*User)(nil))
+	dORM.QueryTable("User")
+	qs := dORM.QueryTable("user")
 	num, err := qs.Filter("UserName", "slene").Filter("user_name", "slene").Filter("profile__Age", 28).Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))

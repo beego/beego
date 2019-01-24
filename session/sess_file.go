@@ -141,9 +141,9 @@ func (fp *FileProvider) SessionRead(sid string) (Store, error) {
 	_, err = os.Stat(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid))
 	var f *os.File
 	if err == nil {
-		f, err = os.OpenFile(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid), os.O_RDWR, 0777)
+		f, _ = os.OpenFile(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid), os.O_RDWR, 0777)
 	} else if os.IsNotExist(err) {
-		f, err = os.Create(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid))
+		f, _ = os.Create(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid))
 	} else {
 		return nil, err
 	}
