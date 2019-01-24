@@ -43,7 +43,7 @@ func signature(project *LogProject, method, uri string,
 
 	date, ok := headers["Date"]
 	if !ok {
-		err = fmt.Errorf("Can't find 'Date' header")
+		err = fmt.Errorf("can't find 'Date' header")
 		return
 	}
 

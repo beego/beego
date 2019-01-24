@@ -328,7 +328,7 @@ func (w *fileLogWriter) doRotate(logTime time.Time) error {
 
 	// return error if the last file checked still existed
 	if err == nil {
-		return fmt.Errorf("Rotate: Cannot find free log number to rename %s", w.Filename)
+		return fmt.Errorf("rotate: Cannot find free log number to rename %s", w.Filename)
 	}
 
 	// close fileWriter before rename
@@ -349,10 +349,10 @@ RESTART_LOGGER:
 	go w.deleteOldLog()
 
 	if startLoggerErr != nil {
-		return fmt.Errorf("Rotate StartLogger: %s", startLoggerErr)
+		return fmt.Errorf("rotate StartLogger: %s", startLoggerErr)
 	}
 	if err != nil {
-		return fmt.Errorf("Rotate: %s", err)
+		return fmt.Errorf("rotate: %s", err)
 	}
 	return nil
 }

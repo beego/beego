@@ -149,7 +149,7 @@ func decodeCookie(block cipher.Block, hashKey, name, value string, gcmaxlifetime
 	// 2. Verify MAC. Value is "date|value|mac".
 	parts := bytes.SplitN(b, []byte("|"), 3)
 	if len(parts) != 3 {
-		return nil, errors.New("Decode: invalid value format")
+		return nil, errors.New("decode: invalid value format")
 	}
 
 	b = append([]byte(name+"|"), b[:len(b)-len(parts[2])]...)
@@ -157,19 +157,19 @@ func decodeCookie(block cipher.Block, hashKey, name, value string, gcmaxlifetime
 	h.Write(b)
 	sig := h.Sum(nil)
 	if len(sig) != len(parts[2]) || subtle.ConstantTimeCompare(sig, parts[2]) != 1 {
-		return nil, errors.New("Decode: the value is not valid")
+		return nil, errors.New("decode: the value is not valid")
 	}
 	// 3. Verify date ranges.
 	var t1 int64
 	if t1, err = strconv.ParseInt(string(parts[0]), 10, 64); err != nil {
-		return nil, errors.New("Decode: invalid timestamp")
+		return nil, errors.New("decode: invalid timestamp")
 	}
 	t2 := time.Now().UTC().Unix()
 	if t1 > t2 {
-		return nil, errors.New("Decode: timestamp is too new")
+		return nil, errors.New("decode: timestamp is too new")
 	}
 	if t1 < t2-gcmaxlifetime {
-		return nil, errors.New("Decode: expired timestamp")
+		return nil, errors.New("decode: expired timestamp")
 	}
 	// 4. Decrypt (optional).
 	b, err = decode(parts[1])

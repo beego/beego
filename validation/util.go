@@ -103,7 +103,7 @@ func (f Funcs) Call(name string, params ...interface{}) (result []reflect.Value,
 		return
 	}
 	if len(params) != f[name].Type().NumIn() {
-		err = fmt.Errorf("The number of params is not adapted")
+		err = fmt.Errorf("the number of params is not adapted")
 		return
 	}
 	in := make([]reflect.Value, len(params))
