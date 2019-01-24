@@ -143,7 +143,7 @@ func (o *Options) PreflightHeader(origin, rMethod, rHeaders string) (headers map
 		rHeader = strings.TrimSpace(rHeader)
 	lookupLoop:
 		for _, allowedHeader := range o.AllowHeaders {
-			if strings.ToLower(rHeader) == strings.ToLower(allowedHeader) {
+			if strings.EqualFold(rHeader, allowedHeader) {
 				allowed = append(allowed, rHeader)
 				break lookupLoop
 			}
