@@ -30,7 +30,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"gopkg.in/yaml.v2"
+
+	yaml "gopkg.in/yaml.v2"
 )
 
 // BeegoOutput does work for sending response header.
@@ -203,7 +204,6 @@ func (output *BeegoOutput) JSON(data interface{}, hasIndent bool, encoding bool)
 	return output.Body(content)
 }
 
-
 // YAML writes yaml to response body.
 func (output *BeegoOutput) YAML(data interface{}) error {
 	output.Header("Content-Type", "application/x-yaml; charset=utf-8")
@@ -288,7 +288,20 @@ func (output *BeegoOutput) Download(file string, filename ...string) {
 	} else {
 		fName = filepath.Base(file)
 	}
-	output.Header("Content-Disposition", "attachment; filename="+url.PathEscape(fName))
+	//https://tools.ietf.org/html/rfc6266#section-4.3
+	fn := url.PathEscape(fName)
+	if fName == fn {
+		fn = "filename=" + fn
+	} else {
+		/**
+		  The parameters "filename" and "filename*" differ only in that
+		  "filename*" uses the encoding defined in [RFC5987], allowing the use
+		  of characters not present in the ISO-8859-1 character set
+		  ([ISO-8859-1]).
+		*/
+		fn = "filename=" + fName + "; filename*=utf-8''" + fn
+	}
+	output.Header("Content-Disposition", "attachment; "+fn)
 	output.Header("Content-Description", "File Transfer")
 	output.Header("Content-Type", "application/octet-stream")
 	output.Header("Content-Transfer-Encoding", "binary")
