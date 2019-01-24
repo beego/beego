@@ -38,7 +38,7 @@ func (mi *MemoryItem) isExpire() bool {
 	if mi.lifespan == 0 {
 		return false
 	}
-	return time.Now().Sub(mi.createdTime) > mi.lifespan
+	return time.Since(mi.createdTime) > mi.lifespan
 }
 
 // MemoryCache is Memory cache adapter.

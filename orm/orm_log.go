@@ -37,7 +37,7 @@ func NewLog(out io.Writer) *Log {
 }
 
 func debugLogQueies(alias *alias, operaton, query string, t time.Time, err error, args ...interface{}) {
-	sub := time.Now().Sub(t) / 1e5
+	sub := time.Since(t) / 1e5
 	elsp := float64(int(sub)) / 10.0
 	flag := "  OK"
 	if err != nil {
