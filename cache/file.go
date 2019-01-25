@@ -65,7 +65,7 @@ func NewFileCache() Cache {
 // the config need to be like {CachePath:"/cache","FileSuffix":".bin","DirectoryLevel":2,"EmbedExpiry":0}
 func (fc *FileCache) StartAndGC(config string) error {
 
-	var cfg map[string]string
+	cfg := make(map[string]string)
 	json.Unmarshal([]byte(config), &cfg)
 	if _, ok := cfg["CachePath"]; !ok {
 		cfg["CachePath"] = FileCachePath
