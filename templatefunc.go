@@ -297,22 +297,16 @@ func parseFormToStruct(form url.Values, objT reflect.Type, objV reflect.Value) e
 			tag = tags[0]
 		}
 
-		if fieldT.Type.Kind() == reflect.Slice {
-			found := false
-			for _, v := range form[tag] {
-				if len(v) != 0 {
-					found = true
-					break
-				}
-			}
-			if !found {
+		formValues := form[tag]
+		var value string
+		if len(formValues) == 0 {
+			continue
+		}
+		if len(formValues) == 1 {
+			value = formValues[0]
+			if value == "" {
 				continue
 			}
-		}
-
-		value := form.Get(tag)
-		if (fieldT.Type.Kind() != reflect.Slice) && len(value) == 0 {
-			continue
 		}
 
 		switch fieldT.Type.Kind() {
