@@ -55,21 +55,21 @@ func Substr(s string, start, length int) string {
 // HTML2str returns escaping text convert from html.
 func HTML2str(html string) string {
 
-	re, _ := regexp.Compile(`\<[\S\s]+?\>`)
+	re := regexp.MustCompile(`\<[\S\s]+?\>`)
 	html = re.ReplaceAllStringFunc(html, strings.ToLower)
 
 	//remove STYLE
-	re, _ = regexp.Compile(`\<style[\S\s]+?\</style\>`)
+	re = regexp.MustCompile(`\<style[\S\s]+?\</style\>`)
 	html = re.ReplaceAllString(html, "")
 
 	//remove SCRIPT
-	re, _ = regexp.Compile(`\<script[\S\s]+?\</script\>`)
+	re = regexp.MustCompile(`\<script[\S\s]+?\</script\>`)
 	html = re.ReplaceAllString(html, "")
 
-	re, _ = regexp.Compile(`\<[\S\s]+?\>`)
+	re = regexp.MustCompile(`\<[\S\s]+?\>`)
 	html = re.ReplaceAllString(html, "\n")
 
-	re, _ = regexp.Compile(`\s{2,}`)
+	re = regexp.MustCompile(`\s{2,}`)
 	html = re.ReplaceAllString(html, "\n")
 
 	return strings.TrimSpace(html)
