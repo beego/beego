@@ -464,6 +464,7 @@ func TestNullDataTypes(t *testing.T) {
 	Q := dDbBaser.TableQuote()
 	num, err = dORM.Raw(fmt.Sprintf("SELECT * FROM %sdata_null%s where id=?", Q, Q), 3).QueryRows(&dnList)
 	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 1))
 	equal := reflect.DeepEqual(*dnList[0], d)
 	throwFailNow(t, AssertIs(equal, true))
 }
