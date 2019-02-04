@@ -111,7 +111,7 @@ func TestHtmlunquote(t *testing.T) {
 
 func TestParseForm(t *testing.T) {
 	type ExtendInfo struct {
-		Hobby string `form:"hobby"`
+		Hobby []string `form:"hobby"`
 		Memo  string
 	}
 
@@ -146,7 +146,7 @@ func TestParseForm(t *testing.T) {
 		"date":         []string{"2014-11-12"},
 		"organization": []string{"beego"},
 		"title":        []string{"CXO"},
-		"hobby":        []string{"Basketball"},
+		"hobby":        []string{"", "Basketball", "Football"},
 		"memo":         []string{"nothing"},
 	}
 	if err := ParseForm(form, u); err == nil {
@@ -186,8 +186,14 @@ func TestParseForm(t *testing.T) {
 	if u.Title != "CXO" {
 		t.Errorf("Title should equal `CXO`, but got `%v`", u.Title)
 	}
-	if u.Hobby != "Basketball" {
-		t.Errorf("Hobby should equal `Basketball`, but got `%v`", u.Hobby)
+	if u.Hobby[0] != "" {
+		t.Errorf("Hobby should equal ``, but got `%v`", u.Hobby[0])
+	}
+	if u.Hobby[1] != "Basketball" {
+		t.Errorf("Hobby should equal `Basketball`, but got `%v`", u.Hobby[1])
+	}
+	if u.Hobby[2] != "Football" {
+		t.Errorf("Hobby should equal `Football`, but got `%v`", u.Hobby[2])
 	}
 	if len(u.Memo) != 0 {
 		t.Errorf("Memo's length should equal 0 but got %v", len(u.Memo))
