@@ -133,7 +133,7 @@ func (lp *Provider) SessionRead(sid string) (session.Store, error) {
 // SessionExist check ledis session exist by sid
 func (lp *Provider) SessionExist(sid string) bool {
 	count, _ := c.Exists([]byte(sid))
-	return !(count == 0)
+	return count != 0
 }
 
 // SessionRegenerate generate new sid for ledis session
