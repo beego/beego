@@ -621,6 +621,25 @@ func (d *dbBase) Update(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.
 		return 0, err
 	}
 
+	var find bool
+	var index int
+	for i, col := range setNames {
+		if mi.fields.GetByColumn(col).autoNowAdd {
+			index = i
+			find = true
+		}
+	}
+
+	if find {
+		newSetNames := make([]string, 0, 0)
+		newSetNames = append(setNames[0:index], setNames[index+1:]...)
+		setNames = newSetNames
+		newSetValues := make([]interface{}, 0, 0)
+		newSetValues = append(setValues[0:index], setValues[index+1:]...)
+		setValues = newSetValues
+
+	}
+
 	setValues = append(setValues, pkValue)
 
 	Q := d.ins.TableQuote()
