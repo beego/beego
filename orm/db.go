@@ -632,10 +632,12 @@ func (d *dbBase) Update(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.
 
 	if find {
 		newSetNames := make([]string, 0, len(setNames)-1)
-		newSetNames = append(setNames[0:index], setNames[index+1:]...)
+		newSetNames = append(newSetNames, setNames[0:index]...)
+		newSetNames = append(newSetNames, setNames[index+1:]...)
 		setNames = newSetNames
 		newSetValues := make([]interface{}, 0, len(setNames)-1)
-		newSetValues = append(setValues[0:index], setValues[index+1:]...)
+		newSetValues = append(newSetValues, setValues[0:index]...)
+		newSetValues = append(newSetValues, setValues[index+1:]...)
 		setValues = newSetValues
 
 	}
