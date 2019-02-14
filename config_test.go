@@ -48,15 +48,15 @@ func TestAssignConfig_02(t *testing.T) {
 	_BConfig := &Config{}
 	bs, _ := json.Marshal(newBConfig())
 
-	jsonMap := map[string]interface{}{}
+	jsonMap := M{}
 	json.Unmarshal(bs, &jsonMap)
 
-	configMap := map[string]interface{}{}
+	configMap := M{}
 	for k, v := range jsonMap {
 		if reflect.TypeOf(v).Kind() == reflect.Map {
-			for k1, v1 := range v.(map[string]interface{}) {
+			for k1, v1 := range v.(M) {
 				if reflect.TypeOf(v1).Kind() == reflect.Map {
-					for k2, v2 := range v1.(map[string]interface{}) {
+					for k2, v2 := range v1.(M) {
 						configMap[k2] = v2
 					}
 				} else {
@@ -75,7 +75,7 @@ func TestAssignConfig_02(t *testing.T) {
 
 	jcf := &config.JSONConfig{}
 	bs, _ = json.Marshal(configMap)
-	ac, _ := jcf.ParseData([]byte(bs))
+	ac, _ := jcf.ParseData(bs)
 
 	for _, i := range []interface{}{_BConfig, &_BConfig.Listen, &_BConfig.WebConfig, &_BConfig.Log, &_BConfig.WebConfig.Session} {
 		assignSingleConfig(i, ac)

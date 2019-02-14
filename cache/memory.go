@@ -116,19 +116,19 @@ func (bc *MemoryCache) Incr(key string) error {
 	if !ok {
 		return errors.New("key not exist")
 	}
-	switch itm.val.(type) {
+	switch val := itm.val.(type) {
 	case int:
-		itm.val = itm.val.(int) + 1
+		itm.val = val + 1
 	case int32:
-		itm.val = itm.val.(int32) + 1
+		itm.val = val + 1
 	case int64:
-		itm.val = itm.val.(int64) + 1
+		itm.val = val + 1
 	case uint:
-		itm.val = itm.val.(uint) + 1
+		itm.val = val + 1
 	case uint32:
-		itm.val = itm.val.(uint32) + 1
+		itm.val = val + 1
 	case uint64:
-		itm.val = itm.val.(uint64) + 1
+		itm.val = val + 1
 	default:
 		return errors.New("item val is not (u)int (u)int32 (u)int64")
 	}
@@ -143,28 +143,28 @@ func (bc *MemoryCache) Decr(key string) error {
 	if !ok {
 		return errors.New("key not exist")
 	}
-	switch itm.val.(type) {
+	switch val := itm.val.(type) {
 	case int:
-		itm.val = itm.val.(int) - 1
+		itm.val = val - 1
 	case int64:
-		itm.val = itm.val.(int64) - 1
+		itm.val = val - 1
 	case int32:
-		itm.val = itm.val.(int32) - 1
+		itm.val = val - 1
 	case uint:
-		if itm.val.(uint) > 0 {
-			itm.val = itm.val.(uint) - 1
+		if val > 0 {
+			itm.val = val - 1
 		} else {
 			return errors.New("item val is less than 0")
 		}
 	case uint32:
-		if itm.val.(uint32) > 0 {
-			itm.val = itm.val.(uint32) - 1
+		if val > 0 {
+			itm.val = val - 1
 		} else {
 			return errors.New("item val is less than 0")
 		}
 	case uint64:
-		if itm.val.(uint64) > 0 {
-			itm.val = itm.val.(uint64) - 1
+		if val > 0 {
+			itm.val = val - 1
 		} else {
 			return errors.New("item val is less than 0")
 		}
@@ -203,13 +203,17 @@ func (bc *MemoryCache) StartAndGC(config string) error {
 	dur := time.Duration(cf["interval"]) * time.Second
 	bc.Every = cf["interval"]
 	bc.dur = dur
-	go bc.vaccuum()
+	go bc.vacuum()
 	return nil
 }
 
 // check expiration.
-func (bc *MemoryCache) vaccuum() {
-	if bc.Every < 1 {
+func (bc *MemoryCache) vacuum() {
+	bc.RLock()
+	every := bc.Every
+	bc.RUnlock()
+
+	if every < 1 {
 		return
 	}
 	for {

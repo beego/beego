@@ -172,7 +172,7 @@ func Register(name string, m Migrationer) error {
 	return nil
 }
 
-// Upgrade upgrate the migration from lasttime
+// Upgrade upgrade the migration from lasttime
 func Upgrade(lasttime int64) error {
 	sm := sortMap(migrationMap)
 	i := 0
