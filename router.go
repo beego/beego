@@ -889,7 +889,7 @@ Admin:
 		statusCode = 200
 	}
 
-	logAccess(context, &startTime, statusCode)
+	LogAccess(context, &startTime, statusCode)
 
 	timeDur := time.Since(startTime)
 	context.ResponseWriter.Elapsed = timeDur
@@ -980,7 +980,7 @@ func toURL(params map[string]string) string {
 	return strings.TrimRight(u, "&")
 }
 
-func logAccess(ctx *beecontext.Context, startTime *time.Time, statusCode int) {
+func LogAccess(ctx *beecontext.Context, startTime *time.Time, statusCode int) {
 	//Skip logging if AccessLogs config is false
 	if !BConfig.Log.AccessLogs {
 		return
