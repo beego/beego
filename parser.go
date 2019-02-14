@@ -39,7 +39,7 @@ var globalRouterTemplate = `package routers
 
 import (
 	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/context/param"
+	"github.com/astaxie/beego/context/param"{{.globalimport}}
 )
 
 func init() {
@@ -52,6 +52,22 @@ var (
 	commentFilename    string
 	pkgLastupdate      map[string]int64
 	genInfoList        map[string][]ControllerComments
+
+	routerHooks = map[string]int{
+		"beego.BeforeStatic": BeforeStatic,
+		"beego.BeforeRouter": BeforeRouter,
+		"beego.BeforeExec":   BeforeExec,
+		"beego.AfterExec":    AfterExec,
+		"beego.FinishRouter": FinishRouter,
+	}
+
+	routerHooksMapping = map[int]string{
+		BeforeStatic: "beego.BeforeStatic",
+		BeforeRouter: "beego.BeforeRouter",
+		BeforeExec:   "beego.BeforeExec",
+		AfterExec:    "beego.AfterExec",
+		FinishRouter: "beego.FinishRouter",
+	}
 )
 
 const commentPrefix = "commentsRouter_"
@@ -102,6 +118,20 @@ type parsedComment struct {
 	routerPath string
 	methods    []string
 	params     map[string]parsedParam
+	filters    []parsedFilter
+	imports    []parsedImport
+}
+
+type parsedImport struct {
+	importPath  string
+	importAlias string
+}
+
+type parsedFilter struct {
+	pattern string
+	pos     int
+	filter  string
+	params  []bool
 }
 
 type parsedParam struct {
@@ -114,22 +144,67 @@ type parsedParam struct {
 
 func parserComments(f *ast.FuncDecl, controllerName, pkgpath string) error {
 	if f.Doc != nil {
-		parsedComment, err := parseComment(f.Doc.List)
+		parsedComments, err := parseComment(f.Doc.List)
 		if err != nil {
 			return err
 		}
-		if parsedComment.routerPath != "" {
-			key := pkgpath + ":" + controllerName
-			cc := ControllerComments{}
-			cc.Method = f.Name.String()
-			cc.Router = parsedComment.routerPath
-			cc.AllowHTTPMethods = parsedComment.methods
-			cc.MethodParams = buildMethodParams(f.Type.Params.List, parsedComment)
-			genInfoList[key] = append(genInfoList[key], cc)
+		for _, parsedComment := range parsedComments {
+			if parsedComment.routerPath != "" {
+				key := pkgpath + ":" + controllerName
+				cc := ControllerComments{}
+				cc.Method = f.Name.String()
+				cc.Router = parsedComment.routerPath
+				cc.AllowHTTPMethods = parsedComment.methods
+				cc.MethodParams = buildMethodParams(f.Type.Params.List, parsedComment)
+				cc.FilterComments = buildFilters(parsedComment.filters)
+				cc.ImportComments = buildImports(parsedComment.imports)
+				genInfoList[key] = append(genInfoList[key], cc)
+			}
 		}
-
 	}
 	return nil
+}
+
+func buildImports(pis []parsedImport) []*ControllerImportComments {
+	var importComments []*ControllerImportComments
+
+	for _, pi := range pis {
+		importComments = append(importComments, &ControllerImportComments{
+			ImportPath:  pi.importPath,
+			ImportAlias: pi.importAlias,
+		})
+	}
+
+	return importComments
+}
+
+func buildFilters(pfs []parsedFilter) []*ControllerFilterComments {
+	var filterComments []*ControllerFilterComments
+
+	for _, pf := range pfs {
+		var (
+			returnOnOutput bool
+			resetParams    bool
+		)
+
+		if len(pf.params) >= 1 {
+			returnOnOutput = pf.params[0]
+		}
+
+		if len(pf.params) >= 2 {
+			resetParams = pf.params[1]
+		}
+
+		filterComments = append(filterComments, &ControllerFilterComments{
+			Filter:         pf.filter,
+			Pattern:        pf.pattern,
+			Pos:            pf.pos,
+			ReturnOnOutput: returnOnOutput,
+			ResetParams:    resetParams,
+		})
+	}
+
+	return filterComments
 }
 
 func buildMethodParams(funcParams []*ast.Field, pc *parsedComment) []*param.MethodParam {
@@ -177,26 +252,15 @@ func paramInPath(name, route string) bool {
 
 var routeRegex = regexp.MustCompile(`@router\s+(\S+)(?:\s+\[(\S+)\])?`)
 
-func parseComment(lines []*ast.Comment) (pc *parsedComment, err error) {
-	pc = &parsedComment{}
+func parseComment(lines []*ast.Comment) (pcs []*parsedComment, err error) {
+	pcs = []*parsedComment{}
+	params := map[string]parsedParam{}
+	filters := []parsedFilter{}
+	imports := []parsedImport{}
+
 	for _, c := range lines {
 		t := strings.TrimSpace(strings.TrimLeft(c.Text, "//"))
-		if strings.HasPrefix(t, "@router") {
-			matches := routeRegex.FindStringSubmatch(t)
-			if len(matches) == 3 {
-				pc.routerPath = matches[1]
-				methods := matches[2]
-				if methods == "" {
-					pc.methods = []string{"get"}
-					//pc.hasGet = true
-				} else {
-					pc.methods = strings.Split(methods, ",")
-					//pc.hasGet = strings.Contains(methods, "get")
-				}
-			} else {
-				return nil, errors.New("Router information is missing")
-			}
-		} else if strings.HasPrefix(t, "@Param") {
+		if strings.HasPrefix(t, "@Param") {
 			pv := getparams(strings.TrimSpace(strings.TrimLeft(t, "@Param")))
 			if len(pv) < 4 {
 				logs.Error("Invalid @Param format. Needs at least 4 parameters")
@@ -217,17 +281,99 @@ func parseComment(lines []*ast.Comment) (pc *parsedComment, err error) {
 				p.defValue = pv[3]
 				p.required, _ = strconv.ParseBool(pv[4])
 			}
-			if pc.params == nil {
-				pc.params = map[string]parsedParam{}
+			params[funcParamName] = p
+		}
+	}
+
+	for _, c := range lines {
+		t := strings.TrimSpace(strings.TrimLeft(c.Text, "//"))
+		if strings.HasPrefix(t, "@Import") {
+			iv := getparams(strings.TrimSpace(strings.TrimLeft(t, "@Import")))
+			if len(iv) == 0 || len(iv) > 2 {
+				logs.Error("Invalid @Import format. Only accepts 1 or 2 parameters")
+				continue
 			}
-			pc.params[funcParamName] = p
+
+			p := parsedImport{}
+			p.importPath = iv[0]
+
+			if len(iv) == 2 {
+				p.importAlias = iv[1]
+			}
+
+			imports = append(imports, p)
+		}
+	}
+
+filterLoop:
+	for _, c := range lines {
+		t := strings.TrimSpace(strings.TrimLeft(c.Text, "//"))
+		if strings.HasPrefix(t, "@Filter") {
+			fv := getparams(strings.TrimSpace(strings.TrimLeft(t, "@Filter")))
+			if len(fv) < 3 {
+				logs.Error("Invalid @Filter format. Needs at least 3 parameters")
+				continue filterLoop
+			}
+
+			p := parsedFilter{}
+			p.pattern = fv[0]
+			posName := fv[1]
+			if pos, exists := routerHooks[posName]; exists {
+				p.pos = pos
+			} else {
+				logs.Error("Invalid @Filter pos: ", posName)
+				continue filterLoop
+			}
+
+			p.filter = fv[2]
+			fvParams := fv[3:]
+			for _, fvParam := range fvParams {
+				switch fvParam {
+				case "true":
+					p.params = append(p.params, true)
+				case "false":
+					p.params = append(p.params, false)
+				default:
+					logs.Error("Invalid @Filter param: ", fvParam)
+					continue filterLoop
+				}
+			}
+
+			filters = append(filters, p)
+		}
+	}
+
+	for _, c := range lines {
+		var pc = &parsedComment{}
+		pc.params = params
+		pc.filters = filters
+		pc.imports = imports
+
+		t := strings.TrimSpace(strings.TrimLeft(c.Text, "//"))
+		if strings.HasPrefix(t, "@router") {
+			t := strings.TrimSpace(strings.TrimLeft(c.Text, "//"))
+			matches := routeRegex.FindStringSubmatch(t)
+			if len(matches) == 3 {
+				pc.routerPath = matches[1]
+				methods := matches[2]
+				if methods == "" {
+					pc.methods = []string{"get"}
+					//pc.hasGet = true
+				} else {
+					pc.methods = strings.Split(methods, ",")
+					//pc.hasGet = strings.Contains(methods, "get")
+				}
+				pcs = append(pcs, pc)
+			} else {
+				return nil, errors.New("Router information is missing")
+			}
 		}
 	}
 	return
 }
 
 // direct copy from bee\g_docs.go
-// analisys params return []string
+// analysis params return []string
 // @Param	query		form	 string	true		"The email for login"
 // [query form string true "The email for login"]
 func getparams(str string) []string {
@@ -266,8 +412,9 @@ func genRouterCode(pkgRealpath string) {
 	os.Mkdir(getRouterDir(pkgRealpath), 0755)
 	logs.Info("generate router from comments")
 	var (
-		globalinfo string
-		sortKey    []string
+		globalinfo   string
+		globalimport string
+		sortKey      []string
 	)
 	for k := range genInfoList {
 		sortKey = append(sortKey, k)
@@ -285,6 +432,7 @@ func genRouterCode(pkgRealpath string) {
 				}
 				allmethod = strings.TrimRight(allmethod, ",") + "}"
 			}
+
 			params := "nil"
 			if len(c.Params) > 0 {
 				params = "[]map[string]string{"
@@ -295,6 +443,7 @@ func genRouterCode(pkgRealpath string) {
 				}
 				params = strings.TrimRight(params, ",") + "}"
 			}
+
 			methodParams := "param.Make("
 			if len(c.MethodParams) > 0 {
 				lines := make([]string, 0, len(c.MethodParams))
@@ -306,24 +455,66 @@ func genRouterCode(pkgRealpath string) {
 					",\n			"
 			}
 			methodParams += ")"
+
+			imports := ""
+			if len(c.ImportComments) > 0 {
+				for _, i := range c.ImportComments {
+					if i.ImportAlias != "" {
+						imports += fmt.Sprintf(`
+	%s "%s"`, i.ImportAlias, i.ImportPath)
+					} else {
+						imports += fmt.Sprintf(`
+	"%s"`, i.ImportPath)
+					}
+				}
+			}
+
+			filters := ""
+			if len(c.FilterComments) > 0 {
+				for _, f := range c.FilterComments {
+					filters += fmt.Sprintf(`                &beego.ControllerFilter{
+                    Pattern: "%s",
+                    Pos: %s,
+                    Filter: %s,
+                    ReturnOnOutput: %v,
+                    ResetParams: %v,
+                },`, f.Pattern, routerHooksMapping[f.Pos], f.Filter, f.ReturnOnOutput, f.ResetParams)
+				}
+			}
+
+			if filters == "" {
+				filters = "nil"
+			} else {
+				filters = fmt.Sprintf(`[]*beego.ControllerFilter{
+%s
+            }`, filters)
+			}
+
+			globalimport = imports
+
 			globalinfo = globalinfo + `
-	beego.GlobalControllerRouter["` + k + `"] = append(beego.GlobalControllerRouter["` + k + `"],
-		beego.ControllerComments{
-			Method: "` + strings.TrimSpace(c.Method) + `",
-			` + "Router: `" + c.Router + "`" + `,
-			AllowHTTPMethods: ` + allmethod + `,
-			MethodParams: ` + methodParams + `,
-			Params: ` + params + `})
+    beego.GlobalControllerRouter["` + k + `"] = append(beego.GlobalControllerRouter["` + k + `"],
+        beego.ControllerComments{
+            Method: "` + strings.TrimSpace(c.Method) + `",
+            ` + "Router: `" + c.Router + "`" + `,
+            AllowHTTPMethods: ` + allmethod + `,
+            MethodParams: ` + methodParams + `,
+            Filters: ` + filters + `,
+            Params: ` + params + `})
 `
 		}
 	}
+
 	if globalinfo != "" {
 		f, err := os.Create(filepath.Join(getRouterDir(pkgRealpath), commentFilename))
 		if err != nil {
 			panic(err)
 		}
 		defer f.Close()
-		f.WriteString(strings.Replace(globalRouterTemplate, "{{.globalinfo}}", globalinfo, -1))
+
+		content := strings.Replace(globalRouterTemplate, "{{.globalinfo}}", globalinfo, -1)
+		content = strings.Replace(content, "{{.globalimport}}", globalimport, -1)
+		f.WriteString(content)
 	}
 }
 

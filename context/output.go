@@ -30,6 +30,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	yaml "gopkg.in/yaml.v2"
 )
 
 // BeegoOutput does work for sending response header.
@@ -182,8 +184,8 @@ func errorRenderer(err error) Renderer {
 }
 
 // JSON writes json to response body.
-// if coding is true, it converts utf-8 to \u0000 type.
-func (output *BeegoOutput) JSON(data interface{}, hasIndent bool, coding bool) error {
+// if encoding is true, it converts utf-8 to \u0000 type.
+func (output *BeegoOutput) JSON(data interface{}, hasIndent bool, encoding bool) error {
 	output.Header("Content-Type", "application/json; charset=utf-8")
 	var content []byte
 	var err error
@@ -196,8 +198,21 @@ func (output *BeegoOutput) JSON(data interface{}, hasIndent bool, coding bool) e
 		http.Error(output.Context.ResponseWriter, err.Error(), http.StatusInternalServerError)
 		return err
 	}
-	if coding {
+	if encoding {
 		content = []byte(stringsToJSON(string(content)))
+	}
+	return output.Body(content)
+}
+
+// YAML writes yaml to response body.
+func (output *BeegoOutput) YAML(data interface{}) error {
+	output.Header("Content-Type", "application/x-yaml; charset=utf-8")
+	var content []byte
+	var err error
+	content, err = yaml.Marshal(data)
+	if err != nil {
+		http.Error(output.Context.ResponseWriter, err.Error(), http.StatusInternalServerError)
+		return err
 	}
 	return output.Body(content)
 }
@@ -245,6 +260,19 @@ func (output *BeegoOutput) XML(data interface{}, hasIndent bool) error {
 	return output.Body(content)
 }
 
+// ServeFormatted serve YAML, XML OR JSON, depending on the value of the Accept header
+func (output *BeegoOutput) ServeFormatted(data interface{}, hasIndent bool, hasEncode ...bool) {
+	accept := output.Context.Input.Header("Accept")
+	switch accept {
+	case ApplicationYAML:
+		output.YAML(data)
+	case ApplicationXML, TextXML:
+		output.XML(data, hasIndent)
+	default:
+		output.JSON(data, hasIndent, len(hasEncode) > 0 && hasEncode[0])
+	}
+}
+
 // Download forces response for download file.
 // it prepares the download response header automatically.
 func (output *BeegoOutput) Download(file string, filename ...string) {
@@ -260,7 +288,20 @@ func (output *BeegoOutput) Download(file string, filename ...string) {
 	} else {
 		fName = filepath.Base(file)
 	}
-	output.Header("Content-Disposition", "attachment; filename="+url.QueryEscape(fName))
+	//https://tools.ietf.org/html/rfc6266#section-4.3
+	fn := url.PathEscape(fName)
+	if fName == fn {
+		fn = "filename=" + fn
+	} else {
+		/**
+		  The parameters "filename" and "filename*" differ only in that
+		  "filename*" uses the encoding defined in [RFC5987], allowing the use
+		  of characters not present in the ISO-8859-1 character set
+		  ([ISO-8859-1]).
+		*/
+		fn = "filename=" + fName + "; filename*=utf-8''" + fn
+	}
+	output.Header("Content-Disposition", "attachment; "+fn)
 	output.Header("Content-Description", "File Transfer")
 	output.Header("Content-Type", "application/octet-stream")
 	output.Header("Content-Transfer-Encoding", "binary")
@@ -325,13 +366,13 @@ func (output *BeegoOutput) IsForbidden() bool {
 }
 
 // IsNotFound returns boolean of this request is not found.
-// HTTP 404 means forbidden.
+// HTTP 404 means not found.
 func (output *BeegoOutput) IsNotFound() bool {
 	return output.Status == 404
 }
 
 // IsClientError returns boolean of this request client sends error data.
-// HTTP 4xx means forbidden.
+// HTTP 4xx means client error.
 func (output *BeegoOutput) IsClientError() bool {
 	return output.Status >= 400 && output.Status < 500
 }
@@ -350,6 +391,11 @@ func stringsToJSON(str string) string {
 			jsons.WriteRune(r)
 		} else {
 			jsons.WriteString("\\u")
+			if rint < 0x100 {
+				jsons.WriteString("00")
+			} else if rint < 0x1000 {
+				jsons.WriteString("0")
+			}
 			jsons.WriteString(strconv.FormatInt(int64(rint), 16))
 		}
 	}

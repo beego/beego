@@ -26,8 +26,25 @@ func TestNewBeeMap(t *testing.T) {
 }
 
 func TestSet(t *testing.T) {
+	safeMap = NewBeeMap()
 	if ok := safeMap.Set("astaxie", 1); !ok {
 		t.Error("expected", true, "got", false)
+	}
+}
+
+func TestReSet(t *testing.T) {
+	safeMap := NewBeeMap()
+	if ok := safeMap.Set("astaxie", 1); !ok {
+		t.Error("expected", true, "got", false)
+	}
+	// set diff value
+	if ok := safeMap.Set("astaxie", -1); !ok {
+		t.Error("expected", true, "got", false)
+	}
+
+	// set same value
+	if ok := safeMap.Set("astaxie", -1); ok {
+		t.Error("expected", false, "got", true)
 	}
 }
 
@@ -47,6 +64,21 @@ func TestDelete(t *testing.T) {
 	safeMap.Delete("astaxie")
 	if exists := safeMap.Check("astaxie"); exists {
 		t.Error("expected element to be deleted")
+	}
+}
+
+func TestItems(t *testing.T) {
+	safeMap := NewBeeMap()
+	safeMap.Set("astaxie", "hello")
+	for k, v := range safeMap.Items() {
+		key := k.(string)
+		value := v.(string)
+		if key != "astaxie" {
+			t.Error("expected the key should be astaxie")
+		}
+		if value != "hello" {
+			t.Error("expected the value should be hello")
+		}
 	}
 }
 

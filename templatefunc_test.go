@@ -94,7 +94,7 @@ func TestCompareRelated(t *testing.T) {
 }
 
 func TestHtmlquote(t *testing.T) {
-	h := `&lt;&#39;&nbsp;&rdquo;&ldquo;&amp;&quot;&gt;`
+	h := `&lt;&#39;&nbsp;&rdquo;&ldquo;&amp;&#34;&gt;`
 	s := `<' ”“&">`
 	if Htmlquote(s) != h {
 		t.Error("should be equal")
@@ -102,8 +102,8 @@ func TestHtmlquote(t *testing.T) {
 }
 
 func TestHtmlunquote(t *testing.T) {
-	h := `&lt;&#39;&nbsp;&rdquo;&ldquo;&amp;&quot;&gt;`
-	s := `<' ”“&">`
+	h := `&lt;&#39;&nbsp;&rdquo;&ldquo;&amp;&#34;&gt;`
+	s := `<' ”“&">`
 	if Htmlunquote(h) != s {
 		t.Error("should be equal")
 	}
@@ -111,7 +111,7 @@ func TestHtmlunquote(t *testing.T) {
 
 func TestParseForm(t *testing.T) {
 	type ExtendInfo struct {
-		Hobby string `form:"hobby"`
+		Hobby []string `form:"hobby"`
 		Memo  string
 	}
 
@@ -146,7 +146,7 @@ func TestParseForm(t *testing.T) {
 		"date":         []string{"2014-11-12"},
 		"organization": []string{"beego"},
 		"title":        []string{"CXO"},
-		"hobby":        []string{"Basketball"},
+		"hobby":        []string{"", "Basketball", "Football"},
 		"memo":         []string{"nothing"},
 	}
 	if err := ParseForm(form, u); err == nil {
@@ -186,8 +186,14 @@ func TestParseForm(t *testing.T) {
 	if u.Title != "CXO" {
 		t.Errorf("Title should equal `CXO`, but got `%v`", u.Title)
 	}
-	if u.Hobby != "Basketball" {
-		t.Errorf("Hobby should equal `Basketball`, but got `%v`", u.Hobby)
+	if u.Hobby[0] != "" {
+		t.Errorf("Hobby should equal ``, but got `%v`", u.Hobby[0])
+	}
+	if u.Hobby[1] != "Basketball" {
+		t.Errorf("Hobby should equal `Basketball`, but got `%v`", u.Hobby[1])
+	}
+	if u.Hobby[2] != "Football" {
+		t.Errorf("Hobby should equal `Football`, but got `%v`", u.Hobby[2])
 	}
 	if len(u.Memo) != 0 {
 		t.Errorf("Memo's length should equal 0 but got %v", len(u.Memo))
@@ -197,7 +203,6 @@ func TestParseForm(t *testing.T) {
 func TestRenderForm(t *testing.T) {
 	type user struct {
 		ID      int         `form:"-"`
-		tag     string      `form:"tag"`
 		Name    interface{} `form:"username"`
 		Age     int         `form:"age,text,年龄："`
 		Sex     string
@@ -329,7 +334,7 @@ func TestMapGet(t *testing.T) {
 	}
 
 	// test 2 level map
-	m2 := map[string]interface{}{
+	m2 := M{
 		"1": map[string]float64{
 			"2": 3.5,
 		},
@@ -344,11 +349,11 @@ func TestMapGet(t *testing.T) {
 	}
 
 	// test 5 level map
-	m5 := map[string]interface{}{
-		"1": map[string]interface{}{
-			"2": map[string]interface{}{
-				"3": map[string]interface{}{
-					"4": map[string]interface{}{
+	m5 := M{
+		"1": M{
+			"2": M{
+				"3": M{
+					"4": M{
 						"5": 1.2,
 					},
 				},

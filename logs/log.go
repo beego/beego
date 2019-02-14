@@ -309,6 +309,11 @@ func (bl *BeeLogger) SetLevel(l int) {
 	bl.level = l
 }
 
+// GetLevel Get Current log message level.
+func (bl *BeeLogger) GetLevel() int {
+	return bl.level
+}
+
 // SetLogFuncCallDepth set log funcCallDepth
 func (bl *BeeLogger) SetLogFuncCallDepth(d int) {
 	bl.loggerFuncCallDepth = d

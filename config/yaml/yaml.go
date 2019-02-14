@@ -119,7 +119,7 @@ func parseYML(buf []byte) (cnf map[string]interface{}, err error) {
 // ConfigContainer A Config represents the yaml configuration.
 type ConfigContainer struct {
 	data map[string]interface{}
-	sync.Mutex
+	sync.RWMutex
 }
 
 // Bool returns the boolean value for a given key.
@@ -154,7 +154,7 @@ func (c *ConfigContainer) Int(key string) (int, error) {
 }
 
 // DefaultInt returns the integer value for a given key.
-// if err != nil return defaltval
+// if err != nil return defaultval
 func (c *ConfigContainer) DefaultInt(key string, defaultval int) int {
 	v, err := c.Int(key)
 	if err != nil {
@@ -174,7 +174,7 @@ func (c *ConfigContainer) Int64(key string) (int64, error) {
 }
 
 // DefaultInt64 returns the int64 value for a given key.
-// if err != nil return defaltval
+// if err != nil return defaultval
 func (c *ConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
 	v, err := c.Int64(key)
 	if err != nil {
@@ -198,7 +198,7 @@ func (c *ConfigContainer) Float(key string) (float64, error) {
 }
 
 // DefaultFloat returns the float64 value for a given key.
-// if err != nil return defaltval
+// if err != nil return defaultval
 func (c *ConfigContainer) DefaultFloat(key string, defaultval float64) float64 {
 	v, err := c.Float(key)
 	if err != nil {
@@ -218,7 +218,7 @@ func (c *ConfigContainer) String(key string) string {
 }
 
 // DefaultString returns the string value for a given key.
-// if err != nil return defaltval
+// if err != nil return defaultval
 func (c *ConfigContainer) DefaultString(key string, defaultval string) string {
 	v := c.String(key)
 	if v == "" {
@@ -237,7 +237,7 @@ func (c *ConfigContainer) Strings(key string) []string {
 }
 
 // DefaultStrings returns the []string value for a given key.
-// if err != nil return defaltval
+// if err != nil return defaultval
 func (c *ConfigContainer) DefaultStrings(key string, defaultval []string) []string {
 	v := c.Strings(key)
 	if v == nil {
@@ -285,9 +285,28 @@ func (c *ConfigContainer) getData(key string) (interface{}, error) {
 	if len(key) == 0 {
 		return nil, errors.New("key is empty")
 	}
+	c.RLock()
+	defer c.RUnlock()
 
-	if v, ok := c.data[key]; ok {
-		return v, nil
+	keys := strings.Split(key, ".")
+	tmpData := c.data
+	for idx, k := range keys {
+		if v, ok := tmpData[k]; ok {
+			switch v.(type) {
+			case map[string]interface{}:
+				{
+					tmpData = v.(map[string]interface{})
+					if idx == len(keys) - 1 {
+						return tmpData, nil
+					}
+				}
+			default:
+				{
+					return v, nil
+				}
+
+			}
+		}
 	}
 	return nil, fmt.Errorf("not exist key %q", key)
 }

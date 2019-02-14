@@ -7,7 +7,7 @@ import (
 // MethodParamOption defines a func which apply options on a MethodParam
 type MethodParamOption func(*MethodParam)
 
-// IsRequired indicates that this param is required and can not be ommited from the http request
+// IsRequired indicates that this param is required and can not be omitted from the http request
 var IsRequired MethodParamOption = func(p *MethodParam) {
 	p.required = true
 }

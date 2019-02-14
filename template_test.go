@@ -16,6 +16,9 @@ package beego
 
 import (
 	"bytes"
+	"github.com/astaxie/beego/testdata"
+	"github.com/elazarl/go-bindata-assetfs"
+	"net/http"
 	"os"
 	"path/filepath"
 	"testing"
@@ -255,4 +258,59 @@ func TestTemplateLayout(t *testing.T) {
 		os.RemoveAll(filepath.Join(dir, name))
 	}
 	os.RemoveAll(dir)
+}
+
+type TestingFileSystem struct {
+	assetfs *assetfs.AssetFS
+}
+
+func (d TestingFileSystem) Open(name string) (http.File, error) {
+	return d.assetfs.Open(name)
+}
+
+var outputBinData = `<!DOCTYPE html>
+<html>
+  <head>
+    <title>beego welcome template</title>
+  </head>
+  <body>
+
+	
+<h1>Hello, blocks!</h1>
+
+	
+<h1>Hello, astaxie!</h1>
+
+	
+
+	<h2>Hello</h2>
+	<p> This is SomeVar: val</p>
+  </body>
+</html>
+`
+
+func TestFsBinData(t *testing.T) {
+	SetTemplateFSFunc(func() http.FileSystem {
+		return TestingFileSystem{&assetfs.AssetFS{Asset: testdata.Asset, AssetDir: testdata.AssetDir, AssetInfo: testdata.AssetInfo}}
+	})
+	dir := "views"
+	if err := AddViewPath("views"); err != nil {
+		t.Fatal(err)
+	}
+	beeTemplates := beeViewPathTemplates[dir]
+	if len(beeTemplates) != 3 {
+		t.Fatalf("should be 3 but got %v", len(beeTemplates))
+	}
+	if err := beeTemplates["index.tpl"].ExecuteTemplate(os.Stdout, "index.tpl", map[string]string{"Title": "Hello", "SomeVar": "val"}); err != nil {
+		t.Fatal(err)
+	}
+	out := bytes.NewBufferString("")
+	if err := beeTemplates["index.tpl"].ExecuteTemplate(out, "index.tpl", map[string]string{"Title": "Hello", "SomeVar": "val"}); err != nil {
+		t.Fatal(err)
+	}
+
+	if out.String() != outputBinData {
+		t.Log(out.String())
+		t.Fatal("Compare failed")
+	}
 }

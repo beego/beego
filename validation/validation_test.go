@@ -268,6 +268,18 @@ func TestMobile(t *testing.T) {
 	if !valid.Mobile("+8614700008888", "mobile").Ok {
 		t.Error("\"+8614700008888\" is a valid mobile phone number should be true")
 	}
+	if !valid.Mobile("17300008888", "mobile").Ok {
+		t.Error("\"17300008888\" is a valid mobile phone number should be true")
+	}
+	if !valid.Mobile("+8617100008888", "mobile").Ok {
+		t.Error("\"+8617100008888\" is a valid mobile phone number should be true")
+	}
+	if !valid.Mobile("8617500008888", "mobile").Ok {
+		t.Error("\"8617500008888\" is a valid mobile phone number should be true")
+	}
+	if valid.Mobile("8617400008888", "mobile").Ok {
+		t.Error("\"8617400008888\" is a valid mobile phone number should be false")
+	}
 }
 
 func TestTel(t *testing.T) {
@@ -441,4 +453,121 @@ func TestSkipValid(t *testing.T) {
 	if !b {
 		t.Fatal("validation should be passed")
 	}
+}
+
+func TestPointer(t *testing.T) {
+	type User struct {
+		ID int
+
+		Email    *string `valid:"Email"`
+		ReqEmail *string `valid:"Required;Email"`
+	}
+
+	u := User{
+		ReqEmail: nil,
+		Email:    nil,
+	}
+
+	valid := Validation{}
+	b, err := valid.Valid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b {
+		t.Fatal("validation should not be passed")
+	}
+
+	validEmail := "a@a.com"
+	u = User{
+		ReqEmail: &validEmail,
+		Email:    nil,
+	}
+
+	valid = Validation{RequiredFirst: true}
+	b, err = valid.Valid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !b {
+		t.Fatal("validation should be passed")
+	}
+
+	u = User{
+		ReqEmail: &validEmail,
+		Email:    nil,
+	}
+
+	valid = Validation{}
+	b, err = valid.Valid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b {
+		t.Fatal("validation should not be passed")
+	}
+
+	invalidEmail := "a@a"
+	u = User{
+		ReqEmail: &validEmail,
+		Email:    &invalidEmail,
+	}
+
+	valid = Validation{RequiredFirst: true}
+	b, err = valid.Valid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b {
+		t.Fatal("validation should not be passed")
+	}
+
+	u = User{
+		ReqEmail: &validEmail,
+		Email:    &invalidEmail,
+	}
+
+	valid = Validation{}
+	b, err = valid.Valid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b {
+		t.Fatal("validation should not be passed")
+	}
+}
+
+func TestCanSkipAlso(t *testing.T) {
+	type User struct {
+		ID int
+
+		Email      string `valid:"Email"`
+		ReqEmail   string `valid:"Required;Email"`
+		MatchRange int    `valid:"Range(10, 20)"`
+	}
+
+	u := User{
+		ReqEmail:   "a@a.com",
+		Email:      "",
+		MatchRange: 0,
+	}
+
+	valid := Validation{RequiredFirst: true}
+	b, err := valid.Valid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b {
+		t.Fatal("validation should not be passed")
+	}
+
+	valid = Validation{RequiredFirst: true}
+	valid.CanSkipAlso("Range")
+	b, err = valid.Valid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !b {
+		t.Fatal("validation should be passed")
+	}
+
 }

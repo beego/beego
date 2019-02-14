@@ -216,7 +216,7 @@ func TestJson(t *testing.T) {
 		t.Error("unknown keys should return an error when expecting a Bool")
 	}
 
-	if !jsonconf.DefaultBool("unknow", true) {
+	if !jsonconf.DefaultBool("unknown", true) {
 		t.Error("unknown keys with default value wrong")
 	}
 }

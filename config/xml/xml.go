@@ -102,7 +102,7 @@ func (c *ConfigContainer) Int(key string) (int, error) {
 }
 
 // DefaultInt returns the integer value for a given key.
-// if err != nil return defaltval
+// if err != nil return defaultval
 func (c *ConfigContainer) DefaultInt(key string, defaultval int) int {
 	v, err := c.Int(key)
 	if err != nil {
@@ -117,7 +117,7 @@ func (c *ConfigContainer) Int64(key string) (int64, error) {
 }
 
 // DefaultInt64 returns the int64 value for a given key.
-// if err != nil return defaltval
+// if err != nil return defaultval
 func (c *ConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
 	v, err := c.Int64(key)
 	if err != nil {
@@ -133,7 +133,7 @@ func (c *ConfigContainer) Float(key string) (float64, error) {
 }
 
 // DefaultFloat returns the float64 value for a given key.
-// if err != nil return defaltval
+// if err != nil return defaultval
 func (c *ConfigContainer) DefaultFloat(key string, defaultval float64) float64 {
 	v, err := c.Float(key)
 	if err != nil {
@@ -151,7 +151,7 @@ func (c *ConfigContainer) String(key string) string {
 }
 
 // DefaultString returns the string value for a given key.
-// if err != nil return defaltval
+// if err != nil return defaultval
 func (c *ConfigContainer) DefaultString(key string, defaultval string) string {
 	v := c.String(key)
 	if v == "" {
@@ -170,7 +170,7 @@ func (c *ConfigContainer) Strings(key string) []string {
 }
 
 // DefaultStrings returns the []string value for a given key.
-// if err != nil return defaltval
+// if err != nil return defaultval
 func (c *ConfigContainer) DefaultStrings(key string, defaultval []string) []string {
 	v := c.Strings(key)
 	if v == nil {

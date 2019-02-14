@@ -12,10 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// +build go1.8
+
 package orm
 
 import (
 	"bytes"
+	"context"
 	"database/sql"
 	"fmt"
 	"io/ioutil"
@@ -452,9 +455,18 @@ func TestNullDataTypes(t *testing.T) {
 	throwFail(t, AssertIs(*d.Float32Ptr, float32Ptr))
 	throwFail(t, AssertIs(*d.Float64Ptr, float64Ptr))
 	throwFail(t, AssertIs(*d.DecimalPtr, decimalPtr))
-	throwFail(t, AssertIs((*d.TimePtr).Format(testTime), timePtr.Format(testTime)))
-	throwFail(t, AssertIs((*d.DatePtr).Format(testDate), datePtr.Format(testDate)))
-	throwFail(t, AssertIs((*d.DateTimePtr).Format(testDateTime), dateTimePtr.Format(testDateTime)))
+	throwFail(t, AssertIs((*d.TimePtr).UTC().Format(testTime), timePtr.UTC().Format(testTime)))
+	throwFail(t, AssertIs((*d.DatePtr).UTC().Format(testDate), datePtr.UTC().Format(testDate)))
+	throwFail(t, AssertIs((*d.DateTimePtr).UTC().Format(testDateTime), dateTimePtr.UTC().Format(testDateTime)))
+
+	// test support for pointer fields using RawSeter.QueryRows()
+	var dnList []*DataNull
+	Q := dDbBaser.TableQuote()
+	num, err = dORM.Raw(fmt.Sprintf("SELECT * FROM %sdata_null%s where id=?", Q, Q), 3).QueryRows(&dnList)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 1))
+	equal := reflect.DeepEqual(*dnList[0], d)
+	throwFailNow(t, AssertIs(equal, true))
 }
 
 func TestDataCustomTypes(t *testing.T) {
@@ -896,6 +908,18 @@ func TestOperators(t *testing.T) {
 	num, err = qs.Filter("id__between", []int{2, 3}).Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 2))
+
+	num, err = qs.FilterRaw("user_name", "= 'slene'").Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	num, err = qs.FilterRaw("status", "IN (1, 2)").Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 2))
+
+	num, err = qs.FilterRaw("profile_id", "IN (SELECT id FROM user_profile WHERE age=30)").Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
 }
 
 func TestSetCond(t *testing.T) {
@@ -919,6 +943,11 @@ func TestSetCond(t *testing.T) {
 
 	cond4 := cond.And("user_name", "slene").OrNotCond(cond.And("user_name", "slene"))
 	num, err = qs.SetCond(cond4).Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 3))
+
+	cond5 := cond.Raw("user_name", "= 'slene'").OrNotCond(cond.And("user_name", "slene"))
+	num, err = qs.SetCond(cond5).Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 3))
 }
@@ -1659,6 +1688,31 @@ func TestRawQueryRow(t *testing.T) {
 	throwFail(t, AssertIs(uid, 4))
 	throwFail(t, AssertIs(*status, 3))
 	throwFail(t, AssertIs(pid, nil))
+
+	// test for sql.Null* fields
+	nData := &DataNull{
+		NullString:  sql.NullString{String: "test sql.null", Valid: true},
+		NullBool:    sql.NullBool{Bool: true, Valid: true},
+		NullInt64:   sql.NullInt64{Int64: 42, Valid: true},
+		NullFloat64: sql.NullFloat64{Float64: 42.42, Valid: true},
+	}
+	newId, err := dORM.Insert(nData)
+	throwFailNow(t, err)
+
+	var nd *DataNull
+	query = fmt.Sprintf("SELECT * FROM %sdata_null%s where id=?", Q, Q)
+	err = dORM.Raw(query, newId).QueryRow(&nd)
+	throwFailNow(t, err)
+
+	throwFailNow(t, AssertNot(nd, nil))
+	throwFail(t, AssertIs(nd.NullBool.Valid, true))
+	throwFail(t, AssertIs(nd.NullBool.Bool, true))
+	throwFail(t, AssertIs(nd.NullString.Valid, true))
+	throwFail(t, AssertIs(nd.NullString.String, "test sql.null"))
+	throwFail(t, AssertIs(nd.NullInt64.Valid, true))
+	throwFail(t, AssertIs(nd.NullInt64.Int64, 42))
+	throwFail(t, AssertIs(nd.NullFloat64.Valid, true))
+	throwFail(t, AssertIs(nd.NullFloat64.Float64, 42.42))
 }
 
 // user_profile table
@@ -1751,6 +1805,32 @@ func TestQueryRows(t *testing.T) {
 	throwFailNow(t, AssertIs(l[1].UserName, "astaxie"))
 	throwFailNow(t, AssertIs(l[1].Age, 30))
 
+	// test for sql.Null* fields
+	nData := &DataNull{
+		NullString:  sql.NullString{String: "test sql.null", Valid: true},
+		NullBool:    sql.NullBool{Bool: true, Valid: true},
+		NullInt64:   sql.NullInt64{Int64: 42, Valid: true},
+		NullFloat64: sql.NullFloat64{Float64: 42.42, Valid: true},
+	}
+	newId, err := dORM.Insert(nData)
+	throwFailNow(t, err)
+
+	var nDataList []*DataNull
+	query = fmt.Sprintf("SELECT * FROM %sdata_null%s where id=?", Q, Q)
+	num, err = dORM.Raw(query, newId).QueryRows(&nDataList)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 1))
+
+	nd := nDataList[0]
+	throwFailNow(t, AssertNot(nd, nil))
+	throwFail(t, AssertIs(nd.NullBool.Valid, true))
+	throwFail(t, AssertIs(nd.NullBool.Bool, true))
+	throwFail(t, AssertIs(nd.NullString.Valid, true))
+	throwFail(t, AssertIs(nd.NullString.String, "test sql.null"))
+	throwFail(t, AssertIs(nd.NullInt64.Valid, true))
+	throwFail(t, AssertIs(nd.NullInt64.Int64, 42))
+	throwFail(t, AssertIs(nd.NullFloat64.Valid, true))
+	throwFail(t, AssertIs(nd.NullFloat64.Float64, 42.42))
 }
 
 func TestRawValues(t *testing.T) {
@@ -1988,6 +2068,66 @@ func TestTransaction(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
 
+}
+
+func TestTransactionIsolationLevel(t *testing.T) {
+	// this test worked when database support transaction isolation level
+	if IsSqlite {
+		return
+	}
+
+	o1 := NewOrm()
+	o2 := NewOrm()
+
+	// start two transaction with isolation level repeatable read
+	err := o1.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
+	throwFail(t, err)
+	err = o2.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
+	throwFail(t, err)
+
+	// o1 insert tag
+	var tag Tag
+	tag.Name = "test-transaction"
+	id, err := o1.Insert(&tag)
+	throwFail(t, err)
+	throwFail(t, AssertIs(id > 0, true))
+
+	// o2 query tag table, no result
+	num, err := o2.QueryTable("tag").Filter("name", "test-transaction").Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 0))
+
+	// o1 commit
+	o1.Commit()
+
+	// o2 query tag table, still no result
+	num, err = o2.QueryTable("tag").Filter("name", "test-transaction").Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 0))
+
+	// o2 commit and query tag table, get the result
+	o2.Commit()
+	num, err = o2.QueryTable("tag").Filter("name", "test-transaction").Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	num, err = o1.QueryTable("tag").Filter("name", "test-transaction").Delete()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+}
+
+func TestBeginTxWithContextCanceled(t *testing.T) {
+	o := NewOrm()
+	ctx, cancel := context.WithCancel(context.Background())
+	o.BeginTx(ctx, nil)
+	id, err := o.Insert(&Tag{Name: "test-context"})
+	throwFail(t, err)
+	throwFail(t, AssertIs(id > 0, true))
+
+	// cancel the context before commit to make it error
+	cancel()
+	err = o.Commit()
+	throwFail(t, AssertIs(err, context.Canceled))
 }
 
 func TestReadOrCreate(t *testing.T) {
@@ -2260,6 +2400,7 @@ func TestIgnoreCaseTag(t *testing.T) {
 	throwFail(t, AssertIs(info.fields.GetByName("Name02").column, "Name"))
 	throwFail(t, AssertIs(info.fields.GetByName("Name03").column, "name"))
 }
+
 func TestInsertOrUpdate(t *testing.T) {
 	RegisterModel(new(User))
 	user := User{UserName: "unique_username133", Status: 1, Password: "o"}
@@ -2296,6 +2437,11 @@ func TestInsertOrUpdate(t *testing.T) {
 		dORM.Read(&test, "user_name")
 		throwFailNow(t, AssertIs(user2.Status, test.Status))
 		throwFailNow(t, AssertIs(user2.Password, strings.TrimSpace(test.Password)))
+	}
+
+	//postgres ON CONFLICT DO UPDATE SET can`t use colu=colu+values
+	if IsPostgres {
+		return
 	}
 	//test3 +
 	_, err = dORM.InsertOrUpdate(&user2, "user_name", "status=status+1")
