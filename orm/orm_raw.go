@@ -191,6 +191,14 @@ func (o *rawSet) setFieldValue(ind reflect.Value, value interface{}) {
 				ind.Set(reflect.Indirect(reflect.ValueOf(sc)))
 			}
 		}
+
+	case reflect.Ptr:
+		if value == nil {
+			ind.Set(reflect.Zero(ind.Type()))
+			break
+		}
+		ind.Set(reflect.New(ind.Type().Elem()))
+		o.setFieldValue(reflect.Indirect(ind), value)
 	}
 }
 

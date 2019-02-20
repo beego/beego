@@ -458,6 +458,15 @@ func TestNullDataTypes(t *testing.T) {
 	throwFail(t, AssertIs((*d.TimePtr).UTC().Format(testTime), timePtr.UTC().Format(testTime)))
 	throwFail(t, AssertIs((*d.DatePtr).UTC().Format(testDate), datePtr.UTC().Format(testDate)))
 	throwFail(t, AssertIs((*d.DateTimePtr).UTC().Format(testDateTime), dateTimePtr.UTC().Format(testDateTime)))
+
+	// test support for pointer fields using RawSeter.QueryRows()
+	var dnList []*DataNull
+	Q := dDbBaser.TableQuote()
+	num, err = dORM.Raw(fmt.Sprintf("SELECT * FROM %sdata_null%s where id=?", Q, Q), 3).QueryRows(&dnList)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(num, 1))
+	equal := reflect.DeepEqual(*dnList[0], d)
+	throwFailNow(t, AssertIs(equal, true))
 }
 
 func TestDataCustomTypes(t *testing.T) {

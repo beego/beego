@@ -184,7 +184,7 @@ func (mp *Provider) SessionExist(sid string) bool {
 	row := c.QueryRow("select session_data from session where session_key=$1", sid)
 	var sessiondata []byte
 	err := row.Scan(&sessiondata)
-	return !(err == sql.ErrNoRows)
+	return err != sql.ErrNoRows
 }
 
 // SessionRegenerate generate new sid for postgresql session

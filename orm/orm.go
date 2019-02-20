@@ -522,6 +522,16 @@ func (o *orm) Driver() Driver {
 	return driver(o.alias.Name)
 }
 
+// return sql.DBStats for current database
+func (o *orm) DBStats() *sql.DBStats {
+	if o.alias != nil && o.alias.DB != nil {
+		stats := o.alias.DB.Stats()
+		return &stats
+	}
+
+	return nil
+}
+
 // NewOrm create new orm
 func NewOrm() Ormer {
 	BootStrap() // execute only once
