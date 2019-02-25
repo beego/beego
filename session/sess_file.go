@@ -19,6 +19,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"errors"
 	"path"
 	"path/filepath"
 	"strings"
@@ -130,6 +131,9 @@ func (fp *FileProvider) SessionInit(maxlifetime int64, savePath string) error {
 func (fp *FileProvider) SessionRead(sid string) (Store, error) {
 	if strings.ContainsAny(sid, "./") {
 		return nil, nil
+	}
+	if len(sid) < 2 {
+		return nil, errors.New("length of the sid is less than 2")
 	}
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()
