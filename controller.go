@@ -291,7 +291,7 @@ func (c *Controller) viewPath() string {
 
 // Redirect sends the redirection response to url with status code.
 func (c *Controller) Redirect(url string, code int) {
-	logAccess(c.Ctx, nil, code)
+	LogAccess(c.Ctx, nil, code)
 	c.Ctx.Redirect(code, url)
 }
 
