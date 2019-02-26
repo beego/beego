@@ -122,7 +122,6 @@ func NewServer(addr string, handler http.Handler) (srv *Server) {
 	}
 
 	srv = &Server{
-		wg:      sync.WaitGroup{},
 		sigChan: make(chan os.Signal),
 		isChild: isChild,
 		SignalHooks: map[int]map[os.Signal][]func(){
@@ -137,20 +136,21 @@ func NewServer(addr string, handler http.Handler) (srv *Server) {
 				syscall.SIGTERM: {},
 			},
 		},
-		state:   StateInit,
-		Network: "tcp",
+		state:        StateInit,
+		Network:      "tcp",
+		terminalChan: make(chan error), //no cache channel
 	}
-	srv.Server = &http.Server{}
-	srv.Server.Addr = addr
-	srv.Server.ReadTimeout = DefaultReadTimeOut
-	srv.Server.WriteTimeout = DefaultWriteTimeOut
-	srv.Server.MaxHeaderBytes = DefaultMaxHeaderBytes
-	srv.Server.Handler = handler
+	srv.Server = &http.Server{
+		Addr:           addr,
+		ReadTimeout:    DefaultReadTimeOut,
+		WriteTimeout:   DefaultWriteTimeOut,
+		MaxHeaderBytes: DefaultMaxHeaderBytes,
+		Handler:        handler,
+	}
 
 	runningServersOrder = append(runningServersOrder, addr)
 	runningServers[addr] = srv
-
-	return
+	return srv
 }
 
 // ListenAndServe refer http.ListenAndServe
