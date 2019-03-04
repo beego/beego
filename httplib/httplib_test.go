@@ -206,9 +206,16 @@ func TestToJson(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(ip.Origin)
-
-	if n := strings.Count(ip.Origin, "."); n != 3 {
+	ips := strings.Split(ip.Origin, ",")
+	if len(ips) == 0 {
 		t.Fatal("response is not valid ip")
+	} else {
+		for ip := range ips {
+			if net.ParseIP(ip).To4() == nil {
+				t.Fatal("response is not valid ip")
+			}
+		}
+
 	}
 }
 
