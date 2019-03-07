@@ -78,7 +78,7 @@ var (
 	DefaultReadTimeOut time.Duration
 	// DefaultWriteTimeOut is the HTTP Write timeout
 	DefaultWriteTimeOut time.Duration
-	// DefaultMaxHeaderBytes is the Max HTTP Herder size, default is 0, no limit
+	// DefaultMaxHeaderBytes is the Max HTTP Header size, default is 0, no limit
 	DefaultMaxHeaderBytes int
 	// DefaultTimeout is the shutdown server's timeout. default is 60s
 	DefaultTimeout = 60 * time.Second
