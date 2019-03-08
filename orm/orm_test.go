@@ -2347,6 +2347,35 @@ func TestPtrPk(t *testing.T) {
 	throwFail(t, AssertIs(num, 1))
 }
 
+func TestFkRel(t *testing.T) {
+	RegisterModel(new(User))
+	RegisterModel(new(Post))
+
+	post := &Post{ID:100, Title: "post for unit test"}
+	post.Content = "some content for the unit test"
+
+	user := &User{ID:21, Email:"asif@gmail.com", UserName: "asif-fndr"}
+
+	post.User = user
+
+	cnt, err := dORM.Insert(user)
+	throwFail(t, err)
+	throwFail(t, AssertIs(cnt, 1))
+
+	cnt, err = dORM.Insert(post)
+	throwFail(t, err)
+	throwFail(t, AssertIs(cnt, 1))
+
+	cnt, err = dORM.Delete(user)
+	throwFail(t, AssertNot(err, nil))
+	throwFail(t, AssertIs(cnt, 0))
+
+	cnt, err = dORM.Delete(post)
+	throwFail(t, err)
+	throwFail(t, AssertIs(cnt, 1))
+}
+
+
 func TestSnake(t *testing.T) {
 	cases := map[string]string{
 		"i":           "i",
