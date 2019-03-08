@@ -56,7 +56,7 @@ func NewConsole() Logger {
 	cw := &consoleWriter{
 		lg:       newLogWriter(os.Stdout),
 		Level:    LevelDebug,
-		Colorful: runtime.GOOS != "windows",
+		Colorful: false,
 	}
 	return cw
 }
