@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"runtime"
 	"sync"
 	"time"
 )
@@ -33,7 +34,7 @@ func newLogWriter(wr io.Writer) *logWriter {
 
 func (lg *logWriter) println(when time.Time, msg string) {
 	lg.Lock()
-	h, _, _:= formatTimeHeader(when)
+	h, _, _ := formatTimeHeader(when)
 	lg.writer.Write(append(append(h, msg...), '\n'))
 	lg.Unlock()
 }
@@ -146,21 +147,50 @@ var (
 	reset = string([]byte{27, 91, 48, 109})
 )
 
+var once sync.Once
+var colorMap map[string]string
+
+func initColor() {
+	if runtime.GOOS == "windows" {
+		green = w32Green
+		white = w32White
+		yellow = w32Yellow
+		red = w32Red
+		blue = w32Blue
+		magenta = w32Magenta
+		cyan = w32Cyan
+	}
+	colorMap = map[string]string{
+		"green":   green,
+		"white":   white,
+		"yellow":  yellow,
+		"red":     red,
+		"GET":     blue,
+		"POST":    cyan,
+		"PUT":     yellow,
+		"DELETE":  red,
+		"PATCH":   green,
+		"HEAD":    magenta,
+		"OPTIONS": white,
+	}
+}
+
 // ColorByStatus return color by http code
 // 2xx return Green
 // 3xx return White
 // 4xx return Yellow
 // 5xx return Red
 func ColorByStatus(cond bool, code int) string {
+	once.Do(initColor)
 	switch {
 	case code >= 200 && code < 300:
-		return map[bool]string{true: green, false: w32Green}[cond]
+		return colorMap["green"]
 	case code >= 300 && code < 400:
-		return map[bool]string{true: white, false: w32White}[cond]
+		return colorMap["white"]
 	case code >= 400 && code < 500:
-		return map[bool]string{true: yellow, false: w32Yellow}[cond]
+		return colorMap["yellow"]
 	default:
-		return map[bool]string{true: red, false: w32Red}[cond]
+		return colorMap["red"]
 	}
 }
 
@@ -173,24 +203,11 @@ func ColorByStatus(cond bool, code int) string {
 // HEAD return Magenta
 // OPTIONS return WHITE
 func ColorByMethod(cond bool, method string) string {
-	switch method {
-	case "GET":
-		return map[bool]string{true: blue, false: w32Blue}[cond]
-	case "POST":
-		return map[bool]string{true: cyan, false: w32Cyan}[cond]
-	case "PUT":
-		return map[bool]string{true: yellow, false: w32Yellow}[cond]
-	case "DELETE":
-		return map[bool]string{true: red, false: w32Red}[cond]
-	case "PATCH":
-		return map[bool]string{true: green, false: w32Green}[cond]
-	case "HEAD":
-		return map[bool]string{true: magenta, false: w32Magenta}[cond]
-	case "OPTIONS":
-		return map[bool]string{true: white, false: w32White}[cond]
-	default:
-		return reset
+	once.Do(initColor)
+	if c := colorMap[method]; c != "" {
+		return c
 	}
+	return reset
 }
 
 // Guard Mutex to guarantee atomic of W32Debug(string) function
