@@ -161,10 +161,12 @@ func initColor() {
 		cyan = w32Cyan
 	}
 	colorMap = map[string]string{
-		"green":   green,
-		"white":   white,
-		"yellow":  yellow,
-		"red":     red,
+		//by color
+		"green":  green,
+		"white":  white,
+		"yellow": yellow,
+		"red":    red,
+		//by method
 		"GET":     blue,
 		"POST":    cyan,
 		"PUT":     yellow,
@@ -195,13 +197,6 @@ func ColorByStatus(code int) string {
 }
 
 // ColorByMethod return color by http code
-// GET return Blue
-// POST return Cyan
-// PUT return Yellow
-// DELETE return Red
-// PATCH return Green
-// HEAD return Magenta
-// OPTIONS return WHITE
 func ColorByMethod(method string) string {
 	once.Do(initColor)
 	if c := colorMap[method]; c != "" {
