@@ -180,7 +180,7 @@ func initColor() {
 // 3xx return White
 // 4xx return Yellow
 // 5xx return Red
-func ColorByStatus(cond bool, code int) string {
+func ColorByStatus(code int) string {
 	once.Do(initColor)
 	switch {
 	case code >= 200 && code < 300:
@@ -202,11 +202,15 @@ func ColorByStatus(cond bool, code int) string {
 // PATCH return Green
 // HEAD return Magenta
 // OPTIONS return WHITE
-func ColorByMethod(cond bool, method string) string {
+func ColorByMethod(method string) string {
 	once.Do(initColor)
 	if c := colorMap[method]; c != "" {
 		return c
 	}
+	return reset
+}
+
+func ResetColor() string {
 	return reset
 }
 
