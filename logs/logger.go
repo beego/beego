@@ -205,6 +205,7 @@ func ColorByMethod(method string) string {
 	return reset
 }
 
+// ResetColor return reset color
 func ResetColor() string {
 	return reset
 }
