@@ -900,34 +900,29 @@ Admin:
 		}
 
 		if FilterMonitorFunc(r.Method, r.URL.Path, timeDur, pattern, statusCode) {
+			routerName := ""
 			if runRouter != nil {
-				go toolbox.StatisticsMap.AddStatistics(r.Method, r.URL.Path, runRouter.Name(), timeDur)
-			} else {
-				go toolbox.StatisticsMap.AddStatistics(r.Method, r.URL.Path, "", timeDur)
+				routerName = runRouter.Name()
 			}
+			go toolbox.StatisticsMap.AddStatistics(r.Method, r.URL.Path, routerName, timeDur)
 		}
 	}
 
 	if BConfig.RunMode == DEV && !BConfig.Log.AccessLogs {
-		var devInfo string
-		iswin := (runtime.GOOS == "windows")
-		statusColor := logs.ColorByStatus(iswin, statusCode)
-		methodColor := logs.ColorByMethod(iswin, r.Method)
-		resetColor := logs.ColorByMethod(iswin, "")
-		if findRouter {
-			if routerInfo != nil {
-				devInfo = fmt.Sprintf("|%15s|%s %3d %s|%13s|%8s|%s %-7s %s %-3s   r:%s", context.Input.IP(), statusColor, statusCode,
-					resetColor, timeDur.String(), "match", methodColor, r.Method, resetColor, r.URL.Path,
-					routerInfo.pattern)
-			} else {
-				devInfo = fmt.Sprintf("|%15s|%s %3d %s|%13s|%8s|%s %-7s %s %-3s", context.Input.IP(), statusColor, statusCode, resetColor,
-					timeDur.String(), "match", methodColor, r.Method, resetColor, r.URL.Path)
-			}
-		} else {
-			devInfo = fmt.Sprintf("|%15s|%s %3d %s|%13s|%8s|%s %-7s %s %-3s", context.Input.IP(), statusColor, statusCode, resetColor,
-				timeDur.String(), "nomatch", methodColor, r.Method, resetColor, r.URL.Path)
+		match := map[bool]string{true: "match", false: "nomatch"}
+		devInfo := fmt.Sprintf("|%15s|%s %3d %s|%13s|%8s|%s %-7s %s %-3s",
+			context.Input.IP(),
+			logs.ColorByStatus(statusCode), statusCode, logs.ResetColor(),
+			timeDur.String(),
+			match[findRouter],
+			logs.ColorByMethod(r.Method), r.Method, logs.ResetColor(),
+			r.URL.Path)
+		if routerInfo != nil {
+			devInfo += fmt.Sprintf("   r:%s", routerInfo.pattern)
 		}
-		if iswin {
+
+		//todo one logger enough,in fact no need to separate logger into windows and others
+		if runtime.GOOS == "windows" {
 			logs.W32Debug(devInfo)
 		} else {
 			logs.Debug(devInfo)
