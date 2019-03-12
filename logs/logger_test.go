@@ -15,7 +15,6 @@
 package logs
 
 import (
-	"bytes"
 	"testing"
 	"time"
 )
@@ -56,4 +55,3 @@ func TestFormatHeader_1(t *testing.T) {
 		tm = tm.Add(dur)
 	}
 }
-
