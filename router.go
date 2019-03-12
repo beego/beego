@@ -21,7 +21,6 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
-	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -921,12 +920,7 @@ Admin:
 			devInfo += fmt.Sprintf("   r:%s", routerInfo.pattern)
 		}
 
-		//todo one logger enough,in fact no need to separate logger into windows and others
-		if runtime.GOOS == "windows" {
-			logs.W32Debug(devInfo)
-		} else {
-			logs.Debug(devInfo)
-		}
+		logs.Debug(devInfo)
 	}
 	// Call WriteHeader if status code has been set changed
 	if context.Output.Status != 0 {
