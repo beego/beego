@@ -187,12 +187,12 @@ func (bl *BeeLogger) setLogger(adapterName string, configs ...string) error {
 		}
 	}
 
-	log, ok := adapters[adapterName]
+	logAdapter, ok := adapters[adapterName]
 	if !ok {
 		return fmt.Errorf("logs: unknown adaptername %q (forgotten Register?)", adapterName)
 	}
 
-	lg := log()
+	lg := logAdapter()
 	err := lg.Init(config)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "logs.BeeLogger.SetLogger: "+err.Error())
