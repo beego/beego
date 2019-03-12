@@ -80,7 +80,7 @@ func (c *consoleWriter) WriteMsg(when time.Time, msg string, level int) error {
 	if c.Colorful {
 		msg = strings.Replace(msg, levelPrefix[level], colors[level](levelPrefix[level]), 1)
 	}
-	c.lg.println(when, msg)
+	c.lg.writeln(when, msg)
 	return nil
 }
 
