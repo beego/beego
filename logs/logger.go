@@ -15,9 +15,7 @@
 package logs
 
 import (
-	"fmt"
 	"io"
-	"os"
 	"runtime"
 	"sync"
 	"time"
@@ -37,40 +35,6 @@ func (lg *logWriter) println(when time.Time, msg string) {
 	h, _, _ := formatTimeHeader(when)
 	lg.writer.Write(append(append(h, msg...), '\n'))
 	lg.Unlock()
-}
-
-type outputMode int
-
-// DiscardNonColorEscSeq supports the divided color escape sequence.
-// But non-color escape sequence is not output.
-// Please use the OutputNonColorEscSeq If you want to output a non-color
-// escape sequences such as ncurses. However, it does not support the divided
-// color escape sequence.
-const (
-	_ outputMode = iota
-	DiscardNonColorEscSeq
-	OutputNonColorEscSeq
-)
-
-// NewAnsiColorWriter creates and initializes a new ansiColorWriter
-// using io.Writer w as its initial contents.
-// In the console of Windows, which change the foreground and background
-// colors of the text by the escape sequence.
-// In the console of other systems, which writes to w all text.
-func NewAnsiColorWriter(w io.Writer) io.Writer {
-	return NewModeAnsiColorWriter(w, DiscardNonColorEscSeq)
-}
-
-// NewModeAnsiColorWriter create and initializes a new ansiColorWriter
-// by specifying the outputMode.
-func NewModeAnsiColorWriter(w io.Writer, mode outputMode) io.Writer {
-	if _, ok := w.(*ansiColorWriter); !ok {
-		return &ansiColorWriter{
-			w:    w,
-			mode: mode,
-		}
-	}
-	return w
 }
 
 const (
@@ -208,18 +172,4 @@ func ColorByMethod(method string) string {
 // ResetColor return reset color
 func ResetColor() string {
 	return reset
-}
-
-// Guard Mutex to guarantee atomic of W32Debug(string) function
-var mu sync.Mutex
-
-// W32Debug Helper method to output colored logs in Windows terminals
-func W32Debug(msg string) {
-	mu.Lock()
-	defer mu.Unlock()
-
-	current := time.Now()
-	w := NewAnsiColorWriter(os.Stdout)
-
-	fmt.Fprintf(w, "[beego] %v %s\n", current.Format("2006/01/02 - 15:04:05"), msg)
 }
