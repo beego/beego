@@ -85,7 +85,7 @@ func APIBasicAuth(appid, appkey string) beego.FilterFunc {
 
 // APIBaiscAuth calls APIBasicAuth for previous callers
 func APIBaiscAuth(appid, appkey string) beego.FilterFunc {
-	return APIBaiscAuth(appid, appkey)
+	return APIBasicAuth(appid, appkey)
 }
 
 // APISecretAuth use AppIdToAppSecret verify and
