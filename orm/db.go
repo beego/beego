@@ -633,7 +633,6 @@ func (d *dbBase) Update(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.
 	if find {
 		setNames = append(setNames[0:index], setNames[index+1:]...)
 		setValues = append(setValues[0:index], setValues[index+1:]...)
-
 	}
 
 	setValues = append(setValues, pkValue)
