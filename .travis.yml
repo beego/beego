@@ -36,6 +36,7 @@ install:
   - go get github.com/casbin/casbin
   - go get github.com/elazarl/go-bindata-assetfs
   - go get github.com/OwnLocal/goes
+  - go get github.com/shiena/ansicolor
   - go get -u honnef.co/go/tools/cmd/staticcheck
   - go get -u github.com/mdempsky/unconvert
   - go get -u github.com/gordonklaus/ineffassign
