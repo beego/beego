@@ -93,17 +93,17 @@ func (p ControllerCommentsSlice) Swap(i, j int) {
 // Controller defines some basic http request handler operations, such as
 // http context, template and view, session and xsrf.
 type Controller struct {
-					 // context data
-	Ctx            *context.Context
-	Data           map[interface{}]interface{}
+	// context data
+	Ctx  *context.Context
+	Data map[interface{}]interface{}
 
-					 // route controller info
+	// route controller info
 	controllerName string
 	actionName     string
 	methodMapping  map[string]func() //method:routertree
 	AppController  interface{}
 
-					 // template data
+	// template data
 	TplName        string
 	ViewPath       string
 	Layout         string
@@ -112,13 +112,13 @@ type Controller struct {
 	TplExt         string
 	EnableRender   bool
 
-					 // xsrf data
-	_xsrfToken     string
-	XSRFExpire     int
-	EnableXSRF     bool
+	// xsrf data
+	_xsrfToken string
+	XSRFExpire int
+	EnableXSRF bool
 
-					 // session
-	CruSession     session.Store
+	// session
+	CruSession session.Store
 }
 
 // ControllerInterface is an interface to uniform all controller handler.
@@ -214,6 +214,7 @@ func (c *Controller) Trace() {
 	hs := fmt.Sprintf("\r\nTRACE %s %s%s\r\n", c.Ctx.Request.RequestURI, c.Ctx.Request.Proto, ts(c.Ctx.Request.Header))
 	c.Ctx.Output.Header("Content-Type", "message/http")
 	c.Ctx.Output.Header("Content-Length", fmt.Sprint(len(hs)))
+	c.Ctx.Output.Header("Cache-Control", "no-cache, no-store, must-revalidate")
 	c.Ctx.WriteString(hs)
 }
 
@@ -371,7 +372,7 @@ func (c *Controller) URLFor(endpoint string, values ...interface{}) string {
 		return ""
 	}
 	if endpoint[0] == '.' {
-		return URLFor(reflect.Indirect(reflect.ValueOf(c.AppController)).Type().Name() + endpoint, values...)
+		return URLFor(reflect.Indirect(reflect.ValueOf(c.AppController)).Type().Name()+endpoint, values...)
 	}
 	return URLFor(endpoint, values...)
 }
@@ -379,7 +380,7 @@ func (c *Controller) URLFor(endpoint string, values ...interface{}) string {
 // ServeJSON sends a json response with encoding charset.
 func (c *Controller) ServeJSON(encoding ...bool) {
 	var (
-		hasIndent = BConfig.RunMode != PROD
+		hasIndent   = BConfig.RunMode != PROD
 		hasEncoding = len(encoding) > 0 && encoding[0]
 	)
 
@@ -604,7 +605,7 @@ func (c *Controller) SaveToFile(fromfile, tofile string) error {
 		return err
 	}
 	defer file.Close()
-	f, err := os.OpenFile(tofile, os.O_WRONLY | os.O_CREATE | os.O_TRUNC, 0666)
+	f, err := os.OpenFile(tofile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		return err
 	}
