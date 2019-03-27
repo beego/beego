@@ -198,6 +198,7 @@ func (c *Controller) Options() {
 }
 
 // Trace adds a request function to handle Trace request.
+// this method SHOULD NOT be overridden.
 // https://tools.ietf.org/html/rfc7231#section-4.3.8
 // The TRACE method requests a remote, application-level loop-back of
 // the request message.  The final recipient of the request SHOULD
