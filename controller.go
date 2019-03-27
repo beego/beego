@@ -27,6 +27,8 @@ import (
 	"strconv"
 	"strings"
 
+	"fmt"
+
 	"github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/context/param"
 	"github.com/astaxie/beego/session"
@@ -78,24 +80,30 @@ type ControllerComments struct {
 // ControllerCommentsSlice implements the sort interface
 type ControllerCommentsSlice []ControllerComments
 
-func (p ControllerCommentsSlice) Len() int           { return len(p) }
-func (p ControllerCommentsSlice) Less(i, j int) bool { return p[i].Router < p[j].Router }
-func (p ControllerCommentsSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+func (p ControllerCommentsSlice) Len() int {
+	return len(p)
+}
+func (p ControllerCommentsSlice) Less(i, j int) bool {
+	return p[i].Router < p[j].Router
+}
+func (p ControllerCommentsSlice) Swap(i, j int) {
+	p[i], p[j] = p[j], p[i]
+}
 
 // Controller defines some basic http request handler operations, such as
 // http context, template and view, session and xsrf.
 type Controller struct {
-	// context data
-	Ctx  *context.Context
-	Data map[interface{}]interface{}
+					 // context data
+	Ctx            *context.Context
+	Data           map[interface{}]interface{}
 
-	// route controller info
+					 // route controller info
 	controllerName string
 	actionName     string
 	methodMapping  map[string]func() //method:routertree
 	AppController  interface{}
 
-	// template data
+					 // template data
 	TplName        string
 	ViewPath       string
 	Layout         string
@@ -104,13 +112,13 @@ type Controller struct {
 	TplExt         string
 	EnableRender   bool
 
-	// xsrf data
-	_xsrfToken string
-	XSRFExpire int
-	EnableXSRF bool
+					 // xsrf data
+	_xsrfToken     string
+	XSRFExpire     int
+	EnableXSRF     bool
 
-	// session
-	CruSession session.Store
+					 // session
+	CruSession     session.Store
 }
 
 // ControllerInterface is an interface to uniform all controller handler.
@@ -124,6 +132,7 @@ type ControllerInterface interface {
 	Head()
 	Patch()
 	Options()
+	Trace()
 	Finish()
 	Render() error
 	XSRFToken() string
@@ -186,6 +195,26 @@ func (c *Controller) Patch() {
 // Options adds a request function to handle OPTIONS request.
 func (c *Controller) Options() {
 	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", http.StatusMethodNotAllowed)
+}
+
+// Trace adds a request function to handle Trace request.
+// https://tools.ietf.org/html/rfc7231#section-4.3.8
+// The TRACE method requests a remote, application-level loop-back of
+// the request message.  The final recipient of the request SHOULD
+// reflect the message received, excluding some fields described below,
+// back to the client as the message body of a 200 (OK) response with a
+// Content-Type of "message/http" (Section 8.3.1 of [RFC7230]).
+func (c *Controller) Trace() {
+	ts := func(h http.Header) (hs string) {
+		for k, v := range h {
+			hs += fmt.Sprintf("\r\n%s: %s", k, v)
+		}
+		return
+	}
+	hs := fmt.Sprintf("\r\nTRACE %s %s%s\r\n", c.Ctx.Request.RequestURI, c.Ctx.Request.Proto, ts(c.Ctx.Request.Header))
+	c.Ctx.Output.Header("Content-Type", "message/http")
+	c.Ctx.Output.Header("Content-Length", fmt.Sprint(len(hs)))
+	c.Ctx.WriteString(hs)
 }
 
 // HandlerFunc call function with the name
@@ -342,7 +371,7 @@ func (c *Controller) URLFor(endpoint string, values ...interface{}) string {
 		return ""
 	}
 	if endpoint[0] == '.' {
-		return URLFor(reflect.Indirect(reflect.ValueOf(c.AppController)).Type().Name()+endpoint, values...)
+		return URLFor(reflect.Indirect(reflect.ValueOf(c.AppController)).Type().Name() + endpoint, values...)
 	}
 	return URLFor(endpoint, values...)
 }
@@ -350,7 +379,7 @@ func (c *Controller) URLFor(endpoint string, values ...interface{}) string {
 // ServeJSON sends a json response with encoding charset.
 func (c *Controller) ServeJSON(encoding ...bool) {
 	var (
-		hasIndent   = BConfig.RunMode != PROD
+		hasIndent = BConfig.RunMode != PROD
 		hasEncoding = len(encoding) > 0 && encoding[0]
 	)
 
@@ -575,7 +604,7 @@ func (c *Controller) SaveToFile(fromfile, tofile string) error {
 		return err
 	}
 	defer file.Close()
-	f, err := os.OpenFile(tofile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+	f, err := os.OpenFile(tofile, os.O_WRONLY | os.O_CREATE | os.O_TRUNC, 0666)
 	if err != nil {
 		return err
 	}

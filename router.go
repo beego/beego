@@ -843,6 +843,8 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				execController.Patch()
 			case http.MethodOptions:
 				execController.Options()
+			case http.MethodTrace:
+				execController.Trace()
 			default:
 				if !execController.HandlerFunc(runMethod) {
 					vc := reflect.ValueOf(execController)
