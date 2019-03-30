@@ -28,3 +28,11 @@ func defaultGOPATH() string {
 	}
 	return ""
 }
+
+func GetModule() bool {
+	module := os.Getenv("GO111MODULE")
+	if strings.Compare(runtime.Version(), "go1.11") >= 0 && (module == "auto" || module == "on") {
+		return true
+	}
+	return false
+}
