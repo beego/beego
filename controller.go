@@ -17,6 +17,7 @@ package beego
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"html/template"
 	"io"
 	"mime/multipart"
@@ -26,8 +27,6 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-
-	"fmt"
 
 	"github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/context/param"
@@ -80,15 +79,9 @@ type ControllerComments struct {
 // ControllerCommentsSlice implements the sort interface
 type ControllerCommentsSlice []ControllerComments
 
-func (p ControllerCommentsSlice) Len() int {
-	return len(p)
-}
-func (p ControllerCommentsSlice) Less(i, j int) bool {
-	return p[i].Router < p[j].Router
-}
-func (p ControllerCommentsSlice) Swap(i, j int) {
-	p[i], p[j] = p[j], p[i]
-}
+func (p ControllerCommentsSlice) Len() int           { return len(p) }
+func (p ControllerCommentsSlice) Less(i, j int) bool { return p[i].Router < p[j].Router }
+func (p ControllerCommentsSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 // Controller defines some basic http request handler operations, such as
 // http context, template and view, session and xsrf.
