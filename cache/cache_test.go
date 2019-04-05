@@ -98,7 +98,7 @@ func TestCache(t *testing.T) {
 }
 
 func TestFileCache(t *testing.T) {
-	bm, err := NewCache("file", `{"CachePath":"cache","FileSuffix":".bin","DirectoryLevel":2,"EmbedExpiry":0}`)
+	bm, err := NewCache("file", `{"CachePath":"cache","FileSuffix":".bin","DirectoryLevel":"2","EmbedExpiry":"0"}`)
 	if err != nil {
 		t.Error("init err")
 	}
