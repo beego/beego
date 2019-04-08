@@ -20,6 +20,8 @@ import (
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestIni(t *testing.T) {
@@ -187,4 +189,31 @@ name=mysql
 		}
 
 	}
+}
+
+func TestSectionStrings(t *testing.T) {
+	var (
+		inicontext = []byte(`
+appname = beeapi
+
+[section1]
+key1="asta"
+key2 = "xie"
+
+[section2]
+key1="asta"
+key2 = "xie"
+`)
+	)
+
+	iniconfg := IniConfig{}
+	cfg, err := iniconfg.ParseData(inicontext)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	iniContainer := cfg.(*IniConfigContainer)
+
+	assert.ElementsMatch(t, []string{"default", "section1", "section2"}, iniContainer.SectionStrings())
+
 }

@@ -434,6 +434,16 @@ func (c *IniConfigContainer) SaveConfigFile(filename string) (err error) {
 	return err
 }
 
+// SectionStrings returns list of section names.
+func (c *IniConfigContainer) SectionStrings() []string {
+	var sections []string
+	for section, _ := range c.data {
+		sections = append(sections, section)
+	}
+
+	return sections
+}
+
 // Set writes a new value for key.
 // if write to one section, the key need be "section::key".
 // if the section is not existed, it panics.
