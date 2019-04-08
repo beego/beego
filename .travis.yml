@@ -51,6 +51,7 @@ install:
   - go get -u github.com/gordonklaus/ineffassign
   - go get -u github.com/golang/lint/golint
   - go get -u github.com/go-redis/redis
+  - go get -u github.com/stretchr/testify/assert
 before_script:
   - psql --version
   - sh -c "if [ '$ORM_DRIVER' = 'postgres' ]; then psql -c 'create database orm_test;' -U postgres; fi"
