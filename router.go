@@ -21,7 +21,6 @@ import (
 	"path"
 	"path/filepath"
 	"reflect"
-	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -690,7 +689,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	// filter wrong http method
 	if !HTTPMETHOD[r.Method] {
-		http.Error(rw, "Method Not Allowed", http.StatusMethodNotAllowed)
+		exception("405", context)
 		goto Admin
 	}
 
@@ -900,38 +899,28 @@ Admin:
 		}
 
 		if FilterMonitorFunc(r.Method, r.URL.Path, timeDur, pattern, statusCode) {
+			routerName := ""
 			if runRouter != nil {
-				go toolbox.StatisticsMap.AddStatistics(r.Method, r.URL.Path, runRouter.Name(), timeDur)
-			} else {
-				go toolbox.StatisticsMap.AddStatistics(r.Method, r.URL.Path, "", timeDur)
+				routerName = runRouter.Name()
 			}
+			go toolbox.StatisticsMap.AddStatistics(r.Method, r.URL.Path, routerName, timeDur)
 		}
 	}
 
 	if BConfig.RunMode == DEV && !BConfig.Log.AccessLogs {
-		var devInfo string
-		iswin := (runtime.GOOS == "windows")
-		statusColor := logs.ColorByStatus(iswin, statusCode)
-		methodColor := logs.ColorByMethod(iswin, r.Method)
-		resetColor := logs.ColorByMethod(iswin, "")
-		if findRouter {
-			if routerInfo != nil {
-				devInfo = fmt.Sprintf("|%15s|%s %3d %s|%13s|%8s|%s %-7s %s %-3s   r:%s", context.Input.IP(), statusColor, statusCode,
-					resetColor, timeDur.String(), "match", methodColor, r.Method, resetColor, r.URL.Path,
-					routerInfo.pattern)
-			} else {
-				devInfo = fmt.Sprintf("|%15s|%s %3d %s|%13s|%8s|%s %-7s %s %-3s", context.Input.IP(), statusColor, statusCode, resetColor,
-					timeDur.String(), "match", methodColor, r.Method, resetColor, r.URL.Path)
-			}
-		} else {
-			devInfo = fmt.Sprintf("|%15s|%s %3d %s|%13s|%8s|%s %-7s %s %-3s", context.Input.IP(), statusColor, statusCode, resetColor,
-				timeDur.String(), "nomatch", methodColor, r.Method, resetColor, r.URL.Path)
+		match := map[bool]string{true: "match", false: "nomatch"}
+		devInfo := fmt.Sprintf("|%15s|%s %3d %s|%13s|%8s|%s %-7s %s %-3s",
+			context.Input.IP(),
+			logs.ColorByStatus(statusCode), statusCode, logs.ResetColor(),
+			timeDur.String(),
+			match[findRouter],
+			logs.ColorByMethod(r.Method), r.Method, logs.ResetColor(),
+			r.URL.Path)
+		if routerInfo != nil {
+			devInfo += fmt.Sprintf("   r:%s", routerInfo.pattern)
 		}
-		if iswin {
-			logs.W32Debug(devInfo)
-		} else {
-			logs.Debug(devInfo)
-		}
+
+		logs.Debug(devInfo)
 	}
 	// Call WriteHeader if status code has been set changed
 	if context.Output.Status != 0 {

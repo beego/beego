@@ -15,9 +15,8 @@
 package logs
 
 import (
-	"fmt"
 	"io"
-	"os"
+	"runtime"
 	"sync"
 	"time"
 )
@@ -31,45 +30,11 @@ func newLogWriter(wr io.Writer) *logWriter {
 	return &logWriter{writer: wr}
 }
 
-func (lg *logWriter) println(when time.Time, msg string) {
+func (lg *logWriter) writeln(when time.Time, msg string) {
 	lg.Lock()
-	h, _, _:= formatTimeHeader(when)
+	h, _, _ := formatTimeHeader(when)
 	lg.writer.Write(append(append(h, msg...), '\n'))
 	lg.Unlock()
-}
-
-type outputMode int
-
-// DiscardNonColorEscSeq supports the divided color escape sequence.
-// But non-color escape sequence is not output.
-// Please use the OutputNonColorEscSeq If you want to output a non-color
-// escape sequences such as ncurses. However, it does not support the divided
-// color escape sequence.
-const (
-	_ outputMode = iota
-	DiscardNonColorEscSeq
-	OutputNonColorEscSeq
-)
-
-// NewAnsiColorWriter creates and initializes a new ansiColorWriter
-// using io.Writer w as its initial contents.
-// In the console of Windows, which change the foreground and background
-// colors of the text by the escape sequence.
-// In the console of other systems, which writes to w all text.
-func NewAnsiColorWriter(w io.Writer) io.Writer {
-	return NewModeAnsiColorWriter(w, DiscardNonColorEscSeq)
-}
-
-// NewModeAnsiColorWriter create and initializes a new ansiColorWriter
-// by specifying the outputMode.
-func NewModeAnsiColorWriter(w io.Writer, mode outputMode) io.Writer {
-	if _, ok := w.(*ansiColorWriter); !ok {
-		return &ansiColorWriter{
-			w:    w,
-			mode: mode,
-		}
-	}
-	return w
 }
 
 const (
@@ -146,63 +111,65 @@ var (
 	reset = string([]byte{27, 91, 48, 109})
 )
 
+var once sync.Once
+var colorMap map[string]string
+
+func initColor() {
+	if runtime.GOOS == "windows" {
+		green = w32Green
+		white = w32White
+		yellow = w32Yellow
+		red = w32Red
+		blue = w32Blue
+		magenta = w32Magenta
+		cyan = w32Cyan
+	}
+	colorMap = map[string]string{
+		//by color
+		"green":  green,
+		"white":  white,
+		"yellow": yellow,
+		"red":    red,
+		//by method
+		"GET":     blue,
+		"POST":    cyan,
+		"PUT":     yellow,
+		"DELETE":  red,
+		"PATCH":   green,
+		"HEAD":    magenta,
+		"OPTIONS": white,
+	}
+}
+
 // ColorByStatus return color by http code
 // 2xx return Green
 // 3xx return White
 // 4xx return Yellow
 // 5xx return Red
-func ColorByStatus(cond bool, code int) string {
+func ColorByStatus(code int) string {
+	once.Do(initColor)
 	switch {
 	case code >= 200 && code < 300:
-		return map[bool]string{true: green, false: w32Green}[cond]
+		return colorMap["green"]
 	case code >= 300 && code < 400:
-		return map[bool]string{true: white, false: w32White}[cond]
+		return colorMap["white"]
 	case code >= 400 && code < 500:
-		return map[bool]string{true: yellow, false: w32Yellow}[cond]
+		return colorMap["yellow"]
 	default:
-		return map[bool]string{true: red, false: w32Red}[cond]
+		return colorMap["red"]
 	}
 }
 
 // ColorByMethod return color by http code
-// GET return Blue
-// POST return Cyan
-// PUT return Yellow
-// DELETE return Red
-// PATCH return Green
-// HEAD return Magenta
-// OPTIONS return WHITE
-func ColorByMethod(cond bool, method string) string {
-	switch method {
-	case "GET":
-		return map[bool]string{true: blue, false: w32Blue}[cond]
-	case "POST":
-		return map[bool]string{true: cyan, false: w32Cyan}[cond]
-	case "PUT":
-		return map[bool]string{true: yellow, false: w32Yellow}[cond]
-	case "DELETE":
-		return map[bool]string{true: red, false: w32Red}[cond]
-	case "PATCH":
-		return map[bool]string{true: green, false: w32Green}[cond]
-	case "HEAD":
-		return map[bool]string{true: magenta, false: w32Magenta}[cond]
-	case "OPTIONS":
-		return map[bool]string{true: white, false: w32White}[cond]
-	default:
-		return reset
+func ColorByMethod(method string) string {
+	once.Do(initColor)
+	if c := colorMap[method]; c != "" {
+		return c
 	}
+	return reset
 }
 
-// Guard Mutex to guarantee atomic of W32Debug(string) function
-var mu sync.Mutex
-
-// W32Debug Helper method to output colored logs in Windows terminals
-func W32Debug(msg string) {
-	mu.Lock()
-	defer mu.Unlock()
-
-	current := time.Now()
-	w := NewAnsiColorWriter(os.Stdout)
-
-	fmt.Fprintf(w, "[beego] %v %s\n", current.Format("2006/01/02 - 15:04:05"), msg)
+// ResetColor return reset color
+func ResetColor() string {
+	return reset
 }
