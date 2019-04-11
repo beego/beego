@@ -80,12 +80,16 @@ func (f *fields) GetByAny(name string) (*fieldInfo, bool) {
 	if fi, ok := f.fields[name]; ok {
 		return fi, ok
 	}
-	if fi, ok := f.fieldsLow[strings.ToLower(name)]; ok {
-		return fi, ok
-	}
+
+	//优先使用orm:column()定义的字段
 	if fi, ok := f.columns[name]; ok {
 		return fi, ok
 	}
+
+	if fi, ok := f.fieldsLow[strings.ToLower(name)]; ok {
+		return fi, ok
+	}
+
 	return nil, false
 }
 
