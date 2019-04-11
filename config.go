@@ -183,13 +183,13 @@ func recoverPanic(ctx *context.Context) {
 			logs.Critical(fmt.Sprintf("%s:%d", file, line))
 			stack = stack + fmt.Sprintln(fmt.Sprintf("%s:%d", file, line))
 		}
-		if BConfig.RunMode == DEV && BConfig.EnableErrorsRender {
-			showErr(err, ctx, stack)
-		}
 		if ctx.Output.Status != 0 {
 			ctx.ResponseWriter.WriteHeader(ctx.Output.Status)
 		} else {
 			ctx.ResponseWriter.WriteHeader(500)
+		}
+		if BConfig.RunMode == DEV && BConfig.EnableErrorsRender {
+			showErr(err, ctx, stack)
 		}
 	}
 }
