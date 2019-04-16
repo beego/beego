@@ -223,6 +223,12 @@
 			"revisionTime": "2019-03-24T16:07:22Z"
 		},
 		{
+			"checksumSHA1": "Y2MOwzNZfl4NRNDbLCZa6sgx7O0=",
+			"path": "github.com/golang/protobuf/proto",
+			"revision": "d3c38a4eb4970272b87a425ae00ccc4548e2f9bb",
+			"revisionTime": "2019-03-18T19:48:12Z"
+		},
+		{
 			"checksumSHA1": "vIHJJOBT0sZAySRfsohRVooD41g=",
 			"origin": "github.com/siddontang/ledisdb/vendor/github.com/golang/snappy",
 			"path": "github.com/golang/snappy",
@@ -265,6 +271,12 @@
 			"path": "github.com/pkg/errors",
 			"revision": "27936f6d90f9c8e1145f11ed52ffffbfdb9e0af7",
 			"revisionTime": "2019-02-27T00:00:51Z"
+		},
+		{
+			"checksumSHA1": "v5CCEZdC63TIkIL8TUeURBcZzNc=",
+			"path": "github.com/shiena/ansicolor",
+			"revision": "a422bbe96644373c5753384a59d678f7d261ff10",
+			"revisionTime": "2015-11-19T15:19:21Z"
 		},
 		{
 			"checksumSHA1": "BbjvNHTHCOH+fiBRVnqgkIODIJQ=",
