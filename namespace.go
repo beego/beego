@@ -207,11 +207,11 @@ func (n *Namespace) Include(cList ...ControllerInterface) *Namespace {
 func (n *Namespace) Namespace(ns ...*Namespace) *Namespace {
 	for _, ni := range ns {
 		for k, v := range ni.handlers.routers {
-			if t, ok := n.handlers.routers[k]; ok {
+			if _, ok := n.handlers.routers[k]; ok {
 				addPrefix(v, ni.prefix)
 				n.handlers.routers[k].AddTree(ni.prefix, v)
 			} else {
-				t = NewTree()
+				t := NewTree()
 				t.AddTree(ni.prefix, v)
 				addPrefix(t, ni.prefix)
 				n.handlers.routers[k] = t
@@ -236,11 +236,11 @@ func (n *Namespace) Namespace(ns ...*Namespace) *Namespace {
 func AddNamespace(nl ...*Namespace) {
 	for _, n := range nl {
 		for k, v := range n.handlers.routers {
-			if t, ok := BeeApp.Handlers.routers[k]; ok {
+			if _, ok := BeeApp.Handlers.routers[k]; ok {
 				addPrefix(v, n.prefix)
 				BeeApp.Handlers.routers[k].AddTree(n.prefix, v)
 			} else {
-				t = NewTree()
+				t := NewTree()
 				t.AddTree(n.prefix, v)
 				addPrefix(t, n.prefix)
 				BeeApp.Handlers.routers[k] = t

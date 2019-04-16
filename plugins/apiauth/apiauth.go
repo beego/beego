@@ -72,8 +72,8 @@ import (
 // AppIDToAppSecret is used to get appsecret throw appid
 type AppIDToAppSecret func(string) string
 
-// APIBaiscAuth use the basic appid/appkey as the AppIdToAppSecret
-func APIBaiscAuth(appid, appkey string) beego.FilterFunc {
+// APIBasicAuth use the basic appid/appkey as the AppIdToAppSecret
+func APIBasicAuth(appid, appkey string) beego.FilterFunc {
 	ft := func(aid string) string {
 		if aid == appid {
 			return appkey
@@ -81,6 +81,11 @@ func APIBaiscAuth(appid, appkey string) beego.FilterFunc {
 		return ""
 	}
 	return APISecretAuth(ft, 300)
+}
+
+// APIBaiscAuth calls APIBasicAuth for previous callers
+func APIBaiscAuth(appid, appkey string) beego.FilterFunc {
+	return APIBasicAuth(appid, appkey)
 }
 
 // APISecretAuth use AppIdToAppSecret verify and
