@@ -223,12 +223,6 @@
 			"revisionTime": "2019-03-24T16:07:22Z"
 		},
 		{
-			"checksumSHA1": "Y2MOwzNZfl4NRNDbLCZa6sgx7O0=",
-			"path": "github.com/golang/protobuf/proto",
-			"revision": "d3c38a4eb4970272b87a425ae00ccc4548e2f9bb",
-			"revisionTime": "2019-03-18T19:48:12Z"
-		},
-		{
 			"checksumSHA1": "vIHJJOBT0sZAySRfsohRVooD41g=",
 			"origin": "github.com/siddontang/ledisdb/vendor/github.com/golang/snappy",
 			"path": "github.com/golang/snappy",
@@ -473,22 +467,22 @@
 			"revisionTime": "2013-02-01T09:32:26Z"
 		},
 		{
-			"checksumSHA1": "J6lNRPdrYhKft6S8x33K9brxyhE=",
+			"checksumSHA1": "31Q46st1pd0VJJmD7yQFHKB8jrE=",
 			"path": "golang.org/x/crypto/acme",
-			"revision": "c126467f60eb25f8f27e5a981f32a87e3965053f",
-			"revisionTime": "2018-07-23T15:26:11Z"
+			"revision": "38d8ce5564a5b71b2e3a00553993f1b9a7ae852f",
+			"revisionTime": "2019-04-03T20:23:40Z"
 		},
 		{
-			"checksumSHA1": "EFjIi/zCZ1Cte0MQtyxGCTgSzk8=",
+			"checksumSHA1": "Yjacru/DE9yXphaefh67NrjNgAk=",
 			"path": "golang.org/x/crypto/acme/autocert",
-			"revision": "c126467f60eb25f8f27e5a981f32a87e3965053f",
-			"revisionTime": "2018-07-23T15:26:11Z"
+			"revision": "38d8ce5564a5b71b2e3a00553993f1b9a7ae852f",
+			"revisionTime": "2019-04-03T20:23:40Z"
 		},
 		{
 			"checksumSHA1": "1MGpGDQqnUoRpv7VEcQrXOBydXE=",
 			"path": "golang.org/x/crypto/pbkdf2",
-			"revision": "c126467f60eb25f8f27e5a981f32a87e3965053f",
-			"revisionTime": "2018-07-23T15:26:11Z"
+			"revision": "38d8ce5564a5b71b2e3a00553993f1b9a7ae852f",
+			"revisionTime": "2019-04-03T20:23:40Z"
 		},
 		{
 			"checksumSHA1": "GtamqiJoL7PGHsN454AoffBFMa8=",

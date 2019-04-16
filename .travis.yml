@@ -3,6 +3,7 @@ language: go
 go:
   - "1.10.x"
   - "1.11.x"
+  - "1.12.x"
 services:
   - redis-server
   - mysql
@@ -26,7 +27,6 @@ install:
   - go get github.com/couchbase/go-couchbase
   - go get github.com/beego/goyaml2
   - go get gopkg.in/yaml.v2
-  - go get github.com/golang/protobuf/proto
   - go get github.com/belogik/goes
   - go get github.com/siddontang/ledisdb/config
   - go get github.com/siddontang/ledisdb/ledis

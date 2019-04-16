@@ -33,7 +33,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	"github.com/golang/protobuf/proto"
+	"github.com/gogo/protobuf/proto"
 )
 
 // BeegoOutput does work for sending response header.
