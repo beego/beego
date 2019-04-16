@@ -285,6 +285,8 @@ func (output *BeegoOutput) ServeFormatted(data interface{}, hasIndent bool, hasE
 		output.XML(data, hasIndent)
 	case ApplicationProtoBuf:
 		output.ProtoBuf(data)
+	case ApplicationJSONP:
+		output.JSONP(data, hasIndent)
 	default:
 		output.JSON(data, hasIndent, len(hasEncode) > 0 && hasEncode[0])
 	}

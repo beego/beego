@@ -40,12 +40,14 @@ import (
 
 //commonly used mime-types
 const (
+	ApplicationHTML     = "application/xhtml+xml"
 	ApplicationJSON     = "application/json"
 	ApplicationJSONP    = "application/javascript"
 	ApplicationXML      = "application/xml"
 	ApplicationYAML     = "application/x-yaml"
 	ApplicationProtoBuf = "application/x-protobuf"
 	TextXML             = "text/xml"
+	TextHTML            = "text/html"
 )
 
 // NewContext return the Context with Input and Output

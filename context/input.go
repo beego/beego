@@ -24,23 +24,13 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
-	"regexp"
 	"strconv"
 	"strings"
 
 	"github.com/astaxie/beego/session"
 )
 
-// Regexes for checking the accept headers
-// TODO make sure these are correct
-var (
-	acceptsHTMLRegex = regexp.MustCompile(`(text/html|application/xhtml\+xml)(?:,|$)`)
-	acceptsXMLRegex  = regexp.MustCompile(`(application/xml|text/xml)(?:,|$)`)
-	acceptsJSONRegex = regexp.MustCompile(`(application/json)(?:,|$)`)
-	acceptsYAMLRegex = regexp.MustCompile(`(application/x-yaml)(?:,|$)`)
-	acceptsProtoBuf  = regexp.MustCompile(`(application/x-protobuf)(?:,|$)`)
-	maxParam         = 50
-)
+var maxParam = 50
 
 // BeegoInput operates the http request header, data, cookie and body.
 // it also contains router params and current session.
@@ -188,32 +178,48 @@ func (input *BeegoInput) IsWebsocket() bool {
 
 // IsUpload returns boolean of whether file uploads in this request or not..
 func (input *BeegoInput) IsUpload() bool {
-	return strings.Contains(input.Header("Content-Type"), "multipart/form-data")
+	return someAccept(input.Header("Content-Type"), "multipart/form-data")
 }
 
 // AcceptsHTML Checks if request accepts html response
 func (input *BeegoInput) AcceptsHTML() bool {
-	return acceptsHTMLRegex.MatchString(input.Header("Accept"))
+	return someAccept(input.Header("Accept"), ApplicationHTML, TextHTML)
 }
 
 // AcceptsXML Checks if request accepts xml response
 func (input *BeegoInput) AcceptsXML() bool {
-	return acceptsXMLRegex.MatchString(input.Header("Accept"))
+	return someAccept(input.Header("Accept"), ApplicationXML, TextXML)
 }
 
 // AcceptsJSON Checks if request accepts json response
 func (input *BeegoInput) AcceptsJSON() bool {
-	return acceptsJSONRegex.MatchString(input.Header("Accept"))
+	return someAccept(input.Header("Accept"), ApplicationJSON)
+}
+
+// AcceptsJSONP Checks if request accepts jsonp response
+func (input *BeegoInput) AcceptsJSONP() bool {
+	return someAccept(input.Header("Accept"), ApplicationJSONP)
 }
 
 // AcceptsYAML Checks if request accepts yaml response
 func (input *BeegoInput) AcceptsYAML() bool {
-	return acceptsYAMLRegex.MatchString(input.Header("Accept"))
+	return someAccept(input.Header("Accept"), ApplicationYAML)
 }
 
 // AcceptsProtoBuf Checks if request accepts protobuf response
 func (input *BeegoInput) AcceptsProtoBuf() bool {
-	return acceptsProtoBuf.MatchString(input.Header("Accept"))
+	return someAccept(input.Header("Accept"), ApplicationProtoBuf)
+}
+
+// Check if some of types is accepted by head
+func someAccept(acceptHead string, acceptedTypes ...string) bool {
+	for _, acceptedType := range acceptedTypes {
+		if strings.Contains(strings.ToLower(acceptHead), strings.ToLower(acceptedType)) {
+			return true
+		}
+	}
+
+	return false
 }
 
 // IP returns request client ip.
