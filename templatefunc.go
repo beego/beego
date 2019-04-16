@@ -55,21 +55,21 @@ func Substr(s string, start, length int) string {
 // HTML2str returns escaping text convert from html.
 func HTML2str(html string) string {
 
-	re, _ := regexp.Compile(`\<[\S\s]+?\>`)
+	re := regexp.MustCompile(`\<[\S\s]+?\>`)
 	html = re.ReplaceAllStringFunc(html, strings.ToLower)
 
 	//remove STYLE
-	re, _ = regexp.Compile(`\<style[\S\s]+?\</style\>`)
+	re = regexp.MustCompile(`\<style[\S\s]+?\</style\>`)
 	html = re.ReplaceAllString(html, "")
 
 	//remove SCRIPT
-	re, _ = regexp.Compile(`\<script[\S\s]+?\</script\>`)
+	re = regexp.MustCompile(`\<script[\S\s]+?\</script\>`)
 	html = re.ReplaceAllString(html, "")
 
-	re, _ = regexp.Compile(`\<[\S\s]+?\>`)
+	re = regexp.MustCompile(`\<[\S\s]+?\>`)
 	html = re.ReplaceAllString(html, "\n")
 
-	re, _ = regexp.Compile(`\s{2,}`)
+	re = regexp.MustCompile(`\s{2,}`)
 	html = re.ReplaceAllString(html, "\n")
 
 	return strings.TrimSpace(html)
@@ -85,24 +85,24 @@ func DateFormat(t time.Time, layout string) (datestring string) {
 var datePatterns = []string{
 	// year
 	"Y", "2006", // A full numeric representation of a year, 4 digits   Examples: 1999 or 2003
-	"y", "06",   //A two digit representation of a year   Examples: 99 or 03
+	"y", "06", //A two digit representation of a year   Examples: 99 or 03
 
 	// month
-	"m", "01",      // Numeric representation of a month, with leading zeros 01 through 12
-	"n", "1",       // Numeric representation of a month, without leading zeros   1 through 12
-	"M", "Jan",     // A short textual representation of a month, three letters Jan through Dec
+	"m", "01", // Numeric representation of a month, with leading zeros 01 through 12
+	"n", "1", // Numeric representation of a month, without leading zeros   1 through 12
+	"M", "Jan", // A short textual representation of a month, three letters Jan through Dec
 	"F", "January", // A full textual representation of a month, such as January or March   January through December
 
 	// day
 	"d", "02", // Day of the month, 2 digits with leading zeros 01 to 31
-	"j", "2",  // Day of the month without leading zeros 1 to 31
+	"j", "2", // Day of the month without leading zeros 1 to 31
 
 	// week
-	"D", "Mon",    // A textual representation of a day, three letters Mon through Sun
+	"D", "Mon", // A textual representation of a day, three letters Mon through Sun
 	"l", "Monday", // A full textual representation of the day of the week  Sunday through Saturday
 
 	// time
-	"g", "3",  // 12-hour format of an hour without leading zeros    1 through 12
+	"g", "3", // 12-hour format of an hour without leading zeros    1 through 12
 	"G", "15", // 24-hour format of an hour without leading zeros   0 through 23
 	"h", "03", // 12-hour format of an hour with leading zeros  01 through 12
 	"H", "15", // 24-hour format of an hour with leading zeros  00 through 23
@@ -172,7 +172,7 @@ func GetConfig(returnType, key string, defaultVal interface{}) (value interface{
 	case "DIY":
 		value, err = AppConfig.DIY(key)
 	default:
-		err = errors.New("Config keys must be of type String, Bool, Int, Int64, Float, or DIY")
+		err = errors.New("config keys must be of type String, Bool, Int, Int64, Float, or DIY")
 	}
 
 	if err != nil {
@@ -297,9 +297,16 @@ func parseFormToStruct(form url.Values, objT reflect.Type, objV reflect.Value) e
 			tag = tags[0]
 		}
 
-		value := form.Get(tag)
-		if len(value) == 0 {
+		formValues := form[tag]
+		var value string
+		if len(formValues) == 0 {
 			continue
+		}
+		if len(formValues) == 1 {
+			value = formValues[0]
+			if value == "" {
+				continue
+			}
 		}
 
 		switch fieldT.Type.Kind() {

@@ -1,7 +1,6 @@
 language: go
 
 go:
-  - "1.10.x"
   - "1.11.x"
   - "1.12.x"
 services:
@@ -10,9 +9,19 @@ services:
   - postgresql
   - memcached
 env:
-  - ORM_DRIVER=sqlite3   ORM_SOURCE=$TRAVIS_BUILD_DIR/orm_test.db
-  - ORM_DRIVER=postgres ORM_SOURCE="user=postgres dbname=orm_test sslmode=disable"
+  global:
+    - GO_REPO_FULLNAME="github.com/astaxie/beego"
+  matrix:
+    - ORM_DRIVER=sqlite3   ORM_SOURCE=$TRAVIS_BUILD_DIR/orm_test.db
+    - ORM_DRIVER=postgres ORM_SOURCE="user=postgres dbname=orm_test sslmode=disable"
 before_install:
+   # link the local repo with ${GOPATH}/src/<namespace>/<repo>
+ - GO_REPO_NAMESPACE=${GO_REPO_FULLNAME%/*}
+   # relies on GOPATH to contain only one directory...
+ - mkdir -p ${GOPATH}/src/${GO_REPO_NAMESPACE}
+ - ln -sv ${TRAVIS_BUILD_DIR} ${GOPATH}/src/${GO_REPO_FULLNAME}
+ - cd ${GOPATH}/src/${GO_REPO_FULLNAME}
+   # get and build ssdb
  - git clone git://github.com/ideawu/ssdb.git
  - cd ssdb
  - make
@@ -37,7 +46,8 @@ install:
   - go get github.com/casbin/casbin
   - go get github.com/elazarl/go-bindata-assetfs
   - go get github.com/OwnLocal/goes
-  - go get -u honnef.co/go/tools/cmd/gosimple
+  - go get github.com/shiena/ansicolor
+  - go get -u honnef.co/go/tools/cmd/staticcheck
   - go get -u github.com/mdempsky/unconvert
   - go get -u github.com/gordonklaus/ineffassign
   - go get -u github.com/golang/lint/golint
@@ -56,7 +66,7 @@ after_script:
   - rm -rf ./res/var/*
 script:
   - go test -v ./...
-  - gosimple -ignore "$(cat .gosimpleignore)" $(go list ./... | grep -v /vendor/)
+  - staticcheck -show-ignored -checks "-ST1017,-U1000,-ST1005,-S1034,-S1012,-SA4006,-SA6005,-SA1019,-SA1024"
   - unconvert $(go list ./... | grep -v /vendor/)
   - ineffassign .
   - find . ! \( -path './vendor' -prune \) -type f -name '*.go' -print0 | xargs -0 gofmt -l -s

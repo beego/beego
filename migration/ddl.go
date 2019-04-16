@@ -17,7 +17,7 @@ package migration
 import (
 	"fmt"
 
-	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/logs"
 )
 
 // Index struct defines the structure of Index Columns
@@ -316,7 +316,7 @@ func (m *Migration) GetSQL() (sql string) {
 			sql += fmt.Sprintf("ALTER TABLE `%s` ", m.TableName)
 			for index, column := range m.Columns {
 				if !column.remove {
-					beego.BeeLogger.Info("col")
+					logs.Info("col")
 					sql += fmt.Sprintf("\n ADD `%s` %s %s %s %s %s", column.Name, column.DataType, column.Unsign, column.Null, column.Inc, column.Default)
 				} else {
 					sql += fmt.Sprintf("\n DROP COLUMN `%s`", column.Name)

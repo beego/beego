@@ -97,7 +97,7 @@ func parseYML(buf []byte) (cnf map[string]interface{}, err error) {
 		}
 	}
 
-	data, err := goyaml2.Read(bytes.NewBuffer(buf))
+	data, err := goyaml2.Read(bytes.NewReader(buf))
 	if err != nil {
 		log.Println("Goyaml2 ERR>", string(buf), err)
 		return
@@ -296,7 +296,7 @@ func (c *ConfigContainer) getData(key string) (interface{}, error) {
 			case map[string]interface{}:
 				{
 					tmpData = v.(map[string]interface{})
-					if idx == len(keys) - 1 {
+					if idx == len(keys)-1 {
 						return tmpData, nil
 					}
 				}
