@@ -88,7 +88,7 @@ func Register(name string, adapter Config) {
 	adapters[name] = adapter
 }
 
-// NewConfig adapterName is ini/json/xml/yaml.
+// NewConfig adapterName is ini/json/xml/yaml/configMap.
 // filename is the config file path.
 func NewConfig(adapterName, filename string) (Configer, error) {
 	adapter, ok := adapters[adapterName]
@@ -98,7 +98,7 @@ func NewConfig(adapterName, filename string) (Configer, error) {
 	return adapter.Parse(filename)
 }
 
-// NewConfigData adapterName is ini/json/xml/yaml.
+// NewConfigData adapterName is ini/json/xml/yaml/configMap.
 // data is the config data.
 func NewConfigData(adapterName string, data []byte) (Configer, error) {
 	adapter, ok := adapters[adapterName]
