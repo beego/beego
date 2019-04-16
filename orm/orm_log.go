@@ -123,9 +123,23 @@ func (d *dbQueryLog) Prepare(query string) (*sql.Stmt, error) {
 	return stmt, err
 }
 
+func (d *dbQueryLog) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
+	a := time.Now()
+	stmt, err := d.db.PrepareContext(ctx, query)
+	debugLogQueies(d.alias, "db.Prepare", query, a, err)
+	return stmt, err
+}
+
 func (d *dbQueryLog) Exec(query string, args ...interface{}) (sql.Result, error) {
 	a := time.Now()
 	res, err := d.db.Exec(query, args...)
+	debugLogQueies(d.alias, "db.Exec", query, a, err, args...)
+	return res, err
+}
+
+func (d *dbQueryLog) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	a := time.Now()
+	res, err := d.db.ExecContext(ctx, query, args...)
 	debugLogQueies(d.alias, "db.Exec", query, a, err, args...)
 	return res, err
 }
@@ -137,9 +151,23 @@ func (d *dbQueryLog) Query(query string, args ...interface{}) (*sql.Rows, error)
 	return res, err
 }
 
+func (d *dbQueryLog) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+	a := time.Now()
+	res, err := d.db.QueryContext(ctx, query, args...)
+	debugLogQueies(d.alias, "db.Query", query, a, err, args...)
+	return res, err
+}
+
 func (d *dbQueryLog) QueryRow(query string, args ...interface{}) *sql.Row {
 	a := time.Now()
 	res := d.db.QueryRow(query, args...)
+	debugLogQueies(d.alias, "db.QueryRow", query, a, nil, args...)
+	return res
+}
+
+func (d *dbQueryLog) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
+	a := time.Now()
+	res := d.db.QueryRowContext(ctx, query, args...)
 	debugLogQueies(d.alias, "db.QueryRow", query, a, nil, args...)
 	return res
 }

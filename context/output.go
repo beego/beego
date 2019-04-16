@@ -32,6 +32,7 @@ import (
 	"time"
 
 	"gopkg.in/yaml.v2"
+
 	"github.com/golang/protobuf/proto"
 )
 
@@ -107,7 +108,7 @@ func (output *BeegoOutput) Cookie(name string, value string, others ...interface
 
 		switch {
 		case maxAge > 0:
-			fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(maxAge)*time.Second).UTC().Format(time.RFC1123), maxAge)
+			fmt.Fprintf(&b, "; Expires=%s; Max-Age=%d", time.Now().Add(time.Duration(maxAge) * time.Second).UTC().Format(time.RFC1123), maxAge)
 		case maxAge < 0:
 			fmt.Fprintf(&b, "; Max-Age=0")
 		}
@@ -184,10 +185,14 @@ func errorRenderer(err error) Renderer {
 	})
 }
 
+func getContentTypeHead(contentType string) string {
+	return fmt.Sprintf("%s; charset=utf-8", contentType)
+}
+
 // JSON writes json to response body.
 // if encoding is true, it converts utf-8 to \u0000 type.
 func (output *BeegoOutput) JSON(data interface{}, hasIndent bool, encoding bool) error {
-	output.Header("Content-Type", "application/json; charset=utf-8")
+	output.Header("Content-Type", getContentTypeHead(ApplicationJSON))
 	var content []byte
 	var err error
 	if hasIndent {
@@ -205,12 +210,10 @@ func (output *BeegoOutput) JSON(data interface{}, hasIndent bool, encoding bool)
 	return output.Body(content)
 }
 
-// PROTOBUF writes protobuf to response body.
-func (output *BeegoOutput) PROTOBUF(data interface{}) error {
-	output.Header("Content-Type", "application/x-protobuf; charset=utf-8")
-	var content []byte
-	var err error
-	content, err = proto.Marshal(data.(proto.Message))
+// ProtoBuf writes protobuf to response body.
+func (output *BeegoOutput) ProtoBuf(data interface{}) error {
+	output.Header("Content-Type", getContentTypeHead(ApplicationProtoBuf))
+	content, err := proto.Marshal(data.(proto.Message))
 	if err != nil {
 		http.Error(output.Context.ResponseWriter, err.Error(), http.StatusInternalServerError)
 		return err
@@ -220,10 +223,8 @@ func (output *BeegoOutput) PROTOBUF(data interface{}) error {
 
 // YAML writes yaml to response body.
 func (output *BeegoOutput) YAML(data interface{}) error {
-	output.Header("Content-Type", "application/x-yaml; charset=utf-8")
-	var content []byte
-	var err error
-	content, err = yaml.Marshal(data)
+	output.Header("Content-Type", getContentTypeHead(ApplicationYAML))
+	content, err := yaml.Marshal(data)
 	if err != nil {
 		http.Error(output.Context.ResponseWriter, err.Error(), http.StatusInternalServerError)
 		return err
@@ -233,7 +234,7 @@ func (output *BeegoOutput) YAML(data interface{}) error {
 
 // JSONP writes jsonp to response body.
 func (output *BeegoOutput) JSONP(data interface{}, hasIndent bool) error {
-	output.Header("Content-Type", "application/javascript; charset=utf-8")
+	output.Header("Content-Type", getContentTypeHead(ApplicationJSONP))
 	var content []byte
 	var err error
 	if hasIndent {
@@ -259,7 +260,7 @@ func (output *BeegoOutput) JSONP(data interface{}, hasIndent bool) error {
 
 // XML writes xml string to response body.
 func (output *BeegoOutput) XML(data interface{}, hasIndent bool) error {
-	output.Header("Content-Type", "application/xml; charset=utf-8")
+	output.Header("Content-Type", getContentTypeHead(ApplicationXML))
 	var content []byte
 	var err error
 	if hasIndent {
@@ -272,6 +273,21 @@ func (output *BeegoOutput) XML(data interface{}, hasIndent bool) error {
 		return err
 	}
 	return output.Body(content)
+}
+
+// ServeFormatted serve YAML, XML OR JSON, depending on the value of the Accept header
+func (output *BeegoOutput) ServeFormatted(data interface{}, hasIndent bool, hasEncode ...bool) {
+	accept := output.Context.Input.Header("Accept")
+	switch accept {
+	case ApplicationYAML:
+		output.YAML(data)
+	case ApplicationXML, TextXML:
+		output.XML(data, hasIndent)
+	case ApplicationProtoBuf:
+		output.ProtoBuf(data)
+	default:
+		output.JSON(data, hasIndent, len(hasEncode) > 0 && hasEncode[0])
+	}
 }
 
 // Download forces response for download file.
