@@ -38,6 +38,7 @@ Congratulations! You've just built your first **beego** app.
 ## Features
 
 * RESTful support
+* RESTful protocol buffers with [gogo/protobuf](https://github.com/gogo/protobuf)
 * MVC architecture
 * Modularity
 * Auto API documents
