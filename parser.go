@@ -35,7 +35,7 @@ import (
 	"github.com/astaxie/beego/utils"
 )
 
-var globalRouterTemplate = `package routers
+var globalRouterTemplate = `package {{.routersDir}}
 
 import (
 	"github.com/astaxie/beego"
@@ -516,7 +516,9 @@ func genRouterCode(pkgRealpath string) {
 		}
 		defer f.Close()
 
+		routersDir := AppConfig.DefaultString("routersdir", "routers")
 		content := strings.Replace(globalRouterTemplate, "{{.globalinfo}}", globalinfo, -1)
+		content = strings.Replace(content, "{{.routersDir}}", routersDir, -1)
 		content = strings.Replace(content, "{{.globalimport}}", globalimport, -1)
 		f.WriteString(content)
 	}
@@ -574,7 +576,8 @@ func getpathTime(pkgRealpath string) (lastupdate int64, err error) {
 func getRouterDir(pkgRealpath string) string {
 	dir := filepath.Dir(pkgRealpath)
 	for {
-		d := filepath.Join(dir, "routers")
+		routersDir := AppConfig.DefaultString("routersdir", "routers")
+		d := filepath.Join(dir, routersDir)
 		if utils.FileExists(d) {
 			return d
 		}
