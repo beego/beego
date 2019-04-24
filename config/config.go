@@ -17,7 +17,7 @@
 //  import "github.com/astaxie/beego/config"
 //Examples.
 //
-//  cnf, err := config.NewConfig("ini", "config.conf")
+//  cnf, err := config.NewConfig("configMap", "beego")
 //
 //  cnf APIS:
 //
@@ -41,36 +41,53 @@
 package config
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"reflect"
 	"time"
+
+	"github.com/astaxie/beego/encoder"
+	"github.com/astaxie/beego/encoder/json"
 )
 
 // Configer defines how to get and set value from configuration raw data.
 type Configer interface {
 	Set(key, val string) error   //support section::key type in given key when using ini type.
-	String(key string) string    //support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
-	Strings(key string) []string //get string slice
-	Int(key string) (int, error)
-	Int64(key string) (int64, error)
-	Bool(key string) (bool, error)
-	Float(key string) (float64, error)
-	DefaultString(key string, defaultVal string) string      // support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
-	DefaultStrings(key string, defaultVal []string) []string //get string slice
-	DefaultInt(key string, defaultVal int) int
-	DefaultInt64(key string, defaultVal int64) int64
-	DefaultBool(key string, defaultVal bool) bool
-	DefaultFloat(key string, defaultVal float64) float64
-	DIY(key string) (interface{}, error)
+	String(keys ...string) string    //support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
+	Strings(keys ...string) []string //get string slice
+	Int(keys ...string) (int, error)
+	Int64(keys ...string) (int64, error)
+	Bool(keys ...string) (bool, error)
+	Float(keys ...string) (float64, error)
+	DefaultString(defaultVal string, keys ...string) string      // support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
+	DefaultStrings(defaultVal []string, keys ...string) []string //get string slice
+	DefaultInt(defaultVal int, keys ...string) int
+	DefaultInt64(defaultVal int64, keys ...string) int64
+	DefaultBool(defaultVal bool, keys ...string) bool
+	DefaultFloat(defaultVal float64, keys ...string) float64
+	DIY(keys ...string) (interface{}, error)
 	GetSection(section string) (map[string]string, error)
-	SaveConfigFile(filename string) error
+	SaveConfigFile(filename string, coder encoder.Encoder) error
+}
+
+type Option struct {
+	// Encoder
+	Encoder encoder.Encoder
+
+	// for alternative data
+	Context context.Context
+
+	ConfigName string
+
+	SeparatorKeys string
 }
 
 // Config is the adapter interface for parsing config file to get raw data to Configer.
 type Config interface {
-	Parse(key string) (Configer, error)
+	Parse() (Configer, error)
 	ParseData(data []byte) (Configer, error)
+	SetOption(option Option)
 }
 
 var adapters = make(map[string]Config)
@@ -85,27 +102,69 @@ func Register(name string, adapter Config) {
 	if _, ok := adapters[name]; ok {
 		panic("config: Register called twice for adapter " + name)
 	}
+
 	adapters[name] = adapter
 }
 
-// NewConfig adapterName is ini/json/xml/yaml/configMap.
-// filename is the config file path.
-func NewConfig(adapterName, filename string) (Configer, error) {
+// NewConfig adapterName is env/memory/configMap/consul/file.
+// configName is path <file> in case file or config name
+func NewConfig(adapterName, configName string, opts ...Option) (Configer, error) {
 	adapter, ok := adapters[adapterName]
 	if !ok {
 		return nil, fmt.Errorf("config: unknown adaptername %q (forgotten import?)", adapterName)
 	}
-	return adapter.Parse(filename)
+
+	// Default options
+	options := Option{
+		Encoder:       json.NewEncoder(),
+		Context:       context.Background(),
+		SeparatorKeys: "::",
+	}
+
+	if len(opts) > 0 {
+		options = opts[0]
+	}
+
+	options.ConfigName = configName
+
+	adapter.SetOption(options)
+
+	return adapter.Parse()
 }
 
 // NewConfigData adapterName is ini/json/xml/yaml/configMap.
 // data is the config data.
-func NewConfigData(adapterName string, data []byte) (Configer, error) {
+func NewConfigData(adapterName string, data []byte, opts ...Option) (Configer, error) {
 	adapter, ok := adapters[adapterName]
 	if !ok {
 		return nil, fmt.Errorf("config: unknown adaptername %q (forgotten import?)", adapterName)
 	}
+
+	options := Option{
+		Encoder:       json.NewEncoder(),
+		Context:       context.Background(),
+		ConfigName:    "default",
+		SeparatorKeys: "::",
+	}
+
+	if len(opts) > 0 {
+		options = opts[0]
+	}
+
+	adapter.SetOption(options)
+
 	return adapter.ParseData(data)
+}
+
+func ToStringKeyMap(v map[interface{}]interface{}) map[string]interface{} {
+	mapString := make(map[string]interface{})
+
+	for key, value := range v {
+		strKey := fmt.Sprintf("%v", key)
+		mapString[strKey] = value
+	}
+
+	return mapString
 }
 
 // ExpandValueEnvForMap convert all string value with environment variable.
@@ -114,6 +173,8 @@ func ExpandValueEnvForMap(m map[string]interface{}) map[string]interface{} {
 		switch value := v.(type) {
 		case string:
 			m[k] = ExpandValueEnv(value)
+		case map[interface{}]interface{}:
+			m[k] = ExpandValueEnvForMap(ToStringKeyMap(value))
 		case map[string]interface{}:
 			m[k] = ExpandValueEnvForMap(value)
 		case map[string]string:
@@ -229,7 +290,6 @@ func ToString(x interface{}) string {
 	// Handle type with .Error() method
 	case error:
 		return y.Error()
-
 	}
 
 	// Handle named string type

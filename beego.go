@@ -23,7 +23,7 @@ import (
 
 const (
 	// VERSION represent beego web framework version.
-	VERSION = "1.11.2"
+	VERSION = "2.0.0"
 
 	// DEV is for develop
 	DEV = "dev"
@@ -108,8 +108,8 @@ func initBeforeHTTPRun() {
 
 // TestBeegoInit is for test package init
 func TestBeegoInit(ap string) {
-	path := filepath.Join(ap, "conf", "app.conf")
-	os.Chdir(ap)
+	path := filepath.Join(ap, "conf", "app.json")
+	_ = os.Chdir(ap)
 	InitBeegoBeforeTest(path)
 }
 

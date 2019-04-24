@@ -23,7 +23,10 @@ import (
 	"strings"
 
 	"github.com/astaxie/beego/config"
+	"github.com/astaxie/beego/config/base"
+	_ "github.com/astaxie/beego/config/file"
 	"github.com/astaxie/beego/context"
+	_ "github.com/astaxie/beego/encoder/yaml"
 	"github.com/astaxie/beego/logs"
 	"github.com/astaxie/beego/session"
 	"github.com/astaxie/beego/utils"
@@ -127,8 +130,8 @@ var (
 
 	// appConfigPath is the path to the config files
 	appConfigPath string
-	// appConfigProvider is the provider for the config, default is ini
-	appConfigProvider = "ini"
+	// appConfigProvider is the provider for the config, default is file
+	appConfigProvider = "file"
 )
 
 func init() {
@@ -141,15 +144,15 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	var filename = "app.conf"
+	var filename = "app.yaml"
 	if os.Getenv("BEEGO_RUNMODE") != "" {
-		filename = os.Getenv("BEEGO_RUNMODE") + ".app.conf"
+		filename = os.Getenv("BEEGO_RUNMODE") + ".app.yaml"
 	}
 	appConfigPath = filepath.Join(workPath, "conf", filename)
 	if !utils.FileExists(appConfigPath) {
 		appConfigPath = filepath.Join(AppPath, "conf", filename)
 		if !utils.FileExists(appConfigPath) {
-			AppConfig = &beegoAppConfig{innerConfig: config.NewFakeConfig()}
+			AppConfig = &beegoAppConfig{Configer: base.NewBaseConfig()}
 			return
 		}
 	}
@@ -334,10 +337,10 @@ func assignConfig(ac config.Configer) error {
 
 	//init log
 	logs.Reset()
-	for adaptor, config := range BConfig.Log.Outputs {
-		err := logs.SetLogger(adaptor, config)
+	for adaptor, conf := range BConfig.Log.Outputs {
+		err := logs.SetLogger(adaptor, conf)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, fmt.Sprintf("%s with the config %q got err:%s", adaptor, config, err.Error()))
+			fmt.Fprintln(os.Stderr, fmt.Sprintf("%s with the config %q got err:%s", adaptor, conf, err.Error()))
 		}
 	}
 	logs.SetLogFuncCall(BConfig.Log.FileLineNum)
@@ -366,145 +369,32 @@ func assignSingleConfig(p interface{}, ac config.Configer) {
 		case reflect.String:
 			pf.SetString(ac.DefaultString(name, pf.String()))
 		case reflect.Int, reflect.Int64:
-			pf.SetInt(ac.DefaultInt64(name, pf.Int()))
+			pf.SetInt(ac.DefaultInt64(pf.Int(), name))
 		case reflect.Bool:
-			pf.SetBool(ac.DefaultBool(name, pf.Bool()))
+			valDef :=  pf.Bool()
+			pf.SetBool(ac.DefaultBool(valDef, name))
 		case reflect.Struct:
 		default:
 			//do nothing here
 		}
 	}
-
 }
 
-// LoadAppConfig allow developer to apply a config file
-func LoadAppConfig(adapterName, configPath string) error {
-	absConfigPath, err := filepath.Abs(configPath)
-	if err != nil {
-		return err
-	}
-
-	if !utils.FileExists(absConfigPath) {
-		return fmt.Errorf("the target config file: %s don't exist", configPath)
-	}
-
-	appConfigPath = absConfigPath
+// LoadAppConfig allow developer to apply a config
+func LoadAppConfig(adapterName, configName string) error {
 	appConfigProvider = adapterName
-
-	return parseConfig(appConfigPath)
+	return parseConfig(configName)
 }
 
 type beegoAppConfig struct {
-	innerConfig config.Configer
+	config.Configer
 }
 
 func newAppConfig(appConfigProvider, appConfigPath string) (*beegoAppConfig, error) {
 	ac, err := config.NewConfig(appConfigProvider, appConfigPath)
+
 	if err != nil {
 		return nil, err
 	}
 	return &beegoAppConfig{ac}, nil
-}
-
-func (b *beegoAppConfig) Set(key, val string) error {
-	if err := b.innerConfig.Set(BConfig.RunMode+"::"+key, val); err != nil {
-		return err
-	}
-	return b.innerConfig.Set(key, val)
-}
-
-func (b *beegoAppConfig) String(key string) string {
-	if v := b.innerConfig.String(BConfig.RunMode + "::" + key); v != "" {
-		return v
-	}
-	return b.innerConfig.String(key)
-}
-
-func (b *beegoAppConfig) Strings(key string) []string {
-	if v := b.innerConfig.Strings(BConfig.RunMode + "::" + key); len(v) > 0 {
-		return v
-	}
-	return b.innerConfig.Strings(key)
-}
-
-func (b *beegoAppConfig) Int(key string) (int, error) {
-	if v, err := b.innerConfig.Int(BConfig.RunMode + "::" + key); err == nil {
-		return v, nil
-	}
-	return b.innerConfig.Int(key)
-}
-
-func (b *beegoAppConfig) Int64(key string) (int64, error) {
-	if v, err := b.innerConfig.Int64(BConfig.RunMode + "::" + key); err == nil {
-		return v, nil
-	}
-	return b.innerConfig.Int64(key)
-}
-
-func (b *beegoAppConfig) Bool(key string) (bool, error) {
-	if v, err := b.innerConfig.Bool(BConfig.RunMode + "::" + key); err == nil {
-		return v, nil
-	}
-	return b.innerConfig.Bool(key)
-}
-
-func (b *beegoAppConfig) Float(key string) (float64, error) {
-	if v, err := b.innerConfig.Float(BConfig.RunMode + "::" + key); err == nil {
-		return v, nil
-	}
-	return b.innerConfig.Float(key)
-}
-
-func (b *beegoAppConfig) DefaultString(key string, defaultVal string) string {
-	if v := b.String(key); v != "" {
-		return v
-	}
-	return defaultVal
-}
-
-func (b *beegoAppConfig) DefaultStrings(key string, defaultVal []string) []string {
-	if v := b.Strings(key); len(v) != 0 {
-		return v
-	}
-	return defaultVal
-}
-
-func (b *beegoAppConfig) DefaultInt(key string, defaultVal int) int {
-	if v, err := b.Int(key); err == nil {
-		return v
-	}
-	return defaultVal
-}
-
-func (b *beegoAppConfig) DefaultInt64(key string, defaultVal int64) int64 {
-	if v, err := b.Int64(key); err == nil {
-		return v
-	}
-	return defaultVal
-}
-
-func (b *beegoAppConfig) DefaultBool(key string, defaultVal bool) bool {
-	if v, err := b.Bool(key); err == nil {
-		return v
-	}
-	return defaultVal
-}
-
-func (b *beegoAppConfig) DefaultFloat(key string, defaultVal float64) float64 {
-	if v, err := b.Float(key); err == nil {
-		return v
-	}
-	return defaultVal
-}
-
-func (b *beegoAppConfig) DIY(key string) (interface{}, error) {
-	return b.innerConfig.DIY(key)
-}
-
-func (b *beegoAppConfig) GetSection(section string) (map[string]string, error) {
-	return b.innerConfig.GetSection(section)
-}
-
-func (b *beegoAppConfig) SaveConfigFile(filename string) error {
-	return b.innerConfig.SaveConfigFile(filename)
 }

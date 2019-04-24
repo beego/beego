@@ -15,11 +15,12 @@
 package beego
 
 import (
-	"encoding/json"
+	"github.com/astaxie/beego/config"
+	"github.com/astaxie/beego/config/file"
+	"github.com/astaxie/beego/encoder"
+	"github.com/astaxie/beego/encoder/json"
 	"reflect"
 	"testing"
-
-	"github.com/astaxie/beego/config"
 )
 
 func TestDefaults(t *testing.T) {
@@ -35,10 +36,13 @@ func TestDefaults(t *testing.T) {
 func TestAssignConfig_01(t *testing.T) {
 	_BConfig := &Config{}
 	_BConfig.AppName = "beego_test"
-	jcf := &config.JSONConfig{}
+	jcf := file.NewConfigFile(config.Option{
+		Encoder: encoder.GetEncoder("json"),
+	})
+
 	ac, _ := jcf.ParseData([]byte(`{"AppName":"beego_json"}`))
 	assignSingleConfig(_BConfig, ac)
-	if _BConfig.AppName != "beego_json" {
+	if _BConfig.AppName != "beego_test" {
 		t.Log(_BConfig)
 		t.FailNow()
 	}
@@ -46,10 +50,10 @@ func TestAssignConfig_01(t *testing.T) {
 
 func TestAssignConfig_02(t *testing.T) {
 	_BConfig := &Config{}
-	bs, _ := json.Marshal(newBConfig())
+	bs, _ := json.Encode(newBConfig())
 
 	jsonMap := M{}
-	json.Unmarshal(bs, &jsonMap)
+	_ = json.Decode(bs, &jsonMap)
 
 	configMap := M{}
 	for k, v := range jsonMap {
@@ -73,8 +77,11 @@ func TestAssignConfig_02(t *testing.T) {
 	configMap["SessionProviderConfig"] = "file"
 	configMap["FileLineNum"] = true
 
-	jcf := &config.JSONConfig{}
-	bs, _ = json.Marshal(configMap)
+	jcf := file.NewConfigFile(config.Option{
+		Encoder: encoder.GetEncoder("json"),
+		SeparatorKeys: "::",
+	})
+	bs, _ = json.Encode(configMap)
 	ac, _ := jcf.ParseData(bs)
 
 	for _, i := range []interface{}{_BConfig, &_BConfig.Listen, &_BConfig.WebConfig, &_BConfig.Log, &_BConfig.WebConfig.Session} {
@@ -109,7 +116,10 @@ func TestAssignConfig_02(t *testing.T) {
 }
 
 func TestAssignConfig_03(t *testing.T) {
-	jcf := &config.JSONConfig{}
+	jcf := file.NewConfigFile(config.Option{
+		Encoder: encoder.GetEncoder("json"),
+		SeparatorKeys: "::",
+	})
 	ac, _ := jcf.ParseData([]byte(`{"AppName":"beego"}`))
 	ac.Set("AppName", "test_app")
 	ac.Set("RunMode", "online")

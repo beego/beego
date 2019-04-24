@@ -94,9 +94,9 @@ func registerAdmin() error {
 func registerGzip() error {
 	if BConfig.EnableGzip {
 		context.InitGzip(
-			AppConfig.DefaultInt("gzipMinLength", -1),
-			AppConfig.DefaultInt("gzipCompressLevel", -1),
-			AppConfig.DefaultStrings("includedMethods", []string{"GET"}),
+			AppConfig.DefaultInt(-1, "gzipMinLength"),
+			AppConfig.DefaultInt( -1, "gzipCompressLevel"),
+			AppConfig.DefaultStrings([]string{"GET"}, "includedMethods"),
 		)
 	}
 	return nil
