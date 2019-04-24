@@ -367,7 +367,7 @@ func assignSingleConfig(p interface{}, ac config.Configer) {
 		name := pt.Field(i).Name
 		switch pf.Kind() {
 		case reflect.String:
-			pf.SetString(ac.DefaultString(name, pf.String()))
+			pf.SetString(ac.DefaultString(pf.String(), name))
 		case reflect.Int, reflect.Int64:
 			pf.SetInt(ac.DefaultInt64(pf.Int(), name))
 		case reflect.Bool:

@@ -15,12 +15,13 @@
 package beego
 
 import (
+	"reflect"
+	"testing"
+
 	"github.com/astaxie/beego/config"
 	"github.com/astaxie/beego/config/file"
 	"github.com/astaxie/beego/encoder"
 	"github.com/astaxie/beego/encoder/json"
-	"reflect"
-	"testing"
 )
 
 func TestDefaults(t *testing.T) {
@@ -38,11 +39,12 @@ func TestAssignConfig_01(t *testing.T) {
 	_BConfig.AppName = "beego_test"
 	jcf := file.NewConfigFile(config.Option{
 		Encoder: encoder.GetEncoder("json"),
+		SeparatorKeys: "::",
 	})
 
 	ac, _ := jcf.ParseData([]byte(`{"AppName":"beego_json"}`))
 	assignSingleConfig(_BConfig, ac)
-	if _BConfig.AppName != "beego_test" {
+	if _BConfig.AppName != "beego_json" {
 		t.Log(_BConfig)
 		t.FailNow()
 	}
@@ -127,7 +129,7 @@ func TestAssignConfig_03(t *testing.T) {
 	ac.Set("StaticExtensionsToGzip", ".css,.js,.html,.jpg,.png")
 	assignConfig(ac)
 
-	t.Logf("%#v", BConfig)
+	//t.Logf("%#v", BConfig)
 
 	if BConfig.AppName != "test_app" {
 		t.FailNow()
