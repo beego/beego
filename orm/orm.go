@@ -72,7 +72,7 @@ const (
 var (
 	Debug            = false
 	DebugLog         = NewLog(os.Stdout)
-	DefaultRowsLimit = 1000
+	DefaultRowsLimit = -1
 	DefaultRelsDepth = 2
 	DefaultTimeLoc   = time.Local
 	ErrTxHasBegan    = errors.New("<Ormer.Begin> transaction already begin")
