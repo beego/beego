@@ -97,7 +97,7 @@ func parseYML(buf []byte) (cnf map[string]interface{}, err error) {
 		}
 	}
 
-	data, err := goyaml2.Read(bytes.NewBuffer(buf))
+	data, err := goyaml2.Read(bytes.NewReader(buf))
 	if err != nil {
 		log.Println("Goyaml2 ERR>", string(buf), err)
 		return

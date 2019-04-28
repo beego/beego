@@ -176,7 +176,7 @@ func (app *App) Run(mws ...MiddleWare) {
 			if BConfig.Listen.HTTPSPort != 0 {
 				app.Server.Addr = fmt.Sprintf("%s:%d", BConfig.Listen.HTTPSAddr, BConfig.Listen.HTTPSPort)
 			} else if BConfig.Listen.EnableHTTP {
-				BeeLogger.Info("Start https server error, conflict with http. Please reset https port")
+				logs.Info("Start https server error, conflict with http. Please reset https port")
 				return
 			}
 			logs.Info("https server Running on https://%s", app.Server.Addr)
@@ -192,7 +192,7 @@ func (app *App) Run(mws ...MiddleWare) {
 				pool := x509.NewCertPool()
 				data, err := ioutil.ReadFile(BConfig.Listen.TrustCaFile)
 				if err != nil {
-					BeeLogger.Info("MutualHTTPS should provide TrustCaFile")
+					logs.Info("MutualHTTPS should provide TrustCaFile")
 					return
 				}
 				pool.AppendCertsFromPEM(data)

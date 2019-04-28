@@ -78,7 +78,7 @@ var (
 	DefaultReadTimeOut time.Duration
 	// DefaultWriteTimeOut is the HTTP Write timeout
 	DefaultWriteTimeOut time.Duration
-	// DefaultMaxHeaderBytes is the Max HTTP Herder size, default is 0, no limit
+	// DefaultMaxHeaderBytes is the Max HTTP Header size, default is 0, no limit
 	DefaultMaxHeaderBytes int
 	// DefaultTimeout is the shutdown server's timeout. default is 60s
 	DefaultTimeout = 60 * time.Second
@@ -122,7 +122,6 @@ func NewServer(addr string, handler http.Handler) (srv *Server) {
 	}
 
 	srv = &Server{
-		wg:      sync.WaitGroup{},
 		sigChan: make(chan os.Signal),
 		isChild: isChild,
 		SignalHooks: map[int]map[os.Signal][]func(){
@@ -137,20 +136,21 @@ func NewServer(addr string, handler http.Handler) (srv *Server) {
 				syscall.SIGTERM: {},
 			},
 		},
-		state:   StateInit,
-		Network: "tcp",
+		state:        StateInit,
+		Network:      "tcp",
+		terminalChan: make(chan error), //no cache channel
 	}
-	srv.Server = &http.Server{}
-	srv.Server.Addr = addr
-	srv.Server.ReadTimeout = DefaultReadTimeOut
-	srv.Server.WriteTimeout = DefaultWriteTimeOut
-	srv.Server.MaxHeaderBytes = DefaultMaxHeaderBytes
-	srv.Server.Handler = handler
+	srv.Server = &http.Server{
+		Addr:           addr,
+		ReadTimeout:    DefaultReadTimeOut,
+		WriteTimeout:   DefaultWriteTimeOut,
+		MaxHeaderBytes: DefaultMaxHeaderBytes,
+		Handler:        handler,
+	}
 
 	runningServersOrder = append(runningServersOrder, addr)
 	runningServers[addr] = srv
-
-	return
+	return srv
 }
 
 // ListenAndServe refer http.ListenAndServe

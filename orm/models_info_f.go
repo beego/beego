@@ -301,7 +301,7 @@ checkType:
 	fi.sf = sf
 	fi.fullName = mi.fullName + mName + "." + sf.Name
 
-	fi.description = sf.Tag.Get("description")
+	fi.description = tags["description"]
 	fi.null = attrs["null"]
 	fi.index = attrs["index"]
 	fi.auto = attrs["auto"]

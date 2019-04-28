@@ -435,7 +435,7 @@ func exception(errCode string, ctx *context.Context) {
 
 func executeError(err *errorInfo, ctx *context.Context, code int) {
 	//make sure to log the error in the access log
-	logAccess(ctx, nil, code)
+	LogAccess(ctx, nil, code)
 
 	if err.errorType == errorTypeHandler {
 		ctx.ResponseWriter.WriteHeader(code)
