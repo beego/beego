@@ -778,7 +778,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			runRouter = routerInfo.controllerType
 			methodParams = routerInfo.methodParams
 			method := r.Method
-			if r.Method == http.MethodPost && context.Input.Query("_method") == http.MethodPost {
+			if r.Method == http.MethodPost && context.Input.Query("_method") == http.MethodPut {
 				method = http.MethodPut
 			}
 			if r.Method == http.MethodPost && context.Input.Query("_method") == http.MethodDelete {
@@ -843,6 +843,8 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 				execController.Patch()
 			case http.MethodOptions:
 				execController.Options()
+			case http.MethodTrace:
+				execController.Trace()
 			default:
 				if !execController.HandlerFunc(runMethod) {
 					vc := reflect.ValueOf(execController)
