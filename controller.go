@@ -17,6 +17,7 @@ package beego
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"html/template"
 	"io"
 	"mime/multipart"
@@ -124,6 +125,7 @@ type ControllerInterface interface {
 	Head()
 	Patch()
 	Options()
+	Trace()
 	Finish()
 	Render() error
 	XSRFToken() string
@@ -186,6 +188,28 @@ func (c *Controller) Patch() {
 // Options adds a request function to handle OPTIONS request.
 func (c *Controller) Options() {
 	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", http.StatusMethodNotAllowed)
+}
+
+// Trace adds a request function to handle Trace request.
+// this method SHOULD NOT be overridden.
+// https://tools.ietf.org/html/rfc7231#section-4.3.8
+// The TRACE method requests a remote, application-level loop-back of
+// the request message.  The final recipient of the request SHOULD
+// reflect the message received, excluding some fields described below,
+// back to the client as the message body of a 200 (OK) response with a
+// Content-Type of "message/http" (Section 8.3.1 of [RFC7230]).
+func (c *Controller) Trace() {
+	ts := func(h http.Header) (hs string) {
+		for k, v := range h {
+			hs += fmt.Sprintf("\r\n%s: %s", k, v)
+		}
+		return
+	}
+	hs := fmt.Sprintf("\r\nTRACE %s %s%s\r\n", c.Ctx.Request.RequestURI, c.Ctx.Request.Proto, ts(c.Ctx.Request.Header))
+	c.Ctx.Output.Header("Content-Type", "message/http")
+	c.Ctx.Output.Header("Content-Length", fmt.Sprint(len(hs)))
+	c.Ctx.Output.Header("Cache-Control", "no-cache, no-store, must-revalidate")
+	c.Ctx.WriteString(hs)
 }
 
 // HandlerFunc call function with the name
