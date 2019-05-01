@@ -110,8 +110,8 @@ func (bc *MemoryCache) Delete(name string) error {
 // Incr increase cache counter in memory.
 // it supports int,int32,int64,uint,uint32,uint64.
 func (bc *MemoryCache) Incr(key string) error {
-	bc.RLock()
-	defer bc.RUnlock()
+	bc.Lock()
+	defer bc.Unlock()
 	itm, ok := bc.items[key]
 	if !ok {
 		return errors.New("key not exist")
@@ -137,8 +137,8 @@ func (bc *MemoryCache) Incr(key string) error {
 
 // Decr decrease counter in memory.
 func (bc *MemoryCache) Decr(key string) error {
-	bc.RLock()
-	defer bc.RUnlock()
+	bc.Lock()
+	defer bc.Unlock()
 	itm, ok := bc.items[key]
 	if !ok {
 		return errors.New("key not exist")
