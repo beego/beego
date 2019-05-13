@@ -15,6 +15,7 @@
 package session
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -128,8 +129,9 @@ func (fp *FileProvider) SessionInit(maxlifetime int64, savePath string) error {
 // if file is not exist, create it.
 // the file path is generated from sid string.
 func (fp *FileProvider) SessionRead(sid string) (Store, error) {
-	if strings.ContainsAny(sid, "./") {
-		return nil, nil
+	inavlidChars := "./"
+	if strings.ContainsAny(sid, inavlidChars) {
+		return nil, errors.New("the sid shouldn't have following characters " + inavlidChars)
 	}
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()
