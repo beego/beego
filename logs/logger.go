@@ -33,7 +33,7 @@ func newLogWriter(wr io.Writer) *logWriter {
 
 func (lg *logWriter) println(when time.Time, msg string) {
 	lg.Lock()
-	h, _ := formatTimeHeader(when)
+	h, _, _:= formatTimeHeader(when)
 	lg.writer.Write(append(append(h, msg...), '\n'))
 	lg.Unlock()
 }
@@ -87,13 +87,15 @@ const (
 	mi2 = `012345678901234567890123456789012345678901234567890123456789`
 	s1  = `000000000011111111112222222222333333333344444444445555555555`
 	s2  = `012345678901234567890123456789012345678901234567890123456789`
+	ns1 = `0123456789`
 )
 
-func formatTimeHeader(when time.Time) ([]byte, int) {
+func formatTimeHeader(when time.Time) ([]byte, int, int) {
 	y, mo, d := when.Date()
 	h, mi, s := when.Clock()
-	//len("2006/01/02 15:04:05 ")==20
-	var buf [20]byte
+	ns := when.Nanosecond() / 1000000
+	//len("2006/01/02 15:04:05.123 ")==24
+	var buf [24]byte
 
 	buf[0] = y1[y/1000%10]
 	buf[1] = y2[y/100]
@@ -114,9 +116,14 @@ func formatTimeHeader(when time.Time) ([]byte, int) {
 	buf[16] = ':'
 	buf[17] = s1[s]
 	buf[18] = s2[s]
-	buf[19] = ' '
+	buf[19] = '.'
+	buf[20] = ns1[ns/100]
+	buf[21] = ns1[ns%100/10]
+	buf[22] = ns1[ns%10]
 
-	return buf[0:], d
+	buf[23] = ' '
+
+	return buf[0:], d, h
 }
 
 var (
@@ -139,6 +146,11 @@ var (
 	reset = string([]byte{27, 91, 48, 109})
 )
 
+// ColorByStatus return color by http code
+// 2xx return Green
+// 3xx return White
+// 4xx return Yellow
+// 5xx return Red
 func ColorByStatus(cond bool, code int) string {
 	switch {
 	case code >= 200 && code < 300:
@@ -152,6 +164,14 @@ func ColorByStatus(cond bool, code int) string {
 	}
 }
 
+// ColorByMethod return color by http code
+// GET return Blue
+// POST return Cyan
+// PUT return Yellow
+// DELETE return Red
+// PATCH return Green
+// HEAD return Magenta
+// OPTIONS return WHITE
 func ColorByMethod(cond bool, method string) string {
 	switch method {
 	case "GET":
@@ -173,10 +193,10 @@ func ColorByMethod(cond bool, method string) string {
 	}
 }
 
-// Guard Mutex to guarantee atomicity of W32Debug(string) function
+// Guard Mutex to guarantee atomic of W32Debug(string) function
 var mu sync.Mutex
 
-// Helper method to output colored logs in Windows terminals
+// W32Debug Helper method to output colored logs in Windows terminals
 func W32Debug(msg string) {
 	mu.Lock()
 	defer mu.Unlock()

@@ -112,7 +112,7 @@ func TestFile2(t *testing.T) {
 	os.Remove("test2.log")
 }
 
-func TestFileRotate_01(t *testing.T) {
+func TestFileDailyRotate_01(t *testing.T) {
 	log := NewLogger(10000)
 	log.SetLogger("file", `{"filename":"test3.log","maxlines":4}`)
 	log.Debug("debug")
@@ -133,28 +133,28 @@ func TestFileRotate_01(t *testing.T) {
 	os.Remove("test3.log")
 }
 
-func TestFileRotate_02(t *testing.T) {
+func TestFileDailyRotate_02(t *testing.T) {
 	fn1 := "rotate_day.log"
-	fn2 := "rotate_day." + time.Now().Add(-24*time.Hour).Format("2006-01-02") + ".log"
-	testFileRotate(t, fn1, fn2)
+	fn2 := "rotate_day." + time.Now().Add(-24*time.Hour).Format("2006-01-02") + ".001.log"
+	testFileRotate(t, fn1, fn2, true, false)
 }
 
-func TestFileRotate_03(t *testing.T) {
+func TestFileDailyRotate_03(t *testing.T) {
 	fn1 := "rotate_day.log"
 	fn := "rotate_day." + time.Now().Add(-24*time.Hour).Format("2006-01-02") + ".log"
 	os.Create(fn)
 	fn2 := "rotate_day." + time.Now().Add(-24*time.Hour).Format("2006-01-02") + ".001.log"
-	testFileRotate(t, fn1, fn2)
+	testFileRotate(t, fn1, fn2, true, false)
 	os.Remove(fn)
 }
 
-func TestFileRotate_04(t *testing.T) {
+func TestFileDailyRotate_04(t *testing.T) {
 	fn1 := "rotate_day.log"
-	fn2 := "rotate_day." + time.Now().Add(-24*time.Hour).Format("2006-01-02") + ".log"
+	fn2 := "rotate_day." + time.Now().Add(-24*time.Hour).Format("2006-01-02") + ".001.log"
 	testFileDailyRotate(t, fn1, fn2)
 }
 
-func TestFileRotate_05(t *testing.T) {
+func TestFileDailyRotate_05(t *testing.T) {
 	fn1 := "rotate_day.log"
 	fn := "rotate_day." + time.Now().Add(-24*time.Hour).Format("2006-01-02") + ".log"
 	os.Create(fn)
@@ -162,23 +162,131 @@ func TestFileRotate_05(t *testing.T) {
 	testFileDailyRotate(t, fn1, fn2)
 	os.Remove(fn)
 }
-
-func testFileRotate(t *testing.T, fn1, fn2 string) {
-	fw := &fileLogWriter{
-		Daily:   true,
-		MaxDays: 7,
-		Rotate:  true,
-		Level:   LevelTrace,
-		Perm:    "0660",
+func TestFileDailyRotate_06(t *testing.T) { //test file mode
+	log := NewLogger(10000)
+	log.SetLogger("file", `{"filename":"test3.log","maxlines":4}`)
+	log.Debug("debug")
+	log.Info("info")
+	log.Notice("notice")
+	log.Warning("warning")
+	log.Error("error")
+	log.Alert("alert")
+	log.Critical("critical")
+	log.Emergency("emergency")
+	rotateName := "test3" + fmt.Sprintf(".%s.%03d", time.Now().Format("2006-01-02"), 1) + ".log"
+	s, _ := os.Lstat(rotateName)
+	if s.Mode() != 0440 {
+		os.Remove(rotateName)
+		os.Remove("test3.log")
+		t.Fatal("rotate file mode error")
 	}
-	fw.Init(fmt.Sprintf(`{"filename":"%v","maxdays":1}`, fn1))
-	fw.dailyOpenTime = time.Now().Add(-24 * time.Hour)
-	fw.dailyOpenDate = fw.dailyOpenTime.Day()
-	fw.WriteMsg(time.Now(), "this is a msg for test", LevelDebug)
+	os.Remove(rotateName)
+	os.Remove("test3.log")
+}
+
+func TestFileHourlyRotate_01(t *testing.T) {
+	log := NewLogger(10000)
+    log.SetLogger("file", `{"filename":"test3.log","hourly":true,"maxlines":4}`)
+	log.Debug("debug")
+	log.Info("info")
+	log.Notice("notice")
+	log.Warning("warning")
+	log.Error("error")
+	log.Alert("alert")
+	log.Critical("critical")
+	log.Emergency("emergency")
+	rotateName := "test3" + fmt.Sprintf(".%s.%03d", time.Now().Format("2006010215"), 1) + ".log"
+	b, err := exists(rotateName)
+	if !b || err != nil {
+		os.Remove("test3.log")
+		t.Fatal("rotate not generated")
+	}
+	os.Remove(rotateName)
+	os.Remove("test3.log")
+}
+
+func TestFileHourlyRotate_02(t *testing.T) {
+	fn1 := "rotate_hour.log"
+	fn2 := "rotate_hour." + time.Now().Add(-1*time.Hour).Format("2006010215") + ".001.log"
+	testFileRotate(t, fn1, fn2, false, true)
+}
+
+func TestFileHourlyRotate_03(t *testing.T) {
+	fn1 := "rotate_hour.log"
+	fn := "rotate_hour." + time.Now().Add(-1*time.Hour).Format("2006010215") + ".log"
+	os.Create(fn)
+	fn2 := "rotate_hour." + time.Now().Add(-1*time.Hour).Format("2006010215") + ".001.log"
+	testFileRotate(t, fn1, fn2, false, true)
+	os.Remove(fn)
+}
+
+func TestFileHourlyRotate_04(t *testing.T) {
+	fn1 := "rotate_hour.log"
+	fn2 := "rotate_hour." + time.Now().Add(-1*time.Hour).Format("2006010215") + ".001.log"
+	testFileHourlyRotate(t, fn1, fn2)
+}
+
+func TestFileHourlyRotate_05(t *testing.T) {
+	fn1 := "rotate_hour.log"
+	fn := "rotate_hour." + time.Now().Add(-1*time.Hour).Format("2006010215") + ".log"
+	os.Create(fn)
+	fn2 := "rotate_hour." + time.Now().Add(-1*time.Hour).Format("2006010215") + ".001.log"
+	testFileHourlyRotate(t, fn1, fn2)
+	os.Remove(fn)
+}
+
+func TestFileHourlyRotate_06(t *testing.T) { //test file mode
+	log := NewLogger(10000)
+    log.SetLogger("file", `{"filename":"test3.log", "hourly":true, "maxlines":4}`)
+	log.Debug("debug")
+	log.Info("info")
+	log.Notice("notice")
+	log.Warning("warning")
+	log.Error("error")
+	log.Alert("alert")
+	log.Critical("critical")
+	log.Emergency("emergency")
+	rotateName := "test3" + fmt.Sprintf(".%s.%03d", time.Now().Format("2006010215"), 1) + ".log"
+	s, _ := os.Lstat(rotateName)
+	if s.Mode() != 0440 {
+		os.Remove(rotateName)
+		os.Remove("test3.log")
+		t.Fatal("rotate file mode error")
+	}
+	os.Remove(rotateName)
+	os.Remove("test3.log")
+}
+
+func testFileRotate(t *testing.T, fn1, fn2 string, daily, hourly bool) {
+	fw := &fileLogWriter{
+		Daily:      daily,
+		MaxDays:    7,
+		Hourly:     hourly,
+		MaxHours:   168,
+		Rotate:     true,
+		Level:      LevelTrace,
+		Perm:       "0660",
+		RotatePerm: "0440",
+	}
+
+    if daily {
+        fw.Init(fmt.Sprintf(`{"filename":"%v","maxdays":1}`, fn1))
+        fw.dailyOpenTime = time.Now().Add(-24 * time.Hour)
+        fw.dailyOpenDate = fw.dailyOpenTime.Day()
+    }
+
+    if hourly {
+        fw.Init(fmt.Sprintf(`{"filename":"%v","maxhours":1}`, fn1))
+        fw.hourlyOpenTime = time.Now().Add(-1 * time.Hour)
+        fw.hourlyOpenDate = fw.hourlyOpenTime.Day()
+    }
+
+    fw.WriteMsg(time.Now(), "this is a msg for test", LevelDebug)
 
 	for _, file := range []string{fn1, fn2} {
 		_, err := os.Stat(file)
 		if err != nil {
+			t.Log(err)
 			t.FailNow()
 		}
 		os.Remove(file)
@@ -188,11 +296,12 @@ func testFileRotate(t *testing.T, fn1, fn2 string) {
 
 func testFileDailyRotate(t *testing.T, fn1, fn2 string) {
 	fw := &fileLogWriter{
-		Daily:   true,
-		MaxDays: 7,
-		Rotate:  true,
-		Level:   LevelTrace,
-		Perm:    "0660",
+		Daily:      true,
+		MaxDays:    7,
+		Rotate:     true,
+		Level:      LevelTrace,
+		Perm:       "0660",
+		RotatePerm: "0440",
 	}
 	fw.Init(fmt.Sprintf(`{"filename":"%v","maxdays":1}`, fn1))
 	fw.dailyOpenTime = time.Now().Add(-24 * time.Hour)
@@ -217,6 +326,37 @@ func testFileDailyRotate(t *testing.T, fn1, fn2 string) {
 	fw.Destroy()
 }
 
+func testFileHourlyRotate(t *testing.T, fn1, fn2 string) {
+	fw := &fileLogWriter{
+        Hourly:      true,
+        MaxHours:    168,
+		Rotate:     true,
+		Level:      LevelTrace,
+		Perm:       "0660",
+		RotatePerm: "0440",
+	}
+	fw.Init(fmt.Sprintf(`{"filename":"%v","maxhours":1}`, fn1))
+	fw.hourlyOpenTime = time.Now().Add(-1 * time.Hour)
+	fw.hourlyOpenDate = fw.hourlyOpenTime.Hour()
+	hour, _ := time.ParseInLocation("2006010215", time.Now().Format("2006010215"), fw.hourlyOpenTime.Location())
+	hour = hour.Add(-1 * time.Second)
+	fw.hourlyRotate(hour)
+	for _, file := range []string{fn1, fn2} {
+		_, err := os.Stat(file)
+		if err != nil {
+			t.FailNow()
+		}
+		content, err := ioutil.ReadFile(file)
+		if err != nil {
+			t.FailNow()
+		}
+		if len(content) > 0 {
+			t.FailNow()
+		}
+		os.Remove(file)
+	}
+	fw.Destroy()
+}
 func exists(path string) (bool, error) {
 	_, err := os.Stat(path)
 	if err == nil {

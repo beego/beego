@@ -63,7 +63,7 @@ func (t *dbTables) set(names []string, mi *modelInfo, fi *fieldInfo, inner bool)
 // add table info to collection.
 func (t *dbTables) add(names []string, mi *modelInfo, fi *fieldInfo, inner bool) (*dbTable, bool) {
 	name := strings.Join(names, ExprSep)
-	if _, ok := t.tablesM[name]; ok == false {
+	if _, ok := t.tablesM[name]; !ok {
 		i := len(t.tables) + 1
 		jt := &dbTable{i, fmt.Sprintf("T%d", i), name, names, false, inner, mi, fi, nil}
 		t.tablesM[name] = jt
@@ -261,7 +261,7 @@ loopFor:
 				fiN, okN = mmi.fields.GetByAny(exprs[i+1])
 			}
 
-			if isRel && (fi.mi.isThrough == false || num != i) {
+			if isRel && (!fi.mi.isThrough || num != i) {
 				if fi.null || t.skipEnd {
 					inner = false
 				}
@@ -364,7 +364,7 @@ func (t *dbTables) getCondSQL(cond *Condition, sub bool, tz *time.Location) (whe
 			}
 
 			index, _, fi, suc := t.parseExprs(mi, exprs)
-			if suc == false {
+			if !suc {
 				panic(fmt.Errorf("unknown field/column name `%s`", strings.Join(p.exprs, ExprSep)))
 			}
 
@@ -372,7 +372,13 @@ func (t *dbTables) getCondSQL(cond *Condition, sub bool, tz *time.Location) (whe
 				operator = "exact"
 			}
 
-			operSQL, args := t.base.GenerateOperatorSQL(mi, fi, operator, p.args, tz)
+			var operSQL string
+			var args []interface{}
+			if p.isRaw {
+				operSQL = p.sql
+			} else {
+				operSQL, args = t.base.GenerateOperatorSQL(mi, fi, operator, p.args, tz)
+			}
 
 			leftCol := fmt.Sprintf("%s.%s%s%s", index, Q, fi.column, Q)
 			t.base.GenerateOperatorLeftCol(fi, operator, &leftCol)
@@ -383,7 +389,7 @@ func (t *dbTables) getCondSQL(cond *Condition, sub bool, tz *time.Location) (whe
 		}
 	}
 
-	if sub == false && where != "" {
+	if !sub && where != "" {
 		where = "WHERE " + where
 	}
 
@@ -403,7 +409,7 @@ func (t *dbTables) getGroupSQL(groups []string) (groupSQL string) {
 		exprs := strings.Split(group, ExprSep)
 
 		index, _, fi, suc := t.parseExprs(t.mi, exprs)
-		if suc == false {
+		if !suc {
 			panic(fmt.Errorf("unknown field/column name `%s`", strings.Join(exprs, ExprSep)))
 		}
 
@@ -432,7 +438,7 @@ func (t *dbTables) getOrderSQL(orders []string) (orderSQL string) {
 		exprs := strings.Split(order, ExprSep)
 
 		index, _, fi, suc := t.parseExprs(t.mi, exprs)
-		if suc == false {
+		if !suc {
 			panic(fmt.Errorf("unknown field/column name `%s`", strings.Join(exprs, ExprSep)))
 		}
 

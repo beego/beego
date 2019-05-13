@@ -52,7 +52,7 @@ func TestErrorCode_01(t *testing.T) {
 		if w.Code != code {
 			t.Fail()
 		}
-		if !strings.Contains(string(w.Body.Bytes()), http.StatusText(code)) {
+		if !strings.Contains(w.Body.String(), http.StatusText(code)) {
 			t.Fail()
 		}
 	}
@@ -82,7 +82,7 @@ func TestErrorCode_03(t *testing.T) {
 	if w.Code != 200 {
 		t.Fail()
 	}
-	if string(w.Body.Bytes()) != parseCodeError {
+	if w.Body.String() != parseCodeError {
 		t.Fail()
 	}
 }

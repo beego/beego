@@ -72,7 +72,7 @@ func (o *queryM2M) Add(mds ...interface{}) (int64, error) {
 	}
 
 	_, v1, exist := getExistPk(o.mi, o.ind)
-	if exist == false {
+	if !exist {
 		panic(ErrMissPK)
 	}
 
@@ -87,7 +87,7 @@ func (o *queryM2M) Add(mds ...interface{}) (int64, error) {
 			v2 = ind.Interface()
 		} else {
 			_, v2, exist = getExistPk(fi.relModelInfo, ind)
-			if exist == false {
+			if !exist {
 				panic(ErrMissPK)
 			}
 		}
@@ -104,11 +104,7 @@ func (o *queryM2M) Remove(mds ...interface{}) (int64, error) {
 	fi := o.fi
 	qs := o.qs.Filter(fi.reverseFieldInfo.name, o.md)
 
-	nums, err := qs.Filter(fi.reverseFieldInfoTwo.name+ExprSep+"in", mds).Delete()
-	if err != nil {
-		return nums, err
-	}
-	return nums, nil
+	return qs.Filter(fi.reverseFieldInfoTwo.name+ExprSep+"in", mds).Delete()
 }
 
 // check model is existed in relationship of origin model

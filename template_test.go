@@ -15,6 +15,10 @@
 package beego
 
 import (
+	"bytes"
+	"github.com/astaxie/beego/testdata"
+	"github.com/elazarl/go-bindata-assetfs"
+	"net/http"
 	"os"
 	"path/filepath"
 	"testing"
@@ -141,4 +145,172 @@ func TestRelativeTemplate(t *testing.T) {
 		os.RemoveAll(filepath.Join(dir, name))
 	}
 	os.RemoveAll(dir)
+}
+
+var add = `{{ template "layout_blog.tpl" . }}
+{{ define "css" }}
+        <link rel="stylesheet" href="/static/css/current.css">
+{{ end}}
+
+
+{{ define "content" }}
+        <h2>{{ .Title }}</h2>
+        <p> This is SomeVar: {{ .SomeVar }}</p>
+{{ end }}
+
+{{ define "js" }}
+    <script src="/static/js/current.js"></script>
+{{ end}}`
+
+var layoutBlog = `<!DOCTYPE html>
+<html>
+<head>
+    <title>Lin Li</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap-theme.min.css">
+     {{ block "css" . }}{{ end }}
+</head>
+<body>
+
+    <div class="container">
+        {{ block "content" . }}{{ end }}
+    </div>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+    <script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+     {{ block "js" . }}{{ end }}
+</body>
+</html>`
+
+var output = `<!DOCTYPE html>
+<html>
+<head>
+    <title>Lin Li</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css">
+    <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap-theme.min.css">
+     
+        <link rel="stylesheet" href="/static/css/current.css">
+
+</head>
+<body>
+
+    <div class="container">
+        
+        <h2>Hello</h2>
+        <p> This is SomeVar: val</p>
+
+    </div>
+    <script type="text/javascript" src="http://code.jquery.com/jquery-2.0.3.min.js"></script>
+    <script src="http://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script>
+     
+    <script src="/static/js/current.js"></script>
+
+</body>
+</html>
+
+
+
+
+
+`
+
+func TestTemplateLayout(t *testing.T) {
+	dir := "_beeTmp"
+	files := []string{
+		"add.tpl",
+		"layout_blog.tpl",
+	}
+	if err := os.MkdirAll(dir, 0777); err != nil {
+		t.Fatal(err)
+	}
+	for k, name := range files {
+		os.MkdirAll(filepath.Dir(filepath.Join(dir, name)), 0777)
+		if f, err := os.Create(filepath.Join(dir, name)); err != nil {
+			t.Fatal(err)
+		} else {
+			if k == 0 {
+				f.WriteString(add)
+			} else if k == 1 {
+				f.WriteString(layoutBlog)
+			}
+			f.Close()
+		}
+	}
+	if err := AddViewPath(dir); err != nil {
+		t.Fatal(err)
+	}
+	beeTemplates := beeViewPathTemplates[dir]
+	if len(beeTemplates) != 2 {
+		t.Fatalf("should be 2 but got %v", len(beeTemplates))
+	}
+	out := bytes.NewBufferString("")
+	if err := beeTemplates["add.tpl"].ExecuteTemplate(out, "add.tpl", map[string]string{"Title": "Hello", "SomeVar": "val"}); err != nil {
+		t.Fatal(err)
+	}
+	if out.String() != output {
+		t.Log(out.String())
+		t.Fatal("Compare failed")
+	}
+	for _, name := range files {
+		os.RemoveAll(filepath.Join(dir, name))
+	}
+	os.RemoveAll(dir)
+}
+
+type TestingFileSystem struct {
+	assetfs *assetfs.AssetFS
+}
+
+func (d TestingFileSystem) Open(name string) (http.File, error) {
+	return d.assetfs.Open(name)
+}
+
+var outputBinData = `<!DOCTYPE html>
+<html>
+  <head>
+    <title>beego welcome template</title>
+  </head>
+  <body>
+
+	
+<h1>Hello, blocks!</h1>
+
+	
+<h1>Hello, astaxie!</h1>
+
+	
+
+	<h2>Hello</h2>
+	<p> This is SomeVar: val</p>
+  </body>
+</html>
+`
+
+func TestFsBinData(t *testing.T) {
+	SetTemplateFSFunc(func() http.FileSystem {
+		return TestingFileSystem{&assetfs.AssetFS{Asset: testdata.Asset, AssetDir: testdata.AssetDir, AssetInfo: testdata.AssetInfo}}
+	})
+	dir := "views"
+	if err := AddViewPath("views"); err != nil {
+		t.Fatal(err)
+	}
+	beeTemplates := beeViewPathTemplates[dir]
+	if len(beeTemplates) != 3 {
+		t.Fatalf("should be 3 but got %v", len(beeTemplates))
+	}
+	if err := beeTemplates["index.tpl"].ExecuteTemplate(os.Stdout, "index.tpl", map[string]string{"Title": "Hello", "SomeVar": "val"}); err != nil {
+		t.Fatal(err)
+	}
+	out := bytes.NewBufferString("")
+	if err := beeTemplates["index.tpl"].ExecuteTemplate(out, "index.tpl", map[string]string{"Title": "Hello", "SomeVar": "val"}); err != nil {
+		t.Fatal(err)
+	}
+
+	if out.String() != outputBinData {
+		t.Log(out.String())
+		t.Fatal("Compare failed")
+	}
 }

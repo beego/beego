@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// +build go1.8
+
 // Package orm provide ORM for MySQL/PostgreSQL/sqlite
 // Simple Usage
 //
@@ -52,6 +54,7 @@
 package orm
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -107,7 +110,7 @@ func (o *orm) getMiInd(md interface{}, needPtr bool) (mi *modelInfo, ind reflect
 	if mi, ok := modelCache.getByFullName(name); ok {
 		return mi, ind
 	}
-	panic(fmt.Errorf("<Ormer> table: `%s` not found, maybe not RegisterModel", name))
+	panic(fmt.Errorf("<Ormer> table: `%s` not found, make sure it was registered with `RegisterModel()`", name))
 }
 
 // get field info from model info by given field name
@@ -122,21 +125,13 @@ func (o *orm) getFieldInfo(mi *modelInfo, name string) *fieldInfo {
 // read data to model
 func (o *orm) Read(md interface{}, cols ...string) error {
 	mi, ind := o.getMiInd(md, true)
-	err := o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols, false)
-	if err != nil {
-		return err
-	}
-	return nil
+	return o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols, false)
 }
 
 // read data to model, like Read(), but use "SELECT FOR UPDATE" form
 func (o *orm) ReadForUpdate(md interface{}, cols ...string) error {
 	mi, ind := o.getMiInd(md, true)
-	err := o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols, true)
-	if err != nil {
-		return err
-	}
-	return nil
+	return o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols, true)
 }
 
 // Try to read a row from the database, or insert one if it doesn't exist
@@ -238,15 +233,11 @@ func (o *orm) InsertOrUpdate(md interface{}, colConflitAndArgs ...string) (int64
 // cols set the columns those want to update.
 func (o *orm) Update(md interface{}, cols ...string) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
-	num, err := o.alias.DbBaser.Update(o.db, mi, ind, o.alias.TZ, cols)
-	if err != nil {
-		return num, err
-	}
-	return num, nil
+	return o.alias.DbBaser.Update(o.db, mi, ind, o.alias.TZ, cols)
 }
 
 // delete model in database
-// cols shows the delete conditions values read from. deafult is pk
+// cols shows the delete conditions values read from. default is pk
 func (o *orm) Delete(md interface{}, cols ...string) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
 	num, err := o.alias.DbBaser.Delete(o.db, mi, ind, o.alias.TZ, cols)
@@ -361,7 +352,7 @@ func (o *orm) queryRelated(md interface{}, name string) (*modelInfo, *fieldInfo,
 	fi := o.getFieldInfo(mi, name)
 
 	_, _, exist := getExistPk(mi, ind)
-	if exist == false {
+	if !exist {
 		panic(ErrMissPK)
 	}
 
@@ -432,9 +423,9 @@ func (o *orm) getRelQs(md interface{}, mi *modelInfo, fi *fieldInfo) *querySet {
 // table name can be string or struct.
 // e.g. QueryTable("user"), QueryTable(&user{}) or QueryTable((*User)(nil)),
 func (o *orm) QueryTable(ptrStructOrTableName interface{}) (qs QuerySeter) {
-	name := ""
+	var name string
 	if table, ok := ptrStructOrTableName.(string); ok {
-		name = snakeString(table)
+		name = nameStrategyMap[defaultNameStrategy](table)
 		if mi, ok := modelCache.get(name); ok {
 			qs = newQuerySet(o, mi)
 		}
@@ -470,11 +461,15 @@ func (o *orm) Using(name string) error {
 
 // begin transaction
 func (o *orm) Begin() error {
+	return o.BeginTx(context.Background(), nil)
+}
+
+func (o *orm) BeginTx(ctx context.Context, opts *sql.TxOptions) error {
 	if o.isTx {
 		return ErrTxHasBegan
 	}
 	var tx *sql.Tx
-	tx, err := o.db.(txer).Begin()
+	tx, err := o.db.(txer).BeginTx(ctx, opts)
 	if err != nil {
 		return err
 	}
@@ -489,7 +484,7 @@ func (o *orm) Begin() error {
 
 // commit transaction
 func (o *orm) Commit() error {
-	if o.isTx == false {
+	if !o.isTx {
 		return ErrTxDone
 	}
 	err := o.db.(txEnder).Commit()
@@ -504,7 +499,7 @@ func (o *orm) Commit() error {
 
 // rollback transaction
 func (o *orm) Rollback() error {
-	if o.isTx == false {
+	if !o.isTx {
 		return ErrTxDone
 	}
 	err := o.db.(txEnder).Rollback()
@@ -553,6 +548,9 @@ func NewOrmWithDB(driverName, aliasName string, db *sql.DB) (Ormer, error) {
 
 	al.Name = aliasName
 	al.DriverName = driverName
+	al.DB = db
+
+	detectTZ(al)
 
 	o := new(orm)
 	o.alias = al

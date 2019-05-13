@@ -52,6 +52,26 @@ type Migrationer interface {
 	GetCreated() int64
 }
 
+//Migration defines the migrations by either SQL or DDL
+type Migration struct {
+	sqls           []string
+	Created        string
+	TableName      string
+	Engine         string
+	Charset        string
+	ModifyType     string
+	Columns        []*Column
+	Indexes        []*Index
+	Primary        []*Column
+	Uniques        []*Unique
+	Foreigns       []*Foreign
+	Renames        []*RenameColumn
+	RemoveColumns  []*Column
+	RemoveIndexes  []*Index
+	RemoveUniques  []*Unique
+	RemoveForeigns []*Foreign
+}
+
 var (
 	migrationMap map[string]Migrationer
 )
@@ -60,20 +80,34 @@ func init() {
 	migrationMap = make(map[string]Migrationer)
 }
 
-// Migration the basic type which will implement the basic type
-type Migration struct {
-	sqls    []string
-	Created string
-}
-
 // Up implement in the Inheritance struct for upgrade
 func (m *Migration) Up() {
 
+	switch m.ModifyType {
+	case "reverse":
+		m.ModifyType = "alter"
+	case "delete":
+		m.ModifyType = "create"
+	}
+	m.sqls = append(m.sqls, m.GetSQL())
 }
 
 // Down implement in the Inheritance struct for down
 func (m *Migration) Down() {
 
+	switch m.ModifyType {
+	case "alter":
+		m.ModifyType = "reverse"
+	case "create":
+		m.ModifyType = "delete"
+	}
+	m.sqls = append(m.sqls, m.GetSQL())
+}
+
+//Migrate adds the SQL to the execution list
+func (m *Migration) Migrate(migrationType string) {
+	m.ModifyType = migrationType
+	m.sqls = append(m.sqls, m.GetSQL())
 }
 
 // SQL add sql want to execute
@@ -138,7 +172,7 @@ func Register(name string, m Migrationer) error {
 	return nil
 }
 
-// Upgrade upgrate the migration from lasttime
+// Upgrade upgrade the migration from lasttime
 func Upgrade(lasttime int64) error {
 	sm := sortMap(migrationMap)
 	i := 0

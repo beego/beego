@@ -21,6 +21,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"os/user"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -77,15 +78,37 @@ func (ini *IniConfig) parseData(dir string, data []byte) (*IniConfigContainer, e
 		}
 	}
 	section := defaultSection
+	tmpBuf := bytes.NewBuffer(nil)
 	for {
-		line, _, err := buf.ReadLine()
-		if err == io.EOF {
+		tmpBuf.Reset()
+
+		shouldBreak := false
+		for {
+			tmp, isPrefix, err := buf.ReadLine()
+			if err == io.EOF {
+				shouldBreak = true
+				break
+			}
+
+			//It might be a good idea to throw a error on all unknonw errors?
+			if _, ok := err.(*os.PathError); ok {
+				return nil, err
+			}
+
+			tmpBuf.Write(tmp)
+			if isPrefix {
+				continue
+			}
+
+			if !isPrefix {
+				break
+			}
+		}
+		if shouldBreak {
 			break
 		}
-		//It might be a good idea to throw a error on all unknonw errors?
-		if _, ok := err.(*os.PathError); ok {
-			return nil, err
-		}
+
+		line := tmpBuf.Bytes()
 		line = bytes.TrimSpace(line)
 		if bytes.Equal(line, bEmpty) {
 			continue
@@ -184,10 +207,17 @@ func (ini *IniConfig) parseData(dir string, data []byte) (*IniConfigContainer, e
 
 // ParseData parse ini the data
 // When include other.conf,other.conf is either absolute directory
-// or under beego in default temporary directory(/tmp/beego).
+// or under beego in default temporary directory(/tmp/beego[-username]).
 func (ini *IniConfig) ParseData(data []byte) (Configer, error) {
-	dir := filepath.Join(os.TempDir(), "beego")
-	os.MkdirAll(dir, os.ModePerm)
+	dir := "beego"
+	currentUser, err := user.Current()
+	if err == nil {
+		dir = "beego-" + currentUser.Username
+	}
+	dir = filepath.Join(os.TempDir(), dir)
+	if err = os.MkdirAll(dir, os.ModePerm); err != nil {
+		return nil, err
+	}
 
 	return ini.parseData(dir, data)
 }
@@ -207,7 +237,7 @@ func (c *IniConfigContainer) Bool(key string) (bool, error) {
 }
 
 // DefaultBool returns the boolean value for a given key.
-// if err != nil return defaltval
+// if err != nil return defaultval
 func (c *IniConfigContainer) DefaultBool(key string, defaultval bool) bool {
 	v, err := c.Bool(key)
 	if err != nil {
@@ -222,7 +252,7 @@ func (c *IniConfigContainer) Int(key string) (int, error) {
 }
 
 // DefaultInt returns the integer value for a given key.
-// if err != nil return defaltval
+// if err != nil return defaultval
 func (c *IniConfigContainer) DefaultInt(key string, defaultval int) int {
 	v, err := c.Int(key)
 	if err != nil {
@@ -237,7 +267,7 @@ func (c *IniConfigContainer) Int64(key string) (int64, error) {
 }
 
 // DefaultInt64 returns the int64 value for a given key.
-// if err != nil return defaltval
+// if err != nil return defaultval
 func (c *IniConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
 	v, err := c.Int64(key)
 	if err != nil {
@@ -252,7 +282,7 @@ func (c *IniConfigContainer) Float(key string) (float64, error) {
 }
 
 // DefaultFloat returns the float64 value for a given key.
-// if err != nil return defaltval
+// if err != nil return defaultval
 func (c *IniConfigContainer) DefaultFloat(key string, defaultval float64) float64 {
 	v, err := c.Float(key)
 	if err != nil {
@@ -267,7 +297,7 @@ func (c *IniConfigContainer) String(key string) string {
 }
 
 // DefaultString returns the string value for a given key.
-// if err != nil return defaltval
+// if err != nil return defaultval
 func (c *IniConfigContainer) DefaultString(key string, defaultval string) string {
 	v := c.String(key)
 	if v == "" {
@@ -287,7 +317,7 @@ func (c *IniConfigContainer) Strings(key string) []string {
 }
 
 // DefaultStrings returns the []string value for a given key.
-// if err != nil return defaltval
+// if err != nil return defaultval
 func (c *IniConfigContainer) DefaultStrings(key string, defaultval []string) []string {
 	v := c.Strings(key)
 	if v == nil {
@@ -306,7 +336,7 @@ func (c *IniConfigContainer) GetSection(section string) (map[string]string, erro
 
 // SaveConfigFile save the config into file.
 //
-// BUG(env): The environment variable config item will be saved with real value in SaveConfigFile Funcation.
+// BUG(env): The environment variable config item will be saved with real value in SaveConfigFile Function.
 func (c *IniConfigContainer) SaveConfigFile(filename string) (err error) {
 	// Write configuration file by filename.
 	f, err := os.Create(filename)
@@ -317,7 +347,10 @@ func (c *IniConfigContainer) SaveConfigFile(filename string) (err error) {
 
 	// Get section or key comments. Fixed #1607
 	getCommentStr := func(section, key string) string {
-		comment, ok := "", false
+		var (
+			comment string
+			ok      bool
+		)
 		if len(key) == 0 {
 			comment, ok = c.sectionComment[section]
 		} else {
@@ -397,11 +430,8 @@ func (c *IniConfigContainer) SaveConfigFile(filename string) (err error) {
 			}
 		}
 	}
-
-	if _, err = buf.WriteTo(f); err != nil {
-		return err
-	}
-	return nil
+	_, err = buf.WriteTo(f)
+	return err
 }
 
 // Set writes a new value for key.
@@ -416,7 +446,7 @@ func (c *IniConfigContainer) Set(key, value string) error {
 
 	var (
 		section, k string
-		sectionKey = strings.Split(key, "::")
+		sectionKey = strings.Split(strings.ToLower(key), "::")
 	)
 
 	if len(sectionKey) >= 2 {

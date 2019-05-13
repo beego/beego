@@ -12,6 +12,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 )
 
+// LogStore Store the logs
 type LogStore struct {
 	Name       string `json:"logstoreName"`
 	TTL        int
@@ -23,6 +24,7 @@ type LogStore struct {
 	project *LogProject
 }
 
+// Shard define the Log Shard
 type Shard struct {
 	ShardID int `json:"shardID"`
 }
@@ -116,16 +118,16 @@ func (s *LogStore) PutLogs(lg *LogGroup) (err error) {
 	return
 }
 
-// GetCursor gets log cursor of one shard specified by shardId.
+// GetCursor gets log cursor of one shard specified by shardID.
 // The from can be in three form: a) unix timestamp in seccond, b) "begin", c) "end".
 // For more detail please read: http://gitlab.alibaba-inc.com/sls/doc/blob/master/api/shard.md#logstore
-func (s *LogStore) GetCursor(shardId int, from string) (cursor string, err error) {
+func (s *LogStore) GetCursor(shardID int, from string) (cursor string, err error) {
 	h := map[string]string{
 		"x-sls-bodyrawsize": "0",
 	}
 
 	uri := fmt.Sprintf("/logstores/%v/shards/%v?type=cursor&from=%v",
-		s.Name, shardId, from)
+		s.Name, shardID, from)
 
 	r, err := request(s.project, "GET", uri, h, nil)
 	if err != nil {
@@ -163,10 +165,10 @@ func (s *LogStore) GetCursor(shardId int, from string) (cursor string, err error
 	return
 }
 
-// GetLogsBytes gets logs binary data from shard specified by shardId according cursor.
+// GetLogsBytes gets logs binary data from shard specified by shardID according cursor.
 // The logGroupMaxCount is the max number of logGroup could be returned.
 // The nextCursor is the next curosr can be used to read logs at next time.
-func (s *LogStore) GetLogsBytes(shardId int, cursor string,
+func (s *LogStore) GetLogsBytes(shardID int, cursor string,
 	logGroupMaxCount int) (out []byte, nextCursor string, err error) {
 
 	h := map[string]string{
@@ -176,7 +178,7 @@ func (s *LogStore) GetLogsBytes(shardId int, cursor string,
 	}
 
 	uri := fmt.Sprintf("/logstores/%v/shards/%v?type=logs&cursor=%v&count=%v",
-		s.Name, shardId, cursor, logGroupMaxCount)
+		s.Name, shardID, cursor, logGroupMaxCount)
 
 	r, err := request(s.project, "GET", uri, h, nil)
 	if err != nil {
@@ -249,13 +251,13 @@ func LogsBytesDecode(data []byte) (gl *LogGroupList, err error) {
 	return
 }
 
-// GetLogs gets logs from shard specified by shardId according cursor.
+// GetLogs gets logs from shard specified by shardID according cursor.
 // The logGroupMaxCount is the max number of logGroup could be returned.
 // The nextCursor is the next curosr can be used to read logs at next time.
-func (s *LogStore) GetLogs(shardId int, cursor string,
+func (s *LogStore) GetLogs(shardID int, cursor string,
 	logGroupMaxCount int) (gl *LogGroupList, nextCursor string, err error) {
 
-	out, nextCursor, err := s.GetLogsBytes(shardId, cursor, logGroupMaxCount)
+	out, nextCursor, err := s.GetLogsBytes(shardID, cursor, logGroupMaxCount)
 	if err != nil {
 		return
 	}

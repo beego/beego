@@ -109,7 +109,7 @@ func getTableUnique(val reflect.Value) [][]string {
 func getColumnName(ft int, addrField reflect.Value, sf reflect.StructField, col string) string {
 	column := col
 	if col == "" {
-		column = snakeString(sf.Name)
+		column = nameStrategyMap[nameStrategy](sf.Name)
 	}
 	switch ft {
 	case RelForeignKey, RelOneToOne:
@@ -149,7 +149,7 @@ func getFieldType(val reflect.Value) (ft int, err error) {
 	case reflect.TypeOf(new(bool)):
 		ft = TypeBooleanField
 	case reflect.TypeOf(new(string)):
-		ft = TypeCharField
+		ft = TypeVarCharField
 	case reflect.TypeOf(new(time.Time)):
 		ft = TypeDateTimeField
 	default:
@@ -176,7 +176,7 @@ func getFieldType(val reflect.Value) (ft int, err error) {
 		case reflect.Bool:
 			ft = TypeBooleanField
 		case reflect.String:
-			ft = TypeCharField
+			ft = TypeVarCharField
 		default:
 			if elm.Interface() == nil {
 				panic(fmt.Errorf("%s is nil pointer, may be miss setting tag", val))
@@ -189,7 +189,7 @@ func getFieldType(val reflect.Value) (ft int, err error) {
 			case sql.NullBool:
 				ft = TypeBooleanField
 			case sql.NullString:
-				ft = TypeCharField
+				ft = TypeVarCharField
 			case time.Time:
 				ft = TypeDateTimeField
 			}

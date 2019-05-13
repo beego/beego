@@ -74,21 +74,16 @@ func (st *CookieSessionStore) SessionID() string {
 
 // SessionRelease Write cookie session to http response cookie
 func (st *CookieSessionStore) SessionRelease(w http.ResponseWriter) {
-	str, err := encodeCookie(cookiepder.block,
-		cookiepder.config.SecurityKey,
-		cookiepder.config.SecurityName,
-		st.values)
-	if err != nil {
-		return
+	encodedCookie, err := encodeCookie(cookiepder.block, cookiepder.config.SecurityKey, cookiepder.config.SecurityName, st.values)
+	if err == nil {
+		cookie := &http.Cookie{Name: cookiepder.config.CookieName,
+			Value:    url.QueryEscape(encodedCookie),
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   cookiepder.config.Secure,
+			MaxAge:   cookiepder.config.Maxage}
+		http.SetCookie(w, cookie)
 	}
-	cookie := &http.Cookie{Name: cookiepder.config.CookieName,
-		Value:    url.QueryEscape(str),
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   cookiepder.config.Secure,
-		MaxAge:   cookiepder.config.Maxage}
-	http.SetCookie(w, cookie)
-	return
 }
 
 type cookieConfig struct {
@@ -166,7 +161,6 @@ func (pder *CookieProvider) SessionDestroy(sid string) error {
 
 // SessionGC Implement method, no used.
 func (pder *CookieProvider) SessionGC() {
-	return
 }
 
 // SessionAll Implement method, return 0.

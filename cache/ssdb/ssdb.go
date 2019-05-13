@@ -53,7 +53,7 @@ func (rc *Cache) GetMulti(keys []string) []interface{} {
 	resSize := len(res)
 	if err == nil {
 		for i := 1; i < resSize; i += 2 {
-			values = append(values, string(res[i+1]))
+			values = append(values, res[i+1])
 		}
 		return values
 	}
@@ -71,10 +71,7 @@ func (rc *Cache) DelMulti(keys []string) error {
 		}
 	}
 	_, err := rc.conn.Do("multi_del", keys)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // Put put value to memcache. only support string.
@@ -113,10 +110,7 @@ func (rc *Cache) Delete(key string) error {
 		}
 	}
 	_, err := rc.conn.Del(key)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 // Incr increase counter.
@@ -175,7 +169,7 @@ func (rc *Cache) ClearAll() error {
 		}
 		keys := []string{}
 		for i := 1; i < size; i += 2 {
-			keys = append(keys, string(resp[i]))
+			keys = append(keys, resp[i])
 		}
 		_, e := rc.conn.Do("multi_del", keys)
 		if e != nil {
@@ -229,10 +223,7 @@ func (rc *Cache) connectInit() error {
 	}
 	var err error
 	rc.conn, err = ssdb.Connect(host, port)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func init() {

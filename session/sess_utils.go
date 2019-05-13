@@ -149,7 +149,7 @@ func decodeCookie(block cipher.Block, hashKey, name, value string, gcmaxlifetime
 	// 2. Verify MAC. Value is "date|value|mac".
 	parts := bytes.SplitN(b, []byte("|"), 3)
 	if len(parts) != 3 {
-		return nil, errors.New("Decode: invalid value %v")
+		return nil, errors.New("Decode: invalid value format")
 	}
 
 	b = append([]byte(name+"|"), b[:len(b)-len(parts[2])]...)

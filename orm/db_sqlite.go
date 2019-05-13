@@ -43,6 +43,7 @@ var sqliteTypes = map[string]string{
 	"pk":              "NOT NULL PRIMARY KEY",
 	"bool":            "bool",
 	"string":          "varchar(%d)",
+	"string-char":     "character(%d)",
 	"string-text":     "text",
 	"time.Time-date":  "date",
 	"time.Time":       "datetime",
@@ -134,7 +135,7 @@ func (d *dbBaseSqlite) IndexExists(db dbQuerier, table string, name string) bool
 	defer rows.Close()
 	for rows.Next() {
 		var tmp, index sql.NullString
-		rows.Scan(&tmp, &index, &tmp)
+		rows.Scan(&tmp, &index, &tmp, &tmp, &tmp)
 		if name == index.String {
 			return true
 		}

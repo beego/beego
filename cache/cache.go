@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package cache provide a Cache interface and some implemetn engine
+// Package cache provide a Cache interface and some implement engine
 // Usage:
 //
 // import(

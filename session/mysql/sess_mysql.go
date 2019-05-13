@@ -143,7 +143,6 @@ func (mp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 // SessionRead get mysql session by sid
 func (mp *Provider) SessionRead(sid string) (session.Store, error) {
 	c := mp.connectInit()
-	defer c.Close()
 	row := c.QueryRow("select session_data from "+TableName+" where session_key=?", sid)
 	var sessiondata []byte
 	err := row.Scan(&sessiondata)
@@ -171,16 +170,12 @@ func (mp *Provider) SessionExist(sid string) bool {
 	row := c.QueryRow("select session_data from "+TableName+" where session_key=?", sid)
 	var sessiondata []byte
 	err := row.Scan(&sessiondata)
-	if err == sql.ErrNoRows {
-		return false
-	}
-	return true
+	return !(err == sql.ErrNoRows)
 }
 
 // SessionRegenerate generate new sid for mysql session
 func (mp *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error) {
 	c := mp.connectInit()
-	defer c.Close()
 	row := c.QueryRow("select session_data from "+TableName+" where session_key=?", oldsid)
 	var sessiondata []byte
 	err := row.Scan(&sessiondata)
@@ -214,7 +209,6 @@ func (mp *Provider) SessionGC() {
 	c := mp.connectInit()
 	c.Exec("DELETE from "+TableName+" where session_expiry < ?", time.Now().Unix()-mp.maxlifetime)
 	c.Close()
-	return
 }
 
 // SessionAll count values in mysql session

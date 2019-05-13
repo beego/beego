@@ -73,8 +73,8 @@ func TestBind(t *testing.T) {
 		{"/?human.ID=888&human.Nick=astaxie&human.Ms=true&human[Pwd]=pass", []testItem{{"human", Human{}, Human{ID: 888, Nick: "astaxie", Ms: true, Pwd: "pass"}}}},
 		{"/?human[0].ID=888&human[0].Nick=astaxie&human[0].Ms=true&human[0][Pwd]=pass01&human[1].ID=999&human[1].Nick=ysqi&human[1].Ms=On&human[1].Pwd=pass02",
 			[]testItem{{"human", []Human{}, []Human{
-				Human{ID: 888, Nick: "astaxie", Ms: true, Pwd: "pass01"},
-				Human{ID: 999, Nick: "ysqi", Ms: true, Pwd: "pass02"},
+				{ID: 888, Nick: "astaxie", Ms: true, Pwd: "pass01"},
+				{ID: 999, Nick: "ysqi", Ms: true, Pwd: "pass02"},
 			}}}},
 
 		{

@@ -23,7 +23,7 @@ import (
 // PolicyFunc defines a policy function which is invoked before the controller handler is executed.
 type PolicyFunc func(*context.Context)
 
-// FindRouter Find Router info for URL
+// FindPolicy Find Router info for URL
 func (p *ControllerRegister) FindPolicy(cont *context.Context) []PolicyFunc {
 	var urlPath = cont.Input.URL()
 	if !BConfig.RouterCaseSensitive {
@@ -71,7 +71,7 @@ func (p *ControllerRegister) addToPolicy(method, pattern string, r ...PolicyFunc
 	}
 }
 
-// Register new policy in beego
+// Policy Register new policy in beego
 func Policy(pattern, method string, policy ...PolicyFunc) {
 	BeeApp.Handlers.addToPolicy(method, pattern, policy...)
 }

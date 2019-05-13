@@ -1,5 +1,5 @@
 /*
-Package sls implements the SDK(v0.5.0) of Simple Log Service(abbr. SLS).
+Package alils implements the SDK(v0.5.0) of Simple Log Service(abbr. SLS).
 
 For more description about SLS, please read this article:
 http://gitlab.alibaba-inc.com/sls/doc.
@@ -20,19 +20,20 @@ type errorMessage struct {
 	Message string `json:"errorMessage"`
 }
 
+// LogProject Define the Ali Project detail
 type LogProject struct {
 	Name            string // Project name
 	Endpoint        string // IP or hostname of SLS endpoint
-	AccessKeyId     string
+	AccessKeyID     string
 	AccessKeySecret string
 }
 
 // NewLogProject creates a new SLS project.
-func NewLogProject(name, endpoint, accessKeyId, accessKeySecret string) (p *LogProject, err error) {
+func NewLogProject(name, endpoint, AccessKeyID, accessKeySecret string) (p *LogProject, err error) {
 	p = &LogProject{
 		Name:            name,
 		Endpoint:        endpoint,
-		AccessKeyId:     accessKeyId,
+		AccessKeyID:     AccessKeyID,
 		AccessKeySecret: accessKeySecret,
 	}
 	return p, nil

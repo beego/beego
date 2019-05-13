@@ -150,12 +150,12 @@ func ExpandValueEnv(value string) (realValue string) {
 	}
 
 	key := ""
-	defalutV := ""
+	defaultV := ""
 	// value start with "${"
 	for i := 2; i < vLen; i++ {
 		if value[i] == '|' && (i+1 < vLen && value[i+1] == '|') {
 			key = value[2:i]
-			defalutV = value[i+2 : vLen-1] // other string is default value.
+			defaultV = value[i+2 : vLen-1] // other string is default value.
 			break
 		} else if value[i] == '}' {
 			key = value[2:i]
@@ -165,7 +165,7 @@ func ExpandValueEnv(value string) (realValue string) {
 
 	realValue = os.Getenv(key)
 	if realValue == "" {
-		realValue = defalutV
+		realValue = defaultV
 	}
 
 	return
@@ -189,16 +189,16 @@ func ParseBool(val interface{}) (value bool, err error) {
 				return false, nil
 			}
 		case int8, int32, int64:
-			strV := fmt.Sprintf("%s", v)
+			strV := fmt.Sprintf("%d", v)
 			if strV == "1" {
 				return true, nil
 			} else if strV == "0" {
 				return false, nil
 			}
 		case float64:
-			if v == 1 {
+			if v == 1.0 {
 				return true, nil
-			} else if v == 0 {
+			} else if v == 0.0 {
 				return false, nil
 			}
 		}

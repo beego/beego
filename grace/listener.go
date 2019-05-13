@@ -21,7 +21,7 @@ func newGraceListener(l net.Listener, srv *Server) (el *graceListener) {
 		server:   srv,
 	}
 	go func() {
-		_ = <-el.stop
+		<-el.stop
 		el.stopped = true
 		el.stop <- el.Listener.Close()
 	}()
@@ -37,7 +37,7 @@ func (gl *graceListener) Accept() (c net.Conn, err error) {
 	tc.SetKeepAlive(true)
 	tc.SetKeepAlivePeriod(3 * time.Minute)
 
-	c = graceConn{
+	c = &graceConn{
 		Conn:   tc,
 		server: gl.server,
 	}

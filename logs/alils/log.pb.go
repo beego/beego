@@ -1,30 +1,43 @@
 package alils
 
-import "github.com/gogo/protobuf/proto"
-import "fmt"
-import "math"
+import (
+	"fmt"
+	"io"
+	"math"
 
-// discarding unused import gogoproto "."
-
-import github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
-
-import "io"
+	"github.com/gogo/protobuf/proto"
+	github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
+)
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+var (
+	// ErrInvalidLengthLog invalid proto
+	ErrInvalidLengthLog = fmt.Errorf("proto: negative length found during unmarshaling")
+	// ErrIntOverflowLog overflow
+	ErrIntOverflowLog = fmt.Errorf("proto: integer overflow")
+)
+
+// Log define the proto Log
 type Log struct {
-	Time             *uint32        `protobuf:"varint,1,req,name=Time" json:"Time,omitempty"`
-	Contents         []*Log_Content `protobuf:"bytes,2,rep,name=Contents" json:"Contents,omitempty"`
-	XXX_unrecognized []byte         `json:"-"`
+	Time            *uint32       `protobuf:"varint,1,req,name=Time" json:"Time,omitempty"`
+	Contents        []*LogContent `protobuf:"bytes,2,rep,name=Contents" json:"Contents,omitempty"`
+	XXXUnrecognized []byte        `json:"-"`
 }
 
-func (m *Log) Reset()         { *m = Log{} }
-func (m *Log) String() string { return proto.CompactTextString(m) }
-func (*Log) ProtoMessage()    {}
+// Reset the Log
+func (m *Log) Reset() { *m = Log{} }
 
+// String return the Compact Log
+func (m *Log) String() string { return proto.CompactTextString(m) }
+
+// ProtoMessage not implemented
+func (*Log) ProtoMessage() {}
+
+// GetTime return the Log's Time
 func (m *Log) GetTime() uint32 {
 	if m != nil && m.Time != nil {
 		return *m.Time
@@ -32,49 +45,65 @@ func (m *Log) GetTime() uint32 {
 	return 0
 }
 
-func (m *Log) GetContents() []*Log_Content {
+// GetContents return the Log's Contents
+func (m *Log) GetContents() []*LogContent {
 	if m != nil {
 		return m.Contents
 	}
 	return nil
 }
 
-type Log_Content struct {
-	Key              *string `protobuf:"bytes,1,req,name=Key" json:"Key,omitempty"`
-	Value            *string `protobuf:"bytes,2,req,name=Value" json:"Value,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
+// LogContent define the Log content struct
+type LogContent struct {
+	Key             *string `protobuf:"bytes,1,req,name=Key" json:"Key,omitempty"`
+	Value           *string `protobuf:"bytes,2,req,name=Value" json:"Value,omitempty"`
+	XXXUnrecognized []byte  `json:"-"`
 }
 
-func (m *Log_Content) Reset()         { *m = Log_Content{} }
-func (m *Log_Content) String() string { return proto.CompactTextString(m) }
-func (*Log_Content) ProtoMessage()    {}
+// Reset LogContent
+func (m *LogContent) Reset() { *m = LogContent{} }
 
-func (m *Log_Content) GetKey() string {
+// String return the compact text
+func (m *LogContent) String() string { return proto.CompactTextString(m) }
+
+// ProtoMessage not implemented
+func (*LogContent) ProtoMessage() {}
+
+// GetKey return the Key
+func (m *LogContent) GetKey() string {
 	if m != nil && m.Key != nil {
 		return *m.Key
 	}
 	return ""
 }
 
-func (m *Log_Content) GetValue() string {
+// GetValue return the Value
+func (m *LogContent) GetValue() string {
 	if m != nil && m.Value != nil {
 		return *m.Value
 	}
 	return ""
 }
 
+// LogGroup define the logs struct
 type LogGroup struct {
-	Logs             []*Log  `protobuf:"bytes,1,rep,name=Logs" json:"Logs,omitempty"`
-	Reserved         *string `protobuf:"bytes,2,opt,name=Reserved" json:"Reserved,omitempty"`
-	Topic            *string `protobuf:"bytes,3,opt,name=Topic" json:"Topic,omitempty"`
-	Source           *string `protobuf:"bytes,4,opt,name=Source" json:"Source,omitempty"`
-	XXX_unrecognized []byte  `json:"-"`
+	Logs            []*Log  `protobuf:"bytes,1,rep,name=Logs" json:"Logs,omitempty"`
+	Reserved        *string `protobuf:"bytes,2,opt,name=Reserved" json:"Reserved,omitempty"`
+	Topic           *string `protobuf:"bytes,3,opt,name=Topic" json:"Topic,omitempty"`
+	Source          *string `protobuf:"bytes,4,opt,name=Source" json:"Source,omitempty"`
+	XXXUnrecognized []byte  `json:"-"`
 }
 
-func (m *LogGroup) Reset()         { *m = LogGroup{} }
-func (m *LogGroup) String() string { return proto.CompactTextString(m) }
-func (*LogGroup) ProtoMessage()    {}
+// Reset LogGroup
+func (m *LogGroup) Reset() { *m = LogGroup{} }
 
+// String return the compact text
+func (m *LogGroup) String() string { return proto.CompactTextString(m) }
+
+// ProtoMessage not implemented
+func (*LogGroup) ProtoMessage() {}
+
+// GetLogs return the loggroup logs
 func (m *LogGroup) GetLogs() []*Log {
 	if m != nil {
 		return m.Logs
@@ -82,6 +111,7 @@ func (m *LogGroup) GetLogs() []*Log {
 	return nil
 }
 
+// GetReserved return Reserved
 func (m *LogGroup) GetReserved() string {
 	if m != nil && m.Reserved != nil {
 		return *m.Reserved
@@ -89,6 +119,7 @@ func (m *LogGroup) GetReserved() string {
 	return ""
 }
 
+// GetTopic return Topic
 func (m *LogGroup) GetTopic() string {
 	if m != nil && m.Topic != nil {
 		return *m.Topic
@@ -96,6 +127,7 @@ func (m *LogGroup) GetTopic() string {
 	return ""
 }
 
+// GetSource return Source
 func (m *LogGroup) GetSource() string {
 	if m != nil && m.Source != nil {
 		return *m.Source
@@ -103,15 +135,22 @@ func (m *LogGroup) GetSource() string {
 	return ""
 }
 
+// LogGroupList define the LogGroups
 type LogGroupList struct {
-	LogGroups        []*LogGroup `protobuf:"bytes,1,rep,name=logGroups" json:"logGroups,omitempty"`
-	XXX_unrecognized []byte      `json:"-"`
+	LogGroups       []*LogGroup `protobuf:"bytes,1,rep,name=logGroups" json:"logGroups,omitempty"`
+	XXXUnrecognized []byte      `json:"-"`
 }
 
-func (m *LogGroupList) Reset()         { *m = LogGroupList{} }
-func (m *LogGroupList) String() string { return proto.CompactTextString(m) }
-func (*LogGroupList) ProtoMessage()    {}
+// Reset LogGroupList
+func (m *LogGroupList) Reset() { *m = LogGroupList{} }
 
+// String return compact text
+func (m *LogGroupList) String() string { return proto.CompactTextString(m) }
+
+// ProtoMessage not implemented
+func (*LogGroupList) ProtoMessage() {}
+
+// GetLogGroups return the LogGroups
 func (m *LogGroupList) GetLogGroups() []*LogGroup {
 	if m != nil {
 		return m.LogGroups
@@ -119,6 +158,7 @@ func (m *LogGroupList) GetLogGroups() []*LogGroup {
 	return nil
 }
 
+// Marshal the logs to byte slice
 func (m *Log) Marshal() (data []byte, err error) {
 	size := m.Size()
 	data = make([]byte, size)
@@ -129,6 +169,7 @@ func (m *Log) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
+// MarshalTo data
 func (m *Log) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
@@ -136,11 +177,10 @@ func (m *Log) MarshalTo(data []byte) (int, error) {
 	_ = l
 	if m.Time == nil {
 		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("Time")
-	} else {
-		data[i] = 0x8
-		i++
-		i = encodeVarintLog(data, i, uint64(*m.Time))
 	}
+	data[i] = 0x8
+	i++
+	i = encodeVarintLog(data, i, uint64(*m.Time))
 	if len(m.Contents) > 0 {
 		for _, msg := range m.Contents {
 			data[i] = 0x12
@@ -153,13 +193,14 @@ func (m *Log) MarshalTo(data []byte) (int, error) {
 			i += n
 		}
 	}
-	if m.XXX_unrecognized != nil {
-		i += copy(data[i:], m.XXX_unrecognized)
+	if m.XXXUnrecognized != nil {
+		i += copy(data[i:], m.XXXUnrecognized)
 	}
 	return i, nil
 }
 
-func (m *Log_Content) Marshal() (data []byte, err error) {
+// Marshal LogContent
+func (m *LogContent) Marshal() (data []byte, err error) {
 	size := m.Size()
 	data = make([]byte, size)
 	n, err := m.MarshalTo(data)
@@ -169,33 +210,34 @@ func (m *Log_Content) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
-func (m *Log_Content) MarshalTo(data []byte) (int, error) {
+// MarshalTo logcontent to data
+func (m *LogContent) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
 	var l int
 	_ = l
 	if m.Key == nil {
 		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("Key")
-	} else {
-		data[i] = 0xa
-		i++
-		i = encodeVarintLog(data, i, uint64(len(*m.Key)))
-		i += copy(data[i:], *m.Key)
 	}
+	data[i] = 0xa
+	i++
+	i = encodeVarintLog(data, i, uint64(len(*m.Key)))
+	i += copy(data[i:], *m.Key)
+
 	if m.Value == nil {
 		return 0, github_com_gogo_protobuf_proto.NewRequiredNotSetError("Value")
-	} else {
-		data[i] = 0x12
-		i++
-		i = encodeVarintLog(data, i, uint64(len(*m.Value)))
-		i += copy(data[i:], *m.Value)
 	}
-	if m.XXX_unrecognized != nil {
-		i += copy(data[i:], m.XXX_unrecognized)
+	data[i] = 0x12
+	i++
+	i = encodeVarintLog(data, i, uint64(len(*m.Value)))
+	i += copy(data[i:], *m.Value)
+	if m.XXXUnrecognized != nil {
+		i += copy(data[i:], m.XXXUnrecognized)
 	}
 	return i, nil
 }
 
+// Marshal LogGroup
 func (m *LogGroup) Marshal() (data []byte, err error) {
 	size := m.Size()
 	data = make([]byte, size)
@@ -206,6 +248,7 @@ func (m *LogGroup) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
+// MarshalTo LogGroup to data
 func (m *LogGroup) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
@@ -241,12 +284,13 @@ func (m *LogGroup) MarshalTo(data []byte) (int, error) {
 		i = encodeVarintLog(data, i, uint64(len(*m.Source)))
 		i += copy(data[i:], *m.Source)
 	}
-	if m.XXX_unrecognized != nil {
-		i += copy(data[i:], m.XXX_unrecognized)
+	if m.XXXUnrecognized != nil {
+		i += copy(data[i:], m.XXXUnrecognized)
 	}
 	return i, nil
 }
 
+// Marshal LogGroupList
 func (m *LogGroupList) Marshal() (data []byte, err error) {
 	size := m.Size()
 	data = make([]byte, size)
@@ -257,6 +301,7 @@ func (m *LogGroupList) Marshal() (data []byte, err error) {
 	return data[:n], nil
 }
 
+// MarshalTo LogGroupList to data
 func (m *LogGroupList) MarshalTo(data []byte) (int, error) {
 	var i int
 	_ = i
@@ -274,8 +319,8 @@ func (m *LogGroupList) MarshalTo(data []byte) (int, error) {
 			i += n
 		}
 	}
-	if m.XXX_unrecognized != nil {
-		i += copy(data[i:], m.XXX_unrecognized)
+	if m.XXXUnrecognized != nil {
+		i += copy(data[i:], m.XXXUnrecognized)
 	}
 	return i, nil
 }
@@ -307,6 +352,8 @@ func encodeVarintLog(data []byte, offset int, v uint64) int {
 	data[offset] = uint8(v)
 	return offset + 1
 }
+
+// Size return the log's size
 func (m *Log) Size() (n int) {
 	var l int
 	_ = l
@@ -319,13 +366,14 @@ func (m *Log) Size() (n int) {
 			n += 1 + l + sovLog(uint64(l))
 		}
 	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
+	if m.XXXUnrecognized != nil {
+		n += len(m.XXXUnrecognized)
 	}
 	return n
 }
 
-func (m *Log_Content) Size() (n int) {
+// Size return LogContent size based on Key and Value
+func (m *LogContent) Size() (n int) {
 	var l int
 	_ = l
 	if m.Key != nil {
@@ -336,12 +384,13 @@ func (m *Log_Content) Size() (n int) {
 		l = len(*m.Value)
 		n += 1 + l + sovLog(uint64(l))
 	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
+	if m.XXXUnrecognized != nil {
+		n += len(m.XXXUnrecognized)
 	}
 	return n
 }
 
+// Size return LogGroup size based on Logs
 func (m *LogGroup) Size() (n int) {
 	var l int
 	_ = l
@@ -363,12 +412,13 @@ func (m *LogGroup) Size() (n int) {
 		l = len(*m.Source)
 		n += 1 + l + sovLog(uint64(l))
 	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
+	if m.XXXUnrecognized != nil {
+		n += len(m.XXXUnrecognized)
 	}
 	return n
 }
 
+// Size return LogGroupList size
 func (m *LogGroupList) Size() (n int) {
 	var l int
 	_ = l
@@ -378,8 +428,8 @@ func (m *LogGroupList) Size() (n int) {
 			n += 1 + l + sovLog(uint64(l))
 		}
 	}
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
+	if m.XXXUnrecognized != nil {
+		n += len(m.XXXUnrecognized)
 	}
 	return n
 }
@@ -395,8 +445,10 @@ func sovLog(x uint64) (n int) {
 	return n
 }
 func sozLog(x uint64) (n int) {
-	return sovLog(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+	return sovLog((x << 1) ^ (x >> 63))
 }
+
+// Unmarshal data to log
 func (m *Log) Unmarshal(data []byte) error {
 	var hasFields [1]uint64
 	l := len(data)
@@ -474,7 +526,7 @@ func (m *Log) Unmarshal(data []byte) error {
 			if postIndex > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.Contents = append(m.Contents, &Log_Content{})
+			m.Contents = append(m.Contents, &LogContent{})
 			if err := m.Contents[len(m.Contents)-1].Unmarshal(data[iNdEx:postIndex]); err != nil {
 				return err
 			}
@@ -491,7 +543,7 @@ func (m *Log) Unmarshal(data []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, data[iNdEx:iNdEx+skippy]...)
+			m.XXXUnrecognized = append(m.XXXUnrecognized, data[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -504,7 +556,9 @@ func (m *Log) Unmarshal(data []byte) error {
 	}
 	return nil
 }
-func (m *Log_Content) Unmarshal(data []byte) error {
+
+// Unmarshal data to LogContent
+func (m *LogContent) Unmarshal(data []byte) error {
 	var hasFields [1]uint64
 	l := len(data)
 	iNdEx := 0
@@ -608,7 +662,7 @@ func (m *Log_Content) Unmarshal(data []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, data[iNdEx:iNdEx+skippy]...)
+			m.XXXUnrecognized = append(m.XXXUnrecognized, data[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -624,6 +678,8 @@ func (m *Log_Content) Unmarshal(data []byte) error {
 	}
 	return nil
 }
+
+// Unmarshal data to LogGroup
 func (m *LogGroup) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
@@ -786,7 +842,7 @@ func (m *LogGroup) Unmarshal(data []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, data[iNdEx:iNdEx+skippy]...)
+			m.XXXUnrecognized = append(m.XXXUnrecognized, data[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -796,6 +852,8 @@ func (m *LogGroup) Unmarshal(data []byte) error {
 	}
 	return nil
 }
+
+// Unmarshal data to LogGroupList
 func (m *LogGroupList) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
@@ -868,7 +926,7 @@ func (m *LogGroupList) Unmarshal(data []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, data[iNdEx:iNdEx+skippy]...)
+			m.XXXUnrecognized = append(m.XXXUnrecognized, data[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -878,6 +936,7 @@ func (m *LogGroupList) Unmarshal(data []byte) error {
 	}
 	return nil
 }
+
 func skipLog(data []byte) (n int, err error) {
 	l := len(data)
 	iNdEx := 0
@@ -940,7 +999,7 @@ func skipLog(data []byte) (n int, err error) {
 		case 3:
 			for {
 				var innerWire uint64
-				var start int = iNdEx
+				var start = iNdEx
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return 0, ErrIntOverflowLog
@@ -977,8 +1036,3 @@ func skipLog(data []byte) (n int, err error) {
 	}
 	panic("unreachable")
 }
-
-var (
-	ErrInvalidLengthLog = fmt.Errorf("proto: negative length found during unmarshaling")
-	ErrIntOverflowLog   = fmt.Errorf("proto: integer overflow")
-)

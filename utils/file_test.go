@@ -54,7 +54,7 @@ func TestSearchFile(t *testing.T) {
 
 	_, err = SearchFile(noExistedFile, ".")
 	if err == nil {
-		t.Errorf("err shouldnot be nil, got path: %s", SelfDir())
+		t.Errorf("err shouldnt be nil, got path: %s", SelfDir())
 	}
 }
 

@@ -34,6 +34,7 @@ var oracleTypes = map[string]string{
 	"pk":              "NOT NULL PRIMARY KEY",
 	"bool":            "bool",
 	"string":          "VARCHAR2(%d)",
+	"string-char":     "CHAR(%d)",
 	"string-text":     "VARCHAR2(%d)",
 	"time.Time-date":  "DATE",
 	"time.Time":       "TIMESTAMP",
@@ -93,4 +94,44 @@ func (d *dbBaseOracle) IndexExists(db dbQuerier, table string, name string) bool
 	var cnt int
 	row.Scan(&cnt)
 	return cnt > 0
+}
+
+// execute insert sql with given struct and given values.
+// insert the given values, not the field values in struct.
+func (d *dbBaseOracle) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []string, values []interface{}) (int64, error) {
+	Q := d.ins.TableQuote()
+
+	marks := make([]string, len(names))
+	for i := range marks {
+		marks[i] = ":" + names[i]
+	}
+
+	sep := fmt.Sprintf("%s, %s", Q, Q)
+	qmarks := strings.Join(marks, ", ")
+	columns := strings.Join(names, sep)
+
+	multi := len(values) / len(names)
+
+	if isMulti {
+		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
+	}
+
+	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s)", Q, mi.table, Q, Q, columns, Q, qmarks)
+
+	d.ins.ReplaceMarks(&query)
+
+	if isMulti || !d.ins.HasReturningID(mi, &query) {
+		res, err := q.Exec(query, values...)
+		if err == nil {
+			if isMulti {
+				return res.RowsAffected()
+			}
+			return res.LastInsertId()
+		}
+		return 0, err
+	}
+	row := q.QueryRow(query, values...)
+	var id int64
+	err := row.Scan(&id)
+	return id, err
 }

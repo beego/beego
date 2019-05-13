@@ -181,7 +181,7 @@ name=mysql
 		cfgData := string(data)
 		datas := strings.Split(saveResult, "\n")
 		for _, line := range datas {
-			if strings.Contains(cfgData, line+"\n") == false {
+			if !strings.Contains(cfgData, line+"\n") {
 				t.Fatalf("different after save ini config file. need contains %q", line)
 			}
 		}

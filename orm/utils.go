@@ -23,6 +23,18 @@ import (
 	"time"
 )
 
+type fn func(string) string
+
+var (
+	nameStrategyMap = map[string]fn{
+		defaultNameStrategy:      snakeString,
+		SnakeAcronymNameStrategy: snakeStringWithAcronym,
+	}
+	defaultNameStrategy      = "snakeString"
+	SnakeAcronymNameStrategy = "snakeStringWithAcronym"
+	nameStrategy             = defaultNameStrategy
+)
+
 // StrTo is the target string
 type StrTo string
 
@@ -92,11 +104,11 @@ func (f StrTo) Int64() (int64, error) {
 		i := new(big.Int)
 		ni, ok := i.SetString(f.String(), 10) // octal
 		if !ok {
-			return int64(v), err
+			return v, err
 		}
 		return ni.Int64(), nil
 	}
-	return int64(v), err
+	return v, err
 }
 
 // Uint string to uint
@@ -130,11 +142,11 @@ func (f StrTo) Uint64() (uint64, error) {
 		i := new(big.Int)
 		ni, ok := i.SetString(f.String(), 10)
 		if !ok {
-			return uint64(v), err
+			return v, err
 		}
 		return ni.Uint64(), nil
 	}
-	return uint64(v), err
+	return v, err
 }
 
 // String string to string
@@ -198,7 +210,28 @@ func ToInt64(value interface{}) (d int64) {
 	return
 }
 
-// snake string, XxYy to xx_yy , XxYY to xx_yy
+func snakeStringWithAcronym(s string) string {
+	data := make([]byte, 0, len(s)*2)
+	num := len(s)
+	for i := 0; i < num; i++ {
+		d := s[i]
+		before := false
+		after := false
+		if i > 0 {
+			before = s[i-1] >= 'a' && s[i-1] <= 'z'
+		}
+		if i+1 < num {
+			after = s[i+1] >= 'a' && s[i+1] <= 'z'
+		}
+		if i > 0 && d >= 'A' && d <= 'Z' && (before || after) {
+			data = append(data, '_')
+		}
+		data = append(data, d)
+	}
+	return strings.ToLower(string(data[:]))
+}
+
+// snake string, XxYy to xx_yy , XxYY to xx_y_y
 func snakeString(s string) string {
 	data := make([]byte, 0, len(s)*2)
 	j := false
@@ -216,6 +249,14 @@ func snakeString(s string) string {
 	return strings.ToLower(string(data[:]))
 }
 
+// SetNameStrategy set different name strategy
+func SetNameStrategy(s string) {
+	if SnakeAcronymNameStrategy != s {
+		nameStrategy = defaultNameStrategy
+	}
+	nameStrategy = s
+}
+
 // camel string, xx_yy to XxYy
 func camelString(s string) string {
 	data := make([]byte, 0, len(s))
@@ -225,7 +266,7 @@ func camelString(s string) string {
 		if d == '_' {
 			flag = true
 			continue
-		} else if flag == true {
+		} else if flag {
 			if d >= 'a' && d <= 'z' {
 				d = d - 32
 			}

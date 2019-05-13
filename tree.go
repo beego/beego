@@ -28,7 +28,7 @@ var (
 )
 
 // Tree has three elements: FixRouter/wildcard/leaves
-// fixRouter sotres Fixed Router
+// fixRouter stores Fixed Router
 // wildcard stores params
 // leaves store the endpoint information
 type Tree struct {
@@ -288,10 +288,10 @@ func (t *Tree) Match(pattern string, ctx *context.Context) (runObject interface{
 		return nil
 	}
 	w := make([]string, 0, 20)
-	return t.match(pattern, w, ctx)
+	return t.match(pattern[1:], pattern, w, ctx)
 }
 
-func (t *Tree) match(pattern string, wildcardValues []string, ctx *context.Context) (runObject interface{}) {
+func (t *Tree) match(treePattern string, pattern string, wildcardValues []string, ctx *context.Context) (runObject interface{}) {
 	if len(pattern) > 0 {
 		i := 0
 		for ; i < len(pattern) && pattern[i] == '/'; i++ {
@@ -301,13 +301,13 @@ func (t *Tree) match(pattern string, wildcardValues []string, ctx *context.Conte
 	// Handle leaf nodes:
 	if len(pattern) == 0 {
 		for _, l := range t.leaves {
-			if ok := l.match(wildcardValues, ctx); ok {
+			if ok := l.match(treePattern, wildcardValues, ctx); ok {
 				return l.runObject
 			}
 		}
 		if t.wildcard != nil {
 			for _, l := range t.wildcard.leaves {
-				if ok := l.match(wildcardValues, ctx); ok {
+				if ok := l.match(treePattern, wildcardValues, ctx); ok {
 					return l.runObject
 				}
 			}
@@ -327,7 +327,12 @@ func (t *Tree) match(pattern string, wildcardValues []string, ctx *context.Conte
 	}
 	for _, subTree := range t.fixrouters {
 		if subTree.prefix == seg {
-			runObject = subTree.match(pattern, wildcardValues, ctx)
+			if len(pattern) != 0 && pattern[0] == '/' {
+				treePattern = pattern[1:]
+			} else {
+				treePattern = pattern
+			}
+			runObject = subTree.match(treePattern, pattern, wildcardValues, ctx)
 			if runObject != nil {
 				break
 			}
@@ -339,7 +344,7 @@ func (t *Tree) match(pattern string, wildcardValues []string, ctx *context.Conte
 			if strings.HasSuffix(seg, str) {
 				for _, subTree := range t.fixrouters {
 					if subTree.prefix == seg[:len(seg)-len(str)] {
-						runObject = subTree.match(pattern, wildcardValues, ctx)
+						runObject = subTree.match(treePattern, pattern, wildcardValues, ctx)
 						if runObject != nil {
 							ctx.Input.SetParam(":ext", str[1:])
 						}
@@ -349,7 +354,7 @@ func (t *Tree) match(pattern string, wildcardValues []string, ctx *context.Conte
 		}
 	}
 	if runObject == nil && t.wildcard != nil {
-		runObject = t.wildcard.match(pattern, append(wildcardValues, seg), ctx)
+		runObject = t.wildcard.match(treePattern, pattern, append(wildcardValues, seg), ctx)
 	}
 
 	if runObject == nil && len(t.leaves) > 0 {
@@ -368,7 +373,7 @@ func (t *Tree) match(pattern string, wildcardValues []string, ctx *context.Conte
 			wildcardValues = append(wildcardValues, pattern[start:i])
 		}
 		for _, l := range t.leaves {
-			if ok := l.match(wildcardValues, ctx); ok {
+			if ok := l.match(treePattern, wildcardValues, ctx); ok {
 				return l.runObject
 			}
 		}
@@ -386,7 +391,7 @@ type leafInfo struct {
 	runObject interface{}
 }
 
-func (leaf *leafInfo) match(wildcardValues []string, ctx *context.Context) (ok bool) {
+func (leaf *leafInfo) match(treePattern string, wildcardValues []string, ctx *context.Context) (ok bool) {
 	//fmt.Println("Leaf:", wildcardValues, leaf.wildcards, leaf.regexps)
 	if leaf.regexps == nil {
 		if len(wildcardValues) == 0 && len(leaf.wildcards) == 0 { // static path
@@ -394,7 +399,7 @@ func (leaf *leafInfo) match(wildcardValues []string, ctx *context.Context) (ok b
 		}
 		// match *
 		if len(leaf.wildcards) == 1 && leaf.wildcards[0] == ":splat" {
-			ctx.Input.SetParam(":splat", path.Join(wildcardValues...))
+			ctx.Input.SetParam(":splat", treePattern)
 			return true
 		}
 		// match *.* or :id

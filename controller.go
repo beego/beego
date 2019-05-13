@@ -28,14 +28,8 @@ import (
 	"strings"
 
 	"github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/context/param"
 	"github.com/astaxie/beego/session"
-)
-
-//commonly used mime-types
-const (
-	applicationJSON = "application/json"
-	applicationXML  = "application/xml"
-	textXML         = "text/xml"
 )
 
 var (
@@ -45,13 +39,48 @@ var (
 	GlobalControllerRouter = make(map[string][]ControllerComments)
 )
 
+// ControllerFilter store the filter for controller
+type ControllerFilter struct {
+	Pattern        string
+	Pos            int
+	Filter         FilterFunc
+	ReturnOnOutput bool
+	ResetParams    bool
+}
+
+// ControllerFilterComments store the comment for controller level filter
+type ControllerFilterComments struct {
+	Pattern        string
+	Pos            int
+	Filter         string // NOQA
+	ReturnOnOutput bool
+	ResetParams    bool
+}
+
+// ControllerImportComments store the import comment for controller needed
+type ControllerImportComments struct {
+	ImportPath  string
+	ImportAlias string
+}
+
 // ControllerComments store the comment for the controller method
 type ControllerComments struct {
 	Method           string
 	Router           string
+	Filters          []*ControllerFilter
+	ImportComments   []*ControllerImportComments
+	FilterComments   []*ControllerFilterComments
 	AllowHTTPMethods []string
 	Params           []map[string]string
+	MethodParams     []*param.MethodParam
 }
+
+// ControllerCommentsSlice implements the sort interface
+type ControllerCommentsSlice []ControllerComments
+
+func (p ControllerCommentsSlice) Len() int           { return len(p) }
+func (p ControllerCommentsSlice) Less(i, j int) bool { return p[i].Router < p[j].Router }
+func (p ControllerCommentsSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 // Controller defines some basic http request handler operations, such as
 // http context, template and view, session and xsrf.
@@ -223,7 +252,7 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		}
 
 		buf.Reset()
-		ExecuteViewPathTemplate(&buf, c.Layout, c.viewPath() ,c.Data)
+		ExecuteViewPathTemplate(&buf, c.Layout, c.viewPath(), c.Data)
 	}
 	return buf.Bytes(), err
 }
@@ -249,7 +278,7 @@ func (c *Controller) renderTemplate() (bytes.Buffer, error) {
 				}
 			}
 		}
-		BuildTemplate(c.viewPath() , buildFiles...)
+		BuildTemplate(c.viewPath(), buildFiles...)
 	}
 	return buf, ExecuteViewPathTemplate(&buf, c.TplName, c.viewPath(), c.Data)
 }
@@ -263,7 +292,21 @@ func (c *Controller) viewPath() string {
 
 // Redirect sends the redirection response to url with status code.
 func (c *Controller) Redirect(url string, code int) {
+	logAccess(c.Ctx, nil, code)
 	c.Ctx.Redirect(code, url)
+}
+
+// SetData set the data depending on the accepted
+func (c *Controller) SetData(data interface{}) {
+	accept := c.Ctx.Input.Header("Accept")
+	switch accept {
+	case context.ApplicationYAML:
+		c.Data["yaml"] = data
+	case context.ApplicationXML, context.TextXML:
+		c.Data["xml"] = data
+	default:
+		c.Data["json"] = data
+	}
 }
 
 // Abort stops controller handler and show the error data if code is defined in ErrorMap or code string.
@@ -308,47 +351,35 @@ func (c *Controller) URLFor(endpoint string, values ...interface{}) string {
 // ServeJSON sends a json response with encoding charset.
 func (c *Controller) ServeJSON(encoding ...bool) {
 	var (
-		hasIndent   = true
-		hasEncoding = false
+		hasIndent   = BConfig.RunMode != PROD
+		hasEncoding = len(encoding) > 0 && encoding[0]
 	)
-	if BConfig.RunMode == PROD {
-		hasIndent = false
-	}
-	if len(encoding) > 0 && encoding[0] == true {
-		hasEncoding = true
-	}
+
 	c.Ctx.Output.JSON(c.Data["json"], hasIndent, hasEncoding)
 }
 
 // ServeJSONP sends a jsonp response.
 func (c *Controller) ServeJSONP() {
-	hasIndent := true
-	if BConfig.RunMode == PROD {
-		hasIndent = false
-	}
+	hasIndent := BConfig.RunMode != PROD
 	c.Ctx.Output.JSONP(c.Data["jsonp"], hasIndent)
 }
 
 // ServeXML sends xml response.
 func (c *Controller) ServeXML() {
-	hasIndent := true
-	if BConfig.RunMode == PROD {
-		hasIndent = false
-	}
+	hasIndent := BConfig.RunMode != PROD
 	c.Ctx.Output.XML(c.Data["xml"], hasIndent)
 }
 
-// ServeFormatted serve Xml OR Json, depending on the value of the Accept header
-func (c *Controller) ServeFormatted() {
-	accept := c.Ctx.Input.Header("Accept")
-	switch accept {
-	case applicationJSON:
-		c.ServeJSON()
-	case applicationXML, textXML:
-		c.ServeXML()
-	default:
-		c.ServeJSON()
-	}
+// ServeYAML sends yaml response.
+func (c *Controller) ServeYAML() {
+	c.Ctx.Output.YAML(c.Data["yaml"])
+}
+
+// ServeFormatted serve YAML, XML OR JSON, depending on the value of the Accept header
+func (c *Controller) ServeFormatted(encoding ...bool) {
+	hasIndent := BConfig.RunMode != PROD
+	hasEncoding := len(encoding) > 0 && encoding[0]
+	c.Ctx.Output.ServeFormatted(c.Data, hasIndent, hasEncoding)
 }
 
 // Input returns the input data map from POST or PUT request body and query string.

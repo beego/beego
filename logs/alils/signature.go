@@ -76,7 +76,7 @@ func signature(project *LogProject, method, uri string,
 		var keys sort.StringSlice
 
 		vals := u.Query()
-		for k, _ := range vals {
+		for k := range vals {
 			keys = append(keys, k)
 		}
 
@@ -109,4 +109,3 @@ func signature(project *LogProject, method, uri string,
 	digest = base64.StdEncoding.EncodeToString(mac.Sum(nil))
 	return
 }
-

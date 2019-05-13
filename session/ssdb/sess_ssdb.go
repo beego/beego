@@ -11,44 +11,40 @@ import (
 	"github.com/ssdb/gossdb/ssdb"
 )
 
-var ssdbProvider = &SsdbProvider{}
+var ssdbProvider = &Provider{}
 
-type SsdbProvider struct {
+// Provider holds ssdb client and configs
+type Provider struct {
 	client      *ssdb.Client
 	host        string
 	port        int
 	maxLifetime int64
 }
 
-func (p *SsdbProvider) connectInit() error {
+func (p *Provider) connectInit() error {
 	var err error
 	if p.host == "" || p.port == 0 {
 		return errors.New("SessionInit First")
 	}
 	p.client, err = ssdb.Connect(p.host, p.port)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
-func (p *SsdbProvider) SessionInit(maxLifetime int64, savePath string) error {
-	var e error = nil
+// SessionInit init the ssdb with the config
+func (p *Provider) SessionInit(maxLifetime int64, savePath string) error {
 	p.maxLifetime = maxLifetime
 	address := strings.Split(savePath, ":")
 	p.host = address[0]
-	p.port, e = strconv.Atoi(address[1])
-	if e != nil {
-		return e
-	}
-	err := p.connectInit()
-	if err != nil {
+
+	var err error
+	if p.port, err = strconv.Atoi(address[1]); err != nil {
 		return err
 	}
-	return nil
+	return p.connectInit()
 }
 
-func (p *SsdbProvider) SessionRead(sid string) (session.Store, error) {
+// SessionRead return a ssdb client session Store
+func (p *Provider) SessionRead(sid string) (session.Store, error) {
 	if p.client == nil {
 		if err := p.connectInit(); err != nil {
 			return nil, err
@@ -71,7 +67,8 @@ func (p *SsdbProvider) SessionRead(sid string) (session.Store, error) {
 	return rs, nil
 }
 
-func (p *SsdbProvider) SessionExist(sid string) bool {
+// SessionExist judged whether sid is exist in session
+func (p *Provider) SessionExist(sid string) bool {
 	if p.client == nil {
 		if err := p.connectInit(); err != nil {
 			panic(err)
@@ -85,9 +82,10 @@ func (p *SsdbProvider) SessionExist(sid string) bool {
 		return false
 	}
 	return true
-
 }
-func (p *SsdbProvider) SessionRegenerate(oldsid, sid string) (session.Store, error) {
+
+// SessionRegenerate regenerate session with new sid and delete oldsid
+func (p *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error) {
 	//conn.Do("setx", key, v, ttl)
 	if p.client == nil {
 		if err := p.connectInit(); err != nil {
@@ -119,27 +117,27 @@ func (p *SsdbProvider) SessionRegenerate(oldsid, sid string) (session.Store, err
 	return rs, nil
 }
 
-func (p *SsdbProvider) SessionDestroy(sid string) error {
+// SessionDestroy destroy the sid
+func (p *Provider) SessionDestroy(sid string) error {
 	if p.client == nil {
 		if err := p.connectInit(); err != nil {
 			return err
 		}
 	}
 	_, err := p.client.Del(sid)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
-func (p *SsdbProvider) SessionGC() {
-	return
+// SessionGC not implemented
+func (p *Provider) SessionGC() {
 }
 
-func (p *SsdbProvider) SessionAll() int {
+// SessionAll not implemented
+func (p *Provider) SessionAll() int {
 	return 0
 }
 
+// SessionStore holds the session information which stored in ssdb
 type SessionStore struct {
 	sid         string
 	lock        sync.RWMutex
@@ -148,12 +146,15 @@ type SessionStore struct {
 	client      *ssdb.Client
 }
 
+// Set the key and value
 func (s *SessionStore) Set(key, value interface{}) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	s.values[key] = value
 	return nil
 }
+
+// Get return the value by the key
 func (s *SessionStore) Get(key interface{}) interface{} {
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -163,30 +164,36 @@ func (s *SessionStore) Get(key interface{}) interface{} {
 	return nil
 }
 
+// Delete the key in session store
 func (s *SessionStore) Delete(key interface{}) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	delete(s.values, key)
 	return nil
 }
+
+// Flush delete all keys and values
 func (s *SessionStore) Flush() error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	s.values = make(map[interface{}]interface{})
 	return nil
 }
+
+// SessionID return the sessionID
 func (s *SessionStore) SessionID() string {
 	return s.sid
 }
 
+// SessionRelease Store the keyvalues into ssdb
 func (s *SessionStore) SessionRelease(w http.ResponseWriter) {
 	b, err := session.EncodeGob(s.values)
 	if err != nil {
 		return
 	}
 	s.client.Do("setx", s.sid, string(b), s.maxLifetime)
-
 }
+
 func init() {
 	session.Register("ssdb", ssdbProvider)
 }

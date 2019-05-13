@@ -38,6 +38,14 @@ import (
 	"github.com/astaxie/beego/utils"
 )
 
+//commonly used mime-types
+const (
+	ApplicationJSON = "application/json"
+	ApplicationXML  = "application/xml"
+	ApplicationYAML = "application/x-yaml"
+	TextXML         = "text/xml"
+)
+
 // NewContext return the Context with Input and Output
 func NewContext() *Context {
 	return &Context{
@@ -171,12 +179,29 @@ func (ctx *Context) CheckXSRFCookie() bool {
 	return true
 }
 
+// RenderMethodResult renders the return value of a controller method to the output
+func (ctx *Context) RenderMethodResult(result interface{}) {
+	if result != nil {
+		renderer, ok := result.(Renderer)
+		if !ok {
+			err, ok := result.(error)
+			if ok {
+				renderer = errorRenderer(err)
+			} else {
+				renderer = jsonRenderer(result)
+			}
+		}
+		renderer.Render(ctx)
+	}
+}
+
 //Response is a wrapper for the http.ResponseWriter
 //started set to true if response was written to then don't execute other handler
 type Response struct {
 	http.ResponseWriter
 	Started bool
 	Status  int
+	Elapsed time.Duration
 }
 
 func (r *Response) reset(rw http.ResponseWriter) {
@@ -225,6 +250,14 @@ func (r *Response) Flush() {
 func (r *Response) CloseNotify() <-chan bool {
 	if cn, ok := r.ResponseWriter.(http.CloseNotifier); ok {
 		return cn.CloseNotify()
+	}
+	return nil
+}
+
+// Pusher http.Pusher
+func (r *Response) Pusher() (pusher http.Pusher) {
+	if pusher, ok := r.ResponseWriter.(http.Pusher); ok {
+		return pusher
 	}
 	return nil
 }

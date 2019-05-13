@@ -94,7 +94,7 @@ func TestCompareRelated(t *testing.T) {
 }
 
 func TestHtmlquote(t *testing.T) {
-	h := `&lt;&#39;&nbsp;&rdquo;&ldquo;&amp;&quot;&gt;`
+	h := `&lt;&#39;&nbsp;&rdquo;&ldquo;&amp;&#34;&gt;`
 	s := `<' ”“&">`
 	if Htmlquote(s) != h {
 		t.Error("should be equal")
@@ -102,8 +102,8 @@ func TestHtmlquote(t *testing.T) {
 }
 
 func TestHtmlunquote(t *testing.T) {
-	h := `&lt;&#39;&nbsp;&rdquo;&ldquo;&amp;&quot;&gt;`
-	s := `<' ”“&">`
+	h := `&lt;&#39;&nbsp;&rdquo;&ldquo;&amp;&#34;&gt;`
+	s := `<' ”“&">`
 	if Htmlunquote(h) != s {
 		t.Error("should be equal")
 	}
@@ -173,7 +173,7 @@ func TestParseForm(t *testing.T) {
 	if u.Intro != "I am an engineer!" {
 		t.Errorf("Intro should equal `I am an engineer!` but got `%v`", u.Intro)
 	}
-	if u.StrBool != true {
+	if !u.StrBool {
 		t.Errorf("strboll should equal `true`, but got `%v`", u.StrBool)
 	}
 	y, m, d := u.Date.Date()
@@ -254,44 +254,44 @@ func TestParseFormTag(t *testing.T) {
 
 	objT := reflect.TypeOf(&user{}).Elem()
 
-	label, name, fType, id, class, ignored, required := parseFormTag(objT.Field(0))
-	if !(name == "name" && label == "年龄：" && fType == "text" && ignored == false) {
+	label, name, fType, _, _, ignored, _ := parseFormTag(objT.Field(0))
+	if !(name == "name" && label == "年龄：" && fType == "text" && !ignored) {
 		t.Errorf("Form Tag with name, label and type was not correctly parsed.")
 	}
 
-	label, name, fType, id, class, ignored, required = parseFormTag(objT.Field(1))
-	if !(name == "NoName" && label == "年龄：" && fType == "hidden" && ignored == false) {
+	label, name, fType, _, _, ignored, _ = parseFormTag(objT.Field(1))
+	if !(name == "NoName" && label == "年龄：" && fType == "hidden" && !ignored) {
 		t.Errorf("Form Tag with label and type but without name was not correctly parsed.")
 	}
 
-	label, name, fType, id, class, ignored, required = parseFormTag(objT.Field(2))
-	if !(name == "OnlyLabel" && label == "年龄：" && fType == "text" && ignored == false) {
+	label, name, fType, _, _, ignored, _ = parseFormTag(objT.Field(2))
+	if !(name == "OnlyLabel" && label == "年龄：" && fType == "text" && !ignored) {
 		t.Errorf("Form Tag containing only label was not correctly parsed.")
 	}
 
-	label, name, fType, id, class, ignored, required = parseFormTag(objT.Field(3))
-	if !(name == "name" && label == "OnlyName: " && fType == "text" && ignored == false &&
+	label, name, fType, id, class, ignored, _ := parseFormTag(objT.Field(3))
+	if !(name == "name" && label == "OnlyName: " && fType == "text" && !ignored &&
 		id == "name" && class == "form-name") {
 		t.Errorf("Form Tag containing only name was not correctly parsed.")
 	}
 
-	label, name, fType, id, class, ignored, required = parseFormTag(objT.Field(4))
-	if ignored == false {
+	_, _, _, _, _, ignored, _ = parseFormTag(objT.Field(4))
+	if !ignored {
 		t.Errorf("Form Tag that should be ignored was not correctly parsed.")
 	}
 
-	label, name, fType, id, class, ignored, required = parseFormTag(objT.Field(5))
-	if !(name == "name" && required == true) {
+	_, name, _, _, _, _, required := parseFormTag(objT.Field(5))
+	if !(name == "name" && required) {
 		t.Errorf("Form Tag containing only name and required was not correctly parsed.")
 	}
 
-	label, name, fType, id, class, ignored, required = parseFormTag(objT.Field(6))
-	if !(name == "name" && required == false) {
+	_, name, _, _, _, _, required = parseFormTag(objT.Field(6))
+	if !(name == "name" && !required) {
 		t.Errorf("Form Tag containing only name and ignore required was not correctly parsed.")
 	}
 
-	label, name, fType, id, class, ignored, required = parseFormTag(objT.Field(7))
-	if !(name == "name" && required == false) {
+	_, name, _, _, _, _, required = parseFormTag(objT.Field(7))
+	if !(name == "name" && !required) {
 		t.Errorf("Form Tag containing only name and not required was not correctly parsed.")
 	}
 
@@ -329,7 +329,7 @@ func TestMapGet(t *testing.T) {
 	}
 
 	// test 2 level map
-	m2 := map[string]interface{}{
+	m2 := M{
 		"1": map[string]float64{
 			"2": 3.5,
 		},
@@ -344,11 +344,11 @@ func TestMapGet(t *testing.T) {
 	}
 
 	// test 5 level map
-	m5 := map[string]interface{}{
-		"1": map[string]interface{}{
-			"2": map[string]interface{}{
-				"3": map[string]interface{}{
-					"4": map[string]interface{}{
+	m5 := M{
+		"1": M{
+			"2": M{
+				"3": M{
+					"4": M{
 						"5": 1.2,
 					},
 				},

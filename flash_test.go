@@ -48,7 +48,7 @@ func TestFlashHeader(t *testing.T) {
 	// match for the expected header
 	res := strings.Contains(sc, "BEEGO_FLASH=%00notice%23BEEGOFLASH%23TestFlashString%00")
 	// validate the assertion
-	if res != true {
+	if !res {
 		t.Errorf("TestFlashHeader() unable to validate flash message")
 	}
 }

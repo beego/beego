@@ -2,7 +2,9 @@ package grace
 
 import (
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -65,7 +67,7 @@ func (srv *Server) ListenAndServe() (err error) {
 			log.Println(err)
 			return err
 		}
-		err = process.Kill()
+		err = process.Signal(syscall.SIGTERM)
 		if err != nil {
 			return err
 		}
@@ -103,6 +105,62 @@ func (srv *Server) ListenAndServeTLS(certFile, keyFile string) (err error) {
 		return
 	}
 
+	go srv.handleSignals()
+
+	l, err := srv.getListener(addr)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	srv.tlsInnerListener = newGraceListener(l, srv)
+	srv.GraceListener = tls.NewListener(srv.tlsInnerListener, srv.TLSConfig)
+
+	if srv.isChild {
+		process, err := os.FindProcess(os.Getppid())
+		if err != nil {
+			log.Println(err)
+			return err
+		}
+		err = process.Signal(syscall.SIGTERM)
+		if err != nil {
+			return err
+		}
+	}
+	log.Println(os.Getpid(), srv.Addr)
+	return srv.Serve()
+}
+
+// ListenAndServeMutualTLS listens on the TCP network address srv.Addr and then calls
+// Serve to handle requests on incoming mutual TLS connections.
+func (srv *Server) ListenAndServeMutualTLS(certFile, keyFile, trustFile string) (err error) {
+	addr := srv.Addr
+	if addr == "" {
+		addr = ":https"
+	}
+
+	if srv.TLSConfig == nil {
+		srv.TLSConfig = &tls.Config{}
+	}
+	if srv.TLSConfig.NextProtos == nil {
+		srv.TLSConfig.NextProtos = []string{"http/1.1"}
+	}
+
+	srv.TLSConfig.Certificates = make([]tls.Certificate, 1)
+	srv.TLSConfig.Certificates[0], err = tls.LoadX509KeyPair(certFile, keyFile)
+	if err != nil {
+		return
+	}
+	srv.TLSConfig.ClientAuth = tls.RequireAndVerifyClientCert
+	pool := x509.NewCertPool()
+	data, err := ioutil.ReadFile(trustFile)
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+	pool.AppendCertsFromPEM(data)
+	srv.TLSConfig.ClientCAs = pool
+	log.Println("Mutual HTTPS")
 	go srv.handleSignals()
 
 	l, err := srv.getListener(addr)
@@ -196,7 +254,6 @@ func (srv *Server) signalHooks(ppFlag int, sig os.Signal) {
 	for _, f := range srv.SignalHooks[ppFlag][sig] {
 		f()
 	}
-	return
 }
 
 // shutdown closes the listener so that no new connections are accepted. it also
@@ -292,7 +349,7 @@ func (srv *Server) fork() (err error) {
 // RegisterSignalHook registers a function to be run PreSignal or PostSignal for a given signal.
 func (srv *Server) RegisterSignalHook(ppFlag int, sig os.Signal, f func()) (err error) {
 	if ppFlag != PreSignal && ppFlag != PostSignal {
-		err = fmt.Errorf("Invalid ppFlag argument. Must be either grace.PreSignal or grace.PostSignal.")
+		err = fmt.Errorf("Invalid ppFlag argument. Must be either grace.PreSignal or grace.PostSignal")
 		return
 	}
 	for _, s := range hookableSignals {
@@ -301,6 +358,6 @@ func (srv *Server) RegisterSignalHook(ppFlag int, sig os.Signal, f func()) (err 
 			return
 		}
 	}
-	err = fmt.Errorf("Signal '%v' is not supported.", sig)
+	err = fmt.Errorf("Signal '%v' is not supported", sig)
 	return
 }

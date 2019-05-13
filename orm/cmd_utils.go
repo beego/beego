@@ -51,12 +51,14 @@ checkColumn:
 	switch fieldType {
 	case TypeBooleanField:
 		col = T["bool"]
-	case TypeCharField:
+	case TypeVarCharField:
 		if al.Driver == DRPostgres && fi.toText {
 			col = T["string-text"]
 		} else {
 			col = fmt.Sprintf(T["string"], fieldSize)
 		}
+	case TypeCharField:
+		col = fmt.Sprintf(T["string-char"], fieldSize)
 	case TypeTextField:
 		col = T["string-text"]
 	case TypeTimeField:
@@ -89,20 +91,20 @@ checkColumn:
 		col = T["float64"]
 	case TypeDecimalField:
 		s := T["float64-decimal"]
-		if strings.Index(s, "%d") == -1 {
+		if !strings.Contains(s, "%d") {
 			col = s
 		} else {
 			col = fmt.Sprintf(s, fi.digits, fi.decimals)
 		}
 	case TypeJSONField:
 		if al.Driver != DRPostgres {
-			fieldType = TypeCharField
+			fieldType = TypeVarCharField
 			goto checkColumn
 		}
 		col = T["json"]
 	case TypeJsonbField:
 		if al.Driver != DRPostgres {
-			fieldType = TypeCharField
+			fieldType = TypeVarCharField
 			goto checkColumn
 		}
 		col = T["jsonb"]
@@ -120,7 +122,7 @@ func getColumnAddQuery(al *alias, fi *fieldInfo) string {
 	Q := al.DbBaser.TableQuote()
 	typ := getColumnTyp(al, fi)
 
-	if fi.null == false {
+	if !fi.null {
 		typ += " " + "NOT NULL"
 	}
 
@@ -172,7 +174,7 @@ func getDbCreateSQL(al *alias) (sqls []string, tableIndexes map[string][]dbIndex
 			} else {
 				column += col
 
-				if fi.null == false {
+				if !fi.null {
 					column += " " + "NOT NULL"
 				}
 
@@ -192,8 +194,12 @@ func getDbCreateSQL(al *alias) (sqls []string, tableIndexes map[string][]dbIndex
 				}
 			}
 
-			if strings.Index(column, "%COL%") != -1 {
+			if strings.Contains(column, "%COL%") {
 				column = strings.Replace(column, "%COL%", fi.column, -1)
+			}
+			
+			if fi.description != "" {
+				column += " " + fmt.Sprintf("COMMENT '%s'",fi.description)
 			}
 
 			columns = append(columns, column)

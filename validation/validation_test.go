@@ -35,6 +35,12 @@ func TestRequired(t *testing.T) {
 	if valid.Required("", "string").Ok {
 		t.Error("\"'\" string should be false")
 	}
+	if valid.Required(" ", "string").Ok {
+		t.Error("\" \" string should be false") // For #2361
+	}
+	if valid.Required("\n", "string").Ok {
+		t.Error("new line string should be false") // For #2361
+	}
 	if !valid.Required("astaxie", "string").Ok {
 		t.Error("string should be true")
 	}
@@ -175,10 +181,10 @@ func TestAlphaNumeric(t *testing.T) {
 func TestMatch(t *testing.T) {
 	valid := Validation{}
 
-	if valid.Match("suchuangji@gmail", regexp.MustCompile("^\\w+@\\w+\\.\\w+$"), "match").Ok {
+	if valid.Match("suchuangji@gmail", regexp.MustCompile(`^\w+@\w+\.\w+$`), "match").Ok {
 		t.Error("\"suchuangji@gmail\" match \"^\\w+@\\w+\\.\\w+$\"  should be false")
 	}
-	if !valid.Match("suchuangji@gmail.com", regexp.MustCompile("^\\w+@\\w+\\.\\w+$"), "match").Ok {
+	if !valid.Match("suchuangji@gmail.com", regexp.MustCompile(`^\w+@\w+\.\w+$`), "match").Ok {
 		t.Error("\"suchuangji@gmail\" match \"^\\w+@\\w+\\.\\w+$\"  should be true")
 	}
 }
@@ -186,10 +192,10 @@ func TestMatch(t *testing.T) {
 func TestNoMatch(t *testing.T) {
 	valid := Validation{}
 
-	if valid.NoMatch("123@gmail", regexp.MustCompile("[^\\w\\d]"), "nomatch").Ok {
+	if valid.NoMatch("123@gmail", regexp.MustCompile(`[^\w\d]`), "nomatch").Ok {
 		t.Error("\"123@gmail\" not match \"[^\\w\\d]\"  should be false")
 	}
-	if !valid.NoMatch("123gmail", regexp.MustCompile("[^\\w\\d]"), "match").Ok {
+	if !valid.NoMatch("123gmail", regexp.MustCompile(`[^\w\d]`), "match").Ok {
 		t.Error("\"123@gmail\" not match \"[^\\w\\d@]\"  should be true")
 	}
 }
@@ -213,6 +219,12 @@ func TestEmail(t *testing.T) {
 	}
 	if !valid.Email("suchuangji@gmail.com", "email").Ok {
 		t.Error("\"suchuangji@gmail.com\" is a valid email address should be true")
+	}
+	if valid.Email("@suchuangji@gmail.com", "email").Ok {
+		t.Error("\"@suchuangji@gmail.com\" is a valid email address should be false")
+	}
+	if valid.Email("suchuangji@gmail.com ok", "email").Ok {
+		t.Error("\"suchuangji@gmail.com ok\" is a valid email address should be false")
 	}
 }
 
@@ -379,3 +391,173 @@ func TestRecursiveValid(t *testing.T) {
 		t.Error("validation should not be passed")
 	}
 }
+
+func TestSkipValid(t *testing.T) {
+	type User struct {
+		ID int
+
+		Email    string `valid:"Email"`
+		ReqEmail string `valid:"Required;Email"`
+
+		IP    string `valid:"IP"`
+		ReqIP string `valid:"Required;IP"`
+
+		Mobile    string `valid:"Mobile"`
+		ReqMobile string `valid:"Required;Mobile"`
+
+		Tel    string `valid:"Tel"`
+		ReqTel string `valid:"Required;Tel"`
+
+		Phone    string `valid:"Phone"`
+		ReqPhone string `valid:"Required;Phone"`
+
+		ZipCode    string `valid:"ZipCode"`
+		ReqZipCode string `valid:"Required;ZipCode"`
+	}
+
+	u := User{
+		ReqEmail:   "a@a.com",
+		ReqIP:      "127.0.0.1",
+		ReqMobile:  "18888888888",
+		ReqTel:     "02088888888",
+		ReqPhone:   "02088888888",
+		ReqZipCode: "510000",
+	}
+
+	valid := Validation{}
+	b, err := valid.Valid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b {
+		t.Fatal("validation should not be passed")
+	}
+
+	valid = Validation{RequiredFirst: true}
+	b, err = valid.Valid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !b {
+		t.Fatal("validation should be passed")
+	}
+}
+
+func TestPointer(t *testing.T) {
+	type User struct {
+		ID int
+
+		Email    *string `valid:"Email"`
+		ReqEmail *string `valid:"Required;Email"`
+	}
+
+	u := User{
+		ReqEmail: nil,
+		Email:	  nil,
+	}
+
+	valid := Validation{}
+	b, err := valid.Valid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b {
+		t.Fatal("validation should not be passed")
+	}
+
+	validEmail := "a@a.com"
+	u = User{
+		ReqEmail: &validEmail,
+		Email:	  nil,
+	}
+
+	valid = Validation{RequiredFirst: true}
+	b, err = valid.Valid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !b {
+		t.Fatal("validation should be passed")
+	}
+
+	u = User{
+		ReqEmail: &validEmail,
+		Email:	  nil,
+	}
+
+	valid = Validation{}
+	b, err = valid.Valid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b {
+		t.Fatal("validation should not be passed")
+	}
+
+	invalidEmail := "a@a"
+	u = User{
+		ReqEmail: &validEmail,
+		Email:	  &invalidEmail,
+	}
+
+	valid = Validation{RequiredFirst: true}
+	b, err = valid.Valid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b {
+		t.Fatal("validation should not be passed")
+	}
+
+	u = User{
+		ReqEmail: &validEmail,
+		Email:	  &invalidEmail,
+	}
+
+	valid = Validation{}
+	b, err = valid.Valid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b {
+		t.Fatal("validation should not be passed")
+	}
+}
+
+
+func TestCanSkipAlso(t *testing.T) {
+	type User struct {
+		ID int
+
+		Email    	string `valid:"Email"`
+		ReqEmail 	string `valid:"Required;Email"`
+		MatchRange	int 	`valid:"Range(10, 20)"`
+	}
+
+	u := User{
+		ReqEmail: 	"a@a.com",
+		Email:    	"",
+		MatchRange: 0,
+	}
+
+	valid := Validation{RequiredFirst: true}
+	b, err := valid.Valid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b {
+		t.Fatal("validation should not be passed")
+	}
+
+	valid = Validation{RequiredFirst: true}
+	valid.CanSkipAlso("Range")
+	b, err = valid.Valid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !b {
+		t.Fatal("validation should be passed")
+	}
+
+}
+
