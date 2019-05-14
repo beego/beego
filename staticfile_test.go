@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"unsafe"
 )
 
 var currentWorkDir, _ = os.Getwd()
@@ -54,10 +55,12 @@ func TestOpenStaticFileDeflate_1(t *testing.T) {
 }
 
 func assetOpenFileAndContent(sch *serveContentHolder, reader *serveContentReader, content []byte, t *testing.T) {
-	t.Log(sch.size, len(content))
-	if sch.size != int64(len(content)) {
-		t.Log("static content file size not same")
-		t.Fail()
+	if sch.encoding == "" {
+		t.Log(sch.size, len(content))
+		if sch.size != int64(len(content)) {
+			t.Log("static content file size not same")
+			t.Fail()
+		}
 	}
 	bs, _ := ioutil.ReadAll(reader)
 	for i, v := range content {
@@ -69,5 +72,28 @@ func assetOpenFileAndContent(sch *serveContentHolder, reader *serveContentReader
 	if len(staticFileMap) == 0 {
 		t.Log("men map is empty")
 		t.Fail()
+	}
+}
+
+func TestStaticFileCaching(t *testing.T) {
+	encodings := [...]string{"", "gzip", "deflate"}
+
+	fi, _ := os.Stat(licenseFile)
+	for _, encoding := range encodings {
+		_, _, first, _, err := openFile(licenseFile, fi, encoding)
+		if err != nil {
+			t.Error(err)
+			continue
+		}
+
+		_, _, second, _, err := openFile(licenseFile, fi, encoding)
+		if err != nil {
+			t.Error(err)
+			continue
+		}
+
+		if uintptr(unsafe.Pointer(first)) != uintptr(unsafe.Pointer(second)) {
+			t.Errorf("encoding '%v' cache failed", encoding)
+		}
 	}
 }

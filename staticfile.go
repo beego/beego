@@ -130,7 +130,7 @@ func openFile(filePath string, fi os.FileInfo, acceptEncoding string) (bool, str
 		if err != nil {
 			return false, "", nil, nil, err
 		}
-		mapFile = &serveContentHolder{data: bufferWriter.Bytes(), modTime: fi.ModTime(), size: int64(bufferWriter.Len()), encoding: n}
+		mapFile = &serveContentHolder{data: bufferWriter.Bytes(), modTime: fi.ModTime(), size: fi.Size(), encoding: n}
 		staticFileMap[mapKey] = mapFile
 	}
 
@@ -178,7 +178,7 @@ func searchFile(ctx *context.Context) (string, os.FileInfo, error) {
 		if !strings.Contains(requestPath, prefix) {
 			continue
 		}
-		if prefix != "/" &&  len(requestPath) > len(prefix) && requestPath[len(prefix)] != '/' {
+		if prefix != "/" && len(requestPath) > len(prefix) && requestPath[len(prefix)] != '/' {
 			continue
 		}
 		filePath := path.Join(staticDir, requestPath[len(prefix):])
