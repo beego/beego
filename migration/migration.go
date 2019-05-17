@@ -176,8 +176,9 @@ func Register(name string, m Migrationer) error {
 func Upgrade(lasttime int64) error {
 	sm := sortMap(migrationMap)
 	i := 0
+	migs, _ := getAllMigrations()
 	for _, v := range sm {
-		if v.created > lasttime {
+		if _, ok := migs[v.name]; !ok {
 			logs.Info("start upgrade", v.name)
 			v.m.Reset()
 			v.m.Up()
@@ -309,4 +310,21 @@ func isRollBack(name string) bool {
 		return true
 	}
 	return false
+}
+func getAllMigrations() (map[string]string, error) {
+	o := orm.NewOrm()
+	var maps []orm.Params
+	migs := make(map[string]string)
+	num, err := o.Raw("select * from migrations order by id_migration desc").Values(&maps)
+	if err != nil {
+		logs.Info("get name has error", err)
+		return migs, err
+	}
+	if num > 0 {
+		for _, v := range maps {
+			name := v["name"].(string)
+			migs[name] = v["status"].(string)
+		}
+	}
+	return migs, nil
 }
