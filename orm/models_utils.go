@@ -66,7 +66,7 @@ func getTableName(val reflect.Value) string {
 	return snakeString(reflect.Indirect(val).Type().Name())
 }
 
-// get table engine, mysiam or innodb.
+// get table engine, myisam or innodb.
 func getTableEngine(val reflect.Value) string {
 	fun := val.MethodByName("TableEngine")
 	if fun.IsValid() {
