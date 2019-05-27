@@ -55,7 +55,7 @@ type Ormer interface {
 	// for example:
 	//  user := new(User)
 	//  id, err = Ormer.Insert(user)
-	//  user must a pointer and Insert will set user's pk field
+	//  user must be a pointer and Insert will set user's pk field
 	Insert(interface{}) (int64, error)
 	// mysql:InsertOrUpdate(model) or InsertOrUpdate(model,"colu=colu+value")
 	// if colu type is integer : can use(+-*/), string : convert(colu,"value")
