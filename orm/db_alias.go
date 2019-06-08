@@ -116,6 +116,7 @@ func (d *DB) getStmt(query string) (*sql.Stmt, error) {
 		d.RUnlock()
 		return stmt, nil
 	}
+	d.RUnlock()
 
 	stmt, err := d.Prepare(query)
 	if err != nil {
@@ -140,7 +141,7 @@ func (d *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	return stmt.Exec(args)
+	return stmt.Exec(args...)
 }
 
 func (d *DB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
@@ -148,7 +149,7 @@ func (d *DB) ExecContext(ctx context.Context, query string, args ...interface{})
 	if err != nil {
 		return nil, err
 	}
-	return stmt.ExecContext(ctx, args)
+	return stmt.ExecContext(ctx, args...)
 }
 
 func (d *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
@@ -156,7 +157,7 @@ func (d *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
 	if err != nil {
 		return nil, err
 	}
-	return stmt.Query(args)
+	return stmt.Query(args...)
 }
 
 func (d *DB) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
@@ -164,7 +165,7 @@ func (d *DB) QueryContext(ctx context.Context, query string, args ...interface{}
 	if err != nil {
 		return nil, err
 	}
-	return stmt.QueryContext(ctx, args)
+	return stmt.QueryContext(ctx, args...)
 }
 
 func (d *DB) QueryRow(query string, args ...interface{}) *sql.Row {
@@ -173,7 +174,7 @@ func (d *DB) QueryRow(query string, args ...interface{}) *sql.Row {
 		panic(err)
 		return nil
 	}
-	return stmt.QueryRow(args)
+	return stmt.QueryRow(args...)
 
 }
 
@@ -261,8 +262,9 @@ func addAliasWthDB(aliasName, driverName string, db *sql.DB) (*alias, error) {
 	al.Name = aliasName
 	al.DriverName = driverName
 	al.DB = &DB{
-		DB:    db,
-		stmts: make(map[string]*sql.Stmt),
+		RWMutex: new(sync.RWMutex),
+		DB:      db,
+		stmts:   make(map[string]*sql.Stmt),
 	}
 
 	if dr, ok := drivers[driverName]; ok {
