@@ -335,11 +335,11 @@ func RegisterModelWithSuffix(suffix string, models ...interface{}) {
 // BootStrap bootstrap models.
 // make all model parsed and can not add more models
 func BootStrap() {
+	modelCache.Lock()
+	defer modelCache.Unlock()
 	if modelCache.done {
 		return
 	}
-	modelCache.Lock()
-	defer modelCache.Unlock()
 	bootStrap()
 	modelCache.done = true
 }
