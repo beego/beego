@@ -529,7 +529,6 @@ func (o *orm) DBStats() *sql.DBStats {
 		stats := o.alias.DB.DB.Stats()
 		return &stats
 	}
-
 	return nil
 }
 
