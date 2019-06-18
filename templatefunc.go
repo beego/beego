@@ -361,6 +361,8 @@ func parseFormToStruct(form url.Values, objT reflect.Type, objV reflect.Value) e
 				if len(value) >= 25 {
 					value = value[:25]
 					t, err = time.ParseInLocation(time.RFC3339, value, time.Local)
+				} else if strings.HasSuffix(strings.ToUpper(value), "Z") {
+					t, err = time.ParseInLocation(time.RFC3339, value, time.Local)	
 				} else if len(value) >= 19 {
 					if strings.Contains(value, "T") {
 						value = value[:19]
