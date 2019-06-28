@@ -110,6 +110,14 @@ type DB struct {
 	stmts map[string]*sql.Stmt
 }
 
+func (d *DB) Begin() (*sql.Tx, error) {
+	return d.DB.Begin()
+}
+
+func (d *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error) {
+	return d.DB.BeginTx(ctx, opts)
+}
+
 func (d *DB) getStmt(query string) (*sql.Stmt, error) {
 	d.RLock()
 	if stmt, ok := d.stmts[query]; ok {
