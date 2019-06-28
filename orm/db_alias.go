@@ -172,7 +172,6 @@ func (d *DB) QueryRow(query string, args ...interface{}) *sql.Row {
 	stmt, err := d.getStmt(query)
 	if err != nil {
 		panic(err)
-		return nil
 	}
 	return stmt.QueryRow(args...)
 
@@ -183,7 +182,6 @@ func (d *DB) QueryRowContext(ctx context.Context, query string, args ...interfac
 	stmt, err := d.getStmt(query)
 	if err != nil {
 		panic(err)
-		return nil
 	}
 	return stmt.QueryRowContext(ctx, args)
 }
