@@ -162,7 +162,7 @@ func (e *Email) Bytes() ([]byte, error) {
 
 // AttachFile Add attach file to the send mail
 func (e *Email) AttachFile(args ...string) (a *Attachment, err error) {
-	if len(args) < 1 && len(args) > 2 {
+	if len(args) < 1 || len(args) > 2 { // change && to ||
 		err = errors.New("Must specify a file name and number of parameters can not exceed at least two")
 		return
 	}
@@ -183,7 +183,7 @@ func (e *Email) AttachFile(args ...string) (a *Attachment, err error) {
 // Attach is used to attach content from an io.Reader to the email.
 // Parameters include an io.Reader, the desired filename for the attachment, and the Content-Type.
 func (e *Email) Attach(r io.Reader, filename string, args ...string) (a *Attachment, err error) {
-	if len(args) < 1 && len(args) > 2 {
+	if len(args) < 1 || len(args) > 2 { // change && to ||
 		err = errors.New("Must specify the file type and number of parameters can not exceed at least two")
 		return
 	}
