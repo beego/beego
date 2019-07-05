@@ -38,7 +38,7 @@ var (
 	beeViewPathTemplates = make(map[string]map[string]*template.Template)
 	templatesLock        sync.RWMutex
 	// beeTemplateExt stores the template extension which will build
-	beeTemplateExt = []string{"tpl", "html"}
+	beeTemplateExt = []string{"tpl", "html", "gohtml"}
 	// beeTemplatePreprocessors stores associations of extension -> preprocessor handler
 	beeTemplateEngines = map[string]templatePreProcessor{}
 	beeTemplateFS      = defaultFSFunc
@@ -240,7 +240,7 @@ func getTplDeep(root string, fs http.FileSystem, file string, parent string, t *
 	var fileAbsPath string
 	var rParent string
 	var err error
-	if filepath.HasPrefix(file, "../") {
+	if strings.HasPrefix(file, "../") {
 		rParent = filepath.Join(filepath.Dir(parent), file)
 		fileAbsPath = filepath.Join(root, filepath.Dir(parent), file)
 	} else {
@@ -248,10 +248,10 @@ func getTplDeep(root string, fs http.FileSystem, file string, parent string, t *
 		fileAbsPath = filepath.Join(root, file)
 	}
 	f, err := fs.Open(fileAbsPath)
-	defer f.Close()
 	if err != nil {
 		panic("can't find template file:" + file)
 	}
+	defer f.Close()
 	data, err := ioutil.ReadAll(f)
 	if err != nil {
 		return nil, [][]string{}, err
