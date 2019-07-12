@@ -89,8 +89,9 @@ func defaultGOPATH() string {
 }
 
 func GetModule() bool {
-	vs := strings.Split(strings.ReplaceAll(runtime.Version(), "go", ""), ".")
-	if len(vs) < 2 {
+	version := regexp.MustCompile(`\d\.\d+`).FindString(runtime.Version())
+	vs := strings.Split(version, ".")
+	if len(vs) != 2 {
 		return false
 	}
 
