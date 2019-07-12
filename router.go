@@ -18,9 +18,11 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"path"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
@@ -253,6 +255,27 @@ func (p *ControllerRegister) Include(cList ...ControllerInterface) {
 			reflectVal := reflect.ValueOf(c)
 			t := reflect.Indirect(reflectVal).Type()
 			wgopath := utils.GetGOPATHs()
+			inGOPATH := false
+			if utils.GetModule() {
+				currentDir, err := os.Getwd()
+				if err != nil {
+					panic(err.Error())
+				}
+				for _, wg := range wgopath {
+					if currentDir == wg {
+						inGOPATH = true
+						break
+					}
+				}
+				if !inGOPATH {
+					if _, ok := skip[currentDir]; !ok {
+						skip[currentDir] = true
+						reg := regexp.MustCompile(`/(.*)+`)
+						parserPkg(currentDir+reg.FindString(t.PkgPath()), t.PkgPath())
+					}
+					break
+				}
+			}
 			if len(wgopath) == 0 {
 				panic("you are in dev mode. So please set gopath")
 			}

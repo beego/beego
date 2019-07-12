@@ -87,3 +87,26 @@ func defaultGOPATH() string {
 	}
 	return ""
 }
+
+func GetModule() bool {
+	vs := strings.Split(strings.ReplaceAll(runtime.Version(), "go", ""), ".")
+	if len(vs) < 2 {
+		return false
+	}
+
+	v1, err := strconv.Atoi(vs[0])
+	if err != nil || v1 < 1 {
+		return false
+	}
+	v2, err := strconv.Atoi(vs[1])
+	if err != nil || v2 < 11 {
+		return false
+	}
+
+	module := os.Getenv("GO111MODULE")
+	if v1 == 1 && v2 == 11 && module != "auto" && module != "on" {
+		return false
+	}
+
+	return true
+}
