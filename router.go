@@ -252,18 +252,10 @@ func (p *ControllerRegister) Include(cList ...ControllerInterface) {
 		for _, c := range cList {
 			reflectVal := reflect.ValueOf(c)
 			t := reflect.Indirect(reflectVal).Type()
-			wgopath := utils.GetGOPATHs()
-			if len(wgopath) == 0 {
-				panic("you are in dev mode. So please set gopath")
-			}
-			pkgpath := ""
-			for _, wg := range wgopath {
-				wg, _ = filepath.EvalSymlinks(filepath.Join(wg, "src", t.PkgPath()))
-				if utils.FileExists(wg) {
-					pkgpath = wg
-					break
-				}
-			}
+
+			// the package path of the source file of t
+			pkgpath := resolvePkgPath(t.PkgPath(), AppPath)
+
 			if pkgpath != "" {
 				if _, ok := skip[pkgpath]; !ok {
 					skip[pkgpath] = true
@@ -286,6 +278,39 @@ func (p *ControllerRegister) Include(cList ...ControllerInterface) {
 			}
 		}
 	}
+}
+
+// resolvePkgPath resolves the package directory
+func resolvePkgPath(pkgpath, curpath string) string {
+	realPkgPath := ""
+	gopaths := utils.GetGOPATHs()
+
+	modulesEnabled := utils.IsModuleEnabled(gopaths, curpath)
+	if modulesEnabled {
+		dirpath := ""
+		for i, r := range pkgpath {
+			if r != '/' {
+				continue
+			}
+			dirpath = filepath.Join(curpath, pkgpath[i:])
+			if utils.FileExists(dirpath) {
+				return dirpath
+			}
+		}
+		panic("go module is enabled, and the package path of controllers can not be resolved")
+	}
+
+	if len(gopaths) == 0 {
+		panic("you are in dev mode. So please set gopath")
+	}
+	for _, gp := range gopaths {
+		gp, _ = filepath.EvalSymlinks(filepath.Join(gp, "src", pkgpath))
+		if utils.FileExists(gp) {
+			realPkgPath = gp
+			break
+		}
+	}
+	return realPkgPath
 }
 
 // Get add get method
