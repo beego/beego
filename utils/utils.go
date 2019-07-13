@@ -106,8 +106,11 @@ func IsModuleEnabled(gopaths []string, cwd string) bool {
 				return false
 			}
 		}
-		return true
+		if FileExists(filepath.Join(cwd, "go.mod")) {
+			return true
+		}
 	}
+	return false
 }
 
 // InDir checks whether path is in the file tree rooted at dir.
