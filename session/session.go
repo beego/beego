@@ -196,7 +196,7 @@ func (manager *Manager) getSid(r *http.Request) (string, error) {
 			}
 		}
 
-		return sid, nil
+		return sid, errs
 	}
 
 	// HTTP Request contains cookie for sessionid info.
