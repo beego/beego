@@ -203,6 +203,21 @@ func (manager *Manager) getSid(r *http.Request) (string, error) {
 	return url.QueryUnescape(cookie.Value)
 }
 
+// Get session store from this http request,
+// if session is not exists, returen nil.
+func (manager *Manager) CurrentSession(r *http.Request) (session Store, err error) {
+	sid, errs := manager.getSid(r)
+	if errs != nil {
+		return nil, errs
+	}
+
+	if sid != "" && manager.provider.SessionExist(sid) {
+		return manager.provider.SessionRead(sid)
+	}
+
+	return nil, nil
+}
+
 // SessionStart generate or read the session id from http request.
 // if session id exists, return SessionStore with this id.
 func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (session Store, err error) {
