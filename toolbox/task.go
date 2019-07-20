@@ -408,8 +408,10 @@ func run() {
 	}
 
 	for {
+		taskLock.Lock()
 		sortList := NewMapSorter(AdminTaskList)
 		sortList.Sort()
+		taskLock.Unlock()
 		var effective time.Time
 		if len(AdminTaskList) == 0 || sortList.Vals[0].GetNext().IsZero() {
 			// If there are no entries yet, just sleep - it still handles new entries
@@ -431,10 +433,12 @@ func run() {
 			}
 			continue
 		case <-changed:
+			taskLock.Lock()
 			now = time.Now().Local()
 			for _, t := range AdminTaskList {
 				t.SetNext(now)
 			}
+			taskLock.Unlock()
 			continue
 		case <-stop:
 			return
@@ -456,9 +460,9 @@ func StopTask() {
 // AddTask add task with name
 func AddTask(taskname string, t Tasker) {
 	taskLock.Lock()
-	defer taskLock.Unlock()
 	t.SetNext(time.Now().Local())
 	AdminTaskList[taskname] = t
+	taskLock.Unlock()
 	if isstart {
 		changed <- true
 	}
@@ -467,8 +471,8 @@ func AddTask(taskname string, t Tasker) {
 // DeleteTask delete task with name
 func DeleteTask(taskname string) {
 	taskLock.Lock()
-	defer taskLock.Unlock()
 	delete(AdminTaskList, taskname)
+	taskLock.Unlock()
 	if isstart {
 		changed <- true
 	}
