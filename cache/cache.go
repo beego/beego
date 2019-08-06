@@ -56,9 +56,9 @@ type Cache interface {
 	// delete cached value by key.
 	Delete(key string) error
 	// increase cached int value by key, as a counter.
-	Incr(key string) error
+	Incr(key string) (int64, error)
 	// decrease cached int value by key, as a counter.
-	Decr(key string) error
+	Decr(key string) (int64, error)
 	// check if cached value exists or not.
 	IsExist(key string) bool
 	// clear all cache.

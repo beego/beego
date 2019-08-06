@@ -48,7 +48,7 @@ func TestRedisCache(t *testing.T) {
 		t.Error("get err")
 	}
 
-	if err = bm.Incr("astaxie"); err != nil {
+	if newValue, err = bm.Incr("astaxie"); err != nil {
 		t.Error("Incr Error", err)
 	}
 

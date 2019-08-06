@@ -124,15 +124,15 @@ func (rc *Cache) IsExist(key string) bool {
 }
 
 // Incr increase counter in redis.
-func (rc *Cache) Incr(key string) error {
-	_, err := redis.Bool(rc.do("INCRBY", key, 1))
-	return err
+func (rc *Cache) Incr(key string) (int64, error) {
+	newValue, err := redis.Int64(rc.do("INCRBY", key, 1))
+	return newValue, err
 }
 
 // Decr decrease counter in redis.
-func (rc *Cache) Decr(key string) error {
-	_, err := redis.Bool(rc.do("INCRBY", key, -1))
-	return err
+func (rc *Cache) Decr(key string) (int64, error) {
+	newValue, err := redis.Int64(rc.do("INCRBY", key, -1))
+	return newValue, err
 }
 
 // ClearAll clean all cache in redis. delete this redis collection.
