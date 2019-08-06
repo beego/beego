@@ -174,7 +174,7 @@ func (fc *FileCache) Delete(key string) error {
 
 // Incr will increase cached int value.
 // fc value is saving forever unless Delete.
-func (fc *FileCache) Incr(key string) error {
+func (fc *FileCache) Incr(key string) (int64, error) {
 	data := fc.Get(key)
 	var incr int
 	if reflect.TypeOf(data).Name() != "int" {
@@ -183,11 +183,11 @@ func (fc *FileCache) Incr(key string) error {
 		incr = data.(int) + 1
 	}
 	fc.Put(key, incr, time.Duration(fc.EmbedExpiry))
-	return nil
+	return GetInt64(incr), nil
 }
 
 // Decr will decrease cached int value.
-func (fc *FileCache) Decr(key string) error {
+func (fc *FileCache) Decr(key string) (int64, error) {
 	data := fc.Get(key)
 	var decr int
 	if reflect.TypeOf(data).Name() != "int" || data.(int)-1 <= 0 {
@@ -196,7 +196,7 @@ func (fc *FileCache) Decr(key string) error {
 		decr = data.(int) - 1
 	}
 	fc.Put(key, decr, time.Duration(fc.EmbedExpiry))
-	return nil
+	return GetInt64(decr), nil
 }
 
 // IsExist check value is exist.

@@ -25,6 +25,7 @@ import (
 )
 
 func TestMemcacheCache(t *testing.T) {
+	var newValue int64
 	bm, err := cache.NewCache("memcache", `{"conn": "127.0.0.1:11211"}`)
 	if err != nil {
 		t.Error("init err")
@@ -50,7 +51,7 @@ func TestMemcacheCache(t *testing.T) {
 		t.Error("get err")
 	}
 
-	if err = bm.Incr("astaxie"); err != nil {
+	if newValue, err = bm.Incr("astaxie"); err != nil || newValue != 2 {
 		t.Error("Incr Error", err)
 	}
 
@@ -58,13 +59,20 @@ func TestMemcacheCache(t *testing.T) {
 		t.Error("get err")
 	}
 
-	if err = bm.Decr("astaxie"); err != nil {
+	if newValue, err = bm.Decr("astaxie"); err != nil  || newValue != 1 {
 		t.Error("Decr Error", err)
 	}
 
 	if v, err := strconv.Atoi(string(bm.Get("astaxie").([]byte))); err != nil || v != 1 {
 		t.Error("get err")
 	}
+
+	// test negative decr
+	bm.Put("astaxie", 0, timeoutDuration)
+	if newValue, err = bm.Decr("astaxie"); newValue != 0 || err != nil {
+		t.Error("Decr Error", err)
+	}
+
 	bm.Delete("astaxie")
 	if bm.IsExist("astaxie") {
 		t.Error("delete err")

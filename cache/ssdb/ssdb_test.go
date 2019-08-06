@@ -9,6 +9,7 @@ import (
 )
 
 func TestSsdbcacheCache(t *testing.T) {
+	var newValue int64
 	ssdb, err := cache.NewCache("ssdb", `{"conn": "127.0.0.1:8888"}`)
 	if err != nil {
 		t.Error("init err")
@@ -40,7 +41,7 @@ func TestSsdbcacheCache(t *testing.T) {
 	if err = ssdb.Put("ssdb", "2", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
-	if err = ssdb.Incr("ssdb"); err != nil {
+	if newValue, err = ssdb.Incr("ssdb"); err != nil || newValue != 3 {
 		t.Error("incr Error", err)
 	}
 
@@ -48,7 +49,7 @@ func TestSsdbcacheCache(t *testing.T) {
 		t.Error("get err")
 	}
 
-	if err = ssdb.Decr("ssdb"); err != nil {
+	if newValue, err = ssdb.Decr("ssdb"); err != nil || newValue != 2 {
 		t.Error("decr error")
 	}
 

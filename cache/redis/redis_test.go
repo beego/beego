@@ -23,6 +23,7 @@ import (
 )
 
 func TestRedisCache(t *testing.T) {
+	var newValue int64
 	bm, err := cache.NewCache("redis", `{"conn": "127.0.0.1:6379"}`)
 	if err != nil {
 		t.Error("init err")
@@ -48,7 +49,7 @@ func TestRedisCache(t *testing.T) {
 		t.Error("get err")
 	}
 
-	if newValue, err = bm.Incr("astaxie"); err != nil {
+	if newValue, err = bm.Incr("astaxie"); newValue != 2 || err != nil {
 		t.Error("Incr Error", err)
 	}
 
@@ -56,13 +57,20 @@ func TestRedisCache(t *testing.T) {
 		t.Error("get err")
 	}
 
-	if err = bm.Decr("astaxie"); err != nil {
+	if newValue, err = bm.Decr("astaxie"); newValue != 1 || err != nil {
 		t.Error("Decr Error", err)
 	}
 
 	if v, _ := redis.Int(bm.Get("astaxie"), err); v != 1 {
 		t.Error("get err")
 	}
+
+	// test negative decr
+	bm.Put("astaxie", 0, timeoutDuration)
+	if newValue, err = bm.Decr("astaxie"); newValue != -1 || err != nil {
+		t.Error("Decr Error", err)
+	}
+
 	bm.Delete("astaxie")
 	if bm.IsExist("astaxie") {
 		t.Error("delete err")

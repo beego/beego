@@ -109,12 +109,12 @@ func (bc *MemoryCache) Delete(name string) error {
 
 // Incr increase cache counter in memory.
 // it supports int,int32,int64,uint,uint32,uint64.
-func (bc *MemoryCache) Incr(key string) error {
+func (bc *MemoryCache) Incr(key string) (int64, error) {
 	bc.Lock()
 	defer bc.Unlock()
 	itm, ok := bc.items[key]
 	if !ok {
-		return errors.New("key not exist")
+		return 0, errors.New("key not exist")
 	}
 	switch val := itm.val.(type) {
 	case int:
@@ -130,18 +130,18 @@ func (bc *MemoryCache) Incr(key string) error {
 	case uint64:
 		itm.val = val + 1
 	default:
-		return errors.New("item val is not (u)int (u)int32 (u)int64")
+		return 0, errors.New("item val is not (u)int (u)int32 (u)int64")
 	}
-	return nil
+	return GetInt64(itm.val), nil
 }
 
 // Decr decrease counter in memory.
-func (bc *MemoryCache) Decr(key string) error {
+func (bc *MemoryCache) Decr(key string) (int64, error) {
 	bc.Lock()
 	defer bc.Unlock()
 	itm, ok := bc.items[key]
 	if !ok {
-		return errors.New("key not exist")
+		return 0, errors.New("key not exist")
 	}
 	switch val := itm.val.(type) {
 	case int:
@@ -154,24 +154,24 @@ func (bc *MemoryCache) Decr(key string) error {
 		if val > 0 {
 			itm.val = val - 1
 		} else {
-			return errors.New("item val is less than 0")
+			return 0, errors.New("item val is less than 0")
 		}
 	case uint32:
 		if val > 0 {
 			itm.val = val - 1
 		} else {
-			return errors.New("item val is less than 0")
+			return 0, errors.New("item val is less than 0")
 		}
 	case uint64:
 		if val > 0 {
 			itm.val = val - 1
 		} else {
-			return errors.New("item val is less than 0")
+			return 0, errors.New("item val is less than 0")
 		}
 	default:
-		return errors.New("item val is not int int64 int32")
+		return 0, errors.New("item val is not int int64 int32")
 	}
-	return nil
+	return GetInt64(itm.val), nil
 }
 
 // IsExist check cache exist in memory.

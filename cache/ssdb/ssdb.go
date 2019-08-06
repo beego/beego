@@ -114,25 +114,25 @@ func (rc *Cache) Delete(key string) error {
 }
 
 // Incr increase counter.
-func (rc *Cache) Incr(key string) error {
+func (rc *Cache) Incr(key string) (int64, error) {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
-			return err
+			return 0, err
 		}
 	}
-	_, err := rc.conn.Do("incr", key, 1)
-	return err
+	newValue, err := rc.conn.Do("incr", key, 1)
+	return cache.GetInt64(newValue), err
 }
 
 // Decr decrease counter.
-func (rc *Cache) Decr(key string) error {
+func (rc *Cache) Decr(key string) (int64, error) {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
-			return err
+			return 0, err
 		}
 	}
-	_, err := rc.conn.Do("incr", key, -1)
-	return err
+	newValue, err := rc.conn.Do("incr", key, -1)
+	return cache.GetInt64(newValue), err
 }
 
 // IsExist check value exists in memcache.
