@@ -256,6 +256,9 @@ func TestMobile(t *testing.T) {
 	if !valid.Mobile("19800008888", "mobile").Ok {
 		t.Error("\"19800008888\" is a valid mobile phone number should be true")
 	}
+	if !valid.Mobile("19900008888", "mobile").Ok {
+		t.Error("\"19900008888\" is a valid mobile phone number should be true")
+	}
 	if !valid.Mobile("18800008888", "mobile").Ok {
 		t.Error("\"18800008888\" is a valid mobile phone number should be true")
 	}
