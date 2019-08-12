@@ -102,7 +102,7 @@ var (
 
 	w32Green   = string([]byte{27, 91, 52, 50, 109})
 	w32White   = string([]byte{27, 91, 52, 55, 109})
-	w32Yellow  = string([]byte{27, 91, 52, 51, 109})
+	w32Yellow  = string([]byte{27, 91, 49, 48, 51, 109})
 	w32Red     = string([]byte{27, 91, 52, 49, 109})
 	w32Blue    = string([]byte{27, 91, 52, 52, 109})
 	w32Magenta = string([]byte{27, 91, 52, 53, 109})
