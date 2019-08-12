@@ -348,6 +348,7 @@ func (c *Controller) CustomAbort(status int, body string) {
 		c.Ctx.Output.Status = status
 		panic(body)
 	}
+	LogAccess(c.Ctx, nil, status)
 	// last panic user string
 	c.Ctx.ResponseWriter.WriteHeader(status)
 	c.Ctx.ResponseWriter.Write([]byte(body))
