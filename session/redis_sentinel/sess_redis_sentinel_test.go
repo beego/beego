@@ -16,7 +16,7 @@ func TestRedisSentinel(t *testing.T) {
 		Maxlifetime:     3600,
 		Secure:          false,
 		CookieLifeTime:  3600,
-		ProviderConfig:  "127.0.0.1:6379,100,,0,master",
+		ProviderConfig:  "127.0.0.1:6379,100,0,master",
 	}
 	globalSessions, e := session.NewManager("redis_sentinel", sessionConfig)
 	if e != nil {
