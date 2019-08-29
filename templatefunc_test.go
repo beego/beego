@@ -248,8 +248,8 @@ func TestParseFormTag(t *testing.T) {
 	// create struct to contain field with different types of struct-tag `form`
 	type user struct {
 		All            int `form:"name,text,年龄："`
-		NoName         int `form:",hidden,年龄："`
-		OnlyLabel      int `form:",,年龄："`
+		NoName         int `form:"hidden,年龄："`
+		OnlyLabel      int `form:"年龄："`
 		OnlyName       int `form:"name" id:"name" class:"form-name"`
 		Ignored        int `form:"-"`
 		Required       int `form:"name" required:"true"`
