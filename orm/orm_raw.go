@@ -462,6 +462,7 @@ func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
 	var cnt int64
 	nInds := make([]reflect.Value, len(sInds))
 	sInd := sInds[0]
+	structTagMap := make(map[reflect.StructTag]map[string]string)
 
 	for rows.Next() {
 
@@ -526,7 +527,11 @@ func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
 							recursiveSetField(f)
 						}
 
-						_, tags := parseStructTag(fe.Tag.Get(defaultStructTagName))
+						tags := structTagMap[fe.Tag]
+						if tags == nil {
+							_, tags = parseStructTag(fe.Tag.Get(defaultStructTagName))
+							structTagMap[fe.Tag] = tags
+						}
 						var col string
 						if col = tags["column"]; col == "" {
 							col = nameStrategyMap[nameStrategy](fe.Name)
