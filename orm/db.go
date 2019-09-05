@@ -179,13 +179,19 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 				}
 			case TypeTimeField, TypeDateField, TypeDateTimeField:
 				value = field.Interface()
-				if t, ok := value.(time.Time); ok {
-					d.ins.TimeToDB(&t, tz)
-					if t.IsZero() {
-						value = nil
-					} else {
-						value = t
+				var t time.Time
+				var ok bool
+				if t, ok = value.(time.Time); !ok {
+					if tptr, ok := value.(*time.Time); ok && tptr != nil {
+						t = *tptr
 					}
+				}
+
+				d.ins.TimeToDB(&t, tz)
+				if t.IsZero() {
+					value = nil
+				} else {
+					value = t
 				}
 			default:
 				switch {
