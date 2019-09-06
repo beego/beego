@@ -349,7 +349,7 @@ checkType:
 			}
 		default:
 			if onDelete == "" {
-				onDelete = DefaultDeletePolicy
+				onDelete = DefaultOdPolicy
 			} else {
 				err = fmt.Errorf("on_delete value expected choice in `cascade,set_null,set_default,do_nothing`, unknown `%s`", onDelete)
 				goto end

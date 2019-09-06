@@ -71,19 +71,19 @@ const (
 
 // Define common vars
 var (
-	Debug               = false
-	DebugLog            = NewLog(os.Stdout)
-	DefaultRowsLimit    = -1
-	DefaultRelsDepth    = 2
-	DefaultTimeLoc      = time.Local
-	DefaultDeletePolicy = odDoNothing
-	ErrTxHasBegan       = errors.New("<Ormer.Begin> transaction already begin")
-	ErrTxDone           = errors.New("<Ormer.Commit/Rollback> transaction not begin")
-	ErrMultiRows        = errors.New("<QuerySeter> return multi rows")
-	ErrNoRows           = errors.New("<QuerySeter> no row found")
-	ErrStmtClosed       = errors.New("<QuerySeter> stmt already closed")
-	ErrArgs             = errors.New("<Ormer> args error may be empty")
-	ErrNotImplement     = errors.New("have not implement")
+	Debug            = false
+	DebugLog         = NewLog(os.Stdout)
+	DefaultRowsLimit = -1
+	DefaultRelsDepth = 2
+	DefaultTimeLoc   = time.Local
+	DefaultOdPolicy  = odDoNothing
+	ErrTxHasBegan    = errors.New("<Ormer.Begin> transaction already begin")
+	ErrTxDone        = errors.New("<Ormer.Commit/Rollback> transaction not begin")
+	ErrMultiRows     = errors.New("<QuerySeter> return multi rows")
+	ErrNoRows        = errors.New("<QuerySeter> no row found")
+	ErrStmtClosed    = errors.New("<QuerySeter> stmt already closed")
+	ErrArgs          = errors.New("<Ormer> args error may be empty")
+	ErrNotImplement  = errors.New("have not implement")
 )
 
 // Params stores the Params
