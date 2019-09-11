@@ -18,7 +18,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"reflect"
 	"sync"
 	"time"
 )
@@ -200,6 +199,7 @@ type alias struct {
 	DriverName   string
 	DataSource   string
 	MaxIdleConns int
+	MaxLifetime  time.Duration
 	MaxOpenConns int
 	DB           *DB
 	DbBaser      dbBaser
@@ -370,14 +370,18 @@ func SetMaxIdleConns(aliasName string, maxIdleConns int) {
 	al.DB.DB.SetMaxIdleConns(maxIdleConns)
 }
 
+// SetConnMaxLifetime Change the lifetime of connections for *sql.DB, maxLifetime <= 0 connections are reused forever.
+func SetMaxLifetimeConns(aliasName string, maxLifetime time.Duration) {
+	al := getDbAlias(aliasName)
+	al.MaxLifetime = maxLifetime
+	al.DB.DB.SetConnMaxLifetime(maxLifetime)
+}
+
 // SetMaxOpenConns Change the max open conns for *sql.DB, use specify database alias name
 func SetMaxOpenConns(aliasName string, maxOpenConns int) {
 	al := getDbAlias(aliasName)
 	al.MaxOpenConns = maxOpenConns
-	// for tip go 1.2
-	if fun := reflect.ValueOf(al.DB).MethodByName("SetMaxOpenConns"); fun.IsValid() {
-		fun.Call([]reflect.Value{reflect.ValueOf(maxOpenConns)})
-	}
+	al.DB.DB.SetMaxOpenConns(maxOpenConns)
 }
 
 // GetDB Get *sql.DB from registered database by db alias name.
