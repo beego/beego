@@ -175,6 +175,7 @@ func (e *Email) AttachFile(args ...string) (a *Attachment, err error) {
 	if err != nil {
 		return
 	}
+	defer f.Close()
 	ct := mime.TypeByExtension(filepath.Ext(filename))
 	basename := path.Base(filename)
 	return e.Attach(f, basename, ct, id)
