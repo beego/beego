@@ -149,6 +149,9 @@ func (d *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	defer stmt.Close()
+
 	return stmt.Exec(args...)
 }
 
@@ -157,6 +160,9 @@ func (d *DB) ExecContext(ctx context.Context, query string, args ...interface{})
 	if err != nil {
 		return nil, err
 	}
+
+	defer stmt.Close()
+
 	return stmt.ExecContext(ctx, args...)
 }
 
@@ -165,6 +171,9 @@ func (d *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	defer stmt.Close()
+
 	return stmt.Query(args...)
 }
 
@@ -173,6 +182,9 @@ func (d *DB) QueryContext(ctx context.Context, query string, args ...interface{}
 	if err != nil {
 		return nil, err
 	}
+
+	defer stmt.Close()
+
 	return stmt.QueryContext(ctx, args...)
 }
 
