@@ -98,6 +98,20 @@ func (ac *_dbCache) get(name string) (al *alias, ok bool) {
 	return
 }
 
+func (ac *_dbCache) removeAllAlias() {
+	ac.mux.Lock()
+	defer ac.mux.Unlock()
+	for _, al := range ac.cache {
+		al.DB.Lock()
+		for _, stmt := range al.DB.stmts {
+			stmt.Close()
+		}
+		al.DB.Unlock()
+		al.DB.DB.Close()
+	}
+
+}
+
 // get default alias.
 func (ac *_dbCache) getDefault() (al *alias) {
 	al, _ = ac.get("default")
@@ -296,6 +310,11 @@ func addAliasWthDB(aliasName, driverName string, db *sql.DB) (*alias, error) {
 func AddAliasWthDB(aliasName, driverName string, db *sql.DB) error {
 	_, err := addAliasWthDB(aliasName, driverName, db)
 	return err
+}
+
+//DeregisterAllDatabases relase all stmt
+func DeregisterAllDatabases() {
+	dataBaseCache.removeAllAlias()
 }
 
 // RegisterDataBase Setting the database connect params. Use the database driver self dataSource args.
