@@ -67,7 +67,8 @@ func init() {
 }
 
 func main() {
-	o := orm.NewOrm()
+    o := orm.NewOrm()
+    defer orm.DeregisterAllDatabases()
 
 	user := User{Name: "slene"}
 
