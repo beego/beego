@@ -49,14 +49,15 @@ install:
   - go get -u honnef.co/go/tools/cmd/staticcheck
   - go get -u github.com/mdempsky/unconvert
   - go get -u github.com/gordonklaus/ineffassign
-  - go get -u github.com/golang/lint/golint
+  #- go get -u github.com/golang/lint/golint
+  - go get -u golang.org/x/lint/golint
   - go get -u github.com/go-redis/redis
 before_script:
   - psql --version
   - sh -c "if [ '$ORM_DRIVER' = 'postgres' ]; then psql -c 'create database orm_test;' -U postgres; fi"
   - sh -c "if [ '$ORM_DRIVER' = 'mysql' ]; then mysql -u root -e 'create database orm_test;'; fi"
   - sh -c "if [ '$ORM_DRIVER' = 'sqlite' ]; then touch $TRAVIS_BUILD_DIR/orm_test.db; fi"
-  - sh -c "go get github.com/golang/lint/golint; golint ./...;"
+  - sh -c "go get - go get -u golang.org/x/lint/golint; golint ./...;"
   - sh -c "go list ./... | grep -v vendor | xargs go vet -v"
   - mkdir -p res/var
   - ./ssdb/ssdb-server ./ssdb/ssdb.conf -d
