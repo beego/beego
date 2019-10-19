@@ -23,14 +23,15 @@ require (
 	github.com/mattn/go-sqlite3 v1.10.0
 	github.com/pelletier/go-toml v1.2.0 // indirect
 	github.com/pkg/errors v0.8.0 // indirect
+	github.com/shiena/ansicolor v0.0.0-20151119151921-a422bbe96644
 	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726 // indirect
 	github.com/siddontang/ledisdb v0.0.0-20181029004158-becf5f38d373
 	github.com/siddontang/rdb v0.0.0-20150307021120-fc89ed2e418d // indirect
 	github.com/ssdb/gossdb v0.0.0-20180723034631-88f6b59b84ec
 	github.com/syndtr/goleveldb v0.0.0-20181127023241-353a9fca669c // indirect
 	github.com/wendal/errors v0.0.0-20130201093226-f66c77a7882b // indirect
-	golang.org/x/crypto v0.0.0-20181127143415-eb0de9b17e85
-	golang.org/x/net v0.0.0-20181114220301-adae6a3d119a // indirect
+	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
+	google.golang.org/appengine v1.6.5 // indirect
 	gopkg.in/yaml.v2 v2.2.1
 )
 
