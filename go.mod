@@ -2,7 +2,7 @@ module github.com/astaxie/beego
 
 require (
 	github.com/Knetic/govaluate v3.0.0+incompatible // indirect
-	github.com/OwnLocal/goes v1.0.0
+	github.com/OwnLocal/goes v1.0.1-0.20170302235955-d25b7ff8314b
 	github.com/beego/goyaml2 v0.0.0-20130207012346-5545475820dd
 	github.com/beego/x2j v0.0.0-20131220205130-a0352aadc542
 	github.com/bradfitz/gomemcache v0.0.0-20180710155616-bc664df96737
