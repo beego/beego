@@ -127,7 +127,7 @@ func (app *App) Run(mws ...MiddleWare) {
 				server.Server.ReadTimeout = app.Server.ReadTimeout
 				server.Server.WriteTimeout = app.Server.WriteTimeout
 				if BConfig.Listen.EnableMutualHTTPS {
-					if err := server.ListenAndServeMutualTLS(BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile, BConfig.Listen.TrustCaFile); err != nil {
+					if err := server.ListenAndServeMutualTLS(BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile, BConfig.Listen.TrustCaFile,convertToClientAuthType(BConfig.Listen.HTTPSClientAuth)); err != nil {
 						logs.Critical("ListenAndServeTLS: ", err, fmt.Sprintf("%d", os.Getpid()))
 						time.Sleep(100 * time.Microsecond)
 						endRunning <- true
@@ -198,7 +198,7 @@ func (app *App) Run(mws ...MiddleWare) {
 				pool.AppendCertsFromPEM(data)
 				app.Server.TLSConfig = &tls.Config{
 					ClientCAs:  pool,
-					ClientAuth: tls.RequireAndVerifyClientCert,
+					ClientAuth: convertToClientAuthType(BConfig.Listen.HTTPSClientAuth),
 				}
 			}
 			if err := app.Server.ListenAndServeTLS(BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile); err != nil {
@@ -237,6 +237,21 @@ func (app *App) Run(mws ...MiddleWare) {
 		}()
 	}
 	<-endRunning
+}
+
+func convertToClientAuthType(t int) tls.ClientAuthType {
+	switch t {
+	case 0:
+		return tls.NoClientCert
+	case 1:
+		return tls.RequestClientCert
+	case 2:
+		return tls.RequireAnyClientCert
+	case 3:
+		return tls.VerifyClientCertIfGiven
+	default:
+		return tls.RequireAndVerifyClientCert
+	}
 }
 
 // Router adds a patterned controller handler to BeeApp.

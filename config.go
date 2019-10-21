@@ -64,6 +64,7 @@ type Listen struct {
 	HTTPSPort         int
 	HTTPSCertFile     string
 	HTTPSKeyFile      string
+	HTTPSClientAuth   int
 	TrustCaFile       string
 	EnableAdmin       bool
 	AdminAddr         string
@@ -208,25 +209,26 @@ func newBConfig() *Config {
 		EnableErrorsShow:    true,
 		EnableErrorsRender:  true,
 		Listen: Listen{
-			Graceful:      false,
-			ServerTimeOut: 0,
-			ListenTCP4:    false,
-			EnableHTTP:    true,
-			AutoTLS:       false,
-			Domains:       []string{},
-			TLSCacheDir:   ".",
-			HTTPAddr:      "",
-			HTTPPort:      8080,
-			EnableHTTPS:   false,
-			HTTPSAddr:     "",
-			HTTPSPort:     10443,
-			HTTPSCertFile: "",
-			HTTPSKeyFile:  "",
-			EnableAdmin:   false,
-			AdminAddr:     "",
-			AdminPort:     8088,
-			EnableFcgi:    false,
-			EnableStdIo:   false,
+			Graceful:        false,
+			ServerTimeOut:   0,
+			ListenTCP4:      false,
+			EnableHTTP:      true,
+			AutoTLS:         false,
+			Domains:         []string{},
+			TLSCacheDir:     ".",
+			HTTPAddr:        "",
+			HTTPPort:        8080,
+			EnableHTTPS:     false,
+			HTTPSAddr:       "",
+			HTTPSPort:       10443,
+			HTTPSCertFile:   "",
+			HTTPSKeyFile:    "",
+			HTTPSClientAuth: 4,
+			EnableAdmin:     false,
+			AdminAddr:       "",
+			AdminPort:       8088,
+			EnableFcgi:      false,
+			EnableStdIo:     false,
 		},
 		WebConfig: WebConfig{
 			AutoRender:             true,

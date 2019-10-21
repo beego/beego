@@ -137,7 +137,7 @@ func (srv *Server) ListenAndServeTLS(certFile, keyFile string) (err error) {
 
 // ListenAndServeMutualTLS listens on the TCP network address srv.Addr and then calls
 // Serve to handle requests on incoming mutual TLS connections.
-func (srv *Server) ListenAndServeMutualTLS(certFile, keyFile, trustFile string) (err error) {
+func (srv *Server) ListenAndServeMutualTLS(certFile, keyFile, trustFile string, clientAuthType tls.ClientAuthType) (err error) {
 	addr := srv.Addr
 	if addr == "" {
 		addr = ":https"
@@ -155,7 +155,7 @@ func (srv *Server) ListenAndServeMutualTLS(certFile, keyFile, trustFile string) 
 	if err != nil {
 		return
 	}
-	srv.TLSConfig.ClientAuth = tls.RequireAndVerifyClientCert
+	srv.TLSConfig.ClientAuth = clientAuthType
 	pool := x509.NewCertPool()
 	data, err := ioutil.ReadFile(trustFile)
 	if err != nil {
