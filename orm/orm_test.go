@@ -2403,8 +2403,10 @@ func TestIgnoreCaseTag(t *testing.T) {
 
 func TestInsertOrUpdate(t *testing.T) {
 	RegisterModel(new(User))
-	user := User{UserName: "unique_username133", Status: 1, Password: "o"}
-	user1 := User{UserName: "unique_username133", Status: 2, Password: "o"}
+	tnow := time.Now()
+	tcreated, _ := time.Parse(formatDate, formatDate)
+	user := User{UserName: "unique_username133", Status: 1, Password: "o", Created: tcreated}
+	user1 := User{UserName: "unique_username133", Status: 2, Password: "o", Created: tnow}
 	user2 := User{UserName: "unique_username133", Status: 3, Password: "oo"}
 	dORM.Insert(&user)
 	test := User{UserName: "unique_username133"}
@@ -2424,6 +2426,7 @@ func TestInsertOrUpdate(t *testing.T) {
 	} else {
 		dORM.Read(&test, "user_name")
 		throwFailNow(t, AssertIs(user1.Status, test.Status))
+		throwFailNow(t, AssertIs(test.Created.In(DefaultTimeLoc), user.Created.In(DefaultTimeLoc), testDate)) // Created should not be updated
 	}
 	//test2
 	_, err = dORM.InsertOrUpdate(&user2, "user_name")
