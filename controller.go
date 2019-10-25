@@ -17,6 +17,7 @@ package beego
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"html/template"
 	"io"
 	"mime/multipart"
@@ -32,24 +33,44 @@ import (
 	"github.com/astaxie/beego/session"
 )
 
-//commonly used mime-types
-const (
-	applicationJSON = "application/json"
-	applicationXML  = "application/xml"
-	textXML         = "text/xml"
-)
-
 var (
 	// ErrAbort custom error when user stop request handler manually.
-	ErrAbort = errors.New("User stop run")
+	ErrAbort = errors.New("user stop run")
 	// GlobalControllerRouter store comments with controller. pkgpath+controller:comments
 	GlobalControllerRouter = make(map[string][]ControllerComments)
 )
+
+// ControllerFilter store the filter for controller
+type ControllerFilter struct {
+	Pattern        string
+	Pos            int
+	Filter         FilterFunc
+	ReturnOnOutput bool
+	ResetParams    bool
+}
+
+// ControllerFilterComments store the comment for controller level filter
+type ControllerFilterComments struct {
+	Pattern        string
+	Pos            int
+	Filter         string // NOQA
+	ReturnOnOutput bool
+	ResetParams    bool
+}
+
+// ControllerImportComments store the import comment for controller needed
+type ControllerImportComments struct {
+	ImportPath  string
+	ImportAlias string
+}
 
 // ControllerComments store the comment for the controller method
 type ControllerComments struct {
 	Method           string
 	Router           string
+	Filters          []*ControllerFilter
+	ImportComments   []*ControllerImportComments
+	FilterComments   []*ControllerFilterComments
 	AllowHTTPMethods []string
 	Params           []map[string]string
 	MethodParams     []*param.MethodParam
@@ -73,7 +94,6 @@ type Controller struct {
 	controllerName string
 	actionName     string
 	methodMapping  map[string]func() //method:routertree
-	gotofunc       string
 	AppController  interface{}
 
 	// template data
@@ -105,6 +125,7 @@ type ControllerInterface interface {
 	Head()
 	Patch()
 	Options()
+	Trace()
 	Finish()
 	Render() error
 	XSRFToken() string
@@ -136,37 +157,59 @@ func (c *Controller) Finish() {}
 
 // Get adds a request function to handle GET request.
 func (c *Controller) Get() {
-	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", 405)
+	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", http.StatusMethodNotAllowed)
 }
 
 // Post adds a request function to handle POST request.
 func (c *Controller) Post() {
-	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", 405)
+	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", http.StatusMethodNotAllowed)
 }
 
 // Delete adds a request function to handle DELETE request.
 func (c *Controller) Delete() {
-	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", 405)
+	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", http.StatusMethodNotAllowed)
 }
 
 // Put adds a request function to handle PUT request.
 func (c *Controller) Put() {
-	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", 405)
+	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", http.StatusMethodNotAllowed)
 }
 
 // Head adds a request function to handle HEAD request.
 func (c *Controller) Head() {
-	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", 405)
+	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", http.StatusMethodNotAllowed)
 }
 
 // Patch adds a request function to handle PATCH request.
 func (c *Controller) Patch() {
-	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", 405)
+	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", http.StatusMethodNotAllowed)
 }
 
 // Options adds a request function to handle OPTIONS request.
 func (c *Controller) Options() {
-	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", 405)
+	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", http.StatusMethodNotAllowed)
+}
+
+// Trace adds a request function to handle Trace request.
+// this method SHOULD NOT be overridden.
+// https://tools.ietf.org/html/rfc7231#section-4.3.8
+// The TRACE method requests a remote, application-level loop-back of
+// the request message.  The final recipient of the request SHOULD
+// reflect the message received, excluding some fields described below,
+// back to the client as the message body of a 200 (OK) response with a
+// Content-Type of "message/http" (Section 8.3.1 of [RFC7230]).
+func (c *Controller) Trace() {
+	ts := func(h http.Header) (hs string) {
+		for k, v := range h {
+			hs += fmt.Sprintf("\r\n%s: %s", k, v)
+		}
+		return
+	}
+	hs := fmt.Sprintf("\r\nTRACE %s %s%s\r\n", c.Ctx.Request.RequestURI, c.Ctx.Request.Proto, ts(c.Ctx.Request.Header))
+	c.Ctx.Output.Header("Content-Type", "message/http")
+	c.Ctx.Output.Header("Content-Length", fmt.Sprint(len(hs)))
+	c.Ctx.Output.Header("Cache-Control", "no-cache, no-store, must-revalidate")
+	c.Ctx.WriteString(hs)
 }
 
 // HandlerFunc call function with the name
@@ -272,7 +315,21 @@ func (c *Controller) viewPath() string {
 
 // Redirect sends the redirection response to url with status code.
 func (c *Controller) Redirect(url string, code int) {
+	LogAccess(c.Ctx, nil, code)
 	c.Ctx.Redirect(code, url)
+}
+
+// SetData set the data depending on the accepted
+func (c *Controller) SetData(data interface{}) {
+	accept := c.Ctx.Input.Header("Accept")
+	switch accept {
+	case context.ApplicationYAML:
+		c.Data["yaml"] = data
+	case context.ApplicationXML, context.TextXML:
+		c.Data["xml"] = data
+	default:
+		c.Data["json"] = data
+	}
 }
 
 // Abort stops controller handler and show the error data if code is defined in ErrorMap or code string.
@@ -317,47 +374,35 @@ func (c *Controller) URLFor(endpoint string, values ...interface{}) string {
 // ServeJSON sends a json response with encoding charset.
 func (c *Controller) ServeJSON(encoding ...bool) {
 	var (
-		hasIndent   = true
-		hasEncoding = false
+		hasIndent   = BConfig.RunMode != PROD
+		hasEncoding = len(encoding) > 0 && encoding[0]
 	)
-	if BConfig.RunMode == PROD {
-		hasIndent = false
-	}
-	if len(encoding) > 0 && encoding[0] {
-		hasEncoding = true
-	}
+
 	c.Ctx.Output.JSON(c.Data["json"], hasIndent, hasEncoding)
 }
 
 // ServeJSONP sends a jsonp response.
 func (c *Controller) ServeJSONP() {
-	hasIndent := true
-	if BConfig.RunMode == PROD {
-		hasIndent = false
-	}
+	hasIndent := BConfig.RunMode != PROD
 	c.Ctx.Output.JSONP(c.Data["jsonp"], hasIndent)
 }
 
 // ServeXML sends xml response.
 func (c *Controller) ServeXML() {
-	hasIndent := true
-	if BConfig.RunMode == PROD {
-		hasIndent = false
-	}
+	hasIndent := BConfig.RunMode != PROD
 	c.Ctx.Output.XML(c.Data["xml"], hasIndent)
 }
 
-// ServeFormatted serve Xml OR Json, depending on the value of the Accept header
-func (c *Controller) ServeFormatted() {
-	accept := c.Ctx.Input.Header("Accept")
-	switch accept {
-	case applicationJSON:
-		c.ServeJSON()
-	case applicationXML, textXML:
-		c.ServeXML()
-	default:
-		c.ServeJSON()
-	}
+// ServeYAML sends yaml response.
+func (c *Controller) ServeYAML() {
+	c.Ctx.Output.YAML(c.Data["yaml"])
+}
+
+// ServeFormatted serve YAML, XML OR JSON, depending on the value of the Accept header
+func (c *Controller) ServeFormatted(encoding ...bool) {
+	hasIndent := BConfig.RunMode != PROD
+	hasEncoding := len(encoding) > 0 && encoding[0]
+	c.Ctx.Output.ServeFormatted(c.Data, hasIndent, hasEncoding)
 }
 
 // Input returns the input data map from POST or PUT request body and query string.

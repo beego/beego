@@ -49,22 +49,27 @@ type Config struct {
 
 // Listen holds for http and https related config
 type Listen struct {
-	Graceful      bool // Graceful means use graceful module to start the server
-	ServerTimeOut int64
-	ListenTCP4    bool
-	EnableHTTP    bool
-	HTTPAddr      string
-	HTTPPort      int
-	EnableHTTPS   bool
-	HTTPSAddr     string
-	HTTPSPort     int
-	HTTPSCertFile string
-	HTTPSKeyFile  string
-	EnableAdmin   bool
-	AdminAddr     string
-	AdminPort     int
-	EnableFcgi    bool
-	EnableStdIo   bool // EnableStdIo works with EnableFcgi Use FCGI via standard I/O
+	Graceful          bool // Graceful means use graceful module to start the server
+	ServerTimeOut     int64
+	ListenTCP4        bool
+	EnableHTTP        bool
+	HTTPAddr          string
+	HTTPPort          int
+	AutoTLS           bool
+	Domains           []string
+	TLSCacheDir       string
+	EnableHTTPS       bool
+	EnableMutualHTTPS bool
+	HTTPSAddr         string
+	HTTPSPort         int
+	HTTPSCertFile     string
+	HTTPSKeyFile      string
+	TrustCaFile       string
+	EnableAdmin       bool
+	AdminAddr         string
+	AdminPort         int
+	EnableFcgi        bool
+	EnableStdIo       bool // EnableStdIo works with EnableFcgi Use FCGI via standard I/O
 }
 
 // WebConfig holds web related config
@@ -96,16 +101,18 @@ type SessionConfig struct {
 	SessionAutoSetCookie         bool
 	SessionDomain                string
 	SessionDisableHTTPOnly       bool // used to allow for cross domain cookies/javascript cookies.
-	SessionEnableSidInHTTPHeader bool //	enable store/get the sessionId into/from http headers
+	SessionEnableSidInHTTPHeader bool // enable store/get the sessionId into/from http headers
 	SessionNameInHTTPHeader      string
-	SessionEnableSidInURLQuery   bool //	enable get the sessionId from Url Query params
+	SessionEnableSidInURLQuery   bool // enable get the sessionId from Url Query params
 }
 
 // LogConfig holds Log related config
 type LogConfig struct {
-	AccessLogs  bool
-	FileLineNum bool
-	Outputs     map[string]string // Store Adaptor : config
+	AccessLogs       bool
+	EnableStaticLogs bool   //log static files requests default: false
+	AccessLogsFormat string //access log format: JSON_FORMAT, APACHE_FORMAT or empty string
+	FileLineNum      bool
+	Outputs          map[string]string // Store Adaptor : config
 }
 
 var (
@@ -134,9 +141,13 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	appConfigPath = filepath.Join(workPath, "conf", "app.conf")
+	var filename = "app.conf"
+	if os.Getenv("BEEGO_RUNMODE") != "" {
+		filename = os.Getenv("BEEGO_RUNMODE") + ".app.conf"
+	}
+	appConfigPath = filepath.Join(workPath, "conf", filename)
 	if !utils.FileExists(appConfigPath) {
-		appConfigPath = filepath.Join(AppPath, "conf", "app.conf")
+		appConfigPath = filepath.Join(AppPath, "conf", filename)
 		if !utils.FileExists(appConfigPath) {
 			AppConfig = &beegoAppConfig{innerConfig: config.NewFakeConfig()}
 			return
@@ -175,13 +186,18 @@ func recoverPanic(ctx *context.Context) {
 		if BConfig.RunMode == DEV && BConfig.EnableErrorsRender {
 			showErr(err, ctx, stack)
 		}
+		if ctx.Output.Status != 0 {
+			ctx.ResponseWriter.WriteHeader(ctx.Output.Status)
+		} else {
+			ctx.ResponseWriter.WriteHeader(500)
+		}
 	}
 }
 
 func newBConfig() *Config {
 	return &Config{
 		AppName:             "beego",
-		RunMode:             DEV,
+		RunMode:             PROD,
 		RouterCaseSensitive: true,
 		ServerName:          "beegoServer:" + VERSION,
 		RecoverPanic:        true,
@@ -196,6 +212,9 @@ func newBConfig() *Config {
 			ServerTimeOut: 0,
 			ListenTCP4:    false,
 			EnableHTTP:    true,
+			AutoTLS:       false,
+			Domains:       []string{},
+			TLSCacheDir:   ".",
 			HTTPAddr:      "",
 			HTTPPort:      8080,
 			EnableHTTPS:   false,
@@ -233,15 +252,17 @@ func newBConfig() *Config {
 				SessionCookieLifeTime:        0, //set cookie default is the browser life
 				SessionAutoSetCookie:         true,
 				SessionDomain:                "",
-				SessionEnableSidInHTTPHeader: false, //	enable store/get the sessionId into/from http headers
+				SessionEnableSidInHTTPHeader: false, // enable store/get the sessionId into/from http headers
 				SessionNameInHTTPHeader:      "Beegosessionid",
-				SessionEnableSidInURLQuery:   false, //	enable get the sessionId from Url Query params
+				SessionEnableSidInURLQuery:   false, // enable get the sessionId from Url Query params
 			},
 		},
 		Log: LogConfig{
-			AccessLogs:  false,
-			FileLineNum: true,
-			Outputs:     map[string]string{"console": ""},
+			AccessLogs:       false,
+			EnableStaticLogs: false,
+			AccessLogsFormat: "APACHE_FORMAT",
+			FileLineNum:      true,
+			Outputs:          map[string]string{"console": ""},
 		},
 	}
 }

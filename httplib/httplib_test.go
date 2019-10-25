@@ -16,6 +16,8 @@ package httplib
 
 import (
 	"io/ioutil"
+	"net"
+	"net/http"
 	"os"
 	"strings"
 	"testing"
@@ -161,7 +163,16 @@ func TestWithSetting(t *testing.T) {
 	var setting BeegoHTTPSettings
 	setting.EnableCookie = true
 	setting.UserAgent = v
-	setting.Transport = nil
+	setting.Transport = &http.Transport{
+		DialContext: (&net.Dialer{
+			Timeout:   30 * time.Second,
+			KeepAlive: 30 * time.Second,
+			DualStack: true,
+		}).DialContext,
+		MaxIdleConns:          50,
+		IdleConnTimeout:       90 * time.Second,
+		ExpectContinueTimeout: 1 * time.Second,
+	}
 	setting.ReadWriteTimeout = 5 * time.Second
 	SetDefaultSetting(setting)
 
@@ -195,10 +206,16 @@ func TestToJson(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(ip.Origin)
-
-	if n := strings.Count(ip.Origin, "."); n != 3 {
+	ips := strings.Split(ip.Origin, ",")
+	if len(ips) == 0 {
 		t.Fatal("response is not valid ip")
 	}
+	for i := range ips {
+		if net.ParseIP(strings.TrimSpace(ips[i])).To4() == nil {
+			t.Fatal("response is not valid ip")
+		}
+	}
+
 }
 
 func TestToFile(t *testing.T) {

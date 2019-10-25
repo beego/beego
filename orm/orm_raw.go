@@ -150,8 +150,10 @@ func (o *rawSet) setFieldValue(ind reflect.Value, value interface{}) {
 	case reflect.Struct:
 		if value == nil {
 			ind.Set(reflect.Zero(ind.Type()))
-
-		} else if _, ok := ind.Interface().(time.Time); ok {
+			return
+		}
+		switch ind.Interface().(type) {
+		case time.Time:
 			var str string
 			switch d := value.(type) {
 			case time.Time:
@@ -178,7 +180,25 @@ func (o *rawSet) setFieldValue(ind reflect.Value, value interface{}) {
 					}
 				}
 			}
+		case sql.NullString, sql.NullInt64, sql.NullFloat64, sql.NullBool:
+			indi := reflect.New(ind.Type()).Interface()
+			sc, ok := indi.(sql.Scanner)
+			if !ok {
+				return
+			}
+			err := sc.Scan(value)
+			if err == nil {
+				ind.Set(reflect.Indirect(reflect.ValueOf(sc)))
+			}
 		}
+
+	case reflect.Ptr:
+		if value == nil {
+			ind.Set(reflect.Zero(ind.Type()))
+			break
+		}
+		ind.Set(reflect.New(ind.Type().Elem()))
+		o.setFieldValue(reflect.Indirect(ind), value)
 	}
 }
 
@@ -358,7 +378,7 @@ func (o *rawSet) QueryRow(containers ...interface{}) error {
 					_, tags := parseStructTag(fe.Tag.Get(defaultStructTagName))
 					var col string
 					if col = tags["column"]; col == "" {
-						col = snakeString(fe.Name)
+						col = nameStrategyMap[nameStrategy](fe.Name)
 					}
 					if v, ok := columnsMp[col]; ok {
 						value := reflect.ValueOf(v).Elem().Interface()
@@ -509,7 +529,7 @@ func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
 						_, tags := parseStructTag(fe.Tag.Get(defaultStructTagName))
 						var col string
 						if col = tags["column"]; col == "" {
-							col = snakeString(fe.Name)
+							col = nameStrategyMap[nameStrategy](fe.Name)
 						}
 						if v, ok := columnsMp[col]; ok {
 							value := reflect.ValueOf(v).Elem().Interface()

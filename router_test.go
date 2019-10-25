@@ -71,10 +71,6 @@ func (tc *TestController) GetEmptyBody() {
 	tc.Ctx.Output.Body(res)
 }
 
-type ResStatus struct {
-	Code int
-	Msg  string
-}
 
 type JSONController struct {
 	Controller
@@ -475,7 +471,7 @@ func TestParamResetFilter(t *testing.T) {
 	// a response header of `Splat`.  The expectation here is that that Header
 	// value should match what the _request's_ router set, not the filter's.
 
-	headers := rw.HeaderMap
+	headers := rw.Result().Header
 	if len(headers["Splat"]) != 1 {
 		t.Errorf(
 			"%s: There was an error in the test. Splat param not set in Header",
@@ -660,25 +656,16 @@ func beegoBeforeRouter1(ctx *context.Context) {
 	ctx.WriteString("|BeforeRouter1")
 }
 
-func beegoBeforeRouter2(ctx *context.Context) {
-	ctx.WriteString("|BeforeRouter2")
-}
 
 func beegoBeforeExec1(ctx *context.Context) {
 	ctx.WriteString("|BeforeExec1")
 }
 
-func beegoBeforeExec2(ctx *context.Context) {
-	ctx.WriteString("|BeforeExec2")
-}
 
 func beegoAfterExec1(ctx *context.Context) {
 	ctx.WriteString("|AfterExec1")
 }
 
-func beegoAfterExec2(ctx *context.Context) {
-	ctx.WriteString("|AfterExec2")
-}
 
 func beegoFinishRouter1(ctx *context.Context) {
 	ctx.WriteString("|FinishRouter1")
@@ -694,4 +681,31 @@ func beegoResetParams(ctx *context.Context) {
 
 func beegoHandleResetParams(ctx *context.Context) {
 	ctx.ResponseWriter.Header().Set("splat", ctx.Input.Param(":splat"))
+}
+
+// YAML
+type YAMLController struct {
+	Controller
+}
+
+func (jc *YAMLController) Prepare() {
+	jc.Data["yaml"] = "prepare"
+	jc.ServeYAML()
+}
+
+func (jc *YAMLController) Get() {
+	jc.Data["Username"] = "astaxie"
+	jc.Ctx.Output.Body([]byte("ok"))
+}
+
+func TestYAMLPrepare(t *testing.T) {
+	r, _ := http.NewRequest("GET", "/yaml/list", nil)
+	w := httptest.NewRecorder()
+
+	handler := NewControllerRegister()
+	handler.Add("/yaml/list", &YAMLController{})
+	handler.ServeHTTP(w, r)
+	if strings.TrimSpace(w.Body.String()) != "prepare" {
+		t.Errorf(w.Body.String())
+	}
 }

@@ -15,6 +15,7 @@
 package orm
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"io"
@@ -28,6 +29,9 @@ type Log struct {
 	*log.Logger
 }
 
+//costomer log func
+var LogFunc func(query map[string]interface{})
+
 // NewLog set io.Writer to create a Logger.
 func NewLog(out io.Writer) *Log {
 	d := new(Log)
@@ -36,12 +40,15 @@ func NewLog(out io.Writer) *Log {
 }
 
 func debugLogQueies(alias *alias, operaton, query string, t time.Time, err error, args ...interface{}) {
+	var logMap = make(map[string]interface{})
 	sub := time.Now().Sub(t) / 1e5
 	elsp := float64(int(sub)) / 10.0
+	logMap["cost_time"] = elsp
 	flag := "  OK"
 	if err != nil {
 		flag = "FAIL"
 	}
+	logMap["flag"] = flag
 	con := fmt.Sprintf(" -[Queries/%s] - [%s / %11s / %7.1fms] - [%s]", alias.Name, flag, operaton, elsp, query)
 	cons := make([]string, 0, len(args))
 	for _, arg := range args {
@@ -52,6 +59,10 @@ func debugLogQueies(alias *alias, operaton, query string, t time.Time, err error
 	}
 	if err != nil {
 		con += " - " + err.Error()
+	}
+	logMap["sql"] = fmt.Sprintf("%s-`%s`", query, strings.Join(cons, "`, `"))
+	if LogFunc != nil{
+		LogFunc(logMap)
 	}
 	DebugLog.Println(con)
 }
@@ -122,9 +133,23 @@ func (d *dbQueryLog) Prepare(query string) (*sql.Stmt, error) {
 	return stmt, err
 }
 
+func (d *dbQueryLog) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
+	a := time.Now()
+	stmt, err := d.db.PrepareContext(ctx, query)
+	debugLogQueies(d.alias, "db.Prepare", query, a, err)
+	return stmt, err
+}
+
 func (d *dbQueryLog) Exec(query string, args ...interface{}) (sql.Result, error) {
 	a := time.Now()
 	res, err := d.db.Exec(query, args...)
+	debugLogQueies(d.alias, "db.Exec", query, a, err, args...)
+	return res, err
+}
+
+func (d *dbQueryLog) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	a := time.Now()
+	res, err := d.db.ExecContext(ctx, query, args...)
 	debugLogQueies(d.alias, "db.Exec", query, a, err, args...)
 	return res, err
 }
@@ -136,9 +161,23 @@ func (d *dbQueryLog) Query(query string, args ...interface{}) (*sql.Rows, error)
 	return res, err
 }
 
+func (d *dbQueryLog) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+	a := time.Now()
+	res, err := d.db.QueryContext(ctx, query, args...)
+	debugLogQueies(d.alias, "db.Query", query, a, err, args...)
+	return res, err
+}
+
 func (d *dbQueryLog) QueryRow(query string, args ...interface{}) *sql.Row {
 	a := time.Now()
 	res := d.db.QueryRow(query, args...)
+	debugLogQueies(d.alias, "db.QueryRow", query, a, nil, args...)
+	return res
+}
+
+func (d *dbQueryLog) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
+	a := time.Now()
+	res := d.db.QueryRowContext(ctx, query, args...)
 	debugLogQueies(d.alias, "db.QueryRow", query, a, nil, args...)
 	return res
 }
@@ -147,6 +186,13 @@ func (d *dbQueryLog) Begin() (*sql.Tx, error) {
 	a := time.Now()
 	tx, err := d.db.(txer).Begin()
 	debugLogQueies(d.alias, "db.Begin", "START TRANSACTION", a, err)
+	return tx, err
+}
+
+func (d *dbQueryLog) BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error) {
+	a := time.Now()
+	tx, err := d.db.(txer).BeginTx(ctx, opts)
+	debugLogQueies(d.alias, "db.BeginTx", "START TRANSACTION", a, err)
 	return tx, err
 }
 

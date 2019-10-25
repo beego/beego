@@ -136,6 +136,7 @@ type fieldInfo struct {
 	decimals            int
 	isFielder           bool // implement Fielder interface
 	onDelete            string
+	description         string
 }
 
 // new field info
@@ -244,8 +245,10 @@ checkType:
 		if err != nil {
 			goto end
 		}
-		if fieldType == TypeCharField {
+		if fieldType == TypeVarCharField {
 			switch tags["type"] {
+			case "char":
+				fieldType = TypeCharField
 			case "text":
 				fieldType = TypeTextField
 			case "json":
@@ -298,6 +301,7 @@ checkType:
 	fi.sf = sf
 	fi.fullName = mi.fullName + mName + "." + sf.Name
 
+	fi.description = tags["description"]
 	fi.null = attrs["null"]
 	fi.index = attrs["index"]
 	fi.auto = attrs["auto"]
@@ -357,7 +361,7 @@ checkType:
 
 	switch fieldType {
 	case TypeBooleanField:
-	case TypeCharField, TypeJSONField, TypeJsonbField:
+	case TypeVarCharField, TypeCharField, TypeJSONField, TypeJsonbField:
 		if size != "" {
 			v, e := StrTo(size).Int32()
 			if e != nil {

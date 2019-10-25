@@ -17,6 +17,7 @@ package beego
 import (
 	"errors"
 	"fmt"
+	"html"
 	"html/template"
 	"net/url"
 	"reflect"
@@ -54,21 +55,21 @@ func Substr(s string, start, length int) string {
 // HTML2str returns escaping text convert from html.
 func HTML2str(html string) string {
 
-	re, _ := regexp.Compile(`\<[\S\s]+?\>`)
+	re := regexp.MustCompile(`\<[\S\s]+?\>`)
 	html = re.ReplaceAllStringFunc(html, strings.ToLower)
 
 	//remove STYLE
-	re, _ = regexp.Compile(`\<style[\S\s]+?\</style\>`)
+	re = regexp.MustCompile(`\<style[\S\s]+?\</style\>`)
 	html = re.ReplaceAllString(html, "")
 
 	//remove SCRIPT
-	re, _ = regexp.Compile(`\<script[\S\s]+?\</script\>`)
+	re = regexp.MustCompile(`\<script[\S\s]+?\</script\>`)
 	html = re.ReplaceAllString(html, "")
 
-	re, _ = regexp.Compile(`\<[\S\s]+?\>`)
+	re = regexp.MustCompile(`\<[\S\s]+?\>`)
 	html = re.ReplaceAllString(html, "\n")
 
-	re, _ = regexp.Compile(`\s{2,}`)
+	re = regexp.MustCompile(`\s{2,}`)
 	html = re.ReplaceAllString(html, "\n")
 
 	return strings.TrimSpace(html)
@@ -171,7 +172,7 @@ func GetConfig(returnType, key string, defaultVal interface{}) (value interface{
 	case "DIY":
 		value, err = AppConfig.DIY(key)
 	default:
-		err = errors.New("Config keys must be of type String, Bool, Int, Int64, Float, or DIY")
+		err = errors.New("config keys must be of type String, Bool, Int, Int64, Float, or DIY")
 	}
 
 	if err != nil {
@@ -207,14 +208,12 @@ func Htmlquote(text string) string {
 	       '&lt;&#39;&amp;&quot;&gt;'
 	*/
 
-	text = strings.Replace(text, "&", "&amp;", -1) // Must be done first!
-	text = strings.Replace(text, "<", "&lt;", -1)
-	text = strings.Replace(text, ">", "&gt;", -1)
-	text = strings.Replace(text, "'", "&#39;", -1)
-	text = strings.Replace(text, "\"", "&quot;", -1)
-	text = strings.Replace(text, "“", "&ldquo;", -1)
-	text = strings.Replace(text, "”", "&rdquo;", -1)
-	text = strings.Replace(text, " ", "&nbsp;", -1)
+	text = html.EscapeString(text)
+	text = strings.NewReplacer(
+		`“`, "&ldquo;",
+		`”`, "&rdquo;",
+		` `, "&nbsp;",
+	).Replace(text)
 
 	return strings.TrimSpace(text)
 }
@@ -228,17 +227,7 @@ func Htmlunquote(text string) string {
 	       '<\\'&">'
 	*/
 
-	// strings.Replace(s, old, new, n)
-	// 在s字符串中，把old字符串替换为new字符串，n表示替换的次数，小于0表示全部替换
-
-	text = strings.Replace(text, "&nbsp;", " ", -1)
-	text = strings.Replace(text, "&rdquo;", "”", -1)
-	text = strings.Replace(text, "&ldquo;", "“", -1)
-	text = strings.Replace(text, "&quot;", "\"", -1)
-	text = strings.Replace(text, "&#39;", "'", -1)
-	text = strings.Replace(text, "&gt;", ">", -1)
-	text = strings.Replace(text, "&lt;", "<", -1)
-	text = strings.Replace(text, "&amp;", "&", -1) // Must be done last!
+	text = html.UnescapeString(text)
 
 	return strings.TrimSpace(text)
 }
@@ -308,9 +297,21 @@ func parseFormToStruct(form url.Values, objT reflect.Type, objV reflect.Value) e
 			tag = tags[0]
 		}
 
-		value := form.Get(tag)
-		if len(value) == 0 {
-			continue
+		formValues := form[tag]
+		var value string
+		if len(formValues) == 0 {
+			defaultValue := fieldT.Tag.Get("default")
+			if defaultValue != "" {
+				value = defaultValue
+			} else {
+				continue
+			}
+		}
+		if len(formValues) == 1 {
+			value = formValues[0]
+			if value == "" {
+				continue
+			}
 		}
 
 		switch fieldT.Type.Kind() {
@@ -360,6 +361,8 @@ func parseFormToStruct(form url.Values, objT reflect.Type, objV reflect.Value) e
 				if len(value) >= 25 {
 					value = value[:25]
 					t, err = time.ParseInLocation(time.RFC3339, value, time.Local)
+				} else if strings.HasSuffix(strings.ToUpper(value), "Z") {
+					t, err = time.ParseInLocation(time.RFC3339, value, time.Local)	
 				} else if len(value) >= 19 {
 					if strings.Contains(value, "T") {
 						value = value[:19]
@@ -703,7 +706,7 @@ func ge(arg1, arg2 interface{}) (bool, error) {
 
 // MapGet getting value from map by keys
 // usage:
-// Data["m"] = map[string]interface{} {
+// Data["m"] = M{
 //     "a": 1,
 //     "1": map[string]float64{
 //         "c": 4,

@@ -15,6 +15,7 @@
 package orm
 
 import (
+	"context"
 	"database/sql"
 	"reflect"
 	"time"
@@ -54,7 +55,7 @@ type Ormer interface {
 	// for example:
 	//  user := new(User)
 	//  id, err = Ormer.Insert(user)
-	//  user must a pointer and Insert will set user's pk field
+	//  user must be a pointer and Insert will set user's pk field
 	Insert(interface{}) (int64, error)
 	// mysql:InsertOrUpdate(model) or InsertOrUpdate(model,"colu=colu+value")
 	// if colu type is integer : can use(+-*/), string : convert(colu,"value")
@@ -106,6 +107,17 @@ type Ormer interface {
 	// 	...
 	// 	err = o.Rollback()
 	Begin() error
+	// begin transaction with provided context and option
+	// the provided context is used until the transaction is committed or rolled back.
+	// if the context is canceled, the transaction will be rolled back.
+	// the provided TxOptions is optional and may be nil if defaults should be used.
+	// if a non-default isolation level is used that the driver doesn't support, an error will be returned.
+	// for example:
+	//  o := NewOrm()
+	// 	err := o.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
+	//  ...
+	//  err = o.Rollback()
+	BeginTx(ctx context.Context, opts *sql.TxOptions) error
 	// commit transaction
 	Commit() error
 	// rollback transaction
@@ -116,6 +128,7 @@ type Ormer interface {
 	//	// update user testing's name to slene
 	Raw(query string, args ...interface{}) RawSeter
 	Driver() Driver
+	DBStats() *sql.DBStats
 }
 
 // Inserter insert prepared statement
@@ -135,6 +148,11 @@ type QuerySeter interface {
 	// 	 // time compare
 	//	qs.Filter("created", time.Now())
 	Filter(string, ...interface{}) QuerySeter
+	// add raw sql to querySeter.
+	// for example:
+	// qs.FilterRaw("user_id IN (SELECT id FROM profile WHERE age>=18)")
+	// //sql-> WHERE user_id IN (SELECT id FROM profile WHERE age>=18)
+	FilterRaw(string, string) QuerySeter
 	// add NOT condition to querySeter.
 	// have the same usage as Filter
 	Exclude(string, ...interface{}) QuerySeter
@@ -190,6 +208,10 @@ type QuerySeter interface {
 	//    Distinct().
 	//    All(&permissions)
 	Distinct() QuerySeter
+	// set FOR UPDATE to query.
+	// for example:
+	//  o.QueryTable("user").Filter("uid", uid).ForUpdate().All(&users)
+	ForUpdate() QuerySeter
 	// return QuerySeter execution result number
 	// for example:
 	//	num, err = qs.Filter("profile__age__gt", 28).Count()
@@ -374,16 +396,23 @@ type RawSeter interface {
 type stmtQuerier interface {
 	Close() error
 	Exec(args ...interface{}) (sql.Result, error)
+	//ExecContext(ctx context.Context, args ...interface{}) (sql.Result, error)
 	Query(args ...interface{}) (*sql.Rows, error)
+	//QueryContext(args ...interface{}) (*sql.Rows, error)
 	QueryRow(args ...interface{}) *sql.Row
+	//QueryRowContext(ctx context.Context, args ...interface{}) *sql.Row
 }
 
 // db querier
 type dbQuerier interface {
 	Prepare(query string) (*sql.Stmt, error)
+	PrepareContext(ctx context.Context, query string) (*sql.Stmt, error)
 	Exec(query string, args ...interface{}) (sql.Result, error)
+	ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error)
 	Query(query string, args ...interface{}) (*sql.Rows, error)
+	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
 	QueryRow(query string, args ...interface{}) *sql.Row
+	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
 }
 
 // type DB interface {
@@ -397,6 +426,7 @@ type dbQuerier interface {
 // transaction beginner
 type txer interface {
 	Begin() (*sql.Tx, error)
+	BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error)
 }
 
 // transaction ending

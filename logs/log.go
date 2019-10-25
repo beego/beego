@@ -92,7 +92,7 @@ type Logger interface {
 }
 
 var adapters = make(map[string]newLoggerFunc)
-var levelPrefix = [LevelDebug + 1]string{"[M] ", "[A] ", "[C] ", "[E] ", "[W] ", "[N] ", "[I] ", "[D] "}
+var levelPrefix = [LevelDebug + 1]string{"[M]", "[A]", "[C]", "[E]", "[W]", "[N]", "[I]", "[D]"}
 
 // Register makes a log provide available by the provided name.
 // If Register is called twice with the same name or if driver is nil,
@@ -116,6 +116,7 @@ type BeeLogger struct {
 	enableFuncCallDepth bool
 	loggerFuncCallDepth int
 	asynchronous        bool
+	prefix              string
 	msgChanLen          int64
 	msgChan             chan *logMsg
 	signalChan          chan string
@@ -186,12 +187,12 @@ func (bl *BeeLogger) setLogger(adapterName string, configs ...string) error {
 		}
 	}
 
-	log, ok := adapters[adapterName]
+	logAdapter, ok := adapters[adapterName]
 	if !ok {
 		return fmt.Errorf("logs: unknown adaptername %q (forgotten Register?)", adapterName)
 	}
 
-	lg := log()
+	lg := logAdapter()
 	err := lg.Init(config)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "logs.BeeLogger.SetLogger: "+err.Error())
@@ -267,6 +268,9 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string, v ...interface{}) error 
 	if len(v) > 0 {
 		msg = fmt.Sprintf(msg, v...)
 	}
+
+	msg = bl.prefix + " " + msg
+
 	when := time.Now()
 	if bl.enableFuncCallDepth {
 		_, file, line, ok := runtime.Caller(bl.loggerFuncCallDepth)
@@ -283,7 +287,7 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string, v ...interface{}) error 
 		// set to emergency to ensure all log will be print out correctly
 		logLevel = LevelEmergency
 	} else {
-		msg = levelPrefix[logLevel] + msg
+		msg = levelPrefix[logLevel] + " " + msg
 	}
 
 	if bl.asynchronous {
@@ -305,6 +309,11 @@ func (bl *BeeLogger) SetLevel(l int) {
 	bl.level = l
 }
 
+// GetLevel Get Current log message level.
+func (bl *BeeLogger) GetLevel() int {
+	return bl.level
+}
+
 // SetLogFuncCallDepth set log funcCallDepth
 func (bl *BeeLogger) SetLogFuncCallDepth(d int) {
 	bl.loggerFuncCallDepth = d
@@ -318,6 +327,11 @@ func (bl *BeeLogger) GetLogFuncCallDepth() int {
 // EnableFuncCallDepth enable log funcCallDepth
 func (bl *BeeLogger) EnableFuncCallDepth(b bool) {
 	bl.enableFuncCallDepth = b
+}
+
+// set prefix
+func (bl *BeeLogger) SetPrefix(s string) {
+	bl.prefix = s
 }
 
 // start logger chan reading.
@@ -542,6 +556,11 @@ func Async(msgLen ...int64) *BeeLogger {
 // SetLevel sets the global log level used by the simple logger.
 func SetLevel(l int) {
 	beeLogger.SetLevel(l)
+}
+
+// SetPrefix sets the prefix
+func SetPrefix(s string) {
+	beeLogger.SetPrefix(s)
 }
 
 // EnableFuncCallDepth enable log funcCallDepth

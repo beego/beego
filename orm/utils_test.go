@@ -34,3 +34,37 @@ func TestCamelString(t *testing.T) {
 		}
 	}
 }
+
+func TestSnakeString(t *testing.T) {
+	camel := []string{"PicUrl", "HelloWorld", "HelloWorld", "HelLOWord", "PicUrl1", "XyXX"}
+	snake := []string{"pic_url", "hello_world", "hello_world", "hel_l_o_word", "pic_url1", "xy_x_x"}
+
+	answer := make(map[string]string)
+	for i, v := range camel {
+		answer[v] = snake[i]
+	}
+
+	for _, v := range camel {
+		res := snakeString(v)
+		if res != answer[v] {
+			t.Error("Unit Test Fail:", v, res, answer[v])
+		}
+	}
+}
+
+func TestSnakeStringWithAcronym(t *testing.T) {
+	camel := []string{"ID", "PicURL", "HelloWorld", "HelloWorld", "HelLOWord", "PicUrl1", "XyXX"}
+	snake := []string{"id", "pic_url", "hello_world", "hello_world", "hel_lo_word", "pic_url1", "xy_xx"}
+
+	answer := make(map[string]string)
+	for i, v := range camel {
+		answer[v] = snake[i]
+	}
+
+	for _, v := range camel {
+		res := snakeStringWithAcronym(v)
+		if res != answer[v] {
+			t.Error("Unit Test Fail:", v, res, answer[v])
+		}
+	}
+}

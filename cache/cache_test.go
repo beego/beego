@@ -16,9 +16,32 @@ package cache
 
 import (
 	"os"
+	"sync"
 	"testing"
 	"time"
 )
+
+func TestCacheIncr(t *testing.T) {
+	bm, err := NewCache("memory", `{"interval":20}`)
+	if err != nil {
+		t.Error("init err")
+	}
+	//timeoutDuration := 10 * time.Second
+
+	bm.Put("edwardhey", 0, time.Second*20)
+	wg := sync.WaitGroup{}
+	wg.Add(10)
+	for i := 0; i < 10; i++ {
+		go func() {
+			defer wg.Done()
+			bm.Incr("edwardhey")
+		}()
+	}
+	wg.Wait()
+	if bm.Get("edwardhey").(int) != 10 {
+		t.Error("Incr err")
+	}
+}
 
 func TestCache(t *testing.T) {
 	bm, err := NewCache("memory", `{"interval":20}`)
@@ -98,7 +121,7 @@ func TestCache(t *testing.T) {
 }
 
 func TestFileCache(t *testing.T) {
-	bm, err := NewCache("file", `{"CachePath":"cache","FileSuffix":".bin","DirectoryLevel":2,"EmbedExpiry":0}`)
+	bm, err := NewCache("file", `{"CachePath":"cache","FileSuffix":".bin","DirectoryLevel":"2","EmbedExpiry":"0"}`)
 	if err != nil {
 		t.Error("init err")
 	}

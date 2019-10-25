@@ -43,6 +43,7 @@ var postgresTypes = map[string]string{
 	"pk":              "NOT NULL PRIMARY KEY",
 	"bool":            "bool",
 	"string":          "varchar(%d)",
+	"string-char":     "char(%d)",
 	"string-text":     "text",
 	"time.Time-date":  "date",
 	"time.Time":       "timestamp with time zone",

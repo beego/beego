@@ -81,6 +81,15 @@ func Register(name string, provide Provider) {
 	provides[name] = provide
 }
 
+//GetProvider
+func GetProvider(name string) (Provider, error) {
+	provider, ok := provides[name]
+	if !ok {
+		return nil, fmt.Errorf("session: unknown provide %q (forgotten import?)", name)
+	}
+	return provider, nil
+}
+
 // ManagerConfig define the session config
 type ManagerConfig struct {
 	CookieName              string `json:"cookieName"`
@@ -96,6 +105,7 @@ type ManagerConfig struct {
 	EnableSidInHTTPHeader   bool   `json:"EnableSidInHTTPHeader"`
 	SessionNameInHTTPHeader string `json:"SessionNameInHTTPHeader"`
 	EnableSidInURLQuery     bool   `json:"EnableSidInURLQuery"`
+	SessionIDPrefix         string `json:"sessionIDPrefix"`
 }
 
 // Manager contains Provider and its configuration.
@@ -151,6 +161,11 @@ func NewManager(provideName string, cf *ManagerConfig) (*Manager, error) {
 		provider,
 		cf,
 	}, nil
+}
+
+// GetProvider return current manager's provider
+func (manager *Manager) GetProvider() Provider {
+	return manager.provider
 }
 
 // getSid retrieves session identifier from HTTP Request.
@@ -331,7 +346,7 @@ func (manager *Manager) sessionID() (string, error) {
 	if n != len(b) || err != nil {
 		return "", fmt.Errorf("Could not successfully read from the system CSPRNG")
 	}
-	return hex.EncodeToString(b), nil
+	return manager.config.SessionIDPrefix + hex.EncodeToString(b), nil
 }
 
 // Set cookie with https.

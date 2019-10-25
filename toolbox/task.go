@@ -20,6 +20,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -32,6 +33,7 @@ type bounds struct {
 // The bounds for each field.
 var (
 	AdminTaskList map[string]Tasker
+	taskLock      sync.Mutex
 	stop          chan bool
 	changed       chan bool
 	isstart       bool
@@ -389,6 +391,8 @@ func dayMatches(s *Schedule, t time.Time) bool {
 
 // StartTask start all tasks
 func StartTask() {
+	taskLock.Lock()
+	defer taskLock.Unlock()
 	if isstart {
 		//If already started， no need to start another goroutine.
 		return
@@ -428,6 +432,9 @@ func run() {
 			continue
 		case <-changed:
 			now = time.Now().Local()
+			for _, t := range AdminTaskList {
+				t.SetNext(now)
+			}
 			continue
 		case <-stop:
 			return
@@ -437,6 +444,8 @@ func run() {
 
 // StopTask stop all tasks
 func StopTask() {
+	taskLock.Lock()
+	defer taskLock.Unlock()
 	if isstart {
 		isstart = false
 		stop <- true
@@ -446,6 +455,9 @@ func StopTask() {
 
 // AddTask add task with name
 func AddTask(taskname string, t Tasker) {
+	taskLock.Lock()
+	defer taskLock.Unlock()
+	t.SetNext(time.Now().Local())
 	AdminTaskList[taskname] = t
 	if isstart {
 		changed <- true
@@ -454,6 +466,8 @@ func AddTask(taskname string, t Tasker) {
 
 // DeleteTask delete task with name
 func DeleteTask(taskname string) {
+	taskLock.Lock()
+	defer taskLock.Unlock()
 	delete(AdminTaskList, taskname)
 	if isstart {
 		changed <- true
