@@ -9,6 +9,12 @@ import (
 	"strings"
 )
 
+var reg *regexp.Regexp
+
+func init() {
+	reg = regexp.MustCompile("^\\d*")
+}
+
 // GetGOPATHs returns all paths in GOPATH variable.
 func GetGOPATHs() []string {
 	gopath := os.Getenv("GOPATH")
@@ -19,7 +25,6 @@ func GetGOPATHs() []string {
 }
 
 func compareGoVersion(a, b string) int {
-	reg := regexp.MustCompile("^\\d*")
 
 	a = strings.TrimPrefix(a, "go")
 	b = strings.TrimPrefix(b, "go")

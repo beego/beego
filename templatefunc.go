@@ -25,6 +25,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/astaxie/beego/logs"
 )
 
 const (
@@ -55,21 +57,36 @@ func Substr(s string, start, length int) string {
 // HTML2str returns escaping text convert from html.
 func HTML2str(html string) string {
 
-	re := regexp.MustCompile(`\<[\S\s]+?\>`)
+	re, err := regexp.Compile(`\<[\S\s]+?\>`)
+	if err != nil {
+		logs.Trace("Regex failed to compile", err)
+	}
 	html = re.ReplaceAllStringFunc(html, strings.ToLower)
 
 	//remove STYLE
-	re = regexp.MustCompile(`\<style[\S\s]+?\</style\>`)
+	re, err = regexp.Compile(`\<style[\S\s]+?\</style\>`)
+	if err != nil {
+		logs.Trace("Regex failed to compile", err)
+	}
 	html = re.ReplaceAllString(html, "")
 
 	//remove SCRIPT
-	re = regexp.MustCompile(`\<script[\S\s]+?\</script\>`)
+	re, err = regexp.Compile(`\<script[\S\s]+?\</script\>`)
+	if err != nil {
+		logs.Trace("Regex failed to compile", err)
+	}
 	html = re.ReplaceAllString(html, "")
 
-	re = regexp.MustCompile(`\<[\S\s]+?\>`)
+	re, err = regexp.Compile(`\<[\S\s]+?\>`)
+	if err != nil {
+		logs.Trace("Regex failed to compile", err)
+	}
 	html = re.ReplaceAllString(html, "\n")
 
-	re = regexp.MustCompile(`\s{2,}`)
+	re, err = regexp.Compile(`\s{2,}`)
+	if err != nil {
+		logs.Trace("Regex failed to compile", err)
+	}
 	html = re.ReplaceAllString(html, "\n")
 
 	return strings.TrimSpace(html)

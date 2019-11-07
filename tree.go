@@ -21,6 +21,7 @@ import (
 
 	"github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/utils"
+	"github.com/astaxie/beego/logs"
 )
 
 var (
@@ -171,7 +172,11 @@ func filterTreeWithPrefix(t *Tree, wildcards []string, reg string) {
 		if reg != "" {
 			if l.regexps != nil {
 				l.wildcards = append(wildcards, l.wildcards...)
-				l.regexps = regexp.MustCompile("^" + reg + "/" + strings.Trim(l.regexps.String(), "^$") + "$")
+				var err error
+				l.regexps, err = regexp.Compile("^" + reg + "/" + strings.Trim(l.regexps.String(), "^$") + "$")
+				if err != nil {
+					logs.Trace("Regex failed to compile", err)
+				}
 			} else {
 				for _, v := range l.wildcards {
 					if v == ":splat" {
@@ -180,7 +185,11 @@ func filterTreeWithPrefix(t *Tree, wildcards []string, reg string) {
 						reg = reg + "/([^/]+)"
 					}
 				}
-				l.regexps = regexp.MustCompile("^" + reg + "$")
+				var err error
+				l.regexps, err = regexp.Compile("^" + reg + "$")
+				if err != nil {
+					logs.Trace("Regex failed to compile", err)
+				}
 				l.wildcards = append(wildcards, l.wildcards...)
 			}
 		} else {
@@ -193,7 +202,11 @@ func filterTreeWithPrefix(t *Tree, wildcards []string, reg string) {
 						reg = "([^/]+)/" + reg
 					}
 				}
-				l.regexps = regexp.MustCompile("^" + reg + strings.Trim(l.regexps.String(), "^$") + "$")
+				var err error
+				l.regexps, err = regexp.Compile("^" + reg + strings.Trim(l.regexps.String(), "^$") + "$")
+				if err != nil {
+					logs.Trace("Regex failed to compile", err)
+				}
 			}
 		}
 	}
@@ -281,6 +294,7 @@ func (t *Tree) addseg(segments []string, route interface{}, wildcards []string, 
 		}
 	}
 }
+
 
 // Match router to runObject & params
 func (t *Tree) Match(pattern string, ctx *context.Context) (runObject interface{}) {
@@ -492,7 +506,10 @@ func splitSegment(key string) (bool, []string, string) {
 		var expt []rune
 		var skipnum int
 		params := []string{}
-		reg := regexp.MustCompile(`[a-zA-Z0-9_]+`)
+		reg, err := regexp.Compile(`[a-zA-Z0-9_]+`)
+		if err != nil {
+			logs.Trace("Regex failed to compile", err)
+		}
 		for i, v := range key {
 			if skipnum > 0 {
 				skipnum--
