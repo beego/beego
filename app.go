@@ -25,6 +25,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/astaxie/beego/grace"
@@ -70,6 +71,7 @@ func (app *App) Run(mws ...MiddleWare) {
 	var (
 		err        error
 		l          net.Listener
+		wg         sync.WaitGroup
 		endRunning = make(chan bool, 1)
 	)
 
@@ -117,7 +119,9 @@ func (app *App) Run(mws ...MiddleWare) {
 		httpsAddr := BConfig.Listen.HTTPSAddr
 		app.Server.Addr = httpsAddr
 		if BConfig.Listen.EnableHTTPS || BConfig.Listen.EnableMutualHTTPS {
+			wg.Add(1)
 			go func() {
+				defer wg.Done()
 				time.Sleep(1000 * time.Microsecond)
 				if BConfig.Listen.HTTPSPort != 0 {
 					httpsAddr = fmt.Sprintf("%s:%d", BConfig.Listen.HTTPSAddr, BConfig.Listen.HTTPSPort)
@@ -151,7 +155,9 @@ func (app *App) Run(mws ...MiddleWare) {
 			}()
 		}
 		if BConfig.Listen.EnableHTTP {
+			wg.Add(1)
 			go func() {
+				defer wg.Done()
 				server := grace.NewServer(addr, app.Handlers)
 				server.Server.ReadTimeout = app.Server.ReadTimeout
 				server.Server.WriteTimeout = app.Server.WriteTimeout
@@ -165,13 +171,21 @@ func (app *App) Run(mws ...MiddleWare) {
 				}
 			}()
 		}
+
+		go func() {
+			wg.Wait()
+			endRunning <- true
+		}()
+
 		<-endRunning
 		return
 	}
 
 	// run normal mode
 	if BConfig.Listen.EnableHTTPS || BConfig.Listen.EnableMutualHTTPS {
+		wg.Add(1)
 		go func() {
+			defer wg.Done()
 			time.Sleep(1000 * time.Microsecond)
 			if BConfig.Listen.HTTPSPort != 0 {
 				app.Server.Addr = fmt.Sprintf("%s:%d", BConfig.Listen.HTTPSAddr, BConfig.Listen.HTTPSPort)
@@ -210,7 +224,9 @@ func (app *App) Run(mws ...MiddleWare) {
 
 	}
 	if BConfig.Listen.EnableHTTP {
+		wg.Add(1)
 		go func() {
+			defer wg.Done()
 			app.Server.Addr = addr
 			logs.Info("http server Running on http://%s", app.Server.Addr)
 			if BConfig.Listen.ListenTCP4 {
@@ -236,6 +252,12 @@ func (app *App) Run(mws ...MiddleWare) {
 			}
 		}()
 	}
+
+	go func() {
+		wg.Wait()
+		endRunning <- true
+	}()
+
 	<-endRunning
 }
 
