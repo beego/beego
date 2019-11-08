@@ -26,6 +26,7 @@ import (
 
 var (
 	allowSuffixExt = []string{".json", ".xml", ".html"}
+	splitSegmentReg = regexp.MustCompile(`[a-zA-Z0-9_]+`)
 )
 
 // Tree has three elements: FixRouter/wildcard/leaves
@@ -176,6 +177,7 @@ func filterTreeWithPrefix(t *Tree, wildcards []string, reg string) {
 				l.regexps, err = regexp.Compile("^" + reg + "/" + strings.Trim(l.regexps.String(), "^$") + "$")
 				if err != nil {
 					logs.Trace("Regex failed to compile", err)
+					return
 				}
 			} else {
 				for _, v := range l.wildcards {
@@ -189,6 +191,7 @@ func filterTreeWithPrefix(t *Tree, wildcards []string, reg string) {
 				l.regexps, err = regexp.Compile("^" + reg + "$")
 				if err != nil {
 					logs.Trace("Regex failed to compile", err)
+					return
 				}
 				l.wildcards = append(wildcards, l.wildcards...)
 			}
@@ -206,6 +209,7 @@ func filterTreeWithPrefix(t *Tree, wildcards []string, reg string) {
 				l.regexps, err = regexp.Compile("^" + reg + strings.Trim(l.regexps.String(), "^$") + "$")
 				if err != nil {
 					logs.Trace("Regex failed to compile", err)
+					return
 				}
 			}
 		}
@@ -506,10 +510,6 @@ func splitSegment(key string) (bool, []string, string) {
 		var expt []rune
 		var skipnum int
 		params := []string{}
-		reg, err := regexp.Compile(`[a-zA-Z0-9_]+`)
-		if err != nil {
-			logs.Trace("Regex failed to compile", err)
-		}
 		for i, v := range key {
 			if skipnum > 0 {
 				skipnum--
@@ -544,7 +544,7 @@ func splitSegment(key string) (bool, []string, string) {
 					}
 				}
 				// params only support a-zA-Z0-9
-				if reg.MatchString(string(v)) {
+				if splitSegmentReg.MatchString(string(v)) {
 					param = append(param, v)
 					continue
 				}

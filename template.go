@@ -262,7 +262,7 @@ func getTplDeep(root string, fs http.FileSystem, file string, parent string, t *
 	}
 	reg, err := regexp.Compile(BConfig.WebConfig.TemplateLeft + "[ ]*template[ ]+\"([^\"]+)\"")
 	if err != nil {
-		logs.Trace("regex failed to compile", err)
+		return nil, [][]string{}, err
 	}
 	allSub := reg.FindAllStringSubmatch(string(data), -1)
 	for _, m := range allSub {
@@ -337,7 +337,7 @@ func _getTemplate(t0 *template.Template, root string, fs http.FileSystem, subMod
 				}
 				reg, err := regexp.Compile(BConfig.WebConfig.TemplateLeft + "[ ]*define[ ]+\"([^\"]+)\"")
 				if err != nil {
-					logs.Trace("regex failed to compile", err)
+					return nil, error
 				}
 				allSub := reg.FindAllStringSubmatch(string(data), -1)
 				for _, sub := range allSub {

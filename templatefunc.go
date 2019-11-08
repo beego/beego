@@ -36,6 +36,12 @@ const (
 	formatDateTimeT = "2006-01-02T15:04:05"
 )
 
+var re1 = regexp.MustCompile(`\<[\S\s]+?\>`)
+var re2 = regexp.MustCompile(`\<style[\S\s]+?\</style\>`)
+var re3 = regexp.MustCompile(`\<script[\S\s]+?\</script\>`)
+var re4 = regexp.MustCompile(`\<[\S\s]+?\>`)
+var re5 = regexp.MustCompile(`\s{2,}`)
+
 // Substr returns the substr from start to length.
 func Substr(s string, start, length int) string {
 	bt := []rune(s)
@@ -57,37 +63,13 @@ func Substr(s string, start, length int) string {
 // HTML2str returns escaping text convert from html.
 func HTML2str(html string) string {
 
-	re, err := regexp.Compile(`\<[\S\s]+?\>`)
-	if err != nil {
-		logs.Trace("Regex failed to compile", err)
-	}
-	html = re.ReplaceAllStringFunc(html, strings.ToLower)
-
+	html = re1.ReplaceAllStringFunc(html, strings.ToLower)
 	//remove STYLE
-	re, err = regexp.Compile(`\<style[\S\s]+?\</style\>`)
-	if err != nil {
-		logs.Trace("Regex failed to compile", err)
-	}
-	html = re.ReplaceAllString(html, "")
-
+	html = re2.ReplaceAllString(html, "")
 	//remove SCRIPT
-	re, err = regexp.Compile(`\<script[\S\s]+?\</script\>`)
-	if err != nil {
-		logs.Trace("Regex failed to compile", err)
-	}
-	html = re.ReplaceAllString(html, "")
-
-	re, err = regexp.Compile(`\<[\S\s]+?\>`)
-	if err != nil {
-		logs.Trace("Regex failed to compile", err)
-	}
-	html = re.ReplaceAllString(html, "\n")
-
-	re, err = regexp.Compile(`\s{2,}`)
-	if err != nil {
-		logs.Trace("Regex failed to compile", err)
-	}
-	html = re.ReplaceAllString(html, "\n")
+	html = re3.ReplaceAllString(html, "")
+	html = re4.ReplaceAllString(html, "\n")
+	html = re5.ReplaceAllString(html, "\n")
 
 	return strings.TrimSpace(html)
 }
