@@ -270,7 +270,8 @@ func (manager *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
 			Path:     "/",
 			HttpOnly: !manager.config.DisableHTTPOnly,
 			Expires:  expiration,
-			MaxAge:   -1}
+			MaxAge:   -1,
+			Domain:   manager.config.Domain}
 
 		http.SetCookie(w, cookie)
 	}
