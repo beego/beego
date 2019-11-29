@@ -169,11 +169,11 @@ func (ctx *Context) CheckXSRFCookie() bool {
 		token = ctx.Request.Header.Get("X-Csrftoken")
 	}
 	if token == "" {
-		ctx.Abort(403, "'_xsrf' argument missing from POST")
+		ctx.Abort(422, "422")
 		return false
 	}
 	if ctx._xsrfToken != token {
-		ctx.Abort(403, "XSRF cookie does not match POST argument")
+		ctx.Abort(417, "417")
 		return false
 	}
 	return true
