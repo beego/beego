@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"path"
 	"path/filepath"
 	"reflect"
@@ -257,11 +258,21 @@ func (p *ControllerRegister) Include(cList ...ControllerInterface) {
 				panic("you are in dev mode. So please set gopath")
 			}
 			pkgpath := ""
-			for _, wg := range wgopath {
-				wg, _ = filepath.EvalSymlinks(filepath.Join(wg, "src", t.PkgPath()))
-				if utils.FileExists(wg) {
-					pkgpath = wg
-					break
+			goModOn := os.Getenv("GO111MODULE") == "on"
+			if goModOn {
+				pl := strings.Split(t.PkgPath(), "/")
+				var err error
+				pkgpath, err = filepath.Abs(strings.Join(pl[1:], "/"))
+				if err != nil {
+					logs.Error("failed to get controllers real path, Error: ", err)
+				}
+			} else {
+				for _, wg := range wgopath {
+					wg, _ = filepath.EvalSymlinks(filepath.Join(wg, "src", t.PkgPath()))
+					if utils.FileExists(wg) {
+						pkgpath = wg
+						break
+					}
 				}
 			}
 			if pkgpath != "" {

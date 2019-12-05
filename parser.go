@@ -77,9 +77,7 @@ func init() {
 }
 
 func parserPkg(pkgRealpath, pkgpath string) error {
-	rep := strings.NewReplacer("\\", "_", "/", "_", ".", "_")
-	commentFilename, _ = filepath.Rel(AppPath, pkgRealpath)
-	commentFilename = commentPrefix + rep.Replace(commentFilename) + ".go"
+	commentFilename = commentPrefix + strings.Join(strings.Split(pkgpath, "/")[1:], "_") + ".go"
 	if !compareFile(pkgRealpath) {
 		logs.Info(pkgRealpath + " no changed")
 		return nil
