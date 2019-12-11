@@ -2,14 +2,14 @@ module github.com/astaxie/beego
 
 require (
 	github.com/Knetic/govaluate v3.0.0+incompatible // indirect
-	github.com/OwnLocal/goes v1.0.0
+	github.com/OwnLocal/goes v1.0.1-0.20170302235955-d25b7ff8314b
 	github.com/beego/goyaml2 v0.0.0-20130207012346-5545475820dd
 	github.com/beego/x2j v0.0.0-20131220205130-a0352aadc542
 	github.com/bradfitz/gomemcache v0.0.0-20180710155616-bc664df96737
 	github.com/casbin/casbin v1.7.0
 	github.com/cloudflare/golz4 v0.0.0-20150217214814-ef862a3cdc58
 	github.com/couchbase/go-couchbase v0.0.0-20181122212707-3e9b6e1258bb
-	github.com/couchbase/gomemcached v0.0.0-20181122193126-5125a94a666c // indirect
+	github.com/couchbase/gomemcached v0.0.0-20191004160342-7b5da2ec40b2 // indirect
 	github.com/couchbase/goutils v0.0.0-20180530154633-e865a1461c8a // indirect
 	github.com/cupcake/rdb v0.0.0-20161107195141-43ba34106c76 // indirect
 	github.com/edsrzf/mmap-go v0.0.0-20170320065105-0bce6a688712 // indirect
@@ -30,8 +30,8 @@ require (
 	github.com/ssdb/gossdb v0.0.0-20180723034631-88f6b59b84ec
 	github.com/syndtr/goleveldb v0.0.0-20181127023241-353a9fca669c // indirect
 	github.com/wendal/errors v0.0.0-20130201093226-f66c77a7882b // indirect
-	golang.org/x/crypto v0.0.0-20181127143415-eb0de9b17e85
-	golang.org/x/net v0.0.0-20181114220301-adae6a3d119a // indirect
+	golang.org/x/crypto v0.0.0-20190308221718-c2843e01d9a2
+	google.golang.org/appengine v1.6.5 // indirect
 	gopkg.in/yaml.v2 v2.2.1
 )
 
