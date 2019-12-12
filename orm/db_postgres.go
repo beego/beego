@@ -17,6 +17,8 @@ package orm
 import (
 	"fmt"
 	"strconv"
+
+	"github.com/astaxie/beego/internal/bytebuffer"
 )
 
 // postgresql operators.
@@ -110,7 +112,9 @@ func (d *dbBasePostgres) ReplaceMarks(query *string) {
 	if num == 0 {
 		return
 	}
-	data := make([]byte, 0, len(q)+num)
+	bb := bytebuffer.Get()
+	data := bb.B
+	defer bytebuffer.Put(bb)
 	num = 1
 	for i := 0; i < len(q); i++ {
 		c := q[i]

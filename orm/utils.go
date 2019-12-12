@@ -21,6 +21,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/astaxie/beego/internal/bytebuffer"
 )
 
 type fn func(string) string
@@ -211,7 +213,9 @@ func ToInt64(value interface{}) (d int64) {
 }
 
 func snakeStringWithAcronym(s string) string {
-	data := make([]byte, 0, len(s)*2)
+	bb := bytebuffer.Get()
+	data := bb.B
+	defer bytebuffer.Put(bb)
 	num := len(s)
 	for i := 0; i < num; i++ {
 		d := s[i]
@@ -233,7 +237,9 @@ func snakeStringWithAcronym(s string) string {
 
 // snake string, XxYy to xx_yy , XxYY to xx_y_y
 func snakeString(s string) string {
-	data := make([]byte, 0, len(s)*2)
+	bb := bytebuffer.Get()
+	data := bb.B
+	defer bytebuffer.Put(bb)
 	j := false
 	num := len(s)
 	for i := 0; i < num; i++ {
@@ -259,7 +265,9 @@ func SetNameStrategy(s string) {
 
 // camel string, xx_yy to XxYy
 func camelString(s string) string {
-	data := make([]byte, 0, len(s))
+	bb := bytebuffer.Get()
+	data := bb.B
+	defer bytebuffer.Put(bb)
 	flag, num := true, len(s)-1
 	for i := 0; i <= num; i++ {
 		d := s[i]

@@ -39,6 +39,8 @@ import (
 	"net/url"
 	"os"
 	"time"
+
+	"github.com/astaxie/beego/internal/bytebuffer"
 )
 
 // Store contains all data for one session process with specific id.
@@ -341,7 +343,9 @@ func (manager *Manager) SetSecure(secure bool) {
 }
 
 func (manager *Manager) sessionID() (string, error) {
-	b := make([]byte, manager.config.SessionIDLength)
+	bb := bytebuffer.GetLen(int(manager.config.SessionIDLength))
+	b := bb.B
+	defer bytebuffer.Put(bb)
 	n, err := rand.Read(b)
 	if n != len(b) || err != nil {
 		return "", fmt.Errorf("Could not successfully read from the system CSPRNG")
