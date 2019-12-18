@@ -237,7 +237,7 @@ func (w *fileLogWriter) dailyRotate(openTime time.Time) {
 	<-tm.C
 	w.Lock()
 	if w.needRotateDaily(0, time.Now().Day()) {
-		if err := w.doRotate(time.Now()); err != nil {
+		if err := w.doRotate(time.Now().AddDate(0,0,-1)); err != nil {
 			fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
 		}
 	}
