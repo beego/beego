@@ -3,7 +3,7 @@ module github.com/lanfengye2008/beego
 require (
 	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/OwnLocal/goes v1.0.0
-	github.com/astaxie/beego v1.12.0
+	github.com/lanfengye2008/beego v1.12.0
 	github.com/beego/goyaml2 v0.0.0-20130207012346-5545475820dd
 	github.com/beego/x2j v0.0.0-20131220205130-a0352aadc542
 	github.com/bradfitz/gomemcache v0.0.0-20180710155616-bc664df96737
