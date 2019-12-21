@@ -41,6 +41,7 @@ func registerModel(PrefixOrSuffix string, model interface{}, isPrefix bool) {
 	table := getTableName(val)
 
 	if PrefixOrSuffix != "" {
+		PrefixOrSuffix = nameStrategyMap[nameStrategy](PrefixOrSuffix)
 		if isPrefix {
 			table = PrefixOrSuffix + table
 		} else {
