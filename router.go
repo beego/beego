@@ -773,7 +773,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			}
 		} else if routerInfo.routerType == routerTypeHandler {
 			isRunnable = true
-			routerInfo.handler.ServeHTTP(rw, r)
+			routerInfo.handler.ServeHTTP(context.ResponseWriter, context.Request)
 		} else {
 			runRouter = routerInfo.controllerType
 			methodParams = routerInfo.methodParams
