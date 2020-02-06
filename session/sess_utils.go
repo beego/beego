@@ -19,7 +19,7 @@ import (
 	"crypto/cipher"
 	"crypto/hmac"
 	"crypto/rand"
-	"crypto/sha1"
+	"crypto/sha256"
 	"crypto/subtle"
 	"encoding/base64"
 	"encoding/gob"
@@ -129,7 +129,7 @@ func encodeCookie(block cipher.Block, hashKey, name string, value map[interface{
 	b = encode(b)
 	// 3. Create MAC for "name|date|value". Extra pipe to be used later.
 	b = []byte(fmt.Sprintf("%s|%d|%s|", name, time.Now().UTC().Unix(), b))
-	h := hmac.New(sha1.New, []byte(hashKey))
+	h := hmac.New(sha256.New, []byte(hashKey))
 	h.Write(b)
 	sig := h.Sum(nil)
 	// Append mac, remove name.
@@ -153,7 +153,7 @@ func decodeCookie(block cipher.Block, hashKey, name, value string, gcmaxlifetime
 	}
 
 	b = append([]byte(name+"|"), b[:len(b)-len(parts[2])]...)
-	h := hmac.New(sha1.New, []byte(hashKey))
+	h := hmac.New(sha256.New, []byte(hashKey))
 	h.Write(b)
 	sig := h.Sum(nil)
 	if len(sig) != len(parts[2]) || subtle.ConstantTimeCompare(sig, parts[2]) != 1 {
