@@ -267,15 +267,16 @@ func (v *Validation) apply(chk Validator, obj interface{}) *Result {
 	key := chk.GetKey()
 	Name := key
 	Field := ""
-
+	Label := ""
 	parts := strings.Split(key, ".")
-	if len(parts) == 2 {
+	if len(parts) == 3 {
 		Field = parts[0]
 		Name = parts[1]
+		Label = parts[2]
 	}
 
 	err := &Error{
-		Message:    chk.DefaultMessage(),
+		Message:    Label + chk.DefaultMessage(),
 		Key:        key,
 		Name:       Name,
 		Field:      Field,
@@ -298,7 +299,7 @@ func (v *Validation) AddError(key, message string) {
 	Field := ""
 
 	parts := strings.Split(key, ".")
-	if len(parts) == 2 {
+	if len(parts) == 3 {
 		Field = parts[0]
 		Name = parts[1]
 	}

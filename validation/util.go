@@ -26,6 +26,8 @@ const (
 	// ValidTag struct tag
 	ValidTag = "valid"
 
+	LabelTag = "label"
+
 	wordsize = 32 << (^uint(0) >> 32 & 1)
 )
 
@@ -124,6 +126,7 @@ func isStructPtr(t reflect.Type) bool {
 
 func getValidFuncs(f reflect.StructField) (vfs []ValidFunc, err error) {
 	tag := f.Tag.Get(ValidTag)
+	label := f.Tag.Get(LabelTag)
 	if len(tag) == 0 {
 		return
 	}
@@ -136,7 +139,7 @@ func getValidFuncs(f reflect.StructField) (vfs []ValidFunc, err error) {
 		if len(vfunc) == 0 {
 			continue
 		}
-		vf, err = parseFunc(vfunc, f.Name)
+		vf, err = parseFunc(vfunc, f.Name, label)
 		if err != nil {
 			return
 		}
@@ -168,7 +171,7 @@ func getRegFuncs(tag, key string) (vfs []ValidFunc, str string, err error) {
 	return
 }
 
-func parseFunc(vfunc, key string) (v ValidFunc, err error) {
+func parseFunc(vfunc, key string, label string) (v ValidFunc, err error) {
 	defer func() {
 		if r := recover(); r != nil {
 			err = fmt.Errorf("%v", r)
@@ -188,7 +191,7 @@ func parseFunc(vfunc, key string) (v ValidFunc, err error) {
 			err = fmt.Errorf("%s require %d parameters", vfunc, num)
 			return
 		}
-		v = ValidFunc{vfunc, []interface{}{key + "." + vfunc}}
+		v = ValidFunc{vfunc, []interface{}{key + "." + vfunc + "." + label}}
 		return
 	}
 
@@ -210,7 +213,7 @@ func parseFunc(vfunc, key string) (v ValidFunc, err error) {
 		return
 	}
 
-	tParams, err := trim(name, key+"."+name, params)
+	tParams, err := trim(name, key+"."+ name + "." + label, params)
 	if err != nil {
 		return
 	}
