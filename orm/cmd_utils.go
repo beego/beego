@@ -198,7 +198,7 @@ func getDbCreateSQL(al *alias) (sqls []string, tableIndexes map[string][]dbIndex
 				column = strings.Replace(column, "%COL%", fi.column, -1)
 			}
 			
-			if fi.description != "" {
+			if fi.description != "" && al.Driver!=DRSqlite {
 				column += " " + fmt.Sprintf("COMMENT '%s'",fi.description)
 			}
 
