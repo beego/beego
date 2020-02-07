@@ -129,7 +129,7 @@ func (f StrTo) Uint16() (uint16, error) {
 	return uint16(v), err
 }
 
-// Uint32 string to uint31
+// Uint32 string to uint32
 func (f StrTo) Uint32() (uint32, error) {
 	v, err := strconv.ParseUint(f.String(), 10, 32)
 	return uint32(v), err

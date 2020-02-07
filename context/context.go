@@ -25,7 +25,7 @@ package context
 import (
 	"bufio"
 	"crypto/hmac"
-	"crypto/sha1"
+	"crypto/sha256"
 	"encoding/base64"
 	"errors"
 	"fmt"
@@ -123,7 +123,7 @@ func (ctx *Context) GetSecureCookie(Secret, key string) (string, bool) {
 	timestamp := parts[1]
 	sig := parts[2]
 
-	h := hmac.New(sha1.New, []byte(Secret))
+	h := hmac.New(sha256.New, []byte(Secret))
 	fmt.Fprintf(h, "%s%s", vs, timestamp)
 
 	if fmt.Sprintf("%02x", h.Sum(nil)) != sig {
@@ -137,7 +137,7 @@ func (ctx *Context) GetSecureCookie(Secret, key string) (string, bool) {
 func (ctx *Context) SetSecureCookie(Secret, name, value string, others ...interface{}) {
 	vs := base64.URLEncoding.EncodeToString([]byte(value))
 	timestamp := strconv.FormatInt(time.Now().UnixNano(), 10)
-	h := hmac.New(sha1.New, []byte(Secret))
+	h := hmac.New(sha256.New, []byte(Secret))
 	fmt.Fprintf(h, "%s%s", vs, timestamp)
 	sig := fmt.Sprintf("%02x", h.Sum(nil))
 	cookie := strings.Join([]string{vs, timestamp, sig}, "|")
@@ -169,11 +169,11 @@ func (ctx *Context) CheckXSRFCookie() bool {
 		token = ctx.Request.Header.Get("X-Csrftoken")
 	}
 	if token == "" {
-		ctx.Abort(403, "'_xsrf' argument missing from POST")
+		ctx.Abort(422, "422")
 		return false
 	}
 	if ctx._xsrfToken != token {
-		ctx.Abort(403, "XSRF cookie does not match POST argument")
+		ctx.Abort(417, "417")
 		return false
 	}
 	return true
