@@ -232,6 +232,20 @@ func TestToFile(t *testing.T) {
 	}
 }
 
+func TestToFileDir(t *testing.T) {
+	f := "./files/beego_testfile"
+	req := Get("http://httpbin.org/ip")
+	err := req.ToFile(f)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll("./files")
+	b, err := ioutil.ReadFile(f)
+	if n := strings.Index(string(b), "origin"); n == -1 {
+		t.Fatal(err)
+	}
+}
+
 func TestHeader(t *testing.T) {
 	req := Get("http://httpbin.org/headers")
 	req.Header("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.57 Safari/537.36")
