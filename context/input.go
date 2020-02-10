@@ -71,7 +71,9 @@ func (input *BeegoInput) Reset(ctx *Context) {
 	input.CruSession = nil
 	input.pnames = input.pnames[:0]
 	input.pvalues = input.pvalues[:0]
+	input.dataLock.Lock()
 	input.data = nil
+	input.dataLock.Unlock()
 	input.RequestBody = []byte{}
 }
 
