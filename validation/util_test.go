@@ -42,7 +42,7 @@ func TestGetValidFuncs(t *testing.T) {
 	}
 
 	f, _ = tf.FieldByName("Tag")
-	if _, err = getValidFuncs(f); err.Error() != "doesn't exsits Maxx valid function" {
+	if _, err = getValidFuncs(f); err.Error() != "doesn't exists Maxx valid function" {
 		t.Fatal(err)
 	}
 
