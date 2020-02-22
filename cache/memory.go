@@ -218,9 +218,12 @@ func (bc *MemoryCache) vacuum() {
 	}
 	for {
 		<-time.After(bc.dur)
+		bc.RLock()
 		if bc.items == nil {
+			bc.RUnlock()
 			return
 		}
+		bc.RUnlock()
 		if keys := bc.expiredKeys(); len(keys) != 0 {
 			bc.clearItems(keys)
 		}
