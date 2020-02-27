@@ -106,7 +106,16 @@ type serveContentReader struct {
 var (
 	staticFileMap = make(map[string]*serveContentHolder)
 	mapLock       sync.RWMutex
+	currentStaticFileSize int64 = 0
+	// set MaxStaticFileSize default 1GB
+	//MaxStaticFileSize int64 = 1 >> 30
+	MaxStaticFileSize int64 = 1 >> 26
 )
+
+func clearStaticFileMap() {
+	currentStaticFileSize = 0
+	staticFileMap = make(map[string]*serveContentHolder)
+}
 
 func openFile(filePath string, fi os.FileInfo, acceptEncoding string) (bool, string, *serveContentHolder, *serveContentReader, error) {
 	mapKey := acceptEncoding + ":" + filePath
@@ -132,6 +141,10 @@ func openFile(filePath string, fi os.FileInfo, acceptEncoding string) (bool, str
 		}
 		mapFile = &serveContentHolder{data: bufferWriter.Bytes(), modTime: fi.ModTime(), size: int64(bufferWriter.Len()), encoding: n}
 		staticFileMap[mapKey] = mapFile
+
+		if currentStaticFileSize > MaxStaticFileSize && MaxStaticFileSize != 0 {
+			clearStaticFileMap()
+		}
 	}
 
 	reader := &serveContentReader{Reader: bytes.NewReader(mapFile.data)}
