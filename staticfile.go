@@ -108,8 +108,7 @@ var (
 	mapLock       sync.RWMutex
 	currentStaticFileSize int64 = 0
 	// set MaxStaticFileSize default 1GB
-	//MaxStaticFileSize int64 = 1 >> 30
-	MaxStaticFileSize int64 = 1 >> 26
+	MaxStaticFileSize int64 = 1 >> 30
 )
 
 func clearStaticFileMap() {
