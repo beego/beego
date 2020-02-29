@@ -224,9 +224,11 @@ func (bc *MemoryCache) vacuum() {
 			return
 		}
 		bc.RUnlock()
+	    bc.Lock()
 		if keys := bc.expiredKeys(); len(keys) != 0 {
 			bc.clearItems(keys)
 		}
+		bc.Unlock()
 	}
 }
 
