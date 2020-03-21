@@ -15,7 +15,6 @@
 package orm
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 	"reflect"
@@ -104,96 +103,6 @@ func (ac *_dbCache) getDefault() (al *alias) {
 	return
 }
 
-type DB struct {
-	*sync.RWMutex
-	DB    *sql.DB
-	stmts map[string]*sql.Stmt
-}
-
-func (d *DB) Begin() (*sql.Tx, error) {
-	return d.DB.Begin()
-}
-
-func (d *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error) {
-	return d.DB.BeginTx(ctx, opts)
-}
-
-func (d *DB) getStmt(query string) (*sql.Stmt, error) {
-	d.RLock()
-	if stmt, ok := d.stmts[query]; ok {
-		d.RUnlock()
-		return stmt, nil
-	}
-	d.RUnlock()
-
-	stmt, err := d.Prepare(query)
-	if err != nil {
-		return nil, err
-	}
-	d.Lock()
-	d.stmts[query] = stmt
-	d.Unlock()
-	return stmt, nil
-}
-
-func (d *DB) Prepare(query string) (*sql.Stmt, error) {
-	return d.DB.Prepare(query)
-}
-
-func (d *DB) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
-	return d.DB.PrepareContext(ctx, query)
-}
-
-func (d *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
-	stmt, err := d.getStmt(query)
-	if err != nil {
-		return nil, err
-	}
-	return stmt.Exec(args...)
-}
-
-func (d *DB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
-	stmt, err := d.getStmt(query)
-	if err != nil {
-		return nil, err
-	}
-	return stmt.ExecContext(ctx, args...)
-}
-
-func (d *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
-	stmt, err := d.getStmt(query)
-	if err != nil {
-		return nil, err
-	}
-	return stmt.Query(args...)
-}
-
-func (d *DB) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
-	stmt, err := d.getStmt(query)
-	if err != nil {
-		return nil, err
-	}
-	return stmt.QueryContext(ctx, args...)
-}
-
-func (d *DB) QueryRow(query string, args ...interface{}) *sql.Row {
-	stmt, err := d.getStmt(query)
-	if err != nil {
-		panic(err)
-	}
-	return stmt.QueryRow(args...)
-
-}
-
-func (d *DB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
-
-	stmt, err := d.getStmt(query)
-	if err != nil {
-		panic(err)
-	}
-	return stmt.QueryRowContext(ctx, args)
-}
-
 type alias struct {
 	Name         string
 	Driver       DriverType
@@ -201,7 +110,7 @@ type alias struct {
 	DataSource   string
 	MaxIdleConns int
 	MaxOpenConns int
-	DB           *DB
+	DB           *sql.DB
 	DbBaser      dbBaser
 	TZ           *time.Location
 	Engine       string
@@ -267,11 +176,7 @@ func addAliasWthDB(aliasName, driverName string, db *sql.DB) (*alias, error) {
 	al := new(alias)
 	al.Name = aliasName
 	al.DriverName = driverName
-	al.DB = &DB{
-		RWMutex: new(sync.RWMutex),
-		DB:      db,
-		stmts:   make(map[string]*sql.Stmt),
-	}
+	al.DB = db
 
 	if dr, ok := drivers[driverName]; ok {
 		al.DbBaser = dbBasers[dr]
@@ -367,7 +272,7 @@ func SetDataBaseTZ(aliasName string, tz *time.Location) error {
 func SetMaxIdleConns(aliasName string, maxIdleConns int) {
 	al := getDbAlias(aliasName)
 	al.MaxIdleConns = maxIdleConns
-	al.DB.DB.SetMaxIdleConns(maxIdleConns)
+	al.DB.SetMaxIdleConns(maxIdleConns)
 }
 
 // SetMaxOpenConns Change the max open conns for *sql.DB, use specify database alias name
@@ -391,7 +296,7 @@ func GetDB(aliasNames ...string) (*sql.DB, error) {
 	}
 	al, ok := dataBaseCache.get(name)
 	if ok {
-		return al.DB.DB, nil
+		return al.DB, nil
 	}
 	return nil, fmt.Errorf("DataBase of alias name `%s` not found", name)
 }

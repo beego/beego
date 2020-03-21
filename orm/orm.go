@@ -60,7 +60,6 @@ import (
 	"fmt"
 	"os"
 	"reflect"
-	"sync"
 	"time"
 )
 
@@ -526,9 +525,10 @@ func (o *orm) Driver() Driver {
 // return sql.DBStats for current database
 func (o *orm) DBStats() *sql.DBStats {
 	if o.alias != nil && o.alias.DB != nil {
-		stats := o.alias.DB.DB.Stats()
+		stats := o.alias.DB.Stats()
 		return &stats
 	}
+
 	return nil
 }
 
@@ -558,11 +558,7 @@ func NewOrmWithDB(driverName, aliasName string, db *sql.DB) (Ormer, error) {
 
 	al.Name = aliasName
 	al.DriverName = driverName
-	al.DB = &DB{
-		RWMutex: new(sync.RWMutex),
-		DB:      db,
-		stmts:   make(map[string]*sql.Stmt),
-	}
+	al.DB = db
 
 	detectTZ(al)
 
