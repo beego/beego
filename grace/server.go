@@ -308,7 +308,7 @@ func (srv *Server) fork() (err error) {
 	var files = make([]*os.File, len(runningServers))
 	var orderArgs = make([]string, len(runningServers))
 	for _, srvPtr := range runningServers {
-		files[socketPtrOffsetMap[srvPtr.Server.Addr]] = srv.File
+		files[socketPtrOffsetMap[srvPtr.Server.Addr]] = srvPtr.File
 		orderArgs[socketPtrOffsetMap[srvPtr.Server.Addr]] = srvPtr.Server.Addr
 	}
 	log.Println(files)
