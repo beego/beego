@@ -131,6 +131,9 @@ func (app *App) Run(mws ...MiddleWare) {
 						logs.Critical("ListenAndServeTLS: ", err, fmt.Sprintf("%d", os.Getpid()))
 						time.Sleep(100 * time.Microsecond)
 						endRunning <- true
+					} else {
+						time.Sleep(100 * time.Microsecond)
+						endRunning <- true
 					}
 				} else {
 					if BConfig.Listen.AutoTLS {
@@ -144,6 +147,9 @@ func (app *App) Run(mws ...MiddleWare) {
 					}
 					if err := server.ListenAndServeTLS(BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile); err != nil {
 						logs.Critical("ListenAndServeTLS: ", err, fmt.Sprintf("%d", os.Getpid()))
+						time.Sleep(100 * time.Microsecond)
+						endRunning <- true
+					} else {
 						time.Sleep(100 * time.Microsecond)
 						endRunning <- true
 					}
@@ -160,6 +166,9 @@ func (app *App) Run(mws ...MiddleWare) {
 				}
 				if err := server.ListenAndServe(); err != nil {
 					logs.Critical("ListenAndServe: ", err, fmt.Sprintf("%d", os.Getpid()))
+					time.Sleep(100 * time.Microsecond)
+					endRunning <- true
+				} else {
 					time.Sleep(100 * time.Microsecond)
 					endRunning <- true
 				}
