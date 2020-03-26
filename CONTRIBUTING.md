@@ -30,7 +30,7 @@ do it in other way.
 ### Create issues
 
 Any significant improvement should be documented as [a GitHub
-issue](https://github.com/astaxie/beego/issues) before anybody
+issue](https://github.com/cdle/beego/issues) before anybody
 starts working on it. 
 
 Also when filing an issue, make sure to answer these five questions:

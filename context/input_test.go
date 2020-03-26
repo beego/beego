@@ -69,23 +69,23 @@ func TestBind(t *testing.T) {
 
 		{"/?p[0]=true&p[1]=false&p[2]=true&p[5]=1&p[6]=ON&p[7]=other", []testItem{{"p", []bool{}, []bool{true, false, true, false, false, true, true, false}}}},
 
-		{"/?human.Nick=astaxie", []testItem{{"human", Human{}, Human{Nick: "astaxie"}}}},
-		{"/?human.ID=888&human.Nick=astaxie&human.Ms=true&human[Pwd]=pass", []testItem{{"human", Human{}, Human{ID: 888, Nick: "astaxie", Ms: true, Pwd: "pass"}}}},
-		{"/?human[0].ID=888&human[0].Nick=astaxie&human[0].Ms=true&human[0][Pwd]=pass01&human[1].ID=999&human[1].Nick=ysqi&human[1].Ms=On&human[1].Pwd=pass02",
+		{"/?human.Nick=cdle", []testItem{{"human", Human{}, Human{Nick: "cdle"}}}},
+		{"/?human.ID=888&human.Nick=cdle&human.Ms=true&human[Pwd]=pass", []testItem{{"human", Human{}, Human{ID: 888, Nick: "cdle", Ms: true, Pwd: "pass"}}}},
+		{"/?human[0].ID=888&human[0].Nick=cdle&human[0].Ms=true&human[0][Pwd]=pass01&human[1].ID=999&human[1].Nick=ysqi&human[1].Ms=On&human[1].Pwd=pass02",
 			[]testItem{{"human", []Human{}, []Human{
-				{ID: 888, Nick: "astaxie", Ms: true, Pwd: "pass01"},
+				{ID: 888, Nick: "cdle", Ms: true, Pwd: "pass01"},
 				{ID: 999, Nick: "ysqi", Ms: true, Pwd: "pass02"},
 			}}}},
 
 		{
-			"/?id=123&isok=true&ft=1.2&ol[0]=1&ol[1]=2&ul[]=str&ul[]=array&human.Nick=astaxie",
+			"/?id=123&isok=true&ft=1.2&ol[0]=1&ol[1]=2&ul[]=str&ul[]=array&human.Nick=cdle",
 			[]testItem{
 				{"id", 0, 123},
 				{"isok", false, true},
 				{"ft", 0.0, 1.2},
 				{"ol", []int{}, []int{1, 2}},
 				{"ul", []string{}, []string{"str", "array"}},
-				{"human", Human{}, Human{Nick: "astaxie"}},
+				{"human", Human{}, Human{Nick: "cdle"}},
 			},
 		},
 	}
@@ -110,7 +110,7 @@ func TestBind(t *testing.T) {
 }
 
 func TestSubDomain(t *testing.T) {
-	r, _ := http.NewRequest("GET", "http://www.example.com/?id=123&isok=true&ft=1.2&ol[0]=1&ol[1]=2&ul[]=str&ul[]=array&user.Name=astaxie", nil)
+	r, _ := http.NewRequest("GET", "http://www.example.com/?id=123&isok=true&ft=1.2&ol[0]=1&ol[1]=2&ul[]=str&ul[]=array&user.Name=cdle", nil)
 	beegoInput := NewInput()
 	beegoInput.Context = NewContext()
 	beegoInput.Context.Reset(httptest.NewRecorder(), r)

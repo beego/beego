@@ -41,7 +41,7 @@ func TestRequired(t *testing.T) {
 	if valid.Required("\n", "string").Ok {
 		t.Error("new line string should be false") // For #2361
 	}
-	if !valid.Required("astaxie", "string").Ok {
+	if !valid.Required("cdle", "string").Ok {
 		t.Error("string should be true")
 	}
 	if valid.Required(0, "zero").Ok {

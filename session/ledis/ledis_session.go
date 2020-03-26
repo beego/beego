@@ -7,7 +7,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/astaxie/beego/session"
+	"github.com/cdle/beego/session"
 	"github.com/siddontang/ledisdb/config"
 	"github.com/siddontang/ledisdb/ledis"
 )
@@ -83,7 +83,7 @@ type Provider struct {
 
 // SessionInit init ledis session
 // savepath like ledis server saveDataPath,pool size
-// e.g. 127.0.0.1:6379,100,astaxie
+// e.g. 127.0.0.1:6379,100,cdle
 func (lp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 	var err error
 	lp.maxlifetime = maxlifetime

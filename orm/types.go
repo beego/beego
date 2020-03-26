@@ -43,7 +43,7 @@ type Ormer interface {
 	// 	u = &User{Id: user.Id}
 	// 	err = Ormer.Read(u)
 	//	this will find User by UserName field
-	// 	u = &User{UserName: "astaxie", Password: "pass"}
+	// 	u = &User{UserName: "cdle", Password: "pass"}
 	//	err = Ormer.Read(u, "UserName")
 	Read(md interface{}, cols ...string) error
 	// Like Read(), but with "FOR UPDATE" clause, useful in transaction.

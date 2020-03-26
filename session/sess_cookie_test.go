@@ -38,11 +38,11 @@ func TestCookie(t *testing.T) {
 	if err != nil {
 		t.Fatal("set error,", err)
 	}
-	err = sess.Set("username", "astaxie")
+	err = sess.Set("username", "cdle")
 	if err != nil {
 		t.Fatal("set error,", err)
 	}
-	if username := sess.Get("username"); username != "astaxie" {
+	if username := sess.Get("username"); username != "cdle" {
 		t.Fatal("get username error")
 	}
 	sess.SessionRelease(w)

@@ -16,7 +16,7 @@ package beego
 
 import (
 	"bytes"
-	"github.com/astaxie/beego/testdata"
+	"github.com/cdle/beego/testdata"
 	"github.com/elazarl/go-bindata-assetfs"
 	"net/http"
 	"os"
@@ -25,7 +25,7 @@ import (
 )
 
 var header = `{{define "header"}}
-<h1>Hello, astaxie!</h1>
+<h1>Hello, cdle!</h1>
 {{end}}`
 
 var index = `<!DOCTYPE html>
@@ -279,7 +279,7 @@ var outputBinData = `<!DOCTYPE html>
 <h1>Hello, blocks!</h1>
 
 	
-<h1>Hello, astaxie!</h1>
+<h1>Hello, cdle!</h1>
 
 	
 

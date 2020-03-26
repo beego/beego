@@ -5,7 +5,7 @@ session is a Go session manager. It can use many session providers. Just like th
 
 ## How to install?
 
-	go get github.com/astaxie/beego/session
+	go get github.com/cdle/beego/session
 
 
 ## What providers are supported?
@@ -18,7 +18,7 @@ As of now this session manager support memory, file, Redis and MySQL.
 First you must import it
 
 	import (
-		"github.com/astaxie/beego/session"
+		"github.com/cdle/beego/session"
 	)
 
 Then in you web app init the global session manager
@@ -42,7 +42,7 @@ Then in you web app init the global session manager
 * Use **Redis** as provider, the last param is the Redis conn address,poolsize,password:
 
 		func init() {
-			globalSessions, _ = session.NewManager("redis", `{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig":"127.0.0.1:6379,100,astaxie"}`)
+			globalSessions, _ = session.NewManager("redis", `{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig":"127.0.0.1:6379,100,cdle"}`)
 			go globalSessions.GC()
 		}
 		
