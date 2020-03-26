@@ -27,6 +27,7 @@ type Server struct {
 	state        uint8
 	Network      string
 	terminalChan chan error
+	File         *os.File
 }
 
 // Serve accepts incoming connections on the Listener l,
@@ -65,6 +66,8 @@ func (srv *Server) ListenAndServe() (err error) {
 		log.Println(err)
 		return err
 	}
+
+	srv.File, _ = srv.ln.(*net.TCPListener).File()
 
 	if srv.isChild {
 		process, err := os.FindProcess(os.Getppid())
@@ -117,6 +120,9 @@ func (srv *Server) ListenAndServeTLS(certFile, keyFile string) (err error) {
 		log.Println(err)
 		return err
 	}
+
+	srv.File, _ = srv.ln.(*net.TCPListener).File()
+
 	srv.ln = tls.NewListener(tcpKeepAliveListener{ln.(*net.TCPListener)}, srv.TLSConfig)
 
 	if srv.isChild {
@@ -172,6 +178,9 @@ func (srv *Server) ListenAndServeMutualTLS(certFile, keyFile, trustFile string) 
 		log.Println(err)
 		return err
 	}
+
+	srv.File, _ = srv.ln.(*net.TCPListener).File()
+
 	srv.ln = tls.NewListener(tcpKeepAliveListener{ln.(*net.TCPListener)}, srv.TLSConfig)
 
 	if srv.isChild {
@@ -303,8 +312,7 @@ func (srv *Server) fork() (err error) {
 	var files = make([]*os.File, len(runningServers))
 	var orderArgs = make([]string, len(runningServers))
 	for _, srvPtr := range runningServers {
-		f, _ := srvPtr.ln.(*net.TCPListener).File()
-		files[socketPtrOffsetMap[srvPtr.Server.Addr]] = f
+		files[socketPtrOffsetMap[srvPtr.Server.Addr]] = srv.File
 		orderArgs[socketPtrOffsetMap[srvPtr.Server.Addr]] = srvPtr.Server.Addr
 	}
 
