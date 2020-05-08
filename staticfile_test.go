@@ -66,7 +66,7 @@ func assetOpenFileAndContent(sch *serveContentHolder, reader *serveContentReader
 			t.Fail()
 		}
 	}
-	if len(staticFileMap) == 0 {
+	if staticFileLruCache.Len() == 0 {
 		t.Log("men map is empty")
 		t.Fail()
 	}
