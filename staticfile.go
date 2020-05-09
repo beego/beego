@@ -106,10 +106,10 @@ type serveContentReader struct {
 }
 
 const (
-	//max file size to cache,default: 3m
-	MaxCacheFileSize int = 1024 * 1024 * 3
-	//max file count to cache,default: 100
-	MaxCacheFileCount int = 100
+	//max file size to cache,default: 100k
+	MaxCacheFileSize int = 1024 * 100
+	//max file count to cache,default: 1000
+	MaxCacheFileCount int = 1000
 )
 
 var (
