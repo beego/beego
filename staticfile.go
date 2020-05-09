@@ -105,8 +105,15 @@ type serveContentReader struct {
 	*bytes.Reader
 }
 
+const (
+	//max file size to cache,default: 3m
+	MaxCacheFileSize int = 1024 * 1024 * 2
+	//max file count to cache,default: 100
+	MaxCacheFileCount int = 100
+)
+
 var (
-	staticFileLruCache, _ = lru.New(1000)
+	staticFileLruCache, _ = lru.New(MaxCacheFileCount)
 	lruLock               sync.RWMutex
 )
 
@@ -139,7 +146,9 @@ func openFile(filePath string, fi os.FileInfo, acceptEncoding string) (bool, str
 			return false, "", nil, nil, err
 		}
 		mapFile = &serveContentHolder{data: bufferWriter.Bytes(), modTime: fi.ModTime(), size: int64(bufferWriter.Len()), originSize: fi.Size(), encoding: n}
-		staticFileLruCache.Add(mapKey, mapFile)
+		if isOk(mapFile, fi) {
+			staticFileLruCache.Add(mapKey, mapFile)
+		}
 	}
 
 	reader := &serveContentReader{Reader: bytes.NewReader(mapFile.data)}
@@ -148,6 +157,8 @@ func openFile(filePath string, fi os.FileInfo, acceptEncoding string) (bool, str
 
 func isOk(s *serveContentHolder, fi os.FileInfo) bool {
 	if s == nil {
+		return false
+	} else if s.size > int64(MaxCacheFileSize) {
 		return false
 	}
 	return s.modTime == fi.ModTime() && s.originSize == fi.Size()
