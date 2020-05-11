@@ -76,6 +76,7 @@ var (
 	DefaultRowsLimit = -1
 	DefaultRelsDepth = 2
 	DefaultTimeLoc   = time.Local
+	DetectTimeLoc    = true
 	ErrTxHasBegan    = errors.New("<Ormer.Begin> transaction already begin")
 	ErrTxDone        = errors.New("<Ormer.Commit/Rollback> transaction not begin")
 	ErrMultiRows     = errors.New("<QuerySeter> return multi rows")

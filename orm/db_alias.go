@@ -212,6 +212,10 @@ func detectTZ(al *alias) {
 	// default use Local
 	al.TZ = DefaultTimeLoc
 
+	if !DetectTimeLoc {
+		return
+	}
+
 	if al.DriverName == "sphinx" {
 		return
 	}
