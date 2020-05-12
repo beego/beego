@@ -149,7 +149,7 @@ func (mp *Provider) SessionRead(sid string) (session.Store, error) {
 	if err == sql.ErrNoRows {
 		c.Exec("insert into "+TableName+"(`session_key`,`session_data`,`session_expiry`) values(?,?,?)",
 			sid, "", time.Now().Unix())
-	} else {
+	} else if err != nil {
 		return nil, err
 	}
 	var kv map[interface{}]interface{}
@@ -183,7 +183,7 @@ func (mp *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error)
 	err := row.Scan(&sessiondata)
 	if err == sql.ErrNoRows {
 		c.Exec("insert into "+TableName+"(`session_key`,`session_data`,`session_expiry`) values(?,?,?)", oldsid, "", time.Now().Unix())
-	} else {
+	} else if err != nil {
 		return nil, err
 	}
 	c.Exec("update "+TableName+" set `session_key`=? where session_key=?", sid, oldsid)
