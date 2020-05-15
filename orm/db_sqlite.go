@@ -17,6 +17,8 @@ package orm
 import (
 	"database/sql"
 	"fmt"
+	"reflect"
+	"time"
 )
 
 // sqlite operators.
@@ -65,6 +67,11 @@ type dbBaseSqlite struct {
 }
 
 var _ dbBaser = new(dbBaseSqlite)
+
+// override base db read for update behavior as SQlite does not support syntax
+func (d *dbBaseSqlite) Read(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location, cols []string, isForUpdate bool) error {
+	return d.dbBase.Read(q, mi, ind, tz, cols, false)
+}
 
 // get sqlite operator.
 func (d *dbBaseSqlite) OperatorSQL(operator string) string {
