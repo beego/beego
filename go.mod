@@ -15,13 +15,14 @@ require (
 	github.com/edsrzf/mmap-go v0.0.0-20170320065105-0bce6a688712 // indirect
 	github.com/elazarl/go-bindata-assetfs v1.0.0
 	github.com/go-redis/redis v6.14.2+incompatible
-	github.com/go-sql-driver/mysql v1.4.1
+	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gogo/protobuf v1.1.1
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/lib/pq v1.0.0
-	github.com/mattn/go-sqlite3 v1.10.0
+	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/pelletier/go-toml v1.2.0 // indirect
+	github.com/pingcap/tidb v2.0.11+incompatible // indirect
 	github.com/pkg/errors v0.8.0 // indirect
 	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726 // indirect
 	github.com/siddontang/ledisdb v0.0.0-20181029004158-becf5f38d373
