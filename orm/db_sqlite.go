@@ -70,6 +70,9 @@ var _ dbBaser = new(dbBaseSqlite)
 
 // override base db read for update behavior as SQlite does not support syntax
 func (d *dbBaseSqlite) Read(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location, cols []string, isForUpdate bool) error {
+	if isForUpdate {
+		DebugLog.Println("[WARN] SQLite does not support SELECT FOR UPDATE query, isForUpdate param is ignored and always as false to do the work")
+	}
 	return d.dbBase.Read(q, mi, ind, tz, cols, false)
 }
 
