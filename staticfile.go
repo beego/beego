@@ -112,6 +112,7 @@ var (
 
 func openFile(filePath string, fi os.FileInfo, acceptEncoding string) (bool, string, *serveContentHolder, *serveContentReader, error) {
 	if staticFileLruCache == nil {
+		//avoid lru cache error
 		if BConfig.WebConfig.StaticCacheFileNum >= 1 {
 			staticFileLruCache, _ = lru.New(BConfig.WebConfig.StaticCacheFileNum)
 		} else {
