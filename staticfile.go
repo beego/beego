@@ -105,19 +105,19 @@ type serveContentReader struct {
 	*bytes.Reader
 }
 
-const (
-	//max file size to cache,default: 100k
-	MaxCacheFileSize int = 1024 * 100
-	//max file count to cache,default: 1000
-	MaxCacheFileCount int = 1000
-)
-
 var (
-	staticFileLruCache, _ = lru.New(MaxCacheFileCount)
-	lruLock               sync.RWMutex
+	staticFileLruCache *lru.Cache
+	lruLock            sync.RWMutex
 )
 
 func openFile(filePath string, fi os.FileInfo, acceptEncoding string) (bool, string, *serveContentHolder, *serveContentReader, error) {
+	if staticFileLruCache == nil {
+		if BConfig.WebConfig.StaticCacheFileNum >= 1 {
+			staticFileLruCache, _ = lru.New(BConfig.WebConfig.StaticCacheFileNum)
+		} else {
+			staticFileLruCache, _ = lru.New(1)
+		}
+	}
 	mapKey := acceptEncoding + ":" + filePath
 	lruLock.RLock()
 	var mapFile *serveContentHolder
@@ -158,7 +158,7 @@ func openFile(filePath string, fi os.FileInfo, acceptEncoding string) (bool, str
 func isOk(s *serveContentHolder, fi os.FileInfo) bool {
 	if s == nil {
 		return false
-	} else if s.size > int64(MaxCacheFileSize) {
+	} else if s.size > int64(BConfig.WebConfig.StaticCacheFileSize) {
 		return false
 	}
 	return s.modTime == fi.ModTime() && s.originSize == fi.Size()
