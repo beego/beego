@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -91,13 +92,7 @@ func (c *JSONConfigContainer) DefaultBool(key string, defaultval bool) bool {
 // Int returns the integer value for a given key.
 func (c *JSONConfigContainer) Int(key string) (int, error) {
 	val := c.getData(key)
-	if val != nil {
-		if v, ok := val.(float64); ok {
-			return int(v), nil
-		}
-		return 0, errors.New("not int value")
-	}
-	return 0, errors.New("not exist key:" + key)
+	return strconv.Atoi(val.(string))
 }
 
 // DefaultInt returns the integer value for a given key.
