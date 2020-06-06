@@ -98,7 +98,7 @@ func (c *JSONConfigContainer) Int(key string) (int, error) {
 		} else if v, ok := val.(string); ok {
 			return strconv.Atoi(v)
 		}
-		return 0, errors.New("not int value")
+		return 0, errors.New("not valid value")
 	}
 	return 0, errors.New("not exist key:" + key)
 }
