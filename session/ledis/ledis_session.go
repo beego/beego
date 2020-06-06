@@ -7,9 +7,10 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/ledisdb/ledisdb/config"
+	"github.com/ledisdb/ledisdb/ledis"
+
 	"github.com/astaxie/beego/session"
-	"github.com/siddontang/ledisdb/config"
-	"github.com/siddontang/ledisdb/ledis"
 )
 
 var (

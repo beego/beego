@@ -36,8 +36,7 @@ install:
   - go get github.com/beego/goyaml2
   - go get gopkg.in/yaml.v2
   - go get github.com/belogik/goes
-  - go get github.com/siddontang/ledisdb/config
-  - go get github.com/siddontang/ledisdb/ledis
+  - go get github.com/ledisdb/ledisdb
   - go get github.com/ssdb/gossdb/ssdb
   - go get github.com/cloudflare/golz4
   - go get github.com/gogo/protobuf/proto
@@ -49,7 +48,7 @@ install:
   - go get -u honnef.co/go/tools/cmd/staticcheck
   - go get -u github.com/mdempsky/unconvert
   - go get -u github.com/gordonklaus/ineffassign
-  - go get -u github.com/golang/lint/golint
+  - go get -u golang.org/x/lint/golint
   - go get -u github.com/go-redis/redis
 before_script:
   - psql --version
