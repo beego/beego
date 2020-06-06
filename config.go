@@ -81,6 +81,8 @@ type WebConfig struct {
 	DirectoryIndex         bool
 	StaticDir              map[string]string
 	StaticExtensionsToGzip []string
+	StaticCacheFileSize    int
+	StaticCacheFileNum     int
 	TemplateLeft           string
 	TemplateRight          string
 	ViewsPath              string
@@ -236,6 +238,8 @@ func newBConfig() *Config {
 			DirectoryIndex:         false,
 			StaticDir:              map[string]string{"/static": "static"},
 			StaticExtensionsToGzip: []string{".css", ".js"},
+			StaticCacheFileSize:    1024 * 100,
+			StaticCacheFileNum:     1000,
 			TemplateLeft:           "{{",
 			TemplateRight:          "}}",
 			ViewsPath:              "views",
@@ -315,6 +319,14 @@ func assignConfig(ac config.Configer) error {
 		if len(fileExts) > 0 {
 			BConfig.WebConfig.StaticExtensionsToGzip = fileExts
 		}
+	}
+
+	if sfs, err := ac.Int("StaticCacheFileSize"); err == nil {
+		BConfig.WebConfig.StaticCacheFileSize = sfs
+	}
+
+	if sfn, err := ac.Int("StaticCacheFileNum"); err == nil {
+		BConfig.WebConfig.StaticCacheFileNum = sfn
 	}
 
 	if lo := ac.String("LogOutputs"); lo != "" {
