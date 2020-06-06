@@ -2,7 +2,6 @@ module github.com/astaxie/beego
 
 require (
 	github.com/Knetic/govaluate v3.0.0+incompatible // indirect
-	github.com/OwnLocal/goes v1.0.0
 	github.com/beego/goyaml2 v0.0.0-20130207012346-5545475820dd
 	github.com/beego/x2j v0.0.0-20131220205130-a0352aadc542
 	github.com/bradfitz/gomemcache v0.0.0-20180710155616-bc664df96737
@@ -11,6 +10,7 @@ require (
 	github.com/couchbase/go-couchbase v0.0.0-20200519150804-63f3cdb75e0d
 	github.com/couchbase/gomemcached v0.0.0-20200526233749-ec430f949808 // indirect
 	github.com/couchbase/goutils v0.0.0-20180530154633-e865a1461c8a // indirect
+	github.com/elastic/go-elasticsearch/v6 v6.8.5 // indirect
 	github.com/elazarl/go-bindata-assetfs v1.0.0
 	github.com/go-redis/redis v6.14.2+incompatible
 	github.com/go-sql-driver/mysql v1.4.1
@@ -18,7 +18,7 @@ require (
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/hashicorp/golang-lru v0.5.4
-	github.com/ledisdb/ledisdb v0.0.0-20200510135210-d35789ec47e6 // indirect
+	github.com/ledisdb/ledisdb v0.0.0-20200510135210-d35789ec47e6
 	github.com/lib/pq v1.0.0
 	github.com/mattn/go-sqlite3 v1.10.0
 	github.com/pelletier/go-toml v1.2.0 // indirect
