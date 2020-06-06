@@ -8,8 +8,8 @@ require (
 	github.com/bradfitz/gomemcache v0.0.0-20180710155616-bc664df96737
 	github.com/casbin/casbin v1.7.0
 	github.com/cloudflare/golz4 v0.0.0-20150217214814-ef862a3cdc58
-	github.com/couchbase/go-couchbase v0.0.0-20181122212707-3e9b6e1258bb
-	github.com/couchbase/gomemcached v0.0.0-20181122193126-5125a94a666c // indirect
+	github.com/couchbase/go-couchbase v0.0.0-20200519150804-63f3cdb75e0d
+	github.com/couchbase/gomemcached v0.0.0-20200526233749-ec430f949808 // indirect
 	github.com/couchbase/goutils v0.0.0-20180530154633-e865a1461c8a // indirect
 	github.com/cupcake/rdb v0.0.0-20161107195141-43ba34106c76 // indirect
 	github.com/edsrzf/mmap-go v0.0.0-20170320065105-0bce6a688712 // indirect
@@ -19,10 +19,12 @@ require (
 	github.com/gogo/protobuf v1.1.1
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
 	github.com/gomodule/redigo v2.0.0+incompatible
+	github.com/hashicorp/golang-lru v0.5.4
 	github.com/lib/pq v1.0.0
 	github.com/mattn/go-sqlite3 v1.10.0
 	github.com/pelletier/go-toml v1.2.0 // indirect
 	github.com/pkg/errors v0.8.0 // indirect
+	github.com/shiena/ansicolor v0.0.0-20151119151921-a422bbe96644
 	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726 // indirect
 	github.com/siddontang/ledisdb v0.0.0-20181029004158-becf5f38d373
 	github.com/siddontang/rdb v0.0.0-20150307021120-fc89ed2e418d // indirect
