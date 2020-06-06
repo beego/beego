@@ -92,7 +92,15 @@ func (c *JSONConfigContainer) DefaultBool(key string, defaultval bool) bool {
 // Int returns the integer value for a given key.
 func (c *JSONConfigContainer) Int(key string) (int, error) {
 	val := c.getData(key)
-	return strconv.Atoi(val.(string))
+	if val != nil {
+		if v, ok := val.(float64); ok {
+			return int(v), nil
+		} else if v, ok := val.(string); ok {
+			return strconv.Atoi(v)
+		}
+		return 0, errors.New("not valid value")
+	}
+	return 0, errors.New("not exist key:" + key)
 }
 
 // DefaultInt returns the integer value for a given key.
