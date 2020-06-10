@@ -52,6 +52,8 @@ func oldMap() M {
 	m["BConfig.WebConfig.DirectoryIndex"] = BConfig.WebConfig.DirectoryIndex
 	m["BConfig.WebConfig.StaticDir"] = BConfig.WebConfig.StaticDir
 	m["BConfig.WebConfig.StaticExtensionsToGzip"] = BConfig.WebConfig.StaticExtensionsToGzip
+	m["BConfig.WebConfig.StaticCacheFileSize"] = BConfig.WebConfig.StaticCacheFileSize
+	m["BConfig.WebConfig.StaticCacheFileNum"] = BConfig.WebConfig.StaticCacheFileNum
 	m["BConfig.WebConfig.TemplateLeft"] = BConfig.WebConfig.TemplateLeft
 	m["BConfig.WebConfig.TemplateRight"] = BConfig.WebConfig.TemplateRight
 	m["BConfig.WebConfig.ViewsPath"] = BConfig.WebConfig.ViewsPath

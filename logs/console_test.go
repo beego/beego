@@ -16,6 +16,7 @@ package logs
 
 import (
 	"testing"
+	"time"
 )
 
 // Try each log level in decreasing order of priority.
@@ -48,4 +49,16 @@ func TestConsoleNoColor(t *testing.T) {
 	log := NewLogger(100)
 	log.SetLogger("console", `{"color":false}`)
 	testConsoleCalls(log)
+}
+
+// Test console async
+func TestConsoleAsync(t *testing.T) {
+	log := NewLogger(100)
+	log.SetLogger("console")
+	log.Async()
+	//log.Close()
+	testConsoleCalls(log)
+	for len(log.msgChan) != 0 {
+		time.Sleep(1 * time.Millisecond)
+	}
 }

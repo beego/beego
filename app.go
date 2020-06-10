@@ -123,7 +123,7 @@ func (app *App) Run(mws ...MiddleWare) {
 					httpsAddr = fmt.Sprintf("%s:%d", BConfig.Listen.HTTPSAddr, BConfig.Listen.HTTPSPort)
 					app.Server.Addr = httpsAddr
 				}
-				server := grace.NewServer(httpsAddr, app.Handlers)
+				server := grace.NewServer(httpsAddr, app.Server.Handler)
 				server.Server.ReadTimeout = app.Server.ReadTimeout
 				server.Server.WriteTimeout = app.Server.WriteTimeout
 				if BConfig.Listen.EnableMutualHTTPS {
@@ -152,7 +152,7 @@ func (app *App) Run(mws ...MiddleWare) {
 		}
 		if BConfig.Listen.EnableHTTP {
 			go func() {
-				server := grace.NewServer(addr, app.Handlers)
+				server := grace.NewServer(addr, app.Server.Handler)
 				server.Server.ReadTimeout = app.Server.ReadTimeout
 				server.Server.WriteTimeout = app.Server.WriteTimeout
 				if BConfig.Listen.ListenTCP4 {
