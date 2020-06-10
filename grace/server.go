@@ -180,7 +180,7 @@ func (srv *Server) ListenAndServeMutualTLS(certFile, keyFile, trustFile string) 
 			log.Println(err)
 			return err
 		}
-		err = process.Kill()
+		err = process.Signal(syscall.SIGTERM)
 		if err != nil {
 			return err
 		}
