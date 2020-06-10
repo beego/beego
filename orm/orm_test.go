@@ -1983,13 +1983,13 @@ func TestUpdate(t *testing.T) {
 		"Nums": ColValue(ColBitRShift, 1),
 	})
 	throwFail(t, err)
-	throwFail(t, AssertIs(num, 0))
+	throwFail(t, AssertIs(num, 1))
 
 	num, err = qs.Filter("user_name", "slene").Update(Params{
 		"Nums": ColValue(ColBitLShift, 1),
 	})
 	throwFail(t, err)
-	throwFail(t, AssertIs(num, 0))
+	throwFail(t, AssertIs(num, 1))
 
 	num, err = qs.Filter("user_name", "slene").Update(Params{
 		"Nums": ColValue(ColBitXOR, 1),
