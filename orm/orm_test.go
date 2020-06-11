@@ -1983,13 +1983,13 @@ func TestUpdate(t *testing.T) {
 		"Nums": ColValue(ColBitRShift, 1),
 	})
 	throwFail(t, err)
-	throwFail(t, AssertIs(num, 1))
+	throwFail(t, AssertIs(num, 0))
 
 	num, err = qs.Filter("user_name", "slene").Update(Params{
 		"Nums": ColValue(ColBitLShift, 1),
 	})
 	throwFail(t, err)
-	throwFail(t, AssertIs(num, 1))
+	throwFail(t, AssertIs(num, 0))
 
 	num, err = qs.Filter("user_name", "slene").Update(Params{
 		"Nums": ColValue(ColBitXOR, 1),
@@ -2006,7 +2006,7 @@ func TestUpdate(t *testing.T) {
 	user := User{UserName: "slene"}
 	err = dORM.Read(&user, "UserName")
 	throwFail(t, err)
-	throwFail(t, AssertIs(user.Nums, 30))
+	throwFail(t, AssertIs(user.Nums, 1))
 }
 
 func TestDelete(t *testing.T) {
