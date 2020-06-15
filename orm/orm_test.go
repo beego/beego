@@ -1973,40 +1973,10 @@ func TestUpdate(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
 
-	num, err = qs.Filter("user_name", "slene").Update(Params{
-		"Nums": ColValue(ColBitAnd, 1),
-	})
-	throwFail(t, err)
-	throwFail(t, AssertIs(num, 1))
-
-	num, err = qs.Filter("user_name", "slene").Update(Params{
-		"Nums": ColValue(ColBitRShift, 1),
-	})
-	throwFail(t, err)
-	throwFail(t, AssertIs(num, 0))
-
-	num, err = qs.Filter("user_name", "slene").Update(Params{
-		"Nums": ColValue(ColBitLShift, 1),
-	})
-	throwFail(t, err)
-	throwFail(t, AssertIs(num, 0))
-
-	num, err = qs.Filter("user_name", "slene").Update(Params{
-		"Nums": ColValue(ColBitXOR, 1),
-	})
-	throwFail(t, err)
-	throwFail(t, AssertIs(num, 1))
-
-	num, err = qs.Filter("user_name", "slene").Update(Params{
-		"Nums": ColValue(ColBitOr, 1),
-	})
-	throwFail(t, err)
-	throwFail(t, AssertIs(num, 0))
-
 	user := User{UserName: "slene"}
 	err = dORM.Read(&user, "UserName")
 	throwFail(t, err)
-	throwFail(t, AssertIs(user.Nums, 1))
+	throwFail(t, AssertIs(user.Nums, 30))
 }
 
 func TestDelete(t *testing.T) {
