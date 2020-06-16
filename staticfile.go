@@ -68,6 +68,10 @@ func serverStaticRouter(ctx *context.Context) {
 			http.ServeFile(ctx.ResponseWriter, ctx.Request, filePath)
 		}
 		return
+	} else if fileInfo.Size() > int64(BConfig.WebConfig.StaticCacheFileSize) {
+		//over size file serve with http module
+		http.ServeFile(ctx.ResponseWriter, ctx.Request, filePath)
+		return
 	}
 
 	var enableCompress = BConfig.EnableGzip && isStaticCompress(filePath)
