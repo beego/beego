@@ -83,8 +83,8 @@ func TestGetValidFuncs(t *testing.T) {
 
 type User struct {
 	Name string `valid:"Required;MaxSize(5)" `
-	Sex  string `valid:"Required;" label:"sex_label"`
-	Age  int    `valid:"Required;Range(1, 140);" label:"age_label"`
+	Sex  string `valid:"Required;"label:"sex_label"`
+	Age  int    `valid:"Required;Range(1, 140);"label:"age_label"`
 }
 
 func TestValidation(t *testing.T) {
@@ -100,6 +100,11 @@ func TestValidation(t *testing.T) {
 		for _, err := range valid.Errors {
 			log.Println(err.Key, err.Message)
 		}
+		if len(valid.Errors) != 3 {
+			t.Error("must be has 3 error")
+		}
+	} else {
+		t.Error("must be has 3 error")
 	}
 }
 
