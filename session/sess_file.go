@@ -138,7 +138,7 @@ func (fp *FileProvider) SessionRead(sid string) (Store, error) {
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()
 
-	err := os.MkdirAll(path.Join(fp.savePath, string(sid[0]), string(sid[1])), 0777)
+	err := os.MkdirAll(path.Join(fp.savePath, string(sid[0]), string(sid[1])), 0755)
 	if err != nil {
 		SLogger.Println(err.Error())
 	}
@@ -231,7 +231,7 @@ func (fp *FileProvider) SessionRegenerate(oldsid, sid string) (Store, error) {
 		return nil, fmt.Errorf("newsid %s exist", newSidFile)
 	}
 
-	err = os.MkdirAll(newPath, 0777)
+	err = os.MkdirAll(newPath, 0755)
 	if err != nil {
 		SLogger.Println(err.Error())
 	}

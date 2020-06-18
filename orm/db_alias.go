@@ -374,6 +374,7 @@ func SetMaxIdleConns(aliasName string, maxIdleConns int) {
 func SetMaxOpenConns(aliasName string, maxOpenConns int) {
 	al := getDbAlias(aliasName)
 	al.MaxOpenConns = maxOpenConns
+	al.DB.DB.SetMaxOpenConns(maxOpenConns)
 	// for tip go 1.2
 	if fun := reflect.ValueOf(al.DB).MethodByName("SetMaxOpenConns"); fun.IsValid() {
 		fun.Call([]reflect.Value{reflect.ValueOf(maxOpenConns)})

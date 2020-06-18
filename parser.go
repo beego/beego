@@ -500,7 +500,7 @@ func genRouterCode(pkgRealpath string) {
     beego.GlobalControllerRouter["` + k + `"] = append(beego.GlobalControllerRouter["` + k + `"],
         beego.ControllerComments{
             Method: "` + strings.TrimSpace(c.Method) + `",
-            ` + "Router: `" + c.Router + "`" + `,
+            ` + `Router: "` + c.Router + `"` + `,
             AllowHTTPMethods: ` + allmethod + `,
             MethodParams: ` + methodParams + `,
             Filters: ` + filters + `,
