@@ -407,6 +407,7 @@ func (b *BeegoHTTPRequest) buildURL(paramBody string) {
 			}()
 			b.Header("Content-Type", bodyWriter.FormDataContentType())
 			b.req.Body = ioutil.NopCloser(pr)
+			b.Header("Transfer-Encoding", "chunked")
 			return
 		}
 

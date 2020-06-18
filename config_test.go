@@ -115,6 +115,8 @@ func TestAssignConfig_03(t *testing.T) {
 	ac.Set("RunMode", "online")
 	ac.Set("StaticDir", "download:down download2:down2")
 	ac.Set("StaticExtensionsToGzip", ".css,.js,.html,.jpg,.png")
+	ac.Set("StaticCacheFileSize", "87456")
+	ac.Set("StaticCacheFileNum", "1254")
 	assignConfig(ac)
 
 	t.Logf("%#v", BConfig)
@@ -130,6 +132,12 @@ func TestAssignConfig_03(t *testing.T) {
 		t.FailNow()
 	}
 	if BConfig.WebConfig.StaticDir["/download2"] != "down2" {
+		t.FailNow()
+	}
+	if BConfig.WebConfig.StaticCacheFileSize != 87456 {
+		t.FailNow()
+	}
+	if BConfig.WebConfig.StaticCacheFileNum != 1254 {
 		t.FailNow()
 	}
 	if len(BConfig.WebConfig.StaticExtensionsToGzip) != 5 {

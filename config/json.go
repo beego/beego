@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -94,8 +95,10 @@ func (c *JSONConfigContainer) Int(key string) (int, error) {
 	if val != nil {
 		if v, ok := val.(float64); ok {
 			return int(v), nil
+		} else if v, ok := val.(string); ok {
+			return strconv.Atoi(v)
 		}
-		return 0, errors.New("not int value")
+		return 0, errors.New("not valid value")
 	}
 	return 0, errors.New("not exist key:" + key)
 }
