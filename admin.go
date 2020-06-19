@@ -55,6 +55,7 @@ func init() {
 	beeAdminApp = &adminApp{
 		routers: make(map[string]http.HandlerFunc),
 	}
+	// keep in mind that all data should be html escaped to avoid XSS attack
 	beeAdminApp.Route("/", adminIndex)
 	beeAdminApp.Route("/qps", qpsIndex)
 	beeAdminApp.Route("/prof", profIndex)
@@ -105,8 +106,8 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 	case "conf":
 		m := make(M)
 		list("BConfig", BConfig, m)
-		m["AppConfigPath"] = appConfigPath
-		m["AppConfigProvider"] = appConfigProvider
+		m["AppConfigPath"] = template.HTMLEscapeString(appConfigPath)
+		m["AppConfigProvider"] = template.HTMLEscapeString(appConfigProvider)
 		tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
 		tmpl = template.Must(tmpl.Parse(configTpl))
 		tmpl = template.Must(tmpl.Parse(defaultScriptsTpl))
@@ -151,8 +152,9 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 					resultList := new([][]string)
 					for _, f := range bf {
 						var result = []string{
-							f.pattern,
-							utils.GetFuncName(f.filterFunc),
+							// void xss
+							template.HTMLEscapeString(f.pattern),
+							template.HTMLEscapeString(utils.GetFuncName(f.filterFunc)),
 						}
 						*resultList = append(*resultList, result)
 					}
@@ -207,8 +209,8 @@ func PrintTree() M {
 
 		printTree(resultList, t)
 
-		methods = append(methods, method)
-		methodsData[method] = resultList
+		methods = append(methods, template.HTMLEscapeString(method))
+		methodsData[template.HTMLEscapeString(method)] = resultList
 	}
 
 	content["Data"] = methodsData
@@ -227,21 +229,21 @@ func printTree(resultList *[][]string, t *Tree) {
 		if v, ok := l.runObject.(*ControllerInfo); ok {
 			if v.routerType == routerTypeBeego {
 				var result = []string{
-					v.pattern,
-					fmt.Sprintf("%s", v.methods),
-					v.controllerType.String(),
+					template.HTMLEscapeString(v.pattern),
+					template.HTMLEscapeString(fmt.Sprintf("%s", v.methods)),
+					template.HTMLEscapeString(v.controllerType.String()),
 				}
 				*resultList = append(*resultList, result)
 			} else if v.routerType == routerTypeRESTFul {
 				var result = []string{
-					v.pattern,
-					fmt.Sprintf("%s", v.methods),
+					template.HTMLEscapeString(v.pattern),
+					template.HTMLEscapeString(fmt.Sprintf("%s", v.methods)),
 					"",
 				}
 				*resultList = append(*resultList, result)
 			} else if v.routerType == routerTypeHandler {
 				var result = []string{
-					v.pattern,
+					template.HTMLEscapeString(v.pattern),
 					"",
 					"",
 				}
@@ -266,7 +268,7 @@ func profIndex(rw http.ResponseWriter, r *http.Request) {
 		result bytes.Buffer
 	)
 	toolbox.ProcessInput(command, &result)
-	data["Content"] = result.String()
+	data["Content"] = template.HTMLEscapeString(result.String())
 
 	if format == "json" && command == "gc summary" {
 		dataJSON, err := json.Marshal(data)
@@ -280,7 +282,7 @@ func profIndex(rw http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data["Title"] = command
+	data["Title"] = template.HTMLEscapeString(command)
 	defaultTpl := defaultScriptsTpl
 	if command == "gc summary" {
 		defaultTpl = gcAjaxTpl
@@ -304,13 +306,13 @@ func healthcheck(rw http.ResponseWriter, _ *http.Request) {
 		if err := h.Check(); err != nil {
 			result = []string{
 				"error",
-				name,
-				err.Error(),
+				template.HTMLEscapeString(name),
+				template.HTMLEscapeString(err.Error()),
 			}
 		} else {
 			result = []string{
 				"success",
-				name,
+				template.HTMLEscapeString(name),
 				"OK",
 			}
 		}
@@ -334,11 +336,11 @@ func taskStatus(rw http.ResponseWriter, req *http.Request) {
 	if taskname != "" {
 		if t, ok := toolbox.AdminTaskList[taskname]; ok {
 			if err := t.Run(); err != nil {
-				data["Message"] = []string{"error", fmt.Sprintf("%s", err)}
+				data["Message"] = []string{"error", template.HTMLEscapeString(fmt.Sprintf("%s", err))}
 			}
-			data["Message"] = []string{"success", fmt.Sprintf("%s run success,Now the Status is <br>%s", taskname, t.GetStatus())}
+			data["Message"] = []string{"success", template.HTMLEscapeString(fmt.Sprintf("%s run success,Now the Status is <br>%s", taskname, t.GetStatus()))}
 		} else {
-			data["Message"] = []string{"warning", fmt.Sprintf("there's no task which named: %s", taskname)}
+			data["Message"] = []string{"warning", template.HTMLEscapeString(fmt.Sprintf("there's no task which named: %s", taskname))}
 		}
 	}
 
@@ -354,10 +356,10 @@ func taskStatus(rw http.ResponseWriter, req *http.Request) {
 	}
 	for tname, tk := range toolbox.AdminTaskList {
 		result := []string{
-			tname,
-			tk.GetSpec(),
-			tk.GetStatus(),
-			tk.GetPrev().String(),
+			template.HTMLEscapeString(tname),
+			template.HTMLEscapeString(tk.GetSpec()),
+			template.HTMLEscapeString(tk.GetStatus()),
+			template.HTMLEscapeString(tk.GetPrev().String()),
 		}
 		*resultList = append(*resultList, result)
 	}
