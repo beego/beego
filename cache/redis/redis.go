@@ -137,12 +137,12 @@ func (rc *Cache) Decr(key string) error {
 
 // ClearAll clean all cache in redis. delete this redis collection.
 func (rc *Cache) ClearAll() error {
-	c := rc.p.Get()
-	defer c.Close()
 	cachedKeys, err := rc.Scan(rc.key + ":*")
 	if err != nil {
 		return err
 	}
+	c := rc.p.Get()
+	defer c.Close()
 	for _, str := range cachedKeys {
 		if _, err = c.Do("DEL", str); err != nil {
 			return err
