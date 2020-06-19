@@ -284,7 +284,12 @@ func (input *BeegoInput) ParamsLen() int {
 func (input *BeegoInput) Param(key string) string {
 	for i, v := range input.pnames {
 		if v == key && i <= len(input.pvalues) {
-			return url.PathEscape(input.pvalues[i])
+			// we cannot use url.PathEscape(input.pvalues[i])
+			// for example, if the value is /a/b
+			// after url.PathEscape(input.pvalues[i]), the value is %2Fa%2Fb
+			// However, the value is used in ControllerRegister.ServeHTTP
+			// and split by "/", so function crash...
+			return input.pvalues[i]
 		}
 	}
 	return ""
