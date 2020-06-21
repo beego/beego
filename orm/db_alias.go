@@ -120,17 +120,24 @@ func (d *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error) 
 
 func (d *DB) getStmt(query string) (*sql.Stmt, error) {
 	d.RLock()
-	if stmt, ok := d.stmts[query]; ok {
-		d.RUnlock()
-		return stmt, nil
-	}
+	c, ok := d.stmts[query]
 	d.RUnlock()
+	if ok {
+		return c, nil
+	}
+
+	d.Lock()
+	c, ok = d.stmts[query]
+	if ok {
+		d.Unlock()
+		return c, nil
+	}
 
 	stmt, err := d.Prepare(query)
 	if err != nil {
+		d.Unlock()
 		return nil, err
 	}
-	d.Lock()
 	d.stmts[query] = stmt
 	d.Unlock()
 	return stmt, nil
