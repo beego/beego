@@ -144,3 +144,10 @@ func TestAssignConfig_03(t *testing.T) {
 		t.FailNow()
 	}
 }
+
+func TestAssignConfig_Orm(t *testing.T) {
+
+	if BConfig.OrmConfig.StmtCacheSize != 0 {
+		t.FailNow()
+	}
+}

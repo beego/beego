@@ -21,6 +21,8 @@ import (
 	"reflect"
 	"sync"
 	"time"
+
+	"github.com/astaxie/beego"
 )
 
 // DriverType database driver constant int.
@@ -62,7 +64,7 @@ var (
 		"tidb":     DRTiDB,
 		"oracle":   DROracle,
 		"oci8":     DROracle, // github.com/mattn/go-oci8
-		"ora":      DROracle, //https://github.com/rana/ora
+		"ora":      DROracle, // https://github.com/rana/ora
 	}
 	dbBasers = map[DriverType]dbBaser{
 		DRMySQL:    newdbBaseMysql(),
@@ -118,33 +120,77 @@ func (d *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error) 
 	return d.DB.BeginTx(ctx, opts)
 }
 
-func (d *DB) getStmt(query string) (*sql.Stmt, error) {
+// getStmt try to create a Stmt instance
+// 1. user allow caching the Stmt, we will read from d.stmts firstly
+// 2. user allow caching the Stmt but there are too many stmts, we will not cache new stmt
+// 3. user does not allow caching Stmt, we create instance
+// the bool indicates whether Stmt has been cached. If the stmt is not cached, don't forget to Close it.
+// for example:
+// stmt, err, cached := getStmt(xxx)
+// if !cached {
+//   defer stmt.Close()
+// }
+func (d *DB) getStmt(query string) (*sql.Stmt, bool, error) {
+
+	// user does not allow caching the query
+	if beego.BConfig.OrmConfig.StmtCacheSize <= 0 {
+		stmt, err := d.Prepare(query)
+		return stmt, false, err
+	}
+
 	d.RLock()
 	c, ok := d.stmts[query]
-	d.RUnlock()
 	if ok {
-		return c, nil
+		d.RUnlock()
+		return c, true, nil
 	}
+
+	// it means that we can not cache more statement, so we just create statement and return
+	if len(d.stmts) >= beego.BConfig.OrmConfig.StmtCacheSize {
+		d.RUnlock()
+		stmt, err := d.Prepare(query)
+		return stmt, false, err
+	}
+	d.RUnlock()
 
 	d.Lock()
 	c, ok = d.stmts[query]
 	if ok {
 		d.Unlock()
-		return c, nil
+		return c, true, nil
 	}
 
 	stmt, err := d.Prepare(query)
 	if err != nil {
 		d.Unlock()
-		return nil, err
+		return nil, false, err
 	}
-	d.stmts[query] = stmt
+
+	cached := false
+	if len(d.stmts) < beego.BConfig.OrmConfig.StmtCacheSize {
+		d.stmts[query] = stmt
+		cached = true
+	}
 	d.Unlock()
-	return stmt, nil
+	return stmt, cached, nil
 }
 
 func (d *DB) Prepare(query string) (*sql.Stmt, error) {
 	return d.DB.Prepare(query)
+}
+
+// ClearCacheStmts will close all cached statement
+// Think twice when you decide to invoke this method
+// In general, only when you shut down the application
+// or close the DB session
+// you should invoke this method.
+func (d *DB) ClearCacheStmts() {
+	d.Lock()
+	for _, stmt := range d.stmts {
+		_ = stmt.Close()
+	}
+	d.stmts = make(map[string]*sql.Stmt)
+	d.Unlock()
 }
 
 func (d *DB) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
@@ -152,41 +198,60 @@ func (d *DB) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error
 }
 
 func (d *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
-	stmt, err := d.getStmt(query)
+	stmt, cached, err := d.getStmt(query)
 	if err != nil {
 		return nil, err
 	}
+
+	if !cached {
+		defer stmt.Close()
+	}
+
 	return stmt.Exec(args...)
 }
 
 func (d *DB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
-	stmt, err := d.getStmt(query)
+	stmt, cached, err := d.getStmt(query)
 	if err != nil {
 		return nil, err
+	}
+	if !cached {
+		defer stmt.Close()
 	}
 	return stmt.ExecContext(ctx, args...)
 }
 
 func (d *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
-	stmt, err := d.getStmt(query)
+	stmt, cached, err := d.getStmt(query)
 	if err != nil {
 		return nil, err
+	}
+
+	if !cached {
+		defer stmt.Close()
 	}
 	return stmt.Query(args...)
 }
 
 func (d *DB) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
-	stmt, err := d.getStmt(query)
+	stmt, cached, err := d.getStmt(query)
 	if err != nil {
 		return nil, err
+	}
+
+	if !cached {
+		defer stmt.Close()
 	}
 	return stmt.QueryContext(ctx, args...)
 }
 
 func (d *DB) QueryRow(query string, args ...interface{}) *sql.Row {
-	stmt, err := d.getStmt(query)
+	stmt, cached, err := d.getStmt(query)
 	if err != nil {
 		panic(err)
+	}
+	if !cached {
+		defer stmt.Close()
 	}
 	return stmt.QueryRow(args...)
 
@@ -194,9 +259,13 @@ func (d *DB) QueryRow(query string, args ...interface{}) *sql.Row {
 
 func (d *DB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
 
-	stmt, err := d.getStmt(query)
+	stmt, cached, err := d.getStmt(query)
 	if err != nil {
 		panic(err)
+	}
+
+	if !cached {
+		defer stmt.Close()
 	}
 	return stmt.QueryRowContext(ctx, args)
 }

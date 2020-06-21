@@ -25,6 +25,7 @@ require (
 	github.com/prometheus/client_golang v1.7.0
 	github.com/shiena/ansicolor v0.0.0-20151119151921-a422bbe96644
 	github.com/ssdb/gossdb v0.0.0-20180723034631-88f6b59b84ec
+	github.com/stretchr/testify v1.4.0
 	github.com/syndtr/goleveldb v0.0.0-20181127023241-353a9fca669c // indirect
 	github.com/wendal/errors v0.0.0-20130201093226-f66c77a7882b // indirect
 	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
