@@ -559,9 +559,9 @@ func NewOrmWithDB(driverName, aliasName string, db *sql.DB) (Ormer, error) {
 	al.Name = aliasName
 	al.DriverName = driverName
 	al.DB = &DB{
-		RWMutex: new(sync.RWMutex),
-		DB:      db,
-		stmts:   make(map[string]*sql.Stmt),
+		RWMutex:        new(sync.RWMutex),
+		DB:             db,
+		stmtDecorators: newStmtDecoratorLruWithEvict(),
 	}
 
 	detectTZ(al)
