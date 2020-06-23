@@ -10,7 +10,7 @@ require (
 	github.com/couchbase/go-couchbase v0.0.0-20200519150804-63f3cdb75e0d
 	github.com/couchbase/gomemcached v0.0.0-20200526233749-ec430f949808 // indirect
 	github.com/couchbase/goutils v0.0.0-20180530154633-e865a1461c8a // indirect
-	github.com/elastic/go-elasticsearch/v6 v6.8.5 // indirect
+	github.com/elastic/go-elasticsearch/v6 v6.8.5
 	github.com/elazarl/go-bindata-assetfs v1.0.0
 	github.com/go-redis/redis v6.14.2+incompatible
 	github.com/go-sql-driver/mysql v1.4.1

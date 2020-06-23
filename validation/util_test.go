@@ -24,7 +24,7 @@ type user struct {
 	ID    int
 	Tag   string `valid:"Maxx(aa)"`
 	Name  string `valid:"Required;"`
-	Age   int    `valid:"Required;Range(1, 140)"`
+	Age   int    `valid:"Required; Range(1, 140)"`
 	match string `valid:"Required; Match(/^(test)?\\w*@(/test/);com$/);Max(2)"`
 }
 
@@ -83,8 +83,8 @@ func TestGetValidFuncs(t *testing.T) {
 
 type User struct {
 	Name string `valid:"Required;MaxSize(5)" `
-	Sex  string `valid:"Required;"label:"sex_label"`
-	Age  int    `valid:"Required;Range(1, 140);"label:"age_label"`
+	Sex  string `valid:"Required;" label:"sex_label"`
+	Age  int    `valid:"Required;Range(1, 140);" label:"age_label"`
 }
 
 func TestValidation(t *testing.T) {
