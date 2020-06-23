@@ -359,6 +359,10 @@ RESTART_LOGGER:
 
 func (w *fileLogWriter) deleteOldLog() {
 	dir := filepath.Dir(w.Filename)
+	absolutePath, err := filepath.EvalSymlinks(w.Filename)
+	if err == nil {
+		dir = filepath.Dir(absolutePath)
+	}
 	filepath.Walk(dir, func(path string, info os.FileInfo, err error) (returnErr error) {
 		defer func() {
 			if r := recover(); r != nil {
