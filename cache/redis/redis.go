@@ -151,6 +151,7 @@ func (rc *Cache) ClearAll() error {
 	return err
 }
 
+// Scan scan all keys matching the pattern. a better choice than `keys`
 func (rc *Cache) Scan(pattern string) (keys []string, err error) {
 	c := rc.p.Get()
 	defer c.Close()
