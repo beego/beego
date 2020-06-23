@@ -443,8 +443,10 @@ func (s *stmtDecorator) release() {
 
 //garbage recycle for stmt
 func (s *stmtDecorator) destroy() {
-	s.wg.Wait()
-	_ = s.stmt.Close()
+	go func() {
+		s.wg.Wait()
+		_ = s.stmt.Close()
+	}()
 }
 
 func newStmtDecorator(sqlStmt *sql.Stmt) *stmtDecorator {
