@@ -33,7 +33,7 @@ type bounds struct {
 // The bounds for each field.
 var (
 	AdminTaskList map[string]Tasker
-	taskLock      sync.Mutex
+	taskLock      sync.RWMutex
 	stop          chan bool
 	changed       chan bool
 	isstart       bool
@@ -408,7 +408,10 @@ func run() {
 	}
 
 	for {
+		// we only use RLock here because NewMapSorter copy the reference, do not change any thing
+		taskLock.RLock()
 		sortList := NewMapSorter(AdminTaskList)
+		taskLock.RUnlock()
 		sortList.Sort()
 		var effective time.Time
 		if len(AdminTaskList) == 0 || sortList.Vals[0].GetNext().IsZero() {
@@ -432,9 +435,11 @@ func run() {
 			continue
 		case <-changed:
 			now = time.Now().Local()
+			taskLock.Lock()
 			for _, t := range AdminTaskList {
 				t.SetNext(now)
 			}
+			taskLock.Unlock()
 			continue
 		case <-stop:
 			return
