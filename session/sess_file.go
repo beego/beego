@@ -129,8 +129,9 @@ func (fp *FileProvider) SessionInit(maxlifetime int64, savePath string) error {
 // if file is not exist, create it.
 // the file path is generated from sid string.
 func (fp *FileProvider) SessionRead(sid string) (Store, error) {
-	if strings.ContainsAny(sid, "./") {
-		return nil, nil
+	invalidChars := "./"
+	if strings.ContainsAny(sid, invalidChars) {
+		return nil, errors.New("the sid shouldn't have following characters: " + invalidChars)
 	}
 	if len(sid) < 2 {
 		return nil, errors.New("length of the sid is less than 2")
