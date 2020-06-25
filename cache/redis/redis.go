@@ -33,7 +33,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/gomodule/redigo/redis"
@@ -47,6 +49,10 @@ var (
 	DefaultKey = "beecacheRedis"
 )
 
+const  (
+	retryTimes = 3
+)
+
 // Cache is Redis cache adapter.
 type Cache struct {
 	p        *redis.Pool // redis connection pool
@@ -55,6 +61,10 @@ type Cache struct {
 	key      string
 	password string
 	maxIdle  int
+
+	maybeEOF bool
+
+	sync.RWMutex
 }
 
 // NewRedisCache create new redis cache with default collection name.
@@ -71,7 +81,28 @@ func (rc *Cache) do(commandName string, args ...interface{}) (reply interface{},
 	c := rc.p.Get()
 	defer c.Close()
 
-	return c.Do(commandName, args...)
+	rc.RLock()
+	tryMax := 1
+	if rc.maybeEOF {
+		tryMax = 1
+	} else {
+		tryMax = retryTimes
+	}
+	rc.RUnlock()
+
+	rc.Lock()
+	for i := 1; i <= tryMax; i++ {
+		reply, err = c.Do(commandName, args...)
+		if err == io.EOF {
+			rc.maybeEOF = true
+			continue
+		} else {
+			rc.maybeEOF = false
+			break
+		}
+	}
+	rc.Unlock()
+	return
 }
 
 // associate with config key.
