@@ -470,7 +470,7 @@ func (d *dbBase) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []s
 
 	multi := len(values) / len(names)
 
-	if isMulti {
+	if isMulti && multi > 1 {
 		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
 	}
 
