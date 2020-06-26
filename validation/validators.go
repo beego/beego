@@ -16,9 +16,11 @@ package validation
 
 import (
 	"fmt"
+	"github.com/astaxie/beego/logs"
 	"reflect"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 	"unicode/utf8"
 )
@@ -57,6 +59,8 @@ var MessageTmpls = map[string]string{
 	"ZipCode":      "Must be valid zipcode",
 }
 
+var once sync.Once
+
 // SetDefaultMessage set default messages
 // if not set, the default messages are
 //  "Required":     "Can not be empty",
@@ -84,9 +88,12 @@ func SetDefaultMessage(msg map[string]string) {
 		return
 	}
 
-	for name := range msg {
-		MessageTmpls[name] = msg[name]
-	}
+	once.Do(func() {
+		for name := range msg {
+			MessageTmpls[name] = msg[name]
+		}
+	})
+	logs.Warn(`you must SetDefaultMessage at once`)
 }
 
 // Validator interface
