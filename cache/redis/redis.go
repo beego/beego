@@ -55,6 +55,9 @@ type Cache struct {
 	key      string
 	password string
 	maxIdle  int
+
+	//the timeout to a value less than the redis server's timeout.
+	timeout  time.Duration
 }
 
 // NewRedisCache create new redis cache with default collection name.
@@ -211,11 +214,20 @@ func (rc *Cache) StartAndGC(config string) error {
 	if _, ok := cf["maxIdle"]; !ok {
 		cf["maxIdle"] = "3"
 	}
+	if _, ok := cf["timeout"]; !ok {
+		cf["timeout"] = "180s"
+	}
 	rc.key = cf["key"]
 	rc.conninfo = cf["conn"]
 	rc.dbNum, _ = strconv.Atoi(cf["dbNum"])
 	rc.password = cf["password"]
 	rc.maxIdle, _ = strconv.Atoi(cf["maxIdle"])
+
+	if v, err := time.ParseDuration(cf["timeout"]); err == nil {
+		rc.timeout = v
+	} else {
+		rc.timeout = 180 * time.Second
+	}
 
 	rc.connectInit()
 
@@ -250,7 +262,7 @@ func (rc *Cache) connectInit() {
 	// initialize a new pool
 	rc.p = &redis.Pool{
 		MaxIdle:     rc.maxIdle,
-		IdleTimeout: 180 * time.Second,
+		IdleTimeout: rc.timeout,
 		Dial:        dialFunc,
 	}
 }
