@@ -60,8 +60,8 @@ func (el *esLogger) WriteMsg(when time.Time, msg string, level int) error {
 	}
 
 	idx := LogDocument{
-		timestamp: when.Format(time.RFC3339),
-		msg:       msg,
+		Timestamp: when.Format(time.RFC3339),
+		Msg:       msg,
 	}
 
 	body, err := json.Marshal(idx)
@@ -87,8 +87,8 @@ func (el *esLogger) Flush() {
 }
 
 type LogDocument struct {
-	timestamp string
-	msg       string
+	Timestamp string `json:"timestamp"`
+	Msg       string `json:"msg"`
 }
 
 func init() {
