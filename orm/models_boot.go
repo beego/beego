@@ -18,6 +18,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"runtime/debug"
 	"strings"
 )
 
@@ -298,6 +299,7 @@ func bootStrap() {
 end:
 	if err != nil {
 		fmt.Println(err)
+		debug.PrintStack()
 		os.Exit(2)
 	}
 }

@@ -129,8 +129,9 @@ func (fp *FileProvider) SessionInit(maxlifetime int64, savePath string) error {
 // if file is not exist, create it.
 // the file path is generated from sid string.
 func (fp *FileProvider) SessionRead(sid string) (Store, error) {
-	if strings.ContainsAny(sid, "./") {
-		return nil, nil
+	invalidChars := "./"
+	if strings.ContainsAny(sid, invalidChars) {
+		return nil, errors.New("the sid shouldn't have following characters: " + invalidChars)
 	}
 	if len(sid) < 2 {
 		return nil, errors.New("length of the sid is less than 2")
@@ -138,7 +139,7 @@ func (fp *FileProvider) SessionRead(sid string) (Store, error) {
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()
 
-	err := os.MkdirAll(path.Join(fp.savePath, string(sid[0]), string(sid[1])), 0777)
+	err := os.MkdirAll(path.Join(fp.savePath, string(sid[0]), string(sid[1])), 0755)
 	if err != nil {
 		SLogger.Println(err.Error())
 	}
@@ -231,7 +232,7 @@ func (fp *FileProvider) SessionRegenerate(oldsid, sid string) (Store, error) {
 		return nil, fmt.Errorf("newsid %s exist", newSidFile)
 	}
 
-	err = os.MkdirAll(newPath, 0777)
+	err = os.MkdirAll(newPath, 0755)
 	if err != nil {
 		SLogger.Println(err.Error())
 	}

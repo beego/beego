@@ -46,7 +46,10 @@ func (srv *Server) Serve() (err error) {
 
 	log.Println(syscall.Getpid(), srv.ln.Addr(), "Listener closed.")
 	// wait for Shutdown to return
-	return <-srv.terminalChan
+	if shutdownErr := <-srv.terminalChan; shutdownErr != nil {
+		return shutdownErr
+	}
+	return
 }
 
 // ListenAndServe listens on the TCP network address srv.Addr and then calls Serve
@@ -180,7 +183,7 @@ func (srv *Server) ListenAndServeMutualTLS(certFile, keyFile, trustFile string) 
 			log.Println(err)
 			return err
 		}
-		err = process.Kill()
+		err = process.Signal(syscall.SIGTERM)
 		if err != nil {
 			return err
 		}

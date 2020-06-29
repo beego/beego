@@ -131,6 +131,8 @@ var (
 	appConfigPath string
 	// appConfigProvider is the provider for the config, default is ini
 	appConfigProvider = "ini"
+	// WorkPath is the absolute path to project root directory
+	WorkPath string
 )
 
 func init() {
@@ -139,7 +141,7 @@ func init() {
 	if AppPath, err = filepath.Abs(filepath.Dir(os.Args[0])); err != nil {
 		panic(err)
 	}
-	workPath, err := os.Getwd()
+	WorkPath, err = os.Getwd()
 	if err != nil {
 		panic(err)
 	}
@@ -147,7 +149,7 @@ func init() {
 	if os.Getenv("BEEGO_RUNMODE") != "" {
 		filename = os.Getenv("BEEGO_RUNMODE") + ".app.conf"
 	}
-	appConfigPath = filepath.Join(workPath, "conf", filename)
+	appConfigPath = filepath.Join(WorkPath, "conf", filename)
 	if !utils.FileExists(appConfigPath) {
 		appConfigPath = filepath.Join(AppPath, "conf", filename)
 		if !utils.FileExists(appConfigPath) {
@@ -420,9 +422,9 @@ func newAppConfig(appConfigProvider, appConfigPath string) (*beegoAppConfig, err
 
 func (b *beegoAppConfig) Set(key, val string) error {
 	if err := b.innerConfig.Set(BConfig.RunMode+"::"+key, val); err != nil {
-		return err
+		return b.innerConfig.Set(key, val)
 	}
-	return b.innerConfig.Set(key, val)
+	return nil
 }
 
 func (b *beegoAppConfig) String(key string) string {
