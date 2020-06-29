@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"os"
 	"path"
 	"path/filepath"
 	"reflect"
@@ -119,6 +120,10 @@ type ControllerInfo struct {
 	routerType     int
 	initialize     func() ControllerInterface
 	methodParams   []*param.MethodParam
+}
+
+func (c *ControllerInfo) GetPattern() string {
+	return c.pattern
 }
 
 // ControllerRegister containers registered router rules, controller handlers and filters.
@@ -249,25 +254,39 @@ func (p *ControllerRegister) addToRouter(method, pattern string, r *ControllerIn
 func (p *ControllerRegister) Include(cList ...ControllerInterface) {
 	if BConfig.RunMode == DEV {
 		skip := make(map[string]bool, 10)
+		wgopath := utils.GetGOPATHs()
+		go111module := os.Getenv(`GO111MODULE`)
 		for _, c := range cList {
 			reflectVal := reflect.ValueOf(c)
 			t := reflect.Indirect(reflectVal).Type()
-			wgopath := utils.GetGOPATHs()
-			if len(wgopath) == 0 {
-				panic("you are in dev mode. So please set gopath")
-			}
-			pkgpath := ""
-			for _, wg := range wgopath {
-				wg, _ = filepath.EvalSymlinks(filepath.Join(wg, "src", t.PkgPath()))
-				if utils.FileExists(wg) {
-					pkgpath = wg
-					break
+			// for go modules
+			if go111module == `on` {
+				pkgpath := filepath.Join(WorkPath, "..", t.PkgPath())
+				if utils.FileExists(pkgpath) {
+					if pkgpath != "" {
+						if _, ok := skip[pkgpath]; !ok {
+							skip[pkgpath] = true
+							parserPkg(pkgpath, t.PkgPath())
+						}
+					}
 				}
-			}
-			if pkgpath != "" {
-				if _, ok := skip[pkgpath]; !ok {
-					skip[pkgpath] = true
-					parserPkg(pkgpath, t.PkgPath())
+			} else {
+				if len(wgopath) == 0 {
+					panic("you are in dev mode. So please set gopath")
+				}
+				pkgpath := ""
+				for _, wg := range wgopath {
+					wg, _ = filepath.EvalSymlinks(filepath.Join(wg, "src", t.PkgPath()))
+					if utils.FileExists(wg) {
+						pkgpath = wg
+						break
+					}
+				}
+				if pkgpath != "" {
+					if _, ok := skip[pkgpath]; !ok {
+						skip[pkgpath] = true
+						parserPkg(pkgpath, t.PkgPath())
+					}
 				}
 			}
 		}
@@ -286,6 +305,21 @@ func (p *ControllerRegister) Include(cList ...ControllerInterface) {
 			}
 		}
 	}
+}
+
+// GetContext returns a context from pool, so usually you should remember to call Reset function to clean the context
+// And don't forget to give back context to pool
+// example:
+//  ctx := p.GetContext()
+//  ctx.Reset(w, q)
+//  defer p.GiveBackContext(ctx)
+func (p *ControllerRegister) GetContext() *beecontext.Context {
+	return p.pool.Get().(*beecontext.Context)
+}
+
+// GiveBackContext put the ctx into pool so that it could be reuse
+func (p *ControllerRegister) GiveBackContext(ctx *beecontext.Context) {
+	p.pool.Put(ctx)
 }
 
 // Get add get method
@@ -667,10 +701,11 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		routerInfo   *ControllerInfo
 		isRunnable   bool
 	)
-	context := p.pool.Get().(*beecontext.Context)
+	context := p.GetContext()
+
 	context.Reset(rw, r)
 
-	defer p.pool.Put(context)
+	defer p.GiveBackContext(context)
 	if BConfig.RecoverFunc != nil {
 		defer BConfig.RecoverFunc(context)
 	}
@@ -739,7 +774,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		routerInfo, findRouter = p.FindRouter(context)
 	}
 
-	//if no matches to url, throw a not found exception
+	// if no matches to url, throw a not found exception
 	if !findRouter {
 		exception("404", context)
 		goto Admin
@@ -750,19 +785,22 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		}
 	}
 
-	//execute middleware filters
+	if routerInfo != nil {
+		// store router pattern into context
+		context.Input.SetData("RouterPattern", routerInfo.pattern)
+	}
+
+	// execute middleware filters
 	if len(p.filters[BeforeExec]) > 0 && p.execFilter(context, urlPath, BeforeExec) {
 		goto Admin
 	}
 
-	//check policies
+	// check policies
 	if p.execPolicy(context, urlPath) {
 		goto Admin
 	}
 
 	if routerInfo != nil {
-		//store router pattern into context
-		context.Input.SetData("RouterPattern", routerInfo.pattern)
 		if routerInfo.routerType == routerTypeRESTFul {
 			if _, ok := routerInfo.methods[r.Method]; ok {
 				isRunnable = true
@@ -796,7 +834,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	// also defined runRouter & runMethod from filter
 	if !isRunnable {
-		//Invoke the request handler
+		// Invoke the request handler
 		var execController ControllerInterface
 		if routerInfo != nil && routerInfo.initialize != nil {
 			execController = routerInfo.initialize()
@@ -809,13 +847,13 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			}
 		}
 
-		//call the controller init function
+		// call the controller init function
 		execController.Init(context, runRouter.Name(), runMethod, execController)
 
-		//call prepare function
+		// call prepare function
 		execController.Prepare()
 
-		//if XSRF is Enable then check cookie where there has any cookie in the  request's cookie _csrf
+		// if XSRF is Enable then check cookie where there has any cookie in the  request's cookie _csrf
 		if BConfig.WebConfig.EnableXSRF {
 			execController.XSRFToken()
 			if r.Method == http.MethodPost || r.Method == http.MethodDelete || r.Method == http.MethodPut ||
@@ -827,7 +865,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		execController.URLMapping()
 
 		if !context.ResponseWriter.Started {
-			//exec main logic
+			// exec main logic
 			switch runMethod {
 			case http.MethodGet:
 				execController.Get()
@@ -852,14 +890,14 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 					in := param.ConvertParams(methodParams, method.Type(), context)
 					out := method.Call(in)
 
-					//For backward compatibility we only handle response if we had incoming methodParams
+					// For backward compatibility we only handle response if we had incoming methodParams
 					if methodParams != nil {
 						p.handleParamResponse(context, execController, out)
 					}
 				}
 			}
 
-			//render template
+			// render template
 			if !context.ResponseWriter.Started && context.Output.Status == 0 {
 				if BConfig.WebConfig.AutoRender {
 					if err := execController.Render(); err != nil {
@@ -873,7 +911,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 		execController.Finish()
 	}
 
-	//execute middleware filters
+	// execute middleware filters
 	if len(p.filters[AfterExec]) > 0 && p.execFilter(context, urlPath, AfterExec) {
 		goto Admin
 	}
@@ -883,7 +921,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 	}
 
 Admin:
-	//admin module record QPS
+	// admin module record QPS
 
 	statusCode := context.ResponseWriter.Status
 	if statusCode == 0 {
@@ -931,7 +969,7 @@ Admin:
 }
 
 func (p *ControllerRegister) handleParamResponse(context *beecontext.Context, execController ControllerInterface, results []reflect.Value) {
-	//looping in reverse order for the case when both error and value are returned and error sets the response status code
+	// looping in reverse order for the case when both error and value are returned and error sets the response status code
 	for i := len(results) - 1; i >= 0; i-- {
 		result := results[i]
 		if result.Kind() != reflect.Interface || !result.IsNil() {
@@ -973,11 +1011,11 @@ func toURL(params map[string]string) string {
 
 // LogAccess logging info HTTP Access
 func LogAccess(ctx *beecontext.Context, startTime *time.Time, statusCode int) {
-	//Skip logging if AccessLogs config is false
+	// Skip logging if AccessLogs config is false
 	if !BConfig.Log.AccessLogs {
 		return
 	}
-	//Skip logging static requests unless EnableStaticLogs config is true
+	// Skip logging static requests unless EnableStaticLogs config is true
 	if !BConfig.Log.EnableStaticLogs && DefaultAccessLogFilter.Filter(ctx) {
 		return
 	}
@@ -1002,7 +1040,7 @@ func LogAccess(ctx *beecontext.Context, startTime *time.Time, statusCode int) {
 		HTTPReferrer:   r.Header.Get("Referer"),
 		HTTPUserAgent:  r.Header.Get("User-Agent"),
 		RemoteUser:     r.Header.Get("Remote-User"),
-		BodyBytesSent:  0, //@todo this one is missing!
+		BodyBytesSent:  0, // @todo this one is missing!
 	}
 	logs.AccessLog(record, BConfig.Log.AccessLogsFormat)
 }

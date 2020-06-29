@@ -55,6 +55,9 @@ type Cache struct {
 	key      string
 	password string
 	maxIdle  int
+
+	//the timeout to a value less than the redis server's timeout.
+	timeout  time.Duration
 }
 
 // NewRedisCache create new redis cache with default collection name.
@@ -137,18 +140,47 @@ func (rc *Cache) Decr(key string) error {
 
 // ClearAll clean all cache in redis. delete this redis collection.
 func (rc *Cache) ClearAll() error {
-	c := rc.p.Get()
-	defer c.Close()
-	cachedKeys, err := redis.Strings(c.Do("KEYS", rc.key+":*"))
+	cachedKeys, err := rc.Scan(rc.key + ":*")
 	if err != nil {
 		return err
 	}
+	c := rc.p.Get()
+	defer c.Close()
 	for _, str := range cachedKeys {
 		if _, err = c.Do("DEL", str); err != nil {
 			return err
 		}
 	}
 	return err
+}
+
+// Scan scan all keys matching the pattern. a better choice than `keys`
+func (rc *Cache) Scan(pattern string) (keys []string, err error) {
+	c := rc.p.Get()
+	defer c.Close()
+	var (
+		cursor uint64 = 0 // start
+		result []interface{}
+		list   []string
+	)
+	for {
+		result, err = redis.Values(c.Do("SCAN", cursor, "MATCH", pattern, "COUNT", 1024))
+		if err != nil {
+			return
+		}
+		list, err = redis.Strings(result[1], nil)
+		if err != nil {
+			return
+		}
+		keys = append(keys, list...)
+		cursor, err = redis.Uint64(result[0], nil)
+		if err != nil {
+			return
+		}
+		if cursor == 0 { // over
+			return
+		}
+	}
 }
 
 // StartAndGC start redis cache adapter.
@@ -182,11 +214,20 @@ func (rc *Cache) StartAndGC(config string) error {
 	if _, ok := cf["maxIdle"]; !ok {
 		cf["maxIdle"] = "3"
 	}
+	if _, ok := cf["timeout"]; !ok {
+		cf["timeout"] = "180s"
+	}
 	rc.key = cf["key"]
 	rc.conninfo = cf["conn"]
 	rc.dbNum, _ = strconv.Atoi(cf["dbNum"])
 	rc.password = cf["password"]
 	rc.maxIdle, _ = strconv.Atoi(cf["maxIdle"])
+
+	if v, err := time.ParseDuration(cf["timeout"]); err == nil {
+		rc.timeout = v
+	} else {
+		rc.timeout = 180 * time.Second
+	}
 
 	rc.connectInit()
 
@@ -221,7 +262,7 @@ func (rc *Cache) connectInit() {
 	// initialize a new pool
 	rc.p = &redis.Pool{
 		MaxIdle:     rc.maxIdle,
-		IdleTimeout: 180 * time.Second,
+		IdleTimeout: rc.timeout,
 		Dial:        dialFunc,
 	}
 }
