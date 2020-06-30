@@ -33,6 +33,8 @@ Congratulations! You've just built your first **beego** app.
 
 ###### Please see [Documentation](http://beego.me/docs) for more.
 
+###### [beego-example](https://github.com/beego-dev/beego-example)
+
 ## Features
 
 * RESTful support

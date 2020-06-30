@@ -23,6 +23,12 @@ func NewES() logs.Logger {
 	return cw
 }
 
+// esLogger will log msg into ES
+// before you using this implementation,
+// please import this package
+// usually means that you can import this package in your main package
+// for example, anonymous:
+// import _ "github.com/astaxie/beego/logs/es"
 type esLogger struct {
 	*elasticsearch.Client
 	DSN   string `json:"dsn"`
@@ -43,7 +49,7 @@ func (el *esLogger) Init(jsonconfig string) error {
 		return errors.New("missing prefix")
 	} else {
 		conn, err := elasticsearch.NewClient(elasticsearch.Config{
-			Addresses: []string{u.Host},
+			Addresses: []string{el.DSN},
 		})
 		if err != nil {
 			return err
