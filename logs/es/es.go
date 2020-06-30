@@ -28,7 +28,7 @@ func NewES() logs.Logger {
 // please import this package
 // usually means that you can import this package in your main package
 // for example, anonymous:
-// _ import github.com/astaxie/beego/logs/es
+// import _ github.com/astaxie/beego/logs/es
 type esLogger struct {
 	*elasticsearch.Client
 	DSN   string `json:"dsn"`
