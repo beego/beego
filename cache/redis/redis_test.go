@@ -15,6 +15,7 @@
 package redis
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -102,5 +103,42 @@ func TestRedisCache(t *testing.T) {
 	// test clear all
 	if err = bm.ClearAll(); err != nil {
 		t.Error("clear all err")
+	}
+}
+
+func TestCache_Scan(t *testing.T) {
+	timeoutDuration := 10 * time.Second
+	// init
+	bm, err := cache.NewCache("redis", `{"conn": "127.0.0.1:6379"}`)
+	if err != nil {
+		t.Error("init err")
+	}
+	// insert all
+	for i := 0; i < 10000; i++ {
+		if err = bm.Put(fmt.Sprintf("astaxie%d", i), fmt.Sprintf("author%d", i), timeoutDuration); err != nil {
+			t.Error("set Error", err)
+		}
+	}
+	// scan all for the first time
+	keys, err := bm.(*Cache).Scan(DefaultKey + ":*")
+	if err != nil {
+		t.Error("scan Error", err)
+	}
+	if len(keys) != 10000 {
+		t.Error("scan all err")
+	}
+
+	// clear all
+	if err = bm.ClearAll(); err != nil {
+		t.Error("clear all err")
+	}
+
+	// scan all for the second time
+	keys, err = bm.(*Cache).Scan(DefaultKey + ":*")
+	if err != nil {
+		t.Error("scan Error", err)
+	}
+	if len(keys) != 0 {
+		t.Error("scan all err")
 	}
 }

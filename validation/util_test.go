@@ -15,6 +15,7 @@
 package validation
 
 import (
+	"log"
 	"reflect"
 	"testing"
 )
@@ -23,7 +24,7 @@ type user struct {
 	ID    int
 	Tag   string `valid:"Maxx(aa)"`
 	Name  string `valid:"Required;"`
-	Age   int    `valid:"Required;Range(1, 140)"`
+	Age   int    `valid:"Required; Range(1, 140)"`
 	match string `valid:"Required; Match(/^(test)?\\w*@(/test/);com$/);Max(2)"`
 }
 
@@ -42,7 +43,7 @@ func TestGetValidFuncs(t *testing.T) {
 	}
 
 	f, _ = tf.FieldByName("Tag")
-	if _, err = getValidFuncs(f); err.Error() != "doesn't exsits Maxx valid function" {
+	if _, err = getValidFuncs(f); err.Error() != "doesn't exists Maxx valid function" {
 		t.Fatal(err)
 	}
 
@@ -77,6 +78,33 @@ func TestGetValidFuncs(t *testing.T) {
 	}
 	if len(vfs) != 3 {
 		t.Fatal("should get 3 ValidFunc but now is", len(vfs))
+	}
+}
+
+type User struct {
+	Name string `valid:"Required;MaxSize(5)" `
+	Sex  string `valid:"Required;" label:"sex_label"`
+	Age  int    `valid:"Required;Range(1, 140);" label:"age_label"`
+}
+
+func TestValidation(t *testing.T) {
+	u := User{"man1238888456", "", 1140}
+	valid := Validation{}
+	b, err := valid.Valid(&u)
+	if err != nil {
+		// handle error
+	}
+	if !b {
+		// validation does not pass
+		// blabla...
+		for _, err := range valid.Errors {
+			log.Println(err.Key, err.Message)
+		}
+		if len(valid.Errors) != 3 {
+			t.Error("must be has 3 error")
+		}
+	} else {
+		t.Error("must be has 3 error")
 	}
 }
 

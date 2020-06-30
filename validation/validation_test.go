@@ -253,44 +253,68 @@ func TestBase64(t *testing.T) {
 func TestMobile(t *testing.T) {
 	valid := Validation{}
 
-	if valid.Mobile("19800008888", "mobile").Ok {
-		t.Error("\"19800008888\" is a valid mobile phone number should be false")
+	validMobiles := []string{
+		"19800008888",
+		"18800008888",
+		"18000008888",
+		"8618300008888",
+		"+8614700008888",
+		"17300008888",
+		"+8617100008888",
+		"8617500008888",
+		"8617400008888",
+		"16200008888",
+		"16500008888",
+		"16600008888",
+		"16700008888",
+		"13300008888",
+		"14900008888",
+		"15300008888",
+		"17300008888",
+		"17700008888",
+		"18000008888",
+		"18900008888",
+		"19100008888",
+		"19900008888",
+		"19300008888",
+		"13000008888",
+		"13100008888",
+		"13200008888",
+		"14500008888",
+		"15500008888",
+		"15600008888",
+		"16600008888",
+		"17100008888",
+		"17500008888",
+		"17600008888",
+		"18500008888",
+		"18600008888",
+		"13400008888",
+		"13500008888",
+		"13600008888",
+		"13700008888",
+		"13800008888",
+		"13900008888",
+		"14700008888",
+		"15000008888",
+		"15100008888",
+		"15200008888",
+		"15800008888",
+		"15900008888",
+		"17200008888",
+		"17800008888",
+		"18200008888",
+		"18300008888",
+		"18400008888",
+		"18700008888",
+		"18800008888",
+		"19800008888",
 	}
-	if !valid.Mobile("18800008888", "mobile").Ok {
-		t.Error("\"18800008888\" is a valid mobile phone number should be true")
-	}
-	if !valid.Mobile("18000008888", "mobile").Ok {
-		t.Error("\"18000008888\" is a valid mobile phone number should be true")
-	}
-	if !valid.Mobile("8618300008888", "mobile").Ok {
-		t.Error("\"8618300008888\" is a valid mobile phone number should be true")
-	}
-	if !valid.Mobile("+8614700008888", "mobile").Ok {
-		t.Error("\"+8614700008888\" is a valid mobile phone number should be true")
-	}
-	if !valid.Mobile("17300008888", "mobile").Ok {
-		t.Error("\"17300008888\" is a valid mobile phone number should be true")
-	}
-	if !valid.Mobile("+8617100008888", "mobile").Ok {
-		t.Error("\"+8617100008888\" is a valid mobile phone number should be true")
-	}
-	if !valid.Mobile("8617500008888", "mobile").Ok {
-		t.Error("\"8617500008888\" is a valid mobile phone number should be true")
-	}
-	if valid.Mobile("8617400008888", "mobile").Ok {
-		t.Error("\"8617400008888\" is a valid mobile phone number should be false")
-	}
-	if !valid.Mobile("16200008888", "mobile").Ok {
-		t.Error("\"16200008888\" is a valid mobile phone number should be true")
-	}
-	if !valid.Mobile("16500008888", "mobile").Ok {
-		t.Error("\"16500008888\" is a valid mobile phone number should be true")
-	}
-	if !valid.Mobile("16600008888", "mobile").Ok {
-		t.Error("\"16600008888\" is a valid mobile phone number should be true")
-	}
-	if !valid.Mobile("16700008888", "mobile").Ok {
-		t.Error("\"16700008888\" is a valid mobile phone number should be true")
+
+	for _, m := range validMobiles {
+		if !valid.Mobile(m, "mobile").Ok {
+			t.Error(m + " is a valid mobile phone number should be true")
+		}
 	}
 }
 
@@ -381,8 +405,8 @@ func TestValid(t *testing.T) {
 	if len(valid.Errors) != 1 {
 		t.Fatalf("valid errors len should be 1 but got %d", len(valid.Errors))
 	}
-	if valid.Errors[0].Key != "Age.Range" {
-		t.Errorf("Message key should be `Name.Match` but got %s", valid.Errors[0].Key)
+	if valid.Errors[0].Key != "Age.Range." {
+		t.Errorf("Message key should be `Age.Range` but got %s", valid.Errors[0].Key)
 	}
 }
 

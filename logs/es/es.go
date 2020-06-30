@@ -1,14 +1,17 @@
 package es
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"net"
 	"net/url"
+	"strings"
 	"time"
 
-	"github.com/OwnLocal/goes"
+	"github.com/elastic/go-elasticsearch/v6"
+	"github.com/elastic/go-elasticsearch/v6/esapi"
+
 	"github.com/astaxie/beego/logs"
 )
 
@@ -20,8 +23,14 @@ func NewES() logs.Logger {
 	return cw
 }
 
+// esLogger will log msg into ES
+// before you using this implementation,
+// please import this package
+// usually means that you can import this package in your main package
+// for example, anonymous:
+// import _ "github.com/astaxie/beego/logs/es"
 type esLogger struct {
-	*goes.Client
+	*elasticsearch.Client
 	DSN   string `json:"dsn"`
 	Level int    `json:"level"`
 }
@@ -38,10 +47,13 @@ func (el *esLogger) Init(jsonconfig string) error {
 		return err
 	} else if u.Path == "" {
 		return errors.New("missing prefix")
-	} else if host, port, err := net.SplitHostPort(u.Host); err != nil {
-		return err
 	} else {
-		conn := goes.NewClient(host, port)
+		conn, err := elasticsearch.NewClient(elasticsearch.Config{
+			Addresses: []string{el.DSN},
+		})
+		if err != nil {
+			return err
+		}
 		el.Client = conn
 	}
 	return nil
@@ -53,21 +65,26 @@ func (el *esLogger) WriteMsg(when time.Time, msg string, level int) error {
 		return nil
 	}
 
-	vals := make(map[string]interface{})
-	vals["@timestamp"] = when.Format(time.RFC3339)
-	vals["@msg"] = msg
-	d := goes.Document{
-		Index:  fmt.Sprintf("%04d.%02d.%02d", when.Year(), when.Month(), when.Day()),
-		Type:   "logs",
-		Fields: vals,
+	idx := LogDocument{
+		Timestamp: when.Format(time.RFC3339),
+		Msg:       msg,
 	}
-	_, err := el.Index(d, nil)
+
+	body, err := json.Marshal(idx)
+	if err != nil {
+		return err
+	}
+	req := esapi.IndexRequest{
+		Index:        fmt.Sprintf("%04d.%02d.%02d", when.Year(), when.Month(), when.Day()),
+		DocumentType: "logs",
+		Body:         strings.NewReader(string(body)),
+	}
+	_, err = req.Do(context.Background(), el.Client)
 	return err
 }
 
 // Destroy is a empty method
 func (el *esLogger) Destroy() {
-
 }
 
 // Flush is a empty method
@@ -75,7 +92,11 @@ func (el *esLogger) Flush() {
 
 }
 
+type LogDocument struct {
+	Timestamp string `json:"timestamp"`
+	Msg       string `json:"msg"`
+}
+
 func init() {
 	logs.Register(logs.AdapterEs, NewES)
 }
-

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	"compress/zlib"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
@@ -53,6 +54,31 @@ func TestOpenStaticFileDeflate_1(t *testing.T) {
 	testOpenFile("deflate", content, t)
 }
 
+func TestStaticCacheWork(t *testing.T) {
+	encodings := []string{"", "gzip", "deflate"}
+
+	fi, _ := os.Stat(licenseFile)
+	for _, encoding := range encodings {
+		_, _, first, _, err := openFile(licenseFile, fi, encoding)
+		if err != nil {
+			t.Error(err)
+			continue
+		}
+
+		_, _, second, _, err := openFile(licenseFile, fi, encoding)
+		if err != nil {
+			t.Error(err)
+			continue
+		}
+
+		address1 := fmt.Sprintf("%p", first)
+		address2 := fmt.Sprintf("%p", second)
+		if address1 != address2 {
+			t.Errorf("encoding '%v' can not hit cache", encoding)
+		}
+	}
+}
+
 func assetOpenFileAndContent(sch *serveContentHolder, reader *serveContentReader, content []byte, t *testing.T) {
 	t.Log(sch.size, len(content))
 	if sch.size != int64(len(content)) {
@@ -66,7 +92,7 @@ func assetOpenFileAndContent(sch *serveContentHolder, reader *serveContentReader
 			t.Fail()
 		}
 	}
-	if len(staticFileMap) == 0 {
+	if staticFileLruCache.Len() == 0 {
 		t.Log("men map is empty")
 		t.Fail()
 	}

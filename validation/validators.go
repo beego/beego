@@ -16,9 +16,11 @@ package validation
 
 import (
 	"fmt"
+	"github.com/astaxie/beego/logs"
 	"reflect"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 	"unicode/utf8"
 )
@@ -57,6 +59,8 @@ var MessageTmpls = map[string]string{
 	"ZipCode":      "Must be valid zipcode",
 }
 
+var once sync.Once
+
 // SetDefaultMessage set default messages
 // if not set, the default messages are
 //  "Required":     "Can not be empty",
@@ -84,9 +88,12 @@ func SetDefaultMessage(msg map[string]string) {
 		return
 	}
 
-	for name := range msg {
-		MessageTmpls[name] = msg[name]
-	}
+	once.Do(func() {
+		for name := range msg {
+			MessageTmpls[name] = msg[name]
+		}
+	})
+	logs.Warn(`you must SetDefaultMessage at once`)
 }
 
 // Validator interface
@@ -632,7 +639,7 @@ func (b Base64) GetLimitValue() interface{} {
 }
 
 // just for chinese mobile phone number
-var mobilePattern = regexp.MustCompile(`^((\+86)|(86))?(1(([35][0-9])|[8][0-9]|[7][01356789]|[4][579]|[6][2567]))\d{8}$`)
+var mobilePattern = regexp.MustCompile(`^((\+86)|(86))?1([356789][0-9]|4[579]|6[67]|7[0135678]|9[189])[0-9]{8}$`)
 
 // Mobile check struct
 type Mobile struct {

@@ -470,7 +470,7 @@ func (d *dbBase) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []s
 
 	multi := len(values) / len(names)
 
-	if isMulti {
+	if isMulti && multi > 1 {
 		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
 	}
 
@@ -770,6 +770,16 @@ func (d *dbBase) UpdateBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 				cols = append(cols, col+" = "+col+" * ?")
 			case ColExcept:
 				cols = append(cols, col+" = "+col+" / ?")
+			case ColBitAnd:
+				cols = append(cols, col+" = "+col+" & ?")
+			case ColBitRShift:
+				cols = append(cols, col+" = "+col+" >> ?")
+			case ColBitLShift:
+				cols = append(cols, col+" = "+col+" << ?")
+			case ColBitXOR:
+				cols = append(cols, col+" = "+col+" ^ ?")
+			case ColBitOr:
+				cols = append(cols, col+" = "+col+" | ?")
 			}
 			values[i] = c.value
 		} else {
