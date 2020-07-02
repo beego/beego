@@ -15,6 +15,7 @@
 package httplib
 
 import (
+	"errors"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -31,6 +32,34 @@ func TestResponse(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(resp)
+}
+
+func TestDoRequest(t *testing.T) {
+	req := Get("https://goolnk.com/33BD2j")
+	retryAmount := 1
+	req.Retries(1)
+	req.RetryDelay(1400 * time.Millisecond)
+	retryDelay := 1400 * time.Millisecond
+
+	req.setting.CheckRedirect = func(redirectReq *http.Request, redirectVia []*http.Request) error {
+		return errors.New("Redirect triggered")
+	}
+
+	startTime := time.Now().UnixNano() / int64(time.Millisecond)
+
+	_, err := req.Response()
+	if err == nil {
+		t.Fatal("Response should have yielded an error")
+	}
+
+	endTime := time.Now().UnixNano() / int64(time.Millisecond)
+	elapsedTime := endTime - startTime
+	delayedTime := int64(retryAmount) * retryDelay.Milliseconds()
+
+	if elapsedTime < delayedTime {
+		t.Errorf("Not enough retries. Took %dms. Delay was meant to take %dms", elapsedTime, delayedTime)
+	}
+
 }
 
 func TestGet(t *testing.T) {
