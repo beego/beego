@@ -144,6 +144,7 @@ type BeegoHTTPSettings struct {
 	Gzip             bool
 	DumpBody         bool
 	Retries          int // if set to -1 means will retry forever
+	RetryDelay       time.Duration
 }
 
 // BeegoHTTPRequest provides more useful methods for requesting one url than http.Request.
@@ -199,6 +200,11 @@ func (b *BeegoHTTPRequest) Debug(isdebug bool) *BeegoHTTPRequest {
 // others means retried times.
 func (b *BeegoHTTPRequest) Retries(times int) *BeegoHTTPRequest {
 	b.setting.Retries = times
+	return b
+}
+
+func (b *BeegoHTTPRequest) RetryDelay(delay time.Duration) *BeegoHTTPRequest {
+	b.setting.RetryDelay = delay
 	return b
 }
 
@@ -512,11 +518,13 @@ func (b *BeegoHTTPRequest) DoRequest() (resp *http.Response, err error) {
 	// retries default value is 0, it will run once.
 	// retries equal to -1, it will run forever until success
 	// retries is setted, it will retries fixed times.
+	// Sleeps for a 400ms inbetween calls to reduce spam
 	for i := 0; b.setting.Retries == -1 || i <= b.setting.Retries; i++ {
 		resp, err = client.Do(b.req)
 		if err == nil {
 			break
 		}
+		time.Sleep(b.setting.RetryDelay)
 	}
 	return resp, err
 }
