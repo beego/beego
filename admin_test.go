@@ -2,10 +2,29 @@ package beego
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+
+	"github.com/astaxie/beego/toolbox"
 )
+
+type SampleDatabaseCheck struct {
+}
+
+type SampleCacheCheck struct {
+}
+
+func (dc *SampleDatabaseCheck) Check() error {
+	return nil
+}
+
+func (cc *SampleCacheCheck) Check() error {
+	return errors.New("no cache detected")
+}
 
 func TestList_01(t *testing.T) {
 	m := make(M)
@@ -99,5 +118,59 @@ func TestExecJSON(t *testing.T) {
 		if decodedBody[i] != originalBody[i] {
 			t.Fatalf("Expected %d but got %d in decoded body slice", originalBody[i], decodedBody[i])
 		}
+	}
+}
+
+func TestHealthCheckHandlerDefault(t *testing.T) {
+	endpointPath := "/healthcheck"
+
+	toolbox.AddHealthCheck("database", &SampleDatabaseCheck{})
+	toolbox.AddHealthCheck("cache", &SampleCacheCheck{})
+
+	req, err := http.NewRequest("GET", endpointPath, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	w := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(healthcheck)
+
+	handler.ServeHTTP(w, req)
+
+	if status := w.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
+	if !strings.Contains(w.Body.String(), "database") {
+		t.Errorf("Expected 'database' in generated template.")
+	}
+
+}
+
+func TestHealthCheckHandlerReturnsJSON(t *testing.T) {
+
+	toolbox.AddHealthCheck("database", &SampleDatabaseCheck{})
+	toolbox.AddHealthCheck("cache", &SampleCacheCheck{})
+
+	req, err := http.NewRequest("GET", "/healthcheck?json=true", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	w := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(healthcheck)
+
+	handler.ServeHTTP(w, req)
+	if status := w.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
+
+	expectedResponseBody := `[{"message":"database","name":"success","status":"OK"},{"message":"cache","name":"error","status":"no cache detected"}]`
+	if w.Body.String() != expectedResponseBody {
+		t.Errorf("handler returned unexpected body: got %v want %v",
+			w.Body.String(), expectedResponseBody)
 	}
 }
