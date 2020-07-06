@@ -279,9 +279,7 @@ func profIndex(rw http.ResponseWriter, r *http.Request) {
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
 			return
 		}
-
-		rw.Header().Set("Content-Type", "application/json")
-		rw.Write(dataJSON)
+		execJSON(rw, dataJSON)
 		return
 	}
 
@@ -295,7 +293,7 @@ func profIndex(rw http.ResponseWriter, r *http.Request) {
 
 // Healthcheck is a http.Handler calling health checking and showing the result.
 // it's in "/healthcheck" pattern in admin module.
-func healthcheck(rw http.ResponseWriter, _ *http.Request) {
+func healthcheck(rw http.ResponseWriter, r *http.Request) {
 	var (
 		result     []string
 		data       = make(map[interface{}]interface{})
@@ -322,10 +320,42 @@ func healthcheck(rw http.ResponseWriter, _ *http.Request) {
 		*resultList = append(*resultList, result)
 	}
 
+	queryParams := r.URL.Query()
+
+	if queryParams["json"] != nil {
+
+		type Result map[string]interface{}
+
+		response := make([]Result, len(*resultList))
+
+		for i, currentResult := range *resultList {
+			currentResultMap := make(Result)
+			currentResultMap["name"] = currentResult[0]
+			currentResultMap["message"] = currentResult[1]
+			currentResultMap["status"] = currentResult[2]
+			response[i] = currentResultMap
+		}
+
+		JSONResponse, err := json.Marshal(response)
+		if err != nil {
+			http.Error(rw, err.Error(), http.StatusInternalServerError)
+		} else {
+			execJSON(rw, JSONResponse)
+		}
+
+		return
+	}
+
 	content["Data"] = resultList
 	data["Content"] = content
 	data["Title"] = "Health Check"
+
 	execTpl(rw, data, healthCheckTpl, defaultScriptsTpl)
+}
+
+func execJSON(rw http.ResponseWriter, jsonData []byte) {
+	rw.Header().Set("Content-Type", "application/json")
+	rw.Write(jsonData)
 }
 
 // TaskStatus is a http.Handler with running task status (task name, status and the last execution).
