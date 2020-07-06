@@ -101,7 +101,6 @@ func (c *connWriter) connect() error {
 
 func (c *connWriter) needToConnectOnMsg() bool {
 	if c.Reconnect {
-		c.Reconnect = false
 		return true
 	}
 
