@@ -63,7 +63,10 @@ func (c *connWriter) WriteMsg(when time.Time, msg string, level int) error {
 		defer c.innerWriter.Close()
 	}
 
-	c.lg.writeln(when, msg)
+	_, err := c.lg.writeln(when, msg)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
