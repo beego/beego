@@ -1,7 +1,9 @@
 package beego
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http/httptest"
 	"testing"
 )
 
@@ -74,4 +76,28 @@ func oldMap() M {
 	m["BConfig.Log.FileLineNum"] = BConfig.Log.FileLineNum
 	m["BConfig.Log.Outputs"] = BConfig.Log.Outputs
 	return m
+}
+
+func TestExecJSON(t *testing.T) {
+	t.Log("Testing the adding of JSON to the response")
+
+	w := httptest.NewRecorder()
+	originalBody := []int{1, 2, 3}
+
+	res, _ := json.Marshal(originalBody)
+
+	execJSON(w, res)
+
+	decodedBody := []int{}
+	err := json.NewDecoder(w.Body).Decode(&decodedBody)
+
+	if err != nil {
+		t.Fatal("Should be able to decode response body into decodedBody slice")
+	}
+
+	for i := range decodedBody {
+		if decodedBody[i] != originalBody[i] {
+			t.Fatalf("Expected %d but got %d in decoded body slice", originalBody[i], decodedBody[i])
+		}
+	}
 }
