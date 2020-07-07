@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -111,7 +112,7 @@ func TestWriteJSON(t *testing.T) {
 	err := json.NewDecoder(w.Body).Decode(&decodedBody)
 
 	if err != nil {
-		t.Fatal("Should be able to decode response body into decodedBody slice")
+		t.Fatal("Could not decode response body into slice.")
 	}
 
 	for i := range decodedBody {
@@ -168,9 +169,31 @@ func TestHealthCheckHandlerReturnsJSON(t *testing.T) {
 			status, http.StatusOK)
 	}
 
-	expectedResponseBody := `[{"message":"database","name":"success","status":"OK"},{"message":"cache","name":"error","status":"no cache detected"}]`
-	if w.Body.String() != expectedResponseBody {
+	decodedResponseBody := []map[string]interface{}{}
+	expectedResponseBody := []map[string]interface{}{}
+
+	expectedJSONString := []byte(`
+		[
+			{
+				"message":"database",
+				"name":"success",
+				"status":"OK"
+			},
+			{
+				"message":"cache",
+				"name":"error",
+				"status":"no cache detected"
+			}
+		]
+	`)
+
+	json.Unmarshal(expectedJSONString, &expectedResponseBody)
+
+	json.Unmarshal(w.Body.Bytes(), &decodedResponseBody)
+
+	if !reflect.DeepEqual(decodedResponseBody, expectedResponseBody) {
 		t.Errorf("handler returned unexpected body: got %v want %v",
-			w.Body.String(), expectedResponseBody)
+			decodedResponseBody, expectedResponseBody)
 	}
+
 }
