@@ -63,7 +63,10 @@ func (c *connWriter) WriteMsg(when time.Time, msg string, level int) error {
 		defer c.innerWriter.Close()
 	}
 
-	c.lg.writeln(when, msg)
+	_, err := c.lg.writeln(when, msg)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -101,7 +104,6 @@ func (c *connWriter) connect() error {
 
 func (c *connWriter) needToConnectOnMsg() bool {
 	if c.Reconnect {
-		c.Reconnect = false
 		return true
 	}
 
