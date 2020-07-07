@@ -97,7 +97,7 @@ func oldMap() M {
 	return m
 }
 
-func TestExecJSON(t *testing.T) {
+func TestWriteJSON(t *testing.T) {
 	t.Log("Testing the adding of JSON to the response")
 
 	w := httptest.NewRecorder()
@@ -105,7 +105,7 @@ func TestExecJSON(t *testing.T) {
 
 	res, _ := json.Marshal(originalBody)
 
-	execJSON(w, res)
+	writeJSON(w, res)
 
 	decodedBody := []int{}
 	err := json.NewDecoder(w.Body).Decode(&decodedBody)
