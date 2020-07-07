@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"strconv"
 	"text/template"
 	"time"
 
@@ -321,28 +322,18 @@ func healthcheck(rw http.ResponseWriter, r *http.Request) {
 	}
 
 	queryParams := r.URL.Query()
+	jsonFlag := queryParams.Get("json")
+	shouldReturnJSON, _ := strconv.ParseBool(jsonFlag)
 
-	if queryParams["json"] != nil {
+	if shouldReturnJSON {
+		responseMap := buildHealthCheckResponseMap(resultList)
+		jsonResponse, err := json.Marshal(responseMap)
 
-		type Result map[string]interface{}
-
-		response := make([]Result, len(*resultList))
-
-		for i, currentResult := range *resultList {
-			currentResultMap := make(Result)
-			currentResultMap["name"] = currentResult[0]
-			currentResultMap["message"] = currentResult[1]
-			currentResultMap["status"] = currentResult[2]
-			response[i] = currentResultMap
-		}
-
-		JSONResponse, err := json.Marshal(response)
 		if err != nil {
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
 		} else {
-			writeJSON(rw, JSONResponse)
+			writeJSON(rw, jsonResponse)
 		}
-
 		return
 	}
 
@@ -351,6 +342,23 @@ func healthcheck(rw http.ResponseWriter, r *http.Request) {
 	data["Title"] = "Health Check"
 
 	writeTemplate(rw, data, healthCheckTpl, defaultScriptsTpl)
+}
+
+func buildHealthCheckResponseMap(resultList *[][]string) []map[string]interface{} {
+	response := make([]map[string]interface{}, len(*resultList))
+
+	for i, currentResult := range *resultList {
+		currentResultMap := make(map[string]interface{})
+
+		currentResultMap["name"] = currentResult[0]
+		currentResultMap["message"] = currentResult[1]
+		currentResultMap["status"] = currentResult[2]
+
+		response[i] = currentResultMap
+	}
+
+	return response
+
 }
 
 func writeJSON(rw http.ResponseWriter, jsonData []byte) {
