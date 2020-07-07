@@ -187,7 +187,6 @@ func TestBuildHealthCheckResponseList(t *testing.T) {
 func TestHealthCheckHandlerReturnsJSON(t *testing.T) {
 
 	toolbox.AddHealthCheck("database", &SampleDatabaseCheck{})
-	toolbox.AddHealthCheck("cache", &SampleCacheCheck{})
 
 	req, err := http.NewRequest("GET", "/healthcheck?json=true", nil)
 	if err != nil {
@@ -213,11 +212,6 @@ func TestHealthCheckHandlerReturnsJSON(t *testing.T) {
 				"message":"database",
 				"name":"success",
 				"status":"OK"
-			},
-			{
-				"message":"cache",
-				"name":"error",
-				"status":"no cache detected"
 			}
 		]
 	`)
