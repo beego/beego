@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/astaxie/beego"
+
 	"github.com/elastic/go-elasticsearch/v6"
 	"github.com/elastic/go-elasticsearch/v6/esapi"
 
@@ -31,15 +33,20 @@ func NewES() logs.Logger {
 // import _ "github.com/astaxie/beego/logs/es"
 type esLogger struct {
 	*elasticsearch.Client
-	DSN   string `json:"dsn"`
-	Level int    `json:"level"`
+	DSN         string `json:"dsn"`
+	Level       int    `json:"level"`
+	Index       string `json:"index"`
+	IndexPrefix string `json:"index_prefix"`
 }
 
-// {"dsn":"http://localhost:9200/","level":1}
+// {"dsn":"http://localhost:9200/","index":"index-name","index_prefix":"test-index-","level":1}
 func (el *esLogger) Init(jsonconfig string) error {
 	err := json.Unmarshal([]byte(jsonconfig), el)
 	if err != nil {
 		return err
+	}
+	if el.IndexPrefix == "" && beego.BConfig.AppName != "" {
+		el.IndexPrefix = beego.BConfig.AppName + "-"
 	}
 	if el.DSN == "" {
 		return errors.New("empty dsn")
@@ -75,9 +82,12 @@ func (el *esLogger) WriteMsg(when time.Time, msg string, level int) error {
 		return err
 	}
 	req := esapi.IndexRequest{
-		Index:        fmt.Sprintf("%04d.%02d.%02d", when.Year(), when.Month(), when.Day()),
+		Index:        el.IndexPrefix + fmt.Sprintf("%04d-%02d-%02d", when.Year(), when.Month(), when.Day()),
 		DocumentType: "logs",
 		Body:         strings.NewReader(string(body)),
+	}
+	if el.Index != "" {
+		req.Index = el.Index
 	}
 	_, err = req.Do(context.Background(), el.Client)
 	return err
@@ -93,8 +103,8 @@ func (el *esLogger) Flush() {
 }
 
 type LogDocument struct {
-	Timestamp string `json:"timestamp"`
-	Msg       string `json:"msg"`
+	Timestamp string      `json:"timestamp"`
+	Msg       interface{} `json:"msg"`
 }
 
 func init() {
