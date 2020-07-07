@@ -326,8 +326,8 @@ func healthcheck(rw http.ResponseWriter, r *http.Request) {
 	shouldReturnJSON, _ := strconv.ParseBool(jsonFlag)
 
 	if shouldReturnJSON {
-		responseMap := buildHealthCheckResponseMap(resultList)
-		jsonResponse, err := json.Marshal(responseMap)
+		response := buildHealthCheckResponseList(resultList)
+		jsonResponse, err := json.Marshal(response)
 
 		if err != nil {
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
@@ -344,15 +344,15 @@ func healthcheck(rw http.ResponseWriter, r *http.Request) {
 	writeTemplate(rw, data, healthCheckTpl, defaultScriptsTpl)
 }
 
-func buildHealthCheckResponseMap(resultList *[][]string) []map[string]interface{} {
-	response := make([]map[string]interface{}, len(*resultList))
+func buildHealthCheckResponseList(healthCheckResults *[][]string) []map[string]interface{} {
+	response := make([]map[string]interface{}, len(*healthCheckResults))
 
-	for i, currentResult := range *resultList {
+	for i, healthCheckResult := range *healthCheckResults {
 		currentResultMap := make(map[string]interface{})
 
-		currentResultMap["name"] = currentResult[0]
-		currentResultMap["message"] = currentResult[1]
-		currentResultMap["status"] = currentResult[2]
+		currentResultMap["name"] = healthCheckResult[0]
+		currentResultMap["message"] = healthCheckResult[1]
+		currentResultMap["status"] = healthCheckResult[2]
 
 		response[i] = currentResultMap
 	}

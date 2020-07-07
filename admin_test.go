@@ -149,6 +149,41 @@ func TestHealthCheckHandlerDefault(t *testing.T) {
 
 }
 
+func TestBuildHealthCheckResponseList(t *testing.T) {
+	healthCheckResults := [][]string{
+		[]string{
+			"error",
+			"Database",
+			"Error occured whie starting the db",
+		},
+		[]string{
+			"success",
+			"Cache",
+			"Cache started successfully",
+		},
+	}
+
+	responseList := buildHealthCheckResponseList(&healthCheckResults)
+
+	if len(responseList) != len(healthCheckResults) {
+		t.Errorf("invalid response map length: got %d want %d",
+			len(responseList), len(healthCheckResults))
+	}
+
+	responseFields := []string{"name", "message", "status"}
+
+	for _, response := range responseList {
+		for _, field := range responseFields {
+			_, ok := response[field]
+			if !ok {
+				t.Errorf("expected %s to be in the response %v", field, response)
+			}
+		}
+
+	}
+
+}
+
 func TestHealthCheckHandlerReturnsJSON(t *testing.T) {
 
 	toolbox.AddHealthCheck("database", &SampleDatabaseCheck{})
