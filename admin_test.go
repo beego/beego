@@ -187,6 +187,7 @@ func TestBuildHealthCheckResponseList(t *testing.T) {
 func TestHealthCheckHandlerReturnsJSON(t *testing.T) {
 
 	toolbox.AddHealthCheck("database", &SampleDatabaseCheck{})
+	toolbox.AddHealthCheck("cache", &SampleCacheCheck{})
 
 	req, err := http.NewRequest("GET", "/healthcheck?json=true", nil)
 	if err != nil {
@@ -212,6 +213,11 @@ func TestHealthCheckHandlerReturnsJSON(t *testing.T) {
 				"message":"database",
 				"name":"success",
 				"status":"OK"
+			},
+			{
+				"message":"cache",
+				"name":"error",
+				"status":"no cache detected"
 			}
 		]
 	`)
@@ -219,6 +225,11 @@ func TestHealthCheckHandlerReturnsJSON(t *testing.T) {
 	json.Unmarshal(expectedJSONString, &expectedResponseBody)
 
 	json.Unmarshal(w.Body.Bytes(), &decodedResponseBody)
+
+	if len(expectedResponseBody) != len(decodedResponseBody) {
+		t.Errorf("invalid response map length: got %d want %d",
+			len(decodedResponseBody), len(expectedResponseBody))
+	}
 
 	if !reflect.DeepEqual(decodedResponseBody, expectedResponseBody) {
 		t.Errorf("handler returned unexpected body: got %v want %v",
