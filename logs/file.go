@@ -148,30 +148,42 @@ func (w *fileLogWriter) WriteMsg(when time.Time, msg string, level int) error {
 	if level > w.Level {
 		return nil
 	}
-	hd, d, h := formatTimeHeader(when)
-	msg = string(hd) + msg + "\n"
-	if w.Rotate {
-		w.RLock()
-		if w.needRotateHourly(len(msg), h) {
-			w.RUnlock()
-			w.Lock()
+
+	logFormat := "APACHE_FORMAT"
+	tempStruct := &AccessLogRecord{}
+	jsonDecodeError := json.Unmarshal([]byte(msg), tempStruct)
+	if jsonDecodeError == nil {
+		// If successfully unmarshelled the text, it was a JSON
+		// format, else it was an apache format
+		logFormat = "JSON_FORMAT"
+	}
+
+	if logFormat == "APACHE_FORMAT" {
+		hd, d, h := formatTimeHeader(when)
+		msg = string(hd) + msg + "\n"
+		if w.Rotate {
+			w.RLock()
 			if w.needRotateHourly(len(msg), h) {
-				if err := w.doRotate(when); err != nil {
-					fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
+				w.RUnlock()
+				w.Lock()
+				if w.needRotateHourly(len(msg), h) {
+					if err := w.doRotate(when); err != nil {
+						fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
+					}
 				}
-			}
-			w.Unlock()
-		} else if w.needRotateDaily(len(msg), d) {
-			w.RUnlock()
-			w.Lock()
-			if w.needRotateDaily(len(msg), d) {
-				if err := w.doRotate(when); err != nil {
-					fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
+				w.Unlock()
+			} else if w.needRotateDaily(len(msg), d) {
+				w.RUnlock()
+				w.Lock()
+				if w.needRotateDaily(len(msg), d) {
+					if err := w.doRotate(when); err != nil {
+						fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
+					}
 				}
+				w.Unlock()
+			} else {
+				w.RUnlock()
 			}
-			w.Unlock()
-		} else {
-			w.RUnlock()
 		}
 	}
 
@@ -373,21 +385,21 @@ func (w *fileLogWriter) deleteOldLog() {
 		if info == nil {
 			return
 		}
-        if w.Hourly {
-            if !info.IsDir() && info.ModTime().Add(1 * time.Hour * time.Duration(w.MaxHours)).Before(time.Now()) {
-                if strings.HasPrefix(filepath.Base(path), filepath.Base(w.fileNameOnly)) &&
-                strings.HasSuffix(filepath.Base(path), w.suffix) {
-                    os.Remove(path)
-                }
-            }
-        } else if w.Daily {
-            if !info.IsDir() && info.ModTime().Add(24 * time.Hour * time.Duration(w.MaxDays)).Before(time.Now()) {
-                if strings.HasPrefix(filepath.Base(path), filepath.Base(w.fileNameOnly)) &&
-                strings.HasSuffix(filepath.Base(path), w.suffix) {
-                    os.Remove(path)
-                }
-            }
-        }
+		if w.Hourly {
+			if !info.IsDir() && info.ModTime().Add(1*time.Hour*time.Duration(w.MaxHours)).Before(time.Now()) {
+				if strings.HasPrefix(filepath.Base(path), filepath.Base(w.fileNameOnly)) &&
+					strings.HasSuffix(filepath.Base(path), w.suffix) {
+					os.Remove(path)
+				}
+			}
+		} else if w.Daily {
+			if !info.IsDir() && info.ModTime().Add(24*time.Hour*time.Duration(w.MaxDays)).Before(time.Now()) {
+				if strings.HasPrefix(filepath.Base(path), filepath.Base(w.fileNameOnly)) &&
+					strings.HasSuffix(filepath.Base(path), w.suffix) {
+					os.Remove(path)
+				}
+			}
+		}
 		return
 	})
 }

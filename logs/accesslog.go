@@ -16,9 +16,9 @@ package logs
 
 import (
 	"bytes"
-	"strings"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -42,6 +42,7 @@ type AccessLogRecord struct {
 	HTTPReferrer   string        `json:"http_referrer"`
 	HTTPUserAgent  string        `json:"http_user_agent"`
 	RemoteUser     string        `json:"remote_user"`
+	LineReference  string        `json:"line_reference"`
 }
 
 func (r *AccessLogRecord) json() ([]byte, error) {

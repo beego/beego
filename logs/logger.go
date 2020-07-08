@@ -32,10 +32,18 @@ func newLogWriter(wr io.Writer) *logWriter {
 
 func (lg *logWriter) writeln(when time.Time, msg string) (int, error) {
 	lg.Lock()
-	h, _, _ := formatTimeHeader(when)
-	n, err := lg.writer.Write(append(append(h, msg...), '\n'))
-	lg.Unlock()
-	return n, err
+	if when.IsZero() {
+		// When the time is Zero it means it should be printed in JSON
+		// format e.g without time printed before the JSON formatted msg
+		n, err := lg.writer.Write(append([]byte(msg), '\n'))
+		lg.Unlock()
+		return n, err
+	} else {
+		h, _, _ := formatTimeHeader(when)
+		n, err := lg.writer.Write(append(append(h, msg...), '\n'))
+		lg.Unlock()
+		return n, err
+	}
 }
 
 const (

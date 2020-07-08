@@ -34,6 +34,7 @@
 package logs
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -270,6 +271,7 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string, v ...interface{}) error 
 	}
 
 	msg = bl.prefix + " " + msg
+	logFormat := "APACHE_FORMAT"
 
 	when := time.Now()
 	if bl.enableFuncCallDepth {
@@ -279,7 +281,32 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string, v ...interface{}) error 
 			line = 0
 		}
 		_, filename := path.Split(file)
-		msg = "[" + filename + ":" + strconv.Itoa(line) + "] " + msg
+
+		tempStruct := &AccessLogRecord{}
+		jsonDecodeError := json.Unmarshal([]byte(msg), tempStruct)
+		if jsonDecodeError == nil {
+			logFormat = "JSON_FORMAT"
+		}
+
+		switch logFormat {
+		case apacheFormat:
+			msg = "[" + filename + ":" + strconv.Itoa(line) + "] " + msg
+		case jsonFormat:
+			fallthrough
+		default:
+			if jsonDecodeError != nil {
+				if !strings.Contains(jsonDecodeError.Error(), "invalid characters") {
+					// Invalid character errors occur in the starting up logs
+					log.Fatal(jsonDecodeError)
+				}
+			}
+			tempStruct.LineReference = filename + ":" + strconv.Itoa(line)
+			jsonString, err := tempStruct.json()
+			if err != nil {
+				log.Fatal(err)
+			}
+			msg = string(jsonString)
+		}
 	}
 
 	//set level info in front of filename info
@@ -301,7 +328,17 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string, v ...interface{}) error 
 			logMsgPool.Put(lm)
 		}
 	} else {
-		bl.writeToLoggers(when, msg, logLevel)
+		switch logFormat {
+		case apacheFormat:
+			bl.writeToLoggers(when, msg, logLevel)
+		case jsonFormat:
+			fallthrough
+		default:
+			// Empty time struct indicates it's in JSON format
+			// and should not be logged before as per
+			// https://github.com/astaxie/beego/issues/3769
+			bl.writeToLoggers(time.Time{}, msg, logLevel)
+		}
 	}
 	return nil
 }
