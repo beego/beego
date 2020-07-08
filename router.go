@@ -707,6 +707,10 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
 		if BConfig.CopyRequestBody && !context.Input.IsUpload() {
+			if r.ContentLength > BConfig.MaxMemory {
+				exception("413", context)
+				goto Admin
+			}
 			context.Input.CopyBody(BConfig.MaxMemory)
 		}
 		context.Input.ParseFormOrMulitForm(BConfig.MaxMemory)
