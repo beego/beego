@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"os"
 	"reflect"
+	"strconv"
 	"text/template"
 	"time"
 
@@ -71,7 +72,7 @@ func init() {
 // AdminIndex is the default http.Handler for admin module.
 // it matches url pattern "/".
 func adminIndex(rw http.ResponseWriter, _ *http.Request) {
-	execTpl(rw, map[interface{}]interface{}{}, indexTpl, defaultScriptsTpl)
+	writeTemplate(rw, map[interface{}]interface{}{}, indexTpl, defaultScriptsTpl)
 }
 
 // QpsIndex is the http.Handler for writing qps statistics map result info in http.ResponseWriter.
@@ -91,7 +92,7 @@ func qpsIndex(rw http.ResponseWriter, _ *http.Request) {
 		}
 	}
 
-	execTpl(rw, data, qpsTpl, defaultScriptsTpl)
+	writeTemplate(rw, data, qpsTpl, defaultScriptsTpl)
 }
 
 // ListConf is the http.Handler of displaying all beego configuration values as key/value pair.
@@ -128,7 +129,7 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 		}
 		data["Content"] = content
 		data["Title"] = "Routers"
-		execTpl(rw, data, routerAndFilterTpl, defaultScriptsTpl)
+		writeTemplate(rw, data, routerAndFilterTpl, defaultScriptsTpl)
 	case "filter":
 		var (
 			content = M{
@@ -171,7 +172,7 @@ func listConf(rw http.ResponseWriter, r *http.Request) {
 
 		data["Content"] = content
 		data["Title"] = "Filters"
-		execTpl(rw, data, routerAndFilterTpl, defaultScriptsTpl)
+		writeTemplate(rw, data, routerAndFilterTpl, defaultScriptsTpl)
 	default:
 		rw.Write([]byte("command not support"))
 	}
@@ -279,9 +280,7 @@ func profIndex(rw http.ResponseWriter, r *http.Request) {
 			http.Error(rw, err.Error(), http.StatusInternalServerError)
 			return
 		}
-
-		rw.Header().Set("Content-Type", "application/json")
-		rw.Write(dataJSON)
+		writeJSON(rw, dataJSON)
 		return
 	}
 
@@ -290,12 +289,12 @@ func profIndex(rw http.ResponseWriter, r *http.Request) {
 	if command == "gc summary" {
 		defaultTpl = gcAjaxTpl
 	}
-	execTpl(rw, data, profillingTpl, defaultTpl)
+	writeTemplate(rw, data, profillingTpl, defaultTpl)
 }
 
 // Healthcheck is a http.Handler calling health checking and showing the result.
 // it's in "/healthcheck" pattern in admin module.
-func healthcheck(rw http.ResponseWriter, _ *http.Request) {
+func healthcheck(rw http.ResponseWriter, r *http.Request) {
 	var (
 		result     []string
 		data       = make(map[interface{}]interface{})
@@ -322,10 +321,49 @@ func healthcheck(rw http.ResponseWriter, _ *http.Request) {
 		*resultList = append(*resultList, result)
 	}
 
+	queryParams := r.URL.Query()
+	jsonFlag := queryParams.Get("json")
+	shouldReturnJSON, _ := strconv.ParseBool(jsonFlag)
+
+	if shouldReturnJSON {
+		response := buildHealthCheckResponseList(resultList)
+		jsonResponse, err := json.Marshal(response)
+
+		if err != nil {
+			http.Error(rw, err.Error(), http.StatusInternalServerError)
+		} else {
+			writeJSON(rw, jsonResponse)
+		}
+		return
+	}
+
 	content["Data"] = resultList
 	data["Content"] = content
 	data["Title"] = "Health Check"
-	execTpl(rw, data, healthCheckTpl, defaultScriptsTpl)
+
+	writeTemplate(rw, data, healthCheckTpl, defaultScriptsTpl)
+}
+
+func buildHealthCheckResponseList(healthCheckResults *[][]string) []map[string]interface{} {
+	response := make([]map[string]interface{}, len(*healthCheckResults))
+
+	for i, healthCheckResult := range *healthCheckResults {
+		currentResultMap := make(map[string]interface{})
+
+		currentResultMap["name"] = healthCheckResult[0]
+		currentResultMap["message"] = healthCheckResult[1]
+		currentResultMap["status"] = healthCheckResult[2]
+
+		response[i] = currentResultMap
+	}
+
+	return response
+
+}
+
+func writeJSON(rw http.ResponseWriter, jsonData []byte) {
+	rw.Header().Set("Content-Type", "application/json")
+	rw.Write(jsonData)
 }
 
 // TaskStatus is a http.Handler with running task status (task name, status and the last execution).
@@ -371,10 +409,10 @@ func taskStatus(rw http.ResponseWriter, req *http.Request) {
 	content["Data"] = resultList
 	data["Content"] = content
 	data["Title"] = "Tasks"
-	execTpl(rw, data, tasksTpl, defaultScriptsTpl)
+	writeTemplate(rw, data, tasksTpl, defaultScriptsTpl)
 }
 
-func execTpl(rw http.ResponseWriter, data map[interface{}]interface{}, tpls ...string) {
+func writeTemplate(rw http.ResponseWriter, data map[interface{}]interface{}, tpls ...string) {
 	tmpl := template.Must(template.New("dashboard").Parse(dashboardTpl))
 	for _, tpl := range tpls {
 		tmpl = template.Must(tmpl.Parse(tpl))
