@@ -425,7 +425,6 @@ func GetDB(aliasNames ...string) (*sql.DB, error) {
 
 type stmtDecorator struct {
 	wg sync.WaitGroup
-	lastUse int64
 	stmt *sql.Stmt
 }
 
@@ -433,9 +432,12 @@ func (s *stmtDecorator) getStmt() *sql.Stmt {
 	return s.stmt
 }
 
+// acquire will add one
+// since this method will be used inside read lock scope,
+// so we can not do more things here
+// we should think about refactor this
 func (s *stmtDecorator) acquire() {
 	s.wg.Add(1)
-	s.lastUse = time.Now().Unix()
 }
 
 func (s *stmtDecorator) release() {
@@ -453,7 +455,6 @@ func (s *stmtDecorator) destroy() {
 func newStmtDecorator(sqlStmt *sql.Stmt) *stmtDecorator {
 	return &stmtDecorator{
 		stmt: sqlStmt,
-		lastUse: time.Now().Unix(),
 	}
 }
 
