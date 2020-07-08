@@ -1,9 +1,31 @@
 package beego
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
+	"reflect"
+	"strings"
 	"testing"
+
+	"github.com/astaxie/beego/toolbox"
 )
+
+type SampleDatabaseCheck struct {
+}
+
+type SampleCacheCheck struct {
+}
+
+func (dc *SampleDatabaseCheck) Check() error {
+	return nil
+}
+
+func (cc *SampleCacheCheck) Check() error {
+	return errors.New("no cache detected")
+}
 
 func TestList_01(t *testing.T) {
 	m := make(M)
@@ -74,4 +96,144 @@ func oldMap() M {
 	m["BConfig.Log.FileLineNum"] = BConfig.Log.FileLineNum
 	m["BConfig.Log.Outputs"] = BConfig.Log.Outputs
 	return m
+}
+
+func TestWriteJSON(t *testing.T) {
+	t.Log("Testing the adding of JSON to the response")
+
+	w := httptest.NewRecorder()
+	originalBody := []int{1, 2, 3}
+
+	res, _ := json.Marshal(originalBody)
+
+	writeJSON(w, res)
+
+	decodedBody := []int{}
+	err := json.NewDecoder(w.Body).Decode(&decodedBody)
+
+	if err != nil {
+		t.Fatal("Could not decode response body into slice.")
+	}
+
+	for i := range decodedBody {
+		if decodedBody[i] != originalBody[i] {
+			t.Fatalf("Expected %d but got %d in decoded body slice", originalBody[i], decodedBody[i])
+		}
+	}
+}
+
+func TestHealthCheckHandlerDefault(t *testing.T) {
+	endpointPath := "/healthcheck"
+
+	toolbox.AddHealthCheck("database", &SampleDatabaseCheck{})
+	toolbox.AddHealthCheck("cache", &SampleCacheCheck{})
+
+	req, err := http.NewRequest("GET", endpointPath, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	w := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(healthcheck)
+
+	handler.ServeHTTP(w, req)
+
+	if status := w.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
+	if !strings.Contains(w.Body.String(), "database") {
+		t.Errorf("Expected 'database' in generated template.")
+	}
+
+}
+
+func TestBuildHealthCheckResponseList(t *testing.T) {
+	healthCheckResults := [][]string{
+		[]string{
+			"error",
+			"Database",
+			"Error occured whie starting the db",
+		},
+		[]string{
+			"success",
+			"Cache",
+			"Cache started successfully",
+		},
+	}
+
+	responseList := buildHealthCheckResponseList(&healthCheckResults)
+
+	if len(responseList) != len(healthCheckResults) {
+		t.Errorf("invalid response map length: got %d want %d",
+			len(responseList), len(healthCheckResults))
+	}
+
+	responseFields := []string{"name", "message", "status"}
+
+	for _, response := range responseList {
+		for _, field := range responseFields {
+			_, ok := response[field]
+			if !ok {
+				t.Errorf("expected %s to be in the response %v", field, response)
+			}
+		}
+
+	}
+
+}
+
+func TestHealthCheckHandlerReturnsJSON(t *testing.T) {
+
+	toolbox.AddHealthCheck("database", &SampleDatabaseCheck{})
+	toolbox.AddHealthCheck("cache", &SampleCacheCheck{})
+
+	req, err := http.NewRequest("GET", "/healthcheck?json=true", nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	w := httptest.NewRecorder()
+
+	handler := http.HandlerFunc(healthcheck)
+
+	handler.ServeHTTP(w, req)
+	if status := w.Code; status != http.StatusOK {
+		t.Errorf("handler returned wrong status code: got %v want %v",
+			status, http.StatusOK)
+	}
+
+	decodedResponseBody := []map[string]interface{}{}
+	expectedResponseBody := []map[string]interface{}{}
+
+	expectedJSONString := []byte(`
+		[
+			{
+				"message":"database",
+				"name":"success",
+				"status":"OK"
+			},
+			{
+				"message":"cache",
+				"name":"error",
+				"status":"no cache detected"
+			}
+		]
+	`)
+
+	json.Unmarshal(expectedJSONString, &expectedResponseBody)
+
+	json.Unmarshal(w.Body.Bytes(), &decodedResponseBody)
+
+	if len(expectedResponseBody) != len(decodedResponseBody) {
+		t.Errorf("invalid response map length: got %d want %d",
+			len(decodedResponseBody), len(expectedResponseBody))
+	}
+
+	if !reflect.DeepEqual(decodedResponseBody, expectedResponseBody) {
+		t.Errorf("handler returned unexpected body: got %v want %v",
+			decodedResponseBody, expectedResponseBody)
+	}
+
 }
