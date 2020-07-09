@@ -726,7 +726,7 @@ func TestRouterEntityTooLargeCopyBody(t *testing.T) {
 	BConfig.CopyRequestBody = _CopyRequestBody
 	BConfig.MaxMemory = _MaxMemory
 
-	if w.Code != 413 {
+	if w.Code != http.StatusRequestEntityTooLarge {
 		t.Errorf("TestRouterRequestEntityTooLarge can't run")
 	}
 }
