@@ -15,6 +15,7 @@
 package beego
 
 import (
+	"bytes"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -70,7 +71,6 @@ func (tc *TestController) GetEmptyBody() {
 	var res []byte
 	tc.Ctx.Output.Body(res)
 }
-
 
 type JSONController struct {
 	Controller
@@ -656,16 +656,13 @@ func beegoBeforeRouter1(ctx *context.Context) {
 	ctx.WriteString("|BeforeRouter1")
 }
 
-
 func beegoBeforeExec1(ctx *context.Context) {
 	ctx.WriteString("|BeforeExec1")
 }
 
-
 func beegoAfterExec1(ctx *context.Context) {
 	ctx.WriteString("|AfterExec1")
 }
-
 
 func beegoFinishRouter1(ctx *context.Context) {
 	ctx.WriteString("|FinishRouter1")
@@ -707,5 +704,29 @@ func TestYAMLPrepare(t *testing.T) {
 	handler.ServeHTTP(w, r)
 	if strings.TrimSpace(w.Body.String()) != "prepare" {
 		t.Errorf(w.Body.String())
+	}
+}
+
+func TestRouterEntityTooLargeCopyBody(t *testing.T) {
+	_MaxMemory := BConfig.MaxMemory
+	_CopyRequestBody := BConfig.CopyRequestBody
+	BConfig.CopyRequestBody = true
+	BConfig.MaxMemory = 20
+
+	b := bytes.NewBuffer([]byte("barbarbarbarbarbarbarbarbarbar"))
+	r, _ := http.NewRequest("POST", "/user/123", b)
+	w := httptest.NewRecorder()
+
+	handler := NewControllerRegister()
+	handler.Post("/user/:id", func(ctx *context.Context) {
+		ctx.Output.Body([]byte(ctx.Input.Param(":id")))
+	})
+	handler.ServeHTTP(w, r)
+
+	BConfig.CopyRequestBody = _CopyRequestBody
+	BConfig.MaxMemory = _MaxMemory
+
+	if w.Code != http.StatusRequestEntityTooLarge {
+		t.Errorf("TestRouterRequestEntityTooLarge can't run")
 	}
 }

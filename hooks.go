@@ -34,6 +34,7 @@ func registerDefaultErrorHandler() error {
 		"504": gatewayTimeout,
 		"417": invalidxsrf,
 		"422": missingxsrf,
+		"413": payloadTooLarge,
 	}
 	for e, h := range m {
 		if _, ok := ErrorMaps[e]; !ok {
