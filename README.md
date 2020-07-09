@@ -12,11 +12,11 @@ It is inspired by Tornado, Sinatra and Flask. beego has some Go-specific feature
 
     go get github.com/astaxie/beego
 
-#### Create hello directory 
+#### Create `hello` directory, cd `hello` directory
 
-   sudo mkdir hello
+   mkdir hello
    cd hello
-   
+ 
 #### Init module
 
   go mod init
