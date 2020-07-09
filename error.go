@@ -363,12 +363,13 @@ func gatewayTimeout(rw http.ResponseWriter, r *http.Request) {
 func payloadTooLarge(rw http.ResponseWriter, r *http.Request) {
 	responseError(rw, r,
 		413,
-		"<br>The page you have requested is unavailable."+
-			"<br>Perhaps you are here because:"+
-			"<br><br><ul>"+
-			"<br>The request entity is larger than limits defined by server"+
-			"<br>Please change the request entity and try again."+
-			"</ul>",
+		`<br>The page you have requested is unavailable.
+		 <br>Perhaps you are here because:<br><br>
+		 <ul>
+			<br>The request entity is larger than limits defined by server.
+			<br>Please change the request entity and try again.
+		 </ul>
+		`,
 	)
 }
 
