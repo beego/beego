@@ -205,3 +205,13 @@ func TestParams(t *testing.T) {
 	}
 
 }
+func BenchmarkQuery(b *testing.B) {
+	beegoInput := NewInput()
+	beegoInput.Context = NewContext()
+	beegoInput.Context.Request, _ = http.NewRequest("POST", "http://www.example.com/?q=foo", nil)
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			beegoInput.Query("q")
+		}
+	})
+}
