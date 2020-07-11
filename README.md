@@ -8,6 +8,15 @@ It is inspired by Tornado, Sinatra and Flask. beego has some Go-specific feature
 
 ## Quick Start
 
+#### Create `hello` directory, cd `hello` directory
+
+    mkdir hello
+    cd hello
+ 
+#### Init module
+
+    go mod init
+
 #### Download and install
 
     go get github.com/astaxie/beego
