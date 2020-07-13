@@ -334,11 +334,13 @@ func (input *BeegoInput) Query(key string) string {
 	}
 	if input.Context.Request.Form == nil {
 		input.dataLock.Lock()
-		defer input.dataLock.Unlock()
 		if input.Context.Request.Form == nil {
 			input.Context.Request.ParseForm()
 		}
+		input.dataLock.Unlock()
 	}
+	input.dataLock.RLock()
+	defer input.dataLock.RUnlock()
 	return input.Context.Request.Form.Get(key)
 }
 
