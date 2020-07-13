@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// +build go1.8
+// +build go1.13
 
 // Package orm provide ORM for MySQL/PostgreSQL/sqlite
 // Simple Usage
