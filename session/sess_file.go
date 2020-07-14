@@ -181,6 +181,7 @@ func (fp *FileProvider) SessionExist(sid string) bool {
 	defer filepder.lock.Unlock()
 
 	if len(sid) < 2 {
+		SLogger.Println("min length of session id is 2", sid)
 		return false
 	}
 
