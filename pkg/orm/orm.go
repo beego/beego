@@ -467,6 +467,7 @@ type orm struct {
 }
 
 var _ Ormer = new(orm)
+var _ TxBeginner = new(orm)
 
 // begin transaction
 func (o *orm) BeginTx(ctx context.Context) (*TxOrmer, error) {
@@ -517,7 +518,8 @@ type txOrm struct {
 	ormBase
 }
 
-var a TxOrmer = new(txOrm)
+var _ TxOrmer = new(txOrm)
+var _ TxCommitter = new(txOrm)
 
 func (t *txOrm) Commit() error {
 	return t.db.(txEnder).Commit()
