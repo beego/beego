@@ -72,7 +72,7 @@ type querySet struct {
 	orders     []string
 	distinct   bool
 	forupdate  bool
-	orm        *orm
+	orm        *ormBase
 	ctx        context.Context
 	forContext bool
 }
@@ -292,7 +292,7 @@ func (o querySet) WithContext(ctx context.Context) QuerySeter {
 }
 
 // create new QuerySeter.
-func newQuerySet(orm *orm, mi *modelInfo) QuerySeter {
+func newQuerySet(orm *ormBase, mi *modelInfo) QuerySeter {
 	o := new(querySet)
 	o.mi = mi
 	o.orm = orm

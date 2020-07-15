@@ -35,8 +35,20 @@ type Fielder interface {
 	RawValue() interface{}
 }
 
+type TxBeginner interface {
+	BeginTx(ctx context.Context) (*TxOrmer, error)
+	BeginTxWithOpts(ctx context.Context, opts *sql.TxOptions) (*TxOrmer, error)
+	ExecuteTx(ctx context.Context, task func(txOrm *TxOrmer) error) error
+	ExecuteTxWithOpts(ctx context.Context, opts *sql.TxOptions, task func(txOrm *TxOrmer) error) error
+}
+
+type TxCommitter interface {
+	Commit() error
+	Rollback() error
+}
+
 // Ormer define the orm interface
-type Ormer interface {
+type OrmerBase interface {
 	// read data to model
 	// for example:
 	//	this will find User by Id field
@@ -102,39 +114,6 @@ type Ormer interface {
 	// switch to another registered database driver by given name.
 	// Using(name string) error
 
-	// begin transaction
-	// for example:
-	// 	o := NewOrm()
-	// 	tx := o.Begin()
-	// 	...
-	// 	err = tx.Rollback()
-	BeginTx(ctx context.Context) (*sql.Tx, error)
-
-	// begin transaction with provided context and option
-	// the provided context is used until the transaction is committed or rolled back.
-	// if the context is canceled, the transaction will be rolled back.
-	// the provided TxOptions is optional and may be nil if defaults should be used.
-	// if a non-default isolation level is used that the driver doesn't support, an error will be returned.
-	// for example:
-	//  o := NewOrm()
-	// 	err := o.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
-	//  ...
-	//  err = o.Rollback()
-	BeginTxWithOpts(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error)
-
-	// ExecuteTx will do task inside a transaction
-	// if the task return an error, the transaction will rollback
-	// for example:
-	// o := NewOrm()
-	// err := o.ExecuteTx(ctx, func() error{
-	//     do something here
-	// })
-	// if err != nil
-	ExecuteTx(ctx context.Context, task func() error) error
-
-	// ExecuteTxWithOpts is similar with ExecuteTx, but we use @opts to create the transaction
-	ExecuteTxWithOpts(ctx context.Context, opts *sql.TxOptions, task func() error) error
-
 	// return a raw query seter for raw sql string.
 	// for example:
 	//	 ormer.Raw("UPDATE `user` SET `user_name` = ? WHERE `user_name` = ?", "slene", "testing").Exec()
@@ -142,6 +121,17 @@ type Ormer interface {
 	Raw(ctx context.Context, query string, args ...interface{}) RawSeter
 	Driver() Driver
 	DBStats() *sql.DBStats
+
+}
+
+type Ormer interface {
+	OrmerBase
+	TxBeginner
+}
+
+type TxOrmer interface {
+	OrmerBase
+	TxCommitter
 }
 
 // Inserter insert prepared statement
