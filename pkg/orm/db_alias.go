@@ -111,6 +111,9 @@ type DB struct {
 	stmtDecorators *lru.Cache
 }
 
+var _ dbQuerier = new(DB)
+var _ txer = new(DB)
+
 func (d *DB) Begin() (*sql.Tx, error) {
 	return d.DB.Begin()
 }
@@ -223,6 +226,9 @@ func (d *DB) QueryRowContext(ctx context.Context, query string, args ...interfac
 type TxDB struct {
 	tx *sql.Tx
 }
+
+var _ dbQuerier = new(TxDB)
+var _ txEnder = new(TxDB)
 
 func (t *TxDB) Commit() error {
 	return t.tx.Commit()
