@@ -475,12 +475,18 @@ func (o *orm) BeginTx(ctx context.Context) (*TxOrmer, error) {
 }
 
 func (o *orm) BeginTxWithOpts(ctx context.Context, opts *sql.TxOptions) (*TxOrmer, error) {
-	_, err := o.db.(txer).BeginTx(ctx, opts)
+	tx, err := o.db.(txer).BeginTx(ctx, opts)
 	if err != nil {
 		return nil, err
 	}
-	//todo
-	return nil, nil
+
+	_txOrm := &txOrm{ormBase{
+		alias: o.alias,
+		db:    &TxDB{tx: tx},
+	}}
+
+	var taskTxOrm TxOrmer = _txOrm
+	return &taskTxOrm, nil
 }
 
 func (o *orm) ExecuteTx(ctx context.Context, task func(txOrm *TxOrmer) error) error {
