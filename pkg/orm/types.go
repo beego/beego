@@ -36,10 +36,17 @@ type Fielder interface {
 }
 
 type TxBeginner interface {
-	BeginTx(ctx context.Context) (TxOrmer, error)
-	BeginTxWithOpts(ctx context.Context, opts *sql.TxOptions) (TxOrmer, error)
-	ExecuteTx(ctx context.Context, task func(txOrm TxOrmer) error) error
-	ExecuteTxWithOpts(ctx context.Context, opts *sql.TxOptions, task func(txOrm TxOrmer) error) error
+	//self control transaction
+	Begin() (TxOrmer, error)
+	BeginWithCtx(ctx context.Context) (TxOrmer, error)
+	BeginWithOpts(opts *sql.TxOptions) (TxOrmer, error)
+	BeginWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions) (TxOrmer, error)
+
+	//closure control transaction
+	DoTransaction(task func(txOrm TxOrmer) error) error
+	DoTransactionWithCtx(ctx context.Context, task func(txOrm TxOrmer) error) error
+	DoTransactionWithOpts(opts *sql.TxOptions, task func(txOrm TxOrmer) error) error
+	DoTransactionWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task func(txOrm TxOrmer) error) error
 }
 
 type TxCommitter interface {

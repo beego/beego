@@ -2020,7 +2020,7 @@ func TestTransaction(t *testing.T) {
 	// this test worked when database support transaction
 
 	o := NewOrm()
-	to, err := o.BeginTx(context.Background())
+	to, err := o.Begin()
 	throwFail(t, err)
 
 	var names = []string{"1", "2", "3"}
@@ -2053,7 +2053,7 @@ func TestTransaction(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 0))
 
-	to, err = o.BeginTx(context.Background())
+	to, err = o.Begin()
 	throwFail(t, err)
 
 	tag.Name = "commit"
@@ -2080,9 +2080,9 @@ func TestTransactionIsolationLevel(t *testing.T) {
 	o2 := NewOrm()
 
 	// start two transaction with isolation level repeatable read
-	to1, err := o1.BeginTxWithOpts(context.Background(), &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
+	to1, err := o1.BeginWithCtxAndOpts(context.Background(), &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 	throwFail(t, err)
-	to2, err := o2.BeginTxWithOpts(context.Background(), &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
+	to2, err := o2.BeginWithCtxAndOpts(context.Background(), &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 	throwFail(t, err)
 
 	// o1 insert tag
@@ -2119,7 +2119,7 @@ func TestTransactionIsolationLevel(t *testing.T) {
 func TestBeginTxWithContextCanceled(t *testing.T) {
 	o := NewOrm()
 	ctx, cancel := context.WithCancel(context.Background())
-	to, _ := o.BeginTx(ctx)
+	to, _ := o.BeginWithCtx(ctx)
 	id, err := to.Insert(&Tag{Name: "test-context"})
 	throwFail(t, err)
 	throwFail(t, AssertIs(id > 0, true))
