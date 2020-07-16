@@ -125,21 +125,24 @@ type DQL interface {
 	// switch to another registered database driver by given name.
 	// Using(name string) error
 
-
-	Driver() Driver
 	DBStats() *sql.DBStats
+}
 
+type DriverGetter interface {
+	Driver() Driver
 }
 
 type Ormer interface {
 	DQL
 	DML
+	DriverGetter
 	TxBeginner
 }
 
 type TxOrmer interface {
 	DQL
 	DML
+	DriverGetter
 	TxCommitter
 }
 
