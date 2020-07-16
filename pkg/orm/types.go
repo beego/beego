@@ -47,22 +47,8 @@ type TxCommitter interface {
 	Rollback() error
 }
 
-// Ormer define the orm interface
-type OrmerBase interface {
-	// read data to model
-	// for example:
-	//	this will find User by Id field
-	// 	u = &User{Id: user.Id}
-	// 	err = Ormer.Read(u)
-	//	this will find User by UserName field
-	// 	u = &User{UserName: "astaxie", Password: "pass"}
-	//	err = Ormer.Read(u, "UserName")
-	Read(ctx context.Context, md interface{}, cols ...string) error
-	// Like Read(), but with "FOR UPDATE" clause, useful in transaction.
-	// Some databases are not support this feature.
-	ReadForUpdate(ctx context.Context, md interface{}, cols ...string) error
-	// Try to read a row from the database, or insert one if it doesn't exist
-	ReadOrCreate(ctx context.Context, md interface{}, col1 string, cols ...string) (bool, int64, error)
+//Data Manipulation Language
+type DML interface {
 	// insert model data to database
 	// for example:
 	//  user := new(User)
@@ -88,6 +74,31 @@ type OrmerBase interface {
 	Update(ctx context.Context, md interface{}, cols ...string) (int64, error)
 	// delete model in database
 	Delete(ctx context.Context, md interface{}, cols ...string) (int64, error)
+
+	// return a raw query seter for raw sql string.
+	// for example:
+	//	 ormer.Raw("UPDATE `user` SET `user_name` = ? WHERE `user_name` = ?", "slene", "testing").Exec()
+	//	// update user testing's name to slene
+	Raw(ctx context.Context, query string, args ...interface{}) RawSeter
+}
+
+// Data Query Language
+type DQL interface {
+	// read data to model
+	// for example:
+	//	this will find User by Id field
+	// 	u = &User{Id: user.Id}
+	// 	err = Ormer.Read(u)
+	//	this will find User by UserName field
+	// 	u = &User{UserName: "astaxie", Password: "pass"}
+	//	err = Ormer.Read(u, "UserName")
+	Read(ctx context.Context, md interface{}, cols ...string) error
+	// Like Read(), but with "FOR UPDATE" clause, useful in transaction.
+	// Some databases are not support this feature.
+	ReadForUpdate(ctx context.Context, md interface{}, cols ...string) error
+	// Try to read a row from the database, or insert one if it doesn't exist
+	ReadOrCreate(ctx context.Context, md interface{}, col1 string, cols ...string) (bool, int64, error)
+
 	// load related models to md model.
 	// args are limit, offset int and order string.
 	//
@@ -114,23 +125,21 @@ type OrmerBase interface {
 	// switch to another registered database driver by given name.
 	// Using(name string) error
 
-	// return a raw query seter for raw sql string.
-	// for example:
-	//	 ormer.Raw("UPDATE `user` SET `user_name` = ? WHERE `user_name` = ?", "slene", "testing").Exec()
-	//	// update user testing's name to slene
-	Raw(ctx context.Context, query string, args ...interface{}) RawSeter
+
 	Driver() Driver
 	DBStats() *sql.DBStats
 
 }
 
 type Ormer interface {
-	OrmerBase
+	DQL
+	DML
 	TxBeginner
 }
 
 type TxOrmer interface {
-	OrmerBase
+	DQL
+	DML
 	TxCommitter
 }
 

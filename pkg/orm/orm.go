@@ -98,7 +98,8 @@ type ormBase struct {
 	db    dbQuerier
 }
 
-var _ OrmerBase = new(ormBase)
+var _ DQL = new(ormBase)
+var _ DML = new(ormBase)
 
 // get model info and model reflect value
 func (o *ormBase) getMiInd(md interface{}, needPtr bool) (mi *modelInfo, ind reflect.Value) {
