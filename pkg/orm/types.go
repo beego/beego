@@ -36,10 +36,10 @@ type Fielder interface {
 }
 
 type TxBeginner interface {
-	BeginTx(ctx context.Context) (*TxOrmer, error)
-	BeginTxWithOpts(ctx context.Context, opts *sql.TxOptions) (*TxOrmer, error)
-	ExecuteTx(ctx context.Context, task func(txOrm *TxOrmer) error) error
-	ExecuteTxWithOpts(ctx context.Context, opts *sql.TxOptions, task func(txOrm *TxOrmer) error) error
+	BeginTx(ctx context.Context) (TxOrmer, error)
+	BeginTxWithOpts(ctx context.Context, opts *sql.TxOptions) (TxOrmer, error)
+	ExecuteTx(ctx context.Context, task func(txOrm TxOrmer) error) error
+	ExecuteTxWithOpts(ctx context.Context, opts *sql.TxOptions, task func(txOrm TxOrmer) error) error
 }
 
 type TxCommitter interface {
@@ -54,14 +54,17 @@ type DML interface {
 	//  user := new(User)
 	//  id, err = Ormer.Insert(user)
 	//  user must be a pointer and Insert will set user's pk field
-	Insert(ctx context.Context, md interface{}) (int64, error)
+	Insert(md interface{}) (int64, error)
+	InsertWithCtx(ctx context.Context, md interface{}) (int64, error)
 	// mysql:InsertOrUpdate(model) or InsertOrUpdate(model,"colu=colu+value")
 	// if colu type is integer : can use(+-*/), string : convert(colu,"value")
 	// postgres: InsertOrUpdate(model,"conflictColumnName") or InsertOrUpdate(model,"conflictColumnName","colu=colu+value")
 	// if colu type is integer : can use(+-*/), string : colu || "value"
-	InsertOrUpdate(ctx context.Context, md interface{}, colConflitAndArgs ...string) (int64, error)
+	InsertOrUpdate(md interface{}, colConflitAndArgs ...string) (int64, error)
+	InsertOrUpdateWithCtx(ctx context.Context, md interface{}, colConflitAndArgs ...string) (int64, error)
 	// insert some models to database
-	InsertMulti(ctx context.Context, bulk int, mds interface{}) (int64, error)
+	InsertMulti(bulk int, mds interface{}) (int64, error)
+	InsertMultiWithCtx(ctx context.Context, bulk int, mds interface{}) (int64, error)
 	// update model to database.
 	// cols set the columns those want to update.
 	// find model by Id(pk) field and update columns specified by fields, if cols is null then update all columns
@@ -71,15 +74,18 @@ type DML interface {
 	//	user.Extra.Name = "beego"
 	//	user.Extra.Data = "orm"
 	//	num, err = Ormer.Update(&user, "Langs", "Extra")
-	Update(ctx context.Context, md interface{}, cols ...string) (int64, error)
+	Update(md interface{}, cols ...string) (int64, error)
+	UpdateWithCtx(ctx context.Context, md interface{}, cols ...string) (int64, error)
 	// delete model in database
-	Delete(ctx context.Context, md interface{}, cols ...string) (int64, error)
+	Delete(md interface{}, cols ...string) (int64, error)
+	DeleteWithCtx(ctx context.Context, md interface{}, cols ...string) (int64, error)
 
 	// return a raw query seter for raw sql string.
 	// for example:
 	//	 ormer.Raw("UPDATE `user` SET `user_name` = ? WHERE `user_name` = ?", "slene", "testing").Exec()
 	//	// update user testing's name to slene
-	Raw(ctx context.Context, query string, args ...interface{}) RawSeter
+	Raw(query string, args ...interface{}) RawSeter
+	RawWithCtx(ctx context.Context, query string, args ...interface{}) RawSeter
 }
 
 // Data Query Language
@@ -92,12 +98,17 @@ type DQL interface {
 	//	this will find User by UserName field
 	// 	u = &User{UserName: "astaxie", Password: "pass"}
 	//	err = Ormer.Read(u, "UserName")
-	Read(ctx context.Context, md interface{}, cols ...string) error
+	Read(md interface{}, cols ...string) error
+	ReadWithCtx(ctx context.Context, md interface{}, cols ...string) error
+
 	// Like Read(), but with "FOR UPDATE" clause, useful in transaction.
 	// Some databases are not support this feature.
-	ReadForUpdate(ctx context.Context, md interface{}, cols ...string) error
+	ReadForUpdate( md interface{}, cols ...string) error
+	ReadForUpdateWithCtx(ctx context.Context, md interface{}, cols ...string) error
+
 	// Try to read a row from the database, or insert one if it doesn't exist
-	ReadOrCreate(ctx context.Context, md interface{}, col1 string, cols ...string) (bool, int64, error)
+	ReadOrCreate(md interface{}, col1 string, cols ...string) (bool, int64, error)
+	ReadOrCreateWithCtx(ctx context.Context, md interface{}, col1 string, cols ...string) (bool, int64, error)
 
 	// load related models to md model.
 	// args are limit, offset int and order string.
@@ -111,16 +122,21 @@ type DQL interface {
 	// args[2] int offset default offset 0
 	// args[3] string order  for example : "-Id"
 	// make sure the relation is defined in model struct tags.
-	LoadRelated(ctx context.Context, md interface{}, name string, args ...interface{}) (int64, error)
+	LoadRelated( md interface{}, name string, args ...interface{}) (int64, error)
+	LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...interface{}) (int64, error)
+
 	// create a models to models queryer
 	// for example:
 	// 	post := Post{Id: 4}
 	// 	m2m := Ormer.QueryM2M(&post, "Tags")
-	QueryM2M(ctx context.Context, md interface{}, name string) QueryM2Mer
+	QueryM2M( md interface{}, name string) QueryM2Mer
+	QueryM2MWithCtx(ctx context.Context, md interface{}, name string) QueryM2Mer
+
 	// return a QuerySeter for table operations.
 	// table name can be string or struct.
 	// e.g. QueryTable("user"), QueryTable(&user{}) or QueryTable((*User)(nil)),
-	QueryTable(ctx context.Context, ptrStructOrTableName interface{}) QuerySeter
+	QueryTable(ptrStructOrTableName interface{}) QuerySeter
+	QueryTableWithCtx(ctx context.Context, ptrStructOrTableName interface{}) QuerySeter
 
 	// switch to another registered database driver by given name.
 	// Using(name string) error

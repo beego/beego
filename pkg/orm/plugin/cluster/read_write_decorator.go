@@ -17,7 +17,6 @@ package cluster
 import (
 	"context"
 	"database/sql"
-
 	"github.com/astaxie/beego/pkg/orm"
 )
 
@@ -31,86 +30,126 @@ type MultipleReadWriteOrm struct {
 	followers map[string]orm.Ormer
 }
 
+func (m *MultipleReadWriteOrm) Read(md interface{}, cols ...string) error {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) ReadWithCtx(ctx context.Context, md interface{}, cols ...string) error {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) ReadForUpdate(md interface{}, cols ...string) error {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) ReadForUpdateWithCtx(ctx context.Context, md interface{}, cols ...string) error {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) ReadOrCreate(md interface{}, col1 string, cols ...string) (bool, int64, error) {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) ReadOrCreateWithCtx(ctx context.Context, md interface{}, col1 string, cols ...string) (bool, int64, error) {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) LoadRelated(md interface{}, name string, args ...interface{}) (int64, error) {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...interface{}) (int64, error) {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) QueryM2M(md interface{}, name string) orm.QueryM2Mer {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) QueryM2MWithCtx(ctx context.Context, md interface{}, name string) orm.QueryM2Mer {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) QueryTable(ptrStructOrTableName interface{}) orm.QuerySeter {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) QueryTableWithCtx(ctx context.Context, ptrStructOrTableName interface{}) orm.QuerySeter {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) DBStats() *sql.DBStats {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) Insert(md interface{}) (int64, error) {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) InsertWithCtx(ctx context.Context, md interface{}) (int64, error) {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) InsertOrUpdate(md interface{}, colConflitAndArgs ...string) (int64, error) {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) InsertOrUpdateWithCtx(ctx context.Context, md interface{}, colConflitAndArgs ...string) (int64, error) {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) InsertMulti(bulk int, mds interface{}) (int64, error) {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) InsertMultiWithCtx(ctx context.Context, bulk int, mds interface{}) (int64, error) {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) Update(md interface{}, cols ...string) (int64, error) {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) UpdateWithCtx(ctx context.Context, md interface{}, cols ...string) (int64, error) {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) Delete(md interface{}, cols ...string) (int64, error) {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) DeleteWithCtx(ctx context.Context, md interface{}, cols ...string) (int64, error) {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) Raw(query string, args ...interface{}) orm.RawSeter {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) RawWithCtx(ctx context.Context, query string, args ...interface{}) orm.RawSeter {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) Driver() orm.Driver {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) BeginTx(ctx context.Context) (*orm.TxOrmer, error) {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) BeginTxWithOpts(ctx context.Context, opts *sql.TxOptions) (orm.TxOrmer, error) {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) ExecuteTx(ctx context.Context, task func(txOrm orm.TxOrmer) error) error {
+	panic("implement me")
+}
+
+func (m *MultipleReadWriteOrm) ExecuteTxWithOpts(ctx context.Context, opts *sql.TxOptions, task func(txOrm orm.TxOrmer) error) error {
+	panic("implement me")
+}
+
 type rawSQlExecutorSelector interface {
 	Select(ctx context.Context, sql string, args ...interface{}) orm.Ormer
 }
-
-func (s *SimpleReadWriteOrm) Read(ctx context.Context, md interface{}, cols ...string) error {
-	hint := ctx.Value("db")
-	if hint == "master"{
-		return s.master.Read(ctx, md, cols...)
-	}
-	return s.follower.Read(ctx, md, cols...)
-}
-
-func (s *SimpleReadWriteOrm) ReadForUpdate(ctx context.Context, md interface{}, cols ...string) error {
-	panic("implement me")
-}
-
-func (s *SimpleReadWriteOrm) ReadOrCreate(ctx context.Context, md interface{}, col1 string, cols ...string) (bool, int64, error) {
-	panic("implement me")
-}
-
-func (s *SimpleReadWriteOrm) Insert(ctx context.Context, md interface{}) (int64, error) {
-	panic("implement me")
-}
-
-func (s *SimpleReadWriteOrm) InsertOrUpdate(ctx context.Context, md interface{}, colConflitAndArgs ...string) (int64, error) {
-	panic("implement me")
-}
-
-func (s *SimpleReadWriteOrm) InsertMulti(ctx context.Context, bulk int, mds interface{}) (int64, error) {
-	panic("implement me")
-}
-
-func (s *SimpleReadWriteOrm) Update(ctx context.Context, md interface{}, cols ...string) (int64, error) {
-	panic("implement me")
-}
-
-func (s *SimpleReadWriteOrm) Delete(ctx context.Context, md interface{}, cols ...string) (int64, error) {
-	panic("implement me")
-}
-
-func (s *SimpleReadWriteOrm) LoadRelated(ctx context.Context, md interface{}, name string, args ...interface{}) (int64, error) {
-	panic("implement me")
-}
-
-func (s *SimpleReadWriteOrm) QueryM2M(ctx context.Context, md interface{}, name string) orm.QueryM2Mer {
-	panic("implement me")
-}
-
-func (s *SimpleReadWriteOrm) QueryTable(ctx context.Context, ptrStructOrTableName interface{}) orm.QuerySeter {
-	panic("implement me")
-}
-
-func (s *SimpleReadWriteOrm) BeginTx(ctx context.Context) (*sql.Tx, error) {
-	panic("implement me")
-}
-
-func (s *SimpleReadWriteOrm) BeginTxWithOpts(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error) {
-	panic("implement me")
-}
-
-func (s *SimpleReadWriteOrm) ExecuteTx(ctx context.Context, task func() error) error {
-	panic("implement me")
-}
-
-func (s *SimpleReadWriteOrm) ExecuteTxWithOpts(ctx context.Context, opts *sql.TxOptions, task func() error) error {
-	panic("implement me")
-}
-
-func (s *SimpleReadWriteOrm) Raw(ctx context.Context, query string, args ...interface{}) orm.RawSeter {
-	panic("implement me")
-}
-
-func (s *SimpleReadWriteOrm) Driver() orm.Driver {
-	panic("implement me")
-}
-
-func (s *SimpleReadWriteOrm) DBStats() *sql.DBStats {
-	panic("implement me")
-}
-
-
-
-
