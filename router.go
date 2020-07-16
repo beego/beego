@@ -742,6 +742,12 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
 		if BConfig.CopyRequestBody && !context.Input.IsUpload() {
+			// connection will close if the incoming data are larger (RFC 7231, 6.5.11)
+			if r.ContentLength > BConfig.MaxMemory {
+				logs.Error(errors.New("payload too large"))
+				exception("413", context)
+				goto Admin
+			}
 			context.Input.CopyBody(BConfig.MaxMemory)
 		}
 		context.Input.ParseFormOrMulitForm(BConfig.MaxMemory)
