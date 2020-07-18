@@ -221,16 +221,17 @@ func (d *DB) QueryRowContext(ctx context.Context, query string, args ...interfac
 }
 
 type alias struct {
-	Name         string
-	Driver       DriverType
-	DriverName   string
-	DataSource   string
-	MaxIdleConns int
-	MaxOpenConns int
-	DB           *DB
-	DbBaser      dbBaser
-	TZ           *time.Location
-	Engine       string
+	Name            string
+	Driver          DriverType
+	DriverName      string
+	DataSource      string
+	MaxIdleConns    int
+	MaxOpenConns    int
+	ConnMaxLifetime time.Duration
+	DB              *DB
+	DbBaser         dbBaser
+	TZ              *time.Location
+	Engine          string
 }
 
 func detectTZ(al *alias) {
@@ -353,6 +354,8 @@ func RegisterDataBase(aliasName, driverName, dataSource string, params ...int) e
 			SetMaxIdleConns(al.Name, v)
 		case 1:
 			SetMaxOpenConns(al.Name, v)
+		case 2:
+			SetConnMaxLifetime(al.Name, time.Duration(v)*time.Millisecond)
 		}
 	}
 
@@ -407,6 +410,13 @@ func SetMaxOpenConns(aliasName string, maxOpenConns int) {
 	}
 }
 
+// SetConnMaxLifetime Change the the max life time of conns for *sql.DB, use specify database alias name
+func SetConnMaxLifetime(aliasName string, connMaxLifetime time.Duration) {
+	al := getDbAlias(aliasName)
+	al.ConnMaxLifetime = connMaxLifetime
+	al.DB.DB.SetConnMaxLifetime(connMaxLifetime)
+}
+
 // GetDB Get *sql.DB from registered database by db alias name.
 // Use "default" as alias name if you not set.
 func GetDB(aliasNames ...string) (*sql.DB, error) {
@@ -424,7 +434,7 @@ func GetDB(aliasNames ...string) (*sql.DB, error) {
 }
 
 type stmtDecorator struct {
-	wg sync.WaitGroup
+	wg   sync.WaitGroup
 	stmt *sql.Stmt
 }
 
