@@ -63,7 +63,7 @@ func newRawPreparer(rs *rawSet) (RawPreparer, error) {
 type rawSet struct {
 	query string
 	args  []interface{}
-	orm   *orm
+	orm   *ormBase
 }
 
 var _ RawSeter = new(rawSet)
@@ -858,7 +858,7 @@ func (o *rawSet) Prepare() (RawPreparer, error) {
 	return newRawPreparer(o)
 }
 
-func newRawSet(orm *orm, query string, args []interface{}) RawSeter {
+func newRawSet(orm *ormBase, query string, args []interface{}) RawSeter {
 	o := new(rawSet)
 	o.query = query
 	o.args = args

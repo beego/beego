@@ -129,7 +129,7 @@ func (o *queryM2M) Count() (int64, error) {
 var _ QueryM2Mer = new(queryM2M)
 
 // create new M2M queryer.
-func newQueryM2M(md interface{}, o *orm, mi *modelInfo, fi *fieldInfo, ind reflect.Value) QueryM2Mer {
+func newQueryM2M(md interface{}, o *ormBase, mi *modelInfo, fi *fieldInfo, ind reflect.Value) QueryM2Mer {
 	qm2m := new(queryM2M)
 	qm2m.md = md
 	qm2m.mi = mi
