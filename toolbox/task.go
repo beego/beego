@@ -102,6 +102,8 @@ type taskerr struct {
 }
 
 // Task task struct
+// It's not a thread-safe structure.
+// Only nearest errors will be saved in ErrList
 type Task struct {
 	Taskname string
 	Spec     *Schedule
@@ -111,6 +113,7 @@ type Task struct {
 	Next     time.Time
 	Errlist  []*taskerr // like errtime:errinfo
 	ErrLimit int        // max length for the errlist, 0 stand for no limit
+	errCnt int // records the error count during the execution
 }
 
 // NewTask add new task with name, time and func
@@ -119,8 +122,11 @@ func NewTask(tname string, spec string, f TaskFunc) *Task {
 	task := &Task{
 		Taskname: tname,
 		DoFunc:   f,
+		// Make configurable
 		ErrLimit: 100,
 		SpecStr:  spec,
+		// we only store the pointer, so it won't use too many space
+		Errlist: make([]*taskerr, 100, 100),
 	}
 	task.SetCron(spec)
 	return task
@@ -144,9 +150,9 @@ func (t *Task) GetStatus() string {
 func (t *Task) Run() error {
 	err := t.DoFunc()
 	if err != nil {
-		if t.ErrLimit > 0 && t.ErrLimit > len(t.Errlist) {
-			t.Errlist = append(t.Errlist, &taskerr{t: t.Next, errinfo: err.Error()})
-		}
+		index := t.errCnt % t.ErrLimit
+		t.Errlist[index] = &taskerr{t: t.Next, errinfo: err.Error()}
+		t.errCnt++
 	}
 	return err
 }
