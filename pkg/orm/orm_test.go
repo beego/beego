@@ -30,6 +30,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var _ = os.PathSeparator
@@ -141,6 +143,7 @@ func getCaller(skip int) string {
 	return fmt.Sprintf("%s:%s:%d: \n%s", fn, funName, line, strings.Join(codes, "\n"))
 }
 
+// Deprecated: Using stretchr/testify/assert
 func throwFail(t *testing.T, err error, args ...interface{}) {
 	if err != nil {
 		con := fmt.Sprintf("\t\nError: %s\n%s\n", err.Error(), getCaller(2))
@@ -455,9 +458,11 @@ func TestNullDataTypes(t *testing.T) {
 	throwFail(t, AssertIs(*d.Float32Ptr, float32Ptr))
 	throwFail(t, AssertIs(*d.Float64Ptr, float64Ptr))
 	throwFail(t, AssertIs(*d.DecimalPtr, decimalPtr))
-	throwFail(t, AssertIs((*d.TimePtr).UTC().Format(testTime), timePtr.UTC().Format(testTime)))
-	throwFail(t, AssertIs((*d.DatePtr).UTC().Format(testDate), datePtr.UTC().Format(testDate)))
-	throwFail(t, AssertIs((*d.DateTimePtr).UTC().Format(testDateTime), dateTimePtr.UTC().Format(testDateTime)))
+
+	// in mysql, there are some precision problem, (*d.TimePtr).UTC() != timePtr.UTC()
+	assert.True(t, (*d.TimePtr).UTC().Sub(timePtr.UTC()) <= time.Second)
+	assert.True(t, (*d.DatePtr).UTC().Sub(datePtr.UTC()) <= time.Second)
+	assert.True(t, (*d.DateTimePtr).UTC().Sub(dateTimePtr.UTC()) <= time.Second)
 
 	// test support for pointer fields using RawSeter.QueryRows()
 	var dnList []*DataNull
@@ -532,8 +537,9 @@ func TestCRUD(t *testing.T) {
 	throwFail(t, AssertIs(u.Status, 3))
 	throwFail(t, AssertIs(u.IsStaff, true))
 	throwFail(t, AssertIs(u.IsActive, true))
-	throwFail(t, AssertIs(u.Created.In(DefaultTimeLoc), user.Created.In(DefaultTimeLoc), testDate))
-	throwFail(t, AssertIs(u.Updated.In(DefaultTimeLoc), user.Updated.In(DefaultTimeLoc), testDateTime))
+
+	assert.True(t, u.Created.In(DefaultTimeLoc).Sub(user.Created.In(DefaultTimeLoc)) <= time.Second)
+	assert.True(t, u.Updated.In(DefaultTimeLoc).Sub(user.Updated.In(DefaultTimeLoc)) <= time.Second)
 
 	user.UserName = "astaxie"
 	user.Profile = profile
@@ -1793,7 +1799,7 @@ func TestQueryRows(t *testing.T) {
 	throwFailNow(t, AssertIs(ids[2], 4))
 	throwFailNow(t, AssertIs(usernames[2], "nobody"))
 
-	//test query rows by nested struct
+	// test query rows by nested struct
 	var l []userProfile
 	query = fmt.Sprintf("SELECT * FROM %suser_profile%s LEFT JOIN %suser%s ON %suser_profile%s.%sid%s = %suser%s.%sid%s", Q, Q, Q, Q, Q, Q, Q, Q, Q, Q, Q, Q)
 	num, err = dORM.Raw(query).QueryRows(&l)
@@ -2413,7 +2419,7 @@ func TestInsertOrUpdate(t *testing.T) {
 		fmt.Println("sqlite3 is nonsupport")
 		return
 	}
-	//test1
+	// test1
 	_, err := dORM.InsertOrUpdate(&user1, "user_name")
 	if err != nil {
 		fmt.Println(err)
@@ -2425,7 +2431,7 @@ func TestInsertOrUpdate(t *testing.T) {
 		dORM.Read(&test, "user_name")
 		throwFailNow(t, AssertIs(user1.Status, test.Status))
 	}
-	//test2
+	// test2
 	_, err = dORM.InsertOrUpdate(&user2, "user_name")
 	if err != nil {
 		fmt.Println(err)
@@ -2439,11 +2445,11 @@ func TestInsertOrUpdate(t *testing.T) {
 		throwFailNow(t, AssertIs(user2.Password, strings.TrimSpace(test.Password)))
 	}
 
-	//postgres ON CONFLICT DO UPDATE SET can`t use colu=colu+values
+	// postgres ON CONFLICT DO UPDATE SET can`t use colu=colu+values
 	if IsPostgres {
 		return
 	}
-	//test3 +
+	// test3 +
 	_, err = dORM.InsertOrUpdate(&user2, "user_name", "status=status+1")
 	if err != nil {
 		fmt.Println(err)
@@ -2455,7 +2461,7 @@ func TestInsertOrUpdate(t *testing.T) {
 		dORM.Read(&test, "user_name")
 		throwFailNow(t, AssertIs(user2.Status+1, test.Status))
 	}
-	//test4 -
+	// test4 -
 	_, err = dORM.InsertOrUpdate(&user2, "user_name", "status=status-1")
 	if err != nil {
 		fmt.Println(err)
@@ -2467,7 +2473,7 @@ func TestInsertOrUpdate(t *testing.T) {
 		dORM.Read(&test, "user_name")
 		throwFailNow(t, AssertIs((user2.Status+1)-1, test.Status))
 	}
-	//test5 *
+	// test5 *
 	_, err = dORM.InsertOrUpdate(&user2, "user_name", "status=status*3")
 	if err != nil {
 		fmt.Println(err)
@@ -2479,7 +2485,7 @@ func TestInsertOrUpdate(t *testing.T) {
 		dORM.Read(&test, "user_name")
 		throwFailNow(t, AssertIs(((user2.Status+1)-1)*3, test.Status))
 	}
-	//test6 /
+	// test6 /
 	_, err = dORM.InsertOrUpdate(&user2, "user_name", "Status=Status/3")
 	if err != nil {
 		fmt.Println(err)

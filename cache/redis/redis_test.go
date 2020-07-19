@@ -21,6 +21,7 @@ import (
 
 	"github.com/astaxie/beego/cache"
 	"github.com/gomodule/redigo/redis"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRedisCache(t *testing.T) {
@@ -124,9 +125,8 @@ func TestCache_Scan(t *testing.T) {
 	if err != nil {
 		t.Error("scan Error", err)
 	}
-	if len(keys) != 10000 {
-		t.Error("scan all err")
-	}
+
+	assert.Equal(t, 10000, len(keys), "scan all error")
 
 	// clear all
 	if err = bm.ClearAll(); err != nil {
