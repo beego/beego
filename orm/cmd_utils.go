@@ -178,9 +178,9 @@ func getDbCreateSQL(al *alias) (sqls []string, tableIndexes map[string][]dbIndex
 					column += " " + "NOT NULL"
 				}
 
-				//if fi.initial.String() != "" {
+				// if fi.initial.String() != "" {
 				//	column += " DEFAULT " + fi.initial.String()
-				//}
+				// }
 
 				// Append attribute DEFAULT
 				column += getColumnDefault(fi)
@@ -197,9 +197,9 @@ func getDbCreateSQL(al *alias) (sqls []string, tableIndexes map[string][]dbIndex
 			if strings.Contains(column, "%COL%") {
 				column = strings.Replace(column, "%COL%", fi.column, -1)
 			}
-			
-			if fi.description != "" && al.Driver!=DRSqlite {
-				column += " " + fmt.Sprintf("COMMENT '%s'",fi.description)
+
+			if fi.description != "" && al.Driver != DRSqlite {
+				column += " " + fmt.Sprintf("COMMENT '%s'", fi.description)
 			}
 
 			columns = append(columns, column)
