@@ -1,7 +1,7 @@
 language: go
 
 go:
-  - "1.13.x"
+  - "1.14.x"
 services:
   - redis-server
   - mysql
@@ -63,7 +63,7 @@ after_script:
   - killall -w ssdb-server
   - rm -rf ./res/var/*
 script:
-  - go test -v ./...
+  - go test ./...
   - staticcheck -show-ignored -checks "-ST1017,-U1000,-ST1005,-S1034,-S1012,-SA4006,-SA6005,-SA1019,-SA1024"
   - unconvert $(go list ./... | grep -v /vendor/)
   - ineffassign .
