@@ -147,19 +147,19 @@ func (s *SimpleReadWriteOrm) BeginWithCtxAndOpts(ctx context.Context, opts *sql.
 	panic("implement me")
 }
 
-func (s *SimpleReadWriteOrm) DoTransaction(task func(txOrm orm.TxOrmer) error) error {
+func (s *SimpleReadWriteOrm) DoTx(task func(txOrm orm.TxOrmer) error) error {
 	panic("implement me")
 }
 
-func (s *SimpleReadWriteOrm) DoTransactionWithCtx(ctx context.Context, task func(txOrm orm.TxOrmer) error) error {
+func (s *SimpleReadWriteOrm) DoTxWithCtx(ctx context.Context, task func(txOrm orm.TxOrmer) error) error {
 	panic("implement me")
 }
 
-func (s *SimpleReadWriteOrm) DoTransactionWithOpts(opts *sql.TxOptions, task func(txOrm orm.TxOrmer) error) error {
+func (s *SimpleReadWriteOrm) DoTxWithOpts(opts *sql.TxOptions, task func(txOrm orm.TxOrmer) error) error {
 	panic("implement me")
 }
 
-func (s *SimpleReadWriteOrm) DoTransactionWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task func(txOrm orm.TxOrmer) error) error {
+func (s *SimpleReadWriteOrm) DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task func(txOrm orm.TxOrmer) error) error {
 	panic("implement me")
 }
 

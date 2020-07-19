@@ -533,19 +533,19 @@ func (o *orm) BeginWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions) (TxO
 	return taskTxOrm, nil
 }
 
-func (o *orm) DoTransaction(task func(txOrm TxOrmer) error) error {
-	return o.DoTransactionWithCtx(context.Background(), task)
+func (o *orm) DoTx(task func(txOrm TxOrmer) error) error {
+	return o.DoTxWithCtx(context.Background(), task)
 }
 
-func (o *orm) DoTransactionWithCtx(ctx context.Context, task func(txOrm TxOrmer) error) error {
-	return o.DoTransactionWithCtxAndOpts(ctx, nil, task)
+func (o *orm) DoTxWithCtx(ctx context.Context, task func(txOrm TxOrmer) error) error {
+	return o.DoTxWithCtxAndOpts(ctx, nil, task)
 }
 
-func (o *orm) DoTransactionWithOpts(opts *sql.TxOptions, task func(txOrm TxOrmer) error) error {
-	return o.DoTransactionWithCtxAndOpts(context.Background(), opts, task)
+func (o *orm) DoTxWithOpts(opts *sql.TxOptions, task func(txOrm TxOrmer) error) error {
+	return o.DoTxWithCtxAndOpts(context.Background(), opts, task)
 }
 
-func (o *orm) DoTransactionWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task func(txOrm TxOrmer) error) error {
+func (o *orm) DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task func(txOrm TxOrmer) error) error {
 	tx, err := o.db.(txer).BeginTx(ctx, opts)
 	if err != nil {
 		return err
