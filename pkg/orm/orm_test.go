@@ -2026,24 +2026,24 @@ func TestTransaction(t *testing.T) {
 	// this test worked when database support transaction
 
 	o := NewOrm()
-	err := o.Begin()
+	to, err := o.Begin()
 	throwFail(t, err)
 
 	var names = []string{"1", "2", "3"}
 
 	var tag Tag
 	tag.Name = names[0]
-	id, err := o.Insert(&tag)
+	id, err := to.Insert(&tag)
 	throwFail(t, err)
 	throwFail(t, AssertIs(id > 0, true))
 
-	num, err := o.QueryTable("tag").Filter("name", "golang").Update(Params{"name": names[1]})
+	num, err := to.QueryTable("tag").Filter("name", "golang").Update(Params{"name": names[1]})
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
 
 	switch {
 	case IsMysql || IsSqlite:
-		res, err := o.Raw("INSERT INTO tag (name) VALUES (?)", names[2]).Exec()
+		res, err := to.Raw("INSERT INTO tag (name) VALUES (?)", names[2]).Exec()
 		throwFail(t, err)
 		if err == nil {
 			id, err = res.LastInsertId()
@@ -2052,22 +2052,22 @@ func TestTransaction(t *testing.T) {
 		}
 	}
 
-	err = o.Rollback()
+	err = to.Rollback()
 	throwFail(t, err)
 
 	num, err = o.QueryTable("tag").Filter("name__in", names).Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 0))
 
-	err = o.Begin()
+	to, err = o.Begin()
 	throwFail(t, err)
 
 	tag.Name = "commit"
-	id, err = o.Insert(&tag)
+	id, err = to.Insert(&tag)
 	throwFail(t, err)
 	throwFail(t, AssertIs(id > 0, true))
 
-	o.Commit()
+	to.Commit()
 	throwFail(t, err)
 
 	num, err = o.QueryTable("tag").Filter("name", "commit").Delete()
@@ -2086,15 +2086,15 @@ func TestTransactionIsolationLevel(t *testing.T) {
 	o2 := NewOrm()
 
 	// start two transaction with isolation level repeatable read
-	err := o1.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
+	to1, err := o1.BeginWithCtxAndOpts(context.Background(), &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 	throwFail(t, err)
-	err = o2.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
+	to2, err := o2.BeginWithCtxAndOpts(context.Background(), &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
 	throwFail(t, err)
 
 	// o1 insert tag
 	var tag Tag
 	tag.Name = "test-transaction"
-	id, err := o1.Insert(&tag)
+	id, err := to1.Insert(&tag)
 	throwFail(t, err)
 	throwFail(t, AssertIs(id > 0, true))
 
@@ -2104,15 +2104,15 @@ func TestTransactionIsolationLevel(t *testing.T) {
 	throwFail(t, AssertIs(num, 0))
 
 	// o1 commit
-	o1.Commit()
+	to1.Commit()
 
 	// o2 query tag table, still no result
-	num, err = o2.QueryTable("tag").Filter("name", "test-transaction").Count()
+	num, err = to2.QueryTable("tag").Filter("name", "test-transaction").Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 0))
 
 	// o2 commit and query tag table, get the result
-	o2.Commit()
+	to2.Commit()
 	num, err = o2.QueryTable("tag").Filter("name", "test-transaction").Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
@@ -2125,14 +2125,14 @@ func TestTransactionIsolationLevel(t *testing.T) {
 func TestBeginTxWithContextCanceled(t *testing.T) {
 	o := NewOrm()
 	ctx, cancel := context.WithCancel(context.Background())
-	o.BeginTx(ctx, nil)
-	id, err := o.Insert(&Tag{Name: "test-context"})
+	to, _ := o.BeginWithCtx(ctx)
+	id, err := to.Insert(&Tag{Name: "test-context"})
 	throwFail(t, err)
 	throwFail(t, AssertIs(id > 0, true))
 
 	// cancel the context before commit to make it error
 	cancel()
-	err = o.Commit()
+	err = to.Commit()
 	throwFail(t, AssertIs(err, context.Canceled))
 }
 

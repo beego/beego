@@ -22,7 +22,7 @@ import (
 // an insert queryer struct
 type insertSet struct {
 	mi     *modelInfo
-	orm    *orm
+	orm    *ormBase
 	stmt   stmtQuerier
 	closed bool
 }
@@ -70,7 +70,7 @@ func (o *insertSet) Close() error {
 }
 
 // create new insert queryer.
-func newInsertSet(orm *orm, mi *modelInfo) (Inserter, error) {
+func newInsertSet(orm *ormBase, mi *modelInfo) (Inserter, error) {
 	bi := new(insertSet)
 	bi.orm = orm
 	bi.mi = mi
