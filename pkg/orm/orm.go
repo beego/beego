@@ -78,6 +78,7 @@ var (
 	DefaultRowsLimit = -1
 	DefaultRelsDepth = 2
 	DefaultTimeLoc   = time.Local
+	ErrTxDone        = errors.New("<TxOrmer.Commit/Rollback> transaction already done")
 	ErrMultiRows     = errors.New("<QuerySeter> return multi rows")
 	ErrNoRows        = errors.New("<QuerySeter> no row found")
 	ErrStmtClosed    = errors.New("<QuerySeter> stmt already closed")
@@ -524,10 +525,13 @@ func (o *orm) BeginWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions) (TxO
 		return nil, err
 	}
 
-	_txOrm := &txOrm{ormBase{
-		alias: o.alias,
-		db:    &TxDB{tx: tx},
-	}}
+	_txOrm := &txOrm{
+		ormBase: ormBase{
+			alias: o.alias,
+			db:    &TxDB{tx: tx},
+		},
+		isClosed: false,
+	}
 
 	var taskTxOrm TxOrmer = _txOrm
 	return taskTxOrm, nil
@@ -546,27 +550,22 @@ func (o *orm) DoTxWithOpts(opts *sql.TxOptions, task func(txOrm TxOrmer) error) 
 }
 
 func (o *orm) DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task func(txOrm TxOrmer) error) error {
-	tx, err := o.db.(txer).BeginTx(ctx, opts)
+	_txOrm, err := o.BeginWithCtxAndOpts(ctx, opts)
 	if err != nil {
 		return err
 	}
 	panicked := true
 	defer func() {
 		if panicked || err != nil {
-			e := tx.Rollback()
+			e := _txOrm.Rollback()
 			logs.Error("rollback transaction failed: %v", e)
 		} else {
-			e := tx.Commit()
+			e := _txOrm.Commit()
 			logs.Error("commit transaction failed: %v", e)
 		}
 	}()
 
-	_txOrm := &txOrm{ormBase{
-		alias: o.alias,
-		db:    &TxDB{tx: tx},
-	}}
-
-	var taskTxOrm TxOrmer = _txOrm
+	var taskTxOrm = _txOrm
 	err = task(taskTxOrm)
 	panicked = false
 	return err
@@ -574,15 +573,33 @@ func (o *orm) DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task 
 
 type txOrm struct {
 	ormBase
+	isClosed   bool
+	closeMutex sync.Mutex
 }
 
 var _ TxOrmer = new(txOrm)
 
 func (t *txOrm) Commit() error {
+	t.closeMutex.Lock()
+	defer t.closeMutex.Unlock()
+
+	if t.isClosed {
+		return ErrTxDone
+	}
+	t.isClosed = true
+
 	return t.db.(txEnder).Commit()
 }
 
 func (t *txOrm) Rollback() error {
+	t.closeMutex.Lock()
+	defer t.closeMutex.Unlock()
+
+	if t.isClosed {
+		return ErrTxDone
+	}
+	t.isClosed = true
+
 	return t.db.(txEnder).Rollback()
 }
 
