@@ -15,10 +15,13 @@
 package toolbox
 
 import (
+	"errors"
 	"fmt"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParse(t *testing.T) {
@@ -51,6 +54,25 @@ func TestSpec(t *testing.T) {
 		t.FailNow()
 	case <-wait(wg):
 	}
+}
+
+func TestTask_Run(t *testing.T) {
+	cnt := -1
+	task := func() error {
+		cnt ++
+		fmt.Printf("Hello, world! %d \n", cnt)
+		return errors.New(fmt.Sprintf("Hello, world! %d", cnt))
+	}
+	tk := NewTask("taska", "0/30 * * * * *", task)
+	for i := 0; i < 200 ; i ++ {
+		e := tk.Run()
+		assert.NotNil(t, e)
+	}
+
+	l := tk.Errlist
+	assert.Equal(t, 100, len(l))
+	assert.Equal(t, "Hello, world! 100", l[0].errinfo)
+	assert.Equal(t, "Hello, world! 101", l[1].errinfo)
 }
 
 func wait(wg *sync.WaitGroup) chan bool {
