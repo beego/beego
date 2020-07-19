@@ -35,35 +35,43 @@ type Fielder interface {
 	RawValue() interface{}
 }
 
-// Ormer define the orm interface
-type Ormer interface {
-	// read data to model
-	// for example:
-	//	this will find User by Id field
-	// 	u = &User{Id: user.Id}
-	// 	err = Ormer.Read(u)
-	//	this will find User by UserName field
-	// 	u = &User{UserName: "astaxie", Password: "pass"}
-	//	err = Ormer.Read(u, "UserName")
-	Read(md interface{}, cols ...string) error
-	// Like Read(), but with "FOR UPDATE" clause, useful in transaction.
-	// Some databases are not support this feature.
-	ReadForUpdate(md interface{}, cols ...string) error
-	// Try to read a row from the database, or insert one if it doesn't exist
-	ReadOrCreate(md interface{}, col1 string, cols ...string) (bool, int64, error)
+type TxBeginner interface {
+	//self control transaction
+	Begin() (TxOrmer, error)
+	BeginWithCtx(ctx context.Context) (TxOrmer, error)
+	BeginWithOpts(opts *sql.TxOptions) (TxOrmer, error)
+	BeginWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions) (TxOrmer, error)
+
+	//closure control transaction
+	DoTx(task func(txOrm TxOrmer) error) error
+	DoTxWithCtx(ctx context.Context, task func(txOrm TxOrmer) error) error
+	DoTxWithOpts(opts *sql.TxOptions, task func(txOrm TxOrmer) error) error
+	DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task func(txOrm TxOrmer) error) error
+}
+
+type TxCommitter interface {
+	Commit() error
+	Rollback() error
+}
+
+//Data Manipulation Language
+type DML interface {
 	// insert model data to database
 	// for example:
 	//  user := new(User)
 	//  id, err = Ormer.Insert(user)
 	//  user must be a pointer and Insert will set user's pk field
-	Insert(interface{}) (int64, error)
+	Insert(md interface{}) (int64, error)
+	InsertWithCtx(ctx context.Context, md interface{}) (int64, error)
 	// mysql:InsertOrUpdate(model) or InsertOrUpdate(model,"colu=colu+value")
 	// if colu type is integer : can use(+-*/), string : convert(colu,"value")
 	// postgres: InsertOrUpdate(model,"conflictColumnName") or InsertOrUpdate(model,"conflictColumnName","colu=colu+value")
 	// if colu type is integer : can use(+-*/), string : colu || "value"
 	InsertOrUpdate(md interface{}, colConflitAndArgs ...string) (int64, error)
+	InsertOrUpdateWithCtx(ctx context.Context, md interface{}, colConflitAndArgs ...string) (int64, error)
 	// insert some models to database
 	InsertMulti(bulk int, mds interface{}) (int64, error)
+	InsertMultiWithCtx(ctx context.Context, bulk int, mds interface{}) (int64, error)
 	// update model to database.
 	// cols set the columns those want to update.
 	// find model by Id(pk) field and update columns specified by fields, if cols is null then update all columns
@@ -74,61 +82,91 @@ type Ormer interface {
 	//	user.Extra.Data = "orm"
 	//	num, err = Ormer.Update(&user, "Langs", "Extra")
 	Update(md interface{}, cols ...string) (int64, error)
+	UpdateWithCtx(ctx context.Context, md interface{}, cols ...string) (int64, error)
 	// delete model in database
 	Delete(md interface{}, cols ...string) (int64, error)
+	DeleteWithCtx(ctx context.Context, md interface{}, cols ...string) (int64, error)
+
+	// return a raw query seter for raw sql string.
+	// for example:
+	//	 ormer.Raw("UPDATE `user` SET `user_name` = ? WHERE `user_name` = ?", "slene", "testing").Exec()
+	//	// update user testing's name to slene
+	Raw(query string, args ...interface{}) RawSeter
+	RawWithCtx(ctx context.Context, query string, args ...interface{}) RawSeter
+}
+
+// Data Query Language
+type DQL interface {
+	// read data to model
+	// for example:
+	//	this will find User by Id field
+	// 	u = &User{Id: user.Id}
+	// 	err = Ormer.Read(u)
+	//	this will find User by UserName field
+	// 	u = &User{UserName: "astaxie", Password: "pass"}
+	//	err = Ormer.Read(u, "UserName")
+	Read(md interface{}, cols ...string) error
+	ReadWithCtx(ctx context.Context, md interface{}, cols ...string) error
+
+	// Like Read(), but with "FOR UPDATE" clause, useful in transaction.
+	// Some databases are not support this feature.
+	ReadForUpdate( md interface{}, cols ...string) error
+	ReadForUpdateWithCtx(ctx context.Context, md interface{}, cols ...string) error
+
+	// Try to read a row from the database, or insert one if it doesn't exist
+	ReadOrCreate(md interface{}, col1 string, cols ...string) (bool, int64, error)
+	ReadOrCreateWithCtx(ctx context.Context, md interface{}, col1 string, cols ...string) (bool, int64, error)
+
 	// load related models to md model.
 	// args are limit, offset int and order string.
 	//
 	// example:
 	// 	Ormer.LoadRelated(post,"Tags")
 	// 	for _,tag := range post.Tags{...}
-	//args[0] bool true useDefaultRelsDepth ; false  depth 0
-	//args[0] int  loadRelationDepth
-	//args[1] int limit default limit 1000
-	//args[2] int offset default offset 0
-	//args[3] string order  for example : "-Id"
+	// args[0] bool true useDefaultRelsDepth ; false  depth 0
+	// args[0] int  loadRelationDepth
+	// args[1] int limit default limit 1000
+	// args[2] int offset default offset 0
+	// args[3] string order  for example : "-Id"
 	// make sure the relation is defined in model struct tags.
-	LoadRelated(md interface{}, name string, args ...interface{}) (int64, error)
+	LoadRelated( md interface{}, name string, args ...interface{}) (int64, error)
+	LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...interface{}) (int64, error)
+
 	// create a models to models queryer
 	// for example:
 	// 	post := Post{Id: 4}
 	// 	m2m := Ormer.QueryM2M(&post, "Tags")
-	QueryM2M(md interface{}, name string) QueryM2Mer
+	QueryM2M( md interface{}, name string) QueryM2Mer
+	QueryM2MWithCtx(ctx context.Context, md interface{}, name string) QueryM2Mer
+
 	// return a QuerySeter for table operations.
 	// table name can be string or struct.
 	// e.g. QueryTable("user"), QueryTable(&user{}) or QueryTable((*User)(nil)),
 	QueryTable(ptrStructOrTableName interface{}) QuerySeter
+	QueryTableWithCtx(ctx context.Context, ptrStructOrTableName interface{}) QuerySeter
+
 	// switch to another registered database driver by given name.
-	Using(name string) error
-	// begin transaction
-	// for example:
-	// 	o := NewOrm()
-	// 	err := o.Begin()
-	// 	...
-	// 	err = o.Rollback()
-	Begin() error
-	// begin transaction with provided context and option
-	// the provided context is used until the transaction is committed or rolled back.
-	// if the context is canceled, the transaction will be rolled back.
-	// the provided TxOptions is optional and may be nil if defaults should be used.
-	// if a non-default isolation level is used that the driver doesn't support, an error will be returned.
-	// for example:
-	//  o := NewOrm()
-	// 	err := o.BeginTx(context.Background(), &sql.TxOptions{Isolation: sql.LevelRepeatableRead})
-	//  ...
-	//  err = o.Rollback()
-	BeginTx(ctx context.Context, opts *sql.TxOptions) error
-	// commit transaction
-	Commit() error
-	// rollback transaction
-	Rollback() error
-	// return a raw query seter for raw sql string.
-	// for example:
-	//	 ormer.Raw("UPDATE `user` SET `user_name` = ? WHERE `user_name` = ?", "slene", "testing").Exec()
-	//	// update user testing's name to slene
-	Raw(query string, args ...interface{}) RawSeter
-	Driver() Driver
+	// Using(name string) error
+
 	DBStats() *sql.DBStats
+}
+
+type DriverGetter interface {
+	Driver() Driver
+}
+
+type Ormer interface {
+	DQL
+	DML
+	DriverGetter
+	TxBeginner
+}
+
+type TxOrmer interface {
+	DQL
+	DML
+	DriverGetter
+	TxCommitter
 }
 
 // Inserter insert prepared statement
@@ -229,7 +267,7 @@ type QuerySeter interface {
 	//	}) // user slene's  name will change to slene2
 	Update(values Params) (int64, error)
 	// delete from table
-	//for example:
+	// for example:
 	//	num ,err = qs.Filter("user_name__in", "testing1", "testing2").Delete()
 	// 	//delete two user  who's name is testing1 or testing2
 	Delete() (int64, error)
@@ -314,8 +352,8 @@ type QueryM2Mer interface {
 	// remove models following the origin model relationship
 	// only delete rows from m2m table
 	// for example:
-	//tag3 := &Tag{Id:5,Name: "TestTag3"}
-	//num, err = m2m.Remove(tag3)
+	// tag3 := &Tag{Id:5,Name: "TestTag3"}
+	// num, err = m2m.Remove(tag3)
 	Remove(...interface{}) (int64, error)
 	// check model is existed in relationship of origin model
 	Exist(interface{}) bool
@@ -337,10 +375,10 @@ type RawPreparer interface {
 //  sql := fmt.Sprintf("SELECT %sid%s,%sname%s FROM %suser%s WHERE id = ?",Q,Q,Q,Q,Q,Q)
 //  rs := Ormer.Raw(sql, 1)
 type RawSeter interface {
-	//execute sql and get result
+	// execute sql and get result
 	Exec() (sql.Result, error)
-	//query data and map to container
-	//for example:
+	// query data and map to container
+	// for example:
 	//	var name string
 	//	var id int
 	//	rs.QueryRow(&id,&name) // id==2 name=="slene"
@@ -396,11 +434,11 @@ type RawSeter interface {
 type stmtQuerier interface {
 	Close() error
 	Exec(args ...interface{}) (sql.Result, error)
-	//ExecContext(ctx context.Context, args ...interface{}) (sql.Result, error)
+	// ExecContext(ctx context.Context, args ...interface{}) (sql.Result, error)
 	Query(args ...interface{}) (*sql.Rows, error)
-	//QueryContext(args ...interface{}) (*sql.Rows, error)
+	// QueryContext(args ...interface{}) (*sql.Rows, error)
 	QueryRow(args ...interface{}) *sql.Row
-	//QueryRowContext(ctx context.Context, args ...interface{}) *sql.Row
+	// QueryRowContext(ctx context.Context, args ...interface{}) *sql.Row
 }
 
 // db querier
