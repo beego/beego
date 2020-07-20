@@ -530,7 +530,6 @@ func (o *orm) BeginWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions) (TxO
 			alias: o.alias,
 			db:    &TxDB{tx: tx},
 		},
-		isClosed: false,
 	}
 
 	var taskTxOrm TxOrmer = _txOrm
@@ -577,33 +576,15 @@ func (o *orm) DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task 
 
 type txOrm struct {
 	ormBase
-	isClosed   bool
-	closeMutex sync.Mutex
 }
 
 var _ TxOrmer = new(txOrm)
 
 func (t *txOrm) Commit() error {
-	t.closeMutex.Lock()
-	defer t.closeMutex.Unlock()
-
-	if t.isClosed {
-		return ErrTxDone
-	}
-	t.isClosed = true
-
 	return t.db.(txEnder).Commit()
 }
 
 func (t *txOrm) Rollback() error {
-	t.closeMutex.Lock()
-	defer t.closeMutex.Unlock()
-
-	if t.isClosed {
-		return ErrTxDone
-	}
-	t.isClosed = true
-
 	return t.db.(txEnder).Rollback()
 }
 
