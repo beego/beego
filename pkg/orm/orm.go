@@ -558,10 +558,14 @@ func (o *orm) DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task 
 	defer func() {
 		if panicked || err != nil {
 			e := _txOrm.Rollback()
-			logs.Error("rollback transaction failed: %v", e)
+			if e != nil {
+				logs.Error("rollback transaction failed: %v,%v", e, panicked)
+			}
 		} else {
 			e := _txOrm.Commit()
-			logs.Error("commit transaction failed: %v", e)
+			if e != nil {
+				logs.Error("commit transaction failed: %v,%v", e, panicked)
+			}
 		}
 	}()
 
