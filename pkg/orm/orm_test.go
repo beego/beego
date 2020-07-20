@@ -2099,7 +2099,7 @@ func TestTransactionIsolationLevel(t *testing.T) {
 	throwFail(t, AssertIs(id > 0, true))
 
 	// o2 query tag table, no result
-	num, err := o2.QueryTable("tag").Filter("name", "test-transaction").Count()
+	num, err := to2.QueryTable("tag").Filter("name", "test-transaction").Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 0))
 
