@@ -111,6 +111,9 @@ type DB struct {
 	stmtDecorators *lru.Cache
 }
 
+var _ dbQuerier = new(DB)
+var _ txer = new(DB)
+
 func (d *DB) Begin() (*sql.Tx, error) {
 	return d.DB.Begin()
 }
@@ -218,6 +221,56 @@ func (d *DB) QueryRowContext(ctx context.Context, query string, args ...interfac
 	stmt := sd.getStmt()
 	defer sd.release()
 	return stmt.QueryRowContext(ctx, args)
+}
+
+type TxDB struct {
+	tx *sql.Tx
+}
+
+var _ dbQuerier = new(TxDB)
+var _ txEnder = new(TxDB)
+
+func (t *TxDB) Commit() error {
+	return t.tx.Commit()
+}
+
+func (t *TxDB) Rollback() error {
+	return t.tx.Rollback()
+}
+
+var _ dbQuerier = new(TxDB)
+var _ txEnder = new(TxDB)
+
+func (t *TxDB) Prepare(query string) (*sql.Stmt, error) {
+	return t.PrepareContext(context.Background(),query)
+}
+
+func (t *TxDB) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
+	return t.tx.PrepareContext(ctx, query)
+}
+
+func (t *TxDB) Exec(query string, args ...interface{}) (sql.Result, error) {
+	return t.ExecContext(context.Background(), query, args...)
+}
+
+func (t *TxDB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	return t.tx.ExecContext(ctx, query, args...)
+}
+
+func (t *TxDB) Query(query string, args ...interface{}) (*sql.Rows, error) {
+	return t.QueryContext(context.Background(),query,args...)
+}
+
+func (t *TxDB) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+	return t.tx.QueryContext(ctx, query, args...)
+}
+
+func (t *TxDB) QueryRow(query string, args ...interface{}) *sql.Row {
+	return t.QueryRowContext(context.Background(),query,args...)
+}
+
+func (t *TxDB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
+	return t.tx.QueryRowContext(ctx, query, args...)
 }
 
 type alias struct {
