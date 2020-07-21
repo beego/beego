@@ -12,16 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Deprecated: we will remove this package, please using pkg/orm
 package orm
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
-	lru "github.com/hashicorp/golang-lru"
 	"reflect"
 	"sync"
 	"time"
+
+	lru "github.com/hashicorp/golang-lru"
+
+	"github.com/astaxie/beego/pkg/common"
+	orm2 "github.com/astaxie/beego/pkg/orm"
 )
 
 // DriverType database driver constant int.
@@ -63,7 +68,7 @@ var (
 		"tidb":     DRTiDB,
 		"oracle":   DROracle,
 		"oci8":     DROracle, // github.com/mattn/go-oci8
-		"ora":      DROracle, //https://github.com/rana/ora
+		"ora":      DROracle, // https://github.com/rana/ora
 	}
 	dbBasers = map[DriverType]dbBaser{
 		DRMySQL:    newdbBaseMysql(),
@@ -119,7 +124,7 @@ func (d *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error) 
 	return d.DB.BeginTx(ctx, opts)
 }
 
-//su must call release to release *sql.Stmt after using
+// su must call release to release *sql.Stmt after using
 func (d *DB) getStmtDecorator(query string) (*stmtDecorator, error) {
 	d.RLock()
 	c, ok := d.stmtDecorators.Get(query)
@@ -289,82 +294,26 @@ func detectTZ(al *alias) {
 	}
 }
 
-func addAliasWthDB(aliasName, driverName string, db *sql.DB) (*alias, error) {
-	al := new(alias)
-	al.Name = aliasName
-	al.DriverName = driverName
-	al.DB = &DB{
-		RWMutex:        new(sync.RWMutex),
-		DB:             db,
-		stmtDecorators: newStmtDecoratorLruWithEvict(),
-	}
-
-	if dr, ok := drivers[driverName]; ok {
-		al.DbBaser = dbBasers[dr]
-		al.Driver = dr
-	} else {
-		return nil, fmt.Errorf("driver name `%s` have not registered", driverName)
-	}
-
-	err := db.Ping()
-	if err != nil {
-		return nil, fmt.Errorf("register db Ping `%s`, %s", aliasName, err.Error())
-	}
-
-	if !dataBaseCache.add(aliasName, al) {
-		return nil, fmt.Errorf("DataBase alias name `%s` already registered, cannot reuse", aliasName)
-	}
-
-	return al, nil
-}
-
 // AddAliasWthDB add a aliasName for the drivename
+// Deprecated: please using pkg/orm
 func AddAliasWthDB(aliasName, driverName string, db *sql.DB) error {
-	_, err := addAliasWthDB(aliasName, driverName, db)
-	return err
+	return orm2.AddAliasWthDB(aliasName, driverName, db)
 }
 
 // RegisterDataBase Setting the database connect params. Use the database driver self dataSource args.
 func RegisterDataBase(aliasName, driverName, dataSource string, params ...int) error {
-	var (
-		err error
-		db  *sql.DB
-		al  *alias
-	)
-
-	db, err = sql.Open(driverName, dataSource)
-	if err != nil {
-		err = fmt.Errorf("register db `%s`, %s", aliasName, err.Error())
-		goto end
-	}
-
-	al, err = addAliasWthDB(aliasName, driverName, db)
-	if err != nil {
-		goto end
-	}
-
-	al.DataSource = dataSource
-
-	detectTZ(al)
-
+	kvs := make([]common.KV, 0, 2)
 	for i, v := range params {
 		switch i {
 		case 0:
-			SetMaxIdleConns(al.Name, v)
+			kvs = append(kvs, common.KV{Key: orm2.MaxIdleConnsKey, Value: v})
 		case 1:
-			SetMaxOpenConns(al.Name, v)
+			kvs = append(kvs, common.KV{Key: orm2.MaxOpenConnsKey, Value: v})
+		case 2:
+			kvs = append(kvs, common.KV{Key: orm2.ConnMaxLifetimeKey, Value: time.Duration(v) * time.Millisecond})
 		}
 	}
-
-end:
-	if err != nil {
-		if db != nil {
-			db.Close()
-		}
-		DebugLog.Println(err.Error())
-	}
-
-	return err
+	return orm2.RegisterDataBase(aliasName, driverName, dataSource, kvs...)
 }
 
 // RegisterDriver Register a database driver use specify driver name, this can be definition the driver is which database type.
@@ -424,7 +373,7 @@ func GetDB(aliasNames ...string) (*sql.DB, error) {
 }
 
 type stmtDecorator struct {
-	wg sync.WaitGroup
+	wg   sync.WaitGroup
 	stmt *sql.Stmt
 }
 
@@ -444,7 +393,7 @@ func (s *stmtDecorator) release() {
 	s.wg.Done()
 }
 
-//garbage recycle for stmt
+// garbage recycle for stmt
 func (s *stmtDecorator) destroy() {
 	go func() {
 		s.wg.Wait()
