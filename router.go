@@ -1046,7 +1046,7 @@ func LogAccess(ctx *beecontext.Context, startTime *time.Time, statusCode int) {
 		HTTPReferrer:   r.Header.Get("Referer"),
 		HTTPUserAgent:  r.Header.Get("User-Agent"),
 		RemoteUser:     r.Header.Get("Remote-User"),
-		BodyBytesSent:  0, // @todo this one is missing!
+		BodyBytesSent:  r.ContentLength,
 	}
 	logs.AccessLog(record, BConfig.Log.AccessLogsFormat)
 }
