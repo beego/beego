@@ -18,10 +18,12 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	lru "github.com/hashicorp/golang-lru"
-	"reflect"
 	"sync"
 	"time"
+
+	lru "github.com/hashicorp/golang-lru"
+
+	"github.com/astaxie/beego/pkg/common"
 )
 
 // DriverType database driver constant int.
@@ -63,7 +65,7 @@ var (
 		"tidb":     DRTiDB,
 		"oracle":   DROracle,
 		"oci8":     DROracle, // github.com/mattn/go-oci8
-		"ora":      DROracle, //https://github.com/rana/ora
+		"ora":      DROracle, // https://github.com/rana/ora
 	}
 	dbBasers = map[DriverType]dbBaser{
 		DRMySQL:    newdbBaseMysql(),
@@ -122,7 +124,7 @@ func (d *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error) 
 	return d.DB.BeginTx(ctx, opts)
 }
 
-//su must call release to release *sql.Stmt after using
+// su must call release to release *sql.Stmt after using
 func (d *DB) getStmtDecorator(query string) (*stmtDecorator, error) {
 	d.RLock()
 	c, ok := d.stmtDecorators.Get(query)
@@ -274,16 +276,17 @@ func (t *TxDB) QueryRowContext(ctx context.Context, query string, args ...interf
 }
 
 type alias struct {
-	Name         string
-	Driver       DriverType
-	DriverName   string
-	DataSource   string
-	MaxIdleConns int
-	MaxOpenConns int
-	DB           *DB
-	DbBaser      dbBaser
-	TZ           *time.Location
-	Engine       string
+	Name            string
+	Driver          DriverType
+	DriverName      string
+	DataSource      string
+	MaxIdleConns    int
+	MaxOpenConns    int
+	ConnMaxLifetime time.Duration
+	DB              *DB
+	DbBaser         dbBaser
+	TZ              *time.Location
+	Engine          string
 }
 
 func detectTZ(al *alias) {
@@ -378,12 +381,14 @@ func AddAliasWthDB(aliasName, driverName string, db *sql.DB) error {
 }
 
 // RegisterDataBase Setting the database connect params. Use the database driver self dataSource args.
-func RegisterDataBase(aliasName, driverName, dataSource string, params ...int) error {
+func RegisterDataBase(aliasName, driverName, dataSource string, params ...common.KV) error {
 	var (
 		err error
 		db  *sql.DB
 		al  *alias
 	)
+
+	kvs := common.NewKVs(params...)
 
 	db, err = sql.Open(driverName, dataSource)
 	if err != nil {
@@ -400,14 +405,13 @@ func RegisterDataBase(aliasName, driverName, dataSource string, params ...int) e
 
 	detectTZ(al)
 
-	for i, v := range params {
-		switch i {
-		case 0:
-			SetMaxIdleConns(al.Name, v)
-		case 1:
-			SetMaxOpenConns(al.Name, v)
-		}
-	}
+	kvs.IfContains(MaxIdleConnsKey, func(value interface{}) {
+		SetMaxIdleConns(al.Name, value.(int))
+	}).IfContains(MaxOpenConnsKey, func(value interface{}) {
+		SetMaxOpenConns(al.Name, value.(int))
+	}).IfContains(ConnMaxLifetimeKey, func(value interface{}) {
+		SetConnMaxLifetime(al.Name, value.(time.Duration))
+	})
 
 end:
 	if err != nil {
@@ -454,10 +458,12 @@ func SetMaxOpenConns(aliasName string, maxOpenConns int) {
 	al := getDbAlias(aliasName)
 	al.MaxOpenConns = maxOpenConns
 	al.DB.DB.SetMaxOpenConns(maxOpenConns)
-	// for tip go 1.2
-	if fun := reflect.ValueOf(al.DB).MethodByName("SetMaxOpenConns"); fun.IsValid() {
-		fun.Call([]reflect.Value{reflect.ValueOf(maxOpenConns)})
-	}
+}
+
+func SetConnMaxLifetime(aliasName string, lifeTime time.Duration) {
+	al := getDbAlias(aliasName)
+	al.ConnMaxLifetime = lifeTime
+	al.DB.DB.SetConnMaxLifetime(lifeTime)
 }
 
 // GetDB Get *sql.DB from registered database by db alias name.
@@ -477,7 +483,7 @@ func GetDB(aliasNames ...string) (*sql.DB, error) {
 }
 
 type stmtDecorator struct {
-	wg sync.WaitGroup
+	wg   sync.WaitGroup
 	stmt *sql.Stmt
 }
 
@@ -497,7 +503,7 @@ func (s *stmtDecorator) release() {
 	s.wg.Done()
 }
 
-//garbage recycle for stmt
+// garbage recycle for stmt
 func (s *stmtDecorator) destroy() {
 	go func() {
 		s.wg.Wait()

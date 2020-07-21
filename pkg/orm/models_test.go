@@ -27,6 +27,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	// As tidb can't use go get, so disable the tidb testing now
 	// _ "github.com/pingcap/tidb"
+
+	"github.com/astaxie/beego/pkg/common"
 )
 
 // A slice string field.
@@ -487,7 +489,10 @@ func init() {
 		os.Exit(2)
 	}
 
-	err := RegisterDataBase("default", DBARGS.Driver, DBARGS.Source, 20)
+	err := RegisterDataBase("default", DBARGS.Driver, DBARGS.Source, common.KV{
+		Key:MaxIdleConnsKey,
+		Value:20,
+	})
 
 	if err != nil{
 		panic(fmt.Sprintf("can not register database: %v", err))
