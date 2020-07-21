@@ -62,19 +62,20 @@ func ColValue(opt operator, value interface{}) interface{} {
 
 // real query struct
 type querySet struct {
-	mi         *modelInfo
-	cond       *Condition
-	related    []string
-	relDepth   int
-	limit      int64
-	offset     int64
-	groups     []string
-	orders     []string
-	distinct   bool
-	forupdate  bool
-	orm        *orm
-	ctx        context.Context
-	forContext bool
+	mi           *modelInfo
+	cond         *Condition
+	related      []string
+	relDepth     int
+	limit        int64
+	batchMaxSize int64
+	offset       int64
+	groups       []string
+	orders       []string
+	distinct     bool
+	forupdate    bool
+	orm          *orm
+	ctx          context.Context
+	forContext   bool
 }
 
 var _ QuerySeter = new(querySet)
@@ -118,6 +119,12 @@ func (o querySet) Limit(limit interface{}, args ...interface{}) QuerySeter {
 	if len(args) > 0 {
 		o.setOffset(args[0])
 	}
+	return &o
+}
+
+// add batchMaxSize value.
+func (o querySet) SetBatchMaxSize(batchMaxSize interface{}) QuerySeter {
+	o.batchMaxSize = ToInt64(batchMaxSize)
 	return &o
 }
 

@@ -18,7 +18,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"math"
 	"reflect"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -838,6 +840,44 @@ func (d *dbBase) deleteRels(q dbQuerier, mi *modelInfo, args []interface{}, tz *
 	return nil
 }
 
+func (d *dbBase) deleteSingleBatch(delPKs []interface{}, q dbQuerier, qs *querySet, mi *modelInfo, tz *time.Location) (int64, error) {
+	Q := d.ins.TableQuote()
+	var res sql.Result
+	var err error
+
+	marks := make([]string, len(delPKs))
+	for i := range marks {
+		marks[i] = "?"
+	}
+
+	sqlIn := fmt.Sprintf("IN (%s)", strings.Join(marks, ", "))
+	fmt.Println(sqlIn)
+	query := fmt.Sprintf("DELETE FROM %s%s%s WHERE %s%s%s %s", Q, mi.table, Q, Q, mi.fields.pk.column, Q, sqlIn)
+
+	d.ins.ReplaceMarks(&query)
+	if qs != nil && qs.forContext {
+		res, err = q.ExecContext(qs.ctx, query, delPKs...)
+	} else {
+		res, err = q.Exec(query, delPKs...)
+	}
+	if err != nil {
+		return 0, err
+	}
+
+	num, err := res.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+
+	if num > 0 {
+		err := d.deleteRels(q, mi, delPKs, tz)
+		if err != nil {
+			return num, err
+		}
+	}
+	return num, nil
+}
+
 // delete table-related records.
 func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condition, tz *time.Location) (int64, error) {
 	tables := newDbTables(mi, d.ins)
@@ -869,10 +909,28 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	rs = r
 	defer rs.Close()
 
+	// Get default database limit
+	var delLimit int64
+	if qs != nil {
+		limit := tables.getLimitSQL(mi, qs.offset, qs.limit)
+		delLimit, _ = strconv.ParseInt(limit, 10, 64)
+
+		if delLimit <= 0 {
+			delLimit = int64(math.MaxInt64)
+		}
+
+		// Set limit to configured limit
+		if 0 < qs.batchMaxSize && qs.batchMaxSize <= delLimit {
+			delLimit = qs.batchMaxSize
+		}
+	}
+
 	var ref interface{}
-	args = make([]interface{}, 0)
-	cnt := 0
-	for rs.Next() {
+	delPKs := make([]interface{}, 0)
+	delPKBatches := make([][]interface{}, 0)
+
+	// Find values to delete
+	for i := 0; rs.Next(); i++ {
 		if err := rs.Scan(&ref); err != nil {
 			return 0, err
 		}
@@ -880,42 +938,29 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 		if err != nil {
 			return 0, err
 		}
-		args = append(args, pkValue)
-		cnt++
+		delPKs = append(delPKs, pkValue)
+		if int64(len(delPKs)) == delLimit {
+			delPKBatches = append(delPKBatches, delPKs)
+			delPKs = make([]interface{}, 0)
+		}
 	}
 
-	if cnt == 0 {
+	// No values to delete
+	if len(delPKBatches) == 0 {
 		return 0, nil
 	}
 
-	marks := make([]string, len(args))
-	for i := range marks {
-		marks[i] = "?"
-	}
-	sqlIn := fmt.Sprintf("IN (%s)", strings.Join(marks, ", "))
-	query = fmt.Sprintf("DELETE FROM %s%s%s WHERE %s%s%s %s", Q, mi.table, Q, Q, mi.fields.pk.column, Q, sqlIn)
-
-	d.ins.ReplaceMarks(&query)
-	var res sql.Result
-	if qs != nil && qs.forContext {
-		res, err = q.ExecContext(qs.ctx, query, args...)
-	} else {
-		res, err = q.Exec(query, args...)
-	}
-	if err == nil {
-		num, err := res.RowsAffected()
+	// Delete every chunk of data
+	var nDeleted int64 = 0
+	for _, delPKs := range delPKBatches {
+		delNum, err := d.deleteSingleBatch(delPKs, q, qs, mi, tz)
+		nDeleted += delNum
 		if err != nil {
-			return 0, err
+			return nDeleted, err
 		}
-		if num > 0 {
-			err := d.deleteRels(q, mi, args, tz)
-			if err != nil {
-				return num, err
-			}
-		}
-		return num, nil
 	}
-	return 0, err
+	fmt.Println(nDeleted)
+	return nDeleted, nil
 }
 
 // read related records.
