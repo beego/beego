@@ -15,11 +15,11 @@
 package session
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
-	"errors"
 	"path"
 	"path/filepath"
 	"strings"
@@ -179,6 +179,11 @@ func (fp *FileProvider) SessionRead(sid string) (Store, error) {
 func (fp *FileProvider) SessionExist(sid string) bool {
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()
+
+	if len(sid) < 2 {
+		SLogger.Println("min length of session id is 2", sid)
+		return false
+	}
 
 	_, err := os.Stat(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid))
 	return err == nil
