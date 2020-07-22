@@ -490,11 +490,11 @@ func init() {
 	}
 
 	err := RegisterDataBase("default", DBARGS.Driver, DBARGS.Source, common.KV{
-		Key:MaxIdleConnsKey,
-		Value:20,
+		Key:   MaxIdleConnsKey,
+		Value: 20,
 	})
 
-	if err != nil{
+	if err != nil {
 		panic(fmt.Sprintf("can not register database: %v", err))
 	}
 

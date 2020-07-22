@@ -213,7 +213,7 @@ func parseFunc(vfunc, key string, label string) (v ValidFunc, err error) {
 		return
 	}
 
-	tParams, err := trim(name, key+"."+ name + "." + label, params)
+	tParams, err := trim(name, key+"."+name+"."+label, params)
 	if err != nil {
 		return
 	}

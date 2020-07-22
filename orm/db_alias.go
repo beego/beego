@@ -424,7 +424,7 @@ func GetDB(aliasNames ...string) (*sql.DB, error) {
 }
 
 type stmtDecorator struct {
-	wg sync.WaitGroup
+	wg   sync.WaitGroup
 	stmt *sql.Stmt
 }
 
