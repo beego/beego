@@ -113,7 +113,7 @@ type Task struct {
 	Next     time.Time
 	Errlist  []*taskerr // like errtime:errinfo
 	ErrLimit int        // max length for the errlist, 0 stand for no limit
-	errCnt int // records the error count during the execution
+	errCnt   int        // records the error count during the execution
 }
 
 // NewTask add new task with name, time and func

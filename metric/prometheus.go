@@ -57,15 +57,15 @@ func registerBuildInfo() {
 		Subsystem: "build_info",
 		Help:      "The building information",
 		ConstLabels: map[string]string{
-			"appname": beego.BConfig.AppName,
+			"appname":        beego.BConfig.AppName,
 			"build_version":  beego.BuildVersion,
 			"build_revision": beego.BuildGitRevision,
 			"build_status":   beego.BuildStatus,
 			"build_tag":      beego.BuildTag,
-			"build_time": strings.Replace(beego.BuildTime, "--", " ", 1),
+			"build_time":     strings.Replace(beego.BuildTime, "--", " ", 1),
 			"go_version":     beego.GoVersion,
 			"git_branch":     beego.GitBranch,
-			"start_time": time.Now().Format("2006-01-02 15:04:05"),
+			"start_time":     time.Now().Format("2006-01-02 15:04:05"),
 		},
 	}, []string{})
 

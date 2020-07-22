@@ -59,12 +59,12 @@ func TestSpec(t *testing.T) {
 func TestTask_Run(t *testing.T) {
 	cnt := -1
 	task := func() error {
-		cnt ++
+		cnt++
 		fmt.Printf("Hello, world! %d \n", cnt)
 		return errors.New(fmt.Sprintf("Hello, world! %d", cnt))
 	}
 	tk := NewTask("taska", "0/30 * * * * *", task)
-	for i := 0; i < 200 ; i ++ {
+	for i := 0; i < 200; i++ {
 		e := tk.Run()
 		assert.NotNil(t, e)
 	}

@@ -369,8 +369,7 @@ func TestFileSessionStore_SessionRelease(t *testing.T) {
 			t.Error(err)
 		}
 
-
-		s.Set(i,i)
+		s.Set(i, i)
 		s.SessionRelease(nil)
 	}
 

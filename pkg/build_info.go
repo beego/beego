@@ -15,11 +15,11 @@
 package beego
 
 var (
-	BuildVersion string
+	BuildVersion     string
 	BuildGitRevision string
-	BuildStatus string
-	BuildTag string
-	BuildTime string
+	BuildStatus      string
+	BuildTag         string
+	BuildTime        string
 
 	GoVersion string
 
