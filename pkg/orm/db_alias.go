@@ -244,7 +244,7 @@ var _ dbQuerier = new(TxDB)
 var _ txEnder = new(TxDB)
 
 func (t *TxDB) Prepare(query string) (*sql.Stmt, error) {
-	return t.PrepareContext(context.Background(),query)
+	return t.PrepareContext(context.Background(), query)
 }
 
 func (t *TxDB) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
@@ -260,7 +260,7 @@ func (t *TxDB) ExecContext(ctx context.Context, query string, args ...interface{
 }
 
 func (t *TxDB) Query(query string, args ...interface{}) (*sql.Rows, error) {
-	return t.QueryContext(context.Background(),query,args...)
+	return t.QueryContext(context.Background(), query, args...)
 }
 
 func (t *TxDB) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
@@ -268,7 +268,7 @@ func (t *TxDB) QueryContext(ctx context.Context, query string, args ...interface
 }
 
 func (t *TxDB) QueryRow(query string, args ...interface{}) *sql.Row {
-	return t.QueryRowContext(context.Background(),query,args...)
+	return t.QueryRowContext(context.Background(), query, args...)
 }
 
 func (t *TxDB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {

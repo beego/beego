@@ -110,7 +110,7 @@ type DQL interface {
 
 	// Like Read(), but with "FOR UPDATE" clause, useful in transaction.
 	// Some databases are not support this feature.
-	ReadForUpdate( md interface{}, cols ...string) error
+	ReadForUpdate(md interface{}, cols ...string) error
 	ReadForUpdateWithCtx(ctx context.Context, md interface{}, cols ...string) error
 
 	// Try to read a row from the database, or insert one if it doesn't exist
@@ -129,14 +129,14 @@ type DQL interface {
 	// args[2] int offset default offset 0
 	// args[3] string order  for example : "-Id"
 	// make sure the relation is defined in model struct tags.
-	LoadRelated( md interface{}, name string, args ...interface{}) (int64, error)
+	LoadRelated(md interface{}, name string, args ...interface{}) (int64, error)
 	LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...interface{}) (int64, error)
 
 	// create a models to models queryer
 	// for example:
 	// 	post := Post{Id: 4}
 	// 	m2m := Ormer.QueryM2M(&post, "Tags")
-	QueryM2M( md interface{}, name string) QueryM2Mer
+	QueryM2M(md interface{}, name string) QueryM2Mer
 	QueryM2MWithCtx(ctx context.Context, md interface{}, name string) QueryM2Mer
 
 	// return a QuerySeter for table operations.
