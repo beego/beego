@@ -23,7 +23,7 @@ import (
 func TestKVs(t *testing.T) {
 	key := "my-key"
 	kvs := NewKVs(KV{
-		Key: key,
+		Key:   key,
 		Value: 12,
 	})
 

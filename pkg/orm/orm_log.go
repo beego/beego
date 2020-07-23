@@ -61,7 +61,7 @@ func debugLogQueies(alias *alias, operaton, query string, t time.Time, err error
 		con += " - " + err.Error()
 	}
 	logMap["sql"] = fmt.Sprintf("%s-`%s`", query, strings.Join(cons, "`, `"))
-	if LogFunc != nil{
+	if LogFunc != nil {
 		LogFunc(logMap)
 	}
 	DebugLog.Println(con)
