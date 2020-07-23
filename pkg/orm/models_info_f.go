@@ -241,7 +241,24 @@ checkType:
 			}
 		}
 
-		fieldType, err = getFieldType(addrField)
+		serializerKey := sf.Tag.Get(serializerStructTagName)
+
+		if serializerKey != "" {
+			fieldType = TypeVarCharField
+			err = nil
+
+			if fi.auto || fi.pk {
+				err = fmt.Errorf("rel/reverse:many field must be slice")
+				goto end
+			} else if _, ok := serializerMap[serializerKey]; !ok {
+				err = fmt.Errorf("serializer %s is not registered", serializerKey)
+				goto end
+			}
+
+		} else {
+			fieldType, err = getFieldType(addrField)
+		}
+
 		if err != nil {
 			goto end
 		}

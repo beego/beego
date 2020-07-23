@@ -19,12 +19,13 @@ import (
 )
 
 const (
-	odCascade             = "cascade"
-	odSetNULL             = "set_null"
-	odSetDefault          = "set_default"
-	odDoNothing           = "do_nothing"
-	defaultStructTagName  = "orm"
-	defaultStructTagDelim = ";"
+	odCascade               = "cascade"
+	odSetNULL               = "set_null"
+	odSetDefault            = "set_default"
+	odDoNothing             = "do_nothing"
+	defaultStructTagName    = "orm"
+	defaultStructTagDelim   = ";"
+	serializerStructTagName = "serializer"
 )
 
 var (
