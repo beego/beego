@@ -920,6 +920,10 @@ func TestOperators(t *testing.T) {
 	num, err = qs.FilterRaw("profile_id", "IN (SELECT id FROM user_profile WHERE age=30)").Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
+
+	num, err = qs.Filter("nums__&", 2).Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
 }
 
 func TestSetCond(t *testing.T) {

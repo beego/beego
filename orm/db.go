@@ -61,6 +61,7 @@ var (
 		// "week_day":    true,
 		"isnull": true,
 		// "search":      true,
+		"&": true,
 	}
 )
 
@@ -1196,6 +1197,13 @@ func (d *dbBase) GenerateOperatorSQL(mi *modelInfo, fi *fieldInfo, operator stri
 			panic(fmt.Errorf("operator `%s` need 2 args not %d", operator, len(params)))
 		}
 		sql = "BETWEEN ? AND ?"
+	case "&":
+		if len(params) == 1 {
+			params = append(params, arg)
+		} else if len(params) != 2 {
+			panic(fmt.Errorf("operator `%s` need 2 args not %d", operator, len(params)))
+		}
+		sql = " & ? = ?"
 	default:
 		if len(params) > 1 {
 			panic(fmt.Errorf("operator `%s` need 1 args not %d", operator, len(params)))
