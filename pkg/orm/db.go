@@ -261,6 +261,10 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 			}
 		}
 	}
+	if fi.serializer != nil {
+		s := *fi.serializer
+		value = s.Serialize(value)
+	}
 	return value, nil
 }
 
@@ -1450,7 +1454,11 @@ setValue:
 			}
 		}
 	case fieldType == TypeVarCharField || fieldType == TypeCharField || fieldType == TypeTextField || fieldType == TypeJSONField || fieldType == TypeJsonbField:
-		if isNative {
+		if fi.serializer != nil {
+			fieldSerializer := *fi.serializer
+			value := fieldSerializer.Deserialize(value.(string))
+			field.Set(reflect.ValueOf(value))
+		} else if isNative {
 			if ns, ok := field.Interface().(sql.NullString); ok {
 				if value == nil {
 					ns.Valid = false

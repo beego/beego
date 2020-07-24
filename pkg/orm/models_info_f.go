@@ -137,6 +137,7 @@ type fieldInfo struct {
 	isFielder           bool // implement Fielder interface
 	onDelete            string
 	description         string
+	serializer          *FieldSerializer
 }
 
 // new field info
@@ -254,6 +255,8 @@ checkType:
 				err = fmt.Errorf("serializer %s is not registered", serializerKey)
 				goto end
 			}
+			fieldSerializer := serializerMap[serializerKey]
+			fi.serializer = &fieldSerializer
 
 		} else {
 			fieldType, err = getFieldType(addrField)
