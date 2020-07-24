@@ -245,7 +245,8 @@ checkType:
 		serializerKey := sf.Tag.Get(serializerStructTagName)
 
 		if serializerKey != "" {
-			fieldType = TypeVarCharField
+			tags["type"] = "text"
+			fieldType = TypeTextField
 			err = nil
 
 			if fi.auto || fi.pk {
