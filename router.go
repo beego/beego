@@ -319,6 +319,10 @@ func (p *ControllerRegister) GetContext() *beecontext.Context {
 
 // GiveBackContext put the ctx into pool so that it could be reuse
 func (p *ControllerRegister) GiveBackContext(ctx *beecontext.Context) {
+	// clear input cached data
+	ctx.Input.Clear()
+	// clear output cached data
+	ctx.Output.Clear()
 	p.pool.Put(ctx)
 }
 

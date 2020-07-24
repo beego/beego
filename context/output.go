@@ -50,8 +50,14 @@ func NewOutput() *BeegoOutput {
 // Reset init BeegoOutput
 func (output *BeegoOutput) Reset(ctx *Context) {
 	output.Context = ctx
+	output.Clear()
+}
+
+// Clear: clear all data in output
+func (output *BeegoOutput) Clear() {
 	output.Status = 0
 }
+
 
 // Header sets response header item string via given key.
 func (output *BeegoOutput) Header(key, val string) {
