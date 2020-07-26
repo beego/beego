@@ -32,7 +32,8 @@ func (o *rawPrepare) Exec(args ...interface{}) (sql.Result, error) {
 	if o.closed {
 		return nil, ErrStmtClosed
 	}
-	return o.stmt.Exec(args...)
+	flatParams := getFlatParams(nil, args, o.rs.orm.alias.TZ)
+	return o.stmt.Exec(flatParams...)
 }
 
 func (o *rawPrepare) Close() error {
