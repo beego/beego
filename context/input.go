@@ -323,28 +323,20 @@ func (input *BeegoInput) SetParam(key, val string) {
 // This function is used to clear parameters so they may be reset between filter
 // passes.
 func (input *BeegoInput) ResetParams() {
-	if len(input.pnames) > 0 {
-		input.pnames = input.pnames[:0]
-	}
-	if len(input.pvalues) > 0 {
-		input.pvalues = input.pvalues[:0]
-	}
+	input.pnames = input.pnames[:0]
+	input.pvalues = input.pvalues[:0]
 }
 
 // ResetData: reset data
 func (input *BeegoInput) ResetData() {
 	input.dataLock.Lock()
-	if input.data != nil {
-		input.data = nil
-	}
+	input.data = nil
 	input.dataLock.Unlock()
 }
 
 // ResetBody: reset body
 func (input *BeegoInput) ResetBody() {
-	if len(input.RequestBody) > 0 {
-		input.RequestBody = []byte{}
-	}
+	input.RequestBody = []byte{}
 }
 
 // Clear: clear all data in input
