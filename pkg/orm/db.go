@@ -125,6 +125,9 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 		if fi.isFielder {
 			f := field.Addr().Interface().(Fielder)
 			value = f.RawValue()
+		}else if fi.serializer != nil {
+			s := *fi.serializer
+			value = s.Serialize(field.Interface())
 		} else {
 			switch fi.fieldType {
 			case TypeBooleanField:
@@ -260,10 +263,6 @@ func (d *dbBase) collectFieldValue(mi *modelInfo, fi *fieldInfo, ind reflect.Val
 				}
 			}
 		}
-	}
-	if fi.serializer != nil {
-		s := *fi.serializer
-		value = s.Serialize(value)
 	}
 	return value, nil
 }
