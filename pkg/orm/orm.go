@@ -591,10 +591,13 @@ func (t *txOrm) Rollback() error {
 // NewOrm create new orm
 func NewOrm() Ormer {
 	BootStrap() // execute only once
+	return NewOrmUsingDB(`default`)
+}
 
+// NewOrm create new orm with the name
+func NewOrmUsingDB(aliasName string) Ormer {
 	o := new(orm)
-	name := `default`
-	if al, ok := dataBaseCache.get(name); ok {
+	if al, ok := dataBaseCache.get(aliasName); ok {
 		o.alias = al
 		if Debug {
 			o.db = newDbQueryLog(al, al.DB)
@@ -602,9 +605,8 @@ func NewOrm() Ormer {
 			o.db = al.DB
 		}
 	} else {
-		panic(fmt.Errorf("<Ormer.Using> unknown db alias name `%s`", name))
+		panic(fmt.Errorf("<Ormer.Using> unknown db alias name `%s`", aliasName))
 	}
-
 	return o
 }
 
