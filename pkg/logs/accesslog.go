@@ -42,6 +42,8 @@ type AccessLogRecord struct {
 	HTTPReferrer   string        `json:"http_referrer"`
 	HTTPUserAgent  string        `json:"http_user_agent"`
 	RemoteUser     string        `json:"remote_user"`
+	LineReference  string        `json:"line_reference"`
+	FilePath       string        `json:"file_path"`
 }
 
 func (r *AccessLogRecord) json() ([]byte, error) {

@@ -116,6 +116,7 @@ type BeeLogger struct {
 	enableFuncCallDepth bool
 	loggerFuncCallDepth int
 	asynchronous        bool
+	FullFilePath        bool
 	prefix              string
 	msgChanLen          int64
 	msgChan             chan *logMsg
