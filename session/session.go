@@ -127,7 +127,7 @@ type Manager struct {
 // 2. hashfunc  default sha1
 // 3. hashkey default beegosessionkey
 // 4. maxage default is none
-func NewManager(provideName string, cf *ManagerConfig) (*Manager, error) {
+func NewManager(provideName string, cf *ManagerConfig, ctx ...context.Context) (*Manager, error) {
 	provider, ok := provides[provideName]
 	if !ok {
 		return nil, fmt.Errorf("session: unknown provide %q (forgotten import?)", provideName)
@@ -148,7 +148,12 @@ func NewManager(provideName string, cf *ManagerConfig) (*Manager, error) {
 			panic(errors.New(strErrMsg))
 		}
 	}
-	err := provider.SessionInit(cf.Maxlifetime, cf.ProviderConfig, context.Background())
+	c := context.Background()
+	if len(ctx) > 0 {
+		c = ctx[0]
+	}
+
+	err := provider.SessionInit(cf.Maxlifetime, cf.ProviderConfig, c)
 	if err != nil {
 		return nil, err
 	}

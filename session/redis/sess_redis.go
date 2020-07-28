@@ -159,15 +159,14 @@ func (rp *Provider) SessionInit(maxlifetime int64, savePath string, ctx context.
 	}
 
 	rp.poollist = redis.NewClient(&redis.Options{
-		Addr:        rp.savePath,
-		Password:    rp.password,
-		PoolSize:    rp.poolsize,
-		DB:          rp.dbNum,
-		IdleTimeout: idleTimeout,
+		Addr:               rp.savePath,
+		Password:           rp.password,
+		PoolSize:           rp.poolsize,
+		DB:                 rp.dbNum,
+		IdleTimeout:        idleTimeout,
 		IdleCheckFrequency: 10 * time.Second,
-		MaxRetries: 5,
+		MaxRetries:         5,
 	}).WithContext(ctx)
-
 
 	return rp.poollist.Ping(ctx).Err()
 }
