@@ -17,6 +17,7 @@ package session
 import (
 	"errors"
 	"fmt"
+	"context"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -119,7 +120,7 @@ type FileProvider struct {
 
 // SessionInit Init file session provider.
 // savePath sets the session files path.
-func (fp *FileProvider) SessionInit(maxlifetime int64, savePath string) error {
+func (fp *FileProvider) SessionInit(maxlifetime int64, savePath string, _ context.Context) error {
 	fp.maxlifetime = maxlifetime
 	fp.savePath = savePath
 	return nil
@@ -176,17 +177,20 @@ func (fp *FileProvider) SessionRead(sid string) (Store, error) {
 
 // SessionExist Check file session exist.
 // it checks the file named from sid exist or not.
-func (fp *FileProvider) SessionExist(sid string) bool {
+func (fp *FileProvider) SessionExist(sid string) (bool, error) {
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()
 
 	if len(sid) < 2 {
 		SLogger.Println("min length of session id is 2", sid)
-		return false
+		return false, nil
 	}
 
 	_, err := os.Stat(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid))
-	return err == nil
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // SessionDestroy Remove all files in this save path

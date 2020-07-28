@@ -32,6 +32,7 @@
 // more docs: http://beego.me/docs/module/session.md
 package redis_cluster
 import (
+	"context"
 	"net/http"
 	"strconv"
 	"strings"
@@ -117,7 +118,7 @@ type Provider struct {
 // SessionInit init redis_cluster session
 // savepath like redis server addr,pool size,password,dbnum
 // e.g. 127.0.0.1:6379;127.0.0.1:6380,100,test,0
-func (rp *Provider) SessionInit(maxlifetime int64, savePath string) error {
+func (rp *Provider) SessionInit(maxlifetime int64, savePath string, ctx context.Context) error {
 	rp.maxlifetime = maxlifetime
 	configs := strings.Split(savePath, ",")
 	if len(configs) > 0 {
@@ -146,12 +147,12 @@ func (rp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 	} else {
 		rp.dbNum = 0
 	}
-	
+
 	rp.poollist = rediss.NewClusterClient(&rediss.ClusterOptions{
 		Addrs:    strings.Split(rp.savePath, ";"),
 		Password:  rp.password,
 		PoolSize: rp.poolsize,
-	})
+	}).WithContext(ctx)
 	return rp.poollist.Ping().Err()
 }
 
@@ -175,18 +176,18 @@ func (rp *Provider) SessionRead(sid string) (session.Store, error) {
 }
 
 // SessionExist check redis_cluster session exist by sid
-func (rp *Provider) SessionExist(sid string) bool {
+func (rp *Provider) SessionExist(sid string) (bool, error) {
 	c := rp.poollist
 	if existed, err := c.Exists(sid).Result(); err != nil || existed == 0 {
-		return false
+		return false, err
 	}
-	return true
+	return true, nil
 }
 
 // SessionRegenerate generate new sid for redis_cluster session
 func (rp *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error) {
 	c := rp.poollist
-	
+
 	if existed, err := c.Exists(oldsid).Result(); err != nil || existed == 0 {
 		// oldsid doesn't exists, set the new sid directly
 		// ignore error here, since if it return error

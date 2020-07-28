@@ -33,6 +33,7 @@
 package memcache
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"sync"
@@ -113,7 +114,7 @@ type MemProvider struct {
 // SessionInit init memcache session
 // savepath like
 // e.g. 127.0.0.1:9090
-func (rp *MemProvider) SessionInit(maxlifetime int64, savePath string) error {
+func (rp *MemProvider) SessionInit(maxlifetime int64, savePath string, _ context.Context) error {
 	rp.maxlifetime = maxlifetime
 	rp.conninfo = strings.Split(savePath, ";")
 	client = memcache.New(rp.conninfo...)
@@ -149,16 +150,16 @@ func (rp *MemProvider) SessionRead(sid string) (session.Store, error) {
 }
 
 // SessionExist check memcache session exist by sid
-func (rp *MemProvider) SessionExist(sid string) bool {
+func (rp *MemProvider) SessionExist(sid string) (bool, error) {
 	if client == nil {
 		if err := rp.connectInit(); err != nil {
-			return false
+			return false, err
 		}
 	}
 	if item, err := client.Get(sid); err != nil || len(item.Value) == 0 {
-		return false
+		return false, err
 	}
-	return true
+	return true, nil
 }
 
 // SessionRegenerate generate new sid for memcache session

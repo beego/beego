@@ -33,6 +33,7 @@
 package couchbase
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"sync"
@@ -135,7 +136,7 @@ func (cp *Provider) getBucket() *couchbase.Bucket {
 // SessionInit init couchbase session
 // savepath like couchbase server REST/JSON URL
 // e.g. http://host:port/, Pool, Bucket
-func (cp *Provider) SessionInit(maxlifetime int64, savePath string) error {
+func (cp *Provider) SessionInit(maxlifetime int64, savePath string, _ context.Context) error {
 	cp.maxlifetime = maxlifetime
 	configs := strings.Split(savePath, ",")
 	if len(configs) > 0 {
@@ -179,16 +180,16 @@ func (cp *Provider) SessionRead(sid string) (session.Store, error) {
 
 // SessionExist Check couchbase session exist.
 // it checkes sid exist or not.
-func (cp *Provider) SessionExist(sid string) bool {
+func (cp *Provider) SessionExist(sid string) (bool, error) {
 	cp.b = cp.getBucket()
 	defer cp.b.Close()
 
 	var doc []byte
 
 	if err := cp.b.Get(sid, &doc); err != nil || doc == nil {
-		return false
+		return false, err
 	}
-	return true
+	return true, nil
 }
 
 // SessionRegenerate remove oldsid and use sid to generate new session

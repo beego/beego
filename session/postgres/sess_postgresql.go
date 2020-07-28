@@ -51,6 +51,7 @@
 package postgres
 
 import (
+	"context"
 	"database/sql"
 	"net/http"
 	"sync"
@@ -141,7 +142,7 @@ func (mp *Provider) connectInit() *sql.DB {
 
 // SessionInit init postgresql session.
 // savepath is the connection string of postgresql.
-func (mp *Provider) SessionInit(maxlifetime int64, savePath string) error {
+func (mp *Provider) SessionInit(maxlifetime int64, savePath string, _ context.Context) error {
 	mp.maxlifetime = maxlifetime
 	mp.savePath = savePath
 	return nil
@@ -178,13 +179,16 @@ func (mp *Provider) SessionRead(sid string) (session.Store, error) {
 }
 
 // SessionExist check postgresql session exist
-func (mp *Provider) SessionExist(sid string) bool {
+func (mp *Provider) SessionExist(sid string) (bool, error) {
 	c := mp.connectInit()
 	defer c.Close()
 	row := c.QueryRow("select session_data from session where session_key=$1", sid)
 	var sessiondata []byte
 	err := row.Scan(&sessiondata)
-	return err != sql.ErrNoRows
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // SessionRegenerate generate new sid for postgresql session

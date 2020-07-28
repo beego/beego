@@ -15,6 +15,7 @@
 package session
 
 import (
+	"context"
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/json"
@@ -112,7 +113,7 @@ type CookieProvider struct {
 // 	securityName - recognized name in encoded cookie string
 // 	cookieName - cookie name
 // 	maxage - cookie max life time.
-func (pder *CookieProvider) SessionInit(maxlifetime int64, config string) error {
+func (pder *CookieProvider) SessionInit(maxlifetime int64, config string, _ context.Context) error {
 	pder.config = &cookieConfig{}
 	err := json.Unmarshal([]byte(config), pder.config)
 	if err != nil {
@@ -147,8 +148,8 @@ func (pder *CookieProvider) SessionRead(sid string) (Store, error) {
 }
 
 // SessionExist Cookie session is always existed
-func (pder *CookieProvider) SessionExist(sid string) bool {
-	return true
+func (pder *CookieProvider) SessionExist(sid string) (bool, error) {
+	return true, nil
 }
 
 // SessionRegenerate Implement method, no used.

@@ -15,6 +15,7 @@
 package session
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"sync"
@@ -37,7 +38,7 @@ func TestFileProvider_SessionInit(t *testing.T) {
 	defer os.RemoveAll(sessionPath)
 	fp := &FileProvider{}
 
-	_ = fp.SessionInit(180, sessionPath)
+	_ = fp.SessionInit(180, sessionPath, context.Background())
 	if fp.maxlifetime != 180 {
 		t.Error()
 	}
@@ -54,9 +55,9 @@ func TestFileProvider_SessionExist(t *testing.T) {
 	defer os.RemoveAll(sessionPath)
 	fp := &FileProvider{}
 
-	_ = fp.SessionInit(180, sessionPath)
+	_ = fp.SessionInit(180, sessionPath, context.Background())
 
-	if fp.SessionExist(sid) {
+	if exists, _ := fp.SessionExist(sid); exists {
 		t.Error()
 	}
 
@@ -65,7 +66,7 @@ func TestFileProvider_SessionExist(t *testing.T) {
 		t.Error(err)
 	}
 
-	if !fp.SessionExist(sid) {
+	if exists, _ := fp.SessionExist(sid); !exists {
 		t.Error()
 	}
 }
@@ -77,17 +78,17 @@ func TestFileProvider_SessionExist2(t *testing.T) {
 	defer os.RemoveAll(sessionPath)
 	fp := &FileProvider{}
 
-	_ = fp.SessionInit(180, sessionPath)
+	_ = fp.SessionInit(180, sessionPath, context.Background())
 
-	if fp.SessionExist(sid) {
+	if exists, _ := fp.SessionExist(sid); exists {
 		t.Error()
 	}
 
-	if fp.SessionExist("") {
+	if exists, _ := fp.SessionExist(""); exists {
 		t.Error()
 	}
 
-	if fp.SessionExist("1") {
+	if exists, _ := fp.SessionExist("1"); exists {
 		t.Error()
 	}
 }
@@ -99,7 +100,7 @@ func TestFileProvider_SessionRead(t *testing.T) {
 	defer os.RemoveAll(sessionPath)
 	fp := &FileProvider{}
 
-	_ = fp.SessionInit(180, sessionPath)
+	_ = fp.SessionInit(180, sessionPath, context.Background())
 
 	s, err := fp.SessionRead(sid)
 	if err != nil {
@@ -121,7 +122,7 @@ func TestFileProvider_SessionRead1(t *testing.T) {
 	defer os.RemoveAll(sessionPath)
 	fp := &FileProvider{}
 
-	_ = fp.SessionInit(180, sessionPath)
+	_ = fp.SessionInit(180, sessionPath, context.Background())
 
 	_, err := fp.SessionRead("")
 	if err == nil {
@@ -141,7 +142,7 @@ func TestFileProvider_SessionAll(t *testing.T) {
 	defer os.RemoveAll(sessionPath)
 	fp := &FileProvider{}
 
-	_ = fp.SessionInit(180, sessionPath)
+	_ = fp.SessionInit(180, sessionPath, context.Background())
 
 	sessionCount := 546
 
@@ -164,14 +165,14 @@ func TestFileProvider_SessionRegenerate(t *testing.T) {
 	defer os.RemoveAll(sessionPath)
 	fp := &FileProvider{}
 
-	_ = fp.SessionInit(180, sessionPath)
+	_ = fp.SessionInit(180, sessionPath, context.Background())
 
 	_, err := fp.SessionRead(sid)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if !fp.SessionExist(sid) {
+	if exists, _ := fp.SessionExist(sid); !exists {
 		t.Error()
 	}
 
@@ -180,11 +181,11 @@ func TestFileProvider_SessionRegenerate(t *testing.T) {
 		t.Error(err)
 	}
 
-	if fp.SessionExist(sid) {
+	if exists, _ := fp.SessionExist(sid); exists {
 		t.Error()
 	}
 
-	if !fp.SessionExist(sidNew) {
+	if exists, _ := fp.SessionExist(sidNew); !exists {
 		t.Error()
 	}
 }
@@ -196,14 +197,14 @@ func TestFileProvider_SessionDestroy(t *testing.T) {
 	defer os.RemoveAll(sessionPath)
 	fp := &FileProvider{}
 
-	_ = fp.SessionInit(180, sessionPath)
+	_ = fp.SessionInit(180, sessionPath, context.Background())
 
 	_, err := fp.SessionRead(sid)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if !fp.SessionExist(sid) {
+	if exists, _ := fp.SessionExist(sid); !exists {
 		t.Error()
 	}
 
@@ -212,7 +213,7 @@ func TestFileProvider_SessionDestroy(t *testing.T) {
 		t.Error(err)
 	}
 
-	if fp.SessionExist(sid) {
+	if exists, _ := fp.SessionExist(sid); exists {
 		t.Error()
 	}
 }
@@ -224,7 +225,7 @@ func TestFileProvider_SessionGC(t *testing.T) {
 	defer os.RemoveAll(sessionPath)
 	fp := &FileProvider{}
 
-	_ = fp.SessionInit(1, sessionPath)
+	_ = fp.SessionInit(1, sessionPath, context.Background())
 
 	sessionCount := 412
 
@@ -250,7 +251,7 @@ func TestFileSessionStore_Set(t *testing.T) {
 	defer os.RemoveAll(sessionPath)
 	fp := &FileProvider{}
 
-	_ = fp.SessionInit(180, sessionPath)
+	_ = fp.SessionInit(180, sessionPath, context.Background())
 
 	sessionCount := 100
 	s, _ := fp.SessionRead(sid)
@@ -269,7 +270,7 @@ func TestFileSessionStore_Get(t *testing.T) {
 	defer os.RemoveAll(sessionPath)
 	fp := &FileProvider{}
 
-	_ = fp.SessionInit(180, sessionPath)
+	_ = fp.SessionInit(180, sessionPath, context.Background())
 
 	sessionCount := 100
 	s, _ := fp.SessionRead(sid)
@@ -290,7 +291,7 @@ func TestFileSessionStore_Delete(t *testing.T) {
 	defer os.RemoveAll(sessionPath)
 	fp := &FileProvider{}
 
-	_ = fp.SessionInit(180, sessionPath)
+	_ = fp.SessionInit(180, sessionPath, context.Background())
 
 	s, _ := fp.SessionRead(sid)
 	s.Set("1", 1)
@@ -313,7 +314,7 @@ func TestFileSessionStore_Flush(t *testing.T) {
 	defer os.RemoveAll(sessionPath)
 	fp := &FileProvider{}
 
-	_ = fp.SessionInit(180, sessionPath)
+	_ = fp.SessionInit(180, sessionPath, context.Background())
 
 	sessionCount := 100
 	s, _ := fp.SessionRead(sid)
@@ -337,7 +338,7 @@ func TestFileSessionStore_SessionID(t *testing.T) {
 	defer os.RemoveAll(sessionPath)
 	fp := &FileProvider{}
 
-	_ = fp.SessionInit(180, sessionPath)
+	_ = fp.SessionInit(180, sessionPath, context.Background())
 
 	sessionCount := 85
 
@@ -359,7 +360,7 @@ func TestFileSessionStore_SessionRelease(t *testing.T) {
 	defer os.RemoveAll(sessionPath)
 	fp := &FileProvider{}
 
-	_ = fp.SessionInit(180, sessionPath)
+	_ = fp.SessionInit(180, sessionPath, context.Background())
 	filepder.savePath = sessionPath
 	sessionCount := 85
 

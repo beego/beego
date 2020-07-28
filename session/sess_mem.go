@@ -16,6 +16,7 @@ package session
 
 import (
 	"container/list"
+	"context"
 	"net/http"
 	"sync"
 	"time"
@@ -85,7 +86,7 @@ type MemProvider struct {
 }
 
 // SessionInit init memory session
-func (pder *MemProvider) SessionInit(maxlifetime int64, savePath string) error {
+func (pder *MemProvider) SessionInit(maxlifetime int64, savePath string, _ context.Context) error {
 	pder.maxlifetime = maxlifetime
 	pder.savePath = savePath
 	return nil
@@ -109,13 +110,13 @@ func (pder *MemProvider) SessionRead(sid string) (Store, error) {
 }
 
 // SessionExist check session store exist in memory session by sid
-func (pder *MemProvider) SessionExist(sid string) bool {
+func (pder *MemProvider) SessionExist(sid string) (bool, error) {
 	pder.lock.RLock()
 	defer pder.lock.RUnlock()
 	if _, ok := pder.sessions[sid]; ok {
-		return true
+		return true, nil
 	}
-	return false
+	return false, nil
 }
 
 // SessionRegenerate generate new sid for session store in memory session

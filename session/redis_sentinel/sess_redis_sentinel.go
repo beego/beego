@@ -33,6 +33,7 @@
 package redis_sentinel
 
 import (
+	"context"
 	"github.com/astaxie/beego/session"
 	"github.com/go-redis/redis"
 	"net/http"
@@ -119,7 +120,7 @@ type Provider struct {
 // SessionInit init redis_sentinel session
 // savepath like redis sentinel addr,pool size,password,dbnum,masterName
 // e.g. 127.0.0.1:26379;127.0.0.2:26379,100,1qaz2wsx,0,mymaster
-func (rp *Provider) SessionInit(maxlifetime int64, savePath string) error {
+func (rp *Provider) SessionInit(maxlifetime int64, savePath string, ctx context.Context) error {
 	rp.maxlifetime = maxlifetime
 	configs := strings.Split(savePath, ",")
 	if len(configs) > 0 {
@@ -164,7 +165,7 @@ func (rp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 		PoolSize:      rp.poolsize,
 		DB:            rp.dbNum,
 		MasterName:    rp.masterName,
-	})
+	}).WithContext(ctx)
 
 	return rp.poollist.Ping().Err()
 }
@@ -189,12 +190,12 @@ func (rp *Provider) SessionRead(sid string) (session.Store, error) {
 }
 
 // SessionExist check redis_sentinel session exist by sid
-func (rp *Provider) SessionExist(sid string) bool {
+func (rp *Provider) SessionExist(sid string) (bool, error) {
 	c := rp.poollist
 	if existed, err := c.Exists(sid).Result(); err != nil || existed == 0 {
-		return false
+		return false, err
 	}
-	return true
+	return true, nil
 }
 
 // SessionRegenerate generate new sid for redis_sentinel session

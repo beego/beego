@@ -28,6 +28,7 @@
 package session
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
@@ -54,9 +55,9 @@ type Store interface {
 // Provider contains global session methods and saved SessionStores.
 // it can operate a SessionStore by its id.
 type Provider interface {
-	SessionInit(gclifetime int64, config string) error
+	SessionInit(gclifetime int64, config string, ctx context.Context) error
 	SessionRead(sid string) (Store, error)
-	SessionExist(sid string) bool
+	SessionExist(sid string) (bool, error)
 	SessionRegenerate(oldsid, sid string) (Store, error)
 	SessionDestroy(sid string) error
 	SessionAll() int //get all active session
@@ -147,8 +148,7 @@ func NewManager(provideName string, cf *ManagerConfig) (*Manager, error) {
 			panic(errors.New(strErrMsg))
 		}
 	}
-
-	err := provider.SessionInit(cf.Maxlifetime, cf.ProviderConfig)
+	err := provider.SessionInit(cf.Maxlifetime, cf.ProviderConfig, context.Background())
 	if err != nil {
 		return nil, err
 	}
@@ -211,8 +211,14 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 		return nil, errs
 	}
 
-	if sid != "" && manager.provider.SessionExist(sid) {
-		return manager.provider.SessionRead(sid)
+	if sid != "" {
+		exists, err := manager.provider.SessionExist(sid)
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			return manager.provider.SessionRead(sid)
+		}
 	}
 
 	// Generate a new session

@@ -41,6 +41,7 @@
 package mysql
 
 import (
+	"context"
 	"database/sql"
 	"net/http"
 	"sync"
@@ -134,7 +135,7 @@ func (mp *Provider) connectInit() *sql.DB {
 
 // SessionInit init mysql session.
 // savepath is the connection string of mysql.
-func (mp *Provider) SessionInit(maxlifetime int64, savePath string) error {
+func (mp *Provider) SessionInit(maxlifetime int64, savePath string, _ context.Context) error {
 	mp.maxlifetime = maxlifetime
 	mp.savePath = savePath
 	return nil
@@ -164,13 +165,16 @@ func (mp *Provider) SessionRead(sid string) (session.Store, error) {
 }
 
 // SessionExist check mysql session exist
-func (mp *Provider) SessionExist(sid string) bool {
+func (mp *Provider) SessionExist(sid string) (bool, error) {
 	c := mp.connectInit()
 	defer c.Close()
 	row := c.QueryRow("select session_data from "+TableName+" where session_key=?", sid)
 	var sessiondata []byte
 	err := row.Scan(&sessiondata)
-	return err != sql.ErrNoRows
+	if err != nil {
+		return false, err
+	}
+	return true, nil
 }
 
 // SessionRegenerate generate new sid for mysql session

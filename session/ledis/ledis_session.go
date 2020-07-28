@@ -2,6 +2,7 @@
 package ledis
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 	"strings"
@@ -85,7 +86,7 @@ type Provider struct {
 // SessionInit init ledis session
 // savepath like ledis server saveDataPath,pool size
 // e.g. 127.0.0.1:6379,100,astaxie
-func (lp *Provider) SessionInit(maxlifetime int64, savePath string) error {
+func (lp *Provider) SessionInit(maxlifetime int64, savePath string, _ context.Context) error {
 	var err error
 	lp.maxlifetime = maxlifetime
 	configs := strings.Split(savePath, ",")
@@ -132,9 +133,9 @@ func (lp *Provider) SessionRead(sid string) (session.Store, error) {
 }
 
 // SessionExist check ledis session exist by sid
-func (lp *Provider) SessionExist(sid string) bool {
+func (lp *Provider) SessionExist(sid string) (bool, error) {
 	count, _ := c.Exists([]byte(sid))
-	return count != 0
+	return count != 0, nil
 }
 
 // SessionRegenerate generate new sid for ledis session
