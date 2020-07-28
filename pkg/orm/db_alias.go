@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/astaxie/beego/pkg/orm/hints"
 	"sync"
 	"time"
 
@@ -402,7 +403,7 @@ func AddAliasWthDB(aliasName, driverName string, db *sql.DB, params ...common.KV
 }
 
 // RegisterDataBase Setting the database connect params. Use the database driver self dataSource args.
-func RegisterDataBase(aliasName, driverName, dataSource string, params ...common.KV) error {
+func RegisterDataBase(aliasName, driverName, dataSource string, hints ...common.KV) error {
 	var (
 		err error
 		db  *sql.DB
@@ -416,7 +417,7 @@ func RegisterDataBase(aliasName, driverName, dataSource string, params ...common
 		goto end
 	}
 
-	al, err = addAliasWthDB(aliasName, driverName, db, params...)
+	al, err = addAliasWthDB(aliasName, driverName, db, hints...)
 	if err != nil {
 		goto end
 	}
