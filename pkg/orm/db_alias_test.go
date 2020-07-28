@@ -42,3 +42,56 @@ func TestRegisterDataBase(t *testing.T) {
 	assert.Equal(t, al.MaxOpenConns, 300)
 	assert.Equal(t, al.ConnMaxLifetime, time.Minute)
 }
+
+func TestRegisterDataBase_MaxStmtCacheSizeNegative1(t *testing.T) {
+	aliasName := "TestRegisterDataBase_MaxStmtCacheSizeNegative1"
+	err := RegisterDataBase(aliasName, DBARGS.Driver, DBARGS.Source, common.KV{
+		Key:   MaxStmtCacheSize,
+		Value: -1,
+	})
+	assert.Nil(t, err)
+
+	al := getDbAlias(aliasName)
+	assert.NotNil(t, al)
+	assert.Equal(t, al.DB.stmtDecoratorsLimit, 0)
+}
+
+func TestRegisterDataBase_MaxStmtCacheSize0(t *testing.T) {
+	aliasName := "TestRegisterDataBase_MaxStmtCacheSize0"
+	err := RegisterDataBase(aliasName, DBARGS.Driver, DBARGS.Source, common.KV{
+		Key:   MaxStmtCacheSize,
+		Value: 0,
+	})
+	assert.Nil(t, err)
+
+	al := getDbAlias(aliasName)
+	assert.NotNil(t, al)
+	assert.Equal(t, al.DB.stmtDecoratorsLimit, 0)
+}
+
+func TestRegisterDataBase_MaxStmtCacheSize1(t *testing.T) {
+	aliasName := "TestRegisterDataBase_MaxStmtCacheSize1"
+	err := RegisterDataBase(aliasName, DBARGS.Driver, DBARGS.Source, common.KV{
+		Key:   MaxStmtCacheSize,
+		Value: 1,
+	})
+	assert.Nil(t, err)
+
+	al := getDbAlias(aliasName)
+	assert.NotNil(t, al)
+	assert.Equal(t, al.DB.stmtDecoratorsLimit, 1)
+}
+
+func TestRegisterDataBase_MaxStmtCacheSize841(t *testing.T) {
+	aliasName := "TestRegisterDataBase_MaxStmtCacheSize841"
+	err := RegisterDataBase(aliasName, DBARGS.Driver, DBARGS.Source, common.KV{
+		Key:   MaxStmtCacheSize,
+		Value: 841,
+	})
+	assert.Nil(t, err)
+
+	al := getDbAlias(aliasName)
+	assert.NotNil(t, al)
+	assert.Equal(t, al.DB.stmtDecoratorsLimit, 841)
+}
+
