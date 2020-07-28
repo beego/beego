@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/astaxie/beego/pkg/orm/hints"
 	"sync"
 	"time"
 
@@ -381,14 +382,14 @@ func AddAliasWthDB(aliasName, driverName string, db *sql.DB) error {
 }
 
 // RegisterDataBase Setting the database connect params. Use the database driver self dataSource args.
-func RegisterDataBase(aliasName, driverName, dataSource string, params ...common.KV) error {
+func RegisterDataBase(aliasName, driverName, dataSource string, hints ...common.KV) error {
 	var (
 		err error
 		db  *sql.DB
 		al  *alias
 	)
 
-	kvs := common.NewKVs(params...)
+	kvs := common.NewKVs(hints...)
 
 	db, err = sql.Open(driverName, dataSource)
 	if err != nil {
@@ -405,11 +406,11 @@ func RegisterDataBase(aliasName, driverName, dataSource string, params ...common
 
 	detectTZ(al)
 
-	kvs.IfContains(MaxIdleConnsKey, func(value interface{}) {
+	kvs.IfContains(maxIdleConnectionsKey, func(value interface{}) {
 		SetMaxIdleConns(al.Name, value.(int))
-	}).IfContains(MaxOpenConnsKey, func(value interface{}) {
+	}).IfContains(maxOpenConnectionsKey, func(value interface{}) {
 		SetMaxOpenConns(al.Name, value.(int))
-	}).IfContains(ConnMaxLifetimeKey, func(value interface{}) {
+	}).IfContains(connMaxLifetimeKey, func(value interface{}) {
 		SetConnMaxLifetime(al.Name, value.(time.Duration))
 	})
 

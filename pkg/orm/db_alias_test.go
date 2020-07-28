@@ -19,21 +19,13 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/astaxie/beego/pkg/common"
 )
 
 func TestRegisterDataBase(t *testing.T) {
-	err := RegisterDataBase("test-params", DBARGS.Driver, DBARGS.Source, common.KV{
-		Key:   MaxIdleConnsKey,
-		Value: 20,
-	}, common.KV{
-		Key:   MaxOpenConnsKey,
-		Value: 300,
-	}, common.KV{
-		Key:   ConnMaxLifetimeKey,
-		Value: time.Minute,
-	})
+	err := RegisterDataBase("test-params", DBARGS.Driver, DBARGS.Source,
+		MaxIdleConnections(20),
+		MaxOpenConnections(300),
+		ConnMaxLifetime(time.Minute))
 	assert.Nil(t, err)
 
 	al := getDbAlias("test-params")
