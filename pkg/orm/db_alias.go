@@ -109,8 +109,9 @@ func (ac *_dbCache) getDefault() (al *alias) {
 
 type DB struct {
 	*sync.RWMutex
-	DB             *sql.DB
-	stmtDecorators *lru.Cache
+	DB                  *sql.DB
+	stmtDecorators      *lru.Cache
+	stmtDecoratorsLimit int
 }
 
 var _ dbQuerier = new(DB)
@@ -165,16 +166,14 @@ func (d *DB) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error
 }
 
 func (d *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
-	sd, err := d.getStmtDecorator(query)
-	if err != nil {
-		return nil, err
-	}
-	stmt := sd.getStmt()
-	defer sd.release()
-	return stmt.Exec(args...)
+	return d.ExecContext(context.Background(), query, args...)
 }
 
 func (d *DB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
+	if d.stmtDecorators == nil {
+		return d.DB.ExecContext(ctx, query, args...)
+	}
+
 	sd, err := d.getStmtDecorator(query)
 	if err != nil {
 		return nil, err
@@ -185,16 +184,14 @@ func (d *DB) ExecContext(ctx context.Context, query string, args ...interface{})
 }
 
 func (d *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
-	sd, err := d.getStmtDecorator(query)
-	if err != nil {
-		return nil, err
-	}
-	stmt := sd.getStmt()
-	defer sd.release()
-	return stmt.Query(args...)
+	return d.QueryContext(context.Background(), query, args...)
 }
 
 func (d *DB) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
+	if d.stmtDecorators == nil {
+		return d.DB.QueryContext(ctx, query, args...)
+	}
+
 	sd, err := d.getStmtDecorator(query)
 	if err != nil {
 		return nil, err
@@ -205,24 +202,21 @@ func (d *DB) QueryContext(ctx context.Context, query string, args ...interface{}
 }
 
 func (d *DB) QueryRow(query string, args ...interface{}) *sql.Row {
-	sd, err := d.getStmtDecorator(query)
-	if err != nil {
-		panic(err)
-	}
-	stmt := sd.getStmt()
-	defer sd.release()
-	return stmt.QueryRow(args...)
-
+	return d.QueryRowContext(context.Background(), query, args...)
 }
 
 func (d *DB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
+	if d.stmtDecorators == nil {
+		return d.DB.QueryRowContext(ctx, query, args...)
+	}
+
 	sd, err := d.getStmtDecorator(query)
 	if err != nil {
 		panic(err)
 	}
 	stmt := sd.getStmt()
 	defer sd.release()
-	return stmt.QueryRowContext(ctx, args)
+	return stmt.QueryRowContext(ctx, args...)
 }
 
 type TxDB struct {
@@ -345,14 +339,31 @@ func detectTZ(al *alias) {
 	}
 }
 
-func addAliasWthDB(aliasName, driverName string, db *sql.DB) (*alias, error) {
+func addAliasWthDB(aliasName, driverName string, db *sql.DB, params ...common.KV) (*alias, error) {
+	kvs := common.NewKVs(params...)
+
+	var stmtCache *lru.Cache
+	var stmtCacheSize int
+
+	maxStmtCacheSize := kvs.GetValueOr(MaxStmtCacheSize, 0).(int)
+	if maxStmtCacheSize > 0 {
+		_stmtCache, errC := newStmtDecoratorLruWithEvict(maxStmtCacheSize)
+		if errC != nil {
+			return nil, errC
+		} else {
+			stmtCache = _stmtCache
+			stmtCacheSize = maxStmtCacheSize
+		}
+	}
+
 	al := new(alias)
 	al.Name = aliasName
 	al.DriverName = driverName
 	al.DB = &DB{
-		RWMutex:        new(sync.RWMutex),
-		DB:             db,
-		stmtDecorators: newStmtDecoratorLruWithEvict(),
+		RWMutex:             new(sync.RWMutex),
+		DB:                  db,
+		stmtDecorators:      stmtCache,
+		stmtDecoratorsLimit: stmtCacheSize,
 	}
 
 	if dr, ok := drivers[driverName]; ok {
@@ -371,12 +382,22 @@ func addAliasWthDB(aliasName, driverName string, db *sql.DB) (*alias, error) {
 		return nil, fmt.Errorf("DataBase alias name `%s` already registered, cannot reuse", aliasName)
 	}
 
+	detectTZ(al)
+
+	kvs.IfContains(MaxIdleConnsKey, func(value interface{}) {
+		SetMaxIdleConns(al.Name, value.(int))
+	}).IfContains(MaxOpenConnsKey, func(value interface{}) {
+		SetMaxOpenConns(al.Name, value.(int))
+	}).IfContains(ConnMaxLifetimeKey, func(value interface{}) {
+		SetConnMaxLifetime(al.Name, value.(time.Duration))
+	})
+
 	return al, nil
 }
 
 // AddAliasWthDB add a aliasName for the drivename
-func AddAliasWthDB(aliasName, driverName string, db *sql.DB) error {
-	_, err := addAliasWthDB(aliasName, driverName, db)
+func AddAliasWthDB(aliasName, driverName string, db *sql.DB, params ...common.KV) error {
+	_, err := addAliasWthDB(aliasName, driverName, db, params...)
 	return err
 }
 
@@ -388,7 +409,6 @@ func RegisterDataBase(aliasName, driverName, dataSource string, params ...common
 		al  *alias
 	)
 
-	kvs := common.NewKVs(params...)
 
 	db, err = sql.Open(driverName, dataSource)
 	if err != nil {
@@ -396,22 +416,12 @@ func RegisterDataBase(aliasName, driverName, dataSource string, params ...common
 		goto end
 	}
 
-	al, err = addAliasWthDB(aliasName, driverName, db)
+	al, err = addAliasWthDB(aliasName, driverName, db, params...)
 	if err != nil {
 		goto end
 	}
 
 	al.DataSource = dataSource
-
-	detectTZ(al)
-
-	kvs.IfContains(MaxIdleConnsKey, func(value interface{}) {
-		SetMaxIdleConns(al.Name, value.(int))
-	}).IfContains(MaxOpenConnsKey, func(value interface{}) {
-		SetMaxOpenConns(al.Name, value.(int))
-	}).IfContains(ConnMaxLifetimeKey, func(value interface{}) {
-		SetConnMaxLifetime(al.Name, value.(time.Duration))
-	})
 
 end:
 	if err != nil {
@@ -517,9 +527,12 @@ func newStmtDecorator(sqlStmt *sql.Stmt) *stmtDecorator {
 	}
 }
 
-func newStmtDecoratorLruWithEvict() *lru.Cache {
-	cache, _ := lru.NewWithEvict(1000, func(key interface{}, value interface{}) {
+func newStmtDecoratorLruWithEvict(cacheSize int) (*lru.Cache, error) {
+	cache, err := lru.NewWithEvict(cacheSize, func(key interface{}, value interface{}) {
 		value.(*stmtDecorator).destroy()
 	})
-	return cache
+	if err != nil {
+		return nil, err
+	}
+	return cache, nil
 }

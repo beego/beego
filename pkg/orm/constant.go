@@ -18,4 +18,5 @@ const (
 	MaxIdleConnsKey    = "MaxIdleConns"
 	MaxOpenConnsKey    = "MaxOpenConns"
 	ConnMaxLifetimeKey = "ConnMaxLifetime"
+	MaxStmtCacheSize   = "MaxStmtCacheSize"
 )
