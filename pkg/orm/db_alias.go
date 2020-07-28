@@ -18,7 +18,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/astaxie/beego/pkg/orm/hints"
 	"sync"
 	"time"
 
@@ -341,12 +340,30 @@ func detectTZ(al *alias) {
 }
 
 func addAliasWthDB(aliasName, driverName string, db *sql.DB, params ...common.KV) (*alias, error) {
+	existErr := fmt.Errorf("DataBase alias name `%s` already registered, cannot reuse", aliasName)
+	if _, ok := dataBaseCache.get(aliasName); ok {
+		return nil, existErr
+	}
+
+	al, err := newAliasWithDb(aliasName, driverName, db, params...)
+	if err != nil {
+		return nil, err
+	}
+
+	if !dataBaseCache.add(aliasName, al) {
+		return nil, existErr
+	}
+
+	return al, nil
+}
+
+func newAliasWithDb(aliasName, driverName string, db *sql.DB, params ...common.KV)(*alias, error){
 	kvs := common.NewKVs(params...)
 
 	var stmtCache *lru.Cache
 	var stmtCacheSize int
 
-	maxStmtCacheSize := kvs.GetValueOr(MaxStmtCacheSize, 0).(int)
+	maxStmtCacheSize := kvs.GetValueOr(maxStmtCacheSizeKey, 0).(int)
 	if maxStmtCacheSize > 0 {
 		_stmtCache, errC := newStmtDecoratorLruWithEvict(maxStmtCacheSize)
 		if errC != nil {
@@ -379,18 +396,20 @@ func addAliasWthDB(aliasName, driverName string, db *sql.DB, params ...common.KV
 		return nil, fmt.Errorf("register db Ping `%s`, %s", aliasName, err.Error())
 	}
 
-	if !dataBaseCache.add(aliasName, al) {
-		return nil, fmt.Errorf("DataBase alias name `%s` already registered, cannot reuse", aliasName)
-	}
-
 	detectTZ(al)
 
-	kvs.IfContains(MaxIdleConnsKey, func(value interface{}) {
-		SetMaxIdleConns(al.Name, value.(int))
-	}).IfContains(MaxOpenConnsKey, func(value interface{}) {
-		SetMaxOpenConns(al.Name, value.(int))
-	}).IfContains(ConnMaxLifetimeKey, func(value interface{}) {
-		SetConnMaxLifetime(al.Name, value.(time.Duration))
+	kvs.IfContains(maxIdleConnectionsKey, func(value interface{}) {
+		if m, ok := value.(int); ok {
+			SetMaxIdleConns(al, m)
+		}
+	}).IfContains(maxOpenConnectionsKey, func(value interface{}) {
+		if m, ok := value.(int); ok {
+			SetMaxOpenConns(al, m)
+		}
+	}).IfContains(connMaxLifetimeKey, func(value interface{}) {
+		if m, ok := value.(time.Duration); ok {
+			SetConnMaxLifetime(al, m)
+		}
 	})
 
 	return al, nil
@@ -458,21 +477,18 @@ func SetDataBaseTZ(aliasName string, tz *time.Location) error {
 }
 
 // SetMaxIdleConns Change the max idle conns for *sql.DB, use specify database alias name
-func SetMaxIdleConns(aliasName string, maxIdleConns int) {
-	al := getDbAlias(aliasName)
+func SetMaxIdleConns(al *alias, maxIdleConns int) {
 	al.MaxIdleConns = maxIdleConns
 	al.DB.DB.SetMaxIdleConns(maxIdleConns)
 }
 
 // SetMaxOpenConns Change the max open conns for *sql.DB, use specify database alias name
-func SetMaxOpenConns(aliasName string, maxOpenConns int) {
-	al := getDbAlias(aliasName)
+func SetMaxOpenConns(al *alias, maxOpenConns int) {
 	al.MaxOpenConns = maxOpenConns
 	al.DB.DB.SetMaxOpenConns(maxOpenConns)
 }
 
-func SetConnMaxLifetime(aliasName string, lifeTime time.Duration) {
-	al := getDbAlias(aliasName)
+func SetConnMaxLifetime(al *alias, lifeTime time.Duration) {
 	al.ConnMaxLifetime = lifeTime
 	al.DB.DB.SetConnMaxLifetime(lifeTime)
 }

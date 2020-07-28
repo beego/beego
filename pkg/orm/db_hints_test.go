@@ -67,3 +67,10 @@ func TestMaxIdleConnections(t *testing.T) {
 	assert.Equal(t, hint.GetValue(), i)
 	assert.Equal(t, hint.GetKey(), maxIdleConnectionsKey)
 }
+
+func TestMaxStmtCacheSize(t *testing.T) {
+	i := 94157
+	hint := MaxStmtCacheSize(i)
+	assert.Equal(t, hint.GetValue(), i)
+	assert.Equal(t, hint.GetKey(), maxStmtCacheSizeKey)
+}

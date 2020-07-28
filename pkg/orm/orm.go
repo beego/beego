@@ -59,10 +59,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego/pkg/common"
-	lru "github.com/hashicorp/golang-lru"
 	"os"
 	"reflect"
-	"sync"
 	"time"
 
 	"github.com/astaxie/beego/logs"
@@ -612,50 +610,10 @@ func NewOrm() Ormer {
 
 // NewOrmWithDB create a new ormer object with specify *sql.DB for query
 func NewOrmWithDB(driverName, aliasName string, db *sql.DB, params ...common.KV) (Ormer, error) {
-	var al *alias
-
-	if dr, ok := drivers[driverName]; ok {
-		al = new(alias)
-		al.DbBaser = dbBasers[dr]
-		al.Driver = dr
-	} else {
-		return nil, fmt.Errorf("driver name `%s` have not registered", driverName)
+	al, err := newAliasWithDb(aliasName, driverName, db, params...)
+	if err != nil {
+		return nil, err
 	}
-
-	kvs := common.NewKVs(params...)
-
-	var stmtCache *lru.Cache
-	var stmtCacheSize int
-
-	maxStmtCacheSize := kvs.GetValueOr(MaxStmtCacheSize, 0).(int)
-	if maxStmtCacheSize > 0 {
-		_stmtCache, errC := newStmtDecoratorLruWithEvict(maxStmtCacheSize)
-		if errC != nil {
-			return nil, errC
-		} else {
-			stmtCache = _stmtCache
-			stmtCacheSize = maxStmtCacheSize
-		}
-	}
-
-	al.Name = aliasName
-	al.DriverName = driverName
-	al.DB = &DB{
-		RWMutex:             new(sync.RWMutex),
-		DB:                  db,
-		stmtDecorators:      stmtCache,
-		stmtDecoratorsLimit: stmtCacheSize,
-	}
-
-	detectTZ(al)
-
-	kvs.IfContains(MaxIdleConnsKey, func(value interface{}) {
-		SetMaxIdleConns(al.Name, value.(int))
-	}).IfContains(MaxOpenConnsKey, func(value interface{}) {
-		SetMaxOpenConns(al.Name, value.(int))
-	}).IfContains(ConnMaxLifetimeKey, func(value interface{}) {
-		SetConnMaxLifetime(al.Name, value.(time.Duration))
-	})
 
 	o := new(orm)
 	o.alias = al
