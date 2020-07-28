@@ -29,7 +29,7 @@ type modelInfo struct {
 	model     interface{}
 	fields    *fields
 	manual    bool
-	addrField reflect.Value //store the original struct value
+	addrField reflect.Value // store the original struct value
 	uniques   []string
 	isThrough bool
 }
