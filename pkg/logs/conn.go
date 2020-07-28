@@ -70,6 +70,27 @@ func (c *connWriter) WriteMsg(when time.Time, msg string, level int) error {
 	return nil
 }
 
+// WriteMsgV2 write message in connection.
+// if connection is down, try to re-connect.
+func (c *connWriter) WriteMsgV2(msg string) error {
+	if c.needToConnectOnMsg() {
+		err := c.connect()
+		if err != nil {
+			return err
+		}
+	}
+
+	if c.ReconnectOnMsg {
+		defer c.innerWriter.Close()
+	}
+
+	_, err := c.lg.writelnV2(msg)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Flush implementing method. empty.
 func (c *connWriter) Flush() {
 

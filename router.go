@@ -29,7 +29,7 @@ import (
 
 	beecontext "github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/context/param"
-	"github.com/astaxie/beego/logs"
+	"github.com/astaxie/beego/pkg/logs"
 	"github.com/astaxie/beego/toolbox"
 	"github.com/astaxie/beego/utils"
 )
@@ -1051,6 +1051,7 @@ func LogAccess(ctx *beecontext.Context, startTime *time.Time, statusCode int) {
 		HTTPUserAgent:  r.Header.Get("User-Agent"),
 		RemoteUser:     r.Header.Get("Remote-User"),
 		BodyBytesSent:  r.ContentLength,
+		FilePath:       "",
 	}
 	logs.AccessLog(record, BConfig.Log.AccessLogsFormat)
 }

@@ -47,6 +47,24 @@ func (s *SLACKWriter) WriteMsg(when time.Time, msg string, level int) error {
 	return nil
 }
 
+// WriteMsgV2 write message in smtp writer.
+// it will send an email with subject and only this message.
+func (s *SLACKWriter) WriteMsgV2(msg string) error {
+
+	form := url.Values{}
+	form.Add("payload", msg)
+
+	resp, err := http.PostForm(s.WebhookURL, form)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("Post webhook failed %s %d", resp.Status, resp.StatusCode)
+	}
+	return nil
+}
+
 // Flush implementing method. empty.
 func (s *SLACKWriter) Flush() {
 }

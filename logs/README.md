@@ -18,7 +18,7 @@ First you must import it
 
 ```golang
 import (
-	"github.com/astaxie/beego/logs"
+	"github.com/astaxie/beego/pkg/logs"
 )
 ```
 

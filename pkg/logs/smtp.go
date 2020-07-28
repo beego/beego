@@ -136,6 +136,24 @@ func (s *SMTPWriter) WriteMsg(when time.Time, msg string, level int) error {
 	return s.sendMail(s.Host, auth, s.FromAddress, s.RecipientAddresses, mailmsg)
 }
 
+// WriteMsgV2 write message in smtp writer.
+// it will send an email with subject and only this message.
+func (s *SMTPWriter) WriteMsgV2(msg string) error {
+
+	hp := strings.Split(s.Host, ":")
+
+	// Set up authentication information.
+	auth := s.getSMTPAuth(hp[0])
+
+	// Connect to the server, authenticate, set the sender and recipient,
+	// and send the email all in one step.
+	contentType := "Content-Type: text/plain" + "; charset=UTF-8"
+	mailmsg := []byte("To: " + strings.Join(s.RecipientAddresses, ";") + "\r\nFrom: " + s.FromAddress + "<" + s.FromAddress +
+		">\r\nSubject: " + s.Subject + "\r\n" + contentType + "\r\n\r\n" + msg)
+
+	return s.sendMail(s.Host, auth, s.FromAddress, s.RecipientAddresses, mailmsg)
+}
+
 // Flush implementing method. empty.
 func (s *SMTPWriter) Flush() {
 }

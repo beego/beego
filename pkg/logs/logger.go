@@ -15,6 +15,7 @@
 package logs
 
 import (
+	"fmt"
 	"io"
 	"runtime"
 	"sync"
@@ -34,6 +35,13 @@ func (lg *logWriter) writeln(when time.Time, msg string) (int, error) {
 	lg.Lock()
 	h, _, _ := formatTimeHeader(when)
 	n, err := lg.writer.Write(append(append(h, msg...), '\n'))
+	lg.Unlock()
+	return n, err
+}
+
+func (lg *logWriter) writelnV2(msg string) (int, error) {
+	lg.Lock()
+	n, err := lg.writer.Write([]byte(fmt.Sprintf("%s\n", msg)))
 	lg.Unlock()
 	return n, err
 }

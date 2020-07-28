@@ -34,6 +34,8 @@
 package logs
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -87,8 +89,24 @@ type newLoggerFunc func() Logger
 type Logger interface {
 	Init(config string) error
 	WriteMsg(when time.Time, msg string, level int) error
+	WriteMsgV2(msg string) error
 	Destroy()
 	Flush()
+}
+
+type FormatterFunc func(string) string
+
+type formatter interface {
+	Formatter(req string) string
+}
+
+func (fmter FormatterFunc) Formatter(req string) string {
+	return fmter(req)
+}
+
+func (bl *BeeLogger) SetFormatter(fmtFunc FormatterFunc) {
+	bl.UseCustomFormatter = true
+	bl.CustomFormatter = fmtFunc
 }
 
 var adapters = make(map[string]newLoggerFunc)
@@ -123,6 +141,8 @@ type BeeLogger struct {
 	signalChan          chan string
 	wg                  sync.WaitGroup
 	outputs             []*nameLogger
+	UseCustomFormatter  bool
+	CustomFormatter     formatter
 }
 
 const defaultAsyncMsgLen = 1e3
@@ -243,6 +263,21 @@ func (bl *BeeLogger) writeToLoggers(when time.Time, msg string, level int) {
 	}
 }
 
+func (bl *BeeLogger) writeToLoggersV2(msg string) {
+	for _, l := range bl.outputs {
+		err := errors.New("")
+		if bl.UseCustomFormatter {
+			err = l.WriteMsgV2(msg)
+
+		} else {
+			err = l.WriteMsgV2(msg)
+		}
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "unable to WriteMsgV2 to adapter:%v,error:%v\n", l.name, err)
+		}
+	}
+}
+
 func (bl *BeeLogger) Write(p []byte) (n int, err error) {
 	if len(p) == 0 {
 		return 0, nil
@@ -252,14 +287,14 @@ func (bl *BeeLogger) Write(p []byte) (n int, err error) {
 		p = p[0 : len(p)-1]
 	}
 	// set levelLoggerImpl to ensure all log message will be write out
-	err = bl.writeMsg(levelLoggerImpl, string(p))
+	err = bl.writeMsg(levelLoggerImpl, string(p), nil)
 	if err == nil {
 		return len(p), err
 	}
 	return 0, err
 }
 
-func (bl *BeeLogger) writeMsg(logLevel int, msg string, v ...interface{}) error {
+func (bl *BeeLogger) writeMsg(logLevel int, msg string, req *AccessLogRecord, v ...interface{}) error {
 	if !bl.init {
 		bl.lock.Lock()
 		bl.setLogger(AdapterConsole)
@@ -274,13 +309,19 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string, v ...interface{}) error 
 
 	when := time.Now()
 	if bl.enableFuncCallDepth {
-		_, file, line, ok := runtime.Caller(bl.loggerFuncCallDepth)
-		if !ok {
-			file = "???"
-			line = 0
+		if req != nil {
+			_, file, line, ok := runtime.Caller(bl.loggerFuncCallDepth)
+			if !ok {
+				file = "???"
+				line = 0
+			}
+
+			if !bl.FullFilePath {
+				_, file = path.Split(file)
+			}
+			msg = "[" + file + ":" + strconv.Itoa(line) + "] " + msg
+			req.FilePath = fmt.Sprintf("%s:%s", file, strconv.Itoa(line))
 		}
-		_, filename := path.Split(file)
-		msg = "[" + filename + ":" + strconv.Itoa(line) + "] " + msg
 	}
 
 	//set level info in front of filename info
@@ -289,6 +330,16 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string, v ...interface{}) error 
 		logLevel = LevelEmergency
 	} else {
 		msg = levelPrefix[logLevel] + " " + msg
+	}
+
+	if bl.UseCustomFormatter {
+		reqText, err := json.Marshal(req)
+		if err != nil {
+			log.Fatal(err)
+		}
+		msg = bl.CustomFormatter.Formatter(string(reqText))
+
+		// fmt.Println("Formatted log: " + msg)
 	}
 
 	if bl.asynchronous {
@@ -302,7 +353,12 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string, v ...interface{}) error 
 			logMsgPool.Put(lm)
 		}
 	} else {
-		bl.writeToLoggers(when, msg, logLevel)
+		if bl.UseCustomFormatter {
+			bl.writeToLoggersV2(msg)
+		} else {
+			bl.writeToLoggers(when, msg, logLevel)
+
+		}
 	}
 	return nil
 }
@@ -332,6 +388,16 @@ func (bl *BeeLogger) GetLogFuncCallDepth() int {
 // EnableFuncCallDepth enable log funcCallDepth
 func (bl *BeeLogger) EnableFuncCallDepth(b bool) {
 	bl.enableFuncCallDepth = b
+}
+
+// EnableFuncCallDepth enable log funcCallDepth
+func (bl *BeeLogger) GetFullFilePath() bool {
+	return bl.FullFilePath
+}
+
+// EnableFuncCallDepth enable log funcCallDepth
+func (bl *BeeLogger) EnableFullFilePath(b bool) {
+	bl.FullFilePath = b
 }
 
 // set prefix
@@ -371,7 +437,7 @@ func (bl *BeeLogger) Emergency(format string, v ...interface{}) {
 	if LevelEmergency > bl.level {
 		return
 	}
-	bl.writeMsg(LevelEmergency, format, v...)
+	bl.writeMsg(LevelEmergency, format, nil, v...)
 }
 
 // Alert Log ALERT level message.
@@ -379,7 +445,7 @@ func (bl *BeeLogger) Alert(format string, v ...interface{}) {
 	if LevelAlert > bl.level {
 		return
 	}
-	bl.writeMsg(LevelAlert, format, v...)
+	bl.writeMsg(LevelAlert, format, nil, v...)
 }
 
 // Critical Log CRITICAL level message.
@@ -387,7 +453,7 @@ func (bl *BeeLogger) Critical(format string, v ...interface{}) {
 	if LevelCritical > bl.level {
 		return
 	}
-	bl.writeMsg(LevelCritical, format, v...)
+	bl.writeMsg(LevelCritical, format, nil, v...)
 }
 
 // Error Log ERROR level message.
@@ -395,7 +461,7 @@ func (bl *BeeLogger) Error(format string, v ...interface{}) {
 	if LevelError > bl.level {
 		return
 	}
-	bl.writeMsg(LevelError, format, v...)
+	bl.writeMsg(LevelError, format, nil, v...)
 }
 
 // Warning Log WARNING level message.
@@ -403,7 +469,7 @@ func (bl *BeeLogger) Warning(format string, v ...interface{}) {
 	if LevelWarn > bl.level {
 		return
 	}
-	bl.writeMsg(LevelWarn, format, v...)
+	bl.writeMsg(LevelWarn, format, nil, v...)
 }
 
 // Notice Log NOTICE level message.
@@ -411,7 +477,7 @@ func (bl *BeeLogger) Notice(format string, v ...interface{}) {
 	if LevelNotice > bl.level {
 		return
 	}
-	bl.writeMsg(LevelNotice, format, v...)
+	bl.writeMsg(LevelNotice, format, nil, v...)
 }
 
 // Informational Log INFORMATIONAL level message.
@@ -419,7 +485,7 @@ func (bl *BeeLogger) Informational(format string, v ...interface{}) {
 	if LevelInfo > bl.level {
 		return
 	}
-	bl.writeMsg(LevelInfo, format, v...)
+	bl.writeMsg(LevelInfo, format, nil, v...)
 }
 
 // Debug Log DEBUG level message.
@@ -427,7 +493,7 @@ func (bl *BeeLogger) Debug(format string, v ...interface{}) {
 	if LevelDebug > bl.level {
 		return
 	}
-	bl.writeMsg(LevelDebug, format, v...)
+	bl.writeMsg(LevelDebug, format, nil, v...)
 }
 
 // Warn Log WARN level message.
@@ -436,7 +502,7 @@ func (bl *BeeLogger) Warn(format string, v ...interface{}) {
 	if LevelWarn > bl.level {
 		return
 	}
-	bl.writeMsg(LevelWarn, format, v...)
+	bl.writeMsg(LevelWarn, format, nil, v...)
 }
 
 // Info Log INFO level message.
@@ -445,7 +511,7 @@ func (bl *BeeLogger) Info(format string, v ...interface{}) {
 	if LevelInfo > bl.level {
 		return
 	}
-	bl.writeMsg(LevelInfo, format, v...)
+	bl.writeMsg(LevelInfo, format, nil, v...)
 }
 
 // Trace Log TRACE level message.
@@ -454,7 +520,7 @@ func (bl *BeeLogger) Trace(format string, v ...interface{}) {
 	if LevelDebug > bl.level {
 		return
 	}
-	bl.writeMsg(LevelDebug, format, v...)
+	bl.writeMsg(LevelDebug, format, nil, v...)
 }
 
 // Flush flush all chan data.
