@@ -40,6 +40,7 @@ const (
 	maxIdleConnectionsKey = "MaxIdleConnections"
 	maxOpenConnectionsKey = "MaxOpenConnections"
 	connMaxLifetimeKey    = "ConnMaxLifetime"
+	maxStmtCacheSizeKey   = "MaxStmtCacheSize"
 )
 
 var _ common.KV = new(Hint)
@@ -57,6 +58,11 @@ func MaxOpenConnections(v int) *Hint {
 // ConnMaxLifetime return a hint about ConnMaxLifetime
 func ConnMaxLifetime(v time.Duration) *Hint {
 	return NewHint(connMaxLifetimeKey, v)
+}
+
+// MaxStmtCacheSize return a hint about MaxStmtCacheSize
+func MaxStmtCacheSize(v int) *Hint {
+	return NewHint(maxStmtCacheSizeKey, v)
 }
 
 // NewHint return a hint
