@@ -327,6 +327,26 @@ func (input *BeegoInput) ResetParams() {
 	input.pvalues = input.pvalues[:0]
 }
 
+// ResetData: reset data
+func (input *BeegoInput) ResetData() {
+	input.dataLock.Lock()
+	input.data = nil
+	input.dataLock.Unlock()
+}
+
+// ResetBody: reset body
+func (input *BeegoInput) ResetBody() {
+	input.RequestBody = []byte{}
+}
+
+// Clear: clear all data in input
+func (input *BeegoInput) Clear() {
+	input.ResetParams()
+	input.ResetData()
+	input.ResetBody()
+
+}
+
 // Query returns input data item string by a given string.
 func (input *BeegoInput) Query(key string) string {
 	if val := input.Param(key); val != "" {
