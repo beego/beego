@@ -186,6 +186,9 @@ func (mp *Provider) SessionExist(sid string) (bool, error) {
 	var sessiondata []byte
 	err := row.Scan(&sessiondata)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
 		return false, err
 	}
 	return true, nil
