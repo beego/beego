@@ -34,12 +34,12 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gomodule/redigo/redis"
 
-	"github.com/astaxie/beego/cache"
-	"strings"
+	"github.com/astaxie/beego/pkg/cache"
 )
 
 var (
@@ -56,7 +56,7 @@ type Cache struct {
 	password string
 	maxIdle  int
 
-	//the timeout to a value less than the redis server's timeout.
+	// the timeout to a value less than the redis server's timeout.
 	timeout time.Duration
 }
 

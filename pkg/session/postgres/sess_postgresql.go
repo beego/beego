@@ -56,7 +56,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/astaxie/beego/session"
+	"github.com/astaxie/beego/pkg/session"
 	// import postgresql Driver
 	_ "github.com/lib/pq"
 )

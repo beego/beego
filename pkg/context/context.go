@@ -35,7 +35,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/astaxie/beego/utils"
+	"github.com/astaxie/beego/pkg/utils"
 )
 
 //commonly used mime-types

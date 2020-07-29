@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/astaxie/beego/cache"
+	"github.com/astaxie/beego/pkg/cache"
 )
 
 func TestMemcacheCache(t *testing.T) {
@@ -70,7 +70,7 @@ func TestMemcacheCache(t *testing.T) {
 		t.Error("delete err")
 	}
 
-	//test string
+	// test string
 	if err = bm.Put("astaxie", "author", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
@@ -82,7 +82,7 @@ func TestMemcacheCache(t *testing.T) {
 		t.Error("get err")
 	}
 
-	//test GetMulti
+	// test GetMulti
 	if err = bm.Put("astaxie1", "author1", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
