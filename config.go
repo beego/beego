@@ -150,6 +150,9 @@ func init() {
 		filename = os.Getenv("BEEGO_RUNMODE") + ".app.conf"
 	}
 	appConfigPath = filepath.Join(WorkPath, "conf", filename)
+	if configPath := os.Getenv("BEEGO_CONFIG_PATH"); configPath != "" {
+		appConfigPath =  configPath
+	}
 	if !utils.FileExists(appConfigPath) {
 		appConfigPath = filepath.Join(AppPath, "conf", filename)
 		if !utils.FileExists(appConfigPath) {
