@@ -22,10 +22,15 @@ import (
 // oracle operators.
 var oracleOperators = map[string]string{
 	"exact":       "= ?",
+	"=":           "= ?",
 	"gt":          "> ?",
+	">":		   "> ?",
 	"gte":         ">= ?",
+	">=":          ">= ?",
 	"lt":          "< ?",
+	"<":           "< ?",
 	"lte":         "<= ?",
+	"<=":          "<= ?",
 	"//iendswith": "LIKE ?",
 }
 
