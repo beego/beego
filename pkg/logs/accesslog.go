@@ -42,8 +42,8 @@ type AccessLogRecord struct {
 	HTTPReferrer   string        `json:"http_referrer"`
 	HTTPUserAgent  string        `json:"http_user_agent"`
 	RemoteUser     string        `json:"remote_user"`
-	LineReference  string        `json:"line_reference"`
 	FilePath       string        `json:"file_path"`
+	LoggerLevel    string        `json:"logger_level"`
 }
 
 func (r *AccessLogRecord) json() ([]byte, error) {
@@ -66,20 +66,13 @@ func disableEscapeHTML(i interface{}) {
 // AccessLog - Format and print access log.
 func AccessLog(r *AccessLogRecord, format string) {
 	var msg string
-	switch format {
-	case apacheFormat:
+
+	if !beeLogger.UseCustomFormatter {
+		// Use apache format
 		timeFormatted := r.RequestTime.Format("02/Jan/2006 03:04:05")
 		msg = fmt.Sprintf(apacheFormatPattern, r.RemoteAddr, timeFormatted, r.Request, r.Status, r.BodyBytesSent,
 			r.ElapsedTime.Seconds(), r.HTTPReferrer, r.HTTPUserAgent)
-	case jsonFormat:
-		fallthrough
-	default:
-		jsonData, err := r.json()
-		if err != nil {
-			msg = fmt.Sprintf(`{"Error": "%s"}`, err)
-		} else {
-			msg = string(jsonData)
-		}
 	}
-	beeLogger.writeMsg(levelLoggerImpl, strings.TrimSpace(msg), r)
+
+	beeLogger.writeMsgV2(levelLoggerImpl, strings.TrimSpace(msg), r)
 }

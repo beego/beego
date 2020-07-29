@@ -35,7 +35,6 @@ package logs
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -107,6 +106,11 @@ func (fmter FormatterFunc) Formatter(req string) string {
 func (bl *BeeLogger) SetFormatter(fmtFunc FormatterFunc) {
 	bl.UseCustomFormatter = true
 	bl.CustomFormatter = fmtFunc
+}
+
+// Default formatter for JSON logging, implement
+func (bl *BeeLogger) JSONFormatter(req string) string {
+	return req
 }
 
 var adapters = make(map[string]newLoggerFunc)
@@ -265,13 +269,8 @@ func (bl *BeeLogger) writeToLoggers(when time.Time, msg string, level int) {
 
 func (bl *BeeLogger) writeToLoggersV2(msg string) {
 	for _, l := range bl.outputs {
-		err := errors.New("")
-		if bl.UseCustomFormatter {
-			err = l.WriteMsgV2(msg)
 
-		} else {
-			err = l.WriteMsgV2(msg)
-		}
+		err := l.WriteMsgV2(msg)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "unable to WriteMsgV2 to adapter:%v,error:%v\n", l.name, err)
 		}
@@ -295,6 +294,63 @@ func (bl *BeeLogger) Write(p []byte) (n int, err error) {
 }
 
 func (bl *BeeLogger) writeMsg(logLevel int, msg string, req *AccessLogRecord, v ...interface{}) error {
+	if !bl.init {
+		bl.lock.Lock()
+		bl.setLogger(AdapterConsole)
+		bl.lock.Unlock()
+	}
+
+	if len(v) > 0 {
+		msg = fmt.Sprintf(msg, v...)
+	}
+
+	msg = bl.prefix + " " + msg
+
+	when := time.Now()
+	if bl.enableFuncCallDepth {
+
+		_, file, line, ok := runtime.Caller(bl.loggerFuncCallDepth)
+		if !ok {
+			file = "???"
+			line = 0
+		}
+
+		if !bl.FullFilePath {
+			_, file = path.Split(file)
+		}
+		msg = "[" + file + ":" + strconv.Itoa(line) + "] " + msg
+	}
+
+	//set level info in front of filename info
+	if logLevel == levelLoggerImpl {
+		// set to emergency to ensure all log will be print out correctly
+		logLevel = LevelEmergency
+	} else {
+		msg = levelPrefix[logLevel] + " " + msg
+	}
+
+	if bl.asynchronous {
+		lm := logMsgPool.Get().(*logMsg)
+		lm.level = logLevel
+		lm.msg = msg
+		lm.when = when
+		if bl.outputs != nil {
+			bl.msgChan <- lm
+		} else {
+			logMsgPool.Put(lm)
+		}
+	} else {
+		if bl.UseCustomFormatter {
+			bl.writeToLoggersV2(msg)
+		} else {
+			bl.writeToLoggers(when, msg, logLevel)
+
+		}
+	}
+	return nil
+}
+
+func (bl *BeeLogger) writeMsgV2(logLevel int, msg string, req *AccessLogRecord, v ...interface{}) error {
 	if !bl.init {
 		bl.lock.Lock()
 		bl.setLogger(AdapterConsole)
@@ -338,8 +394,17 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string, req *AccessLogRecord, v 
 			log.Fatal(err)
 		}
 		msg = bl.CustomFormatter.Formatter(string(reqText))
+	}
 
-		// fmt.Println("Formatted log: " + msg)
+	if bl.UseCustomFormatter {
+		if req != nil {
+			req.LoggerLevel = levelPrefix[logLevel]
+		}
+		reqText, err := json.Marshal(req)
+		if err != nil {
+			log.Fatal(err)
+		}
+		msg = bl.CustomFormatter.Formatter(string(reqText))
 	}
 
 	if bl.asynchronous {
@@ -388,16 +453,6 @@ func (bl *BeeLogger) GetLogFuncCallDepth() int {
 // EnableFuncCallDepth enable log funcCallDepth
 func (bl *BeeLogger) EnableFuncCallDepth(b bool) {
 	bl.enableFuncCallDepth = b
-}
-
-// EnableFuncCallDepth enable log funcCallDepth
-func (bl *BeeLogger) GetFullFilePath() bool {
-	return bl.FullFilePath
-}
-
-// EnableFuncCallDepth enable log funcCallDepth
-func (bl *BeeLogger) EnableFullFilePath(b bool) {
-	bl.FullFilePath = b
 }
 
 // set prefix
