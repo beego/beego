@@ -58,9 +58,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/astaxie/beego/pkg/common"
 	"os"
 	"reflect"
-	"sync"
 	"time"
 
 	"github.com/astaxie/beego/logs"
@@ -580,7 +580,7 @@ func NewOrm() Ormer {
 	return NewOrmUsingDB(`default`)
 }
 
-// NewOrm create new orm with the name
+// NewOrmUsingDB create new orm with the name
 func NewOrmUsingDB(aliasName string) Ormer {
 	o := new(orm)
 	if al, ok := dataBaseCache.get(aliasName); ok {
@@ -597,26 +597,11 @@ func NewOrmUsingDB(aliasName string) Ormer {
 }
 
 // NewOrmWithDB create a new ormer object with specify *sql.DB for query
-func NewOrmWithDB(driverName, aliasName string, db *sql.DB) (Ormer, error) {
-	var al *alias
-
-	if dr, ok := drivers[driverName]; ok {
-		al = new(alias)
-		al.DbBaser = dbBasers[dr]
-		al.Driver = dr
-	} else {
-		return nil, fmt.Errorf("driver name `%s` have not registered", driverName)
+func NewOrmWithDB(driverName, aliasName string, db *sql.DB, params ...common.KV) (Ormer, error) {
+	al, err := newAliasWithDb(aliasName, driverName, db, params...)
+	if err != nil {
+		return nil, err
 	}
-
-	al.Name = aliasName
-	al.DriverName = driverName
-	al.DB = &DB{
-		RWMutex:        new(sync.RWMutex),
-		DB:             db,
-		stmtDecorators: newStmtDecoratorLruWithEvict(),
-	}
-
-	detectTZ(al)
 
 	o := new(orm)
 	o.alias = al
