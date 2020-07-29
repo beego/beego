@@ -349,7 +349,7 @@ func assignConfig(ac config.Configer) error {
 	//init log
 	logs.Reset()
 	for adaptor, config := range BConfig.Log.Outputs {
-		err := logs.SetLogger(adaptor, config)
+		err := logs.SetLogger(adaptor, nil, config)
 		if err != nil {
 			fmt.Fprintln(os.Stderr, fmt.Sprintf("%s with the config %q got err:%s", adaptor, config, err.Error()))
 		}

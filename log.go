@@ -51,8 +51,8 @@ func SetLogFuncCall(b bool) {
 
 // SetLogger sets a new logger.
 // Deprecated: use github.com/astaxie/beego/logs instead.
-func SetLogger(adaptername string, config string) error {
-	return logs.SetLogger(adaptername, config)
+func SetLogger(adaptername string, fmtFunc logs.FormatterFunc, config string) error {
+	return logs.SetLogger(adaptername, fmtFunc, config)
 }
 
 // Emergency logs a message at emergency level.

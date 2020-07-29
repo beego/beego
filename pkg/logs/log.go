@@ -103,7 +103,7 @@ func (fmter FormatterFunc) Formatter(req string) string {
 	return fmter(req)
 }
 
-func (bl *BeeLogger) SetFormatter(fmtFunc FormatterFunc) {
+func (bl *BeeLogger) SetGlobalFormatter(fmtFunc FormatterFunc) {
 	bl.UseCustomFormatter = true
 	bl.CustomFormatter = fmtFunc
 }
@@ -111,6 +111,13 @@ func (bl *BeeLogger) SetFormatter(fmtFunc FormatterFunc) {
 // Default formatter for JSON logging, implement
 func (bl *BeeLogger) JSONFormatter(req string) string {
 	return req
+}
+
+func (bl *BeeLogger) ApacheFormatter(r *AccessLogRecord) string {
+	timeFormatted := r.RequestTime.Format("02/Jan/2006 03:04:05")
+	return fmt.Sprintf(apacheFormatPattern, r.RemoteAddr, timeFormatted,
+		r.Request, r.Status, r.BodyBytesSent, r.ElapsedTime.Seconds(),
+		r.HTTPReferrer, r.HTTPUserAgent)
 }
 
 var adapters = make(map[string]newLoggerFunc)
@@ -229,13 +236,17 @@ func (bl *BeeLogger) setLogger(adapterName string, configs ...string) error {
 
 // SetLogger provides a given logger adapter into BeeLogger with config string.
 // config need to be correct JSON as string: {"interval":360}.
-func (bl *BeeLogger) SetLogger(adapterName string, configs ...string) error {
+func (bl *BeeLogger) SetLogger(adapterName string, fmtFunc FormatterFunc, configs ...string) error {
 	bl.lock.Lock()
 	defer bl.lock.Unlock()
 	if !bl.init {
 		bl.outputs = []*nameLogger{}
 		bl.init = true
 	}
+
+	bl.UseCustomFormatter = true
+	bl.CustomFormatter = fmtFunc
+
 	return bl.setLogger(adapterName, configs...)
 }
 
@@ -706,8 +717,8 @@ func SetLogFuncCallDepth(d int) {
 }
 
 // SetLogger sets a new logger.
-func SetLogger(adapter string, config ...string) error {
-	return beeLogger.SetLogger(adapter, config...)
+func SetLogger(adapter string, fmtFunc FormatterFunc, config ...string) error {
+	return beeLogger.SetLogger(adapter, fmtFunc, config...)
 }
 
 // Emergency logs a message at emergency level.
