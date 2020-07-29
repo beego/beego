@@ -14,14 +14,29 @@
 
 package common
 
-// KV is common structure to store key-value data.
+type KV interface {
+	GetKey() interface{}
+	GetValue() interface{}
+}
+
+// SimpleKV is common structure to store key-value data.
 // when you need something like Pair, you can use this
-type KV struct {
+type SimpleKV struct {
 	Key   interface{}
 	Value interface{}
 }
 
-// KVs will store KV collection as map
+var _ KV = new(SimpleKV)
+
+func (s *SimpleKV) GetKey() interface{} {
+	return s.Key
+}
+
+func (s *SimpleKV) GetValue() interface{} {
+	return s.Value
+}
+
+// KVs will store SimpleKV collection as map
 type KVs struct {
 	kvs map[interface{}]interface{}
 }
@@ -63,7 +78,7 @@ func NewKVs(kvs ...KV) *KVs {
 		kvs: make(map[interface{}]interface{}, len(kvs)),
 	}
 	for _, kv := range kvs {
-		res.kvs[kv.Key] = kv.Value
+		res.kvs[kv.GetKey()] = kv.GetValue()
 	}
 	return res
 }
