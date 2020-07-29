@@ -12,12 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package config
+package json
 
 import (
 	"fmt"
 	"os"
 	"testing"
+
+	"github.com/astaxie/beego/pkg/config"
 )
 
 func TestJsonStartsWithArray(t *testing.T) {
@@ -43,7 +45,7 @@ func TestJsonStartsWithArray(t *testing.T) {
 	}
 	f.Close()
 	defer os.Remove("testjsonWithArray.conf")
-	jsonconf, err := NewConfig("json", "testjsonWithArray.conf")
+	jsonconf, err := config.NewConfig("json", "testjsonWithArray.conf")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -143,7 +145,7 @@ func TestJson(t *testing.T) {
 	}
 	f.Close()
 	defer os.Remove("testjson.conf")
-	jsonconf, err := NewConfig("json", "testjson.conf")
+	jsonconf, err := config.NewConfig("json", "testjson.conf")
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package config
+package ini
 
 import (
 	"fmt"
@@ -20,6 +20,8 @@ import (
 	"os"
 	"strings"
 	"testing"
+
+	"github.com/astaxie/beego/pkg/config"
 )
 
 func TestIni(t *testing.T) {
@@ -92,7 +94,7 @@ password = ${GOPATH}
 	}
 	f.Close()
 	defer os.Remove("testini.conf")
-	iniconf, err := NewConfig("ini", "testini.conf")
+	iniconf, err := config.NewConfig("ini", "testini.conf")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -165,7 +167,7 @@ httpport=8080
 name=mysql
 `
 	)
-	cfg, err := NewConfigData("ini", []byte(inicontext))
+	cfg, err := config.NewConfigData("ini", []byte(inicontext))
 	if err != nil {
 		t.Fatal(err)
 	}

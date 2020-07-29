@@ -54,16 +54,22 @@ import (
 
 const (
 	// PreSignal is the position to add filter before signal
+	// Deprecated: using pkg/grace, we will delete this in v2.1.0
 	PreSignal = iota
 	// PostSignal is the position to add filter after signal
+	// Deprecated: using pkg/grace, we will delete this in v2.1.0
 	PostSignal
 	// StateInit represent the application inited
+	// Deprecated: using pkg/grace, we will delete this in v2.1.0
 	StateInit
 	// StateRunning represent the application is running
+	// Deprecated: using pkg/grace, we will delete this in v2.1.0
 	StateRunning
 	// StateShuttingDown represent the application is shutting down
+	// Deprecated: using pkg/grace, we will delete this in v2.1.0
 	StateShuttingDown
 	// StateTerminate represent the application is killed
+	// Deprecated: using pkg/grace, we will delete this in v2.1.0
 	StateTerminate
 )
 
@@ -106,6 +112,7 @@ func init() {
 }
 
 // NewServer returns a new graceServer.
+// Deprecated: using pkg/grace, we will delete this in v2.1.0
 func NewServer(addr string, handler http.Handler) (srv *Server) {
 	regLock.Lock()
 	defer regLock.Unlock()
@@ -154,12 +161,14 @@ func NewServer(addr string, handler http.Handler) (srv *Server) {
 }
 
 // ListenAndServe refer http.ListenAndServe
+// Deprecated: using pkg/grace, we will delete this in v2.1.0
 func ListenAndServe(addr string, handler http.Handler) error {
 	server := NewServer(addr, handler)
 	return server.ListenAndServe()
 }
 
 // ListenAndServeTLS refer http.ListenAndServeTLS
+// Deprecated: using pkg/grace, we will delete this in v2.1.0
 func ListenAndServeTLS(addr string, certFile string, keyFile string, handler http.Handler) error {
 	server := NewServer(addr, handler)
 	return server.ListenAndServeTLS(certFile, keyFile)

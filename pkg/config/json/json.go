@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package config
+package json
 
 import (
 	"encoding/json"
@@ -23,6 +23,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/astaxie/beego/pkg/config"
 )
 
 // JSONConfig is a json config parser and implements Config interface.
@@ -30,7 +32,7 @@ type JSONConfig struct {
 }
 
 // Parse returns a ConfigContainer with parsed json config map.
-func (js *JSONConfig) Parse(filename string) (Configer, error) {
+func (js *JSONConfig) Parse(filename string) (config.Configer, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err
@@ -45,7 +47,7 @@ func (js *JSONConfig) Parse(filename string) (Configer, error) {
 }
 
 // ParseData returns a ConfigContainer with json string
-func (js *JSONConfig) ParseData(data []byte) (Configer, error) {
+func (js *JSONConfig) ParseData(data []byte) (config.Configer, error) {
 	x := &JSONConfigContainer{
 		data: make(map[string]interface{}),
 	}
@@ -59,7 +61,7 @@ func (js *JSONConfig) ParseData(data []byte) (Configer, error) {
 		x.data["rootArray"] = wrappingArray
 	}
 
-	x.data = ExpandValueEnvForMap(x.data)
+	x.data = config.ExpandValueEnvForMap(x.data)
 
 	return x, nil
 }
@@ -75,7 +77,7 @@ type JSONConfigContainer struct {
 func (c *JSONConfigContainer) Bool(key string) (bool, error) {
 	val := c.getData(key)
 	if val != nil {
-		return ParseBool(val)
+		return config.ParseBool(val)
 	}
 	return false, fmt.Errorf("not exist key: %q", key)
 }
@@ -265,5 +267,5 @@ func (c *JSONConfigContainer) getData(key string) interface{} {
 }
 
 func init() {
-	Register("json", &JSONConfig{})
+	config.Register("json", &JSONConfig{})
 }

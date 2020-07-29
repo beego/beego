@@ -19,9 +19,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/astaxie/beego/cache"
 	"github.com/gomodule/redigo/redis"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/astaxie/beego/pkg/cache"
 )
 
 func TestRedisCache(t *testing.T) {
@@ -70,7 +71,7 @@ func TestRedisCache(t *testing.T) {
 		t.Error("delete err")
 	}
 
-	//test string
+	// test string
 	if err = bm.Put("astaxie", "author", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
@@ -82,7 +83,7 @@ func TestRedisCache(t *testing.T) {
 		t.Error("get err")
 	}
 
-	//test GetMulti
+	// test GetMulti
 	if err = bm.Put("astaxie1", "author1", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
