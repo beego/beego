@@ -200,7 +200,7 @@ func (app *App) Run(mws ...MiddleWare) {
 					ClientAuth: tls.RequireAndVerifyClientCert,
 				}
 				if string(BConfig.Listen.ClientAuth) != "" {
-					tslConfig.ClientAuth = BConfig.Listen.ClientAuth
+					tlsConfig.ClientAuth = BConfig.Listen.ClientAuth
 				}
 				app.Server.TLSConfig = &tslConfig
 			}
