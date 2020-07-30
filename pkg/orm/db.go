@@ -848,74 +848,69 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	}
 
 	if cond == nil || cond.IsEmpty() {
-		panic(fmt.Errorf("delete operation cannot execute without condition"))
+		return 0, errors.New("Delete operation cannot execute without condition")
 	}
 
+	// Build delete query
 	Q := d.ins.TableQuote()
 
 	where, args := tables.getCondSQL(cond, false, tz)
 	join := tables.getJoinSQL()
+	cols := fmt.Sprintf("%s%s%s", Q, mi.fields.pk.column, Q)
 
-	cols := fmt.Sprintf("T0.%s%s%s", Q, mi.fields.pk.column, Q)
-	query := fmt.Sprintf("SELECT %s FROM %s%s%s T0 %s%s", cols, Q, mi.table, Q, join, where)
+	// SELECT t0.column FROM 'table' T0 JOIN ... WHERE ...
+	selectQuery := fmt.Sprintf("SELECT T0.%s FROM %s%s%s T0 %s%s", cols, Q, mi.table, Q, join, where)
+	fmt.Println("selectQuery --------------> ", selectQuery)
 
-	d.ins.ReplaceMarks(&query)
+	// DELETE FROM 'table' WHERE column IN (SELECT t0.column FROM 'table' T0 JOIN ... WHERE ...)
+	deleteQuery := fmt.Sprintf("DELETE FROM %s%s%s WHERE %s IN (%s)", Q, mi.table, Q, cols, selectQuery)
+	fmt.Println("deleteQuery --------------> ", deleteQuery)
+	d.ins.ReplaceMarks(&deleteQuery)
 
-	var rs *sql.Rows
-	r, err := q.Query(query, args...)
+	// Execute delete query
+	var err error
+	var result sql.Result
+
+	if qs != nil && qs.forContext {
+		result, err = q.ExecContext(qs.ctx, deleteQuery, args...)
+	} else {
+		result, err = q.Exec(deleteQuery, args...)
+	}
 	if err != nil {
 		return 0, err
 	}
-	rs = r
-	defer rs.Close()
 
-	var ref interface{}
-	args = make([]interface{}, 0)
-	cnt := 0
-	for rs.Next() {
-		if err := rs.Scan(&ref); err != nil {
-			return 0, err
-		}
-		pkValue, err := d.convertValueFromDB(mi.fields.pk, reflect.ValueOf(ref).Interface(), tz)
+	nDeleted, err := result.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+	if nDeleted > 0 {
+		err := d.deleteRels(q, mi, args, tz)
 		if err != nil {
-			return 0, err
+			return nDeleted, err
 		}
-		args = append(args, pkValue)
-		cnt++
 	}
+	return nDeleted, nil
 
-	if cnt == 0 {
-		return 0, nil
-	}
+	// result, err := q.Exec(deleteQuery, args...)
+	// if err != nil {
+	// 	return 0, err
+	// }
 
-	marks := make([]string, len(args))
-	for i := range marks {
-		marks[i] = "?"
-	}
-	sqlIn := fmt.Sprintf("IN (%s)", strings.Join(marks, ", "))
-	query = fmt.Sprintf("DELETE FROM %s%s%s WHERE %s%s%s %s", Q, mi.table, Q, Q, mi.fields.pk.column, Q, sqlIn)
+	// FIXME: RowsAffected is not supported by all DB drivers
 
-	d.ins.ReplaceMarks(&query)
-	var res sql.Result
-	if qs != nil && qs.forContext {
-		res, err = q.ExecContext(qs.ctx, query, args...)
-	} else {
-		res, err = q.Exec(query, args...)
-	}
-	if err == nil {
-		num, err := res.RowsAffected()
-		if err != nil {
-			return 0, err
-		}
-		if num > 0 {
-			err := d.deleteRels(q, mi, args, tz)
-			if err != nil {
-				return num, err
-			}
-		}
-		return num, nil
-	}
-	return 0, err
+	// Count deleted entries
+	// TODO: enhance count using sql COUNT
+
+	// setValues = append(setValues, pkValue)
+
+	// sep := fmt.Sprintf("%s = ?, %s", Q, Q)
+	// setColumns := strings.Join(setNames, sep)
+
+	// query := fmt.Sprintf("UPDATE %s%s%s SET %s%s%s = ? WHERE %s%s%s = ?", Q, mi.table, Q, Q, setColumns, Q, Q, pkName, Q)
+
+	// d.ins.ReplaceMarks(&query)
+
 }
 
 // read related records.
