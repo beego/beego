@@ -197,11 +197,10 @@ func (app *App) Run(mws ...MiddleWare) {
 				pool.AppendCertsFromPEM(data)
 				tlsConfig := tls.Config{
 					ClientCAs:  pool,
+					ClientAuth: tls.RequireAndVerifyClientCert,
 				}
 				if string(BConfig.Listen.ClientAuth) != "" {
 					tslConfig.ClientAuth = BConfig.Listen.ClientAuth
-				} else {
-					tslConfig.ClientAuth = tls.RequireAndVerifyClientCert
 				}
 				app.Server.TLSConfig = &tslConfig
 			}
