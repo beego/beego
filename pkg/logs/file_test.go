@@ -22,12 +22,14 @@ import (
 	"strconv"
 	"testing"
 	"time"
+
+	beego "github.com/astaxie/beego/pkg"
 )
 
 func TestFilePerm(t *testing.T) {
 	log := NewLogger(10000)
 	// use 0666 as test perm cause the default umask is 022
-	log.SetLogger("file", `{"filename":"test.log", "perm": "0666"}`)
+	log.SetLogger("file", beego.BeeLogger.ApacheFormatter, `{"filename":"test.log", "perm": "0666"}`)
 	log.Debug("debug")
 	log.Informational("info")
 	log.Notice("notice")
@@ -48,7 +50,7 @@ func TestFilePerm(t *testing.T) {
 
 func TestFile1(t *testing.T) {
 	log := NewLogger(10000)
-	log.SetLogger("file", `{"filename":"test.log"}`)
+	log.SetLogger("file", beego.BeeLogger.ApacheFormatter, `{"filename":"test.log"}`)
 	log.Debug("debug")
 	log.Informational("info")
 	log.Notice("notice")
@@ -81,7 +83,7 @@ func TestFile1(t *testing.T) {
 
 func TestFile2(t *testing.T) {
 	log := NewLogger(10000)
-	log.SetLogger("file", fmt.Sprintf(`{"filename":"test2.log","level":%d}`, LevelError))
+	log.SetLogger("file", beego.BeeLogger.ApacheFormatter, fmt.Sprintf(`{"filename":"test2.log","level":%d}`, LevelError))
 	log.Debug("debug")
 	log.Info("info")
 	log.Notice("notice")
@@ -114,7 +116,7 @@ func TestFile2(t *testing.T) {
 
 func TestFileDailyRotate_01(t *testing.T) {
 	log := NewLogger(10000)
-	log.SetLogger("file", `{"filename":"test3.log","maxlines":4}`)
+	log.SetLogger("file", beego.BeeLogger.ApacheFormatter, `{"filename":"test3.log","maxlines":4}`)
 	log.Debug("debug")
 	log.Info("info")
 	log.Notice("notice")
@@ -164,7 +166,7 @@ func TestFileDailyRotate_05(t *testing.T) {
 }
 func TestFileDailyRotate_06(t *testing.T) { //test file mode
 	log := NewLogger(10000)
-	log.SetLogger("file", `{"filename":"test3.log","maxlines":4}`)
+	log.SetLogger("file", beego.BeeLogger.ApacheFormatter, `{"filename":"test3.log","maxlines":4}`)
 	log.Debug("debug")
 	log.Info("info")
 	log.Notice("notice")
@@ -186,7 +188,7 @@ func TestFileDailyRotate_06(t *testing.T) { //test file mode
 
 func TestFileHourlyRotate_01(t *testing.T) {
 	log := NewLogger(10000)
-	log.SetLogger("file", `{"filename":"test3.log","hourly":true,"maxlines":4}`)
+	log.SetLogger("file", beego.BeeLogger.ApacheFormatter, `{"filename":"test3.log","hourly":true,"maxlines":4}`)
 	log.Debug("debug")
 	log.Info("info")
 	log.Notice("notice")
@@ -237,7 +239,7 @@ func TestFileHourlyRotate_05(t *testing.T) {
 
 func TestFileHourlyRotate_06(t *testing.T) { //test file mode
 	log := NewLogger(10000)
-	log.SetLogger("file", `{"filename":"test3.log", "hourly":true, "maxlines":4}`)
+	log.SetLogger("file", beego.BeeLogger.ApacheFormatter, `{"filename":"test3.log", "hourly":true, "maxlines":4}`)
 	log.Debug("debug")
 	log.Info("info")
 	log.Notice("notice")
@@ -370,7 +372,7 @@ func exists(path string) (bool, error) {
 
 func BenchmarkFile(b *testing.B) {
 	log := NewLogger(100000)
-	log.SetLogger("file", `{"filename":"test4.log"}`)
+	log.SetLogger("file", beego.BeeLogger.ApacheFormatter, `{"filename":"test4.log"}`)
 	for i := 0; i < b.N; i++ {
 		log.Debug("debug")
 	}
@@ -379,7 +381,7 @@ func BenchmarkFile(b *testing.B) {
 
 func BenchmarkFileAsynchronous(b *testing.B) {
 	log := NewLogger(100000)
-	log.SetLogger("file", `{"filename":"test4.log"}`)
+	log.SetLogger("file", beego.BeeLogger.ApacheFormatter, `{"filename":"test4.log"}`)
 	log.Async()
 	for i := 0; i < b.N; i++ {
 		log.Debug("debug")
@@ -389,7 +391,7 @@ func BenchmarkFileAsynchronous(b *testing.B) {
 
 func BenchmarkFileCallDepth(b *testing.B) {
 	log := NewLogger(100000)
-	log.SetLogger("file", `{"filename":"test4.log"}`)
+	log.SetLogger("file", beego.BeeLogger.ApacheFormatter, `{"filename":"test4.log"}`)
 	log.EnableFuncCallDepth(true)
 	log.SetLogFuncCallDepth(2)
 	for i := 0; i < b.N; i++ {
@@ -400,7 +402,7 @@ func BenchmarkFileCallDepth(b *testing.B) {
 
 func BenchmarkFileAsynchronousCallDepth(b *testing.B) {
 	log := NewLogger(100000)
-	log.SetLogger("file", `{"filename":"test4.log"}`)
+	log.SetLogger("file", beego.BeeLogger.ApacheFormatter, `{"filename":"test4.log"}`)
 	log.EnableFuncCallDepth(true)
 	log.SetLogFuncCallDepth(2)
 	log.Async()
@@ -412,7 +414,7 @@ func BenchmarkFileAsynchronousCallDepth(b *testing.B) {
 
 func BenchmarkFileOnGoroutine(b *testing.B) {
 	log := NewLogger(100000)
-	log.SetLogger("file", `{"filename":"test4.log"}`)
+	log.SetLogger("file", beego.BeeLogger.ApacheFormatter, `{"filename":"test4.log"}`)
 	for i := 0; i < b.N; i++ {
 		go log.Debug("debug")
 	}

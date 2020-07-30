@@ -18,6 +18,8 @@ import (
 	"net"
 	"os"
 	"testing"
+
+	beego "github.com/astaxie/beego/pkg"
 )
 
 // ConnTCPListener takes a TCP listener and accepts n TCP connections
@@ -41,7 +43,7 @@ func connTCPListener(t *testing.T, n int, ln net.Listener, connChan chan<- net.C
 
 func TestConn(t *testing.T) {
 	log := NewLogger(1000)
-	log.SetLogger("conn", `{"net":"tcp","addr":":7020"}`)
+	log.SetLogger("conn", beego.BeeLogger.ApacheFormatter, `{"net":"tcp","addr":":7020"}`)
 	log.Informational("informational")
 }
 
