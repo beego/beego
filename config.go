@@ -21,6 +21,7 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+	"crypto/tls"
 
 	"github.com/astaxie/beego/config"
 	"github.com/astaxie/beego/context"
@@ -65,6 +66,7 @@ type Listen struct {
 	HTTPSCertFile     string
 	HTTPSKeyFile      string
 	TrustCaFile       string
+	ClientAuth        tls.ClientAuthType
 	EnableAdmin       bool
 	AdminAddr         string
 	AdminPort         int
@@ -234,6 +236,7 @@ func newBConfig() *Config {
 			AdminPort:     8088,
 			EnableFcgi:    false,
 			EnableStdIo:   false,
+			ClientAuth:    tls.RequireAndVerifyClientCert,
 		},
 		WebConfig: WebConfig{
 			AutoRender:             true,
