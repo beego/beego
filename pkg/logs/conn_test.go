@@ -61,7 +61,7 @@ func TestReconnect(t *testing.T) {
 	// Setup logger
 	log := NewLogger(1000)
 	log.SetPrefix("test")
-	log.SetLogger(AdapterConn, `{"net":"tcp","reconnect":true,"level":6,"addr":":6002"}`)
+	log.SetLogger(AdapterConn, beego.BeeLogger.ApacheFormatter, `{"net":"tcp","reconnect":true,"level":6,"addr":":6002"}`)
 	log.Informational("informational 1")
 
 	// Refuse first connection

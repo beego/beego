@@ -41,12 +41,14 @@ const (
 type driver string
 
 // get type constant int of current driver..
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (d driver) Type() DriverType {
 	a, _ := dataBaseCache.get(string(d))
 	return a.Driver
 }
 
 // get name of current driver
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (d driver) Name() string {
 	return string(d)
 }
@@ -111,15 +113,19 @@ type DB struct {
 	stmtDecorators *lru.Cache
 }
 
+// Begin start a transaction
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (d *DB) Begin() (*sql.Tx, error) {
 	return d.DB.Begin()
 }
 
+// BeginTx start a transaction with context and those options
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (d *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error) {
 	return d.DB.BeginTx(ctx, opts)
 }
 
-//su must call release to release *sql.Stmt after using
+// su must call release to release *sql.Stmt after using
 func (d *DB) getStmtDecorator(query string) (*stmtDecorator, error) {
 	d.RLock()
 	c, ok := d.stmtDecorators.Get(query)
@@ -151,14 +157,17 @@ func (d *DB) getStmtDecorator(query string) (*stmtDecorator, error) {
 	return sd, nil
 }
 
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (d *DB) Prepare(query string) (*sql.Stmt, error) {
 	return d.DB.Prepare(query)
 }
 
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (d *DB) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
 	return d.DB.PrepareContext(ctx, query)
 }
 
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (d *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
 	sd, err := d.getStmtDecorator(query)
 	if err != nil {
@@ -169,6 +178,7 @@ func (d *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
 	return stmt.Exec(args...)
 }
 
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (d *DB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	sd, err := d.getStmtDecorator(query)
 	if err != nil {
@@ -179,6 +189,7 @@ func (d *DB) ExecContext(ctx context.Context, query string, args ...interface{})
 	return stmt.ExecContext(ctx, args...)
 }
 
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (d *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
 	sd, err := d.getStmtDecorator(query)
 	if err != nil {
@@ -189,6 +200,7 @@ func (d *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
 	return stmt.Query(args...)
 }
 
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (d *DB) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	sd, err := d.getStmtDecorator(query)
 	if err != nil {
@@ -199,6 +211,7 @@ func (d *DB) QueryContext(ctx context.Context, query string, args ...interface{}
 	return stmt.QueryContext(ctx, args...)
 }
 
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (d *DB) QueryRow(query string, args ...interface{}) *sql.Row {
 	sd, err := d.getStmtDecorator(query)
 	if err != nil {
@@ -210,6 +223,7 @@ func (d *DB) QueryRow(query string, args ...interface{}) *sql.Row {
 
 }
 
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (d *DB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	sd, err := d.getStmtDecorator(query)
 	if err != nil {
@@ -319,12 +333,14 @@ func addAliasWthDB(aliasName, driverName string, db *sql.DB) (*alias, error) {
 }
 
 // AddAliasWthDB add a aliasName for the drivename
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func AddAliasWthDB(aliasName, driverName string, db *sql.DB) error {
 	_, err := addAliasWthDB(aliasName, driverName, db)
 	return err
 }
 
 // RegisterDataBase Setting the database connect params. Use the database driver self dataSource args.
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func RegisterDataBase(aliasName, driverName, dataSource string, params ...int) error {
 	var (
 		err error
@@ -368,6 +384,7 @@ end:
 }
 
 // RegisterDriver Register a database driver use specify driver name, this can be definition the driver is which database type.
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func RegisterDriver(driverName string, typ DriverType) error {
 	if t, ok := drivers[driverName]; !ok {
 		drivers[driverName] = typ
@@ -380,6 +397,7 @@ func RegisterDriver(driverName string, typ DriverType) error {
 }
 
 // SetDataBaseTZ Change the database default used timezone
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func SetDataBaseTZ(aliasName string, tz *time.Location) error {
 	if al, ok := dataBaseCache.get(aliasName); ok {
 		al.TZ = tz
@@ -390,6 +408,7 @@ func SetDataBaseTZ(aliasName string, tz *time.Location) error {
 }
 
 // SetMaxIdleConns Change the max idle conns for *sql.DB, use specify database alias name
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func SetMaxIdleConns(aliasName string, maxIdleConns int) {
 	al := getDbAlias(aliasName)
 	al.MaxIdleConns = maxIdleConns
@@ -397,6 +416,7 @@ func SetMaxIdleConns(aliasName string, maxIdleConns int) {
 }
 
 // SetMaxOpenConns Change the max open conns for *sql.DB, use specify database alias name
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func SetMaxOpenConns(aliasName string, maxOpenConns int) {
 	al := getDbAlias(aliasName)
 	al.MaxOpenConns = maxOpenConns
@@ -409,6 +429,7 @@ func SetMaxOpenConns(aliasName string, maxOpenConns int) {
 
 // GetDB Get *sql.DB from registered database by db alias name.
 // Use "default" as alias name if you not set.
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func GetDB(aliasNames ...string) (*sql.DB, error) {
 	var name string
 	if len(aliasNames) > 0 {

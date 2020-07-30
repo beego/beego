@@ -102,10 +102,6 @@ func (fmter FormatterFunc) Formatter(req string) string {
 	return fmter(req)
 }
 
-func (bl *BeeLogger) SetFormatter(fmtFunc FormatterFunc) {
-	bl.Formatter = fmtFunc
-}
-
 func (bl *BeeLogger) SetGlobalFormatter(fmtFunc FormatterFunc) {
 	bl.UseGlobalFormatter = true
 	bl.GlobalFormatter = fmtFunc

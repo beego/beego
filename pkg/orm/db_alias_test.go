@@ -19,21 +19,13 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/astaxie/beego/pkg/common"
 )
 
 func TestRegisterDataBase(t *testing.T) {
-	err := RegisterDataBase("test-params", DBARGS.Driver, DBARGS.Source, common.KV{
-		Key:   MaxIdleConnsKey,
-		Value: 20,
-	}, common.KV{
-		Key:   MaxOpenConnsKey,
-		Value: 300,
-	}, common.KV{
-		Key:   ConnMaxLifetimeKey,
-		Value: time.Minute,
-	})
+	err := RegisterDataBase("test-params", DBARGS.Driver, DBARGS.Source,
+		MaxIdleConnections(20),
+		MaxOpenConnections(300),
+		ConnMaxLifetime(time.Minute))
 	assert.Nil(t, err)
 
 	al := getDbAlias("test-params")
@@ -41,4 +33,55 @@ func TestRegisterDataBase(t *testing.T) {
 	assert.Equal(t, al.MaxIdleConns, 20)
 	assert.Equal(t, al.MaxOpenConns, 300)
 	assert.Equal(t, al.ConnMaxLifetime, time.Minute)
+}
+
+func TestRegisterDataBase_MaxStmtCacheSizeNegative1(t *testing.T) {
+	aliasName := "TestRegisterDataBase_MaxStmtCacheSizeNegative1"
+	err := RegisterDataBase(aliasName, DBARGS.Driver, DBARGS.Source, MaxStmtCacheSize(-1))
+	assert.Nil(t, err)
+
+	al := getDbAlias(aliasName)
+	assert.NotNil(t, al)
+	assert.Equal(t, al.DB.stmtDecoratorsLimit, 0)
+}
+
+func TestRegisterDataBase_MaxStmtCacheSize0(t *testing.T) {
+	aliasName := "TestRegisterDataBase_MaxStmtCacheSize0"
+	err := RegisterDataBase(aliasName, DBARGS.Driver, DBARGS.Source, MaxStmtCacheSize(0))
+	assert.Nil(t, err)
+
+	al := getDbAlias(aliasName)
+	assert.NotNil(t, al)
+	assert.Equal(t, al.DB.stmtDecoratorsLimit, 0)
+}
+
+func TestRegisterDataBase_MaxStmtCacheSize1(t *testing.T) {
+	aliasName := "TestRegisterDataBase_MaxStmtCacheSize1"
+	err := RegisterDataBase(aliasName, DBARGS.Driver, DBARGS.Source, MaxStmtCacheSize(1))
+	assert.Nil(t, err)
+
+	al := getDbAlias(aliasName)
+	assert.NotNil(t, al)
+	assert.Equal(t, al.DB.stmtDecoratorsLimit, 1)
+}
+
+func TestRegisterDataBase_MaxStmtCacheSize841(t *testing.T) {
+	aliasName := "TestRegisterDataBase_MaxStmtCacheSize841"
+	err := RegisterDataBase(aliasName, DBARGS.Driver, DBARGS.Source, MaxStmtCacheSize(841))
+	assert.Nil(t, err)
+
+	al := getDbAlias(aliasName)
+	assert.NotNil(t, al)
+	assert.Equal(t, al.DB.stmtDecoratorsLimit, 841)
+}
+
+
+func TestDBCache(t *testing.T) {
+	dataBaseCache.add("test1", &alias{})
+	dataBaseCache.add("default", &alias{})
+	al := dataBaseCache.getDefault()
+	assert.NotNil(t, al)
+	al, ok := dataBaseCache.get("test1")
+	assert.NotNil(t, al)
+	assert.True(t, ok)
 }

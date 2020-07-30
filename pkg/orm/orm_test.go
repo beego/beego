@@ -297,16 +297,13 @@ func TestDataTypes(t *testing.T) {
 		vu := e.Interface()
 		switch name {
 		case "Date":
-			vu = vu.(time.Time).In(DefaultTimeLoc).Format(testDate)
-			value = value.(time.Time).In(DefaultTimeLoc).Format(testDate)
 		case "DateTime":
-			vu = vu.(time.Time).In(DefaultTimeLoc).Format(testDateTime)
-			value = value.(time.Time).In(DefaultTimeLoc).Format(testDateTime)
 		case "Time":
-			vu = vu.(time.Time).In(DefaultTimeLoc).Format(testTime)
-			value = value.(time.Time).In(DefaultTimeLoc).Format(testTime)
+			assert.True(t, vu.(time.Time).In(DefaultTimeLoc).Sub(value.(time.Time).In(DefaultTimeLoc)) <= time.Second)
+			break
+		default:
+			assert.Equal(t, value, vu)
 		}
-		throwFail(t, AssertIs(vu == value, true), value, vu)
 	}
 }
 
@@ -1662,18 +1659,14 @@ func TestRawQueryRow(t *testing.T) {
 		switch col {
 		case "id":
 			throwFail(t, AssertIs(id, 1))
+			break
 		case "time":
-			v = v.(time.Time).In(DefaultTimeLoc)
-			value := dataValues[col].(time.Time).In(DefaultTimeLoc)
-			throwFail(t, AssertIs(v, value, testTime))
 		case "date":
-			v = v.(time.Time).In(DefaultTimeLoc)
-			value := dataValues[col].(time.Time).In(DefaultTimeLoc)
-			throwFail(t, AssertIs(v, value, testDate))
 		case "datetime":
 			v = v.(time.Time).In(DefaultTimeLoc)
 			value := dataValues[col].(time.Time).In(DefaultTimeLoc)
-			throwFail(t, AssertIs(v, value, testDateTime))
+			assert.True(t, v.(time.Time).Sub(value) <= time.Second)
+			break
 		default:
 			throwFail(t, AssertIs(v, dataValues[col]))
 		}
@@ -1746,16 +1739,13 @@ func TestQueryRows(t *testing.T) {
 		vu := e.Interface()
 		switch name {
 		case "Time":
-			vu = vu.(time.Time).In(DefaultTimeLoc).Format(testTime)
-			value = value.(time.Time).In(DefaultTimeLoc).Format(testTime)
 		case "Date":
-			vu = vu.(time.Time).In(DefaultTimeLoc).Format(testDate)
-			value = value.(time.Time).In(DefaultTimeLoc).Format(testDate)
 		case "DateTime":
-			vu = vu.(time.Time).In(DefaultTimeLoc).Format(testDateTime)
-			value = value.(time.Time).In(DefaultTimeLoc).Format(testDateTime)
+			assert.True(t, vu.(time.Time).In(DefaultTimeLoc).Sub(value.(time.Time).In(DefaultTimeLoc)) <= time.Second)
+			break
+		default:
+			assert.Equal(t, value, vu)
 		}
-		throwFail(t, AssertIs(vu == value, true), value, vu)
 	}
 
 	var datas2 []Data
@@ -1773,16 +1763,14 @@ func TestQueryRows(t *testing.T) {
 		vu := e.Interface()
 		switch name {
 		case "Time":
-			vu = vu.(time.Time).In(DefaultTimeLoc).Format(testTime)
-			value = value.(time.Time).In(DefaultTimeLoc).Format(testTime)
 		case "Date":
-			vu = vu.(time.Time).In(DefaultTimeLoc).Format(testDate)
-			value = value.(time.Time).In(DefaultTimeLoc).Format(testDate)
 		case "DateTime":
-			vu = vu.(time.Time).In(DefaultTimeLoc).Format(testDateTime)
-			value = value.(time.Time).In(DefaultTimeLoc).Format(testDateTime)
+			assert.True(t, vu.(time.Time).In(DefaultTimeLoc).Sub(value.(time.Time).In(DefaultTimeLoc)) <= time.Second)
+			break
+		default:
+			assert.Equal(t, value, vu)
 		}
-		throwFail(t, AssertIs(vu == value, true), value, vu)
+
 	}
 
 	var ids []int
@@ -2193,8 +2181,8 @@ func TestInLine(t *testing.T) {
 
 	throwFail(t, AssertIs(il.Name, name))
 	throwFail(t, AssertIs(il.Email, email))
-	throwFail(t, AssertIs(il.Created.In(DefaultTimeLoc), inline.Created.In(DefaultTimeLoc), testDate))
-	throwFail(t, AssertIs(il.Updated.In(DefaultTimeLoc), inline.Updated.In(DefaultTimeLoc), testDateTime))
+	assert.True(t, il.Created.In(DefaultTimeLoc).Sub(inline.Created.In(DefaultTimeLoc)) <= time.Second)
+	assert.True(t, il.Updated.In(DefaultTimeLoc).Sub(inline.Updated.In(DefaultTimeLoc)) <= time.Second)
 }
 
 func TestInLineOneToOne(t *testing.T) {

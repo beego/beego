@@ -38,7 +38,7 @@ func TestConsoleCalls(bl *BeeLogger) {
 func TestConsole(t *testing.T) {
 	log1 := NewLogger(10000)
 	log1.EnableFuncCallDepth(true)
-	log1.SetLogger("console", beego.BeeLogger.ApacheFormatter, "")
+	log1.SetLogger("console", bl.ApacheFormatter, "")
 	testConsoleCalls(log1)
 
 	log2 := NewLogger(100)

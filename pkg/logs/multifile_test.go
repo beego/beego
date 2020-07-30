@@ -20,11 +20,13 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	beego "github.com/astaxie/beego/pkg"
 )
 
 func TestFiles_1(t *testing.T) {
 	log := NewLogger(10000)
-	log.SetLogger("multifile", `{"filename":"test.log","separate":["emergency", "alert", "critical", "error", "warning", "notice", "info", "debug"]}`)
+	log.SetLogger("multifile", beego.BeeLogger.ApacheFormatter, `{"filename":"test.log","separate":["emergency", "alert", "critical", "error", "warning", "notice", "info", "debug"]}`)
 	log.Debug("debug")
 	log.Informational("info")
 	log.Notice("notice")
