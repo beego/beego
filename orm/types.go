@@ -22,6 +22,7 @@ import (
 )
 
 // Driver define database driver
+
 type Driver interface {
 	Name() string
 	Type() DriverType

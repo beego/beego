@@ -124,18 +124,21 @@ func (o *orm) getFieldInfo(mi *modelInfo, name string) *fieldInfo {
 }
 
 // read data to model
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (o *orm) Read(md interface{}, cols ...string) error {
 	mi, ind := o.getMiInd(md, true)
 	return o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols, false)
 }
 
 // read data to model, like Read(), but use "SELECT FOR UPDATE" form
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (o *orm) ReadForUpdate(md interface{}, cols ...string) error {
 	mi, ind := o.getMiInd(md, true)
 	return o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols, true)
 }
 
 // Try to read a row from the database, or insert one if it doesn't exist
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (o *orm) ReadOrCreate(md interface{}, col1 string, cols ...string) (bool, int64, error) {
 	cols = append([]string{col1}, cols...)
 	mi, ind := o.getMiInd(md, true)
@@ -159,6 +162,7 @@ func (o *orm) ReadOrCreate(md interface{}, col1 string, cols ...string) (bool, i
 }
 
 // insert model data to database
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (o *orm) Insert(md interface{}) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
 	id, err := o.alias.DbBaser.Insert(o.db, mi, ind, o.alias.TZ)
@@ -183,6 +187,7 @@ func (o *orm) setPk(mi *modelInfo, ind reflect.Value, id int64) {
 }
 
 // insert some models to database
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (o *orm) InsertMulti(bulk int, mds interface{}) (int64, error) {
 	var cnt int64
 
@@ -218,6 +223,7 @@ func (o *orm) InsertMulti(bulk int, mds interface{}) (int64, error) {
 }
 
 // InsertOrUpdate data to database
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (o *orm) InsertOrUpdate(md interface{}, colConflitAndArgs ...string) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
 	id, err := o.alias.DbBaser.InsertOrUpdate(o.db, mi, ind, o.alias, colConflitAndArgs...)
@@ -232,6 +238,7 @@ func (o *orm) InsertOrUpdate(md interface{}, colConflitAndArgs ...string) (int64
 
 // update model to database.
 // cols set the columns those want to update.
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (o *orm) Update(md interface{}, cols ...string) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
 	return o.alias.DbBaser.Update(o.db, mi, ind, o.alias.TZ, cols)
@@ -239,6 +246,7 @@ func (o *orm) Update(md interface{}, cols ...string) (int64, error) {
 
 // delete model in database
 // cols shows the delete conditions values read from. default is pk
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (o *orm) Delete(md interface{}, cols ...string) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
 	num, err := o.alias.DbBaser.Delete(o.db, mi, ind, o.alias.TZ, cols)
@@ -252,6 +260,7 @@ func (o *orm) Delete(md interface{}, cols ...string) (int64, error) {
 }
 
 // create a models to models queryer
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (o *orm) QueryM2M(md interface{}, name string) QueryM2Mer {
 	mi, ind := o.getMiInd(md, true)
 	fi := o.getFieldInfo(mi, name)
@@ -274,6 +283,7 @@ func (o *orm) QueryM2M(md interface{}, name string) QueryM2Mer {
 // 	for _,tag := range post.Tags{...}
 //
 // make sure the relation is defined in model struct tags.
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (o *orm) LoadRelated(md interface{}, name string, args ...interface{}) (int64, error) {
 	_, fi, ind, qseter := o.queryRelated(md, name)
 
@@ -341,6 +351,7 @@ func (o *orm) LoadRelated(md interface{}, name string, args ...interface{}) (int
 // 	qs := orm.QueryRelated(post,"Tag")
 //  qs.All(&[]*Tag{})
 //
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (o *orm) QueryRelated(md interface{}, name string) QuerySeter {
 	// is this api needed ?
 	_, _, _, qs := o.queryRelated(md, name)
@@ -423,6 +434,7 @@ func (o *orm) getRelQs(md interface{}, mi *modelInfo, fi *fieldInfo) *querySet {
 // return a QuerySeter for table operations.
 // table name can be string or struct.
 // e.g. QueryTable("user"), QueryTable(&user{}) or QueryTable((*User)(nil)),
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (o *orm) QueryTable(ptrStructOrTableName interface{}) (qs QuerySeter) {
 	var name string
 	if table, ok := ptrStructOrTableName.(string); ok {
@@ -443,6 +455,8 @@ func (o *orm) QueryTable(ptrStructOrTableName interface{}) (qs QuerySeter) {
 }
 
 // switch to another registered database driver by given name.
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
+// Using NewOrmUsingDB(name)
 func (o *orm) Using(name string) error {
 	if o.isTx {
 		panic(fmt.Errorf("<Ormer.Using> transaction has been start, cannot change db"))
@@ -461,10 +475,12 @@ func (o *orm) Using(name string) error {
 }
 
 // begin transaction
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (o *orm) Begin() error {
 	return o.BeginTx(context.Background(), nil)
 }
 
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (o *orm) BeginTx(ctx context.Context, opts *sql.TxOptions) error {
 	if o.isTx {
 		return ErrTxHasBegan
@@ -484,6 +500,7 @@ func (o *orm) BeginTx(ctx context.Context, opts *sql.TxOptions) error {
 }
 
 // commit transaction
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (o *orm) Commit() error {
 	if !o.isTx {
 		return ErrTxDone
@@ -499,6 +516,7 @@ func (o *orm) Commit() error {
 }
 
 // rollback transaction
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (o *orm) Rollback() error {
 	if !o.isTx {
 		return ErrTxDone
@@ -514,16 +532,19 @@ func (o *orm) Rollback() error {
 }
 
 // return a raw query seter for raw sql string.
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (o *orm) Raw(query string, args ...interface{}) RawSeter {
 	return newRawSet(o, query, args)
 }
 
 // return current using database Driver
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (o *orm) Driver() Driver {
 	return driver(o.alias.Name)
 }
 
 // return sql.DBStats for current database
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func (o *orm) DBStats() *sql.DBStats {
 	if o.alias != nil && o.alias.DB != nil {
 		stats := o.alias.DB.DB.Stats()
@@ -533,6 +554,7 @@ func (o *orm) DBStats() *sql.DBStats {
 }
 
 // NewOrm create new orm
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func NewOrm() Ormer {
 	BootStrap() // execute only once
 
@@ -545,6 +567,7 @@ func NewOrm() Ormer {
 }
 
 // NewOrmWithDB create a new ormer object with specify *sql.DB for query
+// Deprecated: using pkg/orm. We will remove this method in v2.1.0
 func NewOrmWithDB(driverName, aliasName string, db *sql.DB) (Ormer, error) {
 	var al *alias
 

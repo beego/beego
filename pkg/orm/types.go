@@ -21,6 +21,58 @@ import (
 	"time"
 )
 
+// TableNaming is usually used by model
+// when you custom your table name, please implement this interfaces
+// for example:
+// type User struct {
+//   ...
+// }
+// func (u *User) TableName() string {
+//    return "USER_TABLE"
+// }
+type TableNameI interface {
+	TableName() string
+}
+
+// TableEngineI is usually used by model
+// when you want to use specific engine, like myisam, you can implement this interface
+// for example:
+// type User struct {
+//   ...
+// }
+// func (u *User) TableEngine() string {
+//    return "myisam"
+// }
+type TableEngineI interface {
+	TableEngine() string
+}
+
+// TableIndexI is usually used by model
+// when you want to create indexes, you can implement this interface
+// for example:
+// type User struct {
+//   ...
+// }
+// func (u *User) TableIndex() [][]string {
+//    return [][]string{{"Name"}}
+// }
+type TableIndexI interface {
+	TableIndex() [][]string
+}
+
+// TableUniqueI is usually used by model
+// when you want to create unique indexes, you can implement this interface
+// for example:
+// type User struct {
+//   ...
+// }
+// func (u *User) TableUnique() [][]string {
+//    return [][]string{{"Email"}}
+// }
+type TableUniqueI interface {
+	TableUnique() [][]string
+}
+
 // Driver define database driver
 type Driver interface {
 	Name() string
@@ -144,9 +196,6 @@ type DQL interface {
 	// e.g. QueryTable("user"), QueryTable(&user{}) or QueryTable((*User)(nil)),
 	QueryTable(ptrStructOrTableName interface{}) QuerySeter
 	QueryTableWithCtx(ctx context.Context, ptrStructOrTableName interface{}) QuerySeter
-
-	// switch to another registered database driver by given name.
-	// Using(name string) error
 
 	DBStats() *sql.DBStats
 }

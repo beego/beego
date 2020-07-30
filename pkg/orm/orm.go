@@ -305,6 +305,7 @@ func (o *ormBase) QueryM2MWithCtx(ctx context.Context, md interface{}, name stri
 func (o *ormBase) LoadRelated(md interface{}, name string, args ...interface{}) (int64, error) {
 	return o.LoadRelatedWithCtx(context.Background(), md, name, args...)
 }
+
 func (o *ormBase) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...interface{}) (int64, error) {
 	_, fi, ind, qseter := o.queryRelated(md, name)
 
@@ -364,21 +365,6 @@ func (o *ormBase) LoadRelatedWithCtx(ctx context.Context, md interface{}, name s
 	}
 
 	return nums, err
-}
-
-// return a QuerySeter for related models to md model.
-// it can do all, update, delete in QuerySeter.
-// example:
-// 	qs := orm.QueryRelated(post,"Tag")
-//  qs.All(&[]*Tag{})
-//
-func (o *ormBase) QueryRelated(md interface{}, name string) QuerySeter {
-	return o.QueryRelatedWithCtx(context.Background(), md, name)
-}
-func (o *ormBase) QueryRelatedWithCtx(ctx context.Context, md interface{}, name string) QuerySeter {
-	// is this api needed ?
-	_, _, _, qs := o.queryRelated(md, name)
-	return qs
 }
 
 // get QuerySeter for related models to md model
@@ -591,10 +577,13 @@ func (t *txOrm) Rollback() error {
 // NewOrm create new orm
 func NewOrm() Ormer {
 	BootStrap() // execute only once
+	return NewOrmUsingDB(`default`)
+}
 
+// NewOrmUsingDB create new orm with the name
+func NewOrmUsingDB(aliasName string) Ormer {
 	o := new(orm)
-	name := `default`
-	if al, ok := dataBaseCache.get(name); ok {
+	if al, ok := dataBaseCache.get(aliasName); ok {
 		o.alias = al
 		if Debug {
 			o.db = newDbQueryLog(al, al.DB)
@@ -602,9 +591,8 @@ func NewOrm() Ormer {
 			o.db = al.DB
 		}
 	} else {
-		panic(fmt.Errorf("<Ormer.Using> unknown db alias name `%s`", name))
+		panic(fmt.Errorf("<Ormer.Using> unknown db alias name `%s`", aliasName))
 	}
-
 	return o
 }
 
