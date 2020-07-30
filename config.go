@@ -236,7 +236,7 @@ func newBConfig() *Config {
 			AdminPort:     8088,
 			EnableFcgi:    false,
 			EnableStdIo:   false,
-			ClientAuth:    tls.VerifyClientCertIfGiven,
+			ClientAuth:    tls.RequireAndVerifyClientCert,
 		},
 		WebConfig: WebConfig{
 			AutoRender:             true,
