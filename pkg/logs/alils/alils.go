@@ -156,61 +156,6 @@ func (c *aliLSWriter) WriteMsg(when time.Time, msg string, level int) (err error
 	return nil
 }
 
-// WriteMsgV2 write message in connection.
-// if connection is down, try to re-connect.
-func (c *aliLSWriter) WriteMsgV2(when time.Time, msg string, level int) (err error) {
-
-	if level > c.Level {
-		return nil
-	}
-
-	var topic string
-	var content string
-	var lg *LogGroup
-	if c.withMap {
-
-		// Topic，LogGroup
-		strs := strings.SplitN(msg, Delimiter, 2)
-		if len(strs) == 2 {
-			pos := strings.LastIndex(strs[0], " ")
-			topic = strs[0][pos+1 : len(strs[0])]
-			content = strs[0][0:pos] + strs[1]
-			lg = c.groupMap[topic]
-		}
-
-		// send to empty Topic
-		if lg == nil {
-			content = msg
-			lg = c.group[0]
-		}
-	} else {
-		content = msg
-		lg = c.group[0]
-	}
-
-	c1 := &LogContent{
-		Key:   proto.String("msg"),
-		Value: proto.String(content),
-	}
-
-	l := &Log{
-		Time: proto.Uint32(uint32(when.Unix())),
-		Contents: []*LogContent{
-			c1,
-		},
-	}
-
-	c.lock.Lock()
-	lg.Logs = append(lg.Logs, l)
-	c.lock.Unlock()
-
-	if len(lg.Logs) >= c.FlushWhen {
-		c.flush(lg)
-	}
-
-	return nil
-}
-
 // Flush implementing method. empty.
 func (c *aliLSWriter) Flush() {
 

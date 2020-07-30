@@ -59,32 +59,6 @@ func (s *JLWriter) WriteMsg(when time.Time, msg string, level int) error {
 	return nil
 }
 
-// WriteMsg write message in smtp writer.
-// it will send an email with subject and only this message.
-func (s *JLWriter) WriteMsgV2(msg string) error {
-
-	form := url.Values{}
-	form.Add("authorName", s.AuthorName)
-	form.Add("title", s.Title)
-	form.Add("text", msg)
-	if s.RedirectURL != "" {
-		form.Add("redirectUrl", s.RedirectURL)
-	}
-	if s.ImageURL != "" {
-		form.Add("imageUrl", s.ImageURL)
-	}
-
-	resp, err := http.PostForm(s.WebhookURL, form)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("Post webhook failed %s %d", resp.Status, resp.StatusCode)
-	}
-	return nil
-}
-
 // Flush implementing method. empty.
 func (s *JLWriter) Flush() {
 }

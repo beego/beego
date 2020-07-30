@@ -185,19 +185,6 @@ func (w *fileLogWriter) WriteMsg(when time.Time, msg string, level int) error {
 	return err
 }
 
-// WriteMsg write logger message into file.
-func (w *fileLogWriter) WriteMsgV2(msg string) error {
-
-	w.Lock()
-	_, err := w.fileWriter.Write([]byte(msg))
-	if err == nil {
-		w.maxLinesCurLines++
-		w.maxSizeCurSize += len(msg)
-	}
-	w.Unlock()
-	return err
-}
-
 func (w *fileLogWriter) createLogFile() (*os.File, error) {
 	// Open the log file
 	perm, err := strconv.ParseInt(w.Perm, 8, 64)

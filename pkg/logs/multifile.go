@@ -100,19 +100,6 @@ func (f *multiFileLogWriter) WriteMsg(when time.Time, msg string, level int) err
 	}
 	return nil
 }
-func (f *multiFileLogWriter) WriteMsgV2(msg string) error {
-	if f.fullLogWriter != nil {
-		f.fullLogWriter.WriteMsgV2(msg)
-	}
-	for i := 0; i < len(f.writers)-1; i++ {
-		if f.writers[i] != nil {
-
-			f.writers[i].WriteMsgV2(msg)
-
-		}
-	}
-	return nil
-}
 
 func (f *multiFileLogWriter) Flush() {
 	for i := 0; i < len(f.writers); i++ {

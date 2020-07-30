@@ -17,7 +17,6 @@ package logs
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"strings"
 	"time"
 )
@@ -63,16 +62,7 @@ func disableEscapeHTML(i interface{}) {
 	}
 }
 
-// AccessLog - Format and print access log.
+// AccessLog - Print access log.
 func AccessLog(r *AccessLogRecord, format string) {
-	var msg string
-
-	if !beeLogger.UseCustomFormatter {
-		// Use apache format
-		timeFormatted := r.RequestTime.Format("02/Jan/2006 03:04:05")
-		msg = fmt.Sprintf(apacheFormatPattern, r.RemoteAddr, timeFormatted, r.Request, r.Status, r.BodyBytesSent,
-			r.ElapsedTime.Seconds(), r.HTTPReferrer, r.HTTPUserAgent)
-	}
-
-	beeLogger.writeMsgV2(levelLoggerImpl, strings.TrimSpace(msg), r)
+	beeLogger.writeMsgV2(levelLoggerImpl, strings.TrimSpace(format), r)
 }

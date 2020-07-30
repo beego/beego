@@ -84,12 +84,6 @@ func (c *consoleWriter) WriteMsg(when time.Time, msg string, level int) error {
 	return nil
 }
 
-// WriteMsgV2 write message in console.
-func (c *consoleWriter) WriteMsgV2(msg string) error {
-	c.lg.writelnV2(msg)
-	return nil
-}
-
 // Destroy implementing method. empty.
 func (c *consoleWriter) Destroy() {
 

@@ -88,7 +88,6 @@ type newLoggerFunc func() Logger
 type Logger interface {
 	Init(config string) error
 	WriteMsg(when time.Time, msg string, level int) error
-	WriteMsgV2(msg string) error
 	Destroy()
 	Flush()
 }
@@ -103,9 +102,13 @@ func (fmter FormatterFunc) Formatter(req string) string {
 	return fmter(req)
 }
 
+func (bl *BeeLogger) SetFormatter(fmtFunc FormatterFunc) {
+	bl.Formatter = fmtFunc
+}
+
 func (bl *BeeLogger) SetGlobalFormatter(fmtFunc FormatterFunc) {
-	bl.UseCustomFormatter = true
-	bl.CustomFormatter = fmtFunc
+	bl.UseGlobalFormatter = true
+	bl.GlobalFormatter = fmtFunc
 }
 
 // Default formatter for JSON logging, implement
@@ -113,7 +116,10 @@ func (bl *BeeLogger) JSONFormatter(req string) string {
 	return req
 }
 
-func (bl *BeeLogger) ApacheFormatter(r *AccessLogRecord) string {
+func (bl *BeeLogger) ApacheFormatter(req string) string {
+	var r AccessLogRecord
+	_ = json.Unmarshal([]byte(req), &r)
+
 	timeFormatted := r.RequestTime.Format("02/Jan/2006 03:04:05")
 	return fmt.Sprintf(apacheFormatPattern, r.RemoteAddr, timeFormatted,
 		r.Request, r.Status, r.BodyBytesSent, r.ElapsedTime.Seconds(),
@@ -152,15 +158,17 @@ type BeeLogger struct {
 	signalChan          chan string
 	wg                  sync.WaitGroup
 	outputs             []*nameLogger
-	UseCustomFormatter  bool
-	CustomFormatter     formatter
+	Formatter           formatter
+	UseGlobalFormatter  bool
+	GlobalFormatter     formatter
 }
 
 const defaultAsyncMsgLen = 1e3
 
 type nameLogger struct {
 	Logger
-	name string
+	Formatter formatter
+	name      string
 }
 
 type logMsg struct {
@@ -183,7 +191,7 @@ func NewLogger(channelLens ...int64) *BeeLogger {
 		bl.msgChanLen = defaultAsyncMsgLen
 	}
 	bl.signalChan = make(chan string, 1)
-	bl.setLogger(AdapterConsole)
+	bl.setLogger(AdapterConsole, bl.ApacheFormatter)
 	return bl
 }
 
@@ -211,7 +219,7 @@ func (bl *BeeLogger) Async(msgLen ...int64) *BeeLogger {
 
 // SetLogger provides a given logger adapter into BeeLogger with config string.
 // config need to be correct JSON as string: {"interval":360}.
-func (bl *BeeLogger) setLogger(adapterName string, configs ...string) error {
+func (bl *BeeLogger) setLogger(adapterName string, fmtFunc FormatterFunc, configs ...string) error {
 	config := append(configs, "{}")[0]
 	for _, l := range bl.outputs {
 		if l.name == adapterName {
@@ -230,7 +238,7 @@ func (bl *BeeLogger) setLogger(adapterName string, configs ...string) error {
 		fmt.Fprintln(os.Stderr, "logs.BeeLogger.SetLogger: "+err.Error())
 		return err
 	}
-	bl.outputs = append(bl.outputs, &nameLogger{name: adapterName, Logger: lg})
+	bl.outputs = append(bl.outputs, &nameLogger{name: adapterName, Formatter: fmtFunc, Logger: lg})
 	return nil
 }
 
@@ -244,10 +252,9 @@ func (bl *BeeLogger) SetLogger(adapterName string, fmtFunc FormatterFunc, config
 		bl.init = true
 	}
 
-	bl.UseCustomFormatter = true
-	bl.CustomFormatter = fmtFunc
+	bl.Formatter = fmtFunc
 
-	return bl.setLogger(adapterName, configs...)
+	return bl.setLogger(adapterName, fmtFunc, configs...)
 }
 
 // DelLogger remove a logger adapter in BeeLogger.
@@ -278,10 +285,16 @@ func (bl *BeeLogger) writeToLoggers(when time.Time, msg string, level int) {
 	}
 }
 
-func (bl *BeeLogger) writeToLoggersV2(msg string) {
+func (bl *BeeLogger) writeToLoggersV2(when time.Time, msg string, level int) {
+	formattedMsg := ""
+	if bl.UseGlobalFormatter {
+		formattedMsg = bl.GlobalFormatter.Formatter(msg)
+	}
 	for _, l := range bl.outputs {
-
-		err := l.WriteMsgV2(msg)
+		if !bl.UseGlobalFormatter {
+			formattedMsg = l.Formatter.Formatter(msg)
+		}
+		err := l.WriteMsg(when, formattedMsg, level)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "unable to WriteMsgV2 to adapter:%v,error:%v\n", l.name, err)
 		}
@@ -307,7 +320,7 @@ func (bl *BeeLogger) Write(p []byte) (n int, err error) {
 func (bl *BeeLogger) writeMsg(logLevel int, msg string, req *AccessLogRecord, v ...interface{}) error {
 	if !bl.init {
 		bl.lock.Lock()
-		bl.setLogger(AdapterConsole)
+		bl.setLogger(AdapterConsole, bl.ApacheFormatter)
 		bl.lock.Unlock()
 	}
 
@@ -351,12 +364,7 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string, req *AccessLogRecord, v 
 			logMsgPool.Put(lm)
 		}
 	} else {
-		if bl.UseCustomFormatter {
-			bl.writeToLoggersV2(msg)
-		} else {
-			bl.writeToLoggers(when, msg, logLevel)
-
-		}
+		bl.writeToLoggers(when, msg, logLevel)
 	}
 	return nil
 }
@@ -364,7 +372,7 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string, req *AccessLogRecord, v 
 func (bl *BeeLogger) writeMsgV2(logLevel int, msg string, req *AccessLogRecord, v ...interface{}) error {
 	if !bl.init {
 		bl.lock.Lock()
-		bl.setLogger(AdapterConsole)
+		bl.setLogger(AdapterConsole, bl.Formatter.Formatter)
 		bl.lock.Unlock()
 	}
 
@@ -399,23 +407,13 @@ func (bl *BeeLogger) writeMsgV2(logLevel int, msg string, req *AccessLogRecord, 
 		msg = levelPrefix[logLevel] + " " + msg
 	}
 
-	if bl.UseCustomFormatter {
-		reqText, err := json.Marshal(req)
-		if err != nil {
-			log.Fatal(err)
-		}
-		msg = bl.CustomFormatter.Formatter(string(reqText))
+	if req != nil {
+		req.LoggerLevel = levelPrefix[logLevel]
 	}
 
-	if bl.UseCustomFormatter {
-		if req != nil {
-			req.LoggerLevel = levelPrefix[logLevel]
-		}
-		reqText, err := json.Marshal(req)
-		if err != nil {
-			log.Fatal(err)
-		}
-		msg = bl.CustomFormatter.Formatter(string(reqText))
+	reqText, err := json.Marshal(req)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	if bl.asynchronous {
@@ -429,12 +427,7 @@ func (bl *BeeLogger) writeMsgV2(logLevel int, msg string, req *AccessLogRecord, 
 			logMsgPool.Put(lm)
 		}
 	} else {
-		if bl.UseCustomFormatter {
-			bl.writeToLoggersV2(msg)
-		} else {
-			bl.writeToLoggers(when, msg, logLevel)
-
-		}
+		bl.writeToLoggersV2(when, string(reqText), logLevel)
 	}
 	return nil
 }
