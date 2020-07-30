@@ -202,7 +202,7 @@ func (app *App) Run(mws ...MiddleWare) {
 				if string(BConfig.Listen.ClientAuth) != "" {
 					tlsConfig.ClientAuth = BConfig.Listen.ClientAuth
 				}
-				app.Server.TLSConfig = &tslConfig
+				app.Server.TLSConfig = &tlsConfig
 			}
 			if err := app.Server.ListenAndServeTLS(BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile); err != nil {
 				logs.Critical("ListenAndServeTLS: ", err)
