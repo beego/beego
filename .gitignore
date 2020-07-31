@@ -4,3 +4,6 @@
 *.swp
 *.swo
 beego.iml
+
+_beeTmp
+_beeTmp2
