@@ -17,7 +17,7 @@ require (
 	github.com/elastic/go-elasticsearch/v6 v6.8.5
 	github.com/elazarl/go-bindata-assetfs v1.0.0
 	github.com/go-redis/redis v6.14.2+incompatible
-	github.com/go-redis/redis/v8 v8.0.0-beta.7
+	github.com/go-redis/redis/v7 v7.4.0
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gogo/protobuf v1.1.1
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
@@ -30,11 +30,10 @@ require (
 	github.com/prometheus/client_golang v1.7.0
 	github.com/shiena/ansicolor v0.0.0-20151119151921-a422bbe96644
 	github.com/ssdb/gossdb v0.0.0-20180723034631-88f6b59b84ec
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.6.1 // indirect
 	github.com/syndtr/goleveldb v0.0.0-20181127023241-353a9fca669c // indirect
 	github.com/wendal/errors v0.0.0-20130201093226-f66c77a7882b // indirect
 	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
-	golang.org/x/tools v0.0.0-20200207183749-b753a1ba74fa
 	gopkg.in/yaml.v2 v2.2.8
 )
 

@@ -33,7 +33,6 @@
 package memcache
 
 import (
-	"context"
 	"net/http"
 	"strings"
 	"sync"
@@ -114,7 +113,7 @@ type MemProvider struct {
 // SessionInit init memcache session
 // savepath like
 // e.g. 127.0.0.1:9090
-func (rp *MemProvider) SessionInit(maxlifetime int64, savePath string, _ context.Context) error {
+func (rp *MemProvider) SessionInit(maxlifetime int64, savePath string) error {
 	rp.maxlifetime = maxlifetime
 	rp.conninfo = strings.Split(savePath, ";")
 	client = memcache.New(rp.conninfo...)

@@ -17,7 +17,6 @@ package session
 import (
 	"errors"
 	"fmt"
-	"context"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -120,7 +119,7 @@ type FileProvider struct {
 
 // SessionInit Init file session provider.
 // savePath sets the session files path.
-func (fp *FileProvider) SessionInit(maxlifetime int64, savePath string, _ context.Context) error {
+func (fp *FileProvider) SessionInit(maxlifetime int64, savePath string) error {
 	fp.maxlifetime = maxlifetime
 	fp.savePath = savePath
 	return nil

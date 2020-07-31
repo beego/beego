@@ -28,7 +28,6 @@
 package session
 
 import (
-	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
@@ -55,7 +54,7 @@ type Store interface {
 // Provider contains global session methods and saved SessionStores.
 // it can operate a SessionStore by its id.
 type Provider interface {
-	SessionInit(gclifetime int64, config string, ctx context.Context) error
+	SessionInit(gclifetime int64, config string) error
 	SessionRead(sid string) (Store, error)
 	SessionExist(sid string) (bool, error)
 	SessionRegenerate(oldsid, sid string) (Store, error)
@@ -127,7 +126,7 @@ type Manager struct {
 // 2. hashfunc  default sha1
 // 3. hashkey default beegosessionkey
 // 4. maxage default is none
-func NewManager(provideName string, cf *ManagerConfig, ctx ...context.Context) (*Manager, error) {
+func NewManager(provideName string, cf *ManagerConfig) (*Manager, error) {
 	provider, ok := provides[provideName]
 	if !ok {
 		return nil, fmt.Errorf("session: unknown provide %q (forgotten import?)", provideName)
@@ -148,12 +147,8 @@ func NewManager(provideName string, cf *ManagerConfig, ctx ...context.Context) (
 			panic(errors.New(strErrMsg))
 		}
 	}
-	c := context.Background()
-	if len(ctx) > 0 {
-		c = ctx[0]
-	}
 
-	err := provider.SessionInit(cf.Maxlifetime, cf.ProviderConfig, c)
+	err := provider.SessionInit(cf.Maxlifetime, cf.ProviderConfig)
 	if err != nil {
 		return nil, err
 	}

@@ -41,7 +41,6 @@
 package mysql
 
 import (
-	"context"
 	"database/sql"
 	"net/http"
 	"sync"
@@ -135,7 +134,7 @@ func (mp *Provider) connectInit() *sql.DB {
 
 // SessionInit init mysql session.
 // savepath is the connection string of mysql.
-func (mp *Provider) SessionInit(maxlifetime int64, savePath string, _ context.Context) error {
+func (mp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 	mp.maxlifetime = maxlifetime
 	mp.savePath = savePath
 	return nil

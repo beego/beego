@@ -32,7 +32,6 @@
 // more docs: http://beego.me/docs/module/session.md
 package redis_cluster
 import (
-	"context"
 	"net/http"
 	"strconv"
 	"strings"
@@ -118,7 +117,7 @@ type Provider struct {
 // SessionInit init redis_cluster session
 // savepath like redis server addr,pool size,password,dbnum
 // e.g. 127.0.0.1:6379;127.0.0.1:6380,100,test,0
-func (rp *Provider) SessionInit(maxlifetime int64, savePath string, ctx context.Context) error {
+func (rp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 	rp.maxlifetime = maxlifetime
 	configs := strings.Split(savePath, ",")
 	if len(configs) > 0 {

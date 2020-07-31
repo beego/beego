@@ -33,7 +33,6 @@
 package couchbase
 
 import (
-	"context"
 	"net/http"
 	"strings"
 	"sync"
@@ -136,7 +135,7 @@ func (cp *Provider) getBucket() *couchbase.Bucket {
 // SessionInit init couchbase session
 // savepath like couchbase server REST/JSON URL
 // e.g. http://host:port/, Pool, Bucket
-func (cp *Provider) SessionInit(maxlifetime int64, savePath string, _ context.Context) error {
+func (cp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 	cp.maxlifetime = maxlifetime
 	configs := strings.Split(savePath, ",")
 	if len(configs) > 0 {

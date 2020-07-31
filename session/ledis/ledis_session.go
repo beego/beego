@@ -2,7 +2,6 @@
 package ledis
 
 import (
-	"context"
 	"net/http"
 	"strconv"
 	"strings"
@@ -86,7 +85,7 @@ type Provider struct {
 // SessionInit init ledis session
 // savepath like ledis server saveDataPath,pool size
 // e.g. 127.0.0.1:6379,100,astaxie
-func (lp *Provider) SessionInit(maxlifetime int64, savePath string, _ context.Context) error {
+func (lp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 	var err error
 	lp.maxlifetime = maxlifetime
 	configs := strings.Split(savePath, ",")

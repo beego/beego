@@ -33,7 +33,6 @@
 package redis
 
 import (
-	"context"
 	"net/http"
 	"strconv"
 	"strings"
@@ -42,7 +41,7 @@ import (
 
 	"github.com/astaxie/beego/session"
 
-	"github.com/go-redis/redis/v8"
+	"github.com/go-redis/redis/v7"
 )
 
 var redispder = &Provider{}
@@ -105,7 +104,7 @@ func (rs *SessionStore) SessionRelease(w http.ResponseWriter) {
 		return
 	}
 	c := rs.p
-	c.Set(c.Context(), rs.sid, string(b), time.Duration(rs.maxlifetime)*time.Second)
+	c.Set(rs.sid, string(b), time.Duration(rs.maxlifetime)*time.Second)
 }
 
 // Provider redis session provider
@@ -121,7 +120,7 @@ type Provider struct {
 // SessionInit init redis session
 // savepath like redis server addr,pool size,password,dbnum,IdleTimeout second
 // e.g. 127.0.0.1:6379,100,astaxie,0,30
-func (rp *Provider) SessionInit(maxlifetime int64, savePath string, ctx context.Context) error {
+func (rp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 	rp.maxlifetime = maxlifetime
 	configs := strings.Split(savePath, ",")
 	if len(configs) > 0 {
@@ -166,16 +165,16 @@ func (rp *Provider) SessionInit(maxlifetime int64, savePath string, ctx context.
 		IdleTimeout:        idleTimeout,
 		IdleCheckFrequency: 10 * time.Second,
 		MaxRetries:         5,
-	}).WithContext(ctx)
+	})
 
-	return rp.poollist.Ping(ctx).Err()
+	return rp.poollist.Ping().Err()
 }
 
 // SessionRead read redis session by sid
 func (rp *Provider) SessionRead(sid string) (session.Store, error) {
 	var kv map[interface{}]interface{}
 
-	kvs, err := rp.poollist.Get(rp.poollist.Context(), sid).Result()
+	kvs, err := rp.poollist.Get(sid).Result()
 	if err != nil && err != redis.Nil {
 		return nil, err
 	}
@@ -195,7 +194,7 @@ func (rp *Provider) SessionRead(sid string) (session.Store, error) {
 func (rp *Provider) SessionExist(sid string) (bool, error) {
 	c := rp.poollist
 
-	if existed, err := c.Exists(rp.poollist.Context(), sid).Result(); err != nil || existed == 0 {
+	if existed, err := c.Exists(sid).Result(); err != nil || existed == 0 {
 		return false, err
 	}
 	return true, nil
@@ -204,14 +203,14 @@ func (rp *Provider) SessionExist(sid string) (bool, error) {
 // SessionRegenerate generate new sid for redis session
 func (rp *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error) {
 	c := rp.poollist
-	if existed, _ := c.Exists(rp.poollist.Context(), oldsid).Result(); existed == 0 {
+	if existed, _ := c.Exists(oldsid).Result(); existed == 0 {
 		// oldsid doesn't exists, set the new sid directly
 		// ignore error here, since if it return error
 		// the existed value will be 0
 		c.Do(c.Context(), "SET", sid, "", "EX", rp.maxlifetime)
 	} else {
-		c.Rename(c.Context(), oldsid, sid)
-		c.Expire(c.Context(), sid, time.Duration(rp.maxlifetime))
+		c.Rename(oldsid, sid)
+		c.Expire(sid, time.Duration(rp.maxlifetime))
 	}
 	return rp.SessionRead(sid)
 }
@@ -220,7 +219,7 @@ func (rp *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error)
 func (rp *Provider) SessionDestroy(sid string) error {
 	c := rp.poollist
 
-	c.Del(c.Context(), sid)
+	c.Del(sid)
 	return nil
 }
 

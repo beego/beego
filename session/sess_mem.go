@@ -16,7 +16,6 @@ package session
 
 import (
 	"container/list"
-	"context"
 	"net/http"
 	"sync"
 	"time"
@@ -86,7 +85,7 @@ type MemProvider struct {
 }
 
 // SessionInit init memory session
-func (pder *MemProvider) SessionInit(maxlifetime int64, savePath string, _ context.Context) error {
+func (pder *MemProvider) SessionInit(maxlifetime int64, savePath string) error {
 	pder.maxlifetime = maxlifetime
 	pder.savePath = savePath
 	return nil

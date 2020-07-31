@@ -120,7 +120,7 @@ type Provider struct {
 // SessionInit init redis_sentinel session
 // savepath like redis sentinel addr,pool size,password,dbnum,masterName
 // e.g. 127.0.0.1:26379;127.0.0.2:26379,100,1qaz2wsx,0,mymaster
-func (rp *Provider) SessionInit(maxlifetime int64, savePath string, ctx context.Context) error {
+func (rp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 	rp.maxlifetime = maxlifetime
 	configs := strings.Split(savePath, ",")
 	if len(configs) > 0 {

@@ -1,7 +1,6 @@
 package ssdb
 
 import (
-	"context"
 	"errors"
 	"net/http"
 	"strconv"
@@ -32,7 +31,7 @@ func (p *Provider) connectInit() error {
 }
 
 // SessionInit init the ssdb with the config
-func (p *Provider) SessionInit(maxLifetime int64, savePath string, _ context.Context) error {
+func (p *Provider) SessionInit(maxLifetime int64, savePath string) error {
 	p.maxLifetime = maxLifetime
 	address := strings.Split(savePath, ":")
 	p.host = address[0]
