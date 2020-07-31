@@ -33,7 +33,7 @@
 package redis_sentinel
 
 import (
-	"github.com/astaxie/beego/session"
+	"github.com/astaxie/beego/pkg/session"
 	"github.com/go-redis/redis"
 	"net/http"
 	"strconv"

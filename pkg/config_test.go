@@ -19,7 +19,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/astaxie/beego/config"
+	beeJson "github.com/astaxie/beego/pkg/config/json"
 )
 
 func TestDefaults(t *testing.T) {
@@ -35,7 +35,7 @@ func TestDefaults(t *testing.T) {
 func TestAssignConfig_01(t *testing.T) {
 	_BConfig := &Config{}
 	_BConfig.AppName = "beego_test"
-	jcf := &config.JSONConfig{}
+	jcf := &beeJson.JSONConfig{}
 	ac, _ := jcf.ParseData([]byte(`{"AppName":"beego_json"}`))
 	assignSingleConfig(_BConfig, ac)
 	if _BConfig.AppName != "beego_json" {
@@ -73,7 +73,7 @@ func TestAssignConfig_02(t *testing.T) {
 	configMap["SessionProviderConfig"] = "file"
 	configMap["FileLineNum"] = true
 
-	jcf := &config.JSONConfig{}
+	jcf := &beeJson.JSONConfig{}
 	bs, _ = json.Marshal(configMap)
 	ac, _ := jcf.ParseData(bs)
 
@@ -109,7 +109,7 @@ func TestAssignConfig_02(t *testing.T) {
 }
 
 func TestAssignConfig_03(t *testing.T) {
-	jcf := &config.JSONConfig{}
+	jcf := &beeJson.JSONConfig{}
 	ac, _ := jcf.ParseData([]byte(`{"AppName":"beego"}`))
 	ac.Set("AppName", "test_app")
 	ac.Set("RunMode", "online")

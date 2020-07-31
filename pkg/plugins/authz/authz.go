@@ -40,8 +40,8 @@
 package authz
 
 import (
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/pkg"
+	"github.com/astaxie/beego/pkg/context"
 	"github.com/casbin/casbin"
 	"net/http"
 )

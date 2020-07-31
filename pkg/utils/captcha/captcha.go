@@ -66,11 +66,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/cache"
-	"github.com/astaxie/beego/context"
-	"github.com/astaxie/beego/logs"
-	"github.com/astaxie/beego/utils"
+	"github.com/astaxie/beego/pkg"
+	"github.com/astaxie/beego/pkg/cache"
+	"github.com/astaxie/beego/pkg/context"
+	"github.com/astaxie/beego/pkg/logs"
+	"github.com/astaxie/beego/pkg/utils"
 )
 
 var (

@@ -27,10 +27,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/astaxie/beego/grace"
-	"github.com/astaxie/beego/logs"
-	"github.com/astaxie/beego/utils"
 	"golang.org/x/crypto/acme/autocert"
+
+	"github.com/astaxie/beego/pkg/grace"
+	"github.com/astaxie/beego/pkg/logs"
+	"github.com/astaxie/beego/pkg/utils"
 )
 
 var (
@@ -348,7 +349,7 @@ func findAndRemoveSingleTree(entryPointTree *Tree) {
 // func (b *BankAccount)Mapping(){
 //  b.Mapping("ShowAccount" , b.ShowAccount)
 //  b.Mapping("ModifyAccount", b.ModifyAccount)
-//}
+// }
 //
 // //@router /account/:id  [get]
 // func (b *BankAccount) ShowAccount(){
