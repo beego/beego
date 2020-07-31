@@ -811,7 +811,7 @@ func (d *dbBase) UpdateBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 }
 
 // delete related records.
-// do UpdateBanch or DeleteBanch by condition of tables' relationship.
+// do UpdateBatch or DeleteBatch by condition of tables' relationship.
 func (d *dbBase) deleteRels(q dbQuerier, mi *modelInfo, args []interface{}, tz *time.Location) error {
 	for _, fi := range mi.fields.fieldsReverse {
 		fi = fi.reverseFieldInfo
@@ -860,11 +860,9 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 
 	// SELECT t0.column FROM 'table' T0 JOIN ... WHERE ...
 	selectQuery := fmt.Sprintf("SELECT T0.%s FROM %s%s%s T0 %s%s", cols, Q, mi.table, Q, join, where)
-	fmt.Println("selectQuery --------------> ", selectQuery)
 
 	// DELETE FROM 'table' WHERE column IN (SELECT t0.column FROM 'table' T0 JOIN ... WHERE ...)
 	deleteQuery := fmt.Sprintf("DELETE FROM %s%s%s WHERE %s IN (%s)", Q, mi.table, Q, cols, selectQuery)
-	fmt.Println("deleteQuery --------------> ", deleteQuery)
 	d.ins.ReplaceMarks(&deleteQuery)
 
 	// Execute delete query
@@ -880,37 +878,8 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 		return 0, err
 	}
 
-	nDeleted, err := result.RowsAffected()
-	if err != nil {
-		return 0, err
-	}
-	if nDeleted > 0 {
-		err := d.deleteRels(q, mi, args, tz)
-		if err != nil {
-			return nDeleted, err
-		}
-	}
-	return nDeleted, nil
-
-	// result, err := q.Exec(deleteQuery, args...)
-	// if err != nil {
-	// 	return 0, err
-	// }
-
 	// FIXME: RowsAffected is not supported by all DB drivers
-
-	// Count deleted entries
-	// TODO: enhance count using sql COUNT
-
-	// setValues = append(setValues, pkValue)
-
-	// sep := fmt.Sprintf("%s = ?, %s", Q, Q)
-	// setColumns := strings.Join(setNames, sep)
-
-	// query := fmt.Sprintf("UPDATE %s%s%s SET %s%s%s = ? WHERE %s%s%s = ?", Q, mi.table, Q, Q, setColumns, Q, Q, pkName, Q)
-
-	// d.ins.ReplaceMarks(&query)
-
+	return result.RowsAffected()
 }
 
 // read related records.
