@@ -12,7 +12,7 @@ import (
 	"github.com/elastic/go-elasticsearch/v6"
 	"github.com/elastic/go-elasticsearch/v6/esapi"
 
-	"github.com/astaxie/beego/logs"
+	"github.com/astaxie/beego/pkg/logs"
 )
 
 // NewES return a LoggerInterface

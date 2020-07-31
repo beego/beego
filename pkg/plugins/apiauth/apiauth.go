@@ -65,8 +65,8 @@ import (
 	"sort"
 	"time"
 
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/context"
+	"github.com/astaxie/beego/pkg"
+	"github.com/astaxie/beego/pkg/context"
 )
 
 // AppIDToAppSecret is used to get appsecret throw appid

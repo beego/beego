@@ -16,7 +16,7 @@ package validation
 
 import (
 	"fmt"
-	"github.com/astaxie/beego/logs"
+	"github.com/astaxie/beego/pkg/logs"
 	"reflect"
 	"regexp"
 	"strings"

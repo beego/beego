@@ -63,7 +63,7 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/astaxie/beego/logs"
+	"github.com/astaxie/beego/pkg/logs"
 )
 
 // DebugQueries define the debug

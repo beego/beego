@@ -33,7 +33,7 @@
 package redis_cluster
 
 import (
-	"github.com/astaxie/beego/session"
+	"github.com/astaxie/beego/pkg/session"
 	rediss "github.com/go-redis/redis"
 	"net/http"
 	"strconv"
