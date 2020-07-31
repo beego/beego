@@ -37,7 +37,7 @@ import (
 	"strings"
 	"sync"
 	"github.com/astaxie/beego/session"
-	rediss "github.com/go-redis/redis"
+	rediss "github.com/go-redis/redis/v7"
 	"time"
 )
 
@@ -151,7 +151,7 @@ func (rp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 		Addrs:    strings.Split(rp.savePath, ";"),
 		Password:  rp.password,
 		PoolSize: rp.poolsize,
-	}).WithContext(ctx)
+	})
 	return rp.poollist.Ping().Err()
 }
 

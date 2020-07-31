@@ -33,9 +33,8 @@
 package redis_sentinel
 
 import (
-	"context"
 	"github.com/astaxie/beego/session"
-	"github.com/go-redis/redis"
+	"github.com/go-redis/redis/v7"
 	"net/http"
 	"strconv"
 	"strings"
@@ -165,7 +164,7 @@ func (rp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 		PoolSize:      rp.poolsize,
 		DB:            rp.dbNum,
 		MasterName:    rp.masterName,
-	}).WithContext(ctx)
+	})
 
 	return rp.poollist.Ping().Err()
 }
