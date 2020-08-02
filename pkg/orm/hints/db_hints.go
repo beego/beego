@@ -12,11 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package orm
+package hints
 
 import (
 	"github.com/astaxie/beego/pkg/common"
 	"time"
+)
+
+const (
+	//db level
+	KeyMaxIdleConnections = iota
+	KeyMaxOpenConnections
+	KeyConnMaxLifetime
+	KeyMaxStmtCacheSize
+
+	//query level
+	KeyForceIndex
+	KeyUseIndex
+	KeyIgnoreIndex
+	KeyForUpdate
 )
 
 type Hint struct {
@@ -36,33 +50,46 @@ func (s *Hint) GetValue() interface{} {
 	return s.value
 }
 
-const (
-	maxIdleConnectionsKey = "MaxIdleConnections"
-	maxOpenConnectionsKey = "MaxOpenConnections"
-	connMaxLifetimeKey    = "ConnMaxLifetime"
-	maxStmtCacheSizeKey   = "MaxStmtCacheSize"
-)
-
 var _ common.KV = new(Hint)
 
 // MaxIdleConnections return a hint about MaxIdleConnections
 func MaxIdleConnections(v int) *Hint {
-	return NewHint(maxIdleConnectionsKey, v)
+	return NewHint(KeyMaxIdleConnections, v)
 }
 
 // MaxOpenConnections return a hint about MaxOpenConnections
 func MaxOpenConnections(v int) *Hint {
-	return NewHint(maxOpenConnectionsKey, v)
+	return NewHint(KeyMaxOpenConnections, v)
 }
 
 // ConnMaxLifetime return a hint about ConnMaxLifetime
 func ConnMaxLifetime(v time.Duration) *Hint {
-	return NewHint(connMaxLifetimeKey, v)
+	return NewHint(KeyConnMaxLifetime, v)
 }
 
 // MaxStmtCacheSize return a hint about MaxStmtCacheSize
 func MaxStmtCacheSize(v int) *Hint {
-	return NewHint(maxStmtCacheSizeKey, v)
+	return NewHint(KeyMaxStmtCacheSize, v)
+}
+
+// ForceIndex return a hint about ForceIndex
+func ForceIndex(index ...string) *Hint {
+	return NewHint(KeyForceIndex, index)
+}
+
+// UseIndex return a hint about UseIndex
+func UseIndex(index ...string) *Hint {
+	return NewHint(KeyUseIndex, index)
+}
+
+// IgnoreIndex return a hint about IgnoreIndex
+func IgnoreIndex(index ...string) *Hint {
+	return NewHint(KeyIgnoreIndex, index)
+}
+
+// ForUpdate return a hint about ForUpdate
+func ForUpdate() *Hint {
+	return NewHint(KeyForUpdate, true)
 }
 
 // NewHint return a hint

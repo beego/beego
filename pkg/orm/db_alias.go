@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/astaxie/beego/pkg/orm/hints"
 	"sync"
 	"time"
 
@@ -363,7 +364,7 @@ func newAliasWithDb(aliasName, driverName string, db *sql.DB, params ...common.K
 	var stmtCache *lru.Cache
 	var stmtCacheSize int
 
-	maxStmtCacheSize := kvs.GetValueOr(maxStmtCacheSizeKey, 0).(int)
+	maxStmtCacheSize := kvs.GetValueOr(hints.KeyMaxStmtCacheSize, 0).(int)
 	if maxStmtCacheSize > 0 {
 		_stmtCache, errC := newStmtDecoratorLruWithEvict(maxStmtCacheSize)
 		if errC != nil {
@@ -398,15 +399,15 @@ func newAliasWithDb(aliasName, driverName string, db *sql.DB, params ...common.K
 
 	detectTZ(al)
 
-	kvs.IfContains(maxIdleConnectionsKey, func(value interface{}) {
+	kvs.IfContains(hints.KeyMaxIdleConnections, func(value interface{}) {
 		if m, ok := value.(int); ok {
 			SetMaxIdleConns(al, m)
 		}
-	}).IfContains(maxOpenConnectionsKey, func(value interface{}) {
+	}).IfContains(hints.KeyMaxOpenConnections, func(value interface{}) {
 		if m, ok := value.(int); ok {
 			SetMaxOpenConns(al, m)
 		}
-	}).IfContains(connMaxLifetimeKey, func(value interface{}) {
+	}).IfContains(hints.KeyConnMaxLifetime, func(value interface{}) {
 		if m, ok := value.(time.Duration); ok {
 			SetConnMaxLifetime(al, m)
 		}

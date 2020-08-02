@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package orm
+package hints
 
 import (
 	"github.com/stretchr/testify/assert"
@@ -51,26 +51,75 @@ func TestMaxOpenConnections(t *testing.T) {
 	i := 887423
 	hint := MaxOpenConnections(i)
 	assert.Equal(t, hint.GetValue(), i)
-	assert.Equal(t, hint.GetKey(), maxOpenConnectionsKey)
+	assert.Equal(t, hint.GetKey(), KeyMaxOpenConnections)
 }
 
 func TestConnMaxLifetime(t *testing.T) {
 	i := time.Hour
 	hint := ConnMaxLifetime(i)
 	assert.Equal(t, hint.GetValue(), i)
-	assert.Equal(t, hint.GetKey(), connMaxLifetimeKey)
+	assert.Equal(t, hint.GetKey(), KeyConnMaxLifetime)
 }
 
 func TestMaxIdleConnections(t *testing.T) {
 	i := 42316
 	hint := MaxIdleConnections(i)
 	assert.Equal(t, hint.GetValue(), i)
-	assert.Equal(t, hint.GetKey(), maxIdleConnectionsKey)
+	assert.Equal(t, hint.GetKey(), KeyMaxIdleConnections)
 }
 
 func TestMaxStmtCacheSize(t *testing.T) {
 	i := 94157
 	hint := MaxStmtCacheSize(i)
 	assert.Equal(t, hint.GetValue(), i)
-	assert.Equal(t, hint.GetKey(), maxStmtCacheSizeKey)
+	assert.Equal(t, hint.GetKey(), KeyMaxStmtCacheSize)
+}
+
+
+func TestForceIndex(t *testing.T) {
+	s := []string{`f_index1`, `f_index2`, `f_index3`}
+	hint := ForceIndex(s...)
+	assert.Equal(t, hint.GetValue(), s)
+	assert.Equal(t, hint.GetKey(), KeyForceIndex)
+}
+
+func TestForceIndex_0(t *testing.T) {
+	var s []string
+	hint := ForceIndex(s...)
+	assert.Equal(t, hint.GetValue(), s)
+	assert.Equal(t, hint.GetKey(), KeyForceIndex)
+}
+
+func TestIgnoreIndex(t *testing.T) {
+	s := []string{`i_index1`, `i_index2`, `i_index3`}
+	hint := IgnoreIndex(s...)
+	assert.Equal(t, hint.GetValue(), s)
+	assert.Equal(t, hint.GetKey(), KeyIgnoreIndex)
+}
+
+func TestIgnoreIndex_0(t *testing.T) {
+	var s []string
+	hint := IgnoreIndex(s...)
+	assert.Equal(t, hint.GetValue(), s)
+	assert.Equal(t, hint.GetKey(), KeyIgnoreIndex)
+}
+
+func TestUseIndex(t *testing.T) {
+	s := []string{`u_index1`, `u_index2`, `u_index3`}
+	hint := UseIndex(s...)
+	assert.Equal(t, hint.GetValue(), s)
+	assert.Equal(t, hint.GetKey(), KeyUseIndex)
+}
+
+func TestUseIndex_0(t *testing.T) {
+	var s []string
+	hint := UseIndex(s...)
+	assert.Equal(t, hint.GetValue(), s)
+	assert.Equal(t, hint.GetKey(), KeyUseIndex)
+}
+
+func TestForUpdate(t *testing.T) {
+	hint := ForUpdate()
+	assert.Equal(t, hint.GetValue(), true)
+	assert.Equal(t, hint.GetKey(), KeyForUpdate)
 }

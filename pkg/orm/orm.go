@@ -99,6 +99,7 @@ type ormBase struct {
 
 var _ DQL = new(ormBase)
 var _ DML = new(ormBase)
+var _ DriverGetter = new(ormBase)
 
 // get model info and model reflect value
 func (o *ormBase) getMiInd(md interface{}, needPtr bool) (mi *modelInfo, ind reflect.Value) {

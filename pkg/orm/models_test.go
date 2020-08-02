@@ -18,6 +18,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/astaxie/beego/pkg/orm/hints"
 	"os"
 	"strings"
 	"time"
@@ -488,7 +489,7 @@ func init() {
 		os.Exit(2)
 	}
 
-	err := RegisterDataBase("default", DBARGS.Driver, DBARGS.Source, MaxIdleConnections(20))
+	err := RegisterDataBase("default", DBARGS.Driver, DBARGS.Source, hints.MaxIdleConnections(20))
 
 	if err != nil {
 		panic(fmt.Sprintf("can not register database: %v", err))
