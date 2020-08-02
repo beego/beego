@@ -24,6 +24,7 @@ import (
 // connWriter implements LoggerInterface.
 // it writes messages in keep-live tcp connection.
 type connWriter struct {
+	OldLoggerAdapter
 	lg             *logWriter
 	innerWriter    io.WriteCloser
 	ReconnectOnMsg bool   `json:"reconnectOnMsg"`

@@ -18,7 +18,6 @@ import (
 	"encoding/json"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/shiena/ansicolor"
 )
@@ -48,7 +47,9 @@ var colors = []brush{
 
 // consoleWriter implements LoggerInterface and writes messages to terminal.
 type consoleWriter struct {
+	OldLoggerAdapter
 	lg       *logWriter
+	fmtter LogFormatter
 	Level    int  `json:"level"`
 	Colorful bool `json:"color"` //this filed is useful only when system's terminal supports color
 }
@@ -59,6 +60,9 @@ func NewConsole() Logger {
 		lg:       newLogWriter(ansicolor.NewAnsiColorWriter(os.Stdout)),
 		Level:    LevelDebug,
 		Colorful: true,
+		fmtter: &consoleDefaultFormatter {
+			colorful: true,
+		},
 	}
 	return cw
 }
@@ -72,15 +76,34 @@ func (c *consoleWriter) Init(jsonConfig string) error {
 	return json.Unmarshal([]byte(jsonConfig), c)
 }
 
+type consoleDefaultFormatter struct {
+	colorful bool
+}
+
+func (cdf *consoleDefaultFormatter) Format(lm *LogMsg) string {
+	msg := lm.msg
+	if cdf.colorful {
+		msg = strings.Replace(lm.msg, levelPrefix[lm.level], colors[lm.level](levelPrefix[lm.level]), 1)
+	}
+
+	h, _, _ := formatTimeHeader(lm.when)
+
+	bytes := append(append(h, msg...), '\n')
+
+	return string(bytes)
+}
+
 // WriteMsg write message in console.
-func (c *consoleWriter) WriteMsg(when time.Time, msg string, level int) error {
-	if level > c.Level {
+func (c *consoleWriter) WriteLogMsg(lm *LogMsg) error {
+
+	// here is an example
+
+	if lm.level > c.Level {
 		return nil
 	}
-	if c.Colorful {
-		msg = strings.Replace(msg, levelPrefix[level], colors[level](levelPrefix[level]), 1)
-	}
-	c.lg.writeln(when, msg)
+
+	msg := c.fmtter.Format(lm)
+	c.lg.writeln(msg)
 	return nil
 }
 

@@ -30,6 +30,7 @@ func NewES() logs.Logger {
 // for example, anonymous:
 // import _ "github.com/astaxie/beego/logs/es"
 type esLogger struct {
+	logs.OldLoggerAdapter
 	*elasticsearch.Client
 	DSN   string `json:"dsn"`
 	Level int    `json:"level"`

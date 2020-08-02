@@ -32,6 +32,7 @@ import (
 // fileLogWriter implements LoggerInterface.
 // It writes messages by lines limit, file size limit, or time frequency.
 type fileLogWriter struct {
+	OldLoggerAdapter
 	sync.RWMutex // write log order by order and  atomic incr maxLinesCurLines and maxSizeCurSize
 	// The opened file
 	Filename   string `json:"filename"`

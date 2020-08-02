@@ -10,6 +10,7 @@ import (
 
 // JLWriter implements beego LoggerInterface and is used to send jiaoliao webhook
 type JLWriter struct {
+	OldLoggerAdapter
 	AuthorName  string `json:"authorname"`
 	Title       string `json:"title"`
 	WebhookURL  string `json:"webhookurl"`

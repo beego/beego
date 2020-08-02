@@ -10,6 +10,7 @@ import (
 
 // SLACKWriter implements beego LoggerInterface and is used to send jiaoliao webhook
 type SLACKWriter struct {
+	OldLoggerAdapter
 	WebhookURL string `json:"webhookurl"`
 	Level      int    `json:"level"`
 }

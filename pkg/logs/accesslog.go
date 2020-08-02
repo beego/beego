@@ -81,3 +81,20 @@ func AccessLog(r *AccessLogRecord, format string) {
 	}
 	beeLogger.writeMsg(levelLoggerImpl, strings.TrimSpace(msg))
 }
+
+// we don't need to change this
+// but users can register their formatter
+type IgnoreTimeFormatter struct {
+}
+
+func (itf *IgnoreTimeFormatter) Format(lm *LogMsg) string {
+	// isJson should be calculate by lm.msg
+	isJson := true
+	if isJson {
+		return lm.msg
+	} else {
+		// back to default implementation
+		// here is an example,
+		return lm.msg + lm.when.String()
+	}
+}

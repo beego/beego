@@ -26,6 +26,7 @@ import (
 
 // SMTPWriter implements LoggerInterface and is used to send emails via given SMTP-server.
 type SMTPWriter struct {
+	OldLoggerAdapter
 	Username           string   `json:"username"`
 	Password           string   `json:"password"`
 	Host               string   `json:"host"`

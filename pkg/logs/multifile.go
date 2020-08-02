@@ -25,6 +25,7 @@ import (
 // and write the error-level logs to project.error.log and write the debug-level logs to project.debug.log
 // the rotate attribute also  acts like fileLogWriter
 type multiFileLogWriter struct {
+	OldLoggerAdapter
 	writers       [LevelDebug + 1 + 1]*fileLogWriter // the last one for fullLogWriter
 	fullLogWriter *fileLogWriter
 	Separate      []string `json:"separate"`

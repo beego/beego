@@ -33,6 +33,7 @@ type Config struct {
 // aliLSWriter implements LoggerInterface.
 // it writes messages in keep-live tcp connection.
 type aliLSWriter struct {
+	logs.OldLoggerAdapter
 	store    *LogStore
 	group    []*LogGroup
 	withMap  bool
