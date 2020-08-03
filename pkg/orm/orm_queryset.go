@@ -71,7 +71,7 @@ type querySet struct {
 	groups     []string
 	orders     []string
 	distinct   bool
-	forupdate  bool
+	forUpdate  bool
 	orm        *ormBase
 	ctx        context.Context
 	forContext bool
@@ -148,7 +148,25 @@ func (o querySet) Distinct() QuerySeter {
 
 // add FOR UPDATE to SELECT
 func (o querySet) ForUpdate() QuerySeter {
-	o.forupdate = true
+	o.forUpdate = true
+	return &o
+}
+
+// ForceIndex force index for query
+func (o querySet) ForceIndex(indexes ...string) QuerySeter {
+	//todo
+	return &o
+}
+
+// UseIndex use index for query
+func (o querySet) UseIndex(indexes ...string) QuerySeter {
+	//todo
+	return &o
+}
+
+// IgnoreIndex ignore index for query
+func (o querySet) IgnoreIndex(indexes ...string) QuerySeter {
+	//todo
 	return &o
 }
 

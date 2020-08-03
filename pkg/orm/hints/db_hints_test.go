@@ -75,7 +75,6 @@ func TestMaxStmtCacheSize(t *testing.T) {
 	assert.Equal(t, hint.GetKey(), KeyMaxStmtCacheSize)
 }
 
-
 func TestForceIndex(t *testing.T) {
 	s := []string{`f_index1`, `f_index2`, `f_index3`}
 	hint := ForceIndex(s...)
@@ -122,4 +121,34 @@ func TestForUpdate(t *testing.T) {
 	hint := ForUpdate()
 	assert.Equal(t, hint.GetValue(), true)
 	assert.Equal(t, hint.GetKey(), KeyForUpdate)
+}
+
+func TestDefaultRelDepth(t *testing.T) {
+	hint := DefaultRelDepth()
+	assert.Equal(t, hint.GetValue(), true)
+	assert.Equal(t, hint.GetKey(), KeyRelDepth)
+}
+
+func TestRelDepth(t *testing.T) {
+	hint := RelDepth(157965)
+	assert.Equal(t, hint.GetValue(), 157965)
+	assert.Equal(t, hint.GetKey(), KeyRelDepth)
+}
+
+func TestLimit(t *testing.T) {
+	hint := Limit(1579625)
+	assert.Equal(t, hint.GetValue(), int64(1579625))
+	assert.Equal(t, hint.GetKey(), KeyLimit)
+}
+
+func TestOffset(t *testing.T) {
+	hint := Offset(int64(1572123965))
+	assert.Equal(t, hint.GetValue(), int64(1572123965))
+	assert.Equal(t, hint.GetKey(), KeyOffset)
+}
+
+func TestOrderBy(t *testing.T) {
+	hint := OrderBy(`-ID`)
+	assert.Equal(t, hint.GetValue(), `-ID`)
+	assert.Equal(t, hint.GetKey(), KeyOrderBy)
 }

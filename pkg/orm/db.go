@@ -1017,7 +1017,7 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 	}
 	query := fmt.Sprintf("%s %s FROM %s%s%s T0 %s%s%s%s%s", sqlSelect, sels, Q, mi.table, Q, join, where, groupBy, orderBy, limit)
 
-	if qs.forupdate {
+	if qs.forUpdate {
 		query += " FOR UPDATE"
 	}
 
@@ -1779,10 +1779,6 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 	}
 
 	return cnt, nil
-}
-
-func (d *dbBase) RowsTo(dbQuerier, *querySet, *modelInfo, *Condition, interface{}, string, string, *time.Location) (int64, error) {
-	return 0, nil
 }
 
 // flag of update joined record.

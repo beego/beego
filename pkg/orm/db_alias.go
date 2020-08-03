@@ -423,7 +423,7 @@ func AddAliasWthDB(aliasName, driverName string, db *sql.DB, params ...common.KV
 }
 
 // RegisterDataBase Setting the database connect params. Use the database driver self dataSource args.
-func RegisterDataBase(aliasName, driverName, dataSource string, hints ...common.KV) error {
+func RegisterDataBase(aliasName, driverName, dataSource string, params ...common.KV) error {
 	var (
 		err error
 		db  *sql.DB
@@ -437,7 +437,7 @@ func RegisterDataBase(aliasName, driverName, dataSource string, hints ...common.
 		goto end
 	}
 
-	al, err = addAliasWthDB(aliasName, driverName, db, hints...)
+	al, err = addAliasWthDB(aliasName, driverName, db, params...)
 	if err != nil {
 		goto end
 	}
