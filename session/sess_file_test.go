@@ -56,16 +56,24 @@ func TestFileProvider_SessionExist(t *testing.T) {
 
 	_ = fp.SessionInit(180, sessionPath)
 
-	if fp.SessionExist(sid) {
+	exists, err := fp.SessionExist(sid)
+	if err != nil{
+		t.Error(err)
+	}
+	if exists {
 		t.Error()
 	}
 
-	_, err := fp.SessionRead(sid)
+	_, err = fp.SessionRead(sid)
 	if err != nil {
 		t.Error(err)
 	}
 
-	if !fp.SessionExist(sid) {
+	exists, err = fp.SessionExist(sid)
+	if err != nil {
+		t.Error(err)
+	}
+	if !exists {
 		t.Error()
 	}
 }
@@ -79,15 +87,27 @@ func TestFileProvider_SessionExist2(t *testing.T) {
 
 	_ = fp.SessionInit(180, sessionPath)
 
-	if fp.SessionExist(sid) {
+	exists, err := fp.SessionExist(sid)
+	if err != nil {
+		t.Error(err)
+	}
+	if exists {
 		t.Error()
 	}
 
-	if fp.SessionExist("") {
+	exists, err = fp.SessionExist("")
+	if err != nil {
+		t.Error(err)
+	}
+	if exists {
 		t.Error()
 	}
 
-	if fp.SessionExist("1") {
+	exists, err = fp.SessionExist("1")
+	if err != nil {
+		t.Error(err)
+	}
+	if exists {
 		t.Error()
 	}
 }
@@ -171,7 +191,11 @@ func TestFileProvider_SessionRegenerate(t *testing.T) {
 		t.Error(err)
 	}
 
-	if !fp.SessionExist(sid) {
+	exists, err := fp.SessionExist(sid)
+	if err != nil {
+		t.Error(err)
+	}
+	if !exists {
 		t.Error()
 	}
 
@@ -180,11 +204,19 @@ func TestFileProvider_SessionRegenerate(t *testing.T) {
 		t.Error(err)
 	}
 
-	if fp.SessionExist(sid) {
+	exists, err = fp.SessionExist(sid)
+	if err != nil {
+		t.Error(err)
+	}
+	if exists {
 		t.Error()
 	}
 
-	if !fp.SessionExist(sidNew) {
+	exists, err = fp.SessionExist(sidNew)
+	if err != nil {
+		t.Error(err)
+	}
+	if !exists {
 		t.Error()
 	}
 }
@@ -203,7 +235,11 @@ func TestFileProvider_SessionDestroy(t *testing.T) {
 		t.Error(err)
 	}
 
-	if !fp.SessionExist(sid) {
+	exists, err := fp.SessionExist(sid)
+	if err != nil {
+		t.Error(err)
+	}
+	if !exists {
 		t.Error()
 	}
 
@@ -212,7 +248,11 @@ func TestFileProvider_SessionDestroy(t *testing.T) {
 		t.Error(err)
 	}
 
-	if fp.SessionExist(sid) {
+	exists, err = fp.SessionExist(sid)
+	if err != nil {
+		t.Error(err)
+	}
+	if exists {
 		t.Error()
 	}
 }
