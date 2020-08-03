@@ -68,7 +68,7 @@ func (p *Provider) SessionRead(sid string) (session.Store, error) {
 }
 
 // SessionExist judged whether sid is exist in session
-func (p *Provider) SessionExist(sid string) bool {
+func (p *Provider) SessionExist(sid string) (bool, error) {
 	if p.client == nil {
 		if err := p.connectInit(); err != nil {
 			panic(err)
@@ -76,12 +76,12 @@ func (p *Provider) SessionExist(sid string) bool {
 	}
 	value, err := p.client.Get(sid)
 	if err != nil {
-		panic(err)
+		return false, err
 	}
 	if value == nil || len(value.(string)) == 0 {
-		return false
+		return false, nil
 	}
-	return true
+	return true, nil
 }
 
 // SessionRegenerate regenerate session with new sid and delete oldsid
