@@ -25,6 +25,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
+
 	// As tidb can't use go get, so disable the tidb testing now
 	// _ "github.com/pingcap/tidb"
 
@@ -233,6 +234,16 @@ type UserBig struct {
 	Name string
 }
 
+type Attributes struct {
+	Name string
+	Color string
+}
+type SerializedModel struct {
+	Id         int
+	Attributes []Attributes `orm:"null;" serializer:"json"`
+	IntArray []int `serializer:"json"`
+	AttributePtr *Attributes `serializer:"json"`
+}
 type User struct {
 	ID           int    `orm:"column(id)"`
 	UserName     string `orm:"size(30);unique"`
@@ -418,8 +429,8 @@ var DBARGS = struct {
 	Source string
 	Debug  string
 }{
-	os.Getenv("ORM_DRIVER"),
-	os.Getenv("ORM_SOURCE"),
+	"sqlite3",
+	"ddd.db",
 	os.Getenv("ORM_DEBUG"),
 }
 

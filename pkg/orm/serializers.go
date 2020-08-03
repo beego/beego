@@ -10,7 +10,7 @@ var serializerMap = make(map[string]FieldSerializer)
 // FieldSerializer is the interface which all serializers must implement
 type FieldSerializer interface {
 	Serialize(obj interface{}) string
-	Deserialize(fieldContent string) interface{}
+	Deserialize(fieldContent string,originalField interface{}) interface{}
 }
 
 // RegisterSerializer is used to register a serializer into the SerializerMap
@@ -28,10 +28,9 @@ func (serializer *jsonFieldSerializer) Serialize(xyz interface{}) string {
 }
 
 // Deserialize -- deserializes objects to their original json format.
-func (serializer *jsonFieldSerializer) Deserialize(content string) interface{} {
-	var obj []string
-	json.Unmarshal([]byte(content), &obj)
-	return obj
+func (serializer *jsonFieldSerializer) Deserialize(content string,originalField interface{}) interface{} {
+	json.Unmarshal([]byte(content), originalField)
+	return originalField
 }
 
 func init() {

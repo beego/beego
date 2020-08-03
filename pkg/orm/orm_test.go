@@ -200,6 +200,7 @@ func TestSyncDb(t *testing.T) {
 	RegisterModel(new(IntegerPk))
 	RegisterModel(new(UintPk))
 	RegisterModel(new(PtrPk))
+	RegisterModel(new(SerializedModel))
 
 	err := RunSyncdb("default", true, Debug)
 	throwFail(t, err)
@@ -224,6 +225,7 @@ func TestRegisterModels(t *testing.T) {
 	RegisterModel(new(IntegerPk))
 	RegisterModel(new(UintPk))
 	RegisterModel(new(PtrPk))
+	RegisterModel(new(SerializedModel))
 
 	BootStrap()
 
@@ -231,6 +233,28 @@ func TestRegisterModels(t *testing.T) {
 	dDbBaser = getDbAlias("default").DbBaser
 }
 
+func TestSerializer(t *testing.T){
+	serializedModelInstance := new(SerializedModel)
+	var attrs []Attributes
+	for i := 0 ; i < 2 ; i++{
+		attrs = append(attrs,Attributes{Name: fmt.Sprintf("Name-%d",i),Color: fmt.Sprintf("Color-%d",i)})
+	}
+	serializedModelInstance.IntArray = []int{1,2,3,4,5}
+	serializedModelInstance.Attributes = attrs
+	//serializedModelInstance.G = nil
+	_, err := dORM.Insert(serializedModelInstance)
+	assert.Nil(t,err)
+	s := &SerializedModel{Id: serializedModelInstance.Id}
+	err = dORM.Read(s)
+	assert.Nil(t,err)
+	assert.Nil(t,AssertIs(len(s.Attributes),2))
+	assert.Equal(t,Attributes{Name:"Name-0",Color: "Color-0"},s.Attributes[0])
+	assert.Equal(t,Attributes{Name:"Name-1",Color: "Color-1"},s.Attributes[1])
+	assert.Equal(t,[]int{1,2,3,4,5},s.IntArray)
+	
+
+
+}
 func TestModelSyntax(t *testing.T) {
 	user := &User{}
 	ind := reflect.ValueOf(user).Elem()

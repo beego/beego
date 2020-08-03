@@ -1455,8 +1455,12 @@ setValue:
 	case fieldType == TypeVarCharField || fieldType == TypeCharField || fieldType == TypeTextField || fieldType == TypeJSONField || fieldType == TypeJsonbField:
 		if fi.serializer != nil {
 			fieldSerializer := *fi.serializer
-			value := fieldSerializer.Deserialize(value.(string))
-			field.Set(reflect.ValueOf(value))
+			originalFieldType := reflect.New(fi.addrValue.Type()).Interface()
+			value := fieldSerializer.Deserialize(value.(string),originalFieldType)
+			v := reflect.Indirect(reflect.ValueOf(value))
+			if !(v.Kind() == reflect.Ptr && v.IsNil()) {
+				field.Set(reflect.Indirect(reflect.ValueOf(value)))
+			}
 		} else if isNative {
 			if ns, ok := field.Interface().(sql.NullString); ok {
 				if value == nil {
