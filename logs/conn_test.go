@@ -18,7 +18,6 @@ import (
 	"net"
 	"os"
 	"testing"
-	"time"
 )
 
 // ConnTCPListener takes a TCP listener and accepts n TCP connections
@@ -74,7 +73,7 @@ func TestReconnect(t *testing.T) {
 	select {
 	case second := <-newConns:
 		second.Close()
-	case <-time.After(5 * time.Second):
+	default:
 		t.Error("Did not reconnect")
 	}
 }
