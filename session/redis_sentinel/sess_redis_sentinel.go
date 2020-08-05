@@ -189,12 +189,12 @@ func (rp *Provider) SessionRead(sid string) (session.Store, error) {
 }
 
 // SessionExist check redis_sentinel session exist by sid
-func (rp *Provider) SessionExist(sid string) (bool, error) {
+func (rp *Provider) SessionExist(sid string) bool {
 	c := rp.poollist
 	if existed, err := c.Exists(sid).Result(); err != nil || existed == 0 {
-		return false, err
+		return false
 	}
-	return true, nil
+	return true
 }
 
 // SessionRegenerate generate new sid for redis_sentinel session
