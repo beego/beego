@@ -13,5 +13,7 @@ beego is inspired by Tornado, Sinatra and Flask with the added benefit of some G
 	}
 
 more information: http://beego.me
+
+Deprecated: using pkg/, we will delete this in v2.1.0
 */
 package beego
