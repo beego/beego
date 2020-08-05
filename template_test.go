@@ -16,7 +16,7 @@ package beego
 
 import (
 	"bytes"
-	"github.com/astaxie/beego/testdata"
+	"github.com/astaxie/beego/test"
 	"github.com/elazarl/go-bindata-assetfs"
 	"net/http"
 	"os"
@@ -291,7 +291,7 @@ var outputBinData = `<!DOCTYPE html>
 
 func TestFsBinData(t *testing.T) {
 	SetTemplateFSFunc(func() http.FileSystem {
-		return TestingFileSystem{&assetfs.AssetFS{Asset: testdata.Asset, AssetDir: testdata.AssetDir, AssetInfo: testdata.AssetInfo}}
+		return TestingFileSystem{&assetfs.AssetFS{Asset: test.Asset, AssetDir: test.AssetDir, AssetInfo: test.AssetInfo}}
 	})
 	dir := "views"
 	if err := AddViewPath("views"); err != nil {
