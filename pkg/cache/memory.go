@@ -22,11 +22,11 @@ import (
 )
 
 var (
-	// DefaultEvery means the clock time of recycling the expired cache items in memory.
+	// Recycle the expired cache items in memory (in seconds)
 	DefaultEvery = 60 // 1 minute
 )
 
-// MemoryItem store memory cache item.
+// MemoryItem stores memory cache item.
 type MemoryItem struct {
 	val         interface{}
 	createdTime time.Time
@@ -41,8 +41,8 @@ func (mi *MemoryItem) isExpire() bool {
 	return time.Now().Sub(mi.createdTime) > mi.lifespan
 }
 
-// MemoryCache is Memory cache adapter.
-// it contains a RW locker for safe map storage.
+// MemoryCache is a memory cache adapter.
+// Contains a RW locker for safe map storage.
 type MemoryCache struct {
 	sync.RWMutex
 	dur   time.Duration
@@ -56,8 +56,8 @@ func NewMemoryCache() Cache {
 	return &cache
 }
 
-// Get cache from memory.
-// if non-existed or expired, return nil.
+// Get returns cache from memory.
+// If non-existent or expired, return nil.
 func (bc *MemoryCache) Get(name string) interface{} {
 	bc.RLock()
 	defer bc.RUnlock()
@@ -71,7 +71,7 @@ func (bc *MemoryCache) Get(name string) interface{} {
 }
 
 // GetMulti gets caches from memory.
-// if non-existed or expired, return nil.
+// If non-existent or expired, return nil.
 func (bc *MemoryCache) GetMulti(names []string) []interface{} {
 	var rc []interface{}
 	for _, name := range names {
@@ -80,8 +80,8 @@ func (bc *MemoryCache) GetMulti(names []string) []interface{} {
 	return rc
 }
 
-// Put cache to memory.
-// if lifespan is 0, it will be forever till restart.
+// Put puts cache into memory.
+// If lifespan is 0, it will never overwrite this value
 func (bc *MemoryCache) Put(name string, value interface{}, lifespan time.Duration) error {
 	bc.Lock()
 	defer bc.Unlock()
@@ -107,8 +107,8 @@ func (bc *MemoryCache) Delete(name string) error {
 	return nil
 }
 
-// Incr increase cache counter in memory.
-// it supports int,int32,int64,uint,uint32,uint64.
+// Incr increases cache counter in memory.
+// Supports int,int32,int64,uint,uint32,uint64.
 func (bc *MemoryCache) Incr(key string) error {
 	bc.Lock()
 	defer bc.Unlock()
@@ -135,7 +135,7 @@ func (bc *MemoryCache) Incr(key string) error {
 	return nil
 }
 
-// Decr decrease counter in memory.
+// Decr decreases counter in memory.
 func (bc *MemoryCache) Decr(key string) error {
 	bc.Lock()
 	defer bc.Unlock()
@@ -174,7 +174,7 @@ func (bc *MemoryCache) Decr(key string) error {
 	return nil
 }
 
-// IsExist check cache exist in memory.
+// IsExist checks if cache exists in memory.
 func (bc *MemoryCache) IsExist(name string) bool {
 	bc.RLock()
 	defer bc.RUnlock()
@@ -184,7 +184,7 @@ func (bc *MemoryCache) IsExist(name string) bool {
 	return false
 }
 
-// ClearAll will delete all cache in memory.
+// ClearAll deletes all cache in memory.
 func (bc *MemoryCache) ClearAll() error {
 	bc.Lock()
 	defer bc.Unlock()
@@ -192,7 +192,7 @@ func (bc *MemoryCache) ClearAll() error {
 	return nil
 }
 
-// StartAndGC start memory cache. it will check expiration in every clock time.
+// StartAndGC starts memory cache. Checks expiration in every clock time.
 func (bc *MemoryCache) StartAndGC(config string) error {
 	var cf map[string]int
 	json.Unmarshal([]byte(config), &cf)
@@ -230,7 +230,7 @@ func (bc *MemoryCache) vacuum() {
 	}
 }
 
-// expiredKeys returns key list which are expired.
+// expiredKeys returns keys list which are expired.
 func (bc *MemoryCache) expiredKeys() (keys []string) {
 	bc.RLock()
 	defer bc.RUnlock()
@@ -242,7 +242,7 @@ func (bc *MemoryCache) expiredKeys() (keys []string) {
 	return
 }
 
-// clearItems removes all the items which key in keys.
+// ClearItems removes all items who's key is in keys
 func (bc *MemoryCache) clearItems(keys []string) {
 	bc.Lock()
 	defer bc.Unlock()

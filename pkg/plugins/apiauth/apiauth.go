@@ -65,14 +65,14 @@ import (
 	"sort"
 	"time"
 
-	"github.com/astaxie/beego/pkg"
+	beego "github.com/astaxie/beego/pkg"
 	"github.com/astaxie/beego/pkg/context"
 )
 
-// AppIDToAppSecret is used to get appsecret throw appid
+// AppIDToAppSecret gets appsecret through appid
 type AppIDToAppSecret func(string) string
 
-// APIBasicAuth use the basic appid/appkey as the AppIdToAppSecret
+// APIBasicAuth uses the basic appid/appkey as the AppIdToAppSecret
 func APIBasicAuth(appid, appkey string) beego.FilterFunc {
 	ft := func(aid string) string {
 		if aid == appid {
@@ -83,56 +83,58 @@ func APIBasicAuth(appid, appkey string) beego.FilterFunc {
 	return APISecretAuth(ft, 300)
 }
 
-// APIBaiscAuth calls APIBasicAuth for previous callers
+// APIBasicAuth calls APIBasicAuth for previous callers
 func APIBaiscAuth(appid, appkey string) beego.FilterFunc {
 	return APIBasicAuth(appid, appkey)
 }
 
-// APISecretAuth use AppIdToAppSecret verify and
+// APISecretAuth uses AppIdToAppSecret verify and
 func APISecretAuth(f AppIDToAppSecret, timeout int) beego.FilterFunc {
 	return func(ctx *context.Context) {
 		if ctx.Input.Query("appid") == "" {
 			ctx.ResponseWriter.WriteHeader(403)
-			ctx.WriteString("miss query param: appid")
+			ctx.WriteString("missing query parameter: appid")
 			return
 		}
 		appsecret := f(ctx.Input.Query("appid"))
 		if appsecret == "" {
 			ctx.ResponseWriter.WriteHeader(403)
-			ctx.WriteString("not exist this appid")
+			ctx.WriteString("appid query parameter missing")
 			return
 		}
 		if ctx.Input.Query("signature") == "" {
 			ctx.ResponseWriter.WriteHeader(403)
-			ctx.WriteString("miss query param: signature")
+			ctx.WriteString("missing query parameter: signature")
+
 			return
 		}
 		if ctx.Input.Query("timestamp") == "" {
 			ctx.ResponseWriter.WriteHeader(403)
-			ctx.WriteString("miss query param: timestamp")
+			ctx.WriteString("missing query parameter: timestamp")
 			return
 		}
 		u, err := time.Parse("2006-01-02 15:04:05", ctx.Input.Query("timestamp"))
 		if err != nil {
 			ctx.ResponseWriter.WriteHeader(403)
-			ctx.WriteString("timestamp format is error, should 2006-01-02 15:04:05")
+			ctx.WriteString("incorrect timestamp format. Should be in the form 2006-01-02 15:04:05")
+
 			return
 		}
 		t := time.Now()
 		if t.Sub(u).Seconds() > float64(timeout) {
 			ctx.ResponseWriter.WriteHeader(403)
-			ctx.WriteString("timeout! the request time is long ago, please try again")
+			ctx.WriteString("request timer timeout exceeded. Please try again")
 			return
 		}
 		if ctx.Input.Query("signature") !=
 			Signature(appsecret, ctx.Input.Method(), ctx.Request.Form, ctx.Input.URL()) {
 			ctx.ResponseWriter.WriteHeader(403)
-			ctx.WriteString("auth failed")
+			ctx.WriteString("authentication failed")
 		}
 	}
 }
 
-// Signature used to generate signature with the appsecret/method/params/RequestURI
+// Signature generates signature with appsecret/method/params/RequestURI
 func Signature(appsecret, method string, params url.Values, RequestURL string) (result string) {
 	var b bytes.Buffer
 	keys := make([]string, len(params))
