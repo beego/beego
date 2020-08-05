@@ -22,7 +22,7 @@ import (
 )
 
 var (
-	// Recycle the expired cache items in memory (in seconds)
+	// Timer for how often to recycle the expired cache items in memory (in seconds)
 	DefaultEvery = 60 // 1 minute
 )
 
@@ -81,7 +81,7 @@ func (bc *MemoryCache) GetMulti(names []string) []interface{} {
 }
 
 // Put puts cache into memory.
-// If lifespan is 0, it will never overwrite this value
+// If lifespan is 0, it will never overwrite this value unless restarted
 func (bc *MemoryCache) Put(name string, value interface{}, lifespan time.Duration) error {
 	bc.Lock()
 	defer bc.Unlock()
