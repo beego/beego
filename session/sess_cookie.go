@@ -147,8 +147,8 @@ func (pder *CookieProvider) SessionRead(sid string) (Store, error) {
 }
 
 // SessionExist Cookie session is always existed
-func (pder *CookieProvider) SessionExist(sid string) (bool, error) {
-	return true, nil
+func (pder *CookieProvider) SessionExist(sid string) bool {
+	return true
 }
 
 // SessionRegenerate Implement method, no used.

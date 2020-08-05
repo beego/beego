@@ -149,16 +149,16 @@ func (rp *MemProvider) SessionRead(sid string) (session.Store, error) {
 }
 
 // SessionExist check memcache session exist by sid
-func (rp *MemProvider) SessionExist(sid string) (bool, error) {
+func (rp *MemProvider) SessionExist(sid string) bool {
 	if client == nil {
 		if err := rp.connectInit(); err != nil {
-			return false, err
+			return false
 		}
 	}
 	if item, err := client.Get(sid); err != nil || len(item.Value) == 0 {
-		return false, err
+		return false
 	}
-	return true, nil
+	return true
 }
 
 // SessionRegenerate generate new sid for memcache session

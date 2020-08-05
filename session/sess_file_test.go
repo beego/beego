@@ -56,24 +56,16 @@ func TestFileProvider_SessionExist(t *testing.T) {
 
 	_ = fp.SessionInit(180, sessionPath)
 
-	exists, err := fp.SessionExist(sid)
-	if err != nil{
-		t.Error(err)
-	}
-	if exists {
+	if fp.SessionExist(sid) {
 		t.Error()
 	}
 
-	_, err = fp.SessionRead(sid)
+	_, err := fp.SessionRead(sid)
 	if err != nil {
 		t.Error(err)
 	}
 
-	exists, err = fp.SessionExist(sid)
-	if err != nil {
-		t.Error(err)
-	}
-	if !exists {
+	if !fp.SessionExist(sid) {
 		t.Error()
 	}
 }
@@ -87,27 +79,15 @@ func TestFileProvider_SessionExist2(t *testing.T) {
 
 	_ = fp.SessionInit(180, sessionPath)
 
-	exists, err := fp.SessionExist(sid)
-	if err != nil {
-		t.Error(err)
-	}
-	if exists {
+	if fp.SessionExist(sid) {
 		t.Error()
 	}
 
-	exists, err = fp.SessionExist("")
-	if err != nil {
-		t.Error(err)
-	}
-	if exists {
+	if fp.SessionExist("") {
 		t.Error()
 	}
 
-	exists, err = fp.SessionExist("1")
-	if err != nil {
-		t.Error(err)
-	}
-	if exists {
+	if fp.SessionExist("1") {
 		t.Error()
 	}
 }
@@ -191,11 +171,7 @@ func TestFileProvider_SessionRegenerate(t *testing.T) {
 		t.Error(err)
 	}
 
-	exists, err := fp.SessionExist(sid)
-	if err != nil {
-		t.Error(err)
-	}
-	if !exists {
+	if !fp.SessionExist(sid) {
 		t.Error()
 	}
 
@@ -204,19 +180,11 @@ func TestFileProvider_SessionRegenerate(t *testing.T) {
 		t.Error(err)
 	}
 
-	exists, err = fp.SessionExist(sid)
-	if err != nil {
-		t.Error(err)
-	}
-	if exists {
+	if fp.SessionExist(sid) {
 		t.Error()
 	}
 
-	exists, err = fp.SessionExist(sidNew)
-	if err != nil {
-		t.Error(err)
-	}
-	if !exists {
+	if !fp.SessionExist(sidNew) {
 		t.Error()
 	}
 }
@@ -235,11 +203,7 @@ func TestFileProvider_SessionDestroy(t *testing.T) {
 		t.Error(err)
 	}
 
-	exists, err := fp.SessionExist(sid)
-	if err != nil {
-		t.Error(err)
-	}
-	if !exists {
+	if !fp.SessionExist(sid) {
 		t.Error()
 	}
 
@@ -248,11 +212,7 @@ func TestFileProvider_SessionDestroy(t *testing.T) {
 		t.Error(err)
 	}
 
-	exists, err = fp.SessionExist(sid)
-	if err != nil {
-		t.Error(err)
-	}
-	if exists {
+	if fp.SessionExist(sid) {
 		t.Error()
 	}
 }

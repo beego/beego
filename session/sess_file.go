@@ -176,20 +176,17 @@ func (fp *FileProvider) SessionRead(sid string) (Store, error) {
 
 // SessionExist Check file session exist.
 // it checks the file named from sid exist or not.
-func (fp *FileProvider) SessionExist(sid string) (bool, error) {
+func (fp *FileProvider) SessionExist(sid string) bool {
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()
 
 	if len(sid) < 2 {
 		SLogger.Println("min length of session id is 2", sid)
-		return false, nil
+		return false
 	}
 
 	_, err := os.Stat(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid))
-	if err != nil {
-		return false, nil
-	}
-	return true, nil
+	return err == nil
 }
 
 // SessionDestroy Remove all files in this save path
