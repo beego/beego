@@ -101,7 +101,7 @@ Maybe you will find the **memory** provider is a good example.
 	type Provider interface {
 		SessionInit(gclifetime int64, config string) error
 		SessionRead(sid string) (SessionStore, error)
-		SessionExist(sid string) bool
+		SessionExist(sid string) (bool, error)
 		SessionRegenerate(oldsid, sid string) (SessionStore, error)
 		SessionDestroy(sid string) error
 		SessionAll() int //get all active session
