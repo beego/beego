@@ -35,6 +35,7 @@ import (
 
 var (
 	// BeeApp is an application instance
+	// Deprecated: using pkg/, we will delete this in v2.1.0
 	BeeApp *App
 )
 
@@ -50,6 +51,7 @@ type App struct {
 }
 
 // NewApp returns a new beego application.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func NewApp() *App {
 	cr := NewControllerRegister()
 	app := &App{Handlers: cr, Server: &http.Server{}}
@@ -57,9 +59,11 @@ func NewApp() *App {
 }
 
 // MiddleWare function for http.Handler
+// Deprecated: using pkg/, we will delete this in v2.1.0
 type MiddleWare func(http.Handler) http.Handler
 
 // Run beego application.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (app *App) Run(mws ...MiddleWare) {
 	addr := BConfig.Listen.HTTPAddr
 
@@ -254,6 +258,7 @@ func (app *App) Run(mws ...MiddleWare) {
 //  beego.Router("/api/create",&RestController{},"post:CreateFood")
 //  beego.Router("/api/update",&RestController{},"put:UpdateFood")
 //  beego.Router("/api/delete",&RestController{},"delete:DeleteFood")
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func Router(rootpath string, c ControllerInterface, mappingMethods ...string) *App {
 	BeeApp.Handlers.Add(rootpath, c, mappingMethods...)
 	return BeeApp
@@ -268,6 +273,7 @@ func Router(rootpath string, c ControllerInterface, mappingMethods ...string) *A
 // Usage (replace "GET" with "*" for all methods):
 //  beego.UnregisterFixedRoute("/yourpreviouspath", "GET")
 //  beego.Router("/yourpreviouspath", yourControllerAddress, "get:GetNewPage")
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func UnregisterFixedRoute(fixedRoute string, method string) *App {
 	subPaths := splitPath(fixedRoute)
 	if method == "" || method == "*" {
@@ -364,6 +370,7 @@ func findAndRemoveSingleTree(entryPointTree *Tree) {
 // the comments @router url methodlist
 // url support all the function Router's pattern
 // methodlist [get post head put delete options *]
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func Include(cList ...ControllerInterface) *App {
 	BeeApp.Handlers.Include(cList...)
 	return BeeApp
@@ -372,6 +379,7 @@ func Include(cList ...ControllerInterface) *App {
 // RESTRouter adds a restful controller handler to BeeApp.
 // its' controller implements beego.ControllerInterface and
 // defines a param "pattern/:objectId" to visit each resource.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func RESTRouter(rootpath string, c ControllerInterface) *App {
 	Router(rootpath, c)
 	Router(path.Join(rootpath, ":objectId"), c)
@@ -382,6 +390,7 @@ func RESTRouter(rootpath string, c ControllerInterface) *App {
 // it's same to App.AutoRouter.
 // if beego.AddAuto(&MainContorlller{}) and MainController has methods List and Page,
 // visit the url /main/list to exec List function or /main/page to exec Page function.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func AutoRouter(c ControllerInterface) *App {
 	BeeApp.Handlers.AddAuto(c)
 	return BeeApp
@@ -391,6 +400,7 @@ func AutoRouter(c ControllerInterface) *App {
 // it's same to App.AutoRouterWithPrefix.
 // if beego.AutoPrefix("/admin",&MainContorlller{}) and MainController has methods List and Page,
 // visit the url /admin/main/list to exec List function or /admin/main/page to exec Page function.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func AutoPrefix(prefix string, c ControllerInterface) *App {
 	BeeApp.Handlers.AddAutoPrefix(prefix, c)
 	return BeeApp
@@ -401,6 +411,7 @@ func AutoPrefix(prefix string, c ControllerInterface) *App {
 //    beego.Get("/", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func Get(rootpath string, f FilterFunc) *App {
 	BeeApp.Handlers.Get(rootpath, f)
 	return BeeApp
@@ -411,6 +422,7 @@ func Get(rootpath string, f FilterFunc) *App {
 //    beego.Post("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func Post(rootpath string, f FilterFunc) *App {
 	BeeApp.Handlers.Post(rootpath, f)
 	return BeeApp
@@ -421,6 +433,7 @@ func Post(rootpath string, f FilterFunc) *App {
 //    beego.Delete("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func Delete(rootpath string, f FilterFunc) *App {
 	BeeApp.Handlers.Delete(rootpath, f)
 	return BeeApp
@@ -431,6 +444,7 @@ func Delete(rootpath string, f FilterFunc) *App {
 //    beego.Put("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func Put(rootpath string, f FilterFunc) *App {
 	BeeApp.Handlers.Put(rootpath, f)
 	return BeeApp
@@ -441,6 +455,7 @@ func Put(rootpath string, f FilterFunc) *App {
 //    beego.Head("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func Head(rootpath string, f FilterFunc) *App {
 	BeeApp.Handlers.Head(rootpath, f)
 	return BeeApp
@@ -451,6 +466,7 @@ func Head(rootpath string, f FilterFunc) *App {
 //    beego.Options("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func Options(rootpath string, f FilterFunc) *App {
 	BeeApp.Handlers.Options(rootpath, f)
 	return BeeApp
@@ -461,6 +477,7 @@ func Options(rootpath string, f FilterFunc) *App {
 //    beego.Patch("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func Patch(rootpath string, f FilterFunc) *App {
 	BeeApp.Handlers.Patch(rootpath, f)
 	return BeeApp
@@ -471,6 +488,7 @@ func Patch(rootpath string, f FilterFunc) *App {
 //    beego.Any("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func Any(rootpath string, f FilterFunc) *App {
 	BeeApp.Handlers.Any(rootpath, f)
 	return BeeApp
@@ -481,6 +499,7 @@ func Any(rootpath string, f FilterFunc) *App {
 //    beego.Handler("/api", http.HandlerFunc(func (w http.ResponseWriter, r *http.Request) {
 //          fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
 //    }))
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func Handler(rootpath string, h http.Handler, options ...interface{}) *App {
 	BeeApp.Handlers.Handler(rootpath, h, options...)
 	return BeeApp
@@ -490,6 +509,7 @@ func Handler(rootpath string, h http.Handler, options ...interface{}) *App {
 // The pos means action constant including
 // beego.BeforeStatic, beego.BeforeRouter, beego.BeforeExec, beego.AfterExec and beego.FinishRouter.
 // The bool params is for setting the returnOnOutput value (false allows multiple filters to execute)
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func InsertFilter(pattern string, pos int, filter FilterFunc, params ...bool) *App {
 	BeeApp.Handlers.InsertFilter(pattern, pos, filter, params...)
 	return BeeApp

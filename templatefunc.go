@@ -35,6 +35,7 @@ const (
 )
 
 // Substr returns the substr from start to length.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func Substr(s string, start, length int) string {
 	bt := []rune(s)
 	if start < 0 {
@@ -53,6 +54,7 @@ func Substr(s string, start, length int) string {
 }
 
 // HTML2str returns escaping text convert from html.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func HTML2str(html string) string {
 
 	re := regexp.MustCompile(`\<[\S\s]+?\>`)
@@ -76,6 +78,7 @@ func HTML2str(html string) string {
 }
 
 // DateFormat takes a time and a layout string and returns a string with the formatted date. Used by the template parser as "dateformat"
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func DateFormat(t time.Time, layout string) (datestring string) {
 	datestring = t.Format(layout)
 	return
@@ -123,6 +126,7 @@ var datePatterns = []string{
 }
 
 // DateParse Parse Date use PHP time format.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func DateParse(dateString, format string) (time.Time, error) {
 	replacer := strings.NewReplacer(datePatterns...)
 	format = replacer.Replace(format)
@@ -130,6 +134,7 @@ func DateParse(dateString, format string) (time.Time, error) {
 }
 
 // Date takes a PHP like date func to Go's time format.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func Date(t time.Time, format string) string {
 	replacer := strings.NewReplacer(datePatterns...)
 	format = replacer.Replace(format)
@@ -138,6 +143,7 @@ func Date(t time.Time, format string) string {
 
 // Compare is a quick and dirty comparison function. It will convert whatever you give it to strings and see if the two values are equal.
 // Whitespace is trimmed. Used by the template parser as "eq".
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func Compare(a, b interface{}) (equal bool) {
 	equal = false
 	if strings.TrimSpace(fmt.Sprintf("%v", a)) == strings.TrimSpace(fmt.Sprintf("%v", b)) {
@@ -147,16 +153,19 @@ func Compare(a, b interface{}) (equal bool) {
 }
 
 // CompareNot !Compare
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func CompareNot(a, b interface{}) (equal bool) {
 	return !Compare(a, b)
 }
 
 // NotNil the same as CompareNot
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func NotNil(a interface{}) (isNil bool) {
 	return CompareNot(a, nil)
 }
 
 // GetConfig get the Appconfig
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func GetConfig(returnType, key string, defaultVal interface{}) (value interface{}, err error) {
 	switch returnType {
 	case "String":
@@ -195,11 +204,13 @@ func GetConfig(returnType, key string, defaultVal interface{}) (value interface{
 }
 
 // Str2html Convert string to template.HTML type.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func Str2html(raw string) template.HTML {
 	return template.HTML(raw)
 }
 
 // Htmlquote returns quoted html string.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func Htmlquote(text string) string {
 	//HTML编码为实体符号
 	/*
@@ -219,6 +230,7 @@ func Htmlquote(text string) string {
 }
 
 // Htmlunquote returns unquoted html string.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func Htmlunquote(text string) string {
 	//实体符号解释为HTML
 	/*
@@ -249,11 +261,13 @@ func Htmlunquote(text string) string {
 //	/user/John%20Doe
 //
 //  more detail http://beego.me/docs/mvc/controller/urlbuilding.md
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func URLFor(endpoint string, values ...interface{}) string {
 	return BeeApp.Handlers.URLFor(endpoint, values...)
 }
 
 // AssetsJs returns script tag with src string.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func AssetsJs(text string) template.HTML {
 
 	text = "<script src=\"" + text + "\"></script>"
@@ -262,6 +276,7 @@ func AssetsJs(text string) template.HTML {
 }
 
 // AssetsCSS returns stylesheet link tag with src string.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func AssetsCSS(text string) template.HTML {
 
 	text = "<link href=\"" + text + "\" rel=\"stylesheet\" />"
@@ -411,6 +426,7 @@ func parseFormToStruct(form url.Values, objT reflect.Type, objV reflect.Value) e
 }
 
 // ParseForm will parse form values to struct via tag.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func ParseForm(form url.Values, obj interface{}) error {
 	objT := reflect.TypeOf(obj)
 	objV := reflect.ValueOf(obj)
@@ -442,6 +458,7 @@ var unKind = map[reflect.Kind]bool{
 
 // RenderForm will render object to form html.
 // obj must be a struct pointer.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func RenderForm(obj interface{}) template.HTML {
 	objT := reflect.TypeOf(obj)
 	objV := reflect.ValueOf(obj)
@@ -715,6 +732,7 @@ func ge(arg1, arg2 interface{}) (bool, error) {
 //
 // {{ map_get m "a" }} // return 1
 // {{ map_get m 1 "c" }} // return 4
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func MapGet(arg1 interface{}, arg2 ...interface{}) (interface{}, error) {
 	arg1Type := reflect.TypeOf(arg1)
 	arg1Val := reflect.ValueOf(arg1)

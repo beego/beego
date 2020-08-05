@@ -6,9 +6,11 @@ import (
 	"path/filepath"
 )
 
+// Deprecated: using pkg/, we will delete this in v2.1.0
 type FileSystem struct {
 }
 
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (d FileSystem) Open(name string) (http.File, error) {
 	return os.Open(name)
 }
@@ -16,6 +18,7 @@ func (d FileSystem) Open(name string) (http.File, error) {
 // Walk walks the file tree rooted at root in filesystem, calling walkFn for each file or
 // directory in the tree, including root. All errors that arise visiting files
 // and directories are filtered by walkFn.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func Walk(fs http.FileSystem, root string, walkFn filepath.WalkFunc) error {
 
 	f, err := fs.Open(root)

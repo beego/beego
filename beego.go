@@ -23,15 +23,19 @@ import (
 
 const (
 	// VERSION represent beego web framework version.
+	// Deprecated: using pkg/, we will delete this in v2.1.0
 	VERSION = "1.12.2"
 
 	// DEV is for develop
+	// Deprecated: using pkg/, we will delete this in v2.1.0
 	DEV = "dev"
 	// PROD is for production
+	// Deprecated: using pkg/, we will delete this in v2.1.0
 	PROD = "prod"
 )
 
 // M is Map shortcut
+// Deprecated: using pkg/, we will delete this in v2.1.0
 type M map[string]interface{}
 
 // Hook function to run
@@ -44,6 +48,7 @@ var (
 // AddAPPStartHook is used to register the hookfunc
 // The hookfuncs will run in beego.Run()
 // such as initiating session , starting middleware , building template, starting admin control and so on.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func AddAPPStartHook(hf ...hookfunc) {
 	hooks = append(hooks, hf...)
 }
@@ -53,6 +58,7 @@ func AddAPPStartHook(hf ...hookfunc) {
 // beego.Run("localhost")
 // beego.Run(":8089")
 // beego.Run("127.0.0.1:8089")
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func Run(params ...string) {
 
 	initBeforeHTTPRun()
@@ -73,6 +79,7 @@ func Run(params ...string) {
 }
 
 // RunWithMiddleWares Run beego application with middlewares.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func RunWithMiddleWares(addr string, mws ...MiddleWare) {
 	initBeforeHTTPRun()
 
@@ -107,6 +114,7 @@ func initBeforeHTTPRun() {
 }
 
 // TestBeegoInit is for test package init
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func TestBeegoInit(ap string) {
 	path := filepath.Join(ap, "conf", "app.conf")
 	os.Chdir(ap)
@@ -114,6 +122,7 @@ func TestBeegoInit(ap string) {
 }
 
 // InitBeegoBeforeTest is for test package init
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func InitBeegoBeforeTest(appConfigPath string) {
 	if err := LoadAppConfig(appConfigProvider, appConfigPath); err != nil {
 		panic(err)
