@@ -66,7 +66,12 @@ checkColumn:
 	case TypeDateField:
 		col = T["time.Time-date"]
 	case TypeDateTimeField:
-		col = T["time.Time"]
+		s := T["time.Time"]
+		if !strings.Contains(s, "%d") {
+			col = s
+		} else {
+			col = fmt.Sprintf(s, fi.Accuracy)
+		}
 	case TypeBitField:
 		col = T["int8"]
 	case TypeSmallIntegerField:

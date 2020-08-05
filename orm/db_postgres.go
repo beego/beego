@@ -46,7 +46,7 @@ var postgresTypes = map[string]string{
 	"string-char":     "char(%d)",
 	"string-text":     "text",
 	"time.Time-date":  "date",
-	"time.Time":       "timestamp with time zone",
+	"time.Time":       "timestamp(%d) with time zone",
 	"int8":            `smallint CHECK("%COL%" >= -127 AND "%COL%" <= 128)`,
 	"int16":           "smallint",
 	"int32":           "integer",

@@ -45,6 +45,7 @@ var supportTag = map[string]int{
 	"on_delete":    2,
 	"type":         2,
 	"description":  2,
+	"accuracy":     2,
 }
 
 // get reflect.Type name with package path.
