@@ -24,7 +24,7 @@ import (
 	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/astaxie/beego/pkg/testdata"
+	"github.com/astaxie/beego/test"
 )
 
 var header = `{{define "header"}}
@@ -308,7 +308,7 @@ var outputBinData = `<!DOCTYPE html>
 
 func TestFsBinData(t *testing.T) {
 	SetTemplateFSFunc(func() http.FileSystem {
-		return TestingFileSystem{&assetfs.AssetFS{Asset: testdata.Asset, AssetDir: testdata.AssetDir, AssetInfo: testdata.AssetInfo}}
+		return TestingFileSystem{&assetfs.AssetFS{Asset: test.Asset, AssetDir: test.AssetDir, AssetInfo: test.AssetInfo}}
 	})
 	dir := "views"
 	if err := AddViewPath("views"); err != nil {

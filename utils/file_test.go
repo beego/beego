@@ -18,6 +18,8 @@ import (
 	"path/filepath"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var noExistedFile = "/tmp/not_existed_file"
@@ -66,9 +68,8 @@ func TestGrepFile(t *testing.T) {
 
 	path := filepath.Join(".", "testdata", "grepe.test")
 	lines, err := GrepFile(`^\s*[^#]+`, path)
-	if err != nil {
-		t.Error(err)
-	}
+	assert.Nil(t, err)
+
 	if !reflect.DeepEqual(lines, []string{"hello", "world"}) {
 		t.Errorf("expect [hello world], but receive %v", lines)
 	}

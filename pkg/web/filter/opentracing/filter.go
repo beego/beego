@@ -29,20 +29,22 @@ type FilterChainBuilder struct {
 
 
 func (builder *FilterChainBuilder) FilterChain(next beego.FilterFunc) beego.FilterFunc {
-	// TODO, if we support multiple servers, this need to be changed
-	cr := beego.BeeApp.Handlers
 	return func(ctx *context.Context) {
 		span := opentracing.SpanFromContext(ctx.Request.Context())
 		spanCtx := ctx.Request.Context()
 		if span == nil {
 			operationName := ctx.Input.URL()
 			// it means that there is not any span, so we create a span as the root span.
-			route, found := cr.FindRouter(ctx)
+			// TODO, if we support multiple servers, this need to be changed
+			route, found := beego.BeeApp.Handlers.FindRouter(ctx)
 			if found {
 				operationName = route.GetPattern()
 			}
 			span, spanCtx = opentracing.StartSpanFromContext(spanCtx, operationName)
+			newReq := ctx.Request.Clone(spanCtx)
+			ctx.Reset(ctx.ResponseWriter.ResponseWriter, newReq)
 		}
+
 		defer span.Finish()
 		next(ctx)
 		// if you think we need to do more things, feel free to create an issue to tell us
