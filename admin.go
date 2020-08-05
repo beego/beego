@@ -52,6 +52,7 @@ var beeAdminApp *adminApp
 //	 	return true
 // 	}
 // 	beego.FilterMonitorFunc = MyFilterMonitor.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 var FilterMonitorFunc func(string, string, time.Duration, string, int) bool
 
 func init() {
@@ -201,6 +202,7 @@ func list(root string, p interface{}, m M) {
 }
 
 // PrintTree prints all registered routers.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func PrintTree() M {
 	var (
 		content     = M{}
@@ -432,6 +434,7 @@ func (admin *adminApp) Route(pattern string, f http.HandlerFunc) {
 
 // Run adminApp http server.
 // Its addr is defined in configuration file as adminhttpaddr and adminhttpport.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (admin *adminApp) Run() {
 	if len(toolbox.AdminTaskList) > 0 {
 		toolbox.StartTask()

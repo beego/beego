@@ -31,6 +31,7 @@ var (
 // fixRouter stores Fixed Router
 // wildcard stores params
 // leaves store the endpoint information
+// Deprecated: using pkg/, we will delete this in v2.1.0
 type Tree struct {
 	//prefix set for static router
 	prefix string
@@ -43,12 +44,14 @@ type Tree struct {
 }
 
 // NewTree return a new Tree
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func NewTree() *Tree {
 	return &Tree{}
 }
 
 // AddTree will add tree to the exist Tree
 // prefix should has no params
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (t *Tree) AddTree(prefix string, tree *Tree) {
 	t.addtree(splitPath(prefix), tree, nil, "")
 }
@@ -200,6 +203,7 @@ func filterTreeWithPrefix(t *Tree, wildcards []string, reg string) {
 }
 
 // AddRouter call addseg function
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (t *Tree) AddRouter(pattern string, runObject interface{}) {
 	t.addseg(splitPath(pattern), runObject, nil, "")
 }
@@ -283,6 +287,7 @@ func (t *Tree) addseg(segments []string, route interface{}, wildcards []string, 
 }
 
 // Match router to runObject & params
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (t *Tree) Match(pattern string, ctx *context.Context) (runObject interface{}) {
 	if len(pattern) == 0 || pattern[0] != '/' {
 		return nil

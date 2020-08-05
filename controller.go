@@ -35,12 +35,15 @@ import (
 
 var (
 	// ErrAbort custom error when user stop request handler manually.
+	// Deprecated: using pkg/, we will delete this in v2.1.0
 	ErrAbort = errors.New("user stop run")
 	// GlobalControllerRouter store comments with controller. pkgpath+controller:comments
+	// Deprecated: using pkg/, we will delete this in v2.1.0
 	GlobalControllerRouter = make(map[string][]ControllerComments)
 )
 
 // ControllerFilter store the filter for controller
+// Deprecated: using pkg/, we will delete this in v2.1.0
 type ControllerFilter struct {
 	Pattern        string
 	Pos            int
@@ -50,6 +53,7 @@ type ControllerFilter struct {
 }
 
 // ControllerFilterComments store the comment for controller level filter
+// Deprecated: using pkg/, we will delete this in v2.1.0
 type ControllerFilterComments struct {
 	Pattern        string
 	Pos            int
@@ -59,12 +63,14 @@ type ControllerFilterComments struct {
 }
 
 // ControllerImportComments store the import comment for controller needed
+// Deprecated: using pkg/, we will delete this in v2.1.0
 type ControllerImportComments struct {
 	ImportPath  string
 	ImportAlias string
 }
 
 // ControllerComments store the comment for the controller method
+// Deprecated: using pkg/, we will delete this in v2.1.0
 type ControllerComments struct {
 	Method           string
 	Router           string
@@ -77,6 +83,7 @@ type ControllerComments struct {
 }
 
 // ControllerCommentsSlice implements the sort interface
+// Deprecated: using pkg/, we will delete this in v2.1.0
 type ControllerCommentsSlice []ControllerComments
 
 func (p ControllerCommentsSlice) Len() int           { return len(p) }
@@ -85,6 +92,7 @@ func (p ControllerCommentsSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 // Controller defines some basic http request handler operations, such as
 // http context, template and view, session and xsrf.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 type Controller struct {
 	// context data
 	Ctx  *context.Context
@@ -115,6 +123,7 @@ type Controller struct {
 }
 
 // ControllerInterface is an interface to uniform all controller handler.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 type ControllerInterface interface {
 	Init(ct *context.Context, controllerName, actionName string, app interface{})
 	Prepare()
@@ -135,6 +144,7 @@ type ControllerInterface interface {
 }
 
 // Init generates default values of controller operations.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) Init(ctx *context.Context, controllerName, actionName string, app interface{}) {
 	c.Layout = ""
 	c.TplName = ""
@@ -150,42 +160,51 @@ func (c *Controller) Init(ctx *context.Context, controllerName, actionName strin
 }
 
 // Prepare runs after Init before request function execution.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) Prepare() {}
 
 // Finish runs after request function execution.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) Finish() {}
 
 // Get adds a request function to handle GET request.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) Get() {
 	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", http.StatusMethodNotAllowed)
 }
 
 // Post adds a request function to handle POST request.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) Post() {
 	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", http.StatusMethodNotAllowed)
 }
 
 // Delete adds a request function to handle DELETE request.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) Delete() {
 	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", http.StatusMethodNotAllowed)
 }
 
 // Put adds a request function to handle PUT request.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) Put() {
 	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", http.StatusMethodNotAllowed)
 }
 
 // Head adds a request function to handle HEAD request.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) Head() {
 	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", http.StatusMethodNotAllowed)
 }
 
 // Patch adds a request function to handle PATCH request.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) Patch() {
 	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", http.StatusMethodNotAllowed)
 }
 
 // Options adds a request function to handle OPTIONS request.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) Options() {
 	http.Error(c.Ctx.ResponseWriter, "Method Not Allowed", http.StatusMethodNotAllowed)
 }
@@ -198,6 +217,7 @@ func (c *Controller) Options() {
 // reflect the message received, excluding some fields described below,
 // back to the client as the message body of a 200 (OK) response with a
 // Content-Type of "message/http" (Section 8.3.1 of [RFC7230]).
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) Trace() {
 	ts := func(h http.Header) (hs string) {
 		for k, v := range h {
@@ -213,6 +233,7 @@ func (c *Controller) Trace() {
 }
 
 // HandlerFunc call function with the name
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) HandlerFunc(fnname string) bool {
 	if v, ok := c.methodMapping[fnname]; ok {
 		v()
@@ -222,14 +243,17 @@ func (c *Controller) HandlerFunc(fnname string) bool {
 }
 
 // URLMapping register the internal Controller router.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) URLMapping() {}
 
 // Mapping the method to function
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) Mapping(method string, fn func()) {
 	c.methodMapping[method] = fn
 }
 
 // Render sends the response with rendered template bytes as text/html type.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) Render() error {
 	if !c.EnableRender {
 		return nil
@@ -247,12 +271,14 @@ func (c *Controller) Render() error {
 }
 
 // RenderString returns the rendered template string. Do not send out response.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) RenderString() (string, error) {
 	b, e := c.RenderBytes()
 	return string(b), e
 }
 
 // RenderBytes returns the bytes of rendered template string. Do not send out response.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) RenderBytes() ([]byte, error) {
 	buf, err := c.renderTemplate()
 	//if the controller has set layout, then first get the tplName's content set the content to the layout
@@ -314,12 +340,14 @@ func (c *Controller) viewPath() string {
 }
 
 // Redirect sends the redirection response to url with status code.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) Redirect(url string, code int) {
 	LogAccess(c.Ctx, nil, code)
 	c.Ctx.Redirect(code, url)
 }
 
 // SetData set the data depending on the accepted
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) SetData(data interface{}) {
 	accept := c.Ctx.Input.Header("Accept")
 	switch accept {
@@ -333,6 +361,7 @@ func (c *Controller) SetData(data interface{}) {
 }
 
 // Abort stops controller handler and show the error data if code is defined in ErrorMap or code string.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) Abort(code string) {
 	status, err := strconv.Atoi(code)
 	if err != nil {
@@ -342,6 +371,7 @@ func (c *Controller) Abort(code string) {
 }
 
 // CustomAbort stops controller handler and show the error data, it's similar Aborts, but support status code and body.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) CustomAbort(status int, body string) {
 	// first panic from ErrorMaps, it is user defined error functions.
 	if _, ok := ErrorMaps[body]; ok {
@@ -355,12 +385,14 @@ func (c *Controller) CustomAbort(status int, body string) {
 }
 
 // StopRun makes panic of USERSTOPRUN error and go to recover function if defined.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) StopRun() {
 	panic(ErrAbort)
 }
 
 // URLFor does another controller handler in this request function.
 // it goes to this controller method if endpoint is not clear.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) URLFor(endpoint string, values ...interface{}) string {
 	if len(endpoint) == 0 {
 		return ""
@@ -372,6 +404,7 @@ func (c *Controller) URLFor(endpoint string, values ...interface{}) string {
 }
 
 // ServeJSON sends a json response with encoding charset.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) ServeJSON(encoding ...bool) {
 	var (
 		hasIndent   = BConfig.RunMode != PROD
@@ -382,23 +415,27 @@ func (c *Controller) ServeJSON(encoding ...bool) {
 }
 
 // ServeJSONP sends a jsonp response.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) ServeJSONP() {
 	hasIndent := BConfig.RunMode != PROD
 	c.Ctx.Output.JSONP(c.Data["jsonp"], hasIndent)
 }
 
 // ServeXML sends xml response.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) ServeXML() {
 	hasIndent := BConfig.RunMode != PROD
 	c.Ctx.Output.XML(c.Data["xml"], hasIndent)
 }
 
 // ServeYAML sends yaml response.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) ServeYAML() {
 	c.Ctx.Output.YAML(c.Data["yaml"])
 }
 
 // ServeFormatted serve YAML, XML OR JSON, depending on the value of the Accept header
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) ServeFormatted(encoding ...bool) {
 	hasIndent := BConfig.RunMode != PROD
 	hasEncoding := len(encoding) > 0 && encoding[0]
@@ -406,6 +443,7 @@ func (c *Controller) ServeFormatted(encoding ...bool) {
 }
 
 // Input returns the input data map from POST or PUT request body and query string.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) Input() url.Values {
 	if c.Ctx.Request.Form == nil {
 		c.Ctx.Request.ParseForm()
@@ -414,11 +452,13 @@ func (c *Controller) Input() url.Values {
 }
 
 // ParseForm maps input data map to obj struct.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) ParseForm(obj interface{}) error {
 	return ParseForm(c.Input(), obj)
 }
 
 // GetString returns the input value by key string or the default value while it's present and input is blank
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) GetString(key string, def ...string) string {
 	if v := c.Ctx.Input.Query(key); v != "" {
 		return v
@@ -431,6 +471,7 @@ func (c *Controller) GetString(key string, def ...string) string {
 
 // GetStrings returns the input string slice by key string or the default value while it's present and input is blank
 // it's designed for multi-value input field such as checkbox(input[type=checkbox]), multi-selection.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) GetStrings(key string, def ...[]string) []string {
 	var defv []string
 	if len(def) > 0 {
@@ -447,6 +488,7 @@ func (c *Controller) GetStrings(key string, def ...[]string) []string {
 }
 
 // GetInt returns input as an int or the default value while it's present and input is blank
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) GetInt(key string, def ...int) (int, error) {
 	strv := c.Ctx.Input.Query(key)
 	if len(strv) == 0 && len(def) > 0 {
@@ -456,6 +498,7 @@ func (c *Controller) GetInt(key string, def ...int) (int, error) {
 }
 
 // GetInt8 return input as an int8 or the default value while it's present and input is blank
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) GetInt8(key string, def ...int8) (int8, error) {
 	strv := c.Ctx.Input.Query(key)
 	if len(strv) == 0 && len(def) > 0 {
@@ -466,6 +509,7 @@ func (c *Controller) GetInt8(key string, def ...int8) (int8, error) {
 }
 
 // GetUint8 return input as an uint8 or the default value while it's present and input is blank
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) GetUint8(key string, def ...uint8) (uint8, error) {
 	strv := c.Ctx.Input.Query(key)
 	if len(strv) == 0 && len(def) > 0 {
@@ -476,6 +520,7 @@ func (c *Controller) GetUint8(key string, def ...uint8) (uint8, error) {
 }
 
 // GetInt16 returns input as an int16 or the default value while it's present and input is blank
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) GetInt16(key string, def ...int16) (int16, error) {
 	strv := c.Ctx.Input.Query(key)
 	if len(strv) == 0 && len(def) > 0 {
@@ -486,6 +531,7 @@ func (c *Controller) GetInt16(key string, def ...int16) (int16, error) {
 }
 
 // GetUint16 returns input as an uint16 or the default value while it's present and input is blank
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) GetUint16(key string, def ...uint16) (uint16, error) {
 	strv := c.Ctx.Input.Query(key)
 	if len(strv) == 0 && len(def) > 0 {
@@ -496,6 +542,7 @@ func (c *Controller) GetUint16(key string, def ...uint16) (uint16, error) {
 }
 
 // GetInt32 returns input as an int32 or the default value while it's present and input is blank
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) GetInt32(key string, def ...int32) (int32, error) {
 	strv := c.Ctx.Input.Query(key)
 	if len(strv) == 0 && len(def) > 0 {
@@ -506,6 +553,7 @@ func (c *Controller) GetInt32(key string, def ...int32) (int32, error) {
 }
 
 // GetUint32 returns input as an uint32 or the default value while it's present and input is blank
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) GetUint32(key string, def ...uint32) (uint32, error) {
 	strv := c.Ctx.Input.Query(key)
 	if len(strv) == 0 && len(def) > 0 {
@@ -516,6 +564,7 @@ func (c *Controller) GetUint32(key string, def ...uint32) (uint32, error) {
 }
 
 // GetInt64 returns input value as int64 or the default value while it's present and input is blank.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) GetInt64(key string, def ...int64) (int64, error) {
 	strv := c.Ctx.Input.Query(key)
 	if len(strv) == 0 && len(def) > 0 {
@@ -525,6 +574,7 @@ func (c *Controller) GetInt64(key string, def ...int64) (int64, error) {
 }
 
 // GetUint64 returns input value as uint64 or the default value while it's present and input is blank.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) GetUint64(key string, def ...uint64) (uint64, error) {
 	strv := c.Ctx.Input.Query(key)
 	if len(strv) == 0 && len(def) > 0 {
@@ -534,6 +584,7 @@ func (c *Controller) GetUint64(key string, def ...uint64) (uint64, error) {
 }
 
 // GetBool returns input value as bool or the default value while it's present and input is blank.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) GetBool(key string, def ...bool) (bool, error) {
 	strv := c.Ctx.Input.Query(key)
 	if len(strv) == 0 && len(def) > 0 {
@@ -543,6 +594,7 @@ func (c *Controller) GetBool(key string, def ...bool) (bool, error) {
 }
 
 // GetFloat returns input value as float64 or the default value while it's present and input is blank.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) GetFloat(key string, def ...float64) (float64, error) {
 	strv := c.Ctx.Input.Query(key)
 	if len(strv) == 0 && len(def) > 0 {
@@ -553,6 +605,7 @@ func (c *Controller) GetFloat(key string, def ...float64) (float64, error) {
 
 // GetFile returns the file data in file upload field named as key.
 // it returns the first one of multi-uploaded files.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) GetFile(key string) (multipart.File, *multipart.FileHeader, error) {
 	return c.Ctx.Request.FormFile(key)
 }
@@ -584,6 +637,7 @@ func (c *Controller) GetFile(key string) (multipart.File, *multipart.FileHeader,
 //		return
 //	}
 // }
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) GetFiles(key string) ([]*multipart.FileHeader, error) {
 	if files, ok := c.Ctx.Request.MultipartForm.File[key]; ok {
 		return files, nil
@@ -593,6 +647,7 @@ func (c *Controller) GetFiles(key string) ([]*multipart.FileHeader, error) {
 
 // SaveToFile saves uploaded file to new path.
 // it only operates the first one of mutil-upload form file field.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) SaveToFile(fromfile, tofile string) error {
 	file, _, err := c.Ctx.Request.FormFile(fromfile)
 	if err != nil {
@@ -609,6 +664,7 @@ func (c *Controller) SaveToFile(fromfile, tofile string) error {
 }
 
 // StartSession starts session and load old session data info this controller.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) StartSession() session.Store {
 	if c.CruSession == nil {
 		c.CruSession = c.Ctx.Input.CruSession
@@ -617,6 +673,7 @@ func (c *Controller) StartSession() session.Store {
 }
 
 // SetSession puts value into session.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) SetSession(name interface{}, value interface{}) {
 	if c.CruSession == nil {
 		c.StartSession()
@@ -625,6 +682,7 @@ func (c *Controller) SetSession(name interface{}, value interface{}) {
 }
 
 // GetSession gets value from session.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) GetSession(name interface{}) interface{} {
 	if c.CruSession == nil {
 		c.StartSession()
@@ -633,6 +691,7 @@ func (c *Controller) GetSession(name interface{}) interface{} {
 }
 
 // DelSession removes value from session.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) DelSession(name interface{}) {
 	if c.CruSession == nil {
 		c.StartSession()
@@ -642,6 +701,7 @@ func (c *Controller) DelSession(name interface{}) {
 
 // SessionRegenerateID regenerates session id for this session.
 // the session data have no changes.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) SessionRegenerateID() {
 	if c.CruSession != nil {
 		c.CruSession.SessionRelease(c.Ctx.ResponseWriter)
@@ -651,6 +711,7 @@ func (c *Controller) SessionRegenerateID() {
 }
 
 // DestroySession cleans session data and session cookie.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) DestroySession() {
 	c.Ctx.Input.CruSession.Flush()
 	c.Ctx.Input.CruSession = nil
@@ -658,21 +719,25 @@ func (c *Controller) DestroySession() {
 }
 
 // IsAjax returns this request is ajax or not.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) IsAjax() bool {
 	return c.Ctx.Input.IsAjax()
 }
 
 // GetSecureCookie returns decoded cookie value from encoded browser cookie values.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) GetSecureCookie(Secret, key string) (string, bool) {
 	return c.Ctx.GetSecureCookie(Secret, key)
 }
 
 // SetSecureCookie puts value into cookie after encoded the value.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) SetSecureCookie(Secret, name, value string, others ...interface{}) {
 	c.Ctx.SetSecureCookie(Secret, name, value, others...)
 }
 
 // XSRFToken creates a CSRF token string and returns.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) XSRFToken() string {
 	if c._xsrfToken == "" {
 		expire := int64(BConfig.WebConfig.XSRFExpire)
@@ -687,6 +752,7 @@ func (c *Controller) XSRFToken() string {
 // CheckXSRFCookie checks xsrf token in this request is valid or not.
 // the token can provided in request header "X-Xsrftoken" and "X-CsrfToken"
 // or in form field value named as "_xsrf".
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) CheckXSRFCookie() bool {
 	if !c.EnableXSRF {
 		return true
@@ -695,12 +761,14 @@ func (c *Controller) CheckXSRFCookie() bool {
 }
 
 // XSRFFormHTML writes an input field contains xsrf token value.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) XSRFFormHTML() string {
 	return `<input type="hidden" name="_xsrf" value="` +
 		c.XSRFToken() + `" />`
 }
 
 // GetControllerAndAction gets the executing controller name and action name.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *Controller) GetControllerAndAction() (string, string) {
 	return c.controllerName, c.actionName
 }
