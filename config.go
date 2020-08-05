@@ -21,6 +21,7 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+	"crypto/tls"
 
 	"github.com/astaxie/beego/config"
 	"github.com/astaxie/beego/context"
@@ -30,6 +31,7 @@ import (
 )
 
 // Config is the main struct for BConfig
+// Deprecated: using pkg/, we will delete this in v2.1.0
 type Config struct {
 	AppName             string //Application name
 	RunMode             string //Running Mode: dev | prod
@@ -48,6 +50,7 @@ type Config struct {
 }
 
 // Listen holds for http and https related config
+// Deprecated: using pkg/, we will delete this in v2.1.0
 type Listen struct {
 	Graceful          bool // Graceful means use graceful module to start the server
 	ServerTimeOut     int64
@@ -65,6 +68,7 @@ type Listen struct {
 	HTTPSCertFile     string
 	HTTPSKeyFile      string
 	TrustCaFile       string
+	ClientAuth        tls.ClientAuthType
 	EnableAdmin       bool
 	AdminAddr         string
 	AdminPort         int
@@ -73,6 +77,7 @@ type Listen struct {
 }
 
 // WebConfig holds web related config
+// Deprecated: using pkg/, we will delete this in v2.1.0
 type WebConfig struct {
 	AutoRender             bool
 	EnableDocs             bool
@@ -93,6 +98,7 @@ type WebConfig struct {
 }
 
 // SessionConfig holds session related config
+// Deprecated: using pkg/, we will delete this in v2.1.0
 type SessionConfig struct {
 	SessionOn                    bool
 	SessionProvider              string
@@ -109,6 +115,7 @@ type SessionConfig struct {
 }
 
 // LogConfig holds Log related config
+// Deprecated: using pkg/, we will delete this in v2.1.0
 type LogConfig struct {
 	AccessLogs       bool
 	EnableStaticLogs bool   //log static files requests default: false
@@ -119,12 +126,16 @@ type LogConfig struct {
 
 var (
 	// BConfig is the default config for Application
+	// Deprecated: using pkg/, we will delete this in v2.1.0
 	BConfig *Config
 	// AppConfig is the instance of Config, store the config information from file
+	// Deprecated: using pkg/, we will delete this in v2.1.0
 	AppConfig *beegoAppConfig
 	// AppPath is the absolute path to the app
+	// Deprecated: using pkg/, we will delete this in v2.1.0
 	AppPath string
 	// GlobalSessions is the instance for the session manager
+	// Deprecated: using pkg/, we will delete this in v2.1.0
 	GlobalSessions *session.Manager
 
 	// appConfigPath is the path to the config files
@@ -132,6 +143,7 @@ var (
 	// appConfigProvider is the provider for the config, default is ini
 	appConfigProvider = "ini"
 	// WorkPath is the absolute path to project root directory
+	// Deprecated: using pkg/, we will delete this in v2.1.0
 	WorkPath string
 )
 
@@ -150,6 +162,9 @@ func init() {
 		filename = os.Getenv("BEEGO_RUNMODE") + ".app.conf"
 	}
 	appConfigPath = filepath.Join(WorkPath, "conf", filename)
+	if configPath := os.Getenv("BEEGO_CONFIG_PATH"); configPath != "" {
+		appConfigPath =  configPath
+	}
 	if !utils.FileExists(appConfigPath) {
 		appConfigPath = filepath.Join(AppPath, "conf", filename)
 		if !utils.FileExists(appConfigPath) {
@@ -231,6 +246,7 @@ func newBConfig() *Config {
 			AdminPort:     8088,
 			EnableFcgi:    false,
 			EnableStdIo:   false,
+			ClientAuth:    tls.RequireAndVerifyClientCert,
 		},
 		WebConfig: WebConfig{
 			AutoRender:             true,
@@ -392,6 +408,7 @@ func assignSingleConfig(p interface{}, ac config.Configer) {
 }
 
 // LoadAppConfig allow developer to apply a config file
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func LoadAppConfig(adapterName, configPath string) error {
 	absConfigPath, err := filepath.Abs(configPath)
 	if err != nil {
@@ -420,6 +437,7 @@ func newAppConfig(appConfigProvider, appConfigPath string) (*beegoAppConfig, err
 	return &beegoAppConfig{ac}, nil
 }
 
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (b *beegoAppConfig) Set(key, val string) error {
 	if err := b.innerConfig.Set(BConfig.RunMode+"::"+key, val); err != nil {
 		return b.innerConfig.Set(key, val)
@@ -427,6 +445,7 @@ func (b *beegoAppConfig) Set(key, val string) error {
 	return nil
 }
 
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (b *beegoAppConfig) String(key string) string {
 	if v := b.innerConfig.String(BConfig.RunMode + "::" + key); v != "" {
 		return v
@@ -434,6 +453,7 @@ func (b *beegoAppConfig) String(key string) string {
 	return b.innerConfig.String(key)
 }
 
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (b *beegoAppConfig) Strings(key string) []string {
 	if v := b.innerConfig.Strings(BConfig.RunMode + "::" + key); len(v) > 0 {
 		return v
@@ -441,6 +461,7 @@ func (b *beegoAppConfig) Strings(key string) []string {
 	return b.innerConfig.Strings(key)
 }
 
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (b *beegoAppConfig) Int(key string) (int, error) {
 	if v, err := b.innerConfig.Int(BConfig.RunMode + "::" + key); err == nil {
 		return v, nil
@@ -448,6 +469,7 @@ func (b *beegoAppConfig) Int(key string) (int, error) {
 	return b.innerConfig.Int(key)
 }
 
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (b *beegoAppConfig) Int64(key string) (int64, error) {
 	if v, err := b.innerConfig.Int64(BConfig.RunMode + "::" + key); err == nil {
 		return v, nil
@@ -455,6 +477,7 @@ func (b *beegoAppConfig) Int64(key string) (int64, error) {
 	return b.innerConfig.Int64(key)
 }
 
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (b *beegoAppConfig) Bool(key string) (bool, error) {
 	if v, err := b.innerConfig.Bool(BConfig.RunMode + "::" + key); err == nil {
 		return v, nil
@@ -462,6 +485,7 @@ func (b *beegoAppConfig) Bool(key string) (bool, error) {
 	return b.innerConfig.Bool(key)
 }
 
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (b *beegoAppConfig) Float(key string) (float64, error) {
 	if v, err := b.innerConfig.Float(BConfig.RunMode + "::" + key); err == nil {
 		return v, nil
@@ -469,6 +493,7 @@ func (b *beegoAppConfig) Float(key string) (float64, error) {
 	return b.innerConfig.Float(key)
 }
 
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (b *beegoAppConfig) DefaultString(key string, defaultVal string) string {
 	if v := b.String(key); v != "" {
 		return v
@@ -476,6 +501,7 @@ func (b *beegoAppConfig) DefaultString(key string, defaultVal string) string {
 	return defaultVal
 }
 
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (b *beegoAppConfig) DefaultStrings(key string, defaultVal []string) []string {
 	if v := b.Strings(key); len(v) != 0 {
 		return v
@@ -483,6 +509,7 @@ func (b *beegoAppConfig) DefaultStrings(key string, defaultVal []string) []strin
 	return defaultVal
 }
 
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (b *beegoAppConfig) DefaultInt(key string, defaultVal int) int {
 	if v, err := b.Int(key); err == nil {
 		return v
@@ -490,6 +517,7 @@ func (b *beegoAppConfig) DefaultInt(key string, defaultVal int) int {
 	return defaultVal
 }
 
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (b *beegoAppConfig) DefaultInt64(key string, defaultVal int64) int64 {
 	if v, err := b.Int64(key); err == nil {
 		return v
@@ -497,6 +525,7 @@ func (b *beegoAppConfig) DefaultInt64(key string, defaultVal int64) int64 {
 	return defaultVal
 }
 
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (b *beegoAppConfig) DefaultBool(key string, defaultVal bool) bool {
 	if v, err := b.Bool(key); err == nil {
 		return v
@@ -504,6 +533,7 @@ func (b *beegoAppConfig) DefaultBool(key string, defaultVal bool) bool {
 	return defaultVal
 }
 
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (b *beegoAppConfig) DefaultFloat(key string, defaultVal float64) float64 {
 	if v, err := b.Float(key); err == nil {
 		return v
@@ -511,14 +541,17 @@ func (b *beegoAppConfig) DefaultFloat(key string, defaultVal float64) float64 {
 	return defaultVal
 }
 
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (b *beegoAppConfig) DIY(key string) (interface{}, error) {
 	return b.innerConfig.DIY(key)
 }
 
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (b *beegoAppConfig) GetSection(section string) (map[string]string, error) {
 	return b.innerConfig.GetSection(section)
 }
 
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (b *beegoAppConfig) SaveConfigFile(filename string) error {
 	return b.innerConfig.SaveConfigFile(filename)
 }

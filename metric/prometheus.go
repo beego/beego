@@ -27,6 +27,8 @@ import (
 	"github.com/astaxie/beego/logs"
 )
 
+// Deprecated: we will removed this function in 2.1.0
+// please use pkg/web/filter/prometheus#FilterChain
 func PrometheusMiddleWare(next http.Handler) http.Handler {
 	summaryVec := prometheus.NewSummaryVec(prometheus.SummaryOpts{
 		Name:      "beego",

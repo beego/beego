@@ -14,10 +14,19 @@
 
 package beego
 
-import "github.com/astaxie/beego/pkg/context"
+import (
+	"strings"
+
+	"github.com/astaxie/beego/pkg/context"
+)
+
+// FilterChain is different from pure FilterFunc
+// when you use this, you must invoke next(ctx) inside the FilterFunc which is returned
+// And all those FilterChain will be invoked before other FilterFunc
+type FilterChain func(next FilterFunc) FilterFunc
 
 // FilterFunc defines a filter function which is invoked before the controller handler is executed.
-type FilterFunc func(*context.Context)
+type FilterFunc func(ctx *context.Context)
 
 // FilterRouter defines a filter operation which is invoked before the controller handler is executed.
 // It can match the URL against a pattern, and execute a filter function
@@ -28,6 +37,55 @@ type FilterRouter struct {
 	pattern        string
 	returnOnOutput bool
 	resetParams    bool
+}
+
+// params is for:
+//   1. setting the returnOnOutput value (false allows multiple filters to execute)
+//   2. determining whether or not params need to be reset.
+func newFilterRouter(pattern string, routerCaseSensitive bool, filter FilterFunc, params ...bool) *FilterRouter {
+	mr := &FilterRouter{
+		tree:           NewTree(),
+		pattern:        pattern,
+		filterFunc:     filter,
+		returnOnOutput: true,
+	}
+	if !routerCaseSensitive {
+		mr.pattern = strings.ToLower(pattern)
+	}
+
+	paramsLen := len(params)
+	if paramsLen > 0 {
+		mr.returnOnOutput = params[0]
+	}
+	if paramsLen > 1 {
+		mr.resetParams = params[1]
+	}
+	mr.tree.AddRouter(pattern, true)
+	return mr
+}
+
+// filter will check whether we need to execute the filter logic
+// return (started, done)
+func (f *FilterRouter) filter(ctx *context.Context, urlPath string, preFilterParams map[string]string) (bool, bool) {
+	if f.returnOnOutput && ctx.ResponseWriter.Started {
+		return true, true
+	}
+	if f.resetParams {
+		preFilterParams = ctx.Input.Params()
+	}
+	if ok := f.ValidRouter(urlPath, ctx); ok {
+		f.filterFunc(ctx)
+		if f.resetParams {
+			ctx.Input.ResetParams()
+			for k, v := range preFilterParams {
+				ctx.Input.SetParam(k, v)
+			}
+		}
+	}
+	if f.returnOnOutput && ctx.ResponseWriter.Started {
+		return true, true
+	}
+	return false, false
 }
 
 // ValidRouter checks if the current request is matched by this filter.

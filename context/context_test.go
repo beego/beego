@@ -17,7 +17,10 @@ package context
 import (
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestXsrfReset_01(t *testing.T) {
@@ -44,4 +47,8 @@ func TestXsrfReset_01(t *testing.T) {
 	if token == c._xsrfToken {
 		t.FailNow()
 	}
+
+	ck := c.ResponseWriter.Header().Get("Set-Cookie")
+	assert.True(t, strings.Contains(ck, "Secure"))
+	assert.True(t, strings.Contains(ck, "HttpOnly"))
 }

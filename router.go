@@ -51,6 +51,7 @@ const (
 
 var (
 	// HTTPMETHOD list the supported http methods.
+	// Deprecated: using pkg/, we will delete this in v2.1.0
 	HTTPMETHOD = map[string]bool{
 		"GET":       true,
 		"POST":      true,
@@ -80,10 +81,12 @@ var (
 
 	urlPlaceholder = "{{placeholder}}"
 	// DefaultAccessLogFilter will skip the accesslog if return true
+	// Deprecated: using pkg/, we will delete this in v2.1.0
 	DefaultAccessLogFilter FilterHandler = &logFilter{}
 )
 
 // FilterHandler is an interface for
+// Deprecated: using pkg/, we will delete this in v2.1.0
 type FilterHandler interface {
 	Filter(*beecontext.Context) bool
 }
@@ -92,6 +95,7 @@ type FilterHandler interface {
 type logFilter struct {
 }
 
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (l *logFilter) Filter(ctx *beecontext.Context) bool {
 	requestPath := path.Clean(ctx.Request.URL.Path)
 	if requestPath == "/favicon.ico" || requestPath == "/robots.txt" {
@@ -106,6 +110,7 @@ func (l *logFilter) Filter(ctx *beecontext.Context) bool {
 }
 
 // ExceptMethodAppend to append a slice's value into "exceptMethod", for controller's methods shouldn't reflect to AutoRouter
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func ExceptMethodAppend(action string) {
 	exceptMethod = append(exceptMethod, action)
 }
@@ -122,11 +127,13 @@ type ControllerInfo struct {
 	methodParams   []*param.MethodParam
 }
 
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (c *ControllerInfo) GetPattern() string {
 	return c.pattern
 }
 
 // ControllerRegister containers registered router rules, controller handlers and filters.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 type ControllerRegister struct {
 	routers      map[string]*Tree
 	enablePolicy bool
@@ -137,6 +144,7 @@ type ControllerRegister struct {
 }
 
 // NewControllerRegister returns a new ControllerRegister.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func NewControllerRegister() *ControllerRegister {
 	return &ControllerRegister{
 		routers:  make(map[string]*Tree),
@@ -159,6 +167,7 @@ func NewControllerRegister() *ControllerRegister {
 //	Add("/api/delete",&RestController{},"delete:DeleteFood")
 //	Add("/api",&RestController{},"get,post:ApiFunc"
 //	Add("/simple",&SimpleController{},"get:GetFunc;post:PostFunc")
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (p *ControllerRegister) Add(pattern string, c ControllerInterface, mappingMethods ...string) {
 	p.addWithMethodParams(pattern, c, nil, mappingMethods...)
 }
@@ -251,6 +260,7 @@ func (p *ControllerRegister) addToRouter(method, pattern string, r *ControllerIn
 
 // Include only when the Runmode is dev will generate router file in the router/auto.go from the controller
 // Include(&BankAccount{}, &OrderController{},&RefundController{},&ReceiptController{})
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (p *ControllerRegister) Include(cList ...ControllerInterface) {
 	if BConfig.RunMode == DEV {
 		skip := make(map[string]bool, 10)
@@ -313,11 +323,13 @@ func (p *ControllerRegister) Include(cList ...ControllerInterface) {
 //  ctx := p.GetContext()
 //  ctx.Reset(w, q)
 //  defer p.GiveBackContext(ctx)
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (p *ControllerRegister) GetContext() *beecontext.Context {
 	return p.pool.Get().(*beecontext.Context)
 }
 
 // GiveBackContext put the ctx into pool so that it could be reuse
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (p *ControllerRegister) GiveBackContext(ctx *beecontext.Context) {
 	// clear input cached data
 	ctx.Input.Clear()
@@ -331,6 +343,7 @@ func (p *ControllerRegister) GiveBackContext(ctx *beecontext.Context) {
 //    Get("/", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (p *ControllerRegister) Get(pattern string, f FilterFunc) {
 	p.AddMethod("get", pattern, f)
 }
@@ -340,6 +353,7 @@ func (p *ControllerRegister) Get(pattern string, f FilterFunc) {
 //    Post("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (p *ControllerRegister) Post(pattern string, f FilterFunc) {
 	p.AddMethod("post", pattern, f)
 }
@@ -349,6 +363,7 @@ func (p *ControllerRegister) Post(pattern string, f FilterFunc) {
 //    Put("/api/:id", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (p *ControllerRegister) Put(pattern string, f FilterFunc) {
 	p.AddMethod("put", pattern, f)
 }
@@ -358,6 +373,7 @@ func (p *ControllerRegister) Put(pattern string, f FilterFunc) {
 //    Delete("/api/:id", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (p *ControllerRegister) Delete(pattern string, f FilterFunc) {
 	p.AddMethod("delete", pattern, f)
 }
@@ -367,6 +383,7 @@ func (p *ControllerRegister) Delete(pattern string, f FilterFunc) {
 //    Head("/api/:id", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (p *ControllerRegister) Head(pattern string, f FilterFunc) {
 	p.AddMethod("head", pattern, f)
 }
@@ -376,6 +393,7 @@ func (p *ControllerRegister) Head(pattern string, f FilterFunc) {
 //    Patch("/api/:id", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (p *ControllerRegister) Patch(pattern string, f FilterFunc) {
 	p.AddMethod("patch", pattern, f)
 }
@@ -385,6 +403,7 @@ func (p *ControllerRegister) Patch(pattern string, f FilterFunc) {
 //    Options("/api/:id", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (p *ControllerRegister) Options(pattern string, f FilterFunc) {
 	p.AddMethod("options", pattern, f)
 }
@@ -394,6 +413,7 @@ func (p *ControllerRegister) Options(pattern string, f FilterFunc) {
 //    Any("/api/:id", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (p *ControllerRegister) Any(pattern string, f FilterFunc) {
 	p.AddMethod("*", pattern, f)
 }
@@ -403,6 +423,7 @@ func (p *ControllerRegister) Any(pattern string, f FilterFunc) {
 //    AddMethod("get","/api/:id", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (p *ControllerRegister) AddMethod(method, pattern string, f FilterFunc) {
 	method = strings.ToUpper(method)
 	if method != "*" && !HTTPMETHOD[method] {
@@ -433,6 +454,7 @@ func (p *ControllerRegister) AddMethod(method, pattern string, f FilterFunc) {
 }
 
 // Handler add user defined Handler
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (p *ControllerRegister) Handler(pattern string, h http.Handler, options ...interface{}) {
 	route := &ControllerInfo{}
 	route.pattern = pattern
@@ -453,6 +475,7 @@ func (p *ControllerRegister) Handler(pattern string, h http.Handler, options ...
 // MainController has method List and Page.
 // visit the url /main/list to execute List function
 // /main/page to execute Page function.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (p *ControllerRegister) AddAuto(c ControllerInterface) {
 	p.AddAutoPrefix("/", c)
 }
@@ -462,6 +485,7 @@ func (p *ControllerRegister) AddAuto(c ControllerInterface) {
 // MainController has method List and Page.
 // visit the url /admin/main/list to execute List function
 // /admin/main/page to execute Page function.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (p *ControllerRegister) AddAutoPrefix(prefix string, c ControllerInterface) {
 	reflectVal := reflect.ValueOf(c)
 	rt := reflectVal.Type()
@@ -492,6 +516,7 @@ func (p *ControllerRegister) AddAutoPrefix(prefix string, c ControllerInterface)
 // params is for:
 //   1. setting the returnOnOutput value (false allows multiple filters to execute)
 //   2. determining whether or not params need to be reset.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (p *ControllerRegister) InsertFilter(pattern string, pos int, filter FilterFunc, params ...bool) error {
 	mr := &FilterRouter{
 		tree:           NewTree(),
@@ -526,6 +551,7 @@ func (p *ControllerRegister) insertFilterRouter(pos int, mr *FilterRouter) (err 
 
 // URLFor does another controller handler in this request function.
 // it can access any controller method.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (p *ControllerRegister) URLFor(endpoint string, values ...interface{}) string {
 	paths := strings.Split(endpoint, ".")
 	if len(paths) <= 1 {
@@ -695,6 +721,7 @@ func (p *ControllerRegister) execFilter(context *beecontext.Context, urlPath str
 }
 
 // Implement http.Handler interface.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
 	startTime := time.Now()
 	var (
@@ -993,6 +1020,7 @@ func (p *ControllerRegister) handleParamResponse(context *beecontext.Context, ex
 }
 
 // FindRouter Find Router info for URL
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (p *ControllerRegister) FindRouter(context *beecontext.Context) (routerInfo *ControllerInfo, isFind bool) {
 	var urlPath = context.Input.URL()
 	if !BConfig.RouterCaseSensitive {
@@ -1020,6 +1048,7 @@ func toURL(params map[string]string) string {
 }
 
 // LogAccess logging info HTTP Access
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func LogAccess(ctx *beecontext.Context, startTime *time.Time, statusCode int) {
 	// Skip logging if AccessLogs config is false
 	if !BConfig.Log.AccessLogs {

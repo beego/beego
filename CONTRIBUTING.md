@@ -12,11 +12,13 @@ please let us know if anything feels wrong or incomplete.
 ### Pull requests
 
 First of all. beego follow the gitflow. So please send you pull request 
-to **develop** branch. We will close the pull request to master branch.
+to **develop-2** branch. We will close the pull request to master branch.
 
 We are always happy to receive pull requests, and do our best to
 review them as fast as possible. Not sure if that typo is worth a pull
 request? Do it! We will appreciate it.
+
+Don't forget to rebase your commits!
 
 If your pull request is not accepted on the first try, don't be
 discouraged! Sometimes we can make a mistake, please do more explaining 

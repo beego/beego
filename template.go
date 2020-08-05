@@ -47,6 +47,7 @@ var (
 // ExecuteTemplate applies the template with name  to the specified data object,
 // writing the output to wr.
 // A template will be executed safely in parallel.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func ExecuteTemplate(wr io.Writer, name string, data interface{}) error {
 	return ExecuteViewPathTemplate(wr, name, BConfig.WebConfig.ViewsPath, data)
 }
@@ -54,6 +55,7 @@ func ExecuteTemplate(wr io.Writer, name string, data interface{}) error {
 // ExecuteViewPathTemplate applies the template with name and from specific viewPath to the specified data object,
 // writing the output to wr.
 // A template will be executed safely in parallel.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func ExecuteViewPathTemplate(wr io.Writer, name string, viewPath string, data interface{}) error {
 	if BConfig.RunMode == DEV {
 		templatesLock.RLock()
@@ -143,6 +145,7 @@ func (tf *templateFile) visit(paths string, f os.FileInfo, err error) error {
 }
 
 // HasTemplateExt return this path contains supported template extension of beego or not.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func HasTemplateExt(paths string) bool {
 	for _, v := range beeTemplateExt {
 		if strings.HasSuffix(paths, "."+v) {
@@ -153,6 +156,7 @@ func HasTemplateExt(paths string) bool {
 }
 
 // AddTemplateExt add new extension for template.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func AddTemplateExt(ext string) {
 	for _, v := range beeTemplateExt {
 		if v == ext {
@@ -165,6 +169,7 @@ func AddTemplateExt(ext string) {
 // AddViewPath adds a new path to the supported view paths.
 //Can later be used by setting a controller ViewPath to this folder
 //will panic if called after beego.Run()
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func AddViewPath(viewPath string) error {
 	if beeViewPathTemplateLocked {
 		if _, exist := beeViewPathTemplates[viewPath]; exist {
@@ -182,6 +187,7 @@ func lockViewPaths() {
 
 // BuildTemplate will build all template files in a directory.
 // it makes beego can render any template file in view directory.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func BuildTemplate(dir string, files ...string) error {
 	var err error
 	fs := beeTemplateFS()
@@ -363,11 +369,13 @@ func defaultFSFunc() http.FileSystem {
 }
 
 // SetTemplateFSFunc set default filesystem function
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func SetTemplateFSFunc(fnt templateFSFunc) {
 	beeTemplateFS = fnt
 }
 
 // SetViewsPath sets view directory path in beego application.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func SetViewsPath(path string) *App {
 	BConfig.WebConfig.ViewsPath = path
 	return BeeApp
@@ -375,6 +383,7 @@ func SetViewsPath(path string) *App {
 
 // SetStaticPath sets static directory path and proper url pattern in beego application.
 // if beego.SetStaticPath("static","public"), visit /static/* to load static file in folder "public".
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func SetStaticPath(url string, path string) *App {
 	if !strings.HasPrefix(url, "/") {
 		url = "/" + url
@@ -387,6 +396,7 @@ func SetStaticPath(url string, path string) *App {
 }
 
 // DelStaticPath removes the static folder setting in this url pattern in beego application.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func DelStaticPath(url string) *App {
 	if !strings.HasPrefix(url, "/") {
 		url = "/" + url
@@ -399,6 +409,7 @@ func DelStaticPath(url string) *App {
 }
 
 // AddTemplateEngine add a new templatePreProcessor which support extension
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func AddTemplateEngine(extension string, fn templatePreProcessor) *App {
 	AddTemplateExt(extension)
 	beeTemplateEngines[extension] = fn

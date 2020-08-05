@@ -1,4 +1,4 @@
-// Copyright 2020 astaxie
+// Copyright 2020 
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,31 +12,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package metric
+package beego
 
 import (
 	"net/http"
-	"net/url"
+	"net/http/httptest"
 	"testing"
-	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/astaxie/beego/pkg/context"
 )
 
-func TestPrometheusMiddleWare(t *testing.T) {
-	middleware := PrometheusMiddleWare(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
-	writer := &context.Response{}
-	request := &http.Request{
-		URL: &url.URL{
-			Host:    "localhost",
-			RawPath: "/a/b/c",
-		},
-		Method: "POST",
-	}
-	vec := prometheus.NewSummaryVec(prometheus.SummaryOpts{}, []string{"pattern", "method", "status", "duration"})
+func TestControllerRegister_InsertFilterChain(t *testing.T) {
 
-	report(time.Second, writer, request, vec)
-	middleware.ServeHTTP(writer, request)
+	InsertFilterChain("/*", func(next FilterFunc) FilterFunc {
+		return func(ctx *context.Context) {
+			ctx.Output.Header("filter", "filter-chain")
+			next(ctx)
+		}
+	})
+
+	ns := NewNamespace("/chain")
+
+	ns.Get("/*", func(ctx *context.Context) {
+		ctx.Output.Body([]byte("hello"))
+	})
+
+
+	r, _ := http.NewRequest("GET", "/chain/user", nil)
+	w := httptest.NewRecorder()
+
+	BeeApp.Handlers.ServeHTTP(w, r)
+
+	assert.Equal(t, "filter-chain", w.Header().Get("filter"))
 }

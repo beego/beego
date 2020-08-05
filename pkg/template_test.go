@@ -16,12 +16,15 @@ package beego
 
 import (
 	"bytes"
-	"github.com/astaxie/beego/pkg/testdata"
-	"github.com/elazarl/go-bindata-assetfs"
 	"net/http"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/elazarl/go-bindata-assetfs"
+	"github.com/stretchr/testify/assert"
+
+	"github.com/astaxie/beego/test"
 )
 
 var header = `{{define "header"}}
@@ -46,7 +49,9 @@ var block = `{{define "block"}}
 {{end}}`
 
 func TestTemplate(t *testing.T) {
-	dir := "_beeTmp"
+	wkdir, err := os.Getwd()
+	assert.Nil(t, err)
+	dir := filepath.Join(wkdir, "_beeTmp", "TestTemplate")
 	files := []string{
 		"header.tpl",
 		"index.tpl",
@@ -56,7 +61,8 @@ func TestTemplate(t *testing.T) {
 		t.Fatal(err)
 	}
 	for k, name := range files {
-		os.MkdirAll(filepath.Dir(filepath.Join(dir, name)), 0777)
+		dirErr := os.MkdirAll(filepath.Dir(filepath.Join(dir, name)), 0777)
+		assert.Nil(t, dirErr)
 		if f, err := os.Create(filepath.Join(dir, name)); err != nil {
 			t.Fatal(err)
 		} else {
@@ -107,7 +113,9 @@ var user = `<!DOCTYPE html>
 `
 
 func TestRelativeTemplate(t *testing.T) {
-	dir := "_beeTmp"
+	wkdir, err := os.Getwd()
+	assert.Nil(t, err)
+	dir := filepath.Join(wkdir, "_beeTmp")
 
 	//Just add dir to known viewPaths
 	if err := AddViewPath(dir); err != nil {
@@ -218,7 +226,10 @@ var output = `<!DOCTYPE html>
 `
 
 func TestTemplateLayout(t *testing.T) {
-	dir := "_beeTmp"
+	wkdir, err := os.Getwd()
+	assert.Nil(t, err)
+
+	dir := filepath.Join(wkdir, "_beeTmp", "TestTemplateLayout")
 	files := []string{
 		"add.tpl",
 		"layout_blog.tpl",
@@ -226,17 +237,22 @@ func TestTemplateLayout(t *testing.T) {
 	if err := os.MkdirAll(dir, 0777); err != nil {
 		t.Fatal(err)
 	}
+
 	for k, name := range files {
-		os.MkdirAll(filepath.Dir(filepath.Join(dir, name)), 0777)
+		dirErr := os.MkdirAll(filepath.Dir(filepath.Join(dir, name)), 0777)
+		assert.Nil(t, dirErr)
 		if f, err := os.Create(filepath.Join(dir, name)); err != nil {
 			t.Fatal(err)
 		} else {
 			if k == 0 {
-				f.WriteString(add)
+				_, writeErr := f.WriteString(add)
+				assert.Nil(t, writeErr)
 			} else if k == 1 {
-				f.WriteString(layoutBlog)
+				_, writeErr := f.WriteString(layoutBlog)
+				assert.Nil(t, writeErr)
 			}
-			f.Close()
+			clErr := f.Close()
+			assert.Nil(t, clErr)
 		}
 	}
 	if err := AddViewPath(dir); err != nil {
@@ -247,6 +263,7 @@ func TestTemplateLayout(t *testing.T) {
 		t.Fatalf("should be 2 but got %v", len(beeTemplates))
 	}
 	out := bytes.NewBufferString("")
+
 	if err := beeTemplates["add.tpl"].ExecuteTemplate(out, "add.tpl", map[string]string{"Title": "Hello", "SomeVar": "val"}); err != nil {
 		t.Fatal(err)
 	}
@@ -291,7 +308,7 @@ var outputBinData = `<!DOCTYPE html>
 
 func TestFsBinData(t *testing.T) {
 	SetTemplateFSFunc(func() http.FileSystem {
-		return TestingFileSystem{&assetfs.AssetFS{Asset: testdata.Asset, AssetDir: testdata.AssetDir, AssetInfo: testdata.AssetInfo}}
+		return TestingFileSystem{&assetfs.AssetFS{Asset: test.Asset, AssetDir: test.AssetDir, AssetInfo: test.AssetInfo}}
 	})
 	dir := "views"
 	if err := AddViewPath("views"); err != nil {
