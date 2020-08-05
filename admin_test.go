@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/astaxie/beego/toolbox"
 )
@@ -230,10 +231,19 @@ func TestHealthCheckHandlerReturnsJSON(t *testing.T) {
 		t.Errorf("invalid response map length: got %d want %d",
 			len(decodedResponseBody), len(expectedResponseBody))
 	}
+	assert.Equal(t, len(expectedResponseBody), len(decodedResponseBody))
+	assert.Equal(t, 2, len(decodedResponseBody))
 
-	if !reflect.DeepEqual(decodedResponseBody, expectedResponseBody) {
-		t.Errorf("handler returned unexpected body: got %v want %v",
-			decodedResponseBody, expectedResponseBody)
+	var database, cache map[string]interface{}
+	if decodedResponseBody[0]["message"] == "database" {
+		database = decodedResponseBody[0]
+		cache = decodedResponseBody[1]
+	} else {
+		database = decodedResponseBody[1]
+		cache = decodedResponseBody[0]
 	}
+
+	assert.Equal(t, expectedResponseBody[0], database)
+	assert.Equal(t, expectedResponseBody[1], cache)
 
 }
