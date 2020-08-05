@@ -349,7 +349,7 @@ func (o *ormBase) LoadRelatedWithCtx(ctx context.Context, md interface{}, name s
 	qs.RelatedSel(relDepth)
 
 	if len(order) > 0 {
-		qs.orders = []string{order}
+		qs.OrderBy([]string{order}...)
 	}
 
 	find := ind.FieldByIndex(fi.fieldIndex)
@@ -431,10 +431,10 @@ func (o *ormBase) getReverseQs(md interface{}, mi *modelInfo, fi *fieldInfo) *qu
 
 	if fi.fieldType == RelReverseMany && fi.reverseFieldInfo.mi.isThrough {
 		q = newQuerySet(o, fi.relModelInfo).(*querySet)
-		q.cond = NewCondition().And(fi.reverseFieldInfoM2M.column+ExprSep+fi.reverseFieldInfo.column, md)
+		q.Filter(fi.reverseFieldInfoM2M.column+ExprSep+fi.reverseFieldInfo.column, md)
 	} else {
 		q = newQuerySet(o, fi.reverseFieldInfo.mi).(*querySet)
-		q.cond = NewCondition().And(fi.reverseFieldInfo.column, md)
+		q.Filter(fi.reverseFieldInfo.column, md)
 	}
 
 	return q
@@ -449,12 +449,11 @@ func (o *ormBase) getRelQs(md interface{}, mi *modelInfo, fi *fieldInfo) *queryS
 	}
 
 	q := newQuerySet(o, fi.relModelInfo).(*querySet)
-	q.cond = NewCondition()
 
 	if fi.fieldType == RelManyToMany {
-		q.cond = q.cond.And(fi.reverseFieldInfoM2M.column+ExprSep+fi.reverseFieldInfo.column, md)
+		q.Filter(fi.reverseFieldInfoM2M.column+ExprSep+fi.reverseFieldInfo.column, md)
 	} else {
-		q.cond = q.cond.And(fi.reverseFieldInfo.column, md)
+		q.Filter(fi.reverseFieldInfo.column, md)
 	}
 
 	return q
