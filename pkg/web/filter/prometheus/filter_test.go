@@ -1,4 +1,4 @@
-// Copyright 2020 astaxie
+// Copyright 2020 beego 
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,31 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package metric
+package prometheus
 
 import (
 	"net/http"
-	"net/url"
+	"net/http/httptest"
 	"testing"
-	"time"
 
-	"github.com/prometheus/client_golang/prometheus"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/astaxie/beego/pkg/context"
 )
 
-func TestPrometheusMiddleWare(t *testing.T) {
-	middleware := PrometheusMiddleWare(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
-	writer := &context.Response{}
-	request := &http.Request{
-		URL: &url.URL{
-			Host:    "localhost",
-			RawPath: "/a/b/c",
-		},
-		Method: "POST",
-	}
-	vec := prometheus.NewSummaryVec(prometheus.SummaryOpts{}, []string{"pattern", "method", "status", "duration"})
+func TestFilterChain(t *testing.T) {
+	filter := (&FilterChainBuilder{}).FilterChain(func(ctx *context.Context) {
+		// do nothing
+		ctx.Input.SetData("invocation", true)
+	})
 
-	report(time.Second, writer, request, vec)
-	middleware.ServeHTTP(writer, request)
+	ctx := context.NewContext()
+	r, _ := http.NewRequest("GET", "/prometheus/user", nil)
+	w := httptest.NewRecorder()
+	ctx.Reset(w, r)
+	ctx.Input.SetData("RouterPattern", "my-route")
+	filter(ctx)
+	assert.True(t, ctx.Input.GetData("invocation").(bool))
 }
