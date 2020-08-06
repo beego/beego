@@ -195,7 +195,7 @@ func (b *BeegoHTTPRequest) Debug(isdebug bool) *BeegoHTTPRequest {
 }
 
 // Retries sets Retries times.
-// default is 0 (never retries)
+// default is 0 (never retry)
 // -1 retry indefinitely (forever)
 // Other numbers specify the exact retry amount
 func (b *BeegoHTTPRequest) Retries(times int) *BeegoHTTPRequest {
