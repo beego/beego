@@ -41,7 +41,7 @@ import (
 
 	"github.com/astaxie/beego/pkg/session"
 
-	"github.com/gomodule/redigo/redis"
+	"github.com/go-redis/redis/v7"
 )
 
 var redispder = &Provider{}
@@ -51,7 +51,7 @@ var MaxPoolSize = 100
 
 // SessionStore redis session store
 type SessionStore struct {
-	p           *redis.Pool
+	p           *redis.Client
 	sid         string
 	lock        sync.RWMutex
 	values      map[interface{}]interface{}
@@ -103,9 +103,8 @@ func (rs *SessionStore) SessionRelease(w http.ResponseWriter) {
 	if err != nil {
 		return
 	}
-	c := rs.p.Get()
-	defer c.Close()
-	c.Do("SETEX", rs.sid, rs.maxlifetime, string(b))
+	c := rs.p
+	c.Set(rs.sid, string(b), time.Duration(rs.maxlifetime)*time.Second)
 }
 
 // Provider redis session provider
@@ -115,7 +114,7 @@ type Provider struct {
 	poolsize    int
 	password    string
 	dbNum       int
-	poollist    *redis.Pool
+	poollist    *redis.Client
 }
 
 // SessionInit init redis session
@@ -157,45 +156,40 @@ func (rp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 			idleTimeout = time.Duration(timeout) * time.Second
 		}
 	}
-	rp.poollist = &redis.Pool{
-		Dial: func() (redis.Conn, error) {
-			c, err := redis.Dial("tcp", rp.savePath)
-			if err != nil {
-				return nil, err
-			}
-			if rp.password != "" {
-				if _, err = c.Do("AUTH", rp.password); err != nil {
-					c.Close()
-					return nil, err
-				}
-			}
-			// some redis proxy such as twemproxy is not support select command
-			if rp.dbNum > 0 {
-				_, err = c.Do("SELECT", rp.dbNum)
-				if err != nil {
-					c.Close()
-					return nil, err
-				}
-			}
-			return c, err
-		},
-		MaxIdle: rp.poolsize,
+	var idleCheckFrequency time.Duration = 0
+	if len(configs) > 5 {
+		checkFrequency, err := strconv.Atoi(configs[5])
+		if err == nil && checkFrequency > 0 {
+			idleCheckFrequency = time.Duration(checkFrequency) * time.Second
+		}
+	}
+	var maxRetries = 0
+	if len(configs) > 6 {
+		retries, err := strconv.Atoi(configs[6])
+		if err == nil && retries > 0 {
+			maxRetries = retries
+		}
 	}
 
-	rp.poollist.IdleTimeout = idleTimeout
+	rp.poollist = redis.NewClient(&redis.Options{
+		Addr:               rp.savePath,
+		Password:           rp.password,
+		PoolSize:           rp.poolsize,
+		DB:                 rp.dbNum,
+		IdleTimeout:        idleTimeout,
+		IdleCheckFrequency: idleCheckFrequency,
+		MaxRetries:         maxRetries,
+	})
 
-	return rp.poollist.Get().Err()
+	return rp.poollist.Ping().Err()
 }
 
 // SessionRead read redis session by sid
 func (rp *Provider) SessionRead(sid string) (session.Store, error) {
-	c := rp.poollist.Get()
-	defer c.Close()
-
 	var kv map[interface{}]interface{}
 
-	kvs, err := redis.String(c.Do("GET", sid))
-	if err != nil && err != redis.ErrNil {
+	kvs, err := rp.poollist.Get(sid).Result()
+	if err != nil && err != redis.Nil {
 		return nil, err
 	}
 	if len(kvs) == 0 {
@@ -212,10 +206,9 @@ func (rp *Provider) SessionRead(sid string) (session.Store, error) {
 
 // SessionExist check redis session exist by sid
 func (rp *Provider) SessionExist(sid string) (bool, error) {
-	c := rp.poollist.Get()
-	defer c.Close()
+	c := rp.poollist
 
-	if existed, err := redis.Int(c.Do("EXISTS", sid)); err != nil || existed == 0 {
+	if existed, err := c.Exists(sid).Result(); err != nil || existed == 0 {
 		return false, err
 	}
 	return true, nil
@@ -223,27 +216,24 @@ func (rp *Provider) SessionExist(sid string) (bool, error) {
 
 // SessionRegenerate generate new sid for redis session
 func (rp *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error) {
-	c := rp.poollist.Get()
-	defer c.Close()
-
-	if existed, _ := redis.Int(c.Do("EXISTS", oldsid)); existed == 0 {
+	c := rp.poollist
+	if existed, _ := c.Exists(oldsid).Result(); existed == 0 {
 		// oldsid doesn't exists, set the new sid directly
 		// ignore error here, since if it return error
 		// the existed value will be 0
-		c.Do("SET", sid, "", "EX", rp.maxlifetime)
+		c.Do(c.Context(), "SET", sid, "", "EX", rp.maxlifetime)
 	} else {
-		c.Do("RENAME", oldsid, sid)
-		c.Do("EXPIRE", sid, rp.maxlifetime)
+		c.Rename(oldsid, sid)
+		c.Expire(sid, time.Duration(rp.maxlifetime))
 	}
 	return rp.SessionRead(sid)
 }
 
 // SessionDestroy delete redis session by id
 func (rp *Provider) SessionDestroy(sid string) error {
-	c := rp.poollist.Get()
-	defer c.Close()
+	c := rp.poollist
 
-	c.Do("DEL", sid)
+	c.Del(sid)
 	return nil
 }
 
@@ -259,3 +249,4 @@ func (rp *Provider) SessionAll() int {
 func init() {
 	session.Register("redis", redispder)
 }
+
