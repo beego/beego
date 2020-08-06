@@ -35,7 +35,7 @@ type SMTPWriter struct {
 	Level              int      `json:"level"`
 }
 
-// NewSMTPWriter create smtp writer.
+// NewSMTPWriter creates the smtp writer.
 func newSMTPWriter() Logger {
 	return &SMTPWriter{Level: LevelTrace}
 }
@@ -115,8 +115,8 @@ func (s *SMTPWriter) sendMail(hostAddressWithPort string, auth smtp.Auth, fromAd
 	return client.Quit()
 }
 
-// WriteMsg write message in smtp writer.
-// it will send an email with subject and only this message.
+// WriteMsg writes message in smtp writer.
+// Sends an email with subject and only this message.
 func (s *SMTPWriter) WriteMsg(when time.Time, msg string, level int) error {
 	if level > s.Level {
 		return nil

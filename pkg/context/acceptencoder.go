@@ -28,18 +28,18 @@ import (
 )
 
 var (
-	//Default size==20B same as nginx
+	// Default size==20B same as nginx
 	defaultGzipMinLength = 20
-	//Content will only be compressed if content length is either unknown or greater than gzipMinLength.
+	// Content will only be compressed if content length is either unknown or greater than gzipMinLength.
 	gzipMinLength = defaultGzipMinLength
-	//The compression level used for deflate compression. (0-9).
+	// Compression level used for deflate compression. (0-9).
 	gzipCompressLevel int
-	//List of HTTP methods to compress. If not set, only GET requests are compressed.
+	// List of HTTP methods to compress. If not set, only GET requests are compressed.
 	includedMethods map[string]bool
 	getMethodOnly   bool
 )
 
-// InitGzip init the gzipcompress
+// InitGzip initializes the gzipcompress
 func InitGzip(minLength, compressLevel int, methods []string) {
 	if minLength >= 0 {
 		gzipMinLength = minLength
@@ -98,9 +98,9 @@ func (ac acceptEncoder) put(wr resetWriter, level int) {
 	}
 	wr.Reset(nil)
 
-	//notice
-	//compressionLevel==BestCompression DOES NOT MATTER
-	//sync.Pool will not memory leak
+	// notice
+	// compressionLevel==BestCompression DOES NOT MATTER
+	// sync.Pool will not memory leak
 
 	switch level {
 	case gzipCompressLevel:
@@ -119,10 +119,10 @@ var (
 		bestCompressionPool:     &sync.Pool{New: func() interface{} { wr, _ := gzip.NewWriterLevel(nil, flate.BestCompression); return wr }},
 	}
 
-	//according to the sec :http://tools.ietf.org/html/rfc2616#section-3.5 ,the deflate compress in http is zlib indeed
-	//deflate
-	//The "zlib" format defined in RFC 1950 [31] in combination with
-	//the "deflate" compression mechanism described in RFC 1951 [29].
+	// According to: http://tools.ietf.org/html/rfc2616#section-3.5 the deflate compress in http is zlib indeed
+	// deflate
+	// The "zlib" format defined in RFC 1950 [31] in combination with
+	// the "deflate" compression mechanism described in RFC 1951 [29].
 	deflateCompressEncoder = acceptEncoder{
 		name:                    "deflate",
 		levelEncode:             func(level int) resetWriter { wr, _ := zlib.NewWriterLevel(nil, level); return wr },
@@ -145,7 +145,7 @@ func WriteFile(encoding string, writer io.Writer, file *os.File) (bool, string, 
 	return writeLevel(encoding, writer, file, flate.BestCompression)
 }
 
-// WriteBody reads  writes content to writer by the specific encoding(gzip/deflate)
+// WriteBody reads writes content to writer by the specific encoding(gzip/deflate)
 func WriteBody(encoding string, writer io.Writer, content []byte) (bool, string, error) {
 	if encoding == "" || len(content) < gzipMinLength {
 		_, err := writer.Write(content)
@@ -154,8 +154,8 @@ func WriteBody(encoding string, writer io.Writer, content []byte) (bool, string,
 	return writeLevel(encoding, writer, bytes.NewReader(content), gzipCompressLevel)
 }
 
-// writeLevel reads from reader,writes to writer by specific encoding and compress level
-// the compress level is defined by deflate package
+// writeLevel reads from reader and writes to writer by specific encoding and compress level.
+// The compress level is defined by deflate package
 func writeLevel(encoding string, writer io.Writer, reader io.Reader, level int) (bool, string, error) {
 	var outputWriter resetWriter
 	var err error

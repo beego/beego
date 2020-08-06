@@ -26,7 +26,7 @@ import (
 // brush is a color join function
 type brush func(string) string
 
-// newBrush return a fix color Brush
+// newBrush returns a fix color Brush
 func newBrush(color string) brush {
 	pre := "\033["
 	reset := "\033[0m"
@@ -53,7 +53,7 @@ type consoleWriter struct {
 	Colorful bool `json:"color"` //this filed is useful only when system's terminal supports color
 }
 
-// NewConsole create ConsoleWriter returning as LoggerInterface.
+// NewConsole creates ConsoleWriter returning as LoggerInterface.
 func NewConsole() Logger {
 	cw := &consoleWriter{
 		lg:       newLogWriter(ansicolor.NewAnsiColorWriter(os.Stdout)),
@@ -63,8 +63,8 @@ func NewConsole() Logger {
 	return cw
 }
 
-// Init init console logger.
-// jsonConfig like '{"level":LevelTrace}'.
+// Init initianlizes the console logger.
+// jsonConfig must be in the format '{"level":LevelTrace}'
 func (c *consoleWriter) Init(jsonConfig string) error {
 	if len(jsonConfig) == 0 {
 		return nil
@@ -72,7 +72,7 @@ func (c *consoleWriter) Init(jsonConfig string) error {
 	return json.Unmarshal([]byte(jsonConfig), c)
 }
 
-// WriteMsg write message in console.
+// WriteMsg writes message in console.
 func (c *consoleWriter) WriteMsg(when time.Time, msg string, level int) error {
 	if level > c.Level {
 		return nil

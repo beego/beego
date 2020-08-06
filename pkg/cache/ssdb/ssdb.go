@@ -18,12 +18,12 @@ type Cache struct {
 	conninfo []string
 }
 
-//NewSsdbCache create new ssdb adapter.
+//NewSsdbCache creates new ssdb adapter.
 func NewSsdbCache() cache.Cache {
 	return &Cache{}
 }
 
-// Get get value from memcache.
+// Get gets a key's value from memcache.
 func (rc *Cache) Get(key string) interface{} {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
@@ -37,7 +37,7 @@ func (rc *Cache) Get(key string) interface{} {
 	return nil
 }
 
-// GetMulti get value from memcache.
+// GetMulti gets one or keys values from memcache.
 func (rc *Cache) GetMulti(keys []string) []interface{} {
 	size := len(keys)
 	var values []interface{}
@@ -63,7 +63,7 @@ func (rc *Cache) GetMulti(keys []string) []interface{} {
 	return values
 }
 
-// DelMulti get value from memcache.
+// DelMulti deletes one or more keys from memcache
 func (rc *Cache) DelMulti(keys []string) error {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
@@ -74,7 +74,8 @@ func (rc *Cache) DelMulti(keys []string) error {
 	return err
 }
 
-// Put put value to memcache. only support string.
+// Put puts value into memcache.
+// value:  must be of type string
 func (rc *Cache) Put(key string, value interface{}, timeout time.Duration) error {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
@@ -102,7 +103,7 @@ func (rc *Cache) Put(key string, value interface{}, timeout time.Duration) error
 	return errors.New("bad response")
 }
 
-// Delete delete value in memcache.
+// Delete deletes a value in memcache.
 func (rc *Cache) Delete(key string) error {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
@@ -113,7 +114,7 @@ func (rc *Cache) Delete(key string) error {
 	return err
 }
 
-// Incr increase counter.
+// Incr increases a key's counter.
 func (rc *Cache) Incr(key string) error {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
@@ -124,7 +125,7 @@ func (rc *Cache) Incr(key string) error {
 	return err
 }
 
-// Decr decrease counter.
+// Decr decrements a key's counter.
 func (rc *Cache) Decr(key string) error {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
@@ -135,7 +136,7 @@ func (rc *Cache) Decr(key string) error {
 	return err
 }
 
-// IsExist check value exists in memcache.
+// IsExist checks if a key exists in memcache.
 func (rc *Cache) IsExist(key string) bool {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
@@ -153,7 +154,7 @@ func (rc *Cache) IsExist(key string) bool {
 
 }
 
-// ClearAll clear all cached in memcache.
+// ClearAll clears all cached items in memcache.
 func (rc *Cache) ClearAll() error {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
@@ -195,9 +196,9 @@ func (rc *Cache) Scan(keyStart string, keyEnd string, limit int) ([]string, erro
 	return resp, nil
 }
 
-// StartAndGC start memcache adapter.
-// config string is like {"conn":"connection info"}.
-// if connecting error, return.
+// StartAndGC starts the memcache adapter.
+// config: must be in the format {"conn":"connection info"}.
+// If an error occurs during connection, an error is returned
 func (rc *Cache) StartAndGC(config string) error {
 	var cf map[string]string
 	json.Unmarshal([]byte(config), &cf)

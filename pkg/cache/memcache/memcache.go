@@ -46,7 +46,7 @@ type Cache struct {
 	conninfo []string
 }
 
-// NewMemCache create new memcache adapter.
+// NewMemCache creates a new memcache adapter.
 func NewMemCache() cache.Cache {
 	return &Cache{}
 }
@@ -64,7 +64,7 @@ func (rc *Cache) Get(key string) interface{} {
 	return nil
 }
 
-// GetMulti get value from memcache.
+// GetMulti gets a value from a key in memcache.
 func (rc *Cache) GetMulti(keys []string) []interface{} {
 	size := len(keys)
 	var rv []interface{}
@@ -89,7 +89,7 @@ func (rc *Cache) GetMulti(keys []string) []interface{} {
 	return rv
 }
 
-// Put put value to memcache.
+// Put puts a value into memcache.
 func (rc *Cache) Put(key string, val interface{}, timeout time.Duration) error {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
@@ -107,7 +107,7 @@ func (rc *Cache) Put(key string, val interface{}, timeout time.Duration) error {
 	return rc.conn.Set(&item)
 }
 
-// Delete delete value in memcache.
+// Delete deletes a value in memcache.
 func (rc *Cache) Delete(key string) error {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
@@ -117,7 +117,7 @@ func (rc *Cache) Delete(key string) error {
 	return rc.conn.Delete(key)
 }
 
-// Incr increase counter.
+// Incr increases counter.
 func (rc *Cache) Incr(key string) error {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
@@ -128,7 +128,7 @@ func (rc *Cache) Incr(key string) error {
 	return err
 }
 
-// Decr decrease counter.
+// Decr decreases counter.
 func (rc *Cache) Decr(key string) error {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
@@ -139,7 +139,7 @@ func (rc *Cache) Decr(key string) error {
 	return err
 }
 
-// IsExist check value exists in memcache.
+// IsExist checks if a value exists in memcache.
 func (rc *Cache) IsExist(key string) bool {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
@@ -150,7 +150,7 @@ func (rc *Cache) IsExist(key string) bool {
 	return err == nil
 }
 
-// ClearAll clear all cached in memcache.
+// ClearAll clears all cache in memcache.
 func (rc *Cache) ClearAll() error {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
@@ -160,9 +160,9 @@ func (rc *Cache) ClearAll() error {
 	return rc.conn.FlushAll()
 }
 
-// StartAndGC start memcache adapter.
-// config string is like {"conn":"connection info"}.
-// if connecting error, return.
+// StartAndGC starts the memcache adapter.
+// config: must be in the format {"conn":"connection info"}.
+// If an error occurs during connecting, an error is returned
 func (rc *Cache) StartAndGC(config string) error {
 	var cf map[string]string
 	json.Unmarshal([]byte(config), &cf)

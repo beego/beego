@@ -224,7 +224,7 @@ func (ini *IniConfig) ParseData(data []byte) (config.Configer, error) {
 	return ini.parseData(dir, data)
 }
 
-// IniConfigContainer A Config represents the ini configuration.
+// IniConfigContainer is a config which represents the ini configuration.
 // When set and get value, support key as section:name type.
 type IniConfigContainer struct {
 	data           map[string]map[string]string // section=> key:val
