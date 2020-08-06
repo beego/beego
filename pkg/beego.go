@@ -97,6 +97,7 @@ func initBeforeHTTPRun() {
 		registerTemplate,
 		registerAdmin,
 		registerGzip,
+		registerCommentRouter,
 	)
 
 	for _, hk := range hooks {
