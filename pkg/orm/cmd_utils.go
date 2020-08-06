@@ -66,7 +66,12 @@ checkColumn:
 	case TypeDateField:
 		col = T["time.Time-date"]
 	case TypeDateTimeField:
-		col = T["time.Time"]
+		if fi.timePrecision == nil {
+			col = T["time.Time"]
+		} else {
+			s := T["time.Time-precision"]
+			col = fmt.Sprintf(s, *fi.timePrecision)
+		}
 	case TypeBitField:
 		col = T["int8"]
 	case TypeSmallIntegerField:
