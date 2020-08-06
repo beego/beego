@@ -46,7 +46,7 @@ func printHelp(errs ...string) {
 	os.Exit(2)
 }
 
-// RunCommand listen for orm command and then run it if command arguments passed.
+// RunCommand listens for orm command and runs if command arguments have been passed.
 func RunCommand() {
 	if len(os.Args) < 2 || os.Args[1] != "orm" {
 		return
@@ -83,7 +83,7 @@ type commandSyncDb struct {
 	rtOnError bool
 }
 
-// parse orm command line arguments.
+// Parse the orm command line arguments.
 func (d *commandSyncDb) Parse(args []string) {
 	var name string
 
@@ -96,7 +96,7 @@ func (d *commandSyncDb) Parse(args []string) {
 	d.al = getDbAlias(name)
 }
 
-// run orm line command.
+// Run orm line command.
 func (d *commandSyncDb) Run() error {
 	var drops []string
 	if d.force {
@@ -232,7 +232,7 @@ type commandSQLAll struct {
 	al *alias
 }
 
-// parse orm command line arguments.
+// Parse orm command line arguments.
 func (d *commandSQLAll) Parse(args []string) {
 	var name string
 
@@ -243,7 +243,7 @@ func (d *commandSQLAll) Parse(args []string) {
 	d.al = getDbAlias(name)
 }
 
-// run orm line command.
+// Run orm line command.
 func (d *commandSQLAll) Run() error {
 	sqls, indexes := getDbCreateSQL(d.al)
 	var all []string
@@ -266,9 +266,9 @@ func init() {
 }
 
 // RunSyncdb run syncdb command line.
-// name means table's alias name. default is "default".
-// force means run next sql if the current is error.
-// verbose means show all info when running command or not.
+// name: Table's alias name (default is "default")
+// force: Run the next sql command even if the current gave an error
+// verbose: Print all information, useful for debugging
 func RunSyncdb(name string, force bool, verbose bool) error {
 	BootStrap()
 

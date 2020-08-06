@@ -19,8 +19,8 @@ type KV interface {
 	GetValue() interface{}
 }
 
-// SimpleKV is common structure to store key-value data.
-// when you need something like Pair, you can use this
+// SimpleKV is common structure to store key-value pairs.
+// When you need something like Pair, you can use this
 type SimpleKV struct {
 	Key   interface{}
 	Value interface{}
@@ -41,8 +41,8 @@ type KVs struct {
 	kvs map[interface{}]interface{}
 }
 
-// GetValueOr check whether this contains the key,
-// if the key not found, the default value will be return
+// GetValueOr returns the value for a given key, if non-existant
+// it returns defValue
 func (kvs *KVs) GetValueOr(key interface{}, defValue interface{}) interface{} {
 	v, ok := kvs.kvs[key]
 	if ok {
@@ -51,13 +51,13 @@ func (kvs *KVs) GetValueOr(key interface{}, defValue interface{}) interface{} {
 	return defValue
 }
 
-// Contains will check whether contains the key
+// Contains checks if a key exists
 func (kvs *KVs) Contains(key interface{}) bool {
 	_, ok := kvs.kvs[key]
 	return ok
 }
 
-// IfContains is a functional API that if the key is in KVs, the action will be invoked
+// IfContains invokes the action on a key if it exists
 func (kvs *KVs) IfContains(key interface{}, action func(value interface{})) *KVs {
 	v, ok := kvs.kvs[key]
 	if ok {
@@ -66,13 +66,13 @@ func (kvs *KVs) IfContains(key interface{}, action func(value interface{})) *KVs
 	return kvs
 }
 
-// Put store the value
+// Put stores the value
 func (kvs *KVs) Put(key interface{}, value interface{}) *KVs {
 	kvs.kvs[key] = value
 	return kvs
 }
 
-// NewKVs will create the *KVs instance
+// NewKVs creates the *KVs instance
 func NewKVs(kvs ...KV) *KVs {
 	res := &KVs{
 		kvs: make(map[interface{}]interface{}, len(kvs)),
