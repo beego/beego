@@ -54,7 +54,7 @@ type FileCache struct {
 	EmbedExpiry    int
 }
 
-// NewFileCache cerates a new file cache with no config.
+// NewFileCache creates a new file cache with no config.
 // The level and expiry need to be set in the method StartAndGC as config string.
 func NewFileCache() Cache {
 	//    return &FileCache{CachePath:FileCachePath, FileSuffix:FileCacheFileSuffix}

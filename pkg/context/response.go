@@ -7,21 +7,21 @@ import (
 )
 
 const (
-	//BadRequest indicates http error 400
+	//BadRequest indicates HTTP error 400
 	BadRequest StatusCode = http.StatusBadRequest
 
-	//NotFound indicates http error 404
+	//NotFound indicates HTTP error 404
 	NotFound StatusCode = http.StatusNotFound
 )
 
-// StatusCode sets the http response status code
+// StatusCode sets the HTTP response status code
 type StatusCode int
 
 func (s StatusCode) Error() string {
 	return strconv.Itoa(int(s))
 }
 
-// Render sets the http status code
+// Render sets the HTTP status code
 func (s StatusCode) Render(ctx *Context) {
 	ctx.Output.SetStatus(int(s))
 }
