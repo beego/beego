@@ -32,6 +32,7 @@ require (
 	github.com/wendal/errors v0.0.0-20130201093226-f66c77a7882b // indirect
 	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
 	golang.org/x/net v0.0.0-20190620200207-3b0461eec859 // indirect
+	golang.org/x/tools v0.0.0-20200117065230-39095c1d176c
 	google.golang.org/grpc v1.31.0 // indirect
 	gopkg.in/yaml.v2 v2.2.8
 )

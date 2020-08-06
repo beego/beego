@@ -102,3 +102,13 @@ func registerGzip() error {
 	}
 	return nil
 }
+
+func registerCommentRouter() error {
+	if BConfig.RunMode == DEV {
+		if err := parserPkg(filepath.Join(WorkPath, BConfig.WebConfig.CommentRouterPath)); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
