@@ -56,7 +56,7 @@ type Store interface {
 type Provider interface {
 	SessionInit(gclifetime int64, config string) error
 	SessionRead(sid string) (Store, error)
-	SessionExist(sid string) bool
+	SessionExist(sid string) (bool, error)
 	SessionRegenerate(oldsid, sid string) (Store, error)
 	SessionDestroy(sid string) error
 	SessionAll() int //get all active session
@@ -211,8 +211,14 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 		return nil, errs
 	}
 
-	if sid != "" && manager.provider.SessionExist(sid) {
-		return manager.provider.SessionRead(sid)
+	if sid != "" {
+		exists, err := manager.provider.SessionExist(sid)
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			return manager.provider.SessionRead(sid)
+		}
 	}
 
 	// Generate a new session

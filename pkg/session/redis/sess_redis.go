@@ -211,14 +211,14 @@ func (rp *Provider) SessionRead(sid string) (session.Store, error) {
 }
 
 // SessionExist check redis session exist by sid
-func (rp *Provider) SessionExist(sid string) bool {
+func (rp *Provider) SessionExist(sid string) (bool, error) {
 	c := rp.poollist.Get()
 	defer c.Close()
 
 	if existed, err := redis.Int(c.Do("EXISTS", sid)); err != nil || existed == 0 {
-		return false
+		return false, err
 	}
-	return true
+	return true, nil
 }
 
 // SessionRegenerate generate new sid for redis session
