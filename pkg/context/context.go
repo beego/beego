@@ -38,7 +38,7 @@ import (
 	"github.com/astaxie/beego/pkg/utils"
 )
 
-//commonly used mime-types
+// Commonly used mime-types
 const (
 	ApplicationJSON = "application/json"
 	ApplicationXML  = "application/xml"
@@ -55,7 +55,7 @@ func NewContext() *Context {
 }
 
 // Context Http request context struct including BeegoInput, BeegoOutput, http.Request and http.ResponseWriter.
-// BeegoInput and BeegoOutput provides some api to operate request and response more easily.
+// BeegoInput and BeegoOutput provides an api to operate request and response more easily.
 type Context struct {
 	Input          *BeegoInput
 	Output         *BeegoOutput
@@ -64,7 +64,7 @@ type Context struct {
 	_xsrfToken     string
 }
 
-// Reset init Context, BeegoInput and BeegoOutput
+// Reset initializes Context, BeegoInput and BeegoOutput
 func (ctx *Context) Reset(rw http.ResponseWriter, r *http.Request) {
 	ctx.Request = r
 	if ctx.ResponseWriter == nil {
@@ -76,37 +76,36 @@ func (ctx *Context) Reset(rw http.ResponseWriter, r *http.Request) {
 	ctx._xsrfToken = ""
 }
 
-// Redirect does redirection to localurl with http header status code.
+// Redirect redirects to localurl with http header status code.
 func (ctx *Context) Redirect(status int, localurl string) {
 	http.Redirect(ctx.ResponseWriter, ctx.Request, localurl, status)
 }
 
-// Abort stops this request.
-// if beego.ErrorMaps exists, panic body.
+// Abort stops the request.
+// If beego.ErrorMaps exists, panic body.
 func (ctx *Context) Abort(status int, body string) {
 	ctx.Output.SetStatus(status)
 	panic(body)
 }
 
-// WriteString Write string to response body.
-// it sends response body.
+// WriteString writes a string to response body.
 func (ctx *Context) WriteString(content string) {
 	ctx.ResponseWriter.Write([]byte(content))
 }
 
-// GetCookie Get cookie from request by a given key.
-// It's alias of BeegoInput.Cookie.
+// GetCookie gets a cookie from a request for a given key.
+// (Alias of BeegoInput.Cookie)
 func (ctx *Context) GetCookie(key string) string {
 	return ctx.Input.Cookie(key)
 }
 
-// SetCookie Set cookie for response.
-// It's alias of BeegoOutput.Cookie.
+// SetCookie sets a cookie for a response.
+// (Alias of BeegoOutput.Cookie)
 func (ctx *Context) SetCookie(name string, value string, others ...interface{}) {
 	ctx.Output.Cookie(name, value, others...)
 }
 
-// GetSecureCookie Get secure cookie from request by a given key.
+// GetSecureCookie gets a secure cookie from a request for a given key.
 func (ctx *Context) GetSecureCookie(Secret, key string) (string, bool) {
 	val := ctx.Input.Cookie(key)
 	if val == "" {
@@ -133,7 +132,7 @@ func (ctx *Context) GetSecureCookie(Secret, key string) (string, bool) {
 	return string(res), true
 }
 
-// SetSecureCookie Set Secure cookie for response.
+// SetSecureCookie sets a secure cookie for a response.
 func (ctx *Context) SetSecureCookie(Secret, name, value string, others ...interface{}) {
 	vs := base64.URLEncoding.EncodeToString([]byte(value))
 	timestamp := strconv.FormatInt(time.Now().UnixNano(), 10)
@@ -144,7 +143,7 @@ func (ctx *Context) SetSecureCookie(Secret, name, value string, others ...interf
 	ctx.Output.Cookie(name, cookie, others...)
 }
 
-// XSRFToken creates a xsrf token string and returns.
+// XSRFToken creates and returns an xsrf token string
 func (ctx *Context) XSRFToken(key string, expire int64) string {
 	if ctx._xsrfToken == "" {
 		token, ok := ctx.GetSecureCookie(key, "_xsrf")
@@ -157,8 +156,8 @@ func (ctx *Context) XSRFToken(key string, expire int64) string {
 	return ctx._xsrfToken
 }
 
-// CheckXSRFCookie checks xsrf token in this request is valid or not.
-// the token can provided in request header "X-Xsrftoken" and "X-CsrfToken"
+// CheckXSRFCookie checks if the XSRF token in this request is valid or not.
+// The token can be provided in the request header in the form "X-Xsrftoken" or "X-CsrfToken"
 // or in form field value named as "_xsrf".
 func (ctx *Context) CheckXSRFCookie() bool {
 	token := ctx.Input.Query("_xsrf")
@@ -195,8 +194,8 @@ func (ctx *Context) RenderMethodResult(result interface{}) {
 	}
 }
 
-//Response is a wrapper for the http.ResponseWriter
-//started set to true if response was written to then don't execute other handler
+// Response is a wrapper for the http.ResponseWriter
+// Started:  if true, response was already written to so the other handler will not be executed
 type Response struct {
 	http.ResponseWriter
 	Started bool
@@ -210,16 +209,16 @@ func (r *Response) reset(rw http.ResponseWriter) {
 	r.Started = false
 }
 
-// Write writes the data to the connection as part of an HTTP reply,
-// and sets `started` to true.
-// started means the response has sent out.
+// Write writes the data to the connection as part of a HTTP reply,
+// and sets `Started` to true.
+// Started:  if true, the response was already sent
 func (r *Response) Write(p []byte) (int, error) {
 	r.Started = true
 	return r.ResponseWriter.Write(p)
 }
 
-// WriteHeader sends an HTTP response header with status code,
-// and sets `started` to true.
+// WriteHeader sends a HTTP response header with status code,
+// and sets `Started` to true.
 func (r *Response) WriteHeader(code int) {
 	if r.Status > 0 {
 		//prevent multiple response.WriteHeader calls

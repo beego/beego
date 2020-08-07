@@ -22,7 +22,7 @@ const (
 	header
 )
 
-//New creates a new MethodParam with name and specific options
+// New creates a new MethodParam with name and specific options
 func New(name string, opts ...MethodParamOption) *MethodParam {
 	return newParam(name, nil, opts)
 }
@@ -35,7 +35,7 @@ func newParam(name string, parser paramParser, opts []MethodParamOption) (param 
 	return
 }
 
-//Make creates an array of MethodParmas or an empty array
+// Make creates an array of MethodParmas or an empty array
 func Make(list ...*MethodParam) []*MethodParam {
 	if len(list) > 0 {
 		return list

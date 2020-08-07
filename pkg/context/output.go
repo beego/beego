@@ -42,12 +42,12 @@ type BeegoOutput struct {
 }
 
 // NewOutput returns new BeegoOutput.
-// it contains nothing now.
+// Empty when initialized
 func NewOutput() *BeegoOutput {
 	return &BeegoOutput{}
 }
 
-// Reset init BeegoOutput
+// Reset initializes BeegoOutput
 func (output *BeegoOutput) Reset(ctx *Context) {
 	output.Context = ctx
 	output.Status = 0
@@ -58,9 +58,9 @@ func (output *BeegoOutput) Header(key, val string) {
 	output.Context.ResponseWriter.Header().Set(key, val)
 }
 
-// Body sets response body content.
-// if EnableGzip, compress content string.
-// it sends out response body directly.
+// Body sets the response body content.
+// if EnableGzip, content is compressed.
+// Sends out response body directly.
 func (output *BeegoOutput) Body(content []byte) error {
 	var encoding string
 	var buf = &bytes.Buffer{}
@@ -85,13 +85,13 @@ func (output *BeegoOutput) Body(content []byte) error {
 	return nil
 }
 
-// Cookie sets cookie value via given key.
-// others are ordered as cookie's max age time, path,domain, secure and httponly.
+// Cookie sets a cookie value via given key.
+// others: used to set a cookie's max age time, path,domain, secure and httponly.
 func (output *BeegoOutput) Cookie(name string, value string, others ...interface{}) {
 	var b bytes.Buffer
 	fmt.Fprintf(&b, "%s=%s", sanitizeName(name), sanitizeValue(value))
 
-	//fix cookie not work in IE
+	// fix cookie not work in IE
 	if len(others) > 0 {
 		var maxAge int64
 
@@ -183,7 +183,7 @@ func errorRenderer(err error) Renderer {
 	})
 }
 
-// JSON writes json to response body.
+// JSON writes json to the response body.
 // if encoding is true, it converts utf-8 to \u0000 type.
 func (output *BeegoOutput) JSON(data interface{}, hasIndent bool, encoding bool) error {
 	output.Header("Content-Type", "application/json; charset=utf-8")
@@ -204,7 +204,7 @@ func (output *BeegoOutput) JSON(data interface{}, hasIndent bool, encoding bool)
 	return output.Body(content)
 }
 
-// YAML writes yaml to response body.
+// YAML writes yaml to the response body.
 func (output *BeegoOutput) YAML(data interface{}) error {
 	output.Header("Content-Type", "application/x-yaml; charset=utf-8")
 	var content []byte
@@ -217,7 +217,7 @@ func (output *BeegoOutput) YAML(data interface{}) error {
 	return output.Body(content)
 }
 
-// JSONP writes jsonp to response body.
+// JSONP writes jsonp to the response body.
 func (output *BeegoOutput) JSONP(data interface{}, hasIndent bool) error {
 	output.Header("Content-Type", "application/javascript; charset=utf-8")
 	var content []byte
@@ -243,7 +243,7 @@ func (output *BeegoOutput) JSONP(data interface{}, hasIndent bool) error {
 	return output.Body(callbackContent.Bytes())
 }
 
-// XML writes xml string to response body.
+// XML writes xml string to the response body.
 func (output *BeegoOutput) XML(data interface{}, hasIndent bool) error {
 	output.Header("Content-Type", "application/xml; charset=utf-8")
 	var content []byte
@@ -260,7 +260,7 @@ func (output *BeegoOutput) XML(data interface{}, hasIndent bool) error {
 	return output.Body(content)
 }
 
-// ServeFormatted serve YAML, XML OR JSON, depending on the value of the Accept header
+// ServeFormatted serves YAML, XML or JSON, depending on the value of the Accept header
 func (output *BeegoOutput) ServeFormatted(data interface{}, hasIndent bool, hasEncode ...bool) {
 	accept := output.Context.Input.Header("Accept")
 	switch accept {
@@ -274,7 +274,7 @@ func (output *BeegoOutput) ServeFormatted(data interface{}, hasIndent bool, hasE
 }
 
 // Download forces response for download file.
-// it prepares the download response header automatically.
+// Prepares the download response header automatically.
 func (output *BeegoOutput) Download(file string, filename ...string) {
 	// check get file error, file not found or other error.
 	if _, err := os.Stat(file); err != nil {
@@ -323,61 +323,61 @@ func (output *BeegoOutput) ContentType(ext string) {
 	}
 }
 
-// SetStatus sets response status code.
-// It writes response header directly.
+// SetStatus sets the response status code.
+// Writes response header directly.
 func (output *BeegoOutput) SetStatus(status int) {
 	output.Status = status
 }
 
-// IsCachable returns boolean of this request is cached.
+// IsCachable returns boolean of if this request is cached.
 // HTTP 304 means cached.
 func (output *BeegoOutput) IsCachable() bool {
 	return output.Status >= 200 && output.Status < 300 || output.Status == 304
 }
 
-// IsEmpty returns boolean of this request is empty.
+// IsEmpty returns boolean of if this request is empty.
 // HTTP 201，204 and 304 means empty.
 func (output *BeegoOutput) IsEmpty() bool {
 	return output.Status == 201 || output.Status == 204 || output.Status == 304
 }
 
-// IsOk returns boolean of this request runs well.
+// IsOk returns boolean of if this request was ok.
 // HTTP 200 means ok.
 func (output *BeegoOutput) IsOk() bool {
 	return output.Status == 200
 }
 
-// IsSuccessful returns boolean of this request runs successfully.
+// IsSuccessful returns boolean of this request was successful.
 // HTTP 2xx means ok.
 func (output *BeegoOutput) IsSuccessful() bool {
 	return output.Status >= 200 && output.Status < 300
 }
 
-// IsRedirect returns boolean of this request is redirection header.
+// IsRedirect returns boolean of if this request is redirected.
 // HTTP 301,302,307 means redirection.
 func (output *BeegoOutput) IsRedirect() bool {
 	return output.Status == 301 || output.Status == 302 || output.Status == 303 || output.Status == 307
 }
 
-// IsForbidden returns boolean of this request is forbidden.
+// IsForbidden returns boolean of if this request is forbidden.
 // HTTP 403 means forbidden.
 func (output *BeegoOutput) IsForbidden() bool {
 	return output.Status == 403
 }
 
-// IsNotFound returns boolean of this request is not found.
+// IsNotFound returns boolean of if this request is not found.
 // HTTP 404 means not found.
 func (output *BeegoOutput) IsNotFound() bool {
 	return output.Status == 404
 }
 
-// IsClientError returns boolean of this request client sends error data.
+// IsClientError returns boolean of if this request client sends error data.
 // HTTP 4xx means client error.
 func (output *BeegoOutput) IsClientError() bool {
 	return output.Status >= 400 && output.Status < 500
 }
 
-// IsServerError returns boolean of this server handler errors.
+// IsServerError returns boolean of if this server handler errors.
 // HTTP 5xx means server internal error.
 func (output *BeegoOutput) IsServerError() bool {
 	return output.Status >= 500 && output.Status < 600
