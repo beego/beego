@@ -1,6 +1,6 @@
 package alils
 
-// InputDetail define log detail
+// InputDetail defines log detail
 type InputDetail struct {
 	LogType       string   `json:"logType"`
 	LogPath       string   `json:"logPath"`
@@ -15,13 +15,13 @@ type InputDetail struct {
 	TopicFormat   string   `json:"topicFormat"`
 }
 
-// OutputDetail define the output detail
+// OutputDetail defines the output detail
 type OutputDetail struct {
 	Endpoint     string `json:"endpoint"`
 	LogStoreName string `json:"logstoreName"`
 }
 
-// LogConfig define Log Config
+// LogConfig defines Log Config
 type LogConfig struct {
 	Name         string       `json:"configName"`
 	InputType    string       `json:"inputType"`

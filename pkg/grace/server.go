@@ -29,8 +29,8 @@ type Server struct {
 	terminalChan chan error
 }
 
-// Serve accepts incoming connections on the Listener l,
-// creating a new service goroutine for each.
+// Serve accepts incoming connections on the Listener l
+// and creates a new service goroutine for each.
 // The service goroutines read requests and then call srv.Handler to reply to them.
 func (srv *Server) Serve() (err error) {
 	srv.state = StateRunning

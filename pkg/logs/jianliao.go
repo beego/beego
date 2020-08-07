@@ -18,7 +18,7 @@ type JLWriter struct {
 	Level       int    `json:"level"`
 }
 
-// newJLWriter create jiaoliao writer.
+// newJLWriter creates jiaoliao writer.
 func newJLWriter() Logger {
 	return &JLWriter{Level: LevelTrace}
 }
@@ -28,8 +28,8 @@ func (s *JLWriter) Init(jsonconfig string) error {
 	return json.Unmarshal([]byte(jsonconfig), s)
 }
 
-// WriteMsg write message in smtp writer.
-// it will send an email with subject and only this message.
+// WriteMsg writes message in smtp writer.
+// Sends an email with subject and only this message.
 func (s *JLWriter) WriteMsg(when time.Time, msg string, level int) error {
 	if level > s.Level {
 		return nil
