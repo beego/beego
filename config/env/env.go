@@ -36,6 +36,7 @@ func init() {
 
 // Get returns a value by key.
 // If the key does not exist, the default value will be returned.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func Get(key string, defVal string) string {
 	if val := env.Get(key); val != nil {
 		return val.(string)
@@ -45,6 +46,7 @@ func Get(key string, defVal string) string {
 
 // MustGet returns a value by key.
 // If the key does not exist, it will return an error.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func MustGet(key string) (string, error) {
 	if val := env.Get(key); val != nil {
 		return val.(string), nil
@@ -54,12 +56,14 @@ func MustGet(key string) (string, error) {
 
 // Set sets a value in the ENV copy.
 // This does not affect the child process environment.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func Set(key string, value string) {
 	env.Set(key, value)
 }
 
 // MustSet sets a value in the ENV copy and the child process environment.
 // It returns an error in case the set operation failed.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func MustSet(key string, value string) error {
 	err := os.Setenv(key, value)
 	if err != nil {
@@ -70,6 +74,7 @@ func MustSet(key string, value string) error {
 }
 
 // GetAll returns all keys/values in the current child process environment.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func GetAll() map[string]string {
 	items := env.Items()
 	envs := make(map[string]string, env.Count())
