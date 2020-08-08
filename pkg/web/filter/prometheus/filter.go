@@ -1,4 +1,4 @@
-// Copyright 2020 astaxie
+// Copyright 2020 beego 
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,22 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package metric
+package prometheus
 
 import (
-	"net/http"
-	"reflect"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/logs"
+	beego "github.com/astaxie/beego/pkg"
+	"github.com/astaxie/beego/pkg/context"
 )
 
-func PrometheusMiddleWare(next http.Handler) http.Handler {
+// FilterChainBuilder is an extension point,
+// when we want to support some configuration,
+// please use this structure
+type FilterChainBuilder struct {
+}
+
+// FilterChain returns a FilterFunc. The filter will records some metrics
+func (builder *FilterChainBuilder) FilterChain(next beego.FilterFunc) beego.FilterFunc {
 	summaryVec := prometheus.NewSummaryVec(prometheus.SummaryOpts{
 		Name:      "beego",
 		Subsystem: "http_request",
@@ -43,12 +48,12 @@ func PrometheusMiddleWare(next http.Handler) http.Handler {
 
 	registerBuildInfo()
 
-	return http.HandlerFunc(func(writer http.ResponseWriter, q *http.Request) {
-		start := time.Now()
-		next.ServeHTTP(writer, q)
-		end := time.Now()
-		go report(end.Sub(start), writer, q, summaryVec)
-	})
+	return func(ctx *context.Context) {
+		startTime := time.Now()
+		next(ctx)
+		endTime := time.Now()
+		go report(endTime.Sub(startTime), ctx, summaryVec)
+	}
 }
 
 func registerBuildInfo() {
@@ -73,27 +78,9 @@ func registerBuildInfo() {
 	buildInfo.WithLabelValues().Set(1)
 }
 
-func report(dur time.Duration, writer http.ResponseWriter, q *http.Request, vec *prometheus.SummaryVec) {
-	ctrl := beego.BeeApp.Handlers
-	ctx := ctrl.GetContext()
-	ctx.Reset(writer, q)
-	defer ctrl.GiveBackContext(ctx)
-
-	// We cannot read the status code from q.Response.StatusCode
-	// since the http server does not set q.Response. So q.Response is nil
-	// Thus, we use reflection to read the status from writer whose concrete type is http.response
-	responseVal := reflect.ValueOf(writer).Elem()
-	field := responseVal.FieldByName("status")
-	status := -1
-	if field.IsValid() && field.Kind() == reflect.Int {
-		status = int(field.Int())
-	}
-	ptn := "UNKNOWN"
-	if rt, found := ctrl.FindRouter(ctx); found {
-		ptn = rt.GetPattern()
-	} else {
-		logs.Warn("we can not find the router info for this request, so request will be recorded as UNKNOWN: " + q.URL.String())
-	}
+func report(dur time.Duration, ctx *context.Context, vec *prometheus.SummaryVec) {
+	status := ctx.Output.Status
+	ptn := ctx.Input.GetData("RouterPattern").(string)
 	ms := dur / time.Millisecond
-	vec.WithLabelValues(ptn, q.Method, strconv.Itoa(status), strconv.Itoa(int(ms))).Observe(float64(ms))
+	vec.WithLabelValues(ptn, ctx.Input.Method(), strconv.Itoa(status), strconv.Itoa(int(ms))).Observe(float64(ms))
 }

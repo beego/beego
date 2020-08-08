@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package config
+package ini
 
 import (
 	"bufio"
@@ -26,6 +26,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/astaxie/beego/pkg/config"
 )
 
 var (
@@ -45,7 +47,7 @@ type IniConfig struct {
 }
 
 // Parse creates a new Config and parses the file configuration from the named file.
-func (ini *IniConfig) Parse(name string) (Configer, error) {
+func (ini *IniConfig) Parse(name string) (config.Configer, error) {
 	return ini.parseFile(name)
 }
 
@@ -195,7 +197,7 @@ func (ini *IniConfig) parseData(dir string, data []byte) (*IniConfigContainer, e
 			val = bytes.Trim(val, `"`)
 		}
 
-		cfg.data[section][key] = ExpandValueEnv(string(val))
+		cfg.data[section][key] = config.ExpandValueEnv(string(val))
 		if comment.Len() > 0 {
 			cfg.keyComment[section+"."+key] = comment.String()
 			comment.Reset()
@@ -208,7 +210,7 @@ func (ini *IniConfig) parseData(dir string, data []byte) (*IniConfigContainer, e
 // ParseData parse ini the data
 // When include other.conf,other.conf is either absolute directory
 // or under beego in default temporary directory(/tmp/beego[-username]).
-func (ini *IniConfig) ParseData(data []byte) (Configer, error) {
+func (ini *IniConfig) ParseData(data []byte) (config.Configer, error) {
 	dir := "beego"
 	currentUser, err := user.Current()
 	if err == nil {
@@ -233,7 +235,7 @@ type IniConfigContainer struct {
 
 // Bool returns the boolean value for a given key.
 func (c *IniConfigContainer) Bool(key string) (bool, error) {
-	return ParseBool(c.getdata(key))
+	return config.ParseBool(c.getdata(key))
 }
 
 // DefaultBool returns the boolean value for a given key.
@@ -500,5 +502,5 @@ func (c *IniConfigContainer) getdata(key string) string {
 }
 
 func init() {
-	Register("ini", &IniConfig{})
+	config.Register("ini", &IniConfig{})
 }

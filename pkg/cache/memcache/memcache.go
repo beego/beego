@@ -35,8 +35,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/astaxie/beego/cache"
 	"github.com/bradfitz/gomemcache/memcache"
+
+	"github.com/astaxie/beego/pkg/cache"
 )
 
 // Cache Memcache adapter.

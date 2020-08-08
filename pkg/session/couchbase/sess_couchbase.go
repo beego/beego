@@ -39,7 +39,7 @@ import (
 
 	couchbase "github.com/couchbase/go-couchbase"
 
-	"github.com/astaxie/beego/session"
+	"github.com/astaxie/beego/pkg/session"
 )
 
 var couchbpder = &Provider{}
@@ -179,16 +179,16 @@ func (cp *Provider) SessionRead(sid string) (session.Store, error) {
 
 // SessionExist Check couchbase session exist.
 // it checkes sid exist or not.
-func (cp *Provider) SessionExist(sid string) bool {
+func (cp *Provider) SessionExist(sid string) (bool, error) {
 	cp.b = cp.getBucket()
 	defer cp.b.Close()
 
 	var doc []byte
 
 	if err := cp.b.Get(sid, &doc); err != nil || doc == nil {
-		return false
+		return false, err
 	}
-	return true
+	return true, nil
 }
 
 // SessionRegenerate remove oldsid and use sid to generate new session

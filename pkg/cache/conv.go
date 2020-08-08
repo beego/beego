@@ -19,7 +19,7 @@ import (
 	"strconv"
 )
 
-// GetString convert interface to string.
+// GetString converts interface to string.
 func GetString(v interface{}) string {
 	switch result := v.(type) {
 	case string:
@@ -34,7 +34,7 @@ func GetString(v interface{}) string {
 	return ""
 }
 
-// GetInt convert interface to int.
+// GetInt converts interface to int.
 func GetInt(v interface{}) int {
 	switch result := v.(type) {
 	case int:
@@ -52,7 +52,7 @@ func GetInt(v interface{}) int {
 	return 0
 }
 
-// GetInt64 convert interface to int64.
+// GetInt64 converts interface to int64.
 func GetInt64(v interface{}) int64 {
 	switch result := v.(type) {
 	case int:
@@ -71,7 +71,7 @@ func GetInt64(v interface{}) int64 {
 	return 0
 }
 
-// GetFloat64 convert interface to float64.
+// GetFloat64 converts interface to float64.
 func GetFloat64(v interface{}) float64 {
 	switch result := v.(type) {
 	case float64:
@@ -85,7 +85,7 @@ func GetFloat64(v interface{}) float64 {
 	return 0
 }
 
-// GetBool convert interface to bool.
+// GetBool converts interface to bool.
 func GetBool(v interface{}) bool {
 	switch result := v.(type) {
 	case bool:

@@ -27,10 +27,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/astaxie/beego/grace"
-	"github.com/astaxie/beego/logs"
-	"github.com/astaxie/beego/utils"
 	"golang.org/x/crypto/acme/autocert"
+
+	"github.com/astaxie/beego/pkg/grace"
+	"github.com/astaxie/beego/pkg/logs"
+	"github.com/astaxie/beego/pkg/utils"
 )
 
 var (
@@ -348,7 +349,7 @@ func findAndRemoveSingleTree(entryPointTree *Tree) {
 // func (b *BankAccount)Mapping(){
 //  b.Mapping("ShowAccount" , b.ShowAccount)
 //  b.Mapping("ModifyAccount", b.ModifyAccount)
-//}
+// }
 //
 // //@router /account/:id  [get]
 // func (b *BankAccount) ShowAccount(){
@@ -492,5 +493,12 @@ func Handler(rootpath string, h http.Handler, options ...interface{}) *App {
 // The bool params is for setting the returnOnOutput value (false allows multiple filters to execute)
 func InsertFilter(pattern string, pos int, filter FilterFunc, params ...bool) *App {
 	BeeApp.Handlers.InsertFilter(pattern, pos, filter, params...)
+	return BeeApp
+}
+
+// InsertFilterChain adds a FilterFunc built by filterChain.
+// This filter will be executed before all filters.
+func InsertFilterChain(pattern string, filterChain FilterChain, params ...bool) *App {
+	BeeApp.Handlers.InsertFilterChain(pattern, filterChain, params...)
 	return BeeApp
 }

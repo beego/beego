@@ -33,7 +33,7 @@
 package redis_sentinel
 
 import (
-	"github.com/astaxie/beego/session"
+	"github.com/astaxie/beego/pkg/session"
 	"github.com/go-redis/redis"
 	"net/http"
 	"strconv"
@@ -189,12 +189,12 @@ func (rp *Provider) SessionRead(sid string) (session.Store, error) {
 }
 
 // SessionExist check redis_sentinel session exist by sid
-func (rp *Provider) SessionExist(sid string) bool {
+func (rp *Provider) SessionExist(sid string) (bool, error) {
 	c := rp.poollist
 	if existed, err := c.Exists(sid).Result(); err != nil || existed == 0 {
-		return false
+		return false, err
 	}
-	return true
+	return true, nil
 }
 
 // SessionRegenerate generate new sid for redis_sentinel session

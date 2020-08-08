@@ -21,7 +21,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/astaxie/beego/utils"
+	"github.com/astaxie/beego/pkg/utils"
 )
 
 var env *utils.BeeMap
@@ -34,7 +34,7 @@ func init() {
 	}
 }
 
-// Get returns a value by key.
+// Get returns a value for a given key.
 // If the key does not exist, the default value will be returned.
 func Get(key string, defVal string) string {
 	if val := env.Get(key); val != nil {

@@ -109,13 +109,13 @@ func (pder *MemProvider) SessionRead(sid string) (Store, error) {
 }
 
 // SessionExist check session store exist in memory session by sid
-func (pder *MemProvider) SessionExist(sid string) bool {
+func (pder *MemProvider) SessionExist(sid string) (bool, error) {
 	pder.lock.RLock()
 	defer pder.lock.RUnlock()
 	if _, ok := pder.sessions[sid]; ok {
-		return true
+		return true, nil
 	}
-	return false
+	return false, nil
 }
 
 // SessionRegenerate generate new sid for session store in memory session

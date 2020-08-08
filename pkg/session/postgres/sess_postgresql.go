@@ -56,7 +56,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/astaxie/beego/session"
+	"github.com/astaxie/beego/pkg/session"
 	// import postgresql Driver
 	_ "github.com/lib/pq"
 )
@@ -178,13 +178,19 @@ func (mp *Provider) SessionRead(sid string) (session.Store, error) {
 }
 
 // SessionExist check postgresql session exist
-func (mp *Provider) SessionExist(sid string) bool {
+func (mp *Provider) SessionExist(sid string) (bool, error) {
 	c := mp.connectInit()
 	defer c.Close()
 	row := c.QueryRow("select session_data from session where session_key=$1", sid)
 	var sessiondata []byte
 	err := row.Scan(&sessiondata)
-	return err != sql.ErrNoRows
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
 }
 
 // SessionRegenerate generate new sid for postgresql session

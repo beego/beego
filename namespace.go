@@ -24,15 +24,18 @@ import (
 type namespaceCond func(*beecontext.Context) bool
 
 // LinkNamespace used as link action
+// Deprecated: using pkg/, we will delete this in v2.1.0
 type LinkNamespace func(*Namespace)
 
 // Namespace is store all the info
+// Deprecated: using pkg/, we will delete this in v2.1.0
 type Namespace struct {
 	prefix   string
 	handlers *ControllerRegister
 }
 
 // NewNamespace get new Namespace
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func NewNamespace(prefix string, params ...LinkNamespace) *Namespace {
 	ns := &Namespace{
 		prefix:   prefix,
@@ -54,6 +57,7 @@ func NewNamespace(prefix string, params ...LinkNamespace) *Namespace {
 //       return false
 //   })
 // Cond as the first filter
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (n *Namespace) Cond(cond namespaceCond) *Namespace {
 	fn := func(ctx *beecontext.Context) {
 		if !cond(ctx) {
@@ -83,6 +87,7 @@ func (n *Namespace) Cond(cond namespaceCond) *Namespace {
 //          ctx.Redirect(302, "/login")
 //        }
 //   })
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (n *Namespace) Filter(action string, filter ...FilterFunc) *Namespace {
 	var a int
 	if action == "before" {
@@ -98,6 +103,7 @@ func (n *Namespace) Filter(action string, filter ...FilterFunc) *Namespace {
 
 // Router same as beego.Rourer
 // refer: https://godoc.org/github.com/astaxie/beego#Router
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (n *Namespace) Router(rootpath string, c ControllerInterface, mappingMethods ...string) *Namespace {
 	n.handlers.Add(rootpath, c, mappingMethods...)
 	return n
@@ -105,6 +111,7 @@ func (n *Namespace) Router(rootpath string, c ControllerInterface, mappingMethod
 
 // AutoRouter same as beego.AutoRouter
 // refer: https://godoc.org/github.com/astaxie/beego#AutoRouter
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (n *Namespace) AutoRouter(c ControllerInterface) *Namespace {
 	n.handlers.AddAuto(c)
 	return n
@@ -112,6 +119,7 @@ func (n *Namespace) AutoRouter(c ControllerInterface) *Namespace {
 
 // AutoPrefix same as beego.AutoPrefix
 // refer: https://godoc.org/github.com/astaxie/beego#AutoPrefix
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (n *Namespace) AutoPrefix(prefix string, c ControllerInterface) *Namespace {
 	n.handlers.AddAutoPrefix(prefix, c)
 	return n
@@ -119,6 +127,7 @@ func (n *Namespace) AutoPrefix(prefix string, c ControllerInterface) *Namespace 
 
 // Get same as beego.Get
 // refer: https://godoc.org/github.com/astaxie/beego#Get
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (n *Namespace) Get(rootpath string, f FilterFunc) *Namespace {
 	n.handlers.Get(rootpath, f)
 	return n
@@ -126,6 +135,7 @@ func (n *Namespace) Get(rootpath string, f FilterFunc) *Namespace {
 
 // Post same as beego.Post
 // refer: https://godoc.org/github.com/astaxie/beego#Post
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (n *Namespace) Post(rootpath string, f FilterFunc) *Namespace {
 	n.handlers.Post(rootpath, f)
 	return n
@@ -133,6 +143,7 @@ func (n *Namespace) Post(rootpath string, f FilterFunc) *Namespace {
 
 // Delete same as beego.Delete
 // refer: https://godoc.org/github.com/astaxie/beego#Delete
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (n *Namespace) Delete(rootpath string, f FilterFunc) *Namespace {
 	n.handlers.Delete(rootpath, f)
 	return n
@@ -140,6 +151,7 @@ func (n *Namespace) Delete(rootpath string, f FilterFunc) *Namespace {
 
 // Put same as beego.Put
 // refer: https://godoc.org/github.com/astaxie/beego#Put
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (n *Namespace) Put(rootpath string, f FilterFunc) *Namespace {
 	n.handlers.Put(rootpath, f)
 	return n
@@ -147,6 +159,7 @@ func (n *Namespace) Put(rootpath string, f FilterFunc) *Namespace {
 
 // Head same as beego.Head
 // refer: https://godoc.org/github.com/astaxie/beego#Head
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (n *Namespace) Head(rootpath string, f FilterFunc) *Namespace {
 	n.handlers.Head(rootpath, f)
 	return n
@@ -154,6 +167,7 @@ func (n *Namespace) Head(rootpath string, f FilterFunc) *Namespace {
 
 // Options same as beego.Options
 // refer: https://godoc.org/github.com/astaxie/beego#Options
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (n *Namespace) Options(rootpath string, f FilterFunc) *Namespace {
 	n.handlers.Options(rootpath, f)
 	return n
@@ -161,6 +175,7 @@ func (n *Namespace) Options(rootpath string, f FilterFunc) *Namespace {
 
 // Patch same as beego.Patch
 // refer: https://godoc.org/github.com/astaxie/beego#Patch
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (n *Namespace) Patch(rootpath string, f FilterFunc) *Namespace {
 	n.handlers.Patch(rootpath, f)
 	return n
@@ -168,6 +183,7 @@ func (n *Namespace) Patch(rootpath string, f FilterFunc) *Namespace {
 
 // Any same as beego.Any
 // refer: https://godoc.org/github.com/astaxie/beego#Any
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (n *Namespace) Any(rootpath string, f FilterFunc) *Namespace {
 	n.handlers.Any(rootpath, f)
 	return n
@@ -175,6 +191,7 @@ func (n *Namespace) Any(rootpath string, f FilterFunc) *Namespace {
 
 // Handler same as beego.Handler
 // refer: https://godoc.org/github.com/astaxie/beego#Handler
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (n *Namespace) Handler(rootpath string, h http.Handler) *Namespace {
 	n.handlers.Handler(rootpath, h)
 	return n
@@ -182,6 +199,7 @@ func (n *Namespace) Handler(rootpath string, h http.Handler) *Namespace {
 
 // Include add include class
 // refer: https://godoc.org/github.com/astaxie/beego#Include
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (n *Namespace) Include(cList ...ControllerInterface) *Namespace {
 	n.handlers.Include(cList...)
 	return n
@@ -204,6 +222,7 @@ func (n *Namespace) Include(cList ...ControllerInterface) *Namespace {
 //            ctx.Output.Body([]byte("crminfo"))
 //    }),
 //)
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (n *Namespace) Namespace(ns ...*Namespace) *Namespace {
 	for _, ni := range ns {
 		for k, v := range ni.handlers.routers {
@@ -233,6 +252,7 @@ func (n *Namespace) Namespace(ns ...*Namespace) *Namespace {
 
 // AddNamespace register Namespace into beego.Handler
 // support multi Namespace
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func AddNamespace(nl ...*Namespace) {
 	for _, n := range nl {
 		for k, v := range n.handlers.routers {
@@ -276,6 +296,7 @@ func addPrefix(t *Tree, prefix string) {
 }
 
 // NSCond is Namespace Condition
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func NSCond(cond namespaceCond) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Cond(cond)
@@ -283,6 +304,7 @@ func NSCond(cond namespaceCond) LinkNamespace {
 }
 
 // NSBefore Namespace BeforeRouter filter
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func NSBefore(filterList ...FilterFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Filter("before", filterList...)
@@ -290,6 +312,7 @@ func NSBefore(filterList ...FilterFunc) LinkNamespace {
 }
 
 // NSAfter add Namespace FinishRouter filter
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func NSAfter(filterList ...FilterFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Filter("after", filterList...)
@@ -297,6 +320,7 @@ func NSAfter(filterList ...FilterFunc) LinkNamespace {
 }
 
 // NSInclude Namespace Include ControllerInterface
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func NSInclude(cList ...ControllerInterface) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Include(cList...)
@@ -304,6 +328,7 @@ func NSInclude(cList ...ControllerInterface) LinkNamespace {
 }
 
 // NSRouter call Namespace Router
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func NSRouter(rootpath string, c ControllerInterface, mappingMethods ...string) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Router(rootpath, c, mappingMethods...)
@@ -311,6 +336,7 @@ func NSRouter(rootpath string, c ControllerInterface, mappingMethods ...string) 
 }
 
 // NSGet call Namespace Get
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func NSGet(rootpath string, f FilterFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Get(rootpath, f)
@@ -318,6 +344,7 @@ func NSGet(rootpath string, f FilterFunc) LinkNamespace {
 }
 
 // NSPost call Namespace Post
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func NSPost(rootpath string, f FilterFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Post(rootpath, f)
@@ -325,6 +352,7 @@ func NSPost(rootpath string, f FilterFunc) LinkNamespace {
 }
 
 // NSHead call Namespace Head
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func NSHead(rootpath string, f FilterFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Head(rootpath, f)
@@ -332,6 +360,7 @@ func NSHead(rootpath string, f FilterFunc) LinkNamespace {
 }
 
 // NSPut call Namespace Put
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func NSPut(rootpath string, f FilterFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Put(rootpath, f)
@@ -339,6 +368,7 @@ func NSPut(rootpath string, f FilterFunc) LinkNamespace {
 }
 
 // NSDelete call Namespace Delete
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func NSDelete(rootpath string, f FilterFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Delete(rootpath, f)
@@ -346,6 +376,7 @@ func NSDelete(rootpath string, f FilterFunc) LinkNamespace {
 }
 
 // NSAny call Namespace Any
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func NSAny(rootpath string, f FilterFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Any(rootpath, f)
@@ -353,6 +384,7 @@ func NSAny(rootpath string, f FilterFunc) LinkNamespace {
 }
 
 // NSOptions call Namespace Options
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func NSOptions(rootpath string, f FilterFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Options(rootpath, f)
@@ -360,6 +392,7 @@ func NSOptions(rootpath string, f FilterFunc) LinkNamespace {
 }
 
 // NSPatch call Namespace Patch
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func NSPatch(rootpath string, f FilterFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Patch(rootpath, f)
@@ -367,6 +400,7 @@ func NSPatch(rootpath string, f FilterFunc) LinkNamespace {
 }
 
 // NSAutoRouter call Namespace AutoRouter
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func NSAutoRouter(c ControllerInterface) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.AutoRouter(c)
@@ -374,6 +408,7 @@ func NSAutoRouter(c ControllerInterface) LinkNamespace {
 }
 
 // NSAutoPrefix call Namespace AutoPrefix
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func NSAutoPrefix(prefix string, c ControllerInterface) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.AutoPrefix(prefix, c)
@@ -381,6 +416,7 @@ func NSAutoPrefix(prefix string, c ControllerInterface) LinkNamespace {
 }
 
 // NSNamespace add sub Namespace
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func NSNamespace(prefix string, params ...LinkNamespace) LinkNamespace {
 	return func(ns *Namespace) {
 		n := NewNamespace(prefix, params...)
@@ -389,6 +425,7 @@ func NSNamespace(prefix string, params ...LinkNamespace) LinkNamespace {
 }
 
 // NSHandler add handler
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func NSHandler(rootpath string, h http.Handler) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Handler(rootpath, h)

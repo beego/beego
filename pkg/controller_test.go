@@ -19,7 +19,9 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/astaxie/beego/context"
+	"github.com/stretchr/testify/assert"
+
+	"github.com/astaxie/beego/pkg/context"
 	"os"
 	"path/filepath"
 )
@@ -125,8 +127,10 @@ func TestGetUint64(t *testing.T) {
 }
 
 func TestAdditionalViewPaths(t *testing.T) {
-	dir1 := "_beeTmp"
-	dir2 := "_beeTmp2"
+	wkdir, err := os.Getwd()
+	assert.Nil(t, err)
+	dir1 := filepath.Join(wkdir, "_beeTmp", "TestAdditionalViewPaths")
+	dir2 := filepath.Join(wkdir, "_beeTmp2", "TestAdditionalViewPaths")
 	defer os.RemoveAll(dir1)
 	defer os.RemoveAll(dir2)
 

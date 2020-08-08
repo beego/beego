@@ -64,7 +64,7 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/astaxie/beego/logs"
+	"github.com/astaxie/beego/pkg/logs"
 )
 
 // DebugQueries define the debug
@@ -372,21 +372,6 @@ func (o *ormBase) LoadRelatedWithCtx(ctx context.Context, md interface{}, name s
 	return nums, err
 }
 
-// return a QuerySeter for related models to md model.
-// it can do all, update, delete in QuerySeter.
-// example:
-// 	qs := orm.QueryRelated(post,"Tag")
-//  qs.All(&[]*Tag{})
-//
-func (o *ormBase) QueryRelated(md interface{}, name string) QuerySeter {
-	return o.QueryRelatedWithCtx(context.Background(), md, name)
-}
-func (o *ormBase) QueryRelatedWithCtx(ctx context.Context, md interface{}, name string) QuerySeter {
-	// is this api needed ?
-	_, _, _, qs := o.queryRelated(md, name)
-	return qs
-}
-
 // get QuerySeter for related models to md model
 func (o *ormBase) queryRelated(md interface{}, name string) (*modelInfo, *fieldInfo, reflect.Value, QuerySeter) {
 	mi, ind := o.getMiInd(md, true)
@@ -596,10 +581,13 @@ func (t *txOrm) Rollback() error {
 // NewOrm create new orm
 func NewOrm() Ormer {
 	BootStrap() // execute only once
+	return NewOrmUsingDB(`default`)
+}
 
+// NewOrmUsingDB create new orm with the name
+func NewOrmUsingDB(aliasName string) Ormer {
 	o := new(orm)
-	name := `default`
-	if al, ok := dataBaseCache.get(name); ok {
+	if al, ok := dataBaseCache.get(aliasName); ok {
 		o.alias = al
 		if Debug {
 			o.db = newDbQueryLog(al, al.DB)
@@ -607,9 +595,8 @@ func NewOrm() Ormer {
 			o.db = al.DB
 		}
 	} else {
-		panic(fmt.Errorf("<Ormer.Using> unknown db alias name `%s`", name))
+		panic(fmt.Errorf("<Ormer.Using> unknown db alias name `%s`", aliasName))
 	}
-
 	return o
 }
 

@@ -5,7 +5,7 @@
 // views/index.tpl
 // DO NOT EDIT!
 
-package testdata
+package test
 
 import (
 	"bytes"

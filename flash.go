@@ -21,11 +21,13 @@ import (
 )
 
 // FlashData is a tools to maintain data when using across request.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 type FlashData struct {
 	Data map[string]string
 }
 
 // NewFlash return a new empty FlashData struct.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func NewFlash() *FlashData {
 	return &FlashData{
 		Data: make(map[string]string),
@@ -33,6 +35,7 @@ func NewFlash() *FlashData {
 }
 
 // Set message to flash
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (fd *FlashData) Set(key string, msg string, args ...interface{}) {
 	if len(args) == 0 {
 		fd.Data[key] = msg
@@ -42,6 +45,7 @@ func (fd *FlashData) Set(key string, msg string, args ...interface{}) {
 }
 
 // Success writes success message to flash.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (fd *FlashData) Success(msg string, args ...interface{}) {
 	if len(args) == 0 {
 		fd.Data["success"] = msg
@@ -51,6 +55,7 @@ func (fd *FlashData) Success(msg string, args ...interface{}) {
 }
 
 // Notice writes notice message to flash.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (fd *FlashData) Notice(msg string, args ...interface{}) {
 	if len(args) == 0 {
 		fd.Data["notice"] = msg
@@ -60,6 +65,7 @@ func (fd *FlashData) Notice(msg string, args ...interface{}) {
 }
 
 // Warning writes warning message to flash.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (fd *FlashData) Warning(msg string, args ...interface{}) {
 	if len(args) == 0 {
 		fd.Data["warning"] = msg
@@ -69,6 +75,7 @@ func (fd *FlashData) Warning(msg string, args ...interface{}) {
 }
 
 // Error writes error message to flash.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (fd *FlashData) Error(msg string, args ...interface{}) {
 	if len(args) == 0 {
 		fd.Data["error"] = msg
@@ -79,6 +86,7 @@ func (fd *FlashData) Error(msg string, args ...interface{}) {
 
 // Store does the saving operation of flash data.
 // the data are encoded and saved in cookie.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func (fd *FlashData) Store(c *Controller) {
 	c.Data["flash"] = fd.Data
 	var flashValue string
@@ -89,6 +97,7 @@ func (fd *FlashData) Store(c *Controller) {
 }
 
 // ReadFromRequest parsed flash data from encoded values in cookie.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func ReadFromRequest(c *Controller) *FlashData {
 	flash := NewFlash()
 	if cookie, err := c.Ctx.Request.Cookie(BConfig.WebConfig.FlashName); err == nil {

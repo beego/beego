@@ -18,6 +18,7 @@ import (
 )
 
 // Server embedded http.Server
+// Deprecated: using pkg/grace, we will delete this in v2.1.0
 type Server struct {
 	*http.Server
 	ln           net.Listener
@@ -32,6 +33,7 @@ type Server struct {
 // Serve accepts incoming connections on the Listener l,
 // creating a new service goroutine for each.
 // The service goroutines read requests and then call srv.Handler to reply to them.
+// Deprecated: using pkg/grace, we will delete this in v2.1.0
 func (srv *Server) Serve() (err error) {
 	srv.state = StateRunning
 	defer func() { srv.state = StateTerminate }()
@@ -55,6 +57,7 @@ func (srv *Server) Serve() (err error) {
 // ListenAndServe listens on the TCP network address srv.Addr and then calls Serve
 // to handle requests on incoming connections. If srv.Addr is blank, ":http" is
 // used.
+// Deprecated: using pkg/grace, we will delete this in v2.1.0
 func (srv *Server) ListenAndServe() (err error) {
 	addr := srv.Addr
 	if addr == "" {
@@ -94,6 +97,7 @@ func (srv *Server) ListenAndServe() (err error) {
 // CA's certificate.
 //
 // If srv.Addr is blank, ":https" is used.
+// Deprecated: using pkg/grace, we will delete this in v2.1.0
 func (srv *Server) ListenAndServeTLS(certFile, keyFile string) (err error) {
 	addr := srv.Addr
 	if addr == "" {
@@ -140,6 +144,7 @@ func (srv *Server) ListenAndServeTLS(certFile, keyFile string) (err error) {
 
 // ListenAndServeMutualTLS listens on the TCP network address srv.Addr and then calls
 // Serve to handle requests on incoming mutual TLS connections.
+// Deprecated: using pkg/grace, we will delete this in v2.1.0
 func (srv *Server) ListenAndServeMutualTLS(certFile, keyFile, trustFile string) (err error) {
 	addr := srv.Addr
 	if addr == "" {
@@ -340,6 +345,7 @@ func (srv *Server) fork() (err error) {
 }
 
 // RegisterSignalHook registers a function to be run PreSignal or PostSignal for a given signal.
+// Deprecated: using pkg/grace, we will delete this in v2.1.0
 func (srv *Server) RegisterSignalHook(ppFlag int, sig os.Signal, f func()) (err error) {
 	if ppFlag != PreSignal && ppFlag != PostSignal {
 		err = fmt.Errorf("Invalid ppFlag argument. Must be either grace.PreSignal or grace.PostSignal")

@@ -76,3 +76,13 @@ func TestRegisterDataBase_MaxStmtCacheSize841(t *testing.T) {
 	assert.Equal(t, al.DB.stmtDecoratorsLimit, 841)
 }
 
+
+func TestDBCache(t *testing.T) {
+	dataBaseCache.add("test1", &alias{})
+	dataBaseCache.add("default", &alias{})
+	al := dataBaseCache.getDefault()
+	assert.NotNil(t, al)
+	al, ok := dataBaseCache.get("test1")
+	assert.NotNil(t, al)
+	assert.True(t, ok)
+}

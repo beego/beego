@@ -40,7 +40,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/astaxie/beego/config"
+	"github.com/astaxie/beego/pkg/config"
 	"github.com/beego/goyaml2"
 )
 

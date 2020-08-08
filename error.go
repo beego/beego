@@ -205,6 +205,7 @@ type errorInfo struct {
 
 // ErrorMaps holds map of http handlers for each error string.
 // there is 10 kinds default error(40x and 50x)
+// Deprecated: using pkg/, we will delete this in v2.1.0
 var ErrorMaps = make(map[string]*errorInfo, 10)
 
 // show 401 unauthorized error.
@@ -387,6 +388,7 @@ func responseError(rw http.ResponseWriter, r *http.Request, errCode int, errCont
 // usage:
 // 	beego.ErrorHandler("404",NotFound)
 //	beego.ErrorHandler("500",InternalServerError)
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func ErrorHandler(code string, h http.HandlerFunc) *App {
 	ErrorMaps[code] = &errorInfo{
 		errorType: errorTypeHandler,
@@ -399,6 +401,7 @@ func ErrorHandler(code string, h http.HandlerFunc) *App {
 // ErrorController registers ControllerInterface to each http err code string.
 // usage:
 // 	beego.ErrorController(&controllers.ErrorController{})
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func ErrorController(c ControllerInterface) *App {
 	reflectVal := reflect.ValueOf(c)
 	rt := reflectVal.Type()
@@ -418,6 +421,7 @@ func ErrorController(c ControllerInterface) *App {
 }
 
 // Exception Write HttpStatus with errCode and Exec error handler if exist.
+// Deprecated: using pkg/, we will delete this in v2.1.0
 func Exception(errCode uint64, ctx *context.Context) {
 	exception(strconv.FormatUint(errCode, 10), ctx)
 }
