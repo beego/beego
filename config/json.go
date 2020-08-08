@@ -26,10 +26,12 @@ import (
 )
 
 // JSONConfig is a json config parser and implements Config interface.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 type JSONConfig struct {
 }
 
 // Parse returns a ConfigContainer with parsed json config map.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (js *JSONConfig) Parse(filename string) (Configer, error) {
 	file, err := os.Open(filename)
 	if err != nil {
@@ -45,6 +47,7 @@ func (js *JSONConfig) Parse(filename string) (Configer, error) {
 }
 
 // ParseData returns a ConfigContainer with json string
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (js *JSONConfig) ParseData(data []byte) (Configer, error) {
 	x := &JSONConfigContainer{
 		data: make(map[string]interface{}),
@@ -66,12 +69,14 @@ func (js *JSONConfig) ParseData(data []byte) (Configer, error) {
 
 // JSONConfigContainer A Config represents the json configuration.
 // Only when get value, support key as section:name type.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 type JSONConfigContainer struct {
 	data map[string]interface{}
 	sync.RWMutex
 }
 
 // Bool returns the boolean value for a given key.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *JSONConfigContainer) Bool(key string) (bool, error) {
 	val := c.getData(key)
 	if val != nil {
@@ -82,6 +87,7 @@ func (c *JSONConfigContainer) Bool(key string) (bool, error) {
 
 // DefaultBool return the bool value if has no error
 // otherwise return the defaultval
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *JSONConfigContainer) DefaultBool(key string, defaultval bool) bool {
 	if v, err := c.Bool(key); err == nil {
 		return v
@@ -90,6 +96,7 @@ func (c *JSONConfigContainer) DefaultBool(key string, defaultval bool) bool {
 }
 
 // Int returns the integer value for a given key.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *JSONConfigContainer) Int(key string) (int, error) {
 	val := c.getData(key)
 	if val != nil {
@@ -105,6 +112,7 @@ func (c *JSONConfigContainer) Int(key string) (int, error) {
 
 // DefaultInt returns the integer value for a given key.
 // if err != nil return defaultval
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *JSONConfigContainer) DefaultInt(key string, defaultval int) int {
 	if v, err := c.Int(key); err == nil {
 		return v
@@ -113,6 +121,7 @@ func (c *JSONConfigContainer) DefaultInt(key string, defaultval int) int {
 }
 
 // Int64 returns the int64 value for a given key.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *JSONConfigContainer) Int64(key string) (int64, error) {
 	val := c.getData(key)
 	if val != nil {
@@ -126,6 +135,7 @@ func (c *JSONConfigContainer) Int64(key string) (int64, error) {
 
 // DefaultInt64 returns the int64 value for a given key.
 // if err != nil return defaultval
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *JSONConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
 	if v, err := c.Int64(key); err == nil {
 		return v
@@ -134,6 +144,7 @@ func (c *JSONConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
 }
 
 // Float returns the float value for a given key.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *JSONConfigContainer) Float(key string) (float64, error) {
 	val := c.getData(key)
 	if val != nil {
@@ -147,6 +158,7 @@ func (c *JSONConfigContainer) Float(key string) (float64, error) {
 
 // DefaultFloat returns the float64 value for a given key.
 // if err != nil return defaultval
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *JSONConfigContainer) DefaultFloat(key string, defaultval float64) float64 {
 	if v, err := c.Float(key); err == nil {
 		return v
@@ -155,6 +167,7 @@ func (c *JSONConfigContainer) DefaultFloat(key string, defaultval float64) float
 }
 
 // String returns the string value for a given key.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *JSONConfigContainer) String(key string) string {
 	val := c.getData(key)
 	if val != nil {
@@ -167,6 +180,7 @@ func (c *JSONConfigContainer) String(key string) string {
 
 // DefaultString returns the string value for a given key.
 // if err != nil return defaultval
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *JSONConfigContainer) DefaultString(key string, defaultval string) string {
 	// TODO FIXME should not use "" to replace non existence
 	if v := c.String(key); v != "" {
@@ -176,6 +190,7 @@ func (c *JSONConfigContainer) DefaultString(key string, defaultval string) strin
 }
 
 // Strings returns the []string value for a given key.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *JSONConfigContainer) Strings(key string) []string {
 	stringVal := c.String(key)
 	if stringVal == "" {
@@ -186,6 +201,7 @@ func (c *JSONConfigContainer) Strings(key string) []string {
 
 // DefaultStrings returns the []string value for a given key.
 // if err != nil return defaultval
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *JSONConfigContainer) DefaultStrings(key string, defaultval []string) []string {
 	if v := c.Strings(key); v != nil {
 		return v
@@ -194,6 +210,7 @@ func (c *JSONConfigContainer) DefaultStrings(key string, defaultval []string) []
 }
 
 // GetSection returns map for the given section
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *JSONConfigContainer) GetSection(section string) (map[string]string, error) {
 	if v, ok := c.data[section]; ok {
 		return v.(map[string]string), nil
@@ -202,6 +219,7 @@ func (c *JSONConfigContainer) GetSection(section string) (map[string]string, err
 }
 
 // SaveConfigFile save the config into file
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *JSONConfigContainer) SaveConfigFile(filename string) (err error) {
 	// Write configuration file by filename.
 	f, err := os.Create(filename)
@@ -218,6 +236,7 @@ func (c *JSONConfigContainer) SaveConfigFile(filename string) (err error) {
 }
 
 // Set writes a new value for key.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *JSONConfigContainer) Set(key, val string) error {
 	c.Lock()
 	defer c.Unlock()
@@ -226,6 +245,7 @@ func (c *JSONConfigContainer) Set(key, val string) error {
 }
 
 // DIY returns the raw value by a given key.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *JSONConfigContainer) DIY(key string) (v interface{}, err error) {
 	val := c.getData(key)
 	if val != nil {
@@ -235,6 +255,7 @@ func (c *JSONConfigContainer) DIY(key string) (v interface{}, err error) {
 }
 
 // section.key or key
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *JSONConfigContainer) getData(key string) interface{} {
 	if len(key) == 0 {
 		return nil
