@@ -204,17 +204,19 @@ type DriverGetter interface {
 	Driver() Driver
 }
 
-type Ormer interface {
+type ormer interface {
 	DQL
 	DML
 	DriverGetter
+}
+
+type Ormer interface {
+	ormer
 	TxBeginner
 }
 
 type TxOrmer interface {
-	DQL
-	DML
-	DriverGetter
+	ormer
 	TxCommitter
 }
 
