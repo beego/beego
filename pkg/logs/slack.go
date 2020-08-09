@@ -14,7 +14,7 @@ type SLACKWriter struct {
 	Level      int    `json:"level"`
 }
 
-// newSLACKWriter create jiaoliao writer.
+// newSLACKWriter creates jiaoliao writer.
 func newSLACKWriter() Logger {
 	return &SLACKWriter{Level: LevelTrace}
 }
@@ -25,7 +25,7 @@ func (s *SLACKWriter) Init(jsonconfig string) error {
 }
 
 // WriteMsg write message in smtp writer.
-// it will send an email with subject and only this message.
+// Sends an email with subject and only this message.
 func (s *SLACKWriter) WriteMsg(when time.Time, msg string, level int) error {
 	if level > s.Level {
 		return nil

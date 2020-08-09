@@ -12,7 +12,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 )
 
-// LogStore Store the logs
+// LogStore stores the logs
 type LogStore struct {
 	Name       string `json:"logstoreName"`
 	TTL        int
@@ -24,7 +24,7 @@ type LogStore struct {
 	project *LogProject
 }
 
-// Shard define the Log Shard
+// Shard defines the Log Shard
 type Shard struct {
 	ShardID int `json:"shardID"`
 }
@@ -71,7 +71,7 @@ func (s *LogStore) ListShards() (shardIDs []int, err error) {
 	return
 }
 
-// PutLogs put logs into logstore.
+// PutLogs puts logs into logstore.
 // The callers should transform user logs into LogGroup.
 func (s *LogStore) PutLogs(lg *LogGroup) (err error) {
 	body, err := proto.Marshal(lg)

@@ -15,7 +15,7 @@ import (
 	"github.com/astaxie/beego/pkg/logs"
 )
 
-// NewES return a LoggerInterface
+// NewES returns a LoggerInterface
 func NewES() logs.Logger {
 	cw := &esLogger{
 		Level: logs.LevelDebug,
@@ -59,7 +59,7 @@ func (el *esLogger) Init(jsonconfig string) error {
 	return nil
 }
 
-// WriteMsg will write the msg and level into es
+// WriteMsg writes the msg and level into es
 func (el *esLogger) WriteMsg(when time.Time, msg string, level int) error {
 	if level > el.Level {
 		return nil

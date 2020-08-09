@@ -72,7 +72,7 @@ func (xc *Config) ParseData(data []byte) (config.Configer, error) {
 	return x, nil
 }
 
-// ConfigContainer A Config represents the xml configuration.
+// ConfigContainer is a Config which represents the xml configuration.
 type ConfigContainer struct {
 	data map[string]interface{}
 	sync.Mutex

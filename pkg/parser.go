@@ -19,8 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"go/ast"
-	"go/parser"
-	"go/token"
+	"golang.org/x/tools/go/packages"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -76,7 +75,7 @@ func init() {
 	pkgLastupdate = make(map[string]int64)
 }
 
-func parserPkg(pkgRealpath, pkgpath string) error {
+func parserPkg(pkgRealpath string) error {
 	rep := strings.NewReplacer("\\", "_", "/", "_", ".", "_")
 	commentFilename, _ = filepath.Rel(AppPath, pkgRealpath)
 	commentFilename = commentPrefix + rep.Replace(commentFilename) + ".go"
@@ -85,24 +84,23 @@ func parserPkg(pkgRealpath, pkgpath string) error {
 		return nil
 	}
 	genInfoList = make(map[string][]ControllerComments)
-	fileSet := token.NewFileSet()
-	astPkgs, err := parser.ParseDir(fileSet, pkgRealpath, func(info os.FileInfo) bool {
-		name := info.Name()
-		return !info.IsDir() && !strings.HasPrefix(name, ".") && strings.HasSuffix(name, ".go")
-	}, parser.ParseComments)
+	pkgs, err := packages.Load(&packages.Config{
+		Mode: packages.NeedName | packages.NeedFiles | packages.NeedCompiledGoFiles | packages.NeedSyntax,
+		Dir:  pkgRealpath,
+	}, "./...")
 
 	if err != nil {
 		return err
 	}
-	for _, pkg := range astPkgs {
-		for _, fl := range pkg.Files {
+	for _, pkg := range pkgs {
+		for _, fl := range pkg.Syntax {
 			for _, d := range fl.Decls {
 				switch specDecl := d.(type) {
 				case *ast.FuncDecl:
 					if specDecl.Recv != nil {
 						exp, ok := specDecl.Recv.List[0].Type.(*ast.StarExpr) // Check that the type is correct first beforing throwing to parser
 						if ok {
-							parserComments(specDecl, fmt.Sprint(exp.X), pkgpath)
+							parserComments(specDecl, fmt.Sprint(exp.X), pkg.PkgPath)
 						}
 					}
 				}
@@ -566,8 +564,17 @@ func getpathTime(pkgRealpath string) (lastupdate int64, err error) {
 		return lastupdate, err
 	}
 	for _, f := range fl {
-		if lastupdate < f.ModTime().UnixNano() {
-			lastupdate = f.ModTime().UnixNano()
+		var t int64
+		if f.IsDir() {
+			t, err = getpathTime(filepath.Join(pkgRealpath, f.Name()))
+			if err != nil {
+				return lastupdate, err
+			}
+		} else {
+			t = f.ModTime().UnixNano()
+		}
+		if lastupdate < t {
+			lastupdate = t
 		}
 	}
 	return lastupdate, nil

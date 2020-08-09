@@ -11,9 +11,9 @@ import (
 )
 
 const (
-	// CacheSize set the flush size
+	// CacheSize sets the flush size
 	CacheSize int = 64
-	// Delimiter define the topic delimiter
+	// Delimiter defines the topic delimiter
 	Delimiter string = "##"
 )
 
@@ -31,7 +31,7 @@ type Config struct {
 }
 
 // aliLSWriter implements LoggerInterface.
-// it writes messages in keep-live tcp connection.
+// Writes messages in keep-live tcp connection.
 type aliLSWriter struct {
 	store    *LogStore
 	group    []*LogGroup
@@ -41,14 +41,14 @@ type aliLSWriter struct {
 	Config
 }
 
-// NewAliLS create a new Logger
+// NewAliLS creates a new Logger
 func NewAliLS() logs.Logger {
 	alils := new(aliLSWriter)
 	alils.Level = logs.LevelTrace
 	return alils
 }
 
-// Init parse config and init struct
+// Init parses config and initializes struct
 func (c *aliLSWriter) Init(jsonConfig string) (err error) {
 
 	json.Unmarshal([]byte(jsonConfig), c)
@@ -101,8 +101,8 @@ func (c *aliLSWriter) Init(jsonConfig string) (err error) {
 	return nil
 }
 
-// WriteMsg write message in connection.
-// if connection is down, try to re-connect.
+// WriteMsg writes a message in connection.
+// If connection is down, try to re-connect.
 func (c *aliLSWriter) WriteMsg(when time.Time, msg string, level int) (err error) {
 
 	if level > c.Level {

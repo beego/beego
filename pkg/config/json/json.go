@@ -66,7 +66,7 @@ func (js *JSONConfig) ParseData(data []byte) (config.Configer, error) {
 	return x, nil
 }
 
-// JSONConfigContainer A Config represents the json configuration.
+// JSONConfigContainer is a config which represents the json configuration.
 // Only when get value, support key as section:name type.
 type JSONConfigContainer struct {
 	data map[string]interface{}
