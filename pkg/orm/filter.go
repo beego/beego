@@ -18,8 +18,12 @@ import (
 	"context"
 )
 
+// FilterChain is used to build a Filter
+// don't forget to call next(...) inside your Filter
 type FilterChain func(next Filter) Filter
 
+// Filter's behavior is a little big strang.
+// it's only be called when users call methods of Ormer
 type Filter func(ctx context.Context, inv *Invocation)
 
 var globalFilterChains = make([]FilterChain, 0, 4)
