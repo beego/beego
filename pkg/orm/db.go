@@ -739,8 +739,10 @@ func (d *dbBase) UpdateBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	}
 
 	tables := newDbTables(mi, d.ins)
+	var specifyIndexes string
 	if qs != nil {
 		tables.parseRelated(qs.related, qs.relDepth)
+		specifyIndexes = tables.getIndexSql(mi.table, qs.useIndex, qs.indexes)
 	}
 
 	where, args := tables.getCondSQL(cond, false, tz)
@@ -791,9 +793,12 @@ func (d *dbBase) UpdateBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	sets := strings.Join(cols, ", ") + " "
 
 	if d.ins.SupportUpdateJoin() {
-		query = fmt.Sprintf("UPDATE %s%s%s T0 %sSET %s%s", Q, mi.table, Q, join, sets, where)
+		query = fmt.Sprintf("UPDATE %s%s%s T0 %s%sSET %s%s", Q, mi.table, Q, specifyIndexes, join, sets, where)
 	} else {
-		supQuery := fmt.Sprintf("SELECT T0.%s%s%s FROM %s%s%s T0 %s%s", Q, mi.fields.pk.column, Q, Q, mi.table, Q, join, where)
+		supQuery := fmt.Sprintf("SELECT T0.%s%s%s FROM %s%s%s T0 %s%s%s",
+			Q, mi.fields.pk.column, Q,
+			Q, mi.table, Q,
+			specifyIndexes, join, where)
 		query = fmt.Sprintf("UPDATE %s%s%s SET %sWHERE %s%s%s IN ( %s )", Q, mi.table, Q, sets, Q, mi.fields.pk.column, Q, supQuery)
 	}
 
@@ -844,8 +849,10 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	tables := newDbTables(mi, d.ins)
 	tables.skipEnd = true
 
+	var specifyIndexes string
 	if qs != nil {
 		tables.parseRelated(qs.related, qs.relDepth)
+		specifyIndexes = tables.getIndexSql(mi.table, qs.useIndex, qs.indexes)
 	}
 
 	if cond == nil || cond.IsEmpty() {
@@ -858,7 +865,7 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	join := tables.getJoinSQL()
 
 	cols := fmt.Sprintf("T0.%s%s%s", Q, mi.fields.pk.column, Q)
-	query := fmt.Sprintf("SELECT %s FROM %s%s%s T0 %s%s", cols, Q, mi.table, Q, join, where)
+	query := fmt.Sprintf("SELECT %s FROM %s%s%s T0 %s%s%s", cols, Q, mi.table, Q, specifyIndexes, join, where)
 
 	d.ins.ReplaceMarks(&query)
 
