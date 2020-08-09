@@ -176,11 +176,11 @@ type DQL interface {
 	// example:
 	// 	Ormer.LoadRelated(post,"Tags")
 	// 	for _,tag := range post.Tags{...}
-	// args[0] bool true useDefaultRelsDepth ; false  depth 0
-	// args[0] int  loadRelationDepth
-	// args[1] int limit default limit 1000
-	// args[2] int offset default offset 0
-	// args[3] string order  for example : "-Id"
+	// hints.DefaultRelDepth useDefaultRelsDepth ; or depth 0
+	// hints.RelDepth loadRelationDepth
+	// hints.Limit limit default limit 1000
+	// hints.Offset int offset default offset 0
+	// hints.OrderBy string order  for example : "-Id"
 	// make sure the relation is defined in model struct tags.
 	LoadRelated(md interface{}, name string, args ...common.KV) (int64, error)
 	LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...common.KV) (int64, error)
