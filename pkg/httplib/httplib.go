@@ -34,6 +34,7 @@ package httplib
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"encoding/xml"
@@ -65,6 +66,11 @@ var defaultSetting = BeegoHTTPSettings{
 
 var defaultCookieJar http.CookieJar
 var settingMutex sync.Mutex
+
+// it will be the last filter and execute request.Do
+var doRequestFilter = func(ctx context.Context, req *BeegoHTTPRequest) (*http.Response, error) {
+	return req.doRequest(ctx)
+}
 
 // createDefaultCookie creates a global cookiejar to store cookies.
 func createDefaultCookie() {
@@ -145,6 +151,7 @@ type BeegoHTTPSettings struct {
 	DumpBody         bool
 	Retries          int // if set to -1 means will retry forever
 	RetryDelay       time.Duration
+	FilterChains     []FilterChain
 }
 
 // BeegoHTTPRequest provides more useful methods than http.Request for requesting a url.
@@ -295,6 +302,18 @@ func (b *BeegoHTTPRequest) SetCheckRedirect(redirect func(req *http.Request, via
 	return b
 }
 
+// SetFilters will use the filter as the invocation filters
+func (b *BeegoHTTPRequest) SetFilters(fcs ...FilterChain) *BeegoHTTPRequest {
+	b.setting.FilterChains = fcs
+	return b
+}
+
+// AddFilters adds filter
+func (b *BeegoHTTPRequest) AddFilters(fcs ...FilterChain) *BeegoHTTPRequest {
+	b.setting.FilterChains = append(b.setting.FilterChains, fcs...)
+	return b
+}
+
 // Param adds query param in to request.
 // params build query string as ?key1=value1&key2=value2...
 func (b *BeegoHTTPRequest) Param(key, value string) *BeegoHTTPRequest {
@@ -397,7 +416,7 @@ func (b *BeegoHTTPRequest) buildURL(paramBody string) {
 					if err != nil {
 						log.Println("Httplib:", err)
 					}
-					//iocopy
+					// iocopy
 					_, err = io.Copy(fileWriter, fh)
 					fh.Close()
 					if err != nil {
@@ -440,6 +459,21 @@ func (b *BeegoHTTPRequest) getResponse() (*http.Response, error) {
 
 // DoRequest executes client.Do
 func (b *BeegoHTTPRequest) DoRequest() (resp *http.Response, err error) {
+	return b.DoRequestWithCtx(context.Background())
+}
+
+func (b *BeegoHTTPRequest) DoRequestWithCtx(ctx context.Context) (resp *http.Response, err error) {
+
+	root := doRequestFilter
+	if len(b.setting.FilterChains) > 0 {
+		for i := len(b.setting.FilterChains) - 1; i >= 0; i-- {
+			root = b.setting.FilterChains[i](root)
+		}
+	}
+	return root(ctx, b)
+}
+
+func (b *BeegoHTTPRequest) doRequest(ctx context.Context) (resp *http.Response, err error) {
 	var paramBody string
 	if len(b.params) > 0 {
 		var buf bytes.Buffer
