@@ -41,10 +41,12 @@ var (
 )
 
 // IniConfig implements Config to parse ini file.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 type IniConfig struct {
 }
 
 // Parse creates a new Config and parses the file configuration from the named file.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (ini *IniConfig) Parse(name string) (Configer, error) {
 	return ini.parseFile(name)
 }
@@ -208,6 +210,7 @@ func (ini *IniConfig) parseData(dir string, data []byte) (*IniConfigContainer, e
 // ParseData parse ini the data
 // When include other.conf,other.conf is either absolute directory
 // or under beego in default temporary directory(/tmp/beego[-username]).
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (ini *IniConfig) ParseData(data []byte) (Configer, error) {
 	dir := "beego"
 	currentUser, err := user.Current()
@@ -224,6 +227,7 @@ func (ini *IniConfig) ParseData(data []byte) (Configer, error) {
 
 // IniConfigContainer A Config represents the ini configuration.
 // When set and get value, support key as section:name type.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 type IniConfigContainer struct {
 	data           map[string]map[string]string // section=> key:val
 	sectionComment map[string]string            // section : comment
@@ -232,12 +236,14 @@ type IniConfigContainer struct {
 }
 
 // Bool returns the boolean value for a given key.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *IniConfigContainer) Bool(key string) (bool, error) {
 	return ParseBool(c.getdata(key))
 }
 
 // DefaultBool returns the boolean value for a given key.
 // if err != nil return defaultval
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *IniConfigContainer) DefaultBool(key string, defaultval bool) bool {
 	v, err := c.Bool(key)
 	if err != nil {
@@ -247,12 +253,14 @@ func (c *IniConfigContainer) DefaultBool(key string, defaultval bool) bool {
 }
 
 // Int returns the integer value for a given key.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *IniConfigContainer) Int(key string) (int, error) {
 	return strconv.Atoi(c.getdata(key))
 }
 
 // DefaultInt returns the integer value for a given key.
 // if err != nil return defaultval
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *IniConfigContainer) DefaultInt(key string, defaultval int) int {
 	v, err := c.Int(key)
 	if err != nil {
@@ -262,12 +270,14 @@ func (c *IniConfigContainer) DefaultInt(key string, defaultval int) int {
 }
 
 // Int64 returns the int64 value for a given key.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *IniConfigContainer) Int64(key string) (int64, error) {
 	return strconv.ParseInt(c.getdata(key), 10, 64)
 }
 
 // DefaultInt64 returns the int64 value for a given key.
 // if err != nil return defaultval
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *IniConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
 	v, err := c.Int64(key)
 	if err != nil {
@@ -277,12 +287,14 @@ func (c *IniConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
 }
 
 // Float returns the float value for a given key.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *IniConfigContainer) Float(key string) (float64, error) {
 	return strconv.ParseFloat(c.getdata(key), 64)
 }
 
 // DefaultFloat returns the float64 value for a given key.
 // if err != nil return defaultval
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *IniConfigContainer) DefaultFloat(key string, defaultval float64) float64 {
 	v, err := c.Float(key)
 	if err != nil {
@@ -292,12 +304,14 @@ func (c *IniConfigContainer) DefaultFloat(key string, defaultval float64) float6
 }
 
 // String returns the string value for a given key.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *IniConfigContainer) String(key string) string {
 	return c.getdata(key)
 }
 
 // DefaultString returns the string value for a given key.
 // if err != nil return defaultval
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *IniConfigContainer) DefaultString(key string, defaultval string) string {
 	v := c.String(key)
 	if v == "" {
@@ -308,6 +322,7 @@ func (c *IniConfigContainer) DefaultString(key string, defaultval string) string
 
 // Strings returns the []string value for a given key.
 // Return nil if config value does not exist or is empty.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *IniConfigContainer) Strings(key string) []string {
 	v := c.String(key)
 	if v == "" {
@@ -318,6 +333,7 @@ func (c *IniConfigContainer) Strings(key string) []string {
 
 // DefaultStrings returns the []string value for a given key.
 // if err != nil return defaultval
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *IniConfigContainer) DefaultStrings(key string, defaultval []string) []string {
 	v := c.Strings(key)
 	if v == nil {
@@ -327,6 +343,7 @@ func (c *IniConfigContainer) DefaultStrings(key string, defaultval []string) []s
 }
 
 // GetSection returns map for the given section
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *IniConfigContainer) GetSection(section string) (map[string]string, error) {
 	if v, ok := c.data[section]; ok {
 		return v, nil
@@ -337,6 +354,7 @@ func (c *IniConfigContainer) GetSection(section string) (map[string]string, erro
 // SaveConfigFile save the config into file.
 //
 // BUG(env): The environment variable config item will be saved with real value in SaveConfigFile Function.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *IniConfigContainer) SaveConfigFile(filename string) (err error) {
 	// Write configuration file by filename.
 	f, err := os.Create(filename)
@@ -437,6 +455,7 @@ func (c *IniConfigContainer) SaveConfigFile(filename string) (err error) {
 // Set writes a new value for key.
 // if write to one section, the key need be "section::key".
 // if the section is not existed, it panics.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *IniConfigContainer) Set(key, value string) error {
 	c.Lock()
 	defer c.Unlock()
@@ -465,6 +484,7 @@ func (c *IniConfigContainer) Set(key, value string) error {
 }
 
 // DIY returns the raw value by a given key.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *IniConfigContainer) DIY(key string) (v interface{}, err error) {
 	if v, ok := c.data[strings.ToLower(key)]; ok {
 		return v, nil

@@ -45,9 +45,11 @@ import (
 )
 
 // Config is a yaml config parser and implements Config interface.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 type Config struct{}
 
 // Parse returns a ConfigContainer with parsed yaml config map.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (yaml *Config) Parse(filename string) (y config.Configer, err error) {
 	cnf, err := ReadYmlReader(filename)
 	if err != nil {
@@ -60,6 +62,7 @@ func (yaml *Config) Parse(filename string) (y config.Configer, err error) {
 }
 
 // ParseData parse yaml data
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (yaml *Config) ParseData(data []byte) (config.Configer, error) {
 	cnf, err := parseYML(data)
 	if err != nil {
@@ -73,6 +76,7 @@ func (yaml *Config) ParseData(data []byte) (config.Configer, error) {
 
 // ReadYmlReader Read yaml file to map.
 // if json like, use json package, unless goyaml2 package.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func ReadYmlReader(path string) (cnf map[string]interface{}, err error) {
 	buf, err := ioutil.ReadFile(path)
 	if err != nil {
@@ -117,12 +121,14 @@ func parseYML(buf []byte) (cnf map[string]interface{}, err error) {
 }
 
 // ConfigContainer A Config represents the yaml configuration.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 type ConfigContainer struct {
 	data map[string]interface{}
 	sync.RWMutex
 }
 
 // Bool returns the boolean value for a given key.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *ConfigContainer) Bool(key string) (bool, error) {
 	v, err := c.getData(key)
 	if err != nil {
@@ -133,6 +139,7 @@ func (c *ConfigContainer) Bool(key string) (bool, error) {
 
 // DefaultBool return the bool value if has no error
 // otherwise return the defaultval
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *ConfigContainer) DefaultBool(key string, defaultval bool) bool {
 	v, err := c.Bool(key)
 	if err != nil {
@@ -142,6 +149,7 @@ func (c *ConfigContainer) DefaultBool(key string, defaultval bool) bool {
 }
 
 // Int returns the integer value for a given key.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *ConfigContainer) Int(key string) (int, error) {
 	if v, err := c.getData(key); err != nil {
 		return 0, err
@@ -155,6 +163,7 @@ func (c *ConfigContainer) Int(key string) (int, error) {
 
 // DefaultInt returns the integer value for a given key.
 // if err != nil return defaultval
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *ConfigContainer) DefaultInt(key string, defaultval int) int {
 	v, err := c.Int(key)
 	if err != nil {
@@ -164,6 +173,7 @@ func (c *ConfigContainer) DefaultInt(key string, defaultval int) int {
 }
 
 // Int64 returns the int64 value for a given key.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *ConfigContainer) Int64(key string) (int64, error) {
 	if v, err := c.getData(key); err != nil {
 		return 0, err
@@ -175,6 +185,7 @@ func (c *ConfigContainer) Int64(key string) (int64, error) {
 
 // DefaultInt64 returns the int64 value for a given key.
 // if err != nil return defaultval
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *ConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
 	v, err := c.Int64(key)
 	if err != nil {
@@ -184,6 +195,7 @@ func (c *ConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
 }
 
 // Float returns the float value for a given key.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *ConfigContainer) Float(key string) (float64, error) {
 	if v, err := c.getData(key); err != nil {
 		return 0.0, err
@@ -199,6 +211,7 @@ func (c *ConfigContainer) Float(key string) (float64, error) {
 
 // DefaultFloat returns the float64 value for a given key.
 // if err != nil return defaultval
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *ConfigContainer) DefaultFloat(key string, defaultval float64) float64 {
 	v, err := c.Float(key)
 	if err != nil {
@@ -208,6 +221,7 @@ func (c *ConfigContainer) DefaultFloat(key string, defaultval float64) float64 {
 }
 
 // String returns the string value for a given key.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *ConfigContainer) String(key string) string {
 	if v, err := c.getData(key); err == nil {
 		if vv, ok := v.(string); ok {
@@ -219,6 +233,7 @@ func (c *ConfigContainer) String(key string) string {
 
 // DefaultString returns the string value for a given key.
 // if err != nil return defaultval
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *ConfigContainer) DefaultString(key string, defaultval string) string {
 	v := c.String(key)
 	if v == "" {
@@ -228,6 +243,7 @@ func (c *ConfigContainer) DefaultString(key string, defaultval string) string {
 }
 
 // Strings returns the []string value for a given key.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *ConfigContainer) Strings(key string) []string {
 	v := c.String(key)
 	if v == "" {
@@ -238,6 +254,7 @@ func (c *ConfigContainer) Strings(key string) []string {
 
 // DefaultStrings returns the []string value for a given key.
 // if err != nil return defaultval
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *ConfigContainer) DefaultStrings(key string, defaultval []string) []string {
 	v := c.Strings(key)
 	if v == nil {
@@ -247,6 +264,7 @@ func (c *ConfigContainer) DefaultStrings(key string, defaultval []string) []stri
 }
 
 // GetSection returns map for the given section
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *ConfigContainer) GetSection(section string) (map[string]string, error) {
 
 	if v, ok := c.data[section]; ok {
@@ -256,6 +274,7 @@ func (c *ConfigContainer) GetSection(section string) (map[string]string, error) 
 }
 
 // SaveConfigFile save the config into file
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *ConfigContainer) SaveConfigFile(filename string) (err error) {
 	// Write configuration file by filename.
 	f, err := os.Create(filename)
@@ -268,6 +287,7 @@ func (c *ConfigContainer) SaveConfigFile(filename string) (err error) {
 }
 
 // Set writes a new value for key.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *ConfigContainer) Set(key, val string) error {
 	c.Lock()
 	defer c.Unlock()
@@ -276,6 +296,7 @@ func (c *ConfigContainer) Set(key, val string) error {
 }
 
 // DIY returns the raw value by a given key.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *ConfigContainer) DIY(key string) (v interface{}, err error) {
 	return c.getData(key)
 }
