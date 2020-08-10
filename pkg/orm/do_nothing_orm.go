@@ -1,4 +1,4 @@
-// Copyright 2020 beego 
+// Copyright 2020 beego
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import (
 var _ Ormer = new(DoNothingOrm)
 
 type DoNothingOrm struct {
+
 }
 
 func (d *DoNothingOrm) Read(md interface{}, cols ...string) error {
@@ -148,19 +149,19 @@ func (d *DoNothingOrm) BeginWithCtxAndOpts(ctx context.Context, opts *sql.TxOpti
 	return nil, nil
 }
 
-func (d *DoNothingOrm) DoTx(task func(txOrm TxOrmer) error) error {
+func (d *DoNothingOrm) DoTx(task func(ctx context.Context, txOrm TxOrmer) error) error {
 	return nil
 }
 
-func (d *DoNothingOrm) DoTxWithCtx(ctx context.Context, task func(txOrm TxOrmer) error) error {
+func (d *DoNothingOrm) DoTxWithCtx(ctx context.Context, task func(ctx context.Context, txOrm TxOrmer) error) error {
 	return nil
 }
 
-func (d *DoNothingOrm) DoTxWithOpts(opts *sql.TxOptions, task func(txOrm TxOrmer) error) error {
+func (d *DoNothingOrm) DoTxWithOpts(opts *sql.TxOptions, task func(ctx context.Context, txOrm TxOrmer) error) error {
 	return nil
 }
 
-func (d *DoNothingOrm) DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task func(txOrm TxOrmer) error) error {
+func (d *DoNothingOrm) DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task func(ctx context.Context, txOrm TxOrmer) error) error {
 	return nil
 }
 

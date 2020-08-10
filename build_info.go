@@ -16,15 +16,15 @@ package beego
 
 var (
 	// Deprecated: using pkg/, we will delete this in v2.1.0
-	BuildVersion     string
+	BuildVersion string
 	// Deprecated: using pkg/, we will delete this in v2.1.0
 	BuildGitRevision string
 	// Deprecated: using pkg/, we will delete this in v2.1.0
-	BuildStatus      string
+	BuildStatus string
 	// Deprecated: using pkg/, we will delete this in v2.1.0
-	BuildTag         string
+	BuildTag string
 	// Deprecated: using pkg/, we will delete this in v2.1.0
-	BuildTime        string
+	BuildTime string
 
 	// Deprecated: using pkg/, we will delete this in v2.1.0
 	GoVersion string

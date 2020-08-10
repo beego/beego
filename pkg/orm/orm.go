@@ -522,19 +522,24 @@ func (o *orm) BeginWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions) (TxO
 	return taskTxOrm, nil
 }
 
-func (o *orm) DoTx(task func(txOrm TxOrmer) error) error {
+func (o *orm) DoTx(task func(ctx context.Context, txOrm TxOrmer) error) error {
 	return o.DoTxWithCtx(context.Background(), task)
 }
 
-func (o *orm) DoTxWithCtx(ctx context.Context, task func(txOrm TxOrmer) error) error {
+func (o *orm) DoTxWithCtx(ctx context.Context, task func(ctx context.Context, txOrm TxOrmer) error) error {
 	return o.DoTxWithCtxAndOpts(ctx, nil, task)
 }
 
-func (o *orm) DoTxWithOpts(opts *sql.TxOptions, task func(txOrm TxOrmer) error) error {
+func (o *orm) DoTxWithOpts(opts *sql.TxOptions, task func(ctx context.Context, txOrm TxOrmer) error) error {
 	return o.DoTxWithCtxAndOpts(context.Background(), opts, task)
 }
 
-func (o *orm) DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task func(txOrm TxOrmer) error) error {
+func (o *orm) DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task func(ctx context.Context, txOrm TxOrmer) error) error {
+	return doTxTemplate(o, ctx, opts, task)
+}
+
+func doTxTemplate(o TxBeginner, ctx context.Context, opts *sql.TxOptions,
+	task func(ctx context.Context, txOrm TxOrmer) error) error {
 	_txOrm, err := o.BeginWithCtxAndOpts(ctx, opts)
 	if err != nil {
 		return err
@@ -553,9 +558,8 @@ func (o *orm) DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task 
 			}
 		}
 	}()
-
 	var taskTxOrm = _txOrm
-	err = task(taskTxOrm)
+	err = task(ctx, taskTxOrm)
 	panicked = false
 	return err
 }
@@ -582,18 +586,11 @@ func NewOrm() Ormer {
 
 // NewOrmUsingDB create new orm with the name
 func NewOrmUsingDB(aliasName string) Ormer {
-	o := new(orm)
 	if al, ok := dataBaseCache.get(aliasName); ok {
-		o.alias = al
-		if Debug {
-			o.db = newDbQueryLog(al, al.DB)
-		} else {
-			o.db = al.DB
-		}
+		return newDBWithAlias(al)
 	} else {
 		panic(fmt.Errorf("<Ormer.Using> unknown db alias name `%s`", aliasName))
 	}
-	return o
 }
 
 // NewOrmWithDB create a new ormer object with specify *sql.DB for query
@@ -603,14 +600,21 @@ func NewOrmWithDB(driverName, aliasName string, db *sql.DB, params ...common.KV)
 		return nil, err
 	}
 
+	return newDBWithAlias(al), nil
+}
+
+func newDBWithAlias(al *alias) Ormer {
 	o := new(orm)
 	o.alias = al
 
 	if Debug {
-		o.db = newDbQueryLog(o.alias, db)
+		o.db = newDbQueryLog(al, al.DB)
 	} else {
-		o.db = db
+		o.db = al.DB
 	}
 
-	return o, nil
+	if len(globalFilterChains) > 0 {
+		return NewFilterOrmDecorator(o, globalFilterChains...)
+	}
+	return o
 }
