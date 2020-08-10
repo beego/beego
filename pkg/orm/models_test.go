@@ -387,8 +387,8 @@ type Index struct {
 	Id int `orm:"column(id)"`
 
 	// Other Fields
-	F1 int `orm:"column(f1);unique"`
-	F2 int `orm:"column(f2);unique"`
+	F1 int `orm:"column(f1);index"`
+	F2 int `orm:"column(f2);index"`
 }
 
 func NewInLine() *InLine {

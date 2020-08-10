@@ -812,13 +812,13 @@ func TestSpecifyIndex(t *testing.T) {
 	_, _ = dORM.Insert(index)
 	throwFailNow(t, AssertIs(index.Id, 2))
 
-	_ = dORM.QueryTable(&Index{}).Filter(`f1`, `1`).ForceIndex(`f1`).One(index)
+	_ = dORM.QueryTable(&Index{}).Filter(`f1`, `1`).ForceIndex(`index_f1`).One(index)
 	throwFailNow(t, AssertIs(index.F2, 2))
 
-	_ = dORM.QueryTable(&Index{}).Filter(`f1`, `3`).UseIndex(`f1`, `f2`).One(index)
-	throwFailNow(t, AssertIs(index.F2, 4))
+	_ = dORM.QueryTable(&Index{}).Filter(`f2`, `4`).UseIndex(`index_f2`).One(index)
+	throwFailNow(t, AssertIs(index.F1, 3))
 
-	_ = dORM.QueryTable(&Index{}).Filter(`f1`, `1`).IgnoreIndex(`f1`, `f2`).One(index)
+	_ = dORM.QueryTable(&Index{}).Filter(`f1`, `1`).IgnoreIndex(`index_f1`, `index_f2`).One(index)
 	throwFailNow(t, AssertIs(index.F2, 2))
 }
 
