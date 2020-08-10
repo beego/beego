@@ -416,10 +416,10 @@ func (o *ormBase) getReverseQs(md interface{}, mi *modelInfo, fi *fieldInfo) *qu
 
 	if fi.fieldType == RelReverseMany && fi.reverseFieldInfo.mi.isThrough {
 		q = newQuerySet(o, fi.relModelInfo).(*querySet)
-		q.Filter(fi.reverseFieldInfoM2M.column+ExprSep+fi.reverseFieldInfo.column, md)
+		q.cond = NewCondition().And(fi.reverseFieldInfoM2M.column+ExprSep+fi.reverseFieldInfo.column, md)
 	} else {
 		q = newQuerySet(o, fi.reverseFieldInfo.mi).(*querySet)
-		q.Filter(fi.reverseFieldInfo.column, md)
+		q.cond = NewCondition().And(fi.reverseFieldInfo.column, md)
 	}
 
 	return q
@@ -434,11 +434,12 @@ func (o *ormBase) getRelQs(md interface{}, mi *modelInfo, fi *fieldInfo) *queryS
 	}
 
 	q := newQuerySet(o, fi.relModelInfo).(*querySet)
+	q.cond = NewCondition()
 
 	if fi.fieldType == RelManyToMany {
-		q.Filter(fi.reverseFieldInfoM2M.column+ExprSep+fi.reverseFieldInfo.column, md)
+		q.cond = q.cond.And(fi.reverseFieldInfoM2M.column+ExprSep+fi.reverseFieldInfo.column, md)
 	} else {
-		q.Filter(fi.reverseFieldInfo.column, md)
+		q.cond = q.cond.And(fi.reverseFieldInfo.column, md)
 	}
 
 	return q
