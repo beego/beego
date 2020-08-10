@@ -201,6 +201,7 @@ func TestSyncDb(t *testing.T) {
 	RegisterModel(new(IntegerPk))
 	RegisterModel(new(UintPk))
 	RegisterModel(new(PtrPk))
+	RegisterModel(new(Index))
 
 	err := RunSyncdb("default", true, Debug)
 	throwFail(t, err)
@@ -225,6 +226,7 @@ func TestRegisterModels(t *testing.T) {
 	RegisterModel(new(IntegerPk))
 	RegisterModel(new(UintPk))
 	RegisterModel(new(PtrPk))
+	RegisterModel(new(Index))
 
 	BootStrap()
 
@@ -792,6 +794,32 @@ func TestExpr(t *testing.T) {
 	// num, err = qs.Filter("created", time.Now().Format(format_Date)).Count()
 	// throwFail(t, err)
 	// throwFail(t, AssertIs(num, 3))
+}
+
+func TestSpecifyIndex(t *testing.T) {
+	var index *Index
+	index = &Index{
+		F1: 1,
+		F2: 2,
+	}
+	_, _ = dORM.Insert(index)
+	throwFailNow(t, AssertIs(index.Id, 1))
+
+	index = &Index{
+		F1: 3,
+		F2: 4,
+	}
+	_, _ = dORM.Insert(index)
+	throwFailNow(t, AssertIs(index.Id, 2))
+
+	_ = dORM.QueryTable(&Index{}).Filter(`f1`, `1`).ForceIndex(`f1`).One(index)
+	throwFailNow(t, AssertIs(index.F2, 2))
+
+	_ = dORM.QueryTable(&Index{}).Filter(`f1`, `3`).UseIndex(`f1`, `f2`).One(index)
+	throwFailNow(t, AssertIs(index.F2, 4))
+
+	_ = dORM.QueryTable(&Index{}).Filter(`f1`, `1`).IgnoreIndex(`f1`, `f2`).One(index)
+	throwFailNow(t, AssertIs(index.F2, 2))
 }
 
 func TestOperators(t *testing.T) {
