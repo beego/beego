@@ -36,14 +36,25 @@ func (s *SimpleKV) GetValue() interface{} {
 	return s.Value
 }
 
-// KVs will store SimpleKV collection as map
-type KVs struct {
+// KVs interface
+type KVs interface {
+	GetValueOr(key interface{}, defValue interface{}) interface{}
+	Contains(key interface{}) bool
+	IfContains(key interface{}, action func(value interface{})) KVs
+	Put(key interface{}, value interface{}) KVs
+	Clone() KVs
+}
+
+// SimpleKVs will store SimpleKV collection as map
+type SimpleKVs struct {
 	kvs map[interface{}]interface{}
 }
 
+var _ KVs = new(SimpleKVs)
+
 // GetValueOr returns the value for a given key, if non-existant
 // it returns defValue
-func (kvs *KVs) GetValueOr(key interface{}, defValue interface{}) interface{} {
+func (kvs *SimpleKVs) GetValueOr(key interface{}, defValue interface{}) interface{} {
 	v, ok := kvs.kvs[key]
 	if ok {
 		return v
@@ -52,13 +63,13 @@ func (kvs *KVs) GetValueOr(key interface{}, defValue interface{}) interface{} {
 }
 
 // Contains checks if a key exists
-func (kvs *KVs) Contains(key interface{}) bool {
+func (kvs *SimpleKVs) Contains(key interface{}) bool {
 	_, ok := kvs.kvs[key]
 	return ok
 }
 
 // IfContains invokes the action on a key if it exists
-func (kvs *KVs) IfContains(key interface{}, action func(value interface{})) *KVs {
+func (kvs *SimpleKVs) IfContains(key interface{}, action func(value interface{})) KVs {
 	v, ok := kvs.kvs[key]
 	if ok {
 		action(v)
@@ -67,14 +78,25 @@ func (kvs *KVs) IfContains(key interface{}, action func(value interface{})) *KVs
 }
 
 // Put stores the value
-func (kvs *KVs) Put(key interface{}, value interface{}) *KVs {
+func (kvs *SimpleKVs) Put(key interface{}, value interface{}) KVs {
 	kvs.kvs[key] = value
 	return kvs
 }
 
+// Clone
+func (kvs *SimpleKVs) Clone() KVs {
+	newKVs := new(SimpleKVs)
+
+	for key, value := range kvs.kvs {
+		newKVs.Put(key, value)
+	}
+
+	return newKVs
+}
+
 // NewKVs creates the *KVs instance
-func NewKVs(kvs ...KV) *KVs {
-	res := &KVs{
+func NewKVs(kvs ...KV) KVs {
+	res := &SimpleKVs{
 		kvs: make(map[interface{}]interface{}, len(kvs)),
 	}
 	for _, kv := range kvs {

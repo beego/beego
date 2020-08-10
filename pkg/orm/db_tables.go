@@ -472,6 +472,15 @@ func (t *dbTables) getLimitSQL(mi *modelInfo, offset int64, limit int64) (limits
 	return
 }
 
+// getIndexSql generate index sql.
+func (t *dbTables) getIndexSql(tableName string,useIndex int, indexes []string) (clause string) {
+	if len(indexes) == 0 {
+		return
+	}
+
+	return t.base.GenerateSpecifyIndex(tableName, useIndex, indexes)
+}
+
 // crete new tables collection.
 func newDbTables(mi *modelInfo, base dbBaser) *dbTables {
 	tables := &dbTables{}

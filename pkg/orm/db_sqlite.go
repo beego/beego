@@ -17,7 +17,9 @@ package orm
 import (
 	"database/sql"
 	"fmt"
+	"github.com/astaxie/beego/pkg/orm/hints"
 	"reflect"
+	"strings"
 	"time"
 )
 
@@ -152,6 +154,25 @@ func (d *dbBaseSqlite) IndexExists(db dbQuerier, table string, name string) bool
 	}
 	return false
 }
+
+// GenerateSpecifyIndex return a specifying index clause
+func (d *dbBaseSqlite) GenerateSpecifyIndex(tableName string, useIndex int, indexes []string) string {
+	var s []string
+	Q := d.TableQuote()
+	for _, index := range indexes {
+		tmp := fmt.Sprintf(`%s%s%s`, Q, index, Q)
+		s = append(s, tmp)
+	}
+
+	switch useIndex {
+	case hints.KeyUseIndex, hints.KeyForceIndex:
+		return fmt.Sprintf(` INDEXED BY %s `, strings.Join(s, `,`))
+	default:
+		DebugLog.Println("[WARN] Not a valid specifying action, so that action is ignored")
+		return ``
+	}
+}
+
 
 // create new sqlite dbBaser.
 func newdbBaseSqlite() dbBaser {
