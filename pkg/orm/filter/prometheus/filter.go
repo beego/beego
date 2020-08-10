@@ -29,6 +29,10 @@ import (
 // FilterChainBuilder is an extension point,
 // when we want to support some configuration,
 // please use this structure
+// this Filter's behavior looks a little bit strange
+// for example:
+// if we want to records the metrics of QuerySetter
+// actually we only records metrics of invoking "QueryTable" and "QueryTableWithCtx"
 type FilterChainBuilder struct {
 	summaryVec prometheus.ObserverVec
 }

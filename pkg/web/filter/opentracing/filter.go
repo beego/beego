@@ -15,37 +15,44 @@
 package opentracing
 
 import (
+	"context"
+
+	logKit "github.com/go-kit/kit/log"
+	opentracingKit "github.com/go-kit/kit/tracing/opentracing"
 	"github.com/opentracing/opentracing-go"
 
 	beego "github.com/astaxie/beego/pkg"
-	"github.com/astaxie/beego/pkg/context"
+	beegoCtx "github.com/astaxie/beego/pkg/context"
 )
 
 // FilterChainBuilder provides an extension point that we can support more configurations if necessary
 type FilterChainBuilder struct {
 	// CustomSpanFunc makes users to custom the span.
-	CustomSpanFunc func(span opentracing.Span, ctx *context.Context)
+	CustomSpanFunc func(span opentracing.Span, ctx *beegoCtx.Context)
 }
 
 
 func (builder *FilterChainBuilder) FilterChain(next beego.FilterFunc) beego.FilterFunc {
-	return func(ctx *context.Context) {
-		span := opentracing.SpanFromContext(ctx.Request.Context())
-		spanCtx := ctx.Request.Context()
-		if span == nil {
-			operationName := ctx.Input.URL()
-			// it means that there is not any span, so we create a span as the root span.
-			// TODO, if we support multiple servers, this need to be changed
-			route, found := beego.BeeApp.Handlers.FindRouter(ctx)
-			if found {
-				operationName = route.GetPattern()
-			}
-			span, spanCtx = opentracing.StartSpanFromContext(spanCtx, operationName)
-			newReq := ctx.Request.Clone(spanCtx)
-			ctx.Reset(ctx.ResponseWriter.ResponseWriter, newReq)
+	return func(ctx *beegoCtx.Context) {
+		var (
+			spanCtx context.Context
+			span    opentracing.Span
+		)
+		operationName := builder.operationName(ctx)
+
+		if preSpan := opentracing.SpanFromContext(ctx.Request.Context()); preSpan == nil {
+			inject := opentracingKit.HTTPToContext(opentracing.GlobalTracer(), operationName, logKit.NewNopLogger())
+			spanCtx = inject(ctx.Request.Context(), ctx.Request)
+			span = opentracing.SpanFromContext(spanCtx)
+		} else {
+			span, spanCtx = opentracing.StartSpanFromContext(ctx.Request.Context(), operationName)
 		}
 
 		defer span.Finish()
+
+		newReq := ctx.Request.Clone(spanCtx)
+		ctx.Reset(ctx.ResponseWriter.ResponseWriter, newReq)
+
 		next(ctx)
 		// if you think we need to do more things, feel free to create an issue to tell us
 		span.SetTag("status", ctx.Output.Status)
@@ -55,4 +62,15 @@ func (builder *FilterChainBuilder) FilterChain(next beego.FilterFunc) beego.Filt
 			builder.CustomSpanFunc(span, ctx)
 		}
 	}
+}
+
+func (builder *FilterChainBuilder) operationName(ctx *beegoCtx.Context) string {
+	operationName := ctx.Input.URL()
+	// it means that there is not any span, so we create a span as the root span.
+	// TODO, if we support multiple servers, this need to be changed
+	route, found := beego.BeeApp.Handlers.FindRouter(ctx)
+	if found {
+		operationName = route.GetPattern()
+	}
+	return operationName
 }
