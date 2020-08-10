@@ -382,6 +382,15 @@ type InLine struct {
 	Email string
 }
 
+type Index struct {
+	// Common Fields
+	Id int `orm:"column(id)"`
+
+	// Other Fields
+	F1 int `orm:"column(f1);unique"`
+	F2 int `orm:"column(f2);unique"`
+}
+
 func NewInLine() *InLine {
 	return new(InLine)
 }
