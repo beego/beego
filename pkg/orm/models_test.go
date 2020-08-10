@@ -27,7 +27,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	// As tidb can't use go get, so disable the tidb testing now
 	// _ "github.com/pingcap/tidb"
-
 )
 
 // A slice string field.
