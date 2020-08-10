@@ -18,6 +18,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/astaxie/beego/pkg/orm/hints"
 	"reflect"
 	"strings"
 	"time"
@@ -738,8 +739,10 @@ func (d *dbBase) UpdateBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	}
 
 	tables := newDbTables(mi, d.ins)
+	var specifyIndexes string
 	if qs != nil {
 		tables.parseRelated(qs.related, qs.relDepth)
+		specifyIndexes = tables.getIndexSql(mi.table, qs.useIndex, qs.indexes)
 	}
 
 	where, args := tables.getCondSQL(cond, false, tz)
@@ -790,9 +793,12 @@ func (d *dbBase) UpdateBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	sets := strings.Join(cols, ", ") + " "
 
 	if d.ins.SupportUpdateJoin() {
-		query = fmt.Sprintf("UPDATE %s%s%s T0 %sSET %s%s", Q, mi.table, Q, join, sets, where)
+		query = fmt.Sprintf("UPDATE %s%s%s T0 %s%sSET %s%s", Q, mi.table, Q, specifyIndexes, join, sets, where)
 	} else {
-		supQuery := fmt.Sprintf("SELECT T0.%s%s%s FROM %s%s%s T0 %s%s", Q, mi.fields.pk.column, Q, Q, mi.table, Q, join, where)
+		supQuery := fmt.Sprintf("SELECT T0.%s%s%s FROM %s%s%s T0 %s%s%s",
+			Q, mi.fields.pk.column, Q,
+			Q, mi.table, Q,
+			specifyIndexes, join, where)
 		query = fmt.Sprintf("UPDATE %s%s%s SET %sWHERE %s%s%s IN ( %s )", Q, mi.table, Q, sets, Q, mi.fields.pk.column, Q, supQuery)
 	}
 
@@ -843,8 +849,10 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	tables := newDbTables(mi, d.ins)
 	tables.skipEnd = true
 
+	var specifyIndexes string
 	if qs != nil {
 		tables.parseRelated(qs.related, qs.relDepth)
+		specifyIndexes = tables.getIndexSql(mi.table, qs.useIndex, qs.indexes)
 	}
 
 	if cond == nil || cond.IsEmpty() {
@@ -857,7 +865,7 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	join := tables.getJoinSQL()
 
 	cols := fmt.Sprintf("T0.%s%s%s", Q, mi.fields.pk.column, Q)
-	query := fmt.Sprintf("SELECT %s FROM %s%s%s T0 %s%s", cols, Q, mi.table, Q, join, where)
+	query := fmt.Sprintf("SELECT %s FROM %s%s%s T0 %s%s%s", cols, Q, mi.table, Q, specifyIndexes, join, where)
 
 	d.ins.ReplaceMarks(&query)
 
@@ -1002,6 +1010,7 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 	orderBy := tables.getOrderSQL(qs.orders)
 	limit := tables.getLimitSQL(mi, offset, rlimit)
 	join := tables.getJoinSQL()
+	specifyIndexes := tables.getIndexSql(mi.table, qs.useIndex, qs.indexes)
 
 	for _, tbl := range tables.tables {
 		if tbl.sel {
@@ -1015,9 +1024,11 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 	if qs.distinct {
 		sqlSelect += " DISTINCT"
 	}
-	query := fmt.Sprintf("%s %s FROM %s%s%s T0 %s%s%s%s%s", sqlSelect, sels, Q, mi.table, Q, join, where, groupBy, orderBy, limit)
+	query := fmt.Sprintf("%s %s FROM %s%s%s T0 %s%s%s%s%s%s",
+		sqlSelect, sels, Q, mi.table, Q,
+		specifyIndexes, join, where, groupBy, orderBy, limit)
 
-	if qs.forupdate {
+	if qs.forUpdate {
 		query += " FOR UPDATE"
 	}
 
@@ -1153,10 +1164,13 @@ func (d *dbBase) Count(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condition
 	groupBy := tables.getGroupSQL(qs.groups)
 	tables.getOrderSQL(qs.orders)
 	join := tables.getJoinSQL()
+	specifyIndexes := tables.getIndexSql(mi.table, qs.useIndex, qs.indexes)
 
 	Q := d.ins.TableQuote()
 
-	query := fmt.Sprintf("SELECT COUNT(*) FROM %s%s%s T0 %s%s%s", Q, mi.table, Q, join, where, groupBy)
+	query := fmt.Sprintf("SELECT COUNT(*) FROM %s%s%s T0 %s%s%s%s",
+		Q, mi.table, Q,
+		specifyIndexes, join, where, groupBy)
 
 	if groupBy != "" {
 		query = fmt.Sprintf("SELECT COUNT(*) FROM (%s) AS T", query)
@@ -1680,6 +1694,7 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 	orderBy := tables.getOrderSQL(qs.orders)
 	limit := tables.getLimitSQL(mi, qs.offset, qs.limit)
 	join := tables.getJoinSQL()
+	specifyIndexes := tables.getIndexSql(mi.table, qs.useIndex, qs.indexes)
 
 	sels := strings.Join(cols, ", ")
 
@@ -1687,7 +1702,10 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 	if qs.distinct {
 		sqlSelect += " DISTINCT"
 	}
-	query := fmt.Sprintf("%s %s FROM %s%s%s T0 %s%s%s%s%s", sqlSelect, sels, Q, mi.table, Q, join, where, groupBy, orderBy, limit)
+	query := fmt.Sprintf("%s %s FROM %s%s%s T0 %s%s%s%s%s%s",
+		sqlSelect, sels,
+		Q, mi.table, Q,
+		specifyIndexes, join, where, groupBy, orderBy, limit)
 
 	d.ins.ReplaceMarks(&query)
 
@@ -1779,10 +1797,6 @@ func (d *dbBase) ReadValues(q dbQuerier, qs *querySet, mi *modelInfo, cond *Cond
 	}
 
 	return cnt, nil
-}
-
-func (d *dbBase) RowsTo(dbQuerier, *querySet, *modelInfo, *Condition, interface{}, string, string, *time.Location) (int64, error) {
-	return 0, nil
 }
 
 // flag of update joined record.
@@ -1900,3 +1914,31 @@ func (d *dbBase) ShowColumnsQuery(table string) string {
 func (d *dbBase) IndexExists(dbQuerier, string, string) bool {
 	panic(ErrNotImplement)
 }
+
+// GenerateSpecifyIndex return a specifying index clause
+func (d *dbBase) GenerateSpecifyIndex(tableName string, useIndex int, indexes []string) string {
+	var s []string
+	Q := d.TableQuote()
+	for _, index := range indexes {
+		tmp := fmt.Sprintf(`%s%s%s`, Q, index, Q)
+		s = append(s, tmp)
+	}
+
+	var useWay string
+
+	switch useIndex {
+	case hints.KeyUseIndex:
+		useWay = `USE`
+	case hints.KeyForceIndex:
+		useWay = `FORCE`
+	case hints.KeyIgnoreIndex:
+		useWay = `IGNORE`
+	default:
+		DebugLog.Println("[WARN] Not a valid specifying action, so that action is ignored")
+		return ``
+	}
+
+	return fmt.Sprintf(` %s INDEX(%s) `, useWay, strings.Join(s, `,`))
+}
+
+
