@@ -41,8 +41,6 @@ type KVs interface {
 	GetValueOr(key interface{}, defValue interface{}) interface{}
 	Contains(key interface{}) bool
 	IfContains(key interface{}, action func(value interface{})) KVs
-	Put(key interface{}, value interface{}) KVs
-	Clone() KVs
 }
 
 // SimpleKVs will store SimpleKV collection as map
@@ -75,23 +73,6 @@ func (kvs *SimpleKVs) IfContains(key interface{}, action func(value interface{})
 		action(v)
 	}
 	return kvs
-}
-
-// Put stores the value
-func (kvs *SimpleKVs) Put(key interface{}, value interface{}) KVs {
-	kvs.kvs[key] = value
-	return kvs
-}
-
-// Clone
-func (kvs *SimpleKVs) Clone() KVs {
-	newKVs := new(SimpleKVs)
-
-	for key, value := range kvs.kvs {
-		newKVs.Put(key, value)
-	}
-
-	return newKVs
 }
 
 // NewKVs creates the *KVs instance
