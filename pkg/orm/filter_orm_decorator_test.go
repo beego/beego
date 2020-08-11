@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/astaxie/beego/pkg/common"
 	"sync"
 	"testing"
 
@@ -360,7 +361,7 @@ func (f *filterMockOrm) ReadForUpdateWithCtx(ctx context.Context, md interface{}
 	return errors.New("read for update error")
 }
 
-func (f *filterMockOrm) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...interface{}) (int64, error) {
+func (f *filterMockOrm) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...common.KV) (int64, error) {
 	return 99, errors.New("load related error")
 }
 
