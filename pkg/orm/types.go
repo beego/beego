@@ -17,6 +17,7 @@ package orm
 import (
 	"context"
 	"database/sql"
+	"github.com/astaxie/beego/pkg/common"
 	"reflect"
 	"time"
 )
@@ -95,10 +96,10 @@ type TxBeginner interface {
 	BeginWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions) (TxOrmer, error)
 
 	//closure control transaction
-	DoTx(task func(txOrm TxOrmer) error) error
-	DoTxWithCtx(ctx context.Context, task func(txOrm TxOrmer) error) error
-	DoTxWithOpts(opts *sql.TxOptions, task func(txOrm TxOrmer) error) error
-	DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task func(txOrm TxOrmer) error) error
+	DoTx(task func(ctx context.Context, txOrm TxOrmer) error) error
+	DoTxWithCtx(ctx context.Context, task func(ctx context.Context, txOrm TxOrmer) error) error
+	DoTxWithOpts(opts *sql.TxOptions, task func(ctx context.Context, txOrm TxOrmer) error) error
+	DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task func(ctx context.Context, txOrm TxOrmer) error) error
 }
 
 type TxCommitter interface {
@@ -175,14 +176,14 @@ type DQL interface {
 	// example:
 	// 	Ormer.LoadRelated(post,"Tags")
 	// 	for _,tag := range post.Tags{...}
-	// args[0] bool true useDefaultRelsDepth ; false  depth 0
-	// args[0] int  loadRelationDepth
-	// args[1] int limit default limit 1000
-	// args[2] int offset default offset 0
-	// args[3] string order  for example : "-Id"
+	// hints.DefaultRelDepth useDefaultRelsDepth ; or depth 0
+	// hints.RelDepth loadRelationDepth
+	// hints.Limit limit default limit 1000
+	// hints.Offset int offset default offset 0
+	// hints.OrderBy string order  for example : "-Id"
 	// make sure the relation is defined in model struct tags.
-	LoadRelated(md interface{}, name string, args ...interface{}) (int64, error)
-	LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...interface{}) (int64, error)
+	LoadRelated(md interface{}, name string, args ...common.KV) (int64, error)
+	LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...common.KV) (int64, error)
 
 	// create a models to models queryer
 	// for example:
@@ -282,6 +283,21 @@ type QuerySeter interface {
 	// for example:
 	//	qs.OrderBy("-status")
 	OrderBy(exprs ...string) QuerySeter
+	// add FORCE INDEX expression.
+	// for example:
+	//	qs.ForceIndex(`idx_name1`,`idx_name2`)
+	// ForceIndex, UseIndex , IgnoreIndex are mutually exclusive
+	ForceIndex(indexes ...string) QuerySeter
+	// add USE INDEX expression.
+	// for example:
+	//	qs.UseIndex(`idx_name1`,`idx_name2`)
+	// ForceIndex, UseIndex , IgnoreIndex are mutually exclusive
+	UseIndex(indexes ...string) QuerySeter
+	// add IGNORE INDEX expression.
+	// for example:
+	//	qs.IgnoreIndex(`idx_name1`,`idx_name2`)
+	// ForceIndex, UseIndex , IgnoreIndex are mutually exclusive
+	IgnoreIndex(indexes ...string) QuerySeter
 	// set relation model to query together.
 	// it will query relation models and assign to parent model.
 	// for example:
@@ -527,24 +543,27 @@ type txEnder interface {
 // base database struct
 type dbBaser interface {
 	Read(dbQuerier, *modelInfo, reflect.Value, *time.Location, []string, bool) error
+	ReadBatch(dbQuerier, *querySet, *modelInfo, *Condition, interface{}, *time.Location, []string) (int64, error)
+	Count(dbQuerier, *querySet, *modelInfo, *Condition, *time.Location) (int64, error)
+	ReadValues(dbQuerier, *querySet, *modelInfo, *Condition, []string, interface{}, *time.Location) (int64, error)
+
 	Insert(dbQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
 	InsertOrUpdate(dbQuerier, *modelInfo, reflect.Value, *alias, ...string) (int64, error)
 	InsertMulti(dbQuerier, *modelInfo, reflect.Value, int, *time.Location) (int64, error)
 	InsertValue(dbQuerier, *modelInfo, bool, []string, []interface{}) (int64, error)
 	InsertStmt(stmtQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
+
 	Update(dbQuerier, *modelInfo, reflect.Value, *time.Location, []string) (int64, error)
-	Delete(dbQuerier, *modelInfo, reflect.Value, *time.Location, []string) (int64, error)
-	ReadBatch(dbQuerier, *querySet, *modelInfo, *Condition, interface{}, *time.Location, []string) (int64, error)
-	SupportUpdateJoin() bool
 	UpdateBatch(dbQuerier, *querySet, *modelInfo, *Condition, Params, *time.Location) (int64, error)
+
+	Delete(dbQuerier, *modelInfo, reflect.Value, *time.Location, []string) (int64, error)
 	DeleteBatch(dbQuerier, *querySet, *modelInfo, *Condition, *time.Location) (int64, error)
-	Count(dbQuerier, *querySet, *modelInfo, *Condition, *time.Location) (int64, error)
+
+	SupportUpdateJoin() bool
 	OperatorSQL(string) string
 	GenerateOperatorSQL(*modelInfo, *fieldInfo, string, []interface{}, *time.Location) (string, []interface{})
 	GenerateOperatorLeftCol(*fieldInfo, string, *string)
 	PrepareInsert(dbQuerier, *modelInfo) (stmtQuerier, string, error)
-	ReadValues(dbQuerier, *querySet, *modelInfo, *Condition, []string, interface{}, *time.Location) (int64, error)
-	RowsTo(dbQuerier, *querySet, *modelInfo, *Condition, interface{}, string, string, *time.Location) (int64, error)
 	MaxLimit() uint64
 	TableQuote() string
 	ReplaceMarks(*string)
@@ -559,4 +578,6 @@ type dbBaser interface {
 	IndexExists(dbQuerier, string, string) bool
 	collectFieldValue(*modelInfo, *fieldInfo, reflect.Value, bool, *time.Location) (interface{}, error)
 	setval(dbQuerier, *modelInfo, []string) error
+
+	GenerateSpecifyIndex(tableName string,useIndex int ,indexes []string) string
 }

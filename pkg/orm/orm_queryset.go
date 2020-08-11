@@ -17,6 +17,7 @@ package orm
 import (
 	"context"
 	"fmt"
+	"github.com/astaxie/beego/pkg/orm/hints"
 )
 
 type colValue struct {
@@ -71,7 +72,9 @@ type querySet struct {
 	groups     []string
 	orders     []string
 	distinct   bool
-	forupdate  bool
+	forUpdate  bool
+	useIndex   int
+	indexes    []string
 	orm        *ormBase
 	ctx        context.Context
 	forContext bool
@@ -148,7 +151,28 @@ func (o querySet) Distinct() QuerySeter {
 
 // add FOR UPDATE to SELECT
 func (o querySet) ForUpdate() QuerySeter {
-	o.forupdate = true
+	o.forUpdate = true
+	return &o
+}
+
+// ForceIndex force index for query
+func (o querySet) ForceIndex(indexes ...string) QuerySeter {
+	o.useIndex = hints.KeyForceIndex
+	o.indexes = indexes
+	return &o
+}
+
+// UseIndex use index for query
+func (o querySet) UseIndex(indexes ...string) QuerySeter {
+	o.useIndex = hints.KeyUseIndex
+	o.indexes = indexes
+	return &o
+}
+
+// IgnoreIndex ignore index for query
+func (o querySet) IgnoreIndex(indexes ...string) QuerySeter {
+	o.useIndex = hints.KeyIgnoreIndex
+	o.indexes = indexes
 	return &o
 }
 

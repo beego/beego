@@ -1,4 +1,4 @@
-// Copyright 2020 beego 
+// Copyright 2020 beego
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import (
 // don't forget to call next(...) inside your Filter
 type FilterChain func(next Filter) Filter
 
-// Filter's behavior is a little big strang.
+// Filter's behavior is a little big strange.
 // it's only be called when users call methods of Ormer
 type Filter func(ctx context.Context, inv *Invocation)
 
@@ -31,6 +31,6 @@ var globalFilterChains = make([]FilterChain, 0, 4)
 // AddGlobalFilterChain adds a new FilterChain
 // All orm instances built after this invocation will use this filterChain,
 // but instances built before this invocation will not be affected
-func AddGlobalFilterChain(filterChain FilterChain) {
-	globalFilterChains = append(globalFilterChains, filterChain)
+func AddGlobalFilterChain(filterChain ...FilterChain) {
+	globalFilterChains = append(globalFilterChains, filterChain...)
 }
