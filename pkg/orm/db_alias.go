@@ -358,7 +358,7 @@ func addAliasWthDB(aliasName, driverName string, db *sql.DB, params ...common.KV
 	return al, nil
 }
 
-func newAliasWithDb(aliasName, driverName string, db *sql.DB, params ...common.KV)(*alias, error){
+func newAliasWithDb(aliasName, driverName string, db *sql.DB, params ...common.KV) (*alias, error) {
 	kvs := common.NewKVs(params...)
 
 	var stmtCache *lru.Cache
@@ -429,7 +429,6 @@ func RegisterDataBase(aliasName, driverName, dataSource string, params ...common
 		db  *sql.DB
 		al  *alias
 	)
-
 
 	db, err = sql.Open(driverName, dataSource)
 	if err != nil {

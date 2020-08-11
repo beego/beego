@@ -498,6 +498,7 @@ func InsertFilter(pattern string, pos int, filter FilterFunc, params ...bool) *A
 
 // InsertFilterChain adds a FilterFunc built by filterChain.
 // This filter will be executed before all filters.
+// the filter's behavior is like stack
 func InsertFilterChain(pattern string, filterChain FilterChain, params ...bool) *App {
 	BeeApp.Handlers.InsertFilterChain(pattern, filterChain, params...)
 	return BeeApp

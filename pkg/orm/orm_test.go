@@ -2523,5 +2523,3 @@ func TestInsertOrUpdate(t *testing.T) {
 		throwFailNow(t, AssertIs((((user2.Status+1)-1)*3)/3, test.Status))
 	}
 }
-
-
