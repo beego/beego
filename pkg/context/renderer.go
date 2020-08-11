@@ -1,6 +1,6 @@
 package context
 
-// Renderer defines an http response renderer
+// Renderer defines a http response renderer
 type Renderer interface {
 	Render(ctx *Context)
 }
