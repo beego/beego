@@ -1,4 +1,4 @@
-// Copyright 2020 
+// Copyright 2020
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,7 +38,6 @@ func TestControllerRegister_InsertFilterChain(t *testing.T) {
 	ns.Get("/*", func(ctx *context.Context) {
 		ctx.Output.Body([]byte("hello"))
 	})
-
 
 	r, _ := http.NewRequest("GET", "/chain/user", nil)
 	w := httptest.NewRecorder()

@@ -1,4 +1,4 @@
-// Copyright 2020 beego 
+// Copyright 2020 beego
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,6 @@ type FilterChainBuilder struct {
 	CustomSpanFunc func(span opentracing.Span, ctx *beegoCtx.Context)
 }
 
-
 func (builder *FilterChainBuilder) FilterChain(next beego.FilterFunc) beego.FilterFunc {
 	return func(ctx *beegoCtx.Context) {
 		var (
@@ -55,9 +54,21 @@ func (builder *FilterChainBuilder) FilterChain(next beego.FilterFunc) beego.Filt
 
 		next(ctx)
 		// if you think we need to do more things, feel free to create an issue to tell us
-		span.SetTag("status", ctx.Output.Status)
-		span.SetTag("method", ctx.Input.Method())
-		span.SetTag("route", ctx.Input.GetData("RouterPattern"))
+		span.SetTag("http.status_code", ctx.ResponseWriter.Status)
+		span.SetTag("http.method", ctx.Input.Method())
+		span.SetTag("peer.hostname", ctx.Request.Host)
+		span.SetTag("http.url", ctx.Request.URL.String())
+		span.SetTag("http.scheme", ctx.Request.URL.Scheme)
+		span.SetTag("span.kind", "server")
+		span.SetTag("component", "beego")
+		if ctx.Output.IsServerError() || ctx.Output.IsClientError() {
+			span.SetTag("error", true)
+		}
+		span.SetTag("peer.address", ctx.Request.RemoteAddr)
+		span.SetTag("http.proto", ctx.Request.Proto)
+
+		span.SetTag("beego.route", ctx.Input.GetData("RouterPattern"))
+
 		if builder.CustomSpanFunc != nil {
 			builder.CustomSpanFunc(span, ctx)
 		}
@@ -70,7 +81,7 @@ func (builder *FilterChainBuilder) operationName(ctx *beegoCtx.Context) string {
 	// TODO, if we support multiple servers, this need to be changed
 	route, found := beego.BeeApp.Handlers.FindRouter(ctx)
 	if found {
-		operationName = route.GetPattern()
+		operationName = ctx.Input.Method() + "#" + route.GetPattern()
 	}
 	return operationName
 }

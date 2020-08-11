@@ -57,7 +57,7 @@ func TestFileProvider_SessionExist(t *testing.T) {
 	_ = fp.SessionInit(180, sessionPath)
 
 	exists, err := fp.SessionExist(sid)
-	if err != nil{
+	if err != nil {
 		t.Error(err)
 	}
 	if exists {
