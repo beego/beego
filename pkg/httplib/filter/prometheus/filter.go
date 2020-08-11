@@ -1,4 +1,4 @@
-// Copyright 2020 beego 
+// Copyright 2020 beego
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -63,10 +63,12 @@ func (builder *FilterChainBuilder) report(startTime time.Time, endTime time.Time
 	host := req.GetRequest().URL.Host
 	path := req.GetRequest().URL.Path
 
-	status := resp.StatusCode
+	status := -1
+	if resp != nil {
+		status = resp.StatusCode
+	}
 
 	dur := int(endTime.Sub(startTime) / time.Millisecond)
-
 
 	builder.summaryVec.WithLabelValues(proto, scheme, method, host, path,
 		strconv.Itoa(status), strconv.Itoa(dur), strconv.FormatBool(err == nil))

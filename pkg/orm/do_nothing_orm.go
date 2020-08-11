@@ -1,4 +1,4 @@
-// Copyright 2020 beego 
+// Copyright 2020 beego
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package orm
 import (
 	"context"
 	"database/sql"
+	"github.com/astaxie/beego/pkg/common"
 )
 
 // DoNothingOrm won't do anything, usually you use this to custom your mock Ormer implementation
@@ -26,6 +27,7 @@ import (
 var _ Ormer = new(DoNothingOrm)
 
 type DoNothingOrm struct {
+
 }
 
 func (d *DoNothingOrm) Read(md interface{}, cols ...string) error {
@@ -52,11 +54,11 @@ func (d *DoNothingOrm) ReadOrCreateWithCtx(ctx context.Context, md interface{}, 
 	return false, 0, nil
 }
 
-func (d *DoNothingOrm) LoadRelated(md interface{}, name string, args ...interface{}) (int64, error) {
+func (d *DoNothingOrm) LoadRelated(md interface{}, name string,  args ...common.KV) (int64, error) {
 	return 0, nil
 }
 
-func (d *DoNothingOrm) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...interface{}) (int64, error) {
+func (d *DoNothingOrm) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string,  args ...common.KV) (int64, error) {
 	return 0, nil
 }
 
@@ -148,19 +150,19 @@ func (d *DoNothingOrm) BeginWithCtxAndOpts(ctx context.Context, opts *sql.TxOpti
 	return nil, nil
 }
 
-func (d *DoNothingOrm) DoTx(task func(txOrm TxOrmer) error) error {
+func (d *DoNothingOrm) DoTx(task func(ctx context.Context, txOrm TxOrmer) error) error {
 	return nil
 }
 
-func (d *DoNothingOrm) DoTxWithCtx(ctx context.Context, task func(txOrm TxOrmer) error) error {
+func (d *DoNothingOrm) DoTxWithCtx(ctx context.Context, task func(ctx context.Context, txOrm TxOrmer) error) error {
 	return nil
 }
 
-func (d *DoNothingOrm) DoTxWithOpts(opts *sql.TxOptions, task func(txOrm TxOrmer) error) error {
+func (d *DoNothingOrm) DoTxWithOpts(opts *sql.TxOptions, task func(ctx context.Context, txOrm TxOrmer) error) error {
 	return nil
 }
 
-func (d *DoNothingOrm) DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task func(txOrm TxOrmer) error) error {
+func (d *DoNothingOrm) DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task func(ctx context.Context, txOrm TxOrmer) error) error {
 	return nil
 }
 

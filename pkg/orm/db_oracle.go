@@ -16,6 +16,7 @@ package orm
 
 import (
 	"fmt"
+	"github.com/astaxie/beego/pkg/orm/hints"
 	"strings"
 )
 
@@ -94,6 +95,29 @@ func (d *dbBaseOracle) IndexExists(db dbQuerier, table string, name string) bool
 	var cnt int
 	row.Scan(&cnt)
 	return cnt > 0
+}
+
+func (d *dbBaseOracle) GenerateSpecifyIndex(tableName string, useIndex int, indexes []string) string {
+	var s []string
+	Q := d.TableQuote()
+	for _, index := range indexes {
+		tmp := fmt.Sprintf(`%s%s%s`, Q, index, Q)
+		s = append(s, tmp)
+	}
+
+	var hint string
+
+	switch useIndex {
+	case hints.KeyUseIndex, hints.KeyForceIndex:
+		hint = `INDEX`
+	case hints.KeyIgnoreIndex:
+		hint = `NO_INDEX`
+	default:
+		DebugLog.Println("[WARN] Not a valid specifying action, so that action is ignored")
+		return ``
+	}
+
+	return fmt.Sprintf(` /*+ %s(%s %s)*/ `, hint, tableName, strings.Join(s, `,`))
 }
 
 // execute insert sql with given struct and given values.
