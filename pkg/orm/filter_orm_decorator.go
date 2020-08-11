@@ -17,6 +17,7 @@ package orm
 import (
 	"context"
 	"database/sql"
+	"github.com/astaxie/beego/pkg/common"
 	"reflect"
 	"time"
 )
@@ -133,11 +134,11 @@ func (f *filterOrmDecorator) ReadOrCreateWithCtx(ctx context.Context, md interfa
 	return ok, res, err
 }
 
-func (f *filterOrmDecorator) LoadRelated(md interface{}, name string, args ...interface{}) (int64, error) {
+func (f *filterOrmDecorator) LoadRelated(md interface{}, name string, args ...common.KV) (int64, error) {
 	return f.LoadRelatedWithCtx(context.Background(), md, name, args...)
 }
 
-func (f *filterOrmDecorator) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...interface{}) (int64, error) {
+func (f *filterOrmDecorator) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...common.KV) (int64, error) {
 	var (
 		res int64
 		err error
