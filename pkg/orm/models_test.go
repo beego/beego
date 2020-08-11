@@ -18,6 +18,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/astaxie/beego/pkg/orm/hints"
 	"os"
 	"strings"
 	"time"
@@ -380,6 +381,15 @@ type InLine struct {
 	Email string
 }
 
+type Index struct {
+	// Common Fields
+	Id int `orm:"column(id)"`
+
+	// Other Fields
+	F1 int `orm:"column(f1);index"`
+	F2 int `orm:"column(f2);index"`
+}
+
 func NewInLine() *InLine {
 	return new(InLine)
 }
@@ -487,7 +497,7 @@ func init() {
 		os.Exit(2)
 	}
 
-	err := RegisterDataBase("default", DBARGS.Driver, DBARGS.Source, MaxIdleConnections(20))
+	err := RegisterDataBase("default", DBARGS.Driver, DBARGS.Source, hints.MaxIdleConnections(20))
 
 	if err != nil {
 		panic(fmt.Sprintf("can not register database: %v", err))

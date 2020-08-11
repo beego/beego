@@ -59,6 +59,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego/pkg/common"
+	"github.com/astaxie/beego/pkg/orm/hints"
 	"os"
 	"reflect"
 	"time"
@@ -99,6 +100,7 @@ type ormBase struct {
 
 var _ DQL = new(ormBase)
 var _ DML = new(ormBase)
+var _ DriverGetter = new(ormBase)
 
 // get model info and model reflect value
 func (o *ormBase) getMiInd(md interface{}, needPtr bool) (mi *modelInfo, ind reflect.Value) {
@@ -302,11 +304,10 @@ func (o *ormBase) QueryM2MWithCtx(ctx context.Context, md interface{}, name stri
 // 	for _,tag := range post.Tags{...}
 //
 // make sure the relation is defined in model struct tags.
-func (o *ormBase) LoadRelated(md interface{}, name string, args ...interface{}) (int64, error) {
+func (o *ormBase) LoadRelated(md interface{}, name string, args ...common.KV) (int64, error) {
 	return o.LoadRelatedWithCtx(context.Background(), md, name, args...)
 }
-
-func (o *ormBase) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...interface{}) (int64, error) {
+func (o *ormBase) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...common.KV) (int64, error) {
 	_, fi, ind, qseter := o.queryRelated(md, name)
 
 	qs := qseter.(*querySet)
@@ -314,24 +315,29 @@ func (o *ormBase) LoadRelatedWithCtx(ctx context.Context, md interface{}, name s
 	var relDepth int
 	var limit, offset int64
 	var order string
-	for i, arg := range args {
-		switch i {
-		case 0:
-			if v, ok := arg.(bool); ok {
-				if v {
-					relDepth = DefaultRelsDepth
-				}
-			} else if v, ok := arg.(int); ok {
-				relDepth = v
+
+	kvs := common.NewKVs(args...)
+	kvs.IfContains(hints.KeyRelDepth, func(value interface{}) {
+		if v, ok := value.(bool); ok {
+			if v {
+				relDepth = DefaultRelsDepth
 			}
-		case 1:
-			limit = ToInt64(arg)
-		case 2:
-			offset = ToInt64(arg)
-		case 3:
-			order, _ = arg.(string)
+		} else if v, ok := value.(int); ok {
+			relDepth = v
 		}
-	}
+	}).IfContains(hints.KeyLimit, func(value interface{}) {
+		if v, ok := value.(int64); ok {
+			limit = v
+		}
+	}).IfContains(hints.KeyOffset, func(value interface{}) {
+		if v, ok := value.(int64); ok {
+			offset = v
+		}
+	}).IfContains(hints.KeyOrderBy, func(value interface{}) {
+		if v, ok := value.(string); ok {
+			order = v
+		}
+	})
 
 	switch fi.fieldType {
 	case RelOneToOne, RelForeignKey, RelReverseOne:

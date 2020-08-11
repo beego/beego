@@ -17,6 +17,7 @@ package orm
 import (
 	"context"
 	"database/sql"
+	"github.com/astaxie/beego/pkg/common"
 )
 
 // DoNothingOrm won't do anything, usually you use this to custom your mock Ormer implementation
@@ -53,11 +54,11 @@ func (d *DoNothingOrm) ReadOrCreateWithCtx(ctx context.Context, md interface{}, 
 	return false, 0, nil
 }
 
-func (d *DoNothingOrm) LoadRelated(md interface{}, name string, args ...interface{}) (int64, error) {
+func (d *DoNothingOrm) LoadRelated(md interface{}, name string,  args ...common.KV) (int64, error) {
 	return 0, nil
 }
 
-func (d *DoNothingOrm) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...interface{}) (int64, error) {
+func (d *DoNothingOrm) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string,  args ...common.KV) (int64, error) {
 	return 0, nil
 }
 

@@ -15,6 +15,7 @@
 package orm
 
 import (
+	"github.com/astaxie/beego/pkg/orm/hints"
 	"testing"
 	"time"
 
@@ -23,9 +24,9 @@ import (
 
 func TestRegisterDataBase(t *testing.T) {
 	err := RegisterDataBase("test-params", DBARGS.Driver, DBARGS.Source,
-		MaxIdleConnections(20),
-		MaxOpenConnections(300),
-		ConnMaxLifetime(time.Minute))
+		hints.MaxIdleConnections(20),
+		hints.MaxOpenConnections(300),
+		hints.ConnMaxLifetime(time.Minute))
 	assert.Nil(t, err)
 
 	al := getDbAlias("test-params")
@@ -37,7 +38,7 @@ func TestRegisterDataBase(t *testing.T) {
 
 func TestRegisterDataBase_MaxStmtCacheSizeNegative1(t *testing.T) {
 	aliasName := "TestRegisterDataBase_MaxStmtCacheSizeNegative1"
-	err := RegisterDataBase(aliasName, DBARGS.Driver, DBARGS.Source, MaxStmtCacheSize(-1))
+	err := RegisterDataBase(aliasName, DBARGS.Driver, DBARGS.Source, hints.MaxStmtCacheSize(-1))
 	assert.Nil(t, err)
 
 	al := getDbAlias(aliasName)
@@ -47,7 +48,7 @@ func TestRegisterDataBase_MaxStmtCacheSizeNegative1(t *testing.T) {
 
 func TestRegisterDataBase_MaxStmtCacheSize0(t *testing.T) {
 	aliasName := "TestRegisterDataBase_MaxStmtCacheSize0"
-	err := RegisterDataBase(aliasName, DBARGS.Driver, DBARGS.Source, MaxStmtCacheSize(0))
+	err := RegisterDataBase(aliasName, DBARGS.Driver, DBARGS.Source, hints.MaxStmtCacheSize(0))
 	assert.Nil(t, err)
 
 	al := getDbAlias(aliasName)
@@ -57,7 +58,7 @@ func TestRegisterDataBase_MaxStmtCacheSize0(t *testing.T) {
 
 func TestRegisterDataBase_MaxStmtCacheSize1(t *testing.T) {
 	aliasName := "TestRegisterDataBase_MaxStmtCacheSize1"
-	err := RegisterDataBase(aliasName, DBARGS.Driver, DBARGS.Source, MaxStmtCacheSize(1))
+	err := RegisterDataBase(aliasName, DBARGS.Driver, DBARGS.Source, hints.MaxStmtCacheSize(1))
 	assert.Nil(t, err)
 
 	al := getDbAlias(aliasName)
@@ -67,7 +68,7 @@ func TestRegisterDataBase_MaxStmtCacheSize1(t *testing.T) {
 
 func TestRegisterDataBase_MaxStmtCacheSize841(t *testing.T) {
 	aliasName := "TestRegisterDataBase_MaxStmtCacheSize841"
-	err := RegisterDataBase(aliasName, DBARGS.Driver, DBARGS.Source, MaxStmtCacheSize(841))
+	err := RegisterDataBase(aliasName, DBARGS.Driver, DBARGS.Source, hints.MaxStmtCacheSize(841))
 	assert.Nil(t, err)
 
 	al := getDbAlias(aliasName)
