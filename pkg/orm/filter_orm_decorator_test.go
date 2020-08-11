@@ -1,4 +1,4 @@
-// Copyright 2020 beego 
+// Copyright 2020 beego
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/astaxie/beego/pkg/common"
 	"sync"
 	"testing"
 
@@ -130,49 +131,49 @@ func TestFilterOrmDecorator_DoTx(t *testing.T) {
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
 		return func(ctx context.Context, inv *Invocation) {
-			assert.Equal(t, "DoTxWithCtxAndOpts", inv.Method)
-			assert.Equal(t, 2, len(inv.Args))
-			assert.Equal(t, "", inv.GetTableName())
-			assert.False(t, inv.InsideTx)
+			if inv.Method == "DoTxWithCtxAndOpts" {
+				assert.Equal(t, 2, len(inv.Args))
+				assert.Equal(t, "", inv.GetTableName())
+				assert.False(t, inv.InsideTx)
+			}
+
 			next(ctx, inv)
 		}
 	})
 
-	err := od.DoTx(func(txOrm TxOrmer) error {
-		return errors.New("tx error")
+	err := od.DoTx(func(c context.Context, txOrm TxOrmer) error {
+		return nil
 	})
 	assert.NotNil(t, err)
-	assert.Equal(t, "tx error", err.Error())
 
-	err = od.DoTxWithCtx(context.Background(), func(txOrm TxOrmer) error {
-		return errors.New("tx ctx error")
+	err = od.DoTxWithCtx(context.Background(), func(c context.Context, txOrm TxOrmer) error {
+		return nil
 	})
 	assert.NotNil(t, err)
-	assert.Equal(t, "tx ctx error", err.Error())
 
-	err = od.DoTxWithOpts(nil, func(txOrm TxOrmer) error {
-		return errors.New("tx opts error")
+	err = od.DoTxWithOpts(nil, func(c context.Context, txOrm TxOrmer) error {
+		return nil
 	})
 	assert.NotNil(t, err)
-	assert.Equal(t, "tx opts error", err.Error())
+
 
 	od = NewFilterOrmDecorator(o, func(next Filter) Filter {
 		return func(ctx context.Context, inv *Invocation) {
-			assert.Equal(t, "DoTxWithCtxAndOpts", inv.Method)
-			assert.Equal(t, 2, len(inv.Args))
-			assert.Equal(t, "", inv.GetTableName())
-			assert.Equal(t, "do tx name", inv.TxName)
-			assert.False(t, inv.InsideTx)
+			if inv.Method == "DoTxWithCtxAndOpts" {
+				assert.Equal(t, 2, len(inv.Args))
+				assert.Equal(t, "", inv.GetTableName())
+				assert.Equal(t, "do tx name", inv.TxName)
+				assert.False(t, inv.InsideTx)
+			}
 			next(ctx, inv)
 		}
 	})
 
 	ctx := context.WithValue(context.Background(), TxNameKey, "do tx name")
-	err = od.DoTxWithCtxAndOpts(ctx, nil, func(txOrm TxOrmer) error {
-		return errors.New("tx ctx opts error")
+	err = od.DoTxWithCtxAndOpts(ctx, nil, func(c context.Context, txOrm TxOrmer) error {
+		return nil
 	})
 	assert.NotNil(t, err)
-	assert.Equal(t, "tx ctx opts error", err.Error())
 }
 
 func TestFilterOrmDecorator_Driver(t *testing.T) {
@@ -347,6 +348,8 @@ func TestFilterOrmDecorator_ReadOrCreate(t *testing.T) {
 	assert.Equal(t, int64(13), i)
 }
 
+var _ Ormer = new(filterMockOrm)
+
 // filterMockOrm is only used in this test file
 type filterMockOrm struct {
 	DoNothingOrm
@@ -360,7 +363,7 @@ func (f *filterMockOrm) ReadForUpdateWithCtx(ctx context.Context, md interface{}
 	return errors.New("read for update error")
 }
 
-func (f *filterMockOrm) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...interface{}) (int64, error) {
+func (f *filterMockOrm) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...common.KV) (int64, error) {
 	return 99, errors.New("load related error")
 }
 
@@ -376,8 +379,8 @@ func (f *filterMockOrm) InsertWithCtx(ctx context.Context, md interface{}) (int6
 	return 100, errors.New("insert error")
 }
 
-func (f *filterMockOrm) DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task func(txOrm TxOrmer) error) error {
-	return task(nil)
+func (f *filterMockOrm) DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task func(c context.Context, txOrm TxOrmer) error) error {
+	return task(ctx, nil)
 }
 
 func (f *filterMockOrm) DeleteWithCtx(ctx context.Context, md interface{}, cols ...string) (int64, error) {

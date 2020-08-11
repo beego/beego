@@ -1,4 +1,4 @@
-// Copyright 2020 beego 
+// Copyright 2020 beego
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,14 +17,11 @@ package opentracing
 import (
 	"context"
 	"net/http"
-	"strconv"
 
+	"github.com/astaxie/beego/pkg/httplib"
 	logKit "github.com/go-kit/kit/log"
 	opentracingKit "github.com/go-kit/kit/tracing/opentracing"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
-
-	"github.com/astaxie/beego/pkg/httplib"
 )
 
 type FilterChainBuilder struct {
@@ -38,14 +35,8 @@ func (builder *FilterChainBuilder) FilterChain(next httplib.Filter) httplib.Filt
 	return func(ctx context.Context, req *httplib.BeegoHTTPRequest) (*http.Response, error) {
 
 		method := req.GetRequest().Method
-		host := req.GetRequest().URL.Host
-		path := req.GetRequest().URL.Path
 
-		proto := req.GetRequest().Proto
-
-		scheme := req.GetRequest().URL.Scheme
-
-		operationName := host + path + "#" + method
+		operationName := method + "#" + req.GetRequest().URL.String()
 		span, spanCtx := opentracing.StartSpanFromContext(ctx, operationName)
 		defer span.Finish()
 
@@ -54,20 +45,23 @@ func (builder *FilterChainBuilder) FilterChain(next httplib.Filter) httplib.Filt
 		resp, err := next(spanCtx, req)
 
 		if resp != nil {
-			span.SetTag("status", strconv.Itoa(resp.StatusCode))
+			span.SetTag("http.status_code", resp.StatusCode)
 		}
-
-		span.SetTag("method", method)
-		span.SetTag("host", host)
-		span.SetTag("path", path)
-		span.SetTag("proto", proto)
-		span.SetTag("scheme", scheme)
-
-		span.LogFields(log.String("url", req.GetRequest().URL.String()))
-
+		span.SetTag("http.method", method)
+		span.SetTag("peer.hostname", req.GetRequest().URL.Host)
+		span.SetTag("http.url", req.GetRequest().URL.String())
+		span.SetTag("http.scheme", req.GetRequest().URL.Scheme)
+		span.SetTag("span.kind", "client")
+		span.SetTag("component", "beego")
 		if err != nil {
-			span.LogFields(log.String("error", err.Error()))
+			span.SetTag("error", true)
+			span.SetTag("message", err.Error())
+		} else if resp != nil && !(resp.StatusCode < 300 && resp.StatusCode >= 200) {
+			span.SetTag("error", true)
 		}
+
+		span.SetTag("peer.address", req.GetRequest().RemoteAddr)
+		span.SetTag("http.proto", req.GetRequest().Proto)
 
 		if builder.CustomSpanFunc != nil {
 			builder.CustomSpanFunc(span, ctx, req, resp, err)

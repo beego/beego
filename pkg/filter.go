@@ -33,6 +33,7 @@ type FilterFunc func(ctx *context.Context)
 // when a request with a matching URL arrives.
 type FilterRouter struct {
 	filterFunc     FilterFunc
+	next           *FilterRouter
 	tree           *Tree
 	pattern        string
 	returnOnOutput bool
@@ -81,6 +82,8 @@ func (f *FilterRouter) filter(ctx *context.Context, urlPath string, preFilterPar
 				ctx.Input.SetParam(k, v)
 			}
 		}
+	} else if f.next != nil {
+		return f.next.filter(ctx, urlPath, preFilterParams)
 	}
 	if f.returnOnOutput && ctx.ResponseWriter.Started {
 		return true, true

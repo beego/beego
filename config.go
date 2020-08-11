@@ -15,13 +15,13 @@
 package beego
 
 import (
+	"crypto/tls"
 	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
 	"runtime"
 	"strings"
-	"crypto/tls"
 
 	"github.com/astaxie/beego/config"
 	"github.com/astaxie/beego/context"
@@ -163,7 +163,7 @@ func init() {
 	}
 	appConfigPath = filepath.Join(WorkPath, "conf", filename)
 	if configPath := os.Getenv("BEEGO_CONFIG_PATH"); configPath != "" {
-		appConfigPath =  configPath
+		appConfigPath = configPath
 	}
 	if !utils.FileExists(appConfigPath) {
 		appConfigPath = filepath.Join(AppPath, "conf", filename)

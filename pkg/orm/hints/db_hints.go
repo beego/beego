@@ -12,11 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package orm
+package hints
 
 import (
 	"github.com/astaxie/beego/pkg/common"
 	"time"
+)
+
+const (
+	//db level
+	KeyMaxIdleConnections = iota
+	KeyMaxOpenConnections
+	KeyConnMaxLifetime
+	KeyMaxStmtCacheSize
+
+	//query level
+	KeyForceIndex
+	KeyUseIndex
+	KeyIgnoreIndex
+	KeyForUpdate
+	KeyLimit
+	KeyOffset
+	KeyOrderBy
+	KeyRelDepth
 )
 
 type Hint struct {
@@ -36,33 +54,71 @@ func (s *Hint) GetValue() interface{} {
 	return s.value
 }
 
-const (
-	maxIdleConnectionsKey = "MaxIdleConnections"
-	maxOpenConnectionsKey = "MaxOpenConnections"
-	connMaxLifetimeKey    = "ConnMaxLifetime"
-	maxStmtCacheSizeKey   = "MaxStmtCacheSize"
-)
-
 var _ common.KV = new(Hint)
 
 // MaxIdleConnections return a hint about MaxIdleConnections
 func MaxIdleConnections(v int) *Hint {
-	return NewHint(maxIdleConnectionsKey, v)
+	return NewHint(KeyMaxIdleConnections, v)
 }
 
 // MaxOpenConnections return a hint about MaxOpenConnections
 func MaxOpenConnections(v int) *Hint {
-	return NewHint(maxOpenConnectionsKey, v)
+	return NewHint(KeyMaxOpenConnections, v)
 }
 
 // ConnMaxLifetime return a hint about ConnMaxLifetime
 func ConnMaxLifetime(v time.Duration) *Hint {
-	return NewHint(connMaxLifetimeKey, v)
+	return NewHint(KeyConnMaxLifetime, v)
 }
 
 // MaxStmtCacheSize return a hint about MaxStmtCacheSize
 func MaxStmtCacheSize(v int) *Hint {
-	return NewHint(maxStmtCacheSizeKey, v)
+	return NewHint(KeyMaxStmtCacheSize, v)
+}
+
+// ForceIndex return a hint about ForceIndex
+func ForceIndex(indexes ...string) *Hint {
+	return NewHint(KeyForceIndex, indexes)
+}
+
+// UseIndex return a hint about UseIndex
+func UseIndex(indexes ...string) *Hint {
+	return NewHint(KeyUseIndex, indexes)
+}
+
+// IgnoreIndex return a hint about IgnoreIndex
+func IgnoreIndex(indexes ...string) *Hint {
+	return NewHint(KeyIgnoreIndex, indexes)
+}
+
+// ForUpdate return a hint about ForUpdate
+func ForUpdate() *Hint {
+	return NewHint(KeyForUpdate, true)
+}
+
+// DefaultRelDepth return a hint about DefaultRelDepth
+func DefaultRelDepth() *Hint {
+	return NewHint(KeyRelDepth, true)
+}
+
+// RelDepth return a hint about RelDepth
+func RelDepth(d int) *Hint {
+	return NewHint(KeyRelDepth, d)
+}
+
+// Limit return a hint about Limit
+func Limit(d int64) *Hint {
+	return NewHint(KeyLimit, d)
+}
+
+// Offset return a hint about Offset
+func Offset(d int64) *Hint {
+	return NewHint(KeyOffset, d)
+}
+
+// OrderBy return a hint about OrderBy
+func OrderBy(s string) *Hint {
+	return NewHint(KeyOrderBy, s)
 }
 
 // NewHint return a hint
