@@ -200,6 +200,7 @@ func TestSyncDb(t *testing.T) {
 	RegisterModel(new(IntegerPk))
 	RegisterModel(new(UintPk))
 	RegisterModel(new(PtrPk))
+	RegisterModel(new(StrPk))
 
 	err := RunSyncdb("default", true, Debug)
 	throwFail(t, err)
@@ -224,6 +225,7 @@ func TestRegisterModels(t *testing.T) {
 	RegisterModel(new(IntegerPk))
 	RegisterModel(new(UintPk))
 	RegisterModel(new(PtrPk))
+	RegisterModel(new(StrPk))
 
 	BootStrap()
 
@@ -2487,4 +2489,21 @@ func TestInsertOrUpdate(t *testing.T) {
 	}
 }
 
+func TestStrPkInsert(t *testing.T) {
+	RegisterModel(new(StrPk))
+	value := `StrPkValues(*56`
+	strPk := &StrPk{
+		Id:    "1",
+		Value: value,
+	}
+
+	var err error
+	_, err = dORM.Insert(strPk)
+	throwFailNow(t, AssertIs(err, nil))
+
+	var vForTesting StrPk
+	err = dORM.QueryTable(new(StrPk)).Filter(`id`, `1`).One(&vForTesting)
+	throwFailNow(t, AssertIs(err, nil))
+	throwFailNow(t, AssertIs(vForTesting.Value, value))
+}
 

@@ -412,6 +412,11 @@ type PtrPk struct {
 	Positive bool
 }
 
+type StrPk struct {
+	Id    string  `orm:"column(id);size(64);pk"`
+	Value string
+}
+
 var DBARGS = struct {
 	Driver string
 	Source string
