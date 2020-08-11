@@ -107,13 +107,16 @@ func (rs *SessionStore) SessionRelease(w http.ResponseWriter) {
 
 // Provider redis_sentinel session provider
 type Provider struct {
-	maxlifetime int64
-	savePath    string
-	poolsize    int
-	password    string
-	dbNum       int
-	poollist    *redis.Client
-	masterName  string
+	maxlifetime        int64
+	savePath           string
+	poolsize           int
+	password           string
+	dbNum              int
+	idleTimeout        time.Duration
+	idleCheckFrequency time.Duration
+	maxRetries         int
+	poollist           *redis.Client
+	masterName         string
 }
 
 // SessionInit init redis_sentinel session
@@ -157,37 +160,34 @@ func (rp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 	} else {
 		rp.masterName = "mymaster"
 	}
-	var idleTimeout time.Duration = 0
 	if len(configs) > 5 {
 		timeout, err := strconv.Atoi(configs[4])
 		if err == nil && timeout > 0 {
-			idleTimeout = time.Duration(timeout) * time.Second
+			rp.idleTimeout = time.Duration(timeout) * time.Second
 		}
 	}
-	var idleCheckFrequency time.Duration = 0
 	if len(configs) > 6 {
 		checkFrequency, err := strconv.Atoi(configs[5])
 		if err == nil && checkFrequency > 0 {
-			idleCheckFrequency = time.Duration(checkFrequency) * time.Second
+			rp.idleCheckFrequency = time.Duration(checkFrequency) * time.Second
 		}
 	}
-	var maxRetries = 0
 	if len(configs) > 7 {
 		retries, err := strconv.Atoi(configs[6])
 		if err == nil && retries > 0 {
-			maxRetries = retries
+			rp.maxRetries = retries
 		}
 	}
 
 	rp.poollist = redis.NewFailoverClient(&redis.FailoverOptions{
-		SentinelAddrs: strings.Split(rp.savePath, ";"),
-		Password:      rp.password,
-		PoolSize:      rp.poolsize,
-		DB:            rp.dbNum,
-		MasterName:    rp.masterName,
-		IdleTimeout: idleTimeout,
-		IdleCheckFrequency: idleCheckFrequency,
-		MaxRetries: maxRetries,
+		SentinelAddrs:      strings.Split(rp.savePath, ";"),
+		Password:           rp.password,
+		PoolSize:           rp.poolsize,
+		DB:                 rp.dbNum,
+		MasterName:         rp.masterName,
+		IdleTimeout:        rp.idleTimeout,
+		IdleCheckFrequency: rp.idleCheckFrequency,
+		MaxRetries:         rp.maxRetries,
 	})
 
 	return rp.poollist.Ping().Err()

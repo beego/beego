@@ -109,12 +109,15 @@ func (rs *SessionStore) SessionRelease(w http.ResponseWriter) {
 
 // Provider redis session provider
 type Provider struct {
-	maxlifetime int64
-	savePath    string
-	poolsize    int
-	password    string
-	dbNum       int
-	poollist    *redis.Client
+	maxlifetime        int64
+	savePath           string
+	poolsize           int
+	password           string
+	dbNum              int
+	idleTimeout        time.Duration
+	idleCheckFrequency time.Duration
+	maxRetries         int
+	poollist           *redis.Client
 }
 
 // SessionInit init redis session
@@ -149,25 +152,22 @@ func (rp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 	} else {
 		rp.dbNum = 0
 	}
-	var idleTimeout time.Duration = 0
 	if len(configs) > 4 {
 		timeout, err := strconv.Atoi(configs[4])
 		if err == nil && timeout > 0 {
-			idleTimeout = time.Duration(timeout) * time.Second
+			rp.idleTimeout = time.Duration(timeout) * time.Second
 		}
 	}
-	var idleCheckFrequency time.Duration = 0
 	if len(configs) > 5 {
 		checkFrequency, err := strconv.Atoi(configs[5])
 		if err == nil && checkFrequency > 0 {
-			idleCheckFrequency = time.Duration(checkFrequency) * time.Second
+			rp.idleCheckFrequency = time.Duration(checkFrequency) * time.Second
 		}
 	}
-	var maxRetries = 0
 	if len(configs) > 6 {
 		retries, err := strconv.Atoi(configs[6])
 		if err == nil && retries > 0 {
-			maxRetries = retries
+			rp.maxRetries = retries
 		}
 	}
 
@@ -176,9 +176,9 @@ func (rp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 		Password:           rp.password,
 		PoolSize:           rp.poolsize,
 		DB:                 rp.dbNum,
-		IdleTimeout:        idleTimeout,
-		IdleCheckFrequency: idleCheckFrequency,
-		MaxRetries:         maxRetries,
+		IdleTimeout:        rp.idleTimeout,
+		IdleCheckFrequency: rp.idleCheckFrequency,
+		MaxRetries:         rp.maxRetries,
 	})
 
 	return rp.poollist.Ping().Err()
@@ -249,4 +249,3 @@ func (rp *Provider) SessionAll() int {
 func init() {
 	session.Register("redis", redispder)
 }
-
