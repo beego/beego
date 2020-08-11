@@ -1,4 +1,4 @@
-// Copyright 2020 beego 
+// Copyright 2020 beego
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@ package opentracing
 
 import (
 	"context"
+	"strings"
 
 	"github.com/opentracing/opentracing-go"
 
@@ -27,6 +28,8 @@ import (
 // for example:
 // if we want to trace QuerySetter
 // actually we trace invoking "QueryTable" and "QueryTableWithCtx"
+// the method Begin*, Commit and Rollback are ignored.
+// When use using those methods, it means that they want to manager their transaction manually, so we won't handle them.
 type FilterChainBuilder struct {
 	// CustomSpanFunc users are able to custom their span
 	CustomSpanFunc func(span opentracing.Span, ctx context.Context, inv *orm.Invocation)
@@ -35,25 +38,34 @@ type FilterChainBuilder struct {
 func (builder *FilterChainBuilder) FilterChain(next orm.Filter) orm.Filter {
 	return func(ctx context.Context, inv *orm.Invocation) {
 		operationName := builder.operationName(ctx, inv)
-		span, spanCtx := opentracing.StartSpanFromContext(ctx, operationName)
-		defer span.Finish()
-
-		next(spanCtx, inv)
-		span.SetTag("Method", inv.Method)
-		span.SetTag("Table", inv.GetTableName())
-		span.SetTag("InsideTx", inv.InsideTx)
-		span.SetTag("TxName", spanCtx.Value(orm.TxNameKey))
-
-		if builder.CustomSpanFunc != nil {
-			builder.CustomSpanFunc(span, spanCtx, inv)
+		if strings.HasPrefix(inv.Method, "Begin") || inv.Method == "Commit" || inv.Method == "Rollback" {
+			next(ctx, inv)
+			return
 		}
 
+		span, spanCtx := opentracing.StartSpanFromContext(ctx, operationName)
+		defer span.Finish()
+		next(spanCtx, inv)
+		builder.buildSpan(span, spanCtx, inv)
+	}
+}
+
+func (builder *FilterChainBuilder) buildSpan(span opentracing.Span, ctx context.Context, inv *orm.Invocation) {
+	span.SetTag("orm.method", inv.Method)
+	span.SetTag("orm.table", inv.GetTableName())
+	span.SetTag("orm.insideTx", inv.InsideTx)
+	span.SetTag("orm.txName", ctx.Value(orm.TxNameKey))
+	span.SetTag("span.kind", "client")
+	span.SetTag("component", "beego")
+
+	if builder.CustomSpanFunc != nil {
+		builder.CustomSpanFunc(span, ctx, inv)
 	}
 }
 
 func (builder *FilterChainBuilder) operationName(ctx context.Context, inv *orm.Invocation) string {
 	if n, ok := ctx.Value(orm.TxNameKey).(string); ok {
-		return inv.Method + "#" + n
+		return inv.Method + "#tx(" + n + ")"
 	}
 	return inv.Method + "#" + inv.GetTableName()
 }
