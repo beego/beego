@@ -74,6 +74,7 @@ func createDefaultCookie() {
 }
 
 // SetDefaultSetting Overwrite default settings
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func SetDefaultSetting(setting BeegoHTTPSettings) {
 	settingMutex.Lock()
 	defer settingMutex.Unlock()
@@ -81,6 +82,7 @@ func SetDefaultSetting(setting BeegoHTTPSettings) {
 }
 
 // NewBeegoRequest return *BeegoHttpRequest with specific method
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func NewBeegoRequest(rawurl, method string) *BeegoHTTPRequest {
 	var resp http.Response
 	u, err := url.Parse(rawurl)
@@ -106,31 +108,37 @@ func NewBeegoRequest(rawurl, method string) *BeegoHTTPRequest {
 }
 
 // Get returns *BeegoHttpRequest with GET method.
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func Get(url string) *BeegoHTTPRequest {
 	return NewBeegoRequest(url, "GET")
 }
 
 // Post returns *BeegoHttpRequest with POST method.
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func Post(url string) *BeegoHTTPRequest {
 	return NewBeegoRequest(url, "POST")
 }
 
 // Put returns *BeegoHttpRequest with PUT method.
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func Put(url string) *BeegoHTTPRequest {
 	return NewBeegoRequest(url, "PUT")
 }
 
 // Delete returns *BeegoHttpRequest DELETE method.
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func Delete(url string) *BeegoHTTPRequest {
 	return NewBeegoRequest(url, "DELETE")
 }
 
 // Head returns *BeegoHttpRequest with HEAD method.
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func Head(url string) *BeegoHTTPRequest {
 	return NewBeegoRequest(url, "HEAD")
 }
 
 // BeegoHTTPSettings is the http.Client setting
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 type BeegoHTTPSettings struct {
 	ShowDebug        bool
 	UserAgent        string
@@ -148,6 +156,7 @@ type BeegoHTTPSettings struct {
 }
 
 // BeegoHTTPRequest provides more useful methods for requesting one url than http.Request.
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 type BeegoHTTPRequest struct {
 	url     string
 	req     *http.Request
@@ -160,35 +169,41 @@ type BeegoHTTPRequest struct {
 }
 
 // GetRequest return the request object
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) GetRequest() *http.Request {
 	return b.req
 }
 
 // Setting Change request settings
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) Setting(setting BeegoHTTPSettings) *BeegoHTTPRequest {
 	b.setting = setting
 	return b
 }
 
 // SetBasicAuth sets the request's Authorization header to use HTTP Basic Authentication with the provided username and password.
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) SetBasicAuth(username, password string) *BeegoHTTPRequest {
 	b.req.SetBasicAuth(username, password)
 	return b
 }
 
 // SetEnableCookie sets enable/disable cookiejar
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) SetEnableCookie(enable bool) *BeegoHTTPRequest {
 	b.setting.EnableCookie = enable
 	return b
 }
 
 // SetUserAgent sets User-Agent header field
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) SetUserAgent(useragent string) *BeegoHTTPRequest {
 	b.setting.UserAgent = useragent
 	return b
 }
 
 // Debug sets show debug or not when executing request.
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) Debug(isdebug bool) *BeegoHTTPRequest {
 	b.setting.ShowDebug = isdebug
 	return b
@@ -198,28 +213,33 @@ func (b *BeegoHTTPRequest) Debug(isdebug bool) *BeegoHTTPRequest {
 // default is 0 means no retried.
 // -1 means retried forever.
 // others means retried times.
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) Retries(times int) *BeegoHTTPRequest {
 	b.setting.Retries = times
 	return b
 }
 
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) RetryDelay(delay time.Duration) *BeegoHTTPRequest {
 	b.setting.RetryDelay = delay
 	return b
 }
 
 // DumpBody setting whether need to Dump the Body.
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) DumpBody(isdump bool) *BeegoHTTPRequest {
 	b.setting.DumpBody = isdump
 	return b
 }
 
 // DumpRequest return the DumpRequest
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) DumpRequest() []byte {
 	return b.dump
 }
 
 // SetTimeout sets connect time out and read-write time out for BeegoRequest.
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) SetTimeout(connectTimeout, readWriteTimeout time.Duration) *BeegoHTTPRequest {
 	b.setting.ConnectTimeout = connectTimeout
 	b.setting.ReadWriteTimeout = readWriteTimeout
@@ -227,18 +247,21 @@ func (b *BeegoHTTPRequest) SetTimeout(connectTimeout, readWriteTimeout time.Dura
 }
 
 // SetTLSClientConfig sets tls connection configurations if visiting https url.
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) SetTLSClientConfig(config *tls.Config) *BeegoHTTPRequest {
 	b.setting.TLSClientConfig = config
 	return b
 }
 
 // Header add header item string in request.
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) Header(key, value string) *BeegoHTTPRequest {
 	b.req.Header.Set(key, value)
 	return b
 }
 
 // SetHost set the request host
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) SetHost(host string) *BeegoHTTPRequest {
 	b.req.Host = host
 	return b
@@ -246,6 +269,7 @@ func (b *BeegoHTTPRequest) SetHost(host string) *BeegoHTTPRequest {
 
 // SetProtocolVersion Set the protocol version for incoming requests.
 // Client requests always use HTTP/1.1.
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) SetProtocolVersion(vers string) *BeegoHTTPRequest {
 	if len(vers) == 0 {
 		vers = "HTTP/1.1"
@@ -262,12 +286,14 @@ func (b *BeegoHTTPRequest) SetProtocolVersion(vers string) *BeegoHTTPRequest {
 }
 
 // SetCookie add cookie into request.
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) SetCookie(cookie *http.Cookie) *BeegoHTTPRequest {
 	b.req.Header.Add("Cookie", cookie.String())
 	return b
 }
 
 // SetTransport set the setting transport
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) SetTransport(transport http.RoundTripper) *BeegoHTTPRequest {
 	b.setting.Transport = transport
 	return b
@@ -280,6 +306,7 @@ func (b *BeegoHTTPRequest) SetTransport(transport http.RoundTripper) *BeegoHTTPR
 // 		u, _ := url.ParseRequestURI("http://127.0.0.1:8118")
 // 		return u, nil
 // 	}
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) SetProxy(proxy func(*http.Request) (*url.URL, error)) *BeegoHTTPRequest {
 	b.setting.Proxy = proxy
 	return b
@@ -289,6 +316,7 @@ func (b *BeegoHTTPRequest) SetProxy(proxy func(*http.Request) (*url.URL, error))
 //
 // If CheckRedirect is nil, the Client uses its default policy,
 // which is to stop after 10 consecutive requests.
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) SetCheckRedirect(redirect func(req *http.Request, via []*http.Request) error) *BeegoHTTPRequest {
 	b.setting.CheckRedirect = redirect
 	return b
@@ -296,6 +324,7 @@ func (b *BeegoHTTPRequest) SetCheckRedirect(redirect func(req *http.Request, via
 
 // Param adds query param in to request.
 // params build query string as ?key1=value1&key2=value2...
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) Param(key, value string) *BeegoHTTPRequest {
 	if param, ok := b.params[key]; ok {
 		b.params[key] = append(param, value)
@@ -306,6 +335,7 @@ func (b *BeegoHTTPRequest) Param(key, value string) *BeegoHTTPRequest {
 }
 
 // PostFile add a post file to the request
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) PostFile(formname, filename string) *BeegoHTTPRequest {
 	b.files[formname] = filename
 	return b
@@ -313,6 +343,7 @@ func (b *BeegoHTTPRequest) PostFile(formname, filename string) *BeegoHTTPRequest
 
 // Body adds request raw body.
 // it supports string and []byte.
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) Body(data interface{}) *BeegoHTTPRequest {
 	switch t := data.(type) {
 	case string:
@@ -328,6 +359,7 @@ func (b *BeegoHTTPRequest) Body(data interface{}) *BeegoHTTPRequest {
 }
 
 // XMLBody adds request raw body encoding by XML.
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) XMLBody(obj interface{}) (*BeegoHTTPRequest, error) {
 	if b.req.Body == nil && obj != nil {
 		byts, err := xml.Marshal(obj)
@@ -342,6 +374,7 @@ func (b *BeegoHTTPRequest) XMLBody(obj interface{}) (*BeegoHTTPRequest, error) {
 }
 
 // YAMLBody adds request raw body encoding by YAML.
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) YAMLBody(obj interface{}) (*BeegoHTTPRequest, error) {
 	if b.req.Body == nil && obj != nil {
 		byts, err := yaml.Marshal(obj)
@@ -356,6 +389,7 @@ func (b *BeegoHTTPRequest) YAMLBody(obj interface{}) (*BeegoHTTPRequest, error) 
 }
 
 // JSONBody adds request raw body encoding by JSON.
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) JSONBody(obj interface{}) (*BeegoHTTPRequest, error) {
 	if b.req.Body == nil && obj != nil {
 		byts, err := json.Marshal(obj)
@@ -438,6 +472,7 @@ func (b *BeegoHTTPRequest) getResponse() (*http.Response, error) {
 }
 
 // DoRequest will do the client.Do
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) DoRequest() (resp *http.Response, err error) {
 	var paramBody string
 	if len(b.params) > 0 {
@@ -531,6 +566,7 @@ func (b *BeegoHTTPRequest) DoRequest() (resp *http.Response, err error) {
 
 // String returns the body string in response.
 // it calls Response inner.
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) String() (string, error) {
 	data, err := b.Bytes()
 	if err != nil {
@@ -542,6 +578,7 @@ func (b *BeegoHTTPRequest) String() (string, error) {
 
 // Bytes returns the body []byte in response.
 // it calls Response inner.
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) Bytes() ([]byte, error) {
 	if b.body != nil {
 		return b.body, nil
@@ -568,6 +605,7 @@ func (b *BeegoHTTPRequest) Bytes() ([]byte, error) {
 
 // ToFile saves the body data in response to one file.
 // it calls Response inner.
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) ToFile(filename string) error {
 	resp, err := b.getResponse()
 	if err != nil {
@@ -608,6 +646,7 @@ func pathExistAndMkdir(filename string) (err error) {
 
 // ToJSON returns the map that marshals from the body bytes as json in response .
 // it calls Response inner.
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) ToJSON(v interface{}) error {
 	data, err := b.Bytes()
 	if err != nil {
@@ -618,6 +657,7 @@ func (b *BeegoHTTPRequest) ToJSON(v interface{}) error {
 
 // ToXML returns the map that marshals from the body bytes as xml in response .
 // it calls Response inner.
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) ToXML(v interface{}) error {
 	data, err := b.Bytes()
 	if err != nil {
@@ -628,6 +668,7 @@ func (b *BeegoHTTPRequest) ToXML(v interface{}) error {
 
 // ToYAML returns the map that marshals from the body bytes as yaml in response .
 // it calls Response inner.
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) ToYAML(v interface{}) error {
 	data, err := b.Bytes()
 	if err != nil {
@@ -637,11 +678,13 @@ func (b *BeegoHTTPRequest) ToYAML(v interface{}) error {
 }
 
 // Response executes request client gets response mannually.
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func (b *BeegoHTTPRequest) Response() (*http.Response, error) {
 	return b.getResponse()
 }
 
 // TimeoutDialer returns functions of connection dialer with timeout settings for http.Transport Dial field.
+// Deprecated: using pkg/httplib, we will delete this in v2.1.0
 func TimeoutDialer(cTimeout time.Duration, rwTimeout time.Duration) func(net, addr string) (c net.Conn, err error) {
 	return func(netw, addr string) (net.Conn, error) {
 		conn, err := net.DialTimeout(netw, addr, cTimeout)

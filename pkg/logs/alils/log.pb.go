@@ -31,13 +31,13 @@ type Log struct {
 // Reset the Log
 func (m *Log) Reset() { *m = Log{} }
 
-// String return the Compact Log
+// String returns the Compact Log
 func (m *Log) String() string { return proto.CompactTextString(m) }
 
 // ProtoMessage not implemented
 func (*Log) ProtoMessage() {}
 
-// GetTime return the Log's Time
+// GetTime returns the Log's Time
 func (m *Log) GetTime() uint32 {
 	if m != nil && m.Time != nil {
 		return *m.Time
@@ -45,7 +45,7 @@ func (m *Log) GetTime() uint32 {
 	return 0
 }
 
-// GetContents return the Log's Contents
+// GetContents returns the Log's Contents
 func (m *Log) GetContents() []*LogContent {
 	if m != nil {
 		return m.Contents
@@ -53,7 +53,7 @@ func (m *Log) GetContents() []*LogContent {
 	return nil
 }
 
-// LogContent define the Log content struct
+// LogContent defines the Log content struct
 type LogContent struct {
 	Key             *string `protobuf:"bytes,1,req,name=Key" json:"Key,omitempty"`
 	Value           *string `protobuf:"bytes,2,req,name=Value" json:"Value,omitempty"`
@@ -63,13 +63,13 @@ type LogContent struct {
 // Reset LogContent
 func (m *LogContent) Reset() { *m = LogContent{} }
 
-// String return the compact text
+// String returns the compact text
 func (m *LogContent) String() string { return proto.CompactTextString(m) }
 
 // ProtoMessage not implemented
 func (*LogContent) ProtoMessage() {}
 
-// GetKey return the Key
+// GetKey returns the key
 func (m *LogContent) GetKey() string {
 	if m != nil && m.Key != nil {
 		return *m.Key
@@ -77,7 +77,7 @@ func (m *LogContent) GetKey() string {
 	return ""
 }
 
-// GetValue return the Value
+// GetValue returns the value
 func (m *LogContent) GetValue() string {
 	if m != nil && m.Value != nil {
 		return *m.Value
@@ -85,7 +85,7 @@ func (m *LogContent) GetValue() string {
 	return ""
 }
 
-// LogGroup define the logs struct
+// LogGroup defines the logs struct
 type LogGroup struct {
 	Logs            []*Log  `protobuf:"bytes,1,rep,name=Logs" json:"Logs,omitempty"`
 	Reserved        *string `protobuf:"bytes,2,opt,name=Reserved" json:"Reserved,omitempty"`
@@ -97,13 +97,13 @@ type LogGroup struct {
 // Reset LogGroup
 func (m *LogGroup) Reset() { *m = LogGroup{} }
 
-// String return the compact text
+// String returns the compact text
 func (m *LogGroup) String() string { return proto.CompactTextString(m) }
 
 // ProtoMessage not implemented
 func (*LogGroup) ProtoMessage() {}
 
-// GetLogs return the loggroup logs
+// GetLogs returns the loggroup logs
 func (m *LogGroup) GetLogs() []*Log {
 	if m != nil {
 		return m.Logs
@@ -111,7 +111,8 @@ func (m *LogGroup) GetLogs() []*Log {
 	return nil
 }
 
-// GetReserved return Reserved
+// GetReserved returns Reserved. An empty string is returned
+// if an error occurs
 func (m *LogGroup) GetReserved() string {
 	if m != nil && m.Reserved != nil {
 		return *m.Reserved
@@ -119,7 +120,8 @@ func (m *LogGroup) GetReserved() string {
 	return ""
 }
 
-// GetTopic return Topic
+// GetTopic returns Topic. An empty string is returned
+// if an error occurs
 func (m *LogGroup) GetTopic() string {
 	if m != nil && m.Topic != nil {
 		return *m.Topic
@@ -127,7 +129,8 @@ func (m *LogGroup) GetTopic() string {
 	return ""
 }
 
-// GetSource return Source
+// GetSource returns source. An empty string is returned
+// if an error occurs
 func (m *LogGroup) GetSource() string {
 	if m != nil && m.Source != nil {
 		return *m.Source
@@ -135,7 +138,7 @@ func (m *LogGroup) GetSource() string {
 	return ""
 }
 
-// LogGroupList define the LogGroups
+// LogGroupList defines the LogGroups
 type LogGroupList struct {
 	LogGroups       []*LogGroup `protobuf:"bytes,1,rep,name=logGroups" json:"logGroups,omitempty"`
 	XXXUnrecognized []byte      `json:"-"`
@@ -144,13 +147,13 @@ type LogGroupList struct {
 // Reset LogGroupList
 func (m *LogGroupList) Reset() { *m = LogGroupList{} }
 
-// String return compact text
+// String returns compact text
 func (m *LogGroupList) String() string { return proto.CompactTextString(m) }
 
 // ProtoMessage not implemented
 func (*LogGroupList) ProtoMessage() {}
 
-// GetLogGroups return the LogGroups
+// GetLogGroups returns the LogGroups
 func (m *LogGroupList) GetLogGroups() []*LogGroup {
 	if m != nil {
 		return m.LogGroups
@@ -158,7 +161,7 @@ func (m *LogGroupList) GetLogGroups() []*LogGroup {
 	return nil
 }
 
-// Marshal the logs to byte slice
+// Marshal marshals the logs to byte slice
 func (m *Log) Marshal() (data []byte, err error) {
 	size := m.Size()
 	data = make([]byte, size)
@@ -353,7 +356,7 @@ func encodeVarintLog(data []byte, offset int, v uint64) int {
 	return offset + 1
 }
 
-// Size return the log's size
+// Size returns the log's size
 func (m *Log) Size() (n int) {
 	var l int
 	_ = l
@@ -372,7 +375,7 @@ func (m *Log) Size() (n int) {
 	return n
 }
 
-// Size return LogContent size based on Key and Value
+// Size returns LogContent size based on Key and Value
 func (m *LogContent) Size() (n int) {
 	var l int
 	_ = l
@@ -390,7 +393,7 @@ func (m *LogContent) Size() (n int) {
 	return n
 }
 
-// Size return LogGroup size based on Logs
+// Size returns LogGroup size based on Logs
 func (m *LogGroup) Size() (n int) {
 	var l int
 	_ = l
@@ -418,7 +421,7 @@ func (m *LogGroup) Size() (n int) {
 	return n
 }
 
-// Size return LogGroupList size
+// Size returns LogGroupList size
 func (m *LogGroupList) Size() (n int) {
 	var l int
 	_ = l
@@ -448,7 +451,7 @@ func sozLog(x uint64) (n int) {
 	return sovLog((x << 1) ^ (x >> 63))
 }
 
-// Unmarshal data to log
+// Unmarshal unmarshals data to log
 func (m *Log) Unmarshal(data []byte) error {
 	var hasFields [1]uint64
 	l := len(data)
@@ -557,7 +560,7 @@ func (m *Log) Unmarshal(data []byte) error {
 	return nil
 }
 
-// Unmarshal data to LogContent
+// Unmarshal unmarshals data to LogContent
 func (m *LogContent) Unmarshal(data []byte) error {
 	var hasFields [1]uint64
 	l := len(data)
@@ -679,7 +682,7 @@ func (m *LogContent) Unmarshal(data []byte) error {
 	return nil
 }
 
-// Unmarshal data to LogGroup
+// Unmarshal unmarshals data to LogGroup
 func (m *LogGroup) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0
@@ -853,7 +856,7 @@ func (m *LogGroup) Unmarshal(data []byte) error {
 	return nil
 }
 
-// Unmarshal data to LogGroupList
+// Unmarshal unmarshals data to LogGroupList
 func (m *LogGroupList) Unmarshal(data []byte) error {
 	l := len(data)
 	iNdEx := 0

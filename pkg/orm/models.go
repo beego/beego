@@ -15,6 +15,7 @@
 package orm
 
 import (
+	"reflect"
 	"sync"
 )
 
@@ -71,6 +72,14 @@ func (mc *_modelCache) get(table string) (mi *modelInfo, ok bool) {
 func (mc *_modelCache) getByFullName(name string) (mi *modelInfo, ok bool) {
 	mi, ok = mc.cacheByFullName[name]
 	return
+}
+
+func (mc *_modelCache) getByMd(md interface{}) (*modelInfo, bool) {
+	val := reflect.ValueOf(md)
+	ind := reflect.Indirect(val)
+	typ := ind.Type()
+	name := getFullName(typ)
+	return mc.getByFullName(name)
 }
 
 // set model info to collection

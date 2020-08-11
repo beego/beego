@@ -28,7 +28,7 @@ const (
 	jsonFormat          = "JSON_FORMAT"
 )
 
-// AccessLogRecord struct for holding access log data.
+// AccessLogRecord is astruct for holding access log data.
 type AccessLogRecord struct {
 	RemoteAddr     string        `json:"remote_addr"`
 	RequestTime    time.Time     `json:"request_time"`

@@ -86,6 +86,7 @@ type WebConfig struct {
 	TemplateLeft           string
 	TemplateRight          string
 	ViewsPath              string
+	CommentRouterPath      string
 	EnableXSRF             bool
 	XSRFKey                string
 	XSRFExpire             int
@@ -245,6 +246,7 @@ func newBConfig() *Config {
 			TemplateLeft:           "{{",
 			TemplateRight:          "}}",
 			ViewsPath:              "views",
+			CommentRouterPath:      "controllers",
 			EnableXSRF:             false,
 			XSRFKey:                "beegoxsrf",
 			XSRFExpire:             0,
