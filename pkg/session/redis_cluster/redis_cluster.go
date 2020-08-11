@@ -107,12 +107,15 @@ func (rs *SessionStore) SessionRelease(w http.ResponseWriter) {
 
 // Provider redis_cluster session provider
 type Provider struct {
-	maxlifetime int64
-	savePath    string
-	poolsize    int
-	password    string
-	dbNum       int
-	poollist    *rediss.ClusterClient
+	maxlifetime        int64
+	savePath           string
+	poolsize           int
+	password           string
+	dbNum              int
+	idleTimeout        time.Duration
+	idleCheckFrequency time.Duration
+	maxRetries         int
+	poollist           *rediss.ClusterClient
 }
 
 // SessionInit init redis_cluster session
@@ -147,35 +150,32 @@ func (rp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 	} else {
 		rp.dbNum = 0
 	}
-	var idleTimeout time.Duration = 0
 	if len(configs) > 4 {
 		timeout, err := strconv.Atoi(configs[4])
 		if err == nil && timeout > 0 {
-			idleTimeout = time.Duration(timeout) * time.Second
+			rp.idleTimeout = time.Duration(timeout) * time.Second
 		}
 	}
-	var idleCheckFrequency time.Duration = 0
 	if len(configs) > 5 {
 		checkFrequency, err := strconv.Atoi(configs[5])
 		if err == nil && checkFrequency > 0 {
-			idleCheckFrequency = time.Duration(checkFrequency) * time.Second
+			rp.idleCheckFrequency = time.Duration(checkFrequency) * time.Second
 		}
 	}
-	var maxRetries = 0
 	if len(configs) > 6 {
 		retries, err := strconv.Atoi(configs[6])
 		if err == nil && retries > 0 {
-			maxRetries = retries
+			rp.maxRetries = retries
 		}
 	}
 
 	rp.poollist = rediss.NewClusterClient(&rediss.ClusterOptions{
-		Addrs:    strings.Split(rp.savePath, ";"),
-		Password: rp.password,
-		PoolSize: rp.poolsize,
-		IdleTimeout: idleTimeout,
-		IdleCheckFrequency: idleCheckFrequency,
-		MaxRetries: maxRetries,
+		Addrs:              strings.Split(rp.savePath, ";"),
+		Password:           rp.password,
+		PoolSize:           rp.poolsize,
+		IdleTimeout:        rp.idleTimeout,
+		IdleCheckFrequency: rp.idleCheckFrequency,
+		MaxRetries:         rp.maxRetries,
 	})
 	return rp.poollist.Ping().Err()
 }
