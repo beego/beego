@@ -12,8 +12,8 @@ require (
 	github.com/couchbase/goutils v0.0.0-20180530154633-e865a1461c8a // indirect
 	github.com/elastic/go-elasticsearch/v6 v6.8.5
 	github.com/elazarl/go-bindata-assetfs v1.0.0
-	github.com/go-kit/kit v0.9.0
 	github.com/go-redis/redis v6.14.2+incompatible
+	github.com/go-redis/redis/v7 v7.4.0
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gogo/protobuf v1.1.1
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
