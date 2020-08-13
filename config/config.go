@@ -48,22 +48,39 @@ import (
 )
 
 // Configer defines how to get and set value from configuration raw data.
+// Deprecated: using pkg/config, we will delete this in v2.1.0
 type Configer interface {
-	Set(key, val string) error   //support section::key type in given key when using ini type.
-	String(key string) string    //support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
+	// Deprecated: using pkg/config, we will delete this in v2.1.0
+	Set(key, val string) error //support section::key type in given key when using ini type.
+	// Deprecated: using pkg/config, we will delete this in v2.1.0
+	String(key string) string //support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
+	// Deprecated: using pkg/config, we will delete this in v2.1.0
 	Strings(key string) []string //get string slice
+	// Deprecated: using pkg/config, we will delete this in v2.1.0
 	Int(key string) (int, error)
+	// Deprecated: using pkg/config, we will delete this in v2.1.0
 	Int64(key string) (int64, error)
+	// Deprecated: using pkg/config, we will delete this in v2.1.0
 	Bool(key string) (bool, error)
+	// Deprecated: using pkg/config, we will delete this in v2.1.0
 	Float(key string) (float64, error)
-	DefaultString(key string, defaultVal string) string      // support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
+	// Deprecated: using pkg/config, we will delete this in v2.1.0
+	DefaultString(key string, defaultVal string) string // support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
+	// Deprecated: using pkg/config, we will delete this in v2.1.0
 	DefaultStrings(key string, defaultVal []string) []string //get string slice
+	// Deprecated: using pkg/config, we will delete this in v2.1.0
 	DefaultInt(key string, defaultVal int) int
+	// Deprecated: using pkg/config, we will delete this in v2.1.0
 	DefaultInt64(key string, defaultVal int64) int64
+	// Deprecated: using pkg/config, we will delete this in v2.1.0
 	DefaultBool(key string, defaultVal bool) bool
+	// Deprecated: using pkg/config, we will delete this in v2.1.0
 	DefaultFloat(key string, defaultVal float64) float64
+	// Deprecated: using pkg/config, we will delete this in v2.1.0
 	DIY(key string) (interface{}, error)
+	// Deprecated: using pkg/config, we will delete this in v2.1.0
 	GetSection(section string) (map[string]string, error)
+	// Deprecated: using pkg/config, we will delete this in v2.1.0
 	SaveConfigFile(filename string) error
 }
 

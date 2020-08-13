@@ -16,6 +16,7 @@ package orm
 
 import (
 	"fmt"
+	"github.com/astaxie/beego/pkg/orm/hints"
 	"strings"
 )
 
@@ -97,6 +98,29 @@ func (d *dbBaseOracle) IndexExists(db dbQuerier, table string, name string) bool
 	return cnt > 0
 }
 
+func (d *dbBaseOracle) GenerateSpecifyIndex(tableName string, useIndex int, indexes []string) string {
+	var s []string
+	Q := d.TableQuote()
+	for _, index := range indexes {
+		tmp := fmt.Sprintf(`%s%s%s`, Q, index, Q)
+		s = append(s, tmp)
+	}
+
+	var hint string
+
+	switch useIndex {
+	case hints.KeyUseIndex, hints.KeyForceIndex:
+		hint = `INDEX`
+	case hints.KeyIgnoreIndex:
+		hint = `NO_INDEX`
+	default:
+		DebugLog.Println("[WARN] Not a valid specifying action, so that action is ignored")
+		return ``
+	}
+
+	return fmt.Sprintf(` /*+ %s(%s %s)*/ `, hint, tableName, strings.Join(s, `,`))
+}
+
 // execute insert sql with given struct and given values.
 // insert the given values, not the field values in struct.
 func (d *dbBaseOracle) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []string, values []interface{}) (int64, error) {
@@ -127,7 +151,12 @@ func (d *dbBaseOracle) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, nam
 			if isMulti {
 				return res.RowsAffected()
 			}
-			return res.LastInsertId()
+
+			lastInsertId, err := res.LastInsertId()
+			if err != nil {
+				DebugLog.Println("[WARN] return LastInsertId error:", err)
+			}
+			return lastInsertId, nil
 		}
 		return 0, err
 	}

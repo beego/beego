@@ -29,12 +29,10 @@ func TestKVs(t *testing.T) {
 
 	assert.True(t, kvs.Contains(key))
 
-	kvs.IfContains(key, func(value interface{}) {
-		kvs.Put("my-key1", "")
-	})
-
-	assert.True(t, kvs.Contains("my-key1"))
-
 	v := kvs.GetValueOr(key, 13)
 	assert.Equal(t, 12, v)
+
+	v = kvs.GetValueOr(`key-not-exists`, 8546)
+	assert.Equal(t, 8546, v)
+
 }

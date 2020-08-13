@@ -59,6 +59,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/astaxie/beego/pkg/common"
+	"github.com/astaxie/beego/pkg/orm/hints"
 	"os"
 	"reflect"
 	"time"
@@ -99,6 +100,7 @@ type ormBase struct {
 
 var _ DQL = new(ormBase)
 var _ DML = new(ormBase)
+var _ DriverGetter = new(ormBase)
 
 // get model info and model reflect value
 func (o *ormBase) getMiInd(md interface{}, needPtr bool) (mi *modelInfo, ind reflect.Value) {
@@ -302,11 +304,10 @@ func (o *ormBase) QueryM2MWithCtx(ctx context.Context, md interface{}, name stri
 // 	for _,tag := range post.Tags{...}
 //
 // make sure the relation is defined in model struct tags.
-func (o *ormBase) LoadRelated(md interface{}, name string, args ...interface{}) (int64, error) {
+func (o *ormBase) LoadRelated(md interface{}, name string, args ...common.KV) (int64, error) {
 	return o.LoadRelatedWithCtx(context.Background(), md, name, args...)
 }
-
-func (o *ormBase) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...interface{}) (int64, error) {
+func (o *ormBase) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...common.KV) (int64, error) {
 	_, fi, ind, qseter := o.queryRelated(md, name)
 
 	qs := qseter.(*querySet)
@@ -314,24 +315,29 @@ func (o *ormBase) LoadRelatedWithCtx(ctx context.Context, md interface{}, name s
 	var relDepth int
 	var limit, offset int64
 	var order string
-	for i, arg := range args {
-		switch i {
-		case 0:
-			if v, ok := arg.(bool); ok {
-				if v {
-					relDepth = DefaultRelsDepth
-				}
-			} else if v, ok := arg.(int); ok {
-				relDepth = v
+
+	kvs := common.NewKVs(args...)
+	kvs.IfContains(hints.KeyRelDepth, func(value interface{}) {
+		if v, ok := value.(bool); ok {
+			if v {
+				relDepth = DefaultRelsDepth
 			}
-		case 1:
-			limit = ToInt64(arg)
-		case 2:
-			offset = ToInt64(arg)
-		case 3:
-			order, _ = arg.(string)
+		} else if v, ok := value.(int); ok {
+			relDepth = v
 		}
-	}
+	}).IfContains(hints.KeyLimit, func(value interface{}) {
+		if v, ok := value.(int64); ok {
+			limit = v
+		}
+	}).IfContains(hints.KeyOffset, func(value interface{}) {
+		if v, ok := value.(int64); ok {
+			offset = v
+		}
+	}).IfContains(hints.KeyOrderBy, func(value interface{}) {
+		if v, ok := value.(string); ok {
+			order = v
+		}
+	})
 
 	switch fi.fieldType {
 	case RelOneToOne, RelForeignKey, RelReverseOne:
@@ -522,19 +528,24 @@ func (o *orm) BeginWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions) (TxO
 	return taskTxOrm, nil
 }
 
-func (o *orm) DoTx(task func(txOrm TxOrmer) error) error {
+func (o *orm) DoTx(task func(ctx context.Context, txOrm TxOrmer) error) error {
 	return o.DoTxWithCtx(context.Background(), task)
 }
 
-func (o *orm) DoTxWithCtx(ctx context.Context, task func(txOrm TxOrmer) error) error {
+func (o *orm) DoTxWithCtx(ctx context.Context, task func(ctx context.Context, txOrm TxOrmer) error) error {
 	return o.DoTxWithCtxAndOpts(ctx, nil, task)
 }
 
-func (o *orm) DoTxWithOpts(opts *sql.TxOptions, task func(txOrm TxOrmer) error) error {
+func (o *orm) DoTxWithOpts(opts *sql.TxOptions, task func(ctx context.Context, txOrm TxOrmer) error) error {
 	return o.DoTxWithCtxAndOpts(context.Background(), opts, task)
 }
 
-func (o *orm) DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task func(txOrm TxOrmer) error) error {
+func (o *orm) DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task func(ctx context.Context, txOrm TxOrmer) error) error {
+	return doTxTemplate(o, ctx, opts, task)
+}
+
+func doTxTemplate(o TxBeginner, ctx context.Context, opts *sql.TxOptions,
+	task func(ctx context.Context, txOrm TxOrmer) error) error {
 	_txOrm, err := o.BeginWithCtxAndOpts(ctx, opts)
 	if err != nil {
 		return err
@@ -553,9 +564,8 @@ func (o *orm) DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task 
 			}
 		}
 	}()
-
 	var taskTxOrm = _txOrm
-	err = task(taskTxOrm)
+	err = task(ctx, taskTxOrm)
 	panicked = false
 	return err
 }
@@ -582,18 +592,11 @@ func NewOrm() Ormer {
 
 // NewOrmUsingDB create new orm with the name
 func NewOrmUsingDB(aliasName string) Ormer {
-	o := new(orm)
 	if al, ok := dataBaseCache.get(aliasName); ok {
-		o.alias = al
-		if Debug {
-			o.db = newDbQueryLog(al, al.DB)
-		} else {
-			o.db = al.DB
-		}
+		return newDBWithAlias(al)
 	} else {
 		panic(fmt.Errorf("<Ormer.Using> unknown db alias name `%s`", aliasName))
 	}
-	return o
 }
 
 // NewOrmWithDB create a new ormer object with specify *sql.DB for query
@@ -603,14 +606,21 @@ func NewOrmWithDB(driverName, aliasName string, db *sql.DB, params ...common.KV)
 		return nil, err
 	}
 
+	return newDBWithAlias(al), nil
+}
+
+func newDBWithAlias(al *alias) Ormer {
 	o := new(orm)
 	o.alias = al
 
 	if Debug {
-		o.db = newDbQueryLog(o.alias, db)
+		o.db = newDbQueryLog(al, al.DB)
 	} else {
-		o.db = db
+		o.db = al.DB
 	}
 
-	return o, nil
+	if len(globalFilterChains) > 0 {
+		return NewFilterOrmDecorator(o, globalFilterChains...)
+	}
+	return o
 }

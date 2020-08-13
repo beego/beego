@@ -21,6 +21,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/astaxie/beego/pkg/orm/hints"
 	"io/ioutil"
 	"math"
 	"os"
@@ -200,6 +201,8 @@ func TestSyncDb(t *testing.T) {
 	RegisterModel(new(IntegerPk))
 	RegisterModel(new(UintPk))
 	RegisterModel(new(PtrPk))
+	RegisterModel(new(Index))
+	RegisterModel(new(StrPk))
 
 	err := RunSyncdb("default", true, Debug)
 	throwFail(t, err)
@@ -224,6 +227,8 @@ func TestRegisterModels(t *testing.T) {
 	RegisterModel(new(IntegerPk))
 	RegisterModel(new(UintPk))
 	RegisterModel(new(PtrPk))
+	RegisterModel(new(Index))
+	RegisterModel(new(StrPk))
 
 	BootStrap()
 
@@ -793,6 +798,32 @@ func TestExpr(t *testing.T) {
 	// throwFail(t, AssertIs(num, 3))
 }
 
+func TestSpecifyIndex(t *testing.T) {
+	var index *Index
+	index = &Index{
+		F1: 1,
+		F2: 2,
+	}
+	_, _ = dORM.Insert(index)
+	throwFailNow(t, AssertIs(index.Id, 1))
+
+	index = &Index{
+		F1: 3,
+		F2: 4,
+	}
+	_, _ = dORM.Insert(index)
+	throwFailNow(t, AssertIs(index.Id, 2))
+
+	_ = dORM.QueryTable(&Index{}).Filter(`f1`, `1`).ForceIndex(`index_f1`).One(index)
+	throwFailNow(t, AssertIs(index.F2, 2))
+
+	_ = dORM.QueryTable(&Index{}).Filter(`f2`, `4`).UseIndex(`index_f2`).One(index)
+	throwFailNow(t, AssertIs(index.F1, 3))
+
+	_ = dORM.QueryTable(&Index{}).Filter(`f1`, `1`).IgnoreIndex(`index_f1`, `index_f2`).One(index)
+	throwFailNow(t, AssertIs(index.F2, 2))
+}
+
 func TestOperators(t *testing.T) {
 	qs := dORM.QueryTable("user")
 	num, err := qs.Filter("user_name", "slene").Count()
@@ -1279,24 +1310,32 @@ func TestLoadRelated(t *testing.T) {
 	throwFailNow(t, AssertIs(len(user.Posts), 2))
 	throwFailNow(t, AssertIs(user.Posts[0].User.ID, 3))
 
-	num, err = dORM.LoadRelated(&user, "Posts", true)
+	num, err = dORM.LoadRelated(&user, "Posts", hints.DefaultRelDepth())
 	throwFailNow(t, err)
 	throwFailNow(t, AssertIs(num, 2))
 	throwFailNow(t, AssertIs(len(user.Posts), 2))
 	throwFailNow(t, AssertIs(user.Posts[0].User.UserName, "astaxie"))
 
-	num, err = dORM.LoadRelated(&user, "Posts", true, 1)
+	num, err = dORM.LoadRelated(&user, "Posts",
+		hints.DefaultRelDepth(),
+		hints.Limit(1))
 	throwFailNow(t, err)
 	throwFailNow(t, AssertIs(num, 1))
 	throwFailNow(t, AssertIs(len(user.Posts), 1))
 
-	num, err = dORM.LoadRelated(&user, "Posts", true, 0, 0, "-Id")
+	num, err = dORM.LoadRelated(&user, "Posts",
+		hints.DefaultRelDepth(),
+		hints.OrderBy("-Id"))
 	throwFailNow(t, err)
 	throwFailNow(t, AssertIs(num, 2))
 	throwFailNow(t, AssertIs(len(user.Posts), 2))
 	throwFailNow(t, AssertIs(user.Posts[0].Title, "Formatting"))
 
-	num, err = dORM.LoadRelated(&user, "Posts", true, 1, 1, "Id")
+	num, err = dORM.LoadRelated(&user, "Posts",
+		hints.DefaultRelDepth(),
+		hints.Limit(1),
+		hints.Offset(1),
+		hints.OrderBy("Id"))
 	throwFailNow(t, err)
 	throwFailNow(t, AssertIs(num, 1))
 	throwFailNow(t, AssertIs(len(user.Posts), 1))
@@ -1318,7 +1357,7 @@ func TestLoadRelated(t *testing.T) {
 	throwFailNow(t, AssertIs(profile.User == nil, false))
 	throwFailNow(t, AssertIs(profile.User.UserName, "astaxie"))
 
-	num, err = dORM.LoadRelated(&profile, "User", true)
+	num, err = dORM.LoadRelated(&profile, "User", hints.DefaultRelDepth())
 	throwFailNow(t, err)
 	throwFailNow(t, AssertIs(num, 1))
 	throwFailNow(t, AssertIs(profile.User == nil, false))
@@ -1335,7 +1374,7 @@ func TestLoadRelated(t *testing.T) {
 	throwFailNow(t, AssertIs(user.Profile == nil, false))
 	throwFailNow(t, AssertIs(user.Profile.Age, 30))
 
-	num, err = dORM.LoadRelated(&user, "Profile", true)
+	num, err = dORM.LoadRelated(&user, "Profile", hints.DefaultRelDepth())
 	throwFailNow(t, err)
 	throwFailNow(t, AssertIs(num, 1))
 	throwFailNow(t, AssertIs(user.Profile == nil, false))
@@ -1355,7 +1394,7 @@ func TestLoadRelated(t *testing.T) {
 	throwFailNow(t, AssertIs(post.User == nil, false))
 	throwFailNow(t, AssertIs(post.User.UserName, "astaxie"))
 
-	num, err = dORM.LoadRelated(&post, "User", true)
+	num, err = dORM.LoadRelated(&post, "User", hints.DefaultRelDepth())
 	throwFailNow(t, err)
 	throwFailNow(t, AssertIs(num, 1))
 	throwFailNow(t, AssertIs(post.User == nil, false))
@@ -1375,7 +1414,7 @@ func TestLoadRelated(t *testing.T) {
 	throwFailNow(t, AssertIs(len(post.Tags), 2))
 	throwFailNow(t, AssertIs(post.Tags[0].Name, "golang"))
 
-	num, err = dORM.LoadRelated(&post, "Tags", true)
+	num, err = dORM.LoadRelated(&post, "Tags", hints.DefaultRelDepth())
 	throwFailNow(t, err)
 	throwFailNow(t, AssertIs(num, 2))
 	throwFailNow(t, AssertIs(len(post.Tags), 2))
@@ -1396,7 +1435,7 @@ func TestLoadRelated(t *testing.T) {
 	throwFailNow(t, AssertIs(tag.Posts[0].User.ID, 2))
 	throwFailNow(t, AssertIs(tag.Posts[0].User.Profile == nil, true))
 
-	num, err = dORM.LoadRelated(&tag, "Posts", true)
+	num, err = dORM.LoadRelated(&tag, "Posts", hints.DefaultRelDepth())
 	throwFailNow(t, err)
 	throwFailNow(t, AssertIs(num, 3))
 	throwFailNow(t, AssertIs(tag.Posts[0].Title, "Introduction"))
@@ -2486,3 +2525,22 @@ func TestInsertOrUpdate(t *testing.T) {
 		throwFailNow(t, AssertIs((((user2.Status+1)-1)*3)/3, test.Status))
 	}
 }
+
+func TestStrPkInsert(t *testing.T) {
+	RegisterModel(new(StrPk))
+	value := `StrPkValues(*56`
+	strPk := &StrPk{
+		Id:    "1",
+		Value: value,
+	}
+
+	var err error
+	_, err = dORM.Insert(strPk)
+	throwFailNow(t, AssertIs(err, nil))
+
+	var vForTesting StrPk
+	err = dORM.QueryTable(new(StrPk)).Filter(`id`, `1`).One(&vForTesting)
+	throwFailNow(t, AssertIs(err, nil))
+	throwFailNow(t, AssertIs(vForTesting.Value, value))
+}
+

@@ -93,6 +93,7 @@ func (d *dbBasePostgres) MaxLimit() uint64 {
 	return 0
 }
 
+
 // postgresql quote is ".
 func (d *dbBasePostgres) TableQuote() string {
 	return `"`
@@ -180,6 +181,12 @@ func (d *dbBasePostgres) IndexExists(db dbQuerier, table string, name string) bo
 	var cnt int
 	row.Scan(&cnt)
 	return cnt > 0
+}
+
+// GenerateSpecifyIndex return a specifying index clause
+func (d *dbBasePostgres) GenerateSpecifyIndex(tableName string, useIndex int, indexes []string) string {
+	DebugLog.Println("[WARN] Not support any specifying index action, so that action is ignored")
+	return ``
 }
 
 // create new postgresql dbBaser.

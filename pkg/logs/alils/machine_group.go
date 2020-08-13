@@ -8,13 +8,13 @@ import (
 	"net/http/httputil"
 )
 
-// MachineGroupAttribute define the Attribute
+// MachineGroupAttribute defines the Attribute
 type MachineGroupAttribute struct {
 	ExternalName string `json:"externalName"`
 	TopicName    string `json:"groupTopic"`
 }
 
-// MachineGroup define the machine Group
+// MachineGroup defines the machine Group
 type MachineGroup struct {
 	Name          string   `json:"groupName"`
 	Type          string   `json:"groupType"`
@@ -29,20 +29,20 @@ type MachineGroup struct {
 	project *LogProject
 }
 
-// Machine define the Machine
+// Machine defines the Machine
 type Machine struct {
 	IP            string
 	UniqueID      string `json:"machine-uniqueid"`
 	UserdefinedID string `json:"userdefined-id"`
 }
 
-// MachineList define the Machine List
+// MachineList defines the Machine List
 type MachineList struct {
 	Total    int
 	Machines []*Machine
 }
 
-// ListMachines returns machine list of this machine group.
+// ListMachines returns the machine list of this machine group.
 func (m *MachineGroup) ListMachines() (ms []*Machine, total int, err error) {
 	h := map[string]string{
 		"x-sls-bodyrawsize": "0",
