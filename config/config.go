@@ -51,9 +51,9 @@ import (
 // Deprecated: using pkg/config, we will delete this in v2.1.0
 type Configer interface {
 	// Deprecated: using pkg/config, we will delete this in v2.1.0
-	Set(key, val string) error   //support section::key type in given key when using ini type.
+	Set(key, val string) error //support section::key type in given key when using ini type.
 	// Deprecated: using pkg/config, we will delete this in v2.1.0
-	String(key string) string    //support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
+	String(key string) string //support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
 	// Deprecated: using pkg/config, we will delete this in v2.1.0
 	Strings(key string) []string //get string slice
 	// Deprecated: using pkg/config, we will delete this in v2.1.0
@@ -65,7 +65,7 @@ type Configer interface {
 	// Deprecated: using pkg/config, we will delete this in v2.1.0
 	Float(key string) (float64, error)
 	// Deprecated: using pkg/config, we will delete this in v2.1.0
-	DefaultString(key string, defaultVal string) string      // support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
+	DefaultString(key string, defaultVal string) string // support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
 	// Deprecated: using pkg/config, we will delete this in v2.1.0
 	DefaultStrings(key string, defaultVal []string) []string //get string slice
 	// Deprecated: using pkg/config, we will delete this in v2.1.0

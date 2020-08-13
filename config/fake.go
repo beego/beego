@@ -27,15 +27,18 @@ type fakeConfigContainer struct {
 func (c *fakeConfigContainer) getData(key string) string {
 	return c.data[strings.ToLower(key)]
 }
+
 // Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *fakeConfigContainer) Set(key, val string) error {
 	c.data[strings.ToLower(key)] = val
 	return nil
 }
+
 // Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *fakeConfigContainer) String(key string) string {
 	return c.getData(key)
 }
+
 // Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *fakeConfigContainer) DefaultString(key string, defaultval string) string {
 	v := c.String(key)
@@ -44,6 +47,7 @@ func (c *fakeConfigContainer) DefaultString(key string, defaultval string) strin
 	}
 	return v
 }
+
 // Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *fakeConfigContainer) Strings(key string) []string {
 	v := c.String(key)
@@ -52,6 +56,7 @@ func (c *fakeConfigContainer) Strings(key string) []string {
 	}
 	return strings.Split(v, ";")
 }
+
 // Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *fakeConfigContainer) DefaultStrings(key string, defaultval []string) []string {
 	v := c.Strings(key)
@@ -60,10 +65,12 @@ func (c *fakeConfigContainer) DefaultStrings(key string, defaultval []string) []
 	}
 	return v
 }
+
 // Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *fakeConfigContainer) Int(key string) (int, error) {
 	return strconv.Atoi(c.getData(key))
 }
+
 // Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *fakeConfigContainer) DefaultInt(key string, defaultval int) int {
 	v, err := c.Int(key)
@@ -72,10 +79,12 @@ func (c *fakeConfigContainer) DefaultInt(key string, defaultval int) int {
 	}
 	return v
 }
+
 // Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *fakeConfigContainer) Int64(key string) (int64, error) {
 	return strconv.ParseInt(c.getData(key), 10, 64)
 }
+
 // Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *fakeConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
 	v, err := c.Int64(key)
@@ -84,10 +93,12 @@ func (c *fakeConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
 	}
 	return v
 }
+
 // Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *fakeConfigContainer) Bool(key string) (bool, error) {
 	return ParseBool(c.getData(key))
 }
+
 // Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *fakeConfigContainer) DefaultBool(key string, defaultval bool) bool {
 	v, err := c.Bool(key)
@@ -96,10 +107,12 @@ func (c *fakeConfigContainer) DefaultBool(key string, defaultval bool) bool {
 	}
 	return v
 }
+
 // Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *fakeConfigContainer) Float(key string) (float64, error) {
 	return strconv.ParseFloat(c.getData(key), 64)
 }
+
 // Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *fakeConfigContainer) DefaultFloat(key string, defaultval float64) float64 {
 	v, err := c.Float(key)
@@ -108,6 +121,7 @@ func (c *fakeConfigContainer) DefaultFloat(key string, defaultval float64) float
 	}
 	return v
 }
+
 // Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *fakeConfigContainer) DIY(key string) (interface{}, error) {
 	if v, ok := c.data[strings.ToLower(key)]; ok {
@@ -115,10 +129,12 @@ func (c *fakeConfigContainer) DIY(key string) (interface{}, error) {
 	}
 	return nil, errors.New("key not find")
 }
+
 // Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *fakeConfigContainer) GetSection(section string) (map[string]string, error) {
 	return nil, errors.New("not implement in the fakeConfigContainer")
 }
+
 // Deprecated: using pkg/config, we will delete this in v2.1.0
 func (c *fakeConfigContainer) SaveConfigFile(filename string) error {
 	return errors.New("not implement in the fakeConfigContainer")
