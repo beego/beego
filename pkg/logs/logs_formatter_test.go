@@ -46,20 +46,15 @@ func TestCustomFormatter(t *testing.T) {
 
 func TestGlobalFormatter(t *testing.T) {
 	fmtter := &customLogFormatter{}
+	SetGlobalFormatter(fmtter.GlobalFormat)
 
-	err := SetLoggerWithOpts("console", []string{""}, common.SimpleKV{Key: "formatter", Value: fmtter.Format})
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	err = SetLoggerWithOpts("file", []string{`{"filename":"tester.log"}`}, common.SimpleKV{Key: "formatter", Value: fmtter.Format2})
+	err := SetLoggerWithOpts("file", []string{`{"filename":"tester.log"}`}, common.SimpleKV{Key: "formatter", Value: fmtter.Format2})
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	os.Remove("tester.log")
 
-	SetGlobalFormatter(fmtter.GlobalFormat)
 }
 
 func TestDuplicateAdapterFormatter(t *testing.T) {
