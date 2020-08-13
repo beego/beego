@@ -164,7 +164,12 @@ func (d *dbBaseMysql) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Val
 			if isMulti {
 				return res.RowsAffected()
 			}
-			return res.LastInsertId()
+
+			lastInsertId, err := res.LastInsertId()
+			if err != nil {
+				DebugLog.Println("[WARN] return LastInsertId error:", err)
+			}
+			return lastInsertId, nil
 		}
 		return 0, err
 	}
