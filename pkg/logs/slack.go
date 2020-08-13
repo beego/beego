@@ -15,7 +15,7 @@ type SLACKWriter struct {
 	Level      int    `json:"level"`
 }
 
-// newSLACKWriter create jiaoliao writer.
+// newSLACKWriter creates jiaoliao writer.
 func newSLACKWriter() Logger {
 	return &SLACKWriter{Level: LevelTrace}
 }

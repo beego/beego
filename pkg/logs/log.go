@@ -128,7 +128,7 @@ func Register(name string, log newLoggerFunc) {
 }
 
 // BeeLogger is default logger in beego application.
-// it can contain several providers and log message into all providers.
+// Can contain several providers and log message into all providers.
 type BeeLogger struct {
 	lock                sync.Mutex
 	level               int
@@ -166,7 +166,7 @@ type LogMsg struct {
 var logMsgPool *sync.Pool
 
 // NewLogger returns a new BeeLogger.
-// channelLen means the number of messages in chan(used where asynchronous is true).
+// channelLen: the number of messages in chan(used where asynchronous is true).
 // if the buffering chan is full, logger adapters write to file or other way.
 func NewLogger(channelLens ...int64) *BeeLogger {
 	bl := new(BeeLogger)
@@ -181,7 +181,7 @@ func NewLogger(channelLens ...int64) *BeeLogger {
 	return bl
 }
 
-// Async set the log to asynchronous and start the goroutine
+// Async sets the log to asynchronous and start the goroutine
 func (bl *BeeLogger) Async(msgLen ...int64) *BeeLogger {
 	bl.lock.Lock()
 	defer bl.lock.Unlock()
@@ -204,7 +204,7 @@ func (bl *BeeLogger) Async(msgLen ...int64) *BeeLogger {
 }
 
 // SetLogger provides a given logger adapter into BeeLogger with config string.
-// config need to be correct JSON as string: {"interval":360}.
+// config must in in JSON format like {"interval":360}}
 func (bl *BeeLogger) setLogger(adapterName string, configs ...string) error {
 	config := append(configs, "{}")[0]
 	for _, l := range bl.outputs {
@@ -267,7 +267,7 @@ func (bl *BeeLogger) setLoggerWithOpts(adapterName string, opts common.SimpleKV,
 }
 
 // SetLogger provides a given logger adapter into BeeLogger with config string.
-// config need to be correct JSON as string: {"interval":360}.
+// config must in in JSON format like {"interval":360}}
 func (bl *BeeLogger) SetLogger(adapterName string, configs ...string) error {
 	bl.lock.Lock()
 	defer bl.lock.Unlock()
@@ -419,9 +419,9 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string, v ...interface{}) error 
 	return nil
 }
 
-// SetLevel Set log message level.
+// SetLevel sets log message level.
 // If message level (such as LevelDebug) is higher than logger level (such as LevelWarning),
-// log providers will not even be sent the message.
+// log providers will not be sent the message.
 func (bl *BeeLogger) SetLevel(l int) {
 	bl.level = l
 }

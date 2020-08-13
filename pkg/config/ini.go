@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package ini
+package config
 
 import (
 	"bufio"
@@ -26,8 +26,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-
-	"github.com/astaxie/beego/pkg/config"
 )
 
 var (
@@ -47,7 +45,7 @@ type IniConfig struct {
 }
 
 // Parse creates a new Config and parses the file configuration from the named file.
-func (ini *IniConfig) Parse(name string) (config.Configer, error) {
+func (ini *IniConfig) Parse(name string) (Configer, error) {
 	return ini.parseFile(name)
 }
 
@@ -197,7 +195,7 @@ func (ini *IniConfig) parseData(dir string, data []byte) (*IniConfigContainer, e
 			val = bytes.Trim(val, `"`)
 		}
 
-		cfg.data[section][key] = config.ExpandValueEnv(string(val))
+		cfg.data[section][key] = ExpandValueEnv(string(val))
 		if comment.Len() > 0 {
 			cfg.keyComment[section+"."+key] = comment.String()
 			comment.Reset()
@@ -210,7 +208,7 @@ func (ini *IniConfig) parseData(dir string, data []byte) (*IniConfigContainer, e
 // ParseData parse ini the data
 // When include other.conf,other.conf is either absolute directory
 // or under beego in default temporary directory(/tmp/beego[-username]).
-func (ini *IniConfig) ParseData(data []byte) (config.Configer, error) {
+func (ini *IniConfig) ParseData(data []byte) (Configer, error) {
 	dir := "beego"
 	currentUser, err := user.Current()
 	if err == nil {
@@ -224,7 +222,7 @@ func (ini *IniConfig) ParseData(data []byte) (config.Configer, error) {
 	return ini.parseData(dir, data)
 }
 
-// IniConfigContainer A Config represents the ini configuration.
+// IniConfigContainer is a config which represents the ini configuration.
 // When set and get value, support key as section:name type.
 type IniConfigContainer struct {
 	data           map[string]map[string]string // section=> key:val
@@ -235,7 +233,7 @@ type IniConfigContainer struct {
 
 // Bool returns the boolean value for a given key.
 func (c *IniConfigContainer) Bool(key string) (bool, error) {
-	return config.ParseBool(c.getdata(key))
+	return ParseBool(c.getdata(key))
 }
 
 // DefaultBool returns the boolean value for a given key.
@@ -502,5 +500,5 @@ func (c *IniConfigContainer) getdata(key string) string {
 }
 
 func init() {
-	config.Register("ini", &IniConfig{})
+	Register("ini", &IniConfig{})
 }

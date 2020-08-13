@@ -23,7 +23,7 @@ import (
 )
 
 // connWriter implements LoggerInterface.
-// it writes messages in keep-live tcp connection.
+// Writes messages in keep-live tcp connection.
 type connWriter struct {
 	OldLoggerAdapter
 	lg             *logWriter
@@ -35,15 +35,15 @@ type connWriter struct {
 	Level          int    `json:"level"`
 }
 
-// NewConn create new ConnWrite returning as LoggerInterface.
+// NewConn creates new ConnWrite returning as LoggerInterface.
 func NewConn() Logger {
 	conn := new(connWriter)
 	conn.Level = LevelTrace
 	return conn
 }
 
-// Init init connection writer with json config.
-// json config only need key "level".
+// Init initializes a connection writer with json config.
+// json config only needs they "level" key
 func (c *connWriter) Init(jsonConfig string) error {
 	return json.Unmarshal([]byte(jsonConfig), c)
 }
@@ -52,6 +52,7 @@ func (c *connWriter) Init(jsonConfig string) error {
 // if connection is down, try to re-connect.
 func (c *connWriter) WriteMsg(lm *LogMsg, opts ...common.SimpleKV) error {
 	if lm.Level > c.Level {
+
 		return nil
 	}
 	if c.needToConnectOnMsg() {

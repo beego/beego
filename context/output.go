@@ -58,7 +58,6 @@ func (output *BeegoOutput) Clear() {
 	output.Status = 0
 }
 
-
 // Header sets response header item string via given key.
 func (output *BeegoOutput) Header(key, val string) {
 	output.Context.ResponseWriter.Header().Set(key, val)

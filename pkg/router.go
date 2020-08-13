@@ -18,9 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"os"
 	"path"
-	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
@@ -257,45 +255,6 @@ func (p *ControllerRegister) addToRouter(method, pattern string, r *ControllerIn
 // Include only when the Runmode is dev will generate router file in the router/auto.go from the controller
 // Include(&BankAccount{}, &OrderController{},&RefundController{},&ReceiptController{})
 func (p *ControllerRegister) Include(cList ...ControllerInterface) {
-	if BConfig.RunMode == DEV {
-		skip := make(map[string]bool, 10)
-		wgopath := utils.GetGOPATHs()
-		go111module := os.Getenv(`GO111MODULE`)
-		for _, c := range cList {
-			reflectVal := reflect.ValueOf(c)
-			t := reflect.Indirect(reflectVal).Type()
-			// for go modules
-			if go111module == `on` {
-				pkgpath := filepath.Join(WorkPath, "..", t.PkgPath())
-				if utils.FileExists(pkgpath) {
-					if pkgpath != "" {
-						if _, ok := skip[pkgpath]; !ok {
-							skip[pkgpath] = true
-							parserPkg(pkgpath, t.PkgPath())
-						}
-					}
-				}
-			} else {
-				if len(wgopath) == 0 {
-					panic("you are in dev mode. So please set gopath")
-				}
-				pkgpath := ""
-				for _, wg := range wgopath {
-					wg, _ = filepath.EvalSymlinks(filepath.Join(wg, "src", t.PkgPath()))
-					if utils.FileExists(wg) {
-						pkgpath = wg
-						break
-					}
-				}
-				if pkgpath != "" {
-					if _, ok := skip[pkgpath]; !ok {
-						skip[pkgpath] = true
-						parserPkg(pkgpath, t.PkgPath())
-					}
-				}
-			}
-		}
-	}
 	for _, c := range cList {
 		reflectVal := reflect.ValueOf(c)
 		t := reflect.Indirect(reflectVal).Type()
@@ -513,7 +472,9 @@ func (p *ControllerRegister) InsertFilterChain(pattern string, chain FilterChain
 	root := p.chainRoot
 	filterFunc := chain(root.filterFunc)
 	p.chainRoot = newFilterRouter(pattern, BConfig.RouterCaseSensitive, filterFunc, params...)
+	p.chainRoot.next = root
 }
+
 
 // add Filter into
 func (p *ControllerRegister) insertFilterRouter(pos int, mr *FilterRouter) (err error) {

@@ -43,7 +43,7 @@ import (
 )
 
 var (
-	// DefaultKey the collection name of redis for cache adapter.
+	// The collection name of redis for the cache adapter.
 	DefaultKey = "beecacheRedis"
 )
 
@@ -56,16 +56,16 @@ type Cache struct {
 	password string
 	maxIdle  int
 
-	// the timeout to a value less than the redis server's timeout.
+	// Timeout value (less than the redis server's timeout value)
 	timeout time.Duration
 }
 
-// NewRedisCache create new redis cache with default collection name.
+// NewRedisCache creates a new redis cache with default collection name.
 func NewRedisCache() cache.Cache {
 	return &Cache{key: DefaultKey}
 }
 
-// actually do the redis cmds, args[0] must be the key name.
+// Execute the redis commands. args[0] must be the key name
 func (rc *Cache) do(commandName string, args ...interface{}) (reply interface{}, err error) {
 	if len(args) < 1 {
 		return nil, errors.New("missing required arguments")
@@ -90,7 +90,7 @@ func (rc *Cache) Get(key string) interface{} {
 	return nil
 }
 
-// GetMulti get cache from redis.
+// GetMulti gets cache from redis.
 func (rc *Cache) GetMulti(keys []string) []interface{} {
 	c := rc.p.Get()
 	defer c.Close()
@@ -105,19 +105,19 @@ func (rc *Cache) GetMulti(keys []string) []interface{} {
 	return values
 }
 
-// Put put cache to redis.
+// Put puts cache into redis.
 func (rc *Cache) Put(key string, val interface{}, timeout time.Duration) error {
 	_, err := rc.do("SETEX", key, int64(timeout/time.Second), val)
 	return err
 }
 
-// Delete delete cache in redis.
+// Delete deletes a key's cache in redis.
 func (rc *Cache) Delete(key string) error {
 	_, err := rc.do("DEL", key)
 	return err
 }
 
-// IsExist check cache's existence in redis.
+// IsExist checks cache's existence in redis.
 func (rc *Cache) IsExist(key string) bool {
 	v, err := redis.Bool(rc.do("EXISTS", key))
 	if err != nil {
@@ -126,19 +126,19 @@ func (rc *Cache) IsExist(key string) bool {
 	return v
 }
 
-// Incr increase counter in redis.
+// Incr increases a key's counter in redis.
 func (rc *Cache) Incr(key string) error {
 	_, err := redis.Bool(rc.do("INCRBY", key, 1))
 	return err
 }
 
-// Decr decrease counter in redis.
+// Decr decreases a key's counter in redis.
 func (rc *Cache) Decr(key string) error {
 	_, err := redis.Bool(rc.do("INCRBY", key, -1))
 	return err
 }
 
-// ClearAll clean all cache in redis. delete this redis collection.
+// ClearAll deletes all cache in the redis collection
 func (rc *Cache) ClearAll() error {
 	cachedKeys, err := rc.Scan(rc.key + ":*")
 	if err != nil {
@@ -154,7 +154,7 @@ func (rc *Cache) ClearAll() error {
 	return err
 }
 
-// Scan scan all keys matching the pattern. a better choice than `keys`
+// Scan scans all keys matching a given pattern.
 func (rc *Cache) Scan(pattern string) (keys []string, err error) {
 	c := rc.p.Get()
 	defer c.Close()
@@ -183,10 +183,9 @@ func (rc *Cache) Scan(pattern string) (keys []string, err error) {
 	}
 }
 
-// StartAndGC start redis cache adapter.
-// config is like {"key":"collection key","conn":"connection info","dbNum":"0"}
-// the cache item in redis are stored forever,
-// so no gc operation.
+// StartAndGC starts the redis cache adapter.
+// config: must be in this format {"key":"collection key","conn":"connection info","dbNum":"0"}
+// Cached items in redis are stored forever, no garbage collection happens
 func (rc *Cache) StartAndGC(config string) error {
 	var cf map[string]string
 	json.Unmarshal([]byte(config), &cf)

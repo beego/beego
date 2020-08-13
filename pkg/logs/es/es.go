@@ -16,7 +16,7 @@ import (
 	"github.com/astaxie/beego/pkg/logs"
 )
 
-// NewES return a LoggerInterface
+// NewES returns a LoggerInterface
 func NewES() logs.Logger {
 	cw := &esLogger{
 		Level: logs.LevelDebug,
