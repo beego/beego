@@ -397,11 +397,13 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string, v ...interface{}) error 
 	}
 
 	if bl.asynchronous {
-		lm := logMsgPool.Get().(*LogMsg)
+		logM := logMsgPool.Get().(*LogMsg)
+		logM.Msg = msg
+		logM.When = when
 		if bl.outputs != nil {
-			bl.msgChan <- lm
+			bl.msgChan <- logM
 		} else {
-			logMsgPool.Put(lm)
+			logMsgPool.Put(logM)
 		}
 	} else {
 		bl.writeToLoggers(lm)
