@@ -36,7 +36,7 @@ type SMTPWriter struct {
 	Level              int      `json:"level"`
 }
 
-// NewSMTPWriter create smtp writer.
+// NewSMTPWriter creates the smtp writer.
 func newSMTPWriter() Logger {
 	return &SMTPWriter{Level: LevelTrace}
 }

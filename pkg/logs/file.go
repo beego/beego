@@ -32,7 +32,7 @@ import (
 )
 
 // fileLogWriter implements LoggerInterface.
-// It writes messages by lines limit, file size limit, or time frequency.
+// Writes messages by lines limit, file size limit, or time frequency.
 type fileLogWriter struct {
 	sync.RWMutex // write log order by order and  atomic incr maxLinesCurLines and maxSizeCurSize
 	// The opened file
@@ -75,7 +75,7 @@ type fileLogWriter struct {
 	OldLoggerAdapter
 }
 
-// newFileWriter create a FileLogWriter returning as LoggerInterface.
+// newFileWriter creates a FileLogWriter returning as LoggerInterface.
 func newFileWriter() Logger {
 	w := &fileLogWriter{
 		Daily:      true,
@@ -302,7 +302,7 @@ func (w *fileLogWriter) lines() (int, error) {
 	return count, nil
 }
 
-// DoRotate means it need to write file in new file.
+// DoRotate means it needs to write logs into a new file.
 // new file name like xx.2013-01-01.log (daily) or xx.001.log (by line or size)
 func (w *fileLogWriter) doRotate(logTime time.Time) error {
 	// file exists
@@ -413,7 +413,7 @@ func (w *fileLogWriter) Destroy() {
 	w.fileWriter.Close()
 }
 
-// Flush flush file logger.
+// Flush flushes file logger.
 // there are no buffering messages in file logger in memory.
 // flush file means sync file from disk.
 func (w *fileLogWriter) Flush() {

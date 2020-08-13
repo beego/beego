@@ -20,7 +20,7 @@ type JLWriter struct {
 	Level       int    `json:"level"`
 }
 
-// newJLWriter create jiaoliao writer.
+// newJLWriter creates jiaoliao writer.
 func newJLWriter() Logger {
 	return &JLWriter{Level: LevelTrace}
 }

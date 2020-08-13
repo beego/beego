@@ -20,7 +20,7 @@ type errorMessage struct {
 	Message string `json:"errorMessage"`
 }
 
-// LogProject Define the Ali Project detail
+// LogProject defines the Ali Project detail
 type LogProject struct {
 	Name            string // Project name
 	Endpoint        string // IP or hostname of SLS endpoint
