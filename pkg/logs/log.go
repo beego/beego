@@ -701,6 +701,9 @@ func SetLogger(adapter string, config ...string) error {
 	return beeLogger.SetLogger(adapter, config...)
 }
 
+// SetLoggerWIthOpts sets a given log adapter with a custom log adapter.
+// Log Adapter must be given in the form common.SimpleKV{Key: "formatter": Value: struct.FormatFunc}
+// where FormatFunc has the signature func(*LogMsg) string
 func SetLoggerWithOpts(adapter string, config []string, opts common.SimpleKV) error {
 	return beeLogger.SetLoggerWithOpts(adapter, opts, config...)
 }
@@ -710,10 +713,14 @@ func (bl *BeeLogger) setGlobalFormatter(fmtter func(*LogMsg) string) error {
 	return nil
 }
 
+// SetGlobalFormatter sets the global formatter for all log adapters
+// This overrides and other individually set adapter
 func SetGlobalFormatter(fmtter func(*LogMsg) string) error {
 	return beeLogger.setGlobalFormatter(fmtter)
 }
 
+// EnableFullFilePath enables full file path logging. Disabled by default
+// e.g "/home/Documents/GitHub/beego/mainapp/" instead of "mainapp"
 func EnableFullFilePath(b bool) {
 	beeLogger.enableFullFilePath = b
 }
