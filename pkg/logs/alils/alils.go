@@ -4,8 +4,8 @@ import (
 	"encoding/json"
 	"strings"
 	"sync"
-	"time"
 
+	"github.com/astaxie/beego/pkg/common"
 	"github.com/astaxie/beego/pkg/logs"
 	"github.com/gogo/protobuf/proto"
 )
@@ -39,6 +39,7 @@ type aliLSWriter struct {
 	groupMap map[string]*LogGroup
 	lock     *sync.Mutex
 	Config
+	logs.OldLoggerAdapter
 }
 
 // NewAliLS create a new Logger
@@ -103,10 +104,20 @@ func (c *aliLSWriter) Init(jsonConfig string) (err error) {
 
 // WriteMsg write message in connection.
 // if connection is down, try to re-connect.
-func (c *aliLSWriter) WriteMsg(when time.Time, msg string, level int) (err error) {
+func (c *aliLSWriter) WriteMsg(lm *logs.LogMsg, opts ...common.SimpleKV) (err error) {
 
-	if level > c.Level {
+	if lm.Level > c.Level {
 		return nil
+	}
+
+	msg := ""
+	for _, elem := range opts {
+		if elem.Key == "formatterFunc" {
+			formatterFunc := elem.Value.(func(*logs.LogMsg) string)
+			msg = formatterFunc(lm)
+		} else {
+			msg = lm.Msg
+		}
 	}
 
 	var topic string
@@ -115,7 +126,7 @@ func (c *aliLSWriter) WriteMsg(when time.Time, msg string, level int) (err error
 	if c.withMap {
 
 		// Topic，LogGroup
-		strs := strings.SplitN(msg, Delimiter, 2)
+		strs := strings.SplitN(lm.Msg, Delimiter, 2)
 		if len(strs) == 2 {
 			pos := strings.LastIndex(strs[0], " ")
 			topic = strs[0][pos+1 : len(strs[0])]
@@ -139,7 +150,7 @@ func (c *aliLSWriter) WriteMsg(when time.Time, msg string, level int) (err error
 	}
 
 	l := &Log{
-		Time: proto.Uint32(uint32(when.Unix())),
+		Time: proto.Uint32(uint32(lm.When.Unix())),
 		Contents: []*LogContent{
 			c1,
 		},

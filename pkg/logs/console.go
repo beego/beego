@@ -18,8 +18,8 @@ import (
 	"encoding/json"
 	"os"
 	"strings"
-	"time"
 
+	"github.com/astaxie/beego/pkg/common"
 	"github.com/shiena/ansicolor"
 )
 
@@ -48,7 +48,9 @@ var colors = []brush{
 
 // consoleWriter implements LoggerInterface and writes messages to terminal.
 type consoleWriter struct {
+	OldLoggerAdapter
 	lg       *logWriter
+	fmtter   LogFormatter
 	Level    int  `json:"level"`
 	Colorful bool `json:"color"` //this filed is useful only when system's terminal supports color
 }
@@ -59,6 +61,9 @@ func NewConsole() Logger {
 		lg:       newLogWriter(ansicolor.NewAnsiColorWriter(os.Stdout)),
 		Level:    LevelDebug,
 		Colorful: true,
+		fmtter: &consoleDefaultFormatter{
+			colorful: true,
+		},
 	}
 	return cw
 }
@@ -72,15 +77,48 @@ func (c *consoleWriter) Init(jsonConfig string) error {
 	return json.Unmarshal([]byte(jsonConfig), c)
 }
 
+type consoleDefaultFormatter struct {
+	colorful bool
+}
+
+func (cdf *consoleDefaultFormatter) Format(lm *LogMsg) string {
+	msg := lm.Msg
+	if cdf.colorful {
+		msg = strings.Replace(lm.Msg, levelPrefix[lm.Level], colors[lm.Level](levelPrefix[lm.Level]), 1)
+	}
+
+	h, _, _ := formatTimeHeader(lm.When)
+	bytes := append(append(h, msg...), '\n')
+
+	return string(bytes)
+}
+
 // WriteMsg write message in console.
-func (c *consoleWriter) WriteMsg(when time.Time, msg string, level int) error {
-	if level > c.Level {
+func (c *consoleWriter) WriteMsg(lm *LogMsg, opts ...common.SimpleKV) error {
+	usesCustomFormatter := false
+	msg := ""
+
+	if lm.Level > c.Level {
 		return nil
 	}
 	if c.Colorful {
-		msg = strings.Replace(msg, levelPrefix[level], colors[level](levelPrefix[level]), 1)
+		lm.Msg = strings.Replace(lm.Msg, levelPrefix[lm.Level], colors[lm.Level](levelPrefix[lm.Level]), 1)
 	}
-	c.lg.writeln(when, msg)
+
+	for _, elem := range opts {
+		if elem.Key == "formatterFunc" {
+			usesCustomFormatter = true
+			goodFunc := elem.Value.(func(*LogMsg) string)
+			msg = goodFunc(lm)
+			msg += "\n"
+		}
+	}
+
+	if !usesCustomFormatter {
+		msg = c.fmtter.Format(lm)
+	}
+
+	c.lg.writeln(msg)
 	return nil
 }
 

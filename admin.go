@@ -28,7 +28,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/astaxie/beego/grace"
-	"github.com/astaxie/beego/logs"
+	"github.com/astaxie/beego/pkg/logs"
 	"github.com/astaxie/beego/toolbox"
 	"github.com/astaxie/beego/utils"
 )

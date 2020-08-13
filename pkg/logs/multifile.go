@@ -16,7 +16,8 @@ package logs
 
 import (
 	"encoding/json"
-	"time"
+
+	"github.com/astaxie/beego/pkg/common"
 )
 
 // A filesLogWriter manages several fileLogWriter
@@ -25,6 +26,7 @@ import (
 // and write the error-level logs to project.error.log and write the debug-level logs to project.debug.log
 // the rotate attribute also  acts like fileLogWriter
 type multiFileLogWriter struct {
+	OldLoggerAdapter
 	writers       [LevelDebug + 1 + 1]*fileLogWriter // the last one for fullLogWriter
 	fullLogWriter *fileLogWriter
 	Separate      []string `json:"separate"`
@@ -87,14 +89,33 @@ func (f *multiFileLogWriter) Destroy() {
 	}
 }
 
-func (f *multiFileLogWriter) WriteMsg(when time.Time, msg string, level int) error {
+func (f *multiFileLogWriter) WriteMsg(lm *LogMsg, opts ...common.SimpleKV) error {
+	useCustomFormatter := false
+
 	if f.fullLogWriter != nil {
-		f.fullLogWriter.WriteMsg(when, msg, level)
+		for _, elem := range opts {
+			if elem.Key == "formatterFunc" {
+				f.fullLogWriter.WriteMsg(lm, elem)
+				useCustomFormatter = true
+			}
+		}
+		if !useCustomFormatter {
+			f.fullLogWriter.WriteMsg(lm, common.SimpleKV{})
+		}
 	}
+
 	for i := 0; i < len(f.writers)-1; i++ {
 		if f.writers[i] != nil {
-			if level == f.writers[i].Level {
-				f.writers[i].WriteMsg(when, msg, level)
+			if lm.Level == f.writers[i].Level {
+				for _, elem := range opts {
+					if elem.Key == "formatterFunc" {
+						f.fullLogWriter.WriteMsg(lm, elem)
+						useCustomFormatter = true
+					}
+				}
+				if !useCustomFormatter {
+					f.fullLogWriter.WriteMsg(lm, common.SimpleKV{})
+				}
 			}
 		}
 	}

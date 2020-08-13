@@ -33,7 +33,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/astaxie/beego/logs"
+	"github.com/astaxie/beego/pkg/logs"
 	"github.com/astaxie/beego/orm"
 )
 

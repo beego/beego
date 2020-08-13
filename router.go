@@ -29,7 +29,7 @@ import (
 
 	beecontext "github.com/astaxie/beego/context"
 	"github.com/astaxie/beego/context/param"
-	"github.com/astaxie/beego/logs"
+	"github.com/astaxie/beego/pkg/logs"
 	"github.com/astaxie/beego/toolbox"
 	"github.com/astaxie/beego/utils"
 )

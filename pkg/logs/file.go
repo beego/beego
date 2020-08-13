@@ -27,6 +27,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/astaxie/beego/pkg/common"
 )
 
 // fileLogWriter implements LoggerInterface.
@@ -69,6 +71,8 @@ type fileLogWriter struct {
 	RotatePerm string `json:"rotateperm"`
 
 	fileNameOnly, suffix string // like "project.log", project is fileNameOnly and .log is suffix
+
+	OldLoggerAdapter
 }
 
 // newFileWriter create a FileLogWriter returning as LoggerInterface.
@@ -144,28 +148,28 @@ func (w *fileLogWriter) needRotateHourly(size int, hour int) bool {
 }
 
 // WriteMsg write logger message into file.
-func (w *fileLogWriter) WriteMsg(when time.Time, msg string, level int) error {
-	if level > w.Level {
+func (w *fileLogWriter) WriteMsg(lm *LogMsg, opts ...common.SimpleKV) error {
+	if lm.Level > w.Level {
 		return nil
 	}
-	hd, d, h := formatTimeHeader(when)
-	msg = string(hd) + msg + "\n"
+	hd, d, h := formatTimeHeader(lm.When)
+	lm.Msg = string(hd) + lm.Msg + "\n"
 	if w.Rotate {
 		w.RLock()
-		if w.needRotateHourly(len(msg), h) {
+		if w.needRotateHourly(len(lm.Msg), h) {
 			w.RUnlock()
 			w.Lock()
-			if w.needRotateHourly(len(msg), h) {
-				if err := w.doRotate(when); err != nil {
+			if w.needRotateHourly(len(lm.Msg), h) {
+				if err := w.doRotate(lm.When); err != nil {
 					fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
 				}
 			}
 			w.Unlock()
-		} else if w.needRotateDaily(len(msg), d) {
+		} else if w.needRotateDaily(len(lm.Msg), d) {
 			w.RUnlock()
 			w.Lock()
-			if w.needRotateDaily(len(msg), d) {
-				if err := w.doRotate(when); err != nil {
+			if w.needRotateDaily(len(lm.Msg), d) {
+				if err := w.doRotate(lm.When); err != nil {
 					fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
 				}
 			}
@@ -176,10 +180,22 @@ func (w *fileLogWriter) WriteMsg(when time.Time, msg string, level int) error {
 	}
 
 	w.Lock()
-	_, err := w.fileWriter.Write([]byte(msg))
+
+	res := ""
+
+	for _, elem := range opts {
+		if elem.Key == "formatterFunc" {
+			formatterFunc := elem.Value.(func(*LogMsg) string)
+			res = formatterFunc(lm)
+		} else {
+			res = lm.Msg
+		}
+	}
+
+	_, err := w.fileWriter.Write([]byte(res))
 	if err == nil {
 		w.maxLinesCurLines++
-		w.maxSizeCurSize += len(msg)
+		w.maxSizeCurSize += len(lm.Msg)
 	}
 	w.Unlock()
 	return err

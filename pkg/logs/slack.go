@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"time"
+
+	"github.com/astaxie/beego/pkg/common"
 )
 
 // SLACKWriter implements beego LoggerInterface and is used to send jiaoliao webhook
@@ -26,12 +27,22 @@ func (s *SLACKWriter) Init(jsonconfig string) error {
 
 // WriteMsg write message in smtp writer.
 // it will send an email with subject and only this message.
-func (s *SLACKWriter) WriteMsg(when time.Time, msg string, level int) error {
-	if level > s.Level {
+func (s *SLACKWriter) WriteMsg(lm *LogMsg, opts ...common.SimpleKV) error {
+	if lm.Level > s.Level {
 		return nil
 	}
 
-	text := fmt.Sprintf("{\"text\": \"%s %s\"}", when.Format("2006-01-02 15:04:05"), msg)
+	msg := ""
+	for _, elem := range opts {
+		if elem.Key == "formatterFunc" {
+			formatterFunc := elem.Value.(func(*LogMsg) string)
+			msg = formatterFunc(lm)
+		} else {
+			msg = lm.Msg
+		}
+	}
+
+	text := fmt.Sprintf("{\"text\": \"%s %s\"}", lm.When.Format("2006-01-02 15:04:05"), msg)
 
 	form := url.Values{}
 	form.Add("payload", text)

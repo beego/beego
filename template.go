@@ -27,7 +27,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/astaxie/beego/logs"
+	"github.com/astaxie/beego/pkg/logs"
 	"github.com/astaxie/beego/utils"
 )
 

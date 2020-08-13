@@ -281,7 +281,15 @@ func testFileRotate(t *testing.T, fn1, fn2 string, daily, hourly bool) {
 		fw.hourlyOpenDate = fw.hourlyOpenTime.Day()
 	}
 
-	fw.WriteMsg(time.Now(), "this is a msg for test", LevelDebug)
+	testMsg := &LogMsg{
+		When:       time.Now(),
+		Level:      1,
+		Msg:        "Hello world",
+		FilePath:   "/home/user/beego",
+		LineNumber: 625,
+	}
+
+	fw.WriteMsg(testMsg)
 
 	for _, file := range []string{fn1, fn2} {
 		_, err := os.Stat(file)

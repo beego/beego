@@ -18,12 +18,14 @@ import (
 	"encoding/json"
 	"io"
 	"net"
-	"time"
+
+	"github.com/astaxie/beego/pkg/common"
 )
 
 // connWriter implements LoggerInterface.
 // it writes messages in keep-live tcp connection.
 type connWriter struct {
+	OldLoggerAdapter
 	lg             *logWriter
 	innerWriter    io.WriteCloser
 	ReconnectOnMsg bool   `json:"reconnectOnMsg"`
@@ -48,8 +50,8 @@ func (c *connWriter) Init(jsonConfig string) error {
 
 // WriteMsg write message in connection.
 // if connection is down, try to re-connect.
-func (c *connWriter) WriteMsg(when time.Time, msg string, level int) error {
-	if level > c.Level {
+func (c *connWriter) WriteMsg(lm *LogMsg, opts ...common.SimpleKV) error {
+	if lm.Level > c.Level {
 		return nil
 	}
 	if c.needToConnectOnMsg() {
@@ -63,7 +65,17 @@ func (c *connWriter) WriteMsg(when time.Time, msg string, level int) error {
 		defer c.innerWriter.Close()
 	}
 
-	_, err := c.lg.writeln(when, msg)
+	msg := ""
+	for _, elem := range opts {
+		if elem.Key == "formatterFunc" {
+			formatterFunc := elem.Value.(func(*LogMsg) string)
+			msg = formatterFunc(lm)
+		} else {
+			msg = lm.Msg
+		}
+	}
+
+	_, err := c.lg.writeln(msg)
 	if err != nil {
 		return err
 	}

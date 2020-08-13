@@ -509,12 +509,11 @@ func (p *ControllerRegister) InsertFilter(pattern string, pos int, filter Filter
 //           // do something
 //     }
 // }
-func (p *ControllerRegister) InsertFilterChain(pattern string, chain FilterChain, params...bool)  {
+func (p *ControllerRegister) InsertFilterChain(pattern string, chain FilterChain, params ...bool) {
 	root := p.chainRoot
 	filterFunc := chain(root.filterFunc)
 	p.chainRoot = newFilterRouter(pattern, BConfig.RouterCaseSensitive, filterFunc, params...)
 }
-
 
 // add Filter into
 func (p *ControllerRegister) insertFilterRouter(pos int, mr *FilterRouter) (err error) {

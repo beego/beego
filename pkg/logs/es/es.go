@@ -12,6 +12,7 @@ import (
 	"github.com/elastic/go-elasticsearch/v6"
 	"github.com/elastic/go-elasticsearch/v6/esapi"
 
+	"github.com/astaxie/beego/pkg/common"
 	"github.com/astaxie/beego/pkg/logs"
 )
 
@@ -28,9 +29,10 @@ func NewES() logs.Logger {
 // please import this package
 // usually means that you can import this package in your main package
 // for example, anonymous:
-// import _ "github.com/astaxie/beego/logs/es"
+// import _ "github.com/astaxie/beego/pkg/logs/es"
 type esLogger struct {
 	*elasticsearch.Client
+	logs.OldLoggerAdapter
 	DSN   string `json:"dsn"`
 	Level int    `json:"level"`
 }
@@ -60,13 +62,23 @@ func (el *esLogger) Init(jsonconfig string) error {
 }
 
 // WriteMsg will write the msg and level into es
-func (el *esLogger) WriteMsg(when time.Time, msg string, level int) error {
-	if level > el.Level {
+func (el *esLogger) WriteMsg(lm *logs.LogMsg, opts ...common.SimpleKV) error {
+	if lm.Level > el.Level {
 		return nil
 	}
 
+	msg := ""
+	for _, elem := range opts {
+		if elem.Key == "formatterFunc" {
+			formatterFunc := elem.Value.(func(*logs.LogMsg) string)
+			msg = formatterFunc(lm)
+		} else {
+			msg = lm.Msg
+		}
+	}
+
 	idx := LogDocument{
-		Timestamp: when.Format(time.RFC3339),
+		Timestamp: lm.When.Format(time.RFC3339),
 		Msg:       msg,
 	}
 
@@ -75,7 +87,7 @@ func (el *esLogger) WriteMsg(when time.Time, msg string, level int) error {
 		return err
 	}
 	req := esapi.IndexRequest{
-		Index:        fmt.Sprintf("%04d.%02d.%02d", when.Year(), when.Month(), when.Day()),
+		Index:        fmt.Sprintf("%04d.%02d.%02d", lm.When.Year(), lm.When.Month(), lm.When.Day()),
 		DocumentType: "logs",
 		Body:         strings.NewReader(string(body)),
 	}
