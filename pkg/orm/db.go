@@ -486,7 +486,7 @@ func (d *dbBase) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []s
 				return res.RowsAffected()
 			}
 
-			lastInsertId, err:=res.LastInsertId()
+			lastInsertId, err := res.LastInsertId()
 			if err != nil {
 				DebugLog.Println("[WARN] return LastInsertId error:", err)
 			}
@@ -591,7 +591,12 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a
 			if isMulti {
 				return res.RowsAffected()
 			}
-			return res.LastInsertId()
+
+			lastInsertId, err := res.LastInsertId()
+			if err != nil {
+				DebugLog.Println("[WARN] return LastInsertId error:", err)
+			}
+			return lastInsertId, nil
 		}
 		return 0, err
 	}
