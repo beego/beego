@@ -135,8 +135,8 @@ type BeeLogger struct {
 	init                bool
 	enableFuncCallDepth bool
 	loggerFuncCallDepth int
-	GlobalFormatter     func(*LogMsg) string
-	EnableFullFilePath  bool
+	globalFormatter     func(*LogMsg) string
+	enableFullFilePath  bool
 	asynchronous        bool
 	prefix              string
 	msgChanLen          int64
@@ -317,15 +317,18 @@ func (bl *BeeLogger) writeToLoggers(lm *LogMsg) {
 		// Use a custom formatter if set
 		if l.Formatter != nil {
 			// Global formatter overrides any singular formatter that is set
-			if bl.GlobalFormatter != nil {
-				err = l.WriteMsg(lm, common.SimpleKV{Key: "formatterFunc", Value: bl.GlobalFormatter})
+			if bl.globalFormatter != nil {
+				err = l.WriteMsg(lm, common.SimpleKV{Key: "formatterFunc", Value: bl.globalFormatter})
 			} else {
 				err = l.WriteMsg(lm, common.SimpleKV{Key: "formatterFunc", Value: l.Formatter})
 			}
 		} else {
-			if bl.GlobalFormatter != nil {
-				err = l.WriteMsg(lm, common.SimpleKV{Key: "formatterFunc", Value: bl.GlobalFormatter})
+			// SetLoggerWithOpts() was not set but GlobalFormatter can still be used
+			if bl.globalFormatter != nil {
+				err = l.WriteMsg(lm, common.SimpleKV{Key: "formatterFunc", Value: bl.globalFormatter})
 			} else {
+				// No global or custom logger was set, use the default APACHE_FORMAT (or JSON_FORMAT if set
+				// with beego.BConfig.Log.AccessLogsFormat = "JSON_FORMAT")
 				err = l.WriteMsg(lm, common.SimpleKV{})
 			}
 		}
@@ -379,7 +382,7 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string, v ...interface{}) error 
 			line = 0
 		}
 
-		if !bl.EnableFullFilePath {
+		if !bl.enableFullFilePath {
 			_, file = path.Split(file)
 		}
 	}
@@ -703,7 +706,7 @@ func SetLoggerWithOpts(adapter string, config []string, opts common.SimpleKV) er
 }
 
 func (bl *BeeLogger) setGlobalFormatter(fmtter func(*LogMsg) string) error {
-	bl.GlobalFormatter = fmtter
+	bl.globalFormatter = fmtter
 	return nil
 }
 
@@ -712,7 +715,7 @@ func SetGlobalFormatter(fmtter func(*LogMsg) string) error {
 }
 
 func EnableFullFilePath(b bool) {
-	beeLogger.EnableFullFilePath = b
+	beeLogger.enableFullFilePath = b
 }
 
 // Emergency logs a message at emergency level.
