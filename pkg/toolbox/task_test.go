@@ -15,7 +15,6 @@
 package toolbox
 
 import (
-	"errors"
 	"fmt"
 	"sync"
 	"testing"
@@ -61,7 +60,7 @@ func TestTask_Run(t *testing.T) {
 	task := func() error {
 		cnt++
 		fmt.Printf("Hello, world! %d \n", cnt)
-		return errors.New(fmt.Sprintf("Hello, world! %d", cnt))
+		return fmt.Errorf("Hello, world! %d", cnt)
 	}
 	tk := NewTask("taska", "0/30 * * * * *", task)
 	for i := 0; i < 200; i++ {

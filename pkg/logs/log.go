@@ -34,7 +34,6 @@
 package logs
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -252,7 +251,7 @@ func (bl *BeeLogger) setLoggerWithOpts(adapterName string, opts common.SimpleKV,
 	}
 
 	if opts.Key == nil {
-		return errors.New(fmt.Sprintf("No SimpleKV struct set for %s log adapter", adapterName))
+		return fmt.Errorf("No SimpleKV struct set for %s log adapter", adapterName)
 	}
 
 	if strings.ToLower(opts.Key.(string)) == "formatter" {
@@ -263,7 +262,7 @@ func (bl *BeeLogger) setLoggerWithOpts(adapterName string, opts common.SimpleKV,
 		return nil
 	}
 
-	return errors.New(fmt.Sprintf("No formatter set for %s log adapter", adapterName))
+	return fmt.Errorf("No formatter set for %s log adapter", adapterName)
 }
 
 // SetLogger provides a given logger adapter into BeeLogger with config string.
