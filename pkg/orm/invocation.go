@@ -1,4 +1,4 @@
-// Copyright 2020 beego 
+// Copyright 2020 beego
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 package orm
 
 import (
+	"context"
 	"time"
 )
 
@@ -22,29 +23,29 @@ import (
 type Invocation struct {
 	Method string
 	// Md may be nil in some cases. It depends on method
-	Md     interface{}
+	Md interface{}
 	// the args are all arguments except context.Context
-	Args   []interface{}
+	Args []interface{}
 
 	mi *modelInfo
 	// f is the Orm operation
-	f  func()
+	f func(ctx context.Context)
 
 	// insideTx indicates whether this is inside a transaction
-	InsideTx bool
+	InsideTx    bool
 	TxStartTime time.Time
-	TxName string
+	TxName      string
 }
 
 func (inv *Invocation) GetTableName() string {
-	if inv.mi != nil{
+	if inv.mi != nil {
 		return inv.mi.table
 	}
 	return ""
 }
 
-func (inv *Invocation) execute() {
-	inv.f()
+func (inv *Invocation) execute(ctx context.Context) {
+	inv.f(ctx)
 }
 
 // GetPkFieldName return the primary key of this table

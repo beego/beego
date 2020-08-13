@@ -96,10 +96,10 @@ type TxBeginner interface {
 	BeginWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions) (TxOrmer, error)
 
 	//closure control transaction
-	DoTx(task func(txOrm TxOrmer) error) error
-	DoTxWithCtx(ctx context.Context, task func(txOrm TxOrmer) error) error
-	DoTxWithOpts(opts *sql.TxOptions, task func(txOrm TxOrmer) error) error
-	DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task func(txOrm TxOrmer) error) error
+	DoTx(task func(ctx context.Context, txOrm TxOrmer) error) error
+	DoTxWithCtx(ctx context.Context, task func(ctx context.Context, txOrm TxOrmer) error) error
+	DoTxWithOpts(opts *sql.TxOptions, task func(ctx context.Context, txOrm TxOrmer) error) error
+	DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task func(ctx context.Context, txOrm TxOrmer) error) error
 }
 
 type TxCommitter interface {

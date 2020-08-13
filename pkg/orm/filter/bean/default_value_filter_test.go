@@ -37,7 +37,6 @@ func TestDefaultValueFilterChainBuilder_FilterChain(t *testing.T) {
 	entity = &DefaultValueTestEntity{}
 	orm.RegisterModel(entity)
 
-
 	_, _ = o.InsertOrUpdate(entity)
 	assert.Equal(t, 12, entity.Age)
 	assert.Equal(t, 13, entity.AgeInOldStyle)
@@ -66,7 +65,7 @@ type defaultValueTestOrm struct {
 }
 
 type DefaultValueTestEntity struct {
-	Id int`orm:pk`
+	Id            int
 	Age           int `default:"12"`
 	AgeInOldStyle int `orm:"default(13);bee()"`
 	AgeIgnore     int

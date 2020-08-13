@@ -28,7 +28,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	// As tidb can't use go get, so disable the tidb testing now
 	// _ "github.com/pingcap/tidb"
-
 )
 
 // A slice string field.
@@ -420,6 +419,11 @@ type UintPk struct {
 type PtrPk struct {
 	ID       *IntegerPk `orm:"pk;rel(one)"`
 	Positive bool
+}
+
+type StrPk struct {
+	Id    string  `orm:"column(id);size(64);pk"`
+	Value string
 }
 
 var DBARGS = struct {
