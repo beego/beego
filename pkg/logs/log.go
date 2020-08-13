@@ -136,6 +136,7 @@ type BeeLogger struct {
 	enableFuncCallDepth bool
 	loggerFuncCallDepth int
 	GlobalFormatter     func(*LogMsg) string
+	EnableFullFilePath  bool
 	asynchronous        bool
 	prefix              string
 	msgChanLen          int64
@@ -376,6 +377,10 @@ func (bl *BeeLogger) writeMsg(logLevel int, msg string, v ...interface{}) error 
 		if !ok {
 			file = "???"
 			line = 0
+		}
+
+		if !bl.EnableFullFilePath {
+			_, file = path.Split(file)
 		}
 	}
 
@@ -704,6 +709,10 @@ func (bl *BeeLogger) setGlobalFormatter(fmtter func(*LogMsg) string) error {
 
 func SetGlobalFormatter(fmtter func(*LogMsg) string) error {
 	return beeLogger.setGlobalFormatter(fmtter)
+}
+
+func EnableFullFilePath(b bool) {
+	beeLogger.EnableFullFilePath = b
 }
 
 // Emergency logs a message at emergency level.
