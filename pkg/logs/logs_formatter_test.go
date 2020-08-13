@@ -16,6 +16,8 @@ package logs
 
 import (
 	"log"
+	"os"
+	"testing"
 
 	"github.com/astaxie/beego/pkg/common"
 )
@@ -24,21 +26,25 @@ type customLogFormatter struct {
 }
 
 func (clf *customLogFormatter) Format(lm *LogMsg) string {
-	return lm.FilePath + lm.When.String() + lm.Msg
+	return "[CONSOLE]" + lm.FilePath + lm.When.String() + lm.Msg
+}
+
+func (clf *customLogFormatter) Format2(lm *LogMsg) string {
+	return "[FILE]" + lm.FilePath + lm.When.String() + lm.Msg
 }
 
 func (clf *customLogFormatter) GlobalFormat(lm *LogMsg) string {
 	return "[Global]" + lm.FilePath + lm.When.String() + lm.Msg
 }
 
-func testCustomFormatter() {
+func TestCustomFormatter(t *testing.T) {
 	fmtter := &customLogFormatter{}
 
 	SetLoggerWithOpts("console", []string{""}, common.SimpleKV{Key: "formatter", Value: fmtter.Format})
 	return
 }
 
-func testGlobalFormatter() {
+func TestGlobalFormatter(t *testing.T) {
 	fmtter := &customLogFormatter{}
 
 	err := SetLoggerWithOpts("console", []string{""}, common.SimpleKV{Key: "formatter", Value: fmtter.Format})
@@ -46,5 +52,24 @@ func testGlobalFormatter() {
 		log.Fatal(err)
 	}
 
+	err = SetLoggerWithOpts("file", []string{`{"filename":"tester.log"}`}, common.SimpleKV{Key: "formatter", Value: fmtter.Format2})
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	os.Remove("tester.log")
+
 	SetGlobalFormatter(fmtter.GlobalFormat)
+}
+
+func TestDuplicateAdapterFormatter(t *testing.T) {
+	fmtter := &customLogFormatter{}
+
+	SetLogger("console")
+
+	err := SetLoggerWithOpts("console", []string{``}, common.SimpleKV{Key: "formatter", Value: fmtter.Format2})
+	if err == nil {
+		t.Fatal("duplicate log adapter console was set without failure")
+	}
+
 }
