@@ -2538,7 +2538,7 @@ func TestStrPkInsert(t *testing.T) {
 	var err error
 	_, err = dORM.Insert(strPk)
 	throwFailNow(t, AssertIs(err, nil))
- 
+
 	var vForTesting StrPk
 	err = dORM.QueryTable(new(StrPk)).Filter(`id`, pk).One(&vForTesting)
 	throwFailNow(t, AssertIs(err, nil))
@@ -2549,12 +2549,19 @@ func TestStrPkInsert(t *testing.T) {
 		Id:    pk,
 		Value: value2,
 	}
+	
 	_, err = dORM.InsertOrUpdate(strPkForUpsert, `id`)
-	throwFailNow(t, AssertIs(err, nil))
-
-	var vForTesting2 StrPk
-	err = dORM.QueryTable(new(StrPk)).Filter(`id`, pk).One(&vForTesting2)
-	throwFailNow(t, AssertIs(err, nil))
-	throwFailNow(t, AssertIs(vForTesting2.Value, value2))
+	if err != nil {
+		fmt.Println(err)
+		if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego" {
+		} else {
+			throwFailNow(t, err)
+		}
+	} else {
+		var vForTesting2 StrPk
+		err = dORM.QueryTable(new(StrPk)).Filter(`id`, pk).One(&vForTesting2)
+		throwFailNow(t, AssertIs(err, nil))
+		throwFailNow(t, AssertIs(vForTesting2.Value, value2))
+	}
 }
 
