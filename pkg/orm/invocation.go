@@ -47,3 +47,12 @@ func (inv *Invocation) GetTableName() string {
 func (inv *Invocation) execute(ctx context.Context) {
 	inv.f(ctx)
 }
+
+// GetPkFieldName return the primary key of this table
+// if not found, "" is returned
+func (inv *Invocation) GetPkFieldName() string {
+	if inv.mi.fields.pk != nil {
+		return inv.mi.fields.pk.name
+	}
+	return ""
+}
