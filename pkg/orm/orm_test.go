@@ -777,6 +777,19 @@ func TestCustomField(t *testing.T) {
 
 	throwFailNow(t, AssertIs(user.Extra.Name, "beego"))
 	throwFailNow(t, AssertIs(user.Extra.Data, "orm"))
+
+	var users []User
+	n, err := dORM.Raw("select * from user where id = 2").QueryRows(&users)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(n, 1))
+	throwFailNow(t, AssertIs(users[0].Extra.Name, "beego"))
+	throwFailNow(t, AssertIs(users[0].Extra.Data, "orm"))
+
+	user = User{}
+	err = dORM.Raw("select * from user where id = 2").QueryRow(&user)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(users[0].Extra.Name, "beego"))
+	throwFailNow(t, AssertIs(users[0].Extra.Data, "orm"))
 }
 
 func TestExpr(t *testing.T) {
@@ -2543,4 +2556,3 @@ func TestStrPkInsert(t *testing.T) {
 	throwFailNow(t, AssertIs(err, nil))
 	throwFailNow(t, AssertIs(vForTesting.Value, value))
 }
-
