@@ -54,18 +54,24 @@ func (e *SliceStringField) FieldType() int {
 }
 
 func (e *SliceStringField) SetRaw(value interface{}) error {
-	switch d := value.(type) {
-	case []string:
-		e.Set(d)
-	case string:
-		if len(d) > 0 {
-			parts := strings.Split(d, ",")
+	f := func(str string) {
+		if len(str) > 0 {
+			parts := strings.Split(str, ",")
 			v := make([]string, 0, len(parts))
 			for _, p := range parts {
 				v = append(v, strings.TrimSpace(p))
 			}
 			e.Set(v)
 		}
+	}
+
+	switch d := value.(type) {
+	case []string:
+		e.Set(d)
+	case string:
+		f(d)
+	case []byte:
+		f(string(d))
 	default:
 		return fmt.Errorf("<SliceStringField.SetRaw> unknown value `%v`", value)
 	}
@@ -97,6 +103,8 @@ func (e *JSONFieldTest) SetRaw(value interface{}) error {
 	switch d := value.(type) {
 	case string:
 		return json.Unmarshal([]byte(d), e)
+	case []byte:
+		return json.Unmarshal(d, e)
 	default:
 		return fmt.Errorf("<JSONField.SetRaw> unknown value `%v`", value)
 	}
