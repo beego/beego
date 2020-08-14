@@ -154,8 +154,10 @@ func (d *dbBaseOracle) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, nam
 			lastInsertId, err := res.LastInsertId()
 			if err != nil {
 				DebugLog.Println(ErrLastInsertIdUnavailable, ':', err)
+				return lastInsertId, ErrLastInsertIdUnavailable
+			}else{
+				return lastInsertId, nil
 			}
-			return lastInsertId, nil
 		}
 		return 0, err
 	}
