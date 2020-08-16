@@ -2542,18 +2542,42 @@ func TestInsertOrUpdate(t *testing.T) {
 
 func TestStrPkInsert(t *testing.T) {
 	RegisterModel(new(StrPk))
+	pk := `1`
 	value := `StrPkValues(*56`
 	strPk := &StrPk{
-		Id:    "1",
+		Id:    pk,
 		Value: value,
 	}
 
 	var err error
 	_, err = dORM.Insert(strPk)
-	throwFailNow(t, AssertIs(err, nil))
+	if err != ErrLastInsertIdUnavailable {
+		throwFailNow(t, AssertIs(err, nil))
+	}
 
 	var vForTesting StrPk
-	err = dORM.QueryTable(new(StrPk)).Filter(`id`, `1`).One(&vForTesting)
+	err = dORM.QueryTable(new(StrPk)).Filter(`id`, pk).One(&vForTesting)
 	throwFailNow(t, AssertIs(err, nil))
 	throwFailNow(t, AssertIs(vForTesting.Value, value))
+
+	value2 := `s8s5da7as`
+	strPkForUpsert := &StrPk{
+		Id:    pk,
+		Value: value2,
+	}
+	
+	_, err = dORM.InsertOrUpdate(strPkForUpsert, `id`)
+	if err != nil {
+		fmt.Println(err)
+		if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego" {
+		} else if err == ErrLastInsertIdUnavailable {
+		} else {
+			throwFailNow(t, err)
+		}
+	} else {
+		var vForTesting2 StrPk
+		err = dORM.QueryTable(new(StrPk)).Filter(`id`, pk).One(&vForTesting2)
+		throwFailNow(t, AssertIs(err, nil))
+		throwFailNow(t, AssertIs(vForTesting2.Value, value2))
+	}
 }
