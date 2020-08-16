@@ -85,6 +85,8 @@ var (
 	ErrStmtClosed    = errors.New("<QuerySeter> stmt already closed")
 	ErrArgs          = errors.New("<Ormer> args error may be empty")
 	ErrNotImplement  = errors.New("have not implement")
+
+	ErrLastInsertIdUnavailable = errors.New("<Ormer> last insert id is unavailable")
 )
 
 // Params stores the Params
