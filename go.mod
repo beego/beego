@@ -36,6 +36,7 @@ require (
 	golang.org/x/tools v0.0.0-20200117065230-39095c1d176c
 	google.golang.org/grpc v1.31.0 // indirect
 	gopkg.in/yaml.v2 v2.2.8
+	honnef.co/go/tools v0.0.1-2020.1.5 // indirect
 )
 
 replace golang.org/x/crypto v0.0.0-20181127143415-eb0de9b17e85 => github.com/golang/crypto v0.0.0-20181127143415-eb0de9b17e85
