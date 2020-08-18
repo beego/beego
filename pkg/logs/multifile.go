@@ -16,7 +16,6 @@ package logs
 
 import (
 	"encoding/json"
-	"time"
 )
 
 // A filesLogWriter manages several fileLogWriter
@@ -87,14 +86,14 @@ func (f *multiFileLogWriter) Destroy() {
 	}
 }
 
-func (f *multiFileLogWriter) WriteMsg(when time.Time, msg string, level int) error {
+func (f *multiFileLogWriter) WriteMsg(lm *LogMsg) error {
 	if f.fullLogWriter != nil {
-		f.fullLogWriter.WriteMsg(when, msg, level)
+		f.fullLogWriter.WriteMsg(lm)
 	}
 	for i := 0; i < len(f.writers)-1; i++ {
 		if f.writers[i] != nil {
-			if level == f.writers[i].Level {
-				f.writers[i].WriteMsg(when, msg, level)
+			if lm.Level == f.writers[i].Level {
+				f.writers[i].WriteMsg(lm)
 			}
 		}
 	}
