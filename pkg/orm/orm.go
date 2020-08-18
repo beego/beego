@@ -58,11 +58,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/astaxie/beego/pkg/common"
-	"github.com/astaxie/beego/pkg/orm/hints"
 	"os"
 	"reflect"
 	"time"
+
+	"github.com/astaxie/beego/pkg/common"
+	"github.com/astaxie/beego/pkg/orm/hints"
 
 	"github.com/astaxie/beego/pkg/logs"
 )

@@ -23,8 +23,8 @@ import (
 
 func TestAddGlobalFilterChain(t *testing.T) {
 	AddGlobalFilterChain(func(next Filter) Filter {
-		return func(ctx context.Context, inv *Invocation) {
-
+		return func(ctx context.Context, inv *Invocation) []interface{} {
+			return next(ctx, inv)
 		}
 	})
 	assert.Equal(t, 1, len(globalFilterChains))

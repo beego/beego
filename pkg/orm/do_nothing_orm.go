@@ -17,6 +17,7 @@ package orm
 import (
 	"context"
 	"database/sql"
+
 	"github.com/astaxie/beego/pkg/common"
 )
 
@@ -27,7 +28,6 @@ import (
 var _ Ormer = new(DoNothingOrm)
 
 type DoNothingOrm struct {
-
 }
 
 func (d *DoNothingOrm) Read(md interface{}, cols ...string) error {
@@ -54,11 +54,11 @@ func (d *DoNothingOrm) ReadOrCreateWithCtx(ctx context.Context, md interface{}, 
 	return false, 0, nil
 }
 
-func (d *DoNothingOrm) LoadRelated(md interface{}, name string,  args ...common.KV) (int64, error) {
+func (d *DoNothingOrm) LoadRelated(md interface{}, name string, args ...common.KV) (int64, error) {
 	return 0, nil
 }
 
-func (d *DoNothingOrm) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string,  args ...common.KV) (int64, error) {
+func (d *DoNothingOrm) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...common.KV) (int64, error) {
 	return 0, nil
 }
 

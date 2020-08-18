@@ -1,4 +1,4 @@
-// Copyright 2020 
+// Copyright 2020
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -76,7 +76,7 @@ func NewDefaultValueFilterChainBuilder(typeAdapters map[string]bean.TypeAdapter,
 }
 
 func (d *DefaultValueFilterChainBuilder) FilterChain(next orm.Filter) orm.Filter {
-	return func(ctx context.Context, inv *orm.Invocation) {
+	return func(ctx context.Context, inv *orm.Invocation) []interface{} {
 		switch inv.Method {
 		case "Insert", "InsertWithCtx":
 			d.handleInsert(ctx, inv)
@@ -88,7 +88,7 @@ func (d *DefaultValueFilterChainBuilder) FilterChain(next orm.Filter) orm.Filter
 			d.handleInsertMulti(ctx, inv)
 			break
 		}
-		next(ctx, inv)
+		return next(ctx, inv)
 	}
 }
 

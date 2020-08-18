@@ -1,4 +1,4 @@
-// Copyright 2020 
+// Copyright 2020
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package bean
 import (
 	"context"
 	"time"
-
 )
 
 // TimeTypeAdapter process the time.Time
@@ -29,7 +28,7 @@ type TimeTypeAdapter struct {
 // and if the DftValue == now
 // time.Now() is returned
 func (t *TimeTypeAdapter) DefaultValue(ctx context.Context, dftValue string) (interface{}, error) {
-	if dftValue == "now"{
+	if dftValue == "now" {
 		return time.Now(), nil
 	}
 	return time.Parse(t.Layout, dftValue)

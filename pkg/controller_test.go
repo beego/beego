@@ -21,9 +21,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/astaxie/beego/pkg/context"
 	"os"
 	"path/filepath"
+
+	"github.com/astaxie/beego/pkg/context"
 )
 
 func TestGetInt(t *testing.T) {

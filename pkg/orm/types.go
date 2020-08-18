@@ -17,9 +17,10 @@ package orm
 import (
 	"context"
 	"database/sql"
-	"github.com/astaxie/beego/pkg/common"
 	"reflect"
 	"time"
+
+	"github.com/astaxie/beego/pkg/common"
 )
 
 // TableNaming is usually used by model
@@ -579,5 +580,5 @@ type dbBaser interface {
 	collectFieldValue(*modelInfo, *fieldInfo, reflect.Value, bool, *time.Location) (interface{}, error)
 	setval(dbQuerier, *modelInfo, []string) error
 
-	GenerateSpecifyIndex(tableName string,useIndex int ,indexes []string) string
+	GenerateSpecifyIndex(tableName string, useIndex int, indexes []string) string
 }
