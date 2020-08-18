@@ -15,9 +15,10 @@
 package orm
 
 import (
-	"github.com/astaxie/beego/pkg/orm/hints"
 	"testing"
 	"time"
+
+	"github.com/astaxie/beego/pkg/orm/hints"
 
 	"github.com/stretchr/testify/assert"
 )

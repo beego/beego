@@ -224,7 +224,7 @@ func (rp *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error)
 		c.Do(c.Context(), "SET", sid, "", "EX", rp.maxlifetime)
 	} else {
 		c.Rename(oldsid, sid)
-		c.Expire(sid, time.Duration(rp.maxlifetime) * time.Second)
+		c.Expire(sid, time.Duration(rp.maxlifetime)*time.Second)
 	}
 	return rp.SessionRead(sid)
 }

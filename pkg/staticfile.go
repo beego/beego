@@ -28,7 +28,7 @@ import (
 
 	"github.com/astaxie/beego/pkg/context"
 	"github.com/astaxie/beego/pkg/logs"
-	"github.com/hashicorp/golang-lru"
+	lru "github.com/hashicorp/golang-lru"
 )
 
 var errNotStaticRequest = errors.New("request not a static file request")

@@ -29,7 +29,7 @@ type Invocation struct {
 
 	mi *modelInfo
 	// f is the Orm operation
-	f func(ctx context.Context)
+	f func(ctx context.Context) []interface{}
 
 	// insideTx indicates whether this is inside a transaction
 	InsideTx    bool
@@ -44,8 +44,8 @@ func (inv *Invocation) GetTableName() string {
 	return ""
 }
 
-func (inv *Invocation) execute(ctx context.Context) {
-	inv.f(ctx)
+func (inv *Invocation) execute(ctx context.Context) []interface{} {
+	return inv.f(ctx)
 }
 
 // GetPkFieldName return the primary key of this table

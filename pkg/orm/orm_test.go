@@ -21,7 +21,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/astaxie/beego/pkg/orm/hints"
 	"io/ioutil"
 	"math"
 	"os"
@@ -31,6 +30,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/astaxie/beego/pkg/orm/hints"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -2565,7 +2566,7 @@ func TestStrPkInsert(t *testing.T) {
 		Id:    pk,
 		Value: value2,
 	}
-	
+
 	_, err = dORM.InsertOrUpdate(strPkForUpsert, `id`)
 	if err != nil {
 		fmt.Println(err)

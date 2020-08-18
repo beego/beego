@@ -17,13 +17,14 @@ package orm
 import (
 	"context"
 	"database/sql"
-	"github.com/astaxie/beego/pkg/common"
 	"reflect"
 	"time"
+
+	"github.com/astaxie/beego/pkg/common"
 )
 
 const (
-	TxNameKey  = "TxName"
+	TxNameKey = "TxName"
 )
 
 var _ Ormer = new(filterOrmDecorator)
@@ -45,8 +46,8 @@ func NewFilterOrmDecorator(delegate Ormer, filterChains ...FilterChain) Ormer {
 	res := &filterOrmDecorator{
 		ormer:      delegate,
 		TxBeginner: delegate,
-		root: func(ctx context.Context, inv *Invocation) {
-			inv.execute(ctx)
+		root: func(ctx context.Context, inv *Invocation) []interface{} {
+			return inv.execute(ctx)
 		},
 	}
 
@@ -73,7 +74,7 @@ func (f *filterOrmDecorator) Read(md interface{}, cols ...string) error {
 	return f.ReadWithCtx(context.Background(), md, cols...)
 }
 
-func (f *filterOrmDecorator) ReadWithCtx(ctx context.Context, md interface{}, cols ...string) (err error) {
+func (f *filterOrmDecorator) ReadWithCtx(ctx context.Context, md interface{}, cols ...string) error {
 	mi, _ := modelCache.getByMd(md)
 	inv := &Invocation{
 		Method:      "ReadWithCtx",
@@ -82,12 +83,13 @@ func (f *filterOrmDecorator) ReadWithCtx(ctx context.Context, md interface{}, co
 		mi:          mi,
 		InsideTx:    f.insideTx,
 		TxStartTime: f.txStartTime,
-		f: func(c context.Context) {
-			err = f.ormer.ReadWithCtx(c, md, cols...)
+		f: func(c context.Context) []interface{} {
+			err := f.ormer.ReadWithCtx(c, md, cols...)
+			return []interface{}{err}
 		},
 	}
-	f.root(ctx, inv)
-	return err
+	res := f.root(ctx, inv)
+	return f.convertError(res[0])
 }
 
 func (f *filterOrmDecorator) ReadForUpdate(md interface{}, cols ...string) error {
@@ -95,7 +97,6 @@ func (f *filterOrmDecorator) ReadForUpdate(md interface{}, cols ...string) error
 }
 
 func (f *filterOrmDecorator) ReadForUpdateWithCtx(ctx context.Context, md interface{}, cols ...string) error {
-	var err error
 	mi, _ := modelCache.getByMd(md)
 	inv := &Invocation{
 		Method:      "ReadForUpdateWithCtx",
@@ -104,12 +105,13 @@ func (f *filterOrmDecorator) ReadForUpdateWithCtx(ctx context.Context, md interf
 		mi:          mi,
 		InsideTx:    f.insideTx,
 		TxStartTime: f.txStartTime,
-		f: func(c context.Context) {
-			err = f.ormer.ReadForUpdateWithCtx(c, md, cols...)
+		f: func(c context.Context) []interface{} {
+			err := f.ormer.ReadForUpdateWithCtx(c, md, cols...)
+			return []interface{}{err}
 		},
 	}
-	f.root(ctx, inv)
-	return err
+	res := f.root(ctx, inv)
+	return f.convertError(res[0])
 }
 
 func (f *filterOrmDecorator) ReadOrCreate(md interface{}, col1 string, cols ...string) (bool, int64, error) {
@@ -117,11 +119,6 @@ func (f *filterOrmDecorator) ReadOrCreate(md interface{}, col1 string, cols ...s
 }
 
 func (f *filterOrmDecorator) ReadOrCreateWithCtx(ctx context.Context, md interface{}, col1 string, cols ...string) (bool, int64, error) {
-	var (
-		ok  bool
-		res int64
-		err error
-	)
 
 	mi, _ := modelCache.getByMd(md)
 	inv := &Invocation{
@@ -131,12 +128,13 @@ func (f *filterOrmDecorator) ReadOrCreateWithCtx(ctx context.Context, md interfa
 		mi:          mi,
 		InsideTx:    f.insideTx,
 		TxStartTime: f.txStartTime,
-		f: func(c context.Context) {
-			ok, res, err = f.ormer.ReadOrCreateWithCtx(c, md, col1, cols...)
+		f: func(c context.Context) []interface{} {
+			ok, res, err := f.ormer.ReadOrCreateWithCtx(c, md, col1, cols...)
+			return []interface{}{ok, res, err}
 		},
 	}
-	f.root(ctx, inv)
-	return ok, res, err
+	res := f.root(ctx, inv)
+	return res[0].(bool), res[1].(int64), f.convertError(res[2])
 }
 
 func (f *filterOrmDecorator) LoadRelated(md interface{}, name string, args ...common.KV) (int64, error) {
@@ -144,10 +142,6 @@ func (f *filterOrmDecorator) LoadRelated(md interface{}, name string, args ...co
 }
 
 func (f *filterOrmDecorator) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...common.KV) (int64, error) {
-	var (
-		res int64
-		err error
-	)
 
 	mi, _ := modelCache.getByMd(md)
 	inv := &Invocation{
@@ -157,12 +151,13 @@ func (f *filterOrmDecorator) LoadRelatedWithCtx(ctx context.Context, md interfac
 		mi:          mi,
 		InsideTx:    f.insideTx,
 		TxStartTime: f.txStartTime,
-		f: func(c context.Context) {
-			res, err = f.ormer.LoadRelatedWithCtx(c, md, name, args...)
+		f: func(c context.Context) []interface{} {
+			res, err := f.ormer.LoadRelatedWithCtx(c, md, name, args...)
+			return []interface{}{res, err}
 		},
 	}
-	f.root(ctx, inv)
-	return res, err
+	res := f.root(ctx, inv)
+	return res[0].(int64), f.convertError(res[1])
 }
 
 func (f *filterOrmDecorator) QueryM2M(md interface{}, name string) QueryM2Mer {
@@ -170,9 +165,6 @@ func (f *filterOrmDecorator) QueryM2M(md interface{}, name string) QueryM2Mer {
 }
 
 func (f *filterOrmDecorator) QueryM2MWithCtx(ctx context.Context, md interface{}, name string) QueryM2Mer {
-	var (
-		res QueryM2Mer
-	)
 
 	mi, _ := modelCache.getByMd(md)
 	inv := &Invocation{
@@ -182,12 +174,16 @@ func (f *filterOrmDecorator) QueryM2MWithCtx(ctx context.Context, md interface{}
 		mi:          mi,
 		InsideTx:    f.insideTx,
 		TxStartTime: f.txStartTime,
-		f: func(c context.Context) {
-			res = f.ormer.QueryM2MWithCtx(c, md, name)
+		f: func(c context.Context) []interface{} {
+			res := f.ormer.QueryM2MWithCtx(c, md, name)
+			return []interface{}{res}
 		},
 	}
-	f.root(ctx, inv)
-	return res
+	res := f.root(ctx, inv)
+	if res[0] == nil {
+		return nil
+	}
+	return res[0].(QueryM2Mer)
 }
 
 func (f *filterOrmDecorator) QueryTable(ptrStructOrTableName interface{}) QuerySeter {
@@ -196,7 +192,6 @@ func (f *filterOrmDecorator) QueryTable(ptrStructOrTableName interface{}) QueryS
 
 func (f *filterOrmDecorator) QueryTableWithCtx(ctx context.Context, ptrStructOrTableName interface{}) QuerySeter {
 	var (
-		res  QuerySeter
 		name string
 		md   interface{}
 		mi   *modelInfo
@@ -220,28 +215,36 @@ func (f *filterOrmDecorator) QueryTableWithCtx(ctx context.Context, ptrStructOrT
 		TxStartTime: f.txStartTime,
 		Md:          md,
 		mi:          mi,
-		f: func(c context.Context) {
-			res = f.ormer.QueryTableWithCtx(c, ptrStructOrTableName)
+		f: func(c context.Context) []interface{} {
+			res := f.ormer.QueryTableWithCtx(c, ptrStructOrTableName)
+			return []interface{}{res}
 		},
 	}
-	f.root(ctx, inv)
-	return res
+	res := f.root(ctx, inv)
+
+	if res[0] == nil {
+		return nil
+	}
+	return res[0].(QuerySeter)
 }
 
 func (f *filterOrmDecorator) DBStats() *sql.DBStats {
-	var (
-		res *sql.DBStats
-	)
 	inv := &Invocation{
 		Method:      "DBStats",
 		InsideTx:    f.insideTx,
 		TxStartTime: f.txStartTime,
-		f: func(c context.Context) {
-			res = f.ormer.DBStats()
+		f: func(c context.Context) []interface{} {
+			res := f.ormer.DBStats()
+			return []interface{}{res}
 		},
 	}
-	f.root(context.Background(), inv)
-	return res
+	res := f.root(context.Background(), inv)
+
+	if res[0] == nil {
+		return nil
+	}
+
+	return res[0].(*sql.DBStats)
 }
 
 func (f *filterOrmDecorator) Insert(md interface{}) (int64, error) {
@@ -249,10 +252,6 @@ func (f *filterOrmDecorator) Insert(md interface{}) (int64, error) {
 }
 
 func (f *filterOrmDecorator) InsertWithCtx(ctx context.Context, md interface{}) (int64, error) {
-	var (
-		res int64
-		err error
-	)
 	mi, _ := modelCache.getByMd(md)
 	inv := &Invocation{
 		Method:      "InsertWithCtx",
@@ -261,12 +260,13 @@ func (f *filterOrmDecorator) InsertWithCtx(ctx context.Context, md interface{}) 
 		mi:          mi,
 		InsideTx:    f.insideTx,
 		TxStartTime: f.txStartTime,
-		f: func(c context.Context) {
-			res, err = f.ormer.InsertWithCtx(c, md)
+		f: func(c context.Context) []interface{} {
+			res, err := f.ormer.InsertWithCtx(c, md)
+			return []interface{}{res, err}
 		},
 	}
-	f.root(ctx, inv)
-	return res, err
+	res := f.root(ctx, inv)
+	return res[0].(int64), f.convertError(res[1])
 }
 
 func (f *filterOrmDecorator) InsertOrUpdate(md interface{}, colConflitAndArgs ...string) (int64, error) {
@@ -274,10 +274,6 @@ func (f *filterOrmDecorator) InsertOrUpdate(md interface{}, colConflitAndArgs ..
 }
 
 func (f *filterOrmDecorator) InsertOrUpdateWithCtx(ctx context.Context, md interface{}, colConflitAndArgs ...string) (int64, error) {
-	var (
-		res int64
-		err error
-	)
 	mi, _ := modelCache.getByMd(md)
 	inv := &Invocation{
 		Method:      "InsertOrUpdateWithCtx",
@@ -286,12 +282,13 @@ func (f *filterOrmDecorator) InsertOrUpdateWithCtx(ctx context.Context, md inter
 		mi:          mi,
 		InsideTx:    f.insideTx,
 		TxStartTime: f.txStartTime,
-		f: func(c context.Context) {
-			res, err = f.ormer.InsertOrUpdateWithCtx(c, md, colConflitAndArgs...)
+		f: func(c context.Context) []interface{} {
+			res, err := f.ormer.InsertOrUpdateWithCtx(c, md, colConflitAndArgs...)
+			return []interface{}{res, err}
 		},
 	}
-	f.root(ctx, inv)
-	return res, err
+	res := f.root(ctx, inv)
+	return res[0].(int64), f.convertError(res[1])
 }
 
 func (f *filterOrmDecorator) InsertMulti(bulk int, mds interface{}) (int64, error) {
@@ -301,10 +298,8 @@ func (f *filterOrmDecorator) InsertMulti(bulk int, mds interface{}) (int64, erro
 // InsertMultiWithCtx uses the first element's model info
 func (f *filterOrmDecorator) InsertMultiWithCtx(ctx context.Context, bulk int, mds interface{}) (int64, error) {
 	var (
-		res int64
-		err error
-		md  interface{}
-		mi  *modelInfo
+		md interface{}
+		mi *modelInfo
 	)
 
 	sind := reflect.Indirect(reflect.ValueOf(mds))
@@ -322,12 +317,13 @@ func (f *filterOrmDecorator) InsertMultiWithCtx(ctx context.Context, bulk int, m
 		mi:          mi,
 		InsideTx:    f.insideTx,
 		TxStartTime: f.txStartTime,
-		f: func(c context.Context) {
-			res, err = f.ormer.InsertMultiWithCtx(c, bulk, mds)
+		f: func(c context.Context) []interface{} {
+			res, err := f.ormer.InsertMultiWithCtx(c, bulk, mds)
+			return []interface{}{res, err}
 		},
 	}
-	f.root(ctx, inv)
-	return res, err
+	res := f.root(ctx, inv)
+	return res[0].(int64), f.convertError(res[1])
 }
 
 func (f *filterOrmDecorator) Update(md interface{}, cols ...string) (int64, error) {
@@ -335,10 +331,6 @@ func (f *filterOrmDecorator) Update(md interface{}, cols ...string) (int64, erro
 }
 
 func (f *filterOrmDecorator) UpdateWithCtx(ctx context.Context, md interface{}, cols ...string) (int64, error) {
-	var (
-		res int64
-		err error
-	)
 	mi, _ := modelCache.getByMd(md)
 	inv := &Invocation{
 		Method:      "UpdateWithCtx",
@@ -347,12 +339,13 @@ func (f *filterOrmDecorator) UpdateWithCtx(ctx context.Context, md interface{}, 
 		mi:          mi,
 		InsideTx:    f.insideTx,
 		TxStartTime: f.txStartTime,
-		f: func(c context.Context) {
-			res, err = f.ormer.UpdateWithCtx(c, md, cols...)
+		f: func(c context.Context) []interface{} {
+			res, err := f.ormer.UpdateWithCtx(c, md, cols...)
+			return []interface{}{res, err}
 		},
 	}
-	f.root(ctx, inv)
-	return res, err
+	res := f.root(ctx, inv)
+	return res[0].(int64), f.convertError(res[1])
 }
 
 func (f *filterOrmDecorator) Delete(md interface{}, cols ...string) (int64, error) {
@@ -360,10 +353,6 @@ func (f *filterOrmDecorator) Delete(md interface{}, cols ...string) (int64, erro
 }
 
 func (f *filterOrmDecorator) DeleteWithCtx(ctx context.Context, md interface{}, cols ...string) (int64, error) {
-	var (
-		res int64
-		err error
-	)
 	mi, _ := modelCache.getByMd(md)
 	inv := &Invocation{
 		Method:      "DeleteWithCtx",
@@ -372,12 +361,13 @@ func (f *filterOrmDecorator) DeleteWithCtx(ctx context.Context, md interface{}, 
 		mi:          mi,
 		InsideTx:    f.insideTx,
 		TxStartTime: f.txStartTime,
-		f: func(c context.Context) {
-			res, err = f.ormer.DeleteWithCtx(c, md, cols...)
+		f: func(c context.Context) []interface{} {
+			res, err := f.ormer.DeleteWithCtx(c, md, cols...)
+			return []interface{}{res, err}
 		},
 	}
-	f.root(ctx, inv)
-	return res, err
+	res := f.root(ctx, inv)
+	return res[0].(int64), f.convertError(res[1])
 }
 
 func (f *filterOrmDecorator) Raw(query string, args ...interface{}) RawSeter {
@@ -385,36 +375,39 @@ func (f *filterOrmDecorator) Raw(query string, args ...interface{}) RawSeter {
 }
 
 func (f *filterOrmDecorator) RawWithCtx(ctx context.Context, query string, args ...interface{}) RawSeter {
-	var (
-		res RawSeter
-	)
 	inv := &Invocation{
 		Method:      "RawWithCtx",
 		Args:        []interface{}{query, args},
 		InsideTx:    f.insideTx,
 		TxStartTime: f.txStartTime,
-		f: func(c context.Context) {
-			res = f.ormer.RawWithCtx(c, query, args...)
+		f: func(c context.Context) []interface{} {
+			res := f.ormer.RawWithCtx(c, query, args...)
+			return []interface{}{res}
 		},
 	}
-	f.root(ctx, inv)
-	return res
+	res := f.root(ctx, inv)
+
+	if res[0] == nil {
+		return nil
+	}
+	return res[0].(RawSeter)
 }
 
 func (f *filterOrmDecorator) Driver() Driver {
-	var (
-		res Driver
-	)
 	inv := &Invocation{
 		Method:      "Driver",
 		InsideTx:    f.insideTx,
 		TxStartTime: f.txStartTime,
-		f: func(c context.Context) {
-			res = f.ormer.Driver()
+		f: func(c context.Context) []interface{} {
+			res := f.ormer.Driver()
+			return []interface{}{res}
 		},
 	}
-	f.root(context.Background(), inv)
-	return res
+	res := f.root(context.Background(), inv)
+	if res[0] == nil {
+		return nil
+	}
+	return res[0].(Driver)
 }
 
 func (f *filterOrmDecorator) Begin() (TxOrmer, error) {
@@ -430,22 +423,19 @@ func (f *filterOrmDecorator) BeginWithOpts(opts *sql.TxOptions) (TxOrmer, error)
 }
 
 func (f *filterOrmDecorator) BeginWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions) (TxOrmer, error) {
-	var (
-		res TxOrmer
-		err error
-	)
 	inv := &Invocation{
 		Method:      "BeginWithCtxAndOpts",
 		Args:        []interface{}{opts},
 		InsideTx:    f.insideTx,
 		TxStartTime: f.txStartTime,
-		f: func(c context.Context) {
-			res, err = f.TxBeginner.BeginWithCtxAndOpts(c, opts)
+		f: func(c context.Context) []interface{} {
+			res, err := f.TxBeginner.BeginWithCtxAndOpts(c, opts)
 			res = NewFilterTxOrmDecorator(res, f.root, getTxNameFromCtx(c))
+			return []interface{}{res, err}
 		},
 	}
-	f.root(ctx, inv)
-	return res, err
+	res := f.root(ctx, inv)
+	return res[0].(TxOrmer), f.convertError(res[1])
 }
 
 func (f *filterOrmDecorator) DoTx(task func(ctx context.Context, txOrm TxOrmer) error) error {
@@ -461,58 +451,58 @@ func (f *filterOrmDecorator) DoTxWithOpts(opts *sql.TxOptions, task func(ctx con
 }
 
 func (f *filterOrmDecorator) DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task func(ctx context.Context, txOrm TxOrmer) error) error {
-	var (
-		err error
-	)
-
 	inv := &Invocation{
 		Method:      "DoTxWithCtxAndOpts",
 		Args:        []interface{}{opts, task},
 		InsideTx:    f.insideTx,
 		TxStartTime: f.txStartTime,
 		TxName:      getTxNameFromCtx(ctx),
-		f: func(c context.Context) {
-			err = doTxTemplate(f, c, opts, task)
+		f: func(c context.Context) []interface{} {
+			err := doTxTemplate(f, c, opts, task)
+			return []interface{}{err}
 		},
 	}
-	f.root(ctx, inv)
-	return err
+	res := f.root(ctx, inv)
+	return f.convertError(res[0])
 }
 
 func (f *filterOrmDecorator) Commit() error {
-	var (
-		err error
-	)
 	inv := &Invocation{
 		Method:      "Commit",
 		Args:        []interface{}{},
 		InsideTx:    f.insideTx,
 		TxStartTime: f.txStartTime,
 		TxName:      f.txName,
-		f: func(c context.Context) {
-			err = f.TxCommitter.Commit()
+		f: func(c context.Context) []interface{} {
+			err := f.TxCommitter.Commit()
+			return []interface{}{err}
 		},
 	}
-	f.root(context.Background(), inv)
-	return err
+	res := f.root(context.Background(), inv)
+	return f.convertError(res[0])
 }
 
 func (f *filterOrmDecorator) Rollback() error {
-	var (
-		err error
-	)
 	inv := &Invocation{
 		Method:      "Rollback",
 		Args:        []interface{}{},
 		InsideTx:    f.insideTx,
 		TxStartTime: f.txStartTime,
 		TxName:      f.txName,
-		f: func(c context.Context) {
-			err = f.TxCommitter.Rollback()
+		f: func(c context.Context) []interface{} {
+			err := f.TxCommitter.Rollback()
+			return []interface{}{err}
 		},
 	}
-	f.root(context.Background(), inv)
-	return err
+	res := f.root(context.Background(), inv)
+	return f.convertError(res[0])
+}
+
+func (f *filterOrmDecorator) convertError(v interface{}) error {
+	if v == nil {
+		return nil
+	}
+	return v.(error)
 }
 
 func getTxNameFromCtx(ctx context.Context) string {
