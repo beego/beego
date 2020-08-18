@@ -115,6 +115,7 @@ type BeeLogger struct {
 	init                bool
 	enableFuncCallDepth bool
 	loggerFuncCallDepth int
+	enableFullFilePath  bool
 	asynchronous        bool
 	prefix              string
 	msgChanLen          int64
@@ -652,6 +653,12 @@ func GetLogger(prefixes ...string) *log.Logger {
 		beeLoggerMap.logs[prefix] = l
 	}
 	return l
+}
+
+// EnableFullFilePath enables full file path logging. Disabled by default
+// e.g "/home/Documents/GitHub/beego/mainapp/" instead of "mainapp"
+func EnableFullFilePath(b bool) {
+	beeLogger.enableFullFilePath = b
 }
 
 // Reset will remove all the adapter
