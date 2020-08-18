@@ -36,17 +36,17 @@ type FilterChainBuilder struct {
 }
 
 func (builder *FilterChainBuilder) FilterChain(next orm.Filter) orm.Filter {
-	return func(ctx context.Context, inv *orm.Invocation) {
+	return func(ctx context.Context, inv *orm.Invocation) []interface{} {
 		operationName := builder.operationName(ctx, inv)
 		if strings.HasPrefix(inv.Method, "Begin") || inv.Method == "Commit" || inv.Method == "Rollback" {
-			next(ctx, inv)
-			return
+			return next(ctx, inv)
 		}
 
 		span, spanCtx := opentracing.StartSpanFromContext(ctx, operationName)
 		defer span.Finish()
-		next(spanCtx, inv)
+		res := next(spanCtx, inv)
 		builder.buildSpan(span, spanCtx, inv)
+		return res
 	}
 }
 

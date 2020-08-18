@@ -40,7 +40,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/astaxie/beego/pkg"
+	beego "github.com/astaxie/beego/pkg"
 	"github.com/astaxie/beego/pkg/context"
 )
 

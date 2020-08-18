@@ -42,7 +42,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/astaxie/beego/pkg"
+	beego "github.com/astaxie/beego/pkg"
 	"github.com/astaxie/beego/pkg/context"
 )
 
