@@ -1,0 +1,7 @@
+
+goimports -l pkg
+goimports -l examples
+
+ineffassign .
+
+staticcheck -show-ignored -checks "-ST1017,-U1000,-ST1005,-S1034,-S1012,-SA4006,-SA6005,-SA1019,-SA1024" ./pkg
