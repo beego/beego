@@ -7,6 +7,22 @@ It is the work of hundreds of contributors. We appreciate your help!
 Here are instructions to get you started. They are probably not perfect, 
 please let us know if anything feels wrong or incomplete.
 
+## Prepare environment
+
+Firstly, install some tools. Execute those commands **outside** the project. Or those command will modify go.mod file.
+
+```shell script
+go get -u golang.org/x/tools/cmd/goimports
+
+go get -u github.com/gordonklaus/ineffassign
+```
+
+And the go into project directory, run :
+```shell script
+cp ./githook/pre-commit ./.git/hooks/pre-commit
+```
+This will add git hooks into .git/hooks. Or you can add it manually.
+
 ## Contribution guidelines
 
 ### Pull requests
