@@ -17,9 +17,10 @@ package orm
 import (
 	"database/sql"
 	"fmt"
-	"github.com/pkg/errors"
 	"reflect"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 // raw sql string prepared statement

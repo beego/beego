@@ -1,6 +1,6 @@
 
-goimports -l pkg
-goimports -l examples
+goimports -w -format-only pkg
+goimports -w -format-only examples
 
 ineffassign .
 

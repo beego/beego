@@ -40,10 +40,11 @@
 package authz
 
 import (
-	"github.com/astaxie/beego/pkg"
+	"net/http"
+
+	beego "github.com/astaxie/beego/pkg"
 	"github.com/astaxie/beego/pkg/context"
 	"github.com/casbin/casbin"
-	"net/http"
 )
 
 // NewAuthorizer returns the authorizer.
