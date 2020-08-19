@@ -21,6 +21,7 @@ import (
 )
 
 type fakeConfigContainer struct {
+	BaseConfiger
 	data map[string]string
 }
 
