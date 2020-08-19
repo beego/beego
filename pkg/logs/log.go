@@ -39,7 +39,6 @@ import (
 	"os"
 	"path"
 	"runtime"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -279,14 +278,25 @@ func (bl *BeeLogger) writeMsg(lm *LogMsg, v ...interface{}) error {
 
 	lm.Msg = bl.prefix + " " + lm.Msg
 
+	var (
+		file string
+		line int
+		ok   bool
+	)
+
 	if bl.enableFuncCallDepth {
-		_, file, line, ok := runtime.Caller(bl.loggerFuncCallDepth)
+		_, file, line, ok = runtime.Caller(bl.loggerFuncCallDepth)
 		if !ok {
 			file = "???"
 			line = 0
 		}
-		_, filename := path.Split(file)
-		lm.Msg = "[" + filename + ":" + strconv.Itoa(line) + "] " + lm.Msg
+
+		if !bl.enableFullFilePath {
+			_, file = path.Split(file)
+		}
+		lm.FilePath = file
+		lm.LineNumber = line
+		lm.Msg = fmt.Sprintf("[%s:%d] %s", lm.FilePath, lm.LineNumber, lm.Msg)
 	}
 
 	//set level info in front of filename info
