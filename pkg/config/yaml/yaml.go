@@ -118,6 +118,7 @@ func parseYML(buf []byte) (cnf map[string]interface{}, err error) {
 
 // ConfigContainer is a config which represents the yaml configuration.
 type ConfigContainer struct {
+	config.BaseConfiger
 	data map[string]interface{}
 	sync.RWMutex
 }
