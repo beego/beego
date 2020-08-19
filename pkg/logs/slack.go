@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"time"
 )
 
 // SLACKWriter implements beego LoggerInterface and is used to send jiaoliao webhook
@@ -26,12 +25,12 @@ func (s *SLACKWriter) Init(jsonconfig string) error {
 
 // WriteMsg write message in smtp writer.
 // Sends an email with subject and only this message.
-func (s *SLACKWriter) WriteMsg(when time.Time, msg string, level int) error {
-	if level > s.Level {
+func (s *SLACKWriter) WriteMsg(lm *LogMsg) error {
+	if lm.Level > s.Level {
 		return nil
 	}
 
-	text := fmt.Sprintf("{\"text\": \"%s %s\"}", when.Format("2006-01-02 15:04:05"), msg)
+	text := fmt.Sprintf("{\"text\": \"%s %s\"}", lm.When.Format("2006-01-02 15:04:05"), lm.Msg)
 
 	form := url.Values{}
 	form.Add("payload", text)

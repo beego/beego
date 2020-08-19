@@ -18,7 +18,6 @@ import (
 	"encoding/json"
 	"os"
 	"strings"
-	"time"
 
 	"github.com/shiena/ansicolor"
 )
@@ -73,14 +72,14 @@ func (c *consoleWriter) Init(jsonConfig string) error {
 }
 
 // WriteMsg writes message in console.
-func (c *consoleWriter) WriteMsg(when time.Time, msg string, level int) error {
-	if level > c.Level {
+func (c *consoleWriter) WriteMsg(lm *LogMsg) error {
+	if lm.Level > c.Level {
 		return nil
 	}
 	if c.Colorful {
-		msg = strings.Replace(msg, levelPrefix[level], colors[level](levelPrefix[level]), 1)
+		lm.Msg = strings.Replace(lm.Msg, levelPrefix[lm.Level], colors[lm.Level](levelPrefix[lm.Level]), 1)
 	}
-	c.lg.writeln(when, msg)
+	c.lg.writeln(lm)
 	return nil
 }
 

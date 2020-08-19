@@ -79,5 +79,10 @@ func AccessLog(r *AccessLogRecord, format string) {
 			msg = string(jsonData)
 		}
 	}
-	beeLogger.writeMsg(levelLoggerImpl, strings.TrimSpace(msg))
+	lm := &LogMsg{
+		Msg:   strings.TrimSpace(msg),
+		When:  time.Now(),
+		Level: levelLoggerImpl,
+	}
+	beeLogger.writeMsg(lm)
 }
