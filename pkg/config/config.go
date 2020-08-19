@@ -15,7 +15,7 @@
 // Package config is used to parse config.
 // Usage:
 //  import "github.com/astaxie/beego/config"
-//Examples.
+// Examples.
 //
 //  cnf, err := config.NewConfig("ini", "config.conf")
 //
@@ -37,34 +37,155 @@
 //  cnf.DIY(key string) (interface{}, error)
 //  cnf.GetSection(section string) (map[string]string, error)
 //  cnf.SaveConfigFile(filename string) error
-//More docs http://beego.me/docs/module/config.md
+// More docs http://beego.me/docs/module/config.md
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"reflect"
+	"strconv"
+	"strings"
 	"time"
 )
 
 // Configer defines how to get and set value from configuration raw data.
 type Configer interface {
-	Set(key, val string) error   //support section::key type in given key when using ini type.
-	String(key string) string    //support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
-	Strings(key string) []string //get string slice
+	// support section::key type in given key when using ini type.
+	Set(key, val string) error
+
+	// support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
+	String(key string) string
+	// get string slice
+	Strings(key string) []string
 	Int(key string) (int, error)
 	Int64(key string) (int64, error)
 	Bool(key string) (bool, error)
 	Float(key string) (float64, error)
-	DefaultString(key string, defaultVal string) string      // support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
-	DefaultStrings(key string, defaultVal []string) []string //get string slice
+	// support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
+	DefaultString(key string, defaultVal string) string
+	// get string slice
+	DefaultStrings(key string, defaultVal []string) []string
 	DefaultInt(key string, defaultVal int) int
 	DefaultInt64(key string, defaultVal int64) int64
 	DefaultBool(key string, defaultVal bool) bool
 	DefaultFloat(key string, defaultVal float64) float64
 	DIY(key string) (interface{}, error)
 	GetSection(section string) (map[string]string, error)
+
+	Unmarshaler(obj interface{}) error
+	Sub(key string) (Configer, error)
+	OnChange(fn func(cfg Configer))
+	// GetByPrefix(prefix string) ([]byte, error)
+	// GetSerializer() Serializer
 	SaveConfigFile(filename string) error
+}
+
+type BaseConfiger struct {
+	// The reader should support key like "a.b.c"
+	reader func(key string) (string, error)
+}
+
+func (c *BaseConfiger) Int(key string) (int, error) {
+	res, err := c.reader(key)
+	if err != nil {
+		return 0, err
+	}
+	return strconv.Atoi(res)
+}
+
+func (c *BaseConfiger) Int64(key string) (int64, error) {
+	res, err := c.reader(key)
+	if err != nil {
+		return 0, err
+	}
+	return strconv.ParseInt(res, 10, 64)
+}
+
+func (c *BaseConfiger) Bool(key string) (bool, error) {
+	res, err := c.reader(key)
+	if err != nil {
+		return false, err
+	}
+	return strconv.ParseBool(res)
+}
+
+func (c *BaseConfiger) Float(key string) (float64, error) {
+	res, err := c.reader(key)
+	if err != nil {
+		return 0, err
+	}
+	return strconv.ParseFloat(res, 64)
+}
+
+func (c *BaseConfiger) DefaultString(key string, defaultVal string) string {
+	if res := c.String(key); res != "" {
+		return res
+	}
+	return defaultVal
+}
+
+func (c *BaseConfiger) DefaultStrings(key string, defaultVal []string) []string {
+	if res := c.Strings(key); len(res) > 0 {
+		return res
+	}
+	return defaultVal
+}
+
+func (c *BaseConfiger) DefaultInt(key string, defaultVal int) int {
+	if res, err := c.Int(key); err == nil {
+		return res
+	}
+	return defaultVal
+}
+
+func (c *BaseConfiger) DefaultInt64(key string, defaultVal int64) int64 {
+	if res, err := c.Int64(key); err == nil {
+		return res
+	}
+	return defaultVal
+}
+
+func (c *BaseConfiger) DefaultBool(key string, defaultVal bool) bool {
+	if res, err := c.Bool(key); err == nil {
+		return res
+	}
+	return defaultVal
+}
+func (c *BaseConfiger) DefaultFloat(key string, defaultVal float64) float64 {
+	if res, err := c.Float(key); err == nil {
+		return res
+	}
+	return defaultVal
+}
+
+func (c *BaseConfiger) String(key string) string {
+	res, _ := c.reader(key)
+	return res
+}
+
+func (c *BaseConfiger) Strings(key string) []string {
+	res, err := c.reader(key)
+	if err != nil || res == "" {
+		return nil
+	}
+	return strings.Split(res, ";")
+}
+
+// TODO remove this before release v2.0.0
+func (c *BaseConfiger) Unmarshaler(obj interface{}) error {
+	return errors.New("unsupported operation")
+}
+
+// TODO remove this before release v2.0.0
+func (c *BaseConfiger) Sub(key string) (Configer, error) {
+	return nil, errors.New("unsupported operation")
+}
+
+// TODO remove this before release v2.0.0
+func (c *BaseConfiger) OnChange(fn func(cfg Configer)) {
+	// do nothing
 }
 
 // Config is the adapter interface for parsing config file to get raw data to Configer.

@@ -115,7 +115,7 @@ func TestFilterOrmDecorator_Delete(t *testing.T) {
 	register()
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
-		return func(ctx context.Context, inv *Invocation) []interface{}  {
+		return func(ctx context.Context, inv *Invocation) []interface{} {
 			assert.Equal(t, "DeleteWithCtx", inv.Method)
 			assert.Equal(t, 2, len(inv.Args))
 			assert.Equal(t, "FILTER_TEST", inv.GetTableName())
@@ -311,7 +311,7 @@ func TestFilterOrmDecorator_Raw(t *testing.T) {
 	assert.Nil(t, res)
 }
 
-func TestFilterOrmDecorator_ReadForUpdate(t *testing.T)  {
+func TestFilterOrmDecorator_ReadForUpdate(t *testing.T) {
 	register()
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {

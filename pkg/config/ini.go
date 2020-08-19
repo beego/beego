@@ -225,6 +225,7 @@ func (ini *IniConfig) ParseData(data []byte) (Configer, error) {
 // IniConfigContainer is a config which represents the ini configuration.
 // When set and get value, support key as section:name type.
 type IniConfigContainer struct {
+	BaseConfiger
 	data           map[string]map[string]string // section=> key:val
 	sectionComment map[string]string            // section : comment
 	keyComment     map[string]string            // id: []{comment, key...}; id 1 is for main comment.
