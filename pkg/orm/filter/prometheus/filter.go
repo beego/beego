@@ -56,16 +56,15 @@ func NewFilterChainBuilder() *FilterChainBuilder {
 }
 
 func (builder *FilterChainBuilder) FilterChain(next orm.Filter) orm.Filter {
-	return func(ctx context.Context, inv *orm.Invocation) []interface{} {
+	return func(ctx context.Context, inv *orm.Invocation) {
 		startTime := time.Now()
-		res := next(ctx, inv)
+		next(ctx, inv)
 		endTime := time.Now()
 		dur := (endTime.Sub(startTime)) / time.Millisecond
 
 		// if the TPS is too large, here may be some problem
 		// thinking about using goroutine pool
 		go builder.report(ctx, inv, dur)
-		return res
 	}
 }
 

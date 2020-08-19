@@ -17,11 +17,10 @@ package orm
 import (
 	"database/sql"
 	"fmt"
+	"github.com/astaxie/beego/pkg/orm/hints"
 	"reflect"
 	"strings"
 	"time"
-
-	"github.com/astaxie/beego/pkg/orm/hints"
 )
 
 // sqlite operators.
@@ -173,6 +172,7 @@ func (d *dbBaseSqlite) GenerateSpecifyIndex(tableName string, useIndex int, inde
 		return ``
 	}
 }
+
 
 // create new sqlite dbBaser.
 func newdbBaseSqlite() dbBaser {

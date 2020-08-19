@@ -25,9 +25,8 @@ import (
 )
 
 func TestFilterChainBuilder_FilterChain(t *testing.T) {
-	next := func(ctx context.Context, inv *orm.Invocation) []interface{} {
+	next := func(ctx context.Context, inv *orm.Invocation) {
 		inv.TxName = "Hello"
-		return []interface{}{}
 	}
 
 	builder := &FilterChainBuilder{

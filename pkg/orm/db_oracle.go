@@ -16,9 +16,8 @@ package orm
 
 import (
 	"fmt"
-	"strings"
-
 	"github.com/astaxie/beego/pkg/orm/hints"
+	"strings"
 )
 
 // oracle operators.
@@ -156,7 +155,7 @@ func (d *dbBaseOracle) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, nam
 			if err != nil {
 				DebugLog.Println(ErrLastInsertIdUnavailable, ':', err)
 				return lastInsertId, ErrLastInsertIdUnavailable
-			} else {
+			}else{
 				return lastInsertId, nil
 			}
 		}

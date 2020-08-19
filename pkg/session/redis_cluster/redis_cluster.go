@@ -33,14 +33,13 @@
 package redis_cluster
 
 import (
+	"github.com/astaxie/beego/pkg/session"
+	rediss "github.com/go-redis/redis/v7"
 	"net/http"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/astaxie/beego/pkg/session"
-	rediss "github.com/go-redis/redis/v7"
 )
 
 var redispder = &Provider{}

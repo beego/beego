@@ -18,10 +18,9 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/astaxie/beego/pkg/common"
 	"sync"
 	"testing"
-
-	"github.com/astaxie/beego/pkg/common"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -32,11 +31,11 @@ func TestFilterOrmDecorator_Read(t *testing.T) {
 
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
-		return func(ctx context.Context, inv *Invocation) []interface{} {
+		return func(ctx context.Context, inv *Invocation) {
 			assert.Equal(t, "ReadWithCtx", inv.Method)
 			assert.Equal(t, 2, len(inv.Args))
 			assert.Equal(t, "FILTER_TEST", inv.GetTableName())
-			return next(ctx, inv)
+			next(ctx, inv)
 		}
 	})
 
@@ -51,7 +50,7 @@ func TestFilterOrmDecorator_BeginTx(t *testing.T) {
 
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
-		return func(ctx context.Context, inv *Invocation) []interface{} {
+		return func(ctx context.Context, inv *Invocation) {
 			if inv.Method == "BeginWithCtxAndOpts" {
 				assert.Equal(t, 1, len(inv.Args))
 				assert.Equal(t, "", inv.GetTableName())
@@ -70,7 +69,7 @@ func TestFilterOrmDecorator_BeginTx(t *testing.T) {
 				t.Fail()
 			}
 
-			return next(ctx, inv)
+			next(ctx, inv)
 		}
 	})
 	to, err := od.Begin()
@@ -99,11 +98,11 @@ func TestFilterOrmDecorator_BeginTx(t *testing.T) {
 func TestFilterOrmDecorator_DBStats(t *testing.T) {
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
-		return func(ctx context.Context, inv *Invocation) []interface{} {
+		return func(ctx context.Context, inv *Invocation) {
 			assert.Equal(t, "DBStats", inv.Method)
 			assert.Equal(t, 0, len(inv.Args))
 			assert.Equal(t, "", inv.GetTableName())
-			return next(ctx, inv)
+			next(ctx, inv)
 		}
 	})
 	res := od.DBStats()
@@ -115,11 +114,11 @@ func TestFilterOrmDecorator_Delete(t *testing.T) {
 	register()
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
-		return func(ctx context.Context, inv *Invocation) []interface{}  {
+		return func(ctx context.Context, inv *Invocation) {
 			assert.Equal(t, "DeleteWithCtx", inv.Method)
 			assert.Equal(t, 2, len(inv.Args))
 			assert.Equal(t, "FILTER_TEST", inv.GetTableName())
-			return next(ctx, inv)
+			next(ctx, inv)
 		}
 	})
 	res, err := od.Delete(&FilterTestEntity{})
@@ -131,13 +130,14 @@ func TestFilterOrmDecorator_Delete(t *testing.T) {
 func TestFilterOrmDecorator_DoTx(t *testing.T) {
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
-		return func(ctx context.Context, inv *Invocation) []interface{} {
+		return func(ctx context.Context, inv *Invocation) {
 			if inv.Method == "DoTxWithCtxAndOpts" {
 				assert.Equal(t, 2, len(inv.Args))
 				assert.Equal(t, "", inv.GetTableName())
 				assert.False(t, inv.InsideTx)
 			}
-			return next(ctx, inv)
+
+			next(ctx, inv)
 		}
 	})
 
@@ -156,15 +156,16 @@ func TestFilterOrmDecorator_DoTx(t *testing.T) {
 	})
 	assert.NotNil(t, err)
 
+
 	od = NewFilterOrmDecorator(o, func(next Filter) Filter {
-		return func(ctx context.Context, inv *Invocation) []interface{} {
+		return func(ctx context.Context, inv *Invocation) {
 			if inv.Method == "DoTxWithCtxAndOpts" {
 				assert.Equal(t, 2, len(inv.Args))
 				assert.Equal(t, "", inv.GetTableName())
 				assert.Equal(t, "do tx name", inv.TxName)
 				assert.False(t, inv.InsideTx)
 			}
-			return next(ctx, inv)
+			next(ctx, inv)
 		}
 	})
 
@@ -178,12 +179,12 @@ func TestFilterOrmDecorator_DoTx(t *testing.T) {
 func TestFilterOrmDecorator_Driver(t *testing.T) {
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
-		return func(ctx context.Context, inv *Invocation) []interface{} {
+		return func(ctx context.Context, inv *Invocation) {
 			assert.Equal(t, "Driver", inv.Method)
 			assert.Equal(t, 0, len(inv.Args))
 			assert.Equal(t, "", inv.GetTableName())
 			assert.False(t, inv.InsideTx)
-			return next(ctx, inv)
+			next(ctx, inv)
 		}
 	})
 	res := od.Driver()
@@ -194,12 +195,12 @@ func TestFilterOrmDecorator_Insert(t *testing.T) {
 	register()
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
-		return func(ctx context.Context, inv *Invocation) []interface{} {
+		return func(ctx context.Context, inv *Invocation) {
 			assert.Equal(t, "InsertWithCtx", inv.Method)
 			assert.Equal(t, 1, len(inv.Args))
 			assert.Equal(t, "FILTER_TEST", inv.GetTableName())
 			assert.False(t, inv.InsideTx)
-			return next(ctx, inv)
+			next(ctx, inv)
 		}
 	})
 
@@ -213,12 +214,12 @@ func TestFilterOrmDecorator_InsertMulti(t *testing.T) {
 	register()
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
-		return func(ctx context.Context, inv *Invocation) []interface{} {
+		return func(ctx context.Context, inv *Invocation) {
 			assert.Equal(t, "InsertMultiWithCtx", inv.Method)
 			assert.Equal(t, 2, len(inv.Args))
 			assert.Equal(t, "FILTER_TEST", inv.GetTableName())
 			assert.False(t, inv.InsideTx)
-			return next(ctx, inv)
+			next(ctx, inv)
 		}
 	})
 
@@ -233,12 +234,12 @@ func TestFilterOrmDecorator_InsertOrUpdate(t *testing.T) {
 	register()
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
-		return func(ctx context.Context, inv *Invocation) []interface{} {
+		return func(ctx context.Context, inv *Invocation) {
 			assert.Equal(t, "InsertOrUpdateWithCtx", inv.Method)
 			assert.Equal(t, 2, len(inv.Args))
 			assert.Equal(t, "FILTER_TEST", inv.GetTableName())
 			assert.False(t, inv.InsideTx)
-			return next(ctx, inv)
+			next(ctx, inv)
 		}
 	})
 	i, err := od.InsertOrUpdate(&FilterTestEntity{})
@@ -250,12 +251,12 @@ func TestFilterOrmDecorator_InsertOrUpdate(t *testing.T) {
 func TestFilterOrmDecorator_LoadRelated(t *testing.T) {
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
-		return func(ctx context.Context, inv *Invocation) []interface{} {
+		return func(ctx context.Context, inv *Invocation) {
 			assert.Equal(t, "LoadRelatedWithCtx", inv.Method)
 			assert.Equal(t, 3, len(inv.Args))
 			assert.Equal(t, "FILTER_TEST", inv.GetTableName())
 			assert.False(t, inv.InsideTx)
-			return next(ctx, inv)
+			next(ctx, inv)
 		}
 	})
 	i, err := od.LoadRelated(&FilterTestEntity{}, "hello")
@@ -267,12 +268,12 @@ func TestFilterOrmDecorator_LoadRelated(t *testing.T) {
 func TestFilterOrmDecorator_QueryM2M(t *testing.T) {
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
-		return func(ctx context.Context, inv *Invocation) []interface{} {
+		return func(ctx context.Context, inv *Invocation) {
 			assert.Equal(t, "QueryM2MWithCtx", inv.Method)
 			assert.Equal(t, 2, len(inv.Args))
 			assert.Equal(t, "FILTER_TEST", inv.GetTableName())
 			assert.False(t, inv.InsideTx)
-			return next(ctx, inv)
+			next(ctx, inv)
 		}
 	})
 	res := od.QueryM2M(&FilterTestEntity{}, "hello")
@@ -283,12 +284,12 @@ func TestFilterOrmDecorator_QueryTable(t *testing.T) {
 	register()
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
-		return func(ctx context.Context, inv *Invocation) []interface{} {
+		return func(ctx context.Context, inv *Invocation) {
 			assert.Equal(t, "QueryTableWithCtx", inv.Method)
 			assert.Equal(t, 1, len(inv.Args))
 			assert.Equal(t, "FILTER_TEST", inv.GetTableName())
 			assert.False(t, inv.InsideTx)
-			return next(ctx, inv)
+			next(ctx, inv)
 		}
 	})
 	res := od.QueryTable(&FilterTestEntity{})
@@ -299,28 +300,28 @@ func TestFilterOrmDecorator_Raw(t *testing.T) {
 	register()
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
-		return func(ctx context.Context, inv *Invocation) []interface{} {
+		return func(ctx context.Context, inv *Invocation) {
 			assert.Equal(t, "RawWithCtx", inv.Method)
 			assert.Equal(t, 2, len(inv.Args))
 			assert.Equal(t, "", inv.GetTableName())
 			assert.False(t, inv.InsideTx)
-			return next(ctx, inv)
+			next(ctx, inv)
 		}
 	})
 	res := od.Raw("hh")
 	assert.Nil(t, res)
 }
 
-func TestFilterOrmDecorator_ReadForUpdate(t *testing.T)  {
+func TestFilterOrmDecorator_ReadForUpdate(t *testing.T) {
 	register()
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
-		return func(ctx context.Context, inv *Invocation) []interface{} {
+		return func(ctx context.Context, inv *Invocation) {
 			assert.Equal(t, "ReadForUpdateWithCtx", inv.Method)
 			assert.Equal(t, 2, len(inv.Args))
 			assert.Equal(t, "FILTER_TEST", inv.GetTableName())
 			assert.False(t, inv.InsideTx)
-			return next(ctx, inv)
+			next(ctx, inv)
 		}
 	})
 	err := od.ReadForUpdate(&FilterTestEntity{})
@@ -332,12 +333,12 @@ func TestFilterOrmDecorator_ReadOrCreate(t *testing.T) {
 	register()
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
-		return func(ctx context.Context, inv *Invocation) []interface{} {
+		return func(ctx context.Context, inv *Invocation) {
 			assert.Equal(t, "ReadOrCreateWithCtx", inv.Method)
 			assert.Equal(t, 3, len(inv.Args))
 			assert.Equal(t, "FILTER_TEST", inv.GetTableName())
 			assert.False(t, inv.InsideTx)
-			return next(ctx, inv)
+			next(ctx, inv)
 		}
 	})
 	ok, i, err := od.ReadOrCreate(&FilterTestEntity{}, "name")

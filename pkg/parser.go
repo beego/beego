@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"go/ast"
+	"golang.org/x/tools/go/packages"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -27,8 +28,6 @@ import (
 	"strconv"
 	"strings"
 	"unicode"
-
-	"golang.org/x/tools/go/packages"
 
 	"github.com/astaxie/beego/pkg/context/param"
 	"github.com/astaxie/beego/pkg/logs"

@@ -15,9 +15,8 @@
 package hints
 
 import (
-	"time"
-
 	"github.com/astaxie/beego/pkg/common"
+	"time"
 )
 
 const (

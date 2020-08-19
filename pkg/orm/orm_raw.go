@@ -17,10 +17,9 @@ package orm
 import (
 	"database/sql"
 	"fmt"
+	"github.com/pkg/errors"
 	"reflect"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 // raw sql string prepared statement
@@ -383,19 +382,33 @@ func (o *rawSet) QueryRow(containers ...interface{}) error {
 					}
 				}
 			} else {
-				for i := 0; i < ind.NumField(); i++ {
-					f := ind.Field(i)
-					fe := ind.Type().Field(i)
-					_, tags := parseStructTag(fe.Tag.Get(defaultStructTagName))
-					var col string
-					if col = tags["column"]; col == "" {
-						col = nameStrategyMap[nameStrategy](fe.Name)
-					}
-					if v, ok := columnsMp[col]; ok {
-						value := reflect.ValueOf(v).Elem().Interface()
-						o.setFieldValue(f, value)
+				// define recursive function
+				var recursiveSetField func(rv reflect.Value)
+				recursiveSetField = func(rv reflect.Value) {
+					for i := 0; i < rv.NumField(); i++ {
+						f := rv.Field(i)
+						fe := rv.Type().Field(i)
+
+						// check if the field is a Struct
+						// recursive the Struct type
+						if fe.Type.Kind() == reflect.Struct {
+							recursiveSetField(f)
+						}
+
+						_, tags := parseStructTag(fe.Tag.Get(defaultStructTagName))
+						var col string
+						if col = tags["column"]; col == "" {
+							col = nameStrategyMap[nameStrategy](fe.Name)
+						}
+						if v, ok := columnsMp[col]; ok {
+							value := reflect.ValueOf(v).Elem().Interface()
+							o.setFieldValue(f, value)
+						}
 					}
 				}
+
+				// init call the recursive function
+				recursiveSetField(ind)
 			}
 
 		} else {

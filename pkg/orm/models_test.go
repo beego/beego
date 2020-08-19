@@ -18,11 +18,10 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"github.com/astaxie/beego/pkg/orm/hints"
 	"os"
 	"strings"
 	"time"
-
-	"github.com/astaxie/beego/pkg/orm/hints"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
@@ -431,7 +430,7 @@ type PtrPk struct {
 }
 
 type StrPk struct {
-	Id    string `orm:"column(id);size(64);pk"`
+	Id    string  `orm:"column(id);size(64);pk"`
 	Value string
 }
 

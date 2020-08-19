@@ -28,9 +28,8 @@ func TestFilterChainBuilder_FilterChain(t *testing.T) {
 	builder := NewFilterChainBuilder()
 	assert.NotNil(t, builder.summaryVec)
 
-	filter := builder.FilterChain(func(ctx context.Context, inv *orm.Invocation) []interface{} {
+	filter := builder.FilterChain(func(ctx context.Context, inv *orm.Invocation) {
 		inv.Method = "coming"
-		return []interface{}{}
 	})
 	assert.NotNil(t, filter)
 

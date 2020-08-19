@@ -21,7 +21,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	assetfs "github.com/elazarl/go-bindata-assetfs"
+	"github.com/elazarl/go-bindata-assetfs"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/astaxie/beego/test"

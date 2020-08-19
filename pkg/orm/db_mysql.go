@@ -169,7 +169,7 @@ func (d *dbBaseMysql) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Val
 			if err != nil {
 				DebugLog.Println(ErrLastInsertIdUnavailable, ':', err)
 				return lastInsertId, ErrLastInsertIdUnavailable
-			} else {
+			}else{
 				return lastInsertId, nil
 			}
 		}

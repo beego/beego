@@ -18,10 +18,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/astaxie/beego/pkg/orm/hints"
 	"sync"
 	"time"
-
-	"github.com/astaxie/beego/pkg/orm/hints"
 
 	lru "github.com/hashicorp/golang-lru"
 

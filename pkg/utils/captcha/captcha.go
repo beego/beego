@@ -66,7 +66,7 @@ import (
 	"strings"
 	"time"
 
-	beego "github.com/astaxie/beego/pkg"
+	"github.com/astaxie/beego/pkg"
 	"github.com/astaxie/beego/pkg/cache"
 	"github.com/astaxie/beego/pkg/context"
 	"github.com/astaxie/beego/pkg/logs"

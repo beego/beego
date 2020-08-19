@@ -18,11 +18,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/astaxie/beego/pkg/orm/hints"
 	"reflect"
 	"strings"
 	"time"
-
-	"github.com/astaxie/beego/pkg/orm/hints"
 )
 
 const (
@@ -491,7 +490,7 @@ func (d *dbBase) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []s
 			if err != nil {
 				DebugLog.Println(ErrLastInsertIdUnavailable, ':', err)
 				return lastInsertId, ErrLastInsertIdUnavailable
-			} else {
+			}else{
 				return lastInsertId, nil
 			}
 		}
@@ -599,7 +598,7 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a
 			if err != nil {
 				DebugLog.Println(ErrLastInsertIdUnavailable, ':', err)
 				return lastInsertId, ErrLastInsertIdUnavailable
-			} else {
+			}else{
 				return lastInsertId, nil
 			}
 		}
@@ -1955,3 +1954,5 @@ func (d *dbBase) GenerateSpecifyIndex(tableName string, useIndex int, indexes []
 
 	return fmt.Sprintf(` %s INDEX(%s) `, useWay, strings.Join(s, `,`))
 }
+
+

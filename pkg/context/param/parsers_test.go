@@ -1,10 +1,8 @@
 package param
 
-import (
-	"reflect"
-	"testing"
-	"time"
-)
+import "testing"
+import "reflect"
+import "time"
 
 type testDefinition struct {
 	strValue       string

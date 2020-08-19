@@ -21,6 +21,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/astaxie/beego/pkg/orm/hints"
 	"io/ioutil"
 	"math"
 	"os"
@@ -30,8 +31,6 @@ import (
 	"strings"
 	"testing"
 	"time"
-
-	"github.com/astaxie/beego/pkg/orm/hints"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -1742,6 +1741,24 @@ func TestRawQueryRow(t *testing.T) {
 	throwFail(t, AssertIs(*status, 3))
 	throwFail(t, AssertIs(pid, nil))
 
+	type Embeded struct {
+		Status int `orm:"column(status)"`
+	}
+	type queryRowNoModelTest struct {
+		Id    int `orm:"column(id)"`
+		EmbedField Embeded
+	}
+
+	cols = []string{
+		"id", "status",
+	}
+	var row queryRowNoModelTest
+	query = fmt.Sprintf("SELECT %s%s%s FROM %suser%s WHERE id = ?", Q, strings.Join(cols, sep), Q, Q, Q)
+	err = dORM.Raw(query, 4).QueryRow(&row)
+	throwFail(t, err)
+	throwFail(t, AssertIs(row.Id, 4))
+	throwFail(t, AssertIs(row.EmbedField.Status, 3))
+
 	// test for sql.Null* fields
 	nData := &DataNull{
 		NullString:  sql.NullString{String: "test sql.null", Valid: true},
@@ -1766,6 +1783,13 @@ func TestRawQueryRow(t *testing.T) {
 	throwFail(t, AssertIs(nd.NullInt64.Int64, 42))
 	throwFail(t, AssertIs(nd.NullFloat64.Valid, true))
 	throwFail(t, AssertIs(nd.NullFloat64.Float64, 42.42))
+
+	var u User
+	query = fmt.Sprintf("SELECT * FROM %suser%s ",Q,Q)
+	err = dORM.Raw(query).QueryRow(&u)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(u.UserName, "slene"))
+	throwFailNow(t, AssertIs(u.Extra.Name, "beego"))
 }
 
 // user_profile table

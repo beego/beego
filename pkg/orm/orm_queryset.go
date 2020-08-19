@@ -17,7 +17,6 @@ package orm
 import (
 	"context"
 	"fmt"
-
 	"github.com/astaxie/beego/pkg/orm/hints"
 )
 
