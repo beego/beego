@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"time"
 )
 
 // JLWriter implements beego LoggerInterface and is used to send jiaoliao webhook
@@ -30,12 +29,12 @@ func (s *JLWriter) Init(jsonconfig string) error {
 
 // WriteMsg writes message in smtp writer.
 // Sends an email with subject and only this message.
-func (s *JLWriter) WriteMsg(when time.Time, msg string, level int) error {
-	if level > s.Level {
+func (s *JLWriter) WriteMsg(lm *LogMsg) error {
+	if lm.Level > s.Level {
 		return nil
 	}
 
-	text := fmt.Sprintf("%s %s", when.Format("2006-01-02 15:04:05"), msg)
+	text := fmt.Sprintf("%s %s", lm.When.Format("2006-01-02 15:04:05"), lm.Msg)
 
 	form := url.Values{}
 	form.Add("authorName", s.AuthorName)

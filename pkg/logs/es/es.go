@@ -60,14 +60,14 @@ func (el *esLogger) Init(jsonconfig string) error {
 }
 
 // WriteMsg writes the msg and level into es
-func (el *esLogger) WriteMsg(when time.Time, msg string, level int) error {
-	if level > el.Level {
+func (el *esLogger) WriteMsg(lm *logs.LogMsg) error {
+	if lm.Level > el.Level {
 		return nil
 	}
 
 	idx := LogDocument{
-		Timestamp: when.Format(time.RFC3339),
-		Msg:       msg,
+		Timestamp: lm.When.Format(time.RFC3339),
+		Msg:       lm.Msg,
 	}
 
 	body, err := json.Marshal(idx)
@@ -75,7 +75,7 @@ func (el *esLogger) WriteMsg(when time.Time, msg string, level int) error {
 		return err
 	}
 	req := esapi.IndexRequest{
-		Index:        fmt.Sprintf("%04d.%02d.%02d", when.Year(), when.Month(), when.Day()),
+		Index:        fmt.Sprintf("%04d.%02d.%02d", lm.When.Year(), lm.When.Month(), lm.When.Day()),
 		DocumentType: "logs",
 		Body:         strings.NewReader(string(body)),
 	}
