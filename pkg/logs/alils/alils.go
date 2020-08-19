@@ -113,7 +113,7 @@ func (c *aliLSWriter) WriteMsg(lm *logs.LogMsg) error {
 	if c.withMap {
 
 		// Topic，LogGroup
-		strs := strings.SplitN(msg, Delimiter, 2)
+		strs := strings.SplitN(lm.Msg, Delimiter, 2)
 		if len(strs) == 2 {
 			pos := strings.LastIndex(strs[0], " ")
 			topic = strs[0][pos+1 : len(strs[0])]
@@ -123,11 +123,11 @@ func (c *aliLSWriter) WriteMsg(lm *logs.LogMsg) error {
 
 		// send to empty Topic
 		if lg == nil {
-			content = msg
+			content = lm.Msg
 			lg = c.group[0]
 		}
 	} else {
-		content = msg
+		content = lm.Msg
 		lg = c.group[0]
 	}
 
@@ -137,7 +137,7 @@ func (c *aliLSWriter) WriteMsg(lm *logs.LogMsg) error {
 	}
 
 	l := &Log{
-		Time: proto.Uint32(uint32(when.Unix())),
+		Time: proto.Uint32(uint32(lm.When.Unix())),
 		Contents: []*LogContent{
 			c1,
 		},
