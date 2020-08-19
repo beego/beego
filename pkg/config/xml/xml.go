@@ -74,6 +74,7 @@ func (xc *Config) ParseData(data []byte) (config.Configer, error) {
 
 // ConfigContainer is a Config which represents the xml configuration.
 type ConfigContainer struct {
+	config.BaseConfiger
 	data map[string]interface{}
 	sync.Mutex
 }

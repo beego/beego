@@ -411,6 +411,7 @@ func LoadAppConfig(adapterName, configPath string) error {
 }
 
 type beegoAppConfig struct {
+	config.BaseConfiger
 	innerConfig config.Configer
 }
 
@@ -419,7 +420,7 @@ func newAppConfig(appConfigProvider, appConfigPath string) (*beegoAppConfig, err
 	if err != nil {
 		return nil, err
 	}
-	return &beegoAppConfig{ac}, nil
+	return &beegoAppConfig{innerConfig: ac}, nil
 }
 
 func (b *beegoAppConfig) Set(key, val string) error {
