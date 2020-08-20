@@ -114,6 +114,10 @@ func (s *SMTPWriter) sendMail(hostAddressWithPort string, auth smtp.Auth, fromAd
 	return client.Quit()
 }
 
+func (s *SMTPWriter) Format(lm *LogMsg) string {
+	return lm.Msg
+}
+
 // WriteMsg writes message in smtp writer.
 // Sends an email with subject and only this message.
 func (s *SMTPWriter) WriteMsg(lm *LogMsg) error {

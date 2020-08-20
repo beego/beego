@@ -27,6 +27,10 @@ func (s *JLWriter) Init(jsonconfig string) error {
 	return json.Unmarshal([]byte(jsonconfig), s)
 }
 
+func (s *JLWriter) Format(lm *LogMsg) string {
+	return lm.Msg
+}
+
 // WriteMsg writes message in smtp writer.
 // Sends an email with subject and only this message.
 func (s *JLWriter) WriteMsg(lm *LogMsg) error {

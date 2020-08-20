@@ -35,6 +35,10 @@ type esLogger struct {
 	Level int    `json:"level"`
 }
 
+func (el *esLogger) Format(lm *logs.LogMsg) string {
+	return lm.Msg
+}
+
 // {"dsn":"http://localhost:9200/","level":1}
 func (el *esLogger) Init(jsonconfig string) error {
 	err := json.Unmarshal([]byte(jsonconfig), el)

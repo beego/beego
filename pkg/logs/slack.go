@@ -18,6 +18,10 @@ func newSLACKWriter() Logger {
 	return &SLACKWriter{Level: LevelTrace}
 }
 
+func (s *SLACKWriter) Format(lm *LogMsg) string {
+	return lm.Msg
+}
+
 // Init SLACKWriter with json config string
 func (s *SLACKWriter) Init(jsonconfig string) error {
 	return json.Unmarshal([]byte(jsonconfig), s)
