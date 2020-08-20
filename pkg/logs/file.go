@@ -89,6 +89,10 @@ func newFileWriter() Logger {
 	return w
 }
 
+func (w *fileLogWriter) Format(lm *LogMsg) string {
+	return lm.Msg
+}
+
 // Init file logger with json config.
 // jsonConfig like:
 //  {
