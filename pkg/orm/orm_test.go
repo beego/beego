@@ -1742,6 +1742,24 @@ func TestRawQueryRow(t *testing.T) {
 	throwFail(t, AssertIs(*status, 3))
 	throwFail(t, AssertIs(pid, nil))
 
+	type Embeded struct {
+		Email string
+	}
+	type queryRowNoModelTest struct {
+		Id         int
+		EmbedField Embeded
+	}
+
+	cols = []string{
+		"id", "email",
+	}
+	var row queryRowNoModelTest
+	query = fmt.Sprintf("SELECT %s%s%s FROM %suser%s WHERE id = ?", Q, strings.Join(cols, sep), Q, Q, Q)
+	err = dORM.Raw(query, 4).QueryRow(&row)
+	throwFail(t, err)
+	throwFail(t, AssertIs(row.Id, 4))
+	throwFail(t, AssertIs(row.EmbedField.Email, "nobody@gmail.com"))
+
 	// test for sql.Null* fields
 	nData := &DataNull{
 		NullString:  sql.NullString{String: "test sql.null", Valid: true},
