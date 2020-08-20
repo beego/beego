@@ -15,6 +15,7 @@
 package session
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -87,16 +88,16 @@ func (fs *FileSessionStore) SessionRelease(w http.ResponseWriter) {
 		SLogger.Println(err)
 		return
 	}
-	_, err = os.Stat(path.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid))
+	_, err = os.Stat(path.Join(filepder.FilePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid))
 	var f *os.File
 	if err == nil {
-		f, err = os.OpenFile(path.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid), os.O_RDWR, 0777)
+		f, err = os.OpenFile(path.Join(filepder.FilePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid), os.O_RDWR, 0777)
 		if err != nil {
 			SLogger.Println(err)
 			return
 		}
 	} else if os.IsNotExist(err) {
-		f, err = os.Create(path.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid))
+		f, err = os.Create(path.Join(filepder.FilePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid))
 		if err != nil {
 			SLogger.Println(err)
 			return
@@ -114,14 +115,20 @@ func (fs *FileSessionStore) SessionRelease(w http.ResponseWriter) {
 type FileProvider struct {
 	lock        sync.RWMutex
 	maxlifetime int64
-	savePath    string
+	fileProviderConfig
+}
+
+type fileProviderConfig struct {
+	FilePath string `json:"filePath"`
 }
 
 // SessionInit Init file session provider.
 // savePath sets the session files path.
-func (fp *FileProvider) SessionInit(maxlifetime int64, savePath string) error {
+func (fp *FileProvider) SessionInit(maxlifetime int64, config string) error {
+	if err := json.Unmarshal([]byte(config), &fp.fileProviderConfig); err != nil {
+		return err
+	}
 	fp.maxlifetime = maxlifetime
-	fp.savePath = savePath
 	return nil
 }
 
@@ -139,23 +146,23 @@ func (fp *FileProvider) SessionRead(sid string) (Store, error) {
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()
 
-	err := os.MkdirAll(path.Join(fp.savePath, string(sid[0]), string(sid[1])), 0755)
+	err := os.MkdirAll(path.Join(fp.FilePath, string(sid[0]), string(sid[1])), 0755)
 	if err != nil {
 		SLogger.Println(err.Error())
 	}
-	_, err = os.Stat(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid))
+	_, err = os.Stat(path.Join(fp.FilePath, string(sid[0]), string(sid[1]), sid))
 	var f *os.File
 	if err == nil {
-		f, err = os.OpenFile(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid), os.O_RDWR, 0777)
+		f, err = os.OpenFile(path.Join(fp.FilePath, string(sid[0]), string(sid[1]), sid), os.O_RDWR, 0777)
 	} else if os.IsNotExist(err) {
-		f, err = os.Create(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid))
+		f, err = os.Create(path.Join(fp.FilePath, string(sid[0]), string(sid[1]), sid))
 	} else {
 		return nil, err
 	}
 
 	defer f.Close()
 
-	os.Chtimes(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid), time.Now(), time.Now())
+	os.Chtimes(path.Join(fp.FilePath, string(sid[0]), string(sid[1]), sid), time.Now(), time.Now())
 	var kv map[interface{}]interface{}
 	b, err := ioutil.ReadAll(f)
 	if err != nil {
@@ -185,7 +192,7 @@ func (fp *FileProvider) SessionExist(sid string) (bool, error) {
 		return false, errors.New("min length of session id is 2")
 	}
 
-	_, err := os.Stat(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid))
+	_, err := os.Stat(path.Join(fp.FilePath, string(sid[0]), string(sid[1]), sid))
 	return err == nil, nil
 }
 
@@ -193,7 +200,7 @@ func (fp *FileProvider) SessionExist(sid string) (bool, error) {
 func (fp *FileProvider) SessionDestroy(sid string) error {
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()
-	os.Remove(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid))
+	os.Remove(path.Join(fp.FilePath, string(sid[0]), string(sid[1]), sid))
 	return nil
 }
 
@@ -203,14 +210,14 @@ func (fp *FileProvider) SessionGC() {
 	defer filepder.lock.Unlock()
 
 	gcmaxlifetime = fp.maxlifetime
-	filepath.Walk(fp.savePath, gcpath)
+	filepath.Walk(fp.FilePath, gcpath)
 }
 
 // SessionAll Get active file session number.
 // it walks save path to count files.
 func (fp *FileProvider) SessionAll() int {
 	a := &activeSession{}
-	err := filepath.Walk(fp.savePath, func(path string, f os.FileInfo, err error) error {
+	err := filepath.Walk(fp.FilePath, func(path string, f os.FileInfo, err error) error {
 		return a.visit(path, f, err)
 	})
 	if err != nil {
@@ -226,9 +233,9 @@ func (fp *FileProvider) SessionRegenerate(oldsid, sid string) (Store, error) {
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()
 
-	oldPath := path.Join(fp.savePath, string(oldsid[0]), string(oldsid[1]))
+	oldPath := path.Join(fp.FilePath, string(oldsid[0]), string(oldsid[1]))
 	oldSidFile := path.Join(oldPath, oldsid)
-	newPath := path.Join(fp.savePath, string(sid[0]), string(sid[1]))
+	newPath := path.Join(fp.FilePath, string(sid[0]), string(sid[1]))
 	newSidFile := path.Join(newPath, sid)
 
 	// new sid file is exist

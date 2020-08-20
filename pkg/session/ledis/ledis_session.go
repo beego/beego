@@ -2,12 +2,11 @@
 package ledis
 
 import (
+	"encoding/json"
 	"net/http"
-	"strconv"
-	"strings"
 	"sync"
 
-	"github.com/ledisdb/ledisdb/config"
+	ledisConfig "github.com/ledisdb/ledisdb/config"
 	"github.com/ledisdb/ledisdb/ledis"
 
 	"github.com/astaxie/beego/pkg/session"
@@ -78,35 +77,33 @@ func (ls *SessionStore) SessionRelease(w http.ResponseWriter) {
 // Provider ledis session provider
 type Provider struct {
 	maxlifetime int64
-	savePath    string
-	db          int
+	ledisProviderConfig
+}
+
+type ledisProviderConfig struct {
+	Path string `json:"path"`
+	Db int `json:"db"`
 }
 
 // SessionInit init ledis session
 // savepath like ledis server saveDataPath,pool size
 // e.g. 127.0.0.1:6379,100,astaxie
-func (lp *Provider) SessionInit(maxlifetime int64, savePath string) error {
+func (lp *Provider) SessionInit(maxlifetime int64, config string) error {
 	var err error
-	lp.maxlifetime = maxlifetime
-	configs := strings.Split(savePath, ",")
-	if len(configs) == 1 {
-		lp.savePath = configs[0]
-	} else if len(configs) == 2 {
-		lp.savePath = configs[0]
-		lp.db, err = strconv.Atoi(configs[1])
-		if err != nil {
-			return err
-		}
+	if err = json.Unmarshal([]byte(config), &lp.ledisProviderConfig); err != nil {
+		return err
 	}
-	cfg := new(config.Config)
-	cfg.DataDir = lp.savePath
+	lp.maxlifetime = maxlifetime
+
+	cfg := new(ledisConfig.Config)
+	cfg.DataDir = lp.Path
 
 	var ledisInstance *ledis.Ledis
 	ledisInstance, err = ledis.Open(cfg)
 	if err != nil {
 		return err
 	}
-	c, err = ledisInstance.Select(lp.db)
+	c, err = ledisInstance.Select(lp.Db)
 	return err
 }
 

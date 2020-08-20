@@ -81,13 +81,11 @@ type MemProvider struct {
 	sessions    map[string]*list.Element // map in memory
 	list        *list.List               // for gc
 	maxlifetime int64
-	savePath    string
 }
 
 // SessionInit init memory session
-func (pder *MemProvider) SessionInit(maxlifetime int64, savePath string) error {
+func (pder *MemProvider) SessionInit(maxlifetime int64, config string) error {
 	pder.maxlifetime = maxlifetime
-	pder.savePath = savePath
 	return nil
 }
 

@@ -33,8 +33,8 @@
 package redis_cluster
 
 import (
+	"encoding/json"
 	"net/http"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -109,74 +109,37 @@ func (rs *SessionStore) SessionRelease(w http.ResponseWriter) {
 // Provider redis_cluster session provider
 type Provider struct {
 	maxlifetime        int64
-	savePath           string
-	poolsize           int
-	password           string
-	dbNum              int
-	idleTimeout        time.Duration
-	idleCheckFrequency time.Duration
-	maxRetries         int
 	poollist           *rediss.ClusterClient
+	redisClusterProviderConfig
+}
+
+type redisClusterProviderConfig struct {
+	Addr string `json:"addr"`
+	PoolSize int `json:"poolSize"`
+	Password string `json:"password"`
+	DbNum int `json:"dbNum"`
+	IdleTimeout int `json:"idleTimeout"`
+	IdleCheckFrequency int `json:"idleCheckFrequency"`
+	MaxRetries int `json:"maxRetries"`
 }
 
 // SessionInit init redis_cluster session
 // savepath like redis server addr,pool size,password,dbnum
 // e.g. 127.0.0.1:6379;127.0.0.1:6380,100,test,0
-func (rp *Provider) SessionInit(maxlifetime int64, savePath string) error {
+func (rp *Provider) SessionInit(maxlifetime int64, config string) error {
 	rp.maxlifetime = maxlifetime
-	configs := strings.Split(savePath, ",")
-	if len(configs) > 0 {
-		rp.savePath = configs[0]
-	}
-	if len(configs) > 1 {
-		poolsize, err := strconv.Atoi(configs[1])
-		if err != nil || poolsize < 0 {
-			rp.poolsize = MaxPoolSize
-		} else {
-			rp.poolsize = poolsize
-		}
-	} else {
-		rp.poolsize = MaxPoolSize
-	}
-	if len(configs) > 2 {
-		rp.password = configs[2]
-	}
-	if len(configs) > 3 {
-		dbnum, err := strconv.Atoi(configs[3])
-		if err != nil || dbnum < 0 {
-			rp.dbNum = 0
-		} else {
-			rp.dbNum = dbnum
-		}
-	} else {
-		rp.dbNum = 0
-	}
-	if len(configs) > 4 {
-		timeout, err := strconv.Atoi(configs[4])
-		if err == nil && timeout > 0 {
-			rp.idleTimeout = time.Duration(timeout) * time.Second
-		}
-	}
-	if len(configs) > 5 {
-		checkFrequency, err := strconv.Atoi(configs[5])
-		if err == nil && checkFrequency > 0 {
-			rp.idleCheckFrequency = time.Duration(checkFrequency) * time.Second
-		}
-	}
-	if len(configs) > 6 {
-		retries, err := strconv.Atoi(configs[6])
-		if err == nil && retries > 0 {
-			rp.maxRetries = retries
-		}
+	rp.PoolSize = MaxPoolSize
+	if err := json.Unmarshal([]byte(config), &rp.redisClusterProviderConfig); err != nil {
+		return err
 	}
 
 	rp.poollist = rediss.NewClusterClient(&rediss.ClusterOptions{
-		Addrs:              strings.Split(rp.savePath, ";"),
-		Password:           rp.password,
-		PoolSize:           rp.poolsize,
-		IdleTimeout:        rp.idleTimeout,
-		IdleCheckFrequency: rp.idleCheckFrequency,
-		MaxRetries:         rp.maxRetries,
+		Addrs:              strings.Split(rp.Addr, ";"),
+		Password:           rp.Password,
+		PoolSize:           rp.PoolSize,
+		IdleTimeout:        time.Duration(rp.IdleTimeout) * time.Second,
+		IdleCheckFrequency: time.Duration(rp.IdleCheckFrequency) * time.Second,
+		MaxRetries:         rp.MaxRetries,
 	})
 	return rp.poollist.Ping().Err()
 }

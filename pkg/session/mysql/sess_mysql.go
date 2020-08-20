@@ -42,6 +42,7 @@ package mysql
 
 import (
 	"database/sql"
+	"encoding/json"
 	"net/http"
 	"sync"
 	"time"
@@ -120,12 +121,16 @@ func (st *SessionStore) SessionRelease(w http.ResponseWriter) {
 // Provider mysql session provider
 type Provider struct {
 	maxlifetime int64
-	savePath    string
+	mysqlProviderConfig
+}
+
+type mysqlProviderConfig struct {
+	Addr string `json:"addr"`
 }
 
 // connect to mysql
 func (mp *Provider) connectInit() *sql.DB {
-	db, e := sql.Open("mysql", mp.savePath)
+	db, e := sql.Open("mysql", mp.Addr)
 	if e != nil {
 		return nil
 	}
@@ -134,9 +139,11 @@ func (mp *Provider) connectInit() *sql.DB {
 
 // SessionInit init mysql session.
 // savepath is the connection string of mysql.
-func (mp *Provider) SessionInit(maxlifetime int64, savePath string) error {
+func (mp *Provider) SessionInit(maxlifetime int64, config string) error {
+	if err := json.Unmarshal([]byte(config), &mp.mysqlProviderConfig); err != nil {
+		return err
+	}
 	mp.maxlifetime = maxlifetime
-	mp.savePath = savePath
 	return nil
 }
 

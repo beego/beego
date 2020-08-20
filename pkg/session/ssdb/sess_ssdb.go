@@ -1,10 +1,9 @@
 package ssdb
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
-	"strconv"
-	"strings"
 	"sync"
 
 	"github.com/astaxie/beego/pkg/session"
@@ -16,30 +15,30 @@ var ssdbProvider = &Provider{}
 // Provider holds ssdb client and configs
 type Provider struct {
 	client      *ssdb.Client
-	host        string
-	port        int
 	maxLifetime int64
+	ssdbProviderConfig
+}
+
+type ssdbProviderConfig struct {
+	Host string `json:"host"`
+	Port int `json:"port"`
 }
 
 func (p *Provider) connectInit() error {
 	var err error
-	if p.host == "" || p.port == 0 {
+	if p.Host == "" || p.Port == 0 {
 		return errors.New("SessionInit First")
 	}
-	p.client, err = ssdb.Connect(p.host, p.port)
+	p.client, err = ssdb.Connect(p.Host, p.Port)
 	return err
 }
 
 // SessionInit init the ssdb with the config
-func (p *Provider) SessionInit(maxLifetime int64, savePath string) error {
-	p.maxLifetime = maxLifetime
-	address := strings.Split(savePath, ":")
-	p.host = address[0]
-
-	var err error
-	if p.port, err = strconv.Atoi(address[1]); err != nil {
+func (p *Provider) SessionInit(maxLifetime int64, config string) error {
+	if err := json.Unmarshal([]byte(config), &p.ssdbProviderConfig); err != nil {
 		return err
 	}
+	p.maxLifetime = maxLifetime
 	return p.connectInit()
 }
 

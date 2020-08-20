@@ -75,20 +75,20 @@ func (st *CookieSessionStore) SessionID() string {
 // SessionRelease Write cookie session to http response cookie
 func (st *CookieSessionStore) SessionRelease(w http.ResponseWriter) {
 	st.lock.Lock()
-	encodedCookie, err := encodeCookie(cookiepder.block, cookiepder.config.SecurityKey, cookiepder.config.SecurityName, st.values)
+	encodedCookie, err := encodeCookie(cookiepder.block, cookiepder.SecurityKey, cookiepder.SecurityName, st.values)
 	st.lock.Unlock()
 	if err == nil {
-		cookie := &http.Cookie{Name: cookiepder.config.CookieName,
+		cookie := &http.Cookie{Name: cookiepder.CookieName,
 			Value:    url.QueryEscape(encodedCookie),
 			Path:     "/",
 			HttpOnly: true,
-			Secure:   cookiepder.config.Secure,
-			MaxAge:   cookiepder.config.Maxage}
+			Secure:   cookiepder.Secure,
+			MaxAge:   cookiepder.Maxage}
 		http.SetCookie(w, cookie)
 	}
 }
 
-type cookieConfig struct {
+type cookieProviderConfig struct {
 	SecurityKey  string `json:"securityKey"`
 	BlockKey     string `json:"blockKey"`
 	SecurityName string `json:"securityName"`
@@ -100,8 +100,8 @@ type cookieConfig struct {
 // CookieProvider Cookie session provider
 type CookieProvider struct {
 	maxlifetime int64
-	config      *cookieConfig
 	block       cipher.Block
+	cookieProviderConfig
 }
 
 // SessionInit Init cookie session provider with max lifetime and config json.
@@ -113,18 +113,17 @@ type CookieProvider struct {
 // 	cookieName - cookie name
 // 	maxage - cookie max life time.
 func (pder *CookieProvider) SessionInit(maxlifetime int64, config string) error {
-	pder.config = &cookieConfig{}
-	err := json.Unmarshal([]byte(config), pder.config)
+	err := json.Unmarshal([]byte(config), &pder.cookieProviderConfig)
 	if err != nil {
 		return err
 	}
-	if pder.config.BlockKey == "" {
-		pder.config.BlockKey = string(generateRandomKey(16))
+	if pder.BlockKey == "" {
+		pder.BlockKey = string(generateRandomKey(16))
 	}
-	if pder.config.SecurityName == "" {
-		pder.config.SecurityName = string(generateRandomKey(20))
+	if pder.SecurityName == "" {
+		pder.SecurityName = string(generateRandomKey(20))
 	}
-	pder.block, err = aes.NewCipher([]byte(pder.config.BlockKey))
+	pder.block, err = aes.NewCipher([]byte(pder.BlockKey))
 	if err != nil {
 		return err
 	}
@@ -136,8 +135,8 @@ func (pder *CookieProvider) SessionInit(maxlifetime int64, config string) error 
 // decode cooke string to map and put into SessionStore with sid.
 func (pder *CookieProvider) SessionRead(sid string) (Store, error) {
 	maps, _ := decodeCookie(pder.block,
-		pder.config.SecurityKey,
-		pder.config.SecurityName,
+		pder.SecurityKey,
+		pder.SecurityName,
 		sid, pder.maxlifetime)
 	if maps == nil {
 		maps = make(map[interface{}]interface{})

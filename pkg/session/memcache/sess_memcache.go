@@ -33,8 +33,8 @@
 package memcache
 
 import (
+	"encoding/json"
 	"net/http"
-	"strings"
 	"sync"
 
 	"github.com/astaxie/beego/pkg/session"
@@ -105,18 +105,21 @@ func (rs *SessionStore) SessionRelease(w http.ResponseWriter) {
 // MemProvider memcache session provider
 type MemProvider struct {
 	maxlifetime int64
-	conninfo    []string
-	poolsize    int
-	password    string
+	MemProviderConfig
+}
+
+type MemProviderConfig struct {
+	ConnInfo []string `json:"connInfo"`
 }
 
 // SessionInit init memcache session
 // savepath like
 // e.g. 127.0.0.1:9090
-func (rp *MemProvider) SessionInit(maxlifetime int64, savePath string) error {
+func (rp *MemProvider) SessionInit(maxlifetime int64, config string) error {
+	if err := json.Unmarshal([]byte(config), &rp.MemProviderConfig); err != nil {
+		return err
+	}
 	rp.maxlifetime = maxlifetime
-	rp.conninfo = strings.Split(savePath, ";")
-	client = memcache.New(rp.conninfo...)
 	return nil
 }
 
@@ -212,7 +215,7 @@ func (rp *MemProvider) SessionDestroy(sid string) error {
 }
 
 func (rp *MemProvider) connectInit() error {
-	client = memcache.New(rp.conninfo...)
+	client = memcache.New(rp.ConnInfo...)
 	return nil
 }
 

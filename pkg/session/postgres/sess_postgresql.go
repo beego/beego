@@ -52,6 +52,7 @@ package postgres
 
 import (
 	"database/sql"
+	"encoding/json"
 	"net/http"
 	"sync"
 	"time"
@@ -127,12 +128,16 @@ func (st *SessionStore) SessionRelease(w http.ResponseWriter) {
 // Provider postgresql session provider
 type Provider struct {
 	maxlifetime int64
-	savePath    string
+	postgresqlProviderConfig
+}
+
+type postgresqlProviderConfig struct {
+	Addr string `json:"addr"`
 }
 
 // connect to postgresql
 func (mp *Provider) connectInit() *sql.DB {
-	db, e := sql.Open("postgres", mp.savePath)
+	db, e := sql.Open("postgres", mp.Addr)
 	if e != nil {
 		return nil
 	}
@@ -141,9 +146,11 @@ func (mp *Provider) connectInit() *sql.DB {
 
 // SessionInit init postgresql session.
 // savepath is the connection string of postgresql.
-func (mp *Provider) SessionInit(maxlifetime int64, savePath string) error {
+func (mp *Provider) SessionInit(maxlifetime int64, config string) error {
+	if err := json.Unmarshal([]byte(config), &mp.postgresqlProviderConfig); err != nil {
+		return err
+	}
 	mp.maxlifetime = maxlifetime
-	mp.savePath = savePath
 	return nil
 }
 

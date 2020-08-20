@@ -33,8 +33,8 @@
 package redis_sentinel
 
 import (
+	"encoding/json"
 	"net/http"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -109,86 +109,41 @@ func (rs *SessionStore) SessionRelease(w http.ResponseWriter) {
 // Provider redis_sentinel session provider
 type Provider struct {
 	maxlifetime        int64
-	savePath           string
-	poolsize           int
-	password           string
-	dbNum              int
-	idleTimeout        time.Duration
-	idleCheckFrequency time.Duration
-	maxRetries         int
 	poollist           *redis.Client
-	masterName         string
+	redisSentinelProviderConfig
+}
+
+type redisSentinelProviderConfig struct {
+	Addr string `json:"addr"`
+	PoolSize int `json:"poolSize"`
+	Password string `json:"password"`
+	DbNum int `json:"dbNum"`
+	IdleTimeout int `json:"idleTimeout"`
+	IdleCheckFrequency int `json:"idleCheckFrequency"`
+	MaxRetries int `json:"maxRetries"`
+	MasterName string `json:"masterName"`
 }
 
 // SessionInit init redis_sentinel session
 // savepath like redis sentinel addr,pool size,password,dbnum,masterName
 // e.g. 127.0.0.1:26379;127.0.0.2:26379,100,1qaz2wsx,0,mymaster
-func (rp *Provider) SessionInit(maxlifetime int64, savePath string) error {
+func (rp *Provider) SessionInit(maxlifetime int64, config string) error {
 	rp.maxlifetime = maxlifetime
-	configs := strings.Split(savePath, ",")
-	if len(configs) > 0 {
-		rp.savePath = configs[0]
-	}
-	if len(configs) > 1 {
-		poolsize, err := strconv.Atoi(configs[1])
-		if err != nil || poolsize < 0 {
-			rp.poolsize = DefaultPoolSize
-		} else {
-			rp.poolsize = poolsize
-		}
-	} else {
-		rp.poolsize = DefaultPoolSize
-	}
-	if len(configs) > 2 {
-		rp.password = configs[2]
-	}
-	if len(configs) > 3 {
-		dbnum, err := strconv.Atoi(configs[3])
-		if err != nil || dbnum < 0 {
-			rp.dbNum = 0
-		} else {
-			rp.dbNum = dbnum
-		}
-	} else {
-		rp.dbNum = 0
-	}
-	if len(configs) > 4 {
-		if configs[4] != "" {
-			rp.masterName = configs[4]
-		} else {
-			rp.masterName = "mymaster"
-		}
-	} else {
-		rp.masterName = "mymaster"
-	}
-	if len(configs) > 5 {
-		timeout, err := strconv.Atoi(configs[4])
-		if err == nil && timeout > 0 {
-			rp.idleTimeout = time.Duration(timeout) * time.Second
-		}
-	}
-	if len(configs) > 6 {
-		checkFrequency, err := strconv.Atoi(configs[5])
-		if err == nil && checkFrequency > 0 {
-			rp.idleCheckFrequency = time.Duration(checkFrequency) * time.Second
-		}
-	}
-	if len(configs) > 7 {
-		retries, err := strconv.Atoi(configs[6])
-		if err == nil && retries > 0 {
-			rp.maxRetries = retries
-		}
+	rp.PoolSize = DefaultPoolSize
+	rp.MasterName = "mymaster"
+	if err := json.Unmarshal([]byte(config), &rp.redisSentinelProviderConfig); err != nil {
+		return err
 	}
 
 	rp.poollist = redis.NewFailoverClient(&redis.FailoverOptions{
-		SentinelAddrs:      strings.Split(rp.savePath, ";"),
-		Password:           rp.password,
-		PoolSize:           rp.poolsize,
-		DB:                 rp.dbNum,
-		MasterName:         rp.masterName,
-		IdleTimeout:        rp.idleTimeout,
-		IdleCheckFrequency: rp.idleCheckFrequency,
-		MaxRetries:         rp.maxRetries,
+		SentinelAddrs:      strings.Split(rp.Addr, ";"),
+		Password:           rp.Password,
+		PoolSize:           rp.PoolSize,
+		DB:                 rp.DbNum,
+		MasterName:         rp.MasterName,
+		IdleTimeout:        time.Duration(rp.IdleTimeout) * time.Second,
+		IdleCheckFrequency: time.Duration(rp.IdleCheckFrequency) * time.Second,
+		MaxRetries:         rp.MaxRetries,
 	})
 
 	return rp.poollist.Ping().Err()

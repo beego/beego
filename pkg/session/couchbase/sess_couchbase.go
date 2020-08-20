@@ -33,8 +33,8 @@
 package couchbase
 
 import (
+	"encoding/json"
 	"net/http"
-	"strings"
 	"sync"
 
 	couchbase "github.com/couchbase/go-couchbase"
@@ -56,10 +56,14 @@ type SessionStore struct {
 // Provider couchabse provided
 type Provider struct {
 	maxlifetime int64
-	savePath    string
-	pool        string
-	bucket      string
 	b           *couchbase.Bucket
+	CouchBaseProviderConfig
+}
+
+type CouchBaseProviderConfig struct {
+	Addr string `json:"addr"`
+	Pool string `json:"pool"`
+	Bucket string `json:"bucket"`
 }
 
 // Set value to couchabse session
@@ -114,17 +118,17 @@ func (cs *SessionStore) SessionRelease(w http.ResponseWriter) {
 }
 
 func (cp *Provider) getBucket() *couchbase.Bucket {
-	c, err := couchbase.Connect(cp.savePath)
+	c, err := couchbase.Connect(cp.Addr)
 	if err != nil {
 		return nil
 	}
 
-	pool, err := c.GetPool(cp.pool)
+	pool, err := c.GetPool(cp.Pool)
 	if err != nil {
 		return nil
 	}
 
-	bucket, err := pool.GetBucket(cp.bucket)
+	bucket, err := pool.GetBucket(cp.Bucket)
 	if err != nil {
 		return nil
 	}
@@ -135,18 +139,11 @@ func (cp *Provider) getBucket() *couchbase.Bucket {
 // SessionInit init couchbase session
 // savepath like couchbase server REST/JSON URL
 // e.g. http://host:port/, Pool, Bucket
-func (cp *Provider) SessionInit(maxlifetime int64, savePath string) error {
+func (cp *Provider) SessionInit(maxlifetime int64, config string) error {
+	if err := json.Unmarshal([]byte(config), &cp.CouchBaseProviderConfig); err != nil {
+		return err
+	}
 	cp.maxlifetime = maxlifetime
-	configs := strings.Split(savePath, ",")
-	if len(configs) > 0 {
-		cp.savePath = configs[0]
-	}
-	if len(configs) > 1 {
-		cp.pool = configs[1]
-	}
-	if len(configs) > 2 {
-		cp.bucket = configs[2]
-	}
 
 	return nil
 }

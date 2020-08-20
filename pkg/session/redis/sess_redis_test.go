@@ -16,7 +16,7 @@ func TestRedis(t *testing.T) {
 		Maxlifetime:     3600,
 		Secure:          false,
 		CookieLifeTime:  3600,
-		ProviderConfig:  "127.0.0.1:6379,100,,0,30",
+		ProviderConfig: `{"addr":"127.0.0.1:6379","poolSize":100,"dbNum":0,"idleTimeout":30}`,
 	}
 	globalSession, err := session.NewManager("redis", sessionConfig)
 	if err != nil {

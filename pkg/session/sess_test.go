@@ -117,7 +117,7 @@ func TestParseConfig(t *testing.T) {
 	if cf2.EnableSetCookie {
 		t.Fatal("parseconfig get enableSetCookie error")
 	}
-	cconfig := new(cookieConfig)
+	cconfig := new(cookieProviderConfig)
 	err = json.Unmarshal([]byte(cf2.ProviderConfig), cconfig)
 	if err != nil {
 		t.Fatal("parse ProviderConfig err,", err)
