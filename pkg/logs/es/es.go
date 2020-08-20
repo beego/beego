@@ -71,7 +71,7 @@ func (el *esLogger) WriteMsg(lm *logs.LogMsg) error {
 
 	idx := LogDocument{
 		Timestamp: lm.When.Format(time.RFC3339),
-		Msg:       lm.Msg,
+		Msg:       el.Format(lm),
 	}
 
 	body, err := json.Marshal(idx)
