@@ -49,6 +49,7 @@ func init() {
 type App struct {
 	Handlers *ControllerRegister
 	Server   *http.Server
+	Services []*Service
 }
 
 // NewApp returns a new beego application.
@@ -58,10 +59,31 @@ func NewApp() *App {
 	return app
 }
 
+// Service defines an individual service
+type Service struct {
+	Handlers *ControllerRegister
+	Server   *http.Server
+}
+
+func NewService() *Service {
+	cr := NewControllerRegister()
+	service := &Service{Handlers: cr, Server: &http.Server{}}
+	return service
+}
+
+func (s *Service) RegisterService() {
+	BeeApp.Services = append(BeeApp.Services, s)
+}
+
+func (s *Service) Router(rootpath string, c ControllerInterface, mappingMethods ...string) *App {
+	s.Handlers.Add(rootpath, c, mappingMethods...)
+	return BeeApp
+}
+
+
 // MiddleWare function for http.Handler
 type MiddleWare func(http.Handler) http.Handler
 
-// Run beego application.
 func (app *App) Run(mws ...MiddleWare) {
 	addr := BConfig.Listen.HTTPAddr
 
@@ -238,6 +260,187 @@ func (app *App) Run(mws ...MiddleWare) {
 		}()
 	}
 	<-endRunning
+}
+
+// Run beego services individually.
+func (app *App) RunServices(mws ...MiddleWare) {
+	addr := BConfig.Listen.HTTPAddr
+
+	if BConfig.Listen.HTTPPort != 0 {
+		addr = fmt.Sprintf("%s:%d", BConfig.Listen.HTTPAddr, BConfig.Listen.HTTPPort)
+	}
+
+	var (
+		err        error
+		l          net.Listener
+		endRunning = make(chan bool, 1)
+	)
+
+	for _, service := range app.Services {
+		// run cgi server
+		if BConfig.Listen.EnableFcgi {
+			if BConfig.Listen.EnableStdIo {
+				if err = fcgi.Serve(nil, service.Handlers); err == nil { // standard I/O
+					logs.Info("Use FCGI via standard I/O")
+				} else {
+					logs.Critical("Cannot use FCGI via standard I/O", err)
+				}
+				return
+			}
+			if BConfig.Listen.HTTPPort == 0 {
+				// remove the Socket file before start
+				if utils.FileExists(addr) {
+					os.Remove(addr)
+				}
+				l, err = net.Listen("unix", addr)
+			} else {
+				l, err = net.Listen("tcp", addr)
+			}
+			if err != nil {
+				logs.Critical("Listen: ", err)
+			}
+			if err = fcgi.Serve(l, service.Handlers); err != nil {
+				logs.Critical("fcgi.Serve: ", err)
+			}
+			return
+		}
+
+		service.Server.Handler = service.Handlers
+		for i := len(mws) - 1; i >= 0; i-- {
+			if mws[i] == nil {
+				continue
+			}
+			service.Server.Handler = mws[i](service.Server.Handler)
+		}
+		service.Server.ReadTimeout = time.Duration(BConfig.Listen.ServerTimeOut) * time.Second
+		service.Server.WriteTimeout = time.Duration(BConfig.Listen.ServerTimeOut) * time.Second
+		service.Server.ErrorLog = logs.GetLogger("HTTP")
+
+		// run graceful mode
+		if BConfig.Listen.Graceful {
+			httpsAddr := BConfig.Listen.HTTPSAddr
+			service.Server.Addr = httpsAddr
+			if BConfig.Listen.EnableHTTPS || BConfig.Listen.EnableMutualHTTPS {
+				go func() {
+					time.Sleep(1000 * time.Microsecond)
+					if BConfig.Listen.HTTPSPort != 0 {
+						httpsAddr = fmt.Sprintf("%s:%d", BConfig.Listen.HTTPSAddr, BConfig.Listen.HTTPSPort)
+						service.Server.Addr = httpsAddr
+					}
+					server := grace.NewServer(httpsAddr, service.Server.Handler)
+					server.Server.ReadTimeout = service.Server.ReadTimeout
+					server.Server.WriteTimeout = service.Server.WriteTimeout
+					if BConfig.Listen.EnableMutualHTTPS {
+						if err := server.ListenAndServeMutualTLS(BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile, BConfig.Listen.TrustCaFile); err != nil {
+							logs.Critical("ListenAndServeTLS: ", err, fmt.Sprintf("%d", os.Getpid()))
+							time.Sleep(100 * time.Microsecond)
+						}
+					} else {
+						if BConfig.Listen.AutoTLS {
+							m := autocert.Manager{
+								Prompt:     autocert.AcceptTOS,
+								HostPolicy: autocert.HostWhitelist(BConfig.Listen.Domains...),
+								Cache:      autocert.DirCache(BConfig.Listen.TLSCacheDir),
+							}
+							service.Server.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
+							BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile = "", ""
+						}
+						if err := server.ListenAndServeTLS(BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile); err != nil {
+							logs.Critical("ListenAndServeTLS: ", err, fmt.Sprintf("%d", os.Getpid()))
+							time.Sleep(100 * time.Microsecond)
+						}
+					}
+					endRunning <- true
+				}()
+			}
+			if BConfig.Listen.EnableHTTP {
+				go func() {
+					server := grace.NewServer(addr, service.Server.Handler)
+					server.Server.ReadTimeout = service.Server.ReadTimeout
+					server.Server.WriteTimeout = service.Server.WriteTimeout
+					if BConfig.Listen.ListenTCP4 {
+						server.Network = "tcp4"
+					}
+					if err := server.ListenAndServe(); err != nil {
+						logs.Critical("ListenAndServe: ", err, fmt.Sprintf("%d", os.Getpid()))
+						time.Sleep(100 * time.Microsecond)
+					}
+					endRunning <- true
+				}()
+			}
+			<-endRunning
+			return
+		}
+
+		// run normal mode
+		if BConfig.Listen.EnableHTTPS || BConfig.Listen.EnableMutualHTTPS {
+			go func() {
+				time.Sleep(1000 * time.Microsecond)
+				if BConfig.Listen.HTTPSPort != 0 {
+					service.Server.Addr = fmt.Sprintf("%s:%d", BConfig.Listen.HTTPSAddr, BConfig.Listen.HTTPSPort)
+				} else if BConfig.Listen.EnableHTTP {
+					logs.Info("Start https server error, conflict with http. Please reset https port")
+					return
+				}
+				logs.Info("https server Running on https://%s", service.Server.Addr)
+				if BConfig.Listen.AutoTLS {
+					m := autocert.Manager{
+						Prompt:     autocert.AcceptTOS,
+						HostPolicy: autocert.HostWhitelist(BConfig.Listen.Domains...),
+						Cache:      autocert.DirCache(BConfig.Listen.TLSCacheDir),
+					}
+					service.Server.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
+					BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile = "", ""
+				} else if BConfig.Listen.EnableMutualHTTPS {
+					pool := x509.NewCertPool()
+					data, err := ioutil.ReadFile(BConfig.Listen.TrustCaFile)
+					if err != nil {
+						logs.Info("MutualHTTPS should provide TrustCaFile")
+						return
+					}
+					pool.AppendCertsFromPEM(data)
+					service.Server.TLSConfig = &tls.Config{
+						ClientCAs:  pool,
+						ClientAuth: tls.RequireAndVerifyClientCert,
+					}
+				}
+				if err := service.Server.ListenAndServeTLS(BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile); err != nil {
+					logs.Critical("ListenAndServeTLS: ", err)
+					time.Sleep(100 * time.Microsecond)
+					endRunning <- true
+				}
+			}()
+
+		}
+		if BConfig.Listen.EnableHTTP {
+			go func() {
+				service.Server.Addr = addr
+				logs.Info("http server Running on http://%s", service.Server.Addr)
+				if BConfig.Listen.ListenTCP4 {
+					ln, err := net.Listen("tcp4", service.Server.Addr)
+					if err != nil {
+						logs.Critical("ListenAndServe: ", err)
+						time.Sleep(100 * time.Microsecond)
+						endRunning <- true
+						return
+					}
+					if err = service.Server.Serve(ln); err != nil {
+						logs.Critical("ListenAndServe: ", err)
+						time.Sleep(100 * time.Microsecond)
+						endRunning <- true
+						return
+					}
+				} else {
+					if err := service.Server.ListenAndServe(); err != nil {
+						logs.Critical("ListenAndServe: ", err)
+						time.Sleep(100 * time.Microsecond)
+						endRunning <- true
+					}
+				}
+			}()
+		}
+		<-endRunning
+	}
 }
 
 // Router adds a patterned controller handler to BeeApp.

@@ -72,6 +72,10 @@ func Run(params ...string) {
 	BeeApp.Run()
 }
 
+func RunServices(params ...string) {
+	BeeApp.RunServices()
+}
+
 // RunWithMiddleWares Run beego application with middlewares.
 func RunWithMiddleWares(addr string, mws ...MiddleWare) {
 	initBeforeHTTPRun()
