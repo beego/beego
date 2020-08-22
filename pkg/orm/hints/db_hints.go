@@ -45,6 +45,8 @@ type Hint struct {
 
 var _ common.KV = new(Hint)
 
+type HintFunc common.KVsFunc
+
 // GetKey return key
 func (s *Hint) GetKey() interface{} {
 	return s.key
@@ -58,68 +60,68 @@ func (s *Hint) GetValue() interface{} {
 var _ common.KV = new(Hint)
 
 // MaxIdleConnections return a hint about MaxIdleConnections
-func MaxIdleConnections(v int) *Hint {
-	return NewHint(KeyMaxIdleConnections, v)
+func MaxIdleConnections(v int) HintFunc {
+	return NewHintFunc(KeyMaxIdleConnections, v)
 }
 
 // MaxOpenConnections return a hint about MaxOpenConnections
-func MaxOpenConnections(v int) *Hint {
-	return NewHint(KeyMaxOpenConnections, v)
+func MaxOpenConnections(v int) HintFunc {
+	return NewHintFunc(KeyMaxOpenConnections, v)
 }
 
 // ConnMaxLifetime return a hint about ConnMaxLifetime
-func ConnMaxLifetime(v time.Duration) *Hint {
-	return NewHint(KeyConnMaxLifetime, v)
+func ConnMaxLifetime(v time.Duration) HintFunc {
+	return NewHintFunc(KeyConnMaxLifetime, v)
 }
 
 // MaxStmtCacheSize return a hint about MaxStmtCacheSize
-func MaxStmtCacheSize(v int) *Hint {
-	return NewHint(KeyMaxStmtCacheSize, v)
+func MaxStmtCacheSize(v int) HintFunc {
+	return NewHintFunc(KeyMaxStmtCacheSize, v)
 }
 
 // ForceIndex return a hint about ForceIndex
-func ForceIndex(indexes ...string) *Hint {
-	return NewHint(KeyForceIndex, indexes)
+func ForceIndex(indexes ...string) HintFunc {
+	return NewHintFunc(KeyForceIndex, indexes)
 }
 
 // UseIndex return a hint about UseIndex
-func UseIndex(indexes ...string) *Hint {
-	return NewHint(KeyUseIndex, indexes)
+func UseIndex(indexes ...string) HintFunc {
+	return NewHintFunc(KeyUseIndex, indexes)
 }
 
 // IgnoreIndex return a hint about IgnoreIndex
-func IgnoreIndex(indexes ...string) *Hint {
-	return NewHint(KeyIgnoreIndex, indexes)
+func IgnoreIndex(indexes ...string) HintFunc {
+	return NewHintFunc(KeyIgnoreIndex, indexes)
 }
 
 // ForUpdate return a hint about ForUpdate
-func ForUpdate() *Hint {
-	return NewHint(KeyForUpdate, true)
+func ForUpdate() HintFunc {
+	return NewHintFunc(KeyForUpdate, true)
 }
 
 // DefaultRelDepth return a hint about DefaultRelDepth
-func DefaultRelDepth() *Hint {
-	return NewHint(KeyRelDepth, true)
+func DefaultRelDepth() HintFunc {
+	return NewHintFunc(KeyRelDepth, true)
 }
 
 // RelDepth return a hint about RelDepth
-func RelDepth(d int) *Hint {
-	return NewHint(KeyRelDepth, d)
+func RelDepth(d int) HintFunc {
+	return NewHintFunc(KeyRelDepth, d)
 }
 
 // Limit return a hint about Limit
-func Limit(d int64) *Hint {
-	return NewHint(KeyLimit, d)
+func Limit(d int64) HintFunc {
+	return NewHintFunc(KeyLimit, d)
 }
 
 // Offset return a hint about Offset
-func Offset(d int64) *Hint {
-	return NewHint(KeyOffset, d)
+func Offset(d int64) HintFunc {
+	return NewHintFunc(KeyOffset, d)
 }
 
 // OrderBy return a hint about OrderBy
-func OrderBy(s string) *Hint {
-	return NewHint(KeyOrderBy, s)
+func OrderBy(s string) HintFunc {
+	return NewHintFunc(KeyOrderBy, s)
 }
 
 // NewHint return a hint
@@ -127,5 +129,12 @@ func NewHint(key interface{}, value interface{}) *Hint {
 	return &Hint{
 		key:   key,
 		value: value,
+	}
+}
+
+// NewHintFunc return a hintFunc
+func NewHintFunc(key interface{}, value interface{}) HintFunc {
+	return func(kvs common.KVs) {
+		kvs.AddKV(NewHint(key, value))
 	}
 }

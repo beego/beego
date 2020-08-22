@@ -17,10 +17,9 @@ package orm
 import (
 	"context"
 	"database/sql"
+	"github.com/astaxie/beego/pkg/orm/hints"
 	"reflect"
 	"time"
-
-	"github.com/astaxie/beego/pkg/common"
 )
 
 // TableNaming is usually used by model
@@ -183,8 +182,8 @@ type DQL interface {
 	// hints.Offset int offset default offset 0
 	// hints.OrderBy string order  for example : "-Id"
 	// make sure the relation is defined in model struct tags.
-	LoadRelated(md interface{}, name string, args ...common.KV) (int64, error)
-	LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...common.KV) (int64, error)
+	LoadRelated(md interface{}, name string, hintFunctions ...hints.HintFunc) (int64, error)
+	LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, hintFunctions ...hints.HintFunc) (int64, error)
 
 	// create a models to models queryer
 	// for example:

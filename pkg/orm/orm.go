@@ -307,10 +307,10 @@ func (o *ormBase) QueryM2MWithCtx(ctx context.Context, md interface{}, name stri
 // 	for _,tag := range post.Tags{...}
 //
 // make sure the relation is defined in model struct tags.
-func (o *ormBase) LoadRelated(md interface{}, name string, args ...common.KV) (int64, error) {
-	return o.LoadRelatedWithCtx(context.Background(), md, name, args...)
+func (o *ormBase) LoadRelated(md interface{}, name string, hintFunctions ...hints.HintFunc) (int64, error) {
+	return o.LoadRelatedWithCtx(context.Background(), md, name, hintFunctions...)
 }
-func (o *ormBase) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...common.KV) (int64, error) {
+func (o *ormBase) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, hintFunctions ...hints.HintFunc) (int64, error) {
 	_, fi, ind, qseter := o.queryRelated(md, name)
 
 	qs := qseter.(*querySet)
@@ -319,7 +319,11 @@ func (o *ormBase) LoadRelatedWithCtx(ctx context.Context, md interface{}, name s
 	var limit, offset int64
 	var order string
 
-	kvs := common.NewKVs(args...)
+	kvs := common.NewKVs()
+	for _, funcItem := range hintFunctions {
+		funcItem(kvs)
+	}
+
 	kvs.IfContains(hints.KeyRelDepth, func(value interface{}) {
 		if v, ok := value.(bool); ok {
 			if v {
@@ -603,8 +607,8 @@ func NewOrmUsingDB(aliasName string) Ormer {
 }
 
 // NewOrmWithDB create a new ormer object with specify *sql.DB for query
-func NewOrmWithDB(driverName, aliasName string, db *sql.DB, params ...common.KV) (Ormer, error) {
-	al, err := newAliasWithDb(aliasName, driverName, db, params...)
+func NewOrmWithDB(driverName, aliasName string, db *sql.DB, hintFunctions ...hints.HintFunc) (Ormer, error) {
+	al, err := newAliasWithDb(aliasName, driverName, db, hintFunctions...)
 	if err != nil {
 		return nil, err
 	}

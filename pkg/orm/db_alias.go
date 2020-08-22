@@ -341,13 +341,13 @@ func detectTZ(al *alias) {
 	}
 }
 
-func addAliasWthDB(aliasName, driverName string, db *sql.DB, params ...common.KV) (*alias, error) {
+func addAliasWthDB(aliasName, driverName string, db *sql.DB, hintFunctions ...hints.HintFunc) (*alias, error) {
 	existErr := fmt.Errorf("DataBase alias name `%s` already registered, cannot reuse", aliasName)
 	if _, ok := dataBaseCache.get(aliasName); ok {
 		return nil, existErr
 	}
 
-	al, err := newAliasWithDb(aliasName, driverName, db, params...)
+	al, err := newAliasWithDb(aliasName, driverName, db, hintFunctions...)
 	if err != nil {
 		return nil, err
 	}
@@ -359,8 +359,12 @@ func addAliasWthDB(aliasName, driverName string, db *sql.DB, params ...common.KV
 	return al, nil
 }
 
-func newAliasWithDb(aliasName, driverName string, db *sql.DB, params ...common.KV) (*alias, error) {
-	kvs := common.NewKVs(params...)
+func newAliasWithDb(aliasName, driverName string, db *sql.DB, hintFunctions ...hints.HintFunc) (*alias, error) {
+	kvs := common.NewKVs()
+
+	for _, funcItem := range hintFunctions {
+		funcItem(kvs)
+	}
 
 	var stmtCache *lru.Cache
 	var stmtCacheSize int
@@ -418,13 +422,13 @@ func newAliasWithDb(aliasName, driverName string, db *sql.DB, params ...common.K
 }
 
 // AddAliasWthDB add a aliasName for the drivename
-func AddAliasWthDB(aliasName, driverName string, db *sql.DB, params ...common.KV) error {
-	_, err := addAliasWthDB(aliasName, driverName, db, params...)
+func AddAliasWthDB(aliasName, driverName string, db *sql.DB, hintFunctions ...hints.HintFunc) error {
+	_, err := addAliasWthDB(aliasName, driverName, db, hintFunctions...)
 	return err
 }
 
 // RegisterDataBase Setting the database connect params. Use the database driver self dataSource args.
-func RegisterDataBase(aliasName, driverName, dataSource string, params ...common.KV) error {
+func RegisterDataBase(aliasName, driverName, dataSource string, hintFunctions ...hints.HintFunc) error {
 	var (
 		err error
 		db  *sql.DB
@@ -437,7 +441,7 @@ func RegisterDataBase(aliasName, driverName, dataSource string, params ...common
 		goto end
 	}
 
-	al, err = addAliasWthDB(aliasName, driverName, db, params...)
+	al, err = addAliasWthDB(aliasName, driverName, db, hintFunctions...)
 	if err != nil {
 		goto end
 	}

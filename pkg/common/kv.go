@@ -41,7 +41,10 @@ type KVs interface {
 	GetValueOr(key interface{}, defValue interface{}) interface{}
 	Contains(key interface{}) bool
 	IfContains(key interface{}, action func(value interface{})) KVs
+	AddKV(kv KV)
 }
+
+type KVsFunc func(kvs KVs)
 
 // SimpleKVs will store SimpleKV collection as map
 type SimpleKVs struct {
@@ -73,6 +76,10 @@ func (kvs *SimpleKVs) IfContains(key interface{}, action func(value interface{})
 		action(v)
 	}
 	return kvs
+}
+
+func (kvs *SimpleKVs) AddKV(kv KV) {
+	kvs.kvs[kv.GetKey()] = kv.GetValue()
 }
 
 // NewKVs creates the *KVs instance

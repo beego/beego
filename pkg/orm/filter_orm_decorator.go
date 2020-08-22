@@ -17,10 +17,9 @@ package orm
 import (
 	"context"
 	"database/sql"
+	"github.com/astaxie/beego/pkg/orm/hints"
 	"reflect"
 	"time"
-
-	"github.com/astaxie/beego/pkg/common"
 )
 
 const (
@@ -137,22 +136,22 @@ func (f *filterOrmDecorator) ReadOrCreateWithCtx(ctx context.Context, md interfa
 	return res[0].(bool), res[1].(int64), f.convertError(res[2])
 }
 
-func (f *filterOrmDecorator) LoadRelated(md interface{}, name string, args ...common.KV) (int64, error) {
-	return f.LoadRelatedWithCtx(context.Background(), md, name, args...)
+func (f *filterOrmDecorator) LoadRelated(md interface{}, name string, hintFunctions ...hints.HintFunc) (int64, error) {
+	return f.LoadRelatedWithCtx(context.Background(), md, name, hintFunctions...)
 }
 
-func (f *filterOrmDecorator) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...common.KV) (int64, error) {
+func (f *filterOrmDecorator) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, hintsFunctions ...hints.HintFunc) (int64, error) {
 
 	mi, _ := modelCache.getByMd(md)
 	inv := &Invocation{
 		Method:      "LoadRelatedWithCtx",
-		Args:        []interface{}{md, name, args},
+		Args:        []interface{}{md, name, hintsFunctions},
 		Md:          md,
 		mi:          mi,
 		InsideTx:    f.insideTx,
 		TxStartTime: f.txStartTime,
 		f: func(c context.Context) []interface{} {
-			res, err := f.ormer.LoadRelatedWithCtx(c, md, name, args...)
+			res, err := f.ormer.LoadRelatedWithCtx(c, md, name, hintsFunctions...)
 			return []interface{}{res, err}
 		},
 	}
