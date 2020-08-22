@@ -100,6 +100,10 @@ func (c *aliLSWriter) Init(jsonConfig string) (err error) {
 	return nil
 }
 
+func (c *aliLSWriter) Format(lm *logs.LogMsg) string {
+	return lm.Msg
+}
+
 // WriteMsg writes a message in connection.
 // If connection is down, try to re-connect.
 func (c *aliLSWriter) WriteMsg(lm *logs.LogMsg) error {

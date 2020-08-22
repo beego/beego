@@ -89,6 +89,10 @@ func newFileWriter() Logger {
 	return w
 }
 
+func (w *fileLogWriter) Format(lm *LogMsg) string {
+	return lm.Msg
+}
+
 // Init file logger with json config.
 // jsonConfig like:
 //  {
@@ -149,7 +153,8 @@ func (w *fileLogWriter) WriteMsg(lm *LogMsg) error {
 		return nil
 	}
 	hd, d, h := formatTimeHeader(lm.When)
-	lm.Msg = string(hd) + lm.Msg + "\n"
+	msg := w.Format(lm)
+	msg = fmt.Sprintf("%s %s\n", string(hd), msg)
 	if w.Rotate {
 		w.RLock()
 		if w.needRotateHourly(len(lm.Msg), h) {
@@ -176,10 +181,10 @@ func (w *fileLogWriter) WriteMsg(lm *LogMsg) error {
 	}
 
 	w.Lock()
-	_, err := w.fileWriter.Write([]byte(lm.Msg))
+	_, err := w.fileWriter.Write([]byte(msg))
 	if err == nil {
 		w.maxLinesCurLines++
-		w.maxSizeCurSize += len(lm.Msg)
+		w.maxSizeCurSize += len(msg)
 	}
 	w.Unlock()
 	return err

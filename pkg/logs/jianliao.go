@@ -27,6 +27,10 @@ func (s *JLWriter) Init(jsonconfig string) error {
 	return json.Unmarshal([]byte(jsonconfig), s)
 }
 
+func (s *JLWriter) Format(lm *LogMsg) string {
+	return lm.Msg
+}
+
 // WriteMsg writes message in smtp writer.
 // Sends an email with subject and only this message.
 func (s *JLWriter) WriteMsg(lm *LogMsg) error {
@@ -34,8 +38,7 @@ func (s *JLWriter) WriteMsg(lm *LogMsg) error {
 		return nil
 	}
 
-	text := fmt.Sprintf("%s %s", lm.When.Format("2006-01-02 15:04:05"), lm.Msg)
-
+	text := fmt.Sprintf("%s %s", lm.When.Format("2006-01-02 15:04:05"), s.Format(lm))
 	form := url.Values{}
 	form.Add("authorName", s.AuthorName)
 	form.Add("title", s.Title)

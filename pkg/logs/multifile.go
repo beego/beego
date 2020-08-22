@@ -78,6 +78,10 @@ func (f *multiFileLogWriter) Init(config string) error {
 	return nil
 }
 
+func (f *multiFileLogWriter) Format(lm *LogMsg) string {
+	return lm.Msg
+}
+
 func (f *multiFileLogWriter) Destroy() {
 	for i := 0; i < len(f.writers); i++ {
 		if f.writers[i] != nil {
