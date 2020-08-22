@@ -86,6 +86,7 @@ type newLoggerFunc func() Logger
 type Logger interface {
 	Init(config string) error
 	WriteMsg(lm *LogMsg) error
+	Format(lm *LogMsg) string
 	Destroy()
 	Flush()
 }
@@ -128,6 +129,8 @@ const defaultAsyncMsgLen = 1e3
 
 type nameLogger struct {
 	Logger
+	// Formatter func(*LogMsg) string
+	LogFormatter
 	name string
 }
 
@@ -137,6 +140,10 @@ type LogMsg struct {
 	When       time.Time
 	FilePath   string
 	LineNumber int
+}
+
+type LogFormatter interface {
+	Format(lm *LogMsg) string
 }
 
 var logMsgPool *sync.Pool
@@ -177,6 +184,10 @@ func (bl *BeeLogger) Async(msgLen ...int64) *BeeLogger {
 	bl.wg.Add(1)
 	go bl.startLogger()
 	return bl
+}
+
+func Format(lm *LogMsg) string {
+	return lm.Msg
 }
 
 // SetLogger provides a given logger adapter into BeeLogger with config string.
@@ -237,6 +248,7 @@ func (bl *BeeLogger) DelLogger(adapterName string) error {
 
 func (bl *BeeLogger) writeToLoggers(lm *LogMsg) {
 	for _, l := range bl.outputs {
+		// fmt.Println("Formatted: ", l.Format(lm))
 		err := l.WriteMsg(lm)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "unable to WriteMsg to adapter:%v,error:%v\n", l.name, err)

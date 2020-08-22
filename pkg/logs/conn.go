@@ -39,6 +39,10 @@ func NewConn() Logger {
 	return conn
 }
 
+func (c *connWriter) Format(lm *LogMsg) string {
+	return lm.Msg
+}
+
 // Init initializes a connection writer with json config.
 // json config only needs they "level" key
 func (c *connWriter) Init(jsonConfig string) error {
@@ -62,7 +66,8 @@ func (c *connWriter) WriteMsg(lm *LogMsg) error {
 		defer c.innerWriter.Close()
 	}
 
-	_, err := c.lg.writeln(lm)
+	msg := c.Format(lm)
+	_, err := c.lg.writeln(msg)
 	if err != nil {
 		return err
 	}

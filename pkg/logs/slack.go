@@ -18,6 +18,10 @@ func newSLACKWriter() Logger {
 	return &SLACKWriter{Level: LevelTrace}
 }
 
+func (s *SLACKWriter) Format(lm *LogMsg) string {
+	return lm.Msg
+}
+
 // Init SLACKWriter with json config string
 func (s *SLACKWriter) Init(jsonconfig string) error {
 	return json.Unmarshal([]byte(jsonconfig), s)
@@ -29,8 +33,8 @@ func (s *SLACKWriter) WriteMsg(lm *LogMsg) error {
 	if lm.Level > s.Level {
 		return nil
 	}
-
-	text := fmt.Sprintf("{\"text\": \"%s %s\"}", lm.When.Format("2006-01-02 15:04:05"), lm.Msg)
+	msg := s.Format(lm)
+	text := fmt.Sprintf("{\"text\": \"%s %s\"}", lm.When.Format("2006-01-02 15:04:05"), msg)
 
 	form := url.Values{}
 	form.Add("payload", text)

@@ -52,6 +52,20 @@ type consoleWriter struct {
 	Colorful bool `json:"color"` //this filed is useful only when system's terminal supports color
 }
 
+func (c *consoleWriter) Format(lm *LogMsg) string {
+	msg := lm.Msg
+
+	if c.Colorful {
+		msg = strings.Replace(lm.Msg, levelPrefix[lm.Level], colors[lm.Level](levelPrefix[lm.Level]), 1)
+	}
+
+	h, _, _ := formatTimeHeader(lm.When)
+	bytes := append(append(h, msg...), '\n')
+
+	return "eee" + string(bytes)
+
+}
+
 // NewConsole creates ConsoleWriter returning as LoggerInterface.
 func NewConsole() Logger {
 	cw := &consoleWriter{
@@ -76,10 +90,12 @@ func (c *consoleWriter) WriteMsg(lm *LogMsg) error {
 	if lm.Level > c.Level {
 		return nil
 	}
+	// fmt.Printf("Formatted: %s\n\n", c.fmtter.Format(lm))
 	if c.Colorful {
 		lm.Msg = strings.Replace(lm.Msg, levelPrefix[lm.Level], colors[lm.Level](levelPrefix[lm.Level]), 1)
 	}
-	c.lg.writeln(lm)
+	msg := c.Format(lm)
+	c.lg.writeln(msg)
 	return nil
 }
 
