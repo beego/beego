@@ -137,6 +137,7 @@ type fieldInfo struct {
 	isFielder           bool // implement Fielder interface
 	onDelete            string
 	description         string
+	timePrecision       *int
 }
 
 // new field info
@@ -177,7 +178,7 @@ func newFieldInfo(mi *modelInfo, field reflect.Value, sf reflect.StructField, mN
 	decimals := tags["decimals"]
 	size := tags["size"]
 	onDelete := tags["on_delete"]
-
+	precision := tags["precision"]
 	initial.Clear()
 	if v, ok := tags["default"]; ok {
 		initial.Set(v)
@@ -377,6 +378,18 @@ checkType:
 		fi.index = false
 		fi.unique = false
 	case TypeTimeField, TypeDateField, TypeDateTimeField:
+		if fieldType == TypeDateTimeField {
+			if precision != "" {
+				v, e := StrTo(precision).Int()
+				if e != nil {
+					err = fmt.Errorf("convert %s to int error:%v", precision, e)
+				} else {
+					fi.timePrecision = &v
+				}
+			}
+
+		}
+
 		if attrs["auto_now"] {
 			fi.autoNow = true
 		} else if attrs["auto_now_add"] {
