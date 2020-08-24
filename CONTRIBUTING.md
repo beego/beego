@@ -7,6 +7,42 @@ It is the work of hundreds of contributors. We appreciate your help!
 Here are instructions to get you started. They are probably not perfect, 
 please let us know if anything feels wrong or incomplete.
 
+## Prepare environment
+
+Firstly, install some tools. Execute those commands **outside** the project. Or those command will modify go.mod file.
+
+```shell script
+go get -u golang.org/x/tools/cmd/goimports
+
+go get -u github.com/gordonklaus/ineffassign
+```
+
+And the go into project directory, run :
+```shell script
+cp ./githook/pre-commit ./.git/hooks/pre-commit
+```
+This will add git hooks into .git/hooks. Or you can add it manually.
+
+## Prepare middleware
+
+Beego uses many middlewares, including MySQL, Redis, SSDB and so on.
+
+We provide docker compose file to start all middlewares.
+
+You can run:
+```shell script
+docker-compose -f scripts/test_docker_compose.yml up -d
+```
+Unit tests read addressed from environment, here is an example:
+```shell script
+export ORM_DRIVER=mysql
+export ORM_SOURCE="beego:test@tcp(192.168.0.105:13306)/orm_test?charset=utf8"
+export MEMCACHE_ADDR="192.168.0.105:11211"
+export REDIS_ADDR="192.168.0.105:6379"
+export SSDB_ADDR="192.168.0.105:8888"
+```
+
+
 ## Contribution guidelines
 
 ### Pull requests
