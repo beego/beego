@@ -31,8 +31,10 @@ func NewES() logs.Logger {
 // import _ "github.com/astaxie/beego/logs/es"
 type esLogger struct {
 	*elasticsearch.Client
-	DSN   string `json:"dsn"`
-	Level int    `json:"level"`
+	DSN                string `json:"dsn"`
+	Level              int    `json:"level"`
+	UseCustomFormatter bool
+	CustomFormatter    func(*logs.LogMsg) string
 }
 
 func (el *esLogger) Format(lm *logs.LogMsg) string {
@@ -40,7 +42,14 @@ func (el *esLogger) Format(lm *logs.LogMsg) string {
 }
 
 // {"dsn":"http://localhost:9200/","level":1}
-func (el *esLogger) Init(jsonconfig string) error {
+func (el *esLogger) Init(jsonconfig string, LogFormatter ...func(*logs.LogMsg) string) error {
+	for _, elem := range LogFormatter {
+		if elem != nil {
+			el.UseCustomFormatter = true
+			el.CustomFormatter = elem
+		}
+	}
+
 	err := json.Unmarshal([]byte(jsonconfig), el)
 	if err != nil {
 		return err
@@ -69,9 +78,16 @@ func (el *esLogger) WriteMsg(lm *logs.LogMsg) error {
 		return nil
 	}
 
+	msg := ""
+	if el.UseCustomFormatter {
+		msg = el.CustomFormatter(lm)
+	} else {
+		msg = el.Format(lm)
+	}
+
 	idx := LogDocument{
 		Timestamp: lm.When.Format(time.RFC3339),
-		Msg:       el.Format(lm),
+		Msg:       msg,
 	}
 
 	body, err := json.Marshal(idx)
