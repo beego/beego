@@ -9,8 +9,10 @@ import (
 
 // SLACKWriter implements beego LoggerInterface and is used to send jiaoliao webhook
 type SLACKWriter struct {
-	WebhookURL string `json:"webhookurl"`
-	Level      int    `json:"level"`
+	WebhookURL         string `json:"webhookurl"`
+	Level              int    `json:"level"`
+	UseCustomFormatter bool
+	CustomFormatter    func(*LogMsg) string
 }
 
 // newSLACKWriter creates jiaoliao writer.
@@ -23,7 +25,14 @@ func (s *SLACKWriter) Format(lm *LogMsg) string {
 }
 
 // Init SLACKWriter with json config string
-func (s *SLACKWriter) Init(jsonconfig string) error {
+func (s *SLACKWriter) Init(jsonconfig string, LogFormatter ...func(*LogMsg) string) error {
+	for _, elem := range LogFormatter {
+		if elem != nil {
+			s.UseCustomFormatter = true
+			s.CustomFormatter = elem
+		}
+	}
+
 	return json.Unmarshal([]byte(jsonconfig), s)
 }
 

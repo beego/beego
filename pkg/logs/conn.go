@@ -23,13 +23,15 @@ import (
 // connWriter implements LoggerInterface.
 // Writes messages in keep-live tcp connection.
 type connWriter struct {
-	lg             *logWriter
-	innerWriter    io.WriteCloser
-	ReconnectOnMsg bool   `json:"reconnectOnMsg"`
-	Reconnect      bool   `json:"reconnect"`
-	Net            string `json:"net"`
-	Addr           string `json:"addr"`
-	Level          int    `json:"level"`
+	lg                 *logWriter
+	innerWriter        io.WriteCloser
+	UseCustomFormatter bool
+	CustomFormatter    func(*LogMsg) string
+	ReconnectOnMsg     bool   `json:"reconnectOnMsg"`
+	Reconnect          bool   `json:"reconnect"`
+	Net                string `json:"net"`
+	Addr               string `json:"addr"`
+	Level              int    `json:"level"`
 }
 
 // NewConn creates new ConnWrite returning as LoggerInterface.
@@ -45,7 +47,14 @@ func (c *connWriter) Format(lm *LogMsg) string {
 
 // Init initializes a connection writer with json config.
 // json config only needs they "level" key
-func (c *connWriter) Init(jsonConfig string) error {
+func (c *connWriter) Init(jsonConfig string, LogFormatter ...func(*LogMsg) string) error {
+	for _, elem := range LogFormatter {
+		if elem != nil {
+			c.UseCustomFormatter = true
+			c.CustomFormatter = elem
+		}
+	}
+
 	return json.Unmarshal([]byte(jsonConfig), c)
 }
 

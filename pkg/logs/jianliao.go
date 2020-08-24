@@ -9,12 +9,14 @@ import (
 
 // JLWriter implements beego LoggerInterface and is used to send jiaoliao webhook
 type JLWriter struct {
-	AuthorName  string `json:"authorname"`
-	Title       string `json:"title"`
-	WebhookURL  string `json:"webhookurl"`
-	RedirectURL string `json:"redirecturl,omitempty"`
-	ImageURL    string `json:"imageurl,omitempty"`
-	Level       int    `json:"level"`
+	AuthorName         string `json:"authorname"`
+	Title              string `json:"title"`
+	WebhookURL         string `json:"webhookurl"`
+	RedirectURL        string `json:"redirecturl,omitempty"`
+	ImageURL           string `json:"imageurl,omitempty"`
+	Level              int    `json:"level"`
+	UseCustomFormatter bool
+	CustomFormatter    func(*LogMsg) string
 }
 
 // newJLWriter creates jiaoliao writer.
@@ -23,7 +25,14 @@ func newJLWriter() Logger {
 }
 
 // Init JLWriter with json config string
-func (s *JLWriter) Init(jsonconfig string) error {
+func (s *JLWriter) Init(jsonconfig string, LogFormatter ...func(*LogMsg) string) error {
+	for _, elem := range LogFormatter {
+		if elem != nil {
+			s.UseCustomFormatter = true
+			s.CustomFormatter = elem
+		}
+	}
+
 	return json.Unmarshal([]byte(jsonconfig), s)
 }
 
