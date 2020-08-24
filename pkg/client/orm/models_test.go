@@ -145,55 +145,56 @@ type Data struct {
 }
 
 type DataNull struct {
-	ID          int             `orm:"column(id)"`
-	Boolean     bool            `orm:"null"`
-	Char        string          `orm:"null;size(50)"`
-	Text        string          `orm:"null;type(text)"`
-	JSON        string          `orm:"type(json);null"`
-	Jsonb       string          `orm:"type(jsonb);null"`
-	Time        time.Time       `orm:"null;type(time)"`
-	Date        time.Time       `orm:"null;type(date)"`
-	DateTime    time.Time       `orm:"null;column(datetime)"`
-	Byte        byte            `orm:"null"`
-	Rune        rune            `orm:"null"`
-	Int         int             `orm:"null"`
-	Int8        int8            `orm:"null"`
-	Int16       int16           `orm:"null"`
-	Int32       int32           `orm:"null"`
-	Int64       int64           `orm:"null"`
-	Uint        uint            `orm:"null"`
-	Uint8       uint8           `orm:"null"`
-	Uint16      uint16          `orm:"null"`
-	Uint32      uint32          `orm:"null"`
-	Uint64      uint64          `orm:"null"`
-	Float32     float32         `orm:"null"`
-	Float64     float64         `orm:"null"`
-	Decimal     float64         `orm:"digits(8);decimals(4);null"`
-	NullString  sql.NullString  `orm:"null"`
-	NullBool    sql.NullBool    `orm:"null"`
-	NullFloat64 sql.NullFloat64 `orm:"null"`
-	NullInt64   sql.NullInt64   `orm:"null"`
-	BooleanPtr  *bool           `orm:"null"`
-	CharPtr     *string         `orm:"null;size(50)"`
-	TextPtr     *string         `orm:"null;type(text)"`
-	BytePtr     *byte           `orm:"null"`
-	RunePtr     *rune           `orm:"null"`
-	IntPtr      *int            `orm:"null"`
-	Int8Ptr     *int8           `orm:"null"`
-	Int16Ptr    *int16          `orm:"null"`
-	Int32Ptr    *int32          `orm:"null"`
-	Int64Ptr    *int64          `orm:"null"`
-	UintPtr     *uint           `orm:"null"`
-	Uint8Ptr    *uint8          `orm:"null"`
-	Uint16Ptr   *uint16         `orm:"null"`
-	Uint32Ptr   *uint32         `orm:"null"`
-	Uint64Ptr   *uint64         `orm:"null"`
-	Float32Ptr  *float32        `orm:"null"`
-	Float64Ptr  *float64        `orm:"null"`
-	DecimalPtr  *float64        `orm:"digits(8);decimals(4);null"`
-	TimePtr     *time.Time      `orm:"null;type(time)"`
-	DatePtr     *time.Time      `orm:"null;type(date)"`
-	DateTimePtr *time.Time      `orm:"null"`
+	ID                int             `orm:"column(id)"`
+	Boolean           bool            `orm:"null"`
+	Char              string          `orm:"null;size(50)"`
+	Text              string          `orm:"null;type(text)"`
+	JSON              string          `orm:"type(json);null"`
+	Jsonb             string          `orm:"type(jsonb);null"`
+	Time              time.Time       `orm:"null;type(time)"`
+	Date              time.Time       `orm:"null;type(date)"`
+	DateTime          time.Time       `orm:"null;column(datetime)"`
+	DateTimePrecision time.Time       `orm:"null;type(datetime);precision(4)"`
+	Byte              byte            `orm:"null"`
+	Rune              rune            `orm:"null"`
+	Int               int             `orm:"null"`
+	Int8              int8            `orm:"null"`
+	Int16             int16           `orm:"null"`
+	Int32             int32           `orm:"null"`
+	Int64             int64           `orm:"null"`
+	Uint              uint            `orm:"null"`
+	Uint8             uint8           `orm:"null"`
+	Uint16            uint16          `orm:"null"`
+	Uint32            uint32          `orm:"null"`
+	Uint64            uint64          `orm:"null"`
+	Float32           float32         `orm:"null"`
+	Float64           float64         `orm:"null"`
+	Decimal           float64         `orm:"digits(8);decimals(4);null"`
+	NullString        sql.NullString  `orm:"null"`
+	NullBool          sql.NullBool    `orm:"null"`
+	NullFloat64       sql.NullFloat64 `orm:"null"`
+	NullInt64         sql.NullInt64   `orm:"null"`
+	BooleanPtr        *bool           `orm:"null"`
+	CharPtr           *string         `orm:"null;size(50)"`
+	TextPtr           *string         `orm:"null;type(text)"`
+	BytePtr           *byte           `orm:"null"`
+	RunePtr           *rune           `orm:"null"`
+	IntPtr            *int            `orm:"null"`
+	Int8Ptr           *int8           `orm:"null"`
+	Int16Ptr          *int16          `orm:"null"`
+	Int32Ptr          *int32          `orm:"null"`
+	Int64Ptr          *int64          `orm:"null"`
+	UintPtr           *uint           `orm:"null"`
+	Uint8Ptr          *uint8          `orm:"null"`
+	Uint16Ptr         *uint16         `orm:"null"`
+	Uint32Ptr         *uint32         `orm:"null"`
+	Uint64Ptr         *uint64         `orm:"null"`
+	Float32Ptr        *float32        `orm:"null"`
+	Float64Ptr        *float64        `orm:"null"`
+	DecimalPtr        *float64        `orm:"digits(8);decimals(4);null"`
+	TimePtr           *time.Time      `orm:"null;type(time)"`
+	DatePtr           *time.Time      `orm:"null;type(date)"`
+	DateTimePtr       *time.Time      `orm:"null"`
 }
 
 type String string
@@ -297,13 +298,14 @@ func NewProfile() *Profile {
 }
 
 type Post struct {
-	ID      int       `orm:"column(id)"`
-	User    *User     `orm:"rel(fk)"`
-	Title   string    `orm:"size(60)"`
-	Content string    `orm:"type(text)"`
-	Created time.Time `orm:"auto_now_add"`
-	Updated time.Time `orm:"auto_now"`
-	Tags    []*Tag    `orm:"rel(m2m);rel_through(github.com/astaxie/beego/pkg/client/orm.PostTags)"`
+	ID               int       `orm:"column(id)"`
+	User             *User     `orm:"rel(fk)"`
+	Title            string    `orm:"size(60)"`
+	Content          string    `orm:"type(text)"`
+	Created          time.Time `orm:"auto_now_add"`
+	Updated          time.Time `orm:"auto_now"`
+	UpdatedPrecision time.Time `orm:"auto_now;type(datetime);precision(4)"`
+	Tags             []*Tag    `orm:"rel(m2m);rel_through(github.com/astaxie/beego/pkg/client/orm.PostTags)"`
 }
 
 func (u *Post) TableIndex() [][]string {
