@@ -24,9 +24,11 @@ import (
 // and write the error-level logs to project.error.log and write the debug-level logs to project.debug.log
 // the rotate attribute also  acts like fileLogWriter
 type multiFileLogWriter struct {
-	writers       [LevelDebug + 1 + 1]*fileLogWriter // the last one for fullLogWriter
-	fullLogWriter *fileLogWriter
-	Separate      []string `json:"separate"`
+	writers            [LevelDebug + 1 + 1]*fileLogWriter // the last one for fullLogWriter
+	fullLogWriter      *fileLogWriter
+	Separate           []string `json:"separate"`
+	UseCustomFormatter bool
+	CustomFormatter    func(*LogMsg) string
 }
 
 var levelNames = [...]string{"emergency", "alert", "critical", "error", "warning", "notice", "info", "debug"}
@@ -44,7 +46,14 @@ var levelNames = [...]string{"emergency", "alert", "critical", "error", "warning
 //	"separate":["emergency", "alert", "critical", "error", "warning", "notice", "info", "debug"],
 //	}
 
-func (f *multiFileLogWriter) Init(config string) error {
+func (f *multiFileLogWriter) Init(config string, LogFormatter ...func(*LogMsg) string) error {
+	for _, elem := range LogFormatter {
+		if elem != nil {
+			f.UseCustomFormatter = true
+			f.CustomFormatter = elem
+		}
+	}
+
 	writer := newFileWriter().(*fileLogWriter)
 	err := writer.Init(config)
 	if err != nil {
@@ -74,7 +83,6 @@ func (f *multiFileLogWriter) Init(config string) error {
 			}
 		}
 	}
-
 	return nil
 }
 

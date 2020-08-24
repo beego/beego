@@ -47,9 +47,11 @@ var colors = []brush{
 
 // consoleWriter implements LoggerInterface and writes messages to terminal.
 type consoleWriter struct {
-	lg       *logWriter
-	Level    int  `json:"level"`
-	Colorful bool `json:"color"` //this filed is useful only when system's terminal supports color
+	lg                 *logWriter
+	UseCustomFormatter bool
+	CustomFormatter    func(*LogMsg) string
+	Level              int  `json:"level"`
+	Colorful           bool `json:"color"` //this filed is useful only when system's terminal supports color
 }
 
 func (c *consoleWriter) Format(lm *LogMsg) string {
@@ -62,7 +64,7 @@ func (c *consoleWriter) Format(lm *LogMsg) string {
 	h, _, _ := formatTimeHeader(lm.When)
 	bytes := append(append(h, msg...), '\n')
 
-	return "eee" + string(bytes)
+	return string(bytes)
 
 }
 
@@ -78,10 +80,18 @@ func NewConsole() Logger {
 
 // Init initianlizes the console logger.
 // jsonConfig must be in the format '{"level":LevelTrace}'
-func (c *consoleWriter) Init(jsonConfig string) error {
+func (c *consoleWriter) Init(jsonConfig string, LogFormatter ...func(*LogMsg) string) error {
+	for _, elem := range LogFormatter {
+		if elem != nil {
+			c.UseCustomFormatter = true
+			c.CustomFormatter = elem
+		}
+	}
+
 	if len(jsonConfig) == 0 {
 		return nil
 	}
+
 	return json.Unmarshal([]byte(jsonConfig), c)
 }
 
@@ -94,7 +104,15 @@ func (c *consoleWriter) WriteMsg(lm *LogMsg) error {
 	if c.Colorful {
 		lm.Msg = strings.Replace(lm.Msg, levelPrefix[lm.Level], colors[lm.Level](levelPrefix[lm.Level]), 1)
 	}
-	msg := c.Format(lm)
+
+	msg := ""
+
+	if c.UseCustomFormatter {
+		msg = c.CustomFormatter(lm)
+	} else {
+		msg = c.Format(lm)
+	}
+
 	c.lg.writeln(msg)
 	return nil
 }
