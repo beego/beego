@@ -32,11 +32,13 @@ type Config struct {
 // aliLSWriter implements LoggerInterface.
 // Writes messages in keep-live tcp connection.
 type aliLSWriter struct {
-	store    *LogStore
-	group    []*LogGroup
-	withMap  bool
-	groupMap map[string]*LogGroup
-	lock     *sync.Mutex
+	store              *LogStore
+	group              []*LogGroup
+	withMap            bool
+	groupMap           map[string]*LogGroup
+	lock               *sync.Mutex
+	UseCustomFormatter bool
+	CustomFormatter    func(*logs.LogMsg) string
 	Config
 }
 
@@ -48,7 +50,14 @@ func NewAliLS() logs.Logger {
 }
 
 // Init parses config and initializes struct
-func (c *aliLSWriter) Init(jsonConfig string) (err error) {
+func (c *aliLSWriter) Init(jsonConfig string, LogFormatter ...func(*logs.LogMsg) string) (err error) {
+
+	for _, elem := range LogFormatter {
+		if elem != nil {
+			c.UseCustomFormatter = true
+			c.CustomFormatter = elem
+		}
+	}
 
 	json.Unmarshal([]byte(jsonConfig), c)
 
@@ -133,6 +142,12 @@ func (c *aliLSWriter) WriteMsg(lm *logs.LogMsg) error {
 	} else {
 		content = lm.Msg
 		lg = c.group[0]
+	}
+
+	if c.UseCustomFormatter {
+		content = c.CustomFormatter(lm)
+	} else {
+		content = c.Format(lm)
 	}
 
 	c1 := &LogContent{
