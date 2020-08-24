@@ -130,17 +130,14 @@ func (c *aliLSWriter) WriteMsg(lm *logs.LogMsg) error {
 		if len(strs) == 2 {
 			pos := strings.LastIndex(strs[0], " ")
 			topic = strs[0][pos+1 : len(strs[0])]
-			content = strs[0][0:pos] + strs[1]
 			lg = c.groupMap[topic]
 		}
 
 		// send to empty Topic
 		if lg == nil {
-			content = lm.Msg
 			lg = c.group[0]
 		}
 	} else {
-		content = lm.Msg
 		lg = c.group[0]
 	}
 
