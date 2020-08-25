@@ -22,6 +22,7 @@ require (
 	github.com/lib/pq v1.0.0
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/pelletier/go-toml v1.2.0 // indirect
+	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.7.0
 	github.com/shiena/ansicolor v0.0.0-20151119151921-a422bbe96644
 	github.com/ssdb/gossdb v0.0.0-20180723034631-88f6b59b84ec
@@ -29,7 +30,7 @@ require (
 	github.com/syndtr/goleveldb v0.0.0-20181127023241-353a9fca669c // indirect
 	github.com/wendal/errors v0.0.0-20130201093226-f66c77a7882b // indirect
 	golang.org/x/crypto v0.0.0-20191011191535-87dc89f01550
-	golang.org/x/tools v0.0.0-20200117065230-39095c1d176c
+	golang.org/x/net v0.0.0-20190620200207-3b0461eec859 // indirect
 	gopkg.in/yaml.v2 v2.2.8
 )
 

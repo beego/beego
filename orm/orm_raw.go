@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"reflect"
 	"time"
+
+	"github.com/pkg/errors"
 )
 
 // raw sql string prepared statement
@@ -368,7 +370,15 @@ func (o *rawSet) QueryRow(containers ...interface{}) error {
 							field.Set(mf)
 							field = mf.Elem().FieldByIndex(fi.relModelInfo.fields.pk.fieldIndex)
 						}
-						o.setFieldValue(field, value)
+						if fi.isFielder {
+							fd := field.Addr().Interface().(Fielder)
+							err := fd.SetRaw(value)
+							if err != nil {
+								return errors.Errorf("set raw error:%s", err)
+							}
+						} else {
+							o.setFieldValue(field, value)
+						}
 					}
 				}
 			} else {
@@ -509,7 +519,15 @@ func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
 							field.Set(mf)
 							field = mf.Elem().FieldByIndex(fi.relModelInfo.fields.pk.fieldIndex)
 						}
-						o.setFieldValue(field, value)
+						if fi.isFielder {
+							fd := field.Addr().Interface().(Fielder)
+							err := fd.SetRaw(value)
+							if err != nil {
+								return 0, errors.Errorf("set raw error:%s", err)
+							}
+						} else {
+							o.setFieldValue(field, value)
+						}
 					}
 				}
 			} else {
