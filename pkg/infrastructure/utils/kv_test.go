@@ -1,4 +1,4 @@
-// Copyright 2020 
+// Copyright 2020 beego-dev
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,4 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package pkg
+package utils
+
+import (
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+)
+
+func TestKVs(t *testing.T) {
+	key := "my-key"
+	kvs := NewKVs(&SimpleKV{
+		Key:   key,
+		Value: 12,
+	})
+
+	assert.True(t, kvs.Contains(key))
+
+	v := kvs.GetValueOr(key, 13)
+	assert.Equal(t, 12, v)
+
+	v = kvs.GetValueOr(`key-not-exists`, 8546)
+	assert.Equal(t, 8546, v)
+
+}
