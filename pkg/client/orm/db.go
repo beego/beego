@@ -1355,7 +1355,14 @@ setValue:
 				t   time.Time
 				err error
 			)
-			if len(s) >= 19 {
+
+			if fi.timePrecision != nil && len(s) >= (20+*fi.timePrecision) {
+				layout := formatDateTime + "."
+				for i := 0; i < *fi.timePrecision; i++ {
+					layout += "0"
+				}
+				t, err = time.ParseInLocation(layout, s[:20+*fi.timePrecision], tz)
+			} else if len(s) >= 19 {
 				s = s[:19]
 				t, err = time.ParseInLocation(formatDateTime, s, tz)
 			} else if len(s) >= 10 {
