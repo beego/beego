@@ -26,7 +26,7 @@
 //
 //  cnf, err := config.NewConfig("xml", "config.xml")
 //
-//More docs http://beego.me/docs/module/config.md
+// More docs http://beego.me/docs/module/config.md
 package xml
 
 import (
@@ -36,11 +36,11 @@ import (
 	"io/ioutil"
 	"os"
 	"strconv"
-	"strings"
 	"sync"
 
-	"github.com/astaxie/beego/pkg/infrastructure/config"
 	"github.com/beego/x2j"
+
+	"github.com/astaxie/beego/pkg/infrastructure/config"
 )
 
 // Config is a xml config parser and implements Config interface.
@@ -144,37 +144,18 @@ func (c *ConfigContainer) DefaultFloat(key string, defaultval float64) float64 {
 }
 
 // String returns the string value for a given key.
-func (c *ConfigContainer) String(key string) string {
+func (c *ConfigContainer) String(key string) (string, error) {
 	if v, ok := c.data[key].(string); ok {
-		return v
+		return v, nil
 	}
-	return ""
+	return "", errors.New(fmt.Sprintf("configuration not found or not string, key: %s", key))
 }
 
 // DefaultString returns the string value for a given key.
 // if err != nil return defaultval
 func (c *ConfigContainer) DefaultString(key string, defaultval string) string {
-	v := c.String(key)
-	if v == "" {
-		return defaultval
-	}
-	return v
-}
-
-// Strings returns the []string value for a given key.
-func (c *ConfigContainer) Strings(key string) []string {
-	v := c.String(key)
-	if v == "" {
-		return nil
-	}
-	return strings.Split(v, ";")
-}
-
-// DefaultStrings returns the []string value for a given key.
-// if err != nil return defaultval
-func (c *ConfigContainer) DefaultStrings(key string, defaultval []string) []string {
-	v := c.Strings(key)
-	if v == nil {
+	v, err := c.String(key)
+	if v == "" || err != nil {
 		return defaultval
 	}
 	return v

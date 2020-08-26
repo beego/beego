@@ -69,7 +69,7 @@ checkColumn:
 		// the precision of sqlite is not implemented
 		if al.Driver == 2 || fi.timePrecision == nil {
 			col = T["time.Time"]
-		}else {
+		} else {
 			s := T["time.Time-precision"]
 			col = fmt.Sprintf(s, *fi.timePrecision)
 		}

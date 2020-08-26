@@ -109,9 +109,9 @@ password = ${GOPATH}
 		case bool:
 			value, err = iniconf.Bool(k)
 		case []string:
-			value = iniconf.Strings(k)
+			value, err = iniconf.Strings(k)
 		case string:
-			value = iniconf.String(k)
+			value, err = iniconf.String(k)
 		default:
 			value, err = iniconf.DIY(k)
 		}
@@ -125,7 +125,8 @@ password = ${GOPATH}
 	if err = iniconf.Set("name", "astaxie"); err != nil {
 		t.Fatal(err)
 	}
-	if iniconf.String("name") != "astaxie" {
+	res, _ := iniconf.String("name")
+	if res != "astaxie" {
 		t.Fatal("get name error")
 	}
 

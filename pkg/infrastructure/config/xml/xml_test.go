@@ -25,7 +25,7 @@ import (
 func TestXML(t *testing.T) {
 
 	var (
-		//xml parse should incluce in <config></config> tags
+		// xml parse should incluce in <config></config> tags
 		xmlcontext = `<?xml version="1.0" encoding="UTF-8"?>
 <config>
 <appname>beeapi</appname>
@@ -102,9 +102,9 @@ func TestXML(t *testing.T) {
 		case bool:
 			value, err = xmlconf.Bool(k)
 		case []string:
-			value = xmlconf.Strings(k)
+			value, err = xmlconf.Strings(k)
 		case string:
-			value = xmlconf.String(k)
+			value, err = xmlconf.String(k)
 		default:
 			value, err = xmlconf.DIY(k)
 		}
@@ -119,7 +119,9 @@ func TestXML(t *testing.T) {
 	if err = xmlconf.Set("name", "astaxie"); err != nil {
 		t.Fatal(err)
 	}
-	if xmlconf.String("name") != "astaxie" {
+
+	res, _ := xmlconf.String("name")
+	if res != "astaxie" {
 		t.Fatal("get name error")
 	}
 }
