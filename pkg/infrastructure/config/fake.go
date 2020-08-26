@@ -15,6 +15,7 @@
 package config
 
 import (
+	"context"
 	"errors"
 	"strconv"
 	"strings"
@@ -32,34 +33,6 @@ func (c *fakeConfigContainer) getData(key string) string {
 func (c *fakeConfigContainer) Set(key, val string) error {
 	c.data[strings.ToLower(key)] = val
 	return nil
-}
-
-func (c *fakeConfigContainer) String(key string) string {
-	return c.getData(key)
-}
-
-func (c *fakeConfigContainer) DefaultString(key string, defaultval string) string {
-	v := c.String(key)
-	if v == "" {
-		return defaultval
-	}
-	return v
-}
-
-func (c *fakeConfigContainer) Strings(key string) []string {
-	v := c.String(key)
-	if v == "" {
-		return nil
-	}
-	return strings.Split(v, ";")
-}
-
-func (c *fakeConfigContainer) DefaultStrings(key string, defaultval []string) []string {
-	v := c.Strings(key)
-	if v == nil {
-		return defaultval
-	}
-	return v
 }
 
 func (c *fakeConfigContainer) Int(key string) (int, error) {
@@ -129,7 +102,11 @@ var _ Configer = new(fakeConfigContainer)
 
 // NewFakeConfig return a fake Configer
 func NewFakeConfig() Configer {
-	return &fakeConfigContainer{
+	res := &fakeConfigContainer{
 		data: make(map[string]string),
 	}
+	res.BaseConfiger = NewBaseConfiger(func(ctx context.Context, key string) (string, error) {
+		return res.getData(key), nil
+	})
+	return res
 }

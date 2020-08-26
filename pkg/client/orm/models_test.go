@@ -243,7 +243,7 @@ type UserBig struct {
 }
 
 type TM struct {
-	ID            int      `orm:"column(id)"`
+	ID           int       `orm:"column(id)"`
 	TMPrecision1 time.Time `orm:"type(datetime);precision(3)"`
 	TMPrecision2 time.Time `orm:"auto_now_add;type(datetime);precision(4)"`
 }
