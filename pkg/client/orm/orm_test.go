@@ -204,6 +204,7 @@ func TestSyncDb(t *testing.T) {
 	RegisterModel(new(PtrPk))
 	RegisterModel(new(Index))
 	RegisterModel(new(StrPk))
+	RegisterModel(new(TM))
 
 	err := RunSyncdb("default", true, Debug)
 	throwFail(t, err)
@@ -230,6 +231,7 @@ func TestRegisterModels(t *testing.T) {
 	RegisterModel(new(PtrPk))
 	RegisterModel(new(Index))
 	RegisterModel(new(StrPk))
+	RegisterModel(new(TM))
 
 	BootStrap()
 
@@ -311,6 +313,24 @@ func TestDataTypes(t *testing.T) {
 			assert.Equal(t, value, vu)
 		}
 	}
+}
+
+func TestTM(t *testing.T) {
+	// The precision of sqlite is not implemented
+	if dORM.Driver().Type() == 2 {
+		return
+	}
+	var recTM TM
+	tm := NewTM()
+	tm.TMPrecision1 = time.Unix(1596766024, 123456789)
+	tm.TMPrecision2 = time.Unix(1596766024, 123456789)
+	_, err := dORM.Insert(tm)
+	throwFail(t, err)
+
+	err = dORM.QueryTable("tm").One(&recTM)
+	throwFail(t, err)
+	throwFail(t, AssertIs(recTM.TMPrecision1.String(), "2020-08-07 02:07:04.123 +0000 UTC"))
+	throwFail(t, AssertIs(recTM.TMPrecision2.String(), "2020-08-07 02:07:04.1235 +0000 UTC"))
 }
 
 func TestNullDataTypes(t *testing.T) {
