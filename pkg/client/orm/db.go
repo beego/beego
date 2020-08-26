@@ -1361,7 +1361,7 @@ setValue:
 				for i := 0; i < *fi.timePrecision; i++ {
 					layout += "0"
 				}
-				t, err = time.ParseInLocation(layout, s, tz)
+				t, err = time.ParseInLocation(layout, s[:20+*fi.timePrecision], tz)
 			} else if len(s) >= 19 {
 				s = s[:19]
 				t, err = time.ParseInLocation(formatDateTime, s, tz)
