@@ -506,7 +506,8 @@ var (
 )
 
 func init() {
-	Debug, _ = StrTo(DBARGS.Debug).Bool()
+	// Debug, _ = StrTo(DBARGS.Debug).Bool()
+	Debug = true
 
 	if DBARGS.Driver == "" || DBARGS.Source == "" {
 		fmt.Println(helpinfo)
