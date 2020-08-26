@@ -769,6 +769,20 @@ func TestCustomField(t *testing.T) {
 
 	throwFailNow(t, AssertIs(user.Extra.Name, "beego"))
 	throwFailNow(t, AssertIs(user.Extra.Data, "orm"))
+
+	var users []User
+	Q := dDbBaser.TableQuote()
+	n, err := dORM.Raw(fmt.Sprintf("SELECT * FROM %suser%s where id=?", Q, Q), 2).QueryRows(&users)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(n, 1))
+	throwFailNow(t, AssertIs(users[0].Extra.Name, "beego"))
+	throwFailNow(t, AssertIs(users[0].Extra.Data, "orm"))
+
+	user = User{}
+	err = dORM.Raw(fmt.Sprintf("SELECT * FROM %suser%s where id=?", Q, Q), 2).QueryRow(&user)
+	throwFailNow(t, err)
+	throwFailNow(t, AssertIs(user.Extra.Name, "beego"))
+	throwFailNow(t, AssertIs(user.Extra.Data, "orm"))
 }
 
 func TestExpr(t *testing.T) {
