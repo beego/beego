@@ -70,7 +70,8 @@ func TestYaml(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	if yamlconf.String("appname") != "beeapi" {
+	res, _ := yamlconf.String("appname")
+	if res != "beeapi" {
 		t.Fatal("appname not equal to beeapi")
 	}
 
@@ -91,9 +92,9 @@ func TestYaml(t *testing.T) {
 		case bool:
 			value, err = yamlconf.Bool(k)
 		case []string:
-			value = yamlconf.Strings(k)
+			value, err = yamlconf.Strings(k)
 		case string:
-			value = yamlconf.String(k)
+			value, err = yamlconf.String(k)
 		default:
 			value, err = yamlconf.DIY(k)
 		}
@@ -108,7 +109,8 @@ func TestYaml(t *testing.T) {
 	if err = yamlconf.Set("name", "astaxie"); err != nil {
 		t.Fatal(err)
 	}
-	if yamlconf.String("name") != "astaxie" {
+	res, _ = yamlconf.String("name")
+	if res != "astaxie" {
 		t.Fatal("get name error")
 	}
 

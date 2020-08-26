@@ -15,6 +15,7 @@
 package config
 
 import (
+	"context"
 	"errors"
 	"testing"
 
@@ -59,7 +60,7 @@ func TestBaseConfiger_DefaultStrings(t *testing.T) {
 
 func newBaseConfier(str1 string) *BaseConfiger {
 	return &BaseConfiger{
-		reader: func(key string) (string, error) {
+		reader: func(ctx context.Context, key string) (string, error) {
 			if key == "key1" {
 				return str1, nil
 			} else {

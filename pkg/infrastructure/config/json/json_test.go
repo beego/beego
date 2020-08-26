@@ -163,9 +163,9 @@ func TestJson(t *testing.T) {
 		case bool:
 			value, err = jsonconf.Bool(k)
 		case []string:
-			value = jsonconf.Strings(k)
+			value, err = jsonconf.Strings(k)
 		case string:
-			value = jsonconf.String(k)
+			value, err = jsonconf.String(k)
 		default:
 			value, err = jsonconf.DIY(k)
 		}
@@ -179,7 +179,9 @@ func TestJson(t *testing.T) {
 	if err = jsonconf.Set("name", "astaxie"); err != nil {
 		t.Fatal(err)
 	}
-	if jsonconf.String("name") != "astaxie" {
+
+	res, _ := jsonconf.String("name")
+	if res != "astaxie" {
 		t.Fatal("get name error")
 	}
 
@@ -210,7 +212,7 @@ func TestJson(t *testing.T) {
 		t.Error("unknown keys should return an error when expecting an interface{}")
 	}
 
-	if val := jsonconf.String("unknown"); val != "" {
+	if val, _ := jsonconf.String("unknown"); val != "" {
 		t.Error("unknown keys should return an empty string when expecting a String")
 	}
 
