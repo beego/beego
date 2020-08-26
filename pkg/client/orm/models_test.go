@@ -241,6 +241,21 @@ type UserBig struct {
 	Name string
 }
 
+type TM struct {
+	ID            int      `orm:"column(id)"`
+	TMPrecision1 time.Time `orm:"type(datetime);precision(3)"`
+	TMPrecision2 time.Time `orm:"auto_now_add;type(datetime);precision(4)"`
+}
+
+func (t *TM) TableName() string {
+	return "tm"
+}
+
+func NewTM() *TM {
+	obj := new(TM)
+	return obj
+}
+
 type User struct {
 	ID           int    `orm:"column(id)"`
 	UserName     string `orm:"size(30);unique"`

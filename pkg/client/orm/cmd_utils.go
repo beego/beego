@@ -66,12 +66,14 @@ checkColumn:
 	case TypeDateField:
 		col = T["time.Time-date"]
 	case TypeDateTimeField:
-		if fi.timePrecision == nil {
+		// the precision of sqlite is not implemented
+		if al.Driver == 2 || fi.timePrecision == nil {
 			col = T["time.Time"]
-		} else {
+		}else {
 			s := T["time.Time-precision"]
 			col = fmt.Sprintf(s, *fi.timePrecision)
 		}
+
 	case TypeBitField:
 		col = T["int8"]
 	case TypeSmallIntegerField:
