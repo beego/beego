@@ -34,8 +34,7 @@ type SMTPWriter struct {
 	FromAddress        string   `json:"fromAddress"`
 	RecipientAddresses []string `json:"sendTos"`
 	Level              int      `json:"level"`
-	UseCustomFormatter bool
-	CustomFormatter    func(*LogMsg) string
+	customFormatter    func(*LogMsg) string
 }
 
 // NewSMTPWriter creates the smtp writer.
@@ -55,12 +54,16 @@ func newSMTPWriter() Logger {
 //		"level":LevelError
 //	}
 func (s *SMTPWriter) Init(jsonConfig string, opts ...common.SimpleKV) error {
-	// for _, elem := range LogFormatter {
-	// 	if elem != nil {
-	// 		s.UseCustomFormatter = true
-	// 		s.CustomFormatter = elem
-	// 	}
-	// }
+
+	for _, elem := range opts {
+		if elem.Key == "formatter" {
+			formatter, err := GetFormatter(elem)
+			if err != nil {
+				return err
+			}
+			s.customFormatter = formatter
+		}
+	}
 
 	return json.Unmarshal([]byte(jsonConfig), s)
 }

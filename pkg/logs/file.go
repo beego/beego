@@ -62,8 +62,7 @@ type fileLogWriter struct {
 	hourlyOpenDate int
 	hourlyOpenTime time.Time
 
-	UseCustomFormatter bool
-	CustomFormatter    func(*LogMsg) string
+	customFormatter func(*LogMsg) string
 
 	Rotate bool `json:"rotate"`
 
@@ -110,12 +109,16 @@ func (w *fileLogWriter) Format(lm *LogMsg) string {
 //      "perm":"0600"
 //  }
 func (w *fileLogWriter) Init(jsonConfig string, opts ...common.SimpleKV) error {
-	// for _, elem := range LogFormatter {
-	// 	if elem != nil {
-	// 		w.UseCustomFormatter = true
-	// 		w.CustomFormatter = elem
-	// 	}
-	// }
+
+	for _, elem := range opts {
+		if elem.Key == "formatter" {
+			formatter, err := GetFormatter(elem)
+			if err != nil {
+				return err
+			}
+			w.customFormatter = formatter
+		}
+	}
 
 	err := json.Unmarshal([]byte(jsonConfig), w)
 	if err != nil {
@@ -166,8 +169,9 @@ func (w *fileLogWriter) WriteMsg(lm *LogMsg) error {
 	}
 	hd, d, h := formatTimeHeader(lm.When)
 	msg := ""
-	if w.UseCustomFormatter {
-		msg = w.CustomFormatter(lm)
+
+	if w.customFormatter != nil {
+		msg = w.customFormatter(lm)
 	} else {
 		msg = w.Format(lm)
 	}

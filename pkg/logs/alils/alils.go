@@ -5,6 +5,7 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/astaxie/beego/pkg/common"
 	"github.com/astaxie/beego/pkg/logs"
 	"github.com/gogo/protobuf/proto"
 )
@@ -32,13 +33,12 @@ type Config struct {
 // aliLSWriter implements LoggerInterface.
 // Writes messages in keep-live tcp connection.
 type aliLSWriter struct {
-	store              *LogStore
-	group              []*LogGroup
-	withMap            bool
-	groupMap           map[string]*LogGroup
-	lock               *sync.Mutex
-	UseCustomFormatter bool
-	CustomFormatter    func(*logs.LogMsg) string
+	store           *LogStore
+	group           []*LogGroup
+	withMap         bool
+	groupMap        map[string]*LogGroup
+	lock            *sync.Mutex
+	customFormatter func(*logs.LogMsg) string
 	Config
 }
 
@@ -50,15 +50,17 @@ func NewAliLS() logs.Logger {
 }
 
 // Init parses config and initializes struct
-func (c *aliLSWriter) Init(jsonConfig string, LogFormatter ...func(*logs.LogMsg) string) (err error) {
+func (c *aliLSWriter) Init(jsonConfig string, opts ...common.SimpleKV) error {
 
-	for _, elem := range LogFormatter {
-		if elem != nil {
-			c.UseCustomFormatter = true
-			c.CustomFormatter = elem
+	for _, elem := range opts {
+		if elem.Key == "formatter" {
+			formatter, err := logs.GetFormatter(elem)
+			if err != nil {
+				return err
+			}
+			c.customFormatter = formatter
 		}
 	}
-
 	json.Unmarshal([]byte(jsonConfig), c)
 
 	if c.FlushWhen > CacheSize {
@@ -72,10 +74,12 @@ func (c *aliLSWriter) Init(jsonConfig string, LogFormatter ...func(*logs.LogMsg)
 		AccessKeySecret: c.KeySecret,
 	}
 
-	c.store, err = prj.GetLogStore(c.LogStore)
+	store, err := prj.GetLogStore(c.LogStore)
 	if err != nil {
 		return err
 	}
+
+	c.store = store
 
 	// Create default Log Group
 	c.group = append(c.group, &LogGroup{
@@ -141,8 +145,8 @@ func (c *aliLSWriter) WriteMsg(lm *logs.LogMsg) error {
 		lg = c.group[0]
 	}
 
-	if c.UseCustomFormatter {
-		content = c.CustomFormatter(lm)
+	if c.customFormatter != nil {
+		content = c.customFormatter(lm)
 	} else {
 		content = c.Format(lm)
 	}
