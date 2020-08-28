@@ -38,10 +38,13 @@ import (
 	"log"
 	"os"
 	"path"
+	"reflect"
 	"runtime"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/astaxie/beego/pkg/common"
 )
 
 // RFC5424 log message levels.
@@ -84,7 +87,7 @@ type newLoggerFunc func() Logger
 
 // Logger defines the behavior of a log provider.
 type Logger interface {
-	Init(config string, LogFormatter ...func(*LogMsg) string) error
+	Init(config string, opts ...common.SimpleKV) error
 	WriteMsg(lm *LogMsg) error
 	Format(lm *LogMsg) string
 	Destroy()
@@ -210,7 +213,7 @@ func (bl *BeeLogger) setLogger(adapterName string, configs ...string) error {
 	// Global formatter overrides the default set formatter
 	// but not adapter specific formatters set with logs.SetLoggerWithOpts()
 	if bl.globalFormatter != nil {
-		err = lg.Init(config, bl.globalFormatter)
+		err = lg.Init(config)
 	} else {
 		err = lg.Init(config)
 	}
@@ -401,9 +404,21 @@ func (bl *BeeLogger) startLogger() {
 	}
 }
 
+// Get the formatter from the opts common.SimpleKV structure
+// Looks for a key: "formatter" with value: func(*LogMsg) string
+func GetFormatter(opts common.SimpleKV) (func(*LogMsg) string, error) {
+	if strings.ToLower(opts.Key.(string)) == "formatter" {
+		formatterInterface := reflect.ValueOf(opts.Value).Interface()
+		formatterFunc := formatterInterface.(func(*LogMsg) string)
+		return formatterFunc, nil
+	}
+
+	return nil, fmt.Errorf("no \"formatter\" key given in simpleKV")
+}
+
 // SetLoggerWithOpts sets a log adapter with a user defined logging format. Config must be valid JSON
 // such as: {"interval":360}
-func (bl *BeeLogger) setLoggerWithOpts(adapterName string, formatterFunc func(*LogMsg) string, configs ...string) error {
+func (bl *BeeLogger) setLoggerWithOpts(adapterName string, opts common.SimpleKV, configs ...string) error {
 	config := append(configs, "{}")[0]
 	for _, l := range bl.outputs {
 		if l.name == adapterName {
@@ -416,12 +431,12 @@ func (bl *BeeLogger) setLoggerWithOpts(adapterName string, formatterFunc func(*L
 		return fmt.Errorf("logs: unknown adaptername %q (forgotten Register?)", adapterName)
 	}
 
-	if formatterFunc == nil {
-		return fmt.Errorf("No formatter set for %s log adapter", adapterName)
+	if opts.Key == nil {
+		return fmt.Errorf("No SimpleKV struct set for %s log adapter", adapterName)
 	}
 
 	lg := logAdapter()
-	err := lg.Init(config, formatterFunc)
+	err := lg.Init(config, opts)
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "logs.BeeLogger.SetLogger: "+err.Error())
 		return err
@@ -436,21 +451,22 @@ func (bl *BeeLogger) setLoggerWithOpts(adapterName string, formatterFunc func(*L
 }
 
 // SetLogger provides a given logger adapter into BeeLogger with config string.
-func (bl *BeeLogger) SetLoggerWithOpts(adapterName string, formatterFunc func(*LogMsg) string, configs ...string) error {
+func (bl *BeeLogger) SetLoggerWithOpts(adapterName string, opts common.SimpleKV, configs ...string) error {
 	bl.lock.Lock()
 	defer bl.lock.Unlock()
 	if !bl.init {
 		bl.outputs = []*nameLogger{}
 		bl.init = true
 	}
-	return bl.setLoggerWithOpts(adapterName, formatterFunc, configs...)
+	return bl.setLoggerWithOpts(adapterName, opts, configs...)
 }
 
 // SetLoggerWIthOpts sets a given log adapter with a custom log adapter.
 // Log Adapter must be given in the form common.SimpleKV{Key: "formatter": Value: struct.FormatFunc}
 // where FormatFunc has the signature func(*LogMsg) string
-func SetLoggerWithOpts(adapter string, config []string, formatterFunc func(*LogMsg) string) error {
-	err := beeLogger.SetLoggerWithOpts(adapter, formatterFunc, config...)
+// func SetLoggerWithOpts(adapter string, config []string, formatterFunc func(*LogMsg) string) error {
+func SetLoggerWithOpts(adapter string, config []string, opts common.SimpleKV) error {
+	err := beeLogger.SetLoggerWithOpts(adapter, opts, config...)
 	if err != nil {
 		log.Fatal(err)
 	}

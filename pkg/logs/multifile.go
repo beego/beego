@@ -16,6 +16,8 @@ package logs
 
 import (
 	"encoding/json"
+
+	"github.com/astaxie/beego/pkg/common"
 )
 
 // A filesLogWriter manages several fileLogWriter
@@ -46,16 +48,16 @@ var levelNames = [...]string{"emergency", "alert", "critical", "error", "warning
 //	"separate":["emergency", "alert", "critical", "error", "warning", "notice", "info", "debug"],
 //	}
 
-func (f *multiFileLogWriter) Init(config string, LogFormatter ...func(*LogMsg) string) error {
-	for _, elem := range LogFormatter {
-		if elem != nil {
-			f.UseCustomFormatter = true
-			f.CustomFormatter = elem
-		}
-	}
+func (f *multiFileLogWriter) Init(jsonConfig string, opts ...common.SimpleKV) error {
+	// for _, elem := range LogFormatter {
+	// 	if elem != nil {
+	// 		f.UseCustomFormatter = true
+	// 		f.CustomFormatter = elem
+	// 	}
+	// }
 
 	writer := newFileWriter().(*fileLogWriter)
-	err := writer.Init(config)
+	err := writer.Init(jsonConfig)
 	if err != nil {
 		return err
 	}
@@ -63,10 +65,10 @@ func (f *multiFileLogWriter) Init(config string, LogFormatter ...func(*LogMsg) s
 	f.writers[LevelDebug+1] = writer
 
 	//unmarshal "separate" field to f.Separate
-	json.Unmarshal([]byte(config), f)
+	json.Unmarshal([]byte(jsonConfig), f)
 
 	jsonMap := map[string]interface{}{}
-	json.Unmarshal([]byte(config), &jsonMap)
+	json.Unmarshal([]byte(jsonConfig), &jsonMap)
 
 	for i := LevelEmergency; i < LevelDebug+1; i++ {
 		for _, v := range f.Separate {

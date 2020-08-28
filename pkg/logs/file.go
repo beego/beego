@@ -27,6 +27,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/astaxie/beego/pkg/common"
 )
 
 // fileLogWriter implements LoggerInterface.
@@ -107,13 +109,13 @@ func (w *fileLogWriter) Format(lm *LogMsg) string {
 //  "rotate":true,
 //      "perm":"0600"
 //  }
-func (w *fileLogWriter) Init(jsonConfig string, LogFormatter ...func(*LogMsg) string) error {
-	for _, elem := range LogFormatter {
-		if elem != nil {
-			w.UseCustomFormatter = true
-			w.CustomFormatter = elem
-		}
-	}
+func (w *fileLogWriter) Init(jsonConfig string, opts ...common.SimpleKV) error {
+	// for _, elem := range LogFormatter {
+	// 	if elem != nil {
+	// 		w.UseCustomFormatter = true
+	// 		w.CustomFormatter = elem
+	// 	}
+	// }
 
 	err := json.Unmarshal([]byte(jsonConfig), w)
 	if err != nil {

@@ -19,6 +19,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/astaxie/beego/pkg/common"
+
 	"github.com/shiena/ansicolor"
 )
 
@@ -47,11 +49,10 @@ var colors = []brush{
 
 // consoleWriter implements LoggerInterface and writes messages to terminal.
 type consoleWriter struct {
-	lg                 *logWriter
-	UseCustomFormatter bool
-	CustomFormatter    func(*LogMsg) string
-	Level              int  `json:"level"`
-	Colorful           bool `json:"color"` //this filed is useful only when system's terminal supports color
+	lg              *logWriter
+	customFormatter func(*LogMsg) string
+	Level           int  `json:"level"`
+	Colorful        bool `json:"color"` //this filed is useful only when system's terminal supports color
 }
 
 func (c *consoleWriter) Format(lm *LogMsg) string {
@@ -80,11 +81,16 @@ func NewConsole() Logger {
 
 // Init initianlizes the console logger.
 // jsonConfig must be in the format '{"level":LevelTrace}'
-func (c *consoleWriter) Init(jsonConfig string, LogFormatter ...func(*LogMsg) string) error {
-	for _, elem := range LogFormatter {
-		if elem != nil {
-			c.UseCustomFormatter = true
-			c.CustomFormatter = elem
+// func (c *consoleWriter) Init(jsonConfig string, LogFormatter ...func(*LogMsg) string) error {
+func (c *consoleWriter) Init(jsonConfig string, opts ...common.SimpleKV) error {
+
+	for _, elem := range opts {
+		if elem.Key == "formatter" {
+			formatter, err := GetFormatter(elem)
+			if err != nil {
+				return err
+			}
+			c.customFormatter = formatter
 		}
 	}
 
@@ -107,10 +113,11 @@ func (c *consoleWriter) WriteMsg(lm *LogMsg) error {
 
 	msg := ""
 
-	if c.UseCustomFormatter {
-		msg = c.CustomFormatter(lm)
+	if c.customFormatter != nil {
+		msg = c.customFormatter(lm)
 	} else {
 		msg = c.Format(lm)
+
 	}
 
 	c.lg.writeln(msg)
