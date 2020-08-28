@@ -32,8 +32,8 @@ import (
 
 // Config is the main struct for BConfig
 type Config struct {
-	AppName             string //Application name
-	RunMode             string //Running Mode: dev | prod
+	AppName             string // Application name
+	RunMode             string // Running Mode: dev | prod
 	RouterCaseSensitive bool
 	ServerName          string
 	RecoverPanic        bool
@@ -113,8 +113,8 @@ type SessionConfig struct {
 // LogConfig holds Log related config
 type LogConfig struct {
 	AccessLogs       bool
-	EnableStaticLogs bool   //log static files requests default: false
-	AccessLogsFormat string //access log format: JSON_FORMAT, APACHE_FORMAT or empty string
+	EnableStaticLogs bool   // log static files requests default: false
+	AccessLogsFormat string // access log format: JSON_FORMAT, APACHE_FORMAT or empty string
 	FileLineNum      bool
 	Outputs          map[string]string // Store Adaptor : config
 }
@@ -210,7 +210,7 @@ func newBConfig() *Config {
 		RecoverFunc:         recoverPanic,
 		CopyRequestBody:     false,
 		EnableGzip:          false,
-		MaxMemory:           1 << 26, //64MB
+		MaxMemory:           1 << 26, // 64MB
 		EnableErrorsShow:    true,
 		EnableErrorsRender:  true,
 		Listen: Listen{
@@ -258,7 +258,7 @@ func newBConfig() *Config {
 				SessionGCMaxLifetime:         3600,
 				SessionProviderConfig:        "",
 				SessionDisableHTTPOnly:       false,
-				SessionCookieLifeTime:        0, //set cookie default is the browser life
+				SessionCookieLifeTime:        0, // set cookie default is the browser life
 				SessionAutoSetCookie:         true,
 				SessionDomain:                "",
 				SessionEnableSidInHTTPHeader: false, // enable store/get the sessionId into/from http headers
@@ -292,11 +292,11 @@ func assignConfig(ac config.Configer) error {
 	// set the run mode first
 	if envRunMode := os.Getenv("BEEGO_RUNMODE"); envRunMode != "" {
 		BConfig.RunMode = envRunMode
-	} else if runMode := ac.String("RunMode"); runMode != "" {
+	} else if runMode, err := ac.String("RunMode"); runMode != "" && err == nil {
 		BConfig.RunMode = runMode
 	}
 
-	if sd := ac.String("StaticDir"); sd != "" {
+	if sd, err := ac.String("StaticDir"); sd != "" && err == nil {
 		BConfig.WebConfig.StaticDir = map[string]string{}
 		sds := strings.Fields(sd)
 		for _, v := range sds {
@@ -308,7 +308,7 @@ func assignConfig(ac config.Configer) error {
 		}
 	}
 
-	if sgz := ac.String("StaticExtensionsToGzip"); sgz != "" {
+	if sgz, err := ac.String("StaticExtensionsToGzip"); sgz != "" && err == nil {
 		extensions := strings.Split(sgz, ",")
 		fileExts := []string{}
 		for _, ext := range extensions {
@@ -334,7 +334,7 @@ func assignConfig(ac config.Configer) error {
 		BConfig.WebConfig.StaticCacheFileNum = sfn
 	}
 
-	if lo := ac.String("LogOutputs"); lo != "" {
+	if lo, err := ac.String("LogOutputs"); lo != "" && err == nil {
 		// if lo is not nil or empty
 		// means user has set his own LogOutputs
 		// clear the default setting to BConfig.Log.Outputs
@@ -349,7 +349,7 @@ func assignConfig(ac config.Configer) error {
 		}
 	}
 
-	//init log
+	// init log
 	logs.Reset()
 	for adaptor, config := range BConfig.Log.Outputs {
 		err := logs.SetLogger(adaptor, config)
@@ -388,7 +388,7 @@ func assignSingleConfig(p interface{}, ac config.Configer) {
 			pf.SetBool(ac.DefaultBool(name, pf.Bool()))
 		case reflect.Struct:
 		default:
-			//do nothing here
+			// do nothing here
 		}
 	}
 
@@ -431,16 +431,16 @@ func (b *beegoAppConfig) Set(key, val string) error {
 	return nil
 }
 
-func (b *beegoAppConfig) String(key string) string {
-	if v := b.innerConfig.String(BConfig.RunMode + "::" + key); v != "" {
-		return v
+func (b *beegoAppConfig) String(key string) (string, error) {
+	if v, err := b.innerConfig.String(BConfig.RunMode + "::" + key); v != "" && err == nil {
+		return v, nil
 	}
 	return b.innerConfig.String(key)
 }
 
-func (b *beegoAppConfig) Strings(key string) []string {
-	if v := b.innerConfig.Strings(BConfig.RunMode + "::" + key); len(v) > 0 {
-		return v
+func (b *beegoAppConfig) Strings(key string) ([]string, error) {
+	if v, err := b.innerConfig.Strings(BConfig.RunMode + "::" + key); len(v) > 0 && err == nil {
+		return v, nil
 	}
 	return b.innerConfig.Strings(key)
 }
@@ -474,14 +474,14 @@ func (b *beegoAppConfig) Float(key string) (float64, error) {
 }
 
 func (b *beegoAppConfig) DefaultString(key string, defaultVal string) string {
-	if v := b.String(key); v != "" {
+	if v, err := b.String(key); v != "" && err == nil {
 		return v
 	}
 	return defaultVal
 }
 
 func (b *beegoAppConfig) DefaultStrings(key string, defaultVal []string) []string {
-	if v := b.Strings(key); len(v) != 0 {
+	if v, err := b.Strings(key); len(v) != 0 && err == nil {
 		return v
 	}
 	return defaultVal

@@ -165,7 +165,35 @@ func (c *JSONConfigContainer) String(key string) (string, error) {
 			return v, nil
 		}
 	}
-	return "", errors.New(fmt.Sprintf("config not found or is not string, key: %s", key))
+	return "", nil
+}
+
+// DefaultString returns the string value for a given key.
+// if err != nil return defaultval
+func (c *JSONConfigContainer) DefaultString(key string, defaultval string) string {
+	// TODO FIXME should not use "" to replace non existence
+	if v, err := c.String(key); v != "" && err == nil {
+		return v
+	}
+	return defaultval
+}
+
+// Strings returns the []string value for a given key.
+func (c *JSONConfigContainer) Strings(key string) ([]string, error) {
+	stringVal, err := c.String(key)
+	if stringVal == "" || err != nil {
+		return nil, err
+	}
+	return strings.Split(stringVal, ";"), nil
+}
+
+// DefaultStrings returns the []string value for a given key.
+// if err != nil return defaultval
+func (c *JSONConfigContainer) DefaultStrings(key string, defaultval []string) []string {
+	if v, err := c.Strings(key); v != nil && err == nil {
+		return v
+	}
+	return defaultval
 }
 
 // GetSection returns map for the given section
