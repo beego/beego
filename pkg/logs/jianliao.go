@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+
+	"github.com/astaxie/beego/pkg/common"
 )
 
 // JLWriter implements beego LoggerInterface and is used to send jiaoliao webhook
@@ -25,15 +27,15 @@ func newJLWriter() Logger {
 }
 
 // Init JLWriter with json config string
-func (s *JLWriter) Init(jsonconfig string, LogFormatter ...func(*LogMsg) string) error {
-	for _, elem := range LogFormatter {
-		if elem != nil {
-			s.UseCustomFormatter = true
-			s.CustomFormatter = elem
-		}
-	}
+func (s *JLWriter) Init(jsonConfig string, opts ...common.SimpleKV) error {
+	// for _, elem := range LogFormatter {
+	// 	if elem != nil {
+	// 		s.UseCustomFormatter = true
+	// 		s.CustomFormatter = elem
+	// 	}
+	// }
 
-	return json.Unmarshal([]byte(jsonconfig), s)
+	return json.Unmarshal([]byte(jsonConfig), s)
 }
 
 func (s *JLWriter) Format(lm *LogMsg) string {

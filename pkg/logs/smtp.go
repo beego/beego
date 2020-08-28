@@ -21,6 +21,8 @@ import (
 	"net"
 	"net/smtp"
 	"strings"
+
+	"github.com/astaxie/beego/pkg/common"
 )
 
 // SMTPWriter implements LoggerInterface and is used to send emails via given SMTP-server.
@@ -52,15 +54,15 @@ func newSMTPWriter() Logger {
 //		"sendTos":["email1","email2"],
 //		"level":LevelError
 //	}
-func (s *SMTPWriter) Init(jsonconfig string, LogFormatter ...func(*LogMsg) string) error {
-	for _, elem := range LogFormatter {
-		if elem != nil {
-			s.UseCustomFormatter = true
-			s.CustomFormatter = elem
-		}
-	}
+func (s *SMTPWriter) Init(jsonConfig string, opts ...common.SimpleKV) error {
+	// for _, elem := range LogFormatter {
+	// 	if elem != nil {
+	// 		s.UseCustomFormatter = true
+	// 		s.CustomFormatter = elem
+	// 	}
+	// }
 
-	return json.Unmarshal([]byte(jsonconfig), s)
+	return json.Unmarshal([]byte(jsonConfig), s)
 }
 
 func (s *SMTPWriter) getSMTPAuth(host string) smtp.Auth {

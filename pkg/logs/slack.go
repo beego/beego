@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+
+	"github.com/astaxie/beego/pkg/common"
 )
 
 // SLACKWriter implements beego LoggerInterface and is used to send jiaoliao webhook
@@ -25,15 +27,14 @@ func (s *SLACKWriter) Format(lm *LogMsg) string {
 }
 
 // Init SLACKWriter with json config string
-func (s *SLACKWriter) Init(jsonconfig string, LogFormatter ...func(*LogMsg) string) error {
-	for _, elem := range LogFormatter {
-		if elem != nil {
-			s.UseCustomFormatter = true
-			s.CustomFormatter = elem
-		}
-	}
+func (s *SLACKWriter) Init(jsonConfig string, opts ...common.SimpleKV) error {
+	// 	if elem != nil {
+	// 		s.UseCustomFormatter = true
+	// 		s.CustomFormatter = elem
+	// 	}
+	// }
 
-	return json.Unmarshal([]byte(jsonconfig), s)
+	return json.Unmarshal([]byte(jsonConfig), s)
 }
 
 // WriteMsg write message in smtp writer.
