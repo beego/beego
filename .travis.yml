@@ -7,7 +7,7 @@ services:
   - mysql
   - postgresql
   - memcached
-  - etcd
+  - docker
 env:
   global:
     - GO_REPO_FULLNAME="github.com/astaxie/beego"
@@ -27,17 +27,33 @@ before_install:
   - cd ssdb
   - make
   - cd ..
+  #  - prepare etcd
   #  - prepare for etcd unit tests
-  - git clone https://github.com/etcd-io/etcd.git
-  - cd etcd
-  - ./build
-  - ./bin/etcd
-  - ./bin/etcdctl put current.float 1.23
-  - ./bin/etcdctl put current.bool true
-  - ./bin/etcdctl put current.int 11
-  - ./bin/etcdctl put current.string hello
-  - ./bin/etcdctl put current.serialize.name test
-  - cd ..
+  - rm -rf /tmp/etcd-data.tmp
+  - mkdir -p /tmp/etcd-data.tmp
+  - docker rmi gcr.io/etcd-development/etcd:v3.3.25 || true &&
+    docker run -d
+    -p 2379:2379
+    -p 2380:2380
+    --mount type=bind,source=/tmp/etcd-data.tmp,destination=/etcd-data
+    --name etcd-gcr-v3.3.25
+    gcr.io/etcd-development/etcd:v3.3.25
+    /usr/local/bin/etcd
+    --name s1
+    --data-dir /etcd-data
+    --listen-client-urls http://0.0.0.0:2379
+    --advertise-client-urls http://0.0.0.0:2379
+    --listen-peer-urls http://0.0.0.0:2380
+    --initial-advertise-peer-urls http://0.0.0.0:2380
+    --initial-cluster s1=http://0.0.0.0:2380
+    --initial-cluster-token tkn
+    --initial-cluster-state new
+  - docker exec etcd-gcr-v3.3.25 /bin/sh -c "ETCDCTL_API=3 /usr/local/bin/etcdctl put current.float 1.23"
+  - docker exec etcd-gcr-v3.3.25 /bin/sh -c "ETCDCTL_API=3 /usr/local/bin/etcdctl put current.bool true"
+  - docker exec etcd-gcr-v3.3.25 /bin/sh -c "ETCDCTL_API=3 /usr/local/bin/etcdctl put current.int 11"
+  - docker exec etcd-gcr-v3.3.25 /bin/sh -c "ETCDCTL_API=3 /usr/local/bin/etcdctl put current.string hello"
+  - docker exec etcd-gcr-v3.3.25 /bin/sh -c "ETCDCTL_API=3 /usr/local/bin/etcdctl put current.serialize.name test"
+  - docker exec etcd-gcr-v3.3.25 /bin/sh -c "ETCDCTL_API=3 /usr/local/bin/etcdctl put sub.sub.key1 sub.sub.key"
 install:
   - go get github.com/lib/pq
   - go get github.com/go-sql-driver/mysql
@@ -64,6 +80,8 @@ install:
   - go get -u golang.org/x/lint/golint
   - go get -u github.com/go-redis/redis
 before_script:
+
+  #  -
   - psql --version
   #  - prepare for orm unit tests
   - sh -c "if [ '$ORM_DRIVER' = 'postgres' ]; then psql -c 'create database orm_test;' -U postgres; fi"

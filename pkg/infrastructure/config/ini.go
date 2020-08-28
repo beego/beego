@@ -17,14 +17,13 @@ package config
 import (
 	"bufio"
 	"bytes"
-	"context"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"os/user"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -66,9 +65,6 @@ func (ini *IniConfig) parseData(dir string, data []byte) (*IniConfigContainer, e
 		keyComment:     make(map[string]string),
 		RWMutex:        sync.RWMutex{},
 	}
-	cfg.BaseConfiger = NewBaseConfiger(func(ctx context.Context, key string) (string, error) {
-		return cfg.getdata(key)
-	})
 	cfg.Lock()
 	defer cfg.Unlock()
 
@@ -94,7 +90,7 @@ func (ini *IniConfig) parseData(dir string, data []byte) (*IniConfigContainer, e
 				break
 			}
 
-			// It might be a good idea to throw a error on all unknonw errors?
+			//It might be a good idea to throw a error on all unknonw errors?
 			if _, ok := err.(*os.PathError); ok {
 				return nil, err
 			}
@@ -234,6 +230,101 @@ type IniConfigContainer struct {
 	sectionComment map[string]string            // section : comment
 	keyComment     map[string]string            // id: []{comment, key...}; id 1 is for main comment.
 	sync.RWMutex
+}
+
+// Bool returns the boolean value for a given key.
+func (c *IniConfigContainer) Bool(key string) (bool, error) {
+	return ParseBool(c.getdata(key))
+}
+
+// DefaultBool returns the boolean value for a given key.
+// if err != nil return defaultval
+func (c *IniConfigContainer) DefaultBool(key string, defaultval bool) bool {
+	v, err := c.Bool(key)
+	if err != nil {
+		return defaultval
+	}
+	return v
+}
+
+// Int returns the integer value for a given key.
+func (c *IniConfigContainer) Int(key string) (int, error) {
+	return strconv.Atoi(c.getdata(key))
+}
+
+// DefaultInt returns the integer value for a given key.
+// if err != nil return defaultval
+func (c *IniConfigContainer) DefaultInt(key string, defaultval int) int {
+	v, err := c.Int(key)
+	if err != nil {
+		return defaultval
+	}
+	return v
+}
+
+// Int64 returns the int64 value for a given key.
+func (c *IniConfigContainer) Int64(key string) (int64, error) {
+	return strconv.ParseInt(c.getdata(key), 10, 64)
+}
+
+// DefaultInt64 returns the int64 value for a given key.
+// if err != nil return defaultval
+func (c *IniConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
+	v, err := c.Int64(key)
+	if err != nil {
+		return defaultval
+	}
+	return v
+}
+
+// Float returns the float value for a given key.
+func (c *IniConfigContainer) Float(key string) (float64, error) {
+	return strconv.ParseFloat(c.getdata(key), 64)
+}
+
+// DefaultFloat returns the float64 value for a given key.
+// if err != nil return defaultval
+func (c *IniConfigContainer) DefaultFloat(key string, defaultval float64) float64 {
+	v, err := c.Float(key)
+	if err != nil {
+		return defaultval
+	}
+	return v
+}
+
+// String returns the string value for a given key.
+func (c *IniConfigContainer) String(key string) (string, error) {
+	return c.getdata(key), nil
+}
+
+// DefaultString returns the string value for a given key.
+// if err != nil return defaultval
+func (c *IniConfigContainer) DefaultString(key string, defaultval string) string {
+	v, err := c.String(key)
+	if v == "" || err != nil {
+		return defaultval
+	}
+	return v
+}
+
+// Strings returns the []string value for a given key.
+// Return nil if config value does not exist or is empty.
+func (c *IniConfigContainer) Strings(key string) ([]string, error) {
+	v, err := c.String(key)
+	if v == "" || err != nil {
+		return nil, err
+	}
+	return strings.Split(v, ";"), nil
+}
+
+// DefaultStrings returns the []string value for a given key.
+// if err != nil return defaultval
+func (c *IniConfigContainer) DefaultStrings(key string, defaultval []string) []string {
+	v, err := c.Strings(key)
+	if v == nil || err != nil {
+		return defaultval
+	}
+	return v
 }
 
 // GetSection returns map for the given section
@@ -383,9 +474,9 @@ func (c *IniConfigContainer) DIY(key string) (v interface{}, err error) {
 }
 
 // section.key or key
-func (c *IniConfigContainer) getdata(key string) (string, error) {
+func (c *IniConfigContainer) getdata(key string) string {
 	if len(key) == 0 {
-		return "", errors.New("the key is empty")
+		return ""
 	}
 	c.RLock()
 	defer c.RUnlock()
@@ -403,10 +494,10 @@ func (c *IniConfigContainer) getdata(key string) (string, error) {
 	}
 	if v, ok := c.data[section]; ok {
 		if vv, ok := v[k]; ok {
-			return vv, nil
+			return vv
 		}
 	}
-	return "", errors.New(fmt.Sprintf("config not found: %s", key))
+	return ""
 }
 
 func init() {
