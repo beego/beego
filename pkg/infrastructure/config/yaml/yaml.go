@@ -214,11 +214,9 @@ func (c *ConfigContainer) String(key string) (string, error) {
 	if v, err := c.getData(key); err == nil {
 		if vv, ok := v.(string); ok {
 			return vv, nil
-		} else {
-			return "", errors.New(fmt.Sprintf("the value is not string, key: %s, value: %v", key, v))
 		}
 	}
-	return "", errors.New(fmt.Sprintf("configuration not found, key: %s", key))
+	return "", nil
 }
 
 // DefaultString returns the string value for a given key.

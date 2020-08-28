@@ -131,7 +131,7 @@ func (c *BaseConfiger) Float(key string) (float64, error) {
 // DefaultString returns the string value for a given key.
 // if err != nil or value is empty return defaultval
 func (c *BaseConfiger) DefaultString(key string, defaultVal string) string {
-	if res, err := c.String(key); res != "" && err != nil {
+	if res, err := c.String(key); res != "" && err == nil {
 		return res
 	}
 	return defaultVal
@@ -140,7 +140,7 @@ func (c *BaseConfiger) DefaultString(key string, defaultVal string) string {
 // DefaultStrings returns the []string value for a given key.
 // if err != nil return defaultval
 func (c *BaseConfiger) DefaultStrings(key string, defaultVal []string) []string {
-	if res, err := c.Strings(key); len(res) > 0 && err != nil {
+	if res, err := c.Strings(key); len(res) > 0 && err == nil {
 		return res
 	}
 	return defaultVal
