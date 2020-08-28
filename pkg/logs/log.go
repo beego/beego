@@ -213,7 +213,7 @@ func (bl *BeeLogger) setLogger(adapterName string, configs ...string) error {
 	// Global formatter overrides the default set formatter
 	// but not adapter specific formatters set with logs.SetLoggerWithOpts()
 	if bl.globalFormatter != nil {
-		err = lg.Init(config)
+		err = lg.Init(config, common.SimpleKV{Key: "formatter", Value: bl.globalFormatter})
 	} else {
 		err = lg.Init(config)
 	}
