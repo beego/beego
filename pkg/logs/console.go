@@ -81,7 +81,6 @@ func NewConsole() Logger {
 
 // Init initianlizes the console logger.
 // jsonConfig must be in the format '{"level":LevelTrace}'
-// func (c *consoleWriter) Init(jsonConfig string, LogFormatter ...func(*LogMsg) string) error {
 func (c *consoleWriter) Init(jsonConfig string, opts ...common.SimpleKV) error {
 
 	for _, elem := range opts {

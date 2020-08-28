@@ -26,11 +26,10 @@ import (
 // and write the error-level logs to project.error.log and write the debug-level logs to project.debug.log
 // the rotate attribute also  acts like fileLogWriter
 type multiFileLogWriter struct {
-	writers            [LevelDebug + 1 + 1]*fileLogWriter // the last one for fullLogWriter
-	fullLogWriter      *fileLogWriter
-	Separate           []string `json:"separate"`
-	UseCustomFormatter bool
-	CustomFormatter    func(*LogMsg) string
+	writers         [LevelDebug + 1 + 1]*fileLogWriter // the last one for fullLogWriter
+	fullLogWriter   *fileLogWriter
+	Separate        []string `json:"separate"`
+	customFormatter func(*LogMsg) string
 }
 
 var levelNames = [...]string{"emergency", "alert", "critical", "error", "warning", "notice", "info", "debug"}
@@ -49,12 +48,15 @@ var levelNames = [...]string{"emergency", "alert", "critical", "error", "warning
 //	}
 
 func (f *multiFileLogWriter) Init(jsonConfig string, opts ...common.SimpleKV) error {
-	// for _, elem := range LogFormatter {
-	// 	if elem != nil {
-	// 		f.UseCustomFormatter = true
-	// 		f.CustomFormatter = elem
-	// 	}
-	// }
+	for _, elem := range opts {
+		if elem.Key == "formatter" {
+			formatter, err := GetFormatter(elem)
+			if err != nil {
+				return err
+			}
+			f.customFormatter = formatter
+		}
+	}
 
 	writer := newFileWriter().(*fileLogWriter)
 	err := writer.Init(jsonConfig)
