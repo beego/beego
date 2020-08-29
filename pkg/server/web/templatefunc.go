@@ -160,7 +160,7 @@ func NotNil(a interface{}) (isNil bool) {
 func GetConfig(returnType, key string, defaultVal interface{}) (value interface{}, err error) {
 	switch returnType {
 	case "String":
-		value = AppConfig.String(key)
+		value, err = AppConfig.String(key)
 	case "Bool":
 		value, err = AppConfig.Bool(key)
 	case "Int":

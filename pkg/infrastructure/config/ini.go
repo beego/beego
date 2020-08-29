@@ -293,15 +293,15 @@ func (c *IniConfigContainer) DefaultFloat(key string, defaultval float64) float6
 }
 
 // String returns the string value for a given key.
-func (c *IniConfigContainer) String(key string) string {
-	return c.getdata(key)
+func (c *IniConfigContainer) String(key string) (string, error) {
+	return c.getdata(key), nil
 }
 
 // DefaultString returns the string value for a given key.
 // if err != nil return defaultval
 func (c *IniConfigContainer) DefaultString(key string, defaultval string) string {
-	v := c.String(key)
-	if v == "" {
+	v, err := c.String(key)
+	if v == "" || err != nil {
 		return defaultval
 	}
 	return v
@@ -309,19 +309,19 @@ func (c *IniConfigContainer) DefaultString(key string, defaultval string) string
 
 // Strings returns the []string value for a given key.
 // Return nil if config value does not exist or is empty.
-func (c *IniConfigContainer) Strings(key string) []string {
-	v := c.String(key)
-	if v == "" {
-		return nil
+func (c *IniConfigContainer) Strings(key string) ([]string, error) {
+	v, err := c.String(key)
+	if v == "" || err != nil {
+		return nil, err
 	}
-	return strings.Split(v, ";")
+	return strings.Split(v, ";"), nil
 }
 
 // DefaultStrings returns the []string value for a given key.
 // if err != nil return defaultval
 func (c *IniConfigContainer) DefaultStrings(key string, defaultval []string) []string {
-	v := c.Strings(key)
-	if v == nil {
+	v, err := c.Strings(key)
+	if v == nil || err != nil {
 		return defaultval
 	}
 	return v
