@@ -15,6 +15,7 @@
 package web
 
 import (
+	context2 "context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -292,11 +293,11 @@ func assignConfig(ac config.Configer) error {
 	// set the run mode first
 	if envRunMode := os.Getenv("BEEGO_RUNMODE"); envRunMode != "" {
 		BConfig.RunMode = envRunMode
-	} else if runMode, err := ac.String("RunMode"); runMode != "" && err == nil {
+	} else if runMode, err := ac.String(nil, "RunMode"); runMode != "" && err == nil {
 		BConfig.RunMode = runMode
 	}
 
-	if sd, err := ac.String("StaticDir"); sd != "" && err == nil {
+	if sd, err := ac.String(nil, "StaticDir"); sd != "" && err == nil {
 		BConfig.WebConfig.StaticDir = map[string]string{}
 		sds := strings.Fields(sd)
 		for _, v := range sds {
@@ -308,7 +309,7 @@ func assignConfig(ac config.Configer) error {
 		}
 	}
 
-	if sgz, err := ac.String("StaticExtensionsToGzip"); sgz != "" && err == nil {
+	if sgz, err := ac.String(nil, "StaticExtensionsToGzip"); sgz != "" && err == nil {
 		extensions := strings.Split(sgz, ",")
 		fileExts := []string{}
 		for _, ext := range extensions {
@@ -326,15 +327,15 @@ func assignConfig(ac config.Configer) error {
 		}
 	}
 
-	if sfs, err := ac.Int("StaticCacheFileSize"); err == nil {
+	if sfs, err := ac.Int(nil, "StaticCacheFileSize"); err == nil {
 		BConfig.WebConfig.StaticCacheFileSize = sfs
 	}
 
-	if sfn, err := ac.Int("StaticCacheFileNum"); err == nil {
+	if sfn, err := ac.Int(nil, "StaticCacheFileNum"); err == nil {
 		BConfig.WebConfig.StaticCacheFileNum = sfn
 	}
 
-	if lo, err := ac.String("LogOutputs"); lo != "" && err == nil {
+	if lo, err := ac.String(nil, "LogOutputs"); lo != "" && err == nil {
 		// if lo is not nil or empty
 		// means user has set his own LogOutputs
 		// clear the default setting to BConfig.Log.Outputs
@@ -381,11 +382,11 @@ func assignSingleConfig(p interface{}, ac config.Configer) {
 		name := pt.Field(i).Name
 		switch pf.Kind() {
 		case reflect.String:
-			pf.SetString(ac.DefaultString(name, pf.String()))
+			pf.SetString(ac.DefaultString(nil, name, pf.String()))
 		case reflect.Int, reflect.Int64:
-			pf.SetInt(ac.DefaultInt64(name, pf.Int()))
+			pf.SetInt(ac.DefaultInt64(nil, name, pf.Int()))
 		case reflect.Bool:
-			pf.SetBool(ac.DefaultBool(name, pf.Bool()))
+			pf.SetBool(ac.DefaultBool(nil, name, pf.Bool()))
 		case reflect.Struct:
 		default:
 			// do nothing here
@@ -424,105 +425,105 @@ func newAppConfig(appConfigProvider, appConfigPath string) (*beegoAppConfig, err
 	return &beegoAppConfig{innerConfig: ac}, nil
 }
 
-func (b *beegoAppConfig) Set(key, val string) error {
-	if err := b.innerConfig.Set(BConfig.RunMode+"::"+key, val); err != nil {
-		return b.innerConfig.Set(key, val)
+func (b *beegoAppConfig) Set(ctx context2.Context, key, val string) error {
+	if err := b.innerConfig.Set(nil, BConfig.RunMode+"::"+key, val); err != nil {
+		return b.innerConfig.Set(nil, key, val)
 	}
 	return nil
 }
 
-func (b *beegoAppConfig) String(key string) (string, error) {
-	if v, err := b.innerConfig.String(BConfig.RunMode + "::" + key); v != "" && err == nil {
+func (b *beegoAppConfig) String(ctx context2.Context, key string) (string, error) {
+	if v, err := b.innerConfig.String(nil, BConfig.RunMode+"::"+key); v != "" && err == nil {
 		return v, nil
 	}
-	return b.innerConfig.String(key)
+	return b.innerConfig.String(nil, key)
 }
 
-func (b *beegoAppConfig) Strings(key string) ([]string, error) {
-	if v, err := b.innerConfig.Strings(BConfig.RunMode + "::" + key); len(v) > 0 && err == nil {
+func (b *beegoAppConfig) Strings(ctx context2.Context, key string) ([]string, error) {
+	if v, err := b.innerConfig.Strings(nil, BConfig.RunMode+"::"+key); len(v) > 0 && err == nil {
 		return v, nil
 	}
-	return b.innerConfig.Strings(key)
+	return b.innerConfig.Strings(nil, key)
 }
 
-func (b *beegoAppConfig) Int(key string) (int, error) {
-	if v, err := b.innerConfig.Int(BConfig.RunMode + "::" + key); err == nil {
+func (b *beegoAppConfig) Int(ctx context2.Context, key string) (int, error) {
+	if v, err := b.innerConfig.Int(nil, BConfig.RunMode+"::"+key); err == nil {
 		return v, nil
 	}
-	return b.innerConfig.Int(key)
+	return b.innerConfig.Int(nil, key)
 }
 
-func (b *beegoAppConfig) Int64(key string) (int64, error) {
-	if v, err := b.innerConfig.Int64(BConfig.RunMode + "::" + key); err == nil {
+func (b *beegoAppConfig) Int64(ctx context2.Context, key string) (int64, error) {
+	if v, err := b.innerConfig.Int64(nil, BConfig.RunMode+"::"+key); err == nil {
 		return v, nil
 	}
-	return b.innerConfig.Int64(key)
+	return b.innerConfig.Int64(nil, key)
 }
 
-func (b *beegoAppConfig) Bool(key string) (bool, error) {
-	if v, err := b.innerConfig.Bool(BConfig.RunMode + "::" + key); err == nil {
+func (b *beegoAppConfig) Bool(ctx context2.Context, key string) (bool, error) {
+	if v, err := b.innerConfig.Bool(nil, BConfig.RunMode+"::"+key); err == nil {
 		return v, nil
 	}
-	return b.innerConfig.Bool(key)
+	return b.innerConfig.Bool(nil, key)
 }
 
-func (b *beegoAppConfig) Float(key string) (float64, error) {
-	if v, err := b.innerConfig.Float(BConfig.RunMode + "::" + key); err == nil {
+func (b *beegoAppConfig) Float(ctx context2.Context, key string) (float64, error) {
+	if v, err := b.innerConfig.Float(nil, BConfig.RunMode+"::"+key); err == nil {
 		return v, nil
 	}
-	return b.innerConfig.Float(key)
+	return b.innerConfig.Float(nil, key)
 }
 
-func (b *beegoAppConfig) DefaultString(key string, defaultVal string) string {
-	if v, err := b.String(key); v != "" && err == nil {
+func (b *beegoAppConfig) DefaultString(ctx context2.Context, key string, defaultVal string) string {
+	if v, err := b.String(nil, key); v != "" && err == nil {
 		return v
 	}
 	return defaultVal
 }
 
-func (b *beegoAppConfig) DefaultStrings(key string, defaultVal []string) []string {
-	if v, err := b.Strings(key); len(v) != 0 && err == nil {
+func (b *beegoAppConfig) DefaultStrings(ctx context2.Context, key string, defaultVal []string) []string {
+	if v, err := b.Strings(ctx, key); len(v) != 0 && err == nil {
 		return v
 	}
 	return defaultVal
 }
 
-func (b *beegoAppConfig) DefaultInt(key string, defaultVal int) int {
-	if v, err := b.Int(key); err == nil {
+func (b *beegoAppConfig) DefaultInt(ctx context2.Context, key string, defaultVal int) int {
+	if v, err := b.Int(ctx, key); err == nil {
 		return v
 	}
 	return defaultVal
 }
 
-func (b *beegoAppConfig) DefaultInt64(key string, defaultVal int64) int64 {
-	if v, err := b.Int64(key); err == nil {
+func (b *beegoAppConfig) DefaultInt64(ctx context2.Context, key string, defaultVal int64) int64 {
+	if v, err := b.Int64(ctx, key); err == nil {
 		return v
 	}
 	return defaultVal
 }
 
-func (b *beegoAppConfig) DefaultBool(key string, defaultVal bool) bool {
-	if v, err := b.Bool(key); err == nil {
+func (b *beegoAppConfig) DefaultBool(ctx context2.Context, key string, defaultVal bool) bool {
+	if v, err := b.Bool(ctx, key); err == nil {
 		return v
 	}
 	return defaultVal
 }
 
-func (b *beegoAppConfig) DefaultFloat(key string, defaultVal float64) float64 {
-	if v, err := b.Float(key); err == nil {
+func (b *beegoAppConfig) DefaultFloat(ctx context2.Context, key string, defaultVal float64) float64 {
+	if v, err := b.Float(ctx, key); err == nil {
 		return v
 	}
 	return defaultVal
 }
 
-func (b *beegoAppConfig) DIY(key string) (interface{}, error) {
-	return b.innerConfig.DIY(key)
+func (b *beegoAppConfig) DIY(ctx context2.Context, key string) (interface{}, error) {
+	return b.innerConfig.DIY(nil, key)
 }
 
-func (b *beegoAppConfig) GetSection(section string) (map[string]string, error) {
-	return b.innerConfig.GetSection(section)
+func (b *beegoAppConfig) GetSection(ctx context2.Context, section string) (map[string]string, error) {
+	return b.innerConfig.GetSection(nil, section)
 }
 
-func (b *beegoAppConfig) SaveConfigFile(filename string) error {
-	return b.innerConfig.SaveConfigFile(filename)
+func (b *beegoAppConfig) SaveConfigFile(ctx context2.Context, filename string) error {
+	return b.innerConfig.SaveConfigFile(nil, filename)
 }

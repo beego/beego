@@ -49,7 +49,7 @@ func TestJsonStartsWithArray(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	rootArray, err := jsonconf.DIY("rootArray")
+	rootArray, err := jsonconf.DIY(nil, "rootArray")
 	if err != nil {
 		t.Error("array does not exist as element")
 	}
@@ -155,19 +155,19 @@ func TestJson(t *testing.T) {
 		var value interface{}
 		switch v.(type) {
 		case int:
-			value, err = jsonconf.Int(k)
+			value, err = jsonconf.Int(nil, k)
 		case int64:
-			value, err = jsonconf.Int64(k)
+			value, err = jsonconf.Int64(nil, k)
 		case float64:
-			value, err = jsonconf.Float(k)
+			value, err = jsonconf.Float(nil, k)
 		case bool:
-			value, err = jsonconf.Bool(k)
+			value, err = jsonconf.Bool(nil, k)
 		case []string:
-			value, err = jsonconf.Strings(k)
+			value, err = jsonconf.Strings(nil, k)
 		case string:
-			value, err = jsonconf.String(k)
+			value, err = jsonconf.String(nil, k)
 		default:
-			value, err = jsonconf.DIY(k)
+			value, err = jsonconf.DIY(nil, k)
 		}
 		if err != nil {
 			t.Fatalf("get key %q value fatal,%v err %s", k, v, err)
@@ -176,16 +176,16 @@ func TestJson(t *testing.T) {
 		}
 
 	}
-	if err = jsonconf.Set("name", "astaxie"); err != nil {
+	if err = jsonconf.Set(nil, "name", "astaxie"); err != nil {
 		t.Fatal(err)
 	}
 
-	res, _ := jsonconf.String("name")
+	res, _ := jsonconf.String(nil, "name")
 	if res != "astaxie" {
 		t.Fatal("get name error")
 	}
 
-	if db, err := jsonconf.DIY("database"); err != nil {
+	if db, err := jsonconf.DIY(nil, "database"); err != nil {
 		t.Fatal(err)
 	} else if m, ok := db.(map[string]interface{}); !ok {
 		t.Log(db)
@@ -196,31 +196,31 @@ func TestJson(t *testing.T) {
 		}
 	}
 
-	if _, err := jsonconf.Int("unknown"); err == nil {
+	if _, err := jsonconf.Int(nil, "unknown"); err == nil {
 		t.Error("unknown keys should return an error when expecting an Int")
 	}
 
-	if _, err := jsonconf.Int64("unknown"); err == nil {
+	if _, err := jsonconf.Int64(nil, "unknown"); err == nil {
 		t.Error("unknown keys should return an error when expecting an Int64")
 	}
 
-	if _, err := jsonconf.Float("unknown"); err == nil {
+	if _, err := jsonconf.Float(nil, "unknown"); err == nil {
 		t.Error("unknown keys should return an error when expecting a Float")
 	}
 
-	if _, err := jsonconf.DIY("unknown"); err == nil {
+	if _, err := jsonconf.DIY(nil, "unknown"); err == nil {
 		t.Error("unknown keys should return an error when expecting an interface{}")
 	}
 
-	if val, _ := jsonconf.String("unknown"); val != "" {
+	if val, _ := jsonconf.String(nil, "unknown"); val != "" {
 		t.Error("unknown keys should return an empty string when expecting a String")
 	}
 
-	if _, err := jsonconf.Bool("unknown"); err == nil {
+	if _, err := jsonconf.Bool(nil, "unknown"); err == nil {
 		t.Error("unknown keys should return an error when expecting a Bool")
 	}
 
-	if !jsonconf.DefaultBool("unknown", true) {
+	if !jsonconf.DefaultBool(nil, "unknown", true) {
 		t.Error("unknown keys with default value wrong")
 	}
 }

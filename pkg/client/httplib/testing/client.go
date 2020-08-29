@@ -34,7 +34,7 @@ func getPort() string {
 		if err != nil {
 			return "8080"
 		}
-		port, err = config.String("httpport")
+		port, err = config.String(nil, "httpport")
 		if err != nil {
 			return "8080"
 		}

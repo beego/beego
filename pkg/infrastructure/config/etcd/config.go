@@ -64,23 +64,18 @@ func (e *EtcdConfiger) reader(ctx context.Context, key string) (string, error) {
 
 // Set do nothing and return an error
 // I think write data to remote config center is not a good practice
-func (e *EtcdConfiger) Set(key, val string) error {
+func (e *EtcdConfiger) Set(ctx context.Context, key, val string) error {
 	return errors.New("Unsupported operation")
 }
 
 // DIY return the original response from etcd
 // be careful when you decide to use this
-func (e *EtcdConfiger) DIY(key string) (interface{}, error) {
+func (e *EtcdConfiger) DIY(ctx context.Context, key string) (interface{}, error) {
 	return get(e.client, context.TODO(), key)
 }
 
 // GetSection in this implementation, we use section as prefix
-func (e *EtcdConfiger) GetSection(section string) (map[string]string, error) {
-	return e.GetSectionWithCtx(context.Background(), section)
-}
-
-func (e *EtcdConfiger) GetSectionWithCtx(ctx context.Context, section string) (map[string]string, error) {
-
+func (e *EtcdConfiger) GetSection(ctx context.Context, section string) (map[string]string, error) {
 	var (
 		resp *clientv3.GetResponse
 		err  error
@@ -103,7 +98,7 @@ func (e *EtcdConfiger) GetSectionWithCtx(ctx context.Context, section string) (m
 	return res, nil
 }
 
-func (e *EtcdConfiger) SaveConfigFile(filename string) error {
+func (e *EtcdConfiger) SaveConfigFile(ctx context.Context, filename string) error {
 	return errors.New("Unsupported operation")
 }
 
@@ -111,7 +106,7 @@ func (e *EtcdConfiger) SaveConfigFile(filename string) error {
 // for example, when we got "5", we are not sure whether it's int 5, or it's string "5"
 // TODO(support more complicated decoder)
 func (e *EtcdConfiger) Unmarshaler(ctx context.Context, prefix string, obj interface{}, opt ...config.DecodeOption) error {
-	res, err := e.GetSectionWithCtx(ctx, prefix)
+	res, err := e.GetSection(ctx, prefix)
 	if err != nil {
 		return errors.WithMessage(err, fmt.Sprintf("could not read config with prefix: %s", prefix))
 	}
@@ -125,7 +120,7 @@ func (e *EtcdConfiger) Unmarshaler(ctx context.Context, prefix string, obj inter
 }
 
 // Sub return an sub configer.
-func (e *EtcdConfiger) Sub(key string) (config.Configer, error) {
+func (e *EtcdConfiger) Sub(ctx context.Context, key string) (config.Configer, error) {
 	return newEtcdConfiger(e.client, e.prefix+key), nil
 }
 

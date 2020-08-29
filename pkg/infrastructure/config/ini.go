@@ -17,6 +17,7 @@ package config
 import (
 	"bufio"
 	"bytes"
+	"context"
 	"errors"
 	"io"
 	"io/ioutil"
@@ -233,84 +234,84 @@ type IniConfigContainer struct {
 }
 
 // Bool returns the boolean value for a given key.
-func (c *IniConfigContainer) Bool(key string) (bool, error) {
+func (c *IniConfigContainer) Bool(ctx context.Context, key string) (bool, error) {
 	return ParseBool(c.getdata(key))
 }
 
 // DefaultBool returns the boolean value for a given key.
-// if err != nil return defaultval
-func (c *IniConfigContainer) DefaultBool(key string, defaultval bool) bool {
-	v, err := c.Bool(key)
+// if err != nil return defaultVal
+func (c *IniConfigContainer) DefaultBool(ctx context.Context, key string, defaultVal bool) bool {
+	v, err := c.Bool(ctx, key)
 	if err != nil {
-		return defaultval
+		return defaultVal
 	}
 	return v
 }
 
 // Int returns the integer value for a given key.
-func (c *IniConfigContainer) Int(key string) (int, error) {
+func (c *IniConfigContainer) Int(ctx context.Context, key string) (int, error) {
 	return strconv.Atoi(c.getdata(key))
 }
 
 // DefaultInt returns the integer value for a given key.
-// if err != nil return defaultval
-func (c *IniConfigContainer) DefaultInt(key string, defaultval int) int {
-	v, err := c.Int(key)
+// if err != nil return defaultVal
+func (c *IniConfigContainer) DefaultInt(ctx context.Context, key string, defaultVal int) int {
+	v, err := c.Int(ctx, key)
 	if err != nil {
-		return defaultval
+		return defaultVal
 	}
 	return v
 }
 
 // Int64 returns the int64 value for a given key.
-func (c *IniConfigContainer) Int64(key string) (int64, error) {
+func (c *IniConfigContainer) Int64(ctx context.Context, key string) (int64, error) {
 	return strconv.ParseInt(c.getdata(key), 10, 64)
 }
 
 // DefaultInt64 returns the int64 value for a given key.
-// if err != nil return defaultval
-func (c *IniConfigContainer) DefaultInt64(key string, defaultval int64) int64 {
-	v, err := c.Int64(key)
+// if err != nil return defaultVal
+func (c *IniConfigContainer) DefaultInt64(ctx context.Context, key string, defaultVal int64) int64 {
+	v, err := c.Int64(ctx, key)
 	if err != nil {
-		return defaultval
+		return defaultVal
 	}
 	return v
 }
 
 // Float returns the float value for a given key.
-func (c *IniConfigContainer) Float(key string) (float64, error) {
+func (c *IniConfigContainer) Float(ctx context.Context, key string) (float64, error) {
 	return strconv.ParseFloat(c.getdata(key), 64)
 }
 
 // DefaultFloat returns the float64 value for a given key.
-// if err != nil return defaultval
-func (c *IniConfigContainer) DefaultFloat(key string, defaultval float64) float64 {
-	v, err := c.Float(key)
+// if err != nil return defaultVal
+func (c *IniConfigContainer) DefaultFloat(ctx context.Context, key string, defaultVal float64) float64 {
+	v, err := c.Float(ctx, key)
 	if err != nil {
-		return defaultval
+		return defaultVal
 	}
 	return v
 }
 
 // String returns the string value for a given key.
-func (c *IniConfigContainer) String(key string) (string, error) {
+func (c *IniConfigContainer) String(ctx context.Context, key string) (string, error) {
 	return c.getdata(key), nil
 }
 
 // DefaultString returns the string value for a given key.
-// if err != nil return defaultval
-func (c *IniConfigContainer) DefaultString(key string, defaultval string) string {
-	v, err := c.String(key)
+// if err != nil return defaultVal
+func (c *IniConfigContainer) DefaultString(ctx context.Context, key string, defaultVal string) string {
+	v, err := c.String(nil, key)
 	if v == "" || err != nil {
-		return defaultval
+		return defaultVal
 	}
 	return v
 }
 
 // Strings returns the []string value for a given key.
 // Return nil if config value does not exist or is empty.
-func (c *IniConfigContainer) Strings(key string) ([]string, error) {
-	v, err := c.String(key)
+func (c *IniConfigContainer) Strings(ctx context.Context, key string) ([]string, error) {
+	v, err := c.String(nil, key)
 	if v == "" || err != nil {
 		return nil, err
 	}
@@ -318,17 +319,17 @@ func (c *IniConfigContainer) Strings(key string) ([]string, error) {
 }
 
 // DefaultStrings returns the []string value for a given key.
-// if err != nil return defaultval
-func (c *IniConfigContainer) DefaultStrings(key string, defaultval []string) []string {
-	v, err := c.Strings(key)
+// if err != nil return defaultVal
+func (c *IniConfigContainer) DefaultStrings(ctx context.Context, key string, defaultVal []string) []string {
+	v, err := c.Strings(ctx, key)
 	if v == nil || err != nil {
-		return defaultval
+		return defaultVal
 	}
 	return v
 }
 
 // GetSection returns map for the given section
-func (c *IniConfigContainer) GetSection(section string) (map[string]string, error) {
+func (c *IniConfigContainer) GetSection(ctx context.Context, section string) (map[string]string, error) {
 	if v, ok := c.data[section]; ok {
 		return v, nil
 	}
@@ -338,7 +339,7 @@ func (c *IniConfigContainer) GetSection(section string) (map[string]string, erro
 // SaveConfigFile save the config into file.
 //
 // BUG(env): The environment variable config item will be saved with real value in SaveConfigFile Function.
-func (c *IniConfigContainer) SaveConfigFile(filename string) (err error) {
+func (c *IniConfigContainer) SaveConfigFile(ctx context.Context, filename string) (err error) {
 	// Write configuration file by filename.
 	f, err := os.Create(filename)
 	if err != nil {
@@ -438,7 +439,7 @@ func (c *IniConfigContainer) SaveConfigFile(filename string) (err error) {
 // Set writes a new value for key.
 // if write to one section, the key need be "section::key".
 // if the section is not existed, it panics.
-func (c *IniConfigContainer) Set(key, value string) error {
+func (c *IniConfigContainer) Set(ctx context.Context, key, val string) error {
 	c.Lock()
 	defer c.Unlock()
 	if len(key) == 0 {
@@ -461,12 +462,12 @@ func (c *IniConfigContainer) Set(key, value string) error {
 	if _, ok := c.data[section]; !ok {
 		c.data[section] = make(map[string]string)
 	}
-	c.data[section][k] = value
+	c.data[section][k] = val
 	return nil
 }
 
 // DIY returns the raw value by a given key.
-func (c *IniConfigContainer) DIY(key string) (v interface{}, err error) {
+func (c *IniConfigContainer) DIY(ctx context.Context, key string) (v interface{}, err error) {
 	if v, ok := c.data[strings.ToLower(key)]; ok {
 		return v, nil
 	}
