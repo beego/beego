@@ -111,12 +111,12 @@ func TestAssignConfig_02(t *testing.T) {
 func TestAssignConfig_03(t *testing.T) {
 	jcf := &beeJson.JSONConfig{}
 	ac, _ := jcf.ParseData([]byte(`{"AppName":"beego"}`))
-	ac.Set("AppName", "test_app")
-	ac.Set("RunMode", "online")
-	ac.Set("StaticDir", "download:down download2:down2")
-	ac.Set("StaticExtensionsToGzip", ".css,.js,.html,.jpg,.png")
-	ac.Set("StaticCacheFileSize", "87456")
-	ac.Set("StaticCacheFileNum", "1254")
+	ac.Set(nil, "AppName", "test_app")
+	ac.Set(nil, "RunMode", "online")
+	ac.Set(nil, "StaticDir", "download:down download2:down2")
+	ac.Set(nil, "StaticExtensionsToGzip", ".css,.js,.html,.jpg,.png")
+	ac.Set(nil, "StaticCacheFileSize", "87456")
+	ac.Set(nil, "StaticCacheFileNum", "1254")
 	assignConfig(ac)
 
 	t.Logf("%#v", BConfig)

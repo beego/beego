@@ -15,6 +15,7 @@
 package web
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -516,7 +517,7 @@ func genRouterCode(pkgRealpath string) {
 		}
 		defer f.Close()
 
-		routersDir := AppConfig.DefaultString("routersdir", "routers")
+		routersDir := AppConfig.DefaultString(context.Background(), "routersdir", "routers")
 		content := strings.Replace(globalRouterTemplate, "{{.globalinfo}}", globalinfo, -1)
 		content = strings.Replace(content, "{{.routersDir}}", routersDir, -1)
 		content = strings.Replace(content, "{{.globalimport}}", globalimport, -1)
@@ -585,7 +586,7 @@ func getpathTime(pkgRealpath string) (lastupdate int64, err error) {
 func getRouterDir(pkgRealpath string) string {
 	dir := filepath.Dir(pkgRealpath)
 	for {
-		routersDir := AppConfig.DefaultString("routersdir", "routers")
+		routersDir := AppConfig.DefaultString(context.Background(), "routersdir", "routers")
 		d := filepath.Join(dir, routersDir)
 		if utils.FileExists(d) {
 			return d

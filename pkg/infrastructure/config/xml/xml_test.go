@@ -76,7 +76,7 @@ func TestXML(t *testing.T) {
 	}
 
 	var xmlsection map[string]string
-	xmlsection, err = xmlconf.GetSection("mysection")
+	xmlsection, err = xmlconf.GetSection(nil, "mysection")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -94,19 +94,19 @@ func TestXML(t *testing.T) {
 
 		switch v.(type) {
 		case int:
-			value, err = xmlconf.Int(k)
+			value, err = xmlconf.Int(nil, k)
 		case int64:
-			value, err = xmlconf.Int64(k)
+			value, err = xmlconf.Int64(nil, k)
 		case float64:
-			value, err = xmlconf.Float(k)
+			value, err = xmlconf.Float(nil, k)
 		case bool:
-			value, err = xmlconf.Bool(k)
+			value, err = xmlconf.Bool(nil, k)
 		case []string:
-			value, err = xmlconf.Strings(k)
+			value, err = xmlconf.Strings(nil, k)
 		case string:
-			value, err = xmlconf.String(k)
+			value, err = xmlconf.String(nil, k)
 		default:
-			value, err = xmlconf.DIY(k)
+			value, err = xmlconf.DIY(nil, k)
 		}
 		if err != nil {
 			t.Errorf("get key %q value fatal,%v err %s", k, v, err)
@@ -116,11 +116,11 @@ func TestXML(t *testing.T) {
 
 	}
 
-	if err = xmlconf.Set("name", "astaxie"); err != nil {
+	if err = xmlconf.Set(nil, "name", "astaxie"); err != nil {
 		t.Fatal(err)
 	}
 
-	res, _ := xmlconf.String("name")
+	res, _ := xmlconf.String(nil, "name")
 	if res != "astaxie" {
 		t.Fatal("get name error")
 	}
