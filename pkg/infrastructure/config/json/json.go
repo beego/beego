@@ -158,39 +158,39 @@ func (c *JSONConfigContainer) DefaultFloat(key string, defaultval float64) float
 }
 
 // String returns the string value for a given key.
-func (c *JSONConfigContainer) String(key string) string {
+func (c *JSONConfigContainer) String(key string) (string, error) {
 	val := c.getData(key)
 	if val != nil {
 		if v, ok := val.(string); ok {
-			return v
+			return v, nil
 		}
 	}
-	return ""
+	return "", nil
 }
 
 // DefaultString returns the string value for a given key.
 // if err != nil return defaultval
 func (c *JSONConfigContainer) DefaultString(key string, defaultval string) string {
 	// TODO FIXME should not use "" to replace non existence
-	if v := c.String(key); v != "" {
+	if v, err := c.String(key); v != "" && err == nil {
 		return v
 	}
 	return defaultval
 }
 
 // Strings returns the []string value for a given key.
-func (c *JSONConfigContainer) Strings(key string) []string {
-	stringVal := c.String(key)
-	if stringVal == "" {
-		return nil
+func (c *JSONConfigContainer) Strings(key string) ([]string, error) {
+	stringVal, err := c.String(key)
+	if stringVal == "" || err != nil {
+		return nil, err
 	}
-	return strings.Split(c.String(key), ";")
+	return strings.Split(stringVal, ";"), nil
 }
 
 // DefaultStrings returns the []string value for a given key.
 // if err != nil return defaultval
 func (c *JSONConfigContainer) DefaultStrings(key string, defaultval []string) []string {
-	if v := c.Strings(key); v != nil {
+	if v, err := c.Strings(key); v != nil && err == nil {
 		return v
 	}
 	return defaultval

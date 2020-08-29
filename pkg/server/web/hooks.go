@@ -48,9 +48,9 @@ func registerDefaultErrorHandler() error {
 func registerSession() error {
 	if BConfig.WebConfig.Session.SessionOn {
 		var err error
-		sessionConfig := AppConfig.String("sessionConfig")
+		sessionConfig, err := AppConfig.String("sessionConfig")
 		conf := new(session.ManagerConfig)
-		if sessionConfig == "" {
+		if sessionConfig == "" || err != nil {
 			conf.CookieName = BConfig.WebConfig.Session.SessionName
 			conf.EnableSetCookie = BConfig.WebConfig.Session.SessionAutoSetCookie
 			conf.Gclifetime = BConfig.WebConfig.Session.SessionGCMaxLifetime

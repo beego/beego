@@ -41,6 +41,7 @@
 package config
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
@@ -56,9 +57,9 @@ type Configer interface {
 	Set(key, val string) error
 
 	// support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
-	String(key string) string
+	String(key string) (string, error)
 	// get string slice
-	Strings(key string) []string
+	Strings(key string) ([]string, error)
 	Int(key string) (int, error)
 	Int64(key string) (int64, error)
 	Bool(key string) (bool, error)
@@ -72,11 +73,13 @@ type Configer interface {
 	DefaultBool(key string, defaultVal bool) bool
 	DefaultFloat(key string, defaultVal float64) float64
 	DIY(key string) (interface{}, error)
-	GetSection(section string) (map[string]string, error)
 
-	Unmarshaler(obj interface{}) error
+	GetSection(section string) (map[string]string, error)
+	GetSectionWithCtx(ctx context.Context, section string) (map[string]string, error)
+
+	Unmarshaler(ctx context.Context, prefix string, obj interface{}, opt ...DecodeOption) error
 	Sub(key string) (Configer, error)
-	OnChange(fn func(cfg Configer))
+	OnChange(ctx context.Context, key string, fn func(value string))
 	// GetByPrefix(prefix string) ([]byte, error)
 	// GetSerializer() Serializer
 	SaveConfigFile(filename string) error
@@ -84,11 +87,17 @@ type Configer interface {
 
 type BaseConfiger struct {
 	// The reader should support key like "a.b.c"
-	reader func(key string) (string, error)
+	reader func(ctx context.Context, key string) (string, error)
+}
+
+func NewBaseConfiger(reader func(ctx context.Context, key string) (string, error)) BaseConfiger {
+	return BaseConfiger{
+		reader: reader,
+	}
 }
 
 func (c *BaseConfiger) Int(key string) (int, error) {
-	res, err := c.reader(key)
+	res, err := c.reader(context.TODO(), key)
 	if err != nil {
 		return 0, err
 	}
@@ -96,7 +105,7 @@ func (c *BaseConfiger) Int(key string) (int, error) {
 }
 
 func (c *BaseConfiger) Int64(key string) (int64, error) {
-	res, err := c.reader(key)
+	res, err := c.reader(context.TODO(), key)
 	if err != nil {
 		return 0, err
 	}
@@ -104,30 +113,34 @@ func (c *BaseConfiger) Int64(key string) (int64, error) {
 }
 
 func (c *BaseConfiger) Bool(key string) (bool, error) {
-	res, err := c.reader(key)
+	res, err := c.reader(context.TODO(), key)
 	if err != nil {
 		return false, err
 	}
-	return strconv.ParseBool(res)
+	return ParseBool(res)
 }
 
 func (c *BaseConfiger) Float(key string) (float64, error) {
-	res, err := c.reader(key)
+	res, err := c.reader(context.TODO(), key)
 	if err != nil {
 		return 0, err
 	}
 	return strconv.ParseFloat(res, 64)
 }
 
+// DefaultString returns the string value for a given key.
+// if err != nil or value is empty return defaultval
 func (c *BaseConfiger) DefaultString(key string, defaultVal string) string {
-	if res := c.String(key); res != "" {
+	if res, err := c.String(key); res != "" && err == nil {
 		return res
 	}
 	return defaultVal
 }
 
+// DefaultStrings returns the []string value for a given key.
+// if err != nil return defaultval
 func (c *BaseConfiger) DefaultStrings(key string, defaultVal []string) []string {
-	if res := c.Strings(key); len(res) > 0 {
+	if res, err := c.Strings(key); len(res) > 0 && err == nil {
 		return res
 	}
 	return defaultVal
@@ -160,21 +173,27 @@ func (c *BaseConfiger) DefaultFloat(key string, defaultVal float64) float64 {
 	return defaultVal
 }
 
-func (c *BaseConfiger) String(key string) string {
-	res, _ := c.reader(key)
-	return res
+func (c *BaseConfiger) GetSectionWithCtx(ctx context.Context, section string) (map[string]string, error) {
+	// TODO
+	return nil, nil
 }
 
-func (c *BaseConfiger) Strings(key string) []string {
-	res, err := c.reader(key)
+func (c *BaseConfiger) String(key string) (string, error) {
+	return c.reader(context.TODO(), key)
+}
+
+// Strings returns the []string value for a given key.
+// Return nil if config value does not exist or is empty.
+func (c *BaseConfiger) Strings(key string) ([]string, error) {
+	res, err := c.String(key)
 	if err != nil || res == "" {
-		return nil
+		return nil, err
 	}
-	return strings.Split(res, ";")
+	return strings.Split(res, ";"), nil
 }
 
 // TODO remove this before release v2.0.0
-func (c *BaseConfiger) Unmarshaler(obj interface{}) error {
+func (c *BaseConfiger) Unmarshaler(ctx context.Context, prefix string, obj interface{}, opt ...DecodeOption) error {
 	return errors.New("unsupported operation")
 }
 
@@ -184,7 +203,7 @@ func (c *BaseConfiger) Sub(key string) (Configer, error) {
 }
 
 // TODO remove this before release v2.0.0
-func (c *BaseConfiger) OnChange(fn func(cfg Configer)) {
+func (c *BaseConfiger) OnChange(ctx context.Context, key string, fn func(value string)) {
 	// do nothing
 }
 
@@ -360,4 +379,9 @@ func ToString(x interface{}) string {
 
 	// Fallback to fmt package for anything else like numeric types
 	return fmt.Sprint(x)
+}
+
+type DecodeOption func(options decodeOptions)
+
+type decodeOptions struct {
 }

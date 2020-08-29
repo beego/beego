@@ -26,7 +26,7 @@
 //
 //  cnf, err := config.NewConfig("yaml", "config.yaml")
 //
-//More docs http://beego.me/docs/module/config.md
+// More docs http://beego.me/docs/module/config.md
 package yaml
 
 import (
@@ -40,8 +40,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/astaxie/beego/pkg/infrastructure/config"
 	"github.com/beego/goyaml2"
+
+	"github.com/astaxie/beego/pkg/infrastructure/config"
 )
 
 // Config is a yaml config parser and implements Config interface.
@@ -209,39 +210,39 @@ func (c *ConfigContainer) DefaultFloat(key string, defaultval float64) float64 {
 }
 
 // String returns the string value for a given key.
-func (c *ConfigContainer) String(key string) string {
+func (c *ConfigContainer) String(key string) (string, error) {
 	if v, err := c.getData(key); err == nil {
 		if vv, ok := v.(string); ok {
-			return vv
+			return vv, nil
 		}
 	}
-	return ""
+	return "", nil
 }
 
 // DefaultString returns the string value for a given key.
 // if err != nil return defaultval
 func (c *ConfigContainer) DefaultString(key string, defaultval string) string {
-	v := c.String(key)
-	if v == "" {
+	v, err := c.String(key)
+	if v == "" || err != nil {
 		return defaultval
 	}
 	return v
 }
 
 // Strings returns the []string value for a given key.
-func (c *ConfigContainer) Strings(key string) []string {
-	v := c.String(key)
-	if v == "" {
-		return nil
+func (c *ConfigContainer) Strings(key string) ([]string, error) {
+	v, err := c.String(key)
+	if v == "" || err != nil {
+		return nil, err
 	}
-	return strings.Split(v, ";")
+	return strings.Split(v, ";"), nil
 }
 
 // DefaultStrings returns the []string value for a given key.
 // if err != nil return defaultval
 func (c *ConfigContainer) DefaultStrings(key string, defaultval []string) []string {
-	v := c.Strings(key)
-	if v == nil {
+	v, err := c.Strings(key)
+	if v == nil || err != nil {
 		return defaultval
 	}
 	return v
