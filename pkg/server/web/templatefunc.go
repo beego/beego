@@ -15,6 +15,7 @@
 package web
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"html"
@@ -58,11 +59,11 @@ func HTML2str(html string) string {
 	re := regexp.MustCompile(`\<[\S\s]+?\>`)
 	html = re.ReplaceAllStringFunc(html, strings.ToLower)
 
-	//remove STYLE
+	// remove STYLE
 	re = regexp.MustCompile(`\<style[\S\s]+?\</style\>`)
 	html = re.ReplaceAllString(html, "")
 
-	//remove SCRIPT
+	// remove SCRIPT
 	re = regexp.MustCompile(`\<script[\S\s]+?\</script\>`)
 	html = re.ReplaceAllString(html, "")
 
@@ -85,7 +86,7 @@ func DateFormat(t time.Time, layout string) (datestring string) {
 var datePatterns = []string{
 	// year
 	"Y", "2006", // A full numeric representation of a year, 4 digits   Examples: 1999 or 2003
-	"y", "06", //A two digit representation of a year   Examples: 99 or 03
+	"y", "06", // A two digit representation of a year   Examples: 99 or 03
 
 	// month
 	"m", "01", // Numeric representation of a month, with leading zeros 01 through 12
@@ -160,17 +161,17 @@ func NotNil(a interface{}) (isNil bool) {
 func GetConfig(returnType, key string, defaultVal interface{}) (value interface{}, err error) {
 	switch returnType {
 	case "String":
-		value, err = AppConfig.String(key)
+		value, err = AppConfig.String(context.Background(), key)
 	case "Bool":
-		value, err = AppConfig.Bool(key)
+		value, err = AppConfig.Bool(context.Background(), key)
 	case "Int":
-		value, err = AppConfig.Int(key)
+		value, err = AppConfig.Int(context.Background(), key)
 	case "Int64":
-		value, err = AppConfig.Int64(key)
+		value, err = AppConfig.Int64(context.Background(), key)
 	case "Float":
-		value, err = AppConfig.Float(key)
+		value, err = AppConfig.Float(context.Background(), key)
 	case "DIY":
-		value, err = AppConfig.DIY(key)
+		value, err = AppConfig.DIY(context.Background(), key)
 	default:
 		err = errors.New("config keys must be of type String, Bool, Int, Int64, Float, or DIY")
 	}
@@ -201,7 +202,7 @@ func Str2html(raw string) template.HTML {
 
 // Htmlquote returns quoted html string.
 func Htmlquote(text string) string {
-	//HTML编码为实体符号
+	// HTML编码为实体符号
 	/*
 	   Encodes `text` for raw use in HTML.
 	       >>> htmlquote("<'&\\">")
@@ -220,7 +221,7 @@ func Htmlquote(text string) string {
 
 // Htmlunquote returns unquoted html string.
 func Htmlunquote(text string) string {
-	//实体符号解释为HTML
+	// 实体符号解释为HTML
 	/*
 	   Decodes `text` that's HTML quoted.
 	       >>> htmlunquote('&lt;&#39;&amp;&quot;&gt;')
