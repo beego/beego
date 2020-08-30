@@ -542,7 +542,7 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a
 
 	marks := make([]string, len(names))
 	updateValues := make([]interface{}, 0)
-	updates := make([]string, len(names))
+	updates := make([]string, 0)
 	var conflitValue interface{}
 	for i, v := range names {
 		// identifier in database may not be case-sensitive, so quote it
@@ -555,18 +555,21 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a
 		if valueStr != "" {
 			switch a.Driver {
 			case DRMySQL:
-				updates[i] = v + "=" + valueStr
+				updates = append(updates, v+"="+valueStr)
 			case DRPostgres:
 				if conflitValue != nil {
 					//postgres ON CONFLICT DO UPDATE SET can`t use colu=colu+values
-					updates[i] = fmt.Sprintf("%s=(select %s from %s where %s = ? )", v, valueStr, mi.table, args0)
+					updates = append(updates, fmt.Sprintf("%s=(select %s from %s where %s = ? )", v, valueStr, mi.table, args0))
 					updateValues = append(updateValues, conflitValue)
 				} else {
 					return 0, fmt.Errorf("`%s` must be in front of `%s` in your struct", args0, v)
 				}
 			}
+		} else if !mi.fields.GetByColumn(names[i]).autoNowAdd {
+			// ignore auto_now_add when updating.
+			continue
 		} else {
-			updates[i] = v + "=?"
+			updates = append(updates, v+"=?")
 			updateValues = append(updateValues, values[i])
 		}
 	}
