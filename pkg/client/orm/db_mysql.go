@@ -129,17 +129,17 @@ func (d *dbBaseMysql) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Val
 
 	marks := make([]string, len(names))
 	updateValues := make([]interface{}, 0)
-	updates := make([]string, 0)
+	updates := make([]string, len(names))
 
 	for i, v := range names {
 		marks[i] = "?"
 		valueStr := argsMap[strings.ToLower(v)]
 		if valueStr != "" {
-			updates = append(updates, "`"+v+"`"+"="+valueStr)
+			updates[i] = "`" + v + "`" + "=" + valueStr
 		} else if mi.fields.GetByColumn(v).autoNowAdd {
 			continue
 		} else {
-			updates = append(updates, "`"+v+"`"+"=?")
+			updates[i] = "`" + v + "`" + "=?"
 			updateValues = append(updateValues, values[i])
 		}
 	}
