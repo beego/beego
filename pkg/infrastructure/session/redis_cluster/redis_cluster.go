@@ -33,6 +33,7 @@
 package redis_cluster
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 	"strings"
@@ -58,7 +59,7 @@ type SessionStore struct {
 }
 
 // Set value in redis_cluster session
-func (rs *SessionStore) Set(key, value interface{}) error {
+func (rs *SessionStore) Set(ctx context.Context, key, value interface{}) error {
 	rs.lock.Lock()
 	defer rs.lock.Unlock()
 	rs.values[key] = value
@@ -66,7 +67,7 @@ func (rs *SessionStore) Set(key, value interface{}) error {
 }
 
 // Get value in redis_cluster session
-func (rs *SessionStore) Get(key interface{}) interface{} {
+func (rs *SessionStore) Get(ctx context.Context, key interface{}) interface{} {
 	rs.lock.RLock()
 	defer rs.lock.RUnlock()
 	if v, ok := rs.values[key]; ok {
@@ -76,7 +77,7 @@ func (rs *SessionStore) Get(key interface{}) interface{} {
 }
 
 // Delete value in redis_cluster session
-func (rs *SessionStore) Delete(key interface{}) error {
+func (rs *SessionStore) Delete(ctx context.Context, key interface{}) error {
 	rs.lock.Lock()
 	defer rs.lock.Unlock()
 	delete(rs.values, key)
@@ -84,7 +85,7 @@ func (rs *SessionStore) Delete(key interface{}) error {
 }
 
 // Flush clear all values in redis_cluster session
-func (rs *SessionStore) Flush() error {
+func (rs *SessionStore) Flush(context.Context) error {
 	rs.lock.Lock()
 	defer rs.lock.Unlock()
 	rs.values = make(map[interface{}]interface{})
@@ -92,12 +93,12 @@ func (rs *SessionStore) Flush() error {
 }
 
 // SessionID get redis_cluster session id
-func (rs *SessionStore) SessionID() string {
+func (rs *SessionStore) SessionID(context.Context) string {
 	return rs.sid
 }
 
 // SessionRelease save session values to redis_cluster
-func (rs *SessionStore) SessionRelease(w http.ResponseWriter) {
+func (rs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
 	b, err := session.EncodeGob(rs.values)
 	if err != nil {
 		return
@@ -122,7 +123,7 @@ type Provider struct {
 // SessionInit init redis_cluster session
 // savepath like redis server addr,pool size,password,dbnum
 // e.g. 127.0.0.1:6379;127.0.0.1:6380,100,test,0
-func (rp *Provider) SessionInit(maxlifetime int64, savePath string) error {
+func (rp *Provider) SessionInit(ctx context.Context, maxlifetime int64, savePath string) error {
 	rp.maxlifetime = maxlifetime
 	configs := strings.Split(savePath, ",")
 	if len(configs) > 0 {
@@ -182,7 +183,7 @@ func (rp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 }
 
 // SessionRead read redis_cluster session by sid
-func (rp *Provider) SessionRead(sid string) (session.Store, error) {
+func (rp *Provider) SessionRead(ctx context.Context, sid string) (session.Store, error) {
 	var kv map[interface{}]interface{}
 	kvs, err := rp.poollist.Get(sid).Result()
 	if err != nil && err != rediss.Nil {
@@ -201,7 +202,7 @@ func (rp *Provider) SessionRead(sid string) (session.Store, error) {
 }
 
 // SessionExist check redis_cluster session exist by sid
-func (rp *Provider) SessionExist(sid string) (bool, error) {
+func (rp *Provider) SessionExist(ctx context.Context, sid string) (bool, error) {
 	c := rp.poollist
 	if existed, err := c.Exists(sid).Result(); err != nil || existed == 0 {
 		return false, err
@@ -210,7 +211,7 @@ func (rp *Provider) SessionExist(sid string) (bool, error) {
 }
 
 // SessionRegenerate generate new sid for redis_cluster session
-func (rp *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error) {
+func (rp *Provider) SessionRegenerate(ctx context.Context, oldsid, sid string) (session.Store, error) {
 	c := rp.poollist
 
 	if existed, err := c.Exists(oldsid).Result(); err != nil || existed == 0 {
@@ -222,22 +223,22 @@ func (rp *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error)
 		c.Rename(oldsid, sid)
 		c.Expire(sid, time.Duration(rp.maxlifetime)*time.Second)
 	}
-	return rp.SessionRead(sid)
+	return rp.SessionRead(context.Background(), sid)
 }
 
 // SessionDestroy delete redis session by id
-func (rp *Provider) SessionDestroy(sid string) error {
+func (rp *Provider) SessionDestroy(ctx context.Context, sid string) error {
 	c := rp.poollist
 	c.Del(sid)
 	return nil
 }
 
 // SessionGC Impelment method, no used.
-func (rp *Provider) SessionGC() {
+func (rp *Provider) SessionGC(context.Context) {
 }
 
 // SessionAll return all activeSession
-func (rp *Provider) SessionAll() int {
+func (rp *Provider) SessionAll(context.Context) int {
 	return 0
 }
 

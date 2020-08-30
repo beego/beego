@@ -51,6 +51,7 @@
 package postgres
 
 import (
+	"context"
 	"database/sql"
 	"net/http"
 	"sync"
@@ -73,7 +74,7 @@ type SessionStore struct {
 
 // Set value in postgresql session.
 // it is temp value in map.
-func (st *SessionStore) Set(key, value interface{}) error {
+func (st *SessionStore) Set(ctx context.Context, key, value interface{}) error {
 	st.lock.Lock()
 	defer st.lock.Unlock()
 	st.values[key] = value
@@ -81,7 +82,7 @@ func (st *SessionStore) Set(key, value interface{}) error {
 }
 
 // Get value from postgresql session
-func (st *SessionStore) Get(key interface{}) interface{} {
+func (st *SessionStore) Get(ctx context.Context, key interface{}) interface{} {
 	st.lock.RLock()
 	defer st.lock.RUnlock()
 	if v, ok := st.values[key]; ok {
@@ -91,7 +92,7 @@ func (st *SessionStore) Get(key interface{}) interface{} {
 }
 
 // Delete value in postgresql session
-func (st *SessionStore) Delete(key interface{}) error {
+func (st *SessionStore) Delete(ctx context.Context, key interface{}) error {
 	st.lock.Lock()
 	defer st.lock.Unlock()
 	delete(st.values, key)
@@ -99,7 +100,7 @@ func (st *SessionStore) Delete(key interface{}) error {
 }
 
 // Flush clear all values in postgresql session
-func (st *SessionStore) Flush() error {
+func (st *SessionStore) Flush(context.Context) error {
 	st.lock.Lock()
 	defer st.lock.Unlock()
 	st.values = make(map[interface{}]interface{})
@@ -107,13 +108,13 @@ func (st *SessionStore) Flush() error {
 }
 
 // SessionID get session id of this postgresql session store
-func (st *SessionStore) SessionID() string {
+func (st *SessionStore) SessionID(context.Context) string {
 	return st.sid
 }
 
 // SessionRelease save postgresql session values to database.
 // must call this method to save values to database.
-func (st *SessionStore) SessionRelease(w http.ResponseWriter) {
+func (st *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
 	defer st.c.Close()
 	b, err := session.EncodeGob(st.values)
 	if err != nil {
@@ -141,14 +142,14 @@ func (mp *Provider) connectInit() *sql.DB {
 
 // SessionInit init postgresql session.
 // savepath is the connection string of postgresql.
-func (mp *Provider) SessionInit(maxlifetime int64, savePath string) error {
+func (mp *Provider) SessionInit(ctx context.Context, maxlifetime int64, savePath string) error {
 	mp.maxlifetime = maxlifetime
 	mp.savePath = savePath
 	return nil
 }
 
 // SessionRead get postgresql session by sid
-func (mp *Provider) SessionRead(sid string) (session.Store, error) {
+func (mp *Provider) SessionRead(ctx context.Context, sid string) (session.Store, error) {
 	c := mp.connectInit()
 	row := c.QueryRow("select session_data from session where session_key=$1", sid)
 	var sessiondata []byte
@@ -178,7 +179,7 @@ func (mp *Provider) SessionRead(sid string) (session.Store, error) {
 }
 
 // SessionExist check postgresql session exist
-func (mp *Provider) SessionExist(sid string) (bool, error) {
+func (mp *Provider) SessionExist(ctx context.Context, sid string) (bool, error) {
 	c := mp.connectInit()
 	defer c.Close()
 	row := c.QueryRow("select session_data from session where session_key=$1", sid)
@@ -194,7 +195,7 @@ func (mp *Provider) SessionExist(sid string) (bool, error) {
 }
 
 // SessionRegenerate generate new sid for postgresql session
-func (mp *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error) {
+func (mp *Provider) SessionRegenerate(ctx context.Context, oldsid, sid string) (session.Store, error) {
 	c := mp.connectInit()
 	row := c.QueryRow("select session_data from session where session_key=$1", oldsid)
 	var sessiondata []byte
@@ -218,7 +219,7 @@ func (mp *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error)
 }
 
 // SessionDestroy delete postgresql session by sid
-func (mp *Provider) SessionDestroy(sid string) error {
+func (mp *Provider) SessionDestroy(ctx context.Context, sid string) error {
 	c := mp.connectInit()
 	c.Exec("DELETE FROM session where session_key=$1", sid)
 	c.Close()
@@ -226,14 +227,14 @@ func (mp *Provider) SessionDestroy(sid string) error {
 }
 
 // SessionGC delete expired values in postgresql session
-func (mp *Provider) SessionGC() {
+func (mp *Provider) SessionGC(context.Context) {
 	c := mp.connectInit()
 	c.Exec("DELETE from session where EXTRACT(EPOCH FROM (current_timestamp - session_expiry)) > $1", mp.maxlifetime)
 	c.Close()
 }
 
 // SessionAll count values in postgresql session
-func (mp *Provider) SessionAll() int {
+func (mp *Provider) SessionAll(context.Context) int {
 	c := mp.connectInit()
 	defer c.Close()
 	var total int

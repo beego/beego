@@ -36,12 +36,12 @@ func TestMem(t *testing.T) {
 	if err != nil {
 		t.Fatal("set error,", err)
 	}
-	defer sess.SessionRelease(w)
-	err = sess.Set("username", "astaxie")
+	defer sess.SessionRelease(nil, w)
+	err = sess.Set(nil, "username", "astaxie")
 	if err != nil {
 		t.Fatal("set error,", err)
 	}
-	if username := sess.Get("username"); username != "astaxie" {
+	if username := sess.Get(nil, "username"); username != "astaxie" {
 		t.Fatal("get username error")
 	}
 	if cookiestr := w.Header().Get("Set-Cookie"); cookiestr == "" {

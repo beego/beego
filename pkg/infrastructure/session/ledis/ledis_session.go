@@ -2,6 +2,7 @@
 package ledis
 
 import (
+	"context"
 	"net/http"
 	"strconv"
 	"strings"
@@ -27,7 +28,7 @@ type SessionStore struct {
 }
 
 // Set value in ledis session
-func (ls *SessionStore) Set(key, value interface{}) error {
+func (ls *SessionStore) Set(ctx context.Context, key, value interface{}) error {
 	ls.lock.Lock()
 	defer ls.lock.Unlock()
 	ls.values[key] = value
@@ -35,7 +36,7 @@ func (ls *SessionStore) Set(key, value interface{}) error {
 }
 
 // Get value in ledis session
-func (ls *SessionStore) Get(key interface{}) interface{} {
+func (ls *SessionStore) Get(ctx context.Context, key interface{}) interface{} {
 	ls.lock.RLock()
 	defer ls.lock.RUnlock()
 	if v, ok := ls.values[key]; ok {
@@ -45,7 +46,7 @@ func (ls *SessionStore) Get(key interface{}) interface{} {
 }
 
 // Delete value in ledis session
-func (ls *SessionStore) Delete(key interface{}) error {
+func (ls *SessionStore) Delete(ctx context.Context, key interface{}) error {
 	ls.lock.Lock()
 	defer ls.lock.Unlock()
 	delete(ls.values, key)
@@ -53,7 +54,7 @@ func (ls *SessionStore) Delete(key interface{}) error {
 }
 
 // Flush clear all values in ledis session
-func (ls *SessionStore) Flush() error {
+func (ls *SessionStore) Flush(context.Context) error {
 	ls.lock.Lock()
 	defer ls.lock.Unlock()
 	ls.values = make(map[interface{}]interface{})
@@ -61,12 +62,12 @@ func (ls *SessionStore) Flush() error {
 }
 
 // SessionID get ledis session id
-func (ls *SessionStore) SessionID() string {
+func (ls *SessionStore) SessionID(context.Context) string {
 	return ls.sid
 }
 
 // SessionRelease save session values to ledis
-func (ls *SessionStore) SessionRelease(w http.ResponseWriter) {
+func (ls *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
 	b, err := session.EncodeGob(ls.values)
 	if err != nil {
 		return
@@ -85,7 +86,7 @@ type Provider struct {
 // SessionInit init ledis session
 // savepath like ledis server saveDataPath,pool size
 // e.g. 127.0.0.1:6379,100,astaxie
-func (lp *Provider) SessionInit(maxlifetime int64, savePath string) error {
+func (lp *Provider) SessionInit(ctx context.Context, maxlifetime int64, savePath string) error {
 	var err error
 	lp.maxlifetime = maxlifetime
 	configs := strings.Split(savePath, ",")
@@ -111,7 +112,7 @@ func (lp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 }
 
 // SessionRead read ledis session by sid
-func (lp *Provider) SessionRead(sid string) (session.Store, error) {
+func (lp *Provider) SessionRead(ctx context.Context, sid string) (session.Store, error) {
 	var (
 		kv  map[interface{}]interface{}
 		err error
@@ -132,13 +133,13 @@ func (lp *Provider) SessionRead(sid string) (session.Store, error) {
 }
 
 // SessionExist check ledis session exist by sid
-func (lp *Provider) SessionExist(sid string) (bool, error) {
+func (lp *Provider) SessionExist(ctx context.Context, sid string) (bool, error) {
 	count, _ := c.Exists([]byte(sid))
 	return count != 0, nil
 }
 
 // SessionRegenerate generate new sid for ledis session
-func (lp *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error) {
+func (lp *Provider) SessionRegenerate(ctx context.Context, oldsid, sid string) (session.Store, error) {
 	count, _ := c.Exists([]byte(sid))
 	if count == 0 {
 		// oldsid doesn't exists, set the new sid directly
@@ -151,21 +152,21 @@ func (lp *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error)
 		c.Set([]byte(sid), data)
 		c.Expire([]byte(sid), lp.maxlifetime)
 	}
-	return lp.SessionRead(sid)
+	return lp.SessionRead(context.Background(), sid)
 }
 
 // SessionDestroy delete ledis session by id
-func (lp *Provider) SessionDestroy(sid string) error {
+func (lp *Provider) SessionDestroy(ctx context.Context, sid string) error {
 	c.Del([]byte(sid))
 	return nil
 }
 
 // SessionGC Impelment method, no used.
-func (lp *Provider) SessionGC() {
+func (lp *Provider) SessionGC(context.Context) {
 }
 
 // SessionAll return all active session
-func (lp *Provider) SessionAll() int {
+func (lp *Provider) SessionAll(context.Context) int {
 	return 0
 }
 func init() {
