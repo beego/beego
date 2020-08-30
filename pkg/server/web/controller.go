@@ -622,7 +622,7 @@ func (c *Controller) SetSession(name interface{}, value interface{}) {
 	if c.CruSession == nil {
 		c.StartSession()
 	}
-	c.CruSession.Set(name, value)
+	c.CruSession.Set(nil, name, value)
 }
 
 // GetSession gets value from session.
@@ -630,7 +630,7 @@ func (c *Controller) GetSession(name interface{}) interface{} {
 	if c.CruSession == nil {
 		c.StartSession()
 	}
-	return c.CruSession.Get(name)
+	return c.CruSession.Get(nil, name)
 }
 
 // DelSession removes value from session.
@@ -638,14 +638,14 @@ func (c *Controller) DelSession(name interface{}) {
 	if c.CruSession == nil {
 		c.StartSession()
 	}
-	c.CruSession.Delete(name)
+	c.CruSession.Delete(nil, name)
 }
 
 // SessionRegenerateID regenerates session id for this session.
 // the session data have no changes.
 func (c *Controller) SessionRegenerateID() {
 	if c.CruSession != nil {
-		c.CruSession.SessionRelease(c.Ctx.ResponseWriter)
+		c.CruSession.SessionRelease(nil, c.Ctx.ResponseWriter)
 	}
 	c.CruSession = GlobalSessions.SessionRegenerateID(c.Ctx.ResponseWriter, c.Ctx.Request)
 	c.Ctx.Input.CruSession = c.CruSession
@@ -653,7 +653,7 @@ func (c *Controller) SessionRegenerateID() {
 
 // DestroySession cleans session data and session cookie.
 func (c *Controller) DestroySession() {
-	c.Ctx.Input.CruSession.Flush()
+	c.Ctx.Input.CruSession.Flush(nil)
 	c.Ctx.Input.CruSession = nil
 	GlobalSessions.SessionDestroy(c.Ctx.ResponseWriter, c.Ctx.Request)
 }

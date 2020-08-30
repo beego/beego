@@ -15,6 +15,7 @@
 package session
 
 import (
+	"context"
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/json"
@@ -34,7 +35,7 @@ type CookieSessionStore struct {
 
 // Set value to cookie session.
 // the value are encoded as gob with hash block string.
-func (st *CookieSessionStore) Set(key, value interface{}) error {
+func (st *CookieSessionStore) Set(ctx context.Context, key, value interface{}) error {
 	st.lock.Lock()
 	defer st.lock.Unlock()
 	st.values[key] = value
@@ -42,7 +43,7 @@ func (st *CookieSessionStore) Set(key, value interface{}) error {
 }
 
 // Get value from cookie session
-func (st *CookieSessionStore) Get(key interface{}) interface{} {
+func (st *CookieSessionStore) Get(ctx context.Context, key interface{}) interface{} {
 	st.lock.RLock()
 	defer st.lock.RUnlock()
 	if v, ok := st.values[key]; ok {
@@ -52,7 +53,7 @@ func (st *CookieSessionStore) Get(key interface{}) interface{} {
 }
 
 // Delete value in cookie session
-func (st *CookieSessionStore) Delete(key interface{}) error {
+func (st *CookieSessionStore) Delete(ctx context.Context, key interface{}) error {
 	st.lock.Lock()
 	defer st.lock.Unlock()
 	delete(st.values, key)
@@ -60,7 +61,7 @@ func (st *CookieSessionStore) Delete(key interface{}) error {
 }
 
 // Flush Clean all values in cookie session
-func (st *CookieSessionStore) Flush() error {
+func (st *CookieSessionStore) Flush(context.Context) error {
 	st.lock.Lock()
 	defer st.lock.Unlock()
 	st.values = make(map[interface{}]interface{})
@@ -68,12 +69,12 @@ func (st *CookieSessionStore) Flush() error {
 }
 
 // SessionID Return id of this cookie session
-func (st *CookieSessionStore) SessionID() string {
+func (st *CookieSessionStore) SessionID(context.Context) string {
 	return st.sid
 }
 
 // SessionRelease Write cookie session to http response cookie
-func (st *CookieSessionStore) SessionRelease(w http.ResponseWriter) {
+func (st *CookieSessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
 	st.lock.Lock()
 	encodedCookie, err := encodeCookie(cookiepder.block, cookiepder.config.SecurityKey, cookiepder.config.SecurityName, st.values)
 	st.lock.Unlock()
@@ -112,7 +113,7 @@ type CookieProvider struct {
 // 	securityName - recognized name in encoded cookie string
 // 	cookieName - cookie name
 // 	maxage - cookie max life time.
-func (pder *CookieProvider) SessionInit(maxlifetime int64, config string) error {
+func (pder *CookieProvider) SessionInit(ctx context.Context, maxlifetime int64, config string) error {
 	pder.config = &cookieConfig{}
 	err := json.Unmarshal([]byte(config), pder.config)
 	if err != nil {
@@ -134,7 +135,7 @@ func (pder *CookieProvider) SessionInit(maxlifetime int64, config string) error 
 
 // SessionRead Get SessionStore in cooke.
 // decode cooke string to map and put into SessionStore with sid.
-func (pder *CookieProvider) SessionRead(sid string) (Store, error) {
+func (pder *CookieProvider) SessionRead(ctx context.Context, sid string) (Store, error) {
 	maps, _ := decodeCookie(pder.block,
 		pder.config.SecurityKey,
 		pder.config.SecurityName,
@@ -147,26 +148,26 @@ func (pder *CookieProvider) SessionRead(sid string) (Store, error) {
 }
 
 // SessionExist Cookie session is always existed
-func (pder *CookieProvider) SessionExist(sid string) (bool, error) {
+func (pder *CookieProvider) SessionExist(ctx context.Context, sid string) (bool, error) {
 	return true, nil
 }
 
 // SessionRegenerate Implement method, no used.
-func (pder *CookieProvider) SessionRegenerate(oldsid, sid string) (Store, error) {
+func (pder *CookieProvider) SessionRegenerate(ctx context.Context, oldsid, sid string) (Store, error) {
 	return nil, nil
 }
 
 // SessionDestroy Implement method, no used.
-func (pder *CookieProvider) SessionDestroy(sid string) error {
+func (pder *CookieProvider) SessionDestroy(ctx context.Context, sid string) error {
 	return nil
 }
 
 // SessionGC Implement method, no used.
-func (pder *CookieProvider) SessionGC() {
+func (pder *CookieProvider) SessionGC(context.Context) {
 }
 
 // SessionAll Implement method, return 0.
-func (pder *CookieProvider) SessionAll() int {
+func (pder *CookieProvider) SessionAll(context.Context) int {
 	return 0
 }
 
