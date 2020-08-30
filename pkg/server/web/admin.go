@@ -16,6 +16,7 @@ package web
 
 import (
 	"bytes"
+	context2 "context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -378,10 +379,10 @@ func taskStatus(rw http.ResponseWriter, req *http.Request) {
 	taskname := req.Form.Get("taskname")
 	if taskname != "" {
 		if t, ok := task.AdminTaskList[taskname]; ok {
-			if err := t.Run(); err != nil {
+			if err := t.Run(nil); err != nil {
 				data["Message"] = []string{"error", template.HTMLEscapeString(fmt.Sprintf("%s", err))}
 			}
-			data["Message"] = []string{"success", template.HTMLEscapeString(fmt.Sprintf("%s run success,Now the Status is <br>%s", taskname, t.GetStatus()))}
+			data["Message"] = []string{"success", template.HTMLEscapeString(fmt.Sprintf("%s run success,Now the Status is <br>%s", taskname, t.GetStatus(nil)))}
 		} else {
 			data["Message"] = []string{"warning", template.HTMLEscapeString(fmt.Sprintf("there's no task which named: %s", taskname))}
 		}
@@ -400,9 +401,9 @@ func taskStatus(rw http.ResponseWriter, req *http.Request) {
 	for tname, tk := range task.AdminTaskList {
 		result := []string{
 			template.HTMLEscapeString(tname),
-			template.HTMLEscapeString(tk.GetSpec()),
-			template.HTMLEscapeString(tk.GetStatus()),
-			template.HTMLEscapeString(tk.GetPrev().String()),
+			template.HTMLEscapeString(tk.GetSpec(nil)),
+			template.HTMLEscapeString(tk.GetStatus(nil)),
+			template.HTMLEscapeString(tk.GetPrev(context2.Background()).String()),
 		}
 		*resultList = append(*resultList, result)
 	}
