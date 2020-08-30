@@ -404,5 +404,5 @@ func stringsToJSON(str string) string {
 
 // Session sets session item value with given key.
 func (output *BeegoOutput) Session(name interface{}, value interface{}) {
-	output.Context.Input.CruSession.Set(name, value)
+	output.Context.Input.CruSession.Set(nil, name, value)
 }

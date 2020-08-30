@@ -28,6 +28,7 @@
 package session
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
@@ -43,24 +44,24 @@ import (
 
 // Store contains all data for one session process with specific id.
 type Store interface {
-	Set(key, value interface{}) error     //set session value
-	Get(key interface{}) interface{}      //get session value
-	Delete(key interface{}) error         //delete session value
-	SessionID() string                    //back current sessionID
-	SessionRelease(w http.ResponseWriter) // release the resource & save data to provider & return the data
-	Flush() error                         //delete all data
+	Set(ctx context.Context, key, value interface{}) error     //set session value
+	Get(ctx context.Context, key interface{}) interface{}      //get session value
+	Delete(ctx context.Context, key interface{}) error         //delete session value
+	SessionID(ctx context.Context) string                      //back current sessionID
+	SessionRelease(ctx context.Context, w http.ResponseWriter) // release the resource & save data to provider & return the data
+	Flush(ctx context.Context) error                           //delete all data
 }
 
 // Provider contains global session methods and saved SessionStores.
 // it can operate a SessionStore by its id.
 type Provider interface {
-	SessionInit(gclifetime int64, config string) error
-	SessionRead(sid string) (Store, error)
-	SessionExist(sid string) (bool, error)
-	SessionRegenerate(oldsid, sid string) (Store, error)
-	SessionDestroy(sid string) error
-	SessionAll() int //get all active session
-	SessionGC()
+	SessionInit(ctx context.Context, gclifetime int64, config string) error
+	SessionRead(ctx context.Context, sid string) (Store, error)
+	SessionExist(ctx context.Context, sid string) (bool, error)
+	SessionRegenerate(ctx context.Context, oldsid, sid string) (Store, error)
+	SessionDestroy(ctx context.Context, sid string) error
+	SessionAll(ctx context.Context) int //get all active session
+	SessionGC(ctx context.Context)
 }
 
 var provides = make(map[string]Provider)
@@ -148,7 +149,7 @@ func NewManager(provideName string, cf *ManagerConfig) (*Manager, error) {
 		}
 	}
 
-	err := provider.SessionInit(cf.Maxlifetime, cf.ProviderConfig)
+	err := provider.SessionInit(nil, cf.Maxlifetime, cf.ProviderConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -212,12 +213,12 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 	}
 
 	if sid != "" {
-		exists, err := manager.provider.SessionExist(sid)
+		exists, err := manager.provider.SessionExist(nil, sid)
 		if err != nil {
 			return nil, err
 		}
 		if exists {
-			return manager.provider.SessionRead(sid)
+			return manager.provider.SessionRead(nil, sid)
 		}
 	}
 
@@ -227,7 +228,7 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 		return nil, errs
 	}
 
-	session, err = manager.provider.SessionRead(sid)
+	session, err = manager.provider.SessionRead(nil, sid)
 	if err != nil {
 		return nil, err
 	}
@@ -269,7 +270,7 @@ func (manager *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sid, _ := url.QueryUnescape(cookie.Value)
-	manager.provider.SessionDestroy(sid)
+	manager.provider.SessionDestroy(nil, sid)
 	if manager.config.EnableSetCookie {
 		expiration := time.Now()
 		cookie = &http.Cookie{Name: manager.config.CookieName,
@@ -285,14 +286,14 @@ func (manager *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
 
 // GetSessionStore Get SessionStore by its id.
 func (manager *Manager) GetSessionStore(sid string) (sessions Store, err error) {
-	sessions, err = manager.provider.SessionRead(sid)
+	sessions, err = manager.provider.SessionRead(nil, sid)
 	return
 }
 
 // GC Start session gc process.
 // it can do gc in times after gc lifetime.
 func (manager *Manager) GC() {
-	manager.provider.SessionGC()
+	manager.provider.SessionGC(nil)
 	time.AfterFunc(time.Duration(manager.config.Gclifetime)*time.Second, func() { manager.GC() })
 }
 
@@ -305,7 +306,7 @@ func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Reque
 	cookie, err := r.Cookie(manager.config.CookieName)
 	if err != nil || cookie.Value == "" {
 		//delete old cookie
-		session, _ = manager.provider.SessionRead(sid)
+		session, _ = manager.provider.SessionRead(nil, sid)
 		cookie = &http.Cookie{Name: manager.config.CookieName,
 			Value:    url.QueryEscape(sid),
 			Path:     "/",
@@ -315,7 +316,7 @@ func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Reque
 		}
 	} else {
 		oldsid, _ := url.QueryUnescape(cookie.Value)
-		session, _ = manager.provider.SessionRegenerate(oldsid, sid)
+		session, _ = manager.provider.SessionRegenerate(nil, oldsid, sid)
 		cookie.Value = url.QueryEscape(sid)
 		cookie.HttpOnly = true
 		cookie.Path = "/"
@@ -339,7 +340,7 @@ func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Reque
 
 // GetActiveSession Get all active sessions count number.
 func (manager *Manager) GetActiveSession() int {
-	return manager.provider.SessionAll()
+	return manager.provider.SessionAll(nil)
 }
 
 // SetSecure Set cookie with https.

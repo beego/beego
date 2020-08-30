@@ -33,6 +33,7 @@
 package couchbase
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"sync"
@@ -63,7 +64,7 @@ type Provider struct {
 }
 
 // Set value to couchabse session
-func (cs *SessionStore) Set(key, value interface{}) error {
+func (cs *SessionStore) Set(ctx context.Context, key, value interface{}) error {
 	cs.lock.Lock()
 	defer cs.lock.Unlock()
 	cs.values[key] = value
@@ -71,7 +72,7 @@ func (cs *SessionStore) Set(key, value interface{}) error {
 }
 
 // Get value from couchabse session
-func (cs *SessionStore) Get(key interface{}) interface{} {
+func (cs *SessionStore) Get(ctx context.Context, key interface{}) interface{} {
 	cs.lock.RLock()
 	defer cs.lock.RUnlock()
 	if v, ok := cs.values[key]; ok {
@@ -81,7 +82,7 @@ func (cs *SessionStore) Get(key interface{}) interface{} {
 }
 
 // Delete value in couchbase session by given key
-func (cs *SessionStore) Delete(key interface{}) error {
+func (cs *SessionStore) Delete(ctx context.Context, key interface{}) error {
 	cs.lock.Lock()
 	defer cs.lock.Unlock()
 	delete(cs.values, key)
@@ -89,7 +90,7 @@ func (cs *SessionStore) Delete(key interface{}) error {
 }
 
 // Flush Clean all values in couchbase session
-func (cs *SessionStore) Flush() error {
+func (cs *SessionStore) Flush(context.Context) error {
 	cs.lock.Lock()
 	defer cs.lock.Unlock()
 	cs.values = make(map[interface{}]interface{})
@@ -97,12 +98,12 @@ func (cs *SessionStore) Flush() error {
 }
 
 // SessionID Get couchbase session store id
-func (cs *SessionStore) SessionID() string {
+func (cs *SessionStore) SessionID(context.Context) string {
 	return cs.sid
 }
 
 // SessionRelease Write couchbase session with Gob string
-func (cs *SessionStore) SessionRelease(w http.ResponseWriter) {
+func (cs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
 	defer cs.b.Close()
 
 	bo, err := session.EncodeGob(cs.values)
@@ -135,7 +136,7 @@ func (cp *Provider) getBucket() *couchbase.Bucket {
 // SessionInit init couchbase session
 // savepath like couchbase server REST/JSON URL
 // e.g. http://host:port/, Pool, Bucket
-func (cp *Provider) SessionInit(maxlifetime int64, savePath string) error {
+func (cp *Provider) SessionInit(ctx context.Context, maxlifetime int64, savePath string) error {
 	cp.maxlifetime = maxlifetime
 	configs := strings.Split(savePath, ",")
 	if len(configs) > 0 {
@@ -152,7 +153,7 @@ func (cp *Provider) SessionInit(maxlifetime int64, savePath string) error {
 }
 
 // SessionRead read couchbase session by sid
-func (cp *Provider) SessionRead(sid string) (session.Store, error) {
+func (cp *Provider) SessionRead(ctx context.Context, sid string) (session.Store, error) {
 	cp.b = cp.getBucket()
 
 	var (
@@ -179,7 +180,7 @@ func (cp *Provider) SessionRead(sid string) (session.Store, error) {
 
 // SessionExist Check couchbase session exist.
 // it checkes sid exist or not.
-func (cp *Provider) SessionExist(sid string) (bool, error) {
+func (cp *Provider) SessionExist(ctx context.Context, sid string) (bool, error) {
 	cp.b = cp.getBucket()
 	defer cp.b.Close()
 
@@ -192,7 +193,7 @@ func (cp *Provider) SessionExist(sid string) (bool, error) {
 }
 
 // SessionRegenerate remove oldsid and use sid to generate new session
-func (cp *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error) {
+func (cp *Provider) SessionRegenerate(ctx context.Context, oldsid, sid string) (session.Store, error) {
 	cp.b = cp.getBucket()
 
 	var doc []byte
@@ -225,7 +226,7 @@ func (cp *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error)
 }
 
 // SessionDestroy Remove bucket in this couchbase
-func (cp *Provider) SessionDestroy(sid string) error {
+func (cp *Provider) SessionDestroy(ctx context.Context, sid string) error {
 	cp.b = cp.getBucket()
 	defer cp.b.Close()
 
@@ -234,11 +235,11 @@ func (cp *Provider) SessionDestroy(sid string) error {
 }
 
 // SessionGC Recycle
-func (cp *Provider) SessionGC() {
+func (cp *Provider) SessionGC(context.Context) {
 }
 
 // SessionAll return all active session
-func (cp *Provider) SessionAll() int {
+func (cp *Provider) SessionAll(context.Context) int {
 	return 0
 }
 

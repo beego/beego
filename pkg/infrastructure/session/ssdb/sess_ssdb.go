@@ -1,6 +1,7 @@
 package ssdb
 
 import (
+	"context"
 	"errors"
 	"net/http"
 	"strconv"
@@ -31,7 +32,7 @@ func (p *Provider) connectInit() error {
 }
 
 // SessionInit init the ssdb with the config
-func (p *Provider) SessionInit(maxLifetime int64, savePath string) error {
+func (p *Provider) SessionInit(ctx context.Context, maxLifetime int64, savePath string) error {
 	p.maxLifetime = maxLifetime
 	address := strings.Split(savePath, ":")
 	p.host = address[0]
@@ -44,7 +45,7 @@ func (p *Provider) SessionInit(maxLifetime int64, savePath string) error {
 }
 
 // SessionRead return a ssdb client session Store
-func (p *Provider) SessionRead(sid string) (session.Store, error) {
+func (p *Provider) SessionRead(ctx context.Context, sid string) (session.Store, error) {
 	if p.client == nil {
 		if err := p.connectInit(); err != nil {
 			return nil, err
@@ -68,7 +69,7 @@ func (p *Provider) SessionRead(sid string) (session.Store, error) {
 }
 
 // SessionExist judged whether sid is exist in session
-func (p *Provider) SessionExist(sid string) (bool, error) {
+func (p *Provider) SessionExist(ctx context.Context, sid string) (bool, error) {
 	if p.client == nil {
 		if err := p.connectInit(); err != nil {
 			return false, err
@@ -85,7 +86,7 @@ func (p *Provider) SessionExist(sid string) (bool, error) {
 }
 
 // SessionRegenerate regenerate session with new sid and delete oldsid
-func (p *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error) {
+func (p *Provider) SessionRegenerate(ctx context.Context, oldsid, sid string) (session.Store, error) {
 	//conn.Do("setx", key, v, ttl)
 	if p.client == nil {
 		if err := p.connectInit(); err != nil {
@@ -118,7 +119,7 @@ func (p *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error) 
 }
 
 // SessionDestroy destroy the sid
-func (p *Provider) SessionDestroy(sid string) error {
+func (p *Provider) SessionDestroy(ctx context.Context, sid string) error {
 	if p.client == nil {
 		if err := p.connectInit(); err != nil {
 			return err
@@ -129,11 +130,11 @@ func (p *Provider) SessionDestroy(sid string) error {
 }
 
 // SessionGC not implemented
-func (p *Provider) SessionGC() {
+func (p *Provider) SessionGC(context.Context) {
 }
 
 // SessionAll not implemented
-func (p *Provider) SessionAll() int {
+func (p *Provider) SessionAll(context.Context) int {
 	return 0
 }
 
@@ -147,7 +148,7 @@ type SessionStore struct {
 }
 
 // Set the key and value
-func (s *SessionStore) Set(key, value interface{}) error {
+func (s *SessionStore) Set(ctx context.Context, key, value interface{}) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	s.values[key] = value
@@ -155,7 +156,7 @@ func (s *SessionStore) Set(key, value interface{}) error {
 }
 
 // Get return the value by the key
-func (s *SessionStore) Get(key interface{}) interface{} {
+func (s *SessionStore) Get(ctx context.Context, key interface{}) interface{} {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	if value, ok := s.values[key]; ok {
@@ -165,7 +166,7 @@ func (s *SessionStore) Get(key interface{}) interface{} {
 }
 
 // Delete the key in session store
-func (s *SessionStore) Delete(key interface{}) error {
+func (s *SessionStore) Delete(ctx context.Context, key interface{}) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	delete(s.values, key)
@@ -173,7 +174,7 @@ func (s *SessionStore) Delete(key interface{}) error {
 }
 
 // Flush delete all keys and values
-func (s *SessionStore) Flush() error {
+func (s *SessionStore) Flush(context.Context) error {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	s.values = make(map[interface{}]interface{})
@@ -181,12 +182,12 @@ func (s *SessionStore) Flush() error {
 }
 
 // SessionID return the sessionID
-func (s *SessionStore) SessionID() string {
+func (s *SessionStore) SessionID(context.Context) string {
 	return s.sid
 }
 
 // SessionRelease Store the keyvalues into ssdb
-func (s *SessionStore) SessionRelease(w http.ResponseWriter) {
+func (s *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
 	b, err := session.EncodeGob(s.values)
 	if err != nil {
 		return

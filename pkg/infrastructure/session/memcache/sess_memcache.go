@@ -33,6 +33,7 @@
 package memcache
 
 import (
+	"context"
 	"net/http"
 	"strings"
 	"sync"
@@ -54,7 +55,7 @@ type SessionStore struct {
 }
 
 // Set value in memcache session
-func (rs *SessionStore) Set(key, value interface{}) error {
+func (rs *SessionStore) Set(ctx context.Context, key, value interface{}) error {
 	rs.lock.Lock()
 	defer rs.lock.Unlock()
 	rs.values[key] = value
@@ -62,7 +63,7 @@ func (rs *SessionStore) Set(key, value interface{}) error {
 }
 
 // Get value in memcache session
-func (rs *SessionStore) Get(key interface{}) interface{} {
+func (rs *SessionStore) Get(ctx context.Context, key interface{}) interface{} {
 	rs.lock.RLock()
 	defer rs.lock.RUnlock()
 	if v, ok := rs.values[key]; ok {
@@ -72,7 +73,7 @@ func (rs *SessionStore) Get(key interface{}) interface{} {
 }
 
 // Delete value in memcache session
-func (rs *SessionStore) Delete(key interface{}) error {
+func (rs *SessionStore) Delete(ctx context.Context, key interface{}) error {
 	rs.lock.Lock()
 	defer rs.lock.Unlock()
 	delete(rs.values, key)
@@ -80,7 +81,7 @@ func (rs *SessionStore) Delete(key interface{}) error {
 }
 
 // Flush clear all values in memcache session
-func (rs *SessionStore) Flush() error {
+func (rs *SessionStore) Flush(context.Context) error {
 	rs.lock.Lock()
 	defer rs.lock.Unlock()
 	rs.values = make(map[interface{}]interface{})
@@ -88,12 +89,12 @@ func (rs *SessionStore) Flush() error {
 }
 
 // SessionID get memcache session id
-func (rs *SessionStore) SessionID() string {
+func (rs *SessionStore) SessionID(context.Context) string {
 	return rs.sid
 }
 
 // SessionRelease save session values to memcache
-func (rs *SessionStore) SessionRelease(w http.ResponseWriter) {
+func (rs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
 	b, err := session.EncodeGob(rs.values)
 	if err != nil {
 		return
@@ -113,7 +114,7 @@ type MemProvider struct {
 // SessionInit init memcache session
 // savepath like
 // e.g. 127.0.0.1:9090
-func (rp *MemProvider) SessionInit(maxlifetime int64, savePath string) error {
+func (rp *MemProvider) SessionInit(ctx context.Context, maxlifetime int64, savePath string) error {
 	rp.maxlifetime = maxlifetime
 	rp.conninfo = strings.Split(savePath, ";")
 	client = memcache.New(rp.conninfo...)
@@ -121,7 +122,7 @@ func (rp *MemProvider) SessionInit(maxlifetime int64, savePath string) error {
 }
 
 // SessionRead read memcache session by sid
-func (rp *MemProvider) SessionRead(sid string) (session.Store, error) {
+func (rp *MemProvider) SessionRead(ctx context.Context, sid string) (session.Store, error) {
 	if client == nil {
 		if err := rp.connectInit(); err != nil {
 			return nil, err
@@ -149,7 +150,7 @@ func (rp *MemProvider) SessionRead(sid string) (session.Store, error) {
 }
 
 // SessionExist check memcache session exist by sid
-func (rp *MemProvider) SessionExist(sid string) (bool, error) {
+func (rp *MemProvider) SessionExist(ctx context.Context, sid string) (bool, error) {
 	if client == nil {
 		if err := rp.connectInit(); err != nil {
 			return false, err
@@ -162,7 +163,7 @@ func (rp *MemProvider) SessionExist(sid string) (bool, error) {
 }
 
 // SessionRegenerate generate new sid for memcache session
-func (rp *MemProvider) SessionRegenerate(oldsid, sid string) (session.Store, error) {
+func (rp *MemProvider) SessionRegenerate(ctx context.Context, oldsid, sid string) (session.Store, error) {
 	if client == nil {
 		if err := rp.connectInit(); err != nil {
 			return nil, err
@@ -201,7 +202,7 @@ func (rp *MemProvider) SessionRegenerate(oldsid, sid string) (session.Store, err
 }
 
 // SessionDestroy delete memcache session by id
-func (rp *MemProvider) SessionDestroy(sid string) error {
+func (rp *MemProvider) SessionDestroy(ctx context.Context, sid string) error {
 	if client == nil {
 		if err := rp.connectInit(); err != nil {
 			return err
@@ -217,11 +218,11 @@ func (rp *MemProvider) connectInit() error {
 }
 
 // SessionGC Impelment method, no used.
-func (rp *MemProvider) SessionGC() {
+func (rp *MemProvider) SessionGC(context.Context) {
 }
 
 // SessionAll return all activeSession
-func (rp *MemProvider) SessionAll() int {
+func (rp *MemProvider) SessionAll(context.Context) int {
 	return 0
 }
 

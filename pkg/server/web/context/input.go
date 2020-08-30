@@ -361,7 +361,7 @@ func (input *BeegoInput) Cookie(key string) string {
 // Session returns current session item value by a given key.
 // if non-existed, return nil.
 func (input *BeegoInput) Session(key interface{}) interface{} {
-	return input.CruSession.Get(key)
+	return input.CruSession.Get(nil, key)
 }
 
 // CopyBody returns the raw request body data as bytes.

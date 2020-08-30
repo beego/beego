@@ -15,6 +15,7 @@
 package session
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io/ioutil"
@@ -40,7 +41,7 @@ type FileSessionStore struct {
 }
 
 // Set value to file session
-func (fs *FileSessionStore) Set(key, value interface{}) error {
+func (fs *FileSessionStore) Set(ctx context.Context, key, value interface{}) error {
 	fs.lock.Lock()
 	defer fs.lock.Unlock()
 	fs.values[key] = value
@@ -48,7 +49,7 @@ func (fs *FileSessionStore) Set(key, value interface{}) error {
 }
 
 // Get value from file session
-func (fs *FileSessionStore) Get(key interface{}) interface{} {
+func (fs *FileSessionStore) Get(ctx context.Context, key interface{}) interface{} {
 	fs.lock.RLock()
 	defer fs.lock.RUnlock()
 	if v, ok := fs.values[key]; ok {
@@ -58,7 +59,7 @@ func (fs *FileSessionStore) Get(key interface{}) interface{} {
 }
 
 // Delete value in file session by given key
-func (fs *FileSessionStore) Delete(key interface{}) error {
+func (fs *FileSessionStore) Delete(ctx context.Context, key interface{}) error {
 	fs.lock.Lock()
 	defer fs.lock.Unlock()
 	delete(fs.values, key)
@@ -66,7 +67,7 @@ func (fs *FileSessionStore) Delete(key interface{}) error {
 }
 
 // Flush Clean all values in file session
-func (fs *FileSessionStore) Flush() error {
+func (fs *FileSessionStore) Flush(context.Context) error {
 	fs.lock.Lock()
 	defer fs.lock.Unlock()
 	fs.values = make(map[interface{}]interface{})
@@ -74,12 +75,12 @@ func (fs *FileSessionStore) Flush() error {
 }
 
 // SessionID Get file session store id
-func (fs *FileSessionStore) SessionID() string {
+func (fs *FileSessionStore) SessionID(context.Context) string {
 	return fs.sid
 }
 
 // SessionRelease Write file session to local file with Gob string
-func (fs *FileSessionStore) SessionRelease(w http.ResponseWriter) {
+func (fs *FileSessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()
 	b, err := EncodeGob(fs.values)
@@ -119,7 +120,7 @@ type FileProvider struct {
 
 // SessionInit Init file session provider.
 // savePath sets the session files path.
-func (fp *FileProvider) SessionInit(maxlifetime int64, savePath string) error {
+func (fp *FileProvider) SessionInit(ctx context.Context, maxlifetime int64, savePath string) error {
 	fp.maxlifetime = maxlifetime
 	fp.savePath = savePath
 	return nil
@@ -128,7 +129,7 @@ func (fp *FileProvider) SessionInit(maxlifetime int64, savePath string) error {
 // SessionRead Read file session by sid.
 // if file is not exist, create it.
 // the file path is generated from sid string.
-func (fp *FileProvider) SessionRead(sid string) (Store, error) {
+func (fp *FileProvider) SessionRead(ctx context.Context, sid string) (Store, error) {
 	invalidChars := "./"
 	if strings.ContainsAny(sid, invalidChars) {
 		return nil, errors.New("the sid shouldn't have following characters: " + invalidChars)
@@ -176,7 +177,7 @@ func (fp *FileProvider) SessionRead(sid string) (Store, error) {
 
 // SessionExist Check file session exist.
 // it checks the file named from sid exist or not.
-func (fp *FileProvider) SessionExist(sid string) (bool, error) {
+func (fp *FileProvider) SessionExist(ctx context.Context, sid string) (bool, error) {
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()
 
@@ -190,7 +191,7 @@ func (fp *FileProvider) SessionExist(sid string) (bool, error) {
 }
 
 // SessionDestroy Remove all files in this save path
-func (fp *FileProvider) SessionDestroy(sid string) error {
+func (fp *FileProvider) SessionDestroy(ctx context.Context, sid string) error {
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()
 	os.Remove(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid))
@@ -198,7 +199,7 @@ func (fp *FileProvider) SessionDestroy(sid string) error {
 }
 
 // SessionGC Recycle files in save path
-func (fp *FileProvider) SessionGC() {
+func (fp *FileProvider) SessionGC(context.Context) {
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()
 
@@ -208,7 +209,7 @@ func (fp *FileProvider) SessionGC() {
 
 // SessionAll Get active file session number.
 // it walks save path to count files.
-func (fp *FileProvider) SessionAll() int {
+func (fp *FileProvider) SessionAll(context.Context) int {
 	a := &activeSession{}
 	err := filepath.Walk(fp.savePath, func(path string, f os.FileInfo, err error) error {
 		return a.visit(path, f, err)
@@ -222,7 +223,7 @@ func (fp *FileProvider) SessionAll() int {
 
 // SessionRegenerate Generate new sid for file session.
 // it delete old file and create new file named from new sid.
-func (fp *FileProvider) SessionRegenerate(oldsid, sid string) (Store, error) {
+func (fp *FileProvider) SessionRegenerate(ctx context.Context, oldsid, sid string) (Store, error) {
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()
 

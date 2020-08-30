@@ -16,6 +16,7 @@ package session
 
 import (
 	"container/list"
+	"context"
 	"net/http"
 	"sync"
 	"time"
@@ -33,7 +34,7 @@ type MemSessionStore struct {
 }
 
 // Set value to memory session
-func (st *MemSessionStore) Set(key, value interface{}) error {
+func (st *MemSessionStore) Set(ctx context.Context, key, value interface{}) error {
 	st.lock.Lock()
 	defer st.lock.Unlock()
 	st.value[key] = value
@@ -41,7 +42,7 @@ func (st *MemSessionStore) Set(key, value interface{}) error {
 }
 
 // Get value from memory session by key
-func (st *MemSessionStore) Get(key interface{}) interface{} {
+func (st *MemSessionStore) Get(ctx context.Context, key interface{}) interface{} {
 	st.lock.RLock()
 	defer st.lock.RUnlock()
 	if v, ok := st.value[key]; ok {
@@ -51,7 +52,7 @@ func (st *MemSessionStore) Get(key interface{}) interface{} {
 }
 
 // Delete in memory session by key
-func (st *MemSessionStore) Delete(key interface{}) error {
+func (st *MemSessionStore) Delete(ctx context.Context, key interface{}) error {
 	st.lock.Lock()
 	defer st.lock.Unlock()
 	delete(st.value, key)
@@ -59,7 +60,7 @@ func (st *MemSessionStore) Delete(key interface{}) error {
 }
 
 // Flush clear all values in memory session
-func (st *MemSessionStore) Flush() error {
+func (st *MemSessionStore) Flush(context.Context) error {
 	st.lock.Lock()
 	defer st.lock.Unlock()
 	st.value = make(map[interface{}]interface{})
@@ -67,12 +68,12 @@ func (st *MemSessionStore) Flush() error {
 }
 
 // SessionID get this id of memory session store
-func (st *MemSessionStore) SessionID() string {
+func (st *MemSessionStore) SessionID(context.Context) string {
 	return st.sid
 }
 
 // SessionRelease Implement method, no used.
-func (st *MemSessionStore) SessionRelease(w http.ResponseWriter) {
+func (st *MemSessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
 }
 
 // MemProvider Implement the provider interface
@@ -85,14 +86,14 @@ type MemProvider struct {
 }
 
 // SessionInit init memory session
-func (pder *MemProvider) SessionInit(maxlifetime int64, savePath string) error {
+func (pder *MemProvider) SessionInit(ctx context.Context, maxlifetime int64, savePath string) error {
 	pder.maxlifetime = maxlifetime
 	pder.savePath = savePath
 	return nil
 }
 
 // SessionRead get memory session store by sid
-func (pder *MemProvider) SessionRead(sid string) (Store, error) {
+func (pder *MemProvider) SessionRead(ctx context.Context, sid string) (Store, error) {
 	pder.lock.RLock()
 	if element, ok := pder.sessions[sid]; ok {
 		go pder.SessionUpdate(sid)
@@ -109,7 +110,7 @@ func (pder *MemProvider) SessionRead(sid string) (Store, error) {
 }
 
 // SessionExist check session store exist in memory session by sid
-func (pder *MemProvider) SessionExist(sid string) (bool, error) {
+func (pder *MemProvider) SessionExist(ctx context.Context, sid string) (bool, error) {
 	pder.lock.RLock()
 	defer pder.lock.RUnlock()
 	if _, ok := pder.sessions[sid]; ok {
@@ -119,7 +120,7 @@ func (pder *MemProvider) SessionExist(sid string) (bool, error) {
 }
 
 // SessionRegenerate generate new sid for session store in memory session
-func (pder *MemProvider) SessionRegenerate(oldsid, sid string) (Store, error) {
+func (pder *MemProvider) SessionRegenerate(ctx context.Context, oldsid, sid string) (Store, error) {
 	pder.lock.RLock()
 	if element, ok := pder.sessions[oldsid]; ok {
 		go pder.SessionUpdate(oldsid)
@@ -141,7 +142,7 @@ func (pder *MemProvider) SessionRegenerate(oldsid, sid string) (Store, error) {
 }
 
 // SessionDestroy delete session store in memory session by id
-func (pder *MemProvider) SessionDestroy(sid string) error {
+func (pder *MemProvider) SessionDestroy(ctx context.Context, sid string) error {
 	pder.lock.Lock()
 	defer pder.lock.Unlock()
 	if element, ok := pder.sessions[sid]; ok {
@@ -153,7 +154,7 @@ func (pder *MemProvider) SessionDestroy(sid string) error {
 }
 
 // SessionGC clean expired session stores in memory session
-func (pder *MemProvider) SessionGC() {
+func (pder *MemProvider) SessionGC(context.Context) {
 	pder.lock.RLock()
 	for {
 		element := pder.list.Back()
@@ -175,7 +176,7 @@ func (pder *MemProvider) SessionGC() {
 }
 
 // SessionAll get count number of memory session
-func (pder *MemProvider) SessionAll() int {
+func (pder *MemProvider) SessionAll(context.Context) int {
 	return pder.list.Len()
 }
 
