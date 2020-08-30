@@ -38,14 +38,14 @@ func TestCookie(t *testing.T) {
 	if err != nil {
 		t.Fatal("set error,", err)
 	}
-	err = sess.Set("username", "astaxie")
+	err = sess.Set(nil, "username", "astaxie")
 	if err != nil {
 		t.Fatal("set error,", err)
 	}
-	if username := sess.Get("username"); username != "astaxie" {
+	if username := sess.Get(nil, "username"); username != "astaxie" {
 		t.Fatal("get username error")
 	}
-	sess.SessionRelease(w)
+	sess.SessionRelease(nil, w)
 	if cookiestr := w.Header().Get("Set-Cookie"); cookiestr == "" {
 		t.Fatal("setcookie error")
 	} else {
@@ -85,7 +85,7 @@ func TestDestorySessionCookie(t *testing.T) {
 	if err != nil {
 		t.Fatal("session start err,", err)
 	}
-	if newSession.SessionID() != session.SessionID() {
+	if newSession.SessionID(nil) != session.SessionID(nil) {
 		t.Fatal("get cookie session id is not the same again.")
 	}
 
@@ -99,7 +99,7 @@ func TestDestorySessionCookie(t *testing.T) {
 	if err != nil {
 		t.Fatal("session start error")
 	}
-	if newSession.SessionID() == session.SessionID() {
+	if newSession.SessionID(nil) == session.SessionID(nil) {
 		t.Fatal("after destroy session and reqeust again ,get cookie session id is same.")
 	}
 }

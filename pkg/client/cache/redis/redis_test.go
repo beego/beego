@@ -129,7 +129,7 @@ func TestCache_Scan(t *testing.T) {
 		t.Error("init err")
 	}
 	// insert all
-	for i := 0; i < 10000; i++ {
+	for i := 0; i < 100; i++ {
 		if err = bm.Put(fmt.Sprintf("astaxie%d", i), fmt.Sprintf("author%d", i), timeoutDuration); err != nil {
 			t.Error("set Error", err)
 		}
@@ -141,7 +141,7 @@ func TestCache_Scan(t *testing.T) {
 		t.Error("scan Error", err)
 	}
 
-	assert.Equal(t, 10000, len(keys), "scan all error")
+	assert.Equal(t, 100, len(keys), "scan all error")
 
 	// clear all
 	if err = bm.ClearAll(); err != nil {
