@@ -26,7 +26,7 @@
 //
 //  cnf, err := config.NewConfig("xml", "config.xml")
 //
-//More docs http://beego.me/docs/module/config.md
+// More docs http://beego.me/docs/module/config.md
 package xml
 
 import (
@@ -40,7 +40,11 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/mitchellh/mapstructure"
+
 	"github.com/astaxie/beego/pkg/infrastructure/config"
+	"github.com/astaxie/beego/pkg/infrastructure/logs"
+
 	"github.com/beego/x2j"
 )
 
@@ -75,9 +79,51 @@ func (xc *Config) ParseData(data []byte) (config.Configer, error) {
 
 // ConfigContainer is a Config which represents the xml configuration.
 type ConfigContainer struct {
-	config.BaseConfiger
 	data map[string]interface{}
 	sync.Mutex
+}
+
+// Unmarshaler is a little be inconvenient since the xml library doesn't know type.
+// So when you use
+// <id>1</id>
+// The "1" is a string, not int
+func (c *ConfigContainer) Unmarshaler(ctx context.Context, prefix string, obj interface{}, opt ...config.DecodeOption) error {
+	sub, err := c.sub(ctx, prefix)
+	if err != nil {
+		return err
+	}
+	return mapstructure.Decode(sub, obj)
+}
+
+func (c *ConfigContainer) Sub(ctx context.Context, key string) (config.Configer, error) {
+	sub, err := c.sub(ctx, key)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ConfigContainer{
+		data: sub,
+	}, nil
+
+}
+
+func (c *ConfigContainer) sub(ctx context.Context, key string) (map[string]interface{}, error) {
+	if key == "" {
+		return c.data, nil
+	}
+	value, ok := c.data[key]
+	if !ok {
+		return nil, errors.New(fmt.Sprintf("the key is not found: %s", key))
+	}
+	res, ok := value.(map[string]interface{})
+	if !ok {
+		return nil, errors.New(fmt.Sprintf("the value of this key is not a structure: %s", key))
+	}
+	return res, nil
+}
+
+func (c *ConfigContainer) OnChange(ctx context.Context, key string, fn func(value string)) {
+	logs.Warn("Unsupported operation")
 }
 
 // Bool returns the boolean value for a given key.
@@ -155,7 +201,7 @@ func (c *ConfigContainer) String(ctx context.Context, key string) (string, error
 // DefaultString returns the string value for a given key.
 // if err != nil return defaultVal
 func (c *ConfigContainer) DefaultString(ctx context.Context, key string, defaultVal string) string {
-	v, err := c.String(nil, key)
+	v, err := c.String(ctx, key)
 	if v == "" || err != nil {
 		return defaultVal
 	}
