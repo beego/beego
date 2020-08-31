@@ -15,9 +15,12 @@
 package xml
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/astaxie/beego/pkg/infrastructure/config"
 )
@@ -120,8 +123,36 @@ func TestXML(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	res, _ := xmlconf.String(nil, "name")
+	res, _ := xmlconf.String(context.Background(), "name")
 	if res != "astaxie" {
 		t.Fatal("get name error")
 	}
+
+	sub, err := xmlconf.Sub(context.Background(), "mysection")
+	assert.Nil(t, err)
+	assert.NotNil(t, sub)
+	name, err := sub.String(context.Background(), "name")
+	assert.Nil(t, err)
+	assert.Equal(t, "MySection", name)
+
+	id, err := sub.Int(context.Background(), "id")
+	assert.Nil(t, err)
+	assert.Equal(t, 1, id)
+
+	sec := &Section{}
+
+	err = sub.Unmarshaler(context.Background(), "", sec)
+	assert.Nil(t, err)
+	assert.Equal(t, "MySection", sec.Name)
+
+	sec = &Section{}
+
+	err = xmlconf.Unmarshaler(context.Background(), "mysection", sec)
+	assert.Nil(t, err)
+	assert.Equal(t, "MySection", sec.Name)
+
+}
+
+type Section struct {
+	Name string `xml:"name"`
 }
