@@ -25,7 +25,10 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/mitchellh/mapstructure"
+
 	"github.com/astaxie/beego/pkg/infrastructure/config"
+	"github.com/astaxie/beego/pkg/infrastructure/logs"
 )
 
 // JSONConfig is a json config parser and implements Config interface.
@@ -70,9 +73,46 @@ func (js *JSONConfig) ParseData(data []byte) (config.Configer, error) {
 // JSONConfigContainer is a config which represents the json configuration.
 // Only when get value, support key as section:name type.
 type JSONConfigContainer struct {
-	config.BaseConfiger
 	data map[string]interface{}
 	sync.RWMutex
+}
+
+func (c *JSONConfigContainer) Unmarshaler(ctx context.Context, prefix string, obj interface{}, opt ...config.DecodeOption) error {
+	sub, err := c.sub(ctx, prefix)
+	if err != nil {
+		return err
+	}
+	return mapstructure.Decode(sub, obj)
+}
+
+func (c *JSONConfigContainer) Sub(ctx context.Context, key string) (config.Configer, error) {
+	sub, err := c.sub(ctx, key)
+	if err != nil {
+		return nil, err
+	}
+	return &JSONConfigContainer{
+		data: sub,
+	}, nil
+}
+
+func (c *JSONConfigContainer) sub(ctx context.Context, key string) (map[string]interface{}, error) {
+	if key == "" {
+		return c.data, nil
+	}
+	value, ok := c.data[key]
+	if !ok {
+		return nil, errors.New(fmt.Sprintf("key is not found: %s", key))
+	}
+
+	res, ok := value.(map[string]interface{})
+	if !ok {
+		return nil, errors.New(fmt.Sprintf("the type of value is invalid, key: %s", key))
+	}
+	return res, nil
+}
+
+func (c *JSONConfigContainer) OnChange(ctx context.Context, key string, fn func(value string)) {
+	logs.Warn("unsupported operation")
 }
 
 // Bool returns the boolean value for a given key.
