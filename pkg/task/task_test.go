@@ -26,7 +26,7 @@ import (
 
 func TestParse(t *testing.T) {
 	tk := NewTask("taska", "0/30 * * * * *", func() error { fmt.Println("hello world"); return nil })
-	err := tk.Run()
+	err := tk.Run(nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -65,7 +65,7 @@ func TestTask_Run(t *testing.T) {
 	}
 	tk := NewTask("taska", "0/30 * * * * *", task)
 	for i := 0; i < 200; i++ {
-		e := tk.Run()
+		e := tk.Run(nil)
 		assert.NotNil(t, e)
 	}
 
