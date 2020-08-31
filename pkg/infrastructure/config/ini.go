@@ -66,6 +66,10 @@ func (ini *IniConfig) parseData(dir string, data []byte) (*IniConfigContainer, e
 		keyComment:     make(map[string]string),
 		RWMutex:        sync.RWMutex{},
 	}
+
+	cfg.BaseConfiger = NewBaseConfiger(func(ctx context.Context, key string) (string, error) {
+		return cfg.getdata(key), nil
+	})
 	cfg.Lock()
 	defer cfg.Unlock()
 
