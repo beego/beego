@@ -15,9 +15,12 @@
 package json
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/astaxie/beego/pkg/infrastructure/config"
 )
@@ -223,4 +226,27 @@ func TestJson(t *testing.T) {
 	if !jsonconf.DefaultBool(nil, "unknown", true) {
 		t.Error("unknown keys with default value wrong")
 	}
+
+	sub, err := jsonconf.Sub(context.Background(), "database")
+	assert.Nil(t, err)
+	assert.NotNil(t, sub)
+
+	sub, err = sub.Sub(context.Background(), "conns")
+	assert.Nil(t, err)
+
+	maxCon, _ := sub.Int(context.Background(), "maxconnection")
+	assert.Equal(t, 12, maxCon)
+
+	dbCfg := &DatabaseConfig{}
+	err = sub.Unmarshaler(context.Background(), "", dbCfg)
+	assert.Nil(t, err)
+	assert.Equal(t, 12, dbCfg.MaxConnection)
+	assert.True(t, dbCfg.Autoconnect)
+	assert.Equal(t, "info", dbCfg.Connectioninfo)
+}
+
+type DatabaseConfig struct {
+	MaxConnection  int    `json:"maxconnection"`
+	Autoconnect    bool   `json:"autoconnect"`
+	Connectioninfo string `json:"connectioninfo"`
 }
