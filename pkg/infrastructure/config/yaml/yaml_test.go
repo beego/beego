@@ -15,9 +15,12 @@
 package yaml
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/astaxie/beego/pkg/infrastructure/config"
 )
@@ -37,6 +40,9 @@ func TestYaml(t *testing.T) {
 "path1": ${GOPATH}
 "path2": ${GOPATH||/home/go}
 "empty": "" 
+"user":
+  "name": "tom"
+  "age": 13
 `
 
 		keyValue = map[string]interface{}{
@@ -114,4 +120,33 @@ func TestYaml(t *testing.T) {
 		t.Fatal("get name error")
 	}
 
+	sub, err := yamlconf.Sub(context.Background(), "user")
+	assert.Nil(t, err)
+	assert.NotNil(t, sub)
+	name, err := sub.String(context.Background(), "name")
+	assert.Nil(t, err)
+	assert.Equal(t, "tom", name)
+
+	age, err := sub.Int(context.Background(), "age")
+	assert.Nil(t, err)
+	assert.Equal(t, 13, age)
+
+	user := &User{}
+
+	err = sub.Unmarshaler(context.Background(), "", user)
+	assert.Nil(t, err)
+	assert.Equal(t, "tom", user.Name)
+	assert.Equal(t, 13, user.Age)
+
+	user = &User{}
+
+	err = yamlconf.Unmarshaler(context.Background(), "user", user)
+	assert.Nil(t, err)
+	assert.Equal(t, "tom", user.Name)
+	assert.Equal(t, 13, user.Age)
+}
+
+type User struct {
+	Name string `yaml:"name"`
+	Age  int    `yaml:"age"`
 }
