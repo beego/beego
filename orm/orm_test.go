@@ -822,7 +822,7 @@ func TestOperators(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
 
-	if dORM.Driver().Name() == "mysql" {
+	if IsMysql {
 		// Now only mysql support `strictexact`
 		num, err = qs.Filter("user_name__strictexact", "Slene").Count()
 		throwFail(t, err)
