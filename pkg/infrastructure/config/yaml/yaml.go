@@ -42,8 +42,10 @@ import (
 	"sync"
 
 	"github.com/beego/goyaml2"
+	"gopkg.in/yaml.v2"
 
 	"github.com/astaxie/beego/pkg/infrastructure/config"
+	"github.com/astaxie/beego/pkg/infrastructure/logs"
 )
 
 // Config is a yaml config parser and implements Config interface.
@@ -120,9 +122,59 @@ func parseYML(buf []byte) (cnf map[string]interface{}, err error) {
 
 // ConfigContainer is a config which represents the yaml configuration.
 type ConfigContainer struct {
-	config.BaseConfiger
 	data map[string]interface{}
 	sync.RWMutex
+}
+
+// Unmarshaler is similar to Sub
+func (c *ConfigContainer) Unmarshaler(ctx context.Context, prefix string, obj interface{}, opt ...config.DecodeOption) error {
+	sub, err := c.sub(ctx, prefix)
+	if err != nil {
+		return err
+	}
+
+	bytes, err := yaml.Marshal(sub)
+	if err != nil {
+		return err
+	}
+	return yaml.Unmarshal(bytes, obj)
+}
+
+func (c *ConfigContainer) Sub(ctx context.Context, key string) (config.Configer, error) {
+	sub, err := c.sub(ctx, key)
+	if err != nil {
+		return nil, err
+	}
+	return &ConfigContainer{
+		data: sub,
+	}, nil
+}
+
+func (c *ConfigContainer) sub(ctx context.Context, key string) (map[string]interface{}, error) {
+	tmpData := c.data
+	keys := strings.Split(key, ".")
+	for idx, k := range keys {
+		if v, ok := tmpData[k]; ok {
+			switch v.(type) {
+			case map[string]interface{}:
+				{
+					tmpData = v.(map[string]interface{})
+					if idx == len(keys)-1 {
+						return tmpData, nil
+					}
+				}
+			default:
+				return nil, errors.New(fmt.Sprintf("the key is invalid: %s", key))
+			}
+		}
+	}
+
+	return tmpData, nil
+}
+
+func (c *ConfigContainer) OnChange(ctx context.Context, key string, fn func(value string)) {
+	// do nothing
+	logs.Warn("Unsupported operation: OnChange")
 }
 
 // Bool returns the boolean value for a given key.
@@ -291,7 +343,7 @@ func (c *ConfigContainer) getData(key string) (interface{}, error) {
 	c.RLock()
 	defer c.RUnlock()
 
-	keys := strings.Split(key, ".")
+	keys := strings.Split(c.key(key), ".")
 	tmpData := c.data
 	for idx, k := range keys {
 		if v, ok := tmpData[k]; ok {
@@ -312,6 +364,10 @@ func (c *ConfigContainer) getData(key string) (interface{}, error) {
 		}
 	}
 	return nil, fmt.Errorf("not exist key %q", key)
+}
+
+func (c *ConfigContainer) key(key string) string {
+	return key
 }
 
 func init() {
