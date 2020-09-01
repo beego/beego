@@ -99,13 +99,17 @@ func (d *commandSyncDb) Parse(args []string) {
 // Run orm line command.
 func (d *commandSyncDb) Run() error {
 	var drops []string
+	var err error
 	if d.force {
-		drops = getDbDropSQL(d.al)
+		drops, err = modelCache.getDbDropSQL(d.al)
+		if err != nil {
+			return err
+		}
 	}
 
 	db := d.al.DB
 
-	if d.force {
+	if d.force && len(drops) > 0 {
 		for i, mi := range modelCache.allOrdered() {
 			query := drops[i]
 			if !d.noInfo {
@@ -124,7 +128,10 @@ func (d *commandSyncDb) Run() error {
 		}
 	}
 
-	sqls, indexes := getDbCreateSQL(d.al)
+	createQueries, indexes, err := modelCache.getDbCreateSQL(d.al)
+	if err != nil {
+		return err
+	}
 
 	tables, err := d.al.DbBaser.GetTables(db)
 	if err != nil {
@@ -201,7 +208,7 @@ func (d *commandSyncDb) Run() error {
 			fmt.Printf("create table `%s` \n", mi.table)
 		}
 
-		queries := []string{sqls[i]}
+		queries := []string{createQueries[i]}
 		for _, idx := range indexes[mi.table] {
 			queries = append(queries, idx.SQL)
 		}
@@ -245,10 +252,13 @@ func (d *commandSQLAll) Parse(args []string) {
 
 // Run orm line command.
 func (d *commandSQLAll) Run() error {
-	sqls, indexes := getDbCreateSQL(d.al)
+	createQueries, indexes, err := modelCache.getDbCreateSQL(d.al)
+	if err != nil {
+		return err
+	}
 	var all []string
 	for i, mi := range modelCache.allOrdered() {
-		queries := []string{sqls[i]}
+		queries := []string{createQueries[i]}
 		for _, idx := range indexes[mi.table] {
 			queries = append(queries, idx.SQL)
 		}

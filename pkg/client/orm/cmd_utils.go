@@ -16,7 +16,6 @@ package orm
 
 import (
 	"fmt"
-	"os"
 	"strings"
 )
 
@@ -24,21 +23,6 @@ type dbIndex struct {
 	Table string
 	Name  string
 	SQL   string
-}
-
-// create database drop sql.
-func getDbDropSQL(al *alias) (sqls []string) {
-	if len(modelCache.cache) == 0 {
-		fmt.Println("no Model found, need register your model")
-		os.Exit(2)
-	}
-
-	Q := al.DbBaser.TableQuote()
-
-	for _, mi := range modelCache.allOrdered() {
-		sqls = append(sqls, fmt.Sprintf(`DROP TABLE IF EXISTS %s%s%s`, Q, mi.table, Q))
-	}
-	return sqls
 }
 
 // get database column type string.
@@ -138,146 +122,6 @@ func getColumnAddQuery(al *alias, fi *fieldInfo) string {
 		Q, fi.column, Q,
 		typ, getColumnDefault(fi),
 	)
-}
-
-// create database creation string.
-func getDbCreateSQL(al *alias) (sqls []string, tableIndexes map[string][]dbIndex) {
-	if len(modelCache.cache) == 0 {
-		fmt.Println("no Model found, need register your model")
-		os.Exit(2)
-	}
-
-	Q := al.DbBaser.TableQuote()
-	T := al.DbBaser.DbTypes()
-	sep := fmt.Sprintf("%s, %s", Q, Q)
-
-	tableIndexes = make(map[string][]dbIndex)
-
-	for _, mi := range modelCache.allOrdered() {
-		sql := fmt.Sprintf("-- %s\n", strings.Repeat("-", 50))
-		sql += fmt.Sprintf("--  Table Structure for `%s`\n", mi.fullName)
-		sql += fmt.Sprintf("-- %s\n", strings.Repeat("-", 50))
-
-		sql += fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s%s%s (\n", Q, mi.table, Q)
-
-		columns := make([]string, 0, len(mi.fields.fieldsDB))
-
-		sqlIndexes := [][]string{}
-
-		for _, fi := range mi.fields.fieldsDB {
-
-			column := fmt.Sprintf("    %s%s%s ", Q, fi.column, Q)
-			col := getColumnTyp(al, fi)
-
-			if fi.auto {
-				switch al.Driver {
-				case DRSqlite, DRPostgres:
-					column += T["auto"]
-				default:
-					column += col + " " + T["auto"]
-				}
-			} else if fi.pk {
-				column += col + " " + T["pk"]
-			} else {
-				column += col
-
-				if !fi.null {
-					column += " " + "NOT NULL"
-				}
-
-				//if fi.initial.String() != "" {
-				//	column += " DEFAULT " + fi.initial.String()
-				//}
-
-				// Append attribute DEFAULT
-				column += getColumnDefault(fi)
-
-				if fi.unique {
-					column += " " + "UNIQUE"
-				}
-
-				if fi.index {
-					sqlIndexes = append(sqlIndexes, []string{fi.column})
-				}
-			}
-
-			if strings.Contains(column, "%COL%") {
-				column = strings.Replace(column, "%COL%", fi.column, -1)
-			}
-
-			if fi.description != "" && al.Driver != DRSqlite {
-				column += " " + fmt.Sprintf("COMMENT '%s'", fi.description)
-			}
-
-			columns = append(columns, column)
-		}
-
-		if mi.model != nil {
-			allnames := getTableUnique(mi.addrField)
-			if !mi.manual && len(mi.uniques) > 0 {
-				allnames = append(allnames, mi.uniques)
-			}
-			for _, names := range allnames {
-				cols := make([]string, 0, len(names))
-				for _, name := range names {
-					if fi, ok := mi.fields.GetByAny(name); ok && fi.dbcol {
-						cols = append(cols, fi.column)
-					} else {
-						panic(fmt.Errorf("cannot found column `%s` when parse UNIQUE in `%s.TableUnique`", name, mi.fullName))
-					}
-				}
-				column := fmt.Sprintf("    UNIQUE (%s%s%s)", Q, strings.Join(cols, sep), Q)
-				columns = append(columns, column)
-			}
-		}
-
-		sql += strings.Join(columns, ",\n")
-		sql += "\n)"
-
-		if al.Driver == DRMySQL {
-			var engine string
-			if mi.model != nil {
-				engine = getTableEngine(mi.addrField)
-			}
-			if engine == "" {
-				engine = al.Engine
-			}
-			sql += " ENGINE=" + engine
-		}
-
-		sql += ";"
-		sqls = append(sqls, sql)
-
-		if mi.model != nil {
-			for _, names := range getTableIndex(mi.addrField) {
-				cols := make([]string, 0, len(names))
-				for _, name := range names {
-					if fi, ok := mi.fields.GetByAny(name); ok && fi.dbcol {
-						cols = append(cols, fi.column)
-					} else {
-						panic(fmt.Errorf("cannot found column `%s` when parse INDEX in `%s.TableIndex`", name, mi.fullName))
-					}
-				}
-				sqlIndexes = append(sqlIndexes, cols)
-			}
-		}
-
-		for _, names := range sqlIndexes {
-			name := mi.table + "_" + strings.Join(names, "_")
-			cols := strings.Join(names, sep)
-			sql := fmt.Sprintf("CREATE INDEX %s%s%s ON %s%s%s (%s%s%s);", Q, name, Q, Q, mi.table, Q, Q, cols, Q)
-
-			index := dbIndex{}
-			index.Table = mi.table
-			index.Name = name
-			index.SQL = sql
-
-			tableIndexes[mi.table] = append(tableIndexes[mi.table], index)
-		}
-
-	}
-
-	return
 }
 
 // Get string value for the attribute "DEFAULT" for the CREATE, ALTER commands
