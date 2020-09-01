@@ -32,7 +32,7 @@ var _ TxOrmer = new(filterOrmDecorator)
 
 type filterOrmDecorator struct {
 	ormer
-	modelRegister
+	modelCacheHandler
 	TxBeginner
 	TxCommitter
 
@@ -44,15 +44,15 @@ type filterOrmDecorator struct {
 }
 
 func (f *filterOrmDecorator) RegisterModels(models ...interface{}) (err error) {
-	return f.modelRegister.RegisterModels(models...)
+	return f.modelCacheHandler.RegisterModels(models...)
 }
 
 func (f *filterOrmDecorator) RegisterModelsWithPrefix(prefix string, models ...interface{}) (err error) {
-	return f.modelRegister.RegisterModelsWithPrefix(prefix, models...)
+	return f.modelCacheHandler.RegisterModelsWithPrefix(prefix, models...)
 }
 
 func (f *filterOrmDecorator) RegisterModelsWithSuffix(suffix string, models ...interface{}) (err error) {
-	return f.modelRegister.RegisterModelsWithSuffix(suffix, models...)
+	return f.modelCacheHandler.RegisterModelsWithSuffix(suffix, models...)
 }
 
 func NewFilterOrmDecorator(delegate Ormer, filterChains ...FilterChain) Ormer {
