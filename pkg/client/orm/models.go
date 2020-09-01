@@ -33,13 +33,10 @@ const (
 )
 
 var (
-	modelCache = &_modelCache{
-		cache:           make(map[string]*modelInfo),
-		cacheByFullName: make(map[string]*modelInfo),
-	}
+	modelCache = NewModelCacheHandler()
 )
 
-type modelRegister interface {
+type modelCacheHandler interface {
 	//RegisterModels register models without prefix or suffix
 	RegisterModels(models ...interface{}) (err error)
 	//RegisterModelsWithPrefix register models with prefix
@@ -57,7 +54,15 @@ type _modelCache struct {
 	done            bool
 }
 
-var _ modelRegister = new(_modelCache)
+//NewModelCacheHandler generator of _modelCache
+func NewModelCacheHandler() *_modelCache {
+	return &_modelCache{
+		cache:           make(map[string]*modelInfo),
+		cacheByFullName: make(map[string]*modelInfo),
+	}
+}
+
+var _ modelCacheHandler = new(_modelCache)
 
 func (mc *_modelCache) RegisterModels(models ...interface{}) (err error) {
 	return mc.register(``, true, models...)

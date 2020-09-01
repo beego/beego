@@ -498,21 +498,21 @@ func (o *ormBase) DBStats() *sql.DBStats {
 
 type orm struct {
 	ormBase
-	modelRegister
+	modelCacheHandler
 }
 
 var _ Ormer = new(orm)
 
 func (o *orm) RegisterModels(models ...interface{}) (err error) {
-	return o.modelRegister.RegisterModels(models)
+	return o.modelCacheHandler.RegisterModels(models)
 }
 
 func (o *orm) RegisterModelsWithPrefix(prefix string, models ...interface{}) (err error) {
-	return o.modelRegister.RegisterModelsWithPrefix(prefix, models...)
+	return o.modelCacheHandler.RegisterModelsWithPrefix(prefix, models...)
 }
 
 func (o *orm) RegisterModelsWithSuffix(suffix string, models ...interface{}) (err error) {
-	return o.modelRegister.RegisterModelsWithSuffix(suffix, models...)
+	return o.modelCacheHandler.RegisterModelsWithSuffix(suffix, models...)
 }
 
 func (o *orm) Begin() (TxOrmer, error) {
@@ -634,6 +634,8 @@ func newDBWithAlias(al *alias) Ormer {
 	} else {
 		o.db = al.DB
 	}
+
+	o.modelCacheHandler = NewModelCacheHandler()
 
 	if len(globalFilterChains) > 0 {
 		return NewFilterOrmDecorator(o, globalFilterChains...)

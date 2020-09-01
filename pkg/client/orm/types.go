@@ -214,7 +214,7 @@ type ormer interface {
 
 type Ormer interface {
 	ormer
-	modelRegister
+	modelCacheHandler
 	TxBeginner
 }
 
