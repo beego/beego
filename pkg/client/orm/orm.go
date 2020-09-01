@@ -498,9 +498,22 @@ func (o *ormBase) DBStats() *sql.DBStats {
 
 type orm struct {
 	ormBase
+	modelRegister
 }
 
 var _ Ormer = new(orm)
+
+func (o *orm) RegisterModels(models ...interface{}) (err error) {
+	return o.modelRegister.RegisterModels(models)
+}
+
+func (o *orm) RegisterModelsWithPrefix(prefix string, models ...interface{}) (err error) {
+	return o.modelRegister.RegisterModelsWithPrefix(prefix, models...)
+}
+
+func (o *orm) RegisterModelsWithSuffix(suffix string, models ...interface{}) (err error) {
+	return o.modelRegister.RegisterModelsWithSuffix(suffix, models...)
+}
 
 func (o *orm) Begin() (TxOrmer, error) {
 	return o.BeginWithCtx(context.Background())

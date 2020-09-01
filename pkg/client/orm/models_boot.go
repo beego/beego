@@ -14,15 +14,8 @@
 
 package orm
 
-import (
-	"fmt"
-)
-
 // RegisterModel register models
 func RegisterModel(models ...interface{}) {
-	if modelCache.done {
-		panic(fmt.Errorf("RegisterModel must be run before BootStrap"))
-	}
 	RegisterModelWithPrefix("", models...)
 }
 
