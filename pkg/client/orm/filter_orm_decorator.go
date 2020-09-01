@@ -32,6 +32,7 @@ var _ TxOrmer = new(filterOrmDecorator)
 
 type filterOrmDecorator struct {
 	ormer
+	modelRegister
 	TxBeginner
 	TxCommitter
 
@@ -40,6 +41,18 @@ type filterOrmDecorator struct {
 	insideTx    bool
 	txStartTime time.Time
 	txName      string
+}
+
+func (f *filterOrmDecorator) RegisterModels(models ...interface{}) (err error) {
+	return f.modelRegister.RegisterModels(models...)
+}
+
+func (f *filterOrmDecorator) RegisterModelsWithPrefix(prefix string, models ...interface{}) (err error) {
+	return f.modelRegister.RegisterModelsWithPrefix(prefix, models...)
+}
+
+func (f *filterOrmDecorator) RegisterModelsWithSuffix(suffix string, models ...interface{}) (err error) {
+	return f.modelRegister.RegisterModelsWithSuffix(suffix, models...)
 }
 
 func NewFilterOrmDecorator(delegate Ormer, filterChains ...FilterChain) Ormer {
