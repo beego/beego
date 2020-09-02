@@ -199,7 +199,7 @@ func (app *App) Run(mws ...MiddleWare) {
 				pool.AppendCertsFromPEM(data)
 				app.Server.TLSConfig = &tls.Config{
 					ClientCAs:  pool,
-					ClientAuth: tls.RequireAndVerifyClientCert,
+					ClientAuth: tls.ClientAuthType(BConfig.Listen.ClientAuth),
 				}
 			}
 			if err := app.Server.ListenAndServeTLS(BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile); err != nil {
