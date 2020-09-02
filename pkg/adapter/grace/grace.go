@@ -66,7 +66,6 @@ const (
 
 var (
 
-
 	// DefaultReadTimeOut is the HTTP read timeout
 	DefaultReadTimeOut time.Duration
 	// DefaultWriteTimeOut is the HTTP Write timeout
@@ -75,7 +74,6 @@ var (
 	DefaultMaxHeaderBytes int
 	// DefaultTimeout is the shutdown server's timeout. default is 60s
 	DefaultTimeout = grace.DefaultTimeout
-
 )
 
 // NewServer returns a new graceServer.
