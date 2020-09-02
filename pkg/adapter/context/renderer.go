@@ -6,4 +6,3 @@ import (
 
 // Renderer defines an http response renderer
 type Renderer context.Renderer
-
