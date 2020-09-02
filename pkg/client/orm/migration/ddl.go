@@ -31,7 +31,7 @@ type Unique struct {
 	Columns    []*Column
 }
 
-//Column struct defines a single column of a table
+// Column struct defines a single column of a table
 type Column struct {
 	Name     string
 	Inc      string
@@ -84,7 +84,7 @@ func (m *Migration) NewCol(name string) *Column {
 	return col
 }
 
-//PriCol creates a new primary column and attaches it to m struct
+// PriCol creates a new primary column and attaches it to m struct
 func (m *Migration) PriCol(name string) *Column {
 	col := &Column{Name: name}
 	m.AddColumns(col)
@@ -92,7 +92,7 @@ func (m *Migration) PriCol(name string) *Column {
 	return col
 }
 
-//UniCol creates / appends columns to specified unique key and attaches it to m struct
+// UniCol creates / appends columns to specified unique key and attaches it to m struct
 func (m *Migration) UniCol(uni, name string) *Column {
 	col := &Column{Name: name}
 	m.AddColumns(col)
@@ -114,7 +114,7 @@ func (m *Migration) UniCol(uni, name string) *Column {
 	return col
 }
 
-//ForeignCol creates a new foreign column and returns the instance of column
+// ForeignCol creates a new foreign column and returns the instance of column
 func (m *Migration) ForeignCol(colname, foreigncol, foreigntable string) (foreign *Foreign) {
 
 	foreign = &Foreign{ForeignColumn: foreigncol, ForeignTable: foreigntable}
@@ -123,25 +123,25 @@ func (m *Migration) ForeignCol(colname, foreigncol, foreigntable string) (foreig
 	return foreign
 }
 
-//SetOnDelete sets the on delete of foreign
+// SetOnDelete sets the on delete of foreign
 func (foreign *Foreign) SetOnDelete(del string) *Foreign {
 	foreign.OnDelete = "ON DELETE" + del
 	return foreign
 }
 
-//SetOnUpdate sets the on update of foreign
+// SetOnUpdate sets the on update of foreign
 func (foreign *Foreign) SetOnUpdate(update string) *Foreign {
 	foreign.OnUpdate = "ON UPDATE" + update
 	return foreign
 }
 
-//Remove marks the columns to be removed.
-//it allows reverse m to create the column.
+// Remove marks the columns to be removed.
+// it allows reverse m to create the column.
 func (c *Column) Remove() {
 	c.remove = true
 }
 
-//SetAuto enables auto_increment of column (can be used once)
+// SetAuto enables auto_increment of column (can be used once)
 func (c *Column) SetAuto(inc bool) *Column {
 	if inc {
 		c.Inc = "auto_increment"
@@ -149,7 +149,7 @@ func (c *Column) SetAuto(inc bool) *Column {
 	return c
 }
 
-//SetNullable sets the column to be null
+// SetNullable sets the column to be null
 func (c *Column) SetNullable(null bool) *Column {
 	if null {
 		c.Null = ""
@@ -160,13 +160,13 @@ func (c *Column) SetNullable(null bool) *Column {
 	return c
 }
 
-//SetDefault sets the default value, prepend with "DEFAULT "
+// SetDefault sets the default value, prepend with "DEFAULT "
 func (c *Column) SetDefault(def string) *Column {
 	c.Default = "DEFAULT " + def
 	return c
 }
 
-//SetUnsigned sets the column to be unsigned int
+// SetUnsigned sets the column to be unsigned int
 func (c *Column) SetUnsigned(unsign bool) *Column {
 	if unsign {
 		c.Unsign = "UNSIGNED"
@@ -174,13 +174,13 @@ func (c *Column) SetUnsigned(unsign bool) *Column {
 	return c
 }
 
-//SetDataType sets the dataType of the column
+// SetDataType sets the dataType of the column
 func (c *Column) SetDataType(dataType string) *Column {
 	c.DataType = dataType
 	return c
 }
 
-//SetOldNullable allows reverting to previous nullable on reverse ms
+// SetOldNullable allows reverting to previous nullable on reverse ms
 func (c *RenameColumn) SetOldNullable(null bool) *RenameColumn {
 	if null {
 		c.OldNull = ""
@@ -191,13 +191,13 @@ func (c *RenameColumn) SetOldNullable(null bool) *RenameColumn {
 	return c
 }
 
-//SetOldDefault allows reverting to previous default on reverse ms
+// SetOldDefault allows reverting to previous default on reverse ms
 func (c *RenameColumn) SetOldDefault(def string) *RenameColumn {
 	c.OldDefault = def
 	return c
 }
 
-//SetOldUnsigned allows reverting to previous unsgined on reverse ms
+// SetOldUnsigned allows reverting to previous unsgined on reverse ms
 func (c *RenameColumn) SetOldUnsigned(unsign bool) *RenameColumn {
 	if unsign {
 		c.OldUnsign = "UNSIGNED"
@@ -205,19 +205,19 @@ func (c *RenameColumn) SetOldUnsigned(unsign bool) *RenameColumn {
 	return c
 }
 
-//SetOldDataType allows reverting to previous datatype on reverse ms
+// SetOldDataType allows reverting to previous datatype on reverse ms
 func (c *RenameColumn) SetOldDataType(dataType string) *RenameColumn {
 	c.OldDataType = dataType
 	return c
 }
 
-//SetPrimary adds the columns to the primary key (can only be used any number of times in only one m)
+// SetPrimary adds the columns to the primary key (can only be used any number of times in only one m)
 func (c *Column) SetPrimary(m *Migration) *Column {
 	m.Primary = append(m.Primary, c)
 	return c
 }
 
-//AddColumnsToUnique adds the columns to Unique Struct
+// AddColumnsToUnique adds the columns to Unique Struct
 func (unique *Unique) AddColumnsToUnique(columns ...*Column) *Unique {
 
 	unique.Columns = append(unique.Columns, columns...)
@@ -225,7 +225,7 @@ func (unique *Unique) AddColumnsToUnique(columns ...*Column) *Unique {
 	return unique
 }
 
-//AddColumns adds columns to m struct
+// AddColumns adds columns to m struct
 func (m *Migration) AddColumns(columns ...*Column) *Migration {
 
 	m.Columns = append(m.Columns, columns...)
@@ -233,38 +233,38 @@ func (m *Migration) AddColumns(columns ...*Column) *Migration {
 	return m
 }
 
-//AddPrimary adds the column to primary in m struct
+// AddPrimary adds the column to primary in m struct
 func (m *Migration) AddPrimary(primary *Column) *Migration {
 	m.Primary = append(m.Primary, primary)
 	return m
 }
 
-//AddUnique adds the column to unique in m struct
+// AddUnique adds the column to unique in m struct
 func (m *Migration) AddUnique(unique *Unique) *Migration {
 	m.Uniques = append(m.Uniques, unique)
 	return m
 }
 
-//AddForeign adds the column to foreign in m struct
+// AddForeign adds the column to foreign in m struct
 func (m *Migration) AddForeign(foreign *Foreign) *Migration {
 	m.Foreigns = append(m.Foreigns, foreign)
 	return m
 }
 
-//AddIndex adds the column to index in m struct
+// AddIndex adds the column to index in m struct
 func (m *Migration) AddIndex(index *Index) *Migration {
 	m.Indexes = append(m.Indexes, index)
 	return m
 }
 
-//RenameColumn allows renaming of columns
+// RenameColumn allows renaming of columns
 func (m *Migration) RenameColumn(from, to string) *RenameColumn {
 	rename := &RenameColumn{OldName: from, NewName: to}
 	m.Renames = append(m.Renames, rename)
 	return rename
 }
 
-//GetSQL returns the generated sql depending on ModifyType
+// GetSQL returns the generated sql depending on ModifyType
 func (m *Migration) GetSQL() (sql string) {
 	sql = ""
 	switch m.ModifyType {
