@@ -28,7 +28,7 @@ func NewFlash() *FlashData {
 
 // Set message to flash
 func (fd *FlashData) Set(key string, msg string, args ...interface{}) {
-	(*web.FlashData)(fd).Set(key, msg, args)
+	(*web.FlashData)(fd).Set(key, msg, args...)
 }
 
 // Success writes success message to flash.

@@ -255,7 +255,8 @@ func Handler(rootpath string, h http.Handler, options ...interface{}) *App {
 // beego.BeforeStatic, beego.BeforeRouter, beego.BeforeExec, beego.AfterExec and beego.FinishRouter.
 // The bool params is for setting the returnOnOutput value (false allows multiple filters to execute)
 func InsertFilter(pattern string, pos int, filter FilterFunc, params ...bool) *App {
+	opts := oldToNewFilterOpts(params)
 	return (*App)(web.InsertFilter(pattern, pos, func(ctx *context.Context) {
 		filter((*context2.Context)(ctx))
-	}, params...))
+	}, opts...))
 }
