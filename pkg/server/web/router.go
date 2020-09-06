@@ -148,7 +148,7 @@ func NewControllerRegister() *ControllerRegister {
 			},
 		},
 	}
-	res.chainRoot = newFilterRouter("/*", false, res.serveHttp)
+	res.chainRoot = newFilterRouter("/*", res.serveHttp, WithCaseSensitive(false))
 	return res
 }
 
@@ -262,7 +262,7 @@ func (p *ControllerRegister) Include(cList ...ControllerInterface) {
 		if comm, ok := GlobalControllerRouter[key]; ok {
 			for _, a := range comm {
 				for _, f := range a.Filters {
-					p.InsertFilter(f.Pattern, f.Pos, f.Filter, f.ReturnOnOutput, f.ResetParams)
+					p.InsertFilter(f.Pattern, f.Pos, f.Filter, WithReturnOnOutput(f.ReturnOnOutput), WithResetParams(f.ResetParams))
 				}
 
 				p.addWithMethodParams(a.Router, c, a.MethodParams, strings.Join(a.AllowHTTPMethods, ",")+":"+a.Method)
@@ -452,8 +452,9 @@ func (p *ControllerRegister) AddAutoPrefix(prefix string, c ControllerInterface)
 // params is for:
 //   1. setting the returnOnOutput value (false allows multiple filters to execute)
 //   2. determining whether or not params need to be reset.
-func (p *ControllerRegister) InsertFilter(pattern string, pos int, filter FilterFunc, params ...bool) error {
-	mr := newFilterRouter(pattern, BConfig.RouterCaseSensitive, filter, params...)
+func (p *ControllerRegister) InsertFilter(pattern string, pos int, filter FilterFunc, opts ...FilterOpt) error {
+	opts = append(opts, WithCaseSensitive(BConfig.RouterCaseSensitive))
+	mr := newFilterRouter(pattern, filter, opts...)
 	return p.insertFilterRouter(pos, mr)
 }
 
@@ -468,10 +469,11 @@ func (p *ControllerRegister) InsertFilter(pattern string, pos int, filter Filter
 //           // do something
 //     }
 // }
-func (p *ControllerRegister) InsertFilterChain(pattern string, chain FilterChain, params ...bool) {
+func (p *ControllerRegister) InsertFilterChain(pattern string, chain FilterChain, opts ...FilterOpt) {
 	root := p.chainRoot
 	filterFunc := chain(root.filterFunc)
-	p.chainRoot = newFilterRouter(pattern, BConfig.RouterCaseSensitive, filterFunc, params...)
+	opts = append(opts, WithCaseSensitive(BConfig.RouterCaseSensitive))
+	p.chainRoot = newFilterRouter(pattern, filterFunc, opts...)
 	p.chainRoot.next = root
 
 }

@@ -83,11 +83,6 @@ func APIBasicAuth(appid, appkey string) web.FilterFunc {
 	return APISecretAuth(ft, 300)
 }
 
-// APIBasicAuth calls APIBasicAuth for previous callers
-func APIBaiscAuth(appid, appkey string) web.FilterFunc {
-	return APIBasicAuth(appid, appkey)
-}
-
 // APISecretAuth uses AppIdToAppSecret verify and
 func APISecretAuth(f AppIDToAppSecret, timeout int) web.FilterFunc {
 	return func(ctx *context.Context) {

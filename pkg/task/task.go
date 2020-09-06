@@ -83,7 +83,7 @@ type Schedule struct {
 }
 
 // TaskFunc task func type
-type TaskFunc func() error
+type TaskFunc func(ctx context.Context) error
 
 // Tasker task interface
 type Tasker interface {
@@ -148,8 +148,8 @@ func (t *Task) GetStatus(context.Context) string {
 }
 
 // Run run all tasks
-func (t *Task) Run(context.Context) error {
-	err := t.DoFunc()
+func (t *Task) Run(ctx context.Context) error {
+	err := t.DoFunc(ctx)
 	if err != nil {
 		index := t.errCnt % t.ErrLimit
 		t.Errlist[index] = &taskerr{t: t.Next, errinfo: err.Error()}
