@@ -199,7 +199,7 @@ func (app *App) Run(mws ...MiddleWare) {
 				pool.AppendCertsFromPEM(data)
 				app.Server.TLSConfig = &tls.Config{
 					ClientCAs:  pool,
-					ClientAuth: tls.RequireAndVerifyClientCert,
+					ClientAuth: tls.ClientAuthType(BConfig.Listen.ClientAuth),
 				}
 			}
 			if err := app.Server.ListenAndServeTLS(BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile); err != nil {
@@ -492,15 +492,15 @@ func Handler(rootpath string, h http.Handler, options ...interface{}) *App {
 // The pos means action constant including
 // beego.BeforeStatic, beego.BeforeRouter, beego.BeforeExec, beego.AfterExec and beego.FinishRouter.
 // The bool params is for setting the returnOnOutput value (false allows multiple filters to execute)
-func InsertFilter(pattern string, pos int, filter FilterFunc, params ...bool) *App {
-	BeeApp.Handlers.InsertFilter(pattern, pos, filter, params...)
+func InsertFilter(pattern string, pos int, filter FilterFunc, opts ...FilterOpt) *App {
+	BeeApp.Handlers.InsertFilter(pattern, pos, filter, opts...)
 	return BeeApp
 }
 
 // InsertFilterChain adds a FilterFunc built by filterChain.
 // This filter will be executed before all filters.
 // the filter's behavior is like stack
-func InsertFilterChain(pattern string, filterChain FilterChain, params ...bool) *App {
-	BeeApp.Handlers.InsertFilterChain(pattern, filterChain, params...)
+func InsertFilterChain(pattern string, filterChain FilterChain, opts ...FilterOpt) *App {
+	BeeApp.Handlers.InsertFilterChain(pattern, filterChain, opts...)
 	return BeeApp
 }

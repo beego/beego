@@ -172,7 +172,7 @@ func (pder *CookieProvider) SessionAll(context.Context) int {
 }
 
 // SessionUpdate Implement method, no used.
-func (pder *CookieProvider) SessionUpdate(sid string) error {
+func (pder *CookieProvider) SessionUpdate(ctx context.Context, sid string) error {
 	return nil
 }
 

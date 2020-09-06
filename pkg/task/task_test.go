@@ -15,6 +15,7 @@
 package task
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"sync"
@@ -25,7 +26,10 @@ import (
 )
 
 func TestParse(t *testing.T) {
-	tk := NewTask("taska", "0/30 * * * * *", func() error { fmt.Println("hello world"); return nil })
+	tk := NewTask("taska", "0/30 * * * * *", func(ctx context.Context) error {
+		fmt.Println("hello world")
+		return nil
+	})
 	err := tk.Run(nil)
 	if err != nil {
 		t.Fatal(err)
@@ -39,9 +43,9 @@ func TestParse(t *testing.T) {
 func TestSpec(t *testing.T) {
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
-	tk1 := NewTask("tk1", "0 12 * * * *", func() error { fmt.Println("tk1"); return nil })
-	tk2 := NewTask("tk2", "0,10,20 * * * * *", func() error { fmt.Println("tk2"); wg.Done(); return nil })
-	tk3 := NewTask("tk3", "0 10 * * * *", func() error { fmt.Println("tk3"); wg.Done(); return nil })
+	tk1 := NewTask("tk1", "0 12 * * * *", func(ctx context.Context) error { fmt.Println("tk1"); return nil })
+	tk2 := NewTask("tk2", "0,10,20 * * * * *", func(ctx context.Context) error { fmt.Println("tk2"); wg.Done(); return nil })
+	tk3 := NewTask("tk3", "0 10 * * * *", func(ctx context.Context) error { fmt.Println("tk3"); wg.Done(); return nil })
 
 	AddTask("tk1", tk1)
 	AddTask("tk2", tk2)
@@ -58,7 +62,7 @@ func TestSpec(t *testing.T) {
 
 func TestTask_Run(t *testing.T) {
 	cnt := -1
-	task := func() error {
+	task := func(ctx context.Context) error {
 		cnt++
 		fmt.Printf("Hello, world! %d \n", cnt)
 		return errors.New(fmt.Sprintf("Hello, world! %d", cnt))
