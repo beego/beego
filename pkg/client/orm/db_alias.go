@@ -400,20 +400,45 @@ func newAliasWithDb(aliasName, driverName string, db *sql.DB, params ...utils.KV
 	detectTZ(al)
 
 	kvs.IfContains(hints.KeyMaxIdleConnections, func(value interface{}) {
-		if m, ok := value.(int); ok {
-			SetMaxIdleConns(al, m)
-		}
+		al.SetMaxIdleConns(value.(int))
 	}).IfContains(hints.KeyMaxOpenConnections, func(value interface{}) {
-		if m, ok := value.(int); ok {
-			SetMaxOpenConns(al, m)
-		}
+		al.SetMaxOpenConns(value.(int))
 	}).IfContains(hints.KeyConnMaxLifetime, func(value interface{}) {
-		if m, ok := value.(time.Duration); ok {
-			SetConnMaxLifetime(al, m)
-		}
+		al.SetConnMaxLifetime(value.(time.Duration))
 	})
 
 	return al, nil
+}
+
+// SetMaxIdleConns Change the max idle conns for *sql.DB, use specify database alias name
+// Deprecated you should not use this, we will remove it in the future
+func SetMaxIdleConns(aliasName string, maxIdleConns int) {
+	al := getDbAlias(aliasName)
+	al.SetMaxIdleConns(maxIdleConns)
+}
+
+// SetMaxOpenConns Change the max open conns for *sql.DB, use specify database alias name
+// Deprecated you should not use this, we will remove it in the future
+func SetMaxOpenConns(aliasName string, maxOpenConns int) {
+	al := getDbAlias(aliasName)
+	al.SetMaxIdleConns(maxOpenConns)
+}
+
+// SetMaxIdleConns Change the max idle conns for *sql.DB, use specify database alias name
+func (al *alias) SetMaxIdleConns(maxIdleConns int) {
+	al.MaxIdleConns = maxIdleConns
+	al.DB.DB.SetMaxIdleConns(maxIdleConns)
+}
+
+// SetMaxOpenConns Change the max open conns for *sql.DB, use specify database alias name
+func (al *alias) SetMaxOpenConns(maxOpenConns int) {
+	al.MaxOpenConns = maxOpenConns
+	al.DB.DB.SetMaxOpenConns(maxOpenConns)
+}
+
+func (al *alias) SetConnMaxLifetime(lifeTime time.Duration) {
+	al.ConnMaxLifetime = lifeTime
+	al.DB.DB.SetConnMaxLifetime(lifeTime)
 }
 
 // AddAliasWthDB add a aliasName for the drivename
@@ -474,23 +499,6 @@ func SetDataBaseTZ(aliasName string, tz *time.Location) error {
 		return fmt.Errorf("DataBase alias name `%s` not registered", aliasName)
 	}
 	return nil
-}
-
-// SetMaxIdleConns Change the max idle conns for *sql.DB, use specify database alias name
-func SetMaxIdleConns(al *alias, maxIdleConns int) {
-	al.MaxIdleConns = maxIdleConns
-	al.DB.DB.SetMaxIdleConns(maxIdleConns)
-}
-
-// SetMaxOpenConns Change the max open conns for *sql.DB, use specify database alias name
-func SetMaxOpenConns(al *alias, maxOpenConns int) {
-	al.MaxOpenConns = maxOpenConns
-	al.DB.DB.SetMaxOpenConns(maxOpenConns)
-}
-
-func SetConnMaxLifetime(al *alias, lifeTime time.Duration) {
-	al.ConnMaxLifetime = lifeTime
-	al.DB.DB.SetConnMaxLifetime(lifeTime)
 }
 
 // GetDB Get *sql.DB from registered database by db alias name.
