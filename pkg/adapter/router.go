@@ -249,6 +249,9 @@ func oldToNewFilterOpts(params []bool) []web.FilterOpt {
 	opts := make([]web.FilterOpt, 0, 4)
 	if len(params) > 0 {
 		opts = append(opts, web.WithReturnOnOutput(params[0]))
+	} else {
+		// the default value should be true
+		opts = append(opts, web.WithReturnOnOutput(true))
 	}
 	if len(params) > 1 {
 		opts = append(opts, web.WithResetParams(params[1]))

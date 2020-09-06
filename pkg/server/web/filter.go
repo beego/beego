@@ -45,13 +45,14 @@ type FilterRouter struct {
 //   2. determining whether or not params need to be reset.
 func newFilterRouter(pattern string, filter FilterFunc, opts ...FilterOpt) *FilterRouter {
 	mr := &FilterRouter{
-		tree:           NewTree(),
-		pattern:        pattern,
-		filterFunc:     filter,
-		returnOnOutput: true,
+		tree:       NewTree(),
+		pattern:    pattern,
+		filterFunc: filter,
 	}
 
-	fos := &filterOpts{}
+	fos := &filterOpts{
+		returnOnOutput: true,
+	}
 
 	for _, o := range opts {
 		o(fos)
