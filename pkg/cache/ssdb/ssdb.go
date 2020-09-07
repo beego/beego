@@ -228,5 +228,5 @@ func (rc *Cache) connectInit() error {
 }
 
 func init() {
-	cache.Register("ssdb", NewSsdbCache)
+	// cache.Register("ssdb", NewSsdbCache)
 }

@@ -30,14 +30,14 @@
 package memcache
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"strings"
 	"time"
 
-	"github.com/bradfitz/gomemcache/memcache"
-
 	"github.com/astaxie/beego/pkg/cache"
+	"github.com/bradfitz/gomemcache/memcache"
 )
 
 // Cache Memcache adapter.
@@ -51,52 +51,59 @@ func NewMemCache() cache.Cache {
 	return &Cache{}
 }
 
-// Get get value from memcache.
-func (rc *Cache) Get(key string) interface{} {
+func (rc *Cache) client() *memcache.Client {
 	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return err
-		}
+		rc.conn = memcache.New(rc.conninfo...)
 	}
-	if item, err := rc.conn.Get(key); err == nil {
-		return item.Value
+	return rc.conn
+}
+
+//Get get value from memcache
+func (rc *Cache) Get(key string) (interface{}, error) {
+	return rc.GetWithCtx(context.Background(), key)
+}
+
+//GetWithCtx get value with context from memcache
+func (rc *Cache) GetWithCtx(ctx context.Context, key string) (interface{}, error) {
+	item, err := rc.client().Get(key)
+	if err != nil {
+		return nil, err
 	}
-	return nil
+	return item.Value, err
 }
 
 // GetMulti gets a value from a key in memcache.
-func (rc *Cache) GetMulti(keys []string) []interface{} {
-	size := len(keys)
+func (rc *Cache) GetMulti(keys []string) ([]interface{}, error) {
+	return rc.GetMultiWithCtx(context.Background(), keys)
+}
+
+// GetMultiWithCtx gets a value from a key in memcache.
+func (rc *Cache) GetMultiWithCtx(ctx context.Context, keys []string) ([]interface{}, error) {
 	var rv []interface{}
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			for i := 0; i < size; i++ {
-				rv = append(rv, err)
-			}
-			return rv
+	mv, err := rc.client().GetMulti(keys)
+	if err != nil {
+		for i := 0; i < len(keys); i++ {
+			rv = append(rv, nil)
 		}
+		return rv, err
 	}
-	mv, err := rc.conn.GetMulti(keys)
-	if err == nil {
-		for _, v := range mv {
-			rv = append(rv, v.Value)
-		}
-		return rv
+	for _, v := range mv {
+		rv = append(rv, v.Value)
 	}
-	for i := 0; i < size; i++ {
-		rv = append(rv, err)
-	}
-	return rv
+	return rv, nil
 }
 
 // Put puts a value into memcache.
 func (rc *Cache) Put(key string, val interface{}, timeout time.Duration) error {
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return err
-		}
+	return rc.PutWithCtx(context.Background(), key, val, timeout)
+}
+
+// PutWithCtx puts a value into memcache.
+func (rc *Cache) PutWithCtx(ctx context.Context, key string, val interface{}, timeout time.Duration) error {
+	item := &memcache.Item{
+		Key:        key,
+		Expiration: int32(timeout / time.Second),
 	}
-	item := memcache.Item{Key: key, Expiration: int32(timeout / time.Second)}
 	if v, ok := val.([]byte); ok {
 		item.Value = v
 	} else if str, ok := val.(string); ok {
@@ -104,59 +111,73 @@ func (rc *Cache) Put(key string, val interface{}, timeout time.Duration) error {
 	} else {
 		return errors.New("val only support string and []byte")
 	}
-	return rc.conn.Set(&item)
+	return rc.client().Set(item)
 }
 
-// Delete deletes a value in memcache.
+// Delete cached value by key.
 func (rc *Cache) Delete(key string) error {
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return err
-		}
-	}
-	return rc.conn.Delete(key)
+	return rc.DeleteWithCtx(context.Background(), key)
 }
 
-// Incr increases counter.
-func (rc *Cache) Incr(key string) error {
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return err
-		}
-	}
-	_, err := rc.conn.Increment(key, 1)
-	return err
+// DeleteWithCtx  cached value by key.
+func (rc *Cache) DeleteWithCtx(ctx context.Context, key string) error {
+	return rc.client().Delete(key)
 }
 
-// Decr decreases counter.
-func (rc *Cache) Decr(key string) error {
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return err
-		}
-	}
-	_, err := rc.conn.Decrement(key, 1)
-	return err
+//IncrBy ..
+func (rc *Cache) IncrBy(key string, n int) (int, error) {
+	return rc.IncrByWithCtx(context.Background(), key, n)
 }
 
-// IsExist checks if a value exists in memcache.
-func (rc *Cache) IsExist(key string) bool {
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return false
-		}
+//IncrByWithCtx ..
+func (rc *Cache) IncrByWithCtx(ctx context.Context, key string, n int) (int, error) {
+	if n > 0 {
+		val, err := rc.client().Increment(key, uint64(n))
+		return int(val), err
 	}
-	_, err := rc.conn.Get(key)
-	return err == nil
+	val, err := rc.client().Decrement(key, uint64(-n))
+	return int(val), err
 }
 
-// ClearAll clears all cache in memcache.
+// Incr ..
+func (rc *Cache) Incr(key string) (int, error) {
+	return rc.IncrBy(key, 1)
+}
+
+//IncrWithCtx ..
+func (rc *Cache) IncrWithCtx(ctx context.Context, key string) (int, error) {
+	return rc.IncrByWithCtx(ctx, key, 1)
+}
+
+// Decr ..
+func (rc *Cache) Decr(key string) (int, error) {
+	return rc.IncrBy(key, -1)
+}
+
+//DecrWithCtx ..
+func (rc *Cache) DecrWithCtx(ctx context.Context, key string) (int, error) {
+	return rc.IncrByWithCtx(ctx, key, -1)
+}
+
+// IsExist Check if a cached value exists or not.
+// add error as return value
+func (rc *Cache) IsExist(key string) (bool, error) {
+	return rc.IsExistWithCtx(context.Background(), key)
+}
+
+//IsExistWithCtx ..
+func (rc *Cache) IsExistWithCtx(ctx context.Context, key string) (bool, error) {
+	_, err := rc.client().Get(key)
+	return err == nil, err
+}
+
+// ClearAll Clear all cache.
 func (rc *Cache) ClearAll() error {
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return err
-		}
-	}
+	return rc.ClearAllWithCtx(context.Background())
+}
+
+// ClearAllWithCtx  clears all cache in memcache.
+func (rc *Cache) ClearAllWithCtx(ctx context.Context) error {
 	return rc.conn.FlushAll()
 }
 
@@ -170,17 +191,7 @@ func (rc *Cache) StartAndGC(config string) error {
 		return errors.New("config has no conn key")
 	}
 	rc.conninfo = strings.Split(cf["conn"], ";")
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// connect to memcache and keep the connection.
-func (rc *Cache) connectInit() error {
-	rc.conn = memcache.New(rc.conninfo...)
+	rc.client()
 	return nil
 }
 

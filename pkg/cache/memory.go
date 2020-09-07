@@ -15,15 +15,24 @@
 package cache
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
+	"runtime"
 	"sync"
 	"time"
 )
 
 var (
-	// Timer for how often to recycle the expired cache items in memory (in seconds)
+	//DefaultEvery Timer for how often to recycle the expired cache items in memory (in seconds)
 	DefaultEvery = 60 // 1 minute
+
+	//ErrKeyExpire error
+	ErrKeyExpire = errors.New("memory: with an expire key")
+	//ErrKeyNotFound error
+	ErrKeyNotFound = errors.New("memory: key not exist")
+	//ErrValNotLogicType (u)int (u)int32 (u)int64
+	ErrValNotLogicType = errors.New("memory: val not Logic operations")
 )
 
 // MemoryItem stores memory cache item.
@@ -56,139 +65,178 @@ func NewMemoryCache() Cache {
 	return &cache
 }
 
-// Get returns cache from memory.
-// If non-existent or expired, return nil.
-func (bc *MemoryCache) Get(name string) interface{} {
-	bc.RLock()
-	defer bc.RUnlock()
-	if itm, ok := bc.items[name]; ok {
-		if itm.isExpire() {
-			return nil
-		}
-		return itm.val
-	}
-	return nil
+// Get If non-existent or expired, return nil.
+func (bc *MemoryCache) Get(key string) (interface{}, error) {
+	return bc.GetWithCtx(context.Background(), key)
 }
 
-// GetMulti gets caches from memory.
-// If non-existent or expired, return nil.
-func (bc *MemoryCache) GetMulti(names []string) []interface{} {
-	var rc []interface{}
-	for _, name := range names {
-		rc = append(rc, bc.Get(name))
+//GetWithCtx If non-existent or expired, return nil.
+func (bc *MemoryCache) GetWithCtx(ctx context.Context, key string) (interface{}, error) {
+	bc.RLock()
+	defer bc.RUnlock()
+	if itm, ok := bc.items[key]; ok {
+		if itm.isExpire() {
+			return itm.val, ErrKeyExpire
+		}
+		return itm.val, nil
 	}
-	return rc
+	return nil, ErrKeyNotFound
+}
+
+// GetMulti is a batch version of Get.
+// add error as return value
+func (bc *MemoryCache) GetMulti(keys []string) ([]interface{}, error) {
+	return bc.GetMultiWithCtx(context.Background(), keys)
+}
+
+//GetMultiWithCtx gets caches from memory.
+// If non-existent or expired, return nil.
+func (bc *MemoryCache) GetMultiWithCtx(ctx context.Context, keys []string) ([]interface{}, error) {
+	var rc []interface{}
+	for _, k := range keys {
+		v, err := bc.GetWithCtx(ctx, k)
+		if err != nil {
+			return rc, err
+		}
+		rc = append(rc, v)
+	}
+	return rc, nil
 }
 
 // Put puts cache into memory.
 // If lifespan is 0, it will never overwrite this value unless restarted
-func (bc *MemoryCache) Put(name string, value interface{}, lifespan time.Duration) error {
+func (bc *MemoryCache) Put(key string, val interface{}, timeout time.Duration) error {
+	return bc.PutWithCtx(context.Background(), key, val, timeout)
+}
+
+// PutWithCtx puts cache into memory.
+// If lifespan is 0, it will never overwrite this value unless restarted
+func (bc *MemoryCache) PutWithCtx(ctx context.Context, key string, val interface{}, timeout time.Duration) error {
 	bc.Lock()
 	defer bc.Unlock()
-	bc.items[name] = &MemoryItem{
-		val:         value,
+	bc.items[key] = &MemoryItem{
+		val:         val,
 		createdTime: time.Now(),
-		lifespan:    lifespan,
+		lifespan:    timeout,
 	}
 	return nil
 }
 
-// Delete cache in memory.
-func (bc *MemoryCache) Delete(name string) error {
+// Delete cached value by key.
+func (bc *MemoryCache) Delete(key string) error {
+	return bc.DeleteWithCtx(context.Background(), key)
+}
+
+//DeleteWithCtx ..
+func (bc *MemoryCache) DeleteWithCtx(ctx context.Context, key string) error {
 	bc.Lock()
 	defer bc.Unlock()
-	if _, ok := bc.items[name]; !ok {
-		return errors.New("key not exist")
-	}
-	delete(bc.items, name)
-	if _, ok := bc.items[name]; ok {
-		return errors.New("delete key error")
-	}
+	delete(bc.items, key)
 	return nil
 }
 
-// Incr increases cache counter in memory.
+// IncrBy a cached int value by key, as a counter.
+// int indicates current value after increasing
+func (bc *MemoryCache) IncrBy(key string, n int) (int, error) {
+	return bc.IncrByWithCtx(context.Background(), key, n)
+}
+
+//IncrByWithCtx ..
+func (bc *MemoryCache) IncrByWithCtx(ctx context.Context, key string, n int) (int, error) {
+	bc.Lock()
+	defer bc.Unlock()
+	itm, ok := bc.items[key]
+	if !ok {
+		return n, bc.Put(key, n, 0)
+	}
+	switch val := itm.val.(type) {
+	case int:
+		itm.val = val + int(n)
+		return itm.val.(int), nil
+	case int32:
+		itm.val = val + int32(n)
+		return int(itm.val.(int32)), nil
+	case int64:
+		itm.val = val + int64(n)
+		return int(itm.val.(int64)), nil
+	case uint:
+		if n > 0 {
+			itm.val = val + uint(n)
+		} else {
+			itm.val = val - uint(n)
+		}
+		return int(itm.val.(uint)), nil
+	case uint32:
+		if n > 0 {
+			itm.val = val + uint32(n)
+		} else {
+			itm.val = val - uint32(n)
+		}
+		return int(itm.val.(uint32)), nil
+	case uint64:
+		if n > 0 {
+			itm.val = val + uint64(n)
+		} else {
+			itm.val = val - uint64(n)
+		}
+		return int(itm.val.(uint64)), nil
+	default:
+		return 0, ErrValNotLogicType
+	}
+}
+
+// Incr a cached int value by key, as a counter.
+// int indicates current value after increasing
 // Supports int,int32,int64,uint,uint32,uint64.
-func (bc *MemoryCache) Incr(key string) error {
-	bc.Lock()
-	defer bc.Unlock()
-	itm, ok := bc.items[key]
-	if !ok {
-		return errors.New("key not exist")
-	}
-	switch val := itm.val.(type) {
-	case int:
-		itm.val = val + 1
-	case int32:
-		itm.val = val + 1
-	case int64:
-		itm.val = val + 1
-	case uint:
-		itm.val = val + 1
-	case uint32:
-		itm.val = val + 1
-	case uint64:
-		itm.val = val + 1
-	default:
-		return errors.New("item val is not (u)int (u)int32 (u)int64")
-	}
-	return nil
+func (bc *MemoryCache) Incr(key string) (int, error) {
+	return bc.IncrBy(key, 1)
 }
 
-// Decr decreases counter in memory.
-func (bc *MemoryCache) Decr(key string) error {
-	bc.Lock()
-	defer bc.Unlock()
-	itm, ok := bc.items[key]
-	if !ok {
-		return errors.New("key not exist")
-	}
-	switch val := itm.val.(type) {
-	case int:
-		itm.val = val - 1
-	case int64:
-		itm.val = val - 1
-	case int32:
-		itm.val = val - 1
-	case uint:
-		if val > 0 {
-			itm.val = val - 1
-		} else {
-			return errors.New("item val is less than 0")
-		}
-	case uint32:
-		if val > 0 {
-			itm.val = val - 1
-		} else {
-			return errors.New("item val is less than 0")
-		}
-	case uint64:
-		if val > 0 {
-			itm.val = val - 1
-		} else {
-			return errors.New("item val is less than 0")
-		}
-	default:
-		return errors.New("item val is not int int64 int32")
-	}
-	return nil
+//IncrWithCtx ..
+// Supports int,int32,int64,uint,uint32,uint64.
+func (bc *MemoryCache) IncrWithCtx(ctx context.Context, key string) (int, error) {
+	return bc.IncrByWithCtx(context.Background(), key, 1)
 }
 
-// IsExist checks if cache exists in memory.
-func (bc *MemoryCache) IsExist(name string) bool {
+// Decr a cached int value by key, as a counter.
+// int indicates current value after decreasing
+func (bc *MemoryCache) Decr(key string) (int, error) {
+	return bc.IncrBy(key, -1)
+}
+
+// DecrWithCtx ..
+// Supports int,int32,int64,uint,uint32,uint64.
+func (bc *MemoryCache) DecrWithCtx(ctx context.Context, key string) (int, error) {
+	return bc.IncrByWithCtx(context.Background(), key, -1)
+}
+
+// IsExist Check if a cached value exists or not.
+// add error as return value
+func (bc *MemoryCache) IsExist(key string) (bool, error) {
+	return bc.IsExistWithCtx(context.Background(), key)
+}
+
+//IsExistWithCtx ..
+func (bc *MemoryCache) IsExistWithCtx(ctx context.Context, key string) (bool, error) {
 	bc.RLock()
 	defer bc.RUnlock()
-	if v, ok := bc.items[name]; ok {
-		return !v.isExpire()
+	if v, ok := bc.items[key]; ok {
+		return !v.isExpire(), ErrKeyExpire
 	}
-	return false
+	return false, ErrKeyNotFound
 }
 
-// ClearAll deletes all cache in memory.
+// ClearAll Clear all cache.
 func (bc *MemoryCache) ClearAll() error {
+	return bc.ClearAllWithCtx(context.Background())
+}
+
+//ClearAllWithCtx deletes all cache in memory.
+func (bc *MemoryCache) ClearAllWithCtx(ctx context.Context) error {
 	bc.Lock()
 	defer bc.Unlock()
 	bc.items = make(map[string]*MemoryItem)
+	runtime.GC() //todo ? need gc?
 	return nil
 }
 

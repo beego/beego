@@ -30,6 +30,7 @@
 package redis
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -66,14 +67,16 @@ func NewRedisCache() cache.Cache {
 }
 
 // Execute the redis commands. args[0] must be the key name
-func (rc *Cache) do(commandName string, args ...interface{}) (reply interface{}, err error) {
+func (rc *Cache) do(ctx context.Context, commandName string, args ...interface{}) (reply interface{}, err error) {
 	if len(args) < 1 {
 		return nil, errors.New("missing required arguments")
 	}
 	args[0] = rc.associate(args[0])
-	c := rc.p.Get()
+	c, err := rc.p.GetContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 	defer c.Close()
-
 	return c.Do(commandName, args...)
 }
 
@@ -83,63 +86,114 @@ func (rc *Cache) associate(originKey interface{}) string {
 }
 
 // Get cache from redis.
-func (rc *Cache) Get(key string) interface{} {
-	if v, err := rc.do("GET", key); err == nil {
-		return v
-	}
-	return nil
+func (rc *Cache) Get(key string) (interface{}, error) {
+	return rc.GetWithCtx(context.Background(), key)
+}
+
+// GetWithCtx cache from redis.
+func (rc *Cache) GetWithCtx(ctx context.Context, key string) (interface{}, error) {
+	return rc.do(ctx, "GET", key)
 }
 
 // GetMulti gets cache from redis.
-func (rc *Cache) GetMulti(keys []string) []interface{} {
-	c := rc.p.Get()
+func (rc *Cache) GetMulti(keys []string) ([]interface{}, error) {
+	return rc.GetMultiWithCtx(context.Background(), keys)
+}
+
+// GetMultiWithCtx gets cache from redis.
+func (rc *Cache) GetMultiWithCtx(ctx context.Context, keys []string) ([]interface{}, error) {
+	c, err := rc.p.GetContext(ctx)
+	if err != nil {
+		return nil, err
+	}
 	defer c.Close()
 	var args []interface{}
 	for _, key := range keys {
 		args = append(args, rc.associate(key))
 	}
-	values, err := redis.Values(c.Do("MGET", args...))
-	if err != nil {
-		return nil
-	}
-	return values
+	return redis.Values(c.Do("MGET", args...))
 }
 
 // Put puts cache into redis.
 func (rc *Cache) Put(key string, val interface{}, timeout time.Duration) error {
-	_, err := rc.do("SETEX", key, int64(timeout/time.Second), val)
+	return rc.PutWithCtx(context.Background(), key, val, timeout)
+}
+
+// PutWithCtx puts cache into redis.
+func (rc *Cache) PutWithCtx(ctx context.Context, key string, val interface{}, timeout time.Duration) error {
+	_, err := rc.do(ctx, "SETEX", key, int64(timeout/time.Second), val)
 	return err
 }
 
 // Delete deletes a key's cache in redis.
 func (rc *Cache) Delete(key string) error {
-	_, err := rc.do("DEL", key)
+	return rc.DeleteWithCtx(context.Background(), key)
+}
+
+// DeleteWithCtx deletes a key's cache in redis.
+func (rc *Cache) DeleteWithCtx(ctx context.Context, key string) error {
+	_, err := rc.do(ctx, "DEL", key)
 	return err
 }
 
-// IsExist checks cache's existence in redis.
-func (rc *Cache) IsExist(key string) bool {
-	v, err := redis.Bool(rc.do("EXISTS", key))
-	if err != nil {
-		return false
-	}
-	return v
+// IncrBy increases a key's counter in redis.
+func (rc *Cache) IncrBy(key string, n int) (int, error) {
+	return rc.IncrByWithCtx(context.Background(), key, n)
+}
+
+// IncrByWithCtx increases a key's counter in redis.
+func (rc *Cache) IncrByWithCtx(ctx context.Context, key string, n int) (int, error) {
+	return redis.Int(rc.do(ctx, "INCRBY", key, n))
 }
 
 // Incr increases a key's counter in redis.
-func (rc *Cache) Incr(key string) error {
-	_, err := redis.Bool(rc.do("INCRBY", key, 1))
-	return err
+func (rc *Cache) Incr(key string) (int, error) {
+	return rc.IncrByWithCtx(context.Background(), key, 1)
+}
+
+// IncrWithCtx increases a key's counter in redis.
+func (rc *Cache) IncrWithCtx(ctx context.Context, key string) (int, error) {
+	return rc.IncrByWithCtx(ctx, key, 1)
 }
 
 // Decr decreases a key's counter in redis.
-func (rc *Cache) Decr(key string) error {
-	_, err := redis.Bool(rc.do("INCRBY", key, -1))
-	return err
+func (rc *Cache) Decr(key string) (int, error) {
+	return rc.IncrByWithCtx(context.Background(), key, -1)
+}
+
+// DecrWithCtx decreases a key's counter in redis.
+func (rc *Cache) DecrWithCtx(ctx context.Context, key string) (int, error) {
+	return rc.IncrByWithCtx(ctx, key, -1)
+}
+
+// IsExist checks cache's existence in redis.
+func (rc *Cache) IsExist(key string) (bool, error) {
+	return rc.IsExistWithCtx(context.Background(), key)
+}
+
+// IsExistWithCtx checks cache's existence in redis.
+func (rc *Cache) IsExistWithCtx(ctx context.Context, key string) (bool, error) {
+	return redis.Bool(rc.do(ctx, "EXISTS", key))
 }
 
 // ClearAll deletes all cache in the redis collection
 func (rc *Cache) ClearAll() error {
+	cachedKeys, err := rc.Scan(rc.key + ":*")
+	if err != nil {
+		return err
+	}
+	c := rc.p.Get()
+	defer c.Close()
+	for _, str := range cachedKeys {
+		if _, err = c.Do("DEL", str); err != nil {
+			return err
+		}
+	}
+	return err
+}
+
+// ClearAll deletes all cache in the redis collection
+func (rc *Cache) ClearAllWithCtx(ctx context.Context) error {
 	cachedKeys, err := rc.Scan(rc.key + ":*")
 	if err != nil {
 		return err

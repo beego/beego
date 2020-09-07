@@ -56,7 +56,7 @@ type FileCache struct {
 
 // NewFileCache creates a new file cache with no config.
 // The level and expiry need to be set in the method StartAndGC as config string.
-func NewFileCache() Cache {
+func NewFileCache() *FileCache {
 	//    return &FileCache{CachePath:FileCachePath, FileSuffix:FileCacheFileSuffix}
 	return &FileCache{}
 }
@@ -253,5 +253,5 @@ func GobDecode(data []byte, to *FileCacheItem) error {
 }
 
 func init() {
-	Register("file", NewFileCache)
+	// Register("file", NewFileCache)
 }

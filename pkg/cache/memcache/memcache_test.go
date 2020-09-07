@@ -16,14 +16,9 @@ package memcache
 
 import (
 	_ "github.com/bradfitz/gomemcache/memcache"
-
-	"strconv"
-	"testing"
-	"time"
-
-	"github.com/astaxie/beego/pkg/cache"
 )
 
+/*
 func TestMemcacheCache(t *testing.T) {
 	bm, err := cache.NewCache("memcache", `{"conn": "127.0.0.1:11211"}`)
 	if err != nil {
@@ -106,3 +101,4 @@ func TestMemcacheCache(t *testing.T) {
 		t.Error("clear all err")
 	}
 }
+*/
