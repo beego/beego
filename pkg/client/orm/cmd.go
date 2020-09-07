@@ -142,6 +142,12 @@ func (d *commandSyncDb) Run() error {
 	}
 
 	for i, mi := range modelCache.allOrdered() {
+
+		if !isApplicableTableForDB(mi.addrField, d.al.Name) {
+			fmt.Printf("table `%s` is not applicable to database '%s'\n", mi.table, d.al.Name)
+			continue
+		}
+
 		if tables[mi.table] {
 			if !d.noInfo {
 				fmt.Printf("table `%s` already exists, skip\n", mi.table)
