@@ -75,6 +75,11 @@ type TableUniqueI interface {
 	TableUnique() [][]string
 }
 
+// IsApplicableTableForDB if return false, we won't create table to this db
+type IsApplicableTableForDB interface {
+	IsApplicableTableForDB(db string) bool
+}
+
 // Driver define database driver
 type Driver interface {
 	Name() string
