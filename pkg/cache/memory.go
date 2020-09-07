@@ -27,12 +27,12 @@ var (
 	//DefaultEvery Timer for how often to recycle the expired cache items in memory (in seconds)
 	DefaultEvery = 60 // 1 minute
 
-	//ErrKeyExpire error
-	ErrKeyExpire = errors.New("memory: with an expire key")
-	//ErrKeyNotFound error
-	ErrKeyNotFound = errors.New("memory: key not exist")
-	//ErrValNotLogicType (u)int (u)int32 (u)int64
-	ErrValNotLogicType = errors.New("memory: val not Logic operations")
+	//ErrMemoryKeyExpire error
+	ErrMemoryKeyExpire = errors.New("memory: with an expire key")
+	//ErrMemoryKeyNotFound error
+	ErrMemoryKeyNotFound = errors.New("memory: key not exist")
+	//ErrMemoryValNotLogicType (u)int (u)int32 (u)int64
+	ErrMemoryValNotLogicType = errors.New("memory: val not Logic operations")
 )
 
 // MemoryItem stores memory cache item.
@@ -76,11 +76,11 @@ func (bc *MemoryCache) GetWithCtx(ctx context.Context, key string) (interface{},
 	defer bc.RUnlock()
 	if itm, ok := bc.items[key]; ok {
 		if itm.isExpire() {
-			return itm.val, ErrKeyExpire
+			return itm.val, ErrMemoryKeyExpire
 		}
 		return itm.val, nil
 	}
-	return nil, ErrKeyNotFound
+	return nil, ErrMemoryKeyNotFound
 }
 
 // GetMulti is a batch version of Get.
@@ -181,7 +181,7 @@ func (bc *MemoryCache) IncrByWithCtx(ctx context.Context, key string, n int) (in
 		}
 		return int(itm.val.(uint64)), nil
 	default:
-		return 0, ErrValNotLogicType
+		return 0, ErrMemoryValNotLogicType
 	}
 }
 
@@ -221,9 +221,12 @@ func (bc *MemoryCache) IsExistWithCtx(ctx context.Context, key string) (bool, er
 	bc.RLock()
 	defer bc.RUnlock()
 	if v, ok := bc.items[key]; ok {
-		return !v.isExpire(), ErrKeyExpire
+		if v.isExpire() {
+			return false, ErrMemoryKeyExpire
+		}
+		return true, nil
 	}
-	return false, ErrKeyNotFound
+	return false, ErrMemoryKeyNotFound
 }
 
 // ClearAll Clear all cache.
@@ -236,7 +239,7 @@ func (bc *MemoryCache) ClearAllWithCtx(ctx context.Context) error {
 	bc.Lock()
 	defer bc.Unlock()
 	bc.items = make(map[string]*MemoryItem)
-	runtime.GC() //todo ? need gc?
+	runtime.GC() //todo need gc?
 	return nil
 }
 
