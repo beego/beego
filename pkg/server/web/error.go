@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/astaxie/beego/pkg"
 	"github.com/astaxie/beego/pkg/infrastructure/utils"
 
 	"github.com/astaxie/beego/pkg/server/web/context"
@@ -91,7 +92,7 @@ func showErr(err interface{}, ctx *context.Context, stack string) {
 		"RequestURL":    ctx.Input.URI(),
 		"RemoteAddr":    ctx.Input.IP(),
 		"Stack":         stack,
-		"BeegoVersion":  VERSION,
+		"BeegoVersion":  pkg.VERSION,
 		"GoVersion":     runtime.Version(),
 	}
 	t.Execute(ctx.ResponseWriter, data)
@@ -378,7 +379,7 @@ func responseError(rw http.ResponseWriter, r *http.Request, errCode int, errCont
 	t, _ := template.New("beegoerrortemp").Parse(errtpl)
 	data := M{
 		"Title":        http.StatusText(errCode),
-		"BeegoVersion": VERSION,
+		"BeegoVersion": pkg.VERSION,
 		"Content":      template.HTML(errContent),
 	}
 	t.Execute(rw, data)
