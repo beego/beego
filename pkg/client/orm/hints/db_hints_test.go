@@ -48,34 +48,6 @@ func TestNewHint_float(t *testing.T) {
 	assert.Equal(t, hint.GetValue(), value)
 }
 
-func TestMaxOpenConnections(t *testing.T) {
-	i := 887423
-	hint := MaxOpenConnections(i)
-	assert.Equal(t, hint.GetValue(), i)
-	assert.Equal(t, hint.GetKey(), KeyMaxOpenConnections)
-}
-
-func TestConnMaxLifetime(t *testing.T) {
-	i := time.Hour
-	hint := ConnMaxLifetime(i)
-	assert.Equal(t, hint.GetValue(), i)
-	assert.Equal(t, hint.GetKey(), KeyConnMaxLifetime)
-}
-
-func TestMaxIdleConnections(t *testing.T) {
-	i := 42316
-	hint := MaxIdleConnections(i)
-	assert.Equal(t, hint.GetValue(), i)
-	assert.Equal(t, hint.GetKey(), KeyMaxIdleConnections)
-}
-
-func TestMaxStmtCacheSize(t *testing.T) {
-	i := 94157
-	hint := MaxStmtCacheSize(i)
-	assert.Equal(t, hint.GetValue(), i)
-	assert.Equal(t, hint.GetKey(), KeyMaxStmtCacheSize)
-}
-
 func TestForceIndex(t *testing.T) {
 	s := []string{`f_index1`, `f_index2`, `f_index3`}
 	hint := ForceIndex(s...)

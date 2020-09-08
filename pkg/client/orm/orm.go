@@ -601,7 +601,7 @@ func NewOrmUsingDB(aliasName string) Ormer {
 }
 
 // NewOrmWithDB create a new ormer object with specify *sql.DB for query
-func NewOrmWithDB(driverName, aliasName string, db *sql.DB, params ...utils.KV) (Ormer, error) {
+func NewOrmWithDB(driverName, aliasName string, db *sql.DB, params ...DBOption) (Ormer, error) {
 	al, err := newAliasWithDb(aliasName, driverName, db, params...)
 	if err != nil {
 		return nil, err
