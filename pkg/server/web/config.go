@@ -24,6 +24,7 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/astaxie/beego/pkg"
 	"github.com/astaxie/beego/pkg/infrastructure/config"
 	"github.com/astaxie/beego/pkg/infrastructure/logs"
 	"github.com/astaxie/beego/pkg/infrastructure/session"
@@ -208,7 +209,7 @@ func newBConfig() *Config {
 		AppName:             "beego",
 		RunMode:             PROD,
 		RouterCaseSensitive: true,
-		ServerName:          "beegoServer:" + VERSION,
+		ServerName:          "beegoServer:" + pkg.VERSION,
 		RecoverPanic:        true,
 		RecoverFunc:         recoverPanic,
 		CopyRequestBody:     false,
