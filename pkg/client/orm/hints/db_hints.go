@@ -15,20 +15,12 @@
 package hints
 
 import (
-	"time"
-
 	"github.com/astaxie/beego/pkg/infrastructure/utils"
 )
 
 const (
-	//db level
-	KeyMaxIdleConnections = iota
-	KeyMaxOpenConnections
-	KeyConnMaxLifetime
-	KeyMaxStmtCacheSize
-
 	//query level
-	KeyForceIndex
+	KeyForceIndex = iota
 	KeyUseIndex
 	KeyIgnoreIndex
 	KeyForUpdate
@@ -56,26 +48,6 @@ func (s *Hint) GetValue() interface{} {
 }
 
 var _ utils.KV = new(Hint)
-
-// MaxIdleConnections return a hint about MaxIdleConnections
-func MaxIdleConnections(v int) *Hint {
-	return NewHint(KeyMaxIdleConnections, v)
-}
-
-// MaxOpenConnections return a hint about MaxOpenConnections
-func MaxOpenConnections(v int) *Hint {
-	return NewHint(KeyMaxOpenConnections, v)
-}
-
-// ConnMaxLifetime return a hint about ConnMaxLifetime
-func ConnMaxLifetime(v time.Duration) *Hint {
-	return NewHint(KeyConnMaxLifetime, v)
-}
-
-// MaxStmtCacheSize return a hint about MaxStmtCacheSize
-func MaxStmtCacheSize(v int) *Hint {
-	return NewHint(KeyMaxStmtCacheSize, v)
-}
 
 // ForceIndex return a hint about ForceIndex
 func ForceIndex(indexes ...string) *Hint {
