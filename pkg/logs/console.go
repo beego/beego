@@ -58,10 +58,6 @@ type consoleWriter struct {
 func (c *consoleWriter) Format(lm *LogMsg) string {
 	msg := lm.Msg
 
-	if c.Colorful {
-		msg = strings.Replace(lm.Msg, levelPrefix[lm.Level], colors[lm.Level](levelPrefix[lm.Level]), 1)
-	}
-
 	h, _, _ := formatTimeHeader(lm.When)
 	bytes := append(append(h, msg...), '\n')
 
@@ -105,12 +101,12 @@ func (c *consoleWriter) WriteMsg(lm *LogMsg) error {
 	if lm.Level > c.Level {
 		return nil
 	}
-	// fmt.Printf("Formatted: %s\n\n", c.fmtter.Format(lm))
+
+	msg := ""
+
 	if c.Colorful {
 		lm.Msg = strings.Replace(lm.Msg, levelPrefix[lm.Level], colors[lm.Level](levelPrefix[lm.Level]), 1)
 	}
-
-	msg := ""
 
 	if c.customFormatter != nil {
 		msg = c.customFormatter(lm)
