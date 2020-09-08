@@ -20,8 +20,6 @@ import (
 	"time"
 
 	"github.com/astaxie/beego/pkg/client/orm"
-	"github.com/astaxie/beego/pkg/client/orm/hints"
-	"github.com/astaxie/beego/pkg/infrastructure/utils"
 )
 
 // DriverType database driver constant int.
@@ -86,13 +84,13 @@ func AddAliasWthDB(aliasName, driverName string, db *sql.DB) error {
 
 // RegisterDataBase Setting the database connect params. Use the database driver self dataSource args.
 func RegisterDataBase(aliasName, driverName, dataSource string, params ...int) error {
-	opts := make([]utils.KV, 0, 2)
+	opts := make([]orm.DBOption, 0, 2)
 	if len(params) > 0 {
-		opts = append(opts, hints.MaxIdleConnections(params[0]))
+		opts = append(opts, orm.MaxIdleConnections(params[0]))
 	}
 
 	if len(params) > 1 {
-		opts = append(opts, hints.MaxOpenConnections(params[1]))
+		opts = append(opts, orm.MaxOpenConnections(params[1]))
 	}
 	return orm.RegisterDataBase(aliasName, driverName, dataSource, opts...)
 }
