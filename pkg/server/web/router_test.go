@@ -381,7 +381,7 @@ func TestRouterHandlerAll(t *testing.T) {
 }
 
 //
-// Benchmarks NewApp:
+// Benchmarks NewHttpSever:
 //
 
 func beegoFilterFunc(ctx *context.Context) {

@@ -34,6 +34,7 @@ import (
 )
 
 // Config is the main struct for BConfig
+// TODO after supporting multiple servers, remove common config to somewhere else
 type Config struct {
 	AppName             string // Application name
 	RunMode             string // Running Mode: dev | prod
@@ -168,15 +169,15 @@ func init() {
 	}
 }
 
-func recoverPanic(ctx *context.Context) {
+func (cfg *Config) defaultRecoverPanic(ctx *context.Context) {
 	if err := recover(); err != nil {
 		if err == ErrAbort {
 			return
 		}
-		if !BConfig.RecoverPanic {
+		if !cfg.RecoverPanic {
 			panic(err)
 		}
-		if BConfig.EnableErrorsShow {
+		if cfg.EnableErrorsShow {
 			if _, ok := ErrorMaps[fmt.Sprint(err)]; ok {
 				exception(fmt.Sprint(err), ctx)
 				return
@@ -193,7 +194,7 @@ func recoverPanic(ctx *context.Context) {
 			logs.Critical(fmt.Sprintf("%s:%d", file, line))
 			stack = stack + fmt.Sprintln(fmt.Sprintf("%s:%d", file, line))
 		}
-		if BConfig.RunMode == DEV && BConfig.EnableErrorsRender {
+		if cfg.RunMode == DEV && cfg.EnableErrorsRender {
 			showErr(err, ctx, stack)
 		}
 		if ctx.Output.Status != 0 {
@@ -205,18 +206,18 @@ func recoverPanic(ctx *context.Context) {
 }
 
 func newBConfig() *Config {
-	return &Config{
+	res := &Config{
 		AppName:             "beego",
 		RunMode:             PROD,
 		RouterCaseSensitive: true,
 		ServerName:          "beegoServer:" + pkg.VERSION,
 		RecoverPanic:        true,
-		RecoverFunc:         recoverPanic,
-		CopyRequestBody:     false,
-		EnableGzip:          false,
-		MaxMemory:           1 << 26, // 64MB
-		EnableErrorsShow:    true,
-		EnableErrorsRender:  true,
+
+		CopyRequestBody:    false,
+		EnableGzip:         false,
+		MaxMemory:          1 << 26, // 64MB
+		EnableErrorsShow:   true,
+		EnableErrorsRender: true,
 		Listen: Listen{
 			Graceful:      false,
 			ServerTimeOut: 0,
@@ -279,6 +280,9 @@ func newBConfig() *Config {
 			Outputs:          map[string]string{"console": ""},
 		},
 	}
+
+	res.RecoverFunc = res.defaultRecoverPanic
+	return res
 }
 
 // now only support ini, next will support json.
