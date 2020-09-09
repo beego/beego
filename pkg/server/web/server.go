@@ -24,12 +24,14 @@ import (
 	"net/http/fcgi"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 	"time"
 
 	"golang.org/x/crypto/acme/autocert"
 
 	"github.com/astaxie/beego/pkg/infrastructure/logs"
+	beecontext "github.com/astaxie/beego/pkg/server/web/context"
 
 	"github.com/astaxie/beego/pkg/infrastructure/utils"
 	"github.com/astaxie/beego/pkg/server/web/grace"
@@ -37,24 +39,39 @@ import (
 
 var (
 	// BeeApp is an application instance
-	BeeApp *App
+	// If you are using single server, you could use this
+	// But if you need multiple servers, do not use this
+	BeeApp *HttpServer
 )
 
 func init() {
 	// create beego application
-	BeeApp = NewApp()
+	BeeApp = NewHttpSever()
 }
 
-// App defines beego application with a new PatternServeMux.
-type App struct {
+// HttpServer defines beego application with a new PatternServeMux.
+type HttpServer struct {
 	Handlers *ControllerRegister
 	Server   *http.Server
+	Cfg      *Config
 }
 
-// NewApp returns a new beego application.
-func NewApp() *App {
-	cr := NewControllerRegister()
-	app := &App{Handlers: cr, Server: &http.Server{}}
+// NewHttpSever returns a new beego application.
+// this method will use the BConfig as the configure to create HttpServer
+// Be careful that when you update BConfig, the server's Cfg will not be updated
+func NewHttpSever() *HttpServer {
+	return NewHttpServerWithCfg(*BConfig)
+}
+
+// NewHttpServerWithCfg will create an sever with specific cfg
+func NewHttpServerWithCfg(cfg Config) *HttpServer {
+	cfgPtr := &cfg
+	cr := NewControllerRegisterWithCfg(cfgPtr)
+	app := &HttpServer{
+		Handlers: cr,
+		Server:   &http.Server{},
+		Cfg:      cfgPtr,
+	}
 	return app
 }
 
@@ -62,11 +79,16 @@ func NewApp() *App {
 type MiddleWare func(http.Handler) http.Handler
 
 // Run beego application.
-func (app *App) Run(mws ...MiddleWare) {
-	addr := BConfig.Listen.HTTPAddr
+func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 
-	if BConfig.Listen.HTTPPort != 0 {
-		addr = fmt.Sprintf("%s:%d", BConfig.Listen.HTTPAddr, BConfig.Listen.HTTPPort)
+	initBeforeHTTPRun()
+
+	app.initAddr(addr)
+
+	addr = app.Cfg.Listen.HTTPAddr
+
+	if app.Cfg.Listen.HTTPPort != 0 {
+		addr = fmt.Sprintf("%s:%d", app.Cfg.Listen.HTTPAddr, app.Cfg.Listen.HTTPPort)
 	}
 
 	var (
@@ -76,8 +98,8 @@ func (app *App) Run(mws ...MiddleWare) {
 	)
 
 	// run cgi server
-	if BConfig.Listen.EnableFcgi {
-		if BConfig.Listen.EnableStdIo {
+	if app.Cfg.Listen.EnableFcgi {
+		if app.Cfg.Listen.EnableStdIo {
 			if err = fcgi.Serve(nil, app.Handlers); err == nil { // standard I/O
 				logs.Info("Use FCGI via standard I/O")
 			} else {
@@ -85,7 +107,7 @@ func (app *App) Run(mws ...MiddleWare) {
 			}
 			return
 		}
-		if BConfig.Listen.HTTPPort == 0 {
+		if app.Cfg.Listen.HTTPPort == 0 {
 			// remove the Socket file before start
 			if utils.FileExists(addr) {
 				os.Remove(addr)
@@ -110,40 +132,42 @@ func (app *App) Run(mws ...MiddleWare) {
 		}
 		app.Server.Handler = mws[i](app.Server.Handler)
 	}
-	app.Server.ReadTimeout = time.Duration(BConfig.Listen.ServerTimeOut) * time.Second
-	app.Server.WriteTimeout = time.Duration(BConfig.Listen.ServerTimeOut) * time.Second
+	app.Server.ReadTimeout = time.Duration(app.Cfg.Listen.ServerTimeOut) * time.Second
+	app.Server.WriteTimeout = time.Duration(app.Cfg.Listen.ServerTimeOut) * time.Second
 	app.Server.ErrorLog = logs.GetLogger("HTTP")
 
 	// run graceful mode
-	if BConfig.Listen.Graceful {
-		httpsAddr := BConfig.Listen.HTTPSAddr
+	if app.Cfg.Listen.Graceful {
+		httpsAddr := app.Cfg.Listen.HTTPSAddr
 		app.Server.Addr = httpsAddr
-		if BConfig.Listen.EnableHTTPS || BConfig.Listen.EnableMutualHTTPS {
+		if app.Cfg.Listen.EnableHTTPS || app.Cfg.Listen.EnableMutualHTTPS {
 			go func() {
 				time.Sleep(1000 * time.Microsecond)
-				if BConfig.Listen.HTTPSPort != 0 {
-					httpsAddr = fmt.Sprintf("%s:%d", BConfig.Listen.HTTPSAddr, BConfig.Listen.HTTPSPort)
+				if app.Cfg.Listen.HTTPSPort != 0 {
+					httpsAddr = fmt.Sprintf("%s:%d", app.Cfg.Listen.HTTPSAddr, app.Cfg.Listen.HTTPSPort)
 					app.Server.Addr = httpsAddr
 				}
 				server := grace.NewServer(httpsAddr, app.Server.Handler)
 				server.Server.ReadTimeout = app.Server.ReadTimeout
 				server.Server.WriteTimeout = app.Server.WriteTimeout
-				if BConfig.Listen.EnableMutualHTTPS {
-					if err := server.ListenAndServeMutualTLS(BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile, BConfig.Listen.TrustCaFile); err != nil {
+				if app.Cfg.Listen.EnableMutualHTTPS {
+					if err := server.ListenAndServeMutualTLS(app.Cfg.Listen.HTTPSCertFile,
+						app.Cfg.Listen.HTTPSKeyFile,
+						app.Cfg.Listen.TrustCaFile); err != nil {
 						logs.Critical("ListenAndServeTLS: ", err, fmt.Sprintf("%d", os.Getpid()))
 						time.Sleep(100 * time.Microsecond)
 					}
 				} else {
-					if BConfig.Listen.AutoTLS {
+					if app.Cfg.Listen.AutoTLS {
 						m := autocert.Manager{
 							Prompt:     autocert.AcceptTOS,
-							HostPolicy: autocert.HostWhitelist(BConfig.Listen.Domains...),
-							Cache:      autocert.DirCache(BConfig.Listen.TLSCacheDir),
+							HostPolicy: autocert.HostWhitelist(app.Cfg.Listen.Domains...),
+							Cache:      autocert.DirCache(app.Cfg.Listen.TLSCacheDir),
 						}
 						app.Server.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
-						BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile = "", ""
+						app.Cfg.Listen.HTTPSCertFile, app.Cfg.Listen.HTTPSKeyFile = "", ""
 					}
-					if err := server.ListenAndServeTLS(BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile); err != nil {
+					if err := server.ListenAndServeTLS(app.Cfg.Listen.HTTPSCertFile, app.Cfg.Listen.HTTPSKeyFile); err != nil {
 						logs.Critical("ListenAndServeTLS: ", err, fmt.Sprintf("%d", os.Getpid()))
 						time.Sleep(100 * time.Microsecond)
 					}
@@ -151,12 +175,12 @@ func (app *App) Run(mws ...MiddleWare) {
 				endRunning <- true
 			}()
 		}
-		if BConfig.Listen.EnableHTTP {
+		if app.Cfg.Listen.EnableHTTP {
 			go func() {
 				server := grace.NewServer(addr, app.Server.Handler)
 				server.Server.ReadTimeout = app.Server.ReadTimeout
 				server.Server.WriteTimeout = app.Server.WriteTimeout
-				if BConfig.Listen.ListenTCP4 {
+				if app.Cfg.Listen.ListenTCP4 {
 					server.Network = "tcp4"
 				}
 				if err := server.ListenAndServe(); err != nil {
@@ -171,27 +195,27 @@ func (app *App) Run(mws ...MiddleWare) {
 	}
 
 	// run normal mode
-	if BConfig.Listen.EnableHTTPS || BConfig.Listen.EnableMutualHTTPS {
+	if app.Cfg.Listen.EnableHTTPS || app.Cfg.Listen.EnableMutualHTTPS {
 		go func() {
 			time.Sleep(1000 * time.Microsecond)
-			if BConfig.Listen.HTTPSPort != 0 {
-				app.Server.Addr = fmt.Sprintf("%s:%d", BConfig.Listen.HTTPSAddr, BConfig.Listen.HTTPSPort)
-			} else if BConfig.Listen.EnableHTTP {
+			if app.Cfg.Listen.HTTPSPort != 0 {
+				app.Server.Addr = fmt.Sprintf("%s:%d", app.Cfg.Listen.HTTPSAddr, app.Cfg.Listen.HTTPSPort)
+			} else if app.Cfg.Listen.EnableHTTP {
 				logs.Info("Start https server error, conflict with http. Please reset https port")
 				return
 			}
 			logs.Info("https server Running on https://%s", app.Server.Addr)
-			if BConfig.Listen.AutoTLS {
+			if app.Cfg.Listen.AutoTLS {
 				m := autocert.Manager{
 					Prompt:     autocert.AcceptTOS,
-					HostPolicy: autocert.HostWhitelist(BConfig.Listen.Domains...),
-					Cache:      autocert.DirCache(BConfig.Listen.TLSCacheDir),
+					HostPolicy: autocert.HostWhitelist(app.Cfg.Listen.Domains...),
+					Cache:      autocert.DirCache(app.Cfg.Listen.TLSCacheDir),
 				}
 				app.Server.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
-				BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile = "", ""
-			} else if BConfig.Listen.EnableMutualHTTPS {
+				app.Cfg.Listen.HTTPSCertFile, app.Cfg.Listen.HTTPSKeyFile = "", ""
+			} else if app.Cfg.Listen.EnableMutualHTTPS {
 				pool := x509.NewCertPool()
-				data, err := ioutil.ReadFile(BConfig.Listen.TrustCaFile)
+				data, err := ioutil.ReadFile(app.Cfg.Listen.TrustCaFile)
 				if err != nil {
 					logs.Info("MutualHTTPS should provide TrustCaFile")
 					return
@@ -199,10 +223,10 @@ func (app *App) Run(mws ...MiddleWare) {
 				pool.AppendCertsFromPEM(data)
 				app.Server.TLSConfig = &tls.Config{
 					ClientCAs:  pool,
-					ClientAuth: tls.ClientAuthType(BConfig.Listen.ClientAuth),
+					ClientAuth: tls.ClientAuthType(app.Cfg.Listen.ClientAuth),
 				}
 			}
-			if err := app.Server.ListenAndServeTLS(BConfig.Listen.HTTPSCertFile, BConfig.Listen.HTTPSKeyFile); err != nil {
+			if err := app.Server.ListenAndServeTLS(app.Cfg.Listen.HTTPSCertFile, app.Cfg.Listen.HTTPSKeyFile); err != nil {
 				logs.Critical("ListenAndServeTLS: ", err)
 				time.Sleep(100 * time.Microsecond)
 				endRunning <- true
@@ -210,11 +234,11 @@ func (app *App) Run(mws ...MiddleWare) {
 		}()
 
 	}
-	if BConfig.Listen.EnableHTTP {
+	if app.Cfg.Listen.EnableHTTP {
 		go func() {
 			app.Server.Addr = addr
 			logs.Info("http server Running on http://%s", app.Server.Addr)
-			if BConfig.Listen.ListenTCP4 {
+			if app.Cfg.Listen.ListenTCP4 {
 				ln, err := net.Listen("tcp4", app.Server.Addr)
 				if err != nil {
 					logs.Critical("ListenAndServe: ", err)
@@ -240,8 +264,17 @@ func (app *App) Run(mws ...MiddleWare) {
 	<-endRunning
 }
 
+func (app *HttpServer) Start() {
+
+}
+
+// Router see HttpServer.Router
+func Router(rootpath string, c ControllerInterface, mappingMethods ...string) *HttpServer {
+	return BeeApp.Router(rootpath, c, mappingMethods...)
+}
+
 // Router adds a patterned controller handler to BeeApp.
-// it's an alias method of App.Router.
+// it's an alias method of HttpServer.Router.
 // usage:
 //  simple router
 //  beego.Router("/admin", &admin.UserController{})
@@ -256,9 +289,14 @@ func (app *App) Run(mws ...MiddleWare) {
 //  beego.Router("/api/create",&RestController{},"post:CreateFood")
 //  beego.Router("/api/update",&RestController{},"put:UpdateFood")
 //  beego.Router("/api/delete",&RestController{},"delete:DeleteFood")
-func Router(rootpath string, c ControllerInterface, mappingMethods ...string) *App {
-	BeeApp.Handlers.Add(rootpath, c, mappingMethods...)
-	return BeeApp
+func (app *HttpServer) Router(rootPath string, c ControllerInterface, mappingMethods ...string) *HttpServer {
+	app.Handlers.Add(rootPath, c, mappingMethods...)
+	return app
+}
+
+// UnregisterFixedRoute see HttpServer.UnregisterFixedRoute
+func UnregisterFixedRoute(fixedRoute string, method string) *HttpServer {
+	return BeeApp.UnregisterFixedRoute(fixedRoute, method)
 }
 
 // UnregisterFixedRoute unregisters the route with the specified fixedRoute. It is particularly useful
@@ -270,31 +308,31 @@ func Router(rootpath string, c ControllerInterface, mappingMethods ...string) *A
 // Usage (replace "GET" with "*" for all methods):
 //  beego.UnregisterFixedRoute("/yourpreviouspath", "GET")
 //  beego.Router("/yourpreviouspath", yourControllerAddress, "get:GetNewPage")
-func UnregisterFixedRoute(fixedRoute string, method string) *App {
+func (app *HttpServer) UnregisterFixedRoute(fixedRoute string, method string) *HttpServer {
 	subPaths := splitPath(fixedRoute)
 	if method == "" || method == "*" {
 		for m := range HTTPMETHOD {
-			if _, ok := BeeApp.Handlers.routers[m]; !ok {
+			if _, ok := app.Handlers.routers[m]; !ok {
 				continue
 			}
-			if BeeApp.Handlers.routers[m].prefix == strings.Trim(fixedRoute, "/ ") {
-				findAndRemoveSingleTree(BeeApp.Handlers.routers[m])
+			if app.Handlers.routers[m].prefix == strings.Trim(fixedRoute, "/ ") {
+				findAndRemoveSingleTree(app.Handlers.routers[m])
 				continue
 			}
-			findAndRemoveTree(subPaths, BeeApp.Handlers.routers[m], m)
+			findAndRemoveTree(subPaths, app.Handlers.routers[m], m)
 		}
-		return BeeApp
+		return app
 	}
 	// Single HTTP method
 	um := strings.ToUpper(method)
-	if _, ok := BeeApp.Handlers.routers[um]; ok {
-		if BeeApp.Handlers.routers[um].prefix == strings.Trim(fixedRoute, "/ ") {
-			findAndRemoveSingleTree(BeeApp.Handlers.routers[um])
-			return BeeApp
+	if _, ok := app.Handlers.routers[um]; ok {
+		if app.Handlers.routers[um].prefix == strings.Trim(fixedRoute, "/ ") {
+			findAndRemoveSingleTree(app.Handlers.routers[um])
+			return app
 		}
-		findAndRemoveTree(subPaths, BeeApp.Handlers.routers[um], um)
+		findAndRemoveTree(subPaths, app.Handlers.routers[um], um)
 	}
-	return BeeApp
+	return app
 }
 
 func findAndRemoveTree(paths []string, entryPointTree *Tree, method string) {
@@ -339,6 +377,11 @@ func findAndRemoveSingleTree(entryPointTree *Tree) {
 	}
 }
 
+// Include see HttpServer.Include
+func Include(cList ...ControllerInterface) *HttpServer {
+	return BeeApp.Include(cList...)
+}
+
 // Include will generate router file in the router/xxx.go from the controller's comments
 // usage:
 // beego.Include(&BankAccount{}, &OrderController{},&RefundController{},&ReceiptController{})
@@ -366,36 +409,56 @@ func findAndRemoveSingleTree(entryPointTree *Tree) {
 // the comments @router url methodlist
 // url support all the function Router's pattern
 // methodlist [get post head put delete options *]
-func Include(cList ...ControllerInterface) *App {
-	BeeApp.Handlers.Include(cList...)
-	return BeeApp
+func (app *HttpServer) Include(cList ...ControllerInterface) *HttpServer {
+	app.Handlers.Include(cList...)
+	return app
+}
+
+// RESTRouter see HttpServer.RESTRouter
+func RESTRouter(rootpath string, c ControllerInterface) *HttpServer {
+	return BeeApp.RESTRouter(rootpath, c)
 }
 
 // RESTRouter adds a restful controller handler to BeeApp.
 // its' controller implements beego.ControllerInterface and
 // defines a param "pattern/:objectId" to visit each resource.
-func RESTRouter(rootpath string, c ControllerInterface) *App {
-	Router(rootpath, c)
-	Router(path.Join(rootpath, ":objectId"), c)
-	return BeeApp
+func (app *HttpServer) RESTRouter(rootpath string, c ControllerInterface) *HttpServer {
+	app.Router(rootpath, c)
+	app.Router(path.Join(rootpath, ":objectId"), c)
+	return app
+}
+
+// AutoRouter see HttpServer.AutoRouter
+func AutoRouter(c ControllerInterface) *HttpServer {
+	return BeeApp.AutoRouter(c)
 }
 
 // AutoRouter adds defined controller handler to BeeApp.
-// it's same to App.AutoRouter.
+// it's same to HttpServer.AutoRouter.
 // if beego.AddAuto(&MainContorlller{}) and MainController has methods List and Page,
 // visit the url /main/list to exec List function or /main/page to exec Page function.
-func AutoRouter(c ControllerInterface) *App {
-	BeeApp.Handlers.AddAuto(c)
-	return BeeApp
+func (app *HttpServer) AutoRouter(c ControllerInterface) *HttpServer {
+	app.Handlers.AddAuto(c)
+	return app
+}
+
+// AutoPrefix see HttpServer.AutoPrefix
+func AutoPrefix(prefix string, c ControllerInterface) *HttpServer {
+	return BeeApp.AutoPrefix(prefix, c)
 }
 
 // AutoPrefix adds controller handler to BeeApp with prefix.
-// it's same to App.AutoRouterWithPrefix.
+// it's same to HttpServer.AutoRouterWithPrefix.
 // if beego.AutoPrefix("/admin",&MainContorlller{}) and MainController has methods List and Page,
 // visit the url /admin/main/list to exec List function or /admin/main/page to exec Page function.
-func AutoPrefix(prefix string, c ControllerInterface) *App {
-	BeeApp.Handlers.AddAutoPrefix(prefix, c)
-	return BeeApp
+func (app *HttpServer) AutoPrefix(prefix string, c ControllerInterface) *HttpServer {
+	app.Handlers.AddAutoPrefix(prefix, c)
+	return app
+}
+
+// Get see HttpServer.Get
+func Get(rootpath string, f FilterFunc) *HttpServer {
+	return BeeApp.Get(rootpath, f)
 }
 
 // Get used to register router for Get method
@@ -403,9 +466,14 @@ func AutoPrefix(prefix string, c ControllerInterface) *App {
 //    beego.Get("/", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func Get(rootpath string, f FilterFunc) *App {
-	BeeApp.Handlers.Get(rootpath, f)
-	return BeeApp
+func (app *HttpServer) Get(rootpath string, f FilterFunc) *HttpServer {
+	app.Handlers.Get(rootpath, f)
+	return app
+}
+
+// Post see HttpServer.Post
+func Post(rootpath string, f FilterFunc) *HttpServer {
+	return BeeApp.Post(rootpath, f)
 }
 
 // Post used to register router for Post method
@@ -413,9 +481,14 @@ func Get(rootpath string, f FilterFunc) *App {
 //    beego.Post("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func Post(rootpath string, f FilterFunc) *App {
-	BeeApp.Handlers.Post(rootpath, f)
-	return BeeApp
+func (app *HttpServer) Post(rootpath string, f FilterFunc) *HttpServer {
+	app.Handlers.Post(rootpath, f)
+	return app
+}
+
+// Delete see HttpServer.Delete
+func Delete(rootpath string, f FilterFunc) *HttpServer {
+	return BeeApp.Delete(rootpath, f)
 }
 
 // Delete used to register router for Delete method
@@ -423,9 +496,14 @@ func Post(rootpath string, f FilterFunc) *App {
 //    beego.Delete("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func Delete(rootpath string, f FilterFunc) *App {
-	BeeApp.Handlers.Delete(rootpath, f)
-	return BeeApp
+func (app *HttpServer) Delete(rootpath string, f FilterFunc) *HttpServer {
+	app.Handlers.Delete(rootpath, f)
+	return app
+}
+
+// Put see HttpServer.Put
+func Put(rootpath string, f FilterFunc) *HttpServer {
+	return BeeApp.Put(rootpath, f)
 }
 
 // Put used to register router for Put method
@@ -433,9 +511,14 @@ func Delete(rootpath string, f FilterFunc) *App {
 //    beego.Put("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func Put(rootpath string, f FilterFunc) *App {
-	BeeApp.Handlers.Put(rootpath, f)
-	return BeeApp
+func (app *HttpServer) Put(rootpath string, f FilterFunc) *HttpServer {
+	app.Handlers.Put(rootpath, f)
+	return app
+}
+
+// Head see HttpServer.Head
+func Head(rootpath string, f FilterFunc) *HttpServer {
+	return BeeApp.Head(rootpath, f)
 }
 
 // Head used to register router for Head method
@@ -443,8 +526,14 @@ func Put(rootpath string, f FilterFunc) *App {
 //    beego.Head("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func Head(rootpath string, f FilterFunc) *App {
-	BeeApp.Handlers.Head(rootpath, f)
+func (app *HttpServer) Head(rootpath string, f FilterFunc) *HttpServer {
+	app.Handlers.Head(rootpath, f)
+	return app
+}
+
+// Options see HttpServer.Options
+func Options(rootpath string, f FilterFunc) *HttpServer {
+	BeeApp.Handlers.Options(rootpath, f)
 	return BeeApp
 }
 
@@ -453,9 +542,14 @@ func Head(rootpath string, f FilterFunc) *App {
 //    beego.Options("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func Options(rootpath string, f FilterFunc) *App {
-	BeeApp.Handlers.Options(rootpath, f)
-	return BeeApp
+func (app *HttpServer) Options(rootpath string, f FilterFunc) *HttpServer {
+	app.Handlers.Options(rootpath, f)
+	return app
+}
+
+// Patch see HttpServer.Patch
+func Patch(rootpath string, f FilterFunc) *HttpServer {
+	return BeeApp.Patch(rootpath, f)
 }
 
 // Patch used to register router for Patch method
@@ -463,9 +557,14 @@ func Options(rootpath string, f FilterFunc) *App {
 //    beego.Patch("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func Patch(rootpath string, f FilterFunc) *App {
-	BeeApp.Handlers.Patch(rootpath, f)
-	return BeeApp
+func (app *HttpServer) Patch(rootpath string, f FilterFunc) *HttpServer {
+	app.Handlers.Patch(rootpath, f)
+	return app
+}
+
+// Any see HttpServer.Any
+func Any(rootpath string, f FilterFunc) *HttpServer {
+	return BeeApp.Any(rootpath, f)
 }
 
 // Any used to register router for all methods
@@ -473,9 +572,14 @@ func Patch(rootpath string, f FilterFunc) *App {
 //    beego.Any("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func Any(rootpath string, f FilterFunc) *App {
-	BeeApp.Handlers.Any(rootpath, f)
-	return BeeApp
+func (app *HttpServer) Any(rootpath string, f FilterFunc) *HttpServer {
+	app.Handlers.Any(rootpath, f)
+	return app
+}
+
+// Handler see HttpServer.Handler
+func Handler(rootpath string, h http.Handler, options ...interface{}) *HttpServer {
+	return BeeApp.Handler(rootpath, h, options...)
 }
 
 // Handler used to register a Handler router
@@ -483,24 +587,81 @@ func Any(rootpath string, f FilterFunc) *App {
 //    beego.Handler("/api", http.HandlerFunc(func (w http.ResponseWriter, r *http.Request) {
 //          fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
 //    }))
-func Handler(rootpath string, h http.Handler, options ...interface{}) *App {
-	BeeApp.Handlers.Handler(rootpath, h, options...)
-	return BeeApp
+func (app *HttpServer) Handler(rootpath string, h http.Handler, options ...interface{}) *HttpServer {
+	app.Handlers.Handler(rootpath, h, options...)
+	return app
+}
+
+// InserFilter see HttpServer.InsertFilter
+func InsertFilter(pattern string, pos int, filter FilterFunc, opts ...FilterOpt) *HttpServer {
+	return BeeApp.InsertFilter(pattern, pos, filter, opts...)
 }
 
 // InsertFilter adds a FilterFunc with pattern condition and action constant.
 // The pos means action constant including
 // beego.BeforeStatic, beego.BeforeRouter, beego.BeforeExec, beego.AfterExec and beego.FinishRouter.
 // The bool params is for setting the returnOnOutput value (false allows multiple filters to execute)
-func InsertFilter(pattern string, pos int, filter FilterFunc, opts ...FilterOpt) *App {
-	BeeApp.Handlers.InsertFilter(pattern, pos, filter, opts...)
-	return BeeApp
+func (app *HttpServer) InsertFilter(pattern string, pos int, filter FilterFunc, opts ...FilterOpt) *HttpServer {
+	app.Handlers.InsertFilter(pattern, pos, filter, opts...)
+	return app
+}
+
+// InsertFilterChain see HttpServer.InsertFilterChain
+func InsertFilterChain(pattern string, filterChain FilterChain, opts ...FilterOpt) *HttpServer {
+	return BeeApp.InsertFilterChain(pattern, filterChain, opts...)
 }
 
 // InsertFilterChain adds a FilterFunc built by filterChain.
 // This filter will be executed before all filters.
-// the filter's behavior is like stack
-func InsertFilterChain(pattern string, filterChain FilterChain, opts ...FilterOpt) *App {
-	BeeApp.Handlers.InsertFilterChain(pattern, filterChain, opts...)
-	return BeeApp
+// the filter's behavior like stack's behavior
+// and the last filter is serving the http request
+func (app *HttpServer) InsertFilterChain(pattern string, filterChain FilterChain, opts ...FilterOpt) *HttpServer {
+	app.Handlers.InsertFilterChain(pattern, filterChain, opts...)
+	return app
+}
+
+func (app *HttpServer) initAddr(addr string) {
+	strs := strings.Split(addr, ":")
+	if len(strs) > 0 && strs[0] != "" {
+		app.Cfg.Listen.HTTPAddr = strs[0]
+		app.Cfg.Listen.Domains = []string{strs[0]}
+	}
+	if len(strs) > 1 && strs[1] != "" {
+		app.Cfg.Listen.HTTPPort, _ = strconv.Atoi(strs[1])
+	}
+}
+
+func (app *HttpServer) LogAccess(ctx *beecontext.Context, startTime *time.Time, statusCode int) {
+	// Skip logging if AccessLogs config is false
+	if !app.Cfg.Log.AccessLogs {
+		return
+	}
+	// Skip logging static requests unless EnableStaticLogs config is true
+	if !app.Cfg.Log.EnableStaticLogs && DefaultAccessLogFilter.Filter(ctx) {
+		return
+	}
+	var (
+		requestTime time.Time
+		elapsedTime time.Duration
+		r           = ctx.Request
+	)
+	if startTime != nil {
+		requestTime = *startTime
+		elapsedTime = time.Since(*startTime)
+	}
+	record := &logs.AccessLogRecord{
+		RemoteAddr:     ctx.Input.IP(),
+		RequestTime:    requestTime,
+		RequestMethod:  r.Method,
+		Request:        fmt.Sprintf("%s %s %s", r.Method, r.RequestURI, r.Proto),
+		ServerProtocol: r.Proto,
+		Host:           r.Host,
+		Status:         statusCode,
+		ElapsedTime:    elapsedTime,
+		HTTPReferrer:   r.Header.Get("Referer"),
+		HTTPUserAgent:  r.Header.Get("User-Agent"),
+		RemoteUser:     r.Header.Get("Remote-User"),
+		BodyBytesSent:  r.ContentLength,
+	}
+	logs.AccessLog(record, app.Cfg.Log.AccessLogsFormat)
 }

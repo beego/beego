@@ -33,11 +33,11 @@ func init() {
 }
 
 // App defines beego application with a new PatternServeMux.
-type App web.App
+type App web.HttpServer
 
 // NewApp returns a new beego application.
 func NewApp() *App {
-	return (*App)(web.NewApp())
+	return (*App)(web.NewHttpSever())
 }
 
 // MiddleWare function for http.Handler
@@ -46,7 +46,7 @@ type MiddleWare web.MiddleWare
 // Run beego application.
 func (app *App) Run(mws ...MiddleWare) {
 	newMws := oldMiddlewareToNew(mws)
-	(*web.App)(app).Run(newMws...)
+	(*web.HttpServer)(app).Run("", newMws...)
 }
 
 func oldMiddlewareToNew(mws []MiddleWare) []web.MiddleWare {
@@ -58,7 +58,7 @@ func oldMiddlewareToNew(mws []MiddleWare) []web.MiddleWare {
 }
 
 // Router adds a patterned controller handler to BeeApp.
-// it's an alias method of App.Router.
+// it's an alias method of HttpServer.Router.
 // usage:
 //  simple router
 //  beego.Router("/admin", &admin.UserController{})
@@ -138,7 +138,7 @@ func RESTRouter(rootpath string, c ControllerInterface) *App {
 }
 
 // AutoRouter adds defined controller handler to BeeApp.
-// it's same to App.AutoRouter.
+// it's same to HttpServer.AutoRouter.
 // if beego.AddAuto(&MainContorlller{}) and MainController has methods List and Page,
 // visit the url /main/list to exec List function or /main/page to exec Page function.
 func AutoRouter(c ControllerInterface) *App {
@@ -146,7 +146,7 @@ func AutoRouter(c ControllerInterface) *App {
 }
 
 // AutoPrefix adds controller handler to BeeApp with prefix.
-// it's same to App.AutoRouterWithPrefix.
+// it's same to HttpServer.AutoRouterWithPrefix.
 // if beego.AutoPrefix("/admin",&MainContorlller{}) and MainController has methods List and Page,
 // visit the url /admin/main/list to exec List function or /admin/main/page to exec Page function.
 func AutoPrefix(prefix string, c ControllerInterface) *App {
