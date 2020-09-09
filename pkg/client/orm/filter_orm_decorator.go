@@ -17,6 +17,7 @@ package orm
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"reflect"
 	"time"
 
@@ -32,7 +33,6 @@ var _ TxOrmer = new(filterOrmDecorator)
 
 type filterOrmDecorator struct {
 	ormer
-	modelCacheHandler
 	TxBeginner
 	TxCommitter
 
@@ -44,15 +44,15 @@ type filterOrmDecorator struct {
 }
 
 func (f *filterOrmDecorator) RegisterModels(models ...interface{}) (err error) {
-	return f.modelCacheHandler.RegisterModels(models...)
+	return errors.New(`not callable`)
 }
 
 func (f *filterOrmDecorator) RegisterModelsWithPrefix(prefix string, models ...interface{}) (err error) {
-	return f.modelCacheHandler.RegisterModelsWithPrefix(prefix, models...)
+	return errors.New(`not callable`)
 }
 
 func (f *filterOrmDecorator) RegisterModelsWithSuffix(suffix string, models ...interface{}) (err error) {
-	return f.modelCacheHandler.RegisterModelsWithSuffix(suffix, models...)
+	return errors.New(`not callable`)
 }
 
 func NewFilterOrmDecorator(delegate Ormer, filterChains ...FilterChain) Ormer {
