@@ -36,4 +36,20 @@ services:
     image: memcached
     ports:
     - "11211:11211"
-
+  etcd:
+    command: >
+      sh -c "
+      etcdctl put current.float 1.23
+      && etcdctl put current.bool true
+      && etcdctl put current.int 11
+      && etcdctl put current.string hello
+      && etcdctl put current.serialize.name test
+      "
+    container_name: "beego-etcd"
+    environment:
+      - ALLOW_NONE_AUTHENTICATION=yes
+#      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379
+    image: bitnami/etcd
+    ports:
+    - "2379:2379"
+    - "2380:2380"
