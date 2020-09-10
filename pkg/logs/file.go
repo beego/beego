@@ -27,6 +27,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/astaxie/beego/pkg/common"
 )
 
 // fileLogWriter implements LoggerInterface.
@@ -59,6 +61,8 @@ type fileLogWriter struct {
 	MaxHours       int64 `json:"maxhours"`
 	hourlyOpenDate int
 	hourlyOpenTime time.Time
+
+	customFormatter func(*LogMsg) string
 
 	Rotate bool `json:"rotate"`
 
@@ -104,7 +108,18 @@ func (w *fileLogWriter) Format(lm *LogMsg) string {
 //  "rotate":true,
 //      "perm":"0600"
 //  }
-func (w *fileLogWriter) Init(jsonConfig string) error {
+func (w *fileLogWriter) Init(jsonConfig string, opts ...common.SimpleKV) error {
+
+	for _, elem := range opts {
+		if elem.Key == "formatter" {
+			formatter, err := GetFormatter(elem)
+			if err != nil {
+				return err
+			}
+			w.customFormatter = formatter
+		}
+	}
+
 	err := json.Unmarshal([]byte(jsonConfig), w)
 	if err != nil {
 		return err
@@ -153,7 +168,14 @@ func (w *fileLogWriter) WriteMsg(lm *LogMsg) error {
 		return nil
 	}
 	hd, d, h := formatTimeHeader(lm.When)
-	msg := w.Format(lm)
+	msg := ""
+
+	if w.customFormatter != nil {
+		msg = w.customFormatter(lm)
+	} else {
+		msg = w.Format(lm)
+	}
+
 	msg = fmt.Sprintf("%s %s\n", string(hd), msg)
 	if w.Rotate {
 		w.RLock()
