@@ -21,6 +21,8 @@ import (
 	"net"
 	"net/smtp"
 	"strings"
+
+	"github.com/astaxie/beego/pkg/infrastructure/utils"
 )
 
 // SMTPWriter implements LoggerInterface and is used to send emails via given SMTP-server.
@@ -32,6 +34,7 @@ type SMTPWriter struct {
 	FromAddress        string   `json:"fromAddress"`
 	RecipientAddresses []string `json:"sendTos"`
 	Level              int      `json:"level"`
+	customFormatter    func(*LogMsg) string
 }
 
 // NewSMTPWriter creates the smtp writer.
@@ -50,8 +53,19 @@ func newSMTPWriter() Logger {
 //		"sendTos":["email1","email2"],
 //		"level":LevelError
 //	}
-func (s *SMTPWriter) Init(jsonconfig string) error {
-	return json.Unmarshal([]byte(jsonconfig), s)
+func (s *SMTPWriter) Init(jsonConfig string, opts ...utils.KV) error {
+
+	for _, elem := range opts {
+		if elem.GetKey() == "formatter" {
+			formatter, err := GetFormatter(elem)
+			if err != nil {
+				return err
+			}
+			s.customFormatter = formatter
+		}
+	}
+
+	return json.Unmarshal([]byte(jsonConfig), s)
 }
 
 func (s *SMTPWriter) getSMTPAuth(host string) smtp.Auth {
@@ -114,6 +128,10 @@ func (s *SMTPWriter) sendMail(hostAddressWithPort string, auth smtp.Auth, fromAd
 	return client.Quit()
 }
 
+func (s *SMTPWriter) Format(lm *LogMsg) string {
+	return lm.Msg
+}
+
 // WriteMsg writes message in smtp writer.
 // Sends an email with subject and only this message.
 func (s *SMTPWriter) WriteMsg(lm *LogMsg) error {
@@ -126,11 +144,13 @@ func (s *SMTPWriter) WriteMsg(lm *LogMsg) error {
 	// Set up authentication information.
 	auth := s.getSMTPAuth(hp[0])
 
+	msg := s.Format(lm)
+
 	// Connect to the server, authenticate, set the sender and recipient,
 	// and send the email all in one step.
 	contentType := "Content-Type: text/plain" + "; charset=UTF-8"
 	mailmsg := []byte("To: " + strings.Join(s.RecipientAddresses, ";") + "\r\nFrom: " + s.FromAddress + "<" + s.FromAddress +
-		">\r\nSubject: " + s.Subject + "\r\n" + contentType + "\r\n\r\n" + fmt.Sprintf(".%s", lm.When.Format("2006-01-02 15:04:05")) + lm.Msg)
+		">\r\nSubject: " + s.Subject + "\r\n" + contentType + "\r\n\r\n" + fmt.Sprintf(".%s", lm.When.Format("2006-01-02 15:04:05")) + msg)
 
 	return s.sendMail(s.Host, auth, s.FromAddress, s.RecipientAddresses, mailmsg)
 }

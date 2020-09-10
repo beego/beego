@@ -19,6 +19,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/astaxie/beego/pkg/infrastructure/utils"
+
 	"github.com/shiena/ansicolor"
 )
 
@@ -47,9 +49,20 @@ var colors = []brush{
 
 // consoleWriter implements LoggerInterface and writes messages to terminal.
 type consoleWriter struct {
-	lg       *logWriter
-	Level    int  `json:"level"`
-	Colorful bool `json:"color"` //this filed is useful only when system's terminal supports color
+	lg              *logWriter
+	customFormatter func(*LogMsg) string
+	Level           int  `json:"level"`
+	Colorful        bool `json:"color"` //this filed is useful only when system's terminal supports color
+}
+
+func (c *consoleWriter) Format(lm *LogMsg) string {
+	msg := lm.Msg
+
+	h, _, _ := formatTimeHeader(lm.When)
+	bytes := append(append(h, msg...), '\n')
+
+	return string(bytes)
+
 }
 
 // NewConsole creates ConsoleWriter returning as LoggerInterface.
@@ -64,10 +77,22 @@ func NewConsole() Logger {
 
 // Init initianlizes the console logger.
 // jsonConfig must be in the format '{"level":LevelTrace}'
-func (c *consoleWriter) Init(jsonConfig string) error {
+func (c *consoleWriter) Init(jsonConfig string, opts ...utils.KV) error {
+
+	for _, elem := range opts {
+		if elem.GetKey() == "formatter" {
+			formatter, err := GetFormatter(elem)
+			if err != nil {
+				return err
+			}
+			c.customFormatter = formatter
+		}
+	}
+
 	if len(jsonConfig) == 0 {
 		return nil
 	}
+
 	return json.Unmarshal([]byte(jsonConfig), c)
 }
 
@@ -76,10 +101,21 @@ func (c *consoleWriter) WriteMsg(lm *LogMsg) error {
 	if lm.Level > c.Level {
 		return nil
 	}
+
+	msg := ""
+
 	if c.Colorful {
 		lm.Msg = strings.Replace(lm.Msg, levelPrefix[lm.Level], colors[lm.Level](levelPrefix[lm.Level]), 1)
 	}
-	c.lg.writeln(lm)
+
+	if c.customFormatter != nil {
+		msg = c.customFormatter(lm)
+	} else {
+		msg = c.Format(lm)
+
+	}
+
+	c.lg.writeln(msg)
 	return nil
 }
 

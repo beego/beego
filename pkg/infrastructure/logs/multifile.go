@@ -16,6 +16,8 @@ package logs
 
 import (
 	"encoding/json"
+
+	"github.com/astaxie/beego/pkg/infrastructure/utils"
 )
 
 // A filesLogWriter manages several fileLogWriter
@@ -24,9 +26,10 @@ import (
 // and write the error-level logs to project.error.log and write the debug-level logs to project.debug.log
 // the rotate attribute also  acts like fileLogWriter
 type multiFileLogWriter struct {
-	writers       [LevelDebug + 1 + 1]*fileLogWriter // the last one for fullLogWriter
-	fullLogWriter *fileLogWriter
-	Separate      []string `json:"separate"`
+	writers         [LevelDebug + 1 + 1]*fileLogWriter // the last one for fullLogWriter
+	fullLogWriter   *fileLogWriter
+	Separate        []string `json:"separate"`
+	customFormatter func(*LogMsg) string
 }
 
 var levelNames = [...]string{"emergency", "alert", "critical", "error", "warning", "notice", "info", "debug"}
@@ -44,9 +47,19 @@ var levelNames = [...]string{"emergency", "alert", "critical", "error", "warning
 //	"separate":["emergency", "alert", "critical", "error", "warning", "notice", "info", "debug"],
 //	}
 
-func (f *multiFileLogWriter) Init(config string) error {
+func (f *multiFileLogWriter) Init(jsonConfig string, opts ...utils.KV) error {
+	for _, elem := range opts {
+		if elem.GetKey() == "formatter" {
+			formatter, err := GetFormatter(elem)
+			if err != nil {
+				return err
+			}
+			f.customFormatter = formatter
+		}
+	}
+
 	writer := newFileWriter().(*fileLogWriter)
-	err := writer.Init(config)
+	err := writer.Init(jsonConfig)
 	if err != nil {
 		return err
 	}
@@ -54,10 +67,10 @@ func (f *multiFileLogWriter) Init(config string) error {
 	f.writers[LevelDebug+1] = writer
 
 	//unmarshal "separate" field to f.Separate
-	json.Unmarshal([]byte(config), f)
+	json.Unmarshal([]byte(jsonConfig), f)
 
 	jsonMap := map[string]interface{}{}
-	json.Unmarshal([]byte(config), &jsonMap)
+	json.Unmarshal([]byte(jsonConfig), &jsonMap)
 
 	for i := LevelEmergency; i < LevelDebug+1; i++ {
 		for _, v := range f.Separate {
@@ -74,8 +87,11 @@ func (f *multiFileLogWriter) Init(config string) error {
 			}
 		}
 	}
-
 	return nil
+}
+
+func (f *multiFileLogWriter) Format(lm *LogMsg) string {
+	return lm.Msg
 }
 
 func (f *multiFileLogWriter) Destroy() {

@@ -27,6 +27,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/astaxie/beego/pkg/infrastructure/utils"
 )
 
 // fileLogWriter implements LoggerInterface.
@@ -60,6 +62,8 @@ type fileLogWriter struct {
 	hourlyOpenDate int
 	hourlyOpenTime time.Time
 
+	customFormatter func(*LogMsg) string
+
 	Rotate bool `json:"rotate"`
 
 	Level int `json:"level"`
@@ -89,6 +93,10 @@ func newFileWriter() Logger {
 	return w
 }
 
+func (w *fileLogWriter) Format(lm *LogMsg) string {
+	return lm.Msg
+}
+
 // Init file logger with json config.
 // jsonConfig like:
 //  {
@@ -100,7 +108,18 @@ func newFileWriter() Logger {
 //  "rotate":true,
 //      "perm":"0600"
 //  }
-func (w *fileLogWriter) Init(jsonConfig string) error {
+func (w *fileLogWriter) Init(jsonConfig string, opts ...utils.KV) error {
+
+	for _, elem := range opts {
+		if elem.GetKey() == "formatter" {
+			formatter, err := GetFormatter(elem)
+			if err != nil {
+				return err
+			}
+			w.customFormatter = formatter
+		}
+	}
+
 	err := json.Unmarshal([]byte(jsonConfig), w)
 	if err != nil {
 		return err
@@ -149,7 +168,15 @@ func (w *fileLogWriter) WriteMsg(lm *LogMsg) error {
 		return nil
 	}
 	hd, d, h := formatTimeHeader(lm.When)
-	lm.Msg = string(hd) + lm.Msg + "\n"
+	msg := ""
+
+	if w.customFormatter != nil {
+		msg = w.customFormatter(lm)
+	} else {
+		msg = w.Format(lm)
+	}
+
+	msg = fmt.Sprintf("%s %s\n", string(hd), msg)
 	if w.Rotate {
 		w.RLock()
 		if w.needRotateHourly(len(lm.Msg), h) {
@@ -176,10 +203,10 @@ func (w *fileLogWriter) WriteMsg(lm *LogMsg) error {
 	}
 
 	w.Lock()
-	_, err := w.fileWriter.Write([]byte(lm.Msg))
+	_, err := w.fileWriter.Write([]byte(msg))
 	if err == nil {
 		w.maxLinesCurLines++
-		w.maxSizeCurSize += len(lm.Msg)
+		w.maxSizeCurSize += len(msg)
 	}
 	w.Unlock()
 	return err
@@ -302,7 +329,7 @@ func (w *fileLogWriter) doRotate(logTime time.Time) error {
 
 	_, err = os.Lstat(w.Filename)
 	if err != nil {
-		//even if the file is not exist or other ,we should RESTART the logger
+		// even if the file is not exist or other ,we should RESTART the logger
 		goto RESTART_LOGGER
 	}
 
