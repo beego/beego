@@ -26,6 +26,7 @@ import (
 	"path"
 	"strconv"
 	"strings"
+	"text/template"
 	"time"
 
 	"golang.org/x/crypto/acme/autocert"
@@ -72,6 +73,7 @@ func NewHttpServerWithCfg(cfg Config) *HttpServer {
 		Server:   &http.Server{},
 		Cfg:      cfgPtr,
 	}
+
 	return app
 }
 
@@ -664,4 +666,91 @@ func (app *HttpServer) LogAccess(ctx *beecontext.Context, startTime *time.Time, 
 		BodyBytesSent:  r.ContentLength,
 	}
 	logs.AccessLog(record, app.Cfg.Log.AccessLogsFormat)
+}
+
+// PrintTree prints all registered routers.
+func (app *HttpServer) PrintTree() M {
+	var (
+		content     = M{}
+		methods     = []string{}
+		methodsData = make(M)
+	)
+	for method, t := range app.Handlers.routers {
+
+		resultList := new([][]string)
+
+		printTree(resultList, t)
+
+		methods = append(methods, template.HTMLEscapeString(method))
+		methodsData[template.HTMLEscapeString(method)] = resultList
+	}
+
+	content["Data"] = methodsData
+	content["Methods"] = methods
+	return content
+}
+
+func printTree(resultList *[][]string, t *Tree) {
+	for _, tr := range t.fixrouters {
+		printTree(resultList, tr)
+	}
+	if t.wildcard != nil {
+		printTree(resultList, t.wildcard)
+	}
+	for _, l := range t.leaves {
+		if v, ok := l.runObject.(*ControllerInfo); ok {
+			if v.routerType == routerTypeBeego {
+				var result = []string{
+					template.HTMLEscapeString(v.pattern),
+					template.HTMLEscapeString(fmt.Sprintf("%s", v.methods)),
+					template.HTMLEscapeString(v.controllerType.String()),
+				}
+				*resultList = append(*resultList, result)
+			} else if v.routerType == routerTypeRESTFul {
+				var result = []string{
+					template.HTMLEscapeString(v.pattern),
+					template.HTMLEscapeString(fmt.Sprintf("%s", v.methods)),
+					"",
+				}
+				*resultList = append(*resultList, result)
+			} else if v.routerType == routerTypeHandler {
+				var result = []string{
+					template.HTMLEscapeString(v.pattern),
+					"",
+					"",
+				}
+				*resultList = append(*resultList, result)
+			}
+		}
+	}
+}
+
+func (app *HttpServer) reportFilter() M {
+	filterTypeData := make(M)
+	// filterTypes := []string{}
+	if app.Handlers.enableFilter {
+		// var filterType string
+		for k, fr := range map[int]string{
+			BeforeStatic: "Before Static",
+			BeforeRouter: "Before Router",
+			BeforeExec:   "Before Exec",
+			AfterExec:    "After Exec",
+			FinishRouter: "Finish Router",
+		} {
+			if bf := app.Handlers.filters[k]; len(bf) > 0 {
+				resultList := new([][]string)
+				for _, f := range bf {
+					var result = []string{
+						// void xss
+						template.HTMLEscapeString(f.pattern),
+						template.HTMLEscapeString(utils.GetFuncName(f.filterFunc)),
+					}
+					*resultList = append(*resultList, result)
+				}
+				filterTypeData[fr] = resultList
+			}
+		}
+	}
+
+	return filterTypeData
 }
