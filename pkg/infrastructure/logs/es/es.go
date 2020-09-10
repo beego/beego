@@ -13,6 +13,7 @@ import (
 	"github.com/elastic/go-elasticsearch/v6/esapi"
 
 	"github.com/astaxie/beego/pkg/infrastructure/logs"
+	"github.com/astaxie/beego/pkg/infrastructure/utils"
 )
 
 // NewES returns a LoggerInterface
@@ -31,13 +32,29 @@ func NewES() logs.Logger {
 // import _ "github.com/astaxie/beego/logs/es"
 type esLogger struct {
 	*elasticsearch.Client
-	DSN   string `json:"dsn"`
-	Level int    `json:"level"`
+	DSN             string `json:"dsn"`
+	Level           int    `json:"level"`
+	customFormatter func(*logs.LogMsg) string
+}
+
+func (el *esLogger) Format(lm *logs.LogMsg) string {
+	return lm.Msg
 }
 
 // {"dsn":"http://localhost:9200/","level":1}
-func (el *esLogger) Init(jsonconfig string) error {
-	err := json.Unmarshal([]byte(jsonconfig), el)
+func (el *esLogger) Init(jsonConfig string, opts ...utils.KV) error {
+
+	for _, elem := range opts {
+		if elem.GetKey() == "formatter" {
+			formatter, err := logs.GetFormatter(elem)
+			if err != nil {
+				return err
+			}
+			el.customFormatter = formatter
+		}
+	}
+
+	err := json.Unmarshal([]byte(jsonConfig), el)
 	if err != nil {
 		return err
 	}
@@ -65,9 +82,16 @@ func (el *esLogger) WriteMsg(lm *logs.LogMsg) error {
 		return nil
 	}
 
+	msg := ""
+	if el.customFormatter != nil {
+		msg = el.customFormatter(lm)
+	} else {
+		msg = el.Format(lm)
+	}
+
 	idx := LogDocument{
 		Timestamp: lm.When.Format(time.RFC3339),
-		Msg:       lm.Msg,
+		Msg:       msg,
 	}
 
 	body, err := json.Marshal(idx)

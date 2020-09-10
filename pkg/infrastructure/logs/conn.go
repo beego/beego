@@ -18,18 +18,21 @@ import (
 	"encoding/json"
 	"io"
 	"net"
+
+	"github.com/astaxie/beego/pkg/infrastructure/utils"
 )
 
 // connWriter implements LoggerInterface.
 // Writes messages in keep-live tcp connection.
 type connWriter struct {
-	lg             *logWriter
-	innerWriter    io.WriteCloser
-	ReconnectOnMsg bool   `json:"reconnectOnMsg"`
-	Reconnect      bool   `json:"reconnect"`
-	Net            string `json:"net"`
-	Addr           string `json:"addr"`
-	Level          int    `json:"level"`
+	lg              *logWriter
+	innerWriter     io.WriteCloser
+	customFormatter func(*LogMsg) string
+	ReconnectOnMsg  bool   `json:"reconnectOnMsg"`
+	Reconnect       bool   `json:"reconnect"`
+	Net             string `json:"net"`
+	Addr            string `json:"addr"`
+	Level           int    `json:"level"`
 }
 
 // NewConn creates new ConnWrite returning as LoggerInterface.
@@ -39,9 +42,24 @@ func NewConn() Logger {
 	return conn
 }
 
+func (c *connWriter) Format(lm *LogMsg) string {
+	return lm.Msg
+}
+
 // Init initializes a connection writer with json config.
 // json config only needs they "level" key
-func (c *connWriter) Init(jsonConfig string) error {
+func (c *connWriter) Init(jsonConfig string, opts ...utils.KV) error {
+
+	for _, elem := range opts {
+		if elem.GetKey() == "formatter" {
+			formatter, err := GetFormatter(elem)
+			if err != nil {
+				return err
+			}
+			c.customFormatter = formatter
+		}
+	}
+
 	return json.Unmarshal([]byte(jsonConfig), c)
 }
 
@@ -62,7 +80,15 @@ func (c *connWriter) WriteMsg(lm *LogMsg) error {
 		defer c.innerWriter.Close()
 	}
 
-	_, err := c.lg.writeln(lm)
+	msg := ""
+	if c.customFormatter != nil {
+		msg = c.customFormatter(lm)
+	} else {
+		msg = c.Format(lm)
+
+	}
+
+	_, err := c.lg.writeln(msg)
 	if err != nil {
 		return err
 	}

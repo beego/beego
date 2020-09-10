@@ -5,12 +5,16 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+
+	"github.com/astaxie/beego/pkg/infrastructure/utils"
 )
 
 // SLACKWriter implements beego LoggerInterface and is used to send jiaoliao webhook
 type SLACKWriter struct {
-	WebhookURL string `json:"webhookurl"`
-	Level      int    `json:"level"`
+	WebhookURL         string `json:"webhookurl"`
+	Level              int    `json:"level"`
+	UseCustomFormatter bool
+	CustomFormatter    func(*LogMsg) string
 }
 
 // newSLACKWriter creates jiaoliao writer.
@@ -18,9 +22,19 @@ func newSLACKWriter() Logger {
 	return &SLACKWriter{Level: LevelTrace}
 }
 
+func (s *SLACKWriter) Format(lm *LogMsg) string {
+	return lm.Msg
+}
+
 // Init SLACKWriter with json config string
-func (s *SLACKWriter) Init(jsonconfig string) error {
-	return json.Unmarshal([]byte(jsonconfig), s)
+func (s *SLACKWriter) Init(jsonConfig string, opts ...utils.KV) error {
+	// 	if elem != nil {
+	// 		s.UseCustomFormatter = true
+	// 		s.CustomFormatter = elem
+	// 	}
+	// }
+
+	return json.Unmarshal([]byte(jsonConfig), s)
 }
 
 // WriteMsg write message in smtp writer.
@@ -29,8 +43,8 @@ func (s *SLACKWriter) WriteMsg(lm *LogMsg) error {
 	if lm.Level > s.Level {
 		return nil
 	}
-
-	text := fmt.Sprintf("{\"text\": \"%s %s\"}", lm.When.Format("2006-01-02 15:04:05"), lm.Msg)
+	msg := s.Format(lm)
+	text := fmt.Sprintf("{\"text\": \"%s %s\"}", lm.When.Format("2006-01-02 15:04:05"), msg)
 
 	form := url.Values{}
 	form.Add("payload", text)

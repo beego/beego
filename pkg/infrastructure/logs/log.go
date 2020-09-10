@@ -38,10 +38,13 @@ import (
 	"log"
 	"os"
 	"path"
+	"reflect"
 	"runtime"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/astaxie/beego/pkg/infrastructure/utils"
 )
 
 // RFC5424 log message levels.
@@ -84,8 +87,9 @@ type newLoggerFunc func() Logger
 
 // Logger defines the behavior of a log provider.
 type Logger interface {
-	Init(config string) error
+	Init(config string, opts ...utils.KV) error
 	WriteMsg(lm *LogMsg) error
+	Format(lm *LogMsg) string
 	Destroy()
 	Flush()
 }
@@ -114,6 +118,7 @@ type BeeLogger struct {
 	init                bool
 	enableFuncCallDepth bool
 	loggerFuncCallDepth int
+	globalFormatter     func(*LogMsg) string
 	enableFullFilePath  bool
 	asynchronous        bool
 	prefix              string
@@ -137,6 +142,10 @@ type LogMsg struct {
 	When       time.Time
 	FilePath   string
 	LineNumber int
+}
+
+type LogFormatter interface {
+	Format(lm *LogMsg) string
 }
 
 var logMsgPool *sync.Pool
@@ -179,6 +188,10 @@ func (bl *BeeLogger) Async(msgLen ...int64) *BeeLogger {
 	return bl
 }
 
+func Format(lm *LogMsg) string {
+	return lm.Msg
+}
+
 // SetLogger provides a given logger adapter into BeeLogger with config string.
 // config must in in JSON format like {"interval":360}}
 func (bl *BeeLogger) setLogger(adapterName string, configs ...string) error {
@@ -195,7 +208,16 @@ func (bl *BeeLogger) setLogger(adapterName string, configs ...string) error {
 	}
 
 	lg := logAdapter()
-	err := lg.Init(config)
+	var err error
+
+	// Global formatter overrides the default set formatter
+	// but not adapter specific formatters set with logs.SetLoggerWithOpts()
+	if bl.globalFormatter != nil {
+		err = lg.Init(config, &utils.SimpleKV{Key: "formatter", Value: bl.globalFormatter})
+	} else {
+		err = lg.Init(config)
+	}
+
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "logs.BeeLogger.SetLogger: "+err.Error())
 		return err
@@ -299,7 +321,7 @@ func (bl *BeeLogger) writeMsg(lm *LogMsg, v ...interface{}) error {
 		lm.Msg = fmt.Sprintf("[%s:%d] %s", lm.FilePath, lm.LineNumber, lm.Msg)
 	}
 
-	//set level info in front of filename info
+	// set level info in front of filename info
 	if lm.Level == levelLoggerImpl {
 		// set to emergency to ensure all log will be print out correctly
 		lm.Level = LevelEmergency
@@ -380,6 +402,87 @@ func (bl *BeeLogger) startLogger() {
 			break
 		}
 	}
+}
+
+// Get the formatter from the opts common.SimpleKV structure
+// Looks for a key: "formatter" with value: func(*LogMsg) string
+func GetFormatter(opts utils.KV) (func(*LogMsg) string, error) {
+	if strings.ToLower(opts.GetKey().(string)) == "formatter" {
+		formatterInterface := reflect.ValueOf(opts.GetValue()).Interface()
+		formatterFunc := formatterInterface.(func(*LogMsg) string)
+		return formatterFunc, nil
+	}
+
+	return nil, fmt.Errorf("no \"formatter\" key given in simpleKV")
+}
+
+// SetLoggerWithOpts sets a log adapter with a user defined logging format. Config must be valid JSON
+// such as: {"interval":360}
+func (bl *BeeLogger) setLoggerWithOpts(adapterName string, opts utils.KV, configs ...string) error {
+	config := append(configs, "{}")[0]
+	for _, l := range bl.outputs {
+		if l.name == adapterName {
+			return fmt.Errorf("logs: duplicate adaptername %q (you have set this logger before)", adapterName)
+		}
+	}
+
+	logAdapter, ok := adapters[adapterName]
+	if !ok {
+		return fmt.Errorf("logs: unknown adaptername %q (forgotten Register?)", adapterName)
+	}
+
+	if opts.GetKey() == nil {
+		return fmt.Errorf("No SimpleKV struct set for %s log adapter", adapterName)
+	}
+
+	lg := logAdapter()
+	err := lg.Init(config, opts)
+	if err != nil {
+		fmt.Fprintln(os.Stderr, "logs.BeeLogger.SetLogger: "+err.Error())
+		return err
+	}
+
+	bl.outputs = append(bl.outputs, &nameLogger{
+		name:   adapterName,
+		Logger: lg,
+	})
+
+	return nil
+}
+
+// SetLogger provides a given logger adapter into BeeLogger with config string.
+func (bl *BeeLogger) SetLoggerWithOpts(adapterName string, opts utils.KV, configs ...string) error {
+	bl.lock.Lock()
+	defer bl.lock.Unlock()
+	if !bl.init {
+		bl.outputs = []*nameLogger{}
+		bl.init = true
+	}
+	return bl.setLoggerWithOpts(adapterName, opts, configs...)
+}
+
+// SetLoggerWIthOpts sets a given log adapter with a custom log adapter.
+// Log Adapter must be given in the form common.SimpleKV{Key: "formatter": Value: struct.FormatFunc}
+// where FormatFunc has the signature func(*LogMsg) string
+// func SetLoggerWithOpts(adapter string, config []string, formatterFunc func(*LogMsg) string) error {
+func SetLoggerWithOpts(adapter string, config []string, opts utils.KV) error {
+	err := beeLogger.SetLoggerWithOpts(adapter, opts, config...)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return nil
+
+}
+
+func (bl *BeeLogger) setGlobalFormatter(fmtter func(*LogMsg) string) error {
+	bl.globalFormatter = fmtter
+	return nil
+}
+
+// SetGlobalFormatter sets the global formatter for all log adapters
+// This overrides and other individually set adapter
+func SetGlobalFormatter(fmtter func(*LogMsg) string) error {
+	return beeLogger.setGlobalFormatter(fmtter)
 }
 
 // Emergency Log EMERGENCY level message.
@@ -777,9 +880,9 @@ func formatLog(f interface{}, v ...interface{}) string {
 			return msg
 		}
 		if strings.Contains(msg, "%") && !strings.Contains(msg, "%%") {
-			//format string
+			// format string
 		} else {
-			//do not contain format char
+			// do not contain format char
 			msg += strings.Repeat(" %v", len(v))
 		}
 	default:
