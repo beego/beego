@@ -136,7 +136,7 @@ func TestHealthCheckHandlerDefault(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	handler := http.HandlerFunc(healthcheck)
+	handler := http.HandlerFunc(heathCheck)
 
 	handler.ServeHTTP(w, req)
 
@@ -197,7 +197,7 @@ func TestHealthCheckHandlerReturnsJSON(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	handler := http.HandlerFunc(healthcheck)
+	handler := http.HandlerFunc(heathCheck)
 
 	handler.ServeHTTP(w, req)
 	if status := w.Code; status != http.StatusOK {
