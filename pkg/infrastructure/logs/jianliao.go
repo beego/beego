@@ -6,42 +6,49 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/astaxie/beego/pkg/infrastructure/utils"
+	"github.com/pkg/errors"
 )
 
 // JLWriter implements beego LoggerInterface and is used to send jiaoliao webhook
 type JLWriter struct {
-	AuthorName      string `json:"authorname"`
-	Title           string `json:"title"`
-	WebhookURL      string `json:"webhookurl"`
-	RedirectURL     string `json:"redirecturl,omitempty"`
-	ImageURL        string `json:"imageurl,omitempty"`
-	Level           int    `json:"level"`
-	customFormatter func(*LogMsg) string
+	AuthorName  string `json:"authorname"`
+	Title       string `json:"title"`
+	WebhookURL  string `json:"webhookurl"`
+	RedirectURL string `json:"redirecturl,omitempty"`
+	ImageURL    string `json:"imageurl,omitempty"`
+	Level       int    `json:"level"`
+
+	formatter LogFormatter
+	Formatter string `json:"formatter"`
 }
 
 // newJLWriter creates jiaoliao writer.
 func newJLWriter() Logger {
-	return &JLWriter{Level: LevelTrace}
+	res := &JLWriter{Level: LevelTrace}
+	res.formatter = res
+	return res
 }
 
 // Init JLWriter with json config string
-func (s *JLWriter) Init(jsonConfig string, opts ...utils.KV) error {
-	for _, elem := range opts {
-		if elem.GetKey() == "formatter" {
-			formatter, err := GetFormatter(elem)
-			if err != nil {
-				return err
-			}
-			s.customFormatter = formatter
-		}
-	}
+func (s *JLWriter) Init(config string) error {
 
-	return json.Unmarshal([]byte(jsonConfig), s)
+	res := json.Unmarshal([]byte(config), s)
+	if res == nil && len(s.Formatter) > 0 {
+		fmtr, ok := GetFormatter(s.Formatter)
+		if !ok {
+			return errors.New(fmt.Sprintf("the formatter with name: %s not found", s.Formatter))
+		}
+		s.formatter = fmtr
+	}
+	return res
 }
 
 func (s *JLWriter) Format(lm *LogMsg) string {
-	return lm.Msg
+	return lm.OldStyleFormat()
+}
+
+func (s *JLWriter) SetFormatter(f LogFormatter) {
+	s.formatter = f
 }
 
 // WriteMsg writes message in smtp writer.
@@ -51,14 +58,7 @@ func (s *JLWriter) WriteMsg(lm *LogMsg) error {
 		return nil
 	}
 
-	text := ""
-
-	if s.customFormatter != nil {
-		text = fmt.Sprintf("%s %s", lm.When.Format("2006-01-02 15:04:05"), s.customFormatter(lm))
-	} else {
-		text = fmt.Sprintf("%s %s", lm.When.Format("2006-01-02 15:04:05"), s.Format(lm))
-
-	}
+	text := s.formatter.Format(lm)
 
 	form := url.Values{}
 	form.Add("authorName", s.AuthorName)

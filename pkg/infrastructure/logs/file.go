@@ -27,8 +27,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/astaxie/beego/pkg/infrastructure/utils"
 )
 
 // fileLogWriter implements LoggerInterface.
@@ -62,8 +60,6 @@ type fileLogWriter struct {
 	hourlyOpenDate int
 	hourlyOpenTime time.Time
 
-	customFormatter func(*LogMsg) string
-
 	Rotate bool `json:"rotate"`
 
 	Level int `json:"level"`
@@ -73,6 +69,9 @@ type fileLogWriter struct {
 	RotatePerm string `json:"rotateperm"`
 
 	fileNameOnly, suffix string // like "project.log", project is fileNameOnly and .log is suffix
+
+	formatter LogFormatter
+	Formatter string `json:"formatter"`
 }
 
 // newFileWriter creates a FileLogWriter returning as LoggerInterface.
@@ -90,11 +89,19 @@ func newFileWriter() Logger {
 		MaxFiles:   999,
 		MaxSize:    1 << 28,
 	}
+	w.formatter = w
 	return w
 }
 
 func (w *fileLogWriter) Format(lm *LogMsg) string {
-	return lm.Msg
+	msg := lm.OldStyleFormat()
+	hd, _, _ := formatTimeHeader(lm.When)
+	msg = fmt.Sprintf("%s %s\n", string(hd), msg)
+	return msg
+}
+
+func (w *fileLogWriter) SetFormatter(f LogFormatter) {
+	w.formatter = f
 }
 
 // Init file logger with json config.
@@ -108,19 +115,9 @@ func (w *fileLogWriter) Format(lm *LogMsg) string {
 //  "rotate":true,
 //      "perm":"0600"
 //  }
-func (w *fileLogWriter) Init(jsonConfig string, opts ...utils.KV) error {
+func (w *fileLogWriter) Init(config string) error {
 
-	for _, elem := range opts {
-		if elem.GetKey() == "formatter" {
-			formatter, err := GetFormatter(elem)
-			if err != nil {
-				return err
-			}
-			w.customFormatter = formatter
-		}
-	}
-
-	err := json.Unmarshal([]byte(jsonConfig), w)
+	err := json.Unmarshal([]byte(config), w)
 	if err != nil {
 		return err
 	}
@@ -131,6 +128,14 @@ func (w *fileLogWriter) Init(jsonConfig string, opts ...utils.KV) error {
 	w.fileNameOnly = strings.TrimSuffix(w.Filename, w.suffix)
 	if w.suffix == "" {
 		w.suffix = ".log"
+	}
+
+	if len(w.Formatter) > 0 {
+		fmtr, ok := GetFormatter(w.Formatter)
+		if !ok {
+			return errors.New(fmt.Sprintf("the formatter with name: %s not found", w.Formatter))
+		}
+		w.formatter = fmtr
 	}
 	err = w.startLogger()
 	return err
@@ -149,13 +154,13 @@ func (w *fileLogWriter) startLogger() error {
 	return w.initFd()
 }
 
-func (w *fileLogWriter) needRotateDaily(size int, day int) bool {
+func (w *fileLogWriter) needRotateDaily(day int) bool {
 	return (w.MaxLines > 0 && w.maxLinesCurLines >= w.MaxLines) ||
 		(w.MaxSize > 0 && w.maxSizeCurSize >= w.MaxSize) ||
 		(w.Daily && day != w.dailyOpenDate)
 }
 
-func (w *fileLogWriter) needRotateHourly(size int, hour int) bool {
+func (w *fileLogWriter) needRotateHourly(hour int) bool {
 	return (w.MaxLines > 0 && w.maxLinesCurLines >= w.MaxLines) ||
 		(w.MaxSize > 0 && w.maxSizeCurSize >= w.MaxSize) ||
 		(w.Hourly && hour != w.hourlyOpenDate)
@@ -167,31 +172,25 @@ func (w *fileLogWriter) WriteMsg(lm *LogMsg) error {
 	if lm.Level > w.Level {
 		return nil
 	}
-	hd, d, h := formatTimeHeader(lm.When)
-	msg := ""
 
-	if w.customFormatter != nil {
-		msg = w.customFormatter(lm)
-	} else {
-		msg = w.Format(lm)
-	}
+	_, d, h := formatTimeHeader(lm.When)
 
-	msg = fmt.Sprintf("%s %s\n", string(hd), msg)
+	msg := w.formatter.Format(lm)
 	if w.Rotate {
 		w.RLock()
-		if w.needRotateHourly(len(lm.Msg), h) {
+		if w.needRotateHourly(h) {
 			w.RUnlock()
 			w.Lock()
-			if w.needRotateHourly(len(lm.Msg), h) {
+			if w.needRotateHourly(h) {
 				if err := w.doRotate(lm.When); err != nil {
 					fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
 				}
 			}
 			w.Unlock()
-		} else if w.needRotateDaily(len(lm.Msg), d) {
+		} else if w.needRotateDaily(d) {
 			w.RUnlock()
 			w.Lock()
-			if w.needRotateDaily(len(lm.Msg), d) {
+			if w.needRotateDaily(d) {
 				if err := w.doRotate(lm.When); err != nil {
 					fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
 				}
@@ -263,7 +262,7 @@ func (w *fileLogWriter) dailyRotate(openTime time.Time) {
 	tm := time.NewTimer(time.Duration(nextDay.UnixNano() - openTime.UnixNano() + 100))
 	<-tm.C
 	w.Lock()
-	if w.needRotateDaily(0, time.Now().Day()) {
+	if w.needRotateDaily(time.Now().Day()) {
 		if err := w.doRotate(time.Now()); err != nil {
 			fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
 		}
@@ -278,7 +277,7 @@ func (w *fileLogWriter) hourlyRotate(openTime time.Time) {
 	tm := time.NewTimer(time.Duration(nextHour.UnixNano() - openTime.UnixNano() + 100))
 	<-tm.C
 	w.Lock()
-	if w.needRotateHourly(0, time.Now().Hour()) {
+	if w.needRotateHourly(time.Now().Hour()) {
 		if err := w.doRotate(time.Now()); err != nil {
 			fmt.Fprintf(os.Stderr, "FileLogWriter(%q): %s\n", w.Filename, err)
 		}
