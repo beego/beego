@@ -212,6 +212,23 @@ func TestAutoExtFunc(t *testing.T) {
 	}
 }
 
+func TestEscape(t *testing.T) {
+
+	r, _ := http.NewRequest("GET", "/search/%E4%BD%A0%E5%A5%BD", nil)
+	w := httptest.NewRecorder()
+
+	handler := NewControllerRegister()
+	handler.Get("/search/:keyword(.+)", func(ctx *context.Context) {
+		value := ctx.Input.Param(":keyword")
+		ctx.Output.Body([]byte(value))
+	})
+	handler.ServeHTTP(w, r)
+	str := w.Body.String()
+	if str != "你好" {
+		t.Errorf("incorrect, %s", str)
+	}
+}
+
 func TestRouteOk(t *testing.T) {
 
 	r, _ := http.NewRequest("GET", "/person/anderson/thomas?learn=kungfu", nil)
