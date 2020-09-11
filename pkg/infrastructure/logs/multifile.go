@@ -16,8 +16,6 @@ package logs
 
 import (
 	"encoding/json"
-
-	"github.com/astaxie/beego/pkg/infrastructure/utils"
 )
 
 // A filesLogWriter manages several fileLogWriter
@@ -26,10 +24,9 @@ import (
 // and write the error-level logs to project.error.log and write the debug-level logs to project.debug.log
 // the rotate attribute also  acts like fileLogWriter
 type multiFileLogWriter struct {
-	writers         [LevelDebug + 1 + 1]*fileLogWriter // the last one for fullLogWriter
-	fullLogWriter   *fileLogWriter
-	Separate        []string `json:"separate"`
-	customFormatter func(*LogMsg) string
+	writers       [LevelDebug + 1 + 1]*fileLogWriter // the last one for fullLogWriter
+	fullLogWriter *fileLogWriter
+	Separate      []string `json:"separate"`
 }
 
 var levelNames = [...]string{"emergency", "alert", "critical", "error", "warning", "notice", "info", "debug"}
@@ -47,30 +44,27 @@ var levelNames = [...]string{"emergency", "alert", "critical", "error", "warning
 //	"separate":["emergency", "alert", "critical", "error", "warning", "notice", "info", "debug"],
 //	}
 
-func (f *multiFileLogWriter) Init(jsonConfig string, opts ...utils.KV) error {
-	for _, elem := range opts {
-		if elem.GetKey() == "formatter" {
-			formatter, err := GetFormatter(elem)
-			if err != nil {
-				return err
-			}
-			f.customFormatter = formatter
-		}
-	}
+func (f *multiFileLogWriter) Init(config string) error {
 
 	writer := newFileWriter().(*fileLogWriter)
-	err := writer.Init(jsonConfig)
+	err := writer.Init(config)
 	if err != nil {
 		return err
 	}
 	f.fullLogWriter = writer
 	f.writers[LevelDebug+1] = writer
 
-	//unmarshal "separate" field to f.Separate
-	json.Unmarshal([]byte(jsonConfig), f)
+	// unmarshal "separate" field to f.Separate
+	err = json.Unmarshal([]byte(config), f)
+	if err != nil {
+		return err
+	}
 
 	jsonMap := map[string]interface{}{}
-	json.Unmarshal([]byte(jsonConfig), &jsonMap)
+	err = json.Unmarshal([]byte(config), &jsonMap)
+	if err != nil {
+		return err
+	}
 
 	for i := LevelEmergency; i < LevelDebug+1; i++ {
 		for _, v := range f.Separate {
@@ -91,7 +85,11 @@ func (f *multiFileLogWriter) Init(jsonConfig string, opts ...utils.KV) error {
 }
 
 func (f *multiFileLogWriter) Format(lm *LogMsg) string {
-	return lm.Msg
+	return lm.OldStyleFormat()
+}
+
+func (f *multiFileLogWriter) SetFormatter(fmt LogFormatter) {
+	f.fullLogWriter.SetFormatter(f)
 }
 
 func (f *multiFileLogWriter) Destroy() {
@@ -126,7 +124,8 @@ func (f *multiFileLogWriter) Flush() {
 
 // newFilesWriter create a FileLogWriter returning as LoggerInterface.
 func newFilesWriter() Logger {
-	return &multiFileLogWriter{}
+	res := &multiFileLogWriter{}
+	return res
 }
 
 func init() {

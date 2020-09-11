@@ -22,7 +22,7 @@ import (
 	"net/smtp"
 	"strings"
 
-	"github.com/astaxie/beego/pkg/infrastructure/utils"
+	"github.com/pkg/errors"
 )
 
 // SMTPWriter implements LoggerInterface and is used to send emails via given SMTP-server.
@@ -34,12 +34,15 @@ type SMTPWriter struct {
 	FromAddress        string   `json:"fromAddress"`
 	RecipientAddresses []string `json:"sendTos"`
 	Level              int      `json:"level"`
-	customFormatter    func(*LogMsg) string
+	formatter          LogFormatter
+	Formatter          string `json:"formatter"`
 }
 
 // NewSMTPWriter creates the smtp writer.
 func newSMTPWriter() Logger {
-	return &SMTPWriter{Level: LevelTrace}
+	res := &SMTPWriter{Level: LevelTrace}
+	res.formatter = res
+	return res
 }
 
 // Init smtp writer with json config.
@@ -53,19 +56,16 @@ func newSMTPWriter() Logger {
 //		"sendTos":["email1","email2"],
 //		"level":LevelError
 //	}
-func (s *SMTPWriter) Init(jsonConfig string, opts ...utils.KV) error {
-
-	for _, elem := range opts {
-		if elem.GetKey() == "formatter" {
-			formatter, err := GetFormatter(elem)
-			if err != nil {
-				return err
-			}
-			s.customFormatter = formatter
+func (s *SMTPWriter) Init(config string) error {
+	res := json.Unmarshal([]byte(config), s)
+	if res == nil && len(s.Formatter) > 0 {
+		fmtr, ok := GetFormatter(s.Formatter)
+		if !ok {
+			return errors.New(fmt.Sprintf("the formatter with name: %s not found", s.Formatter))
 		}
+		s.formatter = fmtr
 	}
-
-	return json.Unmarshal([]byte(jsonConfig), s)
+	return res
 }
 
 func (s *SMTPWriter) getSMTPAuth(host string) smtp.Auth {
@@ -78,6 +78,10 @@ func (s *SMTPWriter) getSMTPAuth(host string) smtp.Auth {
 		s.Password,
 		host,
 	)
+}
+
+func (s *SMTPWriter) SetFormatter(f LogFormatter) {
+	s.formatter = f
 }
 
 func (s *SMTPWriter) sendMail(hostAddressWithPort string, auth smtp.Auth, fromAddress string, recipients []string, msgContent []byte) error {
@@ -129,7 +133,7 @@ func (s *SMTPWriter) sendMail(hostAddressWithPort string, auth smtp.Auth, fromAd
 }
 
 func (s *SMTPWriter) Format(lm *LogMsg) string {
-	return lm.Msg
+	return lm.OldStyleFormat()
 }
 
 // WriteMsg writes message in smtp writer.

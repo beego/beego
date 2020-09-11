@@ -6,35 +6,46 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/astaxie/beego/pkg/infrastructure/utils"
+	"github.com/pkg/errors"
 )
 
 // SLACKWriter implements beego LoggerInterface and is used to send jiaoliao webhook
 type SLACKWriter struct {
-	WebhookURL         string `json:"webhookurl"`
-	Level              int    `json:"level"`
-	UseCustomFormatter bool
-	CustomFormatter    func(*LogMsg) string
+	WebhookURL string `json:"webhookurl"`
+	Level      int    `json:"level"`
+	formatter  LogFormatter
+	Formatter  string `json:"formatter"`
 }
 
 // newSLACKWriter creates jiaoliao writer.
 func newSLACKWriter() Logger {
-	return &SLACKWriter{Level: LevelTrace}
+	res := &SLACKWriter{Level: LevelTrace}
+	res.formatter = res
+	return res
 }
 
 func (s *SLACKWriter) Format(lm *LogMsg) string {
-	return lm.Msg
+	text := fmt.Sprintf("{\"text\": \"%s %s\"}", lm.When.Format("2006-01-02 15:04:05"), lm.OldStyleFormat())
+	return text
+}
+
+func (s *SLACKWriter) SetFormatter(f LogFormatter) {
+	s.formatter = f
 }
 
 // Init SLACKWriter with json config string
-func (s *SLACKWriter) Init(jsonConfig string, opts ...utils.KV) error {
-	// 	if elem != nil {
-	// 		s.UseCustomFormatter = true
-	// 		s.CustomFormatter = elem
-	// 	}
-	// }
+func (s *SLACKWriter) Init(config string) error {
+	res := json.Unmarshal([]byte(config), s)
 
-	return json.Unmarshal([]byte(jsonConfig), s)
+	if res == nil && len(s.Formatter) > 0 {
+		fmtr, ok := GetFormatter(s.Formatter)
+		if !ok {
+			return errors.New(fmt.Sprintf("the formatter with name: %s not found", s.Formatter))
+		}
+		s.formatter = fmtr
+	}
+
+	return res
 }
 
 // WriteMsg write message in smtp writer.
@@ -44,10 +55,8 @@ func (s *SLACKWriter) WriteMsg(lm *LogMsg) error {
 		return nil
 	}
 	msg := s.Format(lm)
-	text := fmt.Sprintf("{\"text\": \"%s %s\"}", lm.When.Format("2006-01-02 15:04:05"), msg)
-
 	form := url.Values{}
-	form.Add("payload", text)
+	form.Add("payload", msg)
 
 	resp, err := http.PostForm(s.WebhookURL, form)
 	if err != nil {
