@@ -33,13 +33,13 @@ var (
 // wildcard stores params
 // leaves store the endpoint information
 type Tree struct {
-	//prefix set for static router
+	// prefix set for static router
 	prefix string
-	//search fix route first
+	// search fix route first
 	fixrouters []*Tree
-	//if set, failure to match fixrouters search then search wildcard
+	// if set, failure to match fixrouters search then search wildcard
 	wildcard *Tree
-	//if set, failure to match wildcard search
+	// if set, failure to match wildcard search
 	leaves []*leafInfo
 }
 
@@ -69,13 +69,13 @@ func (t *Tree) addtree(segments []string, tree *Tree, wildcards []string, reg st
 			filterTreeWithPrefix(tree, wildcards, reg)
 		}
 	}
-	//Rule: /login/*/access match /login/2009/11/access
-	//if already has *, and when loop the access, should as a regexpStr
+	// Rule: /login/*/access match /login/2009/11/access
+	// if already has *, and when loop the access, should as a regexpStr
 	if !iswild && utils.InSlice(":splat", wildcards) {
 		iswild = true
 		regexpStr = seg
 	}
-	//Rule: /user/:id/*
+	// Rule: /user/:id/*
 	if seg == "*" && len(wildcards) > 0 && reg == "" {
 		regexpStr = "(.+)"
 	}
@@ -222,13 +222,13 @@ func (t *Tree) addseg(segments []string, route interface{}, wildcards []string, 
 			t.addseg(segments[1:], route, wildcards, reg)
 			params = params[1:]
 		}
-		//Rule: /login/*/access match /login/2009/11/access
-		//if already has *, and when loop the access, should as a regexpStr
+		// Rule: /login/*/access match /login/2009/11/access
+		// if already has *, and when loop the access, should as a regexpStr
 		if !iswild && utils.InSlice(":splat", wildcards) {
 			iswild = true
 			regexpStr = seg
 		}
-		//Rule: /user/:id/*
+		// Rule: /user/:id/*
 		if seg == "*" && len(wildcards) > 0 && reg == "" {
 			regexpStr = "(.+)"
 		}
@@ -393,7 +393,7 @@ type leafInfo struct {
 }
 
 func (leaf *leafInfo) match(treePattern string, wildcardValues []string, ctx *context.Context) (ok bool) {
-	//fmt.Println("Leaf:", wildcardValues, leaf.wildcards, leaf.regexps)
+	// fmt.Println("Leaf:", wildcardValues, leaf.wildcards, leaf.regexps)
 	if leaf.regexps == nil {
 		if len(wildcardValues) == 0 && len(leaf.wildcards) == 0 { // static path
 			return true
@@ -500,7 +500,7 @@ func splitSegment(key string) (bool, []string, string) {
 				continue
 			}
 			if start {
-				//:id:int and :name:string
+				// :id:int and :name:string
 				if v == ':' {
 					if len(key) >= i+4 {
 						if key[i+1:i+4] == "int" {
