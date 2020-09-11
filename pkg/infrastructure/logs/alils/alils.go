@@ -2,12 +2,14 @@ package alils
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"sync"
 
-	"github.com/astaxie/beego/pkg/infrastructure/logs"
-	"github.com/astaxie/beego/pkg/infrastructure/utils"
 	"github.com/gogo/protobuf/proto"
+	"github.com/pkg/errors"
+
+	"github.com/astaxie/beego/pkg/infrastructure/logs"
 )
 
 const (
@@ -28,40 +30,35 @@ type Config struct {
 	Source    string   `json:"source"`
 	Level     int      `json:"level"`
 	FlushWhen int      `json:"flush_when"`
+	Formatter string   `json:"formatter"`
 }
 
 // aliLSWriter implements LoggerInterface.
 // Writes messages in keep-live tcp connection.
 type aliLSWriter struct {
-	store           *LogStore
-	group           []*LogGroup
-	withMap         bool
-	groupMap        map[string]*LogGroup
-	lock            *sync.Mutex
-	customFormatter func(*logs.LogMsg) string
+	store    *LogStore
+	group    []*LogGroup
+	withMap  bool
+	groupMap map[string]*LogGroup
+	lock     *sync.Mutex
 	Config
+	formatter logs.LogFormatter
 }
 
 // NewAliLS creates a new Logger
 func NewAliLS() logs.Logger {
 	alils := new(aliLSWriter)
 	alils.Level = logs.LevelTrace
+	alils.formatter = alils
 	return alils
 }
 
 // Init parses config and initializes struct
-func (c *aliLSWriter) Init(jsonConfig string, opts ...utils.KV) error {
-
-	for _, elem := range opts {
-		if elem.GetKey() == "formatter" {
-			formatter, err := logs.GetFormatter(elem)
-			if err != nil {
-				return err
-			}
-			c.customFormatter = formatter
-		}
+func (c *aliLSWriter) Init(config string) error {
+	err := json.Unmarshal([]byte(config), c)
+	if err != nil {
+		return err
 	}
-	json.Unmarshal([]byte(jsonConfig), c)
 
 	if c.FlushWhen > CacheSize {
 		c.FlushWhen = CacheSize
@@ -110,11 +107,23 @@ func (c *aliLSWriter) Init(jsonConfig string, opts ...utils.KV) error {
 
 	c.lock = &sync.Mutex{}
 
+	if len(c.Formatter) > 0 {
+		fmtr, ok := logs.GetFormatter(c.Formatter)
+		if !ok {
+			return errors.New(fmt.Sprintf("the formatter with name: %s not found", c.Formatter))
+		}
+		c.formatter = fmtr
+	}
+
 	return nil
 }
 
 func (c *aliLSWriter) Format(lm *logs.LogMsg) string {
-	return lm.Msg
+	return lm.OldStyleFormat()
+}
+
+func (c *aliLSWriter) SetFormatter(f logs.LogFormatter) {
+	c.formatter = f
 }
 
 // WriteMsg writes a message in connection.
@@ -145,11 +154,7 @@ func (c *aliLSWriter) WriteMsg(lm *logs.LogMsg) error {
 		lg = c.group[0]
 	}
 
-	if c.customFormatter != nil {
-		content = c.customFormatter(lm)
-	} else {
-		content = c.Format(lm)
-	}
+	content = c.formatter.Format(lm)
 
 	c1 := &LogContent{
 		Key:   proto.String("msg"),
@@ -170,7 +175,6 @@ func (c *aliLSWriter) WriteMsg(lm *logs.LogMsg) error {
 	if len(lg.Logs) >= c.FlushWhen {
 		c.flush(lg)
 	}
-
 	return nil
 }
 

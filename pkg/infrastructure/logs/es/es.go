@@ -13,7 +13,6 @@ import (
 	"github.com/elastic/go-elasticsearch/v6/esapi"
 
 	"github.com/astaxie/beego/pkg/infrastructure/logs"
-	"github.com/astaxie/beego/pkg/infrastructure/utils"
 )
 
 // NewES returns a LoggerInterface
@@ -32,29 +31,34 @@ func NewES() logs.Logger {
 // import _ "github.com/astaxie/beego/logs/es"
 type esLogger struct {
 	*elasticsearch.Client
-	DSN             string `json:"dsn"`
-	Level           int    `json:"level"`
-	customFormatter func(*logs.LogMsg) string
+	DSN       string `json:"dsn"`
+	Level     int    `json:"level"`
+	formatter logs.LogFormatter
+	Formatter string `json:"formatter"`
 }
 
 func (el *esLogger) Format(lm *logs.LogMsg) string {
-	return lm.Msg
+
+	msg := lm.OldStyleFormat()
+	idx := LogDocument{
+		Timestamp: lm.When.Format(time.RFC3339),
+		Msg:       msg,
+	}
+	body, err := json.Marshal(idx)
+	if err != nil {
+		return msg
+	}
+	return string(body)
+}
+
+func (el *esLogger) SetFormatter(f logs.LogFormatter) {
+	el.formatter = f
 }
 
 // {"dsn":"http://localhost:9200/","level":1}
-func (el *esLogger) Init(jsonConfig string, opts ...utils.KV) error {
+func (el *esLogger) Init(config string) error {
 
-	for _, elem := range opts {
-		if elem.GetKey() == "formatter" {
-			formatter, err := logs.GetFormatter(elem)
-			if err != nil {
-				return err
-			}
-			el.customFormatter = formatter
-		}
-	}
-
-	err := json.Unmarshal([]byte(jsonConfig), el)
+	err := json.Unmarshal([]byte(config), el)
 	if err != nil {
 		return err
 	}
@@ -73,6 +77,13 @@ func (el *esLogger) Init(jsonConfig string, opts ...utils.KV) error {
 		}
 		el.Client = conn
 	}
+	if len(el.Formatter) > 0 {
+		fmtr, ok := logs.GetFormatter(el.Formatter)
+		if !ok {
+			return errors.New(fmt.Sprintf("the formatter with name: %s not found", el.Formatter))
+		}
+		el.formatter = fmtr
+	}
 	return nil
 }
 
@@ -82,28 +93,14 @@ func (el *esLogger) WriteMsg(lm *logs.LogMsg) error {
 		return nil
 	}
 
-	msg := ""
-	if el.customFormatter != nil {
-		msg = el.customFormatter(lm)
-	} else {
-		msg = el.Format(lm)
-	}
+	msg := el.formatter.Format(lm)
 
-	idx := LogDocument{
-		Timestamp: lm.When.Format(time.RFC3339),
-		Msg:       msg,
-	}
-
-	body, err := json.Marshal(idx)
-	if err != nil {
-		return err
-	}
 	req := esapi.IndexRequest{
 		Index:        fmt.Sprintf("%04d.%02d.%02d", lm.When.Year(), lm.When.Month(), lm.When.Day()),
 		DocumentType: "logs",
-		Body:         strings.NewReader(string(body)),
+		Body:         strings.NewReader(msg),
 	}
-	_, err = req.Do(context.Background(), el.Client)
+	_, err := req.Do(context.Background(), el.Client)
 	return err
 }
 
