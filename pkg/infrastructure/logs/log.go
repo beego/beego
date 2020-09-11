@@ -38,13 +38,12 @@ import (
 	"log"
 	"os"
 	"path"
-	"reflect"
 	"runtime"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/astaxie/beego/pkg/infrastructure/utils"
+	"github.com/pkg/errors"
 )
 
 // RFC5424 log message levels.
@@ -87,11 +86,11 @@ type newLoggerFunc func() Logger
 
 // Logger defines the behavior of a log provider.
 type Logger interface {
-	Init(config string, opts ...utils.KV) error
+	Init(config string) error
 	WriteMsg(lm *LogMsg) error
-	Format(lm *LogMsg) string
 	Destroy()
 	Flush()
+	SetFormatter(f LogFormatter)
 }
 
 var adapters = make(map[string]newLoggerFunc)
@@ -118,7 +117,6 @@ type BeeLogger struct {
 	init                bool
 	enableFuncCallDepth bool
 	loggerFuncCallDepth int
-	globalFormatter     func(*LogMsg) string
 	enableFullFilePath  bool
 	asynchronous        bool
 	prefix              string
@@ -127,6 +125,7 @@ type BeeLogger struct {
 	signalChan          chan string
 	wg                  sync.WaitGroup
 	outputs             []*nameLogger
+	globalFormatter     string
 }
 
 const defaultAsyncMsgLen = 1e3
@@ -137,15 +136,15 @@ type nameLogger struct {
 }
 
 type LogMsg struct {
-	Level      int
-	Msg        string
-	When       time.Time
-	FilePath   string
-	LineNumber int
-}
-
-type LogFormatter interface {
-	Format(lm *LogMsg) string
+	Level               int
+	Msg                 string
+	When                time.Time
+	FilePath            string
+	LineNumber          int
+	Args                []interface{}
+	Prefix              string
+	enableFullFilePath  bool
+	enableFuncCallDepth bool
 }
 
 var logMsgPool *sync.Pool
@@ -188,8 +187,25 @@ func (bl *BeeLogger) Async(msgLen ...int64) *BeeLogger {
 	return bl
 }
 
-func Format(lm *LogMsg) string {
-	return lm.Msg
+// OldStyleFormat you should never invoke this
+func (lm *LogMsg) OldStyleFormat() string {
+	msg := lm.Msg
+
+	if len(lm.Args) > 0 {
+		lm.Msg = fmt.Sprintf(lm.Msg, lm.Args...)
+	}
+
+	msg = lm.Prefix + " " + msg
+
+	if lm.enableFuncCallDepth {
+		if !lm.enableFullFilePath {
+			_, lm.FilePath = path.Split(lm.FilePath)
+		}
+		msg = fmt.Sprintf("[%s:%d] %s", lm.FilePath, lm.LineNumber, msg)
+	}
+
+	msg = levelPrefix[lm.Level] + " " + msg
+	return msg
 }
 
 // SetLogger provides a given logger adapter into BeeLogger with config string.
@@ -208,15 +224,17 @@ func (bl *BeeLogger) setLogger(adapterName string, configs ...string) error {
 	}
 
 	lg := logAdapter()
-	var err error
 
 	// Global formatter overrides the default set formatter
-	// but not adapter specific formatters set with logs.SetLoggerWithOpts()
-	if bl.globalFormatter != nil {
-		err = lg.Init(config, &utils.SimpleKV{Key: "formatter", Value: bl.globalFormatter})
-	} else {
-		err = lg.Init(config)
+	if len(bl.globalFormatter) > 0 {
+		fmtr, ok := GetFormatter(bl.globalFormatter)
+		if !ok {
+			return errors.New(fmt.Sprintf("the formatter with name: %s not found", bl.globalFormatter))
+		}
+		lg.SetFormatter(fmtr)
 	}
+
+	err := lg.Init(config)
 
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "logs.BeeLogger.SetLogger: "+err.Error())
@@ -287,18 +305,12 @@ func (bl *BeeLogger) Write(p []byte) (n int, err error) {
 	return 0, err
 }
 
-func (bl *BeeLogger) writeMsg(lm *LogMsg, v ...interface{}) error {
+func (bl *BeeLogger) writeMsg(lm *LogMsg) error {
 	if !bl.init {
 		bl.lock.Lock()
 		bl.setLogger(AdapterConsole)
 		bl.lock.Unlock()
 	}
-
-	if len(v) > 0 {
-		lm.Msg = fmt.Sprintf(lm.Msg, v...)
-	}
-
-	lm.Msg = bl.prefix + " " + lm.Msg
 
 	var (
 		file string
@@ -306,27 +318,21 @@ func (bl *BeeLogger) writeMsg(lm *LogMsg, v ...interface{}) error {
 		ok   bool
 	)
 
-	if bl.enableFuncCallDepth {
-		_, file, line, ok = runtime.Caller(bl.loggerFuncCallDepth)
-		if !ok {
-			file = "???"
-			line = 0
-		}
-
-		if !bl.enableFullFilePath {
-			_, file = path.Split(file)
-		}
-		lm.FilePath = file
-		lm.LineNumber = line
-		lm.Msg = fmt.Sprintf("[%s:%d] %s", lm.FilePath, lm.LineNumber, lm.Msg)
+	_, file, line, ok = runtime.Caller(bl.loggerFuncCallDepth)
+	if !ok {
+		file = "???"
+		line = 0
 	}
+	lm.FilePath = file
+	lm.LineNumber = line
+
+	lm.enableFullFilePath = bl.enableFullFilePath
+	lm.enableFuncCallDepth = bl.enableFuncCallDepth
 
 	// set level info in front of filename info
 	if lm.Level == levelLoggerImpl {
 		// set to emergency to ensure all log will be print out correctly
 		lm.Level = LevelEmergency
-	} else {
-		lm.Msg = levelPrefix[lm.Level] + " " + lm.Msg
 	}
 
 	if bl.asynchronous {
@@ -334,6 +340,10 @@ func (bl *BeeLogger) writeMsg(lm *LogMsg, v ...interface{}) error {
 		logM.Level = lm.Level
 		logM.Msg = lm.Msg
 		logM.When = lm.When
+		logM.Args = lm.Args
+		logM.FilePath = lm.FilePath
+		logM.LineNumber = lm.LineNumber
+		logM.Prefix = lm.Prefix
 		if bl.outputs != nil {
 			bl.msgChan <- lm
 		} else {
@@ -404,84 +414,14 @@ func (bl *BeeLogger) startLogger() {
 	}
 }
 
-// Get the formatter from the opts common.SimpleKV structure
-// Looks for a key: "formatter" with value: func(*LogMsg) string
-func GetFormatter(opts utils.KV) (func(*LogMsg) string, error) {
-	if strings.ToLower(opts.GetKey().(string)) == "formatter" {
-		formatterInterface := reflect.ValueOf(opts.GetValue()).Interface()
-		formatterFunc := formatterInterface.(func(*LogMsg) string)
-		return formatterFunc, nil
-	}
-
-	return nil, fmt.Errorf("no \"formatter\" key given in simpleKV")
-}
-
-// SetLoggerWithOpts sets a log adapter with a user defined logging format. Config must be valid JSON
-// such as: {"interval":360}
-func (bl *BeeLogger) setLoggerWithOpts(adapterName string, opts utils.KV, configs ...string) error {
-	config := append(configs, "{}")[0]
-	for _, l := range bl.outputs {
-		if l.name == adapterName {
-			return fmt.Errorf("logs: duplicate adaptername %q (you have set this logger before)", adapterName)
-		}
-	}
-
-	logAdapter, ok := adapters[adapterName]
-	if !ok {
-		return fmt.Errorf("logs: unknown adaptername %q (forgotten Register?)", adapterName)
-	}
-
-	if opts.GetKey() == nil {
-		return fmt.Errorf("No SimpleKV struct set for %s log adapter", adapterName)
-	}
-
-	lg := logAdapter()
-	err := lg.Init(config, opts)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "logs.BeeLogger.SetLogger: "+err.Error())
-		return err
-	}
-
-	bl.outputs = append(bl.outputs, &nameLogger{
-		name:   adapterName,
-		Logger: lg,
-	})
-
-	return nil
-}
-
-// SetLogger provides a given logger adapter into BeeLogger with config string.
-func (bl *BeeLogger) SetLoggerWithOpts(adapterName string, opts utils.KV, configs ...string) error {
-	bl.lock.Lock()
-	defer bl.lock.Unlock()
-	if !bl.init {
-		bl.outputs = []*nameLogger{}
-		bl.init = true
-	}
-	return bl.setLoggerWithOpts(adapterName, opts, configs...)
-}
-
-// SetLoggerWIthOpts sets a given log adapter with a custom log adapter.
-// Log Adapter must be given in the form common.SimpleKV{Key: "formatter": Value: struct.FormatFunc}
-// where FormatFunc has the signature func(*LogMsg) string
-// func SetLoggerWithOpts(adapter string, config []string, formatterFunc func(*LogMsg) string) error {
-func SetLoggerWithOpts(adapter string, config []string, opts utils.KV) error {
-	err := beeLogger.SetLoggerWithOpts(adapter, opts, config...)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return nil
-
-}
-
-func (bl *BeeLogger) setGlobalFormatter(fmtter func(*LogMsg) string) error {
+func (bl *BeeLogger) setGlobalFormatter(fmtter string) error {
 	bl.globalFormatter = fmtter
 	return nil
 }
 
 // SetGlobalFormatter sets the global formatter for all log adapters
-// This overrides and other individually set adapter
-func SetGlobalFormatter(fmtter func(*LogMsg) string) error {
+// don't forget to register the formatter by invoking RegisterFormatter
+func SetGlobalFormatter(fmtter string) error {
 	return beeLogger.setGlobalFormatter(fmtter)
 }
 
@@ -513,11 +453,8 @@ func (bl *BeeLogger) Alert(format string, v ...interface{}) {
 		Level: LevelAlert,
 		Msg:   format,
 		When:  time.Now(),
+		Args:  v,
 	}
-	if len(v) > 0 {
-		lm.Msg = fmt.Sprintf(lm.Msg, v...)
-	}
-
 	bl.writeMsg(lm)
 }
 
@@ -530,9 +467,7 @@ func (bl *BeeLogger) Critical(format string, v ...interface{}) {
 		Level: LevelCritical,
 		Msg:   format,
 		When:  time.Now(),
-	}
-	if len(v) > 0 {
-		lm.Msg = fmt.Sprintf(lm.Msg, v...)
+		Args:  v,
 	}
 
 	bl.writeMsg(lm)
@@ -547,9 +482,7 @@ func (bl *BeeLogger) Error(format string, v ...interface{}) {
 		Level: LevelError,
 		Msg:   format,
 		When:  time.Now(),
-	}
-	if len(v) > 0 {
-		lm.Msg = fmt.Sprintf(lm.Msg, v...)
+		Args:  v,
 	}
 
 	bl.writeMsg(lm)
@@ -564,9 +497,7 @@ func (bl *BeeLogger) Warning(format string, v ...interface{}) {
 		Level: LevelWarn,
 		Msg:   format,
 		When:  time.Now(),
-	}
-	if len(v) > 0 {
-		lm.Msg = fmt.Sprintf(lm.Msg, v...)
+		Args:  v,
 	}
 
 	bl.writeMsg(lm)
@@ -581,9 +512,7 @@ func (bl *BeeLogger) Notice(format string, v ...interface{}) {
 		Level: LevelNotice,
 		Msg:   format,
 		When:  time.Now(),
-	}
-	if len(v) > 0 {
-		lm.Msg = fmt.Sprintf(lm.Msg, v...)
+		Args:  v,
 	}
 
 	bl.writeMsg(lm)
@@ -598,9 +527,7 @@ func (bl *BeeLogger) Informational(format string, v ...interface{}) {
 		Level: LevelInfo,
 		Msg:   format,
 		When:  time.Now(),
-	}
-	if len(v) > 0 {
-		lm.Msg = fmt.Sprintf(lm.Msg, v...)
+		Args:  v,
 	}
 
 	bl.writeMsg(lm)
@@ -615,9 +542,7 @@ func (bl *BeeLogger) Debug(format string, v ...interface{}) {
 		Level: LevelDebug,
 		Msg:   format,
 		When:  time.Now(),
-	}
-	if len(v) > 0 {
-		lm.Msg = fmt.Sprintf(lm.Msg, v...)
+		Args:  v,
 	}
 
 	bl.writeMsg(lm)
@@ -633,9 +558,7 @@ func (bl *BeeLogger) Warn(format string, v ...interface{}) {
 		Level: LevelWarn,
 		Msg:   format,
 		When:  time.Now(),
-	}
-	if len(v) > 0 {
-		lm.Msg = fmt.Sprintf(lm.Msg, v...)
+		Args:  v,
 	}
 
 	bl.writeMsg(lm)
@@ -651,9 +574,7 @@ func (bl *BeeLogger) Info(format string, v ...interface{}) {
 		Level: LevelInfo,
 		Msg:   format,
 		When:  time.Now(),
-	}
-	if len(v) > 0 {
-		lm.Msg = fmt.Sprintf(lm.Msg, v...)
+		Args:  v,
 	}
 
 	bl.writeMsg(lm)
@@ -669,9 +590,7 @@ func (bl *BeeLogger) Trace(format string, v ...interface{}) {
 		Level: LevelDebug,
 		Msg:   format,
 		When:  time.Now(),
-	}
-	if len(v) > 0 {
-		lm.Msg = fmt.Sprintf(lm.Msg, v...)
+		Args:  v,
 	}
 
 	bl.writeMsg(lm)
