@@ -311,9 +311,7 @@ func (o *ormBase) LoadRelated(md interface{}, name string, args ...utils.KV) (in
 	return o.LoadRelatedWithCtx(context.Background(), md, name, args...)
 }
 func (o *ormBase) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...utils.KV) (int64, error) {
-	_, fi, ind, qseter := o.queryRelated(md, name)
-
-	qs := qseter.(*querySet)
+	_, fi, ind, qs := o.queryRelated(md, name)
 
 	var relDepth int
 	var limit, offset int64
@@ -377,7 +375,7 @@ func (o *ormBase) LoadRelatedWithCtx(ctx context.Context, md interface{}, name s
 }
 
 // get QuerySeter for related models to md model
-func (o *ormBase) queryRelated(md interface{}, name string) (*modelInfo, *fieldInfo, reflect.Value, QuerySeter) {
+func (o *ormBase) queryRelated(md interface{}, name string) (*modelInfo, *fieldInfo, reflect.Value, *querySet) {
 	mi, ind := o.getMiInd(md, true)
 	fi := o.getFieldInfo(mi, name)
 
@@ -616,7 +614,7 @@ func NewOrmUsingDB(aliasName string) Ormer {
 }
 
 // NewOrmWithDB create a new ormer object with specify *sql.DB for query
-func NewOrmWithDB(driverName, aliasName string, db *sql.DB, params ...utils.KV) (Ormer, error) {
+func NewOrmWithDB(driverName, aliasName string, db *sql.DB, params ...DBOption) (Ormer, error) {
 	al, err := newAliasWithDb(aliasName, driverName, db, params...)
 	if err != nil {
 		return nil, err

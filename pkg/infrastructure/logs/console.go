@@ -16,9 +16,11 @@ package logs
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 
+	"github.com/pkg/errors"
 	"github.com/shiena/ansicolor"
 )
 
@@ -47,9 +49,25 @@ var colors = []brush{
 
 // consoleWriter implements LoggerInterface and writes messages to terminal.
 type consoleWriter struct {
-	lg       *logWriter
-	Level    int  `json:"level"`
-	Colorful bool `json:"color"` //this filed is useful only when system's terminal supports color
+	lg        *logWriter
+	formatter LogFormatter
+	Formatter string `json:"formatter"`
+	Level     int    `json:"level"`
+	Colorful  bool   `json:"color"` // this filed is useful only when system's terminal supports color
+}
+
+func (c *consoleWriter) Format(lm *LogMsg) string {
+	msg := lm.OldStyleFormat()
+	if c.Colorful {
+		msg = strings.Replace(lm.Msg, levelPrefix[lm.Level], colors[lm.Level](levelPrefix[lm.Level]), 1)
+	}
+	h, _, _ := formatTimeHeader(lm.When)
+	bytes := append(append(h, msg...), '\n')
+	return string(bytes)
+}
+
+func (c *consoleWriter) SetFormatter(f LogFormatter) {
+	c.formatter = f
 }
 
 // NewConsole creates ConsoleWriter returning as LoggerInterface.
@@ -59,16 +77,27 @@ func NewConsole() Logger {
 		Level:    LevelDebug,
 		Colorful: true,
 	}
+	cw.formatter = cw
 	return cw
 }
 
 // Init initianlizes the console logger.
 // jsonConfig must be in the format '{"level":LevelTrace}'
-func (c *consoleWriter) Init(jsonConfig string) error {
-	if len(jsonConfig) == 0 {
+func (c *consoleWriter) Init(config string) error {
+
+	if len(config) == 0 {
 		return nil
 	}
-	return json.Unmarshal([]byte(jsonConfig), c)
+
+	res := json.Unmarshal([]byte(config), c)
+	if res == nil && len(c.Formatter) > 0 {
+		fmtr, ok := GetFormatter(c.Formatter)
+		if !ok {
+			return errors.New(fmt.Sprintf("the formatter with name: %s not found", c.Formatter))
+		}
+		c.formatter = fmtr
+	}
+	return res
 }
 
 // WriteMsg writes message in console.
@@ -76,10 +105,8 @@ func (c *consoleWriter) WriteMsg(lm *LogMsg) error {
 	if lm.Level > c.Level {
 		return nil
 	}
-	if c.Colorful {
-		lm.Msg = strings.Replace(lm.Msg, levelPrefix[lm.Level], colors[lm.Level](levelPrefix[lm.Level]), 1)
-	}
-	c.lg.writeln(lm)
+	msg := c.formatter.Format(lm)
+	c.lg.writeln(msg)
 	return nil
 }
 

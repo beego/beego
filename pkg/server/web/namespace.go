@@ -91,7 +91,7 @@ func (n *Namespace) Filter(action string, filter ...FilterFunc) *Namespace {
 		a = FinishRouter
 	}
 	for _, f := range filter {
-		n.handlers.InsertFilter("*", a, f)
+		n.handlers.InsertFilter("*", a, f, WithReturnOnOutput(true))
 	}
 	return n
 }

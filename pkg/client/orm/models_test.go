@@ -22,8 +22,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/astaxie/beego/pkg/client/orm/hints"
-
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
@@ -529,7 +527,7 @@ func init() {
 		os.Exit(2)
 	}
 
-	err := RegisterDataBase("default", DBARGS.Driver, DBARGS.Source, hints.MaxIdleConnections(20))
+	err := RegisterDataBase("default", DBARGS.Driver, DBARGS.Source, MaxIdleConnections(20))
 
 	if err != nil {
 		panic(fmt.Sprintf("can not register database: %v", err))

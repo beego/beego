@@ -43,24 +43,27 @@ type FilterRouter struct {
 // params is for:
 //   1. setting the returnOnOutput value (false allows multiple filters to execute)
 //   2. determining whether or not params need to be reset.
-func newFilterRouter(pattern string, routerCaseSensitive bool, filter FilterFunc, params ...bool) *FilterRouter {
+func newFilterRouter(pattern string, filter FilterFunc, opts ...FilterOpt) *FilterRouter {
 	mr := &FilterRouter{
-		tree:           NewTree(),
-		pattern:        pattern,
-		filterFunc:     filter,
+		tree:       NewTree(),
+		pattern:    pattern,
+		filterFunc: filter,
+	}
+
+	fos := &filterOpts{
 		returnOnOutput: true,
 	}
-	if !routerCaseSensitive {
+
+	for _, o := range opts {
+		o(fos)
+	}
+
+	if !fos.routerCaseSensitive {
 		mr.pattern = strings.ToLower(pattern)
 	}
 
-	paramsLen := len(params)
-	if paramsLen > 0 {
-		mr.returnOnOutput = params[0]
-	}
-	if paramsLen > 1 {
-		mr.resetParams = params[1]
-	}
+	mr.returnOnOutput = fos.returnOnOutput
+	mr.resetParams = fos.resetParams
 	mr.tree.AddRouter(pattern, true)
 	return mr
 }
@@ -102,4 +105,30 @@ func (f *FilterRouter) ValidRouter(url string, ctx *context.Context) bool {
 		}
 	}
 	return false
+}
+
+type filterOpts struct {
+	returnOnOutput      bool
+	resetParams         bool
+	routerCaseSensitive bool
+}
+
+type FilterOpt func(opts *filterOpts)
+
+func WithReturnOnOutput(ret bool) FilterOpt {
+	return func(opts *filterOpts) {
+		opts.returnOnOutput = ret
+	}
+}
+
+func WithResetParams(reset bool) FilterOpt {
+	return func(opts *filterOpts) {
+		opts.resetParams = reset
+	}
+}
+
+func WithCaseSensitive(sensitive bool) FilterOpt {
+	return func(opts *filterOpts) {
+		opts.routerCaseSensitive = sensitive
+	}
 }

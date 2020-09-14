@@ -16,6 +16,7 @@ package web
 
 import (
 	context2 "context"
+	"crypto/tls"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -72,6 +73,7 @@ type Listen struct {
 	AdminPort         int
 	EnableFcgi        bool
 	EnableStdIo       bool // EnableStdIo works with EnableFcgi Use FCGI via standard I/O
+	ClientAuth        int
 }
 
 // WebConfig holds web related config
@@ -234,6 +236,7 @@ func newBConfig() *Config {
 			AdminPort:     8088,
 			EnableFcgi:    false,
 			EnableStdIo:   false,
+			ClientAuth:    int(tls.RequireAndVerifyClientCert),
 		},
 		WebConfig: WebConfig{
 			AutoRender:             true,

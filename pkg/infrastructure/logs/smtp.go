@@ -21,6 +21,8 @@ import (
 	"net"
 	"net/smtp"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 // SMTPWriter implements LoggerInterface and is used to send emails via given SMTP-server.
@@ -32,11 +34,15 @@ type SMTPWriter struct {
 	FromAddress        string   `json:"fromAddress"`
 	RecipientAddresses []string `json:"sendTos"`
 	Level              int      `json:"level"`
+	formatter          LogFormatter
+	Formatter          string `json:"formatter"`
 }
 
 // NewSMTPWriter creates the smtp writer.
 func newSMTPWriter() Logger {
-	return &SMTPWriter{Level: LevelTrace}
+	res := &SMTPWriter{Level: LevelTrace}
+	res.formatter = res
+	return res
 }
 
 // Init smtp writer with json config.
@@ -50,8 +56,16 @@ func newSMTPWriter() Logger {
 //		"sendTos":["email1","email2"],
 //		"level":LevelError
 //	}
-func (s *SMTPWriter) Init(jsonconfig string) error {
-	return json.Unmarshal([]byte(jsonconfig), s)
+func (s *SMTPWriter) Init(config string) error {
+	res := json.Unmarshal([]byte(config), s)
+	if res == nil && len(s.Formatter) > 0 {
+		fmtr, ok := GetFormatter(s.Formatter)
+		if !ok {
+			return errors.New(fmt.Sprintf("the formatter with name: %s not found", s.Formatter))
+		}
+		s.formatter = fmtr
+	}
+	return res
 }
 
 func (s *SMTPWriter) getSMTPAuth(host string) smtp.Auth {
@@ -64,6 +78,10 @@ func (s *SMTPWriter) getSMTPAuth(host string) smtp.Auth {
 		s.Password,
 		host,
 	)
+}
+
+func (s *SMTPWriter) SetFormatter(f LogFormatter) {
+	s.formatter = f
 }
 
 func (s *SMTPWriter) sendMail(hostAddressWithPort string, auth smtp.Auth, fromAddress string, recipients []string, msgContent []byte) error {
@@ -114,6 +132,10 @@ func (s *SMTPWriter) sendMail(hostAddressWithPort string, auth smtp.Auth, fromAd
 	return client.Quit()
 }
 
+func (s *SMTPWriter) Format(lm *LogMsg) string {
+	return lm.OldStyleFormat()
+}
+
 // WriteMsg writes message in smtp writer.
 // Sends an email with subject and only this message.
 func (s *SMTPWriter) WriteMsg(lm *LogMsg) error {
@@ -126,11 +148,13 @@ func (s *SMTPWriter) WriteMsg(lm *LogMsg) error {
 	// Set up authentication information.
 	auth := s.getSMTPAuth(hp[0])
 
+	msg := s.Format(lm)
+
 	// Connect to the server, authenticate, set the sender and recipient,
 	// and send the email all in one step.
 	contentType := "Content-Type: text/plain" + "; charset=UTF-8"
 	mailmsg := []byte("To: " + strings.Join(s.RecipientAddresses, ";") + "\r\nFrom: " + s.FromAddress + "<" + s.FromAddress +
-		">\r\nSubject: " + s.Subject + "\r\n" + contentType + "\r\n\r\n" + fmt.Sprintf(".%s", lm.When.Format("2006-01-02 15:04:05")) + lm.Msg)
+		">\r\nSubject: " + s.Subject + "\r\n" + contentType + "\r\n\r\n" + fmt.Sprintf(".%s", lm.When.Format("2006-01-02 15:04:05")) + msg)
 
 	return s.sendMail(s.Host, auth, s.FromAddress, s.RecipientAddresses, mailmsg)
 }
