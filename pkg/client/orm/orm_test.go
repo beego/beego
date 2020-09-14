@@ -2620,3 +2620,40 @@ func TestStrPkInsert(t *testing.T) {
 		throwFailNow(t, AssertIs(vForTesting2.Value, value2))
 	}
 }
+
+func TestPSQueryBuilder(t *testing.T) {
+	// only test postgres
+	if dORM.Driver().Type() != 4 {
+		return
+	}
+
+	var user User
+	var l []userProfile
+	o := NewOrm()
+
+	qb, err := NewQueryBuilder("postgres")
+	if err != nil {
+		throwFailNow(t, err)
+	}
+	qb.Select("user.id", "user.user_name").
+		From("user").Where("id = ?").OrderBy("user_name").
+		Desc().Limit(1).Offset(0)
+	sql := qb.String()
+	err = o.Raw(sql, 2).QueryRow(&user)
+	if err != nil {
+		throwFailNow(t, err)
+	}
+	throwFail(t, AssertIs(user.UserName, "slene"))
+
+	qb.Select("*").
+		From("user_profile").InnerJoin("user").
+		On("user_profile.id = user.id")
+	sql = qb.String()
+	num, err := o.Raw(sql).QueryRows(&l)
+	if err != nil {
+		throwFailNow(t, err)
+	}
+	throwFailNow(t, AssertIs(num, 1))
+	throwFailNow(t, AssertIs(l[0].UserName, "astaxie"))
+	throwFailNow(t, AssertIs(l[0].Age, 30))
+}
