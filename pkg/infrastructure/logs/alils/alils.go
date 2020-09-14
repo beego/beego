@@ -2,11 +2,14 @@ package alils
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 	"sync"
 
-	"github.com/astaxie/beego/pkg/infrastructure/logs"
 	"github.com/gogo/protobuf/proto"
+	"github.com/pkg/errors"
+
+	"github.com/astaxie/beego/pkg/infrastructure/logs"
 )
 
 const (
@@ -27,6 +30,7 @@ type Config struct {
 	Source    string   `json:"source"`
 	Level     int      `json:"level"`
 	FlushWhen int      `json:"flush_when"`
+	Formatter string   `json:"formatter"`
 }
 
 // aliLSWriter implements LoggerInterface.
@@ -38,19 +42,23 @@ type aliLSWriter struct {
 	groupMap map[string]*LogGroup
 	lock     *sync.Mutex
 	Config
+	formatter logs.LogFormatter
 }
 
 // NewAliLS creates a new Logger
 func NewAliLS() logs.Logger {
 	alils := new(aliLSWriter)
 	alils.Level = logs.LevelTrace
+	alils.formatter = alils
 	return alils
 }
 
 // Init parses config and initializes struct
-func (c *aliLSWriter) Init(jsonConfig string) (err error) {
-
-	json.Unmarshal([]byte(jsonConfig), c)
+func (c *aliLSWriter) Init(config string) error {
+	err := json.Unmarshal([]byte(config), c)
+	if err != nil {
+		return err
+	}
 
 	if c.FlushWhen > CacheSize {
 		c.FlushWhen = CacheSize
@@ -63,10 +71,12 @@ func (c *aliLSWriter) Init(jsonConfig string) (err error) {
 		AccessKeySecret: c.KeySecret,
 	}
 
-	c.store, err = prj.GetLogStore(c.LogStore)
+	store, err := prj.GetLogStore(c.LogStore)
 	if err != nil {
 		return err
 	}
+
+	c.store = store
 
 	// Create default Log Group
 	c.group = append(c.group, &LogGroup{
@@ -97,7 +107,23 @@ func (c *aliLSWriter) Init(jsonConfig string) (err error) {
 
 	c.lock = &sync.Mutex{}
 
+	if len(c.Formatter) > 0 {
+		fmtr, ok := logs.GetFormatter(c.Formatter)
+		if !ok {
+			return errors.New(fmt.Sprintf("the formatter with name: %s not found", c.Formatter))
+		}
+		c.formatter = fmtr
+	}
+
 	return nil
+}
+
+func (c *aliLSWriter) Format(lm *logs.LogMsg) string {
+	return lm.OldStyleFormat()
+}
+
+func (c *aliLSWriter) SetFormatter(f logs.LogFormatter) {
+	c.formatter = f
 }
 
 // WriteMsg writes a message in connection.
@@ -117,19 +143,18 @@ func (c *aliLSWriter) WriteMsg(lm *logs.LogMsg) error {
 		if len(strs) == 2 {
 			pos := strings.LastIndex(strs[0], " ")
 			topic = strs[0][pos+1 : len(strs[0])]
-			content = strs[0][0:pos] + strs[1]
 			lg = c.groupMap[topic]
 		}
 
 		// send to empty Topic
 		if lg == nil {
-			content = lm.Msg
 			lg = c.group[0]
 		}
 	} else {
-		content = lm.Msg
 		lg = c.group[0]
 	}
+
+	content = c.formatter.Format(lm)
 
 	c1 := &LogContent{
 		Key:   proto.String("msg"),
@@ -150,7 +175,6 @@ func (c *aliLSWriter) WriteMsg(lm *logs.LogMsg) error {
 	if len(lg.Logs) >= c.FlushWhen {
 		c.flush(lg)
 	}
-
 	return nil
 }
 

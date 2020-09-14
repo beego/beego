@@ -442,7 +442,7 @@ func (mc *_modelCache) getDbDropSQL(al *alias) (queries []string, err error) {
 	for _, mi := range mc.allOrdered() {
 		queries = append(queries, fmt.Sprintf(`DROP TABLE IF EXISTS %s%s%s`, Q, mi.table, Q))
 	}
-	return queries,nil
+	return queries, nil
 }
 
 //getDbCreateSQL get database scheme creation sql queries

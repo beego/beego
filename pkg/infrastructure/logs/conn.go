@@ -16,8 +16,11 @@ package logs
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"net"
+
+	"github.com/pkg/errors"
 )
 
 // connWriter implements LoggerInterface.
@@ -25,6 +28,8 @@ import (
 type connWriter struct {
 	lg             *logWriter
 	innerWriter    io.WriteCloser
+	formatter      LogFormatter
+	Formatter      string `json:"formatter"`
 	ReconnectOnMsg bool   `json:"reconnectOnMsg"`
 	Reconnect      bool   `json:"reconnect"`
 	Net            string `json:"net"`
@@ -36,13 +41,30 @@ type connWriter struct {
 func NewConn() Logger {
 	conn := new(connWriter)
 	conn.Level = LevelTrace
+	conn.formatter = conn
 	return conn
+}
+
+func (c *connWriter) Format(lm *LogMsg) string {
+	return lm.OldStyleFormat()
 }
 
 // Init initializes a connection writer with json config.
 // json config only needs they "level" key
-func (c *connWriter) Init(jsonConfig string) error {
-	return json.Unmarshal([]byte(jsonConfig), c)
+func (c *connWriter) Init(config string) error {
+	res := json.Unmarshal([]byte(config), c)
+	if res == nil && len(c.Formatter) > 0 {
+		fmtr, ok := GetFormatter(c.Formatter)
+		if !ok {
+			return errors.New(fmt.Sprintf("the formatter with name: %s not found", c.Formatter))
+		}
+		c.formatter = fmtr
+	}
+	return res
+}
+
+func (c *connWriter) SetFormatter(f LogFormatter) {
+	c.formatter = f
 }
 
 // WriteMsg writes message in connection.
@@ -62,7 +84,9 @@ func (c *connWriter) WriteMsg(lm *LogMsg) error {
 		defer c.innerWriter.Close()
 	}
 
-	_, err := c.lg.writeln(lm)
+	msg := c.formatter.Format(lm)
+
+	_, err := c.lg.writeln(msg)
 	if err != nil {
 		return err
 	}

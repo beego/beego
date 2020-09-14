@@ -21,9 +21,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/astaxie/beego/pkg/client/orm/hints"
-	"github.com/astaxie/beego/pkg/infrastructure/utils"
-
 	lru "github.com/hashicorp/golang-lru"
 )
 
@@ -278,6 +275,7 @@ type alias struct {
 	MaxIdleConns    int
 	MaxOpenConns    int
 	ConnMaxLifetime time.Duration
+	StmtCacheSize   int
 	DB              *DB
 	DbBaser         dbBaser
 	TZ              *time.Location
@@ -340,7 +338,7 @@ func detectTZ(al *alias) {
 	}
 }
 
-func addAliasWthDB(aliasName, driverName string, db *sql.DB, params ...utils.KV) (*alias, error) {
+func addAliasWthDB(aliasName, driverName string, db *sql.DB, params ...DBOption) (*alias, error) {
 	existErr := fmt.Errorf("DataBase alias name `%s` already registered, cannot reuse", aliasName)
 	if _, ok := dataBaseCache.get(aliasName); ok {
 		return nil, existErr
@@ -358,32 +356,35 @@ func addAliasWthDB(aliasName, driverName string, db *sql.DB, params ...utils.KV)
 	return al, nil
 }
 
-func newAliasWithDb(aliasName, driverName string, db *sql.DB, params ...utils.KV) (*alias, error) {
-	kvs := utils.NewKVs(params...)
+func newAliasWithDb(aliasName, driverName string, db *sql.DB, params ...DBOption) (*alias, error) {
+
+	al := &alias{}
+	al.DB = &DB{
+		RWMutex: new(sync.RWMutex),
+		DB:      db,
+	}
+
+	for _, p := range params {
+		p(al)
+	}
 
 	var stmtCache *lru.Cache
 	var stmtCacheSize int
 
-	maxStmtCacheSize := kvs.GetValueOr(hints.KeyMaxStmtCacheSize, 0).(int)
-	if maxStmtCacheSize > 0 {
-		_stmtCache, errC := newStmtDecoratorLruWithEvict(maxStmtCacheSize)
+	if al.StmtCacheSize > 0 {
+		_stmtCache, errC := newStmtDecoratorLruWithEvict(al.StmtCacheSize)
 		if errC != nil {
 			return nil, errC
 		} else {
 			stmtCache = _stmtCache
-			stmtCacheSize = maxStmtCacheSize
+			stmtCacheSize = al.StmtCacheSize
 		}
 	}
 
-	al := new(alias)
 	al.Name = aliasName
 	al.DriverName = driverName
-	al.DB = &DB{
-		RWMutex:             new(sync.RWMutex),
-		DB:                  db,
-		stmtDecorators:      stmtCache,
-		stmtDecoratorsLimit: stmtCacheSize,
-	}
+	al.DB.stmtDecorators = stmtCache
+	al.DB.stmtDecoratorsLimit = stmtCacheSize
 
 	if dr, ok := drivers[driverName]; ok {
 		al.DbBaser = dbBasers[dr]
@@ -399,31 +400,48 @@ func newAliasWithDb(aliasName, driverName string, db *sql.DB, params ...utils.KV
 
 	detectTZ(al)
 
-	kvs.IfContains(hints.KeyMaxIdleConnections, func(value interface{}) {
-		if m, ok := value.(int); ok {
-			SetMaxIdleConns(al, m)
-		}
-	}).IfContains(hints.KeyMaxOpenConnections, func(value interface{}) {
-		if m, ok := value.(int); ok {
-			SetMaxOpenConns(al, m)
-		}
-	}).IfContains(hints.KeyConnMaxLifetime, func(value interface{}) {
-		if m, ok := value.(time.Duration); ok {
-			SetConnMaxLifetime(al, m)
-		}
-	})
-
 	return al, nil
 }
 
+// SetMaxIdleConns Change the max idle conns for *sql.DB, use specify database alias name
+// Deprecated you should not use this, we will remove it in the future
+func SetMaxIdleConns(aliasName string, maxIdleConns int) {
+	al := getDbAlias(aliasName)
+	al.SetMaxIdleConns(maxIdleConns)
+}
+
+// SetMaxOpenConns Change the max open conns for *sql.DB, use specify database alias name
+// Deprecated you should not use this, we will remove it in the future
+func SetMaxOpenConns(aliasName string, maxOpenConns int) {
+	al := getDbAlias(aliasName)
+	al.SetMaxIdleConns(maxOpenConns)
+}
+
+// SetMaxIdleConns Change the max idle conns for *sql.DB, use specify database alias name
+func (al *alias) SetMaxIdleConns(maxIdleConns int) {
+	al.MaxIdleConns = maxIdleConns
+	al.DB.DB.SetMaxIdleConns(maxIdleConns)
+}
+
+// SetMaxOpenConns Change the max open conns for *sql.DB, use specify database alias name
+func (al *alias) SetMaxOpenConns(maxOpenConns int) {
+	al.MaxOpenConns = maxOpenConns
+	al.DB.DB.SetMaxOpenConns(maxOpenConns)
+}
+
+func (al *alias) SetConnMaxLifetime(lifeTime time.Duration) {
+	al.ConnMaxLifetime = lifeTime
+	al.DB.DB.SetConnMaxLifetime(lifeTime)
+}
+
 // AddAliasWthDB add a aliasName for the drivename
-func AddAliasWthDB(aliasName, driverName string, db *sql.DB, params ...utils.KV) error {
+func AddAliasWthDB(aliasName, driverName string, db *sql.DB, params ...DBOption) error {
 	_, err := addAliasWthDB(aliasName, driverName, db, params...)
 	return err
 }
 
 // RegisterDataBase Setting the database connect params. Use the database driver self dataSource args.
-func RegisterDataBase(aliasName, driverName, dataSource string, params ...utils.KV) error {
+func RegisterDataBase(aliasName, driverName, dataSource string, params ...DBOption) error {
 	var (
 		err error
 		db  *sql.DB
@@ -474,23 +492,6 @@ func SetDataBaseTZ(aliasName string, tz *time.Location) error {
 		return fmt.Errorf("DataBase alias name `%s` not registered", aliasName)
 	}
 	return nil
-}
-
-// SetMaxIdleConns Change the max idle conns for *sql.DB, use specify database alias name
-func SetMaxIdleConns(al *alias, maxIdleConns int) {
-	al.MaxIdleConns = maxIdleConns
-	al.DB.DB.SetMaxIdleConns(maxIdleConns)
-}
-
-// SetMaxOpenConns Change the max open conns for *sql.DB, use specify database alias name
-func SetMaxOpenConns(al *alias, maxOpenConns int) {
-	al.MaxOpenConns = maxOpenConns
-	al.DB.DB.SetMaxOpenConns(maxOpenConns)
-}
-
-func SetConnMaxLifetime(al *alias, lifeTime time.Duration) {
-	al.ConnMaxLifetime = lifeTime
-	al.DB.DB.SetConnMaxLifetime(lifeTime)
 }
 
 // GetDB Get *sql.DB from registered database by db alias name.
@@ -552,4 +553,34 @@ func newStmtDecoratorLruWithEvict(cacheSize int) (*lru.Cache, error) {
 		return nil, err
 	}
 	return cache, nil
+}
+
+type DBOption func(al *alias)
+
+// MaxIdleConnections return a hint about MaxIdleConnections
+func MaxIdleConnections(maxIdleConn int) DBOption {
+	return func(al *alias) {
+		al.SetMaxIdleConns(maxIdleConn)
+	}
+}
+
+// MaxOpenConnections return a hint about MaxOpenConnections
+func MaxOpenConnections(maxOpenConn int) DBOption {
+	return func(al *alias) {
+		al.SetMaxOpenConns(maxOpenConn)
+	}
+}
+
+// ConnMaxLifetime return a hint about ConnMaxLifetime
+func ConnMaxLifetime(v time.Duration) DBOption {
+	return func(al *alias) {
+		al.SetConnMaxLifetime(v)
+	}
+}
+
+// MaxStmtCacheSize return a hint about MaxStmtCacheSize
+func MaxStmtCacheSize(v int) DBOption {
+	return func(al *alias) {
+		al.StmtCacheSize = v
+	}
 }

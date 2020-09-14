@@ -212,6 +212,23 @@ func TestAutoExtFunc(t *testing.T) {
 	}
 }
 
+func TestEscape(t *testing.T) {
+
+	r, _ := http.NewRequest("GET", "/search/%E4%BD%A0%E5%A5%BD", nil)
+	w := httptest.NewRecorder()
+
+	handler := NewControllerRegister()
+	handler.Get("/search/:keyword(.+)", func(ctx *context.Context) {
+		value := ctx.Input.Param(":keyword")
+		ctx.Output.Body([]byte(value))
+	})
+	handler.ServeHTTP(w, r)
+	str := w.Body.String()
+	if str != "你好" {
+		t.Errorf("incorrect, %s", str)
+	}
+}
+
 func TestRouteOk(t *testing.T) {
 
 	r, _ := http.NewRequest("GET", "/person/anderson/thomas?learn=kungfu", nil)
@@ -423,7 +440,7 @@ func TestInsertFilter(t *testing.T) {
 	testName := "TestInsertFilter"
 
 	mux := NewControllerRegister()
-	mux.InsertFilter("*", BeforeRouter, func(*context.Context) {})
+	mux.InsertFilter("*", BeforeRouter, func(*context.Context) {}, WithReturnOnOutput(true))
 	if !mux.filters[BeforeRouter][0].returnOnOutput {
 		t.Errorf(
 			"%s: passing no variadic params should set returnOnOutput to true",
@@ -436,7 +453,7 @@ func TestInsertFilter(t *testing.T) {
 	}
 
 	mux = NewControllerRegister()
-	mux.InsertFilter("*", BeforeRouter, func(*context.Context) {}, false)
+	mux.InsertFilter("*", BeforeRouter, func(*context.Context) {}, WithReturnOnOutput(false))
 	if mux.filters[BeforeRouter][0].returnOnOutput {
 		t.Errorf(
 			"%s: passing false as 1st variadic param should set returnOnOutput to false",
@@ -444,7 +461,7 @@ func TestInsertFilter(t *testing.T) {
 	}
 
 	mux = NewControllerRegister()
-	mux.InsertFilter("*", BeforeRouter, func(*context.Context) {}, true, true)
+	mux.InsertFilter("*", BeforeRouter, func(*context.Context) {}, WithReturnOnOutput(true), WithResetParams(true))
 	if !mux.filters[BeforeRouter][0].resetParams {
 		t.Errorf(
 			"%s: passing true as 2nd variadic param should set resetParams to true",
@@ -461,7 +478,7 @@ func TestParamResetFilter(t *testing.T) {
 
 	mux := NewControllerRegister()
 
-	mux.InsertFilter("*", BeforeExec, beegoResetParams, true, true)
+	mux.InsertFilter("*", BeforeExec, beegoResetParams, WithReturnOnOutput(true), WithResetParams(true))
 
 	mux.Get(route, beegoHandleResetParams)
 
@@ -514,8 +531,8 @@ func TestFilterBeforeExec(t *testing.T) {
 	url := "/beforeExec"
 
 	mux := NewControllerRegister()
-	mux.InsertFilter(url, BeforeRouter, beegoFilterNoOutput)
-	mux.InsertFilter(url, BeforeExec, beegoBeforeExec1)
+	mux.InsertFilter(url, BeforeRouter, beegoFilterNoOutput, WithReturnOnOutput(true))
+	mux.InsertFilter(url, BeforeExec, beegoBeforeExec1, WithReturnOnOutput(true))
 
 	mux.Get(url, beegoFilterFunc)
 
@@ -542,7 +559,7 @@ func TestFilterAfterExec(t *testing.T) {
 	mux := NewControllerRegister()
 	mux.InsertFilter(url, BeforeRouter, beegoFilterNoOutput)
 	mux.InsertFilter(url, BeforeExec, beegoFilterNoOutput)
-	mux.InsertFilter(url, AfterExec, beegoAfterExec1, false)
+	mux.InsertFilter(url, AfterExec, beegoAfterExec1, WithReturnOnOutput(false))
 
 	mux.Get(url, beegoFilterFunc)
 
@@ -570,10 +587,10 @@ func TestFilterFinishRouter(t *testing.T) {
 	url := "/finishRouter"
 
 	mux := NewControllerRegister()
-	mux.InsertFilter(url, BeforeRouter, beegoFilterNoOutput)
-	mux.InsertFilter(url, BeforeExec, beegoFilterNoOutput)
-	mux.InsertFilter(url, AfterExec, beegoFilterNoOutput)
-	mux.InsertFilter(url, FinishRouter, beegoFinishRouter1)
+	mux.InsertFilter(url, BeforeRouter, beegoFilterNoOutput, WithReturnOnOutput(true))
+	mux.InsertFilter(url, BeforeExec, beegoFilterNoOutput, WithReturnOnOutput(true))
+	mux.InsertFilter(url, AfterExec, beegoFilterNoOutput, WithReturnOnOutput(true))
+	mux.InsertFilter(url, FinishRouter, beegoFinishRouter1, WithReturnOnOutput(true))
 
 	mux.Get(url, beegoFilterFunc)
 
@@ -604,7 +621,7 @@ func TestFilterFinishRouterMultiFirstOnly(t *testing.T) {
 	url := "/finishRouterMultiFirstOnly"
 
 	mux := NewControllerRegister()
-	mux.InsertFilter(url, FinishRouter, beegoFinishRouter1, false)
+	mux.InsertFilter(url, FinishRouter, beegoFinishRouter1, WithReturnOnOutput(false))
 	mux.InsertFilter(url, FinishRouter, beegoFinishRouter2)
 
 	mux.Get(url, beegoFilterFunc)
@@ -631,8 +648,8 @@ func TestFilterFinishRouterMulti(t *testing.T) {
 	url := "/finishRouterMulti"
 
 	mux := NewControllerRegister()
-	mux.InsertFilter(url, FinishRouter, beegoFinishRouter1, false)
-	mux.InsertFilter(url, FinishRouter, beegoFinishRouter2, false)
+	mux.InsertFilter(url, FinishRouter, beegoFinishRouter1, WithReturnOnOutput(false))
+	mux.InsertFilter(url, FinishRouter, beegoFinishRouter2, WithReturnOnOutput(false))
 
 	mux.Get(url, beegoFilterFunc)
 
