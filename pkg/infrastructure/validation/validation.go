@@ -269,6 +269,11 @@ func (v *Validation) apply(chk Validator, obj interface{}) *Result {
 	Field := ""
 	Label := ""
 	parts := strings.Split(key, ".")
+	if len(parts) == 2 {
+		Field = parts[0]
+		Name = parts[1]
+		Label = Field
+	}
 	if len(parts) == 3 {
 		Field = parts[0]
 		Name = parts[1]
