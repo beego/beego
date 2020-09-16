@@ -49,6 +49,7 @@ import (
 	"net/url"
 	"os"
 	"path"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -62,10 +63,15 @@ var defaultSetting = BeegoHTTPSettings{
 	ReadWriteTimeout: 60 * time.Second,
 	Gzip:             true,
 	DumpBody:         true,
+	FileChunkSize:    defaultChunkSize,
 }
 
 var defaultCookieJar http.CookieJar
 var settingMutex sync.Mutex
+var defaultClient = &http.Client{}
+var defaultTransport = &http.Transport{MaxIdleConnsPerHost: 100}
+
+const defaultChunkSize = 32 * 1024 * 1024
 
 // it will be the last filter and execute request.Do
 var doRequestFilter = func(ctx context.Context, req *BeegoHTTPRequest) (*http.Response, error) {
@@ -140,11 +146,11 @@ func Head(url string) *BeegoHTTPRequest {
 type BeegoHTTPSettings struct {
 	ShowDebug        bool
 	UserAgent        string
-	ConnectTimeout   time.Duration
-	ReadWriteTimeout time.Duration
-	TLSClientConfig  *tls.Config
-	Proxy            func(*http.Request) (*url.URL, error)
-	Transport        http.RoundTripper
+	ConnectTimeout   time.Duration                         // valid only by default client
+	ReadWriteTimeout time.Duration                         // valid only by default client
+	TLSClientConfig  *tls.Config                           // valid only by default client
+	Proxy            func(*http.Request) (*url.URL, error) // valid only by default client
+	Transport        http.RoundTripper                     // valid only by default client
 	CheckRedirect    func(req *http.Request, via []*http.Request) error
 	EnableCookie     bool
 	Gzip             bool
@@ -152,6 +158,8 @@ type BeegoHTTPSettings struct {
 	Retries          int // if set to -1 means will retry forever
 	RetryDelay       time.Duration
 	FilterChains     []FilterChain
+	FileChunkSize    int
+	client           *http.Client //if nil,use default client;otherwise use set value
 }
 
 // BeegoHTTPRequest provides more useful methods than http.Request for requesting a url.
@@ -174,6 +182,19 @@ func (b *BeegoHTTPRequest) GetRequest() *http.Request {
 // Setting changes request settings
 func (b *BeegoHTTPRequest) Setting(setting BeegoHTTPSettings) *BeegoHTTPRequest {
 	b.setting = setting
+	return b
+}
+
+// WithCustomClient with use custom client fot request
+// all set for default client will be ignore.
+func (b *BeegoHTTPRequest) WithCustomClient(client *http.Client) *BeegoHTTPRequest {
+	b.setting.client = client
+	return b
+}
+
+// SetFileChunkSize set the file chunk size
+func (b *BeegoHTTPRequest) SetFileChunkSize(fileChunkSize int) *BeegoHTTPRequest {
+	b.setting.FileChunkSize = fileChunkSize
 	return b
 }
 
@@ -406,6 +427,7 @@ func (b *BeegoHTTPRequest) buildURL(paramBody string) {
 		if len(b.files) > 0 {
 			pr, pw := io.Pipe()
 			bodyWriter := multipart.NewWriter(pw)
+			buf := make([]byte, b.setting.FileChunkSize)
 			go func() {
 				for formname, filename := range b.files {
 					fileWriter, err := bodyWriter.CreateFormFile(formname, filename)
@@ -416,8 +438,13 @@ func (b *BeegoHTTPRequest) buildURL(paramBody string) {
 					if err != nil {
 						log.Println("Httplib:", err)
 					}
-					// iocopy
-					_, err = io.Copy(fileWriter, fh)
+					for {
+						n, err := fh.Read(buf)
+						if err != nil {
+							break
+						}
+						_, _ = fileWriter.Write(buf[:n])
+					}
 					fh.Close()
 					if err != nil {
 						log.Println("Httplib:", err)
@@ -497,42 +524,42 @@ func (b *BeegoHTTPRequest) doRequest(ctx context.Context) (resp *http.Response, 
 
 	b.req.URL = urlParsed
 
-	trans := b.setting.Transport
+	client := b.setting.client
+	if client == nil {
+		trans := b.setting.Transport
 
-	if trans == nil {
-		// create default transport
-		trans = &http.Transport{
-			TLSClientConfig:     b.setting.TLSClientConfig,
-			Proxy:               b.setting.Proxy,
-			Dial:                TimeoutDialer(b.setting.ConnectTimeout, b.setting.ReadWriteTimeout),
-			MaxIdleConnsPerHost: 100,
+		if trans == nil {
+			// set trans is default
+			defaultTransport.TLSClientConfig = b.setting.TLSClientConfig
+			defaultTransport.Proxy = b.setting.Proxy
+			defaultTransport.Dial = TimeoutDialer(b.setting.ConnectTimeout, b.setting.ReadWriteTimeout)
+			trans = defaultTransport
+		} else {
+			// if b.transport is *http.Transport then set the settings.
+			if t, ok := trans.(*http.Transport); ok {
+				if t.TLSClientConfig == nil {
+					t.TLSClientConfig = b.setting.TLSClientConfig
+				}
+				if t.Proxy == nil {
+					t.Proxy = b.setting.Proxy
+				}
+				if t.Dial == nil {
+					t.Dial = TimeoutDialer(b.setting.ConnectTimeout, b.setting.ReadWriteTimeout)
+				}
+			}
 		}
-	} else {
-		// if b.transport is *http.Transport then set the settings.
-		if t, ok := trans.(*http.Transport); ok {
-			if t.TLSClientConfig == nil {
-				t.TLSClientConfig = b.setting.TLSClientConfig
-			}
-			if t.Proxy == nil {
-				t.Proxy = b.setting.Proxy
-			}
-			if t.Dial == nil {
-				t.Dial = TimeoutDialer(b.setting.ConnectTimeout, b.setting.ReadWriteTimeout)
-			}
-		}
-	}
 
-	var jar http.CookieJar
-	if b.setting.EnableCookie {
-		if defaultCookieJar == nil {
-			createDefaultCookie()
+		var jar http.CookieJar
+		if b.setting.EnableCookie {
+			if defaultCookieJar == nil {
+				createDefaultCookie()
+			}
+			jar = defaultCookieJar
 		}
-		jar = defaultCookieJar
-	}
 
-	client := &http.Client{
-		Transport: trans,
-		Jar:       jar,
+		client = defaultClient //unset client use default
+		client.Transport = trans
+		client.Jar = jar
 	}
 
 	if b.setting.UserAgent != "" && b.req.Header.Get("User-Agent") == "" {
@@ -601,9 +628,20 @@ func (b *BeegoHTTPRequest) Bytes() ([]byte, error) {
 	return b.body, err
 }
 
+type ProgressListener struct {
+	Total   int
+	Current int
+}
+
+func (wc *ProgressListener) Write(p []byte) (int, error) {
+	n := len(p)
+	wc.Current += n
+	return n, nil
+}
+
 // ToFile saves the body data in response to one file.
 // Calls Response inner.
-func (b *BeegoHTTPRequest) ToFile(filename string) error {
+func (b *BeegoHTTPRequest) ToFile(filename string, l *ProgressListener) error {
 	resp, err := b.getResponse()
 	if err != nil {
 		return err
@@ -621,8 +659,15 @@ func (b *BeegoHTTPRequest) ToFile(filename string) error {
 		return err
 	}
 	defer f.Close()
-	_, err = io.Copy(f, resp.Body)
-	return err
+	if l == nil {
+		_, err = io.Copy(f, resp.Body)
+		return err
+	} else {
+		contentLength := resp.Header.Get("Content-Length")
+		l.Total, _ = strconv.Atoi(contentLength)
+		_, err = io.Copy(f, io.TeeReader(resp.Body, l))
+		return err
+	}
 }
 
 // Check if the file directory exists. If it doesn't then it's created

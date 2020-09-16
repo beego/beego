@@ -16,6 +16,7 @@ package httplib
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -98,24 +99,33 @@ func TestSimplePost(t *testing.T) {
 	}
 }
 
-//func TestPostFile(t *testing.T) {
-//	v := "smallfish"
-//	req := Post("http://httpbin.org/post")
-//	req.Debug(true)
-//	req.Param("username", v)
-//	req.PostFile("uploadfile", "httplib_test.go")
+func TestPostFile(t *testing.T) {
+	rtn := struct {
+		Files map[string]string `json:"files"`
+	}{}
+	v1 := "smallfish"
+	v2 := "smallfish"
+	_ = ioutil.WriteFile("./test1.info", []byte(v1), 0600)
+	_ = ioutil.WriteFile("./test2.info", []byte(v2), 0600)
+	defer func() {
+		_ = os.RemoveAll("./test1.info")
+		_ = os.RemoveAll("./test2.info")
+	}()
+	req := Post("http://httpbin.org/post")
+	req.Debug(true)
+	req.SetFileChunkSize(4)
+	req.PostFile("uploadfile", "./test1.info")
+	req.PostFile("file2", "./test2.info")
 
-//	str, err := req.String()
-//	if err != nil {
-//		t.Fatal(err)
-//	}
-//	t.Log(str)
-
-//	n := strings.Index(str, v)
-//	if n == -1 {
-//		t.Fatal(v + " not found in post")
-//	}
-//}
+	err := req.ToJSON(&rtn)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rtn.Files["uploadfile"] == v1 && rtn.Files["file2"] == v2 {
+		return
+	}
+	t.Fatal(rtn)
+}
 
 func TestSimplePut(t *testing.T) {
 	str, err := Put("http://httpbin.org/put").String()
@@ -250,7 +260,7 @@ func TestToJson(t *testing.T) {
 func TestToFile(t *testing.T) {
 	f := "beego_testfile"
 	req := Get("http://httpbin.org/ip")
-	err := req.ToFile(f)
+	err := req.ToFile(f, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -264,7 +274,8 @@ func TestToFile(t *testing.T) {
 func TestToFileDir(t *testing.T) {
 	f := "./files/beego_testfile"
 	req := Get("http://httpbin.org/ip")
-	err := req.ToFile(f)
+	listener := &ProgressListener{}
+	err := req.ToFile(f, listener)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -273,6 +284,10 @@ func TestToFileDir(t *testing.T) {
 	if n := strings.Index(string(b), "origin"); n == -1 {
 		t.Fatal(err)
 	}
+	if listener.Current == listener.Total || listener.Current == 0 {
+		t.Fatal(nil)
+	}
+	fmt.Println(listener)
 }
 
 func TestHeader(t *testing.T) {

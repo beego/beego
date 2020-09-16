@@ -268,7 +268,7 @@ func (b *BeegoHTTPRequest) Bytes() ([]byte, error) {
 // ToFile saves the body data in response to one file.
 // it calls Response inner.
 func (b *BeegoHTTPRequest) ToFile(filename string) error {
-	return b.delegate.ToFile(filename)
+	return b.delegate.ToFile(filename, nil)
 }
 
 // ToJSON returns the map that marshals from the body bytes as json in response .
