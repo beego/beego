@@ -30,18 +30,6 @@ var _ Ormer = new(DoNothingOrm)
 type DoNothingOrm struct {
 }
 
-func (d *DoNothingOrm) RegisterModels(models ...interface{}) (err error) {
-	return nil
-}
-
-func (d *DoNothingOrm) RegisterModelsWithPrefix(prefix string, models ...interface{}) (err error) {
-	return nil
-}
-
-func (d *DoNothingOrm) RegisterModelsWithSuffix(suffix string, models ...interface{}) (err error) {
-	return nil
-}
-
 func (d *DoNothingOrm) Read(md interface{}, cols ...string) error {
 	return nil
 }

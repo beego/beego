@@ -36,15 +36,6 @@ var (
 	modelCache = NewModelCacheHandler()
 )
 
-type modelCacheHandler interface {
-	//RegisterModels register models without prefix or suffix
-	RegisterModels(models ...interface{}) (err error)
-	//RegisterModelsWithPrefix register models with prefix
-	RegisterModelsWithPrefix(prefix string, models ...interface{}) (err error)
-	//RegisterModelsWithSuffix register models with suffix
-	RegisterModelsWithSuffix(suffix string, models ...interface{}) (err error)
-}
-
 // model info collection
 type _modelCache struct {
 	sync.RWMutex    // only used outsite for bootStrap
@@ -60,20 +51,6 @@ func NewModelCacheHandler() *_modelCache {
 		cache:           make(map[string]*modelInfo),
 		cacheByFullName: make(map[string]*modelInfo),
 	}
-}
-
-var _ modelCacheHandler = new(_modelCache)
-
-func (mc *_modelCache) RegisterModels(models ...interface{}) (err error) {
-	return mc.register(``, true, models...)
-}
-
-func (mc *_modelCache) RegisterModelsWithPrefix(prefix string, models ...interface{}) (err error) {
-	return mc.register(prefix, true, models...)
-}
-
-func (mc *_modelCache) RegisterModelsWithSuffix(suffix string, models ...interface{}) (err error) {
-	return mc.register(suffix, false, models...)
 }
 
 // get all model info
