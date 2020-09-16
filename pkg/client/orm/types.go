@@ -219,7 +219,6 @@ type ormer interface {
 
 type Ormer interface {
 	ormer
-	modelCacheHandler
 	TxBeginner
 }
 

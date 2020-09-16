@@ -17,7 +17,6 @@ package orm
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"reflect"
 	"time"
 
@@ -41,18 +40,6 @@ type filterOrmDecorator struct {
 	insideTx    bool
 	txStartTime time.Time
 	txName      string
-}
-
-func (f *filterOrmDecorator) RegisterModels(models ...interface{}) (err error) {
-	return errors.New(`not callable`)
-}
-
-func (f *filterOrmDecorator) RegisterModelsWithPrefix(prefix string, models ...interface{}) (err error) {
-	return errors.New(`not callable`)
-}
-
-func (f *filterOrmDecorator) RegisterModelsWithSuffix(suffix string, models ...interface{}) (err error) {
-	return errors.New(`not callable`)
 }
 
 func NewFilterOrmDecorator(delegate Ormer, filterChains ...FilterChain) Ormer {
