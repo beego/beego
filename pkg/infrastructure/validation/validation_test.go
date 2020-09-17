@@ -607,3 +607,28 @@ func TestCanSkipAlso(t *testing.T) {
 	}
 
 }
+
+func TestFieldNoEmpty(t *testing.T) {
+	type User struct {
+		Name string `json:"name" valid:"Match(/^[a-zA-Z][a-zA-Z0-9._-]{0,31}$/)"`
+	}
+	u := User{
+		Name: "*",
+	}
+
+	valid := Validation{}
+	b, err := valid.Valid(u)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b {
+		t.Fatal("validation should be passed")
+	}
+	if len(valid.Errors) == 0 {
+		t.Fatal("validation should be passed")
+	}
+	validErr := valid.Errors[0]
+	if len(validErr.Field) == 0 {
+		t.Fatal("validation should be passed")
+	}
+}
