@@ -37,7 +37,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path"
 	"runtime"
 	"strings"
 	"sync"
@@ -135,18 +134,6 @@ type nameLogger struct {
 	name string
 }
 
-type LogMsg struct {
-	Level               int
-	Msg                 string
-	When                time.Time
-	FilePath            string
-	LineNumber          int
-	Args                []interface{}
-	Prefix              string
-	enableFullFilePath  bool
-	enableFuncCallDepth bool
-}
-
 var logMsgPool *sync.Pool
 
 // NewLogger returns a new BeeLogger.
@@ -185,27 +172,6 @@ func (bl *BeeLogger) Async(msgLen ...int64) *BeeLogger {
 	bl.wg.Add(1)
 	go bl.startLogger()
 	return bl
-}
-
-// OldStyleFormat you should never invoke this
-func (lm *LogMsg) OldStyleFormat() string {
-	msg := lm.Msg
-
-	if len(lm.Args) > 0 {
-		lm.Msg = fmt.Sprintf(lm.Msg, lm.Args...)
-	}
-
-	msg = lm.Prefix + " " + msg
-
-	if lm.enableFuncCallDepth {
-		if !lm.enableFullFilePath {
-			_, lm.FilePath = path.Split(lm.FilePath)
-		}
-		msg = fmt.Sprintf("[%s:%d] %s", lm.FilePath, lm.LineNumber, msg)
-	}
-
-	msg = levelPrefix[lm.Level] + " " + msg
-	return msg
 }
 
 // SetLogger provides a given logger adapter into BeeLogger with config string.

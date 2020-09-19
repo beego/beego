@@ -44,7 +44,9 @@ func (s *JLWriter) Init(config string) error {
 }
 
 func (s *JLWriter) Format(lm *LogMsg) string {
-	return lm.OldStyleFormat()
+	msg := lm.OldStyleFormat()
+	msg = fmt.Sprintf("%s %s", lm.When.Format("2006-01-02 15:04:05"), msg)
+	return msg
 }
 
 func (s *JLWriter) SetFormatter(f LogFormatter) {
