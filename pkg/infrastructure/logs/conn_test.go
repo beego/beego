@@ -18,6 +18,9 @@ import (
 	"net"
 	"os"
 	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // ConnTCPListener takes a TCP listener and accepts n TCP connections
@@ -45,6 +48,7 @@ func TestConn(t *testing.T) {
 	log.Informational("informational")
 }
 
+// need to rewrite this test, it's not stable
 func TestReconnect(t *testing.T) {
 	// Setup connection listener
 	newConns := make(chan net.Conn)
@@ -76,4 +80,18 @@ func TestReconnect(t *testing.T) {
 	default:
 		t.Error("Did not reconnect")
 	}
+}
+
+func TestConnWriter_Format(t *testing.T) {
+	lg := &LogMsg{
+		Level:      LevelDebug,
+		Msg:        "Hello, world",
+		When:       time.Date(2020, 9, 19, 20, 12, 37, 9, time.UTC),
+		FilePath:   "/user/home/main.go",
+		LineNumber: 13,
+		Prefix:     "Cus",
+	}
+	cw := NewConn().(*connWriter)
+	res := cw.Format(lg)
+	assert.Equal(t, "[D] Cus Hello, world", res)
 }

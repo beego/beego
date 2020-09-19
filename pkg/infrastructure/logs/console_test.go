@@ -17,6 +17,8 @@ package logs
 import (
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // Try each log level in decreasing order of priority.
@@ -61,4 +63,20 @@ func TestConsoleAsync(t *testing.T) {
 	for len(log.msgChan) != 0 {
 		time.Sleep(1 * time.Millisecond)
 	}
+}
+
+func TestFormat(t *testing.T) {
+	log := newConsole()
+	lm := &LogMsg{
+		Level:      LevelDebug,
+		Msg:        "Hello, world",
+		When:       time.Date(2020, 9, 19, 20, 12, 37, 9, time.UTC),
+		FilePath:   "/user/home/main.go",
+		LineNumber: 13,
+		Prefix:     "Cus",
+	}
+	res := log.Format(lm)
+	assert.Equal(t, "2020/09/19 20:12:37.000 \x1b[1;44m[D]\x1b[0m Cus Hello, world\n", res)
+	err := log.WriteMsg(lm)
+	assert.Nil(t, err)
 }
