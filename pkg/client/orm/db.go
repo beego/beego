@@ -38,10 +38,11 @@ var (
 
 var (
 	operators = map[string]bool{
-		"exact":     true,
-		"iexact":    true,
-		"contains":  true,
-		"icontains": true,
+		"exact":       true,
+		"iexact":      true,
+		"strictexact": true,
+		"contains":    true,
+		"icontains":   true,
 		// "regex":       true,
 		// "iregex":      true,
 		"gt":          true,

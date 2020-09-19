@@ -22,10 +22,11 @@ import (
 
 // mysql operators.
 var mysqlOperators = map[string]string{
-	"exact":     "= ?",
-	"iexact":    "LIKE ?",
-	"contains":  "LIKE BINARY ?",
-	"icontains": "LIKE ?",
+	"exact":       "= ?",
+	"iexact":      "LIKE ?",
+	"strictexact": "= BINARY ?",
+	"contains":    "LIKE BINARY ?",
+	"icontains":   "LIKE ?",
 	// "regex":       "REGEXP BINARY ?",
 	// "iregex":      "REGEXP ?",
 	"gt":          "> ?",
