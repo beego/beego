@@ -27,7 +27,7 @@ type LogFormatter interface {
 
 // PatternLogFormatter provides a quick format method
 // for example:
-// tes := PatternLogFormatter{Pattern: "%F:%n|%w %t>> %m", WhenFormat: "2006-01-02"}
+// tes := &PatternLogFormatter{Pattern: "%F:%n|%w %t>> %m", WhenFormat: "2006-01-02"}
 // RegisterFormatter("tes", tes)
 // SetGlobalFormatter("tes")
 type PatternLogFormatter struct {
@@ -35,7 +35,7 @@ type PatternLogFormatter struct {
 	WhenFormat string
 }
 
-func (p PatternLogFormatter) getWhenFormatter() string {
+func (p *PatternLogFormatter) getWhenFormatter() string {
 	s := p.WhenFormat
 	if s == "" {
 		s = "2006/01/02 15:04:05.123" // default style
@@ -43,7 +43,7 @@ func (p PatternLogFormatter) getWhenFormatter() string {
 	return s
 }
 
-func (p PatternLogFormatter) Format(lm *LogMsg) string {
+func (p *PatternLogFormatter) Format(lm *LogMsg) string {
 	return p.ToString(lm)
 }
 
@@ -62,7 +62,7 @@ func GetFormatter(name string) (LogFormatter, bool) {
 
 // 'w' when, 'm' msg,'f' filename，'F' full path，'n' line number
 // 'l' level number, 't' prefix of level type, 'T' full name of level type
-func (p PatternLogFormatter) ToString(lm *LogMsg) string {
+func (p *PatternLogFormatter) ToString(lm *LogMsg) string {
 	s := []rune(p.Pattern)
 	m := map[rune]string{
 		'w': lm.When.Format(p.getWhenFormatter()),

@@ -7,7 +7,7 @@ import (
 )
 
 func TestPatternLogFormatter(t *testing.T) {
-	tes := PatternLogFormatter{
+	tes := &PatternLogFormatter{
 		Pattern:    "%F:%n|%w%t>> %m",
 		WhenFormat: "2006-01-02",
 	}
