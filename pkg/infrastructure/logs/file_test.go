@@ -22,6 +22,8 @@ import (
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestFilePerm(t *testing.T) {
@@ -427,4 +429,19 @@ func BenchmarkFileOnGoroutine(b *testing.B) {
 		go log.Debug("debug")
 	}
 	os.Remove("test4.log")
+}
+
+func TestFileLogWriter_Format(t *testing.T) {
+	lg := &LogMsg{
+		Level:      LevelDebug,
+		Msg:        "Hello, world",
+		When:       time.Date(2020, 9, 19, 20, 12, 37, 9, time.UTC),
+		FilePath:   "/user/home/main.go",
+		LineNumber: 13,
+		Prefix:     "Cus",
+	}
+
+	fw := newFileWriter().(*fileLogWriter)
+	res := fw.Format(lg)
+	assert.Equal(t, "2020/09/19 20:12:37.000  [D] Cus Hello, world\n", res)
 }

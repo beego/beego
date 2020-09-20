@@ -59,7 +59,7 @@ type consoleWriter struct {
 func (c *consoleWriter) Format(lm *LogMsg) string {
 	msg := lm.OldStyleFormat()
 	if c.Colorful {
-		msg = strings.Replace(lm.Msg, levelPrefix[lm.Level], colors[lm.Level](levelPrefix[lm.Level]), 1)
+		msg = strings.Replace(msg, levelPrefix[lm.Level], colors[lm.Level](levelPrefix[lm.Level]), 1)
 	}
 	h, _, _ := formatTimeHeader(lm.When)
 	bytes := append(append(h, msg...), '\n')
@@ -72,6 +72,10 @@ func (c *consoleWriter) SetFormatter(f LogFormatter) {
 
 // NewConsole creates ConsoleWriter returning as LoggerInterface.
 func NewConsole() Logger {
+	return newConsole()
+}
+
+func newConsole() *consoleWriter {
 	cw := &consoleWriter{
 		lg:       newLogWriter(ansicolor.NewAnsiColorWriter(os.Stdout)),
 		Level:    LevelDebug,
