@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package beego
+package pkg
 
 var (
 	BuildVersion     string
@@ -24,4 +24,9 @@ var (
 	GoVersion string
 
 	GitBranch string
+)
+
+const (
+	// VERSION represent beego web framework version.
+	VERSION = "1.12.2"
 )
