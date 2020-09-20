@@ -9,96 +9,100 @@ import (
 )
 
 func TestSsdbcacheCache(t *testing.T) {
-	ssdb, err := cache.NewCache("ssdb", `{"conn": "127.0.0.1:8888"}`)
+	cc, err := cache.NewCache("ssdb", `{"conn": "127.0.0.1:8888"}`)
 	if err != nil {
 		t.Error("init err")
 	}
 
 	// test put and exist
-	if ssdb.IsExist("ssdb") {
+	if _, err := cc.IsExist("test_key"); err != nil {
 		t.Error("check err")
 	}
 	timeoutDuration := 10 * time.Second
 	//timeoutDuration := -10*time.Second   if timeoutDuration is negtive,it means permanent
-	if err = ssdb.Put("ssdb", "ssdb", timeoutDuration); err != nil {
+	if err = cc.Put("test_key", "test_val", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
-	if !ssdb.IsExist("ssdb") {
+	// test put and exist
+	b, err := cc.IsExist("test_key")
+	if err != nil {
+		t.Error("check err")
+	}
+	if b == false {
 		t.Error("check err")
 	}
 
 	// Get test done
-	if err = ssdb.Put("ssdb", "ssdb", timeoutDuration); err != nil {
+	if err = cc.Put("test_key", "test_val", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
 
-	if v := ssdb.Get("ssdb"); v != "ssdb" {
+	if v, _ := cc.Get("test_key"); v != "test_val" {
 		t.Error("get Error")
 	}
 
 	//inc/dec test done
-	if err = ssdb.Put("ssdb", "2", timeoutDuration); err != nil {
+	if err = cc.Put("test_key", "2", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
-	if err = ssdb.Incr("ssdb"); err != nil {
+	if _, err = cc.Incr("test_key"); err != nil {
 		t.Error("incr Error", err)
 	}
 
-	if v, err := strconv.Atoi(ssdb.Get("ssdb").(string)); err != nil || v != 3 {
+	v, _ := cc.Get("test_key")
+	if v, err := strconv.Atoi(v.(string)); err != nil || v != 3 {
 		t.Error("get err")
 	}
 
-	if err = ssdb.Decr("ssdb"); err != nil {
+	if _, err = cc.Decr("test_key"); err != nil {
 		t.Error("decr error")
 	}
 
 	// test del
-	if err = ssdb.Put("ssdb", "3", timeoutDuration); err != nil {
+	if err = cc.Put("test_key", "3", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
-	if v, err := strconv.Atoi(ssdb.Get("ssdb").(string)); err != nil || v != 3 {
+	v, _ = cc.Get("test_key")
+	if v, err := strconv.Atoi(v.(string)); err != nil || v != 3 {
 		t.Error("get err")
 	}
-	if err := ssdb.Delete("ssdb"); err == nil {
-		if ssdb.IsExist("ssdb") {
+	if err := cc.Delete("test_key"); err == nil {
+		if ok, _ := cc.IsExist("test_key"); ok {
 			t.Error("delete err")
 		}
 	}
 
 	//test string
-	if err = ssdb.Put("ssdb", "ssdb", -10*time.Second); err != nil {
+	if err = cc.Put("test_key", "test_val", -10*time.Second); err != nil {
 		t.Error("set Error", err)
 	}
-	if !ssdb.IsExist("ssdb") {
+	if ok, _ := cc.IsExist("test_key"); ok {
 		t.Error("check err")
 	}
-	if v := ssdb.Get("ssdb").(string); v != "ssdb" {
+	if v, _ := cc.Get("test_key"); v.(string) != "test_val" {
 		t.Error("get err")
 	}
 
 	//test GetMulti done
-	if err = ssdb.Put("ssdb1", "ssdb1", -10*time.Second); err != nil {
+	if err = cc.Put("k1", "v1", -10*time.Second); err != nil {
 		t.Error("set Error", err)
 	}
-	if !ssdb.IsExist("ssdb1") {
+	if ok, _ := cc.IsExist("k1"); !ok {
 		t.Error("check err")
 	}
-	vv := ssdb.GetMulti([]string{"ssdb", "ssdb1"})
+	vv, err := cc.GetMulti([]string{"k1", "k2"})
 	if len(vv) != 2 {
 		t.Error("getmulti error")
 	}
-	if vv[0].(string) != "ssdb" {
+	if vv[0].(string) != "v1" {
 		t.Error("getmulti error")
 	}
-	if vv[1].(string) != "ssdb1" {
+	if vv[1].(string) != "v1" {
 		t.Error("getmulti error")
 	}
 
 	// test clear all done
-	if err = ssdb.ClearAll(); err != nil {
+	if err = cc.ClearAll(); err != nil {
 		t.Error("clear all err")
-	}
-	if ssdb.IsExist("ssdb") || ssdb.IsExist("ssdb1") {
-		t.Error("check err")
 	}
 }

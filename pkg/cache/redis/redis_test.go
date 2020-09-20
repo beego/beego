@@ -16,100 +16,118 @@ package redis
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
+	"time"
 
 	"github.com/astaxie/beego/pkg/cache"
+	"gotest.tools/assert"
 )
 
 func TestIncr(t *testing.T) {
-	bm, err := cache.NewCache("redis", `{"conn": "127.0.0.1:6379"}`)
+	cc, err := cache.NewCache("redis", `{"conn": "127.0.0.1:6379"}`)
 	if err != nil {
 		t.Error("init err")
 	}
-	v, err := bm.Incr("test")
+	v, err := cc.Incr("test")
 	fmt.Println(v, err)
 }
 
-/*
 func TestRedisCache(t *testing.T) {
-	bm, err := cache.NewCache("redis", `{"conn": "127.0.0.1:6379"}`)
+	cc, err := cache.NewCache("redis", `{"conn": "127.0.0.1:6379"}`)
 	if err != nil {
 		t.Error("init err")
 	}
+
+	// test put and exist
+	if _, err := cc.IsExist("test_key"); err != nil {
+		t.Error("check err")
+	}
 	timeoutDuration := 10 * time.Second
-	if err = bm.Put("astaxie", 1, timeoutDuration); err != nil {
+	//timeoutDuration := -10*time.Second   if timeoutDuration is negtive,it means permanent
+	if err = cc.Put("test_key", "test_val", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
-	if b, err := !bm.IsExist("astaxie"); b {
+	// test put and exist
+	b, err := cc.IsExist("test_key")
+	if err != nil {
+		t.Error("check err")
+	}
+	if b == false {
 		t.Error("check err")
 	}
 
-	time.Sleep(11 * time.Second)
-
-	if bm.IsExist("astaxie") {
-		t.Error("check err")
-	}
-	if err = bm.Put("astaxie", 1, timeoutDuration); err != nil {
+	// Get test done
+	if err = cc.Put("test_key", "test_val", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
 
-	if v, _ := redis.Int(bm.Get("astaxie"), err); v != 1 {
-		t.Error("get err")
+	if v, _ := cc.Get("test_key"); v != "test_val" {
+		t.Error("get Error")
 	}
 
-	if err = bm.Incr("astaxie"); err != nil {
-		t.Error("Incr Error", err)
-	}
-
-	if v, _ := redis.Int(bm.Get("astaxie"), err); v != 2 {
-		t.Error("get err")
-	}
-
-	if err = bm.Decr("astaxie"); err != nil {
-		t.Error("Decr Error", err)
-	}
-
-	if v, _ := redis.Int(bm.Get("astaxie"), err); v != 1 {
-		t.Error("get err")
-	}
-	bm.Delete("astaxie")
-	if bm.IsExist("astaxie") {
-		t.Error("delete err")
-	}
-
-	// test string
-	if err = bm.Put("astaxie", "author", timeoutDuration); err != nil {
+	//inc/dec test done
+	if err = cc.Put("test_key", "2", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
-	if !bm.IsExist("astaxie") {
-		t.Error("check err")
+	if _, err = cc.Incr("test_key"); err != nil {
+		t.Error("incr Error", err)
 	}
 
-	if v, _ := redis.String(bm.Get("astaxie"), err); v != "author" {
+	v, _ := cc.Get("test_key")
+	if v, err := strconv.Atoi(v.(string)); err != nil || v != 3 {
 		t.Error("get err")
 	}
 
-	// test GetMulti
-	if err = bm.Put("astaxie1", "author1", timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
-	if !bm.IsExist("astaxie1") {
-		t.Error("check err")
+	if _, err = cc.Decr("test_key"); err != nil {
+		t.Error("decr error")
 	}
 
-	vv := bm.GetMulti([]string{"astaxie", "astaxie1"})
+	// test del
+	if err = cc.Put("test_key", "3", timeoutDuration); err != nil {
+		t.Error("set Error", err)
+	}
+	v, _ = cc.Get("test_key")
+	if v, err := strconv.Atoi(v.(string)); err != nil || v != 3 {
+		t.Error("get err")
+	}
+	if err := cc.Delete("test_key"); err == nil {
+		if ok, _ := cc.IsExist("test_key"); ok {
+			t.Error("delete err")
+		}
+	}
+
+	//test string
+	if err = cc.Put("test_key", "test_val", -10*time.Second); err != nil {
+		t.Error("set Error", err)
+	}
+	if ok, _ := cc.IsExist("test_key"); ok {
+		t.Error("check err")
+	}
+	if v, _ := cc.Get("test_key"); v.(string) != "test_val" {
+		t.Error("get err")
+	}
+
+	//test GetMulti done
+	if err = cc.Put("k1", "v1", -10*time.Second); err != nil {
+		t.Error("set Error", err)
+	}
+	if ok, _ := cc.IsExist("k1"); !ok {
+		t.Error("check err")
+	}
+	vv, err := cc.GetMulti([]string{"k1", "k2"})
 	if len(vv) != 2 {
-		t.Error("GetMulti ERROR")
+		t.Error("getmulti error")
 	}
-	if v, _ := redis.String(vv[0], nil); v != "author" {
-		t.Error("GetMulti ERROR")
+	if vv[0].(string) != "v1" {
+		t.Error("getmulti error")
 	}
-	if v, _ := redis.String(vv[1], nil); v != "author1" {
-		t.Error("GetMulti ERROR")
+	if vv[1].(string) != "v1" {
+		t.Error("getmulti error")
 	}
 
-	// test clear all
-	if err = bm.ClearAll(); err != nil {
+	// test clear all done
+	if err = cc.ClearAll(); err != nil {
 		t.Error("clear all err")
 	}
 }
@@ -149,4 +167,3 @@ func TestCache_Scan(t *testing.T) {
 		t.Error("scan all err")
 	}
 }
-*/

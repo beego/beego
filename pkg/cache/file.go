@@ -16,6 +16,7 @@ package cache
 
 import (
 	"bytes"
+	"context"
 	"crypto/md5"
 	"encoding/gob"
 	"encoding/hex"
@@ -28,6 +29,11 @@ import (
 	"reflect"
 	"strconv"
 	"time"
+)
+
+var (
+	//ErrKeyExpired ..
+	ErrKeyExpired = fmt.Errorf("key is expired")
 )
 
 // FileCacheItem is basic unit of file cache adapter which
@@ -56,7 +62,7 @@ type FileCache struct {
 
 // NewFileCache creates a new file cache with no config.
 // The level and expiry need to be set in the method StartAndGC as config string.
-func NewFileCache() *FileCache {
+func NewFileCache() Cache {
 	//    return &FileCache{CachePath:FileCachePath, FileSuffix:FileCacheFileSuffix}
 	return &FileCache{}
 }
@@ -118,35 +124,63 @@ func (fc *FileCache) getCacheFileName(key string) string {
 	return filepath.Join(cachePath, fmt.Sprintf("%s%s", keyMd5, fc.FileSuffix))
 }
 
-// Get value from file cache.
-// if nonexistent or expired return an empty string.
-func (fc *FileCache) Get(key string) interface{} {
+// Get a cached value by key.
+func (fc *FileCache) Get(key string) (interface{}, error) {
+	return fc.GetWithCtx(context.Background(), key)
+}
+
+// GetWithCtx a cached value by key.
+func (fc *FileCache) GetWithCtx(ctx context.Context, key string) (interface{}, error) {
 	fileData, err := FileGetContents(fc.getCacheFileName(key))
 	if err != nil {
-		return ""
+		return "", err
 	}
 	var to FileCacheItem
 	GobDecode(fileData, &to)
 	if to.Expired.Before(time.Now()) {
-		return ""
+		return "", ErrKeyExpired
 	}
-	return to.Data
+	return to.Data, nil
 }
 
 // GetMulti gets values from file cache.
 // if nonexistent or expired return an empty string.
-func (fc *FileCache) GetMulti(keys []string) []interface{} {
+func (fc *FileCache) GetMulti(keys []string) ([]interface{}, error) {
 	var rc []interface{}
+	var errs error
 	for _, key := range keys {
-		rc = append(rc, fc.Get(key))
+		v, err := fc.GetWithCtx(context.Background(), key)
+		if err != nil {
+			errs = err
+		}
+		rc = append(rc, v)
 	}
-	return rc
+	return rc, errs
+}
+
+// GetMultiWithCtx gets values from file cache.
+func (fc *FileCache) GetMultiWithCtx(ctx context.Context, keys []string) ([]interface{}, error) {
+	var rc []interface{}
+	var errs error
+	for _, key := range keys {
+		v, err := fc.GetWithCtx(ctx, key)
+		if err != nil {
+			errs = err
+		}
+		rc = append(rc, v)
+	}
+	return rc, errs
 }
 
 // Put value into file cache.
 // timeout: how long this file should be kept in ms
 // if timeout equals fc.EmbedExpiry(default is 0), cache this item forever.
 func (fc *FileCache) Put(key string, val interface{}, timeout time.Duration) error {
+	return fc.PutWithCtx(context.Background(), key, val, timeout)
+}
+
+// PutWithCtx put value into file cache.
+func (fc *FileCache) PutWithCtx(ctx context.Context, key string, val interface{}, timeout time.Duration) error {
 	gob.Register(val)
 
 	item := FileCacheItem{Data: val}
@@ -165,6 +199,11 @@ func (fc *FileCache) Put(key string, val interface{}, timeout time.Duration) err
 
 // Delete file cache value.
 func (fc *FileCache) Delete(key string) error {
+	return fc.DeleteWithCtx(context.Background(), key)
+}
+
+// DeleteWithCtx delete file cache value.
+func (fc *FileCache) DeleteWithCtx(ctx context.Context, key string) error {
 	filename := fc.getCacheFileName(key)
 	if ok, _ := exists(filename); ok {
 		return os.Remove(filename)
@@ -172,41 +211,65 @@ func (fc *FileCache) Delete(key string) error {
 	return nil
 }
 
-// Incr increases cached int value.
+// IncrBy increases cached int value.
 // fc value is saved forever unless deleted.
-func (fc *FileCache) Incr(key string) error {
-	data := fc.Get(key)
+func (fc *FileCache) IncrBy(key string, n int) (int, error) {
+	return fc.IncrByWithCtx(context.Background(), key, n)
+}
+
+// IncrByWithCtx increases cached int value.
+func (fc *FileCache) IncrByWithCtx(ctx context.Context, key string, n int) (int, error) {
+	data, err := fc.Get(key)
+	if err != nil {
+		return 0, err
+	}
 	var incr int
 	if reflect.TypeOf(data).Name() != "int" {
 		incr = 0
 	} else {
-		incr = data.(int) + 1
+		incr = data.(int) + n
 	}
-	fc.Put(key, incr, time.Duration(fc.EmbedExpiry))
-	return nil
+	err = fc.Put(key, incr, time.Duration(fc.EmbedExpiry))
+	return incr, err
+}
+
+// Incr increases cached int value.
+func (fc *FileCache) Incr(key string) (int, error) {
+	return fc.IncrByWithCtx(context.Background(), key, 1)
+}
+
+// IncrWithCtx increases cached int value.
+func (fc *FileCache) IncrWithCtx(ctx context.Context, key string) (int, error) {
+	return fc.IncrByWithCtx(context.Background(), key, 1)
 }
 
 // Decr decreases cached int value.
-func (fc *FileCache) Decr(key string) error {
-	data := fc.Get(key)
-	var decr int
-	if reflect.TypeOf(data).Name() != "int" || data.(int)-1 <= 0 {
-		decr = 0
-	} else {
-		decr = data.(int) - 1
-	}
-	fc.Put(key, decr, time.Duration(fc.EmbedExpiry))
-	return nil
+func (fc *FileCache) Decr(key string) (int, error) {
+	return fc.IncrByWithCtx(context.Background(), key, -1)
+}
+
+// DecrWithCtx decreases cached int value.
+func (fc *FileCache) DecrWithCtx(ctx context.Context, key string) (int, error) {
+	return fc.IncrByWithCtx(context.Background(), key, -1)
 }
 
 // IsExist checks if value exists.
-func (fc *FileCache) IsExist(key string) bool {
-	ret, _ := exists(fc.getCacheFileName(key))
-	return ret
+func (fc *FileCache) IsExist(key string) (bool, error) {
+	return fc.IsExistWithCtx(context.Background(), key)
+}
+
+// IsExistWithCtx checks if value exists.
+func (fc *FileCache) IsExistWithCtx(ctx context.Context, key string) (bool, error) {
+	return exists(fc.getCacheFileName(key))
 }
 
 // ClearAll cleans cached files (not implemented)
 func (fc *FileCache) ClearAll() error {
+	return nil
+}
+
+//ClearAllWithCtx cleans cached files (not implemented)
+func (fc *FileCache) ClearAllWithCtx(ctx context.Context) error {
 	return nil
 }
 
@@ -253,5 +316,5 @@ func GobDecode(data []byte, to *FileCacheItem) error {
 }
 
 func init() {
-	// Register("file", NewFileCache)
+	Register("file", NewFileCache)
 }
