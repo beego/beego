@@ -15,40 +15,11 @@
 package logs
 
 import (
-	"net/http"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
 )
-
-type TestHttpHandler struct {
-}
-
-func (t *TestHttpHandler) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
-	writer.Write([]byte("coming"))
-}
-
-func TestJLWriter_WriteMsg(t *testing.T) {
-	// start sever
-
-	http.Handle("/", &TestHttpHandler{})
-	go http.ListenAndServe(":12124", nil)
-
-	jl := newJLWriter()
-	jl.Init(`{
-"webhookurl":"http://localhost:12124/hello",
-"redirecturl":"nil",
-"imageurl":"a"
-}`)
-	err := jl.WriteMsg(&LogMsg{
-		Msg: "world",
-	})
-
-	jl.Flush()
-	jl.Destroy()
-	assert.Nil(t, err)
-}
 
 func TestJLWriter_Format(t *testing.T) {
 	lg := &LogMsg{
