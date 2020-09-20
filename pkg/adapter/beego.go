@@ -15,12 +15,14 @@
 package adapter
 
 import (
+	"github.com/astaxie/beego/pkg"
 	"github.com/astaxie/beego/pkg/server/web"
 )
 
 const (
+
 	// VERSION represent beego web framework version.
-	VERSION = web.VERSION
+	VERSION = pkg.VERSION
 
 	// DEV is for develop
 	DEV = web.DEV

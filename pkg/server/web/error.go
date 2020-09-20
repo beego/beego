@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/astaxie/beego/pkg"
 	"github.com/astaxie/beego/pkg/infrastructure/utils"
 
 	"github.com/astaxie/beego/pkg/server/web/context"
@@ -91,7 +92,7 @@ func showErr(err interface{}, ctx *context.Context, stack string) {
 		"RequestURL":    ctx.Input.URI(),
 		"RemoteAddr":    ctx.Input.IP(),
 		"Stack":         stack,
-		"BeegoVersion":  VERSION,
+		"BeegoVersion":  pkg.VERSION,
 		"GoVersion":     runtime.Version(),
 	}
 	t.Execute(ctx.ResponseWriter, data)
@@ -378,7 +379,7 @@ func responseError(rw http.ResponseWriter, r *http.Request, errCode int, errCont
 	t, _ := template.New("beegoerrortemp").Parse(errtpl)
 	data := M{
 		"Title":        http.StatusText(errCode),
-		"BeegoVersion": VERSION,
+		"BeegoVersion": pkg.VERSION,
 		"Content":      template.HTML(errContent),
 	}
 	t.Execute(rw, data)
@@ -388,7 +389,7 @@ func responseError(rw http.ResponseWriter, r *http.Request, errCode int, errCont
 // usage:
 // 	beego.ErrorHandler("404",NotFound)
 //	beego.ErrorHandler("500",InternalServerError)
-func ErrorHandler(code string, h http.HandlerFunc) *App {
+func ErrorHandler(code string, h http.HandlerFunc) *HttpServer {
 	ErrorMaps[code] = &errorInfo{
 		errorType: errorTypeHandler,
 		handler:   h,
@@ -400,7 +401,7 @@ func ErrorHandler(code string, h http.HandlerFunc) *App {
 // ErrorController registers ControllerInterface to each http err code string.
 // usage:
 // 	beego.ErrorController(&controllers.ErrorController{})
-func ErrorController(c ControllerInterface) *App {
+func ErrorController(c ControllerInterface) *HttpServer {
 	reflectVal := reflect.ValueOf(c)
 	rt := reflectVal.Type()
 	ct := reflect.Indirect(reflectVal).Type()

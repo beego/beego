@@ -9,7 +9,6 @@ import (
 
 	"github.com/astaxie/beego/pkg/infrastructure/logs"
 	"github.com/astaxie/beego/pkg/infrastructure/session"
-
 	"github.com/astaxie/beego/pkg/server/web/context"
 )
 
@@ -83,13 +82,6 @@ func registerTemplate() error {
 			logs.Warn(err)
 		}
 		return err
-	}
-	return nil
-}
-
-func registerAdmin() error {
-	if BConfig.Listen.EnableAdmin {
-		go beeAdminApp.Run()
 	}
 	return nil
 }
