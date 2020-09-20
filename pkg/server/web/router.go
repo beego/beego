@@ -135,10 +135,18 @@ type ControllerRegister struct {
 
 	// the filter created by FilterChain
 	chainRoot *FilterRouter
+
+	cfg *Config
 }
 
 // NewControllerRegister returns a new ControllerRegister.
+// Usually you should not use this method
+// please use NewControllerRegisterWithCfg
 func NewControllerRegister() *ControllerRegister {
+	return NewControllerRegisterWithCfg(BeeApp.Cfg)
+}
+
+func NewControllerRegisterWithCfg(cfg *Config) *ControllerRegister {
 	res := &ControllerRegister{
 		routers:  make(map[string]*Tree),
 		policies: make(map[string]*Tree),
@@ -147,6 +155,7 @@ func NewControllerRegister() *ControllerRegister {
 				return beecontext.NewContext()
 			},
 		},
+		cfg: cfg,
 	}
 	res.chainRoot = newFilterRouter("/*", res.serveHttp, WithCaseSensitive(false))
 	return res
@@ -240,7 +249,7 @@ func (p *ControllerRegister) addWithMethodParams(pattern string, c ControllerInt
 }
 
 func (p *ControllerRegister) addToRouter(method, pattern string, r *ControllerInfo) {
-	if !BConfig.RouterCaseSensitive {
+	if !p.cfg.RouterCaseSensitive {
 		pattern = strings.ToLower(pattern)
 	}
 	if t, ok := p.routers[method]; ok {
@@ -453,7 +462,7 @@ func (p *ControllerRegister) AddAutoPrefix(prefix string, c ControllerInterface)
 //   1. setting the returnOnOutput value (false allows multiple filters to execute)
 //   2. determining whether or not params need to be reset.
 func (p *ControllerRegister) InsertFilter(pattern string, pos int, filter FilterFunc, opts ...FilterOpt) error {
-	opts = append(opts, WithCaseSensitive(BConfig.RouterCaseSensitive))
+	opts = append(opts, WithCaseSensitive(p.cfg.RouterCaseSensitive))
 	mr := newFilterRouter(pattern, filter, opts...)
 	return p.insertFilterRouter(pos, mr)
 }
@@ -472,7 +481,7 @@ func (p *ControllerRegister) InsertFilter(pattern string, pos int, filter Filter
 func (p *ControllerRegister) InsertFilterChain(pattern string, chain FilterChain, opts ...FilterOpt) {
 	root := p.chainRoot
 	filterFunc := chain(root.filterFunc)
-	opts = append(opts, WithCaseSensitive(BConfig.RouterCaseSensitive))
+	opts = append(opts, WithCaseSensitive(p.cfg.RouterCaseSensitive))
 	p.chainRoot = newFilterRouter(pattern, filterFunc, opts...)
 	p.chainRoot.next = root
 
@@ -669,14 +678,14 @@ func (p *ControllerRegister) serveHttp(ctx *beecontext.Context) {
 		isRunnable   bool
 	)
 
-	if BConfig.RecoverFunc != nil {
-		defer BConfig.RecoverFunc(ctx)
+	if p.cfg.RecoverFunc != nil {
+		defer p.cfg.RecoverFunc(ctx, p.cfg)
 	}
 
-	ctx.Output.EnableGzip = BConfig.EnableGzip
+	ctx.Output.EnableGzip = p.cfg.EnableGzip
 
-	if BConfig.RunMode == DEV {
-		ctx.Output.Header("Server", BConfig.ServerName)
+	if p.cfg.RunMode == DEV {
+		ctx.Output.Header("Server", p.cfg.ServerName)
 	}
 
 	urlPath := p.getUrlPath(ctx)
@@ -700,20 +709,20 @@ func (p *ControllerRegister) serveHttp(ctx *beecontext.Context) {
 	}
 
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
-		if BConfig.CopyRequestBody && !ctx.Input.IsUpload() {
+		if p.cfg.CopyRequestBody && !ctx.Input.IsUpload() {
 			// connection will close if the incoming data are larger (RFC 7231, 6.5.11)
-			if r.ContentLength > BConfig.MaxMemory {
+			if r.ContentLength > p.cfg.MaxMemory {
 				logs.Error(errors.New("payload too large"))
 				exception("413", ctx)
 				goto Admin
 			}
-			ctx.Input.CopyBody(BConfig.MaxMemory)
+			ctx.Input.CopyBody(p.cfg.MaxMemory)
 		}
-		ctx.Input.ParseFormOrMulitForm(BConfig.MaxMemory)
+		ctx.Input.ParseFormOrMulitForm(p.cfg.MaxMemory)
 	}
 
 	// session init
-	if BConfig.WebConfig.Session.SessionOn {
+	if p.cfg.WebConfig.Session.SessionOn {
 		var err error
 		ctx.Input.CruSession, err = GlobalSessions.SessionStart(rw, r)
 		if err != nil {
@@ -819,7 +828,7 @@ func (p *ControllerRegister) serveHttp(ctx *beecontext.Context) {
 		execController.Prepare()
 
 		// if XSRF is Enable then check cookie where there has any cookie in the  request's cookie _csrf
-		if BConfig.WebConfig.EnableXSRF {
+		if p.cfg.WebConfig.EnableXSRF {
 			execController.XSRFToken()
 			if r.Method == http.MethodPost || r.Method == http.MethodDelete || r.Method == http.MethodPut ||
 				(r.Method == http.MethodPost && (ctx.Input.Query("_method") == http.MethodDelete || ctx.Input.Query("_method") == http.MethodPut)) {
@@ -864,7 +873,7 @@ func (p *ControllerRegister) serveHttp(ctx *beecontext.Context) {
 
 			// render template
 			if !ctx.ResponseWriter.Started && ctx.Output.Status == 0 {
-				if BConfig.WebConfig.AutoRender {
+				if p.cfg.WebConfig.AutoRender {
 					if err := execController.Render(); err != nil {
 						logs.Error(err)
 					}
@@ -897,7 +906,7 @@ Admin:
 
 	timeDur := time.Since(startTime)
 	ctx.ResponseWriter.Elapsed = timeDur
-	if BConfig.Listen.EnableAdmin {
+	if p.cfg.Listen.EnableAdmin {
 		pattern := ""
 		if routerInfo != nil {
 			pattern = routerInfo.pattern
@@ -912,7 +921,7 @@ Admin:
 		}
 	}
 
-	if BConfig.RunMode == DEV && !BConfig.Log.AccessLogs {
+	if p.cfg.RunMode == DEV && !p.cfg.Log.AccessLogs {
 		match := map[bool]string{true: "match", false: "nomatch"}
 		devInfo := fmt.Sprintf("|%15s|%s %3d %s|%13s|%8s|%s %-7s %s %-3s",
 			ctx.Input.IP(),
@@ -935,7 +944,7 @@ Admin:
 
 func (p *ControllerRegister) getUrlPath(ctx *beecontext.Context) string {
 	urlPath := ctx.Request.URL.Path
-	if !BConfig.RouterCaseSensitive {
+	if !p.cfg.RouterCaseSensitive {
 		urlPath = strings.ToLower(urlPath)
 	}
 	return urlPath
@@ -958,7 +967,7 @@ func (p *ControllerRegister) handleParamResponse(context *beecontext.Context, ex
 // FindRouter Find Router info for URL
 func (p *ControllerRegister) FindRouter(context *beecontext.Context) (routerInfo *ControllerInfo, isFind bool) {
 	var urlPath = context.Input.URL()
-	if !BConfig.RouterCaseSensitive {
+	if !p.cfg.RouterCaseSensitive {
 		urlPath = strings.ToLower(urlPath)
 	}
 	httpMethod := context.Input.Method()
@@ -984,36 +993,5 @@ func toURL(params map[string]string) string {
 
 // LogAccess logging info HTTP Access
 func LogAccess(ctx *beecontext.Context, startTime *time.Time, statusCode int) {
-	// Skip logging if AccessLogs config is false
-	if !BConfig.Log.AccessLogs {
-		return
-	}
-	// Skip logging static requests unless EnableStaticLogs config is true
-	if !BConfig.Log.EnableStaticLogs && DefaultAccessLogFilter.Filter(ctx) {
-		return
-	}
-	var (
-		requestTime time.Time
-		elapsedTime time.Duration
-		r           = ctx.Request
-	)
-	if startTime != nil {
-		requestTime = *startTime
-		elapsedTime = time.Since(*startTime)
-	}
-	record := &logs.AccessLogRecord{
-		RemoteAddr:     ctx.Input.IP(),
-		RequestTime:    requestTime,
-		RequestMethod:  r.Method,
-		Request:        fmt.Sprintf("%s %s %s", r.Method, r.RequestURI, r.Proto),
-		ServerProtocol: r.Proto,
-		Host:           r.Host,
-		Status:         statusCode,
-		ElapsedTime:    elapsedTime,
-		HTTPReferrer:   r.Header.Get("Referer"),
-		HTTPUserAgent:  r.Header.Get("User-Agent"),
-		RemoteUser:     r.Header.Get("Remote-User"),
-		BodyBytesSent:  r.ContentLength,
-	}
-	logs.AccessLog(record, BConfig.Log.AccessLogsFormat)
+	BeeApp.LogAccess(ctx, startTime, statusCode)
 }

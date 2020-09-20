@@ -1,4 +1,4 @@
-// Copyright 2020 astaxie
+// Copyright 2020
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,14 +14,18 @@
 
 package web
 
-var (
-	BuildVersion     string
-	BuildGitRevision string
-	BuildStatus      string
-	BuildTag         string
-	BuildTime        string
+import (
+	"testing"
 
-	GoVersion string
-
-	GitBranch string
+	"github.com/stretchr/testify/assert"
 )
+
+func TestNewHttpServerWithCfg(t *testing.T) {
+	// we should make sure that update server's config won't change
+	BConfig.AppName = "Before"
+	svr := NewHttpServerWithCfg(*BConfig)
+	svr.Cfg.AppName = "hello"
+	assert.NotEqual(t, "hello", BConfig.AppName)
+	assert.Equal(t, "Before", BConfig.AppName)
+
+}

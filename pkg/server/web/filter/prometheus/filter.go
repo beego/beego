@@ -21,6 +21,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
+	"github.com/astaxie/beego/pkg"
 	"github.com/astaxie/beego/pkg/server/web"
 	"github.com/astaxie/beego/pkg/server/web/context"
 )
@@ -63,13 +64,13 @@ func registerBuildInfo() {
 		Help:      "The building information",
 		ConstLabels: map[string]string{
 			"appname":        web.BConfig.AppName,
-			"build_version":  web.BuildVersion,
-			"build_revision": web.BuildGitRevision,
-			"build_status":   web.BuildStatus,
-			"build_tag":      web.BuildTag,
-			"build_time":     strings.Replace(web.BuildTime, "--", " ", 1),
-			"go_version":     web.GoVersion,
-			"git_branch":     web.GitBranch,
+			"build_version":  pkg.BuildVersion,
+			"build_revision": pkg.BuildGitRevision,
+			"build_status":   pkg.BuildStatus,
+			"build_tag":      pkg.BuildTag,
+			"build_time":     strings.Replace(pkg.BuildTime, "--", " ", 1),
+			"go_version":     pkg.GoVersion,
+			"git_branch":     pkg.GitBranch,
 			"start_time":     time.Now().Format("2006-01-02 15:04:05"),
 		},
 	}, []string{})

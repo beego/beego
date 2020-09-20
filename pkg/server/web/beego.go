@@ -17,14 +17,10 @@ package web
 import (
 	"os"
 	"path/filepath"
-	"strconv"
-	"strings"
+	"sync"
 )
 
 const (
-	// VERSION represent beego web framework version.
-	VERSION = "1.12.2"
-
 	// DEV is for develop
 	DEV = "dev"
 	// PROD is for production
@@ -38,7 +34,7 @@ type M map[string]interface{}
 type hookfunc func() error
 
 var (
-	hooks = make([]hookfunc, 0) //hook function slice to store the hookfunc
+	hooks = make([]hookfunc, 0) // hook function slice to store the hookfunc
 )
 
 // AddAPPStartHook is used to register the hookfunc
@@ -55,56 +51,39 @@ func AddAPPStartHook(hf ...hookfunc) {
 // beego.Run("127.0.0.1:8089")
 func Run(params ...string) {
 
-	initBeforeHTTPRun()
-
 	if len(params) > 0 && params[0] != "" {
-		strs := strings.Split(params[0], ":")
-		if len(strs) > 0 && strs[0] != "" {
-			BConfig.Listen.HTTPAddr = strs[0]
-		}
-		if len(strs) > 1 && strs[1] != "" {
-			BConfig.Listen.HTTPPort, _ = strconv.Atoi(strs[1])
-		}
-
-		BConfig.Listen.Domains = params
+		BeeApp.Run(params[0])
 	}
-
-	BeeApp.Run()
+	BeeApp.Run("")
 }
 
 // RunWithMiddleWares Run beego application with middlewares.
 func RunWithMiddleWares(addr string, mws ...MiddleWare) {
-	initBeforeHTTPRun()
-
-	strs := strings.Split(addr, ":")
-	if len(strs) > 0 && strs[0] != "" {
-		BConfig.Listen.HTTPAddr = strs[0]
-		BConfig.Listen.Domains = []string{strs[0]}
-	}
-	if len(strs) > 1 && strs[1] != "" {
-		BConfig.Listen.HTTPPort, _ = strconv.Atoi(strs[1])
-	}
-
-	BeeApp.Run(mws...)
+	BeeApp.Run(addr, mws...)
 }
 
-func initBeforeHTTPRun() {
-	//init hooks
-	AddAPPStartHook(
-		registerMime,
-		registerDefaultErrorHandler,
-		registerSession,
-		registerTemplate,
-		registerAdmin,
-		registerGzip,
-		registerCommentRouter,
-	)
+var initHttpOnce sync.Once
 
-	for _, hk := range hooks {
-		if err := hk(); err != nil {
-			panic(err)
+// TODO move to module init function
+func initBeforeHTTPRun() {
+	initHttpOnce.Do(func() {
+		// init hooks
+		AddAPPStartHook(
+			registerMime,
+			registerDefaultErrorHandler,
+			registerSession,
+			registerTemplate,
+			registerAdmin,
+			registerGzip,
+			registerCommentRouter,
+		)
+
+		for _, hk := range hooks {
+			if err := hk(); err != nil {
+				panic(err)
+			}
 		}
-	}
+	})
 }
 
 // TestBeegoInit is for test package init

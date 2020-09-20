@@ -17,6 +17,7 @@ package adapter
 import (
 	"time"
 
+	_ "github.com/astaxie/beego/pkg/infrastructure/governor"
 	"github.com/astaxie/beego/pkg/server/web"
 )
 
@@ -38,11 +39,7 @@ import (
 // 	beego.FilterMonitorFunc = MyFilterMonitor.
 var FilterMonitorFunc func(string, string, time.Duration, string, int) bool
 
-func init() {
-	FilterMonitorFunc = web.FilterMonitorFunc
-}
-
 // PrintTree prints all registered routers.
 func PrintTree() M {
-	return (M)(web.PrintTree())
+	return (M)(web.BeeApp.PrintTree())
 }
