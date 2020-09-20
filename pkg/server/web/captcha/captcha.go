@@ -145,7 +145,7 @@ func (c *Captcha) Handler(ctx *context.Context) {
 			return
 		}
 	} else {
-		if v, ok := c.store.Get(key).([]byte); ok {
+		if v, err := c.store.Get(key).([]byte); err == nil {
 			chars = v
 		} else {
 			ctx.Output.SetStatus(404)
@@ -207,7 +207,7 @@ func (c *Captcha) Verify(id string, challenge string) (success bool) {
 
 	key := c.key(id)
 
-	if v, ok := c.store.Get(key).([]byte); ok {
+	if v, err := c.store.Get(key).([]byte); err == nil {
 		chars = v
 	} else {
 		return
