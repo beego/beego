@@ -266,10 +266,6 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 	<-endRunning
 }
 
-func (app *HttpServer) Start() {
-
-}
-
 // Router see HttpServer.Router
 func Router(rootpath string, c ControllerInterface, mappingMethods ...string) *HttpServer {
 	return BeeApp.Router(rootpath, c, mappingMethods...)

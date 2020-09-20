@@ -46,23 +46,9 @@ var beeAdminApp *adminApp
 var FilterMonitorFunc func(string, string, time.Duration, string, int) bool
 
 func init() {
-	c := &adminController{
-		servers: make([]*HttpServer, 0, 2),
-	}
-	beeAdminApp = &adminApp{
-		HttpServer: NewHttpServerWithCfg(*BConfig),
-	}
-	// keep in mind that all data should be html escaped to avoid XSS attack
-	beeAdminApp.Router("/", c, "get:AdminIndex")
-	beeAdminApp.Router("/qps", c, "get:QpsIndex")
-	beeAdminApp.Router("/prof", c, "get:ProfIndex")
-	beeAdminApp.Router("/healthcheck", c, "get:Healthcheck")
-	beeAdminApp.Router("/task", c, "get:TaskStatus")
-	beeAdminApp.Router("/listconf", c, "get:ListConf")
-	beeAdminApp.Router("/metrics", c, "get:PrometheusMetrics")
+
 	FilterMonitorFunc = func(string, string, time.Duration, string, int) bool { return true }
 
-	beeAdminApp.Run()
 }
 
 func list(root string, p interface{}, m M) {
@@ -110,11 +96,28 @@ func (admin *adminApp) Run() {
 	}
 
 	logs.Info("Admin server Running on %s", addr)
+
 	admin.HttpServer.Run(addr)
 }
 
 func registerAdmin() error {
 	if BConfig.Listen.EnableAdmin {
+
+		c := &adminController{
+			servers: make([]*HttpServer, 0, 2),
+		}
+		beeAdminApp = &adminApp{
+			HttpServer: NewHttpServerWithCfg(*BConfig),
+		}
+		// keep in mind that all data should be html escaped to avoid XSS attack
+		beeAdminApp.Router("/", c, "get:AdminIndex")
+		beeAdminApp.Router("/qps", c, "get:QpsIndex")
+		beeAdminApp.Router("/prof", c, "get:ProfIndex")
+		beeAdminApp.Router("/healthcheck", c, "get:Healthcheck")
+		beeAdminApp.Router("/task", c, "get:TaskStatus")
+		beeAdminApp.Router("/listconf", c, "get:ListConf")
+		beeAdminApp.Router("/metrics", c, "get:PrometheusMetrics")
+
 		go beeAdminApp.Run()
 	}
 	return nil
