@@ -189,9 +189,9 @@ func (t *Task) GetPrev(context.Context) time.Time {
 // SetCron some signals：
 //       *： any time
 //       ,：　 separate signal
-//　　    －：duration
+// 　　    －：duration
 //       /n : do as n times of time duration
-/////////////////////////////////////////////////////////
+// ///////////////////////////////////////////////////////
 //	0/30 * * * * *                        every 30s
 //	0 43 21 * * *                         21:43
 //	0 15 05 * * * 　　                     05:15
@@ -401,10 +401,12 @@ func StartTask() {
 	taskLock.Lock()
 	defer taskLock.Unlock()
 	if isstart {
-		//If already started， no need to start another goroutine.
+		// If already started， no need to start another goroutine.
 		return
 	}
 	isstart = true
+
+	registerCommands()
 	go run()
 }
 

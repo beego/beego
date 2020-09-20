@@ -16,7 +16,6 @@ package web
 
 import (
 	"bytes"
-	context2 "context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -26,7 +25,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
 	"github.com/astaxie/beego/pkg/infrastructure/governor"
-	"github.com/astaxie/beego/pkg/task"
 )
 
 type adminController struct {
@@ -90,34 +88,28 @@ func (a *adminController) TaskStatus() {
 	req.ParseForm()
 	taskname := req.Form.Get("taskname")
 	if taskname != "" {
-		if t, ok := task.AdminTaskList[taskname]; ok {
-			if err := t.Run(nil); err != nil {
-				data["Message"] = []string{"error", template.HTMLEscapeString(fmt.Sprintf("%s", err))}
-			}
-			data["Message"] = []string{"success", template.HTMLEscapeString(fmt.Sprintf("%s run success,Now the Status is <br>%s", taskname, t.GetStatus(nil)))}
+		cmd := governor.GetCommand("task", "run")
+		res := cmd.Execute(taskname)
+		if res.IsSuccess() {
+
+			data["Message"] = []string{"success",
+				template.HTMLEscapeString(fmt.Sprintf("%s run success,Now the Status is <br>%s",
+					taskname, res.Content.(string)))}
+
 		} else {
-			data["Message"] = []string{"warning", template.HTMLEscapeString(fmt.Sprintf("there's no task which named: %s", taskname))}
+			data["Message"] = []string{"error", template.HTMLEscapeString(fmt.Sprintf("%s", res.Error))}
 		}
 	}
 
 	// List Tasks
 	content := make(M)
-	resultList := new([][]string)
+	resultList := governor.GetCommand("task", "list").Execute().Content.([][]string)
 	var fields = []string{
 		"Task Name",
 		"Task Spec",
 		"Task Status",
 		"Last Time",
 		"",
-	}
-	for tname, tk := range task.AdminTaskList {
-		result := []string{
-			template.HTMLEscapeString(tname),
-			template.HTMLEscapeString(tk.GetSpec(nil)),
-			template.HTMLEscapeString(tk.GetStatus(nil)),
-			template.HTMLEscapeString(tk.GetPrev(context2.Background()).String()),
-		}
-		*resultList = append(*resultList, result)
 	}
 
 	content["Fields"] = fields
