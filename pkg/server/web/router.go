@@ -155,6 +155,7 @@ func NewControllerRegisterWithCfg(cfg *Config) *ControllerRegister {
 				return beecontext.NewContext()
 			},
 		},
+		cfg: cfg,
 	}
 	res.chainRoot = newFilterRouter("/*", res.serveHttp, WithCaseSensitive(false))
 	return res
@@ -678,7 +679,7 @@ func (p *ControllerRegister) serveHttp(ctx *beecontext.Context) {
 	)
 
 	if p.cfg.RecoverFunc != nil {
-		defer p.cfg.RecoverFunc(ctx)
+		defer p.cfg.RecoverFunc(ctx, p.cfg)
 	}
 
 	ctx.Output.EnableGzip = p.cfg.EnableGzip

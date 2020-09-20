@@ -41,7 +41,7 @@ type Config struct {
 	RouterCaseSensitive bool
 	ServerName          string
 	RecoverPanic        bool
-	RecoverFunc         func(*context.Context)
+	RecoverFunc         func(*context.Context, *Config)
 	CopyRequestBody     bool
 	EnableGzip          bool
 	MaxMemory           int64
@@ -169,7 +169,7 @@ func init() {
 	}
 }
 
-func (cfg *Config) defaultRecoverPanic(ctx *context.Context) {
+func defaultRecoverPanic(ctx *context.Context, cfg *Config) {
 	if err := recover(); err != nil {
 		if err == ErrAbort {
 			return
@@ -281,7 +281,7 @@ func newBConfig() *Config {
 		},
 	}
 
-	res.RecoverFunc = res.defaultRecoverPanic
+	res.RecoverFunc = defaultRecoverPanic
 	return res
 }
 
