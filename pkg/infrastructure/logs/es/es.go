@@ -18,7 +18,8 @@ import (
 // NewES returns a LoggerInterface
 func NewES() logs.Logger {
 	cw := &esLogger{
-		Level: logs.LevelDebug,
+		Level:       logs.LevelDebug,
+		indexNaming: indexNaming,
 	}
 	return cw
 }
@@ -35,6 +36,8 @@ type esLogger struct {
 	Level     int    `json:"level"`
 	formatter logs.LogFormatter
 	Formatter string `json:"formatter"`
+
+	indexNaming IndexNaming
 }
 
 func (el *esLogger) Format(lm *logs.LogMsg) string {
@@ -96,7 +99,7 @@ func (el *esLogger) WriteMsg(lm *logs.LogMsg) error {
 	msg := el.formatter.Format(lm)
 
 	req := esapi.IndexRequest{
-		Index:        fmt.Sprintf("%04d.%02d.%02d", lm.When.Year(), lm.When.Month(), lm.When.Day()),
+		Index:        indexNaming.IndexName(lm),
 		DocumentType: "logs",
 		Body:         strings.NewReader(msg),
 	}
