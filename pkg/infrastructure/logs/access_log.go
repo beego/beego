@@ -63,7 +63,17 @@ func disableEscapeHTML(i interface{}) {
 
 // AccessLog - Format and print access log.
 func AccessLog(r *AccessLogRecord, format string) {
-	var msg string
+	msg := r.format(format)
+	lm := &LogMsg{
+		Msg:   strings.TrimSpace(msg),
+		When:  time.Now(),
+		Level: levelLoggerImpl,
+	}
+	beeLogger.writeMsg(lm)
+}
+
+func (r *AccessLogRecord) format(format string) string {
+	msg := ""
 	switch format {
 	case apacheFormat:
 		timeFormatted := r.RequestTime.Format("02/Jan/2006 03:04:05")
@@ -79,10 +89,5 @@ func AccessLog(r *AccessLogRecord, format string) {
 			msg = string(jsonData)
 		}
 	}
-	lm := &LogMsg{
-		Msg:   strings.TrimSpace(msg),
-		When:  time.Now(),
-		Level: levelLoggerImpl,
-	}
-	beeLogger.writeMsg(lm)
+	return msg
 }
