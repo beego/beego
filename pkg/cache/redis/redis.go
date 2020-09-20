@@ -44,7 +44,7 @@ import (
 )
 
 var (
-	// The collection name of redis for the cache adapter.
+	// DefaultKey The collection name of redis for the cache adapter.
 	DefaultKey = "beecacheRedis"
 )
 

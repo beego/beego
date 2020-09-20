@@ -13,7 +13,6 @@ require (
 	github.com/elastic/go-elasticsearch/v6 v6.8.5
 	github.com/elazarl/go-bindata-assetfs v1.0.0
 	github.com/go-kit/kit v0.9.0
-	github.com/go-redis/redis v6.14.2+incompatible
 	github.com/go-redis/redis/v7 v7.4.0
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gogo/protobuf v1.1.1
@@ -36,7 +35,7 @@ require (
 	golang.org/x/tools v0.0.0-20200117065230-39095c1d176c
 	google.golang.org/grpc v1.31.0 // indirect
 	gopkg.in/yaml.v2 v2.2.8
-	honnef.co/go/tools v0.0.1-2020.1.5 // indirect
+	gotest.tools v2.2.0+incompatible
 )
 
 replace golang.org/x/crypto v0.0.0-20181127143415-eb0de9b17e85 => github.com/golang/crypto v0.0.0-20181127143415-eb0de9b17e85
