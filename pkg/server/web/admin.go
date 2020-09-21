@@ -21,7 +21,6 @@ import (
 	"time"
 
 	"github.com/astaxie/beego/pkg/infrastructure/logs"
-	"github.com/astaxie/beego/pkg/task"
 )
 
 // BeeAdminApp is the default adminApp used by admin module.
@@ -86,9 +85,12 @@ type adminApp struct {
 // Route adds http.HandlerFunc to adminApp with url pattern.
 func (admin *adminApp) Run() {
 
-	if len(task.AdminTaskList) > 0 {
-		task.StartTask()
-	}
+	// if len(task.AdminTaskList) > 0 {
+	// 	task.StartTask()
+	// }
+	logs.Warning("now we don't start tasks here, if you use task module," +
+		" please invoke task.StartTask, or task will not be executed")
+
 	addr := BConfig.Listen.AdminAddr
 
 	if BConfig.Listen.AdminPort != 0 {
