@@ -68,7 +68,6 @@ import (
 
 	"github.com/astaxie/beego/pkg/infrastructure/logs"
 
-	"github.com/astaxie/beego/pkg/client/cache"
 	"github.com/astaxie/beego/pkg/infrastructure/utils"
 	"github.com/astaxie/beego/pkg/server/web"
 	"github.com/astaxie/beego/pkg/server/web/context"
@@ -91,7 +90,7 @@ const (
 // Captcha struct
 type Captcha struct {
 	// beego cache store
-	store cache.Cache
+	store Storage
 
 	// url prefix for captcha image
 	URLPrefix string
@@ -232,7 +231,7 @@ func (c *Captcha) Verify(id string, challenge string) (success bool) {
 }
 
 // NewCaptcha create a new captcha.Captcha
-func NewCaptcha(urlPrefix string, store cache.Cache) *Captcha {
+func NewCaptcha(urlPrefix string, store Storage) *Captcha {
 	cpt := &Captcha{}
 	cpt.store = store
 	cpt.FieldIDName = fieldIDName
@@ -258,7 +257,7 @@ func NewCaptcha(urlPrefix string, store cache.Cache) *Captcha {
 
 // NewWithFilter create a new captcha.Captcha and auto AddFilter for serve captacha image
 // and add a template func for output html
-func NewWithFilter(urlPrefix string, store cache.Cache) *Captcha {
+func NewWithFilter(urlPrefix string, store Storage) *Captcha {
 	cpt := NewCaptcha(urlPrefix, store)
 
 	// create filter for serve captcha image
@@ -268,4 +267,13 @@ func NewWithFilter(urlPrefix string, store cache.Cache) *Captcha {
 	web.AddFuncMap("create_captcha", cpt.CreateCaptchaHTML)
 
 	return cpt
+}
+
+type Storage interface {
+	// Get a cached value by key.
+	Get(key string) interface{}
+	// Set a cached value with key and expire time.
+	Put(key string, val interface{}, timeout time.Duration) error
+	// Delete cached value by key.
+	Delete(key string) error
 }
