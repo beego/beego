@@ -25,12 +25,12 @@ func NewSsdbCache() cache.Cache {
 	return &Cache{}
 }
 
-// Get gets a key's value from memcache.
+// Get gets a key's value from ssdb.
 func (rc *Cache) Get(key string) (interface{}, error) {
 	return rc.GetWithCtx(context.Background(), key)
 }
 
-// GetWithCtx gets a key's value from memcache.
+// GetWithCtx gets a key's value from ssdb.
 func (rc *Cache) GetWithCtx(ctx context.Context, key string) (interface{}, error) {
 	rc.conn.Do()
 	if rc.conn == nil {
@@ -41,29 +41,23 @@ func (rc *Cache) GetWithCtx(ctx context.Context, key string) (interface{}, error
 	return rc.conn.Get(key)
 }
 
-// GetMulti gets one or keys values from memcache.
+// GetMulti gets one or keys values from ssdb.
 func (rc *Cache) GetMulti(keys []string) ([]interface{}, error) {
 	return rc.GetMultiWithCtx(context.Background(), keys)
 }
 
-// GetMultiWithCtx gets one or keys values from memcache.
+// GetMultiWithCtx gets one or keys values from ssdb.
 func (rc *Cache) GetMultiWithCtx(ctx context.Context, keys []string) ([]interface{}, error) {
 	size := len(keys)
 	var values []interface{}
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
-			for i := 0; i < size; i++ {
-				values = append(values, nil)
-			}
 			return values, err
 		}
 	}
 	res, err := rc.conn.Do("multi_get", keys)
 	resSize := len(res)
 	if err == nil {
-		for i := 0; i < size; i++ {
-			values = append(values, nil)
-		}
 		return values, err
 	}
 	for i := 1; i < resSize; i += 2 {
@@ -72,7 +66,7 @@ func (rc *Cache) GetMultiWithCtx(ctx context.Context, keys []string) ([]interfac
 	return values, nil
 }
 
-// Put puts value into memcache.
+// Put puts value into ssdb.
 // value:  must be of type string
 func (rc *Cache) Put(key string, val interface{}, timeout time.Duration) error {
 	return rc.PutWithCtx(context.Background(), key, val, timeout)
@@ -111,7 +105,7 @@ func (rc *Cache) Delete(key string) error {
 	return rc.DeleteWithCtx(context.Background(), key)
 }
 
-// DeleteWithCtx deletes a value in memcache.
+// DeleteWithCtx deletes a value in ssdb.
 func (rc *Cache) DeleteWithCtx(ctx context.Context, key string) error {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
@@ -191,7 +185,7 @@ func (rc *Cache) IsExistWithCtx(ctx context.Context, key string) (bool, error) {
 	return false, nil
 }
 
-// ClearAll clears all cached items in memcache.
+// ClearAll clears all cached items in ssdb.
 func (rc *Cache) ClearAll() error {
 	return rc.ClearAllWithCtx(context.Background())
 }
@@ -238,7 +232,7 @@ func (rc *Cache) Scan(keyStart string, keyEnd string, limit int) ([]string, erro
 	return resp, nil
 }
 
-// StartAndGC starts the memcache adapter.
+// StartAndGC starts the ssdb adapter.
 // config: must be in the format {"conn":"connection info"}.
 // If an error occurs during connection, an error is returned
 func (rc *Cache) StartAndGC(config string) error {
@@ -256,7 +250,7 @@ func (rc *Cache) StartAndGC(config string) error {
 	return nil
 }
 
-// connect to memcache and keep the connection.
+// connect to ssdb and keep the connection.
 func (rc *Cache) connectInit() error {
 	conninfoArray := strings.Split(rc.conninfo[0], ":")
 	host := conninfoArray[0]

@@ -178,21 +178,10 @@ func (rc *Cache) IsExistWithCtx(ctx context.Context, key string) (bool, error) {
 
 // ClearAll deletes all cache in the redis collection
 func (rc *Cache) ClearAll() error {
-	cachedKeys, err := rc.Scan(rc.key + ":*")
-	if err != nil {
-		return err
-	}
-	c := rc.p.Get()
-	defer c.Close()
-	for _, str := range cachedKeys {
-		if _, err = c.Do("DEL", str); err != nil {
-			return err
-		}
-	}
-	return err
+	return rc.ClearAllWithCtx(context.Background())
 }
 
-// ClearAll deletes all cache in the redis collection
+// ClearAllWithCtx deletes all cache in the redis collection
 func (rc *Cache) ClearAllWithCtx(ctx context.Context) error {
 	cachedKeys, err := rc.Scan(rc.key + ":*")
 	if err != nil {

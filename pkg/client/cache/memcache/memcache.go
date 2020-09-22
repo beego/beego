@@ -179,7 +179,7 @@ func (rc *Cache) ClearAll() error {
 
 // ClearAllWithCtx  clears all cache in memcache.
 func (rc *Cache) ClearAllWithCtx(ctx context.Context) error {
-	return rc.conn.FlushAll()
+	return rc.client().FlushAll()
 }
 
 // StartAndGC starts the memcache adapter.

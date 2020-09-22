@@ -146,16 +146,7 @@ func (fc *FileCache) GetWithCtx(ctx context.Context, key string) (interface{}, e
 // GetMulti gets values from file cache.
 // if nonexistent or expired return an empty string.
 func (fc *FileCache) GetMulti(keys []string) ([]interface{}, error) {
-	var rc []interface{}
-	var errs error
-	for _, key := range keys {
-		v, err := fc.GetWithCtx(context.Background(), key)
-		if err != nil {
-			errs = err
-		}
-		rc = append(rc, v)
-	}
-	return rc, errs
+	return rc.GetMultiWithCtx(context.Background(), keys)
 }
 
 // GetMultiWithCtx gets values from file cache.
