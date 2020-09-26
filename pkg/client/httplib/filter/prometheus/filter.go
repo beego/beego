@@ -23,11 +23,13 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/astaxie/beego/pkg/client/httplib"
-	"github.com/astaxie/beego/pkg/server/web"
 )
 
 type FilterChainBuilder struct {
 	summaryVec prometheus.ObserverVec
+	AppName    string
+	ServerName string
+	RunMode    string
 }
 
 func (builder *FilterChainBuilder) FilterChain(next httplib.Filter) httplib.Filter {
@@ -36,9 +38,9 @@ func (builder *FilterChainBuilder) FilterChain(next httplib.Filter) httplib.Filt
 		Name:      "beego",
 		Subsystem: "remote_http_request",
 		ConstLabels: map[string]string{
-			"server":  web.BConfig.ServerName,
-			"env":     web.BConfig.RunMode,
-			"appname": web.BConfig.AppName,
+			"server":  builder.ServerName,
+			"env":     builder.RunMode,
+			"appname": builder.AppName,
 		},
 		Help: "The statics info for remote http requests",
 	}, []string{"proto", "scheme", "method", "host", "path", "status", "duration", "isError"})
