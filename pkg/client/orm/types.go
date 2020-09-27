@@ -405,6 +405,15 @@ type QuerySeter interface {
 	// 	Found int
 	// }
 	RowsToStruct(ptrStruct interface{}, keyCol, valueCol string) (int64, error)
+	// aggregate func.
+	// for example:
+	// type result struct {
+	//  DeptName string
+	//	Total    int
+	// }
+	// var res []result
+	//  o.QueryTable("dept_info").Aggregate("dept_name,sum(salary) as total").GroupBy("dept_name").All(&res)
+	Aggregate(s string) QuerySeter
 }
 
 // QueryM2Mer model to model query struct

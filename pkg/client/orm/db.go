@@ -948,7 +948,7 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 	val := reflect.ValueOf(container)
 	ind := reflect.Indirect(val)
 
-	errTyp := true
+	customTyp := true
 	one := true
 	isPtr := true
 
@@ -967,15 +967,15 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 		} else {
 			fn = getFullName(ind.Type())
 		}
-		errTyp = fn != mi.fullName
+		customTyp = fn != mi.fullName
 	}
 
-	if errTyp {
-		if one {
-			panic(fmt.Errorf("wrong object type `%s` for rows scan, need *%s", val.Type(), mi.fullName))
-		} else {
-			panic(fmt.Errorf("wrong object type `%s` for rows scan, need *[]*%s or *[]%s", val.Type(), mi.fullName, mi.fullName))
+	if customTyp {
+		i, err := d.customModel(q, qs, mi, cond, tz, container)
+		if err != nil {
+			return 0, nil
 		}
+		return i, nil
 	}
 
 	rlimit := qs.limit
@@ -1962,4 +1962,437 @@ func (d *dbBase) GenerateSpecifyIndex(tableName string, useIndex int, indexes []
 	}
 
 	return fmt.Sprintf(` %s INDEX(%s) `, useWay, strings.Join(s, `,`))
+}
+
+// processing custom models
+func (d *dbBase) customModel(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condition, tz *time.Location, container interface{}) (int64, error) {
+	var (
+		refs  = make([]interface{}, 0)
+		sInds []reflect.Value
+		eTyps []reflect.Type
+		sMi   *modelInfo
+		cols  []string
+	)
+	structMode := false
+
+	val := reflect.ValueOf(container)
+	sInd := reflect.Indirect(val)
+	if val.Kind() != reflect.Ptr || sInd.Kind() != reflect.Slice {
+		panic(fmt.Errorf("<RawSeter.QueryRows> all args must be use ptr slice"))
+	}
+
+	etyp := sInd.Type().Elem()
+	typ := etyp
+	if typ.Kind() == reflect.Ptr {
+		typ = typ.Elem()
+	}
+
+	sInds = append(sInds, sInd)
+	eTyps = append(eTyps, etyp)
+
+	if typ.Kind() == reflect.Struct && typ.String() != "time.Time" {
+
+		structMode = true
+		fn := getFullName(typ)
+		if mi, ok := modelCache.getByFullName(fn); ok {
+			sMi = mi
+		}
+	} else {
+		var ref interface{}
+		refs = append(refs, &ref)
+	}
+
+	rlimit := qs.limit
+	offset := qs.offset
+
+	Q := d.ins.TableQuote()
+
+	var tCols []string
+	if len(cols) > 0 {
+		hasRel := len(qs.related) > 0 || qs.relDepth > 0
+		tCols = make([]string, 0, len(cols))
+		var maps map[string]bool
+		if hasRel {
+			maps = make(map[string]bool)
+		}
+		for _, col := range cols {
+			if fi, ok := mi.fields.GetByAny(col); ok {
+				tCols = append(tCols, fi.column)
+				if hasRel {
+					maps[fi.column] = true
+				}
+			} else {
+				return 0, fmt.Errorf("wrong field/column name `%s`", col)
+			}
+		}
+		if hasRel {
+			for _, fi := range mi.fields.fieldsDB {
+				if fi.fieldType&IsRelField > 0 {
+					if !maps[fi.column] {
+						tCols = append(tCols, fi.column)
+					}
+				}
+			}
+		}
+	} else {
+		tCols = mi.fields.dbcols
+	}
+
+	colsNum := len(tCols)
+	sep := fmt.Sprintf("%s, T0.%s", Q, Q)
+	sels := fmt.Sprintf("T0.%s%s%s", Q, strings.Join(tCols, sep), Q)
+
+	tables := newDbTables(mi, d.ins)
+	tables.parseRelated(qs.related, qs.relDepth)
+
+	where, args := tables.getCondSQL(cond, false, tz)
+	groupBy := tables.getGroupSQL(qs.groups)
+	orderBy := tables.getOrderSQL(qs.orders)
+	limit := tables.getLimitSQL(mi, offset, rlimit)
+	join := tables.getJoinSQL()
+	specifyIndexes := tables.getIndexSql(mi.table, qs.useIndex, qs.indexes)
+
+	for _, tbl := range tables.tables {
+		if tbl.sel {
+			colsNum += len(tbl.mi.fields.dbcols)
+			sep := fmt.Sprintf("%s, %s.%s", Q, tbl.index, Q)
+			sels += fmt.Sprintf(", %s.%s%s%s", tbl.index, Q, strings.Join(tbl.mi.fields.dbcols, sep), Q)
+		}
+	}
+
+	sqlSelect := "SELECT"
+	if qs.distinct {
+		sqlSelect += " DISTINCT"
+	}
+	query := ""
+	if qs.aggregate != "" {
+		query = fmt.Sprintf("%s %s FROM %s%s%s T0 %s%s%s%s%s%s",
+			sqlSelect, qs.aggregate, Q, mi.table, Q,
+			specifyIndexes, join, where, groupBy, orderBy, limit)
+	} else {
+		query = fmt.Sprintf("%s %s FROM %s%s%s T0 %s%s%s%s%s%s",
+			sqlSelect, sels, Q, mi.table, Q,
+			specifyIndexes, join, where, groupBy, orderBy, limit)
+	}
+
+	if qs.forUpdate {
+		query += " FOR UPDATE"
+	}
+	d.ins.ReplaceMarks(&query)
+	rows, err := q.Query(query, args...)
+	if err != nil {
+		return 0, err
+	}
+
+	defer rows.Close()
+
+	var cnt int64
+	nInds := make([]reflect.Value, len(sInds))
+	sInd = sInds[0]
+
+	for rows.Next() {
+
+		if structMode {
+			columns, err := rows.Columns()
+			if err != nil {
+				return 0, err
+			}
+
+			columnsMp := make(map[string]interface{}, len(columns))
+
+			refs = make([]interface{}, 0, len(columns))
+			for _, col := range columns {
+				var ref interface{}
+				columnsMp[col] = &ref
+				refs = append(refs, &ref)
+			}
+
+			if err := rows.Scan(refs...); err != nil {
+				return 0, err
+			}
+
+			if cnt == 0 && !sInd.IsNil() {
+				sInd.Set(reflect.New(sInd.Type()).Elem())
+			}
+
+			var ind reflect.Value
+			if eTyps[0].Kind() == reflect.Ptr {
+				ind = reflect.New(eTyps[0].Elem())
+			} else {
+				ind = reflect.New(eTyps[0])
+			}
+
+			if ind.Kind() == reflect.Ptr {
+				ind = ind.Elem()
+			}
+
+			if sMi != nil {
+				for _, col := range columns {
+					if fi := sMi.fields.GetByColumn(col); fi != nil {
+						value := reflect.ValueOf(columnsMp[col]).Elem().Interface()
+						field := ind.FieldByIndex(fi.fieldIndex)
+						if fi.fieldType&IsRelField > 0 {
+							mf := reflect.New(fi.relModelInfo.addrField.Elem().Type())
+							field.Set(mf)
+							field = mf.Elem().FieldByIndex(fi.relModelInfo.fields.pk.fieldIndex)
+						}
+						if fi.isFielder {
+							fd := field.Addr().Interface().(Fielder)
+							err := fd.SetRaw(value)
+							if err != nil {
+								return 0, errors.New(fmt.Sprintf("set raw error:%s", err))
+							}
+						} else {
+							d.setValues(field, value, tz)
+						}
+					}
+				}
+			} else {
+				// define recursive function
+				var recursiveSetField func(rv reflect.Value)
+				recursiveSetField = func(rv reflect.Value) {
+					for i := 0; i < rv.NumField(); i++ {
+						f := rv.Field(i)
+						fe := rv.Type().Field(i)
+
+						// check if the field is a Struct
+						// recursive the Struct type
+						if fe.Type.Kind() == reflect.Struct {
+							recursiveSetField(f)
+						}
+
+						_, tags := parseStructTag(fe.Tag.Get(defaultStructTagName))
+						var col string
+						if col = tags["column"]; col == "" {
+							col = nameStrategyMap[nameStrategy](fe.Name)
+						}
+						if v, ok := columnsMp[col]; ok {
+							value := reflect.ValueOf(v).Elem().Interface()
+							d.setValues(f, value, tz)
+						}
+					}
+				}
+
+				// init call the recursive function
+				recursiveSetField(ind)
+			}
+
+			if eTyps[0].Kind() == reflect.Ptr {
+				ind = ind.Addr()
+			}
+
+			sInd = reflect.Append(sInd, ind)
+
+		} else {
+			if err := rows.Scan(refs...); err != nil {
+				return 0, err
+			}
+
+			d.setRefs(refs, sInds, &nInds, eTyps, cnt == 0, tz)
+		}
+
+		cnt++
+	}
+
+	if cnt > 0 {
+
+		if structMode {
+			sInds[0].Set(sInd)
+		} else {
+			for i, sInd := range sInds {
+				nInd := nInds[i]
+				sInd.Set(nInd)
+			}
+		}
+	}
+
+	return cnt, nil
+}
+
+func (d *dbBase) setValues(ind reflect.Value, value interface{}, tz *time.Location) {
+	switch ind.Kind() {
+	case reflect.Bool:
+		if value == nil {
+			ind.SetBool(false)
+		} else if v, ok := value.(bool); ok {
+			ind.SetBool(v)
+		} else {
+			v, _ := StrTo(ToStr(value)).Bool()
+			ind.SetBool(v)
+		}
+
+	case reflect.String:
+		if value == nil {
+			ind.SetString("")
+		} else {
+			ind.SetString(ToStr(value))
+		}
+
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		if value == nil {
+			ind.SetInt(0)
+		} else {
+			val := reflect.ValueOf(value)
+			switch val.Kind() {
+			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+				ind.SetInt(val.Int())
+			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+				ind.SetInt(int64(val.Uint()))
+			default:
+				v, _ := StrTo(ToStr(value)).Int64()
+				ind.SetInt(v)
+			}
+		}
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		if value == nil {
+			ind.SetUint(0)
+		} else {
+			val := reflect.ValueOf(value)
+			switch val.Kind() {
+			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+				ind.SetUint(uint64(val.Int()))
+			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+				ind.SetUint(val.Uint())
+			default:
+				v, _ := StrTo(ToStr(value)).Uint64()
+				ind.SetUint(v)
+			}
+		}
+	case reflect.Float64, reflect.Float32:
+		if value == nil {
+			ind.SetFloat(0)
+		} else {
+			val := reflect.ValueOf(value)
+			switch val.Kind() {
+			case reflect.Float64:
+				ind.SetFloat(val.Float())
+			default:
+				v, _ := StrTo(ToStr(value)).Float64()
+				ind.SetFloat(v)
+			}
+		}
+
+	case reflect.Struct:
+		if value == nil {
+			ind.Set(reflect.Zero(ind.Type()))
+			return
+		}
+		switch ind.Interface().(type) {
+		case time.Time:
+			var str string
+			switch v := value.(type) {
+			case time.Time:
+				d.ins.TimeFromDB(&v, tz)
+				ind.Set(reflect.ValueOf(v))
+			case []byte:
+				str = string(v)
+			case string:
+				str = v
+			}
+			if str != "" {
+				if len(str) >= 19 {
+					str = str[:19]
+					t, err := time.ParseInLocation(formatDateTime, str, tz)
+					if err == nil {
+						t = t.In(DefaultTimeLoc)
+						ind.Set(reflect.ValueOf(t))
+					}
+				} else if len(str) >= 10 {
+					str = str[:10]
+					t, err := time.ParseInLocation(formatDate, str, DefaultTimeLoc)
+					if err == nil {
+						ind.Set(reflect.ValueOf(t))
+					}
+				}
+			}
+		case sql.NullString, sql.NullInt64, sql.NullFloat64, sql.NullBool:
+			indi := reflect.New(ind.Type()).Interface()
+			sc, ok := indi.(sql.Scanner)
+			if !ok {
+				return
+			}
+			err := sc.Scan(value)
+			if err == nil {
+				ind.Set(reflect.Indirect(reflect.ValueOf(sc)))
+			}
+		}
+
+	case reflect.Ptr:
+		if value == nil {
+			ind.Set(reflect.Zero(ind.Type()))
+			break
+		}
+		ind.Set(reflect.New(ind.Type().Elem()))
+		d.setValues(reflect.Indirect(ind), value, tz)
+	}
+}
+
+func (d *dbBase) setRefs(refs []interface{}, sInds []reflect.Value, nIndsPtr *[]reflect.Value, eTyps []reflect.Type, init bool, tz *time.Location) {
+
+	nInds := *nIndsPtr
+	cur := 0
+	for i := 0; i < len(sInds); i++ {
+		sInd := sInds[i]
+		eTyp := eTyps[i]
+
+		typ := eTyp
+		isPtr := false
+		if typ.Kind() == reflect.Ptr {
+			isPtr = true
+			typ = typ.Elem()
+		}
+		if typ.Kind() == reflect.Ptr {
+			isPtr = true
+			typ = typ.Elem()
+		}
+
+		var nInd reflect.Value
+		if init {
+			nInd = reflect.New(sInd.Type()).Elem()
+		} else {
+			nInd = nInds[i]
+		}
+
+		val := reflect.New(typ)
+		ind := val.Elem()
+
+		tpName := ind.Type().String()
+
+		if ind.Kind() == reflect.Struct {
+			if tpName == "time.Time" {
+				value := reflect.ValueOf(refs[cur]).Elem().Interface()
+				if isPtr && value == nil {
+					val = reflect.New(val.Type()).Elem()
+				} else {
+					d.setValues(ind, value, tz)
+				}
+				cur++
+			}
+
+		} else {
+			value := reflect.ValueOf(refs[cur]).Elem().Interface()
+			if isPtr && value == nil {
+				val = reflect.New(val.Type()).Elem()
+			} else {
+				d.setValues(ind, value, tz)
+			}
+			cur++
+		}
+
+		if nInd.Kind() == reflect.Slice {
+			if isPtr {
+				nInd = reflect.Append(nInd, val)
+			} else {
+				nInd = reflect.Append(nInd, ind)
+			}
+		} else {
+			if isPtr {
+				nInd.Set(val)
+			} else {
+				nInd.Set(ind)
+			}
+		}
+
+		nInds[i] = nInd
+	}
 }

@@ -205,6 +205,7 @@ func TestSyncDb(t *testing.T) {
 	RegisterModel(new(Index))
 	RegisterModel(new(StrPk))
 	RegisterModel(new(TM))
+	RegisterModel(new(DeptInfo))
 
 	err := RunSyncdb("default", true, Debug)
 	throwFail(t, err)
@@ -232,6 +233,7 @@ func TestRegisterModels(t *testing.T) {
 	RegisterModel(new(Index))
 	RegisterModel(new(StrPk))
 	RegisterModel(new(TM))
+	RegisterModel(new(DeptInfo))
 
 	BootStrap()
 
@@ -331,6 +333,64 @@ func TestTM(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(recTM.TMPrecision1.String(), "2020-08-07 02:07:04.123 +0000 UTC"))
 	throwFail(t, AssertIs(recTM.TMPrecision2.String(), "2020-08-07 02:07:04.1235 +0000 UTC"))
+}
+
+func TestAggregate(t *testing.T) {
+
+	data := []*DeptInfo{
+		{
+			DeptName:     "A",
+			EmployeeName: "A1",
+			Salary:       1000,
+		},
+		{
+			DeptName:     "A",
+			EmployeeName: "A2",
+			Salary:       2000,
+		},
+		{
+			DeptName:     "B",
+			EmployeeName: "B1",
+			Salary:       2000,
+		},
+		{
+			DeptName:     "B",
+			EmployeeName: "B2",
+			Salary:       4000,
+		},
+		{
+			DeptName:     "B",
+			EmployeeName: "B3",
+			Salary:       3000,
+		},
+	}
+
+	qs := dORM.QueryTable("dept_info")
+	i, _ := qs.PrepareInsert()
+	for _, d := range data {
+		_, err := i.Insert(d)
+		if err != nil {
+			throwFail(t, err)
+		}
+	}
+
+	type result1 struct {
+		DeptName string
+		Total    int
+	}
+	var res []result1
+	qs.Aggregate("dept_name,sum(salary) as total").GroupBy("dept_name").OrderBy("dept_name").All(&res)
+	throwFail(t, AssertIs(res[0].DeptName, "A"))
+	throwFail(t, AssertIs(res[0].Total, 3000))
+
+	type result2 struct {
+		DeptName string
+		Avg      float64
+	}
+	var M []result2
+	qs.Aggregate("dept_name,avg(salary) as avg").GroupBy("dept_name").OrderBy("dept_name").All(&M)
+	throwFail(t, AssertIs(M[1].DeptName, "B"))
+	throwFail(t, AssertIs(M[1].Avg, 3000))
 }
 
 func TestNullDataTypes(t *testing.T) {
