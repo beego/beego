@@ -451,6 +451,11 @@ func run() {
 			taskLock.Unlock()
 			continue
 		case <-stop:
+			taskLock.Lock()
+			if isstart {
+				isstart = false
+			}
+			taskLock.Unlock()
 			return
 		}
 	}
@@ -458,13 +463,7 @@ func run() {
 
 // StopTask stop all tasks
 func StopTask() {
-	taskLock.Lock()
-	defer taskLock.Unlock()
-	if isstart {
-		isstart = false
-		stop <- true
-	}
-
+	stop <- true
 }
 
 // AddTask add task with name
