@@ -114,11 +114,11 @@ func (c *Captcha) Verify(id string, challenge string) (success bool) {
 
 // NewCaptcha create a new captcha.Captcha
 func NewCaptcha(urlPrefix string, store cache.Cache) *Captcha {
-	return (*Captcha)(captcha.NewCaptcha(urlPrefix, store))
+	return (*Captcha)(captcha.NewCaptcha(urlPrefix, cache.CreateOldToNewAdapter(store)))
 }
 
 // NewWithFilter create a new captcha.Captcha and auto AddFilter for serve captacha image
 // and add a template func for output html
 func NewWithFilter(urlPrefix string, store cache.Cache) *Captcha {
-	return (*Captcha)(captcha.NewWithFilter(urlPrefix, store))
+	return (*Captcha)(captcha.NewWithFilter(urlPrefix, cache.CreateOldToNewAdapter(store)))
 }

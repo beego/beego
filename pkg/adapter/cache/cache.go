@@ -33,8 +33,7 @@ package cache
 
 import (
 	"fmt"
-
-	"github.com/astaxie/beego/pkg/client/cache"
+	"time"
 )
 
 // Cache interface contains all behaviors for cache adapter.
@@ -47,7 +46,26 @@ import (
 //	c.Incr("counter")  // now is 1
 //	c.Incr("counter")  // now is 2
 //	count := c.Get("counter").(int)
-type Cache cache.Cache
+type Cache interface {
+	// get cached value by key.
+	Get(key string) interface{}
+	// GetMulti is a batch version of Get.
+	GetMulti(keys []string) []interface{}
+	// set cached value with key and expire time.
+	Put(key string, val interface{}, timeout time.Duration) error
+	// delete cached value by key.
+	Delete(key string) error
+	// increase cached int value by key, as a counter.
+	Incr(key string) error
+	// decrease cached int value by key, as a counter.
+	Decr(key string) error
+	// check if cached value exists or not.
+	IsExist(key string) bool
+	// clear all cache.
+	ClearAll() error
+	// start gc routine based on config string settings.
+	StartAndGC(config string) error
+}
 
 // Instance is a function create a new Cache Instance
 type Instance func() Cache
