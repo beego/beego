@@ -36,7 +36,24 @@ func TestParse(t *testing.T) {
 	}
 	AddTask("taska", tk)
 	StartTask()
-	time.Sleep(6 * time.Second)
+	time.Sleep(3 * time.Second)
+	StopTask()
+}
+
+func TestModifyTaskListAfterRunning(t *testing.T) {
+	tk := NewTask("taska", "0/30 * * * * *", func(ctx context.Context) error {
+		fmt.Println("hello world")
+		return nil
+	})
+	err := tk.Run(nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	AddTask("taska", tk)
+	StartTask()
+	DeleteTask("taska")
+	AddTask("taska1", tk)
+	time.Sleep(3 * time.Second)
 	StopTask()
 }
 

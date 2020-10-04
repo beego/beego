@@ -468,21 +468,33 @@ func StopTask() {
 
 // AddTask add task with name
 func AddTask(taskname string, t Tasker) {
+	isChanged := false
 	taskLock.Lock()
-	defer taskLock.Unlock()
 	t.SetNext(nil, time.Now().Local())
 	AdminTaskList[taskname] = t
 	if isstart {
+		isChanged = true
+	}
+	taskLock.Unlock()
+
+	if isChanged {
 		changed <- true
 	}
+
 }
 
 // DeleteTask delete task with name
 func DeleteTask(taskname string) {
+	isChanged := false
+
 	taskLock.Lock()
-	defer taskLock.Unlock()
 	delete(AdminTaskList, taskname)
 	if isstart {
+		isChanged = true
+	}
+	taskLock.Unlock()
+
+	if isChanged {
 		changed <- true
 	}
 }
