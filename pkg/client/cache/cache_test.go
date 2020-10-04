@@ -15,6 +15,7 @@
 package cache
 
 import (
+	"context"
 	"os"
 	"sync"
 	"testing"
@@ -26,19 +27,20 @@ func TestCacheIncr(t *testing.T) {
 	if err != nil {
 		t.Error("init err")
 	}
-	//timeoutDuration := 10 * time.Second
+	// timeoutDuration := 10 * time.Second
 
-	bm.Put("edwardhey", 0, time.Second*20)
+	bm.Put(context.Background(), "edwardhey", 0, time.Second*20)
 	wg := sync.WaitGroup{}
 	wg.Add(10)
 	for i := 0; i < 10; i++ {
 		go func() {
 			defer wg.Done()
-			bm.Incr("edwardhey")
+			bm.Incr(context.Background(), "edwardhey")
 		}()
 	}
 	wg.Wait()
-	if bm.Get("edwardhey").(int) != 10 {
+	val, _ := bm.Get(context.Background(), "edwardhey")
+	if val.(int) != 10 {
 		t.Error("Incr err")
 	}
 }
@@ -49,66 +51,66 @@ func TestCache(t *testing.T) {
 		t.Error("init err")
 	}
 	timeoutDuration := 10 * time.Second
-	if err = bm.Put("astaxie", 1, timeoutDuration); err != nil {
+	if err = bm.Put(context.Background(), "astaxie", 1, timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
-	if !bm.IsExist("astaxie") {
+	if res, _ := bm.IsExist(context.Background(), "astaxie"); !res {
 		t.Error("check err")
 	}
 
-	if v := bm.Get("astaxie"); v.(int) != 1 {
+	if v, _ := bm.Get(context.Background(), "astaxie"); v.(int) != 1 {
 		t.Error("get err")
 	}
 
 	time.Sleep(30 * time.Second)
 
-	if bm.IsExist("astaxie") {
+	if res, _ := bm.IsExist(context.Background(), "astaxie"); res {
 		t.Error("check err")
 	}
 
-	if err = bm.Put("astaxie", 1, timeoutDuration); err != nil {
+	if err = bm.Put(context.Background(), "astaxie", 1, timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
 
-	if err = bm.Incr("astaxie"); err != nil {
+	if err = bm.Incr(context.Background(), "astaxie"); err != nil {
 		t.Error("Incr Error", err)
 	}
 
-	if v := bm.Get("astaxie"); v.(int) != 2 {
+	if v, _ := bm.Get(context.Background(), "astaxie"); v.(int) != 2 {
 		t.Error("get err")
 	}
 
-	if err = bm.Decr("astaxie"); err != nil {
+	if err = bm.Decr(context.Background(), "astaxie"); err != nil {
 		t.Error("Decr Error", err)
 	}
 
-	if v := bm.Get("astaxie"); v.(int) != 1 {
+	if v, _ := bm.Get(context.Background(), "astaxie"); v.(int) != 1 {
 		t.Error("get err")
 	}
-	bm.Delete("astaxie")
-	if bm.IsExist("astaxie") {
+	bm.Delete(context.Background(), "astaxie")
+	if res, _ := bm.IsExist(context.Background(), "astaxie"); res {
 		t.Error("delete err")
 	}
 
-	//test GetMulti
-	if err = bm.Put("astaxie", "author", timeoutDuration); err != nil {
+	// test GetMulti
+	if err = bm.Put(context.Background(), "astaxie", "author", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
-	if !bm.IsExist("astaxie") {
+	if res, _ := bm.IsExist(context.Background(), "astaxie"); !res {
 		t.Error("check err")
 	}
-	if v := bm.Get("astaxie"); v.(string) != "author" {
+	if v, _ := bm.Get(context.Background(), "astaxie"); v.(string) != "author" {
 		t.Error("get err")
 	}
 
-	if err = bm.Put("astaxie1", "author1", timeoutDuration); err != nil {
+	if err = bm.Put(context.Background(), "astaxie1", "author1", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
-	if !bm.IsExist("astaxie1") {
+	if res, _ := bm.IsExist(context.Background(), "astaxie1"); !res {
 		t.Error("check err")
 	}
 
-	vv := bm.GetMulti([]string{"astaxie", "astaxie1"})
+	vv, _ := bm.GetMulti(context.Background(), []string{"astaxie", "astaxie1"})
 	if len(vv) != 2 {
 		t.Error("GetMulti ERROR")
 	}
@@ -126,57 +128,57 @@ func TestFileCache(t *testing.T) {
 		t.Error("init err")
 	}
 	timeoutDuration := 10 * time.Second
-	if err = bm.Put("astaxie", 1, timeoutDuration); err != nil {
+	if err = bm.Put(context.Background(), "astaxie", 1, timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
-	if !bm.IsExist("astaxie") {
+	if res, _ := bm.IsExist(context.Background(), "astaxie"); !res {
 		t.Error("check err")
 	}
 
-	if v := bm.Get("astaxie"); v.(int) != 1 {
+	if v, _ := bm.Get(context.Background(), "astaxie"); v.(int) != 1 {
 		t.Error("get err")
 	}
 
-	if err = bm.Incr("astaxie"); err != nil {
+	if err = bm.Incr(context.Background(), "astaxie"); err != nil {
 		t.Error("Incr Error", err)
 	}
 
-	if v := bm.Get("astaxie"); v.(int) != 2 {
+	if v, _ := bm.Get(context.Background(), "astaxie"); v.(int) != 2 {
 		t.Error("get err")
 	}
 
-	if err = bm.Decr("astaxie"); err != nil {
+	if err = bm.Decr(context.Background(), "astaxie"); err != nil {
 		t.Error("Decr Error", err)
 	}
 
-	if v := bm.Get("astaxie"); v.(int) != 1 {
+	if v, _ := bm.Get(context.Background(), "astaxie"); v.(int) != 1 {
 		t.Error("get err")
 	}
-	bm.Delete("astaxie")
-	if bm.IsExist("astaxie") {
+	bm.Delete(context.Background(), "astaxie")
+	if res, _ := bm.IsExist(context.Background(), "astaxie"); res {
 		t.Error("delete err")
 	}
 
-	//test string
-	if err = bm.Put("astaxie", "author", timeoutDuration); err != nil {
+	// test string
+	if err = bm.Put(context.Background(), "astaxie", "author", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
-	if !bm.IsExist("astaxie") {
+	if res, _ := bm.IsExist(context.Background(), "astaxie"); !res {
 		t.Error("check err")
 	}
-	if v := bm.Get("astaxie"); v.(string) != "author" {
+	if v, _ := bm.Get(context.Background(), "astaxie"); v.(string) != "author" {
 		t.Error("get err")
 	}
 
-	//test GetMulti
-	if err = bm.Put("astaxie1", "author1", timeoutDuration); err != nil {
+	// test GetMulti
+	if err = bm.Put(context.Background(), "astaxie1", "author1", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
-	if !bm.IsExist("astaxie1") {
+	if res, _ := bm.IsExist(context.Background(), "astaxie1"); !res {
 		t.Error("check err")
 	}
 
-	vv := bm.GetMulti([]string{"astaxie", "astaxie1"})
+	vv, _ := bm.GetMulti(context.Background(), []string{"astaxie", "astaxie1"})
 	if len(vv) != 2 {
 		t.Error("GetMulti ERROR")
 	}

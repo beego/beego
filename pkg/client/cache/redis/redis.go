@@ -30,6 +30,7 @@
 package redis
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -83,63 +84,60 @@ func (rc *Cache) associate(originKey interface{}) string {
 }
 
 // Get cache from redis.
-func (rc *Cache) Get(key string) interface{} {
+func (rc *Cache) Get(ctx context.Context, key string) (interface{}, error) {
 	if v, err := rc.do("GET", key); err == nil {
-		return v
+		return v, nil
+	} else {
+		return nil, err
 	}
-	return nil
 }
 
 // GetMulti gets cache from redis.
-func (rc *Cache) GetMulti(keys []string) []interface{} {
+func (rc *Cache) GetMulti(ctx context.Context, keys []string) ([]interface{}, error) {
 	c := rc.p.Get()
 	defer c.Close()
 	var args []interface{}
 	for _, key := range keys {
 		args = append(args, rc.associate(key))
 	}
-	values, err := redis.Values(c.Do("MGET", args...))
-	if err != nil {
-		return nil
-	}
-	return values
+	return redis.Values(c.Do("MGET", args...))
 }
 
 // Put puts cache into redis.
-func (rc *Cache) Put(key string, val interface{}, timeout time.Duration) error {
+func (rc *Cache) Put(ctx context.Context, key string, val interface{}, timeout time.Duration) error {
 	_, err := rc.do("SETEX", key, int64(timeout/time.Second), val)
 	return err
 }
 
 // Delete deletes a key's cache in redis.
-func (rc *Cache) Delete(key string) error {
+func (rc *Cache) Delete(ctx context.Context, key string) error {
 	_, err := rc.do("DEL", key)
 	return err
 }
 
 // IsExist checks cache's existence in redis.
-func (rc *Cache) IsExist(key string) bool {
+func (rc *Cache) IsExist(ctx context.Context, key string) (bool, error) {
 	v, err := redis.Bool(rc.do("EXISTS", key))
 	if err != nil {
-		return false
+		return false, err
 	}
-	return v
+	return v, nil
 }
 
 // Incr increases a key's counter in redis.
-func (rc *Cache) Incr(key string) error {
+func (rc *Cache) Incr(ctx context.Context, key string) error {
 	_, err := redis.Bool(rc.do("INCRBY", key, 1))
 	return err
 }
 
 // Decr decreases a key's counter in redis.
-func (rc *Cache) Decr(key string) error {
+func (rc *Cache) Decr(ctx context.Context, key string) error {
 	_, err := redis.Bool(rc.do("INCRBY", key, -1))
 	return err
 }
 
 // ClearAll deletes all cache in the redis collection
-func (rc *Cache) ClearAll() error {
+func (rc *Cache) ClearAll(context.Context) error {
 	cachedKeys, err := rc.Scan(rc.key + ":*")
 	if err != nil {
 		return err

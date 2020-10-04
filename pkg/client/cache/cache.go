@@ -32,6 +32,7 @@
 package cache
 
 import (
+	"context"
 	"fmt"
 	"time"
 )
@@ -48,21 +49,21 @@ import (
 //	count := c.Get("counter").(int)
 type Cache interface {
 	// Get a cached value by key.
-	Get(key string) interface{}
+	Get(ctx context.Context, key string) (interface{}, error)
 	// GetMulti is a batch version of Get.
-	GetMulti(keys []string) []interface{}
+	GetMulti(ctx context.Context, keys []string) ([]interface{}, error)
 	// Set a cached value with key and expire time.
-	Put(key string, val interface{}, timeout time.Duration) error
+	Put(ctx context.Context, key string, val interface{}, timeout time.Duration) error
 	// Delete cached value by key.
-	Delete(key string) error
+	Delete(ctx context.Context, key string) error
 	// Increment a cached int value by key, as a counter.
-	Incr(key string) error
+	Incr(ctx context.Context, key string) error
 	// Decrement a cached int value by key, as a counter.
-	Decr(key string) error
+	Decr(ctx context.Context, key string) error
 	// Check if a cached value exists or not.
-	IsExist(key string) bool
+	IsExist(ctx context.Context, key string) (bool, error)
 	// Clear all cache.
-	ClearAll() error
+	ClearAll(ctx context.Context) error
 	// Start gc routine based on config string settings.
 	StartAndGC(config string) error
 }
