@@ -23,7 +23,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/astaxie/beego/pkg/client/orm"
-	"github.com/astaxie/beego/pkg/server/web"
 )
 
 // FilterChainBuilder is an extension point,
@@ -35,27 +34,24 @@ import (
 // actually we only records metrics of invoking "QueryTable" and "QueryTableWithCtx"
 type FilterChainBuilder struct {
 	summaryVec prometheus.ObserverVec
+	AppName    string
+	ServerName string
+	RunMode    string
 }
 
-func NewFilterChainBuilder() *FilterChainBuilder {
-	summaryVec := prometheus.NewSummaryVec(prometheus.SummaryOpts{
+func (builder *FilterChainBuilder) FilterChain(next orm.Filter) orm.Filter {
+
+	builder.summaryVec = prometheus.NewSummaryVec(prometheus.SummaryOpts{
 		Name:      "beego",
 		Subsystem: "orm_operation",
 		ConstLabels: map[string]string{
-			"server":  web.BConfig.ServerName,
-			"env":     web.BConfig.RunMode,
-			"appname": web.BConfig.AppName,
+			"server":  builder.ServerName,
+			"env":     builder.RunMode,
+			"appname": builder.AppName,
 		},
 		Help: "The statics info for orm operation",
 	}, []string{"method", "name", "duration", "insideTx", "txName"})
 
-	prometheus.MustRegister(summaryVec)
-	return &FilterChainBuilder{
-		summaryVec: summaryVec,
-	}
-}
-
-func (builder *FilterChainBuilder) FilterChain(next orm.Filter) orm.Filter {
 	return func(ctx context.Context, inv *orm.Invocation) []interface{} {
 		startTime := time.Now()
 		res := next(ctx, inv)
