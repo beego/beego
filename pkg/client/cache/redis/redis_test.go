@@ -15,6 +15,7 @@
 package redis
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -38,67 +39,70 @@ func TestRedisCache(t *testing.T) {
 		t.Error("init err")
 	}
 	timeoutDuration := 10 * time.Second
-	if err = bm.Put("astaxie", 1, timeoutDuration); err != nil {
+	if err = bm.Put(context.Background(), "astaxie", 1, timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
-	if !bm.IsExist("astaxie") {
+	if res, _ := bm.IsExist(context.Background(), "astaxie"); !res {
 		t.Error("check err")
 	}
 
 	time.Sleep(11 * time.Second)
 
-	if bm.IsExist("astaxie") {
+	if res, _ := bm.IsExist(context.Background(), "astaxie"); res {
 		t.Error("check err")
 	}
-	if err = bm.Put("astaxie", 1, timeoutDuration); err != nil {
+	if err = bm.Put(context.Background(), "astaxie", 1, timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
 
-	if v, _ := redis.Int(bm.Get("astaxie"), err); v != 1 {
+	val, _ := bm.Get(context.Background(), "astaxie")
+	if v, _ := redis.Int(val, err); v != 1 {
 		t.Error("get err")
 	}
 
-	if err = bm.Incr("astaxie"); err != nil {
+	if err = bm.Incr(context.Background(), "astaxie"); err != nil {
 		t.Error("Incr Error", err)
 	}
-
-	if v, _ := redis.Int(bm.Get("astaxie"), err); v != 2 {
+	val, _ = bm.Get(context.Background(), "astaxie")
+	if v, _ := redis.Int(val, err); v != 2 {
 		t.Error("get err")
 	}
 
-	if err = bm.Decr("astaxie"); err != nil {
+	if err = bm.Decr(context.Background(), "astaxie"); err != nil {
 		t.Error("Decr Error", err)
 	}
 
-	if v, _ := redis.Int(bm.Get("astaxie"), err); v != 1 {
+	val, _ = bm.Get(context.Background(), "astaxie")
+	if v, _ := redis.Int(val, err); v != 1 {
 		t.Error("get err")
 	}
-	bm.Delete("astaxie")
-	if bm.IsExist("astaxie") {
+	bm.Delete(context.Background(), "astaxie")
+	if res, _ := bm.IsExist(context.Background(), "astaxie"); res {
 		t.Error("delete err")
 	}
 
 	// test string
-	if err = bm.Put("astaxie", "author", timeoutDuration); err != nil {
+	if err = bm.Put(context.Background(), "astaxie", "author", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
-	if !bm.IsExist("astaxie") {
+	if res, _ := bm.IsExist(context.Background(), "astaxie"); !res {
 		t.Error("check err")
 	}
 
-	if v, _ := redis.String(bm.Get("astaxie"), err); v != "author" {
+	val, _ = bm.Get(context.Background(), "astaxie")
+	if v, _ := redis.String(val, err); v != "author" {
 		t.Error("get err")
 	}
 
 	// test GetMulti
-	if err = bm.Put("astaxie1", "author1", timeoutDuration); err != nil {
+	if err = bm.Put(context.Background(), "astaxie1", "author1", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
-	if !bm.IsExist("astaxie1") {
+	if res, _ := bm.IsExist(context.Background(), "astaxie1"); !res {
 		t.Error("check err")
 	}
 
-	vv := bm.GetMulti([]string{"astaxie", "astaxie1"})
+	vv, _ := bm.GetMulti(context.Background(), []string{"astaxie", "astaxie1"})
 	if len(vv) != 2 {
 		t.Error("GetMulti ERROR")
 	}
@@ -110,7 +114,7 @@ func TestRedisCache(t *testing.T) {
 	}
 
 	// test clear all
-	if err = bm.ClearAll(); err != nil {
+	if err = bm.ClearAll(context.Background()); err != nil {
 		t.Error("clear all err")
 	}
 }
@@ -130,7 +134,7 @@ func TestCache_Scan(t *testing.T) {
 	}
 	// insert all
 	for i := 0; i < 100; i++ {
-		if err = bm.Put(fmt.Sprintf("astaxie%d", i), fmt.Sprintf("author%d", i), timeoutDuration); err != nil {
+		if err = bm.Put(context.Background(), fmt.Sprintf("astaxie%d", i), fmt.Sprintf("author%d", i), timeoutDuration); err != nil {
 			t.Error("set Error", err)
 		}
 	}
@@ -144,7 +148,7 @@ func TestCache_Scan(t *testing.T) {
 	assert.Equal(t, 100, len(keys), "scan all error")
 
 	// clear all
-	if err = bm.ClearAll(); err != nil {
+	if err = bm.ClearAll(context.Background()); err != nil {
 		t.Error("clear all err")
 	}
 

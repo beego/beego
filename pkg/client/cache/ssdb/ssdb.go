@@ -1,6 +1,7 @@
 package ssdb
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"strconv"
@@ -24,29 +25,26 @@ func NewSsdbCache() cache.Cache {
 }
 
 // Get gets a key's value from memcache.
-func (rc *Cache) Get(key string) interface{} {
+func (rc *Cache) Get(ctx context.Context, key string) (interface{}, error) {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
-			return nil
+			return nil, nil
 		}
 	}
 	value, err := rc.conn.Get(key)
 	if err == nil {
-		return value
+		return value, nil
 	}
-	return nil
+	return nil, nil
 }
 
-// GetMulti gets one or keys values from memcache.
-func (rc *Cache) GetMulti(keys []string) []interface{} {
+// GetMulti gets one or keys values from ssdb.
+func (rc *Cache) GetMulti(ctx context.Context, keys []string) ([]interface{}, error) {
 	size := len(keys)
 	var values []interface{}
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
-			for i := 0; i < size; i++ {
-				values = append(values, err)
-			}
-			return values
+			return values, err
 		}
 	}
 	res, err := rc.conn.Do("multi_get", keys)
@@ -55,12 +53,12 @@ func (rc *Cache) GetMulti(keys []string) []interface{} {
 		for i := 1; i < resSize; i += 2 {
 			values = append(values, res[i+1])
 		}
-		return values
+		return values, nil
 	}
 	for i := 0; i < size; i++ {
 		values = append(values, err)
 	}
-	return values
+	return values, nil
 }
 
 // DelMulti deletes one or more keys from memcache
@@ -76,13 +74,13 @@ func (rc *Cache) DelMulti(keys []string) error {
 
 // Put puts value into memcache.
 // value:  must be of type string
-func (rc *Cache) Put(key string, value interface{}, timeout time.Duration) error {
+func (rc *Cache) Put(ctx context.Context, key string, val interface{}, timeout time.Duration) error {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
 			return err
 		}
 	}
-	v, ok := value.(string)
+	v, ok := val.(string)
 	if !ok {
 		return errors.New("value must string")
 	}
@@ -104,7 +102,7 @@ func (rc *Cache) Put(key string, value interface{}, timeout time.Duration) error
 }
 
 // Delete deletes a value in memcache.
-func (rc *Cache) Delete(key string) error {
+func (rc *Cache) Delete(ctx context.Context, key string) error {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
 			return err
@@ -115,7 +113,7 @@ func (rc *Cache) Delete(key string) error {
 }
 
 // Incr increases a key's counter.
-func (rc *Cache) Incr(key string) error {
+func (rc *Cache) Incr(ctx context.Context, key string) error {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
 			return err
@@ -126,7 +124,7 @@ func (rc *Cache) Incr(key string) error {
 }
 
 // Decr decrements a key's counter.
-func (rc *Cache) Decr(key string) error {
+func (rc *Cache) Decr(ctx context.Context, key string) error {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
 			return err
@@ -137,25 +135,25 @@ func (rc *Cache) Decr(key string) error {
 }
 
 // IsExist checks if a key exists in memcache.
-func (rc *Cache) IsExist(key string) bool {
+func (rc *Cache) IsExist(ctx context.Context, key string) (bool, error) {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
-			return false
+			return false, err
 		}
 	}
 	resp, err := rc.conn.Do("exists", key)
 	if err != nil {
-		return false
+		return false, err
 	}
 	if len(resp) == 2 && resp[1] == "1" {
-		return true
+		return true, nil
 	}
-	return false
+	return false, nil
 
 }
 
 // ClearAll clears all cached items in memcache.
-func (rc *Cache) ClearAll() error {
+func (rc *Cache) ClearAll(context.Context) error {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
 			return err
