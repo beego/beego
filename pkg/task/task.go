@@ -548,13 +548,20 @@ func(m *taskManager) DeleteTask(taskname string) {
 
 //  ClearTask clear all tasks
 func(m *taskManager) ClearTask() {
+	isChanged := false
+
 	m.taskLock.Lock()
 	m.adminTaskList = make(map[string]Tasker)
+	if m.started {
+		isChanged = true
+	}
 	m.taskLock.Unlock()
 
-	go func() {
-		m.changed <- true
-	}()
+	if isChanged {
+		go func() {
+			m.changed <- true
+		}()
+	}
 }
 
 // MapSorter sort map for tasker
