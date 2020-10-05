@@ -18,7 +18,6 @@ import (
 	"mime/multipart"
 	"net/url"
 
-	"github.com/astaxie/beego/pkg/adapter/context"
 	"github.com/astaxie/beego/pkg/adapter/session"
 	webContext "github.com/astaxie/beego/pkg/server/web/context"
 
@@ -61,13 +60,12 @@ func (p ControllerCommentsSlice) Swap(i, j int) {
 // http context, template and view, session and xsrf.
 type Controller web.Controller
 
+func (c *Controller) Init(ctx *webContext.Context, controllerName, actionName string, app interface{}) {
+	(*web.Controller)(c).Init(ctx, controllerName, actionName, app)
+}
+
 // ControllerInterface is an interface to uniform all controller handler.
 type ControllerInterface web.ControllerInterface
-
-// Init generates default values of controller operations.
-func (c *Controller) Init(ctx *context.Context, controllerName, actionName string, app interface{}) {
-	(*web.Controller)(c).Init((*webContext.Context)(ctx), controllerName, actionName, app)
-}
 
 // Prepare runs after Init before request function execution.
 func (c *Controller) Prepare() {

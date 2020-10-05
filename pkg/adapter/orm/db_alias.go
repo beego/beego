@@ -27,12 +27,11 @@ type DriverType orm.DriverType
 
 // Enum the Database driver
 const (
-	_          DriverType = iota // int enum type
-	DRMySQL               = orm.DRMySQL
-	DRSqlite              = orm.DRSqlite   // sqlite
-	DROracle              = orm.DROracle   // oracle
-	DRPostgres            = orm.DRPostgres // pgsql
-	DRTiDB                = orm.DRTiDB     // TiDB
+	DRMySQL    = DriverType(orm.DRMySQL)
+	DRSqlite   = DriverType(orm.DRSqlite)   // sqlite
+	DROracle   = DriverType(orm.DROracle)   // oracle
+	DRPostgres = DriverType(orm.DRPostgres) // pgsql
+	DRTiDB     = DriverType(orm.DRTiDB)     // TiDB
 )
 
 type DB orm.DB
