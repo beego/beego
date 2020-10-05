@@ -15,13 +15,14 @@
 package beego
 
 import (
+	"crypto/tls"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"reflect"
 	"runtime"
 	"strings"
-	"crypto/tls"
 
 	"github.com/astaxie/beego/config"
 	"github.com/astaxie/beego/context"
@@ -108,6 +109,7 @@ type SessionConfig struct {
 	SessionEnableSidInHTTPHeader bool // enable store/get the sessionId into/from http headers
 	SessionNameInHTTPHeader      string
 	SessionEnableSidInURLQuery   bool // enable get the sessionId from Url Query params
+	SessionCookieSameSite        http.SameSite
 }
 
 // LogConfig holds Log related config
@@ -153,7 +155,7 @@ func init() {
 	}
 	appConfigPath = filepath.Join(WorkPath, "conf", filename)
 	if configPath := os.Getenv("BEEGO_CONFIG_PATH"); configPath != "" {
-		appConfigPath =  configPath
+		appConfigPath = configPath
 	}
 	if !utils.FileExists(appConfigPath) {
 		appConfigPath = filepath.Join(AppPath, "conf", filename)
@@ -267,6 +269,7 @@ func newBConfig() *Config {
 				SessionEnableSidInHTTPHeader: false, // enable store/get the sessionId into/from http headers
 				SessionNameInHTTPHeader:      "Beegosessionid",
 				SessionEnableSidInURLQuery:   false, // enable get the sessionId from Url Query params
+				SessionCookieSameSite:        http.SameSiteDefaultMode,
 			},
 		},
 		Log: LogConfig{
