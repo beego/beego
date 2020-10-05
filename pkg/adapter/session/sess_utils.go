@@ -15,7 +15,7 @@
 package session
 
 import (
-	"github.com/astaxie/beego/pkg/infrastructure/session"
+	"github.com/astaxie/beego/pkg/core/session"
 )
 
 // EncodeGob encode the obj to gob

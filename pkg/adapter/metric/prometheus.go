@@ -24,7 +24,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/astaxie/beego/pkg"
-	"github.com/astaxie/beego/pkg/infrastructure/logs"
+	"github.com/astaxie/beego/pkg/core/logs"
 	"github.com/astaxie/beego/pkg/server/web"
 )
 

@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/astaxie/beego/pkg/adapter/session"
-	beeLedis "github.com/astaxie/beego/pkg/infrastructure/session/ledis"
+	beeLedis "github.com/astaxie/beego/pkg/core/session/ledis"
 )
 
 // SessionStore ledis session store

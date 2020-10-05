@@ -18,7 +18,7 @@ import (
 	context2 "context"
 
 	"github.com/astaxie/beego/pkg/adapter/session"
-	newCfg "github.com/astaxie/beego/pkg/infrastructure/config"
+	newCfg "github.com/astaxie/beego/pkg/core/config"
 	"github.com/astaxie/beego/pkg/server/web"
 )
 

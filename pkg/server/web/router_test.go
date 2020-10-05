@@ -21,7 +21,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/astaxie/beego/pkg/infrastructure/logs"
+	"github.com/astaxie/beego/pkg/core/logs"
 
 	"github.com/astaxie/beego/pkg/server/web/context"
 )

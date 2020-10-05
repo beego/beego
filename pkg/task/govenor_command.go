@@ -21,7 +21,7 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/astaxie/beego/pkg/infrastructure/governor"
+	"github.com/astaxie/beego/pkg/core/governor"
 )
 
 type listTaskCommand struct {

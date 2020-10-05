@@ -50,7 +50,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/astaxie/beego/pkg/infrastructure/validation"
+	"github.com/astaxie/beego/pkg/core/validation"
 )
 
 // ValidFormer valid interface

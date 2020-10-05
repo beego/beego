@@ -60,7 +60,7 @@ import (
 
 	"github.com/astaxie/beego/pkg/client/orm"
 	"github.com/astaxie/beego/pkg/client/orm/hints"
-	"github.com/astaxie/beego/pkg/infrastructure/utils"
+	"github.com/astaxie/beego/pkg/core/utils"
 )
 
 // DebugQueries define the debug
