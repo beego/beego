@@ -59,6 +59,7 @@
 package captcha
 
 import (
+	context2 "context"
 	"fmt"
 	"html/template"
 	"net/http"
@@ -137,14 +138,15 @@ func (c *Captcha) Handler(ctx *context.Context) {
 
 	if len(ctx.Input.Query("reload")) > 0 {
 		chars = c.genRandChars()
-		if err := c.store.Put(key, chars, c.Expiration); err != nil {
+		if err := c.store.Put(context2.Background(), key, chars, c.Expiration); err != nil {
 			ctx.Output.SetStatus(500)
 			ctx.WriteString("captcha reload error")
 			logs.Error("Reload Create Captcha Error:", err)
 			return
 		}
 	} else {
-		if v, ok := c.store.Get(key).([]byte); ok {
+		val, _ := c.store.Get(context2.Background(), key)
+		if v, ok := val.([]byte); ok {
 			chars = v
 		} else {
 			ctx.Output.SetStatus(404)
@@ -183,7 +185,7 @@ func (c *Captcha) CreateCaptcha() (string, error) {
 	chars := c.genRandChars()
 
 	// save to store
-	if err := c.store.Put(c.key(id), chars, c.Expiration); err != nil {
+	if err := c.store.Put(context2.Background(), c.key(id), chars, c.Expiration); err != nil {
 		return "", err
 	}
 
@@ -205,8 +207,8 @@ func (c *Captcha) Verify(id string, challenge string) (success bool) {
 	var chars []byte
 
 	key := c.key(id)
-
-	if v, ok := c.store.Get(key).([]byte); ok {
+	val, _ := c.store.Get(context2.Background(), key)
+	if v, ok := val.([]byte); ok {
 		chars = v
 	} else {
 		return
@@ -214,7 +216,7 @@ func (c *Captcha) Verify(id string, challenge string) (success bool) {
 
 	defer func() {
 		// finally remove it
-		c.store.Delete(key)
+		c.store.Delete(context2.Background(), key)
 	}()
 
 	if len(chars) != len(challenge) {
@@ -271,9 +273,9 @@ func NewWithFilter(urlPrefix string, store Storage) *Captcha {
 
 type Storage interface {
 	// Get a cached value by key.
-	Get(key string) interface{}
+	Get(ctx context2.Context, key string) (interface{}, error)
 	// Set a cached value with key and expire time.
-	Put(key string, val interface{}, timeout time.Duration) error
+	Put(ctx context2.Context, key string, val interface{}, timeout time.Duration) error
 	// Delete cached value by key.
-	Delete(key string) error
+	Delete(ctx context2.Context, key string) error
 }
