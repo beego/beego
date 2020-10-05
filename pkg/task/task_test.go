@@ -41,7 +41,8 @@ func TestParse(t *testing.T) {
 }
 
 func TestModifyTaskListAfterRunning(t *testing.T) {
-	tk := NewTask("taska", "0/30 * * * * *", func(ctx context.Context) error {
+	m := newTaskManager()
+	tk := NewTask("taskb", "0/30 * * * * *", func(ctx context.Context) error {
 		fmt.Println("hello world")
 		return nil
 	})
@@ -49,26 +50,32 @@ func TestModifyTaskListAfterRunning(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	AddTask("taska", tk)
-	StartTask()
-	DeleteTask("taska")
-	AddTask("taska1", tk)
+	m.AddTask("taskb", tk)
+	m.StartTask()
+	go func() {
+		m.DeleteTask("taskb")
+	}()
+	go func() {
+		m.AddTask("taskb1", tk)
+	}()
+
 	time.Sleep(3 * time.Second)
-	StopTask()
+	m.StopTask()
 }
 
 func TestSpec(t *testing.T) {
+	m := newTaskManager()
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
 	tk1 := NewTask("tk1", "0 12 * * * *", func(ctx context.Context) error { fmt.Println("tk1"); return nil })
 	tk2 := NewTask("tk2", "0,10,20 * * * * *", func(ctx context.Context) error { fmt.Println("tk2"); wg.Done(); return nil })
 	tk3 := NewTask("tk3", "0 10 * * * *", func(ctx context.Context) error { fmt.Println("tk3"); wg.Done(); return nil })
 
-	AddTask("tk1", tk1)
-	AddTask("tk2", tk2)
-	AddTask("tk3", tk3)
-	StartTask()
-	defer StopTask()
+	m.AddTask("tk1", tk1)
+	m.AddTask("tk2", tk2)
+	m.AddTask("tk3", tk3)
+	m.StartTask()
+	defer m.StopTask()
 
 	select {
 	case <-time.After(200 * time.Second):

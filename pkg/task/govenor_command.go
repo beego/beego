@@ -28,8 +28,8 @@ type listTaskCommand struct {
 }
 
 func (l *listTaskCommand) Execute(params ...interface{}) *governor.Result {
-	resultList := make([][]string, 0, len(AdminTaskList))
-	for tname, tk := range AdminTaskList {
+	resultList := make([][]string, 0, len(globalTaskManager.adminTaskList))
+	for tname, tk := range globalTaskManager.adminTaskList {
 		result := []string{
 			template.HTMLEscapeString(tname),
 			template.HTMLEscapeString(tk.GetSpec(nil)),
@@ -65,7 +65,7 @@ func (r *runTaskCommand) Execute(params ...interface{}) *governor.Result {
 		}
 	}
 
-	if t, ok := AdminTaskList[tn]; ok {
+	if t, ok := globalTaskManager.adminTaskList[tn]; ok {
 		err := t.Run(context.Background())
 		if err != nil {
 			return &governor.Result{
