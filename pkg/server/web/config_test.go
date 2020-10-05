@@ -19,7 +19,7 @@ import (
 	"reflect"
 	"testing"
 
-	beeJson "github.com/astaxie/beego/pkg/infrastructure/config/json"
+	beeJson "github.com/astaxie/beego/pkg/core/config/json"
 )
 
 func TestDefaults(t *testing.T) {

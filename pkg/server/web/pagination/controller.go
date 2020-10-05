@@ -15,7 +15,7 @@
 package pagination
 
 import (
-	"github.com/astaxie/beego/pkg/infrastructure/utils/pagination"
+	"github.com/astaxie/beego/pkg/core/utils/pagination"
 	"github.com/astaxie/beego/pkg/server/web/context"
 )
 

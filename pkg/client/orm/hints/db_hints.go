@@ -15,7 +15,7 @@
 package hints
 
 import (
-	"github.com/astaxie/beego/pkg/infrastructure/utils"
+	"github.com/astaxie/beego/pkg/core/utils"
 )
 
 const (

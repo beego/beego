@@ -19,7 +19,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/astaxie/beego/pkg/infrastructure/utils"
+	"github.com/astaxie/beego/pkg/core/utils"
 
 	"github.com/astaxie/beego/pkg/server/web/context"
 )

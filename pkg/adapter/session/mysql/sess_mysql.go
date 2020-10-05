@@ -45,7 +45,7 @@ import (
 	"net/http"
 
 	"github.com/astaxie/beego/pkg/adapter/session"
-	"github.com/astaxie/beego/pkg/infrastructure/session/mysql"
+	"github.com/astaxie/beego/pkg/core/session/mysql"
 
 	// import mysql driver
 	_ "github.com/go-sql-driver/mysql"

@@ -17,7 +17,7 @@
 package env
 
 import (
-	"github.com/astaxie/beego/pkg/infrastructure/config/env"
+	"github.com/astaxie/beego/pkg/core/config/env"
 )
 
 // Get returns a value by key.

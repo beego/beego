@@ -17,7 +17,7 @@ package session
 import (
 	"context"
 
-	"github.com/astaxie/beego/pkg/infrastructure/session"
+	"github.com/astaxie/beego/pkg/core/session"
 )
 
 type oldToNewProviderAdapter struct {

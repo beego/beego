@@ -18,7 +18,7 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/astaxie/beego/pkg/infrastructure/utils"
+	"github.com/astaxie/beego/pkg/core/utils"
 )
 
 // DoNothingOrm won't do anything, usually you use this to custom your mock Ormer implementation

@@ -41,7 +41,7 @@
 package config
 
 import (
-	"github.com/astaxie/beego/pkg/infrastructure/config"
+	"github.com/astaxie/beego/pkg/core/config"
 )
 
 // Configer defines how to get and set value from configuration raw data.
