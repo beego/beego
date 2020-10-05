@@ -27,7 +27,7 @@ import (
 	"github.com/astaxie/beego/pkg"
 	"github.com/astaxie/beego/pkg/core/config"
 	"github.com/astaxie/beego/pkg/core/logs"
-	"github.com/astaxie/beego/pkg/core/session"
+	"github.com/astaxie/beego/pkg/server/web/session"
 
 	"github.com/astaxie/beego/pkg/core/utils"
 	"github.com/astaxie/beego/pkg/server/web/context"

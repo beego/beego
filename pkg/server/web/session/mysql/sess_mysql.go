@@ -47,7 +47,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/astaxie/beego/pkg/core/session"
+	"github.com/astaxie/beego/pkg/server/web/session"
 	// import mysql driver
 	_ "github.com/go-sql-driver/mysql"
 )

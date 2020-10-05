@@ -18,7 +18,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/astaxie/beego/pkg/core/session"
+	"github.com/astaxie/beego/pkg/server/web/session"
 )
 
 type NewToOldStoreAdapter struct {

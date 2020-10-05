@@ -6,7 +6,7 @@ import (
 
 	"github.com/astaxie/beego/pkg/adapter/session"
 
-	beeSsdb "github.com/astaxie/beego/pkg/core/session/ssdb"
+	beeSsdb "github.com/astaxie/beego/pkg/server/web/session/ssdb"
 )
 
 // Provider holds ssdb client and configs

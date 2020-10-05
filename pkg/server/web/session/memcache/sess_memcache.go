@@ -38,7 +38,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/astaxie/beego/pkg/core/session"
+	"github.com/astaxie/beego/pkg/server/web/session"
 
 	"github.com/bradfitz/gomemcache/memcache"
 )

@@ -1,16 +1,14 @@
-package redis
+package redis_sentinel
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
-	"github.com/astaxie/beego/pkg/core/session"
+	"github.com/astaxie/beego/pkg/server/web/session"
 )
 
-func TestRedis(t *testing.T) {
+func TestRedisSentinel(t *testing.T) {
 	sessionConfig := &session.ManagerConfig{
 		CookieName:      "gosessionid",
 		EnableSetCookie: true,
@@ -18,25 +16,20 @@ func TestRedis(t *testing.T) {
 		Maxlifetime:     3600,
 		Secure:          false,
 		CookieLifeTime:  3600,
+		ProviderConfig:  "127.0.0.1:6379,100,,0,master",
 	}
-
-	redisAddr := os.Getenv("REDIS_ADDR")
-	if redisAddr == "" {
-		redisAddr = "127.0.0.1:6379"
+	globalSessions, e := session.NewManager("redis_sentinel", sessionConfig)
+	if e != nil {
+		t.Log(e)
+		return
 	}
-
-	sessionConfig.ProviderConfig = fmt.Sprintf("%s,100,,0,30", redisAddr)
-	globalSession, err := session.NewManager("redis", sessionConfig)
-	if err != nil {
-		t.Fatal("could not create manager:", err)
-	}
-
-	go globalSession.GC()
+	//todo test if e==nil
+	go globalSessions.GC()
 
 	r, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 
-	sess, err := globalSession.SessionStart(w, r)
+	sess, err := globalSessions.SessionStart(w, r)
 	if err != nil {
 		t.Fatal("session start failed:", err)
 	}
@@ -93,4 +86,5 @@ func TestRedis(t *testing.T) {
 	}
 
 	sess.SessionRelease(nil, w)
+
 }
