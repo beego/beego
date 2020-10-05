@@ -22,6 +22,8 @@ import (
 )
 
 func TestParse(t *testing.T) {
+	defer ClearTask()
+
 	tk := NewTask("taska", "0/30 * * * * *", func() error { fmt.Println("hello world"); return nil })
 	err := tk.Run()
 	if err != nil {
@@ -34,6 +36,8 @@ func TestParse(t *testing.T) {
 }
 
 func TestSpec(t *testing.T) {
+	defer ClearTask()
+
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
 	tk1 := NewTask("tk1", "0 12 * * * *", func() error { fmt.Println("tk1"); return nil })

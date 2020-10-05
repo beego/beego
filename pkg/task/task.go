@@ -36,7 +36,7 @@ type taskManager struct {
 	taskLock      sync.RWMutex
 	stop          chan bool
 	changed       chan bool
-	isstart       bool
+	started       bool
 }
 
 func newTaskManager()*taskManager{
@@ -45,7 +45,7 @@ func newTaskManager()*taskManager{
 		taskLock:      sync.RWMutex{},
 		stop:          make(chan bool),
 		changed:       make(chan bool),
-		isstart:       false,
+		started:       false,
 	}
 }
 
@@ -431,16 +431,21 @@ func DeleteTask(taskName string) {
 	globalTaskManager.DeleteTask(taskName)
 }
 
+//  ClearTask clear all tasks
+func ClearTask() {
+	globalTaskManager.ClearTask()
+}
+
 
 // StartTask start all tasks
 func (m *taskManager) StartTask() {
 	m.taskLock.Lock()
 	defer m.taskLock.Unlock()
-	if m.isstart {
+	if m.started {
 		// If already started， no need to start another goroutine.
 		return
 	}
-	m.isstart = true
+	m.started = true
 
 	registerCommands()
 	go m.run()
@@ -488,8 +493,8 @@ func(m *taskManager) run() {
 			continue
 		case <-m.stop:
 			m.taskLock.Lock()
-			if m.isstart {
-				m.isstart = false
+			if m.started {
+				m.started = false
 			}
 			m.taskLock.Unlock()
 			return
@@ -510,7 +515,7 @@ func (m *taskManager)AddTask(taskname string, t Tasker) {
 	m.taskLock.Lock()
 	t.SetNext(nil, time.Now().Local())
 	m.adminTaskList[taskname] = t
-	if m.isstart {
+	if m.started {
 		isChanged = true
 	}
 	m.taskLock.Unlock()
@@ -529,14 +534,27 @@ func(m *taskManager) DeleteTask(taskname string) {
 
 	m.taskLock.Lock()
 	delete(m.adminTaskList, taskname)
-	if m.isstart {
+	if m.started {
 		isChanged = true
 	}
 	m.taskLock.Unlock()
 
 	if isChanged {
-		m.changed <- true
+		go func() {
+			m.changed <- true
+		}()
 	}
+}
+
+//  ClearTask clear all tasks
+func(m *taskManager) ClearTask() {
+	m.taskLock.Lock()
+	m.adminTaskList = make(map[string]Tasker)
+	m.taskLock.Unlock()
+
+	go func() {
+		m.changed <- true
+	}()
 }
 
 // MapSorter sort map for tasker

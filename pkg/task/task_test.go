@@ -26,6 +26,8 @@ import (
 )
 
 func TestParse(t *testing.T) {
+	m := newTaskManager()
+	defer m.ClearTask()
 	tk := NewTask("taska", "0/30 * * * * *", func(ctx context.Context) error {
 		fmt.Println("hello world")
 		return nil
@@ -34,14 +36,15 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	AddTask("taska", tk)
-	StartTask()
+	m.AddTask("taska", tk)
+	m.StartTask()
 	time.Sleep(3 * time.Second)
-	StopTask()
+	m.StopTask()
 }
 
 func TestModifyTaskListAfterRunning(t *testing.T) {
 	m := newTaskManager()
+	defer m.ClearTask()
 	tk := NewTask("taskb", "0/30 * * * * *", func(ctx context.Context) error {
 		fmt.Println("hello world")
 		return nil
@@ -65,6 +68,7 @@ func TestModifyTaskListAfterRunning(t *testing.T) {
 
 func TestSpec(t *testing.T) {
 	m := newTaskManager()
+	defer m.ClearTask()
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
 	tk1 := NewTask("tk1", "0 12 * * * *", func(ctx context.Context) error { fmt.Println("tk1"); return nil })
