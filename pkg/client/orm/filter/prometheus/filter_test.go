@@ -24,14 +24,15 @@ import (
 	"github.com/astaxie/beego/pkg/client/orm"
 )
 
-func TestFilterChainBuilder_FilterChain(t *testing.T) {
-	builder := NewFilterChainBuilder()
-	assert.NotNil(t, builder.summaryVec)
-
-	filter := builder.FilterChain(func(ctx context.Context, inv *orm.Invocation) []interface{} {
+func TestFilterChainBuilder_FilterChain1(t *testing.T) {
+	next := func(ctx context.Context, inv *orm.Invocation) []interface{} {
 		inv.Method = "coming"
 		return []interface{}{}
-	})
+	}
+	builder := &FilterChainBuilder{}
+	filter := builder.FilterChain(next)
+
+	assert.NotNil(t, builder.summaryVec)
 	assert.NotNil(t, filter)
 
 	inv := &orm.Invocation{}

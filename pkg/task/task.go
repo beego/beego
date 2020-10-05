@@ -31,13 +31,28 @@ type bounds struct {
 	names    map[string]uint
 }
 
-// The bounds for each field.
-var (
-	AdminTaskList map[string]Tasker
+type taskManager struct {
+	adminTaskList map[string]Tasker
 	taskLock      sync.RWMutex
 	stop          chan bool
 	changed       chan bool
-	isstart       bool
+	started       bool
+}
+
+func newTaskManager()*taskManager{
+	return &taskManager{
+		adminTaskList: make(map[string]Tasker),
+		taskLock:      sync.RWMutex{},
+		stop:          make(chan bool),
+		changed:       make(chan bool),
+		started:       false,
+	}
+}
+
+// The bounds for each field.
+var (
+	globalTaskManager *taskManager
+
 	seconds       = bounds{0, 59, nil}
 	minutes       = bounds{0, 59, nil}
 	hours         = bounds{0, 23, nil}
@@ -398,32 +413,58 @@ func dayMatches(s *Schedule, t time.Time) bool {
 
 // StartTask start all tasks
 func StartTask() {
-	taskLock.Lock()
-	defer taskLock.Unlock()
-	if isstart {
+	globalTaskManager.StartTask()
+}
+
+// StopTask stop all tasks
+func StopTask() {
+	globalTaskManager.StopTask()
+}
+
+// AddTask add task with name
+func AddTask(taskName string, t Tasker) {
+	globalTaskManager.AddTask(taskName, t)
+}
+
+// DeleteTask delete task with name
+func DeleteTask(taskName string) {
+	globalTaskManager.DeleteTask(taskName)
+}
+
+//  ClearTask clear all tasks
+func ClearTask() {
+	globalTaskManager.ClearTask()
+}
+
+
+// StartTask start all tasks
+func (m *taskManager) StartTask() {
+	m.taskLock.Lock()
+	defer m.taskLock.Unlock()
+	if m.started {
 		// If already started， no need to start another goroutine.
 		return
 	}
-	isstart = true
+	m.started = true
 
 	registerCommands()
-	go run()
+	go m.run()
 }
 
-func run() {
+func(m *taskManager) run() {
 	now := time.Now().Local()
-	for _, t := range AdminTaskList {
+	for _, t := range m.adminTaskList {
 		t.SetNext(nil, now)
 	}
 
 	for {
 		// we only use RLock here because NewMapSorter copy the reference, do not change any thing
-		taskLock.RLock()
-		sortList := NewMapSorter(AdminTaskList)
-		taskLock.RUnlock()
+		m.taskLock.RLock()
+		sortList := NewMapSorter(m.adminTaskList)
+		m.taskLock.RUnlock()
 		sortList.Sort()
 		var effective time.Time
-		if len(AdminTaskList) == 0 || sortList.Vals[0].GetNext(context.Background()).IsZero() {
+		if len(m.adminTaskList) == 0 || sortList.Vals[0].GetNext(context.Background()).IsZero() {
 			// If there are no entries yet, just sleep - it still handles new entries
 			// and stop requests.
 			effective = now.AddDate(10, 0, 0)
@@ -442,49 +483,84 @@ func run() {
 				e.SetNext(nil, effective)
 			}
 			continue
-		case <-changed:
+		case <-m.changed:
 			now = time.Now().Local()
-			taskLock.Lock()
-			for _, t := range AdminTaskList {
+			m.taskLock.Lock()
+			for _, t := range m.adminTaskList {
 				t.SetNext(nil, now)
 			}
-			taskLock.Unlock()
+			m.taskLock.Unlock()
 			continue
-		case <-stop:
+		case <-m.stop:
+			m.taskLock.Lock()
+			if m.started {
+				m.started = false
+			}
+			m.taskLock.Unlock()
 			return
 		}
 	}
 }
 
 // StopTask stop all tasks
-func StopTask() {
-	taskLock.Lock()
-	defer taskLock.Unlock()
-	if isstart {
-		isstart = false
-		stop <- true
-	}
-
+func(m *taskManager) StopTask() {
+	go func() {
+		m.stop <- true
+	}()
 }
 
 // AddTask add task with name
-func AddTask(taskname string, t Tasker) {
-	taskLock.Lock()
-	defer taskLock.Unlock()
+func (m *taskManager)AddTask(taskname string, t Tasker) {
+	isChanged := false
+	m.taskLock.Lock()
 	t.SetNext(nil, time.Now().Local())
-	AdminTaskList[taskname] = t
-	if isstart {
-		changed <- true
+	m.adminTaskList[taskname] = t
+	if m.started {
+		isChanged = true
 	}
+	m.taskLock.Unlock()
+
+	if isChanged {
+		go func() {
+			m.changed <- true
+		}()
+	}
+
 }
 
 // DeleteTask delete task with name
-func DeleteTask(taskname string) {
-	taskLock.Lock()
-	defer taskLock.Unlock()
-	delete(AdminTaskList, taskname)
-	if isstart {
-		changed <- true
+func(m *taskManager) DeleteTask(taskname string) {
+	isChanged := false
+
+	m.taskLock.Lock()
+	delete(m.adminTaskList, taskname)
+	if m.started {
+		isChanged = true
+	}
+	m.taskLock.Unlock()
+
+	if isChanged {
+		go func() {
+			m.changed <- true
+		}()
+	}
+}
+
+//  ClearTask clear all tasks
+func(m *taskManager) ClearTask() {
+	isChanged := false
+
+	m.taskLock.Lock()
+	m.adminTaskList = make(map[string]Tasker)
+	if m.started {
+		isChanged = true
+	}
+	m.taskLock.Unlock()
+
+	if isChanged {
+		go func() {
+			m.changed <- true
+		}()
 	}
 }
 
@@ -637,7 +713,5 @@ func all(r bounds) uint64 {
 }
 
 func init() {
-	AdminTaskList = make(map[string]Tasker)
-	stop = make(chan bool)
-	changed = make(chan bool)
+	globalTaskManager = newTaskManager()
 }
