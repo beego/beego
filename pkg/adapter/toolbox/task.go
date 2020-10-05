@@ -212,6 +212,11 @@ func DeleteTask(taskname string) {
 	task.DeleteTask(taskname)
 }
 
+// ClearTask clear all tasks
+func ClearTask() {
+	task.ClearTask()
+}
+
 // MapSorter sort map for tasker
 type MapSorter task.MapSorter
 
