@@ -8,8 +8,8 @@ import (
 	"path/filepath"
 
 	"github.com/astaxie/beego/pkg/core/logs"
-	"github.com/astaxie/beego/pkg/core/session"
 	"github.com/astaxie/beego/pkg/server/web/context"
+	"github.com/astaxie/beego/pkg/server/web/session"
 )
 
 // register MIME type with content type

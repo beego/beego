@@ -37,7 +37,7 @@ import (
 	"net/http"
 
 	"github.com/astaxie/beego/pkg/adapter/session"
-	beecb "github.com/astaxie/beego/pkg/core/session/couchbase"
+	beecb "github.com/astaxie/beego/pkg/server/web/session/couchbase"
 )
 
 // SessionStore store each session

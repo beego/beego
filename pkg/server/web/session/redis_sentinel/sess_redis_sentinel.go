@@ -40,7 +40,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/astaxie/beego/pkg/core/session"
+	"github.com/astaxie/beego/pkg/server/web/session"
 	"github.com/go-redis/redis/v7"
 )
 

@@ -58,7 +58,7 @@ import (
 	// import postgresql Driver
 	_ "github.com/lib/pq"
 
-	"github.com/astaxie/beego/pkg/core/session/postgres"
+	"github.com/astaxie/beego/pkg/server/web/session/postgres"
 )
 
 // SessionStore postgresql session store
