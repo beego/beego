@@ -8,8 +8,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/astaxie/beego/pkg/core/session"
 	"github.com/ssdb/gossdb/ssdb"
+
+	"github.com/astaxie/beego/pkg/server/web/session"
 )
 
 var ssdbProvider = &Provider{}
@@ -87,7 +88,7 @@ func (p *Provider) SessionExist(ctx context.Context, sid string) (bool, error) {
 
 // SessionRegenerate regenerate session with new sid and delete oldsid
 func (p *Provider) SessionRegenerate(ctx context.Context, oldsid, sid string) (session.Store, error) {
-	//conn.Do("setx", key, v, ttl)
+	// conn.Do("setx", key, v, ttl)
 	if p.client == nil {
 		if err := p.connectInit(); err != nil {
 			return nil, err
