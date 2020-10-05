@@ -32,7 +32,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/astaxie/beego/pkg/core/session"
+	"github.com/astaxie/beego/pkg/server/web/session"
 )
 
 // Store contains all data for one session process with specific id.

@@ -11,7 +11,7 @@ import (
 	"github.com/ledisdb/ledisdb/config"
 	"github.com/ledisdb/ledisdb/ledis"
 
-	"github.com/astaxie/beego/pkg/core/session"
+	"github.com/astaxie/beego/pkg/server/web/session"
 )
 
 var (

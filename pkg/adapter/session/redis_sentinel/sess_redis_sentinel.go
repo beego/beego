@@ -38,7 +38,7 @@ import (
 
 	"github.com/astaxie/beego/pkg/adapter/session"
 
-	sentinel "github.com/astaxie/beego/pkg/core/session/redis_sentinel"
+	sentinel "github.com/astaxie/beego/pkg/server/web/session/redis_sentinel"
 )
 
 // DefaultPoolSize redis_sentinel default pool size

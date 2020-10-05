@@ -37,7 +37,7 @@ import (
 	"net/http"
 
 	"github.com/astaxie/beego/pkg/adapter/session"
-	cluster "github.com/astaxie/beego/pkg/core/session/redis_cluster"
+	cluster "github.com/astaxie/beego/pkg/server/web/session/redis_cluster"
 )
 
 // MaxPoolSize redis_cluster max pool size

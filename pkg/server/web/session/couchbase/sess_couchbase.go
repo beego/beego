@@ -40,7 +40,7 @@ import (
 
 	couchbase "github.com/couchbase/go-couchbase"
 
-	"github.com/astaxie/beego/pkg/core/session"
+	"github.com/astaxie/beego/pkg/server/web/session"
 )
 
 var couchbpder = &Provider{}
