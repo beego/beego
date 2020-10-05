@@ -34,7 +34,7 @@ import (
 	"time"
 
 	"github.com/astaxie/beego/pkg/client/orm"
-	"github.com/astaxie/beego/pkg/infrastructure/logs"
+	"github.com/astaxie/beego/pkg/core/logs"
 )
 
 // const the data format for the bee generate migration datatype

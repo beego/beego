@@ -27,8 +27,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/astaxie/beego/pkg/infrastructure/logs"
-	"github.com/astaxie/beego/pkg/infrastructure/utils"
+	"github.com/astaxie/beego/pkg/core/logs"
+	"github.com/astaxie/beego/pkg/core/utils"
 )
 
 var (

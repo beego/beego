@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/astaxie/beego/pkg/infrastructure/logs"
-	"github.com/astaxie/beego/pkg/infrastructure/session"
+	"github.com/astaxie/beego/pkg/core/logs"
+	"github.com/astaxie/beego/pkg/core/session"
 	"github.com/astaxie/beego/pkg/server/web/context"
 )
 

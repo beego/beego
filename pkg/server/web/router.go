@@ -25,9 +25,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/astaxie/beego/pkg/infrastructure/logs"
+	"github.com/astaxie/beego/pkg/core/logs"
 
-	"github.com/astaxie/beego/pkg/infrastructure/utils"
+	"github.com/astaxie/beego/pkg/core/utils"
 	beecontext "github.com/astaxie/beego/pkg/server/web/context"
 	"github.com/astaxie/beego/pkg/server/web/context/param"
 )

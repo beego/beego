@@ -17,9 +17,9 @@ package adapter
 import (
 	"strings"
 
-	"github.com/astaxie/beego/pkg/infrastructure/logs"
+	"github.com/astaxie/beego/pkg/core/logs"
 
-	webLog "github.com/astaxie/beego/pkg/infrastructure/logs"
+	webLog "github.com/astaxie/beego/pkg/core/logs"
 )
 
 // Log levels to control the logging output.

@@ -19,10 +19,10 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/astaxie/beego/pkg/infrastructure/logs"
+	"github.com/astaxie/beego/pkg/core/logs"
 
 	"github.com/astaxie/beego/pkg/client/orm"
-	"github.com/astaxie/beego/pkg/infrastructure/bean"
+	"github.com/astaxie/beego/pkg/core/bean"
 )
 
 // DefaultValueFilterChainBuilder only works for InsertXXX method,

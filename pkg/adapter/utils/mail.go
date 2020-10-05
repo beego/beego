@@ -17,7 +17,7 @@ package utils
 import (
 	"io"
 
-	"github.com/astaxie/beego/pkg/infrastructure/utils"
+	"github.com/astaxie/beego/pkg/core/utils"
 )
 
 // Email is the type used for email messages

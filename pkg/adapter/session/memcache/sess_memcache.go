@@ -38,7 +38,7 @@ import (
 
 	"github.com/astaxie/beego/pkg/adapter/session"
 
-	beemem "github.com/astaxie/beego/pkg/infrastructure/session/memcache"
+	beemem "github.com/astaxie/beego/pkg/core/session/memcache"
 )
 
 // SessionStore memcache session store

@@ -18,7 +18,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/astaxie/beego/pkg/infrastructure/session"
+	"github.com/astaxie/beego/pkg/core/session"
 )
 
 // MemSessionStore memory session store.

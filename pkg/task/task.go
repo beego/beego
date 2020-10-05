@@ -39,7 +39,7 @@ type taskManager struct {
 	started       bool
 }
 
-func newTaskManager()*taskManager{
+func newTaskManager() *taskManager {
 	return &taskManager{
 		adminTaskList: make(map[string]Tasker),
 		taskLock:      sync.RWMutex{},
@@ -53,11 +53,11 @@ func newTaskManager()*taskManager{
 var (
 	globalTaskManager *taskManager
 
-	seconds       = bounds{0, 59, nil}
-	minutes       = bounds{0, 59, nil}
-	hours         = bounds{0, 23, nil}
-	days          = bounds{1, 31, nil}
-	months        = bounds{1, 12, map[string]uint{
+	seconds = bounds{0, 59, nil}
+	minutes = bounds{0, 59, nil}
+	hours   = bounds{0, 23, nil}
+	days    = bounds{1, 31, nil}
+	months  = bounds{1, 12, map[string]uint{
 		"jan": 1,
 		"feb": 2,
 		"mar": 3,
@@ -436,7 +436,6 @@ func ClearTask() {
 	globalTaskManager.ClearTask()
 }
 
-
 // StartTask start all tasks
 func (m *taskManager) StartTask() {
 	m.taskLock.Lock()
@@ -451,7 +450,7 @@ func (m *taskManager) StartTask() {
 	go m.run()
 }
 
-func(m *taskManager) run() {
+func (m *taskManager) run() {
 	now := time.Now().Local()
 	for _, t := range m.adminTaskList {
 		t.SetNext(nil, now)
@@ -503,14 +502,14 @@ func(m *taskManager) run() {
 }
 
 // StopTask stop all tasks
-func(m *taskManager) StopTask() {
+func (m *taskManager) StopTask() {
 	go func() {
 		m.stop <- true
 	}()
 }
 
 // AddTask add task with name
-func (m *taskManager)AddTask(taskname string, t Tasker) {
+func (m *taskManager) AddTask(taskname string, t Tasker) {
 	isChanged := false
 	m.taskLock.Lock()
 	t.SetNext(nil, time.Now().Local())
@@ -529,7 +528,7 @@ func (m *taskManager)AddTask(taskname string, t Tasker) {
 }
 
 // DeleteTask delete task with name
-func(m *taskManager) DeleteTask(taskname string) {
+func (m *taskManager) DeleteTask(taskname string) {
 	isChanged := false
 
 	m.taskLock.Lock()
@@ -547,7 +546,7 @@ func(m *taskManager) DeleteTask(taskname string) {
 }
 
 //  ClearTask clear all tasks
-func(m *taskManager) ClearTask() {
+func (m *taskManager) ClearTask() {
 	isChanged := false
 
 	m.taskLock.Lock()

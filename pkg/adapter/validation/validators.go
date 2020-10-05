@@ -17,7 +17,7 @@ package validation
 import (
 	"sync"
 
-	"github.com/astaxie/beego/pkg/infrastructure/validation"
+	"github.com/astaxie/beego/pkg/core/validation"
 )
 
 // CanSkipFuncs will skip valid if RequiredFirst is true and the struct field's value is empty
