@@ -15,7 +15,7 @@
 package utils
 
 import (
-	"github.com/astaxie/beego/pkg/infrastructure/utils"
+	"github.com/astaxie/beego/pkg/core/utils"
 )
 
 // SelfPath gets compiled executable file absolute path

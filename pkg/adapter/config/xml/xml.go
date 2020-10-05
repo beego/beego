@@ -30,5 +30,5 @@
 package xml
 
 import (
-	_ "github.com/astaxie/beego/pkg/infrastructure/config/xml"
+	_ "github.com/astaxie/beego/pkg/core/config/xml"
 )

@@ -15,5 +15,5 @@
 package config
 
 import (
-	_ "github.com/astaxie/beego/pkg/infrastructure/config/json"
+	_ "github.com/astaxie/beego/pkg/core/config/json"
 )

@@ -30,5 +30,5 @@
 package yaml
 
 import (
-	_ "github.com/astaxie/beego/pkg/infrastructure/config/yaml"
+	_ "github.com/astaxie/beego/pkg/core/config/yaml"
 )

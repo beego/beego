@@ -11,7 +11,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/astaxie/beego/pkg/infrastructure/governor"
+	"github.com/astaxie/beego/pkg/core/governor"
 )
 
 type SampleDatabaseCheck struct {

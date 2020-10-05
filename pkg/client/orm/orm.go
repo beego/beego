@@ -63,9 +63,9 @@ import (
 	"time"
 
 	"github.com/astaxie/beego/pkg/client/orm/hints"
-	"github.com/astaxie/beego/pkg/infrastructure/utils"
+	"github.com/astaxie/beego/pkg/core/utils"
 
-	"github.com/astaxie/beego/pkg/infrastructure/logs"
+	"github.com/astaxie/beego/pkg/core/logs"
 )
 
 // DebugQueries define the debug

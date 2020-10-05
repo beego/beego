@@ -31,7 +31,7 @@
 package toolbox
 
 import (
-	"github.com/astaxie/beego/pkg/infrastructure/governor"
+	"github.com/astaxie/beego/pkg/core/governor"
 )
 
 // AdminCheckList holds health checker map

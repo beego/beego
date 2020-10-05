@@ -24,7 +24,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"github.com/astaxie/beego/pkg/infrastructure/governor"
+	"github.com/astaxie/beego/pkg/core/governor"
 )
 
 type adminController struct {

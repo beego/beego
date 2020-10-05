@@ -31,9 +31,9 @@ import (
 
 	"golang.org/x/tools/go/packages"
 
-	"github.com/astaxie/beego/pkg/infrastructure/logs"
+	"github.com/astaxie/beego/pkg/core/logs"
 
-	"github.com/astaxie/beego/pkg/infrastructure/utils"
+	"github.com/astaxie/beego/pkg/core/utils"
 	"github.com/astaxie/beego/pkg/server/web/context/param"
 )
 
