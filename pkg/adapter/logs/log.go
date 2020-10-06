@@ -86,9 +86,6 @@ type Logger interface {
 	Flush()
 }
 
-var adapters = make(map[string]newLoggerFunc)
-var levelPrefix = [LevelDebug + 1]string{"[M]", "[A]", "[C]", "[E]", "[W]", "[N]", "[I]", "[D]"}
-
 // Register makes a log provide available by the provided name.
 // If Register is called twice with the same name or if driver is nil,
 // it panics.
@@ -343,4 +340,8 @@ func Debug(f interface{}, v ...interface{}) {
 // compatibility alias for Warning()
 func Trace(f interface{}, v ...interface{}) {
 	logs.Trace(f, v...)
+}
+
+func init() {
+	SetLogFuncCallDepth(4)
 }
