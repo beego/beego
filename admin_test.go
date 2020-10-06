@@ -154,7 +154,7 @@ func TestBuildHealthCheckResponseList(t *testing.T) {
 		[]string{
 			"error",
 			"Database",
-			"Error occured whie starting the db",
+			"Error occurred while starting the db",
 		},
 		[]string{
 			"success",
