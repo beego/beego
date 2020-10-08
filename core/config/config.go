@@ -184,17 +184,14 @@ func (c *BaseConfiger) Strings(ctx context.Context, key string) ([]string, error
 	return strings.Split(res, ";"), nil
 }
 
-// TODO remove this before release v2.0.0
 func (c *BaseConfiger) Unmarshaler(ctx context.Context, prefix string, obj interface{}, opt ...DecodeOption) error {
 	return errors.New("unsupported operation")
 }
 
-// TODO remove this before release v2.0.0
 func (c *BaseConfiger) Sub(ctx context.Context, key string) (Configer, error) {
 	return nil, errors.New("unsupported operation")
 }
 
-// TODO remove this before release v2.0.0
 func (c *BaseConfiger) OnChange(ctx context.Context, key string, fn func(value string)) {
 	// do nothing
 }

@@ -28,5 +28,5 @@ var (
 
 const (
 	// VERSION represent beego web framework version.
-	VERSION = "1.12.2"
+	VERSION = "2.0.0-alpha"
 )
