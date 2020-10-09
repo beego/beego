@@ -17,11 +17,14 @@ go get -u golang.org/x/tools/cmd/goimports
 go get -u github.com/gordonklaus/ineffassign
 ```
 
-And the go into project directory, run :
+Put those lines into your pre-commit githook script:
 ```shell script
-cp ./githook/pre-commit ./.git/hooks/pre-commit
+goimports -w -format-only ./
+
+ineffassign .
+
+staticcheck -show-ignored -checks "-ST1017,-U1000,-ST1005,-S1034,-S1012,-SA4006,-SA6005,-SA1019,-SA1024" ./
 ```
-This will add git hooks into .git/hooks. Or you can add it manually.
 
 ## Prepare middleware
 
@@ -33,7 +36,7 @@ You can run:
 ```shell script
 docker-compose -f scripts/test_docker_compose.yml up -d
 ```
-Unit tests read addressed from environment, here is an example:
+Unit tests read addresses from environment, here is an example:
 ```shell script
 export ORM_DRIVER=mysql
 export ORM_SOURCE="beego:test@tcp(192.168.0.105:13306)/orm_test?charset=utf8"
@@ -86,5 +89,5 @@ documenting your bug report or improvement proposal. If it does, it
 never hurts to add a quick "+1" or "I have this problem too". This will
 help prioritize the most common problems and requests.
 
-Also if you don't know how to use it. please make sure you have read though
+Also, if you don't know how to use it. please make sure you have read through
 the docs in http://beego.me/docs
