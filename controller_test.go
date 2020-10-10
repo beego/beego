@@ -19,9 +19,10 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/astaxie/beego/context"
 	"os"
 	"path/filepath"
+
+	"github.com/astaxie/beego/context"
 )
 
 func TestGetInt(t *testing.T) {

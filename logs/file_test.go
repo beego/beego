@@ -186,7 +186,7 @@ func TestFileDailyRotate_06(t *testing.T) { //test file mode
 
 func TestFileHourlyRotate_01(t *testing.T) {
 	log := NewLogger(10000)
-    log.SetLogger("file", `{"filename":"test3.log","hourly":true,"maxlines":4}`)
+	log.SetLogger("file", `{"filename":"test3.log","hourly":true,"maxlines":4}`)
 	log.Debug("debug")
 	log.Info("info")
 	log.Notice("notice")
@@ -237,7 +237,7 @@ func TestFileHourlyRotate_05(t *testing.T) {
 
 func TestFileHourlyRotate_06(t *testing.T) { //test file mode
 	log := NewLogger(10000)
-    log.SetLogger("file", `{"filename":"test3.log", "hourly":true, "maxlines":4}`)
+	log.SetLogger("file", `{"filename":"test3.log", "hourly":true, "maxlines":4}`)
 	log.Debug("debug")
 	log.Info("info")
 	log.Notice("notice")
@@ -269,19 +269,19 @@ func testFileRotate(t *testing.T, fn1, fn2 string, daily, hourly bool) {
 		RotatePerm: "0440",
 	}
 
-    if daily {
-        fw.Init(fmt.Sprintf(`{"filename":"%v","maxdays":1}`, fn1))
-        fw.dailyOpenTime = time.Now().Add(-24 * time.Hour)
-        fw.dailyOpenDate = fw.dailyOpenTime.Day()
-    }
+	if daily {
+		fw.Init(fmt.Sprintf(`{"filename":"%v","maxdays":1}`, fn1))
+		fw.dailyOpenTime = time.Now().Add(-24 * time.Hour)
+		fw.dailyOpenDate = fw.dailyOpenTime.Day()
+	}
 
-    if hourly {
-        fw.Init(fmt.Sprintf(`{"filename":"%v","maxhours":1}`, fn1))
-        fw.hourlyOpenTime = time.Now().Add(-1 * time.Hour)
-        fw.hourlyOpenDate = fw.hourlyOpenTime.Day()
-    }
+	if hourly {
+		fw.Init(fmt.Sprintf(`{"filename":"%v","maxhours":1}`, fn1))
+		fw.hourlyOpenTime = time.Now().Add(-1 * time.Hour)
+		fw.hourlyOpenDate = fw.hourlyOpenTime.Day()
+	}
 
-    fw.WriteMsg(time.Now(), "this is a msg for test", LevelDebug)
+	fw.WriteMsg(time.Now(), "this is a msg for test", LevelDebug)
 
 	for _, file := range []string{fn1, fn2} {
 		_, err := os.Stat(file)
@@ -328,8 +328,8 @@ func testFileDailyRotate(t *testing.T, fn1, fn2 string) {
 
 func testFileHourlyRotate(t *testing.T, fn1, fn2 string) {
 	fw := &fileLogWriter{
-        Hourly:      true,
-        MaxHours:    168,
+		Hourly:     true,
+		MaxHours:   168,
 		Rotate:     true,
 		Level:      LevelTrace,
 		Perm:       "0660",
