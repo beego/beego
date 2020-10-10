@@ -16,12 +16,13 @@ package beego
 
 import (
 	"bytes"
-	"github.com/astaxie/beego/testdata"
-	"github.com/elazarl/go-bindata-assetfs"
 	"net/http"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/astaxie/beego/testdata"
+	"github.com/elazarl/go-bindata-assetfs"
 )
 
 var header = `{{define "header"}}

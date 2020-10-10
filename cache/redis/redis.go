@@ -38,8 +38,9 @@ import (
 
 	"github.com/gomodule/redigo/redis"
 
-	"github.com/astaxie/beego/cache"
 	"strings"
+
+	"github.com/astaxie/beego/cache"
 )
 
 var (
@@ -57,7 +58,7 @@ type Cache struct {
 	maxIdle  int
 
 	//the timeout to a value less than the redis server's timeout.
-	timeout  time.Duration
+	timeout time.Duration
 }
 
 // NewRedisCache create new redis cache with default collection name.

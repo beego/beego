@@ -18,10 +18,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	lru "github.com/hashicorp/golang-lru"
 	"reflect"
 	"sync"
 	"time"
+
+	lru "github.com/hashicorp/golang-lru"
 )
 
 // DriverType database driver constant int.
@@ -424,7 +425,7 @@ func GetDB(aliasNames ...string) (*sql.DB, error) {
 }
 
 type stmtDecorator struct {
-	wg sync.WaitGroup
+	wg   sync.WaitGroup
 	stmt *sql.Stmt
 }
 
@@ -459,7 +460,9 @@ func newStmtDecorator(sqlStmt *sql.Stmt) *stmtDecorator {
 }
 
 func newStmtDecoratorLruWithEvict() *lru.Cache {
-	cache, _ := lru.NewWithEvict(1000, func(key interface{}, value interface{}) {
+	// temporarily solution
+	// we fixed this problem in v2.x
+	cache, _ := lru.NewWithEvict(50, func(key interface{}, value interface{}) {
 		value.(*stmtDecorator).destroy()
 	})
 	return cache
