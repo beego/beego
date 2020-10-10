@@ -296,7 +296,7 @@ func (c *ConfigContainer) getData(key string) (interface{}, error) {
 			case map[string]interface{}:
 				{
 					tmpData = v.(map[string]interface{})
-					if idx == len(keys) - 1 {
+					if idx == len(keys)-1 {
 						return tmpData, nil
 					}
 				}

@@ -33,13 +33,14 @@
 package redis_sentinel
 
 import (
-	"github.com/astaxie/beego/session"
-	"github.com/go-redis/redis"
 	"net/http"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/astaxie/beego/session"
+	"github.com/go-redis/redis"
 )
 
 var redispder = &Provider{}
