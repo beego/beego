@@ -202,7 +202,7 @@ func searchFile(ctx *context.Context) (string, os.FileInfo, error) {
 		if !strings.Contains(requestPath, prefix) {
 			continue
 		}
-		if prefix != "/" &&  len(requestPath) > len(prefix) && requestPath[len(prefix)] != '/' {
+		if prefix != "/" && len(requestPath) > len(prefix) && requestPath[len(prefix)] != '/' {
 			continue
 		}
 		filePath := path.Join(staticDir, requestPath[len(prefix):])
