@@ -16,6 +16,7 @@ package beego
 
 import (
 	"bytes"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -728,5 +729,34 @@ func TestRouterEntityTooLargeCopyBody(t *testing.T) {
 
 	if w.Code != http.StatusRequestEntityTooLarge {
 		t.Errorf("TestRouterRequestEntityTooLarge can't run")
+	}
+}
+
+func TestRouterEntityTooLargeToSaveFile(t *testing.T) {
+	_maxFileSize := BConfig.MaxFileSize
+	_MaxMemory := BConfig.MaxMemory
+	BConfig.MaxFileSize = 20
+	BConfig.MaxMemory = 2048
+
+	b := bytes.NewBuffer(nil)
+	mw := multipart.NewWriter(b)
+	part, _ := mw.CreateFormFile("test", "m.bin")
+	part.Write(bytes.Repeat([]byte("a"), 21))
+	mw.Close()
+
+	r, _ := http.NewRequest("POST", "/user/123", b)
+	w := httptest.NewRecorder()
+
+	handler := NewControllerRegister()
+	handler.Post("/user/:id", func(ctx *context.Context) {
+		ctx.Output.Body([]byte(ctx.Input.Param(":id")))
+	})
+	handler.ServeHTTP(w, r)
+
+	BConfig.MaxFileSize = _maxFileSize
+	BConfig.MaxMemory = _MaxMemory
+
+	if w.Code != http.StatusRequestEntityTooLarge {
+		t.Errorf("RouterEntityTooLargeToSaveFile failed, %d != %d", w.Code, http.StatusRequestEntityTooLarge)
 	}
 }

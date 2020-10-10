@@ -68,6 +68,7 @@ func TestAssignConfig_02(t *testing.T) {
 		}
 	}
 	configMap["MaxMemory"] = 1024
+	configMap["MaxFileSize"] = 1025
 	configMap["Graceful"] = true
 	configMap["XSRFExpire"] = 32
 	configMap["SessionProviderConfig"] = "file"
@@ -83,6 +84,11 @@ func TestAssignConfig_02(t *testing.T) {
 
 	if _BConfig.MaxMemory != 1024 {
 		t.Log(_BConfig.MaxMemory)
+		t.FailNow()
+	}
+
+	if _BConfig.MaxFileSize != 1025 {
+		t.Log(_BConfig.MaxFileSize)
 		t.FailNow()
 	}
 

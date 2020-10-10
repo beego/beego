@@ -42,6 +42,7 @@ type Config struct {
 	CopyRequestBody     bool
 	EnableGzip          bool
 	MaxMemory           int64
+	MaxFileSize         int64
 	EnableErrorsShow    bool
 	EnableErrorsRender  bool
 	Listen              Listen
@@ -216,6 +217,7 @@ func newBConfig() *Config {
 		CopyRequestBody:     false,
 		EnableGzip:          false,
 		MaxMemory:           1 << 26, //64MB
+		MaxFileSize:         1 << 27, //128MB
 		EnableErrorsShow:    true,
 		EnableErrorsRender:  true,
 		Listen: Listen{

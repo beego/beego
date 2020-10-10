@@ -750,6 +750,12 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 			}
 			context.Input.CopyBody(BConfig.MaxMemory)
 		}
+
+		if r.ContentLength > BConfig.MaxFileSize {
+			logs.Error(errors.New("payload too large"))
+			exception("413", context)
+			goto Admin
+		}
 		context.Input.ParseFormOrMulitForm(BConfig.MaxMemory)
 	}
 
