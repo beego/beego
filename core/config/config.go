@@ -72,6 +72,8 @@ type Configer interface {
 	DefaultInt64(ctx context.Context, key string, defaultVal int64) int64
 	DefaultBool(ctx context.Context, key string, defaultVal bool) bool
 	DefaultFloat(ctx context.Context, key string, defaultVal float64) float64
+
+	// DIY return the original value
 	DIY(ctx context.Context, key string) (interface{}, error)
 
 	GetSection(ctx context.Context, section string) (map[string]string, error)
