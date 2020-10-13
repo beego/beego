@@ -27,6 +27,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/mitchellh/mapstructure"
 )
 
 var (
@@ -503,6 +505,13 @@ func (c *IniConfigContainer) getdata(key string) string {
 		}
 	}
 	return ""
+}
+
+func (c *IniConfigContainer) Unmarshaler(prefix string, obj interface{}, opt ...DecodeOption) error {
+	if len(prefix) > 0 {
+		return errors.New("unsupported prefix params")
+	}
+	return mapstructure.Decode(c.data, opt)
 }
 
 func init() {
