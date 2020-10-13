@@ -15,7 +15,6 @@
 package toml
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -52,11 +51,11 @@ Woman="true"
 	assert.Nil(t, err)
 	assert.NotNil(t, c)
 
-	val, err := c.Bool(context.Background(), "Man")
+	val, err := c.Bool("Man")
 	assert.Nil(t, err)
 	assert.True(t, val)
 
-	_, err = c.Bool(context.Background(), "Woman")
+	_, err = c.Bool("Woman")
 	assert.NotNil(t, err)
 	assert.Equal(t, config.InvalidValueTypeError, err)
 }
@@ -71,13 +70,13 @@ Woman="false"
 	assert.Nil(t, err)
 	assert.NotNil(t, c)
 
-	val := c.DefaultBool(context.Background(), "Man11", true)
+	val := c.DefaultBool("Man11", true)
 	assert.True(t, val)
 
-	val = c.DefaultBool(context.Background(), "Man", false)
+	val = c.DefaultBool("Man", false)
 	assert.True(t, val)
 
-	val = c.DefaultBool(context.Background(), "Woman", true)
+	val = c.DefaultBool("Woman", true)
 	assert.True(t, val)
 }
 
@@ -91,13 +90,13 @@ PriceInvalid="12.3"
 	assert.Nil(t, err)
 	assert.NotNil(t, c)
 
-	val := c.DefaultFloat(context.Background(), "Price", 11.2)
+	val := c.DefaultFloat("Price", 11.2)
 	assert.Equal(t, 12.3, val)
 
-	val = c.DefaultFloat(context.Background(), "Price11", 11.2)
+	val = c.DefaultFloat("Price11", 11.2)
 	assert.Equal(t, 11.2, val)
 
-	val = c.DefaultFloat(context.Background(), "PriceInvalid", 11.2)
+	val = c.DefaultFloat("PriceInvalid", 11.2)
 	assert.Equal(t, 11.2, val)
 }
 
@@ -111,13 +110,13 @@ AgeInvalid="13"
 	assert.Nil(t, err)
 	assert.NotNil(t, c)
 
-	val := c.DefaultInt(context.Background(), "Age", 11)
+	val := c.DefaultInt("Age", 11)
 	assert.Equal(t, 12, val)
 
-	val = c.DefaultInt(context.Background(), "Price11", 11)
+	val = c.DefaultInt("Price11", 11)
 	assert.Equal(t, 11, val)
 
-	val = c.DefaultInt(context.Background(), "PriceInvalid", 11)
+	val = c.DefaultInt("PriceInvalid", 11)
 	assert.Equal(t, 11, val)
 }
 
@@ -131,13 +130,13 @@ NameInvalid=13
 	assert.Nil(t, err)
 	assert.NotNil(t, c)
 
-	val := c.DefaultString(context.Background(), "Name", "Jerry")
+	val := c.DefaultString("Name", "Jerry")
 	assert.Equal(t, "Tom", val)
 
-	val = c.DefaultString(context.Background(), "Name11", "Jerry")
+	val = c.DefaultString("Name11", "Jerry")
 	assert.Equal(t, "Jerry", val)
 
-	val = c.DefaultString(context.Background(), "NameInvalid", "Jerry")
+	val = c.DefaultString("NameInvalid", "Jerry")
 	assert.Equal(t, "Jerry", val)
 }
 
@@ -151,13 +150,13 @@ NameInvalid="Tom"
 	assert.Nil(t, err)
 	assert.NotNil(t, c)
 
-	val := c.DefaultStrings(context.Background(), "Name", []string{"Jerry"})
+	val := c.DefaultStrings("Name", []string{"Jerry"})
 	assert.Equal(t, []string{"Tom", "Jerry"}, val)
 
-	val = c.DefaultStrings(context.Background(), "Name11", []string{"Jerry"})
+	val = c.DefaultStrings("Name11", []string{"Jerry"})
 	assert.Equal(t, []string{"Jerry"}, val)
 
-	val = c.DefaultStrings(context.Background(), "NameInvalid", []string{"Jerry"})
+	val = c.DefaultStrings("NameInvalid", []string{"Jerry"})
 	assert.Equal(t, []string{"Jerry"}, val)
 }
 
@@ -170,7 +169,7 @@ Name=["Tom", "Jerry"]
 	assert.Nil(t, err)
 	assert.NotNil(t, c)
 
-	_, err = c.DIY(context.Background(), "Name")
+	_, err = c.DIY("Name")
 	assert.Nil(t, err)
 }
 
@@ -184,14 +183,14 @@ PriceInvalid="12.3"
 	assert.Nil(t, err)
 	assert.NotNil(t, c)
 
-	val, err := c.Float(context.Background(), "Price")
+	val, err := c.Float("Price")
 	assert.Nil(t, err)
 	assert.Equal(t, 12.3, val)
 
-	_, err = c.Float(context.Background(), "Price11")
+	_, err = c.Float("Price11")
 	assert.Equal(t, config.KeyNotFoundError, err)
 
-	_, err = c.Float(context.Background(), "PriceInvalid")
+	_, err = c.Float("PriceInvalid")
 	assert.Equal(t, config.InvalidValueTypeError, err)
 }
 
@@ -205,14 +204,14 @@ AgeInvalid="13"
 	assert.Nil(t, err)
 	assert.NotNil(t, c)
 
-	val, err := c.Int(context.Background(), "Age")
+	val, err := c.Int("Age")
 	assert.Nil(t, err)
 	assert.Equal(t, 12, val)
 
-	_, err = c.Int(context.Background(), "Age11")
+	_, err = c.Int("Age11")
 	assert.Equal(t, config.KeyNotFoundError, err)
 
-	_, err = c.Int(context.Background(), "AgeInvalid")
+	_, err = c.Int("AgeInvalid")
 	assert.Equal(t, config.InvalidValueTypeError, err)
 }
 
@@ -234,7 +233,7 @@ func TestConfigContainer_GetSection(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, c)
 
-	m, err := c.GetSection(context.Background(), "servers")
+	m, err := c.GetSection("servers")
 	assert.Nil(t, err)
 	assert.NotNil(t, m)
 	assert.Equal(t, 2, len(m))
@@ -252,17 +251,17 @@ Name="Jerry"
 	assert.Nil(t, err)
 	assert.NotNil(t, c)
 
-	val, err := c.String(context.Background(), "Name")
+	val, err := c.String("Name")
 	assert.Nil(t, err)
 	assert.Equal(t, "Tom", val)
 
-	_, err = c.String(context.Background(), "Name11")
+	_, err = c.String("Name11")
 	assert.Equal(t, config.KeyNotFoundError, err)
 
-	_, err = c.String(context.Background(), "NameInvalid")
+	_, err = c.String("NameInvalid")
 	assert.Equal(t, config.InvalidValueTypeError, err)
 
-	val, err = c.String(context.Background(), "Person.Name")
+	val, err = c.String("Person.Name")
 	assert.Nil(t, err)
 	assert.Equal(t, "Jerry", val)
 }
@@ -277,14 +276,14 @@ NameInvalid="Tom"
 	assert.Nil(t, err)
 	assert.NotNil(t, c)
 
-	val, err := c.Strings(context.Background(), "Name")
+	val, err := c.Strings("Name")
 	assert.Nil(t, err)
 	assert.Equal(t, []string{"Tom", "Jerry"}, val)
 
-	_, err = c.Strings(context.Background(), "Name11")
+	_, err = c.Strings("Name11")
 	assert.Equal(t, config.KeyNotFoundError, err)
 
-	_, err = c.Strings(context.Background(), "NameInvalid")
+	_, err = c.Strings("NameInvalid")
 	assert.Equal(t, config.InvalidValueTypeError, err)
 }
 
@@ -298,9 +297,9 @@ NameInvalid="Tom"
 	assert.Nil(t, err)
 	assert.NotNil(t, c)
 
-	err = c.Set(context.Background(), "Age", "11")
+	err = c.Set("Age", "11")
 	assert.Nil(t, err)
-	age, err := c.String(context.Background(), "Age")
+	age, err := c.String("Age")
 	assert.Nil(t, err)
 	assert.Equal(t, "11", age)
 }
@@ -323,24 +322,24 @@ func TestConfigContainer_SubAndMushall(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, c)
 
-	sub, err := c.Sub(context.Background(), "servers")
+	sub, err := c.Sub("servers")
 	assert.Nil(t, err)
 	assert.NotNil(t, sub)
 
-	sub, err = sub.Sub(context.Background(), "alpha")
+	sub, err = sub.Sub("alpha")
 	assert.Nil(t, err)
 	assert.NotNil(t, sub)
-	ip, err := sub.String(context.Background(), "ip")
+	ip, err := sub.String("ip")
 	assert.Nil(t, err)
 	assert.Equal(t, "10.0.0.1", ip)
 
 	svr := &Server{}
-	err = sub.Unmarshaler(context.Background(), "", svr)
+	err = sub.Unmarshaler("", svr)
 	assert.Nil(t, err)
 	assert.Equal(t, "10.0.0.1", svr.Ip)
 
 	svr = &Server{}
-	err = c.Unmarshaler(context.Background(), "servers.alpha", svr)
+	err = c.Unmarshaler("servers.alpha", svr)
 	assert.Nil(t, err)
 	assert.Equal(t, "10.0.0.1", svr.Ip)
 }
@@ -368,10 +367,10 @@ func TestConfigContainer_SaveConfigFile(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, c)
 
-	sub, err := c.Sub(context.Background(), "servers")
+	sub, err := c.Sub("servers")
 	assert.Nil(t, err)
 
-	err = sub.SaveConfigFile(context.Background(), path)
+	err = sub.SaveConfigFile(path)
 	assert.Nil(t, err)
 }
 

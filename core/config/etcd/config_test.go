@@ -15,7 +15,6 @@
 package etcd
 
 import (
-	"context"
 	"encoding/json"
 	"os"
 	"testing"
@@ -24,11 +23,6 @@ import (
 	"github.com/coreos/etcd/clientv3"
 	"github.com/stretchr/testify/assert"
 )
-
-func TestWithEtcdOption(t *testing.T) {
-	ctx := WithEtcdOption(context.Background(), clientv3.WithPrefix())
-	assert.NotNil(t, ctx.Value(etcdOpts))
-}
 
 func TestEtcdConfigerProvider_Parse(t *testing.T) {
 	provider := &EtcdConfigerProvider{}
@@ -42,59 +36,59 @@ func TestEtcdConfiger(t *testing.T) {
 	provider := &EtcdConfigerProvider{}
 	cfger, _ := provider.Parse(readEtcdConfig())
 
-	subCfger, err := cfger.Sub(nil, "sub.")
+	subCfger, err := cfger.Sub("sub.")
 	assert.Nil(t, err)
 	assert.NotNil(t, subCfger)
 
-	subSubCfger, err := subCfger.Sub(nil, "sub.")
+	subSubCfger, err := subCfger.Sub("sub.")
 	assert.NotNil(t, subSubCfger)
 	assert.Nil(t, err)
 
-	str, err := subSubCfger.String(nil, "key1")
+	str, err := subSubCfger.String("key1")
 	assert.Nil(t, err)
 	assert.Equal(t, "sub.sub.key", str)
 
 	// we cannot test it
-	subSubCfger.OnChange(context.Background(), "watch", func(value string) {
+	subSubCfger.OnChange("watch", func(value string) {
 		// do nothing
 	})
 
-	defStr := cfger.DefaultString(nil, "not_exit", "default value")
+	defStr := cfger.DefaultString("not_exit", "default value")
 	assert.Equal(t, "default value", defStr)
 
-	defInt64 := cfger.DefaultInt64(nil, "not_exit", -1)
+	defInt64 := cfger.DefaultInt64("not_exit", -1)
 	assert.Equal(t, int64(-1), defInt64)
 
-	defInt := cfger.DefaultInt(nil, "not_exit", -2)
+	defInt := cfger.DefaultInt("not_exit", -2)
 	assert.Equal(t, -2, defInt)
 
-	defFlt := cfger.DefaultFloat(nil, "not_exit", 12.3)
+	defFlt := cfger.DefaultFloat("not_exit", 12.3)
 	assert.Equal(t, 12.3, defFlt)
 
-	defBl := cfger.DefaultBool(nil, "not_exit", true)
+	defBl := cfger.DefaultBool("not_exit", true)
 	assert.True(t, defBl)
 
-	defStrs := cfger.DefaultStrings(nil, "not_exit", []string{"hello"})
+	defStrs := cfger.DefaultStrings("not_exit", []string{"hello"})
 	assert.Equal(t, []string{"hello"}, defStrs)
 
-	fl, err := cfger.Float(nil, "current.float")
+	fl, err := cfger.Float("current.float")
 	assert.Nil(t, err)
 	assert.Equal(t, 1.23, fl)
 
-	bl, err := cfger.Bool(nil, "current.bool")
+	bl, err := cfger.Bool("current.bool")
 	assert.Nil(t, err)
 	assert.True(t, bl)
 
-	it, err := cfger.Int(nil, "current.int")
+	it, err := cfger.Int("current.int")
 	assert.Nil(t, err)
 	assert.Equal(t, 11, it)
 
-	str, err = cfger.String(nil, "current.string")
+	str, err = cfger.String("current.string")
 	assert.Nil(t, err)
 	assert.Equal(t, "hello", str)
 
 	tn := &TestEntity{}
-	err = cfger.Unmarshaler(context.Background(), "current.serialize.", tn)
+	err = cfger.Unmarshaler("current.serialize.", tn)
 	assert.Nil(t, err)
 	assert.Equal(t, "test", tn.Name)
 }

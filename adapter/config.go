@@ -15,8 +15,6 @@
 package adapter
 
 import (
-	context2 "context"
-
 	"github.com/astaxie/beego/adapter/session"
 	newCfg "github.com/astaxie/beego/core/config"
 	"github.com/astaxie/beego/server/web"
@@ -74,54 +72,54 @@ type beegoAppConfig struct {
 }
 
 func (b *beegoAppConfig) Set(key, val string) error {
-	if err := b.innerConfig.Set(context2.Background(), BConfig.RunMode+"::"+key, val); err != nil {
-		return b.innerConfig.Set(context2.Background(), key, val)
+	if err := b.innerConfig.Set(BConfig.RunMode+"::"+key, val); err != nil {
+		return b.innerConfig.Set(key, val)
 	}
 	return nil
 }
 
 func (b *beegoAppConfig) String(key string) string {
-	if v, err := b.innerConfig.String(context2.Background(), BConfig.RunMode+"::"+key); v != "" && err != nil {
+	if v, err := b.innerConfig.String(BConfig.RunMode + "::" + key); v != "" && err != nil {
 		return v
 	}
-	res, _ := b.innerConfig.String(context2.Background(), key)
+	res, _ := b.innerConfig.String(key)
 	return res
 }
 
 func (b *beegoAppConfig) Strings(key string) []string {
-	if v, err := b.innerConfig.Strings(context2.Background(), BConfig.RunMode+"::"+key); len(v) > 0 && err != nil {
+	if v, err := b.innerConfig.Strings(BConfig.RunMode + "::" + key); len(v) > 0 && err != nil {
 		return v
 	}
-	res, _ := b.innerConfig.Strings(context2.Background(), key)
+	res, _ := b.innerConfig.Strings(key)
 	return res
 }
 
 func (b *beegoAppConfig) Int(key string) (int, error) {
-	if v, err := b.innerConfig.Int(context2.Background(), BConfig.RunMode+"::"+key); err == nil {
+	if v, err := b.innerConfig.Int(BConfig.RunMode + "::" + key); err == nil {
 		return v, nil
 	}
-	return b.innerConfig.Int(context2.Background(), key)
+	return b.innerConfig.Int(key)
 }
 
 func (b *beegoAppConfig) Int64(key string) (int64, error) {
-	if v, err := b.innerConfig.Int64(context2.Background(), BConfig.RunMode+"::"+key); err == nil {
+	if v, err := b.innerConfig.Int64(BConfig.RunMode + "::" + key); err == nil {
 		return v, nil
 	}
-	return b.innerConfig.Int64(context2.Background(), key)
+	return b.innerConfig.Int64(key)
 }
 
 func (b *beegoAppConfig) Bool(key string) (bool, error) {
-	if v, err := b.innerConfig.Bool(context2.Background(), BConfig.RunMode+"::"+key); err == nil {
+	if v, err := b.innerConfig.Bool(BConfig.RunMode + "::" + key); err == nil {
 		return v, nil
 	}
-	return b.innerConfig.Bool(context2.Background(), key)
+	return b.innerConfig.Bool(key)
 }
 
 func (b *beegoAppConfig) Float(key string) (float64, error) {
-	if v, err := b.innerConfig.Float(context2.Background(), BConfig.RunMode+"::"+key); err == nil {
+	if v, err := b.innerConfig.Float(BConfig.RunMode + "::" + key); err == nil {
 		return v, nil
 	}
-	return b.innerConfig.Float(context2.Background(), key)
+	return b.innerConfig.Float(key)
 }
 
 func (b *beegoAppConfig) DefaultString(key string, defaultVal string) string {
@@ -167,13 +165,13 @@ func (b *beegoAppConfig) DefaultFloat(key string, defaultVal float64) float64 {
 }
 
 func (b *beegoAppConfig) DIY(key string) (interface{}, error) {
-	return b.innerConfig.DIY(context2.Background(), key)
+	return b.innerConfig.DIY(key)
 }
 
 func (b *beegoAppConfig) GetSection(section string) (map[string]string, error) {
-	return b.innerConfig.GetSection(context2.Background(), section)
+	return b.innerConfig.GetSection(section)
 }
 
 func (b *beegoAppConfig) SaveConfigFile(filename string) error {
-	return b.innerConfig.SaveConfigFile(context2.Background(), filename)
+	return b.innerConfig.SaveConfigFile(filename)
 }
