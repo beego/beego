@@ -101,19 +101,19 @@ password = ${GOPATH}
 		var value interface{}
 		switch v.(type) {
 		case int:
-			value, err = iniconf.Int(nil, k)
+			value, err = iniconf.Int(k)
 		case int64:
-			value, err = iniconf.Int64(nil, k)
+			value, err = iniconf.Int64(k)
 		case float64:
-			value, err = iniconf.Float(nil, k)
+			value, err = iniconf.Float(k)
 		case bool:
-			value, err = iniconf.Bool(nil, k)
+			value, err = iniconf.Bool(k)
 		case []string:
-			value, err = iniconf.Strings(nil, k)
+			value, err = iniconf.Strings(k)
 		case string:
-			value, err = iniconf.String(nil, k)
+			value, err = iniconf.String(k)
 		default:
-			value, err = iniconf.DIY(nil, k)
+			value, err = iniconf.DIY(k)
 		}
 		if err != nil {
 			t.Fatalf("get key %q value fail,err %s", k, err)
@@ -122,10 +122,10 @@ password = ${GOPATH}
 		}
 
 	}
-	if err = iniconf.Set(nil, "name", "astaxie"); err != nil {
+	if err = iniconf.Set("name", "astaxie"); err != nil {
 		t.Fatal(err)
 	}
-	res, _ := iniconf.String(nil, "name")
+	res, _ := iniconf.String("name")
 	if res != "astaxie" {
 		t.Fatal("get name error")
 	}
@@ -171,7 +171,7 @@ name=mysql
 		t.Fatal(err)
 	}
 	name := "newIniConfig.ini"
-	if err := cfg.SaveConfigFile(nil, name); err != nil {
+	if err := cfg.SaveConfigFile(name); err != nil {
 		t.Fatal(err)
 	}
 	defer os.Remove(name)

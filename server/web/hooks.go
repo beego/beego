@@ -1,7 +1,6 @@
 package web
 
 import (
-	context2 "context"
 	"encoding/json"
 	"mime"
 	"net/http"
@@ -48,7 +47,7 @@ func registerDefaultErrorHandler() error {
 func registerSession() error {
 	if BConfig.WebConfig.Session.SessionOn {
 		var err error
-		sessionConfig, err := AppConfig.String(nil, "sessionConfig")
+		sessionConfig, err := AppConfig.String("sessionConfig")
 		conf := new(session.ManagerConfig)
 		if sessionConfig == "" || err != nil {
 			conf.CookieName = BConfig.WebConfig.Session.SessionName
@@ -89,9 +88,9 @@ func registerTemplate() error {
 func registerGzip() error {
 	if BConfig.EnableGzip {
 		context.InitGzip(
-			AppConfig.DefaultInt(context2.Background(), "gzipMinLength", -1),
-			AppConfig.DefaultInt(context2.Background(), "gzipCompressLevel", -1),
-			AppConfig.DefaultStrings(context2.Background(), "includedMethods", []string{"GET"}),
+			AppConfig.DefaultInt("gzipMinLength", -1),
+			AppConfig.DefaultInt("gzipCompressLevel", -1),
+			AppConfig.DefaultStrings("includedMethods", []string{"GET"}),
 		)
 	}
 	return nil

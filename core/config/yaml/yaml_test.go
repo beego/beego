@@ -15,7 +15,6 @@
 package yaml
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -76,7 +75,7 @@ func TestYaml(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	res, _ := yamlconf.String(nil, "appname")
+	res, _ := yamlconf.String("appname")
 	if res != "beeapi" {
 		t.Fatal("appname not equal to beeapi")
 	}
@@ -90,19 +89,19 @@ func TestYaml(t *testing.T) {
 
 		switch v.(type) {
 		case int:
-			value, err = yamlconf.Int(nil, k)
+			value, err = yamlconf.Int(k)
 		case int64:
-			value, err = yamlconf.Int64(nil, k)
+			value, err = yamlconf.Int64(k)
 		case float64:
-			value, err = yamlconf.Float(nil, k)
+			value, err = yamlconf.Float(k)
 		case bool:
-			value, err = yamlconf.Bool(nil, k)
+			value, err = yamlconf.Bool(k)
 		case []string:
-			value, err = yamlconf.Strings(nil, k)
+			value, err = yamlconf.Strings(k)
 		case string:
-			value, err = yamlconf.String(nil, k)
+			value, err = yamlconf.String(k)
 		default:
-			value, err = yamlconf.DIY(nil, k)
+			value, err = yamlconf.DIY(k)
 		}
 		if err != nil {
 			t.Errorf("get key %q value fatal,%v err %s", k, v, err)
@@ -112,35 +111,35 @@ func TestYaml(t *testing.T) {
 
 	}
 
-	if err = yamlconf.Set(nil, "name", "astaxie"); err != nil {
+	if err = yamlconf.Set("name", "astaxie"); err != nil {
 		t.Fatal(err)
 	}
-	res, _ = yamlconf.String(nil, "name")
+	res, _ = yamlconf.String("name")
 	if res != "astaxie" {
 		t.Fatal("get name error")
 	}
 
-	sub, err := yamlconf.Sub(context.Background(), "user")
+	sub, err := yamlconf.Sub("user")
 	assert.Nil(t, err)
 	assert.NotNil(t, sub)
-	name, err := sub.String(context.Background(), "name")
+	name, err := sub.String("name")
 	assert.Nil(t, err)
 	assert.Equal(t, "tom", name)
 
-	age, err := sub.Int(context.Background(), "age")
+	age, err := sub.Int("age")
 	assert.Nil(t, err)
 	assert.Equal(t, 13, age)
 
 	user := &User{}
 
-	err = sub.Unmarshaler(context.Background(), "", user)
+	err = sub.Unmarshaler("", user)
 	assert.Nil(t, err)
 	assert.Equal(t, "tom", user.Name)
 	assert.Equal(t, 13, user.Age)
 
 	user = &User{}
 
-	err = yamlconf.Unmarshaler(context.Background(), "user", user)
+	err = yamlconf.Unmarshaler("user", user)
 	assert.Nil(t, err)
 	assert.Equal(t, "tom", user.Name)
 	assert.Equal(t, 13, user.Age)

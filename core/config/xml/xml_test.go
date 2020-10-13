@@ -15,7 +15,6 @@
 package xml
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -79,7 +78,7 @@ func TestXML(t *testing.T) {
 	}
 
 	var xmlsection map[string]string
-	xmlsection, err = xmlconf.GetSection(nil, "mysection")
+	xmlsection, err = xmlconf.GetSection("mysection")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -97,19 +96,19 @@ func TestXML(t *testing.T) {
 
 		switch v.(type) {
 		case int:
-			value, err = xmlconf.Int(nil, k)
+			value, err = xmlconf.Int(k)
 		case int64:
-			value, err = xmlconf.Int64(nil, k)
+			value, err = xmlconf.Int64(k)
 		case float64:
-			value, err = xmlconf.Float(nil, k)
+			value, err = xmlconf.Float(k)
 		case bool:
-			value, err = xmlconf.Bool(nil, k)
+			value, err = xmlconf.Bool(k)
 		case []string:
-			value, err = xmlconf.Strings(nil, k)
+			value, err = xmlconf.Strings(k)
 		case string:
-			value, err = xmlconf.String(nil, k)
+			value, err = xmlconf.String(k)
 		default:
-			value, err = xmlconf.DIY(nil, k)
+			value, err = xmlconf.DIY(k)
 		}
 		if err != nil {
 			t.Errorf("get key %q value fatal,%v err %s", k, v, err)
@@ -119,35 +118,35 @@ func TestXML(t *testing.T) {
 
 	}
 
-	if err = xmlconf.Set(nil, "name", "astaxie"); err != nil {
+	if err = xmlconf.Set("name", "astaxie"); err != nil {
 		t.Fatal(err)
 	}
 
-	res, _ := xmlconf.String(context.Background(), "name")
+	res, _ := xmlconf.String("name")
 	if res != "astaxie" {
 		t.Fatal("get name error")
 	}
 
-	sub, err := xmlconf.Sub(context.Background(), "mysection")
+	sub, err := xmlconf.Sub("mysection")
 	assert.Nil(t, err)
 	assert.NotNil(t, sub)
-	name, err := sub.String(context.Background(), "name")
+	name, err := sub.String("name")
 	assert.Nil(t, err)
 	assert.Equal(t, "MySection", name)
 
-	id, err := sub.Int(context.Background(), "id")
+	id, err := sub.Int("id")
 	assert.Nil(t, err)
 	assert.Equal(t, 1, id)
 
 	sec := &Section{}
 
-	err = sub.Unmarshaler(context.Background(), "", sec)
+	err = sub.Unmarshaler("", sec)
 	assert.Nil(t, err)
 	assert.Equal(t, "MySection", sec.Name)
 
 	sec = &Section{}
 
-	err = xmlconf.Unmarshaler(context.Background(), "mysection", sec)
+	err = xmlconf.Unmarshaler("mysection", sec)
 	assert.Nil(t, err)
 	assert.Equal(t, "MySection", sec.Name)
 
