@@ -30,8 +30,6 @@ import (
 	"github.com/astaxie/beego/core/logs"
 )
 
-const etcdOpts = "etcdOpts"
-
 type EtcdConfiger struct {
 	prefix string
 	client *clientv3.Client
@@ -50,7 +48,7 @@ func newEtcdConfiger(client *clientv3.Client, prefix string) *EtcdConfiger {
 
 // reader is an general implementation that read config from etcd.
 func (e *EtcdConfiger) reader(ctx context.Context, key string) (string, error) {
-	resp, err := get(e.client, ctx, e.prefix+key)
+	resp, err := get(e.client, e.prefix+key)
 	if err != nil {
 		return "", err
 	}
@@ -64,29 +62,24 @@ func (e *EtcdConfiger) reader(ctx context.Context, key string) (string, error) {
 
 // Set do nothing and return an error
 // I think write data to remote config center is not a good practice
-func (e *EtcdConfiger) Set(ctx context.Context, key, val string) error {
+func (e *EtcdConfiger) Set(key, val string) error {
 	return errors.New("Unsupported operation")
 }
 
 // DIY return the original response from etcd
 // be careful when you decide to use this
-func (e *EtcdConfiger) DIY(ctx context.Context, key string) (interface{}, error) {
-	return get(e.client, context.TODO(), key)
+func (e *EtcdConfiger) DIY(key string) (interface{}, error) {
+	return get(e.client, key)
 }
 
 // GetSection in this implementation, we use section as prefix
-func (e *EtcdConfiger) GetSection(ctx context.Context, section string) (map[string]string, error) {
+func (e *EtcdConfiger) GetSection(section string) (map[string]string, error) {
 	var (
 		resp *clientv3.GetResponse
 		err  error
 	)
 
-	if opts, ok := ctx.Value(etcdOpts).([]clientv3.OpOption); ok {
-		opts = append(opts, clientv3.WithPrefix())
-		resp, err = e.client.Get(context.TODO(), e.prefix+section, opts...)
-	} else {
-		resp, err = e.client.Get(context.TODO(), e.prefix+section, clientv3.WithPrefix())
-	}
+	resp, err = e.client.Get(context.TODO(), e.prefix+section, clientv3.WithPrefix())
 
 	if err != nil {
 		return nil, errors.WithMessage(err, "GetSection failed")
@@ -98,15 +91,15 @@ func (e *EtcdConfiger) GetSection(ctx context.Context, section string) (map[stri
 	return res, nil
 }
 
-func (e *EtcdConfiger) SaveConfigFile(ctx context.Context, filename string) error {
+func (e *EtcdConfiger) SaveConfigFile(filename string) error {
 	return errors.New("Unsupported operation")
 }
 
 // Unmarshaler is not very powerful because we lost the type information when we get configuration from etcd
 // for example, when we got "5", we are not sure whether it's int 5, or it's string "5"
 // TODO(support more complicated decoder)
-func (e *EtcdConfiger) Unmarshaler(ctx context.Context, prefix string, obj interface{}, opt ...config.DecodeOption) error {
-	res, err := e.GetSection(ctx, prefix)
+func (e *EtcdConfiger) Unmarshaler(prefix string, obj interface{}, opt ...config.DecodeOption) error {
+	res, err := e.GetSection(prefix)
 	if err != nil {
 		return errors.WithMessage(err, fmt.Sprintf("could not read config with prefix: %s", prefix))
 	}
@@ -120,22 +113,18 @@ func (e *EtcdConfiger) Unmarshaler(ctx context.Context, prefix string, obj inter
 }
 
 // Sub return an sub configer.
-func (e *EtcdConfiger) Sub(ctx context.Context, key string) (config.Configer, error) {
+func (e *EtcdConfiger) Sub(key string) (config.Configer, error) {
 	return newEtcdConfiger(e.client, e.prefix+key), nil
 }
 
 // TODO remove this before release v2.0.0
-func (e *EtcdConfiger) OnChange(ctx context.Context, key string, fn func(value string)) {
+func (e *EtcdConfiger) OnChange(key string, fn func(value string)) {
 
 	buildOptsFunc := func() []clientv3.OpOption {
-		if opts, ok := ctx.Value(etcdOpts).([]clientv3.OpOption); ok {
-			opts = append(opts, clientv3.WithCreatedNotify())
-			return opts
-		}
 		return []clientv3.OpOption{}
 	}
 
-	rch := e.client.Watch(ctx, e.prefix+key, buildOptsFunc()...)
+	rch := e.client.Watch(context.Background(), e.prefix+key, buildOptsFunc()...)
 	go func() {
 		for {
 			for resp := range rch {
@@ -152,7 +141,7 @@ func (e *EtcdConfiger) OnChange(ctx context.Context, key string, fn func(value s
 				}
 			}
 			time.Sleep(time.Second)
-			rch = e.client.Watch(ctx, e.prefix+key, buildOptsFunc()...)
+			rch = e.client.Watch(context.Background(), e.prefix+key, buildOptsFunc()...)
 		}
 	}()
 
@@ -188,25 +177,17 @@ func (provider *EtcdConfigerProvider) ParseData(data []byte) (config.Configer, e
 	return newEtcdConfiger(client, ""), nil
 }
 
-func get(client *clientv3.Client, ctx context.Context, key string) (*clientv3.GetResponse, error) {
+func get(client *clientv3.Client, key string) (*clientv3.GetResponse, error) {
 	var (
 		resp *clientv3.GetResponse
 		err  error
 	)
-	if opts, ok := ctx.Value(etcdOpts).([]clientv3.OpOption); ok {
-		resp, err = client.Get(ctx, key, opts...)
-	} else {
-		resp, err = client.Get(ctx, key)
-	}
+	resp, err = client.Get(context.Background(), key)
 
 	if err != nil {
 		return nil, errors.WithMessage(err, fmt.Sprintf("read config from etcd with key %s failed", key))
 	}
 	return resp, err
-}
-
-func WithEtcdOption(ctx context.Context, opts ...clientv3.OpOption) context.Context {
-	return context.WithValue(ctx, etcdOpts, opts)
 }
 
 func init() {

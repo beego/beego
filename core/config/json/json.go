@@ -15,7 +15,6 @@
 package json
 
 import (
-	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -77,16 +76,16 @@ type JSONConfigContainer struct {
 	sync.RWMutex
 }
 
-func (c *JSONConfigContainer) Unmarshaler(ctx context.Context, prefix string, obj interface{}, opt ...config.DecodeOption) error {
-	sub, err := c.sub(ctx, prefix)
+func (c *JSONConfigContainer) Unmarshaler(prefix string, obj interface{}, opt ...config.DecodeOption) error {
+	sub, err := c.sub(prefix)
 	if err != nil {
 		return err
 	}
 	return mapstructure.Decode(sub, obj)
 }
 
-func (c *JSONConfigContainer) Sub(ctx context.Context, key string) (config.Configer, error) {
-	sub, err := c.sub(ctx, key)
+func (c *JSONConfigContainer) Sub(key string) (config.Configer, error) {
+	sub, err := c.sub(key)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +94,7 @@ func (c *JSONConfigContainer) Sub(ctx context.Context, key string) (config.Confi
 	}, nil
 }
 
-func (c *JSONConfigContainer) sub(ctx context.Context, key string) (map[string]interface{}, error) {
+func (c *JSONConfigContainer) sub(key string) (map[string]interface{}, error) {
 	if key == "" {
 		return c.data, nil
 	}
@@ -111,12 +110,12 @@ func (c *JSONConfigContainer) sub(ctx context.Context, key string) (map[string]i
 	return res, nil
 }
 
-func (c *JSONConfigContainer) OnChange(ctx context.Context, key string, fn func(value string)) {
+func (c *JSONConfigContainer) OnChange(key string, fn func(value string)) {
 	logs.Warn("unsupported operation")
 }
 
 // Bool returns the boolean value for a given key.
-func (c *JSONConfigContainer) Bool(ctx context.Context, key string) (bool, error) {
+func (c *JSONConfigContainer) Bool(key string) (bool, error) {
 	val := c.getData(key)
 	if val != nil {
 		return config.ParseBool(val)
@@ -126,15 +125,15 @@ func (c *JSONConfigContainer) Bool(ctx context.Context, key string) (bool, error
 
 // DefaultBool return the bool value if has no error
 // otherwise return the defaultval
-func (c *JSONConfigContainer) DefaultBool(ctx context.Context, key string, defaultVal bool) bool {
-	if v, err := c.Bool(ctx, key); err == nil {
+func (c *JSONConfigContainer) DefaultBool(key string, defaultVal bool) bool {
+	if v, err := c.Bool(key); err == nil {
 		return v
 	}
 	return defaultVal
 }
 
 // Int returns the integer value for a given key.
-func (c *JSONConfigContainer) Int(ctx context.Context, key string) (int, error) {
+func (c *JSONConfigContainer) Int(key string) (int, error) {
 	val := c.getData(key)
 	if val != nil {
 		if v, ok := val.(float64); ok {
@@ -149,15 +148,15 @@ func (c *JSONConfigContainer) Int(ctx context.Context, key string) (int, error) 
 
 // DefaultInt returns the integer value for a given key.
 // if err != nil return defaultval
-func (c *JSONConfigContainer) DefaultInt(ctx context.Context, key string, defaultVal int) int {
-	if v, err := c.Int(ctx, key); err == nil {
+func (c *JSONConfigContainer) DefaultInt(key string, defaultVal int) int {
+	if v, err := c.Int(key); err == nil {
 		return v
 	}
 	return defaultVal
 }
 
 // Int64 returns the int64 value for a given key.
-func (c *JSONConfigContainer) Int64(ctx context.Context, key string) (int64, error) {
+func (c *JSONConfigContainer) Int64(key string) (int64, error) {
 	val := c.getData(key)
 	if val != nil {
 		if v, ok := val.(float64); ok {
@@ -170,15 +169,15 @@ func (c *JSONConfigContainer) Int64(ctx context.Context, key string) (int64, err
 
 // DefaultInt64 returns the int64 value for a given key.
 // if err != nil return defaultval
-func (c *JSONConfigContainer) DefaultInt64(ctx context.Context, key string, defaultVal int64) int64 {
-	if v, err := c.Int64(ctx, key); err == nil {
+func (c *JSONConfigContainer) DefaultInt64(key string, defaultVal int64) int64 {
+	if v, err := c.Int64(key); err == nil {
 		return v
 	}
 	return defaultVal
 }
 
 // Float returns the float value for a given key.
-func (c *JSONConfigContainer) Float(ctx context.Context, key string) (float64, error) {
+func (c *JSONConfigContainer) Float(key string) (float64, error) {
 	val := c.getData(key)
 	if val != nil {
 		if v, ok := val.(float64); ok {
@@ -191,15 +190,15 @@ func (c *JSONConfigContainer) Float(ctx context.Context, key string) (float64, e
 
 // DefaultFloat returns the float64 value for a given key.
 // if err != nil return defaultval
-func (c *JSONConfigContainer) DefaultFloat(ctx context.Context, key string, defaultVal float64) float64 {
-	if v, err := c.Float(ctx, key); err == nil {
+func (c *JSONConfigContainer) DefaultFloat(key string, defaultVal float64) float64 {
+	if v, err := c.Float(key); err == nil {
 		return v
 	}
 	return defaultVal
 }
 
 // String returns the string value for a given key.
-func (c *JSONConfigContainer) String(ctx context.Context, key string) (string, error) {
+func (c *JSONConfigContainer) String(key string) (string, error) {
 	val := c.getData(key)
 	if val != nil {
 		if v, ok := val.(string); ok {
@@ -211,17 +210,17 @@ func (c *JSONConfigContainer) String(ctx context.Context, key string) (string, e
 
 // DefaultString returns the string value for a given key.
 // if err != nil return defaultval
-func (c *JSONConfigContainer) DefaultString(ctx context.Context, key string, defaultVal string) string {
+func (c *JSONConfigContainer) DefaultString(key string, defaultVal string) string {
 	// TODO FIXME should not use "" to replace non existence
-	if v, err := c.String(ctx, key); v != "" && err == nil {
+	if v, err := c.String(key); v != "" && err == nil {
 		return v
 	}
 	return defaultVal
 }
 
 // Strings returns the []string value for a given key.
-func (c *JSONConfigContainer) Strings(ctx context.Context, key string) ([]string, error) {
-	stringVal, err := c.String(nil, key)
+func (c *JSONConfigContainer) Strings(key string) ([]string, error) {
+	stringVal, err := c.String(key)
 	if stringVal == "" || err != nil {
 		return nil, err
 	}
@@ -230,15 +229,15 @@ func (c *JSONConfigContainer) Strings(ctx context.Context, key string) ([]string
 
 // DefaultStrings returns the []string value for a given key.
 // if err != nil return defaultval
-func (c *JSONConfigContainer) DefaultStrings(ctx context.Context, key string, defaultVal []string) []string {
-	if v, err := c.Strings(ctx, key); v != nil && err == nil {
+func (c *JSONConfigContainer) DefaultStrings(key string, defaultVal []string) []string {
+	if v, err := c.Strings(key); v != nil && err == nil {
 		return v
 	}
 	return defaultVal
 }
 
 // GetSection returns map for the given section
-func (c *JSONConfigContainer) GetSection(ctx context.Context, section string) (map[string]string, error) {
+func (c *JSONConfigContainer) GetSection(section string) (map[string]string, error) {
 	if v, ok := c.data[section]; ok {
 		return v.(map[string]string), nil
 	}
@@ -246,7 +245,7 @@ func (c *JSONConfigContainer) GetSection(ctx context.Context, section string) (m
 }
 
 // SaveConfigFile save the config into file
-func (c *JSONConfigContainer) SaveConfigFile(ctx context.Context, filename string) (err error) {
+func (c *JSONConfigContainer) SaveConfigFile(filename string) (err error) {
 	// Write configuration file by filename.
 	f, err := os.Create(filename)
 	if err != nil {
@@ -262,7 +261,7 @@ func (c *JSONConfigContainer) SaveConfigFile(ctx context.Context, filename strin
 }
 
 // Set writes a new value for key.
-func (c *JSONConfigContainer) Set(ctx context.Context, key, val string) error {
+func (c *JSONConfigContainer) Set(key, val string) error {
 	c.Lock()
 	defer c.Unlock()
 	c.data[key] = val
@@ -270,7 +269,7 @@ func (c *JSONConfigContainer) Set(ctx context.Context, key, val string) error {
 }
 
 // DIY returns the raw value by a given key.
-func (c *JSONConfigContainer) DIY(ctx context.Context, key string) (v interface{}, err error) {
+func (c *JSONConfigContainer) DIY(key string) (v interface{}, err error) {
 	val := c.getData(key)
 	if val != nil {
 		return val, nil

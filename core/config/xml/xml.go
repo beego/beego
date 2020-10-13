@@ -30,7 +30,6 @@
 package xml
 
 import (
-	"context"
 	"encoding/xml"
 	"errors"
 	"fmt"
@@ -87,16 +86,16 @@ type ConfigContainer struct {
 // So when you use
 // <id>1</id>
 // The "1" is a string, not int
-func (c *ConfigContainer) Unmarshaler(ctx context.Context, prefix string, obj interface{}, opt ...config.DecodeOption) error {
-	sub, err := c.sub(ctx, prefix)
+func (c *ConfigContainer) Unmarshaler(prefix string, obj interface{}, opt ...config.DecodeOption) error {
+	sub, err := c.sub(prefix)
 	if err != nil {
 		return err
 	}
 	return mapstructure.Decode(sub, obj)
 }
 
-func (c *ConfigContainer) Sub(ctx context.Context, key string) (config.Configer, error) {
-	sub, err := c.sub(ctx, key)
+func (c *ConfigContainer) Sub(key string) (config.Configer, error) {
+	sub, err := c.sub(key)
 	if err != nil {
 		return nil, err
 	}
@@ -107,7 +106,7 @@ func (c *ConfigContainer) Sub(ctx context.Context, key string) (config.Configer,
 
 }
 
-func (c *ConfigContainer) sub(ctx context.Context, key string) (map[string]interface{}, error) {
+func (c *ConfigContainer) sub(key string) (map[string]interface{}, error) {
 	if key == "" {
 		return c.data, nil
 	}
@@ -122,12 +121,12 @@ func (c *ConfigContainer) sub(ctx context.Context, key string) (map[string]inter
 	return res, nil
 }
 
-func (c *ConfigContainer) OnChange(ctx context.Context, key string, fn func(value string)) {
+func (c *ConfigContainer) OnChange(key string, fn func(value string)) {
 	logs.Warn("Unsupported operation")
 }
 
 // Bool returns the boolean value for a given key.
-func (c *ConfigContainer) Bool(ctx context.Context, key string) (bool, error) {
+func (c *ConfigContainer) Bool(key string) (bool, error) {
 	if v := c.data[key]; v != nil {
 		return config.ParseBool(v)
 	}
@@ -136,8 +135,8 @@ func (c *ConfigContainer) Bool(ctx context.Context, key string) (bool, error) {
 
 // DefaultBool return the bool value if has no error
 // otherwise return the defaultVal
-func (c *ConfigContainer) DefaultBool(ctx context.Context, key string, defaultVal bool) bool {
-	v, err := c.Bool(ctx, key)
+func (c *ConfigContainer) DefaultBool(key string, defaultVal bool) bool {
+	v, err := c.Bool(key)
 	if err != nil {
 		return defaultVal
 	}
@@ -145,14 +144,14 @@ func (c *ConfigContainer) DefaultBool(ctx context.Context, key string, defaultVa
 }
 
 // Int returns the integer value for a given key.
-func (c *ConfigContainer) Int(ctx context.Context, key string) (int, error) {
+func (c *ConfigContainer) Int(key string) (int, error) {
 	return strconv.Atoi(c.data[key].(string))
 }
 
 // DefaultInt returns the integer value for a given key.
 // if err != nil return defaultVal
-func (c *ConfigContainer) DefaultInt(ctx context.Context, key string, defaultVal int) int {
-	v, err := c.Int(ctx, key)
+func (c *ConfigContainer) DefaultInt(key string, defaultVal int) int {
+	v, err := c.Int(key)
 	if err != nil {
 		return defaultVal
 	}
@@ -160,14 +159,14 @@ func (c *ConfigContainer) DefaultInt(ctx context.Context, key string, defaultVal
 }
 
 // Int64 returns the int64 value for a given key.
-func (c *ConfigContainer) Int64(ctx context.Context, key string) (int64, error) {
+func (c *ConfigContainer) Int64(key string) (int64, error) {
 	return strconv.ParseInt(c.data[key].(string), 10, 64)
 }
 
 // DefaultInt64 returns the int64 value for a given key.
 // if err != nil return defaultVal
-func (c *ConfigContainer) DefaultInt64(ctx context.Context, key string, defaultVal int64) int64 {
-	v, err := c.Int64(ctx, key)
+func (c *ConfigContainer) DefaultInt64(key string, defaultVal int64) int64 {
+	v, err := c.Int64(key)
 	if err != nil {
 		return defaultVal
 	}
@@ -176,14 +175,14 @@ func (c *ConfigContainer) DefaultInt64(ctx context.Context, key string, defaultV
 }
 
 // Float returns the float value for a given key.
-func (c *ConfigContainer) Float(ctx context.Context, key string) (float64, error) {
+func (c *ConfigContainer) Float(key string) (float64, error) {
 	return strconv.ParseFloat(c.data[key].(string), 64)
 }
 
 // DefaultFloat returns the float64 value for a given key.
 // if err != nil return defaultVal
-func (c *ConfigContainer) DefaultFloat(ctx context.Context, key string, defaultVal float64) float64 {
-	v, err := c.Float(ctx, key)
+func (c *ConfigContainer) DefaultFloat(key string, defaultVal float64) float64 {
+	v, err := c.Float(key)
 	if err != nil {
 		return defaultVal
 	}
@@ -191,7 +190,7 @@ func (c *ConfigContainer) DefaultFloat(ctx context.Context, key string, defaultV
 }
 
 // String returns the string value for a given key.
-func (c *ConfigContainer) String(ctx context.Context, key string) (string, error) {
+func (c *ConfigContainer) String(key string) (string, error) {
 	if v, ok := c.data[key].(string); ok {
 		return v, nil
 	}
@@ -200,8 +199,8 @@ func (c *ConfigContainer) String(ctx context.Context, key string) (string, error
 
 // DefaultString returns the string value for a given key.
 // if err != nil return defaultVal
-func (c *ConfigContainer) DefaultString(ctx context.Context, key string, defaultVal string) string {
-	v, err := c.String(ctx, key)
+func (c *ConfigContainer) DefaultString(key string, defaultVal string) string {
+	v, err := c.String(key)
 	if v == "" || err != nil {
 		return defaultVal
 	}
@@ -209,8 +208,8 @@ func (c *ConfigContainer) DefaultString(ctx context.Context, key string, default
 }
 
 // Strings returns the []string value for a given key.
-func (c *ConfigContainer) Strings(ctx context.Context, key string) ([]string, error) {
-	v, err := c.String(ctx, key)
+func (c *ConfigContainer) Strings(key string) ([]string, error) {
+	v, err := c.String(key)
 	if v == "" || err != nil {
 		return nil, err
 	}
@@ -219,8 +218,8 @@ func (c *ConfigContainer) Strings(ctx context.Context, key string) ([]string, er
 
 // DefaultStrings returns the []string value for a given key.
 // if err != nil return defaultVal
-func (c *ConfigContainer) DefaultStrings(ctx context.Context, key string, defaultVal []string) []string {
-	v, err := c.Strings(ctx, key)
+func (c *ConfigContainer) DefaultStrings(key string, defaultVal []string) []string {
+	v, err := c.Strings(key)
 	if v == nil || err != nil {
 		return defaultVal
 	}
@@ -228,7 +227,7 @@ func (c *ConfigContainer) DefaultStrings(ctx context.Context, key string, defaul
 }
 
 // GetSection returns map for the given section
-func (c *ConfigContainer) GetSection(ctx context.Context, section string) (map[string]string, error) {
+func (c *ConfigContainer) GetSection(section string) (map[string]string, error) {
 	if v, ok := c.data[section].(map[string]interface{}); ok {
 		mapstr := make(map[string]string)
 		for k, val := range v {
@@ -240,7 +239,7 @@ func (c *ConfigContainer) GetSection(ctx context.Context, section string) (map[s
 }
 
 // SaveConfigFile save the config into file
-func (c *ConfigContainer) SaveConfigFile(ctx context.Context, filename string) (err error) {
+func (c *ConfigContainer) SaveConfigFile(filename string) (err error) {
 	// Write configuration file by filename.
 	f, err := os.Create(filename)
 	if err != nil {
@@ -256,7 +255,7 @@ func (c *ConfigContainer) SaveConfigFile(ctx context.Context, filename string) (
 }
 
 // Set writes a new value for key.
-func (c *ConfigContainer) Set(ctx context.Context, key, val string) error {
+func (c *ConfigContainer) Set(key, val string) error {
 	c.Lock()
 	defer c.Unlock()
 	c.data[key] = val
@@ -264,7 +263,7 @@ func (c *ConfigContainer) Set(ctx context.Context, key, val string) error {
 }
 
 // DIY returns the raw value by a given key.
-func (c *ConfigContainer) DIY(ctx context.Context, key string) (v interface{}, err error) {
+func (c *ConfigContainer) DIY(key string) (v interface{}, err error) {
 	if v, ok := c.data[key]; ok {
 		return v, nil
 	}
