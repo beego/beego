@@ -432,6 +432,10 @@ func newAppConfig(appConfigProvider, appConfigPath string) (*beegoAppConfig, err
 	return &beegoAppConfig{innerConfig: ac}, nil
 }
 
+func (b *beegoAppConfig) Unmarshaler(prefix string, obj interface{}, opt ...config.DecodeOption) error {
+	return b.innerConfig.Unmarshaler(prefix, obj, opt...)
+}
+
 func (b *beegoAppConfig) Set(key, val string) error {
 	if err := b.innerConfig.Set(BConfig.RunMode+"::"+key, val); err != nil {
 		return b.innerConfig.Set(key, val)
