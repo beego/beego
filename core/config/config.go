@@ -186,10 +186,6 @@ func (c *BaseConfiger) Strings(key string) ([]string, error) {
 	return strings.Split(res, ";"), nil
 }
 
-func (c *BaseConfiger) Unmarshaler(prefix string, obj interface{}, opt ...DecodeOption) error {
-	return errors.New("unsupported operation")
-}
-
 func (c *BaseConfiger) Sub(key string) (Configer, error) {
 	return nil, errors.New("unsupported operation")
 }

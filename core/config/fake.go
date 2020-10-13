@@ -98,6 +98,10 @@ func (c *fakeConfigContainer) SaveConfigFile(filename string) error {
 	return errors.New("not implement in the fakeConfigContainer")
 }
 
+func (c *fakeConfigContainer) Unmarshaler(prefix string, obj interface{}, opt ...DecodeOption) error {
+	return errors.New("unsupported operation")
+}
+
 var _ Configer = new(fakeConfigContainer)
 
 // NewFakeConfig return a fake Configer

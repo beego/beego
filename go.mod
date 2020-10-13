@@ -32,7 +32,7 @@ require (
 	github.com/mattn/go-sqlite3 v2.0.3+incompatible
 	github.com/mitchellh/mapstructure v1.3.3
 	github.com/opentracing/opentracing-go v1.2.0
-	github.com/pelletier/go-toml v1.2.0
+	github.com/pelletier/go-toml v1.8.1
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.7.0
 	github.com/shiena/ansicolor v0.0.0-20151119151921-a422bbe96644
