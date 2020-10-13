@@ -15,8 +15,6 @@
 package config
 
 import (
-	"context"
-
 	"github.com/pkg/errors"
 
 	"github.com/astaxie/beego/core/config"
@@ -27,148 +25,148 @@ type newToOldConfigerAdapter struct {
 }
 
 func (c *newToOldConfigerAdapter) Set(key, val string) error {
-	return c.delegate.Set(context.Background(), key, val)
+	return c.delegate.Set(key, val)
 }
 
 func (c *newToOldConfigerAdapter) String(key string) string {
-	res, _ := c.delegate.String(context.Background(), key)
+	res, _ := c.delegate.String(key)
 	return res
 }
 
 func (c *newToOldConfigerAdapter) Strings(key string) []string {
-	res, _ := c.delegate.Strings(context.Background(), key)
+	res, _ := c.delegate.Strings(key)
 	return res
 }
 
 func (c *newToOldConfigerAdapter) Int(key string) (int, error) {
-	return c.delegate.Int(context.Background(), key)
+	return c.delegate.Int(key)
 }
 
 func (c *newToOldConfigerAdapter) Int64(key string) (int64, error) {
-	return c.delegate.Int64(context.Background(), key)
+	return c.delegate.Int64(key)
 }
 
 func (c *newToOldConfigerAdapter) Bool(key string) (bool, error) {
-	return c.delegate.Bool(context.Background(), key)
+	return c.delegate.Bool(key)
 }
 
 func (c *newToOldConfigerAdapter) Float(key string) (float64, error) {
-	return c.delegate.Float(context.Background(), key)
+	return c.delegate.Float(key)
 }
 
 func (c *newToOldConfigerAdapter) DefaultString(key string, defaultVal string) string {
-	return c.delegate.DefaultString(context.Background(), key, defaultVal)
+	return c.delegate.DefaultString(key, defaultVal)
 }
 
 func (c *newToOldConfigerAdapter) DefaultStrings(key string, defaultVal []string) []string {
-	return c.delegate.DefaultStrings(context.Background(), key, defaultVal)
+	return c.delegate.DefaultStrings(key, defaultVal)
 }
 
 func (c *newToOldConfigerAdapter) DefaultInt(key string, defaultVal int) int {
-	return c.delegate.DefaultInt(context.Background(), key, defaultVal)
+	return c.delegate.DefaultInt(key, defaultVal)
 }
 
 func (c *newToOldConfigerAdapter) DefaultInt64(key string, defaultVal int64) int64 {
-	return c.delegate.DefaultInt64(context.Background(), key, defaultVal)
+	return c.delegate.DefaultInt64(key, defaultVal)
 }
 
 func (c *newToOldConfigerAdapter) DefaultBool(key string, defaultVal bool) bool {
-	return c.delegate.DefaultBool(context.Background(), key, defaultVal)
+	return c.delegate.DefaultBool(key, defaultVal)
 }
 
 func (c *newToOldConfigerAdapter) DefaultFloat(key string, defaultVal float64) float64 {
-	return c.delegate.DefaultFloat(context.Background(), key, defaultVal)
+	return c.delegate.DefaultFloat(key, defaultVal)
 }
 
 func (c *newToOldConfigerAdapter) DIY(key string) (interface{}, error) {
-	return c.delegate.DIY(context.Background(), key)
+	return c.delegate.DIY(key)
 }
 
 func (c *newToOldConfigerAdapter) GetSection(section string) (map[string]string, error) {
-	return c.delegate.GetSection(context.Background(), section)
+	return c.delegate.GetSection(section)
 }
 
 func (c *newToOldConfigerAdapter) SaveConfigFile(filename string) error {
-	return c.delegate.SaveConfigFile(context.Background(), filename)
+	return c.delegate.SaveConfigFile(filename)
 }
 
 type oldToNewConfigerAdapter struct {
 	delegate Configer
 }
 
-func (o *oldToNewConfigerAdapter) Set(ctx context.Context, key, val string) error {
+func (o *oldToNewConfigerAdapter) Set(key, val string) error {
 	return o.delegate.Set(key, val)
 }
 
-func (o *oldToNewConfigerAdapter) String(ctx context.Context, key string) (string, error) {
+func (o *oldToNewConfigerAdapter) String(key string) (string, error) {
 	return o.delegate.String(key), nil
 }
 
-func (o *oldToNewConfigerAdapter) Strings(ctx context.Context, key string) ([]string, error) {
+func (o *oldToNewConfigerAdapter) Strings(key string) ([]string, error) {
 	return o.delegate.Strings(key), nil
 }
 
-func (o *oldToNewConfigerAdapter) Int(ctx context.Context, key string) (int, error) {
+func (o *oldToNewConfigerAdapter) Int(key string) (int, error) {
 	return o.delegate.Int(key)
 }
 
-func (o *oldToNewConfigerAdapter) Int64(ctx context.Context, key string) (int64, error) {
+func (o *oldToNewConfigerAdapter) Int64(key string) (int64, error) {
 	return o.delegate.Int64(key)
 }
 
-func (o *oldToNewConfigerAdapter) Bool(ctx context.Context, key string) (bool, error) {
+func (o *oldToNewConfigerAdapter) Bool(key string) (bool, error) {
 	return o.delegate.Bool(key)
 }
 
-func (o *oldToNewConfigerAdapter) Float(ctx context.Context, key string) (float64, error) {
+func (o *oldToNewConfigerAdapter) Float(key string) (float64, error) {
 	return o.delegate.Float(key)
 }
 
-func (o *oldToNewConfigerAdapter) DefaultString(ctx context.Context, key string, defaultVal string) string {
+func (o *oldToNewConfigerAdapter) DefaultString(key string, defaultVal string) string {
 	return o.delegate.DefaultString(key, defaultVal)
 }
 
-func (o *oldToNewConfigerAdapter) DefaultStrings(ctx context.Context, key string, defaultVal []string) []string {
+func (o *oldToNewConfigerAdapter) DefaultStrings(key string, defaultVal []string) []string {
 	return o.delegate.DefaultStrings(key, defaultVal)
 }
 
-func (o *oldToNewConfigerAdapter) DefaultInt(ctx context.Context, key string, defaultVal int) int {
+func (o *oldToNewConfigerAdapter) DefaultInt(key string, defaultVal int) int {
 	return o.delegate.DefaultInt(key, defaultVal)
 }
 
-func (o *oldToNewConfigerAdapter) DefaultInt64(ctx context.Context, key string, defaultVal int64) int64 {
+func (o *oldToNewConfigerAdapter) DefaultInt64(key string, defaultVal int64) int64 {
 	return o.delegate.DefaultInt64(key, defaultVal)
 }
 
-func (o *oldToNewConfigerAdapter) DefaultBool(ctx context.Context, key string, defaultVal bool) bool {
+func (o *oldToNewConfigerAdapter) DefaultBool(key string, defaultVal bool) bool {
 	return o.delegate.DefaultBool(key, defaultVal)
 }
 
-func (o *oldToNewConfigerAdapter) DefaultFloat(ctx context.Context, key string, defaultVal float64) float64 {
+func (o *oldToNewConfigerAdapter) DefaultFloat(key string, defaultVal float64) float64 {
 	return o.delegate.DefaultFloat(key, defaultVal)
 }
 
-func (o *oldToNewConfigerAdapter) DIY(ctx context.Context, key string) (interface{}, error) {
+func (o *oldToNewConfigerAdapter) DIY(key string) (interface{}, error) {
 	return o.delegate.DIY(key)
 }
 
-func (o *oldToNewConfigerAdapter) GetSection(ctx context.Context, section string) (map[string]string, error) {
+func (o *oldToNewConfigerAdapter) GetSection(section string) (map[string]string, error) {
 	return o.delegate.GetSection(section)
 }
 
-func (o *oldToNewConfigerAdapter) Unmarshaler(ctx context.Context, prefix string, obj interface{}, opt ...config.DecodeOption) error {
+func (o *oldToNewConfigerAdapter) Unmarshaler(prefix string, obj interface{}, opt ...config.DecodeOption) error {
 	return errors.New("unsupported operation, please use actual config.Configer")
 }
 
-func (o *oldToNewConfigerAdapter) Sub(ctx context.Context, key string) (config.Configer, error) {
+func (o *oldToNewConfigerAdapter) Sub(key string) (config.Configer, error) {
 	return nil, errors.New("unsupported operation, please use actual config.Configer")
 }
 
-func (o *oldToNewConfigerAdapter) OnChange(ctx context.Context, key string, fn func(value string)) {
+func (o *oldToNewConfigerAdapter) OnChange(key string, fn func(value string)) {
 	// do nothing
 }
 
-func (o *oldToNewConfigerAdapter) SaveConfigFile(ctx context.Context, filename string) error {
+func (o *oldToNewConfigerAdapter) SaveConfigFile(filename string) error {
 	return o.delegate.SaveConfigFile(filename)
 }
 

@@ -15,7 +15,6 @@
 package toml
 
 import (
-	"context"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -57,7 +56,7 @@ type configContainer struct {
 }
 
 // Set put key, val
-func (c *configContainer) Set(ctx context.Context, key, val string) error {
+func (c *configContainer) Set(key, val string) error {
 	path := strings.Split(key, keySeparator)
 	sub, err := subTree(c.t, path[0:len(path)-1])
 	if err != nil {
@@ -69,7 +68,7 @@ func (c *configContainer) Set(ctx context.Context, key, val string) error {
 
 // String return the value.
 // return error if key not found or value is invalid type
-func (c *configContainer) String(ctx context.Context, key string) (string, error) {
+func (c *configContainer) String(key string) (string, error) {
 	res, err := c.get(key)
 
 	if err != nil {
@@ -89,7 +88,7 @@ func (c *configContainer) String(ctx context.Context, key string) (string, error
 
 // Strings return []string
 // return error if key not found or value is invalid type
-func (c *configContainer) Strings(ctx context.Context, key string) ([]string, error) {
+func (c *configContainer) Strings(key string) ([]string, error) {
 	val, err := c.get(key)
 
 	if err != nil {
@@ -115,14 +114,14 @@ func (c *configContainer) Strings(ctx context.Context, key string) ([]string, er
 
 // Int return int value
 // return error if key not found or value is invalid type
-func (c *configContainer) Int(ctx context.Context, key string) (int, error) {
-	val, err := c.Int64(ctx, key)
+func (c *configContainer) Int(key string) (int, error) {
+	val, err := c.Int64(key)
 	return int(val), err
 }
 
 // Int64 return int64 value
 // return error if key not found or value is invalid type
-func (c *configContainer) Int64(ctx context.Context, key string) (int64, error) {
+func (c *configContainer) Int64(key string) (int64, error) {
 	res, err := c.get(key)
 	if err != nil {
 		return 0, err
@@ -141,7 +140,7 @@ func (c *configContainer) Int64(ctx context.Context, key string) (int64, error) 
 
 // bool return bool value
 // return error if key not found or value is invalid type
-func (c *configContainer) Bool(ctx context.Context, key string) (bool, error) {
+func (c *configContainer) Bool(key string) (bool, error) {
 
 	res, err := c.get(key)
 
@@ -161,7 +160,7 @@ func (c *configContainer) Bool(ctx context.Context, key string) (bool, error) {
 
 // Float return float value
 // return error if key not found or value is invalid type
-func (c *configContainer) Float(ctx context.Context, key string) (float64, error) {
+func (c *configContainer) Float(key string) (float64, error) {
 	res, err := c.get(key)
 	if err != nil {
 		return 0, err
@@ -180,7 +179,7 @@ func (c *configContainer) Float(ctx context.Context, key string) (float64, error
 
 // DefaultString return string value
 // return default value if key not found or value is invalid type
-func (c *configContainer) DefaultString(ctx context.Context, key string, defaultVal string) string {
+func (c *configContainer) DefaultString(key string, defaultVal string) string {
 	res, err := c.get(key)
 	if err != nil {
 		return defaultVal
@@ -194,7 +193,7 @@ func (c *configContainer) DefaultString(ctx context.Context, key string, default
 
 // DefaultStrings return []string
 // return default value if key not found or value is invalid type
-func (c *configContainer) DefaultStrings(ctx context.Context, key string, defaultVal []string) []string {
+func (c *configContainer) DefaultStrings(key string, defaultVal []string) []string {
 	val, err := c.get(key)
 	if err != nil {
 		return defaultVal
@@ -216,13 +215,13 @@ func (c *configContainer) DefaultStrings(ctx context.Context, key string, defaul
 
 // DefaultInt return int value
 // return default value if key not found or value is invalid type
-func (c *configContainer) DefaultInt(ctx context.Context, key string, defaultVal int) int {
-	return int(c.DefaultInt64(ctx, key, int64(defaultVal)))
+func (c *configContainer) DefaultInt(key string, defaultVal int) int {
+	return int(c.DefaultInt64(key, int64(defaultVal)))
 }
 
 // DefaultInt64 return int64 value
 // return default value if key not found or value is invalid type
-func (c *configContainer) DefaultInt64(ctx context.Context, key string, defaultVal int64) int64 {
+func (c *configContainer) DefaultInt64(key string, defaultVal int64) int64 {
 	res, err := c.get(key)
 	if err != nil {
 		return defaultVal
@@ -238,7 +237,7 @@ func (c *configContainer) DefaultInt64(ctx context.Context, key string, defaultV
 
 // DefaultBool return bool value
 // return default value if key not found or value is invalid type
-func (c *configContainer) DefaultBool(ctx context.Context, key string, defaultVal bool) bool {
+func (c *configContainer) DefaultBool(key string, defaultVal bool) bool {
 	res, err := c.get(key)
 	if err != nil {
 		return defaultVal
@@ -252,7 +251,7 @@ func (c *configContainer) DefaultBool(ctx context.Context, key string, defaultVa
 
 // DefaultFloat return float value
 // return default value if key not found or value is invalid type
-func (c *configContainer) DefaultFloat(ctx context.Context, key string, defaultVal float64) float64 {
+func (c *configContainer) DefaultFloat(key string, defaultVal float64) float64 {
 	res, err := c.get(key)
 	if err != nil {
 		return defaultVal
@@ -265,12 +264,12 @@ func (c *configContainer) DefaultFloat(ctx context.Context, key string, defaultV
 }
 
 // DIY returns the original value
-func (c *configContainer) DIY(ctx context.Context, key string) (interface{}, error) {
+func (c *configContainer) DIY(key string) (interface{}, error) {
 	return c.get(key)
 }
 
 // GetSection return error if the value is not valid toml doc
-func (c *configContainer) GetSection(ctx context.Context, section string) (map[string]string, error) {
+func (c *configContainer) GetSection(section string) (map[string]string, error) {
 	val, err := subTree(c.t, strings.Split(section, keySeparator))
 	if err != nil {
 		return map[string]string{}, err
@@ -283,7 +282,7 @@ func (c *configContainer) GetSection(ctx context.Context, section string) (map[s
 	return res, nil
 }
 
-func (c *configContainer) Unmarshaler(ctx context.Context, prefix string, obj interface{}, opt ...config.DecodeOption) error {
+func (c *configContainer) Unmarshaler(prefix string, obj interface{}, opt ...config.DecodeOption) error {
 	if len(prefix) > 0 {
 		t, err := subTree(c.t, strings.Split(prefix, keySeparator))
 		if err != nil {
@@ -296,7 +295,7 @@ func (c *configContainer) Unmarshaler(ctx context.Context, prefix string, obj in
 
 // Sub return sub configer
 // return error if key not found or the value is not a sub doc
-func (c *configContainer) Sub(ctx context.Context, key string) (config.Configer, error) {
+func (c *configContainer) Sub(key string) (config.Configer, error) {
 	val, err := subTree(c.t, strings.Split(key, keySeparator))
 	if err != nil {
 		return nil, err
@@ -307,12 +306,12 @@ func (c *configContainer) Sub(ctx context.Context, key string) (config.Configer,
 }
 
 // OnChange do nothing
-func (c *configContainer) OnChange(ctx context.Context, key string, fn func(value string)) {
+func (c *configContainer) OnChange(key string, fn func(value string)) {
 	// do nothing
 }
 
 // SaveConfigFile create or override the file
-func (c *configContainer) SaveConfigFile(ctx context.Context, filename string) error {
+func (c *configContainer) SaveConfigFile(filename string) error {
 	// Write configuration file by filename.
 	f, err := os.Create(filename)
 	if err != nil {

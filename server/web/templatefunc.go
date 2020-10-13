@@ -15,7 +15,6 @@
 package web
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"html"
@@ -161,17 +160,17 @@ func NotNil(a interface{}) (isNil bool) {
 func GetConfig(returnType, key string, defaultVal interface{}) (value interface{}, err error) {
 	switch returnType {
 	case "String":
-		value, err = AppConfig.String(context.Background(), key)
+		value, err = AppConfig.String(key)
 	case "Bool":
-		value, err = AppConfig.Bool(context.Background(), key)
+		value, err = AppConfig.Bool(key)
 	case "Int":
-		value, err = AppConfig.Int(context.Background(), key)
+		value, err = AppConfig.Int(key)
 	case "Int64":
-		value, err = AppConfig.Int64(context.Background(), key)
+		value, err = AppConfig.Int64(key)
 	case "Float":
-		value, err = AppConfig.Float(context.Background(), key)
+		value, err = AppConfig.Float(key)
 	case "DIY":
-		value, err = AppConfig.DIY(context.Background(), key)
+		value, err = AppConfig.DIY(key)
 	default:
 		err = errors.New("config keys must be of type String, Bool, Int, Int64, Float, or DIY")
 	}
