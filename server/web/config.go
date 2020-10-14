@@ -293,10 +293,38 @@ func parseConfig(appConfigPath string) (err error) {
 	return assignConfig(AppConfig)
 }
 
+// assignConfig is tricky.
+// For 1.x, it use assignSingleConfig to parse the file
+// but for 2.x, we use Unmarshaler method
 func assignConfig(ac config.Configer) error {
+
+	parseConfigForV1(ac)
+
+	err := ac.Unmarshaler("", BConfig)
+	if err != nil {
+		_, _ = fmt.Fprintln(os.Stderr, fmt.Sprintf("Unmarshaler config file to BConfig failed. " +
+			"And if you are working on v1.x config file, please ignore this, err: %s", err))
+		return err
+	}
+
+	// init log
+	logs.Reset()
+	for adaptor, cfg := range BConfig.Log.Outputs {
+		err := logs.SetLogger(adaptor, cfg)
+		if err != nil {
+			fmt.Fprintln(os.Stderr, fmt.Sprintf("%s with the config %q got err:%s", adaptor, cfg, err.Error()))
+			return err
+		}
+	}
+	logs.SetLogFuncCall(BConfig.Log.FileLineNum)
+	return nil
+}
+
+func parseConfigForV1(ac config.Configer) {
 	for _, i := range []interface{}{BConfig, &BConfig.Listen, &BConfig.WebConfig, &BConfig.Log, &BConfig.WebConfig.Session} {
 		assignSingleConfig(i, ac)
 	}
+
 	// set the run mode first
 	if envRunMode := os.Getenv("BEEGO_RUNMODE"); envRunMode != "" {
 		BConfig.RunMode = envRunMode
@@ -356,18 +384,6 @@ func assignConfig(ac config.Configer) error {
 			}
 		}
 	}
-
-	// init log
-	logs.Reset()
-	for adaptor, config := range BConfig.Log.Outputs {
-		err := logs.SetLogger(adaptor, config)
-		if err != nil {
-			fmt.Fprintln(os.Stderr, fmt.Sprintf("%s with the config %q got err:%s", adaptor, config, err.Error()))
-		}
-	}
-	logs.SetLogFuncCall(BConfig.Log.FileLineNum)
-
-	return nil
 }
 
 func assignSingleConfig(p interface{}, ac config.Configer) {
