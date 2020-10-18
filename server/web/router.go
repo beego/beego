@@ -723,7 +723,11 @@ func (p *ControllerRegister) serveHttp(ctx *beecontext.Context) {
 		err = ctx.Input.ParseFormOrMultiForm(p.cfg.MaxMemory)
 		if err != nil {
 			logs.Error(err)
-			exception("413", ctx)
+			if strings.Contains(err.Error(), `http: request body too large`) {
+				exception("413", ctx)
+			} else {
+				exception("500", ctx)
+			}
 			goto Admin
 		}
 	}
