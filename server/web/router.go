@@ -722,7 +722,7 @@ func (p *ControllerRegister) serveHttp(ctx *beecontext.Context) {
 
 		err = ctx.Input.ParseFormOrMultiForm(p.cfg.MaxMemory)
 		if err != nil {
-			logs.Error(errors.New("payload too large"))
+			logs.Error(err)
 			exception("413", ctx)
 			goto Admin
 		}
