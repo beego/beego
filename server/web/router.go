@@ -666,6 +666,7 @@ func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) 
 }
 
 func (p *ControllerRegister) serveHttp(ctx *beecontext.Context) {
+	var err error
 	startTime := time.Now()
 	r := ctx.Request
 	rw := ctx.ResponseWriter.ResponseWriter
@@ -718,12 +719,17 @@ func (p *ControllerRegister) serveHttp(ctx *beecontext.Context) {
 			}
 			ctx.Input.CopyBody(p.cfg.MaxMemory)
 		}
-		ctx.Input.ParseFormOrMulitForm(p.cfg.MaxMemory)
+
+		err = ctx.Input.ParseFormOrMultiForm(p.cfg.MaxMemory)
+		if err != nil {
+			logs.Error(errors.New("payload too large"))
+			exception("413", ctx)
+			goto Admin
+		}
 	}
 
 	// session init
 	if p.cfg.WebConfig.Session.SessionOn {
-		var err error
 		ctx.Input.CruSession, err = GlobalSessions.SessionStart(rw, r)
 		if err != nil {
 			logs.Error(err)
