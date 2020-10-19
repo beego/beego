@@ -511,7 +511,7 @@ func (c *IniConfigContainer) Unmarshaler(prefix string, obj interface{}, opt ...
 	if len(prefix) > 0 {
 		return errors.New("unsupported prefix params")
 	}
-	return mapstructure.Decode(c.data, opt)
+	return mapstructure.Decode(c.data, obj)
 }
 
 func init() {
