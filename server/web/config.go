@@ -43,12 +43,16 @@ type Config struct {
 	RecoverFunc         func(*context.Context, *Config)
 	CopyRequestBody     bool
 	EnableGzip          bool
-	MaxMemory           int64
-	EnableErrorsShow    bool
-	EnableErrorsRender  bool
-	Listen              Listen
-	WebConfig           WebConfig
-	Log                 LogConfig
+	// MaxMemory and MaxUploadSize are used to limit the request body
+	// if the request is not uploading file, MaxMemory is the max size of request body
+	// if the request is uploading file, MaxUploadSize is the max size of request body
+	MaxMemory          int64
+	MaxUploadSize      int64
+	EnableErrorsShow   bool
+	EnableErrorsRender bool
+	Listen             Listen
+	WebConfig          WebConfig
+	Log                LogConfig
 }
 
 // Listen holds for http and https related config
@@ -215,6 +219,7 @@ func newBConfig() *Config {
 		CopyRequestBody:    false,
 		EnableGzip:         false,
 		MaxMemory:          1 << 26, // 64MB
+		MaxUploadSize:      1 << 30, // 1GB
 		EnableErrorsShow:   true,
 		EnableErrorsRender: true,
 		Listen: Listen{
@@ -302,7 +307,7 @@ func assignConfig(ac config.Configer) error {
 
 	err := ac.Unmarshaler("", BConfig)
 	if err != nil {
-		_, _ = fmt.Fprintln(os.Stderr, fmt.Sprintf("Unmarshaler config file to BConfig failed. " +
+		_, _ = fmt.Fprintln(os.Stderr, fmt.Sprintf("Unmarshaler config file to BConfig failed. "+
 			"And if you are working on v1.x config file, please ignore this, err: %s", err))
 		return err
 	}
