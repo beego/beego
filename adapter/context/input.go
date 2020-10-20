@@ -266,7 +266,7 @@ func (input *BeegoInput) SetData(key, val interface{}) {
 
 // ParseFormOrMulitForm parseForm or parseMultiForm based on Content-type
 func (input *BeegoInput) ParseFormOrMulitForm(maxMemory int64) error {
-	return (*context.BeegoInput)(input).ParseFormOrMulitForm(maxMemory)
+	return (*context.BeegoInput)(input).ParseFormOrMultiForm(maxMemory)
 }
 
 // Bind data from request.Form[key] to dest

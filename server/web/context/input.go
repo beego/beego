@@ -420,9 +420,10 @@ func (input *BeegoInput) SetData(key, val interface{}) {
 	input.data[key] = val
 }
 
-// ParseFormOrMulitForm parseForm or parseMultiForm based on Content-type
-func (input *BeegoInput) ParseFormOrMulitForm(maxMemory int64) error {
+// ParseFormOrMultiForm parseForm or parseMultiForm based on Content-type
+func (input *BeegoInput) ParseFormOrMultiForm(maxMemory int64) error {
 	// Parse the body depending on the content type.
+	input.Context.Request.Body = http.MaxBytesReader(input.Context.ResponseWriter, input.Context.Request.Body, maxMemory)
 	if strings.Contains(input.Header("Content-Type"), "multipart/form-data") {
 		if err := input.Context.Request.ParseMultipartForm(maxMemory); err != nil {
 			return errors.New("Error parsing request body:" + err.Error())
