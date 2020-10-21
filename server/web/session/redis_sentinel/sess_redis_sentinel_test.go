@@ -1,9 +1,13 @@
 package redis_sentinel
 
 import (
+	"context"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/astaxie/beego/server/web/session"
 )
@@ -23,7 +27,7 @@ func TestRedisSentinel(t *testing.T) {
 		t.Log(e)
 		return
 	}
-	//todo test if e==nil
+	// todo test if e==nil
 	go globalSessions.GC()
 
 	r, _ := http.NewRequest("GET", "/", nil)
@@ -87,4 +91,16 @@ func TestRedisSentinel(t *testing.T) {
 
 	sess.SessionRelease(nil, w)
 
+}
+
+func TestProvider_SessionInit(t *testing.T) {
+
+	savePath := `
+{ "save_path": "my save path", "idle_timeout": "3s"}
+`
+	cp := &Provider{}
+	cp.SessionInit(context.Background(), 12, savePath)
+	assert.Equal(t, "my save path", cp.SavePath)
+	assert.Equal(t, 3*time.Second, cp.idleTimeout)
+	assert.Equal(t, int64(12), cp.maxlifetime)
 }

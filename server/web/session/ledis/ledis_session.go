@@ -3,6 +3,7 @@ package ledis
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
@@ -79,35 +80,51 @@ func (ls *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWrite
 // Provider ledis session provider
 type Provider struct {
 	maxlifetime int64
-	savePath    string
-	db          int
+	SavePath    string `json:"save_path"`
+	Db          int    `json:"db"`
 }
 
 // SessionInit init ledis session
 // savepath like ledis server saveDataPath,pool size
-// e.g. 127.0.0.1:6379,100,astaxie
-func (lp *Provider) SessionInit(ctx context.Context, maxlifetime int64, savePath string) error {
+// v1.x e.g. 127.0.0.1:6379,100
+// v2.x you should pass a json string
+// e.g. { "save_path": "my save path", "db": 100}
+func (lp *Provider) SessionInit(ctx context.Context, maxlifetime int64, cfgStr string) error {
 	var err error
 	lp.maxlifetime = maxlifetime
-	configs := strings.Split(savePath, ",")
-	if len(configs) == 1 {
-		lp.savePath = configs[0]
-	} else if len(configs) == 2 {
-		lp.savePath = configs[0]
-		lp.db, err = strconv.Atoi(configs[1])
-		if err != nil {
-			return err
-		}
+	cfgStr = strings.TrimSpace(cfgStr)
+	// we think cfgStr is v2.0, using json to init the session
+	if strings.HasPrefix(cfgStr, "{") {
+		err = json.Unmarshal([]byte(cfgStr), lp)
+	} else {
+		err = lp.initOldStyle(cfgStr)
 	}
+
+	if err != nil {
+		return err
+	}
+
 	cfg := new(config.Config)
-	cfg.DataDir = lp.savePath
+	cfg.DataDir = lp.SavePath
 
 	var ledisInstance *ledis.Ledis
 	ledisInstance, err = ledis.Open(cfg)
 	if err != nil {
 		return err
 	}
-	c, err = ledisInstance.Select(lp.db)
+	c, err = ledisInstance.Select(lp.Db)
+	return err
+}
+
+func (lp *Provider) initOldStyle(cfgStr string) error {
+	var err error
+	configs := strings.Split(cfgStr, ",")
+	if len(configs) == 1 {
+		lp.SavePath = configs[0]
+	} else if len(configs) == 2 {
+		lp.SavePath = configs[0]
+		lp.Db, err = strconv.Atoi(configs[1])
+	}
 	return err
 }
 

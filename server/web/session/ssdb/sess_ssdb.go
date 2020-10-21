@@ -2,6 +2,7 @@ package ssdb
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
@@ -18,31 +19,46 @@ var ssdbProvider = &Provider{}
 // Provider holds ssdb client and configs
 type Provider struct {
 	client      *ssdb.Client
-	host        string
-	port        int
+	Host        string `json:"host"`
+	Port        int    `json:"port"`
 	maxLifetime int64
 }
 
 func (p *Provider) connectInit() error {
 	var err error
-	if p.host == "" || p.port == 0 {
+	if p.Host == "" || p.Port == 0 {
 		return errors.New("SessionInit First")
 	}
-	p.client, err = ssdb.Connect(p.host, p.port)
+	p.client, err = ssdb.Connect(p.Host, p.Port)
 	return err
 }
 
 // SessionInit init the ssdb with the config
-func (p *Provider) SessionInit(ctx context.Context, maxLifetime int64, savePath string) error {
+func (p *Provider) SessionInit(ctx context.Context, maxLifetime int64, cfg string) error {
 	p.maxLifetime = maxLifetime
-	address := strings.Split(savePath, ":")
-	p.host = address[0]
 
+	cfg = strings.TrimSpace(cfg)
 	var err error
-	if p.port, err = strconv.Atoi(address[1]); err != nil {
+	// we think this is v2.0, using json to init the session
+	if strings.HasPrefix(cfg, "{") {
+		err = json.Unmarshal([]byte(cfg), p)
+	} else {
+		err = p.initOldStyle(cfg)
+	}
+	if err != nil {
 		return err
 	}
 	return p.connectInit()
+}
+
+// for v1.x
+func (p *Provider) initOldStyle(savePath string) error {
+	address := strings.Split(savePath, ":")
+	p.Host = address[0]
+
+	var err error
+	p.Port, err = strconv.Atoi(address[1])
+	return err
 }
 
 // SessionRead return a ssdb client session Store
