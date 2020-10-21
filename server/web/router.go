@@ -710,7 +710,12 @@ func (p *ControllerRegister) serveHttp(ctx *beecontext.Context) {
 	}
 
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
-		if p.cfg.CopyRequestBody && !ctx.Input.IsUpload() {
+
+		if ctx.Input.IsUpload() {
+			ctx.Input.Context.Request.Body = http.MaxBytesReader(ctx.Input.Context.ResponseWriter,
+				ctx.Input.Context.Request.Body,
+				p.cfg.MaxUploadSize)
+		} else if p.cfg.CopyRequestBody {
 			// connection will close if the incoming data are larger (RFC 7231, 6.5.11)
 			if r.ContentLength > p.cfg.MaxMemory {
 				logs.Error(errors.New("payload too large"))
@@ -718,6 +723,10 @@ func (p *ControllerRegister) serveHttp(ctx *beecontext.Context) {
 				goto Admin
 			}
 			ctx.Input.CopyBody(p.cfg.MaxMemory)
+		} else {
+			ctx.Input.Context.Request.Body = http.MaxBytesReader(ctx.Input.Context.ResponseWriter,
+				ctx.Input.Context.Request.Body,
+				p.cfg.MaxMemory)
 		}
 
 		err = ctx.Input.ParseFormOrMultiForm(p.cfg.MaxMemory)
