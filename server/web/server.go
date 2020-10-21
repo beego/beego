@@ -59,19 +59,18 @@ type HttpServer struct {
 
 // NewHttpSever returns a new beego application.
 // this method will use the BConfig as the configure to create HttpServer
-// Be careful that when you update BConfig, the server's Cfg will not be updated
+// Be careful that when you update BConfig, the server's Cfg will be updated too
 func NewHttpSever() *HttpServer {
-	return NewHttpServerWithCfg(*BConfig)
+	return NewHttpServerWithCfg(BConfig)
 }
 
 // NewHttpServerWithCfg will create an sever with specific cfg
-func NewHttpServerWithCfg(cfg Config) *HttpServer {
-	cfgPtr := &cfg
-	cr := NewControllerRegisterWithCfg(cfgPtr)
+func NewHttpServerWithCfg(cfg *Config) *HttpServer {
+	cr := NewControllerRegisterWithCfg(cfg)
 	app := &HttpServer{
 		Handlers: cr,
 		Server:   &http.Server{},
-		Cfg:      cfgPtr,
+		Cfg:      cfg,
 	}
 
 	return app

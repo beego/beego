@@ -21,11 +21,10 @@ import (
 )
 
 func TestNewHttpServerWithCfg(t *testing.T) {
-	// we should make sure that update server's config won't change
+
 	BConfig.AppName = "Before"
-	svr := NewHttpServerWithCfg(*BConfig)
+	svr := NewHttpServerWithCfg(BConfig)
 	svr.Cfg.AppName = "hello"
-	assert.NotEqual(t, "hello", BConfig.AppName)
-	assert.Equal(t, "Before", BConfig.AppName)
+	assert.Equal(t, "hello", BConfig.AppName)
 
 }
