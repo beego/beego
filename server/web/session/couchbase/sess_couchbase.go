@@ -34,6 +34,7 @@ package couchbase
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strings"
 	"sync"
@@ -57,9 +58,9 @@ type SessionStore struct {
 // Provider couchabse provided
 type Provider struct {
 	maxlifetime int64
-	savePath    string
-	pool        string
-	bucket      string
+	SavePath    string `json:"save_path"`
+	Pool        string `json:"pool"`
+	Bucket      string `json:"bucket"`
 	b           *couchbase.Bucket
 }
 
@@ -115,17 +116,17 @@ func (cs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWrite
 }
 
 func (cp *Provider) getBucket() *couchbase.Bucket {
-	c, err := couchbase.Connect(cp.savePath)
+	c, err := couchbase.Connect(cp.SavePath)
 	if err != nil {
 		return nil
 	}
 
-	pool, err := c.GetPool(cp.pool)
+	pool, err := c.GetPool(cp.Pool)
 	if err != nil {
 		return nil
 	}
 
-	bucket, err := pool.GetBucket(cp.bucket)
+	bucket, err := pool.GetBucket(cp.Bucket)
 	if err != nil {
 		return nil
 	}
@@ -135,18 +136,31 @@ func (cp *Provider) getBucket() *couchbase.Bucket {
 
 // SessionInit init couchbase session
 // savepath like couchbase server REST/JSON URL
-// e.g. http://host:port/, Pool, Bucket
-func (cp *Provider) SessionInit(ctx context.Context, maxlifetime int64, savePath string) error {
+// For v1.x e.g. http://host:port/, Pool, Bucket
+// For v2.x, you should pass json string.
+// e.g. { "save_path": "http://host:port/", "pool": "mypool", "bucket": "mybucket"}
+func (cp *Provider) SessionInit(ctx context.Context, maxlifetime int64, cfg string) error {
 	cp.maxlifetime = maxlifetime
+	cfg = strings.TrimSpace(cfg)
+	// we think this is v2.0, using json to init the session
+	if strings.HasPrefix(cfg, "{") {
+		return json.Unmarshal([]byte(cfg), cp)
+	} else {
+		return cp.initOldStyle(cfg)
+	}
+}
+
+// initOldStyle keep compatible with v1.x
+func (cp *Provider) initOldStyle(savePath string) error {
 	configs := strings.Split(savePath, ",")
 	if len(configs) > 0 {
-		cp.savePath = configs[0]
+		cp.SavePath = configs[0]
 	}
 	if len(configs) > 1 {
-		cp.pool = configs[1]
+		cp.Pool = configs[1]
 	}
 	if len(configs) > 2 {
-		cp.bucket = configs[2]
+		cp.Bucket = configs[2]
 	}
 
 	return nil
@@ -225,7 +239,7 @@ func (cp *Provider) SessionRegenerate(ctx context.Context, oldsid, sid string) (
 	return cs, nil
 }
 
-// SessionDestroy Remove bucket in this couchbase
+// SessionDestroy Remove Bucket in this couchbase
 func (cp *Provider) SessionDestroy(ctx context.Context, sid string) error {
 	cp.b = cp.getBucket()
 	defer cp.b.Close()
