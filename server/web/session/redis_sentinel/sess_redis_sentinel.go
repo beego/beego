@@ -34,6 +34,7 @@ package redis_sentinel
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
@@ -110,58 +111,99 @@ func (rs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWrite
 
 // Provider redis_sentinel session provider
 type Provider struct {
-	maxlifetime        int64
-	savePath           string
-	poolsize           int
-	password           string
-	dbNum              int
-	idleTimeout        time.Duration
-	idleCheckFrequency time.Duration
-	maxRetries         int
-	poollist           *redis.Client
-	masterName         string
+	maxlifetime int64
+	SavePath    string `json:"save_path"`
+	Poolsize    int    `json:"poolsize"`
+	Password    string `json:"password"`
+	DbNum       int    `json:"db_num"`
+
+	idleTimeout    time.Duration
+	IdleTimeoutStr string `json:"idle_timeout"`
+
+	idleCheckFrequency    time.Duration
+	IdleCheckFrequencyStr string `json:"idle_check_frequency"`
+	MaxRetries            int    `json:"max_retries"`
+	poollist              *redis.Client
+	MasterName            string `json:"master_name"`
 }
 
 // SessionInit init redis_sentinel session
-// savepath like redis sentinel addr,pool size,password,dbnum,masterName
+// cfgStr like redis sentinel addr,pool size,password,dbnum,masterName
 // e.g. 127.0.0.1:26379;127.0.0.2:26379,100,1qaz2wsx,0,mymaster
-func (rp *Provider) SessionInit(ctx context.Context, maxlifetime int64, savePath string) error {
+func (rp *Provider) SessionInit(ctx context.Context, maxlifetime int64, cfgStr string) error {
 	rp.maxlifetime = maxlifetime
+	cfgStr = strings.TrimSpace(cfgStr)
+	// we think cfgStr is v2.0, using json to init the session
+	if strings.HasPrefix(cfgStr, "{") {
+		err := json.Unmarshal([]byte(cfgStr), rp)
+		if err != nil {
+			return err
+		}
+		rp.idleTimeout, err = time.ParseDuration(rp.IdleTimeoutStr)
+		if err != nil {
+			return err
+		}
+
+		rp.idleCheckFrequency, err = time.ParseDuration(rp.IdleCheckFrequencyStr)
+		if err != nil {
+			return err
+		}
+
+	} else {
+		rp.initOldStyle(cfgStr)
+	}
+
+	rp.poollist = redis.NewFailoverClient(&redis.FailoverOptions{
+		SentinelAddrs:      strings.Split(rp.SavePath, ";"),
+		Password:           rp.Password,
+		PoolSize:           rp.Poolsize,
+		DB:                 rp.DbNum,
+		MasterName:         rp.MasterName,
+		IdleTimeout:        rp.idleTimeout,
+		IdleCheckFrequency: rp.idleCheckFrequency,
+		MaxRetries:         rp.MaxRetries,
+	})
+
+	return rp.poollist.Ping().Err()
+}
+
+// for v1.x
+func (rp *Provider) initOldStyle(savePath string) {
 	configs := strings.Split(savePath, ",")
 	if len(configs) > 0 {
-		rp.savePath = configs[0]
+		rp.SavePath = configs[0]
 	}
 	if len(configs) > 1 {
 		poolsize, err := strconv.Atoi(configs[1])
 		if err != nil || poolsize < 0 {
-			rp.poolsize = DefaultPoolSize
+			rp.Poolsize = DefaultPoolSize
 		} else {
-			rp.poolsize = poolsize
+			rp.Poolsize = poolsize
 		}
 	} else {
-		rp.poolsize = DefaultPoolSize
+		rp.Poolsize = DefaultPoolSize
 	}
 	if len(configs) > 2 {
-		rp.password = configs[2]
+		rp.Password = configs[2]
 	}
 	if len(configs) > 3 {
 		dbnum, err := strconv.Atoi(configs[3])
 		if err != nil || dbnum < 0 {
-			rp.dbNum = 0
+			rp.DbNum = 0
 		} else {
-			rp.dbNum = dbnum
+			rp.DbNum = dbnum
 		}
 	} else {
-		rp.dbNum = 0
+		rp.DbNum = 0
 	}
 	if len(configs) > 4 {
 		if configs[4] != "" {
-			rp.masterName = configs[4]
+			rp.MasterName = configs[4]
 		} else {
-			rp.masterName = "mymaster"
+			rp.MasterName = "mymaster"
 		}
 	} else {
-		rp.masterName = "mymaster"
+		rp.MasterName = "mymaster"
 	}
 	if len(configs) > 5 {
 		timeout, err := strconv.Atoi(configs[4])
@@ -178,22 +220,9 @@ func (rp *Provider) SessionInit(ctx context.Context, maxlifetime int64, savePath
 	if len(configs) > 7 {
 		retries, err := strconv.Atoi(configs[6])
 		if err == nil && retries > 0 {
-			rp.maxRetries = retries
+			rp.MaxRetries = retries
 		}
 	}
-
-	rp.poollist = redis.NewFailoverClient(&redis.FailoverOptions{
-		SentinelAddrs:      strings.Split(rp.savePath, ";"),
-		Password:           rp.password,
-		PoolSize:           rp.poolsize,
-		DB:                 rp.dbNum,
-		MasterName:         rp.masterName,
-		IdleTimeout:        rp.idleTimeout,
-		IdleCheckFrequency: rp.idleCheckFrequency,
-		MaxRetries:         rp.maxRetries,
-	})
-
-	return rp.poollist.Ping().Err()
 }
 
 // SessionRead read redis_sentinel session by sid
