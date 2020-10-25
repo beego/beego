@@ -17,6 +17,7 @@ package orm
 import (
 	"context"
 	"database/sql"
+	"github.com/astaxie/beego/client/orm/structs/clauses"
 	"reflect"
 	"time"
 
@@ -289,6 +290,24 @@ type QuerySeter interface {
 	// for example:
 	//	qs.OrderBy("-status")
 	OrderBy(exprs ...string) QuerySeter
+	// add ORDER expression by order clauses
+	// for example:
+	// OrderClauses(clauses.OrderClause(
+	//		clauses.OrderColumn(`status`),
+	//		clauses.OrderSort(clauses.SortAscending),
+	//		clauses.OrderRaw(false),
+	//	))
+	// OrderClauses(clauses.OrderClause(
+	//		clauses.OrderColumn(`user__status`),
+	//		clauses.OrderSort(clauses.SortAscending),
+	//		clauses.OrderRaw(false),
+	//	))
+	// OrderClauses(clauses.OrderClause(
+	//		clauses.OrderColumn(`random()`),
+	//		clauses.OrderSort(clauses.SortNone),
+	//		clauses.OrderRaw(true),
+	//	))
+	OrderClauses(orders ...*clauses.Order) QuerySeter
 	// add FORCE INDEX expression.
 	// for example:
 	//	qs.ForceIndex(`idx_name1`,`idx_name2`)

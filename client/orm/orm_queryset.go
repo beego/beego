@@ -147,6 +147,15 @@ func (o querySet) OrderBy(expressions ...string) QuerySeter {
 	return &o
 }
 
+// add ORDER expression.
+func (o querySet) OrderClauses(orders ...*clauses.Order) QuerySeter {
+	if len(orders) <= 0 {
+		return &o
+	}
+	o.orders = orders
+	return &o
+}
+
 // add DISTINCT to SELECT
 func (o querySet) Distinct() QuerySeter {
 	o.distinct = true
