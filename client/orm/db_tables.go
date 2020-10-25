@@ -16,7 +16,7 @@ package orm
 
 import (
 	"fmt"
-	"github.com/astaxie/beego/client/orm/structs"
+	"github.com/astaxie/beego/client/orm/structs/clauses"
 	"strings"
 	"time"
 )
@@ -422,7 +422,7 @@ func (t *dbTables) getGroupSQL(groups []string) (groupSQL string) {
 }
 
 // generate order sql.
-func (t *dbTables) getOrderSQL(orders []*structs.OrderClause) (orderSQL string) {
+func (t *dbTables) getOrderSQL(orders []*clauses.Order) (orderSQL string) {
 	if len(orders) == 0 {
 		return
 	}
@@ -431,10 +431,13 @@ func (t *dbTables) getOrderSQL(orders []*structs.OrderClause) (orderSQL string) 
 
 	orderSqls := make([]string, 0, len(orders))
 	for _, order := range orders {
-		column := order.Column
-		asc := "ASC"
-		if order.Sort == structs.DESCENDING {
-			asc = "DESC"
+		column := order.GetColumn()
+		var sort string
+		switch order.GetSort() {
+		case clauses.ASCENDING:
+			sort = "ASC"
+		case clauses.DESCENDING:
+			sort = "DESC"
 		}
 		clause := strings.Split(column, ExprSep)
 
@@ -443,7 +446,7 @@ func (t *dbTables) getOrderSQL(orders []*structs.OrderClause) (orderSQL string) 
 			panic(fmt.Errorf("unknown field/column name `%s`", strings.Join(clause, ExprSep)))
 		}
 
-		orderSqls = append(orderSqls, fmt.Sprintf("%s.%s%s%s %s", index, Q, fi.column, Q, asc))
+		orderSqls = append(orderSqls, fmt.Sprintf("%s.%s%s%s %s", index, Q, fi.column, Q, sort))
 	}
 
 	orderSQL = fmt.Sprintf("ORDER BY %s ", strings.Join(orderSqls, ", "))

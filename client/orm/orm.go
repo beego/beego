@@ -58,7 +58,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/astaxie/beego/client/orm/structs"
+	"github.com/astaxie/beego/client/orm/structs/clauses"
 	"os"
 	"reflect"
 	"time"
@@ -352,7 +352,7 @@ func (o *ormBase) LoadRelatedWithCtx(ctx context.Context, md interface{}, name s
 	qs.relDepth = relDepth
 
 	if len(order) > 0 {
-		qs.orders = structs.ParseOrderClause(order)
+		qs.orders = clauses.ParseOrder(order)
 	}
 
 	find := ind.FieldByIndex(fi.fieldIndex)
