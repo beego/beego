@@ -3,8 +3,9 @@ package clauses
 type Sort int8
 
 const (
-	ASCENDING  Sort = 1
-	DESCENDING Sort = 2
+	SortNone       Sort = 0
+	SortAscending  Sort = 1
+	SortDescending Sort = 2
 )
 
 type Order struct {
@@ -23,10 +24,10 @@ func (o *Order) GetSort() Sort {
 func ParseOrder(expressions ...string) []*Order {
 	var orders []*Order
 	for _, expression := range expressions {
-		sort := ASCENDING
+		sort := SortAscending
 		column := expression
 		if expression[0] == '-' {
-			sort = DESCENDING
+			sort = SortDescending
 			column = expression[1:]
 		}
 

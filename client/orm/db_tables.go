@@ -434,9 +434,9 @@ func (t *dbTables) getOrderSQL(orders []*clauses.Order) (orderSQL string) {
 		column := order.GetColumn()
 		var sort string
 		switch order.GetSort() {
-		case clauses.ASCENDING:
+		case clauses.SortAscending:
 			sort = "ASC"
-		case clauses.DESCENDING:
+		case clauses.SortDescending:
 			sort = "DESC"
 		}
 		clause := strings.Split(column, ExprSep)
