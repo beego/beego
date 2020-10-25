@@ -432,21 +432,24 @@ func (t *dbTables) getOrderSQL(orders []*clauses.Order) (orderSQL string) {
 	orderSqls := make([]string, 0, len(orders))
 	for _, order := range orders {
 		column := order.GetColumn()
-		var sort string
-		switch order.GetSort() {
-		case clauses.SortAscending:
-			sort = "ASC"
-		case clauses.SortDescending:
-			sort = "DESC"
-		}
-		clause := strings.Split(column, ExprSep)
+		clause := strings.Split(column, clauses.ExprDot)
 
-		index, _, fi, suc := t.parseExprs(t.mi, clause)
-		if !suc {
-			panic(fmt.Errorf("unknown field/column name `%s`", strings.Join(clause, ExprSep)))
-		}
+		if order.IsRaw() {
+			if len(clause) == 2 {
+				orderSqls = append(orderSqls, fmt.Sprintf("%s.%s%s%s %s", clause[0], Q, clause[1], Q, order.SortString()))
+			} else if len(clause) == 1 {
+				orderSqls = append(orderSqls, fmt.Sprintf("%s%s%s %s", Q, clause[0], Q, order.SortString()))
+			} else {
+				panic(fmt.Errorf("unknown field/column name `%s`", strings.Join(clause, ExprSep)))
+			}
+		} else {
+			index, _, fi, suc := t.parseExprs(t.mi, clause)
+			if !suc {
+				panic(fmt.Errorf("unknown field/column name `%s`", strings.Join(clause, ExprSep)))
+			}
 
-		orderSqls = append(orderSqls, fmt.Sprintf("%s.%s%s%s %s", index, Q, fi.column, Q, sort))
+			orderSqls = append(orderSqls, fmt.Sprintf("%s.%s%s%s %s", index, Q, fi.column, Q, order.SortString()))
+		}
 	}
 
 	orderSQL = fmt.Sprintf("ORDER BY %s ", strings.Join(orderSqls, ", "))

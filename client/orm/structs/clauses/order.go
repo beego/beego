@@ -1,5 +1,7 @@
 package clauses
 
+import "strings"
+
 type Sort int8
 
 const (
@@ -33,6 +35,18 @@ func (o *Order) GetSort() Sort {
 	return o.sort
 }
 
+func (o *Order) SortString() string {
+	switch o.GetSort() {
+	case SortAscending:
+		return "ASC"
+	case SortDescending:
+		return "DESC"
+	}
+
+	return ``
+}
+
+
 func (o *Order) IsRaw() bool {
 	return o.isRaw
 }
@@ -41,10 +55,10 @@ func ParseOrder(expressions ...string) []*Order {
 	var orders []*Order
 	for _, expression := range expressions {
 		sort := SortAscending
-		column := expression
-		if expression[0] == '-' {
+		column := strings.ReplaceAll(expression, ExprSep, ExprDot)
+		if column[0] == '-' {
 			sort = SortDescending
-			column = expression[1:]
+			column = column[1:]
 		}
 
 		orders = append(orders, &Order{
