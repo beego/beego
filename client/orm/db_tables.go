@@ -16,6 +16,7 @@ package orm
 
 import (
 	"fmt"
+	"github.com/astaxie/beego/client/orm/structs"
 	"strings"
 	"time"
 )
@@ -421,7 +422,7 @@ func (t *dbTables) getGroupSQL(groups []string) (groupSQL string) {
 }
 
 // generate order sql.
-func (t *dbTables) getOrderSQL(orders []string) (orderSQL string) {
+func (t *dbTables) getOrderSQL(orders []*structs.OrderClause) (orderSQL string) {
 	if len(orders) == 0 {
 		return
 	}
@@ -430,16 +431,16 @@ func (t *dbTables) getOrderSQL(orders []string) (orderSQL string) {
 
 	orderSqls := make([]string, 0, len(orders))
 	for _, order := range orders {
+		column := order.Column
 		asc := "ASC"
-		if order[0] == '-' {
+		if order.Sort == structs.DESCENDING {
 			asc = "DESC"
-			order = order[1:]
 		}
-		exprs := strings.Split(order, ExprSep)
+		clause := strings.Split(column, ExprSep)
 
-		index, _, fi, suc := t.parseExprs(t.mi, exprs)
+		index, _, fi, suc := t.parseExprs(t.mi, clause)
 		if !suc {
-			panic(fmt.Errorf("unknown field/column name `%s`", strings.Join(exprs, ExprSep)))
+			panic(fmt.Errorf("unknown field/column name `%s`", strings.Join(clause, ExprSep)))
 		}
 
 		orderSqls = append(orderSqls, fmt.Sprintf("%s.%s%s%s %s", index, Q, fi.column, Q, asc))

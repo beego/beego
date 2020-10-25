@@ -17,8 +17,8 @@ package orm
 import (
 	"context"
 	"fmt"
-
 	"github.com/astaxie/beego/client/orm/hints"
+	"github.com/astaxie/beego/client/orm/structs"
 )
 
 type colValue struct {
@@ -71,7 +71,7 @@ type querySet struct {
 	limit      int64
 	offset     int64
 	groups     []string
-	orders     []string
+	orders     []*structs.OrderClause
 	distinct   bool
 	forUpdate  bool
 	useIndex   int
@@ -139,8 +139,11 @@ func (o querySet) GroupBy(exprs ...string) QuerySeter {
 
 // add ORDER expression.
 // "column" means ASC, "-column" means DESC.
-func (o querySet) OrderBy(exprs ...string) QuerySeter {
-	o.orders = exprs
+func (o querySet) OrderBy(expressions ...string) QuerySeter {
+	if len(expressions) <= 0 {
+		return &o
+	}
+	o.orders = structs.ParseOrderClause(expressions...)
 	return &o
 }
 
