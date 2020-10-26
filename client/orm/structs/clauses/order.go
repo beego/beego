@@ -71,7 +71,7 @@ func ParseOrder(expressions ...string) []*Order {
 
 func OrderColumn(column string) OrderOption {
 	return func(order *Order) {
-		order.column = column
+		order.column = strings.ReplaceAll(column, ExprSep, ExprDot)
 	}
 }
 

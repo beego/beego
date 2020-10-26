@@ -21,6 +21,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/astaxie/beego/client/orm/structs/clauses"
 	"io/ioutil"
 	"math"
 	"os"
@@ -1077,6 +1078,26 @@ func TestOrderBy(t *testing.T) {
 	num, err = qs.OrderBy("-profile__age").Filter("user_name", "astaxie").Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
+
+	num, err = qs.OrderClauses(
+		clauses.OrderClause(
+			clauses.OrderColumn(`profile__age`),
+			clauses.OrderSortDescending(),
+		),
+	).Filter("user_name", "astaxie").Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	if IsMysql {
+		num, err = qs.OrderClauses(
+			clauses.OrderClause(
+				clauses.OrderColumn(`rand()`),
+				clauses.OrderRaw(),
+			),
+		).Filter("user_name", "astaxie").Count()
+		throwFail(t, err)
+		throwFail(t, AssertIs(num, 1))
+	}
 }
 
 func TestAll(t *testing.T) {
@@ -1156,6 +1177,19 @@ func TestValues(t *testing.T) {
 	qs := dORM.QueryTable("user")
 
 	num, err := qs.OrderBy("Id").Values(&maps)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 3))
+	if num == 3 {
+		throwFail(t, AssertIs(maps[0]["UserName"], "slene"))
+		throwFail(t, AssertIs(maps[2]["Profile"], nil))
+	}
+
+	num, err = qs.OrderClauses(
+		clauses.OrderClause(
+			clauses.OrderColumn("Id"),
+			clauses.OrderSortAscending(),
+		),
+	).Values(&maps)
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 3))
 	if num == 3 {
