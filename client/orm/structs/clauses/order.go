@@ -46,7 +46,6 @@ func (o *Order) SortString() string {
 	return ``
 }
 
-
 func (o *Order) IsRaw() bool {
 	return o.isRaw
 }
@@ -76,14 +75,26 @@ func OrderColumn(column string) OrderOption {
 	}
 }
 
-func OrderSort(sort Sort) OrderOption {
+func sort(sort Sort) OrderOption {
 	return func(order *Order) {
 		order.sort = sort
 	}
 }
 
-func OrderRaw(isRaw bool) OrderOption {
+func OrderSortAscending() OrderOption {
+	return sort(SortAscending)
+}
+
+func OrderSortDescending() OrderOption {
+	return sort(SortDescending)
+}
+
+func OrderSortNone() OrderOption {
+	return sort(SortNone)
+}
+
+func OrderRaw() OrderOption {
 	return func(order *Order) {
-		order.isRaw = isRaw
+		order.isRaw = true
 	}
 }

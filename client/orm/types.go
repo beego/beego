@@ -294,18 +294,16 @@ type QuerySeter interface {
 	// for example:
 	// OrderClauses(clauses.OrderClause(
 	//		clauses.OrderColumn(`status`),
-	//		clauses.OrderSort(clauses.SortAscending),
-	//		clauses.OrderRaw(false),
+	//		clauses.OrderSortAscending(),//default None
 	//	))
 	// OrderClauses(clauses.OrderClause(
 	//		clauses.OrderColumn(`user__status`),
-	//		clauses.OrderSort(clauses.SortAscending),
-	//		clauses.OrderRaw(false),
+	//		clauses.OrderSortDescending(),//default None
 	//	))
 	// OrderClauses(clauses.OrderClause(
 	//		clauses.OrderColumn(`random()`),
-	//		clauses.OrderSort(clauses.SortNone),
-	//		clauses.OrderRaw(true),
+	//		clauses.OrderSortNone(),//default None
+	//		clauses.OrderRaw(),//default false.if true, do not check field is valid or not
 	//	))
 	OrderClauses(orders ...*clauses.Order) QuerySeter
 	// add FORCE INDEX expression.
