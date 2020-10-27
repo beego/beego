@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestOrderClause(t *testing.T) {
+func TestClause(t *testing.T) {
 	var (
 		column = `a`
 	)
@@ -18,7 +18,7 @@ func TestOrderClause(t *testing.T) {
 	}
 }
 
-func TestOrderSortAscending(t *testing.T) {
+func TestSortAscending(t *testing.T) {
 	o := Clause(
 		SortAscending(),
 	)
@@ -28,7 +28,7 @@ func TestOrderSortAscending(t *testing.T) {
 	}
 }
 
-func TestOrderSortDescending(t *testing.T) {
+func TestSortDescending(t *testing.T) {
 	o := Clause(
 		SortDescending(),
 	)
@@ -38,7 +38,7 @@ func TestOrderSortDescending(t *testing.T) {
 	}
 }
 
-func TestOrderSortNone(t *testing.T) {
+func TestSortNone(t *testing.T) {
 	o1 := Clause(
 		SortNone(),
 	)
@@ -54,7 +54,7 @@ func TestOrderSortNone(t *testing.T) {
 	}
 }
 
-func TestOrderRaw(t *testing.T) {
+func TestRaw(t *testing.T) {
 	o1 := Clause()
 
 	if o1.IsRaw() {
@@ -70,7 +70,7 @@ func TestOrderRaw(t *testing.T) {
 	}
 }
 
-func TestOrderColumn(t *testing.T) {
+func TestColumn(t *testing.T) {
 	o1 := Clause(
 		Column(`aaa`),
 	)
@@ -109,4 +109,36 @@ func TestParseOrder(t *testing.T) {
 		t.Error()
 	}
 
+}
+
+func TestOrder_GetColumn(t *testing.T) {
+	o := Clause(
+		Column(`user__id`),
+	)
+	if o.GetColumn() != `user.id` {
+		t.Error()
+	}
+}
+
+func TestOrder_GetSort(t *testing.T) {
+	o := Clause(
+		SortDescending(),
+	)
+	if o.GetSort() != Descending {
+		t.Error()
+	}
+}
+
+func TestOrder_IsRaw(t *testing.T) {
+	o1 := Clause()
+	if o1.IsRaw() {
+		t.Error()
+	}
+
+	o2 := Clause(
+		Raw(),
+	)
+	if !o2.IsRaw() {
+		t.Error()
+	}
 }
