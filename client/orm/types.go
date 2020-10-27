@@ -17,7 +17,7 @@ package orm
 import (
 	"context"
 	"database/sql"
-	"github.com/astaxie/beego/client/orm/structs/clauses"
+	"github.com/astaxie/beego/client/orm/structs/clauses/order"
 	"reflect"
 	"time"
 
@@ -292,20 +292,26 @@ type QuerySeter interface {
 	OrderBy(exprs ...string) QuerySeter
 	// add ORDER expression by order clauses
 	// for example:
-	// OrderClauses(clauses.OrderClause(
-	//		clauses.OrderColumn(`status`),
-	//		clauses.OrderSortAscending(),//default None
+	//	OrderClauses(
+	//		order.Clause(
+	//			order.Column("Id"),
+	//			order.SortAscending(),
+	//		),
+	//		order.Clause(
+	//			order.Column("status"),
+	//			order.SortDescending(),
+	//		),
+	//	)
+	// OrderClauses(order.Clause(
+	//		order.Column(`user__status`),
+	//		order.SortDescending(),//default None
 	//	))
-	// OrderClauses(clauses.OrderClause(
-	//		clauses.OrderColumn(`user__status`),
-	//		clauses.OrderSortDescending(),//default None
+	// OrderClauses(order.Clause(
+	//		order.Column(`random()`),
+	//		order.SortNone(),//default None
+	//		order.Raw(),//default false.if true, do not check field is valid or not
 	//	))
-	// OrderClauses(clauses.OrderClause(
-	//		clauses.OrderColumn(`random()`),
-	//		clauses.OrderSortNone(),//default None
-	//		clauses.OrderRaw(),//default false.if true, do not check field is valid or not
-	//	))
-	OrderClauses(orders ...*clauses.Order) QuerySeter
+	OrderClauses(orders ...*order.Order) QuerySeter
 	// add FORCE INDEX expression.
 	// for example:
 	//	qs.ForceIndex(`idx_name1`,`idx_name2`)

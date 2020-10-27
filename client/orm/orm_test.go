@@ -21,7 +21,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/astaxie/beego/client/orm/structs/clauses"
+	"github.com/astaxie/beego/client/orm/structs/clauses/order"
 	"io/ioutil"
 	"math"
 	"os"
@@ -1080,9 +1080,9 @@ func TestOrderBy(t *testing.T) {
 	throwFail(t, AssertIs(num, 1))
 
 	num, err = qs.OrderClauses(
-		clauses.OrderClause(
-			clauses.OrderColumn(`profile__age`),
-			clauses.OrderSortDescending(),
+		order.Clause(
+			order.Column(`profile__age`),
+			order.SortDescending(),
 		),
 	).Filter("user_name", "astaxie").Count()
 	throwFail(t, err)
@@ -1090,9 +1090,9 @@ func TestOrderBy(t *testing.T) {
 
 	if IsMysql {
 		num, err = qs.OrderClauses(
-			clauses.OrderClause(
-				clauses.OrderColumn(`rand()`),
-				clauses.OrderRaw(),
+			order.Clause(
+				order.Column(`rand()`),
+				order.Raw(),
 			),
 		).Filter("user_name", "astaxie").Count()
 		throwFail(t, err)
@@ -1185,9 +1185,9 @@ func TestValues(t *testing.T) {
 	}
 
 	num, err = qs.OrderClauses(
-		clauses.OrderClause(
-			clauses.OrderColumn("Id"),
-			clauses.OrderSortAscending(),
+		order.Clause(
+			order.Column("Id"),
+			order.SortAscending(),
 		),
 	).Values(&maps)
 	throwFail(t, err)

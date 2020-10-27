@@ -16,13 +16,13 @@ package orm
 
 import (
 	"fmt"
-	"github.com/astaxie/beego/client/orm/structs/clauses"
+	"github.com/astaxie/beego/client/orm/structs"
 	"strings"
 )
 
 // ExprSep define the expression separation
 const (
-	ExprSep = clauses.ExprSep
+	ExprSep = structs.ExprSep
 )
 
 type condValue struct {

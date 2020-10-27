@@ -1,16 +1,19 @@
-package clauses
+package order
 
-import "strings"
+import (
+	"github.com/astaxie/beego/client/orm/structs"
+	"strings"
+)
 
 type Sort int8
 
 const (
-	SortNone       Sort = 0
-	SortAscending  Sort = 1
-	SortDescending Sort = 2
+	None       Sort = 0
+	Ascending  Sort = 1
+	Descending Sort = 2
 )
 
-type OrderOption func(order *Order)
+type Option func(order *Order)
 
 type Order struct {
 	column string
@@ -18,7 +21,7 @@ type Order struct {
 	isRaw  bool
 }
 
-func OrderClause(options ...OrderOption) *Order {
+func Clause(options ...Option) *Order {
 	o := &Order{}
 	for _, option := range options {
 		option(o)
@@ -37,9 +40,9 @@ func (o *Order) GetSort() Sort {
 
 func (o *Order) SortString() string {
 	switch o.GetSort() {
-	case SortAscending:
+	case Ascending:
 		return "ASC"
-	case SortDescending:
+	case Descending:
 		return "DESC"
 	}
 
@@ -53,10 +56,10 @@ func (o *Order) IsRaw() bool {
 func ParseOrder(expressions ...string) []*Order {
 	var orders []*Order
 	for _, expression := range expressions {
-		sort := SortAscending
-		column := strings.ReplaceAll(expression, ExprSep, ExprDot)
+		sort := Ascending
+		column := strings.ReplaceAll(expression, structs.ExprSep, structs.ExprDot)
 		if column[0] == '-' {
-			sort = SortDescending
+			sort = Descending
 			column = column[1:]
 		}
 
@@ -69,31 +72,31 @@ func ParseOrder(expressions ...string) []*Order {
 	return orders
 }
 
-func OrderColumn(column string) OrderOption {
+func Column(column string) Option {
 	return func(order *Order) {
-		order.column = strings.ReplaceAll(column, ExprSep, ExprDot)
+		order.column = strings.ReplaceAll(column, structs.ExprSep, structs.ExprDot)
 	}
 }
 
-func sort(sort Sort) OrderOption {
+func sort(sort Sort) Option {
 	return func(order *Order) {
 		order.sort = sort
 	}
 }
 
-func OrderSortAscending() OrderOption {
-	return sort(SortAscending)
+func SortAscending() Option {
+	return sort(Ascending)
 }
 
-func OrderSortDescending() OrderOption {
-	return sort(SortDescending)
+func SortDescending() Option {
+	return sort(Descending)
 }
 
-func OrderSortNone() OrderOption {
-	return sort(SortNone)
+func SortNone() Option {
+	return sort(None)
 }
 
-func OrderRaw() OrderOption {
+func Raw() Option {
 	return func(order *Order) {
 		order.isRaw = true
 	}
