@@ -15,6 +15,7 @@
 package httplib
 
 import (
+	"context"
 	"errors"
 	"io/ioutil"
 	"net"
@@ -23,6 +24,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestResponse(t *testing.T) {
@@ -283,4 +286,17 @@ func TestHeader(t *testing.T) {
 		t.Fatal(err)
 	}
 	t.Log(str)
+}
+
+// TestAddFilter make sure that AddFilters only work for the specific request
+func TestAddFilter(t *testing.T) {
+	req := Get("http://beego.me")
+	req.AddFilters(func(next Filter) Filter {
+		return func(ctx context.Context, req *BeegoHTTPRequest) (*http.Response, error) {
+			return next(ctx, req)
+		}
+	})
+
+	r := Get("http://beego.me")
+	assert.Equal(t, 1, len(req.setting.FilterChains)-len(r.setting.FilterChains))
 }
