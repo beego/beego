@@ -17,6 +17,7 @@ package orm
 import (
 	"fmt"
 	"github.com/astaxie/beego/client/orm/clauses"
+	"github.com/astaxie/beego/client/orm/clauses/order_clause"
 	"strings"
 	"time"
 )
