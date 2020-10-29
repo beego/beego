@@ -16,8 +16,7 @@ package orm
 
 import (
 	"fmt"
-	"github.com/astaxie/beego/client/orm/structs"
-	"github.com/astaxie/beego/client/orm/structs/clauses/order"
+	"github.com/astaxie/beego/client/orm/clauses"
 	"strings"
 	"time"
 )
@@ -423,7 +422,7 @@ func (t *dbTables) getGroupSQL(groups []string) (groupSQL string) {
 }
 
 // generate order sql.
-func (t *dbTables) getOrderSQL(orders []*order.Order) (orderSQL string) {
+func (t *dbTables) getOrderSQL(orders []*order_clause.Order) (orderSQL string) {
 	if len(orders) == 0 {
 		return
 	}
@@ -433,7 +432,7 @@ func (t *dbTables) getOrderSQL(orders []*order.Order) (orderSQL string) {
 	orderSqls := make([]string, 0, len(orders))
 	for _, order := range orders {
 		column := order.GetColumn()
-		clause := strings.Split(column, structs.ExprDot)
+		clause := strings.Split(column, clauses.ExprDot)
 
 		if order.IsRaw() {
 			if len(clause) == 2 {

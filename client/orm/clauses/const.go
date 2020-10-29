@@ -1,4 +1,4 @@
-package structs
+package clauses
 
 const (
 	ExprSep                = "__"

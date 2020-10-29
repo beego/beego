@@ -1,7 +1,7 @@
-package order
+package order_clause
 
 import (
-	"github.com/astaxie/beego/client/orm/structs"
+	"github.com/astaxie/beego/client/orm/clauses"
 	"strings"
 )
 
@@ -57,7 +57,7 @@ func ParseOrder(expressions ...string) []*Order {
 	var orders []*Order
 	for _, expression := range expressions {
 		sort := Ascending
-		column := strings.ReplaceAll(expression, structs.ExprSep, structs.ExprDot)
+		column := strings.ReplaceAll(expression, clauses.ExprSep, clauses.ExprDot)
 		if column[0] == '-' {
 			sort = Descending
 			column = column[1:]
@@ -74,7 +74,7 @@ func ParseOrder(expressions ...string) []*Order {
 
 func Column(column string) Option {
 	return func(order *Order) {
-		order.column = strings.ReplaceAll(column, structs.ExprSep, structs.ExprDot)
+		order.column = strings.ReplaceAll(column, clauses.ExprSep, clauses.ExprDot)
 	}
 }
 

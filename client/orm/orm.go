@@ -58,7 +58,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	order2 "github.com/astaxie/beego/client/orm/structs/clauses/order"
+	"github.com/astaxie/beego/client/orm/clauses/order_clause"
 	"os"
 	"reflect"
 	"time"
@@ -352,7 +352,7 @@ func (o *ormBase) LoadRelatedWithCtx(ctx context.Context, md interface{}, name s
 	qs.relDepth = relDepth
 
 	if len(order) > 0 {
-		qs.orders = order2.ParseOrder(order)
+		qs.orders = order_clause.ParseOrder(order)
 	}
 
 	find := ind.FieldByIndex(fi.fieldIndex)
