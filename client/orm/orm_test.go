@@ -381,6 +381,24 @@ func TestUnregisterModel(t *testing.T) {
 	throwFail(t, AssertIs(n, 5))
 	throwFail(t, AssertIs(res[0].EmployeeName, "A1"))
 
+	type Sum struct {
+		DeptName string
+		Total    int
+	}
+	var sun []Sum
+	qs.Aggregate("dept_name,sum(salary) as total").GroupBy("dept_name").OrderBy("dept_name").All(&sun)
+	throwFail(t, AssertIs(sun[0].DeptName, "A"))
+	throwFail(t, AssertIs(sun[0].Total, 3000))
+
+	type Max struct {
+		DeptName string
+		Max      float64
+	}
+	var max []Max
+	qs.Aggregate("dept_name,max(salary) as max").GroupBy("dept_name").OrderBy("dept_name").All(&max)
+	throwFail(t, AssertIs(max[1].DeptName, "B"))
+	throwFail(t, AssertIs(max[1].Max, 4000))
+
 }
 
 func TestNullDataTypes(t *testing.T) {

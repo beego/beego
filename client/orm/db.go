@@ -1038,6 +1038,9 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 	if qs.distinct {
 		sqlSelect += " DISTINCT"
 	}
+	if qs.aggregate != "" {
+		sels = qs.aggregate
+	}
 	query := fmt.Sprintf("%s %s FROM %s%s%s T0 %s%s%s%s%s%s",
 		sqlSelect, sels, Q, mi.table, Q,
 		specifyIndexes, join, where, groupBy, orderBy, limit)
@@ -1062,17 +1065,20 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 		}
 	}
 
-	refs := make([]interface{}, colsNum)
-	for i := range refs {
-		var ref interface{}
-		refs[i] = &ref
-	}
 
 	defer rs.Close()
 
 	slice := ind
 	if unregister {
 		mi,_ = modelCache.get(name)
+		tCols = mi.fields.dbcols
+		colsNum = len(tCols)
+	}
+
+	refs := make([]interface{}, colsNum)
+	for i := range refs {
+		var ref interface{}
+		refs[i] = &ref
 	}
 
 	var cnt int64
@@ -1084,7 +1090,6 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 
 			elm := reflect.New(mi.addrField.Elem().Type())
 			mind := reflect.Indirect(elm)
-
 			cacheV := make(map[string]*reflect.Value)
 			cacheM := make(map[string]*modelInfo)
 			trefs := refs

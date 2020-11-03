@@ -392,12 +392,6 @@ func (mc *_modelCache) register(prefixOrSuffixStr string, prefixOrSuffix bool, m
 					}
 				}
 			}
-
-			if mi.fields.pk == nil {
-				err = fmt.Errorf("<orm.RegisterModel> `%s` needs a primary key field, default is to use 'id' if not set\n", name)
-				return
-			}
-
 		}
 
 		mi.table = table
