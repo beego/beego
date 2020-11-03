@@ -948,10 +948,10 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 	val := reflect.ValueOf(container)
 	ind := reflect.Indirect(val)
 
-	errTyp := true
+	unregister := true
 	one := true
 	isPtr := true
-
+	name := ""
 	if val.Kind() == reflect.Ptr {
 		fn := ""
 		if ind.Kind() == reflect.Slice {
@@ -963,19 +963,17 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 			case reflect.Struct:
 				isPtr = false
 				fn = getFullName(typ)
+				name = getTableName(reflect.New(typ))
 			}
 		} else {
 			fn = getFullName(ind.Type())
+			name = getTableName(ind)
 		}
-		errTyp = fn != mi.fullName
+		unregister = fn != mi.fullName
 	}
 
-	if errTyp {
-		if one {
-			panic(fmt.Errorf("wrong object type `%s` for rows scan, need *%s", val.Type(), mi.fullName))
-		} else {
-			panic(fmt.Errorf("wrong object type `%s` for rows scan, need *[]*%s or *[]%s", val.Type(), mi.fullName, mi.fullName))
-		}
+	if unregister {
+		RegisterModel(container)
 	}
 
 	rlimit := qs.limit
@@ -1073,6 +1071,9 @@ func (d *dbBase) ReadBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Condi
 	defer rs.Close()
 
 	slice := ind
+	if unregister {
+		mi,_ = modelCache.get(name)
+	}
 
 	var cnt int64
 	for rs.Next() {

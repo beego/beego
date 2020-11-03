@@ -332,10 +332,10 @@ end:
 
 // register register models to model cache
 func (mc *_modelCache) register(prefixOrSuffixStr string, prefixOrSuffix bool, models ...interface{}) (err error) {
-	if mc.done {
-		err = fmt.Errorf("register must be run before BootStrap")
-		return
-	}
+	// if mc.done {
+	// 	err = fmt.Errorf("register must be run before BootStrap")
+	// 	return
+	// }
 
 	for _, model := range models {
 		val := reflect.ValueOf(model)
@@ -353,6 +353,9 @@ func (mc *_modelCache) register(prefixOrSuffixStr string, prefixOrSuffix bool, m
 			return
 		}
 
+		if val.Elem().Kind() == reflect.Slice {
+			val = reflect.New(val.Elem().Type().Elem())
+		}
 		table := getTableName(val)
 
 		if prefixOrSuffixStr != "" {
