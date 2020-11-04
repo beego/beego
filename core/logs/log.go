@@ -764,9 +764,7 @@ func formatLog(f interface{}, v ...interface{}) string {
 		if len(v) == 0 {
 			return msg
 		}
-		if strings.Contains(msg, "%") && !strings.Contains(msg, "%%") {
-			// format string
-		} else {
+		if !strings.Contains(msg, "%") {
 			// do not contain format char
 			msg += strings.Repeat(" %v", len(v))
 		}
