@@ -29,6 +29,8 @@ import (
 	"sync"
 
 	"github.com/mitchellh/mapstructure"
+
+	"github.com/astaxie/beego/core/logs"
 )
 
 var (
@@ -97,7 +99,7 @@ func (ini *IniConfig) parseData(dir string, data []byte) (*IniConfigContainer, e
 				break
 			}
 
-			//It might be a good idea to throw a error on all unknonw errors?
+			// It might be a good idea to throw a error on all unknonw errors?
 			if _, ok := err.(*os.PathError); ok {
 				return nil, err
 			}
@@ -516,4 +518,11 @@ func (c *IniConfigContainer) Unmarshaler(prefix string, obj interface{}, opt ...
 
 func init() {
 	Register("ini", &IniConfig{})
+
+	err := InitGlobalInstance("ini", "config/app.conf")
+	if err != nil {
+		logs.Warn("init global config instance failed. If you donot use this, just ignore it. ", err)
+	}
 }
+
+// Ignore this error
