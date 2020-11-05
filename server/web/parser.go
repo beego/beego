@@ -39,7 +39,7 @@ import (
 var globalRouterTemplate = `package {{.routersDir}}
 
 import (
-	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/server/web"
 	"github.com/astaxie/beego/server/web/context/param"{{.globalimport}}
 )
 
@@ -55,19 +55,19 @@ var (
 	genInfoList        map[string][]ControllerComments
 
 	routerHooks = map[string]int{
-		"beego.BeforeStatic": BeforeStatic,
-		"beego.BeforeRouter": BeforeRouter,
-		"beego.BeforeExec":   BeforeExec,
-		"beego.AfterExec":    AfterExec,
-		"beego.FinishRouter": FinishRouter,
+		"web.BeforeStatic": BeforeStatic,
+		"web.BeforeRouter": BeforeRouter,
+		"web.BeforeExec":   BeforeExec,
+		"web.AfterExec":    AfterExec,
+		"web.FinishRouter": FinishRouter,
 	}
 
 	routerHooksMapping = map[int]string{
-		BeforeStatic: "beego.BeforeStatic",
-		BeforeRouter: "beego.BeforeRouter",
-		BeforeExec:   "beego.BeforeExec",
-		AfterExec:    "beego.AfterExec",
-		FinishRouter: "beego.FinishRouter",
+		BeforeStatic: "web.BeforeStatic",
+		BeforeRouter: "web.BeforeRouter",
+		BeforeExec:   "web.BeforeExec",
+		AfterExec:    "web.AfterExec",
+		FinishRouter: "web.FinishRouter",
 	}
 )
 
@@ -476,7 +476,7 @@ func genRouterCode(pkgRealpath string) {
 			filters := ""
 			if len(c.FilterComments) > 0 {
 				for _, f := range c.FilterComments {
-					filters += fmt.Sprintf(`                &beego.ControllerFilter{
+					filters += fmt.Sprintf(`                &web.ControllerFilter{
                     Pattern: "%s",
                     Pos: %s,
                     Filter: %s,
@@ -489,7 +489,7 @@ func genRouterCode(pkgRealpath string) {
 			if filters == "" {
 				filters = "nil"
 			} else {
-				filters = fmt.Sprintf(`[]*beego.ControllerFilter{
+				filters = fmt.Sprintf(`[]*web.ControllerFilter{
 %s
             }`, filters)
 			}
@@ -497,8 +497,8 @@ func genRouterCode(pkgRealpath string) {
 			globalimport += imports
 
 			globalinfo = globalinfo + `
-    beego.GlobalControllerRouter["` + k + `"] = append(beego.GlobalControllerRouter["` + k + `"],
-        beego.ControllerComments{
+    web.GlobalControllerRouter["` + k + `"] = append(web.GlobalControllerRouter["` + k + `"],
+        web.ControllerComments{
             Method: "` + strings.TrimSpace(c.Method) + `",
             ` + `Router: "` + c.Router + `"` + `,
             AllowHTTPMethods: ` + allmethod + `,
