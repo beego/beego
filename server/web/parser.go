@@ -39,7 +39,7 @@ import (
 var globalRouterTemplate = `package {{.routersDir}}
 
 import (
-	"github.com/astaxie/beego"
+	beego "github.com/astaxie/beego/server/web"
 	"github.com/astaxie/beego/server/web/context/param"{{.globalimport}}
 )
 
