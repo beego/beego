@@ -25,3 +25,8 @@ var (
 
 	GitBranch string
 )
+
+const (
+	// VERSION represent beego web framework version.
+	VERSION = "2.0.0-alpha"
+)
