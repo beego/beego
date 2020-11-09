@@ -62,7 +62,6 @@ func GetInt64(v interface{}) int64 {
 	case int64:
 		return result
 	default:
-
 		if d := GetString(v); d != "" {
 			value, _ := strconv.ParseInt(d, 10, 64)
 			return value
