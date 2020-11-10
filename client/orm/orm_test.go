@@ -205,6 +205,7 @@ func TestSyncDb(t *testing.T) {
 	RegisterModel(new(Index))
 	RegisterModel(new(StrPk))
 	RegisterModel(new(TM))
+	RegisterModel(new(DeptInfo))
 
 	err := RunSyncdb("default", true, Debug)
 	throwFail(t, err)
@@ -232,6 +233,7 @@ func TestRegisterModels(t *testing.T) {
 	RegisterModel(new(Index))
 	RegisterModel(new(StrPk))
 	RegisterModel(new(TM))
+	RegisterModel(new(DeptInfo))
 
 	BootStrap()
 
@@ -331,6 +333,68 @@ func TestTM(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(recTM.TMPrecision1.String(), "2020-08-07 02:07:04.123 +0000 UTC"))
 	throwFail(t, AssertIs(recTM.TMPrecision2.String(), "2020-08-07 02:07:04.1235 +0000 UTC"))
+}
+
+func TestUnregisterModel(t *testing.T) {
+	data := []*DeptInfo{
+		{
+			DeptName:     "A",
+			EmployeeName: "A1",
+			Salary:       1000,
+		},
+		{
+			DeptName:     "A",
+			EmployeeName: "A2",
+			Salary:       2000,
+		},
+		{
+			DeptName:     "B",
+			EmployeeName: "B1",
+			Salary:       2000,
+		},
+		{
+			DeptName:     "B",
+			EmployeeName: "B2",
+			Salary:       4000,
+		},
+		{
+			DeptName:     "B",
+			EmployeeName: "B3",
+			Salary:       3000,
+		},
+	}
+	qs := dORM.QueryTable("dept_info")
+	i, _ := qs.PrepareInsert()
+	for _, d := range data {
+		_, err := i.Insert(d)
+		if err != nil {
+			throwFail(t, err)
+		}
+	}
+	var res []UnregisterModel
+	n,err:=dORM.QueryTable("dept_info").All(&res)
+	throwFail(t, err)
+	throwFail(t, AssertIs(n, 5))
+	throwFail(t, AssertIs(res[0].EmployeeName, "A1"))
+
+	type Sum struct {
+		DeptName string
+		Total    int
+	}
+	var sun []Sum
+	qs.Aggregate("dept_name,sum(salary) as total").GroupBy("dept_name").OrderBy("dept_name").All(&sun)
+	throwFail(t, AssertIs(sun[0].DeptName, "A"))
+	throwFail(t, AssertIs(sun[0].Total, 3000))
+
+	type Max struct {
+		DeptName string
+		Max      float64
+	}
+	var max []Max
+	qs.Aggregate("dept_name,max(salary) as max").GroupBy("dept_name").OrderBy("dept_name").All(&max)
+	throwFail(t, AssertIs(max[1].DeptName, "B"))
+	throwFail(t, AssertIs(max[1].Max, 4000))
+
 }
 
 func TestNullDataTypes(t *testing.T) {
