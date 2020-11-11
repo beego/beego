@@ -210,9 +210,9 @@ func (t *Tree) AddRouter(pattern string, runObject interface{}) {
 func (t *Tree) addseg(segments []string, route interface{}, wildcards []string, reg string) {
 	if len(segments) == 0 {
 		if reg != "" {
-			t.leaves = append(t.leaves, &leafInfo{runObject: route, wildcards: wildcards, regexps: regexp.MustCompile("^" + reg + "$")})
+			t.leaves = append([]*leafInfo{{runObject: route, wildcards: wildcards, regexps: regexp.MustCompile("^" + reg + "$")}}, t.leaves...)
 		} else {
-			t.leaves = append(t.leaves, &leafInfo{runObject: route, wildcards: wildcards})
+			t.leaves = append([]*leafInfo{{runObject: route, wildcards: wildcards}}, t.leaves...)
 		}
 	} else {
 		seg := segments[0]
