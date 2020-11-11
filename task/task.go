@@ -452,9 +452,11 @@ func (m *taskManager) StartTask() {
 
 func (m *taskManager) run() {
 	now := time.Now().Local()
+	m.taskLock.Lock()
 	for _, t := range m.adminTaskList {
 		t.SetNext(nil, now)
 	}
+	m.taskLock.Unlock()
 
 	for {
 		// we only use RLock here because NewMapSorter copy the reference, do not change any thing
