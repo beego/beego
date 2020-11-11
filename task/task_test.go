@@ -50,6 +50,7 @@ func TestModifyTaskListAfterRunning(t *testing.T) {
 		return nil
 	})
 	err := tk.Run(nil)
+
 	if err != nil {
 		t.Fatal(err)
 	}
