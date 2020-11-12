@@ -152,5 +152,8 @@ func (c *Condition) IsEmpty() bool {
 
 // clone clone a condition
 func (c Condition) clone() *Condition {
+	params := make([]condValue, len(c.params))
+	copy(params, c.params)
+	c.params = params
 	return &c
 }
