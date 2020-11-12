@@ -2672,10 +2672,10 @@ func TestPSQueryBuilder(t *testing.T) {
 func TestCondition(t *testing.T) {
 	// test Condition whether to include yourself
 	cond := NewCondition()
-	cond = cond.AndCond(cond.Or("id", 1))
-	cond = cond.AndCond(cond.Or("id", 2))
-	cond = cond.AndCond(cond.Or("id", 3))
-	cond = cond.AndCond(cond.Or("id", 4))
+	cond = cond.AndCond(cond.Or("ID", 1))
+	cond = cond.AndCond(cond.Or("ID", 2))
+	cond = cond.AndCond(cond.Or("ID", 3))
+	cond = cond.AndCond(cond.Or("ID", 4))
 
 	cycleFlag := false
 	var hasCycle func(*Condition)
@@ -2691,11 +2691,14 @@ func TestCondition(t *testing.T) {
 				if condPointMap[adr] {
 					// self as sub cond was cycle
 					cycleFlag = true
-					return
-				} else {
-					condPointMap[adr] = true
+					break
 				}
+				condPointMap[adr] = true
+
 			}
+		}
+		if cycleFlag {
+			return
 		}
 		for _, p := range c.params {
 			if p.isCond {
