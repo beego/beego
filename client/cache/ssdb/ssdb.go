@@ -28,14 +28,14 @@ func NewSsdbCache() cache.Cache {
 func (rc *Cache) Get(ctx context.Context, key string) (interface{}, error) {
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
-			return nil, nil
+			return nil, err
 		}
 	}
 	value, err := rc.conn.Get(key)
 	if err == nil {
 		return value, nil
 	}
-	return nil, nil
+	return nil, err
 }
 
 // GetMulti gets one or keys values from ssdb.
