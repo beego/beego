@@ -113,6 +113,14 @@ func TestRedisCache(t *testing.T) {
 		t.Error("GetMulti ERROR")
 	}
 
+	vv, err = bm.GetMulti(context.Background(), []string{"astaxie0", "astaxie1"})
+	if vv[0] != nil {
+		t.Error("GetMulti ERROR")
+	}
+	if v, _ := redis.String(vv[1], nil); v != "author1" {
+		t.Error("GetMulti ERROR")
+	}
+
 	// test clear all
 	if err = bm.ClearAll(context.Background()); err != nil {
 		t.Error("clear all err")

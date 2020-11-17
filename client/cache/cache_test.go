@@ -120,6 +120,20 @@ func TestCache(t *testing.T) {
 	if vv[1].(string) != "author1" {
 		t.Error("GetMulti ERROR")
 	}
+
+	vv, err = bm.GetMulti(context.Background(), []string{"astaxie0", "astaxie1"})
+	if len(vv) != 2 {
+		t.Error("GetMulti ERROR")
+	}
+	if vv[0] != nil {
+		t.Error("GetMulti ERROR")
+	}
+	if vv[1].(string) != "author1" {
+		t.Error("GetMulti ERROR")
+	}
+	if err != nil && err.Error() != "key [astaxie0] error: the key isn't exist" {
+		t.Error("GetMulti ERROR")
+	}
 }
 
 func TestFileCache(t *testing.T) {
@@ -186,6 +200,20 @@ func TestFileCache(t *testing.T) {
 		t.Error("GetMulti ERROR")
 	}
 	if vv[1].(string) != "author1" {
+		t.Error("GetMulti ERROR")
+	}
+
+	vv, err = bm.GetMulti(context.Background(), []string{"astaxie0", "astaxie1"})
+	if len(vv) != 2 {
+		t.Error("GetMulti ERROR")
+	}
+	if vv[0] != nil {
+		t.Error("GetMulti ERROR")
+	}
+	if vv[1].(string) != "author1" {
+		t.Error("GetMulti ERROR")
+	}
+	if err == nil {
 		t.Error("GetMulti ERROR")
 	}
 
