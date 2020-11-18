@@ -113,7 +113,7 @@ func TestRedisCache(t *testing.T) {
 		t.Error("GetMulti ERROR")
 	}
 
-	vv, err = bm.GetMulti(context.Background(), []string{"astaxie0", "astaxie1"})
+	vv, _ = bm.GetMulti(context.Background(), []string{"astaxie0", "astaxie1"})
 	if vv[0] != nil {
 		t.Error("GetMulti ERROR")
 	}
