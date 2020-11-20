@@ -120,8 +120,16 @@ type ControllerInfo struct {
 	methodParams   []*param.MethodParam
 }
 
+type ControllerOptions func(*ControllerInfo)
+
 func (c *ControllerInfo) GetPattern() string {
 	return c.pattern
+}
+
+func WithMethods(ctrlInterface ControllerInterface, mappingMethod ...string) ControllerOptions {
+	return func(c *ControllerInfo) {
+		c.methods = parseMappingMethods(ctrlInterface, mappingMethod)
+	}
 }
 
 // ControllerRegister containers registered router rules, controller handlers and filters.
@@ -171,39 +179,65 @@ func NewControllerRegisterWithCfg(cfg *Config) *ControllerRegister {
 //	Add("/api/delete",&RestController{},"delete:DeleteFood")
 //	Add("/api",&RestController{},"get,post:ApiFunc"
 //	Add("/simple",&SimpleController{},"get:GetFunc;post:PostFunc")
-func (p *ControllerRegister) Add(pattern string, c ControllerInterface, mappingMethods ...string) {
-	p.addWithMethodParams(pattern, c, nil, mappingMethods...)
+func (p *ControllerRegister) Add(pattern string, c ControllerInterface, opts ...ControllerOptions) {
+	p.addWithMethodParams(pattern, c, nil, opts...)
 }
 
-func (p *ControllerRegister) addWithMethodParams(pattern string, c ControllerInterface, methodParams []*param.MethodParam, mappingMethods ...string) {
+func parseMappingMethods(c ControllerInterface, mappingMethods []string) map[string]string {
 	reflectVal := reflect.ValueOf(c)
 	t := reflect.Indirect(reflectVal).Type()
 	methods := make(map[string]string)
-	if len(mappingMethods) > 0 {
-		semi := strings.Split(mappingMethods[0], ";")
-		for _, v := range semi {
-			colon := strings.Split(v, ":")
-			if len(colon) != 2 {
-				panic("method mapping format is invalid")
+
+	if len(mappingMethods) == 0 {
+		return methods
+	}
+
+	semi := strings.Split(mappingMethods[0], ";")
+	for _, v := range semi {
+		colon := strings.Split(v, ":")
+		if len(colon) != 2 {
+			panic("method mapping format is invalid")
+		}
+		comma := strings.Split(colon[0], ",")
+		for _, m := range comma {
+			if m != "*" && !HTTPMETHOD[strings.ToUpper(m)] {
+				panic(v + " is an invalid method mapping. Method doesn't exist " + m)
 			}
-			comma := strings.Split(colon[0], ",")
-			for _, m := range comma {
-				if m == "*" || HTTPMETHOD[strings.ToUpper(m)] {
-					if val := reflectVal.MethodByName(colon[1]); val.IsValid() {
-						methods[strings.ToUpper(m)] = colon[1]
-					} else {
-						panic("'" + colon[1] + "' method doesn't exist in the controller " + t.Name())
-					}
-				} else {
-					panic(v + " is an invalid method mapping. Method doesn't exist " + m)
-				}
+			if val := reflectVal.MethodByName(colon[1]); val.IsValid() {
+				methods[strings.ToUpper(m)] = colon[1]
+				continue
 			}
+			panic("'" + colon[1] + "' method doesn't exist in the controller " + t.Name())
 		}
 	}
 
+	return methods
+}
+
+func (p *ControllerRegister) addRouterForMethod(route *ControllerInfo) {
+	if len(route.methods) == 0 {
+		for m := range HTTPMETHOD {
+			p.addToRouter(m, route.pattern, route)
+		}
+		return
+	}
+	for k := range route.methods {
+		if k != "*" {
+			p.addToRouter(k, route.pattern, route)
+			continue
+		}
+		for m := range HTTPMETHOD {
+			p.addToRouter(m, route.pattern, route)
+		}
+	}
+}
+
+func (p *ControllerRegister) addWithMethodParams(pattern string, c ControllerInterface, methodParams []*param.MethodParam, opts ...ControllerOptions) {
+	reflectVal := reflect.ValueOf(c)
+	t := reflect.Indirect(reflectVal).Type()
+
 	route := &ControllerInfo{}
 	route.pattern = pattern
-	route.methods = methods
 	route.routerType = routerTypeBeego
 	route.controllerType = t
 	route.initialize = func() ControllerInterface {
@@ -229,23 +263,11 @@ func (p *ControllerRegister) addWithMethodParams(pattern string, c ControllerInt
 
 		return execController
 	}
-
 	route.methodParams = methodParams
-	if len(methods) == 0 {
-		for m := range HTTPMETHOD {
-			p.addToRouter(m, pattern, route)
-		}
-	} else {
-		for k := range methods {
-			if k == "*" {
-				for m := range HTTPMETHOD {
-					p.addToRouter(m, pattern, route)
-				}
-			} else {
-				p.addToRouter(k, pattern, route)
-			}
-		}
+	for i := range opts {
+		opts[i](route)
 	}
+	p.addRouterForMethod(route)
 }
 
 func (p *ControllerRegister) addToRouter(method, pattern string, r *ControllerInfo) {
@@ -274,7 +296,7 @@ func (p *ControllerRegister) Include(cList ...ControllerInterface) {
 					p.InsertFilter(f.Pattern, f.Pos, f.Filter, WithReturnOnOutput(f.ReturnOnOutput), WithResetParams(f.ResetParams))
 				}
 
-				p.addWithMethodParams(a.Router, c, a.MethodParams, strings.Join(a.AllowHTTPMethods, ",")+":"+a.Method)
+				p.addWithMethodParams(a.Router, c, a.MethodParams, WithMethods(c, strings.Join(a.AllowHTTPMethods, ",")+":"+a.Method))
 			}
 		}
 	}

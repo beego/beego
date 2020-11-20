@@ -89,8 +89,8 @@ func (jc *JSONController) Get() {
 
 func TestUrlFor(t *testing.T) {
 	handler := NewControllerRegister()
-	handler.Add("/api/list", &TestController{}, "*:List")
-	handler.Add("/person/:last/:first", &TestController{}, "*:Param")
+	handler.Add("/api/list", &TestController{}, WithMethods(&TestController{}, "*:List"))
+	handler.Add("/person/:last/:first", &TestController{}, WithMethods(&TestController{}, "*:Param"))
 	if a := handler.URLFor("TestController.List"); a != "/api/list" {
 		logs.Info(a)
 		t.Errorf("TestController.List must equal to /api/list")
@@ -113,9 +113,9 @@ func TestUrlFor3(t *testing.T) {
 
 func TestUrlFor2(t *testing.T) {
 	handler := NewControllerRegister()
-	handler.Add("/v1/:v/cms_:id(.+)_:page(.+).html", &TestController{}, "*:List")
-	handler.Add("/v1/:username/edit", &TestController{}, "get:GetURL")
-	handler.Add("/v1/:v(.+)_cms/ttt_:id(.+)_:page(.+).html", &TestController{}, "*:Param")
+	handler.Add("/v1/:v/cms_:id(.+)_:page(.+).html", &TestController{}, WithMethods(&TestController{}, "*:List"))
+	handler.Add("/v1/:username/edit", &TestController{}, WithMethods(&TestController{}, "get:GetURL"))
+	handler.Add("/v1/:v(.+)_cms/ttt_:id(.+)_:page(.+).html", &TestController{}, WithMethods(&TestController{}, "*:Param"))
 	handler.Add("/:year:int/:month:int/:title/:entid", &TestController{})
 	if handler.URLFor("TestController.GetURL", ":username", "astaxie") != "/v1/astaxie/edit" {
 		logs.Info(handler.URLFor("TestController.GetURL"))
@@ -145,7 +145,7 @@ func TestUserFunc(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	handler := NewControllerRegister()
-	handler.Add("/api/list", &TestController{}, "*:List")
+	handler.Add("/api/list", &TestController{}, WithMethods(&TestController{}, "*:List"))
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != "i am list" {
 		t.Errorf("user define func can't run")
@@ -235,7 +235,7 @@ func TestRouteOk(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	handler := NewControllerRegister()
-	handler.Add("/person/:last/:first", &TestController{}, "get:GetParams")
+	handler.Add("/person/:last/:first", &TestController{}, WithMethods(&TestController{}, "get:GetParams"))
 	handler.ServeHTTP(w, r)
 	body := w.Body.String()
 	if body != "anderson+thomas+kungfu" {
@@ -249,7 +249,7 @@ func TestManyRoute(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	handler := NewControllerRegister()
-	handler.Add("/beego:id([0-9]+)-:page([0-9]+).html", &TestController{}, "get:GetManyRouter")
+	handler.Add("/beego:id([0-9]+)-:page([0-9]+).html", &TestController{}, WithMethods(&TestController{}, "get:GetManyRouter"))
 	handler.ServeHTTP(w, r)
 
 	body := w.Body.String()
@@ -266,7 +266,7 @@ func TestEmptyResponse(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	handler := NewControllerRegister()
-	handler.Add("/beego-empty.html", &TestController{}, "get:GetEmptyBody")
+	handler.Add("/beego-empty.html", &TestController{}, WithMethods(&TestController{}, "get:GetEmptyBody"))
 	handler.ServeHTTP(w, r)
 
 	if body := w.Body.String(); body != "" {

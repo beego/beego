@@ -272,7 +272,7 @@ func NSInclude(cList ...ControllerInterface) LinkNamespace {
 // NSRouter call Namespace Router
 func NSRouter(rootpath string, c ControllerInterface, mappingMethods ...string) LinkNamespace {
 	return func(namespace *Namespace) {
-		web.Router(rootpath, c, mappingMethods...)
+		web.Router(rootpath, c, web.WithMethods(c, mappingMethods...))
 	}
 }
 

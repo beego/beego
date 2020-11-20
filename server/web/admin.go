@@ -112,13 +112,13 @@ func registerAdmin() error {
 			HttpServer: NewHttpServerWithCfg(BConfig),
 		}
 		// keep in mind that all data should be html escaped to avoid XSS attack
-		beeAdminApp.Router("/", c, "get:AdminIndex")
-		beeAdminApp.Router("/qps", c, "get:QpsIndex")
-		beeAdminApp.Router("/prof", c, "get:ProfIndex")
-		beeAdminApp.Router("/healthcheck", c, "get:Healthcheck")
-		beeAdminApp.Router("/task", c, "get:TaskStatus")
-		beeAdminApp.Router("/listconf", c, "get:ListConf")
-		beeAdminApp.Router("/metrics", c, "get:PrometheusMetrics")
+		beeAdminApp.Router("/", c, WithMethods(c, "get:AdminIndex"))
+		beeAdminApp.Router("/qps", c, WithMethods(c, "get:QpsIndex"))
+		beeAdminApp.Router("/prof", c, WithMethods(c, "get:ProfIndex"))
+		beeAdminApp.Router("/healthcheck", c, WithMethods(c, "get:Healthcheck"))
+		beeAdminApp.Router("/task", c, WithMethods(c, "get:TaskStatus"))
+		beeAdminApp.Router("/listconf", c, WithMethods(c, "get:ListConf"))
+		beeAdminApp.Router("/metrics", c, WithMethods(c, "get:PrometheusMetrics"))
 
 		go beeAdminApp.Run()
 	}
