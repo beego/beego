@@ -781,7 +781,11 @@ func (p *ControllerRegister) serveHttp(ctx *beecontext.Context) {
 	currentSessionOn = BConfig.WebConfig.Session.SessionOn
 	originRouterInfo, originFindRouter = p.FindRouter(ctx)
 	if originFindRouter {
-		currentSessionOn = originRouterInfo.sessionOn
+		if !currentSessionOn && originRouterInfo.sessionOn {
+			logs.Warn("global sessionOn is false, sessionOn of router [%s] %s can't be set to true", ctx.Request.Method, ctx.Request.URL.Path)
+		} else {
+			currentSessionOn = originRouterInfo.sessionOn
+		}
 	}
 	if currentSessionOn {
 		ctx.Input.CruSession, err = GlobalSessions.SessionStart(rw, r)
