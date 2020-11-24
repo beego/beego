@@ -750,3 +750,59 @@ func TestRouterEntityTooLargeCopyBody(t *testing.T) {
 		t.Errorf("TestRouterRequestEntityTooLarge can't run")
 	}
 }
+
+func TestRouterSessionSet(t *testing.T) {
+	oldGlobalSessionOn := BConfig.WebConfig.Session.SessionOn
+	defer func() {
+		BConfig.WebConfig.Session.SessionOn = oldGlobalSessionOn
+	}()
+
+	// global sessionOn = false, router sessionOn = false
+	r, _ := http.NewRequest("GET", "/user", nil)
+	w := httptest.NewRecorder()
+	handler := NewControllerRegister()
+	handler.Add("/user", &TestController{}, SetRouterMethods(&TestController{}, "get:Get"),
+		SetRouterSessionOn(false))
+	handler.ServeHTTP(w, r)
+	if w.Header().Get("Set-Cookie") != "" {
+		t.Errorf("TestRotuerSessionSet failed")
+	}
+
+	// global sessionOn = false, router sessionOn = true
+	r, _ = http.NewRequest("GET", "/user", nil)
+	w = httptest.NewRecorder()
+	handler = NewControllerRegister()
+	handler.Add("/user", &TestController{}, SetRouterMethods(&TestController{}, "get:Get"),
+		SetRouterSessionOn(true))
+	handler.ServeHTTP(w, r)
+	if w.Header().Get("Set-Cookie") != "" {
+		t.Errorf("TestRotuerSessionSet failed")
+	}
+
+	BConfig.WebConfig.Session.SessionOn = true
+	if err := registerSession(); err != nil {
+		t.Errorf("register session failed, error: %s", err.Error())
+	}
+	// global sessionOn = true, router sessionOn = false
+	r, _ = http.NewRequest("GET", "/user", nil)
+	w = httptest.NewRecorder()
+	handler = NewControllerRegister()
+	handler.Add("/user", &TestController{}, SetRouterMethods(&TestController{}, "get:Get"),
+		SetRouterSessionOn(false))
+	handler.ServeHTTP(w, r)
+	if w.Header().Get("Set-Cookie") != "" {
+		t.Errorf("TestRotuerSessionSet failed")
+	}
+
+	// global sessionOn = true, router sessionOn = true
+	r, _ = http.NewRequest("GET", "/user", nil)
+	w = httptest.NewRecorder()
+	handler = NewControllerRegister()
+	handler.Add("/user", &TestController{}, SetRouterMethods(&TestController{}, "get:Get"),
+		SetRouterSessionOn(true))
+	handler.ServeHTTP(w, r)
+	if w.Header().Get("Set-Cookie") == "" {
+		t.Errorf("TestRotuerSessionSet failed")
+	}
+
+}
