@@ -99,7 +99,7 @@ func (n *Namespace) Filter(action string, filter ...FilterFunc) *Namespace {
 // Router same as beego.Rourer
 // refer: https://godoc.org/github.com/astaxie/beego#Router
 func (n *Namespace) Router(rootpath string, c ControllerInterface, mappingMethods ...string) *Namespace {
-	n.handlers.Add(rootpath, c, WithMethods(c, mappingMethods...))
+	n.handlers.Add(rootpath, c, SetRouterMethods(c, mappingMethods...))
 	return n
 }
 

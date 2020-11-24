@@ -118,6 +118,7 @@ type ControllerInfo struct {
 	routerType     int
 	initialize     func() ControllerInterface
 	methodParams   []*param.MethodParam
+	sessionOn      bool
 }
 
 type ControllerOptions func(*ControllerInfo)
@@ -126,9 +127,15 @@ func (c *ControllerInfo) GetPattern() string {
 	return c.pattern
 }
 
-func WithMethods(ctrlInterface ControllerInterface, mappingMethod ...string) ControllerOptions {
+func SetRouterMethods(ctrlInterface ControllerInterface, mappingMethod ...string) ControllerOptions {
 	return func(c *ControllerInfo) {
 		c.methods = parseMappingMethods(ctrlInterface, mappingMethod)
+	}
+}
+
+func SetRouterSessionOn(sessionOn bool) ControllerOptions {
+	return func(c *ControllerInfo) {
+		c.sessionOn = sessionOn
 	}
 }
 
@@ -239,6 +246,7 @@ func (p *ControllerRegister) addWithMethodParams(pattern string, c ControllerInt
 	route := &ControllerInfo{}
 	route.pattern = pattern
 	route.routerType = routerTypeBeego
+	route.sessionOn = BConfig.WebConfig.Session.SessionOn
 	route.controllerType = t
 	route.initialize = func() ControllerInterface {
 		vc := reflect.New(route.controllerType)
@@ -296,7 +304,7 @@ func (p *ControllerRegister) Include(cList ...ControllerInterface) {
 					p.InsertFilter(f.Pattern, f.Pos, f.Filter, WithReturnOnOutput(f.ReturnOnOutput), WithResetParams(f.ResetParams))
 				}
 
-				p.addWithMethodParams(a.Router, c, a.MethodParams, WithMethods(c, strings.Join(a.AllowHTTPMethods, ",")+":"+a.Method))
+				p.addWithMethodParams(a.Router, c, a.MethodParams, SetRouterMethods(c, strings.Join(a.AllowHTTPMethods, ",")+":"+a.Method))
 			}
 		}
 	}
@@ -402,6 +410,7 @@ func (p *ControllerRegister) AddMethod(method, pattern string, f FilterFunc) {
 	route := &ControllerInfo{}
 	route.pattern = pattern
 	route.routerType = routerTypeRESTFul
+	route.sessionOn = BConfig.WebConfig.Session.SessionOn
 	route.runFunction = f
 	methods := make(map[string]string)
 	if method == "*" {
@@ -428,6 +437,7 @@ func (p *ControllerRegister) Handler(pattern string, h http.Handler, options ...
 	route := &ControllerInfo{}
 	route.pattern = pattern
 	route.routerType = routerTypeHandler
+	route.sessionOn = BConfig.WebConfig.Session.SessionOn
 	route.handler = h
 	if len(options) > 0 {
 		if _, ok := options[0].(bool); ok {
@@ -462,6 +472,7 @@ func (p *ControllerRegister) AddAutoPrefix(prefix string, c ControllerInterface)
 		if !utils.InSlice(rt.Method(i).Name, exceptMethod) {
 			route := &ControllerInfo{}
 			route.routerType = routerTypeBeego
+			route.sessionOn = BConfig.WebConfig.Session.SessionOn
 			route.methods = map[string]string{"*": rt.Method(i).Name}
 			route.controllerType = ct
 			pattern := path.Join(prefix, strings.ToLower(controllerName), strings.ToLower(rt.Method(i).Name), "*")
@@ -693,12 +704,15 @@ func (p *ControllerRegister) serveHttp(ctx *beecontext.Context) {
 	r := ctx.Request
 	rw := ctx.ResponseWriter.ResponseWriter
 	var (
-		runRouter    reflect.Type
-		findRouter   bool
-		runMethod    string
-		methodParams []*param.MethodParam
-		routerInfo   *ControllerInfo
-		isRunnable   bool
+		runRouter        reflect.Type
+		findRouter       bool
+		runMethod        string
+		methodParams     []*param.MethodParam
+		routerInfo       *ControllerInfo
+		isRunnable       bool
+		currentSessionOn bool
+		originRouterInfo *ControllerInfo
+		originFindRouter bool
 	)
 
 	if p.cfg.RecoverFunc != nil {
@@ -764,7 +778,12 @@ func (p *ControllerRegister) serveHttp(ctx *beecontext.Context) {
 	}
 
 	// session init
-	if p.cfg.WebConfig.Session.SessionOn {
+	currentSessionOn = BConfig.WebConfig.Session.SessionOn
+	originRouterInfo, originFindRouter = p.FindRouter(ctx)
+	if originFindRouter {
+		currentSessionOn = originRouterInfo.sessionOn
+	}
+	if currentSessionOn {
 		ctx.Input.CruSession, err = GlobalSessions.SessionStart(rw, r)
 		if err != nil {
 			logs.Error(err)
