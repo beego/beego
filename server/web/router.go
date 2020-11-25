@@ -273,7 +273,6 @@ func (p *ControllerRegister) Include(cList ...ControllerInterface) {
 				for _, f := range a.Filters {
 					p.InsertFilter(f.Pattern, f.Pos, f.Filter, WithReturnOnOutput(f.ReturnOnOutput), WithResetParams(f.ResetParams))
 				}
-
 				p.addWithMethodParams(a.Router, c, a.MethodParams, strings.Join(a.AllowHTTPMethods, ",")+":"+a.Method)
 			}
 		}
