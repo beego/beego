@@ -295,15 +295,19 @@ func (manager *Manager) GC() {
 }
 
 // SessionRegenerateID Regenerate a session id for this SessionStore who's id is saving in http request.
-func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Request) (session Store) {
+func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Request) (Store, error) {
 	sid, err := manager.sessionID()
 	if err != nil {
-		return
+		return nil, err
 	}
+	var session Store
 	cookie, err := r.Cookie(manager.config.CookieName)
 	if err != nil || cookie.Value == "" {
-		//delete old cookie
-		session, _ = manager.provider.SessionRead(sid)
+		// delete old cookie
+		session, err = manager.provider.SessionRead(sid)
+		if err != nil {
+			return nil, err
+		}
 		cookie = &http.Cookie{Name: manager.config.CookieName,
 			Value:    url.QueryEscape(sid),
 			Path:     "/",
@@ -313,8 +317,14 @@ func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Reque
 			SameSite: manager.config.CookieSameSite,
 		}
 	} else {
-		oldsid, _ := url.QueryUnescape(cookie.Value)
-		session, _ = manager.provider.SessionRegenerate(oldsid, sid)
+		oldsid, err := url.QueryUnescape(cookie.Value)
+		if err != nil {
+			return nil, err
+		}
+		session, err = manager.provider.SessionRegenerate(oldsid, sid)
+		if err != nil {
+			return nil, err
+		}
 		cookie.Value = url.QueryEscape(sid)
 		cookie.HttpOnly = true
 		cookie.Path = "/"
@@ -333,7 +343,7 @@ func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Reque
 		w.Header().Set(manager.config.SessionNameInHTTPHeader, sid)
 	}
 
-	return
+	return session, nil
 }
 
 // GetActiveSession Get all active sessions count number.
