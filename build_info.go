@@ -15,18 +15,13 @@
 package beego
 
 var (
-	BuildVersion     string
+	BuildVersion string
 	BuildGitRevision string
-	BuildStatus      string
-	BuildTag         string
-	BuildTime        string
+	BuildStatus string
+	BuildTag string
+	BuildTime string
 
 	GoVersion string
 
 	GitBranch string
-)
-
-const (
-	// VERSION represent beego web framework version.
-	VERSION = "2.0.0-alpha"
 )
