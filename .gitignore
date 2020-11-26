@@ -4,9 +4,3 @@
 *.swp
 *.swo
 beego.iml
-
-_beeTmp/
-_beeTmp2/
-pkg/_beeTmp/
-pkg/_beeTmp2/
-test/tmp/
