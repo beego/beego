@@ -40,7 +40,9 @@ v1.12.4 will be released on Jan 2021 And v2.0.0 will be released next month.
 
 #### Download and install
 
-    go get -u github.com/astaxie/beego
+    go get -u github.com/astaxie/beego@develop
+
+Now we are working on beego v2.0.0, so using `@develop`.
 
 #### Create file `hello.go`
 ```go
