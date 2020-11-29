@@ -141,7 +141,7 @@ func (manager *Manager) GC() {
 
 // SessionRegenerateID Regenerate a session id for this SessionStore who's id is saving in http request.
 func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Request) Store {
-	s := (*session.Manager)(manager).SessionRegenerateID(w, r)
+	s, _ := (*session.Manager)(manager).SessionRegenerateID(w, r)
 	return &NewToOldStoreAdapter{
 		delegate: s,
 	}
