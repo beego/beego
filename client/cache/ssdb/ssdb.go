@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -41,23 +42,37 @@ func (rc *Cache) Get(ctx context.Context, key string) (interface{}, error) {
 // GetMulti gets one or keys values from ssdb.
 func (rc *Cache) GetMulti(ctx context.Context, keys []string) ([]interface{}, error) {
 	size := len(keys)
-	var values []interface{}
+	values := make([]interface{}, size)
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
 			return values, err
 		}
 	}
+
 	res, err := rc.conn.Do("multi_get", keys)
+	if err != nil {
+		return values, err
+	}
+
 	resSize := len(res)
-	if err == nil {
-		for i := 1; i < resSize; i += 2 {
-			values = append(values, res[i+1])
+	keyIdx := make(map[string]int)
+	for i := 1; i < resSize; i += 2 {
+		keyIdx[res[i]] = i
+	}
+
+	keysErr := make([]string, 0)
+	for i, ki := range keys {
+		if _, ok := keyIdx[ki]; !ok {
+			keysErr = append(keysErr, fmt.Sprintf("key [%s] error: %s", ki, "the key isn't exist"))
+			continue
 		}
-		return values, nil
+		values[i] = res[keyIdx[ki]+1]
 	}
-	for i := 0; i < size; i++ {
-		values = append(values, err)
+
+	if len(keysErr) != 0 {
+		return values, fmt.Errorf(strings.Join(keysErr, "; "))
 	}
+
 	return values, nil
 }
 

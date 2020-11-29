@@ -28,6 +28,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -144,17 +145,22 @@ func (fc *FileCache) Get(ctx context.Context, key string) (interface{}, error) {
 // GetMulti gets values from file cache.
 // if nonexistent or expired return an empty string.
 func (fc *FileCache) GetMulti(ctx context.Context, keys []string) ([]interface{}, error) {
-	var rc []interface{}
-	for _, key := range keys {
-		val, err := fc.Get(context.Background(), key)
-		if err != nil {
-			rc = append(rc, err)
-		} else {
-			rc = append(rc, val)
-		}
+	rc := make([]interface{}, len(keys))
+	keysErr := make([]string, 0)
 
+	for i, ki := range keys {
+		val, err := fc.Get(context.Background(), ki)
+		if err != nil {
+			keysErr = append(keysErr, fmt.Sprintf("key [%s] error: %s", ki, err.Error()))
+			continue
+		}
+		rc[i] = val
 	}
-	return rc, nil
+
+	if len(keysErr) == 0 {
+		return rc, nil
+	}
+	return rc, errors.New(strings.Join(keysErr, "; "))
 }
 
 // Put value into file cache.

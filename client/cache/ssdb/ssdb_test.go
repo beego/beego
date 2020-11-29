@@ -106,6 +106,20 @@ func TestSsdbcacheCache(t *testing.T) {
 		t.Error("getmulti error")
 	}
 
+	vv, err = ssdb.GetMulti(context.Background(), []string{"ssdb", "ssdb11"})
+	if len(vv) != 2 {
+		t.Error("getmulti error")
+	}
+	if vv[0].(string) != "ssdb" {
+		t.Error("getmulti error")
+	}
+	if vv[1] != nil {
+		t.Error("getmulti error")
+	}
+	if err != nil && err.Error() != "key [ssdb11] error: the key isn't exist" {
+		t.Error("getmulti error")
+	}
+
 	// test clear all done
 	if err = ssdb.ClearAll(context.Background()); err != nil {
 		t.Error("clear all err")
