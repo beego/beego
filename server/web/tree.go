@@ -570,6 +570,9 @@ func splitSegment(key string) (bool, []string, string) {
 				param = make([]rune, 0)
 			} else if v == '?' {
 				params = append(params, ":")
+			} else if v == '.' {
+				out = append(out, '\\')
+				out = append(out, v)
 			} else {
 				out = append(out, v)
 			}

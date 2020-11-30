@@ -323,8 +323,8 @@ func TestSplitSegment(t *testing.T) {
 		":name:string":               {true, []string{":name"}, `([\w]+)`},
 		":id([0-9]+)":                {true, []string{":id"}, `([0-9]+)`},
 		":id([0-9]+)_:name":          {true, []string{":id", ":name"}, `([0-9]+)_(.+)`},
-		":id(.+)_cms.html":           {true, []string{":id"}, `(.+)_cms.html`},
-		"cms_:id(.+)_:page(.+).html": {true, []string{":id", ":page"}, `cms_(.+)_(.+).html`},
+		":id(.+)_cms.html":           {true, []string{":id"}, `(.+)_cms\.html`},
+		"cms_:id(.+)_:page(.+).html": {true, []string{":id", ":page"}, `cms_(.+)_(.+)\.html`},
 		`:app(a|b|c)`:                {true, []string{":app"}, `(a|b|c)`},
 		`:app\((a|b|c)\)`:            {true, []string{":app"}, `(.+)\((a|b|c)\)`},
 	}
