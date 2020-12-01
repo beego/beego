@@ -26,7 +26,6 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -195,28 +194,70 @@ func (fc *FileCache) Delete(ctx context.Context, key string) error {
 // Incr increases cached int value.
 // fc value is saved forever unless deleted.
 func (fc *FileCache) Incr(ctx context.Context, key string) error {
-	data, _ := fc.Get(context.Background(), key)
-	var incr int
-	if reflect.TypeOf(data).Name() != "int" {
-		incr = 0
-	} else {
-		incr = data.(int) + 1
+	data, err := fc.Get(context.Background(), key)
+	if err != nil {
+		return err
 	}
-	fc.Put(context.Background(), key, incr, time.Duration(fc.EmbedExpiry))
-	return nil
+
+	var res interface{}
+	switch val := data.(type) {
+	case int:
+		res = val + 1
+	case int32:
+		res = val + 1
+	case int64:
+		res = val + 1
+	case uint:
+		res = val + 1
+	case uint32:
+		res = val + 1
+	case uint64:
+		res = val + 1
+	default:
+		return errors.Errorf("data is not (u)int (u)int32 (u)int64")
+	}
+
+	return fc.Put(context.Background(), key, res, time.Duration(fc.EmbedExpiry))
 }
 
 // Decr decreases cached int value.
 func (fc *FileCache) Decr(ctx context.Context, key string) error {
-	data, _ := fc.Get(context.Background(), key)
-	var decr int
-	if reflect.TypeOf(data).Name() != "int" || data.(int)-1 <= 0 {
-		decr = 0
-	} else {
-		decr = data.(int) - 1
+	data, err := fc.Get(context.Background(), key)
+	if err != nil {
+		return err
 	}
-	fc.Put(context.Background(), key, decr, time.Duration(fc.EmbedExpiry))
-	return nil
+
+	var res interface{}
+	switch val := data.(type) {
+	case int:
+		res = val - 1
+	case int32:
+		res = val - 1
+	case int64:
+		res = val - 1
+	case uint:
+		if val > 0 {
+			res = val - 1
+		} else {
+			return errors.New("data val is less than 0")
+		}
+	case uint32:
+		if val > 0 {
+			res = val - 1
+		} else {
+			return errors.New("data val is less than 0")
+		}
+	case uint64:
+		if val > 0 {
+			res = val - 1
+		} else {
+			return errors.New("data val is less than 0")
+		}
+	default:
+		return errors.Errorf("data is not (u)int (u)int32 (u)int64")
+	}
+
+	return fc.Put(context.Background(), key, res, time.Duration(fc.EmbedExpiry))
 }
 
 // IsExist checks if value exists.

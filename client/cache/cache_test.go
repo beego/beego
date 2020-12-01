@@ -72,21 +72,9 @@ func TestCache(t *testing.T) {
 		t.Error("set Error", err)
 	}
 
-	if err = bm.Incr(context.Background(), "astaxie"); err != nil {
-		t.Error("Incr Error", err)
-	}
+	// test different integer type for incr & decr
+	testMultiIncrDecr(t, bm, timeoutDuration)
 
-	if v, _ := bm.Get(context.Background(), "astaxie"); v.(int) != 2 {
-		t.Error("get err")
-	}
-
-	if err = bm.Decr(context.Background(), "astaxie"); err != nil {
-		t.Error("Decr Error", err)
-	}
-
-	if v, _ := bm.Get(context.Background(), "astaxie"); v.(int) != 1 {
-		t.Error("get err")
-	}
 	bm.Delete(context.Background(), "astaxie")
 	if res, _ := bm.IsExist(context.Background(), "astaxie"); res {
 		t.Error("delete err")
@@ -153,21 +141,9 @@ func TestFileCache(t *testing.T) {
 		t.Error("get err")
 	}
 
-	if err = bm.Incr(context.Background(), "astaxie"); err != nil {
-		t.Error("Incr Error", err)
-	}
+	// test different integer type for incr & decr
+	testMultiIncrDecr(t, bm, timeoutDuration)
 
-	if v, _ := bm.Get(context.Background(), "astaxie"); v.(int) != 2 {
-		t.Error("get err")
-	}
-
-	if err = bm.Decr(context.Background(), "astaxie"); err != nil {
-		t.Error("Decr Error", err)
-	}
-
-	if v, _ := bm.Get(context.Background(), "astaxie"); v.(int) != 1 {
-		t.Error("get err")
-	}
 	bm.Delete(context.Background(), "astaxie")
 	if res, _ := bm.IsExist(context.Background(), "astaxie"); res {
 		t.Error("delete err")
@@ -218,4 +194,42 @@ func TestFileCache(t *testing.T) {
 	}
 
 	os.RemoveAll("cache")
+}
+
+func testMultiIncrDecr(t *testing.T, c Cache, timeout time.Duration) {
+	testIncrDecr(t, c, 1, 2, timeout)
+	testIncrDecr(t, c, int32(1), int32(2), timeout)
+	testIncrDecr(t, c, int64(1), int64(2), timeout)
+	testIncrDecr(t, c, uint(1), uint(2), timeout)
+	testIncrDecr(t, c, uint32(1), uint32(2), timeout)
+	testIncrDecr(t, c, uint64(1), uint64(2), timeout)
+}
+
+func testIncrDecr(t *testing.T, c Cache, beforeIncr interface{}, afterIncr interface{}, timeout time.Duration) {
+	var err error
+	ctx := context.Background()
+	key := "incDecKey"
+	if err = c.Put(ctx, key, beforeIncr, timeout); err != nil {
+		t.Error("Get Error", err)
+	}
+
+	if err = c.Incr(ctx, key); err != nil {
+		t.Error("Incr Error", err)
+	}
+
+	if v, _ := c.Get(ctx, key); v != afterIncr {
+		t.Error("Get Error")
+	}
+
+	if err = c.Decr(ctx, key); err != nil {
+		t.Error("Decr Error", err)
+	}
+
+	if v, _ := c.Get(ctx, key); v != beforeIncr {
+		t.Error("Get Error")
+	}
+
+	if err := c.Delete(ctx, key); err != nil {
+		t.Error("Delete Error")
+	}
 }
