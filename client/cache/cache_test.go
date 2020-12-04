@@ -46,11 +46,11 @@ func TestCacheIncr(t *testing.T) {
 }
 
 func TestCache(t *testing.T) {
-	bm, err := NewCache("memory", `{"interval":20}`)
+	bm, err := NewCache("memory", `{"interval":1}`)
 	if err != nil {
 		t.Error("init err")
 	}
-	timeoutDuration := 10 * time.Second
+	timeoutDuration := 5 * time.Second
 	if err = bm.Put(context.Background(), "astaxie", 1, timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
@@ -62,7 +62,7 @@ func TestCache(t *testing.T) {
 		t.Error("get err")
 	}
 
-	time.Sleep(30 * time.Second)
+	time.Sleep(7 * time.Second)
 
 	if res, _ := bm.IsExist(context.Background(), "astaxie"); res {
 		t.Error("check err")

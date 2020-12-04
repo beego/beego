@@ -130,22 +130,12 @@ func (bc *MemoryCache) Incr(ctx context.Context, key string) error {
 	if !ok {
 		return errors.New("key not exist")
 	}
-	switch val := itm.val.(type) {
-	case int:
-		itm.val = val + 1
-	case int32:
-		itm.val = val + 1
-	case int64:
-		itm.val = val + 1
-	case uint:
-		itm.val = val + 1
-	case uint32:
-		itm.val = val + 1
-	case uint64:
-		itm.val = val + 1
-	default:
-		return errors.New("item val is not (u)int (u)int32 (u)int64")
+
+	val, err := incr(itm.val)
+	if err != nil {
+		return err
 	}
+	itm.val = val
 	return nil
 }
 
@@ -157,34 +147,12 @@ func (bc *MemoryCache) Decr(ctx context.Context, key string) error {
 	if !ok {
 		return errors.New("key not exist")
 	}
-	switch val := itm.val.(type) {
-	case int:
-		itm.val = val - 1
-	case int64:
-		itm.val = val - 1
-	case int32:
-		itm.val = val - 1
-	case uint:
-		if val > 0 {
-			itm.val = val - 1
-		} else {
-			return errors.New("item val is less than 0")
-		}
-	case uint32:
-		if val > 0 {
-			itm.val = val - 1
-		} else {
-			return errors.New("item val is less than 0")
-		}
-	case uint64:
-		if val > 0 {
-			itm.val = val - 1
-		} else {
-			return errors.New("item val is less than 0")
-		}
-	default:
-		return errors.New("item val is not int int64 int32")
+
+	val, err := decr(itm.val)
+	if err != nil {
+		return err
 	}
+	itm.val = val
 	return nil
 }
 
