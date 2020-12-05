@@ -114,6 +114,13 @@ func TestIncr(t *testing.T) {
 		t.Error("incr failed")
 		return
 	}
+
+	// other type
+	_, err = incr("string")
+	if err == nil {
+		t.Error("incr failed")
+		return
+	}
 }
 
 func TestDecr(t *testing.T) {
@@ -220,6 +227,13 @@ func TestDecr(t *testing.T) {
 		return
 	}
 	_, err = decr(uint64(0))
+	if err == nil {
+		t.Error("decr failed")
+		return
+	}
+
+	// other type
+	_, err = decr("string")
 	if err == nil {
 		t.Error("decr failed")
 		return
