@@ -71,8 +71,24 @@ func (w *dbWriter) Update(key string, val interface{}) error {
 		return fmt.Errorf("val can't convert to int")
 	}
 	kv := &Data{Key: key, Val: valInt}
-	if _, err := w.ormer.InsertOrUpdate(kv); err != nil {
+	if err := insertOrUpdate(w.ormer, kv); err != nil {
 		return err
+	}
+	return nil
+}
+
+func insertOrUpdate(o orm.Ormer, d *Data) error {
+	query := &Data{Key:d.Key}
+	if readErr := o.Read(query, "key"); readErr != nil {
+		if _, insertErr := o.Insert(d); insertErr != nil {
+			return insertErr
+		}
+		return nil
+	}
+
+	d.Id = query.Id
+	if _, errUpdate := o.Update(d, "val"); errUpdate != nil {
+		return errUpdate
 	}
 	return nil
 }
