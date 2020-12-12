@@ -149,7 +149,8 @@ func (ctx *Context) XSRFToken(key string, expire int64) string {
 		token, ok := ctx.GetSecureCookie(key, "_xsrf")
 		if !ok {
 			token = string(utils.RandomCreateBytes(32))
-			ctx.SetSecureCookie(key, "_xsrf", token, expire, "", "", true, true)
+			// TODO make it configurable
+			ctx.SetSecureCookie(key, "_xsrf", token, expire, "", "")
 		}
 		ctx._xsrfToken = token
 	}
