@@ -16,6 +16,7 @@ package web
 
 import (
 	"bytes"
+	context2 "context"
 	"errors"
 	"fmt"
 	"html/template"
@@ -250,13 +251,16 @@ func (c *Controller) Render() error {
 // RenderString returns the rendered template string. Do not send out response.
 func (c *Controller) RenderString() (string, error) {
 	b, e := c.RenderBytes()
+	if e != nil {
+		return "", e
+	}
 	return string(b), e
 }
 
 // RenderBytes returns the bytes of rendered template string. Do not send out response.
 func (c *Controller) RenderBytes() ([]byte, error) {
 	buf, err := c.renderTemplate()
-	//if the controller has set layout, then first get the tplName's content set the content to the layout
+	// if the controller has set layout, then first get the tplName's content set the content to the layout
 	if err == nil && c.Layout != "" {
 		c.Data["LayoutContent"] = template.HTML(buf.String())
 
@@ -276,7 +280,7 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 		}
 
 		buf.Reset()
-		ExecuteViewPathTemplate(&buf, c.Layout, c.viewPath(), c.Data)
+		err = ExecuteViewPathTemplate(&buf, c.Layout, c.viewPath(), c.Data)
 	}
 	return buf.Bytes(), err
 }
@@ -373,50 +377,57 @@ func (c *Controller) URLFor(endpoint string, values ...interface{}) string {
 }
 
 // ServeJSON sends a json response with encoding charset.
-func (c *Controller) ServeJSON(encoding ...bool) {
+func (c *Controller) ServeJSON(encoding ...bool) error {
 	var (
 		hasIndent   = BConfig.RunMode != PROD
 		hasEncoding = len(encoding) > 0 && encoding[0]
 	)
 
-	c.Ctx.Output.JSON(c.Data["json"], hasIndent, hasEncoding)
+	return c.Ctx.Output.JSON(c.Data["json"], hasIndent, hasEncoding)
 }
 
 // ServeJSONP sends a jsonp response.
-func (c *Controller) ServeJSONP() {
+func (c *Controller) ServeJSONP() error {
 	hasIndent := BConfig.RunMode != PROD
-	c.Ctx.Output.JSONP(c.Data["jsonp"], hasIndent)
+	return c.Ctx.Output.JSONP(c.Data["jsonp"], hasIndent)
 }
 
 // ServeXML sends xml response.
-func (c *Controller) ServeXML() {
+func (c *Controller) ServeXML() error {
 	hasIndent := BConfig.RunMode != PROD
-	c.Ctx.Output.XML(c.Data["xml"], hasIndent)
+	return c.Ctx.Output.XML(c.Data["xml"], hasIndent)
 }
 
 // ServeYAML sends yaml response.
-func (c *Controller) ServeYAML() {
-	c.Ctx.Output.YAML(c.Data["yaml"])
+func (c *Controller) ServeYAML() error {
+	return c.Ctx.Output.YAML(c.Data["yaml"])
 }
 
 // ServeFormatted serve YAML, XML OR JSON, depending on the value of the Accept header
-func (c *Controller) ServeFormatted(encoding ...bool) {
+func (c *Controller) ServeFormatted(encoding ...bool) error {
 	hasIndent := BConfig.RunMode != PROD
 	hasEncoding := len(encoding) > 0 && encoding[0]
-	c.Ctx.Output.ServeFormatted(c.Data, hasIndent, hasEncoding)
+	return c.Ctx.Output.ServeFormatted(c.Data, hasIndent, hasEncoding)
 }
 
 // Input returns the input data map from POST or PUT request body and query string.
-func (c *Controller) Input() url.Values {
+func (c *Controller) Input() (url.Values, error) {
 	if c.Ctx.Request.Form == nil {
-		c.Ctx.Request.ParseForm()
+		err := c.Ctx.Request.ParseForm()
+		if err != nil {
+			return nil, err
+		}
 	}
-	return c.Ctx.Request.Form
+	return c.Ctx.Request.Form, nil
 }
 
 // ParseForm maps input data map to obj struct.
 func (c *Controller) ParseForm(obj interface{}) error {
-	return ParseForm(c.Input(), obj)
+	form, err := c.Input()
+	if err != nil {
+		return err
+	}
+	return ParseForm(form, obj)
 }
 
 // GetString returns the input value by key string or the default value while it's present and input is blank
@@ -438,7 +449,7 @@ func (c *Controller) GetStrings(key string, def ...[]string) []string {
 		defv = def[0]
 	}
 
-	if f := c.Input(); f == nil {
+	if f, err := c.Input(); f == nil || err != nil {
 		return defv
 	} else if vs := f[key]; len(vs) > 0 {
 		return vs
@@ -618,11 +629,11 @@ func (c *Controller) StartSession() session.Store {
 }
 
 // SetSession puts value into session.
-func (c *Controller) SetSession(name interface{}, value interface{}) {
+func (c *Controller) SetSession(name interface{}, value interface{}) error {
 	if c.CruSession == nil {
 		c.StartSession()
 	}
-	c.CruSession.Set(nil, name, value)
+	return c.CruSession.Set(context2.Background(), name, value)
 }
 
 // GetSession gets value from session.
@@ -630,32 +641,38 @@ func (c *Controller) GetSession(name interface{}) interface{} {
 	if c.CruSession == nil {
 		c.StartSession()
 	}
-	return c.CruSession.Get(nil, name)
+	return c.CruSession.Get(context2.Background(), name)
 }
 
 // DelSession removes value from session.
-func (c *Controller) DelSession(name interface{}) {
+func (c *Controller) DelSession(name interface{}) error {
 	if c.CruSession == nil {
 		c.StartSession()
 	}
-	c.CruSession.Delete(nil, name)
+	return c.CruSession.Delete(context2.Background(), name)
 }
 
 // SessionRegenerateID regenerates session id for this session.
 // the session data have no changes.
-func (c *Controller) SessionRegenerateID() {
+func (c *Controller) SessionRegenerateID() error {
 	if c.CruSession != nil {
-		c.CruSession.SessionRelease(nil, c.Ctx.ResponseWriter)
+		c.CruSession.SessionRelease(context2.Background(), c.Ctx.ResponseWriter)
 	}
-	c.CruSession = GlobalSessions.SessionRegenerateID(c.Ctx.ResponseWriter, c.Ctx.Request)
+	var err error
+	c.CruSession, err = GlobalSessions.SessionRegenerateID(c.Ctx.ResponseWriter, c.Ctx.Request)
 	c.Ctx.Input.CruSession = c.CruSession
+	return err
 }
 
 // DestroySession cleans session data and session cookie.
-func (c *Controller) DestroySession() {
-	c.Ctx.Input.CruSession.Flush(nil)
+func (c *Controller) DestroySession() error {
+	err := c.Ctx.Input.CruSession.Flush(nil)
+	if err != nil {
+		return err
+	}
 	c.Ctx.Input.CruSession = nil
 	GlobalSessions.SessionDestroy(c.Ctx.ResponseWriter, c.Ctx.Request)
+	return nil
 }
 
 // IsAjax returns this request is ajax or not.

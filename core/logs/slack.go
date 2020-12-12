@@ -1,10 +1,10 @@
 package logs
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"net/url"
 
 	"github.com/pkg/errors"
 )
@@ -25,8 +25,8 @@ func newSLACKWriter() Logger {
 }
 
 func (s *SLACKWriter) Format(lm *LogMsg) string {
-	text := fmt.Sprintf("{\"text\": \"%s %s\"}", lm.When.Format("2006-01-02 15:04:05"), lm.OldStyleFormat())
-	return text
+	// text := fmt.Sprintf("{\"text\": \"%s\"}", msg)
+	return lm.When.Format("2006-01-02 15:04:05") + " " + lm.OldStyleFormat()
 }
 
 func (s *SLACKWriter) SetFormatter(f LogFormatter) {
@@ -55,10 +55,12 @@ func (s *SLACKWriter) WriteMsg(lm *LogMsg) error {
 		return nil
 	}
 	msg := s.Format(lm)
-	form := url.Values{}
-	form.Add("payload", msg)
+	m := make(map[string]string, 1)
+	m["text"] = msg
 
-	resp, err := http.PostForm(s.WebhookURL, form)
+	body, _ := json.Marshal(m)
+	// resp, err := http.PostForm(s.WebhookURL, form)
+	resp, err := http.Post(s.WebhookURL, "application/json", bytes.NewReader(body))
 	if err != nil {
 		return err
 	}
