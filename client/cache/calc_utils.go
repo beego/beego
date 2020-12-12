@@ -19,9 +19,9 @@ func incr(originVal interface{}) (interface{}, error) {
 		}
 		return val + 1, nil
 	case int64:
-		// if val == math.MaxInt64 {
-		// 	return nil, fmt.Errorf("increment would overflow")
-		// }
+		if val == math.MaxInt64 {
+			return nil, fmt.Errorf("increment would overflow")
+		}
 		return val + 1, nil
 	case uint:
 		tmp := val + 1
