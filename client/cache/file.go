@@ -199,25 +199,12 @@ func (fc *FileCache) Incr(ctx context.Context, key string) error {
 		return err
 	}
 
-	var res interface{}
-	switch val := data.(type) {
-	case int:
-		res = val + 1
-	case int32:
-		res = val + 1
-	case int64:
-		res = val + 1
-	case uint:
-		res = val + 1
-	case uint32:
-		res = val + 1
-	case uint64:
-		res = val + 1
-	default:
-		return errors.Errorf("data is not (u)int (u)int32 (u)int64")
+	val, err := incr(data)
+	if err != nil {
+		return err
 	}
 
-	return fc.Put(context.Background(), key, res, time.Duration(fc.EmbedExpiry))
+	return fc.Put(context.Background(), key, val, time.Duration(fc.EmbedExpiry))
 }
 
 // Decr decreases cached int value.
@@ -227,37 +214,12 @@ func (fc *FileCache) Decr(ctx context.Context, key string) error {
 		return err
 	}
 
-	var res interface{}
-	switch val := data.(type) {
-	case int:
-		res = val - 1
-	case int32:
-		res = val - 1
-	case int64:
-		res = val - 1
-	case uint:
-		if val > 0 {
-			res = val - 1
-		} else {
-			return errors.New("data val is less than 0")
-		}
-	case uint32:
-		if val > 0 {
-			res = val - 1
-		} else {
-			return errors.New("data val is less than 0")
-		}
-	case uint64:
-		if val > 0 {
-			res = val - 1
-		} else {
-			return errors.New("data val is less than 0")
-		}
-	default:
-		return errors.Errorf("data is not (u)int (u)int32 (u)int64")
+	val, err := decr(data)
+	if err != nil {
+		return err
 	}
 
-	return fc.Put(context.Background(), key, res, time.Duration(fc.EmbedExpiry))
+	return fc.Put(context.Background(), key, val, time.Duration(fc.EmbedExpiry))
 }
 
 // IsExist checks if value exists.
