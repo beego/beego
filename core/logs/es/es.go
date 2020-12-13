@@ -12,7 +12,7 @@ import (
 	"github.com/elastic/go-elasticsearch/v6"
 	"github.com/elastic/go-elasticsearch/v6/esapi"
 
-	"github.com/astaxie/beego/core/logs"
+	"github.com/beego/beego/core/logs"
 )
 
 // NewES returns a LoggerInterface
@@ -29,7 +29,7 @@ func NewES() logs.Logger {
 // please import this package
 // usually means that you can import this package in your main package
 // for example, anonymous:
-// import _ "github.com/astaxie/beego/logs/es"
+// import _ "github.com/beego/beego/logs/es"
 type esLogger struct {
 	*elasticsearch.Client
 	DSN       string `json:"dsn"`

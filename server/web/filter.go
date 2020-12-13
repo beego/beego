@@ -17,7 +17,7 @@ package web
 import (
 	"strings"
 
-	"github.com/astaxie/beego/server/web/context"
+	"github.com/beego/beego/server/web/context"
 )
 
 // FilterChain is different from pure FilterFunc

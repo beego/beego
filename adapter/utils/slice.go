@@ -15,7 +15,7 @@
 package utils
 
 import (
-	"github.com/astaxie/beego/core/utils"
+	"github.com/beego/beego/core/utils"
 )
 
 type reducetype func(interface{}) interface{}

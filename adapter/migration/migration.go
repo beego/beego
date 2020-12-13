@@ -28,7 +28,7 @@
 package migration
 
 import (
-	"github.com/astaxie/beego/client/orm/migration"
+	"github.com/beego/beego/client/orm/migration"
 )
 
 // const the data format for the bee generate migration datatype

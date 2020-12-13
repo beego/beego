@@ -1,8 +1,8 @@
 package ssdb
 
 import (
-	"github.com/astaxie/beego/adapter/cache"
-	ssdb2 "github.com/astaxie/beego/client/cache/ssdb"
+	"github.com/beego/beego/adapter/cache"
+	ssdb2 "github.com/beego/beego/client/cache/ssdb"
 )
 
 // NewSsdbCache create new ssdb adapter.

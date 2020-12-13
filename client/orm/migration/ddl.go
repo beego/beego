@@ -17,7 +17,7 @@ package migration
 import (
 	"fmt"
 
-	"github.com/astaxie/beego/core/logs"
+	"github.com/beego/beego/core/logs"
 )
 
 // Index struct defines the structure of Index Columns

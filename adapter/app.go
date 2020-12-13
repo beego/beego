@@ -17,9 +17,9 @@ package adapter
 import (
 	"net/http"
 
-	context2 "github.com/astaxie/beego/adapter/context"
-	"github.com/astaxie/beego/server/web"
-	"github.com/astaxie/beego/server/web/context"
+	context2 "github.com/beego/beego/adapter/context"
+	"github.com/beego/beego/server/web"
+	"github.com/beego/beego/server/web/context"
 )
 
 var (

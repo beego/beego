@@ -15,7 +15,7 @@
 package cache
 
 import (
-	"github.com/astaxie/beego/client/cache"
+	"github.com/beego/beego/client/cache"
 )
 
 // NewFileCache Create new file cache with no config.

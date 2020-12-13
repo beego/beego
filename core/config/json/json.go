@@ -26,8 +26,8 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 
-	"github.com/astaxie/beego/core/config"
-	"github.com/astaxie/beego/core/logs"
+	"github.com/beego/beego/core/config"
+	"github.com/beego/beego/core/logs"
 )
 
 // JSONConfig is a json config parser and implements Config interface.

@@ -28,8 +28,8 @@
 //
 // Usage:
 // import(
-//   _ "github.com/astaxie/beego/session/mysql"
-//   "github.com/astaxie/beego/session"
+//   _ "github.com/beego/beego/session/mysql"
+//   "github.com/beego/beego/session"
 // )
 //
 //	func init() {
@@ -47,7 +47,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/astaxie/beego/server/web/session"
+	"github.com/beego/beego/server/web/session"
 	// import mysql driver
 	_ "github.com/go-sql-driver/mysql"
 )

@@ -31,7 +31,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/astaxie/beego/client/orm/hints"
+	"github.com/beego/beego/client/orm/hints"
 
 	"github.com/stretchr/testify/assert"
 )

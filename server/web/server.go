@@ -31,11 +31,11 @@ import (
 
 	"golang.org/x/crypto/acme/autocert"
 
-	"github.com/astaxie/beego/core/logs"
-	beecontext "github.com/astaxie/beego/server/web/context"
+	"github.com/beego/beego/core/logs"
+	beecontext "github.com/beego/beego/server/web/context"
 
-	"github.com/astaxie/beego/core/utils"
-	"github.com/astaxie/beego/server/web/grace"
+	"github.com/beego/beego/core/utils"
+	"github.com/beego/beego/server/web/grace"
 )
 
 var (

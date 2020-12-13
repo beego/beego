@@ -3,7 +3,7 @@ package grace
 import (
 	"os"
 
-	"github.com/astaxie/beego/server/web/grace"
+	"github.com/beego/beego/server/web/grace"
 )
 
 // Server embedded http.Server

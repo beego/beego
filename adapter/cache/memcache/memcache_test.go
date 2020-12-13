@@ -21,7 +21,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/astaxie/beego/adapter/cache"
+	"github.com/beego/beego/adapter/cache"
 )
 
 func TestMemcacheCache(t *testing.T) {

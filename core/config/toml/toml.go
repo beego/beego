@@ -21,7 +21,7 @@ import (
 
 	"github.com/pelletier/go-toml"
 
-	"github.com/astaxie/beego/core/config"
+	"github.com/beego/beego/core/config"
 )
 
 const keySeparator = "."

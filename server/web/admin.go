@@ -20,7 +20,7 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/astaxie/beego/core/logs"
+	"github.com/beego/beego/core/logs"
 )
 
 // BeeAdminApp is the default adminApp used by admin module.

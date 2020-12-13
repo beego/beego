@@ -5,7 +5,7 @@ session is a Go session manager. It can use many session providers. Just like th
 
 ## How to install?
 
-	go get github.com/astaxie/beego/session
+	go get github.com/beego/beego/session
 
 
 ## What providers are supported?
@@ -18,7 +18,7 @@ As of now this session manager support memory, file, Redis and MySQL.
 First you must import it
 
 	import (
-		"github.com/astaxie/beego/session"
+		"github.com/beego/beego/session"
 	)
 
 Then in you web app init the global session manager

@@ -17,10 +17,10 @@ package adapter
 import (
 	"net/http"
 
-	adtContext "github.com/astaxie/beego/adapter/context"
-	"github.com/astaxie/beego/server/web/context"
+	adtContext "github.com/beego/beego/adapter/context"
+	"github.com/beego/beego/server/web/context"
 
-	"github.com/astaxie/beego/server/web"
+	"github.com/beego/beego/server/web"
 )
 
 type namespaceCond func(*adtContext.Context) bool
@@ -91,28 +91,28 @@ func oldToNewFilter(filter []FilterFunc) []web.FilterFunc {
 }
 
 // Router same as beego.Rourer
-// refer: https://godoc.org/github.com/astaxie/beego#Router
+// refer: https://godoc.org/github.com/beego/beego#Router
 func (n *Namespace) Router(rootpath string, c ControllerInterface, mappingMethods ...string) *Namespace {
 	(*web.Namespace)(n).Router(rootpath, c, mappingMethods...)
 	return n
 }
 
 // AutoRouter same as beego.AutoRouter
-// refer: https://godoc.org/github.com/astaxie/beego#AutoRouter
+// refer: https://godoc.org/github.com/beego/beego#AutoRouter
 func (n *Namespace) AutoRouter(c ControllerInterface) *Namespace {
 	(*web.Namespace)(n).AutoRouter(c)
 	return n
 }
 
 // AutoPrefix same as beego.AutoPrefix
-// refer: https://godoc.org/github.com/astaxie/beego#AutoPrefix
+// refer: https://godoc.org/github.com/beego/beego#AutoPrefix
 func (n *Namespace) AutoPrefix(prefix string, c ControllerInterface) *Namespace {
 	(*web.Namespace)(n).AutoPrefix(prefix, c)
 	return n
 }
 
 // Get same as beego.Get
-// refer: https://godoc.org/github.com/astaxie/beego#Get
+// refer: https://godoc.org/github.com/beego/beego#Get
 func (n *Namespace) Get(rootpath string, f FilterFunc) *Namespace {
 	(*web.Namespace)(n).Get(rootpath, func(ctx *context.Context) {
 		f((*adtContext.Context)(ctx))
@@ -121,7 +121,7 @@ func (n *Namespace) Get(rootpath string, f FilterFunc) *Namespace {
 }
 
 // Post same as beego.Post
-// refer: https://godoc.org/github.com/astaxie/beego#Post
+// refer: https://godoc.org/github.com/beego/beego#Post
 func (n *Namespace) Post(rootpath string, f FilterFunc) *Namespace {
 	(*web.Namespace)(n).Post(rootpath, func(ctx *context.Context) {
 		f((*adtContext.Context)(ctx))
@@ -130,7 +130,7 @@ func (n *Namespace) Post(rootpath string, f FilterFunc) *Namespace {
 }
 
 // Delete same as beego.Delete
-// refer: https://godoc.org/github.com/astaxie/beego#Delete
+// refer: https://godoc.org/github.com/beego/beego#Delete
 func (n *Namespace) Delete(rootpath string, f FilterFunc) *Namespace {
 	(*web.Namespace)(n).Delete(rootpath, func(ctx *context.Context) {
 		f((*adtContext.Context)(ctx))
@@ -139,7 +139,7 @@ func (n *Namespace) Delete(rootpath string, f FilterFunc) *Namespace {
 }
 
 // Put same as beego.Put
-// refer: https://godoc.org/github.com/astaxie/beego#Put
+// refer: https://godoc.org/github.com/beego/beego#Put
 func (n *Namespace) Put(rootpath string, f FilterFunc) *Namespace {
 	(*web.Namespace)(n).Put(rootpath, func(ctx *context.Context) {
 		f((*adtContext.Context)(ctx))
@@ -148,7 +148,7 @@ func (n *Namespace) Put(rootpath string, f FilterFunc) *Namespace {
 }
 
 // Head same as beego.Head
-// refer: https://godoc.org/github.com/astaxie/beego#Head
+// refer: https://godoc.org/github.com/beego/beego#Head
 func (n *Namespace) Head(rootpath string, f FilterFunc) *Namespace {
 	(*web.Namespace)(n).Head(rootpath, func(ctx *context.Context) {
 		f((*adtContext.Context)(ctx))
@@ -157,7 +157,7 @@ func (n *Namespace) Head(rootpath string, f FilterFunc) *Namespace {
 }
 
 // Options same as beego.Options
-// refer: https://godoc.org/github.com/astaxie/beego#Options
+// refer: https://godoc.org/github.com/beego/beego#Options
 func (n *Namespace) Options(rootpath string, f FilterFunc) *Namespace {
 	(*web.Namespace)(n).Options(rootpath, func(ctx *context.Context) {
 		f((*adtContext.Context)(ctx))
@@ -166,7 +166,7 @@ func (n *Namespace) Options(rootpath string, f FilterFunc) *Namespace {
 }
 
 // Patch same as beego.Patch
-// refer: https://godoc.org/github.com/astaxie/beego#Patch
+// refer: https://godoc.org/github.com/beego/beego#Patch
 func (n *Namespace) Patch(rootpath string, f FilterFunc) *Namespace {
 	(*web.Namespace)(n).Patch(rootpath, func(ctx *context.Context) {
 		f((*adtContext.Context)(ctx))
@@ -175,7 +175,7 @@ func (n *Namespace) Patch(rootpath string, f FilterFunc) *Namespace {
 }
 
 // Any same as beego.Any
-// refer: https://godoc.org/github.com/astaxie/beego#Any
+// refer: https://godoc.org/github.com/beego/beego#Any
 func (n *Namespace) Any(rootpath string, f FilterFunc) *Namespace {
 	(*web.Namespace)(n).Any(rootpath, func(ctx *context.Context) {
 		f((*adtContext.Context)(ctx))
@@ -184,14 +184,14 @@ func (n *Namespace) Any(rootpath string, f FilterFunc) *Namespace {
 }
 
 // Handler same as beego.Handler
-// refer: https://godoc.org/github.com/astaxie/beego#Handler
+// refer: https://godoc.org/github.com/beego/beego#Handler
 func (n *Namespace) Handler(rootpath string, h http.Handler) *Namespace {
 	(*web.Namespace)(n).Handler(rootpath, h)
 	return n
 }
 
 // Include add include class
-// refer: https://godoc.org/github.com/astaxie/beego#Include
+// refer: https://godoc.org/github.com/beego/beego#Include
 func (n *Namespace) Include(cList ...ControllerInterface) *Namespace {
 	nL := oldToNewCtrlIntfs(cList)
 	(*web.Namespace)(n).Include(nL...)

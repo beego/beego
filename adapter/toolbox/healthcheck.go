@@ -31,7 +31,7 @@
 package toolbox
 
 import (
-	"github.com/astaxie/beego/core/admin"
+	"github.com/beego/beego/core/admin"
 )
 
 // AdminCheckList holds health checker map

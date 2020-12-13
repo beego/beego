@@ -17,7 +17,7 @@ package captcha
 import (
 	"testing"
 
-	"github.com/astaxie/beego/adapter/utils"
+	"github.com/beego/beego/adapter/utils"
 )
 
 const (
