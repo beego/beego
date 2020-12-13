@@ -1,28 +1,29 @@
 # Beego [![Build Status](https://travis-ci.org/astaxie/beego.svg?branch=master)](https://travis-ci.org/astaxie/beego) [![GoDoc](http://godoc.org/github.com/astaxie/beego?status.svg)](http://godoc.org/github.com/astaxie/beego) [![Foundation](https://img.shields.io/badge/Golang-Foundation-green.svg)](http://golangfoundation.org) [![Go Report Card](https://goreportcard.com/badge/github.com/astaxie/beego)](https://goreportcard.com/report/github.com/astaxie/beego)
 
+Beego is used for rapid development of enterprise application in Go, including RESTful APIs, web apps and backend
+services.
 
-beego is used for rapid development of RESTful APIs, web apps and backend services in Go.
-It is inspired by Tornado, Sinatra and Flask. beego has some Go-specific features such as interfaces and struct embedding.
+![architecture](https://cdn.nlark.com/yuque/0/2020/png/755700/1607841568645-2ec8225f-bb82-4586-b3d0-eeb4c8ae3aa9.png)
+
+It is inspired by Tornado, Sinatra and Flask. beego has some Go-specific features such as interfaces and struct
+embedding.
 
 [Officail website](http://beego.me)
 [Example](https://github.com/beego-dev/beego-example)
 
 > If you could not open official website, go to [beedoc](https://github.com/beego/beedoc)
 
-## beego 1.x and 2.x
-
-1. If you are working on beego v1.x please try `go get github.com/astaxie/beego@v1.12.3`
-2. If you want to try beego 2.0.0, run `go get github.com/astaxie/beego@v2.0.0`
-
 ## Quick Start
 
 ### Web Application
+
+![Http Request](https://cdn.nlark.com/yuque/0/2020/png/755700/1607841957921-e163e9cb-87d9-44cc-9cbc-bbdaa3cb1143.png)
 
 #### Create `hello` directory, cd `hello` directory
 
     mkdir hello
     cd hello
- 
+
 #### Init module
 
     go mod init
@@ -32,15 +33,17 @@ It is inspired by Tornado, Sinatra and Flask. beego has some Go-specific feature
     go get github.com/astaxie/beego@v2.0.0
 
 #### Create file `hello.go`
+
 ```go
 package main
 
 import "github.com/astaxie/beego/server/web"
 
-func main(){
-    web.Run()
+func main() {
+	web.Run()
 }
 ```
+
 #### Build and run
 
     go build hello.go
@@ -50,227 +53,36 @@ func main(){
 
 Congratulations! You've just built your first **beego** app.
 
-### Using ORM module
-
-```go
-
-package main
-
-import (
-	"github.com/astaxie/beego/client/orm"
-	"github.com/astaxie/beego/core/logs"
-	_ "github.com/go-sql-driver/mysql"
-)
-
-// User -
-type User struct {
-	ID   int    `orm:"column(id)"`
-	Name string `orm:"column(name)"`
-}
-
-func init() {
-	// need to register models in init
-	orm.RegisterModel(new(User))
-
-	// need to register db driver
-	orm.RegisterDriver("mysql", orm.DRMySQL)
-
-	// need to register default database
-	orm.RegisterDataBase("default", "mysql", "beego:test@tcp(192.168.0.105:13306)/orm_test?charset=utf8")
-}
-
-func main() {
-	// automatically build table
-	orm.RunSyncdb("default", false, true)
-
-	// create orm object, and it will use `default` database
-	o := orm.NewOrm()
-
-	// data
-	user := new(User)
-	user.Name = "mike"
-
-	// insert data
-	id, err := o.Insert(user)
-	if err != nil {
-		logs.Info(err)
-	}
-	
-	// ...
-}
-```
-
-### Using httplib as http client
-```go
-package main
-
-import (
-	"github.com/astaxie/beego/client/httplib"
-	"github.com/astaxie/beego/core/logs"
-)
-
-func main() {
-	// Get, more methods please read docs
-	req := httplib.Get("http://beego.me/")
-	str, err := req.String()
-	if err != nil {
-		logs.Error(err)
-	}
-	logs.Info(str)
-}
-
-```
-
-### Using config module
-
-```go
-package main
-
-import (
-	"context"
-
-	"github.com/astaxie/beego/core/config"
-	"github.com/astaxie/beego/core/logs"
-)
-
-var (
-	ConfigFile = "./app.conf"
-)
-
-func main() {
-	cfg, err := config.NewConfig("ini", ConfigFile)
-	if err != nil {
-		logs.Critical("An error occurred:", err)
-		panic(err)
-	}
-	res, _ := cfg.String(context.Background(), "name")
-	logs.Info("load config name is", res)
-}
-```
-### Using logs module
-```go
-package main
-
-import (
-	"github.com/astaxie/beego/core/logs"
-)
-
-func main() {
-	err := logs.SetLogger(logs.AdapterFile, `{"filename":"project.log","level":7,"maxlines":0,"maxsize":0,"daily":true,"maxdays":10,"color":true}`)
-	if err != nil {
-		panic(err)
-	}
-	logs.Info("hello beego")
-}
-```
-### Using timed task
-
-```go
-package main
-
-import (
-	"context"
-	"time"
-
-	"github.com/astaxie/beego/core/logs"
-	"github.com/astaxie/beego/task"
-)
-
-func main() {
-	// create a task
-	tk1 := task.NewTask("tk1", "0/3 * * * * *", func(ctx context.Context) error { logs.Info("tk1"); return nil })
-
-	// check task
-	err := tk1.Run(context.Background())
-	if err != nil {
-		logs.Error(err)
-	}
-
-	// add task to global todolist
-	task.AddTask("tk1", tk1)
-
-	// start tasks
-	task.StartTask()
-
-	// wait 12 second
-	time.Sleep(12 * time.Second)
-	defer task.StopTask()
-}
-``` 
-
-### Using cache module
-
-```go
-package main
-
-import (
-	"context"
-	"time"
-
-	"github.com/astaxie/beego/client/cache"
-
-	// don't forget this
-	_ "github.com/astaxie/beego/client/cache/redis"
-
-	"github.com/astaxie/beego/core/logs"
-)
-
-func main() {
-	// create cache
-	bm, err := cache.NewCache("redis", `{"key":"default", "conn":":6379", "password":"123456", "dbNum":"0"}`)
-	if err != nil {
-		logs.Error(err)
-	}
-
-	// put
-	isPut := bm.Put(context.Background(), "astaxie", 1, time.Second*10)
-	logs.Info(isPut)
-
-	isPut = bm.Put(context.Background(), "hello", "world", time.Second*10)
-	logs.Info(isPut)
-
-	// get
-	result, _ := bm.Get(context.Background(),"astaxie")
-	logs.Info(string(result.([]byte)))
-
-	multiResult, _ := bm.GetMulti(context.Background(), []string{"astaxie", "hello"})
-	for i := range multiResult {
-		logs.Info(string(multiResult[i].([]byte)))
-	}
-
-	// isExist
-	isExist, _ := bm.IsExist(context.Background(), "astaxie")
-	logs.Info(isExist)
-
-	// delete
-	isDelete := bm.Delete(context.Background(), "astaxie")
-	logs.Info(isDelete)
-}
-```
-
-
 ## Features
 
 * RESTful support
-* MVC architecture
+* [MVC architecture](https://github.com/beego/beedoc/tree/master/en-US/mvc)
 * Modularity
-* Auto API documents
-* Annotation router
-* Namespace
-* Powerful development tools
+* [Auto API documents](https://github.com/beego/beedoc/blob/master/en-US/advantage/docs.md)
+* [Annotation router](https://github.com/beego/beedoc/blob/master/en-US/mvc/controller/router.md)
+* [Namespace](https://github.com/beego/beedoc/blob/master/en-US/mvc/controller/router.md#namespace)
+* [Powerful development tools](https://github.com/beego/bee)
 * Full stack for Web & API
 
-## Documentation
-
-* [English](http://beego.me/docs/intro/)
-* [中文文档](http://beego.me/docs/intro/)
-* [Русский](http://beego.me/docs/intro/)
+## Modules
+* [orm](https://github.com/beego/beedoc/tree/master/en-US/mvc/model)
+* [session](https://github.com/beego/beedoc/blob/master/en-US/module/session.md)
+* [logs](https://github.com/beego/beedoc/blob/master/en-US/module/logs.md)
+* [config](https://github.com/beego/beedoc/blob/master/en-US/module/config.md)
+* [cache](https://github.com/beego/beedoc/blob/master/en-US/module/cache.md)
+* [context](https://github.com/beego/beedoc/blob/master/en-US/module/context.md)
+* [governor](https://github.com/beego/beedoc/blob/master/en-US/module/governor.md)
+* [httplib](https://github.com/beego/beedoc/blob/master/en-US/module/httplib.md)
+* [task](https://github.com/beego/beedoc/blob/master/en-US/module/task.md)
+* [i18n](https://github.com/beego/beedoc/blob/master/en-US/module/i18n.md)
 
 ## Community
 
 * [http://beego.me/community](http://beego.me/community)
-* Welcome to join us in Slack: [https://beego.slack.com](https://beego.slack.com), you can get invited from [here](https://github.com/beego/beedoc/issues/232)
+* Welcome to join us in Slack: [https://beego.slack.com](https://beego.slack.com), you can get invited
+  from [here](https://github.com/beego/beedoc/issues/232)
 * QQ Group Group ID:523992905
+* [Contribution Guide](https://github.com/beego/beedoc/blob/master/en-US/intro/contributing.md).
 
 ## License
 
