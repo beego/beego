@@ -6,7 +6,7 @@ services.
 It is inspired by Tornado, Sinatra and Flask. beego has some Go-specific features such as interfaces and struct
 embedding.
 
-![architecture](https://cdn.nlark.com/yuque/0/2020/png/755700/1607849779965-e243f61d-607f-4357-b292-e2c69aab1c11.png)
+![architecture](https://cdn.nlark.com/yuque/0/2020/png/755700/1607857489109-1e267fce-d65f-4c5e-b915-5c475df33c58.png)
 
 Beego is compos of four parts:
 1. Base modules: including log module, config module, governor module;
@@ -25,7 +25,7 @@ Beego is compos of four parts:
 
 ### Web Application
 
-![Http Request](https://cdn.nlark.com/yuque/0/2020/png/755700/1607854896328-6db5ca04-281d-453e-9843-4777ed932874.png)
+![Http Request](https://cdn.nlark.com/yuque/0/2020/png/755700/1607857462507-855ec543-7ce3-402d-a0cb-b2524d5a4b60.png)
 
 #### Create `hello` directory, cd `hello` directory
 

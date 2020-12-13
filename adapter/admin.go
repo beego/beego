@@ -17,7 +17,7 @@ package adapter
 import (
 	"time"
 
-	_ "github.com/astaxie/beego/core/governor"
+	_ "github.com/astaxie/beego/core/admin"
 	"github.com/astaxie/beego/server/web"
 )
 

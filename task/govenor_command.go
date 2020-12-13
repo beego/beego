@@ -21,13 +21,13 @@ import (
 
 	"github.com/pkg/errors"
 
-	"github.com/astaxie/beego/core/governor"
+	"github.com/astaxie/beego/core/admin"
 )
 
 type listTaskCommand struct {
 }
 
-func (l *listTaskCommand) Execute(params ...interface{}) *governor.Result {
+func (l *listTaskCommand) Execute(params ...interface{}) *admin.Result {
 	resultList := make([][]string, 0, len(globalTaskManager.adminTaskList))
 	for tname, tk := range globalTaskManager.adminTaskList {
 		result := []string{
@@ -39,7 +39,7 @@ func (l *listTaskCommand) Execute(params ...interface{}) *governor.Result {
 		resultList = append(resultList, result)
 	}
 
-	return &governor.Result{
+	return &admin.Result{
 		Status:  200,
 		Content: resultList,
 	}
@@ -48,9 +48,9 @@ func (l *listTaskCommand) Execute(params ...interface{}) *governor.Result {
 type runTaskCommand struct {
 }
 
-func (r *runTaskCommand) Execute(params ...interface{}) *governor.Result {
+func (r *runTaskCommand) Execute(params ...interface{}) *admin.Result {
 	if len(params) == 0 {
-		return &governor.Result{
+		return &admin.Result{
 			Status: 400,
 			Error:  errors.New("task name not passed"),
 		}
@@ -59,7 +59,7 @@ func (r *runTaskCommand) Execute(params ...interface{}) *governor.Result {
 	tn, ok := params[0].(string)
 
 	if !ok {
-		return &governor.Result{
+		return &admin.Result{
 			Status: 400,
 			Error:  errors.New("parameter is invalid"),
 		}
@@ -68,17 +68,17 @@ func (r *runTaskCommand) Execute(params ...interface{}) *governor.Result {
 	if t, ok := globalTaskManager.adminTaskList[tn]; ok {
 		err := t.Run(context.Background())
 		if err != nil {
-			return &governor.Result{
+			return &admin.Result{
 				Status: 500,
 				Error:  err,
 			}
 		}
-		return &governor.Result{
+		return &admin.Result{
 			Status:  200,
 			Content: t.GetStatus(context.Background()),
 		}
 	} else {
-		return &governor.Result{
+		return &admin.Result{
 			Status: 400,
 			Error:  errors.New(fmt.Sprintf("task with name %s not found", tn)),
 		}
@@ -87,6 +87,6 @@ func (r *runTaskCommand) Execute(params ...interface{}) *governor.Result {
 }
 
 func registerCommands() {
-	governor.RegisterCommand("task", "list", &listTaskCommand{})
-	governor.RegisterCommand("task", "run", &runTaskCommand{})
+	admin.RegisterCommand("task", "list", &listTaskCommand{})
+	admin.RegisterCommand("task", "run", &runTaskCommand{})
 }
