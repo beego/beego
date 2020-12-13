@@ -17,7 +17,7 @@ package orm
 import (
 	"io"
 
-	"github.com/astaxie/beego/client/orm"
+	"github.com/beego/beego/client/orm"
 )
 
 // Log implement the log.Logger

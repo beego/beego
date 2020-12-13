@@ -15,7 +15,7 @@
 package migration
 
 import (
-	"github.com/astaxie/beego/client/orm/migration"
+	"github.com/beego/beego/client/orm/migration"
 )
 
 // Index struct defines the structure of Index Columns

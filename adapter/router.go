@@ -18,10 +18,10 @@ import (
 	"net/http"
 	"time"
 
-	beecontext "github.com/astaxie/beego/adapter/context"
-	"github.com/astaxie/beego/server/web/context"
+	beecontext "github.com/beego/beego/adapter/context"
+	"github.com/beego/beego/server/web/context"
 
-	"github.com/astaxie/beego/server/web"
+	"github.com/beego/beego/server/web"
 )
 
 // default filter execution points

@@ -21,7 +21,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/astaxie/beego/core/config"
+	"github.com/beego/beego/core/config"
 )
 
 func TestConfig_Parse(t *testing.T) {

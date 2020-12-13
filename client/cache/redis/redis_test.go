@@ -24,7 +24,7 @@ import (
 	"github.com/gomodule/redigo/redis"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/astaxie/beego/client/cache"
+	"github.com/beego/beego/client/cache"
 )
 
 func TestRedisCache(t *testing.T) {

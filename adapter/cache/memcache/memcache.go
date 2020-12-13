@@ -20,8 +20,8 @@
 //
 // Usage:
 // import(
-//   _ "github.com/astaxie/beego/cache/memcache"
-//   "github.com/astaxie/beego/cache"
+//   _ "github.com/beego/beego/cache/memcache"
+//   "github.com/beego/beego/cache"
 // )
 //
 //  bm, err := cache.NewCache("memcache", `{"conn":"127.0.0.1:11211"}`)
@@ -30,8 +30,8 @@
 package memcache
 
 import (
-	"github.com/astaxie/beego/adapter/cache"
-	"github.com/astaxie/beego/client/cache/memcache"
+	"github.com/beego/beego/adapter/cache"
+	"github.com/beego/beego/client/cache/memcache"
 )
 
 // NewMemCache create new memcache adapter.

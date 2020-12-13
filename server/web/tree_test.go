@@ -18,7 +18,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/astaxie/beego/server/web/context"
+	"github.com/beego/beego/server/web/context"
 )
 
 type testInfo struct {
@@ -93,7 +93,7 @@ func init() {
 
 	//not match example
 
-	// https://github.com/astaxie/beego/issues/3865
+	// https://github.com/beego/beego/issues/3865
 	routers = append(routers, notMatchTestInfo("/read_:id:int\\.htm", "/read_222htm"))
 	routers = append(routers, notMatchTestInfo("/read_:id:int\\.htm", "/read_222_htm"))
 	routers = append(routers, notMatchTestInfo("/read_:id:int\\.htm", " /read_262shtm"))

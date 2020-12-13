@@ -15,7 +15,7 @@
 package logs
 
 import (
-	"github.com/astaxie/beego/core/logs"
+	"github.com/beego/beego/core/logs"
 )
 
 // ColorByStatus return color by http code

@@ -15,7 +15,7 @@
 package adapter
 
 import (
-	"github.com/astaxie/beego/server/web"
+	"github.com/beego/beego/server/web"
 )
 
 // FlashData is a tools to maintain data when using across request.

@@ -16,8 +16,8 @@
 //
 // Simple Usage:
 //	import(
-//		"github.com/astaxie/beego"
-//		"github.com/astaxie/beego/plugins/apiauth"
+//		"github.com/beego/beego"
+//		"github.com/beego/beego/plugins/apiauth"
 //	)
 //
 //	func main(){
@@ -65,8 +65,8 @@ import (
 	"sort"
 	"time"
 
-	"github.com/astaxie/beego/server/web"
-	"github.com/astaxie/beego/server/web/context"
+	"github.com/beego/beego/server/web"
+	"github.com/beego/beego/server/web/context"
 )
 
 // AppIDToAppSecret gets appsecret through appid

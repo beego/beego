@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/astaxie/beego/client/orm"
+	"github.com/beego/beego/client/orm"
 )
 
 type fn func(string) string

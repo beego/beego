@@ -15,7 +15,7 @@
 package orm
 
 import (
-	"github.com/astaxie/beego/client/orm"
+	"github.com/beego/beego/client/orm"
 )
 
 // QueryBuilder is the Query builder interface

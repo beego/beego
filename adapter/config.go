@@ -15,9 +15,9 @@
 package adapter
 
 import (
-	"github.com/astaxie/beego/adapter/session"
-	newCfg "github.com/astaxie/beego/core/config"
-	"github.com/astaxie/beego/server/web"
+	"github.com/beego/beego/adapter/session"
+	newCfg "github.com/beego/beego/core/config"
+	"github.com/beego/beego/server/web"
 )
 
 // Config is the main struct for BConfig

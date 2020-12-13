@@ -18,7 +18,7 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/astaxie/beego/server/web"
+	"github.com/beego/beego/server/web"
 )
 
 type FileSystem web.FileSystem

@@ -23,7 +23,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/astaxie/beego/server/web/context"
+	"github.com/beego/beego/server/web/context"
 )
 
 func TestGetInt(t *testing.T) {

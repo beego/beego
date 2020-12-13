@@ -20,8 +20,8 @@
 //
 // Usage:
 // import(
-//   _ "github.com/astaxie/beego/cache/redis"
-//   "github.com/astaxie/beego/cache"
+//   _ "github.com/beego/beego/cache/redis"
+//   "github.com/beego/beego/cache"
 // )
 //
 //  bm, err := cache.NewCache("redis", `{"conn":"127.0.0.1:11211"}`)
@@ -30,8 +30,8 @@
 package redis
 
 import (
-	"github.com/astaxie/beego/adapter/cache"
-	redis2 "github.com/astaxie/beego/client/cache/redis"
+	"github.com/beego/beego/adapter/cache"
+	redis2 "github.com/beego/beego/client/cache/redis"
 )
 
 var (

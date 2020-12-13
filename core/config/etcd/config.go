@@ -26,8 +26,8 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
 
-	"github.com/astaxie/beego/core/config"
-	"github.com/astaxie/beego/core/logs"
+	"github.com/beego/beego/core/config"
+	"github.com/beego/beego/core/logs"
 )
 
 type EtcdConfiger struct {

@@ -18,10 +18,10 @@ import (
 	"mime/multipart"
 	"net/url"
 
-	"github.com/astaxie/beego/adapter/session"
-	webContext "github.com/astaxie/beego/server/web/context"
+	"github.com/beego/beego/adapter/session"
+	webContext "github.com/beego/beego/server/web/context"
 
-	"github.com/astaxie/beego/server/web"
+	"github.com/beego/beego/server/web"
 )
 
 var (

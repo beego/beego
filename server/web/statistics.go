@@ -19,7 +19,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/astaxie/beego/core/utils"
+	"github.com/beego/beego/core/utils"
 )
 
 // Statistics struct

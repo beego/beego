@@ -22,7 +22,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/astaxie/beego/server/web/context"
+	"github.com/beego/beego/server/web/context"
 )
 
 func TestFilterChainBuilder_FilterChain(t *testing.T) {
