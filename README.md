@@ -25,7 +25,7 @@ Beego is compos of four parts:
 
 ### Web Application
 
-![Http Request](https://cdn.nlark.com/yuque/0/2020/png/755700/1607847142666-281f3089-28cf-4b92-b108-d432eeb4aef3.png)
+![Http Request](https://cdn.nlark.com/yuque/0/2020/png/755700/1607854896328-6db5ca04-281d-453e-9843-4777ed932874.png)
 
 #### Create `hello` directory, cd `hello` directory
 
