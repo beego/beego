@@ -15,7 +15,7 @@
 package logs
 
 import (
-	"github.com/beego/beego/core/logs"
+	"github.com/beego/beego/v2/core/logs"
 )
 
 // ColorByStatus return color by http code

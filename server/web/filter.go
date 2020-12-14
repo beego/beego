@@ -17,7 +17,7 @@ package web
 import (
 	"strings"
 
-	"github.com/beego/beego/server/web/context"
+	"github.com/beego/beego/v2/server/web/context"
 )
 
 // FilterChain is different from pure FilterFunc

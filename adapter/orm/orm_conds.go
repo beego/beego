@@ -15,7 +15,7 @@
 package orm
 
 import (
-	"github.com/beego/beego/client/orm"
+	"github.com/beego/beego/v2/client/orm"
 )
 
 // ExprSep define the expression separation

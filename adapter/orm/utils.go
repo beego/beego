@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/beego/beego/client/orm"
+	"github.com/beego/beego/v2/client/orm"
 )
 
 type fn func(string) string

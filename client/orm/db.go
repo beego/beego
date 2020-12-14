@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/beego/beego/client/orm/hints"
+	"github.com/beego/beego/v2/client/orm/hints"
 )
 
 const (

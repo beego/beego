@@ -18,7 +18,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/beego/beego/client/httplib"
+	"github.com/beego/beego/v2/client/httplib"
 	logKit "github.com/go-kit/kit/log"
 	opentracingKit "github.com/go-kit/kit/tracing/opentracing"
 	"github.com/opentracing/opentracing-go"

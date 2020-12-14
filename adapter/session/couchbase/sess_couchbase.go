@@ -20,8 +20,8 @@
 //
 // Usage:
 // import(
-//   _ "github.com/beego/beego/session/couchbase"
-//   "github.com/beego/beego/session"
+//   _ "github.com/beego/beego/v2/session/couchbase"
+//   "github.com/beego/beego/v2/session"
 // )
 //
 //	func init() {
@@ -36,8 +36,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/beego/beego/adapter/session"
-	beecb "github.com/beego/beego/server/web/session/couchbase"
+	"github.com/beego/beego/v2/adapter/session"
+	beecb "github.com/beego/beego/v2/server/web/session/couchbase"
 )
 
 // SessionStore store each session

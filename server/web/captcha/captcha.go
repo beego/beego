@@ -19,9 +19,9 @@
 // package controllers
 //
 // import (
-// 	"github.com/beego/beego"
-// 	"github.com/beego/beego/cache"
-// 	"github.com/beego/beego/utils/captcha"
+// 	"github.com/beego/beego/v2"
+// 	"github.com/beego/beego/v2/cache"
+// 	"github.com/beego/beego/v2/utils/captcha"
 // )
 //
 // var cpt *captcha.Captcha
@@ -67,11 +67,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/beego/beego/core/logs"
+	"github.com/beego/beego/v2/core/logs"
 
-	"github.com/beego/beego/core/utils"
-	"github.com/beego/beego/server/web"
-	"github.com/beego/beego/server/web/context"
+	"github.com/beego/beego/v2/core/utils"
+	"github.com/beego/beego/v2/server/web"
+	"github.com/beego/beego/v2/server/web/context"
 )
 
 var (

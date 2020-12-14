@@ -19,7 +19,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/beego/beego/server/web/context"
+	"github.com/beego/beego/v2/server/web/context"
 )
 
 // InitGzip init the gzipcompress

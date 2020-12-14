@@ -17,8 +17,8 @@ package opentracing
 import (
 	"context"
 
-	"github.com/beego/beego/server/web"
-	beegoCtx "github.com/beego/beego/server/web/context"
+	"github.com/beego/beego/v2/server/web"
+	beegoCtx "github.com/beego/beego/v2/server/web/context"
 	logKit "github.com/go-kit/kit/log"
 	opentracingKit "github.com/go-kit/kit/tracing/opentracing"
 	"github.com/opentracing/opentracing-go"

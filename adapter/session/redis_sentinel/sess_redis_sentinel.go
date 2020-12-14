@@ -20,8 +20,8 @@
 //
 // Usage:
 // import(
-//   _ "github.com/beego/beego/session/redis_sentinel"
-//   "github.com/beego/beego/session"
+//   _ "github.com/beego/beego/v2/session/redis_sentinel"
+//   "github.com/beego/beego/v2/session"
 // )
 //
 //	func init() {
@@ -36,9 +36,9 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/beego/beego/adapter/session"
+	"github.com/beego/beego/v2/adapter/session"
 
-	sentinel "github.com/beego/beego/server/web/session/redis_sentinel"
+	sentinel "github.com/beego/beego/v2/server/web/session/redis_sentinel"
 )
 
 // DefaultPoolSize redis_sentinel default pool size

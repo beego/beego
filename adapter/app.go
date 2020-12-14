@@ -17,9 +17,9 @@ package adapter
 import (
 	"net/http"
 
-	context2 "github.com/beego/beego/adapter/context"
-	"github.com/beego/beego/server/web"
-	"github.com/beego/beego/server/web/context"
+	context2 "github.com/beego/beego/v2/adapter/context"
+	"github.com/beego/beego/v2/server/web"
+	"github.com/beego/beego/v2/server/web/context"
 )
 
 var (

@@ -19,7 +19,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/beego/beego/adapter/config"
+	"github.com/beego/beego/v2/adapter/config"
 )
 
 func TestXML(t *testing.T) {

@@ -20,8 +20,8 @@
 //
 // Usage:
 // import(
-//   _ "github.com/beego/beego/session/couchbase"
-//   "github.com/beego/beego/session"
+//   _ "github.com/beego/beego/v2/session/couchbase"
+//   "github.com/beego/beego/v2/session"
 // )
 //
 //	func init() {
@@ -41,7 +41,7 @@ import (
 
 	couchbase "github.com/couchbase/go-couchbase"
 
-	"github.com/beego/beego/server/web/session"
+	"github.com/beego/beego/v2/server/web/session"
 )
 
 var couchbpder = &Provider{}

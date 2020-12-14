@@ -26,10 +26,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/beego/beego/core/logs"
+	"github.com/beego/beego/v2/core/logs"
 	lru "github.com/hashicorp/golang-lru"
 
-	"github.com/beego/beego/server/web/context"
+	"github.com/beego/beego/v2/server/web/context"
 )
 
 var errNotStaticRequest = errors.New("request not a static file request")

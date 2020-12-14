@@ -15,9 +15,9 @@
 package adapter
 
 import (
-	"github.com/beego/beego/adapter/context"
-	"github.com/beego/beego/server/web"
-	beecontext "github.com/beego/beego/server/web/context"
+	"github.com/beego/beego/v2/adapter/context"
+	"github.com/beego/beego/v2/server/web"
+	beecontext "github.com/beego/beego/v2/server/web/context"
 )
 
 // FilterFunc defines a filter function which is invoked before the controller handler is executed.
