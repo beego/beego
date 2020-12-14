@@ -95,13 +95,13 @@ type Fielder interface {
 }
 
 type TxBeginner interface {
-	//self control transaction
+	// self control transaction
 	Begin() (TxOrmer, error)
 	BeginWithCtx(ctx context.Context) (TxOrmer, error)
 	BeginWithOpts(opts *sql.TxOptions) (TxOrmer, error)
 	BeginWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions) (TxOrmer, error)
 
-	//closure control transaction
+	// closure control transaction
 	DoTx(task func(ctx context.Context, txOrm TxOrmer) error) error
 	DoTxWithCtx(ctx context.Context, task func(ctx context.Context, txOrm TxOrmer) error) error
 	DoTxWithOpts(opts *sql.TxOptions, task func(ctx context.Context, txOrm TxOrmer) error) error
@@ -113,7 +113,7 @@ type TxCommitter interface {
 	Rollback() error
 }
 
-//Data Manipulation Language
+// Data Manipulation Language
 type DML interface {
 	// insert model data to database
 	// for example:

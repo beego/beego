@@ -189,8 +189,8 @@ func (n *Namespace) Include(cList ...ControllerInterface) *Namespace {
 
 // Namespace add nest Namespace
 // usage:
-//ns := beego.NewNamespace(“/v1”).
-//Namespace(
+// ns := beego.NewNamespace(“/v1”).
+// Namespace(
 //    beego.NewNamespace("/shop").
 //        Get("/:id", func(ctx *context.Context) {
 //            ctx.Output.Body([]byte("shopinfo"))
@@ -203,7 +203,7 @@ func (n *Namespace) Include(cList ...ControllerInterface) *Namespace {
 //        Get("/:id", func(ctx *context.Context) {
 //            ctx.Output.Body([]byte("crminfo"))
 //    }),
-//)
+// )
 func (n *Namespace) Namespace(ns ...*Namespace) *Namespace {
 	for _, ni := range ns {
 		for k, v := range ni.handlers.routers {

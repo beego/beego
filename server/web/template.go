@@ -163,12 +163,12 @@ func AddTemplateExt(ext string) {
 }
 
 // AddViewPath adds a new path to the supported view paths.
-//Can later be used by setting a controller ViewPath to this folder
-//will panic if called after beego.Run()
+// Can later be used by setting a controller ViewPath to this folder
+// will panic if called after beego.Run()
 func AddViewPath(viewPath string) error {
 	if beeViewPathTemplateLocked {
 		if _, exist := beeViewPathTemplates[viewPath]; exist {
-			return nil //Ignore if viewpath already exists
+			return nil // Ignore if viewpath already exists
 		}
 		panic("Can not add new view paths after beego.Run()")
 	}
@@ -303,7 +303,7 @@ func _getTemplate(t0 *template.Template, root string, fs http.FileSystem, subMod
 			if tpl != nil {
 				continue
 			}
-			//first check filename
+			// first check filename
 			for _, otherFile := range others {
 				if otherFile == m[1] {
 					var subMods1 [][]string
@@ -316,7 +316,7 @@ func _getTemplate(t0 *template.Template, root string, fs http.FileSystem, subMod
 					break
 				}
 			}
-			//second check define
+			// second check define
 			for _, otherFile := range others {
 				var data []byte
 				fileAbsPath := filepath.Join(root, otherFile)

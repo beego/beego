@@ -20,7 +20,7 @@ type Cache struct {
 	conninfo []string
 }
 
-//NewSsdbCache creates new ssdb adapter.
+// NewSsdbCache creates new ssdb adapter.
 func NewSsdbCache() cache.Cache {
 	return &Cache{}
 }

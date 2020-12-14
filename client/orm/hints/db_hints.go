@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	//query level
+	// query level
 	KeyForceIndex = iota
 	KeyUseIndex
 	KeyIgnoreIndex

@@ -222,7 +222,7 @@ func (r *Response) Write(p []byte) (int, error) {
 // and sets `Started` to true.
 func (r *Response) WriteHeader(code int) {
 	if r.Status > 0 {
-		//prevent multiple response.WriteHeader calls
+		// prevent multiple response.WriteHeader calls
 		return
 	}
 	r.Status = code

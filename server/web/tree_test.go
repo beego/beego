@@ -50,7 +50,7 @@ func notMatchTestInfo(pattern, url string) testInfo {
 
 func init() {
 	routers = make([]testInfo, 0)
-	//match example
+	// match example
 	routers = append(routers, matchTestInfo("/topic/?:auth:int", "/topic", nil))
 	routers = append(routers, matchTestInfo("/topic/?:auth:int", "/topic/123", map[string]string{":auth": "123"}))
 	routers = append(routers, matchTestInfo("/topic/:id/?:auth", "/topic/1", map[string]string{":id": "1"}))
@@ -91,7 +91,7 @@ func init() {
 	routers = append(routers, matchTestInfo("/api/projects/:pid/members/?:mid", "/api/projects/1/members", map[string]string{":pid": "1"}))
 	routers = append(routers, matchTestInfo("/api/projects/:pid/members/?:mid", "/api/projects/1/members/2", map[string]string{":pid": "1", ":mid": "2"}))
 
-	//not match example
+	// not match example
 
 	// https://github.com/beego/beego/v2/issues/3865
 	routers = append(routers, notMatchTestInfo("/read_:id:int\\.htm", "/read_222htm"))
@@ -324,7 +324,7 @@ func TestSplitSegment(t *testing.T) {
 		":id([0-9]+)":                {true, []string{":id"}, `([0-9]+)`},
 		":id([0-9]+)_:name":          {true, []string{":id", ":name"}, `([0-9]+)_(.+)`},
 		":id(.+)_cms.html":           {true, []string{":id"}, `(.+)_cms.html`},
-		":id(.+)_cms\\.html":           {true, []string{":id"}, `(.+)_cms\.html`},
+		":id(.+)_cms\\.html":         {true, []string{":id"}, `(.+)_cms\.html`},
 		"cms_:id(.+)_:page(.+).html": {true, []string{":id", ":page"}, `cms_(.+)_(.+).html`},
 		`:app(a|b|c)`:                {true, []string{":app"}, `(a|b|c)`},
 		`:app\((a|b|c)\)`:            {true, []string{":app"}, `(.+)\((a|b|c)\)`},

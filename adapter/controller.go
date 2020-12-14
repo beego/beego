@@ -212,7 +212,7 @@ func (c *Controller) ServeFormatted(encoding ...bool) {
 
 // Input returns the input data map from POST or PUT request body and query string.
 func (c *Controller) Input() url.Values {
-	val, _ :=  (*web.Controller)(c).Input()
+	val, _ := (*web.Controller)(c).Input()
 	return val
 }
 

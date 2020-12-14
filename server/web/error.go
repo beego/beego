@@ -444,13 +444,13 @@ func exception(errCode string, ctx *context.Context) {
 			return
 		}
 	}
-	//if 50x error has been removed from errorMap
+	// if 50x error has been removed from errorMap
 	ctx.ResponseWriter.WriteHeader(atoi(errCode))
 	ctx.WriteString(errCode)
 }
 
 func executeError(err *errorInfo, ctx *context.Context, code int) {
-	//make sure to log the error in the access log
+	// make sure to log the error in the access log
 	LogAccess(ctx, nil, code)
 
 	if err.errorType == errorTypeHandler {
@@ -460,16 +460,16 @@ func executeError(err *errorInfo, ctx *context.Context, code int) {
 	}
 	if err.errorType == errorTypeController {
 		ctx.Output.SetStatus(code)
-		//Invoke the request handler
+		// Invoke the request handler
 		vc := reflect.New(err.controllerType)
 		execController, ok := vc.Interface().(ControllerInterface)
 		if !ok {
 			panic("controller is not ControllerInterface")
 		}
-		//call the controller init function
+		// call the controller init function
 		execController.Init(ctx, err.controllerType.Name(), err.method, vc.Interface())
 
-		//call prepare function
+		// call prepare function
 		execController.Prepare()
 
 		execController.URLMapping()
@@ -477,7 +477,7 @@ func executeError(err *errorInfo, ctx *context.Context, code int) {
 		method := vc.MethodByName(err.method)
 		method.Call([]reflect.Value{})
 
-		//render template
+		// render template
 		if BConfig.WebConfig.AutoRender {
 			if err := execController.Render(); err != nil {
 				panic(err)
