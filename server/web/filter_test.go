@@ -19,7 +19,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/beego/beego/server/web/context"
+	"github.com/beego/beego/v2/server/web/context"
 )
 
 var FilterUser = func(ctx *context.Context) {

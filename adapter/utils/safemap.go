@@ -15,7 +15,7 @@
 package utils
 
 import (
-	"github.com/beego/beego/core/utils"
+	"github.com/beego/beego/v2/core/utils"
 )
 
 // BeeMap is a map with lock

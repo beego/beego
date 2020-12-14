@@ -15,7 +15,7 @@
 // Package httplib is used as http.Client
 // Usage:
 //
-// import "github.com/beego/beego/httplib"
+// import "github.com/beego/beego/v2/httplib"
 //
 //	b := httplib.Post("http://beego.me/")
 //	b.Param("username","astaxie")
@@ -38,7 +38,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/beego/beego/client/httplib"
+	"github.com/beego/beego/v2/client/httplib"
 )
 
 // SetDefaultSetting Overwrite default settings

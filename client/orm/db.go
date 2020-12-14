@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/beego/beego/client/orm/hints"
+	"github.com/beego/beego/v2/client/orm/hints"
 )
 
 const (
@@ -524,7 +524,7 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a
 		return 0, fmt.Errorf("`%s` nonsupport InsertOrUpdate in beego", a.DriverName)
 	}
 
-	//Get on the key-value pairs
+	// Get on the key-value pairs
 	for _, v := range args {
 		kv := strings.Split(v, "=")
 		if len(kv) == 2 {
@@ -559,7 +559,7 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a
 				updates[i] = v + "=" + valueStr
 			case DRPostgres:
 				if conflitValue != nil {
-					//postgres ON CONFLICT DO UPDATE SET can`t use colu=colu+values
+					// postgres ON CONFLICT DO UPDATE SET can`t use colu=colu+values
 					updates[i] = fmt.Sprintf("%s=(select %s from %s where %s = ? )", v, valueStr, mi.table, args0)
 					updateValues = append(updateValues, conflitValue)
 				} else {
@@ -584,7 +584,7 @@ func (d *dbBase) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a
 	if isMulti {
 		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
 	}
-	//conflitValue maybe is a int,can`t use fmt.Sprintf
+	// conflitValue maybe is a int,can`t use fmt.Sprintf
 	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s) %s "+qupdates, Q, mi.table, Q, Q, columns, Q, qmarks, iouStr)
 
 	d.ins.ReplaceMarks(&query)

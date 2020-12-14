@@ -6,10 +6,10 @@ import (
 )
 
 const (
-	//BadRequest indicates HTTP error 400
+	// BadRequest indicates HTTP error 400
 	BadRequest StatusCode = http.StatusBadRequest
 
-	//NotFound indicates HTTP error 404
+	// NotFound indicates HTTP error 404
 	NotFound StatusCode = http.StatusNotFound
 )
 

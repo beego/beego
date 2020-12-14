@@ -230,12 +230,12 @@ type bintree struct {
 }
 
 var _bintree = &bintree{nil, map[string]*bintree{
-	"views": &bintree{nil, map[string]*bintree{
-		"blocks": &bintree{nil, map[string]*bintree{
-			"block.tpl": &bintree{viewsBlocksBlockTpl, map[string]*bintree{}},
+	"views": {nil, map[string]*bintree{
+		"blocks": {nil, map[string]*bintree{
+			"block.tpl": {viewsBlocksBlockTpl, map[string]*bintree{}},
 		}},
-		"header.tpl": &bintree{viewsHeaderTpl, map[string]*bintree{}},
-		"index.tpl":  &bintree{viewsIndexTpl, map[string]*bintree{}},
+		"header.tpl": {viewsHeaderTpl, map[string]*bintree{}},
+		"index.tpl":  {viewsIndexTpl, map[string]*bintree{}},
 	}},
 }}
 

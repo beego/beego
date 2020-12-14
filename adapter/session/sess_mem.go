@@ -18,7 +18,7 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/beego/beego/server/web/session"
+	"github.com/beego/beego/v2/server/web/session"
 )
 
 // MemSessionStore memory session store.

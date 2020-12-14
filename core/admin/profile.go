@@ -26,7 +26,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/beego/beego/core/utils"
+	"github.com/beego/beego/v2/core/utils"
 )
 
 var startTime = time.Now()

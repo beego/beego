@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/beego/beego/adapter/cache"
+	"github.com/beego/beego/v2/adapter/cache"
 )
 
 func TestSsdbcacheCache(t *testing.T) {
@@ -26,7 +26,7 @@ func TestSsdbcacheCache(t *testing.T) {
 		t.Error("check err")
 	}
 	timeoutDuration := 10 * time.Second
-	//timeoutDuration := -10*time.Second   if timeoutDuration is negtive,it means permanent
+	// timeoutDuration := -10*time.Second   if timeoutDuration is negtive,it means permanent
 	if err = ssdb.Put("ssdb", "ssdb", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
@@ -43,7 +43,7 @@ func TestSsdbcacheCache(t *testing.T) {
 		t.Error("get Error")
 	}
 
-	//inc/dec test done
+	// inc/dec test done
 	if err = ssdb.Put("ssdb", "2", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
@@ -72,7 +72,7 @@ func TestSsdbcacheCache(t *testing.T) {
 		}
 	}
 
-	//test string
+	// test string
 	if err = ssdb.Put("ssdb", "ssdb", -10*time.Second); err != nil {
 		t.Error("set Error", err)
 	}
@@ -83,7 +83,7 @@ func TestSsdbcacheCache(t *testing.T) {
 		t.Error("get err")
 	}
 
-	//test GetMulti done
+	// test GetMulti done
 	if err = ssdb.Put("ssdb1", "ssdb1", -10*time.Second); err != nil {
 		t.Error("set Error", err)
 	}

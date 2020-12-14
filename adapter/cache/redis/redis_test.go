@@ -22,7 +22,7 @@ import (
 
 	"github.com/gomodule/redigo/redis"
 
-	"github.com/beego/beego/adapter/cache"
+	"github.com/beego/beego/v2/adapter/cache"
 )
 
 func TestRedisCache(t *testing.T) {
@@ -76,7 +76,7 @@ func TestRedisCache(t *testing.T) {
 		t.Error("delete err")
 	}
 
-	//test string
+	// test string
 	if err = bm.Put("astaxie", "author", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
@@ -88,7 +88,7 @@ func TestRedisCache(t *testing.T) {
 		t.Error("get err")
 	}
 
-	//test GetMulti
+	// test GetMulti
 	if err = bm.Put("astaxie1", "author1", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}

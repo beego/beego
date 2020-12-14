@@ -23,9 +23,9 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/beego/beego"
-	"github.com/beego/beego/core/logs"
-	"github.com/beego/beego/server/web"
+	"github.com/beego/beego/v2"
+	"github.com/beego/beego/v2/core/logs"
+	"github.com/beego/beego/v2/server/web"
 )
 
 func PrometheusMiddleWare(next http.Handler) http.Handler {

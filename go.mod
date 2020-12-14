@@ -1,5 +1,5 @@
-//module github.com/beego/beego
-module github.com/beego/beego
+//module github.com/beego/beego/v2
+module github.com/beego/beego/v2
 
 require (
 	github.com/Knetic/govaluate v3.0.0+incompatible // indirect
@@ -44,10 +44,9 @@ require (
 	go.etcd.io/etcd v3.3.25+incompatible // indirect
 	go.uber.org/zap v1.15.0 // indirect
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
-	golang.org/x/net v0.0.0-20200822124328-c89045814202 // indirect
-	golang.org/x/sys v0.0.0-20200824131525-c12d262b63d8 // indirect
+	golang.org/x/lint v0.0.0-20201208152925-83fdc39ff7b5 // indirect
 	golang.org/x/text v0.3.3 // indirect
-	golang.org/x/tools v0.0.0-20200117065230-39095c1d176c
+	golang.org/x/tools v0.0.0-20201211185031-d93e913c1a58
 	google.golang.org/grpc v1.26.0
 	gopkg.in/yaml.v2 v2.2.8
 	honnef.co/go/tools v0.0.1-2020.1.5 // indirect

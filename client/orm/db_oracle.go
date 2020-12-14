@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/beego/beego/client/orm/hints"
+	"github.com/beego/beego/v2/client/orm/hints"
 )
 
 // oracle operators.
@@ -77,7 +77,7 @@ func (d *dbBaseOracle) DbTypes() map[string]string {
 	return oracleTypes
 }
 
-//ShowTablesQuery show all the tables in database
+// ShowTablesQuery show all the tables in database
 func (d *dbBaseOracle) ShowTablesQuery() string {
 	return "SELECT TABLE_NAME FROM USER_TABLES"
 }

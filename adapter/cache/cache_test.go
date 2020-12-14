@@ -26,7 +26,7 @@ func TestCacheIncr(t *testing.T) {
 	if err != nil {
 		t.Error("init err")
 	}
-	//timeoutDuration := 10 * time.Second
+	// timeoutDuration := 10 * time.Second
 
 	bm.Put("edwardhey", 0, time.Second*20)
 	wg := sync.WaitGroup{}
@@ -90,7 +90,7 @@ func TestCache(t *testing.T) {
 		t.Error("delete err")
 	}
 
-	//test GetMulti
+	// test GetMulti
 	if err = bm.Put("astaxie", "author", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
@@ -157,7 +157,7 @@ func TestFileCache(t *testing.T) {
 		t.Error("delete err")
 	}
 
-	//test string
+	// test string
 	if err = bm.Put("astaxie", "author", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
@@ -168,7 +168,7 @@ func TestFileCache(t *testing.T) {
 		t.Error("get err")
 	}
 
-	//test GetMulti
+	// test GetMulti
 	if err = bm.Put("astaxie1", "author1", timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}

@@ -24,7 +24,7 @@ import (
 	assetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/beego/beego/test"
+	"github.com/beego/beego/v2/test"
 )
 
 var header = `{{define "header"}}
@@ -117,7 +117,7 @@ func TestRelativeTemplate(t *testing.T) {
 	assert.Nil(t, err)
 	dir := filepath.Join(wkdir, "_beeTmp")
 
-	//Just add dir to known viewPaths
+	// Just add dir to known viewPaths
 	if err := AddViewPath(dir); err != nil {
 		t.Fatal(err)
 	}
