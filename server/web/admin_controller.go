@@ -250,7 +250,7 @@ func (a *adminController) ListConf() {
 		filterTypeData := BeeApp.reportFilter()
 
 		filterTypes := make([]string, 0, len(filterTypeData))
-		for k, _ := range filterTypeData {
+		for k := range filterTypeData {
 			filterTypes = append(filterTypes, k)
 		}
 

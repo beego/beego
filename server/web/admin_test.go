@@ -152,12 +152,12 @@ func TestHealthCheckHandlerDefault(t *testing.T) {
 
 func TestBuildHealthCheckResponseList(t *testing.T) {
 	healthCheckResults := [][]string{
-		[]string{
+		{
 			"error",
 			"Database",
-			"Error occured whie starting the db",
+			"Error occurred whie starting the db",
 		},
-		[]string{
+		{
 			"success",
 			"Cache",
 			"Cache started successfully",

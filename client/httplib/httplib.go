@@ -553,7 +553,7 @@ func (b *BeegoHTTPRequest) doRequest(ctx context.Context) (resp *http.Response, 
 	// retries default value is 0, it will run once.
 	// retries equal to -1, it will run forever until success
 	// retries is setted, it will retries fixed times.
-	// Sleeps for a 400ms inbetween calls to reduce spam
+	// Sleeps for a 400ms between calls to reduce spam
 	for i := 0; b.setting.Retries == -1 || i <= b.setting.Retries; i++ {
 		resp, err = client.Do(b.req)
 		if err == nil {
