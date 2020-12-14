@@ -30,17 +30,17 @@ import (
 
 	"golang.org/x/tools/go/packages"
 
-	"github.com/beego/beego/core/logs"
+	"github.com/beego/beego/v2/core/logs"
 
-	"github.com/beego/beego/core/utils"
-	"github.com/beego/beego/server/web/context/param"
+	"github.com/beego/beego/v2/core/utils"
+	"github.com/beego/beego/v2/server/web/context/param"
 )
 
 var globalRouterTemplate = `package {{.routersDir}}
 
 import (
-	beego "github.com/beego/beego/server/web"
-	"github.com/beego/beego/server/web/context/param"{{.globalimport}}
+	beego "github.com/beego/beego/v2/server/web"
+	"github.com/beego/beego/v2/server/web/context/param"{{.globalimport}}
 )
 
 func init() {

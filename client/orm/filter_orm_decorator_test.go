@@ -21,7 +21,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/beego/beego/core/utils"
+	"github.com/beego/beego/v2/core/utils"
 
 	"github.com/stretchr/testify/assert"
 )

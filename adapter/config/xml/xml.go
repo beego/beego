@@ -20,8 +20,8 @@
 //
 // Usage:
 //  import(
-//    _ "github.com/beego/beego/config/xml"
-//      "github.com/beego/beego/config"
+//    _ "github.com/beego/beego/v2/config/xml"
+//      "github.com/beego/beego/v2/config"
 //  )
 //
 //  cnf, err := config.NewConfig("xml", "config.xml")
@@ -30,5 +30,5 @@
 package xml
 
 import (
-	_ "github.com/beego/beego/core/config/xml"
+	_ "github.com/beego/beego/v2/core/config/xml"
 )

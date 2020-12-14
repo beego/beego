@@ -15,7 +15,7 @@
 package cache
 
 import (
-	"github.com/beego/beego/client/cache"
+	"github.com/beego/beego/v2/client/cache"
 )
 
 // GetString convert interface to string.

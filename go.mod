@@ -1,5 +1,5 @@
-//module github.com/beego/beego
-module github.com/beego/beego
+//module github.com/beego/beego/v2
+module github.com/beego/beego/v2
 
 require (
 	github.com/Knetic/govaluate v3.0.0+incompatible // indirect

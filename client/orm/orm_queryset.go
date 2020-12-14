@@ -18,7 +18,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/beego/beego/client/orm/hints"
+	"github.com/beego/beego/v2/client/orm/hints"
 )
 
 type colValue struct {

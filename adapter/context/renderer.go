@@ -1,7 +1,7 @@
 package context
 
 import (
-	"github.com/beego/beego/server/web/context"
+	"github.com/beego/beego/v2/server/web/context"
 )
 
 // Renderer defines an http response renderer
