@@ -9,6 +9,7 @@ embedding.
 ![architecture](https://cdn.nlark.com/yuque/0/2020/png/755700/1607857489109-1e267fce-d65f-4c5e-b915-5c475df33c58.png)
 
 Beego is compos of four parts:
+
 1. Base modules: including log module, config module, governor module;
 2. Task: is used for running timed tasks or periodic tasks;
 3. Client: including ORM module, httplib module, cache module;
@@ -18,10 +19,9 @@ Beego is compos of four parts:
 
 [Officail website](http://beego.me)
 
-[Example](https://github.com/beego-dev/beego-example)
+[Example](https://github.com/beego/beego-example)
 
 > If you could not open official website, go to [beedoc](https://github.com/beego/beedoc)
-
 
 ### Web Application
 
@@ -73,6 +73,7 @@ Congratulations! You've just built your first **beego** app.
 * Full stack for Web & API
 
 ## Modules
+
 * [orm](https://github.com/beego/beedoc/tree/master/en-US/mvc/model)
 * [session](https://github.com/beego/beedoc/blob/master/en-US/module/session.md)
 * [logs](https://github.com/beego/beedoc/blob/master/en-US/module/logs.md)

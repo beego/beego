@@ -5,7 +5,7 @@ import (
 	"strings"
 )
 
-//MethodParam keeps param information to be auto passed to controller methods
+// MethodParam keeps param information to be auto passed to controller methods
 type MethodParam struct {
 	name         string
 	in           paramType

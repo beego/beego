@@ -141,7 +141,6 @@ Struct Tag Functions:
 	Phone
 	ZipCode
 
-
 ## LICENSE
 
 BSD License http://creativecommons.org/licenses/BSD/

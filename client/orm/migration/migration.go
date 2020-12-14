@@ -52,7 +52,7 @@ type Migrationer interface {
 	GetCreated() int64
 }
 
-//Migration defines the migrations by either SQL or DDL
+// Migration defines the migrations by either SQL or DDL
 type Migration struct {
 	sqls           []string
 	Created        string
@@ -104,7 +104,7 @@ func (m *Migration) Down() {
 	m.sqls = append(m.sqls, m.GetSQL())
 }
 
-//Migrate adds the SQL to the execution list
+// Migrate adds the SQL to the execution list
 func (m *Migration) Migrate(migrationType string) {
 	m.ModifyType = migrationType
 	m.sqls = append(m.sqls, m.GetSQL())

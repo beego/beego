@@ -65,7 +65,7 @@ type nopResetWriter struct {
 }
 
 func (n nopResetWriter) Reset(w io.Writer) {
-	//do nothing
+	// do nothing
 }
 
 type acceptEncoder struct {

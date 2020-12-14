@@ -138,7 +138,7 @@ func NewServer(addr string, handler http.Handler) (srv *Server) {
 		},
 		state:        StateInit,
 		Network:      "tcp",
-		terminalChan: make(chan error), //no cache channel
+		terminalChan: make(chan error), // no cache channel
 	}
 	srv.Server = &http.Server{
 		Addr:           addr,

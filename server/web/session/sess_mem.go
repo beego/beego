@@ -27,9 +27,9 @@ var mempder = &MemProvider{list: list.New(), sessions: make(map[string]*list.Ele
 // MemSessionStore memory session store.
 // it saved sessions in a map in memory.
 type MemSessionStore struct {
-	sid          string                      //session id
-	timeAccessed time.Time                   //last access time
-	value        map[interface{}]interface{} //session store
+	sid          string                      // session id
+	timeAccessed time.Time                   // last access time
+	value        map[interface{}]interface{} // session store
 	lock         sync.RWMutex
 }
 

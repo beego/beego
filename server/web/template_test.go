@@ -117,7 +117,7 @@ func TestRelativeTemplate(t *testing.T) {
 	assert.Nil(t, err)
 	dir := filepath.Join(wkdir, "_beeTmp")
 
-	//Just add dir to known viewPaths
+	// Just add dir to known viewPaths
 	if err := AddViewPath(dir); err != nil {
 		t.Fatal(err)
 	}

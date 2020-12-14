@@ -46,7 +46,7 @@ func TestGetInt8(t *testing.T) {
 	if val != 40 {
 		t.Errorf("TestGetInt8 expect 40,get %T,%v", val, val)
 	}
-	//Output: int8
+	// Output: int8
 }
 
 func TestGetInt16(t *testing.T) {
