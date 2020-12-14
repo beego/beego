@@ -79,7 +79,7 @@ Congratulations! You've just built your first **beego** app.
 * [config](https://github.com/beego/beedoc/blob/master/en-US/module/config.md)
 * [cache](https://github.com/beego/beedoc/blob/master/en-US/module/cache.md)
 * [context](https://github.com/beego/beedoc/blob/master/en-US/module/context.md)
-* [governor](https://github.com/beego/beedoc/blob/master/en-US/module/governor.md)
+* [admin](https://github.com/beego/beedoc/blob/master/en-US/module/admin.md)
 * [httplib](https://github.com/beego/beedoc/blob/master/en-US/module/httplib.md)
 * [task](https://github.com/beego/beedoc/blob/master/en-US/module/task.md)
 * [i18n](https://github.com/beego/beedoc/blob/master/en-US/module/i18n.md)
