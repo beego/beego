@@ -62,6 +62,7 @@ install:
   - go get github.com/gomodule/redigo/redis
   - go get github.com/beego/x2j
   - go get github.com/couchbase/go-couchbase
+  - go get -u github.com/couchbase/gomemcached@master
   - go get github.com/beego/goyaml2
   - go get gopkg.in/yaml.v2
   - go get github.com/belogik/goes

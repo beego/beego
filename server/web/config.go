@@ -17,6 +17,7 @@ package web
 import (
 	"crypto/tls"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -116,6 +117,7 @@ type SessionConfig struct {
 	SessionEnableSidInHTTPHeader bool // enable store/get the sessionId into/from http headers
 	SessionNameInHTTPHeader      string
 	SessionEnableSidInURLQuery   bool // enable get the sessionId from Url Query params
+	SessionCookieSameSite        http.SameSite
 }
 
 // LogConfig holds Log related config
@@ -274,6 +276,7 @@ func newBConfig() *Config {
 				SessionEnableSidInHTTPHeader: false, // enable store/get the sessionId into/from http headers
 				SessionNameInHTTPHeader:      "Beegosessionid",
 				SessionEnableSidInURLQuery:   false, // enable get the sessionId from Url Query params
+				SessionCookieSameSite:        http.SameSiteDefaultMode,
 			},
 		},
 		Log: LogConfig{
