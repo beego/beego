@@ -88,8 +88,7 @@ Congratulations! You've just built your first **beego** app.
 ## Community
 
 * [http://beego.me/community](http://beego.me/community)
-* Welcome to join us in Slack: [https://beego.slack.com](https://beego.slack.com), you can get invited
-  from [here](https://github.com/beego/beedoc/issues/232)
+* Welcome to join us in Slack: [https://beego.slack.com invite](https://join.slack.com/t/beego/shared_invite/zt-fqlfjaxs-_CRmiITCSbEqQG9NeBqXKA), 
 * QQ Group Group ID:523992905
 * [Contribution Guide](https://github.com/beego/beedoc/blob/master/en-US/intro/contributing.md).
 
