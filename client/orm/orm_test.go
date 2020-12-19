@@ -1746,6 +1746,10 @@ func TestRawQueryRow(t *testing.T) {
 			throwFail(t, AssertIs(id, 1))
 			break
 		case "time":
+			v = v.(time.Time).In(DefaultTimeLoc)
+			value := dataValues[col].(time.Time).In(DefaultTimeLoc)
+			assert.True(t, v.(time.Time).Sub(value) <= time.Second)
+			break
 		case "date":
 		case "datetime":
 			v = v.(time.Time).In(DefaultTimeLoc)
