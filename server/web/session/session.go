@@ -39,6 +39,7 @@ import (
 	"net/textproto"
 	"net/url"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -289,8 +290,9 @@ func (manager *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
 	sid, _ := url.QueryUnescape(cookie.Value)
 	manager.provider.SessionDestroy(nil, sid)
 	if manager.config.EnableSetCookie {
+		cookieName := manager.config.CookieName
 		cookie = &http.Cookie{
-			Name:     manager.config.CookieName,
+			Name:     cookieName,
 			Value:    "",
 			Path:     "/",
 			HttpOnly: !manager.config.DisableHTTPOnly,
@@ -300,7 +302,13 @@ func (manager *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
 			SameSite: manager.config.CookieSameSite,
 		}
 
-		w.Header().Set("Set-Cookie","")
+		hKey := "Set-Cookie"
+		for index, cookie := range w.Header().Values(hKey) {
+			if strings.Contains(cookie, cookieName+`=`) {
+				w.Header()[hKey][index] = ""
+			}
+		}
+		http.SetCookie(w, cookie)
 	}
 }
 
