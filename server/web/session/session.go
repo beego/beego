@@ -180,29 +180,34 @@ func (manager *Manager) GetProvider() Provider {
 func (manager *Manager) getSid(r *http.Request) (string, error) {
 	cookie, errs := r.Cookie(manager.config.CookieName)
 	if errs != nil || cookie.Value == "" {
-		var sid string
-		if manager.config.EnableSidInURLQuery {
-			errs := r.ParseForm()
-			if errs != nil {
-				return "", errs
-			}
-
-			sid = r.FormValue(manager.config.CookieName)
-		}
-
-		// if not found in Cookie / param, then read it from request headers
-		if manager.config.EnableSidInHTTPHeader && sid == "" {
-			sids, isFound := r.Header[manager.config.SessionNameInHTTPHeader]
-			if isFound && len(sids) != 0 {
-				return sids[0], nil
-			}
-		}
-
-		return sid, nil
+		return manager.getSidFromHeader(r)
 	}
 
 	// HTTP Request contains cookie for sessionid info.
 	return url.QueryUnescape(cookie.Value)
+}
+
+//getSidFromHeader
+func (manager *Manager) getSidFromHeader(r *http.Request) (string, error) {
+	var sid string
+	if manager.config.EnableSidInURLQuery {
+		errs := r.ParseForm()
+		if errs != nil {
+			return "", errs
+		}
+
+		sid = r.FormValue(manager.config.CookieName)
+	}
+
+	// if not found in Cookie / param, then read it from request headers
+	if manager.config.EnableSidInHTTPHeader && sid == "" {
+		sids, isFound := r.Header[manager.config.SessionNameInHTTPHeader]
+		if isFound && len(sids) != 0 {
+			return sids[0], nil
+		}
+	}
+
+	return sid, nil
 }
 
 // SessionStart generate or read the session id from http request.
@@ -215,6 +220,12 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 		if sid == `` {
 			return
 		}
+		//3 years
+		maxAge := 365 * 3 * 86400
+		if manager.config.CookieLifeTime > 0 {
+			maxAge = manager.config.CookieLifeTime
+		}
+
 		cookie := &http.Cookie{
 			Name:     manager.config.CookieName,
 			Value:    url.QueryEscape(sid),
@@ -223,12 +234,11 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 			Secure:   manager.isSecure(r),
 			Domain:   manager.config.Domain,
 			SameSite: manager.config.CookieSameSite,
+
+			MaxAge: maxAge,
+			Expires: time.Now().Add(time.Duration(maxAge) * time.Second),
 		}
 
-		if manager.config.CookieLifeTime > 0 {
-			cookie.MaxAge = manager.config.CookieLifeTime
-			cookie.Expires = time.Now().Add(time.Duration(manager.config.CookieLifeTime) * time.Second)
-		}
 		if manager.config.EnableSetCookie {
 			http.SetCookie(w, cookie)
 		}
@@ -241,16 +251,13 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 		r.AddCookie(cookie)
 	}()
 
-	if sid, err = manager.getSid(r); err != nil {
-		return nil, err
-	}
+	sid, err = manager.getSid(r)
+
 
 	if sid != "" {
-		exists, err := manager.provider.SessionExist(nil, sid)
-		if err != nil {
+		if exists, err := manager.provider.SessionExist(nil, sid); err != nil {
 			return nil, err
-		}
-		if exists {
+		} else if exists {
 			return manager.provider.SessionRead(nil, sid)
 		}
 	}
@@ -282,17 +289,18 @@ func (manager *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
 	sid, _ := url.QueryUnescape(cookie.Value)
 	manager.provider.SessionDestroy(nil, sid)
 	if manager.config.EnableSetCookie {
-		expiration := time.Now()
-		cookie = &http.Cookie{Name: manager.config.CookieName,
+		cookie = &http.Cookie{
+			Name:     manager.config.CookieName,
+			Value:    "",
 			Path:     "/",
 			HttpOnly: !manager.config.DisableHTTPOnly,
-			Expires:  expiration,
+			Expires:  time.Now(),
 			MaxAge:   -1,
 			Domain:   manager.config.Domain,
 			SameSite: manager.config.CookieSameSite,
 		}
 
-		http.SetCookie(w, cookie)
+		w.Header().Set("Set-Cookie","")
 	}
 }
 
