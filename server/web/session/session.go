@@ -303,8 +303,8 @@ func (manager *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
 		}
 
 		hKey := "Set-Cookie"
-		for index, cookie := range w.Header().Values(hKey) {
-			if strings.Contains(cookie, cookieName+`=`) {
+		for index, c := range w.Header().Values(hKey) {
+			if strings.Contains(c, cookieName+`=`) {
 				w.Header()[hKey][index] = ""
 			}
 		}
