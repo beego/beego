@@ -208,9 +208,41 @@ func (manager *Manager) getSid(r *http.Request) (string, error) {
 // SessionStart generate or read the session id from http request.
 // if session id exists, return SessionStore with this id.
 func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (session Store, err error) {
-	sid, errs := manager.getSid(r)
-	if errs != nil {
-		return nil, errs
+	var sid string
+
+	defer func() {
+		//set cookie for all response
+		if sid == `` {
+			return
+		}
+		cookie := &http.Cookie{
+			Name:     manager.config.CookieName,
+			Value:    url.QueryEscape(sid),
+			Path:     "/",
+			HttpOnly: !manager.config.DisableHTTPOnly,
+			Secure:   manager.isSecure(r),
+			Domain:   manager.config.Domain,
+			SameSite: manager.config.CookieSameSite,
+		}
+
+		if manager.config.CookieLifeTime > 0 {
+			cookie.MaxAge = manager.config.CookieLifeTime
+			cookie.Expires = time.Now().Add(time.Duration(manager.config.CookieLifeTime) * time.Second)
+		}
+		if manager.config.EnableSetCookie {
+			http.SetCookie(w, cookie)
+		}
+		if manager.config.EnableSidInHTTPHeader {
+			r.Header.Set(manager.config.SessionNameInHTTPHeader, sid)
+			w.Header().Set(manager.config.SessionNameInHTTPHeader, sid)
+		}
+
+		//set  cookie
+		r.AddCookie(cookie)
+	}()
+
+	if sid, err = manager.getSid(r); err != nil {
+		return nil, err
 	}
 
 	if sid != "" {
@@ -224,36 +256,12 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 	}
 
 	// Generate a new session
-	sid, errs = manager.sessionID()
-	if errs != nil {
-		return nil, errs
-	}
-
-	session, err = manager.provider.SessionRead(nil, sid)
-	if err != nil {
+	if sid, err = manager.sessionID(); err != nil {
 		return nil, err
 	}
-	cookie := &http.Cookie{
-		Name:     manager.config.CookieName,
-		Value:    url.QueryEscape(sid),
-		Path:     "/",
-		HttpOnly: !manager.config.DisableHTTPOnly,
-		Secure:   manager.isSecure(r),
-		Domain:   manager.config.Domain,
-		SameSite:   manager.config.CookieSameSite,
-	}
-	if manager.config.CookieLifeTime > 0 {
-		cookie.MaxAge = manager.config.CookieLifeTime
-		cookie.Expires = time.Now().Add(time.Duration(manager.config.CookieLifeTime) * time.Second)
-	}
-	if manager.config.EnableSetCookie {
-		http.SetCookie(w, cookie)
-	}
-	r.AddCookie(cookie)
 
-	if manager.config.EnableSidInHTTPHeader {
-		r.Header.Set(manager.config.SessionNameInHTTPHeader, sid)
-		w.Header().Set(manager.config.SessionNameInHTTPHeader, sid)
+	if session, err = manager.provider.SessionRead(nil, sid); err != nil {
+		return nil, err
 	}
 
 	return
