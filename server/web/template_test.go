@@ -49,9 +49,8 @@ var block = `{{define "block"}}
 {{end}}`
 
 func TestTemplate(t *testing.T) {
-	wkdir, err := os.Getwd()
-	assert.Nil(t, err)
-	dir := filepath.Join(wkdir, "_beeTmp", "TestTemplate")
+	tmpDir := os.TempDir()
+	dir := filepath.Join(tmpDir, "_beeTmp", "TestTemplate")
 	files := []string{
 		"header.tpl",
 		"index.tpl",
@@ -113,9 +112,8 @@ var user = `<!DOCTYPE html>
 `
 
 func TestRelativeTemplate(t *testing.T) {
-	wkdir, err := os.Getwd()
-	assert.Nil(t, err)
-	dir := filepath.Join(wkdir, "_beeTmp")
+	tmpDir := os.TempDir()
+	dir := filepath.Join(tmpDir, "_beeTmp")
 
 	// Just add dir to known viewPaths
 	if err := AddViewPath(dir); err != nil {
@@ -226,10 +224,10 @@ var output = `<!DOCTYPE html>
 `
 
 func TestTemplateLayout(t *testing.T) {
-	wkdir, err := os.Getwd()
+	tmpDir, err := os.Getwd()
 	assert.Nil(t, err)
 
-	dir := filepath.Join(wkdir, "_beeTmp", "TestTemplateLayout")
+	dir := filepath.Join(tmpDir, "_beeTmp", "TestTemplateLayout")
 	files := []string{
 		"add.tpl",
 		"layout_blog.tpl",

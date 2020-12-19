@@ -21,8 +21,6 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/beego/beego/v2/server/web/context"
 )
 
@@ -127,10 +125,9 @@ func TestGetUint64(t *testing.T) {
 }
 
 func TestAdditionalViewPaths(t *testing.T) {
-	wkdir, err := os.Getwd()
-	assert.Nil(t, err)
-	dir1 := filepath.Join(wkdir, "_beeTmp", "TestAdditionalViewPaths")
-	dir2 := filepath.Join(wkdir, "_beeTmp2", "TestAdditionalViewPaths")
+	tmpDir := os.TempDir()
+	dir1 := filepath.Join(tmpDir, "_beeTmp", "TestAdditionalViewPaths")
+	dir2 := filepath.Join(tmpDir, "_beeTmp2", "TestAdditionalViewPaths")
 	defer os.RemoveAll(dir1)
 	defer os.RemoveAll(dir2)
 
