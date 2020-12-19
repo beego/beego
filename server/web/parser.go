@@ -584,17 +584,6 @@ func getpathTime(pkgRealpath string) (lastupdate int64, err error) {
 
 func getRouterDir(pkgRealpath string) string {
 	dir := filepath.Dir(pkgRealpath)
-	for {
-		routersDir := AppConfig.DefaultString("routersdir", "routers")
-		d := filepath.Join(dir, routersDir)
-		if utils.FileExists(d) {
-			return d
-		}
-
-		if r, _ := filepath.Rel(dir, AppPath); r == "." {
-			return d
-		}
-		// Parent dir.
-		dir = filepath.Dir(dir)
-	}
+	routersDir := AppConfig.DefaultString("routersdir", "routers")
+	return filepath.Join(dir, routersDir)
 }
