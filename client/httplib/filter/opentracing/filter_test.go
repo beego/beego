@@ -33,7 +33,9 @@ func TestFilterChainBuilder_FilterChain(t *testing.T) {
 			StatusCode: 404,
 		}, errors.New("hello")
 	}
-	builder := &FilterChainBuilder{}
+	builder := &FilterChainBuilder{
+		TagURL: true,
+	}
 	filter := builder.FilterChain(next)
 	req := httplib.Get("https://github.com/notifications?query=repo%3Aastaxie%2Fbeego")
 	resp, err := filter(context.Background(), req)

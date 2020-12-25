@@ -338,10 +338,16 @@ func (b *BeegoHTTPRequest) Body(data interface{}) *BeegoHTTPRequest {
 	case string:
 		bf := bytes.NewBufferString(t)
 		b.req.Body = ioutil.NopCloser(bf)
+		b.req.GetBody = func() (io.ReadCloser, error) {
+			return ioutil.NopCloser(bf), nil
+		}
 		b.req.ContentLength = int64(len(t))
 	case []byte:
 		bf := bytes.NewBuffer(t)
 		b.req.Body = ioutil.NopCloser(bf)
+		b.req.GetBody = func() (io.ReadCloser, error) {
+			return ioutil.NopCloser(bf), nil
+		}
 		b.req.ContentLength = int64(len(t))
 	}
 	return b
