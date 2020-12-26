@@ -246,7 +246,7 @@ func (p *ControllerRegister) addWithMethodParams(pattern string, c ControllerInt
 	route := &ControllerInfo{}
 	route.pattern = pattern
 	route.routerType = routerTypeBeego
-	route.sessionOn = BConfig.WebConfig.Session.SessionOn
+	route.sessionOn = p.cfg.WebConfig.Session.SessionOn
 	route.controllerType = t
 	route.initialize = func() ControllerInterface {
 		vc := reflect.New(route.controllerType)
@@ -410,7 +410,7 @@ func (p *ControllerRegister) AddMethod(method, pattern string, f FilterFunc) {
 	route := &ControllerInfo{}
 	route.pattern = pattern
 	route.routerType = routerTypeRESTFul
-	route.sessionOn = BConfig.WebConfig.Session.SessionOn
+	route.sessionOn = p.cfg.WebConfig.Session.SessionOn
 	route.runFunction = f
 	methods := make(map[string]string)
 	if method == "*" {
@@ -437,7 +437,7 @@ func (p *ControllerRegister) Handler(pattern string, h http.Handler, options ...
 	route := &ControllerInfo{}
 	route.pattern = pattern
 	route.routerType = routerTypeHandler
-	route.sessionOn = BConfig.WebConfig.Session.SessionOn
+	route.sessionOn = p.cfg.WebConfig.Session.SessionOn
 	route.handler = h
 	if len(options) > 0 {
 		if _, ok := options[0].(bool); ok {
@@ -472,7 +472,7 @@ func (p *ControllerRegister) AddAutoPrefix(prefix string, c ControllerInterface)
 		if !utils.InSlice(rt.Method(i).Name, exceptMethod) {
 			route := &ControllerInfo{}
 			route.routerType = routerTypeBeego
-			route.sessionOn = BConfig.WebConfig.Session.SessionOn
+			route.sessionOn = p.cfg.WebConfig.Session.SessionOn
 			route.methods = map[string]string{"*": rt.Method(i).Name}
 			route.controllerType = ct
 			pattern := path.Join(prefix, strings.ToLower(controllerName), strings.ToLower(rt.Method(i).Name), "*")
@@ -778,7 +778,7 @@ func (p *ControllerRegister) serveHttp(ctx *beecontext.Context) {
 	}
 
 	// session init
-	currentSessionOn = BConfig.WebConfig.Session.SessionOn
+	currentSessionOn = p.cfg.WebConfig.Session.SessionOn
 	originRouterInfo, originFindRouter = p.FindRouter(ctx)
 	if originFindRouter {
 		if !currentSessionOn && originRouterInfo.sessionOn {
