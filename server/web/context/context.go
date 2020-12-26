@@ -15,7 +15,7 @@
 // Package context provide the context utils
 // Usage:
 //
-//	import "github.com/astaxie/beego/context"
+//	import "github.com/beego/beego/v2/context"
 //
 //	ctx := context.Context{Request:req,ResponseWriter:rw}
 //
@@ -35,7 +35,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/astaxie/beego/core/utils"
+	"github.com/beego/beego/v2/core/utils"
 )
 
 // Commonly used mime-types
@@ -222,7 +222,7 @@ func (r *Response) Write(p []byte) (int, error) {
 // and sets `Started` to true.
 func (r *Response) WriteHeader(code int) {
 	if r.Status > 0 {
-		//prevent multiple response.WriteHeader calls
+		// prevent multiple response.WriteHeader calls
 		return
 	}
 	r.Status = code

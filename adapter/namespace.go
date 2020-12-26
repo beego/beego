@@ -17,10 +17,10 @@ package adapter
 import (
 	"net/http"
 
-	adtContext "github.com/astaxie/beego/adapter/context"
-	"github.com/astaxie/beego/server/web/context"
+	adtContext "github.com/beego/beego/v2/adapter/context"
+	"github.com/beego/beego/v2/server/web/context"
 
-	"github.com/astaxie/beego/server/web"
+	"github.com/beego/beego/v2/server/web"
 )
 
 type namespaceCond func(*adtContext.Context) bool
@@ -91,28 +91,28 @@ func oldToNewFilter(filter []FilterFunc) []web.FilterFunc {
 }
 
 // Router same as beego.Rourer
-// refer: https://godoc.org/github.com/astaxie/beego#Router
+// refer: https://godoc.org/github.com/beego/beego/v2#Router
 func (n *Namespace) Router(rootpath string, c ControllerInterface, mappingMethods ...string) *Namespace {
 	(*web.Namespace)(n).Router(rootpath, c, mappingMethods...)
 	return n
 }
 
 // AutoRouter same as beego.AutoRouter
-// refer: https://godoc.org/github.com/astaxie/beego#AutoRouter
+// refer: https://godoc.org/github.com/beego/beego/v2#AutoRouter
 func (n *Namespace) AutoRouter(c ControllerInterface) *Namespace {
 	(*web.Namespace)(n).AutoRouter(c)
 	return n
 }
 
 // AutoPrefix same as beego.AutoPrefix
-// refer: https://godoc.org/github.com/astaxie/beego#AutoPrefix
+// refer: https://godoc.org/github.com/beego/beego/v2#AutoPrefix
 func (n *Namespace) AutoPrefix(prefix string, c ControllerInterface) *Namespace {
 	(*web.Namespace)(n).AutoPrefix(prefix, c)
 	return n
 }
 
 // Get same as beego.Get
-// refer: https://godoc.org/github.com/astaxie/beego#Get
+// refer: https://godoc.org/github.com/beego/beego/v2#Get
 func (n *Namespace) Get(rootpath string, f FilterFunc) *Namespace {
 	(*web.Namespace)(n).Get(rootpath, func(ctx *context.Context) {
 		f((*adtContext.Context)(ctx))
@@ -121,7 +121,7 @@ func (n *Namespace) Get(rootpath string, f FilterFunc) *Namespace {
 }
 
 // Post same as beego.Post
-// refer: https://godoc.org/github.com/astaxie/beego#Post
+// refer: https://godoc.org/github.com/beego/beego/v2#Post
 func (n *Namespace) Post(rootpath string, f FilterFunc) *Namespace {
 	(*web.Namespace)(n).Post(rootpath, func(ctx *context.Context) {
 		f((*adtContext.Context)(ctx))
@@ -130,7 +130,7 @@ func (n *Namespace) Post(rootpath string, f FilterFunc) *Namespace {
 }
 
 // Delete same as beego.Delete
-// refer: https://godoc.org/github.com/astaxie/beego#Delete
+// refer: https://godoc.org/github.com/beego/beego/v2#Delete
 func (n *Namespace) Delete(rootpath string, f FilterFunc) *Namespace {
 	(*web.Namespace)(n).Delete(rootpath, func(ctx *context.Context) {
 		f((*adtContext.Context)(ctx))
@@ -139,7 +139,7 @@ func (n *Namespace) Delete(rootpath string, f FilterFunc) *Namespace {
 }
 
 // Put same as beego.Put
-// refer: https://godoc.org/github.com/astaxie/beego#Put
+// refer: https://godoc.org/github.com/beego/beego/v2#Put
 func (n *Namespace) Put(rootpath string, f FilterFunc) *Namespace {
 	(*web.Namespace)(n).Put(rootpath, func(ctx *context.Context) {
 		f((*adtContext.Context)(ctx))
@@ -148,7 +148,7 @@ func (n *Namespace) Put(rootpath string, f FilterFunc) *Namespace {
 }
 
 // Head same as beego.Head
-// refer: https://godoc.org/github.com/astaxie/beego#Head
+// refer: https://godoc.org/github.com/beego/beego/v2#Head
 func (n *Namespace) Head(rootpath string, f FilterFunc) *Namespace {
 	(*web.Namespace)(n).Head(rootpath, func(ctx *context.Context) {
 		f((*adtContext.Context)(ctx))
@@ -157,7 +157,7 @@ func (n *Namespace) Head(rootpath string, f FilterFunc) *Namespace {
 }
 
 // Options same as beego.Options
-// refer: https://godoc.org/github.com/astaxie/beego#Options
+// refer: https://godoc.org/github.com/beego/beego/v2#Options
 func (n *Namespace) Options(rootpath string, f FilterFunc) *Namespace {
 	(*web.Namespace)(n).Options(rootpath, func(ctx *context.Context) {
 		f((*adtContext.Context)(ctx))
@@ -166,7 +166,7 @@ func (n *Namespace) Options(rootpath string, f FilterFunc) *Namespace {
 }
 
 // Patch same as beego.Patch
-// refer: https://godoc.org/github.com/astaxie/beego#Patch
+// refer: https://godoc.org/github.com/beego/beego/v2#Patch
 func (n *Namespace) Patch(rootpath string, f FilterFunc) *Namespace {
 	(*web.Namespace)(n).Patch(rootpath, func(ctx *context.Context) {
 		f((*adtContext.Context)(ctx))
@@ -175,7 +175,7 @@ func (n *Namespace) Patch(rootpath string, f FilterFunc) *Namespace {
 }
 
 // Any same as beego.Any
-// refer: https://godoc.org/github.com/astaxie/beego#Any
+// refer: https://godoc.org/github.com/beego/beego/v2#Any
 func (n *Namespace) Any(rootpath string, f FilterFunc) *Namespace {
 	(*web.Namespace)(n).Any(rootpath, func(ctx *context.Context) {
 		f((*adtContext.Context)(ctx))
@@ -184,14 +184,14 @@ func (n *Namespace) Any(rootpath string, f FilterFunc) *Namespace {
 }
 
 // Handler same as beego.Handler
-// refer: https://godoc.org/github.com/astaxie/beego#Handler
+// refer: https://godoc.org/github.com/beego/beego/v2#Handler
 func (n *Namespace) Handler(rootpath string, h http.Handler) *Namespace {
 	(*web.Namespace)(n).Handler(rootpath, h)
 	return n
 }
 
 // Include add include class
-// refer: https://godoc.org/github.com/astaxie/beego#Include
+// refer: https://godoc.org/github.com/beego/beego/v2#Include
 func (n *Namespace) Include(cList ...ControllerInterface) *Namespace {
 	nL := oldToNewCtrlIntfs(cList)
 	(*web.Namespace)(n).Include(nL...)
@@ -238,141 +238,158 @@ func AddNamespace(nl ...*Namespace) {
 
 // NSCond is Namespace Condition
 func NSCond(cond namespaceCond) LinkNamespace {
+	wc := web.NSCond(func(b *context.Context) bool {
+		return cond((*adtContext.Context)(b))
+	})
 	return func(namespace *Namespace) {
-		web.NSCond(func(b *context.Context) bool {
-			return cond((*adtContext.Context)(b))
-		})
+		wc((*web.Namespace)(namespace))
 	}
 }
 
 // NSBefore Namespace BeforeRouter filter
 func NSBefore(filterList ...FilterFunc) LinkNamespace {
+	nfs := oldToNewFilter(filterList)
+	wf := web.NSBefore(nfs...)
 	return func(namespace *Namespace) {
-		nfs := oldToNewFilter(filterList)
-		web.NSBefore(nfs...)
+		wf((*web.Namespace)(namespace))
 	}
 }
 
 // NSAfter add Namespace FinishRouter filter
 func NSAfter(filterList ...FilterFunc) LinkNamespace {
+	nfs := oldToNewFilter(filterList)
+	wf := web.NSAfter(nfs...)
 	return func(namespace *Namespace) {
-		nfs := oldToNewFilter(filterList)
-		web.NSAfter(nfs...)
+		wf((*web.Namespace)(namespace))
 	}
 }
 
 // NSInclude Namespace Include ControllerInterface
 func NSInclude(cList ...ControllerInterface) LinkNamespace {
+	nfs := oldToNewCtrlIntfs(cList)
+	wi := web.NSInclude(nfs...)
 	return func(namespace *Namespace) {
-		nfs := oldToNewCtrlIntfs(cList)
-		web.NSInclude(nfs...)
+		wi((*web.Namespace)(namespace))
 	}
 }
 
 // NSRouter call Namespace Router
 func NSRouter(rootpath string, c ControllerInterface, mappingMethods ...string) LinkNamespace {
+	wn := web.NSRouter(rootpath, c, mappingMethods...)
 	return func(namespace *Namespace) {
-		web.Router(rootpath, c, web.SetRouterMethods(c, mappingMethods...))
+		wn((*web.Namespace)(namespace))
 	}
 }
 
 // NSGet call Namespace Get
 func NSGet(rootpath string, f FilterFunc) LinkNamespace {
+	ln := web.NSGet(rootpath, func(ctx *context.Context) {
+		f((*adtContext.Context)(ctx))
+	})
 	return func(ns *Namespace) {
-		web.NSGet(rootpath, func(ctx *context.Context) {
-			f((*adtContext.Context)(ctx))
-		})
+		ln((*web.Namespace)(ns))
 	}
 }
 
 // NSPost call Namespace Post
 func NSPost(rootpath string, f FilterFunc) LinkNamespace {
+	wp := web.NSPost(rootpath, func(ctx *context.Context) {
+		f((*adtContext.Context)(ctx))
+	})
 	return func(ns *Namespace) {
-		web.Post(rootpath, func(ctx *context.Context) {
-			f((*adtContext.Context)(ctx))
-		})
+		wp((*web.Namespace)(ns))
 	}
 }
 
 // NSHead call Namespace Head
 func NSHead(rootpath string, f FilterFunc) LinkNamespace {
+	wb := web.NSHead(rootpath, func(ctx *context.Context) {
+		f((*adtContext.Context)(ctx))
+	})
 	return func(ns *Namespace) {
-		web.NSHead(rootpath, func(ctx *context.Context) {
-			f((*adtContext.Context)(ctx))
-		})
+		wb((*web.Namespace)(ns))
 	}
 }
 
 // NSPut call Namespace Put
 func NSPut(rootpath string, f FilterFunc) LinkNamespace {
+	wn := web.NSPut(rootpath, func(ctx *context.Context) {
+		f((*adtContext.Context)(ctx))
+	})
 	return func(ns *Namespace) {
-		web.NSPut(rootpath, func(ctx *context.Context) {
-			f((*adtContext.Context)(ctx))
-		})
+		wn((*web.Namespace)(ns))
 	}
 }
 
 // NSDelete call Namespace Delete
 func NSDelete(rootpath string, f FilterFunc) LinkNamespace {
+	wn := web.NSDelete(rootpath, func(ctx *context.Context) {
+		f((*adtContext.Context)(ctx))
+	})
 	return func(ns *Namespace) {
-		web.NSDelete(rootpath, func(ctx *context.Context) {
-			f((*adtContext.Context)(ctx))
-		})
+		wn((*web.Namespace)(ns))
 	}
 }
 
 // NSAny call Namespace Any
 func NSAny(rootpath string, f FilterFunc) LinkNamespace {
+	wn := web.NSAny(rootpath, func(ctx *context.Context) {
+		f((*adtContext.Context)(ctx))
+	})
 	return func(ns *Namespace) {
-		web.NSAny(rootpath, func(ctx *context.Context) {
-			f((*adtContext.Context)(ctx))
-		})
+		wn((*web.Namespace)(ns))
 	}
 }
 
 // NSOptions call Namespace Options
 func NSOptions(rootpath string, f FilterFunc) LinkNamespace {
+	wo := web.NSOptions(rootpath, func(ctx *context.Context) {
+		f((*adtContext.Context)(ctx))
+	})
 	return func(ns *Namespace) {
-		web.NSOptions(rootpath, func(ctx *context.Context) {
-			f((*adtContext.Context)(ctx))
-		})
+		wo((*web.Namespace)(ns))
 	}
 }
 
 // NSPatch call Namespace Patch
 func NSPatch(rootpath string, f FilterFunc) LinkNamespace {
+	wn := web.NSPatch(rootpath, func(ctx *context.Context) {
+		f((*adtContext.Context)(ctx))
+	})
 	return func(ns *Namespace) {
-		web.NSPatch(rootpath, func(ctx *context.Context) {
-			f((*adtContext.Context)(ctx))
-		})
+		wn((*web.Namespace)(ns))
 	}
 }
 
 // NSAutoRouter call Namespace AutoRouter
 func NSAutoRouter(c ControllerInterface) LinkNamespace {
+	wn := web.NSAutoRouter(c)
 	return func(ns *Namespace) {
-		web.NSAutoRouter(c)
+		wn((*web.Namespace)(ns))
 	}
 }
 
 // NSAutoPrefix call Namespace AutoPrefix
 func NSAutoPrefix(prefix string, c ControllerInterface) LinkNamespace {
+	wn := web.NSAutoPrefix(prefix, c)
 	return func(ns *Namespace) {
-		web.NSAutoPrefix(prefix, c)
+		wn((*web.Namespace)(ns))
 	}
 }
 
 // NSNamespace add sub Namespace
 func NSNamespace(prefix string, params ...LinkNamespace) LinkNamespace {
+	nps := oldToNewLinkNs(params)
+	wn := web.NSNamespace(prefix, nps...)
 	return func(ns *Namespace) {
-		nps := oldToNewLinkNs(params)
-		web.NSNamespace(prefix, nps...)
+		wn((*web.Namespace)(ns))
 	}
 }
 
 // NSHandler add handler
 func NSHandler(rootpath string, h http.Handler) LinkNamespace {
+	wn := web.NSHandler(rootpath, h)
 	return func(ns *Namespace) {
-		web.NSHandler(rootpath, h)
+		wn((*web.Namespace)(ns))
 	}
 }

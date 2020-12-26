@@ -106,7 +106,7 @@ type Parameter struct {
 type ParameterItems struct {
 	Type             string            `json:"type,omitempty" yaml:"type,omitempty"`
 	Format           string            `json:"format,omitempty" yaml:"format,omitempty"`
-	Items            []*ParameterItems `json:"items,omitempty" yaml:"items,omitempty"` //Required if type is "array". Describes the type of items in the array.
+	Items            []*ParameterItems `json:"items,omitempty" yaml:"items,omitempty"` // Required if type is "array". Describes the type of items in the array.
 	CollectionFormat string            `json:"collectionFormat,omitempty" yaml:"collectionFormat,omitempty"`
 	Default          string            `json:"default,omitempty" yaml:"default,omitempty"`
 }

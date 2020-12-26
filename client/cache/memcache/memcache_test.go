@@ -24,7 +24,7 @@ import (
 
 	_ "github.com/bradfitz/gomemcache/memcache"
 
-	"github.com/astaxie/beego/client/cache"
+	"github.com/beego/beego/v2/client/cache"
 )
 
 func TestMemcacheCache(t *testing.T) {

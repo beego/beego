@@ -11,7 +11,7 @@ import (
 
 	"github.com/ssdb/gossdb/ssdb"
 
-	"github.com/astaxie/beego/client/cache"
+	"github.com/beego/beego/v2/client/cache"
 )
 
 // Cache SSDB adapter
@@ -20,7 +20,7 @@ type Cache struct {
 	conninfo []string
 }
 
-//NewSsdbCache creates new ssdb adapter.
+// NewSsdbCache creates new ssdb adapter.
 func NewSsdbCache() cache.Cache {
 	return &Cache{}
 }

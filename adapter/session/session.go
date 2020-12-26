@@ -16,7 +16,7 @@
 //
 // Usage:
 // import(
-//   "github.com/astaxie/beego/session"
+//   "github.com/beego/beego/v2/session"
 // )
 //
 //	func init() {
@@ -32,7 +32,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/astaxie/beego/server/web/session"
+	"github.com/beego/beego/v2/server/web/session"
 )
 
 // Store contains all data for one session process with specific id.

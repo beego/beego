@@ -21,7 +21,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/astaxie/beego/core/utils"
+	"github.com/beego/beego/v2/core/utils"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -222,7 +222,7 @@ func TestFilterOrmDecorator_InsertMulti(t *testing.T) {
 		}
 	})
 
-	bulk := []*FilterTestEntity{&FilterTestEntity{}, &FilterTestEntity{}}
+	bulk := []*FilterTestEntity{{}, {}}
 	i, err := od.InsertMulti(2, bulk)
 	assert.NotNil(t, err)
 	assert.Equal(t, "insert multi error", err.Error())

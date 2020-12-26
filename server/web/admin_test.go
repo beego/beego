@@ -11,7 +11,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/astaxie/beego/core/admin"
+	"github.com/beego/beego/v2/core/admin"
 )
 
 type SampleDatabaseCheck struct {
@@ -152,12 +152,12 @@ func TestHealthCheckHandlerDefault(t *testing.T) {
 
 func TestBuildHealthCheckResponseList(t *testing.T) {
 	healthCheckResults := [][]string{
-		[]string{
+		{
 			"error",
 			"Database",
-			"Error occured whie starting the db",
+			"Error occurred whie starting the db",
 		},
-		[]string{
+		{
 			"success",
 			"Cache",
 			"Cache started successfully",

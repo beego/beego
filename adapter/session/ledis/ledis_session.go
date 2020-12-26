@@ -5,8 +5,8 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/astaxie/beego/adapter/session"
-	beeLedis "github.com/astaxie/beego/server/web/session/ledis"
+	"github.com/beego/beego/v2/adapter/session"
+	beeLedis "github.com/beego/beego/v2/server/web/session/ledis"
 )
 
 // SessionStore ledis session store

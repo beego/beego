@@ -181,6 +181,12 @@ func (o *rawSet) setFieldValue(ind reflect.Value, value interface{}) {
 					if err == nil {
 						ind.Set(reflect.ValueOf(t))
 					}
+				} else if len(str) >= 8 {
+					str = str[:8]
+					t, err := time.ParseInLocation(formatTime, str, DefaultTimeLoc)
+					if err == nil {
+						ind.Set(reflect.ValueOf(t))
+					}
 				}
 			}
 		case sql.NullString, sql.NullInt64, sql.NullFloat64, sql.NullBool:

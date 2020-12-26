@@ -31,7 +31,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/astaxie/beego/client/orm/hints"
+	"github.com/beego/beego/v2/client/orm/hints"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -1746,6 +1746,10 @@ func TestRawQueryRow(t *testing.T) {
 			throwFail(t, AssertIs(id, 1))
 			break
 		case "time":
+			v = v.(time.Time).In(DefaultTimeLoc)
+			value := dataValues[col].(time.Time).In(DefaultTimeLoc)
+			assert.True(t, v.(time.Time).Sub(value) <= time.Second)
+			break
 		case "date":
 		case "datetime":
 			v = v.(time.Time).In(DefaultTimeLoc)
@@ -1773,12 +1777,12 @@ func TestRawQueryRow(t *testing.T) {
 	throwFail(t, AssertIs(*status, 3))
 	throwFail(t, AssertIs(pid, nil))
 
-	type Embeded struct {
+	type Embedded struct {
 		Email string
 	}
 	type queryRowNoModelTest struct {
 		Id         int
-		EmbedField Embeded
+		EmbedField Embedded
 	}
 
 	cols = []string{
