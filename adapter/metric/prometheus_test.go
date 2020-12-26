@@ -35,7 +35,7 @@ func TestPrometheusMiddleWare(t *testing.T) {
 		},
 		Method: "POST",
 	}
-	vec := prometheus.NewSummaryVec(prometheus.SummaryOpts{}, []string{"pattern", "method", "status", "duration"})
+	vec := prometheus.NewSummaryVec(prometheus.SummaryOpts{}, []string{"pattern", "method", "status"})
 
 	report(time.Second, writer, request, vec)
 	middleware.ServeHTTP(writer, request)
