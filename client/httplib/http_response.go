@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mock
+package httplib
 
 import (
 	"bytes"
@@ -21,7 +21,8 @@ import (
 	"net/http"
 )
 
-// it will try to convert the data to json format
+// NewHttpResponseWithJsonBody will try to convert the data to json format
+// usually you only use this when you want to mock http Response
 func NewHttpResponseWithJsonBody(data interface{}) *http.Response {
 	var body []byte
 	if str, ok := data.(string); ok {

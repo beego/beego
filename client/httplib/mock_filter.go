@@ -12,16 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mock
+package httplib
 
 import (
 	"context"
+	"fmt"
 	"net/http"
-
-	"github.com/beego/beego/v2/client/httplib"
 )
 
 // MockResponse will return mock response if find any suitable mock data
+// if you want to test your code using httplib, you need this.
 type MockResponseFilter struct {
 	ms []*Mock
 }
@@ -32,9 +32,14 @@ func NewMockResponseFilter() *MockResponseFilter {
 	}
 }
 
-func (m *MockResponseFilter) FilterChain(next httplib.Filter) httplib.Filter {
-	return func(ctx context.Context, req *httplib.BeegoHTTPRequest) (*http.Response, error) {
-		for _, mock := range m.ms {
+func (m *MockResponseFilter) FilterChain(next Filter) Filter {
+	return func(ctx context.Context, req *BeegoHTTPRequest) (*http.Response, error) {
+
+		ms := mockFromCtx(ctx)
+		ms = append(ms, m.ms...)
+
+		fmt.Printf("url: %s, mock: %d \n", req.url, len(ms))
+		for _, mock := range ms {
 			if mock.cond.Match(ctx, req) {
 				return mock.resp, mock.err
 			}
@@ -43,22 +48,16 @@ func (m *MockResponseFilter) FilterChain(next httplib.Filter) httplib.Filter {
 	}
 }
 
+func (m *MockResponseFilter) MockByPath(path string, resp *http.Response, err error) {
+	m.Mock(NewSimpleCondition(path), resp, err)
+}
+
+func (m *MockResponseFilter) Clear() {
+	m.ms = make([]*Mock, 0, 1)
+}
+
 // Mock add mock data
 // If the cond.Match(...) = true, the resp and err will be returned
 func (m *MockResponseFilter) Mock(cond RequestCondition, resp *http.Response, err error) {
-	m.ms = append(m.ms, &Mock{
-		cond: cond,
-		resp: resp,
-		err:  err,
-	})
-}
-
-type Mock struct {
-	cond RequestCondition
-	resp *http.Response
-	err  error
-}
-
-type RequestCondition interface {
-	Match(ctx context.Context, req *httplib.BeegoHTTPRequest) bool
+	m.ms = append(m.ms, NewMock(cond, resp, err))
 }

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mock
+package httplib
 
 import (
 	"context"
@@ -20,7 +20,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/beego/beego/v2/client/httplib"
 )
 
 func init() {
@@ -29,37 +28,37 @@ func init() {
 
 func TestSimpleCondition_MatchPath(t *testing.T) {
 	sc := NewSimpleCondition("/abc/s")
-	res := sc.Match(context.Background(), httplib.Get("http://localhost:8080/abc/s"))
+	res := sc.Match(context.Background(), Get("http://localhost:8080/abc/s"))
 	assert.True(t, res)
 }
 
 func TestSimpleCondition_MatchQuery(t *testing.T) {
 	k, v := "my-key", "my-value"
 	sc := NewSimpleCondition("/abc/s")
-	res := sc.Match(context.Background(), httplib.Get("http://localhost:8080/abc/s?my-key=my-value"))
+	res := sc.Match(context.Background(), Get("http://localhost:8080/abc/s?my-key=my-value"))
 	assert.True(t, res)
 
 	sc = NewSimpleCondition("/abc/s", WithQuery(k, v))
-	res = sc.Match(context.Background(), httplib.Get("http://localhost:8080/abc/s?my-key=my-value"))
+	res = sc.Match(context.Background(), Get("http://localhost:8080/abc/s?my-key=my-value"))
 	assert.True(t, res)
 
-	res = sc.Match(context.Background(), httplib.Get("http://localhost:8080/abc/s?my-key=my-valuesss"))
+	res = sc.Match(context.Background(), Get("http://localhost:8080/abc/s?my-key=my-valuesss"))
 	assert.False(t, res)
 
-	res = sc.Match(context.Background(), httplib.Get("http://localhost:8080/abc/s?my-key-a=my-value"))
+	res = sc.Match(context.Background(), Get("http://localhost:8080/abc/s?my-key-a=my-value"))
 	assert.False(t, res)
 
-	res = sc.Match(context.Background(), httplib.Get("http://localhost:8080/abc/s?my-key=my-value&abc=hello"))
+	res = sc.Match(context.Background(), Get("http://localhost:8080/abc/s?my-key=my-value&abc=hello"))
 	assert.True(t, res)
 }
 
 func TestSimpleCondition_MatchHeader(t *testing.T) {
 	k, v := "my-header", "my-header-value"
 	sc := NewSimpleCondition("/abc/s")
-	req := httplib.Get("http://localhost:8080/abc/s")
+	req := Get("http://localhost:8080/abc/s")
 	assert.True(t, sc.Match(context.Background(), req))
 
-	req = httplib.Get("http://localhost:8080/abc/s")
+	req = Get("http://localhost:8080/abc/s")
 	req.Header(k, v)
 	assert.True(t, sc.Match(context.Background(), req))
 
@@ -74,7 +73,7 @@ func TestSimpleCondition_MatchHeader(t *testing.T) {
 func TestSimpleCondition_MatchBodyField(t *testing.T) {
 
 	sc := NewSimpleCondition("/abc/s")
-	req := httplib.Post("http://localhost:8080/abc/s")
+	req := Post("http://localhost:8080/abc/s")
 
 	assert.True(t, sc.Match(context.Background(), req))
 
@@ -103,7 +102,7 @@ func TestSimpleCondition_MatchBodyField(t *testing.T) {
 
 func TestSimpleCondition_Match(t *testing.T) {
 	sc := NewSimpleCondition("/abc/s")
-	req := httplib.Post("http://localhost:8080/abc/s")
+	req := Post("http://localhost:8080/abc/s")
 
 	assert.True(t, sc.Match(context.Background(), req))
 
@@ -116,9 +115,9 @@ func TestSimpleCondition_Match(t *testing.T) {
 
 func TestSimpleCondition_MatchPathReg(t *testing.T) {
 	sc := NewSimpleCondition("", WithPathReg(`\/abc\/.*`))
-	req := httplib.Post("http://localhost:8080/abc/s")
+	req := Post("http://localhost:8080/abc/s")
 	assert.True(t, sc.Match(context.Background(), req))
 
-	req = httplib.Post("http://localhost:8080/abcd/s")
+	req = Post("http://localhost:8080/abcd/s")
 	assert.False(t, sc.Match(context.Background(), req))
 }
