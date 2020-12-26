@@ -548,7 +548,7 @@ func (p *ControllerRegister) getURL(t *Tree, url, controllerName, methodName str
 	for _, l := range t.leaves {
 		if c, ok := l.runObject.(*ControllerInfo); ok {
 			if c.routerType == routerTypeBeego &&
-				strings.HasSuffix(path.Join(c.controllerType.PkgPath(), c.controllerType.Name()), controllerName) {
+				strings.HasSuffix(path.Join(c.controllerType.PkgPath(), c.controllerType.Name()), `/`+controllerName) {
 				find := false
 				if HTTPMETHOD[strings.ToUpper(methodName)] {
 					if len(c.methods) == 0 {
