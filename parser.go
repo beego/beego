@@ -49,7 +49,6 @@ func init() {
 
 var (
 	lastupdateFilename = "lastupdate.tmp"
-	commentFilename    string
 	pkgLastupdate      map[string]int64
 	genInfoList        map[string][]ControllerComments
 
@@ -70,16 +69,13 @@ var (
 	}
 )
 
-const commentPrefix = "commentsRouter_"
+const commentFilename   = "commentsRouter.go"
 
 func init() {
 	pkgLastupdate = make(map[string]int64)
 }
 
 func parserPkg(pkgRealpath, pkgpath string) error {
-	rep := strings.NewReplacer("\\", "_", "/", "_", ".", "_")
-	commentFilename, _ = filepath.Rel(AppPath, pkgRealpath)
-	commentFilename = commentPrefix + rep.Replace(commentFilename) + ".go"
 	if !compareFile(pkgRealpath) {
 		logs.Info(pkgRealpath + " no changed")
 		return nil
@@ -102,7 +98,10 @@ func parserPkg(pkgRealpath, pkgpath string) error {
 					if specDecl.Recv != nil {
 						exp, ok := specDecl.Recv.List[0].Type.(*ast.StarExpr) // Check that the type is correct first beforing throwing to parser
 						if ok {
-							parserComments(specDecl, fmt.Sprint(exp.X), pkgpath)
+							err = parserComments(specDecl, fmt.Sprint(exp.X), pkgpath)
+							if err != nil {
+								return err
+							}
 						}
 					}
 				}
@@ -500,7 +499,7 @@ func genRouterCode(pkgRealpath string) {
     beego.GlobalControllerRouter["` + k + `"] = append(beego.GlobalControllerRouter["` + k + `"],
         beego.ControllerComments{
             Method: "` + strings.TrimSpace(c.Method) + `",
-            ` + `Router: "` + c.Router + `"` + `,
+            ` + "Router: `" + c.Router + "`" + `,
             AllowHTTPMethods: ` + allmethod + `,
             MethodParams: ` + methodParams + `,
             Filters: ` + filters + `,
