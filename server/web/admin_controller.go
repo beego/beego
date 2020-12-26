@@ -24,7 +24,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"github.com/astaxie/beego/core/governor"
+	"github.com/astaxie/beego/core/admin"
 )
 
 type adminController struct {
@@ -51,7 +51,7 @@ func (a *adminController) ProfIndex() {
 		data   = make(map[interface{}]interface{})
 		result bytes.Buffer
 	)
-	governor.ProcessInput(command, &result)
+	admin.ProcessInput(command, &result)
 	data["Content"] = template.HTMLEscapeString(result.String())
 
 	if format == "json" && command == "gc summary" {
@@ -88,7 +88,7 @@ func (a *adminController) TaskStatus() {
 	req.ParseForm()
 	taskname := req.Form.Get("taskname")
 	if taskname != "" {
-		cmd := governor.GetCommand("task", "run")
+		cmd := admin.GetCommand("task", "run")
 		res := cmd.Execute(taskname)
 		if res.IsSuccess() {
 
@@ -103,7 +103,7 @@ func (a *adminController) TaskStatus() {
 
 	// List Tasks
 	content := make(M)
-	resultList := governor.GetCommand("task", "list").Execute().Content.([][]string)
+	resultList := admin.GetCommand("task", "list").Execute().Content.([][]string)
 	var fields = []string{
 		"Task Name",
 		"Task Spec",
@@ -141,7 +141,7 @@ func heathCheck(rw http.ResponseWriter, r *http.Request) {
 		}
 	)
 
-	for name, h := range governor.AdminCheckList {
+	for name, h := range admin.AdminCheckList {
 		if err := h.Check(); err != nil {
 			result = []string{
 				"error",

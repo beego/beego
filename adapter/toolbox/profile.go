@@ -19,7 +19,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/astaxie/beego/core/governor"
+	"github.com/astaxie/beego/core/admin"
 )
 
 var startTime = time.Now()
@@ -31,20 +31,20 @@ func init() {
 
 // ProcessInput parse input command string
 func ProcessInput(input string, w io.Writer) {
-	governor.ProcessInput(input, w)
+	admin.ProcessInput(input, w)
 }
 
 // MemProf record memory profile in pprof
 func MemProf(w io.Writer) {
-	governor.MemProf(w)
+	admin.MemProf(w)
 }
 
 // GetCPUProfile start cpu profile monitor
 func GetCPUProfile(w io.Writer) {
-	governor.GetCPUProfile(w)
+	admin.GetCPUProfile(w)
 }
 
 // PrintGCSummary print gc information to io.Writer
 func PrintGCSummary(w io.Writer) {
-	governor.PrintGCSummary(w)
+	admin.PrintGCSummary(w)
 }

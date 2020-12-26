@@ -11,7 +11,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/astaxie/beego/core/governor"
+	"github.com/astaxie/beego/core/admin"
 )
 
 type SampleDatabaseCheck struct {
@@ -126,8 +126,8 @@ func TestWriteJSON(t *testing.T) {
 func TestHealthCheckHandlerDefault(t *testing.T) {
 	endpointPath := "/healthcheck"
 
-	governor.AddHealthCheck("database", &SampleDatabaseCheck{})
-	governor.AddHealthCheck("cache", &SampleCacheCheck{})
+	admin.AddHealthCheck("database", &SampleDatabaseCheck{})
+	admin.AddHealthCheck("cache", &SampleCacheCheck{})
 
 	req, err := http.NewRequest("GET", endpointPath, nil)
 	if err != nil {
@@ -187,8 +187,8 @@ func TestBuildHealthCheckResponseList(t *testing.T) {
 
 func TestHealthCheckHandlerReturnsJSON(t *testing.T) {
 
-	governor.AddHealthCheck("database", &SampleDatabaseCheck{})
-	governor.AddHealthCheck("cache", &SampleCacheCheck{})
+	admin.AddHealthCheck("database", &SampleDatabaseCheck{})
+	admin.AddHealthCheck("cache", &SampleCacheCheck{})
 
 	req, err := http.NewRequest("GET", "/healthcheck?json=true", nil)
 	if err != nil {
