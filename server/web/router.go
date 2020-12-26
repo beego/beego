@@ -275,6 +275,13 @@ func (p *ControllerRegister) addWithMethodParams(pattern string, c ControllerInt
 	for i := range opts {
 		opts[i](route)
 	}
+	
+	globalSessionOn := p.cfg.WebConfig.Session.SessionOn
+	if !globalSessionOn && route.sessionOn {
+		logs.Warn("global sessionOn is false, sessionOn of router [%s] can't be set to true", route.pattern)
+		route.sessionOn = globalSessionOn
+	}
+
 	p.addRouterForMethod(route)
 }
 
@@ -781,11 +788,7 @@ func (p *ControllerRegister) serveHttp(ctx *beecontext.Context) {
 	currentSessionOn = p.cfg.WebConfig.Session.SessionOn
 	originRouterInfo, originFindRouter = p.FindRouter(ctx)
 	if originFindRouter {
-		if !currentSessionOn && originRouterInfo.sessionOn {
-			logs.Warn("global sessionOn is false, sessionOn of router [%s] %s can't be set to true", ctx.Request.Method, ctx.Request.URL.Path)
-		} else {
-			currentSessionOn = originRouterInfo.sessionOn
-		}
+		currentSessionOn = originRouterInfo.sessionOn
 	}
 	if currentSessionOn {
 		ctx.Input.CruSession, err = GlobalSessions.SessionStart(rw, r)
