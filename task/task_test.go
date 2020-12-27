@@ -36,9 +36,11 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	assert.Equal(t, "0/30 * * * * *", tk.GetSpec(context.Background()))
 	m.AddTask("taska", tk)
 	m.StartTask()
 	time.Sleep(3 * time.Second)
+	assert.True(t, len(tk.GetStatus(context.Background())) == 0)
 	m.StopTask()
 }
 
