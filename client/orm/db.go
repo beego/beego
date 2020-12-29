@@ -880,8 +880,39 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	where, args := tables.getCondSQL(cond, false, tz)
 	join := tables.getJoinSQL()
 
-	query := fmt.Sprintf("DELETE T0 FROM %s%s%s T0 %s%s%s", Q, mi.table, Q, specifyIndexes, join, where)
-	var err error
+	cols := fmt.Sprintf("T0.%s%s%s", Q, mi.fields.pk.column, Q)
+	query := fmt.Sprintf("SELECT %s FROM %s%s%s T0 %s%s%s", cols, Q, mi.table, Q, specifyIndexes, join, where)
+
+	d.ins.ReplaceMarks(&query)
+
+	var rs *sql.Rows
+	r, err := q.Query(query, args...)
+	if err != nil {
+		return 0, err
+	}
+	rs = r
+	defer rs.Close()
+
+	var ref interface{}
+	pkArgs := make([]interface{}, 0)
+	cnt := 0
+	for rs.Next() {
+		if err := rs.Scan(&ref); err != nil {
+			return 0, err
+		}
+		pkValue, err := d.convertValueFromDB(mi.fields.pk, reflect.ValueOf(ref).Interface(), tz)
+		if err != nil {
+			return 0, err
+		}
+		pkArgs = append(pkArgs, pkValue)
+		cnt++
+	}
+
+	if cnt == 0 {
+		return 0, nil
+	}
+
+	query = fmt.Sprintf("DELETE T0 FROM %s%s%s T0 %s%s%s", Q, mi.table, Q, specifyIndexes, join, where)
 
 	d.ins.ReplaceMarks(&query)
 	var res sql.Result
@@ -896,7 +927,7 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 			return 0, err
 		}
 		if num > 0 {
-			err := d.deleteRels(q, mi, args, tz)
+			err := d.deleteRels(q, mi, pkArgs, tz)
 			if err != nil {
 				return num, err
 			}
