@@ -390,13 +390,7 @@ func (p *ControllerRegister) AddMethod(method, pattern string, f FilterFunc) {
 	}
 	route.methods = methods
 	for k := range methods {
-		if k == "*" {
-			for m := range HTTPMETHOD {
-				p.addToRouter(m, pattern, route)
-			}
-		} else {
-			p.addToRouter(k, pattern, route)
-		}
+		p.addToRouter(k, pattern, route)
 	}
 }
 
