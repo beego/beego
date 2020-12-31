@@ -146,7 +146,7 @@ httpport = 8080
 # enable db
 [dbinfo]
 # db type name
-# suport mysql,sqlserver
+# support mysql,sqlserver
 name = mysql
 `
 
@@ -162,7 +162,7 @@ httpport=8080
 # enable db
 [dbinfo]
 # db type name
-# suport mysql,sqlserver
+# support mysql,sqlserver
 name=mysql
 `
 	)

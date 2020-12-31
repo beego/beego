@@ -19,7 +19,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/astaxie/beego/task"
+	"github.com/beego/beego/v2/task"
 )
 
 // The bounds for each field.

@@ -18,10 +18,10 @@ import (
 	"mime/multipart"
 	"net/url"
 
-	"github.com/astaxie/beego/adapter/session"
-	webContext "github.com/astaxie/beego/server/web/context"
+	"github.com/beego/beego/v2/adapter/session"
+	webContext "github.com/beego/beego/v2/server/web/context"
 
-	"github.com/astaxie/beego/server/web"
+	"github.com/beego/beego/v2/server/web"
 )
 
 var (
@@ -212,7 +212,8 @@ func (c *Controller) ServeFormatted(encoding ...bool) {
 
 // Input returns the input data map from POST or PUT request body and query string.
 func (c *Controller) Input() url.Values {
-	return (*web.Controller)(c).Input()
+	val, _ := (*web.Controller)(c).Input()
+	return val
 }
 
 // ParseForm maps input data map to obj struct.

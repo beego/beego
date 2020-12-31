@@ -18,79 +18,112 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/astaxie/beego/server/web/context"
+	"github.com/beego/beego/v2/server/web/context"
 )
 
-type testinfo struct {
-	url        string
-	requesturl string
-	params     map[string]string
+type testInfo struct {
+	pattern          string
+	requestUrl       string
+	params           map[string]string
+	shouldMatchOrNot bool
 }
 
-var routers []testinfo
+var routers []testInfo
+
+func matchTestInfo(pattern, url string, params map[string]string) testInfo {
+	return testInfo{
+		pattern:          pattern,
+		requestUrl:       url,
+		params:           params,
+		shouldMatchOrNot: true,
+	}
+}
+
+func notMatchTestInfo(pattern, url string) testInfo {
+	return testInfo{
+		pattern:          pattern,
+		requestUrl:       url,
+		params:           nil,
+		shouldMatchOrNot: false,
+	}
+}
 
 func init() {
-	routers = make([]testinfo, 0)
-	routers = append(routers, testinfo{"/topic/?:auth:int", "/topic", nil})
-	routers = append(routers, testinfo{"/topic/?:auth:int", "/topic/123", map[string]string{":auth": "123"}})
-	routers = append(routers, testinfo{"/topic/:id/?:auth", "/topic/1", map[string]string{":id": "1"}})
-	routers = append(routers, testinfo{"/topic/:id/?:auth", "/topic/1/2", map[string]string{":id": "1", ":auth": "2"}})
-	routers = append(routers, testinfo{"/topic/:id/?:auth:int", "/topic/1", map[string]string{":id": "1"}})
-	routers = append(routers, testinfo{"/topic/:id/?:auth:int", "/topic/1/123", map[string]string{":id": "1", ":auth": "123"}})
-	routers = append(routers, testinfo{"/:id", "/123", map[string]string{":id": "123"}})
-	routers = append(routers, testinfo{"/hello/?:id", "/hello", map[string]string{":id": ""}})
-	routers = append(routers, testinfo{"/", "/", nil})
-	routers = append(routers, testinfo{"/customer/login", "/customer/login", nil})
-	routers = append(routers, testinfo{"/customer/login", "/customer/login.json", map[string]string{":ext": "json"}})
-	routers = append(routers, testinfo{"/*", "/http://customer/123/", map[string]string{":splat": "http://customer/123/"}})
-	routers = append(routers, testinfo{"/*", "/customer/2009/12/11", map[string]string{":splat": "customer/2009/12/11"}})
-	routers = append(routers, testinfo{"/aa/*/bb", "/aa/2009/bb", map[string]string{":splat": "2009"}})
-	routers = append(routers, testinfo{"/cc/*/dd", "/cc/2009/11/dd", map[string]string{":splat": "2009/11"}})
-	routers = append(routers, testinfo{"/cc/:id/*", "/cc/2009/11/dd", map[string]string{":id": "2009", ":splat": "11/dd"}})
-	routers = append(routers, testinfo{"/ee/:year/*/ff", "/ee/2009/11/ff", map[string]string{":year": "2009", ":splat": "11"}})
-	routers = append(routers, testinfo{"/thumbnail/:size/uploads/*",
-		"/thumbnail/100x100/uploads/items/2014/04/20/dPRCdChkUd651t1Hvs18.jpg",
-		map[string]string{":size": "100x100", ":splat": "items/2014/04/20/dPRCdChkUd651t1Hvs18.jpg"}})
-	routers = append(routers, testinfo{"/*.*", "/nice/api.json", map[string]string{":path": "nice/api", ":ext": "json"}})
-	routers = append(routers, testinfo{"/:name/*.*", "/nice/api.json", map[string]string{":name": "nice", ":path": "api", ":ext": "json"}})
-	routers = append(routers, testinfo{"/:name/test/*.*", "/nice/test/api.json", map[string]string{":name": "nice", ":path": "api", ":ext": "json"}})
-	routers = append(routers, testinfo{"/dl/:width:int/:height:int/*.*",
-		"/dl/48/48/05ac66d9bda00a3acf948c43e306fc9a.jpg",
-		map[string]string{":width": "48", ":height": "48", ":ext": "jpg", ":path": "05ac66d9bda00a3acf948c43e306fc9a"}})
-	routers = append(routers, testinfo{"/v1/shop/:id:int", "/v1/shop/123", map[string]string{":id": "123"}})
-	routers = append(routers, testinfo{"/v1/shop/:id\\((a|b|c)\\)", "/v1/shop/123(a)", map[string]string{":id": "123"}})
-	routers = append(routers, testinfo{"/v1/shop/:id\\((a|b|c)\\)", "/v1/shop/123(b)", map[string]string{":id": "123"}})
-	routers = append(routers, testinfo{"/v1/shop/:id\\((a|b|c)\\)", "/v1/shop/123(c)", map[string]string{":id": "123"}})
-	routers = append(routers, testinfo{"/:year:int/:month:int/:id/:endid", "/1111/111/aaa/aaa", map[string]string{":year": "1111", ":month": "111", ":id": "aaa", ":endid": "aaa"}})
-	routers = append(routers, testinfo{"/v1/shop/:id/:name", "/v1/shop/123/nike", map[string]string{":id": "123", ":name": "nike"}})
-	routers = append(routers, testinfo{"/v1/shop/:id/account", "/v1/shop/123/account", map[string]string{":id": "123"}})
-	routers = append(routers, testinfo{"/v1/shop/:name:string", "/v1/shop/nike", map[string]string{":name": "nike"}})
-	routers = append(routers, testinfo{"/v1/shop/:id([0-9]+)", "/v1/shop//123", map[string]string{":id": "123"}})
-	routers = append(routers, testinfo{"/v1/shop/:id([0-9]+)_:name", "/v1/shop/123_nike", map[string]string{":id": "123", ":name": "nike"}})
-	routers = append(routers, testinfo{"/v1/shop/:id(.+)_cms.html", "/v1/shop/123_cms.html", map[string]string{":id": "123"}})
-	routers = append(routers, testinfo{"/v1/shop/cms_:id(.+)_:page(.+).html", "/v1/shop/cms_123_1.html", map[string]string{":id": "123", ":page": "1"}})
-	routers = append(routers, testinfo{"/v1/:v/cms/aaa_:id(.+)_:page(.+).html", "/v1/2/cms/aaa_123_1.html", map[string]string{":v": "2", ":id": "123", ":page": "1"}})
-	routers = append(routers, testinfo{"/v1/:v/cms_:id(.+)_:page(.+).html", "/v1/2/cms_123_1.html", map[string]string{":v": "2", ":id": "123", ":page": "1"}})
-	routers = append(routers, testinfo{"/v1/:v(.+)_cms/ttt_:id(.+)_:page(.+).html", "/v1/2_cms/ttt_123_1.html", map[string]string{":v": "2", ":id": "123", ":page": "1"}})
-	routers = append(routers, testinfo{"/api/projects/:pid/members/?:mid", "/api/projects/1/members", map[string]string{":pid": "1"}})
-	routers = append(routers, testinfo{"/api/projects/:pid/members/?:mid", "/api/projects/1/members/2", map[string]string{":pid": "1", ":mid": "2"}})
+	routers = make([]testInfo, 0)
+	// match example
+	routers = append(routers, matchTestInfo("/topic/?:auth:int", "/topic", nil))
+	routers = append(routers, matchTestInfo("/topic/?:auth:int", "/topic/123", map[string]string{":auth": "123"}))
+	routers = append(routers, matchTestInfo("/topic/:id/?:auth", "/topic/1", map[string]string{":id": "1"}))
+	routers = append(routers, matchTestInfo("/topic/:id/?:auth", "/topic/1/2", map[string]string{":id": "1", ":auth": "2"}))
+	routers = append(routers, matchTestInfo("/topic/:id/?:auth:int", "/topic/1", map[string]string{":id": "1"}))
+	routers = append(routers, matchTestInfo("/topic/:id/?:auth:int", "/topic/1/123", map[string]string{":id": "1", ":auth": "123"}))
+	routers = append(routers, matchTestInfo("/:id", "/123", map[string]string{":id": "123"}))
+	routers = append(routers, matchTestInfo("/hello/?:id", "/hello", map[string]string{":id": ""}))
+	routers = append(routers, matchTestInfo("/", "/", nil))
+	routers = append(routers, matchTestInfo("/customer/login", "/customer/login", nil))
+	routers = append(routers, matchTestInfo("/customer/login", "/customer/login.json", map[string]string{":ext": "json"}))
+	routers = append(routers, matchTestInfo("/*", "/http://customer/123/", map[string]string{":splat": "http://customer/123/"}))
+	routers = append(routers, matchTestInfo("/*", "/customer/2009/12/11", map[string]string{":splat": "customer/2009/12/11"}))
+	routers = append(routers, matchTestInfo("/aa/*/bb", "/aa/2009/bb", map[string]string{":splat": "2009"}))
+	routers = append(routers, matchTestInfo("/cc/*/dd", "/cc/2009/11/dd", map[string]string{":splat": "2009/11"}))
+	routers = append(routers, matchTestInfo("/cc/:id/*", "/cc/2009/11/dd", map[string]string{":id": "2009", ":splat": "11/dd"}))
+	routers = append(routers, matchTestInfo("/ee/:year/*/ff", "/ee/2009/11/ff", map[string]string{":year": "2009", ":splat": "11"}))
+	routers = append(routers, matchTestInfo("/thumbnail/:size/uploads/*", "/thumbnail/100x100/uploads/items/2014/04/20/dPRCdChkUd651t1Hvs18.jpg", map[string]string{":size": "100x100", ":splat": "items/2014/04/20/dPRCdChkUd651t1Hvs18.jpg"}))
+	routers = append(routers, matchTestInfo("/*.*", "/nice/api.json", map[string]string{":path": "nice/api", ":ext": "json"}))
+	routers = append(routers, matchTestInfo("/:name/*.*", "/nice/api.json", map[string]string{":name": "nice", ":path": "api", ":ext": "json"}))
+	routers = append(routers, matchTestInfo("/:name/test/*.*", "/nice/test/api.json", map[string]string{":name": "nice", ":path": "api", ":ext": "json"}))
+	routers = append(routers, matchTestInfo("/dl/:width:int/:height:int/*.*", "/dl/48/48/05ac66d9bda00a3acf948c43e306fc9a.jpg", map[string]string{":width": "48", ":height": "48", ":ext": "jpg", ":path": "05ac66d9bda00a3acf948c43e306fc9a"}))
+	routers = append(routers, matchTestInfo("/v1/shop/:id:int", "/v1/shop/123", map[string]string{":id": "123"}))
+	routers = append(routers, matchTestInfo("/v1/shop/:id\\((a|b|c)\\)", "/v1/shop/123(a)", map[string]string{":id": "123"}))
+	routers = append(routers, matchTestInfo("/v1/shop/:id\\((a|b|c)\\)", "/v1/shop/123(b)", map[string]string{":id": "123"}))
+	routers = append(routers, matchTestInfo("/v1/shop/:id\\((a|b|c)\\)", "/v1/shop/123(c)", map[string]string{":id": "123"}))
+	routers = append(routers, matchTestInfo("/:year:int/:month:int/:id/:endid", "/1111/111/aaa/aaa", map[string]string{":year": "1111", ":month": "111", ":id": "aaa", ":endid": "aaa"}))
+	routers = append(routers, matchTestInfo("/v1/shop/:id/:name", "/v1/shop/123/nike", map[string]string{":id": "123", ":name": "nike"}))
+	routers = append(routers, matchTestInfo("/v1/shop/:id/account", "/v1/shop/123/account", map[string]string{":id": "123"}))
+	routers = append(routers, matchTestInfo("/v1/shop/:name:string", "/v1/shop/nike", map[string]string{":name": "nike"}))
+	routers = append(routers, matchTestInfo("/v1/shop/:id([0-9]+)", "/v1/shop//123", map[string]string{":id": "123"}))
+	routers = append(routers, matchTestInfo("/v1/shop/:id([0-9]+)_:name", "/v1/shop/123_nike", map[string]string{":id": "123", ":name": "nike"}))
+	routers = append(routers, matchTestInfo("/v1/shop/:id(.+)_cms.html", "/v1/shop/123_cms.html", map[string]string{":id": "123"}))
+	routers = append(routers, matchTestInfo("/v1/shop/cms_:id(.+)_:page(.+).html", "/v1/shop/cms_123_1.html", map[string]string{":id": "123", ":page": "1"}))
+	routers = append(routers, matchTestInfo("/v1/:v/cms/aaa_:id(.+)_:page(.+).html", "/v1/2/cms/aaa_123_1.html", map[string]string{":v": "2", ":id": "123", ":page": "1"}))
+	routers = append(routers, matchTestInfo("/v1/:v/cms_:id(.+)_:page(.+).html", "/v1/2/cms_123_1.html", map[string]string{":v": "2", ":id": "123", ":page": "1"}))
+	routers = append(routers, matchTestInfo("/v1/:v(.+)_cms/ttt_:id(.+)_:page(.+).html", "/v1/2_cms/ttt_123_1.html", map[string]string{":v": "2", ":id": "123", ":page": "1"}))
+	routers = append(routers, matchTestInfo("/api/projects/:pid/members/?:mid", "/api/projects/1/members", map[string]string{":pid": "1"}))
+	routers = append(routers, matchTestInfo("/api/projects/:pid/members/?:mid", "/api/projects/1/members/2", map[string]string{":pid": "1", ":mid": "2"}))
+
+	// not match example
+
+	// https://github.com/beego/beego/v2/issues/3865
+	routers = append(routers, notMatchTestInfo("/read_:id:int\\.htm", "/read_222htm"))
+	routers = append(routers, notMatchTestInfo("/read_:id:int\\.htm", "/read_222_htm"))
+	routers = append(routers, notMatchTestInfo("/read_:id:int\\.htm", " /read_262shtm"))
+
 }
 
 func TestTreeRouters(t *testing.T) {
 	for _, r := range routers {
+		shouldMatch := r.shouldMatchOrNot
+
 		tr := NewTree()
-		tr.AddRouter(r.url, "astaxie")
+		tr.AddRouter(r.pattern, "astaxie")
 		ctx := context.NewContext()
-		obj := tr.Match(r.requesturl, ctx)
+		obj := tr.Match(r.requestUrl, ctx)
+		if !shouldMatch {
+			if obj != nil {
+				t.Fatal("pattern:", r.pattern, ", should not match", r.requestUrl)
+			} else {
+				return
+			}
+		}
 		if obj == nil || obj.(string) != "astaxie" {
-			t.Fatal(r.url+" can't get obj, Expect ", r.requesturl)
+			t.Fatal("pattern:", r.pattern+", can't match obj, Expect ", r.requestUrl)
 		}
 		if r.params != nil {
 			for k, v := range r.params {
 				if vv := ctx.Input.Param(k); vv != v {
-					t.Fatal("The Rule: " + r.url + "\nThe RequestURL:" + r.requesturl + "\nThe Key is " + k + ", The Value should be: " + v + ", but get: " + vv)
+					t.Fatal("The Rule: " + r.pattern + "\nThe RequestURL:" + r.requestUrl + "\nThe Key is " + k + ", The Value should be: " + v + ", but get: " + vv)
 				} else if vv == "" && v != "" {
-					t.Fatal(r.url + "    " + r.requesturl + " get param empty:" + k)
+					t.Fatal(r.pattern + "    " + r.requestUrl + " get param empty:" + k)
 				}
 			}
 		}
@@ -247,7 +280,6 @@ func TestAddTree5(t *testing.T) {
 		t.Fatal("url /v1/shop/ need match router /v1/shop/ ")
 	}
 }
-
 func TestSplitPath(t *testing.T) {
 	a := splitPath("")
 	if len(a) != 0 {
@@ -292,6 +324,7 @@ func TestSplitSegment(t *testing.T) {
 		":id([0-9]+)":                {true, []string{":id"}, `([0-9]+)`},
 		":id([0-9]+)_:name":          {true, []string{":id", ":name"}, `([0-9]+)_(.+)`},
 		":id(.+)_cms.html":           {true, []string{":id"}, `(.+)_cms.html`},
+		":id(.+)_cms\\.html":         {true, []string{":id"}, `(.+)_cms\.html`},
 		"cms_:id(.+)_:page(.+).html": {true, []string{":id", ":page"}, `cms_(.+)_(.+).html`},
 		`:app(a|b|c)`:                {true, []string{":app"}, `(a|b|c)`},
 		`:app\((a|b|c)\)`:            {true, []string{":app"}, `(.+)\((a|b|c)\)`},

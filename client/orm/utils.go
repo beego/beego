@@ -49,12 +49,12 @@ func (f *StrTo) Set(v string) {
 
 // Clear string
 func (f *StrTo) Clear() {
-	*f = StrTo(0x1E)
+	*f = StrTo(rune(0x1E))
 }
 
 // Exist check string exist
 func (f StrTo) Exist() bool {
-	return string(f) != string(0x1E)
+	return string(f) != string(rune(0x1E))
 }
 
 // Bool string to bool

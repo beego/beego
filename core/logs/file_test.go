@@ -164,7 +164,7 @@ func TestFileDailyRotate_05(t *testing.T) {
 	testFileDailyRotate(t, fn1, fn2)
 	os.Remove(fn)
 }
-func TestFileDailyRotate_06(t *testing.T) { //test file mode
+func TestFileDailyRotate_06(t *testing.T) { // test file mode
 	log := NewLogger(10000)
 	log.SetLogger("file", `{"filename":"test3.log","maxlines":4}`)
 	log.Debug("debug")
@@ -237,7 +237,7 @@ func TestFileHourlyRotate_05(t *testing.T) {
 	os.Remove(fn)
 }
 
-func TestFileHourlyRotate_06(t *testing.T) { //test file mode
+func TestFileHourlyRotate_06(t *testing.T) { // test file mode
 	log := NewLogger(10000)
 	log.SetLogger("file", `{"filename":"test3.log", "hourly":true, "maxlines":4}`)
 	log.Debug("debug")

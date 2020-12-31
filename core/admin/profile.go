@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package governor
+package admin
 
 import (
 	"fmt"
@@ -26,7 +26,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/astaxie/beego/core/utils"
+	"github.com/beego/beego/v2/core/utils"
 )
 
 var startTime = time.Now()

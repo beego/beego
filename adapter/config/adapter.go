@@ -17,7 +17,7 @@ package config
 import (
 	"github.com/pkg/errors"
 
-	"github.com/astaxie/beego/core/config"
+	"github.com/beego/beego/v2/core/config"
 )
 
 type newToOldConfigerAdapter struct {

@@ -1,5 +1,5 @@
 package es
 
 import (
-	_ "github.com/astaxie/beego/core/logs/es"
+	_ "github.com/beego/beego/v2/core/logs/es"
 )

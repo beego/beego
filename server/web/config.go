@@ -17,19 +17,20 @@ package web
 import (
 	"crypto/tls"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"reflect"
 	"runtime"
 	"strings"
 
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/core/config"
-	"github.com/astaxie/beego/core/logs"
-	"github.com/astaxie/beego/server/web/session"
+	"github.com/beego/beego/v2"
+	"github.com/beego/beego/v2/core/config"
+	"github.com/beego/beego/v2/core/logs"
+	"github.com/beego/beego/v2/server/web/session"
 
-	"github.com/astaxie/beego/core/utils"
-	"github.com/astaxie/beego/server/web/context"
+	"github.com/beego/beego/v2/core/utils"
+	"github.com/beego/beego/v2/server/web/context"
 )
 
 // Config is the main struct for BConfig
@@ -116,6 +117,7 @@ type SessionConfig struct {
 	SessionEnableSidInHTTPHeader bool // enable store/get the sessionId into/from http headers
 	SessionNameInHTTPHeader      string
 	SessionEnableSidInURLQuery   bool // enable get the sessionId from Url Query params
+	SessionCookieSameSite        http.SameSite
 }
 
 // LogConfig holds Log related config
@@ -274,6 +276,7 @@ func newBConfig() *Config {
 				SessionEnableSidInHTTPHeader: false, // enable store/get the sessionId into/from http headers
 				SessionNameInHTTPHeader:      "Beegosessionid",
 				SessionEnableSidInURLQuery:   false, // enable get the sessionId from Url Query params
+				SessionCookieSameSite:        http.SameSiteDefaultMode,
 			},
 		},
 		Log: LogConfig{

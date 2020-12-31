@@ -101,7 +101,7 @@ func TestSimplePost(t *testing.T) {
 	}
 }
 
-//func TestPostFile(t *testing.T) {
+// func TestPostFile(t *testing.T) {
 //	v := "smallfish"
 //	req := Post("http://httpbin.org/post")
 //	req.Debug(true)
@@ -118,7 +118,7 @@ func TestSimplePost(t *testing.T) {
 //	if n == -1 {
 //		t.Fatal(v + " not found in post")
 //	}
-//}
+// }
 
 func TestSimplePut(t *testing.T) {
 	str, err := Put("http://httpbin.org/put").String()

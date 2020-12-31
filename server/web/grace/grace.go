@@ -22,7 +22,7 @@
 //	 "net/http"
 //	 "os"
 //
-//   "github.com/astaxie/beego/grace"
+//   "github.com/beego/beego/v2/grace"
 // )
 //
 //  func handler(w http.ResponseWriter, r *http.Request) {
@@ -138,7 +138,7 @@ func NewServer(addr string, handler http.Handler) (srv *Server) {
 		},
 		state:        StateInit,
 		Network:      "tcp",
-		terminalChan: make(chan error), //no cache channel
+		terminalChan: make(chan error), // no cache channel
 	}
 	srv.Server = &http.Server{
 		Addr:           addr,

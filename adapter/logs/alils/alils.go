@@ -1,5 +1,5 @@
 package alils
 
 import (
-	_ "github.com/astaxie/beego/core/logs/alils"
+	_ "github.com/beego/beego/v2/core/logs/alils"
 )

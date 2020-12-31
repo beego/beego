@@ -21,9 +21,9 @@ import (
 
 	"github.com/casbin/casbin"
 
-	"github.com/astaxie/beego/server/web"
-	"github.com/astaxie/beego/server/web/context"
-	"github.com/astaxie/beego/server/web/filter/auth"
+	"github.com/beego/beego/v2/server/web"
+	"github.com/beego/beego/v2/server/web/context"
+	"github.com/beego/beego/v2/server/web/filter/auth"
 )
 
 func testRequest(t *testing.T, handler *web.ControllerRegister, user string, path string, method string, code int) {

@@ -24,11 +24,10 @@ import (
 
 	_ "github.com/bradfitz/gomemcache/memcache"
 
-	"github.com/astaxie/beego/client/cache"
+	"github.com/beego/beego/v2/client/cache"
 )
 
 func TestMemcacheCache(t *testing.T) {
-
 	addr := os.Getenv("MEMCACHE_ADDR")
 	if addr == "" {
 		addr = "127.0.0.1:11211"
@@ -111,6 +110,20 @@ func TestMemcacheCache(t *testing.T) {
 		t.Error("GetMulti ERROR")
 	}
 	if string(vv[1].([]byte)) != "author1" && string(vv[1].([]byte)) != "author" {
+		t.Error("GetMulti ERROR")
+	}
+
+	vv, err = bm.GetMulti(context.Background(), []string{"astaxie0", "astaxie1"})
+	if len(vv) != 2 {
+		t.Error("GetMulti ERROR")
+	}
+	if vv[0] != nil {
+		t.Error("GetMulti ERROR")
+	}
+	if string(vv[1].([]byte)) != "author1" {
+		t.Error("GetMulti ERROR")
+	}
+	if err != nil && err.Error() == "key [astaxie0] error: key isn't exist" {
 		t.Error("GetMulti ERROR")
 	}
 
