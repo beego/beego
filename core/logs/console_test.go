@@ -58,7 +58,7 @@ func TestConsoleAsync(t *testing.T) {
 	log := NewLogger(100)
 	log.SetLogger("console")
 	log.Async()
-	//log.Close()
+	// log.Close()
 	testConsoleCalls(log)
 	for len(log.msgChan) != 0 {
 		time.Sleep(1 * time.Millisecond)

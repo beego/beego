@@ -14,40 +14,40 @@ type testDefinition struct {
 
 func Test_Parsers(t *testing.T) {
 
-	//ints
+	// ints
 	checkParser(testDefinition{"1", 1, intParser{}}, t)
 	checkParser(testDefinition{"-1", int64(-1), intParser{}}, t)
 	checkParser(testDefinition{"1", uint64(1), intParser{}}, t)
 
-	//floats
+	// floats
 	checkParser(testDefinition{"1.0", float32(1.0), floatParser{}}, t)
 	checkParser(testDefinition{"-1.0", float64(-1.0), floatParser{}}, t)
 
-	//strings
+	// strings
 	checkParser(testDefinition{"AB", "AB", stringParser{}}, t)
 	checkParser(testDefinition{"AB", []byte{65, 66}, stringParser{}}, t)
 
-	//bools
+	// bools
 	checkParser(testDefinition{"true", true, boolParser{}}, t)
 	checkParser(testDefinition{"0", false, boolParser{}}, t)
 
-	//timeParser
+	// timeParser
 	checkParser(testDefinition{"2017-05-30T13:54:53Z", time.Date(2017, 5, 30, 13, 54, 53, 0, time.UTC), timeParser{}}, t)
 	checkParser(testDefinition{"2017-05-30", time.Date(2017, 5, 30, 0, 0, 0, 0, time.UTC), timeParser{}}, t)
 
-	//json
+	// json
 	checkParser(testDefinition{`{"X": 5, "Y":"Z"}`, struct {
 		X int
 		Y string
 	}{5, "Z"}, jsonParser{}}, t)
 
-	//slice in query is parsed as comma delimited
+	// slice in query is parsed as comma delimited
 	checkParser(testDefinition{`1,2`, []int{1, 2}, sliceParser(intParser{})}, t)
 
-	//slice in body is parsed as json
+	// slice in body is parsed as json
 	checkParser(testDefinition{`["a","b"]`, []string{"a", "b"}, jsonParser{}}, t, MethodParam{in: body})
 
-	//pointers
+	// pointers
 	var someInt = 1
 	checkParser(testDefinition{`1`, &someInt, ptrParser(intParser{})}, t)
 

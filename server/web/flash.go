@@ -102,7 +102,7 @@ func ReadFromRequest(c *Controller) *FlashData {
 				}
 			}
 		}
-		//read one time then delete it
+		// read one time then delete it
 		c.Ctx.SetCookie(BConfig.WebConfig.FlashName, "", -1, "/")
 	}
 	c.Data["flash"] = flash.Data

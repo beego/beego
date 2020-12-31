@@ -188,10 +188,10 @@ func (e *Email) Attach(r io.Reader, filename string, args ...string) (a *Attachm
 		err = errors.New("Must specify the file type and number of parameters can not exceed at least two")
 		return
 	}
-	c := args[0] //Content-Type
+	c := args[0] // Content-Type
 	id := ""
 	if len(args) > 1 {
-		id = args[1] //Content-ID
+		id = args[1] // Content-ID
 	}
 	var buffer bytes.Buffer
 	if _, err = io.Copy(&buffer, r); err != nil {

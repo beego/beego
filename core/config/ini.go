@@ -30,7 +30,7 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 
-	"github.com/astaxie/beego/core/logs"
+	"github.com/beego/beego/v2/core/logs"
 )
 
 var (
@@ -519,7 +519,7 @@ func (c *IniConfigContainer) Unmarshaler(prefix string, obj interface{}, opt ...
 func init() {
 	Register("ini", &IniConfig{})
 
-	err := InitGlobalInstance("ini", "config/app.conf")
+	err := InitGlobalInstance("ini", "conf/app.conf")
 	if err != nil {
 		logs.Warn("init global config instance failed. If you donot use this, just ignore it. ", err)
 	}

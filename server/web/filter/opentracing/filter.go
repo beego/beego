@@ -17,11 +17,12 @@ package opentracing
 import (
 	"context"
 
-	"github.com/astaxie/beego/server/web"
-	beegoCtx "github.com/astaxie/beego/server/web/context"
 	logKit "github.com/go-kit/kit/log"
 	opentracingKit "github.com/go-kit/kit/tracing/opentracing"
 	"github.com/opentracing/opentracing-go"
+
+	"github.com/beego/beego/v2/server/web"
+	beegoCtx "github.com/beego/beego/v2/server/web/context"
 )
 
 // FilterChainBuilder provides an extension point that we can support more configurations if necessary

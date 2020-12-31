@@ -15,7 +15,7 @@
 // Package logs provide a general log interface
 // Usage:
 //
-// import "github.com/astaxie/beego/logs"
+// import "github.com/beego/beego/v2/logs"
 //
 //	log := NewLogger(10000)
 //	log.SetLogger("console", "")
@@ -764,9 +764,7 @@ func formatLog(f interface{}, v ...interface{}) string {
 		if len(v) == 0 {
 			return msg
 		}
-		if strings.Contains(msg, "%") && !strings.Contains(msg, "%%") {
-			// format string
-		} else {
+		if !strings.Contains(msg, "%") {
 			// do not contain format char
 			msg += strings.Repeat(" %v", len(v))
 		}

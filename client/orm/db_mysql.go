@@ -111,7 +111,7 @@ func (d *dbBaseMysql) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Val
 
 	iouStr = "ON DUPLICATE KEY UPDATE"
 
-	//Get on the key-value pairs
+	// Get on the key-value pairs
 	for _, v := range args {
 		kv := strings.Split(v, "=")
 		if len(kv) == 2 {
@@ -155,7 +155,7 @@ func (d *dbBaseMysql) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Val
 	if isMulti {
 		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
 	}
-	//conflitValue maybe is a int,can`t use fmt.Sprintf
+	// conflitValue maybe is a int,can`t use fmt.Sprintf
 	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s) %s "+qupdates, Q, mi.table, Q, Q, columns, Q, qmarks, iouStr)
 
 	d.ins.ReplaceMarks(&query)

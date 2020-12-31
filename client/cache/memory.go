@@ -18,6 +18,8 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"strings"
 	"sync"
 	"time"
 )
@@ -68,22 +70,28 @@ func (bc *MemoryCache) Get(ctx context.Context, key string) (interface{}, error)
 		}
 		return itm.val, nil
 	}
-	return nil, nil
+	return nil, errors.New("the key isn't exist")
 }
 
 // GetMulti gets caches from memory.
 // If non-existent or expired, return nil.
 func (bc *MemoryCache) GetMulti(ctx context.Context, keys []string) ([]interface{}, error) {
-	var rc []interface{}
-	for _, name := range keys {
-		val, err := bc.Get(context.Background(), name)
+	rc := make([]interface{}, len(keys))
+	keysErr := make([]string, 0)
+
+	for i, ki := range keys {
+		val, err := bc.Get(context.Background(), ki)
 		if err != nil {
-			rc = append(rc, err)
-		} else {
-			rc = append(rc, val)
+			keysErr = append(keysErr, fmt.Sprintf("key [%s] error: %s", ki, err.Error()))
+			continue
 		}
+		rc[i] = val
 	}
-	return rc, nil
+
+	if len(keysErr) == 0 {
+		return rc, nil
+	}
+	return rc, errors.New(strings.Join(keysErr, "; "))
 }
 
 // Put puts cache into memory.
@@ -122,22 +130,12 @@ func (bc *MemoryCache) Incr(ctx context.Context, key string) error {
 	if !ok {
 		return errors.New("key not exist")
 	}
-	switch val := itm.val.(type) {
-	case int:
-		itm.val = val + 1
-	case int32:
-		itm.val = val + 1
-	case int64:
-		itm.val = val + 1
-	case uint:
-		itm.val = val + 1
-	case uint32:
-		itm.val = val + 1
-	case uint64:
-		itm.val = val + 1
-	default:
-		return errors.New("item val is not (u)int (u)int32 (u)int64")
+
+	val, err := incr(itm.val)
+	if err != nil {
+		return err
 	}
+	itm.val = val
 	return nil
 }
 
@@ -149,34 +147,12 @@ func (bc *MemoryCache) Decr(ctx context.Context, key string) error {
 	if !ok {
 		return errors.New("key not exist")
 	}
-	switch val := itm.val.(type) {
-	case int:
-		itm.val = val - 1
-	case int64:
-		itm.val = val - 1
-	case int32:
-		itm.val = val - 1
-	case uint:
-		if val > 0 {
-			itm.val = val - 1
-		} else {
-			return errors.New("item val is less than 0")
-		}
-	case uint32:
-		if val > 0 {
-			itm.val = val - 1
-		} else {
-			return errors.New("item val is less than 0")
-		}
-	case uint64:
-		if val > 0 {
-			itm.val = val - 1
-		} else {
-			return errors.New("item val is less than 0")
-		}
-	default:
-		return errors.New("item val is not int int64 int32")
+
+	val, err := decr(itm.val)
+	if err != nil {
+		return err
 	}
+	itm.val = val
 	return nil
 }
 

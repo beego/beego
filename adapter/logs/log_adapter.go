@@ -17,7 +17,7 @@ package logs
 import (
 	"time"
 
-	"github.com/astaxie/beego/core/logs"
+	"github.com/beego/beego/v2/core/logs"
 )
 
 type oldToNewAdapter struct {
