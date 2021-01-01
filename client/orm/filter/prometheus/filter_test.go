@@ -21,7 +21,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/astaxie/beego/client/orm"
+	"github.com/beego/beego/v2/client/orm"
 )
 
 func TestFilterChainBuilder_FilterChain1(t *testing.T) {

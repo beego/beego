@@ -21,9 +21,9 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/server/web"
-	"github.com/astaxie/beego/server/web/context"
+	"github.com/beego/beego/v2"
+	"github.com/beego/beego/v2/server/web"
+	"github.com/beego/beego/v2/server/web/context"
 )
 
 // FilterChainBuilder is an extension point,
@@ -43,7 +43,7 @@ func (builder *FilterChainBuilder) FilterChain(next web.FilterFunc) web.FilterFu
 			"appname": web.BConfig.AppName,
 		},
 		Help: "The statics info for http request",
-	}, []string{"pattern", "method", "status", "duration"})
+	}, []string{"pattern", "method", "status"})
 
 	prometheus.MustRegister(summaryVec)
 
@@ -83,5 +83,5 @@ func report(dur time.Duration, ctx *context.Context, vec *prometheus.SummaryVec)
 	status := ctx.Output.Status
 	ptn := ctx.Input.GetData("RouterPattern").(string)
 	ms := dur / time.Millisecond
-	vec.WithLabelValues(ptn, ctx.Input.Method(), strconv.Itoa(status), strconv.Itoa(int(ms))).Observe(float64(ms))
+	vec.WithLabelValues(ptn, ctx.Input.Method(), strconv.Itoa(status)).Observe(float64(ms))
 }

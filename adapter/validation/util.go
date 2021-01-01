@@ -17,7 +17,7 @@ package validation
 import (
 	"reflect"
 
-	"github.com/astaxie/beego/core/validation"
+	"github.com/beego/beego/v2/core/validation"
 )
 
 const (

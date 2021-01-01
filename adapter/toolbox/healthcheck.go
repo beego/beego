@@ -31,19 +31,19 @@
 package toolbox
 
 import (
-	"github.com/astaxie/beego/core/governor"
+	"github.com/beego/beego/v2/core/admin"
 )
 
 // AdminCheckList holds health checker map
-// Deprecated using governor.AdminCheckList
+// Deprecated using admin.AdminCheckList
 var AdminCheckList map[string]HealthChecker
 
 // HealthChecker health checker interface
-type HealthChecker governor.HealthChecker
+type HealthChecker admin.HealthChecker
 
 // AddHealthCheck add health checker with name string
 func AddHealthCheck(name string, hc HealthChecker) {
-	governor.AddHealthCheck(name, hc)
+	admin.AddHealthCheck(name, hc)
 	AdminCheckList[name] = hc
 }
 

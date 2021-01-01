@@ -50,7 +50,7 @@ type SimpleKVs struct {
 
 var _ KVs = new(SimpleKVs)
 
-// GetValueOr returns the value for a given key, if non-existant
+// GetValueOr returns the value for a given key, if non-existent
 // it returns defValue
 func (kvs *SimpleKVs) GetValueOr(key interface{}, defValue interface{}) interface{} {
 	v, ok := kvs.kvs[key]

@@ -45,7 +45,7 @@ type _modelCache struct {
 	done            bool
 }
 
-//NewModelCacheHandler generator of _modelCache
+// NewModelCacheHandler generator of _modelCache
 func NewModelCacheHandler() *_modelCache {
 	return &_modelCache{
 		cache:           make(map[string]*modelInfo),
@@ -113,7 +113,7 @@ func (mc *_modelCache) clean() {
 	mc.done = false
 }
 
-//bootstrap bootstrap for models
+// bootstrap bootstrap for models
 func (mc *_modelCache) bootstrap() {
 	mc.Lock()
 	defer mc.Unlock()
@@ -407,7 +407,7 @@ func (mc *_modelCache) register(prefixOrSuffixStr string, prefixOrSuffix bool, m
 	return
 }
 
-//getDbDropSQL get database scheme drop sql queries
+// getDbDropSQL get database scheme drop sql queries
 func (mc *_modelCache) getDbDropSQL(al *alias) (queries []string, err error) {
 	if len(mc.cache) == 0 {
 		err = errors.New("no Model found, need register your model")
@@ -422,7 +422,7 @@ func (mc *_modelCache) getDbDropSQL(al *alias) (queries []string, err error) {
 	return queries, nil
 }
 
-//getDbCreateSQL get database scheme creation sql queries
+// getDbCreateSQL get database scheme creation sql queries
 func (mc *_modelCache) getDbCreateSQL(al *alias) (queries []string, tableIndexes map[string][]dbIndex, err error) {
 	if len(mc.cache) == 0 {
 		err = errors.New("no Model found, need register your model")
@@ -467,9 +467,9 @@ func (mc *_modelCache) getDbCreateSQL(al *alias) (queries []string, tableIndexes
 					column += " " + "NOT NULL"
 				}
 
-				//if fi.initial.String() != "" {
+				// if fi.initial.String() != "" {
 				//	column += " DEFAULT " + fi.initial.String()
-				//}
+				// }
 
 				// Append attribute DEFAULT
 				column += getColumnDefault(fi)

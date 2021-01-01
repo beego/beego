@@ -24,7 +24,7 @@ import (
 	"github.com/gomodule/redigo/redis"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/astaxie/beego/client/cache"
+	"github.com/beego/beego/v2/client/cache"
 )
 
 func TestRedisCache(t *testing.T) {
@@ -107,6 +107,14 @@ func TestRedisCache(t *testing.T) {
 		t.Error("GetMulti ERROR")
 	}
 	if v, _ := redis.String(vv[0], nil); v != "author" {
+		t.Error("GetMulti ERROR")
+	}
+	if v, _ := redis.String(vv[1], nil); v != "author1" {
+		t.Error("GetMulti ERROR")
+	}
+
+	vv, _ = bm.GetMulti(context.Background(), []string{"astaxie0", "astaxie1"})
+	if vv[0] != nil {
 		t.Error("GetMulti ERROR")
 	}
 	if v, _ := redis.String(vv[1], nil); v != "author1" {

@@ -31,7 +31,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/astaxie/beego/client/orm/hints"
+	"github.com/beego/beego/v2/client/orm/hints"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -1746,6 +1746,10 @@ func TestRawQueryRow(t *testing.T) {
 			throwFail(t, AssertIs(id, 1))
 			break
 		case "time":
+			v = v.(time.Time).In(DefaultTimeLoc)
+			value := dataValues[col].(time.Time).In(DefaultTimeLoc)
+			assert.True(t, v.(time.Time).Sub(value) <= time.Second)
+			break
 		case "date":
 		case "datetime":
 			v = v.(time.Time).In(DefaultTimeLoc)
@@ -1773,12 +1777,12 @@ func TestRawQueryRow(t *testing.T) {
 	throwFail(t, AssertIs(*status, 3))
 	throwFail(t, AssertIs(pid, nil))
 
-	type Embeded struct {
+	type Embedded struct {
 		Email string
 	}
 	type queryRowNoModelTest struct {
 		Id         int
-		EmbedField Embeded
+		EmbedField Embedded
 	}
 
 	cols = []string{
@@ -2667,4 +2671,49 @@ func TestPSQueryBuilder(t *testing.T) {
 	throwFailNow(t, AssertIs(num, 1))
 	throwFailNow(t, AssertIs(l[0].UserName, "astaxie"))
 	throwFailNow(t, AssertIs(l[0].Age, 30))
+}
+
+func TestCondition(t *testing.T) {
+	// test Condition whether to include yourself
+	cond := NewCondition()
+	cond = cond.AndCond(cond.Or("ID", 1))
+	cond = cond.AndCond(cond.Or("ID", 2))
+	cond = cond.AndCond(cond.Or("ID", 3))
+	cond = cond.AndCond(cond.Or("ID", 4))
+
+	cycleFlag := false
+	var hasCycle func(*Condition)
+	hasCycle = func(c *Condition) {
+		if nil == c || cycleFlag {
+			return
+		}
+		condPointMap := make(map[string]bool)
+		condPointMap[fmt.Sprintf("%p", c)] = true
+		for _, p := range c.params {
+			if p.isCond {
+				adr := fmt.Sprintf("%p", p.cond)
+				if condPointMap[adr] {
+					// self as sub cond was cycle
+					cycleFlag = true
+					break
+				}
+				condPointMap[adr] = true
+
+			}
+		}
+		if cycleFlag {
+			return
+		}
+		for _, p := range c.params {
+			if p.isCond {
+				// check next cond
+				hasCycle(p.cond)
+			}
+		}
+		return
+	}
+	hasCycle(cond)
+	// cycleFlag was true,meaning use self as sub cond
+	throwFail(t, AssertIs(!cycleFlag, true))
+	return
 }

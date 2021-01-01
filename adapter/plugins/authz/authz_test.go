@@ -19,10 +19,11 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	beego "github.com/astaxie/beego/adapter"
-	"github.com/astaxie/beego/adapter/context"
-	"github.com/astaxie/beego/adapter/plugins/auth"
 	"github.com/casbin/casbin"
+
+	beego "github.com/beego/beego/v2/adapter"
+	"github.com/beego/beego/v2/adapter/context"
+	"github.com/beego/beego/v2/adapter/plugins/auth"
 )
 
 func testRequest(t *testing.T, handler *beego.ControllerRegister, user string, path string, method string, code int) {

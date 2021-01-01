@@ -17,8 +17,8 @@ package adapter
 import (
 	"time"
 
-	_ "github.com/astaxie/beego/core/governor"
-	"github.com/astaxie/beego/server/web"
+	_ "github.com/beego/beego/v2/core/admin"
+	"github.com/beego/beego/v2/server/web"
 )
 
 // FilterMonitorFunc is default monitor filter when admin module is enable.

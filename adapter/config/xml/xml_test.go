@@ -19,13 +19,13 @@ import (
 	"os"
 	"testing"
 
-	"github.com/astaxie/beego/adapter/config"
+	"github.com/beego/beego/v2/adapter/config"
 )
 
 func TestXML(t *testing.T) {
 
 	var (
-		//xml parse should incluce in <config></config> tags
+		// xml parse should incluce in <config></config> tags
 		xmlcontext = `<?xml version="1.0" encoding="UTF-8"?>
 <config>
 <appname>beeapi</appname>

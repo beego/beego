@@ -16,7 +16,7 @@
 //
 // Usage:
 // import(
-//   "github.com/astaxie/beego/session"
+//   "github.com/beego/beego/v2/session"
 // )
 //
 //	func init() {
@@ -32,7 +32,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/astaxie/beego/server/web/session"
+	"github.com/beego/beego/v2/server/web/session"
 )
 
 // Store contains all data for one session process with specific id.
@@ -141,7 +141,7 @@ func (manager *Manager) GC() {
 
 // SessionRegenerateID Regenerate a session id for this SessionStore who's id is saving in http request.
 func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Request) Store {
-	s := (*session.Manager)(manager).SessionRegenerateID(w, r)
+	s, _ := (*session.Manager)(manager).SessionRegenerateID(w, r)
 	return &NewToOldStoreAdapter{
 		delegate: s,
 	}
