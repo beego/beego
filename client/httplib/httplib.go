@@ -62,6 +62,7 @@ var defaultSetting = BeegoHTTPSettings{
 	ReadWriteTimeout: 60 * time.Second,
 	Gzip:             true,
 	DumpBody:         true,
+	FilterChains: []FilterChain{mockFilter.FilterChain},
 }
 
 var defaultCookieJar http.CookieJar

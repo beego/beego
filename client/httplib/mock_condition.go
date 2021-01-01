@@ -12,16 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mock
+package httplib
 
 import (
 	"context"
 	"encoding/json"
 	"net/textproto"
 	"regexp"
-
-	"github.com/beego/beego/v2/client/httplib"
 )
+
+type RequestCondition interface {
+	Match(ctx context.Context, req *BeegoHTTPRequest) bool
+}
 
 // reqCondition create condition
 // - path: same path
@@ -52,7 +54,7 @@ func NewSimpleCondition(path string, opts ...simpleConditionOption) *SimpleCondi
 	return sc
 }
 
-func (sc *SimpleCondition) Match(ctx context.Context, req *httplib.BeegoHTTPRequest) bool {
+func (sc *SimpleCondition) Match(ctx context.Context, req *BeegoHTTPRequest) bool {
 	res := true
 	if len(sc.path) > 0 {
 		res = sc.matchPath(ctx, req)
@@ -68,12 +70,12 @@ func (sc *SimpleCondition) Match(ctx context.Context, req *httplib.BeegoHTTPRequ
 		sc.matchBodyFields(ctx, req)
 }
 
-func (sc *SimpleCondition) matchPath(ctx context.Context, req *httplib.BeegoHTTPRequest) bool {
+func (sc *SimpleCondition) matchPath(ctx context.Context, req *BeegoHTTPRequest) bool {
 	path := req.GetRequest().URL.Path
 	return path == sc.path
 }
 
-func (sc *SimpleCondition) matchPathReg(ctx context.Context, req *httplib.BeegoHTTPRequest) bool {
+func (sc *SimpleCondition) matchPathReg(ctx context.Context, req *BeegoHTTPRequest) bool {
 	path := req.GetRequest().URL.Path
 	if b, err := regexp.Match(sc.pathReg, []byte(path)); err == nil {
 		return b
@@ -81,7 +83,7 @@ func (sc *SimpleCondition) matchPathReg(ctx context.Context, req *httplib.BeegoH
 	return false
 }
 
-func (sc *SimpleCondition) matchQuery(ctx context.Context, req *httplib.BeegoHTTPRequest) bool {
+func (sc *SimpleCondition) matchQuery(ctx context.Context, req *BeegoHTTPRequest) bool {
 	qs := req.GetRequest().URL.Query()
 	for k, v := range sc.query {
 		if uv, ok := qs[k]; !ok || uv[0] != v {
@@ -91,7 +93,7 @@ func (sc *SimpleCondition) matchQuery(ctx context.Context, req *httplib.BeegoHTT
 	return true
 }
 
-func (sc *SimpleCondition) matchHeader(ctx context.Context, req *httplib.BeegoHTTPRequest) bool {
+func (sc *SimpleCondition) matchHeader(ctx context.Context, req *BeegoHTTPRequest) bool {
 	headers := req.GetRequest().Header
 	for k, v := range sc.header {
 		if uv, ok := headers[k]; !ok || uv[0] != v {
@@ -101,7 +103,7 @@ func (sc *SimpleCondition) matchHeader(ctx context.Context, req *httplib.BeegoHT
 	return true
 }
 
-func (sc *SimpleCondition) matchBodyFields(ctx context.Context, req *httplib.BeegoHTTPRequest) bool {
+func (sc *SimpleCondition) matchBodyFields(ctx context.Context, req *BeegoHTTPRequest) bool {
 	if len(sc.body) == 0 {
 		return true
 	}
@@ -133,7 +135,7 @@ func (sc *SimpleCondition) matchBodyFields(ctx context.Context, req *httplib.Bee
 	return true
 }
 
-func (sc *SimpleCondition) matchMethod(ctx context.Context, req *httplib.BeegoHTTPRequest) bool {
+func (sc *SimpleCondition) matchMethod(ctx context.Context, req *BeegoHTTPRequest) bool {
 	if len(sc.method) > 0 {
 		return sc.method == req.GetRequest().Method
 	}
