@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/astaxie/beego/server/web/session"
+	"github.com/beego/beego/v2/server/web/session"
 )
 
 func TestRedisSentinel(t *testing.T) {

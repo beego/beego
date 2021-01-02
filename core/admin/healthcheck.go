@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Package governor healthcheck
+// Package admin healthcheck
 //
 // type DatabaseCheck struct {
 // }
@@ -28,7 +28,7 @@
 // AddHealthCheck("database",&DatabaseCheck{})
 //
 // more docs: http://beego.me/docs/module/toolbox.md
-package governor
+package admin
 
 // AdminCheckList holds health checker map
 var AdminCheckList map[string]HealthChecker

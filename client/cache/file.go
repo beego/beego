@@ -26,8 +26,8 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -144,17 +144,22 @@ func (fc *FileCache) Get(ctx context.Context, key string) (interface{}, error) {
 // GetMulti gets values from file cache.
 // if nonexistent or expired return an empty string.
 func (fc *FileCache) GetMulti(ctx context.Context, keys []string) ([]interface{}, error) {
-	var rc []interface{}
-	for _, key := range keys {
-		val, err := fc.Get(context.Background(), key)
-		if err != nil {
-			rc = append(rc, err)
-		} else {
-			rc = append(rc, val)
-		}
+	rc := make([]interface{}, len(keys))
+	keysErr := make([]string, 0)
 
+	for i, ki := range keys {
+		val, err := fc.Get(context.Background(), ki)
+		if err != nil {
+			keysErr = append(keysErr, fmt.Sprintf("key [%s] error: %s", ki, err.Error()))
+			continue
+		}
+		rc[i] = val
 	}
-	return rc, nil
+
+	if len(keysErr) == 0 {
+		return rc, nil
+	}
+	return rc, errors.New(strings.Join(keysErr, "; "))
 }
 
 // Put value into file cache.
@@ -189,28 +194,32 @@ func (fc *FileCache) Delete(ctx context.Context, key string) error {
 // Incr increases cached int value.
 // fc value is saved forever unless deleted.
 func (fc *FileCache) Incr(ctx context.Context, key string) error {
-	data, _ := fc.Get(context.Background(), key)
-	var incr int
-	if reflect.TypeOf(data).Name() != "int" {
-		incr = 0
-	} else {
-		incr = data.(int) + 1
+	data, err := fc.Get(context.Background(), key)
+	if err != nil {
+		return err
 	}
-	fc.Put(context.Background(), key, incr, time.Duration(fc.EmbedExpiry))
-	return nil
+
+	val, err := incr(data)
+	if err != nil {
+		return err
+	}
+
+	return fc.Put(context.Background(), key, val, time.Duration(fc.EmbedExpiry))
 }
 
 // Decr decreases cached int value.
 func (fc *FileCache) Decr(ctx context.Context, key string) error {
-	data, _ := fc.Get(context.Background(), key)
-	var decr int
-	if reflect.TypeOf(data).Name() != "int" || data.(int)-1 <= 0 {
-		decr = 0
-	} else {
-		decr = data.(int) - 1
+	data, err := fc.Get(context.Background(), key)
+	if err != nil {
+		return err
 	}
-	fc.Put(context.Background(), key, decr, time.Duration(fc.EmbedExpiry))
-	return nil
+
+	val, err := decr(data)
+	if err != nil {
+		return err
+	}
+
+	return fc.Put(context.Background(), key, val, time.Duration(fc.EmbedExpiry))
 }
 
 // IsExist checks if value exists.

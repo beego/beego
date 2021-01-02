@@ -21,9 +21,7 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
-	"github.com/astaxie/beego/server/web/context"
+	"github.com/beego/beego/v2/server/web/context"
 )
 
 func TestGetInt(t *testing.T) {
@@ -46,7 +44,7 @@ func TestGetInt8(t *testing.T) {
 	if val != 40 {
 		t.Errorf("TestGetInt8 expect 40,get %T,%v", val, val)
 	}
-	//Output: int8
+	// Output: int8
 }
 
 func TestGetInt16(t *testing.T) {
@@ -127,10 +125,9 @@ func TestGetUint64(t *testing.T) {
 }
 
 func TestAdditionalViewPaths(t *testing.T) {
-	wkdir, err := os.Getwd()
-	assert.Nil(t, err)
-	dir1 := filepath.Join(wkdir, "_beeTmp", "TestAdditionalViewPaths")
-	dir2 := filepath.Join(wkdir, "_beeTmp2", "TestAdditionalViewPaths")
+	tmpDir := os.TempDir()
+	dir1 := filepath.Join(tmpDir, "_beeTmp", "TestAdditionalViewPaths")
+	dir2 := filepath.Join(tmpDir, "_beeTmp2", "TestAdditionalViewPaths")
 	defer os.RemoveAll(dir1)
 	defer os.RemoveAll(dir2)
 

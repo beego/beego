@@ -22,7 +22,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/astaxie/beego/client/orm"
+	"github.com/beego/beego/v2/client/orm"
 )
 
 // FilterChainBuilder is an extension point,
@@ -50,7 +50,7 @@ func (builder *FilterChainBuilder) FilterChain(next orm.Filter) orm.Filter {
 			"appname": builder.AppName,
 		},
 		Help: "The statics info for orm operation",
-	}, []string{"method", "name", "duration", "insideTx", "txName"})
+	}, []string{"method", "name", "insideTx", "txName"})
 
 	return func(ctx context.Context, inv *orm.Invocation) []interface{} {
 		startTime := time.Now()
@@ -74,12 +74,12 @@ func (builder *FilterChainBuilder) report(ctx context.Context, inv *orm.Invocati
 		builder.reportTxn(ctx, inv)
 		return
 	}
-	builder.summaryVec.WithLabelValues(inv.Method, inv.GetTableName(), strconv.Itoa(int(dur)),
-		strconv.FormatBool(inv.InsideTx), inv.TxName)
+	builder.summaryVec.WithLabelValues(inv.Method, inv.GetTableName(),
+		strconv.FormatBool(inv.InsideTx), inv.TxName).Observe(float64(dur))
 }
 
 func (builder *FilterChainBuilder) reportTxn(ctx context.Context, inv *orm.Invocation) {
 	dur := time.Now().Sub(inv.TxStartTime) / time.Millisecond
-	builder.summaryVec.WithLabelValues(inv.Method, inv.TxName, strconv.Itoa(int(dur)),
-		strconv.FormatBool(inv.InsideTx), inv.TxName)
+	builder.summaryVec.WithLabelValues(inv.Method, inv.TxName,
+		strconv.FormatBool(inv.InsideTx), inv.TxName).Observe(float64(dur))
 }

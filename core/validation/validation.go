@@ -15,7 +15,7 @@
 // Package validation for validations
 //
 //	import (
-//		"github.com/astaxie/beego/validation"
+//		"github.com/beego/beego/v2/validation"
 //		"log"
 //	)
 //
@@ -423,7 +423,7 @@ func (v *Validation) Valid(obj interface{}) (b bool, err error) {
 // Step2: If pass on step1, then reflect obj's fields
 // Step3: Do the Recursively validation to all struct or struct pointer fields
 func (v *Validation) RecursiveValid(objc interface{}) (bool, error) {
-	//Step 1: validate obj itself firstly
+	// Step 1: validate obj itself firstly
 	// fails if objc is not struct
 	pass, err := v.Valid(objc)
 	if err != nil || !pass {

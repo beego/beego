@@ -22,7 +22,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/astaxie/beego/client/httplib"
+	"github.com/beego/beego/v2/client/httplib"
 )
 
 type FilterChainBuilder struct {
@@ -43,7 +43,7 @@ func (builder *FilterChainBuilder) FilterChain(next httplib.Filter) httplib.Filt
 			"appname": builder.AppName,
 		},
 		Help: "The statics info for remote http requests",
-	}, []string{"proto", "scheme", "method", "host", "path", "status", "duration", "isError"})
+	}, []string{"proto", "scheme", "method", "host", "path", "status", "isError"})
 
 	return func(ctx context.Context, req *httplib.BeegoHTTPRequest) (*http.Response, error) {
 		startTime := time.Now()
@@ -73,5 +73,5 @@ func (builder *FilterChainBuilder) report(startTime time.Time, endTime time.Time
 	dur := int(endTime.Sub(startTime) / time.Millisecond)
 
 	builder.summaryVec.WithLabelValues(proto, scheme, method, host, path,
-		strconv.Itoa(status), strconv.Itoa(dur), strconv.FormatBool(err == nil))
+		strconv.Itoa(status), strconv.FormatBool(err != nil)).Observe(float64(dur))
 }

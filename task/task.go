@@ -157,6 +157,9 @@ func (t *Task) GetSpec(context.Context) string {
 func (t *Task) GetStatus(context.Context) string {
 	var str string
 	for _, v := range t.Errlist {
+		if v == nil {
+			continue
+		}
 		str += v.t.String() + ":" + v.errinfo + "<br>"
 	}
 	return str
@@ -452,9 +455,11 @@ func (m *taskManager) StartTask() {
 
 func (m *taskManager) run() {
 	now := time.Now().Local()
+	m.taskLock.Lock()
 	for _, t := range m.adminTaskList {
 		t.SetNext(nil, now)
 	}
+	m.taskLock.Unlock()
 
 	for {
 		// we only use RLock here because NewMapSorter copy the reference, do not change any thing

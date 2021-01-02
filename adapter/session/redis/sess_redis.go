@@ -20,8 +20,8 @@
 //
 // Usage:
 // import(
-//   _ "github.com/astaxie/beego/session/redis"
-//   "github.com/astaxie/beego/session"
+//   _ "github.com/beego/beego/v2/session/redis"
+//   "github.com/beego/beego/v2/session"
 // )
 //
 // 	func init() {
@@ -36,9 +36,9 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/astaxie/beego/adapter/session"
+	"github.com/beego/beego/v2/adapter/session"
 
-	beeRedis "github.com/astaxie/beego/server/web/session/redis"
+	beeRedis "github.com/beego/beego/v2/server/web/session/redis"
 )
 
 // MaxPoolSize redis max pool size

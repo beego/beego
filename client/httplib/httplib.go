@@ -15,7 +15,7 @@
 // Package httplib is used as http.Client
 // Usage:
 //
-// import "github.com/astaxie/beego/httplib"
+// import "github.com/beego/beego/v2/httplib"
 //
 //	b := httplib.Post("http://beego.me/")
 //	b.Param("username","astaxie")
@@ -338,10 +338,16 @@ func (b *BeegoHTTPRequest) Body(data interface{}) *BeegoHTTPRequest {
 	case string:
 		bf := bytes.NewBufferString(t)
 		b.req.Body = ioutil.NopCloser(bf)
+		b.req.GetBody = func() (io.ReadCloser, error) {
+			return ioutil.NopCloser(bf), nil
+		}
 		b.req.ContentLength = int64(len(t))
 	case []byte:
 		bf := bytes.NewBuffer(t)
 		b.req.Body = ioutil.NopCloser(bf)
+		b.req.GetBody = func() (io.ReadCloser, error) {
+			return ioutil.NopCloser(bf), nil
+		}
 		b.req.ContentLength = int64(len(t))
 	}
 	return b
@@ -553,7 +559,7 @@ func (b *BeegoHTTPRequest) doRequest(ctx context.Context) (resp *http.Response, 
 	// retries default value is 0, it will run once.
 	// retries equal to -1, it will run forever until success
 	// retries is setted, it will retries fixed times.
-	// Sleeps for a 400ms inbetween calls to reduce spam
+	// Sleeps for a 400ms between calls to reduce spam
 	for i := 0; b.setting.Retries == -1 || i <= b.setting.Retries; i++ {
 		resp, err = client.Do(b.req)
 		if err == nil {
