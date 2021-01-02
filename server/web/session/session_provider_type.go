@@ -1,16 +1,18 @@
 package session
 
+type ProviderType string
+
 const (
-	ProviderCookie        = `cookie`
-	ProviderFile          = `file`
-	ProviderMemory        = `memory`
-	ProviderCouchbase     = `couchbase`
-	ProviderLedis         = `ledis`
-	ProviderMemcache      = `memcache`
-	ProviderMysql         = `mysql`
-	ProviderPostgresql    = `postgresql`
-	ProviderRedis         = `redis`
-	ProviderRedisCluster  = `redis_cluster`
-	ProviderRedisSentinel = `redis_sentinel`
-	ProviderSsdb          = `ssdb`
+	ProviderCookie        ProviderType = `cookie`
+	ProviderFile          ProviderType = `file`
+	ProviderMemory        ProviderType = `memory`
+	ProviderCouchbase     ProviderType = `couchbase`
+	ProviderLedis         ProviderType = `ledis`
+	ProviderMemcache      ProviderType = `memcache`
+	ProviderMysql         ProviderType = `mysql`
+	ProviderPostgresql    ProviderType = `postgresql`
+	ProviderRedis         ProviderType = `redis`
+	ProviderRedisCluster  ProviderType = `redis_cluster`
+	ProviderRedisSentinel ProviderType = `redis_sentinel`
+	ProviderSsdb          ProviderType = `ssdb`
 )
