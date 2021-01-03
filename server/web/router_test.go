@@ -97,7 +97,7 @@ func (jc *JSONController) Get() {
 
 func TestPrefixUrlFor(t *testing.T){
 	handler := NewControllerRegister()
-	handler.Add("/my/prefix/list", &PrefixTestController{}, "get:PrefixList")
+	handler.Add("/my/prefix/list", &PrefixTestController{}, WithRouterMethods(&PrefixTestController{}, "get:PrefixList"))
 
 	if a := handler.URLFor(`PrefixTestController.PrefixList`); a != `/my/prefix/list` {
 		logs.Info(a)
@@ -111,8 +111,8 @@ func TestPrefixUrlFor(t *testing.T){
 
 func TestUrlFor(t *testing.T) {
 	handler := NewControllerRegister()
-	handler.Add("/api/list", &TestController{}, SetRouterMethods(&TestController{}, "*:List"))
-	handler.Add("/person/:last/:first", &TestController{}, SetRouterMethods(&TestController{}, "*:Param"))
+	handler.Add("/api/list", &TestController{}, WithRouterMethods(&TestController{}, "*:List"))
+	handler.Add("/person/:last/:first", &TestController{}, WithRouterMethods(&TestController{}, "*:Param"))
 	if a := handler.URLFor("TestController.List"); a != "/api/list" {
 		logs.Info(a)
 		t.Errorf("TestController.List must equal to /api/list")
@@ -135,9 +135,9 @@ func TestUrlFor3(t *testing.T) {
 
 func TestUrlFor2(t *testing.T) {
 	handler := NewControllerRegister()
-	handler.Add("/v1/:v/cms_:id(.+)_:page(.+).html", &TestController{}, SetRouterMethods(&TestController{}, "*:List"))
-	handler.Add("/v1/:username/edit", &TestController{}, SetRouterMethods(&TestController{}, "get:GetURL"))
-	handler.Add("/v1/:v(.+)_cms/ttt_:id(.+)_:page(.+).html", &TestController{}, SetRouterMethods(&TestController{}, "*:Param"))
+	handler.Add("/v1/:v/cms_:id(.+)_:page(.+).html", &TestController{}, WithRouterMethods(&TestController{}, "*:List"))
+	handler.Add("/v1/:username/edit", &TestController{}, WithRouterMethods(&TestController{}, "get:GetURL"))
+	handler.Add("/v1/:v(.+)_cms/ttt_:id(.+)_:page(.+).html", &TestController{}, WithRouterMethods(&TestController{}, "*:Param"))
 	handler.Add("/:year:int/:month:int/:title/:entid", &TestController{})
 	if handler.URLFor("TestController.GetURL", ":username", "astaxie") != "/v1/astaxie/edit" {
 		logs.Info(handler.URLFor("TestController.GetURL"))
@@ -167,7 +167,7 @@ func TestUserFunc(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	handler := NewControllerRegister()
-	handler.Add("/api/list", &TestController{}, SetRouterMethods(&TestController{}, "*:List"))
+	handler.Add("/api/list", &TestController{}, WithRouterMethods(&TestController{}, "*:List"))
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != "i am list" {
 		t.Errorf("user define func can't run")
@@ -257,7 +257,7 @@ func TestRouteOk(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	handler := NewControllerRegister()
-	handler.Add("/person/:last/:first", &TestController{}, SetRouterMethods(&TestController{}, "get:GetParams"))
+	handler.Add("/person/:last/:first", &TestController{}, WithRouterMethods(&TestController{}, "get:GetParams"))
 	handler.ServeHTTP(w, r)
 	body := w.Body.String()
 	if body != "anderson+thomas+kungfu" {
@@ -271,7 +271,7 @@ func TestManyRoute(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	handler := NewControllerRegister()
-	handler.Add("/beego:id([0-9]+)-:page([0-9]+).html", &TestController{}, SetRouterMethods(&TestController{}, "get:GetManyRouter"))
+	handler.Add("/beego:id([0-9]+)-:page([0-9]+).html", &TestController{}, WithRouterMethods(&TestController{}, "get:GetManyRouter"))
 	handler.ServeHTTP(w, r)
 
 	body := w.Body.String()
@@ -288,7 +288,7 @@ func TestEmptyResponse(t *testing.T) {
 	w := httptest.NewRecorder()
 
 	handler := NewControllerRegister()
-	handler.Add("/beego-empty.html", &TestController{}, SetRouterMethods(&TestController{}, "get:GetEmptyBody"))
+	handler.Add("/beego-empty.html", &TestController{}, WithRouterMethods(&TestController{}, "get:GetEmptyBody"))
 	handler.ServeHTTP(w, r)
 
 	if body := w.Body.String(); body != "" {
@@ -783,8 +783,8 @@ func TestRouterSessionSet(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/user", nil)
 	w := httptest.NewRecorder()
 	handler := NewControllerRegister()
-	handler.Add("/user", &TestController{}, SetRouterMethods(&TestController{}, "get:Get"),
-		SetRouterSessionOn(false))
+	handler.Add("/user", &TestController{}, WithRouterMethods(&TestController{}, "get:Get"),
+		WithRouterSessionOn(false))
 	handler.ServeHTTP(w, r)
 	if w.Header().Get("Set-Cookie") != "" {
 		t.Errorf("TestRotuerSessionSet failed")
@@ -794,8 +794,8 @@ func TestRouterSessionSet(t *testing.T) {
 	r, _ = http.NewRequest("GET", "/user", nil)
 	w = httptest.NewRecorder()
 	handler = NewControllerRegister()
-	handler.Add("/user", &TestController{}, SetRouterMethods(&TestController{}, "get:Get"),
-		SetRouterSessionOn(true))
+	handler.Add("/user", &TestController{}, WithRouterMethods(&TestController{}, "get:Get"),
+		WithRouterSessionOn(true))
 	handler.ServeHTTP(w, r)
 	if w.Header().Get("Set-Cookie") != "" {
 		t.Errorf("TestRotuerSessionSet failed")
@@ -809,8 +809,8 @@ func TestRouterSessionSet(t *testing.T) {
 	r, _ = http.NewRequest("GET", "/user", nil)
 	w = httptest.NewRecorder()
 	handler = NewControllerRegister()
-	handler.Add("/user", &TestController{}, SetRouterMethods(&TestController{}, "get:Get"),
-		SetRouterSessionOn(false))
+	handler.Add("/user", &TestController{}, WithRouterMethods(&TestController{}, "get:Get"),
+		WithRouterSessionOn(false))
 	handler.ServeHTTP(w, r)
 	if w.Header().Get("Set-Cookie") != "" {
 		t.Errorf("TestRotuerSessionSet failed")
@@ -820,8 +820,8 @@ func TestRouterSessionSet(t *testing.T) {
 	r, _ = http.NewRequest("GET", "/user", nil)
 	w = httptest.NewRecorder()
 	handler = NewControllerRegister()
-	handler.Add("/user", &TestController{}, SetRouterMethods(&TestController{}, "get:Get"),
-		SetRouterSessionOn(true))
+	handler.Add("/user", &TestController{}, WithRouterMethods(&TestController{}, "get:Get"),
+		WithRouterSessionOn(true))
 	handler.ServeHTTP(w, r)
 	if w.Header().Get("Set-Cookie") == "" {
 		t.Errorf("TestRotuerSessionSet failed")
