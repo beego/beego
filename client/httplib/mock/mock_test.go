@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package httplib
+package mock
 
 import (
 	"context"
@@ -21,16 +21,18 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/beego/beego/v2/client/httplib"
 )
 
 func TestStartMock(t *testing.T) {
 
-	defaultSetting.FilterChains = []FilterChain{mockFilter.FilterChain}
+	// httplib.defaultSetting.FilterChains = []httplib.FilterChain{mockFilter.FilterChain}
 
 	stub := StartMock()
 	// defer stub.Clear()
 
-	expectedResp := NewHttpResponseWithJsonBody([]byte(`{}`))
+	expectedResp := httplib.NewHttpResponseWithJsonBody([]byte(`{}`))
 	expectedErr := errors.New("expected err")
 
 	stub.Mock(NewSimpleCondition("/abc"), expectedResp, expectedErr)
@@ -45,14 +47,14 @@ func TestStartMock(t *testing.T) {
 // TestStartMock_Isolation Test StartMock that
 // mock only work for this request
 func TestStartMock_Isolation(t *testing.T) {
-	defaultSetting.FilterChains = []FilterChain{mockFilter.FilterChain}
+	// httplib.defaultSetting.FilterChains = []httplib.FilterChain{mockFilter.FilterChain}
 	// setup global stub
 	stub := StartMock()
-	globalMockResp := NewHttpResponseWithJsonBody([]byte(`{}`))
+	globalMockResp := httplib.NewHttpResponseWithJsonBody([]byte(`{}`))
 	globalMockErr := errors.New("expected err")
 	stub.Mock(NewSimpleCondition("/abc"), globalMockResp, globalMockErr)
 
-	expectedResp := NewHttpResponseWithJsonBody(struct {
+	expectedResp := httplib.NewHttpResponseWithJsonBody(struct {
 		A string `json:"a"`
 	}{
 		A: "aaa",
@@ -67,9 +69,9 @@ func TestStartMock_Isolation(t *testing.T) {
 }
 
 func OriginnalCodeUsingHttplibPassCtx(ctx context.Context) (*http.Response, error) {
-	return Get("http://localhost:7777/abc").DoRequestWithCtx(ctx)
+	return httplib.Get("http://localhost:7777/abc").DoRequestWithCtx(ctx)
 }
 
 func OriginalCodeUsingHttplib() (*http.Response, error){
-	return Get("http://localhost:7777/abc").DoRequest()
+	return httplib.Get("http://localhost:7777/abc").DoRequest()
 }

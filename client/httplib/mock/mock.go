@@ -12,16 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package httplib
+package mock
 
 import (
 	"context"
 	"net/http"
 
+	"github.com/beego/beego/v2/client/httplib"
 	"github.com/beego/beego/v2/core/logs"
 )
 
 const mockCtxKey = "beego-httplib-mock"
+
+func init() {
+	InitMockSetting()
+}
 
 type Stub interface {
 	Mock(cond RequestCondition, resp *http.Response, err error)
@@ -30,6 +35,10 @@ type Stub interface {
 }
 
 var mockFilter = &MockResponseFilter{}
+
+func InitMockSetting() {
+	httplib.AddDefaultFilter(mockFilter.FilterChain)
+}
 
 func StartMock() Stub {
 	return mockFilter
