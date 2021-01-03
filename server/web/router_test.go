@@ -26,6 +26,14 @@ import (
 	"github.com/beego/beego/v2/server/web/context"
 )
 
+type PrefixTestController struct {
+	Controller
+}
+
+func (ptc *PrefixTestController) PrefixList() {
+	ptc.Ctx.Output.Body([]byte("i am list in prefix test"))
+}
+
 type TestController struct {
 	Controller
 }
@@ -85,6 +93,20 @@ func (jc *JSONController) Prepare() {
 func (jc *JSONController) Get() {
 	jc.Data["Username"] = "astaxie"
 	jc.Ctx.Output.Body([]byte("ok"))
+}
+
+func TestPrefixUrlFor(t *testing.T){
+	handler := NewControllerRegister()
+	handler.Add("/my/prefix/list", &PrefixTestController{}, "get:PrefixList")
+
+	if a := handler.URLFor(`PrefixTestController.PrefixList`); a != `/my/prefix/list` {
+		logs.Info(a)
+		t.Errorf("PrefixTestController.PrefixList must equal to /my/prefix/list")
+	}
+	if a := handler.URLFor(`TestController.PrefixList`); a != `` {
+		logs.Info(a)
+		t.Errorf("TestController.PrefixList must equal to empty string")
+	}
 }
 
 func TestUrlFor(t *testing.T) {
