@@ -300,3 +300,81 @@ func TestAddFilter(t *testing.T) {
 	r := Get("http://beego.me")
 	assert.Equal(t, 1, len(req.setting.FilterChains)-len(r.setting.FilterChains))
 }
+
+func TestHead(t *testing.T) {
+	req := Head("http://beego.me")
+	assert.NotNil(t, req)
+	assert.Equal(t, "HEAD", req.req.Method)
+}
+
+func TestDelete(t *testing.T) {
+	req := Delete("http://beego.me")
+	assert.NotNil(t, req)
+	assert.Equal(t, "DELETE", req.req.Method)
+}
+
+func TestPost(t *testing.T) {
+	req := Post("http://beego.me")
+	assert.NotNil(t, req)
+	assert.Equal(t, "POST", req.req.Method)
+}
+
+func TestNewBeegoRequest(t *testing.T) {
+	req := NewBeegoRequest("http://beego.me", "GET")
+	assert.NotNil(t, req)
+	assert.Equal(t, "GET", req.req.Method)
+}
+
+func TestPut(t *testing.T) {
+	req := Put("http://beego.me")
+	assert.NotNil(t, req)
+	assert.Equal(t, "PUT", req.req.Method)
+}
+
+func TestBeegoHTTPRequest_Header(t *testing.T) {
+	req := Post("http://beego.me")
+	key, value := "test-header", "test-header-value"
+	req.Header(key, value)
+	assert.Equal(t, value, req.req.Header.Get(key))
+}
+
+func TestBeegoHTTPRequest_SetHost(t *testing.T) {
+	req := Post("http://beego.me")
+	host := "test-hose"
+	req.SetHost(host)
+	assert.Equal(t, host, req.req.Host)
+}
+
+func TestBeegoHTTPRequest_Param(t *testing.T) {
+	req := Post("http://beego.me")
+	key, value := "test-param", "test-param-value"
+	req.Param(key, value)
+	assert.Equal(t, value, req.params[key][0])
+
+	value1 :=  "test-param-value-1"
+	req.Param(key, value1)
+	assert.Equal(t, value1, req.params[key][1])
+}
+
+func TestBeegoHTTPRequest_Body(t *testing.T) {
+	req := Post("http://beego.me")
+	body := `hello, world`
+	req.Body([]byte(body))
+	assert.Equal(t, int64(len(body)), req.req.ContentLength)
+	assert.NotNil(t, req.req.GetBody)
+}
+
+
+type user struct {
+	Name string `xml:"name"`
+}
+func TestBeegoHTTPRequest_XMLBody(t *testing.T) {
+	req := Post("http://beego.me")
+	body := &user{
+		Name: "Tom",
+	}
+	_, err := req.XMLBody(body)
+	assert.True(t, req.req.ContentLength > 0)
+	assert.Nil(t, err)
+	assert.NotNil(t, req.req.GetBody)
+}

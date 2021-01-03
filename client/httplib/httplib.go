@@ -319,6 +319,9 @@ func (b *BeegoHTTPRequest) XMLBody(obj interface{}) (*BeegoHTTPRequest, error) {
 			return b, err
 		}
 		b.req.Body = ioutil.NopCloser(bytes.NewReader(byts))
+		b.req.GetBody = func() (io.ReadCloser, error) {
+			return ioutil.NopCloser(bytes.NewReader(byts)), nil
+		}
 		b.req.ContentLength = int64(len(byts))
 		b.req.Header.Set("Content-Type", "application/xml")
 	}
