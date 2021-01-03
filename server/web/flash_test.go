@@ -40,7 +40,7 @@ func TestFlashHeader(t *testing.T) {
 
 	// setup the handler
 	handler := NewControllerRegister()
-	handler.Add("/", &TestFlashController{}, "get:TestWriteFlash")
+	handler.Add("/", &TestFlashController{}, SetRouterMethods(&TestFlashController{}, "get:TestWriteFlash"))
 	handler.ServeHTTP(w, r)
 
 	// get the Set-Cookie value

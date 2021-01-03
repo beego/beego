@@ -74,7 +74,7 @@ func oldMiddlewareToNew(mws []MiddleWare) []web.MiddleWare {
 //  beego.Router("/api/update",&RestController{},"put:UpdateFood")
 //  beego.Router("/api/delete",&RestController{},"delete:DeleteFood")
 func Router(rootpath string, c ControllerInterface, mappingMethods ...string) *App {
-	return (*App)(web.Router(rootpath, c, mappingMethods...))
+	return (*App)(web.Router(rootpath, c, web.SetRouterMethods(c, mappingMethods...)))
 }
 
 // UnregisterFixedRoute unregisters the route with the specified fixedRoute. It is particularly useful

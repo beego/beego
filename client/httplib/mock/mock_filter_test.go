@@ -12,20 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package httplib
+package mock
 
 import (
 	"errors"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	"github.com/beego/beego/v2/client/httplib"
 )
 
 func TestMockResponseFilter_FilterChain(t *testing.T) {
-	req := Get("http://localhost:8080/abc/s")
+	req := httplib.Get("http://localhost:8080/abc/s")
 	ft := NewMockResponseFilter()
 
-	expectedResp := NewHttpResponseWithJsonBody(`{}`)
+	expectedResp := httplib.NewHttpResponseWithJsonBody(`{}`)
 	expectedErr := errors.New("expected error")
 	ft.Mock(NewSimpleCondition("/abc/s"), expectedResp, expectedErr)
 
@@ -35,16 +37,16 @@ func TestMockResponseFilter_FilterChain(t *testing.T) {
 	assert.Equal(t, expectedErr, err)
 	assert.Equal(t, expectedResp, resp)
 
-	req = Get("http://localhost:8080/abcd/s")
+	req = httplib.Get("http://localhost:8080/abcd/s")
 	req.AddFilters(ft.FilterChain)
 
 	resp, err = req.DoRequest()
 	assert.NotEqual(t, expectedErr, err)
 	assert.NotEqual(t, expectedResp, resp)
 
-	req = Get("http://localhost:8080/abc/s")
+	req = httplib.Get("http://localhost:8080/abc/s")
 	req.AddFilters(ft.FilterChain)
-	expectedResp1 := NewHttpResponseWithJsonBody(map[string]string{})
+	expectedResp1 := httplib.NewHttpResponseWithJsonBody(map[string]string{})
 	expectedErr1 := errors.New("expected error")
 	ft.Mock(NewSimpleCondition("/abc/abs/bbc"), expectedResp1, expectedErr1)
 
@@ -52,7 +54,7 @@ func TestMockResponseFilter_FilterChain(t *testing.T) {
 	assert.Equal(t, expectedErr, err)
 	assert.Equal(t, expectedResp, resp)
 
-	req = Get("http://localhost:8080/abc/abs/bbc")
+	req = httplib.Get("http://localhost:8080/abc/abs/bbc")
 	req.AddFilters(ft.FilterChain)
 	ft.Mock(NewSimpleCondition("/abc/abs/bbc"), expectedResp1, expectedErr1)
 	resp, err = req.DoRequest()
