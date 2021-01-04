@@ -255,6 +255,22 @@ func NewTM() *TM {
 	return obj
 }
 
+type DeptInfo struct {
+	ID           int       `orm:"column(id)"`
+	Created      time.Time `orm:"auto_now_add"`
+	DeptName     string
+	EmployeeName string
+	Salary       int
+}
+
+type UnregisterModel struct {
+	ID           int       `orm:"column(id)"`
+	Created      time.Time `orm:"auto_now_add"`
+	DeptName     string
+	EmployeeName string
+	Salary       int
+}
+
 type User struct {
 	ID           int    `orm:"column(id)"`
 	UserName     string `orm:"size(30);unique"`
