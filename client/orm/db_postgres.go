@@ -55,6 +55,7 @@ var postgresTypes = map[string]string{
 	"uint16":              `integer CHECK("%COL%" >= 0)`,
 	"uint32":              `bigint CHECK("%COL%" >= 0)`,
 	"uint64":              `bigint CHECK("%COL%" >= 0)`,
+	"uuid":                "uuid",
 	"float64":             "double precision",
 	"float64-decimal":     "numeric(%d, %d)",
 	"json":                "json",
