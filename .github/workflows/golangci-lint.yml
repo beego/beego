@@ -23,7 +23,7 @@ jobs:
 #          working-directory: ./
 
           # Optional: golangci-lint command line arguments.
-          args: --timeout=5m
+          args: --timeout=5m --print-issued-lines=true --print-linter-name=true --uniq-by-line=true
 
           # Optional: show only new issues if it's a pull request. The default value is `false`.
           only-new-issues: true
