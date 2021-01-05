@@ -79,6 +79,7 @@ type querySet struct {
 	orm        *ormBase
 	ctx        context.Context
 	forContext bool
+	aggregate  string
 }
 
 var _ QuerySeter = new(querySet)
@@ -322,4 +323,10 @@ func newQuerySet(orm *ormBase, mi *modelInfo) QuerySeter {
 	o.mi = mi
 	o.orm = orm
 	return o
+}
+
+// aggregate func
+func (o querySet) Aggregate(s string) QuerySeter {
+	o.aggregate = s
+	return &o
 }
