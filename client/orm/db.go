@@ -877,31 +877,8 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 
 	Q := d.ins.TableQuote()
 
-	where, args := tables.getCondSQL(cond, false, tz)
+	where, args0 := tables.getCondSQL(cond, false, tz)
 	join := tables.getJoinSQL()
-
-	if join == "" {
-		where = strings.Replace(where, "T0.", "", -1)
-		query := fmt.Sprintf("DELETE FROM %s%s%s %s", Q, mi.table, Q, where)
-		d.ins.ReplaceMarks(&query)
-		var (
-			res sql.Result
-			err error
-		)
-		if qs != nil && qs.forContext {
-			res, err = q.ExecContext(qs.ctx, query, args...)
-		} else {
-			res, err = q.Exec(query, args...)
-		}
-		if err == nil {
-			num, err := res.RowsAffected()
-			if err != nil {
-				return 0, err
-			}
-			return num, nil
-		}
-		return 0, err
-	}
 
 	cols := fmt.Sprintf("T0.%s%s%s", Q, mi.fields.pk.column, Q)
 	query := fmt.Sprintf("SELECT %s FROM %s%s%s T0 %s%s%s", cols, Q, mi.table, Q, specifyIndexes, join, where)
@@ -909,7 +886,7 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	d.ins.ReplaceMarks(&query)
 
 	var rs *sql.Rows
-	r, err := q.Query(query, args...)
+	r, err := q.Query(query, args0...)
 	if err != nil {
 		return 0, err
 	}
@@ -917,7 +894,7 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	defer rs.Close()
 
 	var ref interface{}
-	args = make([]interface{}, 0)
+	args := make([]interface{}, 0)
 	cnt := 0
 	for rs.Next() {
 		if err := rs.Scan(&ref); err != nil {
@@ -939,16 +916,29 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	for i := range marks {
 		marks[i] = "?"
 	}
-	sqlIn := fmt.Sprintf("IN (%s)", strings.Join(marks, ", "))
-	query = fmt.Sprintf("DELETE FROM %s%s%s WHERE %s%s%s %s", Q, mi.table, Q, Q, mi.fields.pk.column, Q, sqlIn)
 
-	d.ins.ReplaceMarks(&query)
 	var res sql.Result
-	if qs != nil && qs.forContext {
-		res, err = q.ExecContext(qs.ctx, query, args...)
+	if join == "" {
+		where = strings.Replace(where, "T0.", "", -1)
+		query = fmt.Sprintf("DELETE FROM %s%s%s %s", Q, mi.table, Q, where)
+		d.ins.ReplaceMarks(&query)
+
+		if qs != nil && qs.forContext {
+			res, err = q.ExecContext(qs.ctx, query, args0...)
+		} else {
+			res, err = q.Exec(query, args0...)
+		}
 	} else {
-		res, err = q.Exec(query, args...)
+		sqlIn := fmt.Sprintf("IN (%s)", strings.Join(marks, ", "))
+		query = fmt.Sprintf("DELETE FROM %s%s%s WHERE %s%s%s %s", Q, mi.table, Q, Q, mi.fields.pk.column, Q, sqlIn)
+
+		if qs != nil && qs.forContext {
+			res, err = q.ExecContext(qs.ctx, query, args...)
+		} else {
+			res, err = q.Exec(query, args...)
+		}
 	}
+
 	if err == nil {
 		num, err := res.RowsAffected()
 		if err != nil {
