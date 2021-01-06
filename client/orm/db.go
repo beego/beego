@@ -931,6 +931,7 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	} else {
 		sqlIn := fmt.Sprintf("IN (%s)", strings.Join(marks, ", "))
 		query = fmt.Sprintf("DELETE FROM %s%s%s WHERE %s%s%s %s", Q, mi.table, Q, Q, mi.fields.pk.column, Q, sqlIn)
+		d.ins.ReplaceMarks(&query)
 
 		if qs != nil && qs.forContext {
 			res, err = q.ExecContext(qs.ctx, query, args...)
