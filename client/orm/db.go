@@ -881,6 +881,7 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	join := tables.getJoinSQL()
 
 	if join == "" {
+		where = strings.Replace(where, "T0.", "", -1)
 		query := fmt.Sprintf("DELETE FROM %s%s%s T0 %s%s", Q, mi.table, Q, specifyIndexes, where)
 		d.ins.ReplaceMarks(&query)
 		var (
