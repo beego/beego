@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"path"
 	"reflect"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -275,7 +276,7 @@ func (p *ControllerRegister) addWithMethodParams(pattern string, c ControllerInt
 	for i := range opts {
 		opts[i](route)
 	}
-	
+
 	globalSessionOn := p.cfg.WebConfig.Session.SessionOn
 	if !globalSessionOn && route.sessionOn {
 		logs.Warn("global sessionOn is false, sessionOn of router [%s] can't be set to true", route.pattern)
@@ -330,6 +331,93 @@ func (p *ControllerRegister) GetContext() *beecontext.Context {
 // GiveBackContext put the ctx into pool so that it could be reuse
 func (p *ControllerRegister) GiveBackContext(ctx *beecontext.Context) {
 	p.pool.Put(ctx)
+}
+
+// RouterGet add post method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    RouterGet("/api/:id", MyController.Ping)
+func (p *ControllerRegister) RouterGet(pattern string, f interface{}) {
+	p.AddRouterMethod(http.MethodGet, pattern, f)
+}
+
+// AddRouterMethod add http method router
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    AddRouterMethod("get","/api/:id", MyController.Ping)
+func (p *ControllerRegister) AddRouterMethod(method, pattern string, f interface{}) {
+	method = strings.ToUpper(method)
+	if method != "*" && !HTTPMETHOD[method] {
+		panic("not support http method: " + method)
+	}
+
+	ct, methodName := getReflectTypeAndMethod(f)
+	route := &ControllerInfo{}
+	route.pattern = pattern
+	route.routerType = routerTypeBeego
+	route.sessionOn = p.cfg.WebConfig.Session.SessionOn
+	route.controllerType = ct
+	route.methods = map[string]string{method: methodName}
+	p.addToRouter(method, pattern, route)
+}
+
+// get reflect controller type and method by controller method expression
+func getReflectTypeAndMethod(f interface{}) (controllerType reflect.Type, method string) {
+	// check f is a function
+	funcType := reflect.TypeOf(f)
+	if funcType.Kind() != reflect.Func {
+		panic("not a method")
+	}
+
+	// get function name
+	funcObj := runtime.FuncForPC(reflect.ValueOf(f).Pointer())
+	if funcObj == nil {
+		panic("cannot find the method")
+	}
+	funcNameSli := strings.Split(funcObj.Name(), ".")
+	lFuncSli := len(funcNameSli)
+	if lFuncSli == 0 {
+		panic("invalid method full name: " + funcObj.Name())
+	}
+
+	method = funcNameSli[lFuncSli-1]
+	if len(method) == 0 {
+		panic("method name is empty")
+	} else if method[0] > 96 || method[0] < 65 {
+		panic("not a public method")
+	}
+
+	// check only one param which is the method receiver
+	if numIn := funcType.NumIn(); numIn != 1 {
+		panic("invalid number of param in")
+	}
+
+	// check the receiver implement ControllerInterface
+	controllerType = funcType.In(0)
+	_, ok := reflect.New(controllerType).Interface().(ControllerInterface)
+	if !ok {
+		panic(controllerType.String() + " is not implemented ControllerInterface")
+	}
+
+	// check controller has the method
+	_, exists := controllerType.MethodByName(method)
+	if !exists {
+		panic(controllerType.String() + " has no method " + method)
+	}
+
+	return
 }
 
 // Get add get method

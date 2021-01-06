@@ -461,6 +461,26 @@ func (app *HttpServer) AutoPrefix(prefix string, c ControllerInterface) *HttpSer
 	return app
 }
 
+// RouterGet see HttpServer.RouterGet
+func RouterGet(rootpath string, f interface{}) {
+	BeeApp.RouterGet(rootpath, f)
+}
+
+// RouterGet used to register router for RouterGet method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    RouterGet("/api/:id", MyController.Ping)
+func (app *HttpServer) RouterGet(rootpath string, f interface{}) *HttpServer {
+	app.Handlers.RouterGet(rootpath, f)
+	return app
+}
+
 // Get see HttpServer.Get
 func Get(rootpath string, f FilterFunc) *HttpServer {
 	return BeeApp.Get(rootpath, f)
