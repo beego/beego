@@ -880,6 +880,28 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	where, args := tables.getCondSQL(cond, false, tz)
 	join := tables.getJoinSQL()
 
+	if join == "" {
+		query := fmt.Sprintf("DELETE FROM %s%s%s T0 %s%s", Q, mi.table, Q, specifyIndexes, where)
+		d.ins.ReplaceMarks(&query)
+		var (
+			res sql.Result
+			err error
+		)
+		if qs != nil && qs.forContext {
+			res, err = q.ExecContext(qs.ctx, query, args...)
+		} else {
+			res, err = q.Exec(query, args...)
+		}
+		if err == nil {
+			num, err := res.RowsAffected()
+			if err != nil {
+				return 0, err
+			}
+			return num, nil
+		}
+		return 0, err
+	}
+
 	cols := fmt.Sprintf("T0.%s%s%s", Q, mi.fields.pk.column, Q)
 	query := fmt.Sprintf("SELECT %s FROM %s%s%s T0 %s%s%s", cols, Q, mi.table, Q, specifyIndexes, join, where)
 

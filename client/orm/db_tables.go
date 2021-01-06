@@ -199,7 +199,7 @@ func (t *dbTables) getJoinSQL() (join string) {
 			c2 = jt.fi.relModelInfo.fields.pk.column
 
 			if jt.fi.reverse {
-				c1 = jt.mi.fields.pk.column
+				c1 = jt.fi.mi.fields.pk.column
 				c2 = jt.fi.reverseFieldInfo.column
 			}
 		}
