@@ -187,6 +187,54 @@ func (n *Namespace) Include(cList ...ControllerInterface) *Namespace {
 	return n
 }
 
+// RouterGet same as beego.RouterGet
+func (n *Namespace) RouterGet(rootpath string, f interface{}) *Namespace {
+	n.handlers.RouterGet(rootpath, f)
+	return n
+}
+
+// RouterPost same as beego.RouterPost
+func (n *Namespace) RouterPost(rootpath string, f interface{}) *Namespace {
+	n.handlers.RouterPost(rootpath, f)
+	return n
+}
+
+// RouterDelete same as beego.RouterDelete
+func (n *Namespace) RouterDelete(rootpath string, f interface{}) *Namespace {
+	n.handlers.RouterDelete(rootpath, f)
+	return n
+}
+
+// RouterPut same as beego.RouterPut
+func (n *Namespace) RouterPut(rootpath string, f interface{}) *Namespace {
+	n.handlers.RouterPut(rootpath, f)
+	return n
+}
+
+// RouterHead same as beego.RouterHead
+func (n *Namespace) RouterHead(rootpath string, f interface{}) *Namespace {
+	n.handlers.RouterHead(rootpath, f)
+	return n
+}
+
+// RouterOptions same as beego.RouterOptions
+func (n *Namespace) RouterOptions(rootpath string, f interface{}) *Namespace {
+	n.handlers.RouterOptions(rootpath, f)
+	return n
+}
+
+// RouterPatch same as beego.RouterPatch
+func (n *Namespace) RouterPatch(rootpath string, f interface{}) *Namespace {
+	n.handlers.RouterPatch(rootpath, f)
+	return n
+}
+
+// Any same as beego.RouterAny
+func (n *Namespace) RouterAny(rootpath string, f interface{}) *Namespace {
+	n.handlers.RouterAny(rootpath, f)
+	return n
+}
+
 // Namespace add nest Namespace
 // usage:
 // ns := beego.NewNamespace(“/v1”).
@@ -363,6 +411,62 @@ func NSOptions(rootpath string, f FilterFunc) LinkNamespace {
 func NSPatch(rootpath string, f FilterFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Patch(rootpath, f)
+	}
+}
+
+// NSRouterGet call Namespace RouterGet
+func NSRouterGet(rootpath string, f interface{}) LinkNamespace {
+	return func(ns *Namespace) {
+		ns.RouterGet(rootpath, f)
+	}
+}
+
+// NSPost call Namespace RouterPost
+func NSRouterPost(rootpath string, f interface{}) LinkNamespace {
+	return func(ns *Namespace) {
+		ns.RouterPost(rootpath, f)
+	}
+}
+
+// NSRouterHead call Namespace RouterHead
+func NSRouterHead(rootpath string, f interface{}) LinkNamespace {
+	return func(ns *Namespace) {
+		ns.RouterHead(rootpath, f)
+	}
+}
+
+// NSRouterPut call Namespace RouterPut
+func NSRouterPut(rootpath string, f interface{}) LinkNamespace {
+	return func(ns *Namespace) {
+		ns.RouterPut(rootpath, f)
+	}
+}
+
+// NSRouterDelete call Namespace RouterDelete
+func NSRouterDelete(rootpath string, f interface{}) LinkNamespace {
+	return func(ns *Namespace) {
+		ns.RouterDelete(rootpath, f)
+	}
+}
+
+// NSRouterAny call Namespace RouterAny
+func NSRouterAny(rootpath string, f interface{}) LinkNamespace {
+	return func(ns *Namespace) {
+		ns.RouterAny(rootpath, f)
+	}
+}
+
+// NSRouterOptions call Namespace RouterOptions
+func NSRouterOptions(rootpath string, f interface{}) LinkNamespace {
+	return func(ns *Namespace) {
+		ns.RouterOptions(rootpath, f)
+	}
+}
+
+// NSRouterPatch call Namespace RouterPatch
+func NSRouterPatch(rootpath string, f interface{}) LinkNamespace {
+	return func(ns *Namespace) {
+		ns.RouterPatch(rootpath, f)
 	}
 }
 

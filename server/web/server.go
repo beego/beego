@@ -481,6 +481,146 @@ func (app *HttpServer) RouterGet(rootpath string, f interface{}) *HttpServer {
 	return app
 }
 
+// RouterPost see HttpServer.RouterGet
+func RouterPost(rootpath string, f interface{}) {
+	BeeApp.RouterPost(rootpath, f)
+}
+
+// RouterPost used to register router for RouterPost method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    RouterPost("/api/:id", MyController.Ping)
+func (app *HttpServer) RouterPost(rootpath string, f interface{}) *HttpServer {
+	app.Handlers.RouterPost(rootpath, f)
+	return app
+}
+
+// RouterHead see HttpServer.RouterHead
+func RouterHead(rootpath string, f interface{}) {
+	BeeApp.RouterPost(rootpath, f)
+}
+
+// RouterHead used to register router for RouterHead method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    RouterHead("/api/:id", MyController.Ping)
+func (app *HttpServer) RouterHead(rootpath string, f interface{}) *HttpServer {
+	app.Handlers.RouterHead(rootpath, f)
+	return app
+}
+
+// RouterPut see HttpServer.RouterPut
+func RouterPut(rootpath string, f interface{}) {
+	BeeApp.RouterPost(rootpath, f)
+}
+
+// RouterPut used to register router for RouterPut method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    RouterPut("/api/:id", MyController.Ping)
+func (app *HttpServer) RouterPut(rootpath string, f interface{}) *HttpServer {
+	app.Handlers.RouterPut(rootpath, f)
+	return app
+}
+
+// RouterPatch see HttpServer.RouterPatch
+func RouterPatch(rootpath string, f interface{}) {
+	BeeApp.RouterPatch(rootpath, f)
+}
+
+// RouterPatch used to register router for RouterPatch method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    RouterPatch("/api/:id", MyController.Ping)
+func (app *HttpServer) RouterPatch(rootpath string, f interface{}) *HttpServer {
+	app.Handlers.RouterPatch(rootpath, f)
+	return app
+}
+
+// RouterDelete see HttpServer.RouterDelete
+func RouterDelete(rootpath string, f interface{}) {
+	BeeApp.RouterDelete(rootpath, f)
+}
+
+// RouterDelete used to register router for RouterDelete method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    RouterDelete("/api/:id", MyController.Ping)
+func (app *HttpServer) RouterDelete(rootpath string, f interface{}) *HttpServer {
+	app.Handlers.RouterDelete(rootpath, f)
+	return app
+}
+
+// RouterOptions see HttpServer.RouterOptions
+func RouterOptions(rootpath string, f interface{}) {
+	BeeApp.RouterOptions(rootpath, f)
+}
+
+// RouterOptions used to register router for RouterOptions method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    RouterOptions("/api/:id", MyController.Ping)
+func (app *HttpServer) RouterOptions(rootpath string, f interface{}) *HttpServer {
+	app.Handlers.RouterOptions(rootpath, f)
+	return app
+}
+
+// RouterAny see HttpServer.RouterAny
+func RouterAny(rootpath string, f interface{}) {
+	BeeApp.RouterOptions(rootpath, f)
+}
+
+// RouterAny used to register router for RouterAny method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    RouterAny("/api/:id", MyController.Ping)
+func (app *HttpServer) RouterAny(rootpath string, f interface{}) *HttpServer {
+	app.Handlers.RouterAny(rootpath, f)
+	return app
+}
+
 // Get see HttpServer.Get
 func Get(rootpath string, f FilterFunc) *HttpServer {
 	return BeeApp.Get(rootpath, f)

@@ -333,7 +333,7 @@ func (p *ControllerRegister) GiveBackContext(ctx *beecontext.Context) {
 	p.pool.Put(ctx)
 }
 
-// RouterGet add post method
+// RouterGet add get method
 // usage:
 //    type MyController struct {
 //	     web.Controller
@@ -345,6 +345,104 @@ func (p *ControllerRegister) GiveBackContext(ctx *beecontext.Context) {
 //    RouterGet("/api/:id", MyController.Ping)
 func (p *ControllerRegister) RouterGet(pattern string, f interface{}) {
 	p.AddRouterMethod(http.MethodGet, pattern, f)
+}
+
+// RouterPost add post method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    RouterPost("/api/:id", MyController.Ping)
+func (p *ControllerRegister) RouterPost(pattern string, f interface{}) {
+	p.AddRouterMethod(http.MethodPost, pattern, f)
+}
+
+// RouterHead add post method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    RouterHead("/api/:id", MyController.Ping)
+func (p *ControllerRegister) RouterHead(pattern string, f interface{}) {
+	p.AddRouterMethod(http.MethodHead, pattern, f)
+}
+
+// RouterPut add post method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    RouterPut("/api/:id", MyController.Ping)
+func (p *ControllerRegister) RouterPut(pattern string, f interface{}) {
+	p.AddRouterMethod(http.MethodPut, pattern, f)
+}
+
+// RouterPatch add post method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    RouterPatch("/api/:id", MyController.Ping)
+func (p *ControllerRegister) RouterPatch(pattern string, f interface{}) {
+	p.AddRouterMethod(http.MethodPatch, pattern, f)
+}
+
+// RouterDelete add post method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    RouterDelete("/api/:id", MyController.Ping)
+func (p *ControllerRegister) RouterDelete(pattern string, f interface{}) {
+	p.AddRouterMethod(http.MethodDelete, pattern, f)
+}
+
+// RouterOptions add post method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    RouterOptions("/api/:id", MyController.Ping)
+func (p *ControllerRegister) RouterOptions(pattern string, f interface{}) {
+	p.AddRouterMethod(http.MethodOptions, pattern, f)
+}
+
+// RouterAny add post method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    RouterAny("/api/:id", MyController.Ping)
+func (p *ControllerRegister) RouterAny(pattern string, f interface{}) {
+	p.AddRouterMethod("*", pattern, f)
 }
 
 // AddRouterMethod add http method router
