@@ -503,7 +503,7 @@ func (app *HttpServer) RouterPost(rootpath string, f interface{}) *HttpServer {
 
 // RouterHead see HttpServer.RouterHead
 func RouterHead(rootpath string, f interface{}) {
-	BeeApp.RouterPost(rootpath, f)
+	BeeApp.RouterHead(rootpath, f)
 }
 
 // RouterHead used to register router for RouterHead method
@@ -523,7 +523,7 @@ func (app *HttpServer) RouterHead(rootpath string, f interface{}) *HttpServer {
 
 // RouterPut see HttpServer.RouterPut
 func RouterPut(rootpath string, f interface{}) {
-	BeeApp.RouterPost(rootpath, f)
+	BeeApp.RouterPut(rootpath, f)
 }
 
 // RouterPut used to register router for RouterPut method
@@ -603,7 +603,7 @@ func (app *HttpServer) RouterOptions(rootpath string, f interface{}) *HttpServer
 
 // RouterAny see HttpServer.RouterAny
 func RouterAny(rootpath string, f interface{}) {
-	BeeApp.RouterOptions(rootpath, f)
+	BeeApp.RouterAny(rootpath, f)
 }
 
 // RouterAny used to register router for RouterAny method

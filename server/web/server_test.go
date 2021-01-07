@@ -15,6 +15,8 @@
 package web
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -27,4 +29,83 @@ func TestNewHttpServerWithCfg(t *testing.T) {
 	svr.Cfg.AppName = "hello"
 	assert.Equal(t, "hello", BConfig.AppName)
 
+}
+
+func TestServerRouterGet(t *testing.T) {
+	r, _ := http.NewRequest(http.MethodGet, "/user", nil)
+	w := httptest.NewRecorder()
+
+	RouterGet("/user", ExampleController.Ping)
+	BeeApp.Handlers.ServeHTTP(w, r)
+	if w.Body.String() != exampleBody {
+		t.Errorf("TestServerRouterGet can't run")
+	}
+}
+
+func TestServerRouterPost(t *testing.T) {
+	r, _ := http.NewRequest(http.MethodPost, "/user", nil)
+	w := httptest.NewRecorder()
+
+	RouterPost("/user", ExampleController.Ping)
+	BeeApp.Handlers.ServeHTTP(w, r)
+	if w.Body.String() != exampleBody {
+		t.Errorf("TestServerRouterPost can't run")
+	}
+}
+
+func TestServerRouterHead(t *testing.T) {
+	r, _ := http.NewRequest(http.MethodHead, "/user", nil)
+	w := httptest.NewRecorder()
+
+	RouterHead("/user", ExampleController.Ping)
+	BeeApp.Handlers.ServeHTTP(w, r)
+	if w.Body.String() != exampleBody {
+		t.Errorf("TestServerRouterHead can't run")
+	}
+}
+
+func TestServerRouterPut(t *testing.T) {
+	r, _ := http.NewRequest(http.MethodPut, "/user", nil)
+	w := httptest.NewRecorder()
+
+	RouterPut("/user", ExampleController.Ping)
+	BeeApp.Handlers.ServeHTTP(w, r)
+	if w.Body.String() != exampleBody {
+		t.Errorf("TestServerRouterPut can't run")
+	}
+}
+
+func TestServerRouterPatch(t *testing.T) {
+	r, _ := http.NewRequest(http.MethodPatch, "/user", nil)
+	w := httptest.NewRecorder()
+
+	RouterPatch("/user", ExampleController.Ping)
+	BeeApp.Handlers.ServeHTTP(w, r)
+	if w.Body.String() != exampleBody {
+		t.Errorf("TestServerRouterPatch can't run")
+	}
+}
+
+func TestServerRouterDelete(t *testing.T) {
+	r, _ := http.NewRequest(http.MethodDelete, "/user", nil)
+	w := httptest.NewRecorder()
+
+	RouterDelete("/user", ExampleController.Ping)
+	BeeApp.Handlers.ServeHTTP(w, r)
+	if w.Body.String() != exampleBody {
+		t.Errorf("TestServerRouterDelete can't run")
+	}
+}
+
+func TestServerRouterAny(t *testing.T) {
+	RouterAny("/user", ExampleController.Ping)
+
+	for method, _ := range HTTPMETHOD {
+		r, _ := http.NewRequest(method, "/user", nil)
+		w := httptest.NewRecorder()
+		BeeApp.Handlers.ServeHTTP(w, r)
+		if w.Body.String() != exampleBody {
+			t.Errorf("TestServerRouterAny can't run")
+		}
+	}
 }

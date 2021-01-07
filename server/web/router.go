@@ -361,7 +361,7 @@ func (p *ControllerRegister) RouterPost(pattern string, f interface{}) {
 	p.AddRouterMethod(http.MethodPost, pattern, f)
 }
 
-// RouterHead add post method
+// RouterHead add head method
 // usage:
 //    type MyController struct {
 //	     web.Controller
@@ -375,7 +375,7 @@ func (p *ControllerRegister) RouterHead(pattern string, f interface{}) {
 	p.AddRouterMethod(http.MethodHead, pattern, f)
 }
 
-// RouterPut add post method
+// RouterPut add put method
 // usage:
 //    type MyController struct {
 //	     web.Controller
@@ -389,7 +389,7 @@ func (p *ControllerRegister) RouterPut(pattern string, f interface{}) {
 	p.AddRouterMethod(http.MethodPut, pattern, f)
 }
 
-// RouterPatch add post method
+// RouterPatch add patch method
 // usage:
 //    type MyController struct {
 //	     web.Controller
@@ -403,7 +403,7 @@ func (p *ControllerRegister) RouterPatch(pattern string, f interface{}) {
 	p.AddRouterMethod(http.MethodPatch, pattern, f)
 }
 
-// RouterDelete add post method
+// RouterDelete add delete method
 // usage:
 //    type MyController struct {
 //	     web.Controller
@@ -417,7 +417,7 @@ func (p *ControllerRegister) RouterDelete(pattern string, f interface{}) {
 	p.AddRouterMethod(http.MethodDelete, pattern, f)
 }
 
-// RouterOptions add post method
+// RouterOptions add options method
 // usage:
 //    type MyController struct {
 //	     web.Controller
@@ -431,7 +431,7 @@ func (p *ControllerRegister) RouterOptions(pattern string, f interface{}) {
 	p.AddRouterMethod(http.MethodOptions, pattern, f)
 }
 
-// RouterAny add post method
+// RouterAny add all method
 // usage:
 //    type MyController struct {
 //	     web.Controller
@@ -467,8 +467,20 @@ func (p *ControllerRegister) AddRouterMethod(method, pattern string, f interface
 	route.routerType = routerTypeBeego
 	route.sessionOn = p.cfg.WebConfig.Session.SessionOn
 	route.controllerType = ct
-	route.methods = map[string]string{method: methodName}
-	p.addToRouter(method, pattern, route)
+
+	methods := make(map[string]string)
+	if method == "*" {
+		for val := range HTTPMETHOD {
+			methods[val] = methodName
+		}
+	} else {
+		methods[method] = methodName
+	}
+	route.methods = methods
+
+	for method, _ := range methods {
+		p.addToRouter(method, pattern, route)
+	}
 }
 
 // get reflect controller type and method by controller method expression
