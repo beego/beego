@@ -912,7 +912,7 @@ func TestRouterRouterAny(t *testing.T) {
 	handler := NewControllerRegister()
 	handler.RouterAny("/user", ExampleController.Ping)
 
-	for method, _ := range HTTPMETHOD {
+	for method := range HTTPMETHOD {
 		w := httptest.NewRecorder()
 		r, _ := http.NewRequest(method, "/user", nil)
 		handler.ServeHTTP(w, r)

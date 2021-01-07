@@ -478,7 +478,7 @@ func (p *ControllerRegister) AddRouterMethod(method, pattern string, f interface
 	}
 	route.methods = methods
 
-	for method, _ := range methods {
+	for method := range methods {
 		p.addToRouter(method, pattern, route)
 	}
 }

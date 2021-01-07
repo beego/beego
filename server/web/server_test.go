@@ -100,7 +100,7 @@ func TestServerRouterDelete(t *testing.T) {
 func TestServerRouterAny(t *testing.T) {
 	RouterAny("/user", ExampleController.Ping)
 
-	for method, _ := range HTTPMETHOD {
+	for method := range HTTPMETHOD {
 		r, _ := http.NewRequest(method, "/user", nil)
 		w := httptest.NewRecorder()
 		BeeApp.Handlers.ServeHTTP(w, r)
