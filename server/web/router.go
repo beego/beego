@@ -139,6 +139,12 @@ func WithRouterSessionOn(sessionOn bool) ControllerOption {
 	}
 }
 
+type filterChainConfig struct {
+	pattern string
+	chain FilterChain
+	opts []FilterOpt
+}
+
 // ControllerRegister containers registered router rules, controller handlers and filters.
 type ControllerRegister struct {
 	routers      map[string]*Tree
@@ -150,6 +156,9 @@ type ControllerRegister struct {
 
 	// the filter created by FilterChain
 	chainRoot *FilterRouter
+
+	// keep registered chain and build it when serve http
+	filterChains []filterChainConfig
 
 	cfg *Config
 }
@@ -171,9 +180,21 @@ func NewControllerRegisterWithCfg(cfg *Config) *ControllerRegister {
 			},
 		},
 		cfg: cfg,
+		filterChains: make([]filterChainConfig, 0, 4),
 	}
 	res.chainRoot = newFilterRouter("/*", res.serveHttp, WithCaseSensitive(false))
 	return res
+}
+
+// Init will be executed when HttpServer start running
+func (p *ControllerRegister) Init() {
+	for i := len(p.filterChains) - 1; i >= 0 ; i --  {
+		fc := p.filterChains[i]
+		root := p.chainRoot
+		filterFunc := fc.chain(root.filterFunc)
+		p.chainRoot = newFilterRouter(fc.pattern, filterFunc, fc.opts...)
+		p.chainRoot.next = root
+	}
 }
 
 // Add controller handler and pattern rules to ControllerRegister.
@@ -513,12 +534,13 @@ func (p *ControllerRegister) InsertFilter(pattern string, pos int, filter Filter
 //     }
 // }
 func (p *ControllerRegister) InsertFilterChain(pattern string, chain FilterChain, opts ...FilterOpt) {
-	root := p.chainRoot
-	filterFunc := chain(root.filterFunc)
-	opts = append(opts, WithCaseSensitive(p.cfg.RouterCaseSensitive))
-	p.chainRoot = newFilterRouter(pattern, filterFunc, opts...)
-	p.chainRoot.next = root
 
+	opts = append(opts, WithCaseSensitive(p.cfg.RouterCaseSensitive))
+	p.filterChains = append(p.filterChains, filterChainConfig{
+		pattern: pattern,
+		chain: chain,
+		opts: opts,
+	})
 }
 
 // add Filter into
