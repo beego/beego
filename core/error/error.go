@@ -3,6 +3,7 @@ package error
 import (
 	"fmt"
 	"github.com/beego/beego/v2/core/codes"
+	"strconv"
 )
 
 type Error struct {
@@ -26,7 +27,8 @@ func Errorf(c codes.Code, format string, a ...interface{}) error {
 }
 
 func (e *Error) Error() string {
-	return fmt.Sprintf("beego error: code = %s desc = %s", e.GetCode(), e.GetMessage())
+	codeSrt := strconv.FormatUint(uint64(e.GetCode()), 10)
+	return fmt.Sprintf("beego error: code = %s desc = %s", codeSrt, e.GetMessage())
 }
 
 func (x *Error) GetCode() codes.Code {
