@@ -18,6 +18,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -37,4 +38,5 @@ func TestFilterChain(t *testing.T) {
 	ctx.Input.SetData("RouterPattern", "my-route")
 	filter(ctx)
 	assert.True(t, ctx.Input.GetData("invocation").(bool))
+	time.Sleep(1 * time.Second)
 }
