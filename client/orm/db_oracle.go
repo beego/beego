@@ -15,6 +15,7 @@
 package orm
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -89,8 +90,8 @@ func (d *dbBaseOracle) ShowColumnsQuery(table string) string {
 }
 
 // check index is exist
-func (d *dbBaseOracle) IndexExists(db dbQuerier, table string, name string) bool {
-	row := db.QueryRow("SELECT COUNT(*) FROM USER_IND_COLUMNS, USER_INDEXES "+
+func (d *dbBaseOracle) IndexExists(ctx context.Context, db dbQuerier, table string, name string) bool {
+	row := db.QueryRowContext(ctx, "SELECT COUNT(*) FROM USER_IND_COLUMNS, USER_INDEXES "+
 		"WHERE USER_IND_COLUMNS.INDEX_NAME = USER_INDEXES.INDEX_NAME "+
 		"AND  USER_IND_COLUMNS.TABLE_NAME = ? AND USER_IND_COLUMNS.INDEX_NAME = ?", strings.ToUpper(table), strings.ToUpper(name))
 
@@ -124,7 +125,7 @@ func (d *dbBaseOracle) GenerateSpecifyIndex(tableName string, useIndex int, inde
 
 // execute insert sql with given struct and given values.
 // insert the given values, not the field values in struct.
-func (d *dbBaseOracle) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, names []string, values []interface{}) (int64, error) {
+func (d *dbBaseOracle) InsertValue(ctx context.Context, q dbQuerier, mi *modelInfo, isMulti bool, names []string, values []interface{}) (int64, error) {
 	Q := d.ins.TableQuote()
 
 	marks := make([]string, len(names))
@@ -147,7 +148,7 @@ func (d *dbBaseOracle) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, nam
 	d.ins.ReplaceMarks(&query)
 
 	if isMulti || !d.ins.HasReturningID(mi, &query) {
-		res, err := q.Exec(query, values...)
+		res, err := q.ExecContext(ctx, query, values...)
 		if err == nil {
 			if isMulti {
 				return res.RowsAffected()
@@ -163,7 +164,7 @@ func (d *dbBaseOracle) InsertValue(q dbQuerier, mi *modelInfo, isMulti bool, nam
 		}
 		return 0, err
 	}
-	row := q.QueryRow(query, values...)
+	row := q.QueryRowContext(ctx, query, values...)
 	var id int64
 	err := row.Scan(&id)
 	return id, err

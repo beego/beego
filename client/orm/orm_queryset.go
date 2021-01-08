@@ -17,8 +17,9 @@ package orm
 import (
 	"context"
 	"fmt"
-	"github.com/beego/beego/v2/client/orm/hints"
+
 	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
+	"github.com/beego/beego/v2/client/orm/hints"
 )
 
 type colValue struct {
@@ -64,22 +65,21 @@ func ColValue(opt operator, value interface{}) interface{} {
 
 // real query struct
 type querySet struct {
-	mi         *modelInfo
-	cond       *Condition
-	related    []string
-	relDepth   int
-	limit      int64
-	offset     int64
-	groups     []string
-	orders     []*order_clause.Order
-	distinct   bool
-	forUpdate  bool
-	useIndex   int
-	indexes    []string
-	orm        *ormBase
-	ctx        context.Context
-	forContext bool
-	aggregate  string
+	mi        *modelInfo
+	cond      *Condition
+	related   []string
+	relDepth  int
+	limit     int64
+	offset    int64
+	groups    []string
+	orders    []*order_clause.Order
+	distinct  bool
+	forUpdate bool
+	useIndex  int
+	indexes   []string
+	orm       *ormBase
+	ctx       context.Context
+	aggregate string
 }
 
 var _ QuerySeter = new(querySet)
@@ -221,25 +221,36 @@ func (o querySet) GetCond() *Condition {
 	return o.cond
 }
 
+func (o querySet) getContext() context.Context {
+	if o.ctx != nil {
+		return o.ctx
+	}
+	return context.Background()
+}
+
 // return QuerySeter execution result number
 func (o *querySet) Count() (int64, error) {
-	return o.orm.alias.DbBaser.Count(o.orm.db, o, o.mi, o.cond, o.orm.alias.TZ)
+	ctx := o.getContext()
+	return o.orm.alias.DbBaser.Count(ctx, o.orm.db, o, o.mi, o.cond, o.orm.alias.TZ)
 }
 
 // check result empty or not after QuerySeter executed
 func (o *querySet) Exist() bool {
-	cnt, _ := o.orm.alias.DbBaser.Count(o.orm.db, o, o.mi, o.cond, o.orm.alias.TZ)
+	ctx := o.getContext()
+	cnt, _ := o.orm.alias.DbBaser.Count(ctx, o.orm.db, o, o.mi, o.cond, o.orm.alias.TZ)
 	return cnt > 0
 }
 
 // execute update with parameters
 func (o *querySet) Update(values Params) (int64, error) {
-	return o.orm.alias.DbBaser.UpdateBatch(o.orm.db, o, o.mi, o.cond, values, o.orm.alias.TZ)
+	ctx := o.getContext()
+	return o.orm.alias.DbBaser.UpdateBatch(ctx, o.orm.db, o, o.mi, o.cond, values, o.orm.alias.TZ)
 }
 
 // execute delete
 func (o *querySet) Delete() (int64, error) {
-	return o.orm.alias.DbBaser.DeleteBatch(o.orm.db, o, o.mi, o.cond, o.orm.alias.TZ)
+	ctx := o.getContext()
+	return o.orm.alias.DbBaser.DeleteBatch(ctx, o.orm.db, o, o.mi, o.cond, o.orm.alias.TZ)
 }
 
 // return a insert queryer.
@@ -248,20 +259,23 @@ func (o *querySet) Delete() (int64, error) {
 // 	i,err := sq.PrepareInsert()
 // 	i.Add(&user1{},&user2{})
 func (o *querySet) PrepareInsert() (Inserter, error) {
-	return newInsertSet(o.orm, o.mi)
+	ctx := o.getContext()
+	return newInsertSet(ctx, o.orm, o.mi)
 }
 
 // query all data and map to containers.
 // cols means the columns when querying.
 func (o *querySet) All(container interface{}, cols ...string) (int64, error) {
-	return o.orm.alias.DbBaser.ReadBatch(o.orm.db, o, o.mi, o.cond, container, o.orm.alias.TZ, cols)
+	ctx := o.getContext()
+	return o.orm.alias.DbBaser.ReadBatch(ctx, o.orm.db, o, o.mi, o.cond, container, o.orm.alias.TZ, cols)
 }
 
 // query one row data and map to containers.
 // cols means the columns when querying.
 func (o *querySet) One(container interface{}, cols ...string) error {
+	ctx := o.getContext()
 	o.limit = 1
-	num, err := o.orm.alias.DbBaser.ReadBatch(o.orm.db, o, o.mi, o.cond, container, o.orm.alias.TZ, cols)
+	num, err := o.orm.alias.DbBaser.ReadBatch(ctx, o.orm.db, o, o.mi, o.cond, container, o.orm.alias.TZ, cols)
 	if err != nil {
 		return err
 	}
@@ -279,19 +293,22 @@ func (o *querySet) One(container interface{}, cols ...string) error {
 // expres means condition expression.
 // it converts data to []map[column]value.
 func (o *querySet) Values(results *[]Params, exprs ...string) (int64, error) {
-	return o.orm.alias.DbBaser.ReadValues(o.orm.db, o, o.mi, o.cond, exprs, results, o.orm.alias.TZ)
+	ctx := o.getContext()
+	return o.orm.alias.DbBaser.ReadValues(ctx, o.orm.db, o, o.mi, o.cond, exprs, results, o.orm.alias.TZ)
 }
 
 // query all data and map to [][]interface
 // it converts data to [][column_index]value
 func (o *querySet) ValuesList(results *[]ParamsList, exprs ...string) (int64, error) {
-	return o.orm.alias.DbBaser.ReadValues(o.orm.db, o, o.mi, o.cond, exprs, results, o.orm.alias.TZ)
+	ctx := o.getContext()
+	return o.orm.alias.DbBaser.ReadValues(ctx, o.orm.db, o, o.mi, o.cond, exprs, results, o.orm.alias.TZ)
 }
 
 // query all data and map to []interface.
 // it's designed for one row record set, auto change to []value, not [][column]value.
 func (o *querySet) ValuesFlat(result *ParamsList, expr string) (int64, error) {
-	return o.orm.alias.DbBaser.ReadValues(o.orm.db, o, o.mi, o.cond, []string{expr}, result, o.orm.alias.TZ)
+	ctx := o.getContext()
+	return o.orm.alias.DbBaser.ReadValues(ctx, o.orm.db, o, o.mi, o.cond, []string{expr}, result, o.orm.alias.TZ)
 }
 
 // query all rows into map[string]interface with specify key and value column name.
@@ -325,7 +342,6 @@ func (o *querySet) RowsToStruct(ptrStruct interface{}, keyCol, valueCol string) 
 // set context to QuerySeter.
 func (o querySet) WithContext(ctx context.Context) QuerySeter {
 	o.ctx = ctx
-	o.forContext = true
 	return &o
 }
 

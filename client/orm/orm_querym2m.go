@@ -14,10 +14,14 @@
 
 package orm
 
-import "reflect"
+import (
+	"context"
+	"reflect"
+)
 
 // model to model struct
 type queryM2M struct {
+	ctx context.Context
 	md  interface{}
 	mi  *modelInfo
 	fi  *fieldInfo
@@ -96,7 +100,7 @@ func (o *queryM2M) Add(mds ...interface{}) (int64, error) {
 	}
 	names = append(names, otherNames...)
 	values = append(values, otherValues...)
-	return dbase.InsertValue(orm.db, mi, true, names, values)
+	return dbase.InsertValue(o.ctx, orm.db, mi, true, names, values)
 }
 
 // remove models following the origin model relationship
@@ -129,12 +133,13 @@ func (o *queryM2M) Count() (int64, error) {
 var _ QueryM2Mer = new(queryM2M)
 
 // create new M2M queryer.
-func newQueryM2M(md interface{}, o *ormBase, mi *modelInfo, fi *fieldInfo, ind reflect.Value) QueryM2Mer {
+func newQueryM2M(ctx context.Context, md interface{}, o *ormBase, mi *modelInfo, fi *fieldInfo, ind reflect.Value) QueryM2Mer {
 	qm2m := new(queryM2M)
+	qm2m.ctx = ctx
 	qm2m.md = md
 	qm2m.mi = mi
 	qm2m.fi = fi
 	qm2m.ind = ind
-	qm2m.qs = newQuerySet(o, fi.relThroughModelInfo).(*querySet)
+	qm2m.qs = newQuerySet(o, fi.relThroughModelInfo).WithContext(ctx).(*querySet)
 	return qm2m
 }

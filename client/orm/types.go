@@ -236,6 +236,8 @@ type Inserter interface {
 
 // QuerySeter query seter
 type QuerySeter interface {
+	// add query context for querySeter
+	WithContext(context.Context) QuerySeter
 	// add condition expression to QuerySeter.
 	// for example:
 	//	filter by UserName == 'slene'
@@ -539,11 +541,11 @@ type RawSeter interface {
 type stmtQuerier interface {
 	Close() error
 	Exec(args ...interface{}) (sql.Result, error)
-	// ExecContext(ctx context.Context, args ...interface{}) (sql.Result, error)
+	ExecContext(ctx context.Context, args ...interface{}) (sql.Result, error)
 	Query(args ...interface{}) (*sql.Rows, error)
-	// QueryContext(args ...interface{}) (*sql.Rows, error)
+	QueryContext(ctx context.Context, args ...interface{}) (*sql.Rows, error)
 	QueryRow(args ...interface{}) *sql.Row
-	// QueryRowContext(ctx context.Context, args ...interface{}) *sql.Row
+	QueryRowContext(ctx context.Context, args ...interface{}) *sql.Row
 }
 
 // db querier
@@ -580,28 +582,28 @@ type txEnder interface {
 
 // base database struct
 type dbBaser interface {
-	Read(dbQuerier, *modelInfo, reflect.Value, *time.Location, []string, bool) error
-	ReadBatch(dbQuerier, *querySet, *modelInfo, *Condition, interface{}, *time.Location, []string) (int64, error)
-	Count(dbQuerier, *querySet, *modelInfo, *Condition, *time.Location) (int64, error)
-	ReadValues(dbQuerier, *querySet, *modelInfo, *Condition, []string, interface{}, *time.Location) (int64, error)
+	Read(context.Context, dbQuerier, *modelInfo, reflect.Value, *time.Location, []string, bool) error
+	ReadBatch(context.Context, dbQuerier, *querySet, *modelInfo, *Condition, interface{}, *time.Location, []string) (int64, error)
+	Count(context.Context, dbQuerier, *querySet, *modelInfo, *Condition, *time.Location) (int64, error)
+	ReadValues(context.Context, dbQuerier, *querySet, *modelInfo, *Condition, []string, interface{}, *time.Location) (int64, error)
 
-	Insert(dbQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
-	InsertOrUpdate(dbQuerier, *modelInfo, reflect.Value, *alias, ...string) (int64, error)
-	InsertMulti(dbQuerier, *modelInfo, reflect.Value, int, *time.Location) (int64, error)
-	InsertValue(dbQuerier, *modelInfo, bool, []string, []interface{}) (int64, error)
-	InsertStmt(stmtQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
+	Insert(context.Context, dbQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
+	InsertOrUpdate(context.Context, dbQuerier, *modelInfo, reflect.Value, *alias, ...string) (int64, error)
+	InsertMulti(context.Context, dbQuerier, *modelInfo, reflect.Value, int, *time.Location) (int64, error)
+	InsertValue(context.Context, dbQuerier, *modelInfo, bool, []string, []interface{}) (int64, error)
+	InsertStmt(context.Context, stmtQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
 
-	Update(dbQuerier, *modelInfo, reflect.Value, *time.Location, []string) (int64, error)
-	UpdateBatch(dbQuerier, *querySet, *modelInfo, *Condition, Params, *time.Location) (int64, error)
+	Update(context.Context, dbQuerier, *modelInfo, reflect.Value, *time.Location, []string) (int64, error)
+	UpdateBatch(context.Context, dbQuerier, *querySet, *modelInfo, *Condition, Params, *time.Location) (int64, error)
 
-	Delete(dbQuerier, *modelInfo, reflect.Value, *time.Location, []string) (int64, error)
-	DeleteBatch(dbQuerier, *querySet, *modelInfo, *Condition, *time.Location) (int64, error)
+	Delete(context.Context, dbQuerier, *modelInfo, reflect.Value, *time.Location, []string) (int64, error)
+	DeleteBatch(context.Context, dbQuerier, *querySet, *modelInfo, *Condition, *time.Location) (int64, error)
 
 	SupportUpdateJoin() bool
 	OperatorSQL(string) string
 	GenerateOperatorSQL(*modelInfo, *fieldInfo, string, []interface{}, *time.Location) (string, []interface{})
 	GenerateOperatorLeftCol(*fieldInfo, string, *string)
-	PrepareInsert(dbQuerier, *modelInfo) (stmtQuerier, string, error)
+	PrepareInsert(context.Context, dbQuerier, *modelInfo) (stmtQuerier, string, error)
 	MaxLimit() uint64
 	TableQuote() string
 	ReplaceMarks(*string)
@@ -610,12 +612,12 @@ type dbBaser interface {
 	TimeToDB(*time.Time, *time.Location)
 	DbTypes() map[string]string
 	GetTables(dbQuerier) (map[string]bool, error)
-	GetColumns(dbQuerier, string) (map[string][3]string, error)
+	GetColumns(context.Context, dbQuerier, string) (map[string][3]string, error)
 	ShowTablesQuery() string
 	ShowColumnsQuery(string) string
-	IndexExists(dbQuerier, string, string) bool
+	IndexExists(context.Context, dbQuerier, string, string) bool
 	collectFieldValue(*modelInfo, *fieldInfo, reflect.Value, bool, *time.Location) (interface{}, error)
-	setval(dbQuerier, *modelInfo, []string) error
+	setval(context.Context, dbQuerier, *modelInfo, []string) error
 
 	GenerateSpecifyIndex(tableName string, useIndex int, indexes []string) string
 }

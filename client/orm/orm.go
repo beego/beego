@@ -136,7 +136,7 @@ func (o *ormBase) Read(md interface{}, cols ...string) error {
 }
 func (o *ormBase) ReadWithCtx(ctx context.Context, md interface{}, cols ...string) error {
 	mi, ind := o.getMiInd(md, true)
-	return o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols, false)
+	return o.alias.DbBaser.Read(ctx, o.db, mi, ind, o.alias.TZ, cols, false)
 }
 
 // read data to model, like Read(), but use "SELECT FOR UPDATE" form
@@ -145,7 +145,7 @@ func (o *ormBase) ReadForUpdate(md interface{}, cols ...string) error {
 }
 func (o *ormBase) ReadForUpdateWithCtx(ctx context.Context, md interface{}, cols ...string) error {
 	mi, ind := o.getMiInd(md, true)
-	return o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols, true)
+	return o.alias.DbBaser.Read(ctx, o.db, mi, ind, o.alias.TZ, cols, true)
 }
 
 // Try to read a row from the database, or insert one if it doesn't exist
@@ -155,7 +155,7 @@ func (o *ormBase) ReadOrCreate(md interface{}, col1 string, cols ...string) (boo
 func (o *ormBase) ReadOrCreateWithCtx(ctx context.Context, md interface{}, col1 string, cols ...string) (bool, int64, error) {
 	cols = append([]string{col1}, cols...)
 	mi, ind := o.getMiInd(md, true)
-	err := o.alias.DbBaser.Read(o.db, mi, ind, o.alias.TZ, cols, false)
+	err := o.alias.DbBaser.Read(ctx, o.db, mi, ind, o.alias.TZ, cols, false)
 	if err == ErrNoRows {
 		// Create
 		id, err := o.InsertWithCtx(ctx, md)
@@ -180,7 +180,7 @@ func (o *ormBase) Insert(md interface{}) (int64, error) {
 }
 func (o *ormBase) InsertWithCtx(ctx context.Context, md interface{}) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
-	id, err := o.alias.DbBaser.Insert(o.db, mi, ind, o.alias.TZ)
+	id, err := o.alias.DbBaser.Insert(ctx, o.db, mi, ind, o.alias.TZ)
 	if err != nil {
 		return id, err
 	}
@@ -223,7 +223,7 @@ func (o *ormBase) InsertMultiWithCtx(ctx context.Context, bulk int, mds interfac
 		for i := 0; i < sind.Len(); i++ {
 			ind := reflect.Indirect(sind.Index(i))
 			mi, _ := o.getMiInd(ind.Interface(), false)
-			id, err := o.alias.DbBaser.Insert(o.db, mi, ind, o.alias.TZ)
+			id, err := o.alias.DbBaser.Insert(ctx, o.db, mi, ind, o.alias.TZ)
 			if err != nil {
 				return cnt, err
 			}
@@ -234,7 +234,7 @@ func (o *ormBase) InsertMultiWithCtx(ctx context.Context, bulk int, mds interfac
 		}
 	} else {
 		mi, _ := o.getMiInd(sind.Index(0).Interface(), false)
-		return o.alias.DbBaser.InsertMulti(o.db, mi, sind, bulk, o.alias.TZ)
+		return o.alias.DbBaser.InsertMulti(ctx, o.db, mi, sind, bulk, o.alias.TZ)
 	}
 	return cnt, nil
 }
@@ -245,7 +245,7 @@ func (o *ormBase) InsertOrUpdate(md interface{}, colConflictAndArgs ...string) (
 }
 func (o *ormBase) InsertOrUpdateWithCtx(ctx context.Context, md interface{}, colConflitAndArgs ...string) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
-	id, err := o.alias.DbBaser.InsertOrUpdate(o.db, mi, ind, o.alias, colConflitAndArgs...)
+	id, err := o.alias.DbBaser.InsertOrUpdate(ctx, o.db, mi, ind, o.alias, colConflitAndArgs...)
 	if err != nil {
 		return id, err
 	}
@@ -262,7 +262,7 @@ func (o *ormBase) Update(md interface{}, cols ...string) (int64, error) {
 }
 func (o *ormBase) UpdateWithCtx(ctx context.Context, md interface{}, cols ...string) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
-	return o.alias.DbBaser.Update(o.db, mi, ind, o.alias.TZ, cols)
+	return o.alias.DbBaser.Update(ctx, o.db, mi, ind, o.alias.TZ, cols)
 }
 
 // delete model in database
@@ -272,7 +272,7 @@ func (o *ormBase) Delete(md interface{}, cols ...string) (int64, error) {
 }
 func (o *ormBase) DeleteWithCtx(ctx context.Context, md interface{}, cols ...string) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
-	num, err := o.alias.DbBaser.Delete(o.db, mi, ind, o.alias.TZ, cols)
+	num, err := o.alias.DbBaser.Delete(ctx, o.db, mi, ind, o.alias.TZ, cols)
 	if err != nil {
 		return num, err
 	}
@@ -297,7 +297,7 @@ func (o *ormBase) QueryM2MWithCtx(ctx context.Context, md interface{}, name stri
 		panic(fmt.Errorf("<Ormer.QueryM2M> model `%s` . name `%s` is not a m2m field", fi.name, mi.fullName))
 	}
 
-	return newQueryM2M(md, o, mi, fi, ind)
+	return newQueryM2M(ctx, md, o, mi, fi, ind)
 }
 
 // load related models to md model.
@@ -470,7 +470,7 @@ func (o *ormBase) QueryTableWithCtx(ctx context.Context, ptrStructOrTableName in
 	if qs == nil {
 		panic(fmt.Errorf("<Ormer.QueryTable> table name: `%s` not exists", name))
 	}
-	return
+	return qs.WithContext(ctx)
 }
 
 // return a raw query seter for raw sql string.
@@ -596,9 +596,8 @@ func NewOrm() Ormer {
 func NewOrmUsingDB(aliasName string) Ormer {
 	if al, ok := dataBaseCache.get(aliasName); ok {
 		return newDBWithAlias(al)
-	} else {
-		panic(fmt.Errorf("<Ormer.Using> unknown db alias name `%s`", aliasName))
 	}
+	panic(fmt.Errorf("<Ormer.Using> unknown db alias name `%s`", aliasName))
 }
 
 // NewOrmWithDB create a new ormer object with specify *sql.DB for query
