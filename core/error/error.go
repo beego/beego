@@ -1,17 +1,17 @@
 package error
 
-import "fmt"
-import "github.com/beego/beego/v2/core/codes"
-
-type Code int32
+import (
+	"fmt"
+	"github.com/beego/beego/v2/core/codes"
+)
 
 type Error struct {
-    Code Code
+    Code codes.Code
     Msg string
 }
 
 // New returns a Error representing c and msg.
-func New(c Code, msg string) *Error {
+func New(c codes.Code, msg string) *Error {
     return &Error{Code: c, Msg: msg}
 }
 
@@ -29,7 +29,7 @@ func (e *Error) Error() string {
 	return fmt.Sprintf("beego error: code = %s desc = %s", e.GetCode(), e.GetMessage())
 }
 
-func (x *Error) GetCode() Code {
+func (x *Error) GetCode() codes.Code {
 	if x != nil {
 		return x.Code
 	}
