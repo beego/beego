@@ -84,7 +84,9 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 
 	initBeforeHTTPRun()
 
+	// init...
 	app.initAddr(addr)
+	app.Handlers.Init()
 
 	addr = app.Cfg.Listen.HTTPAddr
 
@@ -266,8 +268,12 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 }
 
 // Router see HttpServer.Router
-func Router(rootpath string, c ControllerInterface, opts ...ControllerOptions) *HttpServer {
-	return BeeApp.Router(rootpath, c, opts...)
+func Router(rootpath string, c ControllerInterface, mappingMethods ...string) *HttpServer {
+	return RouterWithOpts(rootpath, c, WithRouterMethods(c, mappingMethods...))
+}
+
+func RouterWithOpts(rootpath string, c ControllerInterface, opts ...ControllerOption) *HttpServer {
+	return BeeApp.RouterWithOpts(rootpath, c, opts...)
 }
 
 // Router adds a patterned controller handler to BeeApp.
@@ -286,7 +292,11 @@ func Router(rootpath string, c ControllerInterface, opts ...ControllerOptions) *
 //  beego.Router("/api/create",&RestController{},"post:CreateFood")
 //  beego.Router("/api/update",&RestController{},"put:UpdateFood")
 //  beego.Router("/api/delete",&RestController{},"delete:DeleteFood")
-func (app *HttpServer) Router(rootPath string, c ControllerInterface, opts ...ControllerOptions) *HttpServer {
+func (app *HttpServer) Router(rootPath string, c ControllerInterface, mappingMethods ...string) *HttpServer {
+	return app.RouterWithOpts(rootPath, c, WithRouterMethods(c, mappingMethods...))
+}
+
+func (app *HttpServer) RouterWithOpts(rootPath string, c ControllerInterface, opts ...ControllerOption) *HttpServer {
 	app.Handlers.Add(rootPath, c, opts...)
 	return app
 }

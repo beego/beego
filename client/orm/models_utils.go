@@ -109,6 +109,9 @@ func getTableUnique(val reflect.Value) [][]string {
 
 // get whether the table needs to be created for the database alias
 func isApplicableTableForDB(val reflect.Value, db string) bool {
+	if !val.IsValid() {
+		return true
+	}
 	fun := val.MethodByName("IsApplicableTableForDB")
 	if fun.IsValid() {
 		vals := fun.Call([]reflect.Value{reflect.ValueOf(db)})

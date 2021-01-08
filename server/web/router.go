@@ -121,22 +121,28 @@ type ControllerInfo struct {
 	sessionOn      bool
 }
 
-type ControllerOptions func(*ControllerInfo)
+type ControllerOption func(*ControllerInfo)
 
 func (c *ControllerInfo) GetPattern() string {
 	return c.pattern
 }
 
-func SetRouterMethods(ctrlInterface ControllerInterface, mappingMethod ...string) ControllerOptions {
+func WithRouterMethods(ctrlInterface ControllerInterface, mappingMethod ...string) ControllerOption {
 	return func(c *ControllerInfo) {
 		c.methods = parseMappingMethods(ctrlInterface, mappingMethod)
 	}
 }
 
-func SetRouterSessionOn(sessionOn bool) ControllerOptions {
+func WithRouterSessionOn(sessionOn bool) ControllerOption {
 	return func(c *ControllerInfo) {
 		c.sessionOn = sessionOn
 	}
+}
+
+type filterChainConfig struct {
+	pattern string
+	chain FilterChain
+	opts []FilterOpt
 }
 
 // ControllerRegister containers registered router rules, controller handlers and filters.
@@ -150,6 +156,9 @@ type ControllerRegister struct {
 
 	// the filter created by FilterChain
 	chainRoot *FilterRouter
+
+	// keep registered chain and build it when serve http
+	filterChains []filterChainConfig
 
 	cfg *Config
 }
@@ -171,9 +180,21 @@ func NewControllerRegisterWithCfg(cfg *Config) *ControllerRegister {
 			},
 		},
 		cfg: cfg,
+		filterChains: make([]filterChainConfig, 0, 4),
 	}
 	res.chainRoot = newFilterRouter("/*", res.serveHttp, WithCaseSensitive(false))
 	return res
+}
+
+// Init will be executed when HttpServer start running
+func (p *ControllerRegister) Init() {
+	for i := len(p.filterChains) - 1; i >= 0 ; i --  {
+		fc := p.filterChains[i]
+		root := p.chainRoot
+		filterFunc := fc.chain(root.filterFunc)
+		p.chainRoot = newFilterRouter(fc.pattern, filterFunc, fc.opts...)
+		p.chainRoot.next = root
+	}
 }
 
 // Add controller handler and pattern rules to ControllerRegister.
@@ -186,7 +207,7 @@ func NewControllerRegisterWithCfg(cfg *Config) *ControllerRegister {
 //	Add("/api/delete",&RestController{},"delete:DeleteFood")
 //	Add("/api",&RestController{},"get,post:ApiFunc"
 //	Add("/simple",&SimpleController{},"get:GetFunc;post:PostFunc")
-func (p *ControllerRegister) Add(pattern string, c ControllerInterface, opts ...ControllerOptions) {
+func (p *ControllerRegister) Add(pattern string, c ControllerInterface, opts ...ControllerOption) {
 	p.addWithMethodParams(pattern, c, nil, opts...)
 }
 
@@ -239,7 +260,7 @@ func (p *ControllerRegister) addRouterForMethod(route *ControllerInfo) {
 	}
 }
 
-func (p *ControllerRegister) addWithMethodParams(pattern string, c ControllerInterface, methodParams []*param.MethodParam, opts ...ControllerOptions) {
+func (p *ControllerRegister) addWithMethodParams(pattern string, c ControllerInterface, methodParams []*param.MethodParam, opts ...ControllerOption) {
 	reflectVal := reflect.ValueOf(c)
 	t := reflect.Indirect(reflectVal).Type()
 
@@ -311,7 +332,7 @@ func (p *ControllerRegister) Include(cList ...ControllerInterface) {
 					p.InsertFilter(f.Pattern, f.Pos, f.Filter, WithReturnOnOutput(f.ReturnOnOutput), WithResetParams(f.ResetParams))
 				}
 
-				p.addWithMethodParams(a.Router, c, a.MethodParams, SetRouterMethods(c, strings.Join(a.AllowHTTPMethods, ",")+":"+a.Method))
+				p.addWithMethodParams(a.Router, c, a.MethodParams, WithRouterMethods(c, strings.Join(a.AllowHTTPMethods, ",")+":"+a.Method))
 			}
 		}
 	}
@@ -513,12 +534,13 @@ func (p *ControllerRegister) InsertFilter(pattern string, pos int, filter Filter
 //     }
 // }
 func (p *ControllerRegister) InsertFilterChain(pattern string, chain FilterChain, opts ...FilterOpt) {
-	root := p.chainRoot
-	filterFunc := chain(root.filterFunc)
-	opts = append(opts, WithCaseSensitive(p.cfg.RouterCaseSensitive))
-	p.chainRoot = newFilterRouter(pattern, filterFunc, opts...)
-	p.chainRoot.next = root
 
+	opts = append(opts, WithCaseSensitive(p.cfg.RouterCaseSensitive))
+	p.filterChains = append(p.filterChains, filterChainConfig{
+		pattern: pattern,
+		chain: chain,
+		opts: opts,
+	})
 }
 
 // add Filter into
