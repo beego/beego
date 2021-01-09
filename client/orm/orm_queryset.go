@@ -17,8 +17,8 @@ package orm
 import (
 	"context"
 	"fmt"
-	"github.com/astaxie/beego/v2/client/orm/hints"
-	"github.com/astaxie/beego/v2/client/orm/clauses/order_clause"
+	"github.com/beego/beego/v2/client/orm/hints"
+	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
 )
 
 type colValue struct {
