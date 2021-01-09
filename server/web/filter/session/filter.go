@@ -29,7 +29,7 @@ func Session(providerType session.ProviderType, options ...session.ManagerConfig
 			}
 
 			if sess, err := sessionManager.SessionStart(ctx.ResponseWriter, ctx.Request); err != nil {
-				logs.Warning(`init session error:%s`, err.Error())
+				logs.Error(`init session error:%s`, err.Error())
 			} else {
 				//release session at the end of request
 				defer sess.SessionRelease(context.Background(), ctx.ResponseWriter)
