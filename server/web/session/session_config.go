@@ -21,6 +21,12 @@ type ManagerConfig struct {
 	CookieSameSite          http.SameSite `json:"cookieSameSite"`
 }
 
+func (c *ManagerConfig) Opts(opts ...ManagerConfigOpt) {
+	for _, opt := range opts {
+		opt(c)
+	}
+}
+
 type ManagerConfigOpt func(config *ManagerConfig)
 
 func NewManagerConfig(opts ...ManagerConfigOpt) *ManagerConfig {
