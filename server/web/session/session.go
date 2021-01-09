@@ -279,7 +279,10 @@ func (manager *Manager) GetSessionStore(sid string) (sessions Store, err error) 
 // it can do gc in times after gc lifetime.
 func (manager *Manager) GC() {
 	manager.provider.SessionGC(nil)
-	time.AfterFunc(time.Duration(manager.config.Gclifetime)*time.Second, func() { manager.GC() })
+	ticker := time.NewTicker(time.Duration(manager.config.Gclifetime) * time.Second)
+	for range ticker.C {
+		manager.provider.SessionGC(nil)
+	}
 }
 
 // SessionRegenerateID Regenerate a session id for this SessionStore who's id is saving in http request.
