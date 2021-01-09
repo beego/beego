@@ -5,6 +5,7 @@ import (
 	"github.com/beego/beego/v2/server/web"
 	webContext "github.com/beego/beego/v2/server/web/context"
 	"github.com/beego/beego/v2/server/web/session"
+	"github.com/google/uuid"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -21,11 +22,13 @@ func testRequest(t *testing.T, handler *web.ControllerRegister, path string, met
 }
 
 func TestSession(t *testing.T) {
+	storeKey := uuid.New().String()
 	handler := web.NewControllerRegister()
 	handler.InsertFilterChain(
 		"*",
 		Session(
 			session.ProviderMemory,
+			storeKey,
 			session.CfgCookieName(`go_session_id`),
 			session.CfgSetCookie(true),
 			session.CfgGcLifeTime(3600),
@@ -38,7 +41,7 @@ func TestSession(t *testing.T) {
 		"*",
 		func(next web.FilterFunc) web.FilterFunc {
 			return func(ctx *webContext.Context) {
-				if store := ctx.Input.GetData(getSessionKey()); store == nil {
+				if store := ctx.Input.GetData(storeKey); store == nil {
 					t.Error(`store should not be nil`)
 				}
 				next(ctx)
@@ -53,11 +56,104 @@ func TestSession(t *testing.T) {
 }
 
 func TestGetStore(t *testing.T) {
+	storeKey := uuid.New().String()
 	handler := web.NewControllerRegister()
 
 	handler.InsertFilterChain(
 		"*",
 		Session(
+			session.ProviderMemory,
+			storeKey,
+			session.CfgCookieName(`go_session_id`),
+			session.CfgSetCookie(true),
+			session.CfgGcLifeTime(3600),
+			session.CfgMaxLifeTime(3600),
+			session.CfgSecure(false),
+			session.CfgCookieLifeTime(3600),
+		),
+	)
+	handler.InsertFilterChain(
+		"*",
+		func(next web.FilterFunc) web.FilterFunc {
+			return func(ctx *webContext.Context) {
+				var (
+					checkKey   = `asodiuasdk1j)AS(87`
+					checkValue = `ASsd-09812-3`
+
+					store session.Store
+					err   error
+
+					c = context.Background()
+				)
+
+				if store, err = GetStore(ctx, storeKey); err == nil {
+					if store == nil {
+						t.Error(`store should not be nil`)
+					} else {
+						_ = store.Set(c, checkKey, checkValue)
+					}
+				} else {
+					t.Error(err)
+				}
+
+				next(ctx)
+
+				if store != nil {
+					if v := store.Get(c, checkKey); v != checkValue {
+						t.Error(v, `is not equals to`, checkValue)
+					}
+				} else {
+					t.Error(`store should not be nil`)
+				}
+
+			}
+		},
+	)
+	handler.Any("*", func(ctx *webContext.Context) {
+		ctx.Output.SetStatus(200)
+	})
+
+	testRequest(t, handler, "/dataset1/resource1", "GET", 200)
+}
+
+func TestDefaultSession(t *testing.T) {
+	handler := web.NewControllerRegister()
+	handler.InsertFilterChain(
+		"*",
+		DefaultSession(
+			session.ProviderMemory,
+			session.CfgCookieName(`go_session_id`),
+			session.CfgSetCookie(true),
+			session.CfgGcLifeTime(3600),
+			session.CfgMaxLifeTime(3600),
+			session.CfgSecure(false),
+			session.CfgCookieLifeTime(3600),
+		),
+	)
+	handler.InsertFilterChain(
+		"*",
+		func(next web.FilterFunc) web.FilterFunc {
+			return func(ctx *webContext.Context) {
+				if store := ctx.Input.GetData(defaultStorageKey); store == nil {
+					t.Error(`store should not be nil`)
+				}
+				next(ctx)
+			}
+		},
+	)
+	handler.Any("*", func(ctx *webContext.Context) {
+		ctx.Output.SetStatus(200)
+	})
+
+	testRequest(t, handler, "/dataset1/resource1", "GET", 200)
+}
+
+func TestGetDefaultStore(t *testing.T) {
+	handler := web.NewControllerRegister()
+
+	handler.InsertFilterChain(
+		"*",
+		DefaultSession(
 			session.ProviderMemory,
 			session.CfgCookieName(`go_session_id`),
 			session.CfgSetCookie(true),
@@ -81,7 +177,7 @@ func TestGetStore(t *testing.T) {
 					c = context.Background()
 				)
 
-				if store, err = GetStore(ctx); err == nil {
+				if store, err = GetDefaultStore(ctx); err == nil {
 					if store == nil {
 						t.Error(`store should not be nil`)
 					} else {
@@ -97,7 +193,7 @@ func TestGetStore(t *testing.T) {
 					if v := store.Get(c, checkKey); v != checkValue {
 						t.Error(v, `is not equals to`, checkValue)
 					}
-				}else{
+				} else {
 					t.Error(`store should not be nil`)
 				}
 
