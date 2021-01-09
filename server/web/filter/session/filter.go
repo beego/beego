@@ -29,10 +29,10 @@ func sessionStoreKey(key string) string {
 //
 //params:
 //ctx: pointer of beego web context
-//storeName: set the storage key in ctx.Input
+//storeKey: set the storage key in ctx.Input
 //
 //if you want to get session storage, just see GetStore
-func Session(providerType session.ProviderType, storeName string, options ...session.ManagerConfigOpt) web.FilterChain {
+func Session(providerType session.ProviderType, storeKey string, options ...session.ManagerConfigOpt) web.FilterChain {
 	sessionConfig := session.NewManagerConfig(options...)
 	sessionManager, _ := session.NewManager(string(providerType), sessionConfig)
 	go sessionManager.GC()
@@ -45,7 +45,7 @@ func Session(providerType session.ProviderType, storeName string, options ...ses
 			} else {
 				//release session at the end of request
 				defer sess.SessionRelease(context.Background(), ctx.ResponseWriter)
-				ctx.Input.SetData(sessionStoreKey(storeName), sess)
+				ctx.Input.SetData(sessionStoreKey(storeKey), sess)
 			}
 
 			next(ctx)
@@ -55,13 +55,13 @@ func Session(providerType session.ProviderType, storeName string, options ...ses
 }
 
 //GetStore get session storage in beego web context
-func GetStore(ctx *webContext.Context, storeName string) (store session.Store, err error) {
+func GetStore(ctx *webContext.Context, storeKey string) (store session.Store, err error) {
 	if ctx == nil {
 		err = errors.New(`ctx is nil`)
 		return
 	}
 
-	if s, ok := ctx.Input.GetData(sessionStoreKey(storeName)).(session.Store); ok {
+	if s, ok := ctx.Input.GetData(sessionStoreKey(storeKey)).(session.Store); ok {
 		store = s
 		return
 	} else {
