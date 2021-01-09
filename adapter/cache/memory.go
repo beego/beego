@@ -15,7 +15,7 @@
 package cache
 
 import (
-	"github.com/astaxie/beego/client/cache"
+	"github.com/beego/beego/v2/client/cache"
 )
 
 // NewMemoryCache returns a new MemoryCache.

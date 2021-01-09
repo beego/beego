@@ -19,7 +19,7 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/astaxie/beego/server/web"
+	"github.com/beego/beego/v2/server/web"
 )
 
 // ExecuteTemplate applies the template with name  to the specified data object,

@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/astaxie/beego/core/utils"
+	"github.com/beego/beego/v2/core/utils"
 )
 
 // GetGOPATHs returns all paths in GOPATH variable.

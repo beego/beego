@@ -15,7 +15,7 @@
 // Package httplib is used as http.Client
 // Usage:
 //
-// import "github.com/astaxie/beego/httplib"
+// import "github.com/beego/beego/v2/httplib"
 //
 //	b := httplib.Post("http://beego.me/")
 //	b.Param("username","astaxie")
@@ -44,46 +44,20 @@ import (
 	"mime/multipart"
 	"net"
 	"net/http"
-	"net/http/cookiejar"
 	"net/http/httputil"
 	"net/url"
 	"os"
 	"path"
 	"strings"
-	"sync"
 	"time"
 
 	"gopkg.in/yaml.v2"
 )
 
-var defaultSetting = BeegoHTTPSettings{
-	UserAgent:        "beegoServer",
-	ConnectTimeout:   60 * time.Second,
-	ReadWriteTimeout: 60 * time.Second,
-	Gzip:             true,
-	DumpBody:         true,
-}
-
-var defaultCookieJar http.CookieJar
-var settingMutex sync.Mutex
 
 // it will be the last filter and execute request.Do
 var doRequestFilter = func(ctx context.Context, req *BeegoHTTPRequest) (*http.Response, error) {
 	return req.doRequest(ctx)
-}
-
-// createDefaultCookie creates a global cookiejar to store cookies.
-func createDefaultCookie() {
-	settingMutex.Lock()
-	defer settingMutex.Unlock()
-	defaultCookieJar, _ = cookiejar.New(nil)
-}
-
-// SetDefaultSetting overwrites default settings
-func SetDefaultSetting(setting BeegoHTTPSettings) {
-	settingMutex.Lock()
-	defer settingMutex.Unlock()
-	defaultSetting = setting
 }
 
 // NewBeegoRequest returns *BeegoHttpRequest with specific method
@@ -136,23 +110,7 @@ func Head(url string) *BeegoHTTPRequest {
 	return NewBeegoRequest(url, "HEAD")
 }
 
-// BeegoHTTPSettings is the http.Client setting
-type BeegoHTTPSettings struct {
-	ShowDebug        bool
-	UserAgent        string
-	ConnectTimeout   time.Duration
-	ReadWriteTimeout time.Duration
-	TLSClientConfig  *tls.Config
-	Proxy            func(*http.Request) (*url.URL, error)
-	Transport        http.RoundTripper
-	CheckRedirect    func(req *http.Request, via []*http.Request) error
-	EnableCookie     bool
-	Gzip             bool
-	DumpBody         bool
-	Retries          int // if set to -1 means will retry forever
-	RetryDelay       time.Duration
-	FilterChains     []FilterChain
-}
+
 
 // BeegoHTTPRequest provides more useful methods than http.Request for requesting a url.
 type BeegoHTTPRequest struct {
@@ -338,10 +296,16 @@ func (b *BeegoHTTPRequest) Body(data interface{}) *BeegoHTTPRequest {
 	case string:
 		bf := bytes.NewBufferString(t)
 		b.req.Body = ioutil.NopCloser(bf)
+		b.req.GetBody = func() (io.ReadCloser, error) {
+			return ioutil.NopCloser(bf), nil
+		}
 		b.req.ContentLength = int64(len(t))
 	case []byte:
 		bf := bytes.NewBuffer(t)
 		b.req.Body = ioutil.NopCloser(bf)
+		b.req.GetBody = func() (io.ReadCloser, error) {
+			return ioutil.NopCloser(bf), nil
+		}
 		b.req.ContentLength = int64(len(t))
 	}
 	return b
@@ -355,6 +319,9 @@ func (b *BeegoHTTPRequest) XMLBody(obj interface{}) (*BeegoHTTPRequest, error) {
 			return b, err
 		}
 		b.req.Body = ioutil.NopCloser(bytes.NewReader(byts))
+		b.req.GetBody = func() (io.ReadCloser, error) {
+			return ioutil.NopCloser(bytes.NewReader(byts)), nil
+		}
 		b.req.ContentLength = int64(len(byts))
 		b.req.Header.Set("Content-Type", "application/xml")
 	}
@@ -553,7 +520,7 @@ func (b *BeegoHTTPRequest) doRequest(ctx context.Context) (resp *http.Response, 
 	// retries default value is 0, it will run once.
 	// retries equal to -1, it will run forever until success
 	// retries is setted, it will retries fixed times.
-	// Sleeps for a 400ms inbetween calls to reduce spam
+	// Sleeps for a 400ms between calls to reduce spam
 	for i := 0; b.setting.Retries == -1 || i <= b.setting.Retries; i++ {
 		resp, err = client.Do(b.req)
 		if err == nil {

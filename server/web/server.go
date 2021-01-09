@@ -31,11 +31,11 @@ import (
 
 	"golang.org/x/crypto/acme/autocert"
 
-	"github.com/astaxie/beego/core/logs"
-	beecontext "github.com/astaxie/beego/server/web/context"
+	"github.com/beego/beego/v2/core/logs"
+	beecontext "github.com/beego/beego/v2/server/web/context"
 
-	"github.com/astaxie/beego/core/utils"
-	"github.com/astaxie/beego/server/web/grace"
+	"github.com/beego/beego/v2/core/utils"
+	"github.com/beego/beego/v2/server/web/grace"
 )
 
 var (
@@ -266,8 +266,8 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 }
 
 // Router see HttpServer.Router
-func Router(rootpath string, c ControllerInterface, mappingMethods ...string) *HttpServer {
-	return BeeApp.Router(rootpath, c, mappingMethods...)
+func Router(rootpath string, c ControllerInterface, opts ...ControllerOptions) *HttpServer {
+	return BeeApp.Router(rootpath, c, opts...)
 }
 
 // Router adds a patterned controller handler to BeeApp.
@@ -286,8 +286,8 @@ func Router(rootpath string, c ControllerInterface, mappingMethods ...string) *H
 //  beego.Router("/api/create",&RestController{},"post:CreateFood")
 //  beego.Router("/api/update",&RestController{},"put:UpdateFood")
 //  beego.Router("/api/delete",&RestController{},"delete:DeleteFood")
-func (app *HttpServer) Router(rootPath string, c ControllerInterface, mappingMethods ...string) *HttpServer {
-	app.Handlers.Add(rootPath, c, mappingMethods...)
+func (app *HttpServer) Router(rootPath string, c ControllerInterface, opts ...ControllerOptions) *HttpServer {
+	app.Handlers.Add(rootPath, c, opts...)
 	return app
 }
 

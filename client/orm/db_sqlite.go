@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/astaxie/beego/client/orm/hints"
+	"github.com/beego/beego/v2/client/orm/hints"
 )
 
 // sqlite operators.

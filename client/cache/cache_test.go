@@ -16,6 +16,7 @@ package cache
 
 import (
 	"context"
+	"math"
 	"os"
 	"sync"
 	"testing"
@@ -46,11 +47,11 @@ func TestCacheIncr(t *testing.T) {
 }
 
 func TestCache(t *testing.T) {
-	bm, err := NewCache("memory", `{"interval":20}`)
+	bm, err := NewCache("memory", `{"interval":1}`)
 	if err != nil {
 		t.Error("init err")
 	}
-	timeoutDuration := 10 * time.Second
+	timeoutDuration := 5 * time.Second
 	if err = bm.Put(context.Background(), "astaxie", 1, timeoutDuration); err != nil {
 		t.Error("set Error", err)
 	}
@@ -62,7 +63,7 @@ func TestCache(t *testing.T) {
 		t.Error("get err")
 	}
 
-	time.Sleep(30 * time.Second)
+	time.Sleep(7 * time.Second)
 
 	if res, _ := bm.IsExist(context.Background(), "astaxie"); res {
 		t.Error("check err")
@@ -72,21 +73,13 @@ func TestCache(t *testing.T) {
 		t.Error("set Error", err)
 	}
 
-	if err = bm.Incr(context.Background(), "astaxie"); err != nil {
-		t.Error("Incr Error", err)
-	}
+	// test different integer type for incr & decr
+	testMultiTypeIncrDecr(t, bm, timeoutDuration)
 
-	if v, _ := bm.Get(context.Background(), "astaxie"); v.(int) != 2 {
-		t.Error("get err")
-	}
+	// test overflow of incr&decr
+	testIncrOverFlow(t, bm, timeoutDuration)
+	testDecrOverFlow(t, bm, timeoutDuration)
 
-	if err = bm.Decr(context.Background(), "astaxie"); err != nil {
-		t.Error("Decr Error", err)
-	}
-
-	if v, _ := bm.Get(context.Background(), "astaxie"); v.(int) != 1 {
-		t.Error("get err")
-	}
 	bm.Delete(context.Background(), "astaxie")
 	if res, _ := bm.IsExist(context.Background(), "astaxie"); res {
 		t.Error("delete err")
@@ -120,6 +113,20 @@ func TestCache(t *testing.T) {
 	if vv[1].(string) != "author1" {
 		t.Error("GetMulti ERROR")
 	}
+
+	vv, err = bm.GetMulti(context.Background(), []string{"astaxie0", "astaxie1"})
+	if len(vv) != 2 {
+		t.Error("GetMulti ERROR")
+	}
+	if vv[0] != nil {
+		t.Error("GetMulti ERROR")
+	}
+	if vv[1].(string) != "author1" {
+		t.Error("GetMulti ERROR")
+	}
+	if err != nil && err.Error() != "key [astaxie0] error: the key isn't exist" {
+		t.Error("GetMulti ERROR")
+	}
 }
 
 func TestFileCache(t *testing.T) {
@@ -139,21 +146,13 @@ func TestFileCache(t *testing.T) {
 		t.Error("get err")
 	}
 
-	if err = bm.Incr(context.Background(), "astaxie"); err != nil {
-		t.Error("Incr Error", err)
-	}
+	// test different integer type for incr & decr
+	testMultiTypeIncrDecr(t, bm, timeoutDuration)
 
-	if v, _ := bm.Get(context.Background(), "astaxie"); v.(int) != 2 {
-		t.Error("get err")
-	}
+	// test overflow of incr&decr
+	testIncrOverFlow(t, bm, timeoutDuration)
+	testDecrOverFlow(t, bm, timeoutDuration)
 
-	if err = bm.Decr(context.Background(), "astaxie"); err != nil {
-		t.Error("Decr Error", err)
-	}
-
-	if v, _ := bm.Get(context.Background(), "astaxie"); v.(int) != 1 {
-		t.Error("get err")
-	}
 	bm.Delete(context.Background(), "astaxie")
 	if res, _ := bm.IsExist(context.Background(), "astaxie"); res {
 		t.Error("delete err")
@@ -189,5 +188,99 @@ func TestFileCache(t *testing.T) {
 		t.Error("GetMulti ERROR")
 	}
 
+	vv, err = bm.GetMulti(context.Background(), []string{"astaxie0", "astaxie1"})
+	if len(vv) != 2 {
+		t.Error("GetMulti ERROR")
+	}
+	if vv[0] != nil {
+		t.Error("GetMulti ERROR")
+	}
+	if vv[1].(string) != "author1" {
+		t.Error("GetMulti ERROR")
+	}
+	if err == nil {
+		t.Error("GetMulti ERROR")
+	}
+
 	os.RemoveAll("cache")
+}
+
+func testMultiTypeIncrDecr(t *testing.T, c Cache, timeout time.Duration) {
+	testIncrDecr(t, c, 1, 2, timeout)
+	testIncrDecr(t, c, int32(1), int32(2), timeout)
+	testIncrDecr(t, c, int64(1), int64(2), timeout)
+	testIncrDecr(t, c, uint(1), uint(2), timeout)
+	testIncrDecr(t, c, uint32(1), uint32(2), timeout)
+	testIncrDecr(t, c, uint64(1), uint64(2), timeout)
+}
+
+func testIncrDecr(t *testing.T, c Cache, beforeIncr interface{}, afterIncr interface{}, timeout time.Duration) {
+	var err error
+	ctx := context.Background()
+	key := "incDecKey"
+	if err = c.Put(ctx, key, beforeIncr, timeout); err != nil {
+		t.Error("Get Error", err)
+	}
+
+	if err = c.Incr(ctx, key); err != nil {
+		t.Error("Incr Error", err)
+	}
+
+	if v, _ := c.Get(ctx, key); v != afterIncr {
+		t.Error("Get Error")
+	}
+
+	if err = c.Decr(ctx, key); err != nil {
+		t.Error("Decr Error", err)
+	}
+
+	if v, _ := c.Get(ctx, key); v != beforeIncr {
+		t.Error("Get Error")
+	}
+
+	if err := c.Delete(ctx, key); err != nil {
+		t.Error("Delete Error")
+	}
+}
+
+func testIncrOverFlow(t *testing.T, c Cache, timeout time.Duration) {
+	var err error
+	ctx := context.Background()
+	key := "incKey"
+
+	// int64
+	if err = c.Put(ctx, key, int64(math.MaxInt64), timeout); err != nil {
+		t.Error("Put Error: ", err.Error())
+		return
+	}
+	defer func() {
+		if err = c.Delete(ctx, key); err != nil {
+			t.Errorf("Delete error: %s", err.Error())
+		}
+	}()
+	if err = c.Incr(ctx, key); err == nil {
+		t.Error("Incr error")
+		return
+	}
+}
+
+func testDecrOverFlow(t *testing.T, c Cache, timeout time.Duration) {
+	var err error
+	ctx := context.Background()
+	key := "decKey"
+
+	// int64
+	if err = c.Put(ctx, key, int64(math.MinInt64), timeout); err != nil {
+		t.Error("Put Error: ", err.Error())
+		return
+	}
+	defer func() {
+		if err = c.Delete(ctx, key); err != nil {
+			t.Errorf("Delete error: %s", err.Error())
+		}
+	}()
+	if err = c.Decr(ctx, key); err == nil {
+		t.Error("Decr error")
+		return
+	}
 }

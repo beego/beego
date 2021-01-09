@@ -7,18 +7,18 @@ validation is a form validation for a data validation and error collecting using
 
 Install:
 
-	go get github.com/astaxie/beego/validation
+	go get github.com/beego/beego/v2/validation
 
 Test:
 
-	go test github.com/astaxie/beego/validation
+	go test github.com/beego/beego/v2/validation
 
 ## Example
 
 Direct Use:
 
 	import (
-		"github.com/astaxie/beego/validation"
+		"github.com/beego/beego/v2/validation"
 		"log"
 	)
 
@@ -49,7 +49,7 @@ Direct Use:
 Struct Tag Use:
 
 	import (
-		"github.com/astaxie/beego/validation"
+		"github.com/beego/beego/v2/validation"
 	)
 
 	// validation function follow with "valid" tag
@@ -81,7 +81,7 @@ Struct Tag Use:
 Use custom function:
 
 	import (
-		"github.com/astaxie/beego/validation"
+		"github.com/beego/beego/v2/validation"
 	)
 
 	type user struct {
@@ -140,7 +140,6 @@ Struct Tag Functions:
 	Tel
 	Phone
 	ZipCode
-
 
 ## LICENSE
 

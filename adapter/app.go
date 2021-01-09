@@ -17,9 +17,9 @@ package adapter
 import (
 	"net/http"
 
-	context2 "github.com/astaxie/beego/adapter/context"
-	"github.com/astaxie/beego/server/web"
-	"github.com/astaxie/beego/server/web/context"
+	context2 "github.com/beego/beego/v2/adapter/context"
+	"github.com/beego/beego/v2/server/web"
+	"github.com/beego/beego/v2/server/web/context"
 )
 
 var (
@@ -74,7 +74,7 @@ func oldMiddlewareToNew(mws []MiddleWare) []web.MiddleWare {
 //  beego.Router("/api/update",&RestController{},"put:UpdateFood")
 //  beego.Router("/api/delete",&RestController{},"delete:DeleteFood")
 func Router(rootpath string, c ControllerInterface, mappingMethods ...string) *App {
-	return (*App)(web.Router(rootpath, c, mappingMethods...))
+	return (*App)(web.Router(rootpath, c, web.SetRouterMethods(c, mappingMethods...)))
 }
 
 // UnregisterFixedRoute unregisters the route with the specified fixedRoute. It is particularly useful

@@ -21,7 +21,7 @@
 //
 //	import (
 //		"fmt"
-//		"github.com/astaxie/beego/client/orm"
+//		"github.com/beego/beego/v2/client/orm"
 //		_ "github.com/go-sql-driver/mysql" // import your used driver
 //	)
 //
@@ -63,10 +63,10 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/astaxie/beego/client/orm/hints"
-	"github.com/astaxie/beego/core/utils"
+	"github.com/beego/beego/v2/client/orm/hints"
+	"github.com/beego/beego/v2/core/utils"
 
-	"github.com/astaxie/beego/core/logs"
+	"github.com/beego/beego/v2/core/logs"
 )
 
 // DebugQueries define the debug

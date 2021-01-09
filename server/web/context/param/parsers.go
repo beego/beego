@@ -18,7 +18,7 @@ func getParser(param *MethodParam, t reflect.Type) paramParser {
 		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		return intParser{}
 	case reflect.Slice:
-		if t.Elem().Kind() == reflect.Uint8 { //treat []byte as string
+		if t.Elem().Kind() == reflect.Uint8 { // treat []byte as string
 			return stringParser{}
 		}
 		if param.in == body {

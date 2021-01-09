@@ -19,9 +19,9 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/astaxie/beego/core/utils"
+	"github.com/beego/beego/v2/core/utils"
 
-	"github.com/astaxie/beego/server/web/context"
+	"github.com/beego/beego/v2/server/web/context"
 )
 
 var (
@@ -210,9 +210,9 @@ func (t *Tree) AddRouter(pattern string, runObject interface{}) {
 func (t *Tree) addseg(segments []string, route interface{}, wildcards []string, reg string) {
 	if len(segments) == 0 {
 		if reg != "" {
-			t.leaves = append(t.leaves, &leafInfo{runObject: route, wildcards: wildcards, regexps: regexp.MustCompile("^" + reg + "$")})
+			t.leaves = append([]*leafInfo{{runObject: route, wildcards: wildcards, regexps: regexp.MustCompile("^" + reg + "$")}}, t.leaves...)
 		} else {
-			t.leaves = append(t.leaves, &leafInfo{runObject: route, wildcards: wildcards})
+			t.leaves = append([]*leafInfo{{runObject: route, wildcards: wildcards}}, t.leaves...)
 		}
 	} else {
 		seg := segments[0]

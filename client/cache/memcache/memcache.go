@@ -20,8 +20,8 @@
 //
 // Usage:
 // import(
-//   _ "github.com/astaxie/beego/cache/memcache"
-//   "github.com/astaxie/beego/cache"
+//   _ "github.com/beego/beego/v2/cache/memcache"
+//   "github.com/beego/beego/v2/cache"
 // )
 //
 //  bm, err := cache.NewCache("memcache", `{"conn":"127.0.0.1:11211"}`)
@@ -33,12 +33,13 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
 	"github.com/bradfitz/gomemcache/memcache"
 
-	"github.com/astaxie/beego/client/cache"
+	"github.com/beego/beego/v2/client/cache"
 )
 
 // Cache Memcache adapter.
@@ -68,19 +69,31 @@ func (rc *Cache) Get(ctx context.Context, key string) (interface{}, error) {
 
 // GetMulti gets a value from a key in memcache.
 func (rc *Cache) GetMulti(ctx context.Context, keys []string) ([]interface{}, error) {
-	var rv []interface{}
+	rv := make([]interface{}, len(keys))
 	if rc.conn == nil {
 		if err := rc.connectInit(); err != nil {
 			return rv, err
 		}
 	}
+
 	mv, err := rc.conn.GetMulti(keys)
-	if err == nil {
-		for _, v := range mv {
-			rv = append(rv, v.Value)
-		}
+	if err != nil {
+		return rv, err
 	}
-	return rv, err
+
+	keysErr := make([]string, 0)
+	for i, ki := range keys {
+		if _, ok := mv[ki]; !ok {
+			keysErr = append(keysErr, fmt.Sprintf("key [%s] error: %s", ki, "the key isn't exist"))
+			continue
+		}
+		rv[i] = mv[ki].Value
+	}
+
+	if len(keysErr) == 0 {
+		return rv, nil
+	}
+	return rv, fmt.Errorf(strings.Join(keysErr, "; "))
 }
 
 // Put puts a value into memcache.

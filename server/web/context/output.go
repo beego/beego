@@ -261,15 +261,15 @@ func (output *BeegoOutput) XML(data interface{}, hasIndent bool) error {
 }
 
 // ServeFormatted serves YAML, XML or JSON, depending on the value of the Accept header
-func (output *BeegoOutput) ServeFormatted(data interface{}, hasIndent bool, hasEncode ...bool) {
+func (output *BeegoOutput) ServeFormatted(data interface{}, hasIndent bool, hasEncode ...bool) error {
 	accept := output.Context.Input.Header("Accept")
 	switch accept {
 	case ApplicationYAML:
-		output.YAML(data)
+		return output.YAML(data)
 	case ApplicationXML, TextXML:
-		output.XML(data, hasIndent)
+		return output.XML(data, hasIndent)
 	default:
-		output.JSON(data, hasIndent, len(hasEncode) > 0 && hasEncode[0])
+		return output.JSON(data, hasIndent, len(hasEncode) > 0 && hasEncode[0])
 	}
 }
 
@@ -288,7 +288,7 @@ func (output *BeegoOutput) Download(file string, filename ...string) {
 	} else {
 		fName = filepath.Base(file)
 	}
-	//https://tools.ietf.org/html/rfc6266#section-4.3
+	// https://tools.ietf.org/html/rfc6266#section-4.3
 	fn := url.PathEscape(fName)
 	if fName == fn {
 		fn = "filename=" + fn

@@ -18,10 +18,10 @@ import (
 	"net/http"
 	"time"
 
-	beecontext "github.com/astaxie/beego/adapter/context"
-	"github.com/astaxie/beego/server/web/context"
+	beecontext "github.com/beego/beego/v2/adapter/context"
+	"github.com/beego/beego/v2/server/web/context"
 
-	"github.com/astaxie/beego/server/web"
+	"github.com/beego/beego/v2/server/web"
 )
 
 // default filter execution points
@@ -87,7 +87,7 @@ func NewControllerRegister() *ControllerRegister {
 //	Add("/api",&RestController{},"get,post:ApiFunc"
 //	Add("/simple",&SimpleController{},"get:GetFunc;post:PostFunc")
 func (p *ControllerRegister) Add(pattern string, c ControllerInterface, mappingMethods ...string) {
-	(*web.ControllerRegister)(p).Add(pattern, c, mappingMethods...)
+	(*web.ControllerRegister)(p).Add(pattern, c, web.SetRouterMethods(c, mappingMethods...))
 }
 
 // Include only when the Runmode is dev will generate router file in the router/auto.go from the controller

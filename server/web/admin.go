@@ -20,7 +20,7 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/astaxie/beego/core/logs"
+	"github.com/beego/beego/v2/core/logs"
 )
 
 // BeeAdminApp is the default adminApp used by admin module.
@@ -112,13 +112,13 @@ func registerAdmin() error {
 			HttpServer: NewHttpServerWithCfg(BConfig),
 		}
 		// keep in mind that all data should be html escaped to avoid XSS attack
-		beeAdminApp.Router("/", c, "get:AdminIndex")
-		beeAdminApp.Router("/qps", c, "get:QpsIndex")
-		beeAdminApp.Router("/prof", c, "get:ProfIndex")
-		beeAdminApp.Router("/healthcheck", c, "get:Healthcheck")
-		beeAdminApp.Router("/task", c, "get:TaskStatus")
-		beeAdminApp.Router("/listconf", c, "get:ListConf")
-		beeAdminApp.Router("/metrics", c, "get:PrometheusMetrics")
+		beeAdminApp.Router("/", c, SetRouterMethods(c, "get:AdminIndex"))
+		beeAdminApp.Router("/qps", c, SetRouterMethods(c, "get:QpsIndex"))
+		beeAdminApp.Router("/prof", c, SetRouterMethods(c, "get:ProfIndex"))
+		beeAdminApp.Router("/healthcheck", c, SetRouterMethods(c, "get:Healthcheck"))
+		beeAdminApp.Router("/task", c, SetRouterMethods(c, "get:TaskStatus"))
+		beeAdminApp.Router("/listconf", c, SetRouterMethods(c, "get:ListConf"))
+		beeAdminApp.Router("/metrics", c, SetRouterMethods(c, "get:PrometheusMetrics"))
 
 		go beeAdminApp.Run()
 	}

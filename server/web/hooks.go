@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/astaxie/beego/core/logs"
-	"github.com/astaxie/beego/server/web/context"
-	"github.com/astaxie/beego/server/web/session"
+	"github.com/beego/beego/v2/core/logs"
+	"github.com/beego/beego/v2/server/web/context"
+	"github.com/beego/beego/v2/server/web/session"
 )
 
 // register MIME type with content type
@@ -61,6 +61,7 @@ func registerSession() error {
 			conf.EnableSidInHTTPHeader = BConfig.WebConfig.Session.SessionEnableSidInHTTPHeader
 			conf.SessionNameInHTTPHeader = BConfig.WebConfig.Session.SessionNameInHTTPHeader
 			conf.EnableSidInURLQuery = BConfig.WebConfig.Session.SessionEnableSidInURLQuery
+			conf.CookieSameSite = BConfig.WebConfig.Session.SessionCookieSameSite
 		} else {
 			if err = json.Unmarshal([]byte(sessionConfig), conf); err != nil {
 				return err

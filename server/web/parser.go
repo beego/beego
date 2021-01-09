@@ -30,17 +30,17 @@ import (
 
 	"golang.org/x/tools/go/packages"
 
-	"github.com/astaxie/beego/core/logs"
+	"github.com/beego/beego/v2/core/logs"
 
-	"github.com/astaxie/beego/core/utils"
-	"github.com/astaxie/beego/server/web/context/param"
+	"github.com/beego/beego/v2/core/utils"
+	"github.com/beego/beego/v2/server/web/context/param"
 )
 
 var globalRouterTemplate = `package {{.routersDir}}
 
 import (
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/server/web/context/param"{{.globalimport}}
+	beego "github.com/beego/beego/v2/server/web"
+	"github.com/beego/beego/v2/server/web/context/param"{{.globalimport}}
 )
 
 func init() {
@@ -50,7 +50,6 @@ func init() {
 
 var (
 	lastupdateFilename = "lastupdate.tmp"
-	commentFilename    string
 	pkgLastupdate      map[string]int64
 	genInfoList        map[string][]ControllerComments
 
@@ -71,16 +70,13 @@ var (
 	}
 )
 
-const commentPrefix = "commentsRouter_"
+const commentFilename   = "commentsRouter.go"
 
 func init() {
 	pkgLastupdate = make(map[string]int64)
 }
 
 func parserPkg(pkgRealpath string) error {
-	rep := strings.NewReplacer("\\", "_", "/", "_", ".", "_")
-	commentFilename, _ = filepath.Rel(AppPath, pkgRealpath)
-	commentFilename = commentPrefix + rep.Replace(commentFilename) + ".go"
 	if !compareFile(pkgRealpath) {
 		logs.Info(pkgRealpath + " no changed")
 		return nil
@@ -102,7 +98,10 @@ func parserPkg(pkgRealpath string) error {
 					if specDecl.Recv != nil {
 						exp, ok := specDecl.Recv.List[0].Type.(*ast.StarExpr) // Check that the type is correct first beforing throwing to parser
 						if ok {
-							parserComments(specDecl, fmt.Sprint(exp.X), pkg.PkgPath)
+							err = parserComments(specDecl, fmt.Sprint(exp.X), pkg.PkgPath)
+							if err != nil {
+								return err
+							}
 						}
 					}
 				}
@@ -500,7 +499,8 @@ func genRouterCode(pkgRealpath string) {
     beego.GlobalControllerRouter["` + k + `"] = append(beego.GlobalControllerRouter["` + k + `"],
         beego.ControllerComments{
             Method: "` + strings.TrimSpace(c.Method) + `",
-            ` + `Router: "` + c.Router + `"` + `,
+
+            ` + "Router: `" + c.Router + "`" + `,
             AllowHTTPMethods: ` + allmethod + `,
             MethodParams: ` + methodParams + `,
             Filters: ` + filters + `,
@@ -584,17 +584,6 @@ func getpathTime(pkgRealpath string) (lastupdate int64, err error) {
 
 func getRouterDir(pkgRealpath string) string {
 	dir := filepath.Dir(pkgRealpath)
-	for {
-		routersDir := AppConfig.DefaultString("routersdir", "routers")
-		d := filepath.Join(dir, routersDir)
-		if utils.FileExists(d) {
-			return d
-		}
-
-		if r, _ := filepath.Rel(dir, AppPath); r == "." {
-			return d
-		}
-		// Parent dir.
-		dir = filepath.Dir(dir)
-	}
+	routersDir := AppConfig.DefaultString("routersdir", "routers")
+	return filepath.Join(dir, routersDir)
 }

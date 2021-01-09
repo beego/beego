@@ -14,26 +14,13 @@
 
 package config
 
-import (
-	"github.com/astaxie/beego/core/logs"
-)
-
 // We use this to simply application's development
 // for most users, they only need to use those methods
 var globalInstance Configer
 
-func init() {
-	// Ignore this error
-	err := InitGlobalInstance("ini", "config/app.conf")
-	if err != nil {
-		logs.Warn("init global config instance failed. If you donot use this, just ignore it. ", err)
-	}
-
-}
-
 // InitGlobalInstance will ini the global instance
 // If you want to use specific implementation, don't forget to import it.
-// e.g. _ import "github.com/astaxie/beego/core/config/etcd"
+// e.g. _ import "github.com/beego/beego/v2/core/config/etcd"
 // err := InitGlobalInstance("etcd", "someconfig")
 func InitGlobalInstance(name string, cfg string) error {
 	var err error

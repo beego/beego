@@ -17,7 +17,7 @@ package es
 import (
 	"fmt"
 
-	"github.com/astaxie/beego/core/logs"
+	"github.com/beego/beego/v2/core/logs"
 )
 
 // IndexNaming generate the index name
