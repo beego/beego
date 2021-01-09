@@ -1,7 +1,7 @@
 package order_clause
 
 import (
-	"github.com/astaxie/beego/client/orm/clauses"
+	"github.com/beego/beego/v2/client/orm/clauses"
 	"strings"
 )
 

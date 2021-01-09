@@ -58,7 +58,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/astaxie/beego/client/orm/clauses/order_clause"
+	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
 	"os"
 	"reflect"
 	"time"

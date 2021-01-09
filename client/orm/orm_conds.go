@@ -16,7 +16,7 @@ package orm
 
 import (
 	"fmt"
-	"github.com/astaxie/beego/client/orm/clauses"
+	"github.com/beego/beego/v2/client/orm/clauses"
 	"strings"
 )
 
