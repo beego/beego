@@ -1,9 +1,15 @@
 on:
   # Trigger analysis when pushing in master or pull requests, and when creating
   # a pull request.
+  push:
+    branches:
+      - develop
   pull_request:
     types: [opened, synchronize, reopened]
-name: Main Workflow
+name: Sonar Check
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 jobs:
   sonarcloud:
     runs-on: ubuntu-latest
@@ -14,6 +20,3 @@ jobs:
           fetch-depth: 0
       - name: SonarCloud Scan
         uses: sonarsource/sonarcloud-github-action@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
