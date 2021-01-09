@@ -109,6 +109,23 @@ func TestTask_Run(t *testing.T) {
 	assert.Equal(t, "Hello, world! 101", l[1].errinfo)
 }
 
+func TestCrudTask(t *testing.T) {
+	m := newTaskManager()
+	m.AddTask("my-task1", NewTask("my-task1", "0/30 * * * * *", func(ctx context.Context) error {
+		return nil
+	}))
+
+	m.AddTask("my-task2", NewTask("my-task2", "0/30 * * * * *", func(ctx context.Context) error {
+		return nil
+	}))
+
+	m.DeleteTask("my-task1")
+	assert.Equal(t, 1, len(m.adminTaskList))
+
+	m.ClearTask()
+	assert.Equal(t, 0, len(m.adminTaskList))
+}
+
 func wait(wg *sync.WaitGroup) chan bool {
 	ch := make(chan bool)
 	go func() {
