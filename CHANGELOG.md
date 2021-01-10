@@ -1,5 +1,5 @@
 # developing
-- Add sonar check. [4432](https://github.com/beego/beego/pull/4432)
+- Add sonar check and ignore test. [4432](https://github.com/beego/beego/pull/4432) [4433](https://github.com/beego/beego/pull/4433)
 - Update changlog.yml to check every PR to develop branch.[4427](https://github.com/beego/beego/pull/4427)
 - Fix 4396: Add context.param module into adapter. [4398](https://github.com/beego/beego/pull/4398)
 - Remove `duration` from prometheus labels. [4391](https://github.com/beego/beego/pull/4391)
