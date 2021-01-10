@@ -17,6 +17,7 @@ package orm
 import (
 	"context"
 	"database/sql"
+	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
 	"reflect"
 	"time"
 
@@ -289,6 +290,28 @@ type QuerySeter interface {
 	// for example:
 	//	qs.OrderBy("-status")
 	OrderBy(exprs ...string) QuerySeter
+	// add ORDER expression by order clauses
+	// for example:
+	//	OrderClauses(
+	//		order_clause.Clause(
+	//			order.Column("Id"),
+	//			order.SortAscending(),
+	//		),
+	//		order_clause.Clause(
+	//			order.Column("status"),
+	//			order.SortDescending(),
+	//		),
+	//	)
+	//	OrderClauses(order_clause.Clause(
+	//		order_clause.Column(`user__status`),
+	//		order_clause.SortDescending(),//default None
+	//	))
+	//	OrderClauses(order_clause.Clause(
+	//		order_clause.Column(`random()`),
+	//		order_clause.SortNone(),//default None
+	//		order_clause.Raw(),//default false.if true, do not check field is valid or not
+	//	))
+	OrderClauses(orders ...*order_clause.Order) QuerySeter
 	// add FORCE INDEX expression.
 	// for example:
 	//	qs.ForceIndex(`idx_name1`,`idx_name2`)
