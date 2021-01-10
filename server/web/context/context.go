@@ -29,6 +29,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"github.com/beego/beego/v2/server/web/session"
 	"net"
 	"net/http"
 	"strconv"
@@ -192,6 +193,22 @@ func (ctx *Context) RenderMethodResult(result interface{}) {
 			}
 		}
 		renderer.Render(ctx)
+	}
+}
+
+// Session return session store of this context of request
+func (ctx *Context) Session() (store session.Store,err error){
+	if ctx.Input != nil {
+		if ctx.Input.CruSession != nil {
+			store = ctx.Input.CruSession
+			return
+		} else {
+			err = errors.New(`no valid session store(please initialize session)`)
+			return
+		}
+	} else {
+		err = errors.New(`no valid input`)
+		return
 	}
 }
 
