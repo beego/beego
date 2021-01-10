@@ -52,3 +52,35 @@ func TestSession(t *testing.T) {
 
 	testRequest(t, handler, "/dataset1/resource1", "GET", 200)
 }
+
+func TestSession1(t *testing.T) {
+	handler := web.NewControllerRegister()
+	handler.InsertFilterChain(
+		"*",
+		Session(
+			session.ProviderMemory,
+			session.CfgCookieName(`go_session_id`),
+			session.CfgSetCookie(true),
+			session.CfgGcLifeTime(3600),
+			session.CfgMaxLifeTime(3600),
+			session.CfgSecure(false),
+			session.CfgCookieLifeTime(3600),
+		),
+	)
+	handler.InsertFilterChain(
+		"*",
+		func(next web.FilterFunc) web.FilterFunc {
+			return func(ctx *webContext.Context) {
+				if store, err := ctx.Session(); store == nil || err != nil {
+					t.Error(`store should not be nil`)
+				}
+				next(ctx)
+			}
+		},
+	)
+	handler.Any("*", func(ctx *webContext.Context) {
+		ctx.Output.SetStatus(200)
+	})
+
+	testRequest(t, handler, "/dataset1/resource1", "GET", 200)
+}

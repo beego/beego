@@ -15,9 +15,7 @@
 package context
 
 import (
-	"github.com/beego/beego/v2/server/web"
-	"github.com/beego/beego/v2/server/web/filter/session"
-	webSession "github.com/beego/beego/v2/server/web/session"
+	"github.com/beego/beego/v2/server/web/session"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -49,45 +47,25 @@ func TestXsrfReset_01(t *testing.T) {
 	}
 }
 
-func testRequest(t *testing.T, handler *web.ControllerRegister, path string, method string, code int) {
-	r, _ := http.NewRequest(method, path, nil)
-	w := httptest.NewRecorder()
-	handler.ServeHTTP(w, r)
-
-	if w.Code != code {
-		t.Errorf("%s, %s: %d, supposed to be %d", path, method, w.Code, code)
+func TestContext_Session(t *testing.T) {
+	c := NewContext()
+	if store, err := c.Session(); store != nil || err == nil {
+		t.FailNow()
 	}
 }
 
-func TestContext_Session(t *testing.T) {
-	handler := web.NewControllerRegister()
+func TestContext_Session1(t *testing.T) {
+	c := Context{}
+	if store, err := c.Session(); store != nil || err == nil {
+		t.FailNow()
+	}
+}
 
-	handler.InsertFilterChain(
-		"*",
-		session.Session(
-			webSession.ProviderMemory,
-			webSession.CfgCookieName(`go_session_id`),
-			webSession.CfgSetCookie(true),
-			webSession.CfgGcLifeTime(3600),
-			webSession.CfgMaxLifeTime(3600),
-			webSession.CfgSecure(false),
-			webSession.CfgCookieLifeTime(3600),
-		),
-	)
-	handler.InsertFilterChain(
-		"*",
-		func(next web.FilterFunc) web.FilterFunc {
-			return func(ctx *Context) {
-				if _, err := ctx.Session(); err == nil {
-					t.Error()
-				}
+func TestContext_Session2(t *testing.T) {
+	c := NewContext()
+	c.Input.CruSession = &session.MemSessionStore{}
 
-			}
-		},
-	)
-	handler.Any("*", func(ctx *Context) {
-		ctx.Output.SetStatus(200)
-	})
-
-	testRequest(t, handler, "/dataset1/resource1", "GET", 200)
+	if store, err := c.Session(); store == nil || err != nil {
+		t.FailNow()
+	}
 }

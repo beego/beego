@@ -197,7 +197,7 @@ func (ctx *Context) RenderMethodResult(result interface{}) {
 }
 
 // Session return session store of this context of request
-func (ctx *Context) Session() (store session.Store,err error){
+func (ctx *Context) Session() (store session.Store, err error) {
 	if ctx.Input != nil {
 		if ctx.Input.CruSession != nil {
 			store = ctx.Input.CruSession
