@@ -197,12 +197,16 @@ type DQL interface {
 	// 	post := Post{Id: 4}
 	// 	m2m := Ormer.QueryM2M(&post, "Tags")
 	QueryM2M(md interface{}, name string) QueryM2Mer
+	// NOTE: this method is deprecated, context parameter will not take effect.
+	// Use context.Context directly on methods with `WithCtx` suffix such as InsertWithCtx/UpdateWithCtx
 	QueryM2MWithCtx(ctx context.Context, md interface{}, name string) QueryM2Mer
 
 	// return a QuerySeter for table operations.
 	// table name can be string or struct.
 	// e.g. QueryTable("user"), QueryTable(&user{}) or QueryTable((*User)(nil)),
 	QueryTable(ptrStructOrTableName interface{}) QuerySeter
+	// NOTE: this method is deprecated, context parameter will not take effect.
+	// Use context.Context directly on methods with `WithCtx` suffix such as InsertWithCtx/UpdateWithCtx
 	QueryTableWithCtx(ctx context.Context, ptrStructOrTableName interface{}) QuerySeter
 
 	DBStats() *sql.DBStats
@@ -236,8 +240,6 @@ type Inserter interface {
 
 // QuerySeter query seter
 type QuerySeter interface {
-	// add query context for querySeter
-	WithContext(context.Context) QuerySeter
 	// add condition expression to QuerySeter.
 	// for example:
 	//	filter by UserName == 'slene'
@@ -352,9 +354,11 @@ type QuerySeter interface {
 	// for example:
 	//	num, err = qs.Filter("profile__age__gt", 28).Count()
 	Count() (int64, error)
+	CountWithCtx(context.Context) (int64, error)
 	// check result empty or not after QuerySeter executed
 	// the same as QuerySeter.Count > 0
 	Exist() bool
+	ExistWithCtx(context.Context) bool
 	// execute update with parameters
 	// for example:
 	//	num, err = qs.Filter("user_name", "slene").Update(Params{
@@ -364,11 +368,13 @@ type QuerySeter interface {
 	//		"user_name": "slene2"
 	//	}) // user slene's  name will change to slene2
 	Update(values Params) (int64, error)
+	UpdateWithCtx(ctx context.Context, values Params) (int64, error)
 	// delete from table
 	// for example:
 	//	num ,err = qs.Filter("user_name__in", "testing1", "testing2").Delete()
 	// 	//delete two user  who's name is testing1 or testing2
 	Delete() (int64, error)
+	DeleteWithCtx(context.Context) (int64, error)
 	// return a insert queryer.
 	// it can be used in times.
 	// example:
@@ -377,18 +383,21 @@ type QuerySeter interface {
 	//	num, err = i.Insert(&user2) // user table will add one record user2 at once
 	//	err = i.Close() //don't forget call Close
 	PrepareInsert() (Inserter, error)
+	PrepareInsertWithCtx(context.Context) (Inserter, error)
 	// query all data and map to containers.
 	// cols means the columns when querying.
 	// for example:
 	//	var users []*User
 	//	qs.All(&users) // users[0],users[1],users[2] ...
 	All(container interface{}, cols ...string) (int64, error)
+	AllWithCtx(ctx context.Context, container interface{}, cols ...string) (int64, error)
 	// query one row data and map to containers.
 	// cols means the columns when querying.
 	// for example:
 	//	var user User
 	//	qs.One(&user) //user.UserName == "slene"
 	One(container interface{}, cols ...string) error
+	OneWithCtx(ctx context.Context, container interface{}, cols ...string) error
 	// query all data and map to []map[string]interface.
 	// expres means condition expression.
 	// it converts data to []map[column]value.
@@ -396,18 +405,21 @@ type QuerySeter interface {
 	//	var maps []Params
 	//	qs.Values(&maps) //maps[0]["UserName"]=="slene"
 	Values(results *[]Params, exprs ...string) (int64, error)
+	ValuesWithCtx(ctx context.Context, results *[]Params, exprs ...string) (int64, error)
 	// query all data and map to [][]interface
 	// it converts data to [][column_index]value
 	// for example:
 	//	var list []ParamsList
 	//	qs.ValuesList(&list) // list[0][1] == "slene"
 	ValuesList(results *[]ParamsList, exprs ...string) (int64, error)
+	ValuesListWithCtx(ctx context.Context, results *[]ParamsList, exprs ...string) (int64, error)
 	// query all data and map to []interface.
 	// it's designed for one column record set, auto change to []value, not [][column]value.
 	// for example:
 	//	var list ParamsList
 	//	qs.ValuesFlat(&list, "UserName") // list[0] == "slene"
 	ValuesFlat(result *ParamsList, expr string) (int64, error)
+	ValuesFlatWithCtx(ctx context.Context, result *ParamsList, expr string) (int64, error)
 	// query all rows into map[string]interface with specify key and value column name.
 	// keyCol = "name", valueCol = "value"
 	// table data
@@ -456,18 +468,23 @@ type QueryM2Mer interface {
 	// insert one or more rows to m2m table
 	// make sure the relation is defined in post model struct tag.
 	Add(...interface{}) (int64, error)
+	AddWithCtx(context.Context, ...interface{}) (int64, error)
 	// remove models following the origin model relationship
 	// only delete rows from m2m table
 	// for example:
 	// tag3 := &Tag{Id:5,Name: "TestTag3"}
 	// num, err = m2m.Remove(tag3)
 	Remove(...interface{}) (int64, error)
+	RemoveWithCtx(context.Context, ...interface{}) (int64, error)
 	// check model is existed in relationship of origin model
 	Exist(interface{}) bool
+	ExistWithCtx(context.Context, interface{}) bool
 	// clean all models in related of origin model
 	Clear() (int64, error)
+	ClearWithCtx(context.Context) (int64, error)
 	// count all related models of origin model
 	Count() (int64, error)
+	CountWithCtx(context.Context) (int64, error)
 }
 
 // RawPreparer raw query statement

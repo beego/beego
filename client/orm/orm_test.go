@@ -2836,7 +2836,7 @@ func TestContextCanceled(t *testing.T) {
 	ctx, cancel = context.WithCancel(context.Background())
 	cancel()
 
-	qs := dORM.QueryTable(user).WithContext(ctx)
-	_, err = qs.Filter("UserName", "slene").Count()
+	qs := dORM.QueryTable(user)
+	_, err = qs.Filter("UserName", "slene").CountWithCtx(ctx)
 	throwFail(t, AssertIs(err, context.Canceled))
 }

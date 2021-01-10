@@ -284,9 +284,6 @@ func (o *ormBase) DeleteWithCtx(ctx context.Context, md interface{}, cols ...str
 
 // create a models to models queryer
 func (o *ormBase) QueryM2M(md interface{}, name string) QueryM2Mer {
-	return o.QueryM2MWithCtx(context.Background(), md, name)
-}
-func (o *ormBase) QueryM2MWithCtx(ctx context.Context, md interface{}, name string) QueryM2Mer {
 	mi, ind := o.getMiInd(md, true)
 	fi := o.getFieldInfo(mi, name)
 
@@ -297,7 +294,13 @@ func (o *ormBase) QueryM2MWithCtx(ctx context.Context, md interface{}, name stri
 		panic(fmt.Errorf("<Ormer.QueryM2M> model `%s` . name `%s` is not a m2m field", fi.name, mi.fullName))
 	}
 
-	return newQueryM2M(ctx, md, o, mi, fi, ind)
+	return newQueryM2M(md, o, mi, fi, ind)
+}
+
+// NOTE: this method is deprecated, context parameter will not take effect.
+func (o *ormBase) QueryM2MWithCtx(_ context.Context, md interface{}, name string) QueryM2Mer {
+	logs.Warn("QueryM2MWithCtx is DEPRECATED. Use methods with `WithCtx` suffix on QueryM2M as replacement please.")
+	return o.QueryM2M(md, name)
 }
 
 // load related models to md model.
@@ -452,9 +455,6 @@ func (o *ormBase) getRelQs(md interface{}, mi *modelInfo, fi *fieldInfo) *queryS
 // table name can be string or struct.
 // e.g. QueryTable("user"), QueryTable(&user{}) or QueryTable((*User)(nil)),
 func (o *ormBase) QueryTable(ptrStructOrTableName interface{}) (qs QuerySeter) {
-	return o.QueryTableWithCtx(context.Background(), ptrStructOrTableName)
-}
-func (o *ormBase) QueryTableWithCtx(ctx context.Context, ptrStructOrTableName interface{}) (qs QuerySeter) {
 	var name string
 	if table, ok := ptrStructOrTableName.(string); ok {
 		name = nameStrategyMap[defaultNameStrategy](table)
@@ -470,7 +470,13 @@ func (o *ormBase) QueryTableWithCtx(ctx context.Context, ptrStructOrTableName in
 	if qs == nil {
 		panic(fmt.Errorf("<Ormer.QueryTable> table name: `%s` not exists", name))
 	}
-	return qs.WithContext(ctx)
+	return qs
+}
+
+// NOTE: this method is deprecated, context parameter will not take effect.
+func (o *ormBase) QueryTableWithCtx(_ context.Context, ptrStructOrTableName interface{}) (qs QuerySeter) {
+	logs.Warn("QueryTableWithCtx is DEPRECATED. Use methods with `WithCtx` suffix on QuerySeter as replacement please.")
+	return o.QueryTable(ptrStructOrTableName)
 }
 
 // return a raw query seter for raw sql string.

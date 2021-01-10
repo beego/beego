@@ -77,7 +77,6 @@ func RunCommand() {
 
 // sync database struct command interface.
 type commandSyncDb struct {
-	ctx       context.Context
 	al        *alias
 	force     bool
 	verbose   bool
@@ -143,6 +142,7 @@ func (d *commandSyncDb) Run() error {
 		fmt.Printf("    %s\n", err.Error())
 	}
 
+	ctx := context.Background()
 	for i, mi := range modelCache.allOrdered() {
 
 		if !isApplicableTableForDB(mi.addrField, d.al.Name) {
@@ -156,7 +156,7 @@ func (d *commandSyncDb) Run() error {
 			}
 
 			var fields []*fieldInfo
-			columns, err := d.al.DbBaser.GetColumns(d.ctx, db, mi.table)
+			columns, err := d.al.DbBaser.GetColumns(ctx, db, mi.table)
 			if err != nil {
 				if d.rtOnError {
 					return err
@@ -190,7 +190,7 @@ func (d *commandSyncDb) Run() error {
 			}
 
 			for _, idx := range indexes[mi.table] {
-				if !d.al.DbBaser.IndexExists(d.ctx, db, idx.Table, idx.Name) {
+				if !d.al.DbBaser.IndexExists(ctx, db, idx.Table, idx.Name) {
 					if !d.noInfo {
 						fmt.Printf("create index `%s` for table `%s`\n", idx.Name, idx.Table)
 					}
@@ -292,7 +292,6 @@ func RunSyncdb(name string, force bool, verbose bool) error {
 
 	al := getDbAlias(name)
 	cmd := new(commandSyncDb)
-	cmd.ctx = context.TODO()
 	cmd.al = al
 	cmd.force = force
 	cmd.noInfo = !verbose
