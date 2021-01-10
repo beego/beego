@@ -22,7 +22,6 @@ import (
 
 // an insert queryer struct
 type insertSet struct {
-	ctx    context.Context
 	mi     *modelInfo
 	orm    *ormBase
 	stmt   stmtQuerier
@@ -33,6 +32,10 @@ var _ Inserter = new(insertSet)
 
 // insert model ignore it's registered or not.
 func (o *insertSet) Insert(md interface{}) (int64, error) {
+	return o.InsertWithCtx(context.Background(), md)
+}
+
+func (o *insertSet) InsertWithCtx(ctx context.Context, md interface{}) (int64, error) {
 	if o.closed {
 		return 0, ErrStmtClosed
 	}
@@ -46,7 +49,7 @@ func (o *insertSet) Insert(md interface{}) (int64, error) {
 	if name != o.mi.fullName {
 		panic(fmt.Errorf("<Inserter.Insert> need model `%s` but found `%s`", o.mi.fullName, name))
 	}
-	id, err := o.orm.alias.DbBaser.InsertStmt(o.ctx, o.stmt, o.mi, ind, o.orm.alias.TZ)
+	id, err := o.orm.alias.DbBaser.InsertStmt(ctx, o.stmt, o.mi, ind, o.orm.alias.TZ)
 	if err != nil {
 		return id, err
 	}
@@ -74,7 +77,6 @@ func (o *insertSet) Close() error {
 // create new insert queryer.
 func newInsertSet(ctx context.Context, orm *ormBase, mi *modelInfo) (Inserter, error) {
 	bi := new(insertSet)
-	bi.ctx = ctx
 	bi.orm = orm
 	bi.mi = mi
 	st, query, err := orm.alias.DbBaser.PrepareInsert(ctx, orm.db, mi)

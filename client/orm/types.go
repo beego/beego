@@ -17,10 +17,10 @@ package orm
 import (
 	"context"
 	"database/sql"
-	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
 	"reflect"
 	"time"
 
+	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
 	"github.com/beego/beego/v2/core/utils"
 )
 
@@ -235,6 +235,7 @@ type TxOrmer interface {
 // Inserter insert prepared statement
 type Inserter interface {
 	Insert(interface{}) (int64, error)
+	InsertWithCtx(context.Context, interface{}) (int64, error)
 	Close() error
 }
 
