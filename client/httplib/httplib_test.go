@@ -301,6 +301,28 @@ func TestAddFilter(t *testing.T) {
 	assert.Equal(t, 1, len(req.setting.FilterChains)-len(r.setting.FilterChains))
 }
 
+func TestFilterChainOrder(t *testing.T) {
+	req := Get("http://beego.me")
+	req.AddFilters(func(next Filter) Filter {
+		return func(ctx context.Context, req *BeegoHTTPRequest) (*http.Response, error) {
+			return NewHttpResponseWithJsonBody("first"), nil
+		}
+	})
+
+
+	req.AddFilters(func(next Filter) Filter {
+		return func(ctx context.Context, req *BeegoHTTPRequest) (*http.Response, error) {
+			return NewHttpResponseWithJsonBody("second"), nil
+		}
+	})
+
+	resp, err := req.DoRequestWithCtx(context.Background())
+	assert.Nil(t, err)
+	data := make([]byte, 5)
+	_, _ = resp.Body.Read(data)
+	assert.Equal(t, "first", string(data))
+}
+
 func TestHead(t *testing.T) {
 	req := Head("http://beego.me")
 	assert.NotNil(t, req)

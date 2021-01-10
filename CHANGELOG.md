@@ -7,3 +7,4 @@
 - Using fixed name `commentRouter.go` as generated file name. [4385](https://github.com/beego/beego/pull/4385)
 - Fix 4383: ORM Adapter produces panic when using orm.RegisterModelWithPrefix. [4386](https://github.com/beego/beego/pull/4386)
 - Support 4144: Add new api for order by for supporting multiple way to query [4294](https://github.com/beego/beego/pull/4294)
+- Support session Filter chain. [4404](https://github.com/beego/beego/pull/4404)
