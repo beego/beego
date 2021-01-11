@@ -15,13 +15,63 @@
 package mock
 
 import (
+	"context"
+
 	"github.com/beego/beego/v2/client/orm"
+	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
 )
 
 // DoNothingQuerySetter do nothing
 // usually you use this to build your mock QuerySetter
 type DoNothingQuerySetter struct {
-	
+}
+
+func (d *DoNothingQuerySetter) OrderClauses(orders ...*order_clause.Order) orm.QuerySeter {
+	return d
+}
+
+func (d *DoNothingQuerySetter) CountWithCtx(ctx context.Context) (int64, error) {
+	return 0, nil
+}
+
+func (d *DoNothingQuerySetter) ExistWithCtx(ctx context.Context) bool {
+	return true
+}
+
+func (d *DoNothingQuerySetter) UpdateWithCtx(ctx context.Context, values orm.Params) (int64, error) {
+	return 0, nil
+}
+
+func (d *DoNothingQuerySetter) DeleteWithCtx(ctx context.Context) (int64, error) {
+	return 0, nil
+}
+
+func (d *DoNothingQuerySetter) PrepareInsertWithCtx(ctx context.Context) (orm.Inserter, error) {
+	return nil, nil
+}
+
+func (d *DoNothingQuerySetter) AllWithCtx(ctx context.Context, container interface{}, cols ...string) (int64, error) {
+	return 0, nil
+}
+
+func (d *DoNothingQuerySetter) OneWithCtx(ctx context.Context, container interface{}, cols ...string) error {
+	return nil
+}
+
+func (d *DoNothingQuerySetter) ValuesWithCtx(ctx context.Context, results *[]orm.Params, exprs ...string) (int64, error) {
+	return 0, nil
+}
+
+func (d *DoNothingQuerySetter) ValuesListWithCtx(ctx context.Context, results *[]orm.ParamsList, exprs ...string) (int64, error) {
+	return 0, nil
+}
+
+func (d *DoNothingQuerySetter) ValuesFlatWithCtx(ctx context.Context, result *orm.ParamsList, expr string) (int64, error) {
+	return 0, nil
+}
+
+func (d *DoNothingQuerySetter) Aggregate(s string) orm.QuerySeter {
+	return d
 }
 
 func (d *DoNothingQuerySetter) Filter(s string, i ...interface{}) orm.QuerySeter {

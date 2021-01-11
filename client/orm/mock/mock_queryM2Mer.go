@@ -26,6 +26,26 @@ type DoNothingQueryM2Mer struct {
 	
 }
 
+func (d *DoNothingQueryM2Mer) AddWithCtx(ctx context.Context, i ...interface{}) (int64, error) {
+	return 0, nil
+}
+
+func (d *DoNothingQueryM2Mer) RemoveWithCtx(ctx context.Context, i ...interface{}) (int64, error) {
+	return 0, nil
+}
+
+func (d *DoNothingQueryM2Mer) ExistWithCtx(ctx context.Context, i interface{}) bool {
+	return true
+}
+
+func (d *DoNothingQueryM2Mer) ClearWithCtx(ctx context.Context) (int64, error) {
+	return 0, nil
+}
+
+func (d *DoNothingQueryM2Mer) CountWithCtx(ctx context.Context) (int64, error) {
+	return 0, nil
+}
+
 func (d *DoNothingQueryM2Mer) Add(i ...interface{}) (int64, error) {
 	return 0, nil
 }

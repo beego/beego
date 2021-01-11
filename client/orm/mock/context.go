@@ -20,7 +20,9 @@ import (
 	"github.com/beego/beego/v2/core/logs"
 )
 
-const mockCtxKey = "beego-orm-mock"
+type mockCtxKeyType string
+
+const mockCtxKey = mockCtxKeyType("beego-orm-mock")
 
 func CtxWithMock(ctx context.Context, mock ...*Mock) context.Context {
 	return context.WithValue(ctx, mockCtxKey, mock)

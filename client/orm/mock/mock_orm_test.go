@@ -24,7 +24,7 @@ import (
 
 	"github.com/beego/beego/v2/client/orm"
 )
-
+const mockErrorMsg = "mock error"
 func init() {
 	orm.RegisterModel(&User{})
 }
@@ -65,7 +65,7 @@ func TestMockInsertOrUpdateWithCtx(t *testing.T) {
 func TestMockRead(t *testing.T) {
 	s := StartMock()
 	defer s.Clear()
-	err := errors.New("mock error")
+	err := errors.New(mockErrorMsg)
 	s.Mock(MockRead((&User{}).TableName(), func(data interface{}) {
 		u := data.(*User)
 		u.Name = "Tom"
@@ -100,7 +100,7 @@ func TestMockQueryTableWithCtx(t *testing.T) {
 func TestMockTable(t *testing.T) {
 	s := StartMock()
 	defer s.Clear()
-	mock := errors.New("mock error")
+	mock := errors.New(mockErrorMsg)
 	s.Mock(MockTable((&User{}).TableName(), mock))
 	o := orm.NewOrm()
 	res := o.Read(&User{})
@@ -110,7 +110,7 @@ func TestMockTable(t *testing.T) {
 func TestMockInsertMultiWithCtx(t *testing.T) {
 	s := StartMock()
 	defer s.Clear()
-	mock := errors.New("mock error")
+	mock := errors.New(mockErrorMsg)
 	s.Mock(MockInsertMultiWithCtx((&User{}).TableName(), 12, mock))
 	o := orm.NewOrm()
 	res, err := o.InsertMulti(11, []interface{}{&User{}})
@@ -121,7 +121,7 @@ func TestMockInsertMultiWithCtx(t *testing.T) {
 func TestMockInsertWithCtx(t *testing.T) {
 	s := StartMock()
 	defer s.Clear()
-	mock := errors.New("mock error")
+	mock := errors.New(mockErrorMsg)
 	s.Mock(MockInsertWithCtx((&User{}).TableName(), 13, mock))
 	o := orm.NewOrm()
 	res, err := o.Insert(&User{})
@@ -132,7 +132,7 @@ func TestMockInsertWithCtx(t *testing.T) {
 func TestMockUpdateWithCtx(t *testing.T) {
 	s := StartMock()
 	defer s.Clear()
-	mock := errors.New("mock error")
+	mock := errors.New(mockErrorMsg)
 	s.Mock(MockUpdateWithCtx((&User{}).TableName(), 12, mock))
 	o := orm.NewOrm()
 	res, err := o.Update(&User{})
@@ -143,7 +143,7 @@ func TestMockUpdateWithCtx(t *testing.T) {
 func TestMockLoadRelatedWithCtx(t *testing.T) {
 	s := StartMock()
 	defer s.Clear()
-	mock := errors.New("mock error")
+	mock := errors.New(mockErrorMsg)
 	s.Mock(MockLoadRelatedWithCtx((&User{}).TableName(), "T", 12, mock))
 	o := orm.NewOrm()
 	res, err := o.LoadRelated(&User{}, "T")
@@ -154,7 +154,7 @@ func TestMockLoadRelatedWithCtx(t *testing.T) {
 func TestMockMethod(t *testing.T) {
 	s := StartMock()
 	defer s.Clear()
-	mock := errors.New("mock error")
+	mock := errors.New(mockErrorMsg)
 	s.Mock(MockMethod("ReadWithCtx", mock))
 	o := orm.NewOrm()
 	err := o.Read(&User{})
@@ -164,7 +164,7 @@ func TestMockMethod(t *testing.T) {
 func TestMockReadForUpdateWithCtx(t *testing.T) {
 	s := StartMock()
 	defer s.Clear()
-	mock := errors.New("mock error")
+	mock := errors.New(mockErrorMsg)
 	s.Mock(MockReadForUpdateWithCtx((&User{}).TableName(), func(data interface{}) {
 		u := data.(*User)
 		u.Name = "Tom"
@@ -189,7 +189,7 @@ func TestMockRawWithCtx(t *testing.T) {
 func TestMockReadOrCreateWithCtx(t *testing.T) {
 	s := StartMock()
 	defer s.Clear()
-	mock := errors.New("mock error")
+	mock := errors.New(mockErrorMsg)
 	s.Mock(MockReadOrCreateWithCtx((&User{}).TableName(), func(data interface{}) {
 		u := data.(*User)
 		u.Name = "Tom"
@@ -206,7 +206,7 @@ func TestMockReadOrCreateWithCtx(t *testing.T) {
 func TestTransactionClosure(t *testing.T) {
 	s := StartMock()
 	defer s.Clear()
-	mock := errors.New("mock error")
+	mock := errors.New(mockErrorMsg)
 	s.Mock(MockRead((&User{}).TableName(), func(data interface{}) {
 		u := data.(*User)
 		u.Name = "Tom"
@@ -219,7 +219,7 @@ func TestTransactionClosure(t *testing.T) {
 func TestTransactionManually(t *testing.T) {
 	s := StartMock()
 	defer s.Clear()
-	mock := errors.New("mock error")
+	mock := errors.New(mockErrorMsg)
 	s.Mock(MockRead((&User{}).TableName(), func(data interface{}) {
 		u := data.(*User)
 		u.Name = "Tom"
@@ -232,7 +232,7 @@ func TestTransactionManually(t *testing.T) {
 func TestTransactionRollback(t *testing.T) {
 	s := StartMock()
 	defer s.Clear()
-	mock := errors.New("mock error")
+	mock := errors.New(mockErrorMsg)
 	s.Mock(MockRead((&User{}).TableName(), nil, errors.New("read error")))
 	s.Mock(MockRollback(mock))
 	_, err := originalTx()
@@ -242,7 +242,7 @@ func TestTransactionRollback(t *testing.T) {
 func TestTransactionCommit(t *testing.T)  {
 	s := StartMock()
 	defer s.Clear()
-	mock := errors.New("mock error")
+	mock := errors.New(mockErrorMsg)
 	s.Mock(MockRead((&User{}).TableName(), func(data interface{}) {
 		u := data.(*User)
 		u.Name = "Tom"
@@ -280,7 +280,7 @@ func originalTxUsingClosure() (*User, error) {
 	u := &User{}
 	var err error
 	o := orm.NewOrm()
-	o.DoTx(func(ctx context.Context, txOrm orm.TxOrmer) error {
+	_ = o.DoTx(func(ctx context.Context, txOrm orm.TxOrmer) error {
 		err = txOrm.Read(u)
 		return nil
 	})

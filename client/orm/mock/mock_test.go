@@ -40,7 +40,6 @@ func TestOrmStub_FilterChain(t *testing.T) {
 		arg := inv.Args[0]
 		j := arg.(int)
 		inv.Args[0] = j + 1
-		return
 	})
 	os.Mock(m)
 
