@@ -15,6 +15,7 @@
 package orm
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"os"
@@ -141,6 +142,7 @@ func (d *commandSyncDb) Run() error {
 		fmt.Printf("    %s\n", err.Error())
 	}
 
+	ctx := context.Background()
 	for i, mi := range modelCache.allOrdered() {
 
 		if !isApplicableTableForDB(mi.addrField, d.al.Name) {
@@ -154,7 +156,7 @@ func (d *commandSyncDb) Run() error {
 			}
 
 			var fields []*fieldInfo
-			columns, err := d.al.DbBaser.GetColumns(db, mi.table)
+			columns, err := d.al.DbBaser.GetColumns(ctx, db, mi.table)
 			if err != nil {
 				if d.rtOnError {
 					return err
@@ -188,7 +190,7 @@ func (d *commandSyncDb) Run() error {
 			}
 
 			for _, idx := range indexes[mi.table] {
-				if !d.al.DbBaser.IndexExists(db, idx.Table, idx.Name) {
+				if !d.al.DbBaser.IndexExists(ctx, db, idx.Table, idx.Name) {
 					if !d.noInfo {
 						fmt.Printf("create index `%s` for table `%s`\n", idx.Name, idx.Table)
 					}

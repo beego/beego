@@ -27,7 +27,7 @@ import (
 // this Filter's behavior looks a little bit strange
 // for example:
 // if we want to trace QuerySetter
-// actually we trace invoking "QueryTable" and "QueryTableWithCtx"
+// actually we trace invoking "QueryTable"
 // the method Begin*, Commit and Rollback are ignored.
 // When use using those methods, it means that they want to manager their transaction manually, so we won't handle them.
 type FilterChainBuilder struct {

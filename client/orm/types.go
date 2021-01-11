@@ -20,6 +20,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
 	"github.com/beego/beego/v2/core/utils"
 )
 
@@ -196,12 +197,16 @@ type DQL interface {
 	// 	post := Post{Id: 4}
 	// 	m2m := Ormer.QueryM2M(&post, "Tags")
 	QueryM2M(md interface{}, name string) QueryM2Mer
+	// NOTE: this method is deprecated, context parameter will not take effect.
+	// Use context.Context directly on methods with `WithCtx` suffix such as InsertWithCtx/UpdateWithCtx
 	QueryM2MWithCtx(ctx context.Context, md interface{}, name string) QueryM2Mer
 
 	// return a QuerySeter for table operations.
 	// table name can be string or struct.
 	// e.g. QueryTable("user"), QueryTable(&user{}) or QueryTable((*User)(nil)),
 	QueryTable(ptrStructOrTableName interface{}) QuerySeter
+	// NOTE: this method is deprecated, context parameter will not take effect.
+	// Use context.Context directly on methods with `WithCtx` suffix such as InsertWithCtx/UpdateWithCtx
 	QueryTableWithCtx(ctx context.Context, ptrStructOrTableName interface{}) QuerySeter
 
 	DBStats() *sql.DBStats
@@ -230,6 +235,7 @@ type TxOrmer interface {
 // Inserter insert prepared statement
 type Inserter interface {
 	Insert(interface{}) (int64, error)
+	InsertWithCtx(context.Context, interface{}) (int64, error)
 	Close() error
 }
 
@@ -289,6 +295,28 @@ type QuerySeter interface {
 	// for example:
 	//	qs.OrderBy("-status")
 	OrderBy(exprs ...string) QuerySeter
+	// add ORDER expression by order clauses
+	// for example:
+	//	OrderClauses(
+	//		order_clause.Clause(
+	//			order.Column("Id"),
+	//			order.SortAscending(),
+	//		),
+	//		order_clause.Clause(
+	//			order.Column("status"),
+	//			order.SortDescending(),
+	//		),
+	//	)
+	//	OrderClauses(order_clause.Clause(
+	//		order_clause.Column(`user__status`),
+	//		order_clause.SortDescending(),//default None
+	//	))
+	//	OrderClauses(order_clause.Clause(
+	//		order_clause.Column(`random()`),
+	//		order_clause.SortNone(),//default None
+	//		order_clause.Raw(),//default false.if true, do not check field is valid or not
+	//	))
+	OrderClauses(orders ...*order_clause.Order) QuerySeter
 	// add FORCE INDEX expression.
 	// for example:
 	//	qs.ForceIndex(`idx_name1`,`idx_name2`)
@@ -327,9 +355,11 @@ type QuerySeter interface {
 	// for example:
 	//	num, err = qs.Filter("profile__age__gt", 28).Count()
 	Count() (int64, error)
+	CountWithCtx(context.Context) (int64, error)
 	// check result empty or not after QuerySeter executed
 	// the same as QuerySeter.Count > 0
 	Exist() bool
+	ExistWithCtx(context.Context) bool
 	// execute update with parameters
 	// for example:
 	//	num, err = qs.Filter("user_name", "slene").Update(Params{
@@ -339,11 +369,13 @@ type QuerySeter interface {
 	//		"user_name": "slene2"
 	//	}) // user slene's  name will change to slene2
 	Update(values Params) (int64, error)
+	UpdateWithCtx(ctx context.Context, values Params) (int64, error)
 	// delete from table
 	// for example:
 	//	num ,err = qs.Filter("user_name__in", "testing1", "testing2").Delete()
 	// 	//delete two user  who's name is testing1 or testing2
 	Delete() (int64, error)
+	DeleteWithCtx(context.Context) (int64, error)
 	// return a insert queryer.
 	// it can be used in times.
 	// example:
@@ -352,18 +384,21 @@ type QuerySeter interface {
 	//	num, err = i.Insert(&user2) // user table will add one record user2 at once
 	//	err = i.Close() //don't forget call Close
 	PrepareInsert() (Inserter, error)
+	PrepareInsertWithCtx(context.Context) (Inserter, error)
 	// query all data and map to containers.
 	// cols means the columns when querying.
 	// for example:
 	//	var users []*User
 	//	qs.All(&users) // users[0],users[1],users[2] ...
 	All(container interface{}, cols ...string) (int64, error)
+	AllWithCtx(ctx context.Context, container interface{}, cols ...string) (int64, error)
 	// query one row data and map to containers.
 	// cols means the columns when querying.
 	// for example:
 	//	var user User
 	//	qs.One(&user) //user.UserName == "slene"
 	One(container interface{}, cols ...string) error
+	OneWithCtx(ctx context.Context, container interface{}, cols ...string) error
 	// query all data and map to []map[string]interface.
 	// expres means condition expression.
 	// it converts data to []map[column]value.
@@ -371,18 +406,21 @@ type QuerySeter interface {
 	//	var maps []Params
 	//	qs.Values(&maps) //maps[0]["UserName"]=="slene"
 	Values(results *[]Params, exprs ...string) (int64, error)
+	ValuesWithCtx(ctx context.Context, results *[]Params, exprs ...string) (int64, error)
 	// query all data and map to [][]interface
 	// it converts data to [][column_index]value
 	// for example:
 	//	var list []ParamsList
 	//	qs.ValuesList(&list) // list[0][1] == "slene"
 	ValuesList(results *[]ParamsList, exprs ...string) (int64, error)
+	ValuesListWithCtx(ctx context.Context, results *[]ParamsList, exprs ...string) (int64, error)
 	// query all data and map to []interface.
 	// it's designed for one column record set, auto change to []value, not [][column]value.
 	// for example:
 	//	var list ParamsList
 	//	qs.ValuesFlat(&list, "UserName") // list[0] == "slene"
 	ValuesFlat(result *ParamsList, expr string) (int64, error)
+	ValuesFlatWithCtx(ctx context.Context, result *ParamsList, expr string) (int64, error)
 	// query all rows into map[string]interface with specify key and value column name.
 	// keyCol = "name", valueCol = "value"
 	// table data
@@ -405,6 +443,15 @@ type QuerySeter interface {
 	// 	Found int
 	// }
 	RowsToStruct(ptrStruct interface{}, keyCol, valueCol string) (int64, error)
+	// aggregate func.
+	// for example:
+	// type result struct {
+	//  DeptName string
+	//	Total    int
+	// }
+	// var res []result
+	//  o.QueryTable("dept_info").Aggregate("dept_name,sum(salary) as total").GroupBy("dept_name").All(&res)
+	Aggregate(s string) QuerySeter
 }
 
 // QueryM2Mer model to model query struct
@@ -422,18 +469,23 @@ type QueryM2Mer interface {
 	// insert one or more rows to m2m table
 	// make sure the relation is defined in post model struct tag.
 	Add(...interface{}) (int64, error)
+	AddWithCtx(context.Context, ...interface{}) (int64, error)
 	// remove models following the origin model relationship
 	// only delete rows from m2m table
 	// for example:
 	// tag3 := &Tag{Id:5,Name: "TestTag3"}
 	// num, err = m2m.Remove(tag3)
 	Remove(...interface{}) (int64, error)
+	RemoveWithCtx(context.Context, ...interface{}) (int64, error)
 	// check model is existed in relationship of origin model
 	Exist(interface{}) bool
+	ExistWithCtx(context.Context, interface{}) bool
 	// clean all models in related of origin model
 	Clear() (int64, error)
+	ClearWithCtx(context.Context) (int64, error)
 	// count all related models of origin model
 	Count() (int64, error)
+	CountWithCtx(context.Context) (int64, error)
 }
 
 // RawPreparer raw query statement
@@ -507,11 +559,11 @@ type RawSeter interface {
 type stmtQuerier interface {
 	Close() error
 	Exec(args ...interface{}) (sql.Result, error)
-	// ExecContext(ctx context.Context, args ...interface{}) (sql.Result, error)
+	ExecContext(ctx context.Context, args ...interface{}) (sql.Result, error)
 	Query(args ...interface{}) (*sql.Rows, error)
-	// QueryContext(args ...interface{}) (*sql.Rows, error)
+	QueryContext(ctx context.Context, args ...interface{}) (*sql.Rows, error)
 	QueryRow(args ...interface{}) *sql.Row
-	// QueryRowContext(ctx context.Context, args ...interface{}) *sql.Row
+	QueryRowContext(ctx context.Context, args ...interface{}) *sql.Row
 }
 
 // db querier
@@ -548,28 +600,28 @@ type txEnder interface {
 
 // base database struct
 type dbBaser interface {
-	Read(dbQuerier, *modelInfo, reflect.Value, *time.Location, []string, bool) error
-	ReadBatch(dbQuerier, *querySet, *modelInfo, *Condition, interface{}, *time.Location, []string) (int64, error)
-	Count(dbQuerier, *querySet, *modelInfo, *Condition, *time.Location) (int64, error)
-	ReadValues(dbQuerier, *querySet, *modelInfo, *Condition, []string, interface{}, *time.Location) (int64, error)
+	Read(context.Context, dbQuerier, *modelInfo, reflect.Value, *time.Location, []string, bool) error
+	ReadBatch(context.Context, dbQuerier, *querySet, *modelInfo, *Condition, interface{}, *time.Location, []string) (int64, error)
+	Count(context.Context, dbQuerier, *querySet, *modelInfo, *Condition, *time.Location) (int64, error)
+	ReadValues(context.Context, dbQuerier, *querySet, *modelInfo, *Condition, []string, interface{}, *time.Location) (int64, error)
 
-	Insert(dbQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
-	InsertOrUpdate(dbQuerier, *modelInfo, reflect.Value, *alias, ...string) (int64, error)
-	InsertMulti(dbQuerier, *modelInfo, reflect.Value, int, *time.Location) (int64, error)
-	InsertValue(dbQuerier, *modelInfo, bool, []string, []interface{}) (int64, error)
-	InsertStmt(stmtQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
+	Insert(context.Context, dbQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
+	InsertOrUpdate(context.Context, dbQuerier, *modelInfo, reflect.Value, *alias, ...string) (int64, error)
+	InsertMulti(context.Context, dbQuerier, *modelInfo, reflect.Value, int, *time.Location) (int64, error)
+	InsertValue(context.Context, dbQuerier, *modelInfo, bool, []string, []interface{}) (int64, error)
+	InsertStmt(context.Context, stmtQuerier, *modelInfo, reflect.Value, *time.Location) (int64, error)
 
-	Update(dbQuerier, *modelInfo, reflect.Value, *time.Location, []string) (int64, error)
-	UpdateBatch(dbQuerier, *querySet, *modelInfo, *Condition, Params, *time.Location) (int64, error)
+	Update(context.Context, dbQuerier, *modelInfo, reflect.Value, *time.Location, []string) (int64, error)
+	UpdateBatch(context.Context, dbQuerier, *querySet, *modelInfo, *Condition, Params, *time.Location) (int64, error)
 
-	Delete(dbQuerier, *modelInfo, reflect.Value, *time.Location, []string) (int64, error)
-	DeleteBatch(dbQuerier, *querySet, *modelInfo, *Condition, *time.Location) (int64, error)
+	Delete(context.Context, dbQuerier, *modelInfo, reflect.Value, *time.Location, []string) (int64, error)
+	DeleteBatch(context.Context, dbQuerier, *querySet, *modelInfo, *Condition, *time.Location) (int64, error)
 
 	SupportUpdateJoin() bool
 	OperatorSQL(string) string
 	GenerateOperatorSQL(*modelInfo, *fieldInfo, string, []interface{}, *time.Location) (string, []interface{})
 	GenerateOperatorLeftCol(*fieldInfo, string, *string)
-	PrepareInsert(dbQuerier, *modelInfo) (stmtQuerier, string, error)
+	PrepareInsert(context.Context, dbQuerier, *modelInfo) (stmtQuerier, string, error)
 	MaxLimit() uint64
 	TableQuote() string
 	ReplaceMarks(*string)
@@ -578,12 +630,12 @@ type dbBaser interface {
 	TimeToDB(*time.Time, *time.Location)
 	DbTypes() map[string]string
 	GetTables(dbQuerier) (map[string]bool, error)
-	GetColumns(dbQuerier, string) (map[string][3]string, error)
+	GetColumns(context.Context, dbQuerier, string) (map[string][3]string, error)
 	ShowTablesQuery() string
 	ShowColumnsQuery(string) string
-	IndexExists(dbQuerier, string, string) bool
+	IndexExists(context.Context, dbQuerier, string, string) bool
 	collectFieldValue(*modelInfo, *fieldInfo, reflect.Value, bool, *time.Location) (interface{}, error)
-	setval(dbQuerier, *modelInfo, []string) error
+	setval(context.Context, dbQuerier, *modelInfo, []string) error
 
 	GenerateSpecifyIndex(tableName string, useIndex int, indexes []string) string
 }

@@ -91,25 +91,6 @@ func GetProvider(name string) (Provider, error) {
 	return provider, nil
 }
 
-// ManagerConfig define the session config
-type ManagerConfig struct {
-	CookieName              string `json:"cookieName"`
-	EnableSetCookie         bool   `json:"enableSetCookie,omitempty"`
-	Gclifetime              int64  `json:"gclifetime"`
-	Maxlifetime             int64  `json:"maxLifetime"`
-	DisableHTTPOnly         bool   `json:"disableHTTPOnly"`
-	Secure                  bool   `json:"secure"`
-	CookieLifeTime          int    `json:"cookieLifeTime"`
-	ProviderConfig          string `json:"providerConfig"`
-	Domain                  string `json:"domain"`
-	SessionIDLength         int64  `json:"sessionIDLength"`
-	EnableSidInHTTPHeader   bool   `json:"EnableSidInHTTPHeader"`
-	SessionNameInHTTPHeader string `json:"SessionNameInHTTPHeader"`
-	EnableSidInURLQuery     bool   `json:"EnableSidInURLQuery"`
-	SessionIDPrefix         string `json:"sessionIDPrefix"`
-	CookieSameSite          http.SameSite `json:"cookieSameSite"`
-}
-
 // Manager contains Provider and its configuration.
 type Manager struct {
 	provider Provider

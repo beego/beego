@@ -255,6 +255,22 @@ func NewTM() *TM {
 	return obj
 }
 
+type DeptInfo struct {
+	ID           int       `orm:"column(id)"`
+	Created      time.Time `orm:"auto_now_add"`
+	DeptName     string
+	EmployeeName string
+	Salary       int
+}
+
+type UnregisterModel struct {
+	ID           int       `orm:"column(id)"`
+	Created      time.Time `orm:"auto_now_add"`
+	DeptName     string
+	EmployeeName string
+	Salary       int
+}
+
 type User struct {
 	ID           int    `orm:"column(id)"`
 	UserName     string `orm:"size(30);unique"`
@@ -476,45 +492,45 @@ var (
 	helpinfo = `need driver and source!
 
 	Default DB Drivers.
-	
+
 	  driver: url
 	   mysql: https://github.com/go-sql-driver/mysql
 	 sqlite3: https://github.com/mattn/go-sqlite3
 	postgres: https://github.com/lib/pq
 	tidb: https://github.com/pingcap/tidb
-	
+
 	usage:
-	
+
 	go get -u github.com/beego/beego/v2/client/orm
 	go get -u github.com/go-sql-driver/mysql
 	go get -u github.com/mattn/go-sqlite3
 	go get -u github.com/lib/pq
 	go get -u github.com/pingcap/tidb
-	
+
 	#### MySQL
 	mysql -u root -e 'create database orm_test;'
 	export ORM_DRIVER=mysql
 	export ORM_SOURCE="root:@/orm_test?charset=utf8"
 	go test -v github.com/beego/beego/v2/client/orm
-	
-	
+
+
 	#### Sqlite3
 	export ORM_DRIVER=sqlite3
 	export ORM_SOURCE='file:memory_test?mode=memory'
 	go test -v github.com/beego/beego/v2/client/orm
-	
-	
+
+
 	#### PostgreSQL
 	psql -c 'create database orm_test;' -U postgres
 	export ORM_DRIVER=postgres
 	export ORM_SOURCE="user=postgres dbname=orm_test sslmode=disable"
 	go test -v github.com/beego/beego/v2/client/orm
-	
+
 	#### TiDB
 	export ORM_DRIVER=tidb
 	export ORM_SOURCE='memory://test/test'
 	go test -v github.com/beego/beego/v2/pgk/orm
-	
+
 	`
 )
 
