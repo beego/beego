@@ -29,10 +29,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/beego/beego/v2/server/web/session"
-
 	"github.com/beego/beego/v2/server/web/context"
 	"github.com/beego/beego/v2/server/web/context/param"
+	"github.com/beego/beego/v2/server/web/session"
 )
 
 var (
@@ -619,6 +618,26 @@ func (c *Controller) SaveToFile(fromFile, toFile string) error {
 	defer f.Close()
 
 	_, err = io.Copy(f, file)
+	return err
+}
+
+type onlyWriter struct {
+	io.Writer
+}
+
+func (c *Controller) SaveToFileWithBuffer(fromFile string, toFile string, buf []byte) error {
+	src, _, err := c.Ctx.Request.FormFile(fromFile)
+	if err != nil {
+		return err
+	}
+	defer src.Close()
+
+	dst, err := os.OpenFile(toFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+	if err != nil {
+		return err
+	}
+
+	_, err = io.CopyBuffer(onlyWriter{dst}, src, buf)
 	return err
 }
 
