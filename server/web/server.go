@@ -84,7 +84,9 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 
 	initBeforeHTTPRun()
 
+	// init...
 	app.initAddr(addr)
+	app.Handlers.Init()
 
 	addr = app.Cfg.Listen.HTTPAddr
 
