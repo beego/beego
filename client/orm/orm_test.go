@@ -2820,3 +2820,23 @@ func TestCondition(t *testing.T) {
 	throwFail(t, AssertIs(!cycleFlag, true))
 	return
 }
+
+func TestContextCanceled(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	user := User{UserName: "slene"}
+
+	err := dORM.ReadWithCtx(ctx, &user, "UserName")
+	throwFail(t, err)
+
+	cancel()
+	err = dORM.ReadWithCtx(ctx, &user, "UserName")
+	throwFail(t, AssertIs(err, context.Canceled))
+
+	ctx, cancel = context.WithCancel(context.Background())
+	cancel()
+
+	qs := dORM.QueryTable(user)
+	_, err = qs.Filter("UserName", "slene").CountWithCtx(ctx)
+	throwFail(t, AssertIs(err, context.Canceled))
+}

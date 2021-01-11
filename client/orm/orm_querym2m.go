@@ -14,7 +14,10 @@
 
 package orm
 
-import "reflect"
+import (
+	"context"
+	"reflect"
+)
 
 // model to model struct
 type queryM2M struct {
@@ -33,6 +36,10 @@ type queryM2M struct {
 //
 // make sure the relation is defined in post model struct tag.
 func (o *queryM2M) Add(mds ...interface{}) (int64, error) {
+	return o.AddWithCtx(context.Background(), mds...)
+}
+
+func (o *queryM2M) AddWithCtx(ctx context.Context, mds ...interface{}) (int64, error) {
 	fi := o.fi
 	mi := fi.relThroughModelInfo
 	mfi := fi.reverseFieldInfo
@@ -96,11 +103,15 @@ func (o *queryM2M) Add(mds ...interface{}) (int64, error) {
 	}
 	names = append(names, otherNames...)
 	values = append(values, otherValues...)
-	return dbase.InsertValue(orm.db, mi, true, names, values)
+	return dbase.InsertValue(ctx, orm.db, mi, true, names, values)
 }
 
 // remove models following the origin model relationship
 func (o *queryM2M) Remove(mds ...interface{}) (int64, error) {
+	return o.RemoveWithCtx(context.Background(), mds...)
+}
+
+func (o *queryM2M) RemoveWithCtx(ctx context.Context, mds ...interface{}) (int64, error) {
 	fi := o.fi
 	qs := o.qs.Filter(fi.reverseFieldInfo.name, o.md)
 
@@ -109,21 +120,33 @@ func (o *queryM2M) Remove(mds ...interface{}) (int64, error) {
 
 // check model is existed in relationship of origin model
 func (o *queryM2M) Exist(md interface{}) bool {
+	return o.ExistWithCtx(context.Background(), md)
+}
+
+func (o *queryM2M) ExistWithCtx(ctx context.Context, md interface{}) bool {
 	fi := o.fi
 	return o.qs.Filter(fi.reverseFieldInfo.name, o.md).
-		Filter(fi.reverseFieldInfoTwo.name, md).Exist()
+		Filter(fi.reverseFieldInfoTwo.name, md).ExistWithCtx(ctx)
 }
 
 // clean all models in related of origin model
 func (o *queryM2M) Clear() (int64, error) {
+	return o.ClearWithCtx(context.Background())
+}
+
+func (o *queryM2M) ClearWithCtx(ctx context.Context) (int64, error) {
 	fi := o.fi
-	return o.qs.Filter(fi.reverseFieldInfo.name, o.md).Delete()
+	return o.qs.Filter(fi.reverseFieldInfo.name, o.md).DeleteWithCtx(ctx)
 }
 
 // count all related models of origin model
 func (o *queryM2M) Count() (int64, error) {
+	return o.CountWithCtx(context.Background())
+}
+
+func (o *queryM2M) CountWithCtx(ctx context.Context) (int64, error) {
 	fi := o.fi
-	return o.qs.Filter(fi.reverseFieldInfo.name, o.md).Count()
+	return o.qs.Filter(fi.reverseFieldInfo.name, o.md).CountWithCtx(ctx)
 }
 
 var _ QueryM2Mer = new(queryM2M)
