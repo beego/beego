@@ -455,13 +455,18 @@ func (p *ControllerRegister) RouterAny(pattern string, f interface{}) {
 //    }
 //
 //    AddRouterMethod("get","/api/:id", MyController.Ping)
-func (p *ControllerRegister) AddRouterMethod(method, pattern string, f interface{}) {
-	method = strings.ToUpper(method)
-	if method != "*" && !HTTPMETHOD[method] {
-		panic("not support http method: " + method)
+func (p *ControllerRegister) AddRouterMethod(httpMethod, pattern string, f interface{}) {
+	httpMethod = strings.ToUpper(httpMethod)
+	if httpMethod != "*" && !HTTPMETHOD[httpMethod] {
+		panic("not support http method: " + httpMethod)
 	}
 
 	ct, methodName := getReflectTypeAndMethod(f)
+	p.addBeegoTypeRouter(ct, methodName, httpMethod, pattern)
+}
+
+// addBeegoTypeRouter add beego type router
+func (p *ControllerRegister) addBeegoTypeRouter(ct reflect.Type, ctMethod, httpMethod, pattern string) {
 	route := &ControllerInfo{}
 	route.pattern = pattern
 	route.routerType = routerTypeBeego
@@ -469,18 +474,16 @@ func (p *ControllerRegister) AddRouterMethod(method, pattern string, f interface
 	route.controllerType = ct
 
 	methods := make(map[string]string)
-	if method == "*" {
+	if httpMethod == "*" {
 		for val := range HTTPMETHOD {
-			methods[val] = methodName
+			methods[val] = ctMethod
 		}
 	} else {
-		methods[method] = methodName
+		methods[httpMethod] = ctMethod
 	}
 	route.methods = methods
 
-	for method := range methods {
-		p.addToRouter(method, pattern, route)
-	}
+	p.addRouterForMethod(route)
 }
 
 // get reflect controller type and method by controller method expression
