@@ -39,6 +39,7 @@ type TestControllerWithInterface struct {
 }
 
 func (m TestControllerWithInterface) Ping() {
+	fmt.Println("pong")
 }
 
 type TestController struct {
@@ -951,7 +952,7 @@ func TestRouterAddRouterMethodPanicNotAMethod(t *testing.T) {
 				return
 			}
 		}
-		t.Errorf(fmt.Sprintf("TestRouterAddRouterMethodPanicInvalidMethod failed: %v", err))
+		t.Errorf(fmt.Sprintf("TestRouterAddRouterMethodPanicNotAMethod failed: %v", err))
 	}()
 
 	handler := NewControllerRegister()
@@ -969,7 +970,7 @@ func TestRouterAddRouterMethodPanicNotPublicMethod(t *testing.T) {
 				return
 			}
 		}
-		t.Errorf(fmt.Sprintf("TestRouterAddRouterMethodPanicInvalidMethod failed: %v", err))
+		t.Errorf(fmt.Sprintf("TestRouterAddRouterMethodPanicNotPublicMethod failed: %v", err))
 	}()
 
 	handler := NewControllerRegister()
@@ -987,7 +988,7 @@ func TestRouterAddRouterMethodPanicNotImplementInterface(t *testing.T) {
 				return
 			}
 		}
-		t.Errorf(fmt.Sprintf("TestRouterAddRouterMethodPanicInvalidNumberParamIn failed: %v", err))
+		t.Errorf(fmt.Sprintf("TestRouterAddRouterMethodPanicNotImplementInterface failed: %v", err))
 	}()
 
 	handler := NewControllerRegister()

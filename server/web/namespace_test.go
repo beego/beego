@@ -24,7 +24,13 @@ import (
 	"github.com/beego/beego/v2/server/web/context"
 )
 
-const exampleBody = "hello world"
+const (
+	exampleBody = "hello world"
+
+	nsNamespace     = "/router"
+	nsPath          = "/user"
+	nsNamespacePath = "/router/user"
+)
 
 type ExampleController struct {
 	Controller
@@ -38,7 +44,7 @@ func (m ExampleController) Ping() {
 }
 
 func (m ExampleController) ping() {
-	err := m.Ctx.Output.Body([]byte(exampleBody))
+	err := m.Ctx.Output.Body([]byte("ping method"))
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -189,11 +195,11 @@ func TestNamespaceInside(t *testing.T) {
 }
 
 func TestNamespaceRouterGet(t *testing.T) {
-	r, _ := http.NewRequest(http.MethodGet, "/router/user", nil)
+	r, _ := http.NewRequest(http.MethodGet, nsNamespacePath, nil)
 	w := httptest.NewRecorder()
 
-	ns := NewNamespace("/router")
-	ns.RouterGet("/user", ExampleController.Ping)
+	ns := NewNamespace(nsNamespace)
+	ns.RouterGet(nsPath, ExampleController.Ping)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
@@ -202,11 +208,11 @@ func TestNamespaceRouterGet(t *testing.T) {
 }
 
 func TestNamespaceRouterPost(t *testing.T) {
-	r, _ := http.NewRequest(http.MethodPost, "/router/user", nil)
+	r, _ := http.NewRequest(http.MethodPost, nsNamespacePath, nil)
 	w := httptest.NewRecorder()
 
-	ns := NewNamespace("/router")
-	ns.RouterPost("/user", ExampleController.Ping)
+	ns := NewNamespace(nsNamespace)
+	ns.RouterPost(nsPath, ExampleController.Ping)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
@@ -215,11 +221,11 @@ func TestNamespaceRouterPost(t *testing.T) {
 }
 
 func TestNamespaceRouterDelete(t *testing.T) {
-	r, _ := http.NewRequest(http.MethodDelete, "/router/user", nil)
+	r, _ := http.NewRequest(http.MethodDelete, nsNamespacePath, nil)
 	w := httptest.NewRecorder()
 
-	ns := NewNamespace("/router")
-	ns.RouterDelete("/user", ExampleController.Ping)
+	ns := NewNamespace(nsNamespace)
+	ns.RouterDelete(nsPath, ExampleController.Ping)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
@@ -228,11 +234,11 @@ func TestNamespaceRouterDelete(t *testing.T) {
 }
 
 func TestNamespaceRouterPut(t *testing.T) {
-	r, _ := http.NewRequest(http.MethodPut, "/router/user", nil)
+	r, _ := http.NewRequest(http.MethodPut, nsNamespacePath, nil)
 	w := httptest.NewRecorder()
 
-	ns := NewNamespace("/router")
-	ns.RouterPut("/user", ExampleController.Ping)
+	ns := NewNamespace(nsNamespace)
+	ns.RouterPut(nsPath, ExampleController.Ping)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
@@ -241,11 +247,11 @@ func TestNamespaceRouterPut(t *testing.T) {
 }
 
 func TestNamespaceRouterHead(t *testing.T) {
-	r, _ := http.NewRequest(http.MethodHead, "/router/user", nil)
+	r, _ := http.NewRequest(http.MethodHead, nsNamespacePath, nil)
 	w := httptest.NewRecorder()
 
-	ns := NewNamespace("/router")
-	ns.RouterHead("/user", ExampleController.Ping)
+	ns := NewNamespace(nsNamespace)
+	ns.RouterHead(nsPath, ExampleController.Ping)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
@@ -254,11 +260,11 @@ func TestNamespaceRouterHead(t *testing.T) {
 }
 
 func TestNamespaceRouterOptions(t *testing.T) {
-	r, _ := http.NewRequest(http.MethodOptions, "/router/user", nil)
+	r, _ := http.NewRequest(http.MethodOptions, nsNamespacePath, nil)
 	w := httptest.NewRecorder()
 
-	ns := NewNamespace("/router")
-	ns.RouterOptions("/user", ExampleController.Ping)
+	ns := NewNamespace(nsNamespace)
+	ns.RouterOptions(nsPath, ExampleController.Ping)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
@@ -267,11 +273,11 @@ func TestNamespaceRouterOptions(t *testing.T) {
 }
 
 func TestNamespaceRouterPatch(t *testing.T) {
-	r, _ := http.NewRequest(http.MethodPatch, "/router/user", nil)
+	r, _ := http.NewRequest(http.MethodPatch, nsNamespacePath, nil)
 	w := httptest.NewRecorder()
 
-	ns := NewNamespace("/router")
-	ns.RouterPatch("/user", ExampleController.Ping)
+	ns := NewNamespace(nsNamespace)
+	ns.RouterPatch(nsPath, ExampleController.Ping)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
@@ -280,13 +286,13 @@ func TestNamespaceRouterPatch(t *testing.T) {
 }
 
 func TestNamespaceRouterAny(t *testing.T) {
-	ns := NewNamespace("/router")
-	ns.RouterAny("/user", ExampleController.Ping)
+	ns := NewNamespace(nsNamespace)
+	ns.RouterAny(nsPath, ExampleController.Ping)
 	AddNamespace(ns)
 
 	for method := range HTTPMETHOD {
 		w := httptest.NewRecorder()
-		r, _ := http.NewRequest(method, "/router/user", nil)
+		r, _ := http.NewRequest(method, nsNamespacePath, nil)
 		BeeApp.Handlers.ServeHTTP(w, r)
 		if w.Body.String() != exampleBody {
 			t.Errorf("TestNamespaceRouterAny can't run, get the response is " + w.Body.String())
@@ -295,11 +301,11 @@ func TestNamespaceRouterAny(t *testing.T) {
 }
 
 func TestNamespaceNSRouterGet(t *testing.T) {
-	r, _ := http.NewRequest(http.MethodGet, "/router/user", nil)
+	r, _ := http.NewRequest(http.MethodGet, nsNamespacePath, nil)
 	w := httptest.NewRecorder()
 
-	ns := NewNamespace("/router")
-	NSRouterGet("/user", ExampleController.Ping)(ns)
+	ns := NewNamespace(nsNamespace)
+	NSRouterGet(nsPath, ExampleController.Ping)(ns)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
@@ -308,11 +314,11 @@ func TestNamespaceNSRouterGet(t *testing.T) {
 }
 
 func TestNamespaceNSRouterPost(t *testing.T) {
-	r, _ := http.NewRequest(http.MethodPost, "/router/user", nil)
+	r, _ := http.NewRequest(http.MethodPost, nsNamespacePath, nil)
 	w := httptest.NewRecorder()
 
 	ns := NewNamespace("/router")
-	NSRouterPost("/user", ExampleController.Ping)(ns)
+	NSRouterPost(nsPath, ExampleController.Ping)(ns)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
@@ -321,11 +327,11 @@ func TestNamespaceNSRouterPost(t *testing.T) {
 }
 
 func TestNamespaceNSRouterDelete(t *testing.T) {
-	r, _ := http.NewRequest(http.MethodDelete, "/router/user", nil)
+	r, _ := http.NewRequest(http.MethodDelete, nsNamespacePath, nil)
 	w := httptest.NewRecorder()
 
-	ns := NewNamespace("/router")
-	NSRouterDelete("/user", ExampleController.Ping)(ns)
+	ns := NewNamespace(nsNamespace)
+	NSRouterDelete(nsPath, ExampleController.Ping)(ns)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
@@ -334,11 +340,11 @@ func TestNamespaceNSRouterDelete(t *testing.T) {
 }
 
 func TestNamespaceNSRouterPut(t *testing.T) {
-	r, _ := http.NewRequest(http.MethodPut, "/router/user", nil)
+	r, _ := http.NewRequest(http.MethodPut, nsNamespacePath, nil)
 	w := httptest.NewRecorder()
 
-	ns := NewNamespace("/router")
-	NSRouterPut("/user", ExampleController.Ping)(ns)
+	ns := NewNamespace(nsNamespace)
+	NSRouterPut(nsPath, ExampleController.Ping)(ns)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
@@ -347,11 +353,11 @@ func TestNamespaceNSRouterPut(t *testing.T) {
 }
 
 func TestNamespaceNSRouterHead(t *testing.T) {
-	r, _ := http.NewRequest(http.MethodHead, "/router/user", nil)
+	r, _ := http.NewRequest(http.MethodHead, nsNamespacePath, nil)
 	w := httptest.NewRecorder()
 
-	ns := NewNamespace("/router")
-	NSRouterHead("/user", ExampleController.Ping)(ns)
+	ns := NewNamespace(nsNamespace)
+	NSRouterHead(nsPath, ExampleController.Ping)(ns)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
@@ -360,11 +366,11 @@ func TestNamespaceNSRouterHead(t *testing.T) {
 }
 
 func TestNamespaceNSRouterOptions(t *testing.T) {
-	r, _ := http.NewRequest(http.MethodOptions, "/router/user", nil)
+	r, _ := http.NewRequest(http.MethodOptions, nsNamespacePath, nil)
 	w := httptest.NewRecorder()
 
-	ns := NewNamespace("/router")
-	NSRouterOptions("/user", ExampleController.Ping)(ns)
+	ns := NewNamespace(nsNamespace)
+	NSRouterOptions(nsPath, ExampleController.Ping)(ns)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
@@ -373,10 +379,10 @@ func TestNamespaceNSRouterOptions(t *testing.T) {
 }
 
 func TestNamespaceNSRouterPatch(t *testing.T) {
-	r, _ := http.NewRequest(http.MethodPatch, "/router/user", nil)
+	r, _ := http.NewRequest(http.MethodPatch, nsNamespacePath, nil)
 	w := httptest.NewRecorder()
 
-	ns := NewNamespace("/router")
+	ns := NewNamespace(nsNamespace)
 	NSRouterPatch("/user", ExampleController.Ping)(ns)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
@@ -386,13 +392,13 @@ func TestNamespaceNSRouterPatch(t *testing.T) {
 }
 
 func TestNamespaceNSRouterAny(t *testing.T) {
-	ns := NewNamespace("/router")
-	NSRouterAny("/user", ExampleController.Ping)(ns)
+	ns := NewNamespace(nsNamespace)
+	NSRouterAny(nsPath, ExampleController.Ping)(ns)
 	AddNamespace(ns)
 
 	for method := range HTTPMETHOD {
 		w := httptest.NewRecorder()
-		r, _ := http.NewRequest(method, "/router/user", nil)
+		r, _ := http.NewRequest(method, nsNamespacePath, nil)
 		BeeApp.Handlers.ServeHTTP(w, r)
 		if w.Body.String() != exampleBody {
 			t.Errorf("TestNamespaceNSRouterAny can't run, get the response is " + w.Body.String())
