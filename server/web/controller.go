@@ -605,13 +605,13 @@ func (c *Controller) GetFiles(key string) ([]*multipart.FileHeader, error) {
 
 // SaveToFile saves uploaded file to new path.
 // it only operates the first one of mutil-upload form file field.
-func (c *Controller) SaveToFile(fromfile, tofile string) error {
-	file, _, err := c.Ctx.Request.FormFile(fromfile)
+func (c *Controller) SaveToFile(fromFile, toFile string) error {
+	file, _, err := c.Ctx.Request.FormFile(fromFile)
 	if err != nil {
 		return err
 	}
 	defer file.Close()
-	f, err := os.OpenFile(tofile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+	f, err := os.OpenFile(toFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		return err
 	}
