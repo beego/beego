@@ -611,13 +611,15 @@ func (c *Controller) SaveToFile(fromFile, toFile string) error {
 		return err
 	}
 	defer file.Close()
+
 	f, err := os.OpenFile(toFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
-	io.Copy(f, file)
-	return nil
+
+	_, err = io.Copy(f, file)
+	return err
 }
 
 // StartSession starts session and load old session data info this controller.
