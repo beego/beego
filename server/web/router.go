@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"path"
 	"reflect"
+	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -141,8 +142,8 @@ func WithRouterSessionOn(sessionOn bool) ControllerOption {
 
 type filterChainConfig struct {
 	pattern string
-	chain FilterChain
-	opts []FilterOpt
+	chain   FilterChain
+	opts    []FilterOpt
 }
 
 // ControllerRegister containers registered router rules, controller handlers and filters.
@@ -179,7 +180,7 @@ func NewControllerRegisterWithCfg(cfg *Config) *ControllerRegister {
 				return beecontext.NewContext()
 			},
 		},
-		cfg: cfg,
+		cfg:          cfg,
 		filterChains: make([]filterChainConfig, 0, 4),
 	}
 	res.chainRoot = newFilterRouter("/*", res.serveHttp, WithCaseSensitive(false))
@@ -188,7 +189,7 @@ func NewControllerRegisterWithCfg(cfg *Config) *ControllerRegister {
 
 // Init will be executed when HttpServer start running
 func (p *ControllerRegister) Init() {
-	for i := len(p.filterChains) - 1; i >= 0 ; i --  {
+	for i := len(p.filterChains) - 1; i >= 0; i-- {
 		fc := p.filterChains[i]
 		root := p.chainRoot
 		filterFunc := fc.chain(root.filterFunc)
@@ -264,11 +265,7 @@ func (p *ControllerRegister) addWithMethodParams(pattern string, c ControllerInt
 	reflectVal := reflect.ValueOf(c)
 	t := reflect.Indirect(reflectVal).Type()
 
-	route := &ControllerInfo{}
-	route.pattern = pattern
-	route.routerType = routerTypeBeego
-	route.sessionOn = p.cfg.WebConfig.Session.SessionOn
-	route.controllerType = t
+	route := p.createBeegoRouter(t, pattern)
 	route.initialize = func() ControllerInterface {
 		vc := reflect.New(route.controllerType)
 		execController, ok := vc.Interface().(ControllerInterface)
@@ -296,7 +293,7 @@ func (p *ControllerRegister) addWithMethodParams(pattern string, c ControllerInt
 	for i := range opts {
 		opts[i](route)
 	}
-	
+
 	globalSessionOn := p.cfg.WebConfig.Session.SessionOn
 	if !globalSessionOn && route.sessionOn {
 		logs.Warn("global sessionOn is false, sessionOn of router [%s] can't be set to true", route.pattern)
@@ -351,6 +348,256 @@ func (p *ControllerRegister) GetContext() *beecontext.Context {
 // GiveBackContext put the ctx into pool so that it could be reuse
 func (p *ControllerRegister) GiveBackContext(ctx *beecontext.Context) {
 	p.pool.Put(ctx)
+}
+
+// RouterGet add get method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    RouterGet("/api/:id", MyController.Ping)
+func (p *ControllerRegister) RouterGet(pattern string, f interface{}) {
+	p.AddRouterMethod(http.MethodGet, pattern, f)
+}
+
+// RouterPost add post method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    RouterPost("/api/:id", MyController.Ping)
+func (p *ControllerRegister) RouterPost(pattern string, f interface{}) {
+	p.AddRouterMethod(http.MethodPost, pattern, f)
+}
+
+// RouterHead add head method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    RouterHead("/api/:id", MyController.Ping)
+func (p *ControllerRegister) RouterHead(pattern string, f interface{}) {
+	p.AddRouterMethod(http.MethodHead, pattern, f)
+}
+
+// RouterPut add put method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    RouterPut("/api/:id", MyController.Ping)
+func (p *ControllerRegister) RouterPut(pattern string, f interface{}) {
+	p.AddRouterMethod(http.MethodPut, pattern, f)
+}
+
+// RouterPatch add patch method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    RouterPatch("/api/:id", MyController.Ping)
+func (p *ControllerRegister) RouterPatch(pattern string, f interface{}) {
+	p.AddRouterMethod(http.MethodPatch, pattern, f)
+}
+
+// RouterDelete add delete method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    RouterDelete("/api/:id", MyController.Ping)
+func (p *ControllerRegister) RouterDelete(pattern string, f interface{}) {
+	p.AddRouterMethod(http.MethodDelete, pattern, f)
+}
+
+// RouterOptions add options method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    RouterOptions("/api/:id", MyController.Ping)
+func (p *ControllerRegister) RouterOptions(pattern string, f interface{}) {
+	p.AddRouterMethod(http.MethodOptions, pattern, f)
+}
+
+// RouterAny add all method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    RouterAny("/api/:id", MyController.Ping)
+func (p *ControllerRegister) RouterAny(pattern string, f interface{}) {
+	p.AddRouterMethod("*", pattern, f)
+}
+
+// AddRouterMethod add http method router
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    AddRouterMethod("get","/api/:id", MyController.Ping)
+func (p *ControllerRegister) AddRouterMethod(httpMethod, pattern string, f interface{}) {
+	httpMethod = p.getUpperMethodString(httpMethod)
+	ct, methodName := getReflectTypeAndMethod(f)
+
+	p.addBeegoTypeRouter(ct, methodName, httpMethod, pattern)
+}
+
+// addBeegoTypeRouter add beego type router
+func (p *ControllerRegister) addBeegoTypeRouter(ct reflect.Type, ctMethod, httpMethod, pattern string) {
+	route := p.createBeegoRouter(ct, pattern)
+	methods := p.getHttpMethodMapMethod(httpMethod, ctMethod)
+	route.methods = methods
+
+	p.addRouterForMethod(route)
+}
+
+// createBeegoRouter create beego router base on reflect type and pattern
+func (p *ControllerRegister) createBeegoRouter(ct reflect.Type, pattern string) *ControllerInfo {
+	route := &ControllerInfo{}
+	route.pattern = pattern
+	route.routerType = routerTypeBeego
+	route.sessionOn = p.cfg.WebConfig.Session.SessionOn
+	route.controllerType = ct
+	return route
+}
+
+// createRestfulRouter create restful router with filter function and pattern
+func (p *ControllerRegister) createRestfulRouter(f FilterFunc, pattern string) *ControllerInfo {
+	route := &ControllerInfo{}
+	route.pattern = pattern
+	route.routerType = routerTypeRESTFul
+	route.sessionOn = p.cfg.WebConfig.Session.SessionOn
+	route.runFunction = f
+	return route
+}
+
+// createHandlerRouter create handler router with handler and pattern
+func (p *ControllerRegister) createHandlerRouter(h http.Handler, pattern string) *ControllerInfo {
+	route := &ControllerInfo{}
+	route.pattern = pattern
+	route.routerType = routerTypeHandler
+	route.sessionOn = p.cfg.WebConfig.Session.SessionOn
+	route.handler = h
+	return route
+}
+
+// getHttpMethodMapMethod based on http method and controller method, if ctMethod is empty, then it will
+// use http method as the controller method
+func (p *ControllerRegister) getHttpMethodMapMethod(httpMethod, ctMethod string) map[string]string {
+	methods := make(map[string]string)
+	// not match-all sign, only add for the http method
+	if httpMethod != "*" {
+
+		if ctMethod == "" {
+			ctMethod = httpMethod
+		}
+		methods[httpMethod] = ctMethod
+		return methods
+	}
+
+	// add all http method
+	for val := range HTTPMETHOD {
+		if ctMethod == "" {
+			methods[val] = val
+		} else {
+			methods[val] = ctMethod
+		}
+	}
+	return methods
+}
+
+// getUpperMethodString get upper string of method, and panic if the method
+// is not valid
+func (p *ControllerRegister) getUpperMethodString(method string) string {
+	method = strings.ToUpper(method)
+	if method != "*" && !HTTPMETHOD[method] {
+		panic("not support http method: " + method)
+	}
+	return method
+}
+
+// get reflect controller type and method by controller method expression
+func getReflectTypeAndMethod(f interface{}) (controllerType reflect.Type, method string) {
+	// check f is a function
+	funcType := reflect.TypeOf(f)
+	if funcType.Kind() != reflect.Func {
+		panic("not a method")
+	}
+
+	// get function name
+	funcObj := runtime.FuncForPC(reflect.ValueOf(f).Pointer())
+	if funcObj == nil {
+		panic("cannot find the method")
+	}
+	funcNameSli := strings.Split(funcObj.Name(), ".")
+	lFuncSli := len(funcNameSli)
+	if lFuncSli == 0 {
+		panic("invalid method full name: " + funcObj.Name())
+	}
+
+	method = funcNameSli[lFuncSli-1]
+	if len(method) == 0 {
+		panic("method name is empty")
+	} else if method[0] > 96 || method[0] < 65 {
+		panic("not a public method")
+	}
+
+	// check only one param which is the method receiver
+	if numIn := funcType.NumIn(); numIn != 1 {
+		panic("invalid number of param in")
+	}
+
+	// check the receiver implement ControllerInterface
+	controllerType = funcType.In(0)
+	_, ok := reflect.New(controllerType).Interface().(ControllerInterface)
+	if !ok {
+		panic(controllerType.String() + " is not implemented ControllerInterface")
+	}
+
+	// check controller has the method
+	_, exists := controllerType.MethodByName(method)
+	if !exists {
+		panic(controllerType.String() + " has no method " + method)
+	}
+
+	return
 }
 
 // Get add get method
@@ -431,36 +678,18 @@ func (p *ControllerRegister) Any(pattern string, f FilterFunc) {
 //          ctx.Output.Body("hello world")
 //    })
 func (p *ControllerRegister) AddMethod(method, pattern string, f FilterFunc) {
-	method = strings.ToUpper(method)
-	if method != "*" && !HTTPMETHOD[method] {
-		panic("not support http method: " + method)
-	}
-	route := &ControllerInfo{}
-	route.pattern = pattern
-	route.routerType = routerTypeRESTFul
-	route.sessionOn = p.cfg.WebConfig.Session.SessionOn
-	route.runFunction = f
-	methods := make(map[string]string)
-	if method == "*" {
-		for val := range HTTPMETHOD {
-			methods[val] = val
-		}
-	} else {
-		methods[method] = method
-	}
+	method = p.getUpperMethodString(method)
+
+	route := p.createRestfulRouter(f, pattern)
+	methods := p.getHttpMethodMapMethod(method, "")
 	route.methods = methods
-	for k := range methods {
-		p.addToRouter(k, pattern, route)
-	}
+
+	p.addRouterForMethod(route)
 }
 
 // Handler add user defined Handler
 func (p *ControllerRegister) Handler(pattern string, h http.Handler, options ...interface{}) {
-	route := &ControllerInfo{}
-	route.pattern = pattern
-	route.routerType = routerTypeHandler
-	route.sessionOn = p.cfg.WebConfig.Session.SessionOn
-	route.handler = h
+	route := p.createHandlerRouter(h, pattern)
 	if len(options) > 0 {
 		if _, ok := options[0].(bool); ok {
 			pattern = path.Join(pattern, "?:all(.*)")
@@ -492,16 +721,13 @@ func (p *ControllerRegister) AddAutoPrefix(prefix string, c ControllerInterface)
 	controllerName := strings.TrimSuffix(ct.Name(), "Controller")
 	for i := 0; i < rt.NumMethod(); i++ {
 		if !utils.InSlice(rt.Method(i).Name, exceptMethod) {
-			route := &ControllerInfo{}
-			route.routerType = routerTypeBeego
-			route.sessionOn = p.cfg.WebConfig.Session.SessionOn
-			route.methods = map[string]string{"*": rt.Method(i).Name}
-			route.controllerType = ct
 			pattern := path.Join(prefix, strings.ToLower(controllerName), strings.ToLower(rt.Method(i).Name), "*")
 			patternInit := path.Join(prefix, controllerName, rt.Method(i).Name, "*")
 			patternFix := path.Join(prefix, strings.ToLower(controllerName), strings.ToLower(rt.Method(i).Name))
 			patternFixInit := path.Join(prefix, controllerName, rt.Method(i).Name)
-			route.pattern = pattern
+
+			route := p.createBeegoRouter(ct, pattern)
+			route.methods = map[string]string{"*": rt.Method(i).Name}
 			for m := range HTTPMETHOD {
 				p.addToRouter(m, pattern, route)
 				p.addToRouter(m, patternInit, route)
@@ -538,8 +764,8 @@ func (p *ControllerRegister) InsertFilterChain(pattern string, chain FilterChain
 	opts = append(opts, WithCaseSensitive(p.cfg.RouterCaseSensitive))
 	p.filterChains = append(p.filterChains, filterChainConfig{
 		pattern: pattern,
-		chain: chain,
-		opts: opts,
+		chain:   chain,
+		opts:    opts,
 	})
 }
 
