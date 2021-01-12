@@ -421,7 +421,7 @@ func NSRouterGet(rootpath string, f interface{}) LinkNamespace {
 	}
 }
 
-// NSPost call Namespace RouterPost
+// NSRouterPost call Namespace RouterPost
 func NSRouterPost(rootpath string, f interface{}) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.RouterPost(rootpath, f)
