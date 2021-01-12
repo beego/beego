@@ -123,7 +123,7 @@ func MockLoadRelatedWithCtx(tableName string, name string, rows int64, err error
 
 // MockQueryTableWithCtx support QueryTableWithCtx and QueryTable
 func MockQueryTableWithCtx(tableName string, qs orm.QuerySeter) *Mock {
-	return NewMock(NewSimpleCondition(tableName, "QueryTableWithCtx"), []interface{}{qs}, nil)
+	return NewMock(NewSimpleCondition(tableName, "QueryTable"), []interface{}{qs}, nil)
 }
 
 // MockRawWithCtx support RawWithCtx and Raw
