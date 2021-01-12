@@ -268,7 +268,7 @@ func TestFilterOrmDecorator_QueryM2M(t *testing.T) {
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
 		return func(ctx context.Context, inv *Invocation) []interface{} {
-			assert.Equal(t, "QueryM2MWithCtx", inv.Method)
+			assert.Equal(t, "QueryM2M", inv.Method)
 			assert.Equal(t, 2, len(inv.Args))
 			assert.Equal(t, "FILTER_TEST", inv.GetTableName())
 			assert.False(t, inv.InsideTx)
@@ -284,7 +284,7 @@ func TestFilterOrmDecorator_QueryTable(t *testing.T) {
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
 		return func(ctx context.Context, inv *Invocation) []interface{} {
-			assert.Equal(t, "QueryTableWithCtx", inv.Method)
+			assert.Equal(t, "QueryTable", inv.Method)
 			assert.Equal(t, 1, len(inv.Args))
 			assert.Equal(t, "FILTER_TEST", inv.GetTableName())
 			assert.False(t, inv.InsideTx)

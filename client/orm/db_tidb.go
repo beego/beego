@@ -15,6 +15,7 @@
 package orm
 
 import (
+	"context"
 	"fmt"
 )
 
@@ -47,8 +48,8 @@ func (d *dbBaseTidb) ShowColumnsQuery(table string) string {
 }
 
 // execute sql to check index exist.
-func (d *dbBaseTidb) IndexExists(db dbQuerier, table string, name string) bool {
-	row := db.QueryRow("SELECT count(*) FROM information_schema.statistics "+
+func (d *dbBaseTidb) IndexExists(ctx context.Context, db dbQuerier, table string, name string) bool {
+	row := db.QueryRowContext(ctx, "SELECT count(*) FROM information_schema.statistics "+
 		"WHERE table_schema = DATABASE() AND table_name = ? AND index_name = ?", table, name)
 	var cnt int
 	row.Scan(&cnt)

@@ -20,6 +20,7 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/core/utils"
 )
 
@@ -161,36 +162,34 @@ func (f *filterOrmDecorator) LoadRelatedWithCtx(ctx context.Context, md interfac
 }
 
 func (f *filterOrmDecorator) QueryM2M(md interface{}, name string) QueryM2Mer {
-	return f.QueryM2MWithCtx(context.Background(), md, name)
-}
-
-func (f *filterOrmDecorator) QueryM2MWithCtx(ctx context.Context, md interface{}, name string) QueryM2Mer {
 
 	mi, _ := modelCache.getByMd(md)
 	inv := &Invocation{
-		Method:      "QueryM2MWithCtx",
+		Method:      "QueryM2M",
 		Args:        []interface{}{md, name},
 		Md:          md,
 		mi:          mi,
 		InsideTx:    f.insideTx,
 		TxStartTime: f.txStartTime,
 		f: func(c context.Context) []interface{} {
-			res := f.ormer.QueryM2MWithCtx(c, md, name)
+			res := f.ormer.QueryM2M(md, name)
 			return []interface{}{res}
 		},
 	}
-	res := f.root(ctx, inv)
+	res := f.root(context.Background(), inv)
 	if res[0] == nil {
 		return nil
 	}
 	return res[0].(QueryM2Mer)
 }
 
-func (f *filterOrmDecorator) QueryTable(ptrStructOrTableName interface{}) QuerySeter {
-	return f.QueryTableWithCtx(context.Background(), ptrStructOrTableName)
+// NOTE: this method is deprecated, context parameter will not take effect.
+func (f *filterOrmDecorator) QueryM2MWithCtx(_ context.Context, md interface{}, name string) QueryM2Mer {
+	logs.Warn("QueryM2MWithCtx is DEPRECATED. Use methods with `WithCtx` on QueryM2Mer suffix as replacement.")
+	return f.QueryM2M(md, name)
 }
 
-func (f *filterOrmDecorator) QueryTableWithCtx(ctx context.Context, ptrStructOrTableName interface{}) QuerySeter {
+func (f *filterOrmDecorator) QueryTable(ptrStructOrTableName interface{}) QuerySeter {
 	var (
 		name string
 		md   interface{}
@@ -209,23 +208,29 @@ func (f *filterOrmDecorator) QueryTableWithCtx(ctx context.Context, ptrStructOrT
 	}
 
 	inv := &Invocation{
-		Method:      "QueryTableWithCtx",
+		Method:      "QueryTable",
 		Args:        []interface{}{ptrStructOrTableName},
 		InsideTx:    f.insideTx,
 		TxStartTime: f.txStartTime,
 		Md:          md,
 		mi:          mi,
 		f: func(c context.Context) []interface{} {
-			res := f.ormer.QueryTableWithCtx(c, ptrStructOrTableName)
+			res := f.ormer.QueryTable(ptrStructOrTableName)
 			return []interface{}{res}
 		},
 	}
-	res := f.root(ctx, inv)
+	res := f.root(context.Background(), inv)
 
 	if res[0] == nil {
 		return nil
 	}
 	return res[0].(QuerySeter)
+}
+
+// NOTE: this method is deprecated, context parameter will not take effect.
+func (f *filterOrmDecorator) QueryTableWithCtx(_ context.Context, ptrStructOrTableName interface{}) QuerySeter {
+	logs.Warn("QueryTableWithCtx is DEPRECATED. Use methods with `WithCtx`on QuerySeter suffix as replacement.")
+	return f.QueryTable(ptrStructOrTableName)
 }
 
 func (f *filterOrmDecorator) DBStats() *sql.DBStats {
