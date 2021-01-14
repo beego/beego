@@ -109,6 +109,7 @@ type Tasker interface {
 	GetNext(ctx context.Context) time.Time
 	SetPrev(context.Context, time.Time)
 	GetPrev(ctx context.Context) time.Time
+	GetTimeout(ctx context.Context) time.Duration
 }
 
 // task error
@@ -127,13 +128,14 @@ type Task struct {
 	DoFunc   TaskFunc
 	Prev     time.Time
 	Next     time.Time
+	Timeout  time.Duration
 	Errlist  []*taskerr // like errtime:errinfo
 	ErrLimit int        // max length for the errlist, 0 stand for no limit
 	errCnt   int        // records the error count during the execution
 }
 
 // NewTask add new task with name, time and func
-func NewTask(tname string, spec string, f TaskFunc) *Task {
+func NewTask(tname string, spec string, f TaskFunc, opts ...Option) *Task {
 
 	task := &Task{
 		Taskname: tname,
@@ -144,6 +146,11 @@ func NewTask(tname string, spec string, f TaskFunc) *Task {
 		// we only store the pointer, so it won't use too many space
 		Errlist: make([]*taskerr, 100, 100),
 	}
+
+	for _, opt := range opts {
+		opt.apply(task)
+	}
+
 	task.SetCron(spec)
 	return task
 }
@@ -194,6 +201,31 @@ func (t *Task) SetPrev(ctx context.Context, now time.Time) {
 // GetPrev get prev time of this task
 func (t *Task) GetPrev(context.Context) time.Time {
 	return t.Prev
+}
+
+// GetTimeout get timeout duration of this task
+func (t *Task) GetTimeout(context.Context) time.Duration {
+	return t.Timeout
+}
+
+// Option interface
+type Option interface {
+	apply(*Task)
+}
+
+// optionFunc return a function to set task element
+type optionFunc func(*Task)
+
+// apply option to task
+func (f optionFunc) apply(t *Task) {
+	f(t)
+}
+
+// TimeoutOption return a option to set timeout duration for task
+func TimeoutOption(timeout time.Duration) Option {
+	return optionFunc(func(t *Task) {
+		t.Timeout = timeout
+	})
 }
 
 // six columns mean：
@@ -482,7 +514,19 @@ func (m *taskManager) run() {
 				if e.GetNext(context.Background()) != effective {
 					break
 				}
-				go e.Run(nil)
+
+				// check if timeout is on, if yes passing the timeout context
+				ctx := context.Background()
+				if duration := e.GetTimeout(ctx); duration != 0 {
+					ctx, cancelFunc := context.WithTimeout(ctx, duration)
+					go func() {
+						defer cancelFunc()
+						e.Run(ctx)
+					}()
+				} else {
+					go e.Run(ctx)
+				}
+
 				e.SetPrev(context.Background(), e.GetNext(context.Background()))
 				e.SetNext(nil, effective)
 			}

@@ -55,6 +55,10 @@ func (c *countTask) GetPrev(ctx context.Context) time.Time {
 	return time.Now()
 }
 
+func (c *countTask) GetTimeout(ctx context.Context) time.Duration {
+	return 0
+}
+
 func TestRunTaskCommand_Execute(t *testing.T) {
 	task := &countTask{}
 	AddTask("count", task)
