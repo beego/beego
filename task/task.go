@@ -525,7 +525,7 @@ func (m *taskManager) run() {
 func (m *taskManager) setTasksStartTime(now time.Time) {
 	m.taskLock.Lock()
 	for _, task := range m.adminTaskList {
-		task.SetNext(nil, now)
+		task.SetNext(context.Background(), now)
 	}
 	m.taskLock.Unlock()
 }
@@ -562,7 +562,7 @@ func runNextTasks(sortList *MapSorter, effective time.Time) {
 		}
 
 		e.SetPrev(context.Background(), e.GetNext(context.Background()))
-		e.SetNext(nil, effective)
+		e.SetNext(context.Background(), effective)
 	}
 }
 
