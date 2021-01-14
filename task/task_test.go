@@ -95,15 +95,17 @@ func TestTimeout(t *testing.T) {
 	defer m.ClearTask()
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
+	once1, once2 := sync.Once{}, sync.Once{}
 
 	tk1 := NewTask("tk1", "0/10 * * ? * *",
 		func(ctx context.Context) error {
-			fmt.Println("tk1 start")
 			time.Sleep(4 * time.Second)
 			select {
 			case <-ctx.Done():
-				fmt.Println("tk1 done")
-				wg.Done()
+				once1.Do(func() {
+					fmt.Println("tk1 done")
+					wg.Done()
+				})
 				return errors.New("timeout")
 			default:
 			}
@@ -111,16 +113,17 @@ func TestTimeout(t *testing.T) {
 		}, TimeoutOption(3*time.Second),
 	)
 
-	tk2 := NewTask("tk2", "0/10 * * ? * *",
+	tk2 := NewTask("tk2", "0/11 * * ? * *",
 		func(ctx context.Context) error {
-			fmt.Println("tk2 start")
 			time.Sleep(4 * time.Second)
 			select {
 			case <-ctx.Done():
 				return errors.New("timeout")
 			default:
-				fmt.Println("tk2 done")
-				wg.Done()
+				once2.Do(func() {
+					fmt.Println("tk2 done")
+					wg.Done()
+				})
 			}
 			return nil
 		},
