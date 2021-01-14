@@ -128,10 +128,10 @@ type Task struct {
 	DoFunc   TaskFunc
 	Prev     time.Time
 	Next     time.Time
-	Timeout  time.Duration
-	Errlist  []*taskerr // like errtime:errinfo
-	ErrLimit int        // max length for the errlist, 0 stand for no limit
-	errCnt   int        // records the error count during the execution
+	Timeout  time.Duration // timeout duration
+	Errlist  []*taskerr    // like errtime:errinfo
+	ErrLimit int           // max length for the errlist, 0 stand for no limit
+	errCnt   int           // records the error count during the execution
 }
 
 // NewTask add new task with name, time and func
