@@ -540,7 +540,7 @@ func (m *taskManager) markManagerStop() {
 }
 
 // runNextTasks it runs next task which next run time is equal to effective
-func runNextTasks(sortList *MapSorter, effective time.Time) *MapSorter {
+func runNextTasks(sortList *MapSorter, effective time.Time) {
 	// Run every entry whose next time was this effective time.
 	var i = 0
 	for _, e := range sortList.Vals {
@@ -564,7 +564,6 @@ func runNextTasks(sortList *MapSorter, effective time.Time) *MapSorter {
 		e.SetPrev(context.Background(), e.GetNext(context.Background()))
 		e.SetNext(nil, effective)
 	}
-	return sortList
 }
 
 // StopTask stop all tasks
