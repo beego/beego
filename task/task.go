@@ -555,10 +555,18 @@ func runNextTasks(sortList *MapSorter, effective time.Time) {
 			go func(e Tasker) {
 				ctx, cancelFunc := context.WithTimeout(ctx, duration)
 				defer cancelFunc()
-				e.Run(ctx)
+				err := e.Run(ctx)
+				if err != nil {
+					log.Printf("tasker.run err: %s\n", err.Error())
+				}
 			}(e)
 		} else {
-			go e.Run(ctx)
+			go func(e Tasker) {
+				err := e.Run(ctx)
+				if err != nil {
+					log.Printf("tasker.run err: %s\n", err.Error())
+				}
+			}(e)
 		}
 
 		e.SetPrev(context.Background(), e.GetNext(context.Background()))
