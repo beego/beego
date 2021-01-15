@@ -90,6 +90,57 @@ func TestSpec(t *testing.T) {
 	}
 }
 
+func TestTimeout(t *testing.T) {
+	m := newTaskManager()
+	defer m.ClearTask()
+	wg := &sync.WaitGroup{}
+	wg.Add(2)
+	once1, once2 := sync.Once{}, sync.Once{}
+
+	tk1 := NewTask("tk1", "0/10 * * ? * *",
+		func(ctx context.Context) error {
+			time.Sleep(4 * time.Second)
+			select {
+			case <-ctx.Done():
+				once1.Do(func() {
+					fmt.Println("tk1 done")
+					wg.Done()
+				})
+				return errors.New("timeout")
+			default:
+			}
+			return nil
+		}, TimeoutOption(3*time.Second),
+	)
+
+	tk2 := NewTask("tk2", "0/11 * * ? * *",
+		func(ctx context.Context) error {
+			time.Sleep(4 * time.Second)
+			select {
+			case <-ctx.Done():
+				return errors.New("timeout")
+			default:
+				once2.Do(func() {
+					fmt.Println("tk2 done")
+					wg.Done()
+				})
+			}
+			return nil
+		},
+	)
+
+	m.AddTask("tk1", tk1)
+	m.AddTask("tk2", tk2)
+	m.StartTask()
+	defer m.StopTask()
+
+	select {
+	case <-time.After(19 * time.Second):
+		t.Error("TestTimeout failed")
+	case <-wait(wg):
+	}
+}
+
 func TestTask_Run(t *testing.T) {
 	cnt := -1
 	task := func(ctx context.Context) error {

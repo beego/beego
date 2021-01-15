@@ -11,3 +11,4 @@
 - Support session Filter chain. [4404](https://github.com/beego/beego/pull/4404)
 - Feature issue #4402 finish router get example. [4416](https://github.com/beego/beego/pull/4416)
 - Implement context.Context support and deprecate `QueryM2MWithCtx` and `QueryTableWithCtx` [4424](https://github.com/beego/beego/pull/4424)
+- Finish timeout option for tasks #4441 [4441](https://github.com/beego/beego/pull/4441)
