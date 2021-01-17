@@ -6,6 +6,6 @@ const (
 	SessionSessionStartError Code = 5001001
 )
 
-var strToCode = map[string]Code{
-	`"SESSION_MODULE_SESSION_START_ERROR"`:   SessionSessionStartError,
+var CodeToStr = map[Code]string{
+	SessionSessionStartError : `"SESSION_MODULE_SESSION_START_ERROR"`,
 }

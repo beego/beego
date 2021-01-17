@@ -6,6 +6,9 @@ import (
 	"strconv"
 )
 
+// The `Error`type defines custom error for Beego. It is used by every module
+// in Beego. Each `Error` message contains three pieces of data: error code,
+// error message. More docs http://beego.me/docs/module/error.md
 type Error struct {
     Code codes.Code
     Msg string
@@ -26,21 +29,24 @@ func Errorf(c codes.Code, format string, a ...interface{}) error {
 	return Err(c, fmt.Sprintf(format, a...))
 }
 
+// Error returns formatted message for user.
 func (e *Error) Error() string {
 	codeSrt := strconv.FormatUint(uint64(e.GetCode()), 10)
 	return fmt.Sprintf("beego error: code = %s desc = %s", codeSrt, e.GetMessage())
 }
 
-func (x *Error) GetCode() codes.Code {
-	if x != nil {
-		return x.Code
+// GetCode returns Error's Code
+func (e *Error) GetCode() codes.Code {
+	if e != nil {
+		return e.Code
 	}
 	return 0
 }
 
-func (x *Error) GetMessage() string {
-	if x != nil {
-		return x.Msg
+// GetMessage returns Error's Msg.
+func (e *Error) GetMessage() string {
+	if e != nil {
+		return e.Msg
 	}
 	return ""
 }
