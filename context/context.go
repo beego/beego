@@ -145,12 +145,22 @@ func (ctx *Context) SetSecureCookie(Secret, name, value string, others ...interf
 }
 
 // XSRFToken creates a xsrf token string and returns.
-func (ctx *Context) XSRFToken(key string, expire int64) string {
+// others[0] bool secure
+// others[1] bool http-only
+func (ctx *Context) XSRFToken(key string, expire int64, others...interface{}) string {
 	if ctx._xsrfToken == "" {
 		token, ok := ctx.GetSecureCookie(key, "_xsrf")
 		if !ok {
 			token = string(utils.RandomCreateBytes(32))
-			ctx.SetSecureCookie(key, "_xsrf", token, expire, "", "", true, true)
+			secure := false
+			if len(others) > 0 {
+				secure = others[0].(bool)
+			}
+			httpOnly := false
+			if len(others) > 1{
+				httpOnly = others[1].(bool)
+			}
+			ctx.SetSecureCookie(key, "_xsrf", token, expire, "", "", secure, httpOnly)
 		}
 		ctx._xsrfToken = token
 	}
