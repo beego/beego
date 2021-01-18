@@ -118,7 +118,7 @@ func TestErrorf(t *testing.T) {
 		wantErr bool
 	}{
 		// TODO: Add test cases.
-		{name: "1", args: args{codes.SessionSessionStartError, "%s", []interface{}{codes.CodeToStr[codes.SessionSessionStartError]}}},
+		{name: "1", args: args{codes.SessionSessionStartError, "%s", []interface{}{codes.CodeToStr[codes.SessionSessionStartError]}}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -140,6 +140,7 @@ func TestNew(t *testing.T) {
 		want *Error
 	}{
 		// TODO: Add test cases.
+		{name: "1", args: args{codes.SessionSessionStartError, codes.CodeToStr[codes.SessionSessionStartError]}, want: &Error{Code:codes.SessionSessionStartError,  Msg:codes.CodeToStr[codes.SessionSessionStartError]}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
