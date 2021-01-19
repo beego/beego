@@ -32,7 +32,7 @@ func TestFilterChainBuilder_FilterChain1(t *testing.T) {
 	builder := &FilterChainBuilder{}
 	filter := builder.FilterChain(next)
 
-	assert.NotNil(t, builder.summaryVec)
+	assert.NotNil(t, summaryVec)
 	assert.NotNil(t, filter)
 
 	inv := &orm.Invocation{}

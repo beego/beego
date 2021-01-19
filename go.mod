@@ -12,9 +12,9 @@ require (
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
 	github.com/coreos/pkg v0.0.0-20180928190104-399ea9e2e55f // indirect
-	github.com/couchbase/go-couchbase v0.0.0-20200519150804-63f3cdb75e0d
-	github.com/couchbase/gomemcached v0.0.0-20200526233749-ec430f949808 // indirect
-	github.com/couchbase/goutils v0.0.0-20180530154633-e865a1461c8a // indirect
+	github.com/couchbase/go-couchbase v0.0.0-20201216133707-c04035124b17
+	github.com/couchbase/gomemcached v0.1.2-0.20201215185628-3bc3f73e68cb // indirect
+	github.com/couchbase/goutils v0.0.0-20201030094643-5e82bb967e67 // indirect
 	github.com/elastic/go-elasticsearch/v6 v6.8.5
 	github.com/elazarl/go-bindata-assetfs v1.0.0
 	github.com/go-kit/kit v0.9.0
