@@ -49,6 +49,6 @@ func TestXsrfReset_01(t *testing.T) {
 	}
 
 	ck := c.ResponseWriter.Header().Get("Set-Cookie")
-	assert.True(t, strings.Contains(ck, "Secure"))
-	assert.True(t, strings.Contains(ck, "HttpOnly"))
+	assert.False(t, strings.Contains(ck, "Secure"))
+	assert.False(t, strings.Contains(ck, "HttpOnly"))
 }

@@ -37,7 +37,7 @@ func PrometheusMiddleWare(next http.Handler) http.Handler {
 			"appname": beego.BConfig.AppName,
 		},
 		Help: "The statics info for http request",
-	}, []string{"pattern", "method", "status", "duration"})
+	}, []string{"pattern", "method", "status"})
 
 	prometheus.MustRegister(summaryVec)
 
@@ -95,5 +95,5 @@ func report(dur time.Duration, writer http.ResponseWriter, q *http.Request, vec 
 		logs.Warn("we can not find the router info for this request, so request will be recorded as UNKNOWN: " + q.URL.String())
 	}
 	ms := dur / time.Millisecond
-	vec.WithLabelValues(ptn, q.Method, strconv.Itoa(status), strconv.Itoa(int(ms))).Observe(float64(ms))
+	vec.WithLabelValues(ptn, q.Method, strconv.Itoa(status)).Observe(float64(ms))
 }

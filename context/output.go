@@ -154,7 +154,6 @@ func (output *BeegoOutput) Cookie(name string, value string, others ...interface
 			fmt.Fprintf(&b, "; HttpOnly")
 		}
 	}
-
 	output.Context.ResponseWriter.Header().Add("Set-Cookie", b.String())
 }
 
