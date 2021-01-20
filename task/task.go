@@ -157,6 +157,9 @@ func (t *Task) GetSpec(context.Context) string {
 func (t *Task) GetStatus(context.Context) string {
 	var str string
 	for _, v := range t.Errlist {
+		if v == nil {
+			continue
+		}
 		str += v.t.String() + ":" + v.errinfo + "<br>"
 	}
 	return str
