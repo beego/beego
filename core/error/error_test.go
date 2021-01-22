@@ -1,14 +1,13 @@
 package error
 
 import (
-	"github.com/beego/beego/v2/core/codes"
 	"reflect"
 	"testing"
 )
 
 func TestErr(t *testing.T) {
 	type args struct {
-		c   codes.Code
+		c   Code
 		msg string
 	}
 	tests := []struct {
@@ -17,7 +16,7 @@ func TestErr(t *testing.T) {
 		wantErr bool
 	}{
 		// TODO: Add test cases.
-		{name: "1", args: args{codes.SessionSessionStartError, codes.CodeToStr[codes.SessionSessionStartError]}, wantErr: true},
+		{name: "1", args: args{SessionSessionStartError, CodeToStr[SessionSessionStartError]}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -30,7 +29,7 @@ func TestErr(t *testing.T) {
 
 func TestError_Error(t *testing.T) {
 	type fields struct {
-		Code codes.Code
+		Code Code
 		Msg  string
 	}
 	tests := []struct {
@@ -39,7 +38,7 @@ func TestError_Error(t *testing.T) {
 		want   string
 	}{
 		// TODO: Add test cases.
-		{name: "1", fields: fields{codes.SessionSessionStartError, codes.CodeToStr[codes.SessionSessionStartError]}, want: "beego error: code = 5001001 desc = \"SESSION_MODULE_SESSION_START_ERROR\""},
+		{name: "1", fields: fields{SessionSessionStartError, CodeToStr[SessionSessionStartError]}, want: "beego error: code = 5001001 desc = \"SESSION_MODULE_SESSION_START_ERROR\""},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -56,16 +55,16 @@ func TestError_Error(t *testing.T) {
 
 func TestError_GetCode(t *testing.T) {
 	type fields struct {
-		Code codes.Code
+		Code Code
 		Msg  string
 	}
 	tests := []struct {
 		name   string
 		fields fields
-		want   codes.Code
+		want   Code
 	}{
 		// TODO: Add test cases.
-		{name: "1", fields: fields{codes.SessionSessionStartError, codes.CodeToStr[codes.SessionSessionStartError]}, want: codes.SessionSessionStartError},
+		{name: "1", fields: fields{SessionSessionStartError, CodeToStr[SessionSessionStartError]}, want: SessionSessionStartError},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -82,7 +81,7 @@ func TestError_GetCode(t *testing.T) {
 
 func TestError_GetMessage(t *testing.T) {
 	type fields struct {
-		Code codes.Code
+		Code Code
 		Msg  string
 	}
 	tests := []struct {
@@ -91,7 +90,7 @@ func TestError_GetMessage(t *testing.T) {
 		want   string
 	}{
 		// TODO: Add test cases.
-		{name: "1", fields: fields{codes.SessionSessionStartError, codes.CodeToStr[codes.SessionSessionStartError]}, want: codes.CodeToStr[codes.SessionSessionStartError]},
+		{name: "1", fields: fields{SessionSessionStartError, CodeToStr[SessionSessionStartError]}, want: CodeToStr[SessionSessionStartError]},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -108,7 +107,7 @@ func TestError_GetMessage(t *testing.T) {
 
 func TestErrorf(t *testing.T) {
 	type args struct {
-		c      codes.Code
+		c      Code
 		format string
 		a      []interface{}
 	}
@@ -118,7 +117,7 @@ func TestErrorf(t *testing.T) {
 		wantErr bool
 	}{
 		// TODO: Add test cases.
-		{name: "1", args: args{codes.SessionSessionStartError, "%s", []interface{}{codes.CodeToStr[codes.SessionSessionStartError]}}, wantErr: true},
+		{name: "1", args: args{SessionSessionStartError, "%s", []interface{}{CodeToStr[SessionSessionStartError]}}, wantErr: true},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -131,7 +130,7 @@ func TestErrorf(t *testing.T) {
 
 func TestNew(t *testing.T) {
 	type args struct {
-		c   codes.Code
+		c   Code
 		msg string
 	}
 	tests := []struct {
@@ -140,7 +139,7 @@ func TestNew(t *testing.T) {
 		want *Error
 	}{
 		// TODO: Add test cases.
-		{name: "1", args: args{codes.SessionSessionStartError, codes.CodeToStr[codes.SessionSessionStartError]}, want: &Error{Code:codes.SessionSessionStartError,  Msg:codes.CodeToStr[codes.SessionSessionStartError]}},
+		{name: "1", args: args{SessionSessionStartError, CodeToStr[SessionSessionStartError]}, want: &Error{Code: SessionSessionStartError,  Msg: CodeToStr[SessionSessionStartError]}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

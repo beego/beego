@@ -2,7 +2,6 @@ package error
 
 import (
 	"fmt"
-	"github.com/beego/beego/v2/core/codes"
 	"strconv"
 )
 
@@ -11,22 +10,22 @@ import (
 // error message.
 // More docs http://beego.me/docs/module/error.md.
 type Error struct {
-    Code codes.Code
-    Msg string
+    Code Code
+    Msg  string
 }
 
 // New returns a Error representing c and msg.
-func New(c codes.Code, msg string) *Error {
+func New(c Code, msg string) *Error {
     return &Error{Code: c, Msg: msg}
 }
 
 // Err returns an error representing c and msg.  If c is OK, returns nil.
-func Err(c codes.Code, msg string) error {
+func Err(c Code, msg string) error {
 	return New(c, msg)
 }
 
 // Errorf returns Error(c, fmt.Sprintf(format, a...)).
-func Errorf(c codes.Code, format string, a ...interface{}) error {
+func Errorf(c Code, format string, a ...interface{}) error {
 	return Err(c, fmt.Sprintf(format, a...))
 }
 
@@ -37,7 +36,7 @@ func (e *Error) Error() string {
 }
 
 // GetCode returns Error's Code.
-func (e *Error) GetCode() codes.Code {
+func (e *Error) GetCode() Code {
 	if e != nil {
 		return e.Code
 	}
