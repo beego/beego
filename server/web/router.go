@@ -584,17 +584,22 @@ func getReflectTypeAndMethod(f interface{}) (controllerType reflect.Type, method
 		panic("invalid number of param in")
 	}
 
-	// check the receiver implement ControllerInterface
 	controllerType = funcType.In(0)
-	_, ok := reflect.New(controllerType).Interface().(ControllerInterface)
-	if !ok {
-		panic(controllerType.String() + " is not implemented ControllerInterface")
-	}
 
 	// check controller has the method
 	_, exists := controllerType.MethodByName(method)
 	if !exists {
 		panic(controllerType.String() + " has no method " + method)
+	}
+
+	// check the receiver implement ControllerInterface
+	if controllerType.Kind() == reflect.Ptr {
+		controllerType = controllerType.Elem()
+	}
+	controller := reflect.New(controllerType)
+	_, ok := controller.Interface().(ControllerInterface)
+	if !ok {
+		panic(controllerType.String() + " is not implemented ControllerInterface")
 	}
 
 	return
