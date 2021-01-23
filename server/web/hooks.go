@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"path/filepath"
 
+	"github.com/coreos/etcd/pkg/fileutil"
+
 	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/server/web/context"
 	"github.com/beego/beego/v2/server/web/session"
@@ -99,7 +101,12 @@ func registerGzip() error {
 
 func registerCommentRouter() error {
 	if BConfig.RunMode == DEV {
-		if err := parserPkg(filepath.Join(WorkPath, BConfig.WebConfig.CommentRouterPath)); err != nil {
+		ctrlDir := filepath.Join(WorkPath, BConfig.WebConfig.CommentRouterPath)
+		if !fileutil.Exist(ctrlDir) {
+			logs.Warn("controller package not found, won't generate router: ", ctrlDir)
+			return nil
+		}
+		if err := parserPkg(ctrlDir); err != nil {
 			return err
 		}
 	}
