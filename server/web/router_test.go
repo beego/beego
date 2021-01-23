@@ -961,7 +961,7 @@ func TestRouterAddRouterMethodPanicNotAMethod(t *testing.T) {
 
 func TestRouterAddRouterMethodPanicNotPublicMethod(t *testing.T) {
 	method := http.MethodGet
-	message := "not a public method"
+	message := "ping is not a public method"
 	defer func() {
 		err := recover()
 		if err != nil { //产生了panic异常

@@ -576,7 +576,7 @@ func getReflectTypeAndMethod(f interface{}) (controllerType reflect.Type, method
 	if len(method) == 0 {
 		panic("method name is empty")
 	} else if method[0] > 96 || method[0] < 65 {
-		panic("not a public method")
+		panic(fmt.Sprintf("%s is not a public method", method))
 	}
 
 	// check only one param which is the method receiver
