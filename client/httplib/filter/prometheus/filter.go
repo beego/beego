@@ -18,6 +18,7 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -26,24 +27,30 @@ import (
 )
 
 type FilterChainBuilder struct {
-	summaryVec prometheus.ObserverVec
 	AppName    string
 	ServerName string
 	RunMode    string
 }
 
+var summaryVec prometheus.ObserverVec
+var initSummaryVec sync.Once
+
 func (builder *FilterChainBuilder) FilterChain(next httplib.Filter) httplib.Filter {
 
-	builder.summaryVec = prometheus.NewSummaryVec(prometheus.SummaryOpts{
-		Name:      "beego",
-		Subsystem: "remote_http_request",
-		ConstLabels: map[string]string{
-			"server":  builder.ServerName,
-			"env":     builder.RunMode,
-			"appname": builder.AppName,
-		},
-		Help: "The statics info for remote http requests",
-	}, []string{"proto", "scheme", "method", "host", "path", "status", "isError"})
+	initSummaryVec.Do(func() {
+		summaryVec = prometheus.NewSummaryVec(prometheus.SummaryOpts{
+			Name:      "beego",
+			Subsystem: "remote_http_request",
+			ConstLabels: map[string]string{
+				"server":  builder.ServerName,
+				"env":     builder.RunMode,
+				"appname": builder.AppName,
+			},
+			Help: "The statics info for remote http requests",
+		}, []string{"proto", "scheme", "method", "host", "path", "status", "isError"})
+
+		prometheus.MustRegister(summaryVec)
+	})
 
 	return func(ctx context.Context, req *httplib.BeegoHTTPRequest) (*http.Response, error) {
 		startTime := time.Now()
@@ -72,6 +79,6 @@ func (builder *FilterChainBuilder) report(startTime time.Time, endTime time.Time
 
 	dur := int(endTime.Sub(startTime) / time.Millisecond)
 
-	builder.summaryVec.WithLabelValues(proto, scheme, method, host, path,
+	summaryVec.WithLabelValues(proto, scheme, method, host, path,
 		strconv.Itoa(status), strconv.FormatBool(err != nil)).Observe(float64(dur))
 }

@@ -40,3 +40,17 @@ func TestFilterChain(t *testing.T) {
 	assert.True(t, ctx.Input.GetData("invocation").(bool))
 	time.Sleep(1 * time.Second)
 }
+
+func TestFilterChainBuilder_report(t *testing.T) {
+
+	ctx := context.NewContext()
+	r, _ := http.NewRequest("GET", "/prometheus/user", nil)
+	w := httptest.NewRecorder()
+	ctx.Reset(w, r)
+	fb := &FilterChainBuilder{}
+	// without router info
+	report(time.Second, ctx, fb.buildVec())
+
+	ctx.Input.SetData("RouterPattern", "my-route")
+	report(time.Second, ctx, fb.buildVec())
+}

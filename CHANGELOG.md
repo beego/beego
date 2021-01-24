@@ -13,3 +13,5 @@
 - Implement context.Context support and deprecate `QueryM2MWithCtx` and `QueryTableWithCtx` [4424](https://github.com/beego/beego/pull/4424)
 - Finish timeout option for tasks #4441 [4441](https://github.com/beego/beego/pull/4441)
 - Error Module brief design & using httplib module to validate this design. [4453](https://github.com/beego/beego/pull/4453)
+- Fix 4444: panic when 404 not found. [4446](https://github.com/beego/beego/pull/4446)
+- Fix 4435: fix panic when controller dir not found. [4452](https://github.com/beego/beego/pull/4452)
