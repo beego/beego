@@ -108,8 +108,11 @@ func registerAdmin() error {
 		c := &adminController{
 			servers: make([]*HttpServer, 0, 2),
 		}
+
+		// copy config to avoid conflict
+		adminCfg := *BConfig
 		beeAdminApp = &adminApp{
-			HttpServer: NewHttpServerWithCfg(BConfig),
+			HttpServer: NewHttpServerWithCfg(&adminCfg),
 		}
 		// keep in mind that all data should be html escaped to avoid XSS attack
 		beeAdminApp.Router("/", c, "get:AdminIndex")

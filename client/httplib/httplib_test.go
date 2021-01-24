@@ -345,6 +345,29 @@ func TestNewBeegoRequest(t *testing.T) {
 	req := NewBeegoRequest("http://beego.me", "GET")
 	assert.NotNil(t, req)
 	assert.Equal(t, "GET", req.req.Method)
+
+	// invalid case but still go request
+	req = NewBeegoRequest("httpa\ta://beego.me", "GET")
+	assert.NotNil(t, req)
+}
+
+func TestBeegoHTTPRequest_SetProtocolVersion(t *testing.T) {
+	req := NewBeegoRequest("http://beego.me", "GET")
+	req.SetProtocolVersion("HTTP/3.10")
+	assert.Equal(t, "HTTP/3.10", req.req.Proto)
+	assert.Equal(t, 3, req.req.ProtoMajor)
+	assert.Equal(t, 10, req.req.ProtoMinor)
+
+	req.SetProtocolVersion("")
+	assert.Equal(t, "HTTP/1.1", req.req.Proto)
+	assert.Equal(t, 1, req.req.ProtoMajor)
+	assert.Equal(t, 1, req.req.ProtoMinor)
+
+	// invalid case
+	req.SetProtocolVersion("HTTP/aaa1.1")
+	assert.Equal(t, "HTTP/1.1", req.req.Proto)
+	assert.Equal(t, 1, req.req.ProtoMajor)
+	assert.Equal(t, 1, req.req.ProtoMinor)
 }
 
 func TestPut(t *testing.T) {
@@ -384,6 +407,16 @@ func TestBeegoHTTPRequest_Body(t *testing.T) {
 	req.Body([]byte(body))
 	assert.Equal(t, int64(len(body)), req.req.ContentLength)
 	assert.NotNil(t, req.req.GetBody)
+	assert.NotNil(t, req.req.Body)
+
+	body = "hhhh, i am test"
+	req.Body(body)
+	assert.Equal(t, int64(len(body)), req.req.ContentLength)
+	assert.NotNil(t, req.req.GetBody)
+	assert.NotNil(t, req.req.Body)
+
+	// invalid case
+	req.Body(13)
 }
 
 
