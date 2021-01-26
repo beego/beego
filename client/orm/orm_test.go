@@ -21,6 +21,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
 	"io/ioutil"
 	"math"
 	"os"
@@ -1146,6 +1147,26 @@ func TestOrderBy(t *testing.T) {
 	num, err = qs.OrderBy("-profile__age").Filter("user_name", "astaxie").Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
+
+	num, err = qs.OrderClauses(
+		order_clause.Clause(
+			order_clause.Column(`profile__age`),
+			order_clause.SortDescending(),
+		),
+	).Filter("user_name", "astaxie").Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	if IsMysql {
+		num, err = qs.OrderClauses(
+			order_clause.Clause(
+				order_clause.Column(`rand()`),
+				order_clause.Raw(),
+			),
+		).Filter("user_name", "astaxie").Count()
+		throwFail(t, err)
+		throwFail(t, AssertIs(num, 1))
+	}
 }
 
 func TestAll(t *testing.T) {
@@ -1225,6 +1246,19 @@ func TestValues(t *testing.T) {
 	qs := dORM.QueryTable("user")
 
 	num, err := qs.OrderBy("Id").Values(&maps)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 3))
+	if num == 3 {
+		throwFail(t, AssertIs(maps[0]["UserName"], "slene"))
+		throwFail(t, AssertIs(maps[2]["Profile"], nil))
+	}
+
+	num, err = qs.OrderClauses(
+		order_clause.Clause(
+			order_clause.Column("Id"),
+			order_clause.SortAscending(),
+		),
+	).Values(&maps)
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 3))
 	if num == 3 {
@@ -2785,4 +2819,24 @@ func TestCondition(t *testing.T) {
 	// cycleFlag was true,meaning use self as sub cond
 	throwFail(t, AssertIs(!cycleFlag, true))
 	return
+}
+
+func TestContextCanceled(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	user := User{UserName: "slene"}
+
+	err := dORM.ReadWithCtx(ctx, &user, "UserName")
+	throwFail(t, err)
+
+	cancel()
+	err = dORM.ReadWithCtx(ctx, &user, "UserName")
+	throwFail(t, AssertIs(err, context.Canceled))
+
+	ctx, cancel = context.WithCancel(context.Background())
+	cancel()
+
+	qs := dORM.QueryTable(user)
+	_, err = qs.Filter("UserName", "slene").CountWithCtx(ctx)
+	throwFail(t, AssertIs(err, context.Canceled))
 }

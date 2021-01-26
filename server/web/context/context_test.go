@@ -15,6 +15,7 @@
 package context
 
 import (
+	"github.com/beego/beego/v2/server/web/session"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -42,6 +43,29 @@ func TestXsrfReset_01(t *testing.T) {
 		t.FailNow()
 	}
 	if token == c._xsrfToken {
+		t.FailNow()
+	}
+}
+
+func TestContext_Session(t *testing.T) {
+	c := NewContext()
+	if store, err := c.Session(); store != nil || err == nil {
+		t.FailNow()
+	}
+}
+
+func TestContext_Session1(t *testing.T) {
+	c := Context{}
+	if store, err := c.Session(); store != nil || err == nil {
+		t.FailNow()
+	}
+}
+
+func TestContext_Session2(t *testing.T) {
+	c := NewContext()
+	c.Input.CruSession = &session.MemSessionStore{}
+
+	if store, err := c.Session(); store == nil || err != nil {
 		t.FailNow()
 	}
 }

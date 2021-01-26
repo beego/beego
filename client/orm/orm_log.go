@@ -85,20 +85,31 @@ func (d *stmtQueryLog) Close() error {
 }
 
 func (d *stmtQueryLog) Exec(args ...interface{}) (sql.Result, error) {
+	return d.ExecContext(context.Background(), args...)
+}
+
+func (d *stmtQueryLog) ExecContext(ctx context.Context, args ...interface{}) (sql.Result, error) {
 	a := time.Now()
-	res, err := d.stmt.Exec(args...)
+	res, err := d.stmt.ExecContext(ctx, args...)
 	debugLogQueies(d.alias, "st.Exec", d.query, a, err, args...)
 	return res, err
 }
-
 func (d *stmtQueryLog) Query(args ...interface{}) (*sql.Rows, error) {
+	return d.QueryContext(context.Background(), args...)
+}
+
+func (d *stmtQueryLog) QueryContext(ctx context.Context, args ...interface{}) (*sql.Rows, error) {
 	a := time.Now()
-	res, err := d.stmt.Query(args...)
+	res, err := d.stmt.QueryContext(ctx, args...)
 	debugLogQueies(d.alias, "st.Query", d.query, a, err, args...)
 	return res, err
 }
 
 func (d *stmtQueryLog) QueryRow(args ...interface{}) *sql.Row {
+	return d.QueryRowContext(context.Background(), args...)
+}
+
+func (d *stmtQueryLog) QueryRowContext(ctx context.Context, args ...interface{}) *sql.Row {
 	a := time.Now()
 	res := d.stmt.QueryRow(args...)
 	debugLogQueies(d.alias, "st.QueryRow", d.query, a, nil, args...)

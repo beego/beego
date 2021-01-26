@@ -17,14 +17,18 @@ package prometheus
 import (
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 
 	"github.com/beego/beego/v2"
+	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/server/web"
 	"github.com/beego/beego/v2/server/web/context"
 )
+
+const unknownRouterPattern = "UnknownRouterPattern"
 
 // FilterChainBuilder is an extension point,
 // when we want to support some configuration,
@@ -32,8 +36,30 @@ import (
 type FilterChainBuilder struct {
 }
 
+var summaryVec prometheus.ObserverVec
+var initSummaryVec sync.Once
+
 // FilterChain returns a FilterFunc. The filter will records some metrics
 func (builder *FilterChainBuilder) FilterChain(next web.FilterFunc) web.FilterFunc {
+
+	initSummaryVec.Do(func() {
+		summaryVec = builder.buildVec()
+		err := prometheus.Register(summaryVec)
+		if _, ok := err.(*prometheus.AlreadyRegisteredError); err != nil && !ok {
+			logs.Error("web module register prometheus vector failed, %+v", err)
+		}
+		registerBuildInfo()
+	})
+
+	return func(ctx *context.Context) {
+		startTime := time.Now()
+		next(ctx)
+		endTime := time.Now()
+		go report(endTime.Sub(startTime), ctx, summaryVec)
+	}
+}
+
+func (builder *FilterChainBuilder) buildVec() *prometheus.SummaryVec {
 	summaryVec := prometheus.NewSummaryVec(prometheus.SummaryOpts{
 		Name:      "beego",
 		Subsystem: "http_request",
@@ -44,17 +70,7 @@ func (builder *FilterChainBuilder) FilterChain(next web.FilterFunc) web.FilterFu
 		},
 		Help: "The statics info for http request",
 	}, []string{"pattern", "method", "status"})
-
-	prometheus.MustRegister(summaryVec)
-
-	registerBuildInfo()
-
-	return func(ctx *context.Context) {
-		startTime := time.Now()
-		next(ctx)
-		endTime := time.Now()
-		go report(endTime.Sub(startTime), ctx, summaryVec)
-	}
+	return summaryVec
 }
 
 func registerBuildInfo() {
@@ -75,13 +91,17 @@ func registerBuildInfo() {
 		},
 	}, []string{})
 
-	prometheus.MustRegister(buildInfo)
+	_ = prometheus.Register(buildInfo)
 	buildInfo.WithLabelValues().Set(1)
 }
 
-func report(dur time.Duration, ctx *context.Context, vec *prometheus.SummaryVec) {
+func report(dur time.Duration, ctx *context.Context, vec prometheus.ObserverVec) {
 	status := ctx.Output.Status
-	ptn := ctx.Input.GetData("RouterPattern").(string)
+	ptnItf := ctx.Input.GetData("RouterPattern")
+	ptn := unknownRouterPattern
+	if ptnItf != nil {
+		ptn = ptnItf.(string)
+	}
 	ms := dur / time.Millisecond
 	vec.WithLabelValues(ptn, ctx.Input.Method(), strconv.Itoa(status)).Observe(float64(ms))
 }
