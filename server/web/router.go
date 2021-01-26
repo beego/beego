@@ -576,7 +576,7 @@ func getReflectTypeAndMethod(f interface{}) (controllerType reflect.Type, method
 	if len(method) == 0 {
 		panic("method name is empty")
 	} else if method[0] > 96 || method[0] < 65 {
-		panic("not a public method")
+		panic(fmt.Sprintf("%s is not a public method", method))
 	}
 
 	// check only one param which is the method receiver
@@ -584,17 +584,22 @@ func getReflectTypeAndMethod(f interface{}) (controllerType reflect.Type, method
 		panic("invalid number of param in")
 	}
 
-	// check the receiver implement ControllerInterface
 	controllerType = funcType.In(0)
-	_, ok := reflect.New(controllerType).Interface().(ControllerInterface)
-	if !ok {
-		panic(controllerType.String() + " is not implemented ControllerInterface")
-	}
 
 	// check controller has the method
 	_, exists := controllerType.MethodByName(method)
 	if !exists {
 		panic(controllerType.String() + " has no method " + method)
+	}
+
+	// check the receiver implement ControllerInterface
+	if controllerType.Kind() == reflect.Ptr {
+		controllerType = controllerType.Elem()
+	}
+	controller := reflect.New(controllerType)
+	_, ok := controller.Interface().(ControllerInterface)
+	if !ok {
+		panic(controllerType.String() + " is not implemented ControllerInterface")
 	}
 
 	return

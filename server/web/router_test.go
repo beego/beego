@@ -42,6 +42,10 @@ func (m TestControllerWithInterface) Ping() {
 	fmt.Println("pong")
 }
 
+func (m *TestControllerWithInterface) PingPointer() {
+	fmt.Println("pong pointer")
+}
+
 type TestController struct {
 	Controller
 }
@@ -923,6 +927,92 @@ func TestRouterRouterAny(t *testing.T) {
 	}
 }
 
+func TestRouterRouterGetPointerMethod(t *testing.T) {
+	r, _ := http.NewRequest(http.MethodGet, "/user", nil)
+	w := httptest.NewRecorder()
+
+	handler := NewControllerRegister()
+	handler.RouterGet("/user", (*ExampleController).PingPointer)
+	handler.ServeHTTP(w, r)
+	if w.Body.String() != examplePointerBody {
+		t.Errorf("TestRouterRouterGetPointerMethod can't run")
+	}
+}
+
+func TestRouterRouterPostPointerMethod(t *testing.T) {
+	r, _ := http.NewRequest(http.MethodPost, "/user", nil)
+	w := httptest.NewRecorder()
+
+	handler := NewControllerRegister()
+	handler.RouterPost("/user", (*ExampleController).PingPointer)
+	handler.ServeHTTP(w, r)
+	if w.Body.String() != examplePointerBody {
+		t.Errorf("TestRouterRouterPostPointerMethod can't run")
+	}
+}
+
+func TestRouterRouterHeadPointerMethod(t *testing.T) {
+	r, _ := http.NewRequest(http.MethodHead, "/user", nil)
+	w := httptest.NewRecorder()
+
+	handler := NewControllerRegister()
+	handler.RouterHead("/user", (*ExampleController).PingPointer)
+	handler.ServeHTTP(w, r)
+	if w.Body.String() != examplePointerBody {
+		t.Errorf("TestRouterRouterHeadPointerMethod can't run")
+	}
+}
+
+func TestRouterRouterPutPointerMethod(t *testing.T) {
+	r, _ := http.NewRequest(http.MethodPut, "/user", nil)
+	w := httptest.NewRecorder()
+
+	handler := NewControllerRegister()
+	handler.RouterPut("/user", (*ExampleController).PingPointer)
+	handler.ServeHTTP(w, r)
+	if w.Body.String() != examplePointerBody {
+		t.Errorf("TestRouterRouterPutPointerMethod can't run")
+	}
+}
+
+func TestRouterRouterPatchPointerMethod(t *testing.T) {
+	r, _ := http.NewRequest(http.MethodPatch, "/user", nil)
+	w := httptest.NewRecorder()
+
+	handler := NewControllerRegister()
+	handler.RouterPatch("/user", (*ExampleController).PingPointer)
+	handler.ServeHTTP(w, r)
+	if w.Body.String() != examplePointerBody {
+		t.Errorf("TestRouterRouterPatchPointerMethod can't run")
+	}
+}
+
+func TestRouterRouterDeletePointerMethod(t *testing.T) {
+	r, _ := http.NewRequest(http.MethodDelete, "/user", nil)
+	w := httptest.NewRecorder()
+
+	handler := NewControllerRegister()
+	handler.RouterDelete("/user", (*ExampleController).PingPointer)
+	handler.ServeHTTP(w, r)
+	if w.Body.String() != examplePointerBody {
+		t.Errorf("TestRouterRouterDeletePointerMethod can't run")
+	}
+}
+
+func TestRouterRouterAnyPointerMethod(t *testing.T) {
+	handler := NewControllerRegister()
+	handler.RouterAny("/user", (*ExampleController).PingPointer)
+
+	for method := range HTTPMETHOD {
+		w := httptest.NewRecorder()
+		r, _ := http.NewRequest(method, "/user", nil)
+		handler.ServeHTTP(w, r)
+		if w.Body.String() != examplePointerBody {
+			t.Errorf("TestRouterRouterAnyPointerMethod can't run, get the response is " + w.Body.String())
+		}
+	}
+}
+
 func TestRouterAddRouterMethodPanicInvalidMethod(t *testing.T) {
 	method := "some random method"
 	message := "not support http method: " + strings.ToUpper(method)
@@ -961,7 +1051,7 @@ func TestRouterAddRouterMethodPanicNotAMethod(t *testing.T) {
 
 func TestRouterAddRouterMethodPanicNotPublicMethod(t *testing.T) {
 	method := http.MethodGet
-	message := "not a public method"
+	message := "ping is not a public method"
 	defer func() {
 		err := recover()
 		if err != nil { //产生了panic异常
@@ -993,4 +1083,22 @@ func TestRouterAddRouterMethodPanicNotImplementInterface(t *testing.T) {
 
 	handler := NewControllerRegister()
 	handler.AddRouterMethod(method, "/user", TestControllerWithInterface.Ping)
+}
+
+func TestRouterAddRouterPointerMethodPanicNotImplementInterface(t *testing.T) {
+	method := http.MethodGet
+	message := "web.TestControllerWithInterface is not implemented ControllerInterface"
+	defer func() {
+		err := recover()
+		if err != nil { //产生了panic异常
+			errStr, ok := err.(string)
+			if ok && errStr == message {
+				return
+			}
+		}
+		t.Errorf(fmt.Sprintf("TestRouterAddRouterPointerMethodPanicNotImplementInterface failed: %v", err))
+	}()
+
+	handler := NewControllerRegister()
+	handler.AddRouterMethod(method, "/user", (*TestControllerWithInterface).PingPointer)
 }
