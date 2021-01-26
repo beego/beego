@@ -907,7 +907,7 @@ func (d *dbBase) DeleteBatch(ctx context.Context, q dbQuerier, qs *querySet, mi 
 		return 0, nil
 	}
 
-	marks := make([]string, len(args))
+	marks := make([]string, len(argsRels))
 	for i := range marks {
 		marks[i] = "?"
 	}
