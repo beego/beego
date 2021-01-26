@@ -877,7 +877,7 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 
 	Q := d.ins.TableQuote()
 
-	where, args0 := tables.getCondSQL(cond, false, tz)
+	where, args := tables.getCondSQL(cond, false, tz)
 	join := tables.getJoinSQL()
 
 	cols := fmt.Sprintf("T0.%s%s%s", Q, mi.fields.pk.column, Q)
@@ -886,7 +886,7 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	d.ins.ReplaceMarks(&query)
 
 	var rs *sql.Rows
-	r, err := q.Query(query, args0...)
+	r, err := q.Query(query, args...)
 	if err != nil {
 		return 0, err
 	}
@@ -894,7 +894,7 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	defer rs.Close()
 
 	var ref interface{}
-	args := make([]interface{}, 0)
+	argsRels := make([]interface{}, 0)
 	cnt := 0
 	for rs.Next() {
 		if err := rs.Scan(&ref); err != nil {
@@ -904,7 +904,7 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 		if err != nil {
 			return 0, err
 		}
-		args = append(args, pkValue)
+		argsRels = append(argsRels, pkValue)
 		cnt++
 	}
 
@@ -912,7 +912,7 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 		return 0, nil
 	}
 
-	marks := make([]string, len(args))
+	marks := make([]string, len(argsRels))
 	for i := range marks {
 		marks[i] = "?"
 	}
@@ -921,23 +921,16 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 	if join == "" {
 		where = strings.Replace(where, "T0.", "", -1)
 		query = fmt.Sprintf("DELETE FROM %s%s%s %s", Q, mi.table, Q, where)
-		d.ins.ReplaceMarks(&query)
-
-		if qs != nil && qs.forContext {
-			res, err = q.ExecContext(qs.ctx, query, args0...)
-		} else {
-			res, err = q.Exec(query, args0...)
-		}
 	} else {
 		sqlIn := fmt.Sprintf("IN (%s)", strings.Join(marks, ", "))
 		query = fmt.Sprintf("DELETE FROM %s%s%s WHERE %s%s%s %s", Q, mi.table, Q, Q, mi.fields.pk.column, Q, sqlIn)
-		d.ins.ReplaceMarks(&query)
-
-		if qs != nil && qs.forContext {
-			res, err = q.ExecContext(qs.ctx, query, args...)
-		} else {
-			res, err = q.Exec(query, args...)
-		}
+		args = argsRels
+	}
+	d.ins.ReplaceMarks(&query)
+	if qs != nil && qs.forContext {
+		res, err = q.ExecContext(qs.ctx, query, args...)
+	} else {
+		res, err = q.Exec(query, args...)
 	}
 
 	if err == nil {
@@ -946,7 +939,7 @@ func (d *dbBase) DeleteBatch(q dbQuerier, qs *querySet, mi *modelInfo, cond *Con
 			return 0, err
 		}
 		if num > 0 {
-			err := d.deleteRels(q, mi, args, tz)
+			err := d.deleteRels(q, mi, argsRels, tz)
 			if err != nil {
 				return num, err
 			}
