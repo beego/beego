@@ -25,7 +25,8 @@ import (
 )
 
 const (
-	exampleBody = "hello world"
+	exampleBody        = "hello world"
+	examplePointerBody = "hello world pointer"
 
 	nsNamespace     = "/router"
 	nsPath          = "/user"
@@ -38,6 +39,13 @@ type ExampleController struct {
 
 func (m ExampleController) Ping() {
 	err := m.Ctx.Output.Body([]byte(exampleBody))
+	if err != nil {
+		fmt.Println(err)
+	}
+}
+
+func (m *ExampleController) PingPointer() {
+	err := m.Ctx.Output.Body([]byte(examplePointerBody))
 	if err != nil {
 		fmt.Println(err)
 	}
