@@ -87,7 +87,7 @@ func NewControllerRegister() *ControllerRegister {
 //	Add("/api",&RestController{},"get,post:ApiFunc"
 //	Add("/simple",&SimpleController{},"get:GetFunc;post:PostFunc")
 func (p *ControllerRegister) Add(pattern string, c ControllerInterface, mappingMethods ...string) {
-	(*web.ControllerRegister)(p).Add(pattern, c, mappingMethods...)
+	(*web.ControllerRegister)(p).Add(pattern, c, web.WithRouterMethods(c, mappingMethods...))
 }
 
 // Include only when the Runmode is dev will generate router file in the router/auto.go from the controller

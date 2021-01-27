@@ -12,12 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package httplib
+package mock
 
 import (
 	"context"
-	"fmt"
 	"net/http"
+
+	"github.com/beego/beego/v2/client/httplib"
 )
 
 // MockResponse will return mock response if find any suitable mock data
@@ -32,13 +33,10 @@ func NewMockResponseFilter() *MockResponseFilter {
 	}
 }
 
-func (m *MockResponseFilter) FilterChain(next Filter) Filter {
-	return func(ctx context.Context, req *BeegoHTTPRequest) (*http.Response, error) {
-
+func (m *MockResponseFilter) FilterChain(next httplib.Filter) httplib.Filter {
+	return func(ctx context.Context, req *httplib.BeegoHTTPRequest) (*http.Response, error) {
 		ms := mockFromCtx(ctx)
 		ms = append(ms, m.ms...)
-
-		fmt.Printf("url: %s, mock: %d \n", req.url, len(ms))
 		for _, mock := range ms {
 			if mock.cond.Match(ctx, req) {
 				return mock.resp, mock.err

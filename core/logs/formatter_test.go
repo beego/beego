@@ -88,7 +88,7 @@ func TestPatternLogFormatter(t *testing.T) {
 	}
 	got := tes.ToString(lm)
 	want := lm.FilePath + ":" + strconv.Itoa(lm.LineNumber) + "|" +
-		when.Format(tes.WhenFormat) + levelPrefix[lm.Level-1] + ">> " + lm.Msg
+		when.Format(tes.WhenFormat) + levelPrefix[lm.Level] + ">> " + lm.Msg
 	if got != want {
 		t.Errorf("want %s, got %s", want, got)
 	}
