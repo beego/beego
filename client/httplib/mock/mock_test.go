@@ -72,6 +72,6 @@ func OriginnalCodeUsingHttplibPassCtx(ctx context.Context) (*http.Response, erro
 	return httplib.Get("http://localhost:7777/abc").DoRequestWithCtx(ctx)
 }
 
-func OriginalCodeUsingHttplib() (*http.Response, error){
+func OriginalCodeUsingHttplib() (*http.Response, error) {
 	return httplib.Get("http://localhost:7777/abc").DoRequest()
 }

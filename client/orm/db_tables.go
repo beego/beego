@@ -16,10 +16,11 @@ package orm
 
 import (
 	"fmt"
-	"github.com/beego/beego/v2/client/orm/clauses"
-	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
 	"strings"
 	"time"
+
+	"github.com/beego/beego/v2/client/orm/clauses"
+	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
 )
 
 // table info struct.

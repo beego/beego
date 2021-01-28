@@ -70,7 +70,7 @@ var (
 	}
 )
 
-const commentFilename   = "commentsRouter.go"
+const commentFilename = "commentsRouter.go"
 
 func init() {
 	pkgLastupdate = make(map[string]int64)

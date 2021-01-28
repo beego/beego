@@ -15,7 +15,7 @@
 // Package context provide the context utils
 // Usage:
 //
-//	import "github.com/beego/beego/v2/context"
+//	import "github.com/beego/beego/v2/server/web/context"
 //
 //	ctx := context.Context{Request:req,ResponseWriter:rw}
 //

@@ -1,8 +1,9 @@
 package order_clause
 
 import (
-	"github.com/beego/beego/v2/client/orm/clauses"
 	"strings"
+
+	"github.com/beego/beego/v2/client/orm/clauses"
 )
 
 type Sort int8

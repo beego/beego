@@ -20,8 +20,8 @@
 //
 // Usage:
 //  import(
-//    _ "github.com/beego/beego/v2/config/xml"
-//      "github.com/beego/beego/v2/config"
+//    _ "github.com/beego/beego/v2/core/config/xml"
+//      "github.com/beego/beego/v2/core/config"
 //  )
 //
 //  cnf, err := config.NewConfig("xml", "config.xml")

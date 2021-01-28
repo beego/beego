@@ -21,7 +21,7 @@ import (
 // pre define code
 
 // Unknown indicates got some error which is not defined
-var Unknown = DefineCode(5000001, "error", "Unknown",fmt.Sprintf(`
+var Unknown = DefineCode(5000001, "error", "Unknown", fmt.Sprintf(`
 Unknown error code. Usually you will see this code in three cases:
 1. You forget to define Code or function DefineCode not being executed;
 2. This is not Beego's error but you call FromError();
@@ -49,4 +49,3 @@ func goCodeBlock(code string) string {
 func codeBlock(lan string, code string) string {
 	return fmt.Sprintf("```%s\n%s\n```", lan, code)
 }
-

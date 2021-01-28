@@ -19,7 +19,7 @@ func TestIncr(t *testing.T) {
 		t.Errorf("incr failed, expect %v, but %v actually", updateVal, val)
 		return
 	}
-	_, err = incr(int(1 << (strconv.IntSize - 1) - 1))
+	_, err = incr(int(1<<(strconv.IntSize-1) - 1))
 	if err == nil {
 		t.Error("incr failed")
 		return
@@ -73,7 +73,7 @@ func TestIncr(t *testing.T) {
 		t.Errorf("incr failed, expect %v, but %v actually", updateVal, val)
 		return
 	}
-	_, err = incr(uint(1 << (strconv.IntSize) - 1))
+	_, err = incr(uint(1<<(strconv.IntSize) - 1))
 	if err == nil {
 		t.Error("incr failed")
 		return

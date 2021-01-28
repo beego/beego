@@ -16,7 +16,7 @@
 //
 // Usage:
 // import(
-//   "github.com/beego/beego/v2/session"
+//   "github.com/beego/beego/v2/server/web/session"
 // )
 //
 //	func init() {
@@ -221,7 +221,7 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 		HttpOnly: !manager.config.DisableHTTPOnly,
 		Secure:   manager.isSecure(r),
 		Domain:   manager.config.Domain,
-		SameSite:   manager.config.CookieSameSite,
+		SameSite: manager.config.CookieSameSite,
 	}
 	if manager.config.CookieLifeTime > 0 {
 		cookie.MaxAge = manager.config.CookieLifeTime
