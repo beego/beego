@@ -16,7 +16,7 @@
 // Simple Usage:
 //	import(
 //		"github.com/beego/beego/v2"
-//		"github.com/beego/beego/v2/plugins/authz"
+//		"github.com/beego/beego/v2/server/web/filter/authz"
 //		"github.com/casbin/casbin"
 //	)
 //

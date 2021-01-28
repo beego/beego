@@ -15,7 +15,7 @@
 // Package context provide the context utils
 // Usage:
 //
-//	import "github.com/beego/beego/v2/context"
+//	import "github.com/beego/beego/v2/server/web/context"
 //
 //	ctx := context.Context{Request:req,ResponseWriter:rw}
 //
@@ -29,12 +29,13 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/beego/beego/v2/server/web/session"
 	"net"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/beego/beego/v2/server/web/session"
 
 	"github.com/beego/beego/v2/core/utils"
 )

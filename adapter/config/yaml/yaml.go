@@ -20,8 +20,8 @@
 //
 // Usage:
 //  import(
-//   _ "github.com/beego/beego/v2/config/yaml"
-//     "github.com/beego/beego/v2/config"
+//   _ "github.com/beego/beego/v2/core/config/yaml"
+//     "github.com/beego/beego/v2/core/config"
 //  )
 //
 //  cnf, err := config.NewConfig("yaml", "config.yaml")
