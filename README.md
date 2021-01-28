@@ -1,4 +1,4 @@
-# Beego [![Build Status](https://travis-ci.org/astaxie/beego.svg?branch=master)](https://travis-ci.org/astaxie/beego) [![GoDoc](http://godoc.org/github.com/beego/beego/v2?status.svg)](http://godoc.org/github.com/beego/beego/v2) [![Foundation](https://img.shields.io/badge/Golang-Foundation-green.svg)](http://golangfoundation.org) [![Go Report Card](https://goreportcard.com/badge/github.com/beego/beego/v2)](https://goreportcard.com/report/github.com/beego/beego/v2)
+# Beego [![Build Status](https://travis-ci.org/astaxie/beego.svg?branch=master)](https://travis-ci.org/astaxie/beego) [![GoDoc](http://godoc.org/github.com/beego/beego/v2?status.svg)](http://godoc.org/github.com/beego/beego/v2) [![Foundation](https://img.shields.io/badge/Golang-Foundation-green.svg)](http://golangfoundation.org) [![Go Report Card](https://goreportcard.com/badge/github.com/beego/beego)](https://goreportcard.com/report/github.com/beego/beego)
 
 Beego is used for rapid development of enterprise application in Go, including RESTful APIs, web apps and backend
 services.
