@@ -60,7 +60,6 @@ func TestControllerRegister_InsertFilterChain_Order(t *testing.T) {
 		}
 	})
 
-
 	InsertFilterChain("/abc", func(next FilterFunc) FilterFunc {
 		return func(ctx *context.Context) {
 			ctx.Output.Header("second", fmt.Sprintf("%d", time.Now().UnixNano()))

@@ -22,7 +22,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func Test_getRouterDir(t *testing.T)  {
+func Test_getRouterDir(t *testing.T) {
 	pkg := filepath.Dir(os.TempDir())
 
 	res := getRouterDir(pkg)

@@ -23,7 +23,7 @@ import (
 	"github.com/beego/beego/v2/adapter/context"
 )
 
-func Demo(i int)  {
+func Demo(i int) {
 
 }
 
@@ -37,4 +37,3 @@ func TestConvertParams(t *testing.T) {
 	}, reflect.TypeOf(Demo), ctx)
 	assert.Equal(t, int64(11), res[0].Int())
 }
-

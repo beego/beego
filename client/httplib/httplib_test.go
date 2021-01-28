@@ -309,7 +309,6 @@ func TestFilterChainOrder(t *testing.T) {
 		}
 	})
 
-
 	req.AddFilters(func(next Filter) Filter {
 		return func(ctx context.Context, req *BeegoHTTPRequest) (*http.Response, error) {
 			return NewHttpResponseWithJsonBody("second"), nil
@@ -396,7 +395,7 @@ func TestBeegoHTTPRequest_Param(t *testing.T) {
 	req.Param(key, value)
 	assert.Equal(t, value, req.params[key][0])
 
-	value1 :=  "test-param-value-1"
+	value1 := "test-param-value-1"
 	req.Param(key, value1)
 	assert.Equal(t, value1, req.params[key][1])
 }
@@ -419,10 +418,10 @@ func TestBeegoHTTPRequest_Body(t *testing.T) {
 	req.Body(13)
 }
 
-
 type user struct {
 	Name string `xml:"name"`
 }
+
 func TestBeegoHTTPRequest_XMLBody(t *testing.T) {
 	req := Post("http://beego.me")
 	body := &user{

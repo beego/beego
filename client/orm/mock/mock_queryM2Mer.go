@@ -23,7 +23,6 @@ import (
 // DoNothingQueryM2Mer do nothing
 // use it to build mock orm.QueryM2Mer
 type DoNothingQueryM2Mer struct {
-	
 }
 
 func (d *DoNothingQueryM2Mer) AddWithCtx(ctx context.Context, i ...interface{}) (int64, error) {
@@ -68,13 +67,13 @@ func (d *DoNothingQueryM2Mer) Count() (int64, error) {
 
 type QueryM2MerCondition struct {
 	tableName string
-	name string
+	name      string
 }
 
 func NewQueryM2MerCondition(tableName string, name string) *QueryM2MerCondition {
 	return &QueryM2MerCondition{
 		tableName: tableName,
-		name: name,
+		name:      name,
 	}
 }
 
@@ -88,5 +87,3 @@ func (q *QueryM2MerCondition) Match(ctx context.Context, inv *orm.Invocation) bo
 	}
 	return res
 }
-
-

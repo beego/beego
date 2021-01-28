@@ -44,7 +44,7 @@ func StartMock() Stub {
 	return mockFilter
 }
 
-func CtxWithMock(ctx context.Context, mock... *Mock) context.Context {
+func CtxWithMock(ctx context.Context, mock ...*Mock) context.Context {
 	return context.WithValue(ctx, mockCtxKey, mock)
 }
 
@@ -73,8 +73,6 @@ func NewMock(con RequestCondition, resp *http.Response, err error) *Mock {
 	return &Mock{
 		cond: con,
 		resp: resp,
-		err: err,
+		err:  err,
 	}
 }
-
-

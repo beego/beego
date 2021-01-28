@@ -20,7 +20,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-
 func TestNewHttpResponseWithJsonBody(t *testing.T) {
 	// string
 	resp := NewHttpResponseWithJsonBody("{}")

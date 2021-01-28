@@ -24,7 +24,9 @@ import (
 
 	"github.com/beego/beego/v2/client/orm"
 )
+
 const mockErrorMsg = "mock error"
+
 func init() {
 	orm.RegisterModel(&User{})
 }
@@ -239,7 +241,7 @@ func TestTransactionRollback(t *testing.T) {
 	assert.Equal(t, mock, err)
 }
 
-func TestTransactionCommit(t *testing.T)  {
+func TestTransactionCommit(t *testing.T) {
 	s := StartMock()
 	defer s.Clear()
 	mock := errors.New(mockErrorMsg)

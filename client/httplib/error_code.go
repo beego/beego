@@ -51,7 +51,6 @@ Sometimes you got JSON document and you want to make it as request body. So you 
 If you do this, you got this code. Instead, you should call Header to set Content-type and call Body to set body data.
 `)
 
-
 // start with 5 --------------------------------------------------------------------------
 
 var CreateFormFileFailed = berror.DefineCode(5001001, moduleName, "CreateFormFileFailed", `
@@ -125,7 +124,3 @@ Make sure that:
 1. You pass valid structure pointer to the function;
 2. The body is valid YAML document
 `)
-
-
-
-
