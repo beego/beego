@@ -1,4 +1,5 @@
 # developing
+- Fix: /abc.html/aaa match /abc/aaa. [4459](https://github.com/beego/beego/pull/4459)
 - ORM mock. [4407](https://github.com/beego/beego/pull/4407)
 - Add sonar check and ignore test. [4432](https://github.com/beego/beego/pull/4432) [4433](https://github.com/beego/beego/pull/4433)
 - Update changlog.yml to check every PR to develop branch.[4427](https://github.com/beego/beego/pull/4427)
