@@ -25,6 +25,7 @@ type User struct {
 type Seller struct {
 	Id int
 }
+
 func TestRegisterModelWithPrefix(t *testing.T) {
 	RegisterModelWithPrefix("test", &User{}, &Seller{})
 }

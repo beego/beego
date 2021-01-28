@@ -38,8 +38,8 @@
 //
 // Usage:
 // import(
-//   _ "github.com/beego/beego/v2/session/postgresql"
-//   "github.com/beego/beego/v2/session"
+//   _ "github.com/beego/beego/v2/server/web/session/postgresql"
+//   "github.com/beego/beego/v2/server/web/session"
 // )
 //
 //	func init() {

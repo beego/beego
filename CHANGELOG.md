@@ -1,4 +1,5 @@
 # developing
+- Fix: /abc.html/aaa match /abc/aaa. [4459](https://github.com/beego/beego/pull/4459)
 - ORM mock. [4407](https://github.com/beego/beego/pull/4407)
 - Add sonar check and ignore test. [4432](https://github.com/beego/beego/pull/4432) [4433](https://github.com/beego/beego/pull/4433)
 - Update changlog.yml to check every PR to develop branch.[4427](https://github.com/beego/beego/pull/4427)
@@ -16,4 +17,5 @@
 - Fix 4444: panic when 404 not found. [4446](https://github.com/beego/beego/pull/4446)
 - Fix 4435: fix panic when controller dir not found. [4452](https://github.com/beego/beego/pull/4452)
 - Fix 4456: Fix router method expression [4456](https://github.com/beego/beego/pull/4456)
+- Remove some `go get` lines in `.travis.yml` file [4469](https://github.com/beego/beego/pull/4469)
 - Fix 4451: support QueryExecutor interface. [4461](https://github.com/beego/beego/pull/4461)

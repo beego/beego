@@ -1,6 +1,6 @@
 package clauses
 
 const (
-	ExprSep                = "__"
-	ExprDot                = "."
+	ExprSep = "__"
+	ExprDot = "."
 )

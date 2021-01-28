@@ -19,8 +19,6 @@ import (
 	"sync"
 )
 
-
-
 // A Code is an unsigned 32-bit error code as defined in the beego spec.
 type Code interface {
 	Code() uint32
@@ -38,9 +36,9 @@ var defaultCodeRegistry = &codeRegistry{
 // desc could be markdown doc
 func DefineCode(code uint32, module string, name string, desc string) Code {
 	res := &codeDefinition{
-		code: code,
+		code:   code,
 		module: module,
-		desc: desc,
+		desc:   desc,
 	}
 	defaultCodeRegistry.lock.Lock()
 	defer defaultCodeRegistry.lock.Unlock()
@@ -53,10 +51,9 @@ func DefineCode(code uint32, module string, name string, desc string) Code {
 }
 
 type codeRegistry struct {
-	lock sync.RWMutex
+	lock  sync.RWMutex
 	codes map[uint32]*codeDefinition
 }
-
 
 func (cr *codeRegistry) Get(code uint32) (Code, bool) {
 	cr.lock.RLock()
@@ -66,12 +63,11 @@ func (cr *codeRegistry) Get(code uint32) (Code, bool) {
 }
 
 type codeDefinition struct {
-	code uint32
+	code   uint32
 	module string
-	desc string
-	name string
+	desc   string
+	name   string
 }
-
 
 func (c *codeDefinition) Name() string {
 	return c.name
@@ -88,4 +84,3 @@ func (c *codeDefinition) Module() string {
 func (c *codeDefinition) Desc() string {
 	return c.desc
 }
-

@@ -120,7 +120,6 @@ func (sc *SimpleCondition) matchBodyFields(ctx context.Context, req *httplib.Bee
 		return false
 	}
 
-
 	m := make(map[string]interface{})
 
 	err = json.Unmarshal(bytes, &m)
