@@ -58,7 +58,7 @@ before_install:
 install:
   - go get -u honnef.co/go/tools/cmd/staticcheck
   - go get -u github.com/mdempsky/unconvert
-  - go get -u github.com/gordonklaus/ineffassign  
+  - go get -u github.com/gordonklaus/ineffassign
 before_script:
 
   #  -
@@ -80,6 +80,6 @@ script:
   - staticcheck -show-ignored -checks "-ST1017,-U1000,-ST1005,-S1034,-S1012,-SA4006,-SA6005,-SA1019,-SA1024" ./
   - unconvert $(go list ./... | grep -v /vendor/)
   - ineffassign .
-  - find . ! \( -path './vendor' -prune \) -type f -name '*.go' -print0 | xargs -0 gofmt -l -s  
+  - find . ! \( -path './vendor' -prune \) -type f -name '*.go' -print0 | xargs -0 gofmt -l -s
 addons:
   postgresql: "9.6"
