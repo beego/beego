@@ -36,7 +36,7 @@ We provide docker compose file to start all middlewares.
 You can run:
 
 ```shell script
-docker-compose -f scripts/test_docker_compose.yml up -d
+docker-compose -f scripts/test_docker_compose.yaml up -d
 ```
 
 Unit tests read addresses from environment, here is an example:

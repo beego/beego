@@ -216,19 +216,25 @@ type DriverGetter interface {
 	Driver() Driver
 }
 
+
 type ormer interface {
 	DQL
 	DML
 	DriverGetter
 }
 
-type Ormer interface {
+//QueryExecutor wrapping for ormer
+type QueryExecutor interface {
 	ormer
+}
+
+type Ormer interface {
+	QueryExecutor
 	TxBeginner
 }
 
 type TxOrmer interface {
-	ormer
+	QueryExecutor
 	TxCommitter
 }
 
