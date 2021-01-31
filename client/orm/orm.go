@@ -58,10 +58,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
 	"os"
 	"reflect"
 	"time"
+
+	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
 
 	"github.com/beego/beego/v2/client/orm/hints"
 	"github.com/beego/beego/v2/core/utils"

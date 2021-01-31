@@ -369,7 +369,7 @@ func (mc *_modelCache) register(prefixOrSuffixStr string, prefixOrSuffix bool, m
 		}
 
 		if _, ok := mc.get(table); ok {
-			return	nil
+			return nil
 		}
 
 		mi := newModelInfo(val)

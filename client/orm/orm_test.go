@@ -21,7 +21,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
 	"io/ioutil"
 	"math"
 	"os"
@@ -31,6 +30,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
 
 	"github.com/beego/beego/v2/client/orm/hints"
 

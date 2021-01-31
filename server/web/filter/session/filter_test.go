@@ -1,13 +1,14 @@
 package session
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/beego/beego/v2/server/web"
 	webContext "github.com/beego/beego/v2/server/web/context"
 	"github.com/beego/beego/v2/server/web/session"
 	"github.com/google/uuid"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 func testRequest(t *testing.T, handler *web.ControllerRegister, path string, method string, code int) {

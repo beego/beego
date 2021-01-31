@@ -23,14 +23,14 @@ import (
 type Mock struct {
 	cond Condition
 	resp []interface{}
-	cb func(inv *orm.Invocation)
+	cb   func(inv *orm.Invocation)
 }
 
 func NewMock(cond Condition, resp []interface{}, cb func(inv *orm.Invocation)) *Mock {
 	return &Mock{
 		cond: cond,
 		resp: resp,
-		cb: cb,
+		cb:   cb,
 	}
 }
 

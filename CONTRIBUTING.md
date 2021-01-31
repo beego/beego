@@ -36,7 +36,7 @@ We provide docker compose file to start all middlewares.
 You can run:
 
 ```shell script
-docker-compose -f scripts/test_docker_compose.yml up -d
+docker-compose -f scripts/test_docker_compose.yaml up -d
 ```
 
 Unit tests read addresses from environment, here is an example:
@@ -53,7 +53,7 @@ export SSDB_ADDR="192.168.0.105:8888"
 
 ### Pull requests
 
-First of all. beego follow the gitflow. So please send you pull request to **develop-2** branch. We will close the pull
+First of all. beego follow the gitflow. So please send you pull request to **develop** branch. We will close the pull
 request to master branch.
 
 We are always happy to receive pull requests, and do our best to review them as fast as possible. Not sure if that typo

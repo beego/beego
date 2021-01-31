@@ -20,8 +20,8 @@
 //
 // Usage:
 // import(
-//   _ "github.com/beego/beego/v2/session/redis"
-//   "github.com/beego/beego/v2/session"
+//   _ "github.com/beego/beego/v2/server/web/session/redis"
+//   "github.com/beego/beego/v2/server/web/session"
 // )
 //
 // 	func init() {

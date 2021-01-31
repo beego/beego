@@ -29,7 +29,7 @@ func NewES() logs.Logger {
 // please import this package
 // usually means that you can import this package in your main package
 // for example, anonymous:
-// import _ "github.com/beego/beego/v2/logs/es"
+// import _ "github.com/beego/beego/v2/core/logs/es"
 type esLogger struct {
 	*elasticsearch.Client
 	DSN       string `json:"dsn"`
