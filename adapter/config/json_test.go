@@ -32,7 +32,8 @@ func TestJsonStartsWithArray(t *testing.T) {
 		"serviceAPI": "http://www.test.com/employee"
 	}
 ]`
-	f, err := os.Create("testjsonWithArray.conf")
+	cfgFileName := "testjsonWithArray.conf"
+	f, err := os.Create(cfgFileName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,8 +43,8 @@ func TestJsonStartsWithArray(t *testing.T) {
 		t.Fatal(err)
 	}
 	f.Close()
-	defer os.Remove("testjsonWithArray.conf")
-	jsonconf, err := NewConfig("json", "testjsonWithArray.conf")
+	defer os.Remove(cfgFileName)
+	jsonconf, err := NewConfig("json", cfgFileName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -132,7 +133,8 @@ func TestJson(t *testing.T) {
 		}
 	)
 
-	f, err := os.Create("testjson.conf")
+	cfgFileName := "testjson.conf"
+	f, err := os.Create(cfgFileName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -142,8 +144,8 @@ func TestJson(t *testing.T) {
 		t.Fatal(err)
 	}
 	f.Close()
-	defer os.Remove("testjson.conf")
-	jsonconf, err := NewConfig("json", "testjson.conf")
+	defer os.Remove(cfgFileName)
+	jsonconf, err := NewConfig("json", cfgFileName)
 	if err != nil {
 		t.Fatal(err)
 	}
