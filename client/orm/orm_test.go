@@ -86,11 +86,7 @@ func ValuesCompare(is bool, a interface{}, args ...interface{}) (ok bool, err er
 	}
 	ok = is && ok || !is && !ok
 	if !ok {
-		if is {
-			err = fmt.Errorf("expected: `%v`, get `%v`", b, a)
-		} else {
-			err = fmt.Errorf("expected: `%v`, get `%v`", b, a)
-		}
+		err = fmt.Errorf("expected: `%v`, get `%v`", b, a)
 	}
 
 wrongArg:

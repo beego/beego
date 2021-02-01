@@ -20,3 +20,7 @@
 - Remove some `go get` lines in `.travis.yml` file [4469](https://github.com/beego/beego/pull/4469)
 - Fix 4451: support QueryExecutor interface. [4461](https://github.com/beego/beego/pull/4461)
 - Add some testing scripts [4461](https://github.com/beego/beego/pull/4461)
+
+
+## Fix Sonar
+- [4473](https://github.com/beego/beego/pull/4473)

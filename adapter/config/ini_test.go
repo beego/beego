@@ -81,7 +81,8 @@ password = ${GOPATH}
 		}
 	)
 
-	f, err := os.Create("testini.conf")
+	cfgFile := "testini.conf"
+	f, err := os.Create(cfgFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,8 +92,8 @@ password = ${GOPATH}
 		t.Fatal(err)
 	}
 	f.Close()
-	defer os.Remove("testini.conf")
-	iniconf, err := NewConfig("ini", "testini.conf")
+	defer os.Remove(cfgFile)
+	iniconf, err := NewConfig("ini", cfgFile)
 	if err != nil {
 		t.Fatal(err)
 	}
