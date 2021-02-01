@@ -25,8 +25,11 @@ import (
 	"time"
 )
 
+const getUrl = "http://httpbin.org/get"
+const ipUrl = "http://httpbin.org/ip"
+
 func TestResponse(t *testing.T) {
-	req := Get("http://httpbin.org/get")
+	req := Get(getUrl)
 	resp, err := req.Response()
 	if err != nil {
 		t.Fatal(err)
@@ -63,7 +66,8 @@ func TestDoRequest(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
-	req := Get("http://httpbin.org/get")
+	
+	req := Get(getUrl)
 	b, err := req.Bytes()
 	if err != nil {
 		t.Fatal(err)
@@ -205,7 +209,7 @@ func TestWithSetting(t *testing.T) {
 	setting.ReadWriteTimeout = 5 * time.Second
 	SetDefaultSetting(setting)
 
-	str, err := Get("http://httpbin.org/get").String()
+	str, err := Get(getUrl).String()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -218,7 +222,8 @@ func TestWithSetting(t *testing.T) {
 }
 
 func TestToJson(t *testing.T) {
-	req := Get("http://httpbin.org/ip")
+	
+	req := Get(ipUrl)
 	resp, err := req.Response()
 	if err != nil {
 		t.Fatal(err)
@@ -249,7 +254,7 @@ func TestToJson(t *testing.T) {
 
 func TestToFile(t *testing.T) {
 	f := "beego_testfile"
-	req := Get("http://httpbin.org/ip")
+	req := Get(ipUrl)
 	err := req.ToFile(f)
 	if err != nil {
 		t.Fatal(err)
@@ -263,7 +268,7 @@ func TestToFile(t *testing.T) {
 
 func TestToFileDir(t *testing.T) {
 	f := "./files/beego_testfile"
-	req := Get("http://httpbin.org/ip")
+	req := Get(ipUrl)
 	err := req.ToFile(f)
 	if err != nil {
 		t.Fatal(err)

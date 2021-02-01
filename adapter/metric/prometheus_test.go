@@ -15,6 +15,7 @@
 package metric
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"testing"
@@ -26,7 +27,9 @@ import (
 )
 
 func TestPrometheusMiddleWare(t *testing.T) {
-	middleware := PrometheusMiddleWare(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
+	middleware := PrometheusMiddleWare(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
+		fmt.Print("you are coming")
+	}))
 	writer := &context.Response{}
 	request := &http.Request{
 		URL: &url.URL{
