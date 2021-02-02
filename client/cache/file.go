@@ -73,22 +73,31 @@ func (fc *FileCache) StartAndGC(config string) error {
 	if err != nil {
 		return err
 	}
-	if _, ok := cfg["CachePath"]; !ok {
-		cfg["CachePath"] = FileCachePath
+
+	const cpKey = "CachePath"
+	const fsKey = "FileSuffix"
+	const dlKey = "DirectoryLevel"
+	const eeKey = "EmbedExpiry"
+
+	if _, ok := cfg[cpKey]; !ok {
+		cfg[cpKey] = FileCachePath
 	}
-	if _, ok := cfg["FileSuffix"]; !ok {
-		cfg["FileSuffix"] = FileCacheFileSuffix
+
+	if _, ok := cfg[fsKey]; !ok {
+		cfg[fsKey] = FileCacheFileSuffix
 	}
-	if _, ok := cfg["DirectoryLevel"]; !ok {
-		cfg["DirectoryLevel"] = strconv.Itoa(FileCacheDirectoryLevel)
+
+	if _, ok := cfg[dlKey]; !ok {
+		cfg[dlKey] = strconv.Itoa(FileCacheDirectoryLevel)
 	}
-	if _, ok := cfg["EmbedExpiry"]; !ok {
-		cfg["EmbedExpiry"] = strconv.FormatInt(int64(FileCacheEmbedExpiry.Seconds()), 10)
+
+	if _, ok := cfg[eeKey]; !ok {
+		cfg[eeKey] = strconv.FormatInt(int64(FileCacheEmbedExpiry.Seconds()), 10)
 	}
-	fc.CachePath = cfg["CachePath"]
-	fc.FileSuffix = cfg["FileSuffix"]
-	fc.DirectoryLevel, _ = strconv.Atoi(cfg["DirectoryLevel"])
-	fc.EmbedExpiry, _ = strconv.Atoi(cfg["EmbedExpiry"])
+	fc.CachePath = cfg[cpKey]
+	fc.FileSuffix = cfg[fsKey]
+	fc.DirectoryLevel, _ = strconv.Atoi(cfg[dlKey])
+	fc.EmbedExpiry, _ = strconv.Atoi(cfg[eeKey])
 
 	fc.Init()
 	return nil

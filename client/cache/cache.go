@@ -33,8 +33,9 @@ package cache
 
 import (
 	"context"
-	"fmt"
 	"time"
+
+	"github.com/beego/beego/v2/core/berror"
 )
 
 // Cache interface contains all behaviors for cache adapter.
@@ -78,7 +79,7 @@ var adapters = make(map[string]Instance)
 // it panics.
 func Register(name string, adapter Instance) {
 	if adapter == nil {
-		panic("cache: Register adapter is nil")
+		panic(berror.Error(NilCacheAdapter, "cache: Register adapter is nil").Error())
 	}
 	if _, ok := adapters[name]; ok {
 		panic("cache: Register called twice for adapter " + name)
@@ -92,7 +93,7 @@ func Register(name string, adapter Instance) {
 func NewCache(adapterName, config string) (adapter Cache, err error) {
 	instanceFunc, ok := adapters[adapterName]
 	if !ok {
-		err = fmt.Errorf("cache: unknown adapter name %q (forgot to import?)", adapterName)
+		err = berror.Errorf(UnknownAdapter, "cache: unknown adapter name %s (forgot to import?)", adapterName)
 		return
 	}
 	adapter = instanceFunc()
