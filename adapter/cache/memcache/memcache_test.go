@@ -86,8 +86,8 @@ func TestMemcacheCache(t *testing.T) {
 
 	vv := bm.GetMulti([]string{"astaxie", "astaxie1"})
 	assert.Equal(t, 2, len(vv))
-	assert.Equal(t, "author", vv[0])
-	assert.Equal(t, "author1", vv[1])
+	assert.Equal(t, []byte("author"), vv[0])
+	assert.Equal(t, []byte("author1"), vv[1])
 
 	assert.Nil(t, bm.ClearAll())
 }

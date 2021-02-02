@@ -83,7 +83,7 @@ func TestRedisCache(t *testing.T) {
 
 	assert.Nil(t, bm.Put("astaxie1", "author1", timeoutDuration))
 
-	assert.False(t, bm.IsExist("astaxie1"))
+	assert.True(t, bm.IsExist("astaxie1"))
 
 	vv := bm.GetMulti([]string{"astaxie", "astaxie1"})
 

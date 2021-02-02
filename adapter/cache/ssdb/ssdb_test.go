@@ -37,7 +37,7 @@ func TestSsdbcacheCache(t *testing.T) {
 	assert.Nil(t, ssdb.Put("ssdb", "ssdb", timeoutDuration))
 	assert.True(t, ssdb.IsExist("ssdb"))
 
-	assert.NotNil(t, ssdb.Put("ssdb", "ssdb", timeoutDuration))
+	assert.Nil(t, ssdb.Put("ssdb", "ssdb", timeoutDuration))
 
 	assert.Equal(t, "ssdb", ssdb.Get("ssdb"))
 

@@ -25,7 +25,6 @@ import (
 
 // BeegoHTTPSettings is the http.Client setting
 type BeegoHTTPSettings struct {
-	ShowDebug        bool
 	UserAgent        string
 	ConnectTimeout   time.Duration
 	ReadWriteTimeout time.Duration
@@ -35,7 +34,6 @@ type BeegoHTTPSettings struct {
 	CheckRedirect    func(req *http.Request, via []*http.Request) error
 	EnableCookie     bool
 	Gzip             bool
-	DumpBody         bool
 	Retries          int // if set to -1 means will retry forever
 	RetryDelay       time.Duration
 	FilterChains     []FilterChain
@@ -62,7 +60,6 @@ var defaultSetting = BeegoHTTPSettings{
 	ConnectTimeout:   60 * time.Second,
 	ReadWriteTimeout: 60 * time.Second,
 	Gzip:             true,
-	DumpBody:         true,
 	FilterChains:     make([]FilterChain, 0, 4),
 }
 
