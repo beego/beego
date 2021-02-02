@@ -43,7 +43,6 @@ import (
 	"mime/multipart"
 	"net"
 	"net/http"
-	"net/http/httputil"
 	"net/url"
 	"os"
 	"path"
@@ -155,12 +154,6 @@ func (b *BeegoHTTPRequest) SetUserAgent(useragent string) *BeegoHTTPRequest {
 	return b
 }
 
-// Debug sets show debug or not when executing request.
-func (b *BeegoHTTPRequest) Debug(isdebug bool) *BeegoHTTPRequest {
-	b.setting.ShowDebug = isdebug
-	return b
-}
-
 // Retries sets Retries times.
 // default is 0 (never retry)
 // -1 retry indefinitely (forever)
@@ -174,17 +167,6 @@ func (b *BeegoHTTPRequest) Retries(times int) *BeegoHTTPRequest {
 func (b *BeegoHTTPRequest) RetryDelay(delay time.Duration) *BeegoHTTPRequest {
 	b.setting.RetryDelay = delay
 	return b
-}
-
-// DumpBody sets the DumbBody field
-func (b *BeegoHTTPRequest) DumpBody(isdump bool) *BeegoHTTPRequest {
-	b.setting.DumpBody = isdump
-	return b
-}
-
-// DumpRequest returns the DumpRequest
-func (b *BeegoHTTPRequest) DumpRequest() []byte {
-	return b.dump
 }
 
 // SetTimeout sets connect time out and read-write time out for BeegoRequest.
@@ -446,7 +428,6 @@ func (b *BeegoHTTPRequest) DoRequest() (resp *http.Response, err error) {
 }
 
 func (b *BeegoHTTPRequest) DoRequestWithCtx(ctx context.Context) (resp *http.Response, err error) {
-
 	root := doRequestFilter
 	if len(b.setting.FilterChains) > 0 {
 		for i := len(b.setting.FilterChains) - 1; i >= 0; i-- {
@@ -484,13 +465,6 @@ func (b *BeegoHTTPRequest) doRequest(ctx context.Context) (*http.Response, error
 		client.CheckRedirect = b.setting.CheckRedirect
 	}
 
-	if b.setting.ShowDebug {
-		dump, e := httputil.DumpRequest(b.req, b.setting.DumpBody)
-		if e != nil {
-			logs.Error("%+v", e)
-		}
-		b.dump = dump
-	}
 	return b.sendRequest(client)
 }
 
