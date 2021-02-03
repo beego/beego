@@ -29,6 +29,8 @@ var (
 	DefaultEvery = 60 // 1 minute
 )
 
+const keyNotExistMsg = "key not exist"
+
 // MemoryItem stores memory cache item.
 type MemoryItem struct {
 	val         interface{}
@@ -70,7 +72,7 @@ func (bc *MemoryCache) Get(ctx context.Context, key string) (interface{}, error)
 		}
 		return itm.val, nil
 	}
-	return nil, errors.New("the key isn't exist")
+	return nil, errors.New(keyNotExistMsg)
 }
 
 // GetMulti gets caches from memory.
@@ -112,7 +114,8 @@ func (bc *MemoryCache) Delete(ctx context.Context, key string) error {
 	bc.Lock()
 	defer bc.Unlock()
 	if _, ok := bc.items[key]; !ok {
-		return errors.New("key not exist")
+		
+		return errors.New(keyNotExistMsg)
 	}
 	delete(bc.items, key)
 	if _, ok := bc.items[key]; ok {
@@ -128,7 +131,7 @@ func (bc *MemoryCache) Incr(ctx context.Context, key string) error {
 	defer bc.Unlock()
 	itm, ok := bc.items[key]
 	if !ok {
-		return errors.New("key not exist")
+		return errors.New(keyNotExistMsg)
 	}
 
 	val, err := incr(itm.val)
@@ -145,7 +148,7 @@ func (bc *MemoryCache) Decr(ctx context.Context, key string) error {
 	defer bc.Unlock()
 	itm, ok := bc.items[key]
 	if !ok {
-		return errors.New("key not exist")
+		return errors.New(keyNotExistMsg)
 	}
 
 	val, err := decr(itm.val)

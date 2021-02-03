@@ -55,6 +55,7 @@ import (
 	"github.com/beego/beego/v2/core/logs"
 )
 
+const contentTypeKey = "Content-Type"
 // it will be the last filter and execute request.Do
 var doRequestFilter = func(ctx context.Context, req *BeegoHTTPRequest) (*http.Response, error) {
 	return req.doRequest(ctx)
@@ -311,7 +312,7 @@ func (b *BeegoHTTPRequest) XMLBody(obj interface{}) (*BeegoHTTPRequest, error) {
 			return ioutil.NopCloser(bytes.NewReader(byts)), nil
 		}
 		b.req.ContentLength = int64(len(byts))
-		b.req.Header.Set("Content-Type", "application/xml")
+		b.req.Header.Set(contentTypeKey, "application/xml")
 	}
 	return b, nil
 }
@@ -325,7 +326,7 @@ func (b *BeegoHTTPRequest) YAMLBody(obj interface{}) (*BeegoHTTPRequest, error) 
 		}
 		b.req.Body = ioutil.NopCloser(bytes.NewReader(byts))
 		b.req.ContentLength = int64(len(byts))
-		b.req.Header.Set("Content-Type", "application/x+yaml")
+		b.req.Header.Set(contentTypeKey, "application/x+yaml")
 	}
 	return b, nil
 }
@@ -339,7 +340,7 @@ func (b *BeegoHTTPRequest) JSONBody(obj interface{}) (*BeegoHTTPRequest, error) 
 		}
 		b.req.Body = ioutil.NopCloser(bytes.NewReader(byts))
 		b.req.ContentLength = int64(len(byts))
-		b.req.Header.Set("Content-Type", "application/json")
+		b.req.Header.Set(contentTypeKey, "application/json")
 	}
 	return b, nil
 }
@@ -359,32 +360,36 @@ func (b *BeegoHTTPRequest) buildURL(paramBody string) {
 	if (b.req.Method == "POST" || b.req.Method == "PUT" || b.req.Method == "PATCH" || b.req.Method == "DELETE") && b.req.Body == nil {
 		// with files
 		if len(b.files) > 0 {
-			pr, pw := io.Pipe()
-			bodyWriter := multipart.NewWriter(pw)
-			go func() {
-				for formname, filename := range b.files {
-					b.handleFileToBody(bodyWriter, formname, filename)
-				}
-				for k, v := range b.params {
-					for _, vv := range v {
-						_ = bodyWriter.WriteField(k, vv)
-					}
-				}
-				_ = bodyWriter.Close()
-				_ = pw.Close()
-			}()
-			b.Header("Content-Type", bodyWriter.FormDataContentType())
-			b.req.Body = ioutil.NopCloser(pr)
-			b.Header("Transfer-Encoding", "chunked")
+			b.handleFiles()
 			return
 		}
 
 		// with params
 		if len(paramBody) > 0 {
-			b.Header("Content-Type", "application/x-www-form-urlencoded")
+			b.Header(contentTypeKey, "application/x-www-form-urlencoded")
 			b.Body(paramBody)
 		}
 	}
+}
+
+func (b *BeegoHTTPRequest) handleFiles() {
+	pr, pw := io.Pipe()
+	bodyWriter := multipart.NewWriter(pw)
+	go func() {
+		for formname, filename := range b.files {
+			b.handleFileToBody(bodyWriter, formname, filename)
+		}
+		for k, v := range b.params {
+			for _, vv := range v {
+				_ = bodyWriter.WriteField(k, vv)
+			}
+		}
+		_ = bodyWriter.Close()
+		_ = pw.Close()
+	}()
+	b.Header(contentTypeKey, bodyWriter.FormDataContentType())
+	b.req.Body = ioutil.NopCloser(pr)
+	b.Header("Transfer-Encoding", "chunked")
 }
 
 func (b *BeegoHTTPRequest) handleFileToBody(bodyWriter *multipart.Writer, formname string, filename string) {
