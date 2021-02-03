@@ -21,14 +21,16 @@ import (
 type baseQuerySetter struct {
 }
 
+const shouldNotInvoke = "you should not invoke this method."
+
 func (b *baseQuerySetter) ForceIndex(indexes ...string) orm.QuerySeter {
-	panic("you should not invoke this method.")
+	panic(shouldNotInvoke)
 }
 
 func (b *baseQuerySetter) UseIndex(indexes ...string) orm.QuerySeter {
-	panic("you should not invoke this method.")
+	panic(shouldNotInvoke)
 }
 
 func (b *baseQuerySetter) IgnoreIndex(indexes ...string) orm.QuerySeter {
-	panic("you should not invoke this method.")
+	panic(shouldNotInvoke)
 }

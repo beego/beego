@@ -20,7 +20,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMethodParam_String(t *testing.T) {
+func TestMethodParamString(t *testing.T) {
 	method := New("myName", IsRequired, InHeader, Default("abc"))
 	s := method.String()
 	assert.Equal(t, `param.New("myName", param.IsRequired, param.InHeader, param.Default("abc"))`, s)
