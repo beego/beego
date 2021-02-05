@@ -60,7 +60,7 @@ func TestSsdbcacheCache(t *testing.T) {
 	assert.Equal(t, 3, v)
 	assert.Nil(t, err)
 
-	assert.NotNil(t, ssdb.Delete(context.Background(), "ssdb"))
+	assert.Nil(t, ssdb.Delete(context.Background(), "ssdb"))
 	assert.Nil(t, ssdb.Put(context.Background(), "ssdb", "ssdb", -10*time.Second))
 	// test string
 

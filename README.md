@@ -15,6 +15,8 @@ Beego is compos of four parts:
 3. Client: including ORM module, httplib module, cache module;
 4. Server: including web module. We will support gRPC in the future;
 
+**Please use RELEASE version, or master branch which contains the latest bug fix**
+
 ## Quick Start
 
 [Officail website](http://beego.me)
