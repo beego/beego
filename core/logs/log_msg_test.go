@@ -41,4 +41,8 @@ func TestLogMsg_OldStyleFormat(t *testing.T) {
 
 	res = lg.OldStyleFormat()
 	assert.Equal(t, "[D] [/user/home/main.go:13] Cus Hello, world", res)
+
+	lg.Msg = "hello, %s"
+	lg.Args = []interface{}{"world"}
+	assert.Equal(t, "[D] [/user/home/main.go:13] Cus hello, world", lg.OldStyleFormat())
 }

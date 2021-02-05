@@ -19,19 +19,15 @@ import (
 	"net/url"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestSubstr(t *testing.T) {
 	s := `012345`
-	if Substr(s, 0, 2) != "01" {
-		t.Error("should be equal")
-	}
-	if Substr(s, 0, 100) != "012345" {
-		t.Error("should be equal")
-	}
-	if Substr(s, 12, 100) != "012345" {
-		t.Error("should be equal")
-	}
+	assert.Equal(t, "01", Substr(s, 0, 2))
+	assert.Equal(t, "012345", Substr(s, 0, 100))
+	assert.Equal(t, "012345", Substr(s, 12, 100))
 }
 
 func TestHtml2str(t *testing.T) {
@@ -39,73 +35,51 @@ func TestHtml2str(t *testing.T) {
 
 
 	\n`
-	if HTML2str(h) != "123\\n\n\\n" {
-		t.Error("should be equal")
-	}
+	assert.Equal(t, "123\\n\n\\n", HTML2str(h))
 }
 
 func TestDateFormat(t *testing.T) {
 	ts := "Mon, 01 Jul 2013 13:27:42 CST"
 	tt, _ := time.Parse(time.RFC1123, ts)
 
-	if ss := DateFormat(tt, "2006-01-02 15:04:05"); ss != "2013-07-01 13:27:42" {
-		t.Errorf("2013-07-01 13:27:42 does not equal %v", ss)
-	}
+	assert.Equal(t, "2013-07-01 13:27:42", DateFormat(tt, "2006-01-02 15:04:05"))
 }
 
 func TestDate(t *testing.T) {
 	ts := "Mon, 01 Jul 2013 13:27:42 CST"
 	tt, _ := time.Parse(time.RFC1123, ts)
 
-	if ss := Date(tt, "Y-m-d H:i:s"); ss != "2013-07-01 13:27:42" {
-		t.Errorf("2013-07-01 13:27:42 does not equal %v", ss)
-	}
-	if ss := Date(tt, "y-n-j h:i:s A"); ss != "13-7-1 01:27:42 PM" {
-		t.Errorf("13-7-1 01:27:42 PM does not equal %v", ss)
-	}
-	if ss := Date(tt, "D, d M Y g:i:s a"); ss != "Mon, 01 Jul 2013 1:27:42 pm" {
-		t.Errorf("Mon, 01 Jul 2013 1:27:42 pm does not equal %v", ss)
-	}
-	if ss := Date(tt, "l, d F Y G:i:s"); ss != "Monday, 01 July 2013 13:27:42" {
-		t.Errorf("Monday, 01 July 2013 13:27:42 does not equal %v", ss)
-	}
+	assert.Equal(t, "2013-07-01 13:27:42", Date(tt, "Y-m-d H:i:s"))
+
+	assert.Equal(t, "13-7-1 01:27:42 PM", Date(tt, "y-n-j h:i:s A"))
+	assert.Equal(t, "Mon, 01 Jul 2013 1:27:42 pm", Date(tt, "D, d M Y g:i:s a"))
+	assert.Equal(t, "Monday, 01 July 2013 13:27:42", Date(tt, "l, d F Y G:i:s"))
 }
 
 func TestCompareRelated(t *testing.T) {
-	if !Compare("abc", "abc") {
-		t.Error("should be equal")
-	}
-	if Compare("abc", "aBc") {
-		t.Error("should be not equal")
-	}
-	if !Compare("1", 1) {
-		t.Error("should be equal")
-	}
-	if CompareNot("abc", "abc") {
-		t.Error("should be equal")
-	}
-	if !CompareNot("abc", "aBc") {
-		t.Error("should be not equal")
-	}
-	if !NotNil("a string") {
-		t.Error("should not be nil")
-	}
+	assert.True(t, Compare("abc", "abc"))
+
+	assert.False(t, Compare("abc", "aBc"))
+
+	assert.True(t, Compare("1", 1))
+
+	assert.False(t, CompareNot("abc", "abc"))
+
+	assert.True(t, CompareNot("abc", "aBc"))
+	assert.True(t, NotNil("a string"))
 }
 
 func TestHtmlquote(t *testing.T) {
 	h := `&lt;&#39;&nbsp;&rdquo;&ldquo;&amp;&#34;&gt;`
 	s := `<' ”“&">`
-	if Htmlquote(s) != h {
-		t.Error("should be equal")
-	}
+	assert.Equal(t, h, Htmlquote(s))
 }
 
 func TestHtmlunquote(t *testing.T) {
 	h := `&lt;&#39;&nbsp;&rdquo;&ldquo;&amp;&#34;&gt;`
 	s := `<' ”“&">`
-	if Htmlunquote(h) != s {
-		t.Error("should be equal")
-	}
+	assert.Equal(t, s, Htmlunquote(h))
+
 }
 
 func TestParseForm(t *testing.T) {
@@ -148,55 +122,42 @@ func TestParseForm(t *testing.T) {
 		"hobby":        []string{"", "Basketball", "Football"},
 		"memo":         []string{"nothing"},
 	}
-	if err := ParseForm(form, u); err == nil {
-		t.Fatal("nothing will be changed")
-	}
-	if err := ParseForm(form, &u); err != nil {
-		t.Fatal(err)
-	}
-	if u.ID != 0 {
-		t.Errorf("ID should equal 0 but got %v", u.ID)
-	}
-	if len(u.tag) != 0 {
-		t.Errorf("tag's length should equal 0 but got %v", len(u.tag))
-	}
-	if u.Name.(string) != "test" {
-		t.Errorf("Name should equal `test` but got `%v`", u.Name.(string))
-	}
-	if u.Age != 40 {
-		t.Errorf("Age should equal 40 but got %v", u.Age)
-	}
-	if u.Email != "test@gmail.com" {
-		t.Errorf("Email should equal `test@gmail.com` but got `%v`", u.Email)
-	}
-	if u.Intro != "I am an engineer!" {
-		t.Errorf("Intro should equal `I am an engineer!` but got `%v`", u.Intro)
-	}
-	if !u.StrBool {
-		t.Errorf("strboll should equal `true`, but got `%v`", u.StrBool)
-	}
+
+	assert.NotNil(t, ParseForm(form, u))
+
+	assert.Nil(t, ParseForm(form, &u))
+
+	assert.Equal(t, 0, u.ID)
+
+	assert.Equal(t, 0, len(u.tag))
+
+	assert.Equal(t, "test", u.Name)
+
+	assert.Equal(t, 40, u.Age)
+
+	assert.Equal(t, "test@gmail.com", u.Email)
+
+	assert.Equal(t, "I am an engineer!", u.Intro)
+
+	assert.True(t, u.StrBool)
+
 	y, m, d := u.Date.Date()
-	if y != 2014 || m.String() != "November" || d != 12 {
-		t.Errorf("Date should equal `2014-11-12`, but got `%v`", u.Date.String())
-	}
-	if u.Organization != "beego" {
-		t.Errorf("Organization should equal `beego`, but got `%v`", u.Organization)
-	}
-	if u.Title != "CXO" {
-		t.Errorf("Title should equal `CXO`, but got `%v`", u.Title)
-	}
-	if u.Hobby[0] != "" {
-		t.Errorf("Hobby should equal ``, but got `%v`", u.Hobby[0])
-	}
-	if u.Hobby[1] != "Basketball" {
-		t.Errorf("Hobby should equal `Basketball`, but got `%v`", u.Hobby[1])
-	}
-	if u.Hobby[2] != "Football" {
-		t.Errorf("Hobby should equal `Football`, but got `%v`", u.Hobby[2])
-	}
-	if len(u.Memo) != 0 {
-		t.Errorf("Memo's length should equal 0 but got %v", len(u.Memo))
-	}
+
+	assert.Equal(t, 2014, y)
+	assert.Equal(t, "November", m.String())
+	assert.Equal(t, 12, d)
+
+	assert.Equal(t, "beego", u.Organization)
+
+	assert.Equal(t, "CXO", u.Title)
+
+	assert.Equal(t, "", u.Hobby[0])
+
+	assert.Equal(t, "Basketball", u.Hobby[1])
+
+	assert.Equal(t, "Football", u.Hobby[2])
+
+	assert.Equal(t, 0, len(u.Memo))
 }
 
 func TestRenderForm(t *testing.T) {
@@ -212,18 +173,14 @@ func TestRenderForm(t *testing.T) {
 
 	u := user{Name: "test", Intro: "Some Text"}
 	output := RenderForm(u)
-	if output != template.HTML("") {
-		t.Errorf("output should be empty but got %v", output)
-	}
+	assert.Equal(t, template.HTML(""), output)
 	output = RenderForm(&u)
 	result := template.HTML(
 		`Name: <input name="username" type="text" value="test"></br>` +
 			`年龄：<input name="age" type="text" value="0"></br>` +
 			`Sex: <input name="Sex" type="text" value=""></br>` +
 			`Intro: <textarea name="Intro">Some Text</textarea>`)
-	if output != result {
-		t.Errorf("output should equal `%v` but got `%v`", result, output)
-	}
+	assert.Equal(t, result, output)
 }
 
 func TestMapGet(t *testing.T) {
@@ -233,29 +190,18 @@ func TestMapGet(t *testing.T) {
 		"1": 2,
 	}
 
-	if res, err := MapGet(m1, "a"); err == nil {
-		if res.(int64) != 1 {
-			t.Errorf("Should return 1, but return %v", res)
-		}
-	} else {
-		t.Errorf("Error happens %v", err)
-	}
+	res, err := MapGet(m1, "a")
+	assert.Nil(t, err)
+	assert.Equal(t, int64(1), res)
 
-	if res, err := MapGet(m1, "1"); err == nil {
-		if res.(int64) != 2 {
-			t.Errorf("Should return 2, but return %v", res)
-		}
-	} else {
-		t.Errorf("Error happens %v", err)
-	}
+	res, err = MapGet(m1, "1")
+	assert.Nil(t, err)
+	assert.Equal(t, int64(2), res)
 
-	if res, err := MapGet(m1, 1); err == nil {
-		if res.(int64) != 2 {
-			t.Errorf("Should return 2, but return %v", res)
-		}
-	} else {
-		t.Errorf("Error happens %v", err)
-	}
+
+	res, err = MapGet(m1, 1)
+	assert.Nil(t, err)
+	assert.Equal(t, int64(2), res)
 
 	// test 2 level map
 	m2 := M{
@@ -264,13 +210,9 @@ func TestMapGet(t *testing.T) {
 		},
 	}
 
-	if res, err := MapGet(m2, 1, 2); err == nil {
-		if res.(float64) != 3.5 {
-			t.Errorf("Should return 3.5, but return %v", res)
-		}
-	} else {
-		t.Errorf("Error happens %v", err)
-	}
+	res, err = MapGet(m2, 1, 2)
+	assert.Nil(t, err)
+	assert.Equal(t, 3.5, res)
 
 	// test 5 level map
 	m5 := M{
@@ -285,20 +227,13 @@ func TestMapGet(t *testing.T) {
 		},
 	}
 
-	if res, err := MapGet(m5, 1, 2, 3, 4, 5); err == nil {
-		if res.(float64) != 1.2 {
-			t.Errorf("Should return 1.2, but return %v", res)
-		}
-	} else {
-		t.Errorf("Error happens %v", err)
-	}
+	res, err = MapGet(m5, 1, 2, 3, 4, 5)
+	assert.Nil(t, err)
+	assert.Equal(t, 1.2, res)
 
 	// check whether element not exists in map
-	if res, err := MapGet(m5, 5, 4, 3, 2, 1); err == nil {
-		if res != nil {
-			t.Errorf("Should return nil, but return %v", res)
-		}
-	} else {
-		t.Errorf("Error happens %v", err)
-	}
+	res, err = MapGet(m5, 5, 4, 3, 2, 1)
+	assert.Nil(t, err)
+	assert.Nil(t, res)
+
 }
