@@ -37,7 +37,7 @@ func (lm *LogMsg) OldStyleFormat() string {
 	msg := lm.Msg
 
 	if len(lm.Args) > 0 {
-		lm.Msg = fmt.Sprintf(lm.Msg, lm.Args...)
+		msg = fmt.Sprintf(lm.Msg, lm.Args...)
 	}
 
 	msg = lm.Prefix + " " + msg
