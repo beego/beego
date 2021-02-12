@@ -53,7 +53,7 @@ func (rc *Cache) GetMulti(ctx context.Context, keys []string) ([]interface{}, er
 	keysErr := make([]string, 0)
 	for i, ki := range keys {
 		if _, ok := keyIdx[ki]; !ok {
-			keysErr = append(keysErr, fmt.Sprintf("key [%s] error: %s", ki, "the key isn't exist"))
+			keysErr = append(keysErr, fmt.Sprintf("key [%s] error: %s", ki, "key not exist"))
 			continue
 		}
 		values[i] = res[keyIdx[ki]+1]

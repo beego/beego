@@ -42,6 +42,7 @@ func TestFileCacheStartAndGC(t *testing.T) {
 
 	str := getTestCacheFilePath()
 	err = fc.StartAndGC(fmt.Sprintf(`{"CachePath":"%s","FileSuffix":".bin","DirectoryLevel":"2","EmbedExpiry":"0"}`, str))
+	assert.Nil(t, err)
 	assert.Equal(t, fc.CachePath, str)
 	assert.Equal(t, fc.DirectoryLevel, 2)
 	assert.Equal(t, fc.EmbedExpiry, 0)
@@ -65,22 +66,24 @@ func TestFileCacheInit(t *testing.T) {
 }
 
 func TestFileGetContents(t *testing.T) {
-	data, err := FileGetContents("/bin/aaa")
+	_, err := FileGetContents("/bin/aaa")
 	assert.NotNil(t, err)
 	fn := filepath.Join(os.TempDir(), "fileCache.txt")
 	f, err := os.Create(fn)
 	assert.Nil(t, err)
 	_, err = f.WriteString("text")
 	assert.Nil(t, err)
-	data, err = FileGetContents(fn)
+	data, err := FileGetContents(fn)
 	assert.Nil(t, err)
 	assert.Equal(t, "text", string(data))
 }
 
 func TestGobEncodeDecode(t *testing.T) {
-	data, err := GobEncode(func() {})
+	_, err := GobEncode(func() {
+		fmt.Print("test func")
+	})
 	assert.NotNil(t, err)
-	data, err = GobEncode(&FileCacheItem{
+	data, err := GobEncode(&FileCacheItem{
 		Data: "hello",
 	})
 	assert.Nil(t, err)

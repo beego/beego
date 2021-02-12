@@ -1,4 +1,6 @@
 # developing
+- Error codes definition of cache module. [4493](https://github.com/beego/beego/pull/4493)
+- Remove generateCommentRoute http hook. Using `bee generate routers` commands instead.[4486](https://github.com/beego/beego/pull/4486) [bee PR 762](https://github.com/beego/bee/pull/762)
 - Fix: /abc.html/aaa match /abc/aaa. [4459](https://github.com/beego/beego/pull/4459)
 - ORM mock. [4407](https://github.com/beego/beego/pull/4407)
 - Add sonar check and ignore test. [4432](https://github.com/beego/beego/pull/4432) [4433](https://github.com/beego/beego/pull/4433)
@@ -25,3 +27,5 @@
 
 ## Fix Sonar
 - [4473](https://github.com/beego/beego/pull/4473)
+- [4474](https://github.com/beego/beego/pull/4474)
+- [4479](https://github.com/beego/beego/pull/4479)

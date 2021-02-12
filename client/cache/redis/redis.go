@@ -207,7 +207,7 @@ func (rc *Cache) StartAndGC(config string) error {
 		cf["key"] = DefaultKey
 	}
 	if _, ok := cf["conn"]; !ok {
-		return berror.Wrapf(err, cache.InvalidRedisCacheCfg, "config missing conn field. ", config)
+		return berror.Wrapf(err, cache.InvalidRedisCacheCfg, "config missing conn field: %s", config)
 	}
 
 	// Format redis://<password>@<host>:<port>

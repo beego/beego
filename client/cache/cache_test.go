@@ -18,16 +18,17 @@ import (
 	"context"
 	"math"
 	"os"
+	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCacheIncr(t *testing.T) {
 	bm, err := NewCache("memory", `{"interval":20}`)
-	if err != nil {
-		t.Error("init err")
-	}
+	assert.Nil(t, err)
 	// timeoutDuration := 10 * time.Second
 
 	bm.Put(context.Background(), "edwardhey", 0, time.Second*20)
@@ -48,9 +49,7 @@ func TestCacheIncr(t *testing.T) {
 
 func TestCache(t *testing.T) {
 	bm, err := NewCache("memory", `{"interval":1}`)
-	if err != nil {
-		t.Error("init err")
-	}
+	assert.Nil(t, err)
 	timeoutDuration := 5 * time.Second
 	if err = bm.Put(context.Background(), "astaxie", 1, timeoutDuration); err != nil {
 		t.Error("set Error", err)
@@ -81,70 +80,48 @@ func TestCache(t *testing.T) {
 	testDecrOverFlow(t, bm, timeoutDuration)
 
 	bm.Delete(context.Background(), "astaxie")
-	if res, _ := bm.IsExist(context.Background(), "astaxie"); res {
-		t.Error("delete err")
-	}
+	res, _ := bm.IsExist(context.Background(), "astaxie")
+	assert.False(t, res)
 
-	// test GetMulti
-	if err = bm.Put(context.Background(), "astaxie", "author", timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
-	if res, _ := bm.IsExist(context.Background(), "astaxie"); !res {
-		t.Error("check err")
-	}
-	if v, _ := bm.Get(context.Background(), "astaxie"); v.(string) != "author" {
-		t.Error("get err")
-	}
+	assert.Nil(t, bm.Put(context.Background(), "astaxie", "author", timeoutDuration))
 
-	if err = bm.Put(context.Background(), "astaxie1", "author1", timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
-	if res, _ := bm.IsExist(context.Background(), "astaxie1"); !res {
-		t.Error("check err")
-	}
+	res, _ = bm.IsExist(context.Background(), "astaxie")
+	assert.True(t, res)
+
+	v, _ := bm.Get(context.Background(), "astaxie")
+	assert.Equal(t, "author", v)
+
+	assert.Nil(t, bm.Put(context.Background(), "astaxie1", "author1", timeoutDuration))
+
+	res, _ = bm.IsExist(context.Background(), "astaxie1")
+	assert.True(t, res)
 
 	vv, _ := bm.GetMulti(context.Background(), []string{"astaxie", "astaxie1"})
-	if len(vv) != 2 {
-		t.Error("GetMulti ERROR")
-	}
-	if vv[0].(string) != "author" {
-		t.Error("GetMulti ERROR")
-	}
-	if vv[1].(string) != "author1" {
-		t.Error("GetMulti ERROR")
-	}
+	assert.Equal(t, 2, len(vv))
+	assert.Equal(t, "author", vv[0])
+	assert.Equal(t,"author1", vv[1])
+
+
 
 	vv, err = bm.GetMulti(context.Background(), []string{"astaxie0", "astaxie1"})
-	if len(vv) != 2 {
-		t.Error("GetMulti ERROR")
-	}
-	if vv[0] != nil {
-		t.Error("GetMulti ERROR")
-	}
-	if vv[1].(string) != "author1" {
-		t.Error("GetMulti ERROR")
-	}
-	if err != nil && err.Error() != "key [astaxie0] error: the key isn't exist" {
-		t.Error("GetMulti ERROR")
-	}
+	assert.Equal(t, 2, len(vv))
+	assert.Nil(t, vv[0])
+	assert.Equal(t, "author1", vv[1])
+
+	assert.NotNil(t, err)
+	assert.True(t, strings.Contains(err.Error(), "key isn't exist"))
 }
 
 func TestFileCache(t *testing.T) {
 	bm, err := NewCache("file", `{"CachePath":"cache","FileSuffix":".bin","DirectoryLevel":"2","EmbedExpiry":"0"}`)
-	if err != nil {
-		t.Error("init err")
-	}
+	assert.Nil(t, err)
 	timeoutDuration := 10 * time.Second
-	if err = bm.Put(context.Background(), "astaxie", 1, timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
-	if res, _ := bm.IsExist(context.Background(), "astaxie"); !res {
-		t.Error("check err")
-	}
+	assert.Nil(t,  bm.Put(context.Background(), "astaxie", 1, timeoutDuration))
 
-	if v, _ := bm.Get(context.Background(), "astaxie"); v.(int) != 1 {
-		t.Error("get err")
-	}
+	res, _ := bm.IsExist(context.Background(), "astaxie")
+	assert.True(t, res)
+	v, _ := bm.Get(context.Background(), "astaxie")
+	assert.Equal(t, 1, v)
 
 	// test different integer type for incr & decr
 	testMultiTypeIncrDecr(t, bm, timeoutDuration)
@@ -154,54 +131,35 @@ func TestFileCache(t *testing.T) {
 	testDecrOverFlow(t, bm, timeoutDuration)
 
 	bm.Delete(context.Background(), "astaxie")
-	if res, _ := bm.IsExist(context.Background(), "astaxie"); res {
-		t.Error("delete err")
-	}
+	res, _ = bm.IsExist(context.Background(), "astaxie")
+	assert.False(t, res)
 
 	// test string
-	if err = bm.Put(context.Background(), "astaxie", "author", timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
-	if res, _ := bm.IsExist(context.Background(), "astaxie"); !res {
-		t.Error("check err")
-	}
-	if v, _ := bm.Get(context.Background(), "astaxie"); v.(string) != "author" {
-		t.Error("get err")
-	}
+	assert.Nil(t, bm.Put(context.Background(), "astaxie", "author", timeoutDuration))
+	res, _ = bm.IsExist(context.Background(), "astaxie")
+	assert.True(t, res)
+
+	v, _ = bm.Get(context.Background(), "astaxie")
+	assert.Equal(t, "author", v)
 
 	// test GetMulti
-	if err = bm.Put(context.Background(), "astaxie1", "author1", timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
-	if res, _ := bm.IsExist(context.Background(), "astaxie1"); !res {
-		t.Error("check err")
-	}
+	assert.Nil(t, bm.Put(context.Background(), "astaxie1", "author1", timeoutDuration))
+
+	res, _ = bm.IsExist(context.Background(), "astaxie1")
+	assert.True(t, res)
 
 	vv, _ := bm.GetMulti(context.Background(), []string{"astaxie", "astaxie1"})
-	if len(vv) != 2 {
-		t.Error("GetMulti ERROR")
-	}
-	if vv[0].(string) != "author" {
-		t.Error("GetMulti ERROR")
-	}
-	if vv[1].(string) != "author1" {
-		t.Error("GetMulti ERROR")
-	}
+	assert.Equal(t, 2, len(vv))
+	assert.Equal(t, "author", vv[0])
+	assert.Equal(t, "author1", vv[1])
 
 	vv, err = bm.GetMulti(context.Background(), []string{"astaxie0", "astaxie1"})
-	if len(vv) != 2 {
-		t.Error("GetMulti ERROR")
-	}
-	if vv[0] != nil {
-		t.Error("GetMulti ERROR")
-	}
-	if vv[1].(string) != "author1" {
-		t.Error("GetMulti ERROR")
-	}
-	if err == nil {
-		t.Error("GetMulti ERROR")
-	}
+	assert.Equal(t, 2, len(vv))
 
+	assert.Nil(t, vv[0])
+
+	assert.Equal(t, "author1", vv[1])
+	assert.NotNil(t, err)
 	os.RemoveAll("cache")
 }
 
@@ -215,53 +173,33 @@ func testMultiTypeIncrDecr(t *testing.T, c Cache, timeout time.Duration) {
 }
 
 func testIncrDecr(t *testing.T, c Cache, beforeIncr interface{}, afterIncr interface{}, timeout time.Duration) {
-	var err error
 	ctx := context.Background()
 	key := "incDecKey"
-	if err = c.Put(ctx, key, beforeIncr, timeout); err != nil {
-		t.Error("Get Error", err)
-	}
 
-	if err = c.Incr(ctx, key); err != nil {
-		t.Error("Incr Error", err)
-	}
+	assert.Nil(t, c.Put(ctx, key, beforeIncr, timeout))
+	assert.Nil(t, c.Incr(ctx, key))
 
-	if v, _ := c.Get(ctx, key); v != afterIncr {
-		t.Error("Get Error")
-	}
 
-	if err = c.Decr(ctx, key); err != nil {
-		t.Error("Decr Error", err)
-	}
+	v, _ := c.Get(ctx, key)
+	assert.Equal(t, afterIncr, v)
 
-	if v, _ := c.Get(ctx, key); v != beforeIncr {
-		t.Error("Get Error")
-	}
+	assert.Nil(t, c.Decr(ctx, key))
 
-	if err := c.Delete(ctx, key); err != nil {
-		t.Error("Delete Error")
-	}
+	v, _ = c.Get(ctx, key)
+	assert.Equal(t, v, beforeIncr)
+	assert.Nil(t, c.Delete(ctx, key))
 }
 
 func testIncrOverFlow(t *testing.T, c Cache, timeout time.Duration) {
-	var err error
 	ctx := context.Background()
 	key := "incKey"
 
+	assert.Nil(t, c.Put(ctx, key, int64(math.MaxInt64), timeout))
 	// int64
-	if err = c.Put(ctx, key, int64(math.MaxInt64), timeout); err != nil {
-		t.Error("Put Error: ", err.Error())
-		return
-	}
 	defer func() {
-		if err = c.Delete(ctx, key); err != nil {
-			t.Errorf("Delete error: %s", err.Error())
-		}
+		assert.Nil(t, c.Delete(ctx, key))
 	}()
-	if err = c.Incr(ctx, key); err == nil {
-		t.Error("Incr error")
-		return
-	}
+	assert.NotNil(t, c.Incr(ctx, key))
 }
 
 func testDecrOverFlow(t *testing.T, c Cache, timeout time.Duration) {

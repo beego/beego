@@ -79,7 +79,7 @@ func (rc *Cache) GetMulti(ctx context.Context, keys []string) ([]interface{}, er
 	keysErr := make([]string, 0)
 	for i, ki := range keys {
 		if _, ok := mv[ki]; !ok {
-			keysErr = append(keysErr, fmt.Sprintf("key [%s] error: %s", ki, "the key isn't exist"))
+			keysErr = append(keysErr, fmt.Sprintf("key [%s] error: %s", ki, "key not exist"))
 			continue
 		}
 		rv[i] = mv[ki].Value
@@ -100,7 +100,7 @@ func (rc *Cache) Put(ctx context.Context, key string, val interface{}, timeout t
 		item.Value = []byte(str)
 	} else {
 		return berror.Errorf(cache.InvalidMemCacheValue,
-			"the value must be string or byte[]. key: %s, value:%V", key, val)
+			"the value must be string or byte[]. key: %s, value:%v", key, val)
 	}
 	return berror.Wrapf(rc.conn.Set(&item), cache.MemCacheCurdFailed,
 		"could not put key-value to memcache, key: %s", key)
