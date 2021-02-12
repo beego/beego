@@ -56,12 +56,14 @@ type Cache interface {
 	// Set a cached value with key and expire time.
 	Put(ctx context.Context, key string, val interface{}, timeout time.Duration) error
 	// Delete cached value by key.
+	// Should not return error if key not found
 	Delete(ctx context.Context, key string) error
 	// Increment a cached int value by key, as a counter.
 	Incr(ctx context.Context, key string) error
 	// Decrement a cached int value by key, as a counter.
 	Decr(ctx context.Context, key string) error
 	// Check if a cached value exists or not.
+	// if key is expired, return (false, nil)
 	IsExist(ctx context.Context, key string) (bool, error)
 	// Clear all cache.
 	ClearAll(ctx context.Context) error

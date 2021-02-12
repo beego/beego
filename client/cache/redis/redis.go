@@ -32,7 +32,6 @@ package redis
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -41,6 +40,7 @@ import (
 	"github.com/gomodule/redigo/redis"
 
 	"github.com/beego/beego/v2/client/cache"
+	"github.com/beego/beego/v2/core/berror"
 )
 
 var (
@@ -67,15 +67,20 @@ func NewRedisCache() cache.Cache {
 }
 
 // Execute the redis commands. args[0] must be the key name
-func (rc *Cache) do(commandName string, args ...interface{}) (reply interface{}, err error) {
-	if len(args) < 1 {
-		return nil, errors.New("missing required arguments")
-	}
+func (rc *Cache) do(commandName string, args ...interface{}) (interface{}, error) {
 	args[0] = rc.associate(args[0])
 	c := rc.p.Get()
-	defer c.Close()
+	defer func() {
+		_ = c.Close()
+	}()
 
-	return c.Do(commandName, args...)
+	reply, err := c.Do(commandName, args...)
+	if err != nil {
+		return nil, berror.Wrapf(err, cache.RedisCacheCurdFailed,
+			"could not execute this command: %s", commandName)
+	}
+
+	return reply, nil
 }
 
 // associate with config key.
@@ -95,7 +100,9 @@ func (rc *Cache) Get(ctx context.Context, key string) (interface{}, error) {
 // GetMulti gets cache from redis.
 func (rc *Cache) GetMulti(ctx context.Context, keys []string) ([]interface{}, error) {
 	c := rc.p.Get()
-	defer c.Close()
+	defer func() {
+		_ = c.Close()
+	}()
 	var args []interface{}
 	for _, key := range keys {
 		args = append(args, rc.associate(key))
@@ -137,13 +144,16 @@ func (rc *Cache) Decr(ctx context.Context, key string) error {
 }
 
 // ClearAll deletes all cache in the redis collection
+// Be careful about this method, because it scans all keys and the delete them one by one
 func (rc *Cache) ClearAll(context.Context) error {
 	cachedKeys, err := rc.Scan(rc.key + ":*")
 	if err != nil {
 		return err
 	}
 	c := rc.p.Get()
-	defer c.Close()
+	defer func() {
+		_ = c.Close()
+	}()
 	for _, str := range cachedKeys {
 		if _, err = c.Do("DEL", str); err != nil {
 			return err
@@ -155,7 +165,9 @@ func (rc *Cache) ClearAll(context.Context) error {
 // Scan scans all keys matching a given pattern.
 func (rc *Cache) Scan(pattern string) (keys []string, err error) {
 	c := rc.p.Get()
-	defer c.Close()
+	defer func() {
+		_ = c.Close()
+	}()
 	var (
 		cursor uint64 = 0 // start
 		result []interface{}
@@ -186,13 +198,16 @@ func (rc *Cache) Scan(pattern string) (keys []string, err error) {
 // Cached items in redis are stored forever, no garbage collection happens
 func (rc *Cache) StartAndGC(config string) error {
 	var cf map[string]string
-	json.Unmarshal([]byte(config), &cf)
+	err := json.Unmarshal([]byte(config), &cf)
+	if err != nil {
+		return berror.Wrapf(err, cache.InvalidRedisCacheCfg, "could not unmarshal the config: %s", config)
+	}
 
 	if _, ok := cf["key"]; !ok {
 		cf["key"] = DefaultKey
 	}
 	if _, ok := cf["conn"]; !ok {
-		return errors.New("config has no conn key")
+		return berror.Wrapf(err, cache.InvalidRedisCacheCfg, "config missing conn field. ", config)
 	}
 
 	// Format redis://<password>@<host>:<port>
@@ -229,9 +244,16 @@ func (rc *Cache) StartAndGC(config string) error {
 	rc.connectInit()
 
 	c := rc.p.Get()
-	defer c.Close()
+	defer func() {
+		_ = c.Close()
+	}()
 
-	return c.Err()
+	// test connection
+	if err = c.Err(); err != nil {
+		return berror.Wrapf(err, cache.InvalidConnection,
+			"can not connect to remote redis server, please check the connection info and network state: %s", config)
+	}
+	return nil
 }
 
 // connect to redis.
@@ -239,19 +261,20 @@ func (rc *Cache) connectInit() {
 	dialFunc := func() (c redis.Conn, err error) {
 		c, err = redis.Dial("tcp", rc.conninfo)
 		if err != nil {
-			return nil, err
+			return nil, berror.Wrapf(err, cache.DialFailed,
+				"could not dial to remote server: %s ", rc.conninfo)
 		}
 
 		if rc.password != "" {
-			if _, err := c.Do("AUTH", rc.password); err != nil {
-				c.Close()
+			if _, err = c.Do("AUTH", rc.password); err != nil {
+				_ = c.Close()
 				return nil, err
 			}
 		}
 
 		_, selecterr := c.Do("SELECT", rc.dbNum)
 		if selecterr != nil {
-			c.Close()
+			_ = c.Close()
 			return nil, selecterr
 		}
 		return

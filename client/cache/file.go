@@ -30,7 +30,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/errors"
+	"github.com/beego/beego/v2/core/berror"
 )
 
 // FileCacheItem is basic unit of file cache adapter which
@@ -96,24 +96,37 @@ func (fc *FileCache) StartAndGC(config string) error {
 	}
 	fc.CachePath = cfg[cpKey]
 	fc.FileSuffix = cfg[fsKey]
-	fc.DirectoryLevel, _ = strconv.Atoi(cfg[dlKey])
-	fc.EmbedExpiry, _ = strconv.Atoi(cfg[eeKey])
-
-	fc.Init()
-	return nil
+	fc.DirectoryLevel, err = strconv.Atoi(cfg[dlKey])
+	if err != nil {
+		return berror.Wrapf(err, InvalidFileCacheDirectoryLevelCfg,
+			"invalid directory level config, please check your input, it must be integer: %s", cfg[dlKey])
+	}
+	fc.EmbedExpiry, err = strconv.Atoi(cfg[eeKey])
+	if err != nil {
+		return berror.Wrapf(err, InvalidFileCacheEmbedExpiryCfg,
+			"invalid embed expiry config, please check your input, it must be integer: %s", cfg[eeKey])
+	}
+	return fc.Init()
 }
 
 // Init makes new a dir for file cache if it does not already exist
-func (fc *FileCache) Init() {
-	if ok, _ := exists(fc.CachePath); !ok { // todo : error handle
-		_ = os.MkdirAll(fc.CachePath, os.ModePerm) // todo : error handle
+func (fc *FileCache) Init() error {
+	ok, err := exists(fc.CachePath)
+	if err != nil || ok {
+		return err
 	}
+	err = os.MkdirAll(fc.CachePath, os.ModePerm)
+	if err != nil {
+		return berror.Wrapf(err, CreateFileCacheDirFailed,
+			"could not create directory, please check the config [%s] and file mode.", fc.CachePath)
+	}
+	return nil
 }
 
 // getCachedFilename returns an md5 encoded file name.
-func (fc *FileCache) getCacheFileName(key string) string {
+func (fc *FileCache) getCacheFileName(key string) (string, error) {
 	m := md5.New()
-	io.WriteString(m, key)
+	_, _ = io.WriteString(m, key)
 	keyMd5 := hex.EncodeToString(m.Sum(nil))
 	cachePath := fc.CachePath
 	switch fc.DirectoryLevel {
@@ -122,18 +135,29 @@ func (fc *FileCache) getCacheFileName(key string) string {
 	case 1:
 		cachePath = filepath.Join(cachePath, keyMd5[0:2])
 	}
-
-	if ok, _ := exists(cachePath); !ok { // todo : error handle
-		_ = os.MkdirAll(cachePath, os.ModePerm) // todo : error handle
+	ok, err := exists(cachePath)
+	if err != nil {
+		return "", err
+	}
+	if !ok {
+		err  = os.MkdirAll(cachePath, os.ModePerm)
+		if err != nil {
+			return "", berror.Wrapf(err, CreateFileCacheDirFailed,
+				"could not create the directory: %s", cachePath)
+		}
 	}
 
-	return filepath.Join(cachePath, fmt.Sprintf("%s%s", keyMd5, fc.FileSuffix))
+	return filepath.Join(cachePath, fmt.Sprintf("%s%s", keyMd5, fc.FileSuffix)), nil
 }
 
 // Get value from file cache.
 // if nonexistent or expired return an empty string.
 func (fc *FileCache) Get(ctx context.Context, key string) (interface{}, error) {
-	fileData, err := FileGetContents(fc.getCacheFileName(key))
+	fn, err := fc.getCacheFileName(key)
+	if err != nil {
+		return nil, err
+	}
+	fileData, err := FileGetContents(fn)
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +169,7 @@ func (fc *FileCache) Get(ctx context.Context, key string) (interface{}, error) {
 	}
 
 	if to.Expired.Before(time.Now()) {
-		return nil, errors.New("The key is expired")
+		return nil, ErrKeyExpired
 	}
 	return to.Data, nil
 }
@@ -168,7 +192,7 @@ func (fc *FileCache) GetMulti(ctx context.Context, keys []string) ([]interface{}
 	if len(keysErr) == 0 {
 		return rc, nil
 	}
-	return rc, errors.New(strings.Join(keysErr, "; "))
+	return rc, berror.Error(MultiGetFailed, strings.Join(keysErr, "; "))
 }
 
 // Put value into file cache.
@@ -188,14 +212,26 @@ func (fc *FileCache) Put(ctx context.Context, key string, val interface{}, timeo
 	if err != nil {
 		return err
 	}
-	return FilePutContents(fc.getCacheFileName(key), data)
+
+	fn, err := fc.getCacheFileName(key)
+	if err != nil {
+		return err
+	}
+	return FilePutContents(fn, data)
 }
 
 // Delete file cache value.
 func (fc *FileCache) Delete(ctx context.Context, key string) error {
-	filename := fc.getCacheFileName(key)
+	filename, err := fc.getCacheFileName(key)
+	if err != nil {
+		return err
+	}
 	if ok, _ := exists(filename); ok {
-		return os.Remove(filename)
+		err = os.Remove(filename)
+		if err != nil {
+			return berror.Wrapf(err, DeleteFileCacheItemFailed,
+				"can not delete this file cache key-value, key is %s and file name is %s", key, filename)
+		}
 	}
 	return nil
 }
@@ -233,8 +269,11 @@ func (fc *FileCache) Decr(ctx context.Context, key string) error {
 
 // IsExist checks if value exists.
 func (fc *FileCache) IsExist(ctx context.Context, key string) (bool, error) {
-	ret, _ := exists(fc.getCacheFileName(key))
-	return ret, nil
+	fn, err := fc.getCacheFileName(key)
+	if err != nil {
+		return false, err
+	}
+	return exists(fn)
 }
 
 // ClearAll cleans cached files (not implemented)
@@ -251,13 +290,19 @@ func exists(path string) (bool, error) {
 	if os.IsNotExist(err) {
 		return false, nil
 	}
-	return false, err
+	return false, berror.Wrapf(err, InvalidFileCachePath, "file cache path is invalid: %s", path)
 }
 
 // FileGetContents Reads bytes from a file.
 // if non-existent, create this file.
-func FileGetContents(filename string) (data []byte, e error) {
-	return ioutil.ReadFile(filename)
+func FileGetContents(filename string) ([]byte, error) {
+	data, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return nil, berror.Wrapf(err, ReadFileCacheContentFailed,
+			"could not read the data from the file: %s, " +
+			"please confirm that file exist and Beego has the permission to read the content.", filename)
+	}
+	return data, nil
 }
 
 // FilePutContents puts bytes into a file.
@@ -272,16 +317,21 @@ func GobEncode(data interface{}) ([]byte, error) {
 	enc := gob.NewEncoder(buf)
 	err := enc.Encode(data)
 	if err != nil {
-		return nil, err
+		return nil, berror.Wrap(err, GobEncodeDataFailed, "could not encode this data")
 	}
-	return buf.Bytes(), err
+	return buf.Bytes(), nil
 }
 
 // GobDecode Gob decodes a file cache item.
 func GobDecode(data []byte, to *FileCacheItem) error {
 	buf := bytes.NewBuffer(data)
 	dec := gob.NewDecoder(buf)
-	return dec.Decode(&to)
+	err := dec.Decode(&to)
+	if err != nil {
+		return berror.Wrap(err, InvalidGobEncodedData,
+			"could not decode this data to FileCacheItem. Make sure that the data is encoded by GOB.")
+	}
+	return nil
 }
 
 func init() {
