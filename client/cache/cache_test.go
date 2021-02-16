@@ -18,6 +18,7 @@ import (
 	"context"
 	"math"
 	"os"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -108,7 +109,7 @@ func TestCache(t *testing.T) {
 	assert.Equal(t, "author1", vv[1])
 
 	assert.NotNil(t, err)
-	assert.Equal(t, "key [astaxie0] error: key not exist", err.Error())
+	assert.True(t, strings.Contains(err.Error(), "key isn't exist"))
 }
 
 func TestFileCache(t *testing.T) {

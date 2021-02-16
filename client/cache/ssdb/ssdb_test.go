@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -89,7 +90,7 @@ func TestSsdbcacheCache(t *testing.T) {
 	assert.Nil(t,  vv[1])
 
 	assert.NotNil(t, err)
-	assert.Equal(t, "key [ssdb11] error: key not exist", err.Error())
+	assert.True(t, strings.Contains(err.Error(), "key not exist"))
 
 	// test clear all done
 	assert.Nil(t, ssdb.ClearAll(context.Background()))

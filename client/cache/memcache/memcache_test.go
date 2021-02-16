@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -106,7 +107,7 @@ func TestMemcacheCache(t *testing.T) {
 	assert.Equal(t, "author1", string(vv[1].([]byte)))
 
 	assert.NotNil(t, err)
-	assert.Equal(t, "key [astaxie0] error: key not exist", err.Error())
+	assert.True(t, strings.Contains(err.Error(), "key not exist"))
 
 	assert.Nil(t, bm.ClearAll(context.Background()))
 	// test clear all
