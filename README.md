@@ -19,7 +19,7 @@ Beego is compos of four parts:
 
 ## Quick Start
 
-[Officail website](http://beego.me)
+[Official website](http://beego.me)
 
 [Example](https://github.com/beego/beego-example)
 
