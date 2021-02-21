@@ -1,4 +1,5 @@
 # developing
+- Fix 4503 and 4504: Add `when` to `Write([]byte)` method and add `prefix` to `writeMsg`. [4507](https://github.com/beego/beego/pull/4507)
 - Fix 4480: log format incorrect. [4482](https://github.com/beego/beego/pull/4482)
 - Remove `duration` from prometheus labels. [4391](https://github.com/beego/beego/pull/4391)
 - Fix `unknown escape sequence` in generated code. [4385](https://github.com/beego/beego/pull/4385)

@@ -261,6 +261,7 @@ func (bl *BeeLogger) Write(p []byte) (n int, err error) {
 	lm := &LogMsg{
 		Msg:   string(p),
 		Level: levelLoggerImpl,
+		When: time.Now(),
 	}
 
 	// set levelLoggerImpl to ensure all log message will be write out
@@ -291,6 +292,7 @@ func (bl *BeeLogger) writeMsg(lm *LogMsg) error {
 	}
 	lm.FilePath = file
 	lm.LineNumber = line
+	lm.Prefix = bl.prefix
 
 	lm.enableFullFilePath = bl.enableFullFilePath
 	lm.enableFuncCallDepth = bl.enableFuncCallDepth
