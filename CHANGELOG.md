@@ -25,6 +25,8 @@
 - Refactor httplib: Move debug code to a filter [4440](https://github.com/beego/beego/issues/4440)
 - fix: code quality issues [4513](https://github.com/beego/beego/pull/4513)
 - Optimize maligned structs to reduce memory foot-print [4525](https://github.com/beego/beego/pull/4525)
+- Feat: add token bucket ratelimit filter [4508](https://github.com/beego/beego/pull/4508)
+
 
 
 ## Fix Sonar
