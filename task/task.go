@@ -261,7 +261,7 @@ func NewEasyTask(tname string, f TaskFunc, easyTaskFunc EasyTaskFunc, opts ...Op
 		Taskname: tname,
 		DoFunc:   f,
 		ErrLimit: 100,
-		Errlist:  make([]*taskerr, 100, 100),
+		Errlist:  make([]*taskerr, 100),
 	}
 
 	for _, opt := range opts {
