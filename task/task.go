@@ -16,6 +16,7 @@ package task
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"math"
 	"sort"
@@ -80,12 +81,103 @@ var (
 		"fri": 5,
 		"sat": 6,
 	}}
+
+	specNextFunc = func(t *Task, now time.Time) {
+		t.Next = t.Spec.Next(now)
+	}
 )
 
 const (
 	// Set the top bit if a star was included in the expression.
 	starBit = 1 << 63
 )
+
+// validator interface has validate function
+type validator interface {
+	validate()
+}
+
+// validate run all validators
+func validate(validators ...validator) {
+	for _, v := range validators {
+		v.validate()
+	}
+}
+
+// week
+type Week uint8
+
+const (
+	WeekSunday   Week = 0
+	WeekMonday   Week = 1
+	WeekTuesday  Week = 2
+	WeekWed      Week = 3
+	WeekThursday Week = 4
+	WeekFriday   Week = 5
+	WeekSaturday Week = 6
+)
+
+// validate Week
+func (week Week) validate() {
+	if week > 6 {
+		log.Panicf("week(%d) should be less than 7", week)
+	}
+}
+
+// month
+type Month uint8
+
+const (
+	MonthJan Month = 1
+	MonthFeb Month = 2
+	MonthMar Month = 3
+	MonthApr Month = 4
+	MonthMay Month = 5
+	MonthJun Month = 6
+	MonthJul Month = 7
+	MonthAug Month = 8
+	MonthSep Month = 9
+	MonthOct Month = 10
+	MonthNov Month = 11
+	MonthDec Month = 12
+)
+
+// validate Month
+func (month Month) validate() {
+	if month == 0 || month > 12 {
+		log.Panicf("month(%d) should be [1, 31]", month)
+	}
+}
+
+// Day
+type Day uint8
+
+// validate Day
+func (day Day) validate() {
+	if day > 31 || day == 0 {
+		log.Panicf("day(%d) should be [1, 31]", day)
+	}
+}
+
+// Hour
+type Hour uint8
+
+// validate Hour
+func (hour Hour) validate() {
+	if hour > 23 {
+		log.Panicf("hour(%d) should be less than 24", hour)
+	}
+}
+
+// Minute
+type Minute uint8
+
+// validate Minute
+func (minute Minute) validate() {
+	if minute > 59 {
+		log.Panicf("minute(%d) should be less than 60", minute)
+	}
+}
 
 // Schedule time taks schedule
 type Schedule struct {
@@ -99,6 +191,12 @@ type Schedule struct {
 
 // TaskFunc task func type
 type TaskFunc func(ctx context.Context) error
+
+// TaskFunc task func type
+type EasyTaskFunc func(task *Task)
+
+// nextFunc is a function to set next execution time
+type nextFunc func(t *Task, now time.Time)
 
 // Tasker task interface
 type Tasker interface {
@@ -131,7 +229,8 @@ type Task struct {
 	Timeout  time.Duration // timeout duration
 	Errlist  []*taskerr    // like errtime:errinfo
 	ErrLimit int           // max length for the errlist, 0 stand for no limit
-	errCnt   int           // records the error count during the execution
+	nextFunc nextFunc
+	errCnt   int // records the error count during the execution
 }
 
 // NewTask add new task with name, time and func
@@ -152,7 +251,91 @@ func NewTask(tname string, spec string, f TaskFunc, opts ...Option) *Task {
 	}
 
 	task.SetCron(spec)
+	task.nextFunc = specNextFunc
 	return task
+}
+
+// NewTask add new task with name, time and func
+func NewEasyTask(tname string, f TaskFunc, easyTaskFunc EasyTaskFunc, opts ...Option) *Task {
+	task := &Task{
+		Taskname: tname,
+		DoFunc:   f,
+		ErrLimit: 100,
+		Errlist:  make([]*taskerr, 100, 100),
+	}
+
+	for _, opt := range opts {
+		opt.apply(task)
+	}
+
+	easyTaskFunc(task)
+
+	return task
+}
+
+// Repeat to run the task for every duration
+func Repeat(duration time.Duration) EasyTaskFunc {
+	return func(task *Task) {
+		task.nextFunc = func(t *Task, now time.Time) {
+			prev := t.Prev
+			if prev.IsZero() {
+				prev = now
+			}
+
+			t.Next = prev.Add(duration)
+		}
+	}
+}
+
+// setCronAndNextFunc parse spec and set next function
+func setCronAndNextFunc(task *Task, spec string) {
+	task.SpecStr = spec
+	task.SetCron(task.SpecStr)
+	task.nextFunc = specNextFunc
+}
+
+// DailyStartAt to return a easy task function. The task will
+// run every day at hour:minute:0
+func DailyStartAt(hour Hour, minute Minute) EasyTaskFunc {
+	validate(hour, minute)
+
+	return func(task *Task) {
+		spec := fmt.Sprintf("0 %d %d * * *", minute, hour)
+		setCronAndNextFunc(task, spec)
+	}
+}
+
+// WeeklyStartAt to return a easy task function. The task will
+// run every week at hour:minute:0
+func WeeklyStartAt(week Week, hour Hour, minute Minute) EasyTaskFunc {
+	validate(week, hour, minute)
+
+	return func(task *Task) {
+		spec := fmt.Sprintf("0 %d %d * * %d", minute, hour, week)
+		setCronAndNextFunc(task, spec)
+	}
+}
+
+// MonthlyStartAt to return a easy task function. The task will
+// run on the day of every month at hour:minute:0
+func MonthlyStartAt(day Day, hour Hour, minute Minute) EasyTaskFunc {
+	validate(day, hour, minute)
+
+	return func(task *Task) {
+		spec := fmt.Sprintf("0 %d %d %d * *", minute, hour, day)
+		setCronAndNextFunc(task, spec)
+	}
+}
+
+// YearlyStartAt to return a easy task function. The task will
+// run on the day of the month at hour:minute:0
+func YearlyStartAt(month Month, day Day, hour Hour, minute Minute) EasyTaskFunc {
+	validate(month, day, hour, minute)
+
+	return func(task *Task) {
+		spec := fmt.Sprintf("0 %d %d %d %d *", minute, hour, day, month)
+		setCronAndNextFunc(task, spec)
+	}
 }
 
 // GetSpec get spec string
@@ -185,7 +368,7 @@ func (t *Task) Run(ctx context.Context) error {
 
 // SetNext set next time for this task
 func (t *Task) SetNext(ctx context.Context, now time.Time) {
-	t.Next = t.Spec.Next(now)
+	t.nextFunc(t, now)
 }
 
 // GetNext get the next call time of this task
