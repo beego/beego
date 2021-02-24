@@ -120,7 +120,7 @@ const (
 // validate Week
 func (week Week) validate() {
 	if week > 6 {
-		log.Panicf("week(%d) should be less than 7", week)
+		log.Panicf("week(%d) should be [0, 6]", week)
 	}
 }
 
@@ -165,7 +165,7 @@ type Hour uint8
 // validate Hour
 func (hour Hour) validate() {
 	if hour > 23 {
-		log.Panicf("hour(%d) should be less than 24", hour)
+		log.Panicf("hour(%d) should be [0, 23]", hour)
 	}
 }
 
@@ -175,7 +175,7 @@ type Minute uint8
 // validate Minute
 func (minute Minute) validate() {
 	if minute > 59 {
-		log.Panicf("minute(%d) should be less than 60", minute)
+		log.Panicf("minute(%d) should be [0, 59]", minute)
 	}
 }
 
