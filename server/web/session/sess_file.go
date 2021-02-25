@@ -211,9 +211,7 @@ func (fp *FileProvider) SessionGC(context.Context) {
 // it walks save path to count files.
 func (fp *FileProvider) SessionAll(context.Context) int {
 	a := &activeSession{}
-	err := filepath.Walk(fp.savePath, func(path string, f os.FileInfo, err error) error {
-		return a.visit(path, f, err)
-	})
+	err := filepath.Walk(fp.savePath, a.visit)
 	if err != nil {
 		SLogger.Printf("filepath.Walk() returned %v\n", err)
 		return 0
