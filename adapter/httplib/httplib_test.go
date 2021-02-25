@@ -15,6 +15,7 @@
 package httplib
 
 import (
+	"bytes"
 	"errors"
 	"io/ioutil"
 	"net"
@@ -66,7 +67,7 @@ func TestDoRequest(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
-	
+
 	req := Get(getUrl)
 	b, err := req.Bytes()
 	if err != nil {
@@ -222,7 +223,7 @@ func TestWithSetting(t *testing.T) {
 }
 
 func TestToJson(t *testing.T) {
-	
+
 	req := Get(ipUrl)
 	resp, err := req.Response()
 	if err != nil {
@@ -261,7 +262,7 @@ func TestToFile(t *testing.T) {
 	}
 	defer os.Remove(f)
 	b, err := ioutil.ReadFile(f)
-	if n := strings.Index(string(b), "origin"); n == -1 {
+	if n := bytes.Index(b, []byte("origin")); n == -1 {
 		t.Fatal(err)
 	}
 }
@@ -275,7 +276,7 @@ func TestToFileDir(t *testing.T) {
 	}
 	defer os.RemoveAll("./files")
 	b, err := ioutil.ReadFile(f)
-	if n := strings.Index(string(b), "origin"); n == -1 {
+	if n := bytes.Index(b, []byte("origin")); n == -1 {
 		t.Fatal(err)
 	}
 }
