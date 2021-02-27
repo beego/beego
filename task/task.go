@@ -192,11 +192,8 @@ type Schedule struct {
 // TaskFunc task func type
 type TaskFunc func(ctx context.Context) error
 
-// TaskFunc task func type
-type EasyTaskFunc func(task *Task)
-
-// nextFunc is a function to set next execution time
-type nextFunc func(t *Task, now time.Time)
+// TimeFunc is a function to set next execution time
+type TimeFunc func(t *Task, now time.Time)
 
 // Tasker task interface
 type Tasker interface {
@@ -229,7 +226,7 @@ type Task struct {
 	Timeout  time.Duration // timeout duration
 	Errlist  []*taskerr    // like errtime:errinfo
 	ErrLimit int           // max length for the errlist, 0 stand for no limit
-	nextFunc nextFunc
+	nextFunc TimeFunc
 	errCnt   int // records the error count during the execution
 }
 
@@ -255,8 +252,8 @@ func NewTask(tname string, spec string, f TaskFunc, opts ...Option) *Task {
 	return task
 }
 
-// NewTask add new task with name, time and func
-func NewEasyTask(tname string, f TaskFunc, easyTaskFunc EasyTaskFunc, opts ...Option) *Task {
+// NewEasyTask add new task with name, time func and func
+func NewEasyTask(tname string, nextFunc TimeFunc, f TaskFunc, opts ...Option) *Task {
 	task := &Task{
 		Taskname: tname,
 		DoFunc:   f,
@@ -268,74 +265,47 @@ func NewEasyTask(tname string, f TaskFunc, easyTaskFunc EasyTaskFunc, opts ...Op
 		opt.apply(task)
 	}
 
-	easyTaskFunc(task)
+	task.nextFunc = nextFunc
 
 	return task
 }
 
 // Repeat to run the task for every duration
-func Repeat(duration time.Duration) EasyTaskFunc {
-	return func(task *Task) {
-		task.nextFunc = func(t *Task, now time.Time) {
-			prev := t.Prev
-			if prev.IsZero() {
-				prev = now
-			}
-
-			t.Next = prev.Add(duration)
-		}
+func Repeat(duration time.Duration) TimeFunc {
+	return func(t *Task, now time.Time) {
+		t.Next = now.Add(duration)
 	}
 }
 
-// setCronAndNextFunc parse spec and set next function
-func setCronAndNextFunc(task *Task, spec string) {
-	task.SpecStr = spec
-	task.SetCron(task.SpecStr)
-	task.nextFunc = specNextFunc
-}
-
-// DailyStartAt to return a easy task function. The task will
+// DailyStartAt to return a crontab spec for tasks, which will
 // run every day at hour:minute:0
-func DailyStartAt(hour Hour, minute Minute) EasyTaskFunc {
+func DailyStartAt(hour Hour, minute Minute) string {
 	validate(hour, minute)
-
-	return func(task *Task) {
-		spec := fmt.Sprintf("0 %d %d * * *", minute, hour)
-		setCronAndNextFunc(task, spec)
-	}
+	return fmt.Sprintf("0 %d %d * * *", minute, hour)
 }
 
-// WeeklyStartAt to return a easy task function. The task will
+// WeeklyStartAt to return a crontab spec for tasks, which will
 // run every week at hour:minute:0
-func WeeklyStartAt(week Week, hour Hour, minute Minute) EasyTaskFunc {
+func WeeklyStartAt(week Week, hour Hour, minute Minute) string {
 	validate(week, hour, minute)
 
-	return func(task *Task) {
-		spec := fmt.Sprintf("0 %d %d * * %d", minute, hour, week)
-		setCronAndNextFunc(task, spec)
-	}
+	return fmt.Sprintf("0 %d %d * * %d", minute, hour, week)
 }
 
-// MonthlyStartAt to return a easy task function. The task will
+// MonthlyStartAt to return a crontab spec for tasks, which will
 // run on the day of every month at hour:minute:0
-func MonthlyStartAt(day Day, hour Hour, minute Minute) EasyTaskFunc {
+func MonthlyStartAt(day Day, hour Hour, minute Minute) string {
 	validate(day, hour, minute)
 
-	return func(task *Task) {
-		spec := fmt.Sprintf("0 %d %d %d * *", minute, hour, day)
-		setCronAndNextFunc(task, spec)
-	}
+	return fmt.Sprintf("0 %d %d %d * *", minute, hour, day)
 }
 
-// YearlyStartAt to return a easy task function. The task will
+// YearlyStartAt to return a crontab spec for tasks, which will
 // run on the day of the month at hour:minute:0
-func YearlyStartAt(month Month, day Day, hour Hour, minute Minute) EasyTaskFunc {
+func YearlyStartAt(month Month, day Day, hour Hour, minute Minute) string {
 	validate(month, day, hour, minute)
 
-	return func(task *Task) {
-		spec := fmt.Sprintf("0 %d %d %d %d *", minute, hour, day, month)
-		setCronAndNextFunc(task, spec)
-	}
+	return fmt.Sprintf("0 %d %d %d %d *", minute, hour, day, month)
 }
 
 // GetSpec get spec string
