@@ -722,3 +722,34 @@ func (c *Controller) XSRFFormHTML() string {
 func (c *Controller) GetControllerAndAction() (string, string) {
 	return c.controllerName, c.actionName
 }
+
+// JSONResp sends JSON response directly
+func (c *Controller) JSONResp(data interface{}, encoding ...bool) error {
+	c.Data["json"] = data
+	return c.ServeJSON(encoding...)
+}
+
+// XMLResp sends XML response directly
+func (c *Controller) XMLResp(data interface{}) error {
+	c.Data["xml"] = data
+	return c.ServeXML()
+}
+
+// YAMLResp sends YAML response directly
+func (c *Controller) YAMLResp(data interface{}) error {
+	c.Data["yaml"] = data
+	return c.ServeYAML()
+}
+
+// Resp sends response data directly
+func (c *Controller) Resp(data interface{}, encoding ...bool) error {
+	accept := c.Ctx.Input.Header("Accept")
+	switch accept {
+	case context.ApplicationYAML:
+		return c.YAMLResp(data)
+	case context.ApplicationXML, context.TextXML:
+		return c.XMLResp(data)
+	default:
+		return c.JSONResp(data, encoding...)
+	}
+}
