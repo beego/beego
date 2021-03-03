@@ -287,9 +287,7 @@ func _filePath(dir, name string) string {
 }
 
 func assetFS() *assetfs.AssetFS {
-	assetInfo := func(path string) (os.FileInfo, error) {
-		return os.Stat(path)
-	}
+	assetInfo := os.Stat
 	for k := range _bintree.Children {
 		return &assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, AssetInfo: assetInfo, Prefix: k}
 	}

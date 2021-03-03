@@ -85,7 +85,7 @@ func (builder *FilterChainBuilder) report(ctx context.Context, inv *orm.Invocati
 }
 
 func (builder *FilterChainBuilder) reportTxn(ctx context.Context, inv *orm.Invocation) {
-	dur := time.Now().Sub(inv.TxStartTime) / time.Millisecond
+	dur := time.Since(inv.TxStartTime) / time.Millisecond
 	summaryVec.WithLabelValues(inv.Method, inv.TxName,
 		strconv.FormatBool(inv.InsideTx), inv.TxName).Observe(float64(dur))
 }

@@ -23,6 +23,7 @@
 - Fix 4451: support QueryExecutor interface. [4461](https://github.com/beego/beego/pull/4461)
 - Add some testing scripts [4461](https://github.com/beego/beego/pull/4461)
 - Refactor httplib: Move debug code to a filter [4440](https://github.com/beego/beego/issues/4440)
+- fix: code quality issues [4513](https://github.com/beego/beego/pull/4513)
 
 
 ## Fix Sonar

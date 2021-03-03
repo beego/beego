@@ -15,6 +15,7 @@
 package httplib
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"io/ioutil"
@@ -259,7 +260,7 @@ func TestToFile(t *testing.T) {
 	}
 	defer os.Remove(f)
 	b, err := ioutil.ReadFile(f)
-	if n := strings.Index(string(b), "origin"); n == -1 {
+	if n := bytes.Index(b, []byte("origin")); n == -1 {
 		t.Fatal(err)
 	}
 }
@@ -273,7 +274,7 @@ func TestToFileDir(t *testing.T) {
 	}
 	defer os.RemoveAll("./files")
 	b, err := ioutil.ReadFile(f)
-	if n := strings.Index(string(b), "origin"); n == -1 {
+	if n := bytes.Index(b, []byte("origin")); n == -1 {
 		t.Fatal(err)
 	}
 }

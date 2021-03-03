@@ -42,7 +42,7 @@ func (mi *MemoryItem) isExpire() bool {
 	if mi.lifespan == 0 {
 		return false
 	}
-	return time.Now().Sub(mi.createdTime) > mi.lifespan
+	return time.Since(mi.createdTime) > mi.lifespan
 }
 
 // MemoryCache is a memory cache adapter.
@@ -66,7 +66,7 @@ func (bc *MemoryCache) Get(ctx context.Context, key string) (interface{}, error)
 	bc.RLock()
 	defer bc.RUnlock()
 	if itm, ok :=
-	 	bc.items[key]; ok {
+		bc.items[key]; ok {
 		if itm.isExpire() {
 			return nil, ErrKeyExpired
 		}
