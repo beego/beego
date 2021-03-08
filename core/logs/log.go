@@ -112,17 +112,17 @@ func Register(name string, log newLoggerFunc) {
 // Can contain several providers and log message into all providers.
 type BeeLogger struct {
 	lock                sync.Mutex
-	level               int
 	init                bool
 	enableFuncCallDepth bool
-	loggerFuncCallDepth int
 	enableFullFilePath  bool
 	asynchronous        bool
+	wg                  sync.WaitGroup
+	level               int
+	loggerFuncCallDepth int
 	prefix              string
 	msgChanLen          int64
 	msgChan             chan *LogMsg
 	signalChan          chan string
-	wg                  sync.WaitGroup
 	outputs             []*nameLogger
 	globalFormatter     string
 }

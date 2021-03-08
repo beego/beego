@@ -39,46 +39,46 @@ type Config struct {
 	AppName             string // Application name
 	RunMode             string // Running Mode: dev | prod
 	RouterCaseSensitive bool
-	ServerName          string
 	RecoverPanic        bool
-	RecoverFunc         func(*context.Context, *Config)
 	CopyRequestBody     bool
 	EnableGzip          bool
+	EnableErrorsShow    bool
+	EnableErrorsRender  bool
+	ServerName          string
+	RecoverFunc         func(*context.Context, *Config)
 	// MaxMemory and MaxUploadSize are used to limit the request body
 	// if the request is not uploading file, MaxMemory is the max size of request body
 	// if the request is uploading file, MaxUploadSize is the max size of request body
-	MaxMemory          int64
-	MaxUploadSize      int64
-	EnableErrorsShow   bool
-	EnableErrorsRender bool
-	Listen             Listen
-	WebConfig          WebConfig
-	Log                LogConfig
+	MaxMemory     int64
+	MaxUploadSize int64
+	Listen        Listen
+	WebConfig     WebConfig
+	Log           LogConfig
 }
 
 // Listen holds for http and https related config
 type Listen struct {
 	Graceful          bool // Graceful means use graceful module to start the server
-	ServerTimeOut     int64
 	ListenTCP4        bool
 	EnableHTTP        bool
-	HTTPAddr          string
-	HTTPPort          int
 	AutoTLS           bool
-	Domains           []string
-	TLSCacheDir       string
 	EnableHTTPS       bool
 	EnableMutualHTTPS bool
+	EnableAdmin       bool
+	EnableFcgi        bool
+	EnableStdIo       bool // EnableStdIo works with EnableFcgi Use FCGI via standard I/O
+	ServerTimeOut     int64
+	HTTPAddr          string
+	HTTPPort          int
+	Domains           []string
+	TLSCacheDir       string
 	HTTPSAddr         string
 	HTTPSPort         int
 	HTTPSCertFile     string
 	HTTPSKeyFile      string
 	TrustCaFile       string
-	EnableAdmin       bool
 	AdminAddr         string
 	AdminPort         int
-	EnableFcgi        bool
-	EnableStdIo       bool // EnableStdIo works with EnableFcgi Use FCGI via standard I/O
 	ClientAuth        int
 }
 
@@ -86,9 +86,10 @@ type Listen struct {
 type WebConfig struct {
 	AutoRender             bool
 	EnableDocs             bool
+	EnableXSRF             bool
+	DirectoryIndex         bool
 	FlashName              string
 	FlashSeparator         string
-	DirectoryIndex         bool
 	StaticDir              map[string]string
 	StaticExtensionsToGzip []string
 	StaticCacheFileSize    int
@@ -97,7 +98,6 @@ type WebConfig struct {
 	TemplateRight          string
 	ViewsPath              string
 	CommentRouterPath      string
-	EnableXSRF             bool
 	XSRFKey                string
 	XSRFExpire             int
 	Session                SessionConfig
@@ -106,26 +106,26 @@ type WebConfig struct {
 // SessionConfig holds session related config
 type SessionConfig struct {
 	SessionOn                    bool
+	SessionAutoSetCookie         bool
+	SessionDisableHTTPOnly       bool // used to allow for cross domain cookies/javascript cookies.
+	SessionEnableSidInHTTPHeader bool // enable store/get the sessionId into/from http headers
+	SessionEnableSidInURLQuery   bool // enable get the sessionId from Url Query params
 	SessionProvider              string
 	SessionName                  string
 	SessionGCMaxLifetime         int64
 	SessionProviderConfig        string
 	SessionCookieLifeTime        int
-	SessionAutoSetCookie         bool
 	SessionDomain                string
-	SessionDisableHTTPOnly       bool // used to allow for cross domain cookies/javascript cookies.
-	SessionEnableSidInHTTPHeader bool // enable store/get the sessionId into/from http headers
 	SessionNameInHTTPHeader      string
-	SessionEnableSidInURLQuery   bool // enable get the sessionId from Url Query params
 	SessionCookieSameSite        http.SameSite
 }
 
 // LogConfig holds Log related config
 type LogConfig struct {
 	AccessLogs       bool
-	EnableStaticLogs bool   // log static files requests default: false
-	AccessLogsFormat string // access log format: JSON_FORMAT, APACHE_FORMAT or empty string
+	EnableStaticLogs bool // log static files requests default: false
 	FileLineNum      bool
+	AccessLogsFormat string            // access log format: JSON_FORMAT, APACHE_FORMAT or empty string
 	Outputs          map[string]string // Store Adaptor : config
 }
 

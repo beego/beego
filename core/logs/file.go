@@ -33,6 +33,11 @@ import (
 // Writes messages by lines limit, file size limit, or time frequency.
 type fileLogWriter struct {
 	sync.RWMutex // write log order by order and  atomic incr maxLinesCurLines and maxSizeCurSize
+
+	Rotate bool `json:"rotate"`
+	Daily  bool `json:"daily"`
+	Hourly bool `json:"hourly"`
+
 	// The opened file
 	Filename   string `json:"filename"`
 	fileWriter *os.File
@@ -49,18 +54,14 @@ type fileLogWriter struct {
 	maxSizeCurSize int
 
 	// Rotate daily
-	Daily         bool  `json:"daily"`
 	MaxDays       int64 `json:"maxdays"`
 	dailyOpenDate int
 	dailyOpenTime time.Time
 
 	// Rotate hourly
-	Hourly         bool  `json:"hourly"`
 	MaxHours       int64 `json:"maxhours"`
 	hourlyOpenDate int
 	hourlyOpenTime time.Time
-
-	Rotate bool `json:"rotate"`
 
 	Level int `json:"level"`
 
