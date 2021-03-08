@@ -1286,7 +1286,7 @@ func TestValuesList(t *testing.T) {
 	throwFail(t, AssertIs(num, 3))
 	if num == 3 {
 		throwFail(t, AssertIs(list[0][1], "slene"))
-		throwFail(t, AssertIs(list[2][9], nil))
+		throwFail(t, AssertIs(list[2][11], nil))
 	}
 
 	num, err = qs.OrderBy("Id").ValuesList(&list, "UserName", "Profile__Age")
