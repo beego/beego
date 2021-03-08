@@ -272,23 +272,23 @@ type UnregisterModel struct {
 }
 
 type User struct {
-	ID           int    `orm:"column(id)"`
-	UserName     string `orm:"size(30);unique"`
-	Email        string `orm:"size(100)"`
-	Password     string `orm:"size(100)"`
-	Status       int16  `orm:"column(Status)"`
-	IsStaff      bool
-	IsActive     bool `orm:"default(true)"`
-	unexport     bool `orm:"-"`
-	unexportBool bool
-	Created      time.Time `orm:"auto_now_add;type(date)"`
-	Updated      time.Time `orm:"auto_now"`
-	Profile      *Profile  `orm:"null;rel(one);on_delete(set_null)"`
-	Posts        []*Post   `orm:"reverse(many)" json:"-"`
-	ShouldSkip   string    `orm:"-"`
-	Nums         int
-	Langs        SliceStringField `orm:"size(100)"`
-	Extra        JSONFieldTest    `orm:"type(text)"`
+	ID             int    `orm:"column(id)"`
+	UserName       string `orm:"size(30);unique"`
+	Email          string `orm:"size(100)"`
+	Password       string `orm:"size(100)"`
+	Status         int16  `orm:"column(Status)"`
+	IsStaff        bool
+	IsActive       bool `orm:"default(true)"`
+	Unexported     bool `orm:"-"`
+	UnexportedBool bool
+	Created        time.Time `orm:"auto_now_add;type(date)"`
+	Updated        time.Time `orm:"auto_now"`
+	Profile        *Profile  `orm:"null;rel(one);on_delete(set_null)"`
+	Posts          []*Post   `orm:"reverse(many)" json:"-"`
+	ShouldSkip     string    `orm:"-"`
+	Nums           int
+	Langs          SliceStringField `orm:"size(100)"`
+	Extra          JSONFieldTest    `orm:"type(text)"`
 }
 
 func (u *User) TableIndex() [][]string {
