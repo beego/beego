@@ -108,9 +108,9 @@ type Controller struct {
 	EnableRender   bool
 
 	// xsrf data
+	EnableXSRF bool
 	_xsrfToken string
 	XSRFExpire int
-	EnableXSRF bool
 
 	// session
 	CruSession session.Store

@@ -150,8 +150,8 @@ type filterChainConfig struct {
 type ControllerRegister struct {
 	routers      map[string]*Tree
 	enablePolicy bool
-	policies     map[string]*Tree
 	enableFilter bool
+	policies     map[string]*Tree
 	filters      [FinishRouter + 1][]*FilterRouter
 	pool         sync.Pool
 

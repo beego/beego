@@ -51,23 +51,24 @@ func TestTagAutoWireBeanFactory_AutoWire(t *testing.T) {
 }
 
 type ComplicateStruct struct {
-	IntValue   int    `default:"12"`
-	StrValue   string `default:"hello, strValue"`
-	Int8Value  int8   `default:"8"`
-	Int16Value int16  `default:"16"`
-	Int32Value int32  `default:"32"`
-	Int64Value int64  `default:"64"`
+	BoolValue  bool  `default:"true"`
+	Int8Value  int8  `default:"8"`
+	Uint8Value uint8 `default:"88"`
 
-	UintValue   uint   `default:"13"`
-	Uint8Value  uint8  `default:"88"`
+	Int16Value  int16  `default:"16"`
 	Uint16Value uint16 `default:"1616"`
+	Int32Value  int32  `default:"32"`
 	Uint32Value uint32 `default:"3232"`
+
+	IntValue    int    `default:"12"`
+	UintValue   uint   `default:"13"`
+	Int64Value  int64  `default:"64"`
 	Uint64Value uint64 `default:"6464"`
+
+	StrValue string `default:"hello, strValue"`
 
 	Float32Value float32 `default:"32.32"`
 	Float64Value float64 `default:"64.64"`
-
-	BoolValue bool `default:"true"`
 
 	ignoreInt int `default:"11"`
 

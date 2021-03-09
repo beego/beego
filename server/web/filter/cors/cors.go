@@ -69,10 +69,10 @@ var (
 type Options struct {
 	// If set, all origins are allowed.
 	AllowAllOrigins bool
-	// A list of allowed origins. Wild cards and FQDNs are supported.
-	AllowOrigins []string
 	// If set, allows to share auth credentials such as cookies.
 	AllowCredentials bool
+	// A list of allowed origins. Wild cards and FQDNs are supported.
+	AllowOrigins []string
 	// A list of allowed HTTP methods.
 	AllowMethods []string
 	// A list of allowed HTTP headers.
