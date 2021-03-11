@@ -22,7 +22,7 @@
 //
 //	func main(){
 //		// apiauth every request
-//		beego.InsertFilter("*", beego.BeforeRouter,apiauth.APIBaiscAuth("appid","appkey"))
+//		beego.InsertFilter("*", beego.BeforeRouter,apiauth.APIBasicAuth("appid","appkey"))
 //		beego.Run()
 //	}
 //
