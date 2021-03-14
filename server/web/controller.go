@@ -28,11 +28,11 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-
-	"github.com/beego/beego/v2/server/web/session"
+	"sync"
 
 	"github.com/beego/beego/v2/server/web/context"
 	"github.com/beego/beego/v2/server/web/context/param"
+	"github.com/beego/beego/v2/server/web/session"
 )
 
 var (
@@ -40,7 +40,20 @@ var (
 	ErrAbort = errors.New("user stop run")
 	// GlobalControllerRouter store comments with controller. pkgpath+controller:comments
 	GlobalControllerRouter = make(map[string][]ControllerComments)
+	copyBufferPool         sync.Pool
 )
+
+const (
+	bytePerKb    = 1024
+	copyBufferKb = 32
+	filePerm     = 0666
+)
+
+func init() {
+	copyBufferPool.New = func() interface{} {
+		return make([]byte, bytePerKb*copyBufferKb)
+	}
+}
 
 // ControllerFilter store the filter for controller
 type ControllerFilter struct {
@@ -605,19 +618,31 @@ func (c *Controller) GetFiles(key string) ([]*multipart.FileHeader, error) {
 
 // SaveToFile saves uploaded file to new path.
 // it only operates the first one of mutil-upload form file field.
-func (c *Controller) SaveToFile(fromfile, tofile string) error {
-	file, _, err := c.Ctx.Request.FormFile(fromfile)
+func (c *Controller) SaveToFile(fromFile, toFile string) error {
+	buf := copyBufferPool.Get().([]byte)
+	defer copyBufferPool.Put(buf)
+	return c.SaveToFileWithBuffer(fromFile, toFile, buf)
+}
+
+type onlyWriter struct {
+	io.Writer
+}
+
+func (c *Controller) SaveToFileWithBuffer(fromFile string, toFile string, buf []byte) error {
+	src, _, err := c.Ctx.Request.FormFile(fromFile)
 	if err != nil {
 		return err
 	}
-	defer file.Close()
-	f, err := os.OpenFile(tofile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+	defer src.Close()
+
+	dst, err := os.OpenFile(toFile, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, filePerm)
 	if err != nil {
 		return err
 	}
-	defer f.Close()
-	io.Copy(f, file)
-	return nil
+	defer dst.Close()
+
+	_, err = io.CopyBuffer(onlyWriter{dst}, src, buf)
+	return err
 }
 
 // StartSession starts session and load old session data info this controller.
