@@ -25,13 +25,21 @@ type dbIndex struct {
 	SQL   string
 }
 
+type overrideField struct {
+	fieldType int
+	fieldSize int
+}
+
 // get database column type string.
-func getColumnTyp(al *alias, fi *fieldInfo) (col string) {
+func getColumnTyp(al *alias, fi *fieldInfo, of ...overrideField) (col string) {
 	T := al.DbBaser.DbTypes()
 	fieldType := fi.fieldType
 	fieldSize := fi.size
+	if len(of) > 0 {
+		fieldType = of[0].fieldType
+		fieldSize = of[0].fieldSize
+	}
 
-checkColumn:
 	switch fieldType {
 	case TypeBooleanField:
 		col = T["bool"]
@@ -66,8 +74,10 @@ checkColumn:
 		col = T["int32"]
 	case TypeBigIntegerField:
 		if al.Driver == DRSqlite {
-			fieldType = TypeIntegerField
-			goto checkColumn
+			return getColumnTyp(al, fi, overrideField{
+				fieldType: TypeIntegerField,
+				fieldSize: fieldSize,
+			})
 		}
 		col = T["int64"]
 	case TypePositiveBitField:
@@ -89,20 +99,25 @@ checkColumn:
 		}
 	case TypeJSONField:
 		if al.Driver != DRPostgres {
-			fieldType = TypeVarCharField
-			goto checkColumn
+			return getColumnTyp(al, fi, overrideField{
+				fieldType: TypeVarCharField,
+				fieldSize: fieldSize,
+			})
 		}
 		col = T["json"]
 	case TypeJsonbField:
 		if al.Driver != DRPostgres {
-			fieldType = TypeVarCharField
-			goto checkColumn
+			return getColumnTyp(al, fi, overrideField{
+				fieldType: TypeVarCharField,
+				fieldSize: fieldSize,
+			})
 		}
 		col = T["jsonb"]
 	case RelForeignKey, RelOneToOne:
-		fieldType = fi.relModelInfo.fields.pk.fieldType
-		fieldSize = fi.relModelInfo.fields.pk.size
-		goto checkColumn
+		return getColumnTyp(al, fi, overrideField{
+			fieldType: fi.relModelInfo.fields.pk.fieldType,
+			fieldSize: fi.relModelInfo.fields.pk.size,
+		})
 	}
 
 	return
