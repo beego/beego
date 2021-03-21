@@ -241,6 +241,19 @@ func TestTransactionRollback(t *testing.T) {
 	assert.Equal(t, mock, err)
 }
 
+func TestTransactionRollbackUnlessCommit(t *testing.T)  {
+	s := StartMock()
+	defer s.Clear()
+	mock := errors.New(mockErrorMsg)
+	s.Mock(MockRollbackUnlessCommit(mock))
+
+	//u := &User{}
+	o := orm.NewOrm()
+	txOrm, _ := o.Begin()
+	err := txOrm.RollbackUnlessCommit()
+	assert.Equal(t, mock, err)
+}
+
 func TestTransactionCommit(t *testing.T) {
 	s := StartMock()
 	defer s.Clear()

@@ -402,6 +402,10 @@ func (f *filterMockOrm) Rollback() error {
 	return errors.New("rollback")
 }
 
+func (f *filterMockOrm) RollbackUnlessCommit() error {
+	return errors.New("rollback unless commit")
+}
+
 func (f *filterMockOrm) DBStats() *sql.DBStats {
 	return &sql.DBStats{
 		MaxOpenConnections: -1,
