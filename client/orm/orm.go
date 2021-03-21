@@ -593,6 +593,10 @@ func (t *txOrm) Rollback() error {
 	return t.db.(txEnder).Rollback()
 }
 
+func (t *txOrm) RollbackUnlessCommit() error {
+	return t.db.(txEnder).RollbackUnlessCommit()
+}
+
 // NewOrm create new orm
 func NewOrm() Ormer {
 	BootStrap() // execute only once

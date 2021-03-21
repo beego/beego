@@ -110,9 +110,34 @@ type TxBeginner interface {
 }
 
 type TxCommitter interface {
+	txEnder
+}
+
+// transaction beginner
+type txer interface {
+	Begin() (*sql.Tx, error)
+	BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error)
+}
+
+// transaction ending
+type txEnder interface {
 	Commit() error
 	Rollback() error
+
+	// RollbackUnlessCommit if the transaction has been committed, do nothing, or transaction will be rollback
+	// For example:
+	// ```go
+	//    txOrm := orm.Begin()
+	//    defer txOrm.RollbackUnlessCommit()
+	//    err := txOrm.Insert() // do something
+	//    if err != nil {
+	//       return err
+	//    }
+	//    txOrm.Commit()
+	// ```
+	RollbackUnlessCommit() error
 }
+
 
 // Data Manipulation Language
 type DML interface {
@@ -591,18 +616,6 @@ type dbQuerier interface {
 // 	Query(query string, args ...interface{}) (*sql.Rows, error)
 // 	QueryRow(query string, args ...interface{}) *sql.Row
 // }
-
-// transaction beginner
-type txer interface {
-	Begin() (*sql.Tx, error)
-	BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error)
-}
-
-// transaction ending
-type txEnder interface {
-	Commit() error
-	Rollback() error
-}
 
 // base database struct
 type dbBaser interface {
