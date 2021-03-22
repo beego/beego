@@ -503,6 +503,22 @@ func (f *filterOrmDecorator) Rollback() error {
 	return f.convertError(res[0])
 }
 
+func (f *filterOrmDecorator) RollbackUnlessCommit() error {
+	inv := &Invocation{
+		Method:      "RollbackUnlessCommit",
+		Args:        []interface{}{},
+		InsideTx:    f.insideTx,
+		TxStartTime: f.txStartTime,
+		TxName:      f.txName,
+		f: func(c context.Context) []interface{} {
+			err := f.TxCommitter.RollbackUnlessCommit()
+			return []interface{}{err}
+		},
+	}
+	res := f.root(context.Background(), inv)
+	return f.convertError(res[0])
+}
+
 func (f *filterOrmDecorator) convertError(v interface{}) error {
 	if v == nil {
 		return nil

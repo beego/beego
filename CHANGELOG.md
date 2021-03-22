@@ -6,6 +6,7 @@
 - Add sonar check and ignore test. [4432](https://github.com/beego/beego/pull/4432) [4433](https://github.com/beego/beego/pull/4433)
 - Update changlog.yml to check every PR to develop branch.[4427](https://github.com/beego/beego/pull/4427)
 - Fix 4396: Add context.param module into adapter. [4398](https://github.com/beego/beego/pull/4398)
+- Support `RollbackUnlessCommit` API. [4542](https://github.com/beego/beego/pull/4542)
 - Remove `duration` from prometheus labels. [4391](https://github.com/beego/beego/pull/4391)
 - Fix `unknown escape sequence` in generated code. [4385](https://github.com/beego/beego/pull/4385)
 - Using fixed name `commentRouter.go` as generated file name. [4385](https://github.com/beego/beego/pull/4385)

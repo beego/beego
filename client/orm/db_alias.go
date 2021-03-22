@@ -232,6 +232,14 @@ func (t *TxDB) Rollback() error {
 	return t.tx.Rollback()
 }
 
+func (t *TxDB) RollbackUnlessCommit() error {
+	err := t.tx.Rollback()
+	if err != sql.ErrTxDone {
+		return err
+	}
+	return nil
+}
+
 var _ dbQuerier = new(TxDB)
 var _ txEnder = new(TxDB)
 

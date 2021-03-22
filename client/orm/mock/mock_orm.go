@@ -160,3 +160,8 @@ func MockCommit(err error) *Mock {
 func MockRollback(err error) *Mock {
 	return NewMock(NewSimpleCondition("", "Rollback"), []interface{}{err}, nil)
 }
+
+// MockRollbackUnlessCommit support RollbackUnlessCommit
+func MockRollbackUnlessCommit(err error) *Mock {
+	return NewMock(NewSimpleCondition("", "RollbackUnlessCommit"), []interface{}{err}, nil)
+}

@@ -159,6 +159,7 @@ func throwFail(t *testing.T, err error, args ...interface{}) {
 	}
 }
 
+// deprecated using assert.XXX
 func throwFailNow(t *testing.T, err error, args ...interface{}) {
 	if err != nil {
 		con := fmt.Sprintf("\t\nError: %s\n%s\n", err.Error(), getCaller(2))
@@ -2248,27 +2249,64 @@ func TestTransaction(t *testing.T) {
 	}
 
 	err = to.Rollback()
-	throwFail(t, err)
-
+	assert.Nil(t, err)
 	num, err = o.QueryTable("tag").Filter("name__in", names).Count()
-	throwFail(t, err)
-	throwFail(t, AssertIs(num, 0))
+	assert.Nil(t, err)
+	assert.Equal(t, int64(0), num)
 
 	to, err = o.Begin()
-	throwFail(t, err)
+	assert.Nil(t, err)
 
 	tag.Name = "commit"
 	id, err = to.Insert(&tag)
-	throwFail(t, err)
-	throwFail(t, AssertIs(id > 0, true))
+	assert.Nil(t, err)
+	assert.True(t, id > 0)
 
-	to.Commit()
-	throwFail(t, err)
+	err = to.Commit()
+	assert.Nil(t, err)
 
 	num, err = o.QueryTable("tag").Filter("name", "commit").Delete()
-	throwFail(t, err)
-	throwFail(t, AssertIs(num, 1))
+	assert.Nil(t, err)
+	assert.Equal(t, int64(1), num)
 
+
+}
+
+func TestTxOrmRollbackUnlessCommit(t *testing.T) {
+	o := NewOrm()
+	var tag Tag
+
+	// test not commited and call RollbackUnlessCommit
+	to, err := o.Begin()
+	assert.Nil(t, err)
+	tag.Name = "rollback unless commit"
+	rows, err := to.Insert(&tag)
+	assert.Nil(t, err)
+	assert.True(t, rows > 0)
+	err = to.RollbackUnlessCommit()
+	assert.Nil(t, err)
+	num, err := o.QueryTable("tag").Filter("name", tag.Name).Delete()
+	assert.Nil(t, err)
+	assert.Equal(t, int64(0), num)
+
+	// test commit and call RollbackUnlessCommit
+
+	to, err = o.Begin()
+	assert.Nil(t, err)
+	tag.Name = "rollback unless commit"
+	rows, err = to.Insert(&tag)
+	assert.Nil(t, err)
+	assert.True(t, rows > 0)
+
+	err = to.Commit()
+	assert.Nil(t, err)
+
+	err = to.RollbackUnlessCommit()
+	assert.Nil(t, err)
+
+	num, err = o.QueryTable("tag").Filter("name", tag.Name).Delete()
+	assert.Nil(t, err)
+	assert.Equal(t, int64(1), num)
 }
 
 func TestTransactionIsolationLevel(t *testing.T) {

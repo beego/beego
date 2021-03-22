@@ -206,6 +206,13 @@ func (d *dbQueryLog) Rollback() error {
 	return err
 }
 
+func (d *dbQueryLog) RollbackUnlessCommit() error {
+	a := time.Now()
+	err := d.db.(txEnder).RollbackUnlessCommit()
+	debugLogQueies(d.alias, "tx.RollbackUnlessCommit", "ROLLBACK UNLESS COMMIT", a, err)
+	return err
+}
+
 func (d *dbQueryLog) SetDB(db dbQuerier) {
 	d.db = db
 }
