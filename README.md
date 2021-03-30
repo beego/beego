@@ -40,7 +40,7 @@ Beego is compos of four parts:
 
 #### Download and install
 
-    go get github.com/beego/beego/v2@v2.0.0
+    go get github.com/beego/beego/v2@latest
 
 #### Create file `hello.go`
 
