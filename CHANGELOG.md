@@ -27,6 +27,7 @@
 - fix: code quality issues [4513](https://github.com/beego/beego/pull/4513)
 - Optimize maligned structs to reduce memory foot-print [4525](https://github.com/beego/beego/pull/4525)
 - Feat: add token bucket ratelimit filter [4508](https://github.com/beego/beego/pull/4508)
+- Improve: Avoid ignoring mistakes that need attention [4548](https://github.com/beego/beego/pull/4548)
 
 
 
