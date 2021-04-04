@@ -41,6 +41,7 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/syndtr/goleveldb v0.0.0-20181127023241-353a9fca669c // indirect
 	github.com/wendal/errors v0.0.0-20130201093226-f66c77a7882b // indirect
+	go.etcd.io/bbolt v1.3.5 // indirect
 	go.etcd.io/etcd v3.3.25+incompatible // indirect
 	go.uber.org/zap v1.15.0 // indirect
 	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
@@ -55,5 +56,5 @@ require (
 replace golang.org/x/crypto v0.0.0-20181127143415-eb0de9b17e85 => github.com/golang/crypto v0.0.0-20181127143415-eb0de9b17e85
 
 replace gopkg.in/yaml.v2 v2.2.1 => github.com/go-yaml/yaml v0.0.0-20180328195020-5420a8b6744d
-
+replace github.com/coreos/bbolt => go.etcd.io/bbolt v1.3.5
 go 1.14
