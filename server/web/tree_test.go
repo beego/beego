@@ -17,6 +17,7 @@ package web
 import (
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/beego/beego/v2/server/web/context"
 )
@@ -49,7 +50,7 @@ func notMatchTestInfo(pattern, url string) testInfo {
 }
 
 func init() {
-	routers = make([]testInfo, 0)
+	routers = make([]testInfo, 0, 128)
 	// match example
 	routers = append(routers, matchTestInfo("/topic/?:auth:int", "/topic", nil))
 	routers = append(routers, matchTestInfo("/topic/?:auth:int", "/topic/123", map[string]string{":auth": "123"}))
@@ -90,7 +91,17 @@ func init() {
 	routers = append(routers, matchTestInfo("/v1/:v(.+)_cms/ttt_:id(.+)_:page(.+).html", "/v1/2_cms/ttt_123_1.html", map[string]string{":v": "2", ":id": "123", ":page": "1"}))
 	routers = append(routers, matchTestInfo("/api/projects/:pid/members/?:mid", "/api/projects/1/members", map[string]string{":pid": "1"}))
 	routers = append(routers, matchTestInfo("/api/projects/:pid/members/?:mid", "/api/projects/1/members/2", map[string]string{":pid": "1", ":mid": "2"}))
-
+	routers = append(routers, matchTestInfo("/?:year/?:month/?:day", "/2020/11/10", map[string]string{":year": "2020", ":month": "11", ":day": "10"}))
+	routers = append(routers, matchTestInfo("/?:year/?:month/?:day", "/2020/11", map[string]string{":year": "2020", ":month": "11"}))
+	routers = append(routers, matchTestInfo("/?:year", "/2020", map[string]string{":year": "2020"}))
+	routers = append(routers, matchTestInfo("/?:year([0-9]+)/?:month([0-9]+)/mid/?:day([0-9]+)/?:hour([0-9]+)", "/2020/11/mid/10/24", map[string]string{":year": "2020", ":month": "11", ":day": "10", ":hour": "24"}))
+	routers = append(routers, matchTestInfo("/?:year/?:month/mid/?:day/?:hour", "/2020/mid/10", map[string]string{":year": "2020", ":day": "10"}))
+	routers = append(routers, matchTestInfo("/?:year/?:month/mid/?:day/?:hour", "/2020/11/mid", map[string]string{":year": "2020", ":month": "11"}))
+	routers = append(routers, matchTestInfo("/?:year/?:month/mid/?:day/?:hour", "/mid/10/24", map[string]string{":day": "10", ":hour": "24"}))
+	routers = append(routers, matchTestInfo("/?:year([0-9]+)/:month([0-9]+)/mid/:day([0-9]+)/?:hour([0-9]+)", "/2020/11/mid/10/24", map[string]string{":year": "2020", ":month": "11", ":day": "10", ":hour": "24"}))
+	routers = append(routers, matchTestInfo("/?:year/:month/mid/:day/?:hour", "/11/mid/10/24", map[string]string{":month": "11", ":day": "10"}))
+	routers = append(routers, matchTestInfo("/?:year/:month/mid/:day/?:hour", "/2020/11/mid/10", map[string]string{":year": "2020", ":month": "11", ":day": "10"}))
+	routers = append(routers, matchTestInfo("/?:year/:month/mid/:day/?:hour", "/11/mid/10", map[string]string{":month": "11", ":day": "10"}))
 	// not match example
 
 	// https://github.com/beego/beego/v2/issues/3865
@@ -98,12 +109,23 @@ func init() {
 	routers = append(routers, notMatchTestInfo("/read_:id:int\\.htm", "/read_222_htm"))
 	routers = append(routers, notMatchTestInfo("/read_:id:int\\.htm", " /read_262shtm"))
 
+	// test .html, .json not suffix
+	const abcHtml = "/suffix/abc.html"
+	routers = append(routers, notMatchTestInfo(abcHtml, "/suffix.html/abc"))
+	routers = append(routers, matchTestInfo("/suffix/abc", abcHtml, nil))
+	routers = append(routers, matchTestInfo("/suffix/*", abcHtml, nil))
+	routers = append(routers, notMatchTestInfo("/suffix/*", "/suffix.html/a"))
+	const abcSuffix = "/abc/suffix/*"
+	routers = append(routers, notMatchTestInfo(abcSuffix, "/abc/suffix.html/a"))
+	routers = append(routers, matchTestInfo(abcSuffix, "/abc/suffix/a", nil))
+	routers = append(routers, notMatchTestInfo(abcSuffix, "/abc.j/suffix/a"))
+
 }
 
 func TestTreeRouters(t *testing.T) {
 	for _, r := range routers {
-		shouldMatch := r.shouldMatchOrNot
 
+		shouldMatch := r.shouldMatchOrNot
 		tr := NewTree()
 		tr.AddRouter(r.pattern, "astaxie")
 		ctx := context.NewContext()
@@ -112,7 +134,7 @@ func TestTreeRouters(t *testing.T) {
 			if obj != nil {
 				t.Fatal("pattern:", r.pattern, ", should not match", r.requestUrl)
 			} else {
-				return
+				continue
 			}
 		}
 		if obj == nil || obj.(string) != "astaxie" {
@@ -128,6 +150,7 @@ func TestTreeRouters(t *testing.T) {
 			}
 		}
 	}
+	time.Sleep(time.Second)
 }
 
 func TestStaticPath(t *testing.T) {

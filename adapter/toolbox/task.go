@@ -289,3 +289,7 @@ func (o *oldToNewAdapter) SetPrev(ctx context.Context, t time.Time) {
 func (o *oldToNewAdapter) GetPrev(ctx context.Context) time.Time {
 	return o.delegate.GetPrev()
 }
+
+func (o *oldToNewAdapter) GetTimeout(ctx context.Context) time.Duration {
+	return 0
+}

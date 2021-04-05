@@ -15,7 +15,7 @@
 // Package context provide the context utils
 // Usage:
 //
-//	import "github.com/beego/beego/v2/context"
+//	import "github.com/beego/beego/v2/server/web/context"
 //
 //	ctx := context.Context{Request:req,ResponseWriter:rw}
 //
@@ -34,6 +34,8 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/beego/beego/v2/server/web/session"
 
 	"github.com/beego/beego/v2/core/utils"
 )
@@ -192,6 +194,22 @@ func (ctx *Context) RenderMethodResult(result interface{}) {
 			}
 		}
 		renderer.Render(ctx)
+	}
+}
+
+// Session return session store of this context of request
+func (ctx *Context) Session() (store session.Store, err error) {
+	if ctx.Input != nil {
+		if ctx.Input.CruSession != nil {
+			store = ctx.Input.CruSession
+			return
+		} else {
+			err = errors.New(`no valid session store(please initialize session)`)
+			return
+		}
+	} else {
+		err = errors.New(`no valid input`)
+		return
 	}
 }
 

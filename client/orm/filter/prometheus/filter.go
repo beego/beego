@@ -32,7 +32,7 @@ import (
 // this Filter's behavior looks a little bit strange
 // for example:
 // if we want to records the metrics of QuerySetter
-// actually we only records metrics of invoking "QueryTable" and "QueryTableWithCtx"
+// actually we only records metrics of invoking "QueryTable"
 type FilterChainBuilder struct {
 	AppName    string
 	ServerName string
@@ -85,7 +85,7 @@ func (builder *FilterChainBuilder) report(ctx context.Context, inv *orm.Invocati
 }
 
 func (builder *FilterChainBuilder) reportTxn(ctx context.Context, inv *orm.Invocation) {
-	dur := time.Now().Sub(inv.TxStartTime) / time.Millisecond
+	dur := time.Since(inv.TxStartTime) / time.Millisecond
 	summaryVec.WithLabelValues(inv.Method, inv.TxName,
 		strconv.FormatBool(inv.InsideTx), inv.TxName).Observe(float64(dur))
 }

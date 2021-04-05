@@ -20,8 +20,8 @@
 //
 // Usage:
 // import(
-//   _ "github.com/beego/beego/v2/cache/memcache"
-//   "github.com/beego/beego/v2/cache"
+//   _ "github.com/beego/beego/v2/client/cache/memcache"
+//   "github.com/beego/beego/v2/client/cache"
 // )
 //
 //  bm, err := cache.NewCache("memcache", `{"conn":"127.0.0.1:11211"}`)
@@ -32,7 +32,6 @@ package memcache
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -40,6 +39,7 @@ import (
 	"github.com/bradfitz/gomemcache/memcache"
 
 	"github.com/beego/beego/v2/client/cache"
+	"github.com/beego/beego/v2/core/berror"
 )
 
 // Cache Memcache adapter.
@@ -55,36 +55,31 @@ func NewMemCache() cache.Cache {
 
 // Get get value from memcache.
 func (rc *Cache) Get(ctx context.Context, key string) (interface{}, error) {
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return nil, err
-		}
-	}
 	if item, err := rc.conn.Get(key); err == nil {
 		return item.Value, nil
 	} else {
-		return nil, err
+		return nil, berror.Wrapf(err, cache.MemCacheCurdFailed,
+			"could not read data from memcache, please check your key, network and connection. Root cause: %s",
+			err.Error())
 	}
 }
 
 // GetMulti gets a value from a key in memcache.
 func (rc *Cache) GetMulti(ctx context.Context, keys []string) ([]interface{}, error) {
 	rv := make([]interface{}, len(keys))
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return rv, err
-		}
-	}
 
 	mv, err := rc.conn.GetMulti(keys)
 	if err != nil {
-		return rv, err
+		return rv, berror.Wrapf(err, cache.MemCacheCurdFailed,
+			"could not read multiple key-values from memcache, " +
+			"please check your keys, network and connection. Root cause: %s",
+			err.Error())
 	}
 
 	keysErr := make([]string, 0)
 	for i, ki := range keys {
 		if _, ok := mv[ki]; !ok {
-			keysErr = append(keysErr, fmt.Sprintf("key [%s] error: %s", ki, "the key isn't exist"))
+			keysErr = append(keysErr, fmt.Sprintf("key [%s] error: %s", ki, "key not exist"))
 			continue
 		}
 		rv[i] = mv[ki].Value
@@ -93,78 +88,54 @@ func (rc *Cache) GetMulti(ctx context.Context, keys []string) ([]interface{}, er
 	if len(keysErr) == 0 {
 		return rv, nil
 	}
-	return rv, fmt.Errorf(strings.Join(keysErr, "; "))
+	return rv, berror.Error(cache.MultiGetFailed, strings.Join(keysErr, "; "))
 }
 
 // Put puts a value into memcache.
 func (rc *Cache) Put(ctx context.Context, key string, val interface{}, timeout time.Duration) error {
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return err
-		}
-	}
 	item := memcache.Item{Key: key, Expiration: int32(timeout / time.Second)}
 	if v, ok := val.([]byte); ok {
 		item.Value = v
 	} else if str, ok := val.(string); ok {
 		item.Value = []byte(str)
 	} else {
-		return errors.New("val only support string and []byte")
+		return berror.Errorf(cache.InvalidMemCacheValue,
+			"the value must be string or byte[]. key: %s, value:%v", key, val)
 	}
-	return rc.conn.Set(&item)
+	return berror.Wrapf(rc.conn.Set(&item), cache.MemCacheCurdFailed,
+		"could not put key-value to memcache, key: %s", key)
 }
 
 // Delete deletes a value in memcache.
 func (rc *Cache) Delete(ctx context.Context, key string) error {
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return err
-		}
-	}
-	return rc.conn.Delete(key)
+	return berror.Wrapf(rc.conn.Delete(key), cache.MemCacheCurdFailed,
+		"could not delete key-value from memcache, key: %s", key)
 }
 
 // Incr increases counter.
 func (rc *Cache) Incr(ctx context.Context, key string) error {
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return err
-		}
-	}
 	_, err := rc.conn.Increment(key, 1)
-	return err
+	return berror.Wrapf(err, cache.MemCacheCurdFailed,
+		"could not increase value for key: %s", key)
 }
 
 // Decr decreases counter.
 func (rc *Cache) Decr(ctx context.Context, key string) error {
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return err
-		}
-	}
 	_, err := rc.conn.Decrement(key, 1)
-	return err
+	return berror.Wrapf(err, cache.MemCacheCurdFailed,
+		"could not decrease value for key: %s", key)
 }
 
 // IsExist checks if a value exists in memcache.
 func (rc *Cache) IsExist(ctx context.Context, key string) (bool, error) {
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return false, err
-		}
-	}
-	_, err := rc.conn.Get(key)
+	_, err := rc.Get(ctx, key)
 	return err == nil, err
 }
 
 // ClearAll clears all cache in memcache.
 func (rc *Cache) ClearAll(context.Context) error {
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return err
-		}
-	}
-	return rc.conn.FlushAll()
+	return berror.Wrap(rc.conn.FlushAll(), cache.MemCacheCurdFailed,
+		"try to clear all key-value pairs failed")
 }
 
 // StartAndGC starts the memcache adapter.
@@ -172,21 +143,15 @@ func (rc *Cache) ClearAll(context.Context) error {
 // If an error occurs during connecting, an error is returned
 func (rc *Cache) StartAndGC(config string) error {
 	var cf map[string]string
-	json.Unmarshal([]byte(config), &cf)
+	if err := json.Unmarshal([]byte(config), &cf); err != nil {
+		return berror.Wrapf(err, cache.InvalidMemCacheCfg,
+			"could not unmarshal this config, it must be valid json stringP: %s", config)
+	}
+
 	if _, ok := cf["conn"]; !ok {
-		return errors.New("config has no conn key")
+		return berror.Errorf(cache.InvalidMemCacheCfg, `config must contains "conn" field: %s`, config)
 	}
 	rc.conninfo = strings.Split(cf["conn"], ";")
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-// connect to memcache and keep the connection.
-func (rc *Cache) connectInit() error {
 	rc.conn = memcache.New(rc.conninfo...)
 	return nil
 }

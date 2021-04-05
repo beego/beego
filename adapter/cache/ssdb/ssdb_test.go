@@ -7,7 +7,17 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/beego/beego/v2/adapter/cache"
+)
+
+const (
+	initError = "init err"
+	setError = "set Error"
+	checkError = "check err"
+	getError = "get err"
+	getMultiError = "GetMulti Error"
 )
 
 func TestSsdbcacheCache(t *testing.T) {
@@ -17,95 +27,59 @@ func TestSsdbcacheCache(t *testing.T) {
 	}
 
 	ssdb, err := cache.NewCache("ssdb", fmt.Sprintf(`{"conn": "%s"}`, ssdbAddr))
-	if err != nil {
-		t.Error("init err")
-	}
 
+	assert.Nil(t, err)
+
+	assert.False(t, ssdb.IsExist("ssdb"))
 	// test put and exist
-	if ssdb.IsExist("ssdb") {
-		t.Error("check err")
-	}
-	timeoutDuration := 10 * time.Second
+	timeoutDuration := 3 * time.Second
 	// timeoutDuration := -10*time.Second   if timeoutDuration is negtive,it means permanent
-	if err = ssdb.Put("ssdb", "ssdb", timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
-	if !ssdb.IsExist("ssdb") {
-		t.Error("check err")
-	}
+	assert.Nil(t, ssdb.Put("ssdb", "ssdb", timeoutDuration))
+	assert.True(t, ssdb.IsExist("ssdb"))
 
-	// Get test done
-	if err = ssdb.Put("ssdb", "ssdb", timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
+	assert.Nil(t, ssdb.Put("ssdb", "ssdb", timeoutDuration))
 
-	if v := ssdb.Get("ssdb"); v != "ssdb" {
-		t.Error("get Error")
-	}
+	assert.Equal(t, "ssdb", ssdb.Get("ssdb"))
 
 	// inc/dec test done
-	if err = ssdb.Put("ssdb", "2", timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
-	if err = ssdb.Incr("ssdb"); err != nil {
-		t.Error("incr Error", err)
-	}
+	assert.Nil(t, ssdb.Put("ssdb", "2", timeoutDuration))
 
-	if v, err := strconv.Atoi(ssdb.Get("ssdb").(string)); err != nil || v != 3 {
-		t.Error("get err")
-	}
+	assert.Nil(t, ssdb.Incr("ssdb"))
 
-	if err = ssdb.Decr("ssdb"); err != nil {
-		t.Error("decr error")
-	}
+	v, err := strconv.Atoi(ssdb.Get("ssdb").(string))
+	assert.Nil(t, err)
+	assert.Equal(t, 3, v)
+
+	assert.Nil(t, ssdb.Decr("ssdb"))
+
+	assert.Nil(t, ssdb.Put("ssdb", "3", timeoutDuration))
 
 	// test del
-	if err = ssdb.Put("ssdb", "3", timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
-	if v, err := strconv.Atoi(ssdb.Get("ssdb").(string)); err != nil || v != 3 {
-		t.Error("get err")
-	}
-	if err := ssdb.Delete("ssdb"); err == nil {
-		if ssdb.IsExist("ssdb") {
-			t.Error("delete err")
-		}
-	}
+	v, err = strconv.Atoi(ssdb.Get("ssdb").(string))
+	assert.Nil(t, err)
+	assert.Equal(t, 3, v)
+
+	assert.Nil(t, ssdb.Delete("ssdb"))
+	assert.False(t, ssdb.IsExist("ssdb"))
 
 	// test string
-	if err = ssdb.Put("ssdb", "ssdb", -10*time.Second); err != nil {
-		t.Error("set Error", err)
-	}
-	if !ssdb.IsExist("ssdb") {
-		t.Error("check err")
-	}
-	if v := ssdb.Get("ssdb").(string); v != "ssdb" {
-		t.Error("get err")
-	}
+	assert.Nil(t, ssdb.Put("ssdb", "ssdb", -10*time.Second))
+
+	assert.True(t, ssdb.IsExist("ssdb"))
+	assert.Equal(t, "ssdb", ssdb.Get("ssdb"))
 
 	// test GetMulti done
-	if err = ssdb.Put("ssdb1", "ssdb1", -10*time.Second); err != nil {
-		t.Error("set Error", err)
-	}
-	if !ssdb.IsExist("ssdb1") {
-		t.Error("check err")
-	}
-	vv := ssdb.GetMulti([]string{"ssdb", "ssdb1"})
-	if len(vv) != 2 {
-		t.Error("getmulti error")
-	}
-	if vv[0].(string) != "ssdb" {
-		t.Error("getmulti error")
-	}
-	if vv[1].(string) != "ssdb1" {
-		t.Error("getmulti error")
-	}
+	assert.Nil(t, ssdb.Put("ssdb1", "ssdb1", -10*time.Second))
+	assert.True(t, ssdb.IsExist("ssdb1") )
 
+	vv := ssdb.GetMulti([]string{"ssdb", "ssdb1"})
+	assert.Equal(t, 2, len(vv))
+
+	assert.Equal(t, "ssdb", vv[0])
+	assert.Equal(t, "ssdb1", vv[1])
+
+	assert.Nil(t, ssdb.ClearAll())
+	assert.False(t, ssdb.IsExist("ssdb"))
+	assert.False(t, ssdb.IsExist("ssdb1"))
 	// test clear all done
-	if err = ssdb.ClearAll(); err != nil {
-		t.Error("clear all err")
-	}
-	if ssdb.IsExist("ssdb") || ssdb.IsExist("ssdb1") {
-		t.Error("check err")
-	}
 }

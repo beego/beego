@@ -36,7 +36,6 @@ func TestDoNothingOrm(t *testing.T) {
 
 	assert.Nil(t, o.Driver())
 
-	assert.Nil(t, o.QueryM2MWithCtx(nil, nil, ""))
 	assert.Nil(t, o.QueryM2M(nil, ""))
 	assert.Nil(t, o.ReadWithCtx(nil, nil))
 	assert.Nil(t, o.Read(nil))
@@ -92,7 +91,6 @@ func TestDoNothingOrm(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, int64(0), i)
 
-	assert.Nil(t, o.QueryTableWithCtx(nil, nil))
 	assert.Nil(t, o.QueryTable(nil))
 
 	assert.Nil(t, o.Read(nil))

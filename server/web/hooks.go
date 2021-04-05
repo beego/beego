@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/coreos/etcd/pkg/fileutil"
-
 	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/server/web/context"
 	"github.com/beego/beego/v2/server/web/session"
@@ -63,6 +61,7 @@ func registerSession() error {
 			conf.EnableSidInHTTPHeader = BConfig.WebConfig.Session.SessionEnableSidInHTTPHeader
 			conf.SessionNameInHTTPHeader = BConfig.WebConfig.Session.SessionNameInHTTPHeader
 			conf.EnableSidInURLQuery = BConfig.WebConfig.Session.SessionEnableSidInURLQuery
+			conf.CookieSameSite = BConfig.WebConfig.Session.SessionCookieSameSite
 		} else {
 			if err = json.Unmarshal([]byte(sessionConfig), conf); err != nil {
 				return err
@@ -95,20 +94,5 @@ func registerGzip() error {
 			AppConfig.DefaultStrings("includedMethods", []string{"GET"}),
 		)
 	}
-	return nil
-}
-
-func registerCommentRouter() error {
-	if BConfig.RunMode == DEV {
-		ctrlDir := filepath.Join(WorkPath, BConfig.WebConfig.CommentRouterPath)
-		if !fileutil.Exist(ctrlDir) {
-			logs.Warn("controller package not found, won't generate router: ", ctrlDir)
-			return nil
-		}
-		if err := parserPkg(ctrlDir); err != nil {
-			return err
-		}
-	}
-
 	return nil
 }

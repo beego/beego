@@ -15,7 +15,7 @@
 // Package httplib is used as http.Client
 // Usage:
 //
-// import "github.com/beego/beego/v2/httplib"
+// import "github.com/beego/beego/v2/client/httplib"
 //
 //	b := httplib.Post("http://beego.me/")
 //	b.Param("username","astaxie")
@@ -40,58 +40,36 @@ import (
 	"encoding/xml"
 	"io"
 	"io/ioutil"
-	"log"
 	"mime/multipart"
 	"net"
 	"net/http"
-	"net/http/cookiejar"
-	"net/http/httputil"
 	"net/url"
 	"os"
 	"path"
 	"strings"
-	"sync"
 	"time"
 
 	"gopkg.in/yaml.v2"
+
+	"github.com/beego/beego/v2/core/berror"
+	"github.com/beego/beego/v2/core/logs"
 )
 
-var defaultSetting = BeegoHTTPSettings{
-	UserAgent:        "beegoServer",
-	ConnectTimeout:   60 * time.Second,
-	ReadWriteTimeout: 60 * time.Second,
-	Gzip:             true,
-	DumpBody:         true,
-}
-
-var defaultCookieJar http.CookieJar
-var settingMutex sync.Mutex
-
+const contentTypeKey = "Content-Type"
 // it will be the last filter and execute request.Do
 var doRequestFilter = func(ctx context.Context, req *BeegoHTTPRequest) (*http.Response, error) {
 	return req.doRequest(ctx)
 }
 
-// createDefaultCookie creates a global cookiejar to store cookies.
-func createDefaultCookie() {
-	settingMutex.Lock()
-	defer settingMutex.Unlock()
-	defaultCookieJar, _ = cookiejar.New(nil)
-}
-
-// SetDefaultSetting overwrites default settings
-func SetDefaultSetting(setting BeegoHTTPSettings) {
-	settingMutex.Lock()
-	defer settingMutex.Unlock()
-	defaultSetting = setting
-}
-
 // NewBeegoRequest returns *BeegoHttpRequest with specific method
+// TODO add error as return value
+// I think if we don't return error
+// users are hard to check whether we create Beego request successfully
 func NewBeegoRequest(rawurl, method string) *BeegoHTTPRequest {
 	var resp http.Response
 	u, err := url.Parse(rawurl)
 	if err != nil {
-		log.Println("Httplib:", err)
+		logs.Error("%+v", berror.Wrapf(err, InvalidUrl, "invalid raw url: %s", rawurl))
 	}
 	req := http.Request{
 		URL:        u,
@@ -136,24 +114,6 @@ func Head(url string) *BeegoHTTPRequest {
 	return NewBeegoRequest(url, "HEAD")
 }
 
-// BeegoHTTPSettings is the http.Client setting
-type BeegoHTTPSettings struct {
-	ShowDebug        bool
-	UserAgent        string
-	ConnectTimeout   time.Duration
-	ReadWriteTimeout time.Duration
-	TLSClientConfig  *tls.Config
-	Proxy            func(*http.Request) (*url.URL, error)
-	Transport        http.RoundTripper
-	CheckRedirect    func(req *http.Request, via []*http.Request) error
-	EnableCookie     bool
-	Gzip             bool
-	DumpBody         bool
-	Retries          int // if set to -1 means will retry forever
-	RetryDelay       time.Duration
-	FilterChains     []FilterChain
-}
-
 // BeegoHTTPRequest provides more useful methods than http.Request for requesting a url.
 type BeegoHTTPRequest struct {
 	url     string
@@ -195,12 +155,6 @@ func (b *BeegoHTTPRequest) SetUserAgent(useragent string) *BeegoHTTPRequest {
 	return b
 }
 
-// Debug sets show debug or not when executing request.
-func (b *BeegoHTTPRequest) Debug(isdebug bool) *BeegoHTTPRequest {
-	b.setting.ShowDebug = isdebug
-	return b
-}
-
 // Retries sets Retries times.
 // default is 0 (never retry)
 // -1 retry indefinitely (forever)
@@ -214,17 +168,6 @@ func (b *BeegoHTTPRequest) Retries(times int) *BeegoHTTPRequest {
 func (b *BeegoHTTPRequest) RetryDelay(delay time.Duration) *BeegoHTTPRequest {
 	b.setting.RetryDelay = delay
 	return b
-}
-
-// DumpBody sets the DumbBody field
-func (b *BeegoHTTPRequest) DumpBody(isdump bool) *BeegoHTTPRequest {
-	b.setting.DumpBody = isdump
-	return b
-}
-
-// DumpRequest returns the DumpRequest
-func (b *BeegoHTTPRequest) DumpRequest() []byte {
-	return b.dump
 }
 
 // SetTimeout sets connect time out and read-write time out for BeegoRequest.
@@ -253,7 +196,7 @@ func (b *BeegoHTTPRequest) SetHost(host string) *BeegoHTTPRequest {
 }
 
 // SetProtocolVersion sets the protocol version for incoming requests.
-// Client requests always use HTTP/1.1.
+// Client requests always use HTTP/1.1
 func (b *BeegoHTTPRequest) SetProtocolVersion(vers string) *BeegoHTTPRequest {
 	if len(vers) == 0 {
 		vers = "HTTP/1.1"
@@ -264,8 +207,9 @@ func (b *BeegoHTTPRequest) SetProtocolVersion(vers string) *BeegoHTTPRequest {
 		b.req.Proto = vers
 		b.req.ProtoMajor = major
 		b.req.ProtoMinor = minor
+		return b
 	}
-
+	logs.Error("%+v", berror.Errorf(InvalidUrlProtocolVersion, "invalid protocol: %s", vers))
 	return b
 }
 
@@ -333,16 +277,25 @@ func (b *BeegoHTTPRequest) PostFile(formname, filename string) *BeegoHTTPRequest
 
 // Body adds request raw body.
 // Supports string and []byte.
+// TODO return error if data is invalid
 func (b *BeegoHTTPRequest) Body(data interface{}) *BeegoHTTPRequest {
 	switch t := data.(type) {
 	case string:
 		bf := bytes.NewBufferString(t)
 		b.req.Body = ioutil.NopCloser(bf)
+		b.req.GetBody = func() (io.ReadCloser, error) {
+			return ioutil.NopCloser(bf), nil
+		}
 		b.req.ContentLength = int64(len(t))
 	case []byte:
 		bf := bytes.NewBuffer(t)
 		b.req.Body = ioutil.NopCloser(bf)
+		b.req.GetBody = func() (io.ReadCloser, error) {
+			return ioutil.NopCloser(bf), nil
+		}
 		b.req.ContentLength = int64(len(t))
+	default:
+		logs.Error("%+v", berror.Errorf(UnsupportedBodyType, "unsupported body data type: %s", t))
 	}
 	return b
 }
@@ -352,11 +305,14 @@ func (b *BeegoHTTPRequest) XMLBody(obj interface{}) (*BeegoHTTPRequest, error) {
 	if b.req.Body == nil && obj != nil {
 		byts, err := xml.Marshal(obj)
 		if err != nil {
-			return b, err
+			return b, berror.Wrap(err, InvalidXMLBody, "obj could not be converted to XML data")
 		}
 		b.req.Body = ioutil.NopCloser(bytes.NewReader(byts))
+		b.req.GetBody = func() (io.ReadCloser, error) {
+			return ioutil.NopCloser(bytes.NewReader(byts)), nil
+		}
 		b.req.ContentLength = int64(len(byts))
-		b.req.Header.Set("Content-Type", "application/xml")
+		b.req.Header.Set(contentTypeKey, "application/xml")
 	}
 	return b, nil
 }
@@ -366,11 +322,11 @@ func (b *BeegoHTTPRequest) YAMLBody(obj interface{}) (*BeegoHTTPRequest, error) 
 	if b.req.Body == nil && obj != nil {
 		byts, err := yaml.Marshal(obj)
 		if err != nil {
-			return b, err
+			return b, berror.Wrap(err, InvalidYAMLBody, "obj could not be converted to YAML data")
 		}
 		b.req.Body = ioutil.NopCloser(bytes.NewReader(byts))
 		b.req.ContentLength = int64(len(byts))
-		b.req.Header.Set("Content-Type", "application/x+yaml")
+		b.req.Header.Set(contentTypeKey, "application/x+yaml")
 	}
 	return b, nil
 }
@@ -380,11 +336,11 @@ func (b *BeegoHTTPRequest) JSONBody(obj interface{}) (*BeegoHTTPRequest, error) 
 	if b.req.Body == nil && obj != nil {
 		byts, err := json.Marshal(obj)
 		if err != nil {
-			return b, err
+			return b, berror.Wrap(err, InvalidJSONBody, "obj could not be converted to JSON body")
 		}
 		b.req.Body = ioutil.NopCloser(bytes.NewReader(byts))
 		b.req.ContentLength = int64(len(byts))
-		b.req.Header.Set("Content-Type", "application/json")
+		b.req.Header.Set(contentTypeKey, "application/json")
 	}
 	return b, nil
 }
@@ -404,44 +360,58 @@ func (b *BeegoHTTPRequest) buildURL(paramBody string) {
 	if (b.req.Method == "POST" || b.req.Method == "PUT" || b.req.Method == "PATCH" || b.req.Method == "DELETE") && b.req.Body == nil {
 		// with files
 		if len(b.files) > 0 {
-			pr, pw := io.Pipe()
-			bodyWriter := multipart.NewWriter(pw)
-			go func() {
-				for formname, filename := range b.files {
-					fileWriter, err := bodyWriter.CreateFormFile(formname, filename)
-					if err != nil {
-						log.Println("Httplib:", err)
-					}
-					fh, err := os.Open(filename)
-					if err != nil {
-						log.Println("Httplib:", err)
-					}
-					// iocopy
-					_, err = io.Copy(fileWriter, fh)
-					fh.Close()
-					if err != nil {
-						log.Println("Httplib:", err)
-					}
-				}
-				for k, v := range b.params {
-					for _, vv := range v {
-						bodyWriter.WriteField(k, vv)
-					}
-				}
-				bodyWriter.Close()
-				pw.Close()
-			}()
-			b.Header("Content-Type", bodyWriter.FormDataContentType())
-			b.req.Body = ioutil.NopCloser(pr)
-			b.Header("Transfer-Encoding", "chunked")
+			b.handleFiles()
 			return
 		}
 
 		// with params
 		if len(paramBody) > 0 {
-			b.Header("Content-Type", "application/x-www-form-urlencoded")
+			b.Header(contentTypeKey, "application/x-www-form-urlencoded")
 			b.Body(paramBody)
 		}
+	}
+}
+
+func (b *BeegoHTTPRequest) handleFiles() {
+	pr, pw := io.Pipe()
+	bodyWriter := multipart.NewWriter(pw)
+	go func() {
+		for formname, filename := range b.files {
+			b.handleFileToBody(bodyWriter, formname, filename)
+		}
+		for k, v := range b.params {
+			for _, vv := range v {
+				_ = bodyWriter.WriteField(k, vv)
+			}
+		}
+		_ = bodyWriter.Close()
+		_ = pw.Close()
+	}()
+	b.Header(contentTypeKey, bodyWriter.FormDataContentType())
+	b.req.Body = ioutil.NopCloser(pr)
+	b.Header("Transfer-Encoding", "chunked")
+}
+
+func (b *BeegoHTTPRequest) handleFileToBody(bodyWriter *multipart.Writer, formname string, filename string) {
+	fileWriter, err := bodyWriter.CreateFormFile(formname, filename)
+	const errFmt = "Httplib: %+v"
+	if err != nil {
+		logs.Error(errFmt, berror.Wrapf(err, CreateFormFileFailed,
+			"could not create form file, formname: %s, filename: %s", formname, filename))
+	}
+	fh, err := os.Open(filename)
+
+	if err != nil {
+		logs.Error(errFmt, berror.Wrapf(err, ReadFileFailed, "could not open this file %s", filename))
+	}
+	// iocopy
+	_, err = io.Copy(fileWriter, fh)
+	if err != nil {
+		logs.Error(errFmt, berror.Wrapf(err, CopyFileFailed, "could not copy this file %s", filename))
+	}
+	err = fh.Close()
+	if err != nil {
+		logs.Error(errFmt, berror.Wrapf(err, CloseFileFailed, "could not close this file %s", filename))
 	}
 }
 
@@ -463,7 +433,6 @@ func (b *BeegoHTTPRequest) DoRequest() (resp *http.Response, err error) {
 }
 
 func (b *BeegoHTTPRequest) DoRequestWithCtx(ctx context.Context) (resp *http.Response, err error) {
-
 	root := doRequestFilter
 	if len(b.setting.FilterChains) > 0 {
 		for i := len(b.setting.FilterChains) - 1; i >= 0; i-- {
@@ -473,62 +442,20 @@ func (b *BeegoHTTPRequest) DoRequestWithCtx(ctx context.Context) (resp *http.Res
 	return root(ctx, b)
 }
 
-func (b *BeegoHTTPRequest) doRequest(ctx context.Context) (resp *http.Response, err error) {
-	var paramBody string
-	if len(b.params) > 0 {
-		var buf bytes.Buffer
-		for k, v := range b.params {
-			for _, vv := range v {
-				buf.WriteString(url.QueryEscape(k))
-				buf.WriteByte('=')
-				buf.WriteString(url.QueryEscape(vv))
-				buf.WriteByte('&')
-			}
-		}
-		paramBody = buf.String()
-		paramBody = paramBody[0 : len(paramBody)-1]
-	}
+func (b *BeegoHTTPRequest) doRequest(ctx context.Context) (*http.Response, error) {
+	paramBody := b.buildParamBody()
 
 	b.buildURL(paramBody)
 	urlParsed, err := url.Parse(b.url)
 	if err != nil {
-		return nil, err
+		return nil, berror.Wrapf(err, InvalidUrl, "parse url failed, the url is %s", b.url)
 	}
 
 	b.req.URL = urlParsed
 
-	trans := b.setting.Transport
+	trans := b.buildTrans()
 
-	if trans == nil {
-		// create default transport
-		trans = &http.Transport{
-			TLSClientConfig:     b.setting.TLSClientConfig,
-			Proxy:               b.setting.Proxy,
-			Dial:                TimeoutDialer(b.setting.ConnectTimeout, b.setting.ReadWriteTimeout),
-			MaxIdleConnsPerHost: 100,
-		}
-	} else {
-		// if b.transport is *http.Transport then set the settings.
-		if t, ok := trans.(*http.Transport); ok {
-			if t.TLSClientConfig == nil {
-				t.TLSClientConfig = b.setting.TLSClientConfig
-			}
-			if t.Proxy == nil {
-				t.Proxy = b.setting.Proxy
-			}
-			if t.Dial == nil {
-				t.Dial = TimeoutDialer(b.setting.ConnectTimeout, b.setting.ReadWriteTimeout)
-			}
-		}
-	}
-
-	var jar http.CookieJar
-	if b.setting.EnableCookie {
-		if defaultCookieJar == nil {
-			createDefaultCookie()
-		}
-		jar = defaultCookieJar
-	}
+	jar := b.buildCookieJar()
 
 	client := &http.Client{
 		Transport: trans,
@@ -543,13 +470,10 @@ func (b *BeegoHTTPRequest) doRequest(ctx context.Context) (resp *http.Response, 
 		client.CheckRedirect = b.setting.CheckRedirect
 	}
 
-	if b.setting.ShowDebug {
-		dump, err := httputil.DumpRequest(b.req, b.setting.DumpBody)
-		if err != nil {
-			log.Println(err.Error())
-		}
-		b.dump = dump
-	}
+	return b.sendRequest(client)
+}
+
+func (b *BeegoHTTPRequest) sendRequest(client *http.Client) (resp *http.Response, err error) {
 	// retries default value is 0, it will run once.
 	// retries equal to -1, it will run forever until success
 	// retries is setted, it will retries fixed times.
@@ -557,11 +481,68 @@ func (b *BeegoHTTPRequest) doRequest(ctx context.Context) (resp *http.Response, 
 	for i := 0; b.setting.Retries == -1 || i <= b.setting.Retries; i++ {
 		resp, err = client.Do(b.req)
 		if err == nil {
-			break
+			return
 		}
 		time.Sleep(b.setting.RetryDelay)
 	}
-	return resp, err
+	return nil, berror.Wrap(err, SendRequestFailed, "sending request fail")
+}
+
+func (b *BeegoHTTPRequest) buildCookieJar() http.CookieJar {
+	var jar http.CookieJar
+	if b.setting.EnableCookie {
+		if defaultCookieJar == nil {
+			createDefaultCookie()
+		}
+		jar = defaultCookieJar
+	}
+	return jar
+}
+
+func (b *BeegoHTTPRequest) buildTrans() http.RoundTripper {
+	trans := b.setting.Transport
+
+	if trans == nil {
+		// create default transport
+		trans = &http.Transport{
+			TLSClientConfig:     b.setting.TLSClientConfig,
+			Proxy:               b.setting.Proxy,
+			DialContext:         TimeoutDialerCtx(b.setting.ConnectTimeout, b.setting.ReadWriteTimeout),
+			MaxIdleConnsPerHost: 100,
+		}
+	} else {
+		// if b.transport is *http.Transport then set the settings.
+		if t, ok := trans.(*http.Transport); ok {
+			if t.TLSClientConfig == nil {
+				t.TLSClientConfig = b.setting.TLSClientConfig
+			}
+			if t.Proxy == nil {
+				t.Proxy = b.setting.Proxy
+			}
+			if t.DialContext == nil {
+				t.DialContext = TimeoutDialerCtx(b.setting.ConnectTimeout, b.setting.ReadWriteTimeout)
+			}
+		}
+	}
+	return trans
+}
+
+func (b *BeegoHTTPRequest) buildParamBody() string {
+	var paramBody string
+	if len(b.params) > 0 {
+		var buf bytes.Buffer
+		for k, v := range b.params {
+			for _, vv := range v {
+				buf.WriteString(url.QueryEscape(k))
+				buf.WriteByte('=')
+				buf.WriteString(url.QueryEscape(vv))
+				buf.WriteByte('&')
+			}
+		}
+		paramBody = buf.String()
+		paramBody = paramBody[0 : len(paramBody)-1]
+	}
+	return paramBody
 }
 
 // String returns the body string in response.
@@ -592,10 +573,10 @@ func (b *BeegoHTTPRequest) Bytes() ([]byte, error) {
 	if b.setting.Gzip && resp.Header.Get("Content-Encoding") == "gzip" {
 		reader, err := gzip.NewReader(resp.Body)
 		if err != nil {
-			return nil, err
+			return nil, berror.Wrap(err, ReadGzipBodyFailed, "building gzip reader failed")
 		}
 		b.body, err = ioutil.ReadAll(reader)
-		return b.body, err
+		return b.body, berror.Wrap(err, ReadGzipBodyFailed, "reading gzip data failed")
 	}
 	b.body, err = ioutil.ReadAll(resp.Body)
 	return b.body, err
@@ -638,7 +619,7 @@ func pathExistAndMkdir(filename string) (err error) {
 			return nil
 		}
 	}
-	return err
+	return berror.Wrapf(err, CreateFileIfNotExistFailed, "try to create(if not exist) failed: %s", filename)
 }
 
 // ToJSON returns the map that marshals from the body bytes as json in response.
@@ -648,7 +629,8 @@ func (b *BeegoHTTPRequest) ToJSON(v interface{}) error {
 	if err != nil {
 		return err
 	}
-	return json.Unmarshal(data, v)
+	return berror.Wrap(json.Unmarshal(data, v),
+		UnmarshalJSONResponseToObjectFailed, "unmarshal json body to object failed.")
 }
 
 // ToXML returns the map that marshals from the body bytes as xml in response .
@@ -658,7 +640,8 @@ func (b *BeegoHTTPRequest) ToXML(v interface{}) error {
 	if err != nil {
 		return err
 	}
-	return xml.Unmarshal(data, v)
+	return berror.Wrap(xml.Unmarshal(data, v),
+		UnmarshalXMLResponseToObjectFailed, "unmarshal xml body to object failed.")
 }
 
 // ToYAML returns the map that marshals from the body bytes as yaml in response .
@@ -668,7 +651,8 @@ func (b *BeegoHTTPRequest) ToYAML(v interface{}) error {
 	if err != nil {
 		return err
 	}
-	return yaml.Unmarshal(data, v)
+	return berror.Wrap(yaml.Unmarshal(data, v),
+		UnmarshalYAMLResponseToObjectFailed, "unmarshal yaml body to object failed.")
 }
 
 // Response executes request client gets response manually.
@@ -677,8 +661,18 @@ func (b *BeegoHTTPRequest) Response() (*http.Response, error) {
 }
 
 // TimeoutDialer returns functions of connection dialer with timeout settings for http.Transport Dial field.
+// Deprecated
+// we will move this at the end of 2021
+// please use TimeoutDialerCtx
 func TimeoutDialer(cTimeout time.Duration, rwTimeout time.Duration) func(net, addr string) (c net.Conn, err error) {
 	return func(netw, addr string) (net.Conn, error) {
+		return TimeoutDialerCtx(cTimeout, rwTimeout)(context.Background(), netw, addr)
+	}
+}
+
+func TimeoutDialerCtx(cTimeout time.Duration,
+	rwTimeout time.Duration) func(ctx context.Context, net, addr string) (c net.Conn, err error) {
+	return func(ctx context.Context, netw, addr string) (net.Conn, error) {
 		conn, err := net.DialTimeout(netw, addr, cTimeout)
 		if err != nil {
 			return nil, err

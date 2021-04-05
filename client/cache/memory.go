@@ -17,11 +17,12 @@ package cache
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/beego/beego/v2/core/berror"
 )
 
 var (
@@ -41,7 +42,7 @@ func (mi *MemoryItem) isExpire() bool {
 	if mi.lifespan == 0 {
 		return false
 	}
-	return time.Now().Sub(mi.createdTime) > mi.lifespan
+	return time.Since(mi.createdTime) > mi.lifespan
 }
 
 // MemoryCache is a memory cache adapter.
@@ -64,13 +65,14 @@ func NewMemoryCache() Cache {
 func (bc *MemoryCache) Get(ctx context.Context, key string) (interface{}, error) {
 	bc.RLock()
 	defer bc.RUnlock()
-	if itm, ok := bc.items[key]; ok {
+	if itm, ok :=
+		bc.items[key]; ok {
 		if itm.isExpire() {
-			return nil, errors.New("the key is expired")
+			return nil, ErrKeyExpired
 		}
 		return itm.val, nil
 	}
-	return nil, errors.New("the key isn't exist")
+	return nil, ErrKeyNotExist
 }
 
 // GetMulti gets caches from memory.
@@ -91,7 +93,7 @@ func (bc *MemoryCache) GetMulti(ctx context.Context, keys []string) ([]interface
 	if len(keysErr) == 0 {
 		return rc, nil
 	}
-	return rc, errors.New(strings.Join(keysErr, "; "))
+	return rc, berror.Error(MultiGetFailed, strings.Join(keysErr, "; "))
 }
 
 // Put puts cache into memory.
@@ -108,16 +110,11 @@ func (bc *MemoryCache) Put(ctx context.Context, key string, val interface{}, tim
 }
 
 // Delete cache in memory.
+// If the key is not found, it will not return error
 func (bc *MemoryCache) Delete(ctx context.Context, key string) error {
 	bc.Lock()
 	defer bc.Unlock()
-	if _, ok := bc.items[key]; !ok {
-		return errors.New("key not exist")
-	}
 	delete(bc.items, key)
-	if _, ok := bc.items[key]; ok {
-		return errors.New("delete key error")
-	}
 	return nil
 }
 
@@ -128,24 +125,14 @@ func (bc *MemoryCache) Incr(ctx context.Context, key string) error {
 	defer bc.Unlock()
 	itm, ok := bc.items[key]
 	if !ok {
-		return errors.New("key not exist")
+		return ErrKeyNotExist
 	}
-	switch val := itm.val.(type) {
-	case int:
-		itm.val = val + 1
-	case int32:
-		itm.val = val + 1
-	case int64:
-		itm.val = val + 1
-	case uint:
-		itm.val = val + 1
-	case uint32:
-		itm.val = val + 1
-	case uint64:
-		itm.val = val + 1
-	default:
-		return errors.New("item val is not (u)int (u)int32 (u)int64")
+
+	val, err := incr(itm.val)
+	if err != nil {
+		return err
 	}
+	itm.val = val
 	return nil
 }
 
@@ -155,36 +142,14 @@ func (bc *MemoryCache) Decr(ctx context.Context, key string) error {
 	defer bc.Unlock()
 	itm, ok := bc.items[key]
 	if !ok {
-		return errors.New("key not exist")
+		return ErrKeyNotExist
 	}
-	switch val := itm.val.(type) {
-	case int:
-		itm.val = val - 1
-	case int64:
-		itm.val = val - 1
-	case int32:
-		itm.val = val - 1
-	case uint:
-		if val > 0 {
-			itm.val = val - 1
-		} else {
-			return errors.New("item val is less than 0")
-		}
-	case uint32:
-		if val > 0 {
-			itm.val = val - 1
-		} else {
-			return errors.New("item val is less than 0")
-		}
-	case uint64:
-		if val > 0 {
-			itm.val = val - 1
-		} else {
-			return errors.New("item val is less than 0")
-		}
-	default:
-		return errors.New("item val is not int int64 int32")
+
+	val, err := decr(itm.val)
+	if err != nil {
+		return err
 	}
+	itm.val = val
 	return nil
 }
 
@@ -209,7 +174,9 @@ func (bc *MemoryCache) ClearAll(context.Context) error {
 // StartAndGC starts memory cache. Checks expiration in every clock time.
 func (bc *MemoryCache) StartAndGC(config string) error {
 	var cf map[string]int
-	json.Unmarshal([]byte(config), &cf)
+	if err := json.Unmarshal([]byte(config), &cf); err != nil {
+		return berror.Wrapf(err, InvalidMemoryCacheCfg, "invalid config, please check your input: %s", config)
+	}
 	if _, ok := cf["interval"]; !ok {
 		cf = make(map[string]int)
 		cf["interval"] = DefaultEvery

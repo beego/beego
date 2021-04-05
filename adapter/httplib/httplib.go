@@ -15,7 +15,7 @@
 // Package httplib is used as http.Client
 // Usage:
 //
-// import "github.com/beego/beego/v2/httplib"
+// import "github.com/beego/beego/v2/client/httplib"
 //
 //	b := httplib.Post("http://beego.me/")
 //	b.Param("username","astaxie")
@@ -115,12 +115,6 @@ func (b *BeegoHTTPRequest) SetUserAgent(useragent string) *BeegoHTTPRequest {
 	return b
 }
 
-// Debug sets show debug or not when executing request.
-func (b *BeegoHTTPRequest) Debug(isdebug bool) *BeegoHTTPRequest {
-	b.delegate.Debug(isdebug)
-	return b
-}
-
 // Retries sets Retries times.
 // default is 0 means no retried.
 // -1 means retried forever.
@@ -133,17 +127,6 @@ func (b *BeegoHTTPRequest) Retries(times int) *BeegoHTTPRequest {
 func (b *BeegoHTTPRequest) RetryDelay(delay time.Duration) *BeegoHTTPRequest {
 	b.delegate.RetryDelay(delay)
 	return b
-}
-
-// DumpBody setting whether need to Dump the Body.
-func (b *BeegoHTTPRequest) DumpBody(isdump bool) *BeegoHTTPRequest {
-	b.delegate.DumpBody(isdump)
-	return b
-}
-
-// DumpRequest return the DumpRequest
-func (b *BeegoHTTPRequest) DumpRequest() []byte {
-	return b.delegate.DumpRequest()
 }
 
 // SetTimeout sets connect time out and read-write time out for BeegoRequest.

@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestJsonStartsWithArray(t *testing.T) {
@@ -32,7 +34,8 @@ func TestJsonStartsWithArray(t *testing.T) {
 		"serviceAPI": "http://www.test.com/employee"
 	}
 ]`
-	f, err := os.Create("testjsonWithArray.conf")
+	cfgFileName := "testjsonWithArray.conf"
+	f, err := os.Create(cfgFileName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,8 +45,8 @@ func TestJsonStartsWithArray(t *testing.T) {
 		t.Fatal(err)
 	}
 	f.Close()
-	defer os.Remove("testjsonWithArray.conf")
-	jsonconf, err := NewConfig("json", "testjsonWithArray.conf")
+	defer os.Remove(cfgFileName)
+	jsonconf, err := NewConfig("json", cfgFileName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -132,7 +135,8 @@ func TestJson(t *testing.T) {
 		}
 	)
 
-	f, err := os.Create("testjson.conf")
+	cfgFileName := "testjson.conf"
+	f, err := os.Create(cfgFileName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -142,8 +146,8 @@ func TestJson(t *testing.T) {
 		t.Fatal(err)
 	}
 	f.Close()
-	defer os.Remove("testjson.conf")
-	jsonconf, err := NewConfig("json", "testjson.conf")
+	defer os.Remove(cfgFileName)
+	jsonconf, err := NewConfig("json", cfgFileName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -167,56 +171,39 @@ func TestJson(t *testing.T) {
 		default:
 			value, err = jsonconf.DIY(k)
 		}
-		if err != nil {
-			t.Fatalf("get key %q value fatal,%v err %s", k, v, err)
-		} else if fmt.Sprintf("%v", v) != fmt.Sprintf("%v", value) {
-			t.Fatalf("get key %q value, want %v got %v .", k, v, value)
-		}
 
-	}
-	if err = jsonconf.Set("name", "astaxie"); err != nil {
-		t.Fatal(err)
-	}
-	if jsonconf.String("name") != "astaxie" {
-		t.Fatal("get name error")
+		assert.Nil(t, err)
+		assert.Equal(t, fmt.Sprintf("%v", v), fmt.Sprintf("%v", value))
 	}
 
-	if db, err := jsonconf.DIY("database"); err != nil {
-		t.Fatal(err)
-	} else if m, ok := db.(map[string]interface{}); !ok {
-		t.Log(db)
-		t.Fatal("db not map[string]interface{}")
-	} else {
-		if m["host"].(string) != "host" {
-			t.Fatal("get host err")
-		}
-	}
+	assert.Nil(t, jsonconf.Set("name", "astaxie"))
 
-	if _, err := jsonconf.Int("unknown"); err == nil {
-		t.Error("unknown keys should return an error when expecting an Int")
-	}
+	assert.Equal(t, "astaxie", jsonconf.String("name"))
 
-	if _, err := jsonconf.Int64("unknown"); err == nil {
-		t.Error("unknown keys should return an error when expecting an Int64")
-	}
+	db, err := jsonconf.DIY("database")
+	assert.Nil(t, err)
 
-	if _, err := jsonconf.Float("unknown"); err == nil {
-		t.Error("unknown keys should return an error when expecting a Float")
-	}
+	m, ok := db.(map[string]interface{})
+	assert.True(t, ok)
+	assert.Equal(t,"host" , m["host"])
 
-	if _, err := jsonconf.DIY("unknown"); err == nil {
-		t.Error("unknown keys should return an error when expecting an interface{}")
-	}
+	_, err = jsonconf.Int("unknown")
+	assert.NotNil(t, err)
 
-	if val := jsonconf.String("unknown"); val != "" {
-		t.Error("unknown keys should return an empty string when expecting a String")
-	}
+	_, err = jsonconf.Int64("unknown")
+	assert.NotNil(t, err)
 
-	if _, err := jsonconf.Bool("unknown"); err == nil {
-		t.Error("unknown keys should return an error when expecting a Bool")
-	}
+	_, err = jsonconf.Float("unknown")
+	assert.NotNil(t, err)
 
-	if !jsonconf.DefaultBool("unknown", true) {
-		t.Error("unknown keys with default value wrong")
-	}
+	_, err = jsonconf.DIY("unknown")
+	assert.NotNil(t, err)
+
+	val := jsonconf.String("unknown")
+	assert.Equal(t, "", val)
+
+	_, err = jsonconf.Bool("unknown")
+	assert.NotNil(t, err)
+
+	assert.True(t, jsonconf.DefaultBool("unknown", true))
 }

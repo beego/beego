@@ -21,8 +21,17 @@ import (
 	"time"
 
 	"github.com/gomodule/redigo/redis"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/beego/beego/v2/adapter/cache"
+)
+
+const (
+	initError = "init err"
+	setError = "set Error"
+	checkError = "check err"
+	getError = "get err"
+	getMultiError = "GetMulti Error"
 )
 
 func TestRedisCache(t *testing.T) {
@@ -32,98 +41,79 @@ func TestRedisCache(t *testing.T) {
 	}
 
 	bm, err := cache.NewCache("redis", fmt.Sprintf(`{"conn": "%s"}`, redisAddr))
-	if err != nil {
-		t.Error("init err")
-	}
-	timeoutDuration := 10 * time.Second
-	if err = bm.Put("astaxie", 1, timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
-	if !bm.IsExist("astaxie") {
-		t.Error("check err")
-	}
+	assert.Nil(t, err)
+	timeoutDuration := 5 * time.Second
 
-	time.Sleep(11 * time.Second)
+	assert.Nil(t, bm.Put("astaxie", 1, timeoutDuration))
 
-	if bm.IsExist("astaxie") {
-		t.Error("check err")
-	}
-	if err = bm.Put("astaxie", 1, timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
+	assert.True(t, bm.IsExist("astaxie"))
 
-	if v, _ := redis.Int(bm.Get("astaxie"), err); v != 1 {
-		t.Error("get err")
-	}
+	time.Sleep(7 * time.Second)
 
-	if err = bm.Incr("astaxie"); err != nil {
-		t.Error("Incr Error", err)
-	}
+	assert.False(t, bm.IsExist("astaxie"))
 
-	if v, _ := redis.Int(bm.Get("astaxie"), err); v != 2 {
-		t.Error("get err")
-	}
+	assert.Nil(t,  bm.Put("astaxie", 1, timeoutDuration))
 
-	if err = bm.Decr("astaxie"); err != nil {
-		t.Error("Decr Error", err)
-	}
+	v, err := redis.Int(bm.Get("astaxie"), err)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, v)
 
-	if v, _ := redis.Int(bm.Get("astaxie"), err); v != 1 {
-		t.Error("get err")
-	}
-	bm.Delete("astaxie")
-	if bm.IsExist("astaxie") {
-		t.Error("delete err")
-	}
+	assert.Nil(t, bm.Incr("astaxie"))
 
-	// test string
-	if err = bm.Put("astaxie", "author", timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
-	if !bm.IsExist("astaxie") {
-		t.Error("check err")
-	}
+	v, err = redis.Int(bm.Get("astaxie"), err)
+	assert.Nil(t, err)
+	assert.Equal(t, 2, v)
 
-	if v, _ := redis.String(bm.Get("astaxie"), err); v != "author" {
-		t.Error("get err")
-	}
+	assert.Nil(t, bm.Decr("astaxie"))
 
-	// test GetMulti
-	if err = bm.Put("astaxie1", "author1", timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
-	if !bm.IsExist("astaxie1") {
-		t.Error("check err")
-	}
+	v, err = redis.Int(bm.Get("astaxie"), err)
+	assert.Nil(t, err)
+	assert.Equal(t, 1, v)
+
+	assert.Nil(t, bm.Delete("astaxie"))
+
+	assert.False(t, bm.IsExist("astaxie"))
+
+	assert.Nil(t, bm.Put("astaxie", "author", timeoutDuration))
+	assert.True(t, bm.IsExist("astaxie"))
+
+	vs, err := redis.String(bm.Get("astaxie"), err)
+	assert.Nil(t, err)
+	assert.Equal(t, "author", vs)
+
+	assert.Nil(t, bm.Put("astaxie1", "author1", timeoutDuration))
+
+	assert.True(t, bm.IsExist("astaxie1"))
 
 	vv := bm.GetMulti([]string{"astaxie", "astaxie1"})
-	if len(vv) != 2 {
-		t.Error("GetMulti ERROR")
-	}
-	if v, _ := redis.String(vv[0], nil); v != "author" {
-		t.Error("GetMulti ERROR")
-	}
-	if v, _ := redis.String(vv[1], nil); v != "author1" {
-		t.Error("GetMulti ERROR")
-	}
 
+	assert.Equal(t, 2, len(vv))
+
+	vs, err = redis.String(vv[0], nil)
+
+	assert.Nil(t, err)
+	assert.Equal(t, "author", vs)
+
+	vs, err = redis.String(vv[1], nil)
+
+	assert.Nil(t, err)
+	assert.Equal(t, "author1", vs)
+
+	assert.Nil(t, bm.ClearAll())
 	// test clear all
-	if err = bm.ClearAll(); err != nil {
-		t.Error("clear all err")
-	}
 }
 
-func TestCache_Scan(t *testing.T) {
+func TestCacheScan(t *testing.T) {
 	timeoutDuration := 10 * time.Second
 	// init
 	bm, err := cache.NewCache("redis", `{"conn": "127.0.0.1:6379"}`)
 	if err != nil {
-		t.Error("init err")
+		t.Error(initError)
 	}
 	// insert all
 	for i := 0; i < 10000; i++ {
 		if err = bm.Put(fmt.Sprintf("astaxie%d", i), fmt.Sprintf("author%d", i), timeoutDuration); err != nil {
-			t.Error("set Error", err)
+			t.Error(setError, err)
 		}
 	}
 

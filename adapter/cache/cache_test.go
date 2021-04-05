@@ -19,12 +19,22 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+)
+
+const (
+	initError = "init err"
+	setError = "set Error"
+	checkError = "check err"
+	getError = "get err"
+	getMultiError = "GetMulti Error"
 )
 
 func TestCacheIncr(t *testing.T) {
 	bm, err := NewCache("memory", `{"interval":20}`)
 	if err != nil {
-		t.Error("init err")
+		t.Error(initError)
 	}
 	// timeoutDuration := 10 * time.Second
 
@@ -45,147 +55,95 @@ func TestCacheIncr(t *testing.T) {
 
 func TestCache(t *testing.T) {
 	bm, err := NewCache("memory", `{"interval":20}`)
-	if err != nil {
-		t.Error("init err")
-	}
-	timeoutDuration := 10 * time.Second
-	if err = bm.Put("astaxie", 1, timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
-	if !bm.IsExist("astaxie") {
-		t.Error("check err")
-	}
 
-	if v := bm.Get("astaxie"); v.(int) != 1 {
-		t.Error("get err")
-	}
+	assert.Nil(t, err)
 
-	time.Sleep(30 * time.Second)
+	timeoutDuration := 5 * time.Second
+	err = bm.Put("astaxie", 1, timeoutDuration)
+	assert.Nil(t, err)
 
-	if bm.IsExist("astaxie") {
-		t.Error("check err")
-	}
+	assert.True(t, bm.IsExist("astaxie"))
 
-	if err = bm.Put("astaxie", 1, timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
+	assert.Equal(t, 1, bm.Get("astaxie"))
 
-	if err = bm.Incr("astaxie"); err != nil {
-		t.Error("Incr Error", err)
-	}
+	time.Sleep(10 * time.Second)
 
-	if v := bm.Get("astaxie"); v.(int) != 2 {
-		t.Error("get err")
-	}
+	assert.False(t, bm.IsExist("astaxie"))
 
-	if err = bm.Decr("astaxie"); err != nil {
-		t.Error("Decr Error", err)
-	}
+	err = bm.Put("astaxie", 1, timeoutDuration)
+	assert.Nil(t, err)
 
-	if v := bm.Get("astaxie"); v.(int) != 1 {
-		t.Error("get err")
-	}
-	bm.Delete("astaxie")
-	if bm.IsExist("astaxie") {
-		t.Error("delete err")
-	}
+	err = bm.Incr("astaxie")
+	assert.Nil(t, err)
 
-	// test GetMulti
-	if err = bm.Put("astaxie", "author", timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
-	if !bm.IsExist("astaxie") {
-		t.Error("check err")
-	}
-	if v := bm.Get("astaxie"); v.(string) != "author" {
-		t.Error("get err")
-	}
+	assert.Equal(t, 2, bm.Get("astaxie"))
 
-	if err = bm.Put("astaxie1", "author1", timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
-	if !bm.IsExist("astaxie1") {
-		t.Error("check err")
-	}
+	assert.Nil(t, bm.Decr("astaxie"))
+
+	assert.Equal(t, 1, bm.Get("astaxie"))
+
+	assert.Nil(t, bm.Delete("astaxie"))
+
+	assert.False(t, bm.IsExist("astaxie"))
+
+	assert.Nil(t, bm.Put("astaxie", "author", timeoutDuration))
+
+	assert.True(t, bm.IsExist("astaxie"))
+
+	assert.Equal(t, "author", bm.Get("astaxie"))
+
+	assert.Nil(t, bm.Put("astaxie1", "author1", timeoutDuration))
+
+	assert.True(t, bm.IsExist("astaxie1"))
 
 	vv := bm.GetMulti([]string{"astaxie", "astaxie1"})
-	if len(vv) != 2 {
-		t.Error("GetMulti ERROR")
-	}
-	if vv[0].(string) != "author" {
-		t.Error("GetMulti ERROR")
-	}
-	if vv[1].(string) != "author1" {
-		t.Error("GetMulti ERROR")
-	}
+
+	assert.Equal(t, 2, len(vv))
+
+
+	assert.Equal(t, "author", vv[0])
+
+	assert.Equal(t, "author1", vv[1])
 }
 
 func TestFileCache(t *testing.T) {
 	bm, err := NewCache("file", `{"CachePath":"cache","FileSuffix":".bin","DirectoryLevel":"2","EmbedExpiry":"0"}`)
-	if err != nil {
-		t.Error("init err")
-	}
-	timeoutDuration := 10 * time.Second
-	if err = bm.Put("astaxie", 1, timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
-	if !bm.IsExist("astaxie") {
-		t.Error("check err")
-	}
 
-	if v := bm.Get("astaxie"); v.(int) != 1 {
-		t.Error("get err")
-	}
+	assert.Nil(t, err)
+	timeoutDuration := 5 * time.Second
 
-	if err = bm.Incr("astaxie"); err != nil {
-		t.Error("Incr Error", err)
-	}
+	assert.Nil(t, bm.Put("astaxie", 1, timeoutDuration))
 
-	if v := bm.Get("astaxie"); v.(int) != 2 {
-		t.Error("get err")
-	}
+	assert.True(t, bm.IsExist("astaxie"))
 
-	if err = bm.Decr("astaxie"); err != nil {
-		t.Error("Decr Error", err)
-	}
+	assert.Equal(t, 1, bm.Get("astaxie"))
 
-	if v := bm.Get("astaxie"); v.(int) != 1 {
-		t.Error("get err")
-	}
-	bm.Delete("astaxie")
-	if bm.IsExist("astaxie") {
-		t.Error("delete err")
-	}
+	assert.Nil(t, bm.Incr("astaxie"))
 
-	// test string
-	if err = bm.Put("astaxie", "author", timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
-	if !bm.IsExist("astaxie") {
-		t.Error("check err")
-	}
-	if v := bm.Get("astaxie"); v.(string) != "author" {
-		t.Error("get err")
-	}
+	assert.Equal(t, 2, bm.Get("astaxie"))
 
-	// test GetMulti
-	if err = bm.Put("astaxie1", "author1", timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
-	if !bm.IsExist("astaxie1") {
-		t.Error("check err")
-	}
+	assert.Nil(t, bm.Decr("astaxie"))
+
+	assert.Equal(t, 1, bm.Get("astaxie"))
+	assert.Nil(t, bm.Delete("astaxie"))
+
+	assert.False(t, bm.IsExist("astaxie"))
+
+	assert.Nil(t, bm.Put("astaxie", "author", timeoutDuration))
+
+	assert.True(t, bm.IsExist("astaxie"))
+
+	assert.Equal(t, "author", bm.Get("astaxie"))
+
+	assert.Nil(t, bm.Put("astaxie1", "author1", timeoutDuration))
+
+	assert.True(t, bm.IsExist("astaxie1"))
 
 	vv := bm.GetMulti([]string{"astaxie", "astaxie1"})
-	if len(vv) != 2 {
-		t.Error("GetMulti ERROR")
-	}
-	if vv[0].(string) != "author" {
-		t.Error("GetMulti ERROR")
-	}
-	if vv[1].(string) != "author1" {
-		t.Error("GetMulti ERROR")
-	}
 
-	os.RemoveAll("cache")
+	assert.Equal(t, 2, len(vv))
+
+	assert.Equal(t, "author", vv[0])
+	assert.Equal(t, "author1", vv[1])
+	assert.Nil(t, os.RemoveAll("cache"))
 }

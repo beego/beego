@@ -17,7 +17,7 @@
 // Simple Usage:
 //	import(
 //		"github.com/beego/beego/v2"
-//		"github.com/beego/beego/v2/plugins/apiauth"
+//		"github.com/beego/beego/v2/server/web/filter/apiauth"
 //	)
 //
 //	func main(){

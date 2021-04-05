@@ -15,6 +15,7 @@
 package orm
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 )
@@ -140,7 +141,7 @@ func (d *dbBasePostgres) HasReturningID(mi *modelInfo, query *string) bool {
 }
 
 // sync auto key
-func (d *dbBasePostgres) setval(db dbQuerier, mi *modelInfo, autoFields []string) error {
+func (d *dbBasePostgres) setval(ctx context.Context, db dbQuerier, mi *modelInfo, autoFields []string) error {
 	if len(autoFields) == 0 {
 		return nil
 	}
@@ -151,7 +152,7 @@ func (d *dbBasePostgres) setval(db dbQuerier, mi *modelInfo, autoFields []string
 			mi.table, name,
 			Q, name, Q,
 			Q, mi.table, Q)
-		if _, err := db.Exec(query); err != nil {
+		if _, err := db.ExecContext(ctx, query); err != nil {
 			return err
 		}
 	}
@@ -174,9 +175,9 @@ func (d *dbBasePostgres) DbTypes() map[string]string {
 }
 
 // check index exist in postgresql.
-func (d *dbBasePostgres) IndexExists(db dbQuerier, table string, name string) bool {
+func (d *dbBasePostgres) IndexExists(ctx context.Context, db dbQuerier, table string, name string) bool {
 	query := fmt.Sprintf("SELECT COUNT(*) FROM pg_indexes WHERE tablename = '%s' AND indexname = '%s'", table, name)
-	row := db.QueryRow(query)
+	row := db.QueryRowContext(ctx, query)
 	var cnt int
 	row.Scan(&cnt)
 	return cnt > 0

@@ -118,6 +118,10 @@ var _ Fielder = new(JSONFieldTest)
 type Data struct {
 	ID       int `orm:"column(id)"`
 	Boolean  bool
+	Byte     byte
+	Int8     int8
+	Uint8    uint8
+	Rune     rune
 	Char     string    `orm:"size(50)"`
 	Text     string    `orm:"type(text)"`
 	JSON     string    `orm:"type(json);default({\"name\":\"json\"})"`
@@ -125,26 +129,21 @@ type Data struct {
 	Time     time.Time `orm:"type(time)"`
 	Date     time.Time `orm:"type(date)"`
 	DateTime time.Time `orm:"column(datetime)"`
-	Byte     byte
-	Rune     rune
 	Int      int
-	Int8     int8
+	Uint     uint
 	Int16    int16
+	Uint16   uint16
 	Int32    int32
 	Int64    int64
-	Uint     uint
-	Uint8    uint8
-	Uint16   uint16
 	Uint32   uint32
-	Uint64   uint64
 	Float32  float32
+	Uint64   uint64
 	Float64  float64
 	Decimal  float64 `orm:"digits(8);decimals(4)"`
 }
 
 type DataNull struct {
 	ID                int             `orm:"column(id)"`
-	Boolean           bool            `orm:"null"`
 	Char              string          `orm:"null;size(50)"`
 	Text              string          `orm:"null;type(text)"`
 	JSON              string          `orm:"type(json);null"`
@@ -153,19 +152,20 @@ type DataNull struct {
 	Date              time.Time       `orm:"null;type(date)"`
 	DateTime          time.Time       `orm:"null;column(datetime)"`
 	DateTimePrecision time.Time       `orm:"null;type(datetime);precision(4)"`
+	Boolean           bool            `orm:"null"`
 	Byte              byte            `orm:"null"`
+	Int8              int8            `orm:"null"`
+	Uint8             uint8           `orm:"null"`
 	Rune              rune            `orm:"null"`
 	Int               int             `orm:"null"`
-	Int8              int8            `orm:"null"`
+	Uint              uint            `orm:"null"`
 	Int16             int16           `orm:"null"`
+	Uint16            uint16          `orm:"null"`
 	Int32             int32           `orm:"null"`
 	Int64             int64           `orm:"null"`
-	Uint              uint            `orm:"null"`
-	Uint8             uint8           `orm:"null"`
-	Uint16            uint16          `orm:"null"`
 	Uint32            uint32          `orm:"null"`
-	Uint64            uint64          `orm:"null"`
 	Float32           float32         `orm:"null"`
+	Uint64            uint64          `orm:"null"`
 	Float64           float64         `orm:"null"`
 	Decimal           float64         `orm:"digits(8);decimals(4);null"`
 	NullString        sql.NullString  `orm:"null"`
@@ -215,21 +215,21 @@ type Float64 float64
 type DataCustom struct {
 	ID      int `orm:"column(id)"`
 	Boolean Boolean
+	Byte    Byte
+	Int8    Int8
+	Uint8   Uint8
+	Rune    Rune
 	Char    string `orm:"size(50)"`
 	Text    string `orm:"type(text)"`
-	Byte    Byte
-	Rune    Rune
 	Int     Int
-	Int8    Int8
+	Uint    Uint
 	Int16   Int16
+	Uint16  Uint16
 	Int32   Int32
 	Int64   Int64
-	Uint    Uint
-	Uint8   Uint8
-	Uint16  Uint16
 	Uint32  Uint32
-	Uint64  Uint64
 	Float32 Float32
+	Uint64  Uint64
 	Float64 Float64
 	Decimal Float64 `orm:"digits(8);decimals(4)"`
 }
@@ -255,24 +255,40 @@ func NewTM() *TM {
 	return obj
 }
 
+type DeptInfo struct {
+	ID           int       `orm:"column(id)"`
+	Created      time.Time `orm:"auto_now_add"`
+	DeptName     string
+	EmployeeName string
+	Salary       int
+}
+
+type UnregisterModel struct {
+	ID           int       `orm:"column(id)"`
+	Created      time.Time `orm:"auto_now_add"`
+	DeptName     string
+	EmployeeName string
+	Salary       int
+}
+
 type User struct {
-	ID           int    `orm:"column(id)"`
-	UserName     string `orm:"size(30);unique"`
-	Email        string `orm:"size(100)"`
-	Password     string `orm:"size(100)"`
-	Status       int16  `orm:"column(Status)"`
-	IsStaff      bool
-	IsActive     bool      `orm:"default(true)"`
-	Created      time.Time `orm:"auto_now_add;type(date)"`
-	Updated      time.Time `orm:"auto_now"`
-	Profile      *Profile  `orm:"null;rel(one);on_delete(set_null)"`
-	Posts        []*Post   `orm:"reverse(many)" json:"-"`
-	ShouldSkip   string    `orm:"-"`
-	Nums         int
-	Langs        SliceStringField `orm:"size(100)"`
-	Extra        JSONFieldTest    `orm:"type(text)"`
-	unexport     bool             `orm:"-"`
-	unexportBool bool
+	ID             int    `orm:"column(id)"`
+	UserName       string `orm:"size(30);unique"`
+	Email          string `orm:"size(100)"`
+	Password       string `orm:"size(100)"`
+	Status         int16  `orm:"column(Status)"`
+	IsStaff        bool
+	IsActive       bool `orm:"default(true)"`
+	Unexported     bool `orm:"-"`
+	UnexportedBool bool
+	Created        time.Time `orm:"auto_now_add;type(date)"`
+	Updated        time.Time `orm:"auto_now"`
+	Profile        *Profile  `orm:"null;rel(one);on_delete(set_null)"`
+	Posts          []*Post   `orm:"reverse(many)" json:"-"`
+	ShouldSkip     string    `orm:"-"`
+	Nums           int
+	Langs          SliceStringField `orm:"size(100)"`
+	Extra          JSONFieldTest    `orm:"type(text)"`
 }
 
 func (u *User) TableIndex() [][]string {
@@ -476,45 +492,45 @@ var (
 	helpinfo = `need driver and source!
 
 	Default DB Drivers.
-	
+
 	  driver: url
 	   mysql: https://github.com/go-sql-driver/mysql
 	 sqlite3: https://github.com/mattn/go-sqlite3
 	postgres: https://github.com/lib/pq
 	tidb: https://github.com/pingcap/tidb
-	
+
 	usage:
-	
+
 	go get -u github.com/beego/beego/v2/client/orm
 	go get -u github.com/go-sql-driver/mysql
 	go get -u github.com/mattn/go-sqlite3
 	go get -u github.com/lib/pq
 	go get -u github.com/pingcap/tidb
-	
+
 	#### MySQL
 	mysql -u root -e 'create database orm_test;'
 	export ORM_DRIVER=mysql
 	export ORM_SOURCE="root:@/orm_test?charset=utf8"
 	go test -v github.com/beego/beego/v2/client/orm
-	
-	
+
+
 	#### Sqlite3
 	export ORM_DRIVER=sqlite3
 	export ORM_SOURCE='file:memory_test?mode=memory'
 	go test -v github.com/beego/beego/v2/client/orm
-	
-	
+
+
 	#### PostgreSQL
 	psql -c 'create database orm_test;' -U postgres
 	export ORM_DRIVER=postgres
 	export ORM_SOURCE="user=postgres dbname=orm_test sslmode=disable"
 	go test -v github.com/beego/beego/v2/client/orm
-	
+
 	#### TiDB
 	export ORM_DRIVER=tidb
 	export ORM_SOURCE='memory://test/test'
 	go test -v github.com/beego/beego/v2/pgk/orm
-	
+
 	`
 )
 

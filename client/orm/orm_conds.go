@@ -17,11 +17,13 @@ package orm
 import (
 	"fmt"
 	"strings"
+
+	"github.com/beego/beego/v2/client/orm/clauses"
 )
 
 // ExprSep define the expression separation
 const (
-	ExprSep = "__"
+	ExprSep = clauses.ExprSep
 )
 
 type condValue struct {

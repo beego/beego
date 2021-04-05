@@ -31,6 +31,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
+
 	"github.com/beego/beego/v2/client/orm/hints"
 
 	"github.com/stretchr/testify/assert"
@@ -84,11 +86,7 @@ func ValuesCompare(is bool, a interface{}, args ...interface{}) (ok bool, err er
 	}
 	ok = is && ok || !is && !ok
 	if !ok {
-		if is {
-			err = fmt.Errorf("expected: `%v`, get `%v`", b, a)
-		} else {
-			err = fmt.Errorf("expected: `%v`, get `%v`", b, a)
-		}
+		err = fmt.Errorf("expected: `%v`, get `%v`", b, a)
 	}
 
 wrongArg:
@@ -161,6 +159,7 @@ func throwFail(t *testing.T, err error, args ...interface{}) {
 	}
 }
 
+// deprecated using assert.XXX
 func throwFailNow(t *testing.T, err error, args ...interface{}) {
 	if err != nil {
 		con := fmt.Sprintf("\t\nError: %s\n%s\n", err.Error(), getCaller(2))
@@ -205,6 +204,7 @@ func TestSyncDb(t *testing.T) {
 	RegisterModel(new(Index))
 	RegisterModel(new(StrPk))
 	RegisterModel(new(TM))
+	RegisterModel(new(DeptInfo))
 
 	err := RunSyncdb("default", true, Debug)
 	throwFail(t, err)
@@ -232,6 +232,7 @@ func TestRegisterModels(t *testing.T) {
 	RegisterModel(new(Index))
 	RegisterModel(new(StrPk))
 	RegisterModel(new(TM))
+	RegisterModel(new(DeptInfo))
 
 	BootStrap()
 
@@ -331,6 +332,73 @@ func TestTM(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(recTM.TMPrecision1.String(), "2020-08-07 02:07:04.123 +0000 UTC"))
 	throwFail(t, AssertIs(recTM.TMPrecision2.String(), "2020-08-07 02:07:04.1235 +0000 UTC"))
+}
+
+func TestUnregisterModel(t *testing.T) {
+	data := []*DeptInfo{
+		{
+			DeptName:     "A",
+			EmployeeName: "A1",
+			Salary:       1000,
+		},
+		{
+			DeptName:     "A",
+			EmployeeName: "A2",
+			Salary:       2000,
+		},
+		{
+			DeptName:     "B",
+			EmployeeName: "B1",
+			Salary:       2000,
+		},
+		{
+			DeptName:     "B",
+			EmployeeName: "B2",
+			Salary:       4000,
+		},
+		{
+			DeptName:     "B",
+			EmployeeName: "B3",
+			Salary:       3000,
+		},
+	}
+	qs := dORM.QueryTable("dept_info")
+	i, _ := qs.PrepareInsert()
+	for _, d := range data {
+		_, err := i.Insert(d)
+		if err != nil {
+			throwFail(t, err)
+		}
+	}
+
+	f := func() {
+		var res []UnregisterModel
+		n, err := dORM.QueryTable("dept_info").All(&res)
+		throwFail(t, err)
+		throwFail(t, AssertIs(n, 5))
+		throwFail(t, AssertIs(res[0].EmployeeName, "A1"))
+
+		type Sum struct {
+			DeptName string
+			Total    int
+		}
+		var sun []Sum
+		qs.Aggregate("dept_name,sum(salary) as total").GroupBy("dept_name").OrderBy("dept_name").All(&sun)
+		throwFail(t, AssertIs(sun[0].DeptName, "A"))
+		throwFail(t, AssertIs(sun[0].Total, 3000))
+
+		type Max struct {
+			DeptName string
+			Max      float64
+		}
+		var max []Max
+		qs.Aggregate("dept_name,max(salary) as max").GroupBy("dept_name").OrderBy("dept_name").All(&max)
+		throwFail(t, AssertIs(max[1].DeptName, "B"))
+		throwFail(t, AssertIs(max[1].Max, 4000))
+	}
+	for i := 0; i < 5; i++ {
+		f()
+	}
 }
 
 func TestNullDataTypes(t *testing.T) {
@@ -1077,6 +1145,26 @@ func TestOrderBy(t *testing.T) {
 	num, err = qs.OrderBy("-profile__age").Filter("user_name", "astaxie").Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
+
+	num, err = qs.OrderClauses(
+		order_clause.Clause(
+			order_clause.Column(`profile__age`),
+			order_clause.SortDescending(),
+		),
+	).Filter("user_name", "astaxie").Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	if IsMysql {
+		num, err = qs.OrderClauses(
+			order_clause.Clause(
+				order_clause.Column(`rand()`),
+				order_clause.Raw(),
+			),
+		).Filter("user_name", "astaxie").Count()
+		throwFail(t, err)
+		throwFail(t, AssertIs(num, 1))
+	}
 }
 
 func TestAll(t *testing.T) {
@@ -1163,6 +1251,19 @@ func TestValues(t *testing.T) {
 		throwFail(t, AssertIs(maps[2]["Profile"], nil))
 	}
 
+	num, err = qs.OrderClauses(
+		order_clause.Clause(
+			order_clause.Column("Id"),
+			order_clause.SortAscending(),
+		),
+	).Values(&maps)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 3))
+	if num == 3 {
+		throwFail(t, AssertIs(maps[0]["UserName"], "slene"))
+		throwFail(t, AssertIs(maps[2]["Profile"], nil))
+	}
+
 	num, err = qs.OrderBy("Id").Values(&maps, "UserName", "Profile__Age")
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 3))
@@ -1185,8 +1286,8 @@ func TestValuesList(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 3))
 	if num == 3 {
-		throwFail(t, AssertIs(list[0][1], "slene"))
-		throwFail(t, AssertIs(list[2][9], nil))
+		throwFail(t, AssertIs(list[0][1], "slene")) //username
+		throwFail(t, AssertIs(list[2][10], nil))    //profile
 	}
 
 	num, err = qs.OrderBy("Id").ValuesList(&list, "UserName", "Profile__Age")
@@ -1746,6 +1847,10 @@ func TestRawQueryRow(t *testing.T) {
 			throwFail(t, AssertIs(id, 1))
 			break
 		case "time":
+			v = v.(time.Time).In(DefaultTimeLoc)
+			value := dataValues[col].(time.Time).In(DefaultTimeLoc)
+			assert.True(t, v.(time.Time).Sub(value) <= time.Second)
+			break
 		case "date":
 		case "datetime":
 			v = v.(time.Time).In(DefaultTimeLoc)
@@ -2144,27 +2249,64 @@ func TestTransaction(t *testing.T) {
 	}
 
 	err = to.Rollback()
-	throwFail(t, err)
-
+	assert.Nil(t, err)
 	num, err = o.QueryTable("tag").Filter("name__in", names).Count()
-	throwFail(t, err)
-	throwFail(t, AssertIs(num, 0))
+	assert.Nil(t, err)
+	assert.Equal(t, int64(0), num)
 
 	to, err = o.Begin()
-	throwFail(t, err)
+	assert.Nil(t, err)
 
 	tag.Name = "commit"
 	id, err = to.Insert(&tag)
-	throwFail(t, err)
-	throwFail(t, AssertIs(id > 0, true))
+	assert.Nil(t, err)
+	assert.True(t, id > 0)
 
-	to.Commit()
-	throwFail(t, err)
+	err = to.Commit()
+	assert.Nil(t, err)
 
 	num, err = o.QueryTable("tag").Filter("name", "commit").Delete()
-	throwFail(t, err)
-	throwFail(t, AssertIs(num, 1))
+	assert.Nil(t, err)
+	assert.Equal(t, int64(1), num)
 
+
+}
+
+func TestTxOrmRollbackUnlessCommit(t *testing.T) {
+	o := NewOrm()
+	var tag Tag
+
+	// test not commited and call RollbackUnlessCommit
+	to, err := o.Begin()
+	assert.Nil(t, err)
+	tag.Name = "rollback unless commit"
+	rows, err := to.Insert(&tag)
+	assert.Nil(t, err)
+	assert.True(t, rows > 0)
+	err = to.RollbackUnlessCommit()
+	assert.Nil(t, err)
+	num, err := o.QueryTable("tag").Filter("name", tag.Name).Delete()
+	assert.Nil(t, err)
+	assert.Equal(t, int64(0), num)
+
+	// test commit and call RollbackUnlessCommit
+
+	to, err = o.Begin()
+	assert.Nil(t, err)
+	tag.Name = "rollback unless commit"
+	rows, err = to.Insert(&tag)
+	assert.Nil(t, err)
+	assert.True(t, rows > 0)
+
+	err = to.Commit()
+	assert.Nil(t, err)
+
+	err = to.RollbackUnlessCommit()
+	assert.Nil(t, err)
+
+	num, err = o.QueryTable("tag").Filter("name", tag.Name).Delete()
+	assert.Nil(t, err)
+	assert.Equal(t, int64(1), num)
 }
 
 func TestTransactionIsolationLevel(t *testing.T) {
@@ -2712,4 +2854,24 @@ func TestCondition(t *testing.T) {
 	// cycleFlag was true,meaning use self as sub cond
 	throwFail(t, AssertIs(!cycleFlag, true))
 	return
+}
+
+func TestContextCanceled(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	user := User{UserName: "slene"}
+
+	err := dORM.ReadWithCtx(ctx, &user, "UserName")
+	throwFail(t, err)
+
+	cancel()
+	err = dORM.ReadWithCtx(ctx, &user, "UserName")
+	throwFail(t, AssertIs(err, context.Canceled))
+
+	ctx, cancel = context.WithCancel(context.Background())
+	cancel()
+
+	qs := dORM.QueryTable(user)
+	_, err = qs.Filter("UserName", "slene").CountWithCtx(ctx)
+	throwFail(t, AssertIs(err, context.Canceled))
 }

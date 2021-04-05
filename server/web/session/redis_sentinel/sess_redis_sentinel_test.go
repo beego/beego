@@ -13,15 +13,15 @@ import (
 )
 
 func TestRedisSentinel(t *testing.T) {
-	sessionConfig := &session.ManagerConfig{
-		CookieName:      "gosessionid",
-		EnableSetCookie: true,
-		Gclifetime:      3600,
-		Maxlifetime:     3600,
-		Secure:          false,
-		CookieLifeTime:  3600,
-		ProviderConfig:  "127.0.0.1:6379,100,,0,master",
-	}
+	sessionConfig := session.NewManagerConfig(
+		session.CfgCookieName(`gosessionid`),
+		session.CfgSetCookie(true),
+		session.CfgGcLifeTime(3600),
+		session.CfgMaxLifeTime(3600),
+		session.CfgSecure(false),
+		session.CfgCookieLifeTime(3600),
+		session.CfgProviderConfig("127.0.0.1:6379,100,,0,master"),
+	)
 	globalSessions, e := session.NewManager("redis_sentinel", sessionConfig)
 	if e != nil {
 		t.Log(e)

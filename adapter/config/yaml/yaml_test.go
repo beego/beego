@@ -54,7 +54,8 @@ func TestYaml(t *testing.T) {
 			"emptystrings":    []string{},
 		}
 	)
-	f, err := os.Create("testyaml.conf")
+	cfgFileName := "testyaml.conf"
+	f, err := os.Create(cfgFileName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -64,8 +65,8 @@ func TestYaml(t *testing.T) {
 		t.Fatal(err)
 	}
 	f.Close()
-	defer os.Remove("testyaml.conf")
-	yamlconf, err := config.NewConfig("yaml", "testyaml.conf")
+	defer os.Remove(cfgFileName)
+	yamlconf, err := config.NewConfig("yaml", cfgFileName)
 	if err != nil {
 		t.Fatal(err)
 	}

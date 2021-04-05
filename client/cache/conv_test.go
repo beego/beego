@@ -16,128 +16,74 @@ package cache
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetString(t *testing.T) {
 	var t1 = "test1"
-	if "test1" != GetString(t1) {
-		t.Error("get string from string error")
-	}
-	var t2 = []byte("test2")
-	if "test2" != GetString(t2) {
-		t.Error("get string from byte array error")
-	}
-	var t3 = 1
-	if "1" != GetString(t3) {
-		t.Error("get string from int error")
-	}
-	var t4 int64 = 1
-	if "1" != GetString(t4) {
-		t.Error("get string from int64 error")
-	}
-	var t5 = 1.1
-	if "1.1" != GetString(t5) {
-		t.Error("get string from float64 error")
-	}
 
-	if "" != GetString(nil) {
-		t.Error("get string from nil error")
-	}
+	assert.Equal(t, "test1", GetString(t1))
+	var t2 = []byte("test2")
+	assert.Equal(t, "test2", GetString(t2))
+	var t3 = 1
+	assert.Equal(t, "1", GetString(t3))
+	var t4 int64 = 1
+	assert.Equal(t, "1", GetString(t4))
+	var t5 = 1.1
+	assert.Equal(t, "1.1", GetString(t5))
+	assert.Equal(t, "", GetString(nil))
 }
 
 func TestGetInt(t *testing.T) {
 	var t1 = 1
-	if 1 != GetInt(t1) {
-		t.Error("get int from int error")
-	}
+	assert.Equal(t, 1, GetInt(t1))
 	var t2 int32 = 32
-	if 32 != GetInt(t2) {
-		t.Error("get int from int32 error")
-	}
+	assert.Equal(t, 32, GetInt(t2))
+
 	var t3 int64 = 64
-	if 64 != GetInt(t3) {
-		t.Error("get int from int64 error")
-	}
+	assert.Equal(t, 64, GetInt(t3))
 	var t4 = "128"
-	if 128 != GetInt(t4) {
-		t.Error("get int from num string error")
-	}
-	if 0 != GetInt(nil) {
-		t.Error("get int from nil error")
-	}
+
+	assert.Equal(t, 128, GetInt(t4))
+	assert.Equal(t, 0, GetInt(nil))
 }
 
 func TestGetInt64(t *testing.T) {
 	var i int64 = 1
 	var t1 = 1
-	if i != GetInt64(t1) {
-		t.Error("get int64 from int error")
-	}
+	assert.Equal(t, i, GetInt64(t1))
 	var t2 int32 = 1
-	if i != GetInt64(t2) {
-		t.Error("get int64 from int32 error")
-	}
+
+	assert.Equal(t, i, GetInt64(t2))
 	var t3 int64 = 1
-	if i != GetInt64(t3) {
-		t.Error("get int64 from int64 error")
-	}
+	assert.Equal(t, i, GetInt64(t3))
 	var t4 = "1"
-	if i != GetInt64(t4) {
-		t.Error("get int64 from num string error")
-	}
-	if 0 != GetInt64(nil) {
-		t.Error("get int64 from nil")
-	}
+	assert.Equal(t, i, GetInt64(t4))
+	assert.Equal(t, int64(0), GetInt64(nil))
 }
 
 func TestGetFloat64(t *testing.T) {
 	var f = 1.11
 	var t1 float32 = 1.11
-	if f != GetFloat64(t1) {
-		t.Error("get float64 from float32 error")
-	}
+	assert.Equal(t, f, GetFloat64(t1))
 	var t2 = 1.11
-	if f != GetFloat64(t2) {
-		t.Error("get float64 from float64 error")
-	}
+	assert.Equal(t, f, GetFloat64(t2))
 	var t3 = "1.11"
-	if f != GetFloat64(t3) {
-		t.Error("get float64 from string error")
-	}
+	assert.Equal(t, f, GetFloat64(t3))
 
 	var f2 float64 = 1
 	var t4 = 1
-	if f2 != GetFloat64(t4) {
-		t.Error("get float64 from int error")
-	}
+	assert.Equal(t, f2, GetFloat64(t4))
 
-	if 0 != GetFloat64(nil) {
-		t.Error("get float64 from nil error")
-	}
+	assert.Equal(t, float64(0), GetFloat64(nil))
 }
 
 func TestGetBool(t *testing.T) {
 	var t1 = true
-	if !GetBool(t1) {
-		t.Error("get bool from bool error")
-	}
+	assert.True(t, GetBool(t1))
 	var t2 = "true"
-	if !GetBool(t2) {
-		t.Error("get bool from string error")
-	}
-	if GetBool(nil) {
-		t.Error("get bool from nil error")
-	}
-}
+	assert.True(t, GetBool(t2))
 
-func byteArrayEquals(a []byte, b []byte) bool {
-	if len(a) != len(b) {
-		return false
-	}
-	for i, v := range a {
-		if v != b[i] {
-			return false
-		}
-	}
-	return true
+	assert.False(t, GetBool(nil))
 }

@@ -1,4 +1,4 @@
-# Beego [![Build Status](https://travis-ci.org/astaxie/beego.svg?branch=master)](https://travis-ci.org/astaxie/beego) [![GoDoc](http://godoc.org/github.com/beego/beego/v2?status.svg)](http://godoc.org/github.com/beego/beego/v2) [![Foundation](https://img.shields.io/badge/Golang-Foundation-green.svg)](http://golangfoundation.org) [![Go Report Card](https://goreportcard.com/badge/github.com/beego/beego/v2)](https://goreportcard.com/report/github.com/beego/beego/v2)
+# Beego [![Build Status](https://travis-ci.org/beego/beego.svg?branch=master)](https://travis-ci.org/beego/beego) [![GoDoc](http://godoc.org/github.com/beego/beego?status.svg)](http://godoc.org/github.com/beego/beego) [![Foundation](https://img.shields.io/badge/Golang-Foundation-green.svg)](http://golangfoundation.org) [![Go Report Card](https://goreportcard.com/badge/github.com/beego/beego)](https://goreportcard.com/report/github.com/beego/beego)
 
 Beego is used for rapid development of enterprise application in Go, including RESTful APIs, web apps and backend
 services.
@@ -19,7 +19,7 @@ Beego is compos of four parts:
 
 ## Quick Start
 
-[Officail website](http://beego.me)
+[Official website](http://beego.me)
 
 [Example](https://github.com/beego/beego-example)
 
@@ -40,7 +40,7 @@ Beego is compos of four parts:
 
 #### Download and install
 
-    go get github.com/beego/beego/v2@v2.0.0
+    go get github.com/beego/beego/v2@latest
 
 #### Create file `hello.go`
 
@@ -90,8 +90,7 @@ Congratulations! You've just built your first **beego** app.
 ## Community
 
 * [http://beego.me/community](http://beego.me/community)
-* Welcome to join us in Slack: [https://beego.slack.com](https://beego.slack.com), you can get invited
-  from [here](https://github.com/beego/beedoc/issues/232)
+* Welcome to join us in Slack: [https://beego.slack.com invite](https://join.slack.com/t/beego/shared_invite/zt-fqlfjaxs-_CRmiITCSbEqQG9NeBqXKA), 
 * QQ Group Group ID:523992905
 * [Contribution Guide](https://github.com/beego/beedoc/blob/master/en-US/intro/contributing.md).
 

@@ -21,7 +21,17 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/beego/beego/v2/adapter/cache"
+)
+
+const (
+	initError = "init err"
+	setError = "set Error"
+	checkError = "check err"
+	getError = "get err"
+	getMultiError = "GetMulti Error"
 )
 
 func TestMemcacheCache(t *testing.T) {
@@ -32,83 +42,52 @@ func TestMemcacheCache(t *testing.T) {
 	}
 
 	bm, err := cache.NewCache("memcache", fmt.Sprintf(`{"conn": "%s"}`, addr))
-	if err != nil {
-		t.Error("init err")
-	}
-	timeoutDuration := 10 * time.Second
-	if err = bm.Put("astaxie", "1", timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
-	if !bm.IsExist("astaxie") {
-		t.Error("check err")
-	}
+	assert.Nil(t, err)
+	timeoutDuration := 5 * time.Second
+
+	assert.Nil(t, bm.Put("astaxie", "1", timeoutDuration))
+
+	assert.True(t, bm.IsExist("astaxie"))
 
 	time.Sleep(11 * time.Second)
 
-	if bm.IsExist("astaxie") {
-		t.Error("check err")
-	}
-	if err = bm.Put("astaxie", "1", timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
+	assert.False(t, bm.IsExist("astaxie"))
 
-	if v, err := strconv.Atoi(string(bm.Get("astaxie").([]byte))); err != nil || v != 1 {
-		t.Error("get err")
-	}
+	assert.Nil(t, bm.Put("astaxie", "1", timeoutDuration))
+	v, err := strconv.Atoi(string(bm.Get("astaxie").([]byte)))
+	assert.Nil(t, err)
+	assert.Equal(t, 1, v)
 
-	if err = bm.Incr("astaxie"); err != nil {
-		t.Error("Incr Error", err)
-	}
+	assert.Nil(t, bm.Incr("astaxie"))
 
-	if v, err := strconv.Atoi(string(bm.Get("astaxie").([]byte))); err != nil || v != 2 {
-		t.Error("get err")
-	}
+	v, err = strconv.Atoi(string(bm.Get("astaxie").([]byte)))
+	assert.Nil(t, err)
+	assert.Equal(t, 2, v)
 
-	if err = bm.Decr("astaxie"); err != nil {
-		t.Error("Decr Error", err)
-	}
+	assert.Nil(t, bm.Decr("astaxie"))
 
-	if v, err := strconv.Atoi(string(bm.Get("astaxie").([]byte))); err != nil || v != 1 {
-		t.Error("get err")
-	}
-	bm.Delete("astaxie")
-	if bm.IsExist("astaxie") {
-		t.Error("delete err")
-	}
+	v, err = strconv.Atoi(string(bm.Get("astaxie").([]byte)))
+	assert.Nil(t, err)
+	assert.Equal(t, 1, v)
 
-	// test string
-	if err = bm.Put("astaxie", "author", timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
-	if !bm.IsExist("astaxie") {
-		t.Error("check err")
-	}
+	assert.Nil(t, bm.Delete("astaxie"))
 
-	if v := bm.Get("astaxie").([]byte); string(v) != "author" {
-		t.Error("get err")
-	}
+	assert.False(t,  bm.IsExist("astaxie"))
 
-	// test GetMulti
-	if err = bm.Put("astaxie1", "author1", timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
-	if !bm.IsExist("astaxie1") {
-		t.Error("check err")
-	}
+	assert.Nil(t, bm.Put("astaxie", "author", timeoutDuration))
+
+	assert.True(t, bm.IsExist("astaxie"))
+
+	assert.Equal(t, []byte("author"), bm.Get("astaxie"))
+
+	assert.Nil(t, bm.Put("astaxie1", "author1", timeoutDuration))
+
+	assert.True(t, bm.IsExist("astaxie1"))
 
 	vv := bm.GetMulti([]string{"astaxie", "astaxie1"})
-	if len(vv) != 2 {
-		t.Error("GetMulti ERROR")
-	}
-	if string(vv[0].([]byte)) != "author" && string(vv[0].([]byte)) != "author1" {
-		t.Error("GetMulti ERROR")
-	}
-	if string(vv[1].([]byte)) != "author1" && string(vv[1].([]byte)) != "author" {
-		t.Error("GetMulti ERROR")
-	}
+	assert.Equal(t, 2, len(vv))
+	assert.Equal(t, []byte("author"), vv[0])
+	assert.Equal(t, []byte("author1"), vv[1])
 
-	// test clear all
-	if err = bm.ClearAll(); err != nil {
-		t.Error("clear all err")
-	}
+	assert.Nil(t, bm.ClearAll())
 }

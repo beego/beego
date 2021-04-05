@@ -210,9 +210,9 @@ func (t *Tree) AddRouter(pattern string, runObject interface{}) {
 func (t *Tree) addseg(segments []string, route interface{}, wildcards []string, reg string) {
 	if len(segments) == 0 {
 		if reg != "" {
-			t.leaves = append(t.leaves, &leafInfo{runObject: route, wildcards: wildcards, regexps: regexp.MustCompile("^" + reg + "$")})
+			t.leaves = append([]*leafInfo{{runObject: route, wildcards: wildcards, regexps: regexp.MustCompile("^" + reg + "$")}}, t.leaves...)
 		} else {
-			t.leaves = append(t.leaves, &leafInfo{runObject: route, wildcards: wildcards})
+			t.leaves = append([]*leafInfo{{runObject: route, wildcards: wildcards}}, t.leaves...)
 		}
 	} else {
 		seg := segments[0]
@@ -342,8 +342,9 @@ func (t *Tree) match(treePattern string, pattern string, wildcardValues []string
 	if runObject == nil && len(t.fixrouters) > 0 {
 		// Filter the .json .xml .html extension
 		for _, str := range allowSuffixExt {
-			if strings.HasSuffix(seg, str) {
+			if strings.HasSuffix(seg, str) && strings.HasSuffix(treePattern, seg) {
 				for _, subTree := range t.fixrouters {
+					// strings.HasSuffix(treePattern, seg) avoid cases: /aaa.html/bbb could access /aaa/bbb
 					if subTree.prefix == seg[:len(seg)-len(str)] {
 						runObject = subTree.match(treePattern, pattern, wildcardValues, ctx)
 						if runObject != nil {

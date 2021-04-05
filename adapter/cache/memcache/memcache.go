@@ -20,8 +20,8 @@
 //
 // Usage:
 // import(
-//   _ "github.com/beego/beego/v2/cache/memcache"
-//   "github.com/beego/beego/v2/cache"
+//   _ "github.com/beego/beego/v2/client/cache/memcache"
+//   "github.com/beego/beego/v2/client/cache"
 // )
 //
 //  bm, err := cache.NewCache("memcache", `{"conn":"127.0.0.1:11211"}`)

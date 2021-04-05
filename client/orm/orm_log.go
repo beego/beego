@@ -41,7 +41,7 @@ func NewLog(out io.Writer) *Log {
 
 func debugLogQueies(alias *alias, operaton, query string, t time.Time, err error, args ...interface{}) {
 	var logMap = make(map[string]interface{})
-	sub := time.Now().Sub(t) / 1e5
+	sub := time.Since(t) / 1e5
 	elsp := float64(int(sub)) / 10.0
 	logMap["cost_time"] = elsp
 	flag := "  OK"
@@ -85,20 +85,31 @@ func (d *stmtQueryLog) Close() error {
 }
 
 func (d *stmtQueryLog) Exec(args ...interface{}) (sql.Result, error) {
+	return d.ExecContext(context.Background(), args...)
+}
+
+func (d *stmtQueryLog) ExecContext(ctx context.Context, args ...interface{}) (sql.Result, error) {
 	a := time.Now()
-	res, err := d.stmt.Exec(args...)
+	res, err := d.stmt.ExecContext(ctx, args...)
 	debugLogQueies(d.alias, "st.Exec", d.query, a, err, args...)
 	return res, err
 }
-
 func (d *stmtQueryLog) Query(args ...interface{}) (*sql.Rows, error) {
+	return d.QueryContext(context.Background(), args...)
+}
+
+func (d *stmtQueryLog) QueryContext(ctx context.Context, args ...interface{}) (*sql.Rows, error) {
 	a := time.Now()
-	res, err := d.stmt.Query(args...)
+	res, err := d.stmt.QueryContext(ctx, args...)
 	debugLogQueies(d.alias, "st.Query", d.query, a, err, args...)
 	return res, err
 }
 
 func (d *stmtQueryLog) QueryRow(args ...interface{}) *sql.Row {
+	return d.QueryRowContext(context.Background(), args...)
+}
+
+func (d *stmtQueryLog) QueryRowContext(ctx context.Context, args ...interface{}) *sql.Row {
 	a := time.Now()
 	res := d.stmt.QueryRow(args...)
 	debugLogQueies(d.alias, "st.QueryRow", d.query, a, nil, args...)
@@ -192,6 +203,13 @@ func (d *dbQueryLog) Rollback() error {
 	a := time.Now()
 	err := d.db.(txEnder).Rollback()
 	debugLogQueies(d.alias, "tx.Rollback", "ROLLBACK", a, err)
+	return err
+}
+
+func (d *dbQueryLog) RollbackUnlessCommit() error {
+	a := time.Now()
+	err := d.db.(txEnder).RollbackUnlessCommit()
+	debugLogQueies(d.alias, "tx.RollbackUnlessCommit", "ROLLBACK UNLESS COMMIT", a, err)
 	return err
 }
 

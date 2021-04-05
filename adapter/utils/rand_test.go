@@ -16,7 +16,7 @@ package utils
 
 import "testing"
 
-func TestRand_01(t *testing.T) {
+func TestRand01(t *testing.T) {
 	bs0 := RandomCreateBytes(16)
 	bs1 := RandomCreateBytes(16)
 

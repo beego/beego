@@ -25,7 +25,7 @@ func RegisterModel(models ...interface{}) {
 
 // RegisterModelWithPrefix register models with a prefix
 func RegisterModelWithPrefix(prefix string, models ...interface{}) {
-	orm.RegisterModelWithPrefix(prefix, models)
+	orm.RegisterModelWithPrefix(prefix, models...)
 }
 
 // RegisterModelWithSuffix register models with a suffix
