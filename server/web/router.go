@@ -787,11 +787,6 @@ func (p *ControllerRegister) serveHttp(ctx *beecontext.Context) {
 		goto Admin
 	}
 
-	// execute middleware filters
-	if len(p.filters[BeforeExec]) > 0 && p.execFilter(ctx, urlPath, BeforeExec) {
-		goto Admin
-	}
-
 	if routerInfo != nil {
 		if routerInfo.routerType == routerTypeRESTFul {
 			if _, ok := routerInfo.methods[r.Method]; ok {
@@ -825,6 +820,11 @@ func (p *ControllerRegister) serveHttp(ctx *beecontext.Context) {
 	}
 	ctx.Input.ExecMethod = runMethod
 	ctx.Input.ExecController = runRouter
+
+	// execute middleware filters
+	if len(p.filters[BeforeExec]) > 0 && p.execFilter(ctx, urlPath, BeforeExec) {
+		goto Admin
+	}
 
 	// also defined runRouter & runMethod from filter
 	if !isRunnable {
