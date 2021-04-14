@@ -54,7 +54,7 @@ func (c *TestController) HelloSession() {
 		c.Ctx.WriteString("error")
 		return
 	}
-	c.SetSession("name", "Tom")
+	_ = c.SetSession("name", "Tom")
 	c.Ctx.WriteString("set")
 }
 

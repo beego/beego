@@ -77,6 +77,7 @@ func (s *SessionProvider) SessionAll(ctx context.Context) int {
 
 // SessionGC do nothing
 func (s *SessionProvider) SessionGC(ctx context.Context) {
+	// we do anything since we don't need to mock GC
 }
 
 
@@ -105,6 +106,7 @@ func (s *SessionStore) SessionID(ctx context.Context) string {
 
 // SessionRelease do nothing
 func (s *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
+	// Support in the future if necessary, now I think we don't need to implement this
 }
 
 func (s *SessionStore) Flush(ctx context.Context) error {
