@@ -59,3 +59,11 @@ func (m *HttpResponse) JsonUnmarshal(value interface{}) error {
 func (m *HttpResponse) BodyToString() string {
 	return string(m.body)
 }
+
+// Reset will reset the status to init status
+// Usually, you want to reuse this instance you may need to call Reset
+func (m *HttpResponse) Reset() {
+	m.body = make([]byte, 0)
+	m.header = make(http.Header)
+	m.StatusCode = 0
+}
