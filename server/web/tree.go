@@ -294,8 +294,8 @@ func (t *Tree) Match(pattern string, ctx *context.Context) (runObject interface{
 
 func (t *Tree) match(treePattern string, pattern string, wildcardValues []string, ctx *context.Context) (runObject interface{}) {
 	if len(pattern) > 0 {
-		i := 0
-		for ; i < len(pattern) && pattern[i] == '/'; i++ {
+		i, l := 0, len(pattern)
+		for ; i < l && pattern[i] == '/'; i++ {
 		}
 		pattern = pattern[i:]
 	}
