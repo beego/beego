@@ -17,8 +17,12 @@ package web
 import (
 	"bytes"
 	context2 "context"
+	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"fmt"
+	"github.com/gogo/protobuf/proto"
+	"gopkg.in/yaml.v2"
 	"html/template"
 	"io"
 	"mime/multipart"
@@ -147,6 +151,12 @@ type ControllerInterface interface {
 	CheckXSRFCookie() bool
 	HandlerFunc(fn string) bool
 	URLMapping()
+	Bind(obj interface{}) error
+	BindJson(obj interface{}) error
+	BindXML(obj interface{}) error
+	BindForm(obj interface{}) error
+	BindProtobuf(obj interface{}) error
+	BindYAML(obj interface{}) error
 }
 
 // Init generates default values of controller operations.
@@ -238,6 +248,48 @@ func (c *Controller) HandlerFunc(fnname string) bool {
 
 // URLMapping register the internal Controller router.
 func (c *Controller) URLMapping() {}
+
+func (c *Controller) Bind(obj interface{}) error {
+	ct := c.Ctx.Request.Header["Content-Type"]
+	i, l := 0, len(ct[0])
+	for ; i < l && ct[0][i] != ';'; i++ {
+	}
+	switch ct[0][0:i] {
+	case "application/json":
+		return c.BindJson(obj)
+	case "application/xml", "text/xml":
+		return c.BindXML(obj)
+	case "application/x-www-form-urlencoded":
+		return c.BindForm(obj)
+	case "application/x-protobuf":
+		return c.BindProtobuf(obj)
+	case "application/x-yaml":
+		return c.BindYAML(obj)
+	default:
+		return errors.New("Unsupported Content-Type:" + ct[0])
+	}
+}
+
+func (c *Controller) BindYAML(obj interface{}) error {
+	return yaml.Unmarshal(c.Ctx.Input.RequestBody, obj)
+}
+
+func (c *Controller) BindForm(obj interface{}) error {
+	return c.ParseForm(obj)
+}
+
+func (c *Controller) BindJson(obj interface{}) error {
+	return json.Unmarshal(c.Ctx.Input.RequestBody, obj)
+}
+
+func (c *Controller) BindProtobuf(obj interface{}) error {
+	return proto.Unmarshal(c.Ctx.Input.RequestBody, obj.(proto.Message))
+}
+
+func (c *Controller) BindXML(obj interface{}) error {
+	return xml.Unmarshal(c.Ctx.Input.RequestBody, obj)
+}
+
 
 // Mapping the method to function
 func (c *Controller) Mapping(method string, fn func()) {
