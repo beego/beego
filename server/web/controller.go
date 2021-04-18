@@ -245,7 +245,7 @@ func (c *Controller) URLMapping() {}
 
 func (c *Controller) Bind(obj interface{}) error {
 	ct, exist := c.Ctx.Request.Header["Content-Type"]
-	if exist == false || len(ct) == 0 {
+	if !exist || len(ct) == 0 {
 		return c.BindJson(obj)
 	}
 	i, l := 0, len(ct[0])
