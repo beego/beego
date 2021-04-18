@@ -68,14 +68,21 @@ var (
 		"LOCK":      true,
 		"UNLOCK":    true,
 	}
-	// these beego.Controller's methods shouldn't reflect to AutoRouter
-	exceptMethod = []string{"Init", "Prepare", "Finish", "Render", "RenderString",
-		"RenderBytes", "Redirect", "Abort", "StopRun", "UrlFor", "ServeJSON", "ServeJSONP",
-		"ServeYAML", "ServeXML", "Input", "ParseForm", "GetString", "GetStrings", "GetInt", "GetBool",
-		"GetFloat", "GetFile", "SaveToFile", "StartSession", "SetSession", "GetSession",
-		"DelSession", "SessionRegenerateID", "DestroySession", "IsAjax", "GetSecureCookie",
-		"SetSecureCookie", "XsrfToken", "CheckXsrfCookie", "XsrfFormHtml",
-		"GetControllerAndAction", "ServeFormatted"}
+	// these web.Controller's methods shouldn't reflect to AutoRouter
+	exceptMethod = []string{"Abort", "CheckXSRFCookie", "CustomAbort", "DelSession",
+		"DestroySession", "Finish", "GetBool", "GetControllerAndAction",
+		"GetFile", "GetFiles", "GetFloat", "GetInt", "GetInt16",
+		"GetInt32", "GetInt64", "GetInt8", "GetSecureCookie", "GetSession",
+		"GetString", "GetStrings", "GetUint16", "GetUint32", "GetUint64",
+		"GetUint8", "HandlerFunc", "Init", "Input",
+		"IsAjax", "Mapping", "ParseForm",
+		"Prepare", "Redirect", "Render", "RenderBytes",
+		"RenderString", "SaveToFile", "SaveToFileWithBuffer", "SaveToFileWithBuffer",
+		"ServeFormatted", "ServeJSON", "ServeJSONP", "ServeXML", "ServeYAML",
+		"SessionRegenerateID", "SetData", "SetSecureCookie", "SetSession", "StartSession",
+		"StopRun", "URLFor", "URLMapping", "XSRFFormHTML",
+		"XSRFToken",
+	}
 
 	urlPlaceholder = "{{placeholder}}"
 	// DefaultAccessLogFilter will skip the accesslog if return true
