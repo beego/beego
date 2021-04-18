@@ -151,12 +151,6 @@ type ControllerInterface interface {
 	CheckXSRFCookie() bool
 	HandlerFunc(fn string) bool
 	URLMapping()
-	Bind(obj interface{}) error
-	BindJson(obj interface{}) error
-	BindXML(obj interface{}) error
-	BindForm(obj interface{}) error
-	BindProtobuf(obj interface{}) error
-	BindYAML(obj interface{}) error
 }
 
 // Init generates default values of controller operations.
@@ -250,7 +244,10 @@ func (c *Controller) HandlerFunc(fnname string) bool {
 func (c *Controller) URLMapping() {}
 
 func (c *Controller) Bind(obj interface{}) error {
-	ct := c.Ctx.Request.Header["Content-Type"]
+	ct, exist := c.Ctx.Request.Header["Content-Type"]
+	if exist == false || len(ct) == 0 {
+		return c.BindJson(obj)
+	}
 	i, l := 0, len(ct[0])
 	for ; i < l && ct[0][i] != ';'; i++ {
 	}
