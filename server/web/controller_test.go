@@ -198,7 +198,7 @@ func TestBindJson(t *testing.T) {
 	assert.Equal(t, "FOO", s.Foo)
 }
 
-func TestBindNoContentType(t *testing.T)  {
+func TestBindNoContentType(t *testing.T) {
 	var s struct {
 		Foo string `json:"foo"`
 	}
@@ -211,7 +211,6 @@ func TestBindNoContentType(t *testing.T)  {
 	require.NoError(t, err)
 	assert.Equal(t, "FOO", s.Foo)
 }
-
 
 func TestBindXML(t *testing.T) {
 

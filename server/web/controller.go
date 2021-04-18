@@ -287,7 +287,6 @@ func (c *Controller) BindXML(obj interface{}) error {
 	return xml.Unmarshal(c.Ctx.Input.RequestBody, obj)
 }
 
-
 // Mapping the method to function
 func (c *Controller) Mapping(method string, fn func()) {
 	c.methodMapping[method] = fn
