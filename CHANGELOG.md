@@ -34,7 +34,8 @@
 - Integration: DeepSource [4560](https://github.com/beego/beego/pull/4560)
 - Integration: Remove unnecessary function call [4577](https://github.com/beego/beego/pull/4577)
 - Feature issue #4402 finish router get example. [4416](https://github.com/beego/beego/pull/4416)
-- Proposal: Add Bind() method for web.Controller [4491](https://github.com/beego/beego/issues/4491)
+- Proposal: Add Bind() method for `web.Controller` [4491](https://github.com/beego/beego/issues/4579)
+- Optimize AddAutoPrefix: only register one router in case-insensitive mode. [4582](https://github.com/beego/beego/pull/4582)
 
 ## Fix Sonar
 - [4473](https://github.com/beego/beego/pull/4473)
