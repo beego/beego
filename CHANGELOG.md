@@ -1,5 +1,5 @@
 # developing
-- Web mock and test support. [4565](https://github.com/beego/beego/pull/4565)
+- Web mock and test support. [4565](https://github.com/beego/beego/pull/4565) [4574](https://github.com/beego/beego/pull/4574)
 - Error codes definition of cache module. [4493](https://github.com/beego/beego/pull/4493)
 - Remove generateCommentRoute http hook. Using `bee generate routers` commands instead.[4486](https://github.com/beego/beego/pull/4486) [bee PR 762](https://github.com/beego/bee/pull/762)
 - Fix: /abc.html/aaa match /abc/aaa. [4459](https://github.com/beego/beego/pull/4459)
@@ -32,6 +32,7 @@
 - Feat: add token bucket ratelimit filter [4508](https://github.com/beego/beego/pull/4508)
 - Improve: Avoid ignoring mistakes that need attention [4548](https://github.com/beego/beego/pull/4548)
 - Integration: DeepSource [4560](https://github.com/beego/beego/pull/4560)
+- Integration: Remove unnecessary function call [4577](https://github.com/beego/beego/pull/4577)
 
 
 
