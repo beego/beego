@@ -15,7 +15,10 @@
 package web
 
 import (
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"math"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -179,4 +182,65 @@ func TestAdditionalViewPaths(t *testing.T) {
 	ctrl.TplName = "file2.tpl"
 	ctrl.ViewPath = dir2
 	ctrl.RenderString()
+}
+
+func TestBindJson(t *testing.T) {
+	var s struct {
+		Foo string `json:"foo"`
+	}
+	header := map[string][]string{"Content-Type": {"application/json"}}
+	request := &http.Request{Header: header}
+	input := &context.BeegoInput{RequestBody: []byte(`{"foo": "FOO"}`)}
+	ctx := &context.Context{Request: request, Input: input}
+	ctrlr := Controller{Ctx: ctx}
+	err := ctrlr.Bind(&s)
+	require.NoError(t, err)
+	assert.Equal(t, "FOO", s.Foo)
+}
+
+func TestBindNoContentType(t *testing.T) {
+	var s struct {
+		Foo string `json:"foo"`
+	}
+	header := map[string][]string{}
+	request := &http.Request{Header: header}
+	input := &context.BeegoInput{RequestBody: []byte(`{"foo": "FOO"}`)}
+	ctx := &context.Context{Request: request, Input: input}
+	ctrlr := Controller{Ctx: ctx}
+	err := ctrlr.Bind(&s)
+	require.NoError(t, err)
+	assert.Equal(t, "FOO", s.Foo)
+}
+
+func TestBindXML(t *testing.T) {
+
+	var s struct {
+		Foo string `xml:"foo"`
+	}
+	xmlBody := `<?xml version="1.0" encoding="UTF-8"?>
+<root>
+   <foo>FOO</foo>
+</root>`
+	header := map[string][]string{"Content-Type": {"text/xml"}}
+	request := &http.Request{Header: header}
+	input := &context.BeegoInput{RequestBody: []byte(xmlBody)}
+	ctx := &context.Context{Request: request, Input: input}
+	ctrlr := Controller{Ctx: ctx}
+	err := ctrlr.Bind(&s)
+	require.NoError(t, err)
+	assert.Equal(t, "FOO", s.Foo)
+}
+
+func TestBindYAML(t *testing.T) {
+	var s struct {
+		Foo string `yaml:"foo"`
+	}
+	header := map[string][]string{"Content-Type": {"application/x-yaml"}}
+	request := &http.Request{Header: header}
+	input := &context.BeegoInput{RequestBody: []byte("foo: FOO")}
+	ctx := &context.Context{Request: request, Input: input}
+	ctrlr := Controller{Ctx: ctx}
+	err := ctrlr.Bind(&s)
+	require.NoError(t, err)
+	assert.Equal(t, "FOO", s.Foo)
 }

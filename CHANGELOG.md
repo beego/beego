@@ -32,8 +32,9 @@
 - Feat: add token bucket ratelimit filter [4508](https://github.com/beego/beego/pull/4508)
 - Improve: Avoid ignoring mistakes that need attention [4548](https://github.com/beego/beego/pull/4548)
 - Integration: DeepSource [4560](https://github.com/beego/beego/pull/4560)
-
-
+- Integration: Remove unnecessary function call [4577](https://github.com/beego/beego/pull/4577)
+- Feature issue #4402 finish router get example. [4416](https://github.com/beego/beego/pull/4416)
+- Proposal: Add Bind() method for web.Controller [4491](https://github.com/beego/beego/issues/4491)
 
 ## Fix Sonar
 - [4473](https://github.com/beego/beego/pull/4473)
