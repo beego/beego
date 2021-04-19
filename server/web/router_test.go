@@ -137,10 +137,12 @@ func TestUrlFor(t *testing.T) {
 func TestUrlFor3(t *testing.T) {
 	handler := NewControllerRegister()
 	handler.AddAuto(&TestController{})
-	if a := handler.URLFor("TestController.Myext"); a != "/test/myext" && a != "/Test/Myext" {
+	a := handler.URLFor("TestController.Myext")
+	if a != "/test/myext" && a != "/Test/Myext" {
 		t.Errorf("TestController.Myext must equal to /test/myext, but get " + a)
 	}
-	if a := handler.URLFor("TestController.GetURL"); a != "/test/geturl" && a != "/Test/GetURL" {
+	a = handler.URLFor("TestController.GetURL")
+	if a != "/test/geturl" && a != "/Test/GetURL" {
 		t.Errorf("TestController.GetURL must equal to /test/geturl, but get " + a)
 	}
 }
