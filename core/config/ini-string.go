@@ -20,7 +20,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -37,19 +36,10 @@ type IniStringConfig struct {
 
 // Parse creates a new Config and parses the file configuration from the named file.
 func (ini *IniStringConfig) Parse(name string) (Configer, error) {
-	return ini.parseFile(name)
+	return ini.parseData([]byte(name))
 }
 
-func (ini *IniStringConfig) parseFile(name string) (*IniConfigContainer, error) {
-	data, err := ioutil.ReadFile(name)
-	if err != nil {
-		return nil, err
-	}
-
-	return ini.parseData(filepath.Dir(name), data)
-}
-
-func (ini *IniStringConfig) parseData(dir string, data []byte) (*IniConfigContainer, error) {
+func (ini *IniStringConfig) parseData(data []byte) (*IniConfigContainer, error) {
 	cfg := &IniConfigContainer{
 		data:           make(map[string]map[string]string),
 		sectionComment: make(map[string]string),
@@ -144,43 +134,6 @@ func (ini *IniStringConfig) parseData(dir string, data []byte) (*IniConfigContai
 
 		key := string(bytes.TrimSpace(keyValue[0])) // key name case insensitive
 		key = strings.ToLower(key)
-
-		// handle include "other.conf"
-		if len(keyValue) == 1 && strings.HasPrefix(key, "include") {
-
-			includefiles := strings.Fields(key)
-			if includefiles[0] == "include" && len(includefiles) == 2 {
-
-				otherfile := strings.Trim(includefiles[1], "\"")
-				if !filepath.IsAbs(otherfile) {
-					otherfile = filepath.Join(dir, otherfile)
-				}
-
-				i, err := ini.parseFile(otherfile)
-				if err != nil {
-					return nil, err
-				}
-
-				for sec, dt := range i.data {
-					if _, ok := cfg.data[sec]; !ok {
-						cfg.data[sec] = make(map[string]string)
-					}
-					for k, v := range dt {
-						cfg.data[sec][k] = v
-					}
-				}
-
-				for sec, comm := range i.sectionComment {
-					cfg.sectionComment[sec] = comm
-				}
-
-				for k, comm := range i.keyComment {
-					cfg.keyComment[k] = comm
-				}
-
-				continue
-			}
-		}
 
 		if len(keyValue) != 2 {
 			return nil, errors.New("read the content error: \"" + string(line) + "\", should key = val")
