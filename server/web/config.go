@@ -437,7 +437,7 @@ func LoadAppConfig(adapterName, configPath string) error {
 	appConfigPath = absConfigPath
 	appConfigProvider = adapterName
 
-	return parseConfig(appConfigPath)
+	return parseConfig(configPath)
 }
 
 type beegoAppConfig struct {
