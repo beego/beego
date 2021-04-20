@@ -39,7 +39,7 @@ func TestResponse(t *testing.T) {
 }
 
 func TestDoRequest(t *testing.T) {
-	req := Get("https://goolnk.com/")
+	req := Get("https://goolnk.com/33BD2j")
 	retryAmount := 1
 	req.Retries(1)
 	req.RetryDelay(1400 * time.Millisecond)
