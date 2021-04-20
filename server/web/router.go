@@ -68,14 +68,21 @@ var (
 		"LOCK":      true,
 		"UNLOCK":    true,
 	}
-	// these beego.Controller's methods shouldn't reflect to AutoRouter
-	exceptMethod = []string{"Init", "Prepare", "Finish", "Render", "RenderString",
-		"RenderBytes", "Redirect", "Abort", "StopRun", "UrlFor", "ServeJSON", "ServeJSONP",
-		"ServeYAML", "ServeXML", "Input", "ParseForm", "GetString", "GetStrings", "GetInt", "GetBool",
-		"GetFloat", "GetFile", "SaveToFile", "StartSession", "SetSession", "GetSession",
-		"DelSession", "SessionRegenerateID", "DestroySession", "IsAjax", "GetSecureCookie",
-		"SetSecureCookie", "XsrfToken", "CheckXsrfCookie", "XsrfFormHtml",
-		"GetControllerAndAction", "ServeFormatted"}
+	// these web.Controller's methods shouldn't reflect to AutoRouter
+	exceptMethod = []string{"Abort", "CheckXSRFCookie", "CustomAbort", "DelSession",
+		"DestroySession", "Finish", "GetBool", "GetControllerAndAction",
+		"GetFile", "GetFiles", "GetFloat", "GetInt", "GetInt16",
+		"GetInt32", "GetInt64", "GetInt8", "GetSecureCookie", "GetSession",
+		"GetString", "GetStrings", "GetUint16", "GetUint32", "GetUint64",
+		"GetUint8", "HandlerFunc", "Init", "Input",
+		"IsAjax", "Mapping", "ParseForm",
+		"Prepare", "Redirect", "Render", "RenderBytes",
+		"RenderString", "SaveToFile", "SaveToFileWithBuffer", "SaveToFileWithBuffer",
+		"ServeFormatted", "ServeJSON", "ServeJSONP", "ServeXML", "ServeYAML",
+		"SessionRegenerateID", "SetData", "SetSecureCookie", "SetSession", "StartSession",
+		"StopRun", "URLFor", "URLMapping", "XSRFFormHTML",
+		"XSRFToken",
+	}
 
 	urlPlaceholder = "{{placeholder}}"
 	// DefaultAccessLogFilter will skip the accesslog if return true
@@ -725,20 +732,30 @@ func (p *ControllerRegister) AddAutoPrefix(prefix string, c ControllerInterface)
 	ct := reflect.Indirect(reflectVal).Type()
 	controllerName := strings.TrimSuffix(ct.Name(), "Controller")
 	for i := 0; i < rt.NumMethod(); i++ {
-		if !utils.InSlice(rt.Method(i).Name, exceptMethod) {
-			pattern := path.Join(prefix, strings.ToLower(controllerName), strings.ToLower(rt.Method(i).Name), "*")
-			patternInit := path.Join(prefix, controllerName, rt.Method(i).Name, "*")
-			patternFix := path.Join(prefix, strings.ToLower(controllerName), strings.ToLower(rt.Method(i).Name))
-			patternFixInit := path.Join(prefix, controllerName, rt.Method(i).Name)
+		methodName := rt.Method(i).Name
+		if !utils.InSlice(methodName, exceptMethod) {
+			p.addAutoPrefixMethod(prefix, controllerName, methodName, ct)
+		}
+	}
+}
 
-			route := p.createBeegoRouter(ct, pattern)
-			route.methods = map[string]string{"*": rt.Method(i).Name}
-			for m := range HTTPMETHOD {
-				p.addToRouter(m, pattern, route)
-				p.addToRouter(m, patternInit, route)
-				p.addToRouter(m, patternFix, route)
-				p.addToRouter(m, patternFixInit, route)
-			}
+func (p *ControllerRegister) addAutoPrefixMethod(prefix, controllerName, methodName string, ctrl reflect.Type)  {
+	pattern := path.Join(prefix, strings.ToLower(controllerName), strings.ToLower(methodName), "*")
+	patternInit := path.Join(prefix, controllerName, methodName, "*")
+	patternFix := path.Join(prefix, strings.ToLower(controllerName), strings.ToLower(methodName))
+	patternFixInit := path.Join(prefix, controllerName, methodName)
+
+	route := p.createBeegoRouter(ctrl, pattern)
+	route.methods = map[string]string{"*": methodName}
+	for m := range HTTPMETHOD {
+
+		p.addToRouter(m, pattern, route)
+
+		// only case sensitive, we add three more routes
+		if p.cfg.RouterCaseSensitive {
+			p.addToRouter(m, patternInit, route)
+			p.addToRouter(m, patternFix, route)
+			p.addToRouter(m, patternFixInit, route)
 		}
 	}
 }
