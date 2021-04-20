@@ -21,8 +21,6 @@ import (
 	"errors"
 	"io"
 	"os"
-	"os/user"
-	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -157,17 +155,7 @@ func (ini *IniStringConfig) parseData(data []byte) (*IniConfigContainer, error) 
 // When include other.conf,other.conf is either absolute directory
 // or under beego in default temporary directory(/tmp/beego[-username]).
 func (ini *IniStringConfig) ParseData(data []byte) (Configer, error) {
-	dir := "beego"
-	currentUser, err := user.Current()
-	if err == nil {
-		dir = "beego-" + currentUser.Username
-	}
-	dir = filepath.Join(os.TempDir(), dir)
-	if err = os.MkdirAll(dir, os.ModePerm); err != nil {
-		return nil, err
-	}
-
-	return ini.parseData(dir, data)
+	return ini.parseData(data)
 }
 
 // IniStringConfigContainer is a config which represents the ini configuration.
