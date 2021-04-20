@@ -55,6 +55,11 @@ func SetDefaultSetting(setting BeegoHTTPSettings) {
 	defaultSetting = setting
 }
 
+// SetDefaultSetting return current default setting
+func GetDefaultSetting() BeegoHTTPSettings {
+	return defaultSetting
+}
+
 var defaultSetting = BeegoHTTPSettings{
 	UserAgent:        "beegoServer",
 	ConnectTimeout:   60 * time.Second,

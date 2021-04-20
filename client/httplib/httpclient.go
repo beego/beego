@@ -12,26 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package client
+package httplib
 
 import (
 	"net/http"
 	"strings"
 
-	"github.com/beego/beego/v2/client/httplib"
 	"github.com/beego/beego/v2/core/berror"
 )
 
+// Client provides an HTTP client supporting chain call
 type Client struct {
 	Name       string
 	Endpoint   string
 	CommonOpts []BeegoHttpRequestOption
 
-	Setting *httplib.BeegoHTTPSettings
-	pointer *ResponsePointer
+	Setting *BeegoHTTPSettings
+	pointer *responsePointer
 }
 
-type ResponsePointer struct {
+type responsePointer struct {
 	response      **http.Response
 	statusCode    **int
 	header        **http.Header
@@ -39,12 +39,14 @@ type ResponsePointer struct {
 	contentLength **int64
 }
 
-// NewClient
+// NewClient return a new http client
 func NewClient(name string, endpoint string, opts ...ClientOption) (*Client, error) {
 	res := &Client{
 		Name:     name,
 		Endpoint: endpoint,
 	}
+	setting := GetDefaultSetting()
+	res.Setting = &setting
 	for _, o := range opts {
 		err := o(res)
 		if err != nil {
@@ -58,7 +60,7 @@ func NewClient(name string, endpoint string, opts ...ClientOption) (*Client, err
 func (c *Client) Response(resp **http.Response) *Client {
 	if c.pointer == nil {
 		newC := *c
-		newC.pointer = &ResponsePointer{
+		newC.pointer = &responsePointer{
 			response: resp,
 		}
 		return &newC
@@ -71,7 +73,7 @@ func (c *Client) Response(resp **http.Response) *Client {
 func (c *Client) StatusCode(code **int) *Client {
 	if c.pointer == nil {
 		newC := *c
-		newC.pointer = &ResponsePointer{
+		newC.pointer = &responsePointer{
 			statusCode: code,
 		}
 		return &newC
@@ -84,7 +86,7 @@ func (c *Client) StatusCode(code **int) *Client {
 func (c *Client) Headers(headers **http.Header) *Client {
 	if c.pointer == nil {
 		newC := *c
-		newC.pointer = &ResponsePointer{
+		newC.pointer = &responsePointer{
 			header: headers,
 		}
 		return &newC
@@ -97,7 +99,7 @@ func (c *Client) Headers(headers **http.Header) *Client {
 func (c *Client) HeaderValue(key string, value **string) *Client {
 	if c.pointer == nil {
 		newC := *c
-		newC.pointer = &ResponsePointer{
+		newC.pointer = &responsePointer{
 			headerValues: map[string]**string{
 				key: value,
 			},
@@ -120,7 +122,7 @@ func (c *Client) ContentType(contentType **string) *Client {
 func (c *Client) ContentLength(contentLength **int64) *Client {
 	if c.pointer == nil {
 		newC := *c
-		newC.pointer = &ResponsePointer{
+		newC.pointer = &responsePointer{
 			contentLength: contentLength,
 		}
 		return &newC
@@ -155,19 +157,19 @@ func (c *Client) setPointers(resp *http.Response) {
 }
 
 // initRequest will apply all the client setting, common option and request option
-func (c *Client) newRequest(method, path string, opts []BeegoHttpRequestOption) (*httplib.BeegoHTTPRequest, error) {
-	var req *httplib.BeegoHTTPRequest
+func (c *Client) newRequest(method, path string, opts []BeegoHttpRequestOption) (*BeegoHTTPRequest, error) {
+	var req *BeegoHTTPRequest
 	switch method {
 	case http.MethodGet:
-		req = httplib.Get(c.Endpoint + path)
+		req = Get(c.Endpoint + path)
 	case http.MethodPost:
-		req = httplib.Post(c.Endpoint + path)
+		req = Post(c.Endpoint + path)
 	case http.MethodPut:
-		req = httplib.Put(c.Endpoint + path)
+		req = Put(c.Endpoint + path)
 	case http.MethodDelete:
-		req = httplib.Delete(c.Endpoint + path)
+		req = Delete(c.Endpoint + path)
 	case http.MethodHead:
-		req = httplib.Head(c.Endpoint + path)
+		req = Head(c.Endpoint + path)
 	}
 
 	req = req.Setting(*c.Setting)
@@ -187,13 +189,17 @@ func (c *Client) newRequest(method, path string, opts []BeegoHttpRequestOption) 
 }
 
 // handleResponse try to parse body to meaningful value
-func (c *Client) handleResponse(value interface{}, req *httplib.BeegoHTTPRequest) error {
+func (c *Client) handleResponse(value interface{}, req *BeegoHTTPRequest) error {
 	// send request
 	resp, err := req.Response()
 	if err != nil {
 		return err
 	}
 	c.setPointers(resp)
+
+	if value == nil {
+		return nil
+	}
 
 	// handle basic type
 	switch v := value.(type) {
@@ -217,7 +223,7 @@ func (c *Client) handleResponse(value interface{}, req *httplib.BeegoHTTPRequest
 	switch strings.Split(resp.Header.Get("Content-Type"), ";")[0] {
 	case "application/json":
 		return req.ToJSON(value)
-	case "text/xml":
+	case "text/xml", "application/xml":
 		return req.ToXML(value)
 	case "text/yaml", "application/x-yaml":
 		return req.ToYAML(value)
@@ -235,7 +241,7 @@ func (c *Client) handleResponse(value interface{}, req *httplib.BeegoHTTPRequest
 	}
 
 	// TODO add new error type about can't parse body
-	return berror.Error(httplib.UnsupportedBodyType, "unsupported body data")
+	return berror.Error(UnsupportedBodyType, "unsupported body data")
 }
 
 // Get Send a GET request and try to give its result value
