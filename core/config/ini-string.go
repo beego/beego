@@ -31,28 +31,16 @@ import (
 	"github.com/mitchellh/mapstructure"
 )
 
-var (
-	defaultSection = "default"   // default section means if some ini items not in a section, make them in default section,
-	bNumComment    = []byte{'#'} // number signal
-	bSemComment    = []byte{';'} // semicolon signal
-	bEmpty         = []byte{}
-	bEqual         = []byte{'='} // equal signal
-	bDQuote        = []byte{'"'} // quote signal
-	sectionStart   = []byte{'['} // section start signal
-	sectionEnd     = []byte{']'} // section end signal
-	lineBreak      = "\n"
-)
-
-// IniConfig implements Config to parse ini file.
-type IniConfig struct {
+// IniStringConfig implements Config to parse ini file.
+type IniStringConfig struct {
 }
 
 // Parse creates a new Config and parses the file configuration from the named file.
-func (ini *IniConfig) Parse(name string) (Configer, error) {
+func (ini *IniStringConfig) Parse(name string) (Configer, error) {
 	return ini.parseFile(name)
 }
 
-func (ini *IniConfig) parseFile(name string) (*IniConfigContainer, error) {
+func (ini *IniStringConfig) parseFile(name string) (*IniConfigContainer, error) {
 	data, err := ioutil.ReadFile(name)
 	if err != nil {
 		return nil, err
@@ -61,7 +49,7 @@ func (ini *IniConfig) parseFile(name string) (*IniConfigContainer, error) {
 	return ini.parseData(filepath.Dir(name), data)
 }
 
-func (ini *IniConfig) parseData(dir string, data []byte) (*IniConfigContainer, error) {
+func (ini *IniStringConfig) parseData(dir string, data []byte) (*IniConfigContainer, error) {
 	cfg := &IniConfigContainer{
 		data:           make(map[string]map[string]string),
 		sectionComment: make(map[string]string),
@@ -215,7 +203,7 @@ func (ini *IniConfig) parseData(dir string, data []byte) (*IniConfigContainer, e
 // ParseData parse ini the data
 // When include other.conf,other.conf is either absolute directory
 // or under beego in default temporary directory(/tmp/beego[-username]).
-func (ini *IniConfig) ParseData(data []byte) (Configer, error) {
+func (ini *IniStringConfig) ParseData(data []byte) (Configer, error) {
 	dir := "beego"
 	currentUser, err := user.Current()
 	if err == nil {
@@ -229,9 +217,9 @@ func (ini *IniConfig) ParseData(data []byte) (Configer, error) {
 	return ini.parseData(dir, data)
 }
 
-// IniConfigContainer is a config which represents the ini configuration.
+// IniStringConfigContainer is a config which represents the ini configuration.
 // When set and get value, support key as section:name type.
-type IniConfigContainer struct {
+type IniStringConfigContainer struct {
 	BaseConfiger
 	data           map[string]map[string]string // section=> key:val
 	sectionComment map[string]string            // section : comment
@@ -240,13 +228,13 @@ type IniConfigContainer struct {
 }
 
 // Bool returns the boolean value for a given key.
-func (c *IniConfigContainer) Bool(key string) (bool, error) {
+func (c *IniStringConfigContainer) Bool(key string) (bool, error) {
 	return ParseBool(c.getdata(key))
 }
 
 // DefaultBool returns the boolean value for a given key.
 // if err != nil return defaultVal
-func (c *IniConfigContainer) DefaultBool(key string, defaultVal bool) bool {
+func (c *IniStringConfigContainer) DefaultBool(key string, defaultVal bool) bool {
 	v, err := c.Bool(key)
 	if err != nil {
 		return defaultVal
@@ -255,13 +243,13 @@ func (c *IniConfigContainer) DefaultBool(key string, defaultVal bool) bool {
 }
 
 // Int returns the integer value for a given key.
-func (c *IniConfigContainer) Int(key string) (int, error) {
+func (c *IniStringConfigContainer) Int(key string) (int, error) {
 	return strconv.Atoi(c.getdata(key))
 }
 
 // DefaultInt returns the integer value for a given key.
 // if err != nil return defaultVal
-func (c *IniConfigContainer) DefaultInt(key string, defaultVal int) int {
+func (c *IniStringConfigContainer) DefaultInt(key string, defaultVal int) int {
 	v, err := c.Int(key)
 	if err != nil {
 		return defaultVal
@@ -270,13 +258,13 @@ func (c *IniConfigContainer) DefaultInt(key string, defaultVal int) int {
 }
 
 // Int64 returns the int64 value for a given key.
-func (c *IniConfigContainer) Int64(key string) (int64, error) {
+func (c *IniStringConfigContainer) Int64(key string) (int64, error) {
 	return strconv.ParseInt(c.getdata(key), 10, 64)
 }
 
 // DefaultInt64 returns the int64 value for a given key.
 // if err != nil return defaultVal
-func (c *IniConfigContainer) DefaultInt64(key string, defaultVal int64) int64 {
+func (c *IniStringConfigContainer) DefaultInt64(key string, defaultVal int64) int64 {
 	v, err := c.Int64(key)
 	if err != nil {
 		return defaultVal
@@ -285,13 +273,13 @@ func (c *IniConfigContainer) DefaultInt64(key string, defaultVal int64) int64 {
 }
 
 // Float returns the float value for a given key.
-func (c *IniConfigContainer) Float(key string) (float64, error) {
+func (c *IniStringConfigContainer) Float(key string) (float64, error) {
 	return strconv.ParseFloat(c.getdata(key), 64)
 }
 
 // DefaultFloat returns the float64 value for a given key.
 // if err != nil return defaultVal
-func (c *IniConfigContainer) DefaultFloat(key string, defaultVal float64) float64 {
+func (c *IniStringConfigContainer) DefaultFloat(key string, defaultVal float64) float64 {
 	v, err := c.Float(key)
 	if err != nil {
 		return defaultVal
@@ -300,13 +288,13 @@ func (c *IniConfigContainer) DefaultFloat(key string, defaultVal float64) float6
 }
 
 // String returns the string value for a given key.
-func (c *IniConfigContainer) String(key string) (string, error) {
+func (c *IniStringConfigContainer) String(key string) (string, error) {
 	return c.getdata(key), nil
 }
 
 // DefaultString returns the string value for a given key.
 // if err != nil return defaultVal
-func (c *IniConfigContainer) DefaultString(key string, defaultVal string) string {
+func (c *IniStringConfigContainer) DefaultString(key string, defaultVal string) string {
 	v, err := c.String(key)
 	if v == "" || err != nil {
 		return defaultVal
@@ -316,7 +304,7 @@ func (c *IniConfigContainer) DefaultString(key string, defaultVal string) string
 
 // Strings returns the []string value for a given key.
 // Return nil if config value does not exist or is empty.
-func (c *IniConfigContainer) Strings(key string) ([]string, error) {
+func (c *IniStringConfigContainer) Strings(key string) ([]string, error) {
 	v, err := c.String(key)
 	if v == "" || err != nil {
 		return nil, err
@@ -326,7 +314,7 @@ func (c *IniConfigContainer) Strings(key string) ([]string, error) {
 
 // DefaultStrings returns the []string value for a given key.
 // if err != nil return defaultVal
-func (c *IniConfigContainer) DefaultStrings(key string, defaultVal []string) []string {
+func (c *IniStringConfigContainer) DefaultStrings(key string, defaultVal []string) []string {
 	v, err := c.Strings(key)
 	if v == nil || err != nil {
 		return defaultVal
@@ -335,7 +323,7 @@ func (c *IniConfigContainer) DefaultStrings(key string, defaultVal []string) []s
 }
 
 // GetSection returns map for the given section
-func (c *IniConfigContainer) GetSection(section string) (map[string]string, error) {
+func (c *IniStringConfigContainer) GetSection(section string) (map[string]string, error) {
 	if v, ok := c.data[section]; ok {
 		return v, nil
 	}
@@ -345,7 +333,7 @@ func (c *IniConfigContainer) GetSection(section string) (map[string]string, erro
 // SaveConfigFile save the config into file.
 //
 // BUG(env): The environment variable config item will be saved with real value in SaveConfigFile Function.
-func (c *IniConfigContainer) SaveConfigFile(filename string) (err error) {
+func (c *IniStringConfigContainer) SaveConfigFile(filename string) (err error) {
 	// Write configuration file by filename.
 	f, err := os.Create(filename)
 	if err != nil {
@@ -445,7 +433,7 @@ func (c *IniConfigContainer) SaveConfigFile(filename string) (err error) {
 // Set writes a new value for key.
 // if write to one section, the key need be "section::key".
 // if the section is not existed, it panics.
-func (c *IniConfigContainer) Set(key, val string) error {
+func (c *IniStringConfigContainer) Set(key, val string) error {
 	c.Lock()
 	defer c.Unlock()
 	if len(key) == 0 {
@@ -473,7 +461,7 @@ func (c *IniConfigContainer) Set(key, val string) error {
 }
 
 // DIY returns the raw value by a given key.
-func (c *IniConfigContainer) DIY(key string) (v interface{}, err error) {
+func (c *IniStringConfigContainer) DIY(key string) (v interface{}, err error) {
 	if v, ok := c.data[strings.ToLower(key)]; ok {
 		return v, nil
 	}
@@ -481,7 +469,7 @@ func (c *IniConfigContainer) DIY(key string) (v interface{}, err error) {
 }
 
 // section.key or key
-func (c *IniConfigContainer) getdata(key string) string {
+func (c *IniStringConfigContainer) getdata(key string) string {
 	if len(key) == 0 {
 		return ""
 	}
@@ -507,7 +495,7 @@ func (c *IniConfigContainer) getdata(key string) string {
 	return ""
 }
 
-func (c *IniConfigContainer) Unmarshaler(prefix string, obj interface{}, opt ...DecodeOption) error {
+func (c *IniStringConfigContainer) Unmarshaler(prefix string, obj interface{}, opt ...DecodeOption) error {
 	if len(prefix) > 0 {
 		return errors.New("unsupported prefix params")
 	}
@@ -515,12 +503,7 @@ func (c *IniConfigContainer) Unmarshaler(prefix string, obj interface{}, opt ...
 }
 
 func init() {
-	Register("ini", &IniConfig{})
-
-	err := InitGlobalInstance("ini", "conf/app.conf")
-	if err != nil {
-
-	}
+	Register("ini-string", &IniStringConfig{})
 }
 
 // Ignore this error
