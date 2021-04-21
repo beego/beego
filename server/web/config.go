@@ -295,6 +295,7 @@ func parseConfig(appConfigPath string) (err error) {
 	if err != nil {
 		return err
 	}
+
 	return assignConfig(AppConfig)
 }
 
@@ -430,7 +431,7 @@ func LoadAppConfig(adapterName, configPath string) error {
 		return err
 	}
 
-	if !utils.FileExists(absConfigPath) {
+	if adapterName!="ini-string" && !utils.FileExists(absConfigPath) {
 		return fmt.Errorf("the target config file: %s don't exist", configPath)
 	}
 
