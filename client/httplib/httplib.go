@@ -56,6 +56,7 @@ import (
 )
 
 const contentTypeKey = "Content-Type"
+
 // it will be the last filter and execute request.Do
 var doRequestFilter = func(ctx context.Context, req *BeegoHTTPRequest) (*http.Response, error) {
 	return req.doRequest(ctx)
@@ -658,6 +659,64 @@ func (b *BeegoHTTPRequest) ToYAML(v interface{}) error {
 // Response executes request client gets response manually.
 func (b *BeegoHTTPRequest) Response() (*http.Response, error) {
 	return b.getResponse()
+}
+
+// ResponseForValue attempts to resolve the response body to value using an existing method.
+// Calls Response inner.
+// If value type is **string or **[]byte, the func directly passes response body into the pointer.
+// Else if response header contain Content-Type, func will call ToJSON\ToXML\ToYAML.
+// Finally it will try to parse body as json\yaml\xml, If all attempts fail, an error will be returned
+func (b *BeegoHTTPRequest) ResponseForValue(value interface{}) error {
+	if value == nil {
+		return nil
+	}
+	// handle basic type
+	switch v := value.(type) {
+	case **string:
+		s, err := b.String()
+		if err != nil {
+			return nil
+		}
+		*v = &s
+		return nil
+	case **[]byte:
+		bs, err := b.Bytes()
+		if err != nil {
+			return nil
+		}
+		*v = &bs
+		return nil
+	}
+
+	resp, err := b.Response()
+	if err != nil {
+		return err
+	}
+	contentType := strings.Split(resp.Header.Get(contentTypeKey), ";")[0]
+
+	// try to parse it as content type
+	switch contentType {
+	case "application/json":
+		return b.ToJSON(value)
+	case "text/xml", "application/xml":
+		return b.ToXML(value)
+	case "text/yaml", "application/x-yaml", "application/x+yaml":
+		return b.ToYAML(value)
+	}
+
+	// try to parse it anyway
+	if err := b.ToJSON(value); err == nil {
+		return nil
+	}
+	if err := b.ToYAML(value); err == nil {
+		return nil
+	}
+	if err := b.ToXML(value); err == nil {
+		return nil
+	}
+
+	// TODO add new error type about can't parse body
+	return berror.Error(UnsupportedBodyType, "unsupported body data")
 }
 
 // TimeoutDialer returns functions of connection dialer with timeout settings for http.Transport Dial field.

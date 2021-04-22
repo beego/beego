@@ -21,70 +21,62 @@ import (
 	"time"
 )
 
-type ClientOption func(client *Client) error
-type BeegoHttpRequestOption func(request *BeegoHTTPRequest) error
+type ClientOption func(client *Client)
+type BeegoHttpRequestOption func(request *BeegoHTTPRequest)
 
 // WithEnableCookie will enable cookie in all subsequent request
 func WithEnableCookie(enable bool) ClientOption {
-	return func(client *Client) error {
+	return func(client *Client) {
 		client.Setting.EnableCookie = enable
-		return nil
 	}
 }
 
 // WithEnableCookie will adds UA in all subsequent request
 func WithUserAgent(userAgent string) ClientOption {
-	return func(client *Client) error {
+	return func(client *Client) {
 		client.Setting.UserAgent = userAgent
-		return nil
 	}
 }
 
 // WithTLSClientConfig will adds tls config in all subsequent request
 func WithTLSClientConfig(config *tls.Config) ClientOption {
-	return func(client *Client) error {
+	return func(client *Client) {
 		client.Setting.TLSClientConfig = config
-		return nil
 	}
 }
 
 // WithTransport will set transport field in all subsequent request
 func WithTransport(transport http.RoundTripper) ClientOption {
-	return func(client *Client) error {
+	return func(client *Client) {
 		client.Setting.Transport = transport
-		return nil
 	}
 }
 
 // WithProxy will set http proxy field in all subsequent request
 func WithProxy(proxy func(*http.Request) (*url.URL, error)) ClientOption {
-	return func(client *Client) error {
+	return func(client *Client) {
 		client.Setting.Proxy = proxy
-		return nil
 	}
 }
 
 // WithCheckRedirect will specifies the policy for handling redirects in all subsequent request
 func WithCheckRedirect(redirect func(req *http.Request, via []*http.Request) error) ClientOption {
-	return func(client *Client) error {
+	return func(client *Client) {
 		client.Setting.CheckRedirect = redirect
-		return nil
 	}
 }
 
 // WithHTTPSetting can replace beegoHTTPSeting
 func WithHTTPSetting(setting BeegoHTTPSettings) ClientOption {
-	return func(client *Client) error {
-		client.Setting = &setting
-		return nil
+	return func(client *Client) {
+		client.Setting = setting
 	}
 }
 
 // WithEnableGzip will enable gzip in all subsequent request
 func WithEnableGzip(enable bool) ClientOption {
-	return func(client *Client) error {
+	return func(client *Client) {
 		client.Setting.Gzip = enable
-		return nil
 	}
 }
 
@@ -92,73 +84,60 @@ func WithEnableGzip(enable bool) ClientOption {
 
 // WithTimeout sets connect time out and read-write time out for BeegoRequest.
 func WithTimeout(connectTimeout, readWriteTimeout time.Duration) BeegoHttpRequestOption {
-	return func(request *BeegoHTTPRequest) error {
+	return func(request *BeegoHTTPRequest) {
 		request.SetTimeout(connectTimeout, readWriteTimeout)
-		return nil
 	}
 }
 
 // WithHeader adds header item string in request.
 func WithHeader(key, value string) BeegoHttpRequestOption {
-	return func(request *BeegoHTTPRequest) error {
+	return func(request *BeegoHTTPRequest) {
 		request.Header(key, value)
-		return nil
 	}
 }
 
 // WithCookie adds a cookie to the request.
 func WithCookie(cookie *http.Cookie) BeegoHttpRequestOption {
-	return func(request *BeegoHTTPRequest) error {
+	return func(request *BeegoHTTPRequest) {
 		request.Header("Cookie", cookie.String())
-		return nil
 	}
 }
 
 // Withtokenfactory adds a custom function to set Authorization
-func WithTokenFactory(tokenFactory func() (string, error)) BeegoHttpRequestOption {
-	return func(request *BeegoHTTPRequest) error {
-		t, err := tokenFactory()
-		if err != nil {
-			return err
-		}
+func WithTokenFactory(tokenFactory func() string) BeegoHttpRequestOption {
+	return func(request *BeegoHTTPRequest) {
+		t := tokenFactory()
+
 		request.Header("Authorization", t)
-		return nil
 	}
 }
 
 // WithBasicAuth adds a custom function to set basic auth
-func WithBasicAuth(basicAuth func() (string, string, error)) BeegoHttpRequestOption {
-	return func(request *BeegoHTTPRequest) error {
-		username, password, err := basicAuth()
-		if err != nil {
-			return err
-		}
+func WithBasicAuth(basicAuth func() (string, string)) BeegoHttpRequestOption {
+	return func(request *BeegoHTTPRequest) {
+		username, password := basicAuth()
 		request.SetBasicAuth(username, password)
-		return nil
 	}
 }
 
 // WithFilters will use the filter as the invocation filters
 func WithFilters(fcs ...FilterChain) BeegoHttpRequestOption {
-	return func(request *BeegoHTTPRequest) error {
+	return func(request *BeegoHTTPRequest) {
 		request.SetFilters(fcs...)
-		return nil
 	}
 }
 
 // WithContentType adds ContentType in header
 func WithContentType(contentType string) BeegoHttpRequestOption {
-	return func(request *BeegoHTTPRequest) error {
-		request.Header("Content-Type", contentType)
-		return nil
+	return func(request *BeegoHTTPRequest) {
+		request.Header(contentTypeKey, contentType)
 	}
 }
 
 // WithParam adds query param in to request.
 func WithParam(key, value string) BeegoHttpRequestOption {
-	return func(request *BeegoHTTPRequest) error {
+	return func(request *BeegoHTTPRequest) {
 		request.Param(key, value)
-		return nil
 	}
 }
 
@@ -167,9 +146,8 @@ func WithParam(key, value string) BeegoHttpRequestOption {
 // -1 retry indefinitely (forever)
 // Other numbers specify the exact retry amount
 func WithRetry(times int, delay time.Duration) BeegoHttpRequestOption {
-	return func(request *BeegoHTTPRequest) error {
+	return func(request *BeegoHTTPRequest) {
 		request.Retries(times)
 		request.RetryDelay(delay)
-		return nil
 	}
 }

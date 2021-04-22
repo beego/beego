@@ -433,3 +433,7 @@ func TestBeegoHTTPRequest_XMLBody(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, req.req.GetBody)
 }
+
+// TODO
+func TestBeegoHTTPRequest_ResponseForValue(t *testing.T) {
+}

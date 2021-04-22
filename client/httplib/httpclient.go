@@ -16,9 +16,6 @@ package httplib
 
 import (
 	"net/http"
-	"strings"
-
-	"github.com/beego/beego/v2/core/berror"
 )
 
 // Client provides an HTTP client supporting chain call
@@ -27,8 +24,8 @@ type Client struct {
 	Endpoint   string
 	CommonOpts []BeegoHttpRequestOption
 
-	Setting *BeegoHTTPSettings
-	pointer *responsePointer
+	Setting BeegoHTTPSettings
+	pointer responsePointer
 }
 
 type responsePointer struct {
@@ -46,71 +43,42 @@ func NewClient(name string, endpoint string, opts ...ClientOption) (*Client, err
 		Endpoint: endpoint,
 	}
 	setting := GetDefaultSetting()
-	res.Setting = &setting
+	res.Setting = setting
 	for _, o := range opts {
-		err := o(res)
-		if err != nil {
-			return nil, err
-		}
+		o(res)
 	}
 	return res, nil
 }
 
 // Response will set response to the pointer
 func (c *Client) Response(resp **http.Response) *Client {
-	if c.pointer == nil {
-		newC := *c
-		newC.pointer = &responsePointer{
-			response: resp,
-		}
-		return &newC
-	}
-	c.pointer.response = resp
-	return c
+	newC := *c
+	newC.pointer.response = resp
+	return &newC
 }
 
 // StatusCode will set response StatusCode to the pointer
 func (c *Client) StatusCode(code **int) *Client {
-	if c.pointer == nil {
-		newC := *c
-		newC.pointer = &responsePointer{
-			statusCode: code,
-		}
-		return &newC
-	}
-	c.pointer.statusCode = code
-	return c
+	newC := *c
+	newC.pointer.statusCode = code
+	return &newC
 }
 
 // Headers will set response Headers to the pointer
 func (c *Client) Headers(headers **http.Header) *Client {
-	if c.pointer == nil {
-		newC := *c
-		newC.pointer = &responsePointer{
-			header: headers,
-		}
-		return &newC
-	}
-	c.pointer.header = headers
-	return c
+	newC := *c
+	newC.pointer.header = headers
+	return &newC
 }
 
 // HeaderValue will set response HeaderValue to the pointer
 func (c *Client) HeaderValue(key string, value **string) *Client {
-	if c.pointer == nil {
-		newC := *c
-		newC.pointer = &responsePointer{
-			headerValues: map[string]**string{
-				key: value,
-			},
-		}
-		return &newC
+	newC := *c
+	if newC.pointer.headerValues == nil {
+		newC.pointer.headerValues = make(map[string]**string)
 	}
-	if c.pointer.headerValues == nil {
-		c.pointer.headerValues = map[string]**string{}
-	}
-	c.pointer.headerValues[key] = value
-	return c
+	newC.pointer.headerValues[key] = value
+	return &newC
 }
 
 // ContentType will set response ContentType to the pointer
@@ -120,22 +88,13 @@ func (c *Client) ContentType(contentType **string) *Client {
 
 // ContentLength will set response ContentLength to the pointer
 func (c *Client) ContentLength(contentLength **int64) *Client {
-	if c.pointer == nil {
-		newC := *c
-		newC.pointer = &responsePointer{
-			contentLength: contentLength,
-		}
-		return &newC
-	}
-	c.pointer.contentLength = contentLength
-	return c
+	newC := *c
+	newC.pointer.contentLength = contentLength
+	return &newC
 }
 
 // setPointers set the http response value to pointer
 func (c *Client) setPointers(resp *http.Response) {
-	if c.pointer == nil {
-		return
-	}
 	if c.pointer.response != nil {
 		*c.pointer.response = resp
 	}
@@ -156,36 +115,12 @@ func (c *Client) setPointers(resp *http.Response) {
 	}
 }
 
-// initRequest will apply all the client setting, common option and request option
-func (c *Client) newRequest(method, path string, opts []BeegoHttpRequestOption) (*BeegoHTTPRequest, error) {
-	var req *BeegoHTTPRequest
-	switch method {
-	case http.MethodGet:
-		req = Get(c.Endpoint + path)
-	case http.MethodPost:
-		req = Post(c.Endpoint + path)
-	case http.MethodPut:
-		req = Put(c.Endpoint + path)
-	case http.MethodDelete:
-		req = Delete(c.Endpoint + path)
-	case http.MethodHead:
-		req = Head(c.Endpoint + path)
-	}
-
-	req = req.Setting(*c.Setting)
-	for _, o := range c.CommonOpts {
-		err := o(req)
-		if err != nil {
-			return nil, err
-		}
-	}
+func (c *Client) customReq(req *BeegoHTTPRequest, opts []BeegoHttpRequestOption) {
+	req.Setting(c.Setting)
+	opts = append(c.CommonOpts, opts...)
 	for _, o := range opts {
-		err := o(req)
-		if err != nil {
-			return nil, err
-		}
+		o(req)
 	}
-	return req, nil
 }
 
 // handleResponse try to parse body to meaningful value
@@ -196,69 +131,20 @@ func (c *Client) handleResponse(value interface{}, req *BeegoHTTPRequest) error 
 		return err
 	}
 	c.setPointers(resp)
-
-	if value == nil {
-		return nil
-	}
-
-	// handle basic type
-	switch v := value.(type) {
-	case **string:
-		s, err := req.String()
-		if err != nil {
-			return nil
-		}
-		*v = &s
-		return nil
-	case **[]byte:
-		bs, err := req.Bytes()
-		if err != nil {
-			return nil
-		}
-		*v = &bs
-		return nil
-	}
-
-	// try to parse it as content type
-	switch strings.Split(resp.Header.Get("Content-Type"), ";")[0] {
-	case "application/json":
-		return req.ToJSON(value)
-	case "text/xml", "application/xml":
-		return req.ToXML(value)
-	case "text/yaml", "application/x-yaml":
-		return req.ToYAML(value)
-	}
-
-	// try to parse it anyway
-	if err := req.ToJSON(value); err == nil {
-		return nil
-	}
-	if err := req.ToYAML(value); err == nil {
-		return nil
-	}
-	if err := req.ToXML(value); err == nil {
-		return nil
-	}
-
-	// TODO add new error type about can't parse body
-	return berror.Error(UnsupportedBodyType, "unsupported body data")
+	return req.ResponseForValue(value)
 }
 
 // Get Send a GET request and try to give its result value
 func (c *Client) Get(value interface{}, path string, opts ...BeegoHttpRequestOption) error {
-	req, err := c.newRequest(http.MethodGet, path, opts)
-	if err != nil {
-		return err
-	}
+	req := Get(c.Endpoint + path)
+	c.customReq(req, opts)
 	return c.handleResponse(value, req)
 }
 
 // Post Send a POST request and try to give its result value
 func (c *Client) Post(value interface{}, path string, body interface{}, opts ...BeegoHttpRequestOption) error {
-	req, err := c.newRequest(http.MethodPost, path, opts)
-	if err != nil {
-		return err
-	}
+	req := Post(c.Endpoint + path)
+	c.customReq(req, opts)
 	if body != nil {
 		req = req.Body(body)
 	}
@@ -267,10 +153,8 @@ func (c *Client) Post(value interface{}, path string, body interface{}, opts ...
 
 // Put Send a Put request and try to give its result value
 func (c *Client) Put(value interface{}, path string, body interface{}, opts ...BeegoHttpRequestOption) error {
-	req, err := c.newRequest(http.MethodPut, path, opts)
-	if err != nil {
-		return err
-	}
+	req := Put(c.Endpoint + path)
+	c.customReq(req, opts)
 	if body != nil {
 		req = req.Body(body)
 	}
@@ -279,18 +163,14 @@ func (c *Client) Put(value interface{}, path string, body interface{}, opts ...B
 
 // Delete Send a Delete request and try to give its result value
 func (c *Client) Delete(value interface{}, path string, opts ...BeegoHttpRequestOption) error {
-	req, err := c.newRequest(http.MethodDelete, path, opts)
-	if err != nil {
-		return err
-	}
+	req := Delete(c.Endpoint + path)
+	c.customReq(req, opts)
 	return c.handleResponse(value, req)
 }
 
 // Head Send a Head request and try to give its result value
 func (c *Client) Head(value interface{}, path string, opts ...BeegoHttpRequestOption) error {
-	req, err := c.newRequest(http.MethodHead, path, opts)
-	if err != nil {
-		return err
-	}
+	req := Head(c.Endpoint + path)
+	c.customReq(req, opts)
 	return c.handleResponse(value, req)
 }

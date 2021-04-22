@@ -55,7 +55,7 @@ func SetDefaultSetting(setting BeegoHTTPSettings) {
 	defaultSetting = setting
 }
 
-// SetDefaultSetting return current default setting
+// GetDefaultSetting return current default setting
 func GetDefaultSetting() BeegoHTTPSettings {
 	return defaultSetting
 }

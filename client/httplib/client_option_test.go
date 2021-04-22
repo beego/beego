@@ -147,8 +147,8 @@ func TestOption_WithTokenFactory(t *testing.T) {
 		t.Fatal(err)
 	}
 	client.CommonOpts = append(client.CommonOpts,
-		WithTokenFactory(func() (string, error) {
-			return "testauth", nil
+		WithTokenFactory(func() string {
+			return "testauth"
 		}))
 
 	var str *string
@@ -172,8 +172,8 @@ func TestOption_WithBasicAuth(t *testing.T) {
 
 	var str *string
 	err = client.Get(&str, "/basic-auth/user/passwd",
-		WithBasicAuth(func() (string, string, error) {
-			return "user", "passwd", nil
+		WithBasicAuth(func() (string, string) {
+			return "user", "passwd"
 		}))
 	if err != nil {
 		t.Fatal(err)
@@ -240,7 +240,9 @@ func TestOption_WithRetry(t *testing.T) {
 
 	err = client.Get(nil, "", WithRetry(retryAmount, retryDelay))
 
-	assert.NotNil(t, err)
+	if err != nil {
+		t.Fatal(err)
+	}
 	endTime := time.Now().UnixNano() / int64(time.Millisecond)
 	elapsedTime := endTime - startTime
 	delayedTime := int64(retryAmount) * retryDelay.Milliseconds()
