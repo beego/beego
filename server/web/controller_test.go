@@ -270,16 +270,10 @@ type respTestCase struct {
 func TestControllerResp(t *testing.T) {
 	// test cases
 	tcs := []respTestCase{
-		{Accept: context.ApplicationJSON, ExpectedContentLength: 18, ExpectedResponse: `{
-			"foo": "bar"
-		  }`},
-		{Accept: context.ApplicationXML, ExpectedContentLength: 25, ExpectedResponse: `<S>
-		<foo>bar</foo>
-	  </S>`},
+		{Accept: context.ApplicationJSON, ExpectedContentLength: 18, ExpectedResponse: "{\n  \"foo\": \"bar\"\n}"},
+		{Accept: context.ApplicationXML, ExpectedContentLength: 25, ExpectedResponse: "<S>\n  <foo>bar</foo>\n</S>"},
 		{Accept: context.ApplicationYAML, ExpectedContentLength: 9, ExpectedResponse: "foo: bar\n"},
-		{Accept: "OTHER", ExpectedContentLength: 18, ExpectedResponse: `{
-			"foo": "bar"
-		  }`},
+		{Accept: "OTHER", ExpectedContentLength: 18, ExpectedResponse: "{\n  \"foo\": \"bar\"\n}"},
 	}
 
 	for _, tc := range tcs {
