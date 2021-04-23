@@ -294,7 +294,7 @@ func testControllerRespTestCases(t *testing.T, tc respTestCase) {
 
 	response := w.Result()
 	if response.ContentLength != tc.ExpectedContentLength {
-		t.Errorf("TestResponse() unable to validate content length for %s", tc.Accept)
+		t.Errorf("TestResponse() unable to validate content length %d for %s", response.ContentLength, tc.Accept)
 	}
 
 	if response.StatusCode != http.StatusOK {
@@ -307,6 +307,6 @@ func testControllerRespTestCases(t *testing.T, tc respTestCase) {
 	}
 	bodyString := string(bodyBytes)
 	if bodyString != tc.ExpectedResponse {
-		t.Errorf("TestResponse() failed to validate response body for %s", tc.Accept)
+		t.Errorf("TestResponse() failed to validate response body '%s' for %s", bodyString, tc.Accept)
 	}
 }
