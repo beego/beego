@@ -258,7 +258,7 @@ func (t *TestRespController) TestResponse() {
 
 	bar := S{Foo: "bar"}
 
-	t.Resp(bar)
+	_ = t.Resp(bar)
 }
 
 type respTestCase struct {
