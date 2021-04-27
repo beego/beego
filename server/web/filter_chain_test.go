@@ -15,16 +15,18 @@
 package web
 
 import (
+	"github.com/beego/beego/v2/core/logs"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/beego/beego/v2/server/web/context"
 )
 
-func TestControllerRegister_InsertFilterChain(t *testing.T) {
+func TestControllerRegisterInsertFilterChain(t *testing.T) {
 
 	InsertFilterChain("/*", func(next FilterFunc) FilterFunc {
 		return func(ctx *context.Context) {
@@ -45,4 +47,25 @@ func TestControllerRegister_InsertFilterChain(t *testing.T) {
 	BeeApp.Handlers.ServeHTTP(w, r)
 
 	assert.Equal(t, "filter-chain", w.Header().Get("filter"))
+}
+
+func TestFilterChainRouter(t *testing.T) {
+	InsertFilterChain("/app/hello1/*", func(next FilterFunc) FilterFunc {
+		return func(ctx *context.Context) {
+			logs.Info("aaa")
+			next(ctx)
+		}
+	})
+
+	InsertFilterChain("/app/*", func(next FilterFunc) FilterFunc {
+		return func(ctx *context.Context) {
+			start := time.Now()
+			ctx.Input.SetData("start", start)
+			logs.Info("start_time", start)
+			next(ctx)
+			logs.Info("run_time", time.Since(start).String())
+		}
+	})
+
+	Run()
 }
