@@ -15,13 +15,10 @@
 package web
 
 import (
-	"github.com/beego/beego/v2/core/logs"
+	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"time"
-
-	"github.com/stretchr/testify/assert"
 
 	"github.com/beego/beego/v2/server/web/context"
 )
@@ -50,22 +47,56 @@ func TestControllerRegisterInsertFilterChain(t *testing.T) {
 }
 
 func TestFilterChainRouter(t *testing.T) {
-	InsertFilterChain("/app/hello1/*", func(next FilterFunc) FilterFunc {
+
+
+	app := NewHttpSever()
+
+	const filterNonMatch = "filter-chain-non-match"
+	app.InsertFilterChain("/app/nonMatch/before/*", func(next FilterFunc) FilterFunc {
 		return func(ctx *context.Context) {
-			logs.Info("aaa")
+			ctx.Output.Header("filter", filterNonMatch)
 			next(ctx)
 		}
 	})
 
-	InsertFilterChain("/app/*", func(next FilterFunc) FilterFunc {
+	const filterAll = "filter-chain-all"
+	app.InsertFilterChain("/*", func(next FilterFunc) FilterFunc {
 		return func(ctx *context.Context) {
-			start := time.Now()
-			ctx.Input.SetData("start", start)
-			logs.Info("start_time", start)
+			ctx.Output.Header("filter", filterAll)
 			next(ctx)
-			logs.Info("run_time", time.Since(start).String())
 		}
 	})
 
-	Run()
+	app.InsertFilterChain("/app/nonMatch/after/*", func(next FilterFunc) FilterFunc {
+		return func(ctx *context.Context) {
+			ctx.Output.Header("filter", filterNonMatch)
+			next(ctx)
+		}
+	})
+
+	app.InsertFilterChain("/app/match/*", func(next FilterFunc) FilterFunc {
+		return func(ctx *context.Context) {
+			ctx.Output.Header("match", "yes")
+			next(ctx)
+		}
+	})
+
+	r, _ := http.NewRequest("GET", "/app/match", nil)
+	w := httptest.NewRecorder()
+
+	app.Handlers.ServeHTTP(w, r)
+	assert.Equal(t, filterAll, w.Header().Get("filter"))
+	assert.Equal(t, "yes", w.Header().Get("match"))
+
+	r, _ = http.NewRequest("GET", "/app/match1", nil)
+	w = httptest.NewRecorder()
+	app.Handlers.ServeHTTP(w, r)
+	assert.Equal(t, filterAll, w.Header().Get("filter"))
+	assert.NotEqual(t, "yes", w.Header().Get("match"))
+
+	r, _ = http.NewRequest("GET", "/app/nonMatch", nil)
+	w = httptest.NewRecorder()
+	app.Handlers.ServeHTTP(w, r)
+	assert.Equal(t, filterAll, w.Header().Get("filter"))
+	assert.NotEqual(t, "yes", w.Header().Get("match"))
 }
