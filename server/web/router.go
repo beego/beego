@@ -486,7 +486,11 @@ func (p *ControllerRegister) InsertFilter(pattern string, pos int, filter Filter
 // }
 func (p *ControllerRegister) InsertFilterChain(pattern string, chain FilterChain, opts ...FilterOpt) {
 	root := p.chainRoot
-	filterFunc := chain(root.filterFunc)
+	//filterFunc := chain(root.filterFunc)
+	filterFunc := chain(func(ctx *beecontext.Context) {
+		var preFilterParams map[string]string
+		root.filter(ctx, p.getUrlPath(ctx), preFilterParams)
+	})
 	opts = append(opts, WithCaseSensitive(p.cfg.RouterCaseSensitive))
 	p.chainRoot = newFilterRouter(pattern, filterFunc, opts...)
 	p.chainRoot.next = root
