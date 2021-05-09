@@ -330,11 +330,19 @@ func parseFormToStruct(form url.Values, objT reflect.Type, objV reflect.Value) e
 			}
 			fieldV.SetBool(b)
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			x, err := strconv.ParseInt(value, 10, 64)
-			if err != nil {
-				return err
+			if strings.Contains(value, ".") {
+				x, err := strconv.ParseFloat(value, 64)
+				if err != nil {
+					return err
+				}
+				fieldV.SetInt(int64(x))
+			} else {
+				x, err := strconv.ParseInt(value, 10, 64)
+				if err != nil {
+					return err
+				}
+				fieldV.SetInt(x)
 			}
-			fieldV.SetInt(x)
 		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 			x, err := strconv.ParseUint(value, 10, 64)
 			if err != nil {
