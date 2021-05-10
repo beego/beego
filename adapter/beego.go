@@ -44,7 +44,8 @@ var (
 // The hookfuncs will run in beego.Run()
 // such as initiating session , starting middleware , building template, starting admin control and so on.
 func AddAPPStartHook(hf ...hookfunc) {
-	for _, f := range hf {
+	for i := 0; i < len(hf); i++ {
+		f := hf[i]
 		web.AddAPPStartHook(func() error {
 			return f()
 		})
