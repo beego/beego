@@ -38,6 +38,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"encoding/xml"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
@@ -56,6 +57,7 @@ import (
 )
 
 const contentTypeKey = "Content-Type"
+
 // it will be the last filter and execute request.Do
 var doRequestFilter = func(ctx context.Context, req *BeegoHTTPRequest) (*http.Response, error) {
 	return req.doRequest(ctx)
@@ -273,6 +275,17 @@ func (b *BeegoHTTPRequest) Param(key, value string) *BeegoHTTPRequest {
 func (b *BeegoHTTPRequest) PostFile(formname, filename string) *BeegoHTTPRequest {
 	b.files[formname] = filename
 	return b
+}
+
+// PostForm submit formdata like "name1=value1&name2=value2" and encode
+func (b *BeegoHTTPRequest) PostForm(fromdata string) (*BeegoHTTPRequest, error) {
+	v, err := url.ParseQuery(fromdata)
+	if err != nil {
+		return b, berror.Wrap(err, InvalidFormData, "fromdata format error")
+	}
+	b.Header("content-type", "application/x-www-form-urlencoded")
+	b.Body(v.Encode())
+	return b, nil
 }
 
 // Body adds request raw body.

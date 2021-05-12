@@ -19,7 +19,7 @@ import (
 )
 
 var InvalidUrl = berror.DefineCode(4001001, moduleName, "InvalidUrl", `
-You pass a invalid url to httplib module. Please check your url, be careful about special character. 
+You pass a invalid url to httplib module. Please check your url, be careful about special character.
 `)
 
 var InvalidUrlProtocolVersion = berror.DefineCode(4001002, moduleName, "InvalidUrlProtocolVersion", `
@@ -51,6 +51,10 @@ Sometimes you got JSON document and you want to make it as request body. So you 
 If you do this, you got this code. Instead, you should call Header to set Content-type and call Body to set body data.
 `)
 
+var InvalidFormData = berror.DefineCode(4001007, moduleName, "InvalidFormData", `
+You pass invalid data which not be FromData, must like "name1=value1&name2=value2".
+`)
+
 // start with 5 --------------------------------------------------------------------------
 
 var CreateFormFileFailed = berror.DefineCode(5001001, moduleName, "CreateFormFileFailed", `
@@ -63,7 +67,7 @@ There are several cases that cause this error:
 1. file not found. Please check the file name;
 2. file not found, but file name is correct. If you use relative file path, it's very possible for you to see this code.
 make sure that this file is in correct directory which Beego looks for;
-3. Beego don't have the privilege to read this file, please change file mode; 
+3. Beego don't have the privilege to read this file, please change file mode;
 `)
 
 var CopyFileFailed = berror.DefineCode(5001003, moduleName, "CopyFileFailed", `
@@ -94,7 +98,7 @@ Please confirm that server returns gzip data.
 `)
 
 var CreateFileIfNotExistFailed = berror.DefineCode(5001007, moduleName, "CreateFileIfNotExist", `
-Beego want to create file if not exist and failed. 
+Beego want to create file if not exist and failed.
 In most cases, it means that Beego doesn't have the privilege to create this file.
 Please change file mode to ensure that Beego is able to create files on specific directory.
 Or you can run Beego with higher authority.
