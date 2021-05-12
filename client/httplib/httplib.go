@@ -38,7 +38,6 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"encoding/xml"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
