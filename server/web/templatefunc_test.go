@@ -378,3 +378,23 @@ func TestMapGet(t *testing.T) {
 		t.Errorf("Error happens %v", err)
 	}
 }
+
+func Test_eq(t *testing.T) {
+	var a uint = 1
+	var b int32 = 1
+	if res, err := eq(a, b); err != nil {
+		if !res {
+			t.Error("uint(1) and int32(1) should not be eq")
+		}
+	}
+}
+
+func Test_lt(t *testing.T) {
+	var a uint = 1
+	var b int32 = 2
+	if res, err := lt(a, b); err != nil {
+		if !res {
+			t.Error("uint(1) not lt int32(2)")
+		}
+	}
+}
