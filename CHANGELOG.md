@@ -1,4 +1,5 @@
 # developing
+- Add template functions eq,lt to support uint and int compare. [4607](https://github.com/beego/beego/pull/4607)
 - Add: Resp() method for web.Controller. [4588](https://github.com/beego/beego/pull/4588) 
 - Web mock and test support. [4565](https://github.com/beego/beego/pull/4565) [4574](https://github.com/beego/beego/pull/4574)
 - Error codes definition of cache module. [4493](https://github.com/beego/beego/pull/4493)
