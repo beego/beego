@@ -618,27 +618,25 @@ func eq(arg1 interface{}, arg2 ...interface{}) (bool, error) {
 			default:
 				return false, errBadComparison
 			}
-		} else {
-			switch k1 {
-			case boolKind:
-				truth = v1.Bool() == v2.Bool()
-			case complexKind:
-				truth = v1.Complex() == v2.Complex()
-			case floatKind:
-				truth = v1.Float() == v2.Float()
-			case intKind:
-				truth = v1.Int() == v2.Int()
-			case stringKind:
-				truth = v1.String() == v2.String()
-			case uintKind:
-				truth = v1.Uint() == v2.Uint()
-			default:
-				panic("invalid kind")
-			}
-		}
-		if truth {
 			return true, nil
 		}
+		switch k1 {
+		case boolKind:
+			truth = v1.Bool() == v2.Bool()
+		case complexKind:
+			truth = v1.Complex() == v2.Complex()
+		case floatKind:
+			truth = v1.Float() == v2.Float()
+		case intKind:
+			truth = v1.Int() == v2.Int()
+		case stringKind:
+			truth = v1.String() == v2.String()
+		case uintKind:
+			truth = v1.Uint() == v2.Uint()
+		default:
+			return false, errBadComparisonType
+		}
+		return truth, nil
 	}
 	return false, nil
 }
