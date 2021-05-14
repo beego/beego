@@ -618,7 +618,9 @@ func eq(arg1 interface{}, arg2 ...interface{}) (bool, error) {
 			default:
 				return false, errBadComparison
 			}
-			return true, nil
+			if truth {
+				return true, nil
+			}
 		}
 		switch k1 {
 		case boolKind:
@@ -636,7 +638,9 @@ func eq(arg1 interface{}, arg2 ...interface{}) (bool, error) {
 		default:
 			return false, errBadComparisonType
 		}
-		return truth, nil
+		if truth {
+			return true, nil
+		}
 	}
 	return false, nil
 }
