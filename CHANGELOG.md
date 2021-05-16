@@ -1,5 +1,6 @@
 # developing
 - Add http client and option func. [4455](https://github.com/beego/beego/issues/4455)
+- Add: Resp() method for web.Controller. [4588](https://github.com/beego/beego/pull/4588) 
 - Web mock and test support. [4565](https://github.com/beego/beego/pull/4565) [4574](https://github.com/beego/beego/pull/4574)
 - Error codes definition of cache module. [4493](https://github.com/beego/beego/pull/4493)
 - Remove generateCommentRoute http hook. Using `bee generate routers` commands instead.[4486](https://github.com/beego/beego/pull/4486) [bee PR 762](https://github.com/beego/bee/pull/762)
@@ -37,6 +38,7 @@
 - Feature issue #4402 finish router get example. [4416](https://github.com/beego/beego/pull/4416)
 - Proposal: Add Bind() method for `web.Controller` [4491](https://github.com/beego/beego/issues/4579)
 - Optimize AddAutoPrefix: only register one router in case-insensitive mode. [4582](https://github.com/beego/beego/pull/4582)
+- Init exceptMethod by using reflection. [4583](https://github.com/beego/beego/pull/4583)
 
 ## Fix Sonar
 - [4473](https://github.com/beego/beego/pull/4473)

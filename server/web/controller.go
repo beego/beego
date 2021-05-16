@@ -21,8 +21,6 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"github.com/gogo/protobuf/proto"
-	"gopkg.in/yaml.v2"
 	"html/template"
 	"io"
 	"mime/multipart"
@@ -37,6 +35,8 @@ import (
 	"github.com/beego/beego/v2/server/web/context"
 	"github.com/beego/beego/v2/server/web/context/param"
 	"github.com/beego/beego/v2/server/web/session"
+	"github.com/gogo/protobuf/proto"
+	"gopkg.in/yaml.v2"
 )
 
 var (
@@ -435,6 +435,22 @@ func (c *Controller) URLFor(endpoint string, values ...interface{}) string {
 		return URLFor(reflect.Indirect(reflect.ValueOf(c.AppController)).Type().Name()+endpoint, values...)
 	}
 	return URLFor(endpoint, values...)
+}
+// Resp sends response based on the Accept Header
+// By default response will be in JSON
+func (c *Controller) Resp(data interface{}) error {
+	accept := c.Ctx.Input.Header("Accept")
+	switch accept {
+	case context.ApplicationYAML:
+		c.Data["yaml"] = data
+		return c.ServeYAML()
+	case context.ApplicationXML, context.TextXML:
+		c.Data["xml"] = data
+		return c.ServeXML()
+	default:
+		c.Data["json"] = data
+		return c.ServeJSON()
+	}
 }
 
 // ServeJSON sends a json response with encoding charset.

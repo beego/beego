@@ -15,16 +15,18 @@
 package web
 
 import (
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"io/ioutil"
 	"math"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strconv"
 	"testing"
 
 	"github.com/beego/beego/v2/server/web/context"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetInt(t *testing.T) {
@@ -243,4 +245,68 @@ func TestBindYAML(t *testing.T) {
 	err := ctrlr.Bind(&s)
 	require.NoError(t, err)
 	assert.Equal(t, "FOO", s.Foo)
+}
+
+type TestRespController struct {
+	Controller
+}
+
+func (t *TestRespController) TestResponse() {
+	type S struct {
+		Foo string `json:"foo" xml:"foo" yaml:"foo"`
+	}
+
+	bar := S{Foo: "bar"}
+
+	_ = t.Resp(bar)
+}
+
+type respTestCase struct {
+	Accept                string
+	ExpectedContentLength int64
+	ExpectedResponse      string
+}
+
+func TestControllerResp(t *testing.T) {
+	// test cases
+	tcs := []respTestCase{
+		{Accept: context.ApplicationJSON, ExpectedContentLength: 18, ExpectedResponse: "{\n  \"foo\": \"bar\"\n}"},
+		{Accept: context.ApplicationXML, ExpectedContentLength: 25, ExpectedResponse: "<S>\n  <foo>bar</foo>\n</S>"},
+		{Accept: context.ApplicationYAML, ExpectedContentLength: 9, ExpectedResponse: "foo: bar\n"},
+		{Accept: "OTHER", ExpectedContentLength: 18, ExpectedResponse: "{\n  \"foo\": \"bar\"\n}"},
+	}
+
+	for _, tc := range tcs {
+		testControllerRespTestCases(t, tc)
+	}
+}
+
+func testControllerRespTestCases(t *testing.T, tc respTestCase) {
+	// create fake GET request
+	r, _ := http.NewRequest("GET", "/", nil)
+	r.Header.Set("Accept", tc.Accept)
+	w := httptest.NewRecorder()
+
+	// setup the handler
+	handler := NewControllerRegister()
+	handler.Add("/", &TestRespController{}, WithRouterMethods(&TestRespController{}, "get:TestResponse"))
+	handler.ServeHTTP(w, r)
+
+	response := w.Result()
+	if response.ContentLength != tc.ExpectedContentLength {
+		t.Errorf("TestResponse() unable to validate content length %d for %s", response.ContentLength, tc.Accept)
+	}
+
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("TestResponse() failed to validate response code for %s", tc.Accept)
+	}
+
+	bodyBytes, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		t.Errorf("TestResponse() failed to parse response body for %s", tc.Accept)
+	}
+	bodyString := string(bodyBytes)
+	if bodyString != tc.ExpectedResponse {
+		t.Errorf("TestResponse() failed to validate response body '%s' for %s", bodyString, tc.Accept)
+	}
 }
