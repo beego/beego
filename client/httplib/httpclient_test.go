@@ -29,91 +29,10 @@ func TestNewClient(t *testing.T) {
 	assert.Equal(t, true, client.Setting.EnableCookie)
 }
 
-func TestClient_Response(t *testing.T) {
-	client, err := NewClient("test", "http://httpbin.org/")
-	if err != nil {
-		t.Fatal(err)
-	}
+type slideSshowResponse struct {
+	Resp  *http.Response
+	bytes []byte
 
-	var resp *http.Response
-	err = client.Response(&resp).Get(nil, "status/203")
-	if err != nil {
-		t.Fatal(err)
-	}
-	assert.Equal(t, 203, resp.StatusCode)
-}
-
-func TestClient_StatusCode(t *testing.T) {
-	client, err := NewClient("test", "http://httpbin.org/")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var statusCode *int
-	err = client.StatusCode(&statusCode).Get(nil, "status/203")
-	if err != nil {
-		t.Fatal(err)
-	}
-	assert.Equal(t, 203, *statusCode)
-}
-
-func TestClient_Headers(t *testing.T) {
-	client, err := NewClient("test", "http://httpbin.org/")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var header *http.Header
-	err = client.Headers(&header).Get(nil, "bytes/123")
-	if err != nil {
-		t.Fatal(err)
-	}
-	assert.Equal(t, "123", header.Get("Content-Length"))
-}
-
-func TestClient_HeaderValue(t *testing.T) {
-	client, err := NewClient("test", "http://httpbin.org/")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var val *string
-	err = client.Headers(nil).HeaderValue("Content-Length", &val).Get(nil, "bytes/123")
-	if err != nil {
-		t.Fatal(err)
-	}
-	assert.Equal(t, "123", *val)
-}
-
-func TestClient_ContentType(t *testing.T) {
-	client, err := NewClient("test", "http://httpbin.org/")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var contentType *string
-	err = client.ContentType(&contentType).Get(nil, "bytes/123")
-	if err != nil {
-		t.Fatal(err)
-	}
-	assert.Equal(t, "application/octet-stream", *contentType)
-}
-
-func TestClient_ContentLength(t *testing.T) {
-	client, err := NewClient("test", "http://httpbin.org/")
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	var contentLength *int64
-	err = client.ContentLength(&contentLength).Get(nil, "bytes/123")
-	if err != nil {
-		t.Fatal(err)
-	}
-	assert.Equal(t, int64(123), *contentLength)
-}
-
-type total struct {
 	Slideshow slideshow `json:"slideshow" yaml:"slideshow"`
 }
 
@@ -132,36 +51,37 @@ type slide struct {
 	Title string `json:"title" yaml:"title" xml:"title"`
 }
 
+func (s *slideSshowResponse) SetHttpResponse(resp *http.Response) {
+	s.Resp = resp
+}
+
+func (s *slideSshowResponse) SetBytes(bytes []byte) {
+	s.bytes = bytes
+}
+
+func (s *slideSshowResponse) Bytes() []byte {
+	return s.bytes
+}
+
+func (s *slideSshowResponse) String() string {
+	return string(s.bytes)
+}
+
 func TestClient_Get(t *testing.T) {
 	client, err := NewClient("test", "http://httpbin.org/")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// basic type
-	var s *string
-	err = client.Get(&s, "/base64/SFRUUEJJTiBpcyBhd2Vzb21l")
-	if err != nil {
-		t.Fatal(err)
-	}
-	assert.Equal(t, "HTTPBIN is awesome", *s)
-
-	var bytes *[]byte
-	err = client.Get(&bytes, "/base64/SFRUUEJJTiBpcyBhd2Vzb21l")
-	if err != nil {
-		t.Fatal(err)
-	}
-	assert.Equal(t, []byte("HTTPBIN is awesome"), *bytes)
-
 	// json
-	var tp *total
-	err = client.Get(&tp, "/json")
+	var s *slideSshowResponse
+	err = client.Get(&s, "/json")
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Equal(t, "Sample Slide Show", tp.Slideshow.Title)
-	assert.Equal(t, 2, len(tp.Slideshow.Slides))
-	assert.Equal(t, "Overview", tp.Slideshow.Slides[1].Title)
+	assert.Equal(t, "Sample Slide Show", s.Slideshow.Title)
+	assert.Equal(t, 2, len(s.Slideshow.Slides))
+	assert.Equal(t, "Overview", s.Slideshow.Slides[1].Title)
 
 	// xml
 	var ssp *slideshow
@@ -174,14 +94,14 @@ func TestClient_Get(t *testing.T) {
 	assert.Equal(t, "Overview", ssp.Slides[1].Title)
 
 	// yaml
-	tp = nil
-	err = client.Get(&tp, "/base64/c2xpZGVzaG93OgogIGF1dGhvcjogWW91cnMgVHJ1bHkKICBkYXRlOiBkYXRlIG9mIHB1YmxpY2F0aW9uCiAgc2xpZGVzOgogIC0gdGl0bGU6IFdha2UgdXAgdG8gV29uZGVyV2lkZ2V0cyEKICAgIHR5cGU6IGFsbAogIC0gaXRlbXM6CiAgICAtIFdoeSA8ZW0+V29uZGVyV2lkZ2V0czwvZW0+IGFyZSBncmVhdAogICAgLSBXaG8gPGVtPmJ1eXM8L2VtPiBXb25kZXJXaWRnZXRzCiAgICB0aXRsZTogT3ZlcnZpZXcKICAgIHR5cGU6IGFsbAogIHRpdGxlOiBTYW1wbGUgU2xpZGUgU2hvdw==")
+	s = nil
+	err = client.Get(&s, "/base64/c2xpZGVzaG93OgogIGF1dGhvcjogWW91cnMgVHJ1bHkKICBkYXRlOiBkYXRlIG9mIHB1YmxpY2F0aW9uCiAgc2xpZGVzOgogIC0gdGl0bGU6IFdha2UgdXAgdG8gV29uZGVyV2lkZ2V0cyEKICAgIHR5cGU6IGFsbAogIC0gaXRlbXM6CiAgICAtIFdoeSA8ZW0+V29uZGVyV2lkZ2V0czwvZW0+IGFyZSBncmVhdAogICAgLSBXaG8gPGVtPmJ1eXM8L2VtPiBXb25kZXJXaWRnZXRzCiAgICB0aXRsZTogT3ZlcnZpZXcKICAgIHR5cGU6IGFsbAogIHRpdGxlOiBTYW1wbGUgU2xpZGUgU2hvdw==")
 	if err != nil {
 		t.Fatal(err)
 	}
-	assert.Equal(t, "Sample Slide Show", tp.Slideshow.Title)
-	assert.Equal(t, 2, len(tp.Slideshow.Slides))
-	assert.Equal(t, "Overview", tp.Slideshow.Slides[1].Title)
+	assert.Equal(t, "Sample Slide Show", s.Slideshow.Title)
+	assert.Equal(t, 2, len(s.Slideshow.Slides))
+	assert.Equal(t, "Overview", s.Slideshow.Slides[1].Title)
 
 }
 
@@ -191,19 +111,19 @@ func TestClient_Post(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var s *string
-	err = client.Get(&s, "/json")
+	var resp = &slideSshowResponse{}
+	err = client.Get(resp, "/json")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	var resp *http.Response
-	err = client.Response(&resp).Post(&s, "/post", *s)
+	jsonStr := resp.String()
+	err = client.Post(resp, "/post", jsonStr)
 	if err != nil {
 		t.Fatal(err)
 	}
 	assert.NotNil(t, resp)
-	assert.Equal(t, http.MethodPost, resp.Request.Method)
+	assert.Equal(t, http.MethodPost, resp.Resp.Request.Method)
 }
 
 func TestClient_Put(t *testing.T) {
@@ -212,19 +132,19 @@ func TestClient_Put(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var s *string
-	err = client.Get(&s, "/json")
+	var resp = &slideSshowResponse{}
+	err = client.Get(resp, "/json")
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	var resp *http.Response
-	err = client.Response(&resp).Put(&s, "/put", *s)
+	jsonStr := resp.String()
+	err = client.Put(resp, "/put", jsonStr)
 	if err != nil {
 		t.Fatal(err)
 	}
 	assert.NotNil(t, resp)
-	assert.Equal(t, http.MethodPut, resp.Request.Method)
+	assert.Equal(t, http.MethodPut, resp.Resp.Request.Method)
 }
 
 func TestClient_Delete(t *testing.T) {
@@ -233,13 +153,13 @@ func TestClient_Delete(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var resp *http.Response
-	err = client.Response(&resp).Delete(nil, "/delete")
+	var resp = &slideSshowResponse{}
+	err = client.Delete(resp, "/delete")
 	if err != nil {
 		t.Fatal(err)
 	}
 	assert.NotNil(t, resp)
-	assert.Equal(t, http.MethodDelete, resp.Request.Method)
+	assert.Equal(t, http.MethodDelete, resp.Resp.Request.Method)
 }
 
 func TestClient_Head(t *testing.T) {
@@ -248,11 +168,11 @@ func TestClient_Head(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var resp *http.Response
-	err = client.Response(&resp).Head(nil, "")
+	var resp = &slideSshowResponse{}
+	err = client.Head(resp, "")
 	if err != nil {
 		t.Fatal(err)
 	}
 	assert.NotNil(t, resp)
-	assert.Equal(t, http.MethodHead, resp.Request.Method)
+	assert.Equal(t, http.MethodHead, resp.Resp.Request.Method)
 }

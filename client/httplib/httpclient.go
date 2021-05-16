@@ -25,15 +25,17 @@ type Client struct {
 	CommonOpts []BeegoHttpRequestOption
 
 	Setting BeegoHTTPSettings
-	pointer responsePointer
 }
 
-type responsePointer struct {
-	response      **http.Response
-	statusCode    **int
-	header        **http.Header
-	headerValues  map[string]**string //用户传一个key，然后将key存在map的key里，header的value存在value里
-	contentLength **int64
+// If value implement this interface. http.response will saved by SetHttpResponse
+type HttpResponseCarrier interface {
+	SetHttpResponse(resp *http.Response)
+}
+
+// If value implement this interface. bytes of http.response will saved by SetHttpResponse
+type ResponseBytesCarrier interface {
+	// Cause of when user get http.response, the body stream is closed. So need to pass bytes by
+	SetBytes(bytes []byte)
 }
 
 // NewClient return a new http client
@@ -48,71 +50,6 @@ func NewClient(name string, endpoint string, opts ...ClientOption) (*Client, err
 		o(res)
 	}
 	return res, nil
-}
-
-// Response will set response to the pointer
-func (c *Client) Response(resp **http.Response) *Client {
-	newC := *c
-	newC.pointer.response = resp
-	return &newC
-}
-
-// StatusCode will set response StatusCode to the pointer
-func (c *Client) StatusCode(code **int) *Client {
-	newC := *c
-	newC.pointer.statusCode = code
-	return &newC
-}
-
-// Headers will set response Headers to the pointer
-func (c *Client) Headers(headers **http.Header) *Client {
-	newC := *c
-	newC.pointer.header = headers
-	return &newC
-}
-
-// HeaderValue will set response HeaderValue to the pointer
-func (c *Client) HeaderValue(key string, value **string) *Client {
-	newC := *c
-	if newC.pointer.headerValues == nil {
-		newC.pointer.headerValues = make(map[string]**string)
-	}
-	newC.pointer.headerValues[key] = value
-	return &newC
-}
-
-// ContentType will set response ContentType to the pointer
-func (c *Client) ContentType(contentType **string) *Client {
-	return c.HeaderValue("Content-Type", contentType)
-}
-
-// ContentLength will set response ContentLength to the pointer
-func (c *Client) ContentLength(contentLength **int64) *Client {
-	newC := *c
-	newC.pointer.contentLength = contentLength
-	return &newC
-}
-
-// setPointers set the http response value to pointer
-func (c *Client) setPointers(resp *http.Response) {
-	if c.pointer.response != nil {
-		*c.pointer.response = resp
-	}
-	if c.pointer.statusCode != nil {
-		*c.pointer.statusCode = &resp.StatusCode
-	}
-	if c.pointer.header != nil {
-		*c.pointer.header = &resp.Header
-	}
-	if c.pointer.headerValues != nil {
-		for k, v := range c.pointer.headerValues {
-			s := resp.Header.Get(k)
-			*v = &s
-		}
-	}
-	if c.pointer.contentLength != nil {
-		*c.pointer.contentLength = &resp.ContentLength
-	}
 }
 
 func (c *Client) customReq(req *BeegoHTTPRequest, opts []BeegoHttpRequestOption) {
@@ -130,7 +67,17 @@ func (c *Client) handleResponse(value interface{}, req *BeegoHTTPRequest) error 
 	if err != nil {
 		return err
 	}
-	c.setPointers(resp)
+	if carrier, ok := (value).(HttpResponseCarrier); ok {
+		(carrier).SetHttpResponse(resp)
+	}
+	if carrier, ok := (value).(ResponseBytesCarrier); ok {
+		bytes, err := req.Bytes()
+		if err != nil {
+			return err
+		}
+		(carrier).SetBytes(bytes)
+	}
+
 	return req.ResponseForValue(value)
 }
 

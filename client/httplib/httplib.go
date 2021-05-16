@@ -663,28 +663,10 @@ func (b *BeegoHTTPRequest) Response() (*http.Response, error) {
 
 // ResponseForValue attempts to resolve the response body to value using an existing method.
 // Calls Response inner.
-// If value type is **string or **[]byte, the func directly passes response body into the pointer.
-// Else if response header contain Content-Type, func will call ToJSON\ToXML\ToYAML.
-// Finally it will try to parse body as json\yaml\xml, If all attempts fail, an error will be returned
+// If response header contain Content-Type, func will call ToJSON\ToXML\ToYAML.
+// Else it will try to parse body as json\yaml\xml, If all attempts fail, an error will be returned
 func (b *BeegoHTTPRequest) ResponseForValue(value interface{}) error {
 	if value == nil {
-		return nil
-	}
-	// handle basic type
-	switch v := value.(type) {
-	case **string:
-		s, err := b.String()
-		if err != nil {
-			return nil
-		}
-		*v = &s
-		return nil
-	case **[]byte:
-		bs, err := b.Bytes()
-		if err != nil {
-			return nil
-		}
-		*v = &bs
 		return nil
 	}
 

@@ -25,6 +25,27 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+type respCarrier struct {
+	Resp  *http.Response
+	bytes []byte
+}
+
+func (r *respCarrier) SetHttpResponse(resp *http.Response) {
+	r.Resp = resp
+}
+
+func (r *respCarrier) SetBytes(bytes []byte) {
+	r.bytes = bytes
+}
+
+func (r *respCarrier) Bytes() []byte {
+	return r.bytes
+}
+
+func (r *respCarrier) String() string {
+	return string(r.bytes)
+}
+
 func TestOption_WithEnableCookie(t *testing.T) {
 	client, err := NewClient("test", "http://httpbin.org/",
 		WithEnableCookie(true))
@@ -33,20 +54,20 @@ func TestOption_WithEnableCookie(t *testing.T) {
 	}
 
 	v := "smallfish"
-	var str *string
-	err = client.Get(&str, "/cookies/set?k1="+v)
+	var resp = &respCarrier{}
+	err = client.Get(resp, "/cookies/set?k1="+v)
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(*str)
+	t.Log(resp.String())
 
-	err = client.Get(&str, "/cookies")
+	err = client.Get(resp, "/cookies")
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(str)
+	t.Log(resp.String())
 
-	n := strings.Index(*str, v)
+	n := strings.Index(resp.String(), v)
 	if n == -1 {
 		t.Fatal(v + " not found in cookie")
 	}
@@ -60,14 +81,14 @@ func TestOption_WithUserAgent(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var str *string
-	err = client.Get(&str, "/headers")
+	var resp = &respCarrier{}
+	err = client.Get(resp, "/headers")
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(str)
+	t.Log(resp.String())
 
-	n := strings.Index(*str, v)
+	n := strings.Index(resp.String(), v)
 	if n == -1 {
 		t.Fatal(v + " not found in user-agent")
 	}
@@ -108,14 +129,14 @@ func TestOption_WithHTTPSetting(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var str *string
-	err = client.Get(&str, "/get")
+	var resp = &respCarrier{}
+	err = client.Get(resp, "/get")
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(str)
+	t.Log(resp.String())
 
-	n := strings.Index(*str, v)
+	n := strings.Index(resp.String(), v)
 	if n == -1 {
 		t.Fatal(v + " not found in user-agent")
 	}
@@ -128,14 +149,14 @@ func TestOption_WithHeader(t *testing.T) {
 	}
 	client.CommonOpts = append(client.CommonOpts, WithHeader("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.57 Safari/537.36"))
 
-	var str *string
-	err = client.Get(&str, "/headers")
+	var resp = &respCarrier{}
+	err = client.Get(resp, "/headers")
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(str)
+	t.Log(resp.String())
 
-	n := strings.Index(*str, "Mozilla/5.0")
+	n := strings.Index(resp.String(), "Mozilla/5.0")
 	if n == -1 {
 		t.Fatal("Mozilla/5.0 not found in user-agent")
 	}
@@ -151,14 +172,14 @@ func TestOption_WithTokenFactory(t *testing.T) {
 			return "testauth"
 		}))
 
-	var str *string
-	err = client.Get(&str, "/headers")
+	var resp = &respCarrier{}
+	err = client.Get(resp, "/headers")
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(str)
+	t.Log(resp.String())
 
-	n := strings.Index(*str, "testauth")
+	n := strings.Index(resp.String(), "testauth")
 	if n == -1 {
 		t.Fatal("Auth is not set in request")
 	}
@@ -170,16 +191,16 @@ func TestOption_WithBasicAuth(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var str *string
-	err = client.Get(&str, "/basic-auth/user/passwd",
+	var resp = &respCarrier{}
+	err = client.Get(resp, "/basic-auth/user/passwd",
 		WithBasicAuth(func() (string, string) {
 			return "user", "passwd"
 		}))
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(str)
-	n := strings.Index(*str, "authenticated")
+	t.Log(resp.String())
+	n := strings.Index(resp.String(), "authenticated")
 	if n == -1 {
 		t.Fatal("authenticated not found in response")
 	}
@@ -192,14 +213,14 @@ func TestOption_WithContentType(t *testing.T) {
 	}
 
 	v := "application/json"
-	var str *string
-	err = client.Get(&str, "/headers", WithContentType(v))
+	var resp = &respCarrier{}
+	err = client.Get(resp, "/headers", WithContentType(v))
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(str)
+	t.Log(resp.String())
 
-	n := strings.Index(*str, v)
+	n := strings.Index(resp.String(), v)
 	if n == -1 {
 		t.Fatal(v + " not found in header")
 	}
@@ -212,14 +233,14 @@ func TestOption_WithParam(t *testing.T) {
 	}
 
 	v := "smallfish"
-	var str *string
-	err = client.Get(&str, "/get", WithParam("username", v))
+	var resp = &respCarrier{}
+	err = client.Get(resp, "/get", WithParam("username", v))
 	if err != nil {
 		t.Fatal(err)
 	}
-	t.Log(str)
+	t.Log(resp.String())
 
-	n := strings.Index(*str, v)
+	n := strings.Index(resp.String(), v)
 	if n == -1 {
 		t.Fatal(v + " not found in header")
 	}
@@ -238,11 +259,8 @@ func TestOption_WithRetry(t *testing.T) {
 	retryDelay := 1400 * time.Millisecond
 	startTime := time.Now().UnixNano() / int64(time.Millisecond)
 
-	err = client.Get(nil, "", WithRetry(retryAmount, retryDelay))
+	_ = client.Get(nil, "", WithRetry(retryAmount, retryDelay))
 
-	if err != nil {
-		t.Fatal(err)
-	}
 	endTime := time.Now().UnixNano() / int64(time.Millisecond)
 	elapsedTime := endTime - startTime
 	delayedTime := int64(retryAmount) * retryDelay.Milliseconds()
