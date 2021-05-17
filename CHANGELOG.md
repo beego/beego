@@ -38,7 +38,7 @@
 - Proposal: Add Bind() method for `web.Controller` [4491](https://github.com/beego/beego/issues/4579)
 - Optimize AddAutoPrefix: only register one router in case-insensitive mode. [4582](https://github.com/beego/beego/pull/4582)
 - Init exceptMethod by using reflection. [4583](https://github.com/beego/beego/pull/4583)
-
+- Deprecated BeeMap and replace all usage with `sync.map` [4612](https://github.com/beego/beego/pull/4612)
 ## Fix Sonar
 - [4473](https://github.com/beego/beego/pull/4473)
 - [4474](https://github.com/beego/beego/pull/4474)

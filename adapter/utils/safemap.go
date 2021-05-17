@@ -18,9 +18,7 @@ import (
 	"github.com/beego/beego/v2/core/utils"
 )
 
-// BeeMap is a map with lock
-type BeeMap utils.BeeMap
-
+//deprecated
 // NewBeeMap return new safemap
 func NewBeeMap() *BeeMap {
 	return (*BeeMap)(utils.NewBeeMap())
