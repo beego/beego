@@ -40,6 +40,7 @@
 - Init exceptMethod by using reflection. [4583](https://github.com/beego/beego/pull/4583)
 
 ## Fix Sonar
+- [4608](https://github.com/beego/beego/pull/4608)
 - [4473](https://github.com/beego/beego/pull/4473)
 - [4474](https://github.com/beego/beego/pull/4474)
 - [4479](https://github.com/beego/beego/pull/4479)

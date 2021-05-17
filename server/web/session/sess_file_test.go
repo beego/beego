@@ -31,7 +31,7 @@ var (
 	mutex sync.Mutex
 )
 
-func TestFileProvider_SessionInit(t *testing.T) {
+func TestFileProviderSessionInit(t *testing.T) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	os.RemoveAll(sessionPath)
@@ -48,7 +48,7 @@ func TestFileProvider_SessionInit(t *testing.T) {
 	}
 }
 
-func TestFileProvider_SessionExist(t *testing.T) {
+func TestFileProviderSessionExist(t *testing.T) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	os.RemoveAll(sessionPath)
@@ -79,7 +79,7 @@ func TestFileProvider_SessionExist(t *testing.T) {
 	}
 }
 
-func TestFileProvider_SessionExist2(t *testing.T) {
+func TestFileProviderSessionExist2(t *testing.T) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	os.RemoveAll(sessionPath)
@@ -113,7 +113,7 @@ func TestFileProvider_SessionExist2(t *testing.T) {
 	}
 }
 
-func TestFileProvider_SessionRead(t *testing.T) {
+func TestFileProviderSessionRead(t *testing.T) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	os.RemoveAll(sessionPath)
@@ -135,7 +135,7 @@ func TestFileProvider_SessionRead(t *testing.T) {
 	}
 }
 
-func TestFileProvider_SessionRead1(t *testing.T) {
+func TestFileProviderSessionRead1(t *testing.T) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	os.RemoveAll(sessionPath)
@@ -155,7 +155,7 @@ func TestFileProvider_SessionRead1(t *testing.T) {
 	}
 }
 
-func TestFileProvider_SessionAll(t *testing.T) {
+func TestFileProviderSessionAll(t *testing.T) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	os.RemoveAll(sessionPath)
@@ -178,7 +178,7 @@ func TestFileProvider_SessionAll(t *testing.T) {
 	}
 }
 
-func TestFileProvider_SessionRegenerate(t *testing.T) {
+func TestFileProviderSessionRegenerate(t *testing.T) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	os.RemoveAll(sessionPath)
@@ -222,7 +222,7 @@ func TestFileProvider_SessionRegenerate(t *testing.T) {
 	}
 }
 
-func TestFileProvider_SessionDestroy(t *testing.T) {
+func TestFileProviderSessionDestroy(t *testing.T) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	os.RemoveAll(sessionPath)
@@ -258,7 +258,7 @@ func TestFileProvider_SessionDestroy(t *testing.T) {
 	}
 }
 
-func TestFileProvider_SessionGC(t *testing.T) {
+func TestFileProviderSessionGC(t *testing.T) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	os.RemoveAll(sessionPath)
@@ -284,7 +284,7 @@ func TestFileProvider_SessionGC(t *testing.T) {
 	}
 }
 
-func TestFileSessionStore_Set(t *testing.T) {
+func TestFileSessionStoreSet(t *testing.T) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	os.RemoveAll(sessionPath)
@@ -303,7 +303,7 @@ func TestFileSessionStore_Set(t *testing.T) {
 	}
 }
 
-func TestFileSessionStore_Get(t *testing.T) {
+func TestFileSessionStoreGet(t *testing.T) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	os.RemoveAll(sessionPath)
@@ -324,7 +324,7 @@ func TestFileSessionStore_Get(t *testing.T) {
 	}
 }
 
-func TestFileSessionStore_Delete(t *testing.T) {
+func TestFileSessionStoreDelete(t *testing.T) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	os.RemoveAll(sessionPath)
@@ -347,7 +347,7 @@ func TestFileSessionStore_Delete(t *testing.T) {
 	}
 }
 
-func TestFileSessionStore_Flush(t *testing.T) {
+func TestFileSessionStoreFlush(t *testing.T) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	os.RemoveAll(sessionPath)
@@ -371,7 +371,7 @@ func TestFileSessionStore_Flush(t *testing.T) {
 	}
 }
 
-func TestFileSessionStore_SessionID(t *testing.T) {
+func TestFileSessionStoreSessionID(t *testing.T) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	os.RemoveAll(sessionPath)
@@ -393,7 +393,7 @@ func TestFileSessionStore_SessionID(t *testing.T) {
 	}
 }
 
-func TestFileSessionStore_SessionRelease(t *testing.T) {
+func TestFileSessionStoreSessionRelease(t *testing.T) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	os.RemoveAll(sessionPath)
