@@ -20,10 +20,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/coreos/etcd/clientv3"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
+	clientv3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc"
 
 	"github.com/beego/beego/v2/core/config"
