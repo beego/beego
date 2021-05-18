@@ -688,7 +688,7 @@ func lt(arg1, arg2 interface{}) (bool, error) {
 		case uintKind:
 			truth = v1.Uint() < v2.Uint()
 		default:
-			panic("invalid kind")
+			return false, errBadComparisonType
 		}
 	}
 	return truth, nil
