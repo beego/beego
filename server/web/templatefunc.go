@@ -636,7 +636,7 @@ func eq(arg1 interface{}, arg2 ...interface{}) (bool, error) {
 		case uintKind:
 			truth = v1.Uint() == v2.Uint()
 		default:
-			return false, errBadComparisonType
+			panic("invalid kind")
 		}
 		if truth {
 			return true, nil
