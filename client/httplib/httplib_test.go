@@ -409,7 +409,7 @@ func TestBeegoHTTPRequestBody(t *testing.T) {
 	assert.NotNil(t, req.req.GetBody)
 	assert.NotNil(t, req.req.Body)
 
-	body = "hhhh, i am test"
+	body = "hhhh, I am test"
 	req.Body(body)
 	assert.Equal(t, int64(len(body)), req.req.ContentLength)
 	assert.NotNil(t, req.req.GetBody)
