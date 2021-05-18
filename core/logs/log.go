@@ -267,7 +267,7 @@ func (bl *BeeLogger) Write(p []byte) (n int, err error) {
 	// set levelLoggerImpl to ensure all log message will be write out
 	err = bl.writeMsg(lm)
 	if err == nil {
-		return len(p), err
+		return len(p), nil
 	}
 	return 0, err
 }
