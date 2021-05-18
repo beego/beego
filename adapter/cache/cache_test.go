@@ -23,13 +23,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const (
-	initError     = "init err"
-	setError      = "set Error"
-	checkError    = "check err"
-	getError      = "get err"
-	getMultiError = "GetMulti Error"
-)
+const initError = "init err"
 
 func TestCacheIncr(t *testing.T) {
 	bm, err := NewCache("memory", `{"interval":20}`)

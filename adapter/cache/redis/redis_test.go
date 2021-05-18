@@ -27,11 +27,8 @@ import (
 )
 
 const (
-	initError     = "init err"
-	setError      = "set Error"
-	checkError    = "check err"
-	getError      = "get err"
-	getMultiError = "GetMulti Error"
+	initError = "init err"
+	setError  = "set Error"
 )
 
 func TestRedisCache(t *testing.T) {
@@ -121,5 +118,4 @@ func TestCacheScan(t *testing.T) {
 	if err = bm.ClearAll(); err != nil {
 		t.Error("clear all err")
 	}
-
 }

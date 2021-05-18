@@ -12,14 +12,6 @@ import (
 	"github.com/beego/beego/v2/adapter/cache"
 )
 
-const (
-	initError     = "init err"
-	setError      = "set Error"
-	checkError    = "check err"
-	getError      = "get err"
-	getMultiError = "GetMulti Error"
-)
-
 func TestSsdbcacheCache(t *testing.T) {
 	ssdbAddr := os.Getenv("SSDB_ADDR")
 	if ssdbAddr == "" {
