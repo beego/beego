@@ -29,7 +29,7 @@ type HttpResponse struct {
 // NewMockHttpResponse you should only use this in your test code
 func NewMockHttpResponse() *HttpResponse {
 	return &HttpResponse{
-		body: make([]byte, 0),
+		body:   make([]byte, 0),
 		header: make(http.Header),
 	}
 }

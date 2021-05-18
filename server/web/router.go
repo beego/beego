@@ -738,7 +738,7 @@ func (p *ControllerRegister) AddAutoPrefix(prefix string, c ControllerInterface)
 	}
 }
 
-func (p *ControllerRegister) addAutoPrefixMethod(prefix, controllerName, methodName string, ctrl reflect.Type)  {
+func (p *ControllerRegister) addAutoPrefixMethod(prefix, controllerName, methodName string, ctrl reflect.Type) {
 	pattern := path.Join(prefix, strings.ToLower(controllerName), strings.ToLower(methodName), "*")
 	patternInit := path.Join(prefix, controllerName, methodName, "*")
 	patternFix := path.Join(prefix, strings.ToLower(controllerName), strings.ToLower(methodName))

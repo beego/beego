@@ -45,4 +45,3 @@ func TestSessionProvider(t *testing.T) {
 
 	assert.Equal(t, "Tom", result)
 }
-

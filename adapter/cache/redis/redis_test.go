@@ -27,10 +27,10 @@ import (
 )
 
 const (
-	initError = "init err"
-	setError = "set Error"
-	checkError = "check err"
-	getError = "get err"
+	initError     = "init err"
+	setError      = "set Error"
+	checkError    = "check err"
+	getError      = "get err"
 	getMultiError = "GetMulti Error"
 )
 
@@ -52,7 +52,7 @@ func TestRedisCache(t *testing.T) {
 
 	assert.False(t, bm.IsExist("astaxie"))
 
-	assert.Nil(t,  bm.Put("astaxie", 1, timeoutDuration))
+	assert.Nil(t, bm.Put("astaxie", 1, timeoutDuration))
 
 	v, err := redis.Int(bm.Get("astaxie"), err)
 	assert.Nil(t, err)

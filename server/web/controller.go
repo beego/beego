@@ -436,6 +436,7 @@ func (c *Controller) URLFor(endpoint string, values ...interface{}) string {
 	}
 	return URLFor(endpoint, values...)
 }
+
 // Resp sends response based on the Accept Header
 // By default response will be in JSON
 func (c *Controller) Resp(data interface{}) error {

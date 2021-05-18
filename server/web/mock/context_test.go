@@ -58,7 +58,7 @@ func (c *TestController) HelloSession() {
 	c.Ctx.WriteString("set")
 }
 
-func (c *TestController) HelloSessionName()  {
+func (c *TestController) HelloSessionName() {
 	name := c.CruSession.Get(context.Background(), "name")
 	c.Ctx.WriteString(name.(string))
 }

@@ -185,7 +185,7 @@ func TestJson(t *testing.T) {
 
 	m, ok := db.(map[string]interface{})
 	assert.True(t, ok)
-	assert.Equal(t,"host" , m["host"])
+	assert.Equal(t, "host", m["host"])
 
 	_, err = jsonconf.Int("unknown")
 	assert.NotNil(t, err)

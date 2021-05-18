@@ -23,9 +23,8 @@ import (
 	"github.com/beego/beego/v2/adapter/context"
 )
 
-
 // Demo is used to test, it's empty
-func Demo(i int)  {
+func Demo(i int) {
 
 }
 

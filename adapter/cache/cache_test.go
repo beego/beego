@@ -24,10 +24,10 @@ import (
 )
 
 const (
-	initError = "init err"
-	setError = "set Error"
-	checkError = "check err"
-	getError = "get err"
+	initError     = "init err"
+	setError      = "set Error"
+	checkError    = "check err"
+	getError      = "get err"
 	getMultiError = "GetMulti Error"
 )
 
@@ -99,7 +99,6 @@ func TestCache(t *testing.T) {
 	vv := bm.GetMulti([]string{"astaxie", "astaxie1"})
 
 	assert.Equal(t, 2, len(vv))
-
 
 	assert.Equal(t, "author", vv[0])
 
