@@ -138,7 +138,6 @@ type txEnder interface {
 	RollbackUnlessCommit() error
 }
 
-
 // Data Manipulation Language
 type DML interface {
 	// insert model data to database
@@ -240,7 +239,6 @@ type DQL interface {
 type DriverGetter interface {
 	Driver() Driver
 }
-
 
 type ormer interface {
 	DQL

@@ -12,14 +12,6 @@ import (
 	"github.com/beego/beego/v2/adapter/cache"
 )
 
-const (
-	initError = "init err"
-	setError = "set Error"
-	checkError = "check err"
-	getError = "get err"
-	getMultiError = "GetMulti Error"
-)
-
 func TestSsdbcacheCache(t *testing.T) {
 	ssdbAddr := os.Getenv("SSDB_ADDR")
 	if ssdbAddr == "" {
@@ -70,7 +62,7 @@ func TestSsdbcacheCache(t *testing.T) {
 
 	// test GetMulti done
 	assert.Nil(t, ssdb.Put("ssdb1", "ssdb1", -10*time.Second))
-	assert.True(t, ssdb.IsExist("ssdb1") )
+	assert.True(t, ssdb.IsExist("ssdb1"))
 
 	vv := ssdb.GetMulti([]string{"ssdb", "ssdb1"})
 	assert.Equal(t, 2, len(vv))

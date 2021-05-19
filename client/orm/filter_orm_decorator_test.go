@@ -21,9 +21,9 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/beego/beego/v2/core/utils"
-
 	"github.com/stretchr/testify/assert"
+
+	"github.com/beego/beego/v2/core/utils"
 )
 
 func TestFilterOrmDecorator_Read(t *testing.T) {

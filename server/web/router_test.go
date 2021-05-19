@@ -23,7 +23,6 @@ import (
 	"testing"
 
 	"github.com/beego/beego/v2/core/logs"
-
 	"github.com/beego/beego/v2/server/web/context"
 )
 

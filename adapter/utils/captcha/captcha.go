@@ -63,11 +63,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/beego/beego/v2/server/web/captcha"
-	beecontext "github.com/beego/beego/v2/server/web/context"
-
 	"github.com/beego/beego/v2/adapter/cache"
 	"github.com/beego/beego/v2/adapter/context"
+	"github.com/beego/beego/v2/server/web/captcha"
+	beecontext "github.com/beego/beego/v2/server/web/context"
 )
 
 var (

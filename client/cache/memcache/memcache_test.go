@@ -74,7 +74,7 @@ func TestMemcacheCache(t *testing.T) {
 	res, _ = bm.IsExist(context.Background(), "astaxie")
 	assert.False(t, res)
 
-	assert.Nil(t,bm.Put(context.Background(), "astaxie", "author", timeoutDuration) )
+	assert.Nil(t, bm.Put(context.Background(), "astaxie", "author", timeoutDuration))
 	// test string
 	res, _ = bm.IsExist(context.Background(), "astaxie")
 	assert.True(t, res)
@@ -85,7 +85,6 @@ func TestMemcacheCache(t *testing.T) {
 
 	// test GetMulti
 	assert.Nil(t, bm.Put(context.Background(), "astaxie1", "author1", timeoutDuration))
-
 
 	res, _ = bm.IsExist(context.Background(), "astaxie1")
 	assert.True(t, res)

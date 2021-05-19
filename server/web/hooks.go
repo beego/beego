@@ -2,12 +2,13 @@ package web
 
 import (
 	"encoding/json"
-	"github.com/beego/beego/v2/core/logs"
-	"github.com/beego/beego/v2/server/web/context"
-	"github.com/beego/beego/v2/server/web/session"
 	"mime"
 	"net/http"
 	"path/filepath"
+
+	"github.com/beego/beego/v2/core/logs"
+	"github.com/beego/beego/v2/server/web/context"
+	"github.com/beego/beego/v2/server/web/session"
 )
 
 // register MIME type with content type

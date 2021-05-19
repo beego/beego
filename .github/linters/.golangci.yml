@@ -36,3 +36,9 @@ linters:
     - whitespace
   disable:
     - errcheck
+
+linters-settings:
+  gci:
+    local-prefixes: github.com/beego/beego
+  goimports:
+    local-prefixes: github.com/beego/beego

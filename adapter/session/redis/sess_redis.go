@@ -37,7 +37,6 @@ import (
 	"net/http"
 
 	"github.com/beego/beego/v2/adapter/session"
-
 	beeRedis "github.com/beego/beego/v2/server/web/session/redis"
 )
 

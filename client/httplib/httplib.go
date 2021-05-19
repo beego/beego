@@ -56,6 +56,7 @@ import (
 )
 
 const contentTypeKey = "Content-Type"
+
 // it will be the last filter and execute request.Do
 var doRequestFilter = func(ctx context.Context, req *BeegoHTTPRequest) (*http.Response, error) {
 	return req.doRequest(ctx)

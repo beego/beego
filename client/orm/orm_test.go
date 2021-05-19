@@ -31,11 +31,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
-
-	"github.com/beego/beego/v2/client/orm/hints"
-
 	"github.com/stretchr/testify/assert"
+
+	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
+	"github.com/beego/beego/v2/client/orm/hints"
 )
 
 var _ = os.PathSeparator

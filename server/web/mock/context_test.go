@@ -18,10 +18,12 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/beego/beego/v2/server/web"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/beego/beego/v2/server/web"
 )
 
 type TestController struct {
@@ -58,7 +60,7 @@ func (c *TestController) HelloSession() {
 	c.Ctx.WriteString("set")
 }
 
-func (c *TestController) HelloSessionName()  {
+func (c *TestController) HelloSessionName() {
 	name := c.CruSession.Get(context.Background(), "name")
 	c.Ctx.WriteString(name.(string))
 }
