@@ -1,7 +1,7 @@
 run:
   timeout: 5m
   skip-files:
-    - generated.*
+    - \.pb\.go$
 
 issues:
   new: true
@@ -10,31 +10,31 @@ linters:
   enable:
     - asciicheck
     - bodyclose
-    - deadcode
     - depguard
     - gci
     - gocritic
     - gofmt
     - gofumpt
     - goimports
-    - goprintffuncname
     - gosimple
     - govet
     - ineffassign
     - misspell
-    - nilerr
-    - rowserrcheck
     - staticcheck
-    - structcheck
-    - stylecheck
     - typecheck
     - unconvert
-    - unused
-    - unparam
-    - varcheck
     - whitespace
   disable:
+    - deadcode
     - errcheck
+    - goprintffuncname
+    - nilerr
+    - rowserrcheck
+    - structcheck
+    - stylecheck
+    - unparam
+    - unused
+    - varcheck
 
 linters-settings:
   gci:
