@@ -148,7 +148,6 @@ func (rp *Provider) SessionInit(ctx context.Context, maxlifetime int64, cfgStr s
 		if err != nil {
 			return err
 		}
-
 	} else {
 		rp.initOldStyle(cfgStr)
 	}
@@ -234,10 +233,8 @@ func (rp *Provider) SessionRead(ctx context.Context, sid string) (session.Store,
 	}
 	if len(kvs) == 0 {
 		kv = make(map[interface{}]interface{})
-	} else {
-		if kv, err = session.DecodeGob([]byte(kvs)); err != nil {
-			return nil, err
-		}
+	} else if kv, err = session.DecodeGob([]byte(kvs)); err != nil {
+		return nil, err
 	}
 
 	rs := &SessionStore{p: rp.poollist, sid: sid, values: kv, maxlifetime: rp.maxlifetime}

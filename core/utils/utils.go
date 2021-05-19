@@ -19,7 +19,7 @@ func GetGOPATHs() []string {
 }
 
 func compareGoVersion(a, b string) int {
-	reg := regexp.MustCompile("^\\d*")
+	reg := regexp.MustCompile(`^\d*`)
 
 	a = strings.TrimPrefix(a, "go")
 	b = strings.TrimPrefix(b, "go")

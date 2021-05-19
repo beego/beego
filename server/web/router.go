@@ -15,6 +15,7 @@
 package web
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net/http"
@@ -82,8 +83,7 @@ type FilterHandler interface {
 }
 
 // default log filter static file will not show
-type logFilter struct {
-}
+type logFilter struct{}
 
 func (l *logFilter) Filter(ctx *beecontext.Context) bool {
 	requestPath := path.Clean(ctx.Request.URL.Path)
@@ -780,7 +780,6 @@ func (p *ControllerRegister) InsertFilter(pattern string, pos int, filter Filter
 //     }
 // }
 func (p *ControllerRegister) InsertFilterChain(pattern string, chain FilterChain, opts ...FilterOpt) {
-
 	opts = append(opts, WithCaseSensitive(p.cfg.RouterCaseSensitive))
 	p.filterChains = append(p.filterChains, filterChainConfig{
 		pattern: pattern,
@@ -886,7 +885,7 @@ func (p *ControllerRegister) getURL(t *Tree, url, controllerName, methodName str
 								if e, isok := params[":ext"]; isok {
 									delete(params, ":path")
 									delete(params, ":ext")
-									return true, strings.Replace(url, urlPlaceholder, p+"."+e, -1) + toURL(params)
+									return true, strings.ReplaceAll(url, urlPlaceholder, p+"."+e) + toURL(params)
 								}
 							}
 						}
@@ -920,7 +919,7 @@ func (p *ControllerRegister) getURL(t *Tree, url, controllerName, methodName str
 							startReg = false
 							if v, ok := params[l.wildcards[i]]; ok {
 								delete(params, l.wildcards[i])
-								regURL = regURL + v
+								regURL += v
 								i++
 							} else {
 								break
@@ -957,7 +956,6 @@ func (p *ControllerRegister) execFilter(context *beecontext.Context, urlPath str
 
 // Implement http.Handler interface.
 func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
-
 	ctx := p.GetContext()
 
 	ctx.Reset(rw, r)
@@ -1061,7 +1059,7 @@ func (p *ControllerRegister) serveHttp(ctx *beecontext.Context) {
 		}
 		defer func() {
 			if ctx.Input.CruSession != nil {
-				ctx.Input.CruSession.SessionRelease(nil, rw)
+				ctx.Input.CruSession.SessionRelease(context.TODO(), rw)
 			}
 		}()
 	}
@@ -1295,7 +1293,7 @@ func (p *ControllerRegister) handleParamResponse(context *beecontext.Context, ex
 
 // FindRouter Find Router info for URL
 func (p *ControllerRegister) FindRouter(context *beecontext.Context) (routerInfo *ControllerInfo, isFind bool) {
-	var urlPath = context.Input.URL()
+	urlPath := context.Input.URL()
 	if !p.cfg.RouterCaseSensitive {
 		urlPath = strings.ToLower(urlPath)
 	}

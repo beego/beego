@@ -36,6 +36,7 @@ func TestFilterChain(t *testing.T) {
 	filter := builder.FilterChain(next)
 	req := httplib.Get("https://github.com/notifications?query=repo%3Aastaxie%2Fbeego")
 	resp, err := filter(context.Background(), req)
+	defer resp.Body.Close()
 	assert.NotNil(t, resp)
 	assert.Nil(t, err)
 }

@@ -71,11 +71,13 @@ func TestBind(t *testing.T) {
 
 		{"/?human.Nick=astaxie", []testItem{{"human", Human{}, Human{Nick: "astaxie"}}}},
 		{"/?human.ID=888&human.Nick=astaxie&human.Ms=true&human[Pwd]=pass", []testItem{{"human", Human{}, Human{ID: 888, Nick: "astaxie", Ms: true, Pwd: "pass"}}}},
-		{"/?human[0].ID=888&human[0].Nick=astaxie&human[0].Ms=true&human[0][Pwd]=pass01&human[1].ID=999&human[1].Nick=ysqi&human[1].Ms=On&human[1].Pwd=pass02",
+		{
+			"/?human[0].ID=888&human[0].Nick=astaxie&human[0].Ms=true&human[0][Pwd]=pass01&human[1].ID=999&human[1].Nick=ysqi&human[1].Ms=On&human[1].Pwd=pass02",
 			[]testItem{{"human", []Human{}, []Human{
 				{ID: 888, Nick: "astaxie", Ms: true, Pwd: "pass01"},
 				{ID: 999, Nick: "ysqi", Ms: true, Pwd: "pass02"},
-			}}}},
+			}}},
+		},
 
 		{
 			"/?id=123&isok=true&ft=1.2&ol[0]=1&ol[1]=2&ul[]=str&ul[]=array&human.Nick=astaxie",
@@ -105,7 +107,6 @@ func TestBind(t *testing.T) {
 				t.Fatalf("Bind %q error,should be:\n%#v \ngot:\n%#v", item.field, item.want, got)
 			}
 		}
-
 	}
 }
 
@@ -203,8 +204,8 @@ func TestParams(t *testing.T) {
 	if val := inp.Param("p2"); val != "val2_ver2" {
 		t.Fatalf("Input.Param wrong value: %s, expected %s", val, "val1_ver2")
 	}
-
 }
+
 func BenchmarkQuery(b *testing.B) {
 	beegoInput := NewInput()
 	beegoInput.Context = NewContext()

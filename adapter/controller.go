@@ -48,9 +48,11 @@ type ControllerCommentsSlice web.ControllerCommentsSlice
 func (p ControllerCommentsSlice) Len() int {
 	return (web.ControllerCommentsSlice)(p).Len()
 }
+
 func (p ControllerCommentsSlice) Less(i, j int) bool {
 	return (web.ControllerCommentsSlice)(p).Less(i, j)
 }
+
 func (p ControllerCommentsSlice) Swap(i, j int) {
 	(web.ControllerCommentsSlice)(p).Swap(i, j)
 }
@@ -367,13 +369,13 @@ func (c *Controller) IsAjax() bool {
 }
 
 // GetSecureCookie returns decoded cookie value from encoded browser cookie values.
-func (c *Controller) GetSecureCookie(Secret, key string) (string, bool) {
-	return (*web.Controller)(c).GetSecureCookie(Secret, key)
+func (c *Controller) GetSecureCookie(secret, key string) (string, bool) {
+	return (*web.Controller)(c).GetSecureCookie(secret, key)
 }
 
 // SetSecureCookie puts value into cookie after encoded the value.
-func (c *Controller) SetSecureCookie(Secret, name, value string, others ...interface{}) {
-	(*web.Controller)(c).SetSecureCookie(Secret, name, value, others...)
+func (c *Controller) SetSecureCookie(secret, name, value string, others ...interface{}) {
+	(*web.Controller)(c).SetSecureCookie(secret, name, value, others...)
 }
 
 // XSRFToken creates a CSRF token string and returns.

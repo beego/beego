@@ -401,7 +401,6 @@ func (b *BeegoHTTPRequest) handleFileToBody(bodyWriter *multipart.Writer, formna
 			"could not create form file, formname: %s, filename: %s", formname, filename))
 	}
 	fh, err := os.Open(filename)
-
 	if err != nil {
 		logs.Error(errFmt, berror.Wrapf(err, ReadFileFailed, "could not open this file %s", filename))
 	}
@@ -511,18 +510,15 @@ func (b *BeegoHTTPRequest) buildTrans() http.RoundTripper {
 			DialContext:         TimeoutDialerCtx(b.setting.ConnectTimeout, b.setting.ReadWriteTimeout),
 			MaxIdleConnsPerHost: 100,
 		}
-	} else {
-		// if b.transport is *http.Transport then set the settings.
-		if t, ok := trans.(*http.Transport); ok {
-			if t.TLSClientConfig == nil {
-				t.TLSClientConfig = b.setting.TLSClientConfig
-			}
-			if t.Proxy == nil {
-				t.Proxy = b.setting.Proxy
-			}
-			if t.DialContext == nil {
-				t.DialContext = TimeoutDialerCtx(b.setting.ConnectTimeout, b.setting.ReadWriteTimeout)
-			}
+	} else if t, ok := trans.(*http.Transport); ok { // if b.transport is *http.Transport then set the settings.
+		if t.TLSClientConfig == nil {
+			t.TLSClientConfig = b.setting.TLSClientConfig
+		}
+		if t.Proxy == nil {
+			t.Proxy = b.setting.Proxy
+		}
+		if t.DialContext == nil {
+			t.DialContext = TimeoutDialerCtx(b.setting.ConnectTimeout, b.setting.ReadWriteTimeout)
 		}
 	}
 	return trans

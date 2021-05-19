@@ -32,11 +32,12 @@ type FilterChainBuilder struct {
 	RunMode    string
 }
 
-var summaryVec prometheus.ObserverVec
-var initSummaryVec sync.Once
+var (
+	summaryVec     prometheus.ObserverVec
+	initSummaryVec sync.Once
+)
 
 func (builder *FilterChainBuilder) FilterChain(next httplib.Filter) httplib.Filter {
-
 	initSummaryVec.Do(func() {
 		summaryVec = prometheus.NewSummaryVec(prometheus.SummaryOpts{
 			Name:      "beego",
@@ -61,9 +62,7 @@ func (builder *FilterChainBuilder) FilterChain(next httplib.Filter) httplib.Filt
 	}
 }
 
-func (builder *FilterChainBuilder) report(startTime time.Time, endTime time.Time,
-	ctx context.Context, req *httplib.BeegoHTTPRequest, resp *http.Response, err error) {
-
+func (builder *FilterChainBuilder) report(startTime time.Time, endTime time.Time, ctx context.Context, req *httplib.BeegoHTTPRequest, resp *http.Response, err error) {
 	proto := req.GetRequest().Proto
 
 	scheme := req.GetRequest().URL.Scheme

@@ -116,7 +116,6 @@ func (m *Migration) UniCol(uni, name string) *Column {
 
 // ForeignCol creates a new foreign column and returns the instance of column
 func (m *Migration) ForeignCol(colname, foreigncol, foreigntable string) (foreign *Foreign) {
-
 	foreign = &Foreign{ForeignColumn: foreigncol, ForeignTable: foreigntable}
 	foreign.Name = colname
 	m.AddForeign(foreign)
@@ -153,7 +152,6 @@ func (c *Column) SetAuto(inc bool) *Column {
 func (c *Column) SetNullable(null bool) *Column {
 	if null {
 		c.Null = ""
-
 	} else {
 		c.Null = "NOT NULL"
 	}
@@ -184,7 +182,6 @@ func (c *Column) SetDataType(dataType string) *Column {
 func (c *RenameColumn) SetOldNullable(null bool) *RenameColumn {
 	if null {
 		c.OldNull = ""
-
 	} else {
 		c.OldNull = "NOT NULL"
 	}
@@ -219,7 +216,6 @@ func (c *Column) SetPrimary(m *Migration) *Column {
 
 // AddColumnsToUnique adds the columns to Unique Struct
 func (unique *Unique) AddColumnsToUnique(columns ...*Column) *Unique {
-
 	unique.Columns = append(unique.Columns, columns...)
 
 	return unique
@@ -227,7 +223,6 @@ func (unique *Unique) AddColumnsToUnique(columns ...*Column) *Unique {
 
 // AddColumns adds columns to m struct
 func (m *Migration) AddColumns(columns ...*Column) *Migration {
-
 	m.Columns = append(m.Columns, columns...)
 
 	return m
@@ -279,17 +274,16 @@ func (m *Migration) GetSQL() (sql string) {
 			}
 
 			if len(m.Primary) > 0 {
-				sql += fmt.Sprintf(",\n PRIMARY KEY( ")
+				sql += ",\n PRIMARY KEY( "
 			}
 			for index, column := range m.Primary {
 				sql += fmt.Sprintf(" `%s`", column.Name)
 				if len(m.Primary) > index+1 {
 					sql += ","
 				}
-
 			}
 			if len(m.Primary) > 0 {
-				sql += fmt.Sprintf(")")
+				sql += ")"
 			}
 
 			for _, unique := range m.Uniques {
@@ -300,13 +294,12 @@ func (m *Migration) GetSQL() (sql string) {
 						sql += ","
 					}
 				}
-				sql += fmt.Sprintf(")")
+				sql += ")"
 			}
 			for _, foreign := range m.Foreigns {
 				sql += fmt.Sprintf(",\n `%s` %s %s %s %s %s", foreign.Name, foreign.DataType, foreign.Unsign, foreign.Null, foreign.Inc, foreign.Default)
 				sql += fmt.Sprintf(",\n KEY  `%s_%s_foreign`(`%s`),", m.TableName, foreign.Column.Name, foreign.Column.Name)
 				sql += fmt.Sprintf("\n CONSTRAINT `%s_%s_foreign` FOREIGN KEY (`%s`) REFERENCES `%s` (`%s`)  %s %s", m.TableName, foreign.Column.Name, foreign.Column.Name, foreign.ForeignTable, foreign.ForeignColumn, foreign.OnDelete, foreign.OnUpdate)
-
 			}
 			sql += fmt.Sprintf(")ENGINE=%s DEFAULT CHARSET=%s;", m.Engine, m.Charset)
 			break
@@ -347,7 +340,6 @@ func (m *Migration) GetSQL() (sql string) {
 		}
 	case "reverse":
 		{
-
 			sql += fmt.Sprintf("ALTER TABLE `%s`", m.TableName)
 			for index, column := range m.Columns {
 				if column.remove {
@@ -361,7 +353,7 @@ func (m *Migration) GetSQL() (sql string) {
 			}
 
 			if len(m.Primary) > 0 {
-				sql += fmt.Sprintf("\n DROP PRIMARY KEY,")
+				sql += "\n DROP PRIMARY KEY,"
 			}
 
 			for index, unique := range m.Uniques {
@@ -369,7 +361,6 @@ func (m *Migration) GetSQL() (sql string) {
 				if len(m.Uniques) > index+1 {
 					sql += ","
 				}
-
 			}
 			for index, column := range m.Renames {
 				sql += fmt.Sprintf("\n CHANGE COLUMN `%s` `%s` %s %s %s %s", column.NewName, column.OldName, column.OldDataType, column.OldUnsign, column.OldNull, column.OldDefault)

@@ -40,6 +40,7 @@ func (s *LogStore) ListShards() (shardIDs []int, err error) {
 	if err != nil {
 		return
 	}
+	defer r.Body.Close()
 
 	buf, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -97,6 +98,7 @@ func (s *LogStore) PutLogs(lg *LogGroup) (err error) {
 	if err != nil {
 		return
 	}
+	defer r.Body.Close()
 
 	buf, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -133,6 +135,7 @@ func (s *LogStore) GetCursor(shardID int, from string) (cursor string, err error
 	if err != nil {
 		return
 	}
+	defer r.Body.Close()
 
 	buf, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -168,9 +171,7 @@ func (s *LogStore) GetCursor(shardID int, from string) (cursor string, err error
 // GetLogsBytes gets logs binary data from shard specified by shardID according cursor.
 // The logGroupMaxCount is the max number of logGroup could be returned.
 // The nextCursor is the next curosr can be used to read logs at next time.
-func (s *LogStore) GetLogsBytes(shardID int, cursor string,
-	logGroupMaxCount int) (out []byte, nextCursor string, err error) {
-
+func (s *LogStore) GetLogsBytes(shardID int, cursor string, logGroupMaxCount int) (out []byte, nextCursor string, err error) {
 	h := map[string]string{
 		"x-sls-bodyrawsize": "0",
 		"Accept":            "application/x-protobuf",
@@ -184,6 +185,7 @@ func (s *LogStore) GetLogsBytes(shardID int, cursor string,
 	if err != nil {
 		return
 	}
+	defer r.Body.Close()
 
 	buf, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -241,7 +243,6 @@ func (s *LogStore) GetLogsBytes(shardID int, cursor string,
 
 // LogsBytesDecode decodes logs binary data retruned by GetLogsBytes API
 func LogsBytesDecode(data []byte) (gl *LogGroupList, err error) {
-
 	gl = &LogGroupList{}
 	err = proto.Unmarshal(data, gl)
 	if err != nil {
@@ -254,9 +255,7 @@ func LogsBytesDecode(data []byte) (gl *LogGroupList, err error) {
 // GetLogs gets logs from shard specified by shardID according cursor.
 // The logGroupMaxCount is the max number of logGroup could be returned.
 // The nextCursor is the next curosr can be used to read logs at next time.
-func (s *LogStore) GetLogs(shardID int, cursor string,
-	logGroupMaxCount int) (gl *LogGroupList, nextCursor string, err error) {
-
+func (s *LogStore) GetLogs(shardID int, cursor string, logGroupMaxCount int) (gl *LogGroupList, nextCursor string, err error) {
 	out, nextCursor, err := s.GetLogsBytes(shardID, cursor, logGroupMaxCount)
 	if err != nil {
 		return

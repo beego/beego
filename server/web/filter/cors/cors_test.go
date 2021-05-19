@@ -65,7 +65,7 @@ func Test_AllowAll(t *testing.T) {
 	r, _ := http.NewRequest("PUT", "/foo", nil)
 	handler.ServeHTTP(recorder, r)
 
-	if recorder.HeaderMap.Get(headerAllowOrigin) != "*" {
+	if recorder.Header().Get(headerAllowOrigin) != "*" {
 		t.Errorf("Allow-Origin header should be *")
 	}
 }
@@ -84,7 +84,7 @@ func Test_AllowRegexMatch(t *testing.T) {
 	r.Header.Add("Origin", origin)
 	handler.ServeHTTP(recorder, r)
 
-	headerValue := recorder.HeaderMap.Get(headerAllowOrigin)
+	headerValue := recorder.Header().Get(headerAllowOrigin)
 	if headerValue != origin {
 		t.Errorf("Allow-Origin header should be %v, found %v", origin, headerValue)
 	}
@@ -104,7 +104,7 @@ func Test_AllowRegexNoMatch(t *testing.T) {
 	r.Header.Add("Origin", origin)
 	handler.ServeHTTP(recorder, r)
 
-	headerValue := recorder.HeaderMap.Get(headerAllowOrigin)
+	headerValue := recorder.Header().Get(headerAllowOrigin)
 	if headerValue != "" {
 		t.Errorf("Allow-Origin header should not exist, found %v", headerValue)
 	}
@@ -127,11 +127,11 @@ func Test_OtherHeaders(t *testing.T) {
 	r, _ := http.NewRequest("PUT", "/foo", nil)
 	handler.ServeHTTP(recorder, r)
 
-	credentialsVal := recorder.HeaderMap.Get(headerAllowCredentials)
-	methodsVal := recorder.HeaderMap.Get(headerAllowMethods)
-	headersVal := recorder.HeaderMap.Get(headerAllowHeaders)
-	exposedHeadersVal := recorder.HeaderMap.Get(headerExposeHeaders)
-	maxAgeVal := recorder.HeaderMap.Get(headerMaxAge)
+	credentialsVal := recorder.Header().Get(headerAllowCredentials)
+	methodsVal := recorder.Header().Get(headerAllowMethods)
+	headersVal := recorder.Header().Get(headerAllowHeaders)
+	exposedHeadersVal := recorder.Header().Get(headerExposeHeaders)
+	maxAgeVal := recorder.Header().Get(headerMaxAge)
 
 	if credentialsVal != "true" {
 		t.Errorf("Allow-Credentials is expected to be true, found %v", credentialsVal)
@@ -167,7 +167,7 @@ func Test_DefaultAllowHeaders(t *testing.T) {
 	r, _ := http.NewRequest("PUT", "/foo", nil)
 	handler.ServeHTTP(recorder, r)
 
-	headersVal := recorder.HeaderMap.Get(headerAllowHeaders)
+	headersVal := recorder.Header().Get(headerAllowHeaders)
 	if headersVal != "Origin,Accept,Content-Type,Authorization" {
 		t.Errorf("Allow-Headers is expected to be Origin,Accept,Content-Type,Authorization; found %v", headersVal)
 	}

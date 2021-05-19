@@ -23,10 +23,6 @@ import (
 	"github.com/beego/beego/v2/client/httplib"
 )
 
-func init() {
-
-}
-
 func TestSimpleCondition_MatchPath(t *testing.T) {
 	sc := NewSimpleCondition("/abc/s")
 	res := sc.Match(context.Background(), httplib.Get("http://localhost:8080/abc/s"))
@@ -72,7 +68,6 @@ func TestSimpleCondition_MatchHeader(t *testing.T) {
 }
 
 func TestSimpleCondition_MatchBodyField(t *testing.T) {
-
 	sc := NewSimpleCondition("/abc/s")
 	req := httplib.Post("http://localhost:8080/abc/s")
 

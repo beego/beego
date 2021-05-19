@@ -19,15 +19,15 @@ import (
 )
 
 func TestGetString(t *testing.T) {
-	var t1 = "test1"
+	t1 := "test1"
 	if "test1" != GetString(t1) {
 		t.Error("get string from string error")
 	}
-	var t2 = []byte("test2")
+	t2 := []byte("test2")
 	if "test2" != GetString(t2) {
 		t.Error("get string from byte array error")
 	}
-	var t3 = 1
+	t3 := 1
 	if "1" != GetString(t3) {
 		t.Error("get string from int error")
 	}
@@ -35,7 +35,7 @@ func TestGetString(t *testing.T) {
 	if "1" != GetString(t4) {
 		t.Error("get string from int64 error")
 	}
-	var t5 = 1.1
+	t5 := 1.1
 	if "1.1" != GetString(t5) {
 		t.Error("get string from float64 error")
 	}
@@ -46,7 +46,7 @@ func TestGetString(t *testing.T) {
 }
 
 func TestGetInt(t *testing.T) {
-	var t1 = 1
+	t1 := 1
 	if 1 != GetInt(t1) {
 		t.Error("get int from int error")
 	}
@@ -58,7 +58,7 @@ func TestGetInt(t *testing.T) {
 	if 64 != GetInt(t3) {
 		t.Error("get int from int64 error")
 	}
-	var t4 = "128"
+	t4 := "128"
 	if 128 != GetInt(t4) {
 		t.Error("get int from num string error")
 	}
@@ -69,7 +69,7 @@ func TestGetInt(t *testing.T) {
 
 func TestGetInt64(t *testing.T) {
 	var i int64 = 1
-	var t1 = 1
+	t1 := 1
 	if i != GetInt64(t1) {
 		t.Error("get int64 from int error")
 	}
@@ -81,7 +81,7 @@ func TestGetInt64(t *testing.T) {
 	if i != GetInt64(t3) {
 		t.Error("get int64 from int64 error")
 	}
-	var t4 = "1"
+	t4 := "1"
 	if i != GetInt64(t4) {
 		t.Error("get int64 from num string error")
 	}
@@ -91,22 +91,22 @@ func TestGetInt64(t *testing.T) {
 }
 
 func TestGetFloat64(t *testing.T) {
-	var f = 1.11
+	f := 1.11
 	var t1 float32 = 1.11
 	if f != GetFloat64(t1) {
 		t.Error("get float64 from float32 error")
 	}
-	var t2 = 1.11
+	t2 := 1.11
 	if f != GetFloat64(t2) {
 		t.Error("get float64 from float64 error")
 	}
-	var t3 = "1.11"
+	t3 := "1.11"
 	if f != GetFloat64(t3) {
 		t.Error("get float64 from string error")
 	}
 
 	var f2 float64 = 1
-	var t4 = 1
+	t4 := 1
 	if f2 != GetFloat64(t4) {
 		t.Error("get float64 from int error")
 	}
@@ -117,11 +117,11 @@ func TestGetFloat64(t *testing.T) {
 }
 
 func TestGetBool(t *testing.T) {
-	var t1 = true
+	t1 := true
 	if !GetBool(t1) {
 		t.Error("get bool from bool error")
 	}
-	var t2 = "true"
+	t2 := "true"
 	if !GetBool(t2) {
 		t.Error("get bool from string error")
 	}

@@ -46,8 +46,7 @@ var (
 )
 
 // IniConfig implements Config to parse ini file.
-type IniConfig struct {
-}
+type IniConfig struct{}
 
 // Parse creates a new Config and parses the file configuration from the named file.
 func (ini *IniConfig) Parse(name string) (Configer, error) {
@@ -161,10 +160,8 @@ func (ini *IniConfig) parseData(dir string, data []byte) (*IniConfigContainer, e
 
 		// handle include "other.conf"
 		if len(keyValue) == 1 && strings.HasPrefix(key, "include") {
-
 			includefiles := strings.Fields(key)
 			if includefiles[0] == "include" && len(includefiles) == 2 {
-
 				otherfile := strings.Trim(includefiles[1], "\"")
 				if !filepath.IsAbs(otherfile) {
 					otherfile = filepath.Join(dir, otherfile)
@@ -209,7 +206,6 @@ func (ini *IniConfig) parseData(dir string, data []byte) (*IniConfigContainer, e
 			cfg.keyComment[section+"."+key] = comment.String()
 			comment.Reset()
 		}
-
 	}
 	return cfg, nil
 }
@@ -374,7 +370,7 @@ func (c *IniConfigContainer) SaveConfigFile(filename string) (err error) {
 			}
 			prefix := string(bNumComment)
 			// Add the line head character "#"
-			return prefix + strings.Replace(comment, lineBreak, lineBreak+prefix, -1)
+			return prefix + strings.ReplaceAll(comment, lineBreak, lineBreak+prefix)
 		}
 		return ""
 	}

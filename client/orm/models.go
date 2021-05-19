@@ -32,9 +32,7 @@ const (
 	defaultStructTagDelim = ";"
 )
 
-var (
-	modelCache = NewModelCacheHandler()
-)
+var modelCache = NewModelCacheHandler()
 
 // model info collection
 type _modelCache struct {
@@ -327,12 +325,10 @@ end:
 		debug.PrintStack()
 	}
 	mc.done = true
-	return
 }
 
 // register register models to model cache
 func (mc *_modelCache) register(prefixOrSuffixStr string, prefixOrSuffix bool, models ...interface{}) (err error) {
-
 	for _, model := range models {
 		val := reflect.ValueOf(model)
 		typ := reflect.Indirect(val).Type()
@@ -357,7 +353,7 @@ func (mc *_modelCache) register(prefixOrSuffixStr string, prefixOrSuffix bool, m
 			if prefixOrSuffix {
 				table = prefixOrSuffixStr + table
 			} else {
-				table = table + prefixOrSuffixStr
+				table += prefixOrSuffixStr
 			}
 		}
 
@@ -438,7 +434,6 @@ func (mc *_modelCache) getDbCreateSQL(al *alias) (queries []string, tableIndexes
 		sqlIndexes := [][]string{}
 
 		for _, fi := range mi.fields.fieldsDB {
-
 			column := fmt.Sprintf("    %s%s%s ", Q, fi.column, Q)
 			col := getColumnTyp(al, fi)
 
@@ -475,7 +470,7 @@ func (mc *_modelCache) getDbCreateSQL(al *alias) (queries []string, tableIndexes
 			}
 
 			if strings.Contains(column, "%COL%") {
-				column = strings.Replace(column, "%COL%", fi.column, -1)
+				column = strings.ReplaceAll(column, "%COL%", fi.column)
 			}
 
 			if fi.description != "" && al.Driver != DRSqlite {

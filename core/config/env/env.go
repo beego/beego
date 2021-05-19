@@ -137,7 +137,7 @@ func GetRuntimeEnv(key string) (string, error) {
 // GetGOBIN returns GOBIN environment variable as a string.
 // It will NOT be an empty string.
 func GetGOBIN() string {
-	// The one set by user explicitly by `export GOBIN=/path` or `env GOBIN=/path command`
+	// The one set by user explicitly by `export GOBIN=/path` or `env GOBIN=/path` command
 	gobin := strings.TrimSpace(Get("GOBIN", ""))
 	if gobin == "" {
 		var err error
@@ -158,7 +158,7 @@ func GetGOBIN() string {
 // GetGOPATH returns GOPATH environment variable as a string.
 // It will NOT be an empty string.
 func GetGOPATH() string {
-	// The one set by user explicitly by `export GOPATH=/path` or `env GOPATH=/path command`
+	// The one set by user explicitly by `export GOPATH=/path` or `env GOPATH=/path` command
 	gopath := strings.TrimSpace(Get("GOPATH", ""))
 	if gopath == "" {
 		var err error

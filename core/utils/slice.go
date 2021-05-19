@@ -20,6 +20,7 @@ import (
 )
 
 type reducetype func(interface{}) interface{}
+
 type filtertype func(interface{}) bool
 
 // InSlice checks given string in string slice or not.
@@ -58,9 +59,8 @@ func SliceRandList(min, max int) []int {
 }
 
 // SliceMerge merges interface slices to one slice.
-func SliceMerge(slice1, slice2 []interface{}) (c []interface{}) {
-	c = append(slice1, slice2...)
-	return
+func SliceMerge(slice1, slice2 []interface{}) []interface{} {
+	return append(slice1, slice2...)
 }
 
 // SliceReduce generates a new slice after parsing every value by reduce function

@@ -24,16 +24,15 @@ import (
 	"github.com/beego/beego/v2/core/admin"
 )
 
-type listTaskCommand struct {
-}
+type listTaskCommand struct{}
 
 func (l *listTaskCommand) Execute(params ...interface{}) *admin.Result {
 	resultList := make([][]string, 0, len(globalTaskManager.adminTaskList))
 	for tname, tk := range globalTaskManager.adminTaskList {
 		result := []string{
 			template.HTMLEscapeString(tname),
-			template.HTMLEscapeString(tk.GetSpec(nil)),
-			template.HTMLEscapeString(tk.GetStatus(nil)),
+			template.HTMLEscapeString(tk.GetSpec(context.TODO())),
+			template.HTMLEscapeString(tk.GetStatus(context.TODO())),
 			template.HTMLEscapeString(tk.GetPrev(context.Background()).String()),
 		}
 		resultList = append(resultList, result)
@@ -45,8 +44,7 @@ func (l *listTaskCommand) Execute(params ...interface{}) *admin.Result {
 	}
 }
 
-type runTaskCommand struct {
-}
+type runTaskCommand struct{}
 
 func (r *runTaskCommand) Execute(params ...interface{}) *admin.Result {
 	if len(params) == 0 {
@@ -83,7 +81,6 @@ func (r *runTaskCommand) Execute(params ...interface{}) *admin.Result {
 			Error:  errors.New(fmt.Sprintf("task with name %s not found", tn)),
 		}
 	}
-
 }
 
 func registerCommands() {

@@ -96,7 +96,7 @@ func (pder *MemProvider) SessionInit(ctx context.Context, maxlifetime int64, sav
 func (pder *MemProvider) SessionRead(ctx context.Context, sid string) (Store, error) {
 	pder.lock.RLock()
 	if element, ok := pder.sessions[sid]; ok {
-		go pder.SessionUpdate(nil, sid)
+		go pder.SessionUpdate(context.TODO(), sid)
 		pder.lock.RUnlock()
 		return element.Value.(*MemSessionStore), nil
 	}
@@ -123,7 +123,7 @@ func (pder *MemProvider) SessionExist(ctx context.Context, sid string) (bool, er
 func (pder *MemProvider) SessionRegenerate(ctx context.Context, oldsid, sid string) (Store, error) {
 	pder.lock.RLock()
 	if element, ok := pder.sessions[oldsid]; ok {
-		go pder.SessionUpdate(nil, oldsid)
+		go pder.SessionUpdate(context.TODO(), oldsid)
 		pder.lock.RUnlock()
 		pder.lock.Lock()
 		element.Value.(*MemSessionStore).sid = sid

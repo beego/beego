@@ -51,7 +51,7 @@ var (
 const (
 	bytePerKb    = 1024
 	copyBufferKb = 32
-	filePerm     = 0666
+	filePerm     = 0o666
 )
 
 func init() {
@@ -757,7 +757,7 @@ func (c *Controller) SessionRegenerateID() error {
 
 // DestroySession cleans session data and session cookie.
 func (c *Controller) DestroySession() error {
-	err := c.Ctx.Input.CruSession.Flush(nil)
+	err := c.Ctx.Input.CruSession.Flush(context2.TODO())
 	if err != nil {
 		return err
 	}
@@ -772,13 +772,13 @@ func (c *Controller) IsAjax() bool {
 }
 
 // GetSecureCookie returns decoded cookie value from encoded browser cookie values.
-func (c *Controller) GetSecureCookie(Secret, key string) (string, bool) {
-	return c.Ctx.GetSecureCookie(Secret, key)
+func (c *Controller) GetSecureCookie(secret, key string) (string, bool) {
+	return c.Ctx.GetSecureCookie(secret, key)
 }
 
 // SetSecureCookie puts value into cookie after encoded the value.
-func (c *Controller) SetSecureCookie(Secret, name, value string, others ...interface{}) {
-	c.Ctx.SetSecureCookie(Secret, name, value, others...)
+func (c *Controller) SetSecureCookie(secret, name, value string, others ...interface{}) {
+	c.Ctx.SetSecureCookie(secret, name, value, others...)
 }
 
 // XSRFToken creates a CSRF token string and returns.

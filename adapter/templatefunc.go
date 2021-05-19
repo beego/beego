@@ -118,7 +118,6 @@ func AssetsJs(text string) template.HTML {
 
 // AssetsCSS returns stylesheet link tag with src string.
 func AssetsCSS(text string) template.HTML {
-
 	text = "<link href=\"" + text + "\" rel=\"stylesheet\" />"
 
 	return template.HTML(text)

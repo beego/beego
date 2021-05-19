@@ -15,6 +15,7 @@
 package session
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -38,14 +39,14 @@ func TestCookie(t *testing.T) {
 	if err != nil {
 		t.Fatal("set error,", err)
 	}
-	err = sess.Set(nil, "username", "astaxie")
+	err = sess.Set(context.TODO(), "username", "astaxie")
 	if err != nil {
 		t.Fatal("set error,", err)
 	}
-	if username := sess.Get(nil, "username"); username != "astaxie" {
+	if username := sess.Get(context.TODO(), "username"); username != "astaxie" {
 		t.Fatal("get username error")
 	}
-	sess.SessionRelease(nil, w)
+	sess.SessionRelease(context.TODO(), w)
 	if cookiestr := w.Header().Get("Set-Cookie"); cookiestr == "" {
 		t.Fatal("setcookie error")
 	} else {
@@ -85,7 +86,7 @@ func TestDestorySessionCookie(t *testing.T) {
 	if err != nil {
 		t.Fatal("session start err,", err)
 	}
-	if newSession.SessionID(nil) != session.SessionID(nil) {
+	if newSession.SessionID(context.TODO()) != session.SessionID(context.TODO()) {
 		t.Fatal("get cookie session id is not the same again.")
 	}
 
@@ -99,7 +100,7 @@ func TestDestorySessionCookie(t *testing.T) {
 	if err != nil {
 		t.Fatal("session start error")
 	}
-	if newSession.SessionID(nil) == session.SessionID(nil) {
+	if newSession.SessionID(context.TODO()) == session.SessionID(context.TODO()) {
 		t.Fatal("after destroy session and reqeust again ,get cookie session id is same.")
 	}
 }

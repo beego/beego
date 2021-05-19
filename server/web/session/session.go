@@ -127,7 +127,7 @@ func NewManager(provideName string, cf *ManagerConfig) (*Manager, error) {
 		}
 	}
 
-	err := provider.SessionInit(nil, cf.Maxlifetime, cf.ProviderConfig)
+	err := provider.SessionInit(context.TODO(), cf.Maxlifetime, cf.ProviderConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -191,12 +191,12 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 	}
 
 	if sid != "" {
-		exists, err := manager.provider.SessionExist(nil, sid)
+		exists, err := manager.provider.SessionExist(context.TODO(), sid)
 		if err != nil {
 			return nil, err
 		}
 		if exists {
-			return manager.provider.SessionRead(nil, sid)
+			return manager.provider.SessionRead(context.TODO(), sid)
 		}
 	}
 
@@ -206,7 +206,7 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 		return nil, errs
 	}
 
-	session, err = manager.provider.SessionRead(nil, sid)
+	session, err = manager.provider.SessionRead(context.TODO(), sid)
 	if err != nil {
 		return nil, err
 	}
@@ -249,10 +249,11 @@ func (manager *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sid, _ := url.QueryUnescape(cookie.Value)
-	manager.provider.SessionDestroy(nil, sid)
+	manager.provider.SessionDestroy(context.TODO(), sid)
 	if manager.config.EnableSetCookie {
 		expiration := time.Now()
-		cookie = &http.Cookie{Name: manager.config.CookieName,
+		cookie = &http.Cookie{
+			Name:     manager.config.CookieName,
 			Path:     "/",
 			HttpOnly: !manager.config.DisableHTTPOnly,
 			Expires:  expiration,
@@ -267,14 +268,14 @@ func (manager *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
 
 // GetSessionStore Get SessionStore by its id.
 func (manager *Manager) GetSessionStore(sid string) (sessions Store, err error) {
-	sessions, err = manager.provider.SessionRead(nil, sid)
+	sessions, err = manager.provider.SessionRead(context.TODO(), sid)
 	return
 }
 
 // GC Start session gc process.
 // it can do gc in times after gc lifetime.
 func (manager *Manager) GC() {
-	manager.provider.SessionGC(nil)
+	manager.provider.SessionGC(context.TODO())
 	time.AfterFunc(time.Duration(manager.config.Gclifetime)*time.Second, func() { manager.GC() })
 }
 
@@ -290,11 +291,12 @@ func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Reque
 	cookie, err := r.Cookie(manager.config.CookieName)
 	if err != nil || cookie.Value == "" {
 		// delete old cookie
-		session, err = manager.provider.SessionRead(nil, sid)
+		session, err = manager.provider.SessionRead(context.TODO(), sid)
 		if err != nil {
 			return nil, err
 		}
-		cookie = &http.Cookie{Name: manager.config.CookieName,
+		cookie = &http.Cookie{
+			Name:     manager.config.CookieName,
 			Value:    url.QueryEscape(sid),
 			Path:     "/",
 			HttpOnly: !manager.config.DisableHTTPOnly,
@@ -308,7 +310,7 @@ func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Reque
 			return nil, err
 		}
 
-		session, err = manager.provider.SessionRegenerate(nil, oldsid, sid)
+		session, err = manager.provider.SessionRegenerate(context.TODO(), oldsid, sid)
 		if err != nil {
 			return nil, err
 		}
@@ -336,7 +338,7 @@ func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Reque
 
 // GetActiveSession Get all active sessions count number.
 func (manager *Manager) GetActiveSession() int {
-	return manager.provider.SessionAll(nil)
+	return manager.provider.SessionAll(context.TODO())
 }
 
 // SetSecure Set cookie with https.

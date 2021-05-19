@@ -303,8 +303,8 @@ func (srv *Server) fork() (err error) {
 	}
 	runningServersForked = true
 
-	var files = make([]*os.File, len(runningServers))
-	var orderArgs = make([]string, len(runningServers))
+	files := make([]*os.File, len(runningServers))
+	orderArgs := make([]string, len(runningServers))
 	for _, srvPtr := range runningServers {
 		f, _ := srvPtr.ln.(*net.TCPListener).File()
 		files[socketPtrOffsetMap[srvPtr.Server.Addr]] = f
@@ -333,6 +333,7 @@ func (srv *Server) fork() (err error) {
 	cmd.ExtraFiles = files
 	err = cmd.Start()
 	if err != nil {
+		regLock.Unlock()
 		log.Fatalf("Restart: Failed to launch, error: %v", err)
 	}
 

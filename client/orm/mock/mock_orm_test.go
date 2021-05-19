@@ -247,7 +247,7 @@ func TestTransactionRollbackUnlessCommit(t *testing.T) {
 	mock := errors.New(mockErrorMsg)
 	s.Mock(MockRollbackUnlessCommit(mock))
 
-	//u := &User{}
+	// u := &User{}
 	o := orm.NewOrm()
 	txOrm, _ := o.Begin()
 	err := txOrm.RollbackUnlessCommit()

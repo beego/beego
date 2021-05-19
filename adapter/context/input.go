@@ -244,8 +244,8 @@ func (input *BeegoInput) Session(key interface{}) interface{} {
 }
 
 // CopyBody returns the raw request body data as bytes.
-func (input *BeegoInput) CopyBody(MaxMemory int64) []byte {
-	return (*context.BeegoInput)(input).CopyBody(MaxMemory)
+func (input *BeegoInput) CopyBody(maxMemory int64) []byte {
+	return (*context.BeegoInput)(input).CopyBody(maxMemory)
 }
 
 // Data return the implicit data in the input

@@ -59,10 +59,8 @@ var defaultRejectionResponse = RejectionResponse{
 // according to the configuration.
 func NewLimiter(opts ...limiterOption) web.FilterFunc {
 	l := &limiter{
-		buckets: make(map[string]bucket),
-		sessionKey: func(r *http.Request) string {
-			return defaultSessionKey(r)
-		},
+		buckets:       make(map[string]bucket),
+		sessionKey:    defaultSessionKey,
 		bucketFactory: NewTokenBucket,
 		resp:          defaultRejectionResponse,
 	}

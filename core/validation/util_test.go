@@ -90,13 +90,9 @@ type User struct {
 func TestValidation(t *testing.T) {
 	u := User{"man1238888456", "", 1140}
 	valid := Validation{}
-	b, err := valid.Valid(&u)
-	if err != nil {
-		// handle error
-	}
+	b, _ := valid.Valid(&u)
 	if !b {
 		// validation does not pass
-		// blabla...
 		for _, err := range valid.Errors {
 			log.Println(err.Key, err.Message)
 		}

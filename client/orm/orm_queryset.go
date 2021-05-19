@@ -140,7 +140,7 @@ func (o querySet) GroupBy(exprs ...string) QuerySeter {
 // add ORDER expression.
 // "column" means ASC, "-column" means DESC.
 func (o querySet) OrderBy(expressions ...string) QuerySeter {
-	if len(expressions) <= 0 {
+	if len(expressions) == 0 {
 		return &o
 	}
 	o.orders = order_clause.ParseOrder(expressions...)
@@ -149,7 +149,7 @@ func (o querySet) OrderBy(expressions ...string) QuerySeter {
 
 // add ORDER expression.
 func (o querySet) OrderClauses(orders ...*order_clause.Order) QuerySeter {
-	if len(orders) <= 0 {
+	if len(orders) == 0 {
 		return &o
 	}
 	o.orders = orders

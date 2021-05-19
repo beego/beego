@@ -33,15 +33,15 @@ const unknownRouterPattern = "UnknownRouterPattern"
 // FilterChainBuilder is an extension point,
 // when we want to support some configuration,
 // please use this structure
-type FilterChainBuilder struct {
-}
+type FilterChainBuilder struct{}
 
-var summaryVec prometheus.ObserverVec
-var initSummaryVec sync.Once
+var (
+	summaryVec     prometheus.ObserverVec
+	initSummaryVec sync.Once
+)
 
 // FilterChain returns a FilterFunc. The filter will records some metrics
 func (builder *FilterChainBuilder) FilterChain(next web.FilterFunc) web.FilterFunc {
-
 	initSummaryVec.Do(func() {
 		summaryVec = builder.buildVec()
 		err := prometheus.Register(summaryVec)

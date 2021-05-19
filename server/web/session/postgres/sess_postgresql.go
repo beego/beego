@@ -123,7 +123,6 @@ func (st *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWrite
 	}
 	st.c.Exec("UPDATE session set session_data=$1, session_expiry=$2 where session_key=$3",
 		b, time.Now().Format(time.RFC3339), st.sid)
-
 }
 
 // Provider postgresql session provider

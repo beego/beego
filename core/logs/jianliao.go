@@ -31,7 +31,6 @@ func newJLWriter() Logger {
 
 // Init JLWriter with json config string
 func (s *JLWriter) Init(config string) error {
-
 	res := json.Unmarshal([]byte(config), s)
 	if res == nil && len(s.Formatter) > 0 {
 		fmtr, ok := GetFormatter(s.Formatter)

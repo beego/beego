@@ -156,7 +156,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	var filename = "app.conf"
+	filename := "app.conf"
 	if os.Getenv("BEEGO_RUNMODE") != "" {
 		filename = os.Getenv("BEEGO_RUNMODE") + ".app.conf"
 	}
@@ -196,7 +196,7 @@ func defaultRecoverPanic(ctx *context.Context, cfg *Config) {
 				break
 			}
 			logs.Critical(fmt.Sprintf("%s:%d", file, line))
-			stack = stack + fmt.Sprintln(fmt.Sprintf("%s:%d", file, line))
+			stack += fmt.Sprintf("%s:%d\n", file, line)
 		}
 		if cfg.RunMode == DEV && cfg.EnableErrorsRender {
 			showErr(err, ctx, stack)
@@ -304,7 +304,6 @@ func parseConfig(appConfigPath string) (err error) {
 // For 1.x, it use assignSingleConfig to parse the file
 // but for 2.x, we use Unmarshaler method
 func assignConfig(ac config.Configer) error {
-
 	parseConfigForV1(ac)
 
 	err := ac.Unmarshaler("", BConfig)
@@ -319,7 +318,7 @@ func assignConfig(ac config.Configer) error {
 	for adaptor, cfg := range BConfig.Log.Outputs {
 		err := logs.SetLogger(adaptor, cfg)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, fmt.Sprintf("%s with the config %q got err:%s", adaptor, cfg, err.Error()))
+			fmt.Fprintf(os.Stderr, "%s with the config %q got err:%s\n", adaptor, cfg, err.Error())
 			return err
 		}
 	}
@@ -422,7 +421,6 @@ func assignSingleConfig(p interface{}, ac config.Configer) {
 			// do nothing here
 		}
 	}
-
 }
 
 // LoadAppConfig allow developer to apply a config file

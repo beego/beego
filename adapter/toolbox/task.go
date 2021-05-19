@@ -80,7 +80,6 @@ type Task struct {
 
 // NewTask add new task with name, time and func
 func NewTask(tname string, spec string, f TaskFunc) *Task {
-
 	task := task.NewTask(tname, spec, func(ctx context.Context) error {
 		return f()
 	})
@@ -98,7 +97,6 @@ func (t *Task) GetSpec() string {
 
 // GetStatus get current task status
 func (t *Task) GetStatus() string {
-
 	t.initDelegate()
 
 	return t.delegate.GetStatus(context.Background())
@@ -222,7 +220,6 @@ type MapSorter task.MapSorter
 
 // NewMapSorter create new tasker map
 func NewMapSorter(m map[string]Tasker) *MapSorter {
-
 	newTaskerMap := make(map[string]task.Tasker, len(m))
 
 	for key, value := range m {
@@ -249,6 +246,7 @@ func (ms *MapSorter) Less(i, j int) bool {
 	}
 	return ms.Vals[i].GetNext(context.Background()).Before(ms.Vals[j].GetNext(context.Background()))
 }
+
 func (ms *MapSorter) Swap(i, j int) {
 	ms.Vals[i], ms.Vals[j] = ms.Vals[j], ms.Vals[i]
 	ms.Keys[i], ms.Keys[j] = ms.Keys[j], ms.Keys[i]

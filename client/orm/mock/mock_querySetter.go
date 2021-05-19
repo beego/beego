@@ -23,8 +23,7 @@ import (
 
 // DoNothingQuerySetter do nothing
 // usually you use this to build your mock QuerySetter
-type DoNothingQuerySetter struct {
-}
+type DoNothingQuerySetter struct{}
 
 func (d *DoNothingQuerySetter) OrderClauses(orders ...*order_clause.Order) orm.QuerySeter {
 	return d

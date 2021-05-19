@@ -17,6 +17,7 @@ package context
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"errors"
 	"io"
 	"io/ioutil"
@@ -361,17 +362,17 @@ func (input *BeegoInput) Cookie(key string) string {
 // Session returns current session item value by a given key.
 // if non-existed, return nil.
 func (input *BeegoInput) Session(key interface{}) interface{} {
-	return input.CruSession.Get(nil, key)
+	return input.CruSession.Get(context.TODO(), key)
 }
 
 // CopyBody returns the raw request body data as bytes.
-func (input *BeegoInput) CopyBody(MaxMemory int64) []byte {
+func (input *BeegoInput) CopyBody(maxMemory int64) []byte {
 	if input.Context.Request.Body == nil {
 		return []byte{}
 	}
 
 	var requestbody []byte
-	safe := &io.LimitedReader{R: input.Context.Request.Body, N: MaxMemory}
+	safe := &io.LimitedReader{R: input.Context.Request.Body, N: maxMemory}
 	if input.Header("Content-Encoding") == "gzip" {
 		reader, err := gzip.NewReader(safe)
 		if err != nil {
@@ -384,7 +385,7 @@ func (input *BeegoInput) CopyBody(MaxMemory int64) []byte {
 
 	input.Context.Request.Body.Close()
 	bf := bytes.NewBuffer(requestbody)
-	input.Context.Request.Body = http.MaxBytesReader(input.Context.ResponseWriter, ioutil.NopCloser(bf), MaxMemory)
+	input.Context.Request.Body = http.MaxBytesReader(input.Context.ResponseWriter, ioutil.NopCloser(bf), maxMemory)
 	input.RequestBody = requestbody
 	return requestbody
 }

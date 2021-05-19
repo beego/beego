@@ -27,7 +27,6 @@ import (
 )
 
 func TestFilterOrmDecorator_Read(t *testing.T) {
-
 	register()
 
 	o := &filterMockOrm{}

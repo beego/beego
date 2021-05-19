@@ -22,8 +22,10 @@ import (
 	"github.com/beego/beego/v2/core/admin"
 )
 
-var startTime = time.Now()
-var pid int
+var (
+	startTime = time.Now()
+	pid       int
+)
 
 func init() {
 	pid = os.Getpid()

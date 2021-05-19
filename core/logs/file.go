@@ -117,7 +117,6 @@ func (w *fileLogWriter) SetFormatter(f LogFormatter) {
 //      "perm":"0600"
 //  }
 func (w *fileLogWriter) Init(config string) error {
-
 	err := json.Unmarshal([]byte(config), w)
 	if err != nil {
 		return err
@@ -134,7 +133,7 @@ func (w *fileLogWriter) Init(config string) error {
 	if len(w.Formatter) > 0 {
 		fmtr, ok := GetFormatter(w.Formatter)
 		if !ok {
-			return errors.New(fmt.Sprintf("the formatter with name: %s not found", w.Formatter))
+			return fmt.Errorf("the formatter with name: %s not found", w.Formatter)
 		}
 		w.formatter = fmtr
 	}
@@ -165,7 +164,6 @@ func (w *fileLogWriter) needRotateHourly(hour int) bool {
 	return (w.MaxLines > 0 && w.maxLinesCurLines >= w.MaxLines) ||
 		(w.MaxSize > 0 && w.maxSizeCurSize >= w.MaxSize) ||
 		(w.Hourly && hour != w.hourlyOpenDate)
-
 }
 
 // WriteMsg writes logger message into file.

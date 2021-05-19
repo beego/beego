@@ -31,8 +31,7 @@ import (
 )
 
 // JSONConfig is a json config parser and implements Config interface.
-type JSONConfig struct {
-}
+type JSONConfig struct{}
 
 // Parse returns a ConfigContainer with parsed json config map.
 func (js *JSONConfig) Parse(filename string) (config.Configer, error) {
@@ -100,12 +99,12 @@ func (c *JSONConfigContainer) sub(key string) (map[string]interface{}, error) {
 	}
 	value, ok := c.data[key]
 	if !ok {
-		return nil, errors.New(fmt.Sprintf("key is not found: %s", key))
+		return nil, fmt.Errorf("key is not found: %s", key)
 	}
 
 	res, ok := value.(map[string]interface{})
 	if !ok {
-		return nil, errors.New(fmt.Sprintf("the type of value is invalid, key: %s", key))
+		return nil, fmt.Errorf("the type of value is invalid, key: %s", key)
 	}
 	return res, nil
 }

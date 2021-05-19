@@ -35,6 +35,7 @@ func TestResponse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer resp.Body.Close()
 	t.Log(resp)
 }
 
@@ -63,7 +64,6 @@ func TestDoRequest(t *testing.T) {
 	if elapsedTime < delayedTime {
 		t.Errorf("Not enough retries. Took %dms. Delay was meant to take %dms", elapsedTime, delayedTime)
 	}
-
 }
 
 func TestGet(t *testing.T) {
@@ -248,7 +248,6 @@ func TestToJson(t *testing.T) {
 			t.Fatal("response is not valid ip")
 		}
 	}
-
 }
 
 func TestToFile(t *testing.T) {

@@ -40,7 +40,7 @@ func NewLog(out io.Writer) *Log {
 }
 
 func debugLogQueies(alias *alias, operaton, query string, t time.Time, err error, args ...interface{}) {
-	var logMap = make(map[string]interface{})
+	logMap := make(map[string]interface{})
 	sub := time.Since(t) / 1e5
 	elsp := float64(int(sub)) / 10.0
 	logMap["cost_time"] = elsp
@@ -94,6 +94,7 @@ func (d *stmtQueryLog) ExecContext(ctx context.Context, args ...interface{}) (sq
 	debugLogQueies(d.alias, "st.Exec", d.query, a, err, args...)
 	return res, err
 }
+
 func (d *stmtQueryLog) Query(args ...interface{}) (*sql.Rows, error) {
 	return d.QueryContext(context.Background(), args...)
 }
@@ -133,9 +134,11 @@ type dbQueryLog struct {
 	txe   txEnder
 }
 
-var _ dbQuerier = new(dbQueryLog)
-var _ txer = new(dbQueryLog)
-var _ txEnder = new(dbQueryLog)
+var (
+	_ dbQuerier = new(dbQueryLog)
+	_ txer      = new(dbQueryLog)
+	_ txEnder   = new(dbQueryLog)
+)
 
 func (d *dbQueryLog) Prepare(query string) (*sql.Stmt, error) {
 	return d.PrepareContext(context.Background(), query)

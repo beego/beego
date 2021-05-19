@@ -154,16 +154,16 @@ func (c *ConfigContainer) sub(key string) (map[string]interface{}, error) {
 	keys := strings.Split(key, ".")
 	for idx, k := range keys {
 		if v, ok := tmpData[k]; ok {
-			switch v.(type) {
+			switch v := v.(type) {
 			case map[string]interface{}:
 				{
-					tmpData = v.(map[string]interface{})
+					tmpData = v
 					if idx == len(keys)-1 {
 						return tmpData, nil
 					}
 				}
 			default:
-				return nil, errors.New(fmt.Sprintf("the key is invalid: %s", key))
+				return nil, fmt.Errorf("the key is invalid: %s", key)
 			}
 		}
 	}
@@ -302,7 +302,6 @@ func (c *ConfigContainer) DefaultStrings(key string, defaultVal []string) []stri
 
 // GetSection returns map for the given section
 func (c *ConfigContainer) GetSection(section string) (map[string]string, error) {
-
 	if v, ok := c.data[section]; ok {
 		return v.(map[string]string), nil
 	}
@@ -335,7 +334,6 @@ func (c *ConfigContainer) DIY(key string) (v interface{}, err error) {
 }
 
 func (c *ConfigContainer) getData(key string) (interface{}, error) {
-
 	if len(key) == 0 {
 		return nil, errors.New("key is empty")
 	}
@@ -346,10 +344,10 @@ func (c *ConfigContainer) getData(key string) (interface{}, error) {
 	tmpData := c.data
 	for idx, k := range keys {
 		if v, ok := tmpData[k]; ok {
-			switch v.(type) {
+			switch v := v.(type) {
 			case map[string]interface{}:
 				{
-					tmpData = v.(map[string]interface{})
+					tmpData = v
 					if idx == len(keys)-1 {
 						return tmpData, nil
 					}
@@ -358,7 +356,6 @@ func (c *ConfigContainer) getData(key string) (interface{}, error) {
 				{
 					return v, nil
 				}
-
 			}
 		}
 	}

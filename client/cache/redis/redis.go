@@ -43,10 +43,8 @@ import (
 	"github.com/beego/beego/v2/core/berror"
 )
 
-var (
-	// The collection name of redis for the cache adapter.
-	DefaultKey = "beecacheRedis"
-)
+// The collection name of redis for the cache adapter.
+var DefaultKey = "beecacheRedis"
 
 // Cache is Redis cache adapter.
 type Cache struct {

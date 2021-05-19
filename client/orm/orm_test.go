@@ -129,7 +129,7 @@ func getCaller(skip int) string {
 			if cur == line {
 				flag = ">>"
 			}
-			code := fmt.Sprintf(" %s %5d:   %s", flag, cur, strings.Replace(string(lines[o+i]), "\t", "    ", -1))
+			code := fmt.Sprintf(" %s %5d:   %s", flag, cur, strings.ReplaceAll(string(lines[o+i]), "\t", "    "))
 			if code != "" {
 				codes = append(codes, code)
 			}
@@ -308,7 +308,6 @@ func TestDataTypes(t *testing.T) {
 		case "DateTime":
 		case "Time":
 			assert.True(t, vu.(time.Time).In(DefaultTimeLoc).Sub(value.(time.Time).In(DefaultTimeLoc)) <= time.Second)
-			break
 		default:
 			assert.Equal(t, value, vu)
 		}
@@ -550,9 +549,9 @@ func TestNullDataTypes(t *testing.T) {
 	throwFail(t, AssertIs(*d.DecimalPtr, decimalPtr))
 
 	// in mysql, there are some precision problem, (*d.TimePtr).UTC() != timePtr.UTC()
-	assert.True(t, (*d.TimePtr).UTC().Sub(timePtr.UTC()) <= time.Second)
-	assert.True(t, (*d.DatePtr).UTC().Sub(datePtr.UTC()) <= time.Second)
-	assert.True(t, (*d.DateTimePtr).UTC().Sub(dateTimePtr.UTC()) <= time.Second)
+	assert.True(t, d.TimePtr.UTC().Sub(timePtr.UTC()) <= time.Second)
+	assert.True(t, d.DatePtr.UTC().Sub(datePtr.UTC()) <= time.Second)
+	assert.True(t, d.DateTimePtr.UTC().Sub(dateTimePtr.UTC()) <= time.Second)
 
 	// test support for pointer fields using RawSeter.QueryRows()
 	var dnList []*DataNull
@@ -842,7 +841,6 @@ The program—and web server—godoc processes Go source files to extract docume
 			throwFailNow(t, AssertIs(nums, num))
 		}
 	}
-
 }
 
 func TestCustomField(t *testing.T) {
@@ -1235,7 +1233,6 @@ func TestOne(t *testing.T) {
 
 	err = qs.Filter("user_name", "nothing").One(&user)
 	throwFail(t, AssertIs(err, ErrNoRows))
-
 }
 
 func TestValues(t *testing.T) {
@@ -1285,8 +1282,8 @@ func TestValuesList(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 3))
 	if num == 3 {
-		throwFail(t, AssertIs(list[0][1], "slene")) //username
-		throwFail(t, AssertIs(list[2][10], nil))    //profile
+		throwFail(t, AssertIs(list[0][1], "slene")) // username
+		throwFail(t, AssertIs(list[2][10], nil))    // profile
 	}
 
 	num, err = qs.OrderBy("Id").ValuesList(&list, "UserName", "Profile__Age")
@@ -1844,18 +1841,15 @@ func TestRawQueryRow(t *testing.T) {
 		switch col {
 		case "id":
 			throwFail(t, AssertIs(id, 1))
-			break
 		case "time":
 			v = v.(time.Time).In(DefaultTimeLoc)
 			value := dataValues[col].(time.Time).In(DefaultTimeLoc)
 			assert.True(t, v.(time.Time).Sub(value) <= time.Second)
-			break
 		case "date":
 		case "datetime":
 			v = v.(time.Time).In(DefaultTimeLoc)
 			value := dataValues[col].(time.Time).In(DefaultTimeLoc)
 			assert.True(t, v.(time.Time).Sub(value) <= time.Second)
-			break
 		default:
 			throwFail(t, AssertIs(v, dataValues[col]))
 		}
@@ -1949,7 +1943,6 @@ func TestQueryRows(t *testing.T) {
 		case "Date":
 		case "DateTime":
 			assert.True(t, vu.(time.Time).In(DefaultTimeLoc).Sub(value.(time.Time).In(DefaultTimeLoc)) <= time.Second)
-			break
 		default:
 			assert.Equal(t, value, vu)
 		}
@@ -1973,7 +1966,6 @@ func TestQueryRows(t *testing.T) {
 		case "Date":
 		case "DateTime":
 			assert.True(t, vu.(time.Time).In(DefaultTimeLoc).Sub(value.(time.Time).In(DefaultTimeLoc)) <= time.Second)
-			break
 		default:
 			assert.Equal(t, value, vu)
 		}
@@ -2224,7 +2216,7 @@ func TestTransaction(t *testing.T) {
 	to, err := o.Begin()
 	throwFail(t, err)
 
-	var names = []string{"1", "2", "3"}
+	names := []string{"1", "2", "3"}
 
 	var tag Tag
 	tag.Name = names[0]
@@ -2267,14 +2259,13 @@ func TestTransaction(t *testing.T) {
 	num, err = o.QueryTable("tag").Filter("name", "commit").Delete()
 	assert.Nil(t, err)
 	assert.Equal(t, int64(1), num)
-
 }
 
 func TestTxOrmRollbackUnlessCommit(t *testing.T) {
 	o := NewOrm()
 	var tag Tag
 
-	// test not commited and call RollbackUnlessCommit
+	// test not committed and call RollbackUnlessCommit
 	to, err := o.Begin()
 	assert.Nil(t, err)
 	tag.Name = "rollback unless commit"
@@ -2854,12 +2845,10 @@ func TestCondition(t *testing.T) {
 				hasCycle(p.cond)
 			}
 		}
-		return
 	}
 	hasCycle(cond)
 	// cycleFlag was true,meaning use self as sub cond
 	throwFail(t, AssertIs(!cycleFlag, true))
-	return
 }
 
 func TestContextCanceled(t *testing.T) {

@@ -25,7 +25,6 @@ import (
 )
 
 func TestYaml(t *testing.T) {
-
 	var (
 		yamlcontext = `
 "appname": beeapi
@@ -81,7 +80,6 @@ func TestYaml(t *testing.T) {
 	}
 
 	for k, v := range keyValue {
-
 		var (
 			value interface{}
 			err   error
@@ -108,7 +106,6 @@ func TestYaml(t *testing.T) {
 		} else if fmt.Sprintf("%v", v) != fmt.Sprintf("%v", value) {
 			t.Errorf("get key %q value, want %v got %v .", k, v, value)
 		}
-
 	}
 
 	if err = yamlconf.Set("name", "astaxie"); err != nil {

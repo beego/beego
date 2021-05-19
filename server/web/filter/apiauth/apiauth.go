@@ -130,7 +130,7 @@ func APISecretAuth(f AppIDToAppSecret, timeout int) web.FilterFunc {
 }
 
 // Signature generates signature with appsecret/method/params/RequestURI
-func Signature(appsecret, method string, params url.Values, RequestURL string) (result string) {
+func Signature(appsecret, method string, params url.Values, requestURL string) (result string) {
 	var b bytes.Buffer
 	keys := make([]string, len(params))
 	pa := make(map[string]string)
@@ -153,7 +153,7 @@ func Signature(appsecret, method string, params url.Values, RequestURL string) (
 		}
 	}
 
-	stringToSign := fmt.Sprintf("%v\n%v\n%v\n", method, b.String(), RequestURL)
+	stringToSign := fmt.Sprintf("%v\n%v\n%v\n", method, b.String(), requestURL)
 
 	sha256 := sha256.New
 	hash := hmac.New(sha256, []byte(appsecret))

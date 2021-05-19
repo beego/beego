@@ -195,8 +195,8 @@ func Allow(opts *Options) web.FilterFunc {
 
 	for _, origin := range opts.AllowOrigins {
 		pattern := regexp.QuoteMeta(origin)
-		pattern = strings.Replace(pattern, "\\*", ".*", -1)
-		pattern = strings.Replace(pattern, "\\?", ".", -1)
+		pattern = strings.ReplaceAll(pattern, "\\*", ".*")
+		pattern = strings.ReplaceAll(pattern, "\\?", ".")
 		allowOriginPatterns = append(allowOriginPatterns, "^"+pattern+"$")
 	}
 

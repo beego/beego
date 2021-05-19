@@ -235,8 +235,11 @@ func (v *Validation) Tel(obj interface{}, key string) *Result {
 
 // Phone Test that the obj is chinese mobile or telephone number if type is string
 func (v *Validation) Phone(obj interface{}, key string) *Result {
-	return v.apply(Phone{Mobile{Match: Match{Regexp: mobilePattern}},
-		Tel{Match: Match{Regexp: telPattern}}, key}, obj)
+	return v.apply(Phone{
+		Mobile{Match: Match{Regexp: mobilePattern}},
+		Tel{Match: Match{Regexp: telPattern}},
+		key,
+	}, obj)
 }
 
 // ZipCode Test that the obj is chinese zip code if type is string
@@ -439,7 +442,6 @@ func (v *Validation) RecursiveValid(objc interface{}) (bool, error) {
 	}
 
 	for i := 0; i < objT.NumField(); i++ {
-
 		t := objT.Field(i).Type
 
 		// Recursive applies to struct or pointer to structs fields

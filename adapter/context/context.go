@@ -82,13 +82,13 @@ func (ctx *Context) SetCookie(name string, value string, others ...interface{}) 
 }
 
 // GetSecureCookie Get secure cookie from request by a given key.
-func (ctx *Context) GetSecureCookie(Secret, key string) (string, bool) {
-	return (*context.Context)(ctx).GetSecureCookie(Secret, key)
+func (ctx *Context) GetSecureCookie(secret, key string) (string, bool) {
+	return (*context.Context)(ctx).GetSecureCookie(secret, key)
 }
 
 // SetSecureCookie Set Secure cookie for response.
-func (ctx *Context) SetSecureCookie(Secret, name, value string, others ...interface{}) {
-	(*context.Context)(ctx).SetSecureCookie(Secret, name, value, others)
+func (ctx *Context) SetSecureCookie(secret, name, value string, others ...interface{}) {
+	(*context.Context)(ctx).SetSecureCookie(secret, name, value, others)
 }
 
 // XSRFToken creates a xsrf token string and returns.

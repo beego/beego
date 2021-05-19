@@ -58,5 +58,4 @@ func TestFilterChainBuilder_FilterChain1(t *testing.T) {
 
 	inv.Method = "Update"
 	builder.report(ctx, inv, time.Second)
-
 }

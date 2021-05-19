@@ -18,8 +18,7 @@ import (
 	"github.com/beego/beego/v2/client/orm"
 )
 
-type baseQuerySetter struct {
-}
+type baseQuerySetter struct{}
 
 const shouldNotInvoke = "you should not invoke this method."
 

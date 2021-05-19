@@ -107,7 +107,7 @@ func (ctx *Context) SetCookie(name string, value string, others ...interface{}) 
 }
 
 // GetSecureCookie gets a secure cookie from a request for a given key.
-func (ctx *Context) GetSecureCookie(Secret, key string) (string, bool) {
+func (ctx *Context) GetSecureCookie(secret, key string) (string, bool) {
 	val := ctx.Input.Cookie(key)
 	if val == "" {
 		return "", false
@@ -123,7 +123,7 @@ func (ctx *Context) GetSecureCookie(Secret, key string) (string, bool) {
 	timestamp := parts[1]
 	sig := parts[2]
 
-	h := hmac.New(sha256.New, []byte(Secret))
+	h := hmac.New(sha256.New, []byte(secret))
 	fmt.Fprintf(h, "%s%s", vs, timestamp)
 
 	if fmt.Sprintf("%02x", h.Sum(nil)) != sig {
@@ -134,10 +134,10 @@ func (ctx *Context) GetSecureCookie(Secret, key string) (string, bool) {
 }
 
 // SetSecureCookie sets a secure cookie for a response.
-func (ctx *Context) SetSecureCookie(Secret, name, value string, others ...interface{}) {
+func (ctx *Context) SetSecureCookie(secret, name, value string, others ...interface{}) {
 	vs := base64.URLEncoding.EncodeToString([]byte(value))
 	timestamp := strconv.FormatInt(time.Now().UnixNano(), 10)
-	h := hmac.New(sha256.New, []byte(Secret))
+	h := hmac.New(sha256.New, []byte(secret))
 	fmt.Fprintf(h, "%s%s", vs, timestamp)
 	sig := fmt.Sprintf("%02x", h.Sum(nil))
 	cookie := strings.Join([]string{vs, timestamp, sig}, "|")

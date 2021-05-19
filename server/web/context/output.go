@@ -16,6 +16,7 @@ package context
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"encoding/xml"
 	"errors"
@@ -63,7 +64,7 @@ func (output *BeegoOutput) Header(key, val string) {
 // Sends out response body directly.
 func (output *BeegoOutput) Body(content []byte) error {
 	var encoding string
-	var buf = &bytes.Buffer{}
+	buf := &bytes.Buffer{}
 	if output.EnableGzip {
 		encoding = ParseEncoding(output.Context.Request)
 	}
@@ -404,5 +405,5 @@ func stringsToJSON(str string) string {
 
 // Session sets session item value with given key.
 func (output *BeegoOutput) Session(name interface{}, value interface{}) {
-	output.Context.Input.CruSession.Set(nil, name, value)
+	output.Context.Input.CruSession.Set(context.TODO(), name, value)
 }

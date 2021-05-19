@@ -29,11 +29,11 @@ type LogProject struct {
 }
 
 // NewLogProject creates a new SLS project.
-func NewLogProject(name, endpoint, AccessKeyID, accessKeySecret string) (p *LogProject, err error) {
+func NewLogProject(name, endpoint, accessKeyID, accessKeySecret string) (p *LogProject, err error) {
 	p = &LogProject{
 		Name:            name,
 		Endpoint:        endpoint,
-		AccessKeyID:     AccessKeyID,
+		AccessKeyID:     accessKeyID,
 		AccessKeySecret: accessKeySecret,
 	}
 	return p, nil
@@ -45,11 +45,12 @@ func (p *LogProject) ListLogStore() (storeNames []string, err error) {
 		"x-sls-bodyrawsize": "0",
 	}
 
-	uri := fmt.Sprintf("/logstores")
+	uri := "/logstores"
 	r, err := request(p, "GET", uri, h, nil)
 	if err != nil {
 		return
 	}
+	defer r.Body.Close()
 
 	buf, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -95,6 +96,7 @@ func (p *LogProject) GetLogStore(name string) (s *LogStore, err error) {
 	if err != nil {
 		return
 	}
+	defer r.Body.Close()
 
 	buf, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -128,7 +130,6 @@ func (p *LogProject) GetLogStore(name string) (s *LogStore, err error) {
 // and ttl is time-to-live(in day) of logs,
 // and shardCnt is the number of shards.
 func (p *LogProject) CreateLogStore(name string, ttl, shardCnt int) (err error) {
-
 	type Body struct {
 		Name       string `json:"logstoreName"`
 		TTL        int    `json:"ttl"`
@@ -156,6 +157,7 @@ func (p *LogProject) CreateLogStore(name string, ttl, shardCnt int) (err error) 
 	if err != nil {
 		return
 	}
+	defer r.Body.Close()
 
 	body, err = ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -188,6 +190,7 @@ func (p *LogProject) DeleteLogStore(name string) (err error) {
 	if err != nil {
 		return
 	}
+	defer r.Body.Close()
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -212,7 +215,6 @@ func (p *LogProject) DeleteLogStore(name string) (err error) {
 // UpdateLogStore updates a logstore according by logstore name,
 // obviously we can't modify the logstore name itself.
 func (p *LogProject) UpdateLogStore(name string, ttl, shardCnt int) (err error) {
-
 	type Body struct {
 		Name       string `json:"logstoreName"`
 		TTL        int    `json:"ttl"`
@@ -240,6 +242,7 @@ func (p *LogProject) UpdateLogStore(name string, ttl, shardCnt int) (err error) 
 	if err != nil {
 		return
 	}
+	defer r.Body.Close()
 
 	body, err = ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -278,6 +281,7 @@ func (p *LogProject) ListMachineGroup(offset, size int) (m []string, total int, 
 	if err != nil {
 		return
 	}
+	defer r.Body.Close()
 
 	buf, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -325,6 +329,7 @@ func (p *LogProject) GetMachineGroup(name string) (m *MachineGroup, err error) {
 	if err != nil {
 		return
 	}
+	defer r.Body.Close()
 
 	buf, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -355,7 +360,6 @@ func (p *LogProject) GetMachineGroup(name string) (m *MachineGroup, err error) {
 
 // CreateMachineGroup creates a new machine group in SLS.
 func (p *LogProject) CreateMachineGroup(m *MachineGroup) (err error) {
-
 	body, err := json.Marshal(m)
 	if err != nil {
 		return
@@ -371,6 +375,7 @@ func (p *LogProject) CreateMachineGroup(m *MachineGroup) (err error) {
 	if err != nil {
 		return
 	}
+	defer r.Body.Close()
 
 	body, err = ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -395,7 +400,6 @@ func (p *LogProject) CreateMachineGroup(m *MachineGroup) (err error) {
 
 // UpdateMachineGroup updates a machine group.
 func (p *LogProject) UpdateMachineGroup(m *MachineGroup) (err error) {
-
 	body, err := json.Marshal(m)
 	if err != nil {
 		return
@@ -411,6 +415,7 @@ func (p *LogProject) UpdateMachineGroup(m *MachineGroup) (err error) {
 	if err != nil {
 		return
 	}
+	defer r.Body.Close()
 
 	body, err = ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -443,6 +448,7 @@ func (p *LogProject) DeleteMachineGroup(name string) (err error) {
 	if err != nil {
 		return
 	}
+	defer r.Body.Close()
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -480,6 +486,7 @@ func (p *LogProject) ListConfig(offset, size int) (cfgNames []string, total int,
 	if err != nil {
 		return
 	}
+	defer r.Body.Close()
 
 	buf, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -525,6 +532,7 @@ func (p *LogProject) GetConfig(name string) (c *LogConfig, err error) {
 	if err != nil {
 		return
 	}
+	defer r.Body.Close()
 
 	buf, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -555,7 +563,6 @@ func (p *LogProject) GetConfig(name string) (c *LogConfig, err error) {
 
 // UpdateConfig updates a config.
 func (p *LogProject) UpdateConfig(c *LogConfig) (err error) {
-
 	body, err := json.Marshal(c)
 	if err != nil {
 		return
@@ -571,6 +578,7 @@ func (p *LogProject) UpdateConfig(c *LogConfig) (err error) {
 	if err != nil {
 		return
 	}
+	defer r.Body.Close()
 
 	body, err = ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -595,7 +603,6 @@ func (p *LogProject) UpdateConfig(c *LogConfig) (err error) {
 
 // CreateConfig creates a new config in SLS.
 func (p *LogProject) CreateConfig(c *LogConfig) (err error) {
-
 	body, err := json.Marshal(c)
 	if err != nil {
 		return
@@ -611,6 +618,7 @@ func (p *LogProject) CreateConfig(c *LogConfig) (err error) {
 	if err != nil {
 		return
 	}
+	defer r.Body.Close()
 
 	body, err = ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -643,6 +651,7 @@ func (p *LogProject) DeleteConfig(name string) (err error) {
 	if err != nil {
 		return
 	}
+	defer r.Body.Close()
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -675,6 +684,7 @@ func (p *LogProject) GetAppliedMachineGroups(confName string) (groupNames []stri
 	if err != nil {
 		return
 	}
+	defer r.Body.Close()
 
 	buf, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -720,6 +730,7 @@ func (p *LogProject) GetAppliedConfigs(groupName string) (confNames []string, er
 	if err != nil {
 		return
 	}
+	defer r.Body.Close()
 
 	buf, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -765,6 +776,7 @@ func (p *LogProject) ApplyConfigToMachineGroup(confName, groupName string) (err 
 	if err != nil {
 		return
 	}
+	defer r.Body.Close()
 
 	buf, err := ioutil.ReadAll(r.Body)
 	if err != nil {
@@ -797,6 +809,7 @@ func (p *LogProject) RemoveConfigFromMachineGroup(confName, groupName string) (e
 	if err != nil {
 		return
 	}
+	defer r.Body.Close()
 
 	buf, err := ioutil.ReadAll(r.Body)
 	if err != nil {

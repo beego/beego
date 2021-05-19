@@ -18,8 +18,10 @@ import (
 	"github.com/beego/beego/v2/client/httplib/testing"
 )
 
-var port = ""
-var baseURL = "http://localhost:"
+var (
+	port    = ""
+	baseURL = "http://localhost:"
+)
 
 // TestHTTPRequest beego test request client
 type TestHTTPRequest testing.TestHTTPRequest

@@ -165,6 +165,7 @@ func (c *BaseConfiger) DefaultBool(key string, defaultVal bool) bool {
 	}
 	return defaultVal
 }
+
 func (c *BaseConfiger) DefaultFloat(key string, defaultVal float64) float64 {
 	if res, err := c.Float(key); err == nil {
 		return res
@@ -337,7 +338,6 @@ func ParseBool(val interface{}) (value bool, err error) {
 // ToString converts values of any type to string.
 func ToString(x interface{}) string {
 	switch y := x.(type) {
-
 	// Handle dates with special logic
 	// This needs to come above the fmt.Stringer
 	// test since time.Time's have a .String()
@@ -356,7 +356,6 @@ func ToString(x interface{}) string {
 	// Handle type with .Error() method
 	case error:
 		return y.Error()
-
 	}
 
 	// Handle named string type
@@ -370,5 +369,4 @@ func ToString(x interface{}) string {
 
 type DecodeOption func(options decodeOptions)
 
-type decodeOptions struct {
-}
+type decodeOptions struct{}

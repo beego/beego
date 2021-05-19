@@ -32,7 +32,7 @@ func TestParse(t *testing.T) {
 		fmt.Println("hello world")
 		return nil
 	})
-	err := tk.Run(nil)
+	err := tk.Run(context.TODO())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -51,7 +51,7 @@ func TestModifyTaskListAfterRunning(t *testing.T) {
 		fmt.Println("hello world")
 		return nil
 	})
-	err := tk.Run(nil)
+	err := tk.Run(context.TODO())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -146,11 +146,11 @@ func TestTask_Run(t *testing.T) {
 	task := func(ctx context.Context) error {
 		cnt++
 		fmt.Printf("Hello, world! %d \n", cnt)
-		return errors.New(fmt.Sprintf("Hello, world! %d", cnt))
+		return fmt.Errorf("Hello, world! %d", cnt)
 	}
 	tk := NewTask("taska", "0/30 * * * * *", task)
 	for i := 0; i < 200; i++ {
-		e := tk.Run(nil)
+		e := tk.Run(context.TODO())
 		assert.NotNil(t, e)
 	}
 

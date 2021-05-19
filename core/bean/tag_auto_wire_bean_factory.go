@@ -71,7 +71,6 @@ func (t *TagAutoWireBeanFactory) AutoWire(ctx context.Context, appCtx Applicatio
 
 	// field name, field metadata
 	for fn, fm := range bm.Fields {
-
 		fValue := v.FieldByName(fn)
 		if len(fm.DftValue) == 0 || !t.needInject(fValue) || !fValue.CanSet() {
 			continue

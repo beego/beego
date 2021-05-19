@@ -25,7 +25,6 @@ import (
 )
 
 func TestXML(t *testing.T) {
-
 	var (
 		// xml parse should incluce in <config></config> tags
 		xmlcontext = `<?xml version="1.0" encoding="UTF-8"?>
@@ -88,7 +87,6 @@ func TestXML(t *testing.T) {
 	}
 
 	for k, v := range keyValue {
-
 		var (
 			value interface{}
 			err   error
@@ -115,7 +113,6 @@ func TestXML(t *testing.T) {
 		} else if fmt.Sprintf("%v", v) != fmt.Sprintf("%v", value) {
 			t.Errorf("get key %q value, want %v got %v .", k, v, value)
 		}
-
 	}
 
 	if err = xmlconf.Set("name", "astaxie"); err != nil {
@@ -149,7 +146,6 @@ func TestXML(t *testing.T) {
 	err = xmlconf.Unmarshaler("mysection", sec)
 	assert.Nil(t, err)
 	assert.Equal(t, "MySection", sec.Name)
-
 }
 
 type Section struct {

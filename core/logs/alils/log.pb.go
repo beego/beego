@@ -10,9 +10,11 @@ import (
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
-var _ = proto.Marshal
-var _ = fmt.Errorf
-var _ = math.Inf
+var (
+	_ = proto.Marshal
+	_ = fmt.Errorf
+	_ = math.Inf
+)
 
 var (
 	// ErrInvalidLengthLog invalid proto
@@ -339,6 +341,7 @@ func encodeFixed64Log(data []byte, offset int, v uint64) int {
 	data[offset+7] = uint8(v >> 56)
 	return offset + 8
 }
+
 func encodeFixed32Log(data []byte, offset int, v uint32) int {
 	data[offset] = uint8(v)
 	data[offset+1] = uint8(v >> 8)
@@ -346,6 +349,7 @@ func encodeFixed32Log(data []byte, offset int, v uint32) int {
 	data[offset+3] = uint8(v >> 24)
 	return offset + 4
 }
+
 func encodeVarintLog(data []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		data[offset] = uint8(v&0x7f | 0x80)
@@ -447,6 +451,7 @@ func sovLog(x uint64) (n int) {
 	}
 	return n
 }
+
 func sozLog(x uint64) (n int) {
 	return sovLog((x << 1) ^ (x >> 63))
 }
@@ -1002,7 +1007,7 @@ func skipLog(data []byte) (n int, err error) {
 		case 3:
 			for {
 				var innerWire uint64
-				var start = iNdEx
+				start := iNdEx
 				for shift := uint(0); ; shift += 7 {
 					if shift >= 64 {
 						return 0, ErrIntOverflowLog

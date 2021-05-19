@@ -72,9 +72,7 @@ type Migration struct {
 	RemoveForeigns []*Foreign
 }
 
-var (
-	migrationMap map[string]Migrationer
-)
+var migrationMap map[string]Migrationer
 
 func init() {
 	migrationMap = make(map[string]Migrationer)
@@ -82,7 +80,6 @@ func init() {
 
 // Up implement in the Inheritance struct for upgrade
 func (m *Migration) Up() {
-
 	switch m.ModifyType {
 	case "reverse":
 		m.ModifyType = "alter"
@@ -94,7 +91,6 @@ func (m *Migration) Up() {
 
 // Down implement in the Inheritance struct for down
 func (m *Migration) Down() {
-
 	switch m.ModifyType {
 	case "alter":
 		m.ModifyType = "reverse"
@@ -140,7 +136,7 @@ func (m *Migration) addOrUpdateRecord(name, status string) error {
 		status = "rollback"
 		p, err := o.Raw("update migrations set status = ?, rollback_statements = ?, created_at = ? where name = ?").Prepare()
 		if err != nil {
-			return nil
+			return err
 		}
 		_, err = p.Exec(status, strings.Join(m.sqls, "; "), time.Now().Format(DBDateFormat), name)
 		return err
@@ -311,6 +307,7 @@ func isRollBack(name string) bool {
 	}
 	return false
 }
+
 func getAllMigrations() (map[string]string, error) {
 	o := orm.NewOrm()
 	var maps []orm.Params

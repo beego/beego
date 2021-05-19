@@ -187,20 +187,20 @@ type Min struct {
 // not support int64 on 32-bit platform
 func (m Min) IsSatisfied(obj interface{}) bool {
 	var v int
-	switch obj.(type) {
+	switch obj := obj.(type) {
 	case int64:
 		if wordsize == 32 {
 			return false
 		}
-		v = int(obj.(int64))
+		v = int(obj)
 	case int:
-		v = obj.(int)
+		v = obj
 	case int32:
-		v = int(obj.(int32))
+		v = int(obj)
 	case int16:
-		v = int(obj.(int16))
+		v = int(obj)
 	case int8:
-		v = int(obj.(int8))
+		v = int(obj)
 	default:
 		return false
 	}
@@ -233,20 +233,20 @@ type Max struct {
 // not support int64 on 32-bit platform
 func (m Max) IsSatisfied(obj interface{}) bool {
 	var v int
-	switch obj.(type) {
+	switch obj := obj.(type) {
 	case int64:
 		if wordsize == 32 {
 			return false
 		}
-		v = int(obj.(int64))
+		v = int(obj)
 	case int:
-		v = obj.(int)
+		v = obj
 	case int32:
-		v = int(obj.(int32))
+		v = int(obj)
 	case int16:
-		v = int(obj.(int16))
+		v = int(obj)
 	case int8:
-		v = int(obj.(int8))
+		v = int(obj)
 	default:
 		return false
 	}

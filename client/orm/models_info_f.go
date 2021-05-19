@@ -282,11 +282,9 @@ checkType:
 		if field.Kind() != reflect.Slice {
 			err = fmt.Errorf("rel/reverse:many field must be slice")
 			goto end
-		} else {
-			if field.Type().Elem().Kind() != reflect.Ptr {
-				err = fmt.Errorf("rel/reverse:many slice must be []*%s", field.Type().Elem().Name())
-				goto end
-			}
+		} else if field.Type().Elem().Kind() != reflect.Ptr {
+			err = fmt.Errorf("rel/reverse:many slice must be []*%s", field.Type().Elem().Name())
+			goto end
 		}
 	}
 
@@ -387,7 +385,6 @@ checkType:
 					fi.timePrecision = &v
 				}
 			}
-
 		}
 
 		if attrs["auto_now"] {

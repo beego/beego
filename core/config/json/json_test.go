@@ -25,7 +25,6 @@ import (
 )
 
 func TestJsonStartsWithArray(t *testing.T) {
-
 	const jsoncontextwitharray = `[
 	{
 		"url": "user",
@@ -72,7 +71,6 @@ func TestJsonStartsWithArray(t *testing.T) {
 }
 
 func TestJson(t *testing.T) {
-
 	var (
 		jsoncontext = `{
 "appname": "beeapi",
@@ -176,7 +174,6 @@ func TestJson(t *testing.T) {
 		} else if fmt.Sprintf("%v", v) != fmt.Sprintf("%v", value) {
 			t.Fatalf("get key %q value, want %v got %v .", k, v, value)
 		}
-
 	}
 	if err = jsonconf.Set("name", "astaxie"); err != nil {
 		t.Fatal(err)
@@ -192,10 +189,8 @@ func TestJson(t *testing.T) {
 	} else if m, ok := db.(map[string]interface{}); !ok {
 		t.Log(db)
 		t.Fatal("db not map[string]interface{}")
-	} else {
-		if m["host"].(string) != "host" {
-			t.Fatal("get host err")
-		}
+	} else if m["host"].(string) != "host" {
+		t.Fatal("get host err")
 	}
 
 	if _, err := jsonconf.Int("unknown"); err == nil {

@@ -47,20 +47,20 @@ func GetDisplayString(data ...interface{}) string {
 }
 
 func display(displayed bool, data ...interface{}) string {
-	var pc, file, line, ok = runtime.Caller(2)
+	pc, file, line, ok := runtime.Caller(2)
 
 	if !ok {
 		return ""
 	}
 
-	var buf = new(bytes.Buffer)
+	buf := new(bytes.Buffer)
 
 	fmt.Fprintf(buf, "[Debug] at %s() [%s:%d]\n", function(pc), file, line)
 
 	fmt.Fprintf(buf, "\n[Variables]\n")
 
 	for i := 0; i < len(data); i += 2 {
-		var output = fomateinfo(len(data[i].(string))+3, data[i+1])
+		output := fomateinfo(len(data[i].(string))+3, data[i+1])
 		fmt.Fprintf(buf, "%s = %s", data[i], output)
 	}
 
@@ -72,7 +72,7 @@ func display(displayed bool, data ...interface{}) string {
 
 // return data dump and format bytes
 func fomateinfo(headlen int, data ...interface{}) []byte {
-	var buf = new(bytes.Buffer)
+	buf := new(bytes.Buffer)
 
 	if len(data) > 1 {
 		fmt.Fprint(buf, "    ")
@@ -83,9 +83,9 @@ func fomateinfo(headlen int, data ...interface{}) []byte {
 	}
 
 	for k, v := range data {
-		var buf2 = new(bytes.Buffer)
+		buf2 := new(bytes.Buffer)
 		var pointers *pointerInfo
-		var interfaces = make([]reflect.Value, 0, 10)
+		interfaces := make([]reflect.Value, 0, 10)
 
 		printKeyValue(buf2, reflect.ValueOf(v), &pointers, &interfaces, nil, true, "    ", 1)
 
@@ -140,13 +140,13 @@ func isSimpleType(val reflect.Value, kind reflect.Kind, pointers **pointerInfo, 
 			return true
 		}
 
-		var elem = val.Elem()
+		elem := val.Elem()
 
 		if isSimpleType(elem, elem.Kind(), pointers, interfaces) {
 			return true
 		}
 
-		var addr = val.Elem().UnsafeAddr()
+		addr := val.Elem().UnsafeAddr()
 
 		for p := *pointers; p != nil; p = p.prev {
 			if addr == p.addr {
@@ -162,7 +162,7 @@ func isSimpleType(val reflect.Value, kind reflect.Kind, pointers **pointerInfo, 
 
 // dump value
 func printKeyValue(buf *bytes.Buffer, val reflect.Value, pointers **pointerInfo, interfaces *[]reflect.Value, structFilter func(string, string) bool, formatOutput bool, indent string, level int) {
-	var t = val.Kind()
+	t := val.Kind()
 
 	switch t {
 	case reflect.Bool:
@@ -183,7 +183,7 @@ func printKeyValue(buf *bytes.Buffer, val reflect.Value, pointers **pointerInfo,
 			return
 		}
 
-		var addr = val.Elem().UnsafeAddr()
+		addr := val.Elem().UnsafeAddr()
 
 		for p := *pointers; p != nil; p = p.prev {
 			if addr == p.addr {
@@ -206,7 +206,7 @@ func printKeyValue(buf *bytes.Buffer, val reflect.Value, pointers **pointerInfo,
 	case reflect.String:
 		fmt.Fprint(buf, "\"", val.String(), "\"")
 	case reflect.Interface:
-		var value = val.Elem()
+		value := val.Elem()
 
 		if !value.IsValid() {
 			fmt.Fprint(buf, "nil")
@@ -223,7 +223,7 @@ func printKeyValue(buf *bytes.Buffer, val reflect.Value, pointers **pointerInfo,
 			printKeyValue(buf, value, pointers, interfaces, structFilter, formatOutput, indent, level+1)
 		}
 	case reflect.Struct:
-		var t = val.Type()
+		t := val.Type()
 
 		fmt.Fprint(buf, t)
 		fmt.Fprint(buf, "{")
@@ -235,7 +235,7 @@ func printKeyValue(buf *bytes.Buffer, val reflect.Value, pointers **pointerInfo,
 				fmt.Fprint(buf, " ")
 			}
 
-			var name = t.Field(i).Name
+			name := t.Field(i).Name
 
 			if formatOutput {
 				for ind := 0; ind < level; ind++ {
@@ -270,12 +270,12 @@ func printKeyValue(buf *bytes.Buffer, val reflect.Value, pointers **pointerInfo,
 		fmt.Fprint(buf, val.Type())
 		fmt.Fprint(buf, "{")
 
-		var allSimple = true
+		allSimple := true
 
 		for i := 0; i < val.Len(); i++ {
-			var elem = val.Index(i)
+			elem := val.Index(i)
 
-			var isSimple = isSimpleType(elem, elem.Kind(), pointers, interfaces)
+			isSimple := isSimpleType(elem, elem.Kind(), pointers, interfaces)
 
 			if !isSimple {
 				allSimple = false
@@ -312,18 +312,18 @@ func printKeyValue(buf *bytes.Buffer, val reflect.Value, pointers **pointerInfo,
 
 		fmt.Fprint(buf, "}")
 	case reflect.Map:
-		var t = val.Type()
-		var keys = val.MapKeys()
+		t := val.Type()
+		keys := val.MapKeys()
 
 		fmt.Fprint(buf, t)
 		fmt.Fprint(buf, "{")
 
-		var allSimple = true
+		allSimple := true
 
 		for i := 0; i < len(keys); i++ {
-			var elem = val.MapIndex(keys[i])
+			elem := val.MapIndex(keys[i])
 
-			var isSimple = isSimpleType(elem, elem.Kind(), pointers, interfaces)
+			isSimple := isSimpleType(elem, elem.Kind(), pointers, interfaces)
 
 			if !isSimple {
 				allSimple = false
@@ -372,8 +372,8 @@ func printKeyValue(buf *bytes.Buffer, val reflect.Value, pointers **pointerInfo,
 
 // PrintPointerInfo dump pointer value
 func PrintPointerInfo(buf *bytes.Buffer, headlen int, pointers *pointerInfo) {
-	var anyused = false
-	var pointerNum = 0
+	anyused := false
+	pointerNum := 0
 
 	for p := pointers; p != nil; p = p.prev {
 		if len(p.used) > 0 {
@@ -384,10 +384,10 @@ func PrintPointerInfo(buf *bytes.Buffer, headlen int, pointers *pointerInfo) {
 	}
 
 	if anyused {
-		var pointerBufs = make([][]rune, pointerNum+1)
+		pointerBufs := make([][]rune, pointerNum+1)
 
 		for i := 0; i < len(pointerBufs); i++ {
-			var pointerBuf = make([]rune, buf.Len()+headlen)
+			pointerBuf := make([]rune, buf.Len()+headlen)
 
 			for j := 0; j < len(pointerBuf); j++ {
 				pointerBuf[j] = ' '
@@ -402,7 +402,7 @@ func PrintPointerInfo(buf *bytes.Buffer, headlen int, pointers *pointerInfo) {
 					if pn == p.n {
 						pointerBufs[pn][p.pos+headlen] = '└'
 
-						var maxpos = 0
+						maxpos := 0
 
 						for i, pos := range p.used {
 							if i < len(p.used)-1 {
@@ -440,10 +440,10 @@ func PrintPointerInfo(buf *bytes.Buffer, headlen int, pointers *pointerInfo) {
 
 // Stack get stack bytes
 func Stack(skip int, indent string) []byte {
-	var buf = new(bytes.Buffer)
+	buf := new(bytes.Buffer)
 
 	for i := skip; ; i++ {
-		var pc, file, line, ok = runtime.Caller(i)
+		pc, file, line, ok := runtime.Caller(i)
 
 		if !ok {
 			break
@@ -473,6 +473,6 @@ func function(pc uintptr) []byte {
 	if period := bytes.Index(name, dot); period >= 0 {
 		name = name[period+1:]
 	}
-	name = bytes.Replace(name, centerDot, dot, -1)
+	name = bytes.ReplaceAll(name, centerDot, dot)
 	return name
 }

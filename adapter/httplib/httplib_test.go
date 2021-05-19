@@ -26,8 +26,10 @@ import (
 	"time"
 )
 
-const getUrl = "http://httpbin.org/get"
-const ipUrl = "http://httpbin.org/ip"
+const (
+	getUrl = "http://httpbin.org/get"
+	ipUrl  = "http://httpbin.org/ip"
+)
 
 func TestResponse(t *testing.T) {
 	req := Get(getUrl)
@@ -35,6 +37,7 @@ func TestResponse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer resp.Body.Close()
 	t.Log(resp)
 }
 
@@ -63,11 +66,9 @@ func TestDoRequest(t *testing.T) {
 	if elapsedTime < delayedTime {
 		t.Errorf("Not enough retries. Took %dms. Delay was meant to take %dms", elapsedTime, delayedTime)
 	}
-
 }
 
 func TestGet(t *testing.T) {
-
 	req := Get(getUrl)
 	b, err := req.Bytes()
 	if err != nil {
@@ -223,12 +224,12 @@ func TestWithSetting(t *testing.T) {
 }
 
 func TestToJson(t *testing.T) {
-
 	req := Get(ipUrl)
 	resp, err := req.Response()
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer resp.Body.Close()
 	t.Log(resp)
 
 	// httpbin will return http remote addr
@@ -250,7 +251,6 @@ func TestToJson(t *testing.T) {
 			t.Fatal("response is not valid ip")
 		}
 	}
-
 }
 
 func TestToFile(t *testing.T) {

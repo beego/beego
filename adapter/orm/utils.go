@@ -235,7 +235,7 @@ func camelString(s string) string {
 			continue
 		} else if flag {
 			if d >= 'a' && d <= 'z' {
-				d = d - 32
+				d -= 32
 			}
 			flag = false
 		}

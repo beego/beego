@@ -55,9 +55,9 @@ func Basic(username string, password string) web.FilterFunc {
 }
 
 // NewBasicAuthenticator return the BasicAuth
-func NewBasicAuthenticator(secrets SecretProvider, Realm string) web.FilterFunc {
+func NewBasicAuthenticator(secrets SecretProvider, realm string) web.FilterFunc {
 	return func(ctx *context.Context) {
-		a := &BasicAuth{Secrets: secrets, Realm: Realm}
+		a := &BasicAuth{Secrets: secrets, Realm: realm}
 		if username := a.CheckAuth(ctx.Request); username == "" {
 			a.RequireAuth(ctx.ResponseWriter, ctx.Request)
 		}

@@ -26,7 +26,6 @@ import (
 )
 
 func TestStartMock(t *testing.T) {
-
 	// httplib.defaultSetting.FilterChains = []httplib.FilterChain{mockFilter.FilterChain}
 
 	stub := StartMock()
@@ -39,9 +38,11 @@ func TestStartMock(t *testing.T) {
 
 	resp, err := OriginalCodeUsingHttplib()
 
+	defer expectedResp.Body.Close()
+	defer resp.Body.Close()
+
 	assert.Equal(t, expectedErr, err)
 	assert.Equal(t, expectedResp, resp)
-
 }
 
 // TestStartMock_Isolation Test StartMock that
@@ -64,6 +65,10 @@ func TestStartMock_Isolation(t *testing.T) {
 	ctx := CtxWithMock(context.Background(), m)
 
 	resp, err := OriginnalCodeUsingHttplibPassCtx(ctx)
+
+	defer globalMockResp.Body.Close()
+	defer resp.Body.Close()
+
 	assert.Equal(t, expectedErr, err)
 	assert.Equal(t, expectedResp, resp)
 }

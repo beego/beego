@@ -23,9 +23,7 @@ import (
 	"github.com/beego/beego/v2/server/web/context"
 )
 
-var (
-	allowSuffixExt = []string{".json", ".xml", ".html"}
-)
+var allowSuffixExt = []string{".json", ".xml", ".html"}
 
 // Tree has three elements: FixRouter/wildcard/leaves
 // fixRouter stores Fixed Router
@@ -85,9 +83,9 @@ func (t *Tree) addtree(segments []string, tree *Tree, wildcards []string, reg st
 					rr := ""
 					for _, w := range wildcards {
 						if w == ":splat" {
-							rr = rr + "(.+)/"
+							rr += "(.+)/"
 						} else {
-							rr = rr + "([^/]+)/"
+							rr += "([^/]+)/"
 						}
 					}
 					regexpStr = rr + regexpStr
@@ -127,9 +125,9 @@ func (t *Tree) addtree(segments []string, tree *Tree, wildcards []string, reg st
 				rr := ""
 				for _, w := range wildcards {
 					if w == ":splat" {
-						rr = rr + "(.+)/"
+						rr += "(.+)/"
 					} else {
-						rr = rr + "([^/]+)/"
+						rr += "([^/]+)/"
 					}
 				}
 				regexpStr = rr + regexpStr
@@ -175,9 +173,9 @@ func filterTreeWithPrefix(t *Tree, wildcards []string, reg string) {
 			} else {
 				for _, v := range l.wildcards {
 					if v == ":splat" {
-						reg = reg + "/(.+)"
+						reg += "/(.+)"
 					} else {
-						reg = reg + "/([^/]+)"
+						reg += "/([^/]+)"
 					}
 				}
 				l.regexps = regexp.MustCompile("^" + reg + "$")
@@ -240,9 +238,9 @@ func (t *Tree) addseg(segments []string, route interface{}, wildcards []string, 
 					rr := ""
 					for _, w := range wildcards {
 						if w == ":splat" {
-							rr = rr + "(.+)/"
+							rr += "(.+)/"
 						} else {
-							rr = rr + "([^/]+)/"
+							rr += "([^/]+)/"
 						}
 					}
 					regexpStr = rr + regexpStr

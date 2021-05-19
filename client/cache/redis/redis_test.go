@@ -28,7 +28,6 @@ import (
 )
 
 func TestRedisCache(t *testing.T) {
-
 	redisAddr := os.Getenv("REDIS_ADDR")
 	if redisAddr == "" {
 		redisAddr = "127.0.0.1:6379"

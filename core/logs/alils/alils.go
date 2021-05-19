@@ -88,7 +88,6 @@ func (c *aliLSWriter) Init(config string) error {
 	// Create other Log Group
 	c.groupMap = make(map[string]*LogGroup)
 	for _, topic := range c.Topics {
-
 		lg := &LogGroup{
 			Topic:  proto.String(topic),
 			Source: proto.String(c.Source),
@@ -136,8 +135,8 @@ func (c *aliLSWriter) WriteMsg(lm *logs.LogMsg) error {
 	var topic string
 	var content string
 	var lg *LogGroup
-	if c.withMap {
 
+	if c.withMap {
 		// Topic，LogGroup
 		strs := strings.SplitN(lm.Msg, Delimiter, 2)
 		if len(strs) == 2 {
@@ -180,7 +179,6 @@ func (c *aliLSWriter) WriteMsg(lm *logs.LogMsg) error {
 
 // Flush implementing method. empty.
 func (c *aliLSWriter) Flush() {
-
 	// flush all group
 	for _, lg := range c.group {
 		c.flush(lg)
@@ -192,7 +190,6 @@ func (c *aliLSWriter) Destroy() {
 }
 
 func (c *aliLSWriter) flush(lg *LogGroup) {
-
 	c.lock.Lock()
 	defer c.lock.Unlock()
 	err := c.store.PutLogs(lg)

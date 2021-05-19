@@ -38,7 +38,6 @@ func TestFiles_1(t *testing.T) {
 	name := "test"
 	suffix := ".log"
 	for _, fn := range fns {
-
 		file := name + suffix
 		if fn != "" {
 			file = name + "." + fn + suffix
@@ -60,7 +59,7 @@ func TestFiles_1(t *testing.T) {
 				lineNum++
 			}
 		}
-		var expected = 1
+		expected := 1
 		if fn == "" {
 			expected = LevelDebug + 1
 		}
@@ -74,5 +73,4 @@ func TestFiles_1(t *testing.T) {
 		}
 		os.Remove(file)
 	}
-
 }

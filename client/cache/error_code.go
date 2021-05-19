@@ -166,9 +166,11 @@ When you try to use SSDB cache, it failed. There are many cases:
 `)
 
 var SsdbBadResponse = berror.DefineCode(5002007, moduleName, "SsdbBadResponse", `
-The reponse from SSDB server is invalid. 
+The response from SSDB server is invalid. 
 Usually it indicates something wrong on server side.
 `)
 
-var ErrKeyExpired = berror.Error(KeyExpired, "the key is expired")
-var ErrKeyNotExist = berror.Error(KeyNotExist, "the key isn't exist")
+var (
+	ErrKeyExpired  = berror.Error(KeyExpired, "the key is expired")
+	ErrKeyNotExist = berror.Error(KeyNotExist, "the key isn't exist")
+)

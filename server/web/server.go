@@ -37,12 +37,10 @@ import (
 	"github.com/beego/beego/v2/server/web/grace"
 )
 
-var (
-	// BeeApp is an application instance
-	// If you are using single server, you could use this
-	// But if you need multiple servers, do not use this
-	BeeApp *HttpServer
-)
+// BeeApp is an application instance
+// If you are using single server, you could use this
+// But if you need multiple servers, do not use this
+var BeeApp *HttpServer
 
 func init() {
 	// create beego application
@@ -80,7 +78,6 @@ type MiddleWare func(http.Handler) http.Handler
 
 // Run beego application.
 func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
-
 	initBeforeHTTPRun()
 
 	// init...
@@ -234,7 +231,6 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 				endRunning <- true
 			}
 		}()
-
 	}
 	if app.Cfg.Listen.EnableHTTP {
 		go func() {
@@ -254,12 +250,10 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 					endRunning <- true
 					return
 				}
-			} else {
-				if err := app.Server.ListenAndServe(); err != nil {
-					logs.Critical("ListenAndServe: ", err)
-					time.Sleep(100 * time.Microsecond)
-					endRunning <- true
-				}
+			} else if err := app.Server.ListenAndServe(); err != nil {
+				logs.Critical("ListenAndServe: ", err)
+				time.Sleep(100 * time.Microsecond)
+				endRunning <- true
 			}
 		}()
 	}
@@ -864,21 +858,21 @@ func printTree(resultList *[][]string, t *Tree) {
 	for _, l := range t.leaves {
 		if v, ok := l.runObject.(*ControllerInfo); ok {
 			if v.routerType == routerTypeBeego {
-				var result = []string{
+				result := []string{
 					template.HTMLEscapeString(v.pattern),
 					template.HTMLEscapeString(fmt.Sprintf("%s", v.methods)),
 					template.HTMLEscapeString(v.controllerType.String()),
 				}
 				*resultList = append(*resultList, result)
 			} else if v.routerType == routerTypeRESTFul {
-				var result = []string{
+				result := []string{
 					template.HTMLEscapeString(v.pattern),
 					template.HTMLEscapeString(fmt.Sprintf("%s", v.methods)),
 					"",
 				}
 				*resultList = append(*resultList, result)
 			} else if v.routerType == routerTypeHandler {
-				var result = []string{
+				result := []string{
 					template.HTMLEscapeString(v.pattern),
 					"",
 					"",
@@ -904,7 +898,7 @@ func (app *HttpServer) reportFilter() M {
 			if bf := app.Handlers.filters[k]; len(bf) > 0 {
 				resultList := new([][]string)
 				for _, f := range bf {
-					var result = []string{
+					result := []string{
 						// void xss
 						template.HTMLEscapeString(f.pattern),
 						template.HTMLEscapeString(utils.GetFuncName(f.filterFunc)),

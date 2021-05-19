@@ -106,7 +106,6 @@ func (t *dbTables) loopDepth(depth int, prefix string, fi *fieldInfo, related []
 
 // parse related fields.
 func (t *dbTables) parseRelated(rels []string, depth int) {
-
 	relsNum := len(rels)
 	related := make([]string, relsNum)
 	copy(related, rels)
@@ -156,9 +155,7 @@ func (t *dbTables) parseRelated(rels []string, depth int) {
 						jt.sel = true
 					}
 				}
-
 				jtl = jt
-
 			} else {
 				panic(fmt.Errorf("unknown model/table name `%s`", ex))
 			}
@@ -229,7 +226,6 @@ func (t *dbTables) parseExprs(mi *modelInfo, exprs []string) (index, name string
 
 loopFor:
 	for i, ex := range exprs {
-
 		var ok, okN bool
 
 		if fiN != nil {
@@ -245,9 +241,7 @@ loopFor:
 		_ = okN
 
 		if ok {
-
 			isRel := fi.rel || fi.reverse
-
 			names = append(names, fi.name)
 
 			switch {
@@ -286,7 +280,6 @@ loopFor:
 			}
 
 		loopEnd:
-
 			if i == 0 || jtl == nil {
 				index = "T0"
 			} else {
@@ -312,9 +305,7 @@ loopFor:
 					name = info.name
 				}
 			}
-
 			break loopFor
-
 		} else {
 			index = ""
 			name = ""

@@ -131,7 +131,7 @@ func getColumnName(ft int, addrField reflect.Value, sf reflect.StructField, col 
 	switch ft {
 	case RelForeignKey, RelOneToOne:
 		if len(col) == 0 {
-			column = column + "_id"
+			column += "_id"
 		}
 	case RelManyToMany, RelReverseMany, RelReverseOne:
 		column = sf.Name

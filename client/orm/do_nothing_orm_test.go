@@ -15,6 +15,7 @@
 package orm
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -22,10 +23,10 @@ import (
 
 func TestDoNothingOrm(t *testing.T) {
 	o := &DoNothingOrm{}
-	err := o.DoTxWithCtxAndOpts(nil, nil, nil)
+	err := o.DoTxWithCtxAndOpts(context.TODO(), nil, nil)
 	assert.Nil(t, err)
 
-	err = o.DoTxWithCtx(nil, nil)
+	err = o.DoTxWithCtx(context.TODO(), nil)
 	assert.Nil(t, err)
 
 	err = o.DoTx(nil)
@@ -37,14 +38,14 @@ func TestDoNothingOrm(t *testing.T) {
 	assert.Nil(t, o.Driver())
 
 	assert.Nil(t, o.QueryM2M(nil, ""))
-	assert.Nil(t, o.ReadWithCtx(nil, nil))
+	assert.Nil(t, o.ReadWithCtx(context.TODO(), nil))
 	assert.Nil(t, o.Read(nil))
 
-	txOrm, err := o.BeginWithCtxAndOpts(nil, nil)
+	txOrm, err := o.BeginWithCtxAndOpts(context.TODO(), nil)
 	assert.Nil(t, err)
 	assert.Nil(t, txOrm)
 
-	txOrm, err = o.BeginWithCtx(nil)
+	txOrm, err = o.BeginWithCtx(context.TODO())
 	assert.Nil(t, err)
 	assert.Nil(t, txOrm)
 
@@ -56,7 +57,7 @@ func TestDoNothingOrm(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Nil(t, txOrm)
 
-	assert.Nil(t, o.RawWithCtx(nil, ""))
+	assert.Nil(t, o.RawWithCtx(context.TODO(), ""))
 	assert.Nil(t, o.Raw(""))
 
 	i, err := o.InsertMulti(0, nil)
@@ -67,11 +68,11 @@ func TestDoNothingOrm(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, int64(0), i)
 
-	i, err = o.InsertWithCtx(nil, nil)
+	i, err = o.InsertWithCtx(context.TODO(), nil)
 	assert.Nil(t, err)
 	assert.Equal(t, int64(0), i)
 
-	i, err = o.InsertOrUpdateWithCtx(nil, nil)
+	i, err = o.InsertOrUpdateWithCtx(context.TODO(), nil)
 	assert.Nil(t, err)
 	assert.Equal(t, int64(0), i)
 
@@ -79,11 +80,11 @@ func TestDoNothingOrm(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, int64(0), i)
 
-	i, err = o.InsertMultiWithCtx(nil, 0, nil)
+	i, err = o.InsertMultiWithCtx(context.TODO(), 0, nil)
 	assert.Nil(t, err)
 	assert.Equal(t, int64(0), i)
 
-	i, err = o.LoadRelatedWithCtx(nil, nil, "")
+	i, err = o.LoadRelatedWithCtx(context.TODO(), nil, "")
 	assert.Nil(t, err)
 	assert.Equal(t, int64(0), i)
 
@@ -94,8 +95,8 @@ func TestDoNothingOrm(t *testing.T) {
 	assert.Nil(t, o.QueryTable(nil))
 
 	assert.Nil(t, o.Read(nil))
-	assert.Nil(t, o.ReadWithCtx(nil, nil))
-	assert.Nil(t, o.ReadForUpdateWithCtx(nil, nil))
+	assert.Nil(t, o.ReadWithCtx(context.TODO(), nil))
+	assert.Nil(t, o.ReadForUpdateWithCtx(context.TODO(), nil))
 	assert.Nil(t, o.ReadForUpdate(nil))
 
 	ok, i, err := o.ReadOrCreate(nil, "")
@@ -103,7 +104,7 @@ func TestDoNothingOrm(t *testing.T) {
 	assert.Equal(t, int64(0), i)
 	assert.False(t, ok)
 
-	ok, i, err = o.ReadOrCreateWithCtx(nil, nil, "")
+	ok, i, err = o.ReadOrCreateWithCtx(context.TODO(), nil, "")
 	assert.Nil(t, err)
 	assert.Equal(t, int64(0), i)
 	assert.False(t, ok)
@@ -112,7 +113,7 @@ func TestDoNothingOrm(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, int64(0), i)
 
-	i, err = o.DeleteWithCtx(nil, nil)
+	i, err = o.DeleteWithCtx(context.TODO(), nil)
 	assert.Nil(t, err)
 	assert.Equal(t, int64(0), i)
 
@@ -120,7 +121,7 @@ func TestDoNothingOrm(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, int64(0), i)
 
-	i, err = o.UpdateWithCtx(nil, nil)
+	i, err = o.UpdateWithCtx(context.TODO(), nil)
 	assert.Nil(t, err)
 	assert.Equal(t, int64(0), i)
 

@@ -23,7 +23,6 @@ import (
 )
 
 func TestIni(t *testing.T) {
-
 	var (
 		inicontext = `
 ;comment one
@@ -121,7 +120,6 @@ password = ${GOPATH}
 		} else if fmt.Sprintf("%v", v) != fmt.Sprintf("%v", value) {
 			t.Fatalf("get key %q value, want %v got %v .", k, v, value)
 		}
-
 	}
 	if err = iniconf.Set("name", "astaxie"); err != nil {
 		t.Fatal(err)
@@ -129,11 +127,9 @@ password = ${GOPATH}
 	if iniconf.String("name") != "astaxie" {
 		t.Fatal("get name error")
 	}
-
 }
 
 func TestIniSave(t *testing.T) {
-
 	const (
 		inicontext = `
 app = app
@@ -186,6 +182,5 @@ name=mysql
 				t.Fatalf("different after save ini config file. need contains %q", line)
 			}
 		}
-
 	}
 }

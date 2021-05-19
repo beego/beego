@@ -8,9 +8,7 @@ import (
 )
 
 // request sends a request to SLS.
-func request(project *LogProject, method, uri string, headers map[string]string,
-	body []byte) (resp *http.Response, err error) {
-
+func request(project *LogProject, method, uri string, headers map[string]string, body []byte) (resp *http.Response, err error) {
 	// The caller should provide 'x-sls-bodyrawsize' header
 	if _, ok := headers["x-sls-bodyrawsize"]; !ok {
 		err = fmt.Errorf("Can't find 'x-sls-bodyrawsize' header")

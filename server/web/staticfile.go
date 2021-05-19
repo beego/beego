@@ -75,7 +75,7 @@ func serverStaticRouter(ctx *context.Context) {
 		return
 	}
 
-	var enableCompress = BConfig.EnableGzip && isStaticCompress(filePath)
+	enableCompress := BConfig.EnableGzip && isStaticCompress(filePath)
 	var acceptEncoding string
 	if enableCompress {
 		acceptEncoding = context.ParseEncoding(ctx.Request)

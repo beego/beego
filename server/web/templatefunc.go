@@ -41,7 +41,7 @@ func Substr(s string, start, length int) string {
 		start = 0
 	}
 	if start > len(bt) {
-		start = start % len(bt)
+		start %= len(bt)
 	}
 	var end int
 	if (start + length) > (len(bt) - 1) {
@@ -54,7 +54,6 @@ func Substr(s string, start, length int) string {
 
 // HTML2str returns escaping text convert from html.
 func HTML2str(html string) string {
-
 	re := regexp.MustCompile(`\<[\S\s]+?\>`)
 	html = re.ReplaceAllStringFunc(html, strings.ToLower)
 
@@ -255,7 +254,6 @@ func URLFor(endpoint string, values ...interface{}) string {
 
 // AssetsJs returns script tag with src string.
 func AssetsJs(text string) template.HTML {
-
 	text = "<script src=\"" + text + "\"></script>"
 
 	return template.HTML(text)
@@ -263,7 +261,6 @@ func AssetsJs(text string) template.HTML {
 
 // AssetsCSS returns stylesheet link tag with src string.
 func AssetsCSS(text string) template.HTML {
-
 	text = "<link href=\"" + text + "\" rel=\"stylesheet\" />"
 
 	return template.HTML(text)
@@ -423,8 +420,10 @@ func ParseForm(form url.Values, obj interface{}) error {
 	return parseFormToStruct(form, objT, objV)
 }
 
-var sliceOfInts = reflect.TypeOf([]int(nil))
-var sliceOfStrings = reflect.TypeOf([]string(nil))
+var (
+	sliceOfInts    = reflect.TypeOf([]int(nil))
+	sliceOfStrings = reflect.TypeOf([]string(nil))
+)
 
 var unKind = map[reflect.Kind]bool{
 	reflect.Uintptr:       true,

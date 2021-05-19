@@ -139,10 +139,8 @@ func (lp *Provider) SessionRead(ctx context.Context, sid string) (session.Store,
 
 	if len(kvs) == 0 {
 		kv = make(map[interface{}]interface{})
-	} else {
-		if kv, err = session.DecodeGob(kvs); err != nil {
-			return nil, err
-		}
+	} else if kv, err = session.DecodeGob(kvs); err != nil {
+		return nil, err
 	}
 
 	ls := &SessionStore{sid: sid, values: kv, maxlifetime: lp.maxlifetime}
@@ -186,6 +184,7 @@ func (lp *Provider) SessionGC(context.Context) {
 func (lp *Provider) SessionAll(context.Context) int {
 	return 0
 }
+
 func init() {
 	session.Register("ledis", ledispder)
 }

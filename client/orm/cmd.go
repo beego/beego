@@ -27,9 +27,7 @@ type commander interface {
 	Run() error
 }
 
-var (
-	commands = make(map[string]commander)
-)
+var commands = make(map[string]commander)
 
 // print help.
 func printHelp(errs ...string) {
@@ -144,7 +142,6 @@ func (d *commandSyncDb) Run() error {
 
 	ctx := context.Background()
 	for i, mi := range modelCache.allOrdered() {
-
 		if !isApplicableTableForDB(mi.addrField, d.al.Name) {
 			fmt.Printf("table `%s` is not applicable to database '%s'\n", mi.table, d.al.Name)
 			continue

@@ -62,10 +62,8 @@ func registerSession() error {
 			conf.SessionNameInHTTPHeader = BConfig.WebConfig.Session.SessionNameInHTTPHeader
 			conf.EnableSidInURLQuery = BConfig.WebConfig.Session.SessionEnableSidInURLQuery
 			conf.CookieSameSite = BConfig.WebConfig.Session.SessionCookieSameSite
-		} else {
-			if err = json.Unmarshal([]byte(sessionConfig), conf); err != nil {
-				return err
-			}
+		} else if err = json.Unmarshal([]byte(sessionConfig), conf); err != nil {
+			return err
 		}
 		if GlobalSessions, err = session.NewManager(BConfig.WebConfig.Session.SessionProvider, conf); err != nil {
 			return err

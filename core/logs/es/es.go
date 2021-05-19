@@ -41,7 +41,6 @@ type esLogger struct {
 }
 
 func (el *esLogger) Format(lm *logs.LogMsg) string {
-
 	msg := lm.OldStyleFormat()
 	idx := LogDocument{
 		Timestamp: lm.When.Format(time.RFC3339),
@@ -60,7 +59,6 @@ func (el *esLogger) SetFormatter(f logs.LogFormatter) {
 
 // {"dsn":"http://localhost:9200/","level":1}
 func (el *esLogger) Init(config string) error {
-
 	err := json.Unmarshal([]byte(config), el)
 	if err != nil {
 		return err
@@ -83,7 +81,7 @@ func (el *esLogger) Init(config string) error {
 	if len(el.Formatter) > 0 {
 		fmtr, ok := logs.GetFormatter(el.Formatter)
 		if !ok {
-			return errors.New(fmt.Sprintf("the formatter with name: %s not found", el.Formatter))
+			return fmt.Errorf("the formatter with name: %s not found", el.Formatter)
 		}
 		el.formatter = fmtr
 	}
@@ -113,7 +111,6 @@ func (el *esLogger) Destroy() {
 
 // Flush is a empty method
 func (el *esLogger) Flush() {
-
 }
 
 type LogDocument struct {
