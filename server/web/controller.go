@@ -32,11 +32,12 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/gogo/protobuf/proto"
+	"gopkg.in/yaml.v2"
+
 	"github.com/beego/beego/v2/server/web/context"
 	"github.com/beego/beego/v2/server/web/context/param"
 	"github.com/beego/beego/v2/server/web/session"
-	"github.com/gogo/protobuf/proto"
-	"gopkg.in/yaml.v2"
 )
 
 var (

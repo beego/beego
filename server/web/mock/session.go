@@ -16,10 +16,12 @@ package mock
 
 import (
 	"context"
+	"net/http"
+
+	"github.com/google/uuid"
+
 	"github.com/beego/beego/v2/server/web"
 	"github.com/beego/beego/v2/server/web/session"
-	"github.com/google/uuid"
-	"net/http"
 )
 
 // NewSessionProvider create new SessionProvider

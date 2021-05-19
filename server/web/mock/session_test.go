@@ -16,10 +16,12 @@ package mock
 
 import (
 	"bytes"
-	"github.com/beego/beego/v2/server/web"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/beego/beego/v2/server/web"
 )
 
 func TestSessionProvider(t *testing.T) {

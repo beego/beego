@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/beego/beego/v2/adapter/session"
-
 	beeSsdb "github.com/beego/beego/v2/server/web/session/ssdb"
 )
 

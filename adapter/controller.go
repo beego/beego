@@ -19,9 +19,8 @@ import (
 	"net/url"
 
 	"github.com/beego/beego/v2/adapter/session"
-	webContext "github.com/beego/beego/v2/server/web/context"
-
 	"github.com/beego/beego/v2/server/web"
+	webContext "github.com/beego/beego/v2/server/web/context"
 )
 
 var (
