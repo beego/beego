@@ -23,7 +23,6 @@ linters:
     - ineffassign
     - misspell
     - nilerr
-    - nlreturn
     - rowserrcheck
     - staticcheck
     - structcheck
