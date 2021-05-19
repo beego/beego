@@ -15,7 +15,9 @@
 package env
 
 import (
+	"go/build"
 	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -71,5 +73,43 @@ func TestEnvGetAll(t *testing.T) {
 	envMap := GetAll()
 	if len(envMap) == 0 {
 		t.Error("expected environment not empty.")
+	}
+}
+
+func TestEnvFile(t *testing.T) {
+	envFile, err := envFile()
+	if err != nil {
+		t.Errorf("expected to get env file without error, but got %s.", err)
+	}
+	if envFile == "" {
+		t.Error("expected to get valid env file, but got empty string.")
+	}
+}
+
+func TestGetGOBIN(t *testing.T) {
+	customGOBIN := filepath.Join("path", "to", "gobin")
+	Set("GOBIN", customGOBIN)
+	if gobin := GetGOBIN(); gobin != Get("GOBIN", "") {
+		t.Errorf("expected GOBIN environment variable equals to %s, but got %s.", customGOBIN, gobin)
+	}
+
+	Set("GOBIN", "")
+	defaultGOBIN := filepath.Join(build.Default.GOPATH, "bin")
+	if gobin := GetGOBIN(); gobin != defaultGOBIN {
+		t.Errorf("expected GOBIN environment variable equals to %s, but got %s.", defaultGOBIN, gobin)
+	}
+}
+
+func TestGetGOPATH(t *testing.T) {
+	customGOPATH := filepath.Join("path", "to", "gopath")
+	Set("GOPATH", customGOPATH)
+	if goPath := GetGOPATH(); goPath != Get("GOPATH", "") {
+		t.Errorf("expected GOPATH environment variable equals to %s, but got %s.", customGOPATH, goPath)
+	}
+
+	Set("GOPATH", "")
+	defaultGOPATH := build.Default.GOPATH
+	if goPath := GetGOPATH(); goPath != defaultGOPATH {
+		t.Errorf("expected GOPATH environment variable equals to %s, but got %s.", defaultGOPATH, goPath)
 	}
 }
