@@ -1,5 +1,6 @@
 # developing
 
+- Infra: use dependabot to update dependencies. [4623](https://github.com/beego/beego/pull/4623)
 - Lint: use golangci-lint. [4619](https://github.com/beego/beego/pull/4619)
 - Chore: format code. [4615](https://github.com/beego/beego/pull/4615)
 - Test on Go v1.15.x & v1.16.x. [4614](https://github.com/beego/beego/pull/4614)
