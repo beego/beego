@@ -24,9 +24,10 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/beego/beego/v2/server/web/context"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+
+	"github.com/beego/beego/v2/server/web/context"
 )
 
 func TestGetInt(t *testing.T) {

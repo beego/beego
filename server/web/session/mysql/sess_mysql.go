@@ -47,9 +47,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/beego/beego/v2/server/web/session"
 	// import mysql driver
 	_ "github.com/go-sql-driver/mysql"
+
+	"github.com/beego/beego/v2/server/web/session"
 )
 
 var (

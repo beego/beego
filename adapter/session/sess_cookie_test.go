@@ -48,7 +48,7 @@ func TestCookie(t *testing.T) {
 		t.Fatal("get username error")
 	}
 	sess.SessionRelease(w)
-	
+
 	if cookiestr := w.Header().Get(setCookieKey); cookiestr == "" {
 		t.Fatal("setcookie error")
 	} else {

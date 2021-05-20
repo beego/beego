@@ -16,10 +16,12 @@ package mock
 
 import (
 	"context"
+	"net/http"
+
+	"github.com/google/uuid"
+
 	"github.com/beego/beego/v2/server/web"
 	"github.com/beego/beego/v2/server/web/session"
-	"github.com/google/uuid"
-	"net/http"
 )
 
 // NewSessionProvider create new SessionProvider
@@ -66,7 +68,7 @@ func (s *SessionProvider) SessionRegenerate(ctx context.Context, oldsid, sid str
 
 // SessionDestroy reset Store to nil
 func (s *SessionProvider) SessionDestroy(ctx context.Context, sid string) error {
-	s.Store = nil;
+	s.Store = nil
 	return nil
 }
 
@@ -80,14 +82,13 @@ func (s *SessionProvider) SessionGC(ctx context.Context) {
 	// we do anything since we don't need to mock GC
 }
 
-
 type SessionStore struct {
-	sid string
+	sid    string
 	values map[interface{}]interface{}
 }
 
 func (s *SessionStore) Set(ctx context.Context, key, value interface{}) error {
-	s.values[key]=value
+	s.values[key] = value
 	return nil
 }
 
@@ -116,10 +117,7 @@ func (s *SessionStore) Flush(ctx context.Context) error {
 
 func newSessionStore() *SessionStore {
 	return &SessionStore{
-		sid: uuid.New().String(),
+		sid:    uuid.New().String(),
 		values: make(map[interface{}]interface{}, 4),
 	}
 }
-
-
-

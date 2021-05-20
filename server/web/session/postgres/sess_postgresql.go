@@ -57,9 +57,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/beego/beego/v2/server/web/session"
 	// import postgresql Driver
 	_ "github.com/lib/pq"
+
+	"github.com/beego/beego/v2/server/web/session"
 )
 
 var postgresqlpder = &Provider{}

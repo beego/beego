@@ -18,21 +18,19 @@ import (
 	"strings"
 
 	"github.com/beego/beego/v2/core/logs"
-
-	webLog "github.com/beego/beego/v2/core/logs"
 )
 
 // Log levels to control the logging output.
 // Deprecated: use github.com/beego/beego/v2/core/logs instead.
 const (
-	LevelEmergency     = webLog.LevelEmergency
-	LevelAlert         = webLog.LevelAlert
-	LevelCritical      = webLog.LevelCritical
-	LevelError         = webLog.LevelError
-	LevelWarning       = webLog.LevelWarning
-	LevelNotice        = webLog.LevelNotice
-	LevelInformational = webLog.LevelInformational
-	LevelDebug         = webLog.LevelDebug
+	LevelEmergency     = logs.LevelEmergency
+	LevelAlert         = logs.LevelAlert
+	LevelCritical      = logs.LevelCritical
+	LevelError         = logs.LevelError
+	LevelWarning       = logs.LevelWarning
+	LevelNotice        = logs.LevelNotice
+	LevelInformational = logs.LevelInformational
+	LevelDebug         = logs.LevelDebug
 )
 
 // BeeLogger references the used application logger.

@@ -23,13 +23,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const (
-	initError = "init err"
-	setError = "set Error"
-	checkError = "check err"
-	getError = "get err"
-	getMultiError = "GetMulti Error"
-)
+const initError = "init err"
 
 func TestCacheIncr(t *testing.T) {
 	bm, err := NewCache("memory", `{"interval":20}`)
@@ -99,7 +93,6 @@ func TestCache(t *testing.T) {
 	vv := bm.GetMulti([]string{"astaxie", "astaxie1"})
 
 	assert.Equal(t, 2, len(vv))
-
 
 	assert.Equal(t, "author", vv[0])
 

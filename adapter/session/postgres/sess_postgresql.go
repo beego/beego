@@ -54,10 +54,10 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/beego/beego/v2/adapter/session"
 	// import postgresql Driver
 	_ "github.com/lib/pq"
 
+	"github.com/beego/beego/v2/adapter/session"
 	"github.com/beego/beego/v2/server/web/session/postgres"
 )
 

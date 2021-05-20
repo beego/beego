@@ -123,14 +123,6 @@ var InvalidSsdbCacheValue = berror.DefineCode(4002022, moduleName, "InvalidSsdbC
 SSDB cache only accept string value. Please check your input.
 `)
 
-
-
-
-
-
-
-
-
 var DeleteFileCacheItemFailed = berror.DefineCode(5002001, moduleName, "DeleteFileCacheItemFailed", `
 Beego try to delete file cache item failed. 
 Please check whether Beego generated file correctly. 

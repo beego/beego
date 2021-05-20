@@ -198,7 +198,6 @@ func TestMapGet(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, int64(2), res)
 
-
 	res, err = MapGet(m1, 1)
 	assert.Nil(t, err)
 	assert.Equal(t, int64(2), res)
