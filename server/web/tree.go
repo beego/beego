@@ -284,7 +284,7 @@ func (t *Tree) addseg(segments []string, route interface{}, wildcards []string, 
 
 // Match router to runObject & params
 func (t *Tree) Match(pattern string, ctx *context.Context) (runObject interface{}) {
-	if len(pattern) == 0 || pattern[0] != '/' {
+	if pattern == "" || pattern[0] != '/' {
 		return nil
 	}
 	w := make([]string, 0, 20)
@@ -300,7 +300,7 @@ func (t *Tree) match(treePattern string, pattern string, wildcardValues []string
 		pattern = pattern[i:]
 	}
 	// Handle leaf nodes:
-	if len(pattern) == 0 {
+	if pattern == "" {
 		for _, l := range t.leaves {
 			if ok := l.match(treePattern, wildcardValues, ctx); ok {
 				return l.runObject
@@ -329,7 +329,7 @@ func (t *Tree) match(treePattern string, pattern string, wildcardValues []string
 	}
 	for _, subTree := range t.fixrouters {
 		if subTree.prefix == seg {
-			if len(pattern) != 0 && pattern[0] == '/' {
+			if pattern != "" && pattern[0] == '/' {
 				treePattern = pattern[1:]
 			} else {
 				treePattern = pattern
