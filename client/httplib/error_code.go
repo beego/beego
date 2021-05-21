@@ -124,3 +124,11 @@ Make sure that:
 1. You pass valid structure pointer to the function;
 2. The body is valid YAML document
 `)
+
+var UnmarshalResponseToObjectFailed = berror.DefineCode(5001011, moduleName,
+	"UnmarshalResponseToObjectFailed", `
+Beego trying to unmarshal response's body to structure but failed.
+There are several cases that cause this error:
+1. You pass valid structure pointer to the function;
+2. The body is valid json, Yaml or XML document
+`)

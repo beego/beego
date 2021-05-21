@@ -34,18 +34,6 @@ func (r *respCarrier) SetHttpResponse(resp *http.Response) {
 	r.Resp = resp
 }
 
-func (r *respCarrier) SetBytes(bytes []byte) {
-	r.bytes = bytes
-}
-
-func (r *respCarrier) Bytes() []byte {
-	return r.bytes
-}
-
-func (r *respCarrier) String() string {
-	return string(r.bytes)
-}
-
 func TestOption_WithEnableCookie(t *testing.T) {
 	client, err := NewClient("test", "http://httpbin.org/",
 		WithEnableCookie(true))

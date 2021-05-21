@@ -656,16 +656,11 @@ func (b *BeegoHTTPRequest) ToYAML(v interface{}) error {
 		UnmarshalYAMLResponseToObjectFailed, "unmarshal yaml body to object failed.")
 }
 
-// Response executes request client gets response manually.
-func (b *BeegoHTTPRequest) Response() (*http.Response, error) {
-	return b.getResponse()
-}
-
-// ResponseForValue attempts to resolve the response body to value using an existing method.
+// ToValue attempts to resolve the response body to value using an existing method.
 // Calls Response inner.
 // If response header contain Content-Type, func will call ToJSON\ToXML\ToYAML.
 // Else it will try to parse body as json\yaml\xml, If all attempts fail, an error will be returned
-func (b *BeegoHTTPRequest) ResponseForValue(value interface{}) error {
+func (b *BeegoHTTPRequest) ToValue(value interface{}) error {
 	if value == nil {
 		return nil
 	}
@@ -674,8 +669,8 @@ func (b *BeegoHTTPRequest) ResponseForValue(value interface{}) error {
 	if err != nil {
 		return err
 	}
-	contentType := strings.Split(resp.Header.Get(contentTypeKey), ";")[0]
 
+	contentType := strings.Split(resp.Header.Get(contentTypeKey), ";")[0]
 	// try to parse it as content type
 	switch contentType {
 	case "application/json":
@@ -697,8 +692,12 @@ func (b *BeegoHTTPRequest) ResponseForValue(value interface{}) error {
 		return nil
 	}
 
-	// TODO add new error type about can't parse body
-	return berror.Error(UnsupportedBodyType, "unsupported body data")
+	return berror.Error(UnmarshalResponseToObjectFailed, "unmarshal body to object failed.")
+}
+
+// Response executes request client gets response manually.
+func (b *BeegoHTTPRequest) Response() (*http.Response, error) {
+	return b.getResponse()
 }
 
 // TimeoutDialer returns functions of connection dialer with timeout settings for http.Transport Dial field.

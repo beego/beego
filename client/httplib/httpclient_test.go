@@ -55,18 +55,6 @@ func (s *slideSshowResponse) SetHttpResponse(resp *http.Response) {
 	s.Resp = resp
 }
 
-func (s *slideSshowResponse) SetBytes(bytes []byte) {
-	s.bytes = bytes
-}
-
-func (s *slideSshowResponse) Bytes() []byte {
-	return s.bytes
-}
-
-func (s *slideSshowResponse) String() string {
-	return string(s.bytes)
-}
-
 func TestClient_Get(t *testing.T) {
 	client, err := NewClient("test", "http://httpbin.org/")
 	if err != nil {

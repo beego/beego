@@ -15,6 +15,9 @@
 package httplib
 
 import (
+	"bytes"
+	"io"
+	"io/ioutil"
 	"net/http"
 )
 
@@ -27,15 +30,30 @@ type Client struct {
 	Setting BeegoHTTPSettings
 }
 
-// If value implement this interface. http.response will saved by SetHttpResponse
+// HttpResponseCarrier If value implement HttpResponseCarrier. http.Response will pass to SetHttpResponse
 type HttpResponseCarrier interface {
 	SetHttpResponse(resp *http.Response)
 }
 
-// If value implement this interface. bytes of http.response will saved by SetHttpResponse
-type ResponseBytesCarrier interface {
-	// Cause of when user get http.response, the body stream is closed. So need to pass bytes by
+// HttpBodyCarrier If value implement HttpBodyCarrier. http.Response.Body will pass to SetReader
+type HttpBodyCarrier interface {
+	SetReader(r *io.ReadCloser)
+}
+
+// HttpBytesCarrier If value implement HttpBytesCarrier.
+// All the byte in http.Response.Body will pass to SetBytes
+type HttpBytesCarrier interface {
 	SetBytes(bytes []byte)
+}
+
+// HttpStatusCarrier If value implement HttpStatusCarrier. http.Response.StatusCode will pass to SetStatusCode
+type HttpStatusCarrier interface {
+	SetStatusCode(status int)
+}
+
+// HttpHeaderCarrier If value implement HttpHeaderCarrier. http.Response.Header will pass to SetHeader
+type HttpHeadersCarrier interface {
+	SetHeader(header map[string][]string)
 }
 
 // NewClient return a new http client
@@ -67,18 +85,47 @@ func (c *Client) handleResponse(value interface{}, req *BeegoHTTPRequest) error 
 	if err != nil {
 		return err
 	}
-	if carrier, ok := (value).(HttpResponseCarrier); ok {
-		(carrier).SetHttpResponse(resp)
-	}
-	if carrier, ok := (value).(ResponseBytesCarrier); ok {
-		bytes, err := req.Bytes()
+
+	switch carrier := value.(type) {
+	case HttpResponseCarrier:
+		b, err := req.Bytes()
 		if err != nil {
 			return err
 		}
-		(carrier).SetBytes(bytes)
+		resp.Body = ioutil.NopCloser(bytes.NewReader(b))
+		carrier.SetHttpResponse(resp)
+		fallthrough
+	case HttpBodyCarrier:
+		b, err := req.Bytes()
+		if err != nil {
+			return err
+		}
+		reader := ioutil.NopCloser(bytes.NewReader(b))
+		carrier.SetReader(&reader)
+		fallthrough
+	case HttpBytesCarrier:
+		b, err := req.Bytes()
+		if err != nil {
+			return err
+		}
+		carrier.SetBytes(b)
+		fallthrough
+	case HttpStatusCarrier:
+		resp, err := req.Response()
+		if err != nil {
+			return err
+		}
+		carrier.SetStatusCode(resp.StatusCode)
+		fallthrough
+	case HttpHeadersCarrier:
+		resp, err := req.Response()
+		if err != nil {
+			return err
+		}
+		carrier.SetHeader(resp.Header)
 	}
 
-	return req.ResponseForValue(value)
+	return req.ToValue(value)
 }
 
 // Get Send a GET request and try to give its result value
