@@ -16,6 +16,8 @@ package httplib
 
 import (
 	"encoding/xml"
+	"io"
+	"io/ioutil"
 	"net/http"
 	"testing"
 
@@ -29,11 +31,38 @@ func TestNewClient(t *testing.T) {
 	assert.Equal(t, true, client.Setting.EnableCookie)
 }
 
-type slideSshowResponse struct {
-	Resp  *http.Response
-	bytes []byte
+type slideShowResponse struct {
+	Resp       *http.Response
+	bytes      []byte
+	StatusCode int
+	Body       io.ReadCloser
+	Header     map[string][]string
 
 	Slideshow slideshow `json:"slideshow" yaml:"slideshow"`
+}
+
+func (r *slideShowResponse) SetHttpResponse(resp *http.Response) {
+	r.Resp = resp
+}
+
+func (r *slideShowResponse) SetBytes(bytes []byte) {
+	r.bytes = bytes
+}
+
+func (r *slideShowResponse) SetReader(reader io.ReadCloser) {
+	r.Body = reader
+}
+
+func (r *slideShowResponse) SetStatusCode(status int) {
+	r.StatusCode = status
+}
+
+func (r *slideShowResponse) SetHeader(header map[string][]string) {
+	r.Header = header
+}
+
+func (r *slideShowResponse) String() string {
+	return string(r.bytes)
 }
 
 type slideshow struct {
@@ -51,8 +80,32 @@ type slide struct {
 	Title string `json:"title" yaml:"title" xml:"title"`
 }
 
-func (s *slideSshowResponse) SetHttpResponse(resp *http.Response) {
-	s.Resp = resp
+func TestClient_handleCarrier(t *testing.T) {
+	v := "beego"
+	client, err := NewClient("test", "http://httpbin.org/",
+		WithUserAgent(v))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var s = &slideShowResponse{}
+	err = client.Get(s, "/json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer s.Body.Close()
+
+	assert.NotNil(t, s.Resp)
+	assert.NotNil(t, s.Body)
+	assert.Equal(t, "429", s.Header["Content-Length"][0])
+	assert.Equal(t, 200, s.StatusCode)
+
+	b, err := ioutil.ReadAll(s.Body)
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, 429, len(b))
+	assert.Equal(t, s.String(), string(b))
 }
 
 func TestClient_Get(t *testing.T) {
@@ -62,7 +115,7 @@ func TestClient_Get(t *testing.T) {
 	}
 
 	// json
-	var s *slideSshowResponse
+	var s *slideShowResponse
 	err = client.Get(&s, "/json")
 	if err != nil {
 		t.Fatal(err)
@@ -99,7 +152,7 @@ func TestClient_Post(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var resp = &slideSshowResponse{}
+	var resp = &slideShowResponse{}
 	err = client.Get(resp, "/json")
 	if err != nil {
 		t.Fatal(err)
@@ -120,7 +173,7 @@ func TestClient_Put(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var resp = &slideSshowResponse{}
+	var resp = &slideShowResponse{}
 	err = client.Get(resp, "/json")
 	if err != nil {
 		t.Fatal(err)
@@ -141,7 +194,7 @@ func TestClient_Delete(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var resp = &slideSshowResponse{}
+	var resp = &slideShowResponse{}
 	err = client.Delete(resp, "/delete")
 	if err != nil {
 		t.Fatal(err)
@@ -156,7 +209,7 @@ func TestClient_Head(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var resp = &slideSshowResponse{}
+	var resp = &slideShowResponse{}
 	err = client.Head(resp, "")
 	if err != nil {
 		t.Fatal(err)

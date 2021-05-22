@@ -37,7 +37,7 @@ type HttpResponseCarrier interface {
 
 // HttpBodyCarrier If value implement HttpBodyCarrier. http.Response.Body will pass to SetReader
 type HttpBodyCarrier interface {
-	SetReader(r *io.ReadCloser)
+	SetReader(r io.ReadCloser)
 }
 
 // HttpBytesCarrier If value implement HttpBytesCarrier.
@@ -80,52 +80,54 @@ func (c *Client) customReq(req *BeegoHTTPRequest, opts []BeegoHttpRequestOption)
 
 // handleResponse try to parse body to meaningful value
 func (c *Client) handleResponse(value interface{}, req *BeegoHTTPRequest) error {
-	// send request
-	resp, err := req.Response()
+	err := c.handleCarrier(value, req)
 	if err != nil {
 		return err
 	}
 
-	switch carrier := value.(type) {
-	case HttpResponseCarrier:
+	return req.ToValue(value)
+}
+
+// handleCarrier set http data to value
+func (c *Client) handleCarrier(value interface{}, req *BeegoHTTPRequest) error {
+	resp, err := req.Response()
+	if err != nil {
+		return err
+	}
+	if value == nil {
+		return err
+	}
+
+	if carrier, ok := value.(HttpResponseCarrier); ok {
 		b, err := req.Bytes()
 		if err != nil {
 			return err
 		}
 		resp.Body = ioutil.NopCloser(bytes.NewReader(b))
 		carrier.SetHttpResponse(resp)
-		fallthrough
-	case HttpBodyCarrier:
+	}
+	if carrier, ok := value.(HttpBodyCarrier); ok {
 		b, err := req.Bytes()
 		if err != nil {
 			return err
 		}
 		reader := ioutil.NopCloser(bytes.NewReader(b))
-		carrier.SetReader(&reader)
-		fallthrough
-	case HttpBytesCarrier:
+		carrier.SetReader(reader)
+	}
+	if carrier, ok := value.(HttpBytesCarrier); ok {
 		b, err := req.Bytes()
 		if err != nil {
 			return err
 		}
 		carrier.SetBytes(b)
-		fallthrough
-	case HttpStatusCarrier:
-		resp, err := req.Response()
-		if err != nil {
-			return err
-		}
+	}
+	if carrier, ok := value.(HttpStatusCarrier); ok {
 		carrier.SetStatusCode(resp.StatusCode)
-		fallthrough
-	case HttpHeadersCarrier:
-		resp, err := req.Response()
-		if err != nil {
-			return err
-		}
+	}
+	if carrier, ok := value.(HttpHeadersCarrier); ok {
 		carrier.SetHeader(resp.Header)
 	}
-
-	return req.ToValue(value)
+	return nil
 }
 
 // Get Send a GET request and try to give its result value

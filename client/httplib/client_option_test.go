@@ -26,12 +26,14 @@ import (
 )
 
 type respCarrier struct {
-	Resp  *http.Response
 	bytes []byte
 }
 
-func (r *respCarrier) SetHttpResponse(resp *http.Response) {
-	r.Resp = resp
+func (r *respCarrier) SetBytes(bytes []byte) {
+	r.bytes = bytes
+}
+func (r *respCarrier) String() string {
+	return string(r.bytes)
 }
 
 func TestOption_WithEnableCookie(t *testing.T) {
