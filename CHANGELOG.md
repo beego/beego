@@ -50,6 +50,7 @@
 
 ## Fix Sonar
 
+- [4624](https://github.com/beego/beego/pull/4624)
 - [4608](https://github.com/beego/beego/pull/4608)
 - [4473](https://github.com/beego/beego/pull/4473)
 - [4474](https://github.com/beego/beego/pull/4474)
