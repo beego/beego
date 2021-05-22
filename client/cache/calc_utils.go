@@ -9,10 +9,8 @@ import (
 var (
 	ErrIncrementOverflow = berror.Error(IncrementOverflow, "this incr invocation will overflow.")
 	ErrDecrementOverflow = berror.Error(DecrementOverflow, "this decr invocation will overflow.")
-	ErrNotIntegerType = berror.Error(NotIntegerType, "item val is not (u)int (u)int32 (u)int64")
+	ErrNotIntegerType    = berror.Error(NotIntegerType, "item val is not (u)int (u)int32 (u)int64")
 )
-
-
 
 func incr(originVal interface{}) (interface{}, error) {
 	switch val := originVal.(type) {

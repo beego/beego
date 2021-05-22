@@ -20,8 +20,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/beego/beego/v2/client/httplib"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/beego/beego/v2/client/httplib"
 )
 
 func TestFilterChain(t *testing.T) {

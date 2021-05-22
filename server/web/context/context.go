@@ -35,9 +35,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/beego/beego/v2/server/web/session"
-
 	"github.com/beego/beego/v2/core/utils"
+	"github.com/beego/beego/v2/server/web/session"
 )
 
 // Commonly used mime-types

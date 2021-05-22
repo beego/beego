@@ -40,7 +40,6 @@ func TestRedisCache(t *testing.T) {
 
 	assert.Nil(t, bm.Put(context.Background(), "astaxie", 1, timeoutDuration))
 
-
 	res, _ := bm.IsExist(context.Background(), "astaxie")
 	assert.True(t, res)
 
@@ -50,7 +49,6 @@ func TestRedisCache(t *testing.T) {
 	assert.False(t, res)
 
 	assert.Nil(t, bm.Put(context.Background(), "astaxie", 1, timeoutDuration))
-
 
 	val, _ := bm.Get(context.Background(), "astaxie")
 	v, _ := redis.Int(val, err)

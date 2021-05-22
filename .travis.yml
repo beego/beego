@@ -2,6 +2,8 @@ language: go
 
 go:
   - "1.14.x"
+  - "1.15.x"
+  - "1.16.x"
 services:
   - redis-server
   - mysql
@@ -12,7 +14,7 @@ env:
   global:
     - GO_REPO_FULLNAME="github.com/beego/beego/v2"
   matrix:
-    - ORM_DRIVER=sqlite3   ORM_SOURCE=$TRAVIS_BUILD_DIR/orm_test.db
+    - ORM_DRIVER=sqlite3 ORM_SOURCE=$TRAVIS_BUILD_DIR/orm_test.db
     - ORM_DRIVER=postgres ORM_SOURCE="user=postgres dbname=orm_test sslmode=disable"
     - ORM_DRIVER=mysql export ORM_SOURCE="root:@/orm_test?charset=utf8"
 before_install:
@@ -55,13 +57,7 @@ before_install:
   - docker exec etcd-gcr-v3.3.25 /bin/sh -c "ETCDCTL_API=3 /usr/local/bin/etcdctl put current.string hello"
   - docker exec etcd-gcr-v3.3.25 /bin/sh -c "ETCDCTL_API=3 /usr/local/bin/etcdctl put current.serialize.name test"
   - docker exec etcd-gcr-v3.3.25 /bin/sh -c "ETCDCTL_API=3 /usr/local/bin/etcdctl put sub.sub.key1 sub.sub.key"
-install:
-  - go get -u honnef.co/go/tools/cmd/staticcheck
-  - go get -u github.com/mdempsky/unconvert
-  - go get -u github.com/gordonklaus/ineffassign
 before_script:
-
-  #  -
   - psql --version
   #  - prepare for orm unit tests
   - sh -c "if [ '$ORM_DRIVER' = 'postgres' ]; then psql -c 'create database orm_test;' -U postgres; fi"
@@ -77,9 +73,5 @@ after_success:
   - bash <(curl -s https://codecov.io/bash)
 script:
   - GO111MODULE=on go test -coverprofile=coverage.txt -covermode=atomic ./...
-  - staticcheck -show-ignored -checks "-ST1017,-U1000,-ST1005,-S1034,-S1012,-SA4006,-SA6005,-SA1019,-SA1024" ./
-  - unconvert $(go list ./... | grep -v /vendor/)
-  - ineffassign .
-  - find . ! \( -path './vendor' -prune \) -type f -name '*.go' -print0 | xargs -0 gofmt -l -s
 addons:
   postgresql: "9.6"

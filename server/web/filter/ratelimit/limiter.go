@@ -152,7 +152,6 @@ func (l *limiter) createBucket(key string) bucket {
 	return b
 }
 
-
 func defaultSessionKey(r *http.Request) string {
 	return ""
 }

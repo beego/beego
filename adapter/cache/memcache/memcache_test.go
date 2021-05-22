@@ -26,16 +26,7 @@ import (
 	"github.com/beego/beego/v2/adapter/cache"
 )
 
-const (
-	initError = "init err"
-	setError = "set Error"
-	checkError = "check err"
-	getError = "get err"
-	getMultiError = "GetMulti Error"
-)
-
 func TestMemcacheCache(t *testing.T) {
-
 	addr := os.Getenv("MEMCACHE_ADDR")
 	if addr == "" {
 		addr = "127.0.0.1:11211"
@@ -72,7 +63,7 @@ func TestMemcacheCache(t *testing.T) {
 
 	assert.Nil(t, bm.Delete("astaxie"))
 
-	assert.False(t,  bm.IsExist("astaxie"))
+	assert.False(t, bm.IsExist("astaxie"))
 
 	assert.Nil(t, bm.Put("astaxie", "author", timeoutDuration))
 

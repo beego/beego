@@ -31,11 +31,10 @@ import (
 	"testing"
 	"time"
 
-	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
-
-	"github.com/beego/beego/v2/client/orm/hints"
-
 	"github.com/stretchr/testify/assert"
+
+	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
+	"github.com/beego/beego/v2/client/orm/hints"
 )
 
 var _ = os.PathSeparator
@@ -2269,7 +2268,6 @@ func TestTransaction(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, int64(1), num)
 
-
 }
 
 func TestTxOrmRollbackUnlessCommit(t *testing.T) {
@@ -2642,93 +2640,101 @@ func TestIgnoreCaseTag(t *testing.T) {
 
 func TestInsertOrUpdate(t *testing.T) {
 	RegisterModel(new(User))
-	user := User{UserName: "unique_username133", Status: 1, Password: "o"}
-	user1 := User{UserName: "unique_username133", Status: 2, Password: "o"}
-	user2 := User{UserName: "unique_username133", Status: 3, Password: "oo"}
+	userName := "unique_username133"
+	column := "user_name"
+	user := User{UserName: userName, Status: 1, Password: "o"}
+	user1 := User{UserName: userName, Status: 2, Password: "o"}
+	user2 := User{UserName: userName, Status: 3, Password: "oo"}
 	dORM.Insert(&user)
-	test := User{UserName: "unique_username133"}
 	fmt.Println(dORM.Driver().Name())
 	if dORM.Driver().Name() == "sqlite3" {
 		fmt.Println("sqlite3 is nonsupport")
 		return
 	}
-	// test1
-	_, err := dORM.InsertOrUpdate(&user1, "user_name")
-	if err != nil {
-		fmt.Println(err)
-		if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego" {
-		} else {
-			throwFailNow(t, err)
-		}
-	} else {
-		dORM.Read(&test, "user_name")
-		throwFailNow(t, AssertIs(user1.Status, test.Status))
-	}
-	// test2
-	_, err = dORM.InsertOrUpdate(&user2, "user_name")
-	if err != nil {
-		fmt.Println(err)
-		if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego" {
-		} else {
-			throwFailNow(t, err)
-		}
-	} else {
-		dORM.Read(&test, "user_name")
-		throwFailNow(t, AssertIs(user2.Status, test.Status))
-		throwFailNow(t, AssertIs(user2.Password, strings.TrimSpace(test.Password)))
+
+	specs := []struct {
+		description          string
+		user                 User
+		colConflitAndArgs    []string
+		assertion            func(expected User, actual User)
+		isPostgresCompatible bool
+	}{
+		{
+			description:       "test1",
+			user:              user1,
+			colConflitAndArgs: []string{column},
+			assertion: func(expected, actual User) {
+				throwFailNow(t, AssertIs(expected.Status, actual.Status))
+			},
+			isPostgresCompatible: true,
+		},
+		{
+			description:       "test2",
+			user:              user2,
+			colConflitAndArgs: []string{column},
+			assertion: func(expected, actual User) {
+				throwFailNow(t, AssertIs(expected.Status, actual.Status))
+				throwFailNow(t, AssertIs(expected.Password, strings.TrimSpace(actual.Password)))
+			},
+			isPostgresCompatible: true,
+		},
+		{
+			description:       "test3 +",
+			user:              user2,
+			colConflitAndArgs: []string{column, "status=status+1"},
+			assertion: func(expected, actual User) {
+				throwFailNow(t, AssertIs(expected.Status+1, actual.Status))
+			},
+			isPostgresCompatible: false,
+		},
+		{
+			description:       "test4 -",
+			user:              user2,
+			colConflitAndArgs: []string{column, "status=status-1"},
+			assertion: func(expected, actual User) {
+				throwFailNow(t, AssertIs((expected.Status+1)-1, actual.Status))
+			},
+			isPostgresCompatible: false,
+		},
+		{
+			description:       "test5 *",
+			user:              user2,
+			colConflitAndArgs: []string{column, "status=status*3"},
+			assertion: func(expected, actual User) {
+				throwFailNow(t, AssertIs(((expected.Status+1)-1)*3, actual.Status))
+			},
+			isPostgresCompatible: false,
+		},
+		{
+			description:       "test6 /",
+			user:              user2,
+			colConflitAndArgs: []string{column, "Status=Status/3"},
+			assertion: func(expected, actual User) {
+				throwFailNow(t, AssertIs((((expected.Status+1)-1)*3)/3, actual.Status))
+			},
+			isPostgresCompatible: false,
+		},
 	}
 
-	// postgres ON CONFLICT DO UPDATE SET can`t use colu=colu+values
-	if IsPostgres {
-		return
-	}
-	// test3 +
-	_, err = dORM.InsertOrUpdate(&user2, "user_name", "status=status+1")
-	if err != nil {
-		fmt.Println(err)
-		if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego" {
-		} else {
-			throwFailNow(t, err)
+	for _, spec := range specs {
+		// postgres ON CONFLICT DO UPDATE SET can`t use colu=colu+values
+		if IsPostgres && !spec.isPostgresCompatible {
+			continue
 		}
-	} else {
-		dORM.Read(&test, "user_name")
-		throwFailNow(t, AssertIs(user2.Status+1, test.Status))
-	}
-	// test4 -
-	_, err = dORM.InsertOrUpdate(&user2, "user_name", "status=status-1")
-	if err != nil {
-		fmt.Println(err)
-		if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego" {
-		} else {
-			throwFailNow(t, err)
+
+		_, err := dORM.InsertOrUpdate(&spec.user, spec.colConflitAndArgs...)
+		if err != nil {
+			fmt.Println(err)
+			if !(err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego") {
+				throwFailNow(t, err)
+			}
+			continue
 		}
-	} else {
-		dORM.Read(&test, "user_name")
-		throwFailNow(t, AssertIs((user2.Status+1)-1, test.Status))
-	}
-	// test5 *
-	_, err = dORM.InsertOrUpdate(&user2, "user_name", "status=status*3")
-	if err != nil {
-		fmt.Println(err)
-		if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego" {
-		} else {
-			throwFailNow(t, err)
-		}
-	} else {
-		dORM.Read(&test, "user_name")
-		throwFailNow(t, AssertIs(((user2.Status+1)-1)*3, test.Status))
-	}
-	// test6 /
-	_, err = dORM.InsertOrUpdate(&user2, "user_name", "Status=Status/3")
-	if err != nil {
-		fmt.Println(err)
-		if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego" {
-		} else {
-			throwFailNow(t, err)
-		}
-	} else {
-		dORM.Read(&test, "user_name")
-		throwFailNow(t, AssertIs((((user2.Status+1)-1)*3)/3, test.Status))
+
+		test := User{UserName: userName}
+		err = dORM.Read(&test, column)
+		throwFailNow(t, AssertIs(err, nil))
+		spec.assertion(spec.user, test)
 	}
 }
 

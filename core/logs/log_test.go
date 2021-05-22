@@ -18,7 +18,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
 )
 
 func TestBeeLoggerDelLogger(t *testing.T) {

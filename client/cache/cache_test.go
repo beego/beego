@@ -99,9 +99,7 @@ func TestCache(t *testing.T) {
 	vv, _ := bm.GetMulti(context.Background(), []string{"astaxie", "astaxie1"})
 	assert.Equal(t, 2, len(vv))
 	assert.Equal(t, "author", vv[0])
-	assert.Equal(t,"author1", vv[1])
-
-
+	assert.Equal(t, "author1", vv[1])
 
 	vv, err = bm.GetMulti(context.Background(), []string{"astaxie0", "astaxie1"})
 	assert.Equal(t, 2, len(vv))
@@ -116,7 +114,7 @@ func TestFileCache(t *testing.T) {
 	bm, err := NewCache("file", `{"CachePath":"cache","FileSuffix":".bin","DirectoryLevel":"2","EmbedExpiry":"0"}`)
 	assert.Nil(t, err)
 	timeoutDuration := 10 * time.Second
-	assert.Nil(t,  bm.Put(context.Background(), "astaxie", 1, timeoutDuration))
+	assert.Nil(t, bm.Put(context.Background(), "astaxie", 1, timeoutDuration))
 
 	res, _ := bm.IsExist(context.Background(), "astaxie")
 	assert.True(t, res)
@@ -178,7 +176,6 @@ func testIncrDecr(t *testing.T, c Cache, beforeIncr interface{}, afterIncr inter
 
 	assert.Nil(t, c.Put(ctx, key, beforeIncr, timeout))
 	assert.Nil(t, c.Incr(ctx, key))
-
 
 	v, _ := c.Get(ctx, key)
 	assert.Equal(t, afterIncr, v)
