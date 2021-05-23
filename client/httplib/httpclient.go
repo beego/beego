@@ -25,29 +25,29 @@ import (
 type Client struct {
 	Name       string
 	Endpoint   string
-	CommonOpts []BeegoHttpRequestOption
+	CommonOpts []BeegoHTTPRequestOption
 
 	Setting BeegoHTTPSettings
 }
 
-// HttpResponseCarrier If value implement HttpResponseCarrier. http.Response will pass to SetHttpResponse
-type HttpResponseCarrier interface {
+// HTTPResponseCarrier If value implement HTTPResponseCarrier. http.Response will pass to SetHttpResponse
+type HTTPResponseCarrier interface {
 	SetHttpResponse(resp *http.Response)
 }
 
-// HttpBodyCarrier If value implement HttpBodyCarrier. http.Response.Body will pass to SetReader
-type HttpBodyCarrier interface {
+// HTTPBodyCarrier If value implement HTTPBodyCarrier. http.Response.Body will pass to SetReader
+type HTTPBodyCarrier interface {
 	SetReader(r io.ReadCloser)
 }
 
-// HttpBytesCarrier If value implement HttpBytesCarrier.
+// HTTPBytesCarrier If value implement HTTPBytesCarrier.
 // All the byte in http.Response.Body will pass to SetBytes
-type HttpBytesCarrier interface {
+type HTTPBytesCarrier interface {
 	SetBytes(bytes []byte)
 }
 
-// HttpStatusCarrier If value implement HttpStatusCarrier. http.Response.StatusCode will pass to SetStatusCode
-type HttpStatusCarrier interface {
+// HTTPStatusCarrier If value implement HTTPStatusCarrier. http.Response.StatusCode will pass to SetStatusCode
+type HTTPStatusCarrier interface {
 	SetStatusCode(status int)
 }
 
@@ -70,7 +70,7 @@ func NewClient(name string, endpoint string, opts ...ClientOption) (*Client, err
 	return res, nil
 }
 
-func (c *Client) customReq(req *BeegoHTTPRequest, opts []BeegoHttpRequestOption) {
+func (c *Client) customReq(req *BeegoHTTPRequest, opts []BeegoHTTPRequestOption) {
 	req.Setting(c.Setting)
 	opts = append(c.CommonOpts, opts...)
 	for _, o := range opts {
@@ -98,7 +98,7 @@ func (c *Client) handleCarrier(value interface{}, req *BeegoHTTPRequest) error {
 		return err
 	}
 
-	if carrier, ok := value.(HttpResponseCarrier); ok {
+	if carrier, ok := value.(HTTPResponseCarrier); ok {
 		b, err := req.Bytes()
 		if err != nil {
 			return err
@@ -106,7 +106,7 @@ func (c *Client) handleCarrier(value interface{}, req *BeegoHTTPRequest) error {
 		resp.Body = ioutil.NopCloser(bytes.NewReader(b))
 		carrier.SetHttpResponse(resp)
 	}
-	if carrier, ok := value.(HttpBodyCarrier); ok {
+	if carrier, ok := value.(HTTPBodyCarrier); ok {
 		b, err := req.Bytes()
 		if err != nil {
 			return err
@@ -114,14 +114,14 @@ func (c *Client) handleCarrier(value interface{}, req *BeegoHTTPRequest) error {
 		reader := ioutil.NopCloser(bytes.NewReader(b))
 		carrier.SetReader(reader)
 	}
-	if carrier, ok := value.(HttpBytesCarrier); ok {
+	if carrier, ok := value.(HTTPBytesCarrier); ok {
 		b, err := req.Bytes()
 		if err != nil {
 			return err
 		}
 		carrier.SetBytes(b)
 	}
-	if carrier, ok := value.(HttpStatusCarrier); ok {
+	if carrier, ok := value.(HTTPStatusCarrier); ok {
 		carrier.SetStatusCode(resp.StatusCode)
 	}
 	if carrier, ok := value.(HttpHeadersCarrier); ok {
@@ -131,14 +131,14 @@ func (c *Client) handleCarrier(value interface{}, req *BeegoHTTPRequest) error {
 }
 
 // Get Send a GET request and try to give its result value
-func (c *Client) Get(value interface{}, path string, opts ...BeegoHttpRequestOption) error {
+func (c *Client) Get(value interface{}, path string, opts ...BeegoHTTPRequestOption) error {
 	req := Get(c.Endpoint + path)
 	c.customReq(req, opts)
 	return c.handleResponse(value, req)
 }
 
 // Post Send a POST request and try to give its result value
-func (c *Client) Post(value interface{}, path string, body interface{}, opts ...BeegoHttpRequestOption) error {
+func (c *Client) Post(value interface{}, path string, body interface{}, opts ...BeegoHTTPRequestOption) error {
 	req := Post(c.Endpoint + path)
 	c.customReq(req, opts)
 	if body != nil {
@@ -148,7 +148,7 @@ func (c *Client) Post(value interface{}, path string, body interface{}, opts ...
 }
 
 // Put Send a Put request and try to give its result value
-func (c *Client) Put(value interface{}, path string, body interface{}, opts ...BeegoHttpRequestOption) error {
+func (c *Client) Put(value interface{}, path string, body interface{}, opts ...BeegoHTTPRequestOption) error {
 	req := Put(c.Endpoint + path)
 	c.customReq(req, opts)
 	if body != nil {
@@ -158,14 +158,14 @@ func (c *Client) Put(value interface{}, path string, body interface{}, opts ...B
 }
 
 // Delete Send a Delete request and try to give its result value
-func (c *Client) Delete(value interface{}, path string, opts ...BeegoHttpRequestOption) error {
+func (c *Client) Delete(value interface{}, path string, opts ...BeegoHTTPRequestOption) error {
 	req := Delete(c.Endpoint + path)
 	c.customReq(req, opts)
 	return c.handleResponse(value, req)
 }
 
 // Head Send a Head request and try to give its result value
-func (c *Client) Head(value interface{}, path string, opts ...BeegoHttpRequestOption) error {
+func (c *Client) Head(value interface{}, path string, opts ...BeegoHTTPRequestOption) error {
 	req := Head(c.Endpoint + path)
 	c.customReq(req, opts)
 	return c.handleResponse(value, req)

@@ -22,7 +22,7 @@ import (
 )
 
 type ClientOption func(client *Client)
-type BeegoHttpRequestOption func(request *BeegoHTTPRequest)
+type BeegoHTTPRequestOption func(request *BeegoHTTPRequest)
 
 // WithEnableCookie will enable cookie in all subsequent request
 func WithEnableCookie(enable bool) ClientOption {
@@ -83,28 +83,28 @@ func WithEnableGzip(enable bool) ClientOption {
 // BeegoHttpRequestOption
 
 // WithTimeout sets connect time out and read-write time out for BeegoRequest.
-func WithTimeout(connectTimeout, readWriteTimeout time.Duration) BeegoHttpRequestOption {
+func WithTimeout(connectTimeout, readWriteTimeout time.Duration) BeegoHTTPRequestOption {
 	return func(request *BeegoHTTPRequest) {
 		request.SetTimeout(connectTimeout, readWriteTimeout)
 	}
 }
 
 // WithHeader adds header item string in request.
-func WithHeader(key, value string) BeegoHttpRequestOption {
+func WithHeader(key, value string) BeegoHTTPRequestOption {
 	return func(request *BeegoHTTPRequest) {
 		request.Header(key, value)
 	}
 }
 
 // WithCookie adds a cookie to the request.
-func WithCookie(cookie *http.Cookie) BeegoHttpRequestOption {
+func WithCookie(cookie *http.Cookie) BeegoHTTPRequestOption {
 	return func(request *BeegoHTTPRequest) {
 		request.Header("Cookie", cookie.String())
 	}
 }
 
 // Withtokenfactory adds a custom function to set Authorization
-func WithTokenFactory(tokenFactory func() string) BeegoHttpRequestOption {
+func WithTokenFactory(tokenFactory func() string) BeegoHTTPRequestOption {
 	return func(request *BeegoHTTPRequest) {
 		t := tokenFactory()
 
@@ -113,7 +113,7 @@ func WithTokenFactory(tokenFactory func() string) BeegoHttpRequestOption {
 }
 
 // WithBasicAuth adds a custom function to set basic auth
-func WithBasicAuth(basicAuth func() (string, string)) BeegoHttpRequestOption {
+func WithBasicAuth(basicAuth func() (string, string)) BeegoHTTPRequestOption {
 	return func(request *BeegoHTTPRequest) {
 		username, password := basicAuth()
 		request.SetBasicAuth(username, password)
@@ -121,21 +121,21 @@ func WithBasicAuth(basicAuth func() (string, string)) BeegoHttpRequestOption {
 }
 
 // WithFilters will use the filter as the invocation filters
-func WithFilters(fcs ...FilterChain) BeegoHttpRequestOption {
+func WithFilters(fcs ...FilterChain) BeegoHTTPRequestOption {
 	return func(request *BeegoHTTPRequest) {
 		request.SetFilters(fcs...)
 	}
 }
 
 // WithContentType adds ContentType in header
-func WithContentType(contentType string) BeegoHttpRequestOption {
+func WithContentType(contentType string) BeegoHTTPRequestOption {
 	return func(request *BeegoHTTPRequest) {
 		request.Header(contentTypeKey, contentType)
 	}
 }
 
 // WithParam adds query param in to request.
-func WithParam(key, value string) BeegoHttpRequestOption {
+func WithParam(key, value string) BeegoHTTPRequestOption {
 	return func(request *BeegoHTTPRequest) {
 		request.Param(key, value)
 	}
@@ -145,7 +145,7 @@ func WithParam(key, value string) BeegoHttpRequestOption {
 // default is 0 (never retry)
 // -1 retry indefinitely (forever)
 // Other numbers specify the exact retry amount
-func WithRetry(times int, delay time.Duration) BeegoHttpRequestOption {
+func WithRetry(times int, delay time.Duration) BeegoHTTPRequestOption {
 	return func(request *BeegoHTTPRequest) {
 		request.Retries(times)
 		request.RetryDelay(delay)

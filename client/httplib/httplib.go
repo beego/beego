@@ -124,7 +124,6 @@ type BeegoHTTPRequest struct {
 	setting BeegoHTTPSettings
 	resp    *http.Response
 	body    []byte
-	dump    []byte
 }
 
 // GetRequest returns the request object
@@ -199,7 +198,7 @@ func (b *BeegoHTTPRequest) SetHost(host string) *BeegoHTTPRequest {
 // SetProtocolVersion sets the protocol version for incoming requests.
 // Client requests always use HTTP/1.1
 func (b *BeegoHTTPRequest) SetProtocolVersion(vers string) *BeegoHTTPRequest {
-	if len(vers) == 0 {
+	if vers == "" {
 		vers = "HTTP/1.1"
 	}
 
@@ -511,18 +510,16 @@ func (b *BeegoHTTPRequest) buildTrans() http.RoundTripper {
 			DialContext:         TimeoutDialerCtx(b.setting.ConnectTimeout, b.setting.ReadWriteTimeout),
 			MaxIdleConnsPerHost: 100,
 		}
-	} else {
+	} else if t, ok := trans.(*http.Transport); ok {
 		// if b.transport is *http.Transport then set the settings.
-		if t, ok := trans.(*http.Transport); ok {
-			if t.TLSClientConfig == nil {
-				t.TLSClientConfig = b.setting.TLSClientConfig
-			}
-			if t.Proxy == nil {
-				t.Proxy = b.setting.Proxy
-			}
-			if t.DialContext == nil {
-				t.DialContext = TimeoutDialerCtx(b.setting.ConnectTimeout, b.setting.ReadWriteTimeout)
-			}
+		if t.TLSClientConfig == nil {
+			t.TLSClientConfig = b.setting.TLSClientConfig
+		}
+		if t.Proxy == nil {
+			t.Proxy = b.setting.Proxy
+		}
+		if t.DialContext == nil {
+			t.DialContext = TimeoutDialerCtx(b.setting.ConnectTimeout, b.setting.ReadWriteTimeout)
 		}
 	}
 	return trans
