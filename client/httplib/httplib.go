@@ -49,6 +49,7 @@ import (
 	"strings"
 	"time"
 
+	xrv "github.com/mattermost/xml-roundtrip-validator"
 	"gopkg.in/yaml.v2"
 
 	"github.com/beego/beego/v2/core/berror"
@@ -638,6 +639,10 @@ func (b *BeegoHTTPRequest) ToXML(v interface{}) error {
 	if err != nil {
 		return err
 	}
+	if err := xrv.Validate(bytes.NewReader(data)); err != nil {
+		panic(err)
+	}
+
 	return berror.Wrap(xml.Unmarshal(data, v),
 		UnmarshalXMLResponseToObjectFailed, "unmarshal xml body to object failed.")
 }
