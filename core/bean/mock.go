@@ -78,7 +78,7 @@ func mock(pv reflect.Value) (err error) {
 
 // mock slice value
 func mockSlice(tagValue string, pvv reflect.Value) (err error) {
-	if len(tagValue) == 0 {
+	if tagValue == "" {
 		return
 	}
 	sliceMetas := strings.Split(tagValue, ":")
