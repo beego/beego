@@ -640,7 +640,7 @@ func (b *BeegoHTTPRequest) ToXML(v interface{}) error {
 		return err
 	}
 	if err := xrv.Validate(bytes.NewReader(data)); err != nil {
-		panic(err)
+		return err
 	}
 
 	return berror.Wrap(xml.Unmarshal(data, v),
