@@ -10,9 +10,8 @@ import (
 // the mock object must be pointer of struct
 // the element in mock object can be slices, structures, basic data types, pointers and interface
 func Mock(v interface{}) (err error) {
-
 	pv := reflect.ValueOf(v)
-	//the input must be pointer of struct
+	// the input must be pointer of struct
 	if pv.Kind() != reflect.Ptr || pv.IsNil() {
 		err = fmt.Errorf("not a pointer of struct")
 		return
@@ -26,7 +25,7 @@ func mock(pv reflect.Value) (err error) {
 	for i := 0; i < pt.Elem().NumField(); i++ {
 		ptt := pt.Elem().Field(i)
 		pvv := pv.Elem().FieldByName(ptt.Name)
-		if !pvv.CanSet() || !pvv.CanAddr() {
+		if !pvv.CanSet() {
 			continue
 		}
 		kt := ptt.Type.Kind()
@@ -79,8 +78,12 @@ func mock(pv reflect.Value) (err error) {
 
 // mock slice value
 func mockSlice(tagValue string, pvv reflect.Value) (err error) {
+	if len(tagValue) == 0 {
+		return
+	}
 	sliceMetas := strings.Split(tagValue, ":")
 	if len(sliceMetas) != 2 || sliceMetas[0] != "length" {
+		err = fmt.Errorf("the value:%s is invalid", tagValue)
 		return
 	}
 	length, e := strconv.Atoi(sliceMetas[1])
@@ -88,7 +91,7 @@ func mockSlice(tagValue string, pvv reflect.Value) (err error) {
 		return e
 	}
 
-	sliceType := reflect.SliceOf(pvv.Type().Elem()) //get slice type
+	sliceType := reflect.SliceOf(pvv.Type().Elem()) // get slice type
 	itemType := sliceType.Elem()                    // get the type of item in slice
 	value := reflect.MakeSlice(sliceType, 0, length)
 	newSliceValue := make([]reflect.Value, 0, length)
@@ -116,7 +119,7 @@ func mockSlice(tagValue string, pvv reflect.Value) (err error) {
 	return
 }
 
-//mock bool value
+// mock bool value
 func mockBool(tagValue string, pvv reflect.Value) (err error) {
 	switch tagValue {
 	case "true":
@@ -129,10 +132,10 @@ func mockBool(tagValue string, pvv reflect.Value) (err error) {
 	return
 }
 
-//mock pointer
+// mock pointer
 func mockPtr(pvv reflect.Value, ptt reflect.Type) (err error) {
 	if pvv.IsNil() {
-		pvv.Set(reflect.New(ptt)) //must set nil value to zero value
+		pvv.Set(reflect.New(ptt)) // must set nil value to zero value
 	}
 	err = mock(pvv)
 	return

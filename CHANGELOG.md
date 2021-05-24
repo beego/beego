@@ -1,5 +1,6 @@
 # developing
 
+- Add: Convenient way to generate mock object [4620](https://github.com/beego/beego/issues/4397)
 - Lint: use golangci-lint. [4619](https://github.com/beego/beego/pull/4619)
 - Chore: format code. [4615](https://github.com/beego/beego/pull/4615)
 - Env: non-empty GOBIN & GOPATH. [4613](https://github.com/beego/beego/pull/4613)
