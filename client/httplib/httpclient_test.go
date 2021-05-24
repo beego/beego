@@ -199,6 +199,7 @@ func TestClient_Delete(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer resp.Resp.Body.Close()
 	assert.NotNil(t, resp)
 	assert.Equal(t, http.MethodDelete, resp.Resp.Request.Method)
 }
@@ -214,6 +215,7 @@ func TestClient_Head(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer resp.Resp.Body.Close()
 	assert.NotNil(t, resp)
 	assert.Equal(t, http.MethodHead, resp.Resp.Request.Method)
 }
