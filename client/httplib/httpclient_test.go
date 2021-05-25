@@ -41,7 +41,7 @@ type slideShowResponse struct {
 	Slideshow slideshow `json:"slideshow" yaml:"slideshow"`
 }
 
-func (r *slideShowResponse) SetHttpResponse(resp *http.Response) {
+func (r *slideShowResponse) SetHTTPResponse(resp *http.Response) {
 	r.Resp = resp
 }
 

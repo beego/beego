@@ -21,8 +21,10 @@ import (
 	"time"
 )
 
-type ClientOption func(client *Client)
-type BeegoHTTPRequestOption func(request *BeegoHTTPRequest)
+type (
+	ClientOption           func(client *Client)
+	BeegoHTTPRequestOption func(request *BeegoHTTPRequest)
+)
 
 // WithEnableCookie will enable cookie in all subsequent request
 func WithEnableCookie(enable bool) ClientOption {

@@ -30,9 +30,9 @@ type Client struct {
 	Setting BeegoHTTPSettings
 }
 
-// HTTPResponseCarrier If value implement HTTPResponseCarrier. http.Response will pass to SetHttpResponse
+// HTTPResponseCarrier If value implement HTTPResponseCarrier. http.Response will pass to SetHTTPResponse
 type HTTPResponseCarrier interface {
-	SetHttpResponse(resp *http.Response)
+	SetHTTPResponse(resp *http.Response)
 }
 
 // HTTPBodyCarrier If value implement HTTPBodyCarrier. http.Response.Body will pass to SetReader
@@ -52,7 +52,7 @@ type HTTPStatusCarrier interface {
 }
 
 // HttpHeaderCarrier If value implement HttpHeaderCarrier. http.Response.Header will pass to SetHeader
-type HttpHeadersCarrier interface {
+type HTTPHeadersCarrier interface {
 	SetHeader(header map[string][]string)
 }
 
@@ -91,6 +91,7 @@ func (c *Client) handleResponse(value interface{}, req *BeegoHTTPRequest) error 
 // handleCarrier set http data to value
 func (c *Client) handleCarrier(value interface{}, req *BeegoHTTPRequest) error {
 	resp, err := req.Response()
+	defer resp.Body.Close()
 	if err != nil {
 		return err
 	}
@@ -104,7 +105,7 @@ func (c *Client) handleCarrier(value interface{}, req *BeegoHTTPRequest) error {
 			return err
 		}
 		resp.Body = ioutil.NopCloser(bytes.NewReader(b))
-		carrier.SetHttpResponse(resp)
+		carrier.SetHTTPResponse(resp)
 	}
 	if carrier, ok := value.(HTTPBodyCarrier); ok {
 		b, err := req.Bytes()
@@ -124,7 +125,7 @@ func (c *Client) handleCarrier(value interface{}, req *BeegoHTTPRequest) error {
 	if carrier, ok := value.(HTTPStatusCarrier); ok {
 		carrier.SetStatusCode(resp.StatusCode)
 	}
-	if carrier, ok := value.(HttpHeadersCarrier); ok {
+	if carrier, ok := value.(HTTPHeadersCarrier); ok {
 		carrier.SetHeader(resp.Header)
 	}
 	return nil
