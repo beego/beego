@@ -32,6 +32,7 @@ type respCarrier struct {
 func (r *respCarrier) SetBytes(bytes []byte) {
 	r.bytes = bytes
 }
+
 func (r *respCarrier) String() string {
 	return string(r.bytes)
 }
@@ -44,7 +45,7 @@ func TestOption_WithEnableCookie(t *testing.T) {
 	}
 
 	v := "smallfish"
-	var resp = &respCarrier{}
+	resp := &respCarrier{}
 	err = client.Get(resp, "/cookies/set?k1="+v)
 	if err != nil {
 		t.Fatal(err)
@@ -71,7 +72,7 @@ func TestOption_WithUserAgent(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var resp = &respCarrier{}
+	resp := &respCarrier{}
 	err = client.Get(resp, "/headers")
 	if err != nil {
 		t.Fatal(err)
@@ -119,7 +120,7 @@ func TestOption_WithHTTPSetting(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var resp = &respCarrier{}
+	resp := &respCarrier{}
 	err = client.Get(resp, "/get")
 	if err != nil {
 		t.Fatal(err)
@@ -139,7 +140,7 @@ func TestOption_WithHeader(t *testing.T) {
 	}
 	client.CommonOpts = append(client.CommonOpts, WithHeader("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.57 Safari/537.36"))
 
-	var resp = &respCarrier{}
+	resp := &respCarrier{}
 	err = client.Get(resp, "/headers")
 	if err != nil {
 		t.Fatal(err)
@@ -162,7 +163,7 @@ func TestOption_WithTokenFactory(t *testing.T) {
 			return "testauth"
 		}))
 
-	var resp = &respCarrier{}
+	resp := &respCarrier{}
 	err = client.Get(resp, "/headers")
 	if err != nil {
 		t.Fatal(err)
@@ -181,7 +182,7 @@ func TestOption_WithBasicAuth(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var resp = &respCarrier{}
+	resp := &respCarrier{}
 	err = client.Get(resp, "/basic-auth/user/passwd",
 		WithBasicAuth(func() (string, string) {
 			return "user", "passwd"
@@ -203,7 +204,7 @@ func TestOption_WithContentType(t *testing.T) {
 	}
 
 	v := "application/json"
-	var resp = &respCarrier{}
+	resp := &respCarrier{}
 	err = client.Get(resp, "/headers", WithContentType(v))
 	if err != nil {
 		t.Fatal(err)
@@ -223,7 +224,7 @@ func TestOption_WithParam(t *testing.T) {
 	}
 
 	v := "smallfish"
-	var resp = &respCarrier{}
+	resp := &respCarrier{}
 	err = client.Get(resp, "/get", WithParam("username", v))
 	if err != nil {
 		t.Fatal(err)

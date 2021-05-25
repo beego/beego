@@ -88,7 +88,7 @@ func TestClient_handleCarrier(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var s = &slideShowResponse{}
+	s := &slideShowResponse{}
 	err = client.Get(s, "/json")
 	if err != nil {
 		t.Fatal(err)
@@ -143,7 +143,6 @@ func TestClient_Get(t *testing.T) {
 	assert.Equal(t, "Sample Slide Show", s.Slideshow.Title)
 	assert.Equal(t, 2, len(s.Slideshow.Slides))
 	assert.Equal(t, "Overview", s.Slideshow.Slides[1].Title)
-
 }
 
 func TestClient_Post(t *testing.T) {
@@ -152,7 +151,7 @@ func TestClient_Post(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var resp = &slideShowResponse{}
+	resp := &slideShowResponse{}
 	err = client.Get(resp, "/json")
 	if err != nil {
 		t.Fatal(err)
@@ -173,7 +172,7 @@ func TestClient_Put(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var resp = &slideShowResponse{}
+	resp := &slideShowResponse{}
 	err = client.Get(resp, "/json")
 	if err != nil {
 		t.Fatal(err)
@@ -194,7 +193,7 @@ func TestClient_Delete(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var resp = &slideShowResponse{}
+	resp := &slideShowResponse{}
 	err = client.Delete(resp, "/delete")
 	if err != nil {
 		t.Fatal(err)
@@ -210,7 +209,7 @@ func TestClient_Head(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var resp = &slideShowResponse{}
+	resp := &slideShowResponse{}
 	err = client.Head(resp, "")
 	if err != nil {
 		t.Fatal(err)

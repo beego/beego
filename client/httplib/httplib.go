@@ -663,10 +663,10 @@ func (b *BeegoHTTPRequest) ToValue(value interface{}) error {
 	}
 
 	resp, err := b.Response()
-	defer resp.Body.Close()
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	contentType := strings.Split(resp.Header.Get(contentTypeKey), ";")[0]
 	// try to parse it as content type

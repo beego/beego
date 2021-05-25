@@ -91,14 +91,14 @@ func (c *Client) handleResponse(value interface{}, req *BeegoHTTPRequest) error 
 // handleCarrier set http data to value
 func (c *Client) handleCarrier(value interface{}, req *BeegoHTTPRequest) error {
 	resp, err := req.Response()
-	defer resp.Body.Close()
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
+
 	if value == nil {
 		return err
 	}
-
 	if carrier, ok := value.(HTTPResponseCarrier); ok {
 		b, err := req.Bytes()
 		if err != nil {
