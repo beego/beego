@@ -1,5 +1,6 @@
 # developing
 
+- Add http client and option func. [4455](https://github.com/beego/beego/issues/4455)
 - Add: Convenient way to generate mock object [4620](https://github.com/beego/beego/issues/4620)
 - Infra: use dependabot to update dependencies. [4623](https://github.com/beego/beego/pull/4623)
 - Lint: use golangci-lint. [4619](https://github.com/beego/beego/pull/4619)
