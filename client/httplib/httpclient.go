@@ -80,7 +80,13 @@ func (c *Client) customReq(req *BeegoHTTPRequest, opts []BeegoHTTPRequestOption)
 
 // handleResponse try to parse body to meaningful value
 func (c *Client) handleResponse(value interface{}, req *BeegoHTTPRequest) error {
-	err := c.handleCarrier(value, req)
+	// make sure req.resp is not nil
+	_, err := req.Bytes()
+	if err != nil {
+		return err
+	}
+
+	err = c.handleCarrier(value, req)
 	if err != nil {
 		return err
 	}
@@ -90,22 +96,17 @@ func (c *Client) handleResponse(value interface{}, req *BeegoHTTPRequest) error 
 
 // handleCarrier set http data to value
 func (c *Client) handleCarrier(value interface{}, req *BeegoHTTPRequest) error {
-	resp, err := req.Response()
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
 	if value == nil {
-		return err
+		return nil
 	}
+
 	if carrier, ok := value.(HTTPResponseCarrier); ok {
 		b, err := req.Bytes()
 		if err != nil {
 			return err
 		}
-		resp.Body = ioutil.NopCloser(bytes.NewReader(b))
-		carrier.SetHTTPResponse(resp)
+		req.resp.Body = ioutil.NopCloser(bytes.NewReader(b))
+		carrier.SetHTTPResponse(req.resp)
 	}
 	if carrier, ok := value.(HTTPBodyCarrier); ok {
 		b, err := req.Bytes()
@@ -123,10 +124,10 @@ func (c *Client) handleCarrier(value interface{}, req *BeegoHTTPRequest) error {
 		carrier.SetBytes(b)
 	}
 	if carrier, ok := value.(HTTPStatusCarrier); ok {
-		carrier.SetStatusCode(resp.StatusCode)
+		carrier.SetStatusCode(req.resp.StatusCode)
 	}
 	if carrier, ok := value.(HTTPHeadersCarrier); ok {
-		carrier.SetHeader(resp.Header)
+		carrier.SetHeader(req.resp.Header)
 	}
 	return nil
 }

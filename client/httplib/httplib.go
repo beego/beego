@@ -662,13 +662,7 @@ func (b *BeegoHTTPRequest) ToValue(value interface{}) error {
 		return nil
 	}
 
-	resp, err := b.Response()
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-
-	contentType := strings.Split(resp.Header.Get(contentTypeKey), ";")[0]
+	contentType := strings.Split(b.resp.Header.Get(contentTypeKey), ";")[0]
 	// try to parse it as content type
 	switch contentType {
 	case "application/json":

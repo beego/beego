@@ -247,7 +247,7 @@ func TestOption_WithRetry(t *testing.T) {
 	}
 
 	retryAmount := 1
-	retryDelay := 200 * time.Millisecond
+	retryDelay := 800 * time.Millisecond
 	startTime := time.Now().UnixNano() / int64(time.Millisecond)
 
 	_ = client.Get(nil, "", WithRetry(retryAmount, retryDelay))
