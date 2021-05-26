@@ -557,9 +557,9 @@ func (m *taskManager) runNextTasks(sortList *MapSorter, effective time.Time) {
 
 		// check if timeout is on, if yes passing the timeout context
 		ctx := context.Background()
+		m.wait.Add(1)
 		if duration := e.GetTimeout(ctx); duration != 0 {
 			go func(e Tasker) {
-				m.wait.Add(1)
 				defer m.wait.Done()
 				ctx, cancelFunc := context.WithTimeout(ctx, duration)
 				defer cancelFunc()
@@ -570,7 +570,6 @@ func (m *taskManager) runNextTasks(sortList *MapSorter, effective time.Time) {
 			}(e)
 		} else {
 			go func(e Tasker) {
-				m.wait.Add(1)
 				defer m.wait.Done()
 				err := e.Run(ctx)
 				if err != nil {
