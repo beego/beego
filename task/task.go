@@ -593,7 +593,7 @@ func (m *taskManager) StopTask() {
 
 // GracefulShutdown wait all task done
 func (m *taskManager) GracefulShutdown() <-chan struct{} {
-	done := make(chan struct{}, 0)
+	done := make(chan struct{})
 	go func() {
 		m.stop <- true
 		m.wait.Wait()
