@@ -560,22 +560,22 @@ func (m *taskManager) runNextTasks(sortList *MapSorter, effective time.Time) {
 		if duration := e.GetTimeout(ctx); duration != 0 {
 			go func(e Tasker) {
 				m.wait.Add(1)
+				defer m.wait.Done()
 				ctx, cancelFunc := context.WithTimeout(ctx, duration)
 				defer cancelFunc()
 				err := e.Run(ctx)
 				if err != nil {
 					log.Printf("tasker.run err: %s\n", err.Error())
 				}
-				m.wait.Done()
 			}(e)
 		} else {
 			go func(e Tasker) {
 				m.wait.Add(1)
+				defer m.wait.Done()
 				err := e.Run(ctx)
 				if err != nil {
 					log.Printf("tasker.run err: %s\n", err.Error())
 				}
-				m.wait.Done()
 			}(e)
 		}
 
