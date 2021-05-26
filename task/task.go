@@ -472,6 +472,11 @@ func ClearTask() {
 	globalTaskManager.ClearTask()
 }
 
+// GracefulShutdown wait all task done
+func GracefulShutdown() <-chan struct{} {
+	return globalTaskManager.GracefulShutdown()
+}
+
 // StartTask start all tasks
 func (m *taskManager) StartTask() {
 	m.taskLock.Lock()
@@ -586,7 +591,7 @@ func (m *taskManager) StopTask() {
 	}()
 }
 
-// StopTask stop all tasks
+// GracefulShutdown wait all task done
 func (m *taskManager) GracefulShutdown() <-chan struct{} {
 	done := make(chan struct{}, 0)
 	go func() {
