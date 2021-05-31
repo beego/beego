@@ -116,6 +116,7 @@ type SessionConfig struct {
 	SessionEnableSidInHTTPHeader bool // enable store/get the sessionId into/from http headers
 	SessionNameInHTTPHeader      string
 	SessionEnableSidInURLQuery   bool // enable get the sessionId from Url Query params
+	SessionIDPrefix              string
 }
 
 // LogConfig holds Log related config
