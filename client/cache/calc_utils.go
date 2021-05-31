@@ -12,6 +12,11 @@ var (
 	ErrNotIntegerType    = berror.Error(NotIntegerType, "item val is not (u)int (u)int32 (u)int64")
 )
 
+const (
+	MinUint32 uint32 = 0
+	MinUint64 uint64 = 0
+)
+
 func incr(originVal interface{}) (interface{}, error) {
 	switch val := originVal.(type) {
 	case int:
@@ -75,12 +80,12 @@ func decr(originVal interface{}) (interface{}, error) {
 		}
 		return val - 1, nil
 	case uint32:
-		if val == 0 {
+		if val == MinUint32 {
 			return nil, ErrDecrementOverflow
 		}
 		return val - 1, nil
 	case uint64:
-		if val == 0 {
+		if val == MinUint64 {
 			return nil, ErrDecrementOverflow
 		}
 		return val - 1, nil
