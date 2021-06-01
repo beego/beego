@@ -120,25 +120,21 @@ func TestOrder_GetColumn(t *testing.T) {
 	}
 }
 
-func TestOrder_GetSort(t *testing.T) {
-	o := Clause(
-		SortDescending(),
-	)
-	if o.GetSort() != Descending {
-		t.Error()
-	}
-}
+func TestSortString(t *testing.T) {
+	template := "got: %s, want: %s"
 
-func TestOrder_IsRaw(t *testing.T) {
-	o1 := Clause()
-	if o1.IsRaw() {
-		t.Error()
+	o1 := Clause(sort(Sort(1)))
+	if o1.SortString() != "ASC" {
+		t.Errorf(template, o1.SortString(), "ASC")
 	}
 
-	o2 := Clause(
-		Raw(),
-	)
-	if !o2.IsRaw() {
-		t.Error()
+	o2 := Clause(sort(Sort(2)))
+	if o2.SortString() != "DESC" {
+		t.Errorf(template, o2.SortString(), "DESC")
+	}
+
+	o3 := Clause(sort(Sort(3)))
+	if o3.SortString() != `` {
+		t.Errorf(template, o3.SortString(), ``)
 	}
 }

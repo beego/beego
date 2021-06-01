@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -175,6 +176,26 @@ func TestCrudTask(t *testing.T) {
 
 	m.ClearTask()
 	assert.Equal(t, 0, len(m.adminTaskList))
+}
+
+func TestGracefulShutdown(t *testing.T) {
+	m := newTaskManager()
+	defer m.ClearTask()
+	waitDone := atomic.Value{}
+	waitDone.Store(false)
+	tk := NewTask("everySecond", "* * * * * *", func(ctx context.Context) error {
+		fmt.Println("hello world")
+		time.Sleep(2 * time.Second)
+		waitDone.Store(true)
+		return nil
+	})
+	m.AddTask("taska", tk)
+	m.StartTask()
+	time.Sleep(1 * time.Second)
+	shutdown := m.GracefulShutdown()
+	assert.False(t, waitDone.Load().(bool))
+	<-shutdown
+	assert.True(t, waitDone.Load().(bool))
 }
 
 func wait(wg *sync.WaitGroup) chan bool {

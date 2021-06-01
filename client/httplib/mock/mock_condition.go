@@ -57,7 +57,7 @@ func NewSimpleCondition(path string, opts ...simpleConditionOption) *SimpleCondi
 }
 
 func (sc *SimpleCondition) Match(ctx context.Context, req *httplib.BeegoHTTPRequest) bool {
-	res := true
+	var res bool
 	if len(sc.path) > 0 {
 		res = sc.matchPath(ctx, req)
 	} else if len(sc.pathReg) > 0 {

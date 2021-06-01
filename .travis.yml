@@ -2,6 +2,8 @@ language: go
 
 go:
   - "1.14.x"
+  - "1.15.x"
+  - "1.16.x"
 services:
   - redis-server
   - mysql
@@ -12,7 +14,7 @@ env:
   global:
     - GO_REPO_FULLNAME="github.com/beego/beego/v2"
   matrix:
-    - ORM_DRIVER=sqlite3   ORM_SOURCE=$TRAVIS_BUILD_DIR/orm_test.db
+    - ORM_DRIVER=sqlite3 ORM_SOURCE=$TRAVIS_BUILD_DIR/orm_test.db
     - ORM_DRIVER=postgres ORM_SOURCE="user=postgres dbname=orm_test sslmode=disable"
     - ORM_DRIVER=mysql export ORM_SOURCE="root:@/orm_test?charset=utf8"
 before_install:

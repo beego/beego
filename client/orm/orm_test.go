@@ -1845,17 +1845,12 @@ func TestRawQueryRow(t *testing.T) {
 		case "id":
 			throwFail(t, AssertIs(id, 1))
 			break
-		case "time":
+		case "time", "datetime":
 			v = v.(time.Time).In(DefaultTimeLoc)
 			value := dataValues[col].(time.Time).In(DefaultTimeLoc)
 			assert.True(t, v.(time.Time).Sub(value) <= time.Second)
 			break
 		case "date":
-		case "datetime":
-			v = v.(time.Time).In(DefaultTimeLoc)
-			value := dataValues[col].(time.Time).In(DefaultTimeLoc)
-			assert.True(t, v.(time.Time).Sub(value) <= time.Second)
-			break
 		default:
 			throwFail(t, AssertIs(v, dataValues[col]))
 		}
@@ -2769,6 +2764,7 @@ func TestStrPkInsert(t *testing.T) {
 		fmt.Println(err)
 		if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego" {
 		} else if err == ErrLastInsertIdUnavailable {
+			return
 		} else {
 			throwFailNow(t, err)
 		}

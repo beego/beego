@@ -1,7 +1,11 @@
 # developing
 - Add template functions eq,lt to support uint and int compare. [4607](https://github.com/beego/beego/pull/4607)
+- Add http client and option func. [4455](https://github.com/beego/beego/issues/4455)
+- Add: Convenient way to generate mock object [4620](https://github.com/beego/beego/issues/4620)
+- Infra: use dependabot to update dependencies. [4623](https://github.com/beego/beego/pull/4623)
 - Lint: use golangci-lint. [4619](https://github.com/beego/beego/pull/4619)
 - Chore: format code. [4615](https://github.com/beego/beego/pull/4615)
+- Test on Go v1.15.x & v1.16.x. [4614](https://github.com/beego/beego/pull/4614)
 - Env: non-empty GOBIN & GOPATH. [4613](https://github.com/beego/beego/pull/4613)
 - Chore: update dependencies. [4611](https://github.com/beego/beego/pull/4611)
 - Update orm_test.go/TestInsertOrUpdate with table-driven. [4609](https://github.com/beego/beego/pull/4609)
@@ -45,10 +49,13 @@
 - Optimize AddAutoPrefix: only register one router in case-insensitive mode. [4582](https://github.com/beego/beego/pull/4582)
 - Init exceptMethod by using reflection. [4583](https://github.com/beego/beego/pull/4583)
 - Deprecated BeeMap and replace all usage with `sync.map` [4616](https://github.com/beego/beego/pull/4616)
+- TaskManager support graceful shutdown [4635](https://github.com/beego/beego/pull/4635)
 
 ## Fix Sonar
 
+- [4624](https://github.com/beego/beego/pull/4624)
 - [4608](https://github.com/beego/beego/pull/4608)
 - [4473](https://github.com/beego/beego/pull/4473)
 - [4474](https://github.com/beego/beego/pull/4474)
 - [4479](https://github.com/beego/beego/pull/4479)
+- [4639](https://github.com/beego/beego/pull/4639)
