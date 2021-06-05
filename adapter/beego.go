@@ -36,10 +36,6 @@ type M web.M
 // Hook function to run
 type hookfunc func() error
 
-var (
-	hooks = make([]hookfunc, 0) // hook function slice to store the hookfunc
-)
-
 // AddAPPStartHook is used to register the hookfunc
 // The hookfuncs will run in beego.Run()
 // such as initiating session , starting middleware , building template, starting admin control and so on.
