@@ -23,7 +23,6 @@ import (
 )
 
 func TestYaml(t *testing.T) {
-
 	var (
 		yamlcontext = `
 "appname": beeapi
@@ -112,5 +111,4 @@ func TestYaml(t *testing.T) {
 	if yamlconf.String("name") != "astaxie" {
 		t.Fatal("get name error")
 	}
-
 }
