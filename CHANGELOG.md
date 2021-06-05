@@ -50,6 +50,7 @@
 - Init exceptMethod by using reflection. [4583](https://github.com/beego/beego/pull/4583)
 - Deprecated BeeMap and replace all usage with `sync.map` [4616](https://github.com/beego/beego/pull/4616)
 - TaskManager support graceful shutdown [4635](https://github.com/beego/beego/pull/4635)
+- Fix lint and format code in adapter/cache dir [4645](https://github.com/beego/beego/pull/4645)
 
 ## Fix Sonar
 
