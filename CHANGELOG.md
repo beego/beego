@@ -2,6 +2,7 @@
 
 - Add http client and option func. [4455](https://github.com/beego/beego/issues/4455)
 - Add: Convenient way to generate mock object [4620](https://github.com/beego/beego/issues/4620)
+- Fix lint and format code in adapter/context dir [4647](https://github.com/beego/beego/pull/4647)
 - Infra: use dependabot to update dependencies. [4623](https://github.com/beego/beego/pull/4623)
 - Lint: use golangci-lint. [4619](https://github.com/beego/beego/pull/4619)
 - Chore: format code. [4615](https://github.com/beego/beego/pull/4615)
