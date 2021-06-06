@@ -124,7 +124,6 @@ func (rc *Cache) IsExist(ctx context.Context, key string) (bool, error) {
 		return true, nil
 	}
 	return false, nil
-
 }
 
 // ClearAll clears all cached items in ssdb.

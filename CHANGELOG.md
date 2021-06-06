@@ -66,4 +66,5 @@
 
 ## Fix lint and format code
 
+- [4651](https://github.com/beego/beego/pull/4651)
 - [4644](https://github.com/beego/beego/pull/4644)
