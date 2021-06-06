@@ -91,7 +91,7 @@ func (fs *FileSessionStore) SessionRelease(ctx context.Context, w http.ResponseW
 	_, err = os.Stat(path.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid))
 	var f *os.File
 	if err == nil {
-		f, err = os.OpenFile(path.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid), os.O_RDWR, 0777)
+		f, err = os.OpenFile(path.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid), os.O_RDWR, 0o777)
 		if err != nil {
 			SLogger.Println(err)
 			return
@@ -140,23 +140,32 @@ func (fp *FileProvider) SessionRead(ctx context.Context, sid string) (Store, err
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()
 
-	err := os.MkdirAll(path.Join(fp.savePath, string(sid[0]), string(sid[1])), 0755)
+	sessionPath := filepath.Join(fp.savePath, string(sid[0]), string(sid[1]))
+	sidPath := filepath.Join(sessionPath, sid)
+	err := os.MkdirAll(sessionPath, 0o755)
 	if err != nil {
 		SLogger.Println(err.Error())
 	}
-	_, err = os.Stat(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid))
 	var f *os.File
-	if err == nil {
-		f, err = os.OpenFile(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid), os.O_RDWR, 0777)
-	} else if os.IsNotExist(err) {
-		f, err = os.Create(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid))
-	} else {
+	_, err = os.Stat(sidPath)
+	switch {
+	case err == nil:
+		f, err = os.OpenFile(sidPath, os.O_RDWR, 0o777)
+		if err != nil {
+			return nil, err
+		}
+	case os.IsNotExist(err):
+		f, err = os.Create(sidPath)
+		if err != nil {
+			return nil, err
+		}
+	default:
 		return nil, err
 	}
 
 	defer f.Close()
 
-	os.Chtimes(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid), time.Now(), time.Now())
+	os.Chtimes(sidPath, time.Now(), time.Now())
 	var kv map[interface{}]interface{}
 	b, err := ioutil.ReadAll(f)
 	if err != nil {
@@ -236,7 +245,7 @@ func (fp *FileProvider) SessionRegenerate(ctx context.Context, oldsid, sid strin
 		return nil, fmt.Errorf("newsid %s exist", newSidFile)
 	}
 
-	err = os.MkdirAll(newPath, 0755)
+	err = os.MkdirAll(newPath, 0o755)
 	if err != nil {
 		SLogger.Println(err.Error())
 	}
@@ -263,7 +272,7 @@ func (fp *FileProvider) SessionRegenerate(ctx context.Context, oldsid, sid strin
 			}
 		}
 
-		ioutil.WriteFile(newSidFile, b, 0777)
+		ioutil.WriteFile(newSidFile, b, 0o777)
 		os.Remove(oldSidFile)
 		os.Chtimes(newSidFile, time.Now(), time.Now())
 		ss := &FileSessionStore{sid: sid, values: kv}

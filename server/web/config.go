@@ -156,7 +156,7 @@ func init() {
 	if err != nil {
 		panic(err)
 	}
-	var filename = "app.conf"
+	filename := "app.conf"
 	if os.Getenv("BEEGO_RUNMODE") != "" {
 		filename = os.Getenv("BEEGO_RUNMODE") + ".app.conf"
 	}
@@ -304,7 +304,6 @@ func parseConfig(appConfigPath string) (err error) {
 // For 1.x, it use assignSingleConfig to parse the file
 // but for 2.x, we use Unmarshaler method
 func assignConfig(ac config.Configer) error {
-
 	parseConfigForV1(ac)
 
 	err := ac.Unmarshaler("", BConfig)
@@ -422,7 +421,6 @@ func assignSingleConfig(p interface{}, ac config.Configer) {
 			// do nothing here
 		}
 	}
-
 }
 
 // LoadAppConfig allow developer to apply a config file

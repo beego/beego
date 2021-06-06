@@ -141,7 +141,7 @@ func TestAdditionalViewPaths(t *testing.T) {
 	dir2file := "file2.tpl"
 
 	genFile := func(dir string, name string, content string) {
-		os.MkdirAll(filepath.Dir(filepath.Join(dir, name)), 0777)
+		os.MkdirAll(filepath.Dir(filepath.Join(dir, name)), 0o777)
 		if f, err := os.Create(filepath.Join(dir, name)); err != nil {
 			t.Fatal(err)
 		} else {
@@ -149,7 +149,6 @@ func TestAdditionalViewPaths(t *testing.T) {
 			f.WriteString(content)
 			f.Close()
 		}
-
 	}
 	genFile(dir1, dir1file, `<div>{{.Content}}</div>`)
 	genFile(dir2, dir2file, `<html>{{.Content}}</html>`)
@@ -216,7 +215,6 @@ func TestBindNoContentType(t *testing.T) {
 }
 
 func TestBindXML(t *testing.T) {
-
 	var s struct {
 		Foo string `xml:"foo"`
 	}

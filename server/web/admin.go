@@ -45,9 +45,7 @@ var beeAdminApp *adminApp
 var FilterMonitorFunc func(string, string, time.Duration, string, int) bool
 
 func init() {
-
 	FilterMonitorFunc = func(string, string, time.Duration, string, int) bool { return true }
-
 }
 
 func list(root string, p interface{}, m M) {
@@ -84,7 +82,6 @@ type adminApp struct {
 
 // Route adds http.HandlerFunc to adminApp with url pattern.
 func (admin *adminApp) Run() {
-
 	// if len(task.AdminTaskList) > 0 {
 	// 	task.StartTask()
 	// }

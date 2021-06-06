@@ -6,8 +6,7 @@ import (
 	"path/filepath"
 )
 
-type FileSystem struct {
-}
+type FileSystem struct{}
 
 func (d FileSystem) Open(name string) (http.File, error) {
 	return os.Open(name)
@@ -17,7 +16,6 @@ func (d FileSystem) Open(name string) (http.File, error) {
 // directory in the tree, including root. All errors that arise visiting files
 // and directories are filtered by walkFn.
 func Walk(fs http.FileSystem, root string, walkFn filepath.WalkFunc) error {
-
 	f, err := fs.Open(root)
 	if err != nil {
 		return err

@@ -5,10 +5,8 @@
 - Infra: use dependabot to update dependencies. [4623](https://github.com/beego/beego/pull/4623)
 - Lint: use golangci-lint. [4619](https://github.com/beego/beego/pull/4619)
 - Chore: format code. [4615](https://github.com/beego/beego/pull/4615)
-- Fix lint and format code in client/httplib dir [4652](https://github.com/beego/beego/pull/4652)
 - Test on Go v1.15.x & v1.16.x. [4614](https://github.com/beego/beego/pull/4614)
 - Env: non-empty GOBIN & GOPATH. [4613](https://github.com/beego/beego/pull/4613)
-- Fix lint and format code in client/orm dir [4653](https://github.com/beego/beego/pull/4653)
 - Chore: update dependencies. [4611](https://github.com/beego/beego/pull/4611)
 - Update orm_test.go/TestInsertOrUpdate with table-driven. [4609](https://github.com/beego/beego/pull/4609)
 - Add: Resp() method for web.Controller. [4588](https://github.com/beego/beego/pull/4588)
@@ -49,10 +47,8 @@
 - Feature issue #4402 finish router get example. [4416](https://github.com/beego/beego/pull/4416)
 - Proposal: Add Bind() method for `web.Controller` [4491](https://github.com/beego/beego/issues/4579)
 - Optimize AddAutoPrefix: only register one router in case-insensitive mode. [4582](https://github.com/beego/beego/pull/4582)
-- Fix lint and format code in task dir [4655](https://github.com/beego/beego/pull/4655)
 - Init exceptMethod by using reflection. [4583](https://github.com/beego/beego/pull/4583)
 - Deprecated BeeMap and replace all usage with `sync.map` [4616](https://github.com/beego/beego/pull/4616)
-- Fix lint and format code in core dir [4654](https://github.com/beego/beego/pull/4654)
 - TaskManager support graceful shutdown [4635](https://github.com/beego/beego/pull/4635)
 
 ## Fix Sonar
@@ -66,10 +62,15 @@
 
 ## Fix lint and format code
 
-- [4651](https://github.com/beego/beego/pull/4651)
 - [4644](https://github.com/beego/beego/pull/4644)
 - [4645](https://github.com/beego/beego/pull/4645)
 - [4646](https://github.com/beego/beego/pull/4646)
 - [4647](https://github.com/beego/beego/pull/4647)
 - [4648](https://github.com/beego/beego/pull/4648)
 - [4649](https://github.com/beego/beego/pull/4649)
+- [4651](https://github.com/beego/beego/pull/4651)
+- [4652](https://github.com/beego/beego/pull/4652)
+- [4653](https://github.com/beego/beego/pull/4653)
+- [4654](https://github.com/beego/beego/pull/4654)
+- [4655](https://github.com/beego/beego/pull/4655)
+- [4656](https://github.com/beego/beego/pull/4656)

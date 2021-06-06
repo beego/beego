@@ -58,84 +58,84 @@ func CfgSessionIdPrefix(prefix string) ManagerConfigOpt {
 	}
 }
 
-//CfgSetCookie whether set `Set-Cookie` header in HTTP response
+// CfgSetCookie whether set `Set-Cookie` header in HTTP response
 func CfgSetCookie(enable bool) ManagerConfigOpt {
 	return func(config *ManagerConfig) {
 		config.EnableSetCookie = enable
 	}
 }
 
-//CfgGcLifeTime set session gc lift time
+// CfgGcLifeTime set session gc lift time
 func CfgGcLifeTime(lifeTime int64) ManagerConfigOpt {
 	return func(config *ManagerConfig) {
 		config.Gclifetime = lifeTime
 	}
 }
 
-//CfgMaxLifeTime set session lift time
+// CfgMaxLifeTime set session lift time
 func CfgMaxLifeTime(lifeTime int64) ManagerConfigOpt {
 	return func(config *ManagerConfig) {
 		config.Maxlifetime = lifeTime
 	}
 }
 
-//CfgGcLifeTime set session lift time
+// CfgGcLifeTime set session lift time
 func CfgCookieLifeTime(lifeTime int) ManagerConfigOpt {
 	return func(config *ManagerConfig) {
 		config.CookieLifeTime = lifeTime
 	}
 }
 
-//CfgProviderConfig configure session provider
+// CfgProviderConfig configure session provider
 func CfgProviderConfig(providerConfig string) ManagerConfigOpt {
 	return func(config *ManagerConfig) {
 		config.ProviderConfig = providerConfig
 	}
 }
 
-//CfgDomain set cookie domain
+// CfgDomain set cookie domain
 func CfgDomain(domain string) ManagerConfigOpt {
 	return func(config *ManagerConfig) {
 		config.Domain = domain
 	}
 }
 
-//CfgSessionIdInHTTPHeader enable session id in http header
+// CfgSessionIdInHTTPHeader enable session id in http header
 func CfgSessionIdInHTTPHeader(enable bool) ManagerConfigOpt {
 	return func(config *ManagerConfig) {
 		config.EnableSidInHTTPHeader = enable
 	}
 }
 
-//CfgSetSessionNameInHTTPHeader set key of session id in http header
+// CfgSetSessionNameInHTTPHeader set key of session id in http header
 func CfgSetSessionNameInHTTPHeader(name string) ManagerConfigOpt {
 	return func(config *ManagerConfig) {
 		config.SessionNameInHTTPHeader = name
 	}
 }
 
-//EnableSidInURLQuery enable session id in query string
+// EnableSidInURLQuery enable session id in query string
 func CfgEnableSidInURLQuery(enable bool) ManagerConfigOpt {
 	return func(config *ManagerConfig) {
 		config.EnableSidInURLQuery = enable
 	}
 }
 
-//DisableHTTPOnly set HTTPOnly for http.Cookie
+// DisableHTTPOnly set HTTPOnly for http.Cookie
 func CfgHTTPOnly(HTTPOnly bool) ManagerConfigOpt {
 	return func(config *ManagerConfig) {
 		config.DisableHTTPOnly = !HTTPOnly
 	}
 }
 
-//CfgSecure set Secure for http.Cookie
+// CfgSecure set Secure for http.Cookie
 func CfgSecure(Enable bool) ManagerConfigOpt {
 	return func(config *ManagerConfig) {
 		config.Secure = Enable
 	}
 }
 
-//CfgSameSite set http.SameSite
+// CfgSameSite set http.SameSite
 func CfgSameSite(sameSite http.SameSite) ManagerConfigOpt {
 	return func(config *ManagerConfig) {
 		config.CookieSameSite = sameSite
