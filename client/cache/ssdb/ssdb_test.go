@@ -15,7 +15,6 @@ import (
 )
 
 func TestSsdbcacheCache(t *testing.T) {
-
 	ssdbAddr := os.Getenv("SSDB_ADDR")
 	if ssdbAddr == "" {
 		ssdbAddr = "127.0.0.1:8888"
