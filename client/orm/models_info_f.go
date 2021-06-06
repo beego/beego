@@ -387,7 +387,6 @@ checkType:
 					fi.timePrecision = &v
 				}
 			}
-
 		}
 
 		if attrs["auto_now"] {

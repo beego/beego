@@ -55,7 +55,6 @@ func (o *OrmStub) Clear() {
 
 func (o *OrmStub) FilterChain(next orm.Filter) orm.Filter {
 	return func(ctx context.Context, inv *orm.Invocation) []interface{} {
-
 		ms := mockFromCtx(ctx)
 		ms = append(ms, o.ms...)
 

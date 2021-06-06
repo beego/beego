@@ -32,41 +32,37 @@ const (
 	formatDateTime = "2006-01-02 15:04:05"
 )
 
-var (
-	// ErrMissPK missing pk error
-	ErrMissPK = errors.New("missed pk value")
-)
+// ErrMissPK missing pk error
+var ErrMissPK = errors.New("missed pk value")
 
-var (
-	operators = map[string]bool{
-		"exact":       true,
-		"iexact":      true,
-		"strictexact": true,
-		"contains":    true,
-		"icontains":   true,
-		// "regex":       true,
-		// "iregex":      true,
-		"gt":          true,
-		"gte":         true,
-		"lt":          true,
-		"lte":         true,
-		"eq":          true,
-		"nq":          true,
-		"ne":          true,
-		"startswith":  true,
-		"endswith":    true,
-		"istartswith": true,
-		"iendswith":   true,
-		"in":          true,
-		"between":     true,
-		// "year":        true,
-		// "month":       true,
-		// "day":         true,
-		// "week_day":    true,
-		"isnull": true,
-		// "search":      true,
-	}
-)
+var operators = map[string]bool{
+	"exact":       true,
+	"iexact":      true,
+	"strictexact": true,
+	"contains":    true,
+	"icontains":   true,
+	// "regex":       true,
+	// "iregex":      true,
+	"gt":          true,
+	"gte":         true,
+	"lt":          true,
+	"lte":         true,
+	"eq":          true,
+	"nq":          true,
+	"ne":          true,
+	"startswith":  true,
+	"endswith":    true,
+	"istartswith": true,
+	"iendswith":   true,
+	"in":          true,
+	"between":     true,
+	// "year":        true,
+	// "month":       true,
+	// "day":         true,
+	// "week_day":    true,
+	"isnull": true,
+	// "search":      true,
+}
 
 // an instance of dbBaser interface/
 type dbBase struct {
@@ -537,7 +533,6 @@ func (d *dbBase) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *modelInfo,
 	names := make([]string, 0, len(mi.fields.dbcols)-1)
 	Q := d.ins.TableQuote()
 	values, _, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, &names, a.TZ)
-
 	if err != nil {
 		return 0, err
 	}
@@ -934,7 +929,6 @@ func (d *dbBase) DeleteBatch(ctx context.Context, q dbQuerier, qs *querySet, mi 
 
 // read related records.
 func (d *dbBase) ReadBatch(ctx context.Context, q dbQuerier, qs *querySet, mi *modelInfo, cond *Condition, container interface{}, tz *time.Location, cols []string) (int64, error) {
-
 	val := reflect.ValueOf(container)
 	ind := reflect.Indirect(val)
 
@@ -1435,12 +1429,10 @@ end:
 	}
 
 	return value, nil
-
 }
 
 // set one value to struct column field.
 func (d *dbBase) setFieldValue(fi *fieldInfo, value interface{}, field reflect.Value) (interface{}, error) {
-
 	fieldType := fi.fieldType
 	isNative := !fi.isFielder
 
@@ -1632,7 +1624,6 @@ setValue:
 
 // query sql, read values , save to *[]ParamList.
 func (d *dbBase) ReadValues(ctx context.Context, q dbQuerier, qs *querySet, mi *modelInfo, cond *Condition, exprs []string, container interface{}, tz *time.Location) (int64, error) {
-
 	var (
 		maps  []Params
 		lists []ParamsList

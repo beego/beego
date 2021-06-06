@@ -193,22 +193,24 @@ type DataNull struct {
 	DateTimePtr       *time.Time      `orm:"null"`
 }
 
-type String string
-type Boolean bool
-type Byte byte
-type Rune rune
-type Int int
-type Int8 int8
-type Int16 int16
-type Int32 int32
-type Int64 int64
-type Uint uint
-type Uint8 uint8
-type Uint16 uint16
-type Uint32 uint32
-type Uint64 uint64
-type Float32 float64
-type Float64 float64
+type (
+	String  string
+	Boolean bool
+	Byte    byte
+	Rune    rune
+	Int     int
+	Int8    int8
+	Int16   int16
+	Int32   int32
+	Int64   int64
+	Uint    uint
+	Uint8   uint8
+	Uint16  uint16
+	Uint32  uint32
+	Uint64  uint64
+	Float32 float64
+	Float64 float64
+)
 
 type DataCustom struct {
 	ID      int `orm:"column(id)"`
@@ -486,8 +488,7 @@ var (
 	dDbBaser dbBaser
 )
 
-var (
-	helpinfo = `need driver and source!
+var helpinfo = `need driver and source!
 
 	Default DB Drivers.
 
@@ -530,7 +531,6 @@ var (
 	go test -v github.com/beego/beego/v2/pgk/orm
 
 	`
-)
 
 func init() {
 	// Debug, _ = StrTo(DBARGS.Debug).Bool()
@@ -542,7 +542,6 @@ func init() {
 	}
 
 	err := RegisterDataBase("default", DBARGS.Driver, DBARGS.Source, MaxIdleConnections(20))
-
 	if err != nil {
 		panic(fmt.Sprintf("can not register database: %v", err))
 	}
@@ -551,5 +550,4 @@ func init() {
 	if alias.Driver == DRMySQL {
 		alias.Engine = "INNODB"
 	}
-
 }

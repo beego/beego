@@ -116,7 +116,6 @@ func (m *Migration) UniCol(uni, name string) *Column {
 
 // ForeignCol creates a new foreign column and returns the instance of column
 func (m *Migration) ForeignCol(colname, foreigncol, foreigntable string) (foreign *Foreign) {
-
 	foreign = &Foreign{ForeignColumn: foreigncol, ForeignTable: foreigntable}
 	foreign.Name = colname
 	m.AddForeign(foreign)
@@ -153,7 +152,6 @@ func (c *Column) SetAuto(inc bool) *Column {
 func (c *Column) SetNullable(null bool) *Column {
 	if null {
 		c.Null = ""
-
 	} else {
 		c.Null = "NOT NULL"
 	}
@@ -184,7 +182,6 @@ func (c *Column) SetDataType(dataType string) *Column {
 func (c *RenameColumn) SetOldNullable(null bool) *RenameColumn {
 	if null {
 		c.OldNull = ""
-
 	} else {
 		c.OldNull = "NOT NULL"
 	}
@@ -219,7 +216,6 @@ func (c *Column) SetPrimary(m *Migration) *Column {
 
 // AddColumnsToUnique adds the columns to Unique Struct
 func (unique *Unique) AddColumnsToUnique(columns ...*Column) *Unique {
-
 	unique.Columns = append(unique.Columns, columns...)
 
 	return unique
@@ -227,7 +223,6 @@ func (unique *Unique) AddColumnsToUnique(columns ...*Column) *Unique {
 
 // AddColumns adds columns to m struct
 func (m *Migration) AddColumns(columns ...*Column) *Migration {
-
 	m.Columns = append(m.Columns, columns...)
 
 	return m
