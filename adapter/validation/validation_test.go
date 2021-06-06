@@ -50,7 +50,6 @@ func TestMin(t *testing.T) {
 
 	assert.False(t, valid.Min(-1, 0, "min0").Ok)
 	assert.True(t, valid.Min(1, 0, "min0").Ok)
-
 }
 
 func TestMax(t *testing.T) {
@@ -502,5 +501,4 @@ func TestCanSkipAlso(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.True(t, b)
-
 }

@@ -1,12 +1,9 @@
 # developing
 
-- Fix lint and format code in adapter/config dir [4646](https://github.com/beego/beego/pull/4646)
 - Add http client and option func. [4455](https://github.com/beego/beego/issues/4455)
 - Add: Convenient way to generate mock object [4620](https://github.com/beego/beego/issues/4620)
-- Fix lint and format code in adapter/context dir [4647](https://github.com/beego/beego/pull/4647)
 - Infra: use dependabot to update dependencies. [4623](https://github.com/beego/beego/pull/4623)
 - Lint: use golangci-lint. [4619](https://github.com/beego/beego/pull/4619)
-- Fix lint and format code in adapter/httplib dir [4648](https://github.com/beego/beego/pull/4648)
 - Chore: format code. [4615](https://github.com/beego/beego/pull/4615)
 - Test on Go v1.15.x & v1.16.x. [4614](https://github.com/beego/beego/pull/4614)
 - Env: non-empty GOBIN & GOPATH. [4613](https://github.com/beego/beego/pull/4613)
@@ -54,7 +51,6 @@
 - Init exceptMethod by using reflection. [4583](https://github.com/beego/beego/pull/4583)
 - Deprecated BeeMap and replace all usage with `sync.map` [4616](https://github.com/beego/beego/pull/4616)
 - TaskManager support graceful shutdown [4635](https://github.com/beego/beego/pull/4635)
-- Fix lint and format code in adapter/cache dir [4645](https://github.com/beego/beego/pull/4645)
 
 ## Fix Sonar
 
@@ -69,3 +65,8 @@
 
 - [4651](https://github.com/beego/beego/pull/4651)
 - [4644](https://github.com/beego/beego/pull/4644)
+- [4645](https://github.com/beego/beego/pull/4645)
+- [4646](https://github.com/beego/beego/pull/4646)
+- [4647](https://github.com/beego/beego/pull/4647)
+- [4648](https://github.com/beego/beego/pull/4648)
+- [4649](https://github.com/beego/beego/pull/4649)

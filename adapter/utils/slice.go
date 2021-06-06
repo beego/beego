@@ -19,6 +19,7 @@ import (
 )
 
 type reducetype func(interface{}) interface{}
+
 type filtertype func(interface{}) bool
 
 // InSlice checks given string in string slice or not.
