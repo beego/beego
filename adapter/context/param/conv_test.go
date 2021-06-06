@@ -25,7 +25,6 @@ import (
 
 // Demo is used to test, it's empty
 func Demo(i int) {
-
 }
 
 func TestConvertParams(t *testing.T) {
