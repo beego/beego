@@ -1,5 +1,6 @@
 # developing
 
+- Fix lint and format code in adapter/config dir [4646](https://github.com/beego/beego/pull/4646)
 - Add http client and option func. [4455](https://github.com/beego/beego/issues/4455)
 - Add: Convenient way to generate mock object [4620](https://github.com/beego/beego/issues/4620)
 - Infra: use dependabot to update dependencies. [4623](https://github.com/beego/beego/pull/4623)
