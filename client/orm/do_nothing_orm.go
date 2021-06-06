@@ -27,8 +27,7 @@ import (
 
 var _ Ormer = new(DoNothingOrm)
 
-type DoNothingOrm struct {
-}
+type DoNothingOrm struct{}
 
 func (d *DoNothingOrm) Read(md interface{}, cols ...string) error {
 	return nil

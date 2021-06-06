@@ -28,8 +28,10 @@ const (
 	TxNameKey = "TxName"
 )
 
-var _ Ormer = new(filterOrmDecorator)
-var _ TxOrmer = new(filterOrmDecorator)
+var (
+	_ Ormer   = new(filterOrmDecorator)
+	_ TxOrmer = new(filterOrmDecorator)
+)
 
 type filterOrmDecorator struct {
 	ormer
@@ -120,7 +122,6 @@ func (f *filterOrmDecorator) ReadOrCreate(md interface{}, col1 string, cols ...s
 }
 
 func (f *filterOrmDecorator) ReadOrCreateWithCtx(ctx context.Context, md interface{}, col1 string, cols ...string) (bool, int64, error) {
-
 	mi, _ := modelCache.getByMd(md)
 	inv := &Invocation{
 		Method:      "ReadOrCreateWithCtx",
@@ -143,7 +144,6 @@ func (f *filterOrmDecorator) LoadRelated(md interface{}, name string, args ...ut
 }
 
 func (f *filterOrmDecorator) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...utils.KV) (int64, error) {
-
 	mi, _ := modelCache.getByMd(md)
 	inv := &Invocation{
 		Method:      "LoadRelatedWithCtx",
@@ -162,7 +162,6 @@ func (f *filterOrmDecorator) LoadRelatedWithCtx(ctx context.Context, md interfac
 }
 
 func (f *filterOrmDecorator) QueryM2M(md interface{}, name string) QueryM2Mer {
-
 	mi, _ := modelCache.getByMd(md)
 	inv := &Invocation{
 		Method:      "QueryM2M",

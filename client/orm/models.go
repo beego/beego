@@ -32,9 +32,7 @@ const (
 	defaultStructTagDelim = ";"
 )
 
-var (
-	modelCache = NewModelCacheHandler()
-)
+var modelCache = NewModelCacheHandler()
 
 // model info collection
 type _modelCache struct {
@@ -332,7 +330,6 @@ end:
 
 // register register models to model cache
 func (mc *_modelCache) register(prefixOrSuffixStr string, prefixOrSuffix bool, models ...interface{}) (err error) {
-
 	for _, model := range models {
 		val := reflect.ValueOf(model)
 		typ := reflect.Indirect(val).Type()

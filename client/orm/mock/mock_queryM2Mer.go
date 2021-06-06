@@ -22,8 +22,7 @@ import (
 
 // DoNothingQueryM2Mer do nothing
 // use it to build mock orm.QueryM2Mer
-type DoNothingQueryM2Mer struct {
-}
+type DoNothingQueryM2Mer struct{}
 
 func (d *DoNothingQueryM2Mer) AddWithCtx(ctx context.Context, i ...interface{}) (int64, error) {
 	return 0, nil

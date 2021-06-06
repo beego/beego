@@ -10,6 +10,7 @@
 - Chore: format code. [4615](https://github.com/beego/beego/pull/4615)
 - Test on Go v1.15.x & v1.16.x. [4614](https://github.com/beego/beego/pull/4614)
 - Env: non-empty GOBIN & GOPATH. [4613](https://github.com/beego/beego/pull/4613)
+- Fix lint and format code in client/orm dir [4653](https://github.com/beego/beego/pull/4653)
 - Chore: update dependencies. [4611](https://github.com/beego/beego/pull/4611)
 - Update orm_test.go/TestInsertOrUpdate with table-driven. [4609](https://github.com/beego/beego/pull/4609)
 - Add: Resp() method for web.Controller. [4588](https://github.com/beego/beego/pull/4588)

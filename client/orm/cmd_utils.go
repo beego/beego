@@ -126,9 +126,7 @@ func getColumnAddQuery(al *alias, fi *fieldInfo) string {
 
 // Get string value for the attribute "DEFAULT" for the CREATE, ALTER commands
 func getColumnDefault(fi *fieldInfo) string {
-	var (
-		v, t, d string
-	)
+	var v, t, d string
 
 	// Skip default attribute if field is in relations
 	if fi.rel || fi.reverse {

@@ -842,7 +842,6 @@ The program—and web server—godoc processes Go source files to extract docume
 			throwFailNow(t, AssertIs(nums, num))
 		}
 	}
-
 }
 
 func TestCustomField(t *testing.T) {
@@ -1235,7 +1234,6 @@ func TestOne(t *testing.T) {
 
 	err = qs.Filter("user_name", "nothing").One(&user)
 	throwFail(t, AssertIs(err, ErrNoRows))
-
 }
 
 func TestValues(t *testing.T) {
@@ -1285,8 +1283,8 @@ func TestValuesList(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 3))
 	if num == 3 {
-		throwFail(t, AssertIs(list[0][1], "slene")) //username
-		throwFail(t, AssertIs(list[2][10], nil))    //profile
+		throwFail(t, AssertIs(list[0][1], "slene")) // username
+		throwFail(t, AssertIs(list[2][10], nil))    // profile
 	}
 
 	num, err = qs.OrderBy("Id").ValuesList(&list, "UserName", "Profile__Age")
@@ -2219,7 +2217,7 @@ func TestTransaction(t *testing.T) {
 	to, err := o.Begin()
 	throwFail(t, err)
 
-	var names = []string{"1", "2", "3"}
+	names := []string{"1", "2", "3"}
 
 	var tag Tag
 	tag.Name = names[0]
@@ -2262,7 +2260,6 @@ func TestTransaction(t *testing.T) {
 	num, err = o.QueryTable("tag").Filter("name", "commit").Delete()
 	assert.Nil(t, err)
 	assert.Equal(t, int64(1), num)
-
 }
 
 func TestTxOrmRollbackUnlessCommit(t *testing.T) {
