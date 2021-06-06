@@ -95,7 +95,6 @@ func (c *connWriter) WriteMsg(lm *LogMsg) error {
 
 // Flush implementing method. empty.
 func (c *connWriter) Flush() {
-
 }
 
 // Destroy destroy connection writer and close tcp listener.

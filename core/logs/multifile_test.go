@@ -60,7 +60,7 @@ func TestFiles_1(t *testing.T) {
 				lineNum++
 			}
 		}
-		var expected = 1
+		expected := 1
 		if fn == "" {
 			expected = LevelDebug + 1
 		}
@@ -74,5 +74,4 @@ func TestFiles_1(t *testing.T) {
 		}
 		os.Remove(file)
 	}
-
 }

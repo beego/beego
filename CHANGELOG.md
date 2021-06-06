@@ -50,6 +50,7 @@
 - Optimize AddAutoPrefix: only register one router in case-insensitive mode. [4582](https://github.com/beego/beego/pull/4582)
 - Init exceptMethod by using reflection. [4583](https://github.com/beego/beego/pull/4583)
 - Deprecated BeeMap and replace all usage with `sync.map` [4616](https://github.com/beego/beego/pull/4616)
+- Fix lint and format code in core dir [4654](https://github.com/beego/beego/pull/4654)
 - TaskManager support graceful shutdown [4635](https://github.com/beego/beego/pull/4635)
 
 ## Fix Sonar
