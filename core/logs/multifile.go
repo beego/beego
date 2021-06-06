@@ -45,7 +45,6 @@ var levelNames = [...]string{"emergency", "alert", "critical", "error", "warning
 //	}
 
 func (f *multiFileLogWriter) Init(config string) error {
-
 	writer := newFileWriter().(*fileLogWriter)
 	err := writer.Init(config)
 	if err != nil {

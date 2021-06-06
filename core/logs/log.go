@@ -92,8 +92,10 @@ type Logger interface {
 	SetFormatter(f LogFormatter)
 }
 
-var adapters = make(map[string]newLoggerFunc)
-var levelPrefix = [LevelDebug + 1]string{"[M]", "[A]", "[C]", "[E]", "[W]", "[N]", "[I]", "[D]"}
+var (
+	adapters    = make(map[string]newLoggerFunc)
+	levelPrefix = [LevelDebug + 1]string{"[M]", "[A]", "[C]", "[E]", "[W]", "[N]", "[I]", "[D]"}
+)
 
 // Register makes a log provide available by the provided name.
 // If Register is called twice with the same name or if driver is nil,
@@ -201,7 +203,6 @@ func (bl *BeeLogger) setLogger(adapterName string, configs ...string) error {
 	}
 
 	err := lg.Init(config)
-
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "logs.BeeLogger.SetLogger: "+err.Error())
 		return err

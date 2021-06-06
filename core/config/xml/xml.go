@@ -102,7 +102,6 @@ func (c *ConfigContainer) Sub(key string) (config.Configer, error) {
 	return &ConfigContainer{
 		data: sub,
 	}, nil
-
 }
 
 func (c *ConfigContainer) sub(key string) (map[string]interface{}, error) {
@@ -170,7 +169,6 @@ func (c *ConfigContainer) DefaultInt64(key string, defaultVal int64) int64 {
 		return defaultVal
 	}
 	return v
-
 }
 
 // Float returns the float value for a given key.

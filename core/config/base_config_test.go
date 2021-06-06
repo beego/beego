@@ -66,7 +66,6 @@ func newBaseConfier(str1 string) *BaseConfiger {
 			} else {
 				return "", errors.New("mock error")
 			}
-
 		},
 	}
 }

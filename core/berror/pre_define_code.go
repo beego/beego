@@ -46,6 +46,7 @@ func init() {
 func goCodeBlock(code string) string {
 	return codeBlock("go", code)
 }
+
 func codeBlock(lan string, code string) string {
 	return fmt.Sprintf("```%s\n%s\n```", lan, code)
 }

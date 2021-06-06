@@ -27,7 +27,7 @@ func RandomCreateBytes(n int, alphabets ...byte) []byte {
 	if len(alphabets) == 0 {
 		alphabets = alphaNum
 	}
-	var bytes = make([]byte, n)
+	bytes := make([]byte, n)
 	var randBy bool
 	if num, err := rand.Read(bytes); num != n || err != nil {
 		r.Seed(time.Now().UnixNano())

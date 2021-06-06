@@ -18,8 +18,7 @@ import (
 	"sync"
 )
 
-
-//deprecated
+// deprecated
 type BeeMap struct {
 	lock *sync.RWMutex
 	bm   map[interface{}]interface{}
