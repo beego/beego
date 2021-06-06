@@ -8,6 +8,7 @@
 - Lint: use golangci-lint. [4619](https://github.com/beego/beego/pull/4619)
 - Fix lint and format code in adapter/httplib dir [4648](https://github.com/beego/beego/pull/4648)
 - Chore: format code. [4615](https://github.com/beego/beego/pull/4615)
+- Fix lint and format code in client/httplib dir [4652](https://github.com/beego/beego/pull/4652)
 - Test on Go v1.15.x & v1.16.x. [4614](https://github.com/beego/beego/pull/4614)
 - Env: non-empty GOBIN & GOPATH. [4613](https://github.com/beego/beego/pull/4613)
 - Chore: update dependencies. [4611](https://github.com/beego/beego/pull/4611)
