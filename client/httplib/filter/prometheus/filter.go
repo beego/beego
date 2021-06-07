@@ -32,11 +32,12 @@ type FilterChainBuilder struct {
 	RunMode    string
 }
 
-var summaryVec prometheus.ObserverVec
-var initSummaryVec sync.Once
+var (
+	summaryVec     prometheus.ObserverVec
+	initSummaryVec sync.Once
+)
 
 func (builder *FilterChainBuilder) FilterChain(next httplib.Filter) httplib.Filter {
-
 	initSummaryVec.Do(func() {
 		summaryVec = prometheus.NewSummaryVec(prometheus.SummaryOpts{
 			Name:      "beego",

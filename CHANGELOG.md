@@ -5,6 +5,7 @@
 - Infra: use dependabot to update dependencies. [4623](https://github.com/beego/beego/pull/4623)
 - Lint: use golangci-lint. [4619](https://github.com/beego/beego/pull/4619)
 - Chore: format code. [4615](https://github.com/beego/beego/pull/4615)
+- Fix lint and format code in client/httplib dir [4652](https://github.com/beego/beego/pull/4652)
 - Test on Go v1.15.x & v1.16.x. [4614](https://github.com/beego/beego/pull/4614)
 - Env: non-empty GOBIN & GOPATH. [4613](https://github.com/beego/beego/pull/4613)
 - Fix lint and format code in client/orm dir [4653](https://github.com/beego/beego/pull/4653)
