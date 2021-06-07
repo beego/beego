@@ -137,7 +137,6 @@ type Task struct {
 
 // NewTask add new task with name, time and func
 func NewTask(tname string, spec string, f TaskFunc, opts ...Option) *Task {
-
 	task := &Task{
 		Taskname: tname,
 		DoFunc:   f,
@@ -351,7 +350,6 @@ func (t *Task) parseSpec(spec string) *Schedule {
 
 // Next set schedule to next time
 func (s *Schedule) Next(t time.Time) time.Time {
-
 	// Start at the earliest possible time (the upcoming second).
 	t = t.Add(1*time.Second - time.Duration(t.Nanosecond())*time.Nanosecond)
 
@@ -548,7 +546,7 @@ func (m *taskManager) markManagerStop() {
 // runNextTasks it runs next task which next run time is equal to effective
 func (m *taskManager) runNextTasks(sortList *MapSorter, effective time.Time) {
 	// Run every entry whose next time was this effective time.
-	var i = 0
+	i := 0
 	for _, e := range sortList.Vals {
 		i++
 		if e.GetNext(context.Background()) != effective {
@@ -617,7 +615,6 @@ func (m *taskManager) AddTask(taskname string, t Tasker) {
 			m.changed <- true
 		}()
 	}
-
 }
 
 // DeleteTask delete task with name
@@ -690,6 +687,7 @@ func (ms *MapSorter) Less(i, j int) bool {
 	}
 	return ms.Vals[i].GetNext(context.Background()).Before(ms.Vals[j].GetNext(context.Background()))
 }
+
 func (ms *MapSorter) Swap(i, j int) {
 	ms.Vals[i], ms.Vals[j] = ms.Vals[j], ms.Vals[i]
 	ms.Keys[i], ms.Keys[j] = ms.Keys[j], ms.Keys[i]
@@ -708,7 +706,6 @@ func getField(field string, r bounds) uint64 {
 // getRange returns the bits indicated by the given expression:
 //   number | number "-" number [ "/" number ]
 func getRange(expr string, r bounds) uint64 {
-
 	var (
 		start, end, step uint
 		rangeAndStep     = strings.Split(expr, "/")
