@@ -8,7 +8,7 @@ embedding.
 
 ![architecture](https://cdn.nlark.com/yuque/0/2020/png/755700/1607857489109-1e267fce-d65f-4c5e-b915-5c475df33c58.png)
 
-Beego is compos of four parts:
+Beego is composed of four parts:
 
 1. Base modules: including log module, config module, governor module;
 2. Task: is used for running timed tasks or periodic tasks;
