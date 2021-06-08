@@ -210,7 +210,6 @@ func (c *JSONConfigContainer) String(key string) (string, error) {
 // DefaultString returns the string value for a given key.
 // if err != nil return defaultval
 func (c *JSONConfigContainer) DefaultString(key string, defaultVal string) string {
-	// TODO FIXME should not use "" to replace non existence
 	if v, err := c.String(key); v != "" && err == nil {
 		return v
 	}
