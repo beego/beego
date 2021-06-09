@@ -520,49 +520,19 @@ func (bl *BeeLogger) Debug(format string, v ...interface{}) {
 // Warn Log WARN level message.
 // compatibility alias for Warning()
 func (bl *BeeLogger) Warn(format string, v ...interface{}) {
-	if LevelWarn > bl.level {
-		return
-	}
-	lm := &LogMsg{
-		Level: LevelWarn,
-		Msg:   format,
-		When:  time.Now(),
-		Args:  v,
-	}
-
-	bl.writeMsg(lm)
+	bl.Warning(format, v...)
 }
 
 // Info Log INFO level message.
 // compatibility alias for Informational()
 func (bl *BeeLogger) Info(format string, v ...interface{}) {
-	if LevelInfo > bl.level {
-		return
-	}
-	lm := &LogMsg{
-		Level: LevelInfo,
-		Msg:   format,
-		When:  time.Now(),
-		Args:  v,
-	}
-
-	bl.writeMsg(lm)
+	bl.Informational(format, v...)
 }
 
 // Trace Log TRACE level message.
 // compatibility alias for Debug()
 func (bl *BeeLogger) Trace(format string, v ...interface{}) {
-	if LevelDebug > bl.level {
-		return
-	}
-	lm := &LogMsg{
-		Level: LevelDebug,
-		Msg:   format,
-		When:  time.Now(),
-		Args:  v,
-	}
-
-	bl.writeMsg(lm)
+	bl.Debug(format, v...)
 }
 
 // Flush flush all chan data.
