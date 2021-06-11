@@ -23,9 +23,7 @@ import (
 	"github.com/beego/beego/v2/server/web/context"
 )
 
-var (
-	allowSuffixExt = []string{".json", ".xml", ".html"}
-)
+var allowSuffixExt = []string{".json", ".xml", ".html"}
 
 // Tree has three elements: FixRouter/wildcard/leaves
 // fixRouter stores Fixed Router

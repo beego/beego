@@ -14,11 +14,9 @@ import (
 	"github.com/beego/beego/v2/core/admin"
 )
 
-type SampleDatabaseCheck struct {
-}
+type SampleDatabaseCheck struct{}
 
-type SampleCacheCheck struct {
-}
+type SampleCacheCheck struct{}
 
 func (dc *SampleDatabaseCheck) Check() error {
 	return nil
@@ -111,7 +109,6 @@ func TestWriteJSON(t *testing.T) {
 
 	decodedBody := []int{}
 	err := json.NewDecoder(w.Body).Decode(&decodedBody)
-
 	if err != nil {
 		t.Fatal("Could not decode response body into slice.")
 	}
@@ -147,7 +144,6 @@ func TestHealthCheckHandlerDefault(t *testing.T) {
 	if !strings.Contains(w.Body.String(), "database") {
 		t.Errorf("Expected 'database' in generated template.")
 	}
-
 }
 
 func TestBuildHealthCheckResponseList(t *testing.T) {
@@ -180,13 +176,10 @@ func TestBuildHealthCheckResponseList(t *testing.T) {
 				t.Errorf("expected %s to be in the response %v", field, response)
 			}
 		}
-
 	}
-
 }
 
 func TestHealthCheckHandlerReturnsJSON(t *testing.T) {
-
 	admin.AddHealthCheck("database", &SampleDatabaseCheck{})
 	admin.AddHealthCheck("cache", &SampleCacheCheck{})
 
@@ -245,5 +238,4 @@ func TestHealthCheckHandlerReturnsJSON(t *testing.T) {
 
 	assert.Equal(t, expectedResponseBody[0], database)
 	assert.Equal(t, expectedResponseBody[1], cache)
-
 }

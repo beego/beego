@@ -23,13 +23,13 @@ import (
 	"time"
 )
 
-const sid = "Session_id"
-const sidNew = "Session_id_new"
-const sessionPath = "./_session_runtime"
-
-var (
-	mutex sync.Mutex
+const (
+	sid         = "Session_id"
+	sidNew      = "Session_id_new"
+	sessionPath = "./_session_runtime"
 )
+
+var mutex sync.Mutex
 
 func TestFileProviderSessionInit(t *testing.T) {
 	mutex.Lock()

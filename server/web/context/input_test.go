@@ -203,8 +203,8 @@ func TestParams(t *testing.T) {
 	if val := inp.Param("p2"); val != "val2_ver2" {
 		t.Fatalf("Input.Param wrong value: %s, expected %s", val, "val1_ver2")
 	}
-
 }
+
 func BenchmarkQuery(b *testing.B) {
 	beegoInput := NewInput()
 	beegoInput.Context = NewContext()

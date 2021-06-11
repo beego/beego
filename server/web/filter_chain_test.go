@@ -28,7 +28,6 @@ import (
 )
 
 func TestControllerRegister_InsertFilterChain(t *testing.T) {
-
 	InsertFilterChain("/*", func(next FilterFunc) FilterFunc {
 		return func(ctx *context.Context) {
 			ctx.Output.Header("filter", "filter-chain")

@@ -299,7 +299,6 @@ func TestParseFormTag(t *testing.T) {
 	if !(name == "name" && !required) {
 		t.Errorf("Form Tag containing only name and not required was not correctly parsed.")
 	}
-
 }
 
 func TestMapGet(t *testing.T) {

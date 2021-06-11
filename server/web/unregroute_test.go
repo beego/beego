@@ -27,13 +27,14 @@ import (
 // that embed parent routers.
 //
 
-const contentRootOriginal = "ok-original-root"
-const contentLevel1Original = "ok-original-level1"
-const contentLevel2Original = "ok-original-level2"
-
-const contentRootReplacement = "ok-replacement-root"
-const contentLevel1Replacement = "ok-replacement-level1"
-const contentLevel2Replacement = "ok-replacement-level2"
+const (
+	contentRootOriginal      = "ok-original-root"
+	contentLevel1Original    = "ok-original-level1"
+	contentLevel2Original    = "ok-original-level2"
+	contentRootReplacement   = "ok-replacement-root"
+	contentLevel1Replacement = "ok-replacement-level1"
+	contentLevel2Replacement = "ok-replacement-level2"
+)
 
 // TestPreUnregController will supply content for the original routes,
 // before unregistration
@@ -44,9 +45,11 @@ type TestPreUnregController struct {
 func (tc *TestPreUnregController) GetFixedRoot() {
 	tc.Ctx.Output.Body([]byte(contentRootOriginal))
 }
+
 func (tc *TestPreUnregController) GetFixedLevel1() {
 	tc.Ctx.Output.Body([]byte(contentLevel1Original))
 }
+
 func (tc *TestPreUnregController) GetFixedLevel2() {
 	tc.Ctx.Output.Body([]byte(contentLevel2Original))
 }
@@ -60,9 +63,11 @@ type TestPostUnregController struct {
 func (tc *TestPostUnregController) GetFixedRoot() {
 	tc.Ctx.Output.Body([]byte(contentRootReplacement))
 }
+
 func (tc *TestPostUnregController) GetFixedLevel1() {
 	tc.Ctx.Output.Body([]byte(contentLevel1Replacement))
 }
+
 func (tc *TestPostUnregController) GetFixedLevel2() {
 	tc.Ctx.Output.Body([]byte(contentLevel2Replacement))
 }
@@ -71,8 +76,7 @@ func (tc *TestPostUnregController) GetFixedLevel2() {
 // In this case, for a path like "/level1/level2" or "/level1", those actions
 // should remain intact, and continue to serve the original content.
 func TestUnregisterFixedRouteRoot(t *testing.T) {
-
-	var method = "GET"
+	method := "GET"
 
 	handler := NewControllerRegister()
 	handler.Add("/", &TestPreUnregController{}, WithRouterMethods(&TestPreUnregController{}, "get:GetFixedRoot"))
@@ -106,15 +110,13 @@ func TestUnregisterFixedRouteRoot(t *testing.T) {
 
 	// Test level 2 (expect no change from the original)
 	testHelperFnContentCheck(t, handler, "Test level 2 (expect no change from the original)", method, "/level1/level2", contentLevel2Original)
-
 }
 
 // TestUnregisterFixedRouteLevel1 replaces just the "/level1" fixed route path.
 // In this case, for a path like "/level1/level2" or "/", those actions
 // should remain intact, and continue to serve the original content.
 func TestUnregisterFixedRouteLevel1(t *testing.T) {
-
-	var method = "GET"
+	method := "GET"
 
 	handler := NewControllerRegister()
 	handler.Add("/", &TestPreUnregController{}, WithRouterMethods(&TestPreUnregController{}, "get:GetFixedRoot"))
@@ -156,15 +158,13 @@ func TestUnregisterFixedRouteLevel1(t *testing.T) {
 
 	// Test level 2 (expect no change from the original)
 	testHelperFnContentCheck(t, handler, "Test level 2 (expect no change from the original)", method, "/level1/level2", contentLevel2Original)
-
 }
 
 // TestUnregisterFixedRouteLevel2 unregisters just the "/level1/level2" fixed
 // route path. In this case, for a path like "/level1" or "/", those actions
 // should remain intact, and continue to serve the original content.
 func TestUnregisterFixedRouteLevel2(t *testing.T) {
-
-	var method = "GET"
+	method := "GET"
 
 	handler := NewControllerRegister()
 	handler.Add("/", &TestPreUnregController{}, WithRouterMethods(&TestPreUnregController{}, "get:GetFixedRoot"))
@@ -206,7 +206,6 @@ func TestUnregisterFixedRouteLevel2(t *testing.T) {
 
 	// Test level 2 (expect change)
 	testHelperFnContentCheck(t, handler, "Test level 2 (expect change)", method, "/level1/level2", contentLevel2Replacement)
-
 }
 
 func testHelperFnContentCheck(t *testing.T, handler *ControllerRegister,
