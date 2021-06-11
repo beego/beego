@@ -74,3 +74,5 @@
 - [4654](https://github.com/beego/beego/pull/4654)
 - [4655](https://github.com/beego/beego/pull/4655)
 - [4656](https://github.com/beego/beego/pull/4656)
+- [4660](https://github.com/beego/beego/pull/4660)
+

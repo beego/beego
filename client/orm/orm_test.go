@@ -2760,6 +2760,7 @@ func TestStrPkInsert(t *testing.T) {
 	if err != nil {
 		fmt.Println(err)
 		if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego" {
+			return
 		} else if err == ErrLastInsertIdUnavailable {
 			return
 		} else {
