@@ -1,0 +1,124 @@
+name: Test
+on:
+  push:
+    branches:
+      - master
+      - develop
+    paths:
+      - "**/*.go"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/test.yml"
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches:
+      - master
+      - develop
+    paths:
+      - "**/*.go"
+      - "go.mod"
+      - "go.sum"
+      - ".github/workflows/test.yml"
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        go-version: [1.14, 1.15, 1.16]
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:latest
+        ports:
+          - 6379:6379
+      memcached:
+        image: memcached:latest
+        ports:
+          - 11211:11211
+      ssdb:
+        image: wendal/ssdb:latest
+        ports:
+          - 8888:8888
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: orm_test
+        ports:
+          - 5432/tcp
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Checkout codebase
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Run etcd
+        env:
+          ETCD_VERSION: v3.4.16
+        run: |
+          rm -rf /tmp/etcd-data.tmp
+          mkdir -p /tmp/etcd-data.tmp
+          docker rmi gcr.io/etcd-development/etcd:${ETCD_VERSION} || true && \
+          docker run -d \
+            -p 2379:2379 \
+            -p 2380:2380 \
+            --mount type=bind,source=/tmp/etcd-data.tmp,destination=/etcd-data \
+            --name etcd-gcr-${ETCD_VERSION} \
+            gcr.io/etcd-development/etcd:${ETCD_VERSION} \
+            /usr/local/bin/etcd \
+            --name s1 \
+            --data-dir /etcd-data \
+            --listen-client-urls http://0.0.0.0:2379 \
+            --advertise-client-urls http://0.0.0.0:2379 \
+            --listen-peer-urls http://0.0.0.0:2380 \
+            --initial-advertise-peer-urls http://0.0.0.0:2380 \
+            --initial-cluster s1=http://0.0.0.0:2380 \
+            --initial-cluster-token tkn \
+            --initial-cluster-state new
+          docker exec etcd-gcr-${ETCD_VERSION} /bin/sh -c "ETCDCTL_API=3 /usr/local/bin/etcdctl put current.float 1.23"
+          docker exec etcd-gcr-${ETCD_VERSION} /bin/sh -c "ETCDCTL_API=3 /usr/local/bin/etcdctl put current.bool true"
+          docker exec etcd-gcr-${ETCD_VERSION} /bin/sh -c "ETCDCTL_API=3 /usr/local/bin/etcdctl put current.int 11"
+          docker exec etcd-gcr-${ETCD_VERSION} /bin/sh -c "ETCDCTL_API=3 /usr/local/bin/etcdctl put current.string hello"
+          docker exec etcd-gcr-${ETCD_VERSION} /bin/sh -c "ETCDCTL_API=3 /usr/local/bin/etcdctl put current.serialize.name test"
+          docker exec etcd-gcr-${ETCD_VERSION} /bin/sh -c "ETCDCTL_API=3 /usr/local/bin/etcdctl put sub.sub.key1 sub.sub.key"
+
+      - name: Run ORM tests on sqlite3
+        env:
+          GOPATH: /home/runner/go
+          ORM_DRIVER: sqlite3
+          ORM_SOURCE: /tmp/sqlite3/orm_test.db
+        run: |
+          mkdir -p /tmp/sqlite3 && touch /tmp/sqlite3/orm_test.db
+          go test -coverprofile=coverage_sqlite3.txt -covermode=atomic $(go list ./... | grep client/orm)
+
+      - name: Run ORM tests on postgres
+        env:
+          GOPATH: /home/runner/go
+          ORM_DRIVER: postgres
+          ORM_SOURCE: host=localhost port=${{ job.services.postgres.ports[5432] }} user=postgres password=postgres dbname=orm_test sslmode=disable
+        run: |
+          go test -coverprofile=coverage_postgres.txt -covermode=atomic $(go list ./... | grep client/orm)
+
+      - name: Run tests on mysql
+        env:
+          GOPATH: /home/runner/go
+          ORM_DRIVER: mysql
+          ORM_SOURCE: root:root@/orm_test?charset=utf8
+        run: |
+          sudo systemctl start mysql
+          mysql -u root -proot -e 'create database orm_test;'
+          go test -coverprofile=coverage.txt -covermode=atomic ./...
+
+      - name: Upload codecov
+        env:
+          CODECOV_TOKEN: 4f4bc484-32a8-43b7-9f48-20966bd48ceb
+        run: bash <(curl -s https://codecov.io/bash)

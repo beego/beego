@@ -1,5 +1,6 @@
 # developing
 
+- Migrate tests to GitHub Actions. [4663](https://github.com/beego/beego/issues/4663)
 - Add http client and option func. [4455](https://github.com/beego/beego/issues/4455)
 - Add: Convenient way to generate mock object [4620](https://github.com/beego/beego/issues/4620)
 - Infra: use dependabot to update dependencies. [4623](https://github.com/beego/beego/pull/4623)
@@ -75,4 +76,3 @@
 - [4655](https://github.com/beego/beego/pull/4655)
 - [4656](https://github.com/beego/beego/pull/4656)
 - [4660](https://github.com/beego/beego/pull/4660)
-
