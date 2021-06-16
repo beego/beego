@@ -80,13 +80,10 @@ func (d *DefaultValueFilterChainBuilder) FilterChain(next orm.Filter) orm.Filter
 		switch inv.Method {
 		case "Insert", "InsertWithCtx":
 			d.handleInsert(ctx, inv)
-			break
 		case "InsertOrUpdate", "InsertOrUpdateWithCtx":
 			d.handleInsertOrUpdate(ctx, inv)
-			break
 		case "InsertMulti", "InsertMultiWithCtx":
 			d.handleInsertMulti(ctx, inv)
-			break
 		}
 		return next(ctx, inv)
 	}
