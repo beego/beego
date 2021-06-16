@@ -88,7 +88,6 @@ func newConsole() *consoleWriter {
 // Init initianlizes the console logger.
 // jsonConfig must be in the format '{"level":LevelTrace}'
 func (c *consoleWriter) Init(config string) error {
-
 	if len(config) == 0 {
 		return nil
 	}
@@ -116,12 +115,10 @@ func (c *consoleWriter) WriteMsg(lm *LogMsg) error {
 
 // Destroy implementing method. empty.
 func (c *consoleWriter) Destroy() {
-
 }
 
 // Flush implementing method. empty.
 func (c *consoleWriter) Flush() {
-
 }
 
 func init() {

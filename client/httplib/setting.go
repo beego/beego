@@ -55,6 +55,11 @@ func SetDefaultSetting(setting BeegoHTTPSettings) {
 	defaultSetting = setting
 }
 
+// GetDefaultSetting return current default setting
+func GetDefaultSetting() BeegoHTTPSettings {
+	return defaultSetting
+}
+
 var defaultSetting = BeegoHTTPSettings{
 	UserAgent:        "beegoServer",
 	ConnectTimeout:   60 * time.Second,
@@ -63,8 +68,10 @@ var defaultSetting = BeegoHTTPSettings{
 	FilterChains:     make([]FilterChain, 0, 4),
 }
 
-var defaultCookieJar http.CookieJar
-var settingMutex sync.Mutex
+var (
+	defaultCookieJar http.CookieJar
+	settingMutex     sync.Mutex
+)
 
 // AddDefaultFilter add a new filter into defaultSetting
 // Be careful about using this method if you invoke SetDefaultSetting somewhere

@@ -72,5 +72,4 @@ func TestRedisSentinel(t *testing.T) {
 	assert.Nil(t, password)
 
 	sess.SessionRelease(w)
-
 }

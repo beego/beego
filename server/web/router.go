@@ -82,8 +82,7 @@ type FilterHandler interface {
 }
 
 // default log filter static file will not show
-type logFilter struct {
-}
+type logFilter struct{}
 
 func (l *logFilter) Filter(ctx *beecontext.Context) bool {
 	requestPath := path.Clean(ctx.Request.URL.Path)
@@ -780,7 +779,6 @@ func (p *ControllerRegister) InsertFilter(pattern string, pos int, filter Filter
 //     }
 // }
 func (p *ControllerRegister) InsertFilterChain(pattern string, chain FilterChain, opts ...FilterOpt) {
-
 	opts = append(opts, WithCaseSensitive(p.cfg.RouterCaseSensitive))
 	p.filterChains = append(p.filterChains, filterChainConfig{
 		pattern: pattern,
@@ -957,7 +955,6 @@ func (p *ControllerRegister) execFilter(context *beecontext.Context, urlPath str
 
 // Implement http.Handler interface.
 func (p *ControllerRegister) ServeHTTP(rw http.ResponseWriter, r *http.Request) {
-
 	ctx := p.GetContext()
 
 	ctx.Reset(rw, r)
@@ -1295,7 +1292,7 @@ func (p *ControllerRegister) handleParamResponse(context *beecontext.Context, ex
 
 // FindRouter Find Router info for URL
 func (p *ControllerRegister) FindRouter(context *beecontext.Context) (routerInfo *ControllerInfo, isFind bool) {
-	var urlPath = context.Input.URL()
+	urlPath := context.Input.URL()
 	if !p.cfg.RouterCaseSensitive {
 		urlPath = strings.ToLower(urlPath)
 	}

@@ -124,7 +124,6 @@ type BeegoHTTPRequest struct {
 	setting BeegoHTTPSettings
 	resp    *http.Response
 	body    []byte
-	dump    []byte
 }
 
 // GetRequest returns the request object
@@ -199,7 +198,7 @@ func (b *BeegoHTTPRequest) SetHost(host string) *BeegoHTTPRequest {
 // SetProtocolVersion sets the protocol version for incoming requests.
 // Client requests always use HTTP/1.1
 func (b *BeegoHTTPRequest) SetProtocolVersion(vers string) *BeegoHTTPRequest {
-	if len(vers) == 0 {
+	if vers == "" {
 		vers = "HTTP/1.1"
 	}
 
@@ -401,7 +400,6 @@ func (b *BeegoHTTPRequest) handleFileToBody(bodyWriter *multipart.Writer, formna
 			"could not create form file, formname: %s, filename: %s", formname, filename))
 	}
 	fh, err := os.Open(filename)
-
 	if err != nil {
 		logs.Error(errFmt, berror.Wrapf(err, ReadFileFailed, "could not open this file %s", filename))
 	}
@@ -511,18 +509,16 @@ func (b *BeegoHTTPRequest) buildTrans() http.RoundTripper {
 			DialContext:         TimeoutDialerCtx(b.setting.ConnectTimeout, b.setting.ReadWriteTimeout),
 			MaxIdleConnsPerHost: 100,
 		}
-	} else {
+	} else if t, ok := trans.(*http.Transport); ok {
 		// if b.transport is *http.Transport then set the settings.
-		if t, ok := trans.(*http.Transport); ok {
-			if t.TLSClientConfig == nil {
-				t.TLSClientConfig = b.setting.TLSClientConfig
-			}
-			if t.Proxy == nil {
-				t.Proxy = b.setting.Proxy
-			}
-			if t.DialContext == nil {
-				t.DialContext = TimeoutDialerCtx(b.setting.ConnectTimeout, b.setting.ReadWriteTimeout)
-			}
+		if t.TLSClientConfig == nil {
+			t.TLSClientConfig = b.setting.TLSClientConfig
+		}
+		if t.Proxy == nil {
+			t.Proxy = b.setting.Proxy
+		}
+		if t.DialContext == nil {
+			t.DialContext = TimeoutDialerCtx(b.setting.ConnectTimeout, b.setting.ReadWriteTimeout)
 		}
 	}
 	return trans
@@ -654,6 +650,40 @@ func (b *BeegoHTTPRequest) ToYAML(v interface{}) error {
 	}
 	return berror.Wrap(yaml.Unmarshal(data, v),
 		UnmarshalYAMLResponseToObjectFailed, "unmarshal yaml body to object failed.")
+}
+
+// ToValue attempts to resolve the response body to value using an existing method.
+// Calls Response inner.
+// If response header contain Content-Type, func will call ToJSON\ToXML\ToYAML.
+// Else it will try to parse body as json\yaml\xml, If all attempts fail, an error will be returned
+func (b *BeegoHTTPRequest) ToValue(value interface{}) error {
+	if value == nil {
+		return nil
+	}
+
+	contentType := strings.Split(b.resp.Header.Get(contentTypeKey), ";")[0]
+	// try to parse it as content type
+	switch contentType {
+	case "application/json":
+		return b.ToJSON(value)
+	case "text/xml", "application/xml":
+		return b.ToXML(value)
+	case "text/yaml", "application/x-yaml", "application/x+yaml":
+		return b.ToYAML(value)
+	}
+
+	// try to parse it anyway
+	if err := b.ToJSON(value); err == nil {
+		return nil
+	}
+	if err := b.ToYAML(value); err == nil {
+		return nil
+	}
+	if err := b.ToXML(value); err == nil {
+		return nil
+	}
+
+	return berror.Error(UnmarshalResponseToObjectFailed, "unmarshal body to object failed.")
 }
 
 // Response executes request client gets response manually.

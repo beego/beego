@@ -101,9 +101,11 @@ type ormBase struct {
 	db    dbQuerier
 }
 
-var _ DQL = new(ormBase)
-var _ DML = new(ormBase)
-var _ DriverGetter = new(ormBase)
+var (
+	_ DQL          = new(ormBase)
+	_ DML          = new(ormBase)
+	_ DriverGetter = new(ormBase)
+)
 
 // get model info and model reflect value
 func (o *ormBase) getMiInd(md interface{}, needPtr bool) (mi *modelInfo, ind reflect.Value) {
@@ -133,6 +135,7 @@ func (o *ormBase) getFieldInfo(mi *modelInfo, name string) *fieldInfo {
 func (o *ormBase) Read(md interface{}, cols ...string) error {
 	return o.ReadWithCtx(context.Background(), md, cols...)
 }
+
 func (o *ormBase) ReadWithCtx(ctx context.Context, md interface{}, cols ...string) error {
 	mi, ind := o.getMiInd(md, true)
 	return o.alias.DbBaser.Read(ctx, o.db, mi, ind, o.alias.TZ, cols, false)
@@ -142,6 +145,7 @@ func (o *ormBase) ReadWithCtx(ctx context.Context, md interface{}, cols ...strin
 func (o *ormBase) ReadForUpdate(md interface{}, cols ...string) error {
 	return o.ReadForUpdateWithCtx(context.Background(), md, cols...)
 }
+
 func (o *ormBase) ReadForUpdateWithCtx(ctx context.Context, md interface{}, cols ...string) error {
 	mi, ind := o.getMiInd(md, true)
 	return o.alias.DbBaser.Read(ctx, o.db, mi, ind, o.alias.TZ, cols, true)
@@ -151,6 +155,7 @@ func (o *ormBase) ReadForUpdateWithCtx(ctx context.Context, md interface{}, cols
 func (o *ormBase) ReadOrCreate(md interface{}, col1 string, cols ...string) (bool, int64, error) {
 	return o.ReadOrCreateWithCtx(context.Background(), md, col1, cols...)
 }
+
 func (o *ormBase) ReadOrCreateWithCtx(ctx context.Context, md interface{}, col1 string, cols ...string) (bool, int64, error) {
 	cols = append([]string{col1}, cols...)
 	mi, ind := o.getMiInd(md, true)
@@ -177,6 +182,7 @@ func (o *ormBase) ReadOrCreateWithCtx(ctx context.Context, md interface{}, col1 
 func (o *ormBase) Insert(md interface{}) (int64, error) {
 	return o.InsertWithCtx(context.Background(), md)
 }
+
 func (o *ormBase) InsertWithCtx(ctx context.Context, md interface{}) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
 	id, err := o.alias.DbBaser.Insert(ctx, o.db, mi, ind, o.alias.TZ)
@@ -204,6 +210,7 @@ func (o *ormBase) setPk(mi *modelInfo, ind reflect.Value, id int64) {
 func (o *ormBase) InsertMulti(bulk int, mds interface{}) (int64, error) {
 	return o.InsertMultiWithCtx(context.Background(), bulk, mds)
 }
+
 func (o *ormBase) InsertMultiWithCtx(ctx context.Context, bulk int, mds interface{}) (int64, error) {
 	var cnt int64
 
@@ -242,6 +249,7 @@ func (o *ormBase) InsertMultiWithCtx(ctx context.Context, bulk int, mds interfac
 func (o *ormBase) InsertOrUpdate(md interface{}, colConflictAndArgs ...string) (int64, error) {
 	return o.InsertOrUpdateWithCtx(context.Background(), md, colConflictAndArgs...)
 }
+
 func (o *ormBase) InsertOrUpdateWithCtx(ctx context.Context, md interface{}, colConflitAndArgs ...string) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
 	id, err := o.alias.DbBaser.InsertOrUpdate(ctx, o.db, mi, ind, o.alias, colConflitAndArgs...)
@@ -259,6 +267,7 @@ func (o *ormBase) InsertOrUpdateWithCtx(ctx context.Context, md interface{}, col
 func (o *ormBase) Update(md interface{}, cols ...string) (int64, error) {
 	return o.UpdateWithCtx(context.Background(), md, cols...)
 }
+
 func (o *ormBase) UpdateWithCtx(ctx context.Context, md interface{}, cols ...string) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
 	return o.alias.DbBaser.Update(ctx, o.db, mi, ind, o.alias.TZ, cols)
@@ -269,6 +278,7 @@ func (o *ormBase) UpdateWithCtx(ctx context.Context, md interface{}, cols ...str
 func (o *ormBase) Delete(md interface{}, cols ...string) (int64, error) {
 	return o.DeleteWithCtx(context.Background(), md, cols...)
 }
+
 func (o *ormBase) DeleteWithCtx(ctx context.Context, md interface{}, cols ...string) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
 	num, err := o.alias.DbBaser.Delete(ctx, o.db, mi, ind, o.alias.TZ, cols)
@@ -313,6 +323,7 @@ func (o *ormBase) QueryM2MWithCtx(_ context.Context, md interface{}, name string
 func (o *ormBase) LoadRelated(md interface{}, name string, args ...utils.KV) (int64, error) {
 	return o.LoadRelatedWithCtx(context.Background(), md, name, args...)
 }
+
 func (o *ormBase) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...utils.KV) (int64, error) {
 	_, fi, ind, qs := o.queryRelated(md, name)
 
@@ -482,6 +493,7 @@ func (o *ormBase) QueryTableWithCtx(_ context.Context, ptrStructOrTableName inte
 func (o *ormBase) Raw(query string, args ...interface{}) RawSeter {
 	return o.RawWithCtx(context.Background(), query, args...)
 }
+
 func (o *ormBase) RawWithCtx(ctx context.Context, query string, args ...interface{}) RawSeter {
 	return newRawSet(o, query, args)
 }
@@ -571,7 +583,7 @@ func doTxTemplate(o TxBeginner, ctx context.Context, opts *sql.TxOptions,
 			}
 		}
 	}()
-	var taskTxOrm = _txOrm
+	taskTxOrm := _txOrm
 	err = task(ctx, taskTxOrm)
 	panicked = false
 	return err

@@ -28,8 +28,8 @@ func TestPrint(t *testing.T) {
 }
 
 func TestPrintPoint(t *testing.T) {
-	var v1 = new(mytype)
-	var v2 = new(mytype)
+	v1 := new(mytype)
+	v2 := new(mytype)
 
 	v1.prev = nil
 	v1.next = v2

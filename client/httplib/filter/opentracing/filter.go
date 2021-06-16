@@ -35,9 +35,7 @@ type FilterChainBuilder struct {
 }
 
 func (builder *FilterChainBuilder) FilterChain(next httplib.Filter) httplib.Filter {
-
 	return func(ctx context.Context, req *httplib.BeegoHTTPRequest) (*http.Response, error) {
-
 		method := req.GetRequest().Method
 
 		operationName := method + "#" + req.GetRequest().URL.String()

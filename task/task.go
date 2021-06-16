@@ -37,6 +37,7 @@ type taskManager struct {
 	stop          chan bool
 	changed       chan bool
 	started       bool
+	wait          sync.WaitGroup
 }
 
 func newTaskManager() *taskManager {
@@ -136,7 +137,6 @@ type Task struct {
 
 // NewTask add new task with name, time and func
 func NewTask(tname string, spec string, f TaskFunc, opts ...Option) *Task {
-
 	task := &Task{
 		Taskname: tname,
 		DoFunc:   f,
@@ -350,7 +350,6 @@ func (t *Task) parseSpec(spec string) *Schedule {
 
 // Next set schedule to next time
 func (s *Schedule) Next(t time.Time) time.Time {
-
 	// Start at the earliest possible time (the upcoming second).
 	t = t.Add(1*time.Second - time.Duration(t.Nanosecond())*time.Nanosecond)
 
@@ -471,6 +470,11 @@ func ClearTask() {
 	globalTaskManager.ClearTask()
 }
 
+// GracefulShutdown wait all task done
+func GracefulShutdown() <-chan struct{} {
+	return globalTaskManager.GracefulShutdown()
+}
+
 // StartTask start all tasks
 func (m *taskManager) StartTask() {
 	m.taskLock.Lock()
@@ -508,7 +512,7 @@ func (m *taskManager) run() {
 
 		select {
 		case now = <-time.After(effective.Sub(now)): // wait for effective time
-			runNextTasks(sortList, effective)
+			m.runNextTasks(sortList, effective)
 			continue
 		case <-m.changed: // tasks have been changed, set all tasks run again now
 			now = time.Now().Local()
@@ -540,9 +544,9 @@ func (m *taskManager) markManagerStop() {
 }
 
 // runNextTasks it runs next task which next run time is equal to effective
-func runNextTasks(sortList *MapSorter, effective time.Time) {
+func (m *taskManager) runNextTasks(sortList *MapSorter, effective time.Time) {
 	// Run every entry whose next time was this effective time.
-	var i = 0
+	i := 0
 	for _, e := range sortList.Vals {
 		i++
 		if e.GetNext(context.Background()) != effective {
@@ -551,8 +555,10 @@ func runNextTasks(sortList *MapSorter, effective time.Time) {
 
 		// check if timeout is on, if yes passing the timeout context
 		ctx := context.Background()
+		m.wait.Add(1)
 		if duration := e.GetTimeout(ctx); duration != 0 {
 			go func(e Tasker) {
+				defer m.wait.Done()
 				ctx, cancelFunc := context.WithTimeout(ctx, duration)
 				defer cancelFunc()
 				err := e.Run(ctx)
@@ -562,6 +568,7 @@ func runNextTasks(sortList *MapSorter, effective time.Time) {
 			}(e)
 		} else {
 			go func(e Tasker) {
+				defer m.wait.Done()
 				err := e.Run(ctx)
 				if err != nil {
 					log.Printf("tasker.run err: %s\n", err.Error())
@@ -581,6 +588,17 @@ func (m *taskManager) StopTask() {
 	}()
 }
 
+// GracefulShutdown wait all task done
+func (m *taskManager) GracefulShutdown() <-chan struct{} {
+	done := make(chan struct{})
+	go func() {
+		m.stop <- true
+		m.wait.Wait()
+		close(done)
+	}()
+	return done
+}
+
 // AddTask add task with name
 func (m *taskManager) AddTask(taskname string, t Tasker) {
 	isChanged := false
@@ -597,7 +615,6 @@ func (m *taskManager) AddTask(taskname string, t Tasker) {
 			m.changed <- true
 		}()
 	}
-
 }
 
 // DeleteTask delete task with name
@@ -670,6 +687,7 @@ func (ms *MapSorter) Less(i, j int) bool {
 	}
 	return ms.Vals[i].GetNext(context.Background()).Before(ms.Vals[j].GetNext(context.Background()))
 }
+
 func (ms *MapSorter) Swap(i, j int) {
 	ms.Vals[i], ms.Vals[j] = ms.Vals[j], ms.Vals[i]
 	ms.Keys[i], ms.Keys[j] = ms.Keys[j], ms.Keys[i]
@@ -688,7 +706,6 @@ func getField(field string, r bounds) uint64 {
 // getRange returns the bits indicated by the given expression:
 //   number | number "-" number [ "/" number ]
 func getRange(expr string, r bounds) uint64 {
-
 	var (
 		start, end, step uint
 		rangeAndStep     = strings.Split(expr, "/")

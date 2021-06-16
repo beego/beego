@@ -302,7 +302,6 @@ func (c *ConfigContainer) DefaultStrings(key string, defaultVal []string) []stri
 
 // GetSection returns map for the given section
 func (c *ConfigContainer) GetSection(section string) (map[string]string, error) {
-
 	if v, ok := c.data[section]; ok {
 		return v.(map[string]string), nil
 	}
@@ -335,7 +334,6 @@ func (c *ConfigContainer) DIY(key string) (v interface{}, err error) {
 }
 
 func (c *ConfigContainer) getData(key string) (interface{}, error) {
-
 	if len(key) == 0 {
 		return nil, errors.New("key is empty")
 	}

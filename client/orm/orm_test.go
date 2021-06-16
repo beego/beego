@@ -842,7 +842,6 @@ The program—and web server—godoc processes Go source files to extract docume
 			throwFailNow(t, AssertIs(nums, num))
 		}
 	}
-
 }
 
 func TestCustomField(t *testing.T) {
@@ -1235,7 +1234,6 @@ func TestOne(t *testing.T) {
 
 	err = qs.Filter("user_name", "nothing").One(&user)
 	throwFail(t, AssertIs(err, ErrNoRows))
-
 }
 
 func TestValues(t *testing.T) {
@@ -1285,8 +1283,8 @@ func TestValuesList(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 3))
 	if num == 3 {
-		throwFail(t, AssertIs(list[0][1], "slene")) //username
-		throwFail(t, AssertIs(list[2][10], nil))    //profile
+		throwFail(t, AssertIs(list[0][1], "slene")) // username
+		throwFail(t, AssertIs(list[2][10], nil))    // profile
 	}
 
 	num, err = qs.OrderBy("Id").ValuesList(&list, "UserName", "Profile__Age")
@@ -1845,17 +1843,12 @@ func TestRawQueryRow(t *testing.T) {
 		case "id":
 			throwFail(t, AssertIs(id, 1))
 			break
-		case "time":
+		case "time", "datetime":
 			v = v.(time.Time).In(DefaultTimeLoc)
 			value := dataValues[col].(time.Time).In(DefaultTimeLoc)
 			assert.True(t, v.(time.Time).Sub(value) <= time.Second)
 			break
 		case "date":
-		case "datetime":
-			v = v.(time.Time).In(DefaultTimeLoc)
-			value := dataValues[col].(time.Time).In(DefaultTimeLoc)
-			assert.True(t, v.(time.Time).Sub(value) <= time.Second)
-			break
 		default:
 			throwFail(t, AssertIs(v, dataValues[col]))
 		}
@@ -2224,7 +2217,7 @@ func TestTransaction(t *testing.T) {
 	to, err := o.Begin()
 	throwFail(t, err)
 
-	var names = []string{"1", "2", "3"}
+	names := []string{"1", "2", "3"}
 
 	var tag Tag
 	tag.Name = names[0]
@@ -2267,7 +2260,6 @@ func TestTransaction(t *testing.T) {
 	num, err = o.QueryTable("tag").Filter("name", "commit").Delete()
 	assert.Nil(t, err)
 	assert.Equal(t, int64(1), num)
-
 }
 
 func TestTxOrmRollbackUnlessCommit(t *testing.T) {
@@ -2768,7 +2760,9 @@ func TestStrPkInsert(t *testing.T) {
 	if err != nil {
 		fmt.Println(err)
 		if err.Error() == "postgres version must 9.5 or higher" || err.Error() == "`sqlite3` nonsupport InsertOrUpdate in beego" {
+			return
 		} else if err == ErrLastInsertIdUnavailable {
+			return
 		} else {
 			throwFailNow(t, err)
 		}

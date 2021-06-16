@@ -119,7 +119,6 @@ func (e *EtcdConfiger) Sub(key string) (config.Configer, error) {
 
 // TODO remove this before release v2.0.0
 func (e *EtcdConfiger) OnChange(key string, fn func(value string)) {
-
 	buildOptsFunc := func() []clientv3.OpOption {
 		return []clientv3.OpOption{}
 	}
@@ -144,11 +143,9 @@ func (e *EtcdConfiger) OnChange(key string, fn func(value string)) {
 			rch = e.client.Watch(context.Background(), e.prefix+key, buildOptsFunc()...)
 		}
 	}()
-
 }
 
-type EtcdConfigerProvider struct {
-}
+type EtcdConfigerProvider struct{}
 
 // Parse = ParseData([]byte(key))
 // key must be json

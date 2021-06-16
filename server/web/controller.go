@@ -51,7 +51,7 @@ var (
 const (
 	bytePerKb    = 1024
 	copyBufferKb = 32
-	filePerm     = 0666
+	filePerm     = 0o666
 )
 
 func init() {
@@ -250,7 +250,8 @@ func (c *Controller) Bind(obj interface{}) error {
 		return c.BindJson(obj)
 	}
 	i, l := 0, len(ct[0])
-	for ; i < l && ct[0][i] != ';'; i++ {
+	for i < l && ct[0][i] != ';' {
+		i++
 	}
 	switch ct[0][0:i] {
 	case "application/json":

@@ -29,8 +29,10 @@ import (
 	"github.com/beego/beego/v2/core/utils"
 )
 
-var startTime = time.Now()
-var pid int
+var (
+	startTime = time.Now()
+	pid       int
+)
 
 func init() {
 	pid = os.Getpid()
@@ -105,7 +107,6 @@ func PrintGCSummary(w io.Writer) {
 }
 
 func printGC(memStats *runtime.MemStats, gcstats *debug.GCStats, w io.Writer) {
-
 	if gcstats.NumGC > 0 {
 		lastPause := gcstats.Pause[0]
 		elapsed := time.Since(startTime)

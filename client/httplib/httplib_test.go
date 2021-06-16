@@ -63,7 +63,6 @@ func TestDoRequest(t *testing.T) {
 	if elapsedTime < delayedTime {
 		t.Errorf("Not enough retries. Took %dms. Delay was meant to take %dms", elapsedTime, delayedTime)
 	}
-
 }
 
 func TestGet(t *testing.T) {
@@ -248,7 +247,6 @@ func TestToJson(t *testing.T) {
 			t.Fatal("response is not valid ip")
 		}
 	}
-
 }
 
 func TestToFile(t *testing.T) {
@@ -432,4 +430,8 @@ func TestBeegoHTTPRequestXMLBody(t *testing.T) {
 	assert.True(t, req.req.ContentLength > 0)
 	assert.Nil(t, err)
 	assert.NotNil(t, req.req.GetBody)
+}
+
+// TODO
+func TestBeegoHTTPRequest_ResponseForValue(t *testing.T) {
 }

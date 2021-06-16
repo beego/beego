@@ -106,7 +106,6 @@ func (t *dbTables) loopDepth(depth int, prefix string, fi *fieldInfo, related []
 
 // parse related fields.
 func (t *dbTables) parseRelated(rels []string, depth int) {
-
 	relsNum := len(rels)
 	related := make([]string, relsNum)
 	copy(related, rels)

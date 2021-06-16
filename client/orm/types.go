@@ -246,7 +246,7 @@ type ormer interface {
 	DriverGetter
 }
 
-//QueryExecutor wrapping for ormer
+// QueryExecutor wrapping for ormer
 type QueryExecutor interface {
 	ormer
 }

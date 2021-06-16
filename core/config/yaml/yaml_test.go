@@ -25,7 +25,6 @@ import (
 )
 
 func TestYaml(t *testing.T) {
-
 	var (
 		yamlcontext = `
 "appname": beeapi

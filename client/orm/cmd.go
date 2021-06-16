@@ -27,9 +27,7 @@ type commander interface {
 	Run() error
 }
 
-var (
-	commands = make(map[string]commander)
-)
+var commands = make(map[string]commander)
 
 // print help.
 func printHelp(errs ...string) {

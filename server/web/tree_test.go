@@ -119,7 +119,6 @@ func init() {
 	routers = append(routers, notMatchTestInfo(abcSuffix, "/abc/suffix.html/a"))
 	routers = append(routers, matchTestInfo(abcSuffix, "/abc/suffix/a", nil))
 	routers = append(routers, notMatchTestInfo(abcSuffix, "/abc.j/suffix/a"))
-
 }
 
 func TestTreeRouters(t *testing.T) {
@@ -303,6 +302,7 @@ func TestAddTree5(t *testing.T) {
 		t.Fatal("url /v1/shop/ need match router /v1/shop/ ")
 	}
 }
+
 func TestSplitPath(t *testing.T) {
 	a := splitPath("")
 	if len(a) != 0 {
@@ -331,7 +331,6 @@ func TestSplitPath(t *testing.T) {
 }
 
 func TestSplitSegment(t *testing.T) {
-
 	items := map[string]struct {
 		isReg  bool
 		params []string
