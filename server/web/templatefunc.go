@@ -503,7 +503,7 @@ func isValidForInput(fType string) bool {
 }
 
 // parseFormTag takes the stuct-tag of a StructField and parses the `form` value.
-// returned are the form label, name-property, type and wether the field should be ignored.
+// returned are the form label, name-property, type and whether the field should be ignored.
 func parseFormTag(fieldT reflect.StructField) (label, name, fType string, id string, class string, ignored bool, required bool) {
 	tags := strings.Split(fieldT.Tag.Get("form"), ",")
 	label = fieldT.Name + ": "
