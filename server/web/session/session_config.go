@@ -45,9 +45,9 @@ func CfgCookieName(cookieName string) ManagerConfigOpt {
 }
 
 // CfgCookieName set len of session id
-func CfgSessionIdLength(len int64) ManagerConfigOpt {
+func CfgSessionIdLength(length int64) ManagerConfigOpt {
 	return func(config *ManagerConfig) {
-		config.SessionIDLength = len
+		config.SessionIDLength = length
 	}
 }
 
