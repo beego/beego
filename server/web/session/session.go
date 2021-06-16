@@ -252,7 +252,8 @@ func (manager *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
 	manager.provider.SessionDestroy(nil, sid)
 	if manager.config.EnableSetCookie {
 		expiration := time.Now()
-		cookie = &http.Cookie{Name: manager.config.CookieName,
+		cookie = &http.Cookie{
+			Name:     manager.config.CookieName,
 			Path:     "/",
 			HttpOnly: !manager.config.DisableHTTPOnly,
 			Expires:  expiration,
@@ -294,7 +295,8 @@ func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Reque
 		if err != nil {
 			return nil, err
 		}
-		cookie = &http.Cookie{Name: manager.config.CookieName,
+		cookie = &http.Cookie{
+			Name:     manager.config.CookieName,
 			Value:    url.QueryEscape(sid),
 			Path:     "/",
 			HttpOnly: !manager.config.DisableHTTPOnly,

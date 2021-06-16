@@ -25,7 +25,6 @@ import (
 )
 
 func TestSessionProvider(t *testing.T) {
-
 	sp := NewSessionProvider("file")
 	assert.NotNil(t, sp)
 

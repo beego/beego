@@ -63,7 +63,7 @@ func (output *BeegoOutput) Header(key, val string) {
 // Sends out response body directly.
 func (output *BeegoOutput) Body(content []byte) error {
 	var encoding string
-	var buf = &bytes.Buffer{}
+	buf := &bytes.Buffer{}
 	if output.EnableGzip {
 		encoding = ParseEncoding(output.Context.Request)
 	}

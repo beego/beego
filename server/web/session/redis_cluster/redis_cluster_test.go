@@ -23,7 +23,6 @@ import (
 )
 
 func TestProvider_SessionInit(t *testing.T) {
-
 	savePath := `
 { "save_path": "my save path", "idle_timeout": "3s"}
 `

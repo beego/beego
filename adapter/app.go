@@ -22,10 +22,8 @@ import (
 	"github.com/beego/beego/v2/server/web/context"
 )
 
-var (
-	// BeeApp is an application instance
-	BeeApp *App
-)
+// BeeApp is an application instance
+var BeeApp *App
 
 func init() {
 	// create beego application

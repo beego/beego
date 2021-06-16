@@ -21,7 +21,6 @@ func processingStr(str []string) string {
 
 // Select will join the fields
 func (qb *PostgresQueryBuilder) Select(fields ...string) QueryBuilder {
-
 	var str string
 	n := len(fields)
 
@@ -80,7 +79,6 @@ func (qb *PostgresQueryBuilder) RightJoin(table string) QueryBuilder {
 
 // On join with on cond
 func (qb *PostgresQueryBuilder) On(cond string) QueryBuilder {
-
 	var str string
 	cond = strings.Replace(cond, " ", "", -1)
 	slice := strings.Split(cond, "=")

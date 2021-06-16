@@ -25,7 +25,6 @@ import (
 )
 
 func TestXML(t *testing.T) {
-
 	var (
 		// xml parse should incluce in <config></config> tags
 		xmlcontext = `<?xml version="1.0" encoding="UTF-8"?>
@@ -149,7 +148,6 @@ func TestXML(t *testing.T) {
 	err = xmlconf.Unmarshaler("mysection", sec)
 	assert.Nil(t, err)
 	assert.Equal(t, "MySection", sec.Name)
-
 }
 
 type Section struct {

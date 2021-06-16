@@ -13,7 +13,6 @@ type testDefinition struct {
 }
 
 func Test_Parsers(t *testing.T) {
-
 	// ints
 	checkParser(testDefinition{"1", 1, intParser{}}, t)
 	checkParser(testDefinition{"-1", int64(-1), intParser{}}, t)
@@ -48,12 +47,11 @@ func Test_Parsers(t *testing.T) {
 	checkParser(testDefinition{`["a","b"]`, []string{"a", "b"}, jsonParser{}}, t, MethodParam{in: body})
 
 	// pointers
-	var someInt = 1
+	someInt := 1
 	checkParser(testDefinition{`1`, &someInt, ptrParser(intParser{})}, t)
 
-	var someStruct = struct{ X int }{5}
+	someStruct := struct{ X int }{5}
 	checkParser(testDefinition{`{"X": 5}`, &someStruct, jsonParser{}}, t)
-
 }
 
 func checkParser(def testDefinition, t *testing.T, methodParam ...MethodParam) {

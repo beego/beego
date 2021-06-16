@@ -112,8 +112,10 @@ type DB struct {
 	stmtDecoratorsLimit int
 }
 
-var _ dbQuerier = new(DB)
-var _ txer = new(DB)
+var (
+	_ dbQuerier = new(DB)
+	_ txer      = new(DB)
+)
 
 func (d *DB) Begin() (*sql.Tx, error) {
 	return d.DB.Begin()
@@ -221,8 +223,10 @@ type TxDB struct {
 	tx *sql.Tx
 }
 
-var _ dbQuerier = new(TxDB)
-var _ txEnder = new(TxDB)
+var (
+	_ dbQuerier = new(TxDB)
+	_ txEnder   = new(TxDB)
+)
 
 func (t *TxDB) Commit() error {
 	return t.tx.Commit()
@@ -240,8 +244,10 @@ func (t *TxDB) RollbackUnlessCommit() error {
 	return nil
 }
 
-var _ dbQuerier = new(TxDB)
-var _ txEnder = new(TxDB)
+var (
+	_ dbQuerier = new(TxDB)
+	_ txEnder   = new(TxDB)
+)
 
 func (t *TxDB) Prepare(query string) (*sql.Stmt, error) {
 	return t.PrepareContext(context.Background(), query)
@@ -365,7 +371,6 @@ func addAliasWthDB(aliasName, driverName string, db *sql.DB, params ...DBOption)
 }
 
 func newAliasWithDb(aliasName, driverName string, db *sql.DB, params ...DBOption) (*alias, error) {
-
 	al := &alias{}
 	al.DB = &DB{
 		RWMutex: new(sync.RWMutex),

@@ -79,12 +79,14 @@ func (st *CookieSessionStore) SessionRelease(ctx context.Context, w http.Respons
 	encodedCookie, err := encodeCookie(cookiepder.block, cookiepder.config.SecurityKey, cookiepder.config.SecurityName, st.values)
 	st.lock.Unlock()
 	if err == nil {
-		cookie := &http.Cookie{Name: cookiepder.config.CookieName,
+		cookie := &http.Cookie{
+			Name:     cookiepder.config.CookieName,
 			Value:    url.QueryEscape(encodedCookie),
 			Path:     "/",
 			HttpOnly: true,
 			Secure:   cookiepder.config.Secure,
-			MaxAge:   cookiepder.config.Maxage}
+			MaxAge:   cookiepder.config.Maxage,
+		}
 		http.SetCookie(w, cookie)
 	}
 }

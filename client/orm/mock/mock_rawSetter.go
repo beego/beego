@@ -20,8 +20,7 @@ import (
 	"github.com/beego/beego/v2/client/orm"
 )
 
-type DoNothingRawSetter struct {
-}
+type DoNothingRawSetter struct{}
 
 func (d *DoNothingRawSetter) Exec() (sql.Result, error) {
 	return nil, nil

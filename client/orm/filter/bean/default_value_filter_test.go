@@ -57,7 +57,6 @@ func TestDefaultValueFilterChainBuilder_FilterChain(t *testing.T) {
 	_, _ = o.InsertMulti(3, []*DefaultValueTestEntity{entity})
 	assert.Equal(t, 12, entity.Age)
 	assert.Equal(t, 13, entity.AgeInOldStyle)
-
 }
 
 type defaultValueTestOrm struct {

@@ -105,7 +105,6 @@ func TestAssignConfig_02(t *testing.T) {
 		t.Log(_BConfig.Log.FileLineNum)
 		t.FailNow()
 	}
-
 }
 
 func TestAssignConfig_03(t *testing.T) {

@@ -32,7 +32,6 @@ func TestEtcdConfigerProvider_Parse(t *testing.T) {
 }
 
 func TestEtcdConfiger(t *testing.T) {
-
 	provider := &EtcdConfigerProvider{}
 	cfger, _ := provider.Parse(readEtcdConfig())
 

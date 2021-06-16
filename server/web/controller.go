@@ -51,7 +51,7 @@ var (
 const (
 	bytePerKb    = 1024
 	copyBufferKb = 32
-	filePerm     = 0666
+	filePerm     = 0o666
 )
 
 func init() {

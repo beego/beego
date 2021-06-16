@@ -23,12 +23,10 @@ import (
 )
 
 func TestNewHttpServerWithCfg(t *testing.T) {
-
 	BConfig.AppName = "Before"
 	svr := NewHttpServerWithCfg(BConfig)
 	svr.Cfg.AppName = "hello"
 	assert.Equal(t, "hello", BConfig.AppName)
-
 }
 
 func TestServerRouterGet(t *testing.T) {

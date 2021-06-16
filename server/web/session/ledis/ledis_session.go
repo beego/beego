@@ -186,6 +186,7 @@ func (lp *Provider) SessionGC(context.Context) {
 func (lp *Provider) SessionAll(context.Context) int {
 	return 0
 }
+
 func init() {
 	session.Register("ledis", ledispder)
 }

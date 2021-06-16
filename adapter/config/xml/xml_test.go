@@ -23,7 +23,6 @@ import (
 )
 
 func TestXML(t *testing.T) {
-
 	var (
 		// xml parse should incluce in <config></config> tags
 		xmlcontext = `<?xml version="1.0" encoding="UTF-8"?>

@@ -25,7 +25,6 @@ import (
 )
 
 func TestJsonStartsWithArray(t *testing.T) {
-
 	const jsoncontextwitharray = `[
 	{
 		"url": "user",
@@ -72,7 +71,6 @@ func TestJsonStartsWithArray(t *testing.T) {
 }
 
 func TestJson(t *testing.T) {
-
 	var (
 		jsoncontext = `{
 "appname": "beeapi",

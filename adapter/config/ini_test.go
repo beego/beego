@@ -23,7 +23,6 @@ import (
 )
 
 func TestIni(t *testing.T) {
-
 	var (
 		inicontext = `
 ;comment one
@@ -129,11 +128,9 @@ password = ${GOPATH}
 	if iniconf.String("name") != "astaxie" {
 		t.Fatal("get name error")
 	}
-
 }
 
 func TestIniSave(t *testing.T) {
-
 	const (
 		inicontext = `
 app = app

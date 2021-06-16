@@ -79,7 +79,6 @@ func TestHtmlunquote(t *testing.T) {
 	h := `&lt;&#39;&nbsp;&rdquo;&ldquo;&amp;&#34;&gt;`
 	s := `<' ”“&">`
 	assert.Equal(t, s, Htmlunquote(h))
-
 }
 
 func TestParseForm(t *testing.T) {
@@ -234,5 +233,4 @@ func TestMapGet(t *testing.T) {
 	res, err = MapGet(m5, 5, 4, 3, 2, 1)
 	assert.Nil(t, err)
 	assert.Nil(t, res)
-
 }

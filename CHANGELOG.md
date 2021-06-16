@@ -1,5 +1,7 @@
 # developing
+
 - Add template functions eq,lt to support uint and int compare. [4607](https://github.com/beego/beego/pull/4607)
+- Migrate tests to GitHub Actions. [4663](https://github.com/beego/beego/issues/4663)
 - Add http client and option func. [4455](https://github.com/beego/beego/issues/4455)
 - Add: Convenient way to generate mock object [4620](https://github.com/beego/beego/issues/4620)
 - Infra: use dependabot to update dependencies. [4623](https://github.com/beego/beego/pull/4623)
@@ -59,3 +61,19 @@
 - [4474](https://github.com/beego/beego/pull/4474)
 - [4479](https://github.com/beego/beego/pull/4479)
 - [4639](https://github.com/beego/beego/pull/4639)
+
+## Fix lint and format code
+
+- [4644](https://github.com/beego/beego/pull/4644)
+- [4645](https://github.com/beego/beego/pull/4645)
+- [4646](https://github.com/beego/beego/pull/4646)
+- [4647](https://github.com/beego/beego/pull/4647)
+- [4648](https://github.com/beego/beego/pull/4648)
+- [4649](https://github.com/beego/beego/pull/4649)
+- [4651](https://github.com/beego/beego/pull/4651)
+- [4652](https://github.com/beego/beego/pull/4652)
+- [4653](https://github.com/beego/beego/pull/4653)
+- [4654](https://github.com/beego/beego/pull/4654)
+- [4655](https://github.com/beego/beego/pull/4655)
+- [4656](https://github.com/beego/beego/pull/4656)
+- [4660](https://github.com/beego/beego/pull/4660)

@@ -46,8 +46,7 @@ var (
 )
 
 // IniConfig implements Config to parse ini file.
-type IniConfig struct {
-}
+type IniConfig struct{}
 
 // Parse creates a new Config and parses the file configuration from the named file.
 func (ini *IniConfig) Parse(name string) (Configer, error) {

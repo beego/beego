@@ -112,8 +112,10 @@ var (
 	reset = string([]byte{27, 91, 48, 109})
 )
 
-var once sync.Once
-var colorMap map[string]string
+var (
+	once     sync.Once
+	colorMap map[string]string
+)
 
 func initColor() {
 	if runtime.GOOS == "windows" {

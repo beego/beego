@@ -5,9 +5,7 @@ import (
 )
 
 func TestClause(t *testing.T) {
-	var (
-		column = `a`
-	)
+	column := `a`
 
 	o := Clause(
 		Column(column),
@@ -108,7 +106,6 @@ func TestParseOrder(t *testing.T) {
 	if orders[2].GetColumn() != `user.status` {
 		t.Error()
 	}
-
 }
 
 func TestOrder_GetColumn(t *testing.T) {

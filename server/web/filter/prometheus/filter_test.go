@@ -42,7 +42,6 @@ func TestFilterChain(t *testing.T) {
 }
 
 func TestFilterChainBuilder_report(t *testing.T) {
-
 	ctx := context.NewContext()
 	r, _ := http.NewRequest("GET", "/prometheus/user", nil)
 	w := httptest.NewRecorder()

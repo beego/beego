@@ -400,7 +400,6 @@ func (b *BeegoHTTPRequest) handleFileToBody(bodyWriter *multipart.Writer, formna
 			"could not create form file, formname: %s, filename: %s", formname, filename))
 	}
 	fh, err := os.Open(filename)
-
 	if err != nil {
 		logs.Error(errFmt, berror.Wrapf(err, ReadFileFailed, "could not open this file %s", filename))
 	}

@@ -165,6 +165,7 @@ func (c *BaseConfiger) DefaultBool(key string, defaultVal bool) bool {
 	}
 	return defaultVal
 }
+
 func (c *BaseConfiger) DefaultFloat(key string, defaultVal float64) float64 {
 	if res, err := c.Float(key); err == nil {
 		return res
@@ -370,5 +371,4 @@ func ToString(x interface{}) string {
 
 type DecodeOption func(options decodeOptions)
 
-type decodeOptions struct {
-}
+type decodeOptions struct{}

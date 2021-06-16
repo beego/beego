@@ -92,8 +92,10 @@ type Logger interface {
 	SetFormatter(f LogFormatter)
 }
 
-var adapters = make(map[string]newLoggerFunc)
-var levelPrefix = [LevelDebug + 1]string{"[M]", "[A]", "[C]", "[E]", "[W]", "[N]", "[I]", "[D]"}
+var (
+	adapters    = make(map[string]newLoggerFunc)
+	levelPrefix = [LevelDebug + 1]string{"[M]", "[A]", "[C]", "[E]", "[W]", "[N]", "[I]", "[D]"}
+)
 
 // Register makes a log provide available by the provided name.
 // If Register is called twice with the same name or if driver is nil,
@@ -201,7 +203,6 @@ func (bl *BeeLogger) setLogger(adapterName string, configs ...string) error {
 	}
 
 	err := lg.Init(config)
-
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "logs.BeeLogger.SetLogger: "+err.Error())
 		return err
@@ -519,49 +520,19 @@ func (bl *BeeLogger) Debug(format string, v ...interface{}) {
 // Warn Log WARN level message.
 // compatibility alias for Warning()
 func (bl *BeeLogger) Warn(format string, v ...interface{}) {
-	if LevelWarn > bl.level {
-		return
-	}
-	lm := &LogMsg{
-		Level: LevelWarn,
-		Msg:   format,
-		When:  time.Now(),
-		Args:  v,
-	}
-
-	bl.writeMsg(lm)
+	bl.Warning(format, v...)
 }
 
 // Info Log INFO level message.
 // compatibility alias for Informational()
 func (bl *BeeLogger) Info(format string, v ...interface{}) {
-	if LevelInfo > bl.level {
-		return
-	}
-	lm := &LogMsg{
-		Level: LevelInfo,
-		Msg:   format,
-		When:  time.Now(),
-		Args:  v,
-	}
-
-	bl.writeMsg(lm)
+	bl.Informational(format, v...)
 }
 
 // Trace Log TRACE level message.
 // compatibility alias for Debug()
 func (bl *BeeLogger) Trace(format string, v ...interface{}) {
-	if LevelDebug > bl.level {
-		return
-	}
-	lm := &LogMsg{
-		Level: LevelDebug,
-		Msg:   format,
-		When:  time.Now(),
-		Args:  v,
-	}
-
-	bl.writeMsg(lm)
+	bl.Debug(format, v...)
 }
 
 // Flush flush all chan data.
