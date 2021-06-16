@@ -395,8 +395,6 @@ func Test_eq(t *testing.T) {
 		{uint(3), int(1), false},
 		{uint64(1), int(1), true},
 		{uint64(3), int(1), false},
-
-
 		{int8(-1), uint(1), false},
 		{int16(-2), uint(1), false},
 		{int32(-3), uint(1), false},
@@ -405,7 +403,6 @@ func Test_eq(t *testing.T) {
 		{int16(1), uint(1), true},
 		{int32(1), uint(1), true},
 		{int64(1), uint(1), true},
-
 		{int8(-1), uint8(1), false},
 		{int16(-2), uint8(1), false},
 		{int32(-3), uint8(1), false},
@@ -414,7 +411,6 @@ func Test_eq(t *testing.T) {
 		{int16(1), uint8(1), true},
 		{int32(1), uint8(1), true},
 		{int64(1), uint8(1), true},
-
 		{int8(-1), uint16(1), false},
 		{int16(-2), uint16(1), false},
 		{int32(-3), uint16(1), false},
@@ -423,7 +419,6 @@ func Test_eq(t *testing.T) {
 		{int16(1), uint16(1), true},
 		{int32(1), uint16(1), true},
 		{int64(1), uint16(1), true},
-
 		{int8(-1), uint32(1), false},
 		{int16(-2), uint32(1), false},
 		{int32(-3), uint32(1), false},
@@ -432,7 +427,6 @@ func Test_eq(t *testing.T) {
 		{int16(1), uint32(1), true},
 		{int32(1), uint32(1), true},
 		{int64(1), uint32(1), true},
-
 		{int8(-1), uint64(1), false},
 		{int16(-2), uint64(1), false},
 		{int32(-3), uint64(1), false},
@@ -442,6 +436,7 @@ func Test_eq(t *testing.T) {
 		{int32(1), uint64(1), true},
 		{int64(1), uint64(1), true},
 	}
+
 	for _, test := range tests {
 		if res, err := eq(test.a, test.b); err != nil {
 			if res != test.result {
@@ -476,7 +471,6 @@ func Test_lt(t *testing.T) {
 		{int(1), int(1), false},
 		{int(1), int(3), true},
 		{int(3), int(1), false},
-
 		{int8(-1), uint(1), true},
 		{int8(1), uint(1), false},
 		{int8(1), uint(3), true},
@@ -497,7 +491,6 @@ func Test_lt(t *testing.T) {
 		{int(1), uint(1), false},
 		{int(1), uint(3), true},
 		{int(3), uint(1), false},
-
 		{int8(-1), uint8(1), true},
 		{int8(1), uint8(1), false},
 		{int8(1), uint8(3), true},
@@ -518,7 +511,6 @@ func Test_lt(t *testing.T) {
 		{int(1), uint8(1), false},
 		{int(1), uint8(3), true},
 		{int(3), uint8(1), false},
-
 		{int8(-1), uint16(1), true},
 		{int8(1), uint16(1), false},
 		{int8(1), uint16(3), true},
@@ -539,7 +531,6 @@ func Test_lt(t *testing.T) {
 		{int(1), uint16(1), false},
 		{int(1), uint16(3), true},
 		{int(3), uint16(1), false},
-
 		{int8(-1), uint32(1), true},
 		{int8(1), uint32(1), false},
 		{int8(1), uint32(3), true},
@@ -560,7 +551,6 @@ func Test_lt(t *testing.T) {
 		{int(1), uint32(1), false},
 		{int(1), uint32(3), true},
 		{int(3), uint32(1), false},
-
 		{int8(-1), uint64(1), true},
 		{int8(1), uint64(1), false},
 		{int8(1), uint64(3), true},
@@ -582,6 +572,7 @@ func Test_lt(t *testing.T) {
 		{int(1), uint64(3), true},
 		{int(3), uint64(1), false},
 	}
+
 	for _, test := range tests {
 		if res, err := lt(test.a, test.b); err != nil {
 			if res != test.result {
