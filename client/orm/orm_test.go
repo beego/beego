@@ -308,7 +308,6 @@ func TestDataTypes(t *testing.T) {
 		case "DateTime":
 		case "Time":
 			assert.True(t, vu.(time.Time).In(DefaultTimeLoc).Sub(value.(time.Time).In(DefaultTimeLoc)) <= time.Second)
-			break
 		default:
 			assert.Equal(t, value, vu)
 		}
@@ -1842,12 +1841,10 @@ func TestRawQueryRow(t *testing.T) {
 		switch col {
 		case "id":
 			throwFail(t, AssertIs(id, 1))
-			break
 		case "time", "datetime":
 			v = v.(time.Time).In(DefaultTimeLoc)
 			value := dataValues[col].(time.Time).In(DefaultTimeLoc)
 			assert.True(t, v.(time.Time).Sub(value) <= time.Second)
-			break
 		case "date":
 		default:
 			throwFail(t, AssertIs(v, dataValues[col]))
@@ -1942,7 +1939,6 @@ func TestQueryRows(t *testing.T) {
 		case "Date":
 		case "DateTime":
 			assert.True(t, vu.(time.Time).In(DefaultTimeLoc).Sub(value.(time.Time).In(DefaultTimeLoc)) <= time.Second)
-			break
 		default:
 			assert.Equal(t, value, vu)
 		}
@@ -1966,7 +1962,6 @@ func TestQueryRows(t *testing.T) {
 		case "Date":
 		case "DateTime":
 			assert.True(t, vu.(time.Time).In(DefaultTimeLoc).Sub(value.(time.Time).In(DefaultTimeLoc)) <= time.Second)
-			break
 		default:
 			assert.Equal(t, value, vu)
 		}
