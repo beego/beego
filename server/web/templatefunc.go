@@ -619,6 +619,8 @@ func eq(arg1 interface{}, arg2 ...interface{}) (bool, error) {
 			}
 			if truth {
 				return true, nil
+			} else {
+				return false, nil
 			}
 		}
 		switch k1 {
