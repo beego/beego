@@ -80,7 +80,7 @@ type slide struct {
 	Title string `json:"title" yaml:"title" xml:"title"`
 }
 
-func TestClient_handleCarrier(t *testing.T) {
+func TestClientHandleCarrier(t *testing.T) {
 	v := "beego"
 	client, err := NewClient("test", "http://httpbin.org/",
 		WithUserAgent(v))
@@ -108,7 +108,7 @@ func TestClient_handleCarrier(t *testing.T) {
 	assert.Equal(t, s.String(), string(b))
 }
 
-func TestClient_Get(t *testing.T) {
+func TestClientGet(t *testing.T) {
 	client, err := NewClient("test", "http://httpbin.org/")
 	if err != nil {
 		t.Fatal(err)
@@ -145,7 +145,7 @@ func TestClient_Get(t *testing.T) {
 	assert.Equal(t, "Overview", s.Slideshow.Slides[1].Title)
 }
 
-func TestClient_Post(t *testing.T) {
+func TestClientPost(t *testing.T) {
 	client, err := NewClient("test", "http://httpbin.org")
 	if err != nil {
 		t.Fatal(err)
@@ -166,7 +166,7 @@ func TestClient_Post(t *testing.T) {
 	assert.Equal(t, http.MethodPost, resp.Resp.Request.Method)
 }
 
-func TestClient_Put(t *testing.T) {
+func TestClientPut(t *testing.T) {
 	client, err := NewClient("test", "http://httpbin.org")
 	if err != nil {
 		t.Fatal(err)
@@ -187,7 +187,7 @@ func TestClient_Put(t *testing.T) {
 	assert.Equal(t, http.MethodPut, resp.Resp.Request.Method)
 }
 
-func TestClient_Delete(t *testing.T) {
+func TestClientDelete(t *testing.T) {
 	client, err := NewClient("test", "http://httpbin.org")
 	if err != nil {
 		t.Fatal(err)
@@ -203,7 +203,7 @@ func TestClient_Delete(t *testing.T) {
 	assert.Equal(t, http.MethodDelete, resp.Resp.Request.Method)
 }
 
-func TestClient_Head(t *testing.T) {
+func TestClientHead(t *testing.T) {
 	client, err := NewClient("test", "http://beego.me")
 	if err != nil {
 		t.Fatal(err)
