@@ -433,5 +433,5 @@ func TestBeegoHTTPRequestXMLBody(t *testing.T) {
 }
 
 // TODO
-func TestBeegoHTTPRequest_ResponseForValue(t *testing.T) {
+func TestBeegoHTTPRequestResponseForValue(t *testing.T) {
 }

@@ -37,7 +37,7 @@ func (r *respCarrier) String() string {
 	return string(r.bytes)
 }
 
-func TestOption_WithEnableCookie(t *testing.T) {
+func TestOptionWithEnableCookie(t *testing.T) {
 	client, err := NewClient("test", "http://httpbin.org/",
 		WithEnableCookie(true))
 	if err != nil {
@@ -64,7 +64,7 @@ func TestOption_WithEnableCookie(t *testing.T) {
 	}
 }
 
-func TestOption_WithUserAgent(t *testing.T) {
+func TestOptionWithUserAgent(t *testing.T) {
 	v := "beego"
 	client, err := NewClient("test", "http://httpbin.org/",
 		WithUserAgent(v))
@@ -85,7 +85,7 @@ func TestOption_WithUserAgent(t *testing.T) {
 	}
 }
 
-func TestOption_WithCheckRedirect(t *testing.T) {
+func TestOptionWithCheckRedirect(t *testing.T) {
 	client, err := NewClient("test", "https://goolnk.com/33BD2j",
 		WithCheckRedirect(func(redirectReq *http.Request, redirectVia []*http.Request) error {
 			return errors.New("Redirect triggered")
@@ -97,7 +97,7 @@ func TestOption_WithCheckRedirect(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestOption_WithHTTPSetting(t *testing.T) {
+func TestOptionWithHTTPSetting(t *testing.T) {
 	v := "beego"
 	var setting BeegoHTTPSettings
 	setting.EnableCookie = true
@@ -133,7 +133,7 @@ func TestOption_WithHTTPSetting(t *testing.T) {
 	}
 }
 
-func TestOption_WithHeader(t *testing.T) {
+func TestOptionWithHeader(t *testing.T) {
 	client, err := NewClient("test", "http://httpbin.org/")
 	if err != nil {
 		t.Fatal(err)
@@ -153,7 +153,7 @@ func TestOption_WithHeader(t *testing.T) {
 	}
 }
 
-func TestOption_WithTokenFactory(t *testing.T) {
+func TestOptionWithTokenFactory(t *testing.T) {
 	client, err := NewClient("test", "http://httpbin.org/")
 	if err != nil {
 		t.Fatal(err)
@@ -176,7 +176,7 @@ func TestOption_WithTokenFactory(t *testing.T) {
 	}
 }
 
-func TestOption_WithBasicAuth(t *testing.T) {
+func TestOptionWithBasicAuth(t *testing.T) {
 	client, err := NewClient("test", "http://httpbin.org/")
 	if err != nil {
 		t.Fatal(err)
@@ -197,7 +197,7 @@ func TestOption_WithBasicAuth(t *testing.T) {
 	}
 }
 
-func TestOption_WithContentType(t *testing.T) {
+func TestOptionWithContentType(t *testing.T) {
 	client, err := NewClient("test", "http://httpbin.org/")
 	if err != nil {
 		t.Fatal(err)
@@ -217,7 +217,7 @@ func TestOption_WithContentType(t *testing.T) {
 	}
 }
 
-func TestOption_WithParam(t *testing.T) {
+func TestOptionWithParam(t *testing.T) {
 	client, err := NewClient("test", "http://httpbin.org/")
 	if err != nil {
 		t.Fatal(err)
@@ -237,7 +237,7 @@ func TestOption_WithParam(t *testing.T) {
 	}
 }
 
-func TestOption_WithRetry(t *testing.T) {
+func TestOptionWithRetry(t *testing.T) {
 	client, err := NewClient("test", "https://goolnk.com/33BD2j",
 		WithCheckRedirect(func(redirectReq *http.Request, redirectVia []*http.Request) error {
 			return errors.New("Redirect triggered")

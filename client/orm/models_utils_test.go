@@ -29,7 +29,7 @@ func (n *NotApplicableModel) IsApplicableTableForDB(db string) bool {
 	return db == "default"
 }
 
-func Test_IsApplicableTableForDB(t *testing.T) {
+func TestIsApplicableTableForDB(t *testing.T) {
 	assert.False(t, isApplicableTableForDB(reflect.ValueOf(&NotApplicableModel{}), "defa"))
 	assert.True(t, isApplicableTableForDB(reflect.ValueOf(&NotApplicableModel{}), "default"))
 }
