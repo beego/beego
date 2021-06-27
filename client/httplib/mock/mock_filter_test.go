@@ -23,7 +23,7 @@ import (
 	"github.com/beego/beego/v2/client/httplib"
 )
 
-func TestMockResponseFilter_FilterChain(t *testing.T) {
+func TestMockResponseFilterFilterChain(t *testing.T) {
 	req := httplib.Get("http://localhost:8080/abc/s")
 	ft := NewMockResponseFilter()
 

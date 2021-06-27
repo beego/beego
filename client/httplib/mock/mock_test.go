@@ -44,7 +44,7 @@ func TestStartMock(t *testing.T) {
 
 // TestStartMock_Isolation Test StartMock that
 // mock only work for this request
-func TestStartMock_Isolation(t *testing.T) {
+func TestStartMockIsolation(t *testing.T) {
 	// httplib.defaultSetting.FilterChains = []httplib.FilterChain{mockFilter.FilterChain}
 	// setup global stub
 	stub := StartMock()

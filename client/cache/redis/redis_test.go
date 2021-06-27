@@ -102,7 +102,7 @@ func TestRedisCache(t *testing.T) {
 	assert.Nil(t, bm.ClearAll(context.Background()))
 }
 
-func TestCache_Scan(t *testing.T) {
+func TestCacheScan(t *testing.T) {
 	timeoutDuration := 10 * time.Second
 
 	addr := os.Getenv("REDIS_ADDR")

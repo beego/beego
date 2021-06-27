@@ -23,13 +23,13 @@ import (
 	"github.com/beego/beego/v2/client/httplib"
 )
 
-func TestSimpleCondition_MatchPath(t *testing.T) {
+func TestSimpleConditionMatchPath(t *testing.T) {
 	sc := NewSimpleCondition("/abc/s")
 	res := sc.Match(context.Background(), httplib.Get("http://localhost:8080/abc/s"))
 	assert.True(t, res)
 }
 
-func TestSimpleCondition_MatchQuery(t *testing.T) {
+func TestSimpleConditionMatchQuery(t *testing.T) {
 	k, v := "my-key", "my-value"
 	sc := NewSimpleCondition("/abc/s")
 	res := sc.Match(context.Background(), httplib.Get("http://localhost:8080/abc/s?my-key=my-value"))
@@ -49,7 +49,7 @@ func TestSimpleCondition_MatchQuery(t *testing.T) {
 	assert.True(t, res)
 }
 
-func TestSimpleCondition_MatchHeader(t *testing.T) {
+func TestSimpleConditionMatchHeader(t *testing.T) {
 	k, v := "my-header", "my-header-value"
 	sc := NewSimpleCondition("/abc/s")
 	req := httplib.Get("http://localhost:8080/abc/s")
@@ -67,7 +67,7 @@ func TestSimpleCondition_MatchHeader(t *testing.T) {
 	assert.False(t, sc.Match(context.Background(), req))
 }
 
-func TestSimpleCondition_MatchBodyField(t *testing.T) {
+func TestSimpleConditionMatchBodyField(t *testing.T) {
 	sc := NewSimpleCondition("/abc/s")
 	req := httplib.Post("http://localhost:8080/abc/s")
 
@@ -96,7 +96,7 @@ func TestSimpleCondition_MatchBodyField(t *testing.T) {
 	assert.True(t, sc.Match(context.Background(), req))
 }
 
-func TestSimpleCondition_Match(t *testing.T) {
+func TestSimpleConditionMatch(t *testing.T) {
 	sc := NewSimpleCondition("/abc/s")
 	req := httplib.Post("http://localhost:8080/abc/s")
 
@@ -109,7 +109,7 @@ func TestSimpleCondition_Match(t *testing.T) {
 	assert.False(t, sc.Match(context.Background(), req))
 }
 
-func TestSimpleCondition_MatchPathReg(t *testing.T) {
+func TestSimpleConditionMatchPathReg(t *testing.T) {
 	sc := NewSimpleCondition("", WithPathReg(`\/abc\/.*`))
 	req := httplib.Post("http://localhost:8080/abc/s")
 	assert.True(t, sc.Match(context.Background(), req))

@@ -108,7 +108,7 @@ func TestParseOrder(t *testing.T) {
 	}
 }
 
-func TestOrder_GetColumn(t *testing.T) {
+func TestOrderGetColumn(t *testing.T) {
 	o := Clause(
 		Column(`user__id`),
 	)

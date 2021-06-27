@@ -22,7 +22,7 @@ import (
 	"github.com/beego/beego/v2/client/orm"
 )
 
-func TestDefaultValueFilterChainBuilder_FilterChain(t *testing.T) {
+func TestDefaultValueFilterChainBuilderFilterChain(t *testing.T) {
 	builder := NewDefaultValueFilterChainBuilder(nil, true, true)
 	o := orm.NewFilterOrmDecorator(&defaultValueTestOrm{}, builder.FilterChain)
 
