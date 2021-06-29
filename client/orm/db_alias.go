@@ -427,7 +427,7 @@ func SetMaxIdleConns(aliasName string, maxIdleConns int) {
 // Deprecated you should not use this, we will remove it in the future
 func SetMaxOpenConns(aliasName string, maxOpenConns int) {
 	al := getDbAlias(aliasName)
-	al.SetMaxIdleConns(maxOpenConns)
+	al.SetMaxOpenConns(maxOpenConns)
 }
 
 // SetMaxIdleConns Change the max idle conns for *sql.DB, use specify database alias name
