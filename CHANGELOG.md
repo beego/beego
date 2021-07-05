@@ -1,5 +1,6 @@
 # developing
 
+- Always set the response status in the CustomAbort function. [4686](https://github.com/beego/beego/pull/4686)
 - Add template functions eq,lt to support uint and int compare. [4607](https://github.com/beego/beego/pull/4607)
 - Migrate tests to GitHub Actions. [4663](https://github.com/beego/beego/issues/4663)
 - Add http client and option func. [4455](https://github.com/beego/beego/issues/4455)
