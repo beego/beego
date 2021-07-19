@@ -437,7 +437,7 @@ func AutoRouter(c ControllerInterface) *HttpServer {
 
 // AutoRouter adds defined controller handler to BeeApp.
 // it's same to HttpServer.AutoRouter.
-// if beego.AddAuto(&MainContorlller{}) and MainController has methods List and Page,
+// if beego.AddAuto(&MainController{}) and MainController has methods List and Page,
 // visit the url /main/list to exec List function or /main/page to exec Page function.
 func (app *HttpServer) AutoRouter(c ControllerInterface) *HttpServer {
 	app.Handlers.AddAuto(c)
@@ -451,7 +451,7 @@ func AutoPrefix(prefix string, c ControllerInterface) *HttpServer {
 
 // AutoPrefix adds controller handler to BeeApp with prefix.
 // it's same to HttpServer.AutoRouterWithPrefix.
-// if beego.AutoPrefix("/admin",&MainContorlller{}) and MainController has methods List and Page,
+// if beego.AutoPrefix("/admin",&MainController{}) and MainController has methods List and Page,
 // visit the url /admin/main/list to exec List function or /admin/main/page to exec Page function.
 func (app *HttpServer) AutoPrefix(prefix string, c ControllerInterface) *HttpServer {
 	app.Handlers.AddAutoPrefix(prefix, c)

@@ -216,7 +216,7 @@ func (p *ControllerRegister) Handler(pattern string, h http.Handler, options ...
 }
 
 // AddAuto router to ControllerRegister.
-// example beego.AddAuto(&MainContorlller{}),
+// example beego.AddAuto(&MainController{}),
 // MainController has method List and Page.
 // visit the url /main/list to execute List function
 // /main/page to execute Page function.
@@ -225,7 +225,7 @@ func (p *ControllerRegister) AddAuto(c ControllerInterface) {
 }
 
 // AddAutoPrefix Add auto router to ControllerRegister with prefix.
-// example beego.AddAutoPrefix("/admin",&MainContorlller{}),
+// example beego.AddAutoPrefix("/admin",&MainController{}),
 // MainController has method List and Page.
 // visit the url /admin/main/list to execute List function
 // /admin/main/page to execute Page function.
