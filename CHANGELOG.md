@@ -1,5 +1,6 @@
 # developing
 
+- Add a custom option for whether to escape HTML special characters when processing http request parameters. [4701](https://github.com/beego/beego/pull/4701)
 - Always set the response status in the CustomAbort function. [4686](https://github.com/beego/beego/pull/4686)
 - Add template functions eq,lt to support uint and int compare. [4607](https://github.com/beego/beego/pull/4607)
 - Migrate tests to GitHub Actions. [4663](https://github.com/beego/beego/issues/4663)
