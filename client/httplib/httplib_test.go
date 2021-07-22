@@ -440,9 +440,9 @@ func TestBeegoHTTPRequestResponseForValue(t *testing.T) {
 func TestBeegoHTTPRequestJSONMarshal(t *testing.T) {
 	req := Post("http://beego.me")
 	req.SetEscapeHTML(false)
-	body := map[string]interface{} {
+	body := map[string]interface{}{
 		"escape": "left&right",
 	}
 	b, _ := req.JSONMarshal(body)
-	assert.Equal(t,fmt.Sprintf(`{"escape":"left&right"}%s`, "\n"), string(b))
+	assert.Equal(t, fmt.Sprintf(`{"escape":"left&right"}%s`, "\n"), string(b))
 }
