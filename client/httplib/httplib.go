@@ -340,7 +340,7 @@ func (b *BeegoHTTPRequest) YAMLBody(obj interface{}) (*BeegoHTTPRequest, error) 
 // JSONBody adds the request raw body encoded in JSON.
 func (b *BeegoHTTPRequest) JSONBody(obj interface{}) (*BeegoHTTPRequest, error) {
 	if b.req.Body == nil && obj != nil {
-		byts, err := b.Marshal(obj)
+		byts, err := b.JSONMarshal(obj)
 		if err != nil {
 			return b, berror.Wrap(err, InvalidJSONBody, "obj could not be converted to JSON body")
 		}
@@ -351,7 +351,7 @@ func (b *BeegoHTTPRequest) JSONBody(obj interface{}) (*BeegoHTTPRequest, error) 
 	return b, nil
 }
 
-func (b *BeegoHTTPRequest) Marshal(obj interface{}) ([]byte, error) {
+func (b *BeegoHTTPRequest) JSONMarshal(obj interface{}) ([]byte, error) {
 	bf := bytes.NewBuffer([]byte{})
 	jsonEncoder := json.NewEncoder(bf)
 	jsonEncoder.SetEscapeHTML(b.setting.EscapeHTML)
