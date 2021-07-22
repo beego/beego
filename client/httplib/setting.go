@@ -37,6 +37,7 @@ type BeegoHTTPSettings struct {
 	Retries          int // if set to -1 means will retry forever
 	RetryDelay       time.Duration
 	FilterChains     []FilterChain
+	EscapeHTML       bool // if set to false means will not escape escape HTML special characters during processing, default true
 }
 
 // createDefaultCookie creates a global cookiejar to store cookies.
@@ -66,6 +67,7 @@ var defaultSetting = BeegoHTTPSettings{
 	ReadWriteTimeout: 60 * time.Second,
 	Gzip:             true,
 	FilterChains:     make([]FilterChain, 0, 4),
+	EscapeHTML:       true,
 }
 
 var (

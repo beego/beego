@@ -18,6 +18,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -434,4 +435,14 @@ func TestBeegoHTTPRequestXMLBody(t *testing.T) {
 
 // TODO
 func TestBeegoHTTPRequestResponseForValue(t *testing.T) {
+}
+
+func TestBeegoHTTPRequestJSONMarshal(t *testing.T) {
+	req := Post("http://beego.me")
+	req.SetEscapeHTML(false)
+	body := map[string]interface{}{
+		"escape": "left&right",
+	}
+	b, _ := req.JSONMarshal(body)
+	assert.Equal(t, fmt.Sprintf(`{"escape":"left&right"}%s`, "\n"), string(b))
 }

@@ -258,6 +258,12 @@ func (b *BeegoHTTPRequest) AddFilters(fcs ...FilterChain) *BeegoHTTPRequest {
 	return b
 }
 
+// SetEscapeHTML is used to set the flag whether escape HTML special characters during processing
+func (b *BeegoHTTPRequest) SetEscapeHTML(isEscape bool) *BeegoHTTPRequest {
+	b.setting.EscapeHTML = isEscape
+	return b
+}
+
 // Param adds query param in to request.
 // params build query string as ?key1=value1&key2=value2...
 func (b *BeegoHTTPRequest) Param(key, value string) *BeegoHTTPRequest {
@@ -334,7 +340,7 @@ func (b *BeegoHTTPRequest) YAMLBody(obj interface{}) (*BeegoHTTPRequest, error) 
 // JSONBody adds the request raw body encoded in JSON.
 func (b *BeegoHTTPRequest) JSONBody(obj interface{}) (*BeegoHTTPRequest, error) {
 	if b.req.Body == nil && obj != nil {
-		byts, err := json.Marshal(obj)
+		byts, err := b.JSONMarshal(obj)
 		if err != nil {
 			return b, berror.Wrap(err, InvalidJSONBody, "obj could not be converted to JSON body")
 		}
@@ -343,6 +349,17 @@ func (b *BeegoHTTPRequest) JSONBody(obj interface{}) (*BeegoHTTPRequest, error) 
 		b.req.Header.Set(contentTypeKey, "application/json")
 	}
 	return b, nil
+}
+
+func (b *BeegoHTTPRequest) JSONMarshal(obj interface{}) ([]byte, error) {
+	bf := bytes.NewBuffer([]byte{})
+	jsonEncoder := json.NewEncoder(bf)
+	jsonEncoder.SetEscapeHTML(b.setting.EscapeHTML)
+	err := jsonEncoder.Encode(obj)
+	if err != nil {
+		return nil, err
+	}
+	return bf.Bytes(), nil
 }
 
 func (b *BeegoHTTPRequest) buildURL(paramBody string) {
