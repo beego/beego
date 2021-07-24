@@ -154,6 +154,13 @@ func (output *BeegoOutput) Cookie(name string, value string, others ...interface
 			fmt.Fprintf(&b, "; HttpOnly")
 		}
 	}
+	
+	// default empty
+	if len(others) > 5 {
+		if v, ok := others[5].(string); ok && len(v) > 0 {
+			fmt.Fprintf(&b, "; SameSite=%s", sanitizeValue(v))
+		}
+	}
 
 	output.Context.ResponseWriter.Header().Add("Set-Cookie", b.String())
 }
