@@ -28,7 +28,7 @@ type FilterChain func(next FilterFunc) FilterFunc
 // FilterFunc defines a filter function which is invoked before the controller handler is executed.
 // It's a alias of HandleFunc
 // In fact, the HandleFunc is the last Filter. This is the truth
-type FilterFunc=HandleFunc
+type FilterFunc = HandleFunc
 
 // FilterRouter defines a filter operation which is invoked before the controller handler is executed.
 // It can match the URL against a pattern, and execute a filter function

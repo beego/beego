@@ -619,7 +619,7 @@ func (app *HttpServer) CtrlAny(rootpath string, f interface{}) *HttpServer {
 }
 
 // Get see HttpServer.Get
-func Get(rootpath string, f FilterFunc) *HttpServer {
+func Get(rootpath string, f HandleFunc) *HttpServer {
 	return BeeApp.Get(rootpath, f)
 }
 
@@ -628,13 +628,13 @@ func Get(rootpath string, f FilterFunc) *HttpServer {
 //    beego.Get("/", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (app *HttpServer) Get(rootpath string, f FilterFunc) *HttpServer {
+func (app *HttpServer) Get(rootpath string, f HandleFunc) *HttpServer {
 	app.Handlers.Get(rootpath, f)
 	return app
 }
 
 // Post see HttpServer.Post
-func Post(rootpath string, f FilterFunc) *HttpServer {
+func Post(rootpath string, f HandleFunc) *HttpServer {
 	return BeeApp.Post(rootpath, f)
 }
 
@@ -643,13 +643,13 @@ func Post(rootpath string, f FilterFunc) *HttpServer {
 //    beego.Post("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (app *HttpServer) Post(rootpath string, f FilterFunc) *HttpServer {
+func (app *HttpServer) Post(rootpath string, f HandleFunc) *HttpServer {
 	app.Handlers.Post(rootpath, f)
 	return app
 }
 
 // Delete see HttpServer.Delete
-func Delete(rootpath string, f FilterFunc) *HttpServer {
+func Delete(rootpath string, f HandleFunc) *HttpServer {
 	return BeeApp.Delete(rootpath, f)
 }
 
@@ -658,13 +658,13 @@ func Delete(rootpath string, f FilterFunc) *HttpServer {
 //    beego.Delete("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (app *HttpServer) Delete(rootpath string, f FilterFunc) *HttpServer {
+func (app *HttpServer) Delete(rootpath string, f HandleFunc) *HttpServer {
 	app.Handlers.Delete(rootpath, f)
 	return app
 }
 
 // Put see HttpServer.Put
-func Put(rootpath string, f FilterFunc) *HttpServer {
+func Put(rootpath string, f HandleFunc) *HttpServer {
 	return BeeApp.Put(rootpath, f)
 }
 
@@ -673,13 +673,13 @@ func Put(rootpath string, f FilterFunc) *HttpServer {
 //    beego.Put("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (app *HttpServer) Put(rootpath string, f FilterFunc) *HttpServer {
+func (app *HttpServer) Put(rootpath string, f HandleFunc) *HttpServer {
 	app.Handlers.Put(rootpath, f)
 	return app
 }
 
 // Head see HttpServer.Head
-func Head(rootpath string, f FilterFunc) *HttpServer {
+func Head(rootpath string, f HandleFunc) *HttpServer {
 	return BeeApp.Head(rootpath, f)
 }
 
@@ -688,13 +688,13 @@ func Head(rootpath string, f FilterFunc) *HttpServer {
 //    beego.Head("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (app *HttpServer) Head(rootpath string, f FilterFunc) *HttpServer {
+func (app *HttpServer) Head(rootpath string, f HandleFunc) *HttpServer {
 	app.Handlers.Head(rootpath, f)
 	return app
 }
 
 // Options see HttpServer.Options
-func Options(rootpath string, f FilterFunc) *HttpServer {
+func Options(rootpath string, f HandleFunc) *HttpServer {
 	BeeApp.Handlers.Options(rootpath, f)
 	return BeeApp
 }
@@ -704,13 +704,13 @@ func Options(rootpath string, f FilterFunc) *HttpServer {
 //    beego.Options("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (app *HttpServer) Options(rootpath string, f FilterFunc) *HttpServer {
+func (app *HttpServer) Options(rootpath string, f HandleFunc) *HttpServer {
 	app.Handlers.Options(rootpath, f)
 	return app
 }
 
 // Patch see HttpServer.Patch
-func Patch(rootpath string, f FilterFunc) *HttpServer {
+func Patch(rootpath string, f HandleFunc) *HttpServer {
 	return BeeApp.Patch(rootpath, f)
 }
 
@@ -719,13 +719,13 @@ func Patch(rootpath string, f FilterFunc) *HttpServer {
 //    beego.Patch("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (app *HttpServer) Patch(rootpath string, f FilterFunc) *HttpServer {
+func (app *HttpServer) Patch(rootpath string, f HandleFunc) *HttpServer {
 	app.Handlers.Patch(rootpath, f)
 	return app
 }
 
 // Any see HttpServer.Any
-func Any(rootpath string, f FilterFunc) *HttpServer {
+func Any(rootpath string, f HandleFunc) *HttpServer {
 	return BeeApp.Any(rootpath, f)
 }
 
@@ -734,7 +734,7 @@ func Any(rootpath string, f FilterFunc) *HttpServer {
 //    beego.Any("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (app *HttpServer) Any(rootpath string, f FilterFunc) *HttpServer {
+func (app *HttpServer) Any(rootpath string, f HandleFunc) *HttpServer {
 	app.Handlers.Any(rootpath, f)
 	return app
 }

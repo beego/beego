@@ -38,7 +38,7 @@ type Config struct {
 	// AppName
 	// @Description Application's name. You'd better set it because we use it to do some logging and tracing
 	// @Default beego
-	AppName             string // Application name
+	AppName string // Application name
 	// RunMode
 	// @Description it's the same as environment. In general, we have different run modes.
 	// For example, the most common case is using dev, test, prod three environments
@@ -49,7 +49,7 @@ type Config struct {
 	// You should never set RunMode="dev" when you deploy the application to prod
 	// because Beego will do more things which need Go SDK and other tools when it found out the RunMode="dev"
 	// @Default dev
-	RunMode             string // Running Mode: dev | prod
+	RunMode string // Running Mode: dev | prod
 
 	// RouterCaseSensitive
 	// @Description If it was true, it means that the router is case sensitive.
@@ -62,7 +62,7 @@ type Config struct {
 	// @Description if it was true, Beego will try to recover from panic when it serves your http request
 	// So you should notice that it doesn't mean that Beego will recover all panic cases.
 	// @Default true
-	RecoverPanic        bool
+	RecoverPanic bool
 	// CopyRequestBody
 	// @Description if it's true, Beego will copy the request body. But if the request body's size > MaxMemory,
 	// Beego will return 413 as http status
@@ -70,14 +70,14 @@ type Config struct {
 	// And if you want to read data from request Body multiple times, please set it to true
 	// In general, if you don't meet any performance issue, you could set it to true
 	// @Default false
-	CopyRequestBody     bool
+	CopyRequestBody bool
 	// EnableGzip
 	// @Description If it was true, Beego will try to compress data by using zip algorithm.
 	// But there are two points:
 	// 1. Only static resources will be compressed
 	// 2. Only those static resource which has the extension specified by StaticExtensionsToGzip will be compressed
 	// @Default false
-	EnableGzip          bool
+	EnableGzip bool
 	// EnableErrorsShow
 	// @Description If it's true, Beego will show error message to page
 	// it will work with ErrorMaps which allows you register some error handler
@@ -85,25 +85,25 @@ type Config struct {
 	// because you may not want to expose your internal error msg to your users
 	// it's a little bit unsafe
 	// @Default true
-	EnableErrorsShow    bool
+	EnableErrorsShow bool
 	// EnableErrorsRender
 	// @Description If it's true, it will output the error msg as a page. It's similar to EnableErrorsShow
 	// And this configure item only work in dev run mode (see RunMode)
 	// @Default true
-	EnableErrorsRender  bool
+	EnableErrorsRender bool
 	// ServerName
 	// @Description server name. For example, in large scale system,
 	// you may want to deploy your application to several machines, so that each of them has a server name
 	// we suggest you'd better set value because Beego use this to output some DEBUG msg,
 	// or integrated with other tools such as tracing, metrics
 	// @Default
-	ServerName          string
+	ServerName string
 
 	// RecoverFunc
 	// @Description when Beego want to recover from panic, it will use this func as callback
 	// see RecoverPanic
 	// @Default defaultRecoverPanic
-	RecoverFunc         func(*context.Context, *Config)
+	RecoverFunc func(*context.Context, *Config)
 	// @Description MaxMemory and MaxUploadSize are used to limit the request body
 	// if the request is not uploading file, MaxMemory is the max size of request body
 	// if the request is uploading file, MaxUploadSize is the max size of request body
@@ -111,7 +111,7 @@ type Config struct {
 	// see CopyRequestBody
 	// the default value is 1 << 26 (64MB)
 	// @Default 67108864
-	MaxMemory     int64
+	MaxMemory int64
 	// MaxUploadSize
 	// @Description  MaxMemory and MaxUploadSize are used to limit the request body
 	// if the request is not uploading file, MaxMemory is the max size of request body
@@ -121,13 +121,13 @@ type Config struct {
 	MaxUploadSize int64
 	// Listen
 	// @Description the configuration about socket or http protocol
-	Listen        Listen
+	Listen Listen
 	// WebConfig
 	// @Description the configuration about Web
-	WebConfig     WebConfig
+	WebConfig WebConfig
 	// LogConfig
 	// @Description log configuration
-	Log           LogConfig
+	Log LogConfig
 }
 
 // Listen holds for http and https related config
@@ -135,32 +135,32 @@ type Listen struct {
 	// Graceful
 	// @Description means use graceful module to start the server
 	// @Default false
-	Graceful          bool
+	Graceful bool
 	// ListenTCP4
 	// @Description if it's true, means that Beego only work for TCP4
 	// please check net.Listen function
 	// In general, you should not set it to true
 	// @Default false
-	ListenTCP4        bool
+	ListenTCP4 bool
 	// EnableHTTP
 	// @Description if it's true, Beego will accept HTTP request.
 	// But if you want to use HTTPS only, please set it to false
 	// see EnableHTTPS
 	// @Default true
-	EnableHTTP        bool
+	EnableHTTP bool
 	// AutoTLS
 	// @Description If it's true, Beego will use default value to initialize the TLS configure
 	// But those values could be override if you have custom value.
 	// see Domains, TLSCacheDir
 	// @Default false
-	AutoTLS           bool
+	AutoTLS bool
 	// EnableHTTPS
 	// @Description If it's true, Beego will accept HTTPS request.
 	// Now, you'd better use HTTPS protocol on prod environment to get better security
 	// In prod, the best option is EnableHTTPS=true and EnableHTTP=false
 	// see EnableHTTP
 	// @Default false
-	EnableHTTPS       bool
+	EnableHTTPS bool
 	// EnableMutualHTTPS
 	// @Description if it's true, Beego will handle requests on incoming mutual TLS connections
 	// see Server.ListenAndServeMutualTLS
@@ -172,76 +172,76 @@ type Listen struct {
 	// The default port is 8088
 	// see AdminPort
 	// @Default false
-	EnableAdmin       bool
+	EnableAdmin bool
 	// EnableFcgi
 	// @Description
 	// @Default false
-	EnableFcgi        bool
+	EnableFcgi bool
 	// EnableStdIo
 	// @Description EnableStdIo works with EnableFcgi Use FCGI via standard I/O
 	// @Default false
-	EnableStdIo       bool
+	EnableStdIo bool
 	// ServerTimeOut
 	// @Description Beego use this as ReadTimeout and WriteTimeout
 	// The unit is second.
 	// see http.Server.ReadTimeout, WriteTimeout
 	// @Default 0
-	ServerTimeOut     int64
+	ServerTimeOut int64
 	// HTTPAddr
 	// @Description Beego listen to this address when the application start up.
 	// @Default ""
-	HTTPAddr          string
+	HTTPAddr string
 	// HTTPPort
 	// @Description Beego listen to this port
 	// you'd better change this value when you deploy to prod environment
 	// @Default 8080
-	HTTPPort          int
+	HTTPPort int
 	// Domains
 	// @Description Beego use this to configure TLS. Those domains are "white list" domain
 	// @Default []
-	Domains           []string
+	Domains []string
 	// TLSCacheDir
 	// @Description Beego use this as cache dir to store TLS cert data
 	// @Default ""
-	TLSCacheDir       string
+	TLSCacheDir string
 	// HTTPSAddr
 	// @Description Beego will listen to this address to accept HTTPS request
 	// see EnableHTTPS
 	// @Default ""
-	HTTPSAddr         string
+	HTTPSAddr string
 	// HTTPSPort
 	// @Description  Beego will listen to this port to accept HTTPS request
 	// @Default 10443
-	HTTPSPort         int
+	HTTPSPort int
 	// HTTPSCertFile
 	// @Description Beego read this file as cert file
 	// When you are using HTTPS protocol, please configure it
 	// see HTTPSKeyFile
 	// @Default ""
-	HTTPSCertFile     string
+	HTTPSCertFile string
 	// HTTPSKeyFile
 	// @Description Beego read this file as key file
 	// When you are using HTTPS protocol, please configure it
 	// see HTTPSCertFile
 	// @Default ""
-	HTTPSKeyFile      string
+	HTTPSKeyFile string
 	// TrustCaFile
 	// @Description Beego read this file as CA file
 	// @Default ""
-	TrustCaFile       string
+	TrustCaFile string
 	// AdminAddr
 	// @Description Beego will listen to this address to provide admin service
 	// In general, it should be the same with your application address, HTTPAddr or HTTPSAddr
 	// @Default ""
-	AdminAddr         string
+	AdminAddr string
 	// AdminPort
 	// @Description  Beego will listen to this port to provide admin service
 	// @Default 8088
-	AdminPort         int
+	AdminPort int
 	// @Description Beego use this tls.ClientAuthType to initialize TLS connection
 	// The default value is tls.RequireAndVerifyClientCert
 	// @Default 4
-	ClientAuth        int
+	ClientAuth int
 }
 
 // WebConfig holds web related config
@@ -252,9 +252,9 @@ type WebConfig struct {
 	// But if you are building RESTFul API and you don't have any page,
 	// you can set it to false
 	// @Default true
-	AutoRender             bool
+	AutoRender bool
 	// Deprecated: Beego didn't use it anymore
-	EnableDocs             bool
+	EnableDocs bool
 	// EnableXSRF
 	// @Description If it's true, Beego will help to provide XSRF support
 	// But you should notice that, now Beego only work for HTTPS protocol with XSRF
@@ -264,22 +264,22 @@ type WebConfig struct {
 	// This is completed different from Beego 1.x because we got many security reports
 	// And if you are in dev environment, you could set it to false
 	// @Default false
-	EnableXSRF             bool
+	EnableXSRF bool
 	// DirectoryIndex
 	// @Description When Beego serves static resources request, it will look up the file.
 	// If the file is directory, Beego will try to find the index.html as the response
 	// But if the index.html is not exist or it's a directory,
 	// Beego will return 403 response if DirectoryIndex is **false**
 	// @Default false
-	DirectoryIndex         bool
+	DirectoryIndex bool
 	// FlashName
 	// @Description the cookie's name when Beego try to store the flash data into cookie
 	// @Default BEEGO_FLASH
-	FlashName              string
+	FlashName string
 	// FlashSeparator
 	// @Description When Beego read flash data from request, it uses this as the separator
 	// @Default BEEGOFLASH
-	FlashSeparator         string
+	FlashSeparator string
 	// StaticDir
 	// @Description Beego uses this as static resources' root directory.
 	// It means that Beego will try to search static resource from this start point
@@ -288,9 +288,9 @@ type WebConfig struct {
 	// which means that when Beego got a request with path /static/xxx
 	// Beego will try to find the resource from static directory
 	// @Default /static => static
-	StaticDir              map[string]string
+	StaticDir map[string]string
 	// StaticExtensionsToGzip
-	// @Description The static resources with those extension wille be compressed if EnableGzip is true
+	// @Description The static resources with those extension will be compressed if EnableGzip is true
 	// @Default [".css", ".js" ]
 	StaticExtensionsToGzip []string
 	// StaticCacheFileSize
@@ -301,45 +301,45 @@ type WebConfig struct {
 	// the max memory size of caching static files is StaticCacheFileSize * StaticCacheFileNum
 	// see StaticCacheFileNum
 	// @Default 102400
-	StaticCacheFileSize    int
+	StaticCacheFileSize int
 	// StaticCacheFileNum
 	// @Description Beego use it to control the memory usage of caching static resource file
 	// If the caching files > StaticCacheFileNum, Beego use LRU algorithm to remove caching file
 	// the max memory size of caching static files is StaticCacheFileSize * StaticCacheFileNum
 	// see StaticCacheFileSize
 	// @Default 1000
-	StaticCacheFileNum     int
+	StaticCacheFileNum int
 	// TemplateLeft
 	// @Description Beego use this to render page
 	// see TemplateRight
 	// @Default {{
-	TemplateLeft           string
+	TemplateLeft string
 	// TemplateRight
 	// @Description Beego use this to render page
 	// see TemplateLeft
 	// @Default }}
-	TemplateRight          string
+	TemplateRight string
 	// ViewsPath
 	// @Description The directory of Beego application storing template
 	// @Default views
-	ViewsPath              string
+	ViewsPath string
 	// CommentRouterPath
 	// @Description Beego scans this directory and its sub directory to generate router
 	// Beego only scans this directory when it's in dev environment
 	// @Default controllers
-	CommentRouterPath      string
+	CommentRouterPath string
 	// XSRFKey
 	// @Description the name of cookie storing XSRF token
 	// see EnableXSRF
 	// @Default beegoxsrf
-	XSRFKey                string
+	XSRFKey string
 	// XSRFExpire
 	// @Description the expiration time of XSRF token cookie
 	// second
 	// @Default 0
-	XSRFExpire             int
+	XSRFExpire int
 	// @Description session related config
-	Session                SessionConfig
+	Session SessionConfig
 }
 
 // SessionConfig holds session related config
@@ -347,16 +347,16 @@ type SessionConfig struct {
 	// SessionOn
 	// @Description if it's true, Beego will auto manage session
 	// @Default false
-	SessionOn                    bool
+	SessionOn bool
 	// SessionAutoSetCookie
 	// @Description if it's true, Beego will put the session token into cookie too
 	// @Default true
-	SessionAutoSetCookie         bool
+	SessionAutoSetCookie bool
 	// SessionDisableHTTPOnly
 	// @Description used to allow for cross domain cookies/javascript cookies
 	// In general, you should not set it to true unless you understand the risk
 	// @Default false
-	SessionDisableHTTPOnly       bool
+	SessionDisableHTTPOnly bool
 	// SessionEnableSidInHTTPHeader
 	// @Description enable store/get the sessionId into/from http headers
 	// @Default false
@@ -364,47 +364,47 @@ type SessionConfig struct {
 	// SessionEnableSidInURLQuery
 	// @Description enable get the sessionId from Url Query params
 	// @Default false
-	SessionEnableSidInURLQuery   bool
+	SessionEnableSidInURLQuery bool
 	// SessionProvider
 	// @Description session provider's name.
 	// You should confirm that this provider has been register via session.Register method
 	// the default value is memory. This is not suitable for distributed system
 	// @Default memory
-	SessionProvider              string
+	SessionProvider string
 	// SessionName
 	// @Description If SessionAutoSetCookie is true, we use this value as the cookie's name
 	// @Default beegosessionID
-	SessionName                  string
+	SessionName string
 	// SessionGCMaxLifetime
 	// @Description Beego will GC session to clean useless session.
 	// unit: second
 	// @Default 3600
-	SessionGCMaxLifetime         int64
+	SessionGCMaxLifetime int64
 	// SessionProviderConfig
 	// @Description the config of session provider
 	// see SessionProvider
 	// you should read the document of session provider to learn how to set this value
 	// @Default ""
-	SessionProviderConfig        string
+	SessionProviderConfig string
 	// SessionCookieLifeTime
 	// @Description If SessionAutoSetCookie is true,
 	// we use this value as the expiration time and max age of the cookie
 	// unit second
 	// @Default 0
-	SessionCookieLifeTime        int
+	SessionCookieLifeTime int
 	// SessionDomain
 	// @Description If SessionAutoSetCookie is true, we use this value as the cookie's domain
 	// @Default ""
-	SessionDomain                string
+	SessionDomain string
 	// SessionNameInHTTPHeader
 	// @Description if SessionEnableSidInHTTPHeader is true, this value will be used as the http header
 	// @Default Beegosessionid
-	SessionNameInHTTPHeader      string
+	SessionNameInHTTPHeader string
 	// SessionCookieSameSite
 	// @Description If SessionAutoSetCookie is true, we use this value as the cookie's same site policy
 	// the default value is http.SameSiteDefaultMode
 	// @Default 1
-	SessionCookieSameSite        http.SameSite
+	SessionCookieSameSite http.SameSite
 }
 
 // LogConfig holds Log related config
@@ -412,7 +412,7 @@ type LogConfig struct {
 	// AccessLogs
 	// @Description If it's true, Beego will log the HTTP request info
 	// @Default false
-	AccessLogs       bool
+	AccessLogs bool
 	// EnableStaticLogs
 	// @Description log static files requests
 	// @Default false
@@ -420,7 +420,7 @@ type LogConfig struct {
 	// FileLineNum
 	// @Description if it's true, it will log the line number
 	// @Default true
-	FileLineNum      bool
+	FileLineNum bool
 	// AccessLogsFormat
 	// @Description access log format: JSON_FORMAT, APACHE_FORMAT or empty string
 	// @Default APACHE_FORMAT
@@ -429,7 +429,7 @@ type LogConfig struct {
 	// @Description the destination of access log
 	// the key is log adapter and the value is adapter's configure
 	// @Default "console" => ""
-	Outputs          map[string]string // Store Adaptor : config
+	Outputs map[string]string // Store Adaptor : config
 }
 
 var (
