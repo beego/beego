@@ -439,6 +439,21 @@ func (c *Controller) URLFor(endpoint string, values ...interface{}) string {
 	return URLFor(endpoint, values...)
 }
 
+func (c *Controller) JsonResp(data interface{}) error {
+	c.Data["json"]=data
+	return c.ServeJSON()
+}
+
+func (c *Controller) XmlResp(data interface{}) error {
+	c.Data["xml"] = data
+	return c.ServeXML()
+}
+
+func (c *Controller) YamlResp(data interface{}) error {
+	c.Data["yaml"] = data
+	return c.ServeYAML()
+}
+
 // Resp sends response based on the Accept Header
 // By default response will be in JSON
 func (c *Controller) Resp(data interface{}) error {

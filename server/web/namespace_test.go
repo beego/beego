@@ -202,100 +202,100 @@ func TestNamespaceInside(t *testing.T) {
 	}
 }
 
-func TestNamespaceRouterGet(t *testing.T) {
+func TestNamespaceCtrlGet(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodGet, nsNamespacePath, nil)
 	w := httptest.NewRecorder()
 
 	ns := NewNamespace(nsNamespace)
-	ns.RouterGet(nsPath, ExampleController.Ping)
+	ns.CtrlGet(nsPath, ExampleController.Ping)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestNamespaceRouterGet can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceCtrlGet can't run, get the response is " + w.Body.String())
 	}
 }
 
-func TestNamespaceRouterPost(t *testing.T) {
+func TestNamespaceCtrlPost(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodPost, nsNamespacePath, nil)
 	w := httptest.NewRecorder()
 
 	ns := NewNamespace(nsNamespace)
-	ns.RouterPost(nsPath, ExampleController.Ping)
+	ns.CtrlPost(nsPath, ExampleController.Ping)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestNamespaceRouterPost can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceCtrlPost can't run, get the response is " + w.Body.String())
 	}
 }
 
-func TestNamespaceRouterDelete(t *testing.T) {
+func TestNamespaceCtrlDelete(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodDelete, nsNamespacePath, nil)
 	w := httptest.NewRecorder()
 
 	ns := NewNamespace(nsNamespace)
-	ns.RouterDelete(nsPath, ExampleController.Ping)
+	ns.CtrlDelete(nsPath, ExampleController.Ping)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestNamespaceRouterDelete can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceCtrlDelete can't run, get the response is " + w.Body.String())
 	}
 }
 
-func TestNamespaceRouterPut(t *testing.T) {
+func TestNamespaceCtrlPut(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodPut, nsNamespacePath, nil)
 	w := httptest.NewRecorder()
 
 	ns := NewNamespace(nsNamespace)
-	ns.RouterPut(nsPath, ExampleController.Ping)
+	ns.CtrlPut(nsPath, ExampleController.Ping)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestNamespaceRouterPut can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceCtrlPut can't run, get the response is " + w.Body.String())
 	}
 }
 
-func TestNamespaceRouterHead(t *testing.T) {
+func TestNamespaceCtrlHead(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodHead, nsNamespacePath, nil)
 	w := httptest.NewRecorder()
 
 	ns := NewNamespace(nsNamespace)
-	ns.RouterHead(nsPath, ExampleController.Ping)
+	ns.CtrlHead(nsPath, ExampleController.Ping)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestNamespaceRouterHead can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceCtrlHead can't run, get the response is " + w.Body.String())
 	}
 }
 
-func TestNamespaceRouterOptions(t *testing.T) {
+func TestNamespaceCtrlOptions(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodOptions, nsNamespacePath, nil)
 	w := httptest.NewRecorder()
 
 	ns := NewNamespace(nsNamespace)
-	ns.RouterOptions(nsPath, ExampleController.Ping)
+	ns.CtrlOptions(nsPath, ExampleController.Ping)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestNamespaceRouterOptions can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceCtrlOptions can't run, get the response is " + w.Body.String())
 	}
 }
 
-func TestNamespaceRouterPatch(t *testing.T) {
+func TestNamespaceCtrlPatch(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodPatch, nsNamespacePath, nil)
 	w := httptest.NewRecorder()
 
 	ns := NewNamespace(nsNamespace)
-	ns.RouterPatch(nsPath, ExampleController.Ping)
+	ns.CtrlPatch(nsPath, ExampleController.Ping)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestNamespaceRouterPatch can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceCtrlPatch can't run, get the response is " + w.Body.String())
 	}
 }
 
-func TestNamespaceRouterAny(t *testing.T) {
+func TestNamespaceCtrlAny(t *testing.T) {
 	ns := NewNamespace(nsNamespace)
-	ns.RouterAny(nsPath, ExampleController.Ping)
+	ns.CtrlAny(nsPath, ExampleController.Ping)
 	AddNamespace(ns)
 
 	for method := range HTTPMETHOD {
@@ -303,105 +303,105 @@ func TestNamespaceRouterAny(t *testing.T) {
 		r, _ := http.NewRequest(method, nsNamespacePath, nil)
 		BeeApp.Handlers.ServeHTTP(w, r)
 		if w.Body.String() != exampleBody {
-			t.Errorf("TestNamespaceRouterAny can't run, get the response is " + w.Body.String())
+			t.Errorf("TestNamespaceCtrlAny can't run, get the response is " + w.Body.String())
 		}
 	}
 }
 
-func TestNamespaceNSRouterGet(t *testing.T) {
+func TestNamespaceNSCtrlGet(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodGet, nsNamespacePath, nil)
 	w := httptest.NewRecorder()
 
 	ns := NewNamespace(nsNamespace)
-	NSRouterGet(nsPath, ExampleController.Ping)(ns)
+	NSCtrlGet(nsPath, ExampleController.Ping)(ns)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestNamespaceNSRouterGet can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceNSCtrlGet can't run, get the response is " + w.Body.String())
 	}
 }
 
-func TestNamespaceNSRouterPost(t *testing.T) {
+func TestNamespaceNSCtrlPost(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodPost, nsNamespacePath, nil)
 	w := httptest.NewRecorder()
 
 	ns := NewNamespace("/router")
-	NSRouterPost(nsPath, ExampleController.Ping)(ns)
+	NSCtrlPost(nsPath, ExampleController.Ping)(ns)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestNamespaceNSRouterPost can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceNSCtrlPost can't run, get the response is " + w.Body.String())
 	}
 }
 
-func TestNamespaceNSRouterDelete(t *testing.T) {
+func TestNamespaceNSCtrlDelete(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodDelete, nsNamespacePath, nil)
 	w := httptest.NewRecorder()
 
 	ns := NewNamespace(nsNamespace)
-	NSRouterDelete(nsPath, ExampleController.Ping)(ns)
+	NSCtrlDelete(nsPath, ExampleController.Ping)(ns)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestNamespaceNSRouterDelete can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceNSCtrlDelete can't run, get the response is " + w.Body.String())
 	}
 }
 
-func TestNamespaceNSRouterPut(t *testing.T) {
+func TestNamespaceNSCtrlPut(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodPut, nsNamespacePath, nil)
 	w := httptest.NewRecorder()
 
 	ns := NewNamespace(nsNamespace)
-	NSRouterPut(nsPath, ExampleController.Ping)(ns)
+	NSCtrlPut(nsPath, ExampleController.Ping)(ns)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestNamespaceNSRouterPut can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceNSCtrlPut can't run, get the response is " + w.Body.String())
 	}
 }
 
-func TestNamespaceNSRouterHead(t *testing.T) {
+func TestNamespaceNSCtrlHead(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodHead, nsNamespacePath, nil)
 	w := httptest.NewRecorder()
 
 	ns := NewNamespace(nsNamespace)
-	NSRouterHead(nsPath, ExampleController.Ping)(ns)
+	NSCtrlHead(nsPath, ExampleController.Ping)(ns)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestNamespaceNSRouterHead can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceNSCtrlHead can't run, get the response is " + w.Body.String())
 	}
 }
 
-func TestNamespaceNSRouterOptions(t *testing.T) {
+func TestNamespaceNSCtrlOptions(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodOptions, nsNamespacePath, nil)
 	w := httptest.NewRecorder()
 
 	ns := NewNamespace(nsNamespace)
-	NSRouterOptions(nsPath, ExampleController.Ping)(ns)
+	NSCtrlOptions(nsPath, ExampleController.Ping)(ns)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestNamespaceNSRouterOptions can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceNSCtrlOptions can't run, get the response is " + w.Body.String())
 	}
 }
 
-func TestNamespaceNSRouterPatch(t *testing.T) {
+func TestNamespaceNSCtrlPatch(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodPatch, nsNamespacePath, nil)
 	w := httptest.NewRecorder()
 
 	ns := NewNamespace(nsNamespace)
-	NSRouterPatch("/user", ExampleController.Ping)(ns)
+	NSCtrlPatch("/user", ExampleController.Ping)(ns)
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestNamespaceNSRouterPatch can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceNSCtrlPatch can't run, get the response is " + w.Body.String())
 	}
 }
 
-func TestNamespaceNSRouterAny(t *testing.T) {
+func TestNamespaceNSCtrlAny(t *testing.T) {
 	ns := NewNamespace(nsNamespace)
-	NSRouterAny(nsPath, ExampleController.Ping)(ns)
+	NSCtrlAny(nsPath, ExampleController.Ping)(ns)
 	AddNamespace(ns)
 
 	for method := range HTTPMETHOD {
@@ -409,7 +409,7 @@ func TestNamespaceNSRouterAny(t *testing.T) {
 		r, _ := http.NewRequest(method, nsNamespacePath, nil)
 		BeeApp.Handlers.ServeHTTP(w, r)
 		if w.Body.String() != exampleBody {
-			t.Errorf("TestNamespaceNSRouterAny can't run, get the response is " + w.Body.String())
+			t.Errorf("TestNamespaceNSCtrlAny can't run, get the response is " + w.Body.String())
 		}
 	}
 }
