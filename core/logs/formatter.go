@@ -73,7 +73,7 @@ func (p *PatternLogFormatter) ToString(lm *LogMsg) string {
 		't': levelPrefix[lm.Level],
 		'T': levelNames[lm.Level],
 		'F': lm.FilePath,
-		'N': "\n"
+		'N': "\n",
 	}
 	_, m['f'] = path.Split(lm.FilePath)
 	res := ""
