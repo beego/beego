@@ -354,7 +354,7 @@ func TestAutoPrefix(t *testing.T) {
 	}
 }
 
-func TestRouterGet(t *testing.T) {
+func TestCtrlGet(t *testing.T) {
 	r, _ := http.NewRequest("GET", "/user", nil)
 	w := httptest.NewRecorder()
 
@@ -364,11 +364,11 @@ func TestRouterGet(t *testing.T) {
 	})
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != "Get userlist" {
-		t.Errorf("TestRouterGet can't run")
+		t.Errorf("TestCtrlGet can't run")
 	}
 }
 
-func TestRouterPost(t *testing.T) {
+func TestCtrlPost(t *testing.T) {
 	r, _ := http.NewRequest("POST", "/user/123", nil)
 	w := httptest.NewRecorder()
 
@@ -378,7 +378,7 @@ func TestRouterPost(t *testing.T) {
 	})
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != "123" {
-		t.Errorf("TestRouterPost can't run")
+		t.Errorf("TestCtrlPost can't run")
 	}
 }
 
@@ -836,174 +836,174 @@ func TestRouterSessionSet(t *testing.T) {
 	}
 }
 
-func TestRouterRouterGet(t *testing.T) {
+func TestRouterCtrlGet(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodGet, "/user", nil)
 	w := httptest.NewRecorder()
 
 	handler := NewControllerRegister()
-	handler.RouterGet("/user", ExampleController.Ping)
+	handler.CtrlGet("/user", ExampleController.Ping)
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestRouterRouterGet can't run")
+		t.Errorf("TestRouterCtrlGet can't run")
 	}
 }
 
-func TestRouterRouterPost(t *testing.T) {
+func TestRouterCtrlPost(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodPost, "/user", nil)
 	w := httptest.NewRecorder()
 
 	handler := NewControllerRegister()
-	handler.RouterPost("/user", ExampleController.Ping)
+	handler.CtrlPost("/user", ExampleController.Ping)
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestRouterRouterPost can't run")
+		t.Errorf("TestRouterCtrlPost can't run")
 	}
 }
 
-func TestRouterRouterHead(t *testing.T) {
+func TestRouterCtrlHead(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodHead, "/user", nil)
 	w := httptest.NewRecorder()
 
 	handler := NewControllerRegister()
-	handler.RouterHead("/user", ExampleController.Ping)
+	handler.CtrlHead("/user", ExampleController.Ping)
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestRouterRouterHead can't run")
+		t.Errorf("TestRouterCtrlHead can't run")
 	}
 }
 
-func TestRouterRouterPut(t *testing.T) {
+func TestRouterCtrlPut(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodPut, "/user", nil)
 	w := httptest.NewRecorder()
 
 	handler := NewControllerRegister()
-	handler.RouterPut("/user", ExampleController.Ping)
+	handler.CtrlPut("/user", ExampleController.Ping)
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestRouterRouterPut can't run")
+		t.Errorf("TestRouterCtrlPut can't run")
 	}
 }
 
-func TestRouterRouterPatch(t *testing.T) {
+func TestRouterCtrlPatch(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodPatch, "/user", nil)
 	w := httptest.NewRecorder()
 
 	handler := NewControllerRegister()
-	handler.RouterPatch("/user", ExampleController.Ping)
+	handler.CtrlPatch("/user", ExampleController.Ping)
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestRouterRouterPatch can't run")
+		t.Errorf("TestRouterCtrlPatch can't run")
 	}
 }
 
-func TestRouterRouterDelete(t *testing.T) {
+func TestRouterCtrlDelete(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodDelete, "/user", nil)
 	w := httptest.NewRecorder()
 
 	handler := NewControllerRegister()
-	handler.RouterDelete("/user", ExampleController.Ping)
+	handler.CtrlDelete("/user", ExampleController.Ping)
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestRouterRouterDelete can't run")
+		t.Errorf("TestRouterCtrlDelete can't run")
 	}
 }
 
-func TestRouterRouterAny(t *testing.T) {
+func TestRouterCtrlAny(t *testing.T) {
 	handler := NewControllerRegister()
-	handler.RouterAny("/user", ExampleController.Ping)
+	handler.CtrlAny("/user", ExampleController.Ping)
 
 	for method := range HTTPMETHOD {
 		w := httptest.NewRecorder()
 		r, _ := http.NewRequest(method, "/user", nil)
 		handler.ServeHTTP(w, r)
 		if w.Body.String() != exampleBody {
-			t.Errorf("TestRouterRouterAny can't run, get the response is " + w.Body.String())
+			t.Errorf("TestRouterCtrlAny can't run, get the response is " + w.Body.String())
 		}
 	}
 }
 
-func TestRouterRouterGetPointerMethod(t *testing.T) {
+func TestRouterCtrlGetPointerMethod(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodGet, "/user", nil)
 	w := httptest.NewRecorder()
 
 	handler := NewControllerRegister()
-	handler.RouterGet("/user", (*ExampleController).PingPointer)
+	handler.CtrlGet("/user", (*ExampleController).PingPointer)
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != examplePointerBody {
-		t.Errorf("TestRouterRouterGetPointerMethod can't run")
+		t.Errorf("TestRouterCtrlGetPointerMethod can't run")
 	}
 }
 
-func TestRouterRouterPostPointerMethod(t *testing.T) {
+func TestRouterCtrlPostPointerMethod(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodPost, "/user", nil)
 	w := httptest.NewRecorder()
 
 	handler := NewControllerRegister()
-	handler.RouterPost("/user", (*ExampleController).PingPointer)
+	handler.CtrlPost("/user", (*ExampleController).PingPointer)
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != examplePointerBody {
-		t.Errorf("TestRouterRouterPostPointerMethod can't run")
+		t.Errorf("TestRouterCtrlPostPointerMethod can't run")
 	}
 }
 
-func TestRouterRouterHeadPointerMethod(t *testing.T) {
+func TestRouterCtrlHeadPointerMethod(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodHead, "/user", nil)
 	w := httptest.NewRecorder()
 
 	handler := NewControllerRegister()
-	handler.RouterHead("/user", (*ExampleController).PingPointer)
+	handler.CtrlHead("/user", (*ExampleController).PingPointer)
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != examplePointerBody {
-		t.Errorf("TestRouterRouterHeadPointerMethod can't run")
+		t.Errorf("TestRouterCtrlHeadPointerMethod can't run")
 	}
 }
 
-func TestRouterRouterPutPointerMethod(t *testing.T) {
+func TestRouterCtrlPutPointerMethod(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodPut, "/user", nil)
 	w := httptest.NewRecorder()
 
 	handler := NewControllerRegister()
-	handler.RouterPut("/user", (*ExampleController).PingPointer)
+	handler.CtrlPut("/user", (*ExampleController).PingPointer)
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != examplePointerBody {
-		t.Errorf("TestRouterRouterPutPointerMethod can't run")
+		t.Errorf("TestRouterCtrlPutPointerMethod can't run")
 	}
 }
 
-func TestRouterRouterPatchPointerMethod(t *testing.T) {
+func TestRouterCtrlPatchPointerMethod(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodPatch, "/user", nil)
 	w := httptest.NewRecorder()
 
 	handler := NewControllerRegister()
-	handler.RouterPatch("/user", (*ExampleController).PingPointer)
+	handler.CtrlPatch("/user", (*ExampleController).PingPointer)
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != examplePointerBody {
-		t.Errorf("TestRouterRouterPatchPointerMethod can't run")
+		t.Errorf("TestRouterCtrlPatchPointerMethod can't run")
 	}
 }
 
-func TestRouterRouterDeletePointerMethod(t *testing.T) {
+func TestRouterCtrlDeletePointerMethod(t *testing.T) {
 	r, _ := http.NewRequest(http.MethodDelete, "/user", nil)
 	w := httptest.NewRecorder()
 
 	handler := NewControllerRegister()
-	handler.RouterDelete("/user", (*ExampleController).PingPointer)
+	handler.CtrlDelete("/user", (*ExampleController).PingPointer)
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != examplePointerBody {
-		t.Errorf("TestRouterRouterDeletePointerMethod can't run")
+		t.Errorf("TestRouterCtrlDeletePointerMethod can't run")
 	}
 }
 
-func TestRouterRouterAnyPointerMethod(t *testing.T) {
+func TestRouterCtrlAnyPointerMethod(t *testing.T) {
 	handler := NewControllerRegister()
-	handler.RouterAny("/user", (*ExampleController).PingPointer)
+	handler.CtrlAny("/user", (*ExampleController).PingPointer)
 
 	for method := range HTTPMETHOD {
 		w := httptest.NewRecorder()
 		r, _ := http.NewRequest(method, "/user", nil)
 		handler.ServeHTTP(w, r)
 		if w.Body.String() != examplePointerBody {
-			t.Errorf("TestRouterRouterAnyPointerMethod can't run, get the response is " + w.Body.String())
+			t.Errorf("TestRouterCtrlAnyPointerMethod can't run, get the response is " + w.Body.String())
 		}
 	}
 }

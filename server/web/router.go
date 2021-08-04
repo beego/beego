@@ -119,7 +119,7 @@ type ControllerInfo struct {
 	controllerType reflect.Type
 	methods        map[string]string
 	handler        http.Handler
-	runFunction    FilterFunc
+	runFunction    HandleFunc
 	routerType     int
 	initialize     func() ControllerInterface
 	methodParams   []*param.MethodParam
@@ -354,7 +354,7 @@ func (p *ControllerRegister) GiveBackContext(ctx *beecontext.Context) {
 	p.pool.Put(ctx)
 }
 
-// RouterGet add get method
+// CtrlGet add get method
 // usage:
 //    type MyController struct {
 //	     web.Controller
@@ -363,12 +363,13 @@ func (p *ControllerRegister) GiveBackContext(ctx *beecontext.Context) {
 //	     m.Ctx.Output.Body([]byte("hello world"))
 //    }
 //
-//    RouterGet("/api/:id", MyController.Ping)
-func (p *ControllerRegister) RouterGet(pattern string, f interface{}) {
+//    CtrlGet("/api/:id", MyController.Ping)
+// If the receiver of function Ping is pointer, you should use CtrlGet("/api/:id", (*MyController).Ping)
+func (p *ControllerRegister) CtrlGet(pattern string, f interface{}) {
 	p.AddRouterMethod(http.MethodGet, pattern, f)
 }
 
-// RouterPost add post method
+// CtrlPost add post method
 // usage:
 //    type MyController struct {
 //	     web.Controller
@@ -377,12 +378,13 @@ func (p *ControllerRegister) RouterGet(pattern string, f interface{}) {
 //	     m.Ctx.Output.Body([]byte("hello world"))
 //    }
 //
-//    RouterPost("/api/:id", MyController.Ping)
-func (p *ControllerRegister) RouterPost(pattern string, f interface{}) {
+//    CtrlPost("/api/:id", MyController.Ping)
+// If the receiver of function Ping is pointer, you should use CtrlPost("/api/:id", (*MyController).Ping)
+func (p *ControllerRegister) CtrlPost(pattern string, f interface{}) {
 	p.AddRouterMethod(http.MethodPost, pattern, f)
 }
 
-// RouterHead add head method
+// CtrlHead add head method
 // usage:
 //    type MyController struct {
 //	     web.Controller
@@ -391,12 +393,13 @@ func (p *ControllerRegister) RouterPost(pattern string, f interface{}) {
 //	     m.Ctx.Output.Body([]byte("hello world"))
 //    }
 //
-//    RouterHead("/api/:id", MyController.Ping)
-func (p *ControllerRegister) RouterHead(pattern string, f interface{}) {
+//    CtrlHead("/api/:id", MyController.Ping)
+// If the receiver of function Ping is pointer, you should use CtrlHead("/api/:id", (*MyController).Ping)
+func (p *ControllerRegister) CtrlHead(pattern string, f interface{}) {
 	p.AddRouterMethod(http.MethodHead, pattern, f)
 }
 
-// RouterPut add put method
+// CtrlPut add put method
 // usage:
 //    type MyController struct {
 //	     web.Controller
@@ -405,12 +408,13 @@ func (p *ControllerRegister) RouterHead(pattern string, f interface{}) {
 //	     m.Ctx.Output.Body([]byte("hello world"))
 //    }
 //
-//    RouterPut("/api/:id", MyController.Ping)
-func (p *ControllerRegister) RouterPut(pattern string, f interface{}) {
+//    CtrlPut("/api/:id", MyController.Ping)
+
+func (p *ControllerRegister) CtrlPut(pattern string, f interface{}) {
 	p.AddRouterMethod(http.MethodPut, pattern, f)
 }
 
-// RouterPatch add patch method
+// CtrlPatch add patch method
 // usage:
 //    type MyController struct {
 //	     web.Controller
@@ -419,12 +423,12 @@ func (p *ControllerRegister) RouterPut(pattern string, f interface{}) {
 //	     m.Ctx.Output.Body([]byte("hello world"))
 //    }
 //
-//    RouterPatch("/api/:id", MyController.Ping)
-func (p *ControllerRegister) RouterPatch(pattern string, f interface{}) {
+//    CtrlPatch("/api/:id", MyController.Ping)
+func (p *ControllerRegister) CtrlPatch(pattern string, f interface{}) {
 	p.AddRouterMethod(http.MethodPatch, pattern, f)
 }
 
-// RouterDelete add delete method
+// CtrlDelete add delete method
 // usage:
 //    type MyController struct {
 //	     web.Controller
@@ -433,12 +437,12 @@ func (p *ControllerRegister) RouterPatch(pattern string, f interface{}) {
 //	     m.Ctx.Output.Body([]byte("hello world"))
 //    }
 //
-//    RouterDelete("/api/:id", MyController.Ping)
-func (p *ControllerRegister) RouterDelete(pattern string, f interface{}) {
+//    CtrlDelete("/api/:id", MyController.Ping)
+func (p *ControllerRegister) CtrlDelete(pattern string, f interface{}) {
 	p.AddRouterMethod(http.MethodDelete, pattern, f)
 }
 
-// RouterOptions add options method
+// CtrlOptions add options method
 // usage:
 //    type MyController struct {
 //	     web.Controller
@@ -447,12 +451,12 @@ func (p *ControllerRegister) RouterDelete(pattern string, f interface{}) {
 //	     m.Ctx.Output.Body([]byte("hello world"))
 //    }
 //
-//    RouterOptions("/api/:id", MyController.Ping)
-func (p *ControllerRegister) RouterOptions(pattern string, f interface{}) {
+//    CtrlOptions("/api/:id", MyController.Ping)
+func (p *ControllerRegister) CtrlOptions(pattern string, f interface{}) {
 	p.AddRouterMethod(http.MethodOptions, pattern, f)
 }
 
-// RouterAny add all method
+// CtrlAny add all method
 // usage:
 //    type MyController struct {
 //	     web.Controller
@@ -461,8 +465,8 @@ func (p *ControllerRegister) RouterOptions(pattern string, f interface{}) {
 //	     m.Ctx.Output.Body([]byte("hello world"))
 //    }
 //
-//    RouterAny("/api/:id", MyController.Ping)
-func (p *ControllerRegister) RouterAny(pattern string, f interface{}) {
+//    CtrlAny("/api/:id", MyController.Ping)
+func (p *ControllerRegister) CtrlAny(pattern string, f interface{}) {
 	p.AddRouterMethod("*", pattern, f)
 }
 
@@ -503,7 +507,7 @@ func (p *ControllerRegister) createBeegoRouter(ct reflect.Type, pattern string) 
 }
 
 // createRestfulRouter create restful router with filter function and pattern
-func (p *ControllerRegister) createRestfulRouter(f FilterFunc, pattern string) *ControllerInfo {
+func (p *ControllerRegister) createRestfulRouter(f HandleFunc, pattern string) *ControllerInfo {
 	route := &ControllerInfo{}
 	route.pattern = pattern
 	route.routerType = routerTypeRESTFul
@@ -609,12 +613,15 @@ func getReflectTypeAndMethod(f interface{}) (controllerType reflect.Type, method
 	return
 }
 
+// HandleFunc define how to process the request
+type HandleFunc func(ctx *beecontext.Context)
+
 // Get add get method
 // usage:
 //    Get("/", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (p *ControllerRegister) Get(pattern string, f FilterFunc) {
+func (p *ControllerRegister) Get(pattern string, f HandleFunc) {
 	p.AddMethod("get", pattern, f)
 }
 
@@ -623,7 +630,7 @@ func (p *ControllerRegister) Get(pattern string, f FilterFunc) {
 //    Post("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (p *ControllerRegister) Post(pattern string, f FilterFunc) {
+func (p *ControllerRegister) Post(pattern string, f HandleFunc) {
 	p.AddMethod("post", pattern, f)
 }
 
@@ -632,7 +639,7 @@ func (p *ControllerRegister) Post(pattern string, f FilterFunc) {
 //    Put("/api/:id", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (p *ControllerRegister) Put(pattern string, f FilterFunc) {
+func (p *ControllerRegister) Put(pattern string, f HandleFunc) {
 	p.AddMethod("put", pattern, f)
 }
 
@@ -641,7 +648,7 @@ func (p *ControllerRegister) Put(pattern string, f FilterFunc) {
 //    Delete("/api/:id", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (p *ControllerRegister) Delete(pattern string, f FilterFunc) {
+func (p *ControllerRegister) Delete(pattern string, f HandleFunc) {
 	p.AddMethod("delete", pattern, f)
 }
 
@@ -650,7 +657,7 @@ func (p *ControllerRegister) Delete(pattern string, f FilterFunc) {
 //    Head("/api/:id", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (p *ControllerRegister) Head(pattern string, f FilterFunc) {
+func (p *ControllerRegister) Head(pattern string, f HandleFunc) {
 	p.AddMethod("head", pattern, f)
 }
 
@@ -659,7 +666,7 @@ func (p *ControllerRegister) Head(pattern string, f FilterFunc) {
 //    Patch("/api/:id", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (p *ControllerRegister) Patch(pattern string, f FilterFunc) {
+func (p *ControllerRegister) Patch(pattern string, f HandleFunc) {
 	p.AddMethod("patch", pattern, f)
 }
 
@@ -668,7 +675,7 @@ func (p *ControllerRegister) Patch(pattern string, f FilterFunc) {
 //    Options("/api/:id", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (p *ControllerRegister) Options(pattern string, f FilterFunc) {
+func (p *ControllerRegister) Options(pattern string, f HandleFunc) {
 	p.AddMethod("options", pattern, f)
 }
 
@@ -677,7 +684,7 @@ func (p *ControllerRegister) Options(pattern string, f FilterFunc) {
 //    Any("/api/:id", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (p *ControllerRegister) Any(pattern string, f FilterFunc) {
+func (p *ControllerRegister) Any(pattern string, f HandleFunc) {
 	p.AddMethod("*", pattern, f)
 }
 
@@ -686,7 +693,7 @@ func (p *ControllerRegister) Any(pattern string, f FilterFunc) {
 //    AddMethod("get","/api/:id", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (p *ControllerRegister) AddMethod(method, pattern string, f FilterFunc) {
+func (p *ControllerRegister) AddMethod(method, pattern string, f HandleFunc) {
 	method = p.getUpperMethodString(method)
 
 	route := p.createRestfulRouter(f, pattern)

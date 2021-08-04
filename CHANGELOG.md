@@ -54,6 +54,7 @@
 - Init exceptMethod by using reflection. [4583](https://github.com/beego/beego/pull/4583)
 - Deprecated BeeMap and replace all usage with `sync.map` [4616](https://github.com/beego/beego/pull/4616)
 - TaskManager support graceful shutdown [4635](https://github.com/beego/beego/pull/4635)
+- Add comments to `web.Config`, rename `RouterXXX` to `CtrlXXX`, define `HandleFunc` [4714](https://github.com/beego/beego/pull/4714)
 
 ## Fix Sonar
 

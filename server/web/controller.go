@@ -247,7 +247,7 @@ func (c *Controller) URLMapping() {}
 func (c *Controller) Bind(obj interface{}) error {
 	ct, exist := c.Ctx.Request.Header["Content-Type"]
 	if !exist || len(ct) == 0 {
-		return c.BindJson(obj)
+		return c.BindJSON(obj)
 	}
 	i, l := 0, len(ct[0])
 	for i < l && ct[0][i] != ';' {
@@ -255,7 +255,7 @@ func (c *Controller) Bind(obj interface{}) error {
 	}
 	switch ct[0][0:i] {
 	case "application/json":
-		return c.BindJson(obj)
+		return c.BindJSON(obj)
 	case "application/xml", "text/xml":
 		return c.BindXML(obj)
 	case "application/x-www-form-urlencoded":
@@ -277,7 +277,7 @@ func (c *Controller) BindForm(obj interface{}) error {
 	return c.ParseForm(obj)
 }
 
-func (c *Controller) BindJson(obj interface{}) error {
+func (c *Controller) BindJSON(obj interface{}) error {
 	return json.Unmarshal(c.Ctx.Input.RequestBody, obj)
 }
 
@@ -437,6 +437,21 @@ func (c *Controller) URLFor(endpoint string, values ...interface{}) string {
 		return URLFor(reflect.Indirect(reflect.ValueOf(c.AppController)).Type().Name()+endpoint, values...)
 	}
 	return URLFor(endpoint, values...)
+}
+
+func (c *Controller) JSONResp(data interface{}) error {
+	c.Data["json"] = data
+	return c.ServeJSON()
+}
+
+func (c *Controller) XMLResp(data interface{}) error {
+	c.Data["xml"] = data
+	return c.ServeXML()
+}
+
+func (c *Controller) YamlResp(data interface{}) error {
+	c.Data["yaml"] = data
+	return c.ServeYAML()
 }
 
 // Resp sends response based on the Accept Header
