@@ -62,6 +62,7 @@ func GetFormatter(name string) (LogFormatter, bool) {
 
 // 'w' when, 'm' msg,'f' filename，'F' full path，'n' line number
 // 'l' level number, 't' prefix of level type, 'T' full name of level type
+// 'N' new line
 func (p *PatternLogFormatter) ToString(lm *LogMsg) string {
 	s := []rune(p.Pattern)
 	m := map[rune]string{
@@ -72,6 +73,7 @@ func (p *PatternLogFormatter) ToString(lm *LogMsg) string {
 		't': levelPrefix[lm.Level],
 		'T': levelNames[lm.Level],
 		'F': lm.FilePath,
+		'N': "\n"
 	}
 	_, m['f'] = path.Split(lm.FilePath)
 	res := ""
