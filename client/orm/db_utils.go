@@ -58,13 +58,12 @@ func getFlatParams(fi *fieldInfo, args []interface{}, tz *time.Location) (params
 
 outFor:
 	for _, arg := range args {
-		val := reflect.ValueOf(arg)
-
 		if arg == nil {
 			params = append(params, arg)
 			continue
 		}
 
+		val := reflect.ValueOf(arg)
 		kind := val.Kind()
 		if kind == reflect.Ptr {
 			val = val.Elem()
