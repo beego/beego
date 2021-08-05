@@ -2104,7 +2104,7 @@ func TestRawPrepare(t *testing.T) {
 
 			num, err := res.RowsAffected()
 			assert.Nil(t, err)
-			assert.Equal(t, num, 3)
+			assert.Equal(t, num, int64(3))
 		}
 
 	case IsPostgres:
@@ -2130,7 +2130,7 @@ func TestRawPrepare(t *testing.T) {
 			if err == nil {
 				num, err := res.RowsAffected()
 				assert.Nil(t, err)
-				assert.Equal(t, num, 3)
+				assert.Equal(t, num, int64(3))
 			}
 		}
 	}
