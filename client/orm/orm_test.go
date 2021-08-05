@@ -191,6 +191,7 @@ func TestSyncDb(t *testing.T) {
 	RegisterModel(new(Profile))
 	RegisterModel(new(Post))
 	RegisterModel(new(Tag))
+	RegisterModel(new(NullValue))
 	RegisterModel(new(Comment))
 	RegisterModel(new(UserBig))
 	RegisterModel(new(PostTags))
@@ -217,6 +218,7 @@ func TestRegisterModels(t *testing.T) {
 	RegisterModel(new(User))
 	RegisterModel(new(Profile))
 	RegisterModel(new(Post))
+	RegisterModel(new(NullValue))
 	RegisterModel(new(Tag))
 	RegisterModel(new(Comment))
 	RegisterModel(new(UserBig))
@@ -1962,69 +1964,81 @@ func TestRawValues(t *testing.T) {
 	}
 }
 
+func TestForIssue4709(t *testing.T) {
+	pre, err := dORM.Raw("INSERT into null_value (value) VALUES (?)").Prepare()
+	assert.Nil(t, err)
+	_, err = pre.Exec(nil)
+	assert.Nil(t, err)
+}
+
 func TestRawPrepare(t *testing.T) {
+	var (
+		result sql.Result
+		err    error
+		pre    RawPreparer
+	)
 	switch {
 	case IsMysql || IsSqlite:
 
-		pre, err := dORM.Raw("INSERT INTO tag (name) VALUES (?)").Prepare()
-		throwFail(t, err)
+		pre, err = dORM.Raw("INSERT INTO tag (name) VALUES (?)").Prepare()
+		assert.Nil(t, err)
 		if pre != nil {
-			r, err := pre.Exec("name1")
-			throwFail(t, err)
+			result, err = pre.Exec("name1")
+			assert.Nil(t, err)
 
-			tid, err := r.LastInsertId()
-			throwFail(t, err)
-			throwFail(t, AssertIs(tid > 0, true))
+			tid, err := result.LastInsertId()
+			assert.Nil(t, err)
+			assert.True(t, tid > 0)
 
-			r, err = pre.Exec("name2")
-			throwFail(t, err)
+			result, err = pre.Exec("name2")
+			assert.Nil(t, err)
 
-			id, err := r.LastInsertId()
-			throwFail(t, err)
-			throwFail(t, AssertIs(id, tid+1))
+			id, err := result.LastInsertId()
+			assert.Nil(t, err)
+			assert.Equal(t, id, tid+1)
 
-			r, err = pre.Exec("name3")
-			throwFail(t, err)
+			result, err = pre.Exec("name3")
+			assert.Nil(t, err)
 
-			id, err = r.LastInsertId()
-			throwFail(t, err)
-			throwFail(t, AssertIs(id, tid+2))
+			id, err = result.LastInsertId()
+			assert.Nil(t, err)
+			assert.Equal(t, id, tid+2)
 
 			err = pre.Close()
-			throwFail(t, err)
+			assert.Nil(t, err)
 
 			res, err := dORM.Raw("DELETE FROM tag WHERE name IN (?, ?, ?)", []string{"name1", "name2", "name3"}).Exec()
-			throwFail(t, err)
+			assert.Nil(t, err)
 
 			num, err := res.RowsAffected()
-			throwFail(t, err)
-			throwFail(t, AssertIs(num, 3))
+			assert.Nil(t, err)
+			assert.Equal(t, num, int64(3))
 		}
 
 	case IsPostgres:
 
-		pre, err := dORM.Raw(`INSERT INTO "tag" ("name") VALUES (?) RETURNING "id"`).Prepare()
-		throwFail(t, err)
+		pre, err = dORM.Raw(`INSERT INTO "tag" ("name") VALUES (?) RETURNING "id"`).Prepare()
+		assert.Nil(t, err)
 		if pre != nil {
-			_, err := pre.Exec("name1")
-			throwFail(t, err)
+			_, err = pre.Exec("name1")
+			assert.Nil(t, err)
 
 			_, err = pre.Exec("name2")
-			throwFail(t, err)
+			assert.Nil(t, err)
 
 			_, err = pre.Exec("name3")
-			throwFail(t, err)
+			assert.Nil(t, err)
 
 			err = pre.Close()
-			throwFail(t, err)
+			assert.Nil(t, err)
 
 			res, err := dORM.Raw(`DELETE FROM "tag" WHERE "name" IN (?, ?, ?)`, []string{"name1", "name2", "name3"}).Exec()
-			throwFail(t, err)
+			assert.Nil(t, err)
 
 			if err == nil {
 				num, err := res.RowsAffected()
-				throwFail(t, err)
-				throwFail(t, AssertIs(num, 3))
+				assert.Nil(t, err)
+				assert.Equal(t, num, int64(3))
 			}
 		}
 	}

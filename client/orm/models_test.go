@@ -332,6 +332,11 @@ func NewPost() *Post {
 	return obj
 }
 
+type NullValue struct {
+	ID    int    `orm:"column(id)"`
+	Value string `orm:"size(30);null"`
+}
+
 type Tag struct {
 	ID       int     `orm:"column(id)"`
 	Name     string  `orm:"size(30)"`
