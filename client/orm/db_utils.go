@@ -61,7 +61,7 @@ outFor:
 			params = append(params, arg)
 			continue
 		}
-		
+
 		val := reflect.ValueOf(arg)
 		kind := val.Kind()
 		if kind == reflect.Ptr {
