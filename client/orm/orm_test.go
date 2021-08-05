@@ -216,6 +216,7 @@ func TestRegisterModels(t *testing.T) {
 	RegisterModel(new(User))
 	RegisterModel(new(Profile))
 	RegisterModel(new(Post))
+	RegisterModel(new(NullValue))
 	RegisterModel(new(Tag))
 	RegisterModel(new(Comment))
 	RegisterModel(new(UserBig))
@@ -2054,6 +2055,13 @@ func TestRawValues(t *testing.T) {
 	}
 }
 
+func TestForIssue4709(t *testing.T) {
+	pre, err := dORM.Raw("INSERT into null_value (value) VALUES (?)").Prepare()
+	assert.Nil(t, err)
+	_, err = pre.Exec(nil)
+	assert.Nil(t, err)
+}
+
 func TestRawPrepare(t *testing.T) {
 	var (
 		result sql.Result
@@ -2066,9 +2074,6 @@ func TestRawPrepare(t *testing.T) {
 		pre, err = dORM.Raw("INSERT INTO tag (name) VALUES (?)").Prepare()
 		assert.Nil(t, err)
 		if pre != nil {
-			result, err = pre.Exec(nil)
-			assert.Nil(t, err)
-
 			result, err = pre.Exec("name1")
 			assert.Nil(t, err)
 
@@ -2106,9 +2111,6 @@ func TestRawPrepare(t *testing.T) {
 		pre, err = dORM.Raw(`INSERT INTO "tag" ("name") VALUES (?) RETURNING "id"`).Prepare()
 		assert.Nil(t, err)
 		if pre != nil {
-			_, err = pre.Exec(nil)
-			assert.Nil(t, err)
-
 			_, err = pre.Exec("name1")
 			assert.Nil(t, err)
 
