@@ -57,13 +57,12 @@ func getExistPk(mi *modelInfo, ind reflect.Value) (column string, value interfac
 func getFlatParams(fi *fieldInfo, args []interface{}, tz *time.Location) (params []interface{}) {
 outFor:
 	for _, arg := range args {
-		val := reflect.ValueOf(arg)
-
 		if arg == nil {
 			params = append(params, arg)
 			continue
 		}
 
+		val := reflect.ValueOf(arg)
 		kind := val.Kind()
 		if kind == reflect.Ptr {
 			val = val.Elem()
