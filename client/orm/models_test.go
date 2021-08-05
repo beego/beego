@@ -353,7 +353,6 @@ type NullValue struct {
 	Value string `orm:"size(30);null"`
 }
 
-
 type Tag struct {
 	ID       int     `orm:"column(id)"`
 	Name     string  `orm:"size(30)"`
