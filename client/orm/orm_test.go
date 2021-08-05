@@ -188,6 +188,7 @@ func TestSyncDb(t *testing.T) {
 	RegisterModel(new(User))
 	RegisterModel(new(Profile))
 	RegisterModel(new(Post))
+	RegisterModel(new(NullValue))
 	RegisterModel(new(Tag))
 	RegisterModel(new(Comment))
 	RegisterModel(new(UserBig))
