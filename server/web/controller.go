@@ -17,8 +17,6 @@ package web
 import (
 	"bytes"
 	context2 "context"
-	"encoding/json"
-	"encoding/xml"
 	"errors"
 	"fmt"
 	"html/template"
@@ -32,8 +30,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/gogo/protobuf/proto"
-	"gopkg.in/yaml.v2"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/beego/beego/v2/server/web/context"
 	"github.com/beego/beego/v2/server/web/context/param"
@@ -244,49 +241,35 @@ func (c *Controller) HandlerFunc(fnname string) bool {
 // URLMapping register the internal Controller router.
 func (c *Controller) URLMapping() {}
 
+// Bind if the content type is form, we read data from form
+// otherwise, read data from request body
 func (c *Controller) Bind(obj interface{}) error {
-	ct, exist := c.Ctx.Request.Header["Content-Type"]
-	if !exist || len(ct) == 0 {
-		return c.BindJSON(obj)
-	}
-	i, l := 0, len(ct[0])
-	for i < l && ct[0][i] != ';' {
-		i++
-	}
-	switch ct[0][0:i] {
-	case "application/json":
-		return c.BindJSON(obj)
-	case "application/xml", "text/xml":
-		return c.BindXML(obj)
-	case "application/x-www-form-urlencoded":
-		return c.BindForm(obj)
-	case "application/x-protobuf":
-		return c.BindProtobuf(obj)
-	case "application/x-yaml":
-		return c.BindYAML(obj)
-	default:
-		return errors.New("Unsupported Content-Type:" + ct[0])
-	}
+	return c.Ctx.Bind(obj)
 }
 
+// BindYAML only read data from http request body
 func (c *Controller) BindYAML(obj interface{}) error {
-	return yaml.Unmarshal(c.Ctx.Input.RequestBody, obj)
+	return c.Ctx.BindYAML(obj)
 }
 
+// BindForm read data from form
 func (c *Controller) BindForm(obj interface{}) error {
-	return c.ParseForm(obj)
+	return c.Ctx.BindForm(obj)
 }
 
+// BindJSON only read data from http request body
 func (c *Controller) BindJSON(obj interface{}) error {
-	return json.Unmarshal(c.Ctx.Input.RequestBody, obj)
+	return c.Ctx.BindJSON(obj)
 }
 
-func (c *Controller) BindProtobuf(obj interface{}) error {
-	return proto.Unmarshal(c.Ctx.Input.RequestBody, obj.(proto.Message))
+// BindProtobuf only read data from http request body
+func (c *Controller) BindProtobuf(obj proto.Message) error {
+	return c.Ctx.BindProtobuf(obj)
 }
 
+// BindXML only read data from http request body
 func (c *Controller) BindXML(obj interface{}) error {
-	return xml.Unmarshal(c.Ctx.Input.RequestBody, obj)
+	return c.Ctx.BindXML(obj)
 }
 
 // Mapping the method to function
@@ -440,35 +423,23 @@ func (c *Controller) URLFor(endpoint string, values ...interface{}) string {
 }
 
 func (c *Controller) JSONResp(data interface{}) error {
-	c.Data["json"] = data
-	return c.ServeJSON()
+	return c.Ctx.JSONResp(data)
 }
 
 func (c *Controller) XMLResp(data interface{}) error {
-	c.Data["xml"] = data
-	return c.ServeXML()
+	return c.Ctx.XMLResp(data)
 }
 
 func (c *Controller) YamlResp(data interface{}) error {
-	c.Data["yaml"] = data
-	return c.ServeYAML()
+	return c.Ctx.YamlResp(data)
 }
 
 // Resp sends response based on the Accept Header
 // By default response will be in JSON
+// it's different from ServeXXX methods
+// because we don't store the data to Data field
 func (c *Controller) Resp(data interface{}) error {
-	accept := c.Ctx.Input.Header("Accept")
-	switch accept {
-	case context.ApplicationYAML:
-		c.Data["yaml"] = data
-		return c.ServeYAML()
-	case context.ApplicationXML, context.TextXML:
-		c.Data["xml"] = data
-		return c.ServeXML()
-	default:
-		c.Data["json"] = data
-		return c.ServeJSON()
-	}
+	return c.Ctx.Resp(data)
 }
 
 // ServeJSON sends a json response with encoding charset.
@@ -518,11 +489,7 @@ func (c *Controller) Input() (url.Values, error) {
 
 // ParseForm maps input data map to obj struct.
 func (c *Controller) ParseForm(obj interface{}) error {
-	form, err := c.Input()
-	if err != nil {
-		return err
-	}
-	return ParseForm(form, obj)
+	return c.Ctx.BindForm(obj)
 }
 
 // GetString returns the input value by key string or the default value while it's present and input is blank
