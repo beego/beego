@@ -16,6 +16,7 @@ package web
 
 import (
 	"fmt"
+	"html/template"
 	"sync"
 	"time"
 
@@ -98,7 +99,7 @@ func (m *URLMap) GetMap() map[string]interface{} {
 	for k, v := range m.urlmap {
 		for kk, vv := range v {
 			result := []string{
-				fmt.Sprintf("% -50s", k),
+				fmt.Sprintf("% -50s", template.HTMLEscapeString(k)),
 				fmt.Sprintf("% -10s", kk),
 				fmt.Sprintf("% -16d", vv.RequestNum),
 				fmt.Sprintf("%d", vv.TotalTime),
