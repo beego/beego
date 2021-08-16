@@ -82,13 +82,10 @@ type adminApp struct {
 	*HttpServer
 }
 
-// Route adds http.HandlerFunc to adminApp with url pattern.
+// Run start Beego admin
 func (admin *adminApp) Run() {
 
-	// if len(task.AdminTaskList) > 0 {
-	// 	task.StartTask()
-	// }
-	logs.Warning("now we don't start tasks here, if you use task module," +
+	logs.Debug("now we don't start tasks here, if you use task module," +
 		" please invoke task.StartTask, or task will not be executed")
 
 	addr := BConfig.Listen.AdminAddr
