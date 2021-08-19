@@ -270,7 +270,7 @@ func (ctx *Context) XSRFToken(key string, expire int64) string {
 		if !ok {
 			token = string(utils.RandomCreateBytes(32))
 			// TODO make it configurable
-			ctx.SetSecureCookie(key, "_xsrf", token, expire, "", "")
+			ctx.SetSecureCookie(key, "_xsrf", token, expire, "/", "")
 		}
 		ctx._xsrfToken = token
 	}
