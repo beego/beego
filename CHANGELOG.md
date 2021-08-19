@@ -57,6 +57,7 @@
 - Add comments to `web.Config`, rename `RouterXXX` to `CtrlXXX`, define `HandleFunc` [4714](https://github.com/beego/beego/pull/4714)
 - Refactor: Move `BindXXX` and `XXXResp` methods to `context.Context`. [4718](https://github.com/beego/beego/pull/4718)
 - fix bug:reflect.ValueOf(nil) in getFlatParams [4715](https://github.com/beego/beego/pull/4715)
+- Fix 4736: set a fixed value "/" to the "Path" of "_xsrf" cookie. [4736](https://github.com/beego/beego/issues/4735)
 
 ## Fix Sonar
 
