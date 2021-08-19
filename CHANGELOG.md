@@ -56,6 +56,7 @@
 - TaskManager support graceful shutdown [4635](https://github.com/beego/beego/pull/4635)
 - Add comments to `web.Config`, rename `RouterXXX` to `CtrlXXX`, define `HandleFunc` [4714](https://github.com/beego/beego/pull/4714)
 - Refactor: Move `BindXXX` and `XXXResp` methods to `context.Context`. [4718](https://github.com/beego/beego/pull/4718)
+- Fix 4728: Print wrong file name. [4737](https://github.com/beego/beego/pull/4737)
 - fix bug:reflect.ValueOf(nil) in getFlatParams [4715](https://github.com/beego/beego/pull/4715)
 
 ## Fix Sonar
