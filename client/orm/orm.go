@@ -282,13 +282,7 @@ func (o *ormBase) Delete(md interface{}, cols ...string) (int64, error) {
 func (o *ormBase) DeleteWithCtx(ctx context.Context, md interface{}, cols ...string) (int64, error) {
 	mi, ind := o.getMiInd(md, true)
 	num, err := o.alias.DbBaser.Delete(ctx, o.db, mi, ind, o.alias.TZ, cols)
-	if err != nil {
-		return num, err
-	}
-	if num > 0 {
-		o.setPk(mi, ind, 0)
-	}
-	return num, nil
+	return num, err
 }
 
 // create a models to models queryer
