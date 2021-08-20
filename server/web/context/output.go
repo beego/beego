@@ -87,7 +87,7 @@ func (output *BeegoOutput) Body(content []byte) error {
 }
 
 // Cookie sets a cookie value via given key.
-// others: used to set a cookie's max age time, path,domain, secure and httponly.
+// others: used to set a cookie's max age time, path,domain, secure, httponly, samesite, sameparty and priority.
 func (output *BeegoOutput) Cookie(name string, value string, others ...interface{}) {
 	var b bytes.Buffer
 	fmt.Fprintf(&b, "%s=%s", sanitizeName(name), sanitizeValue(value))
@@ -160,6 +160,29 @@ func (output *BeegoOutput) Cookie(name string, value string, others ...interface
 	if len(others) > 5 {
 		if v, ok := others[5].(string); ok && len(v) > 0 {
 			fmt.Fprintf(&b, "; SameSite=%s", sanitizeValue(v))
+		}
+	}
+	
+	//default false
+	if len(others) > 6 {
+		var sameParty bool
+		switch v := others[6].(type) {
+		case bool:
+			sameParty = v
+		default:
+			if others[6] != nil {
+				sameParty = false
+			}
+		}
+		if sameParty {
+			fmt.Fprintf(&b, "; SameParty=%t", sameParty)
+		}
+	}
+
+	// default empty
+	if len(others) > 7 {
+		if v, ok := others[7].(string); ok && len(v) > 0 {
+			fmt.Fprintf(&b, "; Priority=%s", sanitizeValue(v))
 		}
 	}
 
