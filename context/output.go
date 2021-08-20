@@ -117,13 +117,13 @@ func (output *BeegoOutput) Cookie(name string, value string, others ...interface
 	// can use nil skip set
 
 	// default "/"
+	tmpPath := "/"
 	if len(others) > 1 {
 		if v, ok := others[1].(string); ok && len(v) > 0 {
-			fmt.Fprintf(&b, "; Path=%s", sanitizeValue(v))
+			tmpPath = sanitizeValue(v)
 		}
-	} else {
-		fmt.Fprintf(&b, "; Path=%s", "/")
 	}
+	fmt.Fprintf(&b, "; Path=%s", tmpPath)
 
 	// default empty
 	if len(others) > 2 {
