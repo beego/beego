@@ -163,7 +163,7 @@ func (output *BeegoOutput) Cookie(name string, value string, others ...interface
 		}
 	}
 	
-	//default false
+	// default false
 	if len(others) > 6 {
 		var sameParty bool
 		switch v := others[6].(type) {
