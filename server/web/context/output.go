@@ -165,17 +165,8 @@ func (output *BeegoOutput) Cookie(name string, value string, others ...interface
 	
 	// default false
 	if len(others) > 6 {
-		var sameParty bool
-		switch v := others[6].(type) {
-		case bool:
-			sameParty = v
-		default:
-			if others[6] != nil {
-				sameParty = false
-			}
-		}
-		if sameParty {
-			fmt.Fprintf(&b, "; SameParty=%t", sameParty)
+		if v, ok := others[6].(bool); ok && v {
+			fmt.Fprintf(&b, "; SameParty")
 		}
 	}
 
