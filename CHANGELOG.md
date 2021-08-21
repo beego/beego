@@ -62,6 +62,7 @@
 - Fix 4734: do not reset id in Delete function. [4738](https://github.com/beego/beego/pull/4738)
 - Fix 4739: set a default value "/" for "Path" in the Cookie function when there is not parameter "Path" or the parameter is "". [4739](https://github.com/beego/beego/issues/4739)
 - Add sameparty and priority for cookie.
+- Fix: cookie "SameParty=false" can not work.
 
 ## Fix Sonar
 
