@@ -14,6 +14,6 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           # these are optional, if you want to configure:
           days-until-close: 5
-          trigger-label: status/need-feeback
+          trigger-label: status/need-translation
           closing-comment: This issue was closed by the need-translation bot. Please transalate your issue to English so it could help others.
           dry-run: false
