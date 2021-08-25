@@ -2403,8 +2403,10 @@ func TestReadOrCreate(t *testing.T) {
 	throwFail(t, AssertIs(nu.Status, u.Status))
 	throwFail(t, AssertIs(nu.IsStaff, u.IsStaff))
 	throwFail(t, AssertIs(nu.IsActive, u.IsActive))
+	assert.True(t, u.ID > 0)
 
 	dORM.Delete(u)
+	assert.True(t, u.ID > 0)
 }
 
 func TestInLine(t *testing.T) {
