@@ -187,11 +187,11 @@ func (c *BaseConfiger) Strings(key string) ([]string, error) {
 	return strings.Split(res, ";"), nil
 }
 
-func (c *BaseConfiger) Sub(key string) (Configer, error) {
+func (*BaseConfiger) Sub(string) (Configer, error) {
 	return nil, errors.New("unsupported operation")
 }
 
-func (c *BaseConfiger) OnChange(key string, fn func(value string)) {
+func (*BaseConfiger) OnChange(_ string, _ func(value string)) {
 	// do nothing
 }
 
@@ -249,6 +249,12 @@ func ExpandValueEnvForMap(m map[string]interface{}) map[string]interface{} {
 				value[k2] = ExpandValueEnv(v2)
 			}
 			m[k] = value
+		case map[interface{}]interface{}:
+			tmp := make(map[string]interface{}, len(value))
+			for k2, v2 := range value {
+				tmp[k2.(string)] = v2
+			}
+			m[k] = ExpandValueEnvForMap(tmp)
 		}
 	}
 	return m
