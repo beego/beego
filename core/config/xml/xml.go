@@ -72,12 +72,12 @@ func (xc *Config) ParseData(data []byte) (config.Configer, error) {
 
 	v := d["config"]
 	if v == nil {
-		return nil, fmt.Errorf("xml parse should incluce in <config></config> tags")
+		return nil, fmt.Errorf("xml parse should include in <config></config> tags")
 	}
 
 	confVal, ok := v.(map[string]interface{})
 	if !ok {
-		return nil, fmt.Errorf("xml parse <config></config> tags should incluce sub tags")
+		return nil, fmt.Errorf("xml parse <config></config> tags should include sub tags")
 	}
 
 	x.data = config.ExpandValueEnvForMap(confVal)
