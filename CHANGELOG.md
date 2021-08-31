@@ -61,6 +61,7 @@
 - Fix 4736: set a fixed value "/" to the "Path" of "_xsrf" cookie. [4736](https://github.com/beego/beego/issues/4735) [4739](https://github.com/beego/beego/issues/4739)
 - Fix 4734: do not reset id in Delete function. [4738](https://github.com/beego/beego/pull/4738) [4742](https://github.com/beego/beego/pull/4742)
 - Fix 4699: Remove Remove goyaml2 dependency. [4755](https://github.com/beego/beego/pull/4755)
+- Fix 4698: Prompt error when config format is incorrect. [4757](https://github.com/beego/beego/pull/4757)
 
 ## Fix Sonar
 
