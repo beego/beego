@@ -70,7 +70,17 @@ func (xc *Config) ParseData(data []byte) (config.Configer, error) {
 		return nil, err
 	}
 
-	x.data = config.ExpandValueEnvForMap(d["config"].(map[string]interface{}))
+	v := d["config"]
+	if v == nil {
+		return nil, fmt.Errorf("xml parse should incluce in <config></config> tags")
+	}
+
+	confVal, ok := v.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("xml parse <config></config> tags should incluce sub tags")
+	}
+
+	x.data = config.ExpandValueEnvForMap(confVal)
 
 	return x, nil
 }

@@ -150,6 +150,25 @@ func TestXML(t *testing.T) {
 	assert.Equal(t, "MySection", sec.Name)
 }
 
+func TestXMLMissConfig(t *testing.T) {
+	xmlcontext1 := `
+	<?xml version="1.0" encoding="UTF-8"?>
+	<appname>beeapi</appname>
+	`
+
+	c := &Config{}
+	_, err := c.ParseData([]byte(xmlcontext1))
+	assert.Equal(t, "xml parse should incluce in <config></config> tags", err.Error())
+
+	xmlcontext2 := `
+	<?xml version="1.0" encoding="UTF-8"?>
+	<config></config>
+	`
+
+	_, err = c.ParseData([]byte(xmlcontext2))
+	assert.Equal(t, "xml parse <config></config> tags should incluce sub tags", err.Error())
+}
+
 type Section struct {
 	Name string `xml:"name"`
 }
