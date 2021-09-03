@@ -29,7 +29,6 @@ func (cc *SampleCacheCheck) Check() error {
 func TestList_01(t *testing.T) {
 	m := make(M)
 	list("BConfig", BConfig, m)
-	t.Log(m)
 	om := oldMap()
 	for k, v := range om {
 		if fmt.Sprint(m[k]) != fmt.Sprint(v) {
@@ -98,8 +97,6 @@ func oldMap() M {
 }
 
 func TestWriteJSON(t *testing.T) {
-	t.Log("Testing the adding of JSON to the response")
-
 	w := httptest.NewRecorder()
 	originalBody := []int{1, 2, 3}
 

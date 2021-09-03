@@ -38,7 +38,8 @@ func NewNamespace(prefix string, params ...LinkNamespace) *Namespace {
 
 func oldToNewLinkNs(params []LinkNamespace) []web.LinkNamespace {
 	nps := make([]web.LinkNamespace, 0, len(params))
-	for _, p := range params {
+	for i := 0; i < len(params); i++ {
+		p := params[i]
 		nps = append(nps, func(namespace *web.Namespace) {
 			p((*Namespace)(namespace))
 		})
@@ -81,7 +82,8 @@ func (n *Namespace) Filter(action string, filter ...FilterFunc) *Namespace {
 
 func oldToNewFilter(filter []FilterFunc) []web.FilterFunc {
 	nfs := make([]web.FilterFunc, 0, len(filter))
-	for _, f := range filter {
+	for i := 0; i < len(filter); i++ {
+		f := filter[i]
 		nfs = append(nfs, func(ctx *context.Context) {
 			f((*adtContext.Context)(ctx))
 		})

@@ -196,7 +196,10 @@ func (p *ControllerRegister) Init() {
 	for i := len(p.filterChains) - 1; i >= 0; i-- {
 		fc := p.filterChains[i]
 		root := p.chainRoot
-		filterFunc := fc.chain(root.filterFunc)
+		filterFunc := fc.chain(func(ctx *beecontext.Context) {
+			var preFilterParams map[string]string
+			root.filter(ctx, p.getUrlPath(ctx), preFilterParams)
+		})
 		p.chainRoot = newFilterRouter(fc.pattern, filterFunc, fc.opts...)
 		p.chainRoot.next = root
 	}
@@ -332,7 +335,6 @@ func (p *ControllerRegister) Include(cList ...ControllerInterface) {
 				for _, f := range a.Filters {
 					p.InsertFilter(f.Pattern, f.Pos, f.Filter, WithReturnOnOutput(f.ReturnOnOutput), WithResetParams(f.ResetParams))
 				}
-
 				p.addWithMethodParams(a.Router, c, a.MethodParams, WithRouterMethods(c, strings.Join(a.AllowHTTPMethods, ",")+":"+a.Method))
 			}
 		}
@@ -786,7 +788,7 @@ func (p *ControllerRegister) InsertFilter(pattern string, pos int, filter Filter
 //     }
 // }
 func (p *ControllerRegister) InsertFilterChain(pattern string, chain FilterChain, opts ...FilterOpt) {
-	opts = append(opts, WithCaseSensitive(p.cfg.RouterCaseSensitive))
+	opts = append([]FilterOpt{WithCaseSensitive(p.cfg.RouterCaseSensitive)}, opts...)
 	p.filterChains = append(p.filterChains, filterChainConfig{
 		pattern: pattern,
 		chain:   chain,

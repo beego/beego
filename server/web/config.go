@@ -405,6 +405,11 @@ type SessionConfig struct {
 	// the default value is http.SameSiteDefaultMode
 	// @Default 1
 	SessionCookieSameSite http.SameSite
+
+	// SessionIDPrefix
+	// @Description session id's prefix
+	// @Default ""
+	SessionIDPrefix string
 }
 
 // LogConfig holds Log related config
