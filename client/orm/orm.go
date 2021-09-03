@@ -536,7 +536,6 @@ func (o *orm) BeginWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions) (TxO
 			db:    &TxDB{tx: tx},
 		},
 	}
-
 	var taskTxOrm TxOrmer = _txOrm
 	return taskTxOrm, nil
 }
