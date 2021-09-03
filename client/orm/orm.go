@@ -536,6 +536,11 @@ func (o *orm) BeginWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions) (TxO
 			db:    &TxDB{tx: tx},
 		},
 	}
+
+	if Debug {
+		_txOrm.db = newDbQueryLog(o.alias, _txOrm.db)
+	}
+
 	var taskTxOrm TxOrmer = _txOrm
 	return taskTxOrm, nil
 }

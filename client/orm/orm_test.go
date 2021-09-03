@@ -2886,3 +2886,59 @@ func TestContextCanceled(t *testing.T) {
 	_, err = qs.Filter("UserName", "slene").CountWithCtx(ctx)
 	throwFail(t, AssertIs(err, context.Canceled))
 }
+
+func TestDebugLog(t *testing.T) {
+
+	txCommitFn := func() {
+		o := NewOrm()
+		o.DoTx(func(ctx context.Context, txOrm TxOrmer) (txerr error) {
+			_, txerr = txOrm.QueryTable(&User{}).Count()
+			return
+		})
+	}
+
+	txRollbackFn := func() {
+		o := NewOrm()
+		o.DoTx(func(ctx context.Context, txOrm TxOrmer) (txerr error) {
+			user := NewUser()
+			user.UserName = "slene"
+			user.Email = "vslene@gmail.com"
+			user.Password = "pass"
+			user.Status = 3
+			user.IsStaff = true
+			user.IsActive = true
+
+			txOrm.Insert(user)
+			txerr = fmt.Errorf("mock error")
+			return
+		})
+	}
+
+	Debug = true
+	output1 := captureDebugLogOutput(txCommitFn)
+
+	assert.Contains(t, output1, "START TRANSACTION")
+	assert.Contains(t, output1, "COMMIT")
+
+	output2 := captureDebugLogOutput(txRollbackFn)
+
+	assert.Contains(t, output2, "START TRANSACTION")
+	assert.Contains(t, output2, "ROLLBACK")
+
+	Debug = false
+	output1 = captureDebugLogOutput(txCommitFn)
+	assert.EqualValues(t, output1, "")
+
+	output2 = captureDebugLogOutput(txRollbackFn)
+	assert.EqualValues(t, output2, "")
+}
+
+func captureDebugLogOutput(f func()) string {
+	var buf bytes.Buffer
+	DebugLog.SetOutput(&buf)
+	defer func() {
+		DebugLog.SetOutput(os.Stderr)
+	}()
+	f()
+	return buf.String()
+}

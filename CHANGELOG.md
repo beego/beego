@@ -65,7 +65,7 @@
 - Fix 4734: do not reset id in Delete function. [4738](https://github.com/beego/beego/pull/4738) [4742](https://github.com/beego/beego/pull/4742)
 - Fix 4699: Remove Remove goyaml2 dependency. [4755](https://github.com/beego/beego/pull/4755)
 - Fix 4698: Prompt error when config format is incorrect. [4757](https://github.com/beego/beego/pull/4757)
-
+- Fix 4674: Tx Orm missing debug log [4756](https://github.com/beego/beego/pull/4756)
 ## Fix Sonar
 
 - [4677](https://github.com/beego/beego/pull/4677)
