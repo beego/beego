@@ -558,10 +558,10 @@ func (o *orm) DoTxWithOpts(opts *sql.TxOptions, task func(ctx context.Context, t
 }
 
 func (o *orm) DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task func(ctx context.Context, txOrm TxOrmer) error) error {
-	return doTxTemplate(o, ctx, opts, task)
+	return doTxTemplate(ctx, o, opts, task)
 }
 
-func doTxTemplate(o TxBeginner, ctx context.Context, opts *sql.TxOptions,
+func doTxTemplate(ctx context.Context, o TxBeginner, opts *sql.TxOptions,
 	task func(ctx context.Context, txOrm TxOrmer) error) error {
 	_txOrm, err := o.BeginWithCtxAndOpts(ctx, opts)
 	if err != nil {

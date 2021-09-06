@@ -129,7 +129,8 @@ func getCaller(skip int) string {
 			if cur == line {
 				flag = ">>"
 			}
-			code := fmt.Sprintf(" %s %5d:   %s", flag, cur, strings.Replace(string(lines[o+i]), "\t", "    ", -1))
+			ls := strings.Replace(string(lines[o+i]), "\t", "    ", -1)
+			code := fmt.Sprintf(" %s %5d:   %s", flag, cur, ls)
 			if code != "" {
 				codes = append(codes, code)
 			}
@@ -883,10 +884,11 @@ func TestCustomField(t *testing.T) {
 
 func TestExpr(t *testing.T) {
 	user := &User{}
-	qs := dORM.QueryTable(user)
-	qs = dORM.QueryTable((*User)(nil))
-	qs = dORM.QueryTable("User")
-	qs = dORM.QueryTable("user")
+	var qs QuerySeter
+	assert.NotPanics(t, func() { qs = dORM.QueryTable(user) })
+	assert.NotPanics(t, func() { qs = dORM.QueryTable((*User)(nil)) })
+	assert.NotPanics(t, func() { qs = dORM.QueryTable("User") })
+	assert.NotPanics(t, func() { qs = dORM.QueryTable("user") })
 	num, err := qs.Filter("UserName", "slene").Filter("user_name", "slene").Filter("profile__Age", 28).Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
@@ -2859,12 +2861,10 @@ func TestCondition(t *testing.T) {
 				hasCycle(p.cond)
 			}
 		}
-		return
 	}
 	hasCycle(cond)
 	// cycleFlag was true,meaning use self as sub cond
 	throwFail(t, AssertIs(!cycleFlag, true))
-	return
 }
 
 func TestContextCanceled(t *testing.T) {
@@ -2888,7 +2888,6 @@ func TestContextCanceled(t *testing.T) {
 }
 
 func TestDebugLog(t *testing.T) {
-
 	txCommitFn := func() {
 		o := NewOrm()
 		o.DoTx(func(ctx context.Context, txOrm TxOrmer) (txerr error) {

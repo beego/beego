@@ -462,7 +462,7 @@ func (f *filterOrmDecorator) DoTxWithCtxAndOpts(ctx context.Context, opts *sql.T
 		TxStartTime: f.txStartTime,
 		TxName:      getTxNameFromCtx(ctx),
 		f: func(c context.Context) []interface{} {
-			err := doTxTemplate(f, c, opts, task)
+			err := doTxTemplate(c, f, opts, task)
 			return []interface{}{err}
 		},
 	}
