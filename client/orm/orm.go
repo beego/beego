@@ -318,7 +318,7 @@ func (o *ormBase) LoadRelated(md interface{}, name string, args ...utils.KV) (in
 	return o.LoadRelatedWithCtx(context.Background(), md, name, args...)
 }
 
-func (o *ormBase) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...utils.KV) (int64, error) {
+func (o *ormBase) LoadRelatedWithCtx(_ context.Context, md interface{}, name string, args ...utils.KV) (int64, error) {
 	_, fi, ind, qs := o.queryRelated(md, name)
 
 	var relDepth int
@@ -488,7 +488,7 @@ func (o *ormBase) Raw(query string, args ...interface{}) RawSeter {
 	return o.RawWithCtx(context.Background(), query, args...)
 }
 
-func (o *ormBase) RawWithCtx(ctx context.Context, query string, args ...interface{}) RawSeter {
+func (o *ormBase) RawWithCtx(_ context.Context, query string, args ...interface{}) RawSeter {
 	return newRawSet(o, query, args)
 }
 

@@ -144,7 +144,7 @@ func getCaller(skip int) string {
 }
 
 func formatLines(s string) string {
-	return strings.Replace(s, "\t", "    ", -1)
+	return strings.ReplaceAll(s, "\t", "    ")
 }
 
 // Deprecated: Using stretchr/testify/assert
@@ -1725,7 +1725,7 @@ func TestQueryM2M(t *testing.T) {
 	throwFailNow(t, AssertIs(num, 1))
 }
 
-func TestQueryRelate(t *testing.T) {
+func TestQueryRelate(_ *testing.T) {
 	// post := &Post{Id: 2}
 
 	// qs := dORM.QueryRelate(post, "Tags")
@@ -2075,9 +2075,7 @@ func TestRawPrepare(t *testing.T) {
 		err    error
 		pre    RawPreparer
 	)
-	switch {
-	case IsMysql || IsSqlite:
-
+	if IsMysql || IsSqlite {
 		pre, err = dORM.Raw("INSERT INTO tag (name) VALUES (?)").Prepare()
 		assert.Nil(t, err)
 		if pre != nil {
@@ -2112,9 +2110,7 @@ func TestRawPrepare(t *testing.T) {
 			assert.Nil(t, err)
 			assert.Equal(t, num, int64(3))
 		}
-
-	case IsPostgres:
-
+	} else if IsPostgres {
 		pre, err = dORM.Raw(`INSERT INTO "tag" ("name") VALUES (?) RETURNING "id"`).Prepare()
 		assert.Nil(t, err)
 		if pre != nil {
@@ -2244,8 +2240,7 @@ func TestTransaction(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
 
-	switch {
-	case IsMysql || IsSqlite:
+	if IsMysql || IsSqlite {
 		res, err := to.Raw("INSERT INTO tag (name) VALUES (?)", names[2]).Exec()
 		throwFail(t, err)
 		if err == nil {
