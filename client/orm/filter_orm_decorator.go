@@ -518,7 +518,7 @@ func (f *filterOrmDecorator) RollbackUnlessCommit() error {
 	return f.convertError(res[0])
 }
 
-func (f *filterOrmDecorator) convertError(v interface{}) error {
+func (*filterOrmDecorator) convertError(v interface{}) error {
 	if v == nil {
 		return nil
 	}

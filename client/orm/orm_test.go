@@ -129,7 +129,7 @@ func getCaller(skip int) string {
 			if cur == line {
 				flag = ">>"
 			}
-			ls := strings.Replace(string(lines[o+i]), "\t", "    ", -1)
+			ls := formatLines(string(lines[o+i]))
 			code := fmt.Sprintf(" %s %5d:   %s", flag, cur, ls)
 			if code != "" {
 				codes = append(codes, code)
@@ -141,6 +141,10 @@ func getCaller(skip int) string {
 		funName = funName[i+1:]
 	}
 	return fmt.Sprintf("%s:%s:%d: \n%s", fn, funName, line, strings.Join(codes, "\n"))
+}
+
+func formatLines(s string) string {
+	return strings.Replace(s, "\t", "    ", -1)
 }
 
 // Deprecated: Using stretchr/testify/assert
@@ -213,7 +217,7 @@ func TestSyncDb(t *testing.T) {
 	modelCache.clean()
 }
 
-func TestRegisterModels(t *testing.T) {
+func TestRegisterModels(_ *testing.T) {
 	RegisterModel(new(Data), new(DataNull), new(DataCustom))
 	RegisterModel(new(User))
 	RegisterModel(new(Profile))
@@ -246,10 +250,10 @@ func TestModelSyntax(t *testing.T) {
 	user := &User{}
 	ind := reflect.ValueOf(user).Elem()
 	fn := getFullName(ind.Type())
-	mi, ok := modelCache.getByFullName(fn)
+	_, ok := modelCache.getByFullName(fn)
 	throwFail(t, AssertIs(ok, true))
 
-	mi, ok = modelCache.get("user")
+	mi, ok := modelCache.get("user")
 	throwFail(t, AssertIs(ok, true))
 	if ok {
 		throwFail(t, AssertIs(mi.fields.GetByName("ShouldSkip") == nil, true))

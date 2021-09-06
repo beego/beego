@@ -108,7 +108,7 @@ var (
 )
 
 // get model info and model reflect value
-func (o *ormBase) getMiInd(md interface{}, needPtr bool) (mi *modelInfo, ind reflect.Value) {
+func (*ormBase) getMiInd(md interface{}, needPtr bool) (mi *modelInfo, ind reflect.Value) {
 	val := reflect.ValueOf(md)
 	ind = reflect.Indirect(val)
 	typ := ind.Type()
@@ -123,7 +123,7 @@ func (o *ormBase) getMiInd(md interface{}, needPtr bool) (mi *modelInfo, ind ref
 }
 
 // get field info from model info by given field name
-func (o *ormBase) getFieldInfo(mi *modelInfo, name string) *fieldInfo {
+func (*ormBase) getFieldInfo(mi *modelInfo, name string) *fieldInfo {
 	fi, ok := mi.fields.GetByAny(name)
 	if !ok {
 		panic(fmt.Errorf("<Ormer> cannot find field `%s` for model `%s`", name, mi.fullName))
@@ -196,7 +196,7 @@ func (o *ormBase) InsertWithCtx(ctx context.Context, md interface{}) (int64, err
 }
 
 // set auto pk field
-func (o *ormBase) setPk(mi *modelInfo, ind reflect.Value, id int64) {
+func (*ormBase) setPk(mi *modelInfo, ind reflect.Value, id int64) {
 	if mi.fields.pk.auto {
 		if mi.fields.pk.fieldType&IsPositiveIntegerField > 0 {
 			ind.FieldByIndex(mi.fields.pk.fieldIndex).SetUint(uint64(id))
