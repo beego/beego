@@ -66,7 +66,7 @@ type fileLogWriter struct {
 	Level int `json:"level"`
 	// Permissions for log file
 	Perm string `json:"perm"`
-	// Permissions for directory if it is spcified in FileName
+	// Permissions for directory if it is specified in FileName
 	DirPerm string `json:"dirperm"`
 
 	RotatePerm string `json:"rotateperm"`
