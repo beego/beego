@@ -64,9 +64,9 @@ type fileLogWriter struct {
 	hourlyOpenTime time.Time
 
 	Level int `json:"level"`
-
+	// Permissions for log file
 	Perm string `json:"perm"`
-
+	// Permissions for directory if it is spcified in FileName
 	DirPerm string `json:"dirperm"`
 
 	RotatePerm string `json:"rotateperm"`
