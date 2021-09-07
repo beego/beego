@@ -108,11 +108,11 @@ var (
 )
 
 // get model info and model reflect value
-func (*ormBase) getMiInd(md interface{}) (mi *modelInfo, ind reflect.Value) {
+func (*ormBase) getMi(md interface{}) (mi *modelInfo) {
 	val := reflect.ValueOf(md)
-	ind = reflect.Indirect(val)
+	ind := reflect.Indirect(val)
 	typ := ind.Type()
-	mi = getModelInfo(typ)
+	mi = getTypeMi(typ)
 	return
 }
 
@@ -124,11 +124,11 @@ func (*ormBase) getPtrMiInd(md interface{}) (mi *modelInfo, ind reflect.Value) {
 	if val.Kind() != reflect.Ptr {
 		panic(fmt.Errorf("<Ormer> cannot use non-ptr model struct `%s`", getFullName(typ)))
 	}
-	mi = getModelInfo(typ)
+	mi = getTypeMi(typ)
 	return
 }
 
-func getModelInfo(mdTyp reflect.Type) *modelInfo {
+func getTypeMi(mdTyp reflect.Type) *modelInfo {
 	name := getFullName(mdTyp)
 	if mi, ok := modelCache.getByFullName(name); ok {
 		return mi
@@ -242,7 +242,7 @@ func (o *ormBase) InsertMultiWithCtx(ctx context.Context, bulk int, mds interfac
 	if bulk <= 1 {
 		for i := 0; i < sind.Len(); i++ {
 			ind := reflect.Indirect(sind.Index(i))
-			mi, _ := o.getMiInd(ind.Interface())
+			mi := o.getMi(ind.Interface())
 			id, err := o.alias.DbBaser.Insert(ctx, o.db, mi, ind, o.alias.TZ)
 			if err != nil {
 				return cnt, err
@@ -253,7 +253,7 @@ func (o *ormBase) InsertMultiWithCtx(ctx context.Context, bulk int, mds interfac
 			cnt++
 		}
 	} else {
-		mi, _ := o.getMiInd(sind.Index(0).Interface())
+		mi := o.getMi(sind.Index(0).Interface())
 		return o.alias.DbBaser.InsertMulti(ctx, o.db, mi, sind, bulk, o.alias.TZ)
 	}
 	return cnt, nil
