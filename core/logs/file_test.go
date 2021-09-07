@@ -17,6 +17,7 @@ package logs
 import (
 	"bufio"
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -46,6 +47,57 @@ func TestFilePerm(t *testing.T) {
 		t.Fatal("unexpected log file permission")
 	}
 	os.Remove("test.log")
+}
+
+func TestFileWithPrefixPath(t *testing.T) {
+	log := NewLogger(10000)
+	log.SetLogger("file", `{"filename":"log/test.log"}`)
+	log.Debug("debug")
+	log.Informational("info")
+	log.Notice("notice")
+	log.Warning("warning")
+	log.Error("error")
+	log.Alert("alert")
+	log.Critical("critical")
+	log.Emergency("emergency")
+	_, err := os.Stat("log/test.log")
+	if err != nil {
+		t.Fatal(err)
+	}
+	os.Remove("log/test.log")
+	os.Remove("log")
+}
+
+func TestFilePermWithPrefixPath(t *testing.T) {
+	log := NewLogger(10000)
+	log.SetLogger("file", `{"filename":"log/test.log", "perm": "0220", "dirperm": "0770"}`)
+	log.Debug("debug")
+	log.Informational("info")
+	log.Notice("notice")
+	log.Warning("warning")
+	log.Error("error")
+	log.Alert("alert")
+	log.Critical("critical")
+	log.Emergency("emergency")
+
+	dir, err := os.Stat("log")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if fs.ModePerm&dir.Mode() != 0o0770 {
+		t.Fatal("unexpected directory permission")
+	}
+
+	file, err := os.Stat("log/test.log")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if file.Mode() != 0o0220 {
+		t.Fatal("unexpected file permission")
+	}
+
+	os.Remove("log/test.log")
+	os.Remove("log")
 }
 
 func TestFile1(t *testing.T) {
@@ -269,6 +321,7 @@ func testFileRotate(t *testing.T, fn1, fn2 string, daily, hourly bool) {
 		Rotate:     true,
 		Level:      LevelTrace,
 		Perm:       "0660",
+		DirPerm:    "0770",
 		RotatePerm: "0440",
 	}
 	fw.formatter = fw
@@ -310,6 +363,7 @@ func testFileDailyRotate(t *testing.T, fn1, fn2 string) {
 		Rotate:     true,
 		Level:      LevelTrace,
 		Perm:       "0660",
+		DirPerm:    "0770",
 		RotatePerm: "0440",
 	}
 	fw.formatter = fw
@@ -344,6 +398,7 @@ func testFileHourlyRotate(t *testing.T, fn1, fn2 string) {
 		Rotate:     true,
 		Level:      LevelTrace,
 		Perm:       "0660",
+		DirPerm:    "0770",
 		RotatePerm: "0440",
 	}
 
