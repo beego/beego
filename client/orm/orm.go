@@ -108,22 +108,36 @@ var (
 )
 
 // get model info and model reflect value
-func (o *ormBase) getMiInd(md interface{}, needPtr bool) (mi *modelInfo, ind reflect.Value) {
+func (*ormBase) getMi(md interface{}) (mi *modelInfo) {
+	val := reflect.ValueOf(md)
+	ind := reflect.Indirect(val)
+	typ := ind.Type()
+	mi = getTypeMi(typ)
+	return
+}
+
+// get need ptr model info and model reflect value
+func (*ormBase) getPtrMiInd(md interface{}) (mi *modelInfo, ind reflect.Value) {
 	val := reflect.ValueOf(md)
 	ind = reflect.Indirect(val)
 	typ := ind.Type()
-	if needPtr && val.Kind() != reflect.Ptr {
+	if val.Kind() != reflect.Ptr {
 		panic(fmt.Errorf("<Ormer> cannot use non-ptr model struct `%s`", getFullName(typ)))
 	}
-	name := getFullName(typ)
+	mi = getTypeMi(typ)
+	return
+}
+
+func getTypeMi(mdTyp reflect.Type) *modelInfo {
+	name := getFullName(mdTyp)
 	if mi, ok := modelCache.getByFullName(name); ok {
-		return mi, ind
+		return mi
 	}
 	panic(fmt.Errorf("<Ormer> table: `%s` not found, make sure it was registered with `RegisterModel()`", name))
 }
 
 // get field info from model info by given field name
-func (o *ormBase) getFieldInfo(mi *modelInfo, name string) *fieldInfo {
+func (*ormBase) getFieldInfo(mi *modelInfo, name string) *fieldInfo {
 	fi, ok := mi.fields.GetByAny(name)
 	if !ok {
 		panic(fmt.Errorf("<Ormer> cannot find field `%s` for model `%s`", name, mi.fullName))
@@ -137,7 +151,7 @@ func (o *ormBase) Read(md interface{}, cols ...string) error {
 }
 
 func (o *ormBase) ReadWithCtx(ctx context.Context, md interface{}, cols ...string) error {
-	mi, ind := o.getMiInd(md, true)
+	mi, ind := o.getPtrMiInd(md)
 	return o.alias.DbBaser.Read(ctx, o.db, mi, ind, o.alias.TZ, cols, false)
 }
 
@@ -147,7 +161,7 @@ func (o *ormBase) ReadForUpdate(md interface{}, cols ...string) error {
 }
 
 func (o *ormBase) ReadForUpdateWithCtx(ctx context.Context, md interface{}, cols ...string) error {
-	mi, ind := o.getMiInd(md, true)
+	mi, ind := o.getPtrMiInd(md)
 	return o.alias.DbBaser.Read(ctx, o.db, mi, ind, o.alias.TZ, cols, true)
 }
 
@@ -158,7 +172,7 @@ func (o *ormBase) ReadOrCreate(md interface{}, col1 string, cols ...string) (boo
 
 func (o *ormBase) ReadOrCreateWithCtx(ctx context.Context, md interface{}, col1 string, cols ...string) (bool, int64, error) {
 	cols = append([]string{col1}, cols...)
-	mi, ind := o.getMiInd(md, true)
+	mi, ind := o.getPtrMiInd(md)
 	err := o.alias.DbBaser.Read(ctx, o.db, mi, ind, o.alias.TZ, cols, false)
 	if err == ErrNoRows {
 		// Create
@@ -184,7 +198,7 @@ func (o *ormBase) Insert(md interface{}) (int64, error) {
 }
 
 func (o *ormBase) InsertWithCtx(ctx context.Context, md interface{}) (int64, error) {
-	mi, ind := o.getMiInd(md, true)
+	mi, ind := o.getPtrMiInd(md)
 	id, err := o.alias.DbBaser.Insert(ctx, o.db, mi, ind, o.alias.TZ)
 	if err != nil {
 		return id, err
@@ -196,7 +210,7 @@ func (o *ormBase) InsertWithCtx(ctx context.Context, md interface{}) (int64, err
 }
 
 // set auto pk field
-func (o *ormBase) setPk(mi *modelInfo, ind reflect.Value, id int64) {
+func (*ormBase) setPk(mi *modelInfo, ind reflect.Value, id int64) {
 	if mi.fields.pk.auto {
 		if mi.fields.pk.fieldType&IsPositiveIntegerField > 0 {
 			ind.FieldByIndex(mi.fields.pk.fieldIndex).SetUint(uint64(id))
@@ -228,7 +242,7 @@ func (o *ormBase) InsertMultiWithCtx(ctx context.Context, bulk int, mds interfac
 	if bulk <= 1 {
 		for i := 0; i < sind.Len(); i++ {
 			ind := reflect.Indirect(sind.Index(i))
-			mi, _ := o.getMiInd(ind.Interface(), false)
+			mi := o.getMi(ind.Interface())
 			id, err := o.alias.DbBaser.Insert(ctx, o.db, mi, ind, o.alias.TZ)
 			if err != nil {
 				return cnt, err
@@ -239,7 +253,7 @@ func (o *ormBase) InsertMultiWithCtx(ctx context.Context, bulk int, mds interfac
 			cnt++
 		}
 	} else {
-		mi, _ := o.getMiInd(sind.Index(0).Interface(), false)
+		mi := o.getMi(sind.Index(0).Interface())
 		return o.alias.DbBaser.InsertMulti(ctx, o.db, mi, sind, bulk, o.alias.TZ)
 	}
 	return cnt, nil
@@ -251,7 +265,7 @@ func (o *ormBase) InsertOrUpdate(md interface{}, colConflictAndArgs ...string) (
 }
 
 func (o *ormBase) InsertOrUpdateWithCtx(ctx context.Context, md interface{}, colConflitAndArgs ...string) (int64, error) {
-	mi, ind := o.getMiInd(md, true)
+	mi, ind := o.getPtrMiInd(md)
 	id, err := o.alias.DbBaser.InsertOrUpdate(ctx, o.db, mi, ind, o.alias, colConflitAndArgs...)
 	if err != nil {
 		return id, err
@@ -269,7 +283,7 @@ func (o *ormBase) Update(md interface{}, cols ...string) (int64, error) {
 }
 
 func (o *ormBase) UpdateWithCtx(ctx context.Context, md interface{}, cols ...string) (int64, error) {
-	mi, ind := o.getMiInd(md, true)
+	mi, ind := o.getPtrMiInd(md)
 	return o.alias.DbBaser.Update(ctx, o.db, mi, ind, o.alias.TZ, cols)
 }
 
@@ -280,14 +294,14 @@ func (o *ormBase) Delete(md interface{}, cols ...string) (int64, error) {
 }
 
 func (o *ormBase) DeleteWithCtx(ctx context.Context, md interface{}, cols ...string) (int64, error) {
-	mi, ind := o.getMiInd(md, true)
+	mi, ind := o.getPtrMiInd(md)
 	num, err := o.alias.DbBaser.Delete(ctx, o.db, mi, ind, o.alias.TZ, cols)
 	return num, err
 }
 
 // create a models to models queryer
 func (o *ormBase) QueryM2M(md interface{}, name string) QueryM2Mer {
-	mi, ind := o.getMiInd(md, true)
+	mi, ind := o.getPtrMiInd(md)
 	fi := o.getFieldInfo(mi, name)
 
 	switch {
@@ -318,7 +332,7 @@ func (o *ormBase) LoadRelated(md interface{}, name string, args ...utils.KV) (in
 	return o.LoadRelatedWithCtx(context.Background(), md, name, args...)
 }
 
-func (o *ormBase) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...utils.KV) (int64, error) {
+func (o *ormBase) LoadRelatedWithCtx(_ context.Context, md interface{}, name string, args ...utils.KV) (int64, error) {
 	_, fi, ind, qs := o.queryRelated(md, name)
 
 	var relDepth int
@@ -384,7 +398,7 @@ func (o *ormBase) LoadRelatedWithCtx(ctx context.Context, md interface{}, name s
 
 // get QuerySeter for related models to md model
 func (o *ormBase) queryRelated(md interface{}, name string) (*modelInfo, *fieldInfo, reflect.Value, *querySet) {
-	mi, ind := o.getMiInd(md, true)
+	mi, ind := o.getPtrMiInd(md)
 	fi := o.getFieldInfo(mi, name)
 
 	_, _, exist := getExistPk(mi, ind)
@@ -488,7 +502,7 @@ func (o *ormBase) Raw(query string, args ...interface{}) RawSeter {
 	return o.RawWithCtx(context.Background(), query, args...)
 }
 
-func (o *ormBase) RawWithCtx(ctx context.Context, query string, args ...interface{}) RawSeter {
+func (o *ormBase) RawWithCtx(_ context.Context, query string, args ...interface{}) RawSeter {
 	return newRawSet(o, query, args)
 }
 
@@ -536,6 +550,11 @@ func (o *orm) BeginWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions) (TxO
 			db:    &TxDB{tx: tx},
 		},
 	}
+
+	if Debug {
+		_txOrm.db = newDbQueryLog(o.alias, _txOrm.db)
+	}
+
 	var taskTxOrm TxOrmer = _txOrm
 	return taskTxOrm, nil
 }
@@ -553,10 +572,10 @@ func (o *orm) DoTxWithOpts(opts *sql.TxOptions, task func(ctx context.Context, t
 }
 
 func (o *orm) DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task func(ctx context.Context, txOrm TxOrmer) error) error {
-	return doTxTemplate(o, ctx, opts, task)
+	return doTxTemplate(ctx, o, opts, task)
 }
 
-func doTxTemplate(o TxBeginner, ctx context.Context, opts *sql.TxOptions,
+func doTxTemplate(ctx context.Context, o TxBeginner, opts *sql.TxOptions,
 	task func(ctx context.Context, txOrm TxOrmer) error) error {
 	_txOrm, err := o.BeginWithCtxAndOpts(ctx, opts)
 	if err != nil {

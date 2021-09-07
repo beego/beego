@@ -129,7 +129,8 @@ func getCaller(skip int) string {
 			if cur == line {
 				flag = ">>"
 			}
-			code := fmt.Sprintf(" %s %5d:   %s", flag, cur, strings.Replace(string(lines[o+i]), "\t", "    ", -1))
+			ls := formatLines(string(lines[o+i]))
+			code := fmt.Sprintf(" %s %5d:   %s", flag, cur, ls)
 			if code != "" {
 				codes = append(codes, code)
 			}
@@ -140,6 +141,10 @@ func getCaller(skip int) string {
 		funName = funName[i+1:]
 	}
 	return fmt.Sprintf("%s:%s:%d: \n%s", fn, funName, line, strings.Join(codes, "\n"))
+}
+
+func formatLines(s string) string {
+	return strings.ReplaceAll(s, "\t", "    ")
 }
 
 // Deprecated: Using stretchr/testify/assert
@@ -212,7 +217,7 @@ func TestSyncDb(t *testing.T) {
 	modelCache.clean()
 }
 
-func TestRegisterModels(t *testing.T) {
+func TestRegisterModels(_ *testing.T) {
 	RegisterModel(new(Data), new(DataNull), new(DataCustom))
 	RegisterModel(new(User))
 	RegisterModel(new(Profile))
@@ -245,10 +250,10 @@ func TestModelSyntax(t *testing.T) {
 	user := &User{}
 	ind := reflect.ValueOf(user).Elem()
 	fn := getFullName(ind.Type())
-	mi, ok := modelCache.getByFullName(fn)
+	_, ok := modelCache.getByFullName(fn)
 	throwFail(t, AssertIs(ok, true))
 
-	mi, ok = modelCache.get("user")
+	mi, ok := modelCache.get("user")
 	throwFail(t, AssertIs(ok, true))
 	if ok {
 		throwFail(t, AssertIs(mi.fields.GetByName("ShouldSkip") == nil, true))
@@ -883,10 +888,11 @@ func TestCustomField(t *testing.T) {
 
 func TestExpr(t *testing.T) {
 	user := &User{}
-	qs := dORM.QueryTable(user)
-	qs = dORM.QueryTable((*User)(nil))
-	qs = dORM.QueryTable("User")
-	qs = dORM.QueryTable("user")
+	var qs QuerySeter
+	assert.NotPanics(t, func() { qs = dORM.QueryTable(user) })
+	assert.NotPanics(t, func() { qs = dORM.QueryTable((*User)(nil)) })
+	assert.NotPanics(t, func() { qs = dORM.QueryTable("User") })
+	assert.NotPanics(t, func() { qs = dORM.QueryTable("user") })
 	num, err := qs.Filter("UserName", "slene").Filter("user_name", "slene").Filter("profile__Age", 28).Count()
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
@@ -1719,7 +1725,7 @@ func TestQueryM2M(t *testing.T) {
 	throwFailNow(t, AssertIs(num, 1))
 }
 
-func TestQueryRelate(t *testing.T) {
+func TestQueryRelate(_ *testing.T) {
 	// post := &Post{Id: 2}
 
 	// qs := dORM.QueryRelate(post, "Tags")
@@ -2069,9 +2075,7 @@ func TestRawPrepare(t *testing.T) {
 		err    error
 		pre    RawPreparer
 	)
-	switch {
-	case IsMysql || IsSqlite:
-
+	if IsMysql || IsSqlite {
 		pre, err = dORM.Raw("INSERT INTO tag (name) VALUES (?)").Prepare()
 		assert.Nil(t, err)
 		if pre != nil {
@@ -2106,9 +2110,7 @@ func TestRawPrepare(t *testing.T) {
 			assert.Nil(t, err)
 			assert.Equal(t, num, int64(3))
 		}
-
-	case IsPostgres:
-
+	} else if IsPostgres {
 		pre, err = dORM.Raw(`INSERT INTO "tag" ("name") VALUES (?) RETURNING "id"`).Prepare()
 		assert.Nil(t, err)
 		if pre != nil {
@@ -2238,8 +2240,7 @@ func TestTransaction(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 1))
 
-	switch {
-	case IsMysql || IsSqlite:
+	if IsMysql || IsSqlite {
 		res, err := to.Raw("INSERT INTO tag (name) VALUES (?)", names[2]).Exec()
 		throwFail(t, err)
 		if err == nil {
@@ -2859,12 +2860,10 @@ func TestCondition(t *testing.T) {
 				hasCycle(p.cond)
 			}
 		}
-		return
 	}
 	hasCycle(cond)
 	// cycleFlag was true,meaning use self as sub cond
 	throwFail(t, AssertIs(!cycleFlag, true))
-	return
 }
 
 func TestContextCanceled(t *testing.T) {
@@ -2885,4 +2884,59 @@ func TestContextCanceled(t *testing.T) {
 	qs := dORM.QueryTable(user)
 	_, err = qs.Filter("UserName", "slene").CountWithCtx(ctx)
 	throwFail(t, AssertIs(err, context.Canceled))
+}
+
+func TestDebugLog(t *testing.T) {
+	txCommitFn := func() {
+		o := NewOrm()
+		o.DoTx(func(ctx context.Context, txOrm TxOrmer) (txerr error) {
+			_, txerr = txOrm.QueryTable(&User{}).Count()
+			return
+		})
+	}
+
+	txRollbackFn := func() {
+		o := NewOrm()
+		o.DoTx(func(ctx context.Context, txOrm TxOrmer) (txerr error) {
+			user := NewUser()
+			user.UserName = "slene"
+			user.Email = "vslene@gmail.com"
+			user.Password = "pass"
+			user.Status = 3
+			user.IsStaff = true
+			user.IsActive = true
+
+			txOrm.Insert(user)
+			txerr = fmt.Errorf("mock error")
+			return
+		})
+	}
+
+	Debug = true
+	output1 := captureDebugLogOutput(txCommitFn)
+
+	assert.Contains(t, output1, "START TRANSACTION")
+	assert.Contains(t, output1, "COMMIT")
+
+	output2 := captureDebugLogOutput(txRollbackFn)
+
+	assert.Contains(t, output2, "START TRANSACTION")
+	assert.Contains(t, output2, "ROLLBACK")
+
+	Debug = false
+	output1 = captureDebugLogOutput(txCommitFn)
+	assert.EqualValues(t, output1, "")
+
+	output2 = captureDebugLogOutput(txRollbackFn)
+	assert.EqualValues(t, output2, "")
+}
+
+func captureDebugLogOutput(f func()) string {
+	var buf bytes.Buffer
+	DebugLog.SetOutput(&buf)
+	defer func() {
+		DebugLog.SetOutput(os.Stderr)
+	}()
+	f()
+	return buf.String()
 }
