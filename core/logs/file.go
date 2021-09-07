@@ -97,7 +97,7 @@ func newFileWriter() Logger {
 	return w
 }
 
-func (w *fileLogWriter) Format(lm *LogMsg) string {
+func (*fileLogWriter) Format(lm *LogMsg) string {
 	msg := lm.OldStyleFormat()
 	hd, _, _ := formatTimeHeader(lm.When)
 	msg = fmt.Sprintf("%s %s\n", string(hd), msg)
