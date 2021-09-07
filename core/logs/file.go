@@ -124,7 +124,7 @@ func (w *fileLogWriter) Init(config string) error {
 	if err != nil {
 		return err
 	}
-	if len(w.Filename) == 0 {
+	if w.Filename == "" {
 		return errors.New("jsonconfig must have filename")
 	}
 	w.suffix = filepath.Ext(w.Filename)
