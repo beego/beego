@@ -136,7 +136,7 @@ func (w *fileLogWriter) Init(config string) error {
 	if len(w.Formatter) > 0 {
 		fmtr, ok := GetFormatter(w.Formatter)
 		if !ok {
-			return errors.New(fmt.Sprintf("the formatter with name: %s not found", w.Formatter))
+			return fmt.Errorf("the formatter with name: %s not found", w.Formatter)
 		}
 		w.formatter = fmtr
 	}
