@@ -326,13 +326,13 @@ func testFileRotate(t *testing.T, fn1, fn2 string, daily, hourly bool) {
 	}
 	fw.logFormatter = fw
 
-	if daily {
+	if fw.Daily {
 		fw.Init(fmt.Sprintf(`{"filename":"%v","maxdays":1}`, fn1))
 		fw.dailyOpenTime = time.Now().Add(-24 * time.Hour)
 		fw.dailyOpenDate = fw.dailyOpenTime.Day()
 	}
 
-	if hourly {
+	if fw.Hourly {
 		fw.Init(fmt.Sprintf(`{"filename":"%v","maxhours":1}`, fn1))
 		fw.hourlyOpenTime = time.Now().Add(-1 * time.Hour)
 		fw.hourlyOpenDate = fw.hourlyOpenTime.Day()
