@@ -66,6 +66,7 @@
 - Fix 4699: Remove Remove goyaml2 dependency. [4755](https://github.com/beego/beego/pull/4755)
 - Fix 4698: Prompt error when config format is incorrect. [4757](https://github.com/beego/beego/pull/4757)
 - Fix 4674: Tx Orm missing debug log [4756](https://github.com/beego/beego/pull/4756)
+- Fix 4759: fix numeric notation of permissions [4759](https://github.com/beego/beego/pull/4759)
 ## Fix Sonar
 
 - [4677](https://github.com/beego/beego/pull/4677)
