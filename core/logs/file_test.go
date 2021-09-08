@@ -324,7 +324,7 @@ func testFileRotate(t *testing.T, fn1, fn2 string, daily, hourly bool) {
 		DirPerm:    "0770",
 		RotatePerm: "0440",
 	}
-	fw.formatter = fw
+	fw.logFormatter = fw
 
 	if daily {
 		fw.Init(fmt.Sprintf(`{"filename":"%v","maxdays":1}`, fn1))
@@ -366,7 +366,7 @@ func testFileDailyRotate(t *testing.T, fn1, fn2 string) {
 		DirPerm:    "0770",
 		RotatePerm: "0440",
 	}
-	fw.formatter = fw
+	fw.logFormatter = fw
 
 	fw.Init(fmt.Sprintf(`{"filename":"%v","maxdays":1}`, fn1))
 	fw.dailyOpenTime = time.Now().Add(-24 * time.Hour)
@@ -402,7 +402,7 @@ func testFileHourlyRotate(t *testing.T, fn1, fn2 string) {
 		RotatePerm: "0440",
 	}
 
-	fw.formatter = fw
+	fw.logFormatter = fw
 	fw.Init(fmt.Sprintf(`{"filename":"%v","maxhours":1}`, fn1))
 	fw.hourlyOpenTime = time.Now().Add(-1 * time.Hour)
 	fw.hourlyOpenDate = fw.hourlyOpenTime.Hour()

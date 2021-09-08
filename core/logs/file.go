@@ -73,8 +73,8 @@ type fileLogWriter struct {
 
 	fileNameOnly, suffix string // like "project.log", project is fileNameOnly and .log is suffix
 
-	formatter LogFormatter
-	Formatter string `json:"formatter"`
+	logFormatter LogFormatter
+	Formatter    string `json:"formatter"`
 }
 
 // newFileWriter creates a FileLogWriter returning as LoggerInterface.
@@ -93,7 +93,7 @@ func newFileWriter() Logger {
 		MaxFiles:   999,
 		MaxSize:    1 << 28,
 	}
-	w.formatter = w
+	w.logFormatter = w
 	return w
 }
 
@@ -105,7 +105,7 @@ func (*fileLogWriter) Format(lm *LogMsg) string {
 }
 
 func (w *fileLogWriter) SetFormatter(f LogFormatter) {
-	w.formatter = f
+	w.logFormatter = f
 }
 
 // Init file logger with json config.
@@ -138,7 +138,7 @@ func (w *fileLogWriter) Init(config string) error {
 		if !ok {
 			return fmt.Errorf("the formatter with name: %s not found", w.Formatter)
 		}
-		w.formatter = fmtr
+		w.logFormatter = fmtr
 	}
 	err = w.startLogger()
 	return err
@@ -177,7 +177,7 @@ func (w *fileLogWriter) WriteMsg(lm *LogMsg) error {
 
 	_, d, h := formatTimeHeader(lm.When)
 
-	msg := w.formatter.Format(lm)
+	msg := w.logFormatter.Format(lm)
 	if w.Rotate {
 		w.RLock()
 		if w.needRotateHourly(h) {
