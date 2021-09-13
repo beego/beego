@@ -17,7 +17,6 @@ package logs
 import (
 	"bufio"
 	"fmt"
-	"io/fs"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -84,7 +83,7 @@ func TestFilePermWithPrefixPath(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if fs.ModePerm&dir.Mode() != 0o0770 {
+	if dir.Mode().Perm() != 0o0770 {
 		t.Fatal("unexpected directory permission")
 	}
 
