@@ -69,7 +69,7 @@ func TestFileWithPrefixPath(t *testing.T) {
 
 func TestFilePermWithPrefixPath(t *testing.T) {
 	log := NewLogger(10000)
-	log.SetLogger("file", `{"filename":"log/test.log", "perm": "0220", "dirperm": "0770"}`)
+	log.SetLogger("file", `{"filename":"mylogpath/test.log", "perm": "0220", "dirperm": "0770"}`)
 	log.Debug("debug")
 	log.Informational("info")
 	log.Notice("notice")
@@ -79,15 +79,15 @@ func TestFilePermWithPrefixPath(t *testing.T) {
 	log.Critical("critical")
 	log.Emergency("emergency")
 
-	dir, err := os.Stat("log")
+	dir, err := os.Stat("mylogpath")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if dir.Mode().Perm() != 0o0770 {
-		t.Fatal("unexpected directory permission")
+	if !dir.IsDir() {
+		t.Fatal("mylogpath expected to be a directory")
 	}
 
-	file, err := os.Stat("log/test.log")
+	file, err := os.Stat("mylogpath/test.log")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -95,8 +95,8 @@ func TestFilePermWithPrefixPath(t *testing.T) {
 		t.Fatal("unexpected file permission")
 	}
 
-	os.Remove("log/test.log")
-	os.Remove("log")
+	os.Remove("mylogpath/test.log")
+	os.Remove("mylogpath")
 }
 
 func TestFile1(t *testing.T) {
