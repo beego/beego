@@ -48,6 +48,57 @@ func TestFilePerm(t *testing.T) {
 	os.Remove("test.log")
 }
 
+func TestFileWithPrefixPath(t *testing.T) {
+	log := NewLogger(10000)
+	log.SetLogger("file", `{"filename":"log/test.log"}`)
+	log.Debug("debug")
+	log.Informational("info")
+	log.Notice("notice")
+	log.Warning("warning")
+	log.Error("error")
+	log.Alert("alert")
+	log.Critical("critical")
+	log.Emergency("emergency")
+	_, err := os.Stat("log/test.log")
+	if err != nil {
+		t.Fatal(err)
+	}
+	os.Remove("log/test.log")
+	os.Remove("log")
+}
+
+func TestFilePermWithPrefixPath(t *testing.T) {
+	log := NewLogger(10000)
+	log.SetLogger("file", `{"filename":"mylogpath/test.log", "perm": "0220", "dirperm": "0770"}`)
+	log.Debug("debug")
+	log.Informational("info")
+	log.Notice("notice")
+	log.Warning("warning")
+	log.Error("error")
+	log.Alert("alert")
+	log.Critical("critical")
+	log.Emergency("emergency")
+
+	dir, err := os.Stat("mylogpath")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !dir.IsDir() {
+		t.Fatal("mylogpath expected to be a directory")
+	}
+
+	file, err := os.Stat("mylogpath/test.log")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if file.Mode() != 0o0220 {
+		t.Fatal("unexpected file permission")
+	}
+
+	os.Remove("mylogpath/test.log")
+	os.Remove("mylogpath")
+}
+
 func TestFile1(t *testing.T) {
 	log := NewLogger(10000)
 	log.SetLogger("file", `{"filename":"test.log"}`)
@@ -269,17 +320,18 @@ func testFileRotate(t *testing.T, fn1, fn2 string, daily, hourly bool) {
 		Rotate:     true,
 		Level:      LevelTrace,
 		Perm:       "0660",
+		DirPerm:    "0770",
 		RotatePerm: "0440",
 	}
-	fw.formatter = fw
+	fw.logFormatter = fw
 
-	if daily {
+	if fw.Daily {
 		fw.Init(fmt.Sprintf(`{"filename":"%v","maxdays":1}`, fn1))
 		fw.dailyOpenTime = time.Now().Add(-24 * time.Hour)
 		fw.dailyOpenDate = fw.dailyOpenTime.Day()
 	}
 
-	if hourly {
+	if fw.Hourly {
 		fw.Init(fmt.Sprintf(`{"filename":"%v","maxhours":1}`, fn1))
 		fw.hourlyOpenTime = time.Now().Add(-1 * time.Hour)
 		fw.hourlyOpenDate = fw.hourlyOpenTime.Day()
@@ -310,9 +362,10 @@ func testFileDailyRotate(t *testing.T, fn1, fn2 string) {
 		Rotate:     true,
 		Level:      LevelTrace,
 		Perm:       "0660",
+		DirPerm:    "0770",
 		RotatePerm: "0440",
 	}
-	fw.formatter = fw
+	fw.logFormatter = fw
 
 	fw.Init(fmt.Sprintf(`{"filename":"%v","maxdays":1}`, fn1))
 	fw.dailyOpenTime = time.Now().Add(-24 * time.Hour)
@@ -344,10 +397,11 @@ func testFileHourlyRotate(t *testing.T, fn1, fn2 string) {
 		Rotate:     true,
 		Level:      LevelTrace,
 		Perm:       "0660",
+		DirPerm:    "0770",
 		RotatePerm: "0440",
 	}
 
-	fw.formatter = fw
+	fw.logFormatter = fw
 	fw.Init(fmt.Sprintf(`{"filename":"%v","maxhours":1}`, fn1))
 	fw.hourlyOpenTime = time.Now().Add(-1 * time.Hour)
 	fw.hourlyOpenDate = fw.hourlyOpenTime.Hour()
