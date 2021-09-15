@@ -21,13 +21,12 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/beego/beego/v2/core/utils"
-
 	"github.com/stretchr/testify/assert"
+
+	"github.com/beego/beego/v2/core/utils"
 )
 
-func TestFilterOrmDecorator_Read(t *testing.T) {
-
+func TestFilterOrmDecoratorRead(t *testing.T) {
 	register()
 
 	o := &filterMockOrm{}
@@ -46,7 +45,7 @@ func TestFilterOrmDecorator_Read(t *testing.T) {
 	assert.Equal(t, "read error", err.Error())
 }
 
-func TestFilterOrmDecorator_BeginTx(t *testing.T) {
+func TestFilterOrmDecoratorBeginTx(t *testing.T) {
 	register()
 
 	o := &filterMockOrm{}
@@ -96,7 +95,7 @@ func TestFilterOrmDecorator_BeginTx(t *testing.T) {
 	assert.Equal(t, "rollback", err.Error())
 }
 
-func TestFilterOrmDecorator_DBStats(t *testing.T) {
+func TestFilterOrmDecoratorDBStats(t *testing.T) {
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
 		return func(ctx context.Context, inv *Invocation) []interface{} {
@@ -111,7 +110,7 @@ func TestFilterOrmDecorator_DBStats(t *testing.T) {
 	assert.Equal(t, -1, res.MaxOpenConnections)
 }
 
-func TestFilterOrmDecorator_Delete(t *testing.T) {
+func TestFilterOrmDecoratorDelete(t *testing.T) {
 	register()
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
@@ -128,7 +127,7 @@ func TestFilterOrmDecorator_Delete(t *testing.T) {
 	assert.Equal(t, int64(-2), res)
 }
 
-func TestFilterOrmDecorator_DoTx(t *testing.T) {
+func TestFilterOrmDecoratorDoTx(t *testing.T) {
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
 		return func(ctx context.Context, inv *Invocation) []interface{} {
@@ -175,7 +174,7 @@ func TestFilterOrmDecorator_DoTx(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
-func TestFilterOrmDecorator_Driver(t *testing.T) {
+func TestFilterOrmDecoratorDriver(t *testing.T) {
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
 		return func(ctx context.Context, inv *Invocation) []interface{} {
@@ -190,7 +189,7 @@ func TestFilterOrmDecorator_Driver(t *testing.T) {
 	assert.Nil(t, res)
 }
 
-func TestFilterOrmDecorator_Insert(t *testing.T) {
+func TestFilterOrmDecoratorInsert(t *testing.T) {
 	register()
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
@@ -209,7 +208,7 @@ func TestFilterOrmDecorator_Insert(t *testing.T) {
 	assert.Equal(t, int64(100), i)
 }
 
-func TestFilterOrmDecorator_InsertMulti(t *testing.T) {
+func TestFilterOrmDecoratorInsertMulti(t *testing.T) {
 	register()
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
@@ -229,7 +228,7 @@ func TestFilterOrmDecorator_InsertMulti(t *testing.T) {
 	assert.Equal(t, int64(2), i)
 }
 
-func TestFilterOrmDecorator_InsertOrUpdate(t *testing.T) {
+func TestFilterOrmDecoratorInsertOrUpdate(t *testing.T) {
 	register()
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
@@ -247,7 +246,7 @@ func TestFilterOrmDecorator_InsertOrUpdate(t *testing.T) {
 	assert.Equal(t, int64(1), i)
 }
 
-func TestFilterOrmDecorator_LoadRelated(t *testing.T) {
+func TestFilterOrmDecoratorLoadRelated(t *testing.T) {
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
 		return func(ctx context.Context, inv *Invocation) []interface{} {
@@ -264,11 +263,11 @@ func TestFilterOrmDecorator_LoadRelated(t *testing.T) {
 	assert.Equal(t, int64(99), i)
 }
 
-func TestFilterOrmDecorator_QueryM2M(t *testing.T) {
+func TestFilterOrmDecoratorQueryM2M(t *testing.T) {
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
 		return func(ctx context.Context, inv *Invocation) []interface{} {
-			assert.Equal(t, "QueryM2MWithCtx", inv.Method)
+			assert.Equal(t, "QueryM2M", inv.Method)
 			assert.Equal(t, 2, len(inv.Args))
 			assert.Equal(t, "FILTER_TEST", inv.GetTableName())
 			assert.False(t, inv.InsideTx)
@@ -279,12 +278,12 @@ func TestFilterOrmDecorator_QueryM2M(t *testing.T) {
 	assert.Nil(t, res)
 }
 
-func TestFilterOrmDecorator_QueryTable(t *testing.T) {
+func TestFilterOrmDecoratorQueryTable(t *testing.T) {
 	register()
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
 		return func(ctx context.Context, inv *Invocation) []interface{} {
-			assert.Equal(t, "QueryTableWithCtx", inv.Method)
+			assert.Equal(t, "QueryTable", inv.Method)
 			assert.Equal(t, 1, len(inv.Args))
 			assert.Equal(t, "FILTER_TEST", inv.GetTableName())
 			assert.False(t, inv.InsideTx)
@@ -295,7 +294,7 @@ func TestFilterOrmDecorator_QueryTable(t *testing.T) {
 	assert.Nil(t, res)
 }
 
-func TestFilterOrmDecorator_Raw(t *testing.T) {
+func TestFilterOrmDecoratorRaw(t *testing.T) {
 	register()
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
@@ -311,7 +310,7 @@ func TestFilterOrmDecorator_Raw(t *testing.T) {
 	assert.Nil(t, res)
 }
 
-func TestFilterOrmDecorator_ReadForUpdate(t *testing.T) {
+func TestFilterOrmDecoratorReadForUpdate(t *testing.T) {
 	register()
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
@@ -328,7 +327,7 @@ func TestFilterOrmDecorator_ReadForUpdate(t *testing.T) {
 	assert.Equal(t, "read for update error", err.Error())
 }
 
-func TestFilterOrmDecorator_ReadOrCreate(t *testing.T) {
+func TestFilterOrmDecoratorReadOrCreate(t *testing.T) {
 	register()
 	o := &filterMockOrm{}
 	od := NewFilterOrmDecorator(o, func(next Filter) Filter {
@@ -400,6 +399,10 @@ func (f *filterMockOrm) Commit() error {
 
 func (f *filterMockOrm) Rollback() error {
 	return errors.New("rollback")
+}
+
+func (f *filterMockOrm) RollbackUnlessCommit() error {
+	return errors.New("rollback unless commit")
 }
 
 func (f *filterMockOrm) DBStats() *sql.DBStats {

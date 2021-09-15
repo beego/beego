@@ -16,7 +16,7 @@
 // Usage
 //	import (
 // 		"github.com/beego/beego/v2"
-//		"github.com/beego/beego/v2/plugins/cors"
+//		"github.com/beego/beego/v2/server/web/filter/cors"
 // )
 //
 //	func main() {
@@ -69,10 +69,10 @@ var (
 type Options struct {
 	// If set, all origins are allowed.
 	AllowAllOrigins bool
-	// A list of allowed origins. Wild cards and FQDNs are supported.
-	AllowOrigins []string
 	// If set, allows to share auth credentials such as cookies.
 	AllowCredentials bool
+	// A list of allowed origins. Wild cards and FQDNs are supported.
+	AllowOrigins []string
 	// A list of allowed HTTP methods.
 	AllowMethods []string
 	// A list of allowed HTTP headers.
@@ -143,7 +143,7 @@ func (o *Options) PreflightHeader(origin, rMethod, rHeaders string) (headers map
 		rHeader = strings.TrimSpace(rHeader)
 	lookupLoop:
 		for _, allowedHeader := range o.AllowHeaders {
-			if strings.ToLower(rHeader) == strings.ToLower(allowedHeader) {
+			if strings.EqualFold(rHeader, allowedHeader) {
 				allowed = append(allowed, rHeader)
 				break lookupLoop
 			}

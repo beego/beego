@@ -241,7 +241,6 @@ func (s *LogStore) GetLogsBytes(shardID int, cursor string,
 
 // LogsBytesDecode decodes logs binary data retruned by GetLogsBytes API
 func LogsBytesDecode(data []byte) (gl *LogGroupList, err error) {
-
 	gl = &LogGroupList{}
 	err = proto.Unmarshal(data, gl)
 	if err != nil {

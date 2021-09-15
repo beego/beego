@@ -20,8 +20,8 @@
 //
 // Usage:
 // import(
-//   _ "github.com/beego/beego/v2/session/memcache"
-//   "github.com/beego/beego/v2/session"
+//   _ "github.com/beego/beego/v2/server/web/session/memcache"
+//   "github.com/beego/beego/v2/server/web/session"
 // )
 //
 //	func init() {
@@ -38,13 +38,15 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/beego/beego/v2/server/web/session"
-
 	"github.com/bradfitz/gomemcache/memcache"
+
+	"github.com/beego/beego/v2/server/web/session"
 )
 
-var mempder = &MemProvider{}
-var client *memcache.Client
+var (
+	mempder = &MemProvider{}
+	client  *memcache.Client
+)
 
 // SessionStore memcache session store
 type SessionStore struct {

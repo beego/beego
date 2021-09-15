@@ -26,7 +26,9 @@ import (
 type FilterChain func(next FilterFunc) FilterFunc
 
 // FilterFunc defines a filter function which is invoked before the controller handler is executed.
-type FilterFunc func(ctx *context.Context)
+// It's a alias of HandleFunc
+// In fact, the HandleFunc is the last Filter. This is the truth
+type FilterFunc = HandleFunc
 
 // FilterRouter defines a filter operation which is invoked before the controller handler is executed.
 // It can match the URL against a pattern, and execute a filter function

@@ -66,7 +66,6 @@ func (m *URLMap) AddStatistics(requestMethod, requestURL, requestController stri
 			}
 			m.urlmap[requestURL][requestMethod] = nb
 		}
-
 	} else {
 		if m.LengthLimit > 0 && m.LengthLimit <= len(m.urlmap) {
 			return
@@ -90,7 +89,7 @@ func (m *URLMap) GetMap() map[string]interface{} {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 
-	var fields = []string{"requestUrl", "method", "times", "used", "max used", "min used", "avg used"}
+	fields := []string{"requestUrl", "method", "times", "used", "max used", "min used", "avg used"}
 
 	var resultLists [][]string
 	content := make(map[string]interface{})

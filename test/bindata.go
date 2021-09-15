@@ -56,18 +56,23 @@ type bindataFileInfo struct {
 func (fi bindataFileInfo) Name() string {
 	return fi.name
 }
+
 func (fi bindataFileInfo) Size() int64 {
 	return fi.size
 }
+
 func (fi bindataFileInfo) Mode() os.FileMode {
 	return fi.mode
 }
+
 func (fi bindataFileInfo) ModTime() time.Time {
 	return fi.modTime
 }
+
 func (fi bindataFileInfo) IsDir() bool {
 	return false
 }
+
 func (fi bindataFileInfo) Sys() interface{} {
 	return nil
 }
@@ -87,7 +92,7 @@ func viewsBlocksBlockTpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "views/blocks/block.tpl", size: 50, mode: os.FileMode(436), modTime: time.Unix(1541431067, 0)}
+	info := bindataFileInfo{name: "views/blocks/block.tpl", size: 50, mode: os.FileMode(0o664), modTime: time.Unix(1541431067, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -107,7 +112,7 @@ func viewsHeaderTpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "views/header.tpl", size: 52, mode: os.FileMode(436), modTime: time.Unix(1541431067, 0)}
+	info := bindataFileInfo{name: "views/header.tpl", size: 52, mode: os.FileMode(0o664), modTime: time.Unix(1541431067, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -127,7 +132,7 @@ func viewsIndexTpl() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "views/index.tpl", size: 255, mode: os.FileMode(436), modTime: time.Unix(1541434906, 0)}
+	info := bindataFileInfo{name: "views/index.tpl", size: 255, mode: os.FileMode(0o664), modTime: time.Unix(1541434906, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -249,7 +254,7 @@ func RestoreAsset(dir, name string) error {
 	if err != nil {
 		return err
 	}
-	err = os.MkdirAll(_filePath(dir, filepath.Dir(name)), os.FileMode(0755))
+	err = os.MkdirAll(_filePath(dir, filepath.Dir(name)), os.FileMode(0o755))
 	if err != nil {
 		return err
 	}
@@ -287,9 +292,7 @@ func _filePath(dir, name string) string {
 }
 
 func assetFS() *assetfs.AssetFS {
-	assetInfo := func(path string) (os.FileInfo, error) {
-		return os.Stat(path)
-	}
+	assetInfo := os.Stat
 	for k := range _bintree.Children {
 		return &assetfs.AssetFS{Asset: Asset, AssetDir: AssetDir, AssetInfo: assetInfo, Prefix: k}
 	}

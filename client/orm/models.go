@@ -32,9 +32,7 @@ const (
 	defaultStructTagDelim = ";"
 )
 
-var (
-	modelCache = NewModelCacheHandler()
-)
+var modelCache = NewModelCacheHandler()
 
 // model info collection
 type _modelCache struct {
@@ -332,11 +330,6 @@ end:
 
 // register register models to model cache
 func (mc *_modelCache) register(prefixOrSuffixStr string, prefixOrSuffix bool, models ...interface{}) (err error) {
-	if mc.done {
-		err = fmt.Errorf("register must be run before BootStrap")
-		return
-	}
-
 	for _, model := range models {
 		val := reflect.ValueOf(model)
 		typ := reflect.Indirect(val).Type()
@@ -352,7 +345,9 @@ func (mc *_modelCache) register(prefixOrSuffixStr string, prefixOrSuffix bool, m
 			err = fmt.Errorf("<orm.RegisterModel> only allow ptr model struct, it looks you use two reference to the struct `%s`", typ)
 			return
 		}
-
+		if val.Elem().Kind() == reflect.Slice {
+			val = reflect.New(val.Elem().Type().Elem())
+		}
 		table := getTableName(val)
 
 		if prefixOrSuffixStr != "" {
@@ -371,8 +366,7 @@ func (mc *_modelCache) register(prefixOrSuffixStr string, prefixOrSuffix bool, m
 		}
 
 		if _, ok := mc.get(table); ok {
-			err = fmt.Errorf("<orm.RegisterModel> table name `%s` repeat register, must be unique\n", table)
-			return
+			return nil
 		}
 
 		mi := newModelInfo(val)
@@ -389,12 +383,6 @@ func (mc *_modelCache) register(prefixOrSuffixStr string, prefixOrSuffix bool, m
 					}
 				}
 			}
-
-			if mi.fields.pk == nil {
-				err = fmt.Errorf("<orm.RegisterModel> `%s` needs a primary key field, default is to use 'id' if not set\n", name)
-				return
-			}
-
 		}
 
 		mi.table = table

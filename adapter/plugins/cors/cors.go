@@ -16,7 +16,7 @@
 // Usage
 //	import (
 // 		"github.com/beego/beego/v2"
-//		"github.com/beego/beego/v2/plugins/cors"
+//		"github.com/beego/beego/v2/server/web/filter/cors"
 // )
 //
 //	func main() {
@@ -37,10 +37,9 @@ package cors
 
 import (
 	beego "github.com/beego/beego/v2/adapter"
+	"github.com/beego/beego/v2/adapter/context"
 	beecontext "github.com/beego/beego/v2/server/web/context"
 	"github.com/beego/beego/v2/server/web/filter/cors"
-
-	"github.com/beego/beego/v2/adapter/context"
 )
 
 // Options represents Access Control options.

@@ -19,10 +19,9 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/beego/beego/v2/core/logs"
-
 	"github.com/beego/beego/v2/client/orm"
 	"github.com/beego/beego/v2/core/bean"
+	"github.com/beego/beego/v2/core/logs"
 )
 
 // DefaultValueFilterChainBuilder only works for InsertXXX method,
@@ -81,13 +80,10 @@ func (d *DefaultValueFilterChainBuilder) FilterChain(next orm.Filter) orm.Filter
 		switch inv.Method {
 		case "Insert", "InsertWithCtx":
 			d.handleInsert(ctx, inv)
-			break
 		case "InsertOrUpdate", "InsertOrUpdateWithCtx":
 			d.handleInsertOrUpdate(ctx, inv)
-			break
 		case "InsertMulti", "InsertMultiWithCtx":
 			d.handleInsertMulti(ctx, inv)
-			break
 		}
 		return next(ctx, inv)
 	}

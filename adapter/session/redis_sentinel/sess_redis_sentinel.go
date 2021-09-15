@@ -20,8 +20,8 @@
 //
 // Usage:
 // import(
-//   _ "github.com/beego/beego/v2/session/redis_sentinel"
-//   "github.com/beego/beego/v2/session"
+//   _ "github.com/beego/beego/v2/server/web/session/redis_sentinel"
+//   "github.com/beego/beego/v2/server/web/session"
 // )
 //
 //	func init() {
@@ -37,7 +37,6 @@ import (
 	"net/http"
 
 	"github.com/beego/beego/v2/adapter/session"
-
 	sentinel "github.com/beego/beego/v2/server/web/session/redis_sentinel"
 )
 

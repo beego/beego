@@ -101,29 +101,30 @@ func newFields() *fields {
 
 // single field info
 type fieldInfo struct {
-	mi                  *modelInfo
-	fieldIndex          []int
-	fieldType           int
 	dbcol               bool // table column fk and onetoone
 	inModel             bool
-	name                string
-	fullName            string
-	column              string
-	addrValue           reflect.Value
-	sf                  reflect.StructField
 	auto                bool
 	pk                  bool
 	null                bool
 	index               bool
 	unique              bool
-	colDefault          bool  // whether has default tag
-	initial             StrTo // store the default value
-	size                int
+	colDefault          bool // whether has default tag
 	toText              bool
 	autoNow             bool
 	autoNowAdd          bool
 	rel                 bool // if type equal to RelForeignKey, RelOneToOne, RelManyToMany then true
 	reverse             bool
+	isFielder           bool // implement Fielder interface
+	mi                  *modelInfo
+	fieldIndex          []int
+	fieldType           int
+	name                string
+	fullName            string
+	column              string
+	addrValue           reflect.Value
+	sf                  reflect.StructField
+	initial             StrTo // store the default value
+	size                int
 	reverseField        string
 	reverseFieldInfo    *fieldInfo
 	reverseFieldInfoTwo *fieldInfo
@@ -134,7 +135,6 @@ type fieldInfo struct {
 	relModelInfo        *modelInfo
 	digits              int
 	decimals            int
-	isFielder           bool // implement Fielder interface
 	onDelete            string
 	description         string
 	timePrecision       *int
@@ -387,7 +387,6 @@ checkType:
 					fi.timePrecision = &v
 				}
 			}
-
 		}
 
 		if attrs["auto_now"] {

@@ -1,0 +1,26 @@
+name: golangci-lint
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "**/*.go"
+      - ".github/workflows/golangci-lint.yml"
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "**/*.go"
+      - ".github/workflows/golangci-lint.yml"
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout codebase
+        uses: actions/checkout@v2
+
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v2
+        with:
+          version: latest
+          args: --config=.github/linters/.golangci.yml
+          only-new-issues: true

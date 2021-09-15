@@ -33,6 +33,11 @@ import (
 // Writes messages by lines limit, file size limit, or time frequency.
 type fileLogWriter struct {
 	sync.RWMutex // write log order by order and  atomic incr maxLinesCurLines and maxSizeCurSize
+
+	Rotate bool `json:"rotate"`
+	Daily  bool `json:"daily"`
+	Hourly bool `json:"hourly"`
+
 	// The opened file
 	Filename   string `json:"filename"`
 	fileWriter *os.File
@@ -49,29 +54,27 @@ type fileLogWriter struct {
 	maxSizeCurSize int
 
 	// Rotate daily
-	Daily         bool  `json:"daily"`
 	MaxDays       int64 `json:"maxdays"`
 	dailyOpenDate int
 	dailyOpenTime time.Time
 
 	// Rotate hourly
-	Hourly         bool  `json:"hourly"`
 	MaxHours       int64 `json:"maxhours"`
 	hourlyOpenDate int
 	hourlyOpenTime time.Time
 
-	Rotate bool `json:"rotate"`
-
 	Level int `json:"level"`
-
+	// Permissions for log file
 	Perm string `json:"perm"`
+	// Permissions for directory if it is specified in FileName
+	DirPerm string `json:"dirperm"`
 
 	RotatePerm string `json:"rotateperm"`
 
 	fileNameOnly, suffix string // like "project.log", project is fileNameOnly and .log is suffix
 
-	formatter LogFormatter
-	Formatter string `json:"formatter"`
+	logFormatter LogFormatter
+	Formatter    string `json:"formatter"`
 }
 
 // newFileWriter creates a FileLogWriter returning as LoggerInterface.
@@ -85,15 +88,16 @@ func newFileWriter() Logger {
 		RotatePerm: "0440",
 		Level:      LevelTrace,
 		Perm:       "0660",
+		DirPerm:    "0770",
 		MaxLines:   10000000,
 		MaxFiles:   999,
 		MaxSize:    1 << 28,
 	}
-	w.formatter = w
+	w.logFormatter = w
 	return w
 }
 
-func (w *fileLogWriter) Format(lm *LogMsg) string {
+func (*fileLogWriter) Format(lm *LogMsg) string {
 	msg := lm.OldStyleFormat()
 	hd, _, _ := formatTimeHeader(lm.When)
 	msg = fmt.Sprintf("%s %s\n", string(hd), msg)
@@ -101,7 +105,7 @@ func (w *fileLogWriter) Format(lm *LogMsg) string {
 }
 
 func (w *fileLogWriter) SetFormatter(f LogFormatter) {
-	w.formatter = f
+	w.logFormatter = f
 }
 
 // Init file logger with json config.
@@ -116,12 +120,11 @@ func (w *fileLogWriter) SetFormatter(f LogFormatter) {
 //      "perm":"0600"
 //  }
 func (w *fileLogWriter) Init(config string) error {
-
 	err := json.Unmarshal([]byte(config), w)
 	if err != nil {
 		return err
 	}
-	if len(w.Filename) == 0 {
+	if w.Filename == "" {
 		return errors.New("jsonconfig must have filename")
 	}
 	w.suffix = filepath.Ext(w.Filename)
@@ -133,9 +136,9 @@ func (w *fileLogWriter) Init(config string) error {
 	if len(w.Formatter) > 0 {
 		fmtr, ok := GetFormatter(w.Formatter)
 		if !ok {
-			return errors.New(fmt.Sprintf("the formatter with name: %s not found", w.Formatter))
+			return fmt.Errorf("the formatter with name: %s not found", w.Formatter)
 		}
-		w.formatter = fmtr
+		w.logFormatter = fmtr
 	}
 	err = w.startLogger()
 	return err
@@ -164,7 +167,6 @@ func (w *fileLogWriter) needRotateHourly(hour int) bool {
 	return (w.MaxLines > 0 && w.maxLinesCurLines >= w.MaxLines) ||
 		(w.MaxSize > 0 && w.maxSizeCurSize >= w.MaxSize) ||
 		(w.Hourly && hour != w.hourlyOpenDate)
-
 }
 
 // WriteMsg writes logger message into file.
@@ -175,7 +177,7 @@ func (w *fileLogWriter) WriteMsg(lm *LogMsg) error {
 
 	_, d, h := formatTimeHeader(lm.When)
 
-	msg := w.formatter.Format(lm)
+	msg := w.logFormatter.Format(lm)
 	if w.Rotate {
 		w.RLock()
 		if w.needRotateHourly(h) {
@@ -218,8 +220,13 @@ func (w *fileLogWriter) createLogFile() (*os.File, error) {
 		return nil, err
 	}
 
+	dirperm, err := strconv.ParseInt(w.DirPerm, 8, 64)
+	if err != nil {
+		return nil, err
+	}
+
 	filepath := path.Dir(w.Filename)
-	os.MkdirAll(filepath, os.FileMode(perm))
+	os.MkdirAll(filepath, os.FileMode(dirperm))
 
 	fd, err := os.OpenFile(w.Filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(perm))
 	if err == nil {

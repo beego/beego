@@ -202,9 +202,7 @@ func BuildTemplate(dir string, files ...string) error {
 		root:  dir,
 		files: make(map[string][]string),
 	}
-	err = Walk(fs, dir, func(path string, f os.FileInfo, err error) error {
-		return self.visit(path, f, err)
-	})
+	err = Walk(fs, dir, self.visit)
 	if err != nil {
 		fmt.Printf("Walk() returned %v\n", err)
 		return err
@@ -351,7 +349,6 @@ func _getTemplate(t0 *template.Template, root string, fs http.FileSystem, subMod
 				}
 			}
 		}
-
 	}
 	return
 }

@@ -25,7 +25,7 @@ type PolicyFunc func(*context.Context)
 
 // FindPolicy Find Router info for URL
 func (p *ControllerRegister) FindPolicy(cont *context.Context) []PolicyFunc {
-	var urlPath = cont.Input.URL()
+	urlPath := cont.Input.URL()
 	if !BConfig.RouterCaseSensitive {
 		urlPath = strings.ToLower(urlPath)
 	}

@@ -21,7 +21,6 @@ import (
 
 // short string format
 func ToShortTimeFormat(d time.Duration) string {
-
 	u := uint64(d)
 	if u < uint64(time.Second) {
 		switch {
@@ -44,5 +43,4 @@ func ToShortTimeFormat(d time.Duration) string {
 			return fmt.Sprintf("%.2fh", float64(u)/1000/1000/1000/60/60)
 		}
 	}
-
 }

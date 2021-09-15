@@ -18,6 +18,9 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/beego/beego/v2/client/orm/clauses"
+	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
 )
 
 // table info struct.
@@ -103,7 +106,6 @@ func (t *dbTables) loopDepth(depth int, prefix string, fi *fieldInfo, related []
 
 // parse related fields.
 func (t *dbTables) parseRelated(rels []string, depth int) {
-
 	relsNum := len(rels)
 	related := make([]string, relsNum)
 	copy(related, rels)
@@ -421,7 +423,7 @@ func (t *dbTables) getGroupSQL(groups []string) (groupSQL string) {
 }
 
 // generate order sql.
-func (t *dbTables) getOrderSQL(orders []string) (orderSQL string) {
+func (t *dbTables) getOrderSQL(orders []*order_clause.Order) (orderSQL string) {
 	if len(orders) == 0 {
 		return
 	}
@@ -430,19 +432,25 @@ func (t *dbTables) getOrderSQL(orders []string) (orderSQL string) {
 
 	orderSqls := make([]string, 0, len(orders))
 	for _, order := range orders {
-		asc := "ASC"
-		if order[0] == '-' {
-			asc = "DESC"
-			order = order[1:]
-		}
-		exprs := strings.Split(order, ExprSep)
+		column := order.GetColumn()
+		clause := strings.Split(column, clauses.ExprDot)
 
-		index, _, fi, suc := t.parseExprs(t.mi, exprs)
-		if !suc {
-			panic(fmt.Errorf("unknown field/column name `%s`", strings.Join(exprs, ExprSep)))
-		}
+		if order.IsRaw() {
+			if len(clause) == 2 {
+				orderSqls = append(orderSqls, fmt.Sprintf("%s.%s%s%s %s", clause[0], Q, clause[1], Q, order.SortString()))
+			} else if len(clause) == 1 {
+				orderSqls = append(orderSqls, fmt.Sprintf("%s%s%s %s", Q, clause[0], Q, order.SortString()))
+			} else {
+				panic(fmt.Errorf("unknown field/column name `%s`", strings.Join(clause, ExprSep)))
+			}
+		} else {
+			index, _, fi, suc := t.parseExprs(t.mi, clause)
+			if !suc {
+				panic(fmt.Errorf("unknown field/column name `%s`", strings.Join(clause, ExprSep)))
+			}
 
-		orderSqls = append(orderSqls, fmt.Sprintf("%s.%s%s%s %s", index, Q, fi.column, Q, asc))
+			orderSqls = append(orderSqls, fmt.Sprintf("%s.%s%s%s %s", index, Q, fi.column, Q, order.SortString()))
+		}
 	}
 
 	orderSQL = fmt.Sprintf("ORDER BY %s ", strings.Join(orderSqls, ", "))

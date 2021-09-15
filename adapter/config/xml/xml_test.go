@@ -23,7 +23,6 @@ import (
 )
 
 func TestXML(t *testing.T) {
-
 	var (
 		// xml parse should incluce in <config></config> tags
 		xmlcontext = `<?xml version="1.0" encoding="UTF-8"?>
@@ -58,7 +57,8 @@ func TestXML(t *testing.T) {
 		}
 	)
 
-	f, err := os.Create("testxml.conf")
+	cfgFileName := "testxml.conf"
+	f, err := os.Create(cfgFileName)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -68,9 +68,9 @@ func TestXML(t *testing.T) {
 		t.Fatal(err)
 	}
 	f.Close()
-	defer os.Remove("testxml.conf")
+	defer os.Remove(cfgFileName)
 
-	xmlconf, err := config.NewConfig("xml", "testxml.conf")
+	xmlconf, err := config.NewConfig("xml", cfgFileName)
 	if err != nil {
 		t.Fatal(err)
 	}

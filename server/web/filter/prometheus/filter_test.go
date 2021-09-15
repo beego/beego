@@ -38,10 +38,10 @@ func TestFilterChain(t *testing.T) {
 	ctx.Input.SetData("RouterPattern", "my-route")
 	filter(ctx)
 	assert.True(t, ctx.Input.GetData("invocation").(bool))
+	time.Sleep(1 * time.Second)
 }
 
 func TestFilterChainBuilder_report(t *testing.T) {
-
 	ctx := context.NewContext()
 	r, _ := http.NewRequest("GET", "/prometheus/user", nil)
 	w := httptest.NewRecorder()

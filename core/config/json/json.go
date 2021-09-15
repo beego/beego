@@ -31,8 +31,7 @@ import (
 )
 
 // JSONConfig is a json config parser and implements Config interface.
-type JSONConfig struct {
-}
+type JSONConfig struct{}
 
 // Parse returns a ConfigContainer with parsed json config map.
 func (js *JSONConfig) Parse(filename string) (config.Configer, error) {
@@ -211,7 +210,6 @@ func (c *JSONConfigContainer) String(key string) (string, error) {
 // DefaultString returns the string value for a given key.
 // if err != nil return defaultval
 func (c *JSONConfigContainer) DefaultString(key string, defaultVal string) string {
-	// TODO FIXME should not use "" to replace non existence
 	if v, err := c.String(key); v != "" && err == nil {
 		return v
 	}

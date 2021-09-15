@@ -605,7 +605,6 @@ func TestCanSkipAlso(t *testing.T) {
 	if !b {
 		t.Fatal("validation should be passed")
 	}
-
 }
 
 func TestFieldNoEmpty(t *testing.T) {

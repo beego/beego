@@ -3,7 +3,6 @@ package ssdb
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -12,6 +11,7 @@ import (
 	"github.com/ssdb/gossdb/ssdb"
 
 	"github.com/beego/beego/v2/client/cache"
+	"github.com/beego/beego/v2/core/berror"
 )
 
 // Cache SSDB adapter
@@ -27,31 +27,21 @@ func NewSsdbCache() cache.Cache {
 
 // Get gets a key's value from memcache.
 func (rc *Cache) Get(ctx context.Context, key string) (interface{}, error) {
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return nil, err
-		}
-	}
 	value, err := rc.conn.Get(key)
 	if err == nil {
 		return value, nil
 	}
-	return nil, err
+	return nil, berror.Wrapf(err, cache.SsdbCacheCurdFailed, "could not get value, key: %s", key)
 }
 
 // GetMulti gets one or keys values from ssdb.
 func (rc *Cache) GetMulti(ctx context.Context, keys []string) ([]interface{}, error) {
 	size := len(keys)
 	values := make([]interface{}, size)
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return values, err
-		}
-	}
 
 	res, err := rc.conn.Do("multi_get", keys)
 	if err != nil {
-		return values, err
+		return values, berror.Wrapf(err, cache.SsdbCacheCurdFailed, "multi_get failed, key: %v", keys)
 	}
 
 	resSize := len(res)
@@ -63,14 +53,14 @@ func (rc *Cache) GetMulti(ctx context.Context, keys []string) ([]interface{}, er
 	keysErr := make([]string, 0)
 	for i, ki := range keys {
 		if _, ok := keyIdx[ki]; !ok {
-			keysErr = append(keysErr, fmt.Sprintf("key [%s] error: %s", ki, "the key isn't exist"))
+			keysErr = append(keysErr, fmt.Sprintf("key [%s] error: %s", ki, "key not exist"))
 			continue
 		}
 		values[i] = res[keyIdx[ki]+1]
 	}
 
 	if len(keysErr) != 0 {
-		return values, fmt.Errorf(strings.Join(keysErr, "; "))
+		return values, berror.Error(cache.MultiGetFailed, strings.Join(keysErr, "; "))
 	}
 
 	return values, nil
@@ -78,26 +68,16 @@ func (rc *Cache) GetMulti(ctx context.Context, keys []string) ([]interface{}, er
 
 // DelMulti deletes one or more keys from memcache
 func (rc *Cache) DelMulti(keys []string) error {
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return err
-		}
-	}
 	_, err := rc.conn.Do("multi_del", keys)
-	return err
+	return berror.Wrapf(err, cache.SsdbCacheCurdFailed, "multi_del failed: %v", keys)
 }
 
 // Put puts value into memcache.
 // value:  must be of type string
 func (rc *Cache) Put(ctx context.Context, key string, val interface{}, timeout time.Duration) error {
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return err
-		}
-	}
 	v, ok := val.(string)
 	if !ok {
-		return errors.New("value must string")
+		return berror.Errorf(cache.InvalidSsdbCacheValue, "value must be string: %v", val)
 	}
 	var resp []string
 	var err error
@@ -108,72 +88,47 @@ func (rc *Cache) Put(ctx context.Context, key string, val interface{}, timeout t
 		resp, err = rc.conn.Do("setx", key, v, ttl)
 	}
 	if err != nil {
-		return err
+		return berror.Wrapf(err, cache.SsdbCacheCurdFailed, "set or setx failed, key: %s", key)
 	}
 	if len(resp) == 2 && resp[0] == "ok" {
 		return nil
 	}
-	return errors.New("bad response")
+	return berror.Errorf(cache.SsdbBadResponse, "the response from SSDB server is invalid: %v", resp)
 }
 
 // Delete deletes a value in memcache.
 func (rc *Cache) Delete(ctx context.Context, key string) error {
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return err
-		}
-	}
 	_, err := rc.conn.Del(key)
-	return err
+	return berror.Wrapf(err, cache.SsdbCacheCurdFailed, "del failed: %s", key)
 }
 
 // Incr increases a key's counter.
 func (rc *Cache) Incr(ctx context.Context, key string) error {
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return err
-		}
-	}
 	_, err := rc.conn.Do("incr", key, 1)
-	return err
+	return berror.Wrapf(err, cache.SsdbCacheCurdFailed, "increase failed: %s", key)
 }
 
 // Decr decrements a key's counter.
 func (rc *Cache) Decr(ctx context.Context, key string) error {
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return err
-		}
-	}
 	_, err := rc.conn.Do("incr", key, -1)
-	return err
+	return berror.Wrapf(err, cache.SsdbCacheCurdFailed, "decrease failed: %s", key)
 }
 
 // IsExist checks if a key exists in memcache.
 func (rc *Cache) IsExist(ctx context.Context, key string) (bool, error) {
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return false, err
-		}
-	}
 	resp, err := rc.conn.Do("exists", key)
 	if err != nil {
-		return false, err
+		return false, berror.Wrapf(err, cache.SsdbCacheCurdFailed, "exists failed: %s", key)
 	}
 	if len(resp) == 2 && resp[1] == "1" {
 		return true, nil
 	}
 	return false, nil
-
 }
 
-// ClearAll clears all cached items in memcache.
+// ClearAll clears all cached items in ssdb.
+// If there are many keys, this method may spent much time.
 func (rc *Cache) ClearAll(context.Context) error {
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return err
-		}
-	}
 	keyStart, keyEnd, limit := "", "", 50
 	resp, err := rc.Scan(keyStart, keyEnd, limit)
 	for err == nil {
@@ -187,21 +142,16 @@ func (rc *Cache) ClearAll(context.Context) error {
 		}
 		_, e := rc.conn.Do("multi_del", keys)
 		if e != nil {
-			return e
+			return berror.Wrapf(e, cache.SsdbCacheCurdFailed, "multi_del failed: %v", keys)
 		}
 		keyStart = resp[size-2]
 		resp, err = rc.Scan(keyStart, keyEnd, limit)
 	}
-	return err
+	return berror.Wrap(err, cache.SsdbCacheCurdFailed, "scan failed")
 }
 
 // Scan key all cached in ssdb.
 func (rc *Cache) Scan(keyStart string, keyEnd string, limit int) ([]string, error) {
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return nil, err
-		}
-	}
 	resp, err := rc.conn.Do("scan", keyStart, keyEnd, limit)
 	if err != nil {
 		return nil, err
@@ -214,30 +164,36 @@ func (rc *Cache) Scan(keyStart string, keyEnd string, limit int) ([]string, erro
 // If an error occurs during connection, an error is returned
 func (rc *Cache) StartAndGC(config string) error {
 	var cf map[string]string
-	json.Unmarshal([]byte(config), &cf)
+	err := json.Unmarshal([]byte(config), &cf)
+	if err != nil {
+		return berror.Wrapf(err, cache.InvalidSsdbCacheCfg,
+			"unmarshal this config failed, it must be a valid json string: %s", config)
+	}
 	if _, ok := cf["conn"]; !ok {
-		return errors.New("config has no conn key")
+		return berror.Wrapf(err, cache.InvalidSsdbCacheCfg,
+			"Missing conn field: %s", config)
 	}
 	rc.conninfo = strings.Split(cf["conn"], ";")
-	if rc.conn == nil {
-		if err := rc.connectInit(); err != nil {
-			return err
-		}
-	}
-	return nil
+	return rc.connectInit()
 }
 
 // connect to memcache and keep the connection.
 func (rc *Cache) connectInit() error {
 	conninfoArray := strings.Split(rc.conninfo[0], ":")
+	if len(conninfoArray) < 2 {
+		return berror.Errorf(cache.InvalidSsdbCacheCfg, "The value of conn should be host:port: %s", rc.conninfo[0])
+	}
 	host := conninfoArray[0]
 	port, e := strconv.Atoi(conninfoArray[1])
 	if e != nil {
-		return e
+		return berror.Errorf(cache.InvalidSsdbCacheCfg, "Port is invalid. It must be integer, %s", rc.conninfo[0])
 	}
 	var err error
-	rc.conn, err = ssdb.Connect(host, port)
-	return err
+	if rc.conn, err = ssdb.Connect(host, port); err != nil {
+		return berror.Wrapf(err, cache.InvalidConnection,
+			"could not connect to SSDB, please check your connection info, network and firewall: %s", rc.conninfo[0])
+	}
+	return nil
 }
 
 func init() {

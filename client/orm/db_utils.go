@@ -55,7 +55,6 @@ func getExistPk(mi *modelInfo, ind reflect.Value) (column string, value interfac
 
 // get fields description as flatted string.
 func getFlatParams(fi *fieldInfo, args []interface{}, tz *time.Location) (params []interface{}) {
-
 outFor:
 	for _, arg := range args {
 		if arg == nil {

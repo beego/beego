@@ -99,7 +99,7 @@ func (n *Namespace) Filter(action string, filter ...FilterFunc) *Namespace {
 // Router same as beego.Rourer
 // refer: https://godoc.org/github.com/beego/beego/v2#Router
 func (n *Namespace) Router(rootpath string, c ControllerInterface, mappingMethods ...string) *Namespace {
-	n.handlers.Add(rootpath, c, mappingMethods...)
+	n.handlers.Add(rootpath, c, WithRouterMethods(c, mappingMethods...))
 	return n
 }
 
@@ -119,56 +119,56 @@ func (n *Namespace) AutoPrefix(prefix string, c ControllerInterface) *Namespace 
 
 // Get same as beego.Get
 // refer: https://godoc.org/github.com/beego/beego/v2#Get
-func (n *Namespace) Get(rootpath string, f FilterFunc) *Namespace {
+func (n *Namespace) Get(rootpath string, f HandleFunc) *Namespace {
 	n.handlers.Get(rootpath, f)
 	return n
 }
 
 // Post same as beego.Post
 // refer: https://godoc.org/github.com/beego/beego/v2#Post
-func (n *Namespace) Post(rootpath string, f FilterFunc) *Namespace {
+func (n *Namespace) Post(rootpath string, f HandleFunc) *Namespace {
 	n.handlers.Post(rootpath, f)
 	return n
 }
 
 // Delete same as beego.Delete
 // refer: https://godoc.org/github.com/beego/beego/v2#Delete
-func (n *Namespace) Delete(rootpath string, f FilterFunc) *Namespace {
+func (n *Namespace) Delete(rootpath string, f HandleFunc) *Namespace {
 	n.handlers.Delete(rootpath, f)
 	return n
 }
 
 // Put same as beego.Put
 // refer: https://godoc.org/github.com/beego/beego/v2#Put
-func (n *Namespace) Put(rootpath string, f FilterFunc) *Namespace {
+func (n *Namespace) Put(rootpath string, f HandleFunc) *Namespace {
 	n.handlers.Put(rootpath, f)
 	return n
 }
 
 // Head same as beego.Head
 // refer: https://godoc.org/github.com/beego/beego/v2#Head
-func (n *Namespace) Head(rootpath string, f FilterFunc) *Namespace {
+func (n *Namespace) Head(rootpath string, f HandleFunc) *Namespace {
 	n.handlers.Head(rootpath, f)
 	return n
 }
 
 // Options same as beego.Options
 // refer: https://godoc.org/github.com/beego/beego/v2#Options
-func (n *Namespace) Options(rootpath string, f FilterFunc) *Namespace {
+func (n *Namespace) Options(rootpath string, f HandleFunc) *Namespace {
 	n.handlers.Options(rootpath, f)
 	return n
 }
 
 // Patch same as beego.Patch
 // refer: https://godoc.org/github.com/beego/beego/v2#Patch
-func (n *Namespace) Patch(rootpath string, f FilterFunc) *Namespace {
+func (n *Namespace) Patch(rootpath string, f HandleFunc) *Namespace {
 	n.handlers.Patch(rootpath, f)
 	return n
 }
 
 // Any same as beego.Any
 // refer: https://godoc.org/github.com/beego/beego/v2#Any
-func (n *Namespace) Any(rootpath string, f FilterFunc) *Namespace {
+func (n *Namespace) Any(rootpath string, f HandleFunc) *Namespace {
 	n.handlers.Any(rootpath, f)
 	return n
 }
@@ -184,6 +184,54 @@ func (n *Namespace) Handler(rootpath string, h http.Handler) *Namespace {
 // refer: https://godoc.org/github.com/beego/beego/v2#Include
 func (n *Namespace) Include(cList ...ControllerInterface) *Namespace {
 	n.handlers.Include(cList...)
+	return n
+}
+
+// CtrlGet same as beego.CtrlGet
+func (n *Namespace) CtrlGet(rootpath string, f interface{}) *Namespace {
+	n.handlers.CtrlGet(rootpath, f)
+	return n
+}
+
+// CtrlPost same as beego.CtrlPost
+func (n *Namespace) CtrlPost(rootpath string, f interface{}) *Namespace {
+	n.handlers.CtrlPost(rootpath, f)
+	return n
+}
+
+// CtrlDelete same as beego.CtrlDelete
+func (n *Namespace) CtrlDelete(rootpath string, f interface{}) *Namespace {
+	n.handlers.CtrlDelete(rootpath, f)
+	return n
+}
+
+// CtrlPut same as beego.CtrlPut
+func (n *Namespace) CtrlPut(rootpath string, f interface{}) *Namespace {
+	n.handlers.CtrlPut(rootpath, f)
+	return n
+}
+
+// CtrlHead same as beego.CtrlHead
+func (n *Namespace) CtrlHead(rootpath string, f interface{}) *Namespace {
+	n.handlers.CtrlHead(rootpath, f)
+	return n
+}
+
+// CtrlOptions same as beego.CtrlOptions
+func (n *Namespace) CtrlOptions(rootpath string, f interface{}) *Namespace {
+	n.handlers.CtrlOptions(rootpath, f)
+	return n
+}
+
+// CtrlPatch same as beego.CtrlPatch
+func (n *Namespace) CtrlPatch(rootpath string, f interface{}) *Namespace {
+	n.handlers.CtrlPatch(rootpath, f)
+	return n
+}
+
+// Any same as beego.CtrlAny
+func (n *Namespace) CtrlAny(rootpath string, f interface{}) *Namespace {
+	n.handlers.CtrlAny(rootpath, f)
 	return n
 }
 
@@ -311,58 +359,114 @@ func NSRouter(rootpath string, c ControllerInterface, mappingMethods ...string) 
 }
 
 // NSGet call Namespace Get
-func NSGet(rootpath string, f FilterFunc) LinkNamespace {
+func NSGet(rootpath string, f HandleFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Get(rootpath, f)
 	}
 }
 
 // NSPost call Namespace Post
-func NSPost(rootpath string, f FilterFunc) LinkNamespace {
+func NSPost(rootpath string, f HandleFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Post(rootpath, f)
 	}
 }
 
 // NSHead call Namespace Head
-func NSHead(rootpath string, f FilterFunc) LinkNamespace {
+func NSHead(rootpath string, f HandleFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Head(rootpath, f)
 	}
 }
 
 // NSPut call Namespace Put
-func NSPut(rootpath string, f FilterFunc) LinkNamespace {
+func NSPut(rootpath string, f HandleFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Put(rootpath, f)
 	}
 }
 
 // NSDelete call Namespace Delete
-func NSDelete(rootpath string, f FilterFunc) LinkNamespace {
+func NSDelete(rootpath string, f HandleFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Delete(rootpath, f)
 	}
 }
 
 // NSAny call Namespace Any
-func NSAny(rootpath string, f FilterFunc) LinkNamespace {
+func NSAny(rootpath string, f HandleFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Any(rootpath, f)
 	}
 }
 
 // NSOptions call Namespace Options
-func NSOptions(rootpath string, f FilterFunc) LinkNamespace {
+func NSOptions(rootpath string, f HandleFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Options(rootpath, f)
 	}
 }
 
 // NSPatch call Namespace Patch
-func NSPatch(rootpath string, f FilterFunc) LinkNamespace {
+func NSPatch(rootpath string, f HandleFunc) LinkNamespace {
 	return func(ns *Namespace) {
 		ns.Patch(rootpath, f)
+	}
+}
+
+// NSCtrlGet call Namespace CtrlGet
+func NSCtrlGet(rootpath string, f interface{}) LinkNamespace {
+	return func(ns *Namespace) {
+		ns.CtrlGet(rootpath, f)
+	}
+}
+
+// NSCtrlPost call Namespace CtrlPost
+func NSCtrlPost(rootpath string, f interface{}) LinkNamespace {
+	return func(ns *Namespace) {
+		ns.CtrlPost(rootpath, f)
+	}
+}
+
+// NSCtrlHead call Namespace CtrlHead
+func NSCtrlHead(rootpath string, f interface{}) LinkNamespace {
+	return func(ns *Namespace) {
+		ns.CtrlHead(rootpath, f)
+	}
+}
+
+// NSCtrlPut call Namespace CtrlPut
+func NSCtrlPut(rootpath string, f interface{}) LinkNamespace {
+	return func(ns *Namespace) {
+		ns.CtrlPut(rootpath, f)
+	}
+}
+
+// NSCtrlDelete call Namespace CtrlDelete
+func NSCtrlDelete(rootpath string, f interface{}) LinkNamespace {
+	return func(ns *Namespace) {
+		ns.CtrlDelete(rootpath, f)
+	}
+}
+
+// NSCtrlAny call Namespace CtrlAny
+func NSCtrlAny(rootpath string, f interface{}) LinkNamespace {
+	return func(ns *Namespace) {
+		ns.CtrlAny(rootpath, f)
+	}
+}
+
+// NSCtrlOptions call Namespace CtrlOptions
+func NSCtrlOptions(rootpath string, f interface{}) LinkNamespace {
+	return func(ns *Namespace) {
+		ns.CtrlOptions(rootpath, f)
+	}
+}
+
+// NSCtrlPatch call Namespace CtrlPatch
+func NSCtrlPatch(rootpath string, f interface{}) LinkNamespace {
+	return func(ns *Namespace) {
+		ns.CtrlPatch(rootpath, f)
 	}
 }
 

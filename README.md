@@ -1,14 +1,12 @@
-# Beego [![Build Status](https://travis-ci.org/astaxie/beego.svg?branch=master)](https://travis-ci.org/astaxie/beego) [![GoDoc](http://godoc.org/github.com/beego/beego/v2?status.svg)](http://godoc.org/github.com/beego/beego/v2) [![Foundation](https://img.shields.io/badge/Golang-Foundation-green.svg)](http://golangfoundation.org) [![Go Report Card](https://goreportcard.com/badge/github.com/beego/beego/v2)](https://goreportcard.com/report/github.com/beego/beego/v2)
+# Beego [![Test](https://github.com/beego/beego/actions/workflows/test.yml/badge.svg?branch=develop)](https://github.com/beego/beego/actions/workflows/test.yml) [![Go Report Card](https://goreportcard.com/badge/github.com/beego/beego)](https://goreportcard.com/report/github.com/beego/beego) [![Go Reference](https://pkg.go.dev/badge/github.com/beego/beego/v2.svg)](https://pkg.go.dev/github.com/beego/beego/v2)
 
-Beego is used for rapid development of enterprise application in Go, including RESTful APIs, web apps and backend
-services.
+Beego is used for rapid development of enterprise application in Go, including RESTful APIs, web apps and backend services.
 
-It is inspired by Tornado, Sinatra and Flask. beego has some Go-specific features such as interfaces and struct
-embedding.
+It is inspired by Tornado, Sinatra and Flask. beego has some Go-specific features such as interfaces and struct embedding.
 
 ![architecture](https://cdn.nlark.com/yuque/0/2020/png/755700/1607857489109-1e267fce-d65f-4c5e-b915-5c475df33c58.png)
 
-Beego is compos of four parts:
+Beego is composed of four parts:
 
 1. Base modules: including log module, config module, governor module;
 2. Task: is used for running timed tasks or periodic tasks;
@@ -19,7 +17,7 @@ Beego is compos of four parts:
 
 ## Quick Start
 
-[Officail website](http://beego.me)
+[Official website](http://beego.me)
 
 [Example](https://github.com/beego/beego-example)
 
@@ -40,7 +38,7 @@ Beego is compos of four parts:
 
 #### Download and install
 
-    go get github.com/beego/beego/v2@v2.0.0
+    go get github.com/beego/beego/v2@latest
 
 #### Create file `hello.go`
 
@@ -90,12 +88,11 @@ Congratulations! You've just built your first **beego** app.
 ## Community
 
 * [http://beego.me/community](http://beego.me/community)
-* Welcome to join us in Slack: [https://beego.slack.com](https://beego.slack.com), you can get invited
-  from [here](https://github.com/beego/beedoc/issues/232)
+* Welcome to join us in Slack: [https://beego.slack.com invite](https://join.slack.com/t/beego/shared_invite/zt-fqlfjaxs-_CRmiITCSbEqQG9NeBqXKA),
 * QQ Group Group ID:523992905
 * [Contribution Guide](https://github.com/beego/beedoc/blob/master/en-US/intro/contributing.md).
 
 ## License
 
 beego source code is licensed under the Apache Licence, Version 2.0
-(http://www.apache.org/licenses/LICENSE-2.0.html).
+([https://www.apache.org/licenses/LICENSE-2.0.html](https://www.apache.org/licenses/LICENSE-2.0.html)).

@@ -18,131 +18,82 @@ import (
 	"regexp"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRequired(t *testing.T) {
 	valid := Validation{}
 
-	if valid.Required(nil, "nil").Ok {
-		t.Error("nil object should be false")
-	}
-	if !valid.Required(true, "bool").Ok {
-		t.Error("Bool value should always return true")
-	}
-	if !valid.Required(false, "bool").Ok {
-		t.Error("Bool value should always return true")
-	}
-	if valid.Required("", "string").Ok {
-		t.Error("\"'\" string should be false")
-	}
-	if valid.Required(" ", "string").Ok {
-		t.Error("\" \" string should be false") // For #2361
-	}
-	if valid.Required("\n", "string").Ok {
-		t.Error("new line string should be false") // For #2361
-	}
-	if !valid.Required("astaxie", "string").Ok {
-		t.Error("string should be true")
-	}
-	if valid.Required(0, "zero").Ok {
-		t.Error("Integer should not be equal 0")
-	}
-	if !valid.Required(1, "int").Ok {
-		t.Error("Integer except 0 should be true")
-	}
-	if !valid.Required(time.Now(), "time").Ok {
-		t.Error("time should be true")
-	}
-	if valid.Required([]string{}, "emptySlice").Ok {
-		t.Error("empty slice should be false")
-	}
-	if !valid.Required([]interface{}{"ok"}, "slice").Ok {
-		t.Error("slice should be true")
-	}
+	assert.False(t, valid.Required(nil, "nil").Ok)
+	assert.True(t, valid.Required(true, "bool").Ok)
+
+	assert.True(t, valid.Required(false, "bool").Ok)
+	assert.False(t, valid.Required("", "string").Ok)
+	assert.False(t, valid.Required(" ", "string").Ok)
+	assert.False(t, valid.Required("\n", "string").Ok)
+
+	assert.True(t, valid.Required("astaxie", "string").Ok)
+	assert.False(t, valid.Required(0, "zero").Ok)
+
+	assert.True(t, valid.Required(1, "int").Ok)
+
+	assert.True(t, valid.Required(time.Now(), "time").Ok)
+
+	assert.False(t, valid.Required([]string{}, "emptySlice").Ok)
+
+	assert.True(t, valid.Required([]interface{}{"ok"}, "slice").Ok)
 }
 
 func TestMin(t *testing.T) {
 	valid := Validation{}
 
-	if valid.Min(-1, 0, "min0").Ok {
-		t.Error("-1 is less than the minimum value of 0 should be false")
-	}
-	if !valid.Min(1, 0, "min0").Ok {
-		t.Error("1 is greater or equal than the minimum value of 0 should be true")
-	}
+	assert.False(t, valid.Min(-1, 0, "min0").Ok)
+	assert.True(t, valid.Min(1, 0, "min0").Ok)
 }
 
 func TestMax(t *testing.T) {
 	valid := Validation{}
 
-	if valid.Max(1, 0, "max0").Ok {
-		t.Error("1 is greater than the minimum value of 0 should be false")
-	}
-	if !valid.Max(-1, 0, "max0").Ok {
-		t.Error("-1 is less or equal than the maximum value of 0 should be true")
-	}
+	assert.False(t, valid.Max(1, 0, "max0").Ok)
+	assert.True(t, valid.Max(-1, 0, "max0").Ok)
 }
 
 func TestRange(t *testing.T) {
 	valid := Validation{}
 
-	if valid.Range(-1, 0, 1, "range0_1").Ok {
-		t.Error("-1 is between 0 and 1 should be false")
-	}
-	if !valid.Range(1, 0, 1, "range0_1").Ok {
-		t.Error("1 is between 0 and 1 should be true")
-	}
+	assert.False(t, valid.Range(-1, 0, 1, "range0_1").Ok)
+
+	assert.True(t, valid.Range(1, 0, 1, "range0_1").Ok)
 }
 
 func TestMinSize(t *testing.T) {
 	valid := Validation{}
 
-	if valid.MinSize("", 1, "minSize1").Ok {
-		t.Error("the length of \"\" is less than the minimum value of 1 should be false")
-	}
-	if !valid.MinSize("ok", 1, "minSize1").Ok {
-		t.Error("the length of \"ok\" is greater or equal than the minimum value of 1 should be true")
-	}
-	if valid.MinSize([]string{}, 1, "minSize1").Ok {
-		t.Error("the length of empty slice is less than the minimum value of 1 should be false")
-	}
-	if !valid.MinSize([]interface{}{"ok"}, 1, "minSize1").Ok {
-		t.Error("the length of [\"ok\"] is greater or equal than the minimum value of 1 should be true")
-	}
+	assert.False(t, valid.MinSize("", 1, "minSize1").Ok)
+
+	assert.True(t, valid.MinSize("ok", 1, "minSize1").Ok)
+	assert.False(t, valid.MinSize([]string{}, 1, "minSize1").Ok)
+	assert.True(t, valid.MinSize([]interface{}{"ok"}, 1, "minSize1").Ok)
 }
 
 func TestMaxSize(t *testing.T) {
 	valid := Validation{}
 
-	if valid.MaxSize("ok", 1, "maxSize1").Ok {
-		t.Error("the length of \"ok\" is greater than the maximum value of 1 should be false")
-	}
-	if !valid.MaxSize("", 1, "maxSize1").Ok {
-		t.Error("the length of \"\" is less or equal than the maximum value of 1 should be true")
-	}
-	if valid.MaxSize([]interface{}{"ok", false}, 1, "maxSize1").Ok {
-		t.Error("the length of [\"ok\", false] is greater than the maximum value of 1 should be false")
-	}
-	if !valid.MaxSize([]string{}, 1, "maxSize1").Ok {
-		t.Error("the length of empty slice is less or equal than the maximum value of 1 should be true")
-	}
+	assert.False(t, valid.MaxSize("ok", 1, "maxSize1").Ok)
+	assert.True(t, valid.MaxSize("", 1, "maxSize1").Ok)
+	assert.False(t, valid.MaxSize([]interface{}{"ok", false}, 1, "maxSize1").Ok)
+	assert.True(t, valid.MaxSize([]string{}, 1, "maxSize1").Ok)
 }
 
 func TestLength(t *testing.T) {
 	valid := Validation{}
 
-	if valid.Length("", 1, "length1").Ok {
-		t.Error("the length of \"\" must equal 1 should be false")
-	}
-	if !valid.Length("1", 1, "length1").Ok {
-		t.Error("the length of \"1\" must equal 1 should be true")
-	}
-	if valid.Length([]string{}, 1, "length1").Ok {
-		t.Error("the length of empty slice must equal 1 should be false")
-	}
-	if !valid.Length([]interface{}{"ok"}, 1, "length1").Ok {
-		t.Error("the length of [\"ok\"] must equal 1 should be true")
-	}
+	assert.False(t, valid.Length("", 1, "length1").Ok)
+	assert.True(t, valid.Length("1", 1, "length1").Ok)
+
+	assert.False(t, valid.Length([]string{}, 1, "length1").Ok)
+	assert.True(t, valid.Length([]interface{}{"ok"}, 1, "length1").Ok)
 }
 
 func TestAlpha(t *testing.T) {
@@ -178,13 +129,16 @@ func TestAlphaNumeric(t *testing.T) {
 	}
 }
 
+const email = "suchuangji@gmail.com"
+
 func TestMatch(t *testing.T) {
 	valid := Validation{}
 
 	if valid.Match("suchuangji@gmail", regexp.MustCompile(`^\w+@\w+\.\w+$`), "match").Ok {
 		t.Error("\"suchuangji@gmail\" match \"^\\w+@\\w+\\.\\w+$\"  should be false")
 	}
-	if !valid.Match("suchuangji@gmail.com", regexp.MustCompile(`^\w+@\w+\.\w+$`), "match").Ok {
+
+	if !valid.Match(email, regexp.MustCompile(`^\w+@\w+\.\w+$`), "match").Ok {
 		t.Error("\"suchuangji@gmail\" match \"^\\w+@\\w+\\.\\w+$\"  should be true")
 	}
 }
@@ -217,7 +171,7 @@ func TestEmail(t *testing.T) {
 	if valid.Email("not@a email", "email").Ok {
 		t.Error("\"not@a email\" is a valid email address should be false")
 	}
-	if !valid.Email("suchuangji@gmail.com", "email").Ok {
+	if !valid.Email(email, "email").Ok {
 		t.Error("\"suchuangji@gmail.com\" is a valid email address should be true")
 	}
 	if valid.Email("@suchuangji@gmail.com", "email").Ok {
@@ -242,7 +196,7 @@ func TestIP(t *testing.T) {
 func TestBase64(t *testing.T) {
 	valid := Validation{}
 
-	if valid.Base64("suchuangji@gmail.com", "base64").Ok {
+	if valid.Base64(email, "base64").Ok {
 		t.Error("\"suchuangji@gmail.com\" are a valid base64 characters should be false")
 	}
 	if !valid.Base64("c3VjaHVhbmdqaUBnbWFpbC5jb20=", "base64").Ok {
@@ -370,44 +324,25 @@ func TestValid(t *testing.T) {
 
 	u := user{Name: "test@/test/;com", Age: 40}
 	b, err := valid.Valid(u)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !b {
-		t.Error("validation should be passed")
-	}
+	assert.Nil(t, err)
+	assert.True(t, b)
 
 	uptr := &user{Name: "test", Age: 40}
 	valid.Clear()
 	b, err = valid.Valid(uptr)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if b {
-		t.Error("validation should not be passed")
-	}
-	if len(valid.Errors) != 1 {
-		t.Fatalf("valid errors len should be 1 but got %d", len(valid.Errors))
-	}
-	if valid.Errors[0].Key != "Name.Match" {
-		t.Errorf("Message key should be `Name.Match` but got %s", valid.Errors[0].Key)
-	}
+
+	assert.Nil(t, err)
+	assert.False(t, b)
+	assert.Equal(t, 1, len(valid.Errors))
+	assert.Equal(t, "Name.Match", valid.Errors[0].Key)
 
 	u = user{Name: "test@/test/;com", Age: 180}
 	valid.Clear()
 	b, err = valid.Valid(u)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if b {
-		t.Error("validation should not be passed")
-	}
-	if len(valid.Errors) != 1 {
-		t.Fatalf("valid errors len should be 1 but got %d", len(valid.Errors))
-	}
-	if valid.Errors[0].Key != "Age.Range." {
-		t.Errorf("Message key should be `Age.Range` but got %s", valid.Errors[0].Key)
-	}
+	assert.Nil(t, err)
+	assert.False(t, b)
+	assert.Equal(t, 1, len(valid.Errors))
+	assert.Equal(t, "Age.Range.", valid.Errors[0].Key)
 }
 
 func TestRecursiveValid(t *testing.T) {
@@ -432,12 +367,8 @@ func TestRecursiveValid(t *testing.T) {
 
 	u := Account{Password: "abc123_", U: User{}}
 	b, err := valid.RecursiveValid(u)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if b {
-		t.Error("validation should not be passed")
-	}
+	assert.Nil(t, err)
+	assert.False(t, b)
 }
 
 func TestSkipValid(t *testing.T) {
@@ -474,21 +405,13 @@ func TestSkipValid(t *testing.T) {
 
 	valid := Validation{}
 	b, err := valid.Valid(u)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if b {
-		t.Fatal("validation should not be passed")
-	}
+	assert.Nil(t, err)
+	assert.False(t, b)
 
 	valid = Validation{RequiredFirst: true}
 	b, err = valid.Valid(u)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !b {
-		t.Fatal("validation should be passed")
-	}
+	assert.Nil(t, err)
+	assert.True(t, b)
 }
 
 func TestPointer(t *testing.T) {
@@ -506,12 +429,8 @@ func TestPointer(t *testing.T) {
 
 	valid := Validation{}
 	b, err := valid.Valid(u)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if b {
-		t.Fatal("validation should not be passed")
-	}
+	assert.Nil(t, err)
+	assert.False(t, b)
 
 	validEmail := "a@a.com"
 	u = User{
@@ -521,12 +440,8 @@ func TestPointer(t *testing.T) {
 
 	valid = Validation{RequiredFirst: true}
 	b, err = valid.Valid(u)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !b {
-		t.Fatal("validation should be passed")
-	}
+	assert.Nil(t, err)
+	assert.True(t, b)
 
 	u = User{
 		ReqEmail: &validEmail,
@@ -535,12 +450,8 @@ func TestPointer(t *testing.T) {
 
 	valid = Validation{}
 	b, err = valid.Valid(u)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if b {
-		t.Fatal("validation should not be passed")
-	}
+	assert.Nil(t, err)
+	assert.False(t, b)
 
 	invalidEmail := "a@a"
 	u = User{
@@ -550,12 +461,8 @@ func TestPointer(t *testing.T) {
 
 	valid = Validation{RequiredFirst: true}
 	b, err = valid.Valid(u)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if b {
-		t.Fatal("validation should not be passed")
-	}
+	assert.Nil(t, err)
+	assert.False(t, b)
 
 	u = User{
 		ReqEmail: &validEmail,
@@ -564,12 +471,8 @@ func TestPointer(t *testing.T) {
 
 	valid = Validation{}
 	b, err = valid.Valid(u)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if b {
-		t.Fatal("validation should not be passed")
-	}
+	assert.Nil(t, err)
+	assert.False(t, b)
 }
 
 func TestCanSkipAlso(t *testing.T) {
@@ -589,21 +492,13 @@ func TestCanSkipAlso(t *testing.T) {
 
 	valid := Validation{RequiredFirst: true}
 	b, err := valid.Valid(u)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if b {
-		t.Fatal("validation should not be passed")
-	}
+	assert.Nil(t, err)
+	assert.False(t, b)
 
 	valid = Validation{RequiredFirst: true}
 	valid.CanSkipAlso("Range")
 	b, err = valid.Valid(u)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if !b {
-		t.Fatal("validation should be passed")
-	}
 
+	assert.Nil(t, err)
+	assert.True(t, b)
 }

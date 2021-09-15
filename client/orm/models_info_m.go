@@ -22,16 +22,16 @@ import (
 
 // single model info
 type modelInfo struct {
+	manual    bool
+	isThrough bool
 	pkg       string
 	name      string
 	fullName  string
 	table     string
 	model     interface{}
 	fields    *fields
-	manual    bool
 	addrField reflect.Value // store the original struct value
 	uniques   []string
-	isThrough bool
 }
 
 // new model info

@@ -15,7 +15,7 @@
 // Package logs provide a general log interface
 // Usage:
 //
-// import "github.com/beego/beego/v2/logs"
+// import "github.com/beego/beego/v2/core/logs"
 //
 //	log := NewLogger(10000)
 //	log.SetLogger("console", "")
@@ -92,8 +92,10 @@ type Logger interface {
 	SetFormatter(f LogFormatter)
 }
 
-var adapters = make(map[string]newLoggerFunc)
-var levelPrefix = [LevelDebug + 1]string{"[M]", "[A]", "[C]", "[E]", "[W]", "[N]", "[I]", "[D]"}
+var (
+	adapters    = make(map[string]newLoggerFunc)
+	levelPrefix = [LevelDebug + 1]string{"[M]", "[A]", "[C]", "[E]", "[W]", "[N]", "[I]", "[D]"}
+)
 
 // Register makes a log provide available by the provided name.
 // If Register is called twice with the same name or if driver is nil,
@@ -112,17 +114,17 @@ func Register(name string, log newLoggerFunc) {
 // Can contain several providers and log message into all providers.
 type BeeLogger struct {
 	lock                sync.Mutex
-	level               int
 	init                bool
 	enableFuncCallDepth bool
-	loggerFuncCallDepth int
 	enableFullFilePath  bool
 	asynchronous        bool
+	wg                  sync.WaitGroup
+	level               int
+	loggerFuncCallDepth int
 	prefix              string
 	msgChanLen          int64
 	msgChan             chan *LogMsg
 	signalChan          chan string
-	wg                  sync.WaitGroup
 	outputs             []*nameLogger
 	globalFormatter     string
 }
@@ -201,7 +203,6 @@ func (bl *BeeLogger) setLogger(adapterName string, configs ...string) error {
 	}
 
 	err := lg.Init(config)
-
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "logs.BeeLogger.SetLogger: "+err.Error())
 		return err
@@ -261,13 +262,13 @@ func (bl *BeeLogger) Write(p []byte) (n int, err error) {
 	lm := &LogMsg{
 		Msg:   string(p),
 		Level: levelLoggerImpl,
-		When: time.Now(),
+		When:  time.Now(),
 	}
 
 	// set levelLoggerImpl to ensure all log message will be write out
 	err = bl.writeMsg(lm)
 	if err == nil {
-		return len(p), err
+		return len(p), nil
 	}
 	return 0, err
 }

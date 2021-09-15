@@ -20,8 +20,8 @@
 //
 // Usage:
 // import(
-//   _ "github.com/beego/beego/v2/cache/redis"
-//   "github.com/beego/beego/v2/cache"
+//   _ "github.com/beego/beego/v2/client/cache/redis"
+//   "github.com/beego/beego/v2/client/cache"
 // )
 //
 //  bm, err := cache.NewCache("redis", `{"conn":"127.0.0.1:11211"}`)
@@ -34,10 +34,8 @@ import (
 	redis2 "github.com/beego/beego/v2/client/cache/redis"
 )
 
-var (
-	// DefaultKey the collection name of redis for cache adapter.
-	DefaultKey = "beecacheRedis"
-)
+// DefaultKey the collection name of redis for cache adapter.
+var DefaultKey = "beecacheRedis"
 
 // NewRedisCache create new redis cache with default collection name.
 func NewRedisCache() cache.Cache {

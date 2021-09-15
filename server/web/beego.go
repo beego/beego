@@ -33,9 +33,7 @@ type M map[string]interface{}
 // Hook function to run
 type hookfunc func() error
 
-var (
-	hooks = make([]hookfunc, 0) // hook function slice to store the hookfunc
-)
+var hooks = make([]hookfunc, 0) // hook function slice to store the hookfunc
 
 // AddAPPStartHook is used to register the hookfunc
 // The hookfuncs will run in beego.Run()
@@ -50,7 +48,6 @@ func AddAPPStartHook(hf ...hookfunc) {
 // beego.Run(":8089")
 // beego.Run("127.0.0.1:8089")
 func Run(params ...string) {
-
 	if len(params) > 0 && params[0] != "" {
 		BeeApp.Run(params[0])
 	}
@@ -75,7 +72,7 @@ func initBeforeHTTPRun() {
 			registerTemplate,
 			registerAdmin,
 			registerGzip,
-			registerCommentRouter,
+			// registerCommentRouter,
 		)
 
 		for _, hk := range hooks {

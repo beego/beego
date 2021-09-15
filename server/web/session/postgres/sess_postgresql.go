@@ -38,8 +38,8 @@
 //
 // Usage:
 // import(
-//   _ "github.com/beego/beego/v2/session/postgresql"
-//   "github.com/beego/beego/v2/session"
+//   _ "github.com/beego/beego/v2/server/web/session/postgresql"
+//   "github.com/beego/beego/v2/server/web/session"
 // )
 //
 //	func init() {
@@ -57,9 +57,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/beego/beego/v2/server/web/session"
 	// import postgresql Driver
 	_ "github.com/lib/pq"
+
+	"github.com/beego/beego/v2/server/web/session"
 )
 
 var postgresqlpder = &Provider{}
@@ -122,7 +123,6 @@ func (st *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWrite
 	}
 	st.c.Exec("UPDATE session set session_data=$1, session_expiry=$2 where session_key=$3",
 		b, time.Now().Format(time.RFC3339), st.sid)
-
 }
 
 // Provider postgresql session provider

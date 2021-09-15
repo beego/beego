@@ -15,8 +15,10 @@
 package httplib
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -62,7 +64,6 @@ func TestDoRequest(t *testing.T) {
 	if elapsedTime < delayedTime {
 		t.Errorf("Not enough retries. Took %dms. Delay was meant to take %dms", elapsedTime, delayedTime)
 	}
-
 }
 
 func TestGet(t *testing.T) {
@@ -247,7 +248,6 @@ func TestToJson(t *testing.T) {
 			t.Fatal("response is not valid ip")
 		}
 	}
-
 }
 
 func TestToFile(t *testing.T) {
@@ -259,7 +259,7 @@ func TestToFile(t *testing.T) {
 	}
 	defer os.Remove(f)
 	b, err := ioutil.ReadFile(f)
-	if n := strings.Index(string(b), "origin"); n == -1 {
+	if n := bytes.Index(b, []byte("origin")); n == -1 {
 		t.Fatal(err)
 	}
 }
@@ -273,7 +273,7 @@ func TestToFileDir(t *testing.T) {
 	}
 	defer os.RemoveAll("./files")
 	b, err := ioutil.ReadFile(f)
-	if n := strings.Index(string(b), "origin"); n == -1 {
+	if n := bytes.Index(b, []byte("origin")); n == -1 {
 		t.Fatal(err)
 	}
 }
@@ -299,4 +299,150 @@ func TestAddFilter(t *testing.T) {
 
 	r := Get("http://beego.me")
 	assert.Equal(t, 1, len(req.setting.FilterChains)-len(r.setting.FilterChains))
+}
+
+func TestFilterChainOrder(t *testing.T) {
+	req := Get("http://beego.me")
+	req.AddFilters(func(next Filter) Filter {
+		return func(ctx context.Context, req *BeegoHTTPRequest) (*http.Response, error) {
+			return NewHttpResponseWithJsonBody("first"), nil
+		}
+	})
+
+	req.AddFilters(func(next Filter) Filter {
+		return func(ctx context.Context, req *BeegoHTTPRequest) (*http.Response, error) {
+			return NewHttpResponseWithJsonBody("second"), nil
+		}
+	})
+
+	resp, err := req.DoRequestWithCtx(context.Background())
+	assert.Nil(t, err)
+	data := make([]byte, 5)
+	_, _ = resp.Body.Read(data)
+	assert.Equal(t, "first", string(data))
+}
+
+func TestHead(t *testing.T) {
+	req := Head("http://beego.me")
+	assert.NotNil(t, req)
+	assert.Equal(t, "HEAD", req.req.Method)
+}
+
+func TestDelete(t *testing.T) {
+	req := Delete("http://beego.me")
+	assert.NotNil(t, req)
+	assert.Equal(t, "DELETE", req.req.Method)
+}
+
+func TestPost(t *testing.T) {
+	req := Post("http://beego.me")
+	assert.NotNil(t, req)
+	assert.Equal(t, "POST", req.req.Method)
+}
+
+func TestNewBeegoRequest(t *testing.T) {
+	req := NewBeegoRequest("http://beego.me", "GET")
+	assert.NotNil(t, req)
+	assert.Equal(t, "GET", req.req.Method)
+
+	// invalid case but still go request
+	req = NewBeegoRequest("httpa\ta://beego.me", "GET")
+	assert.NotNil(t, req)
+}
+
+func TestBeegoHTTPRequestSetProtocolVersion(t *testing.T) {
+	req := NewBeegoRequest("http://beego.me", "GET")
+	req.SetProtocolVersion("HTTP/3.10")
+	assert.Equal(t, "HTTP/3.10", req.req.Proto)
+	assert.Equal(t, 3, req.req.ProtoMajor)
+	assert.Equal(t, 10, req.req.ProtoMinor)
+
+	req.SetProtocolVersion("")
+	assert.Equal(t, "HTTP/1.1", req.req.Proto)
+	assert.Equal(t, 1, req.req.ProtoMajor)
+	assert.Equal(t, 1, req.req.ProtoMinor)
+
+	// invalid case
+	req.SetProtocolVersion("HTTP/aaa1.1")
+	assert.Equal(t, "HTTP/1.1", req.req.Proto)
+	assert.Equal(t, 1, req.req.ProtoMajor)
+	assert.Equal(t, 1, req.req.ProtoMinor)
+}
+
+func TestPut(t *testing.T) {
+	req := Put("http://beego.me")
+	assert.NotNil(t, req)
+	assert.Equal(t, "PUT", req.req.Method)
+}
+
+func TestBeegoHTTPRequestHeader(t *testing.T) {
+	req := Post("http://beego.me")
+	key, value := "test-header", "test-header-value"
+	req.Header(key, value)
+	assert.Equal(t, value, req.req.Header.Get(key))
+}
+
+func TestBeegoHTTPRequestSetHost(t *testing.T) {
+	req := Post("http://beego.me")
+	host := "test-hose"
+	req.SetHost(host)
+	assert.Equal(t, host, req.req.Host)
+}
+
+func TestBeegoHTTPRequestParam(t *testing.T) {
+	req := Post("http://beego.me")
+	key, value := "test-param", "test-param-value"
+	req.Param(key, value)
+	assert.Equal(t, value, req.params[key][0])
+
+	value1 := "test-param-value-1"
+	req.Param(key, value1)
+	assert.Equal(t, value1, req.params[key][1])
+}
+
+func TestBeegoHTTPRequestBody(t *testing.T) {
+	req := Post("http://beego.me")
+	body := `hello, world`
+	req.Body([]byte(body))
+	assert.Equal(t, int64(len(body)), req.req.ContentLength)
+	assert.NotNil(t, req.req.GetBody)
+	assert.NotNil(t, req.req.Body)
+
+	body = "hhhh, I am test"
+	req.Body(body)
+	assert.Equal(t, int64(len(body)), req.req.ContentLength)
+	assert.NotNil(t, req.req.GetBody)
+	assert.NotNil(t, req.req.Body)
+
+	// invalid case
+	req.Body(13)
+}
+
+type user struct {
+	Name string `xml:"name"`
+}
+
+func TestBeegoHTTPRequestXMLBody(t *testing.T) {
+	req := Post("http://beego.me")
+	body := &user{
+		Name: "Tom",
+	}
+	_, err := req.XMLBody(body)
+	assert.True(t, req.req.ContentLength > 0)
+	assert.Nil(t, err)
+	assert.NotNil(t, req.req.GetBody)
+}
+
+// TODO
+func TestBeegoHTTPRequestResponseForValue(t *testing.T) {
+}
+
+func TestBeegoHTTPRequestJSONMarshal(t *testing.T) {
+	req := Post("http://beego.me")
+	req.SetEscapeHTML(false)
+	body := map[string]interface{}{
+		"escape": "left&right",
+	}
+	b, _ := req.JSONMarshal(body)
+	assert.Equal(t, fmt.Sprintf(`{"escape":"left&right"}%s`, "\n"), string(b))
 }

@@ -128,7 +128,6 @@ func (p *LogProject) GetLogStore(name string) (s *LogStore, err error) {
 // and ttl is time-to-live(in day) of logs,
 // and shardCnt is the number of shards.
 func (p *LogProject) CreateLogStore(name string, ttl, shardCnt int) (err error) {
-
 	type Body struct {
 		Name       string `json:"logstoreName"`
 		TTL        int    `json:"ttl"`
@@ -212,7 +211,6 @@ func (p *LogProject) DeleteLogStore(name string) (err error) {
 // UpdateLogStore updates a logstore according by logstore name,
 // obviously we can't modify the logstore name itself.
 func (p *LogProject) UpdateLogStore(name string, ttl, shardCnt int) (err error) {
-
 	type Body struct {
 		Name       string `json:"logstoreName"`
 		TTL        int    `json:"ttl"`
@@ -355,7 +353,6 @@ func (p *LogProject) GetMachineGroup(name string) (m *MachineGroup, err error) {
 
 // CreateMachineGroup creates a new machine group in SLS.
 func (p *LogProject) CreateMachineGroup(m *MachineGroup) (err error) {
-
 	body, err := json.Marshal(m)
 	if err != nil {
 		return
@@ -395,7 +392,6 @@ func (p *LogProject) CreateMachineGroup(m *MachineGroup) (err error) {
 
 // UpdateMachineGroup updates a machine group.
 func (p *LogProject) UpdateMachineGroup(m *MachineGroup) (err error) {
-
 	body, err := json.Marshal(m)
 	if err != nil {
 		return
@@ -555,7 +551,6 @@ func (p *LogProject) GetConfig(name string) (c *LogConfig, err error) {
 
 // UpdateConfig updates a config.
 func (p *LogProject) UpdateConfig(c *LogConfig) (err error) {
-
 	body, err := json.Marshal(c)
 	if err != nil {
 		return
@@ -595,7 +590,6 @@ func (p *LogProject) UpdateConfig(c *LogConfig) (err error) {
 
 // CreateConfig creates a new config in SLS.
 func (p *LogProject) CreateConfig(c *LogConfig) (err error) {
-
 	body, err := json.Marshal(c)
 	if err != nil {
 		return

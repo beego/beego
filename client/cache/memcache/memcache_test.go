@@ -19,10 +19,12 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
 	_ "github.com/bradfitz/gomemcache/memcache"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/beego/beego/v2/client/cache"
 )
@@ -34,78 +36,62 @@ func TestMemcacheCache(t *testing.T) {
 	}
 
 	bm, err := cache.NewCache("memcache", fmt.Sprintf(`{"conn": "%s"}`, addr))
-	if err != nil {
-		t.Error("init err")
-	}
+	assert.Nil(t, err)
+
 	timeoutDuration := 10 * time.Second
-	if err = bm.Put(context.Background(), "astaxie", "1", timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
-	if res, _ := bm.IsExist(context.Background(), "astaxie"); !res {
-		t.Error("check err")
-	}
+
+	assert.Nil(t, bm.Put(context.Background(), "astaxie", "1", timeoutDuration))
+	res, _ := bm.IsExist(context.Background(), "astaxie")
+	assert.True(t, res)
 
 	time.Sleep(11 * time.Second)
 
-	if res, _ := bm.IsExist(context.Background(), "astaxie"); res {
-		t.Error("check err")
-	}
-	if err = bm.Put(context.Background(), "astaxie", "1", timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
+	res, _ = bm.IsExist(context.Background(), "astaxie")
+	assert.False(t, res)
+
+	assert.Nil(t, bm.Put(context.Background(), "astaxie", "1", timeoutDuration))
 
 	val, _ := bm.Get(context.Background(), "astaxie")
-	if v, err := strconv.Atoi(string(val.([]byte))); err != nil || v != 1 {
-		t.Error("get err")
-	}
+	v, err := strconv.Atoi(string(val.([]byte)))
+	assert.Nil(t, err)
+	assert.Equal(t, 1, v)
 
-	if err = bm.Incr(context.Background(), "astaxie"); err != nil {
-		t.Error("Incr Error", err)
-	}
+	assert.Nil(t, bm.Incr(context.Background(), "astaxie"))
 
 	val, _ = bm.Get(context.Background(), "astaxie")
-	if v, err := strconv.Atoi(string(val.([]byte))); err != nil || v != 2 {
-		t.Error("get err")
-	}
+	v, err = strconv.Atoi(string(val.([]byte)))
+	assert.Nil(t, err)
+	assert.Equal(t, 2, v)
 
-	if err = bm.Decr(context.Background(), "astaxie"); err != nil {
-		t.Error("Decr Error", err)
-	}
+	assert.Nil(t, bm.Decr(context.Background(), "astaxie"))
 
 	val, _ = bm.Get(context.Background(), "astaxie")
-	if v, err := strconv.Atoi(string(val.([]byte))); err != nil || v != 1 {
-		t.Error("get err")
-	}
+	v, err = strconv.Atoi(string(val.([]byte)))
+	assert.Nil(t, err)
+	assert.Equal(t, 1, v)
 	bm.Delete(context.Background(), "astaxie")
-	if res, _ := bm.IsExist(context.Background(), "astaxie"); res {
-		t.Error("delete err")
-	}
 
+	res, _ = bm.IsExist(context.Background(), "astaxie")
+	assert.False(t, res)
+
+	assert.Nil(t, bm.Put(context.Background(), "astaxie", "author", timeoutDuration))
 	// test string
-	if err = bm.Put(context.Background(), "astaxie", "author", timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
-	if res, _ := bm.IsExist(context.Background(), "astaxie"); !res {
-		t.Error("check err")
-	}
+	res, _ = bm.IsExist(context.Background(), "astaxie")
+	assert.True(t, res)
 
 	val, _ = bm.Get(context.Background(), "astaxie")
-	if v := val.([]byte); string(v) != "author" {
-		t.Error("get err")
-	}
+	vs := val.([]byte)
+	assert.Equal(t, "author", string(vs))
 
 	// test GetMulti
-	if err = bm.Put(context.Background(), "astaxie1", "author1", timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
-	if res, _ := bm.IsExist(context.Background(), "astaxie1"); !res {
-		t.Error("check err")
-	}
+	assert.Nil(t, bm.Put(context.Background(), "astaxie1", "author1", timeoutDuration))
+
+	res, _ = bm.IsExist(context.Background(), "astaxie1")
+	assert.True(t, res)
 
 	vv, _ := bm.GetMulti(context.Background(), []string{"astaxie", "astaxie1"})
-	if len(vv) != 2 {
-		t.Error("GetMulti ERROR")
-	}
+	assert.Equal(t, 2, len(vv))
+
 	if string(vv[0].([]byte)) != "author" && string(vv[0].([]byte)) != "author1" {
 		t.Error("GetMulti ERROR")
 	}
@@ -114,21 +100,14 @@ func TestMemcacheCache(t *testing.T) {
 	}
 
 	vv, err = bm.GetMulti(context.Background(), []string{"astaxie0", "astaxie1"})
-	if len(vv) != 2 {
-		t.Error("GetMulti ERROR")
-	}
-	if vv[0] != nil {
-		t.Error("GetMulti ERROR")
-	}
-	if string(vv[1].([]byte)) != "author1" {
-		t.Error("GetMulti ERROR")
-	}
-	if err != nil && err.Error() == "key [astaxie0] error: key isn't exist" {
-		t.Error("GetMulti ERROR")
-	}
+	assert.Equal(t, 2, len(vv))
+	assert.Nil(t, vv[0])
 
+	assert.Equal(t, "author1", string(vv[1].([]byte)))
+
+	assert.NotNil(t, err)
+	assert.True(t, strings.Contains(err.Error(), "key not exist"))
+
+	assert.Nil(t, bm.ClearAll(context.Background()))
 	// test clear all
-	if err = bm.ClearAll(context.Background()); err != nil {
-		t.Error("clear all err")
-	}
 }

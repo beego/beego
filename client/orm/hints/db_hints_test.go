@@ -21,7 +21,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestNewHint_time(t *testing.T) {
+func TestNewHintTime(t *testing.T) {
 	key := "qweqwe"
 	value := time.Second
 	hint := NewHint(key, value)
@@ -30,7 +30,7 @@ func TestNewHint_time(t *testing.T) {
 	assert.Equal(t, hint.GetValue(), value)
 }
 
-func TestNewHint_int(t *testing.T) {
+func TestNewHintInt(t *testing.T) {
 	key := "qweqwe"
 	value := 281230
 	hint := NewHint(key, value)
@@ -39,7 +39,7 @@ func TestNewHint_int(t *testing.T) {
 	assert.Equal(t, hint.GetValue(), value)
 }
 
-func TestNewHint_float(t *testing.T) {
+func TestNewHintFloat(t *testing.T) {
 	key := "qweqwe"
 	value := 21.2459753
 	hint := NewHint(key, value)
@@ -55,7 +55,7 @@ func TestForceIndex(t *testing.T) {
 	assert.Equal(t, hint.GetKey(), KeyForceIndex)
 }
 
-func TestForceIndex_0(t *testing.T) {
+func TestForceIndex0(t *testing.T) {
 	var s []string
 	hint := ForceIndex(s...)
 	assert.Equal(t, hint.GetValue(), s)
@@ -69,7 +69,7 @@ func TestIgnoreIndex(t *testing.T) {
 	assert.Equal(t, hint.GetKey(), KeyIgnoreIndex)
 }
 
-func TestIgnoreIndex_0(t *testing.T) {
+func TestIgnoreIndex0(t *testing.T) {
 	var s []string
 	hint := IgnoreIndex(s...)
 	assert.Equal(t, hint.GetValue(), s)
@@ -83,7 +83,7 @@ func TestUseIndex(t *testing.T) {
 	assert.Equal(t, hint.GetKey(), KeyUseIndex)
 }
 
-func TestUseIndex_0(t *testing.T) {
+func TestUseIndex0(t *testing.T) {
 	var s []string
 	hint := UseIndex(s...)
 	assert.Equal(t, hint.GetValue(), s)

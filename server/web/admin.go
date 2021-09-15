@@ -45,9 +45,7 @@ var beeAdminApp *adminApp
 var FilterMonitorFunc func(string, string, time.Duration, string, int) bool
 
 func init() {
-
 	FilterMonitorFunc = func(string, string, time.Duration, string, int) bool { return true }
-
 }
 
 func list(root string, p interface{}, m M) {
@@ -84,18 +82,13 @@ type adminApp struct {
 
 // Run start Beego admin
 func (admin *adminApp) Run() {
-
 	logs.Debug("now we don't start tasks here, if you use task module," +
 		" please invoke task.StartTask, or task will not be executed")
-
 	addr := BConfig.Listen.AdminAddr
-
 	if BConfig.Listen.AdminPort != 0 {
 		addr = fmt.Sprintf("%s:%d", BConfig.Listen.AdminAddr, BConfig.Listen.AdminPort)
 	}
-
 	logs.Info("Admin server Running on %s", addr)
-
 	admin.HttpServer.Run(addr)
 }
 

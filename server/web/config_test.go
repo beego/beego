@@ -32,6 +32,10 @@ func TestDefaults(t *testing.T) {
 	}
 }
 
+func TestLoadAppConfig(t *testing.T) {
+	println(1 << 30)
+}
+
 func TestAssignConfig_01(t *testing.T) {
 	_BConfig := &Config{}
 	_BConfig.AppName = "beego_test"
@@ -105,7 +109,6 @@ func TestAssignConfig_02(t *testing.T) {
 		t.Log(_BConfig.Log.FileLineNum)
 		t.FailNow()
 	}
-
 }
 
 func TestAssignConfig_03(t *testing.T) {

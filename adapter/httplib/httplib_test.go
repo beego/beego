@@ -15,6 +15,7 @@
 package httplib
 
 import (
+	"bytes"
 	"errors"
 	"io/ioutil"
 	"net"
@@ -25,8 +26,13 @@ import (
 	"time"
 )
 
+const (
+	getURL = "http://httpbin.org/get"
+	ipURL  = "http://httpbin.org/ip"
+)
+
 func TestResponse(t *testing.T) {
-	req := Get("http://httpbin.org/get")
+	req := Get(getURL)
 	resp, err := req.Response()
 	if err != nil {
 		t.Fatal(err)
@@ -59,11 +65,10 @@ func TestDoRequest(t *testing.T) {
 	if elapsedTime < delayedTime {
 		t.Errorf("Not enough retries. Took %dms. Delay was meant to take %dms", elapsedTime, delayedTime)
 	}
-
 }
 
 func TestGet(t *testing.T) {
-	req := Get("http://httpbin.org/get")
+	req := Get(getURL)
 	b, err := req.Bytes()
 	if err != nil {
 		t.Fatal(err)
@@ -205,7 +210,7 @@ func TestWithSetting(t *testing.T) {
 	setting.ReadWriteTimeout = 5 * time.Second
 	SetDefaultSetting(setting)
 
-	str, err := Get("http://httpbin.org/get").String()
+	str, err := Get(getURL).String()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -218,7 +223,7 @@ func TestWithSetting(t *testing.T) {
 }
 
 func TestToJson(t *testing.T) {
-	req := Get("http://httpbin.org/ip")
+	req := Get(ipURL)
 	resp, err := req.Response()
 	if err != nil {
 		t.Fatal(err)
@@ -244,33 +249,32 @@ func TestToJson(t *testing.T) {
 			t.Fatal("response is not valid ip")
 		}
 	}
-
 }
 
 func TestToFile(t *testing.T) {
 	f := "beego_testfile"
-	req := Get("http://httpbin.org/ip")
+	req := Get(ipURL)
 	err := req.ToFile(f)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.Remove(f)
 	b, err := ioutil.ReadFile(f)
-	if n := strings.Index(string(b), "origin"); n == -1 {
+	if n := bytes.Index(b, []byte("origin")); n == -1 {
 		t.Fatal(err)
 	}
 }
 
 func TestToFileDir(t *testing.T) {
 	f := "./files/beego_testfile"
-	req := Get("http://httpbin.org/ip")
+	req := Get(ipURL)
 	err := req.ToFile(f)
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll("./files")
 	b, err := ioutil.ReadFile(f)
-	if n := strings.Index(string(b), "origin"); n == -1 {
+	if n := bytes.Index(b, []byte("origin")); n == -1 {
 		t.Fatal(err)
 	}
 }

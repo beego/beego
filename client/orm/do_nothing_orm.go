@@ -27,8 +27,7 @@ import (
 
 var _ Ormer = new(DoNothingOrm)
 
-type DoNothingOrm struct {
-}
+type DoNothingOrm struct{}
 
 func (d *DoNothingOrm) Read(md interface{}, cols ...string) error {
 	return nil
@@ -66,6 +65,7 @@ func (d *DoNothingOrm) QueryM2M(md interface{}, name string) QueryM2Mer {
 	return nil
 }
 
+// NOTE: this method is deprecated, context parameter will not take effect.
 func (d *DoNothingOrm) QueryM2MWithCtx(ctx context.Context, md interface{}, name string) QueryM2Mer {
 	return nil
 }
@@ -74,6 +74,7 @@ func (d *DoNothingOrm) QueryTable(ptrStructOrTableName interface{}) QuerySeter {
 	return nil
 }
 
+// NOTE: this method is deprecated, context parameter will not take effect.
 func (d *DoNothingOrm) QueryTableWithCtx(ctx context.Context, ptrStructOrTableName interface{}) QuerySeter {
 	return nil
 }
