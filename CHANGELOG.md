@@ -1,4 +1,4 @@
-# developing
+# v2.0.2-beta.1
 
 - Add a custom option for whether to escape HTML special characters when processing http request parameters. [4701](https://github.com/beego/beego/pull/4701)
 - Always set the response status in the CustomAbort function. [4686](https://github.com/beego/beego/pull/4686)
