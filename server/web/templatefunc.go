@@ -301,18 +301,18 @@ func RenderForm(obj interface{}) template.HTML {
 
 		fieldT := objT.Field(i)
 
-		label, name, fType, id, class, ignored, required := parseFormTag(fieldT)
+		label, name, fType, id, class, minLength, maxLength, ignored, required := parseFormTag(fieldT)
 		if ignored {
 			continue
 		}
 
-		raw = append(raw, renderFormField(label, name, fType, fieldV.Interface(), id, class, required))
+		raw = append(raw, renderFormField(label, name, fType, fieldV.Interface(), id, class, minLength, maxLength, required))
 	}
 	return template.HTML(strings.Join(raw, "</br>"))
 }
 
 // renderFormField returns a string containing HTML of a single form field.
-func renderFormField(label, name, fType string, value interface{}, id string, class string, required bool) string {
+func renderFormField(label, name, fType string, value interface{}, id string, class string, minLength, maxLength string, required bool) string {
 	if id != "" {
 		id = " id=\"" + id + "\""
 	}
@@ -326,11 +326,21 @@ func renderFormField(label, name, fType string, value interface{}, id string, cl
 		requiredString = " required"
 	}
 
-	if isValidForInput(fType) {
-		return fmt.Sprintf(`%v<input%v%v name="%v" type="%v" value="%v"%v>`, label, id, class, name, fType, value, requiredString)
+	minLengthString := ""
+	if minLength != "" {
+		minLengthString = " minLength=\"" + minLength + "\""
 	}
 
-	return fmt.Sprintf(`%v<%v%v%v name="%v"%v>%v</%v>`, label, fType, id, class, name, requiredString, value, fType)
+	maxLengthString := ""
+	if maxLength != "" {
+		maxLengthString = " maxLength=\"" + maxLength + "\""
+	}
+
+	if isValidForInput(fType) {
+		return fmt.Sprintf(`%v<input%v%v name="%v" type="%v" value="%v"%v%v%v>`, label, id, class, name, fType, value, minLengthString, maxLengthString, requiredString)
+	}
+
+	return fmt.Sprintf(`%v<%v%v%v name="%v"%v%v%v>%v</%v>`, label, fType, id, class, name, minLengthString, maxLengthString, requiredString, value, fType)
 }
 
 // isValidForInput checks if fType is a valid value for the `type` property of an HTML input element.
@@ -346,7 +356,7 @@ func isValidForInput(fType string) bool {
 
 // parseFormTag takes the stuct-tag of a StructField and parses the `form` value.
 // returned are the form label, name-property, type and whether the field should be ignored.
-func parseFormTag(fieldT reflect.StructField) (label, name, fType string, id string, class string, ignored bool, required bool) {
+func parseFormTag(fieldT reflect.StructField) (label, name, fType, id, class, minLength, maxLength string, ignored bool, required bool) {
 	tags := strings.Split(fieldT.Tag.Get("form"), ",")
 	label = fieldT.Name + ": "
 	name = fieldT.Name
@@ -354,6 +364,8 @@ func parseFormTag(fieldT reflect.StructField) (label, name, fType string, id str
 	ignored = false
 	id = fieldT.Tag.Get("id")
 	class = fieldT.Tag.Get("class")
+	minLength = fieldT.Tag.Get("minLength")
+	maxLength = fieldT.Tag.Get("maxLength")
 
 	required = false
 	requiredField := fieldT.Tag.Get("required")
