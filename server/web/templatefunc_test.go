@@ -228,18 +228,28 @@ func TestRenderForm(t *testing.T) {
 }
 
 func TestRenderFormField(t *testing.T) {
-	html := renderFormField("Label: ", "Name", "text", "Value", "", "", false)
+	html := renderFormField("Label: ", "Name", "text", "Value", "", "", "", "", false)
 	if html != `Label: <input name="Name" type="text" value="Value">` {
 		t.Errorf("Wrong html output for input[type=text]: %v ", html)
 	}
 
-	html = renderFormField("Label: ", "Name", "textarea", "Value", "", "", false)
+	html = renderFormField("Label: ", "Name", "text", "Value", "", "", "0", "15", false)
+	if html != `Label: <input name="Name" type="text" value="Value" minLength="0" maxLength="15">` {
+		t.Errorf("Wrong html output for input[type=text]: %v ", html)
+	}
+
+	html = renderFormField("Label: ", "Name", "textarea", "Value", "", "", "", "", false)
 	if html != `Label: <textarea name="Name">Value</textarea>` {
 		t.Errorf("Wrong html output for textarea: %v ", html)
 	}
 
-	html = renderFormField("Label: ", "Name", "textarea", "Value", "", "", true)
+	html = renderFormField("Label: ", "Name", "textarea", "Value", "", "", "", "", true)
 	if html != `Label: <textarea name="Name" required>Value</textarea>` {
+		t.Errorf("Wrong html output for textarea: %v ", html)
+	}
+
+	html = renderFormField("Label: ", "Name", "textarea", "Value", "", "", "0", "15", true)
+	if html != `Label: <textarea name="Name" minLength="0" maxLength="15" required>Value</textarea>` {
 		t.Errorf("Wrong html output for textarea: %v ", html)
 	}
 }
@@ -255,49 +265,55 @@ func TestParseFormTag(t *testing.T) {
 		Required       int `form:"name" required:"true"`
 		IgnoreRequired int `form:"name"`
 		NotRequired    int `form:"name" required:"false"`
+		MinMaxLength   int `form:"" minLength:"0" maxLength:"15"`
 	}
 
 	objT := reflect.TypeOf(&user{}).Elem()
 
-	label, name, fType, _, _, ignored, _ := parseFormTag(objT.Field(0))
+	label, name, fType, _, _, _, _, ignored, _ := parseFormTag(objT.Field(0))
 	if !(name == "name" && label == "年龄：" && fType == "text" && !ignored) {
 		t.Errorf("Form Tag with name, label and type was not correctly parsed.")
 	}
 
-	label, name, fType, _, _, ignored, _ = parseFormTag(objT.Field(1))
+	label, name, fType, _, _, _, _, ignored, _ = parseFormTag(objT.Field(1))
 	if !(name == "NoName" && label == "年龄：" && fType == "hidden" && !ignored) {
 		t.Errorf("Form Tag with label and type but without name was not correctly parsed.")
 	}
 
-	label, name, fType, _, _, ignored, _ = parseFormTag(objT.Field(2))
+	label, name, fType, _, _, _, _, ignored, _ = parseFormTag(objT.Field(2))
 	if !(name == "OnlyLabel" && label == "年龄：" && fType == "text" && !ignored) {
 		t.Errorf("Form Tag containing only label was not correctly parsed.")
 	}
 
-	label, name, fType, id, class, ignored, _ := parseFormTag(objT.Field(3))
+	label, name, fType, id, class, _, _, ignored, _ := parseFormTag(objT.Field(3))
 	if !(name == "name" && label == "OnlyName: " && fType == "text" && !ignored &&
 		id == "name" && class == "form-name") {
 		t.Errorf("Form Tag containing only name was not correctly parsed.")
 	}
 
-	_, _, _, _, _, ignored, _ = parseFormTag(objT.Field(4))
+	_, _, _, _, _, _, _, ignored, _ = parseFormTag(objT.Field(4))
 	if !ignored {
 		t.Errorf("Form Tag that should be ignored was not correctly parsed.")
 	}
 
-	_, name, _, _, _, _, required := parseFormTag(objT.Field(5))
+	_, name, _, _, _, _, _, _, required := parseFormTag(objT.Field(5))
 	if !(name == "name" && required) {
 		t.Errorf("Form Tag containing only name and required was not correctly parsed.")
 	}
 
-	_, name, _, _, _, _, required = parseFormTag(objT.Field(6))
+	_, name, _, _, _, _, _, _, required = parseFormTag(objT.Field(6))
 	if !(name == "name" && !required) {
 		t.Errorf("Form Tag containing only name and ignore required was not correctly parsed.")
 	}
 
-	_, name, _, _, _, _, required = parseFormTag(objT.Field(7))
+	_, name, _, _, _, _, _, _, required = parseFormTag(objT.Field(7))
 	if !(name == "name" && !required) {
 		t.Errorf("Form Tag containing only name and not required was not correctly parsed.")
+	}
+
+	_, name, _, _, _, minLength, maxLength, _, _ := parseFormTag(objT.Field(8))
+	if !(name == "MinMaxLength" && minLength == "0" && maxLength == "15") {
+		t.Errorf("Form Tag without name and with minLength and maxLength was not correctly parsed.")
 	}
 }
 
