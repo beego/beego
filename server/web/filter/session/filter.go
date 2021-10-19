@@ -11,6 +11,7 @@ import (
 
 // Session maintain session for web service
 // Session new a session storage and store it into webContext.Context
+// experimental feature, we may change this in the future
 func Session(providerType session.ProviderType, options ...session.ManagerConfigOpt) web.FilterChain {
 	sessionConfig := session.NewManagerConfig(options...)
 	sessionManager, _ := session.NewManager(string(providerType), sessionConfig)

@@ -13,8 +13,8 @@ type tokenBucket struct {
 	rate        time.Duration
 }
 
-// NewTokenBucket return an bucket that implements token bucket
-func NewTokenBucket(opts ...bucketOption) bucket {
+// newTokenBucket return an bucket that implements token bucket
+func newTokenBucket(opts ...bucketOption) bucket {
 	b := &tokenBucket{lastCheckAt: time.Now()}
 	for _, o := range opts {
 		o(b)
