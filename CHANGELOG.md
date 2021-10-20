@@ -68,6 +68,8 @@
 - Fix 4674: Tx Orm missing debug log [4756](https://github.com/beego/beego/pull/4756)
 - Fix 4759: fix numeric notation of permissions [4759](https://github.com/beego/beego/pull/4759)
 - set default rate and capacity for ratelimit filter [4796](https://github.com/beego/beego/pull/4796)
+- Fix 4782: must set status before rendering error page [4797](https://github.com/beego/beego/pull/4797)
+
 ## Fix Sonar
 
 - [4677](https://github.com/beego/beego/pull/4677)
