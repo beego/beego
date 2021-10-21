@@ -325,7 +325,6 @@ end:
 		debug.PrintStack()
 	}
 	mc.done = true
-	return
 }
 
 // register register models to model cache
