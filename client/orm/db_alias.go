@@ -228,7 +228,8 @@ func (d *DB) Sharding(table string) string {
 }
 
 type TxDB struct {
-	tx *sql.Tx
+	tx       *sql.Tx
+	sharding func(string) string
 }
 
 var (
@@ -290,7 +291,10 @@ func (t *TxDB) QueryRowContext(ctx context.Context, query string, args ...interf
 }
 
 func (t *TxDB) Sharding(table string) string {
-	return table
+	if t.sharding == nil {
+		return table
+	}
+	return t.sharding(table)
 }
 
 type alias struct {

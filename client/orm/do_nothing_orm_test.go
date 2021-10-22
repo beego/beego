@@ -129,4 +129,9 @@ func TestDoNothingOrm(t *testing.T) {
 	to := &DoNothingTxOrm{}
 	assert.Nil(t, to.Commit())
 	assert.Nil(t, to.Rollback())
+
+	o.ShardingTable(
+		func(table string) string {
+		return table
+	})
 }
