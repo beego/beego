@@ -411,6 +411,9 @@ func (f *filterMockOrm) DBStats() *sql.DBStats {
 	}
 }
 
+func (f *filterMockOrm) ShardingTable(sharding func(string) string) {
+}
+
 func validateBeginResult(t *testing.T, to TxOrmer, err error) bool {
 	assert.NotNil(t, err)
 	assert.Equal(t, "begin tx", err.Error())

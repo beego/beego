@@ -2887,6 +2887,11 @@ func TestContextCanceled(t *testing.T) {
 }
 
 func TestDebugLog(t *testing.T) {
+	// register model for unit test
+	RegisterModel(new(Profile))
+	RegisterModel(new(Post))
+	RegisterModel(new(Tag))
+	RegisterModel(new(PostTags))
 	txCommitFn := func() {
 		o := NewOrm()
 		o.DoTx(func(ctx context.Context, txOrm TxOrmer) (txerr error) {

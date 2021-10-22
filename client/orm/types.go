@@ -177,6 +177,13 @@ type DML interface {
 	//	// update user testing's name to slene
 	Raw(query string, args ...interface{}) RawSeter
 	RawWithCtx(ctx context.Context, query string, args ...interface{}) RawSeter
+	// set sharding table in time for different table name with same struct.
+	// ormer.ShardingTable(
+	//		func(tableName string) string {
+	//			return tableName + "_" + tableNameSuffix
+	//		},
+	//	)
+	ShardingTable(func(string) string)
 }
 
 // Data Query Language
@@ -605,6 +612,7 @@ type dbQuerier interface {
 	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
 	QueryRow(query string, args ...interface{}) *sql.Row
 	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
+	Sharding(table string) string
 }
 
 // type DB interface {

@@ -143,7 +143,7 @@ func (d *dbBaseOracle) InsertValue(ctx context.Context, q dbQuerier, mi *modelIn
 		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
 	}
 
-	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s)", Q, mi.table, Q, Q, columns, Q, qmarks)
+	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s)", Q, q.Sharding(mi.table), Q, Q, columns, Q, qmarks)
 
 	d.ins.ReplaceMarks(&query)
 

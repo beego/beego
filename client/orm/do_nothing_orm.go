@@ -167,6 +167,9 @@ func (d *DoNothingOrm) DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptio
 	return nil
 }
 
+func (d *DoNothingOrm) ShardingTable(sharding func(string) string) {
+}
+
 // DoNothingTxOrm is similar with DoNothingOrm, usually you use it to test
 type DoNothingTxOrm struct {
 	DoNothingOrm

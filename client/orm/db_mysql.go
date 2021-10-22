@@ -156,7 +156,7 @@ func (d *dbBaseMysql) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *model
 		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
 	}
 	// conflitValue maybe is a int,can`t use fmt.Sprintf
-	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s) %s "+qupdates, Q, mi.table, Q, Q, columns, Q, qmarks, iouStr)
+	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s) %s "+qupdates, Q, q.Sharding(mi.table), Q, Q, columns, Q, qmarks, iouStr)
 
 	d.ins.ReplaceMarks(&query)
 

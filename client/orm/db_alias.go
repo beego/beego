@@ -110,6 +110,7 @@ type DB struct {
 	DB                  *sql.DB
 	stmtDecorators      *lru.Cache
 	stmtDecoratorsLimit int
+	sharding            func(string) string
 }
 
 var (
@@ -219,6 +220,13 @@ func (d *DB) QueryRowContext(ctx context.Context, query string, args ...interfac
 	return stmt.QueryRowContext(ctx, args...)
 }
 
+func (d *DB) Sharding(table string) string {
+	if d.sharding == nil {
+		return table
+	}
+	return d.sharding(table)
+}
+
 type TxDB struct {
 	tx *sql.Tx
 }
@@ -279,6 +287,10 @@ func (t *TxDB) QueryRow(query string, args ...interface{}) *sql.Row {
 
 func (t *TxDB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	return t.tx.QueryRowContext(ctx, query, args...)
+}
+
+func (t *TxDB) Sharding(table string) string {
+	return table
 }
 
 type alias struct {

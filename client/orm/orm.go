@@ -97,8 +97,9 @@ type Params map[string]interface{}
 type ParamsList []interface{}
 
 type ormBase struct {
-	alias *alias
-	db    dbQuerier
+	alias         *alias
+	db            dbQuerier
+	shardingTable func(string) string
 }
 
 var (
@@ -520,6 +521,11 @@ func (o *ormBase) DBStats() *sql.DBStats {
 	return nil
 }
 
+// set sharding table name func in time.
+func (o *ormBase) ShardingTable(sharding func(string) string) {
+	o.shardingTable = sharding
+}
+
 type orm struct {
 	ormBase
 }
@@ -647,6 +653,12 @@ func newDBWithAlias(al *alias) Ormer {
 	o := new(orm)
 	o.alias = al
 
+	al.DB.sharding = func(table string) string {
+		if o.shardingTable == nil {
+			return table
+		}
+		return o.shardingTable(table)
+	}
 	if Debug {
 		o.db = newDbQueryLog(al, al.DB)
 	} else {

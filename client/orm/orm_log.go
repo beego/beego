@@ -220,6 +220,10 @@ func (d *dbQueryLog) SetDB(db dbQuerier) {
 	d.db = db
 }
 
+func (d *dbQueryLog) Sharding(table string) string {
+	return table
+}
+
 func newDbQueryLog(alias *alias, db dbQuerier) dbQuerier {
 	d := new(dbQueryLog)
 	d.alias = alias

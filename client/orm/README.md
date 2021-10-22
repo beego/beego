@@ -128,6 +128,24 @@ if err == nil {
 
 ```
 
+#### Sharding table with same table struct
+
+```go
+	o := orm.NewOrm()
+	user := User{Name: "slene"}
+	tableSuffix := "202101"
+	// To set table name to `user_202101` for this insert.
+	o.ShardingTable(
+		func(tableName string) string {
+			return tableName + "_" + tableSuffix
+		},
+	)
+
+	// insert
+	id, err := o.Insert(&user)
+
+```
+
 #### Debug Log Queries
 
 In development env, you can simple use
