@@ -2940,3 +2940,14 @@ func captureDebugLogOutput(f func()) string {
 	f()
 	return buf.String()
 }
+
+func TestSingletonNewOrm(t *testing.T) {
+
+	o1 := NewOrm()
+	o2 := NewOrm()
+	adr1:=fmt.Sprintf("%p",o1)
+	adr2:=fmt.Sprintf("%p",o2)
+
+	assert.Equal(t, adr1,adr2)
+
+}

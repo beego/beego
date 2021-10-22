@@ -60,6 +60,7 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"sync"
 	"time"
 
 	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
@@ -619,10 +620,17 @@ func (t *txOrm) RollbackUnlessCommit() error {
 	return t.db.(txEnder).RollbackUnlessCommit()
 }
 
+var once sync.Once
+var o  Ormer
+
 // NewOrm create new orm
 func NewOrm() Ormer {
 	BootStrap() // execute only once
-	return NewOrmUsingDB(`default`)
+	once.Do(func() {
+		o = NewOrmUsingDB(`default`)
+	})
+
+	return o
 }
 
 // NewOrmUsingDB create new orm with the name
