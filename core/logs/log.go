@@ -705,61 +705,61 @@ func SetLogger(adapter string, config ...string) error {
 
 // Emergency logs a message at emergency level.
 func Emergency(f interface{}, v ...interface{}) {
-	beeLogger.Emergency(formatLog(f, v...))
+	beeLogger.Emergency(formatPattern(f, v...), v...)
 }
 
 // Alert logs a message at alert level.
 func Alert(f interface{}, v ...interface{}) {
-	beeLogger.Alert(formatLog(f, v...))
+	beeLogger.Alert(formatPattern(f, v...), v...)
 }
 
 // Critical logs a message at critical level.
 func Critical(f interface{}, v ...interface{}) {
-	beeLogger.Critical(formatLog(f, v...))
+	beeLogger.Critical(formatPattern(f, v...), v...)
 }
 
 // Error logs a message at error level.
 func Error(f interface{}, v ...interface{}) {
-	beeLogger.Error(formatLog(f, v...))
+	beeLogger.Error(formatPattern(f, v...), v...)
 }
 
 // Warning logs a message at warning level.
 func Warning(f interface{}, v ...interface{}) {
-	beeLogger.Warn(formatLog(f, v...))
+	beeLogger.Warn(formatPattern(f, v...), v...)
 }
 
 // Warn compatibility alias for Warning()
 func Warn(f interface{}, v ...interface{}) {
-	beeLogger.Warn(formatLog(f, v...))
+	beeLogger.Warn(formatPattern(f, v...), v...)
 }
 
 // Notice logs a message at notice level.
 func Notice(f interface{}, v ...interface{}) {
-	beeLogger.Notice(formatLog(f, v...))
+	beeLogger.Notice(formatPattern(f, v...), v...)
 }
 
 // Informational logs a message at info level.
 func Informational(f interface{}, v ...interface{}) {
-	beeLogger.Info(formatLog(f, v...))
+	beeLogger.Info(formatPattern(f, v...), v...)
 }
 
 // Info compatibility alias for Warning()
 func Info(f interface{}, v ...interface{}) {
-	beeLogger.Info(formatLog(f, v...))
+	beeLogger.Info(formatPattern(f, v...), v...)
 }
 
 // Debug logs a message at debug level.
 func Debug(f interface{}, v ...interface{}) {
-	beeLogger.Debug(formatLog(f, v...))
+	beeLogger.Debug(formatPattern(f, v...), v...)
 }
 
 // Trace logs a message at trace level.
 // compatibility alias for Warning()
 func Trace(f interface{}, v ...interface{}) {
-	beeLogger.Trace(formatLog(f, v...))
+	beeLogger.Trace(formatPattern(f, v...), v...)
 }
 
-func formatLog(f interface{}, v ...interface{}) string {
+func formatPattern(f interface{}, v ...interface{}) string {
 	var msg string
 	switch f.(type) {
 	case string:
@@ -778,5 +778,5 @@ func formatLog(f interface{}, v ...interface{}) string {
 		}
 		msg += strings.Repeat(" %v", len(v))
 	}
-	return fmt.Sprintf(msg, v...)
+	return msg
 }
