@@ -60,7 +60,7 @@ func GetFormatter(name string) (LogFormatter, bool) {
 	return res, ok
 }
 
-// 'w' when, 'm' msg,'f' filename，'F' full path，'n' line number
+// ToString 'w' when, 'm' msg,'f' filename，'F' full path，'n' line number
 // 'l' level number, 't' prefix of level type, 'T' full name of level type
 func (p *PatternLogFormatter) ToString(lm *LogMsg) string {
 	s := []rune(p.Pattern)

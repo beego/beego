@@ -69,6 +69,7 @@
 - Fix 4759: fix numeric notation of permissions [4759](https://github.com/beego/beego/pull/4759)
 - set default rate and capacity for ratelimit filter [4796](https://github.com/beego/beego/pull/4796)
 - Fix 4782: must set status before rendering error page [4797](https://github.com/beego/beego/pull/4797)
+- Fix 4791: delay to format parameter in log module [4804](https://github.com/beego/beego/pull/4804)
 
 ## Fix Sonar
 
