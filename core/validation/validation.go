@@ -107,7 +107,7 @@ func (r *Result) Message(message string, args ...interface{}) *Result {
 // A Validation context manages data validation and error messages.
 type Validation struct {
 	// if this field set true, in struct tag valid
-	// if the struct field vale is empty
+	// if the struct field value is empty
 	// it will skip those valid functions, see CanSkipFuncs
 	RequiredFirst bool
 
