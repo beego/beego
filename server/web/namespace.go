@@ -48,7 +48,7 @@ func NewNamespace(prefix string, params ...LinkNamespace) *Namespace {
 // if cond return true can run this namespace, else can't
 // usage:
 // ns.Cond(func (ctx *context.Context) bool{
-//       if ctx.Input.Domain() == "api.beego.me" {
+//       if ctx.Input.Domain() == "api.beego.vip" {
 //         return true
 //       }
 //       return false

@@ -26,7 +26,7 @@
 //
 //  cnf, err := config.NewConfig("xml", "config.xml")
 //
-// More docs http://beego.me/docs/module/config.md
+// More docs http://beego.vip/docs/module/config.md
 package xml
 
 import (
