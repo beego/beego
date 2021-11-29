@@ -17,7 +17,7 @@
 //
 // import "github.com/beego/beego/v2/client/httplib"
 //
-//	b := httplib.Post("http://beego.me/")
+//	b := httplib.Post("http://beego.vip/")
 //	b.Param("username","astaxie")
 //	b.Param("password","123456")
 //	b.PostFile("uploadfile1", "httplib.pdf")
@@ -28,7 +28,7 @@
 //	}
 //	fmt.Println(str)
 //
-//  more docs http://beego.me/docs/module/httplib.md
+//  more docs http://beego.vip/docs/module/httplib.md
 package httplib
 
 import (

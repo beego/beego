@@ -37,7 +37,7 @@
 //		go globalSessions.GC()
 //	}
 //
-// more docs: http://beego.me/docs/module/session.md
+// more docs: http://beego.vip/docs/module/session.md
 package mysql
 
 import (

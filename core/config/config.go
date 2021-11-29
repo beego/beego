@@ -37,7 +37,7 @@
 //  cnf.DIY(key string) (interface{}, error)
 //  cnf.GetSection(section string) (map[string]string, error)
 //  cnf.SaveConfigFile(filename string) error
-// More docs http://beego.me/docs/module/config.md
+// More docs http://beego.vip/docs/module/config.md
 package config
 
 import (

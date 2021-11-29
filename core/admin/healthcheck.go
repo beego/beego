@@ -27,7 +27,7 @@
 //
 // AddHealthCheck("database",&DatabaseCheck{})
 //
-// more docs: http://beego.me/docs/module/toolbox.md
+// more docs: http://beego.vip/docs/module/toolbox.md
 package admin
 
 // AdminCheckList holds health checker map
