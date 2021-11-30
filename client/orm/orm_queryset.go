@@ -287,7 +287,7 @@ func (o *querySet) One(container interface{}, cols ...string) error {
 }
 
 func (o *querySet) OneWithCtx(ctx context.Context, container interface{}, cols ...string) error {
-	o.limit = 1
+	//o.limit = 1
 	num, err := o.orm.alias.DbBaser.ReadBatch(ctx, o.orm.db, o, o.mi, o.cond, container, o.orm.alias.TZ, cols)
 	if err != nil {
 		return err
