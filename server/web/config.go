@@ -100,6 +100,7 @@ type WebConfig struct {
 	XSRFKey                string
 	XSRFExpire             int
 	Session                SessionConfig
+	SecureCookieMaxAge     int
 }
 
 // SessionConfig holds session related config
@@ -275,6 +276,7 @@ func newBConfig() *Config {
 				SessionNameInHTTPHeader:      "Beegosessionid",
 				SessionEnableSidInURLQuery:   false, // enable get the sessionId from Url Query params
 			},
+			SecureCookieMaxAge:     0,
 		},
 		Log: LogConfig{
 			AccessLogs:       false,

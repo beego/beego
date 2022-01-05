@@ -106,7 +106,7 @@ func (ctx *Context) SetCookie(name string, value string, others ...interface{}) 
 }
 
 // GetSecureCookie gets a secure cookie from a request for a given key.
-func (ctx *Context) GetSecureCookie(Secret, key string) (string, bool) {
+func (ctx *Context) GetSecureCookie(Secret, key string, maxDays int) (string, bool) {
 	val := ctx.Input.Cookie(key)
 	if val == "" {
 		return "", false
@@ -121,6 +121,21 @@ func (ctx *Context) GetSecureCookie(Secret, key string) (string, bool) {
 	vs := parts[0]
 	timestamp := parts[1]
 	sig := parts[2]
+
+	cookieTimestamp, err := strconv.ParseInt(timestamp, 10, 64)
+	if err != nil {
+		return "", false
+	}
+
+	if maxDays > 0 {
+		nowTimestamp := time.Now().UnixNano()
+		if err != nil {
+			return "", false
+		}
+		if nowTimestamp-cookieTimestamp > (int64(maxDays) * 864e11) {
+			return "", false
+		}
+	}
 
 	h := hmac.New(sha256.New, []byte(Secret))
 	fmt.Fprintf(h, "%s%s", vs, timestamp)
@@ -146,7 +161,7 @@ func (ctx *Context) SetSecureCookie(Secret, name, value string, others ...interf
 // XSRFToken creates and returns an xsrf token string
 func (ctx *Context) XSRFToken(key string, expire int64) string {
 	if ctx._xsrfToken == "" {
-		token, ok := ctx.GetSecureCookie(key, "_xsrf")
+		token, ok := ctx.GetSecureCookie(key, "_xsrf", 0)
 		if !ok {
 			token = string(utils.RandomCreateBytes(32))
 			// TODO make it configurable

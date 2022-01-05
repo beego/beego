@@ -82,8 +82,8 @@ func (ctx *Context) SetCookie(name string, value string, others ...interface{}) 
 }
 
 // GetSecureCookie Get secure cookie from request by a given key.
-func (ctx *Context) GetSecureCookie(Secret, key string) (string, bool) {
-	return (*context.Context)(ctx).GetSecureCookie(Secret, key)
+func (ctx *Context) GetSecureCookie(Secret, key string, maxDays int) (string, bool) {
+	return (*context.Context)(ctx).GetSecureCookie(Secret, key, maxDays)
 }
 
 // SetSecureCookie Set Secure cookie for response.

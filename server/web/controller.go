@@ -682,7 +682,7 @@ func (c *Controller) IsAjax() bool {
 
 // GetSecureCookie returns decoded cookie value from encoded browser cookie values.
 func (c *Controller) GetSecureCookie(Secret, key string) (string, bool) {
-	return c.Ctx.GetSecureCookie(Secret, key)
+	return c.Ctx.GetSecureCookie(Secret, key, BConfig.WebConfig.SecureCookieMaxAge)
 }
 
 // SetSecureCookie puts value into cookie after encoded the value.
