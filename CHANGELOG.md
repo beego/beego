@@ -1,3 +1,5 @@
+# developing
+- [https://github.com/beego/beego/pull/4845](https://github.com/beego/beego/pull/4845)
 # v2.0.2-beta.1
 
 - Add a custom option for whether to escape HTML special characters when processing http request parameters. [4701](https://github.com/beego/beego/pull/4701)
