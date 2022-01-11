@@ -21,11 +21,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/astaxie/beego/core/config"
+	"github.com/beego/beego/v2/core/config"
 )
 
 func TestJsonStartsWithArray(t *testing.T) {
-
 	const jsoncontextwitharray = `[
 	{
 		"url": "user",
@@ -72,7 +71,6 @@ func TestJsonStartsWithArray(t *testing.T) {
 }
 
 func TestJson(t *testing.T) {
-
 	var (
 		jsoncontext = `{
 "appname": "beeapi",

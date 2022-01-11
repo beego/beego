@@ -20,15 +20,15 @@
 //
 // Usage:
 //  import(
-//   _ "github.com/astaxie/beego/config/yaml"
-//     "github.com/astaxie/beego/config"
+//   _ "github.com/beego/beego/v2/core/config/yaml"
+//     "github.com/beego/beego/v2/core/config"
 //  )
 //
 //  cnf, err := config.NewConfig("yaml", "config.yaml")
 //
-// More docs http://beego.me/docs/module/config.md
+// More docs http://beego.vip/docs/module/config.md
 package yaml
 
 import (
-	_ "github.com/astaxie/beego/core/config/yaml"
+	_ "github.com/beego/beego/v2/core/config/yaml"
 )

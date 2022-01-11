@@ -15,11 +15,13 @@
 package testing
 
 import (
-	"github.com/astaxie/beego/client/httplib"
+	"github.com/beego/beego/v2/client/httplib"
 )
 
-var port = ""
-var baseURL = "http://localhost:"
+var (
+	port    = ""
+	baseURL = "http://localhost:"
+)
 
 // TestHTTPRequest beego test request client
 type TestHTTPRequest struct {

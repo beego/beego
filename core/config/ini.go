@@ -30,7 +30,7 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 
-	"github.com/astaxie/beego/core/logs"
+	"github.com/beego/beego/v2/core/logs"
 )
 
 var (
@@ -46,8 +46,7 @@ var (
 )
 
 // IniConfig implements Config to parse ini file.
-type IniConfig struct {
-}
+type IniConfig struct{}
 
 // Parse creates a new Config and parses the file configuration from the named file.
 func (ini *IniConfig) Parse(name string) (Configer, error) {
@@ -521,7 +520,7 @@ func init() {
 
 	err := InitGlobalInstance("ini", "conf/app.conf")
 	if err != nil {
-		logs.Warn("init global config instance failed. If you donot use this, just ignore it. ", err)
+		logs.Debug("init global config instance failed. If you do not use this, just ignore it. ", err)
 	}
 }
 

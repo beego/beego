@@ -37,6 +37,7 @@ type taskManager struct {
 	stop          chan bool
 	changed       chan bool
 	started       bool
+	wait          sync.WaitGroup
 }
 
 func newTaskManager() *taskManager {
@@ -109,6 +110,7 @@ type Tasker interface {
 	GetNext(ctx context.Context) time.Time
 	SetPrev(context.Context, time.Time)
 	GetPrev(ctx context.Context) time.Time
+	GetTimeout(ctx context.Context) time.Duration
 }
 
 // task error
@@ -127,14 +129,14 @@ type Task struct {
 	DoFunc   TaskFunc
 	Prev     time.Time
 	Next     time.Time
-	Errlist  []*taskerr // like errtime:errinfo
-	ErrLimit int        // max length for the errlist, 0 stand for no limit
-	errCnt   int        // records the error count during the execution
+	Timeout  time.Duration // timeout duration
+	Errlist  []*taskerr    // like errtime:errinfo
+	ErrLimit int           // max length for the errlist, 0 stand for no limit
+	errCnt   int           // records the error count during the execution
 }
 
 // NewTask add new task with name, time and func
-func NewTask(tname string, spec string, f TaskFunc) *Task {
-
+func NewTask(tname string, spec string, f TaskFunc, opts ...Option) *Task {
 	task := &Task{
 		Taskname: tname,
 		DoFunc:   f,
@@ -144,6 +146,11 @@ func NewTask(tname string, spec string, f TaskFunc) *Task {
 		// we only store the pointer, so it won't use too many space
 		Errlist: make([]*taskerr, 100, 100),
 	}
+
+	for _, opt := range opts {
+		opt.apply(task)
+	}
+
 	task.SetCron(spec)
 	return task
 }
@@ -157,6 +164,9 @@ func (t *Task) GetSpec(context.Context) string {
 func (t *Task) GetStatus(context.Context) string {
 	var str string
 	for _, v := range t.Errlist {
+		if v == nil {
+			continue
+		}
 		str += v.t.String() + ":" + v.errinfo + "<br>"
 	}
 	return str
@@ -191,6 +201,31 @@ func (t *Task) SetPrev(ctx context.Context, now time.Time) {
 // GetPrev get prev time of this task
 func (t *Task) GetPrev(context.Context) time.Time {
 	return t.Prev
+}
+
+// GetTimeout get timeout duration of this task
+func (t *Task) GetTimeout(context.Context) time.Duration {
+	return t.Timeout
+}
+
+// Option interface
+type Option interface {
+	apply(*Task)
+}
+
+// optionFunc return a function to set task element
+type optionFunc func(*Task)
+
+// apply option to task
+func (f optionFunc) apply(t *Task) {
+	f(t)
+}
+
+// TimeoutOption return a option to set timeout duration for task
+func TimeoutOption(timeout time.Duration) Option {
+	return optionFunc(func(t *Task) {
+		t.Timeout = timeout
+	})
 }
 
 // six columns mean：
@@ -315,7 +350,6 @@ func (t *Task) parseSpec(spec string) *Schedule {
 
 // Next set schedule to next time
 func (s *Schedule) Next(t time.Time) time.Time {
-
 	// Start at the earliest possible time (the upcoming second).
 	t = t.Add(1*time.Second - time.Duration(t.Nanosecond())*time.Nanosecond)
 
@@ -436,6 +470,11 @@ func ClearTask() {
 	globalTaskManager.ClearTask()
 }
 
+// GracefulShutdown wait all task done
+func GracefulShutdown() <-chan struct{} {
+	return globalTaskManager.GracefulShutdown()
+}
+
 // StartTask start all tasks
 func (m *taskManager) StartTask() {
 	m.taskLock.Lock()
@@ -452,14 +491,12 @@ func (m *taskManager) StartTask() {
 
 func (m *taskManager) run() {
 	now := time.Now().Local()
-	m.taskLock.Lock()
-	for _, t := range m.adminTaskList {
-		t.SetNext(nil, now)
-	}
-	m.taskLock.Unlock()
+	// first run the tasks, so set all tasks next run time.
+	m.setTasksStartTime(now)
 
 	for {
 		// we only use RLock here because NewMapSorter copy the reference, do not change any thing
+		// here, we sort all task and get first task running time (effective).
 		m.taskLock.RLock()
 		sortList := NewMapSorter(m.adminTaskList)
 		m.taskLock.RUnlock()
@@ -472,34 +509,75 @@ func (m *taskManager) run() {
 		} else {
 			effective = sortList.Vals[0].GetNext(context.Background())
 		}
+
 		select {
-		case now = <-time.After(effective.Sub(now)):
-			// Run every entry whose next time was this effective time.
-			for _, e := range sortList.Vals {
-				if e.GetNext(context.Background()) != effective {
-					break
-				}
-				go e.Run(nil)
-				e.SetPrev(context.Background(), e.GetNext(context.Background()))
-				e.SetNext(nil, effective)
-			}
+		case now = <-time.After(effective.Sub(now)): // wait for effective time
+			m.runNextTasks(sortList, effective)
 			continue
-		case <-m.changed:
+		case <-m.changed: // tasks have been changed, set all tasks run again now
 			now = time.Now().Local()
-			m.taskLock.Lock()
-			for _, t := range m.adminTaskList {
-				t.SetNext(nil, now)
-			}
-			m.taskLock.Unlock()
+			m.setTasksStartTime(now)
 			continue
-		case <-m.stop:
-			m.taskLock.Lock()
-			if m.started {
-				m.started = false
-			}
-			m.taskLock.Unlock()
+		case <-m.stop: // manager is stopped, and mark manager is stopped
+			m.markManagerStop()
 			return
 		}
+	}
+}
+
+// setTasksStartTime is set all tasks next running time
+func (m *taskManager) setTasksStartTime(now time.Time) {
+	m.taskLock.Lock()
+	for _, task := range m.adminTaskList {
+		task.SetNext(context.Background(), now)
+	}
+	m.taskLock.Unlock()
+}
+
+// markManagerStop it sets manager to be stopped
+func (m *taskManager) markManagerStop() {
+	m.taskLock.Lock()
+	if m.started {
+		m.started = false
+	}
+	m.taskLock.Unlock()
+}
+
+// runNextTasks it runs next task which next run time is equal to effective
+func (m *taskManager) runNextTasks(sortList *MapSorter, effective time.Time) {
+	// Run every entry whose next time was this effective time.
+	i := 0
+	for _, e := range sortList.Vals {
+		i++
+		if e.GetNext(context.Background()) != effective {
+			break
+		}
+
+		// check if timeout is on, if yes passing the timeout context
+		ctx := context.Background()
+		m.wait.Add(1)
+		if duration := e.GetTimeout(ctx); duration != 0 {
+			go func(e Tasker) {
+				defer m.wait.Done()
+				ctx, cancelFunc := context.WithTimeout(ctx, duration)
+				defer cancelFunc()
+				err := e.Run(ctx)
+				if err != nil {
+					log.Printf("tasker.run err: %s\n", err.Error())
+				}
+			}(e)
+		} else {
+			go func(e Tasker) {
+				defer m.wait.Done()
+				err := e.Run(ctx)
+				if err != nil {
+					log.Printf("tasker.run err: %s\n", err.Error())
+				}
+			}(e)
+		}
+
+		e.SetPrev(context.Background(), e.GetNext(context.Background()))
+		e.SetNext(context.Background(), effective)
 	}
 }
 
@@ -508,6 +586,17 @@ func (m *taskManager) StopTask() {
 	go func() {
 		m.stop <- true
 	}()
+}
+
+// GracefulShutdown wait all task done
+func (m *taskManager) GracefulShutdown() <-chan struct{} {
+	done := make(chan struct{})
+	go func() {
+		m.stop <- true
+		m.wait.Wait()
+		close(done)
+	}()
+	return done
 }
 
 // AddTask add task with name
@@ -526,7 +615,6 @@ func (m *taskManager) AddTask(taskname string, t Tasker) {
 			m.changed <- true
 		}()
 	}
-
 }
 
 // DeleteTask delete task with name
@@ -599,6 +687,7 @@ func (ms *MapSorter) Less(i, j int) bool {
 	}
 	return ms.Vals[i].GetNext(context.Background()).Before(ms.Vals[j].GetNext(context.Background()))
 }
+
 func (ms *MapSorter) Swap(i, j int) {
 	ms.Vals[i], ms.Vals[j] = ms.Vals[j], ms.Vals[i]
 	ms.Keys[i], ms.Keys[j] = ms.Keys[j], ms.Keys[i]
@@ -617,7 +706,6 @@ func getField(field string, r bounds) uint64 {
 // getRange returns the bits indicated by the given expression:
 //   number | number "-" number [ "/" number ]
 func getRange(expr string, r bounds) uint64 {
-
 	var (
 		start, end, step uint
 		rangeAndStep     = strings.Split(expr, "/")

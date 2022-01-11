@@ -181,6 +181,12 @@ func (o *rawSet) setFieldValue(ind reflect.Value, value interface{}) {
 					if err == nil {
 						ind.Set(reflect.ValueOf(t))
 					}
+				} else if len(str) >= 8 {
+					str = str[:8]
+					t, err := time.ParseInLocation(formatTime, str, DefaultTimeLoc)
+					if err == nil {
+						ind.Set(reflect.ValueOf(t))
+					}
 				}
 			}
 		case sql.NullString, sql.NullInt64, sql.NullFloat64, sql.NullBool:
@@ -247,7 +253,6 @@ func (o *rawSet) loopSetRefs(refs []interface{}, sInds []reflect.Value, nIndsPtr
 				}
 				cur++
 			}
-
 		} else {
 			value := reflect.ValueOf(refs[cur]).Elem().Interface()
 			if isPtr && value == nil {
@@ -431,7 +436,6 @@ func (o *rawSet) QueryRow(containers ...interface{}) error {
 				sInd.Set(nInd)
 			}
 		}
-
 	} else {
 		return ErrNoRows
 	}
@@ -600,7 +604,6 @@ func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
 	}
 
 	if cnt > 0 {
-
 		if structMode {
 			sInds[0].Set(sInd)
 		} else {

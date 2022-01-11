@@ -27,11 +27,11 @@
 //
 // AddHealthCheck("database",&DatabaseCheck{})
 //
-// more docs: http://beego.me/docs/module/toolbox.md
+// more docs: http://beego.vip/docs/module/toolbox.md
 package toolbox
 
 import (
-	"github.com/astaxie/beego/core/admin"
+	"github.com/beego/beego/v2/core/admin"
 )
 
 // AdminCheckList holds health checker map

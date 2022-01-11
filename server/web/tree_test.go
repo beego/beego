@@ -17,8 +17,9 @@ package web
 import (
 	"strings"
 	"testing"
+	"time"
 
-	"github.com/astaxie/beego/server/web/context"
+	"github.com/beego/beego/v2/server/web/context"
 )
 
 type testInfo struct {
@@ -49,61 +50,84 @@ func notMatchTestInfo(pattern, url string) testInfo {
 }
 
 func init() {
-	routers = make([]testInfo, 0)
-	//match example
-	routers = append(routers, matchTestInfo("/topic/?:auth:int", "/topic", nil))
-	routers = append(routers, matchTestInfo("/topic/?:auth:int", "/topic/123", map[string]string{":auth": "123"}))
-	routers = append(routers, matchTestInfo("/topic/:id/?:auth", "/topic/1", map[string]string{":id": "1"}))
-	routers = append(routers, matchTestInfo("/topic/:id/?:auth", "/topic/1/2", map[string]string{":id": "1", ":auth": "2"}))
-	routers = append(routers, matchTestInfo("/topic/:id/?:auth:int", "/topic/1", map[string]string{":id": "1"}))
-	routers = append(routers, matchTestInfo("/topic/:id/?:auth:int", "/topic/1/123", map[string]string{":id": "1", ":auth": "123"}))
-	routers = append(routers, matchTestInfo("/:id", "/123", map[string]string{":id": "123"}))
-	routers = append(routers, matchTestInfo("/hello/?:id", "/hello", map[string]string{":id": ""}))
-	routers = append(routers, matchTestInfo("/", "/", nil))
-	routers = append(routers, matchTestInfo("/customer/login", "/customer/login", nil))
-	routers = append(routers, matchTestInfo("/customer/login", "/customer/login.json", map[string]string{":ext": "json"}))
-	routers = append(routers, matchTestInfo("/*", "/http://customer/123/", map[string]string{":splat": "http://customer/123/"}))
-	routers = append(routers, matchTestInfo("/*", "/customer/2009/12/11", map[string]string{":splat": "customer/2009/12/11"}))
-	routers = append(routers, matchTestInfo("/aa/*/bb", "/aa/2009/bb", map[string]string{":splat": "2009"}))
-	routers = append(routers, matchTestInfo("/cc/*/dd", "/cc/2009/11/dd", map[string]string{":splat": "2009/11"}))
-	routers = append(routers, matchTestInfo("/cc/:id/*", "/cc/2009/11/dd", map[string]string{":id": "2009", ":splat": "11/dd"}))
-	routers = append(routers, matchTestInfo("/ee/:year/*/ff", "/ee/2009/11/ff", map[string]string{":year": "2009", ":splat": "11"}))
-	routers = append(routers, matchTestInfo("/thumbnail/:size/uploads/*", "/thumbnail/100x100/uploads/items/2014/04/20/dPRCdChkUd651t1Hvs18.jpg", map[string]string{":size": "100x100", ":splat": "items/2014/04/20/dPRCdChkUd651t1Hvs18.jpg"}))
-	routers = append(routers, matchTestInfo("/*.*", "/nice/api.json", map[string]string{":path": "nice/api", ":ext": "json"}))
-	routers = append(routers, matchTestInfo("/:name/*.*", "/nice/api.json", map[string]string{":name": "nice", ":path": "api", ":ext": "json"}))
-	routers = append(routers, matchTestInfo("/:name/test/*.*", "/nice/test/api.json", map[string]string{":name": "nice", ":path": "api", ":ext": "json"}))
-	routers = append(routers, matchTestInfo("/dl/:width:int/:height:int/*.*", "/dl/48/48/05ac66d9bda00a3acf948c43e306fc9a.jpg", map[string]string{":width": "48", ":height": "48", ":ext": "jpg", ":path": "05ac66d9bda00a3acf948c43e306fc9a"}))
-	routers = append(routers, matchTestInfo("/v1/shop/:id:int", "/v1/shop/123", map[string]string{":id": "123"}))
-	routers = append(routers, matchTestInfo("/v1/shop/:id\\((a|b|c)\\)", "/v1/shop/123(a)", map[string]string{":id": "123"}))
-	routers = append(routers, matchTestInfo("/v1/shop/:id\\((a|b|c)\\)", "/v1/shop/123(b)", map[string]string{":id": "123"}))
-	routers = append(routers, matchTestInfo("/v1/shop/:id\\((a|b|c)\\)", "/v1/shop/123(c)", map[string]string{":id": "123"}))
-	routers = append(routers, matchTestInfo("/:year:int/:month:int/:id/:endid", "/1111/111/aaa/aaa", map[string]string{":year": "1111", ":month": "111", ":id": "aaa", ":endid": "aaa"}))
-	routers = append(routers, matchTestInfo("/v1/shop/:id/:name", "/v1/shop/123/nike", map[string]string{":id": "123", ":name": "nike"}))
-	routers = append(routers, matchTestInfo("/v1/shop/:id/account", "/v1/shop/123/account", map[string]string{":id": "123"}))
-	routers = append(routers, matchTestInfo("/v1/shop/:name:string", "/v1/shop/nike", map[string]string{":name": "nike"}))
-	routers = append(routers, matchTestInfo("/v1/shop/:id([0-9]+)", "/v1/shop//123", map[string]string{":id": "123"}))
-	routers = append(routers, matchTestInfo("/v1/shop/:id([0-9]+)_:name", "/v1/shop/123_nike", map[string]string{":id": "123", ":name": "nike"}))
-	routers = append(routers, matchTestInfo("/v1/shop/:id(.+)_cms.html", "/v1/shop/123_cms.html", map[string]string{":id": "123"}))
-	routers = append(routers, matchTestInfo("/v1/shop/cms_:id(.+)_:page(.+).html", "/v1/shop/cms_123_1.html", map[string]string{":id": "123", ":page": "1"}))
-	routers = append(routers, matchTestInfo("/v1/:v/cms/aaa_:id(.+)_:page(.+).html", "/v1/2/cms/aaa_123_1.html", map[string]string{":v": "2", ":id": "123", ":page": "1"}))
-	routers = append(routers, matchTestInfo("/v1/:v/cms_:id(.+)_:page(.+).html", "/v1/2/cms_123_1.html", map[string]string{":v": "2", ":id": "123", ":page": "1"}))
-	routers = append(routers, matchTestInfo("/v1/:v(.+)_cms/ttt_:id(.+)_:page(.+).html", "/v1/2_cms/ttt_123_1.html", map[string]string{":v": "2", ":id": "123", ":page": "1"}))
-	routers = append(routers, matchTestInfo("/api/projects/:pid/members/?:mid", "/api/projects/1/members", map[string]string{":pid": "1"}))
-	routers = append(routers, matchTestInfo("/api/projects/:pid/members/?:mid", "/api/projects/1/members/2", map[string]string{":pid": "1", ":mid": "2"}))
+	const (
+		abcHTML   = "/suffix/abc.html"
+		abcSuffix = "/abc/suffix/*"
+	)
 
-	//not match example
+	routers = []testInfo{
+		// match example
+		matchTestInfo("/topic/?:auth:int", "/topic", nil),
+		matchTestInfo("/topic/?:auth:int", "/topic/123", map[string]string{":auth": "123"}),
+		matchTestInfo("/topic/:id/?:auth", "/topic/1", map[string]string{":id": "1"}),
+		matchTestInfo("/topic/:id/?:auth", "/topic/1/2", map[string]string{":id": "1", ":auth": "2"}),
+		matchTestInfo("/topic/:id/?:auth:int", "/topic/1", map[string]string{":id": "1"}),
+		matchTestInfo("/topic/:id/?:auth:int", "/topic/1/123", map[string]string{":id": "1", ":auth": "123"}),
+		matchTestInfo("/:id", "/123", map[string]string{":id": "123"}),
+		matchTestInfo("/hello/?:id", "/hello", map[string]string{":id": ""}),
+		matchTestInfo("/", "/", nil),
+		matchTestInfo("/customer/login", "/customer/login", nil),
+		matchTestInfo("/customer/login", "/customer/login.json", map[string]string{":ext": "json"}),
+		matchTestInfo("/*", "/http://customer/123/", map[string]string{":splat": "http://customer/123/"}),
+		matchTestInfo("/*", "/customer/2009/12/11", map[string]string{":splat": "customer/2009/12/11"}),
+		matchTestInfo("/aa/*/bb", "/aa/2009/bb", map[string]string{":splat": "2009"}),
+		matchTestInfo("/cc/*/dd", "/cc/2009/11/dd", map[string]string{":splat": "2009/11"}),
+		matchTestInfo("/cc/:id/*", "/cc/2009/11/dd", map[string]string{":id": "2009", ":splat": "11/dd"}),
+		matchTestInfo("/ee/:year/*/ff", "/ee/2009/11/ff", map[string]string{":year": "2009", ":splat": "11"}),
+		matchTestInfo("/thumbnail/:size/uploads/*", "/thumbnail/100x100/uploads/items/2014/04/20/dPRCdChkUd651t1Hvs18.jpg", map[string]string{":size": "100x100", ":splat": "items/2014/04/20/dPRCdChkUd651t1Hvs18.jpg"}),
+		matchTestInfo("/*.*", "/nice/api.json", map[string]string{":path": "nice/api", ":ext": "json"}),
+		matchTestInfo("/:name/*.*", "/nice/api.json", map[string]string{":name": "nice", ":path": "api", ":ext": "json"}),
+		matchTestInfo("/:name/test/*.*", "/nice/test/api.json", map[string]string{":name": "nice", ":path": "api", ":ext": "json"}),
+		matchTestInfo("/dl/:width:int/:height:int/*.*", "/dl/48/48/05ac66d9bda00a3acf948c43e306fc9a.jpg", map[string]string{":width": "48", ":height": "48", ":ext": "jpg", ":path": "05ac66d9bda00a3acf948c43e306fc9a"}),
+		matchTestInfo("/v1/shop/:id:int", "/v1/shop/123", map[string]string{":id": "123"}),
+		matchTestInfo("/v1/shop/:id\\((a|b|c)\\)", "/v1/shop/123(a)", map[string]string{":id": "123"}),
+		matchTestInfo("/v1/shop/:id\\((a|b|c)\\)", "/v1/shop/123(b)", map[string]string{":id": "123"}),
+		matchTestInfo("/v1/shop/:id\\((a|b|c)\\)", "/v1/shop/123(c)", map[string]string{":id": "123"}),
+		matchTestInfo("/:year:int/:month:int/:id/:endid", "/1111/111/aaa/aaa", map[string]string{":year": "1111", ":month": "111", ":id": "aaa", ":endid": "aaa"}),
+		matchTestInfo("/v1/shop/:id/:name", "/v1/shop/123/nike", map[string]string{":id": "123", ":name": "nike"}),
+		matchTestInfo("/v1/shop/:id/account", "/v1/shop/123/account", map[string]string{":id": "123"}),
+		matchTestInfo("/v1/shop/:name:string", "/v1/shop/nike", map[string]string{":name": "nike"}),
+		matchTestInfo("/v1/shop/:id([0-9]+)", "/v1/shop//123", map[string]string{":id": "123"}),
+		matchTestInfo("/v1/shop/:id([0-9]+)_:name", "/v1/shop/123_nike", map[string]string{":id": "123", ":name": "nike"}),
+		matchTestInfo("/v1/shop/:id(.+)_cms.html", "/v1/shop/123_cms.html", map[string]string{":id": "123"}),
+		matchTestInfo("/v1/shop/cms_:id(.+)_:page(.+).html", "/v1/shop/cms_123_1.html", map[string]string{":id": "123", ":page": "1"}),
+		matchTestInfo("/v1/:v/cms/aaa_:id(.+)_:page(.+).html", "/v1/2/cms/aaa_123_1.html", map[string]string{":v": "2", ":id": "123", ":page": "1"}),
+		matchTestInfo("/v1/:v/cms_:id(.+)_:page(.+).html", "/v1/2/cms_123_1.html", map[string]string{":v": "2", ":id": "123", ":page": "1"}),
+		matchTestInfo("/v1/:v(.+)_cms/ttt_:id(.+)_:page(.+).html", "/v1/2_cms/ttt_123_1.html", map[string]string{":v": "2", ":id": "123", ":page": "1"}),
+		matchTestInfo("/api/projects/:pid/members/?:mid", "/api/projects/1/members", map[string]string{":pid": "1"}),
+		matchTestInfo("/api/projects/:pid/members/?:mid", "/api/projects/1/members/2", map[string]string{":pid": "1", ":mid": "2"}),
+		matchTestInfo("/?:year/?:month/?:day", "/2020/11/10", map[string]string{":year": "2020", ":month": "11", ":day": "10"}),
+		matchTestInfo("/?:year/?:month/?:day", "/2020/11", map[string]string{":year": "2020", ":month": "11"}),
+		matchTestInfo("/?:year", "/2020", map[string]string{":year": "2020"}),
+		matchTestInfo("/?:year([0-9]+)/?:month([0-9]+)/mid/?:day([0-9]+)/?:hour([0-9]+)", "/2020/11/mid/10/24", map[string]string{":year": "2020", ":month": "11", ":day": "10", ":hour": "24"}),
+		matchTestInfo("/?:year/?:month/mid/?:day/?:hour", "/2020/mid/10", map[string]string{":year": "2020", ":day": "10"}),
+		matchTestInfo("/?:year/?:month/mid/?:day/?:hour", "/2020/11/mid", map[string]string{":year": "2020", ":month": "11"}),
+		matchTestInfo("/?:year/?:month/mid/?:day/?:hour", "/mid/10/24", map[string]string{":day": "10", ":hour": "24"}),
+		matchTestInfo("/?:year([0-9]+)/:month([0-9]+)/mid/:day([0-9]+)/?:hour([0-9]+)", "/2020/11/mid/10/24", map[string]string{":year": "2020", ":month": "11", ":day": "10", ":hour": "24"}),
+		matchTestInfo("/?:year/:month/mid/:day/?:hour", "/11/mid/10/24", map[string]string{":month": "11", ":day": "10"}),
+		matchTestInfo("/?:year/:month/mid/:day/?:hour", "/2020/11/mid/10", map[string]string{":year": "2020", ":month": "11", ":day": "10"}),
+		matchTestInfo("/?:year/:month/mid/:day/?:hour", "/11/mid/10", map[string]string{":month": "11", ":day": "10"}),
 
-	// https://github.com/astaxie/beego/issues/3865
-	routers = append(routers, notMatchTestInfo("/read_:id:int\\.htm", "/read_222htm"))
-	routers = append(routers, notMatchTestInfo("/read_:id:int\\.htm", "/read_222_htm"))
-	routers = append(routers, notMatchTestInfo("/read_:id:int\\.htm", " /read_262shtm"))
+		// not match example
+		// https://github.com/beego/beego/v2/issues/3865
+		notMatchTestInfo("/read_:id:int\\.htm", "/read_222htm"),
+		notMatchTestInfo("/read_:id:int\\.htm", "/read_222_htm"),
+		notMatchTestInfo("/read_:id:int\\.htm", " /read_262shtm"),
 
+		// test .html, .json not suffix
+		notMatchTestInfo(abcHTML, "/suffix.html/abc"),
+		matchTestInfo("/suffix/abc", abcHTML, nil),
+		matchTestInfo("/suffix/*", abcHTML, nil),
+		notMatchTestInfo("/suffix/*", "/suffix.html/a"),
+		notMatchTestInfo(abcSuffix, "/abc/suffix.html/a"),
+		matchTestInfo(abcSuffix, "/abc/suffix/a", nil),
+		notMatchTestInfo(abcSuffix, "/abc.j/suffix/a"),
+	}
 }
 
 func TestTreeRouters(t *testing.T) {
 	for _, r := range routers {
 		shouldMatch := r.shouldMatchOrNot
-
 		tr := NewTree()
 		tr.AddRouter(r.pattern, "astaxie")
 		ctx := context.NewContext()
@@ -112,7 +136,7 @@ func TestTreeRouters(t *testing.T) {
 			if obj != nil {
 				t.Fatal("pattern:", r.pattern, ", should not match", r.requestUrl)
 			} else {
-				return
+				continue
 			}
 		}
 		if obj == nil || obj.(string) != "astaxie" {
@@ -128,6 +152,7 @@ func TestTreeRouters(t *testing.T) {
 			}
 		}
 	}
+	time.Sleep(time.Second)
 }
 
 func TestStaticPath(t *testing.T) {
@@ -280,6 +305,7 @@ func TestAddTree5(t *testing.T) {
 		t.Fatal("url /v1/shop/ need match router /v1/shop/ ")
 	}
 }
+
 func TestSplitPath(t *testing.T) {
 	a := splitPath("")
 	if len(a) != 0 {
@@ -308,7 +334,6 @@ func TestSplitPath(t *testing.T) {
 }
 
 func TestSplitSegment(t *testing.T) {
-
 	items := map[string]struct {
 		isReg  bool
 		params []string
@@ -324,7 +349,7 @@ func TestSplitSegment(t *testing.T) {
 		":id([0-9]+)":                {true, []string{":id"}, `([0-9]+)`},
 		":id([0-9]+)_:name":          {true, []string{":id", ":name"}, `([0-9]+)_(.+)`},
 		":id(.+)_cms.html":           {true, []string{":id"}, `(.+)_cms.html`},
-		":id(.+)_cms\\.html":           {true, []string{":id"}, `(.+)_cms\.html`},
+		":id(.+)_cms\\.html":         {true, []string{":id"}, `(.+)_cms\.html`},
 		"cms_:id(.+)_:page(.+).html": {true, []string{":id", ":page"}, `cms_(.+)_(.+).html`},
 		`:app(a|b|c)`:                {true, []string{":app"}, `(a|b|c)`},
 		`:app\((a|b|c)\)`:            {true, []string{":app"}, `(.+)\((a|b|c)\)`},

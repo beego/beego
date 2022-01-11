@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -36,9 +37,11 @@ func TestParse(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	assert.Equal(t, "0/30 * * * * *", tk.GetSpec(context.Background()))
 	m.AddTask("taska", tk)
 	m.StartTask()
 	time.Sleep(3 * time.Second)
+	assert.True(t, len(tk.GetStatus(context.Background())) == 0)
 	m.StopTask()
 }
 
@@ -88,6 +91,57 @@ func TestSpec(t *testing.T) {
 	}
 }
 
+func TestTimeout(t *testing.T) {
+	m := newTaskManager()
+	defer m.ClearTask()
+	wg := &sync.WaitGroup{}
+	wg.Add(2)
+	once1, once2 := sync.Once{}, sync.Once{}
+
+	tk1 := NewTask("tk1", "0/10 * * ? * *",
+		func(ctx context.Context) error {
+			time.Sleep(4 * time.Second)
+			select {
+			case <-ctx.Done():
+				once1.Do(func() {
+					fmt.Println("tk1 done")
+					wg.Done()
+				})
+				return errors.New("timeout")
+			default:
+			}
+			return nil
+		}, TimeoutOption(3*time.Second),
+	)
+
+	tk2 := NewTask("tk2", "0/11 * * ? * *",
+		func(ctx context.Context) error {
+			time.Sleep(4 * time.Second)
+			select {
+			case <-ctx.Done():
+				return errors.New("timeout")
+			default:
+				once2.Do(func() {
+					fmt.Println("tk2 done")
+					wg.Done()
+				})
+			}
+			return nil
+		},
+	)
+
+	m.AddTask("tk1", tk1)
+	m.AddTask("tk2", tk2)
+	m.StartTask()
+	defer m.StopTask()
+
+	select {
+	case <-time.After(19 * time.Second):
+		t.Error("TestTimeout failed")
+	case <-wait(wg):
+	}
+}
+
 func TestTask_Run(t *testing.T) {
 	cnt := -1
 	task := func(ctx context.Context) error {
@@ -105,6 +159,43 @@ func TestTask_Run(t *testing.T) {
 	assert.Equal(t, 100, len(l))
 	assert.Equal(t, "Hello, world! 100", l[0].errinfo)
 	assert.Equal(t, "Hello, world! 101", l[1].errinfo)
+}
+
+func TestCrudTask(t *testing.T) {
+	m := newTaskManager()
+	m.AddTask("my-task1", NewTask("my-task1", "0/30 * * * * *", func(ctx context.Context) error {
+		return nil
+	}))
+
+	m.AddTask("my-task2", NewTask("my-task2", "0/30 * * * * *", func(ctx context.Context) error {
+		return nil
+	}))
+
+	m.DeleteTask("my-task1")
+	assert.Equal(t, 1, len(m.adminTaskList))
+
+	m.ClearTask()
+	assert.Equal(t, 0, len(m.adminTaskList))
+}
+
+func TestGracefulShutdown(t *testing.T) {
+	m := newTaskManager()
+	defer m.ClearTask()
+	waitDone := atomic.Value{}
+	waitDone.Store(false)
+	tk := NewTask("everySecond", "* * * * * *", func(ctx context.Context) error {
+		fmt.Println("hello world")
+		time.Sleep(2 * time.Second)
+		waitDone.Store(true)
+		return nil
+	})
+	m.AddTask("taska", tk)
+	m.StartTask()
+	time.Sleep(1 * time.Second)
+	shutdown := m.GracefulShutdown()
+	assert.False(t, waitDone.Load().(bool))
+	<-shutdown
+	assert.True(t, waitDone.Load().(bool))
 }
 
 func wait(wg *sync.WaitGroup) chan bool {

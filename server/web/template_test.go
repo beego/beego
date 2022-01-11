@@ -24,7 +24,7 @@ import (
 	assetfs "github.com/elazarl/go-bindata-assetfs"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/astaxie/beego/test"
+	"github.com/beego/beego/v2/test"
 )
 
 var header = `{{define "header"}}
@@ -49,19 +49,18 @@ var block = `{{define "block"}}
 {{end}}`
 
 func TestTemplate(t *testing.T) {
-	wkdir, err := os.Getwd()
-	assert.Nil(t, err)
-	dir := filepath.Join(wkdir, "_beeTmp", "TestTemplate")
+	tmpDir := os.TempDir()
+	dir := filepath.Join(tmpDir, "_beeTmp", "TestTemplate")
 	files := []string{
 		"header.tpl",
 		"index.tpl",
 		"blocks/block.tpl",
 	}
-	if err := os.MkdirAll(dir, 0777); err != nil {
+	if err := os.MkdirAll(dir, 0o777); err != nil {
 		t.Fatal(err)
 	}
 	for k, name := range files {
-		dirErr := os.MkdirAll(filepath.Dir(filepath.Join(dir, name)), 0777)
+		dirErr := os.MkdirAll(filepath.Dir(filepath.Join(dir, name)), 0o777)
 		assert.Nil(t, dirErr)
 		if f, err := os.Create(filepath.Join(dir, name)); err != nil {
 			t.Fatal(err)
@@ -101,6 +100,7 @@ var menu = `<div class="menu">
 </ul>
 </div>
 `
+
 var user = `<!DOCTYPE html>
 <html>
   <head>
@@ -113,11 +113,10 @@ var user = `<!DOCTYPE html>
 `
 
 func TestRelativeTemplate(t *testing.T) {
-	wkdir, err := os.Getwd()
-	assert.Nil(t, err)
-	dir := filepath.Join(wkdir, "_beeTmp")
+	tmpDir := os.TempDir()
+	dir := filepath.Join(tmpDir, "_beeTmp")
 
-	//Just add dir to known viewPaths
+	// Just add dir to known viewPaths
 	if err := AddViewPath(dir); err != nil {
 		t.Fatal(err)
 	}
@@ -126,11 +125,11 @@ func TestRelativeTemplate(t *testing.T) {
 		"easyui/public/menu.tpl",
 		"easyui/rbac/user.tpl",
 	}
-	if err := os.MkdirAll(dir, 0777); err != nil {
+	if err := os.MkdirAll(dir, 0o777); err != nil {
 		t.Fatal(err)
 	}
 	for k, name := range files {
-		os.MkdirAll(filepath.Dir(filepath.Join(dir, name)), 0777)
+		os.MkdirAll(filepath.Dir(filepath.Join(dir, name)), 0o777)
 		if f, err := os.Create(filepath.Join(dir, name)); err != nil {
 			t.Fatal(err)
 		} else {
@@ -226,20 +225,20 @@ var output = `<!DOCTYPE html>
 `
 
 func TestTemplateLayout(t *testing.T) {
-	wkdir, err := os.Getwd()
+	tmpDir, err := os.Getwd()
 	assert.Nil(t, err)
 
-	dir := filepath.Join(wkdir, "_beeTmp", "TestTemplateLayout")
+	dir := filepath.Join(tmpDir, "_beeTmp", "TestTemplateLayout")
 	files := []string{
 		"add.tpl",
 		"layout_blog.tpl",
 	}
-	if err := os.MkdirAll(dir, 0777); err != nil {
+	if err := os.MkdirAll(dir, 0o777); err != nil {
 		t.Fatal(err)
 	}
 
 	for k, name := range files {
-		dirErr := os.MkdirAll(filepath.Dir(filepath.Join(dir, name)), 0777)
+		dirErr := os.MkdirAll(filepath.Dir(filepath.Join(dir, name)), 0o777)
 		assert.Nil(t, dirErr)
 		if f, err := os.Create(filepath.Join(dir, name)); err != nil {
 			t.Fatal(err)

@@ -21,7 +21,7 @@
 //
 //	import (
 //		"fmt"
-//		"github.com/astaxie/beego/orm"
+//		"github.com/beego/beego/v2/client/orm"
 //		_ "github.com/go-sql-driver/mysql" // import your used driver
 //	)
 //
@@ -50,7 +50,7 @@
 //		num, err = o.Delete(&u)
 //	}
 //
-// more docs: http://beego.me/docs/mvc/model/overview.md
+// more docs: http://beego.vip/docs/mvc/model/overview.md
 package orm
 
 import (
@@ -58,9 +58,9 @@ import (
 	"database/sql"
 	"errors"
 
-	"github.com/astaxie/beego/client/orm"
-	"github.com/astaxie/beego/client/orm/hints"
-	"github.com/astaxie/beego/core/utils"
+	"github.com/beego/beego/v2/client/orm"
+	"github.com/beego/beego/v2/client/orm/hints"
+	"github.com/beego/beego/v2/core/utils"
 )
 
 // DebugQueries define the debug

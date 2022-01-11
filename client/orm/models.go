@@ -32,9 +32,7 @@ const (
 	defaultStructTagDelim = ";"
 )
 
-var (
-	modelCache = NewModelCacheHandler()
-)
+var modelCache = NewModelCacheHandler()
 
 // model info collection
 type _modelCache struct {
@@ -45,7 +43,7 @@ type _modelCache struct {
 	done            bool
 }
 
-//NewModelCacheHandler generator of _modelCache
+// NewModelCacheHandler generator of _modelCache
 func NewModelCacheHandler() *_modelCache {
 	return &_modelCache{
 		cache:           make(map[string]*modelInfo),
@@ -113,7 +111,7 @@ func (mc *_modelCache) clean() {
 	mc.done = false
 }
 
-//bootstrap bootstrap for models
+// bootstrap bootstrap for models
 func (mc *_modelCache) bootstrap() {
 	mc.Lock()
 	defer mc.Unlock()
@@ -327,16 +325,10 @@ end:
 		debug.PrintStack()
 	}
 	mc.done = true
-	return
 }
 
 // register register models to model cache
 func (mc *_modelCache) register(prefixOrSuffixStr string, prefixOrSuffix bool, models ...interface{}) (err error) {
-	if mc.done {
-		err = fmt.Errorf("register must be run before BootStrap")
-		return
-	}
-
 	for _, model := range models {
 		val := reflect.ValueOf(model)
 		typ := reflect.Indirect(val).Type()
@@ -352,7 +344,9 @@ func (mc *_modelCache) register(prefixOrSuffixStr string, prefixOrSuffix bool, m
 			err = fmt.Errorf("<orm.RegisterModel> only allow ptr model struct, it looks you use two reference to the struct `%s`", typ)
 			return
 		}
-
+		if val.Elem().Kind() == reflect.Slice {
+			val = reflect.New(val.Elem().Type().Elem())
+		}
 		table := getTableName(val)
 
 		if prefixOrSuffixStr != "" {
@@ -371,8 +365,7 @@ func (mc *_modelCache) register(prefixOrSuffixStr string, prefixOrSuffix bool, m
 		}
 
 		if _, ok := mc.get(table); ok {
-			err = fmt.Errorf("<orm.RegisterModel> table name `%s` repeat register, must be unique\n", table)
-			return
+			return nil
 		}
 
 		mi := newModelInfo(val)
@@ -389,12 +382,6 @@ func (mc *_modelCache) register(prefixOrSuffixStr string, prefixOrSuffix bool, m
 					}
 				}
 			}
-
-			if mi.fields.pk == nil {
-				err = fmt.Errorf("<orm.RegisterModel> `%s` needs a primary key field, default is to use 'id' if not set\n", name)
-				return
-			}
-
 		}
 
 		mi.table = table
@@ -407,7 +394,7 @@ func (mc *_modelCache) register(prefixOrSuffixStr string, prefixOrSuffix bool, m
 	return
 }
 
-//getDbDropSQL get database scheme drop sql queries
+// getDbDropSQL get database scheme drop sql queries
 func (mc *_modelCache) getDbDropSQL(al *alias) (queries []string, err error) {
 	if len(mc.cache) == 0 {
 		err = errors.New("no Model found, need register your model")
@@ -422,7 +409,7 @@ func (mc *_modelCache) getDbDropSQL(al *alias) (queries []string, err error) {
 	return queries, nil
 }
 
-//getDbCreateSQL get database scheme creation sql queries
+// getDbCreateSQL get database scheme creation sql queries
 func (mc *_modelCache) getDbCreateSQL(al *alias) (queries []string, tableIndexes map[string][]dbIndex, err error) {
 	if len(mc.cache) == 0 {
 		err = errors.New("no Model found, need register your model")
@@ -467,9 +454,9 @@ func (mc *_modelCache) getDbCreateSQL(al *alias) (queries []string, tableIndexes
 					column += " " + "NOT NULL"
 				}
 
-				//if fi.initial.String() != "" {
+				// if fi.initial.String() != "" {
 				//	column += " DEFAULT " + fi.initial.String()
-				//}
+				// }
 
 				// Append attribute DEFAULT
 				column += getColumnDefault(fi)

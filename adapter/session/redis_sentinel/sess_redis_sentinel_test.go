@@ -5,7 +5,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/astaxie/beego/adapter/session"
+	"github.com/stretchr/testify/assert"
+
+	"github.com/beego/beego/v2/adapter/session"
 )
 
 func TestRedisSentinel(t *testing.T) {
@@ -19,72 +21,55 @@ func TestRedisSentinel(t *testing.T) {
 		ProviderConfig:  "127.0.0.1:6379,100,,0,master",
 	}
 	globalSessions, e := session.NewManager("redis_sentinel", sessionConfig)
+
 	if e != nil {
 		t.Log(e)
 		return
 	}
-	// todo test if e==nil
+
 	go globalSessions.GC()
 
 	r, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 
 	sess, err := globalSessions.SessionStart(w, r)
-	if err != nil {
-		t.Fatal("session start failed:", err)
-	}
+	assert.Nil(t, err)
 	defer sess.SessionRelease(w)
 
 	// SET AND GET
 	err = sess.Set("username", "astaxie")
-	if err != nil {
-		t.Fatal("set username failed:", err)
-	}
+	assert.Nil(t, err)
 	username := sess.Get("username")
-	if username != "astaxie" {
-		t.Fatal("get username failed")
-	}
+	assert.Equal(t, "astaxie", username)
 
 	// DELETE
 	err = sess.Delete("username")
-	if err != nil {
-		t.Fatal("delete username failed:", err)
-	}
+	assert.Nil(t, err)
+
 	username = sess.Get("username")
-	if username != nil {
-		t.Fatal("delete username failed")
-	}
+	assert.Nil(t, username)
 
 	// FLUSH
 	err = sess.Set("username", "astaxie")
-	if err != nil {
-		t.Fatal("set failed:", err)
-	}
+	assert.Nil(t, err)
+
 	err = sess.Set("password", "1qaz2wsx")
-	if err != nil {
-		t.Fatal("set failed:", err)
-	}
+	assert.Nil(t, err)
+
 	username = sess.Get("username")
-	if username != "astaxie" {
-		t.Fatal("get username failed")
-	}
+	assert.Equal(t, "astaxie", username)
+
 	password := sess.Get("password")
-	if password != "1qaz2wsx" {
-		t.Fatal("get password failed")
-	}
+	assert.Equal(t, "1qaz2wsx", password)
+
 	err = sess.Flush()
-	if err != nil {
-		t.Fatal("flush failed:", err)
-	}
+	assert.Nil(t, err)
+
 	username = sess.Get("username")
-	if username != nil {
-		t.Fatal("flush failed")
-	}
+	assert.Nil(t, username)
+
 	password = sess.Get("password")
-	if password != nil {
-		t.Fatal("flush failed")
-	}
+	assert.Nil(t, password)
 
 	sess.SessionRelease(w)
-
 }

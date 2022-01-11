@@ -1,0 +1,19 @@
+name: need-translation-issues
+
+on:
+  schedule:
+    - cron: "0 * * * *" # pick a cron here, this is every 1h
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: luanpotter/changes-requested@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          # these are optional, if you want to configure:
+          days-until-close: 5
+          trigger-label: status/need-translation
+          closing-comment: This issue was closed by the need-translation bot. Please transalate your issue to English so it could help others.
+          dry-run: false

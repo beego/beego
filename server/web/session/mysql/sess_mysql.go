@@ -28,8 +28,8 @@
 //
 // Usage:
 // import(
-//   _ "github.com/astaxie/beego/session/mysql"
-//   "github.com/astaxie/beego/session"
+//   _ "github.com/beego/beego/v2/server/web/session/mysql"
+//   "github.com/beego/beego/v2/server/web/session"
 // )
 //
 //	func init() {
@@ -37,7 +37,7 @@
 //		go globalSessions.GC()
 //	}
 //
-// more docs: http://beego.me/docs/module/session.md
+// more docs: http://beego.vip/docs/module/session.md
 package mysql
 
 import (
@@ -47,9 +47,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/astaxie/beego/server/web/session"
 	// import mysql driver
 	_ "github.com/go-sql-driver/mysql"
+
+	"github.com/beego/beego/v2/server/web/session"
 )
 
 var (
@@ -150,6 +151,8 @@ func (mp *Provider) SessionRead(ctx context.Context, sid string) (session.Store,
 	if err == sql.ErrNoRows {
 		c.Exec("insert into "+TableName+"(`session_key`,`session_data`,`session_expiry`) values(?,?,?)",
 			sid, "", time.Now().Unix())
+	} else if err != nil {
+		return nil, err
 	}
 	var kv map[interface{}]interface{}
 	if len(sessiondata) == 0 {
@@ -189,7 +192,10 @@ func (mp *Provider) SessionRegenerate(ctx context.Context, oldsid, sid string) (
 	if err == sql.ErrNoRows {
 		c.Exec("insert into "+TableName+"(`session_key`,`session_data`,`session_expiry`) values(?,?,?)", oldsid, "", time.Now().Unix())
 	}
-	c.Exec("update "+TableName+" set `session_key`=? where session_key=?", sid, oldsid)
+	_, err = c.Exec("update "+TableName+" set `session_key`=? where session_key=?", sid, oldsid)
+	if err != nil {
+		return nil, err
+	}
 	var kv map[interface{}]interface{}
 	if len(sessiondata) == 0 {
 		kv = make(map[interface{}]interface{})

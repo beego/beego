@@ -17,15 +17,13 @@ package adapter
 import (
 	"net/http"
 
-	context2 "github.com/astaxie/beego/adapter/context"
-	"github.com/astaxie/beego/server/web"
-	"github.com/astaxie/beego/server/web/context"
+	context2 "github.com/beego/beego/v2/adapter/context"
+	"github.com/beego/beego/v2/server/web"
+	"github.com/beego/beego/v2/server/web/context"
 )
 
-var (
-	// BeeApp is an application instance
-	BeeApp *App
-)
+// BeeApp is an application instance
+var BeeApp *App
 
 func init() {
 	// create beego application
@@ -139,7 +137,7 @@ func RESTRouter(rootpath string, c ControllerInterface) *App {
 
 // AutoRouter adds defined controller handler to BeeApp.
 // it's same to HttpServer.AutoRouter.
-// if beego.AddAuto(&MainContorlller{}) and MainController has methods List and Page,
+// if beego.AddAuto(&MainController{}) and MainController has methods List and Page,
 // visit the url /main/list to exec List function or /main/page to exec Page function.
 func AutoRouter(c ControllerInterface) *App {
 	return (*App)(web.AutoRouter(c))
@@ -147,7 +145,7 @@ func AutoRouter(c ControllerInterface) *App {
 
 // AutoPrefix adds controller handler to BeeApp with prefix.
 // it's same to HttpServer.AutoRouterWithPrefix.
-// if beego.AutoPrefix("/admin",&MainContorlller{}) and MainController has methods List and Page,
+// if beego.AutoPrefix("/admin",&MainController{}) and MainController has methods List and Page,
 // visit the url /admin/main/list to exec List function or /admin/main/page to exec Page function.
 func AutoPrefix(prefix string, c ControllerInterface) *App {
 	return (*App)(web.AutoPrefix(prefix, c))

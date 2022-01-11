@@ -19,9 +19,9 @@
 // package controllers
 //
 // import (
-// 	"github.com/astaxie/beego"
-// 	"github.com/astaxie/beego/cache"
-// 	"github.com/astaxie/beego/utils/captcha"
+// 	"github.com/beego/beego/v2"
+// 	"github.com/beego/beego/v2/client/cache"
+// 	"github.com/beego/beego/v2/server/web/captcha"
 // )
 //
 // var cpt *captcha.Captcha
@@ -67,16 +67,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/astaxie/beego/core/logs"
-
-	"github.com/astaxie/beego/core/utils"
-	"github.com/astaxie/beego/server/web"
-	"github.com/astaxie/beego/server/web/context"
+	"github.com/beego/beego/v2/core/logs"
+	"github.com/beego/beego/v2/core/utils"
+	"github.com/beego/beego/v2/server/web"
+	"github.com/beego/beego/v2/server/web/context"
 )
 
-var (
-	defaultChars = []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
-)
+var defaultChars = []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 
 const (
 	// default captcha attributes
@@ -200,7 +197,7 @@ func (c *Captcha) VerifyReq(req *http.Request) bool {
 
 // Verify direct verify id and challenge string
 func (c *Captcha) Verify(id string, challenge string) (success bool) {
-	if len(challenge) == 0 || len(id) == 0 {
+	if challenge == "" || id == "" {
 		return
 	}
 
@@ -244,7 +241,7 @@ func NewCaptcha(urlPrefix string, store Storage) *Captcha {
 	cpt.StdWidth = stdWidth
 	cpt.StdHeight = stdHeight
 
-	if len(urlPrefix) == 0 {
+	if urlPrefix == "" {
 		urlPrefix = defaultURLPrefix
 	}
 

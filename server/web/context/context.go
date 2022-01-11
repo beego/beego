@@ -15,11 +15,11 @@
 // Package context provide the context utils
 // Usage:
 //
-//	import "github.com/astaxie/beego/context"
+//	import "github.com/beego/beego/v2/server/web/context"
 //
 //	ctx := context.Context{Request:req,ResponseWriter:rw}
 //
-//  more docs http://beego.me/docs/module/context.md
+//  more docs http://beego.vip/docs/module/context.md
 package context
 
 import (
@@ -27,23 +27,38 @@ import (
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
+	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"net"
 	"net/http"
+	"net/url"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/astaxie/beego/core/utils"
+	"google.golang.org/protobuf/proto"
+	"gopkg.in/yaml.v3"
+
+	"github.com/beego/beego/v2/core/utils"
+	"github.com/beego/beego/v2/server/web/session"
 )
 
 // Commonly used mime-types
 const (
-	ApplicationJSON = "application/json"
-	ApplicationXML  = "application/xml"
-	ApplicationYAML = "application/x-yaml"
-	TextXML         = "text/xml"
+	ApplicationJSON  = "application/json"
+	ApplicationXML   = "application/xml"
+	ApplicationForm  = "application/x-www-form-urlencoded"
+	ApplicationProto = "application/x-protobuf"
+	ApplicationYAML  = "application/x-yaml"
+	TextXML          = "text/xml"
+
+	formatTime      = "15:04:05"
+	formatDate      = "2006-01-02"
+	formatDateTime  = "2006-01-02 15:04:05"
+	formatDateTimeT = "2006-01-02T15:04:05"
 )
 
 // NewContext return the Context with Input and Output
@@ -62,6 +77,108 @@ type Context struct {
 	Request        *http.Request
 	ResponseWriter *Response
 	_xsrfToken     string
+}
+
+func (ctx *Context) Bind(obj interface{}) error {
+	ct, exist := ctx.Request.Header["Content-Type"]
+	if !exist || len(ct) == 0 {
+		return ctx.BindJSON(obj)
+	}
+	i, l := 0, len(ct[0])
+	for i < l && ct[0][i] != ';' {
+		i++
+	}
+	switch ct[0][0:i] {
+	case ApplicationJSON:
+		return ctx.BindJSON(obj)
+	case ApplicationXML, TextXML:
+		return ctx.BindXML(obj)
+	case ApplicationForm:
+		return ctx.BindForm(obj)
+	case ApplicationProto:
+		return ctx.BindProtobuf(obj.(proto.Message))
+	case ApplicationYAML:
+		return ctx.BindYAML(obj)
+	default:
+		return errors.New("Unsupported Content-Type:" + ct[0])
+	}
+}
+
+// Resp sends response based on the Accept Header
+// By default response will be in JSON
+func (ctx *Context) Resp(data interface{}) error {
+	accept := ctx.Input.Header("Accept")
+	switch accept {
+	case ApplicationYAML:
+		return ctx.YamlResp(data)
+	case ApplicationXML, TextXML:
+		return ctx.XMLResp(data)
+	case ApplicationProto:
+		return ctx.ProtoResp(data.(proto.Message))
+	default:
+		return ctx.JSONResp(data)
+	}
+}
+
+func (ctx *Context) JSONResp(data interface{}) error {
+	return ctx.Output.JSON(data, false, false)
+}
+
+func (ctx *Context) XMLResp(data interface{}) error {
+	return ctx.Output.XML(data, false)
+}
+
+func (ctx *Context) YamlResp(data interface{}) error {
+	return ctx.Output.YAML(data)
+}
+
+func (ctx *Context) ProtoResp(data proto.Message) error {
+	return ctx.Output.Proto(data)
+}
+
+// BindYAML only read data from http request body
+func (ctx *Context) BindYAML(obj interface{}) error {
+	return yaml.Unmarshal(ctx.Input.RequestBody, obj)
+}
+
+// BindForm will parse form values to struct via tag.
+func (ctx *Context) BindForm(obj interface{}) error {
+	err := ctx.Request.ParseForm()
+	if err != nil {
+		return err
+	}
+	return ParseForm(ctx.Request.Form, obj)
+}
+
+// BindJSON only read data from http request body
+func (ctx *Context) BindJSON(obj interface{}) error {
+	return json.Unmarshal(ctx.Input.RequestBody, obj)
+}
+
+// BindProtobuf only read data from http request body
+func (ctx *Context) BindProtobuf(obj proto.Message) error {
+	return proto.Unmarshal(ctx.Input.RequestBody, obj)
+}
+
+// BindXML only read data from http request body
+func (ctx *Context) BindXML(obj interface{}) error {
+	return xml.Unmarshal(ctx.Input.RequestBody, obj)
+}
+
+// ParseForm will parse form values to struct via tag.
+func ParseForm(form url.Values, obj interface{}) error {
+	objT := reflect.TypeOf(obj)
+	objV := reflect.ValueOf(obj)
+	if !isStructPtr(objT) {
+		return fmt.Errorf("%v must be  a struct pointer", obj)
+	}
+	objT = objT.Elem()
+	objV = objV.Elem()
+	return parseFormToStruct(form, objT, objV)
+}
+
+func isStructPtr(t reflect.Type) bool {
+	return t.Kind() == reflect.Ptr && t.Elem().Kind() == reflect.Struct
 }
 
 // Reset initializes Context, BeegoInput and BeegoOutput
@@ -90,7 +207,7 @@ func (ctx *Context) Abort(status int, body string) {
 
 // WriteString writes a string to response body.
 func (ctx *Context) WriteString(content string) {
-	ctx.ResponseWriter.Write([]byte(content))
+	_, _ = ctx.ResponseWriter.Write([]byte(content))
 }
 
 // GetCookie gets a cookie from a request for a given key.
@@ -138,7 +255,10 @@ func (ctx *Context) GetSecureCookie(Secret, key string, maxDays int) (string, bo
 	}
 
 	h := hmac.New(sha256.New, []byte(Secret))
-	fmt.Fprintf(h, "%s%s", vs, timestamp)
+	_, err := fmt.Fprintf(h, "%s%s", vs, timestamp)
+	if err != nil {
+		return "", false
+	}
 
 	if fmt.Sprintf("%02x", h.Sum(nil)) != sig {
 		return "", false
@@ -152,7 +272,7 @@ func (ctx *Context) SetSecureCookie(Secret, name, value string, others ...interf
 	vs := base64.URLEncoding.EncodeToString([]byte(value))
 	timestamp := strconv.FormatInt(time.Now().UnixNano(), 10)
 	h := hmac.New(sha256.New, []byte(Secret))
-	fmt.Fprintf(h, "%s%s", vs, timestamp)
+	_, _ = fmt.Fprintf(h, "%s%s", vs, timestamp)
 	sig := fmt.Sprintf("%02x", h.Sum(nil))
 	cookie := strings.Join([]string{vs, timestamp, sig}, "|")
 	ctx.Output.Cookie(name, cookie, others...)
@@ -165,7 +285,7 @@ func (ctx *Context) XSRFToken(key string, expire int64) string {
 		if !ok {
 			token = string(utils.RandomCreateBytes(32))
 			// TODO make it configurable
-			ctx.SetSecureCookie(key, "_xsrf", token, expire, "", "")
+			ctx.SetSecureCookie(key, "_xsrf", token, expire, "/", "")
 		}
 		ctx._xsrfToken = token
 	}
@@ -210,6 +330,22 @@ func (ctx *Context) RenderMethodResult(result interface{}) {
 	}
 }
 
+// Session return session store of this context of request
+func (ctx *Context) Session() (store session.Store, err error) {
+	if ctx.Input != nil {
+		if ctx.Input.CruSession != nil {
+			store = ctx.Input.CruSession
+			return
+		} else {
+			err = errors.New(`no valid session store(please initialize session)`)
+			return
+		}
+	} else {
+		err = errors.New(`no valid input`)
+		return
+	}
+}
+
 // Response is a wrapper for the http.ResponseWriter
 // Started:  if true, response was already written to so the other handler will not be executed
 type Response struct {
@@ -237,7 +373,7 @@ func (r *Response) Write(p []byte) (int, error) {
 // and sets `Started` to true.
 func (r *Response) WriteHeader(code int) {
 	if r.Status > 0 {
-		//prevent multiple response.WriteHeader calls
+		// prevent multiple response.WriteHeader calls
 		return
 	}
 	r.Status = code

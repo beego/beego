@@ -20,8 +20,8 @@
 //
 // Usage:
 // import(
-//   _ "github.com/astaxie/beego/session/redis_cluster"
-//   "github.com/astaxie/beego/session"
+//   _ "github.com/beego/beego/v2/server/web/session/redis_cluster"
+//   "github.com/beego/beego/v2/server/web/session"
 // )
 //
 //	func init() {
@@ -29,7 +29,7 @@
 //		go globalSessions.GC()
 //	}
 //
-// more docs: http://beego.me/docs/module/session.md
+// more docs: http://beego.vip/docs/module/session.md
 package redis_cluster
 
 import (
@@ -43,7 +43,7 @@ import (
 
 	rediss "github.com/go-redis/redis/v7"
 
-	"github.com/astaxie/beego/server/web/session"
+	"github.com/beego/beego/v2/server/web/session"
 )
 
 var redispder = &Provider{}

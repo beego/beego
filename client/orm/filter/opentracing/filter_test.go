@@ -21,10 +21,10 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 
-	"github.com/astaxie/beego/client/orm"
+	"github.com/beego/beego/v2/client/orm"
 )
 
-func TestFilterChainBuilder_FilterChain(t *testing.T) {
+func TestFilterChainBuilderFilterChain(t *testing.T) {
 	next := func(ctx context.Context, inv *orm.Invocation) []interface{} {
 		inv.TxName = "Hello"
 		return []interface{}{}

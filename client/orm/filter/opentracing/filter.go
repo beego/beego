@@ -20,14 +20,14 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 
-	"github.com/astaxie/beego/client/orm"
+	"github.com/beego/beego/v2/client/orm"
 )
 
 // FilterChainBuilder provides an extension point
 // this Filter's behavior looks a little bit strange
 // for example:
 // if we want to trace QuerySetter
-// actually we trace invoking "QueryTable" and "QueryTableWithCtx"
+// actually we trace invoking "QueryTable"
 // the method Begin*, Commit and Rollback are ignored.
 // When use using those methods, it means that they want to manager their transaction manually, so we won't handle them.
 type FilterChainBuilder struct {

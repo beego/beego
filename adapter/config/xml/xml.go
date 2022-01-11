@@ -20,15 +20,15 @@
 //
 // Usage:
 //  import(
-//    _ "github.com/astaxie/beego/config/xml"
-//      "github.com/astaxie/beego/config"
+//    _ "github.com/beego/beego/v2/core/config/xml"
+//      "github.com/beego/beego/v2/core/config"
 //  )
 //
 //  cnf, err := config.NewConfig("xml", "config.xml")
 //
-// More docs http://beego.me/docs/module/config.md
+// More docs http://beego.vip/docs/module/config.md
 package xml
 
 import (
-	_ "github.com/astaxie/beego/core/config/xml"
+	_ "github.com/beego/beego/v2/core/config/xml"
 )

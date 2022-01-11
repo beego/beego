@@ -15,7 +15,7 @@
 // Package validation for validations
 //
 //	import (
-//		"github.com/astaxie/beego/validation"
+//		"github.com/beego/beego/v2/core/validation"
 //		"log"
 //	)
 //
@@ -43,7 +43,7 @@
 //		}
 //	}
 //
-// more info: http://beego.me/docs/mvc/controller/validation.md
+// more info: http://beego.vip/docs/mvc/controller/validation.md
 package validation
 
 import (
@@ -107,7 +107,7 @@ func (r *Result) Message(message string, args ...interface{}) *Result {
 // A Validation context manages data validation and error messages.
 type Validation struct {
 	// if this field set true, in struct tag valid
-	// if the struct field vale is empty
+	// if the struct field value is empty
 	// it will skip those valid functions, see CanSkipFuncs
 	RequiredFirst bool
 
@@ -121,7 +121,7 @@ func (v *Validation) Clear() {
 	v.ErrorsMap = nil
 }
 
-// HasErrors Has ValidationError nor not.
+// HasErrors Has ValidationError or not.
 func (v *Validation) HasErrors() bool {
 	return len(v.Errors) > 0
 }
@@ -158,7 +158,7 @@ func (v *Validation) Max(obj interface{}, max int, key string) *Result {
 	return v.apply(Max{max, key}, obj)
 }
 
-// Range Test that the obj is between mni and max if obj's type is int
+// Range Test that the obj is between min and max if obj's type is int
 func (v *Validation) Range(obj interface{}, min, max int, key string) *Result {
 	return v.apply(Range{Min{Min: min}, Max{Max: max}, key}, obj)
 }
@@ -235,8 +235,11 @@ func (v *Validation) Tel(obj interface{}, key string) *Result {
 
 // Phone Test that the obj is chinese mobile or telephone number if type is string
 func (v *Validation) Phone(obj interface{}, key string) *Result {
-	return v.apply(Phone{Mobile{Match: Match{Regexp: mobilePattern}},
-		Tel{Match: Match{Regexp: telPattern}}, key}, obj)
+	return v.apply(Phone{
+		Mobile{Match: Match{Regexp: mobilePattern}},
+		Tel{Match: Match{Regexp: telPattern}},
+		key,
+	}, obj)
 }
 
 // ZipCode Test that the obj is chinese zip code if type is string
@@ -423,7 +426,7 @@ func (v *Validation) Valid(obj interface{}) (b bool, err error) {
 // Step2: If pass on step1, then reflect obj's fields
 // Step3: Do the Recursively validation to all struct or struct pointer fields
 func (v *Validation) RecursiveValid(objc interface{}) (bool, error) {
-	//Step 1: validate obj itself firstly
+	// Step 1: validate obj itself firstly
 	// fails if objc is not struct
 	pass, err := v.Valid(objc)
 	if err != nil || !pass {

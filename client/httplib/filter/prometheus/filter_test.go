@@ -22,10 +22,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/astaxie/beego/client/httplib"
+	"github.com/beego/beego/v2/client/httplib"
 )
 
-func TestFilterChainBuilder_FilterChain(t *testing.T) {
+func TestFilterChainBuilderFilterChain(t *testing.T) {
 	next := func(ctx context.Context, req *httplib.BeegoHTTPRequest) (*http.Response, error) {
 		time.Sleep(100 * time.Millisecond)
 		return &http.Response{

@@ -23,7 +23,6 @@ import (
 )
 
 func TestIni(t *testing.T) {
-
 	var (
 		inicontext = `
 ;comment one
@@ -81,7 +80,8 @@ password = ${GOPATH}
 		}
 	)
 
-	f, err := os.Create("testini.conf")
+	cfgFile := "testini.conf"
+	f, err := os.Create(cfgFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -91,8 +91,8 @@ password = ${GOPATH}
 		t.Fatal(err)
 	}
 	f.Close()
-	defer os.Remove("testini.conf")
-	iniconf, err := NewConfig("ini", "testini.conf")
+	defer os.Remove(cfgFile)
+	iniconf, err := NewConfig("ini", cfgFile)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -128,11 +128,9 @@ password = ${GOPATH}
 	if iniconf.String("name") != "astaxie" {
 		t.Fatal("get name error")
 	}
-
 }
 
 func TestIniSave(t *testing.T) {
-
 	const (
 		inicontext = `
 app = app
@@ -145,7 +143,7 @@ httpport = 8080
 # enable db
 [dbinfo]
 # db type name
-# suport mysql,sqlserver
+# support mysql,sqlserver
 name = mysql
 `
 
@@ -161,7 +159,7 @@ httpport=8080
 # enable db
 [dbinfo]
 # db type name
-# suport mysql,sqlserver
+# support mysql,sqlserver
 name=mysql
 `
 	)

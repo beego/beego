@@ -15,10 +15,8 @@
 package orm
 
 import (
-	"github.com/astaxie/beego/client/orm"
+	"github.com/beego/beego/v2/client/orm"
 )
 
-var (
-	// ErrMissPK missing pk error
-	ErrMissPK = orm.ErrMissPK
-)
+// ErrMissPK missing pk error
+var ErrMissPK = orm.ErrMissPK

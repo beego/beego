@@ -15,7 +15,7 @@
 // Package validation for validations
 //
 //	import (
-//		"github.com/astaxie/beego/validation"
+//		"github.com/beego/beego/v2/core/validation"
 //		"log"
 //	)
 //
@@ -43,14 +43,14 @@
 //		}
 //	}
 //
-// more info: http://beego.me/docs/mvc/controller/validation.md
+// more info: http://beego.vip/docs/mvc/controller/validation.md
 package validation
 
 import (
 	"fmt"
 	"regexp"
 
-	"github.com/astaxie/beego/core/validation"
+	"github.com/beego/beego/v2/core/validation"
 )
 
 // ValidFormer valid interface

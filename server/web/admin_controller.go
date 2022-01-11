@@ -24,7 +24,7 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"github.com/astaxie/beego/core/admin"
+	"github.com/beego/beego/v2/core/admin"
 )
 
 type adminController struct {
@@ -79,7 +79,6 @@ func (a *adminController) PrometheusMetrics() {
 // TaskStatus is a http.Handler with running task status (task name, status and the last execution).
 // it's in "/task" pattern in admin module.
 func (a *adminController) TaskStatus() {
-
 	rw, req := a.Ctx.ResponseWriter, a.Ctx.Request
 
 	data := make(map[interface{}]interface{})
@@ -91,11 +90,11 @@ func (a *adminController) TaskStatus() {
 		cmd := admin.GetCommand("task", "run")
 		res := cmd.Execute(taskname)
 		if res.IsSuccess() {
-
-			data["Message"] = []string{"success",
+			data["Message"] = []string{
+				"success",
 				template.HTMLEscapeString(fmt.Sprintf("%s run success,Now the Status is <br>%s",
-					taskname, res.Content.(string)))}
-
+					taskname, res.Content.(string))),
+			}
 		} else {
 			data["Message"] = []string{"error", template.HTMLEscapeString(fmt.Sprintf("%s", res.Error))}
 		}
@@ -104,7 +103,7 @@ func (a *adminController) TaskStatus() {
 	// List Tasks
 	content := make(M)
 	resultList := admin.GetCommand("task", "list").Execute().Content.([][]string)
-	var fields = []string{
+	fields := []string{
 		"Task Name",
 		"Task Spec",
 		"Task Status",
@@ -238,19 +237,17 @@ func (a *adminController) ListConf() {
 		data["Title"] = "Routers"
 		writeTemplate(rw, data, routerAndFilterTpl, defaultScriptsTpl)
 	case "filter":
-		var (
-			content = M{
-				"Fields": []string{
-					"Router Pattern",
-					"Filter Function",
-				},
-			}
-		)
+		content := M{
+			"Fields": []string{
+				"Router Pattern",
+				"Filter Function",
+			},
+		}
 
 		filterTypeData := BeeApp.reportFilter()
 
 		filterTypes := make([]string, 0, len(filterTypeData))
-		for k, _ := range filterTypeData {
+		for k := range filterTypeData {
 			filterTypes = append(filterTypes, k)
 		}
 
@@ -287,7 +284,6 @@ func buildHealthCheckResponseList(healthCheckResults *[][]string) []map[string]i
 	}
 
 	return response
-
 }
 
 // PrintTree print all routers

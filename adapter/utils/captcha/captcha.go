@@ -19,9 +19,9 @@
 // package controllers
 //
 // import (
-// 	"github.com/astaxie/beego"
-// 	"github.com/astaxie/beego/cache"
-// 	"github.com/astaxie/beego/utils/captcha"
+// 	"github.com/beego/beego/v2"
+// 	"github.com/beego/beego/v2/client/cache"
+// 	"github.com/beego/beego/v2/server/web/captcha"
 // )
 //
 // var cpt *captcha.Captcha
@@ -63,16 +63,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/astaxie/beego/server/web/captcha"
-	beecontext "github.com/astaxie/beego/server/web/context"
-
-	"github.com/astaxie/beego/adapter/cache"
-	"github.com/astaxie/beego/adapter/context"
+	"github.com/beego/beego/v2/adapter/cache"
+	"github.com/beego/beego/v2/adapter/context"
+	"github.com/beego/beego/v2/server/web/captcha"
+	beecontext "github.com/beego/beego/v2/server/web/context"
 )
 
-var (
-	defaultChars = []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
-)
+var defaultChars = []byte{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
 
 const (
 	// default captcha attributes

@@ -15,8 +15,8 @@
 package adapter
 
 import (
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/server/web"
+	"github.com/beego/beego/v2"
+	"github.com/beego/beego/v2/server/web"
 )
 
 const (
@@ -36,15 +36,12 @@ type M web.M
 // Hook function to run
 type hookfunc func() error
 
-var (
-	hooks = make([]hookfunc, 0) // hook function slice to store the hookfunc
-)
-
 // AddAPPStartHook is used to register the hookfunc
 // The hookfuncs will run in beego.Run()
 // such as initiating session , starting middleware , building template, starting admin control and so on.
 func AddAPPStartHook(hf ...hookfunc) {
-	for _, f := range hf {
+	for i := 0; i < len(hf); i++ {
+		f := hf[i]
 		web.AddAPPStartHook(func() error {
 			return f()
 		})

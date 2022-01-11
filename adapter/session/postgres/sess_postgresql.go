@@ -38,8 +38,8 @@
 //
 // Usage:
 // import(
-//   _ "github.com/astaxie/beego/session/postgresql"
-//   "github.com/astaxie/beego/session"
+//   _ "github.com/beego/beego/v2/server/web/session/postgresql"
+//   "github.com/beego/beego/v2/server/web/session"
 // )
 //
 //	func init() {
@@ -47,18 +47,18 @@
 //		go globalSessions.GC()
 //	}
 //
-// more docs: http://beego.me/docs/module/session.md
+// more docs: http://beego.vip/docs/module/session.md
 package postgres
 
 import (
 	"context"
 	"net/http"
 
-	"github.com/astaxie/beego/adapter/session"
 	// import postgresql Driver
 	_ "github.com/lib/pq"
 
-	"github.com/astaxie/beego/server/web/session/postgres"
+	"github.com/beego/beego/v2/adapter/session"
+	"github.com/beego/beego/v2/server/web/session/postgres"
 )
 
 // SessionStore postgresql session store

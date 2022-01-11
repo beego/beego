@@ -20,13 +20,13 @@
 //
 // Usage:
 //  import(
-//    _ "github.com/astaxie/beego/config/xml"
-//      "github.com/astaxie/beego/config"
+//    _ "github.com/beego/beego/v2/core/config/xml"
+//      "github.com/beego/beego/v2/core/config"
 //  )
 //
 //  cnf, err := config.NewConfig("xml", "config.xml")
 //
-// More docs http://beego.me/docs/module/config.md
+// More docs http://beego.vip/docs/module/config.md
 package xml
 
 import (
@@ -39,12 +39,11 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/beego/x2j"
 	"github.com/mitchellh/mapstructure"
 
-	"github.com/astaxie/beego/core/config"
-	"github.com/astaxie/beego/core/logs"
-
-	"github.com/beego/x2j"
+	"github.com/beego/beego/v2/core/config"
+	"github.com/beego/beego/v2/core/logs"
 )
 
 // Config is a xml config parser and implements Config interface.
@@ -71,7 +70,17 @@ func (xc *Config) ParseData(data []byte) (config.Configer, error) {
 		return nil, err
 	}
 
-	x.data = config.ExpandValueEnvForMap(d["config"].(map[string]interface{}))
+	v := d["config"]
+	if v == nil {
+		return nil, fmt.Errorf("xml parse should include in <config></config> tags")
+	}
+
+	confVal, ok := v.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("xml parse <config></config> tags should include sub tags")
+	}
+
+	x.data = config.ExpandValueEnvForMap(confVal)
 
 	return x, nil
 }
@@ -103,7 +112,6 @@ func (c *ConfigContainer) Sub(key string) (config.Configer, error) {
 	return &ConfigContainer{
 		data: sub,
 	}, nil
-
 }
 
 func (c *ConfigContainer) sub(key string) (map[string]interface{}, error) {
@@ -171,7 +179,6 @@ func (c *ConfigContainer) DefaultInt64(key string, defaultVal int64) int64 {
 		return defaultVal
 	}
 	return v
-
 }
 
 // Float returns the float value for a given key.

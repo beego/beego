@@ -17,7 +17,7 @@ package web
 import (
 	"strings"
 
-	"github.com/astaxie/beego/server/web/context"
+	"github.com/beego/beego/v2/server/web/context"
 )
 
 // PolicyFunc defines a policy function which is invoked before the controller handler is executed.
@@ -25,7 +25,7 @@ type PolicyFunc func(*context.Context)
 
 // FindPolicy Find Router info for URL
 func (p *ControllerRegister) FindPolicy(cont *context.Context) []PolicyFunc {
-	var urlPath = cont.Input.URL()
+	urlPath := cont.Input.URL()
 	if !BConfig.RouterCaseSensitive {
 		urlPath = strings.ToLower(urlPath)
 	}

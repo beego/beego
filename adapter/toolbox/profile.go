@@ -16,18 +16,9 @@ package toolbox
 
 import (
 	"io"
-	"os"
-	"time"
 
-	"github.com/astaxie/beego/core/admin"
+	"github.com/beego/beego/v2/core/admin"
 )
-
-var startTime = time.Now()
-var pid int
-
-func init() {
-	pid = os.Getpid()
-}
 
 // ProcessInput parse input command string
 func ProcessInput(input string, w io.Writer) {

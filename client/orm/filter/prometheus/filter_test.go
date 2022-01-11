@@ -21,10 +21,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/astaxie/beego/client/orm"
+	"github.com/beego/beego/v2/client/orm"
 )
 
-func TestFilterChainBuilder_FilterChain1(t *testing.T) {
+func TestFilterChainBuilderFilterChain1(t *testing.T) {
 	next := func(ctx context.Context, inv *orm.Invocation) []interface{} {
 		inv.Method = "coming"
 		return []interface{}{}
@@ -32,7 +32,7 @@ func TestFilterChainBuilder_FilterChain1(t *testing.T) {
 	builder := &FilterChainBuilder{}
 	filter := builder.FilterChain(next)
 
-	assert.NotNil(t, builder.summaryVec)
+	assert.NotNil(t, summaryVec)
 	assert.NotNil(t, filter)
 
 	inv := &orm.Invocation{}
@@ -58,5 +58,4 @@ func TestFilterChainBuilder_FilterChain1(t *testing.T) {
 
 	inv.Method = "Update"
 	builder.report(ctx, inv, time.Second)
-
 }

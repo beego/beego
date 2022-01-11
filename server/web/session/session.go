@@ -16,7 +16,7 @@
 //
 // Usage:
 // import(
-//   "github.com/astaxie/beego/session"
+//   "github.com/beego/beego/v2/server/web/session"
 // )
 //
 //	func init() {
@@ -24,7 +24,7 @@
 //		go globalSessions.GC()
 //	}
 //
-// more docs: http://beego.me/docs/module/session.md
+// more docs: http://beego.vip/docs/module/session.md
 package session
 
 import (
@@ -44,12 +44,12 @@ import (
 
 // Store contains all data for one session process with specific id.
 type Store interface {
-	Set(ctx context.Context, key, value interface{}) error     //set session value
-	Get(ctx context.Context, key interface{}) interface{}      //get session value
-	Delete(ctx context.Context, key interface{}) error         //delete session value
-	SessionID(ctx context.Context) string                      //back current sessionID
+	Set(ctx context.Context, key, value interface{}) error     // set session value
+	Get(ctx context.Context, key interface{}) interface{}      // get session value
+	Delete(ctx context.Context, key interface{}) error         // delete session value
+	SessionID(ctx context.Context) string                      // back current sessionID
 	SessionRelease(ctx context.Context, w http.ResponseWriter) // release the resource & save data to provider & return the data
-	Flush(ctx context.Context) error                           //delete all data
+	Flush(ctx context.Context) error                           // delete all data
 }
 
 // Provider contains global session methods and saved SessionStores.
@@ -60,7 +60,7 @@ type Provider interface {
 	SessionExist(ctx context.Context, sid string) (bool, error)
 	SessionRegenerate(ctx context.Context, oldsid, sid string) (Store, error)
 	SessionDestroy(ctx context.Context, sid string) error
-	SessionAll(ctx context.Context) int //get all active session
+	SessionAll(ctx context.Context) int // get all active session
 	SessionGC(ctx context.Context)
 }
 
@@ -70,43 +70,21 @@ var provides = make(map[string]Provider)
 var SLogger = NewSessionLog(os.Stderr)
 
 // Register makes a session provide available by the provided name.
-// If Register is called twice with the same name or if driver is nil,
-// it panics.
+// If provider is nil, it panic
 func Register(name string, provide Provider) {
 	if provide == nil {
 		panic("session: Register provide is nil")
 	}
-	if _, dup := provides[name]; dup {
-		panic("session: Register called twice for provider " + name)
-	}
 	provides[name] = provide
 }
 
-//GetProvider
+// GetProvider
 func GetProvider(name string) (Provider, error) {
 	provider, ok := provides[name]
 	if !ok {
 		return nil, fmt.Errorf("session: unknown provide %q (forgotten import?)", name)
 	}
 	return provider, nil
-}
-
-// ManagerConfig define the session config
-type ManagerConfig struct {
-	CookieName              string `json:"cookieName"`
-	EnableSetCookie         bool   `json:"enableSetCookie,omitempty"`
-	Gclifetime              int64  `json:"gclifetime"`
-	Maxlifetime             int64  `json:"maxLifetime"`
-	DisableHTTPOnly         bool   `json:"disableHTTPOnly"`
-	Secure                  bool   `json:"secure"`
-	CookieLifeTime          int    `json:"cookieLifeTime"`
-	ProviderConfig          string `json:"providerConfig"`
-	Domain                  string `json:"domain"`
-	SessionIDLength         int64  `json:"sessionIDLength"`
-	EnableSidInHTTPHeader   bool   `json:"EnableSidInHTTPHeader"`
-	SessionNameInHTTPHeader string `json:"SessionNameInHTTPHeader"`
-	EnableSidInURLQuery     bool   `json:"EnableSidInURLQuery"`
-	SessionIDPrefix         string `json:"sessionIDPrefix"`
 }
 
 // Manager contains Provider and its configuration.
@@ -239,6 +217,7 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 		HttpOnly: !manager.config.DisableHTTPOnly,
 		Secure:   manager.isSecure(r),
 		Domain:   manager.config.Domain,
+		SameSite: manager.config.CookieSameSite,
 	}
 	if manager.config.CookieLifeTime > 0 {
 		cookie.MaxAge = manager.config.CookieLifeTime
@@ -273,12 +252,15 @@ func (manager *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
 	manager.provider.SessionDestroy(nil, sid)
 	if manager.config.EnableSetCookie {
 		expiration := time.Now()
-		cookie = &http.Cookie{Name: manager.config.CookieName,
+		cookie = &http.Cookie{
+			Name:     manager.config.CookieName,
 			Path:     "/",
 			HttpOnly: !manager.config.DisableHTTPOnly,
 			Expires:  expiration,
 			MaxAge:   -1,
-			Domain:   manager.config.Domain}
+			Domain:   manager.config.Domain,
+			SameSite: manager.config.CookieSameSite,
+		}
 
 		http.SetCookie(w, cookie)
 	}
@@ -308,17 +290,19 @@ func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Reque
 
 	cookie, err := r.Cookie(manager.config.CookieName)
 	if err != nil || cookie.Value == "" {
-		//delete old cookie
+		// delete old cookie
 		session, err = manager.provider.SessionRead(nil, sid)
 		if err != nil {
 			return nil, err
 		}
-		cookie = &http.Cookie{Name: manager.config.CookieName,
+		cookie = &http.Cookie{
+			Name:     manager.config.CookieName,
 			Value:    url.QueryEscape(sid),
 			Path:     "/",
 			HttpOnly: !manager.config.DisableHTTPOnly,
 			Secure:   manager.isSecure(r),
 			Domain:   manager.config.Domain,
+			SameSite: manager.config.CookieSameSite,
 		}
 	} else {
 		oldsid, err := url.QueryUnescape(cookie.Value)

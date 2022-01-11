@@ -18,32 +18,40 @@ import (
 	"context"
 	"net/http"
 	"strconv"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/astaxie/beego/client/httplib"
+	"github.com/beego/beego/v2/client/httplib"
 )
 
 type FilterChainBuilder struct {
-	summaryVec prometheus.ObserverVec
 	AppName    string
 	ServerName string
 	RunMode    string
 }
 
-func (builder *FilterChainBuilder) FilterChain(next httplib.Filter) httplib.Filter {
+var (
+	summaryVec     prometheus.ObserverVec
+	initSummaryVec sync.Once
+)
 
-	builder.summaryVec = prometheus.NewSummaryVec(prometheus.SummaryOpts{
-		Name:      "beego",
-		Subsystem: "remote_http_request",
-		ConstLabels: map[string]string{
-			"server":  builder.ServerName,
-			"env":     builder.RunMode,
-			"appname": builder.AppName,
-		},
-		Help: "The statics info for remote http requests",
-	}, []string{"proto", "scheme", "method", "host", "path", "status", "duration", "isError"})
+func (builder *FilterChainBuilder) FilterChain(next httplib.Filter) httplib.Filter {
+	initSummaryVec.Do(func() {
+		summaryVec = prometheus.NewSummaryVec(prometheus.SummaryOpts{
+			Name:      "beego",
+			Subsystem: "remote_http_request",
+			ConstLabels: map[string]string{
+				"server":  builder.ServerName,
+				"env":     builder.RunMode,
+				"appname": builder.AppName,
+			},
+			Help: "The statics info for remote http requests",
+		}, []string{"proto", "scheme", "method", "host", "path", "status", "isError"})
+
+		prometheus.MustRegister(summaryVec)
+	})
 
 	return func(ctx context.Context, req *httplib.BeegoHTTPRequest) (*http.Response, error) {
 		startTime := time.Now()
@@ -72,6 +80,6 @@ func (builder *FilterChainBuilder) report(startTime time.Time, endTime time.Time
 
 	dur := int(endTime.Sub(startTime) / time.Millisecond)
 
-	builder.summaryVec.WithLabelValues(proto, scheme, method, host, path,
-		strconv.Itoa(status), strconv.Itoa(dur), strconv.FormatBool(err == nil))
+	summaryVec.WithLabelValues(proto, scheme, method, host, path,
+		strconv.Itoa(status), strconv.FormatBool(err != nil)).Observe(float64(dur))
 }

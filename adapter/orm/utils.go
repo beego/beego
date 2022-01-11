@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/astaxie/beego/client/orm"
+	"github.com/beego/beego/v2/client/orm"
 )
 
 type fn func(string) string
@@ -195,7 +195,7 @@ func snakeStringWithAcronym(s string) string {
 		}
 		data = append(data, d)
 	}
-	return strings.ToLower(string(data[:]))
+	return strings.ToLower(string(data))
 }
 
 // snake string, XxYy to xx_yy , XxYY to xx_y_y
@@ -213,7 +213,7 @@ func snakeString(s string) string {
 		}
 		data = append(data, d)
 	}
-	return strings.ToLower(string(data[:]))
+	return strings.ToLower(string(data))
 }
 
 // SetNameStrategy set different name strategy
@@ -241,7 +241,7 @@ func camelString(s string) string {
 		}
 		data = append(data, d)
 	}
-	return string(data[:])
+	return string(data)
 }
 
 type argString []string

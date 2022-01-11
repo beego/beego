@@ -20,7 +20,7 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/astaxie/beego/core/logs"
+	"github.com/beego/beego/v2/core/logs"
 )
 
 // BeeAdminApp is the default adminApp used by admin module.
@@ -45,9 +45,7 @@ var beeAdminApp *adminApp
 var FilterMonitorFunc func(string, string, time.Duration, string, int) bool
 
 func init() {
-
 	FilterMonitorFunc = func(string, string, time.Duration, string, int) bool { return true }
-
 }
 
 func list(root string, p interface{}, m M) {
@@ -82,23 +80,15 @@ type adminApp struct {
 	*HttpServer
 }
 
-// Route adds http.HandlerFunc to adminApp with url pattern.
+// Run start Beego admin
 func (admin *adminApp) Run() {
-
-	// if len(task.AdminTaskList) > 0 {
-	// 	task.StartTask()
-	// }
-	logs.Warning("now we don't start tasks here, if you use task module," +
+	logs.Debug("now we don't start tasks here, if you use task module," +
 		" please invoke task.StartTask, or task will not be executed")
-
 	addr := BConfig.Listen.AdminAddr
-
 	if BConfig.Listen.AdminPort != 0 {
 		addr = fmt.Sprintf("%s:%d", BConfig.Listen.AdminAddr, BConfig.Listen.AdminPort)
 	}
-
 	logs.Info("Admin server Running on %s", addr)
-
 	admin.HttpServer.Run(addr)
 }
 
@@ -108,8 +98,11 @@ func registerAdmin() error {
 		c := &adminController{
 			servers: make([]*HttpServer, 0, 2),
 		}
+
+		// copy config to avoid conflict
+		adminCfg := *BConfig
 		beeAdminApp = &adminApp{
-			HttpServer: NewHttpServerWithCfg(BConfig),
+			HttpServer: NewHttpServerWithCfg(&adminCfg),
 		}
 		// keep in mind that all data should be html escaped to avoid XSS attack
 		beeAdminApp.Router("/", c, "get:AdminIndex")

@@ -12,7 +12,7 @@ import (
 	"github.com/ledisdb/ledisdb/config"
 	"github.com/ledisdb/ledisdb/ledis"
 
-	"github.com/astaxie/beego/server/web/session"
+	"github.com/beego/beego/v2/server/web/session"
 )
 
 var (
@@ -186,6 +186,7 @@ func (lp *Provider) SessionGC(context.Context) {
 func (lp *Provider) SessionAll(context.Context) int {
 	return 0
 }
+
 func init() {
 	session.Register("ledis", ledispder)
 }

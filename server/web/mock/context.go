@@ -1,4 +1,4 @@
-// Copyright 2020
+// Copyright 2021 beego
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,23 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package orm
+package mock
 
 import (
-	"github.com/astaxie/beego/client/orm"
+	"net/http"
+
+	beegoCtx "github.com/beego/beego/v2/server/web/context"
 )
 
-type baseQuerySetter struct {
-}
-
-func (b *baseQuerySetter) ForceIndex(indexes ...string) orm.QuerySeter {
-	panic("you should not invoke this method.")
-}
-
-func (b *baseQuerySetter) UseIndex(indexes ...string) orm.QuerySeter {
-	panic("you should not invoke this method.")
-}
-
-func (b *baseQuerySetter) IgnoreIndex(indexes ...string) orm.QuerySeter {
-	panic("you should not invoke this method.")
+func NewMockContext(req *http.Request) (*beegoCtx.Context, *HttpResponse) {
+	ctx := beegoCtx.NewContext()
+	resp := NewMockHttpResponse()
+	ctx.Reset(resp, req)
+	return ctx, resp
 }

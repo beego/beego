@@ -20,7 +20,7 @@ var globalInstance Configer
 
 // InitGlobalInstance will ini the global instance
 // If you want to use specific implementation, don't forget to import it.
-// e.g. _ import "github.com/astaxie/beego/core/config/etcd"
+// e.g. _ import "github.com/beego/beego/v2/core/config/etcd"
 // err := InitGlobalInstance("etcd", "someconfig")
 func InitGlobalInstance(name string, cfg string) error {
 	var err error
@@ -42,15 +42,19 @@ func String(key string) (string, error) {
 func Strings(key string) ([]string, error) {
 	return globalInstance.Strings(key)
 }
+
 func Int(key string) (int, error) {
 	return globalInstance.Int(key)
 }
+
 func Int64(key string) (int64, error) {
 	return globalInstance.Int64(key)
 }
+
 func Bool(key string) (bool, error) {
 	return globalInstance.Bool(key)
 }
+
 func Float(key string) (float64, error) {
 	return globalInstance.Float(key)
 }
@@ -64,15 +68,19 @@ func DefaultString(key string, defaultVal string) string {
 func DefaultStrings(key string, defaultVal []string) []string {
 	return globalInstance.DefaultStrings(key, defaultVal)
 }
+
 func DefaultInt(key string, defaultVal int) int {
 	return globalInstance.DefaultInt(key, defaultVal)
 }
+
 func DefaultInt64(key string, defaultVal int64) int64 {
 	return globalInstance.DefaultInt64(key, defaultVal)
 }
+
 func DefaultBool(key string, defaultVal bool) bool {
 	return globalInstance.DefaultBool(key, defaultVal)
 }
+
 func DefaultFloat(key string, defaultVal float64) float64 {
 	return globalInstance.DefaultFloat(key, defaultVal)
 }
@@ -89,6 +97,7 @@ func GetSection(section string) (map[string]string, error) {
 func Unmarshaler(prefix string, obj interface{}, opt ...DecodeOption) error {
 	return globalInstance.Unmarshaler(prefix, obj, opt...)
 }
+
 func Sub(key string) (Configer, error) {
 	return globalInstance.Sub(key)
 }

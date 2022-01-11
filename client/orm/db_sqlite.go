@@ -15,13 +15,14 @@
 package orm
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"reflect"
 	"strings"
 	"time"
 
-	"github.com/astaxie/beego/client/orm/hints"
+	"github.com/beego/beego/v2/client/orm/hints"
 )
 
 // sqlite operators.
@@ -73,11 +74,11 @@ type dbBaseSqlite struct {
 var _ dbBaser = new(dbBaseSqlite)
 
 // override base db read for update behavior as SQlite does not support syntax
-func (d *dbBaseSqlite) Read(q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location, cols []string, isForUpdate bool) error {
+func (d *dbBaseSqlite) Read(ctx context.Context, q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location, cols []string, isForUpdate bool) error {
 	if isForUpdate {
 		DebugLog.Println("[WARN] SQLite does not support SELECT FOR UPDATE query, isForUpdate param is ignored and always as false to do the work")
 	}
-	return d.dbBase.Read(q, mi, ind, tz, cols, false)
+	return d.dbBase.Read(ctx, q, mi, ind, tz, cols, false)
 }
 
 // get sqlite operator.
@@ -114,9 +115,9 @@ func (d *dbBaseSqlite) ShowTablesQuery() string {
 }
 
 // get columns in sqlite.
-func (d *dbBaseSqlite) GetColumns(db dbQuerier, table string) (map[string][3]string, error) {
+func (d *dbBaseSqlite) GetColumns(ctx context.Context, db dbQuerier, table string) (map[string][3]string, error) {
 	query := d.ins.ShowColumnsQuery(table)
-	rows, err := db.Query(query)
+	rows, err := db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
 	}
@@ -140,9 +141,9 @@ func (d *dbBaseSqlite) ShowColumnsQuery(table string) string {
 }
 
 // check index exist in sqlite.
-func (d *dbBaseSqlite) IndexExists(db dbQuerier, table string, name string) bool {
+func (d *dbBaseSqlite) IndexExists(ctx context.Context, db dbQuerier, table string, name string) bool {
 	query := fmt.Sprintf("PRAGMA index_list('%s')", table)
-	rows, err := db.Query(query)
+	rows, err := db.QueryContext(ctx, query)
 	if err != nil {
 		panic(err)
 	}

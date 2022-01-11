@@ -20,7 +20,6 @@ import (
 )
 
 func TestExpandValueEnv(t *testing.T) {
-
 	testCases := []struct {
 		item string
 		want string
@@ -51,5 +50,4 @@ func TestExpandValueEnv(t *testing.T) {
 			t.Errorf("expand value error, item %q want %q, got %q", c.item, c.want, got)
 		}
 	}
-
 }

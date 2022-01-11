@@ -31,19 +31,16 @@ import (
 
 	"golang.org/x/crypto/acme/autocert"
 
-	"github.com/astaxie/beego/core/logs"
-	beecontext "github.com/astaxie/beego/server/web/context"
-
-	"github.com/astaxie/beego/core/utils"
-	"github.com/astaxie/beego/server/web/grace"
+	"github.com/beego/beego/v2/core/logs"
+	"github.com/beego/beego/v2/core/utils"
+	beecontext "github.com/beego/beego/v2/server/web/context"
+	"github.com/beego/beego/v2/server/web/grace"
 )
 
-var (
-	// BeeApp is an application instance
-	// If you are using single server, you could use this
-	// But if you need multiple servers, do not use this
-	BeeApp *HttpServer
-)
+// BeeApp is an application instance
+// If you are using single server, you could use this
+// But if you need multiple servers, do not use this
+var BeeApp *HttpServer
 
 func init() {
 	// create beego application
@@ -81,10 +78,11 @@ type MiddleWare func(http.Handler) http.Handler
 
 // Run beego application.
 func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
-
 	initBeforeHTTPRun()
 
+	// init...
 	app.initAddr(addr)
+	app.Handlers.Init()
 
 	addr = app.Cfg.Listen.HTTPAddr
 
@@ -233,7 +231,6 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 				endRunning <- true
 			}
 		}()
-
 	}
 	if app.Cfg.Listen.EnableHTTP {
 		go func() {
@@ -267,7 +264,11 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 
 // Router see HttpServer.Router
 func Router(rootpath string, c ControllerInterface, mappingMethods ...string) *HttpServer {
-	return BeeApp.Router(rootpath, c, mappingMethods...)
+	return RouterWithOpts(rootpath, c, WithRouterMethods(c, mappingMethods...))
+}
+
+func RouterWithOpts(rootpath string, c ControllerInterface, opts ...ControllerOption) *HttpServer {
+	return BeeApp.RouterWithOpts(rootpath, c, opts...)
 }
 
 // Router adds a patterned controller handler to BeeApp.
@@ -287,7 +288,11 @@ func Router(rootpath string, c ControllerInterface, mappingMethods ...string) *H
 //  beego.Router("/api/update",&RestController{},"put:UpdateFood")
 //  beego.Router("/api/delete",&RestController{},"delete:DeleteFood")
 func (app *HttpServer) Router(rootPath string, c ControllerInterface, mappingMethods ...string) *HttpServer {
-	app.Handlers.Add(rootPath, c, mappingMethods...)
+	return app.RouterWithOpts(rootPath, c, WithRouterMethods(c, mappingMethods...))
+}
+
+func (app *HttpServer) RouterWithOpts(rootPath string, c ControllerInterface, opts ...ControllerOption) *HttpServer {
+	app.Handlers.Add(rootPath, c, opts...)
 	return app
 }
 
@@ -432,7 +437,7 @@ func AutoRouter(c ControllerInterface) *HttpServer {
 
 // AutoRouter adds defined controller handler to BeeApp.
 // it's same to HttpServer.AutoRouter.
-// if beego.AddAuto(&MainContorlller{}) and MainController has methods List and Page,
+// if beego.AddAuto(&MainController{}) and MainController has methods List and Page,
 // visit the url /main/list to exec List function or /main/page to exec Page function.
 func (app *HttpServer) AutoRouter(c ControllerInterface) *HttpServer {
 	app.Handlers.AddAuto(c)
@@ -446,15 +451,175 @@ func AutoPrefix(prefix string, c ControllerInterface) *HttpServer {
 
 // AutoPrefix adds controller handler to BeeApp with prefix.
 // it's same to HttpServer.AutoRouterWithPrefix.
-// if beego.AutoPrefix("/admin",&MainContorlller{}) and MainController has methods List and Page,
+// if beego.AutoPrefix("/admin",&MainController{}) and MainController has methods List and Page,
 // visit the url /admin/main/list to exec List function or /admin/main/page to exec Page function.
 func (app *HttpServer) AutoPrefix(prefix string, c ControllerInterface) *HttpServer {
 	app.Handlers.AddAutoPrefix(prefix, c)
 	return app
 }
 
+// CtrlGet see HttpServer.CtrlGet
+func CtrlGet(rootpath string, f interface{}) {
+	BeeApp.CtrlGet(rootpath, f)
+}
+
+// CtrlGet used to register router for CtrlGet method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    CtrlGet("/api/:id", MyController.Ping)
+func (app *HttpServer) CtrlGet(rootpath string, f interface{}) *HttpServer {
+	app.Handlers.CtrlGet(rootpath, f)
+	return app
+}
+
+// CtrlPost see HttpServer.CtrlGet
+func CtrlPost(rootpath string, f interface{}) {
+	BeeApp.CtrlPost(rootpath, f)
+}
+
+// CtrlPost used to register router for CtrlPost method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    CtrlPost("/api/:id", MyController.Ping)
+func (app *HttpServer) CtrlPost(rootpath string, f interface{}) *HttpServer {
+	app.Handlers.CtrlPost(rootpath, f)
+	return app
+}
+
+// CtrlHead see HttpServer.CtrlHead
+func CtrlHead(rootpath string, f interface{}) {
+	BeeApp.CtrlHead(rootpath, f)
+}
+
+// CtrlHead used to register router for CtrlHead method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    CtrlHead("/api/:id", MyController.Ping)
+func (app *HttpServer) CtrlHead(rootpath string, f interface{}) *HttpServer {
+	app.Handlers.CtrlHead(rootpath, f)
+	return app
+}
+
+// CtrlPut see HttpServer.CtrlPut
+func CtrlPut(rootpath string, f interface{}) {
+	BeeApp.CtrlPut(rootpath, f)
+}
+
+// CtrlPut used to register router for CtrlPut method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    CtrlPut("/api/:id", MyController.Ping)
+func (app *HttpServer) CtrlPut(rootpath string, f interface{}) *HttpServer {
+	app.Handlers.CtrlPut(rootpath, f)
+	return app
+}
+
+// CtrlPatch see HttpServer.CtrlPatch
+func CtrlPatch(rootpath string, f interface{}) {
+	BeeApp.CtrlPatch(rootpath, f)
+}
+
+// CtrlPatch used to register router for CtrlPatch method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    CtrlPatch("/api/:id", MyController.Ping)
+func (app *HttpServer) CtrlPatch(rootpath string, f interface{}) *HttpServer {
+	app.Handlers.CtrlPatch(rootpath, f)
+	return app
+}
+
+// CtrlDelete see HttpServer.CtrlDelete
+func CtrlDelete(rootpath string, f interface{}) {
+	BeeApp.CtrlDelete(rootpath, f)
+}
+
+// CtrlDelete used to register router for CtrlDelete method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    CtrlDelete("/api/:id", MyController.Ping)
+func (app *HttpServer) CtrlDelete(rootpath string, f interface{}) *HttpServer {
+	app.Handlers.CtrlDelete(rootpath, f)
+	return app
+}
+
+// CtrlOptions see HttpServer.CtrlOptions
+func CtrlOptions(rootpath string, f interface{}) {
+	BeeApp.CtrlOptions(rootpath, f)
+}
+
+// CtrlOptions used to register router for CtrlOptions method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    CtrlOptions("/api/:id", MyController.Ping)
+func (app *HttpServer) CtrlOptions(rootpath string, f interface{}) *HttpServer {
+	app.Handlers.CtrlOptions(rootpath, f)
+	return app
+}
+
+// CtrlAny see HttpServer.CtrlAny
+func CtrlAny(rootpath string, f interface{}) {
+	BeeApp.CtrlAny(rootpath, f)
+}
+
+// CtrlAny used to register router for CtrlAny method
+// usage:
+//    type MyController struct {
+//	     web.Controller
+//    }
+//    func (m MyController) Ping() {
+//	     m.Ctx.Output.Body([]byte("hello world"))
+//    }
+//
+//    CtrlAny("/api/:id", MyController.Ping)
+func (app *HttpServer) CtrlAny(rootpath string, f interface{}) *HttpServer {
+	app.Handlers.CtrlAny(rootpath, f)
+	return app
+}
+
 // Get see HttpServer.Get
-func Get(rootpath string, f FilterFunc) *HttpServer {
+func Get(rootpath string, f HandleFunc) *HttpServer {
 	return BeeApp.Get(rootpath, f)
 }
 
@@ -463,13 +628,13 @@ func Get(rootpath string, f FilterFunc) *HttpServer {
 //    beego.Get("/", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (app *HttpServer) Get(rootpath string, f FilterFunc) *HttpServer {
+func (app *HttpServer) Get(rootpath string, f HandleFunc) *HttpServer {
 	app.Handlers.Get(rootpath, f)
 	return app
 }
 
 // Post see HttpServer.Post
-func Post(rootpath string, f FilterFunc) *HttpServer {
+func Post(rootpath string, f HandleFunc) *HttpServer {
 	return BeeApp.Post(rootpath, f)
 }
 
@@ -478,13 +643,13 @@ func Post(rootpath string, f FilterFunc) *HttpServer {
 //    beego.Post("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (app *HttpServer) Post(rootpath string, f FilterFunc) *HttpServer {
+func (app *HttpServer) Post(rootpath string, f HandleFunc) *HttpServer {
 	app.Handlers.Post(rootpath, f)
 	return app
 }
 
 // Delete see HttpServer.Delete
-func Delete(rootpath string, f FilterFunc) *HttpServer {
+func Delete(rootpath string, f HandleFunc) *HttpServer {
 	return BeeApp.Delete(rootpath, f)
 }
 
@@ -493,13 +658,13 @@ func Delete(rootpath string, f FilterFunc) *HttpServer {
 //    beego.Delete("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (app *HttpServer) Delete(rootpath string, f FilterFunc) *HttpServer {
+func (app *HttpServer) Delete(rootpath string, f HandleFunc) *HttpServer {
 	app.Handlers.Delete(rootpath, f)
 	return app
 }
 
 // Put see HttpServer.Put
-func Put(rootpath string, f FilterFunc) *HttpServer {
+func Put(rootpath string, f HandleFunc) *HttpServer {
 	return BeeApp.Put(rootpath, f)
 }
 
@@ -508,13 +673,13 @@ func Put(rootpath string, f FilterFunc) *HttpServer {
 //    beego.Put("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (app *HttpServer) Put(rootpath string, f FilterFunc) *HttpServer {
+func (app *HttpServer) Put(rootpath string, f HandleFunc) *HttpServer {
 	app.Handlers.Put(rootpath, f)
 	return app
 }
 
 // Head see HttpServer.Head
-func Head(rootpath string, f FilterFunc) *HttpServer {
+func Head(rootpath string, f HandleFunc) *HttpServer {
 	return BeeApp.Head(rootpath, f)
 }
 
@@ -523,13 +688,13 @@ func Head(rootpath string, f FilterFunc) *HttpServer {
 //    beego.Head("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (app *HttpServer) Head(rootpath string, f FilterFunc) *HttpServer {
+func (app *HttpServer) Head(rootpath string, f HandleFunc) *HttpServer {
 	app.Handlers.Head(rootpath, f)
 	return app
 }
 
 // Options see HttpServer.Options
-func Options(rootpath string, f FilterFunc) *HttpServer {
+func Options(rootpath string, f HandleFunc) *HttpServer {
 	BeeApp.Handlers.Options(rootpath, f)
 	return BeeApp
 }
@@ -539,13 +704,13 @@ func Options(rootpath string, f FilterFunc) *HttpServer {
 //    beego.Options("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (app *HttpServer) Options(rootpath string, f FilterFunc) *HttpServer {
+func (app *HttpServer) Options(rootpath string, f HandleFunc) *HttpServer {
 	app.Handlers.Options(rootpath, f)
 	return app
 }
 
 // Patch see HttpServer.Patch
-func Patch(rootpath string, f FilterFunc) *HttpServer {
+func Patch(rootpath string, f HandleFunc) *HttpServer {
 	return BeeApp.Patch(rootpath, f)
 }
 
@@ -554,13 +719,13 @@ func Patch(rootpath string, f FilterFunc) *HttpServer {
 //    beego.Patch("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (app *HttpServer) Patch(rootpath string, f FilterFunc) *HttpServer {
+func (app *HttpServer) Patch(rootpath string, f HandleFunc) *HttpServer {
 	app.Handlers.Patch(rootpath, f)
 	return app
 }
 
 // Any see HttpServer.Any
-func Any(rootpath string, f FilterFunc) *HttpServer {
+func Any(rootpath string, f HandleFunc) *HttpServer {
 	return BeeApp.Any(rootpath, f)
 }
 
@@ -569,7 +734,7 @@ func Any(rootpath string, f FilterFunc) *HttpServer {
 //    beego.Any("/api", func(ctx *context.Context){
 //          ctx.Output.Body("hello world")
 //    })
-func (app *HttpServer) Any(rootpath string, f FilterFunc) *HttpServer {
+func (app *HttpServer) Any(rootpath string, f HandleFunc) *HttpServer {
 	app.Handlers.Any(rootpath, f)
 	return app
 }
@@ -695,21 +860,21 @@ func printTree(resultList *[][]string, t *Tree) {
 	for _, l := range t.leaves {
 		if v, ok := l.runObject.(*ControllerInfo); ok {
 			if v.routerType == routerTypeBeego {
-				var result = []string{
+				result := []string{
 					template.HTMLEscapeString(v.pattern),
 					template.HTMLEscapeString(fmt.Sprintf("%s", v.methods)),
 					template.HTMLEscapeString(v.controllerType.String()),
 				}
 				*resultList = append(*resultList, result)
 			} else if v.routerType == routerTypeRESTFul {
-				var result = []string{
+				result := []string{
 					template.HTMLEscapeString(v.pattern),
 					template.HTMLEscapeString(fmt.Sprintf("%s", v.methods)),
 					"",
 				}
 				*resultList = append(*resultList, result)
 			} else if v.routerType == routerTypeHandler {
-				var result = []string{
+				result := []string{
 					template.HTMLEscapeString(v.pattern),
 					"",
 					"",
@@ -735,7 +900,7 @@ func (app *HttpServer) reportFilter() M {
 			if bf := app.Handlers.filters[k]; len(bf) > 0 {
 				resultList := new([][]string)
 				for _, f := range bf {
-					var result = []string{
+					result := []string{
 						// void xss
 						template.HTMLEscapeString(f.pattern),
 						template.HTMLEscapeString(utils.GetFuncName(f.filterFunc)),

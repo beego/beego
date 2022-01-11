@@ -18,10 +18,9 @@ import (
 	"mime/multipart"
 	"net/url"
 
-	"github.com/astaxie/beego/adapter/session"
-	webContext "github.com/astaxie/beego/server/web/context"
-
-	"github.com/astaxie/beego/server/web"
+	"github.com/beego/beego/v2/adapter/session"
+	"github.com/beego/beego/v2/server/web"
+	webContext "github.com/beego/beego/v2/server/web/context"
 )
 
 var (
@@ -49,9 +48,11 @@ type ControllerCommentsSlice web.ControllerCommentsSlice
 func (p ControllerCommentsSlice) Len() int {
 	return (web.ControllerCommentsSlice)(p).Len()
 }
+
 func (p ControllerCommentsSlice) Less(i, j int) bool {
 	return (web.ControllerCommentsSlice)(p).Less(i, j)
 }
+
 func (p ControllerCommentsSlice) Swap(i, j int) {
 	(web.ControllerCommentsSlice)(p).Swap(i, j)
 }
@@ -212,7 +213,7 @@ func (c *Controller) ServeFormatted(encoding ...bool) {
 
 // Input returns the input data map from POST or PUT request body and query string.
 func (c *Controller) Input() url.Values {
-	val, _ :=  (*web.Controller)(c).Input()
+	val, _ := (*web.Controller)(c).Input()
 	return val
 }
 

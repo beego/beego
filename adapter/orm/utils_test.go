@@ -16,6 +16,8 @@ package orm
 
 import (
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestCamelString(t *testing.T) {
@@ -29,9 +31,7 @@ func TestCamelString(t *testing.T) {
 
 	for _, v := range snake {
 		res := camelString(v)
-		if res != answer[v] {
-			t.Error("Unit Test Fail:", v, res, answer[v])
-		}
+		assert.Equal(t, answer[v], res)
 	}
 }
 
@@ -46,9 +46,7 @@ func TestSnakeString(t *testing.T) {
 
 	for _, v := range camel {
 		res := snakeString(v)
-		if res != answer[v] {
-			t.Error("Unit Test Fail:", v, res, answer[v])
-		}
+		assert.Equal(t, answer[v], res)
 	}
 }
 
@@ -63,8 +61,6 @@ func TestSnakeStringWithAcronym(t *testing.T) {
 
 	for _, v := range camel {
 		res := snakeStringWithAcronym(v)
-		if res != answer[v] {
-			t.Error("Unit Test Fail:", v, res, answer[v])
-		}
+		assert.Equal(t, answer[v], res)
 	}
 }

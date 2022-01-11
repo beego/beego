@@ -16,10 +16,11 @@ package web
 
 import (
 	"fmt"
+	"html/template"
 	"sync"
 	"time"
 
-	"github.com/astaxie/beego/core/utils"
+	"github.com/beego/beego/v2/core/utils"
 )
 
 // Statistics struct
@@ -35,7 +36,7 @@ type Statistics struct {
 // URLMap contains several statistics struct to log different data
 type URLMap struct {
 	lock        sync.RWMutex
-	LengthLimit int //limit the urlmap's length if it's equal to 0 there's no limit
+	LengthLimit int // limit the urlmap's length if it's equal to 0 there's no limit
 	urlmap      map[string]map[string]*Statistics
 }
 
@@ -65,7 +66,6 @@ func (m *URLMap) AddStatistics(requestMethod, requestURL, requestController stri
 			}
 			m.urlmap[requestURL][requestMethod] = nb
 		}
-
 	} else {
 		if m.LengthLimit > 0 && m.LengthLimit <= len(m.urlmap) {
 			return
@@ -89,7 +89,7 @@ func (m *URLMap) GetMap() map[string]interface{} {
 	m.lock.RLock()
 	defer m.lock.RUnlock()
 
-	var fields = []string{"requestUrl", "method", "times", "used", "max used", "min used", "avg used"}
+	fields := []string{"requestUrl", "method", "times", "used", "max used", "min used", "avg used"}
 
 	var resultLists [][]string
 	content := make(map[string]interface{})
@@ -98,7 +98,7 @@ func (m *URLMap) GetMap() map[string]interface{} {
 	for k, v := range m.urlmap {
 		for kk, vv := range v {
 			result := []string{
-				fmt.Sprintf("% -50s", k),
+				fmt.Sprintf("% -50s", template.HTMLEscapeString(k)),
 				fmt.Sprintf("% -10s", kk),
 				fmt.Sprintf("% -16d", vv.RequestNum),
 				fmt.Sprintf("%d", vv.TotalTime),

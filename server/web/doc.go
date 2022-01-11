@@ -6,12 +6,12 @@ It is used for rapid development of RESTful APIs, web apps and backend services 
 beego is inspired by Tornado, Sinatra and Flask with the added benefit of some Go-specific features such as interfaces and struct embedding.
 
 	package main
-	import "github.com/astaxie/beego"
+	import "github.com/beego/beego/v2"
 
 	func main() {
 	 beego.Run()
 	}
 
-more information: http://beego.me
+more information: http://beego.vip
 */
 package web

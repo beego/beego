@@ -21,11 +21,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/astaxie/beego/core/config"
+	"github.com/beego/beego/v2/core/config"
 )
 
 func TestYaml(t *testing.T) {
-
 	var (
 		yamlcontext = `
 "appname": beeapi
@@ -59,6 +58,7 @@ func TestYaml(t *testing.T) {
 			"emptystrings":    []string{},
 		}
 	)
+
 	f, err := os.Create("testyaml.conf")
 	if err != nil {
 		t.Fatal(err)
@@ -70,10 +70,27 @@ func TestYaml(t *testing.T) {
 	}
 	f.Close()
 	defer os.Remove("testyaml.conf")
+
 	yamlconf, err := config.NewConfig("yaml", "testyaml.conf")
 	if err != nil {
 		t.Fatal(err)
 	}
+
+	m, err := ReadYmlReader("testyaml.conf")
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, m, yamlconf.(*ConfigContainer).data)
+
+	shadow, err := (&Config{}).ParseData([]byte(yamlcontext))
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, shadow, yamlconf)
+
+	yamlconf.OnChange("abc", func(value string) {
+		fmt.Printf("on change, value is %s \n", value)
+	})
 
 	res, _ := yamlconf.String("appname")
 	if res != "beeapi" {
@@ -104,7 +121,7 @@ func TestYaml(t *testing.T) {
 			value, err = yamlconf.DIY(k)
 		}
 		if err != nil {
-			t.Errorf("get key %q value fatal,%v err %s", k, v, err)
+			t.Errorf("get key %q value fatal, %v err %s", k, v, err)
 		} else if fmt.Sprintf("%v", v) != fmt.Sprintf("%v", value) {
 			t.Errorf("get key %q value, want %v got %v .", k, v, value)
 		}
@@ -120,7 +137,9 @@ func TestYaml(t *testing.T) {
 	}
 
 	sub, err := yamlconf.Sub("user")
-	assert.Nil(t, err)
+	if err != nil {
+		t.Fatal(err)
+	}
 	assert.NotNil(t, sub)
 	name, err := sub.String("name")
 	assert.Nil(t, err)
@@ -143,6 +162,38 @@ func TestYaml(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, "tom", user.Name)
 	assert.Equal(t, 13, user.Age)
+
+	// default value
+	assert.Equal(t, "beeapi", yamlconf.DefaultString("appname", "invalid"))
+	assert.Equal(t, "invalid", yamlconf.DefaultString("i-appname", "invalid"))
+	assert.Equal(t, 8080, yamlconf.DefaultInt("httpport", 8090))
+	assert.Equal(t, 8090, yamlconf.DefaultInt("i-httpport", 8090))
+	assert.Equal(t, 3.1415976, yamlconf.DefaultFloat("PI", 3.14))
+	assert.Equal(t, 3.14, yamlconf.DefaultFloat("1-PI", 3.14))
+	assert.True(t, yamlconf.DefaultBool("copyrequestbody", false))
+	assert.True(t, yamlconf.DefaultBool("i-copyrequestbody", true))
+	assert.Equal(t, int64(8080), yamlconf.DefaultInt64("httpport", 8090))
+	assert.Equal(t, int64(8090), yamlconf.DefaultInt64("i-httpport", 8090))
+	assert.Equal(t, "tom", yamlconf.DefaultString("user.name", "invalid"))
+	assert.Equal(t, "invalid", yamlconf.DefaultString("user.1-name", "invalid"))
+	assert.Equal(t, []string{"tom"}, yamlconf.DefaultStrings("strings", []string{"tom"}))
+
+	appName, err := yamlconf.DIY("appname")
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, "beeapi", appName)
+
+	err = yamlconf.SaveConfigFile(f.Name())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	section, err := yamlconf.GetSection("user")
+	if err != nil {
+		t.Fatal(err)
+	}
+	assert.Equal(t, "tom", section["name"])
 }
 
 type User struct {

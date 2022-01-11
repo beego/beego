@@ -16,13 +16,13 @@
 //
 // Simple Usage:
 //	import(
-//		"github.com/astaxie/beego"
-//		"github.com/astaxie/beego/plugins/apiauth"
+//		"github.com/beego/beego/v2"
+//		"github.com/beego/beego/v2/server/web/filter/apiauth"
 //	)
 //
 //	func main(){
 //		// apiauth every request
-//		beego.InsertFilter("*", beego.BeforeRouter,apiauth.APIBaiscAuth("appid","appkey"))
+//		beego.InsertFilter("*", beego.BeforeRouter,apiauth.APIBasicAuth("appid","appkey"))
 //		beego.Run()
 //	}
 //
@@ -65,8 +65,8 @@ import (
 	"sort"
 	"time"
 
-	"github.com/astaxie/beego/server/web"
-	"github.com/astaxie/beego/server/web/context"
+	"github.com/beego/beego/v2/server/web"
+	"github.com/beego/beego/v2/server/web/context"
 )
 
 // AppIDToAppSecret gets appsecret through appid

@@ -33,8 +33,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/astaxie/beego/client/orm"
-	"github.com/astaxie/beego/core/logs"
+	"github.com/beego/beego/v2/client/orm"
+	"github.com/beego/beego/v2/core/logs"
 )
 
 // const the data format for the bee generate migration datatype
@@ -52,7 +52,7 @@ type Migrationer interface {
 	GetCreated() int64
 }
 
-//Migration defines the migrations by either SQL or DDL
+// Migration defines the migrations by either SQL or DDL
 type Migration struct {
 	sqls           []string
 	Created        string
@@ -72,9 +72,7 @@ type Migration struct {
 	RemoveForeigns []*Foreign
 }
 
-var (
-	migrationMap map[string]Migrationer
-)
+var migrationMap map[string]Migrationer
 
 func init() {
 	migrationMap = make(map[string]Migrationer)
@@ -82,7 +80,6 @@ func init() {
 
 // Up implement in the Inheritance struct for upgrade
 func (m *Migration) Up() {
-
 	switch m.ModifyType {
 	case "reverse":
 		m.ModifyType = "alter"
@@ -94,7 +91,6 @@ func (m *Migration) Up() {
 
 // Down implement in the Inheritance struct for down
 func (m *Migration) Down() {
-
 	switch m.ModifyType {
 	case "alter":
 		m.ModifyType = "reverse"
@@ -104,7 +100,7 @@ func (m *Migration) Down() {
 	m.sqls = append(m.sqls, m.GetSQL())
 }
 
-//Migrate adds the SQL to the execution list
+// Migrate adds the SQL to the execution list
 func (m *Migration) Migrate(migrationType string) {
 	m.ModifyType = migrationType
 	m.sqls = append(m.sqls, m.GetSQL())
@@ -311,6 +307,7 @@ func isRollBack(name string) bool {
 	}
 	return false
 }
+
 func getAllMigrations() (map[string]string, error) {
 	o := orm.NewOrm()
 	var maps []orm.Params

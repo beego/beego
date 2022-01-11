@@ -15,11 +15,11 @@
 // Package context provide the context utils
 // Usage:
 //
-//	import "github.com/astaxie/beego/context"
+//	import "github.com/beego/beego/v2/server/web/context"
 //
 //	ctx := context.Context{Request:req,ResponseWriter:rw}
 //
-//  more docs http://beego.me/docs/module/context.md
+//  more docs http://beego.vip/docs/module/context.md
 package context
 
 import (
@@ -27,7 +27,7 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/astaxie/beego/server/web/context"
+	"github.com/beego/beego/v2/server/web/context"
 )
 
 // commonly used mime-types

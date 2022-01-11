@@ -20,8 +20,8 @@
 //
 // Usage:
 // import(
-//   _ "github.com/astaxie/beego/session/memcache"
-//   "github.com/astaxie/beego/session"
+//   _ "github.com/beego/beego/v2/server/web/session/memcache"
+//   "github.com/beego/beego/v2/server/web/session"
 // )
 //
 //	func init() {
@@ -29,16 +29,15 @@
 //		go globalSessions.GC()
 //	}
 //
-// more docs: http://beego.me/docs/module/session.md
+// more docs: http://beego.vip/docs/module/session.md
 package memcache
 
 import (
 	"context"
 	"net/http"
 
-	"github.com/astaxie/beego/adapter/session"
-
-	beemem "github.com/astaxie/beego/server/web/session/memcache"
+	"github.com/beego/beego/v2/adapter/session"
+	beemem "github.com/beego/beego/v2/server/web/session/memcache"
 )
 
 // SessionStore memcache session store

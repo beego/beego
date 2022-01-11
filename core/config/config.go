@@ -14,7 +14,7 @@
 
 // Package config is used to parse config.
 // Usage:
-//  import "github.com/astaxie/beego/config"
+//  import "github.com/beego/beego/v2/core/config"
 // Examples.
 //
 //  cnf, err := config.NewConfig("ini", "config.conf")
@@ -37,7 +37,7 @@
 //  cnf.DIY(key string) (interface{}, error)
 //  cnf.GetSection(section string) (map[string]string, error)
 //  cnf.SaveConfigFile(filename string) error
-// More docs http://beego.me/docs/module/config.md
+// More docs http://beego.vip/docs/module/config.md
 package config
 
 import (
@@ -165,6 +165,7 @@ func (c *BaseConfiger) DefaultBool(key string, defaultVal bool) bool {
 	}
 	return defaultVal
 }
+
 func (c *BaseConfiger) DefaultFloat(key string, defaultVal float64) float64 {
 	if res, err := c.Float(key); err == nil {
 		return res
@@ -186,11 +187,11 @@ func (c *BaseConfiger) Strings(key string) ([]string, error) {
 	return strings.Split(res, ";"), nil
 }
 
-func (c *BaseConfiger) Sub(key string) (Configer, error) {
+func (*BaseConfiger) Sub(string) (Configer, error) {
 	return nil, errors.New("unsupported operation")
 }
 
-func (c *BaseConfiger) OnChange(key string, fn func(value string)) {
+func (*BaseConfiger) OnChange(_ string, _ func(value string)) {
 	// do nothing
 }
 
@@ -248,6 +249,12 @@ func ExpandValueEnvForMap(m map[string]interface{}) map[string]interface{} {
 				value[k2] = ExpandValueEnv(v2)
 			}
 			m[k] = value
+		case map[interface{}]interface{}:
+			tmp := make(map[string]interface{}, len(value))
+			for k2, v2 := range value {
+				tmp[k2.(string)] = v2
+			}
+			m[k] = ExpandValueEnvForMap(tmp)
 		}
 	}
 	return m
@@ -370,5 +377,4 @@ func ToString(x interface{}) string {
 
 type DecodeOption func(options decodeOptions)
 
-type decodeOptions struct {
-}
+type decodeOptions struct{}

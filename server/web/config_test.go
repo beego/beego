@@ -19,7 +19,7 @@ import (
 	"reflect"
 	"testing"
 
-	beeJson "github.com/astaxie/beego/core/config/json"
+	beeJson "github.com/beego/beego/v2/core/config/json"
 )
 
 func TestDefaults(t *testing.T) {
@@ -30,6 +30,10 @@ func TestDefaults(t *testing.T) {
 	if BConfig.WebConfig.FlashSeparator != "BEEGOFLASH" {
 		t.Errorf("FlashName was not set to default.")
 	}
+}
+
+func TestLoadAppConfig(t *testing.T) {
+	println(1 << 30)
 }
 
 func TestAssignConfig_01(t *testing.T) {
@@ -105,7 +109,6 @@ func TestAssignConfig_02(t *testing.T) {
 		t.Log(_BConfig.Log.FileLineNum)
 		t.FailNow()
 	}
-
 }
 
 func TestAssignConfig_03(t *testing.T) {

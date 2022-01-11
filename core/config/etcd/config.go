@@ -20,14 +20,14 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/coreos/etcd/clientv3"
 	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/mitchellh/mapstructure"
 	"github.com/pkg/errors"
+	clientv3 "go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc"
 
-	"github.com/astaxie/beego/core/config"
-	"github.com/astaxie/beego/core/logs"
+	"github.com/beego/beego/v2/core/config"
+	"github.com/beego/beego/v2/core/logs"
 )
 
 type EtcdConfiger struct {
@@ -119,7 +119,6 @@ func (e *EtcdConfiger) Sub(key string) (config.Configer, error) {
 
 // TODO remove this before release v2.0.0
 func (e *EtcdConfiger) OnChange(key string, fn func(value string)) {
-
 	buildOptsFunc := func() []clientv3.OpOption {
 		return []clientv3.OpOption{}
 	}
@@ -144,11 +143,9 @@ func (e *EtcdConfiger) OnChange(key string, fn func(value string)) {
 			rch = e.client.Watch(context.Background(), e.prefix+key, buildOptsFunc()...)
 		}
 	}()
-
 }
 
-type EtcdConfigerProvider struct {
-}
+type EtcdConfigerProvider struct{}
 
 // Parse = ParseData([]byte(key))
 // key must be json

@@ -15,7 +15,7 @@
 // Package logs provide a general log interface
 // Usage:
 //
-// import "github.com/astaxie/beego/logs"
+// import "github.com/beego/beego/v2/core/logs"
 //
 //	log := NewLogger(10000)
 //	log.SetLogger("console", "")
@@ -30,14 +30,14 @@
 //	log.Debug("debug")
 //	log.Critical("critical")
 //
-//  more docs http://beego.me/docs/module/logs.md
+//  more docs http://beego.vip/docs/module/logs.md
 package logs
 
 import (
 	"log"
 	"time"
 
-	"github.com/astaxie/beego/core/logs"
+	"github.com/beego/beego/v2/core/logs"
 )
 
 // RFC5424 log message levels.

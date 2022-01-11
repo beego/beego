@@ -16,7 +16,7 @@
 // Usage:
 //
 // import(
-//   "github.com/astaxie/beego/cache"
+//   "github.com/beego/beego/v2/client/cache"
 // )
 //
 // bm, err := cache.NewCache("memory", `{"interval":60}`)
@@ -28,7 +28,7 @@
 //	bm.IsExist("astaxie")
 //	bm.Delete("astaxie")
 //
-//  more docs http://beego.me/docs/module/cache.md
+//  more docs http://beego.vip/docs/module/cache.md
 package cache
 
 import (

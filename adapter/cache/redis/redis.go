@@ -20,24 +20,22 @@
 //
 // Usage:
 // import(
-//   _ "github.com/astaxie/beego/cache/redis"
-//   "github.com/astaxie/beego/cache"
+//   _ "github.com/beego/beego/v2/client/cache/redis"
+//   "github.com/beego/beego/v2/client/cache"
 // )
 //
 //  bm, err := cache.NewCache("redis", `{"conn":"127.0.0.1:11211"}`)
 //
-//  more docs http://beego.me/docs/module/cache.md
+//  more docs http://beego.vip/docs/module/cache.md
 package redis
 
 import (
-	"github.com/astaxie/beego/adapter/cache"
-	redis2 "github.com/astaxie/beego/client/cache/redis"
+	"github.com/beego/beego/v2/adapter/cache"
+	redis2 "github.com/beego/beego/v2/client/cache/redis"
 )
 
-var (
-	// DefaultKey the collection name of redis for cache adapter.
-	DefaultKey = "beecacheRedis"
-)
+// DefaultKey the collection name of redis for cache adapter.
+var DefaultKey = "beecacheRedis"
 
 // NewRedisCache create new redis cache with default collection name.
 func NewRedisCache() cache.Cache {

@@ -20,8 +20,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/coreos/etcd/clientv3"
 	"github.com/stretchr/testify/assert"
+	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 func TestEtcdConfigerProvider_Parse(t *testing.T) {
@@ -32,7 +32,6 @@ func TestEtcdConfigerProvider_Parse(t *testing.T) {
 }
 
 func TestEtcdConfiger(t *testing.T) {
-
 	provider := &EtcdConfigerProvider{}
 	cfger, _ := provider.Parse(readEtcdConfig())
 

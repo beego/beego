@@ -15,11 +15,11 @@
 package config
 
 import (
-	"github.com/astaxie/beego/core/config"
+	"github.com/beego/beego/v2/core/config"
 )
 
 // NewFakeConfig return a fake Configer
 func NewFakeConfig() Configer {
-	new := config.NewFakeConfig()
-	return &newToOldConfigerAdapter{delegate: new}
+	config := config.NewFakeConfig()
+	return &newToOldConfigerAdapter{delegate: config}
 }

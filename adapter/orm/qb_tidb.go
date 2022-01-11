@@ -15,7 +15,7 @@
 package orm
 
 import (
-	"github.com/astaxie/beego/client/orm"
+	"github.com/beego/beego/v2/client/orm"
 )
 
 // TiDBQueryBuilder is the SQL build

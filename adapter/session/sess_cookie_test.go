@@ -22,6 +22,8 @@ import (
 	"testing"
 )
 
+const setCookieKey = "Set-Cookie"
+
 func TestCookie(t *testing.T) {
 	config := `{"cookieName":"gosessionid","enableSetCookie":false,"gclifetime":3600,"ProviderConfig":"{\"cookieName\":\"gosessionid\",\"securityKey\":\"beegocookiehashkey\"}"}`
 	conf := new(ManagerConfig)
@@ -46,7 +48,8 @@ func TestCookie(t *testing.T) {
 		t.Fatal("get username error")
 	}
 	sess.SessionRelease(w)
-	if cookiestr := w.Header().Get("Set-Cookie"); cookiestr == "" {
+
+	if cookiestr := w.Header().Get(setCookieKey); cookiestr == "" {
 		t.Fatal("setcookie error")
 	} else {
 		parts := strings.Split(strings.TrimSpace(cookiestr), ";")
@@ -79,7 +82,7 @@ func TestDestorySessionCookie(t *testing.T) {
 
 	// request again ,will get same sesssion id .
 	r1, _ := http.NewRequest("GET", "/", nil)
-	r1.Header.Set("Cookie", w.Header().Get("Set-Cookie"))
+	r1.Header.Set("Cookie", w.Header().Get(setCookieKey))
 	w = httptest.NewRecorder()
 	newSession, err := globalSessions.SessionStart(w, r1)
 	if err != nil {
@@ -92,7 +95,7 @@ func TestDestorySessionCookie(t *testing.T) {
 	// After destroy session , will get a new session id .
 	globalSessions.SessionDestroy(w, r1)
 	r2, _ := http.NewRequest("GET", "/", nil)
-	r2.Header.Set("Cookie", w.Header().Get("Set-Cookie"))
+	r2.Header.Set("Cookie", w.Header().Get(setCookieKey))
 
 	w = httptest.NewRecorder()
 	newSession, err = globalSessions.SessionStart(w, r2)

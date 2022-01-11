@@ -15,6 +15,7 @@
 package orm
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"strings"
@@ -93,8 +94,8 @@ func (d *dbBaseMysql) ShowColumnsQuery(table string) string {
 }
 
 // execute sql to check index exist.
-func (d *dbBaseMysql) IndexExists(db dbQuerier, table string, name string) bool {
-	row := db.QueryRow("SELECT count(*) FROM information_schema.statistics "+
+func (d *dbBaseMysql) IndexExists(ctx context.Context, db dbQuerier, table string, name string) bool {
+	row := db.QueryRowContext(ctx, "SELECT count(*) FROM information_schema.statistics "+
 		"WHERE table_schema = DATABASE() AND table_name = ? AND index_name = ?", table, name)
 	var cnt int
 	row.Scan(&cnt)
@@ -105,13 +106,13 @@ func (d *dbBaseMysql) IndexExists(db dbQuerier, table string, name string) bool 
 // If your primary key or unique column conflict will update
 // If no will insert
 // Add "`" for mysql sql building
-func (d *dbBaseMysql) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Value, a *alias, args ...string) (int64, error) {
+func (d *dbBaseMysql) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *modelInfo, ind reflect.Value, a *alias, args ...string) (int64, error) {
 	var iouStr string
 	argsMap := map[string]string{}
 
 	iouStr = "ON DUPLICATE KEY UPDATE"
 
-	//Get on the key-value pairs
+	// Get on the key-value pairs
 	for _, v := range args {
 		kv := strings.Split(v, "=")
 		if len(kv) == 2 {
@@ -123,7 +124,6 @@ func (d *dbBaseMysql) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Val
 	names := make([]string, 0, len(mi.fields.dbcols)-1)
 	Q := d.ins.TableQuote()
 	values, _, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, &names, a.TZ)
-
 	if err != nil {
 		return 0, err
 	}
@@ -155,13 +155,13 @@ func (d *dbBaseMysql) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Val
 	if isMulti {
 		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
 	}
-	//conflitValue maybe is a int,can`t use fmt.Sprintf
+	// conflitValue maybe is a int,can`t use fmt.Sprintf
 	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s) %s "+qupdates, Q, mi.table, Q, Q, columns, Q, qmarks, iouStr)
 
 	d.ins.ReplaceMarks(&query)
 
 	if isMulti || !d.ins.HasReturningID(mi, &query) {
-		res, err := q.Exec(query, values...)
+		res, err := q.ExecContext(ctx, query, values...)
 		if err == nil {
 			if isMulti {
 				return res.RowsAffected()
@@ -178,7 +178,7 @@ func (d *dbBaseMysql) InsertOrUpdate(q dbQuerier, mi *modelInfo, ind reflect.Val
 		return 0, err
 	}
 
-	row := q.QueryRow(query, values...)
+	row := q.QueryRowContext(ctx, query, values...)
 	var id int64
 	err = row.Scan(&id)
 	return id, err

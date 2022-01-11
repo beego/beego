@@ -20,18 +20,18 @@
 //
 // Usage:
 // import(
-//   _ "github.com/astaxie/beego/cache/memcache"
-//   "github.com/astaxie/beego/cache"
+//   _ "github.com/beego/beego/v2/client/cache/memcache"
+//   "github.com/beego/beego/v2/client/cache"
 // )
 //
 //  bm, err := cache.NewCache("memcache", `{"conn":"127.0.0.1:11211"}`)
 //
-//  more docs http://beego.me/docs/module/cache.md
+//  more docs http://beego.vip/docs/module/cache.md
 package memcache
 
 import (
-	"github.com/astaxie/beego/adapter/cache"
-	"github.com/astaxie/beego/client/cache/memcache"
+	"github.com/beego/beego/v2/adapter/cache"
+	"github.com/beego/beego/v2/client/cache/memcache"
 )
 
 // NewMemCache create new memcache adapter.

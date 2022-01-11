@@ -19,7 +19,7 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/astaxie/beego/server/web"
+	"github.com/beego/beego/v2/server/web"
 )
 
 const (
@@ -106,7 +106,7 @@ func Htmlunquote(text string) string {
 //	/login?next=/
 //	/user/John%20Doe
 //
-//  more detail http://beego.me/docs/mvc/controller/urlbuilding.md
+//  more detail http://beego.vip/docs/mvc/controller/urlbuilding.md
 func URLFor(endpoint string, values ...interface{}) string {
 	return web.URLFor(endpoint, values...)
 }
@@ -118,7 +118,6 @@ func AssetsJs(text string) template.HTML {
 
 // AssetsCSS returns stylesheet link tag with src string.
 func AssetsCSS(text string) template.HTML {
-
 	text = "<link href=\"" + text + "\" rel=\"stylesheet\" />"
 
 	return template.HTML(text)

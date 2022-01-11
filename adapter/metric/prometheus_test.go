@@ -15,6 +15,7 @@
 package metric
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"testing"
@@ -22,11 +23,13 @@ import (
 
 	"github.com/prometheus/client_golang/prometheus"
 
-	"github.com/astaxie/beego/adapter/context"
+	"github.com/beego/beego/v2/adapter/context"
 )
 
 func TestPrometheusMiddleWare(t *testing.T) {
-	middleware := PrometheusMiddleWare(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {}))
+	middleware := PrometheusMiddleWare(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
+		fmt.Print("you are coming")
+	}))
 	writer := &context.Response{}
 	request := &http.Request{
 		URL: &url.URL{
@@ -35,7 +38,7 @@ func TestPrometheusMiddleWare(t *testing.T) {
 		},
 		Method: "POST",
 	}
-	vec := prometheus.NewSummaryVec(prometheus.SummaryOpts{}, []string{"pattern", "method", "status", "duration"})
+	vec := prometheus.NewSummaryVec(prometheus.SummaryOpts{}, []string{"pattern", "method", "status"})
 
 	report(time.Second, writer, request, vec)
 	middleware.ServeHTTP(writer, request)

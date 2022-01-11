@@ -20,8 +20,8 @@
 //
 // Usage:
 // import(
-//   _ "github.com/astaxie/beego/session/memcache"
-//   "github.com/astaxie/beego/session"
+//   _ "github.com/beego/beego/v2/server/web/session/memcache"
+//   "github.com/beego/beego/v2/server/web/session"
 // )
 //
 //	func init() {
@@ -29,7 +29,7 @@
 //		go globalSessions.GC()
 //	}
 //
-// more docs: http://beego.me/docs/module/session.md
+// more docs: http://beego.vip/docs/module/session.md
 package memcache
 
 import (
@@ -38,13 +38,15 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/astaxie/beego/server/web/session"
-
 	"github.com/bradfitz/gomemcache/memcache"
+
+	"github.com/beego/beego/v2/server/web/session"
 )
 
-var mempder = &MemProvider{}
-var client *memcache.Client
+var (
+	mempder = &MemProvider{}
+	client  *memcache.Client
+)
 
 // SessionStore memcache session store
 type SessionStore struct {

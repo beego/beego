@@ -11,25 +11,26 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/astaxie/beego/server/web/session"
+	"github.com/beego/beego/v2/server/web/session"
 )
 
 func TestRedis(t *testing.T) {
-	sessionConfig := &session.ManagerConfig{
-		CookieName:      "gosessionid",
-		EnableSetCookie: true,
-		Gclifetime:      3600,
-		Maxlifetime:     3600,
-		Secure:          false,
-		CookieLifeTime:  3600,
-	}
-
 	redisAddr := os.Getenv("REDIS_ADDR")
 	if redisAddr == "" {
 		redisAddr = "127.0.0.1:6379"
 	}
+	redisConfig := fmt.Sprintf("%s,100,,0,30", redisAddr)
 
-	sessionConfig.ProviderConfig = fmt.Sprintf("%s,100,,0,30", redisAddr)
+	sessionConfig := session.NewManagerConfig(
+		session.CfgCookieName(`gosessionid`),
+		session.CfgSetCookie(true),
+		session.CfgGcLifeTime(3600),
+		session.CfgMaxLifeTime(3600),
+		session.CfgSecure(false),
+		session.CfgCookieLifeTime(3600),
+		session.CfgProviderConfig(redisConfig),
+	)
+
 	globalSession, err := session.NewManager("redis", sessionConfig)
 	if err != nil {
 		t.Fatal("could not create manager:", err)
@@ -100,7 +101,6 @@ func TestRedis(t *testing.T) {
 }
 
 func TestProvider_SessionInit(t *testing.T) {
-
 	savePath := `
 { "save_path": "my save path", "idle_timeout": "3s"}
 `

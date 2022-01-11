@@ -26,10 +26,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/astaxie/beego/core/logs"
 	lru "github.com/hashicorp/golang-lru"
 
-	"github.com/astaxie/beego/server/web/context"
+	"github.com/beego/beego/v2/core/logs"
+	"github.com/beego/beego/v2/server/web/context"
 )
 
 var errNotStaticRequest = errors.New("request not a static file request")
@@ -65,17 +65,17 @@ func serverStaticRouter(ctx *context.Context) {
 			}
 			ctx.Redirect(302, redirectURL)
 		} else {
-			//serveFile will list dir
+			// serveFile will list dir
 			http.ServeFile(ctx.ResponseWriter, ctx.Request, filePath)
 		}
 		return
 	} else if fileInfo.Size() > int64(BConfig.WebConfig.StaticCacheFileSize) {
-		//over size file serve with http module
+		// over size file serve with http module
 		http.ServeFile(ctx.ResponseWriter, ctx.Request, filePath)
 		return
 	}
 
-	var enableCompress = BConfig.EnableGzip && isStaticCompress(filePath)
+	enableCompress := BConfig.EnableGzip && isStaticCompress(filePath)
 	var acceptEncoding string
 	if enableCompress {
 		acceptEncoding = context.ParseEncoding(ctx.Request)
@@ -102,7 +102,7 @@ type serveContentHolder struct {
 	data       []byte
 	modTime    time.Time
 	size       int64
-	originSize int64 //original file size:to judge file changed
+	originSize int64 // original file size:to judge file changed
 	encoding   string
 }
 
@@ -117,7 +117,7 @@ var (
 
 func openFile(filePath string, fi os.FileInfo, acceptEncoding string) (bool, string, *serveContentHolder, *serveContentReader, error) {
 	if staticFileLruCache == nil {
-		//avoid lru cache error
+		// avoid lru cache error
 		if BConfig.WebConfig.StaticCacheFileNum >= 1 {
 			staticFileLruCache, _ = lru.New(BConfig.WebConfig.StaticCacheFileNum)
 		} else {

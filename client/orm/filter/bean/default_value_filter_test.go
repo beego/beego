@@ -19,10 +19,10 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/astaxie/beego/client/orm"
+	"github.com/beego/beego/v2/client/orm"
 )
 
-func TestDefaultValueFilterChainBuilder_FilterChain(t *testing.T) {
+func TestDefaultValueFilterChainBuilderFilterChain(t *testing.T) {
 	builder := NewDefaultValueFilterChainBuilder(nil, true, true)
 	o := orm.NewFilterOrmDecorator(&defaultValueTestOrm{}, builder.FilterChain)
 
@@ -57,7 +57,6 @@ func TestDefaultValueFilterChainBuilder_FilterChain(t *testing.T) {
 	_, _ = o.InsertMulti(3, []*DefaultValueTestEntity{entity})
 	assert.Equal(t, 12, entity.Age)
 	assert.Equal(t, 13, entity.AgeInOldStyle)
-
 }
 
 type defaultValueTestOrm struct {

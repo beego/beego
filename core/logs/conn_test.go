@@ -26,7 +26,6 @@ import (
 // ConnTCPListener takes a TCP listener and accepts n TCP connections
 // Returns connections using connChan
 func connTCPListener(t *testing.T, n int, ln net.Listener, connChan chan<- net.Conn) {
-
 	// Listen and accept n incoming connections
 	for i := 0; i < n; i++ {
 		conn, err := ln.Accept()

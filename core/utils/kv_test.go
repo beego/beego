@@ -34,5 +34,4 @@ func TestKVs(t *testing.T) {
 
 	v = kvs.GetValueOr(`key-not-exists`, 8546)
 	assert.Equal(t, 8546, v)
-
 }

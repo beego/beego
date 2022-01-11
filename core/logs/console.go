@@ -62,8 +62,7 @@ func (c *consoleWriter) Format(lm *LogMsg) string {
 		msg = strings.Replace(msg, levelPrefix[lm.Level], colors[lm.Level](levelPrefix[lm.Level]), 1)
 	}
 	h, _, _ := formatTimeHeader(lm.When)
-	bytes := append(append(h, msg...), '\n')
-	return string(bytes)
+	return string(append(h, msg...))
 }
 
 func (c *consoleWriter) SetFormatter(f LogFormatter) {
@@ -88,7 +87,6 @@ func newConsole() *consoleWriter {
 // Init initianlizes the console logger.
 // jsonConfig must be in the format '{"level":LevelTrace}'
 func (c *consoleWriter) Init(config string) error {
-
 	if len(config) == 0 {
 		return nil
 	}
@@ -116,12 +114,10 @@ func (c *consoleWriter) WriteMsg(lm *LogMsg) error {
 
 // Destroy implementing method. empty.
 func (c *consoleWriter) Destroy() {
-
 }
 
 // Flush implementing method. empty.
 func (c *consoleWriter) Flush() {
-
 }
 
 func init() {

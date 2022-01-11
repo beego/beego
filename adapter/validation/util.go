@@ -17,7 +17,7 @@ package validation
 import (
 	"reflect"
 
-	"github.com/astaxie/beego/core/validation"
+	"github.com/beego/beego/v2/core/validation"
 )
 
 const (
@@ -27,9 +27,7 @@ const (
 	LabelTag = validation.LabelTag
 )
 
-var (
-	ErrInt64On32 = validation.ErrInt64On32
-)
+var ErrInt64On32 = validation.ErrInt64On32
 
 // CustomFunc is for custom validate function
 type CustomFunc func(v *Validation, obj interface{}, key string)

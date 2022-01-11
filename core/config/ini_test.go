@@ -23,7 +23,6 @@ import (
 )
 
 func TestIni(t *testing.T) {
-
 	var (
 		inicontext = `
 ;comment one
@@ -129,11 +128,9 @@ password = ${GOPATH}
 	if res != "astaxie" {
 		t.Fatal("get name error")
 	}
-
 }
 
 func TestIniSave(t *testing.T) {
-
 	const (
 		inicontext = `
 app = app
@@ -146,7 +143,7 @@ httpport = 8080
 # enable db
 [dbinfo]
 # db type name
-# suport mysql,sqlserver
+# support mysql,sqlserver
 name = mysql
 `
 
@@ -162,7 +159,7 @@ httpport=8080
 # enable db
 [dbinfo]
 # db type name
-# suport mysql,sqlserver
+# support mysql,sqlserver
 name=mysql
 `
 	)

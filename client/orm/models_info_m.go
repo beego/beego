@@ -22,16 +22,16 @@ import (
 
 // single model info
 type modelInfo struct {
+	manual    bool
+	isThrough bool
 	pkg       string
 	name      string
 	fullName  string
 	table     string
 	model     interface{}
 	fields    *fields
-	manual    bool
 	addrField reflect.Value // store the original struct value
 	uniques   []string
-	isThrough bool
 }
 
 // new model info
@@ -74,7 +74,7 @@ func addModelFields(mi *modelInfo, ind reflect.Value, mName string, index []int)
 		} else if err != nil {
 			break
 		}
-		//record current field index
+		// record current field index
 		fi.fieldIndex = append(fi.fieldIndex, index...)
 		fi.fieldIndex = append(fi.fieldIndex, i)
 		fi.mi = mi

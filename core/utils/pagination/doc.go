@@ -8,7 +8,7 @@ In your beego.Controller:
 
  package controllers
 
- import "github.com/astaxie/beego/core/utils/pagination"
+ import "github.com/beego/beego/v2/core/utils/pagination"
 
  type PostsController struct {
    beego.Controller
@@ -52,7 +52,7 @@ In your view templates:
 
 See also
 
-http://beego.me/docs/mvc/view/page.md
+http://beego.vip/docs/mvc/view/page.md
 
 */
 package pagination

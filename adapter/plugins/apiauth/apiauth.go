@@ -16,8 +16,8 @@
 //
 // Simple Usage:
 //	import(
-//		"github.com/astaxie/beego"
-//		"github.com/astaxie/beego/plugins/apiauth"
+//		"github.com/beego/beego/v2"
+//		"github.com/beego/beego/v2/server/web/filter/apiauth"
 //	)
 //
 //	func main(){
@@ -58,10 +58,10 @@ package apiauth
 import (
 	"net/url"
 
-	beego "github.com/astaxie/beego/adapter"
-	"github.com/astaxie/beego/adapter/context"
-	beecontext "github.com/astaxie/beego/server/web/context"
-	"github.com/astaxie/beego/server/web/filter/apiauth"
+	beego "github.com/beego/beego/v2/adapter"
+	"github.com/beego/beego/v2/adapter/context"
+	beecontext "github.com/beego/beego/v2/server/web/context"
+	"github.com/beego/beego/v2/server/web/filter/apiauth"
 )
 
 // AppIDToAppSecret is used to get appsecret throw appid

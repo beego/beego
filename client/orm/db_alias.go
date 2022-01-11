@@ -112,8 +112,10 @@ type DB struct {
 	stmtDecoratorsLimit int
 }
 
-var _ dbQuerier = new(DB)
-var _ txer = new(DB)
+var (
+	_ dbQuerier = new(DB)
+	_ txer      = new(DB)
+)
 
 func (d *DB) Begin() (*sql.Tx, error) {
 	return d.DB.Begin()
@@ -221,8 +223,10 @@ type TxDB struct {
 	tx *sql.Tx
 }
 
-var _ dbQuerier = new(TxDB)
-var _ txEnder = new(TxDB)
+var (
+	_ dbQuerier = new(TxDB)
+	_ txEnder   = new(TxDB)
+)
 
 func (t *TxDB) Commit() error {
 	return t.tx.Commit()
@@ -232,8 +236,18 @@ func (t *TxDB) Rollback() error {
 	return t.tx.Rollback()
 }
 
-var _ dbQuerier = new(TxDB)
-var _ txEnder = new(TxDB)
+func (t *TxDB) RollbackUnlessCommit() error {
+	err := t.tx.Rollback()
+	if err != sql.ErrTxDone {
+		return err
+	}
+	return nil
+}
+
+var (
+	_ dbQuerier = new(TxDB)
+	_ txEnder   = new(TxDB)
+)
 
 func (t *TxDB) Prepare(query string) (*sql.Stmt, error) {
 	return t.PrepareContext(context.Background(), query)
@@ -357,7 +371,6 @@ func addAliasWthDB(aliasName, driverName string, db *sql.DB, params ...DBOption)
 }
 
 func newAliasWithDb(aliasName, driverName string, db *sql.DB, params ...DBOption) (*alias, error) {
-
 	al := &alias{}
 	al.DB = &DB{
 		RWMutex: new(sync.RWMutex),
@@ -414,7 +427,7 @@ func SetMaxIdleConns(aliasName string, maxIdleConns int) {
 // Deprecated you should not use this, we will remove it in the future
 func SetMaxOpenConns(aliasName string, maxOpenConns int) {
 	al := getDbAlias(aliasName)
-	al.SetMaxIdleConns(maxOpenConns)
+	al.SetMaxOpenConns(maxOpenConns)
 }
 
 // SetMaxIdleConns Change the max idle conns for *sql.DB, use specify database alias name
