@@ -255,7 +255,7 @@ func (ctx *Context) GetSecureCookie(Secret, key string, maxDays int) (string, bo
 	}
 
 	h := hmac.New(sha256.New, []byte(Secret))
-	_, err := fmt.Fprintf(h, "%s%s", vs, timestamp)
+	_, err = fmt.Fprintf(h, "%s%s", vs, timestamp)
 	if err != nil {
 		return "", false
 	}
