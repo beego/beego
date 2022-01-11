@@ -340,7 +340,7 @@ type WebConfig struct {
 	XSRFExpire int
 	// @Description session related config
 	Session SessionConfig
-  // @Description secure cookie ttl (days)
+	// @Description secure cookie ttl (days)
 	SecureCookieMaxAge     int
 }
 
