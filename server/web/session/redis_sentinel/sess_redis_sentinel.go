@@ -106,7 +106,9 @@ func (rs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWrite
 		return
 	}
 	c := rs.p
-	c.Set(rs.sid, string(b), time.Duration(rs.maxlifetime)*time.Second)
+	if len(rs.values)!=0{
+	   c.Set(rs.sid, string(b), time.Duration(rs.maxlifetime)*time.Second)
+	}
 }
 
 // Provider redis_sentinel session provider
