@@ -18,6 +18,7 @@ Beego is composed of four parts:
 ## Quick Start
 
 [Official website](http://beego.vip)
+[中文新版文档网站](https://beego.gocn.vip)
 
 [Example](https://github.com/beego/beego-example)
 
