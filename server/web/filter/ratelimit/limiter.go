@@ -15,18 +15,12 @@
 package ratelimit
 
 import (
-	"net/http"
 	"sync"
 	"time"
 
 	"github.com/beego/beego/v2/server/web"
 	"github.com/beego/beego/v2/server/web/context"
 )
-
-// Limiter is an interface used to ratelimit
-type Limiter interface {
-	take(amount uint, r *http.Request) bool
-}
 
 // limiterOption is constructor option
 type limiterOption func(l *limiter)
@@ -37,7 +31,7 @@ type limiter struct {
 	rate          time.Duration
 	buckets       map[string]bucket
 	bucketFactory func(opts ...bucketOption) bucket
-	sessionKey    func(r *http.Request) string
+	sessionKey    func(ctx *context.Context) string
 	resp          RejectionResponse
 }
 
@@ -60,10 +54,10 @@ var defaultRejectionResponse = RejectionResponse{
 func NewLimiter(opts ...limiterOption) web.FilterFunc {
 	l := &limiter{
 		buckets: make(map[string]bucket),
-		sessionKey: func(r *http.Request) string {
-			return defaultSessionKey(r)
-		},
-		bucketFactory: NewTokenBucket,
+		sessionKey: defaultSessionKey,
+		rate:          time.Millisecond * 10,
+		capacity:      100,
+		bucketFactory: newTokenBucket,
 		resp:          defaultRejectionResponse,
 	}
 	for _, o := range opts {
@@ -71,7 +65,7 @@ func NewLimiter(opts ...limiterOption) web.FilterFunc {
 	}
 
 	return func(ctx *context.Context) {
-		if !l.take(perRequestConsumedAmount, ctx.Request) {
+		if !l.take(perRequestConsumedAmount, ctx) {
 			ctx.ResponseWriter.WriteHeader(l.resp.code)
 			ctx.WriteString(l.resp.body)
 		}
@@ -79,8 +73,8 @@ func NewLimiter(opts ...limiterOption) web.FilterFunc {
 }
 
 // WithSessionKey return limiterOption. WithSessionKey config func
-// which defines the request characteristic againstthe limit is applied
-func WithSessionKey(f func(r *http.Request) string) limiterOption {
+// which defines the request characteristic against the limit is applied
+func WithSessionKey(f func(ctx *context.Context) string) limiterOption {
 	return func(l *limiter) {
 		l.sessionKey = f
 	}
@@ -119,16 +113,16 @@ func WithRejectionResponse(resp RejectionResponse) limiterOption {
 	}
 }
 
-func (l *limiter) take(amount uint, r *http.Request) bool {
-	bucket := l.getBucket(r)
+func (l *limiter) take(amount uint, ctx *context.Context) bool {
+	bucket := l.getBucket(ctx)
 	if bucket == nil {
 		return true
 	}
 	return bucket.take(amount)
 }
 
-func (l *limiter) getBucket(r *http.Request) bucket {
-	key := l.sessionKey(r)
+func (l *limiter) getBucket(ctx *context.Context) bucket {
+	key := l.sessionKey(ctx)
 	l.RLock()
 	b, ok := l.buckets[key]
 	l.RUnlock()
@@ -152,11 +146,12 @@ func (l *limiter) createBucket(key string) bucket {
 	return b
 }
 
-func defaultSessionKey(r *http.Request) string {
-	return ""
+func defaultSessionKey(ctx *context.Context) string {
+	return "BEEGO_ALL"
 }
 
-func RemoteIPSessionKey(r *http.Request) string {
+func RemoteIPSessionKey(ctx *context.Context) string {
+	r := ctx.Request
 	IPAddress := r.Header.Get("X-Real-Ip")
 	if IPAddress == "" {
 		IPAddress = r.Header.Get("X-Forwarded-For")

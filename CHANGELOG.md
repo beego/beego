@@ -1,4 +1,6 @@
 # developing
+- [https://github.com/beego/beego/pull/4845](https://github.com/beego/beego/pull/4845)
+# v2.0.2-beta.1
 
 - Add a custom option for whether to escape HTML special characters when processing http request parameters. [4701](https://github.com/beego/beego/pull/4701)
 - Always set the response status in the CustomAbort function. [4686](https://github.com/beego/beego/pull/4686)
@@ -67,6 +69,10 @@
 - Fix 4698: Prompt error when config format is incorrect. [4757](https://github.com/beego/beego/pull/4757)
 - Fix 4674: Tx Orm missing debug log [4756](https://github.com/beego/beego/pull/4756)
 - Fix 4759: fix numeric notation of permissions [4759](https://github.com/beego/beego/pull/4759)
+- set default rate and capacity for ratelimit filter [4796](https://github.com/beego/beego/pull/4796)
+- Fix 4782: must set status before rendering error page [4797](https://github.com/beego/beego/pull/4797)
+- Fix 4791: delay to format parameter in log module [4804](https://github.com/beego/beego/pull/4804)
+
 ## Fix Sonar
 
 - [4677](https://github.com/beego/beego/pull/4677)

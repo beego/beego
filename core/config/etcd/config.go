@@ -46,7 +46,7 @@ func newEtcdConfiger(client *clientv3.Client, prefix string) *EtcdConfiger {
 	return res
 }
 
-// reader is an general implementation that read config from etcd.
+// reader is a general implementation that read config from etcd.
 func (e *EtcdConfiger) reader(ctx context.Context, key string) (string, error) {
 	resp, err := get(e.client, e.prefix+key)
 	if err != nil {
@@ -188,5 +188,5 @@ func get(client *clientv3.Client, key string) (*clientv3.GetResponse, error) {
 }
 
 func init() {
-	config.Register("json", &EtcdConfigerProvider{})
+	config.Register("etcd", &EtcdConfigerProvider{})
 }

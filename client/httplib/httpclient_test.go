@@ -204,7 +204,7 @@ func TestClientDelete(t *testing.T) {
 }
 
 func TestClientHead(t *testing.T) {
-	client, err := NewClient("test", "http://beego.vip")
+	client, err := NewClient("test", "http://beego.gocn.vip")
 	if err != nil {
 		t.Fatal(err)
 	}
