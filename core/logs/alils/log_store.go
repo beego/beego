@@ -8,7 +8,7 @@ import (
 	"net/http/httputil"
 	"strconv"
 
-	lz4 "github.com/cloudflare/golz4"
+	lz4 "github.com/DataDog/golz4"
 	"github.com/gogo/protobuf/proto"
 )
 
@@ -231,7 +231,7 @@ func (s *LogStore) GetLogsBytes(shardID int, cursor string,
 	}
 
 	out = make([]byte, bodyRawSize)
-	err = lz4.Uncompress(buf, out)
+	_, err = lz4.Uncompress(buf, out)
 	if err != nil {
 		return
 	}
