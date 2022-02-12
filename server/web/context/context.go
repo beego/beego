@@ -372,7 +372,11 @@ func (r *Response) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 	if !ok {
 		return nil, nil, errors.New("webserver doesn't support hijacking")
 	}
-	return hj.Hijack()
+	conn, rw, err := hj.Hijack()
+	if err == nil {
+		r.Started = true
+	}
+	return conn, rw, err
 }
 
 // Flush http.Flusher
