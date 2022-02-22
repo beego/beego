@@ -162,9 +162,9 @@ func (d *dbBasePostgres) setval(ctx context.Context, db dbQuerier, mi *modelInfo
 // show table sql for postgresql.
 func (d *dbBasePostgres) ShowTablesQuery(ctx context.Context) string {
 	query := "SELECT table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema NOT IN ('pg_catalog', 'information_schema')"
-	driver := ctx.Value("driver").(DriverType)
+	driver := ctx.Value(ContextKeySchema).(DriverType)
 	if driver == DRPostgres {
-		schema := ctx.Value("schema").(string)
+		schema := ctx.Value(ContextKeyDriver).(string)
 		if len(schema) > 0 {
 			query = fmt.Sprintf("%s AND table_schema='%s'", query, schema)
 		}
