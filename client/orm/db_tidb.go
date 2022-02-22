@@ -37,12 +37,12 @@ func (d *dbBaseTidb) DbTypes() map[string]string {
 }
 
 // show table sql for mysql.
-func (d *dbBaseTidb) ShowTablesQuery(ctx context.Context) string {
+func (d *dbBaseTidb) ShowTablesQuery(_ context.Context) string {
 	return "SELECT table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema = DATABASE()"
 }
 
 // show columns sql of table for mysql.
-func (d *dbBaseTidb) ShowColumnsQuery(ctx context.Context, table string) string {
+func (d *dbBaseTidb) ShowColumnsQuery(_ context.Context, table string) string {
 	return fmt.Sprintf("SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE FROM information_schema.columns "+
 		"WHERE table_schema = DATABASE() AND table_name = '%s'", table)
 }

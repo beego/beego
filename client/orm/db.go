@@ -1890,12 +1890,12 @@ func (d *dbBase) OperatorSQL(operator string) string {
 }
 
 // not implement.
-func (d *dbBase) ShowTablesQuery(ctx context.Context) string {
+func (d *dbBase) ShowTablesQuery(_ context.Context) string {
 	panic(ErrNotImplement)
 }
 
 // not implement.
-func (d *dbBase) ShowColumnsQuery(ctx context.Context, table string) string {
+func (d *dbBase) ShowColumnsQuery(_ context.Context, table string) string {
 	panic(ErrNotImplement)
 }
 

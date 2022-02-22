@@ -22,6 +22,15 @@ import (
 	"strings"
 )
 
+type ContextKey string
+
+const (
+	ContextKeySchema = ContextKey("schema")
+	ContextKeyDriver = ContextKey("driver")
+
+	DataSourceNameSchema = "search_path"
+)
+
 type commander interface {
 	Parse([]string)
 	Run() error
@@ -134,22 +143,22 @@ func (d *commandSyncDb) Run() error {
 
 	ctx := context.Background()
 	if d.al.Driver == DRPostgres {
-		m := make(map[string]string, 0)
+		dsMap := make(map[string]string)
 		ds := d.al.DataSource
 		dss := strings.Split(ds, " ")
-		for idx, _ := range dss {
+		for idx := range dss {
 			dsn := strings.Split(dss[idx], "=")
 			if len(dsn) == 2 {
-				m[dsn[0]] = dsn[1]
+				dsMap[dsn[0]] = dsn[1]
 			}
 		}
-		if schema, ok := m["search_path"]; ok {
-			ctx = context.WithValue(ctx, "schema", schema)
+		if schema, ok := dsMap[DataSourceNameSchema]; ok {
+			ctx = context.WithValue(ctx, ContextKeySchema, schema)
 		}
-		ctx = context.WithValue(ctx, "driver", DRPostgres)
+		ctx = context.WithValue(ctx, ContextKeyDriver, DRPostgres)
 	}
 
-	tables, err := d.al.DbBaser.GetTables(ctx,db)
+	tables, err := d.al.DbBaser.GetTables(ctx, db)
 	if err != nil {
 		if d.rtOnError {
 			return err

@@ -174,13 +174,10 @@ func (d *dbBasePostgres) ShowTablesQuery(ctx context.Context) string {
 
 // show table columns sql for postgresql.
 func (d *dbBasePostgres) ShowColumnsQuery(ctx context.Context, table string) string {
-	query :=fmt.Sprintf("SELECT column_name, data_type, is_nullable FROM information_schema.columns where table_schema NOT IN ('pg_catalog', 'information_schema') and table_name = '%s'", table)
-	driver := ctx.Value("driver").(DriverType)
-	if driver == DRPostgres {
-		schema := ctx.Value("schema").(string)
-		if len(schema) > 0 {
-			query = fmt.Sprintf("%s AND table_schema='%s'", query, schema)
-		}
+	query := fmt.Sprintf("SELECT column_name, data_type, is_nullable FROM information_schema.columns where table_schema NOT IN ('pg_catalog', 'information_schema') and table_name = '%s'", table)
+	schema := ctx.Value(ContextKeySchema).(string)
+	if len(schema) > 0 {
+		query = fmt.Sprintf("%s AND table_schema='%s'", query, schema)
 	}
 	return query
 }
@@ -192,7 +189,7 @@ func (d *dbBasePostgres) DbTypes() map[string]string {
 
 // check index exist in postgresql.
 func (d *dbBasePostgres) IndexExists(ctx context.Context, db dbQuerier, table string, name string) bool {
-	schema := ctx.Value("schema").(string)
+	schema := ctx.Value(ContextKeySchema).(string)
 	if schema == "" {
 		schema = "public"
 	}

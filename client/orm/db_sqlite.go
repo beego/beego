@@ -110,7 +110,7 @@ func (d *dbBaseSqlite) DbTypes() map[string]string {
 }
 
 // get show tables sql in sqlite.
-func (d *dbBaseSqlite) ShowTablesQuery(ctx context.Context) string {
+func (d *dbBaseSqlite) ShowTablesQuery(_ context.Context) string {
 	return "SELECT name FROM sqlite_master WHERE type = 'table'"
 }
 
@@ -136,7 +136,7 @@ func (d *dbBaseSqlite) GetColumns(ctx context.Context, db dbQuerier, table strin
 }
 
 // get show columns sql in sqlite.
-func (d *dbBaseSqlite) ShowColumnsQuery(ctx context.Context, table string) string {
+func (d *dbBaseSqlite) ShowColumnsQuery(_ context.Context, table string) string {
 	return fmt.Sprintf("pragma table_info('%s')", table)
 }
 
