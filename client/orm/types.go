@@ -646,10 +646,10 @@ type dbBaser interface {
 	TimeFromDB(*time.Time, *time.Location)
 	TimeToDB(*time.Time, *time.Location)
 	DbTypes() map[string]string
-	GetTables(dbQuerier) (map[string]bool, error)
+	GetTables(context.Context, dbQuerier) (map[string]bool, error)
 	GetColumns(context.Context, dbQuerier, string) (map[string][3]string, error)
-	ShowTablesQuery() string
-	ShowColumnsQuery(string) string
+	ShowTablesQuery(ctx context.Context) string
+	ShowColumnsQuery(context.Context, string) string
 	IndexExists(context.Context, dbQuerier, string, string) bool
 	collectFieldValue(*modelInfo, *fieldInfo, reflect.Value, bool, *time.Location) (interface{}, error)
 	setval(context.Context, dbQuerier, *modelInfo, []string) error

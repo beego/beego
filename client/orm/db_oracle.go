@@ -79,12 +79,12 @@ func (d *dbBaseOracle) DbTypes() map[string]string {
 }
 
 // ShowTablesQuery show all the tables in database
-func (d *dbBaseOracle) ShowTablesQuery() string {
+func (d *dbBaseOracle) ShowTablesQuery(ctx context.Context) string {
 	return "SELECT TABLE_NAME FROM USER_TABLES"
 }
 
 // Oracle
-func (d *dbBaseOracle) ShowColumnsQuery(table string) string {
+func (d *dbBaseOracle) ShowColumnsQuery(ctx context.Context, table string) string {
 	return fmt.Sprintf("SELECT COLUMN_NAME FROM ALL_TAB_COLUMNS "+
 		"WHERE TABLE_NAME ='%s'", strings.ToUpper(table))
 }

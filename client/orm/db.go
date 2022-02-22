@@ -1833,9 +1833,9 @@ func (d *dbBase) DbTypes() map[string]string {
 }
 
 // gt all tables.
-func (d *dbBase) GetTables(db dbQuerier) (map[string]bool, error) {
+func (d *dbBase) GetTables(ctx context.Context, db dbQuerier) (map[string]bool, error) {
 	tables := make(map[string]bool)
-	query := d.ins.ShowTablesQuery()
+	query := d.ins.ShowTablesQuery(ctx)
 	rows, err := db.Query(query)
 	if err != nil {
 		return tables, err
@@ -1860,7 +1860,7 @@ func (d *dbBase) GetTables(db dbQuerier) (map[string]bool, error) {
 // get all cloumns in table.
 func (d *dbBase) GetColumns(ctx context.Context, db dbQuerier, table string) (map[string][3]string, error) {
 	columns := make(map[string][3]string)
-	query := d.ins.ShowColumnsQuery(table)
+	query := d.ins.ShowColumnsQuery(ctx, table)
 	rows, err := db.QueryContext(ctx, query)
 	if err != nil {
 		return columns, err
@@ -1890,12 +1890,12 @@ func (d *dbBase) OperatorSQL(operator string) string {
 }
 
 // not implement.
-func (d *dbBase) ShowTablesQuery() string {
+func (d *dbBase) ShowTablesQuery(ctx context.Context) string {
 	panic(ErrNotImplement)
 }
 
 // not implement.
-func (d *dbBase) ShowColumnsQuery(table string) string {
+func (d *dbBase) ShowColumnsQuery(ctx context.Context, table string) string {
 	panic(ErrNotImplement)
 }
 

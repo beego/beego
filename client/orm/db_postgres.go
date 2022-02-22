@@ -160,13 +160,29 @@ func (d *dbBasePostgres) setval(ctx context.Context, db dbQuerier, mi *modelInfo
 }
 
 // show table sql for postgresql.
-func (d *dbBasePostgres) ShowTablesQuery() string {
-	return "SELECT table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema NOT IN ('pg_catalog', 'information_schema')"
+func (d *dbBasePostgres) ShowTablesQuery(ctx context.Context) string {
+	query := "SELECT table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema NOT IN ('pg_catalog', 'information_schema')"
+	driver := ctx.Value("driver").(DriverType)
+	if driver == DRPostgres {
+		schema := ctx.Value("schema").(string)
+		if len(schema) > 0 {
+			query = fmt.Sprintf("%s AND table_schema='%s'", query, schema)
+		}
+	}
+	return query
 }
 
 // show table columns sql for postgresql.
-func (d *dbBasePostgres) ShowColumnsQuery(table string) string {
-	return fmt.Sprintf("SELECT column_name, data_type, is_nullable FROM information_schema.columns where table_schema NOT IN ('pg_catalog', 'information_schema') and table_name = '%s'", table)
+func (d *dbBasePostgres) ShowColumnsQuery(ctx context.Context, table string) string {
+	query :=fmt.Sprintf("SELECT column_name, data_type, is_nullable FROM information_schema.columns where table_schema NOT IN ('pg_catalog', 'information_schema') and table_name = '%s'", table)
+	driver := ctx.Value("driver").(DriverType)
+	if driver == DRPostgres {
+		schema := ctx.Value("schema").(string)
+		if len(schema) > 0 {
+			query = fmt.Sprintf("%s AND table_schema='%s'", query, schema)
+		}
+	}
+	return query
 }
 
 // get column types of postgresql.
@@ -176,7 +192,11 @@ func (d *dbBasePostgres) DbTypes() map[string]string {
 
 // check index exist in postgresql.
 func (d *dbBasePostgres) IndexExists(ctx context.Context, db dbQuerier, table string, name string) bool {
-	query := fmt.Sprintf("SELECT COUNT(*) FROM pg_indexes WHERE tablename = '%s' AND indexname = '%s'", table, name)
+	schema := ctx.Value("schema").(string)
+	if schema == "" {
+		schema = "public"
+	}
+	query := fmt.Sprintf("SELECT COUNT(*) FROM pg_indexes WHERE tablename = '%s' AND indexname = '%s' AND schemaname = '%s'", table, name, schema)
 	row := db.QueryRowContext(ctx, query)
 	var cnt int
 	row.Scan(&cnt)

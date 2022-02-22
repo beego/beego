@@ -132,7 +132,24 @@ func (d *commandSyncDb) Run() error {
 		return err
 	}
 
-	tables, err := d.al.DbBaser.GetTables(db)
+	ctx := context.Background()
+	if d.al.Driver == DRPostgres {
+		m := make(map[string]string, 0)
+		ds := d.al.DataSource
+		dss := strings.Split(ds, " ")
+		for idx, _ := range dss {
+			dsn := strings.Split(dss[idx], "=")
+			if len(dsn) == 2 {
+				m[dsn[0]] = dsn[1]
+			}
+		}
+		if schema, ok := m["search_path"]; ok {
+			ctx = context.WithValue(ctx, "schema", schema)
+		}
+		ctx = context.WithValue(ctx, "driver", DRPostgres)
+	}
+
+	tables, err := d.al.DbBaser.GetTables(ctx,db)
 	if err != nil {
 		if d.rtOnError {
 			return err
@@ -140,7 +157,6 @@ func (d *commandSyncDb) Run() error {
 		fmt.Printf("    %s\n", err.Error())
 	}
 
-	ctx := context.Background()
 	for i, mi := range modelCache.allOrdered() {
 
 		if !isApplicableTableForDB(mi.addrField, d.al.Name) {
