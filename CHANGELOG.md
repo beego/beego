@@ -1,7 +1,9 @@
 # developing
-- [https://github.com/beego/beego/pull/4845](https://github.com/beego/beego/pull/4845)
+- [upgrade redisgo to v1.8.8](https://github.com/beego/beego/pull/4872)
+# v2.0.2
+See v2.0.2-beta.1
+- [fix bug: etcd should use etcd as adapter name](https://github.com/beego/beego/pull/4845)
 # v2.0.2-beta.1
-
 - Add a custom option for whether to escape HTML special characters when processing http request parameters. [4701](https://github.com/beego/beego/pull/4701)
 - Always set the response status in the CustomAbort function. [4686](https://github.com/beego/beego/pull/4686)
 - Add template functions eq,lt to support uint and int compare. [4607](https://github.com/beego/beego/pull/4607)
