@@ -16,7 +16,7 @@ jobs:
     if: "!contains(github.event.pull_request.labels.*.name, 'Skip Changelog')"
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Check for CHANGELOG changes
         run: |
