@@ -242,6 +242,10 @@ type Listen struct {
 	// The default value is tls.RequireAndVerifyClientCert
 	// @Default 4
 	ClientAuth int
+	// @Description Beego use this tls.Config to initialize TLS connection if not nil
+	// The default value is nil
+	// @Default nil
+	CustomTLSConfig *tls.Config
 }
 
 // WebConfig holds web related config

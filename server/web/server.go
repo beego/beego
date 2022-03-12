@@ -166,6 +166,11 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 						app.Server.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
 						app.Cfg.Listen.HTTPSCertFile, app.Cfg.Listen.HTTPSKeyFile = "", ""
 					}
+					// CustomTLSConfig has the highest priority, be careful!
+					// You need to give all config about TLS.
+					if app.Cfg.Listen.CustomTLSConfig != nil {
+						app.Server.TLSConfig = app.Cfg.Listen.CustomTLSConfig
+					}
 					if err := server.ListenAndServeTLS(app.Cfg.Listen.HTTPSCertFile, app.Cfg.Listen.HTTPSKeyFile); err != nil {
 						logs.Critical("ListenAndServeTLS: ", err, fmt.Sprintf("%d", os.Getpid()))
 						time.Sleep(100 * time.Microsecond)
@@ -224,6 +229,11 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 					ClientCAs:  pool,
 					ClientAuth: tls.ClientAuthType(app.Cfg.Listen.ClientAuth),
 				}
+			}
+			// CustomTLSConfig has the highest priority, be careful!
+			// You need to give all config about TLS.
+			if app.Cfg.Listen.CustomTLSConfig != nil {
+				app.Server.TLSConfig = app.Cfg.Listen.CustomTLSConfig
 			}
 			if err := app.Server.ListenAndServeTLS(app.Cfg.Listen.HTTPSCertFile, app.Cfg.Listen.HTTPSKeyFile); err != nil {
 				logs.Critical("ListenAndServeTLS: ", err)
