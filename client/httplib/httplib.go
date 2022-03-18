@@ -87,6 +87,7 @@ func NewBeegoRequest(rawurl, method string) *BeegoHTTPRequest {
 		files:   map[string]string{},
 		setting: defaultSetting,
 		resp:    &resp,
+		context: context.Background(),
 	}
 }
 
@@ -124,6 +125,18 @@ type BeegoHTTPRequest struct {
 	setting BeegoHTTPSettings
 	resp    *http.Response
 	body    []byte
+	context context.Context
+}
+
+// WithContext sets the context of BeegoHTTPRequest
+func (b *BeegoHTTPRequest) WithContext(ctx context.Context) *BeegoHTTPRequest {
+	b.context = ctx
+	return b
+}
+
+// Context gets the context of BeegoHTTPRequest
+func (b *BeegoHTTPRequest) Context() context.Context {
+	return b.context
 }
 
 // GetRequest returns the request object
@@ -445,7 +458,7 @@ func (b *BeegoHTTPRequest) getResponse() (*http.Response, error) {
 
 // DoRequest executes client.Do
 func (b *BeegoHTTPRequest) DoRequest() (resp *http.Response, err error) {
-	return b.DoRequestWithCtx(context.Background())
+	return b.DoRequestWithCtx(b.context)
 }
 
 func (b *BeegoHTTPRequest) DoRequestWithCtx(ctx context.Context) (resp *http.Response, err error) {

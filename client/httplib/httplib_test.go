@@ -446,3 +446,21 @@ func TestBeegoHTTPRequestJSONMarshal(t *testing.T) {
 	b, _ := req.JSONMarshal(body)
 	assert.Equal(t, fmt.Sprintf(`{"escape":"left&right"}%s`, "\n"), string(b))
 }
+
+func TestBeegoHTTPRequestWithContext(t *testing.T) {
+	// with set context
+	req := Post("http://beego.vip")
+
+	key := "foo"
+	ctx := context.WithValue(context.Background(), key, "bar")
+	req.WithContext(ctx)
+
+	assert.Equal(t, req.Context().Value(key).(string), "bar")
+	assert.NotNil(t, req.Context())
+
+	// without context
+	req = Post("http://beego.vip")
+
+	assert.Equal(t, req.Context(), context.Background())
+	assert.NotNil(t, req.Context())
+}
