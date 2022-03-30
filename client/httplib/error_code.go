@@ -51,6 +51,10 @@ Sometimes you got JSON document and you want to make it as request body. So you 
 If you do this, you got this code. Instead, you should call Header to set Content-type and call Body to set body data.
 `)
 
+var InvalidURLOrMethod = berror.DefineCode(4001007, moduleName, "InvalidURLOrMethod", `
+You pass invalid url or method to httplib module. Please check the url and method, be careful about special characters.
+`)
+
 // start with 5 --------------------------------------------------------------------------
 
 var CreateFormFileFailed = berror.DefineCode(5001001, moduleName, "CreateFormFileFailed", `

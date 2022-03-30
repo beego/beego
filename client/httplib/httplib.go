@@ -67,26 +67,23 @@ var doRequestFilter = func(ctx context.Context, req *BeegoHTTPRequest) (*http.Re
 // I think if we don't return error
 // users are hard to check whether we create Beego request successfully
 func NewBeegoRequest(rawurl, method string) *BeegoHTTPRequest {
-	var resp http.Response
-	u, err := url.Parse(rawurl)
+	return NewBeegoRequestWithCtx(context.Background(), rawurl, method)
+}
+
+// NewBeegoRequestWithCtx returns a new BeegoHTTPRequest given a method, URL
+func NewBeegoRequestWithCtx(ctx context.Context, rawurl, method string) *BeegoHTTPRequest {
+	req, err := http.NewRequestWithContext(ctx, method, rawurl, nil)
 	if err != nil {
-		logs.Error("%+v", berror.Wrapf(err, InvalidUrl, "invalid raw url: %s", rawurl))
+		logs.Error("%+v", berror.Wrapf(err, InvalidURLOrMethod, "invalid raw url or method: %s %s", rawurl, method))
 	}
-	req := http.Request{
-		URL:        u,
-		Method:     method,
-		Header:     make(http.Header),
-		Proto:      "HTTP/1.1",
-		ProtoMajor: 1,
-		ProtoMinor: 1,
-	}
+
 	return &BeegoHTTPRequest{
 		url:     rawurl,
-		req:     &req,
+		req:     req,
 		params:  map[string][]string{},
 		files:   map[string]string{},
 		setting: defaultSetting,
-		resp:    &resp,
+		resp:    &http.Response{},
 	}
 }
 
@@ -409,7 +406,7 @@ func (b *BeegoHTTPRequest) handleFiles() {
 	b.Header("Transfer-Encoding", "chunked")
 }
 
-func (b *BeegoHTTPRequest) handleFileToBody(bodyWriter *multipart.Writer, formname string, filename string) {
+func (*BeegoHTTPRequest) handleFileToBody(bodyWriter *multipart.Writer, formname string, filename string) {
 	fileWriter, err := bodyWriter.CreateFormFile(formname, filename)
 	const errFmt = "Httplib: %+v"
 	if err != nil {
@@ -445,9 +442,16 @@ func (b *BeegoHTTPRequest) getResponse() (*http.Response, error) {
 
 // DoRequest executes client.Do
 func (b *BeegoHTTPRequest) DoRequest() (resp *http.Response, err error) {
-	return b.DoRequestWithCtx(context.Background())
+	root := doRequestFilter
+	if len(b.setting.FilterChains) > 0 {
+		for i := len(b.setting.FilterChains) - 1; i >= 0; i-- {
+			root = b.setting.FilterChains[i](root)
+		}
+	}
+	return root(b.req.Context(), b)
 }
 
+// Deprecated: please use NewBeegoRequestWithContext
 func (b *BeegoHTTPRequest) DoRequestWithCtx(ctx context.Context) (resp *http.Response, err error) {
 	root := doRequestFilter
 	if len(b.setting.FilterChains) > 0 {
@@ -458,7 +462,7 @@ func (b *BeegoHTTPRequest) DoRequestWithCtx(ctx context.Context) (resp *http.Res
 	return root(ctx, b)
 }
 
-func (b *BeegoHTTPRequest) doRequest(ctx context.Context) (*http.Response, error) {
+func (b *BeegoHTTPRequest) doRequest(_ context.Context) (*http.Response, error) {
 	paramBody := b.buildParamBody()
 
 	b.buildURL(paramBody)
