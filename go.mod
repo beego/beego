@@ -1,6 +1,6 @@
 module github.com/beego/beego/v2
 
-go 1.14
+go 1.18
 
 require (
 	github.com/beego/x2j v0.0.0-20131220205130-a0352aadc542
@@ -8,8 +8,6 @@ require (
 	github.com/casbin/casbin v1.9.1
 	github.com/cloudflare/golz4 v0.0.0-20150217214814-ef862a3cdc58
 	github.com/couchbase/go-couchbase v0.1.0
-	github.com/couchbase/gomemcached v0.1.3 // indirect
-	github.com/couchbase/goutils v0.1.0 // indirect
 	github.com/elastic/go-elasticsearch/v6 v6.8.10
 	github.com/elazarl/go-bindata-assetfs v1.0.1
 	github.com/go-kit/kit v0.10.0
@@ -37,6 +35,39 @@ require (
 	google.golang.org/protobuf v1.26.0
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
+)
+
+require (
+	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible // indirect
+	github.com/beorn7/perks v1.0.1 // indirect
+	github.com/cespare/xxhash/v2 v2.1.2 // indirect
+	github.com/coreos/go-semver v0.3.0 // indirect
+	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
+	github.com/couchbase/gomemcached v0.1.3 // indirect
+	github.com/couchbase/goutils v0.1.0 // indirect
+	github.com/cupcake/rdb v0.0.0-20161107195141-43ba34106c76 // indirect
+	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/edsrzf/mmap-go v1.0.0 // indirect
+	github.com/go-logfmt/logfmt v0.5.0 // indirect
+	github.com/golang/protobuf v1.5.2 // indirect
+	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
+	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
+	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/prometheus/client_model v0.2.0 // indirect
+	github.com/prometheus/common v0.32.1 // indirect
+	github.com/prometheus/procfs v0.7.3 // indirect
+	github.com/siddontang/go v0.0.0-20170517070808-cb568a3e5cc0 // indirect
+	github.com/siddontang/rdb v0.0.0-20150307021120-fc89ed2e418d // indirect
+	github.com/syndtr/goleveldb v0.0.0-20160425020131-cfa635847112 // indirect
+	go.etcd.io/etcd/api/v3 v3.5.2 // indirect
+	go.etcd.io/etcd/client/pkg/v3 v3.5.2 // indirect
+	go.uber.org/atomic v1.7.0 // indirect
+	go.uber.org/multierr v1.6.0 // indirect
+	go.uber.org/zap v1.17.0 // indirect
+	golang.org/x/net v0.0.0-20210525063256-abc453219eb5 // indirect
+	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
+	golang.org/x/text v0.3.6 // indirect
+	google.golang.org/genproto v0.0.0-20210602131652-f16073e35f0c // indirect
 )
 
 replace github.com/gomodule/redigo => github.com/gomodule/redigo v1.8.8

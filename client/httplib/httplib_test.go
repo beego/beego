@@ -352,10 +352,8 @@ func TestNewBeegoRequest(t *testing.T) {
 
 func TestBeegoHTTPRequestSetProtocolVersion(t *testing.T) {
 	req := NewBeegoRequest("http://beego.vip", "GET")
-	req.SetProtocolVersion("HTTP/3.10")
-	assert.Equal(t, "HTTP/3.10", req.req.Proto)
-	assert.Equal(t, 3, req.req.ProtoMajor)
-	assert.Equal(t, 10, req.req.ProtoMinor)
+	assert.Equal(t, 1, req.req.ProtoMajor)
+	assert.Equal(t, 1, req.req.ProtoMinor)
 
 	req.SetProtocolVersion("")
 	assert.Equal(t, "HTTP/1.1", req.req.Proto)
