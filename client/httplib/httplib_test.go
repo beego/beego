@@ -350,6 +350,20 @@ func TestNewBeegoRequest(t *testing.T) {
 	assert.NotNil(t, req)
 }
 
+func TestNewBeegoRequestWithCtx(t *testing.T) {
+	req := NewBeegoRequestWithCtx(context.Background(), "http://beego.vip", "GET")
+	assert.NotNil(t, req)
+	assert.Equal(t, "GET", req.req.Method)
+
+	// bad url but still get request
+	req = NewBeegoRequestWithCtx(context.Background(), "httpa\ta://beego.vip", "GET")
+	assert.NotNil(t, req)
+
+	// bad method but still get request
+	req = NewBeegoRequestWithCtx(context.Background(), "http://beego.vip", "G\tET")
+	assert.NotNil(t, req)
+}
+
 func TestBeegoHTTPRequestSetProtocolVersion(t *testing.T) {
 	req := NewBeegoRequest("http://beego.vip", "GET")
 	assert.Equal(t, 1, req.req.ProtoMajor)
