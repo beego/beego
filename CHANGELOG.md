@@ -3,6 +3,7 @@
 - [fix prometheus CVE-2022-21698](https://github.com/beego/beego/pull/4878)
 - [upgrade to Go 1.18](https://github.com/beego/beego/pull/4896)
 - [Add httplib OpenTelemetry Filter](https://github.com/beego/beego/pull/4888)
+- [Support NewBeegoRequestWithCtx in httplib](https://github.com/beego/beego/pull/4895)
 
 # v2.0.2
 See v2.0.2-beta.1
