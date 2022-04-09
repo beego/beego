@@ -373,9 +373,11 @@ func (r *Response) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 		return nil, nil, errors.New("webserver doesn't support hijacking")
 	}
 	conn, rw, err := hj.Hijack()
-	//if err == nil {
-	//	r.Started = true
-	//}
+	if err == nil {
+		// If the response writer isn't started, router attempts to find a template to render but panics as there isn't
+		// any in most of the cases.
+		r.Started = true
+	}
 	return conn, rw, err
 }
 

@@ -1141,8 +1141,8 @@ func TestHijacking(t *testing.T) {
 	handler.Add("/hijack", &HijackingController{})
 	handler.ServeHTTP(w, r)
 
-	// If the response writer wasn't started, codes above attempts to find a template to render but panics as there
-	// isn't any. Router then recovers and sets status to 500 automatically.
+	// If the response writer wasn't started, router attempts to find a template to render but panics as there isn't
+	// any. Router then recovers and sets status to 500 automatically.
 	if w.StatusCode != 0 {
 		t.Errorf("Hijacking failed with status %d", w.StatusCode)
 	}
