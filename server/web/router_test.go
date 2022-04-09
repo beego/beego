@@ -15,8 +15,10 @@
 package web
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -103,6 +105,39 @@ func (jc *JSONController) Prepare() {
 func (jc *JSONController) Get() {
 	jc.Data["Username"] = "astaxie"
 	jc.Ctx.Output.Body([]byte("ok"))
+}
+
+type HijackingController struct {
+	Controller
+}
+
+func (hc *HijackingController) Get() {
+	conn, _, err := hc.Ctx.ResponseWriter.Hijack()
+	if err != nil {
+		hc.Abort("500")
+	}
+	_ = conn.Close()
+}
+
+type HijackableResponseWriter struct {
+	StatusCode int
+}
+
+func (w *HijackableResponseWriter) Header() http.Header {
+	return nil
+}
+
+func (w *HijackableResponseWriter) Write(buf []byte) (int, error) {
+	return len(buf), nil
+}
+
+func (w *HijackableResponseWriter) WriteHeader(statusCode int) {
+	w.StatusCode = statusCode
+}
+
+func (w *HijackableResponseWriter) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	conn, _ := net.Pipe()
+	return conn, bufio.NewReadWriter(bufio.NewReader(conn), bufio.NewWriter(conn)), nil
 }
 
 func TestPrefixUrlFor(t *testing.T) {
@@ -1096,4 +1131,19 @@ func TestRouterAddRouterPointerMethodPanicNotImplementInterface(t *testing.T) {
 
 	handler := NewControllerRegister()
 	handler.AddRouterMethod(method, "/user", (*TestControllerWithInterface).PingPointer)
+}
+
+func TestHijacking(t *testing.T) {
+	r, _ := http.NewRequest(http.MethodGet, "/hijack", nil)
+	w := &HijackableResponseWriter{}
+
+	handler := NewControllerRegister()
+	handler.Add("/hijack", &HijackingController{})
+	handler.ServeHTTP(w, r)
+
+	// If the response writer wasn't started, codes above attempts to find a template to render but panics as there
+	// isn't any. Router then recovers and sets status to 500 automatically.
+	if w.StatusCode != 0 {
+		t.Errorf("Hijacking failed with status %d", w.StatusCode)
+	}
 }

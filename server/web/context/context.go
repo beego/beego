@@ -373,9 +373,9 @@ func (r *Response) Hijack() (net.Conn, *bufio.ReadWriter, error) {
 		return nil, nil, errors.New("webserver doesn't support hijacking")
 	}
 	conn, rw, err := hj.Hijack()
-	if err == nil {
-		r.Started = true
-	}
+	//if err == nil {
+	//	r.Started = true
+	//}
 	return conn, rw, err
 }
 
