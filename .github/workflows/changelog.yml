@@ -10,6 +10,9 @@ on:
     branches:
       - develop
 
+permissions:
+  contents: read
+
 jobs:
   changelog:
     runs-on: ubuntu-latest
