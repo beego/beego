@@ -17,7 +17,6 @@ package logs
 import (
 	"encoding/json"
 	"errors"
-	"strconv"
 	"testing"
 	"time"
 
@@ -79,17 +78,39 @@ func TestPatternLogFormatter(t *testing.T) {
 		WhenFormat: "2006-01-02",
 	}
 	when := time.Now()
-	lm := &LogMsg{
-		Msg:        "message",
-		FilePath:   "/User/go/beego/main.go",
-		Level:      LevelWarn,
-		LineNumber: 10,
-		When:       when,
+	testCases := []struct {
+		msg  *LogMsg
+		want string
+	}{
+		{
+			msg: &LogMsg{
+				Msg:        "hello %s",
+				FilePath:   "/User/go/beego/main.go",
+				Level:      LevelWarn,
+				LineNumber: 10,
+				When:       when,
+				Args:       []interface{}{"world"},
+			},
+			want: "/User/go/beego/main.go:10|2022-04-17[W]>> hello world",
+		},
+		{
+			msg: &LogMsg{
+				Msg:        "hello",
+				FilePath:   "/User/go/beego/main.go",
+				Level:      LevelWarn,
+				LineNumber: 10,
+				When:       when,
+			},
+			want: "/User/go/beego/main.go:10|2022-04-17[W]>> hello",
+		},
+		{
+			msg:  &LogMsg{},
+			want: ":0|0001-01-01[M]>> ",
+		},
 	}
-	got := tes.ToString(lm)
-	want := lm.FilePath + ":" + strconv.Itoa(lm.LineNumber) + "|" +
-		when.Format(tes.WhenFormat) + levelPrefix[lm.Level] + ">> " + lm.Msg
-	if got != want {
-		t.Errorf("want %s, got %s", want, got)
+
+	for _, tc := range testCases {
+		got := tes.ToString(tc.msg)
+		assert.Equal(t, tc.want, got)
 	}
 }
