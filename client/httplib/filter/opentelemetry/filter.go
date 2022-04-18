@@ -20,6 +20,7 @@ import (
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/beego/beego/v2/client/httplib"
@@ -49,6 +50,8 @@ func (builder *OtelFilterChainBuilder) FilterChain(next httplib.Filter) httplib.
 		spanCtx, span := otel.Tracer("beego").Start(ctx, operationName)
 		defer span.End()
 
+		otel.GetTextMapPropagator().Inject(spanCtx, propagation.HeaderCarrier(req.GetRequest().Header))
+
 		resp, err := next(spanCtx, req)
 
 		if resp != nil {
@@ -66,6 +69,7 @@ func (builder *OtelFilterChainBuilder) FilterChain(next httplib.Filter) httplib.
 		}
 
 		if err != nil {
+			span.SetAttributes(attribute.Bool("error", true))
 			span.RecordError(err)
 		} else if resp != nil && !(resp.StatusCode < 300 && resp.StatusCode >= 200) {
 			span.SetAttributes(attribute.Bool("error", true))

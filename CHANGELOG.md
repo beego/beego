@@ -3,7 +3,7 @@
 - [fix prometheus CVE-2022-21698](https://github.com/beego/beego/pull/4878)
 - [upgrade to Go 1.18](https://github.com/beego/beego/pull/4896)
 - [make `PatternLogFormatter` handling the arguments](https://github.com/beego/beego/pull/4914/files)
-- [Add httplib OpenTelemetry Filter](https://github.com/beego/beego/pull/4888)
+- [Add httplib OpenTelemetry Filter](https://github.com/beego/beego/pull/4888, https://github.com/beego/beego/pull/4915)
 - [Support NewBeegoRequestWithCtx in httplib](https://github.com/beego/beego/pull/4895)
 
 # v2.0.2
