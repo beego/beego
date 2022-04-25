@@ -25,7 +25,7 @@ import (
 
 type CustomFormatter struct{}
 
-func (c *CustomFormatter) Format(lm *LogMsg) string {
+func (*CustomFormatter) Format(lm *LogMsg) string {
 	return "hello, msg: " + lm.Msg
 }
 
@@ -49,15 +49,15 @@ func (t *TestLogger) WriteMsg(lm *LogMsg) error {
 	return nil
 }
 
-func (t *TestLogger) Destroy() {
+func (*TestLogger) Destroy() {
 	panic("implement me")
 }
 
-func (t *TestLogger) Flush() {
+func (*TestLogger) Flush() {
 	panic("implement me")
 }
 
-func (t *TestLogger) SetFormatter(f LogFormatter) {
+func (*TestLogger) SetFormatter(_ LogFormatter) {
 	panic("implement me")
 }
 
@@ -77,7 +77,7 @@ func TestPatternLogFormatter(t *testing.T) {
 		Pattern:    "%F:%n|%w%t>> %m",
 		WhenFormat: "2006-01-02",
 	}
-	when := time.Now()
+	when, _ := time.Parse(tes.WhenFormat, "2022-04-17")
 	testCases := []struct {
 		msg  *LogMsg
 		want string
