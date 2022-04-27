@@ -646,7 +646,7 @@ func (c *Controller) SessionRegenerateID() (err error) {
 	if c.CruSession != nil {
 		c.CruSession.SessionRelease(c.Ctx.ResponseWriter)
 	}
-	c.CruSession = GlobalSessions.SessionRegenerateID(c.Ctx.ResponseWriter, c.Ctx.Request)
+	c.CruSession, err = GlobalSessions.SessionRegenerateID(c.Ctx.ResponseWriter, c.Ctx.Request)
 	c.Ctx.Input.CruSession = c.CruSession
 	return
 }
