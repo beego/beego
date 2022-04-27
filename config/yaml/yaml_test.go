@@ -19,7 +19,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/astaxie/beego/config"
+	"github.com/beego/beego/config"
 )
 
 func TestYaml(t *testing.T) {

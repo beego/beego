@@ -22,7 +22,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/astaxie/beego/context"
+	"github.com/beego/beego/context"
 )
 
 func TestGetInt(t *testing.T) {

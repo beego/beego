@@ -19,9 +19,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/context"
-	"github.com/astaxie/beego/plugins/auth"
+	"github.com/beego/beego"
+	"github.com/beego/beego/context"
+	"github.com/beego/beego/plugins/auth"
 	"github.com/casbin/casbin"
 )
 

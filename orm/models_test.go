@@ -301,7 +301,7 @@ type Post struct {
 	Content string    `orm:"type(text)"`
 	Created time.Time `orm:"auto_now_add"`
 	Updated time.Time `orm:"auto_now"`
-	Tags    []*Tag    `orm:"rel(m2m);rel_through(github.com/astaxie/beego/orm.PostTags)"`
+	Tags    []*Tag    `orm:"rel(m2m);rel_through(github.com/beego/beego/orm.PostTags)"`
 }
 
 func (u *Post) TableIndex() [][]string {
@@ -359,7 +359,7 @@ type Group struct {
 type Permission struct {
 	ID     int `orm:"column(id)"`
 	Name   string
-	Groups []*Group `orm:"rel(m2m);rel_through(github.com/astaxie/beego/orm.GroupPermissions)"`
+	Groups []*Group `orm:"rel(m2m);rel_through(github.com/beego/beego/orm.GroupPermissions)"`
 }
 
 type GroupPermissions struct {
@@ -454,7 +454,7 @@ var (
 	
 	usage:
 	
-	go get -u github.com/astaxie/beego/orm
+	go get -u github.com/beego/beego/orm
 	go get -u github.com/go-sql-driver/mysql
 	go get -u github.com/mattn/go-sqlite3
 	go get -u github.com/lib/pq
@@ -464,25 +464,25 @@ var (
 	mysql -u root -e 'create database orm_test;'
 	export ORM_DRIVER=mysql
 	export ORM_SOURCE="root:@/orm_test?charset=utf8"
-	go test -v github.com/astaxie/beego/orm
+	go test -v github.com/beego/beego/orm
 	
 	
 	#### Sqlite3
 	export ORM_DRIVER=sqlite3
 	export ORM_SOURCE='file:memory_test?mode=memory'
-	go test -v github.com/astaxie/beego/orm
+	go test -v github.com/beego/beego/orm
 	
 	
 	#### PostgreSQL
 	psql -c 'create database orm_test;' -U postgres
 	export ORM_DRIVER=postgres
 	export ORM_SOURCE="user=postgres dbname=orm_test sslmode=disable"
-	go test -v github.com/astaxie/beego/orm
+	go test -v github.com/beego/beego/orm
 	
 	#### TiDB
 	export ORM_DRIVER=tidb
 	export ORM_SOURCE='memory://test/test'
-	go test -v github.com/astaxie/beego/orm
+	go test -v github.com/beego/beego/orm
 	
 	`
 )
