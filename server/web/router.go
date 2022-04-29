@@ -132,6 +132,10 @@ func (c *ControllerInfo) GetPattern() string {
 	return c.pattern
 }
 
+func (c *ControllerInfo) GetMethod() map[string]string {
+	return c.methods
+}
+
 func WithRouterMethods(ctrlInterface ControllerInterface, mappingMethod ...string) ControllerOption {
 	return func(c *ControllerInfo) {
 		c.methods = parseMappingMethods(ctrlInterface, mappingMethod)
@@ -1313,6 +1317,32 @@ func (p *ControllerRegister) FindRouter(context *beecontext.Context) (routerInfo
 		}
 	}
 	return
+}
+
+// GetAllControllerInfo get all ControllerInfo
+func (p *ControllerRegister) GetAllControllerInfo() (routerInfos []*ControllerInfo) {
+	for _, webTree := range p.routers {
+		composeControllerInfos(webTree, &routerInfos)
+	}
+	return
+}
+
+func composeControllerInfos(tree *Tree, routerInfos *[]*ControllerInfo) {
+	if tree.fixrouters != nil {
+		for _, subTree := range tree.fixrouters {
+			composeControllerInfos(subTree, routerInfos)
+		}
+	}
+	if tree.wildcard != nil {
+		composeControllerInfos(tree.wildcard, routerInfos)
+	}
+	if tree.leaves != nil {
+		for _, l := range tree.leaves {
+			if c, ok := l.runObject.(*ControllerInfo); ok {
+				*routerInfos = append(*routerInfos, c)
+			}
+		}
+	}
 }
 
 func toURL(params map[string]string) string {

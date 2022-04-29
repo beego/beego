@@ -49,9 +49,10 @@ func init() {
 
 // HttpServer defines beego application with a new PatternServeMux.
 type HttpServer struct {
-	Handlers *ControllerRegister
-	Server   *http.Server
-	Cfg      *Config
+	Handlers           *ControllerRegister
+	Server             *http.Server
+	Cfg                *Config
+	LifeCycleCallbacks []LifeCycleCallback
 }
 
 // NewHttpSever returns a new beego application.
@@ -76,6 +77,13 @@ func NewHttpServerWithCfg(cfg *Config) *HttpServer {
 // MiddleWare function for http.Handler
 type MiddleWare func(http.Handler) http.Handler
 
+// LifeCycleCallback configures callback.
+// Developer can implement this interface to add custom logic to server lifecycle
+type LifeCycleCallback interface {
+	AfterStart(app *HttpServer)
+	BeforeShutdown(app *HttpServer)
+}
+
 // Run beego application.
 func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 	initBeforeHTTPRun()
@@ -98,11 +106,17 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 
 	// run cgi server
 	if app.Cfg.Listen.EnableFcgi {
+		for _, lifeCycleCallback := range app.LifeCycleCallbacks {
+			lifeCycleCallback.AfterStart(app)
+		}
 		if app.Cfg.Listen.EnableStdIo {
 			if err = fcgi.Serve(nil, app.Handlers); err == nil { // standard I/O
 				logs.Info("Use FCGI via standard I/O")
 			} else {
 				logs.Critical("Cannot use FCGI via standard I/O", err)
+			}
+			for _, lifeCycleCallback := range app.LifeCycleCallbacks {
+				lifeCycleCallback.BeforeShutdown(app)
 			}
 			return
 		}
@@ -116,10 +130,13 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 			l, err = net.Listen("tcp", addr)
 		}
 		if err != nil {
-			logs.Critical("Listen: ", err)
+			logs.Critical("Listen for Fcgi: ", err)
 		}
 		if err = fcgi.Serve(l, app.Handlers); err != nil {
 			logs.Critical("fcgi.Serve: ", err)
+		}
+		for _, lifeCycleCallback := range app.LifeCycleCallbacks {
+			lifeCycleCallback.BeforeShutdown(app)
 		}
 		return
 	}
@@ -137,6 +154,14 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 
 	// run graceful mode
 	if app.Cfg.Listen.Graceful {
+		var opts []grace.ServerOption
+		for _, lifeCycleCallback := range app.LifeCycleCallbacks {
+			lifeCycleCallbackDup := lifeCycleCallback
+			opts = append(opts, grace.WithShutdownCallback(func() {
+				lifeCycleCallbackDup.BeforeShutdown(app)
+			}))
+		}
+
 		httpsAddr := app.Cfg.Listen.HTTPSAddr
 		app.Server.Addr = httpsAddr
 		if app.Cfg.Listen.EnableHTTPS || app.Cfg.Listen.EnableMutualHTTPS {
@@ -146,15 +171,16 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 					httpsAddr = fmt.Sprintf("%s:%d", app.Cfg.Listen.HTTPSAddr, app.Cfg.Listen.HTTPSPort)
 					app.Server.Addr = httpsAddr
 				}
-				server := grace.NewServer(httpsAddr, app.Server.Handler)
+				server := grace.NewServer(httpsAddr, app.Server.Handler, opts...)
 				server.Server.ReadTimeout = app.Server.ReadTimeout
 				server.Server.WriteTimeout = app.Server.WriteTimeout
+				var ln net.Listener
 				if app.Cfg.Listen.EnableMutualHTTPS {
-					if err := server.ListenAndServeMutualTLS(app.Cfg.Listen.HTTPSCertFile,
+					if ln, err = server.ListenMutualTLS(app.Cfg.Listen.HTTPSCertFile,
 						app.Cfg.Listen.HTTPSKeyFile,
 						app.Cfg.Listen.TrustCaFile); err != nil {
-						logs.Critical("ListenAndServeTLS: ", err, fmt.Sprintf("%d", os.Getpid()))
-						time.Sleep(100 * time.Microsecond)
+						logs.Critical("ListenMutualTLS: ", err, fmt.Sprintf("%d", os.Getpid()))
+						return
 					}
 				} else {
 					if app.Cfg.Listen.AutoTLS {
@@ -166,24 +192,40 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 						app.Server.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
 						app.Cfg.Listen.HTTPSCertFile, app.Cfg.Listen.HTTPSKeyFile = "", ""
 					}
-					if err := server.ListenAndServeTLS(app.Cfg.Listen.HTTPSCertFile, app.Cfg.Listen.HTTPSKeyFile); err != nil {
-						logs.Critical("ListenAndServeTLS: ", err, fmt.Sprintf("%d", os.Getpid()))
-						time.Sleep(100 * time.Microsecond)
+					if ln, err = server.ListenTLS(app.Cfg.Listen.HTTPSCertFile, app.Cfg.Listen.HTTPSKeyFile); err != nil {
+						logs.Critical("ListenTLS: ", err, fmt.Sprintf("%d", os.Getpid()))
+						return
 					}
+				}
+				for _, callback := range app.LifeCycleCallbacks {
+					callback.AfterStart(app)
+				}
+				if err = server.ServeTLS(ln); err != nil {
+					logs.Critical("ServeTLS: ", err, fmt.Sprintf("%d", os.Getpid()))
+					time.Sleep(100 * time.Microsecond)
 				}
 				endRunning <- true
 			}()
 		}
 		if app.Cfg.Listen.EnableHTTP {
 			go func() {
-				server := grace.NewServer(addr, app.Server.Handler)
+				server := grace.NewServer(addr, app.Server.Handler, opts...)
 				server.Server.ReadTimeout = app.Server.ReadTimeout
 				server.Server.WriteTimeout = app.Server.WriteTimeout
 				if app.Cfg.Listen.ListenTCP4 {
 					server.Network = "tcp4"
 				}
-				if err := server.ListenAndServe(); err != nil {
-					logs.Critical("ListenAndServe: ", err, fmt.Sprintf("%d", os.Getpid()))
+				ln, err := net.Listen(server.Network, app.Server.Addr)
+				if err != nil {
+					logs.Critical("Listen for HTTP[graceful mode]: ", err)
+					endRunning <- true
+					return
+				}
+				for _, callback := range app.LifeCycleCallbacks {
+					callback.AfterStart(app)
+				}
+				if err := server.ServeWithListener(ln); err != nil {
+					logs.Critical("ServeWithListener: ", err, fmt.Sprintf("%d", os.Getpid()))
 					time.Sleep(100 * time.Microsecond)
 				}
 				endRunning <- true
@@ -239,13 +281,13 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 			if app.Cfg.Listen.ListenTCP4 {
 				ln, err := net.Listen("tcp4", app.Server.Addr)
 				if err != nil {
-					logs.Critical("ListenAndServe: ", err)
+					logs.Critical("Listen for HTTP[normal mode]: ", err)
 					time.Sleep(100 * time.Microsecond)
 					endRunning <- true
 					return
 				}
 				if err = app.Server.Serve(ln); err != nil {
-					logs.Critical("ListenAndServe: ", err)
+					logs.Critical("Serve: ", err)
 					time.Sleep(100 * time.Microsecond)
 					endRunning <- true
 					return

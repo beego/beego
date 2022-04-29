@@ -20,31 +20,41 @@ import (
 // Server embedded http.Server
 type Server struct {
 	*http.Server
-	ln           net.Listener
-	SignalHooks  map[int]map[os.Signal][]func()
-	sigChan      chan os.Signal
-	isChild      bool
-	state        uint8
-	Network      string
-	terminalChan chan error
+	ln                net.Listener
+	SignalHooks       map[int]map[os.Signal][]func()
+	sigChan           chan os.Signal
+	isChild           bool
+	state             uint8
+	Network           string
+	terminalChan      chan error
+	shutdownCallbacks []func()
 }
 
 // Serve accepts incoming connections on the Listener l
 // and creates a new service goroutine for each.
 // The service goroutines read requests and then call srv.Handler to reply to them.
 func (srv *Server) Serve() (err error) {
+	return srv.internalServe(srv.ln)
+}
+
+func (srv *Server) ServeWithListener(ln net.Listener) (err error) {
+	go srv.handleSignals()
+	return srv.internalServe(ln)
+}
+
+func (srv *Server) internalServe(ln net.Listener) (err error) {
 	srv.state = StateRunning
 	defer func() { srv.state = StateTerminate }()
 
 	// When Shutdown is called, Serve, ListenAndServe, and ListenAndServeTLS
 	// immediately return ErrServerClosed. Make sure the program doesn't exit
 	// and waits instead for Shutdown to return.
-	if err = srv.Server.Serve(srv.ln); err != nil && err != http.ErrServerClosed {
+	if err = srv.Server.Serve(ln); err != nil && err != http.ErrServerClosed {
 		log.Println(syscall.Getpid(), "Server.Serve() error:", err)
 		return err
 	}
 
-	log.Println(syscall.Getpid(), srv.ln.Addr(), "Listener closed.")
+	log.Println(syscall.Getpid(), ln.Addr(), "Listener closed.")
 	// wait for Shutdown to return
 	if shutdownErr := <-srv.terminalChan; shutdownErr != nil {
 		return shutdownErr
@@ -95,6 +105,15 @@ func (srv *Server) ListenAndServe() (err error) {
 //
 // If srv.Addr is blank, ":https" is used.
 func (srv *Server) ListenAndServeTLS(certFile, keyFile string) (err error) {
+	ln, err := srv.ListenTLS(certFile, keyFile)
+	if err != nil {
+		return err
+	}
+
+	return srv.ServeTLS(ln)
+}
+
+func (srv *Server) ListenTLS(certFile string, keyFile string) (net.Listener, error) {
 	addr := srv.Addr
 	if addr == "" {
 		addr = ":https"
@@ -108,20 +127,35 @@ func (srv *Server) ListenAndServeTLS(certFile, keyFile string) (err error) {
 	}
 
 	srv.TLSConfig.Certificates = make([]tls.Certificate, 1)
-	srv.TLSConfig.Certificates[0], err = tls.LoadX509KeyPair(certFile, keyFile)
+	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
-		return
+		return nil, err
 	}
+	srv.TLSConfig.Certificates[0] = cert
 
 	go srv.handleSignals()
 
 	ln, err := srv.getListener(addr)
 	if err != nil {
 		log.Println(err)
+		return nil, err
+	}
+	tlsListener := tls.NewListener(tcpKeepAliveListener{ln.(*net.TCPListener)}, srv.TLSConfig)
+	return tlsListener, nil
+}
+
+// ListenAndServeMutualTLS listens on the TCP network address srv.Addr and then calls
+// Serve to handle requests on incoming mutual TLS connections.
+func (srv *Server) ListenAndServeMutualTLS(certFile, keyFile, trustFile string) (err error) {
+	ln, err := srv.ListenMutualTLS(certFile, keyFile, trustFile)
+	if err != nil {
 		return err
 	}
-	srv.ln = tls.NewListener(tcpKeepAliveListener{ln.(*net.TCPListener)}, srv.TLSConfig)
 
+	return srv.ServeTLS(ln)
+}
+
+func (srv *Server) ServeTLS(ln net.Listener) error {
 	if srv.isChild {
 		process, err := os.FindProcess(os.Getppid())
 		if err != nil {
@@ -134,13 +168,12 @@ func (srv *Server) ListenAndServeTLS(certFile, keyFile string) (err error) {
 		}
 	}
 
+	go srv.handleSignals()
 	log.Println(os.Getpid(), srv.Addr)
-	return srv.Serve()
+	return srv.internalServe(ln)
 }
 
-// ListenAndServeMutualTLS listens on the TCP network address srv.Addr and then calls
-// Serve to handle requests on incoming mutual TLS connections.
-func (srv *Server) ListenAndServeMutualTLS(certFile, keyFile, trustFile string) (err error) {
+func (srv *Server) ListenMutualTLS(certFile string, keyFile string, trustFile string) (net.Listener, error) {
 	addr := srv.Addr
 	if addr == "" {
 		addr = ":https"
@@ -154,16 +187,17 @@ func (srv *Server) ListenAndServeMutualTLS(certFile, keyFile, trustFile string) 
 	}
 
 	srv.TLSConfig.Certificates = make([]tls.Certificate, 1)
-	srv.TLSConfig.Certificates[0], err = tls.LoadX509KeyPair(certFile, keyFile)
+	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
 	if err != nil {
-		return
+		return nil, err
 	}
+	srv.TLSConfig.Certificates[0] = cert
 	srv.TLSConfig.ClientAuth = tls.RequireAndVerifyClientCert
 	pool := x509.NewCertPool()
 	data, err := ioutil.ReadFile(trustFile)
 	if err != nil {
 		log.Println(err)
-		return err
+		return nil, err
 	}
 	pool.AppendCertsFromPEM(data)
 	srv.TLSConfig.ClientCAs = pool
@@ -173,24 +207,10 @@ func (srv *Server) ListenAndServeMutualTLS(certFile, keyFile, trustFile string) 
 	ln, err := srv.getListener(addr)
 	if err != nil {
 		log.Println(err)
-		return err
+		return nil, err
 	}
-	srv.ln = tls.NewListener(tcpKeepAliveListener{ln.(*net.TCPListener)}, srv.TLSConfig)
-
-	if srv.isChild {
-		process, err := os.FindProcess(os.Getppid())
-		if err != nil {
-			log.Println(err)
-			return err
-		}
-		err = process.Signal(syscall.SIGTERM)
-		if err != nil {
-			return err
-		}
-	}
-
-	log.Println(os.Getpid(), srv.Addr)
-	return srv.Serve()
+	tlsListener := tls.NewListener(tcpKeepAliveListener{ln.(*net.TCPListener)}, srv.TLSConfig)
+	return tlsListener, nil
 }
 
 // getListener either opens a new socket to listen on, or takes the acceptor socket
@@ -291,6 +311,9 @@ func (srv *Server) shutdown() {
 		var cancel context.CancelFunc
 		ctx, cancel = context.WithTimeout(context.Background(), DefaultTimeout)
 		defer cancel()
+	}
+	for _, shutdownCallback := range srv.shutdownCallbacks {
+		shutdownCallback()
 	}
 	srv.terminalChan <- srv.Server.Shutdown(ctx)
 }

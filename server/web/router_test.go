@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
+	"sort"
 	"strings"
 	"testing"
 
@@ -1096,4 +1098,33 @@ func TestRouterAddRouterPointerMethodPanicNotImplementInterface(t *testing.T) {
 
 	handler := NewControllerRegister()
 	handler.AddRouterMethod(method, "/user", (*TestControllerWithInterface).PingPointer)
+}
+
+func TestGetAllControllerInfo(t *testing.T) {
+	handler := NewControllerRegister()
+	handler.Add("/level1", &TestController{}, WithRouterMethods(&TestController{}, "get:Get"))
+	handler.Add("/level1/level2", &TestController{}, WithRouterMethods(&TestController{}, "get:Get"))
+	handler.Add("/:name1", &TestController{}, WithRouterMethods(&TestController{}, "post:Post"))
+
+	var actualPatterns []string
+	var actualMethods []string
+	for _, controllerInfo := range handler.GetAllControllerInfo() {
+		actualPatterns = append(actualPatterns, controllerInfo.GetPattern())
+		for _, httpMethod := range controllerInfo.GetMethod() {
+			actualMethods = append(actualMethods, httpMethod)
+		}
+	}
+	sort.Strings(actualPatterns)
+	expectedPatterns := []string{"/level1", "/level1/level2", "/:name1"}
+	sort.Strings(expectedPatterns)
+	if !reflect.DeepEqual(actualPatterns, expectedPatterns) {
+		t.Errorf("ControllerInfo.GetMethod expected %#v, but %#v got", expectedPatterns, actualPatterns)
+	}
+
+	sort.Strings(actualMethods)
+	expectedMethods := []string{"Get", "Get", "Post"}
+	sort.Strings(expectedMethods)
+	if !reflect.DeepEqual(actualMethods, expectedMethods) {
+		t.Errorf("ControllerInfo.GetMethod expected %#v, but %#v got", expectedMethods, actualMethods)
+	}
 }

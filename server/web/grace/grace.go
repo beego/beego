@@ -105,8 +105,17 @@ func init() {
 	}
 }
 
+// ServerOption configures how we set up the connection.
+type ServerOption func(*Server)
+
+func WithShutdownCallback(shutdownCallback func()) ServerOption {
+	return func(srv *Server) {
+		srv.shutdownCallbacks = append(srv.shutdownCallbacks, shutdownCallback)
+	}
+}
+
 // NewServer returns a new graceServer.
-func NewServer(addr string, handler http.Handler) (srv *Server) {
+func NewServer(addr string, handler http.Handler, opts ...ServerOption) (srv *Server) {
 	regLock.Lock()
 	defer regLock.Unlock()
 
@@ -146,6 +155,10 @@ func NewServer(addr string, handler http.Handler) (srv *Server) {
 		WriteTimeout:   DefaultWriteTimeOut,
 		MaxHeaderBytes: DefaultMaxHeaderBytes,
 		Handler:        handler,
+	}
+
+	for _, opt := range opts {
+		opt(srv)
 	}
 
 	runningServersOrder = append(runningServersOrder, addr)
