@@ -432,6 +432,7 @@ func (mc *_modelCache) getDbCreateSQL(al *alias) (queries []string, tableIndexes
 		columns := make([]string, 0, len(mi.fields.fieldsDB))
 
 		sqlIndexes := [][]string{}
+		sqlComments := []string{}
 
 		for _, fi := range mi.fields.fieldsDB {
 
@@ -474,8 +475,18 @@ func (mc *_modelCache) getDbCreateSQL(al *alias) (queries []string, tableIndexes
 				column = strings.Replace(column, "%COL%", fi.column, -1)
 			}
 
-			if fi.description != "" && al.Driver != DRSqlite {
-				column += " " + fmt.Sprintf("COMMENT '%s'", fi.description)
+			if fi.description != "" {
+				switch al.Driver {
+				case DRPostgres:
+					// PostgreSQL comments
+					sqlComments = append(sqlComments, fmt.Sprintf("COMMENT ON COLUMN %s.%s IS '%s';\n", mi.table,
+						fi.column, fi.description))
+					break
+				case DRSqlite:
+					break
+				default:
+					column += " " + fmt.Sprintf("COMMENT '%s'", fi.description)
+				}
 			}
 
 			columns = append(columns, column)
@@ -515,6 +526,16 @@ func (mc *_modelCache) getDbCreateSQL(al *alias) (queries []string, tableIndexes
 		}
 
 		sql += ";"
+		if len(sqlComments) != 0 {
+			// append comments to raw sql
+			sql += "\n"
+			sql += fmt.Sprintf("-- %s\n", strings.Repeat("-", 50))
+			sql += fmt.Sprintf("--  Column comments for `%s`\n", mi.fullName)
+			sql += fmt.Sprintf("-- %s\n", strings.Repeat("-", 50))
+			for _, comment := range sqlComments {
+				sql += comment
+			}
+		}
 		queries = append(queries, sql)
 
 		if mi.model != nil {
