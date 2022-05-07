@@ -478,12 +478,10 @@ func (mc *_modelCache) getDbCreateSQL(al *alias) (queries []string, tableIndexes
 			if fi.description != "" {
 				switch al.Driver {
 				case DRPostgres:
-					// PostgreSQL comments
+					// postgres comments
 					sqlComments = append(sqlComments, fmt.Sprintf("COMMENT ON COLUMN %s.%s IS '%s';\n", mi.table,
 						fi.column, fi.description))
-					break
 				case DRSqlite:
-					break
 				default:
 					column += " " + fmt.Sprintf("COMMENT '%s'", fi.description)
 				}
