@@ -432,8 +432,9 @@ func (mc *_modelCache) getDbCreateSQL(al *alias) (queries []string, tableIndexes
 		columns := make([]string, 0, len(mi.fields.fieldsDB))
 
 		sqlIndexes := [][]string{}
+		var commentIndexes []int // store comment indexes for postgres
 
-		for _, fi := range mi.fields.fieldsDB {
+		for i, fi := range mi.fields.fieldsDB {
 
 			column := fmt.Sprintf("    %s%s%s ", Q, fi.column, Q)
 			col := getColumnTyp(al, fi)
@@ -475,7 +476,11 @@ func (mc *_modelCache) getDbCreateSQL(al *alias) (queries []string, tableIndexes
 			}
 
 			if fi.description != "" && al.Driver != DRSqlite {
-				column += " " + fmt.Sprintf("COMMENT '%s'", fi.description)
+				if al.Driver == DRPostgres {
+					commentIndexes = append(commentIndexes, i)
+				} else {
+					column += " " + fmt.Sprintf("COMMENT '%s'", fi.description)
+				}
 			}
 
 			columns = append(columns, column)
@@ -515,6 +520,19 @@ func (mc *_modelCache) getDbCreateSQL(al *alias) (queries []string, tableIndexes
 		}
 
 		sql += ";"
+		if al.Driver == DRPostgres && len(commentIndexes) > 0 {
+			// append comments for postgres only
+			for _, index := range commentIndexes {
+				sql += fmt.Sprintf("\nCOMMENT ON COLUMN %s%s%s.%s%s%s is '%s';",
+					Q,
+					mi.table,
+					Q,
+					Q,
+					mi.fields.fieldsDB[index].column,
+					Q,
+					mi.fields.fieldsDB[index].description)
+			}
+		}
 		queries = append(queries, sql)
 
 		if mi.model != nil {
