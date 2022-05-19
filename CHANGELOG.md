@@ -6,6 +6,7 @@
 - [Add httplib OpenTelemetry Filter](https://github.com/beego/beego/pull/4888, https://github.com/beego/beego/pull/4915)
 - [Support NewBeegoRequestWithCtx in httplib](https://github.com/beego/beego/pull/4895)
 - [Support lifecycle callback](https://github.com/beego/beego/pull/4918)
+- [Append column comments to create table sentence when using postgres](https://github.com/beego/beego/pull/4940)
 
 # v2.0.2
 See v2.0.2-beta.1

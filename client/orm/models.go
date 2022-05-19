@@ -435,7 +435,6 @@ func (mc *_modelCache) getDbCreateSQL(al *alias) (queries []string, tableIndexes
 		var commentIndexes []int // store comment indexes for postgres
 
 		for i, fi := range mi.fields.fieldsDB {
-
 			column := fmt.Sprintf("    %s%s%s ", Q, fi.column, Q)
 			col := getColumnTyp(al, fi)
 
