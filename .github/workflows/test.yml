@@ -20,6 +20,9 @@ on:
       - "go.sum"
       - ".github/workflows/test.yml"
 
+permissions:
+  contents: read
+
 jobs:
   test:
     strategy:

@@ -7,6 +7,7 @@
 - [Support NewBeegoRequestWithCtx in httplib](https://github.com/beego/beego/pull/4895)
 - [Support lifecycle callback](https://github.com/beego/beego/pull/4918)
 - [Append column comments to create table sentence when using postgres](https://github.com/beego/beego/pull/4940)
+- [logs: multiFileLogWriter uses incorrect formatter](https://github.com/beego/beego/pull/4943)
 
 # v2.0.2
 See v2.0.2-beta.1

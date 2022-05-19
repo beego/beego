@@ -478,7 +478,7 @@ func (c *IniConfigContainer) DIY(key string) (v interface{}, err error) {
 	if v, ok := c.data[strings.ToLower(key)]; ok {
 		return v, nil
 	}
-	return v, errors.New("key not find")
+	return v, errors.New("key not found")
 }
 
 // section.key or key
