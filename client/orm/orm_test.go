@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build go1.8
 // +build go1.8
 
 package orm
@@ -214,7 +215,7 @@ func TestSyncDb(t *testing.T) {
 	err := RunSyncdb("default", true, Debug)
 	throwFail(t, err)
 
-	modelCache.clean()
+	defaultModelCache.clean()
 }
 
 func TestRegisterModels(_ *testing.T) {
@@ -250,10 +251,10 @@ func TestModelSyntax(t *testing.T) {
 	user := &User{}
 	ind := reflect.ValueOf(user).Elem()
 	fn := getFullName(ind.Type())
-	_, ok := modelCache.getByFullName(fn)
+	_, ok := defaultModelCache.getByFullName(fn)
 	throwFail(t, AssertIs(ok, true))
 
-	mi, ok := modelCache.get("user")
+	mi, ok := defaultModelCache.get("user")
 	throwFail(t, AssertIs(ok, true))
 	if ok {
 		throwFail(t, AssertIs(mi.fields.GetByName("ShouldSkip") == nil, true))
@@ -2628,9 +2629,9 @@ func TestIgnoreCaseTag(t *testing.T) {
 		Name02 string `orm:"COLUMN(Name)"`
 		Name03 string `orm:"Column(name)"`
 	}
-	modelCache.clean()
+	defaultModelCache.clean()
 	RegisterModel(&testTagModel{})
-	info, ok := modelCache.get("test_tag_model")
+	info, ok := defaultModelCache.get("test_tag_model")
 	throwFail(t, AssertIs(ok, true))
 	throwFail(t, AssertNot(info, nil))
 	if t == nil {

@@ -32,10 +32,10 @@ const (
 	defaultStructTagDelim = ";"
 )
 
-var modelCache = NewModelCacheHandler()
+var defaultModelCache = NewModelCacheHandler()
 
 // model info collection
-type _modelCache struct {
+type modelCache struct {
 	sync.RWMutex    // only used outsite for bootStrap
 	orders          []string
 	cache           map[string]*modelInfo
@@ -43,16 +43,16 @@ type _modelCache struct {
 	done            bool
 }
 
-// NewModelCacheHandler generator of _modelCache
-func NewModelCacheHandler() *_modelCache {
-	return &_modelCache{
+// NewModelCacheHandler generator of modelCache
+func NewModelCacheHandler() *modelCache {
+	return &modelCache{
 		cache:           make(map[string]*modelInfo),
 		cacheByFullName: make(map[string]*modelInfo),
 	}
 }
 
 // get all model info
-func (mc *_modelCache) all() map[string]*modelInfo {
+func (mc *modelCache) all() map[string]*modelInfo {
 	m := make(map[string]*modelInfo, len(mc.cache))
 	for k, v := range mc.cache {
 		m[k] = v
@@ -61,7 +61,7 @@ func (mc *_modelCache) all() map[string]*modelInfo {
 }
 
 // get ordered model info
-func (mc *_modelCache) allOrdered() []*modelInfo {
+func (mc *modelCache) allOrdered() []*modelInfo {
 	m := make([]*modelInfo, 0, len(mc.orders))
 	for _, table := range mc.orders {
 		m = append(m, mc.cache[table])
@@ -70,18 +70,18 @@ func (mc *_modelCache) allOrdered() []*modelInfo {
 }
 
 // get model info by table name
-func (mc *_modelCache) get(table string) (mi *modelInfo, ok bool) {
+func (mc *modelCache) get(table string) (mi *modelInfo, ok bool) {
 	mi, ok = mc.cache[table]
 	return
 }
 
 // get model info by full name
-func (mc *_modelCache) getByFullName(name string) (mi *modelInfo, ok bool) {
+func (mc *modelCache) getByFullName(name string) (mi *modelInfo, ok bool) {
 	mi, ok = mc.cacheByFullName[name]
 	return
 }
 
-func (mc *_modelCache) getByMd(md interface{}) (*modelInfo, bool) {
+func (mc *modelCache) getByMd(md interface{}) (*modelInfo, bool) {
 	val := reflect.ValueOf(md)
 	ind := reflect.Indirect(val)
 	typ := ind.Type()
@@ -90,7 +90,7 @@ func (mc *_modelCache) getByMd(md interface{}) (*modelInfo, bool) {
 }
 
 // set model info to collection
-func (mc *_modelCache) set(table string, mi *modelInfo) *modelInfo {
+func (mc *modelCache) set(table string, mi *modelInfo) *modelInfo {
 	mii := mc.cache[table]
 	mc.cache[table] = mi
 	mc.cacheByFullName[mi.fullName] = mi
@@ -101,7 +101,7 @@ func (mc *_modelCache) set(table string, mi *modelInfo) *modelInfo {
 }
 
 // clean all model info.
-func (mc *_modelCache) clean() {
+func (mc *modelCache) clean() {
 	mc.Lock()
 	defer mc.Unlock()
 
@@ -112,7 +112,7 @@ func (mc *_modelCache) clean() {
 }
 
 // bootstrap bootstrap for models
-func (mc *_modelCache) bootstrap() {
+func (mc *modelCache) bootstrap() {
 	mc.Lock()
 	defer mc.Unlock()
 	if mc.done {
@@ -328,7 +328,7 @@ end:
 }
 
 // register register models to model cache
-func (mc *_modelCache) register(prefixOrSuffixStr string, prefixOrSuffix bool, models ...interface{}) (err error) {
+func (mc *modelCache) register(prefixOrSuffixStr string, prefixOrSuffix bool, models ...interface{}) (err error) {
 	for _, model := range models {
 		val := reflect.ValueOf(model)
 		typ := reflect.Indirect(val).Type()
@@ -395,7 +395,7 @@ func (mc *_modelCache) register(prefixOrSuffixStr string, prefixOrSuffix bool, m
 }
 
 // getDbDropSQL get database scheme drop sql queries
-func (mc *_modelCache) getDbDropSQL(al *alias) (queries []string, err error) {
+func (mc *modelCache) getDbDropSQL(al *alias) (queries []string, err error) {
 	if len(mc.cache) == 0 {
 		err = errors.New("no Model found, need register your model")
 		return
@@ -410,7 +410,7 @@ func (mc *_modelCache) getDbDropSQL(al *alias) (queries []string, err error) {
 }
 
 // getDbCreateSQL get database scheme creation sql queries
-func (mc *_modelCache) getDbCreateSQL(al *alias) (queries []string, tableIndexes map[string][]dbIndex, err error) {
+func (mc *modelCache) getDbCreateSQL(al *alias) (queries []string, tableIndexes map[string][]dbIndex, err error) {
 	if len(mc.cache) == 0 {
 		err = errors.New("no Model found, need register your model")
 		return
@@ -552,5 +552,5 @@ func (mc *_modelCache) getDbCreateSQL(al *alias) (queries []string, tableIndexes
 // ResetModelCache Clean model cache. Then you can re-RegisterModel.
 // Common use this api for test case.
 func ResetModelCache() {
-	modelCache.clean()
+	defaultModelCache.clean()
 }
