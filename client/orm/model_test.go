@@ -15,55 +15,64 @@
 package orm
 
 import (
-	"fmt"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type ModelWithComments struct {
-	Id       int    `orm:"description(user id)"`
+	ID       int    `orm:"column(id);description(user id)"`
 	UserName string `orm:"size(30);unique;description(user name)"`
+	Email    string `orm:"size(100);description(email)"`
+	Password string `orm:"size(100);description(password)"`
+}
+
+type ModelWithoutComments struct {
+	ID       int    `orm:"column(id)"`
+	UserName string `orm:"size(30);unique"`
 	Email    string `orm:"size(100)"`
 	Password string `orm:"size(100)"`
 }
 
+type ModelWithEmptyComments struct {
+	ID       int    `orm:"column(id);description()"`
+	UserName string `orm:"size(30);unique;description()"`
+	Email    string `orm:"size(100);description()"`
+	Password string `orm:"size(100);description()"`
+}
+
 func TestGetDbCreateSQLWithComment(t *testing.T) {
+	type TestCase struct {
+		name    string
+		model   interface{}
+		wantSQL string
+		wantErr error
+	}
 	al := getDbAlias("default")
-	modelCache.clean()
-	RegisterModel(&ModelWithComments{})
-	queries, _, _ := modelCache.getDbCreateSQL(al)
-	header := `-- --------------------------------------------------
---  Table Structure for ` + fmt.Sprintf("`%s`", modelCache.allOrdered()[0].fullName) + `
--- --------------------------------------------------`
-	if al.Driver == DRPostgres {
-		assert.Equal(t, queries, []string{header + `
-CREATE TABLE IF NOT EXISTS "model_with_comments" (
-    "id" serial NOT NULL PRIMARY KEY,
-    "user_name" varchar(30) NOT NULL DEFAULT ''  UNIQUE,
-    "email" varchar(100) NOT NULL DEFAULT '' ,
-    "password" varchar(100) NOT NULL DEFAULT '' 
-);
-COMMENT ON COLUMN "model_with_comments"."id" is 'user id';
-COMMENT ON COLUMN "model_with_comments"."user_name" is 'user name';`,
-		})
-	} else if al.Driver == DRMySQL {
-		assert.Equal(t, queries, []string{header + `
-CREATE TABLE IF NOT EXISTS ` + "`model_with_comments`" + ` (
-    ` + "`id`" + ` integer AUTO_INCREMENT NOT NULL PRIMARY KEY COMMENT 'user id',
-    ` + "`user_name`" + ` varchar(30) NOT NULL DEFAULT ''  UNIQUE COMMENT 'user name',
-    ` + "`email`" + ` varchar(100) NOT NULL DEFAULT '' ,
-    ` + "`password`" + ` varchar(100) NOT NULL DEFAULT '' 
-) ENGINE=INNODB;`,
-		})
-	} else if al.Driver == DRSqlite {
-		assert.Equal(t, queries, []string{header + `
-CREATE TABLE IF NOT EXISTS ` + "`model_with_comments`" + ` (
-    ` + "`id`" + ` integer NOT NULL PRIMARY KEY AUTOINCREMENT,
-    ` + "`user_name`" + ` varchar(30) NOT NULL DEFAULT ''  UNIQUE,
-    ` + "`email`" + ` varchar(100) NOT NULL DEFAULT '' ,
-    ` + "`password`" + ` varchar(100) NOT NULL DEFAULT '' 
-);`,
+	testModelCache := NewModelCacheHandler()
+	var testCases []TestCase
+	switch al.Driver {
+	case DRMySQL:
+		testCases = append(testCases, TestCase{name: "model with comments for MySQL", model: &ModelWithComments{}, wantSQL: "-- --------------------------------------------------\n--  Table Structure for `github.com/beego/beego/v2/client/orm.ModelWithComments`\n-- --------------------------------------------------\nCREATE TABLE IF NOT EXISTS `model_with_comments` (\n    `id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY COMMENT 'user id',\n    `user_name` varchar(30) NOT NULL DEFAULT ''  UNIQUE COMMENT 'user name',\n    `email` varchar(100) NOT NULL DEFAULT ''  COMMENT 'email',\n    `password` varchar(100) NOT NULL DEFAULT ''  COMMENT 'password'\n) ENGINE=INNODB;", wantErr: nil})
+		testCases = append(testCases, TestCase{name: "model without comments for MySQL", model: &ModelWithoutComments{}, wantSQL: "-- --------------------------------------------------\n--  Table Structure for `github.com/beego/beego/v2/client/orm.ModelWithoutComments`\n-- --------------------------------------------------\nCREATE TABLE IF NOT EXISTS `model_without_comments` (\n    `id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY,\n    `user_name` varchar(30) NOT NULL DEFAULT ''  UNIQUE,\n    `email` varchar(100) NOT NULL DEFAULT '' ,\n    `password` varchar(100) NOT NULL DEFAULT '' \n) ENGINE=INNODB;", wantErr: nil})
+		testCases = append(testCases, TestCase{name: "model with empty comments for MySQL", model: &ModelWithEmptyComments{}, wantSQL: "-- --------------------------------------------------\n--  Table Structure for `github.com/beego/beego/v2/client/orm.ModelWithEmptyComments`\n-- --------------------------------------------------\nCREATE TABLE IF NOT EXISTS `model_with_empty_comments` (\n    `id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY,\n    `user_name` varchar(30) NOT NULL DEFAULT ''  UNIQUE,\n    `email` varchar(100) NOT NULL DEFAULT '' ,\n    `password` varchar(100) NOT NULL DEFAULT '' \n) ENGINE=INNODB;", wantErr: nil})
+	case DRPostgres:
+		testCases = append(testCases, TestCase{name: "model with comments for Postgres", model: &ModelWithComments{}, wantSQL: "-- --------------------------------------------------\n--  Table Structure for `github.com/beego/beego/v2/client/orm.ModelWithComments`\n-- --------------------------------------------------\nCREATE TABLE IF NOT EXISTS \"model_with_comments\" (\n    \"id\" serial NOT NULL PRIMARY KEY,\n    \"user_name\" varchar(30) NOT NULL DEFAULT ''  UNIQUE,\n    \"email\" varchar(100) NOT NULL DEFAULT '' ,\n    \"password\" varchar(100) NOT NULL DEFAULT '' \n);\nCOMMENT ON COLUMN \"model_with_comments\".\"id\" is 'user id';\nCOMMENT ON COLUMN \"model_with_comments\".\"user_name\" is 'user name';\nCOMMENT ON COLUMN \"model_with_comments\".\"email\" is 'email';\nCOMMENT ON COLUMN \"model_with_comments\".\"password\" is 'password';", wantErr: nil})
+		testCases = append(testCases, TestCase{name: "model without comments for Postgres", model: &ModelWithoutComments{}, wantSQL: "-- --------------------------------------------------\n--  Table Structure for `github.com/beego/beego/v2/client/orm.ModelWithoutComments`\n-- --------------------------------------------------\nCREATE TABLE IF NOT EXISTS \"model_without_comments\" (\n    \"id\" serial NOT NULL PRIMARY KEY,\n    \"user_name\" varchar(30) NOT NULL DEFAULT ''  UNIQUE,\n    \"email\" varchar(100) NOT NULL DEFAULT '' ,\n    \"password\" varchar(100) NOT NULL DEFAULT '' \n);", wantErr: nil})
+		testCases = append(testCases, TestCase{name: "model with empty comments for Postgres", model: &ModelWithEmptyComments{}, wantSQL: "-- --------------------------------------------------\n--  Table Structure for `github.com/beego/beego/v2/client/orm.ModelWithEmptyComments`\n-- --------------------------------------------------\nCREATE TABLE IF NOT EXISTS \"model_with_empty_comments\" (\n    \"id\" serial NOT NULL PRIMARY KEY,\n    \"user_name\" varchar(30) NOT NULL DEFAULT ''  UNIQUE,\n    \"email\" varchar(100) NOT NULL DEFAULT '' ,\n    \"password\" varchar(100) NOT NULL DEFAULT '' \n);", wantErr: nil})
+	case DRSqlite:
+		testCases = append(testCases, TestCase{name: "model with comments for Sqlite", model: &ModelWithComments{}, wantSQL: "-- --------------------------------------------------\n--  Table Structure for `github.com/beego/beego/v2/client/orm.ModelWithComments`\n-- --------------------------------------------------\nCREATE TABLE IF NOT EXISTS `model_with_comments` (\n    `id` integer NOT NULL PRIMARY KEY AUTOINCREMENT,\n    `user_name` varchar(30) NOT NULL DEFAULT ''  UNIQUE,\n    `email` varchar(100) NOT NULL DEFAULT '' ,\n    `password` varchar(100) NOT NULL DEFAULT '' \n);", wantErr: nil})
+		testCases = append(testCases, TestCase{name: "model without comments for Sqlite", model: &ModelWithoutComments{}, wantSQL: "-- --------------------------------------------------\n--  Table Structure for `github.com/beego/beego/v2/client/orm.ModelWithoutComments`\n-- --------------------------------------------------\nCREATE TABLE IF NOT EXISTS `model_without_comments` (\n    `id` integer NOT NULL PRIMARY KEY AUTOINCREMENT,\n    `user_name` varchar(30) NOT NULL DEFAULT ''  UNIQUE,\n    `email` varchar(100) NOT NULL DEFAULT '' ,\n    `password` varchar(100) NOT NULL DEFAULT '' \n);", wantErr: nil})
+		testCases = append(testCases, TestCase{name: "model with empty comments for Sqlite", model: &ModelWithEmptyComments{}, wantSQL: "-- --------------------------------------------------\n--  Table Structure for `github.com/beego/beego/v2/client/orm.ModelWithEmptyComments`\n-- --------------------------------------------------\nCREATE TABLE IF NOT EXISTS `model_with_empty_comments` (\n    `id` integer NOT NULL PRIMARY KEY AUTOINCREMENT,\n    `user_name` varchar(30) NOT NULL DEFAULT ''  UNIQUE,\n    `email` varchar(100) NOT NULL DEFAULT '' ,\n    `password` varchar(100) NOT NULL DEFAULT '' \n);", wantErr: nil})
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			testModelCache.clean()
+			err := testModelCache.register("", true, tc.model)
+			assert.NoError(t, err)
+			queries, _, err := testModelCache.getDbCreateSQL(al)
+			assert.Equal(t, tc.wantSQL, queries[0])
+			assert.Equal(t, tc.wantErr, err)
 		})
 	}
-	modelCache.clean()
 }
