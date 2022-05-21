@@ -341,10 +341,9 @@ func (t *Tree) match(treePattern string, pattern string, wildcardValues []string
 	if runObject == nil && len(t.fixrouters) > 0 {
 		// Filter the .json .xml .html extension
 		for _, str := range allowSuffixExt {
-			//pattern == "" avoid cases: /aaa.html/aaa.html could access /aaa/:bbb
+			// pattern == "" avoid cases: /aaa.html/aaa.html could access /aaa/:bbb
 			if strings.HasSuffix(seg, str) && pattern == "" {
 				for _, subTree := range t.fixrouters {
-					// strings.HasSuffix(treePattern, seg) avoid cases: /aaa.html/bbb could access /aaa/bbb
 					if subTree.prefix == seg[:len(seg)-len(str)] {
 						runObject = subTree.match(treePattern, pattern, wildcardValues, ctx)
 						if runObject != nil {
