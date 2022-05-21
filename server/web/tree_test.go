@@ -122,6 +122,9 @@ func init() {
 		notMatchTestInfo(abcSuffix, "/abc/suffix.html/a"),
 		matchTestInfo(abcSuffix, "/abc/suffix/a", nil),
 		notMatchTestInfo(abcSuffix, "/abc.j/suffix/a"),
+		// test for fix of issue 4946
+		notMatchTestInfo("/suffix/:name", "/suffix.html/suffix.html"),
+		matchTestInfo("/suffix/:id/name", "/suffix/1234/name.html", map[string]string{":id": "1234", ":ext": "html"}),
 	}
 }
 
