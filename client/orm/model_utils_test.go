@@ -49,7 +49,7 @@ func (i *Interface) TableEngine() string {
 
 func TestDbBase_GetTables(t *testing.T) {
 	RegisterModel(&Interface{})
-	mi, ok := modelCache.get("INTERFACE_")
+	mi, ok := defaultModelCache.get("INTERFACE_")
 	assert.True(t, ok)
 	assert.NotNil(t, mi)
 
