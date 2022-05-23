@@ -52,7 +52,7 @@ In your view templates:
 
 See also
 
-http://beego.me/docs/mvc/view/page.md
+http://beego.vip/docs/mvc/view/page.md
 
 */
 package pagination

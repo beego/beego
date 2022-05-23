@@ -26,7 +26,7 @@
 //
 //  bm, err := cache.NewCache("memcache", `{"conn":"127.0.0.1:11211"}`)
 //
-//  more docs http://beego.me/docs/module/cache.md
+//  more docs http://beego.vip/docs/module/cache.md
 package memcache
 
 import (

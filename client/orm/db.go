@@ -1038,7 +1038,7 @@ func (d *dbBase) ReadBatch(ctx context.Context, q dbQuerier, qs *querySet, mi *m
 
 	slice := ind
 	if unregister {
-		mi, _ = modelCache.get(name)
+		mi, _ = defaultModelCache.get(name)
 		tCols = mi.fields.dbcols
 		colsNum = len(tCols)
 	}

@@ -51,7 +51,7 @@ type HTTPStatusCarrier interface {
 	SetStatusCode(status int)
 }
 
-// HttpHeaderCarrier If value implement HttpHeaderCarrier. http.Response.Header will pass to SetHeader
+// HTTPHeadersCarrier If value implement HttpHeaderCarrier. http.Response.Header will pass to SetHeader
 type HTTPHeadersCarrier interface {
 	SetHeader(header map[string][]string)
 }

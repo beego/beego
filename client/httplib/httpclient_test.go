@@ -25,7 +25,7 @@ import (
 )
 
 func TestNewClient(t *testing.T) {
-	client, err := NewClient("test1", "http://beego.me", WithEnableCookie(true))
+	client, err := NewClient("test1", "http://beego.vip", WithEnableCookie(true))
 	assert.NoError(t, err)
 	assert.NotNil(t, client)
 	assert.Equal(t, true, client.Setting.EnableCookie)
@@ -204,7 +204,7 @@ func TestClientDelete(t *testing.T) {
 }
 
 func TestClientHead(t *testing.T) {
-	client, err := NewClient("test", "http://beego.me")
+	client, err := NewClient("test", "http://beego.gocn.vip")
 	if err != nil {
 		t.Fatal(err)
 	}

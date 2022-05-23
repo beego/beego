@@ -30,7 +30,7 @@
 //	log.Debug("debug")
 //	log.Critical("critical")
 //
-//  more docs http://beego.me/docs/module/logs.md
+//  more docs http://beego.vip/docs/module/logs.md
 package logs
 
 import (

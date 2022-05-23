@@ -290,19 +290,19 @@ func TestHeader(t *testing.T) {
 
 // TestAddFilter make sure that AddFilters only work for the specific request
 func TestAddFilter(t *testing.T) {
-	req := Get("http://beego.me")
+	req := Get("http://beego.vip")
 	req.AddFilters(func(next Filter) Filter {
 		return func(ctx context.Context, req *BeegoHTTPRequest) (*http.Response, error) {
 			return next(ctx, req)
 		}
 	})
 
-	r := Get("http://beego.me")
+	r := Get("http://beego.vip")
 	assert.Equal(t, 1, len(req.setting.FilterChains)-len(r.setting.FilterChains))
 }
 
 func TestFilterChainOrder(t *testing.T) {
-	req := Get("http://beego.me")
+	req := Get("http://beego.vip")
 	req.AddFilters(func(next Filter) Filter {
 		return func(ctx context.Context, req *BeegoHTTPRequest) (*http.Response, error) {
 			return NewHttpResponseWithJsonBody("first"), nil
@@ -323,39 +323,51 @@ func TestFilterChainOrder(t *testing.T) {
 }
 
 func TestHead(t *testing.T) {
-	req := Head("http://beego.me")
+	req := Head("http://beego.vip")
 	assert.NotNil(t, req)
 	assert.Equal(t, "HEAD", req.req.Method)
 }
 
 func TestDelete(t *testing.T) {
-	req := Delete("http://beego.me")
+	req := Delete("http://beego.vip")
 	assert.NotNil(t, req)
 	assert.Equal(t, "DELETE", req.req.Method)
 }
 
 func TestPost(t *testing.T) {
-	req := Post("http://beego.me")
+	req := Post("http://beego.vip")
 	assert.NotNil(t, req)
 	assert.Equal(t, "POST", req.req.Method)
 }
 
 func TestNewBeegoRequest(t *testing.T) {
-	req := NewBeegoRequest("http://beego.me", "GET")
+	req := NewBeegoRequest("http://beego.vip", "GET")
 	assert.NotNil(t, req)
 	assert.Equal(t, "GET", req.req.Method)
 
 	// invalid case but still go request
-	req = NewBeegoRequest("httpa\ta://beego.me", "GET")
+	req = NewBeegoRequest("httpa\ta://beego.vip", "GET")
+	assert.NotNil(t, req)
+}
+
+func TestNewBeegoRequestWithCtx(t *testing.T) {
+	req := NewBeegoRequestWithCtx(context.Background(), "http://beego.vip", "GET")
+	assert.NotNil(t, req)
+	assert.Equal(t, "GET", req.req.Method)
+
+	// bad url but still get request
+	req = NewBeegoRequestWithCtx(context.Background(), "httpa\ta://beego.vip", "GET")
+	assert.NotNil(t, req)
+
+	// bad method but still get request
+	req = NewBeegoRequestWithCtx(context.Background(), "http://beego.vip", "G\tET")
 	assert.NotNil(t, req)
 }
 
 func TestBeegoHTTPRequestSetProtocolVersion(t *testing.T) {
-	req := NewBeegoRequest("http://beego.me", "GET")
-	req.SetProtocolVersion("HTTP/3.10")
-	assert.Equal(t, "HTTP/3.10", req.req.Proto)
-	assert.Equal(t, 3, req.req.ProtoMajor)
-	assert.Equal(t, 10, req.req.ProtoMinor)
+	req := NewBeegoRequest("http://beego.vip", "GET")
+	assert.Equal(t, 1, req.req.ProtoMajor)
+	assert.Equal(t, 1, req.req.ProtoMinor)
 
 	req.SetProtocolVersion("")
 	assert.Equal(t, "HTTP/1.1", req.req.Proto)
@@ -370,27 +382,27 @@ func TestBeegoHTTPRequestSetProtocolVersion(t *testing.T) {
 }
 
 func TestPut(t *testing.T) {
-	req := Put("http://beego.me")
+	req := Put("http://beego.vip")
 	assert.NotNil(t, req)
 	assert.Equal(t, "PUT", req.req.Method)
 }
 
 func TestBeegoHTTPRequestHeader(t *testing.T) {
-	req := Post("http://beego.me")
+	req := Post("http://beego.vip")
 	key, value := "test-header", "test-header-value"
 	req.Header(key, value)
 	assert.Equal(t, value, req.req.Header.Get(key))
 }
 
 func TestBeegoHTTPRequestSetHost(t *testing.T) {
-	req := Post("http://beego.me")
+	req := Post("http://beego.vip")
 	host := "test-hose"
 	req.SetHost(host)
 	assert.Equal(t, host, req.req.Host)
 }
 
 func TestBeegoHTTPRequestParam(t *testing.T) {
-	req := Post("http://beego.me")
+	req := Post("http://beego.vip")
 	key, value := "test-param", "test-param-value"
 	req.Param(key, value)
 	assert.Equal(t, value, req.params[key][0])
@@ -401,7 +413,7 @@ func TestBeegoHTTPRequestParam(t *testing.T) {
 }
 
 func TestBeegoHTTPRequestBody(t *testing.T) {
-	req := Post("http://beego.me")
+	req := Post("http://beego.vip")
 	body := `hello, world`
 	req.Body([]byte(body))
 	assert.Equal(t, int64(len(body)), req.req.ContentLength)
@@ -423,7 +435,7 @@ type user struct {
 }
 
 func TestBeegoHTTPRequestXMLBody(t *testing.T) {
-	req := Post("http://beego.me")
+	req := Post("http://beego.vip")
 	body := &user{
 		Name: "Tom",
 	}
@@ -438,7 +450,7 @@ func TestBeegoHTTPRequestResponseForValue(t *testing.T) {
 }
 
 func TestBeegoHTTPRequestJSONMarshal(t *testing.T) {
-	req := Post("http://beego.me")
+	req := Post("http://beego.vip")
 	req.SetEscapeHTML(false)
 	body := map[string]interface{}{
 		"escape": "left&right",

@@ -155,5 +155,5 @@ note: not recommend use this in product env.
 
 more details and examples in docs and test
 
-[documents](http://beego.me/docs/mvc/model/overview.md)
+[documents](http://beego.vip/docs/mvc/model/overview.md)
 

@@ -21,10 +21,10 @@ var indexTpl = `
 For detail usage please check our document:
 </p>
 <p>
-<a target="_blank" href="http://beego.me/docs/module/admin.md">Toolbox</a>
+<a target="_blank" href="http://beego.vip/docs/module/admin.md">Toolbox</a>
 </p>
 <p>
-<a target="_blank" href="http://beego.me/docs/advantage/monitor.md">Live Monitor</a>
+<a target="_blank" href="http://beego.vip/docs/advantage/monitor.md">Live Monitor</a>
 </p>
 {{.Content}}
 {{end}}`

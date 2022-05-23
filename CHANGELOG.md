@@ -1,7 +1,21 @@
 # developing
-- [https://github.com/beego/beego/pull/4845](https://github.com/beego/beego/pull/4845)
-# v2.0.2-beta.1
 
+# v2.0.3
+- [upgrade redisgo to v1.8.8](https://github.com/beego/beego/pull/4872)
+- [fix prometheus CVE-2022-21698](https://github.com/beego/beego/pull/4878)
+- [upgrade to Go 1.18](https://github.com/beego/beego/pull/4896)
+- [make `PatternLogFormatter` handling the arguments](https://github.com/beego/beego/pull/4914/files)
+- [Add httplib OpenTelemetry Filter](https://github.com/beego/beego/pull/4888, https://github.com/beego/beego/pull/4915)
+- [Support NewBeegoRequestWithCtx in httplib](https://github.com/beego/beego/pull/4895)
+- [Support lifecycle callback](https://github.com/beego/beego/pull/4918)
+- [Append column comments to create table sentence when using postgres](https://github.com/beego/beego/pull/4940)
+- [logs: multiFileLogWriter uses incorrect formatter](https://github.com/beego/beego/pull/4943)
+- [fix issue 4946 CVE-2022-31259](https://github.com/beego/beego/pull/4954)
+
+# v2.0.2
+See v2.0.2-beta.1
+- [fix bug: etcd should use etcd as adapter name](https://github.com/beego/beego/pull/4845)
+# v2.0.2-beta.1
 - Add a custom option for whether to escape HTML special characters when processing http request parameters. [4701](https://github.com/beego/beego/pull/4701)
 - Always set the response status in the CustomAbort function. [4686](https://github.com/beego/beego/pull/4686)
 - Add template functions eq,lt to support uint and int compare. [4607](https://github.com/beego/beego/pull/4607)
