@@ -6,7 +6,7 @@ httplib is an libs help you to curl remote url.
 ## GET
 you can use Get to crawl data.
 
-	import "github.com/astaxie/beego/httplib"
+	import "github.com/beego/beego/httplib"
 	
 	str, err := httplib.Get("http://beego.me/").String()
 	if err != nil {
@@ -94,4 +94,4 @@ httplib support mutil file upload, use `req.PostFile()`
 
 See godoc for further documentation and examples.
 
-* [godoc.org/github.com/astaxie/beego/httplib](https://godoc.org/github.com/astaxie/beego/httplib)
+* [godoc.org/github.com/beego/beego/httplib](https://godoc.org/github.com/beego/beego/httplib)

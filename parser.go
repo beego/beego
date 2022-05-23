@@ -30,16 +30,16 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/astaxie/beego/context/param"
-	"github.com/astaxie/beego/logs"
-	"github.com/astaxie/beego/utils"
+	"github.com/beego/beego/context/param"
+	"github.com/beego/beego/logs"
+	"github.com/beego/beego/utils"
 )
 
 var globalRouterTemplate = `package {{.routersDir}}
 
 import (
-	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/context/param"{{.globalimport}}
+	"github.com/beego/beego"
+	"github.com/beego/beego/context/param"{{.globalimport}}
 )
 
 func init() {
@@ -69,7 +69,7 @@ var (
 	}
 )
 
-const commentFilename   = "commentsRouter.go"
+const commentFilename = "commentsRouter.go"
 
 func init() {
 	pkgLastupdate = make(map[string]int64)

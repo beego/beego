@@ -28,9 +28,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/astaxie/beego/context"
-	"github.com/astaxie/beego/context/param"
-	"github.com/astaxie/beego/session"
+	"github.com/beego/beego/context"
+	"github.com/beego/beego/context/param"
+	"github.com/beego/beego/session"
 )
 
 var (
@@ -680,8 +680,7 @@ func (c *Controller) XSRFToken() string {
 		if c.XSRFExpire > 0 {
 			expire = int64(c.XSRFExpire)
 		}
-		c._xsrfToken = c.Ctx.XSRFToken(BConfig.WebConfig.XSRFKey, expire,
-			  BConfig.WebConfig.XSRFSecure, BConfig.WebConfig.XSRFHttpOnly)
+		c._xsrfToken = c.Ctx.XSRFToken(BConfig.WebConfig.XSRFKey, expire)
 	}
 	return c._xsrfToken
 }

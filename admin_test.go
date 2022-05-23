@@ -11,7 +11,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/astaxie/beego/toolbox"
+	"github.com/beego/beego/toolbox"
 )
 
 type SampleDatabaseCheck struct {
