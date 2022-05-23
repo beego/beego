@@ -1,4 +1,6 @@
 # developing
+
+# v2.0.3
 - [upgrade redisgo to v1.8.8](https://github.com/beego/beego/pull/4872)
 - [fix prometheus CVE-2022-21698](https://github.com/beego/beego/pull/4878)
 - [upgrade to Go 1.18](https://github.com/beego/beego/pull/4896)
