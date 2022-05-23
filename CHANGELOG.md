@@ -8,6 +8,7 @@
 - [Support lifecycle callback](https://github.com/beego/beego/pull/4918)
 - [Append column comments to create table sentence when using postgres](https://github.com/beego/beego/pull/4940)
 - [logs: multiFileLogWriter uses incorrect formatter](https://github.com/beego/beego/pull/4943)
+- [fix issue 4946 CVE-2022-31259](https://github.com/beego/beego/pull/4954)
 
 # v2.0.2
 See v2.0.2-beta.1
