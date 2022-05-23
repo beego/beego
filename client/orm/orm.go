@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build go1.8
 // +build go1.8
 
 // Package orm provide ORM for MySQL/PostgreSQL/sqlite
@@ -130,7 +131,7 @@ func (*ormBase) getPtrMiInd(md interface{}) (mi *modelInfo, ind reflect.Value) {
 
 func getTypeMi(mdTyp reflect.Type) *modelInfo {
 	name := getFullName(mdTyp)
-	if mi, ok := modelCache.getByFullName(name); ok {
+	if mi, ok := defaultModelCache.getByFullName(name); ok {
 		return mi
 	}
 	panic(fmt.Errorf("<Ormer> table: `%s` not found, make sure it was registered with `RegisterModel()`", name))
@@ -476,12 +477,12 @@ func (o *ormBase) QueryTable(ptrStructOrTableName interface{}) (qs QuerySeter) {
 	var name string
 	if table, ok := ptrStructOrTableName.(string); ok {
 		name = nameStrategyMap[defaultNameStrategy](table)
-		if mi, ok := modelCache.get(name); ok {
+		if mi, ok := defaultModelCache.get(name); ok {
 			qs = newQuerySet(o, mi)
 		}
 	} else {
 		name = getFullName(indirectType(reflect.TypeOf(ptrStructOrTableName)))
-		if mi, ok := modelCache.getByFullName(name); ok {
+		if mi, ok := defaultModelCache.getByFullName(name); ok {
 			qs = newQuerySet(o, mi)
 		}
 	}

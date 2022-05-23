@@ -156,7 +156,7 @@ outFor:
 				typ := val.Type()
 				name := getFullName(typ)
 				var value interface{}
-				if mmi, ok := modelCache.getByFullName(name); ok {
+				if mmi, ok := defaultModelCache.getByFullName(name); ok {
 					if _, vu, exist := getExistPk(mmi, val); exist {
 						value = vu
 					}

@@ -100,7 +100,7 @@ func (d *commandSyncDb) Run() error {
 	var drops []string
 	var err error
 	if d.force {
-		drops, err = modelCache.getDbDropSQL(d.al)
+		drops, err = defaultModelCache.getDbDropSQL(d.al)
 		if err != nil {
 			return err
 		}
@@ -109,7 +109,7 @@ func (d *commandSyncDb) Run() error {
 	db := d.al.DB
 
 	if d.force && len(drops) > 0 {
-		for i, mi := range modelCache.allOrdered() {
+		for i, mi := range defaultModelCache.allOrdered() {
 			query := drops[i]
 			if !d.noInfo {
 				fmt.Printf("drop table `%s`\n", mi.table)
@@ -127,7 +127,7 @@ func (d *commandSyncDb) Run() error {
 		}
 	}
 
-	createQueries, indexes, err := modelCache.getDbCreateSQL(d.al)
+	createQueries, indexes, err := defaultModelCache.getDbCreateSQL(d.al)
 	if err != nil {
 		return err
 	}
@@ -141,7 +141,7 @@ func (d *commandSyncDb) Run() error {
 	}
 
 	ctx := context.Background()
-	for i, mi := range modelCache.allOrdered() {
+	for i, mi := range defaultModelCache.allOrdered() {
 
 		if !isApplicableTableForDB(mi.addrField, d.al.Name) {
 			fmt.Printf("table `%s` is not applicable to database '%s'\n", mi.table, d.al.Name)
@@ -258,12 +258,12 @@ func (d *commandSQLAll) Parse(args []string) {
 
 // Run orm line command.
 func (d *commandSQLAll) Run() error {
-	createQueries, indexes, err := modelCache.getDbCreateSQL(d.al)
+	createQueries, indexes, err := defaultModelCache.getDbCreateSQL(d.al)
 	if err != nil {
 		return err
 	}
 	var all []string
-	for i, mi := range modelCache.allOrdered() {
+	for i, mi := range defaultModelCache.allOrdered() {
 		queries := []string{createQueries[i]}
 		for _, idx := range indexes[mi.table] {
 			queries = append(queries, idx.SQL)
