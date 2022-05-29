@@ -68,7 +68,8 @@ func init() {
 		matchTestInfo("/", "/", nil),
 		matchTestInfo("/customer/login", "/customer/login", nil),
 		matchTestInfo("/customer/login", "/customer/login.json", map[string]string{":ext": "json"}),
-		matchTestInfo("/*", "/http://customer/123/", map[string]string{":splat": "http://customer/123/"}),
+		// This case need to be modified when fix issue 4961, "//" will be replaced with "/" and last "/" will be deleted before route.
+		matchTestInfo("/*", "/http://customer/123/", map[string]string{":splat": "http:/customer/123"}),
 		matchTestInfo("/*", "/customer/2009/12/11", map[string]string{":splat": "customer/2009/12/11"}),
 		matchTestInfo("/aa/*/bb", "/aa/2009/bb", map[string]string{":splat": "2009"}),
 		matchTestInfo("/cc/*/dd", "/cc/2009/11/dd", map[string]string{":splat": "2009/11"}),
@@ -125,6 +126,14 @@ func init() {
 		// test for fix of issue 4946
 		notMatchTestInfo("/suffix/:name", "/suffix.html/suffix.html"),
 		matchTestInfo("/suffix/:id/name", "/suffix/1234/name.html", map[string]string{":id": "1234", ":ext": "html"}),
+		// test for fix of issue 4961,path.join() lead to cross directory risk
+		matchTestInfo("/book1/:name/fixPath1/*.*", "/book1/name1/fixPath1/mybook/../mybook2.txt", map[string]string{":name": "name1", ":path": "mybook2"}),
+		notMatchTestInfo("/book1/:name/fixPath1/*.*", "/book1/name1/fixPath1/mybook/../../mybook2.txt"),
+		notMatchTestInfo("/book1/:name/fixPath1/*.*", "/book1/../fixPath1/mybook/../././////evil.txt"),
+		notMatchTestInfo("/book1/:name/fixPath1/*.*", "/book1/./fixPath1/mybook/../././////evil.txt"),
+		notMatchTestInfo("/book2/:type:string/fixPath1/:name", "/book2/type1/fixPath1/name1/../../././////evilType/evilName"),
+		notMatchTestInfo("/book2/:type:string/fixPath1/:name", "/book2/type1/fixPath1/name1/../../././////evilType/evilName"),
+		notMatchTestInfo("/book2/:type:string/fixPath1/:name", "/book2/type1/fixPath1/name1/../../././////evilType/evilName"),
 	}
 }
 
