@@ -215,17 +215,11 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 				if app.Cfg.Listen.ListenTCP4 {
 					server.Network = "tcp4"
 				}
-				ln, err := net.Listen(server.Network, app.Server.Addr)
-				if err != nil {
-					logs.Critical("Listen for HTTP[graceful mode]: ", err)
-					endRunning <- true
-					return
-				}
 				for _, callback := range app.LifeCycleCallbacks {
 					callback.AfterStart(app)
 				}
-				if err := server.ServeWithListener(ln); err != nil {
-					logs.Critical("ServeWithListener: ", err, fmt.Sprintf("%d", os.Getpid()))
+				if err := server.ListenAndServe(); err != nil {
+					logs.Critical("ListenAndServe: ", err, fmt.Sprintf("%d", os.Getpid()))
 					time.Sleep(100 * time.Microsecond)
 				}
 				endRunning <- true
