@@ -6,6 +6,7 @@
 - [upgrade to Go 1.18](https://github.com/beego/beego/pull/4896)
 - [make `PatternLogFormatter` handling the arguments](https://github.com/beego/beego/pull/4914/files)
 - [Add httplib OpenTelemetry Filter](https://github.com/beego/beego/pull/4888, https://github.com/beego/beego/pull/4915)
+- [Add orm OpenTelemetry Filter](https://github.com/beego/beego/issues/4944)
 - [Support NewBeegoRequestWithCtx in httplib](https://github.com/beego/beego/pull/4895)
 - [Support lifecycle callback](https://github.com/beego/beego/pull/4918)
 - [Append column comments to create table sentence when using postgres](https://github.com/beego/beego/pull/4940)
