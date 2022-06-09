@@ -36,7 +36,7 @@ func (rec *RandomExpireCache) Put(ctx context.Context, key string, val interface
 	return rec.cache.Put(ctx, key, val, timeout)
 }
 
-// NewRandomExpireCache
+// NewRandomExpireCache return random expire cache struct
 func NewRandomExpireCache(adapter Cache, generate ExpiredFunc) Cache {
 	return &RandomExpireCache{
 		cache:  adapter,
@@ -44,7 +44,7 @@ func NewRandomExpireCache(adapter Cache, generate ExpiredFunc) Cache {
 	}
 }
 
-// DefaultExpiredFunc random time offset expired
+// DefaultExpiredFunc genreate random time offset expired
 func DefaultExpiredFunc() time.Duration {
 
 	rand.Seed(time.Now().UnixNano())

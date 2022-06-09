@@ -225,7 +225,7 @@ func TestRandomExpireCache(t *testing.T) {
 	bm, err := NewCache("memory", `{"interval":20}`)
 	assert.Nil(t, err)
 
-	cache := NewRandomExpireCache(bm, DefaultExpiredOffs)
+	cache := NewRandomExpireCache(bm, DefaultExpiredFunc)
 
 	timeoutDuration := 3 * time.Second
 
