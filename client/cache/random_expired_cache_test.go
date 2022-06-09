@@ -28,7 +28,7 @@ func TestRandomExpireCache(t *testing.T) {
 	assert.Nil(t, err)
 
 	// cache := NewRandomExpireCache(bm)
-	cache := NewRandomExpireCache(bm, func(opt *RandomExpireCacheOptions) {
+	cache := NewRandomExpireCache(bm, func(opt *RandomExpireCache) {
 		opt.Offset = defaultExpiredFunc
 	})
 

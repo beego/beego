@@ -21,43 +21,34 @@ import (
 )
 
 // ExpiredFunc implement genreate random time offset expired
-type ExpiredFunc func() time.Duration
+type RandomExpireCacheOptions func(*RandomExpireCache)
 
 // RandomExpireCache prevent cache batch invalidation
 // Cache random time offset expired
 type RandomExpireCache struct {
 	cache  Cache
-	offset ExpiredFunc
-}
-
-type RandomExpireCacheOptions struct {
-	Offset ExpiredFunc
+	Offset func() time.Duration
 }
 
 // Put random time offset expired
 func (rec *RandomExpireCache) Put(ctx context.Context, key string, val interface{}, timeout time.Duration) error {
-	timeout += rec.offset()
+	timeout += rec.Offset()
 	return rec.cache.Put(ctx, key, val, timeout)
 }
 
 // NewRandomExpireCache return random expire cache struct
-func NewRandomExpireCache(adapter Cache, opts ...func(opt *RandomExpireCacheOptions)) Cache {
-	var opt RandomExpireCacheOptions
-
+func NewRandomExpireCache(adapter Cache, opts ...RandomExpireCacheOptions) Cache {
+	var cache RandomExpireCache
 	if len(opts) > 0 {
 		for _, fn := range opts {
-			fn(&opt)
+			fn(&cache)
 		}
 	}
-
-	if opt.Offset == nil {
-		opt.Offset = defaultExpiredFunc
+	if cache.Offset == nil {
+		cache.Offset = defaultExpiredFunc
 	}
-
-	return &RandomExpireCache{
-		cache:  adapter,
-		offset: opt.Offset,
-	}
+	cache.cache = adapter
+	return &cache
 }
 
 // defaultExpiredFunc genreate random time offset expired
