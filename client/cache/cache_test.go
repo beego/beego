@@ -219,25 +219,3 @@ func testDecrOverFlow(t *testing.T, c Cache, timeout time.Duration) {
 		return
 	}
 }
-
-func TestRandomExpireCache(t *testing.T) {
-
-	bm, err := NewCache("memory", `{"interval":20}`)
-	assert.Nil(t, err)
-
-	cache := NewRandomExpireCache(bm, DefaultExpiredFunc)
-
-	timeoutDuration := 3 * time.Second
-
-	if err = cache.Put(context.Background(), "Leon Ding", 22, timeoutDuration); err != nil {
-		t.Error("set Error", err)
-	}
-
-	if res, _ := bm.IsExist(context.Background(), "Leon Ding"); !res {
-		t.Error("check err")
-	}
-
-	if v, _ := bm.Get(context.Background(), "Leon Ding"); v.(int) != 22 {
-		t.Error("get err")
-	}
-}
