@@ -20,39 +20,46 @@ import (
 	"time"
 )
 
+// ExpiredFunc implement genreate random time offset expired
+type ExpiredFunc func() time.Duration
+
 // RandomExpireCache prevent cache batch invalidation
 // Cache random time offset expired
 type RandomExpireCache struct {
 	cache  Cache
-	offset int
+	offset ExpiredFunc
 }
 
 // Put random time offset expired
 func (rec *RandomExpireCache) Put(ctx context.Context, key string, val interface{}, timeout time.Duration) error {
-	timeout += generate(timeout, rec.offset)
+	timeout += rec.offset()
 	return rec.cache.Put(ctx, key, val, timeout)
 }
 
 // NewRandomExpireCache
-func NewRandomExpireCache(adapter Cache) Cache {
+func NewRandomExpireCache(adapter Cache, generate ExpiredFunc) Cache {
 	return &RandomExpireCache{
 		cache:  adapter,
-		offset: 8,
+		offset: generate,
 	}
 }
 
-func generate(timeout time.Duration, offset int) time.Duration {
+// DefaultExpiredFunc random time offset expired
+func DefaultExpiredFunc() time.Duration {
+
 	rand.Seed(time.Now().UnixNano())
-	timeout += (time.Duration(rand.Intn(offset)) * time.Second)
-	for timeout <= timeout+(2*time.Second) && timeout >= timeout+(8*time.Second) {
-		timeout += (time.Duration(rand.Intn(offset)) * time.Second)
+	offs := (time.Duration(rand.Intn(5)) * time.Second)
+
+	for (offs < offs+(2*time.Second)) && (offs > offs+(8*time.Second)) {
+		offs = (time.Duration(rand.Intn(5)) * time.Second)
 	}
-	return timeout
+
+	return offs
 }
 
 // Get get value from memcache.
 func (rec *RandomExpireCache) Get(ctx context.Context, key string) (interface{}, error) {
-	return rec.Get(ctx, key)
+	return rec.cache.Get(ctx, key)
 }
 
 // GetMulti gets a value from a key in memcache.

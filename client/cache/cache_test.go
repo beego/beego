@@ -225,9 +225,9 @@ func TestRandomExpireCache(t *testing.T) {
 	bm, err := NewCache("memory", `{"interval":20}`)
 	assert.Nil(t, err)
 
-	cache := NewRandomExpireCache(bm)
+	cache := NewRandomExpireCache(bm, DefaultExpiredOffs)
 
-	timeoutDuration := 5 * time.Second
+	timeoutDuration := 3 * time.Second
 
 	if err = cache.Put(context.Background(), "Leon Ding", 22, timeoutDuration); err != nil {
 		t.Error("set Error", err)
