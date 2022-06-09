@@ -52,7 +52,7 @@ func generate(timeout time.Duration, offset int) time.Duration {
 
 // Get get value from memcache.
 func (rec *RandomExpireCache) Get(ctx context.Context, key string) (interface{}, error) {
-	return rec.Get(ctx, key)
+	return rec.cache.Get(ctx, key)
 }
 
 // GetMulti gets a value from a key in memcache.
