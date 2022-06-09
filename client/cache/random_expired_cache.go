@@ -29,7 +29,7 @@ type RandomExpireCache struct {
 
 // Put random time offset expired
 func (rec *RandomExpireCache) Put(ctx context.Context, key string, val interface{}, timeout time.Duration) error {
-	timeout += generate(timeout, rec.offset)
+	timeout = generate(timeout, rec.offset)
 	return rec.cache.Put(ctx, key, val, timeout)
 }
 
