@@ -39,13 +39,9 @@ func (rec *RandomExpireCache) Put(ctx context.Context, key string, val interface
 // NewRandomExpireCache return random expire cache struct
 func NewRandomExpireCache(adapter Cache, opts ...RandomExpireCacheOption) Cache {
 	var cache RandomExpireCache
-	if len(opts) > 0 {
-		for _, fn := range opts {
-			fn(&cache)
-		}
-	}
-	if cache.Offset == nil {
-		cache.Offset = defaultExpiredFunc
+	cache.Offset = defaultExpiredFunc
+	for _, fn := range opts {
+		fn(&cache)
 	}
 	cache.cache = adapter
 	return &cache
@@ -53,13 +49,7 @@ func NewRandomExpireCache(adapter Cache, opts ...RandomExpireCacheOption) Cache 
 
 // defaultExpiredFunc genreate random time offset expired
 func defaultExpiredFunc() time.Duration {
-	offs := (time.Duration(rand.Intn(5)) * time.Second)
-
-	for (offs < offs+(2*time.Second)) && (offs > offs+(8*time.Second)) {
-		offs = (time.Duration(rand.Intn(5)) * time.Second)
-	}
-
-	return offs
+	return time.Duration(rand.Intn(5)+3) * time.Second
 }
 
 // Get get value from memcache.
