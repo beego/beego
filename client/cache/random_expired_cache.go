@@ -30,6 +30,10 @@ type RandomExpireCache struct {
 	offset ExpiredFunc
 }
 
+type RandomExpireCacheOptions struct {
+	Offset ExpiredFunc
+}
+
 // Put random time offset expired
 func (rec *RandomExpireCache) Put(ctx context.Context, key string, val interface{}, timeout time.Duration) error {
 	timeout += rec.offset()
@@ -37,17 +41,27 @@ func (rec *RandomExpireCache) Put(ctx context.Context, key string, val interface
 }
 
 // NewRandomExpireCache return random expire cache struct
-func NewRandomExpireCache(adapter Cache, generate ExpiredFunc) Cache {
+func NewRandomExpireCache(adapter Cache, opts ...func(opt *RandomExpireCacheOptions)) Cache {
+	var opt RandomExpireCacheOptions
+
+	if len(opts) > 0 {
+		for _, fn := range opts {
+			fn(&opt)
+		}
+	}
+
+	if opt.Offset == nil {
+		opt.Offset = defaultExpiredFunc
+	}
+
 	return &RandomExpireCache{
 		cache:  adapter,
-		offset: generate,
+		offset: opt.Offset,
 	}
 }
 
-// DefaultExpiredFunc genreate random time offset expired
-func DefaultExpiredFunc() time.Duration {
-
-	rand.Seed(time.Now().UnixNano())
+// defaultExpiredFunc genreate random time offset expired
+func defaultExpiredFunc() time.Duration {
 	offs := (time.Duration(rand.Intn(5)) * time.Second)
 
 	for (offs < offs+(2*time.Second)) && (offs > offs+(8*time.Second)) {
