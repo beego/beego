@@ -169,7 +169,6 @@ func (srv *Server) ServeTLS(ln net.Listener) error {
 	}
 
 	go srv.handleSignals()
-	log.Println(os.Getpid(), srv.Addr)
 	return srv.internalServe(ln)
 }
 
