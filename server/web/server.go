@@ -215,7 +215,8 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 				if app.Cfg.Listen.ListenTCP4 {
 					server.Network = "tcp4"
 				}
-				ln, err := net.Listen(server.Network, app.Server.Addr)
+				ln, err := net.Listen(server.Network, server.Addr)
+				logs.Info("graceful http server Running on http://%s", server.Addr)
 				if err != nil {
 					logs.Critical("Listen for HTTP[graceful mode]: ", err)
 					endRunning <- true
