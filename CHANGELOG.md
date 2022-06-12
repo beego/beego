@@ -1,4 +1,7 @@
 # developing
+- [Fix 4984: random expire cache](https://github.com/beego/beego/pull/4984)
+
+
 # v2.0.4
 
 Note: now we force the web admin service serving HTTP only.
