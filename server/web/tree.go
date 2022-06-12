@@ -282,6 +282,8 @@ func (t *Tree) addseg(segments []string, route interface{}, wildcards []string, 
 
 // Match router to runObject & params
 func (t *Tree) Match(pattern string, ctx *context.Context) (runObject interface{}) {
+	// fix issue 4961, deal with "./ ../ //"
+	pattern = path.Clean(pattern)
 	if pattern == "" || pattern[0] != '/' {
 		return nil
 	}

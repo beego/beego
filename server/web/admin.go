@@ -101,6 +101,7 @@ func registerAdmin() error {
 
 		// copy config to avoid conflict
 		adminCfg := *BConfig
+		adminCfg.Listen.EnableHTTPS = false
 		beeAdminApp = &adminApp{
 			HttpServer: NewHttpServerWithCfg(&adminCfg),
 		}

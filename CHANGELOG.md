@@ -1,11 +1,14 @@
 # developing
-
+- [Fix issue 4961, `leafInfo.match()` use `path.join()` to deal with `wildcardValues`, which may lead to cross directory risk ](https://github.com/beego/beego/pull/4964)
+- [Fix 4975: graceful server listen the specific address](https://github.com/beego/beego/pull/4979)
+- [Fix 4976: make admin serve HTTP only](https://github.com/beego/beego/pull/4980)
 # v2.0.3
 - [upgrade redisgo to v1.8.8](https://github.com/beego/beego/pull/4872)
 - [fix prometheus CVE-2022-21698](https://github.com/beego/beego/pull/4878)
 - [upgrade to Go 1.18](https://github.com/beego/beego/pull/4896)
 - [make `PatternLogFormatter` handling the arguments](https://github.com/beego/beego/pull/4914/files)
 - [Add httplib OpenTelemetry Filter](https://github.com/beego/beego/pull/4888, https://github.com/beego/beego/pull/4915)
+- [Add orm OpenTelemetry Filter](https://github.com/beego/beego/issues/4944)
 - [Support NewBeegoRequestWithCtx in httplib](https://github.com/beego/beego/pull/4895)
 - [Support lifecycle callback](https://github.com/beego/beego/pull/4918)
 - [Append column comments to create table sentence when using postgres](https://github.com/beego/beego/pull/4940)
