@@ -1,9 +1,14 @@
 # developing
 - [Fix 4984: random expire cache](https://github.com/beego/beego/pull/4984)
+
+
+# v2.0.4
+
+Note: now we force the web admin service serving HTTP only.
+
 - [Fix issue 4961, `leafInfo.match()` use `path.join()` to deal with `wildcardValues`, which may lead to cross directory risk ](https://github.com/beego/beego/pull/4964)
 - [Fix 4975: graceful server listen the specific address](https://github.com/beego/beego/pull/4979)
 - [Fix 4976: make admin serve HTTP only](https://github.com/beego/beego/pull/4980)
-
 
 # v2.0.3
 - [upgrade redisgo to v1.8.8](https://github.com/beego/beego/pull/4872)
