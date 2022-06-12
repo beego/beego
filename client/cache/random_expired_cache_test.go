@@ -38,6 +38,9 @@ func TestRandomExpireCache(t *testing.T) {
 		t.Error("set Error", err)
 	}
 
+	// testing random expire cache
+	time.Sleep(timeoutDuration + 3 + time.Second)
+
 	if res, _ := cache.IsExist(context.Background(), "Leon Ding"); !res {
 		t.Error("check err")
 	}

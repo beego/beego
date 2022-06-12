@@ -39,11 +39,10 @@ func (rec *RandomExpireCache) Put(ctx context.Context, key string, val interface
 // NewRandomExpireCache return random expire cache struct
 func NewRandomExpireCache(adapter Cache, opts ...RandomExpireCacheOption) Cache {
 	var cache RandomExpireCache
-	cache.Offset = defaultExpiredFunc
+	cache.cache = adapter
 	for _, fn := range opts {
 		fn(&cache)
 	}
-	cache.cache = adapter
 	return &cache
 }
 
