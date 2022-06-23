@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	_ "github.com/burybell/dm"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"

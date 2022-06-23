@@ -35,6 +35,7 @@ const (
 	DROracle                     // oracle
 	DRPostgres                   // pgsql
 	DRTiDB                       // TiDB
+	DRDM                         // DM
 )
 
 // database driver string.
@@ -64,6 +65,7 @@ var (
 		"oracle":   DROracle,
 		"oci8":     DROracle, // github.com/mattn/go-oci8
 		"ora":      DROracle, // https://github.com/rana/ora
+		"dm":       DRDM,
 	}
 	dbBasers = map[DriverType]dbBaser{
 		DRMySQL:    newdbBaseMysql(),
@@ -71,6 +73,7 @@ var (
 		DROracle:   newdbBaseOracle(),
 		DRPostgres: newdbBasePostgres(),
 		DRTiDB:     newdbBaseTidb(),
+		DRDM:       newdbBaseDM(),
 	}
 )
 
