@@ -680,7 +680,8 @@ func (c *Controller) XSRFToken() string {
 		if c.XSRFExpire > 0 {
 			expire = int64(c.XSRFExpire)
 		}
-		c._xsrfToken = c.Ctx.XSRFToken(BConfig.WebConfig.XSRFKey, expire)
+		c._xsrfToken = c.Ctx.XSRFToken(BConfig.WebConfig.XSRFKey, expire,
+			BConfig.WebConfig.XSRFSecure, BConfig.WebConfig.XSRFHttpOnly)
 	}
 	return c._xsrfToken
 }
