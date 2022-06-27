@@ -222,8 +222,12 @@ func TestGetAllTasks(t *testing.T) {
 	m.AddTask("task1", tk)
 	m.AddTask("task2", tk2)
 
-	list := m.GetAllTasks()
-	for _, task := range list {
-		fmt.Println(task)
+	l := m.GetAllTasks()
+	taskNum := 0
+	for _, t := range l {
+		fmt.Println(t)
+		taskNum++
 	}
+
+	assert.Equal(t, 2, taskNum)
 }
