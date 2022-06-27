@@ -206,3 +206,24 @@ func wait(wg *sync.WaitGroup) chan bool {
 	}()
 	return ch
 }
+
+func TestGetAllTasks(t *testing.T) {
+	m := newTaskManager()
+	defer m.ClearTask()
+
+	tk := NewTask("task1", "0/30 * * * * *", func(ctx context.Context) error {
+		return nil
+	})
+
+	tk2 := NewTask("task2", "0/40 * * * * *", func(ctx context.Context) error {
+		return nil
+	})
+
+	m.AddTask("task1", tk)
+	m.AddTask("task2", tk2)
+
+	list := m.GetAllTasks()
+	for _, task := range list {
+		fmt.Println(task)
+	}
+}

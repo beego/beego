@@ -18,6 +18,7 @@ import (
 	"context"
 	"log"
 	"math"
+	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -635,7 +636,7 @@ func (m *taskManager) DeleteTask(taskname string) {
 	}
 }
 
-//  ClearTask clear all tasks
+// ClearTask clear all tasks
 func (m *taskManager) ClearTask() {
 	isChanged := false
 
@@ -651,6 +652,22 @@ func (m *taskManager) ClearTask() {
 			m.changed <- true
 		}()
 	}
+}
+
+// GetAllTasks get all tasks
+func (m *taskManager) GetAllTasks() []*Task {
+	m.taskLock.RLock()
+
+	var l []*Task
+
+	for _, tasker := range m.adminTaskList {
+		rv := reflect.ValueOf(tasker)
+		t := rv.Interface().(*Task)
+		l = append(l, t)
+	}
+	m.taskLock.RUnlock()
+
+	return l
 }
 
 // MapSorter sort map for tasker
