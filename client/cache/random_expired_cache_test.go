@@ -29,7 +29,7 @@ func TestRandomExpireCache(t *testing.T) {
 
 	// cache := NewRandomExpireCache(bm)
 	cache := NewRandomExpireCache(bm, func(opt *RandomExpireCache) {
-		opt.offset = defaultExpiredFunc
+		opt.Offset = defaultExpiredFunc()
 	})
 
 	timeoutDuration := 3 * time.Second
