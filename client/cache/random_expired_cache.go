@@ -27,12 +27,12 @@ type RandomExpireCacheOption func(*RandomExpireCache)
 // Cache random time offset expired
 type RandomExpireCache struct {
 	Cache
-	offset func() time.Duration
+	Offset func() time.Duration
 }
 
 // Put random time offset expired
 func (rec *RandomExpireCache) Put(ctx context.Context, key string, val interface{}, timeout time.Duration) error {
-	timeout += rec.offset()
+	timeout += rec.Offset()
 	return rec.Cache.Put(ctx, key, val, timeout)
 }
 
@@ -42,6 +42,9 @@ func NewRandomExpireCache(adapter Cache, opts ...RandomExpireCacheOption) Cache 
 	rec.Cache = adapter
 	for _, fn := range opts {
 		fn(&rec)
+	}
+	if rec.Offset == nil {
+		rec.Offset = defaultExpiredFunc
 	}
 	return &rec
 }
