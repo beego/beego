@@ -61,7 +61,7 @@ func defaultExpiredFunc() func() time.Duration {
 	const size = 5
 	var randTimes [size]time.Duration
 	for i := range randTimes {
-		randTimes[i] = time.Duration(i + 3)
+		randTimes[i] = time.Duration(i+3) * time.Second
 	}
 	// shuffle values
 	for i := range randTimes {
