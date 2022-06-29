@@ -28,6 +28,10 @@ type countTask struct {
 	mockErr error
 }
 
+func (c *countTask) GetTask(ctx context.Context) *Task {
+	return &Task{}
+}
+
 func (c *countTask) GetSpec(ctx context.Context) string {
 	return "AAA"
 }

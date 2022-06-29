@@ -18,7 +18,6 @@ import (
 	"context"
 	"log"
 	"math"
-	"reflect"
 	"sort"
 	"strconv"
 	"strings"
@@ -104,6 +103,7 @@ type TaskFunc func(ctx context.Context) error
 
 // Tasker task interface
 type Tasker interface {
+	GetTask(ctx context.Context) *Task
 	GetSpec(ctx context.Context) string
 	GetStatus(ctx context.Context) string
 	Run(ctx context.Context) error
@@ -154,6 +154,11 @@ func NewTask(tname string, spec string, f TaskFunc, opts ...Option) *Task {
 
 	task.SetCron(spec)
 	return task
+}
+
+// GetTask get Task self object
+func (t *Task) GetTask(context.Context) *Task {
+	return t
 }
 
 // GetSpec get spec string
@@ -660,10 +665,8 @@ func (m *taskManager) GetAllTasks() []*Task {
 
 	var l []*Task
 
-	for _, tasker := range m.adminTaskList {
-		rv := reflect.ValueOf(tasker)
-		t := rv.Interface().(*Task)
-		l = append(l, t)
+	for _, t := range m.adminTaskList {
+		l = append(l, t.GetTask(context.Background()))
 	}
 	m.taskLock.RUnlock()
 
