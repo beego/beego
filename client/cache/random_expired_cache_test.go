@@ -16,6 +16,7 @@ package cache
 
 import (
 	"context"
+	"math/rand"
 	"strings"
 	"testing"
 	"time"
@@ -27,10 +28,9 @@ func TestRandomExpireCache(t *testing.T) {
 	bm, err := NewCache("memory", `{"interval":20}`)
 	assert.Nil(t, err)
 
-	// cache := NewRandomExpireCache(bm)
-	cache := NewRandomExpireCache(bm, func(opt *RandomExpireCache) {
-		opt.Offset = defaultExpiredFunc()
-	})
+	cache := NewRandomExpireCache(bm)
+	// should not be nil
+	assert.NotNil(t, cache.(*RandomExpireCache).offset)
 
 	timeoutDuration := 3 * time.Second
 
@@ -84,5 +84,16 @@ func TestRandomExpireCache(t *testing.T) {
 
 	assert.NotNil(t, err)
 	assert.True(t, strings.Contains(err.Error(), "key isn't exist"))
+}
 
+func TestWithOffsetFunc(t *testing.T) {
+	bm, err := NewCache("memory", `{"interval":20}`)
+	assert.Nil(t, err)
+
+	magic := -time.Duration(rand.Int())
+	cache := NewRandomExpireCache(bm, WithOffsetFunc(func() time.Duration {
+		return magic
+	}))
+	// offset should return the magic value
+	assert.Equal(t, magic, cache.(*RandomExpireCache).offset())
 }
