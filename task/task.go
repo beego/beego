@@ -103,7 +103,6 @@ type TaskFunc func(ctx context.Context) error
 
 // Tasker task interface
 type Tasker interface {
-	GetTask(ctx context.Context) *Task
 	GetSpec(ctx context.Context) string
 	GetStatus(ctx context.Context) string
 	Run(ctx context.Context) error
@@ -154,11 +153,6 @@ func NewTask(tname string, spec string, f TaskFunc, opts ...Option) *Task {
 
 	task.SetCron(spec)
 	return task
-}
-
-// GetTask get Task self object
-func (t *Task) GetTask(context.Context) *Task {
-	return t
 }
 
 // GetSpec get spec string
@@ -471,9 +465,14 @@ func DeleteTask(taskName string) {
 	globalTaskManager.DeleteTask(taskName)
 }
 
-//  ClearTask clear all tasks
+// ClearTask clear all tasks
 func ClearTask() {
 	globalTaskManager.ClearTask()
+}
+
+// GetAllTasks get all tasks
+func GetAllTasks() []Tasker {
+	return globalTaskManager.GetAllTasks()
 }
 
 // GracefulShutdown wait all task done
@@ -660,13 +659,13 @@ func (m *taskManager) ClearTask() {
 }
 
 // GetAllTasks get all tasks
-func (m *taskManager) GetAllTasks() []*Task {
+func (m *taskManager) GetAllTasks() []Tasker {
 	m.taskLock.RLock()
 
-	var l []*Task
+	var l []Tasker
 
 	for _, t := range m.adminTaskList {
-		l = append(l, t.GetTask(context.Background()))
+		l = append(l, t)
 	}
 	m.taskLock.RUnlock()
 
