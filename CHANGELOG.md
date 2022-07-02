@@ -1,5 +1,6 @@
 # developing
 - [Fix 4984: random expire cache](https://github.com/beego/beego/pull/4984)
+- [Feat: add get all tasks function #](https://github.com/beego/beego/pull/4999)
 
 
 # v2.0.4

@@ -662,7 +662,7 @@ func (m *taskManager) ClearTask() {
 func (m *taskManager) GetAllTasks() []Tasker {
 	m.taskLock.RLock()
 
-	var l []Tasker
+	l := make([]Tasker, 0, len(m.adminTaskList))
 
 	for _, t := range m.adminTaskList {
 		l = append(l, t)
