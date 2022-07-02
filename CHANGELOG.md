@@ -1,5 +1,6 @@
 # developing
 - [Fix 4984: random expire cache](https://github.com/beego/beego/pull/4984)
+- [Fix 4907: make admin serve HTTP only](https://github.com/beego/beego/pull/5005)
 
 
 # v2.0.4
