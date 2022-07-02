@@ -465,9 +465,14 @@ func DeleteTask(taskName string) {
 	globalTaskManager.DeleteTask(taskName)
 }
 
-//  ClearTask clear all tasks
+// ClearTask clear all tasks
 func ClearTask() {
 	globalTaskManager.ClearTask()
+}
+
+// GetAllTasks get all tasks
+func GetAllTasks() []Tasker {
+	return globalTaskManager.GetAllTasks()
 }
 
 // GracefulShutdown wait all task done
@@ -635,7 +640,7 @@ func (m *taskManager) DeleteTask(taskname string) {
 	}
 }
 
-//  ClearTask clear all tasks
+// ClearTask clear all tasks
 func (m *taskManager) ClearTask() {
 	isChanged := false
 
@@ -651,6 +656,20 @@ func (m *taskManager) ClearTask() {
 			m.changed <- true
 		}()
 	}
+}
+
+// GetAllTasks get all tasks
+func (m *taskManager) GetAllTasks() []Tasker {
+	m.taskLock.RLock()
+
+	l := make([]Tasker, 0, len(m.adminTaskList))
+
+	for _, t := range m.adminTaskList {
+		l = append(l, t)
+	}
+	m.taskLock.RUnlock()
+
+	return l
 }
 
 // MapSorter sort map for tasker
