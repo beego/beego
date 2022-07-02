@@ -17,11 +17,19 @@ package cache
 import (
 	"context"
 	"math/rand"
+	"sync/atomic"
 	"time"
 )
 
 // RandomExpireCacheOption implement genreate random time offset expired option
 type RandomExpireCacheOption func(*RandomExpireCache)
+
+// WithOffsetFunc returns a RandomExpireCacheOption that configures the offset function
+func WithOffsetFunc(fn func() time.Duration) RandomExpireCacheOption {
+	return func(cache *RandomExpireCache) {
+		cache.offset = fn
+	}
+}
 
 // RandomExpireCache prevent cache batch invalidation
 // Cache random time offset expired
@@ -38,15 +46,30 @@ func (rec *RandomExpireCache) Put(ctx context.Context, key string, val interface
 
 // NewRandomExpireCache return random expire cache struct
 func NewRandomExpireCache(adapter Cache, opts ...RandomExpireCacheOption) Cache {
-	var rec RandomExpireCache
-	rec.Cache = adapter
+	rec := RandomExpireCache{
+		Cache:  adapter,
+		offset: defaultExpiredFunc(),
+	}
 	for _, fn := range opts {
 		fn(&rec)
 	}
 	return &rec
 }
 
-// defaultExpiredFunc genreate random time offset expired
-func defaultExpiredFunc() time.Duration {
-	return time.Duration(rand.Intn(5)+3) * time.Second
+// defaultExpiredFunc return a func that used to generate random time offset (range: [3s,8s)) expired
+func defaultExpiredFunc() func() time.Duration {
+	const size = 5
+	var randTimes [size]time.Duration
+	for i := range randTimes {
+		randTimes[i] = time.Duration(i+3) * time.Second
+	}
+	// shuffle values
+	for i := range randTimes {
+		n := rand.Intn(size)
+		randTimes[i], randTimes[n] = randTimes[n], randTimes[i]
+	}
+	var i uint64
+	return func() time.Duration {
+		return randTimes[atomic.AddUint64(&i, 1)%size]
+	}
 }
