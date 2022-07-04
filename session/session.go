@@ -328,6 +328,9 @@ func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Reque
 		cookie.Value = url.QueryEscape(sid)
 		cookie.HttpOnly = true
 		cookie.Path = "/"
+		cookie.Secure = manager.isSecure(r)
+		cookie.Domain = manager.config.Domain
+		cookie.SameSite = manager.config.CookieSameSite
 	}
 	if manager.config.CookieLifeTime > 0 {
 		cookie.MaxAge = manager.config.CookieLifeTime
