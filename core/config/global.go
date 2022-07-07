@@ -28,17 +28,17 @@ func InitGlobalInstance(name string, cfg string) error {
 	return err
 }
 
-// support section::key type in given key when using ini type.
+// Set support section::key type in given key when using ini type.
 func Set(key, val string) error {
 	return globalInstance.Set(key, val)
 }
 
-// support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
+// String support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
 func String(key string) (string, error) {
 	return globalInstance.String(key)
 }
 
-// get string slice
+// Strings will get string slice
 func Strings(key string) ([]string, error) {
 	return globalInstance.Strings(key)
 }
@@ -59,12 +59,12 @@ func Float(key string) (float64, error) {
 	return globalInstance.Float(key)
 }
 
-// support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
+// DefaultString support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
 func DefaultString(key string, defaultVal string) string {
 	return globalInstance.DefaultString(key, defaultVal)
 }
 
-// get string slice
+// DefaultStrings will get string slice
 func DefaultStrings(key string, defaultVal []string) []string {
 	return globalInstance.DefaultStrings(key, defaultVal)
 }
