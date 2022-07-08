@@ -23,7 +23,7 @@ import (
 // Log implement the log.Logger
 type Log orm.Log
 
-// costomer log func
+// LogFunc is costomer log func
 var LogFunc = orm.LogFunc
 
 // NewLog set io.Writer to create a Logger.

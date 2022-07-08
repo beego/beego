@@ -246,7 +246,7 @@ func camelString(s string) string {
 
 type argString []string
 
-// get string by index from string slice
+// Get will get string by index from string slice
 func (a argString) Get(i int, args ...string) (r string) {
 	if i >= 0 && i < len(a) {
 		r = a[i]
@@ -258,7 +258,7 @@ func (a argString) Get(i int, args ...string) (r string) {
 
 type argInt []int
 
-// get int by index from int slice
+// Get will get int by index from int slice
 func (a argInt) Get(i int, args ...int) (r int) {
 	if i >= 0 && i < len(a) {
 		r = a[i]
@@ -269,13 +269,13 @@ func (a argInt) Get(i int, args ...int) (r int) {
 	return
 }
 
-// parse time to string with location
+// timeParse parse time to string with location
 func timeParse(dateString, format string) (time.Time, error) {
 	tp, err := time.ParseInLocation(format, dateString, DefaultTimeLoc)
 	return tp, err
 }
 
-// get pointer indirect type
+// indirectType get pointer indirect type
 func indirectType(v reflect.Type) reflect.Type {
 	switch v.Kind() {
 	case reflect.Ptr:
