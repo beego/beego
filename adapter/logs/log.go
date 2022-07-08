@@ -158,7 +158,7 @@ func (bl *BeeLogger) EnableFuncCallDepth(b bool) {
 	(*logs.BeeLogger)(bl).EnableFuncCallDepth(b)
 }
 
-// set prefix
+// SetPrefix will set prefix
 func (bl *BeeLogger) SetPrefix(s string) {
 	(*logs.BeeLogger)(bl).SetPrefix(s)
 }
