@@ -33,7 +33,7 @@ func WithEnableCookie(enable bool) ClientOption {
 	}
 }
 
-// WithEnableCookie will adds UA in all subsequent request
+// WithUserAgent will adds UA in all subsequent request
 func WithUserAgent(userAgent string) ClientOption {
 	return func(client *Client) {
 		client.Setting.UserAgent = userAgent
@@ -105,7 +105,7 @@ func WithCookie(cookie *http.Cookie) BeegoHTTPRequestOption {
 	}
 }
 
-// Withtokenfactory adds a custom function to set Authorization
+// WithTokenFactory adds a custom function to set Authorization
 func WithTokenFactory(tokenFactory func() string) BeegoHTTPRequestOption {
 	return func(request *BeegoHTTPRequest) {
 		t := tokenFactory()
