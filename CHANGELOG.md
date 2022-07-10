@@ -2,6 +2,7 @@
 - [Fix 4984: random expire cache](https://github.com/beego/beego/pull/4984)
 - [Fix 4907: make admin serve HTTP only](https://github.com/beego/beego/pull/5005)
 - [Feat 4999: add get all tasks function](https://github.com/beego/beego/pull/4999)
+- [Fix 5012: fix some bug, pass []any as any in variadic function](https://github.com/beego/beego/pull/5012)
 
 
 # v2.0.4

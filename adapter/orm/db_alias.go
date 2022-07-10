@@ -69,7 +69,7 @@ func (d *DB) QueryContext(ctx context.Context, query string, args ...interface{}
 }
 
 func (d *DB) QueryRow(query string, args ...interface{}) *sql.Row {
-	return (*orm.DB)(d).QueryRow(query, args)
+	return (*orm.DB)(d).QueryRow(query, args...)
 }
 
 func (d *DB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {

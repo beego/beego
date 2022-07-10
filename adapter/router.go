@@ -212,7 +212,7 @@ func (p *ControllerRegister) AddMethod(method, pattern string, f FilterFunc) {
 
 // Handler add user defined Handler
 func (p *ControllerRegister) Handler(pattern string, h http.Handler, options ...interface{}) {
-	(*web.ControllerRegister)(p).Handler(pattern, h, options)
+	(*web.ControllerRegister)(p).Handler(pattern, h, options...)
 }
 
 // AddAuto router to ControllerRegister.
