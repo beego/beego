@@ -53,20 +53,20 @@ import (
 
 // Configer defines how to get and set value from configuration raw data.
 type Configer interface {
-	// support section::key type in given key when using ini type.
+	// Set support section::key type in given key when using ini type.
 	Set(key, val string) error
 
-	// support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
+	// String support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
 	String(key string) (string, error)
-	// get string slice
+	// Strings get string slice
 	Strings(key string) ([]string, error)
 	Int(key string) (int, error)
 	Int64(key string) (int64, error)
 	Bool(key string) (bool, error)
 	Float(key string) (float64, error)
-	// support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
+	// DefaultString support section::key type in key string when using ini and json type; Int,Int64,Bool,Float,DIY are same.
 	DefaultString(key string, defaultVal string) string
-	// get string slice
+	// DefaultStrings get string slice
 	DefaultStrings(key string, defaultVal []string) []string
 	DefaultInt(key string, defaultVal int) int
 	DefaultInt64(key string, defaultVal int64) int64
