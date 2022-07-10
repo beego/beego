@@ -47,7 +47,7 @@ func (output *BeegoOutput) Body(content []byte) error {
 // Cookie sets cookie value via given key.
 // others are ordered as cookie's max age time, path,domain, secure and httponly.
 func (output *BeegoOutput) Cookie(name string, value string, others ...interface{}) {
-	(*context.BeegoOutput)(output).Cookie(name, value, others)
+	(*context.BeegoOutput)(output).Cookie(name, value, others...)
 }
 
 // JSON writes json to response body.
