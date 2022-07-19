@@ -25,7 +25,7 @@ import (
 // code, msg
 const errFmt = "ERROR-%d, %s"
 
-// Err returns an error representing c and msg.  If c is OK, returns nil.
+// Error returns an error representing c and msg.  If c is OK, returns nil.
 func Error(c Code, msg string) error {
 	return fmt.Errorf(errFmt, c.Code(), msg)
 }

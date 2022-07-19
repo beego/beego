@@ -12,6 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// bean is a basic package
+// Package bean is a basic package
 // it should not depend on other modules except common module, log module and config module
 package bean
