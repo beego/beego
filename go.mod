@@ -23,7 +23,6 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.7
 	github.com/mitchellh/mapstructure v1.4.3
 	github.com/opentracing/opentracing-go v1.2.0
-	github.com/pelletier/go-toml v1.9.2
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.12.1
 	github.com/shiena/ansicolor v0.0.0-20200904210342-c7312218db18
@@ -36,7 +35,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.8.0
 	golang.org/x/crypto v0.0.0-20210513164829-c07d793c2f9a
 	google.golang.org/grpc v1.38.0
-	google.golang.org/protobuf v1.26.0
+	google.golang.org/protobuf v1.28.1
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -58,6 +57,7 @@ require (
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/golang/snappy v0.0.0-20180518054509-2e65f85255db // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.1 // indirect
+	github.com/pelletier/go-toml v1.9.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.2.0 // indirect
 	github.com/prometheus/common v0.32.1 // indirect
