@@ -38,6 +38,7 @@ func (srv *Server) Serve() (err error) {
 }
 
 func (srv *Server) ServeWithListener(ln net.Listener) (err error) {
+	srv.ln = ln
 	go srv.handleSignals()
 	return srv.internalServe(ln)
 }
