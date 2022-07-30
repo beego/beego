@@ -35,7 +35,7 @@ type Fielder orm.Fielder
 
 // Ormer define the orm interface
 type Ormer interface {
-	// read data to model
+	// Read read data to model
 	// for example:
 	//	this will find User by Id field
 	// 	u = &User{Id: user.Id}
@@ -44,25 +44,25 @@ type Ormer interface {
 	// 	u = &User{UserName: "astaxie", Password: "pass"}
 	//	err = Ormer.Read(u, "UserName")
 	Read(md interface{}, cols ...string) error
-	// Like Read(), but with "FOR UPDATE" clause, useful in transaction.
+	// ReadForUpdate Like Read(), but with "FOR UPDATE" clause, useful in transaction.
 	// Some databases are not support this feature.
 	ReadForUpdate(md interface{}, cols ...string) error
-	// Try to read a row from the database, or insert one if it doesn't exist
+	// ReadOrCreate Try to read a row from the database, or insert one if it doesn't exist
 	ReadOrCreate(md interface{}, col1 string, cols ...string) (bool, int64, error)
-	// insert model data to database
+	// Insert will insert model data to database
 	// for example:
 	//  user := new(User)
 	//  id, err = Ormer.Insert(user)
 	//  user must be a pointer and Insert will set user's pk field
 	Insert(interface{}) (int64, error)
-	// mysql:InsertOrUpdate(model) or InsertOrUpdate(model,"colu=colu+value")
+	// InsertOrUpdate(model,"colu=colu+value") or mysql:InsertOrUpdate(model)
 	// if colu type is integer : can use(+-*/), string : convert(colu,"value")
 	// postgres: InsertOrUpdate(model,"conflictColumnName") or InsertOrUpdate(model,"conflictColumnName","colu=colu+value")
 	// if colu type is integer : can use(+-*/), string : colu || "value"
 	InsertOrUpdate(md interface{}, colConflitAndArgs ...string) (int64, error)
-	// insert some models to database
+	// InsertMulti insert some models to database
 	InsertMulti(bulk int, mds interface{}) (int64, error)
-	// update model to database.
+	// Update update model to database.
 	// cols set the columns those want to update.
 	// find model by Id(pk) field and update columns specified by fields, if cols is null then update all columns
 	// for example:
@@ -72,9 +72,9 @@ type Ormer interface {
 	//	user.Extra.Data = "orm"
 	//	num, err = Ormer.Update(&user, "Langs", "Extra")
 	Update(md interface{}, cols ...string) (int64, error)
-	// delete model in database
+	// Delete delete model in database
 	Delete(md interface{}, cols ...string) (int64, error)
-	// load related models to md model.
+	// LoadRelated load related models to md model.
 	// args are limit, offset int and order string.
 	//
 	// example:
@@ -87,25 +87,25 @@ type Ormer interface {
 	// args[3] string order  for example : "-Id"
 	// make sure the relation is defined in model struct tags.
 	LoadRelated(md interface{}, name string, args ...interface{}) (int64, error)
-	// create a models to models queryer
+	// QueryM2M create a models to models queryer
 	// for example:
 	// 	post := Post{Id: 4}
 	// 	m2m := Ormer.QueryM2M(&post, "Tags")
 	QueryM2M(md interface{}, name string) QueryM2Mer
-	// return a QuerySeter for table operations.
+	// QueryTable return a QuerySeter for table operations.
 	// table name can be string or struct.
 	// e.g. QueryTable("user"), QueryTable(&user{}) or QueryTable((*User)(nil)),
 	QueryTable(ptrStructOrTableName interface{}) QuerySeter
 	// switch to another registered database driver by given name.
 	Using(name string) error
-	// begin transaction
+	// Begin begin transaction
 	// for example:
 	// 	o := NewOrm()
 	// 	err := o.Begin()
 	// 	...
 	// 	err = o.Rollback()
 	Begin() error
-	// begin transaction with provided context and option
+	// BeginTx begin transaction with provided context and option
 	// the provided context is used until the transaction is committed or rolled back.
 	// if the context is canceled, the transaction will be rolled back.
 	// the provided TxOptions is optional and may be nil if defaults should be used.
@@ -116,11 +116,11 @@ type Ormer interface {
 	//  ...
 	//  err = o.Rollback()
 	BeginTx(ctx context.Context, opts *sql.TxOptions) error
-	// commit transaction
+	// Commit commit transaction
 	Commit() error
-	// rollback transaction
+	// Rollback rollback transaction
 	Rollback() error
-	// return a raw query seter for raw sql string.
+	// Raw return a raw query seter for raw sql string.
 	// for example:
 	//	 ormer.Raw("UPDATE `user` SET `user_name` = ? WHERE `user_name` = ?", "slene", "testing").Exec()
 	//	// update user testing's name to slene

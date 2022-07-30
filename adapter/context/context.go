@@ -78,7 +78,7 @@ func (ctx *Context) GetCookie(key string) string {
 // SetCookie Set cookie for response.
 // It's alias of BeegoOutput.Cookie.
 func (ctx *Context) SetCookie(name string, value string, others ...interface{}) {
-	(*context.Context)(ctx).SetCookie(name, value, others)
+	(*context.Context)(ctx).SetCookie(name, value, others...)
 }
 
 // GetSecureCookie Get secure cookie from request by a given key.
@@ -88,7 +88,7 @@ func (ctx *Context) GetSecureCookie(Secret, key string) (string, bool) {
 
 // SetSecureCookie Set Secure cookie for response.
 func (ctx *Context) SetSecureCookie(Secret, name, value string, others ...interface{}) {
-	(*context.Context)(ctx).SetSecureCookie(Secret, name, value, others)
+	(*context.Context)(ctx).SetSecureCookie(Secret, name, value, others...)
 }
 
 // XSRFToken creates a xsrf token string and returns.

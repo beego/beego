@@ -245,7 +245,7 @@ func Any(rootpath string, f FilterFunc) *App {
 //          fmt.Fprintf(w, "Hello, %q", html.EscapeString(r.URL.Path))
 //    }))
 func Handler(rootpath string, h http.Handler, options ...interface{}) *App {
-	return (*App)(web.Handler(rootpath, h, options))
+	return (*App)(web.Handler(rootpath, h, options...))
 }
 
 // InsertFilter adds a FilterFunc with pattern condition and action constant.

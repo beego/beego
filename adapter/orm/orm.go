@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//go:build go1.8
 // +build go1.8
 
 // Package orm provide ORM for MySQL/PostgreSQL/sqlite
@@ -92,7 +93,7 @@ type ormer struct {
 
 var _ Ormer = new(ormer)
 
-// read data to model
+// Read read data to model
 func (o *ormer) Read(md interface{}, cols ...string) error {
 	if o.isTx {
 		return o.txDelegate.Read(md, cols...)
@@ -100,7 +101,7 @@ func (o *ormer) Read(md interface{}, cols ...string) error {
 	return o.delegate.Read(md, cols...)
 }
 
-// read data to model, like Read(), but use "SELECT FOR UPDATE" form
+// ReadForUpdate read data to model, like Read(), but use "SELECT FOR UPDATE" form
 func (o *ormer) ReadForUpdate(md interface{}, cols ...string) error {
 	if o.isTx {
 		return o.txDelegate.ReadForUpdate(md, cols...)
@@ -108,7 +109,7 @@ func (o *ormer) ReadForUpdate(md interface{}, cols ...string) error {
 	return o.delegate.ReadForUpdate(md, cols...)
 }
 
-// Try to read a row from the database, or insert one if it doesn't exist
+// ReadOrCreate Try to read a row from the database, or insert one if it doesn't exist
 func (o *ormer) ReadOrCreate(md interface{}, col1 string, cols ...string) (bool, int64, error) {
 	if o.isTx {
 		return o.txDelegate.ReadOrCreate(md, col1, cols...)
@@ -116,7 +117,7 @@ func (o *ormer) ReadOrCreate(md interface{}, col1 string, cols ...string) (bool,
 	return o.delegate.ReadOrCreate(md, col1, cols...)
 }
 
-// insert model data to database
+// Insert will insert model data to database
 func (o *ormer) Insert(md interface{}) (int64, error) {
 	if o.isTx {
 		return o.txDelegate.Insert(md)
@@ -124,7 +125,7 @@ func (o *ormer) Insert(md interface{}) (int64, error) {
 	return o.delegate.Insert(md)
 }
 
-// insert some models to database
+// InsertMulti will insert some models to database
 func (o *ormer) InsertMulti(bulk int, mds interface{}) (int64, error) {
 	if o.isTx {
 		return o.txDelegate.InsertMulti(bulk, mds)
@@ -140,7 +141,7 @@ func (o *ormer) InsertOrUpdate(md interface{}, colConflitAndArgs ...string) (int
 	return o.delegate.InsertOrUpdate(md, colConflitAndArgs...)
 }
 
-// update model to database.
+// Update will update model to database.
 // cols set the columns those want to update.
 func (o *ormer) Update(md interface{}, cols ...string) (int64, error) {
 	if o.isTx {
@@ -149,7 +150,7 @@ func (o *ormer) Update(md interface{}, cols ...string) (int64, error) {
 	return o.delegate.Update(md, cols...)
 }
 
-// delete model in database
+// Delete delete model in database
 // cols shows the delete conditions values read from. default is pk
 func (o *ormer) Delete(md interface{}, cols ...string) (int64, error) {
 	if o.isTx {
@@ -158,7 +159,7 @@ func (o *ormer) Delete(md interface{}, cols ...string) (int64, error) {
 	return o.delegate.Delete(md, cols...)
 }
 
-// create a models to models queryer
+// QueryM2M create a models to models queryer
 func (o *ormer) QueryM2M(md interface{}, name string) QueryM2Mer {
 	if o.isTx {
 		return o.txDelegate.QueryM2M(md, name)
@@ -166,7 +167,7 @@ func (o *ormer) QueryM2M(md interface{}, name string) QueryM2Mer {
 	return o.delegate.QueryM2M(md, name)
 }
 
-// load related models to md model.
+// LoadRelated load related models to md model.
 // args are limit, offset int and order string.
 //
 // example:
@@ -200,7 +201,7 @@ func (o *ormer) LoadRelated(md interface{}, name string, args ...interface{}) (i
 	return o.delegate.LoadRelated(md, name, kvs...)
 }
 
-// return a QuerySeter for table operations.
+// QueryTable return a QuerySeter for table operations.
 // table name can be string or struct.
 // e.g. QueryTable("user"), QueryTable(&user{}) or QueryTable((*User)(nil)),
 func (o *ormer) QueryTable(ptrStructOrTableName interface{}) (qs QuerySeter) {
@@ -210,7 +211,7 @@ func (o *ormer) QueryTable(ptrStructOrTableName interface{}) (qs QuerySeter) {
 	return o.delegate.QueryTable(ptrStructOrTableName)
 }
 
-// switch to another registered database driver by given name.
+// Using switch to another registered database driver by given name.
 func (o *ormer) Using(name string) error {
 	if o.isTx {
 		return ErrTxHasBegan
@@ -219,7 +220,7 @@ func (o *ormer) Using(name string) error {
 	return nil
 }
 
-// begin transaction
+// Begin will begin transaction
 func (o *ormer) Begin() error {
 	if o.isTx {
 		return ErrTxHasBegan
@@ -240,7 +241,7 @@ func (o *ormer) BeginTx(ctx context.Context, opts *sql.TxOptions) error {
 	return nil
 }
 
-// commit transaction
+// Commit will commit transaction
 func (o *ormer) Commit() error {
 	if !o.isTx {
 		return ErrTxDone
@@ -255,7 +256,7 @@ func (o *ormer) Commit() error {
 	return err
 }
 
-// rollback transaction
+// Rollback will rollback transaction
 func (o *ormer) Rollback() error {
 	if !o.isTx {
 		return ErrTxDone
@@ -270,7 +271,7 @@ func (o *ormer) Rollback() error {
 	return err
 }
 
-// return a raw query seter for raw sql string.
+// Raw return a raw query seter for raw sql string.
 func (o *ormer) Raw(query string, args ...interface{}) RawSeter {
 	if o.isTx {
 		return o.txDelegate.Raw(query, args...)
@@ -278,7 +279,7 @@ func (o *ormer) Raw(query string, args ...interface{}) RawSeter {
 	return o.delegate.Raw(query, args...)
 }
 
-// return current using database Driver
+// Driver return current using database Driver
 func (o *ormer) Driver() Driver {
 	if o.isTx {
 		return o.txDelegate.Driver()
@@ -286,7 +287,7 @@ func (o *ormer) Driver() Driver {
 	return o.delegate.Driver()
 }
 
-// return sql.DBStats for current database
+// DBStats return sql.DBStats for current database
 func (o *ormer) DBStats() *sql.DBStats {
 	if o.isTx {
 		return o.txDelegate.DBStats()

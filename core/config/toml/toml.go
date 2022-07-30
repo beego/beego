@@ -19,9 +19,8 @@ import (
 	"os"
 	"strings"
 
-	"github.com/pelletier/go-toml"
-
 	"github.com/beego/beego/v2/core/config"
+	"github.com/pelletier/go-toml"
 )
 
 const keySeparator = "."
@@ -135,7 +134,7 @@ func (c *configContainer) Int64(key string) (int64, error) {
 	}
 }
 
-// bool return bool value
+// Bool return bool value
 // return error if key not found or value is invalid type
 func (c *configContainer) Bool(key string) (bool, error) {
 	res, err := c.get(key)

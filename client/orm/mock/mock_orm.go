@@ -45,7 +45,7 @@ func MockMethod(method string, resp ...interface{}) *Mock {
 	return NewMock(NewSimpleCondition("", method), resp, nil)
 }
 
-// MockOrmRead support orm.Read and orm.ReadWithCtx
+// MockRead support orm.Read and orm.ReadWithCtx
 // cb is used to mock read data from DB
 func MockRead(tableName string, cb func(data interface{}), err error) *Mock {
 	return NewMock(NewSimpleCondition(tableName, "ReadWithCtx"), []interface{}{err}, func(inv *orm.Invocation) {

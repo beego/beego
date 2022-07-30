@@ -16,6 +16,7 @@ package web
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"reflect"
 	"time"
@@ -86,7 +87,7 @@ func (admin *adminApp) Run() {
 		" please invoke task.StartTask, or task will not be executed")
 	addr := BConfig.Listen.AdminAddr
 	if BConfig.Listen.AdminPort != 0 {
-		addr = fmt.Sprintf("%s:%d", BConfig.Listen.AdminAddr, BConfig.Listen.AdminPort)
+		addr = net.JoinHostPort(BConfig.Listen.AdminAddr, fmt.Sprintf("%d", BConfig.Listen.AdminPort))
 	}
 	logs.Info("Admin server Running on %s", addr)
 	admin.HttpServer.Run(addr)
@@ -102,6 +103,7 @@ func registerAdmin() error {
 		// copy config to avoid conflict
 		adminCfg := *BConfig
 		adminCfg.Listen.EnableHTTPS = false
+		adminCfg.Listen.EnableMutualHTTPS = false
 		beeAdminApp = &adminApp{
 			HttpServer: NewHttpServerWithCfg(&adminCfg),
 		}
