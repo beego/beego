@@ -10,7 +10,8 @@ var quote string = `"`
 
 // PostgresQueryBuilder is the SQL build
 type PostgresQueryBuilder struct {
-	tokens []string
+	tokens       []string
+	orderByAdded bool
 }
 
 func processingStr(str []string) string {
@@ -124,6 +125,14 @@ func (qb *PostgresQueryBuilder) In(vals ...string) QueryBuilder {
 // OrderBy join the Order by fields
 func (qb *PostgresQueryBuilder) OrderBy(fields ...string) QueryBuilder {
 	str := processingStr(fields)
+
+	if qb.orderByAdded {
+		qb.tokens = append(qb.tokens, CommaSpace, str)
+		return qb
+	}
+
+	qb.orderByAdded = true
+
 	qb.tokens = append(qb.tokens, "ORDER BY", str)
 	return qb
 }

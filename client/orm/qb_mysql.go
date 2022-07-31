@@ -25,7 +25,8 @@ const CommaSpace = ", "
 
 // MySQLQueryBuilder is the SQL build
 type MySQLQueryBuilder struct {
-	tokens []string
+	tokens       []string
+	orderByAdded bool
 }
 
 // Select will join the fields
@@ -96,6 +97,14 @@ func (qb *MySQLQueryBuilder) In(vals ...string) QueryBuilder {
 
 // OrderBy join the Order by fields
 func (qb *MySQLQueryBuilder) OrderBy(fields ...string) QueryBuilder {
+
+	if qb.orderByAdded {
+		qb.tokens = append(qb.tokens, CommaSpace, strings.Join(fields, CommaSpace))
+		return qb
+	}
+
+	qb.orderByAdded = true
+
 	qb.tokens = append(qb.tokens, "ORDER BY", strings.Join(fields, CommaSpace))
 	return qb
 }
