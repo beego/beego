@@ -55,11 +55,40 @@ import (
 	"github.com/beego/beego/v2/core/logs"
 )
 
-const contentTypeKey = "Content-Type"
+const (
+	contentTypeKey         = "Content-Type"
+	ApplicationJSON        = "application/json"
+	ApplicationAtomXML     = "application/atom+xml"
+	ApplicationEcmascript  = "application/ecmascript"
+	ApplicationJavaScript  = "application/javascript"
+	ApplicationVndJSON     = "application/vnd.api+json"
+	ApplicationOctetStream = "application/octet-stream"
+	ApplicationOgg         = "application/ogg"
+	ApplicationPdf         = "application/pdf"
+	ApplicationPostscript  = "application/postscript"
+	ApplicationRdfXML      = "application/rdf+xml"
+	ApplicationRssXML      = "application/rss+xml"
+	ApplicationXML         = "application/xml"
+	ApplicationUrlencoded  = "application/x-www-form-urlencoded"
+	ApplicationFontWoff    = "application/font-woff"
+	ApplicationSoap        = "application/rdf+soap"
+	ApplicationXYaml       = "application/x-yaml"
+	ApplicationXHTMlXML    = "application/xhtml+xml"
+	ApplicationXMLDtd      = "application/xml-dtd"
+	ApplicationXMLXop      = "application/xml-xop"
+	ApplicationZip         = "application/zip"
+	ApplicationGZip        = "application/gzip"
+	ApplicationGraphql     = "application/graphql"
+)
 
 // it will be the last filter and execute request.Do
 var doRequestFilter = func(ctx context.Context, req *BeegoHTTPRequest) (*http.Response, error) {
 	return req.doRequest(ctx)
+}
+
+var doRequestFilterWithMediaType = func(ctx context.Context, mediaType string, req *BeegoHTTPRequest) (*http.Response,
+	error) {
+	return req.doRequestWithMediaType(ctx, mediaType)
 }
 
 // NewBeegoRequest returns *BeegoHttpRequest with specific method
@@ -440,6 +469,18 @@ func (b *BeegoHTTPRequest) getResponse() (*http.Response, error) {
 	return resp, nil
 }
 
+func (b *BeegoHTTPRequest) getResponseWithMediaType(mediaType string) (*http.Response, error) {
+	if b.resp.StatusCode != 0 {
+		return b.resp, nil
+	}
+	resp, err := b.DoRequestWithMediaType(mediaType)
+	if err != nil {
+		return nil, err
+	}
+	b.resp = resp
+	return resp, nil
+}
+
 // DoRequest executes client.Do
 func (b *BeegoHTTPRequest) DoRequest() (resp *http.Response, err error) {
 	root := doRequestFilter
@@ -460,6 +501,17 @@ func (b *BeegoHTTPRequest) DoRequestWithCtx(ctx context.Context) (resp *http.Res
 		}
 	}
 	return root(ctx, b)
+}
+
+// DoRequest executes client.DoWithMediaType
+func (b *BeegoHTTPRequest) DoRequestWithMediaType(mediaType string) (resp *http.Response, err error) {
+	root := doRequestFilterWithMediaType
+	if len(b.setting.FilterChains) > 0 {
+		for i := len(b.setting.FilterChains) - 1; i >= 0; i-- {
+			root = b.setting.FilterWithMediaChains[i](root)
+		}
+	}
+	return root(b.req.Context(), mediaType, b)
 }
 
 func (b *BeegoHTTPRequest) doRequest(_ context.Context) (*http.Response, error) {
@@ -493,6 +545,37 @@ func (b *BeegoHTTPRequest) doRequest(_ context.Context) (*http.Response, error) 
 	return b.sendRequest(client)
 }
 
+func (b *BeegoHTTPRequest) doRequestWithMediaType(_ context.Context, mediaType string) (*http.Response, error) {
+	paramBody := b.buildParamBody()
+
+	b.buildURL(paramBody)
+	urlParsed, err := url.Parse(b.url)
+	if err != nil {
+		return nil, berror.Wrapf(err, InvalidUrl, "parse url failed, the url is %s", b.url)
+	}
+
+	b.req.URL = urlParsed
+
+	trans := b.buildTrans()
+
+	jar := b.buildCookieJar()
+
+	client := &http.Client{
+		Transport: trans,
+		Jar:       jar,
+	}
+
+	if b.setting.UserAgent != "" && b.req.Header.Get("User-Agent") == "" {
+		b.req.Header.Set("User-Agent", b.setting.UserAgent)
+	}
+
+	if b.setting.CheckRedirect != nil {
+		client.CheckRedirect = b.setting.CheckRedirect
+	}
+
+	return b.sendRequestWithMediaType(client, mediaType)
+}
+
 func (b *BeegoHTTPRequest) sendRequest(client *http.Client) (resp *http.Response, err error) {
 	// retries default value is 0, it will run once.
 	// retries equal to -1, it will run forever until success
@@ -500,6 +583,21 @@ func (b *BeegoHTTPRequest) sendRequest(client *http.Client) (resp *http.Response
 	// Sleeps for a 400ms between calls to reduce spam
 	for i := 0; b.setting.Retries == -1 || i <= b.setting.Retries; i++ {
 		resp, err = client.Do(b.req)
+		if err == nil {
+			return
+		}
+		time.Sleep(b.setting.RetryDelay)
+	}
+	return nil, berror.Wrap(err, SendRequestFailed, "sending request fail")
+}
+
+func (b *BeegoHTTPRequest) sendRequestWithMediaType(client *http.Client, mediaType string) (resp *http.Response, err error) {
+	// retries default value is 0, it will run once.
+	// retries equal to -1, it will run forever until success
+	// retries is setted, it will retries fixed times.
+	// Sleeps for a 400ms between calls to reduce spam
+	for i := 0; b.setting.Retries == -1 || i <= b.setting.Retries; i++ {
+		resp, err = client.DoWithMediaType(b.req, mediaType)
 		if err == nil {
 			return
 		}
@@ -710,6 +808,11 @@ func (b *BeegoHTTPRequest) ToValue(value interface{}) error {
 // Response executes request client gets response manually.
 func (b *BeegoHTTPRequest) Response() (*http.Response, error) {
 	return b.getResponse()
+}
+
+// ResponseWithMediaType Response executes request client gets response with media type manually.
+func (b *BeegoHTTPRequest) ResponseWithMediaType(mediaType string) (*http.Response, error) {
+	return b.getResponseWithMediaType(mediaType)
 }
 
 // TimeoutDialer returns functions of connection dialer with timeout settings for http.Transport Dial field.

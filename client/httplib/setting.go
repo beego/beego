@@ -25,19 +25,20 @@ import (
 
 // BeegoHTTPSettings is the http.Client setting
 type BeegoHTTPSettings struct {
-	UserAgent        string
-	ConnectTimeout   time.Duration
-	ReadWriteTimeout time.Duration
-	TLSClientConfig  *tls.Config
-	Proxy            func(*http.Request) (*url.URL, error)
-	Transport        http.RoundTripper
-	CheckRedirect    func(req *http.Request, via []*http.Request) error
-	EnableCookie     bool
-	Gzip             bool
-	Retries          int // if set to -1 means will retry forever
-	RetryDelay       time.Duration
-	FilterChains     []FilterChain
-	EscapeHTML       bool // if set to false means will not escape escape HTML special characters during processing, default true
+	UserAgent             string
+	ConnectTimeout        time.Duration
+	ReadWriteTimeout      time.Duration
+	TLSClientConfig       *tls.Config
+	Proxy                 func(*http.Request) (*url.URL, error)
+	Transport             http.RoundTripper
+	CheckRedirect         func(req *http.Request, via []*http.Request) error
+	EnableCookie          bool
+	Gzip                  bool
+	Retries               int // if set to -1 means will retry forever
+	RetryDelay            time.Duration
+	FilterChains          []FilterChain
+	FilterWithMediaChains []FilterChainWithMedia
+	EscapeHTML            bool // if set to false means will not escape escape HTML special characters during processing, default true
 }
 
 // createDefaultCookie creates a global cookiejar to store cookies.

@@ -21,4 +21,8 @@ import (
 
 type FilterChain func(next Filter) Filter
 
+type FilterChainWithMedia func(next FilterWithMedia) FilterWithMedia
+
 type Filter func(ctx context.Context, req *BeegoHTTPRequest) (*http.Response, error)
+
+type FilterWithMedia func(ctx context.Context, media string, req *BeegoHTTPRequest) (*http.Response, error)
