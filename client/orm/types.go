@@ -405,7 +405,7 @@ type QuerySeter interface {
 	// 	//delete two user  who's name is testing1 or testing2
 	Delete() (int64, error)
 	DeleteWithCtx(context.Context) (int64, error)
-	// return a insert queryer.
+	// return an insert queryer.
 	// it can be used in times.
 	// example:
 	// 	i,err := sq.PrepareInsert()
