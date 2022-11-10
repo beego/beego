@@ -52,7 +52,7 @@ func (c *Condition) AndCond(cond *Condition) *Condition {
 	return (*Condition)((*orm.Condition)(c).AndCond((*orm.Condition)(cond)))
 }
 
-// AndNotCond combine a AND NOT condition to current condition
+// AndNotCond combine an AND NOT condition to current condition
 func (c *Condition) AndNotCond(cond *Condition) *Condition {
 	return (*Condition)((*orm.Condition)(c).AndNotCond((*orm.Condition)(cond)))
 }
@@ -67,12 +67,12 @@ func (c Condition) OrNot(expr string, args ...interface{}) *Condition {
 	return (*Condition)((orm.Condition)(c).OrNot(expr, args...))
 }
 
-// OrCond combine a OR condition to current condition
+// OrCond combine an OR condition to current condition
 func (c *Condition) OrCond(cond *Condition) *Condition {
 	return (*Condition)((*orm.Condition)(c).OrCond((*orm.Condition)(cond)))
 }
 
-// OrNotCond combine a OR NOT condition to current condition
+// OrNotCond combine an OR NOT condition to current condition
 func (c *Condition) OrNotCond(cond *Condition) *Condition {
 	return (*Condition)((*orm.Condition)(c).OrNotCond((*orm.Condition)(cond)))
 }

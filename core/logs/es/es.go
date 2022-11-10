@@ -105,11 +105,11 @@ func (el *esLogger) WriteMsg(lm *logs.LogMsg) error {
 	return err
 }
 
-// Destroy is a empty method
+// Destroy is an empty method
 func (el *esLogger) Destroy() {
 }
 
-// Flush is a empty method
+// Flush is an empty method
 func (el *esLogger) Flush() {
 }
 

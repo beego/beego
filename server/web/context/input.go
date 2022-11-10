@@ -153,7 +153,7 @@ func (input *BeegoInput) IsHead() bool {
 	return input.Is("HEAD")
 }
 
-// IsOptions Is this a OPTIONS method request?
+// IsOptions Is this an OPTIONS method request?
 func (input *BeegoInput) IsOptions() bool {
 	return input.Is("OPTIONS")
 }

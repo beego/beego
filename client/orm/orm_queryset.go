@@ -257,7 +257,7 @@ func (o *querySet) DeleteWithCtx(ctx context.Context) (int64, error) {
 	return o.orm.alias.DbBaser.DeleteBatch(ctx, o.orm.db, o, o.mi, o.cond, o.orm.alias.TZ)
 }
 
-// return a insert queryer.
+// return an insert queryer.
 // it can be used in times.
 // example:
 // 	i,err := sq.PrepareInsert()

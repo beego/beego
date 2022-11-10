@@ -90,7 +90,7 @@ func (c *Condition) AndCond(cond *Condition) *Condition {
 	return c
 }
 
-// AndNotCond combine a AND NOT condition to current condition
+// AndNotCond combine an AND NOT condition to current condition
 func (c *Condition) AndNotCond(cond *Condition) *Condition {
 	c = c.clone()
 	if c == cond {
@@ -121,7 +121,7 @@ func (c Condition) OrNot(expr string, args ...interface{}) *Condition {
 	return &c
 }
 
-// OrCond combine a OR condition to current condition
+// OrCond combine an OR condition to current condition
 func (c *Condition) OrCond(cond *Condition) *Condition {
 	c = c.clone()
 	if c == cond {
@@ -133,7 +133,7 @@ func (c *Condition) OrCond(cond *Condition) *Condition {
 	return c
 }
 
-// OrNotCond combine a OR NOT condition to current condition
+// OrNotCond combine an OR NOT condition to current condition
 func (c *Condition) OrNotCond(cond *Condition) *Condition {
 	c = c.clone()
 	if c == cond {
