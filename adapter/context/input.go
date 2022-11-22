@@ -94,7 +94,7 @@ func (input *BeegoInput) IsHead() bool {
 	return (*context.BeegoInput)(input).IsHead()
 }
 
-// IsOptions Is this a OPTIONS method request?
+// IsOptions Is this an OPTIONS method request?
 func (input *BeegoInput) IsOptions() bool {
 	return (*context.BeegoInput)(input).IsOptions()
 }

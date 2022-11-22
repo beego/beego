@@ -221,7 +221,7 @@ func (f optionFunc) apply(t *Task) {
 	f(t)
 }
 
-// TimeoutOption return a option to set timeout duration for task
+// TimeoutOption return an option to set timeout duration for task
 func TimeoutOption(timeout time.Duration) Option {
 	return optionFunc(func(t *Task) {
 		t.Timeout = timeout
