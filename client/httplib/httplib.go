@@ -112,7 +112,7 @@ func Head(url string) *BeegoHTTPRequest {
 	return NewBeegoRequest(url, "HEAD")
 }
 
-// BeegoHTTPRequest provides more useful methods than http.Request for requesting a url.
+// BeegoHTTPRequest provides more useful methods than http.Request for requesting an url.
 type BeegoHTTPRequest struct {
 	url     string
 	req     *http.Request

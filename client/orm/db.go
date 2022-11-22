@@ -1111,7 +1111,7 @@ func (d *dbBase) ReadBatch(ctx context.Context, q dbQuerier, qs *querySet, mi *m
 				ind.Set(mind)
 			} else {
 				if cnt == 0 {
-					// you can use a empty & caped container list
+					// you can use an empty & caped container list
 					// orm will not replace it
 					if ind.Len() != 0 {
 						// if container is not empty
@@ -1135,7 +1135,7 @@ func (d *dbBase) ReadBatch(ctx context.Context, q dbQuerier, qs *querySet, mi *m
 			ind.Set(slice)
 		} else {
 			// when a result is empty and container is nil
-			// to set a empty container
+			// to set an empty container
 			if ind.IsNil() {
 				ind.Set(reflect.MakeSlice(ind.Type(), 0, 0))
 			}
