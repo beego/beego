@@ -81,7 +81,7 @@ func NewBeegoRequestWithCtx(ctx context.Context, rawurl, method string) *BeegoHT
 		url:     rawurl,
 		req:     req,
 		params:  map[string][]string{},
-		files:   map[string]string{},
+		files:   map[string][]string{},
 		setting: defaultSetting,
 		resp:    &http.Response{},
 	}
@@ -114,10 +114,11 @@ func Head(url string) *BeegoHTTPRequest {
 
 // BeegoHTTPRequest provides more useful methods than http.Request for requesting an url.
 type BeegoHTTPRequest struct {
-	url     string
-	req     *http.Request
-	params  map[string][]string
-	files   map[string]string
+	url    string
+	req    *http.Request
+	params map[string][]string
+	//上传文件 可以上传数组
+	files   map[string][]string
 	setting BeegoHTTPSettings
 	resp    *http.Response
 	body    []byte
@@ -274,7 +275,11 @@ func (b *BeegoHTTPRequest) Param(key, value string) *BeegoHTTPRequest {
 
 // PostFile adds a post file to the request
 func (b *BeegoHTTPRequest) PostFile(formname, filename string) *BeegoHTTPRequest {
-	b.files[formname] = filename
+	if file, ok := b.files[formname]; ok {
+		b.files[formname] = append(file, filename)
+	} else {
+		b.files[formname] = []string{filename}
+	}
 	return b
 }
 
@@ -391,7 +396,9 @@ func (b *BeegoHTTPRequest) handleFiles() {
 	bodyWriter := multipart.NewWriter(pw)
 	go func() {
 		for formname, filename := range b.files {
-			b.handleFileToBody(bodyWriter, formname, filename)
+			for _, vfile := range filename {
+				b.handleFileToBody(bodyWriter, formname, vfile)
+			}
 		}
 		for k, v := range b.params {
 			for _, vv := range v {
