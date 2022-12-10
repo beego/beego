@@ -123,6 +123,14 @@ var InvalidSsdbCacheValue = berror.DefineCode(4002022, moduleName, "InvalidSsdbC
 SSDB cache only accept string value. Please check your input.
 `)
 
+var InvalidStoreFunc = berror.DefineCode(4002024, moduleName, "InvalidStoreFunc", `
+Invalid storeFunc.
+`)
+
+var PersistCacheFailed = berror.DefineCode(4002025, moduleName, "PersistCacheFailed", `
+StoreFunc execute failed.
+`)
+
 var DeleteFileCacheItemFailed = berror.DefineCode(5002001, moduleName, "DeleteFileCacheItemFailed", `
 Beego try to delete file cache item failed. 
 Please check whether Beego generated file correctly. 
