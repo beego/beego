@@ -154,8 +154,10 @@ func testReadThroughCacheGetMulti(t *testing.T, bm Cache) {
 				err2 := berror.Wrap(
 					errors.New("the key not exist"),
 					KeyNotExist, "cache unable to load data")
+				keys := []string{"key0", "key01"}
 				keyErrMap := map[string]error{"key0": err1, "key01": err2}
-				for ki, err := range keyErrMap {
+				for _, ki := range keys {
+					err := keyErrMap[ki]
 					keysErr = append(keysErr, fmt.Sprintf("key [%s] error: %s", ki, err.Error()))
 				}
 				return berror.Error(MultiGetFailed, strings.Join(keysErr, "; "))

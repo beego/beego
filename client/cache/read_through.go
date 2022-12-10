@@ -35,7 +35,6 @@ func NewReadThroughCache(cache Cache, expiration time.Duration,
 func (c *readThroughCache) Get(ctx context.Context, key string) (any, error) {
 	c.mutex.RLock()
 	val, err := c.Cache.Get(ctx, key)
-	fmt.Println(val)
 	c.mutex.RUnlock()
 	if val == nil || err != nil {
 		c.mutex.Lock()
