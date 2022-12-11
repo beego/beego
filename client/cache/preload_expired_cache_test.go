@@ -2,42 +2,36 @@ package cache
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
 )
 
 func TestPreloadCache_Put(t *testing.T) {
-	type fields struct {
-		Cache         Cache
-		sentinelCache *MemoryCache
-		expiredAhead  time.Duration
-		expired       time.Duration
-	}
-	type args struct {
-		ctx     context.Context
-		key     string
-		val     interface{}
-		timeout time.Duration
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		wantErr assert.ErrorAssertionFunc
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			p := &PreloadCache{
-				Cache:         tt.fields.Cache,
-				sentinelCache: tt.fields.sentinelCache,
-				expiredAhead:  tt.fields.expiredAhead,
-				expired:       tt.fields.expired,
-			}
-			tt.wantErr(t, p.Put(tt.args.ctx, tt.args.key, tt.args.val, tt.args.timeout), fmt.Sprintf("Put(%v, %v, %v, %v)", tt.args.ctx, tt.args.key, tt.args.val, tt.args.timeout))
-		})
-	}
+	mc, err := NewCache("memory", `{"interval":1}`)
+	assert.Nil(t, err)
+
+	// mock save to db
+	mockDb := make(map[string]any)
+	mockDb["hello"] = "world"
+
+	cache, err := NewPreloadCache(mc, func(ctx context.Context, key string) (any, error) {
+		val, ok := mockDb[key]
+		if !ok {
+			return nil, errors.New("not found in db")
+		}
+		return val, nil
+	}, 4*time.Second, 3)
+	assert.Nil(t, err)
+
+	err = cache.Put(context.Background(), "hello", "world", 4*time.Second)
+	val, err := cache.Get(context.Background(), "hello")
+	assert.Nil(t, err)
+	assert.Equal(t, "world", val)
+
+	time.Sleep(5 * time.Second)
+	val, err = cache.Get(context.Background(), "hello")
+	assert.Nil(t, err)
+	assert.Equal(t, "world", val)
 }

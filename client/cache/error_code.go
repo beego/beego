@@ -170,6 +170,14 @@ The reponse from SSDB server is invalid.
 Usually it indicates something wrong on server side.
 `)
 
+var MemoryCacheCurdFailed = berror.DefineCode(5002008, moduleName, "MemoryCacheCurdFailed", `
+When you want to get, put, delete key-value from local memory cache.
+`)
+
+var InvalidPreloadCacheCfg = berror.DefineCode(5002009, moduleName, "InvalidPreloadCacheCfg", `
+The preload cache config is invalid. Please check your config. 
+`)
+
 var (
 	ErrKeyExpired  = berror.Error(KeyExpired, "the key is expired")
 	ErrKeyNotExist = berror.Error(KeyNotExist, "the key isn't exist")
