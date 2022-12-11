@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/beego/beego/v2/core/berror"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -13,7 +12,6 @@ import (
 // add the read through function to the original Cache function
 type readThroughCache struct {
 	Cache
-	mutex      sync.RWMutex
 	Expiration time.Duration
 	LoadFunc   func(ctx context.Context, key string) (any, error)
 }
@@ -33,12 +31,8 @@ func NewReadThroughCache(cache Cache, expiration time.Duration,
 
 // Get cache from readThroughCache
 func (c *readThroughCache) Get(ctx context.Context, key string) (any, error) {
-	c.mutex.RLock()
 	val, err := c.Cache.Get(ctx, key)
-	c.mutex.RUnlock()
 	if val == nil || err != nil {
-		c.mutex.Lock()
-		defer c.mutex.Unlock()
 		val, err = c.LoadFunc(ctx, key)
 		if err != nil {
 			return nil, berror.Wrap(
