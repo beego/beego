@@ -47,9 +47,10 @@ func (mi *MemoryItem) isExpire() bool {
 // Contains a RW locker for safe map storage.
 type MemoryCache struct {
 	sync.RWMutex
-	dur   time.Duration
-	items map[string]*MemoryItem
-	Every int // run an expiration check Every clock time
+	dur       time.Duration
+	items     map[string]*MemoryItem
+	Every     int                       // run an expiration check Every clock time
+	onEvicted func(key string, val any) // execute when key is expired
 }
 
 // NewMemoryCache returns a new MemoryCache.
@@ -186,6 +187,11 @@ func (bc *MemoryCache) StartAndGC(config string) error {
 	return nil
 }
 
+// RegisterEvictedFunc for write back cache to register onEvicted function
+func (bc *MemoryCache) RegisterEvictedFunc(fn func(key string, val any)) {
+	bc.onEvicted = fn
+}
+
 // check expiration.
 func (bc *MemoryCache) vacuum() {
 	bc.RLock()
@@ -226,7 +232,11 @@ func (bc *MemoryCache) clearItems(keys []string) {
 	bc.Lock()
 	defer bc.Unlock()
 	for _, key := range keys {
+		val := bc.items[key].val
 		delete(bc.items, key)
+		if bc.onEvicted != nil {
+			bc.onEvicted(key, val)
+		}
 	}
 }
 
