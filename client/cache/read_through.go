@@ -12,33 +12,35 @@ import (
 // add the read through function to the original Cache function
 type readThroughCache struct {
 	Cache
-	Expiration time.Duration
-	LoadFunc   func(ctx context.Context, key string) (any, error)
+	expiration       time.Duration
+	loadFunc         func(ctx context.Context, key string) (any, error)
+	applyForGetMulti bool
 }
 
 // NewReadThroughCache create readThroughCache
 func NewReadThroughCache(cache Cache, expiration time.Duration,
-	loadFunc func(ctx context.Context, key string) (any, error)) (Cache, error) {
+	loadFunc func(ctx context.Context, key string) (any, error), applyForGetMulti bool) (Cache, error) {
 	if loadFunc == nil {
 		return nil, berror.Error(InvalidLoadFunc, "loadFunc cannot be nil")
 	}
 	return &readThroughCache{
-		Cache:      cache,
-		Expiration: expiration,
-		LoadFunc:   loadFunc,
+		Cache:            cache,
+		expiration:       expiration,
+		loadFunc:         loadFunc,
+		applyForGetMulti: applyForGetMulti,
 	}, nil
 }
 
-// Get cache from readThroughCache
+// Get will try to call the LoadFunc to load data if the Cache returns value nil or non-nil error.
 func (c *readThroughCache) Get(ctx context.Context, key string) (any, error) {
 	val, err := c.Cache.Get(ctx, key)
 	if val == nil || err != nil {
-		val, err = c.LoadFunc(ctx, key)
+		val, err = c.loadFunc(ctx, key)
 		if err != nil {
 			return nil, berror.Wrap(
-				err, KeyNotExist, "cache unable to load data")
+				err, LoadFuncFailed, "cache unable to load data")
 		}
-		err = c.Cache.Put(ctx, key, val, c.Expiration)
+		err = c.Cache.Put(ctx, key, val, c.expiration)
 		if err != nil {
 			return val, err
 		}
@@ -46,8 +48,12 @@ func (c *readThroughCache) Get(ctx context.Context, key string) (any, error) {
 	return val, nil
 }
 
-// GetMulti cache from readThroughCache
+// GetMulti will try to call the LoadFunc to load data if the GetMulti method of underlying cache returns non-nil error.
+// You should check the concrete type of underlying cache to learn the cases that the GetMulti function will return non-nil error.
 func (c *readThroughCache) GetMulti(ctx context.Context, keys []string) ([]any, error) {
+	if !c.applyForGetMulti {
+		return c.Cache.GetMulti(ctx, keys)
+	}
 	rc := make([]interface{}, len(keys))
 	keysErr := make([]string, 0)
 
@@ -59,7 +65,6 @@ func (c *readThroughCache) GetMulti(ctx context.Context, keys []string) ([]any, 
 		}
 		rc[i] = val
 	}
-
 	if len(keysErr) == 0 {
 		return rc, nil
 	}

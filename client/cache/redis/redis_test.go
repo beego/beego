@@ -169,14 +169,14 @@ func testReadThroughCacheGet(t *testing.T, bm cache.Cache) {
 					val := []byte(v.(string))
 					return val, nil
 				}
-				c, err := cache.NewReadThroughCache(bm, 3*time.Second, loadfunc)
+				c, err := cache.NewReadThroughCache(bm, 3*time.Second, loadfunc, false)
 				assert.Nil(t, err)
 				return c
 			}(),
 			wantErr: func() error {
 				err := errors.New("the key not exist")
 				return berror.Wrap(
-					err, cache.KeyNotExist, "cache unable to load data")
+					err, cache.LoadFuncFailed, "cache unable to load data")
 			}(),
 		},
 		{
@@ -195,7 +195,7 @@ func testReadThroughCacheGet(t *testing.T, bm cache.Cache) {
 					val := []byte(v.(string))
 					return val, nil
 				}
-				c, err := cache.NewReadThroughCache(bm, 3*time.Second, loadfunc)
+				c, err := cache.NewReadThroughCache(bm, 3*time.Second, loadfunc, false)
 				assert.Nil(t, err)
 				err = c.Put(context.Background(), "key1", "value1", 3*time.Second)
 				assert.Nil(t, err)
@@ -218,13 +218,13 @@ func testReadThroughCacheGet(t *testing.T, bm cache.Cache) {
 					val := []byte(v.(string))
 					return val, nil
 				}
-				c, err := cache.NewReadThroughCache(bm, 3*time.Second, loadfunc)
+				c, err := cache.NewReadThroughCache(bm, 3*time.Second, loadfunc, false)
 				assert.Nil(t, err)
 				return c
 			}(),
 		},
 	}
-	_, err := cache.NewReadThroughCache(bm, 3*time.Second, nil)
+	_, err := cache.NewReadThroughCache(bm, 3*time.Second, nil, false)
 	assert.Equal(t, berror.Error(cache.InvalidLoadFunc, "loadFunc cannot be nil"), err)
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -262,7 +262,7 @@ func testReadThroughCacheGetMulti(t *testing.T, bm cache.Cache) {
 					val := []byte(v.(string))
 					return val, nil
 				}
-				c, err := cache.NewReadThroughCache(bm, 3*time.Second, loadfunc)
+				c, err := cache.NewReadThroughCache(bm, 3*time.Second, loadfunc, true)
 				assert.Nil(t, err)
 				return c
 			}(),
@@ -270,10 +270,10 @@ func testReadThroughCacheGetMulti(t *testing.T, bm cache.Cache) {
 				keysErr := make([]string, 0)
 				err1 := berror.Wrap(
 					errors.New("the key not exist"),
-					cache.KeyNotExist, "cache unable to load data")
+					cache.LoadFuncFailed, "cache unable to load data")
 				err2 := berror.Wrap(
 					errors.New("the key not exist"),
-					cache.KeyNotExist, "cache unable to load data")
+					cache.LoadFuncFailed, "cache unable to load data")
 				keys := []string{"key0", "key01"}
 				keyErrMap := map[string]error{"key0": err1, "key01": err2}
 				for _, ki := range keys {
@@ -300,7 +300,7 @@ func testReadThroughCacheGetMulti(t *testing.T, bm cache.Cache) {
 					val := []byte(v.(string))
 					return val, nil
 				}
-				c, err := cache.NewReadThroughCache(bm, 3*time.Second, loadfunc)
+				c, err := cache.NewReadThroughCache(bm, 3*time.Second, loadfunc, true)
 				assert.Nil(t, err)
 				for key, value := range kvs {
 					err = c.Put(context.Background(), key, value, 3*time.Second)
@@ -325,13 +325,13 @@ func testReadThroughCacheGetMulti(t *testing.T, bm cache.Cache) {
 					val := []byte(v.(string))
 					return val, nil
 				}
-				c, err := cache.NewReadThroughCache(bm, 3*time.Second, loadfunc)
+				c, err := cache.NewReadThroughCache(bm, 3*time.Second, loadfunc, true)
 				assert.Nil(t, err)
 				return c
 			}(),
 		},
 	}
-	_, err := cache.NewReadThroughCache(bm, 3*time.Second, nil)
+	_, err := cache.NewReadThroughCache(bm, 3*time.Second, nil, true)
 	assert.Equal(t, berror.Error(cache.InvalidLoadFunc, "loadFunc cannot be nil"), err)
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
