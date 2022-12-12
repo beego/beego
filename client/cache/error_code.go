@@ -123,8 +123,8 @@ var InvalidSsdbCacheValue = berror.DefineCode(4002022, moduleName, "InvalidSsdbC
 SSDB cache only accept string value. Please check your input.
 `)
 
-var InvalidStoreFunc = berror.DefineCode(4002024, moduleName, "InvalidStoreFunc", `
-Invalid storeFunc.
+var InvalidInitParameters = berror.DefineCode(4002024, moduleName, "InvalidInitParameters", `
+Invalid init cache parameters.
 `)
 
 var PersistCacheFailed = berror.DefineCode(4002025, moduleName, "PersistCacheFailed", `

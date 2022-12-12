@@ -22,11 +22,12 @@ func TestWriteThoughCache_Set(t *testing.T) {
 		wantErr   error
 	}{
 		{
-			name:    "storeFunc nil",
-			wantErr: berror.Error(InvalidStoreFunc, "storeFunc can not be nil"),
+			name:    "nil init parameters",
+			wantErr: berror.Error(InvalidInitParameters, "cache or storeFunc can not be nil"),
 		},
 		{
-			name: "set error",
+			name:  "set error",
+			cache: NewMemoryCache(),
 			storeFunc: func(ctx context.Context, key string, val any) error {
 				return errors.New("failed")
 			},
@@ -60,11 +61,13 @@ func TestWriteThoughCache_Set(t *testing.T) {
 	}
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			w := &WriteThoughCache{
-				Cache:     tt.cache,
-				StoreFunc: tt.storeFunc,
+			w, err := NewWriteThoughCache(tt.cache, tt.storeFunc)
+			if err != nil {
+				assert.EqualError(t, tt.wantErr, err.Error())
+				return
 			}
-			err := w.Set(context.Background(), tt.key, tt.value, 60*time.Second)
+
+			err = w.Set(context.Background(), tt.key, tt.value, 60*time.Second)
 			if err != nil {
 				assert.EqualError(t, tt.wantErr, err.Error())
 				return

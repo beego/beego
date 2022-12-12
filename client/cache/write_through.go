@@ -9,14 +9,23 @@ import (
 
 type WriteThoughCache struct {
 	Cache
-	StoreFunc func(ctx context.Context, key string, val any) error
+	storeFunc func(ctx context.Context, key string, val any) error
+}
+
+func NewWriteThoughCache(cache Cache, fn func(ctx context.Context, key string, val any) error) (*WriteThoughCache, error) {
+	if fn == nil || cache == nil {
+		return nil, berror.Error(InvalidInitParameters, "cache or storeFunc can not be nil")
+	}
+
+	w := &WriteThoughCache{
+		Cache:     cache,
+		storeFunc: fn,
+	}
+	return w, nil
 }
 
 func (w *WriteThoughCache) Set(ctx context.Context, key string, val any, expiration time.Duration) error {
-	if w.StoreFunc == nil {
-		return berror.Error(InvalidStoreFunc, "storeFunc can not be nil")
-	}
-	err := w.StoreFunc(ctx, key, val)
+	err := w.storeFunc(ctx, key, val)
 	if err != nil {
 		return berror.Wrap(err, PersistCacheFailed, fmt.Sprintf("key: %s, val: %v", key, val))
 	}
