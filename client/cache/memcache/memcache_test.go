@@ -18,12 +18,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/beego/beego/v2/core/berror"
 	"os"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/beego/beego/v2/core/berror"
 
 	_ "github.com/bradfitz/gomemcache/memcache"
 	"github.com/stretchr/testify/assert"

@@ -17,10 +17,11 @@ package cache
 import (
 	"context"
 	"errors"
-	"github.com/beego/beego/v2/core/berror"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/beego/beego/v2/core/berror"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestReadThroughCache_Memory_Get(t *testing.T) {

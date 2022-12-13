@@ -16,8 +16,9 @@ package cache
 
 import (
 	"context"
-	"github.com/beego/beego/v2/core/berror"
 	"time"
+
+	"github.com/beego/beego/v2/core/berror"
 )
 
 // readThroughCache is a decorator

@@ -18,10 +18,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/beego/beego/v2/core/berror"
 	"os"
 	"testing"
 	"time"
+
+	"github.com/beego/beego/v2/core/berror"
 
 	"github.com/gomodule/redigo/redis"
 	"github.com/stretchr/testify/assert"
