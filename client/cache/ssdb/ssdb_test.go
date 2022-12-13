@@ -2,9 +2,7 @@ package ssdb
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"github.com/beego/beego/v2/core/berror"
 	"os"
 	"strconv"
 	"strings"
@@ -99,61 +97,4 @@ func TestSsdbcacheCache(t *testing.T) {
 	e2, _ := ssdb.IsExist(context.Background(), "ssdb1")
 	assert.False(t, e1)
 	assert.False(t, e2)
-}
-
-func TestSsdbCache_WriteThough_Set(t *testing.T) {
-	bm, err := cache.NewCache("ssdb", `{"conn": "127.0.0.1:8888"}`)
-	assert.Nil(t, err)
-
-	var mockDbStore = make(map[string]any)
-	testCases := []struct {
-		name      string
-		storeFunc func(ctx context.Context, key string, val any) error
-		key       string
-		value     any
-		wantErr   error
-	}{
-		{
-			name:    "storeFunc nil",
-			wantErr: berror.Error(cache.InvalidStoreFunc, "storeFunc can not be nil"),
-		},
-		{
-			name: "set error",
-			storeFunc: func(ctx context.Context, key string, val any) error {
-				return errors.New("failed")
-			},
-			wantErr: berror.Wrap(errors.New("failed"), cache.PersistCacheFailed,
-				fmt.Sprintf("key: %s, val: %v", "", nil)),
-		},
-		{
-			name: "memory set success",
-			storeFunc: func(ctx context.Context, key string, val any) error {
-				mockDbStore[key] = val
-				return nil
-			},
-			key:   "hello",
-			value: "world",
-		},
-	}
-	for _, tt := range testCases {
-		t.Run(tt.name, func(t *testing.T) {
-			w := &cache.WriteThoughCache{
-				Cache:     bm,
-				StoreFunc: tt.storeFunc,
-			}
-			err := w.Set(context.Background(), tt.key, tt.value, 60*time.Second)
-			if err != nil {
-				assert.EqualError(t, tt.wantErr, err.Error())
-				return
-			}
-
-			val, err := w.Get(context.Background(), tt.key)
-			assert.Nil(t, err)
-			assert.Equal(t, tt.value, val)
-
-			vv, ok := mockDbStore[tt.key]
-			assert.True(t, ok)
-			assert.Equal(t, tt.value, vv)
-		})
-	}
 }
