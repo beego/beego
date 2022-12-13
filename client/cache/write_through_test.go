@@ -1,3 +1,17 @@
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package cache
 
 import (
@@ -22,11 +36,7 @@ func TestWriteThoughCache_Set(t *testing.T) {
 		wantErr   error
 	}{
 		{
-			name:    "nil init parameters",
-			wantErr: berror.Error(InvalidInitParameters, "cache or storeFunc can not be nil"),
-		},
-		{
-			name:  "set error",
+			name:  "store key/value in db fail",
 			cache: NewMemoryCache(),
 			storeFunc: func(ctx context.Context, key string, val any) error {
 				return errors.New("failed")
@@ -35,22 +45,8 @@ func TestWriteThoughCache_Set(t *testing.T) {
 				fmt.Sprintf("key: %s, val: %v", "", nil)),
 		},
 		{
-			name:  "memory set success",
+			name:  "store key/value success",
 			cache: NewMemoryCache(),
-			storeFunc: func(ctx context.Context, key string, val any) error {
-				mockDbStore[key] = val
-				return nil
-			},
-			key:   "hello",
-			value: "world",
-		},
-		{
-			name: "file set success",
-			cache: func() Cache {
-				fc := NewFileCache().(*FileCache)
-				fc.CachePath = getTestCacheFilePath()
-				return fc
-			}(),
 			storeFunc: func(ctx context.Context, key string, val any) error {
 				mockDbStore[key] = val
 				return nil
@@ -80,6 +76,59 @@ func TestWriteThoughCache_Set(t *testing.T) {
 			vv, ok := mockDbStore[tt.key]
 			assert.True(t, ok)
 			assert.Equal(t, tt.value, vv)
+		})
+	}
+}
+
+func TestNewWriteThoughCache(t *testing.T) {
+	underlyingCache := NewMemoryCache()
+	storeFunc := func(ctx context.Context, key string, val any) error { return nil }
+
+	type args struct {
+		cache Cache
+		fn    func(ctx context.Context, key string, val any) error
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes *WriteThoughCache
+		wantErr error
+	}{
+		{
+			name: "nil cache parameters",
+			args: args{
+				cache: nil,
+				fn:    storeFunc,
+			},
+			wantErr: berror.Error(InvalidInitParameters, "cache or storeFunc can not be nil"),
+		},
+		{
+			name: "nil storeFunc parameters",
+			args: args{
+				cache: underlyingCache,
+				fn:    nil,
+			},
+			wantErr: berror.Error(InvalidInitParameters, "cache or storeFunc can not be nil"),
+		},
+		{
+			name: "init write-though cache success",
+			args: args{
+				cache: underlyingCache,
+				fn:    storeFunc,
+			},
+			wantRes: &WriteThoughCache{
+				Cache:     underlyingCache,
+				storeFunc: storeFunc,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := NewWriteThoughCache(tt.args.cache, tt.args.fn)
+			assert.Equal(t, tt.wantErr, err)
+			if err != nil {
+				return
+			}
 		})
 	}
 }
