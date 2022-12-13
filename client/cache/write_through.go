@@ -17,8 +17,9 @@ package cache
 import (
 	"context"
 	"fmt"
-	"github.com/beego/beego/v2/core/berror"
 	"time"
+
+	"github.com/beego/beego/v2/core/berror"
 )
 
 type WriteThoughCache struct {

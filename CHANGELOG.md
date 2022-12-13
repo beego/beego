@@ -1,4 +1,5 @@
 # developing
+- [Fix 5117: support write though cache](https://github.com/beego/beego/pull/5117)
 
 # v2.0.7
 - [Upgrade github.com/go-kit/kit, CVE-2022-24450](https://github.com/beego/beego/pull/5121)

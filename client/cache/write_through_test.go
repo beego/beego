@@ -18,14 +18,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/beego/beego/v2/core/berror"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/beego/beego/v2/core/berror"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestWriteThoughCache_Set(t *testing.T) {
-	var mockDbStore = make(map[string]any)
+	mockDbStore := make(map[string]any)
 
 	testCases := []struct {
 		name      string
