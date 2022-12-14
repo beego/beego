@@ -125,10 +125,12 @@ SSDB cache only accept string value. Please check your input.
 
 var InvalidInitParameters = berror.DefineCode(4002024, moduleName, "InvalidInitParameters", `
 Invalid init cache parameters.
+You can check the related function to confirm that if you pass correct parameters or configure to initiate a Cache instance.
 `)
 
 var PersistCacheFailed = berror.DefineCode(4002025, moduleName, "PersistCacheFailed", `
-StoreFunc execute failed.
+Failed to execute the StoreFunc.
+Please check the log to make sure the StoreFunc works for the specific key and value.
 `)
 
 var DeleteFileCacheItemFailed = berror.DefineCode(5002001, moduleName, "DeleteFileCacheItemFailed", `
