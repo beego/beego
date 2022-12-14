@@ -72,7 +72,7 @@ func TestMemcacheCache(t *testing.T) {
 	v, err = strconv.Atoi(string(val.([]byte)))
 	assert.Nil(t, err)
 	assert.Equal(t, 1, v)
-	bm.Delete(context.Background(), "astaxie")
+	assert.Nil(t, bm.Delete(context.Background(), "astaxie"))
 
 	res, _ = bm.IsExist(context.Background(), "astaxie")
 	assert.False(t, res)

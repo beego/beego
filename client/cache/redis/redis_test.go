@@ -66,7 +66,7 @@ func TestRedisCache(t *testing.T) {
 	val, _ = bm.Get(context.Background(), "astaxie")
 	v, _ = redis.Int(val, err)
 	assert.Equal(t, 1, v)
-	bm.Delete(context.Background(), "astaxie")
+	assert.Nil(t, bm.Delete(context.Background(), "astaxie"))
 
 	res, _ = bm.IsExist(context.Background(), "astaxie")
 	assert.False(t, res)
