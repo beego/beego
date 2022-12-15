@@ -31,7 +31,8 @@ type readThroughCache struct {
 
 // NewReadThroughCache create readThroughCache
 func NewReadThroughCache(cache Cache, expiration time.Duration,
-	loadFunc func(ctx context.Context, key string) (any, error)) (Cache, error) {
+	loadFunc func(ctx context.Context, key string) (any, error),
+) (Cache, error) {
 	if loadFunc == nil {
 		return nil, berror.Error(InvalidLoadFunc, "loadFunc cannot be nil")
 	}

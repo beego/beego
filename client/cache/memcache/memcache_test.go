@@ -212,7 +212,6 @@ func testReadThroughCacheGet(t *testing.T, bm cache.Cache) {
 			}
 			assert.Equal(t, bs, val)
 		})
-
 	}
 }
 
