@@ -63,8 +63,7 @@ func NewMemoryCache() Cache {
 func (bc *MemoryCache) Get(ctx context.Context, key string) (interface{}, error) {
 	bc.RLock()
 	defer bc.RUnlock()
-	if itm, ok :=
-		bc.items[key]; ok {
+	if itm, ok := bc.items[key]; ok {
 		if itm.isExpire() {
 			return nil, ErrKeyExpired
 		}

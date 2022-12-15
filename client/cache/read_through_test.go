@@ -17,7 +17,6 @@ package cache
 import (
 	"context"
 	"errors"
-	"sync"
 	"testing"
 	"time"
 
@@ -25,16 +24,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestSingleflight_Memory_Get(t *testing.T) {
+func TestReadThroughCache_Memory_Get(t *testing.T) {
 	bm, err := NewCache("memory", `{"interval":20}`)
 	assert.Nil(t, err)
-
-	testSingleflightCacheGet(t, bm)
-
-	testSingleflightCacheConcurrencyGet(t, bm)
+	testReadThroughCacheGet(t, bm)
 }
 
-func TestSingleflight_file_Get(t *testing.T) {
+func TestReadThroughCache_file_Get(t *testing.T) {
 	fc := NewFileCache().(*FileCache)
 	fc.CachePath = "////aaa"
 	err := fc.Init()
@@ -42,13 +38,10 @@ func TestSingleflight_file_Get(t *testing.T) {
 	fc.CachePath = getTestCacheFilePath()
 	err = fc.Init()
 	assert.Nil(t, err)
-
-	testSingleflightCacheGet(t, fc)
-
-	testSingleflightCacheConcurrencyGet(t, fc)
+	testReadThroughCacheGet(t, fc)
 }
 
-func testSingleflightCacheGet(t *testing.T, bm Cache) {
+func testReadThroughCacheGet(t *testing.T, bm Cache) {
 	testCases := []struct {
 		name    string
 		key     string
@@ -69,13 +62,14 @@ func testSingleflightCacheGet(t *testing.T, bm Cache) {
 					}
 					return val, nil
 				}
-				c, err := NewSingleflightCache(bm, 3*time.Second, loadfunc)
+				c, err := NewReadThroughCache(bm, 3*time.Second, loadfunc)
 				assert.Nil(t, err)
 				return c
 			}(),
 			wantErr: func() error {
 				err := errors.New("the key not exist")
-				return berror.Wrap(err, KeyNotExist, "cache unable to load data")
+				return berror.Wrap(
+					err, LoadFuncFailed, "cache unable to load data")
 			}(),
 		},
 		{
@@ -93,7 +87,7 @@ func testSingleflightCacheGet(t *testing.T, bm Cache) {
 					}
 					return val, nil
 				}
-				c, err := NewSingleflightCache(bm, 3*time.Second, loadfunc)
+				c, err := NewReadThroughCache(bm, 3*time.Second, loadfunc)
 				assert.Nil(t, err)
 				err = c.Put(context.Background(), "key1", "value1", 3*time.Second)
 				assert.Nil(t, err)
@@ -115,13 +109,13 @@ func testSingleflightCacheGet(t *testing.T, bm Cache) {
 					}
 					return val, nil
 				}
-				c, err := NewSingleflightCache(bm, 3*time.Second, loadfunc)
+				c, err := NewReadThroughCache(bm, 3*time.Second, loadfunc)
 				assert.Nil(t, err)
 				return c
 			}(),
 		},
 	}
-	_, err := NewSingleflightCache(bm, 3*time.Second, nil)
+	_, err := NewReadThroughCache(bm, 3*time.Second, nil)
 	assert.Equal(t, berror.Error(InvalidLoadFunc, "loadFunc cannot be nil"), err)
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
@@ -136,30 +130,15 @@ func testSingleflightCacheGet(t *testing.T, bm Cache) {
 	}
 }
 
-func testSingleflightCacheConcurrencyGet(t *testing.T, bm Cache) {
-	key, value := "key3", "value3"
-	db := &MockOrm{keysMap: map[string]int{key: 1}, kvs: map[string]any{key: value}}
-	c, err := NewSingleflightCache(bm, 10*time.Second,
-		func(ctx context.Context, key string) (any, error) {
-			val, er := db.Load(key)
-			if er != nil {
-				return nil, er
-			}
-			return val, nil
-		})
-	assert.Nil(t, err)
+type MockOrm struct {
+	keysMap map[string]int
+	kvs     map[string]any
+}
 
-	var wg sync.WaitGroup
-	wg.Add(10)
-	for i := 0; i < 10; i++ {
-		go func() {
-			defer wg.Done()
-			val, err := c.Get(context.Background(), key)
-			if err != nil {
-				t.Error(err)
-			}
-			assert.Equal(t, value, val)
-		}()
+func (m *MockOrm) Load(key string) (any, error) {
+	_, ok := m.keysMap[key]
+	if !ok {
+		return nil, errors.New("the key not exist")
 	}
-	wg.Wait()
+	return m.kvs[key], nil
 }
