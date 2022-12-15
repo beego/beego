@@ -25,22 +25,20 @@ import (
 // add the read through function to the original Cache function
 type readThroughCache struct {
 	Cache
-	expiration       time.Duration
-	loadFunc         func(ctx context.Context, key string) (any, error)
-	applyForGetMulti bool
+	expiration time.Duration
+	loadFunc   func(ctx context.Context, key string) (any, error)
 }
 
 // NewReadThroughCache create readThroughCache
 func NewReadThroughCache(cache Cache, expiration time.Duration,
-	loadFunc func(ctx context.Context, key string) (any, error), applyForGetMulti bool) (Cache, error) {
+	loadFunc func(ctx context.Context, key string) (any, error)) (Cache, error) {
 	if loadFunc == nil {
 		return nil, berror.Error(InvalidLoadFunc, "loadFunc cannot be nil")
 	}
 	return &readThroughCache{
-		Cache:            cache,
-		expiration:       expiration,
-		loadFunc:         loadFunc,
-		applyForGetMulti: applyForGetMulti,
+		Cache:      cache,
+		expiration: expiration,
+		loadFunc:   loadFunc,
 	}, nil
 }
 

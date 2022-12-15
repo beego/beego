@@ -144,7 +144,7 @@ func testReadThroughCacheGet(t *testing.T, bm cache.Cache) {
 					val := []byte(v.(string))
 					return val, nil
 				}
-				c, err := cache.NewReadThroughCache(bm, 3*time.Second, loadfunc, false)
+				c, err := cache.NewReadThroughCache(bm, 3*time.Second, loadfunc)
 				assert.Nil(t, err)
 				return c
 			}(),
@@ -170,7 +170,7 @@ func testReadThroughCacheGet(t *testing.T, bm cache.Cache) {
 					val := []byte(v.(string))
 					return val, nil
 				}
-				c, err := cache.NewReadThroughCache(bm, 3*time.Second, loadfunc, false)
+				c, err := cache.NewReadThroughCache(bm, 3*time.Second, loadfunc)
 				assert.Nil(t, err)
 				err = c.Put(context.Background(), "key1", "value1", 3*time.Second)
 				assert.Nil(t, err)
@@ -193,13 +193,13 @@ func testReadThroughCacheGet(t *testing.T, bm cache.Cache) {
 					val := []byte(v.(string))
 					return val, nil
 				}
-				c, err := cache.NewReadThroughCache(bm, 3*time.Second, loadfunc, false)
+				c, err := cache.NewReadThroughCache(bm, 3*time.Second, loadfunc)
 				assert.Nil(t, err)
 				return c
 			}(),
 		},
 	}
-	_, err := cache.NewReadThroughCache(bm, 3*time.Second, nil, false)
+	_, err := cache.NewReadThroughCache(bm, 3*time.Second, nil)
 	assert.Equal(t, berror.Error(cache.InvalidLoadFunc, "loadFunc cannot be nil"), err)
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
