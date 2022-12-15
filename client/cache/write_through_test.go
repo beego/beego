@@ -26,7 +26,7 @@ import (
 )
 
 func TestWriteThoughCache_Set(t *testing.T) {
-	mockDbStore := make(map[string]any)
+	var mockDbStore = make(map[string]any)
 
 	testCases := []struct {
 		name      string
