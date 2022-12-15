@@ -49,13 +49,13 @@ func TestRandomExpireCache(t *testing.T) {
 		t.Error("get err")
 	}
 
-	cache.Delete(context.Background(), "Leon Ding")
+	assert.Nil(t, cache.Delete(context.Background(), "Leon Ding"))
 	res, _ := cache.IsExist(context.Background(), "Leon Ding")
 	assert.False(t, res)
 
 	assert.Nil(t, cache.Put(context.Background(), "Leon Ding", "author", timeoutDuration))
 
-	cache.Delete(context.Background(), "astaxie")
+	assert.Nil(t, cache.Delete(context.Background(), "astaxie"))
 	res, _ = cache.IsExist(context.Background(), "astaxie")
 	assert.False(t, res)
 
