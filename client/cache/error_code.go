@@ -123,6 +123,15 @@ var InvalidSsdbCacheValue = berror.DefineCode(4002022, moduleName, "InvalidSsdbC
 SSDB cache only accept string value. Please check your input.
 `)
 
+var InvalidLoadFunc = berror.DefineCode(4002023, moduleName, "InvalidLoadFunc", `
+Invalid load function for read-through pattern decorator.
+You should pass a valid(non-nil) load function when initiate the decorator instance.
+`)
+
+var LoadFuncFailed = berror.DefineCode(4002024, moduleName, "InvalidLoadFunc", `
+Failed to load data, please check whether the loadfunc is correct
+`)
+
 var DeleteFileCacheItemFailed = berror.DefineCode(5002001, moduleName, "DeleteFileCacheItemFailed", `
 Beego try to delete file cache item failed. 
 Please check whether Beego generated file correctly. 
