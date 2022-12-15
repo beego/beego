@@ -1,5 +1,10 @@
 # developing
 
+# v2.0.7
+- [Upgrade github.com/go-kit/kit, CVE-2022-24450](https://github.com/beego/beego/pull/5121)
+# v2.0.6
+- [fix: revise the body wrapper to handle empty body case](https://github.com/beego/beego/pull/5102)
+
 # v2.0.5
 
 Note: now we force the web admin service serving HTTP only.
