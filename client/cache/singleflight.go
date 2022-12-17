@@ -27,8 +27,8 @@ import (
 type SingleflightCache struct {
 	Cache
 	group      *singleflight.Group
-	Expiration time.Duration
-	LoadFunc   func(ctx context.Context, key string) (any, error)
+	expiration time.Duration
+	loadFunc   func(ctx context.Context, key string) (any, error)
 }
 
 // NewSingleflightCache create SingleflightCache
@@ -41,8 +41,8 @@ func NewSingleflightCache(c Cache, expiration time.Duration,
 	return &SingleflightCache{
 		Cache:      c,
 		group:      &singleflight.Group{},
-		Expiration: expiration,
-		LoadFunc:   loadFunc,
+		expiration: expiration,
+		loadFunc:   loadFunc,
 	}, nil
 }
 
@@ -51,11 +51,11 @@ func (s *SingleflightCache) Get(ctx context.Context, key string) (any, error) {
 	val, err := s.Cache.Get(ctx, key)
 	if val == nil || err != nil {
 		val, err, _ = s.group.Do(key, func() (interface{}, error) {
-			v, er := s.LoadFunc(ctx, key)
+			v, er := s.loadFunc(ctx, key)
 			if er != nil {
 				return nil, berror.Wrap(er, LoadFuncFailed, "cache unable to load data")
 			}
-			er = s.Cache.Put(ctx, key, v, s.Expiration)
+			er = s.Cache.Put(ctx, key, v, s.expiration)
 			return v, er
 		})
 	}
