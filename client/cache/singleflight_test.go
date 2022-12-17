@@ -75,7 +75,7 @@ func testSingleflightCacheGet(t *testing.T, bm Cache) {
 			}(),
 			wantErr: func() error {
 				err := errors.New("the key not exist")
-				return berror.Wrap(err, KeyNotExist, "cache unable to load data")
+				return berror.Wrap(err, LoadFuncFailed, "cache unable to load data")
 			}(),
 		},
 		{
@@ -160,6 +160,7 @@ func testSingleflightCacheConcurrencyGet(t *testing.T, bm Cache) {
 			}
 			assert.Equal(t, value, val)
 		}()
+		time.Sleep(1 * time.Millisecond)
 	}
 	wg.Wait()
 }
