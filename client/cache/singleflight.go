@@ -50,6 +50,9 @@ func NewSingleflightCache(c Cache, expiration time.Duration,
 func (s *SingleflightCache) Get(ctx context.Context, key string) (any, error) {
 	val, err := s.Cache.Get(ctx, key)
 	if val == nil || err != nil {
+		defer func() {
+			s.group.Forget(key)
+		}()
 		val, err, _ = s.group.Do(key, func() (interface{}, error) {
 			v, er := s.loadFunc(ctx, key)
 			if er != nil {
