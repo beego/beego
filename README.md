@@ -17,12 +17,10 @@ Beego is composed of four parts:
 
 ## Quick Start
 
-[Official website](http://beego.vip)
+[Doc](https://github.com/beego/beedoc)
 [中文新版文档网站](https://beego.gocn.vip)
 
 [Example](https://github.com/beego/beego-example)
-
-> If you could not open official website, go to [beedoc](https://github.com/beego/beedoc)
 
 ### Web Application
 
