@@ -41,8 +41,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 // RFC5424 log message levels.
@@ -193,20 +191,20 @@ func (bl *BeeLogger) setLogger(adapterName string, configs ...string) error {
 
 	lg := logAdapter()
 
+	err := lg.Init(config)
+	if err != nil {
+		return err
+	}
+
 	// Global formatter overrides the default set formatter
 	if len(bl.globalFormatter) > 0 {
 		fmtr, ok := GetFormatter(bl.globalFormatter)
 		if !ok {
-			return errors.New(fmt.Sprintf("the formatter with name: %s not found", bl.globalFormatter))
+			return fmt.Errorf("the formatter with name: %s not found", bl.globalFormatter)
 		}
 		lg.SetFormatter(fmtr)
 	}
 
-	err := lg.Init(config)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "logs.BeeLogger.SetLogger: "+err.Error())
-		return err
-	}
 	bl.outputs = append(bl.outputs, &nameLogger{name: adapterName, Logger: lg})
 	return nil
 }
