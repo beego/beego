@@ -17,6 +17,7 @@ Note: now we force the web admin service serving HTTP only.
 - [Fix 5022: Miss assigning listener to graceful Server](https://github.com/beego/beego/pull/5028)
 - [Fix 4955: Make commands and Docker compose for ORM unit tests](https://github.com/beego/beego/pull/5031)
 - [add read through for cache module](https://github.com/beego/beego/pull/5116)
+- [add singleflight cache for cache module](https://github.com/beego/beego/pull/5119)
 
 
 # v2.0.4
