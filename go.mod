@@ -28,12 +28,12 @@ require (
 	github.com/prometheus/client_golang v1.14.0
 	github.com/shiena/ansicolor v0.0.0-20200904210342-c7312218db18
 	github.com/ssdb/gossdb v0.0.0-20180723034631-88f6b59b84ec
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.1
 	go.etcd.io/etcd/client/v3 v3.5.4
-	go.opentelemetry.io/otel v1.8.0
+	go.opentelemetry.io/otel v1.11.2
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.8.0
 	go.opentelemetry.io/otel/sdk v1.8.0
-	go.opentelemetry.io/otel/trace v1.8.0
+	go.opentelemetry.io/otel/trace v1.11.2
 	golang.org/x/crypto v0.0.0-20220315160706-3147a52a75dd
 	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f
 	google.golang.org/grpc v1.40.0
