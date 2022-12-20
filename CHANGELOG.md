@@ -1,4 +1,5 @@
 # developing
+- [Fix 5126: support bloom filter cache](https://github.com/beego/beego/pull/5126)
 - [Fix 5117: support write though cache](https://github.com/beego/beego/pull/5117)
 
 # v2.0.7
