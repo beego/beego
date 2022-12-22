@@ -29,17 +29,17 @@ import (
 )
 
 type MockDB struct {
-	Db      map[string]any
+	Db      Cache
 	loadCnt int64
 }
 
 var (
-	mockDB    = MockDB{Db: make(map[string]any), loadCnt: 0}
+	mockDB    = MockDB{Db: NewMemoryCache(), loadCnt: 0}
 	mockBloom = bloom.NewWithEstimates(20000, 0.99)
 	loadFunc  = func(ctx context.Context, key string) (any, error) {
 		mockDB.loadCnt += 1 // flag of number load data from db
-		v, ok := mockDB.Db[key]
-		if !ok {
+		v, err := mockDB.Db.Get(context.Background(), key)
+		if err != nil {
 			return nil, errors.New("fail")
 		}
 		return v, nil
@@ -69,10 +69,8 @@ func TestBloomFilterCache_Get(t *testing.T) {
 			after: func() {
 				assert.Equal(t, mockDB.loadCnt, int64(0))
 				_ = cacheUnderlying.Delete(context.Background(), "exist_in_cache")
-				mockDB = MockDB{
-					Db:      make(map[string]any),
-					loadCnt: 0,
-				}
+				mockDB.loadCnt = 0
+				_ = mockDB.Db.ClearAll(context.Background())
 			},
 		},
 		// case: keys not exist in cache, not exist in bloom
@@ -80,19 +78,16 @@ func TestBloomFilterCache_Get(t *testing.T) {
 		{
 			name: "not_load_db",
 			before: func() {
-				mockDB.Db = map[string]any{
-					"exist_in_DB": "exist_in_DB",
-				}
+				_ = mockDB.Db.ClearAll(context.Background())
+				_ = mockDB.Db.Put(context.Background(), "exist_in_DB", "exist_in_DB", 0)
 				mockBloom.AddString("other")
 			},
 			key: "exist_in_DB",
 			after: func() {
 				assert.Equal(t, mockDB.loadCnt, int64(0))
 				mockBloom.ClearAll()
-				mockDB = MockDB{
-					Db:      make(map[string]any),
-					loadCnt: 0,
-				}
+				mockDB.loadCnt = 0
+				_ = mockDB.Db.ClearAll(context.Background())
 			},
 		},
 		// case: keys not exist in cache, exist in bloom, exist in db,
@@ -100,9 +95,8 @@ func TestBloomFilterCache_Get(t *testing.T) {
 		{
 			name: "load_db",
 			before: func() {
-				mockDB.Db = map[string]any{
-					"exist_in_DB": "exist_in_DB",
-				}
+				_ = mockDB.Db.ClearAll(context.Background())
+				_ = mockDB.Db.Put(context.Background(), "exist_in_DB", "exist_in_DB", 0)
 				mockBloom.AddString("exist_in_DB")
 			},
 			key:     "exist_in_DB",
@@ -111,10 +105,8 @@ func TestBloomFilterCache_Get(t *testing.T) {
 				assert.Equal(t, mockDB.loadCnt, int64(1))
 				_ = cacheUnderlying.Delete(context.Background(), "exist_in_DB")
 				mockBloom.ClearAll()
-				mockDB = MockDB{
-					Db:      make(map[string]any),
-					loadCnt: 0,
-				}
+				mockDB.loadCnt = 0
+				_ = mockDB.Db.ClearAll(context.Background())
 			},
 		},
 		// case: keys not exist in cache, exist in bloom, not exist in db,
@@ -127,10 +119,8 @@ func TestBloomFilterCache_Get(t *testing.T) {
 			after: func() {
 				assert.Equal(t, mockDB.loadCnt, int64(1))
 				mockBloom.ClearAll()
-				mockDB = MockDB{
-					Db:      make(map[string]any),
-					loadCnt: 0,
-				}
+				mockDB.loadCnt = 0
+				_ = mockDB.Db.ClearAll(context.Background())
 			},
 			key:         "not_exist_in_DB",
 			wantErrCode: LoadFuncFailed.Code(),
@@ -164,9 +154,8 @@ func TestBloomFilterCache_Get_Concurrency(t *testing.T) {
 	bfc, err := NewBloomFilterCache(cacheUnderlying, loadFunc, mockBloom, time.Minute)
 	assert.Nil(t, err)
 
-	mockDB.Db = map[string]any{
-		"key_11": "value_11",
-	}
+	_ = mockDB.Db.ClearAll(context.Background())
+	_ = mockDB.Db.Put(context.Background(), "key_11", "value_11", 0)
 	mockBloom.AddString("key_11")
 
 	var wg sync.WaitGroup
