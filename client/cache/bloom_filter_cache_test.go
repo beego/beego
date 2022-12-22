@@ -135,23 +135,6 @@ func TestBloomFilterCache_Get(t *testing.T) {
 			key:         "not_exist_in_DB",
 			wantErrCode: LoadFuncFailed.Code(),
 		},
-		// case: keys not exist in cache, not exist in bloom, execute Get single key 100 times concurrently
-		// want: not load data from db
-		{
-			name: "Concurrency_Get",
-			before: func() {
-				mockBloom.AddString("exist_key")
-			},
-			after: func() {
-				assert.Equal(t, mockDB.loadCnt, int64(1))
-				mockBloom.ClearAll()
-				mockDB = MockDB{
-					Db:      make(map[string]any),
-					loadCnt: 0,
-				}
-			},
-			key: "not_exist_in_DB",
-		},
 	}
 
 	for _, tc := range testCases {

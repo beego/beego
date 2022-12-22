@@ -31,8 +31,8 @@ type BloomFilterCache struct {
 }
 
 func NewBloomFilterCache(cache Cache, ln func(context.Context, string) (any, error), blm *bloom.BloomFilter,
-	expiration time.Duration) (*BloomFilterCache, error) {
-
+	expiration time.Duration,
+) (*BloomFilterCache, error) {
 	if cache == nil || ln == nil || blm == nil {
 		return nil, berror.Error(InvalidInitParameters, "missing required parameters")
 	}
