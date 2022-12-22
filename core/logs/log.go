@@ -225,7 +225,7 @@ func (bl *BeeLogger) SetLogger(adapterName string, configs ...string) error {
 func (bl *BeeLogger) DelLogger(adapterName string) error {
 	bl.lock.Lock()
 	defer bl.lock.Unlock()
-	outputs := []*nameLogger{}
+	outputs := make([]*nameLogger, 0, len(bl.outputs))
 	for _, lg := range bl.outputs {
 		if lg.name == adapterName {
 			lg.Destroy()
@@ -360,9 +360,13 @@ func (bl *BeeLogger) startLogger() {
 	gameOver := false
 	for {
 		select {
-		case bm := <-bl.msgChan:
-			bl.writeToLoggers(bm)
-			logMsgPool.Put(bm)
+		case bm, ok := <-bl.msgChan:
+			// this is a terrible design to have a signal channel that accept two inputs
+			// so we only handle the msg if the channel is not closed
+			if ok {
+				bl.writeToLoggers(bm)
+				logMsgPool.Put(bm)
+			}
 		case sg := <-bl.signalChan:
 			// Now should only send "flush" or "close" to bl.signalChan
 			bl.flush()
@@ -603,7 +607,10 @@ func (bl *BeeLogger) flush() {
 	if bl.asynchronous {
 		for {
 			if len(bl.msgChan) > 0 {
-				bm := <-bl.msgChan
+				bm, ok := <-bl.msgChan
+				if !ok {
+					continue
+				}
 				bl.writeToLoggers(bm)
 				logMsgPool.Put(bm)
 				continue
