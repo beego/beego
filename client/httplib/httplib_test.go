@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/stretchr/testify/require"
 	"io/ioutil"
 	"net"
 	"net/http"
@@ -33,9 +34,7 @@ import (
 func TestResponse(t *testing.T) {
 	req := Get("http://httpbin.org/get")
 	resp, err := req.Response()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	t.Log(resp)
 }
 
@@ -53,9 +52,7 @@ func TestDoRequest(t *testing.T) {
 	startTime := time.Now().UnixNano() / int64(time.Millisecond)
 
 	_, err := req.Response()
-	if err == nil {
-		t.Fatal("Response should have yielded an error")
-	}
+	require.Error(t, err)
 
 	endTime := time.Now().UnixNano() / int64(time.Millisecond)
 	elapsedTime := endTime - startTime
@@ -69,20 +66,13 @@ func TestDoRequest(t *testing.T) {
 func TestGet(t *testing.T) {
 	req := Get("http://httpbin.org/get")
 	b, err := req.Bytes()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	t.Log(b)
 
 	s, err := req.String()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	t.Log(s)
-
-	if string(b) != s {
-		t.Fatal("request data not match")
-	}
+	require.Equal(t, string(b), s)
 }
 
 func TestSimplePost(t *testing.T) {
@@ -91,15 +81,11 @@ func TestSimplePost(t *testing.T) {
 	req.Param("username", v)
 
 	str, err := req.String()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	t.Log(str)
 
 	n := strings.Index(str, v)
-	if n == -1 {
-		t.Fatal(v + " not found in post")
-	}
+	require.NotEqual(t, -1, n)
 }
 
 // func TestPostFile(t *testing.T) {
@@ -123,40 +109,30 @@ func TestSimplePost(t *testing.T) {
 
 func TestSimplePut(t *testing.T) {
 	str, err := Put("http://httpbin.org/put").String()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	t.Log(str)
 }
 
 func TestSimpleDelete(t *testing.T) {
 	str, err := Delete("http://httpbin.org/delete").String()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	t.Log(str)
 }
 
 func TestSimpleDeleteParam(t *testing.T) {
 	str, err := Delete("http://httpbin.org/delete").Param("key", "val").String()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	t.Log(str)
 }
 
 func TestWithCookie(t *testing.T) {
 	v := "smallfish"
 	str, err := Get("http://httpbin.org/cookies/set?k1=" + v).SetEnableCookie(true).String()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	t.Log(str)
 
 	str, err = Get("http://httpbin.org/cookies").SetEnableCookie(true).String()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	t.Log(str)
 
 	n := strings.Index(str, v)
@@ -167,9 +143,7 @@ func TestWithCookie(t *testing.T) {
 
 func TestWithBasicAuth(t *testing.T) {
 	str, err := Get("http://httpbin.org/basic-auth/user/passwd").SetBasicAuth("user", "passwd").String()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	t.Log(str)
 	n := strings.Index(str, "authenticated")
 	if n == -1 {
@@ -180,9 +154,7 @@ func TestWithBasicAuth(t *testing.T) {
 func TestWithUserAgent(t *testing.T) {
 	v := "beego"
 	str, err := Get("http://httpbin.org/headers").SetUserAgent(v).String()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	t.Log(str)
 
 	n := strings.Index(str, v)
@@ -210,9 +182,7 @@ func TestWithSetting(t *testing.T) {
 	SetDefaultSetting(setting)
 
 	str, err := Get("http://httpbin.org/get").String()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	t.Log(str)
 
 	n := strings.Index(str, v)
@@ -224,9 +194,7 @@ func TestWithSetting(t *testing.T) {
 func TestToJson(t *testing.T) {
 	req := Get("http://httpbin.org/ip")
 	resp, err := req.Response()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	t.Log(resp)
 
 	// httpbin will return http remote addr
@@ -235,9 +203,7 @@ func TestToJson(t *testing.T) {
 	}
 	var ip IP
 	err = req.ToJSON(&ip)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	t.Log(ip.Origin)
 	ips := strings.Split(ip.Origin, ",")
 	if len(ips) == 0 {
@@ -254,9 +220,7 @@ func TestToFile(t *testing.T) {
 	f := "beego_testfile"
 	req := Get("http://httpbin.org/ip")
 	err := req.ToFile(f)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	defer os.Remove(f)
 	b, err := ioutil.ReadFile(f)
 	if n := bytes.Index(b, []byte("origin")); n == -1 {
@@ -268,9 +232,7 @@ func TestToFileDir(t *testing.T) {
 	f := "./files/beego_testfile"
 	req := Get("http://httpbin.org/ip")
 	err := req.ToFile(f)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	defer os.RemoveAll("./files")
 	b, err := ioutil.ReadFile(f)
 	if n := bytes.Index(b, []byte("origin")); n == -1 {
@@ -282,9 +244,7 @@ func TestHeader(t *testing.T) {
 	req := Get("http://httpbin.org/headers")
 	req.Header("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.57 Safari/537.36")
 	str, err := req.String()
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 	t.Log(str)
 }
 
