@@ -24,12 +24,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/beego/beego/v2/core/berror"
-
 	_ "github.com/bradfitz/gomemcache/memcache"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/beego/beego/v2/client/cache"
+	"github.com/beego/beego/v2/core/berror"
 )
 
 func TestMemcacheCache(t *testing.T) {

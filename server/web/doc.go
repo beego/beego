@@ -12,6 +12,5 @@ beego is inspired by Tornado, Sinatra and Flask with the added benefit of some G
 	 beego.Run()
 	}
 
-more information: http://beego.vip
 */
 package web

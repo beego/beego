@@ -22,12 +22,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/beego/beego/v2/core/berror"
-
 	"github.com/gomodule/redigo/redis"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/beego/beego/v2/client/cache"
+	"github.com/beego/beego/v2/core/berror"
 )
 
 func TestRedisCache(t *testing.T) {
