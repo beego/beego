@@ -38,6 +38,6 @@ linters:
 
 linters-settings:
   gci:
-    local-prefixes: github.com/beego/beego
+    local-prefixes: github.com/beego
   goimports:
-    local-prefixes: github.com/beego/beego
+    local-prefixes: github.com/beego

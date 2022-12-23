@@ -62,3 +62,7 @@ test-orm-tidb: ## Run ORM unit tests on tidb.
 
 .PHONY: test-orm-all
 test-orm-all: test-orm-mysql5 test-orm-mysql8 test-orm-pgsql test-orm-tidb
+
+.PHONY: fmt
+fmt:
+	goimports -local "github.com/beego/beego" -w .

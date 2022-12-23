@@ -47,14 +47,12 @@
 //		go globalSessions.GC()
 //	}
 //
-// more docs: http://beego.vip/docs/module/session.md
 package postgres
 
 import (
 	"context"
 	"net/http"
 
-	// import postgresql Driver
 	_ "github.com/lib/pq"
 
 	"github.com/beego/beego/v2/adapter/session"

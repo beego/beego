@@ -18,8 +18,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/beego/beego/v2/core/berror"
 	"golang.org/x/sync/singleflight"
+
+	"github.com/beego/beego/v2/core/berror"
 )
 
 // SingleflightCache

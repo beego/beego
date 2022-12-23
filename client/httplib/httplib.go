@@ -28,7 +28,6 @@
 //	}
 //	fmt.Println(str)
 //
-//  more docs http://beego.vip/docs/module/httplib.md
 package httplib
 
 import (

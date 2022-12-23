@@ -78,7 +78,7 @@ func (builder *FilterChainBuilder) buildSpan(ctx context.Context, span otelTrace
 	span.SetAttributes(attribute.String("component", "beego"))
 
 	if builder.customSpanFunc != nil {
-		builder.customSpanFunc(ctx,span, inv)
+		builder.customSpanFunc(ctx, span, inv)
 	}
 }
 

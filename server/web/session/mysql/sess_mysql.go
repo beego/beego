@@ -37,7 +37,6 @@
 //		go globalSessions.GC()
 //	}
 //
-// more docs: http://beego.vip/docs/module/session.md
 package mysql
 
 import (
@@ -47,7 +46,6 @@ import (
 	"sync"
 	"time"
 
-	// import mysql driver
 	_ "github.com/go-sql-driver/mysql"
 
 	"github.com/beego/beego/v2/server/web/session"

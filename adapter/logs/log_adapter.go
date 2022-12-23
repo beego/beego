@@ -15,8 +15,6 @@
 package logs
 
 import (
-	"time"
-
 	"github.com/beego/beego/v2/core/logs"
 )
 
@@ -40,30 +38,6 @@ func (o *oldToNewAdapter) Flush() {
 	o.old.Flush()
 }
 
-func (o *oldToNewAdapter) SetFormatter(f logs.LogFormatter) {
+func (*oldToNewAdapter) SetFormatter(f logs.LogFormatter) {
 	panic("unsupported operation, you should not invoke this method")
-}
-
-type newToOldAdapter struct {
-	n logs.Logger
-}
-
-func (n *newToOldAdapter) Init(config string) error {
-	return n.n.Init(config)
-}
-
-func (n *newToOldAdapter) WriteMsg(when time.Time, msg string, level int) error {
-	return n.n.WriteMsg(&logs.LogMsg{
-		When:  when,
-		Msg:   msg,
-		Level: level,
-	})
-}
-
-func (n *newToOldAdapter) Destroy() {
-	panic("implement me")
-}
-
-func (n *newToOldAdapter) Flush() {
-	panic("implement me")
 }
