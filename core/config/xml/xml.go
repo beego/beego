@@ -26,7 +26,6 @@
 //
 //  cnf, err := config.NewConfig("xml", "config.xml")
 //
-// More docs http://beego.vip/docs/module/config.md
 package xml
 
 import (
@@ -39,11 +38,11 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/beego/x2j"
 	"github.com/mitchellh/mapstructure"
 
 	"github.com/beego/beego/v2/core/config"
 	"github.com/beego/beego/v2/core/logs"
+	"github.com/beego/x2j"
 )
 
 // Config is a xml config parser and implements Config interface.

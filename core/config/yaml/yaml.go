@@ -21,7 +21,6 @@
 //
 //  cnf, err := config.NewConfig("yaml", "config.yaml")
 //
-// More docs http://beego.vip/docs/module/config.md
 package yaml
 
 import (

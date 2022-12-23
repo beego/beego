@@ -24,7 +24,6 @@
 //		go globalSessions.GC()
 //	}
 //
-// more docs: http://beego.vip/docs/module/session.md
 package session
 
 import (

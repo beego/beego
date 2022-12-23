@@ -19,7 +19,6 @@
 //
 //	ctx := context.Context{Request:req,ResponseWriter:rw}
 //
-//  more docs http://beego.vip/docs/module/context.md
 package context
 
 import (

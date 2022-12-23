@@ -43,7 +43,6 @@
 //		}
 //	}
 //
-// more info: http://beego.vip/docs/mvc/controller/validation.md
 package validation
 
 import (

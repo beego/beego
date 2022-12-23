@@ -29,7 +29,6 @@
 // 		go globalSessions.GC()
 // 	}
 //
-// more docs: http://beego.vip/docs/module/session.md
 package redis
 
 import (

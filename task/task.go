@@ -697,6 +697,7 @@ func (ms *MapSorter) Sort() {
 }
 
 func (ms *MapSorter) Len() int { return len(ms.Keys) }
+
 func (ms *MapSorter) Less(i, j int) bool {
 	if ms.Vals[i].GetNext(context.Background()).IsZero() {
 		return false
