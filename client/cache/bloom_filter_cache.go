@@ -20,17 +20,21 @@ import (
 	"time"
 
 	"github.com/beego/beego/v2/core/berror"
-	"github.com/bits-and-blooms/bloom/v3"
 )
 
 type BloomFilterCache struct {
 	Cache
-	*bloom.BloomFilter
+	BloomFilter
 	loadFunc   func(ctx context.Context, key string) (any, error)
 	expiration time.Duration // set cache expiration, default never expire
 }
 
-func NewBloomFilterCache(cache Cache, ln func(context.Context, string) (any, error), blm *bloom.BloomFilter,
+type BloomFilter interface {
+	Test(data string) bool
+	Add(data string)
+}
+
+func NewBloomFilterCache(cache Cache, ln func(context.Context, string) (any, error), blm BloomFilter,
 	expiration time.Duration,
 ) (*BloomFilterCache, error) {
 	if cache == nil || ln == nil || blm == nil {
@@ -51,7 +55,7 @@ func (bfc *BloomFilterCache) Get(ctx context.Context, key string) (any, error) {
 		return nil, err
 	}
 	if errors.Is(err, ErrKeyNotExist) {
-		exist := bfc.BloomFilter.TestString(key)
+		exist := bfc.BloomFilter.Test(key)
 		if exist {
 			val, err = bfc.loadFunc(ctx, key)
 			if err != nil {
