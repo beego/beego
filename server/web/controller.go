@@ -693,6 +693,11 @@ func (c *Controller) SaveToFileWithBuffer(fromFile string, toFile string, buf []
 	defer dst.Close()
 
 	_, err = io.CopyBuffer(onlyWriter{dst}, src, buf)
+	if err != nil {
+		return err
+	}
+
+	err = c.Ctx.Request.MultipartForm.RemoveAll()
 	return err
 }
 
