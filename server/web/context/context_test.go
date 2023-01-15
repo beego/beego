@@ -102,7 +102,7 @@ func TestSetCookie(t *testing.T) {
 		output.Context.Reset(httptest.NewRecorder(), r)
 		for _, item := range c.valueGp {
 			params := item.item
-			var others = []interface{}{params.MaxAge, params.Path, params.Domain, params.Secure, params.HttpOnly, params.SameSite}
+			others := []interface{}{params.MaxAge, params.Path, params.Domain, params.Secure, params.HttpOnly, params.SameSite}
 			output.Context.SetCookie(params.Name, params.Value, others...)
 			got := output.Context.ResponseWriter.Header().Get("Set-Cookie")
 			if got != item.want {
