@@ -15,8 +15,11 @@
 package web
 
 import (
+	"bytes"
+	"io"
 	"io/ioutil"
 	"math"
+	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -28,6 +31,12 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/beego/beego/v2/server/web/context"
+)
+
+var (
+	fileKey  = "file1"
+	testFile = filepath.Join(currentWorkDir, "test/static/file.txt")
+	toFile   = filepath.Join(currentWorkDir, "test/static/file2.txt")
 )
 
 func TestGetInt(t *testing.T) {
@@ -260,6 +269,18 @@ func (t *TestRespController) TestResponse() {
 	_ = t.Resp(bar)
 }
 
+func (t *TestRespController) TestSaveToFile() {
+	err := t.SaveToFile(fileKey, toFile)
+	if err != nil {
+		t.Ctx.WriteString("save file fail")
+	}
+	err = os.Remove(toFile)
+	if err != nil {
+		t.Ctx.WriteString("save file fail")
+	}
+	t.Ctx.WriteString("save file success")
+}
+
 type respTestCase struct {
 	Accept                string
 	ExpectedContentLength int64
@@ -307,5 +328,74 @@ func testControllerRespTestCases(t *testing.T, tc respTestCase) {
 	bodyString := string(bodyBytes)
 	if bodyString != tc.ExpectedResponse {
 		t.Errorf("TestResponse() failed to validate response body '%s' for %s", bodyString, tc.Accept)
+	}
+}
+
+func createReqBody(filePath string) (string, io.Reader, error) {
+	var err error
+
+	buf := new(bytes.Buffer)
+	bw := multipart.NewWriter(buf) // body writer
+
+	f, err := os.Open(filePath)
+	if err != nil {
+		return "", nil, err
+	}
+	defer func() {
+		_ = f.Close()
+	}()
+
+	// text part1
+	p1w, _ := bw.CreateFormField("name")
+	_, err = p1w.Write([]byte("Tony Bai"))
+	if err != nil {
+		return "", nil, err
+	}
+
+	// text part2
+	p2w, _ := bw.CreateFormField("age")
+	_, err = p2w.Write([]byte("15"))
+	if err != nil {
+		return "", nil, err
+	}
+
+	// file part1
+	_, fileName := filepath.Split(filePath)
+	fw1, _ := bw.CreateFormFile(fileKey, fileName)
+	_, err = io.Copy(fw1, f)
+	if err != nil {
+		return "", nil, err
+	}
+
+	_ = bw.Close() // write the tail boundry
+	return bw.FormDataContentType(), buf, nil
+}
+
+func TestControllerSaveFile(t *testing.T) {
+	// create body
+	contType, bodyReader, err := createReqBody(testFile)
+	assert.NoError(t, err)
+
+	// create fake POST request
+	r, _ := http.NewRequest("POST", "/upload_file", bodyReader)
+	r.Header.Set("Accept", context.ApplicationForm)
+	r.Header.Set("Content-Type", contType)
+	w := httptest.NewRecorder()
+
+	// setup the handler
+	handler := NewControllerRegister()
+	handler.Add("/upload_file", &TestRespController{},
+		WithRouterMethods(&TestRespController{}, "post:TestSaveToFile"))
+	handler.ServeHTTP(w, r)
+
+	response := w.Result()
+	bs := make([]byte, 100)
+	n, err := response.Body.Read(bs)
+	assert.NoError(t, err)
+	if string(bs[:n]) == "save file fail" {
+		t.Errorf("TestSaveToFile() failed to validate response")
+	}
+	if response.StatusCode != http.StatusOK {
+		t.Errorf("TestSaveToFile() failed to validate response code for %s", context.ApplicationJSON)
 	}
 }

@@ -209,8 +209,8 @@ func TestUnregisterFixedRouteLevel2(t *testing.T) {
 }
 
 func testHelperFnContentCheck(t *testing.T, handler *ControllerRegister,
-	testName, method, path, expectedBodyContent string) {
-
+	testName, method, path, expectedBodyContent string,
+) {
 	r, err := http.NewRequest(method, path, nil)
 	if err != nil {
 		t.Errorf("httpRecorderBodyTest NewRequest error: %v", err)
