@@ -17,12 +17,10 @@ Beego is composed of four parts:
 
 ## Quick Start
 
-[Official website](http://beego.vip)
+[Doc](https://github.com/beego/beedoc)
 [中文新版文档网站](https://beego.gocn.vip)
 
 [Example](https://github.com/beego/beego-example)
-
-> If you could not open official website, go to [beedoc](https://github.com/beego/beedoc)
 
 ### Web Application
 
@@ -88,7 +86,6 @@ Congratulations! You've just built your first **beego** app.
 
 ## Community
 
-* [http://beego.vip/community](http://beego.vip/community)
 * Welcome to join us in Slack: [https://beego.slack.com invite](https://join.slack.com/t/beego/shared_invite/zt-fqlfjaxs-_CRmiITCSbEqQG9NeBqXKA),
 * QQ Group ID:523992905
 * [Contribution Guide](https://github.com/beego/beedoc/blob/master/en-US/intro/contributing.md).

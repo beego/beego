@@ -27,7 +27,6 @@
 //
 // AddHealthCheck("database",&DatabaseCheck{})
 //
-// more docs: http://beego.vip/docs/module/toolbox.md
 package toolbox
 
 import (

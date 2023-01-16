@@ -19,8 +19,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/beego/beego/v2/core/config"
 	"github.com/pelletier/go-toml"
+
+	"github.com/beego/beego/v2/core/config"
 )
 
 const keySeparator = "."

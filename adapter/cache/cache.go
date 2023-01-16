@@ -28,7 +28,6 @@
 //	bm.IsExist("astaxie")
 //	bm.Delete("astaxie")
 //
-//  more docs http://beego.vip/docs/module/cache.md
 package cache
 
 import (

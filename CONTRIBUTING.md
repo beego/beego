@@ -89,5 +89,3 @@ Also when filing an issue, make sure to answer these five questions:
 Please take a moment to check that an issue doesn't already exist documenting your bug report or improvement proposal.
 If it does, it never hurts to add a quick "+1" or "I have this problem too". This will help prioritize the most common
 problems and requests.
-
-Also, if you don't know how to use it. please make sure you have read through the docs in http://beego.vip/docs

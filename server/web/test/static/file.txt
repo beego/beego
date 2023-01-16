@@ -1,0 +1,45 @@
+<template>
+  <Container>
+      <div class="content">
+        <h1>
+             Upload files
+        </h1>
+        <div class="forms">
+            <FileForm v-bind:files="files['Model']" name="Model" v-on:upload="upload_model" v-on:submit="submit_model">
+            </FileForm>
+        </div>
+      </div>
+  </Container>
+</template>
+
+<script>
+import axios from 'axios'
+import Container from '@/components/Container.vue'
+import FileForm from '@/components/FileForm.vue'
+
+export default {
+  name: 'App',
+  data: function() {
+    return {
+        files: {},
+    }
+  },
+  components: {
+    Container,
+    FileForm
+  },
+  methods: {
+    upload_model: function(file) {
+        this.files['Model'] = file
+    },
+    submit_model: function() {
+        let formData = new FormData();
+        formData.append('Model', this.files['Model']);
+        axios.put('http://' + document.location.host + '/api/upload_model', formData)
+    }
+  },
+  mounted () {
+
+  }
+}
+</script>

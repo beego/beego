@@ -51,7 +51,6 @@
 //		num, err = o.Delete(&u)
 //	}
 //
-// more docs: http://beego.vip/docs/mvc/model/overview.md
 package orm
 
 import (

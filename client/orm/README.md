@@ -151,9 +151,3 @@ like this:
 
 note: not recommend use this in product env.
 
-## Docs
-
-more details and examples in docs and test
-
-[documents](http://beego.vip/docs/mvc/model/overview.md)
-

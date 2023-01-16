@@ -1,5 +1,11 @@
 # developing
+- [Fix 5126: support bloom filter cache](https://github.com/beego/beego/pull/5126)
 - [Fix 5117: support write though cache](https://github.com/beego/beego/pull/5117)
+- [add read through for cache module](https://github.com/beego/beego/pull/5116)
+- [add singleflight cache for cache module](https://github.com/beego/beego/pull/5119)
+- [Fix 5129: must set formatter after init the logger](https://github.com/beego/beego/pull/5130)
+- [Fix 5079: only log msg when the channel is not closed](https://github.com/beego/beego/pull/5132)
+- [Fix 4435: Controller SaveToFile remove all temp file](https://github.com/beego/beego/pull/5138)
 
 # v2.0.7
 - [Upgrade github.com/go-kit/kit, CVE-2022-24450](https://github.com/beego/beego/pull/5121)
@@ -16,9 +22,6 @@ Note: now we force the web admin service serving HTTP only.
 - [Fix 5012: fix some bug, pass []any as any in variadic function](https://github.com/beego/beego/pull/5012)
 - [Fix 5022: Miss assigning listener to graceful Server](https://github.com/beego/beego/pull/5028)
 - [Fix 4955: Make commands and Docker compose for ORM unit tests](https://github.com/beego/beego/pull/5031)
-- [add read through for cache module](https://github.com/beego/beego/pull/5116)
-- [add singleflight cache for cache module](https://github.com/beego/beego/pull/5119)
-
 
 # v2.0.4
 

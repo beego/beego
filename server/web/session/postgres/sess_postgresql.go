@@ -47,7 +47,6 @@
 //		go globalSessions.GC()
 //	}
 //
-// more docs: http://beego.vip/docs/module/session.md
 package postgres
 
 import (
@@ -57,7 +56,6 @@ import (
 	"sync"
 	"time"
 
-	// import postgresql Driver
 	_ "github.com/lib/pq"
 
 	"github.com/beego/beego/v2/server/web/session"

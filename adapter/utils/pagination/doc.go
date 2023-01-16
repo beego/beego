@@ -50,9 +50,5 @@ In your view templates:
  </ul>
  {{end}}
 
-See also
-
-http://beego.vip/docs/mvc/view/page.md
-
 */
 package pagination

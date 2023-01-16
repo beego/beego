@@ -30,7 +30,6 @@
 //	log.Debug("debug")
 //	log.Critical("critical")
 //
-//  more docs http://beego.vip/docs/module/logs.md
 package logs
 
 import (
@@ -41,8 +40,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 // RFC5424 log message levels.
@@ -193,20 +190,20 @@ func (bl *BeeLogger) setLogger(adapterName string, configs ...string) error {
 
 	lg := logAdapter()
 
+	err := lg.Init(config)
+	if err != nil {
+		return err
+	}
+
 	// Global formatter overrides the default set formatter
 	if len(bl.globalFormatter) > 0 {
 		fmtr, ok := GetFormatter(bl.globalFormatter)
 		if !ok {
-			return errors.New(fmt.Sprintf("the formatter with name: %s not found", bl.globalFormatter))
+			return fmt.Errorf("the formatter with name: %s not found", bl.globalFormatter)
 		}
 		lg.SetFormatter(fmtr)
 	}
 
-	err := lg.Init(config)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "logs.BeeLogger.SetLogger: "+err.Error())
-		return err
-	}
 	bl.outputs = append(bl.outputs, &nameLogger{name: adapterName, Logger: lg})
 	return nil
 }
@@ -227,7 +224,7 @@ func (bl *BeeLogger) SetLogger(adapterName string, configs ...string) error {
 func (bl *BeeLogger) DelLogger(adapterName string) error {
 	bl.lock.Lock()
 	defer bl.lock.Unlock()
-	outputs := []*nameLogger{}
+	outputs := make([]*nameLogger, 0, len(bl.outputs))
 	for _, lg := range bl.outputs {
 		if lg.name == adapterName {
 			lg.Destroy()
@@ -362,9 +359,13 @@ func (bl *BeeLogger) startLogger() {
 	gameOver := false
 	for {
 		select {
-		case bm := <-bl.msgChan:
-			bl.writeToLoggers(bm)
-			logMsgPool.Put(bm)
+		case bm, ok := <-bl.msgChan:
+			// this is a terrible design to have a signal channel that accept two inputs
+			// so we only handle the msg if the channel is not closed
+			if ok {
+				bl.writeToLoggers(bm)
+				logMsgPool.Put(bm)
+			}
 		case sg := <-bl.signalChan:
 			// Now should only send "flush" or "close" to bl.signalChan
 			bl.flush()
@@ -605,7 +606,10 @@ func (bl *BeeLogger) flush() {
 	if bl.asynchronous {
 		for {
 			if len(bl.msgChan) > 0 {
-				bm := <-bl.msgChan
+				bm, ok := <-bl.msgChan
+				if !ok {
+					continue
+				}
 				bl.writeToLoggers(bm)
 				logMsgPool.Put(bm)
 				continue
