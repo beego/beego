@@ -6,6 +6,7 @@
 - [Fix 5129: must set formatter after init the logger](https://github.com/beego/beego/pull/5130)
 - [Fix 5079: only log msg when the channel is not closed](https://github.com/beego/beego/pull/5132)
 - [Fix 4435: Controller SaveToFile remove all temp file](https://github.com/beego/beego/pull/5138)
+- [Fix 5079: Split signalChan into flushChan and closeChan](https://github.com/beego/beego/pull/5139)
 
 # v2.0.7
 - [Upgrade github.com/go-kit/kit, CVE-2022-24450](https://github.com/beego/beego/pull/5121)

@@ -121,7 +121,8 @@ type BeeLogger struct {
 	prefix              string
 	msgChanLen          int64
 	msgChan             chan *LogMsg
-	signalChan          chan string
+	closeChan           chan struct{}
+	flushChan           chan struct{}
 	outputs             []*nameLogger
 	globalFormatter     string
 }
@@ -146,7 +147,8 @@ func NewLogger(channelLens ...int64) *BeeLogger {
 	if bl.msgChanLen <= 0 {
 		bl.msgChanLen = defaultAsyncMsgLen
 	}
-	bl.signalChan = make(chan string, 1)
+	bl.flushChan = make(chan struct{}, 1)
+	bl.closeChan = make(chan struct{}, 1)
 	bl.setLogger(AdapterConsole)
 	return bl
 }
@@ -366,16 +368,16 @@ func (bl *BeeLogger) startLogger() {
 				bl.writeToLoggers(bm)
 				logMsgPool.Put(bm)
 			}
-		case sg := <-bl.signalChan:
-			// Now should only send "flush" or "close" to bl.signalChan
+		case <-bl.closeChan:
 			bl.flush()
-			if sg == "close" {
-				for _, l := range bl.outputs {
-					l.Destroy()
-				}
-				bl.outputs = nil
-				gameOver = true
+			for _, l := range bl.outputs {
+				l.Destroy()
 			}
+			bl.outputs = nil
+			gameOver = true
+			bl.wg.Done()
+		case <-bl.flushChan:
+			bl.flush()
 			bl.wg.Done()
 		}
 		if gameOver {
@@ -569,7 +571,7 @@ func (bl *BeeLogger) Trace(format string, v ...interface{}) {
 // Flush flush all chan data.
 func (bl *BeeLogger) Flush() {
 	if bl.asynchronous {
-		bl.signalChan <- "flush"
+		bl.flushChan <- struct{}{}
 		bl.wg.Wait()
 		bl.wg.Add(1)
 		return
@@ -580,7 +582,7 @@ func (bl *BeeLogger) Flush() {
 // Close close logger, flush all chan data and destroy all adapters in BeeLogger.
 func (bl *BeeLogger) Close() {
 	if bl.asynchronous {
-		bl.signalChan <- "close"
+		bl.closeChan <- struct{}{}
 		bl.wg.Wait()
 		close(bl.msgChan)
 	} else {
@@ -590,7 +592,8 @@ func (bl *BeeLogger) Close() {
 		}
 		bl.outputs = nil
 	}
-	close(bl.signalChan)
+	close(bl.flushChan)
+	close(bl.closeChan)
 }
 
 // Reset close all outputs, and set bl.outputs to nil
