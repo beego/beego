@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/beego/x2j v0.0.0-20131220205130-a0352aadc542
+	github.com/bits-and-blooms/bloom/v3 v3.3.1
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b
 	github.com/casbin/casbin v1.9.1
 	github.com/cloudflare/golz4 v0.0.0-20150217214814-ef862a3cdc58
@@ -15,7 +16,7 @@ require (
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/gogo/protobuf v1.3.2
 	github.com/gomodule/redigo v2.0.0+incompatible
-	github.com/google/uuid v1.2.0
+	github.com/google/uuid v1.3.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/ledisdb/ledisdb v0.0.0-20200510135210-d35789ec47e6
@@ -36,7 +37,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.11.2
 	golang.org/x/crypto v0.0.0-20220315160706-3147a52a75dd
 	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f
-	google.golang.org/grpc v1.40.0
+	google.golang.org/grpc v1.52.3
 	google.golang.org/protobuf v1.28.1
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -46,7 +47,6 @@ require (
 	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.4.0 // indirect
-	github.com/bits-and-blooms/bloom/v3 v3.3.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
@@ -74,10 +74,10 @@ require (
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.7.0 // indirect
 	go.uber.org/zap v1.19.1 // indirect
-	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
-	golang.org/x/sys v0.0.0-20220919091848-fb04ddd9f9c8 // indirect
-	golang.org/x/text v0.3.7 // indirect
-	google.golang.org/genproto v0.0.0-20210917145530-b395a37504d4 // indirect
+	golang.org/x/net v0.4.0 // indirect
+	golang.org/x/sys v0.3.0 // indirect
+	golang.org/x/text v0.5.0 // indirect
+	google.golang.org/genproto v0.0.0-20221118155620-16455021b5e6 // indirect
 )
 
 replace github.com/gomodule/redigo => github.com/gomodule/redigo v1.8.8
