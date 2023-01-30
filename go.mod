@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/beego/x2j v0.0.0-20131220205130-a0352aadc542
+	github.com/bits-and-blooms/bloom/v3 v3.3.1
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b
 	github.com/casbin/casbin v1.9.1
 	github.com/cloudflare/golz4 v0.0.0-20150217214814-ef862a3cdc58
@@ -30,10 +31,10 @@ require (
 	github.com/ssdb/gossdb v0.0.0-20180723034631-88f6b59b84ec
 	github.com/stretchr/testify v1.8.1
 	go.etcd.io/etcd/client/v3 v3.5.4
-	go.opentelemetry.io/otel v1.11.2
-	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.11.2
-	go.opentelemetry.io/otel/sdk v1.11.2
-	go.opentelemetry.io/otel/trace v1.11.2
+	go.opentelemetry.io/otel v1.12.0
+	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.12.0
+	go.opentelemetry.io/otel/sdk v1.12.0
+	go.opentelemetry.io/otel/trace v1.12.0
 	golang.org/x/crypto v0.0.0-20220315160706-3147a52a75dd
 	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f
 	google.golang.org/grpc v1.40.0
@@ -46,7 +47,6 @@ require (
 	github.com/Knetic/govaluate v3.0.1-0.20171022003610-9aa49832a739+incompatible // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.4.0 // indirect
-	github.com/bits-and-blooms/bloom/v3 v3.3.1 // indirect
 	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/coreos/go-systemd/v22 v22.3.2 // indirect
