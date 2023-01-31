@@ -29,7 +29,6 @@
 //	log.Warn("warning")
 //	log.Debug("debug")
 //	log.Critical("critical")
-//
 package logs
 
 import (
@@ -115,6 +114,9 @@ type BeeLogger struct {
 	enableFuncCallDepth bool
 	enableFullFilePath  bool
 	asynchronous        bool
+	// Whether to discard logs when buffer is full and asynchronous is true
+	// No discard by default
+	logWithNonBlocking  bool
 	wg                  sync.WaitGroup
 	level               int
 	loggerFuncCallDepth int
@@ -172,6 +174,16 @@ func (bl *BeeLogger) Async(msgLen ...int64) *BeeLogger {
 	}
 	bl.wg.Add(1)
 	go bl.startLogger()
+	return bl
+}
+
+// AsyncNonBlockWrite Non-blocking write in asynchronous mode
+// Only works if asynchronous write logging is set
+func (bl *BeeLogger) AsyncNonBlockWrite() *BeeLogger {
+	if !bl.asynchronous {
+		return bl
+	}
+	bl.logWithNonBlocking = true
 	return bl
 }
 
@@ -312,7 +324,11 @@ func (bl *BeeLogger) writeMsg(lm *LogMsg) error {
 		logM.FilePath = lm.FilePath
 		logM.LineNumber = lm.LineNumber
 		logM.Prefix = lm.Prefix
+
 		if bl.outputs != nil {
+			if bl.logWithNonBlocking && int64(len(bl.msgChan)) == bl.msgChanLen-1 {
+				return nil
+			}
 			bl.msgChan <- lm
 		} else {
 			logMsgPool.Put(lm)
