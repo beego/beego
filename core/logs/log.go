@@ -326,10 +326,15 @@ func (bl *BeeLogger) writeMsg(lm *LogMsg) error {
 		logM.Prefix = lm.Prefix
 
 		if bl.outputs != nil {
-			if bl.logWithNonBlocking && int64(len(bl.msgChan)) == bl.msgChanLen-1 {
-				return nil
+			if bl.logWithNonBlocking {
+				select {
+				case bl.msgChan <- lm:
+				// discard log when channel is full
+				default:
+				}
+			} else {
+				bl.msgChan <- lm
 			}
-			bl.msgChan <- lm
 		} else {
 			logMsgPool.Put(lm)
 		}

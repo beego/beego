@@ -43,7 +43,6 @@ type mockLogger struct {
 
 func NewMockLogger() Logger {
 	return &mockLogger{
-		//logWriter: newLogWriter(ansicolor.NewAnsiColorWriter(os.Stdout)),
 		logWriter: &logWriter{writer: io.Discard},
 	}
 }
@@ -71,9 +70,9 @@ func (m *mockLogger) GetCnt() int {
 	return m.writeCnt
 }
 
-func (m *mockLogger) Destroy()                    {}
-func (m *mockLogger) Flush()                      {}
-func (m *mockLogger) SetFormatter(f LogFormatter) {}
+func (*mockLogger) Destroy()                    {}
+func (*mockLogger) Flush()                      {}
+func (*mockLogger) SetFormatter(_ LogFormatter) {}
 
 func TestBeeLogger_AsyncNonBlockWrite(t *testing.T) {
 	testCases := []struct {
@@ -114,8 +113,7 @@ func TestBeeLogger_AsyncNonBlockWrite(t *testing.T) {
 			err := beeLogger.SetLogger(tc.name, fmt.Sprintf(`{"write_cost": %d}`, tc.writeCost))
 			assert.Nil(t, err)
 
-			l := beeLogger
-			l = beeLogger.Async(tc.msgLen)
+			l := beeLogger.Async(tc.msgLen)
 			l.AsyncNonBlockWrite()
 
 			for i := 0; i < 10; i++ {
