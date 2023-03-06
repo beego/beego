@@ -467,3 +467,7 @@ func newStmtDecoratorLruWithEvict() *lru.Cache {
 	})
 	return cache
 }
+
+func ResetDataBaseCache() {
+	dataBaseCache = &_dbCache{cache: make(map[string]*alias)}
+}
