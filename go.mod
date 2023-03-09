@@ -29,7 +29,7 @@ require (
 	github.com/prometheus/client_golang v1.14.0
 	github.com/shiena/ansicolor v0.0.0-20200904210342-c7312218db18
 	github.com/ssdb/gossdb v0.0.0-20180723034631-88f6b59b84ec
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 	go.etcd.io/etcd/client/v3 v3.5.4
 	go.opentelemetry.io/otel v1.11.2
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.11.2
