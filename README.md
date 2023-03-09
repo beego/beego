@@ -17,10 +17,11 @@ Beego is composed of four parts:
 
 ## Quick Start
 
-[Doc](https://github.com/beego/beedoc)
-[中文新版文档网站](https://beego.gocn.vip)
-
+[Old Doc - github](https://github.com/beego/beedoc)
+[New Doc Website](https://beego.gocn.vip)
 [Example](https://github.com/beego/beego-example)
+
+> Kindly remind that sometimes the HTTPS certificate is expired, you may get some NOT SECURE warning
 
 ### Web Application
 
