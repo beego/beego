@@ -22,7 +22,8 @@ import (
 
 // Index struct defines the structure of Index Columns
 type Index struct {
-	Name string
+	Name   string
+	Fields []string
 }
 
 // Unique struct defines a single unique key combination
@@ -220,6 +221,15 @@ func (c *Column) SetPrimary(m *Migration) *Column {
 	return c
 }
 
+// SetIndex adds the colums to the index key
+func (c *Column) SetIndex(m *Migration, name string) *Column {
+	i := &Index{}
+	i.Name = m.CreateIndexName(name)
+	i.Fields = append(i.Fields, c.Name)
+	m.AddIndex(i)
+	return c
+}
+
 // AddColumnsToUnique adds the columns to Unique Struct
 func (unique *Unique) AddColumnsToUnique(columns ...*Column) *Unique {
 	unique.Columns = append(unique.Columns, columns...)
@@ -303,6 +313,17 @@ func (m *Migration) GetSQL() (sql string) {
 				}
 				sql += fmt.Sprintf(")")
 			}
+			for _, ind := range m.Indexes {
+				sql += fmt.Sprintf(",\n KEY `%s`( ", ind.Name)
+				for index, field := range ind.Fields {
+					sql += fmt.Sprintf(" `%s`", field)
+					if len(ind.Fields) > index+1 {
+						sql += ","
+					}
+				}
+				sql += fmt.Sprintf(")")
+			}
+
 			for _, foreign := range m.Foreigns {
 				sql += fmt.Sprintf(",\n `%s` %s %s %s %s %s", foreign.Name, foreign.DataType, foreign.Unsign, foreign.Null, foreign.Inc, foreign.Default)
 				sql += fmt.Sprintf(",\n KEY  `%s_%s_foreign`(`%s`),", m.TableName, foreign.Column.Name, foreign.Column.Name)
@@ -372,6 +393,15 @@ func (m *Migration) GetSQL() (sql string) {
 				}
 
 			}
+
+			for index, ind := range m.Indexes {
+				sql += fmt.Sprintf("\n DROP KEY `%s`", ind.Name)
+				if len(m.Uniques) > index+1 {
+					sql += ","
+				}
+
+			}
+
 			for index, column := range m.Renames {
 				sql += fmt.Sprintf("\n CHANGE COLUMN `%s` `%s` %s %s %s %s", column.NewName, column.OldName, column.OldDataType, column.OldUnsign, column.OldNull, column.OldDefault)
 				if len(m.Renames) > index+1 {
@@ -392,5 +422,11 @@ func (m *Migration) GetSQL() (sql string) {
 		}
 	}
 
+	return
+}
+
+// createIndexName create index key
+func (m *Migration) CreateIndexName(name string) (indexName string) {
+	indexName = m.TableName + "_" + name
 	return
 }
