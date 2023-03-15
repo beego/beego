@@ -321,7 +321,7 @@ func (m *Migration) GetSQL() (sql string) {
 						sql += ","
 					}
 				}
-				sql += fmt.Sprintf(")")
+				sql += ")"
 			}
 
 			for _, foreign := range m.Foreigns {
