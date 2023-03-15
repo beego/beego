@@ -396,7 +396,7 @@ func (m *Migration) GetSQL() (sql string) {
 
 			for index, ind := range m.Indexes {
 				sql += fmt.Sprintf("\n DROP KEY `%s`", ind.Name)
-				if len(m.Uniques) > index+1 {
+				if len(m.Indexes) > index+1 {
 					sql += ","
 				}
 
