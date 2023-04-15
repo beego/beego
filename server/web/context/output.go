@@ -32,7 +32,7 @@ import (
 	"time"
 
 	"google.golang.org/protobuf/proto"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 )
 
 // BeegoOutput does work for sending response header.
