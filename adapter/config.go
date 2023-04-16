@@ -87,7 +87,7 @@ func (b *beegoAppConfig) String(key string) string {
 }
 
 func (b *beegoAppConfig) Strings(key string) []string {
-	if v, err := b.innerConfig.Strings(BConfig.RunMode + "::" + key); len(v) > 0 && err != nil {
+	if v, err := b.innerConfig.Strings(BConfig.RunMode + "::" + key); len(v) > 0 && err == nil {
 		return v
 	}
 	res, _ := b.innerConfig.Strings(key)
