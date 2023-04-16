@@ -19,6 +19,7 @@
 // go install github.com/go-sql-driver/mysql
 //
 // mysql session support need create table as sql:
+//
 //	CREATE TABLE `session` (
 //	`session_key` char(64) NOT NULL,
 //	`session_data` blob,
@@ -28,15 +29,16 @@
 //
 // Usage:
 // import(
-//   _ "github.com/beego/beego/v2/server/web/session/mysql"
-//   "github.com/beego/beego/v2/server/web/session"
+//
+//	_ "github.com/beego/beego/v2/server/web/session/mysql"
+//	"github.com/beego/beego/v2/server/web/session"
+//
 // )
 //
 //	func init() {
 //		globalSessions, _ = session.NewManager("mysql", ``{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig":"[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]"}``)
 //		go globalSessions.GC()
 //	}
-//
 package mysql
 
 import (
