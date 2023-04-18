@@ -18,7 +18,6 @@
 //	import "github.com/beego/beego/v2/server/web/context"
 //
 //	ctx := context.Context{Request:req,ResponseWriter:rw}
-//
 package context
 
 import (
@@ -30,6 +29,7 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"github.com/beego/beego/v2/server/web"
 	"net"
 	"net/http"
 	"net/url"
@@ -137,7 +137,8 @@ func (ctx *Context) ProtoResp(data proto.Message) error {
 
 // BindYAML only read data from http request body
 func (ctx *Context) BindYAML(obj interface{}) error {
-	return yaml.Unmarshal(ctx.Input.RequestBody, obj)
+	requestBytes := ctx.Input.GetBody(web.BConfig.MaxMemory)
+	return yaml.Unmarshal(requestBytes, obj)
 }
 
 // BindForm will parse form values to struct via tag.
@@ -151,17 +152,20 @@ func (ctx *Context) BindForm(obj interface{}) error {
 
 // BindJSON only read data from http request body
 func (ctx *Context) BindJSON(obj interface{}) error {
-	return json.Unmarshal(ctx.Input.RequestBody, obj)
+	requestBytes := ctx.Input.GetBody(web.BConfig.MaxMemory)
+	return json.Unmarshal(requestBytes, obj)
 }
 
 // BindProtobuf only read data from http request body
 func (ctx *Context) BindProtobuf(obj proto.Message) error {
-	return proto.Unmarshal(ctx.Input.RequestBody, obj)
+	requestBytes := ctx.Input.GetBody(web.BConfig.MaxMemory)
+	return proto.Unmarshal(requestBytes, obj)
 }
 
 // BindXML only read data from http request body
 func (ctx *Context) BindXML(obj interface{}) error {
-	return xml.Unmarshal(ctx.Input.RequestBody, obj)
+	requestBytes := ctx.Input.GetBody(web.BConfig.MaxMemory)
+	return xml.Unmarshal(requestBytes, obj)
 }
 
 // ParseForm will parse form values to struct via tag.

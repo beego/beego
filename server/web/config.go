@@ -528,7 +528,7 @@ func newBConfig() *Config {
 		ServerName:          "beegoServer:" + beego.VERSION,
 		RecoverPanic:        true,
 
-		CopyRequestBody:    false,
+		CopyRequestBody:    true,
 		EnableGzip:         false,
 		MaxMemory:          1 << 26, // 64MB
 		MaxUploadSize:      1 << 30, // 1GB

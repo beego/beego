@@ -370,23 +370,48 @@ func (input *BeegoInput) CopyBody(MaxMemory int64) []byte {
 		return []byte{}
 	}
 
+	if requestbody, err := input.getBodyNonReproduction(MaxMemory); err != nil {
+		bf := bytes.NewBuffer(requestbody)
+		input.Context.Request.Body = http.MaxBytesReader(input.Context.ResponseWriter, ioutil.NopCloser(bf), MaxMemory)
+		input.RequestBody = requestbody
+		return requestbody
+	} else {
+		return nil
+	}
+}
+
+// GetBody returns the raw request body data as bytes.
+func (input *BeegoInput) GetBody(MaxMemory int64) []byte {
+	if input.RequestBody != nil && len(input.RequestBody) > 0 {
+		return input.RequestBody
+	}
+
+	if input.Context.Request.Body == nil {
+		return []byte{}
+	}
+
+	if requestbody, err := input.getBodyNonReproduction(MaxMemory); err != nil {
+		return requestbody
+	} else {
+		return nil
+	}
+}
+
+func (input *BeegoInput) getBodyNonReproduction(MaxMemory int64) ([]byte, error) {
 	var requestbody []byte
 	safe := &io.LimitedReader{R: input.Context.Request.Body, N: MaxMemory}
 	if input.Header("Content-Encoding") == "gzip" {
 		reader, err := gzip.NewReader(safe)
 		if err != nil {
-			return nil
+			return nil, err
 		}
 		requestbody, _ = ioutil.ReadAll(reader)
 	} else {
 		requestbody, _ = ioutil.ReadAll(safe)
 	}
-
 	input.Context.Request.Body.Close()
-	bf := bytes.NewBuffer(requestbody)
-	input.Context.Request.Body = http.MaxBytesReader(input.Context.ResponseWriter, ioutil.NopCloser(bf), MaxMemory)
-	input.RequestBody = requestbody
-	return requestbody
+
+	return requestbody, nil
 }
 
 // Data returns the implicit data in the input
