@@ -280,7 +280,7 @@ func (d *dbBase) PrepareInsert(ctx context.Context, q dbQuerier, mi *modelInfo) 
 	sep := fmt.Sprintf("%s, %s", Q, Q)
 	columns := strings.Join(dbcols, sep)
 
-	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s)", Q, mi.table, Q, Q, columns, Q, qmarks)
+	query := fmt.Sprintf("INSERT INTO %s (%s%s%s) VALUES (%s)", d.getQuotedTableName(mi.table), Q, columns, Q, qmarks)
 
 	d.ins.ReplaceMarks(&query)
 
@@ -347,7 +347,7 @@ func (d *dbBase) Read(ctx context.Context, q dbQuerier, mi *modelInfo, ind refle
 		forUpdate = "FOR UPDATE"
 	}
 
-	query := fmt.Sprintf("SELECT %s%s%s FROM %s%s%s WHERE %s%s%s = ? %s", Q, sels, Q, Q, mi.table, Q, Q, wheres, Q, forUpdate)
+	query := fmt.Sprintf("SELECT %s%s%s FROM %s WHERE %s%s%s = ? %s", Q, sels, Q, d.getQuotedTableName(mi.table), Q, wheres, Q, forUpdate)
 
 	refs := make([]interface{}, colsNum)
 	for i := range refs {
@@ -474,7 +474,7 @@ func (d *dbBase) InsertValue(ctx context.Context, q dbQuerier, mi *modelInfo, is
 		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
 	}
 
-	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s)", Q, mi.table, Q, Q, columns, Q, qmarks)
+	query := fmt.Sprintf("INSERT INTO %s (%s%s%s) VALUES (%s)", d.getQuotedTableName(mi.table), Q, columns, Q, qmarks)
 
 	d.ins.ReplaceMarks(&query)
 
@@ -581,7 +581,7 @@ func (d *dbBase) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *modelInfo,
 		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
 	}
 	// conflitValue maybe is a int,can`t use fmt.Sprintf
-	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s) %s "+qupdates, Q, mi.table, Q, Q, columns, Q, qmarks, iouStr)
+	query := fmt.Sprintf("INSERT INTO %s (%s%s%s) VALUES (%s) %s "+qupdates, d.getQuotedTableName(mi.table), Q, columns, Q, qmarks, iouStr)
 
 	d.ins.ReplaceMarks(&query)
 
@@ -666,7 +666,7 @@ func (d *dbBase) Update(ctx context.Context, q dbQuerier, mi *modelInfo, ind ref
 	sep := fmt.Sprintf("%s = ?, %s", Q, Q)
 	setColumns := strings.Join(setNames, sep)
 
-	query := fmt.Sprintf("UPDATE %s%s%s SET %s%s%s = ? WHERE %s%s%s = ?", Q, mi.table, Q, Q, setColumns, Q, Q, pkName, Q)
+	query := fmt.Sprintf("UPDATE %s SET %s%s%s = ? WHERE %s%s%s = ?", d.getQuotedTableName(mi.table), Q, setColumns, Q, Q, pkName, Q)
 
 	d.ins.ReplaceMarks(&query)
 
@@ -705,7 +705,7 @@ func (d *dbBase) Delete(ctx context.Context, q dbQuerier, mi *modelInfo, ind ref
 	sep := fmt.Sprintf("%s = ? AND %s", Q, Q)
 	wheres := strings.Join(whereCols, sep)
 
-	query := fmt.Sprintf("DELETE FROM %s%s%s WHERE %s%s%s = ?", Q, mi.table, Q, Q, wheres, Q)
+	query := fmt.Sprintf("DELETE FROM %s WHERE %s%s%s = ?", d.getQuotedTableName(mi.table), Q, wheres, Q)
 
 	d.ins.ReplaceMarks(&query)
 	res, err := q.ExecContext(ctx, query, args...)
@@ -798,13 +798,13 @@ func (d *dbBase) UpdateBatch(ctx context.Context, q dbQuerier, qs *querySet, mi 
 	sets := strings.Join(cols, ", ") + " "
 
 	if d.ins.SupportUpdateJoin() {
-		query = fmt.Sprintf("UPDATE %s%s%s T0 %s%sSET %s%s", Q, mi.table, Q, specifyIndexes, join, sets, where)
+		query = fmt.Sprintf("UPDATE %s T0 %s%sSET %s%s", d.getQuotedTableName(mi.table), specifyIndexes, join, sets, where)
 	} else {
-		supQuery := fmt.Sprintf("SELECT T0.%s%s%s FROM %s%s%s T0 %s%s%s",
+		supQuery := fmt.Sprintf("SELECT T0.%s%s%s FROM %s T0 %s%s%s",
 			Q, mi.fields.pk.column, Q,
-			Q, mi.table, Q,
+			d.getQuotedTableName(mi.table),
 			specifyIndexes, join, where)
-		query = fmt.Sprintf("UPDATE %s%s%s SET %sWHERE %s%s%s IN ( %s )", Q, mi.table, Q, sets, Q, mi.fields.pk.column, Q, supQuery)
+		query = fmt.Sprintf("UPDATE %s SET %sWHERE %s%s%s IN ( %s )", d.getQuotedTableName(mi.table), sets, Q, mi.fields.pk.column, Q, supQuery)
 	}
 
 	d.ins.ReplaceMarks(&query)
@@ -864,7 +864,7 @@ func (d *dbBase) DeleteBatch(ctx context.Context, q dbQuerier, qs *querySet, mi 
 	join := tables.getJoinSQL()
 
 	cols := fmt.Sprintf("T0.%s%s%s", Q, mi.fields.pk.column, Q)
-	query := fmt.Sprintf("SELECT %s FROM %s%s%s T0 %s%s%s", cols, Q, mi.table, Q, specifyIndexes, join, where)
+	query := fmt.Sprintf("SELECT %s FROM %s T0 %s%s%s", cols, d.getQuotedTableName(mi.table), specifyIndexes, join, where)
 
 	d.ins.ReplaceMarks(&query)
 
@@ -900,7 +900,7 @@ func (d *dbBase) DeleteBatch(ctx context.Context, q dbQuerier, qs *querySet, mi 
 		marks[i] = "?"
 	}
 	sqlIn := fmt.Sprintf("IN (%s)", strings.Join(marks, ", "))
-	query = fmt.Sprintf("DELETE FROM %s%s%s WHERE %s%s%s %s", Q, mi.table, Q, Q, mi.fields.pk.column, Q, sqlIn)
+	query = fmt.Sprintf("DELETE FROM %s WHERE %s%s%s %s", d.getQuotedTableName(mi.table), Q, mi.fields.pk.column, Q, sqlIn)
 
 	d.ins.ReplaceMarks(&query)
 	res, err := q.ExecContext(ctx, query, args...)
@@ -1019,8 +1019,8 @@ func (d *dbBase) ReadBatch(ctx context.Context, q dbQuerier, qs *querySet, mi *m
 	if qs.aggregate != "" {
 		sels = qs.aggregate
 	}
-	query := fmt.Sprintf("%s %s FROM %s%s%s T0 %s%s%s%s%s%s",
-		sqlSelect, sels, Q, mi.table, Q,
+	query := fmt.Sprintf("%s %s FROM %s T0 %s%s%s%s%s%s",
+		sqlSelect, sels, d.getQuotedTableName(mi.table),
 		specifyIndexes, join, where, groupBy, orderBy, limit)
 
 	if qs.forUpdate {
@@ -1156,10 +1156,8 @@ func (d *dbBase) Count(ctx context.Context, q dbQuerier, qs *querySet, mi *model
 	join := tables.getJoinSQL()
 	specifyIndexes := tables.getIndexSql(mi.table, qs.useIndex, qs.indexes)
 
-	Q := d.ins.TableQuote()
-
-	query := fmt.Sprintf("SELECT COUNT(*) FROM %s%s%s T0 %s%s%s%s",
-		Q, mi.table, Q,
+	query := fmt.Sprintf("SELECT COUNT(*) FROM %s T0 %s%s%s%s",
+		d.getQuotedTableName(mi.table),
 		specifyIndexes, join, where, groupBy)
 
 	if groupBy != "" {
@@ -1691,9 +1689,9 @@ func (d *dbBase) ReadValues(ctx context.Context, q dbQuerier, qs *querySet, mi *
 	if qs.distinct {
 		sqlSelect += " DISTINCT"
 	}
-	query := fmt.Sprintf("%s %s FROM %s%s%s T0 %s%s%s%s%s%s",
+	query := fmt.Sprintf("%s %s FROM %s T0 %s%s%s%s%s%s",
 		sqlSelect, sels,
-		Q, mi.table, Q,
+		d.getQuotedTableName(mi.table),
 		specifyIndexes, join, where, groupBy, orderBy, limit)
 
 	d.ins.ReplaceMarks(&query)
@@ -1928,4 +1926,13 @@ func (d *dbBase) GenerateSpecifyIndex(tableName string, useIndex int, indexes []
 	}
 
 	return fmt.Sprintf(` %s INDEX(%s) `, useWay, strings.Join(s, `,`))
+}
+
+func (d *dbBase) getQuotedTableName(tableName string) string {
+	Q := d.ins.TableQuote()
+	if len(tableName) > 0 && tableName[0:1] == Q {
+		return tableName
+	}
+	quoted := fmt.Sprintf("%s%s%s", Q, tableName, Q)
+	return quoted
 }
