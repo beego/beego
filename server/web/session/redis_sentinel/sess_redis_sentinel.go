@@ -20,8 +20,10 @@
 //
 // Usage:
 // import(
-//   _ "github.com/beego/beego/v2/server/web/session/redis_sentinel"
-//   "github.com/beego/beego/v2/server/web/session"
+//
+//	_ "github.com/beego/beego/v2/server/web/session/redis_sentinel"
+//	"github.com/beego/beego/v2/server/web/session"
+//
 // )
 //
 //	func init() {
@@ -101,7 +103,9 @@ func (rs *SessionStore) SessionID(context.Context) string {
 
 // SessionRelease save session values to redis_sentinel
 func (rs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
+	rs.lock.Lock()
 	b, err := session.EncodeGob(rs.values)
+	rs.lock.Unlock()
 	if err != nil {
 		return
 	}

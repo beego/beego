@@ -20,15 +20,16 @@
 //
 // Usage:
 // import(
-//   _ "github.com/beego/beego/v2/server/web/session/memcache"
-//   "github.com/beego/beego/v2/server/web/session"
+//
+//	_ "github.com/beego/beego/v2/server/web/session/memcache"
+//	"github.com/beego/beego/v2/server/web/session"
+//
 // )
 //
 //	func init() {
 //		globalSessions, _ = session.NewManager("memcache", ``{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig":"127.0.0.1:11211"}``)
 //		go globalSessions.GC()
 //	}
-//
 package memcache
 
 import (
@@ -96,7 +97,9 @@ func (rs *SessionStore) SessionID(context.Context) string {
 
 // SessionRelease save session values to memcache
 func (rs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
+	rs.lock.Lock()
 	b, err := session.EncodeGob(rs.values)
+	rs.lock.Unlock()
 	if err != nil {
 		return
 	}

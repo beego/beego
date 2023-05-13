@@ -20,15 +20,16 @@
 //
 // Usage:
 // import(
-//   _ "github.com/beego/beego/v2/server/web/session/couchbase"
-//   "github.com/beego/beego/v2/server/web/session"
+//
+//	_ "github.com/beego/beego/v2/server/web/session/couchbase"
+//	"github.com/beego/beego/v2/server/web/session"
+//
 // )
 //
 //	func init() {
 //		globalSessions, _ = session.NewManager("couchbase", ``{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig":"http://host:port/, Pool, Bucket"}``)
 //		go globalSessions.GC()
 //	}
-//
 package couchbase
 
 import (
@@ -105,8 +106,9 @@ func (cs *SessionStore) SessionID(context.Context) string {
 // SessionRelease Write couchbase session with Gob string
 func (cs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
 	defer cs.b.Close()
-
+	cs.lock.Lock()
 	bo, err := session.EncodeGob(cs.values)
+	cs.lock.Unlock()
 	if err != nil {
 		return
 	}
