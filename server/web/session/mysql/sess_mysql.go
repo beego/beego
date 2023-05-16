@@ -111,9 +111,9 @@ func (st *SessionStore) SessionID(context.Context) string {
 // must call this method to save values to database.
 func (st *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
 	defer st.c.Close()
-	st.lock.Lock()
+	st.lock.RLock()
 	b, err := session.EncodeGob(st.values)
-	st.lock.Unlock()
+	st.lock.RUnlock()
 	if err != nil {
 		return
 	}

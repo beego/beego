@@ -106,9 +106,9 @@ func (cs *SessionStore) SessionID(context.Context) string {
 // SessionRelease Write couchbase session with Gob string
 func (cs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
 	defer cs.b.Close()
-	cs.lock.Lock()
+	cs.lock.RLock()
 	bo, err := session.EncodeGob(cs.values)
-	cs.lock.Unlock()
+	cs.lock.RUnlock()
 	if err != nil {
 		return
 	}

@@ -69,9 +69,9 @@ func (ls *SessionStore) SessionID(context.Context) string {
 
 // SessionRelease save session values to ledis
 func (ls *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
-	ls.lock.Lock()
+	ls.lock.RLock()
 	b, err := session.EncodeGob(ls.values)
-	ls.lock.Unlock()
+	ls.lock.RUnlock()
 	if err != nil {
 		return
 	}

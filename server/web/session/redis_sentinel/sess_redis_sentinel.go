@@ -103,9 +103,9 @@ func (rs *SessionStore) SessionID(context.Context) string {
 
 // SessionRelease save session values to redis_sentinel
 func (rs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
-	rs.lock.Lock()
+	rs.lock.RLock()
 	b, err := session.EncodeGob(rs.values)
-	rs.lock.Unlock()
+	rs.lock.RUnlock()
 	if err != nil {
 		return
 	}
