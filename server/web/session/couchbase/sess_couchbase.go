@@ -107,8 +107,9 @@ func (cs *SessionStore) SessionID(context.Context) string {
 func (cs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
 	defer cs.b.Close()
 	cs.lock.RLock()
-	bo, err := session.EncodeGob(cs.values)
+	values := cs.values
 	cs.lock.RUnlock()
+	bo, err := session.EncodeGob(values)
 	if err != nil {
 		return
 	}

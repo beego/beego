@@ -76,8 +76,10 @@ func (st *CookieSessionStore) SessionID(context.Context) string {
 // SessionRelease Write cookie session to http response cookie
 func (st *CookieSessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
 	st.lock.RLock()
-	encodedCookie, err := encodeCookie(cookiepder.block, cookiepder.config.SecurityKey, cookiepder.config.SecurityName, st.values)
+	values := st.values
 	st.lock.RUnlock()
+	encodedCookie, err := encodeCookie(
+		cookiepder.block, cookiepder.config.SecurityKey, cookiepder.config.SecurityName, values)
 	if err == nil {
 		cookie := &http.Cookie{
 			Name:     cookiepder.config.CookieName,

@@ -102,8 +102,9 @@ func (rs *SessionStore) SessionID(context.Context) string {
 // SessionRelease save session values to redis
 func (rs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
 	rs.lock.RLock()
-	b, err := session.EncodeGob(rs.values)
+	values := rs.values
 	rs.lock.RUnlock()
+	b, err := session.EncodeGob(values)
 	if err != nil {
 		return
 	}
