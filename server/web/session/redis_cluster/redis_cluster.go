@@ -20,15 +20,16 @@
 //
 // Usage:
 // import(
-//   _ "github.com/beego/beego/v2/server/web/session/redis_cluster"
-//   "github.com/beego/beego/v2/server/web/session"
+//
+//	_ "github.com/beego/beego/v2/server/web/session/redis_cluster"
+//	"github.com/beego/beego/v2/server/web/session"
+//
 // )
 //
 //	func init() {
 //		globalSessions, _ = session.NewManager("redis_cluster", ``{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig":"127.0.0.1:7070;127.0.0.1:7071"}``)
 //		go globalSessions.GC()
 //	}
-//
 package redis_cluster
 
 import (
@@ -100,7 +101,10 @@ func (rs *SessionStore) SessionID(context.Context) string {
 
 // SessionRelease save session values to redis_cluster
 func (rs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
-	b, err := session.EncodeGob(rs.values)
+	rs.lock.RLock()
+	values := rs.values
+	rs.lock.RUnlock()
+	b, err := session.EncodeGob(values)
 	if err != nil {
 		return
 	}
