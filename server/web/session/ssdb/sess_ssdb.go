@@ -205,7 +205,10 @@ func (s *SessionStore) SessionID(context.Context) string {
 
 // SessionRelease Store the keyvalues into ssdb
 func (s *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
-	b, err := session.EncodeGob(s.values)
+	s.lock.RLock()
+	values := s.values
+	s.lock.RUnlock()
+	b, err := session.EncodeGob(values)
 	if err != nil {
 		return
 	}

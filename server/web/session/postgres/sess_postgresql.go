@@ -18,7 +18,6 @@
 //
 // go install github.com/lib/pq
 //
-//
 // needs this table in your database:
 //
 // CREATE TABLE session (
@@ -35,18 +34,18 @@
 // SessionSavePath = "user=a password=b dbname=c sslmode=disable"
 // SessionName = session
 //
-//
 // Usage:
 // import(
-//   _ "github.com/beego/beego/v2/server/web/session/postgresql"
-//   "github.com/beego/beego/v2/server/web/session"
+//
+//	_ "github.com/beego/beego/v2/server/web/session/postgresql"
+//	"github.com/beego/beego/v2/server/web/session"
+//
 // )
 //
 //	func init() {
 //		globalSessions, _ = session.NewManager("postgresql", ``{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig":"user=pqgotest dbname=pqgotest sslmode=verify-full"}``)
 //		go globalSessions.GC()
 //	}
-//
 package postgres
 
 import (
@@ -115,7 +114,10 @@ func (st *SessionStore) SessionID(context.Context) string {
 // must call this method to save values to database.
 func (st *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
 	defer st.c.Close()
-	b, err := session.EncodeGob(st.values)
+	st.lock.RLock()
+	values := st.values
+	st.lock.RUnlock()
+	b, err := session.EncodeGob(values)
 	if err != nil {
 		return
 	}
