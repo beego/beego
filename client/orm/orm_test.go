@@ -2277,7 +2277,7 @@ func TestTxOrmRollbackUnlessCommit(t *testing.T) {
 	o := NewOrm()
 	var tag Tag
 
-	// test not commited and call RollbackUnlessCommit
+	// test not committed and call RollbackUnlessCommit
 	to, err := o.Begin()
 	assert.Nil(t, err)
 	tag.Name = "rollback unless commit"
