@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/beego/x2j v0.0.0-20131220205130-a0352aadc542
-	github.com/bits-and-blooms/bloom/v3 v3.3.1
+	github.com/bits-and-blooms/bloom/v3 v3.4.0
 	github.com/bradfitz/gomemcache v0.0.0-20190913173617-a41fca850d0b
 	github.com/casbin/casbin v1.9.1
 	github.com/cloudflare/golz4 v0.0.0-20150217214814-ef862a3cdc58
