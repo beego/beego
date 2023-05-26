@@ -16,6 +16,7 @@ package cache
 
 import (
 	"context"
+	"fmt"
 	"math/rand"
 	"strings"
 	"testing"
@@ -86,14 +87,42 @@ func TestRandomExpireCache(t *testing.T) {
 	assert.True(t, strings.Contains(err.Error(), "key isn't exist"))
 }
 
-func TestWithOffsetFunc(t *testing.T) {
+func TestWithRandomExpireOffsetFunc(t *testing.T) {
 	bm, err := NewCache("memory", `{"interval":20}`)
 	assert.Nil(t, err)
 
 	magic := -time.Duration(rand.Int())
-	cache := NewRandomExpireCache(bm, WithOffsetFunc(func() time.Duration {
+	cache := NewRandomExpireCache(bm, WithRandomExpireOffsetFunc(func() time.Duration {
 		return magic
 	}))
 	// offset should return the magic value
 	assert.Equal(t, magic, cache.(*RandomExpireCache).offset())
+}
+
+func ExampleNewRandomExpireCache() {
+	mc := NewMemoryCache()
+	// use the default strategy which will generate random time offset (range: [3s,8s)) expired
+	c := NewRandomExpireCache(mc)
+	// so the expiration will be [1m3s, 1m8s)
+	err := c.Put(context.Background(), "hello", "world", time.Minute)
+	if err != nil {
+		panic(err)
+	}
+
+	c = NewRandomExpireCache(mc,
+		// based on the expiration
+		WithRandomExpireOffsetFunc(func() time.Duration {
+			val := rand.Int31n(100)
+			fmt.Printf("calculate offset")
+			return time.Duration(val) * time.Second
+		}))
+
+	// so the expiration will be [1m0s, 1m100s)
+	err = c.Put(context.Background(), "hello", "world", time.Minute)
+	if err != nil {
+		panic(err)
+	}
+
+	// Output:
+	// calculate offset
 }
