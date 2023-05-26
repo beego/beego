@@ -17,6 +17,7 @@ package cache
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -142,4 +143,29 @@ func (m *MockOrm) Load(key string) (any, error) {
 		return nil, errors.New("the key not exist")
 	}
 	return m.kvs[key], nil
+}
+
+func ExampleNewReadThroughCache() {
+	c := NewMemoryCache()
+	var err error
+	c, err = NewReadThroughCache(c,
+		// expiration, same as the expiration of key
+		time.Minute,
+		// load func, how to load data if the key is absent.
+		// in general, you should load data from database.
+		func(ctx context.Context, key string) (any, error) {
+			return fmt.Sprintf("hello, %s", key), nil
+		})
+	if err != nil {
+		panic(err)
+	}
+
+	val, err := c.Get(context.Background(), "Beego")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Print(val)
+
+	// Output:
+	// hello, Beego
 }
