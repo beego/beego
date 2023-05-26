@@ -60,7 +60,7 @@ func TestWriteThoughCache_Set(t *testing.T) {
 	}
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
-			w, err := NewWriteThoughCache(tt.cache, tt.storeFunc)
+			w, err := NewWriteThroughCache(tt.cache, tt.storeFunc)
 			if err != nil {
 				assert.EqualError(t, tt.wantErr, err.Error())
 				return
@@ -94,7 +94,7 @@ func TestNewWriteThoughCache(t *testing.T) {
 	tests := []struct {
 		name    string
 		args    args
-		wantRes *WriteThoughCache
+		wantRes *WriteThroughCache
 		wantErr error
 	}{
 		{
@@ -119,7 +119,7 @@ func TestNewWriteThoughCache(t *testing.T) {
 				cache: underlyingCache,
 				fn:    storeFunc,
 			},
-			wantRes: &WriteThoughCache{
+			wantRes: &WriteThroughCache{
 				Cache:     underlyingCache,
 				storeFunc: storeFunc,
 			},
@@ -127,11 +127,29 @@ func TestNewWriteThoughCache(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := NewWriteThoughCache(tt.args.cache, tt.args.fn)
+			_, err := NewWriteThroughCache(tt.args.cache, tt.args.fn)
 			assert.Equal(t, tt.wantErr, err)
 			if err != nil {
 				return
 			}
 		})
 	}
+}
+
+func ExampleNewWriteThroughCache() {
+	c := NewMemoryCache()
+	wtc, err := NewWriteThroughCache(c, func(ctx context.Context, key string, val any) error {
+		fmt.Printf("write data to somewhere key %s, val %v \n", key, val)
+		return nil
+	})
+	if err != nil {
+		panic(err)
+	}
+	err = wtc.Set(context.Background(),
+		"/biz/user/id=1", "I am user 1", time.Minute)
+	if err != nil {
+		panic(err)
+	}
+	// Output:
+	// write data to somewhere key /biz/user/id=1, val I am user 1
 }

@@ -24,7 +24,7 @@ import (
 
 type BloomFilterCache struct {
 	Cache
-	BloomFilter
+	blm        BloomFilter
 	loadFunc   func(ctx context.Context, key string) (any, error)
 	expiration time.Duration // set cache expiration, default never expire
 }
@@ -34,7 +34,7 @@ type BloomFilter interface {
 	Add(data string)
 }
 
-func NewBloomFilterCache(cache Cache, ln func(context.Context, string) (any, error), blm BloomFilter,
+func NewBloomFilterCache(cache Cache, ln func(ctx context.Context, key string) (any, error), blm BloomFilter,
 	expiration time.Duration,
 ) (*BloomFilterCache, error) {
 	if cache == nil || ln == nil || blm == nil {
@@ -42,10 +42,10 @@ func NewBloomFilterCache(cache Cache, ln func(context.Context, string) (any, err
 	}
 
 	return &BloomFilterCache{
-		Cache:       cache,
-		BloomFilter: blm,
-		loadFunc:    ln,
-		expiration:  expiration,
+		Cache:      cache,
+		blm:        blm,
+		loadFunc:   ln,
+		expiration: expiration,
 	}, nil
 }
 
@@ -55,7 +55,7 @@ func (bfc *BloomFilterCache) Get(ctx context.Context, key string) (any, error) {
 		return nil, err
 	}
 	if errors.Is(err, ErrKeyNotExist) {
-		exist := bfc.BloomFilter.Test(key)
+		exist := bfc.blm.Test(key)
 		if exist {
 			val, err = bfc.loadFunc(ctx, key)
 			if err != nil {
