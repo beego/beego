@@ -13,6 +13,7 @@
 - [Fix 5079: Split signalChan into flushChan and closeChan](https://github.com/beego/beego/pull/5139)
 - [Fix 5172: protect field access with lock to avoid possible data race](https://github.com/beego/beego/pull/5210)
 - [cache: fix typo and optimize the naming]()
+- [Fix 5176: beegoAppConfig String and Strings function has bug](https://github.com/beego/beego/pull/5211)
 
 # v2.0.7
 - [Upgrade github.com/go-kit/kit, CVE-2022-24450](https://github.com/beego/beego/pull/5121)
