@@ -1,4 +1,6 @@
 # developing
+
+# v2.1.0
 - [unified gopkg.in/yaml version to v2](https://github.com/beego/beego/pull/5169)
 - [add non-block write log in asynchronous mode](https://github.com/beego/beego/pull/5150)
 - [Fix 5126: support bloom filter cache](https://github.com/beego/beego/pull/5126)
