@@ -1,4 +1,5 @@
 # developing
+- [httplib: fix unstable unit test which use the httplib.org](https://github.com/beego/beego/pull/5232)
 
 # v2.1.0
 - [unified gopkg.in/yaml version to v2](https://github.com/beego/beego/pull/5169)

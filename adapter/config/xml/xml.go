@@ -19,13 +19,13 @@
 // go install github.com/beego/x2j.
 //
 // Usage:
-//  import(
-//    _ "github.com/beego/beego/v2/core/config/xml"
-//      "github.com/beego/beego/v2/core/config"
-//  )
 //
-//  cnf, err := config.NewConfig("xml", "config.xml")
+//	import(
+//	  _ "github.com/beego/beego/v2/core/config/xml"
+//	    "github.com/beego/beego/v2/core/config"
+//	)
 //
+//	cnf, err := config.NewConfig("xml", "config.xml")
 package xml
 
 import (

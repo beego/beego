@@ -42,7 +42,6 @@
 //			log.Println(v.Error.Key, v.Error.Message)
 //		}
 //	}
-//
 package validation
 
 import (

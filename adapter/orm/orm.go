@@ -50,7 +50,6 @@
 //		// delete
 //		num, err = o.Delete(&u)
 //	}
-//
 package orm
 
 import (
@@ -170,8 +169,9 @@ func (o *ormer) QueryM2M(md interface{}, name string) QueryM2Mer {
 // args are limit, offset int and order string.
 //
 // example:
-// 	orm.LoadRelated(post,"Tags")
-// 	for _,tag := range post.Tags{...}
+//
+//	orm.LoadRelated(post,"Tags")
+//	for _,tag := range post.Tags{...}
 //
 // make sure the relation is defined in model struct tags.
 func (o *ormer) LoadRelated(md interface{}, name string, args ...interface{}) (int64, error) {

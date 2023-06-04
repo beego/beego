@@ -50,7 +50,6 @@
 //		// delete
 //		num, err = o.Delete(&u)
 //	}
-//
 package orm
 
 import (
@@ -324,8 +323,9 @@ func (o *ormBase) QueryM2MWithCtx(_ context.Context, md interface{}, name string
 // args are limit, offset int and order string.
 //
 // example:
-// 	orm.LoadRelated(post,"Tags")
-// 	for _,tag := range post.Tags{...}
+//
+//	orm.LoadRelated(post,"Tags")
+//	for _,tag := range post.Tags{...}
 //
 // make sure the relation is defined in model struct tags.
 func (o *ormBase) LoadRelated(md interface{}, name string, args ...utils.KV) (int64, error) {

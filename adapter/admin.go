@@ -24,7 +24,8 @@ import (
 // FilterMonitorFunc is default monitor filter when admin module is enable.
 // if this func returns, admin module records qps for this request by condition of this function logic.
 // usage:
-// 	func MyFilterMonitor(method, requestPath string, t time.Duration, pattern string, statusCode int) bool {
+//
+//	func MyFilterMonitor(method, requestPath string, t time.Duration, pattern string, statusCode int) bool {
 //	 	if method == "POST" {
 //			return false
 //	 	}
@@ -35,8 +36,8 @@ import (
 //			return false
 //	 	}
 //	 	return true
-// 	}
-// 	beego.FilterMonitorFunc = MyFilterMonitor.
+//	}
+//	beego.FilterMonitorFunc = MyFilterMonitor.
 var FilterMonitorFunc func(string, string, time.Duration, string, int) bool
 
 // PrintTree prints all registered routers.

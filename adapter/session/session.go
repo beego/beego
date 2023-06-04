@@ -16,14 +16,15 @@
 //
 // Usage:
 // import(
-//   "github.com/beego/beego/v2/server/web/session"
+//
+//	"github.com/beego/beego/v2/server/web/session"
+//
 // )
 //
-//	func init() {
-//      globalSessions, _ = session.NewManager("memory", `{"cookieName":"gosessionid", "enableSetCookie,omitempty": true, "gclifetime":3600, "maxLifetime": 3600, "secure": false, "cookieLifeTime": 3600, "providerConfig": ""}`)
-//		go globalSessions.GC()
-//	}
-//
+//		func init() {
+//	     globalSessions, _ = session.NewManager("memory", `{"cookieName":"gosessionid", "enableSetCookie,omitempty": true, "gclifetime":3600, "maxLifetime": 3600, "secure": false, "cookieLifeTime": 3600, "providerConfig": ""}`)
+//			go globalSessions.GC()
+//		}
 package session
 
 import (

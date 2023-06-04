@@ -15,6 +15,8 @@ Beego is composed of four parts:
 
 **Please use RELEASE version, or master branch which contains the latest bug fix**
 
+**We will remove the adapter package in v2.2.0 which will be released in Aug 2023**
+
 ## Quick Start
 
 [Old Doc - github](https://github.com/beego/beedoc)

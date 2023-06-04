@@ -34,13 +34,15 @@ type CustomFunc func(v *Validation, obj interface{}, key string)
 
 // AddCustomFunc Add a custom function to validation
 // The name can not be:
-//   Clear
-//   HasErrors
-//   ErrorMap
-//   Error
-//   Check
-//   Valid
-//   NoMatch
+//
+//	Clear
+//	HasErrors
+//	ErrorMap
+//	Error
+//	Check
+//	Valid
+//	NoMatch
+//
 // If the name is same with exists function, it will replace the origin valid function
 func AddCustomFunc(name string, f CustomFunc) error {
 	return validation.AddCustomFunc(name, func(v *validation.Validation, obj interface{}, key string) {

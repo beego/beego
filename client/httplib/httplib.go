@@ -27,7 +27,6 @@
 //		t.Fatal(err)
 //	}
 //	fmt.Println(str)
-//
 package httplib
 
 import (
@@ -225,9 +224,9 @@ func (b *BeegoHTTPRequest) SetTransport(transport http.RoundTripper) *BeegoHTTPR
 // example:
 //
 //	func(req *http.Request) (*url.URL, error) {
-// 		u, _ := url.ParseRequestURI("http://127.0.0.1:8118")
-// 		return u, nil
-// 	}
+//		u, _ := url.ParseRequestURI("http://127.0.0.1:8118")
+//		return u, nil
+//	}
 func (b *BeegoHTTPRequest) SetProxy(proxy func(*http.Request) (*url.URL, error)) *BeegoHTTPRequest {
 	b.setting.Proxy = proxy
 	return b
@@ -592,10 +591,10 @@ func (b *BeegoHTTPRequest) Bytes() ([]byte, error) {
 		if err != nil {
 			return nil, berror.Wrap(err, ReadGzipBodyFailed, "building gzip reader failed")
 		}
-		b.body, err = ioutil.ReadAll(reader)
+		b.body, err = io.ReadAll(reader)
 		return b.body, berror.Wrap(err, ReadGzipBodyFailed, "reading gzip data failed")
 	}
-	b.body, err = ioutil.ReadAll(resp.Body)
+	b.body, err = io.ReadAll(resp.Body)
 	return b.body, err
 }
 
