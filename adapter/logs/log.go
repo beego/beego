@@ -29,7 +29,6 @@
 //	log.Warn("warning")
 //	log.Debug("debug")
 //	log.Critical("critical")
-//
 package logs
 
 import (

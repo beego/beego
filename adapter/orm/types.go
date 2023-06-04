@@ -145,6 +145,7 @@ type RawPreparer orm.RawPreparer
 // RawSeter raw query seter
 // create From Ormer.Raw
 // for example:
-//  sql := fmt.Sprintf("SELECT %sid%s,%sname%s FROM %suser%s WHERE id = ?",Q,Q,Q,Q,Q,Q)
-//  rs := Ormer.Raw(sql, 1)
+//
+//	sql := fmt.Sprintf("SELECT %sid%s,%sname%s FROM %suser%s WHERE id = ?",Q,Q,Q,Q,Q,Q)
+//	rs := Ormer.Raw(sql, 1)
 type RawSeter orm.RawSeter

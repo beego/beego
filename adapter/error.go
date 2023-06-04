@@ -182,7 +182,8 @@ var ErrorMaps = web.ErrorMaps
 
 // ErrorHandler registers http.HandlerFunc to each http err code string.
 // usage:
-// 	beego.ErrorHandler("404",NotFound)
+//
+//	beego.ErrorHandler("404",NotFound)
 //	beego.ErrorHandler("500",InternalServerError)
 func ErrorHandler(code string, h http.HandlerFunc) *App {
 	return (*App)(web.ErrorHandler(code, h))
@@ -190,7 +191,8 @@ func ErrorHandler(code string, h http.HandlerFunc) *App {
 
 // ErrorController registers ControllerInterface to each http err code string.
 // usage:
-// 	beego.ErrorController(&controllers.ErrorController{})
+//
+//	beego.ErrorController(&controllers.ErrorController{})
 func ErrorController(c ControllerInterface) *App {
 	return (*App)(web.ErrorController(c))
 }

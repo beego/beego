@@ -27,12 +27,14 @@ import (
 // TableNaming is usually used by model
 // when you custom your table name, please implement this interfaces
 // for example:
-// type User struct {
-//   ...
-// }
-// func (u *User) TableName() string {
-//    return "USER_TABLE"
-// }
+//
+//	type User struct {
+//	  ...
+//	}
+//
+//	func (u *User) TableName() string {
+//	   return "USER_TABLE"
+//	}
 type TableNameI interface {
 	TableName() string
 }
@@ -40,12 +42,14 @@ type TableNameI interface {
 // TableEngineI is usually used by model
 // when you want to use specific engine, like myisam, you can implement this interface
 // for example:
-// type User struct {
-//   ...
-// }
-// func (u *User) TableEngine() string {
-//    return "myisam"
-// }
+//
+//	type User struct {
+//	  ...
+//	}
+//
+//	func (u *User) TableEngine() string {
+//	   return "myisam"
+//	}
 type TableEngineI interface {
 	TableEngine() string
 }
@@ -53,12 +57,14 @@ type TableEngineI interface {
 // TableIndexI is usually used by model
 // when you want to create indexes, you can implement this interface
 // for example:
-// type User struct {
-//   ...
-// }
-// func (u *User) TableIndex() [][]string {
-//    return [][]string{{"Name"}}
-// }
+//
+//	type User struct {
+//	  ...
+//	}
+//
+//	func (u *User) TableIndex() [][]string {
+//	   return [][]string{{"Name"}}
+//	}
 type TableIndexI interface {
 	TableIndex() [][]string
 }
@@ -66,12 +72,14 @@ type TableIndexI interface {
 // TableUniqueI is usually used by model
 // when you want to create unique indexes, you can implement this interface
 // for example:
-// type User struct {
-//   ...
-// }
-// func (u *User) TableUnique() [][]string {
-//    return [][]string{{"Email"}}
-// }
+//
+//	type User struct {
+//	  ...
+//	}
+//
+//	func (u *User) TableUnique() [][]string {
+//	   return [][]string{{"Email"}}
+//	}
 type TableUniqueI interface {
 	TableUnique() [][]string
 }
@@ -526,8 +534,9 @@ type RawPreparer interface {
 // RawSeter raw query seter
 // create From Ormer.Raw
 // for example:
-//  sql := fmt.Sprintf("SELECT %sid%s,%sname%s FROM %suser%s WHERE id = ?",Q,Q,Q,Q,Q,Q)
-//  rs := Ormer.Raw(sql, 1)
+//
+//	sql := fmt.Sprintf("SELECT %sid%s,%sname%s FROM %suser%s WHERE id = ?",Q,Q,Q,Q,Q,Q)
+//	rs := Ormer.Raw(sql, 1)
 type RawSeter interface {
 	// execute sql and get result
 	Exec() (sql.Result, error)

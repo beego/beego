@@ -141,11 +141,16 @@ func (t *Task) GetPrev() time.Time {
 //       week：0-6（0 means Sunday）
 
 // SetCron some signals：
-//       *： any time
-//       ,：　 separate signal
+//
+//	*： any time
+//	,：　 separate signal
+//
 // 　　    －：duration
-//       /n : do as n times of time duration
+//
+//	/n : do as n times of time duration
+//
 // ///////////////////////////////////////////////////////
+//
 //	0/30 * * * * *                        every 30s
 //	0 43 21 * * *                         21:43
 //	0 15 05 * * * 　　                     05:15

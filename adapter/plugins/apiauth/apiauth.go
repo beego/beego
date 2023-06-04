@@ -15,6 +15,7 @@
 // Package apiauth provides handlers to enable apiauth support.
 //
 // Simple Usage:
+//
 //	import(
 //		"github.com/beego/beego/v2"
 //		"github.com/beego/beego/v2/server/web/filter/apiauth"
@@ -37,11 +38,11 @@
 //
 // Information:
 //
-// In the request user should include these params in the query
+// # In the request user should include these params in the query
 //
 // 1. appid
 //
-//		 appid is assigned to the application
+//	appid is assigned to the application
 //
 // 2. signature
 //
@@ -51,8 +52,7 @@
 //
 // 3. timestamp:
 //
-//       send the request time, the format is yyyy-mm-dd HH:ii:ss
-//
+//	send the request time, the format is yyyy-mm-dd HH:ii:ss
 package apiauth
 
 import (

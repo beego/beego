@@ -30,9 +30,10 @@ type queryM2M struct {
 
 // add models to origin models when creating queryM2M.
 // example:
-// 	m2m := orm.QueryM2M(post,"Tag")
-// 	m2m.Add(&Tag1{},&Tag2{})
-//  for _,tag := range post.Tags{}
+//
+//		m2m := orm.QueryM2M(post,"Tag")
+//		m2m.Add(&Tag1{},&Tag2{})
+//	 for _,tag := range post.Tags{}
 //
 // make sure the relation is defined in post model struct tag.
 func (o *queryM2M) Add(mds ...interface{}) (int64, error) {

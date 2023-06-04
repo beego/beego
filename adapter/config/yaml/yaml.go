@@ -19,13 +19,13 @@
 // go install github.com/beego/goyaml2
 //
 // Usage:
-//  import(
-//   _ "github.com/beego/beego/v2/core/config/yaml"
-//     "github.com/beego/beego/v2/core/config"
-//  )
 //
-//  cnf, err := config.NewConfig("yaml", "config.yaml")
+//	import(
+//	 _ "github.com/beego/beego/v2/core/config/yaml"
+//	   "github.com/beego/beego/v2/core/config"
+//	)
 //
+//	cnf, err := config.NewConfig("yaml", "config.yaml")
 package yaml
 
 import (

@@ -43,9 +43,10 @@ const (
 )
 
 // ColValue do the field raw changes. e.g Nums = Nums + 10. usage:
-// 	Params{
-// 		"Nums": ColValue(Col_Add, 10),
-// 	}
+//
+//	Params{
+//		"Nums": ColValue(Col_Add, 10),
+//	}
 func ColValue(opt operator, value interface{}) interface{} {
 	switch opt {
 	case ColAdd, ColMinus, ColMultiply, ColExcept, ColBitAnd, ColBitRShift,
@@ -260,8 +261,9 @@ func (o *querySet) DeleteWithCtx(ctx context.Context) (int64, error) {
 // return an insert queryer.
 // it can be used in times.
 // example:
-// 	i,err := sq.PrepareInsert()
-// 	i.Add(&user1{},&user2{})
+//
+//	i,err := sq.PrepareInsert()
+//	i.Add(&user1{},&user2{})
 func (o *querySet) PrepareInsert() (Inserter, error) {
 	return o.PrepareInsertWithCtx(context.Background())
 }
@@ -339,10 +341,11 @@ func (o *querySet) ValuesFlatWithCtx(ctx context.Context, result *ParamsList, ex
 // name  | value
 // total | 100
 // found | 200
-// to map[string]interface{}{
-// 	"total": 100,
-// 	"found": 200,
-// }
+//
+//	to map[string]interface{}{
+//		"total": 100,
+//		"found": 200,
+//	}
 func (o *querySet) RowsToMap(result *Params, keyCol, valueCol string) (int64, error) {
 	panic(ErrNotImplement)
 }
@@ -353,10 +356,11 @@ func (o *querySet) RowsToMap(result *Params, keyCol, valueCol string) (int64, er
 // name  | value
 // total | 100
 // found | 200
-// to struct {
-// 	Total int
-// 	Found int
-// }
+//
+//	to struct {
+//		Total int
+//		Found int
+//	}
 func (o *querySet) RowsToStruct(ptrStruct interface{}, keyCol, valueCol string) (int64, error) {
 	panic(ErrNotImplement)
 }

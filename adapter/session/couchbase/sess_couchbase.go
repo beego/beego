@@ -20,15 +20,16 @@
 //
 // Usage:
 // import(
-//   _ "github.com/beego/beego/v2/server/web/session/couchbase"
-//   "github.com/beego/beego/v2/server/web/session"
+//
+//	_ "github.com/beego/beego/v2/server/web/session/couchbase"
+//	"github.com/beego/beego/v2/server/web/session"
+//
 // )
 //
 //	func init() {
 //		globalSessions, _ = session.NewManager("couchbase", ``{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig":"http://host:port/, Pool, Bucket"}``)
 //		go globalSessions.GC()
 //	}
-//
 package couchbase
 
 import (

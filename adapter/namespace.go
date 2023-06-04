@@ -50,12 +50,14 @@ func oldToNewLinkNs(params []LinkNamespace) []web.LinkNamespace {
 // Cond set condition function
 // if cond return true can run this namespace, else can't
 // usage:
-// ns.Cond(func (ctx *context.Context) bool{
-//       if ctx.Input.Domain() == "api.beego.vip" {
-//         return true
-//       }
-//       return false
-//   })
+//
+//	ns.Cond(func (ctx *context.Context) bool{
+//	      if ctx.Input.Domain() == "api.beego.vip" {
+//	        return true
+//	      }
+//	      return false
+//	  })
+//
 // Cond as the first filter
 func (n *Namespace) Cond(cond namespaceCond) *Namespace {
 	(*web.Namespace)(n).Cond(func(context *context.Context) bool {
@@ -68,12 +70,13 @@ func (n *Namespace) Cond(cond namespaceCond) *Namespace {
 // action has before & after
 // FilterFunc
 // usage:
-// Filter("before", func (ctx *context.Context){
-//       _, ok := ctx.Input.Session("uid").(int)
-//       if !ok && ctx.Request.RequestURI != "/login" {
-//          ctx.Redirect(302, "/login")
-//        }
-//   })
+//
+//	Filter("before", func (ctx *context.Context){
+//	      _, ok := ctx.Input.Session("uid").(int)
+//	      if !ok && ctx.Request.RequestURI != "/login" {
+//	         ctx.Redirect(302, "/login")
+//	       }
+//	  })
 func (n *Namespace) Filter(action string, filter ...FilterFunc) *Namespace {
 	nfs := oldToNewFilter(filter)
 	(*web.Namespace)(n).Filter(action, nfs...)
@@ -203,18 +206,20 @@ func (n *Namespace) Include(cList ...ControllerInterface) *Namespace {
 // usage:
 // ns := beego.NewNamespace(“/v1”).
 // Namespace(
-//    beego.NewNamespace("/shop").
-//        Get("/:id", func(ctx *context.Context) {
-//            ctx.Output.Body([]byte("shopinfo"))
-//    }),
-//    beego.NewNamespace("/order").
-//        Get("/:id", func(ctx *context.Context) {
-//            ctx.Output.Body([]byte("orderinfo"))
-//    }),
-//    beego.NewNamespace("/crm").
-//        Get("/:id", func(ctx *context.Context) {
-//            ctx.Output.Body([]byte("crminfo"))
-//    }),
+//
+//	beego.NewNamespace("/shop").
+//	    Get("/:id", func(ctx *context.Context) {
+//	        ctx.Output.Body([]byte("shopinfo"))
+//	}),
+//	beego.NewNamespace("/order").
+//	    Get("/:id", func(ctx *context.Context) {
+//	        ctx.Output.Body([]byte("orderinfo"))
+//	}),
+//	beego.NewNamespace("/crm").
+//	    Get("/:id", func(ctx *context.Context) {
+//	        ctx.Output.Body([]byte("crminfo"))
+//	}),
+//
 // )
 func (n *Namespace) Namespace(ns ...*Namespace) *Namespace {
 	nns := oldToNewNs(ns)

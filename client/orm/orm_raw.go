@@ -874,10 +874,11 @@ func (o *rawSet) ValuesFlat(container *ParamsList, cols ...string) (int64, error
 // name  | value
 // total | 100
 // found | 200
-// to map[string]interface{}{
-// 	"total": 100,
-// 	"found": 200,
-// }
+//
+//	to map[string]interface{}{
+//		"total": 100,
+//		"found": 200,
+//	}
 func (o *rawSet) RowsToMap(result *Params, keyCol, valueCol string) (int64, error) {
 	return o.queryRowsTo(result, keyCol, valueCol)
 }
@@ -888,10 +889,11 @@ func (o *rawSet) RowsToMap(result *Params, keyCol, valueCol string) (int64, erro
 // name  | value
 // total | 100
 // found | 200
-// to struct {
-// 	Total int
-// 	Found int
-// }
+//
+//	to struct {
+//		Total int
+//		Found int
+//	}
 func (o *rawSet) RowsToStruct(ptrStruct interface{}, keyCol, valueCol string) (int64, error) {
 	return o.queryRowsTo(ptrStruct, keyCol, valueCol)
 }

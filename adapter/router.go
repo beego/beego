@@ -77,6 +77,7 @@ func NewControllerRegister() *ControllerRegister {
 
 // Add controller handler and pattern rules to ControllerRegister.
 // usage:
+//
 //	default methods is the same name as method
 //	Add("/user",&UserController{})
 //	Add("/api/list",&RestController{},"*:ListFood")
@@ -99,9 +100,10 @@ func (p *ControllerRegister) Include(cList ...ControllerInterface) {
 // GetContext returns a context from pool, so usually you should remember to call Reset function to clean the context
 // And don't forget to give back context to pool
 // example:
-//  ctx := p.GetContext()
-//  ctx.Reset(w, q)
-//  defer p.GiveBackContext(ctx)
+//
+//	ctx := p.GetContext()
+//	ctx.Reset(w, q)
+//	defer p.GiveBackContext(ctx)
 func (p *ControllerRegister) GetContext() *beecontext.Context {
 	return (*beecontext.Context)((*web.ControllerRegister)(p).GetContext())
 }
@@ -113,9 +115,10 @@ func (p *ControllerRegister) GiveBackContext(ctx *beecontext.Context) {
 
 // Get add get method
 // usage:
-//    Get("/", func(ctx *context.Context){
-//          ctx.Output.Body("hello world")
-//    })
+//
+//	Get("/", func(ctx *context.Context){
+//	      ctx.Output.Body("hello world")
+//	})
 func (p *ControllerRegister) Get(pattern string, f FilterFunc) {
 	(*web.ControllerRegister)(p).Get(pattern, func(ctx *context.Context) {
 		f((*beecontext.Context)(ctx))
@@ -124,9 +127,10 @@ func (p *ControllerRegister) Get(pattern string, f FilterFunc) {
 
 // Post add post method
 // usage:
-//    Post("/api", func(ctx *context.Context){
-//          ctx.Output.Body("hello world")
-//    })
+//
+//	Post("/api", func(ctx *context.Context){
+//	      ctx.Output.Body("hello world")
+//	})
 func (p *ControllerRegister) Post(pattern string, f FilterFunc) {
 	(*web.ControllerRegister)(p).Post(pattern, func(ctx *context.Context) {
 		f((*beecontext.Context)(ctx))
@@ -135,9 +139,10 @@ func (p *ControllerRegister) Post(pattern string, f FilterFunc) {
 
 // Put add put method
 // usage:
-//    Put("/api/:id", func(ctx *context.Context){
-//          ctx.Output.Body("hello world")
-//    })
+//
+//	Put("/api/:id", func(ctx *context.Context){
+//	      ctx.Output.Body("hello world")
+//	})
 func (p *ControllerRegister) Put(pattern string, f FilterFunc) {
 	(*web.ControllerRegister)(p).Put(pattern, func(ctx *context.Context) {
 		f((*beecontext.Context)(ctx))
@@ -146,9 +151,10 @@ func (p *ControllerRegister) Put(pattern string, f FilterFunc) {
 
 // Delete add delete method
 // usage:
-//    Delete("/api/:id", func(ctx *context.Context){
-//          ctx.Output.Body("hello world")
-//    })
+//
+//	Delete("/api/:id", func(ctx *context.Context){
+//	      ctx.Output.Body("hello world")
+//	})
 func (p *ControllerRegister) Delete(pattern string, f FilterFunc) {
 	(*web.ControllerRegister)(p).Delete(pattern, func(ctx *context.Context) {
 		f((*beecontext.Context)(ctx))
@@ -157,9 +163,10 @@ func (p *ControllerRegister) Delete(pattern string, f FilterFunc) {
 
 // Head add head method
 // usage:
-//    Head("/api/:id", func(ctx *context.Context){
-//          ctx.Output.Body("hello world")
-//    })
+//
+//	Head("/api/:id", func(ctx *context.Context){
+//	      ctx.Output.Body("hello world")
+//	})
 func (p *ControllerRegister) Head(pattern string, f FilterFunc) {
 	(*web.ControllerRegister)(p).Head(pattern, func(ctx *context.Context) {
 		f((*beecontext.Context)(ctx))
@@ -168,9 +175,10 @@ func (p *ControllerRegister) Head(pattern string, f FilterFunc) {
 
 // Patch add patch method
 // usage:
-//    Patch("/api/:id", func(ctx *context.Context){
-//          ctx.Output.Body("hello world")
-//    })
+//
+//	Patch("/api/:id", func(ctx *context.Context){
+//	      ctx.Output.Body("hello world")
+//	})
 func (p *ControllerRegister) Patch(pattern string, f FilterFunc) {
 	(*web.ControllerRegister)(p).Patch(pattern, func(ctx *context.Context) {
 		f((*beecontext.Context)(ctx))
@@ -179,9 +187,10 @@ func (p *ControllerRegister) Patch(pattern string, f FilterFunc) {
 
 // Options add options method
 // usage:
-//    Options("/api/:id", func(ctx *context.Context){
-//          ctx.Output.Body("hello world")
-//    })
+//
+//	Options("/api/:id", func(ctx *context.Context){
+//	      ctx.Output.Body("hello world")
+//	})
 func (p *ControllerRegister) Options(pattern string, f FilterFunc) {
 	(*web.ControllerRegister)(p).Options(pattern, func(ctx *context.Context) {
 		f((*beecontext.Context)(ctx))
@@ -190,9 +199,10 @@ func (p *ControllerRegister) Options(pattern string, f FilterFunc) {
 
 // Any add all method
 // usage:
-//    Any("/api/:id", func(ctx *context.Context){
-//          ctx.Output.Body("hello world")
-//    })
+//
+//	Any("/api/:id", func(ctx *context.Context){
+//	      ctx.Output.Body("hello world")
+//	})
 func (p *ControllerRegister) Any(pattern string, f FilterFunc) {
 	(*web.ControllerRegister)(p).Any(pattern, func(ctx *context.Context) {
 		f((*beecontext.Context)(ctx))
@@ -201,9 +211,10 @@ func (p *ControllerRegister) Any(pattern string, f FilterFunc) {
 
 // AddMethod add http method router
 // usage:
-//    AddMethod("get","/api/:id", func(ctx *context.Context){
-//          ctx.Output.Body("hello world")
-//    })
+//
+//	AddMethod("get","/api/:id", func(ctx *context.Context){
+//	      ctx.Output.Body("hello world")
+//	})
 func (p *ControllerRegister) AddMethod(method, pattern string, f FilterFunc) {
 	(*web.ControllerRegister)(p).AddMethod(method, pattern, func(ctx *context.Context) {
 		f((*beecontext.Context)(ctx))
@@ -235,8 +246,8 @@ func (p *ControllerRegister) AddAutoPrefix(prefix string, c ControllerInterface)
 
 // InsertFilter Add a FilterFunc with pattern rule and action constant.
 // params is for:
-//   1. setting the returnOnOutput value (false allows multiple filters to execute)
-//   2. determining whether or not params need to be reset.
+//  1. setting the returnOnOutput value (false allows multiple filters to execute)
+//  2. determining whether or not params need to be reset.
 func (p *ControllerRegister) InsertFilter(pattern string, pos int, filter FilterFunc, params ...bool) error {
 	opts := oldToNewFilterOpts(params)
 	return (*web.ControllerRegister)(p).InsertFilter(pattern, pos, func(ctx *context.Context) {
