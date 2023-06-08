@@ -18,6 +18,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/beego/beego/v2/client/orm/internal/models"
+
 	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
 	"github.com/beego/beego/v2/client/orm/hints"
 )
@@ -66,7 +68,7 @@ func ColValue(opt operator, value interface{}) interface{} {
 
 // real query struct
 type querySet struct {
-	mi        *modelInfo
+	mi        *models.ModelInfo
 	cond      *Condition
 	related   []string
 	relDepth  int
@@ -273,7 +275,7 @@ func (o *querySet) PrepareInsertWithCtx(ctx context.Context) (Inserter, error) {
 }
 
 // query all data and map to containers.
-// cols means the columns when querying.
+// cols means the Columns when querying.
 func (o *querySet) All(container interface{}, cols ...string) (int64, error) {
 	return o.AllWithCtx(context.Background(), container, cols...)
 }
@@ -283,7 +285,7 @@ func (o *querySet) AllWithCtx(ctx context.Context, container interface{}, cols .
 }
 
 // query one row data and map to containers.
-// cols means the columns when querying.
+// cols means the Columns when querying.
 func (o *querySet) One(container interface{}, cols ...string) error {
 	return o.OneWithCtx(context.Background(), container, cols...)
 }
@@ -366,7 +368,7 @@ func (o *querySet) RowsToStruct(ptrStruct interface{}, keyCol, valueCol string) 
 }
 
 // create new QuerySeter.
-func newQuerySet(orm *ormBase, mi *modelInfo) QuerySeter {
+func newQuerySet(orm *ormBase, mi *models.ModelInfo) QuerySeter {
 	o := new(querySet)
 	o.mi = mi
 	o.orm = orm

@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:build go1.8
-// +build go1.8
-
 package orm
 
 import (
@@ -31,6 +28,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/beego/beego/v2/client/orm/internal/models"
 
 	"github.com/stretchr/testify/assert"
 
@@ -250,14 +249,14 @@ func TestRegisterModels(_ *testing.T) {
 func TestModelSyntax(t *testing.T) {
 	user := &User{}
 	ind := reflect.ValueOf(user).Elem()
-	fn := getFullName(ind.Type())
+	fn := models.GetFullName(ind.Type())
 	_, ok := defaultModelCache.getByFullName(fn)
 	throwFail(t, AssertIs(ok, true))
 
 	mi, ok := defaultModelCache.get("user")
 	throwFail(t, AssertIs(ok, true))
 	if ok {
-		throwFail(t, AssertIs(mi.fields.GetByName("ShouldSkip") == nil, true))
+		throwFail(t, AssertIs(mi.Fields.GetByName("ShouldSkip") == nil, true))
 	}
 }
 
@@ -561,7 +560,7 @@ func TestNullDataTypes(t *testing.T) {
 	assert.True(t, (*d.DatePtr).UTC().Sub(datePtr.UTC()) <= time.Second)
 	assert.True(t, (*d.DateTimePtr).UTC().Sub(dateTimePtr.UTC()) <= time.Second)
 
-	// test support for pointer fields using RawSeter.QueryRows()
+	// test support for pointer Fields using RawSeter.QueryRows()
 	var dnList []*DataNull
 	Q := dDbBaser.TableQuote()
 	num, err = dORM.Raw(fmt.Sprintf("SELECT * FROM %sdata_null%s where id=?", Q, Q), 3).QueryRows(&dnList)
@@ -1894,7 +1893,7 @@ func TestRawQueryRow(t *testing.T) {
 	throwFail(t, AssertIs(row.Id, 4))
 	throwFail(t, AssertIs(row.EmbedField.Email, "nobody@gmail.com"))
 
-	// test for sql.Null* fields
+	// test for sql.Null* Fields
 	nData := &DataNull{
 		NullString:  sql.NullString{String: "test sql.null", Valid: true},
 		NullBool:    sql.NullBool{Bool: true, Valid: true},
@@ -2003,7 +2002,7 @@ func TestQueryRows(t *testing.T) {
 	throwFailNow(t, AssertIs(l[1].UserName, "astaxie"))
 	throwFailNow(t, AssertIs(l[1].Age, 30))
 
-	// test for sql.Null* fields
+	// test for sql.Null* Fields
 	nData := &DataNull{
 		NullString:  sql.NullString{String: "test sql.null", Valid: true},
 		NullBool:    sql.NullBool{Bool: true, Valid: true},
@@ -2616,7 +2615,7 @@ func TestSnake(t *testing.T) {
 		"tag_666Name": "tag_666_name",
 	}
 	for name, want := range cases {
-		got := snakeString(name)
+		got := models.SnakeString(name)
 		throwFail(t, AssertIs(got, want))
 	}
 }
@@ -2637,10 +2636,10 @@ func TestIgnoreCaseTag(t *testing.T) {
 	if t == nil {
 		return
 	}
-	throwFail(t, AssertIs(info.fields.GetByName("NOO").column, "n"))
-	throwFail(t, AssertIs(info.fields.GetByName("Name01").null, true))
-	throwFail(t, AssertIs(info.fields.GetByName("Name02").column, "Name"))
-	throwFail(t, AssertIs(info.fields.GetByName("Name03").column, "name"))
+	throwFail(t, AssertIs(info.Fields.GetByName("NOO").Column, "n"))
+	throwFail(t, AssertIs(info.Fields.GetByName("Name01").Null, true))
+	throwFail(t, AssertIs(info.Fields.GetByName("Name02").Column, "Name"))
+	throwFail(t, AssertIs(info.Fields.GetByName("Name03").Column, "name"))
 }
 
 func TestInsertOrUpdate(t *testing.T) {

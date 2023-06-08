@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/beego/beego/v2/client/orm/internal/models"
+
 	"github.com/beego/beego/v2/client/orm/hints"
 )
 
@@ -123,9 +125,9 @@ func (d *dbBaseOracle) GenerateSpecifyIndex(tableName string, useIndex int, inde
 	return fmt.Sprintf(` /*+ %s(%s %s)*/ `, hint, tableName, strings.Join(s, `,`))
 }
 
-// execute insert sql with given struct and given values.
+// InsertValue execute insert sql with given struct and given values.
 // insert the given values, not the field values in struct.
-func (d *dbBaseOracle) InsertValue(ctx context.Context, q dbQuerier, mi *modelInfo, isMulti bool, names []string, values []interface{}) (int64, error) {
+func (d *dbBaseOracle) InsertValue(ctx context.Context, q dbQuerier, mi *models.ModelInfo, isMulti bool, names []string, values []interface{}) (int64, error) {
 	Q := d.ins.TableQuote()
 
 	marks := make([]string, len(names))
@@ -143,7 +145,7 @@ func (d *dbBaseOracle) InsertValue(ctx context.Context, q dbQuerier, mi *modelIn
 		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
 	}
 
-	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s)", Q, mi.table, Q, Q, columns, Q, qmarks)
+	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s)", Q, mi.Table, Q, Q, columns, Q, qmarks)
 
 	d.ins.ReplaceMarks(&query)
 

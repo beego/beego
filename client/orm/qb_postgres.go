@@ -19,7 +19,7 @@ func processingStr(str []string) string {
 	return s
 }
 
-// Select will join the fields
+// Select will join the Fields
 func (qb *PostgresQueryBuilder) Select(fields ...string) QueryBuilder {
 	var str string
 	n := len(fields)
@@ -121,7 +121,7 @@ func (qb *PostgresQueryBuilder) In(vals ...string) QueryBuilder {
 	return qb
 }
 
-// OrderBy join the Order by fields
+// OrderBy join the Order by Fields
 func (qb *PostgresQueryBuilder) OrderBy(fields ...string) QueryBuilder {
 	str := processingStr(fields)
 	qb.tokens = append(qb.tokens, "ORDER BY", str)
@@ -152,7 +152,7 @@ func (qb *PostgresQueryBuilder) Offset(offset int) QueryBuilder {
 	return qb
 }
 
-// GroupBy join the Group by fields
+// GroupBy join the Group by Fields
 func (qb *PostgresQueryBuilder) GroupBy(fields ...string) QueryBuilder {
 	str := processingStr(fields)
 	qb.tokens = append(qb.tokens, "GROUP BY", str)

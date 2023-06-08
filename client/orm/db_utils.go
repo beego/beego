@@ -18,6 +18,8 @@ import (
 	"fmt"
 	"reflect"
 	"time"
+
+	"github.com/beego/beego/v2/client/orm/internal/models"
 )
 
 // get table alias.
@@ -29,32 +31,32 @@ func getDbAlias(name string) *alias {
 }
 
 // get pk column info.
-func getExistPk(mi *modelInfo, ind reflect.Value) (column string, value interface{}, exist bool) {
-	fi := mi.fields.pk
+func getExistPk(mi *models.ModelInfo, ind reflect.Value) (column string, value interface{}, exist bool) {
+	fi := mi.Fields.Pk
 
-	v := ind.FieldByIndex(fi.fieldIndex)
-	if fi.fieldType&IsPositiveIntegerField > 0 {
+	v := ind.FieldByIndex(fi.FieldIndex)
+	if fi.FieldType&IsPositiveIntegerField > 0 {
 		vu := v.Uint()
 		exist = vu > 0
 		value = vu
-	} else if fi.fieldType&IsIntegerField > 0 {
+	} else if fi.FieldType&IsIntegerField > 0 {
 		vu := v.Int()
 		exist = true
 		value = vu
-	} else if fi.fieldType&IsRelField > 0 {
-		_, value, exist = getExistPk(fi.relModelInfo, reflect.Indirect(v))
+	} else if fi.FieldType&IsRelField > 0 {
+		_, value, exist = getExistPk(fi.RelModelInfo, reflect.Indirect(v))
 	} else {
 		vu := v.String()
 		exist = vu != ""
 		value = vu
 	}
 
-	column = fi.column
+	column = fi.Column
 	return
 }
 
-// get fields description as flatted string.
-func getFlatParams(fi *fieldInfo, args []interface{}, tz *time.Location) (params []interface{}) {
+// get Fields description as flatted string.
+func getFlatParams(fi *models.FieldInfo, args []interface{}, tz *time.Location) (params []interface{}) {
 outFor:
 	for _, arg := range args {
 		if arg == nil {
@@ -74,7 +76,7 @@ outFor:
 		case reflect.String:
 			v := val.String()
 			if fi != nil {
-				if fi.fieldType == TypeTimeField || fi.fieldType == TypeDateField || fi.fieldType == TypeDateTimeField {
+				if fi.FieldType == TypeTimeField || fi.FieldType == TypeDateField || fi.FieldType == TypeDateTimeField {
 					var t time.Time
 					var err error
 					if len(v) >= 19 {
@@ -94,9 +96,9 @@ outFor:
 						t, err = time.ParseInLocation(formatTime, s, tz)
 					}
 					if err == nil {
-						if fi.fieldType == TypeDateField {
+						if fi.FieldType == TypeDateField {
 							v = t.In(tz).Format(formatDate)
-						} else if fi.fieldType == TypeDateTimeField {
+						} else if fi.FieldType == TypeDateTimeField {
 							v = t.In(tz).Format(formatDateTime)
 						} else {
 							v = t.In(tz).Format(formatTime)
@@ -143,18 +145,18 @@ outFor:
 			continue outFor
 		case reflect.Struct:
 			if v, ok := arg.(time.Time); ok {
-				if fi != nil && fi.fieldType == TypeDateField {
+				if fi != nil && fi.FieldType == TypeDateField {
 					arg = v.In(tz).Format(formatDate)
-				} else if fi != nil && fi.fieldType == TypeDateTimeField {
+				} else if fi != nil && fi.FieldType == TypeDateTimeField {
 					arg = v.In(tz).Format(formatDateTime)
-				} else if fi != nil && fi.fieldType == TypeTimeField {
+				} else if fi != nil && fi.FieldType == TypeTimeField {
 					arg = v.In(tz).Format(formatTime)
 				} else {
 					arg = v.In(tz).Format(formatDateTime)
 				}
 			} else {
 				typ := val.Type()
-				name := getFullName(typ)
+				name := models.GetFullName(typ)
 				var value interface{}
 				if mmi, ok := defaultModelCache.getByFullName(name); ok {
 					if _, vu, exist := getExistPk(mmi, val); exist {

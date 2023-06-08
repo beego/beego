@@ -19,20 +19,9 @@ import (
 	"math/big"
 	"reflect"
 	"strconv"
-	"strings"
 	"time"
-)
 
-type fn func(string) string
-
-var (
-	nameStrategyMap = map[string]fn{
-		defaultNameStrategy:      snakeString,
-		SnakeAcronymNameStrategy: snakeStringWithAcronym,
-	}
-	defaultNameStrategy      = "snakeString"
-	SnakeAcronymNameStrategy = "snakeStringWithAcronym"
-	nameStrategy             = defaultNameStrategy
+	"github.com/beego/beego/v2/client/orm/internal/models"
 )
 
 // StrTo is the target string
@@ -210,76 +199,17 @@ func ToInt64(value interface{}) (d int64) {
 	return
 }
 
-func snakeStringWithAcronym(s string) string {
-	data := make([]byte, 0, len(s)*2)
-	num := len(s)
-	for i := 0; i < num; i++ {
-		d := s[i]
-		before := false
-		after := false
-		if i > 0 {
-			before = s[i-1] >= 'a' && s[i-1] <= 'z'
-		}
-		if i+1 < num {
-			after = s[i+1] >= 'a' && s[i+1] <= 'z'
-		}
-		if i > 0 && d >= 'A' && d <= 'Z' && (before || after) {
-			data = append(data, '_')
-		}
-		data = append(data, d)
-	}
-	return strings.ToLower(string(data))
-}
-
-// snake string, XxYy to xx_yy , XxYY to xx_y_y
-func snakeString(s string) string {
-	data := make([]byte, 0, len(s)*2)
-	j := false
-	num := len(s)
-	for i := 0; i < num; i++ {
-		d := s[i]
-		if i > 0 && d >= 'A' && d <= 'Z' && j {
-			data = append(data, '_')
-		}
-		if d != '_' {
-			j = true
-		}
-		data = append(data, d)
-	}
-	return strings.ToLower(string(data))
-}
-
 // SetNameStrategy set different name strategy
 func SetNameStrategy(s string) {
-	if SnakeAcronymNameStrategy != s {
-		nameStrategy = defaultNameStrategy
+	if models.SnakeAcronymNameStrategy != s {
+		models.NameStrategy = models.DefaultNameStrategy
 	}
-	nameStrategy = s
-}
-
-// camel string, xx_yy to XxYy
-func camelString(s string) string {
-	data := make([]byte, 0, len(s))
-	flag, num := true, len(s)-1
-	for i := 0; i <= num; i++ {
-		d := s[i]
-		if d == '_' {
-			flag = true
-			continue
-		} else if flag {
-			if d >= 'a' && d <= 'z' {
-				d = d - 32
-			}
-			flag = false
-		}
-		data = append(data, d)
-	}
-	return string(data)
+	models.NameStrategy = s
 }
 
 type argString []string
 
-// get string by index from string slice
+// Get get string by index from string slice
 func (a argString) Get(i int, args ...string) (r string) {
 	if i >= 0 && i < len(a) {
 		r = a[i]

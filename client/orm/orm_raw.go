@@ -20,6 +20,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/beego/beego/v2/client/orm/internal/models"
+
 	"github.com/pkg/errors"
 )
 
@@ -287,7 +289,7 @@ func (o *rawSet) QueryRow(containers ...interface{}) error {
 		refs  = make([]interface{}, 0, len(containers))
 		sInds []reflect.Value
 		eTyps []reflect.Type
-		sMi   *modelInfo
+		sMi   *models.ModelInfo
 	)
 	structMode := false
 	for _, container := range containers {
@@ -313,7 +315,7 @@ func (o *rawSet) QueryRow(containers ...interface{}) error {
 			}
 
 			structMode = true
-			fn := getFullName(typ)
+			fn := models.GetFullName(typ)
 			if mi, ok := defaultModelCache.getByFullName(fn); ok {
 				sMi = mi
 			}
@@ -370,15 +372,15 @@ func (o *rawSet) QueryRow(containers ...interface{}) error {
 
 			if sMi != nil {
 				for _, col := range columns {
-					if fi := sMi.fields.GetByColumn(col); fi != nil {
+					if fi := sMi.Fields.GetByColumn(col); fi != nil {
 						value := reflect.ValueOf(columnsMp[col]).Elem().Interface()
-						field := ind.FieldByIndex(fi.fieldIndex)
-						if fi.fieldType&IsRelField > 0 {
-							mf := reflect.New(fi.relModelInfo.addrField.Elem().Type())
+						field := ind.FieldByIndex(fi.FieldIndex)
+						if fi.FieldType&IsRelField > 0 {
+							mf := reflect.New(fi.RelModelInfo.AddrField.Elem().Type())
 							field.Set(mf)
-							field = mf.Elem().FieldByIndex(fi.relModelInfo.fields.pk.fieldIndex)
+							field = mf.Elem().FieldByIndex(fi.RelModelInfo.Fields.Pk.FieldIndex)
 						}
-						if fi.isFielder {
+						if fi.IsFielder {
 							fd := field.Addr().Interface().(Fielder)
 							err := fd.SetRaw(value)
 							if err != nil {
@@ -406,12 +408,12 @@ func (o *rawSet) QueryRow(containers ...interface{}) error {
 						// thanks @Gazeboxu.
 						tags := structTagMap[fe.Tag]
 						if tags == nil {
-							_, tags = parseStructTag(fe.Tag.Get(defaultStructTagName))
+							_, tags = models.ParseStructTag(fe.Tag.Get(models.DefaultStructTagName))
 							structTagMap[fe.Tag] = tags
 						}
 						var col string
 						if col = tags["column"]; col == "" {
-							col = nameStrategyMap[nameStrategy](fe.Name)
+							col = models.NameStrategyMap[models.NameStrategy](fe.Name)
 						}
 						if v, ok := columnsMp[col]; ok {
 							value := reflect.ValueOf(v).Elem().Interface()
@@ -449,7 +451,7 @@ func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
 		refs  = make([]interface{}, 0, len(containers))
 		sInds []reflect.Value
 		eTyps []reflect.Type
-		sMi   *modelInfo
+		sMi   *models.ModelInfo
 	)
 	structMode := false
 	for _, container := range containers {
@@ -474,7 +476,7 @@ func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
 			}
 
 			structMode = true
-			fn := getFullName(typ)
+			fn := models.GetFullName(typ)
 			if mi, ok := defaultModelCache.getByFullName(fn); ok {
 				sMi = mi
 			}
@@ -537,15 +539,15 @@ func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
 
 			if sMi != nil {
 				for _, col := range columns {
-					if fi := sMi.fields.GetByColumn(col); fi != nil {
+					if fi := sMi.Fields.GetByColumn(col); fi != nil {
 						value := reflect.ValueOf(columnsMp[col]).Elem().Interface()
-						field := ind.FieldByIndex(fi.fieldIndex)
-						if fi.fieldType&IsRelField > 0 {
-							mf := reflect.New(fi.relModelInfo.addrField.Elem().Type())
+						field := ind.FieldByIndex(fi.FieldIndex)
+						if fi.FieldType&IsRelField > 0 {
+							mf := reflect.New(fi.RelModelInfo.AddrField.Elem().Type())
 							field.Set(mf)
-							field = mf.Elem().FieldByIndex(fi.relModelInfo.fields.pk.fieldIndex)
+							field = mf.Elem().FieldByIndex(fi.RelModelInfo.Fields.Pk.FieldIndex)
 						}
-						if fi.isFielder {
+						if fi.IsFielder {
 							fd := field.Addr().Interface().(Fielder)
 							err := fd.SetRaw(value)
 							if err != nil {
@@ -570,10 +572,10 @@ func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
 							recursiveSetField(f)
 						}
 
-						_, tags := parseStructTag(fe.Tag.Get(defaultStructTagName))
+						_, tags := models.ParseStructTag(fe.Tag.Get(models.DefaultStructTagName))
 						var col string
 						if col = tags["column"]; col == "" {
-							col = nameStrategyMap[nameStrategy](fe.Name)
+							col = models.NameStrategyMap[models.NameStrategy](fe.Name)
 						}
 						if v, ok := columnsMp[col]; ok {
 							value := reflect.ValueOf(v).Elem().Interface()
@@ -837,7 +839,7 @@ func (o *rawSet) queryRowsTo(container interface{}, keyCol, valueCol string) (in
 			}
 
 		default:
-			if id := ind.FieldByName(camelString(key)); id.IsValid() {
+			if id := ind.FieldByName(models.CamelString(key)); id.IsValid() {
 				o.setFieldValue(id, reflect.ValueOf(refs[valueIndex]).Elem().Interface())
 			}
 		}
