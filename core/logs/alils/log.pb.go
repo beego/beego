@@ -5,12 +5,11 @@ import (
 	"io"
 	"math"
 
-	"github.com/gogo/protobuf/proto"
 	github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
-var _ = proto.Marshal
+var _ = github_com_gogo_protobuf_proto.Marshal
 
 var _ = fmt.Errorf
 
@@ -34,7 +33,7 @@ type Log struct {
 func (m *Log) Reset() { *m = Log{} }
 
 // String returns the Compact Log
-func (m *Log) String() string { return proto.CompactTextString(m) }
+func (m *Log) String() string { return github_com_gogo_protobuf_proto.CompactTextString(m) }
 
 // ProtoMessage not implemented
 func (*Log) ProtoMessage() {}
@@ -66,7 +65,7 @@ type LogContent struct {
 func (m *LogContent) Reset() { *m = LogContent{} }
 
 // String returns the compact text
-func (m *LogContent) String() string { return proto.CompactTextString(m) }
+func (m *LogContent) String() string { return github_com_gogo_protobuf_proto.CompactTextString(m) }
 
 // ProtoMessage not implemented
 func (*LogContent) ProtoMessage() {}
@@ -100,7 +99,7 @@ type LogGroup struct {
 func (m *LogGroup) Reset() { *m = LogGroup{} }
 
 // String returns the compact text
-func (m *LogGroup) String() string { return proto.CompactTextString(m) }
+func (m *LogGroup) String() string { return github_com_gogo_protobuf_proto.CompactTextString(m) }
 
 // ProtoMessage not implemented
 func (*LogGroup) ProtoMessage() {}
@@ -150,7 +149,7 @@ type LogGroupList struct {
 func (m *LogGroupList) Reset() { *m = LogGroupList{} }
 
 // String returns compact text
-func (m *LogGroupList) String() string { return proto.CompactTextString(m) }
+func (m *LogGroupList) String() string { return github_com_gogo_protobuf_proto.CompactTextString(m) }
 
 // ProtoMessage not implemented
 func (*LogGroupList) ProtoMessage() {}
