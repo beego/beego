@@ -45,7 +45,7 @@ func (p *LogProject) ListLogStore() (storeNames []string, err error) {
 		"x-sls-bodyrawsize": "0",
 	}
 
-	uri := fmt.Sprintf("/logstores")
+	uri := "/logstores"
 	r, err := request(p, "GET", uri, h, nil)
 	if err != nil {
 		return
