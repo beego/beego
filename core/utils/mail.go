@@ -120,7 +120,7 @@ func (e *Email) Bytes() ([]byte, error) {
 		}
 		// Create the body sections
 		if e.Text != "" {
-			header.Set("Content-Type", fmt.Sprintf("text/plain; charset=UTF-8"))
+			header.Set("Content-Type", "text/plain; charset=UTF-8")
 			header.Set("Content-Transfer-Encoding", "quoted-printable")
 			if _, err := subWriter.CreatePart(header); err != nil {
 				return nil, err
@@ -131,7 +131,7 @@ func (e *Email) Bytes() ([]byte, error) {
 			}
 		}
 		if e.HTML != "" {
-			header.Set("Content-Type", fmt.Sprintf("text/html; charset=UTF-8"))
+			header.Set("Content-Type", "text/html; charset=UTF-8")
 			header.Set("Content-Transfer-Encoding", "quoted-printable")
 			if _, err := subWriter.CreatePart(header); err != nil {
 				return nil, err
