@@ -18,8 +18,6 @@ import (
 	"fmt"
 	"os"
 	"reflect"
-
-	"github.com/beego/beego/v2/client/orm"
 )
 
 // ModelInfo single model info
@@ -113,7 +111,7 @@ func NewM2MModelInfo(m1, m2 *ModelInfo) (mi *ModelInfo) {
 	fa := new(FieldInfo) // pk
 	f1 := new(FieldInfo) // m1 table RelForeignKey
 	f2 := new(FieldInfo) // m2 table RelForeignKey
-	fa.FieldType = orm.TypeBigIntegerField
+	fa.FieldType = TypeBigIntegerField
 	fa.Auto = true
 	fa.Pk = true
 	fa.DBcol = true
@@ -123,8 +121,8 @@ func NewM2MModelInfo(m1, m2 *ModelInfo) (mi *ModelInfo) {
 
 	f1.DBcol = true
 	f2.DBcol = true
-	f1.FieldType = orm.RelForeignKey
-	f2.FieldType = orm.RelForeignKey
+	f1.FieldType = RelForeignKey
+	f2.FieldType = RelForeignKey
 	f1.Name = CamelString(m1.Table)
 	f2.Name = CamelString(m2.Table)
 	f1.FullName = mi.FullName + "." + f1.Name

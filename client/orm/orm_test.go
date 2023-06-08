@@ -29,6 +29,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/beego/beego/v2/client/orm/internal/logs"
+
+	"github.com/beego/beego/v2/client/orm/internal/utils"
+
 	"github.com/beego/beego/v2/client/orm/internal/models"
 
 	"github.com/stretchr/testify/assert"
@@ -40,9 +44,9 @@ import (
 var _ = os.PathSeparator
 
 var (
-	testDate     = formatDate + " -0700"
-	testDateTime = formatDateTime + " -0700"
-	testTime     = formatTime + " -0700"
+	testDate     = utils.FormatDate + " -0700"
+	testDateTime = utils.FormatDateTime + " -0700"
+	testTime     = utils.FormatTime + " -0700"
 )
 
 type argAny []interface{}
@@ -71,7 +75,7 @@ func ValuesCompare(is bool, a interface{}, args ...interface{}) (ok bool, err er
 	case time.Time:
 		if v2, vo := b.(time.Time); vo {
 			if arg.Get(1) != nil {
-				format := ToStr(arg.Get(1))
+				format := utils.ToStr(arg.Get(1))
 				a = v.Format(format)
 				b = v2.Format(format)
 				ok = a == b
@@ -81,7 +85,7 @@ func ValuesCompare(is bool, a interface{}, args ...interface{}) (ok bool, err er
 			}
 		}
 	default:
-		ok = ToStr(a) == ToStr(b)
+		ok = utils.ToStr(a) == utils.ToStr(b)
 	}
 	ok = is && ok || !is && !ok
 	if !ok {
@@ -2933,9 +2937,9 @@ func TestDebugLog(t *testing.T) {
 
 func captureDebugLogOutput(f func()) string {
 	var buf bytes.Buffer
-	DebugLog.SetOutput(&buf)
+	logs.DebugLog.SetOutput(&buf)
 	defer func() {
-		DebugLog.SetOutput(os.Stderr)
+		logs.DebugLog.SetOutput(os.Stderr)
 	}()
 	f()
 	return buf.String()

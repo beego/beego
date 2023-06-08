@@ -20,6 +20,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/beego/beego/v2/client/orm/internal/utils"
+
 	"github.com/beego/beego/v2/client/orm/internal/models"
 
 	"github.com/pkg/errors"
@@ -97,7 +99,7 @@ func (o *rawSet) setFieldValue(ind reflect.Value, value interface{}) {
 		} else if v, ok := value.(bool); ok {
 			ind.SetBool(v)
 		} else {
-			v, _ := StrTo(ToStr(value)).Bool()
+			v, _ := utils.StrTo(utils.ToStr(value)).Bool()
 			ind.SetBool(v)
 		}
 
@@ -105,7 +107,7 @@ func (o *rawSet) setFieldValue(ind reflect.Value, value interface{}) {
 		if value == nil {
 			ind.SetString("")
 		} else {
-			ind.SetString(ToStr(value))
+			ind.SetString(utils.ToStr(value))
 		}
 
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
@@ -119,7 +121,7 @@ func (o *rawSet) setFieldValue(ind reflect.Value, value interface{}) {
 			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 				ind.SetInt(int64(val.Uint()))
 			default:
-				v, _ := StrTo(ToStr(value)).Int64()
+				v, _ := utils.StrTo(utils.ToStr(value)).Int64()
 				ind.SetInt(v)
 			}
 		}
@@ -134,7 +136,7 @@ func (o *rawSet) setFieldValue(ind reflect.Value, value interface{}) {
 			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 				ind.SetUint(val.Uint())
 			default:
-				v, _ := StrTo(ToStr(value)).Uint64()
+				v, _ := utils.StrTo(utils.ToStr(value)).Uint64()
 				ind.SetUint(v)
 			}
 		}
@@ -147,7 +149,7 @@ func (o *rawSet) setFieldValue(ind reflect.Value, value interface{}) {
 			case reflect.Float64:
 				ind.SetFloat(val.Float())
 			default:
-				v, _ := StrTo(ToStr(value)).Float64()
+				v, _ := utils.StrTo(utils.ToStr(value)).Float64()
 				ind.SetFloat(v)
 			}
 		}
@@ -172,20 +174,20 @@ func (o *rawSet) setFieldValue(ind reflect.Value, value interface{}) {
 			if str != "" {
 				if len(str) >= 19 {
 					str = str[:19]
-					t, err := time.ParseInLocation(formatDateTime, str, o.orm.alias.TZ)
+					t, err := time.ParseInLocation(utils.FormatDateTime, str, o.orm.alias.TZ)
 					if err == nil {
 						t = t.In(DefaultTimeLoc)
 						ind.Set(reflect.ValueOf(t))
 					}
 				} else if len(str) >= 10 {
 					str = str[:10]
-					t, err := time.ParseInLocation(formatDate, str, DefaultTimeLoc)
+					t, err := time.ParseInLocation(utils.FormatDate, str, DefaultTimeLoc)
 					if err == nil {
 						ind.Set(reflect.ValueOf(t))
 					}
 				} else if len(str) >= 8 {
 					str = str[:8]
-					t, err := time.ParseInLocation(formatTime, str, DefaultTimeLoc)
+					t, err := time.ParseInLocation(utils.FormatTime, str, DefaultTimeLoc)
 					if err == nil {
 						ind.Set(reflect.ValueOf(t))
 					}
@@ -381,7 +383,7 @@ func (o *rawSet) QueryRow(containers ...interface{}) error {
 							field = mf.Elem().FieldByIndex(fi.RelModelInfo.Fields.Pk.FieldIndex)
 						}
 						if fi.IsFielder {
-							fd := field.Addr().Interface().(Fielder)
+							fd := field.Addr().Interface().(models.Fielder)
 							err := fd.SetRaw(value)
 							if err != nil {
 								return errors.Errorf("set raw error:%s", err)
@@ -548,7 +550,7 @@ func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
 							field = mf.Elem().FieldByIndex(fi.RelModelInfo.Fields.Pk.FieldIndex)
 						}
 						if fi.IsFielder {
-							fd := field.Addr().Interface().(Fielder)
+							fd := field.Addr().Interface().(models.Fielder)
 							err := fd.SetRaw(value)
 							if err != nil {
 								return 0, errors.Errorf("set raw error:%s", err)

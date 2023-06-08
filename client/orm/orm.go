@@ -54,9 +54,10 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"os"
 	"reflect"
-	"time"
+
+	ilogs "github.com/beego/beego/v2/client/orm/internal/logs"
+	iutils "github.com/beego/beego/v2/client/orm/internal/utils"
 
 	"github.com/beego/beego/v2/client/orm/internal/models"
 
@@ -74,10 +75,10 @@ const (
 // Define common vars
 var (
 	Debug            = false
-	DebugLog         = NewLog(os.Stdout)
+	DebugLog         = ilogs.DebugLog
 	DefaultRowsLimit = -1
 	DefaultRelsDepth = 2
-	DefaultTimeLoc   = time.Local
+	DefaultTimeLoc   = iutils.DefaultTimeLoc
 	ErrTxDone        = errors.New("<TxOrmer.Commit/Rollback> transaction already done")
 	ErrMultiRows     = errors.New("<QuerySeter> return multi rows")
 	ErrNoRows        = errors.New("<QuerySeter> no row found")
@@ -479,7 +480,7 @@ func (o *ormBase) QueryTable(ptrStructOrTableName interface{}) (qs QuerySeter) {
 			qs = newQuerySet(o, mi)
 		}
 	} else {
-		name = models.GetFullName(indirectType(reflect.TypeOf(ptrStructOrTableName)))
+		name = models.GetFullName(iutils.IndirectType(reflect.TypeOf(ptrStructOrTableName)))
 		if mi, ok := defaultModelCache.getByFullName(name); ok {
 			qs = newQuerySet(o, mi)
 		}

@@ -20,6 +20,8 @@ import (
 	"reflect"
 	"time"
 
+	utils2 "github.com/beego/beego/v2/client/orm/internal/utils"
+
 	"github.com/beego/beego/v2/client/orm/internal/models"
 
 	"github.com/beego/beego/v2/core/logs"
@@ -200,7 +202,7 @@ func (f *filterOrmDecorator) QueryTable(ptrStructOrTableName interface{}) QueryS
 	if table, ok := ptrStructOrTableName.(string); ok {
 		name = table
 	} else {
-		name = models.GetFullName(indirectType(reflect.TypeOf(ptrStructOrTableName)))
+		name = models.GetFullName(utils2.IndirectType(reflect.TypeOf(ptrStructOrTableName)))
 		md = ptrStructOrTableName
 	}
 

@@ -19,6 +19,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/beego/beego/v2/client/orm/internal/utils"
+
 	"github.com/beego/beego/v2/client/orm/internal/models"
 )
 
@@ -81,27 +83,27 @@ outFor:
 					var err error
 					if len(v) >= 19 {
 						s := v[:19]
-						t, err = time.ParseInLocation(formatDateTime, s, DefaultTimeLoc)
+						t, err = time.ParseInLocation(utils.FormatDateTime, s, DefaultTimeLoc)
 					} else if len(v) >= 10 {
 						s := v
 						if len(v) > 10 {
 							s = v[:10]
 						}
-						t, err = time.ParseInLocation(formatDate, s, tz)
+						t, err = time.ParseInLocation(utils.FormatDate, s, tz)
 					} else {
 						s := v
 						if len(s) > 8 {
 							s = v[:8]
 						}
-						t, err = time.ParseInLocation(formatTime, s, tz)
+						t, err = time.ParseInLocation(utils.FormatTime, s, tz)
 					}
 					if err == nil {
 						if fi.FieldType == TypeDateField {
-							v = t.In(tz).Format(formatDate)
+							v = t.In(tz).Format(utils.FormatDate)
 						} else if fi.FieldType == TypeDateTimeField {
-							v = t.In(tz).Format(formatDateTime)
+							v = t.In(tz).Format(utils.FormatDateTime)
 						} else {
-							v = t.In(tz).Format(formatTime)
+							v = t.In(tz).Format(utils.FormatTime)
 						}
 					}
 				}
@@ -112,7 +114,7 @@ outFor:
 		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 			arg = val.Uint()
 		case reflect.Float32:
-			arg, _ = StrTo(ToStr(arg)).Float64()
+			arg, _ = utils.StrTo(utils.ToStr(arg)).Float64()
 		case reflect.Float64:
 			arg = val.Float()
 		case reflect.Bool:
@@ -146,13 +148,13 @@ outFor:
 		case reflect.Struct:
 			if v, ok := arg.(time.Time); ok {
 				if fi != nil && fi.FieldType == TypeDateField {
-					arg = v.In(tz).Format(formatDate)
+					arg = v.In(tz).Format(utils.FormatDate)
 				} else if fi != nil && fi.FieldType == TypeDateTimeField {
-					arg = v.In(tz).Format(formatDateTime)
+					arg = v.In(tz).Format(utils.FormatDateTime)
 				} else if fi != nil && fi.FieldType == TypeTimeField {
-					arg = v.In(tz).Format(formatTime)
+					arg = v.In(tz).Format(utils.FormatTime)
 				} else {
-					arg = v.In(tz).Format(formatDateTime)
+					arg = v.In(tz).Format(utils.FormatDateTime)
 				}
 			} else {
 				typ := val.Type()

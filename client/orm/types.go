@@ -97,13 +97,7 @@ type Driver interface {
 	Type() DriverType
 }
 
-// Fielder define field info
-type Fielder interface {
-	String() string
-	FieldType() int
-	SetRaw(interface{}) error
-	RawValue() interface{}
-}
+type Fielder = models.Fielder
 
 type TxBeginner interface {
 	// Begin self control transaction

@@ -21,6 +21,8 @@ import (
 	"os"
 	"strings"
 
+	"github.com/beego/beego/v2/client/orm/internal/utils"
+
 	"github.com/beego/beego/v2/client/orm/internal/models"
 )
 
@@ -55,7 +57,7 @@ func RunCommand() {
 
 	BootStrap()
 
-	args := argString(os.Args[2:])
+	args := utils.ArgString(os.Args[2:])
 	name := args.Get(0)
 
 	if name == "help" {

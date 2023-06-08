@@ -1,5 +1,6 @@
 # developing
 - [httplib: fix unstable unit test which use the httplib.org](https://github.com/beego/beego/pull/5232)
+- [remove adapter package](https://github.com/beego/beego/pull/5239)
 
 ## ORM refactoring
 - [introducing internal/models pkg](https://github.com/beego/beego/pull/5238)

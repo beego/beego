@@ -19,6 +19,8 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/beego/beego/v2/client/orm/internal/logs"
+
 	"github.com/beego/beego/v2/client/orm/internal/models"
 
 	"github.com/beego/beego/v2/client/orm/hints"
@@ -118,7 +120,7 @@ func (d *dbBaseOracle) GenerateSpecifyIndex(tableName string, useIndex int, inde
 	case hints.KeyIgnoreIndex:
 		hint = `NO_INDEX`
 	default:
-		DebugLog.Println("[WARN] Not a valid specifying action, so that action is ignored")
+		logs.DebugLog.Println("[WARN] Not a valid specifying action, so that action is ignored")
 		return ``
 	}
 
@@ -158,7 +160,7 @@ func (d *dbBaseOracle) InsertValue(ctx context.Context, q dbQuerier, mi *models.
 
 			lastInsertId, err := res.LastInsertId()
 			if err != nil {
-				DebugLog.Println(ErrLastInsertIdUnavailable, ':', err)
+				logs.DebugLog.Println(ErrLastInsertIdUnavailable, ':', err)
 				return lastInsertId, ErrLastInsertIdUnavailable
 			} else {
 				return lastInsertId, nil

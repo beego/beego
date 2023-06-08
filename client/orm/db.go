@@ -23,15 +23,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/beego/beego/v2/client/orm/internal/logs"
+
+	"github.com/beego/beego/v2/client/orm/internal/utils"
+
 	"github.com/beego/beego/v2/client/orm/internal/models"
 
 	"github.com/beego/beego/v2/client/orm/hints"
-)
-
-const (
-	formatTime     = "15:04:05"
-	formatDate     = "2006-01-02"
-	formatDateTime = "2006-01-02 15:04:05"
 )
 
 // ErrMissPK missing pk error
@@ -125,7 +123,7 @@ func (d *dbBase) collectFieldValue(mi *models.ModelInfo, fi *models.FieldInfo, i
 	} else {
 		field := ind.FieldByIndex(fi.FieldIndex)
 		if fi.IsFielder {
-			f := field.Addr().Interface().(Fielder)
+			f := field.Addr().Interface().(models.Fielder)
 			value = f.RawValue()
 		} else {
 			switch fi.FieldType {
@@ -174,7 +172,7 @@ func (d *dbBase) collectFieldValue(mi *models.ModelInfo, fi *models.FieldInfo, i
 				} else {
 					vu := field.Interface()
 					if _, ok := vu.(float32); ok {
-						value, _ = StrTo(ToStr(vu)).Float64()
+						value, _ = utils.StrTo(utils.ToStr(vu)).Float64()
 					} else {
 						value = field.Float()
 					}
@@ -244,7 +242,7 @@ func (d *dbBase) collectFieldValue(mi *models.ModelInfo, fi *models.FieldInfo, i
 				d.ins.TimeToDB(&tnow, tz)
 				value = tnow
 				if fi.IsFielder {
-					f := field.Addr().Interface().(Fielder)
+					f := field.Addr().Interface().(models.Fielder)
 					f.SetRaw(tnow.In(DefaultTimeLoc))
 				} else if field.Kind() == reflect.Ptr {
 					v := tnow.In(DefaultTimeLoc)
@@ -482,7 +480,7 @@ func (d *dbBase) InsertValue(ctx context.Context, q dbQuerier, mi *models.ModelI
 
 			lastInsertId, err := res.LastInsertId()
 			if err != nil {
-				DebugLog.Println(ErrLastInsertIdUnavailable, ':', err)
+				logs.DebugLog.Println(ErrLastInsertIdUnavailable, ':', err)
 				return lastInsertId, ErrLastInsertIdUnavailable
 			} else {
 				return lastInsertId, nil
@@ -589,7 +587,7 @@ func (d *dbBase) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *models.Mod
 
 			lastInsertId, err := res.LastInsertId()
 			if err != nil {
-				DebugLog.Println(ErrLastInsertIdUnavailable, ':', err)
+				logs.DebugLog.Println(ErrLastInsertIdUnavailable, ':', err)
 				return lastInsertId, ErrLastInsertIdUnavailable
 			} else {
 				return lastInsertId, nil
@@ -1201,7 +1199,7 @@ func (d *dbBase) GenerateOperatorSQL(mi *models.ModelInfo, fi *models.FieldInfo,
 				params[0] = "IS NULL"
 			}
 		case "iexact", "contains", "icontains", "startswith", "endswith", "istartswith", "iendswith":
-			param := strings.Replace(ToStr(arg), `%`, `\%`, -1)
+			param := strings.Replace(utils.ToStr(arg), `%`, `\%`, -1)
 			switch operator {
 			case "iexact":
 			case "contains", "icontains":
@@ -1264,13 +1262,13 @@ func (d *dbBase) convertValueFromDB(fi *models.FieldInfo, val interface{}, tz *t
 	var value interface{}
 	var tErr error
 
-	var str *StrTo
+	var str *utils.StrTo
 	switch v := val.(type) {
 	case []byte:
-		s := StrTo(string(v))
+		s := utils.StrTo(string(v))
 		str = &s
 	case string:
-		s := StrTo(v)
+		s := utils.StrTo(v)
 		str = &s
 	}
 
@@ -1285,7 +1283,7 @@ setValue:
 				b := v == 1
 				value = b
 			default:
-				s := StrTo(ToStr(v))
+				s := utils.StrTo(utils.ToStr(v))
 				str = &s
 			}
 		}
@@ -1299,7 +1297,7 @@ setValue:
 		}
 	case fieldType == TypeVarCharField || fieldType == TypeCharField || fieldType == TypeTextField || fieldType == TypeJSONField || fieldType == TypeJsonbField:
 		if str == nil {
-			value = ToStr(val)
+			value = utils.ToStr(val)
 		} else {
 			value = str.String()
 		}
@@ -1310,7 +1308,7 @@ setValue:
 				d.ins.TimeFromDB(&t, tz)
 				value = t
 			default:
-				s := StrTo(ToStr(t))
+				s := utils.StrTo(utils.ToStr(t))
 				str = &s
 			}
 		}
@@ -1322,24 +1320,24 @@ setValue:
 			)
 
 			if fi.TimePrecision != nil && len(s) >= (20+*fi.TimePrecision) {
-				layout := formatDateTime + "."
+				layout := utils.FormatDateTime + "."
 				for i := 0; i < *fi.TimePrecision; i++ {
 					layout += "0"
 				}
 				t, err = time.ParseInLocation(layout, s[:20+*fi.TimePrecision], tz)
 			} else if len(s) >= 19 {
 				s = s[:19]
-				t, err = time.ParseInLocation(formatDateTime, s, tz)
+				t, err = time.ParseInLocation(utils.FormatDateTime, s, tz)
 			} else if len(s) >= 10 {
 				if len(s) > 10 {
 					s = s[:10]
 				}
-				t, err = time.ParseInLocation(formatDate, s, tz)
+				t, err = time.ParseInLocation(utils.FormatDate, s, tz)
 			} else if len(s) >= 8 {
 				if len(s) > 8 {
 					s = s[:8]
 				}
-				t, err = time.ParseInLocation(formatTime, s, tz)
+				t, err = time.ParseInLocation(utils.FormatTime, s, tz)
 			}
 			t = t.In(DefaultTimeLoc)
 
@@ -1351,7 +1349,7 @@ setValue:
 		}
 	case fieldType&IsIntegerField > 0:
 		if str == nil {
-			s := StrTo(ToStr(val))
+			s := utils.StrTo(utils.ToStr(val))
 			str = &s
 		}
 		if str != nil {
@@ -1392,7 +1390,7 @@ setValue:
 			case float64:
 				value = v
 			default:
-				s := StrTo(ToStr(v))
+				s := utils.StrTo(utils.ToStr(v))
 				str = &s
 			}
 		}
@@ -1599,7 +1597,7 @@ setValue:
 	}
 
 	if !isNative {
-		fd := field.Addr().Interface().(Fielder)
+		fd := field.Addr().Interface().(models.Fielder)
 		err := fd.SetRaw(value)
 		if err != nil {
 			err = fmt.Errorf("converted value `%v` set to Fielder `%s` failed, err: %s", value, fi.FullName, err)
@@ -1918,7 +1916,7 @@ func (d *dbBase) GenerateSpecifyIndex(tableName string, useIndex int, indexes []
 	case hints.KeyIgnoreIndex:
 		useWay = `IGNORE`
 	default:
-		DebugLog.Println("[WARN] Not a valid specifying action, so that action is ignored")
+		logs.DebugLog.Println("[WARN] Not a valid specifying action, so that action is ignored")
 		return ``
 	}
 

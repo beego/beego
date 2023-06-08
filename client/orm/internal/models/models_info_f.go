@@ -20,7 +20,7 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/beego/beego/v2/client/orm"
+	"github.com/beego/beego/v2/client/orm/internal/utils"
 )
 
 var errSkipField = errors.New("skip field")
@@ -125,7 +125,7 @@ type FieldInfo struct {
 	Column              string
 	AddrValue           reflect.Value
 	Sf                  reflect.StructField
-	Initial             orm.StrTo // store the default value
+	Initial             utils.StrTo // store the default value
 	Size                int
 	ReverseField        string
 	ReverseFieldInfo    *FieldInfo
@@ -147,7 +147,7 @@ func NewFieldInfo(mi *ModelInfo, field reflect.Value, sf reflect.StructField, mN
 	var (
 		tag       string
 		tagValue  string
-		initial   orm.StrTo // store the default value
+		initial   utils.StrTo // store the default value
 		fieldType int
 		attrs     map[string]bool
 		tags      map[string]string
@@ -163,7 +163,7 @@ func NewFieldInfo(mi *ModelInfo, field reflect.Value, sf reflect.StructField, mN
 	addrField = field
 	if field.CanAddr() && field.Kind() != reflect.Ptr {
 		addrField = field.Addr()
-		if _, ok := addrField.Interface().(orm.Fielder); !ok {
+		if _, ok := addrField.Interface().(Fielder); !ok {
 			if field.Kind() == reflect.Slice {
 				addrField = field
 			}
@@ -188,14 +188,14 @@ func NewFieldInfo(mi *ModelInfo, field reflect.Value, sf reflect.StructField, mN
 
 checkType:
 	switch f := addrField.Interface().(type) {
-	case orm.Fielder:
+	case Fielder:
 		fi.IsFielder = true
 		if field.Kind() == reflect.Ptr {
 			err = fmt.Errorf("the model Fielder can not be use ptr")
 			goto end
 		}
 		fieldType = f.FieldType()
-		if fieldType&orm.IsRelField > 0 {
+		if fieldType&IsRelField > 0 {
 			err = fmt.Errorf("unsupport type custom field, please refer to https://github.com/beego/beego/v2/blob/master/orm/models_fields.go#L24-L42")
 			goto end
 		}
@@ -205,13 +205,13 @@ checkType:
 		if tagValue != "" {
 			switch tagValue {
 			case "fk":
-				fieldType = orm.RelForeignKey
+				fieldType = RelForeignKey
 				break checkType
 			case "one":
-				fieldType = orm.RelOneToOne
+				fieldType = RelOneToOne
 				break checkType
 			case "m2m":
-				fieldType = orm.RelManyToMany
+				fieldType = RelManyToMany
 				if tv := tags["rel_table"]; tv != "" {
 					fi.RelTable = tv
 				} else if tv := tags["rel_through"]; tv != "" {
@@ -228,10 +228,10 @@ checkType:
 		if tagValue != "" {
 			switch tagValue {
 			case "one":
-				fieldType = orm.RelReverseOne
+				fieldType = RelReverseOne
 				break checkType
 			case "many":
-				fieldType = orm.RelReverseMany
+				fieldType = RelReverseMany
 				if tv := tags["rel_table"]; tv != "" {
 					fi.RelTable = tv
 				} else if tv := tags["rel_through"]; tv != "" {
@@ -248,26 +248,26 @@ checkType:
 		if err != nil {
 			goto end
 		}
-		if fieldType == orm.TypeVarCharField {
+		if fieldType == TypeVarCharField {
 			switch tags["type"] {
 			case "char":
-				fieldType = orm.TypeCharField
+				fieldType = TypeCharField
 			case "text":
-				fieldType = orm.TypeTextField
+				fieldType = TypeTextField
 			case "json":
-				fieldType = orm.TypeJSONField
+				fieldType = TypeJSONField
 			case "jsonb":
-				fieldType = orm.TypeJsonbField
+				fieldType = TypeJsonbField
 			}
 		}
-		if fieldType == orm.TypeFloatField && (digits != "" || decimals != "") {
-			fieldType = orm.TypeDecimalField
+		if fieldType == TypeFloatField && (digits != "" || decimals != "") {
+			fieldType = TypeDecimalField
 		}
-		if fieldType == orm.TypeDateTimeField && tags["type"] == "date" {
-			fieldType = orm.TypeDateField
+		if fieldType == TypeDateTimeField && tags["type"] == "date" {
+			fieldType = TypeDateField
 		}
-		if fieldType == orm.TypeTimeField && tags["type"] == "time" {
-			fieldType = orm.TypeTimeField
+		if fieldType == TypeTimeField && tags["type"] == "time" {
+			fieldType = TypeTimeField
 		}
 	}
 
@@ -275,12 +275,12 @@ checkType:
 	// rel should Ptr
 	// reverse should slice []*struct
 	switch fieldType {
-	case orm.RelForeignKey, orm.RelOneToOne, orm.RelReverseOne:
+	case RelForeignKey, RelOneToOne, RelReverseOne:
 		if field.Kind() != reflect.Ptr {
 			err = fmt.Errorf("rel/reverse:one field must be *%s", field.Type().Name())
 			goto end
 		}
-	case orm.RelManyToMany, orm.RelReverseMany:
+	case RelManyToMany, RelReverseMany:
 		if field.Kind() != reflect.Slice {
 			err = fmt.Errorf("rel/reverse:many field must be slice")
 			goto end
@@ -292,7 +292,7 @@ checkType:
 		}
 	}
 
-	if fieldType&orm.IsFieldType == 0 {
+	if fieldType&IsFieldType == 0 {
 		err = fmt.Errorf("wrong field type")
 		goto end
 	}
@@ -317,7 +317,7 @@ checkType:
 	}
 
 	switch fieldType {
-	case orm.RelManyToMany, orm.RelReverseMany, orm.RelReverseOne:
+	case RelManyToMany, RelReverseMany, RelReverseOne:
 		fi.Null = false
 		fi.Index = false
 		fi.Auto = false
@@ -328,12 +328,12 @@ checkType:
 	}
 
 	switch fieldType {
-	case orm.RelForeignKey, orm.RelOneToOne, orm.RelManyToMany:
+	case RelForeignKey, RelOneToOne, RelManyToMany:
 		fi.Rel = true
-		if fieldType == orm.RelOneToOne {
+		if fieldType == RelOneToOne {
 			fi.Unique = true
 		}
-	case orm.RelReverseMany, orm.RelReverseOne:
+	case RelReverseMany, RelReverseOne:
 		fi.Reverse = true
 	}
 
@@ -363,10 +363,10 @@ checkType:
 	}
 
 	switch fieldType {
-	case orm.TypeBooleanField:
-	case orm.TypeVarCharField, orm.TypeCharField, orm.TypeJSONField, orm.TypeJsonbField:
+	case TypeBooleanField:
+	case TypeVarCharField, TypeCharField, TypeJSONField, TypeJsonbField:
 		if size != "" {
-			v, e := orm.StrTo(size).Int32()
+			v, e := utils.StrTo(size).Int32()
 			if e != nil {
 				err = fmt.Errorf("wrong size value `%s`", size)
 			} else {
@@ -376,13 +376,13 @@ checkType:
 			fi.Size = 255
 			fi.ToText = true
 		}
-	case orm.TypeTextField:
+	case TypeTextField:
 		fi.Index = false
 		fi.Unique = false
-	case orm.TypeTimeField, orm.TypeDateField, orm.TypeDateTimeField:
-		if fieldType == orm.TypeDateTimeField {
+	case TypeTimeField, TypeDateField, TypeDateTimeField:
+		if fieldType == TypeDateTimeField {
 			if precision != "" {
-				v, e := orm.StrTo(precision).Int()
+				v, e := utils.StrTo(precision).Int()
 				if e != nil {
 					err = fmt.Errorf("convert %s to int error:%v", precision, e)
 				} else {
@@ -396,12 +396,12 @@ checkType:
 		} else if attrs["auto_now_add"] {
 			fi.AutoNowAdd = true
 		}
-	case orm.TypeFloatField:
-	case orm.TypeDecimalField:
+	case TypeFloatField:
+	case TypeDecimalField:
 		d1 := digits
 		d2 := decimals
-		v1, er1 := orm.StrTo(d1).Int8()
-		v2, er2 := orm.StrTo(d2).Int8()
+		v1, er1 := utils.StrTo(d1).Int8()
+		v2, er2 := utils.StrTo(d2).Int8()
 		if er1 != nil || er2 != nil {
 			err = fmt.Errorf("wrong digits/decimals value %s/%s", d2, d1)
 			goto end
@@ -410,12 +410,12 @@ checkType:
 		fi.Decimals = int(v2)
 	default:
 		switch {
-		case fieldType&orm.IsIntegerField > 0:
-		case fieldType&orm.IsRelField > 0:
+		case fieldType&IsIntegerField > 0:
+		case fieldType&IsRelField > 0:
 		}
 	}
 
-	if fieldType&orm.IsIntegerField == 0 {
+	if fieldType&IsIntegerField == 0 {
 		if fi.Auto {
 			err = fmt.Errorf("non-integer type cannot set auto")
 			goto end
@@ -442,32 +442,32 @@ checkType:
 	}
 
 	// can not set default for these type
-	if fi.Auto || fi.Pk || fi.Unique || fieldType == orm.TypeTimeField || fieldType == orm.TypeDateField || fieldType == orm.TypeDateTimeField {
+	if fi.Auto || fi.Pk || fi.Unique || fieldType == TypeTimeField || fieldType == TypeDateField || fieldType == TypeDateTimeField {
 		initial.Clear()
 	}
 
 	if initial.Exist() {
 		v := initial
 		switch fieldType {
-		case orm.TypeBooleanField:
+		case TypeBooleanField:
 			_, err = v.Bool()
-		case orm.TypeFloatField, orm.TypeDecimalField:
+		case TypeFloatField, TypeDecimalField:
 			_, err = v.Float64()
-		case orm.TypeBitField:
+		case TypeBitField:
 			_, err = v.Int8()
-		case orm.TypeSmallIntegerField:
+		case TypeSmallIntegerField:
 			_, err = v.Int16()
-		case orm.TypeIntegerField:
+		case TypeIntegerField:
 			_, err = v.Int32()
-		case orm.TypeBigIntegerField:
+		case TypeBigIntegerField:
 			_, err = v.Int64()
-		case orm.TypePositiveBitField:
+		case TypePositiveBitField:
 			_, err = v.Uint8()
-		case orm.TypePositiveSmallIntegerField:
+		case TypePositiveSmallIntegerField:
 			_, err = v.Uint16()
-		case orm.TypePositiveIntegerField:
+		case TypePositiveIntegerField:
 			_, err = v.Uint32()
-		case orm.TypePositiveBigIntegerField:
+		case TypePositiveBigIntegerField:
 			_, err = v.Uint64()
 		}
 		if err != nil {

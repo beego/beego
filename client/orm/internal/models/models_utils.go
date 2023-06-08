@@ -21,7 +21,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/beego/beego/v2/client/orm"
+	"github.com/beego/beego/v2/client/orm/internal/logs"
 )
 
 // 1 is attr
@@ -145,11 +145,11 @@ func getColumnName(ft int, addrField reflect.Value, sf reflect.StructField, col 
 		column = NameStrategyMap[NameStrategy](sf.Name)
 	}
 	switch ft {
-	case orm.RelForeignKey, orm.RelOneToOne:
+	case RelForeignKey, RelOneToOne:
 		if len(col) == 0 {
 			column = column + "_id"
 		}
-	case orm.RelManyToMany, orm.RelReverseMany, orm.RelReverseOne:
+	case RelManyToMany, RelReverseMany, RelReverseOne:
 		column = sf.Name
 	}
 	return column
@@ -159,76 +159,76 @@ func getColumnName(ft int, addrField reflect.Value, sf reflect.StructField, col 
 func getFieldType(val reflect.Value) (ft int, err error) {
 	switch val.Type() {
 	case reflect.TypeOf(new(int8)):
-		ft = orm.TypeBitField
+		ft = TypeBitField
 	case reflect.TypeOf(new(int16)):
-		ft = orm.TypeSmallIntegerField
+		ft = TypeSmallIntegerField
 	case reflect.TypeOf(new(int32)),
 		reflect.TypeOf(new(int)):
-		ft = orm.TypeIntegerField
+		ft = TypeIntegerField
 	case reflect.TypeOf(new(int64)):
-		ft = orm.TypeBigIntegerField
+		ft = TypeBigIntegerField
 	case reflect.TypeOf(new(uint8)):
-		ft = orm.TypePositiveBitField
+		ft = TypePositiveBitField
 	case reflect.TypeOf(new(uint16)):
-		ft = orm.TypePositiveSmallIntegerField
+		ft = TypePositiveSmallIntegerField
 	case reflect.TypeOf(new(uint32)),
 		reflect.TypeOf(new(uint)):
-		ft = orm.TypePositiveIntegerField
+		ft = TypePositiveIntegerField
 	case reflect.TypeOf(new(uint64)):
-		ft = orm.TypePositiveBigIntegerField
+		ft = TypePositiveBigIntegerField
 	case reflect.TypeOf(new(float32)),
 		reflect.TypeOf(new(float64)):
-		ft = orm.TypeFloatField
+		ft = TypeFloatField
 	case reflect.TypeOf(new(bool)):
-		ft = orm.TypeBooleanField
+		ft = TypeBooleanField
 	case reflect.TypeOf(new(string)):
-		ft = orm.TypeVarCharField
+		ft = TypeVarCharField
 	case reflect.TypeOf(new(time.Time)):
-		ft = orm.TypeDateTimeField
+		ft = TypeDateTimeField
 	default:
 		elm := reflect.Indirect(val)
 		switch elm.Kind() {
 		case reflect.Int8:
-			ft = orm.TypeBitField
+			ft = TypeBitField
 		case reflect.Int16:
-			ft = orm.TypeSmallIntegerField
+			ft = TypeSmallIntegerField
 		case reflect.Int32, reflect.Int:
-			ft = orm.TypeIntegerField
+			ft = TypeIntegerField
 		case reflect.Int64:
-			ft = orm.TypeBigIntegerField
+			ft = TypeBigIntegerField
 		case reflect.Uint8:
-			ft = orm.TypePositiveBitField
+			ft = TypePositiveBitField
 		case reflect.Uint16:
-			ft = orm.TypePositiveSmallIntegerField
+			ft = TypePositiveSmallIntegerField
 		case reflect.Uint32, reflect.Uint:
-			ft = orm.TypePositiveIntegerField
+			ft = TypePositiveIntegerField
 		case reflect.Uint64:
-			ft = orm.TypePositiveBigIntegerField
+			ft = TypePositiveBigIntegerField
 		case reflect.Float32, reflect.Float64:
-			ft = orm.TypeFloatField
+			ft = TypeFloatField
 		case reflect.Bool:
-			ft = orm.TypeBooleanField
+			ft = TypeBooleanField
 		case reflect.String:
-			ft = orm.TypeVarCharField
+			ft = TypeVarCharField
 		default:
 			if elm.Interface() == nil {
 				panic(fmt.Errorf("%s is nil pointer, may be miss setting tag", val))
 			}
 			switch elm.Interface().(type) {
 			case sql.NullInt64:
-				ft = orm.TypeBigIntegerField
+				ft = TypeBigIntegerField
 			case sql.NullFloat64:
-				ft = orm.TypeFloatField
+				ft = TypeFloatField
 			case sql.NullBool:
-				ft = orm.TypeBooleanField
+				ft = TypeBooleanField
 			case sql.NullString:
-				ft = orm.TypeVarCharField
+				ft = TypeVarCharField
 			case time.Time:
-				ft = orm.TypeDateTimeField
+				ft = TypeDateTimeField
 			}
 		}
 	}
-	if ft&orm.IsFieldType == 0 {
+	if ft&IsFieldType == 0 {
 		err = fmt.Errorf("unsupport field type %s, may be miss setting tag", val)
 	}
 	return
@@ -252,7 +252,7 @@ func ParseStructTag(data string) (attrs map[string]bool, tags map[string]string)
 				tags[name] = v
 			}
 		} else {
-			orm.DebugLog.Println("unsupport orm tag", v)
+			logs.DebugLog.Println("unsupport orm tag", v)
 		}
 	}
 	return

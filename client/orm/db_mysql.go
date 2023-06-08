@@ -20,6 +20,8 @@ import (
 	"reflect"
 	"strings"
 
+	"github.com/beego/beego/v2/client/orm/internal/logs"
+
 	"github.com/beego/beego/v2/client/orm/internal/models"
 )
 
@@ -161,7 +163,7 @@ func (d *dbBaseMysql) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *model
 		if err == nil {
 			lastInsertId, err := res.LastInsertId()
 			if err != nil {
-				DebugLog.Println(ErrLastInsertIdUnavailable, ':', err)
+				logs.DebugLog.Println(ErrLastInsertIdUnavailable, ':', err)
 				return lastInsertId, ErrLastInsertIdUnavailable
 			} else {
 				return lastInsertId, nil

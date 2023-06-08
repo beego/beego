@@ -1,4 +1,4 @@
-// Copyright 2014 beego Author. All Rights Reserved.
+// Copyright 2023 beego-dev. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,18 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package orm
+package models
 
-import (
-	"github.com/beego/beego/v2/client/orm/internal/models"
-	"github.com/beego/beego/v2/client/orm/internal/utils"
-)
-
-type StrTo = utils.StrTo
-
-func SetNameStrategy(s string) {
-	if models.SnakeAcronymNameStrategy != s {
-		models.NameStrategy = models.DefaultNameStrategy
-	}
-	models.NameStrategy = s
+// Fielder define field info
+type Fielder interface {
+	String() string
+	FieldType() int
+	SetRaw(interface{}) error
+	RawValue() interface{}
 }

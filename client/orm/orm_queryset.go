@@ -18,6 +18,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/beego/beego/v2/client/orm/internal/utils"
+
 	"github.com/beego/beego/v2/client/orm/internal/models"
 
 	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
@@ -56,7 +58,7 @@ func ColValue(opt operator, value interface{}) interface{} {
 	default:
 		panic(fmt.Errorf("orm.ColValue wrong operator"))
 	}
-	v, err := StrTo(ToStr(value)).Int64()
+	v, err := utils.StrTo(utils.ToStr(value)).Int64()
 	if err != nil {
 		panic(fmt.Errorf("orm.ColValue doesn't support non string/numeric type, %s", err))
 	}
@@ -115,13 +117,13 @@ func (o querySet) Exclude(expr string, args ...interface{}) QuerySeter {
 
 // set offset number
 func (o *querySet) setOffset(num interface{}) {
-	o.offset = ToInt64(num)
+	o.offset = utils.ToInt64(num)
 }
 
 // add LIMIT value.
 // args[0] means offset, e.g. LIMIT num,offset.
 func (o querySet) Limit(limit interface{}, args ...interface{}) QuerySeter {
-	o.limit = ToInt64(limit)
+	o.limit = utils.ToInt64(limit)
 	if len(args) > 0 {
 		o.setOffset(args[0])
 	}
