@@ -505,7 +505,7 @@ func defaultRecoverPanic(ctx *context.Context, cfg *Config) {
 				break
 			}
 			logs.Critical(fmt.Sprintf("%s:%d", file, line))
-			stack = stack + fmt.Sprintf("%s:%d\n", file, line)
+			stack += fmt.Sprintf("%s:%d\n", file, line)
 		}
 
 		if ctx.Output.Status != 0 {
