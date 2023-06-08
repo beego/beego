@@ -120,11 +120,11 @@ func (c *ConfigContainer) sub(key string) (map[string]interface{}, error) {
 	}
 	value, ok := c.data[key]
 	if !ok {
-		return nil, errors.New(fmt.Sprintf("the key is not found: %s", key))
+		return nil, fmt.Errorf("the key is not found: %s", key)
 	}
 	res, ok := value.(map[string]interface{})
 	if !ok {
-		return nil, errors.New(fmt.Sprintf("the value of this key is not a structure: %s", key))
+		return nil, fmt.Errorf("the value of this key is not a structure: %s", key)
 	}
 	return res, nil
 }
