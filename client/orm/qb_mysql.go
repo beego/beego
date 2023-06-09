@@ -28,7 +28,7 @@ type MySQLQueryBuilder struct {
 	tokens []string
 }
 
-// Select will join the fields
+// Select will join the Fields
 func (qb *MySQLQueryBuilder) Select(fields ...string) QueryBuilder {
 	qb.tokens = append(qb.tokens, "SELECT", strings.Join(fields, CommaSpace))
 	return qb
@@ -94,7 +94,7 @@ func (qb *MySQLQueryBuilder) In(vals ...string) QueryBuilder {
 	return qb
 }
 
-// OrderBy join the Order by fields
+// OrderBy join the Order by Fields
 func (qb *MySQLQueryBuilder) OrderBy(fields ...string) QueryBuilder {
 	qb.tokens = append(qb.tokens, "ORDER BY", strings.Join(fields, CommaSpace))
 	return qb
@@ -124,7 +124,7 @@ func (qb *MySQLQueryBuilder) Offset(offset int) QueryBuilder {
 	return qb
 }
 
-// GroupBy join the Group by fields
+// GroupBy join the Group by Fields
 func (qb *MySQLQueryBuilder) GroupBy(fields ...string) QueryBuilder {
 	qb.tokens = append(qb.tokens, "GROUP BY", strings.Join(fields, CommaSpace))
 	return qb

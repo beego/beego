@@ -17,6 +17,8 @@ package orm
 import (
 	"testing"
 
+	"github.com/beego/beego/v2/client/orm/internal/models"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -53,10 +55,10 @@ func TestDbBase_GetTables(t *testing.T) {
 	assert.True(t, ok)
 	assert.NotNil(t, mi)
 
-	engine := getTableEngine(mi.addrField)
+	engine := models.GetTableEngine(mi.AddrField)
 	assert.Equal(t, "innodb", engine)
-	uniques := getTableUnique(mi.addrField)
+	uniques := models.GetTableUnique(mi.AddrField)
 	assert.Equal(t, [][]string{{"unique1"}, {"unique2"}}, uniques)
-	indexes := getTableIndex(mi.addrField)
+	indexes := models.GetTableIndex(mi.AddrField)
 	assert.Equal(t, [][]string{{"index1"}, {"index2"}}, indexes)
 }

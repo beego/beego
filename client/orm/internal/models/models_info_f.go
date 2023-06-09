@@ -12,147 +12,149 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package orm
+package models
 
 import (
 	"errors"
 	"fmt"
 	"reflect"
 	"strings"
+
+	"github.com/beego/beego/v2/client/orm/internal/utils"
 )
 
 var errSkipField = errors.New("skip field")
 
-// field info collection
-type fields struct {
-	pk            *fieldInfo
-	columns       map[string]*fieldInfo
-	fields        map[string]*fieldInfo
-	fieldsLow     map[string]*fieldInfo
-	fieldsByType  map[int][]*fieldInfo
-	fieldsRel     []*fieldInfo
-	fieldsReverse []*fieldInfo
-	fieldsDB      []*fieldInfo
-	rels          []*fieldInfo
-	orders        []string
-	dbcols        []string
+// Fields field info collection
+type Fields struct {
+	Pk            *FieldInfo
+	Columns       map[string]*FieldInfo
+	Fields        map[string]*FieldInfo
+	FieldsLow     map[string]*FieldInfo
+	FieldsByType  map[int][]*FieldInfo
+	FieldsRel     []*FieldInfo
+	FieldsReverse []*FieldInfo
+	FieldsDB      []*FieldInfo
+	Rels          []*FieldInfo
+	Orders        []string
+	DBcols        []string
 }
 
-// add field info
-func (f *fields) Add(fi *fieldInfo) (added bool) {
-	if f.fields[fi.name] == nil && f.columns[fi.column] == nil {
-		f.columns[fi.column] = fi
-		f.fields[fi.name] = fi
-		f.fieldsLow[strings.ToLower(fi.name)] = fi
+// Add adds field info
+func (f *Fields) Add(fi *FieldInfo) (added bool) {
+	if f.Fields[fi.Name] == nil && f.Columns[fi.Column] == nil {
+		f.Columns[fi.Column] = fi
+		f.Fields[fi.Name] = fi
+		f.FieldsLow[strings.ToLower(fi.Name)] = fi
 	} else {
 		return
 	}
-	if _, ok := f.fieldsByType[fi.fieldType]; !ok {
-		f.fieldsByType[fi.fieldType] = make([]*fieldInfo, 0)
+	if _, ok := f.FieldsByType[fi.FieldType]; !ok {
+		f.FieldsByType[fi.FieldType] = make([]*FieldInfo, 0)
 	}
-	f.fieldsByType[fi.fieldType] = append(f.fieldsByType[fi.fieldType], fi)
-	f.orders = append(f.orders, fi.column)
-	if fi.dbcol {
-		f.dbcols = append(f.dbcols, fi.column)
-		f.fieldsDB = append(f.fieldsDB, fi)
+	f.FieldsByType[fi.FieldType] = append(f.FieldsByType[fi.FieldType], fi)
+	f.Orders = append(f.Orders, fi.Column)
+	if fi.DBcol {
+		f.DBcols = append(f.DBcols, fi.Column)
+		f.FieldsDB = append(f.FieldsDB, fi)
 	}
-	if fi.rel {
-		f.fieldsRel = append(f.fieldsRel, fi)
+	if fi.Rel {
+		f.FieldsRel = append(f.FieldsRel, fi)
 	}
-	if fi.reverse {
-		f.fieldsReverse = append(f.fieldsReverse, fi)
+	if fi.Reverse {
+		f.FieldsReverse = append(f.FieldsReverse, fi)
 	}
 	return true
 }
 
-// get field info by name
-func (f *fields) GetByName(name string) *fieldInfo {
-	return f.fields[name]
+// GetByName get field info by name
+func (f *Fields) GetByName(name string) *FieldInfo {
+	return f.Fields[name]
 }
 
-// get field info by column name
-func (f *fields) GetByColumn(column string) *fieldInfo {
-	return f.columns[column]
+// GetByColumn get field info by column name
+func (f *Fields) GetByColumn(column string) *FieldInfo {
+	return f.Columns[column]
 }
 
-// get field info by string, name is prior
-func (f *fields) GetByAny(name string) (*fieldInfo, bool) {
-	if fi, ok := f.fields[name]; ok {
+// GetByAny get field info by string, name is prior
+func (f *Fields) GetByAny(name string) (*FieldInfo, bool) {
+	if fi, ok := f.Fields[name]; ok {
 		return fi, ok
 	}
-	if fi, ok := f.fieldsLow[strings.ToLower(name)]; ok {
+	if fi, ok := f.FieldsLow[strings.ToLower(name)]; ok {
 		return fi, ok
 	}
-	if fi, ok := f.columns[name]; ok {
+	if fi, ok := f.Columns[name]; ok {
 		return fi, ok
 	}
 	return nil, false
 }
 
-// create new field info collection
-func newFields() *fields {
-	f := new(fields)
-	f.fields = make(map[string]*fieldInfo)
-	f.fieldsLow = make(map[string]*fieldInfo)
-	f.columns = make(map[string]*fieldInfo)
-	f.fieldsByType = make(map[int][]*fieldInfo)
+// NewFields create new field info collection
+func NewFields() *Fields {
+	f := new(Fields)
+	f.Fields = make(map[string]*FieldInfo)
+	f.FieldsLow = make(map[string]*FieldInfo)
+	f.Columns = make(map[string]*FieldInfo)
+	f.FieldsByType = make(map[int][]*FieldInfo)
 	return f
 }
 
-// single field info
-type fieldInfo struct {
-	dbcol               bool // table column fk and onetoone
-	inModel             bool
-	auto                bool
-	pk                  bool
-	null                bool
-	index               bool
-	unique              bool
-	colDefault          bool // whether has default tag
-	toText              bool
-	autoNow             bool
-	autoNowAdd          bool
-	rel                 bool // if type equal to RelForeignKey, RelOneToOne, RelManyToMany then true
-	reverse             bool
-	isFielder           bool // implement Fielder interface
-	mi                  *modelInfo
-	fieldIndex          []int
-	fieldType           int
-	name                string
-	fullName            string
-	column              string
-	addrValue           reflect.Value
-	sf                  reflect.StructField
-	initial             StrTo // store the default value
-	size                int
-	reverseField        string
-	reverseFieldInfo    *fieldInfo
-	reverseFieldInfoTwo *fieldInfo
-	reverseFieldInfoM2M *fieldInfo
-	relTable            string
-	relThrough          string
-	relThroughModelInfo *modelInfo
-	relModelInfo        *modelInfo
-	digits              int
-	decimals            int
-	onDelete            string
-	description         string
-	timePrecision       *int
+// FieldInfo single field info
+type FieldInfo struct {
+	DBcol               bool // table column fk and onetoone
+	InModel             bool
+	Auto                bool
+	Pk                  bool
+	Null                bool
+	Index               bool
+	Unique              bool
+	ColDefault          bool // whether has default tag
+	ToText              bool
+	AutoNow             bool
+	AutoNowAdd          bool
+	Rel                 bool // if type equal to RelForeignKey, RelOneToOne, RelManyToMany then true
+	Reverse             bool
+	IsFielder           bool // implement Fielder interface
+	Mi                  *ModelInfo
+	FieldIndex          []int
+	FieldType           int
+	Name                string
+	FullName            string
+	Column              string
+	AddrValue           reflect.Value
+	Sf                  reflect.StructField
+	Initial             utils.StrTo // store the default value
+	Size                int
+	ReverseField        string
+	ReverseFieldInfo    *FieldInfo
+	ReverseFieldInfoTwo *FieldInfo
+	ReverseFieldInfoM2M *FieldInfo
+	RelTable            string
+	RelThrough          string
+	RelThroughModelInfo *ModelInfo
+	RelModelInfo        *ModelInfo
+	Digits              int
+	Decimals            int
+	OnDelete            string
+	Description         string
+	TimePrecision       *int
 }
 
-// new field info
-func newFieldInfo(mi *modelInfo, field reflect.Value, sf reflect.StructField, mName string) (fi *fieldInfo, err error) {
+// NewFieldInfo new field info
+func NewFieldInfo(mi *ModelInfo, field reflect.Value, sf reflect.StructField, mName string) (fi *FieldInfo, err error) {
 	var (
 		tag       string
 		tagValue  string
-		initial   StrTo // store the default value
+		initial   utils.StrTo // store the default value
 		fieldType int
 		attrs     map[string]bool
 		tags      map[string]string
 		addrField reflect.Value
 	)
 
-	fi = new(fieldInfo)
+	fi = new(FieldInfo)
 
 	// if field which CanAddr is the follow type
 	//  A value is addressable if it is an element of a slice,
@@ -168,7 +170,7 @@ func newFieldInfo(mi *modelInfo, field reflect.Value, sf reflect.StructField, mN
 		}
 	}
 
-	attrs, tags = parseStructTag(sf.Tag.Get(defaultStructTagName))
+	attrs, tags = ParseStructTag(sf.Tag.Get(DefaultStructTagName))
 
 	if _, ok := attrs["-"]; ok {
 		return nil, errSkipField
@@ -187,7 +189,7 @@ func newFieldInfo(mi *modelInfo, field reflect.Value, sf reflect.StructField, mN
 checkType:
 	switch f := addrField.Interface().(type) {
 	case Fielder:
-		fi.isFielder = true
+		fi.IsFielder = true
 		if field.Kind() == reflect.Ptr {
 			err = fmt.Errorf("the model Fielder can not be use ptr")
 			goto end
@@ -211,9 +213,9 @@ checkType:
 			case "m2m":
 				fieldType = RelManyToMany
 				if tv := tags["rel_table"]; tv != "" {
-					fi.relTable = tv
+					fi.RelTable = tv
 				} else if tv := tags["rel_through"]; tv != "" {
-					fi.relThrough = tv
+					fi.RelThrough = tv
 				}
 				break checkType
 			default:
@@ -231,9 +233,9 @@ checkType:
 			case "many":
 				fieldType = RelReverseMany
 				if tv := tags["rel_table"]; tv != "" {
-					fi.relTable = tv
+					fi.RelTable = tv
 				} else if tv := tags["rel_through"]; tv != "" {
-					fi.relThrough = tv
+					fi.RelThrough = tv
 				}
 				break checkType
 			default:
@@ -295,117 +297,117 @@ checkType:
 		goto end
 	}
 
-	fi.fieldType = fieldType
-	fi.name = sf.Name
-	fi.column = getColumnName(fieldType, addrField, sf, tags["column"])
-	fi.addrValue = addrField
-	fi.sf = sf
-	fi.fullName = mi.fullName + mName + "." + sf.Name
+	fi.FieldType = fieldType
+	fi.Name = sf.Name
+	fi.Column = getColumnName(fieldType, addrField, sf, tags["column"])
+	fi.AddrValue = addrField
+	fi.Sf = sf
+	fi.FullName = mi.FullName + mName + "." + sf.Name
 
-	fi.description = tags["description"]
-	fi.null = attrs["null"]
-	fi.index = attrs["index"]
-	fi.auto = attrs["auto"]
-	fi.pk = attrs["pk"]
-	fi.unique = attrs["unique"]
+	fi.Description = tags["description"]
+	fi.Null = attrs["null"]
+	fi.Index = attrs["index"]
+	fi.Auto = attrs["auto"]
+	fi.Pk = attrs["pk"]
+	fi.Unique = attrs["unique"]
 
 	// Mark object property if there is attribute "default" in the orm configuration
 	if _, ok := tags["default"]; ok {
-		fi.colDefault = true
+		fi.ColDefault = true
 	}
 
 	switch fieldType {
 	case RelManyToMany, RelReverseMany, RelReverseOne:
-		fi.null = false
-		fi.index = false
-		fi.auto = false
-		fi.pk = false
-		fi.unique = false
+		fi.Null = false
+		fi.Index = false
+		fi.Auto = false
+		fi.Pk = false
+		fi.Unique = false
 	default:
-		fi.dbcol = true
+		fi.DBcol = true
 	}
 
 	switch fieldType {
 	case RelForeignKey, RelOneToOne, RelManyToMany:
-		fi.rel = true
+		fi.Rel = true
 		if fieldType == RelOneToOne {
-			fi.unique = true
+			fi.Unique = true
 		}
 	case RelReverseMany, RelReverseOne:
-		fi.reverse = true
+		fi.Reverse = true
 	}
 
-	if fi.rel && fi.dbcol {
+	if fi.Rel && fi.DBcol {
 		switch onDelete {
-		case odCascade, odDoNothing:
-		case odSetDefault:
+		case OdCascade, OdDoNothing:
+		case OdSetDefault:
 			if !initial.Exist() {
 				err = errors.New("on_delete: set_default need set field a default value")
 				goto end
 			}
-		case odSetNULL:
-			if !fi.null {
+		case OdSetNULL:
+			if !fi.Null {
 				err = errors.New("on_delete: set_null need set field null")
 				goto end
 			}
 		default:
 			if onDelete == "" {
-				onDelete = odCascade
+				onDelete = OdCascade
 			} else {
 				err = fmt.Errorf("on_delete value expected choice in `cascade,set_null,set_default,do_nothing`, unknown `%s`", onDelete)
 				goto end
 			}
 		}
 
-		fi.onDelete = onDelete
+		fi.OnDelete = onDelete
 	}
 
 	switch fieldType {
 	case TypeBooleanField:
 	case TypeVarCharField, TypeCharField, TypeJSONField, TypeJsonbField:
 		if size != "" {
-			v, e := StrTo(size).Int32()
+			v, e := utils.StrTo(size).Int32()
 			if e != nil {
 				err = fmt.Errorf("wrong size value `%s`", size)
 			} else {
-				fi.size = int(v)
+				fi.Size = int(v)
 			}
 		} else {
-			fi.size = 255
-			fi.toText = true
+			fi.Size = 255
+			fi.ToText = true
 		}
 	case TypeTextField:
-		fi.index = false
-		fi.unique = false
+		fi.Index = false
+		fi.Unique = false
 	case TypeTimeField, TypeDateField, TypeDateTimeField:
 		if fieldType == TypeDateTimeField {
 			if precision != "" {
-				v, e := StrTo(precision).Int()
+				v, e := utils.StrTo(precision).Int()
 				if e != nil {
 					err = fmt.Errorf("convert %s to int error:%v", precision, e)
 				} else {
-					fi.timePrecision = &v
+					fi.TimePrecision = &v
 				}
 			}
 		}
 
 		if attrs["auto_now"] {
-			fi.autoNow = true
+			fi.AutoNow = true
 		} else if attrs["auto_now_add"] {
-			fi.autoNowAdd = true
+			fi.AutoNowAdd = true
 		}
 	case TypeFloatField:
 	case TypeDecimalField:
 		d1 := digits
 		d2 := decimals
-		v1, er1 := StrTo(d1).Int8()
-		v2, er2 := StrTo(d2).Int8()
+		v1, er1 := utils.StrTo(d1).Int8()
+		v2, er2 := utils.StrTo(d2).Int8()
 		if er1 != nil || er2 != nil {
 			err = fmt.Errorf("wrong digits/decimals value %s/%s", d2, d1)
 			goto end
 		}
-		fi.digits = int(v1)
-		fi.decimals = int(v2)
+		fi.Digits = int(v1)
+		fi.Decimals = int(v2)
 	default:
 		switch {
 		case fieldType&IsIntegerField > 0:
@@ -414,33 +416,33 @@ checkType:
 	}
 
 	if fieldType&IsIntegerField == 0 {
-		if fi.auto {
+		if fi.Auto {
 			err = fmt.Errorf("non-integer type cannot set auto")
 			goto end
 		}
 	}
 
-	if fi.auto || fi.pk {
-		if fi.auto {
+	if fi.Auto || fi.Pk {
+		if fi.Auto {
 			switch addrField.Elem().Kind() {
 			case reflect.Int, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint32, reflect.Uint64:
 			default:
 				err = fmt.Errorf("auto primary key only support int, int32, int64, uint, uint32, uint64 but found `%s`", addrField.Elem().Kind())
 				goto end
 			}
-			fi.pk = true
+			fi.Pk = true
 		}
-		fi.null = false
-		fi.index = false
-		fi.unique = false
+		fi.Null = false
+		fi.Index = false
+		fi.Unique = false
 	}
 
-	if fi.unique {
-		fi.index = false
+	if fi.Unique {
+		fi.Index = false
 	}
 
 	// can not set default for these type
-	if fi.auto || fi.pk || fi.unique || fieldType == TypeTimeField || fieldType == TypeDateField || fieldType == TypeDateTimeField {
+	if fi.Auto || fi.Pk || fi.Unique || fieldType == TypeTimeField || fieldType == TypeDateField || fieldType == TypeDateTimeField {
 		initial.Clear()
 	}
 
@@ -474,7 +476,7 @@ checkType:
 		}
 	}
 
-	fi.initial = initial
+	fi.Initial = initial
 end:
 	if err != nil {
 		return nil, err

@@ -19,6 +19,10 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
+
+	"github.com/beego/beego/v2/client/orm/internal/logs"
+
+	"github.com/beego/beego/v2/client/orm/internal/models"
 )
 
 // mysql operators.
@@ -72,28 +76,28 @@ type dbBaseMysql struct {
 
 var _ dbBaser = new(dbBaseMysql)
 
-// get mysql operator.
+// OperatorSQL get mysql operator.
 func (d *dbBaseMysql) OperatorSQL(operator string) string {
 	return mysqlOperators[operator]
 }
 
-// get mysql table field types.
+// DbTypes get mysql table field types.
 func (d *dbBaseMysql) DbTypes() map[string]string {
 	return mysqlTypes
 }
 
-// show table sql for mysql.
+// ShowTablesQuery show table sql for mysql.
 func (d *dbBaseMysql) ShowTablesQuery() string {
 	return "SELECT table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema = DATABASE()"
 }
 
-// show columns sql of table for mysql.
+// ShowColumnsQuery show Columns sql of table for mysql.
 func (d *dbBaseMysql) ShowColumnsQuery(table string) string {
-	return fmt.Sprintf("SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE FROM information_schema.columns "+
+	return fmt.Sprintf("SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE FROM information_schema.Columns "+
 		"WHERE table_schema = DATABASE() AND table_name = '%s'", table)
 }
 
-// execute sql to check index exist.
+// IndexExists execute sql to check index exist.
 func (d *dbBaseMysql) IndexExists(ctx context.Context, db dbQuerier, table string, name string) bool {
 	row := db.QueryRowContext(ctx, "SELECT count(*) FROM information_schema.statistics "+
 		"WHERE table_schema = DATABASE() AND table_name = ? AND index_name = ?", table, name)
@@ -106,7 +110,7 @@ func (d *dbBaseMysql) IndexExists(ctx context.Context, db dbQuerier, table strin
 // If your primary key or unique column conflict will update
 // If no will insert
 // Add "`" for mysql sql building
-func (d *dbBaseMysql) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *modelInfo, ind reflect.Value, a *alias, args ...string) (int64, error) {
+func (d *dbBaseMysql) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *models.ModelInfo, ind reflect.Value, a *alias, args ...string) (int64, error) {
 	var iouStr string
 	argsMap := map[string]string{}
 
@@ -120,10 +124,9 @@ func (d *dbBaseMysql) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *model
 		}
 	}
 
-	isMulti := false
-	names := make([]string, 0, len(mi.fields.dbcols)-1)
+	names := make([]string, 0, len(mi.Fields.DBcols)-1)
 	Q := d.ins.TableQuote()
-	values, _, err := d.collectValues(mi, ind, mi.fields.dbcols, true, true, &names, a.TZ)
+	values, _, err := d.collectValues(mi, ind, mi.Fields.DBcols, true, true, &names, a.TZ)
 	if err != nil {
 		return 0, err
 	}
@@ -150,26 +153,17 @@ func (d *dbBaseMysql) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *model
 	qupdates := strings.Join(updates, ", ")
 	columns := strings.Join(names, sep)
 
-	multi := len(values) / len(names)
-
-	if isMulti {
-		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
-	}
 	// conflitValue maybe is an int,can`t use fmt.Sprintf
-	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s) %s "+qupdates, Q, mi.table, Q, Q, columns, Q, qmarks, iouStr)
+	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s) %s "+qupdates, Q, mi.Table, Q, Q, columns, Q, qmarks, iouStr)
 
 	d.ins.ReplaceMarks(&query)
 
-	if isMulti || !d.ins.HasReturningID(mi, &query) {
+	if !d.ins.HasReturningID(mi, &query) {
 		res, err := q.ExecContext(ctx, query, values...)
 		if err == nil {
-			if isMulti {
-				return res.RowsAffected()
-			}
-
 			lastInsertId, err := res.LastInsertId()
 			if err != nil {
-				DebugLog.Println(ErrLastInsertIdUnavailable, ':', err)
+				logs.DebugLog.Println(ErrLastInsertIdUnavailable, ':', err)
 				return lastInsertId, ErrLastInsertIdUnavailable
 			} else {
 				return lastInsertId, nil

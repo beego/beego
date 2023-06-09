@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package orm
+package models
 
 import (
 	"database/sql"
@@ -20,6 +20,8 @@ import (
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/beego/beego/v2/client/orm/internal/logs"
 )
 
 // 1 is attr
@@ -48,15 +50,29 @@ var supportTag = map[string]int{
 	"precision":    2,
 }
 
-// get reflect.Type name with package path.
-func getFullName(typ reflect.Type) string {
+type fn func(string) string
+
+var (
+	NameStrategyMap = map[string]fn{
+		DefaultNameStrategy:      SnakeString,
+		SnakeAcronymNameStrategy: SnakeStringWithAcronym,
+	}
+	DefaultNameStrategy      = "snakeString"
+	SnakeAcronymNameStrategy = "snakeStringWithAcronym"
+	NameStrategy             = DefaultNameStrategy
+	defaultStructTagDelim    = ";"
+	DefaultStructTagName     = "orm"
+)
+
+// GetFullName get reflect.Type name with package path.
+func GetFullName(typ reflect.Type) string {
 	return typ.PkgPath() + "." + typ.Name()
 }
 
-// getTableName get struct table name.
+// GetTableName get struct table name.
 // If the struct implement the TableName, then get the result as tablename
 // else use the struct name which will apply snakeString.
-func getTableName(val reflect.Value) string {
+func GetTableName(val reflect.Value) string {
 	if fun := val.MethodByName("TableName"); fun.IsValid() {
 		vals := fun.Call([]reflect.Value{})
 		// has return and the first val is string
@@ -64,11 +80,11 @@ func getTableName(val reflect.Value) string {
 			return vals[0].String()
 		}
 	}
-	return snakeString(reflect.Indirect(val).Type().Name())
+	return SnakeString(reflect.Indirect(val).Type().Name())
 }
 
-// get table engine, myisam or innodb.
-func getTableEngine(val reflect.Value) string {
+// GetTableEngine get table engine, myisam or innodb.
+func GetTableEngine(val reflect.Value) string {
 	fun := val.MethodByName("TableEngine")
 	if fun.IsValid() {
 		vals := fun.Call([]reflect.Value{})
@@ -79,8 +95,8 @@ func getTableEngine(val reflect.Value) string {
 	return ""
 }
 
-// get table index from method.
-func getTableIndex(val reflect.Value) [][]string {
+// GetTableIndex get table index from method.
+func GetTableIndex(val reflect.Value) [][]string {
 	fun := val.MethodByName("TableIndex")
 	if fun.IsValid() {
 		vals := fun.Call([]reflect.Value{})
@@ -93,8 +109,8 @@ func getTableIndex(val reflect.Value) [][]string {
 	return nil
 }
 
-// get table unique from method
-func getTableUnique(val reflect.Value) [][]string {
+// GetTableUnique get table unique from method
+func GetTableUnique(val reflect.Value) [][]string {
 	fun := val.MethodByName("TableUnique")
 	if fun.IsValid() {
 		vals := fun.Call([]reflect.Value{})
@@ -107,8 +123,8 @@ func getTableUnique(val reflect.Value) [][]string {
 	return nil
 }
 
-// get whether the table needs to be created for the database alias
-func isApplicableTableForDB(val reflect.Value, db string) bool {
+// IsApplicableTableForDB get whether the table needs to be created for the database alias
+func IsApplicableTableForDB(val reflect.Value, db string) bool {
 	if !val.IsValid() {
 		return true
 	}
@@ -126,7 +142,7 @@ func isApplicableTableForDB(val reflect.Value, db string) bool {
 func getColumnName(ft int, addrField reflect.Value, sf reflect.StructField, col string) string {
 	column := col
 	if col == "" {
-		column = nameStrategyMap[nameStrategy](sf.Name)
+		column = NameStrategyMap[NameStrategy](sf.Name)
 	}
 	switch ft {
 	case RelForeignKey, RelOneToOne:
@@ -218,8 +234,8 @@ func getFieldType(val reflect.Value) (ft int, err error) {
 	return
 }
 
-// parse struct tag string
-func parseStructTag(data string) (attrs map[string]bool, tags map[string]string) {
+// ParseStructTag parse struct tag string
+func ParseStructTag(data string) (attrs map[string]bool, tags map[string]string) {
 	attrs = make(map[string]bool)
 	tags = make(map[string]string)
 	for _, v := range strings.Split(data, defaultStructTagDelim) {
@@ -236,8 +252,74 @@ func parseStructTag(data string) (attrs map[string]bool, tags map[string]string)
 				tags[name] = v
 			}
 		} else {
-			DebugLog.Println("unsupport orm tag", v)
+			logs.DebugLog.Println("unsupport orm tag", v)
 		}
 	}
 	return
 }
+
+func SnakeStringWithAcronym(s string) string {
+	data := make([]byte, 0, len(s)*2)
+	num := len(s)
+	for i := 0; i < num; i++ {
+		d := s[i]
+		before := false
+		after := false
+		if i > 0 {
+			before = s[i-1] >= 'a' && s[i-1] <= 'z'
+		}
+		if i+1 < num {
+			after = s[i+1] >= 'a' && s[i+1] <= 'z'
+		}
+		if i > 0 && d >= 'A' && d <= 'Z' && (before || after) {
+			data = append(data, '_')
+		}
+		data = append(data, d)
+	}
+	return strings.ToLower(string(data))
+}
+
+// SnakeString snake string, XxYy to xx_yy , XxYY to xx_y_y
+func SnakeString(s string) string {
+	data := make([]byte, 0, len(s)*2)
+	j := false
+	num := len(s)
+	for i := 0; i < num; i++ {
+		d := s[i]
+		if i > 0 && d >= 'A' && d <= 'Z' && j {
+			data = append(data, '_')
+		}
+		if d != '_' {
+			j = true
+		}
+		data = append(data, d)
+	}
+	return strings.ToLower(string(data))
+}
+
+// CamelString camel string, xx_yy to XxYy
+func CamelString(s string) string {
+	data := make([]byte, 0, len(s))
+	flag, num := true, len(s)-1
+	for i := 0; i <= num; i++ {
+		d := s[i]
+		if d == '_' {
+			flag = true
+			continue
+		} else if flag {
+			if d >= 'a' && d <= 'z' {
+				d = d - 32
+			}
+			flag = false
+		}
+		data = append(data, d)
+	}
+	return string(data)
+}
+
+const (
+	OdCascade    = "cascade"
+	OdSetNULL    = "set_null"
+	OdSetDefault = "set_default"
+	OdDoNothing  = "do_nothing"
+)

@@ -2,6 +2,9 @@
 - [httplib: fix unstable unit test which use the httplib.org](https://github.com/beego/beego/pull/5232)
 - [remove adapter package](https://github.com/beego/beego/pull/5239)
 
+## ORM refactoring
+- [introducing internal/models pkg](https://github.com/beego/beego/pull/5238)
+
 # v2.1.0
 - [unified gopkg.in/yaml version to v2](https://github.com/beego/beego/pull/5169)
 - [add non-block write log in asynchronous mode](https://github.com/beego/beego/pull/5150)
