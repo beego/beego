@@ -125,7 +125,7 @@ func TestWriteDeleteCache_Set(t *testing.T) {
 			_, err = w.Get(tt.ctx, tt.key)
 			assert.Equal(t, ErrKeyNotExist, err)
 
-			vv, _ := mockDbStore[tt.key]
+			vv := mockDbStore[tt.key]
 			assert.Equal(t, tt.value, vv)
 		})
 	}
