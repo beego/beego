@@ -13,6 +13,7 @@
 - [cache: fix typo and optimize the naming]()
 - [Fix 5176: beegoAppConfig String and Strings function has bug](https://github.com/beego/beego/pull/5211)
 
+
 # v2.0.7
 - [Upgrade github.com/go-kit/kit, CVE-2022-24450](https://github.com/beego/beego/pull/5121)
 # v2.0.6
