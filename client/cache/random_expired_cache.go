@@ -24,8 +24,8 @@ import (
 // RandomExpireCacheOption implement genreate random time offset expired option
 type RandomExpireCacheOption func(*RandomExpireCache)
 
-// WithOffsetFunc returns a RandomExpireCacheOption that configures the offset function
-func WithOffsetFunc(fn func() time.Duration) RandomExpireCacheOption {
+// WithRandomExpireOffsetFunc returns a RandomExpireCacheOption that configures the offset function
+func WithRandomExpireOffsetFunc(fn func() time.Duration) RandomExpireCacheOption {
 	return func(cache *RandomExpireCache) {
 		cache.offset = fn
 	}

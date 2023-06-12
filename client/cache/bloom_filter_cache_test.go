@@ -18,6 +18,7 @@ package cache
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"testing"
 	"time"
@@ -175,29 +176,31 @@ func TestBloomFilterCache_Get(t *testing.T) {
 	}
 }
 
-// This implementation of Bloom filters cache is NOT safe for concurrent use.
-// Uncomment the following method.
-// func TestBloomFilterCache_Get_Concurrency(t *testing.T) {
-//	bfc, err := NewBloomFilterCache(cacheUnderlying, loadFunc, mockBloom, time.Minute)
-//	assert.Nil(t, err)
-//
-//	_ = mockDB.Db.ClearAll(context.Background())
-//	_ = mockDB.Db.Put(context.Background(), "key_11", "value_11", 0)
-//	mockBloom.AddString("key_11")
-//
-//	var wg sync.WaitGroup
-//	wg.Add(100000)
-//	for i := 0; i < 100000; i++ {
-//		key := fmt.Sprintf("key_%d", i)
-//		go func(key string) {
-//			defer wg.Done()
-//			val, _ := bfc.Get(context.Background(), key)
-//
-//			if val != nil {
-//				assert.Equal(t, "value_11", val)
-//			}
-//		}(key)
-//	}
-//	wg.Wait()
-//	assert.Equal(t, int64(1), mockDB.loadCnt)
-// }
+func ExampleNewBloomFilterCache() {
+	c := NewMemoryCache()
+	c, err := NewBloomFilterCache(c, func(ctx context.Context, key string) (any, error) {
+		return fmt.Sprintf("hello, %s", key), nil
+	}, &AlwaysExist{}, time.Minute)
+	if err != nil {
+		panic(err)
+	}
+
+	val, err := c.Get(context.Background(), "Beego")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(val)
+	// Output:
+	// hello, Beego
+}
+
+type AlwaysExist struct {
+}
+
+func (*AlwaysExist) Test(string) bool {
+	return true
+}
+
+func (*AlwaysExist) Add(string) {
+
+}

@@ -122,7 +122,7 @@ func (fc *FileCache) Init() error {
 	return nil
 }
 
-// getCachedFilename returns an md5 encoded file name.
+// getCacheFileName returns a md5 encoded file name.
 func (fc *FileCache) getCacheFileName(key string) (string, error) {
 	m := md5.New()
 	_, _ = io.WriteString(m, key)
