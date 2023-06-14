@@ -20,11 +20,186 @@ import (
 	"errors"
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
 
 	"github.com/beego/beego/v2/core/berror"
 )
+
+func TestWriteDoubleDeleteCache_Set(t *testing.T) {
+	mockDbStore := make(map[string]any)
+
+	cancels := make([]func(), 0)
+	defer func() {
+		for _, cancel := range cancels {
+			cancel()
+		}
+	}()
+
+	testCases := []struct {
+		name        string
+		cache       Cache
+		storeFunc   func(ctx context.Context, key string, val any) error
+		ctx         context.Context
+		interval    time.Duration
+		sleepSecond time.Duration
+		key         string
+		value       any
+		wantErr     error
+	}{
+		{
+			name:     "store key/value in db fail",
+			interval: time.Second,
+			cache:    NewMemoryCache(),
+			storeFunc: func(ctx context.Context, key string, val any) error {
+				return errors.New("failed")
+			},
+			ctx: context.TODO(),
+			wantErr: berror.Wrap(errors.New("failed"), PersistCacheFailed,
+				fmt.Sprintf("key: %s, val: %v", "", nil)),
+		},
+		{
+			name:        "store key/value success",
+			interval:    time.Second * 2,
+			sleepSecond: time.Second * 3,
+			cache:       NewMemoryCache(),
+			storeFunc: func(ctx context.Context, key string, val any) error {
+				mockDbStore[key] = val
+				return nil
+			},
+			ctx:   context.TODO(),
+			key:   "hello",
+			value: "world",
+		},
+		{
+			name:        "store key/value timeout",
+			interval:    time.Second * 2,
+			sleepSecond: time.Second * 3,
+			cache:       NewMemoryCache(),
+			storeFunc: func(ctx context.Context, key string, val any) error {
+				select {
+				case <-ctx.Done():
+					return ctx.Err()
+				case <-time.After(3 * time.Second):
+					mockDbStore[key] = val
+					return nil
+				}
+
+			},
+			ctx: func() context.Context {
+				ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+				cancels = append(cancels, cancel)
+				return ctx
+
+			}(),
+			key:   "hello",
+			value: "hello",
+		},
+	}
+	for _, tt := range testCases {
+		t.Run(tt.name, func(t *testing.T) {
+			cache := tt.cache
+			c, err := NewWriteDoubleDeleteCache(cache, tt.interval, tt.storeFunc)
+			if err != nil {
+				assert.EqualError(t, tt.wantErr, err.Error())
+				return
+			}
+
+			err = c.Set(tt.ctx, tt.key, tt.value)
+			if err != nil {
+				assert.EqualError(t, tt.wantErr, err.Error())
+				return
+			}
+
+			err = cache.Put(tt.ctx, tt.key, tt.value, tt.interval)
+			require.NoError(t, err)
+
+			val, err := c.Get(tt.ctx, tt.key)
+			require.NoError(t, err)
+			assert.Equal(t, tt.value, val)
+
+			time.Sleep(tt.sleepSecond)
+
+			_, err = c.Get(tt.ctx, tt.key)
+			assert.Equal(t, ErrKeyNotExist, err)
+		})
+	}
+}
+
+func TestNewWriteDoubleDeleteCache(t *testing.T) {
+	underlyingCache := NewMemoryCache()
+	storeFunc := func(ctx context.Context, key string, val any) error { return nil }
+
+	type args struct {
+		cache    Cache
+		interval time.Duration
+		fn       func(ctx context.Context, key string, val any) error
+	}
+	tests := []struct {
+		name    string
+		args    args
+		wantRes *WriteDoubleDeleteCache
+		wantErr error
+	}{
+		{
+			name: "nil cache parameters",
+			args: args{
+				cache: nil,
+				fn:    storeFunc,
+			},
+			wantErr: berror.Error(InvalidInitParameters, "cache or storeFunc can not be nil"),
+		},
+		{
+			name: "nil storeFunc parameters",
+			args: args{
+				cache: underlyingCache,
+				fn:    nil,
+			},
+			wantErr: berror.Error(InvalidInitParameters, "cache or storeFunc can not be nil"),
+		},
+		{
+			name: "init write-though cache success",
+			args: args{
+				cache:    underlyingCache,
+				fn:       storeFunc,
+				interval: time.Second,
+			},
+			wantRes: &WriteDoubleDeleteCache{
+				Cache:     underlyingCache,
+				storeFunc: storeFunc,
+				interval:  time.Second,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := NewWriteDoubleDeleteCache(tt.args.cache, tt.args.interval, tt.args.fn)
+			assert.Equal(t, tt.wantErr, err)
+			if err != nil {
+				return
+			}
+		})
+	}
+}
+
+func ExampleWriteDoubleDeleteCache() {
+	c := NewMemoryCache()
+	wtc, err := NewWriteDoubleDeleteCache(c, 1*time.Second, func(ctx context.Context, key string, val any) error {
+		fmt.Printf("write data to somewhere key %s, val %v \n", key, val)
+		return nil
+	})
+	if err != nil {
+		panic(err)
+	}
+	err = wtc.Set(context.Background(),
+		"/biz/user/id=1", "I am user 1")
+	if err != nil {
+		panic(err)
+	}
+	// Output:
+	// write data to somewhere key /biz/user/id=1, val I am user 1
+}
 
 func TestWriteDeleteCache_Set(t *testing.T) {
 	mockDbStore := make(map[string]any)
@@ -184,7 +359,7 @@ func TestNewWriteDeleteCache(t *testing.T) {
 	}
 }
 
-func ExampleNewWriteDeleteCache() {
+func ExampleWriteDeleteCache() {
 	c := NewMemoryCache()
 	wtc, err := NewWriteDeleteCache(c, func(ctx context.Context, key string, val any) error {
 		fmt.Printf("write data to somewhere key %s, val %v \n", key, val)

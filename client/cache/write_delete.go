@@ -19,6 +19,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/beego/beego/v2/core/berror"
+	"time"
 )
 
 type WriteDeleteCache struct {
@@ -46,4 +47,41 @@ func (w *WriteDeleteCache) Set(ctx context.Context, key string, val any) error {
 		return berror.Wrap(err, PersistCacheFailed, fmt.Sprintf("key: %s, val: %v", key, val))
 	}
 	return w.Cache.Delete(ctx, key)
+}
+
+type WriteDoubleDeleteCache struct {
+	Cache
+	interval  time.Duration
+	storeFunc func(ctx context.Context, key string, val any) error
+}
+
+func NewWriteDoubleDeleteCache(cache Cache, interval time.Duration,
+	fn func(ctx context.Context, key string, val any) error) (*WriteDoubleDeleteCache, error) {
+	if fn == nil || cache == nil {
+		return nil, berror.Error(InvalidInitParameters, "cache or storeFunc can not be nil")
+	}
+
+	return &WriteDoubleDeleteCache{
+		Cache:     cache,
+		interval:  interval,
+		storeFunc: fn,
+	}, nil
+}
+
+func (c *WriteDoubleDeleteCache) Set(ctx context.Context, key string, val any) error {
+	err := c.storeFunc(ctx, key, val)
+	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
+		return berror.Wrap(err, PersistCacheFailed, fmt.Sprintf("key: %s, val: %v", key, val))
+	}
+	go func() {
+		timer := time.NewTimer(c.interval)
+		defer timer.Stop()
+		select {
+		case <-timer.C:
+			_ = c.Cache.Delete(ctx, key)
+
+		}
+	}()
+	return c.Cache.Delete(ctx, key)
+
 }
