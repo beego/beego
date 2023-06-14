@@ -27,7 +27,7 @@ type WriteDeleteCache struct {
 	storeFunc func(ctx context.Context, key string, val any) error
 }
 
-// NewWriteDeleteCache creates a write delete cache pattern decorator.
+// NewWriteDeleteCache creates write delete cache pattern decorator.
 // The fn is the function that persistent the key and val.
 func NewWriteDeleteCache(cache Cache, fn func(ctx context.Context, key string, val any) error) (*WriteDeleteCache, error) {
 	if fn == nil || cache == nil {
@@ -49,6 +49,8 @@ func (w *WriteDeleteCache) Set(ctx context.Context, key string, val any) error {
 	return w.Cache.Delete(ctx, key)
 }
 
+// WriteDoubleDeleteCache creates write double delete cache pattern decorator.
+// The fn is the function that persistent the key and val.
 type WriteDoubleDeleteCache struct {
 	Cache
 	interval  time.Duration

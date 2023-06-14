@@ -2,6 +2,7 @@
 - [httplib: fix unstable unit test which use the httplib.org](https://github.com/beego/beego/pull/5232)
 - [remove adapter package](https://github.com/beego/beego/pull/5239)
 - [feat: add write-delete cache mode](https://github.com/beego/beego/pull/5242)
+- [feat: add write-double-delete cache mode](https://github.com/beego/beego/pull/5243)
 
 ## ORM refactoring
 - [introducing internal/models pkg](https://github.com/beego/beego/pull/5238)
