@@ -18,8 +18,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/beego/beego/v2/core/berror"
 	"time"
+
+	"github.com/beego/beego/v2/core/berror"
 )
 
 type WriteDeleteCache struct {
@@ -78,11 +79,8 @@ func (c *WriteDoubleDeleteCache) Set(ctx context.Context, key string, val any) e
 	go func() {
 		timer := time.NewTimer(c.interval)
 		defer timer.Stop()
-		select {
-		case <-timer.C:
-			_ = c.Cache.Delete(ctx, key)
-
-		}
+		<-timer.C
+		_ = c.Cache.Delete(ctx, key)
 	}()
 	return c.Cache.Delete(ctx, key)
 
