@@ -884,6 +884,10 @@ func (d *dbBase) DeleteBatch(ctx context.Context, q dbQuerier, qs *querySet, mi 
 		cnt++
 	}
 
+	if err = rs.Err(); err != nil {
+		return 0, err
+	}
+
 	if cnt == 0 {
 		return 0, nil
 	}
@@ -1121,6 +1125,10 @@ func (d *dbBase) ReadBatch(ctx context.Context, q dbQuerier, qs *querySet, mi *m
 			}
 		}
 		cnt++
+	}
+
+	if err = rs.Err(); err != nil {
+		return 0, err
 	}
 
 	if !one {
@@ -1769,6 +1777,10 @@ func (d *dbBase) ReadValues(ctx context.Context, q dbQuerier, qs *querySet, mi *
 		cnt++
 	}
 
+	if err = rs.Err(); err != nil {
+		return 0, err
+	}
+
 	switch v := container.(type) {
 	case *[]Params:
 		*v = maps
@@ -1847,7 +1859,7 @@ func (d *dbBase) GetTables(db dbQuerier) (map[string]bool, error) {
 		}
 	}
 
-	return tables, nil
+	return tables, rows.Err()
 }
 
 // GetColumns get all cloumns in table.
@@ -1874,7 +1886,7 @@ func (d *dbBase) GetColumns(ctx context.Context, db dbQuerier, table string) (ma
 		columns[name] = [3]string{name, typ, null}
 	}
 
-	return columns, nil
+	return columns, rows.Err()
 }
 
 // not implement.
