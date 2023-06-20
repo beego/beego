@@ -33,6 +33,11 @@ func getColumnTyp(al *alias, fi *models.FieldInfo) (col string) {
 	fieldType := fi.FieldType
 	fieldSize := fi.Size
 
+	defer func() {
+		// handling the placeholder, including %COL%
+		col = strings.ReplaceAll(col, "%COL%", fi.Column)
+	}()
+
 checkColumn:
 	switch fieldType {
 	case TypeBooleanField:

@@ -1,8 +1,9 @@
 # developing
 - [httplib: fix unstable unit test which use the httplib.org](https://github.com/beego/beego/pull/5232)
-- [remove adapter package](https://github.com/beego/beego/pull/5239)
+- [rft: remove adapter package](https://github.com/beego/beego/pull/5239)
 - [feat: add write-delete cache mode](https://github.com/beego/beego/pull/5242)
 - [fix 5255: Check the rows.Err() if rows.Next() is false](https://github.com/beego/beego/pull/5256)
+- [orm: missing handling %COL% placeholder](https://github.com/beego/beego/pull/5257)
 
 ## ORM refactoring
 - [introducing internal/models pkg](https://github.com/beego/beego/pull/5238)
