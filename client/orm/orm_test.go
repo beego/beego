@@ -19,7 +19,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"io/ioutil"
 	"math"
 	"os"
 	"path/filepath"
@@ -118,7 +117,7 @@ func getCaller(skip int) string {
 	pc, file, line, _ := runtime.Caller(skip)
 	fun := runtime.FuncForPC(pc)
 	_, fn := filepath.Split(file)
-	data, err := ioutil.ReadFile(file)
+	data, err := os.ReadFile(file)
 	var codes []string
 	if err == nil {
 		lines := bytes.Split(data, []byte{'\n'})

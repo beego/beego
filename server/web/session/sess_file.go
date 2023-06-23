@@ -258,7 +258,7 @@ func (fp *FileProvider) SessionRegenerate(ctx context.Context, oldsid, sid strin
 	// 4.return FileSessionStore
 	_, err = os.Stat(oldSidFile)
 	if err == nil {
-		b, err := ioutil.ReadFile(oldSidFile)
+		b, err := os.ReadFile(oldSidFile)
 		if err != nil {
 			return nil, err
 		}

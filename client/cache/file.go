@@ -295,7 +295,7 @@ func exists(path string) (bool, error) {
 // FileGetContents Reads bytes from a file.
 // if non-existent, create this file.
 func FileGetContents(filename string) ([]byte, error) {
-	data, err := ioutil.ReadFile(filename)
+	data, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, berror.Wrapf(err, ReadFileCacheContentFailed,
 			"could not read the data from the file: %s, "+
