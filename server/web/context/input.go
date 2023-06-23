@@ -384,7 +384,7 @@ func (input *BeegoInput) CopyBody(MaxMemory int64) []byte {
 
 	input.Context.Request.Body.Close()
 	bf := bytes.NewBuffer(requestbody)
-	input.Context.Request.Body = http.MaxBytesReader(input.Context.ResponseWriter, ioutil.NopCloser(bf), MaxMemory)
+	input.Context.Request.Body = http.MaxBytesReader(input.Context.ResponseWriter, io.NopCloser(bf), MaxMemory)
 	input.RequestBody = requestbody
 	return requestbody
 }
