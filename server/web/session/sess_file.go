@@ -19,7 +19,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"path"
@@ -273,7 +272,7 @@ func (fp *FileProvider) SessionRegenerate(ctx context.Context, oldsid, sid strin
 			}
 		}
 
-		ioutil.WriteFile(newSidFile, b, 0o777)
+		os.WriteFile(newSidFile, b, 0o777)
 		os.Remove(oldSidFile)
 		os.Chtimes(newSidFile, time.Now(), time.Now())
 		ss := &FileSessionStore{sid: sid, values: kv}

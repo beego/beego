@@ -23,7 +23,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -307,7 +306,7 @@ func FileGetContents(filename string) ([]byte, error) {
 // FilePutContents puts bytes into a file.
 // if non-existent, create this file.
 func FilePutContents(filename string, content []byte) error {
-	return ioutil.WriteFile(filename, content, os.ModePerm)
+	return os.WriteFile(filename, content, os.ModePerm)
 }
 
 // GobEncode Gob encodes a file cache item.
