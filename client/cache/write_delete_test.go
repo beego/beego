@@ -101,6 +101,9 @@ func TestWriteDoubleDeleteCache_Set(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			cache := tt.cache
+			err := cache.Put(context.Background(), tt.key, tt.value, tt.interval)
+			require.NoError(t, err)
+
 			c, err := NewWriteDoubleDeleteCache(cache, tt.interval, tt.storeFunc)
 			if err != nil {
 				assert.EqualError(t, tt.wantErr, err.Error())
@@ -112,6 +115,9 @@ func TestWriteDoubleDeleteCache_Set(t *testing.T) {
 				assert.EqualError(t, tt.wantErr, err.Error())
 				return
 			}
+
+			_, err = c.Get(tt.ctx, tt.key)
+			assert.Equal(t, ErrKeyNotExist, err)
 
 			err = cache.Put(tt.ctx, tt.key, tt.value, tt.interval)
 			require.NoError(t, err)

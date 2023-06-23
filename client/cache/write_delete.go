@@ -76,12 +76,8 @@ func (c *WriteDoubleDeleteCache) Set(ctx context.Context, key string, val any) e
 	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
 		return berror.Wrap(err, PersistCacheFailed, fmt.Sprintf("key: %s, val: %v", key, val))
 	}
-	go func() {
-		timer := time.NewTimer(c.interval)
-		defer timer.Stop()
-		<-timer.C
+	time.AfterFunc(c.interval, func() {
 		_ = c.Cache.Delete(ctx, key)
-	}()
+	})
 	return c.Cache.Delete(ctx, key)
-
 }
