@@ -18,6 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -167,7 +168,7 @@ func (fp *FileProvider) SessionRead(ctx context.Context, sid string) (Store, err
 
 	os.Chtimes(sidPath, time.Now(), time.Now())
 	var kv map[interface{}]interface{}
-	b, err := ioutil.ReadAll(f)
+	b, err := io.ReadAll(f)
 	if err != nil {
 		return nil, err
 	}

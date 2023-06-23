@@ -18,7 +18,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -40,7 +40,7 @@ func (js *JSONConfig) Parse(filename string) (config.Configer, error) {
 		return nil, err
 	}
 	defer file.Close()
-	content, err := ioutil.ReadAll(file)
+	content, err := io.ReadAll(file)
 	if err != nil {
 		return nil, err
 	}

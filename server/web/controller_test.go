@@ -17,7 +17,6 @@ package web
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"math"
 	"mime/multipart"
 	"net/http"
@@ -321,7 +320,7 @@ func testControllerRespTestCases(t *testing.T, tc respTestCase) {
 		t.Errorf("TestResponse() failed to validate response code for %s", tc.Accept)
 	}
 
-	bodyBytes, err := ioutil.ReadAll(response.Body)
+	bodyBytes, err := io.ReadAll(response.Body)
 	if err != nil {
 		t.Errorf("TestResponse() failed to parse response body for %s", tc.Accept)
 	}
