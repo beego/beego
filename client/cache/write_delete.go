@@ -52,6 +52,8 @@ func (w *WriteDeleteCache) Set(ctx context.Context, key string, val any) error {
 
 // WriteDoubleDeleteCache creates write double delete cache pattern decorator.
 // The fn is the function that persistent the key and val.
+// it will delete the key from cache when you call Set function, and wait for interval, it will delete the key from cache one more time.
+// This pattern help to reduce the possibility of data inconsistencies, but it's still possible to be inconsistent among database and cache.
 type WriteDoubleDeleteCache struct {
 	Cache
 	interval  time.Duration
