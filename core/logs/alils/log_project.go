@@ -9,7 +9,7 @@ package alils
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httputil"
 )
@@ -51,7 +51,7 @@ func (p *LogProject) ListLogStore() (storeNames []string, err error) {
 		return
 	}
 
-	buf, err := ioutil.ReadAll(r.Body)
+	buf, err := io.ReadAll(r.Body)
 	if err != nil {
 		return
 	}
@@ -96,7 +96,7 @@ func (p *LogProject) GetLogStore(name string) (s *LogStore, err error) {
 		return
 	}
 
-	buf, err := ioutil.ReadAll(r.Body)
+	buf, err := io.ReadAll(r.Body)
 	if err != nil {
 		return
 	}
@@ -156,7 +156,7 @@ func (p *LogProject) CreateLogStore(name string, ttl, shardCnt int) (err error) 
 		return
 	}
 
-	body, err = ioutil.ReadAll(r.Body)
+	body, err = io.ReadAll(r.Body)
 	if err != nil {
 		return
 	}
@@ -188,7 +188,7 @@ func (p *LogProject) DeleteLogStore(name string) (err error) {
 		return
 	}
 
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return
 	}
@@ -239,7 +239,7 @@ func (p *LogProject) UpdateLogStore(name string, ttl, shardCnt int) (err error) 
 		return
 	}
 
-	body, err = ioutil.ReadAll(r.Body)
+	body, err = io.ReadAll(r.Body)
 	if err != nil {
 		return
 	}
@@ -277,7 +277,7 @@ func (p *LogProject) ListMachineGroup(offset, size int) (m []string, total int, 
 		return
 	}
 
-	buf, err := ioutil.ReadAll(r.Body)
+	buf, err := io.ReadAll(r.Body)
 	if err != nil {
 		return
 	}
@@ -324,7 +324,7 @@ func (p *LogProject) GetMachineGroup(name string) (m *MachineGroup, err error) {
 		return
 	}
 
-	buf, err := ioutil.ReadAll(r.Body)
+	buf, err := io.ReadAll(r.Body)
 	if err != nil {
 		return
 	}
@@ -369,7 +369,7 @@ func (p *LogProject) CreateMachineGroup(m *MachineGroup) (err error) {
 		return
 	}
 
-	body, err = ioutil.ReadAll(r.Body)
+	body, err = io.ReadAll(r.Body)
 	if err != nil {
 		return
 	}
@@ -408,7 +408,7 @@ func (p *LogProject) UpdateMachineGroup(m *MachineGroup) (err error) {
 		return
 	}
 
-	body, err = ioutil.ReadAll(r.Body)
+	body, err = io.ReadAll(r.Body)
 	if err != nil {
 		return
 	}
@@ -440,7 +440,7 @@ func (p *LogProject) DeleteMachineGroup(name string) (err error) {
 		return
 	}
 
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return
 	}
@@ -477,7 +477,7 @@ func (p *LogProject) ListConfig(offset, size int) (cfgNames []string, total int,
 		return
 	}
 
-	buf, err := ioutil.ReadAll(r.Body)
+	buf, err := io.ReadAll(r.Body)
 	if err != nil {
 		return
 	}
@@ -522,7 +522,7 @@ func (p *LogProject) GetConfig(name string) (c *LogConfig, err error) {
 		return
 	}
 
-	buf, err := ioutil.ReadAll(r.Body)
+	buf, err := io.ReadAll(r.Body)
 	if err != nil {
 		return
 	}
@@ -567,7 +567,7 @@ func (p *LogProject) UpdateConfig(c *LogConfig) (err error) {
 		return
 	}
 
-	body, err = ioutil.ReadAll(r.Body)
+	body, err = io.ReadAll(r.Body)
 	if err != nil {
 		return
 	}
@@ -606,7 +606,7 @@ func (p *LogProject) CreateConfig(c *LogConfig) (err error) {
 		return
 	}
 
-	body, err = ioutil.ReadAll(r.Body)
+	body, err = io.ReadAll(r.Body)
 	if err != nil {
 		return
 	}
@@ -638,7 +638,7 @@ func (p *LogProject) DeleteConfig(name string) (err error) {
 		return
 	}
 
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		return
 	}
@@ -670,7 +670,7 @@ func (p *LogProject) GetAppliedMachineGroups(confName string) (groupNames []stri
 		return
 	}
 
-	buf, err := ioutil.ReadAll(r.Body)
+	buf, err := io.ReadAll(r.Body)
 	if err != nil {
 		return
 	}
@@ -715,7 +715,7 @@ func (p *LogProject) GetAppliedConfigs(groupName string) (confNames []string, er
 		return
 	}
 
-	buf, err := ioutil.ReadAll(r.Body)
+	buf, err := io.ReadAll(r.Body)
 	if err != nil {
 		return
 	}
@@ -760,7 +760,7 @@ func (p *LogProject) ApplyConfigToMachineGroup(confName, groupName string) (err 
 		return
 	}
 
-	buf, err := ioutil.ReadAll(r.Body)
+	buf, err := io.ReadAll(r.Body)
 	if err != nil {
 		return
 	}
@@ -792,7 +792,7 @@ func (p *LogProject) RemoveConfigFromMachineGroup(confName, groupName string) (e
 		return
 	}
 
-	buf, err := ioutil.ReadAll(r.Body)
+	buf, err := io.ReadAll(r.Body)
 	if err != nil {
 		return
 	}

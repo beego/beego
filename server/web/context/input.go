@@ -19,7 +19,6 @@ import (
 	"compress/gzip"
 	"errors"
 	"io"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -377,14 +376,14 @@ func (input *BeegoInput) CopyBody(MaxMemory int64) []byte {
 		if err != nil {
 			return nil
 		}
-		requestbody, _ = ioutil.ReadAll(reader)
+		requestbody, _ = io.ReadAll(reader)
 	} else {
-		requestbody, _ = ioutil.ReadAll(safe)
+		requestbody, _ = io.ReadAll(safe)
 	}
 
 	input.Context.Request.Body.Close()
 	bf := bytes.NewBuffer(requestbody)
-	input.Context.Request.Body = http.MaxBytesReader(input.Context.ResponseWriter, ioutil.NopCloser(bf), MaxMemory)
+	input.Context.Request.Body = http.MaxBytesReader(input.Context.ResponseWriter, io.NopCloser(bf), MaxMemory)
 	input.RequestBody = requestbody
 	return requestbody
 }

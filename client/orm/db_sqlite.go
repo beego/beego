@@ -136,7 +136,7 @@ func (d *dbBaseSqlite) GetColumns(ctx context.Context, db dbQuerier, table strin
 		columns[name.String] = [3]string{name.String, typ.String, null.String}
 	}
 
-	return columns, nil
+	return columns, rows.Err()
 }
 
 // get show Columns sql in sqlite.
