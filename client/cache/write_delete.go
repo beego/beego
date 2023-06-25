@@ -57,10 +57,13 @@ func (w *WriteDeleteCache) Set(ctx context.Context, key string, val any) error {
 type WriteDoubleDeleteCache struct {
 	Cache
 	interval  time.Duration
+	timeout   time.Duration
 	storeFunc func(ctx context.Context, key string, val any) error
 }
 
-func NewWriteDoubleDeleteCache(cache Cache, interval time.Duration,
+type WriteDoubleDeleteCacheOption func(c *WriteDoubleDeleteCache)
+
+func NewWriteDoubleDeleteCache(cache Cache, interval, timeout time.Duration,
 	fn func(ctx context.Context, key string, val any) error) (*WriteDoubleDeleteCache, error) {
 	if fn == nil || cache == nil {
 		return nil, berror.Error(InvalidInitParameters, "cache or storeFunc can not be nil")
@@ -69,17 +72,25 @@ func NewWriteDoubleDeleteCache(cache Cache, interval time.Duration,
 	return &WriteDoubleDeleteCache{
 		Cache:     cache,
 		interval:  interval,
+		timeout:   timeout,
 		storeFunc: fn,
 	}, nil
 }
 
-func (c *WriteDoubleDeleteCache) Set(ctx context.Context, key string, val any) error {
+func (c *WriteDoubleDeleteCache) Set(
+	ctx context.Context, key string, val any) error {
 	err := c.storeFunc(ctx, key, val)
 	if err != nil && !errors.Is(err, context.DeadlineExceeded) {
 		return berror.Wrap(err, PersistCacheFailed, fmt.Sprintf("key: %s, val: %v", key, val))
 	}
 	time.AfterFunc(c.interval, func() {
-		_ = c.Cache.Delete(ctx, key)
+		rCtx, cancel := context.WithTimeout(context.Background(), c.timeout)
+		_ = c.Cache.Delete(rCtx, key)
+		cancel()
 	})
-	return c.Cache.Delete(ctx, key)
+	err = c.Cache.Delete(ctx, key)
+	if err != nil {
+		return berror.Wrap(err, DeleteFailed, fmt.Sprintf("key: %s", key))
+	}
+	return nil
 }

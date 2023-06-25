@@ -37,7 +37,7 @@ func TestWriteDoubleDeleteCache_Set(t *testing.T) {
 			cancel()
 		}
 	}()
-
+	timeout := time.Second * 3
 	testCases := []struct {
 		name        string
 		cache       Cache
@@ -61,10 +61,16 @@ func TestWriteDoubleDeleteCache_Set(t *testing.T) {
 				fmt.Sprintf("key: %s, val: %v", "", nil)),
 		},
 		{
+
 			name:        "store key/value success",
 			interval:    time.Second * 2,
 			sleepSecond: time.Second * 3,
-			cache:       NewMemoryCache(),
+			cache: func() Cache {
+				cache := NewMemoryCache()
+				err := cache.Put(context.Background(), "hello", "world", time.Second*2)
+				require.NoError(t, err)
+				return cache
+			}(),
 			storeFunc: func(ctx context.Context, key string, val any) error {
 				mockDbStore[key] = val
 				return nil
@@ -77,7 +83,12 @@ func TestWriteDoubleDeleteCache_Set(t *testing.T) {
 			name:        "store key/value timeout",
 			interval:    time.Second * 2,
 			sleepSecond: time.Second * 3,
-			cache:       NewMemoryCache(),
+			cache: func() Cache {
+				cache := NewMemoryCache()
+				err := cache.Put(context.Background(), "hello", "hello", time.Second*2)
+				require.NoError(t, err)
+				return cache
+			}(),
 			storeFunc: func(ctx context.Context, key string, val any) error {
 				select {
 				case <-ctx.Done():
@@ -101,10 +112,7 @@ func TestWriteDoubleDeleteCache_Set(t *testing.T) {
 	for _, tt := range testCases {
 		t.Run(tt.name, func(t *testing.T) {
 			cache := tt.cache
-			err := cache.Put(context.Background(), tt.key, tt.value, tt.interval)
-			require.NoError(t, err)
-
-			c, err := NewWriteDoubleDeleteCache(cache, tt.interval, tt.storeFunc)
+			c, err := NewWriteDoubleDeleteCache(cache, tt.interval, timeout, tt.storeFunc)
 			if err != nil {
 				assert.EqualError(t, tt.wantErr, err.Error())
 				return
@@ -143,6 +151,7 @@ func TestNewWriteDoubleDeleteCache(t *testing.T) {
 		interval time.Duration
 		fn       func(ctx context.Context, key string, val any) error
 	}
+	timeout := time.Second * 3
 	tests := []struct {
 		name    string
 		args    args
@@ -181,7 +190,7 @@ func TestNewWriteDoubleDeleteCache(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := NewWriteDoubleDeleteCache(tt.args.cache, tt.args.interval, tt.args.fn)
+			_, err := NewWriteDoubleDeleteCache(tt.args.cache, tt.args.interval, timeout, tt.args.fn)
 			assert.Equal(t, tt.wantErr, err)
 			if err != nil {
 				return
@@ -192,7 +201,7 @@ func TestNewWriteDoubleDeleteCache(t *testing.T) {
 
 func ExampleWriteDoubleDeleteCache() {
 	c := NewMemoryCache()
-	wtc, err := NewWriteDoubleDeleteCache(c, 1*time.Second, func(ctx context.Context, key string, val any) error {
+	wtc, err := NewWriteDoubleDeleteCache(c, 1*time.Second, 3*time.Second, func(ctx context.Context, key string, val any) error {
 		fmt.Printf("write data to somewhere key %s, val %v \n", key, val)
 		return nil
 	})
