@@ -61,7 +61,6 @@ func TestWriteDoubleDeleteCache_Set(t *testing.T) {
 				fmt.Sprintf("key: %s, val: %v", "", nil)),
 		},
 		{
-
 			name:        "store key/value success",
 			interval:    time.Second * 2,
 			sleepSecond: time.Second * 3,
@@ -97,7 +96,6 @@ func TestWriteDoubleDeleteCache_Set(t *testing.T) {
 					mockDbStore[key] = val
 					return nil
 				}
-
 			},
 			ctx: func() context.Context {
 				ctx, cancel := context.WithTimeout(context.Background(), time.Second)
