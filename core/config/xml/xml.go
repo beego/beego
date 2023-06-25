@@ -32,7 +32,6 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -53,7 +52,7 @@ type Config struct{}
 
 // Parse returns a ConfigContainer with parsed xml config map.
 func (xc *Config) Parse(filename string) (config.Configer, error) {
-	context, err := ioutil.ReadFile(filename)
+	context, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}

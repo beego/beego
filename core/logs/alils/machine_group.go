@@ -3,7 +3,7 @@ package alils
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httputil"
 )
@@ -54,7 +54,7 @@ func (m *MachineGroup) ListMachines() (ms []*Machine, total int, err error) {
 		return
 	}
 
-	buf, err := ioutil.ReadAll(r.Body)
+	buf, err := io.ReadAll(r.Body)
 	if err != nil {
 		return
 	}

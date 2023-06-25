@@ -37,7 +37,6 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"io"
-	"io/ioutil"
 	"mime/multipart"
 	"net"
 	"net/http"
@@ -283,16 +282,16 @@ func (b *BeegoHTTPRequest) Body(data interface{}) *BeegoHTTPRequest {
 	switch t := data.(type) {
 	case string:
 		bf := bytes.NewBufferString(t)
-		b.req.Body = ioutil.NopCloser(bf)
+		b.req.Body = io.NopCloser(bf)
 		b.req.GetBody = func() (io.ReadCloser, error) {
-			return ioutil.NopCloser(bf), nil
+			return io.NopCloser(bf), nil
 		}
 		b.req.ContentLength = int64(len(t))
 	case []byte:
 		bf := bytes.NewBuffer(t)
-		b.req.Body = ioutil.NopCloser(bf)
+		b.req.Body = io.NopCloser(bf)
 		b.req.GetBody = func() (io.ReadCloser, error) {
-			return ioutil.NopCloser(bf), nil
+			return io.NopCloser(bf), nil
 		}
 		b.req.ContentLength = int64(len(t))
 	default:
@@ -308,9 +307,9 @@ func (b *BeegoHTTPRequest) XMLBody(obj interface{}) (*BeegoHTTPRequest, error) {
 		if err != nil {
 			return b, berror.Wrap(err, InvalidXMLBody, "obj could not be converted to XML data")
 		}
-		b.req.Body = ioutil.NopCloser(bytes.NewReader(byts))
+		b.req.Body = io.NopCloser(bytes.NewReader(byts))
 		b.req.GetBody = func() (io.ReadCloser, error) {
-			return ioutil.NopCloser(bytes.NewReader(byts)), nil
+			return io.NopCloser(bytes.NewReader(byts)), nil
 		}
 		b.req.ContentLength = int64(len(byts))
 		b.req.Header.Set(contentTypeKey, "application/xml")
@@ -325,7 +324,7 @@ func (b *BeegoHTTPRequest) YAMLBody(obj interface{}) (*BeegoHTTPRequest, error) 
 		if err != nil {
 			return b, berror.Wrap(err, InvalidYAMLBody, "obj could not be converted to YAML data")
 		}
-		b.req.Body = ioutil.NopCloser(bytes.NewReader(byts))
+		b.req.Body = io.NopCloser(bytes.NewReader(byts))
 		b.req.ContentLength = int64(len(byts))
 		b.req.Header.Set(contentTypeKey, "application/x+yaml")
 	}
@@ -339,7 +338,7 @@ func (b *BeegoHTTPRequest) JSONBody(obj interface{}) (*BeegoHTTPRequest, error) 
 		if err != nil {
 			return b, berror.Wrap(err, InvalidJSONBody, "obj could not be converted to JSON body")
 		}
-		b.req.Body = ioutil.NopCloser(bytes.NewReader(byts))
+		b.req.Body = io.NopCloser(bytes.NewReader(byts))
 		b.req.ContentLength = int64(len(byts))
 		b.req.Header.Set(contentTypeKey, "application/json")
 	}
@@ -400,7 +399,7 @@ func (b *BeegoHTTPRequest) handleFiles() {
 		_ = pw.Close()
 	}()
 	b.Header(contentTypeKey, bodyWriter.FormDataContentType())
-	b.req.Body = ioutil.NopCloser(pr)
+	b.req.Body = io.NopCloser(pr)
 	b.Header("Transfer-Encoding", "chunked")
 }
 
