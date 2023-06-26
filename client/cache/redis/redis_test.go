@@ -248,3 +248,51 @@ func (m *MockOrm) Load(key string) (any, error) {
 	}
 	return m.kvs[key], nil
 }
+
+func TestCache_associate(t *testing.T) {
+	testCases := []struct {
+		name            string
+		skipEmptyPrefix bool
+		prefix          string
+		input           string
+		wantRes         string
+	}{
+		{
+			name:            "skip prefix",
+			skipEmptyPrefix: true,
+			prefix:          "",
+			input:           "my-key",
+			wantRes:         "my-key",
+		},
+		{
+			name:            "skip prefix but prefix not empty",
+			skipEmptyPrefix: true,
+			prefix:          "abc",
+			input:           "my-key",
+			wantRes:         "abc:my-key",
+		},
+		{
+			name:            "using empty prefix",
+			skipEmptyPrefix: false,
+			prefix:          "",
+			input:           "my-key",
+			wantRes:         ":my-key",
+		},
+		{
+			name:    "using prefix",
+			prefix:  "abc",
+			input:   "my-key",
+			wantRes: "abc:my-key",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			c := NewRedisCache().(*Cache)
+			c.skipEmptyPrefix = tc.skipEmptyPrefix
+			c.key = tc.prefix
+			res := c.associate(tc.input)
+			assert.Equal(t, tc.wantRes, res)
+		})
+	}
+}

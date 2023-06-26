@@ -51,9 +51,15 @@ type Cache struct {
 	p        *redis.Pool // redis connection pool
 	conninfo string
 	dbNum    int
+	// key actually is prefix.
 	key      string
 	password string
 	maxIdle  int
+
+	// skipEmptyPrefix for backward compatible,
+	// check function associate
+	// see https://github.com/beego/beego/issues/5248
+	skipEmptyPrefix bool
 
 	// Timeout value (less than the redis server's timeout value)
 	timeout time.Duration
@@ -83,6 +89,9 @@ func (rc *Cache) do(commandName string, args ...interface{}) (interface{}, error
 
 // associate with config key.
 func (rc *Cache) associate(originKey interface{}) string {
+	if rc.key == "" && rc.skipEmptyPrefix {
+		return fmt.Sprintf("%s", originKey)
+	}
 	return fmt.Sprintf("%s:%s", rc.key, originKey)
 }
 
@@ -192,7 +201,7 @@ func (rc *Cache) Scan(pattern string) (keys []string, err error) {
 }
 
 // StartAndGC starts the redis cache adapter.
-// config: must be in this format {"key":"collection key","conn":"connection info","dbNum":"0"}
+// config: must be in this format {"key":"collection key","conn":"connection info","dbNum":"0", "skipEmptyPrefix":"true"}
 // Cached items in redis are stored forever, no garbage collection happens
 func (rc *Cache) StartAndGC(config string) error {
 	var cf map[string]string
@@ -215,21 +224,19 @@ func (rc *Cache) StartAndGC(config string) error {
 		cf["conn"] = cf["conn"][i+1:]
 	}
 
-	if _, ok := cf["dbNum"]; !ok {
-		cf["dbNum"] = "0"
-	}
-	if _, ok := cf["password"]; !ok {
-		cf["password"] = ""
+	if v, ok := cf["dbNum"]; ok {
+		rc.dbNum, _ = strconv.Atoi(v)
 	}
 	if _, ok := cf["maxIdle"]; !ok {
 		cf["maxIdle"] = "3"
 	}
-	if _, ok := cf["timeout"]; !ok {
-		cf["timeout"] = "180s"
+
+	if v, ok := cf["skipEmptyPrefix"]; ok {
+		rc.skipEmptyPrefix, _ = strconv.ParseBool(v)
 	}
+
 	rc.key = cf["key"]
 	rc.conninfo = cf["conn"]
-	rc.dbNum, _ = strconv.Atoi(cf["dbNum"])
 	rc.password = cf["password"]
 	rc.maxIdle, _ = strconv.Atoi(cf["maxIdle"])
 
