@@ -6,6 +6,7 @@
 - [fix 5255: Check the rows.Err() if rows.Next() is false](https://github.com/beego/beego/pull/5256)
 - [orm: missing handling %COL% placeholder](https://github.com/beego/beego/pull/5257)
 - [fix: use of ioutil package](https://github.com/beego/beego/pull/5261)
+- [cache/redis: support skipEmptyPrefix option ](https://github.com/beego/beego/pull/5264)
 
 ## ORM refactoring
 - [introducing internal/models pkg](https://github.com/beego/beego/pull/5238)
