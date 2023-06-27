@@ -20,7 +20,6 @@ import (
 	"context"
 	"errors"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -54,7 +53,7 @@ func (ini *IniConfig) Parse(name string) (Configer, error) {
 }
 
 func (ini *IniConfig) parseFile(name string) (*IniConfigContainer, error) {
-	data, err := ioutil.ReadFile(name)
+	data, err := os.ReadFile(name)
 	if err != nil {
 		return nil, err
 	}

@@ -20,6 +20,10 @@ import (
 	"fmt"
 	"os"
 	"strings"
+
+	"github.com/beego/beego/v2/client/orm/internal/utils"
+
+	"github.com/beego/beego/v2/client/orm/internal/models"
 )
 
 type commander interface {
@@ -53,7 +57,7 @@ func RunCommand() {
 
 	BootStrap()
 
-	args := argString(os.Args[2:])
+	args := utils.ArgString(os.Args[2:])
 	name := args.Get(0)
 
 	if name == "help" {
@@ -112,7 +116,7 @@ func (d *commandSyncDb) Run() error {
 		for i, mi := range defaultModelCache.allOrdered() {
 			query := drops[i]
 			if !d.noInfo {
-				fmt.Printf("drop table `%s`\n", mi.table)
+				fmt.Printf("drop table `%s`\n", mi.Table)
 			}
 			_, err := db.Exec(query)
 			if d.verbose {
@@ -143,18 +147,18 @@ func (d *commandSyncDb) Run() error {
 	ctx := context.Background()
 	for i, mi := range defaultModelCache.allOrdered() {
 
-		if !isApplicableTableForDB(mi.addrField, d.al.Name) {
-			fmt.Printf("table `%s` is not applicable to database '%s'\n", mi.table, d.al.Name)
+		if !models.IsApplicableTableForDB(mi.AddrField, d.al.Name) {
+			fmt.Printf("table `%s` is not applicable to database '%s'\n", mi.Table, d.al.Name)
 			continue
 		}
 
-		if tables[mi.table] {
+		if tables[mi.Table] {
 			if !d.noInfo {
-				fmt.Printf("table `%s` already exists, skip\n", mi.table)
+				fmt.Printf("table `%s` already exists, skip\n", mi.Table)
 			}
 
-			var fields []*fieldInfo
-			columns, err := d.al.DbBaser.GetColumns(ctx, db, mi.table)
+			var fields []*models.FieldInfo
+			columns, err := d.al.DbBaser.GetColumns(ctx, db, mi.Table)
 			if err != nil {
 				if d.rtOnError {
 					return err
@@ -162,8 +166,8 @@ func (d *commandSyncDb) Run() error {
 				fmt.Printf("    %s\n", err.Error())
 			}
 
-			for _, fi := range mi.fields.fieldsDB {
-				if _, ok := columns[fi.column]; !ok {
+			for _, fi := range mi.Fields.FieldsDB {
+				if _, ok := columns[fi.Column]; !ok {
 					fields = append(fields, fi)
 				}
 			}
@@ -172,7 +176,7 @@ func (d *commandSyncDb) Run() error {
 				query := getColumnAddQuery(d.al, fi)
 
 				if !d.noInfo {
-					fmt.Printf("add column `%s` for table `%s`\n", fi.fullName, mi.table)
+					fmt.Printf("add column `%s` for table `%s`\n", fi.FullName, mi.Table)
 				}
 
 				_, err := db.Exec(query)
@@ -187,7 +191,7 @@ func (d *commandSyncDb) Run() error {
 				}
 			}
 
-			for _, idx := range indexes[mi.table] {
+			for _, idx := range indexes[mi.Table] {
 				if !d.al.DbBaser.IndexExists(ctx, db, idx.Table, idx.Name) {
 					if !d.noInfo {
 						fmt.Printf("create index `%s` for table `%s`\n", idx.Name, idx.Table)
@@ -211,11 +215,11 @@ func (d *commandSyncDb) Run() error {
 		}
 
 		if !d.noInfo {
-			fmt.Printf("create table `%s` \n", mi.table)
+			fmt.Printf("create table `%s` \n", mi.Table)
 		}
 
 		queries := []string{createQueries[i]}
-		for _, idx := range indexes[mi.table] {
+		for _, idx := range indexes[mi.Table] {
 			queries = append(queries, idx.SQL)
 		}
 
@@ -265,7 +269,7 @@ func (d *commandSQLAll) Run() error {
 	var all []string
 	for i, mi := range defaultModelCache.allOrdered() {
 		queries := []string{createQueries[i]}
-		for _, idx := range indexes[mi.table] {
+		for _, idx := range indexes[mi.Table] {
 			queries = append(queries, idx.SQL)
 		}
 		sql := strings.Join(queries, "\n")

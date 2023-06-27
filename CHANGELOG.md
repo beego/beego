@@ -1,4 +1,16 @@
 # developing
+- [httplib: fix unstable unit test which use the httplib.org](https://github.com/beego/beego/pull/5232)
+- [rft: remove adapter package](https://github.com/beego/beego/pull/5239)
+- [feat: add write-delete cache mode](https://github.com/beego/beego/pull/5242)
+- [feat: add write-double-delete cache mode](https://github.com/beego/beego/pull/5243)
+- [fix 5255: Check the rows.Err() if rows.Next() is false](https://github.com/beego/beego/pull/5256)
+- [orm: missing handling %COL% placeholder](https://github.com/beego/beego/pull/5257)
+- [fix: use of ioutil package](https://github.com/beego/beego/pull/5261)
+
+## ORM refactoring
+- [introducing internal/models pkg](https://github.com/beego/beego/pull/5238)
+
+# v2.1.0
 - [unified gopkg.in/yaml version to v2](https://github.com/beego/beego/pull/5169)
 - [add non-block write log in asynchronous mode](https://github.com/beego/beego/pull/5150)
 - [Fix 5126: support bloom filter cache](https://github.com/beego/beego/pull/5126)
@@ -12,7 +24,6 @@
 - [Fix 5172: protect field access with lock to avoid possible data race](https://github.com/beego/beego/pull/5210)
 - [cache: fix typo and optimize the naming]()
 - [Fix 5176: beegoAppConfig String and Strings function has bug](https://github.com/beego/beego/pull/5211)
-
 
 # v2.0.7
 - [Upgrade github.com/go-kit/kit, CVE-2022-24450](https://github.com/beego/beego/pull/5121)

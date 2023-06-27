@@ -81,7 +81,7 @@ func (el *esLogger) Init(config string) error {
 	if len(el.Formatter) > 0 {
 		fmtr, ok := logs.GetFormatter(el.Formatter)
 		if !ok {
-			return errors.New(fmt.Sprintf("the formatter with name: %s not found", el.Formatter))
+			return fmt.Errorf("the formatter with name: %s not found", el.Formatter)
 		}
 		el.formatter = fmtr
 	}

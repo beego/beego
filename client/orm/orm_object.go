@@ -18,11 +18,13 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+
+	"github.com/beego/beego/v2/client/orm/internal/models"
 )
 
 // an insert queryer struct
 type insertSet struct {
-	mi     *modelInfo
+	mi     *models.ModelInfo
 	orm    *ormBase
 	stmt   stmtQuerier
 	closed bool
@@ -42,23 +44,23 @@ func (o *insertSet) InsertWithCtx(ctx context.Context, md interface{}) (int64, e
 	val := reflect.ValueOf(md)
 	ind := reflect.Indirect(val)
 	typ := ind.Type()
-	name := getFullName(typ)
+	name := models.GetFullName(typ)
 	if val.Kind() != reflect.Ptr {
 		panic(fmt.Errorf("<Inserter.Insert> cannot use non-ptr model struct `%s`", name))
 	}
-	if name != o.mi.fullName {
-		panic(fmt.Errorf("<Inserter.Insert> need model `%s` but found `%s`", o.mi.fullName, name))
+	if name != o.mi.FullName {
+		panic(fmt.Errorf("<Inserter.Insert> need model `%s` but found `%s`", o.mi.FullName, name))
 	}
 	id, err := o.orm.alias.DbBaser.InsertStmt(ctx, o.stmt, o.mi, ind, o.orm.alias.TZ)
 	if err != nil {
 		return id, err
 	}
 	if id > 0 {
-		if o.mi.fields.pk.auto {
-			if o.mi.fields.pk.fieldType&IsPositiveIntegerField > 0 {
-				ind.FieldByIndex(o.mi.fields.pk.fieldIndex).SetUint(uint64(id))
+		if o.mi.Fields.Pk.Auto {
+			if o.mi.Fields.Pk.FieldType&IsPositiveIntegerField > 0 {
+				ind.FieldByIndex(o.mi.Fields.Pk.FieldIndex).SetUint(uint64(id))
 			} else {
-				ind.FieldByIndex(o.mi.fields.pk.fieldIndex).SetInt(id)
+				ind.FieldByIndex(o.mi.Fields.Pk.FieldIndex).SetInt(id)
 			}
 		}
 	}
@@ -75,7 +77,7 @@ func (o *insertSet) Close() error {
 }
 
 // create new insert queryer.
-func newInsertSet(ctx context.Context, orm *ormBase, mi *modelInfo) (Inserter, error) {
+func newInsertSet(ctx context.Context, orm *ormBase, mi *models.ModelInfo) (Inserter, error) {
 	bi := new(insertSet)
 	bi.orm = orm
 	bi.mi = mi

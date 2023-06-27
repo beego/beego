@@ -16,7 +16,9 @@
 // Usage:
 //
 // import(
-//   "github.com/beego/beego/v2/client/cache"
+//
+//	"github.com/beego/beego/v2/client/cache"
+//
 // )
 //
 // bm, err := cache.NewCache("memory", `{"interval":60}`)
@@ -27,7 +29,6 @@
 //	bm.Get("astaxie")
 //	bm.IsExist("astaxie")
 //	bm.Delete("astaxie")
-//
 package cache
 
 import (
@@ -39,6 +40,7 @@ import (
 
 // Cache interface contains all behaviors for cache adapter.
 // usage:
+//
 //	cache.Register("file",cache.NewFileCache) // this operation is run in init method of file.go.
 //	c,err := cache.NewCache("file","{....}")
 //	c.Put("key",value, 3600 * time.Second)

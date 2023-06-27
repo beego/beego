@@ -14,19 +14,18 @@
 
 // Package yaml for config provider
 // Usage:
-//  import(
-//   _ "github.com/beego/beego/v2/core/config/yaml"
-//     "github.com/beego/beego/v2/core/config"
-//  )
 //
-//  cnf, err := config.NewConfig("yaml", "config.yaml")
+//	import(
+//	 _ "github.com/beego/beego/v2/core/config/yaml"
+//	   "github.com/beego/beego/v2/core/config"
+//	)
 //
+//	cnf, err := config.NewConfig("yaml", "config.yaml")
 package yaml
 
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"sync"
@@ -66,7 +65,7 @@ func (*Config) ParseData(data []byte) (config.Configer, error) {
 
 // ReadYmlReader Read yaml file to map.
 func ReadYmlReader(path string) (cnf map[string]interface{}, err error) {
-	buf, err := ioutil.ReadFile(path)
+	buf, err := os.ReadFile(path)
 	if err != nil {
 		return
 	}

@@ -22,6 +22,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/beego/beego/v2/client/orm/internal/logs"
+
+	"github.com/beego/beego/v2/client/orm/internal/models"
+
 	"github.com/beego/beego/v2/client/orm/hints"
 )
 
@@ -74,9 +78,9 @@ type dbBaseSqlite struct {
 var _ dbBaser = new(dbBaseSqlite)
 
 // override base db read for update behavior as SQlite does not support syntax
-func (d *dbBaseSqlite) Read(ctx context.Context, q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location, cols []string, isForUpdate bool) error {
+func (d *dbBaseSqlite) Read(ctx context.Context, q dbQuerier, mi *models.ModelInfo, ind reflect.Value, tz *time.Location, cols []string, isForUpdate bool) error {
 	if isForUpdate {
-		DebugLog.Println("[WARN] SQLite does not support SELECT FOR UPDATE query, isForUpdate param is ignored and always as false to do the work")
+		logs.DebugLog.Println("[WARN] SQLite does not support SELECT FOR UPDATE query, isForUpdate param is ignored and always as false to do the work")
 	}
 	return d.dbBase.Read(ctx, q, mi, ind, tz, cols, false)
 }
@@ -88,8 +92,8 @@ func (d *dbBaseSqlite) OperatorSQL(operator string) string {
 
 // generate functioned sql for sqlite.
 // only support DATE(text).
-func (d *dbBaseSqlite) GenerateOperatorLeftCol(fi *fieldInfo, operator string, leftCol *string) {
-	if fi.fieldType == TypeDateField {
+func (d *dbBaseSqlite) GenerateOperatorLeftCol(fi *models.FieldInfo, operator string, leftCol *string) {
+	if fi.FieldType == TypeDateField {
 		*leftCol = fmt.Sprintf("DATE(%s)", *leftCol)
 	}
 }
@@ -114,7 +118,7 @@ func (d *dbBaseSqlite) ShowTablesQuery() string {
 	return "SELECT name FROM sqlite_master WHERE type = 'table'"
 }
 
-// get columns in sqlite.
+// get Columns in sqlite.
 func (d *dbBaseSqlite) GetColumns(ctx context.Context, db dbQuerier, table string) (map[string][3]string, error) {
 	query := d.ins.ShowColumnsQuery(table)
 	rows, err := db.QueryContext(ctx, query)
@@ -132,10 +136,10 @@ func (d *dbBaseSqlite) GetColumns(ctx context.Context, db dbQuerier, table strin
 		columns[name.String] = [3]string{name.String, typ.String, null.String}
 	}
 
-	return columns, nil
+	return columns, rows.Err()
 }
 
-// get show columns sql in sqlite.
+// get show Columns sql in sqlite.
 func (d *dbBaseSqlite) ShowColumnsQuery(table string) string {
 	return fmt.Sprintf("pragma table_info('%s')", table)
 }
@@ -171,7 +175,7 @@ func (d *dbBaseSqlite) GenerateSpecifyIndex(tableName string, useIndex int, inde
 	case hints.KeyUseIndex, hints.KeyForceIndex:
 		return fmt.Sprintf(` INDEXED BY %s `, strings.Join(s, `,`))
 	default:
-		DebugLog.Println("[WARN] Not a valid specifying action, so that action is ignored")
+		logs.DebugLog.Println("[WARN] Not a valid specifying action, so that action is ignored")
 		return ``
 	}
 }
