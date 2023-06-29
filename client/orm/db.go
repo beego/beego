@@ -19,6 +19,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/beego/beego/v2/client/orm/internal/buffers"
 	"reflect"
 	"strings"
 	"time"
@@ -450,26 +451,7 @@ func (d *dbBase) InsertMulti(ctx context.Context, q dbQuerier, mi *models.ModelI
 // InsertValue execute insert sql with given struct and given values.
 // insert the given values, not the field values in struct.
 func (d *dbBase) InsertValue(ctx context.Context, q dbQuerier, mi *models.ModelInfo, isMulti bool, names []string, values []interface{}) (int64, error) {
-	Q := d.ins.TableQuote()
-
-	marks := make([]string, len(names))
-	for i := range marks {
-		marks[i] = "?"
-	}
-
-	sep := fmt.Sprintf("%s, %s", Q, Q)
-	qmarks := strings.Join(marks, ", ")
-	columns := strings.Join(names, sep)
-
-	multi := len(values) / len(names)
-
-	if isMulti && multi > 1 {
-		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
-	}
-
-	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s)", Q, mi.Table, Q, Q, columns, Q, qmarks)
-
-	d.ins.ReplaceMarks(&query)
+	query := d.InsertValueSQL(names, values, isMulti, mi)
 
 	if isMulti || !d.ins.HasReturningID(mi, &query) {
 		res, err := q.ExecContext(ctx, query, values...)
@@ -492,6 +474,53 @@ func (d *dbBase) InsertValue(ctx context.Context, q dbQuerier, mi *models.ModelI
 	var id int64
 	err := row.Scan(&id)
 	return id, err
+}
+
+func (d *dbBase) InsertValueSQL(names []string, values []interface{}, isMulti bool, mi *models.ModelInfo) string {
+	buf := buffers.Get()
+	defer buffers.Put(buf)
+
+	Q := d.ins.TableQuote()
+
+	_, _ = buf.WriteString("INSERT INTO ")
+	_, _ = buf.WriteString(Q)
+	_, _ = buf.WriteString(mi.Table)
+	_, _ = buf.WriteString(Q)
+
+	_, _ = buf.WriteString(" (")
+	for i, name := range names {
+		if i > 0 {
+			_, _ = buf.WriteString(", ")
+		}
+		_, _ = buf.WriteString(Q)
+		_, _ = buf.WriteString(name)
+		_, _ = buf.WriteString(Q)
+	}
+	_, _ = buf.WriteString(") VALUES (")
+
+	marks := make([]string, len(names))
+	for i := range marks {
+		marks[i] = "?"
+	}
+	qmarks := strings.Join(marks, ", ")
+
+	_, _ = buf.WriteString(qmarks)
+
+	multi := len(values) / len(names)
+
+	if isMulti && multi > 1 {
+		for i := 0; i < multi-1; i++ {
+			_, _ = buf.WriteString("), (")
+			_, _ = buf.WriteString(qmarks)
+		}
+	}
+
+	_ = buf.WriteByte(')')
+
+	query := buf.String()
+	d.ins.ReplaceMarks(&query)
+
+	return query
 }
 
 // InsertOrUpdate a row
