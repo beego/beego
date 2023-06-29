@@ -19,10 +19,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/beego/beego/v2/client/orm/internal/buffers"
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/beego/beego/v2/client/orm/internal/buffers"
 
 	"github.com/beego/beego/v2/client/orm/internal/logs"
 
