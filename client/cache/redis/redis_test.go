@@ -296,3 +296,66 @@ func TestCache_associate(t *testing.T) {
 		})
 	}
 }
+
+func TestCache_StartAndGC(t *testing.T) {
+	tests := []struct {
+		name string
+
+		configStr string
+
+		wantCache Cache
+		wantErr   error
+	}{
+		{
+			name: "just conn",
+			configStr: `{
+  "conn": "127.0.0.1:6379"
+}`,
+
+			wantCache: Cache{
+				conninfo:        "127.0.0.1:6379",
+				dbNum:           0,
+				key:             DefaultKey,
+				password:        "",
+				maxIdle:         DefaultMaxIdle,
+				skipEmptyPrefix: false,
+				timeout:         DefaultTimeout,
+			},
+			wantErr: nil,
+		},
+
+		{
+			name: "all",
+			configStr: `{
+  "dbNum": 2,
+  "skipEmptyPrefix": true,
+  "key": "mykey",
+  "conn": "redis://mypwd@127.0.0.1:6379",
+  "maxIdle": 10,
+  "timeout": "30s"
+}`,
+
+			wantCache: Cache{
+				conninfo:        "127.0.0.1:6379",
+				dbNum:           2,
+				key:             "mykey",
+				password:        "mypwd",
+				maxIdle:         10,
+				skipEmptyPrefix: true,
+				timeout:         time.Second * 30,
+			},
+			wantErr: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := Cache{}
+			err := c.parseConf(tt.configStr)
+			assert.Equal(t, tt.wantErr, err)
+			if err != nil {
+				return
+			}
+			assert.Equal(t, tt.wantCache, c)
+		})
+	}
+}
