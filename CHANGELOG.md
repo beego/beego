@@ -7,6 +7,7 @@
 - [orm: missing handling %COL% placeholder](https://github.com/beego/beego/pull/5257)
 - [fix: use of ioutil package](https://github.com/beego/beego/pull/5261)
 - [cache/redis: support skipEmptyPrefix option ](https://github.com/beego/beego/pull/5264)
+- [fix: refactor InsertValue method](https://github.com/beego/beego/pull/5267)
 
 ## ORM refactoring
 - [introducing internal/models pkg](https://github.com/beego/beego/pull/5238)
