@@ -39,11 +39,9 @@ func TestDbBase_InsertValueSQL(t *testing.T) {
 	}{
 		{
 			name: "single insert by dbBase",
-			db: func() *dbBase {
-				return &dbBase{
-					ins: &dbBase{},
-				}
-			}(),
+			db: &dbBase{
+				ins: &dbBase{},
+			},
 			isMulti: false,
 			names:   []string{"name", "age"},
 			values:  []interface{}{"test", 18},
@@ -51,11 +49,9 @@ func TestDbBase_InsertValueSQL(t *testing.T) {
 		},
 		{
 			name: "single insert by dbBasePostgres",
-			db: func() *dbBase {
-				return &dbBase{
-					ins: newdbBasePostgres(),
-				}
-			}(),
+			db: &dbBase{
+				ins: newdbBasePostgres(),
+			},
 			isMulti: false,
 			names:   []string{"name", "age"},
 			values:  []interface{}{"test", 18},
@@ -63,11 +59,9 @@ func TestDbBase_InsertValueSQL(t *testing.T) {
 		},
 		{
 			name: "multi insert by dbBase",
-			db: func() *dbBase {
-				return &dbBase{
-					ins: &dbBase{},
-				}
-			}(),
+			db: &dbBase{
+				ins: &dbBase{},
+			},
 			isMulti: true,
 			names:   []string{"name", "age"},
 			values:  []interface{}{"test", 18, "test2", 19},
@@ -75,11 +69,9 @@ func TestDbBase_InsertValueSQL(t *testing.T) {
 		},
 		{
 			name: "multi insert by dbBasePostgres",
-			db: func() *dbBase {
-				return &dbBase{
-					ins: newdbBasePostgres(),
-				}
-			}(),
+			db: &dbBase{
+				ins: newdbBasePostgres(),
+			},
 			isMulti: true,
 			names:   []string{"name", "age"},
 			values:  []interface{}{"test", 18, "test2", 19},
@@ -87,11 +79,9 @@ func TestDbBase_InsertValueSQL(t *testing.T) {
 		},
 		{
 			name: "multi insert by dbBase but values is not enough",
-			db: func() *dbBase {
-				return &dbBase{
-					ins: &dbBase{},
-				}
-			}(),
+			db: &dbBase{
+				ins: &dbBase{},
+			},
 			isMulti: true,
 			names:   []string{"name", "age"},
 			values:  []interface{}{"test", 18, "test2"},
@@ -99,11 +89,9 @@ func TestDbBase_InsertValueSQL(t *testing.T) {
 		},
 		{
 			name: "multi insert by dbBasePostgres but values is not enough",
-			db: func() *dbBase {
-				return &dbBase{
-					ins: newdbBasePostgres(),
-				}
-			}(),
+			db: &dbBase{
+				ins: newdbBasePostgres(),
+			},
 			isMulti: true,
 			names:   []string{"name", "age"},
 			values:  []interface{}{"test", 18, "test2"},
@@ -111,11 +99,9 @@ func TestDbBase_InsertValueSQL(t *testing.T) {
 		},
 		{
 			name: "single insert by dbBase but values is double to names",
-			db: func() *dbBase {
-				return &dbBase{
-					ins: &dbBase{},
-				}
-			}(),
+			db: &dbBase{
+				ins: &dbBase{},
+			},
 			isMulti: false,
 			names:   []string{"name", "age"},
 			values:  []interface{}{"test", 18, "test2", 19},
@@ -123,11 +109,9 @@ func TestDbBase_InsertValueSQL(t *testing.T) {
 		},
 		{
 			name: "single insert by dbBasePostgres but values is double to names",
-			db: func() *dbBase {
-				return &dbBase{
-					ins: newdbBasePostgres(),
-				}
-			}(),
+			db: &dbBase{
+				ins: newdbBasePostgres(),
+			},
 			isMulti: false,
 			names:   []string{"name", "age"},
 			values:  []interface{}{"test", 18, "test2", 19},
