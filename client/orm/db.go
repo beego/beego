@@ -552,7 +552,6 @@ func (d *dbBase) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *models.Mod
 		}
 	}
 
-	isMulti := false
 	names := make([]string, 0, len(mi.Fields.DBcols)-1)
 	Q := d.ins.TableQuote()
 	values, _, err := d.collectValues(mi, ind, mi.Fields.DBcols, true, true, &names, a.TZ)
@@ -600,7 +599,7 @@ func (d *dbBase) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *models.Mod
 
 	multi := len(values) / len(names)
 
-	if isMulti {
+	if multi > 1 {
 		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
 	}
 	// conflitValue maybe is a int,can`t use fmt.Sprintf
@@ -608,13 +607,9 @@ func (d *dbBase) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *models.Mod
 
 	d.ins.ReplaceMarks(&query)
 
-	if isMulti || !d.ins.HasReturningID(mi, &query) {
+	if !d.ins.HasReturningID(mi, &query) {
 		res, err := q.ExecContext(ctx, query, values...)
 		if err == nil {
-			if isMulti {
-				return res.RowsAffected()
-			}
-
 			lastInsertId, err := res.LastInsertId()
 			if err != nil {
 				logs.DebugLog.Println(ErrLastInsertIdUnavailable, ':', err)
