@@ -597,11 +597,6 @@ func (d *dbBase) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *models.Mod
 	qupdates := strings.Join(updates, ", ")
 	columns := strings.Join(names, sep)
 
-	multi := len(values) / len(names)
-
-	if multi > 1 {
-		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
-	}
 	// conflitValue maybe is a int,can`t use fmt.Sprintf
 	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s) %s "+qupdates, Q, mi.Table, Q, Q, columns, Q, qmarks, iouStr)
 
