@@ -33,6 +33,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -45,10 +46,10 @@ import (
 const (
 	// DefaultKey defines the collection name of redis for the cache adapter.
 	DefaultKey = "beecacheRedis"
-	// DefaultMaxIdle defines the default max idle connection number.
-	DefaultMaxIdle = 3
-	// DefaultTimeout defines the default timeout .
-	DefaultTimeout = time.Second * 180
+	// defaultMaxIdle defines the default max idle connection number.
+	defaultMaxIdle = 3
+	// defaultTimeout defines the default timeout .
+	defaultTimeout = time.Second * 180
 )
 
 // Cache is Redis cache adapter.
@@ -66,7 +67,8 @@ type Cache struct {
 	// see https://github.com/beego/beego/issues/5248
 	skipEmptyPrefix bool
 
-	// Timeout value (less than the redis server's timeout value)
+	// Timeout value (less than the redis server's timeout value).
+	// Timeout used for idle connection
 	timeout time.Duration
 }
 
@@ -241,29 +243,32 @@ func (rc *Cache) parseConf(config string) error {
 		return err
 	}
 
-	rc.dbNum = cf.DbNum
+	rc.dbNum = cf.dbNum
 	rc.key = cf.Key
 	rc.conninfo = cf.Conn
 	rc.password = cf.password
-	rc.maxIdle = cf.MaxIdle
+	rc.maxIdle = cf.maxIdle
 	rc.timeout = cf.timeout
-	rc.skipEmptyPrefix = cf.SkipEmptyPrefix
+	rc.skipEmptyPrefix = cf.skipEmptyPrefix
 
 	return nil
 }
 
 type redisConfig struct {
-	DbNum           int    `json:"dbNum"`
-	SkipEmptyPrefix bool   `json:"skipEmptyPrefix"`
+	DbNum           string `json:"dbNum"`
+	SkipEmptyPrefix string `json:"skipEmptyPrefix"`
 	Key             string `json:"key"`
 	// Format redis://<password>@<host>:<port>
 	Conn       string `json:"conn"`
-	MaxIdle    int    `json:"maxIdle"`
+	MaxIdle    string `json:"maxIdle"`
 	TimeoutStr string `json:"timeout"`
 
+	dbNum           int
+	skipEmptyPrefix bool
+	maxIdle         int
 	// parse from Conn
 	password string
-	// parse from TimeoutStr
+	// timeout used for idle connection, default is 180 seconds.
 	timeout time.Duration
 }
 
@@ -275,10 +280,6 @@ func (cf *redisConfig) parse() error {
 		return berror.Error(cache.InvalidRedisCacheCfg, "config missing conn field")
 	}
 
-	if cf.Key == "" {
-		cf.Key = DefaultKey
-	}
-
 	// Format redis://<password>@<host>:<port>
 	cf.Conn = strings.Replace(cf.Conn, "redis://", "", 1)
 	if i := strings.Index(cf.Conn, "@"); i > -1 {
@@ -286,14 +287,28 @@ func (cf *redisConfig) parse() error {
 		cf.Conn = cf.Conn[i+1:]
 	}
 
-	if cf.MaxIdle == 0 {
-		cf.MaxIdle = DefaultMaxIdle
+	if cf.Key == "" {
+		cf.Key = DefaultKey
+	}
+
+	if cf.DbNum != "" {
+		cf.dbNum, _ = strconv.Atoi(cf.DbNum)
+	}
+
+	if cf.SkipEmptyPrefix != "" {
+		cf.skipEmptyPrefix, _ = strconv.ParseBool(cf.SkipEmptyPrefix)
+	}
+
+	if cf.MaxIdle == "" {
+		cf.maxIdle = defaultMaxIdle
+	} else {
+		cf.maxIdle, _ = strconv.Atoi(cf.MaxIdle)
 	}
 
 	if v, err := time.ParseDuration(cf.TimeoutStr); err == nil {
 		cf.timeout = v
 	} else {
-		cf.timeout = DefaultTimeout
+		cf.timeout = defaultTimeout
 	}
 
 	return nil

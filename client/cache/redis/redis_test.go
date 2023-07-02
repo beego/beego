@@ -297,7 +297,7 @@ func TestCache_associate(t *testing.T) {
 	}
 }
 
-func TestCache_StartAndGC(t *testing.T) {
+func TestCache_parseConf(t *testing.T) {
 	tests := []struct {
 		name string
 
@@ -317,9 +317,9 @@ func TestCache_StartAndGC(t *testing.T) {
 				dbNum:           0,
 				key:             DefaultKey,
 				password:        "",
-				maxIdle:         DefaultMaxIdle,
+				maxIdle:         defaultMaxIdle,
 				skipEmptyPrefix: false,
-				timeout:         DefaultTimeout,
+				timeout:         defaultTimeout,
 			},
 			wantErr: nil,
 		},
@@ -327,11 +327,11 @@ func TestCache_StartAndGC(t *testing.T) {
 		{
 			name: "all",
 			configStr: `{
-  "dbNum": 2,
-  "skipEmptyPrefix": true,
+  "dbNum": "2",
+  "skipEmptyPrefix": "true",
   "key": "mykey",
   "conn": "redis://mypwd@127.0.0.1:6379",
-  "maxIdle": 10,
+  "maxIdle": "10",
   "timeout": "30s"
 }`,
 
