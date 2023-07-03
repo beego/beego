@@ -713,14 +713,8 @@ func (d *dbBase) Delete(ctx context.Context, q dbQuerier, mi *models.ModelInfo, 
 		args = append(args, pkValue)
 	}
 
-	Q := d.ins.TableQuote()
+	query := d.DeleteSQL(whereCols, mi)
 
-	sep := fmt.Sprintf("%s = ? AND %s", Q, Q)
-	wheres := strings.Join(whereCols, sep)
-
-	query := fmt.Sprintf("DELETE FROM %s%s%s WHERE %s%s%s = ?", Q, mi.Table, Q, Q, wheres, Q)
-
-	d.ins.ReplaceMarks(&query)
 	res, err := q.ExecContext(ctx, query, args...)
 	if err == nil {
 		num, err := res.RowsAffected()
@@ -736,6 +730,35 @@ func (d *dbBase) Delete(ctx context.Context, q dbQuerier, mi *models.ModelInfo, 
 		return num, err
 	}
 	return 0, err
+}
+
+func (d *dbBase) DeleteSQL(whereCols []string, mi *models.ModelInfo) string {
+	buf := buffers.Get()
+	defer buffers.Put(buf)
+
+	Q := d.ins.TableQuote()
+
+	_, _ = buf.WriteString("DELETE FROM ")
+	_, _ = buf.WriteString(Q)
+	_, _ = buf.WriteString(mi.Table)
+	_, _ = buf.WriteString(Q)
+	_, _ = buf.WriteString(" WHERE ")
+
+	for i, col := range whereCols {
+		if i > 0 {
+			_, _ = buf.WriteString(" AND ")
+		}
+		_, _ = buf.WriteString(Q)
+		_, _ = buf.WriteString(col)
+		_, _ = buf.WriteString(Q)
+		_, _ = buf.WriteString(" = ?")
+	}
+
+	query := buf.String()
+
+	d.ins.ReplaceMarks(&query)
+
+	return query
 }
 
 // UpdateBatch update table-related record by querySet.
