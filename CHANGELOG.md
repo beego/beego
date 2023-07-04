@@ -10,7 +10,7 @@
 - [fix: refactor InsertValue method](https://github.com/beego/beego/pull/5267)
 - [fix: modify InsertOrUpdate method, Remove the isMulti variable and its associated code](https://github.com/beego/beego/pull/5269)
 - [refactor cache/redis: Use redisConfig to receive incoming JSON (previously using a map)](https://github.com/beego/beego/pull/5268)
-- [fix: refactor UpdateSQL method](https://github.com/beego/beego/pull/5270)
+- [fix: refactor UpdateSQL method](https://github.com/beego/beego/pull/5272)
 
 ## ORM refactoring
 - [introducing internal/models pkg](https://github.com/beego/beego/pull/5238)
