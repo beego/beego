@@ -128,3 +128,60 @@ func TestDbBase_InsertValueSQL(t *testing.T) {
 		})
 	}
 }
+
+func TestDbBase_DeleteSQL(t *testing.T) {
+	mi := &models.ModelInfo{
+		Table: "test_table",
+	}
+
+	testCases := []struct {
+		name string
+		db   *dbBase
+
+		whereCols []string
+
+		wantRes string
+	}{
+		{
+			name: "delete by dbBase with id",
+			db: &dbBase{
+				ins: &dbBase{},
+			},
+			whereCols: []string{"id"},
+			wantRes:   "DELETE FROM `test_table` WHERE `id` = ?",
+		},
+		{
+			name: "delete by dbBase not id",
+			db: &dbBase{
+				ins: &dbBase{},
+			},
+			whereCols: []string{"name", "age"},
+			wantRes:   "DELETE FROM `test_table` WHERE `name` = ? AND `age` = ?",
+		},
+		{
+			name: "delete by dbBasePostgres with id",
+			db: &dbBase{
+				ins: newdbBasePostgres(),
+			},
+			whereCols: []string{"id"},
+			wantRes:   "DELETE FROM \"test_table\" WHERE \"id\" = $1",
+		},
+		{
+			name: "delete by dbBasePostgres not id",
+			db: &dbBase{
+				ins: newdbBasePostgres(),
+			},
+			whereCols: []string{"name", "age"},
+			wantRes:   "DELETE FROM \"test_table\" WHERE \"name\" = $1 AND \"age\" = $2",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			res := tc.db.DeleteSQL(tc.whereCols, mi)
+
+			assert.Equal(t, tc.wantRes, res)
+		})
+	}
+}
