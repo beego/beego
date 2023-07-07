@@ -143,7 +143,7 @@ var logMsgPool *sync.Pool
 // if the buffering chan is full, logger adapters write to file or other way.
 func NewLogger(channelLens ...int64) *BeeLogger {
 	bl := new(BeeLogger)
-	bl.level = LevelDebug
+	bl.level = LevelInfo
 	bl.loggerFuncCallDepth = 3
 	bl.msgChanLen = append(channelLens, 0)[0]
 	if bl.msgChanLen <= 0 {
