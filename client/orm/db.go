@@ -674,20 +674,47 @@ func (d *dbBase) Update(ctx context.Context, q dbQuerier, mi *models.ModelInfo, 
 
 	setValues = append(setValues, pkValue)
 
-	Q := d.ins.TableQuote()
-
-	sep := fmt.Sprintf("%s = ?, %s", Q, Q)
-	setColumns := strings.Join(setNames, sep)
-
-	query := fmt.Sprintf("UPDATE %s%s%s SET %s%s%s = ? WHERE %s%s%s = ?", Q, mi.Table, Q, Q, setColumns, Q, Q, pkName, Q)
-
-	d.ins.ReplaceMarks(&query)
+	query := d.UpdateSQL(setNames, pkName, mi)
 
 	res, err := q.ExecContext(ctx, query, setValues...)
 	if err == nil {
 		return res.RowsAffected()
 	}
 	return 0, err
+}
+
+func (d *dbBase) UpdateSQL(setNames []string, pkName string, mi *models.ModelInfo) string {
+	buf := buffers.Get()
+	defer buffers.Put(buf)
+
+	Q := d.ins.TableQuote()
+
+	_, _ = buf.WriteString("UPDATE ")
+	_, _ = buf.WriteString(Q)
+	_, _ = buf.WriteString(mi.Table)
+	_, _ = buf.WriteString(Q)
+	_, _ = buf.WriteString(" SET ")
+
+	for i, name := range setNames {
+		if i > 0 {
+			_, _ = buf.WriteString(", ")
+		}
+		_, _ = buf.WriteString(Q)
+		_, _ = buf.WriteString(name)
+		_, _ = buf.WriteString(Q)
+		_, _ = buf.WriteString(" = ?")
+	}
+
+	_, _ = buf.WriteString(" WHERE ")
+	_, _ = buf.WriteString(Q)
+	_, _ = buf.WriteString(pkName)
+	_, _ = buf.WriteString(Q)
+	_, _ = buf.WriteString(" = ?")
+
+	query := buf.String()
+	d.ins.ReplaceMarks(&query)
+
+	return query
 }
 
 // Delete execute delete sql dbQuerier with given struct reflect.Value.
