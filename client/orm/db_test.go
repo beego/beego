@@ -129,6 +129,50 @@ func TestDbBase_InsertValueSQL(t *testing.T) {
 	}
 }
 
+func TestDbBase_UpdateSQL(t *testing.T) {
+	mi := &models.ModelInfo{
+		Table: "test_table",
+	}
+
+	testCases := []struct {
+		name string
+		db   *dbBase
+
+		setNames []string
+		pkName   string
+
+		wantRes string
+	}{
+		{
+			name: "update by dbBase",
+			db: &dbBase{
+				ins: &dbBase{},
+			},
+			setNames: []string{"name", "age", "sender"},
+			pkName:   "id",
+			wantRes:  "UPDATE `test_table` SET `name` = ?, `age` = ?, `sender` = ? WHERE `id` = ?",
+		},
+		{
+			name: "update by dbBasePostgres",
+			db: &dbBase{
+				ins: newdbBasePostgres(),
+			},
+			setNames: []string{"name", "age", "sender"},
+			pkName:   "id",
+			wantRes:  "UPDATE \"test_table\" SET \"name\" = $1, \"age\" = $2, \"sender\" = $3 WHERE \"id\" = $4",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			res := tc.db.UpdateSQL(tc.setNames, tc.pkName, mi)
+
+			assert.Equal(t, tc.wantRes, res)
+		})
+	}
+}
+
 func TestDbBase_DeleteSQL(t *testing.T) {
 	mi := &models.ModelInfo{
 		Table: "test_table",
