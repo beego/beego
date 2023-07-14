@@ -210,7 +210,7 @@ func (o *ormBase) InsertWithCtx(ctx context.Context, md interface{}) (int64, err
 
 // set auto pk field
 func (*ormBase) setPk(mi *models.ModelInfo, ind reflect.Value, id int64) {
-	if mi.Fields.Pk.Auto {
+	if mi.Fields.Pk != nil && mi.Fields.Pk.Auto {
 		if mi.Fields.Pk.FieldType&IsPositiveIntegerField > 0 {
 			ind.FieldByIndex(mi.Fields.Pk.FieldIndex).SetUint(uint64(id))
 		} else {
