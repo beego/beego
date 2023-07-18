@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"html/template"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -184,6 +185,9 @@ func lockViewPaths() {
 func BuildTemplate(dir string, files ...string) error {
 	var err error
 	fs := beeTemplateFS()
+	
+	dir = formatFSPath(dir)
+	
 	f, err := fs.Open(dir)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -244,12 +248,15 @@ func getTplDeep(root string, fs http.FileSystem, file string, parent string, t *
 		rParent = file
 		fileAbsPath = filepath.Join(root, file)
 	}
+    
+	fileAbsPath = formatFSPath(fileAbsPath)
+	
 	f, err := fs.Open(fileAbsPath)
 	if err != nil {
 		panic("can't find template file:" + file)
 	}
 	defer f.Close()
-	data, err := io.ReadAll(f)
+	data, err := ioutil.ReadAll(f)
 	if err != nil {
 		return nil, [][]string{}, err
 	}
@@ -317,13 +324,16 @@ func _getTemplate(t0 *template.Template, root string, fs http.FileSystem, subMod
 			for _, otherFile := range others {
 				var data []byte
 				fileAbsPath := filepath.Join(root, otherFile)
+    
+				fileAbsPath = formatFSPath(fileAbsPath)
+				
 				f, err := fs.Open(fileAbsPath)
 				if err != nil {
 					f.Close()
 					logs.Trace("template file parse error, not success open file:", err)
 					continue
 				}
-				data, err = io.ReadAll(f)
+				data, err = ioutil.ReadAll(f)
 				f.Close()
 				if err != nil {
 					logs.Trace("template file parse error, not success read file:", err)
@@ -352,14 +362,28 @@ func _getTemplate(t0 *template.Template, root string, fs http.FileSystem, subMod
 	return
 }
 
+var isTemplateFS bool
+
 type templateFSFunc func() http.FileSystem
 
 func defaultFSFunc() http.FileSystem {
+	isTemplateFS = false
+	
 	return FileSystem{}
+}
+
+func formatFSPath(dir string) string {
+	if isTemplateFS {
+		return strings.Replace(dir, "\\", "/", -1)
+	}
+
+	return dir
 }
 
 // SetTemplateFSFunc set default filesystem function
 func SetTemplateFSFunc(fnt templateFSFunc) {
+	isTemplateFS = true
+	
 	beeTemplateFS = fnt
 }
 
