@@ -16,6 +16,8 @@ func (d FileSystem) Open(name string) (http.File, error) {
 // directory in the tree, including root. All errors that arise visiting files
 // and directories are filtered by walkFn.
 func Walk(fs http.FileSystem, root string, walkFn filepath.WalkFunc) error {
+	root = formatFSPath(root)
+
 	f, err := fs.Open(root)
 	if err != nil {
 		return err
@@ -38,6 +40,8 @@ func walk(fs http.FileSystem, path string, info os.FileInfo, walkFn filepath.Wal
 	if !info.IsDir() {
 		return walkFn(path, info, nil)
 	}
+    
+	path = formatFSPath(path)
 
 	dir, err := fs.Open(path)
 	if err != nil {
