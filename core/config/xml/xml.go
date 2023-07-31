@@ -19,20 +19,19 @@
 // go install github.com/beego/x2j.
 //
 // Usage:
-//  import(
-//    _ "github.com/beego/beego/v2/core/config/xml"
-//      "github.com/beego/beego/v2/core/config"
-//  )
 //
-//  cnf, err := config.NewConfig("xml", "config.xml")
+//	import(
+//	  _ "github.com/beego/beego/v2/core/config/xml"
+//	    "github.com/beego/beego/v2/core/config"
+//	)
 //
+//	cnf, err := config.NewConfig("xml", "config.xml")
 package xml
 
 import (
 	"encoding/xml"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
@@ -40,9 +39,10 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 
+	"github.com/beego/x2j"
+
 	"github.com/beego/beego/v2/core/config"
 	"github.com/beego/beego/v2/core/logs"
-	"github.com/beego/x2j"
 )
 
 // Config is a xml config parser and implements Config interface.
@@ -52,7 +52,7 @@ type Config struct{}
 
 // Parse returns a ConfigContainer with parsed xml config map.
 func (xc *Config) Parse(filename string) (config.Configer, error) {
-	context, err := ioutil.ReadFile(filename)
+	context, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}
@@ -119,11 +119,11 @@ func (c *ConfigContainer) sub(key string) (map[string]interface{}, error) {
 	}
 	value, ok := c.data[key]
 	if !ok {
-		return nil, errors.New(fmt.Sprintf("the key is not found: %s", key))
+		return nil, fmt.Errorf("the key is not found: %s", key)
 	}
 	res, ok := value.(map[string]interface{})
 	if !ok {
-		return nil, errors.New(fmt.Sprintf("the value of this key is not a structure: %s", key))
+		return nil, fmt.Errorf("the value of this key is not a structure: %s", key)
 	}
 	return res, nil
 }

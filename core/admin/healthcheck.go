@@ -17,16 +17,15 @@
 // type DatabaseCheck struct {
 // }
 //
-// func (dc *DatabaseCheck) Check() error {
-//	if dc.isConnected() {
-//		return nil
-//	} else {
-//		return errors.New("can't connect database")
-// 	 }
-// }
+//	func (dc *DatabaseCheck) Check() error {
+//		if dc.isConnected() {
+//			return nil
+//		} else {
+//			return errors.New("can't connect database")
+//		 }
+//	}
 //
 // AddHealthCheck("database",&DatabaseCheck{})
-//
 package admin
 
 // AdminCheckList holds health checker map

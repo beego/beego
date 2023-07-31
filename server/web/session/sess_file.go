@@ -18,7 +18,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"path"
@@ -167,7 +167,7 @@ func (fp *FileProvider) SessionRead(ctx context.Context, sid string) (Store, err
 
 	os.Chtimes(sidPath, time.Now(), time.Now())
 	var kv map[interface{}]interface{}
-	b, err := ioutil.ReadAll(f)
+	b, err := io.ReadAll(f)
 	if err != nil {
 		return nil, err
 	}
@@ -257,7 +257,7 @@ func (fp *FileProvider) SessionRegenerate(ctx context.Context, oldsid, sid strin
 	// 4.return FileSessionStore
 	_, err = os.Stat(oldSidFile)
 	if err == nil {
-		b, err := ioutil.ReadFile(oldSidFile)
+		b, err := os.ReadFile(oldSidFile)
 		if err != nil {
 			return nil, err
 		}
@@ -272,7 +272,7 @@ func (fp *FileProvider) SessionRegenerate(ctx context.Context, oldsid, sid strin
 			}
 		}
 
-		ioutil.WriteFile(newSidFile, b, 0o777)
+		os.WriteFile(newSidFile, b, 0o777)
 		os.Remove(oldSidFile)
 		os.Chtimes(newSidFile, time.Now(), time.Now())
 		ss := &FileSessionStore{sid: sid, values: kv}

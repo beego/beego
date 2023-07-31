@@ -20,6 +20,10 @@ import (
 	"reflect"
 	"time"
 
+	utils2 "github.com/beego/beego/v2/client/orm/internal/utils"
+
+	"github.com/beego/beego/v2/client/orm/internal/models"
+
 	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/core/utils"
 )
@@ -192,13 +196,13 @@ func (f *filterOrmDecorator) QueryTable(ptrStructOrTableName interface{}) QueryS
 	var (
 		name string
 		md   interface{}
-		mi   *modelInfo
+		mi   *models.ModelInfo
 	)
 
 	if table, ok := ptrStructOrTableName.(string); ok {
 		name = table
 	} else {
-		name = getFullName(indirectType(reflect.TypeOf(ptrStructOrTableName)))
+		name = models.GetFullName(utils2.IndirectType(reflect.TypeOf(ptrStructOrTableName)))
 		md = ptrStructOrTableName
 	}
 
@@ -303,7 +307,7 @@ func (f *filterOrmDecorator) InsertMulti(bulk int, mds interface{}) (int64, erro
 func (f *filterOrmDecorator) InsertMultiWithCtx(ctx context.Context, bulk int, mds interface{}) (int64, error) {
 	var (
 		md interface{}
-		mi *modelInfo
+		mi *models.ModelInfo
 	)
 
 	sind := reflect.Indirect(reflect.ValueOf(mds))

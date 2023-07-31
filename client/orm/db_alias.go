@@ -21,6 +21,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/beego/beego/v2/client/orm/internal/logs"
+
 	lru "github.com/hashicorp/golang-lru"
 )
 
@@ -320,7 +322,7 @@ func detectTZ(al *alias) {
 					al.TZ = t.Location()
 				}
 			} else {
-				DebugLog.Printf("Detect DB timezone: %s %s\n", tz, err.Error())
+				logs.DebugLog.Printf("Detect DB timezone: %s %s\n", tz, err.Error())
 			}
 		}
 
@@ -347,7 +349,7 @@ func detectTZ(al *alias) {
 		if err == nil {
 			al.TZ = loc
 		} else {
-			DebugLog.Printf("Detect DB timezone: %s %s\n", tz, err.Error())
+			logs.DebugLog.Printf("Detect DB timezone: %s %s\n", tz, err.Error())
 		}
 	}
 }
@@ -479,7 +481,7 @@ end:
 		if db != nil {
 			db.Close()
 		}
-		DebugLog.Println(err.Error())
+		logs.DebugLog.Println(err.Error())
 	}
 
 	return err

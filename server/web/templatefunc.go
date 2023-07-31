@@ -227,21 +227,21 @@ func Htmlunquote(text string) string {
 }
 
 // URLFor returns url string with another registered controller handler with params.
-//	usage:
 //
-//	URLFor(".index")
-//	print URLFor("index")
-//  router /login
-//	print URLFor("login")
-//	print URLFor("login", "next","/"")
-//  router /profile/:username
-//	print UrlFor("profile", ":username","John Doe")
-//	result:
-//	/
-//	/login
-//	/login?next=/
-//	/user/John%20Doe
+//		usage:
 //
+//		URLFor(".index")
+//		print URLFor("index")
+//	 router /login
+//		print URLFor("login")
+//		print URLFor("login", "next","/"")
+//	 router /profile/:username
+//		print UrlFor("profile", ":username","John Doe")
+//		result:
+//		/
+//		/login
+//		/login?next=/
+//		/user/John%20Doe
 func URLFor(endpoint string, values ...interface{}) string {
 	return BeeApp.Handlers.URLFor(endpoint, values...)
 }
@@ -564,12 +564,13 @@ func ge(arg1, arg2 interface{}) (bool, error) {
 
 // MapGet getting value from map by keys
 // usage:
-// Data["m"] = M{
-//     "a": 1,
-//     "1": map[string]float64{
-//         "c": 4,
-//     },
-// }
+//
+//	Data["m"] = M{
+//	    "a": 1,
+//	    "1": map[string]float64{
+//	        "c": 4,
+//	    },
+//	}
 //
 // {{ map_get m "a" }} // return 1
 // {{ map_get m 1 "c" }} // return 4

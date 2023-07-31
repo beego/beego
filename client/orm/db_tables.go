@@ -19,6 +19,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/beego/beego/v2/client/orm/internal/models"
+
 	"github.com/beego/beego/v2/client/orm/clauses"
 	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
 )
@@ -31,8 +33,8 @@ type dbTable struct {
 	names []string
 	sel   bool
 	inner bool
-	mi    *modelInfo
-	fi    *fieldInfo
+	mi    *models.ModelInfo
+	fi    *models.FieldInfo
 	jtl   *dbTable
 }
 
@@ -40,14 +42,14 @@ type dbTable struct {
 type dbTables struct {
 	tablesM map[string]*dbTable
 	tables  []*dbTable
-	mi      *modelInfo
+	mi      *models.ModelInfo
 	base    dbBaser
 	skipEnd bool
 }
 
 // set table info to collection.
 // if not exist, create new.
-func (t *dbTables) set(names []string, mi *modelInfo, fi *fieldInfo, inner bool) *dbTable {
+func (t *dbTables) set(names []string, mi *models.ModelInfo, fi *models.FieldInfo, inner bool) *dbTable {
 	name := strings.Join(names, ExprSep)
 	if j, ok := t.tablesM[name]; ok {
 		j.name = name
@@ -64,7 +66,7 @@ func (t *dbTables) set(names []string, mi *modelInfo, fi *fieldInfo, inner bool)
 }
 
 // add table info to collection.
-func (t *dbTables) add(names []string, mi *modelInfo, fi *fieldInfo, inner bool) (*dbTable, bool) {
+func (t *dbTables) add(names []string, mi *models.ModelInfo, fi *models.FieldInfo, inner bool) (*dbTable, bool) {
 	name := strings.Join(names, ExprSep)
 	if _, ok := t.tablesM[name]; !ok {
 		i := len(t.tables) + 1
@@ -82,29 +84,29 @@ func (t *dbTables) get(name string) (*dbTable, bool) {
 	return j, ok
 }
 
-// get related fields info in recursive depth loop.
+// get related Fields info in recursive depth loop.
 // loop once, depth decreases one.
-func (t *dbTables) loopDepth(depth int, prefix string, fi *fieldInfo, related []string) []string {
-	if depth < 0 || fi.fieldType == RelManyToMany {
+func (t *dbTables) loopDepth(depth int, prefix string, fi *models.FieldInfo, related []string) []string {
+	if depth < 0 || fi.FieldType == RelManyToMany {
 		return related
 	}
 
 	if prefix == "" {
-		prefix = fi.name
+		prefix = fi.Name
 	} else {
-		prefix = prefix + ExprSep + fi.name
+		prefix = prefix + ExprSep + fi.Name
 	}
 	related = append(related, prefix)
 
 	depth--
-	for _, fi := range fi.relModelInfo.fields.fieldsRel {
+	for _, fi := range fi.RelModelInfo.Fields.FieldsRel {
 		related = t.loopDepth(depth, prefix, fi, related)
 	}
 
 	return related
 }
 
-// parse related fields.
+// parse related Fields.
 func (t *dbTables) parseRelated(rels []string, depth int) {
 	relsNum := len(rels)
 	related := make([]string, relsNum)
@@ -117,7 +119,7 @@ func (t *dbTables) parseRelated(rels []string, depth int) {
 	}
 
 	relDepth--
-	for _, fi := range t.mi.fields.fieldsRel {
+	for _, fi := range t.mi.Fields.FieldsRel {
 		related = t.loopDepth(relDepth, "", fi, related)
 	}
 
@@ -133,18 +135,18 @@ func (t *dbTables) parseRelated(rels []string, depth int) {
 		inner := true
 
 		for _, ex := range exs {
-			if fi, ok := mmi.fields.GetByAny(ex); ok && fi.rel && fi.fieldType != RelManyToMany {
-				names = append(names, fi.name)
-				mmi = fi.relModelInfo
+			if fi, ok := mmi.Fields.GetByAny(ex); ok && fi.Rel && fi.FieldType != RelManyToMany {
+				names = append(names, fi.Name)
+				mmi = fi.RelModelInfo
 
-				if fi.null || t.skipEnd {
+				if fi.Null || t.skipEnd {
 					inner = false
 				}
 
 				jt := t.set(names, mmi, fi, inner)
 				jt.jtl = jtl
 
-				if fi.reverse {
+				if fi.Reverse {
 					cancel = false
 				}
 
@@ -185,24 +187,24 @@ func (t *dbTables) getJoinSQL() (join string) {
 			t1 = jt.jtl.index
 		}
 		t2 = jt.index
-		table = jt.mi.table
+		table = jt.mi.Table
 
 		switch {
-		case jt.fi.fieldType == RelManyToMany || jt.fi.fieldType == RelReverseMany || jt.fi.reverse && jt.fi.reverseFieldInfo.fieldType == RelManyToMany:
-			c1 = jt.fi.mi.fields.pk.column
-			for _, ffi := range jt.mi.fields.fieldsRel {
-				if jt.fi.mi == ffi.relModelInfo {
-					c2 = ffi.column
+		case jt.fi.FieldType == RelManyToMany || jt.fi.FieldType == RelReverseMany || jt.fi.Reverse && jt.fi.ReverseFieldInfo.FieldType == RelManyToMany:
+			c1 = jt.fi.Mi.Fields.Pk.Column
+			for _, ffi := range jt.mi.Fields.FieldsRel {
+				if jt.fi.Mi == ffi.RelModelInfo {
+					c2 = ffi.Column
 					break
 				}
 			}
 		default:
-			c1 = jt.fi.column
-			c2 = jt.fi.relModelInfo.fields.pk.column
+			c1 = jt.fi.Column
+			c2 = jt.fi.RelModelInfo.Fields.Pk.Column
 
-			if jt.fi.reverse {
-				c1 = jt.mi.fields.pk.column
-				c2 = jt.fi.reverseFieldInfo.column
+			if jt.fi.Reverse {
+				c1 = jt.mi.Fields.Pk.Column
+				c2 = jt.fi.ReverseFieldInfo.Column
 			}
 		}
 
@@ -213,11 +215,11 @@ func (t *dbTables) getJoinSQL() (join string) {
 }
 
 // parse orm model struct field tag expression.
-func (t *dbTables) parseExprs(mi *modelInfo, exprs []string) (index, name string, info *fieldInfo, success bool) {
+func (t *dbTables) parseExprs(mi *models.ModelInfo, exprs []string) (index, name string, info *models.FieldInfo, success bool) {
 	var (
 		jtl *dbTable
-		fi  *fieldInfo
-		fiN *fieldInfo
+		fi  *models.FieldInfo
+		fiN *models.FieldInfo
 		mmi = mi
 	)
 
@@ -238,38 +240,38 @@ loopFor:
 		}
 
 		if i == 0 {
-			fi, ok = mmi.fields.GetByAny(ex)
+			fi, ok = mmi.Fields.GetByAny(ex)
 		}
 
 		_ = okN
 
 		if ok {
 
-			isRel := fi.rel || fi.reverse
+			isRel := fi.Rel || fi.Reverse
 
-			names = append(names, fi.name)
+			names = append(names, fi.Name)
 
 			switch {
-			case fi.rel:
-				mmi = fi.relModelInfo
-				if fi.fieldType == RelManyToMany {
-					mmi = fi.relThroughModelInfo
+			case fi.Rel:
+				mmi = fi.RelModelInfo
+				if fi.FieldType == RelManyToMany {
+					mmi = fi.RelThroughModelInfo
 				}
-			case fi.reverse:
-				mmi = fi.reverseFieldInfo.mi
+			case fi.Reverse:
+				mmi = fi.ReverseFieldInfo.Mi
 			}
 
 			if i < num {
-				fiN, okN = mmi.fields.GetByAny(exprs[i+1])
+				fiN, okN = mmi.Fields.GetByAny(exprs[i+1])
 			}
 
-			if isRel && (!fi.mi.isThrough || num != i) {
-				if fi.null || t.skipEnd {
+			if isRel && (!fi.Mi.IsThrough || num != i) {
+				if fi.Null || t.skipEnd {
 					inner = false
 				}
 
 				if t.skipEnd && okN || !t.skipEnd {
-					if t.skipEnd && okN && fiN.pk {
+					if t.skipEnd && okN && fiN.Pk {
 						goto loopEnd
 					}
 
@@ -295,20 +297,20 @@ loopFor:
 			info = fi
 
 			if jtl == nil {
-				name = fi.name
+				name = fi.Name
 			} else {
-				name = jtl.name + ExprSep + fi.name
+				name = jtl.name + ExprSep + fi.Name
 			}
 
 			switch {
-			case fi.rel:
+			case fi.Rel:
 
-			case fi.reverse:
-				switch fi.reverseFieldInfo.fieldType {
+			case fi.Reverse:
+				switch fi.ReverseFieldInfo.FieldType {
 				case RelOneToOne, RelForeignKey:
 					index = jtl.index
-					info = fi.reverseFieldInfo.mi.fields.pk
-					name = info.name
+					info = fi.ReverseFieldInfo.Mi.Fields.Pk
+					name = info.Name
 				}
 			}
 
@@ -382,7 +384,7 @@ func (t *dbTables) getCondSQL(cond *Condition, sub bool, tz *time.Location) (whe
 				operSQL, args = t.base.GenerateOperatorSQL(mi, fi, operator, p.args, tz)
 			}
 
-			leftCol := fmt.Sprintf("%s.%s%s%s", index, Q, fi.column, Q)
+			leftCol := fmt.Sprintf("%s.%s%s%s", index, Q, fi.Column, Q)
 			t.base.GenerateOperatorLeftCol(fi, operator, &leftCol)
 
 			where += fmt.Sprintf("%s %s ", leftCol, operSQL)
@@ -415,7 +417,7 @@ func (t *dbTables) getGroupSQL(groups []string) (groupSQL string) {
 			panic(fmt.Errorf("unknown field/column name `%s`", strings.Join(exprs, ExprSep)))
 		}
 
-		groupSqls = append(groupSqls, fmt.Sprintf("%s.%s%s%s", index, Q, fi.column, Q))
+		groupSqls = append(groupSqls, fmt.Sprintf("%s.%s%s%s", index, Q, fi.Column, Q))
 	}
 
 	groupSQL = fmt.Sprintf("GROUP BY %s ", strings.Join(groupSqls, ", "))
@@ -449,7 +451,7 @@ func (t *dbTables) getOrderSQL(orders []*order_clause.Order) (orderSQL string) {
 				panic(fmt.Errorf("unknown field/column name `%s`", strings.Join(clause, ExprSep)))
 			}
 
-			orderSqls = append(orderSqls, fmt.Sprintf("%s.%s%s%s %s", index, Q, fi.column, Q, order.SortString()))
+			orderSqls = append(orderSqls, fmt.Sprintf("%s.%s%s%s %s", index, Q, fi.Column, Q, order.SortString()))
 		}
 	}
 
@@ -458,7 +460,7 @@ func (t *dbTables) getOrderSQL(orders []*order_clause.Order) (orderSQL string) {
 }
 
 // generate limit sql.
-func (t *dbTables) getLimitSQL(mi *modelInfo, offset int64, limit int64) (limits string) {
+func (t *dbTables) getLimitSQL(mi *models.ModelInfo, offset int64, limit int64) (limits string) {
 	if limit == 0 {
 		limit = int64(DefaultRowsLimit)
 	}
@@ -490,7 +492,7 @@ func (t *dbTables) getIndexSql(tableName string, useIndex int, indexes []string)
 }
 
 // crete new tables collection.
-func newDbTables(mi *modelInfo, base dbBaser) *dbTables {
+func newDbTables(mi *models.ModelInfo, base dbBaser) *dbTables {
 	tables := &dbTables{}
 	tables.tablesM = make(map[string]*dbTable)
 	tables.mi = mi

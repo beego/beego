@@ -18,7 +18,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"net/http"
 	"net/http/fcgi"
@@ -257,7 +256,7 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 				app.Cfg.Listen.HTTPSCertFile, app.Cfg.Listen.HTTPSKeyFile = "", ""
 			} else if app.Cfg.Listen.EnableMutualHTTPS {
 				pool := x509.NewCertPool()
-				data, err := ioutil.ReadFile(app.Cfg.Listen.TrustCaFile)
+				data, err := os.ReadFile(app.Cfg.Listen.TrustCaFile)
 				if err != nil {
 					logs.Info("MutualHTTPS should provide TrustCaFile")
 					return

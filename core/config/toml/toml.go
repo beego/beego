@@ -15,7 +15,6 @@
 package toml
 
 import (
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -32,7 +31,7 @@ type Config struct {
 
 // Parse accepts filename as the parameter
 func (c *Config) Parse(filename string) (config.Configer, error) {
-	ctx, err := ioutil.ReadFile(filename)
+	ctx, err := os.ReadFile(filename)
 	if err != nil {
 		return nil, err
 	}

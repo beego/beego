@@ -78,11 +78,11 @@ func (p *Paginator) Page() int {
 //
 // Usage (in a view template):
 //
-//  {{range $index, $page := .paginator.Pages}}
-//    <li{{if $.paginator.IsActive .}} class="active"{{end}}>
-//      <a href="{{$.paginator.PageLink $page}}">{{$page}}</a>
-//    </li>
-//  {{end}}
+//	{{range $index, $page := .paginator.Pages}}
+//	  <li{{if $.paginator.IsActive .}} class="active"{{end}}>
+//	    <a href="{{$.paginator.PageLink $page}}">{{$page}}</a>
+//	  </li>
+//	{{end}}
 func (p *Paginator) Pages() []int {
 	if p.pageRange == nil && p.nums > 0 {
 		var pages []int

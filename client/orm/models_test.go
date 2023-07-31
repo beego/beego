@@ -22,6 +22,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/beego/beego/v2/client/orm/internal/models"
+
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
@@ -79,7 +81,7 @@ func (e *SliceStringField) RawValue() interface{} {
 	return e.String()
 }
 
-var _ Fielder = new(SliceStringField)
+var _ models.Fielder = new(SliceStringField)
 
 // A json field.
 type JSONFieldTest struct {
@@ -111,7 +113,7 @@ func (e *JSONFieldTest) RawValue() interface{} {
 	return e.String()
 }
 
-var _ Fielder = new(JSONFieldTest)
+var _ models.Fielder = new(JSONFieldTest)
 
 type Data struct {
 	ID       int `orm:"column(id)"`
