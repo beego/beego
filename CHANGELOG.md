@@ -31,6 +31,20 @@
 - [cache: fix typo and optimize the naming]()
 - [Fix 5176: beegoAppConfig String and Strings function has bug](https://github.com/beego/beego/pull/5211)
 
+# v2.1.0
+- [unified gopkg.in/yaml version to v2](https://github.com/beego/beego/pull/5169)
+- [add non-block write log in asynchronous mode](https://github.com/beego/beego/pull/5150)
+- [Fix 5126: support bloom filter cache](https://github.com/beego/beego/pull/5126)
+- [Fix 5117: support write though cache](https://github.com/beego/beego/pull/5117)
+- [add read through for cache module](https://github.com/beego/beego/pull/5116)
+- [add singleflight cache for cache module](https://github.com/beego/beego/pull/5119)
+- [Fix 5129: must set formatter after init the logger](https://github.com/beego/beego/pull/5130)
+- [Fix 5079: only log msg when the channel is not closed](https://github.com/beego/beego/pull/5132)
+- [Fix 4435: Controller SaveToFile remove all temp file](https://github.com/beego/beego/pull/5138)
+- [Fix 5079: Split signalChan into flushChan and closeChan](https://github.com/beego/beego/pull/5139)
+- [Fix 5172: protect field access with lock to avoid possible data race](https://github.com/beego/beego/pull/5210)
+- [cache: fix typo and optimize the naming]()
+
 # v2.0.7
 - [Upgrade github.com/go-kit/kit, CVE-2022-24450](https://github.com/beego/beego/pull/5121)
 # v2.0.6
