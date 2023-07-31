@@ -18,6 +18,10 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+
+	"github.com/beego/beego/v2/client/orm/internal/logs"
+
+	"github.com/beego/beego/v2/client/orm/internal/models"
 )
 
 // postgresql operators.
@@ -76,7 +80,7 @@ func (d *dbBasePostgres) OperatorSQL(operator string) string {
 }
 
 // generate functioned sql string, such as contains(text).
-func (d *dbBasePostgres) GenerateOperatorLeftCol(fi *fieldInfo, operator string, leftCol *string) {
+func (d *dbBasePostgres) GenerateOperatorLeftCol(fi *models.FieldInfo, operator string, leftCol *string) {
 	switch operator {
 	case "contains", "startswith", "endswith":
 		*leftCol = fmt.Sprintf("%s::text", *leftCol)
@@ -128,20 +132,20 @@ func (d *dbBasePostgres) ReplaceMarks(query *string) {
 }
 
 // make returning sql support for postgresql.
-func (d *dbBasePostgres) HasReturningID(mi *modelInfo, query *string) bool {
-	fi := mi.fields.pk
-	if fi.fieldType&IsPositiveIntegerField == 0 && fi.fieldType&IsIntegerField == 0 {
+func (d *dbBasePostgres) HasReturningID(mi *models.ModelInfo, query *string) bool {
+	fi := mi.Fields.Pk
+	if fi.FieldType&IsPositiveIntegerField == 0 && fi.FieldType&IsIntegerField == 0 {
 		return false
 	}
 
 	if query != nil {
-		*query = fmt.Sprintf(`%s RETURNING "%s"`, *query, fi.column)
+		*query = fmt.Sprintf(`%s RETURNING "%s"`, *query, fi.Column)
 	}
 	return true
 }
 
 // sync auto key
-func (d *dbBasePostgres) setval(ctx context.Context, db dbQuerier, mi *modelInfo, autoFields []string) error {
+func (d *dbBasePostgres) setval(ctx context.Context, db dbQuerier, mi *models.ModelInfo, autoFields []string) error {
 	if len(autoFields) == 0 {
 		return nil
 	}
@@ -149,9 +153,9 @@ func (d *dbBasePostgres) setval(ctx context.Context, db dbQuerier, mi *modelInfo
 	Q := d.ins.TableQuote()
 	for _, name := range autoFields {
 		query := fmt.Sprintf("SELECT setval(pg_get_serial_sequence('%s', '%s'), (SELECT MAX(%s%s%s) FROM %s%s%s));",
-			mi.table, name,
+			mi.Table, name,
 			Q, name, Q,
-			Q, mi.table, Q)
+			Q, mi.Table, Q)
 		if _, err := db.ExecContext(ctx, query); err != nil {
 			return err
 		}
@@ -164,9 +168,9 @@ func (d *dbBasePostgres) ShowTablesQuery() string {
 	return "SELECT table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema NOT IN ('pg_catalog', 'information_schema')"
 }
 
-// show table columns sql for postgresql.
+// show table Columns sql for postgresql.
 func (d *dbBasePostgres) ShowColumnsQuery(table string) string {
-	return fmt.Sprintf("SELECT column_name, data_type, is_nullable FROM information_schema.columns where table_schema NOT IN ('pg_catalog', 'information_schema') and table_name = '%s'", table)
+	return fmt.Sprintf("SELECT column_name, data_type, is_nullable FROM information_schema.Columns where table_schema NOT IN ('pg_catalog', 'information_schema') and table_name = '%s'", table)
 }
 
 // get column types of postgresql.
@@ -185,7 +189,7 @@ func (d *dbBasePostgres) IndexExists(ctx context.Context, db dbQuerier, table st
 
 // GenerateSpecifyIndex return a specifying index clause
 func (d *dbBasePostgres) GenerateSpecifyIndex(tableName string, useIndex int, indexes []string) string {
-	DebugLog.Println("[WARN] Not support any specifying index action, so that action is ignored")
+	logs.DebugLog.Println("[WARN] Not support any specifying index action, so that action is ignored")
 	return ``
 }
 

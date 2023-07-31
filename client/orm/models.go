@@ -21,15 +21,8 @@ import (
 	"runtime/debug"
 	"strings"
 	"sync"
-)
 
-const (
-	odCascade             = "cascade"
-	odSetNULL             = "set_null"
-	odSetDefault          = "set_default"
-	odDoNothing           = "do_nothing"
-	defaultStructTagName  = "orm"
-	defaultStructTagDelim = ";"
+	imodels "github.com/beego/beego/v2/client/orm/internal/models"
 )
 
 var defaultModelCache = NewModelCacheHandler()
@@ -38,22 +31,22 @@ var defaultModelCache = NewModelCacheHandler()
 type modelCache struct {
 	sync.RWMutex    // only used outsite for bootStrap
 	orders          []string
-	cache           map[string]*modelInfo
-	cacheByFullName map[string]*modelInfo
+	cache           map[string]*imodels.ModelInfo
+	cacheByFullName map[string]*imodels.ModelInfo
 	done            bool
 }
 
 // NewModelCacheHandler generator of modelCache
 func NewModelCacheHandler() *modelCache {
 	return &modelCache{
-		cache:           make(map[string]*modelInfo),
-		cacheByFullName: make(map[string]*modelInfo),
+		cache:           make(map[string]*imodels.ModelInfo),
+		cacheByFullName: make(map[string]*imodels.ModelInfo),
 	}
 }
 
 // get all model info
-func (mc *modelCache) all() map[string]*modelInfo {
-	m := make(map[string]*modelInfo, len(mc.cache))
+func (mc *modelCache) all() map[string]*imodels.ModelInfo {
+	m := make(map[string]*imodels.ModelInfo, len(mc.cache))
 	for k, v := range mc.cache {
 		m[k] = v
 	}
@@ -61,8 +54,8 @@ func (mc *modelCache) all() map[string]*modelInfo {
 }
 
 // get ordered model info
-func (mc *modelCache) allOrdered() []*modelInfo {
-	m := make([]*modelInfo, 0, len(mc.orders))
+func (mc *modelCache) allOrdered() []*imodels.ModelInfo {
+	m := make([]*imodels.ModelInfo, 0, len(mc.orders))
 	for _, table := range mc.orders {
 		m = append(m, mc.cache[table])
 	}
@@ -70,30 +63,30 @@ func (mc *modelCache) allOrdered() []*modelInfo {
 }
 
 // get model info by table name
-func (mc *modelCache) get(table string) (mi *modelInfo, ok bool) {
+func (mc *modelCache) get(table string) (mi *imodels.ModelInfo, ok bool) {
 	mi, ok = mc.cache[table]
 	return
 }
 
 // get model info by full name
-func (mc *modelCache) getByFullName(name string) (mi *modelInfo, ok bool) {
+func (mc *modelCache) getByFullName(name string) (mi *imodels.ModelInfo, ok bool) {
 	mi, ok = mc.cacheByFullName[name]
 	return
 }
 
-func (mc *modelCache) getByMd(md interface{}) (*modelInfo, bool) {
+func (mc *modelCache) getByMd(md interface{}) (*imodels.ModelInfo, bool) {
 	val := reflect.ValueOf(md)
 	ind := reflect.Indirect(val)
 	typ := ind.Type()
-	name := getFullName(typ)
+	name := imodels.GetFullName(typ)
 	return mc.getByFullName(name)
 }
 
 // set model info to collection
-func (mc *modelCache) set(table string, mi *modelInfo) *modelInfo {
+func (mc *modelCache) set(table string, mi *imodels.ModelInfo) *imodels.ModelInfo {
 	mii := mc.cache[table]
 	mc.cache[table] = mi
-	mc.cacheByFullName[mi.fullName] = mi
+	mc.cacheByFullName[mi.FullName] = mi
 	if mii == nil {
 		mc.orders = append(mc.orders, table)
 	}
@@ -106,8 +99,8 @@ func (mc *modelCache) clean() {
 	defer mc.Unlock()
 
 	mc.orders = make([]string, 0)
-	mc.cache = make(map[string]*modelInfo)
-	mc.cacheByFullName = make(map[string]*modelInfo)
+	mc.cache = make(map[string]*imodels.ModelInfo)
+	mc.cacheByFullName = make(map[string]*imodels.ModelInfo)
 	mc.done = false
 }
 
@@ -120,7 +113,7 @@ func (mc *modelCache) bootstrap() {
 	}
 	var (
 		err    error
-		models map[string]*modelInfo
+		models map[string]*imodels.ModelInfo
 	)
 	if dataBaseCache.getDefault() == nil {
 		err = fmt.Errorf("must have one register DataBase alias named `default`")
@@ -131,51 +124,51 @@ func (mc *modelCache) bootstrap() {
 	// RelManyToMany set the relTable
 	models = mc.all()
 	for _, mi := range models {
-		for _, fi := range mi.fields.columns {
-			if fi.rel || fi.reverse {
-				elm := fi.addrValue.Type().Elem()
-				if fi.fieldType == RelReverseMany || fi.fieldType == RelManyToMany {
+		for _, fi := range mi.Fields.Columns {
+			if fi.Rel || fi.Reverse {
+				elm := fi.AddrValue.Type().Elem()
+				if fi.FieldType == RelReverseMany || fi.FieldType == RelManyToMany {
 					elm = elm.Elem()
 				}
 				// check the rel or reverse model already register
-				name := getFullName(elm)
+				name := imodels.GetFullName(elm)
 				mii, ok := mc.getByFullName(name)
-				if !ok || mii.pkg != elm.PkgPath() {
-					err = fmt.Errorf("can not find rel in field `%s`, `%s` may be miss register", fi.fullName, elm.String())
+				if !ok || mii.Pkg != elm.PkgPath() {
+					err = fmt.Errorf("can not find rel in field `%s`, `%s` may be miss register", fi.FullName, elm.String())
 					goto end
 				}
-				fi.relModelInfo = mii
+				fi.RelModelInfo = mii
 
-				switch fi.fieldType {
+				switch fi.FieldType {
 				case RelManyToMany:
-					if fi.relThrough != "" {
-						if i := strings.LastIndex(fi.relThrough, "."); i != -1 && len(fi.relThrough) > (i+1) {
-							pn := fi.relThrough[:i]
-							rmi, ok := mc.getByFullName(fi.relThrough)
-							if !ok || pn != rmi.pkg {
-								err = fmt.Errorf("field `%s` wrong rel_through value `%s` cannot find table", fi.fullName, fi.relThrough)
+					if fi.RelThrough != "" {
+						if i := strings.LastIndex(fi.RelThrough, "."); i != -1 && len(fi.RelThrough) > (i+1) {
+							pn := fi.RelThrough[:i]
+							rmi, ok := mc.getByFullName(fi.RelThrough)
+							if !ok || pn != rmi.Pkg {
+								err = fmt.Errorf("field `%s` wrong rel_through value `%s` cannot find table", fi.FullName, fi.RelThrough)
 								goto end
 							}
-							fi.relThroughModelInfo = rmi
-							fi.relTable = rmi.table
+							fi.RelThroughModelInfo = rmi
+							fi.RelTable = rmi.Table
 						} else {
-							err = fmt.Errorf("field `%s` wrong rel_through value `%s`", fi.fullName, fi.relThrough)
+							err = fmt.Errorf("field `%s` wrong rel_through value `%s`", fi.FullName, fi.RelThrough)
 							goto end
 						}
 					} else {
-						i := newM2MModelInfo(mi, mii)
-						if fi.relTable != "" {
-							i.table = fi.relTable
+						i := imodels.NewM2MModelInfo(mi, mii)
+						if fi.RelTable != "" {
+							i.Table = fi.RelTable
 						}
-						if v := mc.set(i.table, i); v != nil {
-							err = fmt.Errorf("the rel table name `%s` already registered, cannot be use, please change one", fi.relTable)
+						if v := mc.set(i.Table, i); v != nil {
+							err = fmt.Errorf("the rel table name `%s` already registered, cannot be use, please change one", fi.RelTable)
 							goto end
 						}
-						fi.relTable = i.table
-						fi.relThroughModelInfo = i
+						fi.RelTable = i.Table
+						fi.RelThroughModelInfo = i
 					}
 
-					fi.relThroughModelInfo.isThrough = true
+					fi.RelThroughModelInfo.IsThrough = true
 				}
 			}
 		}
@@ -185,42 +178,42 @@ func (mc *modelCache) bootstrap() {
 	// if not exist, add a new field to the relModelInfo
 	models = mc.all()
 	for _, mi := range models {
-		for _, fi := range mi.fields.fieldsRel {
-			switch fi.fieldType {
+		for _, fi := range mi.Fields.FieldsRel {
+			switch fi.FieldType {
 			case RelForeignKey, RelOneToOne, RelManyToMany:
 				inModel := false
-				for _, ffi := range fi.relModelInfo.fields.fieldsReverse {
-					if ffi.relModelInfo == mi {
+				for _, ffi := range fi.RelModelInfo.Fields.FieldsReverse {
+					if ffi.RelModelInfo == mi {
 						inModel = true
 						break
 					}
 				}
 				if !inModel {
-					rmi := fi.relModelInfo
-					ffi := new(fieldInfo)
-					ffi.name = mi.name
-					ffi.column = ffi.name
-					ffi.fullName = rmi.fullName + "." + ffi.name
-					ffi.reverse = true
-					ffi.relModelInfo = mi
-					ffi.mi = rmi
-					if fi.fieldType == RelOneToOne {
-						ffi.fieldType = RelReverseOne
+					rmi := fi.RelModelInfo
+					ffi := new(imodels.FieldInfo)
+					ffi.Name = mi.Name
+					ffi.Column = ffi.Name
+					ffi.FullName = rmi.FullName + "." + ffi.Name
+					ffi.Reverse = true
+					ffi.RelModelInfo = mi
+					ffi.Mi = rmi
+					if fi.FieldType == RelOneToOne {
+						ffi.FieldType = RelReverseOne
 					} else {
-						ffi.fieldType = RelReverseMany
+						ffi.FieldType = RelReverseMany
 					}
-					if !rmi.fields.Add(ffi) {
+					if !rmi.Fields.Add(ffi) {
 						added := false
 						for cnt := 0; cnt < 5; cnt++ {
-							ffi.name = fmt.Sprintf("%s%d", mi.name, cnt)
-							ffi.column = ffi.name
-							ffi.fullName = rmi.fullName + "." + ffi.name
-							if added = rmi.fields.Add(ffi); added {
+							ffi.Name = fmt.Sprintf("%s%d", mi.Name, cnt)
+							ffi.Column = ffi.Name
+							ffi.FullName = rmi.FullName + "." + ffi.Name
+							if added = rmi.Fields.Add(ffi); added {
 								break
 							}
 						}
 						if !added {
-							panic(fmt.Errorf("cannot generate auto reverse field info `%s` to `%s`", fi.fullName, ffi.fullName))
+							panic(fmt.Errorf("cannot generate auto reverse field info `%s` to `%s`", fi.FullName, ffi.FullName))
 						}
 					}
 				}
@@ -230,24 +223,24 @@ func (mc *modelCache) bootstrap() {
 
 	models = mc.all()
 	for _, mi := range models {
-		for _, fi := range mi.fields.fieldsRel {
-			switch fi.fieldType {
+		for _, fi := range mi.Fields.FieldsRel {
+			switch fi.FieldType {
 			case RelManyToMany:
-				for _, ffi := range fi.relThroughModelInfo.fields.fieldsRel {
-					switch ffi.fieldType {
+				for _, ffi := range fi.RelThroughModelInfo.Fields.FieldsRel {
+					switch ffi.FieldType {
 					case RelOneToOne, RelForeignKey:
-						if ffi.relModelInfo == fi.relModelInfo {
-							fi.reverseFieldInfoTwo = ffi
+						if ffi.RelModelInfo == fi.RelModelInfo {
+							fi.ReverseFieldInfoTwo = ffi
 						}
-						if ffi.relModelInfo == mi {
-							fi.reverseField = ffi.name
-							fi.reverseFieldInfo = ffi
+						if ffi.RelModelInfo == mi {
+							fi.ReverseField = ffi.Name
+							fi.ReverseFieldInfo = ffi
 						}
 					}
 				}
-				if fi.reverseFieldInfoTwo == nil {
+				if fi.ReverseFieldInfoTwo == nil {
 					err = fmt.Errorf("can not find m2m field for m2m model `%s`, ensure your m2m model defined correct",
-						fi.relThroughModelInfo.fullName)
+						fi.RelThroughModelInfo.FullName)
 					goto end
 				}
 			}
@@ -256,63 +249,63 @@ func (mc *modelCache) bootstrap() {
 
 	models = mc.all()
 	for _, mi := range models {
-		for _, fi := range mi.fields.fieldsReverse {
-			switch fi.fieldType {
+		for _, fi := range mi.Fields.FieldsReverse {
+			switch fi.FieldType {
 			case RelReverseOne:
 				found := false
 			mForA:
-				for _, ffi := range fi.relModelInfo.fields.fieldsByType[RelOneToOne] {
-					if ffi.relModelInfo == mi {
+				for _, ffi := range fi.RelModelInfo.Fields.FieldsByType[RelOneToOne] {
+					if ffi.RelModelInfo == mi {
 						found = true
-						fi.reverseField = ffi.name
-						fi.reverseFieldInfo = ffi
+						fi.ReverseField = ffi.Name
+						fi.ReverseFieldInfo = ffi
 
-						ffi.reverseField = fi.name
-						ffi.reverseFieldInfo = fi
+						ffi.ReverseField = fi.Name
+						ffi.ReverseFieldInfo = fi
 						break mForA
 					}
 				}
 				if !found {
-					err = fmt.Errorf("reverse field `%s` not found in model `%s`", fi.fullName, fi.relModelInfo.fullName)
+					err = fmt.Errorf("reverse field `%s` not found in model `%s`", fi.FullName, fi.RelModelInfo.FullName)
 					goto end
 				}
 			case RelReverseMany:
 				found := false
 			mForB:
-				for _, ffi := range fi.relModelInfo.fields.fieldsByType[RelForeignKey] {
-					if ffi.relModelInfo == mi {
+				for _, ffi := range fi.RelModelInfo.Fields.FieldsByType[RelForeignKey] {
+					if ffi.RelModelInfo == mi {
 						found = true
-						fi.reverseField = ffi.name
-						fi.reverseFieldInfo = ffi
+						fi.ReverseField = ffi.Name
+						fi.ReverseFieldInfo = ffi
 
-						ffi.reverseField = fi.name
-						ffi.reverseFieldInfo = fi
+						ffi.ReverseField = fi.Name
+						ffi.ReverseFieldInfo = fi
 
 						break mForB
 					}
 				}
 				if !found {
 				mForC:
-					for _, ffi := range fi.relModelInfo.fields.fieldsByType[RelManyToMany] {
-						conditions := fi.relThrough != "" && fi.relThrough == ffi.relThrough ||
-							fi.relTable != "" && fi.relTable == ffi.relTable ||
-							fi.relThrough == "" && fi.relTable == ""
-						if ffi.relModelInfo == mi && conditions {
+					for _, ffi := range fi.RelModelInfo.Fields.FieldsByType[RelManyToMany] {
+						conditions := fi.RelThrough != "" && fi.RelThrough == ffi.RelThrough ||
+							fi.RelTable != "" && fi.RelTable == ffi.RelTable ||
+							fi.RelThrough == "" && fi.RelTable == ""
+						if ffi.RelModelInfo == mi && conditions {
 							found = true
 
-							fi.reverseField = ffi.reverseFieldInfoTwo.name
-							fi.reverseFieldInfo = ffi.reverseFieldInfoTwo
-							fi.relThroughModelInfo = ffi.relThroughModelInfo
-							fi.reverseFieldInfoTwo = ffi.reverseFieldInfo
-							fi.reverseFieldInfoM2M = ffi
-							ffi.reverseFieldInfoM2M = fi
+							fi.ReverseField = ffi.ReverseFieldInfoTwo.Name
+							fi.ReverseFieldInfo = ffi.ReverseFieldInfoTwo
+							fi.RelThroughModelInfo = ffi.RelThroughModelInfo
+							fi.ReverseFieldInfoTwo = ffi.ReverseFieldInfo
+							fi.ReverseFieldInfoM2M = ffi
+							ffi.ReverseFieldInfoM2M = fi
 
 							break mForC
 						}
 					}
 				}
 				if !found {
-					err = fmt.Errorf("reverse field for `%s` not found in model `%s`", fi.fullName, fi.relModelInfo.fullName)
+					err = fmt.Errorf("reverse field for `%s` not found in model `%s`", fi.FullName, fi.RelModelInfo.FullName)
 					goto end
 				}
 			}
@@ -334,7 +327,7 @@ func (mc *modelCache) register(prefixOrSuffixStr string, prefixOrSuffix bool, mo
 		typ := reflect.Indirect(val).Type()
 
 		if val.Kind() != reflect.Ptr {
-			err = fmt.Errorf("<orm.RegisterModel> cannot use non-ptr model struct `%s`", getFullName(typ))
+			err = fmt.Errorf("<orm.RegisterModel> cannot use non-ptr model struct `%s`", imodels.GetFullName(typ))
 			return
 		}
 		// For this case:
@@ -347,7 +340,7 @@ func (mc *modelCache) register(prefixOrSuffixStr string, prefixOrSuffix bool, mo
 		if val.Elem().Kind() == reflect.Slice {
 			val = reflect.New(val.Elem().Type().Elem())
 		}
-		table := getTableName(val)
+		table := imodels.GetTableName(val)
 
 		if prefixOrSuffixStr != "" {
 			if prefixOrSuffix {
@@ -358,7 +351,7 @@ func (mc *modelCache) register(prefixOrSuffixStr string, prefixOrSuffix bool, mo
 		}
 
 		// models's fullname is pkgpath + struct name
-		name := getFullName(typ)
+		name := imodels.GetFullName(typ)
 		if _, ok := mc.getByFullName(name); ok {
 			err = fmt.Errorf("<orm.RegisterModel> model `%s` repeat register, must be unique\n", name)
 			return
@@ -368,26 +361,26 @@ func (mc *modelCache) register(prefixOrSuffixStr string, prefixOrSuffix bool, mo
 			return nil
 		}
 
-		mi := newModelInfo(val)
-		if mi.fields.pk == nil {
+		mi := imodels.NewModelInfo(val)
+		if mi.Fields.Pk == nil {
 		outFor:
-			for _, fi := range mi.fields.fieldsDB {
-				if strings.ToLower(fi.name) == "id" {
-					switch fi.addrValue.Elem().Kind() {
+			for _, fi := range mi.Fields.FieldsDB {
+				if strings.ToLower(fi.Name) == "id" {
+					switch fi.AddrValue.Elem().Kind() {
 					case reflect.Int, reflect.Int32, reflect.Int64, reflect.Uint, reflect.Uint32, reflect.Uint64:
-						fi.auto = true
-						fi.pk = true
-						mi.fields.pk = fi
+						fi.Auto = true
+						fi.Pk = true
+						mi.Fields.Pk = fi
 						break outFor
 					}
 				}
 			}
 		}
 
-		mi.table = table
-		mi.pkg = typ.PkgPath()
-		mi.model = model
-		mi.manual = true
+		mi.Table = table
+		mi.Pkg = typ.PkgPath()
+		mi.Model = model
+		mi.Manual = true
 
 		mc.set(table, mi)
 	}
@@ -404,7 +397,7 @@ func (mc *modelCache) getDbDropSQL(al *alias) (queries []string, err error) {
 	Q := al.DbBaser.TableQuote()
 
 	for _, mi := range mc.allOrdered() {
-		queries = append(queries, fmt.Sprintf(`DROP TABLE IF EXISTS %s%s%s`, Q, mi.table, Q))
+		queries = append(queries, fmt.Sprintf(`DROP TABLE IF EXISTS %s%s%s`, Q, mi.Table, Q))
 	}
 	return queries, nil
 }
@@ -424,33 +417,33 @@ func (mc *modelCache) getDbCreateSQL(al *alias) (queries []string, tableIndexes 
 
 	for _, mi := range mc.allOrdered() {
 		sql := fmt.Sprintf("-- %s\n", strings.Repeat("-", 50))
-		sql += fmt.Sprintf("--  Table Structure for `%s`\n", mi.fullName)
+		sql += fmt.Sprintf("--  Table Structure for `%s`\n", mi.FullName)
 		sql += fmt.Sprintf("-- %s\n", strings.Repeat("-", 50))
 
-		sql += fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s%s%s (\n", Q, mi.table, Q)
+		sql += fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s%s%s (\n", Q, mi.Table, Q)
 
-		columns := make([]string, 0, len(mi.fields.fieldsDB))
+		columns := make([]string, 0, len(mi.Fields.FieldsDB))
 
 		sqlIndexes := [][]string{}
 		var commentIndexes []int // store comment indexes for postgres
 
-		for i, fi := range mi.fields.fieldsDB {
-			column := fmt.Sprintf("    %s%s%s ", Q, fi.column, Q)
+		for i, fi := range mi.Fields.FieldsDB {
+			column := fmt.Sprintf("    %s%s%s ", Q, fi.Column, Q)
 			col := getColumnTyp(al, fi)
 
-			if fi.auto {
+			if fi.Auto {
 				switch al.Driver {
 				case DRSqlite, DRPostgres:
 					column += T["auto"]
 				default:
 					column += col + " " + T["auto"]
 				}
-			} else if fi.pk {
+			} else if fi.Pk {
 				column += col + " " + T["pk"]
 			} else {
 				column += col
 
-				if !fi.null {
+				if !fi.Null {
 					column += " " + "NOT NULL"
 				}
 
@@ -461,42 +454,42 @@ func (mc *modelCache) getDbCreateSQL(al *alias) (queries []string, tableIndexes 
 				// Append attribute DEFAULT
 				column += getColumnDefault(fi)
 
-				if fi.unique {
+				if fi.Unique {
 					column += " " + "UNIQUE"
 				}
 
-				if fi.index {
-					sqlIndexes = append(sqlIndexes, []string{fi.column})
+				if fi.Index {
+					sqlIndexes = append(sqlIndexes, []string{fi.Column})
 				}
 			}
 
 			if strings.Contains(column, "%COL%") {
-				column = strings.Replace(column, "%COL%", fi.column, -1)
+				column = strings.Replace(column, "%COL%", fi.Column, -1)
 			}
 
-			if fi.description != "" && al.Driver != DRSqlite {
+			if fi.Description != "" && al.Driver != DRSqlite {
 				if al.Driver == DRPostgres {
 					commentIndexes = append(commentIndexes, i)
 				} else {
-					column += " " + fmt.Sprintf("COMMENT '%s'", fi.description)
+					column += " " + fmt.Sprintf("COMMENT '%s'", fi.Description)
 				}
 			}
 
 			columns = append(columns, column)
 		}
 
-		if mi.model != nil {
-			allnames := getTableUnique(mi.addrField)
-			if !mi.manual && len(mi.uniques) > 0 {
-				allnames = append(allnames, mi.uniques)
+		if mi.Model != nil {
+			allnames := imodels.GetTableUnique(mi.AddrField)
+			if !mi.Manual && len(mi.Uniques) > 0 {
+				allnames = append(allnames, mi.Uniques)
 			}
 			for _, names := range allnames {
 				cols := make([]string, 0, len(names))
 				for _, name := range names {
-					if fi, ok := mi.fields.GetByAny(name); ok && fi.dbcol {
-						cols = append(cols, fi.column)
+					if fi, ok := mi.Fields.GetByAny(name); ok && fi.DBcol {
+						cols = append(cols, fi.Column)
 					} else {
-						panic(fmt.Errorf("cannot found column `%s` when parse UNIQUE in `%s.TableUnique`", name, mi.fullName))
+						panic(fmt.Errorf("cannot found column `%s` when parse UNIQUE in `%s.TableUnique`", name, mi.FullName))
 					}
 				}
 				column := fmt.Sprintf("    UNIQUE (%s%s%s)", Q, strings.Join(cols, sep), Q)
@@ -509,8 +502,8 @@ func (mc *modelCache) getDbCreateSQL(al *alias) (queries []string, tableIndexes 
 
 		if al.Driver == DRMySQL {
 			var engine string
-			if mi.model != nil {
-				engine = getTableEngine(mi.addrField)
+			if mi.Model != nil {
+				engine = imodels.GetTableEngine(mi.AddrField)
 			}
 			if engine == "" {
 				engine = al.Engine
@@ -524,24 +517,24 @@ func (mc *modelCache) getDbCreateSQL(al *alias) (queries []string, tableIndexes 
 			for _, index := range commentIndexes {
 				sql += fmt.Sprintf("\nCOMMENT ON COLUMN %s%s%s.%s%s%s is '%s';",
 					Q,
-					mi.table,
+					mi.Table,
 					Q,
 					Q,
-					mi.fields.fieldsDB[index].column,
+					mi.Fields.FieldsDB[index].Column,
 					Q,
-					mi.fields.fieldsDB[index].description)
+					mi.Fields.FieldsDB[index].Description)
 			}
 		}
 		queries = append(queries, sql)
 
-		if mi.model != nil {
-			for _, names := range getTableIndex(mi.addrField) {
+		if mi.Model != nil {
+			for _, names := range imodels.GetTableIndex(mi.AddrField) {
 				cols := make([]string, 0, len(names))
 				for _, name := range names {
-					if fi, ok := mi.fields.GetByAny(name); ok && fi.dbcol {
-						cols = append(cols, fi.column)
+					if fi, ok := mi.Fields.GetByAny(name); ok && fi.DBcol {
+						cols = append(cols, fi.Column)
 					} else {
-						panic(fmt.Errorf("cannot found column `%s` when parse INDEX in `%s.TableIndex`", name, mi.fullName))
+						panic(fmt.Errorf("cannot found column `%s` when parse INDEX in `%s.TableIndex`", name, mi.FullName))
 					}
 				}
 				sqlIndexes = append(sqlIndexes, cols)
@@ -549,16 +542,16 @@ func (mc *modelCache) getDbCreateSQL(al *alias) (queries []string, tableIndexes 
 		}
 
 		for _, names := range sqlIndexes {
-			name := mi.table + "_" + strings.Join(names, "_")
+			name := mi.Table + "_" + strings.Join(names, "_")
 			cols := strings.Join(names, sep)
-			sql := fmt.Sprintf("CREATE INDEX %s%s%s ON %s%s%s (%s%s%s);", Q, name, Q, Q, mi.table, Q, Q, cols, Q)
+			sql := fmt.Sprintf("CREATE INDEX %s%s%s ON %s%s%s (%s%s%s);", Q, name, Q, Q, mi.Table, Q, Q, cols, Q)
 
 			index := dbIndex{}
-			index.Table = mi.table
+			index.Table = mi.Table
 			index.Name = name
 			index.SQL = sql
 
-			tableIndexes[mi.table] = append(tableIndexes[mi.table], index)
+			tableIndexes[mi.Table] = append(tableIndexes[mi.Table], index)
 		}
 
 	}

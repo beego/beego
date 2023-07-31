@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:build go1.8
-// +build go1.8
-
 // Package orm provide ORM for MySQL/PostgreSQL/sqlite
 // Simple Usage
 //
@@ -50,7 +47,6 @@
 //		// delete
 //		num, err = o.Delete(&u)
 //	}
-//
 package orm
 
 import (
@@ -58,9 +54,12 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"os"
 	"reflect"
-	"time"
+
+	ilogs "github.com/beego/beego/v2/client/orm/internal/logs"
+	iutils "github.com/beego/beego/v2/client/orm/internal/utils"
+
+	"github.com/beego/beego/v2/client/orm/internal/models"
 
 	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
 	"github.com/beego/beego/v2/client/orm/hints"
@@ -76,10 +75,10 @@ const (
 // Define common vars
 var (
 	Debug            = false
-	DebugLog         = NewLog(os.Stdout)
+	DebugLog         = ilogs.DebugLog
 	DefaultRowsLimit = -1
 	DefaultRelsDepth = 2
-	DefaultTimeLoc   = time.Local
+	DefaultTimeLoc   = iutils.DefaultTimeLoc
 	ErrTxDone        = errors.New("<TxOrmer.Commit/Rollback> transaction already done")
 	ErrMultiRows     = errors.New("<QuerySeter> return multi rows")
 	ErrNoRows        = errors.New("<QuerySeter> no row found")
@@ -108,7 +107,7 @@ var (
 )
 
 // get model info and model reflect value
-func (*ormBase) getMi(md interface{}) (mi *modelInfo) {
+func (*ormBase) getMi(md interface{}) (mi *models.ModelInfo) {
 	val := reflect.ValueOf(md)
 	ind := reflect.Indirect(val)
 	typ := ind.Type()
@@ -117,19 +116,19 @@ func (*ormBase) getMi(md interface{}) (mi *modelInfo) {
 }
 
 // get need ptr model info and model reflect value
-func (*ormBase) getPtrMiInd(md interface{}) (mi *modelInfo, ind reflect.Value) {
+func (*ormBase) getPtrMiInd(md interface{}) (mi *models.ModelInfo, ind reflect.Value) {
 	val := reflect.ValueOf(md)
 	ind = reflect.Indirect(val)
 	typ := ind.Type()
 	if val.Kind() != reflect.Ptr {
-		panic(fmt.Errorf("<Ormer> cannot use non-ptr model struct `%s`", getFullName(typ)))
+		panic(fmt.Errorf("<Ormer> cannot use non-ptr model struct `%s`", models.GetFullName(typ)))
 	}
 	mi = getTypeMi(typ)
 	return
 }
 
-func getTypeMi(mdTyp reflect.Type) *modelInfo {
-	name := getFullName(mdTyp)
+func getTypeMi(mdTyp reflect.Type) *models.ModelInfo {
+	name := models.GetFullName(mdTyp)
 	if mi, ok := defaultModelCache.getByFullName(name); ok {
 		return mi
 	}
@@ -137,10 +136,10 @@ func getTypeMi(mdTyp reflect.Type) *modelInfo {
 }
 
 // get field info from model info by given field name
-func (*ormBase) getFieldInfo(mi *modelInfo, name string) *fieldInfo {
-	fi, ok := mi.fields.GetByAny(name)
+func (*ormBase) getFieldInfo(mi *models.ModelInfo, name string) *models.FieldInfo {
+	fi, ok := mi.Fields.GetByAny(name)
 	if !ok {
-		panic(fmt.Errorf("<Ormer> cannot find field `%s` for model `%s`", name, mi.fullName))
+		panic(fmt.Errorf("<Ormer> cannot find field `%s` for model `%s`", name, mi.FullName))
 	}
 	return fi
 }
@@ -180,11 +179,11 @@ func (o *ormBase) ReadOrCreateWithCtx(ctx context.Context, md interface{}, col1 
 		return err == nil, id, err
 	}
 
-	id, vid := int64(0), ind.FieldByIndex(mi.fields.pk.fieldIndex)
-	if mi.fields.pk.fieldType&IsPositiveIntegerField > 0 {
+	id, vid := int64(0), ind.FieldByIndex(mi.Fields.Pk.FieldIndex)
+	if mi.Fields.Pk.FieldType&IsPositiveIntegerField > 0 {
 		id = int64(vid.Uint())
-	} else if mi.fields.pk.rel {
-		return o.ReadOrCreateWithCtx(ctx, vid.Interface(), mi.fields.pk.relModelInfo.fields.pk.name)
+	} else if mi.Fields.Pk.Rel {
+		return o.ReadOrCreateWithCtx(ctx, vid.Interface(), mi.Fields.Pk.RelModelInfo.Fields.Pk.Name)
 	} else {
 		id = vid.Int()
 	}
@@ -210,12 +209,12 @@ func (o *ormBase) InsertWithCtx(ctx context.Context, md interface{}) (int64, err
 }
 
 // set auto pk field
-func (*ormBase) setPk(mi *modelInfo, ind reflect.Value, id int64) {
-	if mi.fields.pk.auto {
-		if mi.fields.pk.fieldType&IsPositiveIntegerField > 0 {
-			ind.FieldByIndex(mi.fields.pk.fieldIndex).SetUint(uint64(id))
+func (*ormBase) setPk(mi *models.ModelInfo, ind reflect.Value, id int64) {
+	if mi.Fields.Pk != nil && mi.Fields.Pk.Auto {
+		if mi.Fields.Pk.FieldType&IsPositiveIntegerField > 0 {
+			ind.FieldByIndex(mi.Fields.Pk.FieldIndex).SetUint(uint64(id))
 		} else {
-			ind.FieldByIndex(mi.fields.pk.fieldIndex).SetInt(id)
+			ind.FieldByIndex(mi.Fields.Pk.FieldIndex).SetInt(id)
 		}
 	}
 }
@@ -277,7 +276,7 @@ func (o *ormBase) InsertOrUpdateWithCtx(ctx context.Context, md interface{}, col
 }
 
 // update model to database.
-// cols set the columns those want to update.
+// cols set the Columns those want to update.
 func (o *ormBase) Update(md interface{}, cols ...string) (int64, error) {
 	return o.UpdateWithCtx(context.Background(), md, cols...)
 }
@@ -305,10 +304,10 @@ func (o *ormBase) QueryM2M(md interface{}, name string) QueryM2Mer {
 	fi := o.getFieldInfo(mi, name)
 
 	switch {
-	case fi.fieldType == RelManyToMany:
-	case fi.fieldType == RelReverseMany && fi.reverseFieldInfo.mi.isThrough:
+	case fi.FieldType == RelManyToMany:
+	case fi.FieldType == RelReverseMany && fi.ReverseFieldInfo.Mi.IsThrough:
 	default:
-		panic(fmt.Errorf("<Ormer.QueryM2M> model `%s` . name `%s` is not a m2m field", fi.name, mi.fullName))
+		panic(fmt.Errorf("<Ormer.QueryM2M> model `%s` . name `%s` is not a m2m field", fi.Name, mi.FullName))
 	}
 
 	return newQueryM2M(md, o, mi, fi, ind)
@@ -324,8 +323,9 @@ func (o *ormBase) QueryM2MWithCtx(_ context.Context, md interface{}, name string
 // args are limit, offset int and order string.
 //
 // example:
-// 	orm.LoadRelated(post,"Tags")
-// 	for _,tag := range post.Tags{...}
+//
+//	orm.LoadRelated(post,"Tags")
+//	for _,tag := range post.Tags{...}
 //
 // make sure the relation is defined in model struct tags.
 func (o *ormBase) LoadRelated(md interface{}, name string, args ...utils.KV) (int64, error) {
@@ -362,7 +362,7 @@ func (o *ormBase) LoadRelatedWithCtx(_ context.Context, md interface{}, name str
 		}
 	})
 
-	switch fi.fieldType {
+	switch fi.FieldType {
 	case RelOneToOne, RelForeignKey, RelReverseOne:
 		limit = 1
 		offset = 0
@@ -376,11 +376,11 @@ func (o *ormBase) LoadRelatedWithCtx(_ context.Context, md interface{}, name str
 		qs.orders = order_clause.ParseOrder(order)
 	}
 
-	find := ind.FieldByIndex(fi.fieldIndex)
+	find := ind.FieldByIndex(fi.FieldIndex)
 
 	var nums int64
 	var err error
-	switch fi.fieldType {
+	switch fi.FieldType {
 	case RelOneToOne, RelForeignKey, RelReverseOne:
 		val := reflect.New(find.Type().Elem())
 		container := val.Interface()
@@ -397,7 +397,7 @@ func (o *ormBase) LoadRelatedWithCtx(_ context.Context, md interface{}, name str
 }
 
 // get QuerySeter for related models to md model
-func (o *ormBase) queryRelated(md interface{}, name string) (*modelInfo, *fieldInfo, reflect.Value, *querySet) {
+func (o *ormBase) queryRelated(md interface{}, name string) (*models.ModelInfo, *models.FieldInfo, reflect.Value, *querySet) {
 	mi, ind := o.getPtrMiInd(md)
 	fi := o.getFieldInfo(mi, name)
 
@@ -408,14 +408,14 @@ func (o *ormBase) queryRelated(md interface{}, name string) (*modelInfo, *fieldI
 
 	var qs *querySet
 
-	switch fi.fieldType {
+	switch fi.FieldType {
 	case RelOneToOne, RelForeignKey, RelManyToMany:
-		if !fi.inModel {
+		if !fi.InModel {
 			break
 		}
 		qs = o.getRelQs(md, mi, fi)
 	case RelReverseOne, RelReverseMany:
-		if !fi.inModel {
+		if !fi.InModel {
 			break
 		}
 		qs = o.getReverseQs(md, mi, fi)
@@ -429,41 +429,41 @@ func (o *ormBase) queryRelated(md interface{}, name string) (*modelInfo, *fieldI
 }
 
 // get reverse relation QuerySeter
-func (o *ormBase) getReverseQs(md interface{}, mi *modelInfo, fi *fieldInfo) *querySet {
-	switch fi.fieldType {
+func (o *ormBase) getReverseQs(md interface{}, mi *models.ModelInfo, fi *models.FieldInfo) *querySet {
+	switch fi.FieldType {
 	case RelReverseOne, RelReverseMany:
 	default:
-		panic(fmt.Errorf("<Ormer> name `%s` for model `%s` is not an available reverse field", fi.name, mi.fullName))
+		panic(fmt.Errorf("<Ormer> name `%s` for model `%s` is not an available reverse field", fi.Name, mi.FullName))
 	}
 
 	var q *querySet
 
-	if fi.fieldType == RelReverseMany && fi.reverseFieldInfo.mi.isThrough {
-		q = newQuerySet(o, fi.relModelInfo).(*querySet)
-		q.cond = NewCondition().And(fi.reverseFieldInfoM2M.column+ExprSep+fi.reverseFieldInfo.column, md)
+	if fi.FieldType == RelReverseMany && fi.ReverseFieldInfo.Mi.IsThrough {
+		q = newQuerySet(o, fi.RelModelInfo).(*querySet)
+		q.cond = NewCondition().And(fi.ReverseFieldInfoM2M.Column+ExprSep+fi.ReverseFieldInfo.Column, md)
 	} else {
-		q = newQuerySet(o, fi.reverseFieldInfo.mi).(*querySet)
-		q.cond = NewCondition().And(fi.reverseFieldInfo.column, md)
+		q = newQuerySet(o, fi.ReverseFieldInfo.Mi).(*querySet)
+		q.cond = NewCondition().And(fi.ReverseFieldInfo.Column, md)
 	}
 
 	return q
 }
 
 // get relation QuerySeter
-func (o *ormBase) getRelQs(md interface{}, mi *modelInfo, fi *fieldInfo) *querySet {
-	switch fi.fieldType {
+func (o *ormBase) getRelQs(md interface{}, mi *models.ModelInfo, fi *models.FieldInfo) *querySet {
+	switch fi.FieldType {
 	case RelOneToOne, RelForeignKey, RelManyToMany:
 	default:
-		panic(fmt.Errorf("<Ormer> name `%s` for model `%s` is not an available rel field", fi.name, mi.fullName))
+		panic(fmt.Errorf("<Ormer> name `%s` for model `%s` is not an available rel field", fi.Name, mi.FullName))
 	}
 
-	q := newQuerySet(o, fi.relModelInfo).(*querySet)
+	q := newQuerySet(o, fi.RelModelInfo).(*querySet)
 	q.cond = NewCondition()
 
-	if fi.fieldType == RelManyToMany {
-		q.cond = q.cond.And(fi.reverseFieldInfoM2M.column+ExprSep+fi.reverseFieldInfo.column, md)
+	if fi.FieldType == RelManyToMany {
+		q.cond = q.cond.And(fi.ReverseFieldInfoM2M.Column+ExprSep+fi.ReverseFieldInfo.Column, md)
 	} else {
-		q.cond = q.cond.And(fi.reverseFieldInfo.column, md)
+		q.cond = q.cond.And(fi.ReverseFieldInfo.Column, md)
 	}
 
 	return q
@@ -475,12 +475,12 @@ func (o *ormBase) getRelQs(md interface{}, mi *modelInfo, fi *fieldInfo) *queryS
 func (o *ormBase) QueryTable(ptrStructOrTableName interface{}) (qs QuerySeter) {
 	var name string
 	if table, ok := ptrStructOrTableName.(string); ok {
-		name = nameStrategyMap[defaultNameStrategy](table)
+		name = models.NameStrategyMap[models.DefaultNameStrategy](table)
 		if mi, ok := defaultModelCache.get(name); ok {
 			qs = newQuerySet(o, mi)
 		}
 	} else {
-		name = getFullName(indirectType(reflect.TypeOf(ptrStructOrTableName)))
+		name = models.GetFullName(iutils.IndirectType(reflect.TypeOf(ptrStructOrTableName)))
 		if mi, ok := defaultModelCache.getByFullName(name); ok {
 			qs = newQuerySet(o, mi)
 		}

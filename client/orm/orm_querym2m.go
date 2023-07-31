@@ -17,22 +17,25 @@ package orm
 import (
 	"context"
 	"reflect"
+
+	"github.com/beego/beego/v2/client/orm/internal/models"
 )
 
 // model to model struct
 type queryM2M struct {
 	md  interface{}
-	mi  *modelInfo
-	fi  *fieldInfo
+	mi  *models.ModelInfo
+	fi  *models.FieldInfo
 	qs  *querySet
 	ind reflect.Value
 }
 
 // add models to origin models when creating queryM2M.
 // example:
-// 	m2m := orm.QueryM2M(post,"Tag")
-// 	m2m.Add(&Tag1{},&Tag2{})
-//  for _,tag := range post.Tags{}
+//
+//		m2m := orm.QueryM2M(post,"Tag")
+//		m2m.Add(&Tag1{},&Tag2{})
+//	 for _,tag := range post.Tags{}
 //
 // make sure the relation is defined in post model struct tag.
 func (o *queryM2M) Add(mds ...interface{}) (int64, error) {
@@ -41,9 +44,9 @@ func (o *queryM2M) Add(mds ...interface{}) (int64, error) {
 
 func (o *queryM2M) AddWithCtx(ctx context.Context, mds ...interface{}) (int64, error) {
 	fi := o.fi
-	mi := fi.relThroughModelInfo
-	mfi := fi.reverseFieldInfo
-	rfi := fi.reverseFieldInfoTwo
+	mi := fi.RelThroughModelInfo
+	mfi := fi.ReverseFieldInfo
+	rfi := fi.ReverseFieldInfoTwo
 
 	orm := o.qs.orm
 	dbase := orm.alias.DbBaser
@@ -52,9 +55,9 @@ func (o *queryM2M) AddWithCtx(ctx context.Context, mds ...interface{}) (int64, e
 	var otherValues []interface{}
 	var otherNames []string
 
-	for _, colname := range mi.fields.dbcols {
-		if colname != mfi.column && colname != rfi.column && colname != fi.mi.fields.pk.column &&
-			mi.fields.columns[colname] != mi.fields.pk {
+	for _, colname := range mi.Fields.DBcols {
+		if colname != mfi.Column && colname != rfi.Column && colname != fi.Mi.Fields.Pk.Column &&
+			mi.Fields.Columns[colname] != mi.Fields.Pk {
 			otherNames = append(otherNames, colname)
 		}
 	}
@@ -83,7 +86,7 @@ func (o *queryM2M) AddWithCtx(ctx context.Context, mds ...interface{}) (int64, e
 		panic(ErrMissPK)
 	}
 
-	names := []string{mfi.column, rfi.column}
+	names := []string{mfi.Column, rfi.Column}
 
 	values := make([]interface{}, 0, len(models)*2)
 	for _, md := range models {
@@ -93,7 +96,7 @@ func (o *queryM2M) AddWithCtx(ctx context.Context, mds ...interface{}) (int64, e
 		if ind.Kind() != reflect.Struct {
 			v2 = ind.Interface()
 		} else {
-			_, v2, exist = getExistPk(fi.relModelInfo, ind)
+			_, v2, exist = getExistPk(fi.RelModelInfo, ind)
 			if !exist {
 				panic(ErrMissPK)
 			}
@@ -113,9 +116,9 @@ func (o *queryM2M) Remove(mds ...interface{}) (int64, error) {
 
 func (o *queryM2M) RemoveWithCtx(ctx context.Context, mds ...interface{}) (int64, error) {
 	fi := o.fi
-	qs := o.qs.Filter(fi.reverseFieldInfo.name, o.md)
+	qs := o.qs.Filter(fi.ReverseFieldInfo.Name, o.md)
 
-	return qs.Filter(fi.reverseFieldInfoTwo.name+ExprSep+"in", mds).Delete()
+	return qs.Filter(fi.ReverseFieldInfoTwo.Name+ExprSep+"in", mds).Delete()
 }
 
 // check model is existed in relationship of origin model
@@ -125,8 +128,8 @@ func (o *queryM2M) Exist(md interface{}) bool {
 
 func (o *queryM2M) ExistWithCtx(ctx context.Context, md interface{}) bool {
 	fi := o.fi
-	return o.qs.Filter(fi.reverseFieldInfo.name, o.md).
-		Filter(fi.reverseFieldInfoTwo.name, md).ExistWithCtx(ctx)
+	return o.qs.Filter(fi.ReverseFieldInfo.Name, o.md).
+		Filter(fi.ReverseFieldInfoTwo.Name, md).ExistWithCtx(ctx)
 }
 
 // clean all models in related of origin model
@@ -136,7 +139,7 @@ func (o *queryM2M) Clear() (int64, error) {
 
 func (o *queryM2M) ClearWithCtx(ctx context.Context) (int64, error) {
 	fi := o.fi
-	return o.qs.Filter(fi.reverseFieldInfo.name, o.md).DeleteWithCtx(ctx)
+	return o.qs.Filter(fi.ReverseFieldInfo.Name, o.md).DeleteWithCtx(ctx)
 }
 
 // count all related models of origin model
@@ -146,18 +149,18 @@ func (o *queryM2M) Count() (int64, error) {
 
 func (o *queryM2M) CountWithCtx(ctx context.Context) (int64, error) {
 	fi := o.fi
-	return o.qs.Filter(fi.reverseFieldInfo.name, o.md).CountWithCtx(ctx)
+	return o.qs.Filter(fi.ReverseFieldInfo.Name, o.md).CountWithCtx(ctx)
 }
 
 var _ QueryM2Mer = new(queryM2M)
 
 // create new M2M queryer.
-func newQueryM2M(md interface{}, o *ormBase, mi *modelInfo, fi *fieldInfo, ind reflect.Value) QueryM2Mer {
+func newQueryM2M(md interface{}, o *ormBase, mi *models.ModelInfo, fi *models.FieldInfo, ind reflect.Value) QueryM2Mer {
 	qm2m := new(queryM2M)
 	qm2m.md = md
 	qm2m.mi = mi
 	qm2m.fi = fi
 	qm2m.ind = ind
-	qm2m.qs = newQuerySet(o, fi.relThroughModelInfo).(*querySet)
+	qm2m.qs = newQuerySet(o, fi.RelThroughModelInfo).(*querySet)
 	return qm2m
 }

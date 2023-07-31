@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"net"
 	"net/http"
@@ -194,7 +193,7 @@ func (srv *Server) ListenMutualTLS(certFile string, keyFile string, trustFile st
 	srv.TLSConfig.Certificates[0] = cert
 	srv.TLSConfig.ClientAuth = tls.RequireAndVerifyClientCert
 	pool := x509.NewCertPool()
-	data, err := ioutil.ReadFile(trustFile)
+	data, err := os.ReadFile(trustFile)
 	if err != nil {
 		log.Println(err)
 		return nil, err

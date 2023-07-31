@@ -505,7 +505,7 @@ func defaultRecoverPanic(ctx *context.Context, cfg *Config) {
 				break
 			}
 			logs.Critical(fmt.Sprintf("%s:%d", file, line))
-			stack = stack + fmt.Sprintln(fmt.Sprintf("%s:%d", file, line))
+			stack += fmt.Sprintf("%s:%d\n", file, line)
 		}
 
 		if ctx.Output.Status != 0 {
@@ -629,7 +629,7 @@ func assignConfig(ac config.Configer) error {
 	for adaptor, cfg := range BConfig.Log.Outputs {
 		err := logs.SetLogger(adaptor, cfg)
 		if err != nil {
-			fmt.Fprintln(os.Stderr, fmt.Sprintf("%s with the config %q got err:%s", adaptor, cfg, err.Error()))
+			fmt.Fprintf(os.Stderr, "%s with the config %q got err:%s\n", adaptor, cfg, err.Error())
 			return err
 		}
 	}

@@ -106,8 +106,10 @@ func MockDeleteWithCtx(tableName string, affectedRow int64, err error) *Mock {
 // Now you may be need to use golang/mock to generate QueryM2M mock instance
 // Or use DoNothingQueryM2Mer
 // for example:
-// 	post := Post{Id: 4}
-// 	m2m := Ormer.QueryM2M(&post, "Tags")
+//
+//	post := Post{Id: 4}
+//	m2m := Ormer.QueryM2M(&post, "Tags")
+//
 // when you write test code:
 // MockQueryM2MWithCtx("post", "Tags", mockM2Mer)
 // "post" is the table name of model Post structure

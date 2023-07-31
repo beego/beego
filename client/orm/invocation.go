@@ -17,6 +17,8 @@ package orm
 import (
 	"context"
 	"time"
+
+	"github.com/beego/beego/v2/client/orm/internal/models"
 )
 
 // Invocation represents an "Orm" invocation
@@ -27,7 +29,7 @@ type Invocation struct {
 	// the args are all arguments except context.Context
 	Args []interface{}
 
-	mi *modelInfo
+	mi *models.ModelInfo
 	// f is the Orm operation
 	f func(ctx context.Context) []interface{}
 
@@ -39,7 +41,7 @@ type Invocation struct {
 
 func (inv *Invocation) GetTableName() string {
 	if inv.mi != nil {
-		return inv.mi.table
+		return inv.mi.Table
 	}
 	return ""
 }
@@ -51,8 +53,8 @@ func (inv *Invocation) execute(ctx context.Context) []interface{} {
 // GetPkFieldName return the primary key of this table
 // if not found, "" is returned
 func (inv *Invocation) GetPkFieldName() string {
-	if inv.mi.fields.pk != nil {
-		return inv.mi.fields.pk.name
+	if inv.mi.Fields.Pk != nil {
+		return inv.mi.Fields.Pk.Name
 	}
 	return ""
 }

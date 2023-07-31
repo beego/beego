@@ -17,6 +17,8 @@ package orm
 import (
 	"fmt"
 	"strings"
+
+	"github.com/beego/beego/v2/client/orm/internal/models"
 )
 
 type dbIndex struct {
@@ -26,17 +28,22 @@ type dbIndex struct {
 }
 
 // get database column type string.
-func getColumnTyp(al *alias, fi *fieldInfo) (col string) {
+func getColumnTyp(al *alias, fi *models.FieldInfo) (col string) {
 	T := al.DbBaser.DbTypes()
-	fieldType := fi.fieldType
-	fieldSize := fi.size
+	fieldType := fi.FieldType
+	fieldSize := fi.Size
+
+	defer func() {
+		// handling the placeholder, including %COL%
+		col = strings.ReplaceAll(col, "%COL%", fi.Column)
+	}()
 
 checkColumn:
 	switch fieldType {
 	case TypeBooleanField:
 		col = T["bool"]
 	case TypeVarCharField:
-		if al.Driver == DRPostgres && fi.toText {
+		if al.Driver == DRPostgres && fi.ToText {
 			col = T["string-text"]
 		} else {
 			col = fmt.Sprintf(T["string"], fieldSize)
@@ -51,11 +58,11 @@ checkColumn:
 		col = T["time.Time-date"]
 	case TypeDateTimeField:
 		// the precision of sqlite is not implemented
-		if al.Driver == 2 || fi.timePrecision == nil {
+		if al.Driver == 2 || fi.TimePrecision == nil {
 			col = T["time.Time"]
 		} else {
 			s := T["time.Time-precision"]
-			col = fmt.Sprintf(s, *fi.timePrecision)
+			col = fmt.Sprintf(s, *fi.TimePrecision)
 		}
 
 	case TypeBitField:
@@ -85,7 +92,7 @@ checkColumn:
 		if !strings.Contains(s, "%d") {
 			col = s
 		} else {
-			col = fmt.Sprintf(s, fi.digits, fi.decimals)
+			col = fmt.Sprintf(s, fi.Digits, fi.Decimals)
 		}
 	case TypeJSONField:
 		if al.Driver != DRPostgres {
@@ -100,8 +107,8 @@ checkColumn:
 		}
 		col = T["jsonb"]
 	case RelForeignKey, RelOneToOne:
-		fieldType = fi.relModelInfo.fields.pk.fieldType
-		fieldSize = fi.relModelInfo.fields.pk.size
+		fieldType = fi.RelModelInfo.Fields.Pk.FieldType
+		fieldSize = fi.RelModelInfo.Fields.Pk.Size
 		goto checkColumn
 	}
 
@@ -109,34 +116,34 @@ checkColumn:
 }
 
 // create alter sql string.
-func getColumnAddQuery(al *alias, fi *fieldInfo) string {
+func getColumnAddQuery(al *alias, fi *models.FieldInfo) string {
 	Q := al.DbBaser.TableQuote()
 	typ := getColumnTyp(al, fi)
 
-	if !fi.null {
+	if !fi.Null {
 		typ += " " + "NOT NULL"
 	}
 
 	return fmt.Sprintf("ALTER TABLE %s%s%s ADD COLUMN %s%s%s %s %s",
-		Q, fi.mi.table, Q,
-		Q, fi.column, Q,
+		Q, fi.Mi.Table, Q,
+		Q, fi.Column, Q,
 		typ, getColumnDefault(fi),
 	)
 }
 
 // Get string value for the attribute "DEFAULT" for the CREATE, ALTER commands
-func getColumnDefault(fi *fieldInfo) string {
+func getColumnDefault(fi *models.FieldInfo) string {
 	var v, t, d string
 
 	// Skip default attribute if field is in relations
-	if fi.rel || fi.reverse {
+	if fi.Rel || fi.Reverse {
 		return v
 	}
 
 	t = " DEFAULT '%s' "
 
 	// These defaults will be useful if there no config value orm:"default" and NOT NULL is on
-	switch fi.fieldType {
+	switch fi.FieldType {
 	case TypeTimeField, TypeDateField, TypeDateTimeField, TypeTextField:
 		return v
 
@@ -153,14 +160,14 @@ func getColumnDefault(fi *fieldInfo) string {
 		d = "{}"
 	}
 
-	if fi.colDefault {
-		if !fi.initial.Exist() {
+	if fi.ColDefault {
+		if !fi.Initial.Exist() {
 			v = fmt.Sprintf(t, "")
 		} else {
-			v = fmt.Sprintf(t, fi.initial.String())
+			v = fmt.Sprintf(t, fi.Initial.String())
 		}
 	} else {
-		if !fi.null {
+		if !fi.Null {
 			v = fmt.Sprintf(t, d)
 		}
 	}
