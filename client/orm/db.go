@@ -936,63 +936,6 @@ func (d *dbBase) getSetSQL(cols []string, values []interface{}) string {
 	return buf.String()
 }
 
-func (d *dbBase) UpdateBatchSQL1(columns []string, values []interface{}, mi *models.ModelInfo, specifyIndexes, join, where string) string {
-	var query, T string
-
-	Q := d.ins.TableQuote()
-
-	if d.ins.SupportUpdateJoin() {
-		T = "T0."
-	}
-
-	cols := make([]string, 0, len(columns))
-
-	for i, v := range columns {
-		col := fmt.Sprintf("%s%s%s%s", T, Q, v, Q)
-		if c, ok := values[i].(colValue); ok {
-			switch c.opt {
-			case ColAdd:
-				cols = append(cols, col+" = "+col+" + ?")
-			case ColMinus:
-				cols = append(cols, col+" = "+col+" - ?")
-			case ColMultiply:
-				cols = append(cols, col+" = "+col+" * ?")
-			case ColExcept:
-				cols = append(cols, col+" = "+col+" / ?")
-			case ColBitAnd:
-				cols = append(cols, col+" = "+col+" & ?")
-			case ColBitRShift:
-				cols = append(cols, col+" = "+col+" >> ?")
-			case ColBitLShift:
-				cols = append(cols, col+" = "+col+" << ?")
-			case ColBitXOR:
-				cols = append(cols, col+" = "+col+" ^ ?")
-			case ColBitOr:
-				cols = append(cols, col+" = "+col+" | ?")
-			}
-			values[i] = c.value
-		} else {
-			cols = append(cols, col+" = ?")
-		}
-	}
-
-	sets := strings.Join(cols, ", ") + " "
-
-	if d.ins.SupportUpdateJoin() {
-		query = fmt.Sprintf("UPDATE %s%s%s T0 %s%sSET %s%s", Q, mi.Table, Q, specifyIndexes, join, sets, where)
-	} else {
-		supQuery := fmt.Sprintf("SELECT T0.%s%s%s FROM %s%s%s T0 %s%s%s",
-			Q, mi.Fields.Pk.Column, Q,
-			Q, mi.Table, Q,
-			specifyIndexes, join, where)
-		query = fmt.Sprintf("UPDATE %s%s%s SET %sWHERE %s%s%s IN ( %s )", Q, mi.Table, Q, sets, Q, mi.Fields.Pk.Column, Q, supQuery)
-	}
-
-	d.ins.ReplaceMarks(&query)
-
-	return query
-}
-
 // delete related records.
 // do UpdateBanch or DeleteBanch by condition of tables' relationship.
 func (d *dbBase) deleteRels(ctx context.Context, q dbQuerier, mi *models.ModelInfo, args []interface{}, tz *time.Location) error {
