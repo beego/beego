@@ -229,3 +229,119 @@ func TestDbBase_DeleteSQL(t *testing.T) {
 		})
 	}
 }
+
+func TestDbBase_UpdateBatchSQL(t *testing.T) {
+	mi := &models.ModelInfo{
+		Table: "test_tab",
+		Fields: &models.Fields{
+			Pk: &models.FieldInfo{
+				Column: "test_id",
+			},
+		},
+	}
+
+	testCases := []struct {
+		name string
+		db   *dbBase
+
+		columns        []string
+		values         []interface{}
+		specifyIndexes string
+		join           string
+		where          string
+
+		wantRes    string
+		wantValues []interface{}
+	}{
+		{
+			name: "update batch by dbBase",
+			db: &dbBase{
+				ins: &dbBase{},
+			},
+			columns: []string{"name", "age", "score"},
+			values: []interface{}{
+				"test_name",
+				colValue{
+					opt:   ColAdd,
+					value: 12,
+				},
+				colValue{
+					opt:   ColMultiply,
+					value: 2,
+				},
+				"test_origin_name",
+				18,
+			},
+			specifyIndexes: " USE INDEX(`name`) ",
+			join:           "LEFT OUTER JOIN `test_tab_2` T1 ON T1.`id` = T0.`test_id` ",
+			where:          "WHERE T0.`name` = ? AND T1.`age` = ?",
+
+			wantRes:    "UPDATE `test_tab` T0  USE INDEX(`name`) LEFT OUTER JOIN `test_tab_2` T1 ON T1.`id` = T0.`test_id` SET T0.`name` = ?, T0.`age` = T0.`age` + ?, T0.`score` = T0.`score` * ? WHERE T0.`name` = ? AND T1.`age` = ?",
+			wantValues: []interface{}{"test_name", int64(12), int64(2), "test_origin_name", 18},
+		},
+		{
+			name: "update batch by dbBasePostgres",
+			db: &dbBase{
+				ins: newdbBasePostgres(),
+			},
+			columns: []string{"name", "age", "score"},
+			values: []interface{}{
+				"test_name",
+				colValue{
+					opt:   ColAdd,
+					value: 12,
+				},
+				colValue{
+					opt:   ColMultiply,
+					value: 2,
+				},
+				"test_origin_name",
+				18,
+			},
+			specifyIndexes: " USE INDEX(`name`) ",
+			join:           "LEFT OUTER JOIN `test_tab_2` T1 ON T1.`id` = T0.`test_id` ",
+			where:          "WHERE T0.`name` = ? AND T1.`age` = ?",
+
+			wantRes:    "UPDATE \"test_tab\" SET \"name\" = $1, \"age\" = \"age\" + $2, \"score\" = \"score\" * $3 WHERE \"test_id\" IN ( SELECT T0.\"test_id\" FROM \"test_tab\" T0  USE INDEX(`name`) LEFT OUTER JOIN `test_tab_2` T1 ON T1.`id` = T0.`test_id` WHERE T0.`name` = $4 AND T1.`age` = $5 )",
+			wantValues: []interface{}{"test_name", int64(12), int64(2), "test_origin_name", 18},
+		},
+		{
+			name: "update batch by dbBaseSqlite",
+			db: &dbBase{
+				ins: newdbBaseSqlite(),
+			},
+			columns: []string{"name", "age", "score"},
+			values: []interface{}{
+				"test_name",
+				colValue{
+					opt:   ColAdd,
+					value: 12,
+				},
+				colValue{
+					opt:   ColMultiply,
+					value: 2,
+				},
+				"test_origin_name",
+				18,
+			},
+			specifyIndexes: " USE INDEX(`name`) ",
+			join:           "LEFT OUTER JOIN `test_tab_2` T1 ON T1.`id` = T0.`test_id` ",
+			where:          "WHERE T0.`name` = ? AND T1.`age` = ?",
+
+			wantRes:    "UPDATE `test_tab` SET `name` = ?, `age` = `age` + ?, `score` = `score` * ? WHERE `test_id` IN ( SELECT T0.`test_id` FROM `test_tab` T0  USE INDEX(`name`) LEFT OUTER JOIN `test_tab_2` T1 ON T1.`id` = T0.`test_id` WHERE T0.`name` = ? AND T1.`age` = ? )",
+			wantValues: []interface{}{"test_name", int64(12), int64(2), "test_origin_name", 18},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			setSQL := tc.db.getSetSQL(tc.columns, tc.values)
+
+			res := tc.db.UpdateBatchSQL(mi, setSQL, tc.specifyIndexes, tc.join, tc.where)
+
+			assert.Equal(t, tc.wantRes, res)
+			assert.Equal(t, tc.wantValues, tc.values)
+		})
+	}
+}
