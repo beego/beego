@@ -819,9 +819,7 @@ func (d *dbBase) UpdateBatch(ctx context.Context, q dbQuerier, qs *querySet, mi 
 
 	join := tables.getJoinSQL()
 
-	sets := d.getSetSQL(columns, values)
-
-	query := d.UpdateBatchSQL(mi, sets, specifyIndexes, join, where)
+	query := d.UpdateBatchSQL(mi, columns, values, specifyIndexes, join, where)
 
 	res, err := q.ExecContext(ctx, query, values...)
 	if err == nil {
@@ -830,40 +828,44 @@ func (d *dbBase) UpdateBatch(ctx context.Context, q dbQuerier, qs *querySet, mi 
 	return 0, err
 }
 
-func (d *dbBase) UpdateBatchSQL(mi *models.ModelInfo, sets, specifyIndexes, join, where string) string {
-	Q := d.ins.TableQuote()
+func (d *dbBase) UpdateBatchSQL(mi *models.ModelInfo, cols []string, values []interface{}, specifyIndexes, join, where string) string {
+	quote := d.ins.TableQuote()
 
 	buf := buffers.Get()
 	defer buffers.Put(buf)
 
 	_, _ = buf.WriteString("UPDATE ")
-	_, _ = buf.WriteString(Q)
+	_, _ = buf.WriteString(quote)
 	_, _ = buf.WriteString(mi.Table)
-	_, _ = buf.WriteString(Q)
+	_, _ = buf.WriteString(quote)
 
 	if d.ins.SupportUpdateJoin() {
 		_, _ = buf.WriteString(" T0 ")
 		_, _ = buf.WriteString(specifyIndexes)
 		_, _ = buf.WriteString(join)
-		_, _ = buf.WriteString(sets)
+
+		d.buildSetSQL(buf, cols, values)
+
 		_, _ = buf.WriteString(" ")
 		_, _ = buf.WriteString(where)
 	} else {
 		_, _ = buf.WriteString(" ")
-		_, _ = buf.WriteString(sets)
+
+		d.buildSetSQL(buf, cols, values)
+
 		_, _ = buf.WriteString(" WHERE ")
-		_, _ = buf.WriteString(Q)
+		_, _ = buf.WriteString(quote)
 		_, _ = buf.WriteString(mi.Fields.Pk.Column)
-		_, _ = buf.WriteString(Q)
+		_, _ = buf.WriteString(quote)
 		_, _ = buf.WriteString(" IN ( ")
 		_, _ = buf.WriteString("SELECT T0.")
-		_, _ = buf.WriteString(Q)
+		_, _ = buf.WriteString(quote)
 		_, _ = buf.WriteString(mi.Fields.Pk.Column)
-		_, _ = buf.WriteString(Q)
+		_, _ = buf.WriteString(quote)
 		_, _ = buf.WriteString(" FROM ")
-		_, _ = buf.WriteString(Q)
+		_, _ = buf.WriteString(quote)
 		_, _ = buf.WriteString(mi.Table)
-		_, _ = buf.WriteString(Q)
+		_, _ = buf.WriteString(quote)
 		_, _ = buf.WriteString(" T0 ")
 		_, _ = buf.WriteString(specifyIndexes)
 		_, _ = buf.WriteString(join)
@@ -878,18 +880,15 @@ func (d *dbBase) UpdateBatchSQL(mi *models.ModelInfo, sets, specifyIndexes, join
 	return query
 }
 
-func (d *dbBase) getSetSQL(cols []string, values []interface{}) string {
+func (d *dbBase) buildSetSQL(buf buffers.Buffer, cols []string, values []interface{}) {
 
-	var T string
+	var owner string
 
-	Q := d.ins.TableQuote()
+	quote := d.ins.TableQuote()
 
 	if d.ins.SupportUpdateJoin() {
-		T = "T0."
+		owner = "T0."
 	}
-
-	buf := buffers.Get()
-	defer buffers.Put(buf)
 
 	_, _ = buf.WriteString("SET ")
 
@@ -897,16 +896,16 @@ func (d *dbBase) getSetSQL(cols []string, values []interface{}) string {
 		if i > 0 {
 			_, _ = buf.WriteString(", ")
 		}
-		_, _ = buf.WriteString(T)
-		_, _ = buf.WriteString(Q)
+		_, _ = buf.WriteString(owner)
+		_, _ = buf.WriteString(quote)
 		_, _ = buf.WriteString(v)
-		_, _ = buf.WriteString(Q)
+		_, _ = buf.WriteString(quote)
 		_, _ = buf.WriteString(" = ")
 		if c, ok := values[i].(colValue); ok {
-			_, _ = buf.WriteString(T)
-			_, _ = buf.WriteString(Q)
+			_, _ = buf.WriteString(owner)
+			_, _ = buf.WriteString(quote)
 			_, _ = buf.WriteString(v)
-			_, _ = buf.WriteString(Q)
+			_, _ = buf.WriteString(quote)
 			switch c.opt {
 			case ColAdd:
 				_, _ = buf.WriteString(" + ?")
@@ -932,8 +931,6 @@ func (d *dbBase) getSetSQL(cols []string, values []interface{}) string {
 			_, _ = buf.WriteString("?")
 		}
 	}
-
-	return buf.String()
 }
 
 // delete related records.

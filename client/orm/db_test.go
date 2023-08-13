@@ -15,6 +15,7 @@
 package orm
 
 import (
+	"github.com/beego/beego/v2/client/orm/internal/buffers"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -230,7 +231,7 @@ func TestDbBase_DeleteSQL(t *testing.T) {
 	}
 }
 
-func TestDbBase_getSetSQL(t *testing.T) {
+func TestDbBase_buildSetSQL(t *testing.T) {
 
 	testCases := []struct {
 		name string
@@ -521,9 +522,12 @@ func TestDbBase_getSetSQL(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 
-			res := tc.db.getSetSQL(tc.columns, tc.values)
+			buf := buffers.Get()
+			defer buffers.Put(buf)
 
-			assert.Equal(t, tc.wantRes, res)
+			tc.db.buildSetSQL(buf, tc.columns, tc.values)
+
+			assert.Equal(t, tc.wantRes, buf.String())
 			assert.Equal(t, tc.wantValues, tc.values)
 		})
 	}
@@ -543,7 +547,9 @@ func TestDbBase_UpdateBatchSQL(t *testing.T) {
 		name string
 		db   *dbBase
 
-		sets           string
+		columns []string
+		values  []interface{}
+
 		specifyIndexes string
 		join           string
 		where          string
@@ -556,7 +562,21 @@ func TestDbBase_UpdateBatchSQL(t *testing.T) {
 				ins: &dbBase{},
 			},
 
-			sets:           "SET T0.`name` = ?, T0.`age` = T0.`age` + ?, T0.`score` = T0.`score` * ?",
+			columns: []string{"name", "age", "score"},
+			values: []interface{}{
+				"test_name",
+				colValue{
+					opt:   ColAdd,
+					value: 12,
+				},
+				colValue{
+					opt:   ColMultiply,
+					value: 2,
+				},
+				"test_origin_name",
+				18,
+			},
+
 			specifyIndexes: " USE INDEX(`name`) ",
 			join:           "LEFT OUTER JOIN `test_tab_2` T1 ON T1.`id` = T0.`test_id` ",
 			where:          "WHERE T0.`name` = ? AND T1.`age` = ?",
@@ -569,7 +589,21 @@ func TestDbBase_UpdateBatchSQL(t *testing.T) {
 				ins: newdbBasePostgres(),
 			},
 
-			sets:           `SET "name" = ?, "age" = "age" + ?, "score" = "score" * ?`,
+			columns: []string{"name", "age", "score"},
+			values: []interface{}{
+				"test_name",
+				colValue{
+					opt:   ColAdd,
+					value: 12,
+				},
+				colValue{
+					opt:   ColMultiply,
+					value: 2,
+				},
+				"test_origin_name",
+				18,
+			},
+
 			specifyIndexes: ` USE INDEX("name") `,
 			join:           `LEFT OUTER JOIN "test_tab_2" T1 ON T1."id" = T0."test_id" `,
 			where:          `WHERE T0."name" = ? AND T1."age" = ?`,
@@ -582,7 +616,21 @@ func TestDbBase_UpdateBatchSQL(t *testing.T) {
 				ins: newdbBaseSqlite(),
 			},
 
-			sets:           "SET `name` = ?, `age` = `age` + ?, `score` = `score` * ?",
+			columns: []string{"name", "age", "score"},
+			values: []interface{}{
+				"test_name",
+				colValue{
+					opt:   ColAdd,
+					value: 12,
+				},
+				colValue{
+					opt:   ColMultiply,
+					value: 2,
+				},
+				"test_origin_name",
+				18,
+			},
+
 			specifyIndexes: " USE INDEX(`name`) ",
 			join:           "LEFT OUTER JOIN `test_tab_2` T1 ON T1.`id` = T0.`test_id` ",
 			where:          "WHERE T0.`name` = ? AND T1.`age` = ?",
@@ -594,7 +642,7 @@ func TestDbBase_UpdateBatchSQL(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 
-			res := tc.db.UpdateBatchSQL(mi, tc.sets, tc.specifyIndexes, tc.join, tc.where)
+			res := tc.db.UpdateBatchSQL(mi, tc.columns, tc.values, tc.specifyIndexes, tc.join, tc.where)
 
 			assert.Equal(t, tc.wantRes, res)
 		})
