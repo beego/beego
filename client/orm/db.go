@@ -819,63 +819,118 @@ func (d *dbBase) UpdateBatch(ctx context.Context, q dbQuerier, qs *querySet, mi 
 
 	join := tables.getJoinSQL()
 
-	var query, T string
+	query := d.UpdateBatchSQL(mi, columns, values, specifyIndexes, join, where)
 
-	Q := d.ins.TableQuote()
-
-	if d.ins.SupportUpdateJoin() {
-		T = "T0."
-	}
-
-	cols := make([]string, 0, len(columns))
-
-	for i, v := range columns {
-		col := fmt.Sprintf("%s%s%s%s", T, Q, v, Q)
-		if c, ok := values[i].(colValue); ok {
-			switch c.opt {
-			case ColAdd:
-				cols = append(cols, col+" = "+col+" + ?")
-			case ColMinus:
-				cols = append(cols, col+" = "+col+" - ?")
-			case ColMultiply:
-				cols = append(cols, col+" = "+col+" * ?")
-			case ColExcept:
-				cols = append(cols, col+" = "+col+" / ?")
-			case ColBitAnd:
-				cols = append(cols, col+" = "+col+" & ?")
-			case ColBitRShift:
-				cols = append(cols, col+" = "+col+" >> ?")
-			case ColBitLShift:
-				cols = append(cols, col+" = "+col+" << ?")
-			case ColBitXOR:
-				cols = append(cols, col+" = "+col+" ^ ?")
-			case ColBitOr:
-				cols = append(cols, col+" = "+col+" | ?")
-			}
-			values[i] = c.value
-		} else {
-			cols = append(cols, col+" = ?")
-		}
-	}
-
-	sets := strings.Join(cols, ", ") + " "
-
-	if d.ins.SupportUpdateJoin() {
-		query = fmt.Sprintf("UPDATE %s%s%s T0 %s%sSET %s%s", Q, mi.Table, Q, specifyIndexes, join, sets, where)
-	} else {
-		supQuery := fmt.Sprintf("SELECT T0.%s%s%s FROM %s%s%s T0 %s%s%s",
-			Q, mi.Fields.Pk.Column, Q,
-			Q, mi.Table, Q,
-			specifyIndexes, join, where)
-		query = fmt.Sprintf("UPDATE %s%s%s SET %sWHERE %s%s%s IN ( %s )", Q, mi.Table, Q, sets, Q, mi.Fields.Pk.Column, Q, supQuery)
-	}
-
-	d.ins.ReplaceMarks(&query)
 	res, err := q.ExecContext(ctx, query, values...)
 	if err == nil {
 		return res.RowsAffected()
 	}
 	return 0, err
+}
+
+func (d *dbBase) UpdateBatchSQL(mi *models.ModelInfo, cols []string, values []interface{}, specifyIndexes, join, where string) string {
+	quote := d.ins.TableQuote()
+
+	buf := buffers.Get()
+	defer buffers.Put(buf)
+
+	_, _ = buf.WriteString("UPDATE ")
+	_, _ = buf.WriteString(quote)
+	_, _ = buf.WriteString(mi.Table)
+	_, _ = buf.WriteString(quote)
+
+	if d.ins.SupportUpdateJoin() {
+		_, _ = buf.WriteString(" T0 ")
+		_, _ = buf.WriteString(specifyIndexes)
+		_, _ = buf.WriteString(join)
+
+		d.buildSetSQL(buf, cols, values)
+
+		_, _ = buf.WriteString(" ")
+		_, _ = buf.WriteString(where)
+	} else {
+		_, _ = buf.WriteString(" ")
+
+		d.buildSetSQL(buf, cols, values)
+
+		_, _ = buf.WriteString(" WHERE ")
+		_, _ = buf.WriteString(quote)
+		_, _ = buf.WriteString(mi.Fields.Pk.Column)
+		_, _ = buf.WriteString(quote)
+		_, _ = buf.WriteString(" IN ( ")
+		_, _ = buf.WriteString("SELECT T0.")
+		_, _ = buf.WriteString(quote)
+		_, _ = buf.WriteString(mi.Fields.Pk.Column)
+		_, _ = buf.WriteString(quote)
+		_, _ = buf.WriteString(" FROM ")
+		_, _ = buf.WriteString(quote)
+		_, _ = buf.WriteString(mi.Table)
+		_, _ = buf.WriteString(quote)
+		_, _ = buf.WriteString(" T0 ")
+		_, _ = buf.WriteString(specifyIndexes)
+		_, _ = buf.WriteString(join)
+		_, _ = buf.WriteString(where)
+		_, _ = buf.WriteString(" )")
+	}
+
+	query := buf.String()
+
+	d.ins.ReplaceMarks(&query)
+
+	return query
+}
+
+func (d *dbBase) buildSetSQL(buf buffers.Buffer, cols []string, values []interface{}) {
+
+	var owner string
+
+	quote := d.ins.TableQuote()
+
+	if d.ins.SupportUpdateJoin() {
+		owner = "T0."
+	}
+
+	_, _ = buf.WriteString("SET ")
+
+	for i, v := range cols {
+		if i > 0 {
+			_, _ = buf.WriteString(", ")
+		}
+		_, _ = buf.WriteString(owner)
+		_, _ = buf.WriteString(quote)
+		_, _ = buf.WriteString(v)
+		_, _ = buf.WriteString(quote)
+		_, _ = buf.WriteString(" = ")
+		if c, ok := values[i].(colValue); ok {
+			_, _ = buf.WriteString(owner)
+			_, _ = buf.WriteString(quote)
+			_, _ = buf.WriteString(v)
+			_, _ = buf.WriteString(quote)
+			switch c.opt {
+			case ColAdd:
+				_, _ = buf.WriteString(" + ?")
+			case ColMinus:
+				_, _ = buf.WriteString(" - ?")
+			case ColMultiply:
+				_, _ = buf.WriteString(" * ?")
+			case ColExcept:
+				_, _ = buf.WriteString(" / ?")
+			case ColBitAnd:
+				_, _ = buf.WriteString(" & ?")
+			case ColBitRShift:
+				_, _ = buf.WriteString(" >> ?")
+			case ColBitLShift:
+				_, _ = buf.WriteString(" << ?")
+			case ColBitXOR:
+				_, _ = buf.WriteString(" ^ ?")
+			case ColBitOr:
+				_, _ = buf.WriteString(" | ?")
+			}
+			values[i] = c.value
+		} else {
+			_, _ = buf.WriteString("?")
+		}
+	}
 }
 
 // delete related records.

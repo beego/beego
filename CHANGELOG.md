@@ -14,6 +14,7 @@
 - [refactor cache/redis: Use redisConfig to receive incoming JSON (previously using a map)](https://github.com/beego/beego/pull/5268)
 - [fix: refactor DeleteSQL method](https://github.com/beego/beego/pull/5271)
 - [fix: refactor UpdateSQL method](https://github.com/beego/beego/pull/5274)
+- [fix: refactor UpdateBatch method](https://github.com/beego/beego/pull/5295)
 
 ## ORM refactoring
 - [introducing internal/models pkg](https://github.com/beego/beego/pull/5238)

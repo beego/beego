@@ -15,6 +15,7 @@
 package orm
 
 import (
+	"github.com/beego/beego/v2/client/orm/internal/buffers"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -224,6 +225,424 @@ func TestDbBase_DeleteSQL(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 
 			res := tc.db.DeleteSQL(tc.whereCols, mi)
+
+			assert.Equal(t, tc.wantRes, res)
+		})
+	}
+}
+
+func TestDbBase_buildSetSQL(t *testing.T) {
+
+	testCases := []struct {
+		name string
+
+		db *dbBase
+
+		columns []string
+		values  []interface{}
+
+		wantRes    string
+		wantValues []interface{}
+	}{
+		{
+			name: "set add/mul operator by dbBase",
+			db: &dbBase{
+				ins: &dbBase{},
+			},
+			columns: []string{"name", "age", "score"},
+			values: []interface{}{
+				"test_name",
+				colValue{
+					opt:   ColAdd,
+					value: 12,
+				},
+				colValue{
+					opt:   ColMultiply,
+					value: 2,
+				},
+				"test_origin_name",
+				18,
+			},
+			wantRes:    "SET T0.`name` = ?, T0.`age` = T0.`age` + ?, T0.`score` = T0.`score` * ?",
+			wantValues: []interface{}{"test_name", int64(12), int64(2), "test_origin_name", 18},
+		},
+		{
+			name: "set min/except operator by dbBase",
+			db: &dbBase{
+				ins: &dbBase{},
+			},
+			columns: []string{"name", "age", "score"},
+			values: []interface{}{
+				"test_name",
+				colValue{
+					opt:   ColMinus,
+					value: 12,
+				},
+				colValue{
+					opt:   ColExcept,
+					value: 2,
+				},
+				"test_origin_name",
+				18,
+			},
+			wantRes:    "SET T0.`name` = ?, T0.`age` = T0.`age` - ?, T0.`score` = T0.`score` / ?",
+			wantValues: []interface{}{"test_name", int64(12), int64(2), "test_origin_name", 18},
+		},
+		{
+			name: "set bitRShift/bitLShift operator by dbBase",
+			db: &dbBase{
+				ins: &dbBase{},
+			},
+			columns: []string{"name", "age", "score"},
+			values: []interface{}{
+				"test_name",
+				colValue{
+					opt:   ColBitRShift,
+					value: 12,
+				},
+				colValue{
+					opt:   ColBitLShift,
+					value: 2,
+				},
+				"test_origin_name",
+				18,
+			},
+			wantRes:    "SET T0.`name` = ?, T0.`age` = T0.`age` >> ?, T0.`score` = T0.`score` << ?",
+			wantValues: []interface{}{"test_name", int64(12), int64(2), "test_origin_name", 18},
+		},
+		{
+			name: "set bitAnd/bitOr/bitXOR operator by dbBase",
+			db: &dbBase{
+				ins: &dbBase{},
+			},
+			columns: []string{"count", "age", "score"},
+			values: []interface{}{
+				colValue{
+					opt:   ColBitAnd,
+					value: 28,
+				},
+				colValue{
+					opt:   ColBitOr,
+					value: 12,
+				},
+				colValue{
+					opt:   ColBitXOR,
+					value: 2,
+				},
+				"test_origin_name",
+				18,
+			},
+			wantRes:    "SET T0.`count` = T0.`count` & ?, T0.`age` = T0.`age` | ?, T0.`score` = T0.`score` ^ ?",
+			wantValues: []interface{}{int64(28), int64(12), int64(2), "test_origin_name", 18},
+		},
+		{
+			name: "set add/mul operator by dbBasePostgres",
+			db: &dbBase{
+				ins: newdbBasePostgres(),
+			},
+			columns: []string{"name", "age", "score"},
+			values: []interface{}{
+				"test_name",
+				colValue{
+					opt:   ColAdd,
+					value: 12,
+				},
+				colValue{
+					opt:   ColMultiply,
+					value: 2,
+				},
+				"test_origin_name",
+				18,
+			},
+			wantRes:    `SET "name" = ?, "age" = "age" + ?, "score" = "score" * ?`,
+			wantValues: []interface{}{"test_name", int64(12), int64(2), "test_origin_name", 18},
+		},
+		{
+			name: "set min/except operator by dbBasePostgres",
+			db: &dbBase{
+				ins: newdbBasePostgres(),
+			},
+			columns: []string{"name", "age", "score"},
+			values: []interface{}{
+				"test_name",
+				colValue{
+					opt:   ColMinus,
+					value: 12,
+				},
+				colValue{
+					opt:   ColExcept,
+					value: 2,
+				},
+				"test_origin_name",
+				18,
+			},
+			wantRes:    `SET "name" = ?, "age" = "age" - ?, "score" = "score" / ?`,
+			wantValues: []interface{}{"test_name", int64(12), int64(2), "test_origin_name", 18},
+		},
+		{
+			name: "set bitRShift/bitLShift operator by dbBasePostgres",
+			db: &dbBase{
+				ins: newdbBasePostgres(),
+			},
+			columns: []string{"name", "age", "score"},
+			values: []interface{}{
+				"test_name",
+				colValue{
+					opt:   ColBitRShift,
+					value: 12,
+				},
+				colValue{
+					opt:   ColBitLShift,
+					value: 2,
+				},
+				"test_origin_name",
+				18,
+			},
+			wantRes:    `SET "name" = ?, "age" = "age" >> ?, "score" = "score" << ?`,
+			wantValues: []interface{}{"test_name", int64(12), int64(2), "test_origin_name", 18},
+		},
+		{
+			name: "set bitAnd/bitOr/bitXOR operator by dbBasePostgres",
+			db: &dbBase{
+				ins: newdbBasePostgres(),
+			},
+			columns: []string{"count", "age", "score"},
+			values: []interface{}{
+				colValue{
+					opt:   ColBitAnd,
+					value: 28,
+				},
+				colValue{
+					opt:   ColBitOr,
+					value: 12,
+				},
+				colValue{
+					opt:   ColBitXOR,
+					value: 2,
+				},
+				"test_origin_name",
+				18,
+			},
+			wantRes:    `SET "count" = "count" & ?, "age" = "age" | ?, "score" = "score" ^ ?`,
+			wantValues: []interface{}{int64(28), int64(12), int64(2), "test_origin_name", 18},
+		},
+		{
+			name: "set add/mul operator by dbBaseSqlite",
+			db: &dbBase{
+				ins: newdbBaseSqlite(),
+			},
+			columns: []string{"name", "age", "score"},
+			values: []interface{}{
+				"test_name",
+				colValue{
+					opt:   ColAdd,
+					value: 12,
+				},
+				colValue{
+					opt:   ColMultiply,
+					value: 2,
+				},
+				"test_origin_name",
+				18,
+			},
+			wantRes:    "SET `name` = ?, `age` = `age` + ?, `score` = `score` * ?",
+			wantValues: []interface{}{"test_name", int64(12), int64(2), "test_origin_name", 18},
+		},
+		{
+			name: "set min/except operator by dbBaseSqlite",
+			db: &dbBase{
+				ins: newdbBaseSqlite(),
+			},
+			columns: []string{"name", "age", "score"},
+			values: []interface{}{
+				"test_name",
+				colValue{
+					opt:   ColMinus,
+					value: 12,
+				},
+				colValue{
+					opt:   ColExcept,
+					value: 2,
+				},
+				"test_origin_name",
+				18,
+			},
+			wantRes:    "SET `name` = ?, `age` = `age` - ?, `score` = `score` / ?",
+			wantValues: []interface{}{"test_name", int64(12), int64(2), "test_origin_name", 18},
+		},
+		{
+			name: "set bitRShift/bitLShift operator by dbBaseSqlite",
+			db: &dbBase{
+				ins: newdbBaseSqlite(),
+			},
+			columns: []string{"name", "age", "score"},
+			values: []interface{}{
+				"test_name",
+				colValue{
+					opt:   ColBitRShift,
+					value: 12,
+				},
+				colValue{
+					opt:   ColBitLShift,
+					value: 2,
+				},
+				"test_origin_name",
+				18,
+			},
+			wantRes:    "SET `name` = ?, `age` = `age` >> ?, `score` = `score` << ?",
+			wantValues: []interface{}{"test_name", int64(12), int64(2), "test_origin_name", 18},
+		},
+		{
+			name: "set bitAnd/bitOr/bitXOR operator by dbBaseSqlite",
+			db: &dbBase{
+				ins: newdbBaseSqlite(),
+			},
+			columns: []string{"count", "age", "score"},
+			values: []interface{}{
+				colValue{
+					opt:   ColBitAnd,
+					value: 28,
+				},
+				colValue{
+					opt:   ColBitOr,
+					value: 12,
+				},
+				colValue{
+					opt:   ColBitXOR,
+					value: 2,
+				},
+				"test_origin_name",
+				18,
+			},
+			wantRes:    "SET `count` = `count` & ?, `age` = `age` | ?, `score` = `score` ^ ?",
+			wantValues: []interface{}{int64(28), int64(12), int64(2), "test_origin_name", 18},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			buf := buffers.Get()
+			defer buffers.Put(buf)
+
+			tc.db.buildSetSQL(buf, tc.columns, tc.values)
+
+			assert.Equal(t, tc.wantRes, buf.String())
+			assert.Equal(t, tc.wantValues, tc.values)
+		})
+	}
+}
+
+func TestDbBase_UpdateBatchSQL(t *testing.T) {
+	mi := &models.ModelInfo{
+		Table: "test_tab",
+		Fields: &models.Fields{
+			Pk: &models.FieldInfo{
+				Column: "test_id",
+			},
+		},
+	}
+
+	testCases := []struct {
+		name string
+		db   *dbBase
+
+		columns []string
+		values  []interface{}
+
+		specifyIndexes string
+		join           string
+		where          string
+
+		wantRes string
+	}{
+		{
+			name: "update batch by dbBase",
+			db: &dbBase{
+				ins: &dbBase{},
+			},
+
+			columns: []string{"name", "age", "score"},
+			values: []interface{}{
+				"test_name",
+				colValue{
+					opt:   ColAdd,
+					value: 12,
+				},
+				colValue{
+					opt:   ColMultiply,
+					value: 2,
+				},
+				"test_origin_name",
+				18,
+			},
+
+			specifyIndexes: " USE INDEX(`name`) ",
+			join:           "LEFT OUTER JOIN `test_tab_2` T1 ON T1.`id` = T0.`test_id` ",
+			where:          "WHERE T0.`name` = ? AND T1.`age` = ?",
+
+			wantRes: "UPDATE `test_tab` T0  USE INDEX(`name`) LEFT OUTER JOIN `test_tab_2` T1 ON T1.`id` = T0.`test_id` SET T0.`name` = ?, T0.`age` = T0.`age` + ?, T0.`score` = T0.`score` * ? WHERE T0.`name` = ? AND T1.`age` = ?",
+		},
+		{
+			name: "update batch by dbBasePostgres",
+			db: &dbBase{
+				ins: newdbBasePostgres(),
+			},
+
+			columns: []string{"name", "age", "score"},
+			values: []interface{}{
+				"test_name",
+				colValue{
+					opt:   ColAdd,
+					value: 12,
+				},
+				colValue{
+					opt:   ColMultiply,
+					value: 2,
+				},
+				"test_origin_name",
+				18,
+			},
+
+			specifyIndexes: ` USE INDEX("name") `,
+			join:           `LEFT OUTER JOIN "test_tab_2" T1 ON T1."id" = T0."test_id" `,
+			where:          `WHERE T0."name" = ? AND T1."age" = ?`,
+
+			wantRes: `UPDATE "test_tab" SET "name" = $1, "age" = "age" + $2, "score" = "score" * $3 WHERE "test_id" IN ( SELECT T0."test_id" FROM "test_tab" T0  USE INDEX("name") LEFT OUTER JOIN "test_tab_2" T1 ON T1."id" = T0."test_id" WHERE T0."name" = $4 AND T1."age" = $5 )`,
+		},
+		{
+			name: "update batch by dbBaseSqlite",
+			db: &dbBase{
+				ins: newdbBaseSqlite(),
+			},
+
+			columns: []string{"name", "age", "score"},
+			values: []interface{}{
+				"test_name",
+				colValue{
+					opt:   ColAdd,
+					value: 12,
+				},
+				colValue{
+					opt:   ColMultiply,
+					value: 2,
+				},
+				"test_origin_name",
+				18,
+			},
+
+			specifyIndexes: " USE INDEX(`name`) ",
+			join:           "LEFT OUTER JOIN `test_tab_2` T1 ON T1.`id` = T0.`test_id` ",
+			where:          "WHERE T0.`name` = ? AND T1.`age` = ?",
+
+			wantRes: "UPDATE `test_tab` SET `name` = ?, `age` = `age` + ?, `score` = `score` * ? WHERE `test_id` IN ( SELECT T0.`test_id` FROM `test_tab` T0  USE INDEX(`name`) LEFT OUTER JOIN `test_tab_2` T1 ON T1.`id` = T0.`test_id` WHERE T0.`name` = ? AND T1.`age` = ? )",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			res := tc.db.UpdateBatchSQL(mi, tc.columns, tc.values, tc.specifyIndexes, tc.join, tc.where)
 
 			assert.Equal(t, tc.wantRes, res)
 		})
