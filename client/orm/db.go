@@ -528,79 +528,19 @@ func (d *dbBase) InsertValueSQL(names []string, values []interface{}, isMulti bo
 // If your primary key or unique column conflict will update
 // If no will insert
 func (d *dbBase) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *models.ModelInfo, ind reflect.Value, a *alias, args ...string) (int64, error) {
-	args0 := ""
-	iouStr := ""
-	argsMap := map[string]string{}
-	switch a.Driver {
-	case DRMySQL:
-		iouStr = "ON DUPLICATE KEY UPDATE"
-	case DRPostgres:
-		if len(args) == 0 {
-			return 0, fmt.Errorf("`%s` use InsertOrUpdate must have a conflict column", a.DriverName)
-		}
-		args0 = strings.ToLower(args[0])
-		iouStr = fmt.Sprintf("ON CONFLICT (%s) DO UPDATE SET", args0)
-	default:
-		return 0, fmt.Errorf("`%s` nonsupport InsertOrUpdate in beego", a.DriverName)
-	}
-
-	// Get on the key-value pairs
-	for _, v := range args {
-		kv := strings.Split(v, "=")
-		if len(kv) == 2 {
-			argsMap[strings.ToLower(kv[0])] = kv[1]
-		}
-	}
 
 	names := make([]string, 0, len(mi.Fields.DBcols)-1)
-	Q := d.ins.TableQuote()
+
 	values, _, err := d.collectValues(mi, ind, mi.Fields.DBcols, true, true, &names, a.TZ)
 	if err != nil {
 		return 0, err
 	}
 
-	marks := make([]string, len(names))
-	updateValues := make([]interface{}, 0)
-	updates := make([]string, len(names))
-	var conflitValue interface{}
-	for i, v := range names {
-		// identifier in database may not be case-sensitive, so quote it
-		v = fmt.Sprintf("%s%s%s", Q, v, Q)
-		marks[i] = "?"
-		valueStr := argsMap[strings.ToLower(v)]
-		if v == args0 {
-			conflitValue = values[i]
-		}
-		if valueStr != "" {
-			switch a.Driver {
-			case DRMySQL:
-				updates[i] = v + "=" + valueStr
-			case DRPostgres:
-				if conflitValue != nil {
-					// postgres ON CONFLICT DO UPDATE SET can`t use colu=colu+values
-					updates[i] = fmt.Sprintf("%s=(select %s from %s where %s = ? )", v, valueStr, mi.Table, args0)
-					updateValues = append(updateValues, conflitValue)
-				} else {
-					return 0, fmt.Errorf("`%s` must be in front of `%s` in your struct", args0, v)
-				}
-			}
-		} else {
-			updates[i] = v + "=?"
-			updateValues = append(updateValues, values[i])
-		}
+	query, err := d.InsertOrUpdateSQL(names, &values, mi, a, args...)
+
+	if err != nil {
+		return 0, err
 	}
-
-	values = append(values, updateValues...)
-
-	sep := fmt.Sprintf("%s, %s", Q, Q)
-	qmarks := strings.Join(marks, ", ")
-	qupdates := strings.Join(updates, ", ")
-	columns := strings.Join(names, sep)
-
-	// conflitValue maybe is a int,can`t use fmt.Sprintf
-	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s) %s "+qupdates, Q, mi.Table, Q, Q, columns, Q, qmarks, iouStr)
-
-	d.ins.ReplaceMarks(&query)
 
 	if !d.ins.HasReturningID(mi, &query) {
 		res, err := q.ExecContext(ctx, query, values...)
@@ -623,6 +563,117 @@ func (d *dbBase) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *models.Mod
 		err = fmt.Errorf("postgres version must 9.5 or higher")
 	}
 	return id, err
+}
+
+func (d *dbBase) InsertOrUpdateSQL(names []string, values *[]interface{}, mi *models.ModelInfo, a *alias, args ...string) (string, error) {
+
+	args0 := ""
+
+	switch a.Driver {
+	case DRMySQL:
+	case DRPostgres:
+		if len(args) == 0 {
+			return "", fmt.Errorf("`%s` use InsertOrUpdate must have a conflict column", a.DriverName)
+		}
+		args0 = strings.ToLower(args[0])
+	default:
+		return "", fmt.Errorf("`%s` nonsupport InsertOrUpdate in beego", a.DriverName)
+	}
+
+	argsMap := map[string]string{}
+	// Get on the key-value pairs
+	for _, v := range args {
+		kv := strings.Split(v, "=")
+		if len(kv) == 2 {
+			argsMap[strings.ToLower(kv[0])] = kv[1]
+		}
+	}
+
+	quote := d.ins.TableQuote()
+
+	buf := buffers.Get()
+	defer buffers.Put(buf)
+
+	_, _ = buf.WriteString("INSERT INTO ")
+	_, _ = buf.WriteString(quote)
+	_, _ = buf.WriteString(mi.Table)
+	_, _ = buf.WriteString(quote)
+	_, _ = buf.WriteString(" (")
+
+	for i, name := range names {
+		if i > 0 {
+			_, _ = buf.WriteString(", ")
+		}
+		_, _ = buf.WriteString(quote)
+		_, _ = buf.WriteString(name)
+		_, _ = buf.WriteString(quote)
+	}
+
+	_, _ = buf.WriteString(") VALUES (")
+
+	for i := 0; i < len(names); i++ {
+		if i > 0 {
+			_, _ = buf.WriteString(", ")
+		}
+		_, _ = buf.WriteString("?")
+	}
+
+	_, _ = buf.WriteString(") ")
+
+	switch a.Driver {
+	case DRMySQL:
+		_, _ = buf.WriteString("ON DUPLICATE KEY UPDATE ")
+	case DRPostgres:
+		_, _ = buf.WriteString("ON CONFLICT (")
+		_, _ = buf.WriteString(args0)
+		_, _ = buf.WriteString(") DO UPDATE SET ")
+	}
+
+	var conflitValue interface{}
+	for i, v := range names {
+		if i > 0 {
+			_, _ = buf.WriteString(", ")
+		}
+		// identifier in database may not be case-sensitive, so quote it
+		v = fmt.Sprintf("%s%s%s", quote, v, quote)
+		valueStr := argsMap[strings.ToLower(v)]
+		if v == args0 {
+			conflitValue = (*values)[i]
+		}
+		if valueStr != "" {
+			switch a.Driver {
+			case DRMySQL:
+				_, _ = buf.WriteString(v)
+				_, _ = buf.WriteString("=")
+				_, _ = buf.WriteString(valueStr)
+			case DRPostgres:
+				if conflitValue != nil {
+					// postgres ON CONFLICT DO UPDATE SET can`t use colu=colu+values
+					_, _ = buf.WriteString(v)
+					_, _ = buf.WriteString("=(select ")
+					_, _ = buf.WriteString(valueStr)
+					_, _ = buf.WriteString(" from ")
+					_, _ = buf.WriteString(mi.Table)
+					_, _ = buf.WriteString(" where ")
+					_, _ = buf.WriteString(args0)
+					_, _ = buf.WriteString(" = ? )")
+					*values = append(*values, conflitValue)
+				} else {
+					return "", fmt.Errorf("`%s` must be in front of `%s` in your struct", args0, v)
+				}
+			}
+		} else {
+			_, _ = buf.WriteString(v)
+			_, _ = buf.WriteString("=?")
+			*values = append(*values, (*values)[i])
+		}
+	}
+
+	query := buf.String()
+
+	d.ins.ReplaceMarks(&query)
+
+	return query, nil
 }
 
 // Update execute update sql dbQuerier with given struct reflect.Value.
