@@ -15,6 +15,7 @@
 package orm
 
 import (
+	"errors"
 	"github.com/beego/beego/v2/client/orm/internal/buffers"
 	"testing"
 
@@ -647,4 +648,241 @@ func TestDbBase_UpdateBatchSQL(t *testing.T) {
 			assert.Equal(t, tc.wantRes, res)
 		})
 	}
+}
+
+func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
+
+	mi := &models.ModelInfo{
+		Table: "test_tab",
+	}
+
+	testCases := []struct {
+		name string
+		db   *dbBase
+
+		names  []string
+		values []interface{}
+		a      *alias
+		args   []string
+
+		wantRes    string
+		wantErr    error
+		wantValues []interface{}
+	}{
+		{
+			name: "test nonsupport driver",
+			db: &dbBase{
+				ins: newdbBaseSqlite(),
+			},
+
+			names: []string{"name", "age", "score"},
+			values: []interface{}{
+				"test_name",
+				18,
+				12,
+			},
+			a: &alias{
+				Driver:     DRSqlite,
+				DriverName: "sqlite3",
+			},
+			args: []string{
+				"`age`=20",
+				"`score`=`score`+1",
+			},
+
+			wantErr: errors.New("`sqlite3` nonsupport InsertOrUpdate in beego"),
+			wantValues: []interface{}{
+				"test_name",
+				18,
+				12,
+			},
+		},
+		{
+			name: "insert or update with MySQL",
+			db: &dbBase{
+				ins: newdbBaseMysql(),
+			},
+
+			names: []string{"name", "age", "score"},
+			values: []interface{}{
+				"test_name",
+				18,
+				12,
+			},
+			a: &alias{
+				Driver:     DRMySQL,
+				DriverName: "mysql",
+			},
+			args: []string{
+				"`age`=20",
+				"`score`=`score`+1",
+			},
+
+			wantRes: "INSERT INTO `test_tab` (`name`, `age`, `score`) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE `name`=?, `age`=20, `score`=`score`+1",
+			wantValues: []interface{}{
+				"test_name",
+				18,
+				12,
+				"test_name",
+			},
+		},
+		{
+			name: "insert or update with MySQL with no args",
+			db: &dbBase{
+				ins: newdbBaseMysql(),
+			},
+
+			names: []string{"name", "age", "score"},
+			values: []interface{}{
+				"test_name",
+				18,
+				12,
+			},
+			a: &alias{
+				Driver:     DRMySQL,
+				DriverName: "mysql",
+			},
+
+			wantRes: "INSERT INTO `test_tab` (`name`, `age`, `score`) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE `name`=?, `age`=?, `score`=?",
+			wantValues: []interface{}{
+				"test_name",
+				18,
+				12,
+				"test_name",
+				18,
+				12,
+			},
+		},
+		{
+			name: "insert or update with PostgreSQL normal",
+			db: &dbBase{
+				ins: newdbBasePostgres(),
+			},
+
+			names: []string{"name", "age", "score"},
+			values: []interface{}{
+				"test_name",
+				18,
+				12,
+			},
+			a: &alias{
+				Driver:     DRPostgres,
+				DriverName: "postgres",
+			},
+			args: []string{
+				`"name"`,
+				`"score"="score_1"`,
+			},
+
+			wantRes: `INSERT INTO "test_tab" ("name", "age", "score") VALUES ($1, $2, $3) ON CONFLICT ("name") DO UPDATE SET "name"=$4, "age"=$5, "score"=(select "score_1" from test_tab where "name" = $6 )`,
+			wantValues: []interface{}{
+				"test_name",
+				18,
+				12,
+				"test_name",
+				18,
+				"test_name",
+			},
+		},
+		{
+			name: "insert or update with PostgreSQL without conflict column",
+			db: &dbBase{
+				ins: newdbBasePostgres(),
+			},
+
+			names: []string{"name", "age", "score"},
+			values: []interface{}{
+				"test_name",
+				18,
+				12,
+			},
+			a: &alias{
+				Driver:     DRPostgres,
+				DriverName: "postgres",
+			},
+
+			wantErr: errors.New("`postgres` use InsertOrUpdate must have a conflict column"),
+			wantValues: []interface{}{
+				"test_name",
+				18,
+				12,
+			},
+		},
+		{
+			name: "insert or update with PostgreSQL the conflict column is not in front of the specified column",
+			db: &dbBase{
+				ins: newdbBasePostgres(),
+			},
+
+			names: []string{"score", "name", "age"},
+			values: []interface{}{
+				12,
+				"test_name",
+				18,
+			},
+			a: &alias{
+				Driver:     DRPostgres,
+				DriverName: "postgres",
+			},
+			args: []string{
+				`"name"`,
+				`"score"="score_1"`,
+			},
+
+			wantErr: errors.New("`\"name\"` must be in front of `\"score\"` in your struct"),
+			wantValues: []interface{}{
+				12,
+				"test_name",
+				18,
+			},
+		},
+		{
+			name: "insert or update with PostgreSQL the conflict column is in front of the specified column",
+			db: &dbBase{
+				ins: newdbBasePostgres(),
+			},
+
+			names: []string{"age", "name", "score"},
+			values: []interface{}{
+				18,
+				"test_name",
+				12,
+			},
+			a: &alias{
+				Driver:     DRPostgres,
+				DriverName: "postgres",
+			},
+			args: []string{
+				`"name"`,
+				`"score"="score_1"`,
+			},
+
+			wantRes: `INSERT INTO "test_tab" ("age", "name", "score") VALUES ($1, $2, $3) ON CONFLICT ("name") DO UPDATE SET "age"=$4, "name"=$5, "score"=(select "score_1" from test_tab where "name" = $6 )`,
+			wantValues: []interface{}{
+				18,
+				"test_name",
+				12,
+				18,
+				"test_name",
+				"test_name",
+			},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			res, err := tc.db.InsertOrUpdateSQL(tc.names, &tc.values, mi, tc.a, tc.args...)
+
+			assert.Equal(t, tc.wantValues, tc.values)
+
+			assert.Equal(t, tc.wantErr, err)
+			if err != nil {
+				return
+			}
+
+			assert.Equal(t, tc.wantRes, res)
+		})
+	}
+
 }
