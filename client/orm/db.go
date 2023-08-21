@@ -23,6 +23,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/beego/beego/v2/client/orm/internal/buffers"
+
 	"github.com/beego/beego/v2/client/orm/internal/logs"
 
 	"github.com/beego/beego/v2/client/orm/internal/utils"
@@ -450,26 +452,7 @@ func (d *dbBase) InsertMulti(ctx context.Context, q dbQuerier, mi *models.ModelI
 // InsertValue execute insert sql with given struct and given values.
 // insert the given values, not the field values in struct.
 func (d *dbBase) InsertValue(ctx context.Context, q dbQuerier, mi *models.ModelInfo, isMulti bool, names []string, values []interface{}) (int64, error) {
-	Q := d.ins.TableQuote()
-
-	marks := make([]string, len(names))
-	for i := range marks {
-		marks[i] = "?"
-	}
-
-	sep := fmt.Sprintf("%s, %s", Q, Q)
-	qmarks := strings.Join(marks, ", ")
-	columns := strings.Join(names, sep)
-
-	multi := len(values) / len(names)
-
-	if isMulti && multi > 1 {
-		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
-	}
-
-	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s)", Q, mi.Table, Q, Q, columns, Q, qmarks)
-
-	d.ins.ReplaceMarks(&query)
+	query := d.InsertValueSQL(names, values, isMulti, mi)
 
 	if isMulti || !d.ins.HasReturningID(mi, &query) {
 		res, err := q.ExecContext(ctx, query, values...)
@@ -494,97 +477,74 @@ func (d *dbBase) InsertValue(ctx context.Context, q dbQuerier, mi *models.ModelI
 	return id, err
 }
 
+func (d *dbBase) InsertValueSQL(names []string, values []interface{}, isMulti bool, mi *models.ModelInfo) string {
+	buf := buffers.Get()
+	defer buffers.Put(buf)
+
+	Q := d.ins.TableQuote()
+
+	_, _ = buf.WriteString("INSERT INTO ")
+	_, _ = buf.WriteString(Q)
+	_, _ = buf.WriteString(mi.Table)
+	_, _ = buf.WriteString(Q)
+
+	_, _ = buf.WriteString(" (")
+	for i, name := range names {
+		if i > 0 {
+			_, _ = buf.WriteString(", ")
+		}
+		_, _ = buf.WriteString(Q)
+		_, _ = buf.WriteString(name)
+		_, _ = buf.WriteString(Q)
+	}
+	_, _ = buf.WriteString(") VALUES (")
+
+	marks := make([]string, len(names))
+	for i := range marks {
+		marks[i] = "?"
+	}
+	qmarks := strings.Join(marks, ", ")
+
+	_, _ = buf.WriteString(qmarks)
+
+	multi := len(values) / len(names)
+
+	if isMulti && multi > 1 {
+		for i := 0; i < multi-1; i++ {
+			_, _ = buf.WriteString("), (")
+			_, _ = buf.WriteString(qmarks)
+		}
+	}
+
+	_ = buf.WriteByte(')')
+
+	query := buf.String()
+	d.ins.ReplaceMarks(&query)
+
+	return query
+}
+
 // InsertOrUpdate a row
 // If your primary key or unique column conflict will update
 // If no will insert
 func (d *dbBase) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *models.ModelInfo, ind reflect.Value, a *alias, args ...string) (int64, error) {
-	args0 := ""
-	iouStr := ""
-	argsMap := map[string]string{}
-	switch a.Driver {
-	case DRMySQL:
-		iouStr = "ON DUPLICATE KEY UPDATE"
-	case DRPostgres:
-		if len(args) == 0 {
-			return 0, fmt.Errorf("`%s` use InsertOrUpdate must have a conflict column", a.DriverName)
-		}
-		args0 = strings.ToLower(args[0])
-		iouStr = fmt.Sprintf("ON CONFLICT (%s) DO UPDATE SET", args0)
-	default:
-		return 0, fmt.Errorf("`%s` nonsupport InsertOrUpdate in beego", a.DriverName)
-	}
 
-	// Get on the key-value pairs
-	for _, v := range args {
-		kv := strings.Split(v, "=")
-		if len(kv) == 2 {
-			argsMap[strings.ToLower(kv[0])] = kv[1]
-		}
-	}
-
-	isMulti := false
 	names := make([]string, 0, len(mi.Fields.DBcols)-1)
-	Q := d.ins.TableQuote()
+
 	values, _, err := d.collectValues(mi, ind, mi.Fields.DBcols, true, true, &names, a.TZ)
 	if err != nil {
 		return 0, err
 	}
 
-	marks := make([]string, len(names))
-	updateValues := make([]interface{}, 0)
-	updates := make([]string, len(names))
-	var conflitValue interface{}
-	for i, v := range names {
-		// identifier in database may not be case-sensitive, so quote it
-		v = fmt.Sprintf("%s%s%s", Q, v, Q)
-		marks[i] = "?"
-		valueStr := argsMap[strings.ToLower(v)]
-		if v == args0 {
-			conflitValue = values[i]
-		}
-		if valueStr != "" {
-			switch a.Driver {
-			case DRMySQL:
-				updates[i] = v + "=" + valueStr
-			case DRPostgres:
-				if conflitValue != nil {
-					// postgres ON CONFLICT DO UPDATE SET can`t use colu=colu+values
-					updates[i] = fmt.Sprintf("%s=(select %s from %s where %s = ? )", v, valueStr, mi.Table, args0)
-					updateValues = append(updateValues, conflitValue)
-				} else {
-					return 0, fmt.Errorf("`%s` must be in front of `%s` in your struct", args0, v)
-				}
-			}
-		} else {
-			updates[i] = v + "=?"
-			updateValues = append(updateValues, values[i])
-		}
+	query, err := d.InsertOrUpdateSQL(names, &values, mi, a, args...)
+
+	if err != nil {
+		return 0, err
 	}
 
-	values = append(values, updateValues...)
-
-	sep := fmt.Sprintf("%s, %s", Q, Q)
-	qmarks := strings.Join(marks, ", ")
-	qupdates := strings.Join(updates, ", ")
-	columns := strings.Join(names, sep)
-
-	multi := len(values) / len(names)
-
-	if isMulti {
-		qmarks = strings.Repeat(qmarks+"), (", multi-1) + qmarks
-	}
-	// conflitValue maybe is a int,can`t use fmt.Sprintf
-	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s) %s "+qupdates, Q, mi.Table, Q, Q, columns, Q, qmarks, iouStr)
-
-	d.ins.ReplaceMarks(&query)
-
-	if isMulti || !d.ins.HasReturningID(mi, &query) {
+	if !d.ins.HasReturningID(mi, &query) {
 		res, err := q.ExecContext(ctx, query, values...)
 		if err == nil {
-			if isMulti {
-				return res.RowsAffected()
-			}
-
 			lastInsertId, err := res.LastInsertId()
 			if err != nil {
 				logs.DebugLog.Println(ErrLastInsertIdUnavailable, ':', err)
@@ -603,6 +563,117 @@ func (d *dbBase) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *models.Mod
 		err = fmt.Errorf("postgres version must 9.5 or higher")
 	}
 	return id, err
+}
+
+func (d *dbBase) InsertOrUpdateSQL(names []string, values *[]interface{}, mi *models.ModelInfo, a *alias, args ...string) (string, error) {
+
+	args0 := ""
+
+	switch a.Driver {
+	case DRMySQL:
+	case DRPostgres:
+		if len(args) == 0 {
+			return "", fmt.Errorf("`%s` use InsertOrUpdate must have a conflict column", a.DriverName)
+		}
+		args0 = strings.ToLower(args[0])
+	default:
+		return "", fmt.Errorf("`%s` nonsupport InsertOrUpdate in beego", a.DriverName)
+	}
+
+	argsMap := map[string]string{}
+	// Get on the key-value pairs
+	for _, v := range args {
+		kv := strings.Split(v, "=")
+		if len(kv) == 2 {
+			argsMap[strings.ToLower(kv[0])] = kv[1]
+		}
+	}
+
+	quote := d.ins.TableQuote()
+
+	buf := buffers.Get()
+	defer buffers.Put(buf)
+
+	_, _ = buf.WriteString("INSERT INTO ")
+	_, _ = buf.WriteString(quote)
+	_, _ = buf.WriteString(mi.Table)
+	_, _ = buf.WriteString(quote)
+	_, _ = buf.WriteString(" (")
+
+	for i, name := range names {
+		if i > 0 {
+			_, _ = buf.WriteString(", ")
+		}
+		_, _ = buf.WriteString(quote)
+		_, _ = buf.WriteString(name)
+		_, _ = buf.WriteString(quote)
+	}
+
+	_, _ = buf.WriteString(") VALUES (")
+
+	for i := 0; i < len(names); i++ {
+		if i > 0 {
+			_, _ = buf.WriteString(", ")
+		}
+		_, _ = buf.WriteString("?")
+	}
+
+	_, _ = buf.WriteString(") ")
+
+	switch a.Driver {
+	case DRMySQL:
+		_, _ = buf.WriteString("ON DUPLICATE KEY UPDATE ")
+	case DRPostgres:
+		_, _ = buf.WriteString("ON CONFLICT (")
+		_, _ = buf.WriteString(args0)
+		_, _ = buf.WriteString(") DO UPDATE SET ")
+	}
+
+	var conflitValue interface{}
+	for i, v := range names {
+		if i > 0 {
+			_, _ = buf.WriteString(", ")
+		}
+		// identifier in database may not be case-sensitive, so quote it
+		v = fmt.Sprintf("%s%s%s", quote, v, quote)
+		valueStr := argsMap[strings.ToLower(v)]
+		if v == args0 {
+			conflitValue = (*values)[i]
+		}
+		if valueStr != "" {
+			switch a.Driver {
+			case DRMySQL:
+				_, _ = buf.WriteString(v)
+				_, _ = buf.WriteString("=")
+				_, _ = buf.WriteString(valueStr)
+			case DRPostgres:
+				if conflitValue != nil {
+					// postgres ON CONFLICT DO UPDATE SET can`t use colu=colu+values
+					_, _ = buf.WriteString(v)
+					_, _ = buf.WriteString("=(select ")
+					_, _ = buf.WriteString(valueStr)
+					_, _ = buf.WriteString(" from ")
+					_, _ = buf.WriteString(mi.Table)
+					_, _ = buf.WriteString(" where ")
+					_, _ = buf.WriteString(args0)
+					_, _ = buf.WriteString(" = ? )")
+					*values = append(*values, conflitValue)
+				} else {
+					return "", fmt.Errorf("`%s` must be in front of `%s` in your struct", args0, v)
+				}
+			}
+		} else {
+			_, _ = buf.WriteString(v)
+			_, _ = buf.WriteString("=?")
+			*values = append(*values, (*values)[i])
+		}
+	}
+
+	query := buf.String()
+
+	d.ins.ReplaceMarks(&query)
+
+	return query, nil
 }
 
 // Update execute update sql dbQuerier with given struct reflect.Value.
@@ -654,20 +725,47 @@ func (d *dbBase) Update(ctx context.Context, q dbQuerier, mi *models.ModelInfo, 
 
 	setValues = append(setValues, pkValue)
 
-	Q := d.ins.TableQuote()
-
-	sep := fmt.Sprintf("%s = ?, %s", Q, Q)
-	setColumns := strings.Join(setNames, sep)
-
-	query := fmt.Sprintf("UPDATE %s%s%s SET %s%s%s = ? WHERE %s%s%s = ?", Q, mi.Table, Q, Q, setColumns, Q, Q, pkName, Q)
-
-	d.ins.ReplaceMarks(&query)
+	query := d.UpdateSQL(setNames, pkName, mi)
 
 	res, err := q.ExecContext(ctx, query, setValues...)
 	if err == nil {
 		return res.RowsAffected()
 	}
 	return 0, err
+}
+
+func (d *dbBase) UpdateSQL(setNames []string, pkName string, mi *models.ModelInfo) string {
+	buf := buffers.Get()
+	defer buffers.Put(buf)
+
+	Q := d.ins.TableQuote()
+
+	_, _ = buf.WriteString("UPDATE ")
+	_, _ = buf.WriteString(Q)
+	_, _ = buf.WriteString(mi.Table)
+	_, _ = buf.WriteString(Q)
+	_, _ = buf.WriteString(" SET ")
+
+	for i, name := range setNames {
+		if i > 0 {
+			_, _ = buf.WriteString(", ")
+		}
+		_, _ = buf.WriteString(Q)
+		_, _ = buf.WriteString(name)
+		_, _ = buf.WriteString(Q)
+		_, _ = buf.WriteString(" = ?")
+	}
+
+	_, _ = buf.WriteString(" WHERE ")
+	_, _ = buf.WriteString(Q)
+	_, _ = buf.WriteString(pkName)
+	_, _ = buf.WriteString(Q)
+	_, _ = buf.WriteString(" = ?")
+
+	query := buf.String()
+	d.ins.ReplaceMarks(&query)
+
+	return query
 }
 
 // Delete execute delete sql dbQuerier with given struct reflect.Value.
@@ -693,14 +791,8 @@ func (d *dbBase) Delete(ctx context.Context, q dbQuerier, mi *models.ModelInfo, 
 		args = append(args, pkValue)
 	}
 
-	Q := d.ins.TableQuote()
+	query := d.DeleteSQL(whereCols, mi)
 
-	sep := fmt.Sprintf("%s = ? AND %s", Q, Q)
-	wheres := strings.Join(whereCols, sep)
-
-	query := fmt.Sprintf("DELETE FROM %s%s%s WHERE %s%s%s = ?", Q, mi.Table, Q, Q, wheres, Q)
-
-	d.ins.ReplaceMarks(&query)
 	res, err := q.ExecContext(ctx, query, args...)
 	if err == nil {
 		num, err := res.RowsAffected()
@@ -716,6 +808,35 @@ func (d *dbBase) Delete(ctx context.Context, q dbQuerier, mi *models.ModelInfo, 
 		return num, err
 	}
 	return 0, err
+}
+
+func (d *dbBase) DeleteSQL(whereCols []string, mi *models.ModelInfo) string {
+	buf := buffers.Get()
+	defer buffers.Put(buf)
+
+	Q := d.ins.TableQuote()
+
+	_, _ = buf.WriteString("DELETE FROM ")
+	_, _ = buf.WriteString(Q)
+	_, _ = buf.WriteString(mi.Table)
+	_, _ = buf.WriteString(Q)
+	_, _ = buf.WriteString(" WHERE ")
+
+	for i, col := range whereCols {
+		if i > 0 {
+			_, _ = buf.WriteString(" AND ")
+		}
+		_, _ = buf.WriteString(Q)
+		_, _ = buf.WriteString(col)
+		_, _ = buf.WriteString(Q)
+		_, _ = buf.WriteString(" = ?")
+	}
+
+	query := buf.String()
+
+	d.ins.ReplaceMarks(&query)
+
+	return query
 }
 
 // UpdateBatch update table-related record by querySet.
@@ -749,63 +870,118 @@ func (d *dbBase) UpdateBatch(ctx context.Context, q dbQuerier, qs *querySet, mi 
 
 	join := tables.getJoinSQL()
 
-	var query, T string
+	query := d.UpdateBatchSQL(mi, columns, values, specifyIndexes, join, where)
 
-	Q := d.ins.TableQuote()
-
-	if d.ins.SupportUpdateJoin() {
-		T = "T0."
-	}
-
-	cols := make([]string, 0, len(columns))
-
-	for i, v := range columns {
-		col := fmt.Sprintf("%s%s%s%s", T, Q, v, Q)
-		if c, ok := values[i].(colValue); ok {
-			switch c.opt {
-			case ColAdd:
-				cols = append(cols, col+" = "+col+" + ?")
-			case ColMinus:
-				cols = append(cols, col+" = "+col+" - ?")
-			case ColMultiply:
-				cols = append(cols, col+" = "+col+" * ?")
-			case ColExcept:
-				cols = append(cols, col+" = "+col+" / ?")
-			case ColBitAnd:
-				cols = append(cols, col+" = "+col+" & ?")
-			case ColBitRShift:
-				cols = append(cols, col+" = "+col+" >> ?")
-			case ColBitLShift:
-				cols = append(cols, col+" = "+col+" << ?")
-			case ColBitXOR:
-				cols = append(cols, col+" = "+col+" ^ ?")
-			case ColBitOr:
-				cols = append(cols, col+" = "+col+" | ?")
-			}
-			values[i] = c.value
-		} else {
-			cols = append(cols, col+" = ?")
-		}
-	}
-
-	sets := strings.Join(cols, ", ") + " "
-
-	if d.ins.SupportUpdateJoin() {
-		query = fmt.Sprintf("UPDATE %s%s%s T0 %s%sSET %s%s", Q, mi.Table, Q, specifyIndexes, join, sets, where)
-	} else {
-		supQuery := fmt.Sprintf("SELECT T0.%s%s%s FROM %s%s%s T0 %s%s%s",
-			Q, mi.Fields.Pk.Column, Q,
-			Q, mi.Table, Q,
-			specifyIndexes, join, where)
-		query = fmt.Sprintf("UPDATE %s%s%s SET %sWHERE %s%s%s IN ( %s )", Q, mi.Table, Q, sets, Q, mi.Fields.Pk.Column, Q, supQuery)
-	}
-
-	d.ins.ReplaceMarks(&query)
 	res, err := q.ExecContext(ctx, query, values...)
 	if err == nil {
 		return res.RowsAffected()
 	}
 	return 0, err
+}
+
+func (d *dbBase) UpdateBatchSQL(mi *models.ModelInfo, cols []string, values []interface{}, specifyIndexes, join, where string) string {
+	quote := d.ins.TableQuote()
+
+	buf := buffers.Get()
+	defer buffers.Put(buf)
+
+	_, _ = buf.WriteString("UPDATE ")
+	_, _ = buf.WriteString(quote)
+	_, _ = buf.WriteString(mi.Table)
+	_, _ = buf.WriteString(quote)
+
+	if d.ins.SupportUpdateJoin() {
+		_, _ = buf.WriteString(" T0 ")
+		_, _ = buf.WriteString(specifyIndexes)
+		_, _ = buf.WriteString(join)
+
+		d.buildSetSQL(buf, cols, values)
+
+		_, _ = buf.WriteString(" ")
+		_, _ = buf.WriteString(where)
+	} else {
+		_, _ = buf.WriteString(" ")
+
+		d.buildSetSQL(buf, cols, values)
+
+		_, _ = buf.WriteString(" WHERE ")
+		_, _ = buf.WriteString(quote)
+		_, _ = buf.WriteString(mi.Fields.Pk.Column)
+		_, _ = buf.WriteString(quote)
+		_, _ = buf.WriteString(" IN ( ")
+		_, _ = buf.WriteString("SELECT T0.")
+		_, _ = buf.WriteString(quote)
+		_, _ = buf.WriteString(mi.Fields.Pk.Column)
+		_, _ = buf.WriteString(quote)
+		_, _ = buf.WriteString(" FROM ")
+		_, _ = buf.WriteString(quote)
+		_, _ = buf.WriteString(mi.Table)
+		_, _ = buf.WriteString(quote)
+		_, _ = buf.WriteString(" T0 ")
+		_, _ = buf.WriteString(specifyIndexes)
+		_, _ = buf.WriteString(join)
+		_, _ = buf.WriteString(where)
+		_, _ = buf.WriteString(" )")
+	}
+
+	query := buf.String()
+
+	d.ins.ReplaceMarks(&query)
+
+	return query
+}
+
+func (d *dbBase) buildSetSQL(buf buffers.Buffer, cols []string, values []interface{}) {
+
+	var owner string
+
+	quote := d.ins.TableQuote()
+
+	if d.ins.SupportUpdateJoin() {
+		owner = "T0."
+	}
+
+	_, _ = buf.WriteString("SET ")
+
+	for i, v := range cols {
+		if i > 0 {
+			_, _ = buf.WriteString(", ")
+		}
+		_, _ = buf.WriteString(owner)
+		_, _ = buf.WriteString(quote)
+		_, _ = buf.WriteString(v)
+		_, _ = buf.WriteString(quote)
+		_, _ = buf.WriteString(" = ")
+		if c, ok := values[i].(colValue); ok {
+			_, _ = buf.WriteString(owner)
+			_, _ = buf.WriteString(quote)
+			_, _ = buf.WriteString(v)
+			_, _ = buf.WriteString(quote)
+			switch c.opt {
+			case ColAdd:
+				_, _ = buf.WriteString(" + ?")
+			case ColMinus:
+				_, _ = buf.WriteString(" - ?")
+			case ColMultiply:
+				_, _ = buf.WriteString(" * ?")
+			case ColExcept:
+				_, _ = buf.WriteString(" / ?")
+			case ColBitAnd:
+				_, _ = buf.WriteString(" & ?")
+			case ColBitRShift:
+				_, _ = buf.WriteString(" >> ?")
+			case ColBitLShift:
+				_, _ = buf.WriteString(" << ?")
+			case ColBitXOR:
+				_, _ = buf.WriteString(" ^ ?")
+			case ColBitOr:
+				_, _ = buf.WriteString(" | ?")
+			}
+			values[i] = c.value
+		} else {
+			_, _ = buf.WriteString("?")
+		}
+	}
 }
 
 // delete related records.

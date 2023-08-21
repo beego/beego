@@ -3,8 +3,9 @@ package orm
 import (
 	"testing"
 
-	"github.com/beego/beego/v2/client/orm/internal/models"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/beego/beego/v2/client/orm/internal/models"
 )
 
 func Test_getColumnTyp(t *testing.T) {

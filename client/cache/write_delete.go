@@ -90,7 +90,7 @@ func (c *WriteDoubleDeleteCache) Set(
 	})
 	err = c.Cache.Delete(ctx, key)
 	if err != nil {
-		return berror.Wrap(err, DeleteFailed, fmt.Sprintf("key: %s", key))
+		return berror.Wrap(err, DeleteFailed, fmt.Sprintf("write double delete pattern failed to delete the key: %s", key))
 	}
 	return nil
 }
