@@ -16,8 +16,10 @@ package orm
 
 import (
 	"errors"
+	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
 	"github.com/beego/beego/v2/client/orm/internal/buffers"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -882,6 +884,414 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 			}
 
 			assert.Equal(t, tc.wantRes, res)
+		})
+	}
+
+}
+
+func TestDbBase_readBatchSQL(t *testing.T) {
+
+	tCols := []string{"name", "score"}
+
+	mi := &models.ModelInfo{
+		Table: "test_tab",
+		Fields: &models.Fields{
+			Pk: &models.FieldInfo{
+				Column: "id",
+			},
+			DBcols: []string{"name", "age", "score"},
+			Fields: map[string]*models.FieldInfo{
+				"name": {
+					Name:   "name",
+					Column: "name",
+				},
+				"age": {
+					Name:   "age",
+					Column: "age",
+				},
+				"score": {
+					Name:   "score",
+					Column: "score",
+				},
+			},
+			Columns: map[string]*models.FieldInfo{
+				"name": {
+					Name: "name",
+				},
+				"age": {
+					Name: "age",
+				},
+				"score": {
+					Name: "score",
+				},
+			},
+		},
+	}
+
+	testTab1Mi := &models.ModelInfo{
+		Table: "test_tab_1",
+		Fields: &models.Fields{
+			Pk: &models.FieldInfo{
+				Column: "test_tab_1_id",
+			},
+			DBcols: []string{"name_1", "age_1", "score_1"},
+			Fields: map[string]*models.FieldInfo{
+				"name1": {
+					Name: "name1",
+				},
+				"age1": {
+					Name: "age1",
+				},
+				"score1": {
+					Name: "score1",
+				},
+			},
+			Columns: map[string]*models.FieldInfo{
+				"name_1": {
+					Name: "name1",
+				},
+				"age_1": {
+					Name: "age1",
+				},
+				"score_1": {
+					Name: "score1",
+				},
+			},
+		},
+	}
+
+	testTab2Mi := &models.ModelInfo{
+		Table: "test_tab_2",
+		Fields: &models.Fields{
+			Pk: &models.FieldInfo{
+				Column: "test_tab_2_id",
+			},
+			DBcols: []string{"name_2", "age_2", "score_2"},
+			Fields: map[string]*models.FieldInfo{
+				"name2": {
+					Name: "name2",
+				},
+				"age2": {
+					Name: "age2",
+				},
+				"score2": {
+					Name: "score2",
+				},
+			},
+			Columns: map[string]*models.FieldInfo{
+				"name_2": {
+					Name: "name2",
+				},
+				"age_2": {
+					Name: "age2",
+				},
+				"score_2": {
+					Name: "score2",
+				},
+			},
+		},
+	}
+
+	tables := &dbTables{
+		mi: mi,
+		tables: []*dbTable{
+			{
+				id:    1,
+				index: "T1",
+				name:  "test_tab_1",
+				names: []string{"name_1", "age_1", "score_1"},
+				sel:   true,
+				inner: false,
+				mi:    testTab1Mi,
+				fi: &models.FieldInfo{
+					Column:       "id",
+					RelModelInfo: testTab1Mi,
+				},
+			},
+			{
+				id:    2,
+				index: "T2",
+				name:  "test_tab_2",
+				jtl: &dbTable{
+					index: "T1",
+				},
+				names: []string{"name_2", "age_2", "score_2"},
+				sel:   false,
+				inner: true,
+				mi:    testTab2Mi,
+				fi: &models.FieldInfo{
+					Column:       "test_tab_1_id",
+					RelModelInfo: testTab2Mi,
+				},
+			},
+		},
+	}
+
+	cond := &Condition{
+		params: []condValue{
+			{
+				exprs: []string{
+					"name",
+					"eq",
+				},
+				args: []interface{}{"test_name"},
+			},
+			{
+				isCond: true,
+				isOr:   true,
+				cond: &Condition{
+					params: []condValue{
+						{
+							exprs: []string{
+								"age",
+								"gt",
+							},
+							args: []interface{}{18},
+						},
+						{
+							exprs: []string{
+								"score",
+								"lt",
+							},
+							args: []interface{}{60},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	tz := time.Local
+
+	testCases := []struct {
+		name string
+		db   *dbBase
+
+		qs *querySet
+
+		wantRes  string
+		wantArgs []interface{}
+	}{
+		{
+			name: "read batch with MySQL",
+			db: &dbBase{
+				ins: newdbBaseMysql(),
+			},
+			qs: &querySet{
+				mi:     mi,
+				cond:   cond,
+				limit:  10,
+				offset: 100,
+				groups: []string{"name", "age"},
+				orders: []*order_clause.Order{
+					order_clause.Clause(order_clause.Column("score"),
+						order_clause.SortAscending()),
+				},
+				useIndex: 1,
+				indexes:  []string{"name", "score"},
+			},
+			wantRes:  "SELECT T0.`name`, T0.`score`, T1.`name_1`, T1.`age_1`, T1.`score_1` FROM `test_tab` T0  USE INDEX(`name`,`score`) LEFT OUTER JOIN `test_tab_1` T1 ON T1.`test_tab_1_id` = T0.`id` INNER JOIN `test_tab_2` T2 ON T2.`test_tab_2_id` = T1.`test_tab_1_id` WHERE T0.`name` = ? OR ( T0.`age` > ? AND T0.`score` < ? ) GROUP BY T0.`name`, T0.`age` ORDER BY T0.`score` ASC LIMIT 10 OFFSET 100",
+			wantArgs: []interface{}{"test_name", int64(18), int64(60)},
+		},
+		{
+			name: "read batch with MySQL and distinct",
+			db: &dbBase{
+				ins: newdbBaseMysql(),
+			},
+			qs: &querySet{
+				mi:     mi,
+				cond:   cond,
+				limit:  10,
+				offset: 100,
+				groups: []string{"name", "age"},
+				orders: []*order_clause.Order{
+					order_clause.Clause(order_clause.Column("score"),
+						order_clause.SortAscending()),
+				},
+				useIndex: 1,
+				indexes:  []string{"name", "score"},
+				distinct: true,
+			},
+			wantRes:  "SELECT DISTINCT T0.`name`, T0.`score`, T1.`name_1`, T1.`age_1`, T1.`score_1` FROM `test_tab` T0  USE INDEX(`name`,`score`) LEFT OUTER JOIN `test_tab_1` T1 ON T1.`test_tab_1_id` = T0.`id` INNER JOIN `test_tab_2` T2 ON T2.`test_tab_2_id` = T1.`test_tab_1_id` WHERE T0.`name` = ? OR ( T0.`age` > ? AND T0.`score` < ? ) GROUP BY T0.`name`, T0.`age` ORDER BY T0.`score` ASC LIMIT 10 OFFSET 100",
+			wantArgs: []interface{}{"test_name", int64(18), int64(60)},
+		},
+		{
+			name: "read batch with MySQL and aggregate",
+			db: &dbBase{
+				ins: newdbBaseMysql(),
+			},
+			qs: &querySet{
+				mi:     mi,
+				cond:   cond,
+				limit:  10,
+				offset: 100,
+				groups: []string{"name", "age"},
+				orders: []*order_clause.Order{
+					order_clause.Clause(order_clause.Column("score"),
+						order_clause.SortAscending()),
+				},
+				useIndex:  1,
+				indexes:   []string{"name", "score"},
+				aggregate: "sum(`T0`.`score`), count(`T1`.`name_1`)",
+			},
+			wantRes:  "SELECT sum(`T0`.`score`), count(`T1`.`name_1`) FROM `test_tab` T0  USE INDEX(`name`,`score`) LEFT OUTER JOIN `test_tab_1` T1 ON T1.`test_tab_1_id` = T0.`id` INNER JOIN `test_tab_2` T2 ON T2.`test_tab_2_id` = T1.`test_tab_1_id` WHERE T0.`name` = ? OR ( T0.`age` > ? AND T0.`score` < ? ) GROUP BY T0.`name`, T0.`age` ORDER BY T0.`score` ASC LIMIT 10 OFFSET 100",
+			wantArgs: []interface{}{"test_name", int64(18), int64(60)},
+		},
+		{
+			name: "read batch with MySQL and distinct and aggregate",
+			db: &dbBase{
+				ins: newdbBaseMysql(),
+			},
+			qs: &querySet{
+				mi:     mi,
+				cond:   cond,
+				limit:  10,
+				offset: 100,
+				groups: []string{"name", "age"},
+				orders: []*order_clause.Order{
+					order_clause.Clause(order_clause.Column("score"),
+						order_clause.SortAscending()),
+				},
+				useIndex:  1,
+				indexes:   []string{"name", "score"},
+				distinct:  true,
+				aggregate: "sum(`T0`.`score`), count(`T1`.`name_1`)",
+			},
+			wantRes:  "SELECT DISTINCT sum(`T0`.`score`), count(`T1`.`name_1`) FROM `test_tab` T0  USE INDEX(`name`,`score`) LEFT OUTER JOIN `test_tab_1` T1 ON T1.`test_tab_1_id` = T0.`id` INNER JOIN `test_tab_2` T2 ON T2.`test_tab_2_id` = T1.`test_tab_1_id` WHERE T0.`name` = ? OR ( T0.`age` > ? AND T0.`score` < ? ) GROUP BY T0.`name`, T0.`age` ORDER BY T0.`score` ASC LIMIT 10 OFFSET 100",
+			wantArgs: []interface{}{"test_name", int64(18), int64(60)},
+		},
+		{
+			name: "read batch with MySQL and for update",
+			db: &dbBase{
+				ins: newdbBaseMysql(),
+			},
+			qs: &querySet{
+				mi:     mi,
+				cond:   cond,
+				limit:  10,
+				offset: 100,
+				groups: []string{"name", "age"},
+				orders: []*order_clause.Order{
+					order_clause.Clause(order_clause.Column("score"),
+						order_clause.SortAscending()),
+				},
+				useIndex:  1,
+				indexes:   []string{"name", "score"},
+				forUpdate: true,
+			},
+			wantRes:  "SELECT T0.`name`, T0.`score`, T1.`name_1`, T1.`age_1`, T1.`score_1` FROM `test_tab` T0  USE INDEX(`name`,`score`) LEFT OUTER JOIN `test_tab_1` T1 ON T1.`test_tab_1_id` = T0.`id` INNER JOIN `test_tab_2` T2 ON T2.`test_tab_2_id` = T1.`test_tab_1_id` WHERE T0.`name` = ? OR ( T0.`age` > ? AND T0.`score` < ? ) GROUP BY T0.`name`, T0.`age` ORDER BY T0.`score` ASC LIMIT 10 OFFSET 100 FOR UPDATE",
+			wantArgs: []interface{}{"test_name", int64(18), int64(60)},
+		},
+		{
+			name: "read batch with PostgreSQL",
+			db: &dbBase{
+				ins: newdbBasePostgres(),
+			},
+			qs: &querySet{
+				mi:     mi,
+				cond:   cond,
+				limit:  10,
+				offset: 100,
+				groups: []string{"name", "age"},
+				orders: []*order_clause.Order{
+					order_clause.Clause(order_clause.Column("score"),
+						order_clause.SortAscending()),
+				},
+			},
+			wantRes:  `SELECT T0."name", T0."score", T1."name_1", T1."age_1", T1."score_1" FROM "test_tab" T0 LEFT OUTER JOIN "test_tab_1" T1 ON T1."test_tab_1_id" = T0."id" INNER JOIN "test_tab_2" T2 ON T2."test_tab_2_id" = T1."test_tab_1_id" WHERE T0."name" = $1 OR ( T0."age" > $2 AND T0."score" < $3 ) GROUP BY T0."name", T0."age" ORDER BY T0."score" ASC LIMIT 10 OFFSET 100`,
+			wantArgs: []interface{}{"test_name", int64(18), int64(60)},
+		},
+		{
+			name: "read batch with PostgreSQL and distinct",
+			db: &dbBase{
+				ins: newdbBasePostgres(),
+			},
+			qs: &querySet{
+				mi:     mi,
+				cond:   cond,
+				limit:  10,
+				offset: 100,
+				groups: []string{"name", "age"},
+				orders: []*order_clause.Order{
+					order_clause.Clause(order_clause.Column("score"),
+						order_clause.SortAscending()),
+				},
+				distinct: true,
+			},
+			wantRes:  `SELECT DISTINCT T0."name", T0."score", T1."name_1", T1."age_1", T1."score_1" FROM "test_tab" T0 LEFT OUTER JOIN "test_tab_1" T1 ON T1."test_tab_1_id" = T0."id" INNER JOIN "test_tab_2" T2 ON T2."test_tab_2_id" = T1."test_tab_1_id" WHERE T0."name" = $1 OR ( T0."age" > $2 AND T0."score" < $3 ) GROUP BY T0."name", T0."age" ORDER BY T0."score" ASC LIMIT 10 OFFSET 100`,
+			wantArgs: []interface{}{"test_name", int64(18), int64(60)},
+		},
+		{
+			name: "read batch with PostgreSQL and aggregate",
+			db: &dbBase{
+				ins: newdbBasePostgres(),
+			},
+			qs: &querySet{
+				mi:     mi,
+				cond:   cond,
+				limit:  10,
+				offset: 100,
+				groups: []string{"name", "age"},
+				orders: []*order_clause.Order{
+					order_clause.Clause(order_clause.Column("score"),
+						order_clause.SortAscending()),
+				},
+				aggregate: `sum("T0"."score"), count("T1"."name_1")`,
+			},
+			wantRes:  `SELECT sum("T0"."score"), count("T1"."name_1") FROM "test_tab" T0 LEFT OUTER JOIN "test_tab_1" T1 ON T1."test_tab_1_id" = T0."id" INNER JOIN "test_tab_2" T2 ON T2."test_tab_2_id" = T1."test_tab_1_id" WHERE T0."name" = $1 OR ( T0."age" > $2 AND T0."score" < $3 ) GROUP BY T0."name", T0."age" ORDER BY T0."score" ASC LIMIT 10 OFFSET 100`,
+			wantArgs: []interface{}{"test_name", int64(18), int64(60)},
+		},
+		{
+			name: "read batch with PostgreSQL and distinct and aggregate",
+			db: &dbBase{
+				ins: newdbBasePostgres(),
+			},
+			qs: &querySet{
+				mi:     mi,
+				cond:   cond,
+				limit:  10,
+				offset: 100,
+				groups: []string{"name", "age"},
+				orders: []*order_clause.Order{
+					order_clause.Clause(order_clause.Column("score"),
+						order_clause.SortAscending()),
+				},
+				distinct:  true,
+				aggregate: `sum("T0"."score"), count("T1"."name_1")`,
+			},
+			wantRes:  `SELECT DISTINCT sum("T0"."score"), count("T1"."name_1") FROM "test_tab" T0 LEFT OUTER JOIN "test_tab_1" T1 ON T1."test_tab_1_id" = T0."id" INNER JOIN "test_tab_2" T2 ON T2."test_tab_2_id" = T1."test_tab_1_id" WHERE T0."name" = $1 OR ( T0."age" > $2 AND T0."score" < $3 ) GROUP BY T0."name", T0."age" ORDER BY T0."score" ASC LIMIT 10 OFFSET 100`,
+			wantArgs: []interface{}{"test_name", int64(18), int64(60)},
+		},
+		{
+			name: "read batch with PostgreSQL and for update",
+			db: &dbBase{
+				ins: newdbBasePostgres(),
+			},
+			qs: &querySet{
+				mi:     mi,
+				cond:   cond,
+				limit:  10,
+				offset: 100,
+				groups: []string{"name", "age"},
+				orders: []*order_clause.Order{
+					order_clause.Clause(order_clause.Column("score"),
+						order_clause.SortAscending()),
+				},
+				forUpdate: true,
+			},
+			wantRes:  `SELECT T0."name", T0."score", T1."name_1", T1."age_1", T1."score_1" FROM "test_tab" T0 LEFT OUTER JOIN "test_tab_1" T1 ON T1."test_tab_1_id" = T0."id" INNER JOIN "test_tab_2" T2 ON T2."test_tab_2_id" = T1."test_tab_1_id" WHERE T0."name" = $1 OR ( T0."age" > $2 AND T0."score" < $3 ) GROUP BY T0."name", T0."age" ORDER BY T0."score" ASC LIMIT 10 OFFSET 100 FOR UPDATE`,
+			wantArgs: []interface{}{"test_name", int64(18), int64(60)},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tables.base = tc.db.ins
+
+			res, args := tc.db.readBatchSQL(tables, tCols, cond, tc.qs, mi, tz)
+
+			assert.Equal(t, tc.wantRes, res)
+			assert.Equal(t, tc.wantArgs, args)
 		})
 	}
 

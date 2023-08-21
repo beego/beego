@@ -1127,11 +1127,6 @@ func (d *dbBase) ReadBatch(ctx context.Context, q dbQuerier, qs *querySet, mi *m
 		RegisterModel(container)
 	}
 
-	rlimit := qs.limit
-	offset := qs.offset
-
-	Q := d.ins.TableQuote()
-
 	var tCols []string
 	if len(cols) > 0 {
 		hasRel := len(qs.related) > 0 || qs.relDepth > 0
@@ -1163,44 +1158,18 @@ func (d *dbBase) ReadBatch(ctx context.Context, q dbQuerier, qs *querySet, mi *m
 		tCols = mi.Fields.DBcols
 	}
 
-	colsNum := len(tCols)
-	sep := fmt.Sprintf("%s, T0.%s", Q, Q)
-	sels := fmt.Sprintf("T0.%s%s%s", Q, strings.Join(tCols, sep), Q)
-
 	tables := newDbTables(mi, d.ins)
 	tables.parseRelated(qs.related, qs.relDepth)
 
-	where, args := tables.getCondSQL(cond, false, tz)
-	groupBy := tables.getGroupSQL(qs.groups)
-	orderBy := tables.getOrderSQL(qs.orders)
-	limit := tables.getLimitSQL(mi, offset, rlimit)
-	join := tables.getJoinSQL()
-	specifyIndexes := tables.getIndexSql(mi.Table, qs.useIndex, qs.indexes)
+	colsNum := len(tCols)
 
 	for _, tbl := range tables.tables {
 		if tbl.sel {
 			colsNum += len(tbl.mi.Fields.DBcols)
-			sep := fmt.Sprintf("%s, %s.%s", Q, tbl.index, Q)
-			sels += fmt.Sprintf(", %s.%s%s%s", tbl.index, Q, strings.Join(tbl.mi.Fields.DBcols, sep), Q)
 		}
 	}
 
-	sqlSelect := "SELECT"
-	if qs.distinct {
-		sqlSelect += " DISTINCT"
-	}
-	if qs.aggregate != "" {
-		sels = qs.aggregate
-	}
-	query := fmt.Sprintf("%s %s FROM %s%s%s T0 %s%s%s%s%s%s",
-		sqlSelect, sels, Q, mi.Table, Q,
-		specifyIndexes, join, where, groupBy, orderBy, limit)
-
-	if qs.forUpdate {
-		query += " FOR UPDATE"
-	}
-
-	d.ins.ReplaceMarks(&query)
+	query, args := d.readBatchSQL(tables, tCols, cond, qs, mi, tz)
 
 	rs, err := q.QueryContext(ctx, query, args...)
 	if err != nil {
@@ -1320,6 +1289,79 @@ func (d *dbBase) ReadBatch(ctx context.Context, q dbQuerier, qs *querySet, mi *m
 	}
 
 	return cnt, nil
+}
+
+func (d *dbBase) readBatchSQL(tables *dbTables, tCols []string, cond *Condition, qs *querySet, mi *models.ModelInfo, tz *time.Location) (string, []interface{}) {
+
+	quote := d.ins.TableQuote()
+
+	where, args := tables.getCondSQL(cond, false, tz)
+	groupBy := tables.getGroupSQL(qs.groups)
+	orderBy := tables.getOrderSQL(qs.orders)
+	limit := tables.getLimitSQL(mi, qs.offset, qs.limit)
+	join := tables.getJoinSQL()
+	specifyIndexes := tables.getIndexSql(mi.Table, qs.useIndex, qs.indexes)
+
+	buf := buffers.Get()
+	defer buffers.Put(buf)
+
+	_, _ = buf.WriteString("SELECT ")
+
+	if qs.distinct {
+		_, _ = buf.WriteString("DISTINCT ")
+	}
+
+	if qs.aggregate == "" {
+		for i, tCol := range tCols {
+			if i > 0 {
+				_, _ = buf.WriteString(", ")
+			}
+			_, _ = buf.WriteString("T0.")
+			_, _ = buf.WriteString(quote)
+			_, _ = buf.WriteString(tCol)
+			_, _ = buf.WriteString(quote)
+		}
+
+		for _, tbl := range tables.tables {
+			if tbl.sel {
+				_, _ = buf.WriteString(", ")
+				for i, DBcol := range tbl.mi.Fields.DBcols {
+					if i > 0 {
+						_, _ = buf.WriteString(", ")
+					}
+					_, _ = buf.WriteString(tbl.index)
+					_, _ = buf.WriteString(".")
+					_, _ = buf.WriteString(quote)
+					_, _ = buf.WriteString(DBcol)
+					_, _ = buf.WriteString(quote)
+				}
+			}
+		}
+	} else {
+		_, _ = buf.WriteString(qs.aggregate)
+	}
+
+	_, _ = buf.WriteString(" FROM ")
+	_, _ = buf.WriteString(quote)
+	_, _ = buf.WriteString(mi.Table)
+	_, _ = buf.WriteString(quote)
+	_, _ = buf.WriteString(" T0 ")
+	_, _ = buf.WriteString(specifyIndexes)
+	_, _ = buf.WriteString(join)
+	_, _ = buf.WriteString(where)
+	_, _ = buf.WriteString(groupBy)
+	_, _ = buf.WriteString(orderBy)
+	_, _ = buf.WriteString(limit)
+
+	if qs.forUpdate {
+		_, _ = buf.WriteString(" FOR UPDATE")
+	}
+
+	query := buf.String()
+
+	d.ins.ReplaceMarks(&query)
+
+	return query, args
 }
 
 // Count excute count sql and return count result int64.
