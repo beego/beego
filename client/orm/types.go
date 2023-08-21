@@ -185,6 +185,8 @@ type DML interface {
 
 // DQL Data Query Language
 type DQL interface {
+	// ReadRaw reads data to model
+	ReadRaw(ctx context.Context, md interface{}, query string, args ...any) error
 	// Read reads data to model
 	// for example:
 	//	this will find User by Id field
@@ -623,6 +625,7 @@ type dbQuerier interface {
 // base database struct
 type dbBaser interface {
 	Read(context.Context, dbQuerier, *models.ModelInfo, reflect.Value, *time.Location, []string, bool) error
+	ReadRaw(ctx context.Context, q dbQuerier, mi *models.ModelInfo, ind reflect.Value, tz *time.Location, query string, args ...any) error
 	ReadBatch(context.Context, dbQuerier, *querySet, *models.ModelInfo, *Condition, interface{}, *time.Location, []string) (int64, error)
 	Count(context.Context, dbQuerier, *querySet, *models.ModelInfo, *Condition, *time.Location) (int64, error)
 	ReadValues(context.Context, dbQuerier, *querySet, *models.ModelInfo, *Condition, []string, interface{}, *time.Location) (int64, error)

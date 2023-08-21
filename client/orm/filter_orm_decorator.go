@@ -77,6 +77,24 @@ func NewFilterTxOrmDecorator(delegate TxOrmer, root Filter, txName string) TxOrm
 	return res
 }
 
+func (f *filterOrmDecorator) ReadRaw(ctx context.Context, md interface{}, query string, args ...any) error {
+	mi, _ := defaultModelCache.getByMd(md)
+	inv := &Invocation{
+		Method:      "ReadRaw",
+		Args:        []interface{}{md, query, args},
+		Md:          md,
+		mi:          mi,
+		InsideTx:    f.insideTx,
+		TxStartTime: f.txStartTime,
+		f: func(c context.Context) []interface{} {
+			err := f.ormer.ReadRaw(c, md, query, args...)
+			return []interface{}{err}
+		},
+	}
+	res := f.root(ctx, inv)
+	return f.convertError(res[0])
+}
+
 func (f *filterOrmDecorator) Read(md interface{}, cols ...string) error {
 	return f.ReadWithCtx(context.Background(), md, cols...)
 }

@@ -145,6 +145,12 @@ func (*ormBase) getFieldInfo(mi *models.ModelInfo, name string) *models.FieldInf
 }
 
 // read data to model
+func (o *ormBase) ReadRaw(ctx context.Context, md interface{}, query string, args ...any) error {
+	mi, ind := o.getPtrMiInd(md)
+	return o.alias.DbBaser.ReadRaw(ctx, o.db, mi, ind, o.alias.TZ, query, args...)
+}
+
+// read data to model
 func (o *ormBase) Read(md interface{}, cols ...string) error {
 	return o.ReadWithCtx(context.Background(), md, cols...)
 }
