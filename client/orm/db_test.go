@@ -1027,39 +1027,8 @@ func TestDbBase_readBatchSQL(t *testing.T) {
 		},
 	}
 
-	cond := &Condition{
-		params: []condValue{
-			{
-				exprs: []string{
-					"name",
-					"eq",
-				},
-				args: []interface{}{"test_name"},
-			},
-			{
-				isCond: true,
-				isOr:   true,
-				cond: &Condition{
-					params: []condValue{
-						{
-							exprs: []string{
-								"age",
-								"gt",
-							},
-							args: []interface{}{18},
-						},
-						{
-							exprs: []string{
-								"score",
-								"lt",
-							},
-							args: []interface{}{60},
-						},
-					},
-				},
-			},
-		},
-	}
+	cond := NewCondition().And("name", "test_name").
+		OrCond(NewCondition().And("age__gt", 18).And("score__lt", 60))
 
 	tz := time.Local
 
