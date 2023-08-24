@@ -17,6 +17,7 @@
 - [fix: refactor UpdateBatch method](https://github.com/beego/beego/pull/5295)
 - [fix: refactor InsertOrUpdate method](https://github.com/beego/beego/pull/5296)
 - [fix: refactor ReadBatch method](https://github.com/beego/beego/pull/5298)
+- [fix: refactor Count method](https://github.com/beego/beego/pull/5300)
 
 ## ORM refactoring
 - [introducing internal/models pkg](https://github.com/beego/beego/pull/5238)
