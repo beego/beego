@@ -1366,30 +1366,51 @@ func (d *dbBase) readBatchSQL(tables *dbTables, tCols []string, cond *Condition,
 
 // Count excute count sql and return count result int64.
 func (d *dbBase) Count(ctx context.Context, q dbQuerier, qs *querySet, mi *models.ModelInfo, cond *Condition, tz *time.Location) (cnt int64, err error) {
+
+	query, args := d.countSQL(qs, mi, cond, tz)
+
+	row := q.QueryRowContext(ctx, query, args...)
+	err = row.Scan(&cnt)
+	return
+}
+
+func (d *dbBase) countSQL(qs *querySet, mi *models.ModelInfo, cond *Condition, tz *time.Location) (string, []interface{}) {
 	tables := newDbTables(mi, d.ins)
 	tables.parseRelated(qs.related, qs.relDepth)
 
 	where, args := tables.getCondSQL(cond, false, tz)
 	groupBy := tables.getGroupSQL(qs.groups)
-	tables.getOrderSQL(qs.orders)
 	join := tables.getJoinSQL()
 	specifyIndexes := tables.getIndexSql(mi.Table, qs.useIndex, qs.indexes)
 
-	Q := d.ins.TableQuote()
+	quote := d.ins.TableQuote()
 
-	query := fmt.Sprintf("SELECT COUNT(*) FROM %s%s%s T0 %s%s%s%s",
-		Q, mi.Table, Q,
-		specifyIndexes, join, where, groupBy)
+	buf := buffers.Get()
+	defer buffers.Put(buf)
 
 	if groupBy != "" {
-		query = fmt.Sprintf("SELECT COUNT(*) FROM (%s) AS T", query)
+		_, _ = buf.WriteString("SELECT COUNT(*) FROM (")
 	}
+
+	_, _ = buf.WriteString("SELECT COUNT(*) FROM ")
+	_, _ = buf.WriteString(quote)
+	_, _ = buf.WriteString(mi.Table)
+	_, _ = buf.WriteString(quote)
+	_, _ = buf.WriteString(" T0 ")
+	_, _ = buf.WriteString(specifyIndexes)
+	_, _ = buf.WriteString(join)
+	_, _ = buf.WriteString(where)
+	_, _ = buf.WriteString(groupBy)
+
+	if groupBy != "" {
+		_, _ = buf.WriteString(") AS T")
+	}
+
+	query := buf.String()
 
 	d.ins.ReplaceMarks(&query)
 
-	row := q.QueryRowContext(ctx, query, args...)
-	err = row.Scan(&cnt)
-	return
+	return query, args
 }
 
 // GenerateOperatorSQL generate sql with replacing operator string placeholders and replaced values.
