@@ -1292,15 +1292,19 @@ func (d *dbBase) ReadBatch(ctx context.Context, q dbQuerier, qs *querySet, mi *m
 }
 
 func (d *dbBase) readBatchSQL(tables *dbTables, tCols []string, cond *Condition, qs *querySet, mi *models.ModelInfo, tz *time.Location) (string, []interface{}) {
-	d.preProcCols(tCols) // pre process columns
-	return d.readSQL(tables, tCols, cond, qs, mi, tz)
+	cols := d.preProcCols(tCols) // pre process columns
+	return d.readSQL(tables, cols, cond, qs, mi, tz)
 }
 
-func (d *dbBase) preProcCols(cols []string) {
+func (d *dbBase) preProcCols(cols []string) []string {
+	res := make([]string, len(cols))
+
 	quote := d.ins.TableQuote()
 	for i, col := range cols {
-		cols[i] = fmt.Sprintf("T0.%s%s%s", quote, col, quote)
+		res[i] = fmt.Sprintf("T0.%s%s%s", quote, col, quote)
 	}
+
+	return res
 }
 
 // readSQL generate a select sql string and return args
