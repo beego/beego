@@ -115,7 +115,7 @@ func (o querySet) Exclude(expr string, args ...interface{}) QuerySeter {
 	return &o
 }
 
-// set offset number
+// Set offset number
 func (o *querySet) setOffset(num interface{}) {
 	o.offset = utils.ToInt64(num)
 }
@@ -194,7 +194,7 @@ func (o querySet) IgnoreIndex(indexes ...string) QuerySeter {
 	return &o
 }
 
-// set relation model to query together.
+// Set relation model to query together.
 // it will query relation models and assign to parent model.
 func (o querySet) RelatedSel(params ...interface{}) QuerySeter {
 	if len(params) == 0 {
@@ -214,13 +214,13 @@ func (o querySet) RelatedSel(params ...interface{}) QuerySeter {
 	return &o
 }
 
-// set condition to QuerySeter.
+// Set condition to QuerySeter.
 func (o querySet) SetCond(cond *Condition) QuerySeter {
 	o.cond = cond
 	return &o
 }
 
-// get condition from QuerySeter
+// Get condition from QuerySeter
 func (o querySet) GetCond() *Condition {
 	return o.cond
 }
@@ -276,7 +276,7 @@ func (o *querySet) PrepareInsertWithCtx(ctx context.Context) (Inserter, error) {
 	return newInsertSet(ctx, o.orm, o.mi)
 }
 
-// query all data and map to containers.
+// query All data and map to containers.
 // cols means the Columns when querying.
 func (o *querySet) All(container interface{}, cols ...string) (int64, error) {
 	return o.AllWithCtx(context.Background(), container, cols...)
@@ -308,7 +308,7 @@ func (o *querySet) OneWithCtx(ctx context.Context, container interface{}, cols .
 	return nil
 }
 
-// query all data and map to []map[string]interface.
+// query All data and map to []map[string]interface.
 // expres means condition expression.
 // it converts data to []map[column]value.
 func (o *querySet) Values(results *[]Params, exprs ...string) (int64, error) {
@@ -319,7 +319,7 @@ func (o *querySet) ValuesWithCtx(ctx context.Context, results *[]Params, exprs .
 	return o.orm.alias.DbBaser.ReadValues(ctx, o.orm.db, o, o.mi, o.cond, exprs, results, o.orm.alias.TZ)
 }
 
-// query all data and map to [][]interface
+// query All data and map to [][]interface
 // it converts data to [][column_index]value
 func (o *querySet) ValuesList(results *[]ParamsList, exprs ...string) (int64, error) {
 	return o.ValuesListWithCtx(context.Background(), results, exprs...)
@@ -329,8 +329,8 @@ func (o *querySet) ValuesListWithCtx(ctx context.Context, results *[]ParamsList,
 	return o.orm.alias.DbBaser.ReadValues(ctx, o.orm.db, o, o.mi, o.cond, exprs, results, o.orm.alias.TZ)
 }
 
-// query all data and map to []interface.
-// it's designed for one row record set, auto change to []value, not [][column]value.
+// query All data and map to []interface.
+// it's designed for one row record Set, auto change to []value, not [][column]value.
 func (o *querySet) ValuesFlat(result *ParamsList, expr string) (int64, error) {
 	return o.ValuesFlatWithCtx(context.Background(), result, expr)
 }
@@ -339,7 +339,7 @@ func (o *querySet) ValuesFlatWithCtx(ctx context.Context, result *ParamsList, ex
 	return o.orm.alias.DbBaser.ReadValues(ctx, o.orm.db, o, o.mi, o.cond, []string{expr}, result, o.orm.alias.TZ)
 }
 
-// query all rows into map[string]interface with specify key and value column name.
+// query All rows into map[string]interface with specify key and value column name.
 // keyCol = "name", valueCol = "value"
 // table data
 // name  | value
@@ -354,7 +354,7 @@ func (o *querySet) RowsToMap(result *Params, keyCol, valueCol string) (int64, er
 	panic(ErrNotImplement)
 }
 
-// query all rows into struct with specify key and value column name.
+// query All rows into struct with specify key and value column name.
 // keyCol = "name", valueCol = "value"
 // table data
 // name  | value

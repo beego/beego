@@ -17,6 +17,8 @@ package orm
 import (
 	"testing"
 
+	"github.com/beego/beego/v2/client/orm/internal/models"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -49,7 +51,7 @@ func TestGetDbCreateSQLWithComment(t *testing.T) {
 		wantErr error
 	}
 	al := getDbAlias("default")
-	testModelCache := NewModelCacheHandler()
+	testModelCache := models.NewModelCacheHandler()
 	var testCases []TestCase
 	switch al.Driver {
 	case DRMySQL:
@@ -67,10 +69,10 @@ func TestGetDbCreateSQLWithComment(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			testModelCache.clean()
-			err := testModelCache.register("", true, tc.model)
+			testModelCache.Clean()
+			err := testModelCache.Register("", true, tc.model)
 			assert.NoError(t, err)
-			queries, _, err := testModelCache.getDbCreateSQL(al)
+			queries, _, err := getDbCreateSQL(testModelCache, al)
 			assert.Equal(t, tc.wantSQL, queries[0])
 			assert.Equal(t, tc.wantErr, err)
 		})
