@@ -148,7 +148,7 @@ type DML interface {
 	// for example:
 	//  user := new(User)
 	//  id, err = Ormer.Insert(user)
-	//  user must be a pointer and Insert will set user's pk field
+	//  user must be a pointer and Insert will Set user's pk field
 	Insert(md interface{}) (int64, error)
 	InsertWithCtx(ctx context.Context, md interface{}) (int64, error)
 	// InsertOrUpdate mysql:InsertOrUpdate(model) or InsertOrUpdate(model,"colu=colu+value")
@@ -161,8 +161,8 @@ type DML interface {
 	InsertMulti(bulk int, mds interface{}) (int64, error)
 	InsertMultiWithCtx(ctx context.Context, bulk int, mds interface{}) (int64, error)
 	// Update updates model to database.
-	// cols set the Columns those want to update.
-	// find model by Id(pk) field and update Columns specified by Fields, if cols is null then update all Columns
+	// cols Set the Columns those want to update.
+	// find model by Id(pk) field and update Columns specified by Fields, if cols is null then update All Columns
 	// for example:
 	// user := User{Id: 2}
 	//	user.Langs = append(user.Langs, "zh-CN", "en-US")
@@ -291,14 +291,14 @@ type QuerySeter interface {
 	// Exclude add NOT condition to querySeter.
 	// have the same usage as Filter
 	Exclude(string, ...interface{}) QuerySeter
-	// SetCond set condition to QuerySeter.
+	// SetCond Set condition to QuerySeter.
 	// sql's where condition
 	//	cond := orm.NewCondition()
 	//	cond1 := cond.And("profile__isnull", false).AndNot("status__in", 1).Or("profile__age__gt", 2000)
 	//	//sql-> WHERE T0.`profile_id` IS NOT NULL AND NOT T0.`Status` IN (?) OR T1.`age` >  2000
 	//	num, err := qs.SetCond(cond1).Count()
 	SetCond(*Condition) QuerySeter
-	// GetCond get condition from QuerySeter.
+	// GetCond Get condition from QuerySeter.
 	// sql's where condition
 	//  cond := orm.NewCondition()
 	//  cond = cond.And("profile__isnull", false).AndNot("status__in", 1)
@@ -310,8 +310,8 @@ type QuerySeter interface {
 	GetCond() *Condition
 	// Limit add LIMIT value.
 	// args[0] means offset, e.g. LIMIT num,offset.
-	// if Limit <= 0 then Limit will be set to default limit ,eg 1000
-	// if QuerySeter doesn't call Limit, the sql's Limit will be set to default limit, eg 1000
+	// if Limit <= 0 then Limit will be Set to default limit ,eg 1000
+	// if QuerySeter doesn't call Limit, the sql's Limit will be Set to default limit, eg 1000
 	//  for example:
 	//	qs.Limit(10, 2)
 	//	// sql-> limit 10 offset 2
@@ -365,10 +365,10 @@ type QuerySeter interface {
 	//	qs.IgnoreIndex(`idx_name1`,`idx_name2`)
 	// ForceIndex, UseIndex , IgnoreIndex are mutually exclusive
 	IgnoreIndex(indexes ...string) QuerySeter
-	// RelatedSel set relation model to query together.
+	// RelatedSel Set relation model to query together.
 	// it will query relation models and assign to parent model.
 	// for example:
-	//	// will load all related Fields use left join .
+	//	// will load All related Fields use left join .
 	// 	qs.RelatedSel().One(&user)
 	//	// will  load related field only profile
 	//	qs.RelatedSel("profile").One(&user)
@@ -380,7 +380,7 @@ type QuerySeter interface {
 	//    Distinct().
 	//    All(&permissions)
 	Distinct() QuerySeter
-	// ForUpdate set FOR UPDATE to query.
+	// ForUpdate Set FOR UPDATE to query.
 	// for example:
 	//  o.QueryTable("user").Filter("uid", uid).ForUpdate().All(&users)
 	ForUpdate() QuerySeter
@@ -418,7 +418,7 @@ type QuerySeter interface {
 	//	err = i.Close() //don't forget call Close
 	PrepareInsert() (Inserter, error)
 	PrepareInsertWithCtx(context.Context) (Inserter, error)
-	// All query all data and map to containers.
+	// All query All data and map to containers.
 	// cols means the Columns when querying.
 	// for example:
 	//	var users []*User
@@ -432,7 +432,7 @@ type QuerySeter interface {
 	//	qs.One(&user) //user.UserName == "slene"
 	One(container interface{}, cols ...string) error
 	OneWithCtx(ctx context.Context, container interface{}, cols ...string) error
-	// Values query all data and map to []map[string]interface.
+	// Values query All data and map to []map[string]interface.
 	// expres means condition expression.
 	// it converts data to []map[column]value.
 	// for example:
@@ -440,21 +440,21 @@ type QuerySeter interface {
 	//	qs.Values(&maps) //maps[0]["UserName"]=="slene"
 	Values(results *[]Params, exprs ...string) (int64, error)
 	ValuesWithCtx(ctx context.Context, results *[]Params, exprs ...string) (int64, error)
-	// ValuesList query all data and map to [][]interface
+	// ValuesList query All data and map to [][]interface
 	// it converts data to [][column_index]value
 	// for example:
 	//	var list []ParamsList
 	//	qs.ValuesList(&list) // list[0][1] == "slene"
 	ValuesList(results *[]ParamsList, exprs ...string) (int64, error)
 	ValuesListWithCtx(ctx context.Context, results *[]ParamsList, exprs ...string) (int64, error)
-	// ValuesFlat query all data and map to []interface.
-	// it's designed for one column record set, auto change to []value, not [][column]value.
+	// ValuesFlat query All data and map to []interface.
+	// it's designed for one column record Set, auto change to []value, not [][column]value.
 	// for example:
 	//	var list ParamsList
 	//	qs.ValuesFlat(&list, "UserName") // list[0] == "slene"
 	ValuesFlat(result *ParamsList, expr string) (int64, error)
 	ValuesFlatWithCtx(ctx context.Context, result *ParamsList, expr string) (int64, error)
-	// RowsToMap query all rows into map[string]interface with specify key and value column name.
+	// RowsToMap query All rows into map[string]interface with specify key and value column name.
 	// keyCol = "name", valueCol = "value"
 	// table data
 	// name  | value
@@ -465,7 +465,7 @@ type QuerySeter interface {
 	// 	"found": 200,
 	// }
 	RowsToMap(result *Params, keyCol, valueCol string) (int64, error)
-	// RowsToStruct query all rows into struct with specify key and value column name.
+	// RowsToStruct query All rows into struct with specify key and value column name.
 	// keyCol = "name", valueCol = "value"
 	// table data
 	// name  | value
@@ -488,7 +488,7 @@ type QuerySeter interface {
 }
 
 // QueryM2Mer model to model query struct
-// all operations are on the m2m table only, will not affect the origin model table
+// All operations are on the m2m table only, will not affect the origin model table
 type QueryM2Mer interface {
 	// Add adds models to origin models when creating queryM2M.
 	// example:
@@ -513,10 +513,10 @@ type QueryM2Mer interface {
 	// Exist checks model is existed in relationship of origin model
 	Exist(interface{}) bool
 	ExistWithCtx(context.Context, interface{}) bool
-	// Clear cleans all models in related of origin model
+	// Clear cleans All models in related of origin model
 	Clear() (int64, error)
 	ClearWithCtx(context.Context) (int64, error)
-	// Count counts all related models of origin model
+	// Count counts All related models of origin model
 	Count() (int64, error)
 	CountWithCtx(context.Context) (int64, error)
 }
@@ -534,7 +534,7 @@ type RawPreparer interface {
 //	sql := fmt.Sprintf("SELECT %sid%s,%sname%s FROM %suser%s WHERE id = ?",Q,Q,Q,Q,Q,Q)
 //	rs := Ormer.Raw(sql, 1)
 type RawSeter interface {
-	// Exec execute sql and get result
+	// Exec execute sql and Get result
 	Exec() (sql.Result, error)
 	// QueryRow query data and map to container
 	// for example:
@@ -559,7 +559,7 @@ type RawSeter interface {
 	// ValuesFlat query data to []interface
 	// see QuerySeter's ValuesFlat
 	ValuesFlat(container *ParamsList, cols ...string) (int64, error)
-	// RowsToMap query all rows into map[string]interface with specify key and value column name.
+	// RowsToMap query All rows into map[string]interface with specify key and value column name.
 	// keyCol = "name", valueCol = "value"
 	// table data
 	// name  | value
@@ -570,7 +570,7 @@ type RawSeter interface {
 	// 	"found": 200,
 	// }
 	RowsToMap(result *Params, keyCol, valueCol string) (int64, error)
-	// RowsToStruct query all rows into struct with specify key and value column name.
+	// RowsToStruct query All rows into struct with specify key and value column name.
 	// keyCol = "name", valueCol = "value"
 	// table data
 	// name  | value

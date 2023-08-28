@@ -132,7 +132,7 @@ func (o *queryM2M) ExistWithCtx(ctx context.Context, md interface{}) bool {
 		Filter(fi.ReverseFieldInfoTwo.Name, md).ExistWithCtx(ctx)
 }
 
-// clean all models in related of origin model
+// Clean All models in related of origin model
 func (o *queryM2M) Clear() (int64, error) {
 	return o.ClearWithCtx(context.Background())
 }
@@ -142,7 +142,7 @@ func (o *queryM2M) ClearWithCtx(ctx context.Context) (int64, error) {
 	return o.qs.Filter(fi.ReverseFieldInfo.Name, o.md).DeleteWithCtx(ctx)
 }
 
-// count all related models of origin model
+// count All related models of origin model
 func (o *queryM2M) Count() (int64, error) {
 	return o.CountWithCtx(context.Background())
 }
