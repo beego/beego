@@ -18,10 +18,9 @@ import (
 	"errors"
 	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
 	"github.com/beego/beego/v2/client/orm/internal/buffers"
+	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
-
-	"github.com/stretchr/testify/assert"
 
 	"github.com/beego/beego/v2/client/orm/internal/models"
 )
@@ -248,7 +247,7 @@ func TestDbBase_buildSetSQL(t *testing.T) {
 		wantValues []interface{}
 	}{
 		{
-			name: "set add/mul operator by dbBase",
+			name: "Set add/mul operator by dbBase",
 			db: &dbBase{
 				ins: &dbBase{},
 			},
@@ -270,7 +269,7 @@ func TestDbBase_buildSetSQL(t *testing.T) {
 			wantValues: []interface{}{"test_name", int64(12), int64(2), "test_origin_name", 18},
 		},
 		{
-			name: "set min/except operator by dbBase",
+			name: "Set min/except operator by dbBase",
 			db: &dbBase{
 				ins: &dbBase{},
 			},
@@ -292,7 +291,7 @@ func TestDbBase_buildSetSQL(t *testing.T) {
 			wantValues: []interface{}{"test_name", int64(12), int64(2), "test_origin_name", 18},
 		},
 		{
-			name: "set bitRShift/bitLShift operator by dbBase",
+			name: "Set bitRShift/bitLShift operator by dbBase",
 			db: &dbBase{
 				ins: &dbBase{},
 			},
@@ -314,7 +313,7 @@ func TestDbBase_buildSetSQL(t *testing.T) {
 			wantValues: []interface{}{"test_name", int64(12), int64(2), "test_origin_name", 18},
 		},
 		{
-			name: "set bitAnd/bitOr/bitXOR operator by dbBase",
+			name: "Set bitAnd/bitOr/bitXOR operator by dbBase",
 			db: &dbBase{
 				ins: &dbBase{},
 			},
@@ -339,7 +338,7 @@ func TestDbBase_buildSetSQL(t *testing.T) {
 			wantValues: []interface{}{int64(28), int64(12), int64(2), "test_origin_name", 18},
 		},
 		{
-			name: "set add/mul operator by dbBasePostgres",
+			name: "Set add/mul operator by dbBasePostgres",
 			db: &dbBase{
 				ins: newdbBasePostgres(),
 			},
@@ -361,7 +360,7 @@ func TestDbBase_buildSetSQL(t *testing.T) {
 			wantValues: []interface{}{"test_name", int64(12), int64(2), "test_origin_name", 18},
 		},
 		{
-			name: "set min/except operator by dbBasePostgres",
+			name: "Set min/except operator by dbBasePostgres",
 			db: &dbBase{
 				ins: newdbBasePostgres(),
 			},
@@ -383,7 +382,7 @@ func TestDbBase_buildSetSQL(t *testing.T) {
 			wantValues: []interface{}{"test_name", int64(12), int64(2), "test_origin_name", 18},
 		},
 		{
-			name: "set bitRShift/bitLShift operator by dbBasePostgres",
+			name: "Set bitRShift/bitLShift operator by dbBasePostgres",
 			db: &dbBase{
 				ins: newdbBasePostgres(),
 			},
@@ -405,7 +404,7 @@ func TestDbBase_buildSetSQL(t *testing.T) {
 			wantValues: []interface{}{"test_name", int64(12), int64(2), "test_origin_name", 18},
 		},
 		{
-			name: "set bitAnd/bitOr/bitXOR operator by dbBasePostgres",
+			name: "Set bitAnd/bitOr/bitXOR operator by dbBasePostgres",
 			db: &dbBase{
 				ins: newdbBasePostgres(),
 			},
@@ -430,7 +429,7 @@ func TestDbBase_buildSetSQL(t *testing.T) {
 			wantValues: []interface{}{int64(28), int64(12), int64(2), "test_origin_name", 18},
 		},
 		{
-			name: "set add/mul operator by dbBaseSqlite",
+			name: "Set add/mul operator by dbBaseSqlite",
 			db: &dbBase{
 				ins: newdbBaseSqlite(),
 			},
@@ -452,7 +451,7 @@ func TestDbBase_buildSetSQL(t *testing.T) {
 			wantValues: []interface{}{"test_name", int64(12), int64(2), "test_origin_name", 18},
 		},
 		{
-			name: "set min/except operator by dbBaseSqlite",
+			name: "Set min/except operator by dbBaseSqlite",
 			db: &dbBase{
 				ins: newdbBaseSqlite(),
 			},
@@ -474,7 +473,7 @@ func TestDbBase_buildSetSQL(t *testing.T) {
 			wantValues: []interface{}{"test_name", int64(12), int64(2), "test_origin_name", 18},
 		},
 		{
-			name: "set bitRShift/bitLShift operator by dbBaseSqlite",
+			name: "Set bitRShift/bitLShift operator by dbBaseSqlite",
 			db: &dbBase{
 				ins: newdbBaseSqlite(),
 			},
@@ -496,7 +495,7 @@ func TestDbBase_buildSetSQL(t *testing.T) {
 			wantValues: []interface{}{"test_name", int64(12), int64(2), "test_origin_name", 18},
 		},
 		{
-			name: "set bitAnd/bitOr/bitXOR operator by dbBaseSqlite",
+			name: "Set bitAnd/bitOr/bitXOR operator by dbBaseSqlite",
 			db: &dbBase{
 				ins: newdbBaseSqlite(),
 			},
@@ -891,18 +890,15 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 
 func TestDbBase_readBatchSQL(t *testing.T) {
 
-	mc := &modelCache{
-		cache:           make(map[string]*models.ModelInfo),
-		cacheByFullName: make(map[string]*models.ModelInfo),
-	}
+	mc := models.NewModelCacheHandler()
 
-	err := mc.register("", false, new(testTab), new(testTab1), new(testTab2))
+	err := mc.Register("", false, new(testTab), new(testTab1), new(testTab2))
 
 	assert.Nil(t, err)
 
-	mc.bootstrap()
+	mc.Bootstrap()
 
-	mi, ok := mc.getByMd(new(testTab))
+	mi, ok := mc.GetByMd(new(testTab))
 
 	assert.True(t, ok)
 

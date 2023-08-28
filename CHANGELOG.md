@@ -1,4 +1,5 @@
 # developing
+- [orm: move the modelCache to internal/models package](https://github.com/beego/beego/pull/5306)
 
 # v2.1.1
 - [httplib: fix unstable unit test which use the httplib.org](https://github.com/beego/beego/pull/5232)

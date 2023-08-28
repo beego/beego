@@ -26,7 +26,7 @@ type Invocation struct {
 	Method string
 	// Md may be nil in some cases. It depends on method
 	Md interface{}
-	// the args are all arguments except context.Context
+	// the args are All arguments except context.Context
 	Args []interface{}
 
 	mi *models.ModelInfo

@@ -27,7 +27,7 @@ type dbIndex struct {
 	SQL   string
 }
 
-// get database column type string.
+// Get database column type string.
 func getColumnTyp(al *alias, fi *models.FieldInfo) (col string) {
 	T := al.DbBaser.DbTypes()
 	fieldType := fi.FieldType

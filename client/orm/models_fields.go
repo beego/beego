@@ -74,11 +74,11 @@ var _ Fielder = new(CharField)
 // Has a few extra, optional attr tag:
 //
 // auto_now:
-// Automatically set the field to now every time the object is saved. Useful for “last-modified” timestamps.
+// Automatically Set the field to now every time the object is saved. Useful for “last-modified” timestamps.
 // Note that the current date is always used; it’s not just a default value that you can override.
 //
 // auto_now_add:
-// Automatically set the field to now when the object is first created. Useful for creation of timestamps.
+// Automatically Set the field to now when the object is first created. Useful for creation of timestamps.
 // Note that the current date is always used; it’s not just a default value that you can override.
 //
 // eg: `orm:"auto_now"` or `orm:"auto_now_add"`
@@ -91,11 +91,11 @@ var _ Fielder = new(TimeField)
 // Has a few extra, optional attr tag:
 //
 // auto_now:
-// Automatically set the field to now every time the object is saved. Useful for “last-modified” timestamps.
+// Automatically Set the field to now every time the object is saved. Useful for “last-modified” timestamps.
 // Note that the current date is always used; it’s not just a default value that you can override.
 //
 // auto_now_add:
-// Automatically set the field to now when the object is first created. Useful for creation of timestamps.
+// Automatically Set the field to now when the object is first created. Useful for creation of timestamps.
 // Note that the current date is always used; it’s not just a default value that you can override.
 //
 // eg: `orm:"auto_now"` or `orm:"auto_now_add"`

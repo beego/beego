@@ -106,7 +106,7 @@ var (
 	_ DriverGetter = new(ormBase)
 )
 
-// get model info and model reflect value
+// Get model info and model reflect value
 func (*ormBase) getMi(md interface{}) (mi *models.ModelInfo) {
 	val := reflect.ValueOf(md)
 	ind := reflect.Indirect(val)
@@ -115,7 +115,7 @@ func (*ormBase) getMi(md interface{}) (mi *models.ModelInfo) {
 	return
 }
 
-// get need ptr model info and model reflect value
+// Get need ptr model info and model reflect value
 func (*ormBase) getPtrMiInd(md interface{}) (mi *models.ModelInfo, ind reflect.Value) {
 	val := reflect.ValueOf(md)
 	ind = reflect.Indirect(val)
@@ -129,13 +129,13 @@ func (*ormBase) getPtrMiInd(md interface{}) (mi *models.ModelInfo, ind reflect.V
 
 func getTypeMi(mdTyp reflect.Type) *models.ModelInfo {
 	name := models.GetFullName(mdTyp)
-	if mi, ok := defaultModelCache.getByFullName(name); ok {
+	if mi, ok := defaultModelCache.GetByFullName(name); ok {
 		return mi
 	}
 	panic(fmt.Errorf("<Ormer> table: `%s` not found, make sure it was registered with `RegisterModel()`", name))
 }
 
-// get field info from model info by given field name
+// Get field info from model info by given field name
 func (*ormBase) getFieldInfo(mi *models.ModelInfo, name string) *models.FieldInfo {
 	fi, ok := mi.Fields.GetByAny(name)
 	if !ok {
@@ -208,7 +208,7 @@ func (o *ormBase) InsertWithCtx(ctx context.Context, md interface{}) (int64, err
 	return id, nil
 }
 
-// set auto pk field
+// Set auto pk field
 func (*ormBase) setPk(mi *models.ModelInfo, ind reflect.Value, id int64) {
 	if mi.Fields.Pk != nil && mi.Fields.Pk.Auto {
 		if mi.Fields.Pk.FieldType&IsPositiveIntegerField > 0 {
@@ -276,7 +276,7 @@ func (o *ormBase) InsertOrUpdateWithCtx(ctx context.Context, md interface{}, col
 }
 
 // update model to database.
-// cols set the Columns those want to update.
+// cols Set the Columns those want to update.
 func (o *ormBase) Update(md interface{}, cols ...string) (int64, error) {
 	return o.UpdateWithCtx(context.Background(), md, cols...)
 }
@@ -396,7 +396,7 @@ func (o *ormBase) LoadRelatedWithCtx(_ context.Context, md interface{}, name str
 	return nums, err
 }
 
-// get QuerySeter for related models to md model
+// Get QuerySeter for related models to md model
 func (o *ormBase) queryRelated(md interface{}, name string) (*models.ModelInfo, *models.FieldInfo, reflect.Value, *querySet) {
 	mi, ind := o.getPtrMiInd(md)
 	fi := o.getFieldInfo(mi, name)
@@ -428,7 +428,7 @@ func (o *ormBase) queryRelated(md interface{}, name string) (*models.ModelInfo, 
 	return mi, fi, ind, qs
 }
 
-// get reverse relation QuerySeter
+// Get reverse relation QuerySeter
 func (o *ormBase) getReverseQs(md interface{}, mi *models.ModelInfo, fi *models.FieldInfo) *querySet {
 	switch fi.FieldType {
 	case RelReverseOne, RelReverseMany:
@@ -449,7 +449,7 @@ func (o *ormBase) getReverseQs(md interface{}, mi *models.ModelInfo, fi *models.
 	return q
 }
 
-// get relation QuerySeter
+// Get relation QuerySeter
 func (o *ormBase) getRelQs(md interface{}, mi *models.ModelInfo, fi *models.FieldInfo) *querySet {
 	switch fi.FieldType {
 	case RelOneToOne, RelForeignKey, RelManyToMany:
@@ -476,12 +476,12 @@ func (o *ormBase) QueryTable(ptrStructOrTableName interface{}) (qs QuerySeter) {
 	var name string
 	if table, ok := ptrStructOrTableName.(string); ok {
 		name = models.NameStrategyMap[models.DefaultNameStrategy](table)
-		if mi, ok := defaultModelCache.get(name); ok {
+		if mi, ok := defaultModelCache.Get(name); ok {
 			qs = newQuerySet(o, mi)
 		}
 	} else {
 		name = models.GetFullName(iutils.IndirectType(reflect.TypeOf(ptrStructOrTableName)))
-		if mi, ok := defaultModelCache.getByFullName(name); ok {
+		if mi, ok := defaultModelCache.GetByFullName(name); ok {
 			qs = newQuerySet(o, mi)
 		}
 	}
@@ -491,13 +491,13 @@ func (o *ormBase) QueryTable(ptrStructOrTableName interface{}) (qs QuerySeter) {
 	return qs
 }
 
-// NOTE: this method is deprecated, context parameter will not take effect.
+// Deprecated: QueryTableWithCtx is deprecated, context parameter will not take effect.
 func (o *ormBase) QueryTableWithCtx(_ context.Context, ptrStructOrTableName interface{}) (qs QuerySeter) {
 	logs.Warn("QueryTableWithCtx is DEPRECATED. Use methods with `WithCtx` suffix on QuerySeter as replacement please.")
 	return o.QueryTable(ptrStructOrTableName)
 }
 
-// return a raw query seter for raw sql string.
+// Raw return a raw query seter for raw sql string.
 func (o *ormBase) Raw(query string, args ...interface{}) RawSeter {
 	return o.RawWithCtx(context.Background(), query, args...)
 }
@@ -506,12 +506,12 @@ func (o *ormBase) RawWithCtx(_ context.Context, query string, args ...interface{
 	return newRawSet(o, query, args)
 }
 
-// return current using database Driver
+// Driver return current using database Driver
 func (o *ormBase) Driver() Driver {
 	return driver(o.alias.Name)
 }
 
-// return sql.DBStats for current database
+// DBStats return sql.DBStats for current database
 func (o *ormBase) DBStats() *sql.DBStats {
 	if o.alias != nil && o.alias.DB != nil {
 		stats := o.alias.DB.DB.Stats()
