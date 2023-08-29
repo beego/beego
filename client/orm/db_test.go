@@ -890,8 +890,6 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 
 func TestDbBase_readBatchSQL(t *testing.T) {
 
-	tCols := []string{"name", "score"}
-
 	mc := models.NewModelCacheHandler()
 
 	err := mc.Register("", false, new(testTab), new(testTab1), new(testTab2))
@@ -913,7 +911,8 @@ func TestDbBase_readBatchSQL(t *testing.T) {
 		name string
 		db   *dbBase
 
-		qs *querySet
+		tCols []string
+		qs    *querySet
 
 		wantRes  string
 		wantArgs []interface{}
@@ -923,6 +922,7 @@ func TestDbBase_readBatchSQL(t *testing.T) {
 			db: &dbBase{
 				ins: newdbBaseMysql(),
 			},
+			tCols: []string{"name", "score"},
 			qs: &querySet{
 				mi:     mi,
 				cond:   cond,
@@ -948,6 +948,7 @@ func TestDbBase_readBatchSQL(t *testing.T) {
 			db: &dbBase{
 				ins: newdbBaseMysql(),
 			},
+			tCols: []string{"name", "score"},
 			qs: &querySet{
 				mi:     mi,
 				cond:   cond,
@@ -974,6 +975,7 @@ func TestDbBase_readBatchSQL(t *testing.T) {
 			db: &dbBase{
 				ins: newdbBaseMysql(),
 			},
+			tCols: []string{"name", "score"},
 			qs: &querySet{
 				mi:     mi,
 				cond:   cond,
@@ -1000,6 +1002,7 @@ func TestDbBase_readBatchSQL(t *testing.T) {
 			db: &dbBase{
 				ins: newdbBaseMysql(),
 			},
+			tCols: []string{"name", "score"},
 			qs: &querySet{
 				mi:     mi,
 				cond:   cond,
@@ -1027,6 +1030,7 @@ func TestDbBase_readBatchSQL(t *testing.T) {
 			db: &dbBase{
 				ins: newdbBaseMysql(),
 			},
+			tCols: []string{"name", "score"},
 			qs: &querySet{
 				mi:     mi,
 				cond:   cond,
@@ -1053,6 +1057,7 @@ func TestDbBase_readBatchSQL(t *testing.T) {
 			db: &dbBase{
 				ins: newdbBasePostgres(),
 			},
+			tCols: []string{"name", "score"},
 			qs: &querySet{
 				mi:     mi,
 				cond:   cond,
@@ -1076,6 +1081,7 @@ func TestDbBase_readBatchSQL(t *testing.T) {
 			db: &dbBase{
 				ins: newdbBasePostgres(),
 			},
+			tCols: []string{"name", "score"},
 			qs: &querySet{
 				mi:     mi,
 				cond:   cond,
@@ -1100,6 +1106,7 @@ func TestDbBase_readBatchSQL(t *testing.T) {
 			db: &dbBase{
 				ins: newdbBasePostgres(),
 			},
+			tCols: []string{"name", "score"},
 			qs: &querySet{
 				mi:     mi,
 				cond:   cond,
@@ -1124,6 +1131,7 @@ func TestDbBase_readBatchSQL(t *testing.T) {
 			db: &dbBase{
 				ins: newdbBasePostgres(),
 			},
+			tCols: []string{"name", "score"},
 			qs: &querySet{
 				mi:     mi,
 				cond:   cond,
@@ -1149,6 +1157,7 @@ func TestDbBase_readBatchSQL(t *testing.T) {
 			db: &dbBase{
 				ins: newdbBasePostgres(),
 			},
+			tCols: []string{"name", "score"},
 			qs: &querySet{
 				mi:     mi,
 				cond:   cond,
@@ -1175,7 +1184,145 @@ func TestDbBase_readBatchSQL(t *testing.T) {
 			tables := newDbTables(mi, tc.db.ins)
 			tables.parseRelated(tc.qs.related, tc.qs.relDepth)
 
-			res, args := tc.db.readBatchSQL(tables, tCols, cond, tc.qs, mi, tz)
+			res, args := tc.db.readBatchSQL(tables, tc.tCols, cond, tc.qs, mi, tz)
+
+			assert.Equal(t, tc.wantRes, res)
+			assert.Equal(t, tc.wantArgs, args)
+		})
+	}
+
+}
+
+func TestDbBase_readValuesSQL(t *testing.T) {
+
+	mc := models.NewModelCacheHandler()
+
+	err := mc.Register("", false, new(testTab), new(testTab1), new(testTab2))
+
+	assert.Nil(t, err)
+
+	mc.Bootstrap()
+
+	mi, ok := mc.GetByMd(new(testTab))
+
+	assert.True(t, ok)
+
+	cond := NewCondition().And("name", "test_name").
+		OrCond(NewCondition().And("age__gt", 18).And("score__lt", 60))
+
+	tz := time.Local
+
+	testCases := []struct {
+		name string
+		db   *dbBase
+
+		cols []string
+		qs   *querySet
+
+		wantRes  string
+		wantArgs []interface{}
+	}{
+		{
+			name: "read values with MySQL",
+			db: &dbBase{
+				ins: newdbBaseMysql(),
+			},
+			cols: []string{"T0.`name` name", "T0.`age` age", "T0.`score` score"},
+			qs: &querySet{
+				mi:     mi,
+				cond:   cond,
+				limit:  10,
+				offset: 100,
+				groups: []string{"name", "age"},
+				orders: []*order_clause.Order{
+					order_clause.Clause(order_clause.Column("score"),
+						order_clause.SortDescending()),
+					order_clause.Clause(order_clause.Column("age"),
+						order_clause.SortAscending()),
+				},
+				useIndex: 1,
+				indexes:  []string{"name", "score"},
+			},
+			wantRes:  "SELECT T0.`name` name, T0.`age` age, T0.`score` score FROM `test_tab` T0  USE INDEX(`name`,`score`) WHERE T0.`name` = ? OR ( T0.`age` > ? AND T0.`score` < ? ) GROUP BY T0.`name`, T0.`age` ORDER BY T0.`score` DESC, T0.`age` ASC LIMIT 10 OFFSET 100",
+			wantArgs: []interface{}{"test_name", int64(18), int64(60)},
+		},
+		{
+			name: "read values with MySQL and distinct",
+			db: &dbBase{
+				ins: newdbBaseMysql(),
+			},
+			cols: []string{"T0.`name` name", "T0.`age` age", "T0.`score` score"},
+			qs: &querySet{
+				mi:     mi,
+				cond:   cond,
+				limit:  10,
+				offset: 100,
+				groups: []string{"name", "age"},
+				orders: []*order_clause.Order{
+					order_clause.Clause(order_clause.Column("score"),
+						order_clause.SortDescending()),
+					order_clause.Clause(order_clause.Column("age"),
+						order_clause.SortAscending()),
+				},
+				useIndex: 1,
+				indexes:  []string{"name", "score"},
+				distinct: true,
+			},
+			wantRes:  "SELECT DISTINCT T0.`name` name, T0.`age` age, T0.`score` score FROM `test_tab` T0  USE INDEX(`name`,`score`) WHERE T0.`name` = ? OR ( T0.`age` > ? AND T0.`score` < ? ) GROUP BY T0.`name`, T0.`age` ORDER BY T0.`score` DESC, T0.`age` ASC LIMIT 10 OFFSET 100",
+			wantArgs: []interface{}{"test_name", int64(18), int64(60)},
+		},
+		{
+			name: "read values with PostgreSQL",
+			db: &dbBase{
+				ins: newdbBasePostgres(),
+			},
+			cols: []string{`T0."name" name`, `T0."age" age`, `T0."score" score`},
+			qs: &querySet{
+				mi:     mi,
+				cond:   cond,
+				limit:  10,
+				offset: 100,
+				groups: []string{"name", "age"},
+				orders: []*order_clause.Order{
+					order_clause.Clause(order_clause.Column("score"),
+						order_clause.SortDescending()),
+					order_clause.Clause(order_clause.Column("age"),
+						order_clause.SortAscending()),
+				},
+			},
+			wantRes:  `SELECT T0."name" name, T0."age" age, T0."score" score FROM "test_tab" T0 WHERE T0."name" = $1 OR ( T0."age" > $2 AND T0."score" < $3 ) GROUP BY T0."name", T0."age" ORDER BY T0."score" DESC, T0."age" ASC LIMIT 10 OFFSET 100`,
+			wantArgs: []interface{}{"test_name", int64(18), int64(60)},
+		},
+		{
+			name: "read values with PostgreSQL and distinct",
+			db: &dbBase{
+				ins: newdbBasePostgres(),
+			},
+			cols: []string{`T0."name" name`, `T0."age" age`, `T0."score" score`},
+			qs: &querySet{
+				mi:     mi,
+				cond:   cond,
+				limit:  10,
+				offset: 100,
+				groups: []string{"name", "age"},
+				orders: []*order_clause.Order{
+					order_clause.Clause(order_clause.Column("score"),
+						order_clause.SortDescending()),
+					order_clause.Clause(order_clause.Column("age"),
+						order_clause.SortAscending()),
+				},
+				distinct: true,
+			},
+			wantRes:  `SELECT DISTINCT T0."name" name, T0."age" age, T0."score" score FROM "test_tab" T0 WHERE T0."name" = $1 OR ( T0."age" > $2 AND T0."score" < $3 ) GROUP BY T0."name", T0."age" ORDER BY T0."score" DESC, T0."age" ASC LIMIT 10 OFFSET 100`,
+			wantArgs: []interface{}{"test_name", int64(18), int64(60)},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tables := newDbTables(mi, tc.db.ins)
+
+			res, args := tc.db.readValuesSQL(tables, tc.cols, tc.qs, mi, cond, tz)
 
 			assert.Equal(t, tc.wantRes, res)
 			assert.Equal(t, tc.wantArgs, args)

@@ -1292,6 +1292,24 @@ func (d *dbBase) ReadBatch(ctx context.Context, q dbQuerier, qs *querySet, mi *m
 }
 
 func (d *dbBase) readBatchSQL(tables *dbTables, tCols []string, cond *Condition, qs *querySet, mi *models.ModelInfo, tz *time.Location) (string, []interface{}) {
+	cols := d.preProcCols(tCols) // pre process columns
+	return d.readSQL(tables, cols, cond, qs, mi, tz)
+}
+
+func (d *dbBase) preProcCols(cols []string) []string {
+	res := make([]string, len(cols))
+
+	quote := d.ins.TableQuote()
+	for i, col := range cols {
+		res[i] = fmt.Sprintf("T0.%s%s%s", quote, col, quote)
+	}
+
+	return res
+}
+
+// readSQL generate a select sql string and return args
+// ReadBatch and ReadValues methods will reuse this method.
+func (d *dbBase) readSQL(tables *dbTables, tCols []string, cond *Condition, qs *querySet, mi *models.ModelInfo, tz *time.Location) (string, []interface{}) {
 
 	quote := d.ins.TableQuote()
 
@@ -1316,10 +1334,7 @@ func (d *dbBase) readBatchSQL(tables *dbTables, tCols []string, cond *Condition,
 			if i > 0 {
 				_, _ = buf.WriteString(", ")
 			}
-			_, _ = buf.WriteString("T0.")
-			_, _ = buf.WriteString(quote)
 			_, _ = buf.WriteString(tCol)
-			_, _ = buf.WriteString(quote)
 		}
 
 		for _, tbl := range tables.tables {
@@ -1897,25 +1912,7 @@ func (d *dbBase) ReadValues(ctx context.Context, q dbQuerier, qs *querySet, mi *
 		}
 	}
 
-	where, args := tables.getCondSQL(cond, false, tz)
-	groupBy := tables.getGroupSQL(qs.groups)
-	orderBy := tables.getOrderSQL(qs.orders)
-	limit := tables.getLimitSQL(mi, qs.offset, qs.limit)
-	join := tables.getJoinSQL()
-	specifyIndexes := tables.getIndexSql(mi.Table, qs.useIndex, qs.indexes)
-
-	sels := strings.Join(cols, ", ")
-
-	sqlSelect := "SELECT"
-	if qs.distinct {
-		sqlSelect += " DISTINCT"
-	}
-	query := fmt.Sprintf("%s %s FROM %s%s%s T0 %s%s%s%s%s%s",
-		sqlSelect, sels,
-		Q, mi.Table, Q,
-		specifyIndexes, join, where, groupBy, orderBy, limit)
-
-	d.ins.ReplaceMarks(&query)
+	query, args := d.readValuesSQL(tables, cols, qs, mi, cond, tz)
 
 	rs, err := q.QueryContext(ctx, query, args...)
 	if err != nil {
@@ -2009,6 +2006,10 @@ func (d *dbBase) ReadValues(ctx context.Context, q dbQuerier, qs *querySet, mi *
 	}
 
 	return cnt, nil
+}
+
+func (d *dbBase) readValuesSQL(tables *dbTables, cols []string, qs *querySet, mi *models.ModelInfo, cond *Condition, tz *time.Location) (string, []interface{}) {
+	return d.readSQL(tables, cols, cond, qs, mi, tz)
 }
 
 // SupportUpdateJoin flag of update joined record.
