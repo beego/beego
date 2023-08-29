@@ -74,7 +74,7 @@ type dbBase struct {
 // check dbBase implements dbBaser interface.
 var _ dbBaser = new(dbBase)
 
-// get struct Columns values as interface slice.
+// Get struct Columns values as interface slice.
 func (d *dbBase) collectValues(mi *models.ModelInfo, ind reflect.Value, cols []string, skipAuto bool, insert bool, names *[]string, tz *time.Location) (values []interface{}, autoFields []string, err error) {
 	if names == nil {
 		ns := make([]string, 0, len(cols))
@@ -117,7 +117,7 @@ func (d *dbBase) collectValues(mi *models.ModelInfo, ind reflect.Value, cols []s
 	return
 }
 
-// get one field value in struct column as interface.
+// Get one field value in struct column as interface.
 func (d *dbBase) collectFieldValue(mi *models.ModelInfo, fi *models.FieldInfo, ind reflect.Value, insert bool, tz *time.Location) (interface{}, error) {
 	var value interface{}
 	if fi.Pk {
@@ -685,7 +685,7 @@ func (d *dbBase) Update(ctx context.Context, q dbQuerier, mi *models.ModelInfo, 
 
 	var setNames []string
 
-	// if specify cols length is zero, then commit all Columns.
+	// if specify cols length is zero, then commit All Columns.
 	if len(cols) == 0 {
 		cols = mi.Fields.DBcols
 		setNames = make([]string, 0, len(mi.Fields.DBcols)-1)
@@ -1180,7 +1180,7 @@ func (d *dbBase) ReadBatch(ctx context.Context, q dbQuerier, qs *querySet, mi *m
 
 	slice := ind
 	if unregister {
-		mi, _ = defaultModelCache.get(name)
+		mi, _ = defaultModelCache.Get(name)
 		tCols = mi.Fields.DBcols
 		colsNum = len(tCols)
 	}
@@ -1281,7 +1281,7 @@ func (d *dbBase) ReadBatch(ctx context.Context, q dbQuerier, qs *querySet, mi *m
 			ind.Set(slice)
 		} else {
 			// when a result is empty and container is nil
-			// to set an empty container
+			// to Set an empty container
 			if ind.IsNil() {
 				ind.Set(reflect.MakeSlice(ind.Type(), 0, 0))
 			}
@@ -1292,6 +1292,24 @@ func (d *dbBase) ReadBatch(ctx context.Context, q dbQuerier, qs *querySet, mi *m
 }
 
 func (d *dbBase) readBatchSQL(tables *dbTables, tCols []string, cond *Condition, qs *querySet, mi *models.ModelInfo, tz *time.Location) (string, []interface{}) {
+	cols := d.preProcCols(tCols) // pre process columns
+	return d.readSQL(tables, cols, cond, qs, mi, tz)
+}
+
+func (d *dbBase) preProcCols(cols []string) []string {
+	res := make([]string, len(cols))
+
+	quote := d.ins.TableQuote()
+	for i, col := range cols {
+		res[i] = fmt.Sprintf("T0.%s%s%s", quote, col, quote)
+	}
+
+	return res
+}
+
+// readSQL generate a select sql string and return args
+// ReadBatch and ReadValues methods will reuse this method.
+func (d *dbBase) readSQL(tables *dbTables, tCols []string, cond *Condition, qs *querySet, mi *models.ModelInfo, tz *time.Location) (string, []interface{}) {
 
 	quote := d.ins.TableQuote()
 
@@ -1316,10 +1334,7 @@ func (d *dbBase) readBatchSQL(tables *dbTables, tCols []string, cond *Condition,
 			if i > 0 {
 				_, _ = buf.WriteString(", ")
 			}
-			_, _ = buf.WriteString("T0.")
-			_, _ = buf.WriteString(quote)
 			_, _ = buf.WriteString(tCol)
-			_, _ = buf.WriteString(quote)
 		}
 
 		for _, tbl := range tables.tables {
@@ -1478,7 +1493,7 @@ func (d *dbBase) GenerateOperatorLeftCol(*models.FieldInfo, string, *string) {
 	// default not use
 }
 
-// set values to struct column.
+// Set values to struct column.
 func (d *dbBase) setColsValues(mi *models.ModelInfo, ind *reflect.Value, cols []string, values []interface{}, tz *time.Location) {
 	for i, column := range cols {
 		val := reflect.Indirect(reflect.ValueOf(values[i])).Interface()
@@ -1664,7 +1679,7 @@ end:
 	return value, nil
 }
 
-// set one value to struct column field.
+// Set one value to struct column field.
 func (d *dbBase) setFieldValue(fi *models.FieldInfo, value interface{}, field reflect.Value) (interface{}, error) {
 	fieldType := fi.FieldType
 	isNative := !fi.IsFielder
@@ -1847,7 +1862,7 @@ setValue:
 		fd := field.Addr().Interface().(models.Fielder)
 		err := fd.SetRaw(value)
 		if err != nil {
-			err = fmt.Errorf("converted value `%v` set to Fielder `%s` failed, err: %s", value, fi.FullName, err)
+			err = fmt.Errorf("converted value `%v` Set to Fielder `%s` failed, err: %s", value, fi.FullName, err)
 			return nil, err
 		}
 	}
@@ -1918,25 +1933,7 @@ func (d *dbBase) ReadValues(ctx context.Context, q dbQuerier, qs *querySet, mi *
 		}
 	}
 
-	where, args := tables.getCondSQL(cond, false, tz)
-	groupBy := tables.getGroupSQL(qs.groups)
-	orderBy := tables.getOrderSQL(qs.orders)
-	limit := tables.getLimitSQL(mi, qs.offset, qs.limit)
-	join := tables.getJoinSQL()
-	specifyIndexes := tables.getIndexSql(mi.Table, qs.useIndex, qs.indexes)
-
-	sels := strings.Join(cols, ", ")
-
-	sqlSelect := "SELECT"
-	if qs.distinct {
-		sqlSelect += " DISTINCT"
-	}
-	query := fmt.Sprintf("%s %s FROM %s%s%s T0 %s%s%s%s%s%s",
-		sqlSelect, sels,
-		Q, mi.Table, Q,
-		specifyIndexes, join, where, groupBy, orderBy, limit)
-
-	d.ins.ReplaceMarks(&query)
+	query, args := d.readValuesSQL(tables, cols, qs, mi, cond, tz)
 
 	rs, err := q.QueryContext(ctx, query, args...)
 	if err != nil {
@@ -2032,6 +2029,10 @@ func (d *dbBase) ReadValues(ctx context.Context, q dbQuerier, qs *querySet, mi *
 	return cnt, nil
 }
 
+func (d *dbBase) readValuesSQL(tables *dbTables, cols []string, qs *querySet, mi *models.ModelInfo, cond *Condition, tz *time.Location) (string, []interface{}) {
+	return d.readSQL(tables, cols, cond, qs, mi, tz)
+}
+
 // SupportUpdateJoin flag of update joined record.
 func (d *dbBase) SupportUpdateJoin() bool {
 	return true
@@ -2071,12 +2072,12 @@ func (d *dbBase) TimeToDB(t *time.Time, tz *time.Location) {
 	*t = t.In(tz)
 }
 
-// DbTypes get database types.
+// DbTypes Get database types.
 func (d *dbBase) DbTypes() map[string]string {
 	return nil
 }
 
-// GetTables gt all tables.
+// GetTables gt All tables.
 func (d *dbBase) GetTables(db dbQuerier) (map[string]bool, error) {
 	tables := make(map[string]bool)
 	query := d.ins.ShowTablesQuery()
@@ -2101,7 +2102,7 @@ func (d *dbBase) GetTables(db dbQuerier) (map[string]bool, error) {
 	return tables, rows.Err()
 }
 
-// GetColumns get all cloumns in table.
+// GetColumns Get All cloumns in table.
 func (d *dbBase) GetColumns(ctx context.Context, db dbQuerier, table string) (map[string][3]string, error) {
 	columns := make(map[string][3]string)
 	query := d.ins.ShowColumnsQuery(table)

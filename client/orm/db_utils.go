@@ -24,7 +24,7 @@ import (
 	"github.com/beego/beego/v2/client/orm/internal/models"
 )
 
-// get table alias.
+// Get table alias.
 func getDbAlias(name string) *alias {
 	if al, ok := dataBaseCache.get(name); ok {
 		return al
@@ -32,7 +32,7 @@ func getDbAlias(name string) *alias {
 	panic(fmt.Errorf("unknown DataBase alias name %s", name))
 }
 
-// get pk column info.
+// Get pk column info.
 func getExistPk(mi *models.ModelInfo, ind reflect.Value) (column string, value interface{}, exist bool) {
 	fi := mi.Fields.Pk
 
@@ -57,7 +57,7 @@ func getExistPk(mi *models.ModelInfo, ind reflect.Value) (column string, value i
 	return
 }
 
-// get Fields description as flatted string.
+// Get Fields description as flatted string.
 func getFlatParams(fi *models.FieldInfo, args []interface{}, tz *time.Location) (params []interface{}) {
 outFor:
 	for _, arg := range args {
@@ -160,7 +160,7 @@ outFor:
 				typ := val.Type()
 				name := models.GetFullName(typ)
 				var value interface{}
-				if mmi, ok := defaultModelCache.getByFullName(name); ok {
+				if mmi, ok := defaultModelCache.GetByFullName(name); ok {
 					if _, vu, exist := getExistPk(mmi, val); exist {
 						value = vu
 					}

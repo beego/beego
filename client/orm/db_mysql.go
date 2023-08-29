@@ -76,12 +76,12 @@ type dbBaseMysql struct {
 
 var _ dbBaser = new(dbBaseMysql)
 
-// OperatorSQL get mysql operator.
+// OperatorSQL Get mysql operator.
 func (d *dbBaseMysql) OperatorSQL(operator string) string {
 	return mysqlOperators[operator]
 }
 
-// DbTypes get mysql table field types.
+// DbTypes Get mysql table field types.
 func (d *dbBaseMysql) DbTypes() map[string]string {
 	return mysqlTypes
 }

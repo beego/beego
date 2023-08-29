@@ -28,7 +28,7 @@ import (
 
 type Log = logs.Log
 
-// NewLog set io.Writer to create a Logger.
+// NewLog Set io.Writer to create a Logger.
 func NewLog(out io.Writer) *logs.Log {
 	d := new(logs.Log)
 	d.Logger = log.New(out, "[ORM]", log.LstdFlags)
