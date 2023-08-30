@@ -1333,18 +1333,15 @@ func TestDbBase_readValuesSQL(t *testing.T) {
 
 func TestDbBase_countSQL(t *testing.T) {
 
-	mc := &modelCache{
-		cache:           make(map[string]*models.ModelInfo),
-		cacheByFullName: make(map[string]*models.ModelInfo),
-	}
+	mc := models.NewModelCacheHandler()
 
-	err := mc.register("", false, new(testTab), new(testTab1), new(testTab2))
+	err := mc.Register("", false, new(testTab), new(testTab1), new(testTab2))
 
 	assert.Nil(t, err)
 
-	mc.bootstrap()
+	mc.Bootstrap()
 
-	mi, ok := mc.getByMd(new(testTab))
+	mi, ok := mc.GetByMd(new(testTab))
 
 	assert.True(t, ok)
 

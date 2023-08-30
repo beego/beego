@@ -1293,7 +1293,17 @@ func (d *dbBase) ReadBatch(ctx context.Context, q dbQuerier, qs *querySet, mi *m
 
 func (d *dbBase) readBatchSQL(tables *dbTables, tCols []string, cond *Condition, qs *querySet, mi *models.ModelInfo, tz *time.Location) (string, []interface{}) {
 	cols := d.preProcCols(tCols) // pre process columns
-	return d.readSQL(tables, cols, cond, qs, mi, tz)
+
+	buf := buffers.Get()
+	defer buffers.Put(buf)
+
+	args := d.readSQL(buf, tables, cols, cond, qs, mi, tz)
+
+	query := buf.String()
+
+	d.ins.ReplaceMarks(&query)
+
+	return query, args
 }
 
 func (d *dbBase) preProcCols(cols []string) []string {
@@ -1309,7 +1319,7 @@ func (d *dbBase) preProcCols(cols []string) []string {
 
 // readSQL generate a select sql string and return args
 // ReadBatch and ReadValues methods will reuse this method.
-func (d *dbBase) readSQL(tables *dbTables, tCols []string, cond *Condition, qs *querySet, mi *models.ModelInfo, tz *time.Location) (string, []interface{}) {
+func (d *dbBase) readSQL(buf buffers.Buffer, tables *dbTables, tCols []string, cond *Condition, qs *querySet, mi *models.ModelInfo, tz *time.Location) []interface{} {
 
 	quote := d.ins.TableQuote()
 
@@ -1319,9 +1329,6 @@ func (d *dbBase) readSQL(tables *dbTables, tCols []string, cond *Condition, qs *
 	limit := tables.getLimitSQL(mi, qs.offset, qs.limit)
 	join := tables.getJoinSQL()
 	specifyIndexes := tables.getIndexSql(mi.Table, qs.useIndex, qs.indexes)
-
-	buf := buffers.Get()
-	defer buffers.Put(buf)
 
 	_, _ = buf.WriteString("SELECT ")
 
@@ -1372,11 +1379,7 @@ func (d *dbBase) readSQL(tables *dbTables, tCols []string, cond *Condition, qs *
 		_, _ = buf.WriteString(" FOR UPDATE")
 	}
 
-	query := buf.String()
-
-	d.ins.ReplaceMarks(&query)
-
-	return query, args
+	return args
 }
 
 // Count excute count sql and return count result int64.
@@ -1393,31 +1396,17 @@ func (d *dbBase) countSQL(qs *querySet, mi *models.ModelInfo, cond *Condition, t
 	tables := newDbTables(mi, d.ins)
 	tables.parseRelated(qs.related, qs.relDepth)
 
-	where, args := tables.getCondSQL(cond, false, tz)
-	groupBy := tables.getGroupSQL(qs.groups)
-	join := tables.getJoinSQL()
-	specifyIndexes := tables.getIndexSql(mi.Table, qs.useIndex, qs.indexes)
-
-	quote := d.ins.TableQuote()
-
 	buf := buffers.Get()
 	defer buffers.Put(buf)
 
-	if groupBy != "" {
+	if len(qs.groups) > 0 {
 		_, _ = buf.WriteString("SELECT COUNT(*) FROM (")
 	}
 
-	_, _ = buf.WriteString("SELECT COUNT(*) FROM ")
-	_, _ = buf.WriteString(quote)
-	_, _ = buf.WriteString(mi.Table)
-	_, _ = buf.WriteString(quote)
-	_, _ = buf.WriteString(" T0 ")
-	_, _ = buf.WriteString(specifyIndexes)
-	_, _ = buf.WriteString(join)
-	_, _ = buf.WriteString(where)
-	_, _ = buf.WriteString(groupBy)
+	qs.aggregate = "COUNT(*)"
+	args := d.readSQL(buf, tables, nil, cond, qs, mi, tz)
 
-	if groupBy != "" {
+	if len(qs.groups) > 0 {
 		_, _ = buf.WriteString(") AS T")
 	}
 
@@ -2030,7 +2019,16 @@ func (d *dbBase) ReadValues(ctx context.Context, q dbQuerier, qs *querySet, mi *
 }
 
 func (d *dbBase) readValuesSQL(tables *dbTables, cols []string, qs *querySet, mi *models.ModelInfo, cond *Condition, tz *time.Location) (string, []interface{}) {
-	return d.readSQL(tables, cols, cond, qs, mi, tz)
+	buf := buffers.Get()
+	defer buffers.Put(buf)
+
+	args := d.readSQL(buf, tables, cols, cond, qs, mi, tz)
+
+	query := buf.String()
+
+	d.ins.ReplaceMarks(&query)
+
+	return query, args
 }
 
 // SupportUpdateJoin flag of update joined record.
