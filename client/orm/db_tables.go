@@ -439,9 +439,9 @@ func (t *dbTables) getOrderSQL(orders []*order_clause.Order) (orderSQL string) {
 
 		if order.IsRaw() {
 			if len(clause) == 2 {
-				orderSqls = append(orderSqls, fmt.Sprintf("%s.%s%s%s %s", clause[0], Q, clause[1], Q, order.SortString()))
+				orderSqls = append(orderSqls, fmt.Sprintf("%s.%s %s", clause[0], clause[1], order.SortString()))
 			} else if len(clause) == 1 {
-				orderSqls = append(orderSqls, fmt.Sprintf("%s%s%s %s", Q, clause[0], Q, order.SortString()))
+				orderSqls = append(orderSqls, fmt.Sprintf("%s %s", clause[0], order.SortString()))
 			} else {
 				panic(fmt.Errorf("unknown field/column name `%s`", strings.Join(clause, ExprSep)))
 			}
