@@ -1,4 +1,5 @@
 # developing
+- [fix: refactor Count method](https://github.com/beego/beego/pull/5300)
 
 # v2.1.1
 - [httplib: fix unstable unit test which use the httplib.org](https://github.com/beego/beego/pull/5232)
@@ -17,7 +18,6 @@
 - [fix: refactor UpdateBatch method](https://github.com/beego/beego/pull/5295)
 - [fix: refactor InsertOrUpdate method](https://github.com/beego/beego/pull/5296)
 - [fix: refactor ReadBatch method](https://github.com/beego/beego/pull/5298)
-- [fix: refactor Count method](https://github.com/beego/beego/pull/5300)
 - [fix: refactor ReadValues method](https://github.com/beego/beego/pull/5303)
 
 ## ORM refactoring
