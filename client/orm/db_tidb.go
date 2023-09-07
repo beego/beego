@@ -26,12 +26,12 @@ type dbBaseTidb struct {
 
 var _ dbBaser = new(dbBaseTidb)
 
-// get mysql operator.
+// Get mysql operator.
 func (d *dbBaseTidb) OperatorSQL(operator string) string {
 	return mysqlOperators[operator]
 }
 
-// get mysql table field types.
+// Get mysql table field types.
 func (d *dbBaseTidb) DbTypes() map[string]string {
 	return mysqlTypes
 }

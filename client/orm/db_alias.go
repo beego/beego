@@ -42,13 +42,13 @@ const (
 // database driver string.
 type driver string
 
-// get type constant int of current driver..
+// Get type constant int of current driver..
 func (d driver) Type() DriverType {
 	a, _ := dataBaseCache.get(string(d))
 	return a.Driver
 }
 
-// get name of current driver
+// Get name of current driver
 func (d driver) Name() string {
 	return string(d)
 }
@@ -326,7 +326,7 @@ func detectTZ(al *alias) {
 			}
 		}
 
-		// get default engine from current database
+		// Get default engine from current database
 		row = al.DB.QueryRow("SELECT ENGINE, TRANSACTIONS FROM information_schema.engines WHERE SUPPORT = 'DEFAULT'")
 		var engine string
 		var tx bool
@@ -410,7 +410,7 @@ func newAliasWithDb(aliasName, driverName string, db *sql.DB, params ...DBOption
 
 	err := db.Ping()
 	if err != nil {
-		return nil, fmt.Errorf("register db Ping `%s`, %s", aliasName, err.Error())
+		return nil, fmt.Errorf("Register db Ping `%s`, %s", aliasName, err.Error())
 	}
 
 	detectTZ(al)
@@ -465,7 +465,7 @@ func RegisterDataBase(aliasName, driverName, dataSource string, params ...DBOpti
 
 	db, err = sql.Open(driverName, dataSource)
 	if err != nil {
-		err = fmt.Errorf("register db `%s`, %s", aliasName, err.Error())
+		err = fmt.Errorf("Register db `%s`, %s", aliasName, err.Error())
 		goto end
 	}
 
@@ -510,7 +510,7 @@ func SetDataBaseTZ(aliasName string, tz *time.Location) error {
 }
 
 // GetDB Get *sql.DB from registered database by db alias name.
-// Use "default" as alias name if you not set.
+// Use "default" as alias name if you not Set.
 func GetDB(aliasNames ...string) (*sql.DB, error) {
 	var name string
 	if len(aliasNames) > 0 {

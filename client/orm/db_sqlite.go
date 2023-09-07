@@ -85,7 +85,7 @@ func (d *dbBaseSqlite) Read(ctx context.Context, q dbQuerier, mi *models.ModelIn
 	return d.dbBase.Read(ctx, q, mi, ind, tz, cols, false)
 }
 
-// get sqlite operator.
+// Get sqlite operator.
 func (d *dbBaseSqlite) OperatorSQL(operator string) string {
 	return sqliteOperators[operator]
 }
@@ -108,17 +108,17 @@ func (d *dbBaseSqlite) MaxLimit() uint64 {
 	return 9223372036854775807
 }
 
-// get column types in sqlite.
+// Get column types in sqlite.
 func (d *dbBaseSqlite) DbTypes() map[string]string {
 	return sqliteTypes
 }
 
-// get show tables sql in sqlite.
+// Get show tables sql in sqlite.
 func (d *dbBaseSqlite) ShowTablesQuery() string {
 	return "SELECT name FROM sqlite_master WHERE type = 'table'"
 }
 
-// get Columns in sqlite.
+// Get Columns in sqlite.
 func (d *dbBaseSqlite) GetColumns(ctx context.Context, db dbQuerier, table string) (map[string][3]string, error) {
 	query := d.ins.ShowColumnsQuery(table)
 	rows, err := db.QueryContext(ctx, query)
@@ -139,7 +139,7 @@ func (d *dbBaseSqlite) GetColumns(ctx context.Context, db dbQuerier, table strin
 	return columns, rows.Err()
 }
 
-// get show Columns sql in sqlite.
+// Get show Columns sql in sqlite.
 func (d *dbBaseSqlite) ShowColumnsQuery(table string) string {
 	return fmt.Sprintf("pragma table_info('%s')", table)
 }

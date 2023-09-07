@@ -104,7 +104,7 @@ func (d *commandSyncDb) Run() error {
 	var drops []string
 	var err error
 	if d.force {
-		drops, err = defaultModelCache.getDbDropSQL(d.al)
+		drops, err = getDbDropSQL(defaultModelCache, d.al)
 		if err != nil {
 			return err
 		}
@@ -113,7 +113,7 @@ func (d *commandSyncDb) Run() error {
 	db := d.al.DB
 
 	if d.force && len(drops) > 0 {
-		for i, mi := range defaultModelCache.allOrdered() {
+		for i, mi := range defaultModelCache.AllOrdered() {
 			query := drops[i]
 			if !d.noInfo {
 				fmt.Printf("drop table `%s`\n", mi.Table)
@@ -131,7 +131,7 @@ func (d *commandSyncDb) Run() error {
 		}
 	}
 
-	createQueries, indexes, err := defaultModelCache.getDbCreateSQL(d.al)
+	createQueries, indexes, err := getDbCreateSQL(defaultModelCache, d.al)
 	if err != nil {
 		return err
 	}
@@ -145,7 +145,7 @@ func (d *commandSyncDb) Run() error {
 	}
 
 	ctx := context.Background()
-	for i, mi := range defaultModelCache.allOrdered() {
+	for i, mi := range defaultModelCache.AllOrdered() {
 
 		if !models.IsApplicableTableForDB(mi.AddrField, d.al.Name) {
 			fmt.Printf("table `%s` is not applicable to database '%s'\n", mi.Table, d.al.Name)
@@ -262,12 +262,12 @@ func (d *commandSQLAll) Parse(args []string) {
 
 // Run orm line command.
 func (d *commandSQLAll) Run() error {
-	createQueries, indexes, err := defaultModelCache.getDbCreateSQL(d.al)
+	createQueries, indexes, err := getDbCreateSQL(defaultModelCache, d.al)
 	if err != nil {
 		return err
 	}
 	var all []string
-	for i, mi := range defaultModelCache.allOrdered() {
+	for i, mi := range defaultModelCache.AllOrdered() {
 		queries := []string{createQueries[i]}
 		for _, idx := range indexes[mi.Table] {
 			queries = append(queries, idx.SQL)
@@ -288,7 +288,7 @@ func init() {
 // RunSyncdb run syncdb command line.
 // name: Table's alias name (default is "default")
 // force: Run the next sql command even if the current gave an error
-// verbose: Print all information, useful for debugging
+// verbose: Print All information, useful for debugging
 func RunSyncdb(name string, force bool, verbose bool) error {
 	BootStrap()
 

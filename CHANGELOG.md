@@ -1,4 +1,5 @@
 # developing
+- [orm: move the modelCache to internal/models package](https://github.com/beego/beego/pull/5306)
 
 # v2.1.1
 - [httplib: fix unstable unit test which use the httplib.org](https://github.com/beego/beego/pull/5232)
@@ -16,6 +17,8 @@
 - [fix: refactor UpdateSQL method](https://github.com/beego/beego/pull/5274)
 - [fix: refactor UpdateBatch method](https://github.com/beego/beego/pull/5295)
 - [fix: refactor InsertOrUpdate method](https://github.com/beego/beego/pull/5296)
+- [fix: refactor ReadBatch method](https://github.com/beego/beego/pull/5298)
+- [fix: refactor ReadValues method](https://github.com/beego/beego/pull/5303)
 
 ## ORM refactoring
 - [introducing internal/models pkg](https://github.com/beego/beego/pull/5238)
