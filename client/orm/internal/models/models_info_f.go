@@ -140,6 +140,7 @@ type FieldInfo struct {
 	OnDelete            string
 	Description         string
 	TimePrecision       *int
+	DBType              string
 }
 
 // NewFieldInfo new field info
@@ -300,6 +301,7 @@ checkType:
 	fi.FieldType = fieldType
 	fi.Name = sf.Name
 	fi.Column = getColumnName(fieldType, addrField, sf, tags["column"])
+	fi.DBType = tags["db_type"]
 	fi.AddrValue = addrField
 	fi.Sf = sf
 	fi.FullName = mi.FullName + mName + "." + sf.Name
