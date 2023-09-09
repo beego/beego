@@ -65,8 +65,9 @@ func getDbCreateSQL(mc *imodels.ModelCache, al *alias) (queries []string, tableI
 		for i, fi := range mi.Fields.FieldsDB {
 			column := fmt.Sprintf("    %s%s%s ", Q, fi.Column, Q)
 			col := getColumnTyp(al, fi)
-
-			if fi.Auto {
+			if fi.DBType != "" {
+				column += fi.DBType
+			} else if fi.Auto {
 				switch al.Driver {
 				case DRSqlite, DRPostgres:
 					column += T["auto"]
