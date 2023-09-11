@@ -1331,6 +1331,108 @@ func TestDbBase_readValuesSQL(t *testing.T) {
 
 }
 
+func TestDbBase_countSQL(t *testing.T) {
+
+	mc := models.NewModelCacheHandler()
+
+	err := mc.Register("", false, new(testTab), new(testTab1), new(testTab2))
+
+	assert.Nil(t, err)
+
+	mc.Bootstrap()
+
+	mi, ok := mc.GetByMd(new(testTab))
+
+	assert.True(t, ok)
+
+	cond := NewCondition().And("name", "test_name").
+		OrCond(NewCondition().And("age__gt", 18).And("score__lt", 60))
+
+	tz := time.Local
+
+	testCases := []struct {
+		name string
+		db   *dbBase
+
+		qs *querySet
+
+		wantRes  string
+		wantArgs []interface{}
+	}{
+		{
+			name: "count with MySQL has no group by",
+			db: &dbBase{
+				ins: newdbBaseMysql(),
+			},
+			qs: &querySet{
+				mi:       mi,
+				cond:     cond,
+				useIndex: 1,
+				indexes:  []string{"name", "score"},
+				related:  make([]string, 0),
+				relDepth: 2,
+			},
+			wantRes:  "SELECT COUNT(*) FROM `test_tab` T0  USE INDEX(`name`,`score`) INNER JOIN `test_tab1` T1 ON T1.`id` = T0.`test_tab_1_id` INNER JOIN `test_tab2` T2 ON T2.`id` = T1.`test_tab_2_id` WHERE T0.`name` = ? OR ( T0.`age` > ? AND T0.`score` < ? ) ",
+			wantArgs: []interface{}{"test_name", int64(18), int64(60)},
+		},
+		{
+			name: "count with MySQL has group by",
+			db: &dbBase{
+				ins: newdbBaseMysql(),
+			},
+			qs: &querySet{
+				mi:       mi,
+				cond:     cond,
+				useIndex: 1,
+				indexes:  []string{"name", "score"},
+				related:  make([]string, 0),
+				relDepth: 2,
+				groups:   []string{"name", "age"},
+			},
+			wantRes:  "SELECT COUNT(*) FROM (SELECT COUNT(*) FROM `test_tab` T0  USE INDEX(`name`,`score`) INNER JOIN `test_tab1` T1 ON T1.`id` = T0.`test_tab_1_id` INNER JOIN `test_tab2` T2 ON T2.`id` = T1.`test_tab_2_id` WHERE T0.`name` = ? OR ( T0.`age` > ? AND T0.`score` < ? ) GROUP BY T0.`name`, T0.`age` ) AS T",
+			wantArgs: []interface{}{"test_name", int64(18), int64(60)},
+		},
+		{
+			name: "count with PostgreSQL has no group by",
+			db: &dbBase{
+				ins: newdbBasePostgres(),
+			},
+			qs: &querySet{
+				mi:       mi,
+				cond:     cond,
+				related:  make([]string, 0),
+				relDepth: 2,
+			},
+			wantRes:  `SELECT COUNT(*) FROM "test_tab" T0 INNER JOIN "test_tab1" T1 ON T1."id" = T0."test_tab_1_id" INNER JOIN "test_tab2" T2 ON T2."id" = T1."test_tab_2_id" WHERE T0."name" = $1 OR ( T0."age" > $2 AND T0."score" < $3 ) `,
+			wantArgs: []interface{}{"test_name", int64(18), int64(60)},
+		},
+		{
+			name: "count with PostgreSQL has group by",
+			db: &dbBase{
+				ins: newdbBasePostgres(),
+			},
+			qs: &querySet{
+				mi:       mi,
+				cond:     cond,
+				related:  make([]string, 0),
+				relDepth: 2,
+				groups:   []string{"name", "age"},
+			},
+			wantRes:  `SELECT COUNT(*) FROM (SELECT COUNT(*) FROM "test_tab" T0 INNER JOIN "test_tab1" T1 ON T1."id" = T0."test_tab_1_id" INNER JOIN "test_tab2" T2 ON T2."id" = T1."test_tab_2_id" WHERE T0."name" = $1 OR ( T0."age" > $2 AND T0."score" < $3 ) GROUP BY T0."name", T0."age" ) AS T`,
+			wantArgs: []interface{}{"test_name", int64(18), int64(60)},
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			res, args := tc.db.countSQL(tc.qs, mi, cond, tz)
+
+			assert.Equal(t, tc.wantRes, res)
+			assert.Equal(t, tc.wantArgs, args)
+		})
+	}
+}
+
 type testTab struct {
 	ID       int64     `orm:"auto;pk;column(id)"`
 	Name     string    `orm:"column(name)"`
