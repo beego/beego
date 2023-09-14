@@ -1,6 +1,6 @@
 # developing
 - [fix: refactor Count method](https://github.com/beego/beego/pull/5300)
-
+- [support db_type in ddl ](https://github.com/beego/beego/pull/5404)
 # v2.1.1
 - [httplib: fix unstable unit test which use the httplib.org](https://github.com/beego/beego/pull/5232)
 - [rft: remove adapter package](https://github.com/beego/beego/pull/5239)
