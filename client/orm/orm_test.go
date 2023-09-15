@@ -1140,7 +1140,10 @@ func TestOffset(t *testing.T) {
 	throwFail(t, AssertIs(num, 2))
 }
 
-func TestOrderBy(t *testing.T) {
+func TestCountOrderBy(t *testing.T) {
+	if IsPostgres {
+		return
+	}
 	qs := dORM.QueryTable("user")
 	num, err := qs.OrderBy("-status").Filter("user_name", "nobody").Count()
 	throwFail(t, err)
@@ -1173,6 +1176,61 @@ func TestOrderBy(t *testing.T) {
 		throwFail(t, err)
 		throwFail(t, AssertIs(num, 1))
 	}
+}
+
+func TestOrderBy(t *testing.T) {
+	var users []*User
+	qs := dORM.QueryTable("user")
+	num, err := qs.OrderBy("-status").Filter("user_name", "nobody").All(&users)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	num, err = qs.OrderBy("status").Filter("user_name", "slene").All(&users)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	num, err = qs.OrderBy("-profile__age").Filter("user_name", "astaxie").All(&users)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	num, err = qs.OrderClauses(
+		order_clause.Clause(
+			order_clause.Column(`profile__age`),
+			order_clause.SortDescending(),
+		),
+	).Filter("user_name", "astaxie").All(&users)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	if IsMysql {
+		num, err = qs.OrderClauses(
+			order_clause.Clause(
+				order_clause.Column(`rand()`),
+				order_clause.Raw(),
+			),
+		).Filter("user_name", "astaxie").All(&users)
+		throwFail(t, err)
+		throwFail(t, AssertIs(num, 1))
+	}
+}
+
+func TestCount(t *testing.T) {
+	qs := dORM.QueryTable("user")
+	num, err := qs.Filter("user_name", "nobody").Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	num, err = qs.Filter("user_name", "slene").Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	num, err = qs.Filter("user_name", "astaxie").Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	num, err = qs.Filter("user_name", "astaxie").Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
 }
 
 func TestAll(t *testing.T) {

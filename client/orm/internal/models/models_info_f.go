@@ -140,6 +140,7 @@ type FieldInfo struct {
 	OnDelete            string
 	Description         string
 	TimePrecision       *int
+	DBType              string
 }
 
 // NewFieldInfo new field info
@@ -308,6 +309,7 @@ checkType:
 	fi.Null = attrs["null"]
 	fi.Index = attrs["index"]
 	fi.Auto = attrs["auto"]
+	fi.DBType = tags["db_type"]
 	fi.Pk = attrs["pk"]
 	fi.Unique = attrs["unique"]
 
