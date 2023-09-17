@@ -1,15 +1,15 @@
 # Contributing to beego
 
-beego is an open source project.
+Beego is an open-source project.
 
-It is the work of hundreds of contributors. We appreciate your help!
+It is the work of hundreds of contributors. And you could be among them, so we appreciate your help!
 
-Here are instructions to get you started. They are probably not perfect, please let us know if anything feels wrong or
+Here are instructions to get you started. They are probably not perfect, so please let us know if anything feels wrong or
 incomplete.
 
 ## Prepare environment
 
-Firstly, install some tools. Execute those commands **outside** the project. Or those command will modify go.mod file.
+Firstly, you need to install some tools. Execute the commands below **outside** the project. Otherwise, this action will modify the go.mod file.
 
 ```shell script
 go get -u golang.org/x/tools/cmd/goimports
@@ -17,7 +17,7 @@ go get -u golang.org/x/tools/cmd/goimports
 go get -u github.com/gordonklaus/ineffassign
 ```
 
-Put those lines into your pre-commit githook script:
+Put the lines below in your pre-commit git hook script:
 
 ```shell script
 goimports -w -format-only ./
@@ -29,17 +29,17 @@ staticcheck -show-ignored -checks "-ST1017,-U1000,-ST1005,-S1034,-S1012,-SA4006,
 
 ## Prepare middleware
 
-Beego uses many middlewares, including MySQL, Redis, SSDB and so on.
+Beego uses many middlewares, including MySQL, Redis, SSDB amongs't others.
 
-We provide docker compose file to start all middlewares.
+We provide a docker-compose file to start all middlewares.
 
-You can run:
+You can run the following command to start all middlewares:
 
 ```shell script
 docker-compose -f scripts/test_docker_compose.yaml up -d
 ```
 
-Unit tests read addresses from environment, here is an example:
+Unit tests read addresses from environmental variables, you can set them up as shown in the example below:
 
 ```shell script
 export ORM_DRIVER=mysql
@@ -53,23 +53,18 @@ export SSDB_ADDR="192.168.0.105:8888"
 
 ### Pull requests
 
-First, beego follow the gitflow. So please send you pull request to **develop** branch. We will close the pull
-request to master branch.
+Beego follows the gitflow. And as such, please submit your pull request to the **develop** branch. We will close the pull request by merging it into the master branch.
 
-By the way, please don't forget update the `CHANGELOG.md` before you send pull request. 
-You can just add your pull request following 'developing' section in `CHANGELOG.md`. 
+**NOTE:** Don't forget to update the `CHANGELOG.md` file by adding the changes made under the **developing** section.
 We'll release them in the next Beego version.
 
-We are always happy to receive pull requests, and do our best to review them as fast as possible. Not sure if that typo
-is worth a pull request? Do it! We will appreciate it.
+We are always happy to receive pull requests, and do our best to review them as fast as possible. Not sure if that typo is worth a pull request? Just do it! We will appreciate it.
 
 Don't forget to rebase your commits!
 
-If your pull request is not accepted on the first try, don't be discouraged! Sometimes we can make a mistake, please do
-more explaining for us. We will appreciate it.
+If your pull request is rejected, dont be discouraged. Sometimes we make mistakes. You can provide us with more context by explaining your issue as clearly as possible.
 
-We're trying very hard to keep beego simple and fast. We don't want it to do everything for everybody. This means that
-we might decide against incorporating a new feature. But we will give you some advice on how to do it in other way.
+In our pursuit of maintaining Beego's simplicity and speed, we might not accept some feature requests. We don't want it to do everything for everybody. For this reason, we might decide against incorporating a new feature. However, we will provide guidance on achieving the same thing using a different approach
 
 ### Create issues
 
@@ -86,6 +81,6 @@ Also when filing an issue, make sure to answer these five questions:
 
 ### but check existing issues and docs first!
 
-Please take a moment to check that an issue doesn't already exist documenting your bug report or improvement proposal.
-If it does, it never hurts to add a quick "+1" or "I have this problem too". This will help prioritize the most common
+Take a moment to check that an issue documenting your bug report or improvement proposal doesn't already exist.
+If it does, it doesn't hurts to add a quick "+1" or "I have this problem too". This will help prioritize the most common
 problems and requests.
