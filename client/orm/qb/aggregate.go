@@ -14,7 +14,7 @@
 
 package qb
 
-// Aggregate 代表聚合函数，例如 AVG, MAX, MIN 等
+// Aggregate represents the aggregation function, such as AVG, MAX, MIN, etc
 type Aggregate struct {
 	fn    string
 	arg   string
@@ -30,31 +30,6 @@ func (a Aggregate) As(alias string) Aggregate {
 		fn:    a.fn,
 		arg:   a.arg,
 		alias: alias,
-	}
-}
-
-// EQ 例如 C("id").EQ(12)
-func (a Aggregate) EQ(arg any) Predicate {
-	return Predicate{
-		left:  a,
-		op:    opEqual,
-		right: exprOf(arg),
-	}
-}
-
-func (a Aggregate) LT(arg any) Predicate {
-	return Predicate{
-		left:  a,
-		op:    opLT,
-		right: exprOf(arg),
-	}
-}
-
-func (a Aggregate) GT(arg any) Predicate {
-	return Predicate{
-		left:  a,
-		op:    opGT,
-		right: exprOf(arg),
 	}
 }
 

@@ -45,7 +45,7 @@ func NewSelector[T any](cache *models.ModelCache) *Selector[T] {
 		cache: cache,
 	}
 }
-func (s Selector[T]) Build() (*Query, error) {
+func (s *Selector[T]) Build() (*Query, error) {
 	var (
 		t   T
 		err error
@@ -257,16 +257,6 @@ func (s *Selector[T]) Select(cols ...Selectable) *Selector[T] {
 	s.columns = cols
 	return s
 }
-
-/*func (s *Selector[T]) Get(ctx context.Context) (*T, error) {
-	q, err := s.Build()
-	if err != nil {
-		return nil, err
-	}
-	t := new(T)
-	err = s.db.ReadRaw(ctx, t, q.SQL, q.Args...)
-	return t, nil
-}*/
 
 type Selectable interface {
 	selectable()
