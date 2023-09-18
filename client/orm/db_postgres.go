@@ -44,7 +44,7 @@ var postgresOperators = map[string]string{
 
 // postgresql column field types.
 var postgresTypes = map[string]string{
-	"auto":                "serial NOT NULL PRIMARY KEY",
+	"auto":                "bigserial NOT NULL PRIMARY KEY",
 	"pk":                  "NOT NULL PRIMARY KEY",
 	"bool":                "bool",
 	"string":              "varchar(%d)",
