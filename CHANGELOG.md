@@ -1,5 +1,8 @@
 # developing
-
+- [refactor: CONTRIBUTING.md file grammatical improvements](https://github.com/beego/beego/issues/5411)
+- [fix: refactor Count method](https://github.com/beego/beego/pull/5300)
+- [support db_type in ddl ](https://github.com/beego/beego/pull/5404)
+- [orm: PostgreSQL change auto to bigserial](https://github.com/beego/beego/pull/5415)
 # v2.1.1
 - [httplib: fix unstable unit test which use the httplib.org](https://github.com/beego/beego/pull/5232)
 - [rft: remove adapter package](https://github.com/beego/beego/pull/5239)
@@ -14,6 +17,10 @@
 - [refactor cache/redis: Use redisConfig to receive incoming JSON (previously using a map)](https://github.com/beego/beego/pull/5268)
 - [fix: refactor DeleteSQL method](https://github.com/beego/beego/pull/5271)
 - [fix: refactor UpdateSQL method](https://github.com/beego/beego/pull/5274)
+- [fix: refactor UpdateBatch method](https://github.com/beego/beego/pull/5295)
+- [fix: refactor InsertOrUpdate method](https://github.com/beego/beego/pull/5296)
+- [fix: refactor ReadBatch method](https://github.com/beego/beego/pull/5298)
+- [fix: refactor ReadValues method](https://github.com/beego/beego/pull/5303)
 
 ## ORM refactoring
 - [introducing internal/models pkg](https://github.com/beego/beego/pull/5238)

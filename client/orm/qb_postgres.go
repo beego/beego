@@ -172,7 +172,7 @@ func (qb *PostgresQueryBuilder) Update(tables ...string) QueryBuilder {
 	return qb
 }
 
-// Set join the set kv
+// Set join the Set kv
 func (qb *PostgresQueryBuilder) Set(kv ...string) QueryBuilder {
 	qb.tokens = append(qb.tokens, "SET", strings.Join(kv, CommaSpace))
 	return qb
@@ -211,7 +211,7 @@ func (qb *PostgresQueryBuilder) Subquery(sub string, alias string) string {
 	return fmt.Sprintf("(%s) AS %s", sub, alias)
 }
 
-// String join all tokens
+// String join All tokens
 func (qb *PostgresQueryBuilder) String() string {
 	s := strings.Join(qb.tokens, " ")
 	qb.tokens = qb.tokens[:0]

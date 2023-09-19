@@ -74,7 +74,7 @@ type dbBase struct {
 // check dbBase implements dbBaser interface.
 var _ dbBaser = new(dbBase)
 
-// get struct Columns values as interface slice.
+// Get struct Columns values as interface slice.
 func (d *dbBase) collectValues(mi *models.ModelInfo, ind reflect.Value, cols []string, skipAuto bool, insert bool, names *[]string, tz *time.Location) (values []interface{}, autoFields []string, err error) {
 	if names == nil {
 		ns := make([]string, 0, len(cols))
@@ -117,7 +117,7 @@ func (d *dbBase) collectValues(mi *models.ModelInfo, ind reflect.Value, cols []s
 	return
 }
 
-// get one field value in struct column as interface.
+// Get one field value in struct column as interface.
 func (d *dbBase) collectFieldValue(mi *models.ModelInfo, fi *models.FieldInfo, ind reflect.Value, insert bool, tz *time.Location) (interface{}, error) {
 	var value interface{}
 	if fi.Pk {
@@ -528,79 +528,19 @@ func (d *dbBase) InsertValueSQL(names []string, values []interface{}, isMulti bo
 // If your primary key or unique column conflict will update
 // If no will insert
 func (d *dbBase) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *models.ModelInfo, ind reflect.Value, a *alias, args ...string) (int64, error) {
-	args0 := ""
-	iouStr := ""
-	argsMap := map[string]string{}
-	switch a.Driver {
-	case DRMySQL:
-		iouStr = "ON DUPLICATE KEY UPDATE"
-	case DRPostgres:
-		if len(args) == 0 {
-			return 0, fmt.Errorf("`%s` use InsertOrUpdate must have a conflict column", a.DriverName)
-		}
-		args0 = strings.ToLower(args[0])
-		iouStr = fmt.Sprintf("ON CONFLICT (%s) DO UPDATE SET", args0)
-	default:
-		return 0, fmt.Errorf("`%s` nonsupport InsertOrUpdate in beego", a.DriverName)
-	}
-
-	// Get on the key-value pairs
-	for _, v := range args {
-		kv := strings.Split(v, "=")
-		if len(kv) == 2 {
-			argsMap[strings.ToLower(kv[0])] = kv[1]
-		}
-	}
 
 	names := make([]string, 0, len(mi.Fields.DBcols)-1)
-	Q := d.ins.TableQuote()
+
 	values, _, err := d.collectValues(mi, ind, mi.Fields.DBcols, true, true, &names, a.TZ)
 	if err != nil {
 		return 0, err
 	}
 
-	marks := make([]string, len(names))
-	updateValues := make([]interface{}, 0)
-	updates := make([]string, len(names))
-	var conflitValue interface{}
-	for i, v := range names {
-		// identifier in database may not be case-sensitive, so quote it
-		v = fmt.Sprintf("%s%s%s", Q, v, Q)
-		marks[i] = "?"
-		valueStr := argsMap[strings.ToLower(v)]
-		if v == args0 {
-			conflitValue = values[i]
-		}
-		if valueStr != "" {
-			switch a.Driver {
-			case DRMySQL:
-				updates[i] = v + "=" + valueStr
-			case DRPostgres:
-				if conflitValue != nil {
-					// postgres ON CONFLICT DO UPDATE SET can`t use colu=colu+values
-					updates[i] = fmt.Sprintf("%s=(select %s from %s where %s = ? )", v, valueStr, mi.Table, args0)
-					updateValues = append(updateValues, conflitValue)
-				} else {
-					return 0, fmt.Errorf("`%s` must be in front of `%s` in your struct", args0, v)
-				}
-			}
-		} else {
-			updates[i] = v + "=?"
-			updateValues = append(updateValues, values[i])
-		}
+	query, err := d.InsertOrUpdateSQL(names, &values, mi, a, args...)
+
+	if err != nil {
+		return 0, err
 	}
-
-	values = append(values, updateValues...)
-
-	sep := fmt.Sprintf("%s, %s", Q, Q)
-	qmarks := strings.Join(marks, ", ")
-	qupdates := strings.Join(updates, ", ")
-	columns := strings.Join(names, sep)
-
-	// conflitValue maybe is a int,can`t use fmt.Sprintf
-	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s) %s "+qupdates, Q, mi.Table, Q, Q, columns, Q, qmarks, iouStr)
-
-	d.ins.ReplaceMarks(&query)
 
 	if !d.ins.HasReturningID(mi, &query) {
 		res, err := q.ExecContext(ctx, query, values...)
@@ -625,6 +565,117 @@ func (d *dbBase) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *models.Mod
 	return id, err
 }
 
+func (d *dbBase) InsertOrUpdateSQL(names []string, values *[]interface{}, mi *models.ModelInfo, a *alias, args ...string) (string, error) {
+
+	args0 := ""
+
+	switch a.Driver {
+	case DRMySQL:
+	case DRPostgres:
+		if len(args) == 0 {
+			return "", fmt.Errorf("`%s` use InsertOrUpdate must have a conflict column", a.DriverName)
+		}
+		args0 = strings.ToLower(args[0])
+	default:
+		return "", fmt.Errorf("`%s` nonsupport InsertOrUpdate in beego", a.DriverName)
+	}
+
+	argsMap := map[string]string{}
+	// Get on the key-value pairs
+	for _, v := range args {
+		kv := strings.Split(v, "=")
+		if len(kv) == 2 {
+			argsMap[strings.ToLower(kv[0])] = kv[1]
+		}
+	}
+
+	quote := d.ins.TableQuote()
+
+	buf := buffers.Get()
+	defer buffers.Put(buf)
+
+	_, _ = buf.WriteString("INSERT INTO ")
+	_, _ = buf.WriteString(quote)
+	_, _ = buf.WriteString(mi.Table)
+	_, _ = buf.WriteString(quote)
+	_, _ = buf.WriteString(" (")
+
+	for i, name := range names {
+		if i > 0 {
+			_, _ = buf.WriteString(", ")
+		}
+		_, _ = buf.WriteString(quote)
+		_, _ = buf.WriteString(name)
+		_, _ = buf.WriteString(quote)
+	}
+
+	_, _ = buf.WriteString(") VALUES (")
+
+	for i := 0; i < len(names); i++ {
+		if i > 0 {
+			_, _ = buf.WriteString(", ")
+		}
+		_, _ = buf.WriteString("?")
+	}
+
+	_, _ = buf.WriteString(") ")
+
+	switch a.Driver {
+	case DRMySQL:
+		_, _ = buf.WriteString("ON DUPLICATE KEY UPDATE ")
+	case DRPostgres:
+		_, _ = buf.WriteString("ON CONFLICT (")
+		_, _ = buf.WriteString(args0)
+		_, _ = buf.WriteString(") DO UPDATE SET ")
+	}
+
+	var conflitValue interface{}
+	for i, v := range names {
+		if i > 0 {
+			_, _ = buf.WriteString(", ")
+		}
+		// identifier in database may not be case-sensitive, so quote it
+		v = fmt.Sprintf("%s%s%s", quote, v, quote)
+		valueStr := argsMap[strings.ToLower(v)]
+		if v == args0 {
+			conflitValue = (*values)[i]
+		}
+		if valueStr != "" {
+			switch a.Driver {
+			case DRMySQL:
+				_, _ = buf.WriteString(v)
+				_, _ = buf.WriteString("=")
+				_, _ = buf.WriteString(valueStr)
+			case DRPostgres:
+				if conflitValue != nil {
+					// postgres ON CONFLICT DO UPDATE SET can`t use colu=colu+values
+					_, _ = buf.WriteString(v)
+					_, _ = buf.WriteString("=(select ")
+					_, _ = buf.WriteString(valueStr)
+					_, _ = buf.WriteString(" from ")
+					_, _ = buf.WriteString(mi.Table)
+					_, _ = buf.WriteString(" where ")
+					_, _ = buf.WriteString(args0)
+					_, _ = buf.WriteString(" = ? )")
+					*values = append(*values, conflitValue)
+				} else {
+					return "", fmt.Errorf("`%s` must be in front of `%s` in your struct", args0, v)
+				}
+			}
+		} else {
+			_, _ = buf.WriteString(v)
+			_, _ = buf.WriteString("=?")
+			*values = append(*values, (*values)[i])
+		}
+	}
+
+	query := buf.String()
+
+	d.ins.ReplaceMarks(&query)
+
+	return query, nil
+}
+
 // Update execute update sql dbQuerier with given struct reflect.Value.
 func (d *dbBase) Update(ctx context.Context, q dbQuerier, mi *models.ModelInfo, ind reflect.Value, tz *time.Location, cols []string) (int64, error) {
 	pkName, pkValue, ok := getExistPk(mi, ind)
@@ -634,7 +685,7 @@ func (d *dbBase) Update(ctx context.Context, q dbQuerier, mi *models.ModelInfo, 
 
 	var setNames []string
 
-	// if specify cols length is zero, then commit all Columns.
+	// if specify cols length is zero, then commit All Columns.
 	if len(cols) == 0 {
 		cols = mi.Fields.DBcols
 		setNames = make([]string, 0, len(mi.Fields.DBcols)-1)
@@ -819,63 +870,118 @@ func (d *dbBase) UpdateBatch(ctx context.Context, q dbQuerier, qs *querySet, mi 
 
 	join := tables.getJoinSQL()
 
-	var query, T string
+	query := d.UpdateBatchSQL(mi, columns, values, specifyIndexes, join, where)
 
-	Q := d.ins.TableQuote()
-
-	if d.ins.SupportUpdateJoin() {
-		T = "T0."
-	}
-
-	cols := make([]string, 0, len(columns))
-
-	for i, v := range columns {
-		col := fmt.Sprintf("%s%s%s%s", T, Q, v, Q)
-		if c, ok := values[i].(colValue); ok {
-			switch c.opt {
-			case ColAdd:
-				cols = append(cols, col+" = "+col+" + ?")
-			case ColMinus:
-				cols = append(cols, col+" = "+col+" - ?")
-			case ColMultiply:
-				cols = append(cols, col+" = "+col+" * ?")
-			case ColExcept:
-				cols = append(cols, col+" = "+col+" / ?")
-			case ColBitAnd:
-				cols = append(cols, col+" = "+col+" & ?")
-			case ColBitRShift:
-				cols = append(cols, col+" = "+col+" >> ?")
-			case ColBitLShift:
-				cols = append(cols, col+" = "+col+" << ?")
-			case ColBitXOR:
-				cols = append(cols, col+" = "+col+" ^ ?")
-			case ColBitOr:
-				cols = append(cols, col+" = "+col+" | ?")
-			}
-			values[i] = c.value
-		} else {
-			cols = append(cols, col+" = ?")
-		}
-	}
-
-	sets := strings.Join(cols, ", ") + " "
-
-	if d.ins.SupportUpdateJoin() {
-		query = fmt.Sprintf("UPDATE %s%s%s T0 %s%sSET %s%s", Q, mi.Table, Q, specifyIndexes, join, sets, where)
-	} else {
-		supQuery := fmt.Sprintf("SELECT T0.%s%s%s FROM %s%s%s T0 %s%s%s",
-			Q, mi.Fields.Pk.Column, Q,
-			Q, mi.Table, Q,
-			specifyIndexes, join, where)
-		query = fmt.Sprintf("UPDATE %s%s%s SET %sWHERE %s%s%s IN ( %s )", Q, mi.Table, Q, sets, Q, mi.Fields.Pk.Column, Q, supQuery)
-	}
-
-	d.ins.ReplaceMarks(&query)
 	res, err := q.ExecContext(ctx, query, values...)
 	if err == nil {
 		return res.RowsAffected()
 	}
 	return 0, err
+}
+
+func (d *dbBase) UpdateBatchSQL(mi *models.ModelInfo, cols []string, values []interface{}, specifyIndexes, join, where string) string {
+	quote := d.ins.TableQuote()
+
+	buf := buffers.Get()
+	defer buffers.Put(buf)
+
+	_, _ = buf.WriteString("UPDATE ")
+	_, _ = buf.WriteString(quote)
+	_, _ = buf.WriteString(mi.Table)
+	_, _ = buf.WriteString(quote)
+
+	if d.ins.SupportUpdateJoin() {
+		_, _ = buf.WriteString(" T0 ")
+		_, _ = buf.WriteString(specifyIndexes)
+		_, _ = buf.WriteString(join)
+
+		d.buildSetSQL(buf, cols, values)
+
+		_, _ = buf.WriteString(" ")
+		_, _ = buf.WriteString(where)
+	} else {
+		_, _ = buf.WriteString(" ")
+
+		d.buildSetSQL(buf, cols, values)
+
+		_, _ = buf.WriteString(" WHERE ")
+		_, _ = buf.WriteString(quote)
+		_, _ = buf.WriteString(mi.Fields.Pk.Column)
+		_, _ = buf.WriteString(quote)
+		_, _ = buf.WriteString(" IN ( ")
+		_, _ = buf.WriteString("SELECT T0.")
+		_, _ = buf.WriteString(quote)
+		_, _ = buf.WriteString(mi.Fields.Pk.Column)
+		_, _ = buf.WriteString(quote)
+		_, _ = buf.WriteString(" FROM ")
+		_, _ = buf.WriteString(quote)
+		_, _ = buf.WriteString(mi.Table)
+		_, _ = buf.WriteString(quote)
+		_, _ = buf.WriteString(" T0 ")
+		_, _ = buf.WriteString(specifyIndexes)
+		_, _ = buf.WriteString(join)
+		_, _ = buf.WriteString(where)
+		_, _ = buf.WriteString(" )")
+	}
+
+	query := buf.String()
+
+	d.ins.ReplaceMarks(&query)
+
+	return query
+}
+
+func (d *dbBase) buildSetSQL(buf buffers.Buffer, cols []string, values []interface{}) {
+
+	var owner string
+
+	quote := d.ins.TableQuote()
+
+	if d.ins.SupportUpdateJoin() {
+		owner = "T0."
+	}
+
+	_, _ = buf.WriteString("SET ")
+
+	for i, v := range cols {
+		if i > 0 {
+			_, _ = buf.WriteString(", ")
+		}
+		_, _ = buf.WriteString(owner)
+		_, _ = buf.WriteString(quote)
+		_, _ = buf.WriteString(v)
+		_, _ = buf.WriteString(quote)
+		_, _ = buf.WriteString(" = ")
+		if c, ok := values[i].(colValue); ok {
+			_, _ = buf.WriteString(owner)
+			_, _ = buf.WriteString(quote)
+			_, _ = buf.WriteString(v)
+			_, _ = buf.WriteString(quote)
+			switch c.opt {
+			case ColAdd:
+				_, _ = buf.WriteString(" + ?")
+			case ColMinus:
+				_, _ = buf.WriteString(" - ?")
+			case ColMultiply:
+				_, _ = buf.WriteString(" * ?")
+			case ColExcept:
+				_, _ = buf.WriteString(" / ?")
+			case ColBitAnd:
+				_, _ = buf.WriteString(" & ?")
+			case ColBitRShift:
+				_, _ = buf.WriteString(" >> ?")
+			case ColBitLShift:
+				_, _ = buf.WriteString(" << ?")
+			case ColBitXOR:
+				_, _ = buf.WriteString(" ^ ?")
+			case ColBitOr:
+				_, _ = buf.WriteString(" | ?")
+			}
+			values[i] = c.value
+		} else {
+			_, _ = buf.WriteString("?")
+		}
+	}
 }
 
 // delete related records.
@@ -1021,11 +1127,6 @@ func (d *dbBase) ReadBatch(ctx context.Context, q dbQuerier, qs *querySet, mi *m
 		RegisterModel(container)
 	}
 
-	rlimit := qs.limit
-	offset := qs.offset
-
-	Q := d.ins.TableQuote()
-
 	var tCols []string
 	if len(cols) > 0 {
 		hasRel := len(qs.related) > 0 || qs.relDepth > 0
@@ -1057,44 +1158,18 @@ func (d *dbBase) ReadBatch(ctx context.Context, q dbQuerier, qs *querySet, mi *m
 		tCols = mi.Fields.DBcols
 	}
 
-	colsNum := len(tCols)
-	sep := fmt.Sprintf("%s, T0.%s", Q, Q)
-	sels := fmt.Sprintf("T0.%s%s%s", Q, strings.Join(tCols, sep), Q)
-
 	tables := newDbTables(mi, d.ins)
 	tables.parseRelated(qs.related, qs.relDepth)
 
-	where, args := tables.getCondSQL(cond, false, tz)
-	groupBy := tables.getGroupSQL(qs.groups)
-	orderBy := tables.getOrderSQL(qs.orders)
-	limit := tables.getLimitSQL(mi, offset, rlimit)
-	join := tables.getJoinSQL()
-	specifyIndexes := tables.getIndexSql(mi.Table, qs.useIndex, qs.indexes)
+	colsNum := len(tCols)
 
 	for _, tbl := range tables.tables {
 		if tbl.sel {
 			colsNum += len(tbl.mi.Fields.DBcols)
-			sep := fmt.Sprintf("%s, %s.%s", Q, tbl.index, Q)
-			sels += fmt.Sprintf(", %s.%s%s%s", tbl.index, Q, strings.Join(tbl.mi.Fields.DBcols, sep), Q)
 		}
 	}
 
-	sqlSelect := "SELECT"
-	if qs.distinct {
-		sqlSelect += " DISTINCT"
-	}
-	if qs.aggregate != "" {
-		sels = qs.aggregate
-	}
-	query := fmt.Sprintf("%s %s FROM %s%s%s T0 %s%s%s%s%s%s",
-		sqlSelect, sels, Q, mi.Table, Q,
-		specifyIndexes, join, where, groupBy, orderBy, limit)
-
-	if qs.forUpdate {
-		query += " FOR UPDATE"
-	}
-
-	d.ins.ReplaceMarks(&query)
+	query, args := d.readBatchSQL(tables, tCols, cond, qs, mi, tz)
 
 	rs, err := q.QueryContext(ctx, query, args...)
 	if err != nil {
@@ -1105,7 +1180,7 @@ func (d *dbBase) ReadBatch(ctx context.Context, q dbQuerier, qs *querySet, mi *m
 
 	slice := ind
 	if unregister {
-		mi, _ = defaultModelCache.get(name)
+		mi, _ = defaultModelCache.Get(name)
 		tCols = mi.Fields.DBcols
 		colsNum = len(tCols)
 	}
@@ -1206,7 +1281,7 @@ func (d *dbBase) ReadBatch(ctx context.Context, q dbQuerier, qs *querySet, mi *m
 			ind.Set(slice)
 		} else {
 			// when a result is empty and container is nil
-			// to set an empty container
+			// to Set an empty container
 			if ind.IsNil() {
 				ind.Set(reflect.MakeSlice(ind.Type(), 0, 0))
 			}
@@ -1216,32 +1291,130 @@ func (d *dbBase) ReadBatch(ctx context.Context, q dbQuerier, qs *querySet, mi *m
 	return cnt, nil
 }
 
-// Count excute count sql and return count result int64.
-func (d *dbBase) Count(ctx context.Context, q dbQuerier, qs *querySet, mi *models.ModelInfo, cond *Condition, tz *time.Location) (cnt int64, err error) {
-	tables := newDbTables(mi, d.ins)
-	tables.parseRelated(qs.related, qs.relDepth)
+func (d *dbBase) readBatchSQL(tables *dbTables, tCols []string, cond *Condition, qs *querySet, mi *models.ModelInfo, tz *time.Location) (string, []interface{}) {
+	cols := d.preProcCols(tCols) // pre process columns
+
+	buf := buffers.Get()
+	defer buffers.Put(buf)
+
+	args := d.readSQL(buf, tables, cols, cond, qs, mi, tz)
+
+	query := buf.String()
+
+	d.ins.ReplaceMarks(&query)
+
+	return query, args
+}
+
+func (d *dbBase) preProcCols(cols []string) []string {
+	res := make([]string, len(cols))
+
+	quote := d.ins.TableQuote()
+	for i, col := range cols {
+		res[i] = fmt.Sprintf("T0.%s%s%s", quote, col, quote)
+	}
+
+	return res
+}
+
+// readSQL generate a select sql string and return args
+// ReadBatch and ReadValues methods will reuse this method.
+func (d *dbBase) readSQL(buf buffers.Buffer, tables *dbTables, tCols []string, cond *Condition, qs *querySet, mi *models.ModelInfo, tz *time.Location) []interface{} {
+
+	quote := d.ins.TableQuote()
 
 	where, args := tables.getCondSQL(cond, false, tz)
 	groupBy := tables.getGroupSQL(qs.groups)
-	tables.getOrderSQL(qs.orders)
+	orderBy := tables.getOrderSQL(qs.orders)
+	limit := tables.getLimitSQL(mi, qs.offset, qs.limit)
 	join := tables.getJoinSQL()
 	specifyIndexes := tables.getIndexSql(mi.Table, qs.useIndex, qs.indexes)
 
-	Q := d.ins.TableQuote()
+	_, _ = buf.WriteString("SELECT ")
 
-	query := fmt.Sprintf("SELECT COUNT(*) FROM %s%s%s T0 %s%s%s%s",
-		Q, mi.Table, Q,
-		specifyIndexes, join, where, groupBy)
-
-	if groupBy != "" {
-		query = fmt.Sprintf("SELECT COUNT(*) FROM (%s) AS T", query)
+	if qs.distinct {
+		_, _ = buf.WriteString("DISTINCT ")
 	}
 
-	d.ins.ReplaceMarks(&query)
+	if qs.aggregate == "" {
+		for i, tCol := range tCols {
+			if i > 0 {
+				_, _ = buf.WriteString(", ")
+			}
+			_, _ = buf.WriteString(tCol)
+		}
+
+		for _, tbl := range tables.tables {
+			if tbl.sel {
+				_, _ = buf.WriteString(", ")
+				for i, DBcol := range tbl.mi.Fields.DBcols {
+					if i > 0 {
+						_, _ = buf.WriteString(", ")
+					}
+					_, _ = buf.WriteString(tbl.index)
+					_, _ = buf.WriteString(".")
+					_, _ = buf.WriteString(quote)
+					_, _ = buf.WriteString(DBcol)
+					_, _ = buf.WriteString(quote)
+				}
+			}
+		}
+	} else {
+		_, _ = buf.WriteString(qs.aggregate)
+	}
+
+	_, _ = buf.WriteString(" FROM ")
+	_, _ = buf.WriteString(quote)
+	_, _ = buf.WriteString(mi.Table)
+	_, _ = buf.WriteString(quote)
+	_, _ = buf.WriteString(" T0 ")
+	_, _ = buf.WriteString(specifyIndexes)
+	_, _ = buf.WriteString(join)
+	_, _ = buf.WriteString(where)
+	_, _ = buf.WriteString(groupBy)
+	_, _ = buf.WriteString(orderBy)
+	_, _ = buf.WriteString(limit)
+
+	if qs.forUpdate {
+		_, _ = buf.WriteString(" FOR UPDATE")
+	}
+
+	return args
+}
+
+// Count excute count sql and return count result int64.
+func (d *dbBase) Count(ctx context.Context, q dbQuerier, qs *querySet, mi *models.ModelInfo, cond *Condition, tz *time.Location) (cnt int64, err error) {
+
+	query, args := d.countSQL(qs, mi, cond, tz)
 
 	row := q.QueryRowContext(ctx, query, args...)
 	err = row.Scan(&cnt)
 	return
+}
+
+func (d *dbBase) countSQL(qs *querySet, mi *models.ModelInfo, cond *Condition, tz *time.Location) (string, []interface{}) {
+	tables := newDbTables(mi, d.ins)
+	tables.parseRelated(qs.related, qs.relDepth)
+
+	buf := buffers.Get()
+	defer buffers.Put(buf)
+
+	if len(qs.groups) > 0 {
+		_, _ = buf.WriteString("SELECT COUNT(*) FROM (")
+	}
+
+	qs.aggregate = "COUNT(*)"
+	args := d.readSQL(buf, tables, nil, cond, qs, mi, tz)
+
+	if len(qs.groups) > 0 {
+		_, _ = buf.WriteString(") AS T")
+	}
+
+	query := buf.String()
+
+	d.ins.ReplaceMarks(&query)
+
+	return query, args
 }
 
 // GenerateOperatorSQL generate sql with replacing operator string placeholders and replaced values.
@@ -1309,7 +1482,7 @@ func (d *dbBase) GenerateOperatorLeftCol(*models.FieldInfo, string, *string) {
 	// default not use
 }
 
-// set values to struct column.
+// Set values to struct column.
 func (d *dbBase) setColsValues(mi *models.ModelInfo, ind *reflect.Value, cols []string, values []interface{}, tz *time.Location) {
 	for i, column := range cols {
 		val := reflect.Indirect(reflect.ValueOf(values[i])).Interface()
@@ -1495,7 +1668,7 @@ end:
 	return value, nil
 }
 
-// set one value to struct column field.
+// Set one value to struct column field.
 func (d *dbBase) setFieldValue(fi *models.FieldInfo, value interface{}, field reflect.Value) (interface{}, error) {
 	fieldType := fi.FieldType
 	isNative := !fi.IsFielder
@@ -1678,7 +1851,7 @@ setValue:
 		fd := field.Addr().Interface().(models.Fielder)
 		err := fd.SetRaw(value)
 		if err != nil {
-			err = fmt.Errorf("converted value `%v` set to Fielder `%s` failed, err: %s", value, fi.FullName, err)
+			err = fmt.Errorf("converted value `%v` Set to Fielder `%s` failed, err: %s", value, fi.FullName, err)
 			return nil, err
 		}
 	}
@@ -1749,25 +1922,7 @@ func (d *dbBase) ReadValues(ctx context.Context, q dbQuerier, qs *querySet, mi *
 		}
 	}
 
-	where, args := tables.getCondSQL(cond, false, tz)
-	groupBy := tables.getGroupSQL(qs.groups)
-	orderBy := tables.getOrderSQL(qs.orders)
-	limit := tables.getLimitSQL(mi, qs.offset, qs.limit)
-	join := tables.getJoinSQL()
-	specifyIndexes := tables.getIndexSql(mi.Table, qs.useIndex, qs.indexes)
-
-	sels := strings.Join(cols, ", ")
-
-	sqlSelect := "SELECT"
-	if qs.distinct {
-		sqlSelect += " DISTINCT"
-	}
-	query := fmt.Sprintf("%s %s FROM %s%s%s T0 %s%s%s%s%s%s",
-		sqlSelect, sels,
-		Q, mi.Table, Q,
-		specifyIndexes, join, where, groupBy, orderBy, limit)
-
-	d.ins.ReplaceMarks(&query)
+	query, args := d.readValuesSQL(tables, cols, qs, mi, cond, tz)
 
 	rs, err := q.QueryContext(ctx, query, args...)
 	if err != nil {
@@ -1863,6 +2018,19 @@ func (d *dbBase) ReadValues(ctx context.Context, q dbQuerier, qs *querySet, mi *
 	return cnt, nil
 }
 
+func (d *dbBase) readValuesSQL(tables *dbTables, cols []string, qs *querySet, mi *models.ModelInfo, cond *Condition, tz *time.Location) (string, []interface{}) {
+	buf := buffers.Get()
+	defer buffers.Put(buf)
+
+	args := d.readSQL(buf, tables, cols, cond, qs, mi, tz)
+
+	query := buf.String()
+
+	d.ins.ReplaceMarks(&query)
+
+	return query, args
+}
+
 // SupportUpdateJoin flag of update joined record.
 func (d *dbBase) SupportUpdateJoin() bool {
 	return true
@@ -1902,12 +2070,12 @@ func (d *dbBase) TimeToDB(t *time.Time, tz *time.Location) {
 	*t = t.In(tz)
 }
 
-// DbTypes get database types.
+// DbTypes Get database types.
 func (d *dbBase) DbTypes() map[string]string {
 	return nil
 }
 
-// GetTables gt all tables.
+// GetTables gt All tables.
 func (d *dbBase) GetTables(db dbQuerier) (map[string]bool, error) {
 	tables := make(map[string]bool)
 	query := d.ins.ShowTablesQuery()
@@ -1932,7 +2100,7 @@ func (d *dbBase) GetTables(db dbQuerier) (map[string]bool, error) {
 	return tables, rows.Err()
 }
 
-// GetColumns get all cloumns in table.
+// GetColumns Get All cloumns in table.
 func (d *dbBase) GetColumns(ctx context.Context, db dbQuerier, table string) (map[string][3]string, error) {
 	columns := make(map[string][3]string)
 	query := d.ins.ShowColumnsQuery(table)

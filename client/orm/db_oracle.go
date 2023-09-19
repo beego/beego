@@ -72,17 +72,17 @@ func newdbBaseOracle() dbBaser {
 	return b
 }
 
-// OperatorSQL get oracle operator.
+// OperatorSQL Get oracle operator.
 func (d *dbBaseOracle) OperatorSQL(operator string) string {
 	return oracleOperators[operator]
 }
 
-// DbTypes get oracle table field types.
+// DbTypes Get oracle table field types.
 func (d *dbBaseOracle) DbTypes() map[string]string {
 	return oracleTypes
 }
 
-// ShowTablesQuery show all the tables in database
+// ShowTablesQuery show All the tables in database
 func (d *dbBaseOracle) ShowTablesQuery() string {
 	return "SELECT TABLE_NAME FROM USER_TABLES"
 }

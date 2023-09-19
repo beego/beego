@@ -48,6 +48,7 @@ var supportTag = map[string]int{
 	"type":         2,
 	"description":  2,
 	"precision":    2,
+	"db_type":      2,
 }
 
 type fn func(string) string

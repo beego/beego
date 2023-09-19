@@ -50,7 +50,7 @@ var (
 
 type argAny []interface{}
 
-// get interface by index from interface slice
+// Get interface by index from interface slice
 func (a argAny) Get(i int, args ...interface{}) (r interface{}) {
 	if i >= 0 && i < len(a) {
 		r = a[i]
@@ -88,7 +88,7 @@ func ValuesCompare(is bool, a interface{}, args ...interface{}) (ok bool, err er
 	}
 	ok = is && ok || !is && !ok
 	if !ok {
-		err = fmt.Errorf("expected: `%v`, get `%v`", b, a)
+		err = fmt.Errorf("expected: `%v`, Get `%v`", b, a)
 	}
 
 wrongArg:
@@ -217,7 +217,7 @@ func TestSyncDb(t *testing.T) {
 	err := RunSyncdb("default", true, Debug)
 	throwFail(t, err)
 
-	defaultModelCache.clean()
+	defaultModelCache.Clean()
 }
 
 func TestRegisterModels(_ *testing.T) {
@@ -253,10 +253,10 @@ func TestModelSyntax(t *testing.T) {
 	user := &User{}
 	ind := reflect.ValueOf(user).Elem()
 	fn := models.GetFullName(ind.Type())
-	_, ok := defaultModelCache.getByFullName(fn)
+	_, ok := defaultModelCache.GetByFullName(fn)
 	throwFail(t, AssertIs(ok, true))
 
-	mi, ok := defaultModelCache.get("user")
+	mi, ok := defaultModelCache.Get("user")
 	throwFail(t, AssertIs(ok, true))
 	if ok {
 		throwFail(t, AssertIs(mi.Fields.GetByName("ShouldSkip") == nil, true))
@@ -283,7 +283,7 @@ var DataValues = map[string]interface{}{
 	"Uint8":    uint8(1<<8 - 1),
 	"Uint16":   uint16(1<<16 - 1),
 	"Uint32":   uint32(1<<32 - 1),
-	"Uint64":   uint64(1<<63 - 1), // uint64 values with high bit set are not supported
+	"Uint64":   uint64(1<<63 - 1), // uint64 values with high bit Set are not supported
 	"Float32":  float32(100.1234),
 	"Float64":  float64(100.1234),
 	"Decimal":  float64(100.1234),
@@ -774,7 +774,7 @@ func TestInsertTestData(t *testing.T) {
 
 	posts := []*Post{
 		{User: users[0], Tags: []*Tag{tags[0]}, Title: "Introduction", Content: `Go is a new language. Although it borrows ideas from existing languages, it has unusual properties that make effective Go programs different in character from programs written in its relatives. A straightforward translation of a C++ or Java program into Go is unlikely to produce a satisfactory result—Java programs are written in Java, not Go. On the other hand, thinking about the problem from a Go perspective could produce a successful but quite different program. In other words, to write Go well, it's important to understand its properties and idioms. It's also important to know the established conventions for programming in Go, such as naming, formatting, program construction, and so on, so that programs you write will be easy for other Go programmers to understand.
-This document gives tips for writing clear, idiomatic Go code. It augments the language specification, the Tour of Go, and How to Write Go Code, all of which you should read first.`},
+This document gives tips for writing clear, idiomatic Go code. It augments the language specification, the Tour of Go, and How to Write Go Code, All of which you should read first.`},
 		{User: users[1], Tags: []*Tag{tags[0], tags[1]}, Title: "Examples", Content: `The Go package sources are intended to serve not only as the core library but also as examples of how to use the language. Moreover, many of the packages contain working, self-contained executable examples you can run directly from the golang.org web site, such as this one (click on the word "Example" to open it up). If you have a question about how to approach a problem or how something might be implemented, the documentation, code and examples in the library can provide answers, ideas and background.`},
 		{User: users[1], Tags: []*Tag{tags[0], tags[2]}, Title: "Formatting", Content: `Formatting issues are the most contentious but the least consequential. People can adapt to different formatting styles but it's better if they don't have to, and less time is devoted to the topic if everyone adheres to the same style. The problem is how to approach this Utopia without a long prescriptive style guide.
 With Go we take an unusual approach and let the machine take care of most formatting issues. The gofmt program (also available as go fmt, which operates at the package level rather than source file level) reads a Go program and emits the source in a standard style of indentation and vertical alignment, retaining and if necessary reformatting comments. If you want to know how to handle some new layout situation, run gofmt; if the answer doesn't seem right, rearrange your program (or file a bug about gofmt), don't work around it.`},
@@ -1140,7 +1140,10 @@ func TestOffset(t *testing.T) {
 	throwFail(t, AssertIs(num, 2))
 }
 
-func TestOrderBy(t *testing.T) {
+func TestCountOrderBy(t *testing.T) {
+	if IsPostgres {
+		return
+	}
 	qs := dORM.QueryTable("user")
 	num, err := qs.OrderBy("-status").Filter("user_name", "nobody").Count()
 	throwFail(t, err)
@@ -1173,6 +1176,61 @@ func TestOrderBy(t *testing.T) {
 		throwFail(t, err)
 		throwFail(t, AssertIs(num, 1))
 	}
+}
+
+func TestOrderBy(t *testing.T) {
+	var users []*User
+	qs := dORM.QueryTable("user")
+	num, err := qs.OrderBy("-status").Filter("user_name", "nobody").All(&users)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	num, err = qs.OrderBy("status").Filter("user_name", "slene").All(&users)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	num, err = qs.OrderBy("-profile__age").Filter("user_name", "astaxie").All(&users)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	num, err = qs.OrderClauses(
+		order_clause.Clause(
+			order_clause.Column(`profile__age`),
+			order_clause.SortDescending(),
+		),
+	).Filter("user_name", "astaxie").All(&users)
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	if IsMysql {
+		num, err = qs.OrderClauses(
+			order_clause.Clause(
+				order_clause.Column(`rand()`),
+				order_clause.Raw(),
+			),
+		).Filter("user_name", "astaxie").All(&users)
+		throwFail(t, err)
+		throwFail(t, AssertIs(num, 1))
+	}
+}
+
+func TestCount(t *testing.T) {
+	qs := dORM.QueryTable("user")
+	num, err := qs.Filter("user_name", "nobody").Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	num, err = qs.Filter("user_name", "slene").Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	num, err = qs.Filter("user_name", "astaxie").Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
+
+	num, err = qs.Filter("user_name", "astaxie").Count()
+	throwFail(t, err)
+	throwFail(t, AssertIs(num, 1))
 }
 
 func TestAll(t *testing.T) {
@@ -2347,7 +2405,7 @@ func TestTransactionIsolationLevel(t *testing.T) {
 	throwFail(t, err)
 	throwFail(t, AssertIs(num, 0))
 
-	// o2 commit and query tag table, get the result
+	// o2 commit and query tag table, Get the result
 	to2.Commit()
 	num, err = o2.QueryTable("tag").Filter("name", "test-transaction").Count()
 	throwFail(t, err)
@@ -2631,9 +2689,9 @@ func TestIgnoreCaseTag(t *testing.T) {
 		Name02 string `orm:"COLUMN(Name)"`
 		Name03 string `orm:"Column(name)"`
 	}
-	defaultModelCache.clean()
+	defaultModelCache.Clean()
 	RegisterModel(&testTagModel{})
-	info, ok := defaultModelCache.get("test_tag_model")
+	info, ok := defaultModelCache.Get("test_tag_model")
 	throwFail(t, AssertIs(ok, true))
 	throwFail(t, AssertNot(info, nil))
 	if t == nil {
