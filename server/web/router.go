@@ -1357,19 +1357,15 @@ func (p *ControllerRegister) GetAllControllerInfo() (routerInfos []*ControllerIn
 }
 
 func composeControllerInfos(tree *Tree, routerInfos *[]*ControllerInfo) {
-	if tree.fixrouters != nil {
-		for _, subTree := range tree.fixrouters {
-			composeControllerInfos(subTree, routerInfos)
-		}
+	for _, subTree := range tree.fixrouters {
+		composeControllerInfos(subTree, routerInfos)
 	}
 	if tree.wildcard != nil {
 		composeControllerInfos(tree.wildcard, routerInfos)
 	}
-	if tree.leaves != nil {
-		for _, l := range tree.leaves {
-			if c, ok := l.runObject.(*ControllerInfo); ok {
-				*routerInfos = append(*routerInfos, c)
-			}
+	for _, l := range tree.leaves {
+		if c, ok := l.runObject.(*ControllerInfo); ok {
+			*routerInfos = append(*routerInfos, c)
 		}
 	}
 }
