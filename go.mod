@@ -11,7 +11,7 @@ require (
 	github.com/couchbase/go-couchbase v0.1.0
 	github.com/elastic/go-elasticsearch/v6 v6.8.10
 	github.com/elazarl/go-bindata-assetfs v1.0.1
-	github.com/go-kit/kit v0.12.1-0.20220826005032-a7ba4fa4e289
+	github.com/go-kit/kit v0.13.0
 	github.com/go-kit/log v0.2.1
 	github.com/go-redis/redis/v7 v7.4.0
 	github.com/go-sql-driver/mysql v1.7.0
