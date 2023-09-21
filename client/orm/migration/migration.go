@@ -136,7 +136,7 @@ func (m *Migration) addOrUpdateRecord(name, status string) error {
 		status = "rollback"
 		p, err := o.Raw("update migrations set status = ?, rollback_statements = ?, created_at = ? where name = ?").Prepare()
 		if err != nil {
-			return nil
+			return err
 		}
 		_, err = p.Exec(status, strings.Join(m.sqls, "; "), time.Now().Format(DBDateFormat), name)
 		return err
