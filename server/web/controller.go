@@ -312,19 +312,17 @@ func (c *Controller) RenderBytes() ([]byte, error) {
 	if err == nil && c.Layout != "" {
 		c.Data["LayoutContent"] = template.HTML(buf.String())
 
-		if c.LayoutSections != nil {
-			for sectionName, sectionTpl := range c.LayoutSections {
-				if sectionTpl == "" {
-					c.Data[sectionName] = ""
-					continue
-				}
-				buf.Reset()
-				err = ExecuteViewPathTemplate(&buf, sectionTpl, c.viewPath(), c.Data)
-				if err != nil {
-					return nil, err
-				}
-				c.Data[sectionName] = template.HTML(buf.String())
+		for sectionName, sectionTpl := range c.LayoutSections {
+			if sectionTpl == "" {
+				c.Data[sectionName] = ""
+				continue
 			}
+			buf.Reset()
+			err = ExecuteViewPathTemplate(&buf, sectionTpl, c.viewPath(), c.Data)
+			if err != nil {
+				return nil, err
+			}
+			c.Data[sectionName] = template.HTML(buf.String())
 		}
 
 		buf.Reset()
@@ -345,13 +343,11 @@ func (c *Controller) renderTemplate() (bytes.Buffer, error) {
 		buildFiles := []string{c.TplName}
 		if c.Layout != "" {
 			buildFiles = append(buildFiles, c.Layout)
-			if c.LayoutSections != nil {
-				for _, sectionTpl := range c.LayoutSections {
-					if sectionTpl == "" {
-						continue
-					}
-					buildFiles = append(buildFiles, sectionTpl)
+			for _, sectionTpl := range c.LayoutSections {
+				if sectionTpl == "" {
+					continue
 				}
+				buildFiles = append(buildFiles, sectionTpl)
 			}
 		}
 		BuildTemplate(c.viewPath(), buildFiles...)
