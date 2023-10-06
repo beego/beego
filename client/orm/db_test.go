@@ -912,7 +912,7 @@ func TestDbBase_readBatchSQL(t *testing.T) {
 		db   *dbBase
 
 		tCols []string
-		qs    *querySet
+		qs    querySet
 
 		wantRes  string
 		wantArgs []interface{}
@@ -923,7 +923,7 @@ func TestDbBase_readBatchSQL(t *testing.T) {
 				ins: newdbBaseMysql(),
 			},
 			tCols: []string{"name", "score"},
-			qs: &querySet{
+			qs: querySet{
 				mi:     mi,
 				cond:   cond,
 				limit:  10,
@@ -949,7 +949,7 @@ func TestDbBase_readBatchSQL(t *testing.T) {
 				ins: newdbBaseMysql(),
 			},
 			tCols: []string{"name", "score"},
-			qs: &querySet{
+			qs: querySet{
 				mi:     mi,
 				cond:   cond,
 				limit:  10,
@@ -976,7 +976,7 @@ func TestDbBase_readBatchSQL(t *testing.T) {
 				ins: newdbBaseMysql(),
 			},
 			tCols: []string{"name", "score"},
-			qs: &querySet{
+			qs: querySet{
 				mi:     mi,
 				cond:   cond,
 				limit:  10,
@@ -1003,7 +1003,7 @@ func TestDbBase_readBatchSQL(t *testing.T) {
 				ins: newdbBaseMysql(),
 			},
 			tCols: []string{"name", "score"},
-			qs: &querySet{
+			qs: querySet{
 				mi:     mi,
 				cond:   cond,
 				limit:  10,
@@ -1031,7 +1031,7 @@ func TestDbBase_readBatchSQL(t *testing.T) {
 				ins: newdbBaseMysql(),
 			},
 			tCols: []string{"name", "score"},
-			qs: &querySet{
+			qs: querySet{
 				mi:     mi,
 				cond:   cond,
 				limit:  10,
@@ -1058,7 +1058,7 @@ func TestDbBase_readBatchSQL(t *testing.T) {
 				ins: newdbBasePostgres(),
 			},
 			tCols: []string{"name", "score"},
-			qs: &querySet{
+			qs: querySet{
 				mi:     mi,
 				cond:   cond,
 				limit:  10,
@@ -1082,7 +1082,7 @@ func TestDbBase_readBatchSQL(t *testing.T) {
 				ins: newdbBasePostgres(),
 			},
 			tCols: []string{"name", "score"},
-			qs: &querySet{
+			qs: querySet{
 				mi:     mi,
 				cond:   cond,
 				limit:  10,
@@ -1107,7 +1107,7 @@ func TestDbBase_readBatchSQL(t *testing.T) {
 				ins: newdbBasePostgres(),
 			},
 			tCols: []string{"name", "score"},
-			qs: &querySet{
+			qs: querySet{
 				mi:     mi,
 				cond:   cond,
 				limit:  10,
@@ -1132,7 +1132,7 @@ func TestDbBase_readBatchSQL(t *testing.T) {
 				ins: newdbBasePostgres(),
 			},
 			tCols: []string{"name", "score"},
-			qs: &querySet{
+			qs: querySet{
 				mi:     mi,
 				cond:   cond,
 				limit:  10,
@@ -1158,7 +1158,7 @@ func TestDbBase_readBatchSQL(t *testing.T) {
 				ins: newdbBasePostgres(),
 			},
 			tCols: []string{"name", "score"},
-			qs: &querySet{
+			qs: querySet{
 				mi:     mi,
 				cond:   cond,
 				limit:  10,
@@ -1217,7 +1217,7 @@ func TestDbBase_readValuesSQL(t *testing.T) {
 		db   *dbBase
 
 		cols []string
-		qs   *querySet
+		qs   querySet
 
 		wantRes  string
 		wantArgs []interface{}
@@ -1228,7 +1228,7 @@ func TestDbBase_readValuesSQL(t *testing.T) {
 				ins: newdbBaseMysql(),
 			},
 			cols: []string{"T0.`name` name", "T0.`age` age", "T0.`score` score"},
-			qs: &querySet{
+			qs: querySet{
 				mi:     mi,
 				cond:   cond,
 				limit:  10,
@@ -1252,7 +1252,7 @@ func TestDbBase_readValuesSQL(t *testing.T) {
 				ins: newdbBaseMysql(),
 			},
 			cols: []string{"T0.`name` name", "T0.`age` age", "T0.`score` score"},
-			qs: &querySet{
+			qs: querySet{
 				mi:     mi,
 				cond:   cond,
 				limit:  10,
@@ -1277,7 +1277,7 @@ func TestDbBase_readValuesSQL(t *testing.T) {
 				ins: newdbBasePostgres(),
 			},
 			cols: []string{`T0."name" name`, `T0."age" age`, `T0."score" score`},
-			qs: &querySet{
+			qs: querySet{
 				mi:     mi,
 				cond:   cond,
 				limit:  10,
@@ -1299,7 +1299,7 @@ func TestDbBase_readValuesSQL(t *testing.T) {
 				ins: newdbBasePostgres(),
 			},
 			cols: []string{`T0."name" name`, `T0."age" age`, `T0."score" score`},
-			qs: &querySet{
+			qs: querySet{
 				mi:     mi,
 				cond:   cond,
 				limit:  10,
@@ -1354,7 +1354,7 @@ func TestDbBase_countSQL(t *testing.T) {
 		name string
 		db   *dbBase
 
-		qs *querySet
+		qs querySet
 
 		wantRes  string
 		wantArgs []interface{}
@@ -1364,7 +1364,7 @@ func TestDbBase_countSQL(t *testing.T) {
 			db: &dbBase{
 				ins: newdbBaseMysql(),
 			},
-			qs: &querySet{
+			qs: querySet{
 				mi:       mi,
 				cond:     cond,
 				useIndex: 1,
@@ -1380,7 +1380,7 @@ func TestDbBase_countSQL(t *testing.T) {
 			db: &dbBase{
 				ins: newdbBaseMysql(),
 			},
-			qs: &querySet{
+			qs: querySet{
 				mi:       mi,
 				cond:     cond,
 				useIndex: 1,
@@ -1397,7 +1397,7 @@ func TestDbBase_countSQL(t *testing.T) {
 			db: &dbBase{
 				ins: newdbBasePostgres(),
 			},
-			qs: &querySet{
+			qs: querySet{
 				mi:       mi,
 				cond:     cond,
 				related:  make([]string, 0),
@@ -1411,7 +1411,7 @@ func TestDbBase_countSQL(t *testing.T) {
 			db: &dbBase{
 				ins: newdbBasePostgres(),
 			},
-			qs: &querySet{
+			qs: querySet{
 				mi:       mi,
 				cond:     cond,
 				related:  make([]string, 0),
