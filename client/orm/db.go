@@ -1094,7 +1094,7 @@ func (d *dbBase) DeleteBatch(ctx context.Context, q dbQuerier, qs *querySet, mi 
 }
 
 // ReadBatch read related records.
-func (d *dbBase) ReadBatch(ctx context.Context, q dbQuerier, qs *querySet, mi *models.ModelInfo, cond *Condition, container interface{}, tz *time.Location, cols []string) (int64, error) {
+func (d *dbBase) ReadBatch(ctx context.Context, q dbQuerier, qs querySet, mi *models.ModelInfo, cond *Condition, container interface{}, tz *time.Location, cols []string) (int64, error) {
 	val := reflect.ValueOf(container)
 	ind := reflect.Indirect(val)
 
@@ -1291,7 +1291,7 @@ func (d *dbBase) ReadBatch(ctx context.Context, q dbQuerier, qs *querySet, mi *m
 	return cnt, nil
 }
 
-func (d *dbBase) readBatchSQL(tables *dbTables, tCols []string, cond *Condition, qs *querySet, mi *models.ModelInfo, tz *time.Location) (string, []interface{}) {
+func (d *dbBase) readBatchSQL(tables *dbTables, tCols []string, cond *Condition, qs querySet, mi *models.ModelInfo, tz *time.Location) (string, []interface{}) {
 	cols := d.preProcCols(tCols) // pre process columns
 
 	buf := buffers.Get()
@@ -1319,7 +1319,7 @@ func (d *dbBase) preProcCols(cols []string) []string {
 
 // readSQL generate a select sql string and return args
 // ReadBatch and ReadValues methods will reuse this method.
-func (d *dbBase) readSQL(buf buffers.Buffer, tables *dbTables, tCols []string, cond *Condition, qs *querySet, mi *models.ModelInfo, tz *time.Location) []interface{} {
+func (d *dbBase) readSQL(buf buffers.Buffer, tables *dbTables, tCols []string, cond *Condition, qs querySet, mi *models.ModelInfo, tz *time.Location) []interface{} {
 
 	quote := d.ins.TableQuote()
 
@@ -1383,7 +1383,7 @@ func (d *dbBase) readSQL(buf buffers.Buffer, tables *dbTables, tCols []string, c
 }
 
 // Count excute count sql and return count result int64.
-func (d *dbBase) Count(ctx context.Context, q dbQuerier, qs *querySet, mi *models.ModelInfo, cond *Condition, tz *time.Location) (cnt int64, err error) {
+func (d *dbBase) Count(ctx context.Context, q dbQuerier, qs querySet, mi *models.ModelInfo, cond *Condition, tz *time.Location) (cnt int64, err error) {
 
 	query, args := d.countSQL(qs, mi, cond, tz)
 
@@ -1392,7 +1392,7 @@ func (d *dbBase) Count(ctx context.Context, q dbQuerier, qs *querySet, mi *model
 	return
 }
 
-func (d *dbBase) countSQL(qs *querySet, mi *models.ModelInfo, cond *Condition, tz *time.Location) (string, []interface{}) {
+func (d *dbBase) countSQL(qs querySet, mi *models.ModelInfo, cond *Condition, tz *time.Location) (string, []interface{}) {
 	tables := newDbTables(mi, d.ins)
 	tables.parseRelated(qs.related, qs.relDepth)
 
@@ -1860,7 +1860,7 @@ setValue:
 }
 
 // ReadValues query sql, read values , save to *[]ParamList.
-func (d *dbBase) ReadValues(ctx context.Context, q dbQuerier, qs *querySet, mi *models.ModelInfo, cond *Condition, exprs []string, container interface{}, tz *time.Location) (int64, error) {
+func (d *dbBase) ReadValues(ctx context.Context, q dbQuerier, qs querySet, mi *models.ModelInfo, cond *Condition, exprs []string, container interface{}, tz *time.Location) (int64, error) {
 	var (
 		maps  []Params
 		lists []ParamsList
@@ -2018,7 +2018,7 @@ func (d *dbBase) ReadValues(ctx context.Context, q dbQuerier, qs *querySet, mi *
 	return cnt, nil
 }
 
-func (d *dbBase) readValuesSQL(tables *dbTables, cols []string, qs *querySet, mi *models.ModelInfo, cond *Condition, tz *time.Location) (string, []interface{}) {
+func (d *dbBase) readValuesSQL(tables *dbTables, cols []string, qs querySet, mi *models.ModelInfo, cond *Condition, tz *time.Location) (string, []interface{}) {
 	buf := buffers.Get()
 	defer buffers.Put(buf)
 

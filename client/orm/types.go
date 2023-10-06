@@ -623,9 +623,9 @@ type dbQuerier interface {
 // base database struct
 type dbBaser interface {
 	Read(context.Context, dbQuerier, *models.ModelInfo, reflect.Value, *time.Location, []string, bool) error
-	ReadBatch(context.Context, dbQuerier, *querySet, *models.ModelInfo, *Condition, interface{}, *time.Location, []string) (int64, error)
-	Count(context.Context, dbQuerier, *querySet, *models.ModelInfo, *Condition, *time.Location) (int64, error)
-	ReadValues(context.Context, dbQuerier, *querySet, *models.ModelInfo, *Condition, []string, interface{}, *time.Location) (int64, error)
+	ReadBatch(context.Context, dbQuerier, querySet, *models.ModelInfo, *Condition, interface{}, *time.Location, []string) (int64, error)
+	Count(context.Context, dbQuerier, querySet, *models.ModelInfo, *Condition, *time.Location) (int64, error)
+	ReadValues(context.Context, dbQuerier, querySet, *models.ModelInfo, *Condition, []string, interface{}, *time.Location) (int64, error)
 
 	Insert(context.Context, dbQuerier, *models.ModelInfo, reflect.Value, *time.Location) (int64, error)
 	InsertOrUpdate(context.Context, dbQuerier, *models.ModelInfo, reflect.Value, *alias, ...string) (int64, error)
