@@ -19,6 +19,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	_ "github.com/mattn/go-sqlite3"
 	"math"
 	"os"
 	"path/filepath"
@@ -3000,4 +3001,14 @@ func captureDebugLogOutput(f func()) string {
 	}()
 	f()
 	return buf.String()
+}
+func TestReadRaw(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+
+	user := User{UserName: "user"}
+	SQL := "SELECT * FROM `user`;"
+
+	err := dORM.ReadRaw(ctx, &user, SQL, nil)
+	cancel()
+	fmt.Print(err)
 }

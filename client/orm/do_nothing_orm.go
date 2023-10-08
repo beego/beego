@@ -33,6 +33,10 @@ func (d *DoNothingOrm) Read(md interface{}, cols ...string) error {
 	return nil
 }
 
+func (d *DoNothingOrm) ReadRaw(ctx context.Context, md interface{}, query string, args ...any) error {
+	return nil
+}
+
 func (d *DoNothingOrm) ReadWithCtx(ctx context.Context, md interface{}, cols ...string) error {
 	return nil
 }
@@ -166,6 +170,8 @@ func (d *DoNothingOrm) DoTxWithOpts(opts *sql.TxOptions, task func(ctx context.C
 func (d *DoNothingOrm) DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions, task func(ctx context.Context, txOrm TxOrmer) error) error {
 	return nil
 }
+
+var _ Ormer = new(DoNothingTxOrm)
 
 // DoNothingTxOrm is similar with DoNothingOrm, usually you use it to test
 type DoNothingTxOrm struct {

@@ -16,7 +16,7 @@ package qb
 
 import (
 	"errors"
-	"github.com/beego/beego/v2/client/orm"
+	//"github.com/beego/beego/v2/client/orm"
 	"github.com/beego/beego/v2/client/orm/internal/models"
 	"github.com/beego/beego/v2/client/orm/qb/errs"
 
@@ -37,7 +37,7 @@ type Selector[T any] struct {
 	tableName string
 
 	cache *models.ModelCache
-	db    orm.Ormer
+	//db    orm.Ormer
 }
 
 func NewSelector[T any](cache *models.ModelCache) *Selector[T] {
@@ -53,7 +53,7 @@ func (s *Selector[T]) Build() (*Query, error) {
 
 	s.model, _ = s.cache.GetByMd(&t)
 	if s.model == nil {
-		orm.BootStrap()
+		//orm.BootStrap()
 		err = s.cache.Register("", true, &t)
 		if err != nil {
 			return nil, err
@@ -270,3 +270,15 @@ func (s *Selector[T]) buildAs(alias string) {
 		s.sb.WriteByte('`')
 	}
 }
+
+/*
+func (s *Selector[T]) Get(ctx context.Context) (*T, error) {
+	q, err := s.Build()
+	if err != nil {
+		return nil, err
+	}
+	t := new(T)
+	err = s.db.ReadRaw(ctx, t, q.SQL, q.Args...)
+	return t, nil
+}
+*/
