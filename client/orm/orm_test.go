@@ -3003,12 +3003,17 @@ func captureDebugLogOutput(f func()) string {
 	return buf.String()
 }
 func TestReadRaw(t *testing.T) {
+	type TestModel struct {
+		Id   int64
+		Name string
+		Age  int8
+	}
 	ctx, cancel := context.WithCancel(context.Background())
-
-	user := User{UserName: "user"}
-	SQL := "SELECT * FROM `user`;"
-
-	err := dORM.ReadRaw(ctx, &user, SQL, nil)
+	RegisterModel(new(TestModel))
+	testModel := TestModel{Name: "user"}
+	SQL := "SELECT * FROM `test_model`;"
+	dORM = NewOrm()
+	err := dORM.ReadRaw(ctx, &testModel, SQL, nil)
 	cancel()
 	fmt.Print(err)
 }
