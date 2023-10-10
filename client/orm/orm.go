@@ -149,6 +149,10 @@ func (o *ormBase) Read(md interface{}, cols ...string) error {
 	return o.ReadWithCtx(context.Background(), md, cols...)
 }
 
+func (o *ormBase) ReadRaw(ctx context.Context, md interface{}, query string, args ...any) error {
+	mi, ind := o.getPtrMiInd(md)
+	return o.alias.DbBaser.ReadRaw(ctx, o.db, mi, ind, o.alias.TZ, query, args...)
+}
 func (o *ormBase) ReadWithCtx(ctx context.Context, md interface{}, cols ...string) error {
 	mi, ind := o.getPtrMiInd(md)
 	return o.alias.DbBaser.Read(ctx, o.db, mi, ind, o.alias.TZ, cols, false)
