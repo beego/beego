@@ -19,6 +19,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	_ "github.com/mattn/go-sqlite3"
 	"math"
 	"os"
 	"path/filepath"
@@ -3000,4 +3001,19 @@ func captureDebugLogOutput(f func()) string {
 	}()
 	f()
 	return buf.String()
+}
+func TestReadRaw(t *testing.T) {
+	type TestModel struct {
+		Id   int64
+		Name string
+		Age  int8
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	RegisterModel(new(TestModel))
+	testModel := TestModel{Name: "user"}
+	SQL := "SELECT * FROM `test_model`;"
+	dORM = NewOrm()
+	err := dORM.ReadRaw(ctx, &testModel, SQL, nil)
+	cancel()
+	fmt.Print(err)
 }

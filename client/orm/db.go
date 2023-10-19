@@ -373,6 +373,34 @@ func (d *dbBase) Read(ctx context.Context, q dbQuerier, mi *models.ModelInfo, in
 	return nil
 }
 
+func (d *dbBase) ReadRaw(ctx context.Context, q dbQuerier, mi *models.ModelInfo, ind reflect.Value, tz *time.Location, query string, args ...any) error {
+	//TODO: Improve code
+	rows, err := q.QueryContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+	cols, err := rows.Columns()
+	if err != nil {
+		return err
+	}
+	refs := make([]any, len(cols))
+	for i := range refs {
+		var ref any
+		refs[i] = &ref
+	}
+	if !rows.Next() {
+		return ErrNoRows
+	}
+	if err = rows.Scan(refs...); err != nil {
+		return err
+	}
+	elm := reflect.New(mi.AddrField.Elem().Type())
+	mind := reflect.Indirect(elm)
+	d.setColsValues(mi, &mind, mi.Fields.DBcols, refs, tz)
+	ind.Set(mind)
+	return nil
+}
+
 // Insert execute insert sql dbQuerier with given struct reflect.Value.
 func (d *dbBase) Insert(ctx context.Context, q dbQuerier, mi *models.ModelInfo, ind reflect.Value, tz *time.Location) (int64, error) {
 	names := make([]string, 0, len(mi.Fields.DBcols))
