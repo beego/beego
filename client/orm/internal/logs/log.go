@@ -3,10 +3,7 @@ package logs
 import (
 	"io"
 	"log"
-	"os"
 )
-
-var DebugLog = NewLog(os.Stdout)
 
 // Log implement the log.Logger
 type Log struct {

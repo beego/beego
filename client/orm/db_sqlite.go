@@ -22,8 +22,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/beego/beego/v2/client/orm/internal/logs"
-
 	"github.com/beego/beego/v2/client/orm/internal/models"
 
 	"github.com/beego/beego/v2/client/orm/hints"
@@ -80,7 +78,7 @@ var _ dbBaser = new(dbBaseSqlite)
 // override base db read for update behavior as SQlite does not support syntax
 func (d *dbBaseSqlite) Read(ctx context.Context, q dbQuerier, mi *models.ModelInfo, ind reflect.Value, tz *time.Location, cols []string, isForUpdate bool) error {
 	if isForUpdate {
-		logs.DebugLog.Println("[WARN] SQLite does not support SELECT FOR UPDATE query, isForUpdate param is ignored and always as false to do the work")
+		DebugLog.Println("[WARN] SQLite does not support SELECT FOR UPDATE query, isForUpdate param is ignored and always as false to do the work")
 	}
 	return d.dbBase.Read(ctx, q, mi, ind, tz, cols, false)
 }
@@ -175,7 +173,7 @@ func (d *dbBaseSqlite) GenerateSpecifyIndex(tableName string, useIndex int, inde
 	case hints.KeyUseIndex, hints.KeyForceIndex:
 		return fmt.Sprintf(` INDEXED BY %s `, strings.Join(s, `,`))
 	default:
-		logs.DebugLog.Println("[WARN] Not a valid specifying action, so that action is ignored")
+		DebugLog.Println("[WARN] Not a valid specifying action, so that action is ignored")
 		return ``
 	}
 }

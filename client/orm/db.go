@@ -25,8 +25,6 @@ import (
 
 	"github.com/beego/beego/v2/client/orm/internal/buffers"
 
-	"github.com/beego/beego/v2/client/orm/internal/logs"
-
 	"github.com/beego/beego/v2/client/orm/internal/utils"
 
 	"github.com/beego/beego/v2/client/orm/internal/models"
@@ -463,7 +461,7 @@ func (d *dbBase) InsertValue(ctx context.Context, q dbQuerier, mi *models.ModelI
 
 			lastInsertId, err := res.LastInsertId()
 			if err != nil {
-				logs.DebugLog.Println(ErrLastInsertIdUnavailable, ':', err)
+				DebugLog.Println(ErrLastInsertIdUnavailable, ':', err)
 				return lastInsertId, ErrLastInsertIdUnavailable
 			} else {
 				return lastInsertId, nil
@@ -547,7 +545,7 @@ func (d *dbBase) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *models.Mod
 		if err == nil {
 			lastInsertId, err := res.LastInsertId()
 			if err != nil {
-				logs.DebugLog.Println(ErrLastInsertIdUnavailable, ':', err)
+				DebugLog.Println(ErrLastInsertIdUnavailable, ':', err)
 				return lastInsertId, ErrLastInsertIdUnavailable
 			} else {
 				return lastInsertId, nil
@@ -2166,7 +2164,7 @@ func (d *dbBase) GenerateSpecifyIndex(tableName string, useIndex int, indexes []
 	case hints.KeyIgnoreIndex:
 		useWay = `IGNORE`
 	default:
-		logs.DebugLog.Println("[WARN] Not a valid specifying action, so that action is ignored")
+		DebugLog.Println("[WARN] Not a valid specifying action, so that action is ignored")
 		return ``
 	}
 

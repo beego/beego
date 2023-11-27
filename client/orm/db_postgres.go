@@ -19,8 +19,6 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/beego/beego/v2/client/orm/internal/logs"
-
 	"github.com/beego/beego/v2/client/orm/internal/models"
 )
 
@@ -189,7 +187,7 @@ func (d *dbBasePostgres) IndexExists(ctx context.Context, db dbQuerier, table st
 
 // GenerateSpecifyIndex return a specifying index clause
 func (d *dbBasePostgres) GenerateSpecifyIndex(tableName string, useIndex int, indexes []string) string {
-	logs.DebugLog.Println("[WARN] Not support any specifying index action, so that action is ignored")
+	DebugLog.Println("[WARN] Not support any specifying index action, so that action is ignored")
 	return ``
 }
 
