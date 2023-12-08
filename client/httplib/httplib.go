@@ -495,7 +495,7 @@ func (b *BeegoHTTPRequest) sendRequest(client *http.Client) (resp *http.Response
 	// retries equal to -1, it will run forever until success
 	// retries is setted, it will retries fixed times.
 	// Sleeps for a 400ms between calls to reduce spam
-	if b.req.Body != nil && b.setting.Retries >= -1 {
+	if b.req.Body != nil && (b.setting.Retries == -1 || b.setting.Retries > 0) {
 		copyBody, _ := io.ReadAll(b.req.Body)
 		for i := 0; b.setting.Retries == -1 || i <= b.setting.Retries; i++ {
 			b.req.Body = io.NopCloser(bytes.NewReader(copyBody))
@@ -506,7 +506,7 @@ func (b *BeegoHTTPRequest) sendRequest(client *http.Client) (resp *http.Response
 			time.Sleep(b.setting.RetryDelay)
 		}
 	} else {
-		resp, err = client.Do(b.req)
+		return client.Do(b.req)
 	}
 	return nil, berror.Wrap(err, SendRequestFailed, "sending request fail")
 }
