@@ -101,9 +101,17 @@ func (h *HttplibTestSuite) SetupSuite() {
 	handler.HandleFunc("/redirect", func(writer http.ResponseWriter, request *http.Request) {
 		http.Redirect(writer, request, "redirect_dst", http.StatusTemporaryRedirect)
 	})
-	handler.HandleFunc("redirect_dst", func(writer http.ResponseWriter, request *http.Request) {
+	handler.HandleFunc("/redirect_dst", func(writer http.ResponseWriter, request *http.Request) {
 		_, _ = writer.Write([]byte("hello"))
 	})
+
+	handler.HandleFunc("/retry", func(writer http.ResponseWriter, request *http.Request) {
+		body, err := io.ReadAll(request.Body)
+		require.NoError(h.T(), err)
+		assert.Equal(h.T(), []byte("retry body"), body)
+		panic("mock error")
+	})
+
 	go func() {
 		_ = http.Serve(listener, handler)
 	}()
@@ -362,6 +370,34 @@ func (h *HttplibTestSuite) TestPut() {
 	assert.Equal(t, "PUT", req.req.Method)
 }
 
+func (h *HttplibTestSuite) TestRetry() {
+	defaultSetting.Retries = 2
+	testCases := []struct {
+		name    string
+		req     func(t *testing.T) *BeegoHTTPRequest
+		wantErr error
+	}{
+		{
+			name: "retry_failed",
+			req: func(t *testing.T) *BeegoHTTPRequest {
+				req := NewBeegoRequest("http://localhost:8080/retry", http.MethodPost)
+				req.Body("retry body")
+				return req
+			},
+			wantErr: io.EOF,
+		},
+	}
+
+	for _, tc := range testCases {
+		h.T().Run(tc.name, func(t *testing.T) {
+			req := tc.req(t)
+			resp, err := req.DoRequest()
+			assert.ErrorIs(t, err, tc.wantErr)
+			assert.Nil(t, resp)
+		})
+	}
+}
+
 func TestNewBeegoRequest(t *testing.T) {
 	req := NewBeegoRequest("http://beego.vip", "GET")
 	assert.NotNil(t, req)
@@ -384,6 +420,7 @@ func TestNewBeegoRequestWithCtx(t *testing.T) {
 	// bad method but still get request
 	req = NewBeegoRequestWithCtx(context.Background(), "http://beego.vip", "G\tET")
 	assert.NotNil(t, req)
+	assert.NotNil(t, req.copyBody)
 }
 
 func TestBeegoHTTPRequestSetProtocolVersion(t *testing.T) {
@@ -459,10 +496,6 @@ func TestBeegoHTTPRequestXMLBody(t *testing.T) {
 	assert.True(t, req.req.ContentLength > 0)
 	assert.Nil(t, err)
 	assert.NotNil(t, req.req.GetBody)
-}
-
-// TODO
-func TestBeegoHTTPRequestResponseForValue(t *testing.T) {
 }
 
 func TestBeegoHTTPRequestJSONMarshal(t *testing.T) {
