@@ -128,6 +128,9 @@ type Config struct {
 	// LogConfig
 	// @Description log configuration
 	Log LogConfig
+	// ControllerSuffix
+	// @Description the suffix of controller for usage of adding auto router
+	ControllerSuffix string
 }
 
 // Listen holds for http and https related config
@@ -596,6 +599,8 @@ func newBConfig() *Config {
 			FileLineNum:      true,
 			Outputs:          map[string]string{"console": ""},
 		},
+
+		ControllerSuffix: "Controller",
 	}
 
 	res.RecoverFunc = defaultRecoverPanic

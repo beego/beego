@@ -764,7 +764,7 @@ func (p *ControllerRegister) AddAutoPrefix(prefix string, c ControllerInterface)
 	reflectVal := reflect.ValueOf(c)
 	rt := reflectVal.Type()
 	ct := reflect.Indirect(reflectVal).Type()
-	controllerName := strings.TrimSuffix(ct.Name(), "Controller")
+	controllerName := strings.TrimSuffix(ct.Name(), p.cfg.ControllerSuffix)
 	for i := 0; i < rt.NumMethod(); i++ {
 		methodName := rt.Method(i).Name
 		if !utils.InSlice(methodName, exceptMethod) {
