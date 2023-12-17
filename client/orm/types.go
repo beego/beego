@@ -181,6 +181,7 @@ type DML interface {
 	//	// update user testing's name to slene
 	Raw(query string, args ...interface{}) RawSeter
 	RawWithCtx(ctx context.Context, query string, args ...interface{}) RawSeter
+	ExecRaw(ctx context.Context, md interface{}, query string, args ...any) (sql.Result, error)
 }
 
 // DQL Data Query Language
@@ -631,6 +632,7 @@ type dbBaser interface {
 	Count(context.Context, dbQuerier, *querySet, *models.ModelInfo, *Condition, *time.Location) (int64, error)
 	ReadValues(context.Context, dbQuerier, *querySet, *models.ModelInfo, *Condition, []string, interface{}, *time.Location) (int64, error)
 
+	ExecRaw(ctx context.Context, q dbQuerier, query string, args ...any) (sql.Result, error)
 	Insert(context.Context, dbQuerier, *models.ModelInfo, reflect.Value, *time.Location) (int64, error)
 	InsertOrUpdate(context.Context, dbQuerier, *models.ModelInfo, reflect.Value, *alias, ...string) (int64, error)
 	InsertMulti(context.Context, dbQuerier, *models.ModelInfo, reflect.Value, int, *time.Location) (int64, error)

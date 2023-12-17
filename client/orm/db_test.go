@@ -16,11 +16,13 @@ package orm
 
 import (
 	"errors"
-	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
-	"github.com/beego/beego/v2/client/orm/internal/buffers"
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/beego/beego/v2/client/orm/clauses/order_clause"
+	"github.com/beego/beego/v2/client/orm/internal/buffers"
 
 	"github.com/beego/beego/v2/client/orm/internal/models"
 )
