@@ -401,7 +401,7 @@ func (d *dbBase) ReadRaw(ctx context.Context, q dbQuerier, mi *models.ModelInfo,
 	return nil
 }
 
-func (_ *dbBase) ExecRaw(ctx context.Context, q dbQuerier, query string, args ...any) (sql.Result, error) {
+func (*dbBase) ExecRaw(ctx context.Context, q dbQuerier, query string, args ...any) (sql.Result, error) {
 	return q.ExecContext(ctx, query, args...)
 }
 
