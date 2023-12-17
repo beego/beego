@@ -100,7 +100,6 @@ func (f *filterOrmDecorator) ReadRaw(ctx context.Context, md interface{}, query 
 	return f.convertError(res[0])
 }
 
-// TODO ExecRaw
 func (f *filterOrmDecorator) ExecRaw(ctx context.Context, md interface{}, query string, args ...any) (sql.Result, error) {
 	mi, _ := defaultModelCache.GetByMd(md)
 	inv := &Invocation{

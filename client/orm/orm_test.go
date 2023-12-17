@@ -3024,6 +3024,9 @@ func TestExecRaw(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	SQL := "INSERT INTO `null_value`(`id`,`value`) VALUES(?,?),(?,?);"
 	dORM = NewOrm()
+	if dORM.Driver().Name() == "postgres" {
+		SQL = "INSERT INTO \"null_value\"(\"id\",\"value\") VALUES($1, $2),($1, $2);"
+	}
 	res, err := dORM.ExecRaw(ctx, &NullValue{},
 		SQL, []interface{}{2, "Tom", 3, "Jerry"}...)
 	assert.Nil(t, err)

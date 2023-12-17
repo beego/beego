@@ -135,8 +135,7 @@ func (d *DoNothingOrm) RawWithCtx(ctx context.Context, query string, args ...int
 	return nil
 }
 
-// TODO
-func (d *DoNothingOrm) ExecRaw(ctx context.Context, md interface{}, query string, args ...any) (sql.Result, error) {
+func (_ *DoNothingOrm) ExecRaw(_ context.Context, _ interface{}, _ string, _ ...any) (sql.Result, error) {
 	return nil, nil
 }
 
