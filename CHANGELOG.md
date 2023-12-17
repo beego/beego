@@ -1,6 +1,7 @@
 # developing
 - [refactor: ORM Builder pattern that supports select statement](https://github.com/beego/beego/pull/5460)
 - [fix: catch missed error on migration](https://github.com/beego/beego/pull/5455)
+- [feature: add ExecRaw func](https://github.com/beego/beego/pull/5455)
 
 # v2.1.2
 - [refactor: CONTRIBUTING.md file grammatical improvements](https://github.com/beego/beego/issues/5411)

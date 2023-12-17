@@ -99,6 +99,25 @@ func (f *filterOrmDecorator) ReadRaw(ctx context.Context, md interface{}, query 
 	res := f.root(ctx, inv)
 	return f.convertError(res[0])
 }
+
+func (f *filterOrmDecorator) ExecRaw(ctx context.Context, md interface{}, query string, args ...any) (sql.Result, error) {
+	mi, _ := defaultModelCache.GetByMd(md)
+	inv := &Invocation{
+		Method:      "ExecRaw",
+		Args:        []interface{}{md, query, args},
+		Md:          md,
+		mi:          mi,
+		InsideTx:    f.insideTx,
+		TxStartTime: f.txStartTime,
+		f: func(c context.Context) []interface{} {
+			res, err := f.ormer.ExecRaw(c, md, query, args...)
+			return []interface{}{res, err}
+		},
+	}
+	res := f.root(ctx, inv)
+	return res[0].(sql.Result), f.convertError(res[1])
+}
+
 func (f *filterOrmDecorator) ReadWithCtx(ctx context.Context, md interface{}, cols ...string) error {
 	mi, _ := defaultModelCache.GetByMd(md)
 	inv := &Invocation{
