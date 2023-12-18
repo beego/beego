@@ -19,7 +19,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	_ "github.com/mattn/go-sqlite3"
 	"math"
 	"os"
 	"path/filepath"
@@ -28,6 +27,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/beego/beego/v2/client/orm/internal/logs"
 
@@ -3002,6 +3003,7 @@ func captureDebugLogOutput(f func()) string {
 	f()
 	return buf.String()
 }
+
 func TestReadRaw(t *testing.T) {
 	type TestModel struct {
 		Id   int64
@@ -3016,4 +3018,19 @@ func TestReadRaw(t *testing.T) {
 	err := dORM.ReadRaw(ctx, &testModel, SQL, nil)
 	cancel()
 	fmt.Print(err)
+}
+
+func TestExecRaw(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	SQL := "INSERT INTO `null_value`(`id`,`value`) VALUES(?,?),(?,?);"
+	dORM = NewOrm()
+	if dORM.Driver().Type() == DRPostgres {
+		SQL = "INSERT INTO \"null_value\"(\"id\",\"value\") VALUES($1, $2),($3, $4);"
+	}
+	res, err := dORM.ExecRaw(ctx, &NullValue{},
+		SQL, []interface{}{2, "Tom", 3, "Jerry"}...)
+	assert.Nil(t, err)
+	_, err = res.RowsAffected()
+	assert.Nil(t, err)
+	cancel()
 }

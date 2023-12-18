@@ -16,12 +16,14 @@ package qb
 
 import (
 	"database/sql"
+	"testing"
+
+	_ "github.com/mattn/go-sqlite3"
+	"github.com/stretchr/testify/assert"
+
 	"github.com/beego/beego/v2/client/orm"
 	imodels "github.com/beego/beego/v2/client/orm/internal/models"
 	"github.com/beego/beego/v2/client/orm/qb/errs"
-	_ "github.com/mattn/go-sqlite3"
-	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestSelector_Build(t *testing.T) {

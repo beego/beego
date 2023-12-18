@@ -401,6 +401,10 @@ func (d *dbBase) ReadRaw(ctx context.Context, q dbQuerier, mi *models.ModelInfo,
 	return nil
 }
 
+func (*dbBase) ExecRaw(ctx context.Context, q dbQuerier, query string, args ...any) (sql.Result, error) {
+	return q.ExecContext(ctx, query, args...)
+}
+
 // Insert execute insert sql dbQuerier with given struct reflect.Value.
 func (d *dbBase) Insert(ctx context.Context, q dbQuerier, mi *models.ModelInfo, ind reflect.Value, tz *time.Location) (int64, error) {
 	names := make([]string, 0, len(mi.Fields.DBcols))

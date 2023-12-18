@@ -46,6 +46,14 @@ func (m *TestControllerWithInterface) PingPointer() {
 	fmt.Println("pong pointer")
 }
 
+type TestDefineController struct {
+	Controller
+}
+
+func (tc *TestDefineController) List() {
+	tc.Ctx.Output.Body([]byte("i am list"))
+}
+
 type TestController struct {
 	Controller
 }
@@ -353,6 +361,21 @@ func TestAutoPrefix(t *testing.T) {
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != "i am list" {
 		t.Errorf("TestAutoPrefix can't run")
+	}
+}
+
+func TestAutoPrefixWithDefinedControllerSuffix(t *testing.T) {
+	r, _ := http.NewRequest("GET", "/admin/test/list", nil)
+	w := httptest.NewRecorder()
+
+	config := BeeApp.Cfg
+	config.ControllerSuffix = "DefineController"
+
+	handler := NewControllerRegisterWithCfg(config)
+	handler.AddAutoPrefix("/admin", &TestDefineController{})
+	handler.ServeHTTP(w, r)
+	if w.Body.String() != "i am list" {
+		t.Errorf("TestAutoPrefixWithDefinedControllerSuffix can't run")
 	}
 }
 

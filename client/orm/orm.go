@@ -510,6 +510,10 @@ func (o *ormBase) RawWithCtx(_ context.Context, query string, args ...interface{
 	return newRawSet(o, query, args)
 }
 
+func (o *ormBase) ExecRaw(ctx context.Context, _ interface{}, query string, args ...any) (sql.Result, error) {
+	return o.alias.DbBaser.ExecRaw(ctx, o.db, query, args...)
+}
+
 // Driver return current using database Driver
 func (o *ormBase) Driver() Driver {
 	return driver(o.alias.Name)

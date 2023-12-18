@@ -29,6 +29,7 @@ type Querier[T any] interface {
 type Executor interface {
 	Exec(ctx context.Context) (sql.Result, error)
 }
+
 type Query struct {
 	SQL  string
 	Args []any
