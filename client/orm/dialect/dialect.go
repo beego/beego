@@ -14,8 +14,6 @@
 
 package dialect
 
-import "github.com/beego/beego/v2/client/orm/qb/errs"
-
 type standardSQL struct {
 	Name string
 }
@@ -23,13 +21,4 @@ type standardSQL struct {
 func (d *standardSQL) Quoter() byte {
 	// TODO implement me
 	panic("implement me")
-}
-
-func Of(driver string) (Dialect, error) {
-	switch driver {
-	case "mysql":
-		return &MySQLDialect{}, nil
-	default:
-		return nil, errs.NewUnsupportedDriverError(driver)
-	}
 }
