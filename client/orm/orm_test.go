@@ -215,6 +215,7 @@ func registerAllModel() {
 	RegisterModel(new(StrPk))
 	RegisterModel(new(TM))
 	RegisterModel(new(DeptInfo))
+	RegisterModel(new(testTab))
 }
 
 func TestSyncDb(t *testing.T) {
