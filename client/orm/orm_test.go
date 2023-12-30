@@ -216,19 +216,18 @@ func registerAllModel() {
 	RegisterModel(new(TM))
 	RegisterModel(new(DeptInfo))
 	RegisterModel(new(testTab), new(testTab1), new(testTab2))
-
 }
 
 func TestSyncDb(t *testing.T) {
+	models.DefaultModelRegistry.Clean()
 	registerAllModel()
 
 	err := RunSyncdb("default", true, Debug)
 	throwFail(t, err)
-
-	models.DefaultModelRegistry.Clean()
 }
 
 func TestRegisterModels(_ *testing.T) {
+	models.DefaultModelRegistry.Clean()
 	registerAllModel()
 
 	BootStrap()
