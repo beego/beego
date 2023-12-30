@@ -193,7 +193,7 @@ func TestGetDB(t *testing.T) {
 	}
 }
 
-func TestSyncDb(t *testing.T) {
+func registerAllModel() {
 	RegisterModel(new(Data), new(DataNull), new(DataCustom))
 	RegisterModel(new(User))
 	RegisterModel(new(Profile))
@@ -215,6 +215,10 @@ func TestSyncDb(t *testing.T) {
 	RegisterModel(new(StrPk))
 	RegisterModel(new(TM))
 	RegisterModel(new(DeptInfo))
+}
+
+func TestSyncDb(t *testing.T) {
+	registerAllModel()
 
 	err := RunSyncdb("default", true, Debug)
 	throwFail(t, err)
@@ -223,27 +227,7 @@ func TestSyncDb(t *testing.T) {
 }
 
 func TestRegisterModels(_ *testing.T) {
-	RegisterModel(new(Data), new(DataNull), new(DataCustom))
-	RegisterModel(new(User))
-	RegisterModel(new(Profile))
-	RegisterModel(new(Post))
-	RegisterModel(new(NullValue))
-	RegisterModel(new(Tag))
-	RegisterModel(new(Comment))
-	RegisterModel(new(UserBig))
-	RegisterModel(new(PostTags))
-	RegisterModel(new(Group))
-	RegisterModel(new(Permission))
-	RegisterModel(new(GroupPermissions))
-	RegisterModel(new(InLine))
-	RegisterModel(new(InLineOneToOne))
-	RegisterModel(new(IntegerPk))
-	RegisterModel(new(UintPk))
-	RegisterModel(new(PtrPk))
-	RegisterModel(new(Index))
-	RegisterModel(new(StrPk))
-	RegisterModel(new(TM))
-	RegisterModel(new(DeptInfo))
+	registerAllModel()
 
 	BootStrap()
 
@@ -2950,8 +2934,8 @@ func TestContextCanceled(t *testing.T) {
 }
 
 func TestDebugLog(t *testing.T) {
-	RegisterModel(new(Profile))
-	RegisterModel(new(Post))
+	models.DefaultModelRegistry.Clean()
+	registerAllModel()
 	txCommitFn := func() {
 		o := NewOrm()
 		o.DoTx(func(ctx context.Context, txOrm TxOrmer) (txerr error) {
