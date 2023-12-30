@@ -892,15 +892,15 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 
 func TestDbBase_readBatchSQL(t *testing.T) {
 
-	mc := models.NewModelCacheHandler()
+	registry := models.DefaultModelRegistry
 
-	err := mc.Register("", false, new(testTab), new(testTab1), new(testTab2))
+	err := registry.Register("", false, new(testTab), new(testTab1), new(testTab2))
 
 	assert.Nil(t, err)
 
-	mc.Bootstrap()
+	registry.Bootstrap()
 
-	mi, ok := mc.GetByMd(new(testTab))
+	mi, ok := registry.GetByMd(new(testTab))
 
 	assert.True(t, ok)
 
@@ -1197,15 +1197,15 @@ func TestDbBase_readBatchSQL(t *testing.T) {
 
 func TestDbBase_readValuesSQL(t *testing.T) {
 
-	mc := models.NewModelCacheHandler()
+	registry := models.DefaultModelRegistry
 
-	err := mc.Register("", false, new(testTab), new(testTab1), new(testTab2))
+	err := registry.Register("", false, new(testTab), new(testTab1), new(testTab2))
 
 	assert.Nil(t, err)
 
-	mc.Bootstrap()
+	registry.Bootstrap()
 
-	mi, ok := mc.GetByMd(new(testTab))
+	mi, ok := registry.GetByMd(new(testTab))
 
 	assert.True(t, ok)
 
@@ -1335,15 +1335,15 @@ func TestDbBase_readValuesSQL(t *testing.T) {
 
 func TestDbBase_countSQL(t *testing.T) {
 
-	mc := models.NewModelCacheHandler()
+	registry := models.DefaultModelRegistry
 
-	err := mc.Register("", false, new(testTab), new(testTab1), new(testTab2))
+	err := registry.Register("", false, new(testTab), new(testTab1), new(testTab2))
 
 	assert.Nil(t, err)
 
-	mc.Bootstrap()
+	registry.Bootstrap()
 
-	mi, ok := mc.GetByMd(new(testTab))
+	mi, ok := registry.GetByMd(new(testTab))
 
 	assert.True(t, ok)
 
