@@ -18,6 +18,6 @@ type MySQLDialect struct {
 	standardSQL
 }
 
-func (d *MySQLDialect) Quoter() byte {
+func (*MySQLDialect) Quoter() byte {
 	return '`'
 }

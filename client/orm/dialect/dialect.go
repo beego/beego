@@ -18,7 +18,7 @@ type standardSQL struct {
 	Name string
 }
 
-func (d *standardSQL) Quoter() byte {
+func (*standardSQL) Quoter() byte {
 	// TODO implement me
 	panic("implement me")
 }
