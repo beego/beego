@@ -28,7 +28,9 @@ import (
 )
 
 func TestDbBase_InsertValueSQL(t *testing.T) {
-
+	registry := models.DefaultModelRegistry
+	registry.Clean()
+	registerAllModel()
 	mi := &models.ModelInfo{
 		Table: "test_table",
 	}
@@ -135,6 +137,9 @@ func TestDbBase_InsertValueSQL(t *testing.T) {
 }
 
 func TestDbBase_UpdateSQL(t *testing.T) {
+	registry := models.DefaultModelRegistry
+	registry.Clean()
+	registerAllModel()
 	mi := &models.ModelInfo{
 		Table: "test_table",
 	}
@@ -179,6 +184,9 @@ func TestDbBase_UpdateSQL(t *testing.T) {
 }
 
 func TestDbBase_DeleteSQL(t *testing.T) {
+	registry := models.DefaultModelRegistry
+	registry.Clean()
+	registerAllModel()
 	mi := &models.ModelInfo{
 		Table: "test_table",
 	}
@@ -236,7 +244,9 @@ func TestDbBase_DeleteSQL(t *testing.T) {
 }
 
 func TestDbBase_buildSetSQL(t *testing.T) {
-
+	registry := models.DefaultModelRegistry
+	registry.Clean()
+	registerAllModel()
 	testCases := []struct {
 		name string
 
@@ -538,6 +548,9 @@ func TestDbBase_buildSetSQL(t *testing.T) {
 }
 
 func TestDbBase_UpdateBatchSQL(t *testing.T) {
+	registry := models.DefaultModelRegistry
+	registry.Clean()
+	registerAllModel()
 	mi := &models.ModelInfo{
 		Table: "test_tab",
 		Fields: &models.Fields{
@@ -654,7 +667,9 @@ func TestDbBase_UpdateBatchSQL(t *testing.T) {
 }
 
 func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
-
+	registry := models.DefaultModelRegistry
+	registry.Clean()
+	registerAllModel()
 	mi := &models.ModelInfo{
 		Table: "test_tab",
 	}
@@ -893,10 +908,8 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 func TestDbBase_readBatchSQL(t *testing.T) {
 
 	registry := models.DefaultModelRegistry
-
-	err := registry.Register("", false, new(testTab), new(testTab1), new(testTab2))
-
-	assert.Nil(t, err)
+	registry.Clean()
+	registerAllModel()
 
 	registry.Bootstrap()
 
@@ -1198,10 +1211,8 @@ func TestDbBase_readBatchSQL(t *testing.T) {
 func TestDbBase_readValuesSQL(t *testing.T) {
 
 	registry := models.DefaultModelRegistry
-
-	err := registry.Register("", false, new(testTab), new(testTab1), new(testTab2))
-
-	assert.Nil(t, err)
+	registry.Clean()
+	registerAllModel()
 
 	registry.Bootstrap()
 
@@ -1336,10 +1347,8 @@ func TestDbBase_readValuesSQL(t *testing.T) {
 func TestDbBase_countSQL(t *testing.T) {
 
 	registry := models.DefaultModelRegistry
-
-	err := registry.Register("", false, new(testTab), new(testTab1), new(testTab2))
-
-	assert.Nil(t, err)
+	registry.Clean()
+	registerAllModel()
 
 	registry.Bootstrap()
 
