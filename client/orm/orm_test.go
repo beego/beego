@@ -2950,7 +2950,7 @@ func TestContextCanceled(t *testing.T) {
 }
 
 func TestDebugLog(t *testing.T) {
-	RegisterModel(new(Profile))
+	RegisterModel(new(User))
 	txCommitFn := func() {
 		o := NewOrm()
 		o.DoTx(func(ctx context.Context, txOrm TxOrmer) (txerr error) {
