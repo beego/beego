@@ -160,7 +160,7 @@ outFor:
 				typ := val.Type()
 				name := models.GetFullName(typ)
 				var value interface{}
-				if mmi, ok := models.DefaultModelCache.GetByFullName(name); ok {
+				if mmi, ok := models.DefaultModelRegistry.GetByFullName(name); ok {
 					if _, vu, exist := getExistPk(mmi, val); exist {
 						value = vu
 					}

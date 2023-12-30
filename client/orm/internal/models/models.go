@@ -22,10 +22,10 @@ import (
 	"sync"
 )
 
-var DefaultModelCache = NewModelCacheHandler()
+var DefaultModelRegistry = newModelRegistry()
 
-// ModelCache info collection
-type ModelCache struct {
+// modelRegistry info collection
+type modelRegistry struct {
 	sync.RWMutex    // only used outsite for bootStrap
 	orders          []string
 	cache           map[string]*ModelInfo
@@ -33,16 +33,16 @@ type ModelCache struct {
 	done            bool
 }
 
-// NewModelCacheHandler generator of ModelCache
-func NewModelCacheHandler() *ModelCache {
-	return &ModelCache{
+// newModelRegistry generator of ModelCache
+func newModelRegistry() *modelRegistry {
+	return &modelRegistry{
 		cache:           make(map[string]*ModelInfo),
 		cacheByFullName: make(map[string]*ModelInfo),
 	}
 }
 
 // All return all model info
-func (mc *ModelCache) All() map[string]*ModelInfo {
+func (mc *modelRegistry) All() map[string]*ModelInfo {
 	m := make(map[string]*ModelInfo, len(mc.cache))
 	for k, v := range mc.cache {
 		m[k] = v
@@ -50,11 +50,11 @@ func (mc *ModelCache) All() map[string]*ModelInfo {
 	return m
 }
 
-func (mc *ModelCache) Empty() bool {
+func (mc *modelRegistry) Empty() bool {
 	return len(mc.cache) == 0
 }
 
-func (mc *ModelCache) AllOrdered() []*ModelInfo {
+func (mc *modelRegistry) AllOrdered() []*ModelInfo {
 	m := make([]*ModelInfo, 0, len(mc.orders))
 	for _, table := range mc.orders {
 		m = append(m, mc.cache[table])
@@ -63,18 +63,18 @@ func (mc *ModelCache) AllOrdered() []*ModelInfo {
 }
 
 // Get model info by table name
-func (mc *ModelCache) Get(table string) (mi *ModelInfo, ok bool) {
+func (mc *modelRegistry) Get(table string) (mi *ModelInfo, ok bool) {
 	mi, ok = mc.cache[table]
 	return
 }
 
 // GetByFullName model info by full name
-func (mc *ModelCache) GetByFullName(name string) (mi *ModelInfo, ok bool) {
+func (mc *modelRegistry) GetByFullName(name string) (mi *ModelInfo, ok bool) {
 	mi, ok = mc.cacheByFullName[name]
 	return
 }
 
-func (mc *ModelCache) GetByMd(md interface{}) (*ModelInfo, bool) {
+func (mc *modelRegistry) GetByMd(md interface{}) (*ModelInfo, bool) {
 	val := reflect.ValueOf(md)
 	ind := reflect.Indirect(val)
 	typ := ind.Type()
@@ -83,7 +83,7 @@ func (mc *ModelCache) GetByMd(md interface{}) (*ModelInfo, bool) {
 }
 
 // Set model info to collection
-func (mc *ModelCache) Set(table string, mi *ModelInfo) *ModelInfo {
+func (mc *modelRegistry) Set(table string, mi *ModelInfo) *ModelInfo {
 	mii := mc.cache[table]
 	mc.cache[table] = mi
 	mc.cacheByFullName[mi.FullName] = mi
@@ -94,7 +94,7 @@ func (mc *ModelCache) Set(table string, mi *ModelInfo) *ModelInfo {
 }
 
 // Clean All model info.
-func (mc *ModelCache) Clean() {
+func (mc *modelRegistry) Clean() {
 	mc.Lock()
 	defer mc.Unlock()
 
@@ -105,7 +105,7 @@ func (mc *ModelCache) Clean() {
 }
 
 // Bootstrap Bootstrap for models
-func (mc *ModelCache) Bootstrap() {
+func (mc *modelRegistry) Bootstrap() {
 	mc.Lock()
 	defer mc.Unlock()
 	if mc.done {
@@ -316,7 +316,7 @@ end:
 }
 
 // Register Register models to model cache
-func (mc *ModelCache) Register(prefixOrSuffixStr string, prefixOrSuffix bool, models ...interface{}) (err error) {
+func (mc *modelRegistry) Register(prefixOrSuffixStr string, prefixOrSuffix bool, models ...interface{}) (err error) {
 	for _, model := range models {
 		val := reflect.ValueOf(model)
 		typ := reflect.Indirect(val).Type()

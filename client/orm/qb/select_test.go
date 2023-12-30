@@ -26,11 +26,11 @@ import (
 )
 
 func TestSelector_Build(t *testing.T) {
-	db := orm.NewOrm()
 	err := orm.RegisterDataBase("default", "sqlite3", "")
 	if err != nil {
 		return
 	}
+	db := orm.NewOrm()
 	testCase := []struct {
 		name      string
 		q         QueryBuilder
@@ -126,11 +126,11 @@ func TestSelector_Build(t *testing.T) {
 }
 
 func TestSelector_OffsetLimit(t *testing.T) {
-	db := orm.NewOrm()
 	err := orm.RegisterDataBase("default", "sqlite3", "")
 	if err != nil {
 		return
 	}
+	db := orm.NewOrm()
 	testCases := []struct {
 		name      string
 		q         QueryBuilder
@@ -174,12 +174,13 @@ func TestSelector_OffsetLimit(t *testing.T) {
 		})
 	}
 }
+
 func TestSelector_OrderBy(t *testing.T) {
-	db := orm.NewOrm()
 	err := orm.RegisterDataBase("default", "sqlite3", "")
 	if err != nil {
 		return
 	}
+	db := orm.NewOrm()
 	testCases := []struct {
 		name      string
 		q         QueryBuilder
@@ -245,12 +246,13 @@ func TestSelector_OrderBy(t *testing.T) {
 		})
 	}
 }
+
 func TestSelector_Select(t *testing.T) {
-	db := orm.NewOrm()
 	err := orm.RegisterDataBase("default", "sqlite3", "")
 	if err != nil {
 		return
 	}
+	db := orm.NewOrm()
 	testCases := []struct {
 		name      string
 		q         QueryBuilder

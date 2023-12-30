@@ -219,7 +219,7 @@ func TestSyncDb(t *testing.T) {
 	err := RunSyncdb("default", true, Debug)
 	throwFail(t, err)
 
-	models.DefaultModelCache.Clean()
+	models.DefaultModelRegistry.Clean()
 }
 
 func TestRegisterModels(_ *testing.T) {
@@ -255,10 +255,10 @@ func TestModelSyntax(t *testing.T) {
 	user := &User{}
 	ind := reflect.ValueOf(user).Elem()
 	fn := models.GetFullName(ind.Type())
-	_, ok := models.DefaultModelCache.GetByFullName(fn)
+	_, ok := models.DefaultModelRegistry.GetByFullName(fn)
 	throwFail(t, AssertIs(ok, true))
 
-	mi, ok := models.DefaultModelCache.Get("user")
+	mi, ok := models.DefaultModelRegistry.Get("user")
 	throwFail(t, AssertIs(ok, true))
 	if ok {
 		throwFail(t, AssertIs(mi.Fields.GetByName("ShouldSkip") == nil, true))
@@ -2691,9 +2691,9 @@ func TestIgnoreCaseTag(t *testing.T) {
 		Name02 string `orm:"COLUMN(Name)"`
 		Name03 string `orm:"Column(name)"`
 	}
-	models.DefaultModelCache.Clean()
+	models.DefaultModelRegistry.Clean()
 	RegisterModel(&testTagModel{})
-	info, ok := models.DefaultModelCache.Get("test_tag_model")
+	info, ok := models.DefaultModelRegistry.Get("test_tag_model")
 	throwFail(t, AssertIs(ok, true))
 	throwFail(t, AssertNot(info, nil))
 	if t == nil {

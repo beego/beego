@@ -54,15 +54,15 @@ func (s *Selector[T]) Build() (*Query, error) {
 		err error
 	)
 	defer bytebufferpool.Put(s.buffer)
-	meta := models.DefaultModelCache
-	s.model, _ = meta.GetByMd(&t)
+	registry := models.DefaultModelRegistry
+	s.model, _ = registry.GetByMd(&t)
 	if s.model == nil {
 		//orm.BootStrap()
-		err = meta.Register("", true, &t)
+		err = registry.Register("", true, &t)
 		if err != nil {
 			return nil, err
 		}
-		s.model, _ = meta.GetByMd(&t)
+		s.model, _ = registry.GetByMd(&t)
 	}
 
 	s.writeString("SELECT ")
