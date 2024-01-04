@@ -23,8 +23,7 @@ import (
 )
 
 // getDbDropSQL Get database scheme drop sql queries
-func getDbDropSQL(al *alias) (queries []string, err error) {
-	registry := imodels.DefaultModelRegistry
+func getDbDropSQL(registry *imodels.ModelCache, al *alias) (queries []string, err error) {
 	if registry.Empty() {
 		err = errors.New("no Model found, need Register your model")
 		return
@@ -39,8 +38,7 @@ func getDbDropSQL(al *alias) (queries []string, err error) {
 }
 
 // getDbCreateSQL Get database scheme creation sql queries
-func getDbCreateSQL(al *alias) (queries []string, tableIndexes map[string][]dbIndex, err error) {
-	registry := imodels.DefaultModelRegistry
+func getDbCreateSQL(registry *imodels.ModelCache, al *alias) (queries []string, tableIndexes map[string][]dbIndex, err error) {
 	if registry.Empty() {
 		err = errors.New("no Model found, need Register your model")
 		return

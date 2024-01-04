@@ -129,7 +129,7 @@ func (*ormBase) getPtrMiInd(md interface{}) (mi *models.ModelInfo, ind reflect.V
 
 func getTypeMi(mdTyp reflect.Type) *models.ModelInfo {
 	name := models.GetFullName(mdTyp)
-	if mi, ok := models.DefaultModelRegistry.GetByFullName(name); ok {
+	if mi, ok := models.DefaultModelCache.GetByFullName(name); ok {
 		return mi
 	}
 	panic(fmt.Errorf("<Ormer> table: `%s` not found, make sure it was registered with `RegisterModel()`", name))
@@ -480,12 +480,12 @@ func (o *ormBase) QueryTable(ptrStructOrTableName interface{}) (qs QuerySeter) {
 	var name string
 	if table, ok := ptrStructOrTableName.(string); ok {
 		name = models.NameStrategyMap[models.DefaultNameStrategy](table)
-		if mi, ok := models.DefaultModelRegistry.Get(name); ok {
+		if mi, ok := models.DefaultModelCache.Get(name); ok {
 			qs = newQuerySet(o, mi)
 		}
 	} else {
 		name = models.GetFullName(iutils.IndirectType(reflect.TypeOf(ptrStructOrTableName)))
-		if mi, ok := models.DefaultModelRegistry.GetByFullName(name); ok {
+		if mi, ok := models.DefaultModelCache.GetByFullName(name); ok {
 			qs = newQuerySet(o, mi)
 		}
 	}

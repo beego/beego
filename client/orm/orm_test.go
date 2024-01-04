@@ -219,7 +219,7 @@ func registerAllModel() {
 }
 
 func TestSyncDb(t *testing.T) {
-	models.DefaultModelRegistry.Clean()
+	models.DefaultModelCache.Clean()
 	registerAllModel()
 
 	err := RunSyncdb("default", true, Debug)
@@ -227,7 +227,7 @@ func TestSyncDb(t *testing.T) {
 }
 
 func TestRegisterModels(_ *testing.T) {
-	models.DefaultModelRegistry.Clean()
+	models.DefaultModelCache.Clean()
 	registerAllModel()
 
 	BootStrap()
@@ -240,10 +240,10 @@ func TestModelSyntax(t *testing.T) {
 	user := &User{}
 	ind := reflect.ValueOf(user).Elem()
 	fn := models.GetFullName(ind.Type())
-	_, ok := models.DefaultModelRegistry.GetByFullName(fn)
+	_, ok := models.DefaultModelCache.GetByFullName(fn)
 	throwFail(t, AssertIs(ok, true))
 
-	mi, ok := models.DefaultModelRegistry.Get("user")
+	mi, ok := models.DefaultModelCache.Get("user")
 	throwFail(t, AssertIs(ok, true))
 	if ok {
 		throwFail(t, AssertIs(mi.Fields.GetByName("ShouldSkip") == nil, true))
@@ -2676,9 +2676,9 @@ func TestIgnoreCaseTag(t *testing.T) {
 		Name02 string `orm:"COLUMN(Name)"`
 		Name03 string `orm:"Column(name)"`
 	}
-	models.DefaultModelRegistry.Clean()
+	models.DefaultModelCache.Clean()
 	RegisterModel(&testTagModel{})
-	info, ok := models.DefaultModelRegistry.Get("test_tag_model")
+	info, ok := models.DefaultModelCache.Get("test_tag_model")
 	throwFail(t, AssertIs(ok, true))
 	throwFail(t, AssertNot(info, nil))
 	if t == nil {
@@ -2935,7 +2935,7 @@ func TestContextCanceled(t *testing.T) {
 }
 
 func TestDebugLog(t *testing.T) {
-	models.DefaultModelRegistry.Clean()
+	models.DefaultModelCache.Clean()
 	registerAllModel()
 	txCommitFn := func() {
 		o := NewOrm()

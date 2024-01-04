@@ -28,14 +28,14 @@ func RegisterModel(models ...interface{}) {
 
 // RegisterModelWithPrefix Register models with a prefix
 func RegisterModelWithPrefix(prefix string, models ...interface{}) {
-	if err := imodels.DefaultModelRegistry.Register(prefix, true, models...); err != nil {
+	if err := imodels.DefaultModelCache.Register(prefix, true, models...); err != nil {
 		panic(err)
 	}
 }
 
 // RegisterModelWithSuffix Register models with a suffix
 func RegisterModelWithSuffix(suffix string, models ...interface{}) {
-	if err := imodels.DefaultModelRegistry.Register(suffix, false, models...); err != nil {
+	if err := imodels.DefaultModelCache.Register(suffix, false, models...); err != nil {
 		panic(err)
 	}
 }
@@ -48,11 +48,11 @@ func BootStrap() {
 		debug.PrintStack()
 		return
 	}
-	imodels.DefaultModelRegistry.Bootstrap()
+	imodels.DefaultModelCache.Bootstrap()
 }
 
 // ResetModelCache Clean model cache. Then you can re-RegisterModel.
 // Common use this api for test case.
 func ResetModelCache() {
-	imodels.DefaultModelRegistry.Clean()
+	imodels.DefaultModelCache.Clean()
 }

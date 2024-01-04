@@ -54,7 +54,7 @@ func (s *Selector[T]) Build() (*Query, error) {
 		err error
 	)
 	defer bytebufferpool.Put(s.buffer)
-	registry := models.DefaultModelRegistry
+	registry := models.DefaultModelCache
 	s.model, _ = registry.GetByMd(&t)
 	if s.model == nil {
 		//orm.BootStrap()
