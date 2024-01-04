@@ -17,8 +17,7 @@ package qb
 import (
 	"context"
 	"errors"
-
-	"github.com/valyala/bytebufferpool"
+	"strings"
 
 	"github.com/beego/beego/v2/client/orm"
 
@@ -30,7 +29,9 @@ import (
 
 // The Selector is used to construct a SELECT statement
 type Selector[T any] struct {
-	builder
+	sb        strings.Builder
+	model     *models.ModelInfo
+	args      []any
 	orderBy   []Column
 	where     []Predicate
 	offset    int
@@ -43,17 +44,14 @@ type Selector[T any] struct {
 func NewSelector[T any](db orm.Ormer) *Selector[T] {
 	return &Selector[T]{
 		db: db,
-		builder: builder{
-			buffer: bytebufferpool.Get(),
-		},
 	}
 }
+
 func (s *Selector[T]) Build() (*Query, error) {
 	var (
 		t   T
 		err error
 	)
-	defer bytebufferpool.Put(s.buffer)
 	registry := models.DefaultModelCache
 	s.model, _ = registry.GetByMd(&t)
 	if s.model == nil {
@@ -65,33 +63,33 @@ func (s *Selector[T]) Build() (*Query, error) {
 		s.model, _ = registry.GetByMd(&t)
 	}
 
-	s.writeString("SELECT ")
+	s.sb.WriteString("SELECT ")
 	if err = s.buildColumns(); err != nil {
 		return nil, err
 	}
-	s.writeString(" FROM ")
+	s.sb.WriteString(" FROM ")
 	if s.tableName != "" {
 		if s.tableName[0] == '`' && s.tableName[len(s.tableName)-1] == '`' {
-			s.writeString(s.tableName)
+			s.sb.WriteString(s.tableName)
 		} else {
-			s.writeByte('`')
-			s.writeString(s.tableName)
-			s.writeByte('`')
+			s.sb.WriteByte('`')
+			s.sb.WriteString(s.tableName)
+			s.sb.WriteByte('`')
 		}
 	} else {
 		if s.model.Table == "" {
 			typ := reflect.TypeOf(t)
-			s.writeByte('`')
-			s.writeString(typ.Name())
-			s.writeByte('`')
+			s.sb.WriteByte('`')
+			s.sb.WriteString(typ.Name())
+			s.sb.WriteByte('`')
 		} else {
-			s.writeByte('`')
-			s.writeString(s.model.Table)
-			s.writeByte('`')
+			s.sb.WriteByte('`')
+			s.sb.WriteString(s.model.Table)
+			s.sb.WriteByte('`')
 		}
 	}
 	if len(s.where) > 0 {
-		s.writeString(" WHERE ")
+		s.sb.WriteString(" WHERE ")
 		p := s.where[0]
 		for i := 1; i < len(s.where); i++ {
 			p = p.And(s.where[i])
@@ -101,10 +99,10 @@ func (s *Selector[T]) Build() (*Query, error) {
 		}
 	}
 	if len(s.orderBy) > 0 {
-		s.writeString(" ORDER BY ")
+		s.sb.WriteString(" ORDER BY ")
 		for i, c := range s.orderBy {
 			if i > 0 {
-				s.comma()
+				s.sb.WriteByte(',')
 			}
 			if err = s.buildColumn(c, false); err != nil {
 				return nil, err
@@ -112,21 +110,22 @@ func (s *Selector[T]) Build() (*Query, error) {
 		}
 	}
 	if s.limit > 0 {
-		s.writeString(" LIMIT ?")
+		s.sb.WriteString(" LIMIT ?")
 		s.addArgs(s.limit)
 	}
 
 	if s.offset > 0 {
-		s.writeString(" OFFSET ?")
+		s.sb.WriteString(" OFFSET ?")
 		s.addArgs(s.offset)
 	}
 
-	s.end()
+	s.sb.WriteByte(';')
 	return &Query{
-		SQL:  s.buffer.String(),
+		SQL:  s.sb.String(),
 		Args: s.args,
 	}, nil
 }
+
 func (s *Selector[T]) addArgs(args ...any) {
 	if s.args == nil {
 		s.args = make([]any, 0, 8)
@@ -140,66 +139,68 @@ func (s *Selector[T]) buildExpression(e Expression) error {
 	}
 	switch exp := e.(type) {
 	case Column:
-		s.writeByte('`')
-		s.writeString(exp.name)
-		s.writeByte('`')
+		s.sb.WriteByte('`')
+		s.sb.WriteString(exp.name)
+		s.sb.WriteByte('`')
 	case value:
-		s.writeByte('?')
+		s.sb.WriteByte('?')
 		s.args = append(s.args, exp.val)
 	case Predicate:
 		_, lp := exp.left.(Predicate)
 		if lp {
-			s.writeByte('(')
+			s.sb.WriteByte('(')
 		}
 		if err := s.buildExpression(exp.left); err != nil {
 			return err
 		}
 		if lp {
-			s.writeByte(')')
+			s.sb.WriteByte(')')
 		}
-		s.space()
-		s.writeString(exp.op.String())
-		s.space()
+		s.sb.WriteByte(' ')
+		s.sb.WriteString(exp.op.String())
+		s.sb.WriteByte(' ')
 
 		_, rp := exp.right.(Predicate)
 		if rp {
-			s.writeByte('(')
+			s.sb.WriteByte('(')
 		}
 		if err := s.buildExpression(exp.right); err != nil {
 			return err
 		}
 		if rp {
-			s.writeByte(')')
+			s.sb.WriteByte(')')
 		}
 	default:
 		return errs.NewErrUnsupportedExpressionType(exp)
 	}
 	return nil
 }
+
 func (s *Selector[T]) buildColumn(c Column, useAlias bool) error {
-	s.writeByte('`')
+	s.sb.WriteByte('`')
 	fd, ok := s.model.Fields.Fields[c.name]
 	if !ok {
 		return errs.NewErrUnknownField(c.name)
 	}
-	s.writeString(fd.Column)
-	s.writeByte('`')
+	s.sb.WriteString(fd.Column)
+	s.sb.WriteByte('`')
 	if c.order != "" {
-		s.writeString(c.order)
+		s.sb.WriteString(c.order)
 	}
 	if useAlias {
 		s.buildAs(c.alias)
 	}
 	return nil
 }
+
 func (s *Selector[T]) buildColumns() error {
 	if len(s.columns) == 0 {
-		s.writeByte('*')
+		s.sb.WriteByte('*')
 		return nil
 	}
 	for i, c := range s.columns {
 		if i > 0 {
-			s.comma()
+			s.sb.WriteByte(',')
 		}
 		switch val := c.(type) {
 		case Column:
@@ -211,7 +212,7 @@ func (s *Selector[T]) buildColumns() error {
 				return err
 			}
 		case RawExpr:
-			s.writeString(val.raw)
+			s.sb.WriteString(val.raw)
 			if len(val.args) != 0 {
 				s.addArgs(val.args...)
 			}
@@ -221,20 +222,22 @@ func (s *Selector[T]) buildColumns() error {
 	}
 	return nil
 }
+
 func (s *Selector[T]) buildAggregate(a Aggregate, useAlias bool) error {
-	s.writeString(a.fn)
-	s.writeString("(`")
+	s.sb.WriteString(a.fn)
+	s.sb.WriteString("(`")
 	fd, ok := s.model.Fields.Fields[a.arg]
 	if !ok {
 		return errs.NewErrUnknownField(a.arg)
 	}
-	s.writeString(fd.Column)
-	s.writeString("`)")
+	s.sb.WriteString(fd.Column)
+	s.sb.WriteString("`)")
 	if useAlias {
 		s.buildAs(a.alias)
 	}
 	return nil
 }
+
 func (s *Selector[T]) From(table string) *Selector[T] {
 	s.tableName = table
 	return s
@@ -244,10 +247,12 @@ func (s *Selector[T]) Where(ps ...Predicate) *Selector[T] {
 	s.where = ps
 	return s
 }
+
 func (s *Selector[T]) OrderBy(cols ...Column) *Selector[T] {
 	s.orderBy = cols
 	return s
 }
+
 func (s *Selector[T]) Offset(offset int) *Selector[T] {
 	s.offset = offset
 	return s
@@ -257,6 +262,7 @@ func (s *Selector[T]) Limit(limit int) *Selector[T] {
 	s.limit = limit
 	return s
 }
+
 func (s *Selector[T]) Select(cols ...Selectable) *Selector[T] {
 	s.columns = cols
 	return s
@@ -268,10 +274,10 @@ type Selectable interface {
 
 func (s *Selector[T]) buildAs(alias string) {
 	if alias != "" {
-		s.writeString(" AS ")
-		s.writeByte('`')
-		s.writeString(alias)
-		s.writeByte('`')
+		s.sb.WriteString(" AS ")
+		s.sb.WriteByte('`')
+		s.sb.WriteString(alias)
+		s.sb.WriteByte('`')
 	}
 }
 
