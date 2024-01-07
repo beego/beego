@@ -22,6 +22,8 @@ import (
 	"sync"
 )
 
+var DefaultModelCache = NewModelCacheHandler()
+
 // ModelCache info collection
 type ModelCache struct {
 	sync.RWMutex    // only used outsite for bootStrap

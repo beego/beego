@@ -1212,7 +1212,7 @@ func (d *dbBase) ReadBatch(ctx context.Context, q dbQuerier, qs *querySet, mi *m
 
 	slice := ind
 	if unregister {
-		mi, _ = defaultModelCache.Get(name)
+		mi, _ = models.DefaultModelCache.Get(name)
 		tCols = mi.Fields.DBcols
 		colsNum = len(tCols)
 	}

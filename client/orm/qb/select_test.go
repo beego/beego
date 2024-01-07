@@ -22,16 +22,15 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/beego/beego/v2/client/orm"
-	imodels "github.com/beego/beego/v2/client/orm/internal/models"
 	"github.com/beego/beego/v2/client/orm/qb/errs"
 )
 
 func TestSelector_Build(t *testing.T) {
-	cache := imodels.NewModelCacheHandler()
 	err := orm.RegisterDataBase("default", "sqlite3", "")
 	if err != nil {
 		return
 	}
+	db := orm.NewOrm()
 	testCase := []struct {
 		name      string
 		q         QueryBuilder
@@ -40,14 +39,14 @@ func TestSelector_Build(t *testing.T) {
 	}{
 		{
 			name: "no from",
-			q:    NewSelector[TestModel](cache),
+			q:    NewSelector[TestModel](db),
 			wantQuery: &Query{
 				SQL:  "SELECT * FROM `test_model`;",
 				Args: nil,
 			},
 		}, {
 			name: "from",
-			q:    NewSelector[TestModel](cache).From("from_test"),
+			q:    NewSelector[TestModel](db).From("from_test"),
 			wantQuery: &Query{
 				SQL:  "SELECT * FROM `from_test`;",
 				Args: nil,
@@ -55,21 +54,21 @@ func TestSelector_Build(t *testing.T) {
 		},
 		{
 			name: "no from",
-			q:    NewSelector[TestModel](cache).From(""),
+			q:    NewSelector[TestModel](db).From(""),
 			wantQuery: &Query{
 				SQL:  "SELECT * FROM `test_model`;",
 				Args: nil,
 			},
 		}, {
 			name: "test_db",
-			q:    NewSelector[TestModel](cache).From("`test_db`.`db_model`"),
+			q:    NewSelector[TestModel](db).From("`test_db`.`db_model`"),
 			wantQuery: &Query{
 				SQL:  "SELECT * FROM `test_db`.`db_model`;",
 				Args: nil,
 			},
 		}, {
 			name: "single and simple predicate",
-			q: NewSelector[TestModel](cache).From("`test_model_t`").
+			q: NewSelector[TestModel](db).From("`test_model_t`").
 				Where(C("Id").EQ(1)),
 			wantQuery: &Query{
 				SQL:  "SELECT * FROM `test_model_t` WHERE `Id` = ?;",
@@ -78,7 +77,7 @@ func TestSelector_Build(t *testing.T) {
 		},
 		{
 			name: "multiple predicates",
-			q: NewSelector[TestModel](cache).
+			q: NewSelector[TestModel](db).
 				Where(C("Age").GT(18), C("Age").LT(35)),
 			wantQuery: &Query{
 				SQL:  "SELECT * FROM `test_model` WHERE (`Age` > ?) AND (`Age` < ?);",
@@ -87,7 +86,7 @@ func TestSelector_Build(t *testing.T) {
 		},
 		{
 			name: "and",
-			q: NewSelector[TestModel](cache).
+			q: NewSelector[TestModel](db).
 				Where(C("Age").GT(18).And(C("Age").LT(35))),
 			wantQuery: &Query{
 				SQL:  "SELECT * FROM `test_model` WHERE (`Age` > ?) AND (`Age` < ?);",
@@ -96,7 +95,7 @@ func TestSelector_Build(t *testing.T) {
 		},
 		{
 			name: "or",
-			q: NewSelector[TestModel](cache).
+			q: NewSelector[TestModel](db).
 				Where(C("Age").GT(18).Or(C("Age").LT(35))),
 			wantQuery: &Query{
 				SQL:  "SELECT * FROM `test_model` WHERE (`Age` > ?) OR (`Age` < ?);",
@@ -105,7 +104,7 @@ func TestSelector_Build(t *testing.T) {
 		},
 		{
 			name: "not",
-			q:    NewSelector[TestModel](cache).Where(Not(C("Age").GT(18))),
+			q:    NewSelector[TestModel](db).Where(Not(C("Age").GT(18))),
 			wantQuery: &Query{
 				// There are two spaces before NOT because we did not perform any special processing on NOT
 				SQL:  "SELECT * FROM `test_model` WHERE  NOT (`Age` > ?);",
@@ -127,11 +126,11 @@ func TestSelector_Build(t *testing.T) {
 }
 
 func TestSelector_OffsetLimit(t *testing.T) {
-	cache := imodels.NewModelCacheHandler()
 	err := orm.RegisterDataBase("default", "sqlite3", "")
 	if err != nil {
 		return
 	}
+	db := orm.NewOrm()
 	testCases := []struct {
 		name      string
 		q         QueryBuilder
@@ -140,7 +139,7 @@ func TestSelector_OffsetLimit(t *testing.T) {
 	}{
 		{
 			name: "offset only",
-			q:    NewSelector[TestModel](cache).Offset(10),
+			q:    NewSelector[TestModel](db).Offset(10),
 			wantQuery: &Query{
 				SQL:  "SELECT * FROM `test_model` OFFSET ?;",
 				Args: []any{10},
@@ -148,7 +147,7 @@ func TestSelector_OffsetLimit(t *testing.T) {
 		},
 		{
 			name: "limit only",
-			q:    NewSelector[TestModel](cache).Limit(10),
+			q:    NewSelector[TestModel](db).Limit(10),
 			wantQuery: &Query{
 				SQL:  "SELECT * FROM `test_model` LIMIT ?;",
 				Args: []any{10},
@@ -156,7 +155,7 @@ func TestSelector_OffsetLimit(t *testing.T) {
 		},
 		{
 			name: "limit offset",
-			q:    NewSelector[TestModel](cache).Limit(20).Offset(10),
+			q:    NewSelector[TestModel](db).Limit(20).Offset(10),
 			wantQuery: &Query{
 				SQL:  "SELECT * FROM `test_model` LIMIT ? OFFSET ?;",
 				Args: []any{20, 10},
@@ -175,12 +174,13 @@ func TestSelector_OffsetLimit(t *testing.T) {
 		})
 	}
 }
+
 func TestSelector_OrderBy(t *testing.T) {
-	cache := imodels.NewModelCacheHandler()
 	err := orm.RegisterDataBase("default", "sqlite3", "")
 	if err != nil {
 		return
 	}
+	db := orm.NewOrm()
 	testCases := []struct {
 		name      string
 		q         QueryBuilder
@@ -189,49 +189,49 @@ func TestSelector_OrderBy(t *testing.T) {
 	}{
 		{
 			name: "none",
-			q:    NewSelector[TestModel](cache).OrderBy(),
+			q:    NewSelector[TestModel](db).OrderBy(),
 			wantQuery: &Query{
 				SQL: "SELECT * FROM `test_model`;",
 			},
 		},
 		{
 			name: "single",
-			q:    NewSelector[TestModel](cache).OrderBy(C("Age")),
+			q:    NewSelector[TestModel](db).OrderBy(C("Age")),
 			wantQuery: &Query{
 				SQL: "SELECT * FROM `test_model` ORDER BY `age`;",
 			},
 		},
 		{
 			name: "single asc",
-			q:    NewSelector[TestModel](cache).OrderBy(C("Age").Asc()),
+			q:    NewSelector[TestModel](db).OrderBy(C("Age").Asc()),
 			wantQuery: &Query{
 				SQL: "SELECT * FROM `test_model` ORDER BY `age` ASC;",
 			},
 		},
 		{
 			name: "single desc",
-			q:    NewSelector[TestModel](cache).OrderBy(C("Age").Desc()),
+			q:    NewSelector[TestModel](db).OrderBy(C("Age").Desc()),
 			wantQuery: &Query{
 				SQL: "SELECT * FROM `test_model` ORDER BY `age` DESC;",
 			},
 		},
 		{
 			name: "multiple",
-			q:    NewSelector[TestModel](cache).OrderBy(C("Age").Asc(), C("FirstName").Desc()),
+			q:    NewSelector[TestModel](db).OrderBy(C("Age").Asc(), C("FirstName").Desc()),
 			wantQuery: &Query{
 				SQL: "SELECT * FROM `test_model` ORDER BY `age` ASC,`first_name` DESC;",
 			},
 		},
 		{
 			name: "multiple asc",
-			q:    NewSelector[TestModel](cache).OrderBy(C("Age"), C("FirstName")),
+			q:    NewSelector[TestModel](db).OrderBy(C("Age"), C("FirstName")),
 			wantQuery: &Query{
 				SQL: "SELECT * FROM `test_model` ORDER BY `age`,`first_name`;",
 			},
 		},
 		{
 			name:    "invalid column",
-			q:       NewSelector[TestModel](cache).OrderBy(C("Invalid")),
+			q:       NewSelector[TestModel](db).OrderBy(C("Invalid")),
 			wantErr: errs.NewErrUnknownField("Invalid"),
 		},
 	}
@@ -246,12 +246,13 @@ func TestSelector_OrderBy(t *testing.T) {
 		})
 	}
 }
+
 func TestSelector_Select(t *testing.T) {
-	cache := imodels.NewModelCacheHandler()
 	err := orm.RegisterDataBase("default", "sqlite3", "")
 	if err != nil {
 		return
 	}
+	db := orm.NewOrm()
 	testCases := []struct {
 		name      string
 		q         QueryBuilder
@@ -260,40 +261,40 @@ func TestSelector_Select(t *testing.T) {
 	}{
 		{
 			name: "all",
-			q:    NewSelector[TestModel](cache),
+			q:    NewSelector[TestModel](db),
 			wantQuery: &Query{
 				SQL: "SELECT * FROM `test_model`;",
 			},
 		},
 		{
 			name:    "invalid column",
-			q:       NewSelector[TestModel](cache).Select(Avg("Invalid")),
+			q:       NewSelector[TestModel](db).Select(Avg("Invalid")),
 			wantErr: errs.NewErrUnknownField("Invalid"),
 		},
 		{
 			name: "partial columns",
-			q:    NewSelector[TestModel](cache).Select(C("Id"), C("FirstName")),
+			q:    NewSelector[TestModel](db).Select(C("Id"), C("FirstName")),
 			wantQuery: &Query{
 				SQL: "SELECT `id`,`first_name` FROM `test_model`;",
 			},
 		},
 		{
 			name: "avg",
-			q:    NewSelector[TestModel](cache).Select(Avg("Age")),
+			q:    NewSelector[TestModel](db).Select(Avg("Age")),
 			wantQuery: &Query{
 				SQL: "SELECT AVG(`age`) FROM `test_model`;",
 			},
 		},
 		{
 			name: "raw expression",
-			q:    NewSelector[TestModel](cache).Select(Raw("COUNT(DISTINCT `first_name`)")),
+			q:    NewSelector[TestModel](db).Select(Raw("COUNT(DISTINCT `first_name`)")),
 			wantQuery: &Query{
 				SQL: "SELECT COUNT(DISTINCT `first_name`) FROM `test_model`;",
 			},
 		},
 		{
 			name: "alias",
-			q: NewSelector[TestModel](cache).
+			q: NewSelector[TestModel](db).
 				Select(C("Id").As("my_id"),
 					Avg("Age").As("avg_age")),
 			wantQuery: &Query{
@@ -302,7 +303,7 @@ func TestSelector_Select(t *testing.T) {
 		},
 		{
 			name: "where ignore alias",
-			q: NewSelector[TestModel](cache).
+			q: NewSelector[TestModel](db).
 				Where(C("Id").As("my_id").LT(100)),
 			wantQuery: &Query{
 				SQL:  "SELECT * FROM `test_model` WHERE `Id` < ?;",

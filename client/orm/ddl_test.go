@@ -57,7 +57,6 @@ func TestGetDbCreateSQLWithComment(t *testing.T) {
 		wantErr error
 	}
 	al := getDbAlias("default")
-	testModelCache := models.NewModelCacheHandler()
 	var testCases []TestCase
 	switch al.Driver {
 	case DRMySQL:
@@ -78,10 +77,10 @@ func TestGetDbCreateSQLWithComment(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			testModelCache.Clean()
-			err := testModelCache.Register("", true, tc.model)
+			registry := models.NewModelCacheHandler()
+			err := registry.Register("", true, tc.model)
 			assert.NoError(t, err)
-			queries, _, err := getDbCreateSQL(testModelCache, al)
+			queries, _, err := getDbCreateSQL(registry, al)
 			assert.Equal(t, tc.wantSQL, queries[0])
 			assert.Equal(t, tc.wantErr, err)
 		})

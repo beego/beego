@@ -17,6 +17,7 @@ package qb
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/beego/beego/v2/client/orm"
 
@@ -24,44 +25,42 @@ import (
 	"github.com/beego/beego/v2/client/orm/qb/errs"
 
 	"reflect"
-	"strings"
 )
 
 // The Selector is used to construct a SELECT statement
 type Selector[T any] struct {
 	sb        strings.Builder
+	model     *models.ModelInfo
 	args      []any
 	orderBy   []Column
 	where     []Predicate
 	offset    int
 	limit     int
-	model     *models.ModelInfo
 	columns   []Selectable
 	tableName string
-
-	cache *models.ModelCache
-	db    orm.Ormer
+	db        orm.Ormer
 }
 
-func NewSelector[T any](cache *models.ModelCache) *Selector[T] {
+func NewSelector[T any](db orm.Ormer) *Selector[T] {
 	return &Selector[T]{
-		cache: cache,
+		db: db,
 	}
 }
+
 func (s *Selector[T]) Build() (*Query, error) {
 	var (
 		t   T
 		err error
 	)
-
-	s.model, _ = s.cache.GetByMd(&t)
+	registry := models.DefaultModelCache
+	s.model, _ = registry.GetByMd(&t)
 	if s.model == nil {
 		//orm.BootStrap()
-		err = s.cache.Register("", true, &t)
+		err = registry.Register("", true, &t)
 		if err != nil {
 			return nil, err
 		}
-		s.model, _ = s.cache.GetByMd(&t)
+		s.model, _ = registry.GetByMd(&t)
 	}
 
 	s.sb.WriteString("SELECT ")
@@ -126,6 +125,7 @@ func (s *Selector[T]) Build() (*Query, error) {
 		Args: s.args,
 	}, nil
 }
+
 func (s *Selector[T]) addArgs(args ...any) {
 	if s.args == nil {
 		s.args = make([]any, 0, 8)
@@ -175,6 +175,7 @@ func (s *Selector[T]) buildExpression(e Expression) error {
 	}
 	return nil
 }
+
 func (s *Selector[T]) buildColumn(c Column, useAlias bool) error {
 	s.sb.WriteByte('`')
 	fd, ok := s.model.Fields.Fields[c.name]
@@ -191,6 +192,7 @@ func (s *Selector[T]) buildColumn(c Column, useAlias bool) error {
 	}
 	return nil
 }
+
 func (s *Selector[T]) buildColumns() error {
 	if len(s.columns) == 0 {
 		s.sb.WriteByte('*')
@@ -220,6 +222,7 @@ func (s *Selector[T]) buildColumns() error {
 	}
 	return nil
 }
+
 func (s *Selector[T]) buildAggregate(a Aggregate, useAlias bool) error {
 	s.sb.WriteString(a.fn)
 	s.sb.WriteString("(`")
@@ -234,6 +237,7 @@ func (s *Selector[T]) buildAggregate(a Aggregate, useAlias bool) error {
 	}
 	return nil
 }
+
 func (s *Selector[T]) From(table string) *Selector[T] {
 	s.tableName = table
 	return s
@@ -243,10 +247,12 @@ func (s *Selector[T]) Where(ps ...Predicate) *Selector[T] {
 	s.where = ps
 	return s
 }
+
 func (s *Selector[T]) OrderBy(cols ...Column) *Selector[T] {
 	s.orderBy = cols
 	return s
 }
+
 func (s *Selector[T]) Offset(offset int) *Selector[T] {
 	s.offset = offset
 	return s
@@ -256,6 +262,7 @@ func (s *Selector[T]) Limit(limit int) *Selector[T] {
 	s.limit = limit
 	return s
 }
+
 func (s *Selector[T]) Select(cols ...Selectable) *Selector[T] {
 	s.columns = cols
 	return s

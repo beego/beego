@@ -3,6 +3,7 @@
 - [fix: catch missed error on migration](https://github.com/beego/beego/pull/5455)
 - [feature: add ExecRaw func](https://github.com/beego/beego/pull/5455)
 - [feature: add Exec Result](https://github.com/beego/beego/pull/5456)
+- [fix: refactor use global DefaultModelCache](https://github.com/beego/beego/pull/5457)
 
 # v2.1.2
 - [refactor: CONTRIBUTING.md file grammatical improvements](https://github.com/beego/beego/issues/5411)

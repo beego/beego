@@ -28,7 +28,6 @@ import (
 )
 
 func TestDbBase_InsertValueSQL(t *testing.T) {
-
 	mi := &models.ModelInfo{
 		Table: "test_table",
 	}
@@ -236,7 +235,6 @@ func TestDbBase_DeleteSQL(t *testing.T) {
 }
 
 func TestDbBase_buildSetSQL(t *testing.T) {
-
 	testCases := []struct {
 		name string
 
@@ -538,6 +536,10 @@ func TestDbBase_buildSetSQL(t *testing.T) {
 }
 
 func TestDbBase_UpdateBatchSQL(t *testing.T) {
+	registry := models.NewModelCacheHandler()
+	err := registry.Register("", false, new(testTab))
+
+	assert.Nil(t, err)
 	mi := &models.ModelInfo{
 		Table: "test_tab",
 		Fields: &models.Fields{
@@ -654,7 +656,10 @@ func TestDbBase_UpdateBatchSQL(t *testing.T) {
 }
 
 func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
+	registry := models.NewModelCacheHandler()
+	err := registry.Register("", false, new(testTab))
 
+	assert.Nil(t, err)
 	mi := &models.ModelInfo{
 		Table: "test_tab",
 	}
@@ -892,15 +897,14 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 
 func TestDbBase_readBatchSQL(t *testing.T) {
 
-	mc := models.NewModelCacheHandler()
-
-	err := mc.Register("", false, new(testTab), new(testTab1), new(testTab2))
+	registry := models.NewModelCacheHandler()
+	err := registry.Register("", false, new(testTab), new(testTab1), new(testTab2))
 
 	assert.Nil(t, err)
 
-	mc.Bootstrap()
+	registry.Bootstrap()
 
-	mi, ok := mc.GetByMd(new(testTab))
+	mi, ok := registry.GetByMd(new(testTab))
 
 	assert.True(t, ok)
 
@@ -1196,16 +1200,14 @@ func TestDbBase_readBatchSQL(t *testing.T) {
 }
 
 func TestDbBase_readValuesSQL(t *testing.T) {
-
-	mc := models.NewModelCacheHandler()
-
-	err := mc.Register("", false, new(testTab), new(testTab1), new(testTab2))
+	registry := models.NewModelCacheHandler()
+	err := registry.Register("", false, new(testTab), new(testTab1), new(testTab2))
 
 	assert.Nil(t, err)
 
-	mc.Bootstrap()
+	registry.Bootstrap()
 
-	mi, ok := mc.GetByMd(new(testTab))
+	mi, ok := registry.GetByMd(new(testTab))
 
 	assert.True(t, ok)
 
@@ -1334,16 +1336,14 @@ func TestDbBase_readValuesSQL(t *testing.T) {
 }
 
 func TestDbBase_countSQL(t *testing.T) {
-
-	mc := models.NewModelCacheHandler()
-
-	err := mc.Register("", false, new(testTab), new(testTab1), new(testTab2))
+	registry := models.NewModelCacheHandler()
+	err := registry.Register("", false, new(testTab), new(testTab1), new(testTab2))
 
 	assert.Nil(t, err)
 
-	mc.Bootstrap()
+	registry.Bootstrap()
 
-	mi, ok := mc.GetByMd(new(testTab))
+	mi, ok := registry.GetByMd(new(testTab))
 
 	assert.True(t, ok)
 
