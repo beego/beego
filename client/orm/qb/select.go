@@ -135,49 +135,6 @@ func (s *Selector[T]) addArgs(args ...any) {
 	s.args = append(s.args, args...)
 }
 
-func (s *Selector[T]) buildExpression(e Expression) error {
-	if e == nil {
-		return nil
-	}
-	switch exp := e.(type) {
-	case Column:
-		s.writeByte('`')
-		s.writeString(exp.name)
-		s.writeByte('`')
-	case value:
-		s.writeByte('?')
-		s.args = append(s.args, exp.val)
-	case Predicate:
-		_, lp := exp.left.(Predicate)
-		if lp {
-			s.writeByte('(')
-		}
-		if err := s.buildExpression(exp.left); err != nil {
-			return err
-		}
-		if lp {
-			s.writeByte(')')
-		}
-		s.space()
-		s.writeString(exp.op.String())
-		s.space()
-
-		_, rp := exp.right.(Predicate)
-		if rp {
-			s.writeByte('(')
-		}
-		if err := s.buildExpression(exp.right); err != nil {
-			return err
-		}
-		if rp {
-			s.writeByte(')')
-		}
-	default:
-		return errs.NewErrUnsupportedExpressionType(exp)
-	}
-	return nil
-}
-
 func (s *Selector[T]) buildColumn(c Column, useAlias bool) error {
 	s.writeByte('`')
 	fd, ok := s.model.Fields.Fields[c.name]

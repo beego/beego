@@ -62,7 +62,11 @@ func (b *builder) buildExpression(e Expression) error {
 	switch exp := e.(type) {
 	case Column:
 		b.writeByte('`')
-		b.writeString(exp.name)
+		fd, ok := b.model.Fields.Fields[exp.name]
+		if !ok {
+			return errs.NewErrUnknownField(exp.name)
+		}
+		b.writeString(fd.Column)
 		b.writeByte('`')
 	case value:
 		b.writeByte('?')

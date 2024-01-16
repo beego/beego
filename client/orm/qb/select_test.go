@@ -306,7 +306,7 @@ func TestSelector_Select(t *testing.T) {
 			q: NewSelector[TestModel](db).
 				Where(C("Id").As("my_id").LT(100)),
 			wantQuery: &Query{
-				SQL:  "SELECT * FROM `test_model` WHERE `Id` < ?;",
+				SQL:  "SELECT * FROM `test_model` WHERE `id` < ?;",
 				Args: []any{100},
 			},
 		},
