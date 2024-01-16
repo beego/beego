@@ -17,6 +17,7 @@ package qb
 import (
 	"context"
 	"errors"
+	"reflect"
 
 	"github.com/valyala/bytebufferpool"
 
@@ -24,8 +25,6 @@ import (
 
 	"github.com/beego/beego/v2/client/orm/internal/models"
 	"github.com/beego/beego/v2/client/orm/qb/errs"
-
-	"reflect"
 )
 
 var _ QueryBuilder = &Selector[any]{}
@@ -67,32 +66,12 @@ func (s *Selector[T]) Build() (*Query, error) {
 		}
 		s.model, _ = registry.GetByMd(&t)
 	}
-
 	s.writeString("SELECT ")
 	if err = s.buildColumns(); err != nil {
 		return nil, err
 	}
 	s.writeString(" FROM ")
-	if s.tableName != "" {
-		if s.tableName[0] == '`' && s.tableName[len(s.tableName)-1] == '`' {
-			s.writeString(s.tableName)
-		} else {
-			s.writeByte('`')
-			s.writeString(s.tableName)
-			s.writeByte('`')
-		}
-	} else {
-		if s.model.Table == "" {
-			typ := reflect.TypeOf(t)
-			s.writeByte('`')
-			s.writeString(typ.Name())
-			s.writeByte('`')
-		} else {
-			s.writeByte('`')
-			s.writeString(s.model.Table)
-			s.writeByte('`')
-		}
-	}
+	s.buildTable()
 	if len(s.where) > 0 {
 		s.writeString(" WHERE ")
 		err = s.buildPredicates(s.where)
@@ -115,7 +94,6 @@ func (s *Selector[T]) Build() (*Query, error) {
 		s.writeString(" LIMIT ?")
 		s.addArgs(s.limit)
 	}
-
 	if s.offset > 0 {
 		s.writeString(" OFFSET ?")
 		s.addArgs(s.offset)
@@ -126,6 +104,30 @@ func (s *Selector[T]) Build() (*Query, error) {
 		SQL:  s.buffer.String(),
 		Args: s.args,
 	}, nil
+}
+
+func (s *Selector[T]) buildTable() {
+	if s.tableName != "" {
+		if s.tableName[0] == '`' && s.tableName[len(s.tableName)-1] == '`' {
+			s.writeString(s.tableName)
+		} else {
+			s.writeByte('`')
+			s.writeString(s.tableName)
+			s.writeByte('`')
+		}
+	} else {
+		if s.model.Table == "" {
+			var t T
+			typ := reflect.TypeOf(t)
+			s.writeByte('`')
+			s.writeString(typ.Name())
+			s.writeByte('`')
+		} else {
+			s.writeByte('`')
+			s.writeString(s.model.Table)
+			s.writeByte('`')
+		}
+	}
 }
 
 func (s *Selector[T]) addArgs(args ...any) {
