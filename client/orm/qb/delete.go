@@ -16,11 +16,8 @@ package qb
 
 import (
 	"context"
-	"reflect"
-
-	"github.com/valyala/bytebufferpool"
-
 	"github.com/beego/beego/v2/client/orm"
+	"github.com/beego/beego/v2/client/orm/internal/buffers"
 	"github.com/beego/beego/v2/client/orm/internal/models"
 )
 
@@ -34,42 +31,28 @@ type Deleter[T any] struct {
 	where []Predicate
 }
 
-// NewDeleter 开始构建一个 DELETE 查询
+// NewDeleter starts building a Delete query
 func NewDeleter[T any](db orm.Ormer) *Deleter[T] {
 	return &Deleter[T]{
 		db: db,
 		builder: builder{
-			buffer: bytebufferpool.Get(),
+			buffer: buffers.Get(),
 		},
 	}
 }
 
 func (d *Deleter[T]) Build() (*Query, error) {
-	defer bytebufferpool.Put(d.buffer)
+	defer buffers.Put(d.buffer)
 	d.writeString("DELETE FROM ")
 	var err error
 	if d.table == nil {
 		d.table = new(T)
 	}
 	registry := models.DefaultModelCache
-	d.model, _ = registry.GetByMd(d.table)
-	if d.model == nil {
-		err = registry.Register("", true, d.table)
-		if err != nil {
-			return nil, err
-		}
-		d.model, _ = registry.GetByMd(d.table)
-	}
-	if d.model.Table == "" {
-		typ := reflect.TypeOf(d.table)
-		d.writeByte('`')
-		d.writeString(typ.Name())
-		d.writeByte('`')
-	} else {
-		d.writeByte('`')
-		d.writeString(d.model.Table)
-		d.writeByte('`')
-	}
+	d.model, _ = registry.GetOrRegisterByMd(d.table)
+	d.writeByte('`')
+	d.writeString(d.model.Table)
+	d.writeByte('`')
 	if len(d.where) > 0 {
 		d.writeString(" WHERE ")
 		err = d.buildPredicates(d.where)

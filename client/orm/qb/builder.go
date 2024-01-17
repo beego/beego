@@ -15,14 +15,13 @@
 package qb
 
 import (
-	"github.com/valyala/bytebufferpool"
-
+	"github.com/beego/beego/v2/client/orm/internal/buffers"
 	"github.com/beego/beego/v2/client/orm/internal/models"
 	"github.com/beego/beego/v2/client/orm/qb/errs"
 )
 
 type builder struct {
-	buffer *bytebufferpool.ByteBuffer
+	buffer buffers.Buffer
 	model  *models.ModelInfo
 	args   []any
 }

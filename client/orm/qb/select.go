@@ -17,9 +17,8 @@ package qb
 import (
 	"context"
 	"errors"
+	"github.com/beego/beego/v2/client/orm/internal/buffers"
 	"reflect"
-
-	"github.com/valyala/bytebufferpool"
 
 	"github.com/beego/beego/v2/client/orm"
 
@@ -45,7 +44,7 @@ func NewSelector[T any](db orm.Ormer) *Selector[T] {
 	return &Selector[T]{
 		db: db,
 		builder: builder{
-			buffer: bytebufferpool.Get(),
+			buffer: buffers.Get(),
 		},
 	}
 }
@@ -55,17 +54,9 @@ func (s *Selector[T]) Build() (*Query, error) {
 		t   T
 		err error
 	)
-	defer bytebufferpool.Put(s.buffer)
+	defer buffers.Put(s.buffer)
 	registry := models.DefaultModelCache
-	s.model, _ = registry.GetByMd(&t)
-	if s.model == nil {
-		//orm.BootStrap()
-		err = registry.Register("", true, &t)
-		if err != nil {
-			return nil, err
-		}
-		s.model, _ = registry.GetByMd(&t)
-	}
+	s.model, _ = registry.GetOrRegisterByMd(&t)
 	s.writeString("SELECT ")
 	if err = s.buildColumns(); err != nil {
 		return nil, err
@@ -108,13 +99,9 @@ func (s *Selector[T]) Build() (*Query, error) {
 
 func (s *Selector[T]) buildTable() {
 	if s.tableName != "" {
-		if s.tableName[0] == '`' && s.tableName[len(s.tableName)-1] == '`' {
-			s.writeString(s.tableName)
-		} else {
-			s.writeByte('`')
-			s.writeString(s.tableName)
-			s.writeByte('`')
-		}
+		s.writeByte('`')
+		s.writeString(s.tableName)
+		s.writeByte('`')
 	} else {
 		if s.model.Table == "" {
 			var t T

@@ -82,6 +82,18 @@ func (mc *ModelCache) GetByMd(md interface{}) (*ModelInfo, bool) {
 	return mc.GetByFullName(name)
 }
 
+func (mc *ModelCache) GetOrRegisterByMd(md interface{}) (*ModelInfo, error) {
+	model, _ := mc.GetByMd(md)
+	if model == nil {
+		err := mc.Register("", true, md)
+		if err != nil {
+			return nil, err
+		}
+		model, _ = mc.GetByMd(md)
+	}
+	return model, nil
+}
+
 // Set model info to collection
 func (mc *ModelCache) Set(table string, mi *ModelInfo) *ModelInfo {
 	mii := mc.cache[table]
