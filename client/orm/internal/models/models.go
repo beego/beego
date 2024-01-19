@@ -16,6 +16,7 @@ package models
 
 import (
 	"fmt"
+	"github.com/beego/beego/v2/client/orm/qb/errs"
 	"reflect"
 	"runtime/debug"
 	"strings"
@@ -83,13 +84,16 @@ func (mc *ModelCache) GetByMd(md interface{}) (*ModelInfo, bool) {
 }
 
 func (mc *ModelCache) GetOrRegisterByMd(md interface{}) (*ModelInfo, error) {
-	model, _ := mc.GetByMd(md)
-	if model == nil {
+	model, ok := mc.GetByMd(md)
+	if !ok {
 		err := mc.Register("", true, md)
 		if err != nil {
 			return nil, err
 		}
-		model, _ = mc.GetByMd(md)
+		model, ok = mc.GetByMd(md)
+		if !ok {
+			return nil, errs.ErrGetByMd
+		}
 	}
 	return model, nil
 }

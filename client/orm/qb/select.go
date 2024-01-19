@@ -56,7 +56,10 @@ func (s *Selector[T]) Build() (*Query, error) {
 	)
 	defer buffers.Put(s.buffer)
 	registry := models.DefaultModelCache
-	s.model, _ = registry.GetOrRegisterByMd(&t)
+	s.model, err = registry.GetOrRegisterByMd(&t)
+	if err != nil {
+		return nil, err
+	}
 	s.writeString("SELECT ")
 	if err = s.buildColumns(); err != nil {
 		return nil, err

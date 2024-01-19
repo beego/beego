@@ -49,7 +49,10 @@ func (d *Deleter[T]) Build() (*Query, error) {
 		d.table = new(T)
 	}
 	registry := models.DefaultModelCache
-	d.model, _ = registry.GetOrRegisterByMd(d.table)
+	d.model, err = registry.GetOrRegisterByMd(d.table)
+	if err != nil {
+		return nil, err
+	}
 	d.writeByte('`')
 	d.writeString(d.model.Table)
 	d.writeByte('`')
