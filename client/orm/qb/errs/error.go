@@ -15,8 +15,11 @@
 package errs
 
 import (
+	"errors"
 	"fmt"
 )
+
+var ErrGetByMd = errors.New("orm: Unknown error in get model")
 
 // NewErrUnknownField returns an error representing an unknown field
 // Generally, it means that you may have entered a column name or an incorrect field name
