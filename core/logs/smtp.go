@@ -21,8 +21,6 @@ import (
 	"net"
 	"net/smtp"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 // SMTPWriter implements LoggerInterface and is used to send emails via given SMTP-server.
@@ -62,7 +60,7 @@ func (s *SMTPWriter) Init(config string) error {
 	if res == nil && len(s.Formatter) > 0 {
 		fmtr, ok := GetFormatter(s.Formatter)
 		if !ok {
-			return errors.New(fmt.Sprintf("the formatter with name: %s not found", s.Formatter))
+			return fmt.Errorf("the formatter with name: %s not found", s.Formatter)
 		}
 		s.formatter = fmtr
 	}

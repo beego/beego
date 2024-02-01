@@ -7,7 +7,6 @@ import (
 	"sync"
 
 	"github.com/gogo/protobuf/proto"
-	"github.com/pkg/errors"
 
 	"github.com/beego/beego/v2/core/logs"
 )
@@ -110,7 +109,7 @@ func (c *aliLSWriter) Init(config string) error {
 	if len(c.Formatter) > 0 {
 		fmtr, ok := logs.GetFormatter(c.Formatter)
 		if !ok {
-			return errors.New(fmt.Sprintf("the formatter with name: %s not found", c.Formatter))
+			return fmt.Errorf("the formatter with name: %s not found", c.Formatter)
 		}
 		c.formatter = fmtr
 	}
