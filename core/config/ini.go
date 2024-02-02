@@ -19,6 +19,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"os/user"
@@ -28,8 +29,6 @@ import (
 	"sync"
 
 	"github.com/mitchellh/mapstructure"
-
-	"github.com/beego/beego/v2/core/logs"
 )
 
 var (
@@ -519,7 +518,7 @@ func init() {
 
 	err := InitGlobalInstance("ini", "conf/app.conf")
 	if err != nil {
-		logs.Debug("init global config instance failed. If you do not use this, just ignore it. ", err)
+		_, _ = fmt.Fprintln(os.Stderr, "init global config instance failed. If you do not use this, just ignore it. ", err)
 	}
 }
 
