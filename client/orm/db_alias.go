@@ -289,6 +289,7 @@ type alias struct {
 	MaxIdleConns    int
 	MaxOpenConns    int
 	ConnMaxLifetime time.Duration
+	ConnMaxIdletime time.Duration
 	StmtCacheSize   int
 	DB              *DB
 	DbBaser         dbBaser
@@ -447,6 +448,11 @@ func (al *alias) SetConnMaxLifetime(lifeTime time.Duration) {
 	al.DB.DB.SetConnMaxLifetime(lifeTime)
 }
 
+func (al *alias) SetConnMaxIdleTime(idleTime time.Duration) {
+	al.ConnMaxIdletime = idleTime
+	al.DB.DB.SetConnMaxIdleTime(idleTime)
+}
+
 // AddAliasWthDB add a aliasName for the drivename
 func AddAliasWthDB(aliasName, driverName string, db *sql.DB, params ...DBOption) error {
 	_, err := addAliasWthDB(aliasName, driverName, db, params...)
@@ -588,6 +594,13 @@ func MaxOpenConnections(maxOpenConn int) DBOption {
 func ConnMaxLifetime(v time.Duration) DBOption {
 	return func(al *alias) {
 		al.SetConnMaxLifetime(v)
+	}
+}
+
+// ConnMaxIdletime return a hint about ConnMaxIdletime
+func ConnMaxIdletime(v time.Duration) DBOption {
+	return func(al *alias) {
+		al.SetConnMaxIdleTime(v)
 	}
 }
 
