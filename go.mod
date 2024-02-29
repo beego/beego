@@ -13,7 +13,6 @@ require (
 	github.com/elazarl/go-bindata-assetfs v1.0.1
 	github.com/go-kit/kit v0.12.1-0.20220826005032-a7ba4fa4e289
 	github.com/go-kit/log v0.2.1
-	github.com/go-redis/redis/v7 v7.4.0
 	github.com/go-sql-driver/mysql v1.7.0
 	github.com/gogo/protobuf v1.3.2
 	github.com/gomodule/redigo v2.0.0+incompatible
@@ -54,6 +53,7 @@ require (
 	github.com/couchbase/goutils v0.1.0 // indirect
 	github.com/cupcake/rdb v0.0.0-20161107195141-43ba34106c76 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/edsrzf/mmap-go v1.0.0 // indirect
 	github.com/go-logfmt/logfmt v0.5.1 // indirect
 	github.com/go-logr/logr v1.2.3 // indirect
@@ -66,6 +66,7 @@ require (
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.42.0 // indirect
 	github.com/prometheus/procfs v0.10.1 // indirect
+	github.com/redis/go-redis/v9 v9.5.1 // indirect
 	github.com/rogpeppe/go-internal v1.10.0 // indirect
 	github.com/siddontang/go v0.0.0-20170517070808-cb568a3e5cc0 // indirect
 	github.com/siddontang/rdb v0.0.0-20150307021120-fc89ed2e418d // indirect
