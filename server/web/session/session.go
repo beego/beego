@@ -127,7 +127,7 @@ func NewManager(provideName string, cf *ManagerConfig) (*Manager, error) {
 		}
 	}
 
-	err := provider.SessionInit(nil, cf.Maxlifetime, cf.ProviderConfig)
+	err := provider.SessionInit(context.Background(), cf.Maxlifetime, cf.ProviderConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -191,12 +191,12 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 	}
 
 	if sid != "" {
-		exists, err := manager.provider.SessionExist(nil, sid)
+		exists, err := manager.provider.SessionExist(context.Background(), sid)
 		if err != nil {
 			return nil, err
 		}
 		if exists {
-			return manager.provider.SessionRead(nil, sid)
+			return manager.provider.SessionRead(context.Background(), sid)
 		}
 	}
 
@@ -206,7 +206,7 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 		return nil, errs
 	}
 
-	session, err = manager.provider.SessionRead(nil, sid)
+	session, err = manager.provider.SessionRead(context.Background(), sid)
 	if err != nil {
 		return nil, err
 	}
@@ -249,7 +249,7 @@ func (manager *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sid, _ := url.QueryUnescape(cookie.Value)
-	manager.provider.SessionDestroy(nil, sid)
+	manager.provider.SessionDestroy(context.Background(), sid)
 	if manager.config.EnableSetCookie {
 		expiration := time.Now()
 		cookie = &http.Cookie{
@@ -268,7 +268,7 @@ func (manager *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
 
 // GetSessionStore Get SessionStore by its id.
 func (manager *Manager) GetSessionStore(sid string) (sessions Store, err error) {
-	sessions, err = manager.provider.SessionRead(nil, sid)
+	sessions, err = manager.provider.SessionRead(context.Background(), sid)
 	return
 }
 
@@ -291,7 +291,7 @@ func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Reque
 	cookie, err := r.Cookie(manager.config.CookieName)
 	if err != nil || cookie.Value == "" {
 		// delete old cookie
-		session, err = manager.provider.SessionRead(nil, sid)
+		session, err = manager.provider.SessionRead(context.Background(), sid)
 		if err != nil {
 			return nil, err
 		}
@@ -310,7 +310,7 @@ func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Reque
 			return nil, err
 		}
 
-		session, err = manager.provider.SessionRegenerate(nil, oldsid, sid)
+		session, err = manager.provider.SessionRegenerate(context.Background(), oldsid, sid)
 		if err != nil {
 			return nil, err
 		}
