@@ -188,7 +188,7 @@ func (bl *BeeLogger) AsyncNonBlockWrite() *BeeLogger {
 }
 
 // SetLogger provides a given logger adapter into BeeLogger with config string.
-// config must in in JSON format like {"interval":360}}
+// config must in JSON format like {"interval":360}}
 func (bl *BeeLogger) setLogger(adapterName string, configs ...string) error {
 	config := append(configs, "{}")[0]
 	for _, l := range bl.outputs {
@@ -223,7 +223,7 @@ func (bl *BeeLogger) setLogger(adapterName string, configs ...string) error {
 }
 
 // SetLogger provides a given logger adapter into BeeLogger with config string.
-// config must in in JSON format like {"interval":360}}
+// config must in JSON format like {"interval":360}}
 func (bl *BeeLogger) SetLogger(adapterName string, configs ...string) error {
 	bl.lock.Lock()
 	defer bl.lock.Unlock()
