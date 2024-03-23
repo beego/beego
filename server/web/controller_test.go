@@ -366,7 +366,7 @@ func createReqBody(filePath string) (string, io.Reader, error) {
 		return "", nil, err
 	}
 
-	_ = bw.Close() // write the tail boundry
+	_ = bw.Close() // write the tail boundary
 	return bw.FormDataContentType(), buf, nil
 }
 
