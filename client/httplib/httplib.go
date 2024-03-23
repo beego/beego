@@ -42,7 +42,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -626,7 +626,7 @@ func (b *BeegoHTTPRequest) ToFile(filename string) error {
 
 // Check if the file directory exists. If it doesn't then it's created
 func pathExistAndMkdir(filename string) (err error) {
-	filename = path.Dir(filename)
+	filename = filepath.Dir(filename)
 	_, err = os.Stat(filename)
 	if err == nil {
 		return nil

@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -226,7 +225,7 @@ func (w *fileLogWriter) createLogFile() (*os.File, error) {
 		return nil, err
 	}
 
-	filepath := path.Dir(w.Filename)
+	filepath := filepath.Dir(w.Filename)
 	os.MkdirAll(filepath, os.FileMode(dirperm))
 
 	fd, err := os.OpenFile(w.Filename, os.O_WRONLY|os.O_APPEND|os.O_CREATE, os.FileMode(perm))
