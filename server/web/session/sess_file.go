@@ -21,7 +21,6 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"path"
 	"path/filepath"
 	"strings"
 	"sync"
@@ -88,16 +87,16 @@ func (fs *FileSessionStore) SessionRelease(ctx context.Context, w http.ResponseW
 		SLogger.Println(err)
 		return
 	}
-	_, err = os.Stat(path.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid))
+	_, err = os.Stat(filepath.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid))
 	var f *os.File
 	if err == nil {
-		f, err = os.OpenFile(path.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid), os.O_RDWR, 0o777)
+		f, err = os.OpenFile(filepath.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid), os.O_RDWR, 0o777)
 		if err != nil {
 			SLogger.Println(err)
 			return
 		}
 	} else if os.IsNotExist(err) {
-		f, err = os.Create(path.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid))
+		f, err = os.Create(filepath.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid))
 		if err != nil {
 			SLogger.Println(err)
 			return
@@ -195,7 +194,7 @@ func (fp *FileProvider) SessionExist(ctx context.Context, sid string) (bool, err
 		return false, errors.New("min length of session id is 2")
 	}
 
-	_, err := os.Stat(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid))
+	_, err := os.Stat(filepath.Join(fp.savePath, string(sid[0]), string(sid[1]), sid))
 	return err == nil, nil
 }
 
@@ -203,7 +202,7 @@ func (fp *FileProvider) SessionExist(ctx context.Context, sid string) (bool, err
 func (fp *FileProvider) SessionDestroy(ctx context.Context, sid string) error {
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()
-	os.Remove(path.Join(fp.savePath, string(sid[0]), string(sid[1]), sid))
+	os.Remove(filepath.Join(fp.savePath, string(sid[0]), string(sid[1]), sid))
 	return nil
 }
 
@@ -234,10 +233,10 @@ func (fp *FileProvider) SessionRegenerate(ctx context.Context, oldsid, sid strin
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()
 
-	oldPath := path.Join(fp.savePath, string(oldsid[0]), string(oldsid[1]))
-	oldSidFile := path.Join(oldPath, oldsid)
-	newPath := path.Join(fp.savePath, string(sid[0]), string(sid[1]))
-	newSidFile := path.Join(newPath, sid)
+	oldPath := filepath.Join(fp.savePath, string(oldsid[0]), string(oldsid[1]))
+	oldSidFile := filepath.Join(oldPath, oldsid)
+	newPath := filepath.Join(fp.savePath, string(sid[0]), string(sid[1]))
+	newSidFile := filepath.Join(newPath, sid)
 
 	// new sid file is exist
 	_, err := os.Stat(newSidFile)
