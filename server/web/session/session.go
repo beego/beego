@@ -287,7 +287,6 @@ func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Reque
 	}
 
 	var session Store
-
 	cookie, err := r.Cookie(manager.config.CookieName)
 	if err != nil || cookie.Value == "" {
 		// delete old cookie
@@ -296,43 +295,39 @@ func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Reque
 			return nil, err
 		}
 		cookie = &http.Cookie{
-			Name:     manager.config.CookieName,
-			Value:    url.QueryEscape(sid),
-			Path:     "/",
-			HttpOnly: !manager.config.DisableHTTPOnly,
-			Secure:   manager.isSecure(r),
-			Domain:   manager.config.Domain,
-			SameSite: manager.config.CookieSameSite,
+			Name:  manager.config.CookieName,
+			Value: url.QueryEscape(sid),
 		}
 	} else {
 		oldsid, err := url.QueryUnescape(cookie.Value)
 		if err != nil {
 			return nil, err
 		}
-
 		session, err = manager.provider.SessionRegenerate(context.Background(), oldsid, sid)
 		if err != nil {
 			return nil, err
 		}
-
 		cookie.Value = url.QueryEscape(sid)
-		cookie.HttpOnly = true
-		cookie.Path = "/"
 	}
 	if manager.config.CookieLifeTime > 0 {
 		cookie.MaxAge = manager.config.CookieLifeTime
 		cookie.Expires = time.Now().Add(time.Duration(manager.config.CookieLifeTime) * time.Second)
 	}
+
+	cookie.HttpOnly = !manager.config.DisableHTTPOnly
+	cookie.Path = "/"
+	cookie.Secure = manager.isSecure(r)
+	cookie.Domain = manager.config.Domain
+	cookie.SameSite = manager.config.CookieSameSite
+
 	if manager.config.EnableSetCookie {
 		http.SetCookie(w, cookie)
 	}
 	r.AddCookie(cookie)
-
 	if manager.config.EnableSidInHTTPHeader {
 		r.Header.Set(manager.config.SessionNameInHTTPHeader, sid)
 		w.Header().Set(manager.config.SessionNameInHTTPHeader, sid)
 	}
-
 	return session, nil
 }
 
