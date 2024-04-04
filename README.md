@@ -5,10 +5,10 @@ Beego is used for rapid development of enterprise application in Go, including R
 It is inspired by Tornado, Sinatra and Flask. beego has some Go-specific features such as interfaces and struct embedding.
 
 ## Quick Start
-
+- [New Doc Website - unavailable](https://beego.gocn.vip)
+- [New Doc Website Backup @flycash](https://doc.meoying.com/beego/docs/en-US/v2.2.x/)
+- [New Doc Website source code(or Backup for backup)](https://github.com/beego/beego-doc)
 - [Old Doc - github](https://github.com/beego/beedoc)
-- [New Doc Website](https://beego.gocn.vip)
-- [New Doc Website Backup](https://github.com/beego/beego-doc)
 - [Example](https://github.com/beego/beego-example)
 
 > Kindly remind that sometimes the HTTPS certificate is expired, you may get some NOT SECURE warning
