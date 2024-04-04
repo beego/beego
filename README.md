@@ -15,8 +15,6 @@ It is inspired by Tornado, Sinatra and Flask. beego has some Go-specific feature
 
 ### Web Application
 
-![Http Request](https://cdn.nlark.com/yuque/0/2020/png/755700/1607857462507-855ec543-7ce3-402d-a0cb-b2524d5a4b60.png)
-
 #### Create `hello` directory, cd `hello` directory
 
     mkdir hello
