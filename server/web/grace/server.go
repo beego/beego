@@ -338,15 +338,15 @@ func (srv *Server) fork() (err error) {
 	var args []string
 	if len(os.Args) > 1 {
 		for _, arg := range os.Args[1:] {
-			if arg == "-graceful" {
+			if strings.TrimLeft(arg, "-") == "graceful" {
 				break
 			}
 			args = append(args, arg)
 		}
 	}
-	args = append(args, "-graceful")
+	args = append(args, "--graceful")
 	if len(runningServers) > 1 {
-		args = append(args, fmt.Sprintf(`-socketorder=%s`, strings.Join(orderArgs, ",")))
+		args = append(args, fmt.Sprintf(`--socketorder=%s`, strings.Join(orderArgs, ",")))
 		log.Println(args)
 	}
 	cmd := exec.Command(path, args...)
