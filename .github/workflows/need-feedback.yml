@@ -15,5 +15,7 @@ jobs:
           # these are optional, if you want to configure:
           days-until-close: 5
           trigger-label: status/need-feedback
-          closing-comment: This issue was closed by the need-feedback bot due to without feebacks.
+          closing-comment: |
+            This issue was closed by the need-feedback bot. 
+            @${issue.user.login}, please follow the issue template/discussion to provide more details.
           dry-run: false
