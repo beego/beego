@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-
-	"github.com/pkg/errors"
 )
 
 // SLACKWriter implements beego LoggerInterface and is used to send jiaoliao webhook
@@ -40,7 +38,7 @@ func (s *SLACKWriter) Init(config string) error {
 	if res == nil && len(s.Formatter) > 0 {
 		fmtr, ok := GetFormatter(s.Formatter)
 		if !ok {
-			return errors.New(fmt.Sprintf("the formatter with name: %s not found", s.Formatter))
+			return fmt.Errorf("the formatter with name: %s not found", s.Formatter)
 		}
 		s.formatter = fmtr
 	}

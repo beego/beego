@@ -39,12 +39,12 @@ func serverStaticRouter(ctx *context.Context) {
 		return
 	}
 
-	forbidden, filePath, fileInfo, err := lookupFile(ctx)
+	fbd, filePath, fileInfo, err := lookupFile(ctx)
 	if err == errNotStaticRequest {
 		return
 	}
 
-	if forbidden {
+	if fbd {
 		exception("403", ctx)
 		return
 	}

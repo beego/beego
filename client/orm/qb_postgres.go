@@ -19,7 +19,7 @@ func processingStr(str []string) string {
 	return s
 }
 
-// Select will join the fields
+// Select will join the Fields
 func (qb *PostgresQueryBuilder) Select(fields ...string) QueryBuilder {
 	var str string
 	n := len(fields)
@@ -121,7 +121,7 @@ func (qb *PostgresQueryBuilder) In(vals ...string) QueryBuilder {
 	return qb
 }
 
-// OrderBy join the Order by fields
+// OrderBy join the Order by Fields
 func (qb *PostgresQueryBuilder) OrderBy(fields ...string) QueryBuilder {
 	str := processingStr(fields)
 	qb.tokens = append(qb.tokens, "ORDER BY", str)
@@ -152,7 +152,7 @@ func (qb *PostgresQueryBuilder) Offset(offset int) QueryBuilder {
 	return qb
 }
 
-// GroupBy join the Group by fields
+// GroupBy join the Group by Fields
 func (qb *PostgresQueryBuilder) GroupBy(fields ...string) QueryBuilder {
 	str := processingStr(fields)
 	qb.tokens = append(qb.tokens, "GROUP BY", str)
@@ -172,7 +172,7 @@ func (qb *PostgresQueryBuilder) Update(tables ...string) QueryBuilder {
 	return qb
 }
 
-// Set join the set kv
+// Set join the Set kv
 func (qb *PostgresQueryBuilder) Set(kv ...string) QueryBuilder {
 	qb.tokens = append(qb.tokens, "SET", strings.Join(kv, CommaSpace))
 	return qb
@@ -211,7 +211,7 @@ func (qb *PostgresQueryBuilder) Subquery(sub string, alias string) string {
 	return fmt.Sprintf("(%s) AS %s", sub, alias)
 }
 
-// String join all tokens
+// String join All tokens
 func (qb *PostgresQueryBuilder) String() string {
 	s := strings.Join(qb.tokens, " ")
 	qb.tokens = qb.tokens[:0]

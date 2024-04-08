@@ -248,3 +248,114 @@ func (m *MockOrm) Load(key string) (any, error) {
 	}
 	return m.kvs[key], nil
 }
+
+func TestCache_associate(t *testing.T) {
+	testCases := []struct {
+		name            string
+		skipEmptyPrefix bool
+		prefix          string
+		input           string
+		wantRes         string
+	}{
+		{
+			name:            "skip prefix",
+			skipEmptyPrefix: true,
+			prefix:          "",
+			input:           "my-key",
+			wantRes:         "my-key",
+		},
+		{
+			name:            "skip prefix but prefix not empty",
+			skipEmptyPrefix: true,
+			prefix:          "abc",
+			input:           "my-key",
+			wantRes:         "abc:my-key",
+		},
+		{
+			name:            "using empty prefix",
+			skipEmptyPrefix: false,
+			prefix:          "",
+			input:           "my-key",
+			wantRes:         ":my-key",
+		},
+		{
+			name:    "using prefix",
+			prefix:  "abc",
+			input:   "my-key",
+			wantRes: "abc:my-key",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			c := NewRedisCache().(*Cache)
+			c.skipEmptyPrefix = tc.skipEmptyPrefix
+			c.key = tc.prefix
+			res := c.associate(tc.input)
+			assert.Equal(t, tc.wantRes, res)
+		})
+	}
+}
+
+func TestCache_parseConf(t *testing.T) {
+	tests := []struct {
+		name string
+
+		configStr string
+
+		wantCache Cache
+		wantErr   error
+	}{
+		{
+			name: "just conn",
+			configStr: `{
+  "conn": "127.0.0.1:6379"
+}`,
+
+			wantCache: Cache{
+				conninfo:        "127.0.0.1:6379",
+				dbNum:           0,
+				key:             DefaultKey,
+				password:        "",
+				maxIdle:         defaultMaxIdle,
+				skipEmptyPrefix: false,
+				timeout:         defaultTimeout,
+			},
+			wantErr: nil,
+		},
+
+		{
+			name: "all",
+			configStr: `{
+  "dbNum": "2",
+  "skipEmptyPrefix": "true",
+  "key": "mykey",
+  "conn": "redis://mypwd@127.0.0.1:6379",
+  "maxIdle": "10",
+  "timeout": "30s"
+}`,
+
+			wantCache: Cache{
+				conninfo:        "127.0.0.1:6379",
+				dbNum:           2,
+				key:             "mykey",
+				password:        "mypwd",
+				maxIdle:         10,
+				skipEmptyPrefix: true,
+				timeout:         time.Second * 30,
+			},
+			wantErr: nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := Cache{}
+			err := c.parseConf(tt.configStr)
+			assert.Equal(t, tt.wantErr, err)
+			if err != nil {
+				return
+			}
+			assert.Equal(t, tt.wantCache, c)
+		})
+	}
+}

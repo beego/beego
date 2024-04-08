@@ -237,11 +237,16 @@ func TimeoutOption(timeout time.Duration) Option {
 //       week：0-6（0 means Sunday）
 
 // SetCron some signals：
-//       *： any time
-//       ,：　 separate signal
+//
+//	*： any time
+//	,：　 separate signal
+//
 // 　　    －：duration
-//       /n : do as n times of time duration
+//
+//	/n : do as n times of time duration
+//
 // ///////////////////////////////////////////////////////
+//
 //	0/30 * * * * *                        every 30s
 //	0 43 21 * * *                         21:43
 //	0 15 05 * * * 　　                     05:15
@@ -724,7 +729,8 @@ func getField(field string, r bounds) uint64 {
 }
 
 // getRange returns the bits indicated by the given expression:
-//   number | number "-" number [ "/" number ]
+//
+//	number | number "-" number [ "/" number ]
 func getRange(expr string, r bounds) uint64 {
 	var (
 		start, end, step uint

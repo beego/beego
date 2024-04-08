@@ -20,8 +20,6 @@ import (
 	"reflect"
 	"strconv"
 
-	"github.com/pkg/errors"
-
 	"github.com/beego/beego/v2/core/logs"
 )
 
@@ -92,9 +90,8 @@ func (t *TagAutoWireBeanFactory) AutoWire(ctx context.Context, appCtx Applicatio
 		switch fValue.Kind() {
 		case reflect.Bool:
 			if v, err := strconv.ParseBool(fm.DftValue); err != nil {
-				return errors.WithMessage(err,
-					fmt.Sprintf("can not convert the field[%s]'s default value[%s] to bool value",
-						fn, fm.DftValue))
+				return fmt.Errorf("can not convert the field[%s]'s default value[%s] to bool value: %w",
+					fn, fm.DftValue, err)
 			} else {
 				fValue.SetBool(v)
 				continue
@@ -182,9 +179,8 @@ func (t *TagAutoWireBeanFactory) AutoWire(ctx context.Context, appCtx Applicatio
 
 func (t *TagAutoWireBeanFactory) setFloatXValue(dftValue string, bitSize int, fn string, fv reflect.Value) error {
 	if v, err := strconv.ParseFloat(dftValue, bitSize); err != nil {
-		return errors.WithMessage(err,
-			fmt.Sprintf("can not convert the field[%s]'s default value[%s] to float%d value",
-				fn, dftValue, bitSize))
+		return fmt.Errorf("can not convert the field[%s]'s default value[%s] to float%d value: %w",
+			fn, dftValue, bitSize, err)
 	} else {
 		fv.SetFloat(v)
 		return nil
@@ -193,9 +189,8 @@ func (t *TagAutoWireBeanFactory) setFloatXValue(dftValue string, bitSize int, fn
 
 func (t *TagAutoWireBeanFactory) setUIntXValue(dftValue string, bitSize int, fn string, fv reflect.Value) error {
 	if v, err := strconv.ParseUint(dftValue, 10, bitSize); err != nil {
-		return errors.WithMessage(err,
-			fmt.Sprintf("can not convert the field[%s]'s default value[%s] to uint%d value",
-				fn, dftValue, bitSize))
+		return fmt.Errorf("can not convert the field[%s]'s default value[%s] to uint%d value: %w",
+			fn, dftValue, bitSize, err)
 	} else {
 		fv.SetUint(v)
 		return nil
@@ -204,9 +199,8 @@ func (t *TagAutoWireBeanFactory) setUIntXValue(dftValue string, bitSize int, fn 
 
 func (t *TagAutoWireBeanFactory) setIntXValue(dftValue string, bitSize int, fn string, fv reflect.Value) error {
 	if v, err := strconv.ParseInt(dftValue, 10, bitSize); err != nil {
-		return errors.WithMessage(err,
-			fmt.Sprintf("can not convert the field[%s]'s default value[%s] to int%d value",
-				fn, dftValue, bitSize))
+		return fmt.Errorf("can not convert the field[%s]'s default value[%s] to int%d value: %w",
+			fn, dftValue, bitSize, err)
 	} else {
 		fv.SetInt(v)
 		return nil

@@ -14,6 +14,7 @@
 
 // Package auth provides handlers to enable basic auth support.
 // Simple Usage:
+//
 //	import(
 //		"github.com/beego/beego/v2"
 //		"github.com/beego/beego/v2/server/web/filter/auth"
@@ -24,7 +25,6 @@
 //		beego.InsertFilter("*", beego.BeforeRouter,auth.Basic("username","secretpassword"))
 //		beego.Run()
 //	}
-//
 //
 // Advanced Usage:
 //

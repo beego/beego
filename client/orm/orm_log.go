@@ -19,25 +19,21 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
-	"log"
 	"strings"
 	"time"
+
+	"github.com/beego/beego/v2/client/orm/internal/logs"
 )
 
-// Log implement the log.Logger
-type Log struct {
-	*log.Logger
+type Log = logs.Log
+
+// NewLog Set io.Writer to create a Logger.
+func NewLog(out io.Writer) *logs.Log {
+	return logs.NewLog(out)
 }
 
-// costomer log func
+// LogFunc costomer log func
 var LogFunc func(query map[string]interface{})
-
-// NewLog set io.Writer to create a Logger.
-func NewLog(out io.Writer) *Log {
-	d := new(Log)
-	d.Logger = log.New(out, "[ORM]", log.LstdFlags)
-	return d
-}
 
 func debugLogQueies(alias *alias, operaton, query string, t time.Time, err error, args ...interface{}) {
 	logMap := make(map[string]interface{})

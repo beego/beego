@@ -16,7 +16,6 @@ package config
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 	"testing"
@@ -173,7 +172,7 @@ name=mysql
 	}
 	defer os.Remove(name)
 
-	if data, err := ioutil.ReadFile(name); err != nil {
+	if data, err := os.ReadFile(name); err != nil {
 		t.Fatal(err)
 	} else {
 		cfgData := string(data)

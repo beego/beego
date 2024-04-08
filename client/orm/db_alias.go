@@ -40,13 +40,13 @@ const (
 // database driver string.
 type driver string
 
-// get type constant int of current driver..
+// Get type constant int of current driver..
 func (d driver) Type() DriverType {
 	a, _ := dataBaseCache.get(string(d))
 	return a.Driver
 }
 
-// get name of current driver
+// Get name of current driver
 func (d driver) Name() string {
 	return string(d)
 }
@@ -289,6 +289,7 @@ type alias struct {
 	MaxIdleConns    int
 	MaxOpenConns    int
 	ConnMaxLifetime time.Duration
+	ConnMaxIdletime time.Duration
 	StmtCacheSize   int
 	DB              *DB
 	DbBaser         dbBaser
@@ -324,7 +325,7 @@ func detectTZ(al *alias) {
 			}
 		}
 
-		// get default engine from current database
+		// Get default engine from current database
 		row = al.DB.QueryRow("SELECT ENGINE, TRANSACTIONS FROM information_schema.engines WHERE SUPPORT = 'DEFAULT'")
 		var engine string
 		var tx bool
@@ -408,7 +409,7 @@ func newAliasWithDb(aliasName, driverName string, db *sql.DB, params ...DBOption
 
 	err := db.Ping()
 	if err != nil {
-		return nil, fmt.Errorf("register db Ping `%s`, %s", aliasName, err.Error())
+		return nil, fmt.Errorf("Register db Ping `%s`, %s", aliasName, err.Error())
 	}
 
 	detectTZ(al)
@@ -447,6 +448,11 @@ func (al *alias) SetConnMaxLifetime(lifeTime time.Duration) {
 	al.DB.DB.SetConnMaxLifetime(lifeTime)
 }
 
+func (al *alias) SetConnMaxIdleTime(idleTime time.Duration) {
+	al.ConnMaxIdletime = idleTime
+	al.DB.DB.SetConnMaxIdleTime(idleTime)
+}
+
 // AddAliasWthDB add a aliasName for the drivename
 func AddAliasWthDB(aliasName, driverName string, db *sql.DB, params ...DBOption) error {
 	_, err := addAliasWthDB(aliasName, driverName, db, params...)
@@ -463,7 +469,7 @@ func RegisterDataBase(aliasName, driverName, dataSource string, params ...DBOpti
 
 	db, err = sql.Open(driverName, dataSource)
 	if err != nil {
-		err = fmt.Errorf("register db `%s`, %s", aliasName, err.Error())
+		err = fmt.Errorf("Register db `%s`, %s", aliasName, err.Error())
 		goto end
 	}
 
@@ -508,7 +514,7 @@ func SetDataBaseTZ(aliasName string, tz *time.Location) error {
 }
 
 // GetDB Get *sql.DB from registered database by db alias name.
-// Use "default" as alias name if you not set.
+// Use "default" as alias name if you not Set.
 func GetDB(aliasNames ...string) (*sql.DB, error) {
 	var name string
 	if len(aliasNames) > 0 {
@@ -588,6 +594,13 @@ func MaxOpenConnections(maxOpenConn int) DBOption {
 func ConnMaxLifetime(v time.Duration) DBOption {
 	return func(al *alias) {
 		al.SetConnMaxLifetime(v)
+	}
+}
+
+// ConnMaxIdletime return a hint about ConnMaxIdletime
+func ConnMaxIdletime(v time.Duration) DBOption {
+	return func(al *alias) {
+		al.SetConnMaxIdleTime(v)
 	}
 }
 

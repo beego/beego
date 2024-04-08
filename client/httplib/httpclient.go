@@ -17,7 +17,6 @@ package httplib
 import (
 	"bytes"
 	"io"
-	"io/ioutil"
 	"net/http"
 )
 
@@ -105,7 +104,7 @@ func (c *Client) handleCarrier(value interface{}, req *BeegoHTTPRequest) error {
 		if err != nil {
 			return err
 		}
-		req.resp.Body = ioutil.NopCloser(bytes.NewReader(b))
+		req.resp.Body = io.NopCloser(bytes.NewReader(b))
 		carrier.SetHTTPResponse(req.resp)
 	}
 	if carrier, ok := value.(HTTPBodyCarrier); ok {
@@ -113,7 +112,7 @@ func (c *Client) handleCarrier(value interface{}, req *BeegoHTTPRequest) error {
 		if err != nil {
 			return err
 		}
-		reader := ioutil.NopCloser(bytes.NewReader(b))
+		reader := io.NopCloser(bytes.NewReader(b))
 		carrier.SetReader(reader)
 	}
 	if carrier, ok := value.(HTTPBytesCarrier); ok {

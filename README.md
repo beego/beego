@@ -4,28 +4,16 @@ Beego is used for rapid development of enterprise application in Go, including R
 
 It is inspired by Tornado, Sinatra and Flask. beego has some Go-specific features such as interfaces and struct embedding.
 
-![architecture](https://cdn.nlark.com/yuque/0/2020/png/755700/1607857489109-1e267fce-d65f-4c5e-b915-5c475df33c58.png)
-
-Beego is composed of four parts:
-
-1. Base modules: including log module, config module, governor module;
-2. Task: is used for running timed tasks or periodic tasks;
-3. Client: including ORM module, httplib module, cache module;
-4. Server: including web module. We will support gRPC in the future;
-
-**Please use RELEASE version, or master branch which contains the latest bug fix**
-
 ## Quick Start
-
-[Old Doc - github](https://github.com/beego/beedoc)
-[New Doc Website](https://beego.gocn.vip)
-[Example](https://github.com/beego/beego-example)
+- [New Doc Website - unavailable](https://beego.gocn.vip)
+- [New Doc Website Backup @flycash](https://doc.meoying.com/beego/docs/en-US/v2.2.x/)
+- [New Doc Website source code(or Backup for backup)](https://github.com/beego/beego-doc)
+- [Old Doc - github](https://github.com/beego/beedoc)
+- [Example](https://github.com/beego/beego-example)
 
 > Kindly remind that sometimes the HTTPS certificate is expired, you may get some NOT SECURE warning
 
 ### Web Application
-
-![Http Request](https://cdn.nlark.com/yuque/0/2020/png/755700/1607857462507-855ec543-7ce3-402d-a0cb-b2524d5a4b60.png)
 
 #### Create `hello` directory, cd `hello` directory
 

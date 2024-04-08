@@ -38,6 +38,8 @@ func TestRedis(t *testing.T) {
 
 	go globalSession.GC()
 
+	ctx := context.Background()
+
 	r, _ := http.NewRequest("GET", "/", nil)
 	w := httptest.NewRecorder()
 
@@ -45,59 +47,59 @@ func TestRedis(t *testing.T) {
 	if err != nil {
 		t.Fatal("session start failed:", err)
 	}
-	defer sess.SessionRelease(nil, w)
+	defer sess.SessionRelease(ctx, w)
 
 	// SET AND GET
-	err = sess.Set(nil, "username", "astaxie")
+	err = sess.Set(ctx, "username", "astaxie")
 	if err != nil {
 		t.Fatal("set username failed:", err)
 	}
-	username := sess.Get(nil, "username")
+	username := sess.Get(ctx, "username")
 	if username != "astaxie" {
 		t.Fatal("get username failed")
 	}
 
 	// DELETE
-	err = sess.Delete(nil, "username")
+	err = sess.Delete(ctx, "username")
 	if err != nil {
 		t.Fatal("delete username failed:", err)
 	}
-	username = sess.Get(nil, "username")
+	username = sess.Get(ctx, "username")
 	if username != nil {
 		t.Fatal("delete username failed")
 	}
 
 	// FLUSH
-	err = sess.Set(nil, "username", "astaxie")
+	err = sess.Set(ctx, "username", "astaxie")
 	if err != nil {
 		t.Fatal("set failed:", err)
 	}
-	err = sess.Set(nil, "password", "1qaz2wsx")
+	err = sess.Set(ctx, "password", "1qaz2wsx")
 	if err != nil {
 		t.Fatal("set failed:", err)
 	}
-	username = sess.Get(nil, "username")
+	username = sess.Get(ctx, "username")
 	if username != "astaxie" {
 		t.Fatal("get username failed")
 	}
-	password := sess.Get(nil, "password")
+	password := sess.Get(ctx, "password")
 	if password != "1qaz2wsx" {
 		t.Fatal("get password failed")
 	}
-	err = sess.Flush(nil)
+	err = sess.Flush(ctx)
 	if err != nil {
 		t.Fatal("flush failed:", err)
 	}
-	username = sess.Get(nil, "username")
+	username = sess.Get(ctx, "username")
 	if username != nil {
 		t.Fatal("flush failed")
 	}
-	password = sess.Get(nil, "password")
+	password = sess.Get(ctx, "password")
 	if password != nil {
 		t.Fatal("flush failed")
 	}
 
-	sess.SessionRelease(nil, w)
+	sess.SessionRelease(ctx, w)
 }
 
 func TestProvider_SessionInit(t *testing.T) {

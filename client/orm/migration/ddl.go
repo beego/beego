@@ -274,7 +274,7 @@ func (m *Migration) GetSQL() (sql string) {
 			}
 
 			if len(m.Primary) > 0 {
-				sql += fmt.Sprintf(",\n PRIMARY KEY( ")
+				sql += ",\n PRIMARY KEY( "
 			}
 			for index, column := range m.Primary {
 				sql += fmt.Sprintf(" `%s`", column.Name)
@@ -284,7 +284,7 @@ func (m *Migration) GetSQL() (sql string) {
 
 			}
 			if len(m.Primary) > 0 {
-				sql += fmt.Sprintf(")")
+				sql += ")"
 			}
 
 			for _, unique := range m.Uniques {
@@ -295,7 +295,7 @@ func (m *Migration) GetSQL() (sql string) {
 						sql += ","
 					}
 				}
-				sql += fmt.Sprintf(")")
+				sql += ")"
 			}
 			for _, foreign := range m.Foreigns {
 				sql += fmt.Sprintf(",\n `%s` %s %s %s %s %s", foreign.Name, foreign.DataType, foreign.Unsign, foreign.Null, foreign.Inc, foreign.Default)
@@ -356,7 +356,7 @@ func (m *Migration) GetSQL() (sql string) {
 			}
 
 			if len(m.Primary) > 0 {
-				sql += fmt.Sprintf("\n DROP PRIMARY KEY,")
+				sql += "\n DROP PRIMARY KEY,"
 			}
 
 			for index, unique := range m.Uniques {
