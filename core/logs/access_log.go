@@ -26,7 +26,10 @@ const (
 	apacheFormatPattern = "%s - - [%s] \"%s %d %d\" %f %s %s"
 	apacheFormat        = "APACHE_FORMAT"
 	jsonFormat          = "JSON_FORMAT"
+	customFormat        = "CUSTOM_FORMAT"
 )
+
+var CustomAccessLogFunc func(r *AccessLogRecord) string
 
 // AccessLogRecord is astruct for holding access log data.
 type AccessLogRecord struct {
@@ -79,6 +82,11 @@ func (r *AccessLogRecord) format(format string) string {
 		timeFormatted := r.RequestTime.Format("02/Jan/2006 03:04:05")
 		msg = fmt.Sprintf(apacheFormatPattern, r.RemoteAddr, timeFormatted, r.Request, r.Status, r.BodyBytesSent,
 			r.ElapsedTime.Seconds(), r.HTTPReferrer, r.HTTPUserAgent)
+	case customFormat:
+		if CustomAccessLogFunc != nil {
+			return CustomAccessLogFunc(r)
+		}
+		fallthrough
 	case jsonFormat:
 		fallthrough
 	default:
