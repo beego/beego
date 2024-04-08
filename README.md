@@ -6,8 +6,8 @@ It is inspired by Tornado, Sinatra and Flask. beego has some Go-specific feature
 
 ## Quick Start
 - [New Doc Website - unavailable](https://beego.gocn.vip)
-- [New Doc Website Backup @flycash](https://doc.meoying.com/beego/docs/en-US/v2.2.x/)
-- [New Doc Website source code(or Backup for backup)](https://github.com/beego/beego-doc)
+- [New Doc Website Backup @flycash](https://doc.meoying.com/en-US/beego/developing/)
+- [New Doc Website source code](https://github.com/beego/beego-doc)
 - [Old Doc - github](https://github.com/beego/beedoc)
 - [Example](https://github.com/beego/beego-example)
 
