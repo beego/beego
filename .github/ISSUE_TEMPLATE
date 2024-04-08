@@ -2,19 +2,22 @@
 
 Please answer these questions before submitting your issue. Thanks!
 
-1. What version of Go and beego are you using (`bee version`)?
+1. What did you do?
+> If possible, provide a recipe for reproducing the error.
+> A complete runnable program is good.
 
+> If this is ORM issue, please provide the DB schemas.
 
-2. What operating system and processor architecture are you using (`go env`)?
+2. What did you expect to see?
 
+3. What did you see instead?
+> please provide log or error information.
 
-3. What did you do?
-If possible, provide a recipe for reproducing the error.
-A complete runnable program is good.
+4. How to reproduce the issue?
 
-If this is ORM issue, please provide the DB schemas.
+> or you can provide a reproduce demo.
 
-4. What did you expect to see?
+5. What version of Go and beego are you using (`bee version`)?
 
+6. What operating system and processor architecture are you using (`go env`)?
 
-5. What did you see instead?
