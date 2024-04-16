@@ -1,4 +1,4 @@
-name: need-translation-issues
+name: issue-must-follow-template
 
 on:
   schedule:
@@ -14,6 +14,6 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           # these are optional, if you want to configure:
           days-until-close: 5
-          trigger-label: status/need-translation
-          closing-comment: This issue was closed by the need-translation bot. Please translate your issue to English so it could help others.
+          trigger-label: status/no-follow-template
+          closing-comment: This issue was closed by the follow-template bot. Please follow the issue template to provide necessary info.
           dry-run: false
