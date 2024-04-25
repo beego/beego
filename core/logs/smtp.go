@@ -32,13 +32,16 @@ type SMTPWriter struct {
 	FromAddress        string   `json:"fromAddress"`
 	RecipientAddresses []string `json:"sendTos"`
 	Level              int      `json:"level"`
-	formatter          LogFormatter
-	Formatter          string `json:"formatter"`
+	// InsecureSkipVerify default value: true
+	InsecureSkipVerify bool `json:"insecureSkipVerify"`
+
+	formatter LogFormatter
+	Formatter string `json:"formatter"`
 }
 
 // NewSMTPWriter creates the smtp writer.
 func newSMTPWriter() Logger {
-	res := &SMTPWriter{Level: LevelTrace}
+	res := &SMTPWriter{Level: LevelTrace, InsecureSkipVerify: true}
 	res.formatter = res
 	return res
 }
@@ -46,15 +49,16 @@ func newSMTPWriter() Logger {
 // Init smtp writer with json config.
 // config like:
 //
-//	{
-//		"username":"example@gmail.com",
-//		"password:"password",
-//		"host":"smtp.gmail.com:465",
-//		"subject":"email title",
-//		"fromAddress":"from@example.com",
-//		"sendTos":["email1","email2"],
-//		"level":LevelError
-//	}
+//		{
+//			"username":"example@gmail.com",
+//			"password:"password",
+//			"host":"smtp.gmail.com:465",
+//			"subject":"email title",
+//			"fromAddress":"from@example.com",
+//			"sendTos":["email1","email2"],
+//			"level":LevelError,
+//	     	"insecureSkipVerify": false
+//		}
 func (s *SMTPWriter) Init(config string) error {
 	res := json.Unmarshal([]byte(config), s)
 	if res == nil && len(s.Formatter) > 0 {
@@ -91,7 +95,7 @@ func (s *SMTPWriter) sendMail(hostAddressWithPort string, auth smtp.Auth, fromAd
 
 	host, _, _ := net.SplitHostPort(hostAddressWithPort)
 	tlsConn := &tls.Config{
-		InsecureSkipVerify: true,
+		InsecureSkipVerify: s.InsecureSkipVerify,
 		ServerName:         host,
 	}
 	if err = client.StartTLS(tlsConn); err != nil {
