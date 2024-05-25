@@ -40,6 +40,10 @@ func main() {
 }
 ```
 
+#### Download required dependencies
+
+    go mod tidy
+
 #### Build and run
 
     go build hello.go
