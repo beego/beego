@@ -58,9 +58,9 @@ type ValidFormer interface {
 
 // Error show the error
 type Error struct {
-	Message, Key, Name, Field, Tmpl string
-	Value                           interface{}
-	LimitValue                      interface{}
+	Message, Key, Name, Field, Tmpl, Label string
+	Value                                  interface{}
+	LimitValue                             interface{}
 }
 
 // String Returns the Message.
@@ -292,6 +292,7 @@ func (v *Validation) apply(chk Validator, obj interface{}) *Result {
 		Value:      obj,
 		Tmpl:       MessageTmpls[Name],
 		LimitValue: chk.GetLimitValue(),
+		Label:      Label,
 	}
 	v.setError(err)
 
@@ -324,6 +325,7 @@ func (v *Validation) AddError(key, message string) {
 		Key:     key,
 		Name:    Name,
 		Field:   Field,
+		Label:   Label,
 	}
 	v.setError(err)
 }
