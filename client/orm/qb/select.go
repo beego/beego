@@ -17,8 +17,9 @@ package qb
 import (
 	"context"
 	"errors"
-	"github.com/beego/beego/v2/client/orm/internal/buffers"
 	"reflect"
+
+	"github.com/beego/beego/v2/client/orm/internal/buffers"
 
 	"github.com/beego/beego/v2/client/orm"
 

@@ -16,11 +16,12 @@ package models
 
 import (
 	"fmt"
-	"github.com/beego/beego/v2/client/orm/qb/errs"
 	"reflect"
 	"runtime/debug"
 	"strings"
 	"sync"
+
+	"github.com/beego/beego/v2/client/orm/qb/errs"
 )
 
 var DefaultModelCache = NewModelCacheHandler()

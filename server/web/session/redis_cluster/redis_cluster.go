@@ -156,11 +156,11 @@ func (rp *Provider) SessionInit(ctx context.Context, maxlifetime int64, cfgStr s
 	}
 
 	rp.poollist = rediss.NewClusterClient(&rediss.ClusterOptions{
-		Addrs:              strings.Split(rp.SavePath, ";"),
-		Password:           rp.Password,
-		PoolSize:           rp.Poolsize,
-		ConnMaxIdleTime:    rp.idleTimeout,
-		MaxRetries:         rp.MaxRetries,
+		Addrs:           strings.Split(rp.SavePath, ";"),
+		Password:        rp.Password,
+		PoolSize:        rp.Poolsize,
+		ConnMaxIdleTime: rp.idleTimeout,
+		MaxRetries:      rp.MaxRetries,
 	})
 	return rp.poollist.Ping(ctx).Err()
 }

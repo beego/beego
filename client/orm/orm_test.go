@@ -30,8 +30,6 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
-	"github.com/beego/beego/v2/client/orm/internal/logs"
-
 	"github.com/beego/beego/v2/client/orm/internal/utils"
 
 	"github.com/beego/beego/v2/client/orm/internal/models"

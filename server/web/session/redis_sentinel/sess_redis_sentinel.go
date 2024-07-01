@@ -159,13 +159,13 @@ func (rp *Provider) SessionInit(ctx context.Context, maxlifetime int64, cfgStr s
 	}
 
 	rp.poollist = redis.NewFailoverClient(&redis.FailoverOptions{
-		SentinelAddrs:      strings.Split(rp.SavePath, ";"),
-		Password:           rp.Password,
-		PoolSize:           rp.Poolsize,
-		DB:                 rp.DbNum,
-		MasterName:         rp.MasterName,
-		ConnMaxIdleTime:    rp.idleTimeout,
-		MaxRetries:         rp.MaxRetries,
+		SentinelAddrs:   strings.Split(rp.SavePath, ";"),
+		Password:        rp.Password,
+		PoolSize:        rp.Poolsize,
+		DB:              rp.DbNum,
+		MasterName:      rp.MasterName,
+		ConnMaxIdleTime: rp.idleTimeout,
+		MaxRetries:      rp.MaxRetries,
 	})
 
 	return rp.poollist.Ping(ctx).Err()
