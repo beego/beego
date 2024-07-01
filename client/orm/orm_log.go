@@ -35,26 +35,32 @@ func NewLog(out io.Writer) *logs.Log {
 // LogFunc costomer log func
 var LogFunc func(query map[string]interface{})
 
-func debugLogQueies(alias *alias, operaton, query string, t time.Time, err error, args ...interface{}) {
+func debugLogQueies(alias *alias, operation, query string, t time.Time, err error, args ...interface{}) {
 	logMap := make(map[string]interface{})
 	sub := time.Since(t) / 1e5
 	elsp := float64(int(sub)) / 10.0
 	logMap["cost_time"] = elsp
-	flag := "  OK"
+	flag := "OK"
 	if err != nil {
 		flag = "FAIL"
 	}
+
 	logMap["flag"] = flag
-	con := fmt.Sprintf(" -[Queries/%s] - [%s / %11s / %7.1fms] - [%s]", alias.Name, flag, operaton, elsp, query)
+	con := fmt.Sprintf(" -[Queries/%s] - [  %s / %11s / %7.1fms] - [%s]", alias.Name, flag, operation, elsp, query)
+	logMap["alias_name"] = alias.Name
+	logMap["operation"] = operation
+	logMap["query"] = query
 	cons := make([]string, 0, len(args))
 	for _, arg := range args {
 		cons = append(cons, fmt.Sprintf("%v", arg))
 	}
 	if len(cons) > 0 {
 		con += fmt.Sprintf(" - `%s`", strings.Join(cons, "`, `"))
+		logMap["cons"] = cons
 	}
 	if err != nil {
 		con += " - " + err.Error()
+		logMap["err"] = err
 	}
 	logMap["sql"] = fmt.Sprintf("%s-`%s`", query, strings.Join(cons, "`, `"))
 	if LogFunc != nil {
