@@ -40,9 +40,11 @@ jobs:
         ports:
           - 11211:11211
       ssdb:
-        image: wendal/ssdb:latest
+        image: tsl0922/ssdb
+        env:
+          SSDB_PORT: 8888
         ports:
-          - 8888:8888
+          - "8888:8888"
       postgres:
         image: postgres:latest
         env:
