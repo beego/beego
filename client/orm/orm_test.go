@@ -30,8 +30,6 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
-	"github.com/beego/beego/v2/client/orm/internal/logs"
-
 	"github.com/beego/beego/v2/client/orm/internal/utils"
 
 	"github.com/beego/beego/v2/client/orm/internal/models"
@@ -2983,9 +2981,9 @@ func TestDebugLog(t *testing.T) {
 
 func captureDebugLogOutput(f func()) string {
 	var buf bytes.Buffer
-	logs.DebugLog.SetOutput(&buf)
+	DebugLog.SetOutput(&buf)
 	defer func() {
-		logs.DebugLog.SetOutput(os.Stderr)
+		DebugLog.SetOutput(os.Stderr)
 	}()
 	f()
 	return buf.String()

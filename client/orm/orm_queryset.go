@@ -226,73 +226,75 @@ func (o querySet) GetCond() *Condition {
 }
 
 // return QuerySeter execution result number
-func (o *querySet) Count() (int64, error) {
+func (o querySet) Count() (int64, error) {
 	return o.CountWithCtx(context.Background())
 }
 
-func (o *querySet) CountWithCtx(ctx context.Context) (int64, error) {
+func (o querySet) CountWithCtx(ctx context.Context) (int64, error) {
 	return o.orm.alias.DbBaser.Count(ctx, o.orm.db, o, o.mi, o.cond, o.orm.alias.TZ)
 }
 
 // check result empty or not after QuerySeter executed
-func (o *querySet) Exist() bool {
+func (o querySet) Exist() bool {
 	return o.ExistWithCtx(context.Background())
 }
 
-func (o *querySet) ExistWithCtx(ctx context.Context) bool {
+func (o querySet) ExistWithCtx(ctx context.Context) bool {
 	cnt, _ := o.orm.alias.DbBaser.Count(ctx, o.orm.db, o, o.mi, o.cond, o.orm.alias.TZ)
 	return cnt > 0
 }
 
 // execute update with parameters
-func (o *querySet) Update(values Params) (int64, error) {
+func (o querySet) Update(values Params) (int64, error) {
 	return o.UpdateWithCtx(context.Background(), values)
 }
 
-func (o *querySet) UpdateWithCtx(ctx context.Context, values Params) (int64, error) {
-	return o.orm.alias.DbBaser.UpdateBatch(ctx, o.orm.db, o, o.mi, o.cond, values, o.orm.alias.TZ)
+func (o querySet) UpdateWithCtx(ctx context.Context, values Params) (int64, error) {
+	return o.orm.alias.DbBaser.UpdateBatch(ctx, o.orm.db, &o, o.mi, o.cond, values, o.orm.alias.TZ)
 }
 
 // execute delete
-func (o *querySet) Delete() (int64, error) {
+func (o querySet) Delete() (int64, error) {
 	return o.DeleteWithCtx(context.Background())
 }
 
-func (o *querySet) DeleteWithCtx(ctx context.Context) (int64, error) {
-	return o.orm.alias.DbBaser.DeleteBatch(ctx, o.orm.db, o, o.mi, o.cond, o.orm.alias.TZ)
+func (o querySet) DeleteWithCtx(ctx context.Context) (int64, error) {
+	return o.orm.alias.DbBaser.DeleteBatch(ctx, o.orm.db, &o, o.mi, o.cond, o.orm.alias.TZ)
 }
 
-// return an insert queryer.
+// PrepareInsert return an insert queryer.
 // it can be used in times.
 // example:
 //
 //	i,err := sq.PrepareInsert()
 //	i.Add(&user1{},&user2{})
-func (o *querySet) PrepareInsert() (Inserter, error) {
+func (o querySet) PrepareInsert() (Inserter, error) {
 	return o.PrepareInsertWithCtx(context.Background())
 }
 
-func (o *querySet) PrepareInsertWithCtx(ctx context.Context) (Inserter, error) {
+func (o querySet) PrepareInsertWithCtx(ctx context.Context) (Inserter, error) {
 	return newInsertSet(ctx, o.orm, o.mi)
 }
 
-// query All data and map to containers.
+// All query all data and map to containers.
 // cols means the Columns when querying.
-func (o *querySet) All(container interface{}, cols ...string) (int64, error) {
+func (o querySet) All(container interface{}, cols ...string) (int64, error) {
 	return o.AllWithCtx(context.Background(), container, cols...)
 }
 
-func (o *querySet) AllWithCtx(ctx context.Context, container interface{}, cols ...string) (int64, error) {
+// AllWithCtx see All
+func (o querySet) AllWithCtx(ctx context.Context, container interface{}, cols ...string) (int64, error) {
 	return o.orm.alias.DbBaser.ReadBatch(ctx, o.orm.db, o, o.mi, o.cond, container, o.orm.alias.TZ, cols)
 }
 
-// query one row data and map to containers.
+// One query one row data and map to containers.
 // cols means the Columns when querying.
-func (o *querySet) One(container interface{}, cols ...string) error {
+func (o querySet) One(container interface{}, cols ...string) error {
 	return o.OneWithCtx(context.Background(), container, cols...)
 }
 
-func (o *querySet) OneWithCtx(ctx context.Context, container interface{}, cols ...string) error {
+// OneWithCtx check One
+func (o querySet) OneWithCtx(ctx context.Context, container interface{}, cols ...string) error {
 	o.limit = 1
 	num, err := o.orm.alias.DbBaser.ReadBatch(ctx, o.orm.db, o, o.mi, o.cond, container, o.orm.alias.TZ, cols)
 	if err != nil {
@@ -308,38 +310,40 @@ func (o *querySet) OneWithCtx(ctx context.Context, container interface{}, cols .
 	return nil
 }
 
-// query All data and map to []map[string]interface.
+// Values query All data and map to []map[string]interface.
 // expres means condition expression.
 // it converts data to []map[column]value.
-func (o *querySet) Values(results *[]Params, exprs ...string) (int64, error) {
+func (o querySet) Values(results *[]Params, exprs ...string) (int64, error) {
 	return o.ValuesWithCtx(context.Background(), results, exprs...)
 }
 
-func (o *querySet) ValuesWithCtx(ctx context.Context, results *[]Params, exprs ...string) (int64, error) {
+// ValuesWithCtx see Values
+func (o querySet) ValuesWithCtx(ctx context.Context, results *[]Params, exprs ...string) (int64, error) {
 	return o.orm.alias.DbBaser.ReadValues(ctx, o.orm.db, o, o.mi, o.cond, exprs, results, o.orm.alias.TZ)
 }
 
-// query All data and map to [][]interface
+// ValuesList query data and map to [][]interface
 // it converts data to [][column_index]value
-func (o *querySet) ValuesList(results *[]ParamsList, exprs ...string) (int64, error) {
+func (o querySet) ValuesList(results *[]ParamsList, exprs ...string) (int64, error) {
 	return o.ValuesListWithCtx(context.Background(), results, exprs...)
 }
 
-func (o *querySet) ValuesListWithCtx(ctx context.Context, results *[]ParamsList, exprs ...string) (int64, error) {
+func (o querySet) ValuesListWithCtx(ctx context.Context, results *[]ParamsList, exprs ...string) (int64, error) {
 	return o.orm.alias.DbBaser.ReadValues(ctx, o.orm.db, o, o.mi, o.cond, exprs, results, o.orm.alias.TZ)
 }
 
-// query All data and map to []interface.
+// ValuesFlat query all data and map to []interface.
 // it's designed for one row record Set, auto change to []value, not [][column]value.
-func (o *querySet) ValuesFlat(result *ParamsList, expr string) (int64, error) {
+func (o querySet) ValuesFlat(result *ParamsList, expr string) (int64, error) {
 	return o.ValuesFlatWithCtx(context.Background(), result, expr)
 }
 
-func (o *querySet) ValuesFlatWithCtx(ctx context.Context, result *ParamsList, expr string) (int64, error) {
+// ValuesFlatWithCtx see ValuesFlat
+func (o querySet) ValuesFlatWithCtx(ctx context.Context, result *ParamsList, expr string) (int64, error) {
 	return o.orm.alias.DbBaser.ReadValues(ctx, o.orm.db, o, o.mi, o.cond, []string{expr}, result, o.orm.alias.TZ)
 }
 
-// query All rows into map[string]interface with specify key and value column name.
+// RowsToMap query rows into map[string]interface with specify key and value column name.
 // keyCol = "name", valueCol = "value"
 // table data
 // name  | value
@@ -350,11 +354,11 @@ func (o *querySet) ValuesFlatWithCtx(ctx context.Context, result *ParamsList, ex
 //		"total": 100,
 //		"found": 200,
 //	}
-func (o *querySet) RowsToMap(result *Params, keyCol, valueCol string) (int64, error) {
+func (o querySet) RowsToMap(result *Params, keyCol, valueCol string) (int64, error) {
 	panic(ErrNotImplement)
 }
 
-// query All rows into struct with specify key and value column name.
+// RowsToStruct query rows into struct with specify key and value column name.
 // keyCol = "name", valueCol = "value"
 // table data
 // name  | value
@@ -365,7 +369,7 @@ func (o *querySet) RowsToMap(result *Params, keyCol, valueCol string) (int64, er
 //		Total int
 //		Found int
 //	}
-func (o *querySet) RowsToStruct(ptrStruct interface{}, keyCol, valueCol string) (int64, error) {
+func (o querySet) RowsToStruct(ptrStruct interface{}, keyCol, valueCol string) (int64, error) {
 	panic(ErrNotImplement)
 }
 

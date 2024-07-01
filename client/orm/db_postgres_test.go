@@ -15,10 +15,12 @@
 package orm
 
 import (
-	imodels "github.com/beego/beego/v2/client/orm/internal/models"
-	"github.com/stretchr/testify/assert"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	imodels "github.com/beego/beego/v2/client/orm/internal/models"
 )
 
 func TestDbBasePostgres_HasReturningID(t *testing.T) {

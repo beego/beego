@@ -21,8 +21,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/beego/beego/v2/client/orm/internal/logs"
-
 	lru "github.com/hashicorp/golang-lru"
 )
 
@@ -291,6 +289,7 @@ type alias struct {
 	MaxIdleConns    int
 	MaxOpenConns    int
 	ConnMaxLifetime time.Duration
+	ConnMaxIdletime time.Duration
 	StmtCacheSize   int
 	DB              *DB
 	DbBaser         dbBaser
@@ -322,7 +321,7 @@ func detectTZ(al *alias) {
 					al.TZ = t.Location()
 				}
 			} else {
-				logs.DebugLog.Printf("Detect DB timezone: %s %s\n", tz, err.Error())
+				DebugLog.Printf("Detect DB timezone: %s %s\n", tz, err.Error())
 			}
 		}
 
@@ -349,7 +348,7 @@ func detectTZ(al *alias) {
 		if err == nil {
 			al.TZ = loc
 		} else {
-			logs.DebugLog.Printf("Detect DB timezone: %s %s\n", tz, err.Error())
+			DebugLog.Printf("Detect DB timezone: %s %s\n", tz, err.Error())
 		}
 	}
 }
@@ -449,6 +448,11 @@ func (al *alias) SetConnMaxLifetime(lifeTime time.Duration) {
 	al.DB.DB.SetConnMaxLifetime(lifeTime)
 }
 
+func (al *alias) SetConnMaxIdleTime(idleTime time.Duration) {
+	al.ConnMaxIdletime = idleTime
+	al.DB.DB.SetConnMaxIdleTime(idleTime)
+}
+
 // AddAliasWthDB add a aliasName for the drivename
 func AddAliasWthDB(aliasName, driverName string, db *sql.DB, params ...DBOption) error {
 	_, err := addAliasWthDB(aliasName, driverName, db, params...)
@@ -480,7 +484,7 @@ end:
 		if db != nil {
 			db.Close()
 		}
-		logs.DebugLog.Println(err.Error())
+		DebugLog.Println(err.Error())
 	}
 
 	return err
@@ -589,6 +593,13 @@ func MaxOpenConnections(maxOpenConn int) DBOption {
 func ConnMaxLifetime(v time.Duration) DBOption {
 	return func(al *alias) {
 		al.SetConnMaxLifetime(v)
+	}
+}
+
+// ConnMaxIdletime return a hint about ConnMaxIdletime
+func ConnMaxIdletime(v time.Duration) DBOption {
+	return func(al *alias) {
+		al.SetConnMaxIdleTime(v)
 	}
 }
 

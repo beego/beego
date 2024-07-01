@@ -16,10 +16,9 @@ package task
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"html/template"
-
-	"github.com/pkg/errors"
 
 	"github.com/beego/beego/v2/core/admin"
 )
@@ -78,7 +77,7 @@ func (r *runTaskCommand) Execute(params ...interface{}) *admin.Result {
 	} else {
 		return &admin.Result{
 			Status: 400,
-			Error:  errors.New(fmt.Sprintf("task with name %s not found", tn)),
+			Error:  fmt.Errorf("task with name %s not found", tn),
 		}
 	}
 }

@@ -54,9 +54,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"os"
 	"reflect"
 
-	ilogs "github.com/beego/beego/v2/client/orm/internal/logs"
 	iutils "github.com/beego/beego/v2/client/orm/internal/utils"
 
 	"github.com/beego/beego/v2/client/orm/internal/models"
@@ -75,7 +75,7 @@ const (
 // Define common vars
 var (
 	Debug            = false
-	DebugLog         = ilogs.DebugLog
+	DebugLog         = NewLog(os.Stdout)
 	DefaultRowsLimit = -1
 	DefaultRelsDepth = 2
 	DefaultTimeLoc   = iutils.DefaultTimeLoc

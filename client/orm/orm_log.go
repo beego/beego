@@ -19,7 +19,6 @@ import (
 	"database/sql"
 	"fmt"
 	"io"
-	"log"
 	"strings"
 	"time"
 
@@ -30,9 +29,7 @@ type Log = logs.Log
 
 // NewLog Set io.Writer to create a Logger.
 func NewLog(out io.Writer) *logs.Log {
-	d := new(logs.Log)
-	d.Logger = log.New(out, "[ORM]", log.LstdFlags)
-	return d
+	return logs.NewLog(out)
 }
 
 // LogFunc costomer log func
@@ -63,7 +60,7 @@ func debugLogQueies(alias *alias, operaton, query string, t time.Time, err error
 	if LogFunc != nil {
 		LogFunc(logMap)
 	}
-	logs.DebugLog.Println(con)
+	DebugLog.Println(con)
 }
 
 // statement query logger struct.

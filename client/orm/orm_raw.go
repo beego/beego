@@ -16,15 +16,13 @@ package orm
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"reflect"
 	"time"
 
-	"github.com/beego/beego/v2/client/orm/internal/utils"
-
 	"github.com/beego/beego/v2/client/orm/internal/models"
-
-	"github.com/pkg/errors"
+	"github.com/beego/beego/v2/client/orm/internal/utils"
 )
 
 // raw sql string prepared statement
@@ -299,7 +297,7 @@ func (o *rawSet) QueryRow(containers ...interface{}) error {
 		ind := reflect.Indirect(val)
 
 		if val.Kind() != reflect.Ptr {
-			panic(fmt.Errorf("<RawSeter.QueryRow> All args must be use ptr"))
+			panic(errors.New("<RawSeter.QueryRow> All args must be use ptr"))
 		}
 
 		etyp := ind.Type()
@@ -313,7 +311,7 @@ func (o *rawSet) QueryRow(containers ...interface{}) error {
 
 		if typ.Kind() == reflect.Struct && typ.String() != "time.Time" {
 			if len(containers) > 1 {
-				panic(fmt.Errorf("<RawSeter.QueryRow> now support one struct only. see #384"))
+				panic(errors.New("<RawSeter.QueryRow> now support one struct only. see #384"))
 			}
 
 			structMode = true
@@ -386,7 +384,7 @@ func (o *rawSet) QueryRow(containers ...interface{}) error {
 							fd := field.Addr().Interface().(models.Fielder)
 							err := fd.SetRaw(value)
 							if err != nil {
-								return errors.Errorf("Set raw error:%s", err)
+								return fmt.Errorf("Set raw error: %w", err)
 							}
 						} else {
 							o.setFieldValue(field, value)
@@ -460,7 +458,7 @@ func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
 		val := reflect.ValueOf(container)
 		sInd := reflect.Indirect(val)
 		if val.Kind() != reflect.Ptr || sInd.Kind() != reflect.Slice {
-			panic(fmt.Errorf("<RawSeter.QueryRows> All args must be use ptr slice"))
+			panic(errors.New("<RawSeter.QueryRows> All args must be use ptr slice"))
 		}
 
 		etyp := sInd.Type().Elem()
@@ -474,7 +472,7 @@ func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
 
 		if typ.Kind() == reflect.Struct && typ.String() != "time.Time" {
 			if len(containers) > 1 {
-				panic(fmt.Errorf("<RawSeter.QueryRow> now support one struct only. see #384"))
+				panic(errors.New("<RawSeter.QueryRow> now support one struct only. see #384"))
 			}
 
 			structMode = true
@@ -552,7 +550,7 @@ func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
 							fd := field.Addr().Interface().(models.Fielder)
 							err := fd.SetRaw(value)
 							if err != nil {
-								return 0, errors.Errorf("Set raw error:%s", err)
+								return 0, fmt.Errorf("Set raw error: %w", err)
 							}
 						} else {
 							o.setFieldValue(field, value)

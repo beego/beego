@@ -132,7 +132,7 @@ func APISecretAuth(f AppIDToAppSecret, timeout int) web.FilterFunc {
 // Signature generates signature with appsecret/method/params/RequestURI
 func Signature(appsecret, method string, params url.Values, RequestURL string) (result string) {
 	var b bytes.Buffer
-	keys := make([]string, len(params))
+	keys := make([]string, 0, len(params))
 	pa := make(map[string]string)
 	for k, v := range params {
 		pa[k] = v[0]
