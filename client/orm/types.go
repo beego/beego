@@ -181,10 +181,12 @@ type DML interface {
 	//	// update user testing's name to slene
 	Raw(query string, args ...interface{}) RawSeter
 	RawWithCtx(ctx context.Context, query string, args ...interface{}) RawSeter
+	ExecRaw(ctx context.Context, md interface{}, query string, args ...any) (sql.Result, error)
 }
 
 // DQL Data Query Language
 type DQL interface {
+
 	// Read reads data to model
 	// for example:
 	//	this will find User by Id field
@@ -194,6 +196,8 @@ type DQL interface {
 	// 	u = &User{UserName: "astaxie", Password: "pass"}
 	//	err = Ormer.Read(u, "UserName")
 	Read(md interface{}, cols ...string) error
+	// ReadRaw reads data to model
+	ReadRaw(ctx context.Context, md interface{}, query string, args ...any) error
 	ReadWithCtx(ctx context.Context, md interface{}, cols ...string) error
 
 	// ReadForUpdate Like Read(), but with "FOR UPDATE" clause, useful in transaction.
@@ -623,10 +627,12 @@ type dbQuerier interface {
 // base database struct
 type dbBaser interface {
 	Read(context.Context, dbQuerier, *models.ModelInfo, reflect.Value, *time.Location, []string, bool) error
+	ReadRaw(ctx context.Context, q dbQuerier, mi *models.ModelInfo, ind reflect.Value, tz *time.Location, query string, args ...any) error
 	ReadBatch(context.Context, dbQuerier, querySet, *models.ModelInfo, *Condition, interface{}, *time.Location, []string) (int64, error)
 	Count(context.Context, dbQuerier, querySet, *models.ModelInfo, *Condition, *time.Location) (int64, error)
 	ReadValues(context.Context, dbQuerier, querySet, *models.ModelInfo, *Condition, []string, interface{}, *time.Location) (int64, error)
 
+	ExecRaw(ctx context.Context, q dbQuerier, query string, args ...any) (sql.Result, error)
 	Insert(context.Context, dbQuerier, *models.ModelInfo, reflect.Value, *time.Location) (int64, error)
 	InsertOrUpdate(context.Context, dbQuerier, *models.ModelInfo, reflect.Value, *alias, ...string) (int64, error)
 	InsertMulti(context.Context, dbQuerier, *models.ModelInfo, reflect.Value, int, *time.Location) (int64, error)

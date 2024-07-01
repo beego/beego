@@ -371,6 +371,38 @@ func (d *dbBase) Read(ctx context.Context, q dbQuerier, mi *models.ModelInfo, in
 	return nil
 }
 
+func (d *dbBase) ReadRaw(ctx context.Context, q dbQuerier, mi *models.ModelInfo, ind reflect.Value, tz *time.Location, query string, args ...any) error {
+	//TODO: Improve code
+	rows, err := q.QueryContext(ctx, query, args...)
+	if err != nil {
+		return err
+	}
+	cols, err := rows.Columns()
+	if err != nil {
+		return err
+	}
+	refs := make([]any, len(cols))
+	for i := range refs {
+		var ref any
+		refs[i] = &ref
+	}
+	if !rows.Next() {
+		return ErrNoRows
+	}
+	if err = rows.Scan(refs...); err != nil {
+		return err
+	}
+	elm := reflect.New(mi.AddrField.Elem().Type())
+	mind := reflect.Indirect(elm)
+	d.setColsValues(mi, &mind, mi.Fields.DBcols, refs, tz)
+	ind.Set(mind)
+	return nil
+}
+
+func (*dbBase) ExecRaw(ctx context.Context, q dbQuerier, query string, args ...any) (sql.Result, error) {
+	return q.ExecContext(ctx, query, args...)
+}
+
 // Insert execute insert sql dbQuerier with given struct reflect.Value.
 func (d *dbBase) Insert(ctx context.Context, q dbQuerier, mi *models.ModelInfo, ind reflect.Value, tz *time.Location) (int64, error) {
 	names := make([]string, 0, len(mi.Fields.DBcols))
@@ -1178,7 +1210,7 @@ func (d *dbBase) ReadBatch(ctx context.Context, q dbQuerier, qs querySet, mi *mo
 
 	slice := ind
 	if unregister {
-		mi, _ = defaultModelCache.Get(name)
+		mi, _ = models.DefaultModelCache.Get(name)
 		tCols = mi.Fields.DBcols
 		colsNum = len(tCols)
 	}

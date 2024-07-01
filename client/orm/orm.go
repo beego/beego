@@ -129,7 +129,7 @@ func (*ormBase) getPtrMiInd(md interface{}) (mi *models.ModelInfo, ind reflect.V
 
 func getTypeMi(mdTyp reflect.Type) *models.ModelInfo {
 	name := models.GetFullName(mdTyp)
-	if mi, ok := defaultModelCache.GetByFullName(name); ok {
+	if mi, ok := models.DefaultModelCache.GetByFullName(name); ok {
 		return mi
 	}
 	panic(fmt.Errorf("<Ormer> table: `%s` not found, make sure it was registered with `RegisterModel()`", name))
@@ -149,6 +149,10 @@ func (o *ormBase) Read(md interface{}, cols ...string) error {
 	return o.ReadWithCtx(context.Background(), md, cols...)
 }
 
+func (o *ormBase) ReadRaw(ctx context.Context, md interface{}, query string, args ...any) error {
+	mi, ind := o.getPtrMiInd(md)
+	return o.alias.DbBaser.ReadRaw(ctx, o.db, mi, ind, o.alias.TZ, query, args...)
+}
 func (o *ormBase) ReadWithCtx(ctx context.Context, md interface{}, cols ...string) error {
 	mi, ind := o.getPtrMiInd(md)
 	return o.alias.DbBaser.Read(ctx, o.db, mi, ind, o.alias.TZ, cols, false)
@@ -476,12 +480,12 @@ func (o *ormBase) QueryTable(ptrStructOrTableName interface{}) (qs QuerySeter) {
 	var name string
 	if table, ok := ptrStructOrTableName.(string); ok {
 		name = models.NameStrategyMap[models.DefaultNameStrategy](table)
-		if mi, ok := defaultModelCache.Get(name); ok {
+		if mi, ok := models.DefaultModelCache.Get(name); ok {
 			qs = newQuerySet(o, mi)
 		}
 	} else {
 		name = models.GetFullName(iutils.IndirectType(reflect.TypeOf(ptrStructOrTableName)))
-		if mi, ok := defaultModelCache.GetByFullName(name); ok {
+		if mi, ok := models.DefaultModelCache.GetByFullName(name); ok {
 			qs = newQuerySet(o, mi)
 		}
 	}
@@ -504,6 +508,10 @@ func (o *ormBase) Raw(query string, args ...interface{}) RawSeter {
 
 func (o *ormBase) RawWithCtx(_ context.Context, query string, args ...interface{}) RawSeter {
 	return newRawSet(o, query, args)
+}
+
+func (o *ormBase) ExecRaw(ctx context.Context, _ interface{}, query string, args ...any) (sql.Result, error) {
+	return o.alias.DbBaser.ExecRaw(ctx, o.db, query, args...)
 }
 
 // Driver return current using database Driver

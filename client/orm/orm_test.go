@@ -28,6 +28,10 @@ import (
 	"testing"
 	"time"
 
+	_ "github.com/mattn/go-sqlite3"
+
+	"github.com/beego/beego/v2/client/orm/internal/logs"
+
 	"github.com/beego/beego/v2/client/orm/internal/utils"
 
 	"github.com/beego/beego/v2/client/orm/internal/models"
@@ -189,7 +193,7 @@ func TestGetDB(t *testing.T) {
 	}
 }
 
-func TestSyncDb(t *testing.T) {
+func registerAllModel() {
 	RegisterModel(new(Data), new(DataNull), new(DataCustom))
 	RegisterModel(new(User))
 	RegisterModel(new(Profile))
@@ -211,35 +215,20 @@ func TestSyncDb(t *testing.T) {
 	RegisterModel(new(StrPk))
 	RegisterModel(new(TM))
 	RegisterModel(new(DeptInfo))
+	RegisterModel(new(testTab), new(testTab1), new(testTab2))
+}
+
+func TestSyncDb(t *testing.T) {
+	models.DefaultModelCache.Clean()
+	registerAllModel()
 
 	err := RunSyncdb("default", true, Debug)
 	throwFail(t, err)
-
-	defaultModelCache.Clean()
 }
 
 func TestRegisterModels(_ *testing.T) {
-	RegisterModel(new(Data), new(DataNull), new(DataCustom))
-	RegisterModel(new(User))
-	RegisterModel(new(Profile))
-	RegisterModel(new(Post))
-	RegisterModel(new(NullValue))
-	RegisterModel(new(Tag))
-	RegisterModel(new(Comment))
-	RegisterModel(new(UserBig))
-	RegisterModel(new(PostTags))
-	RegisterModel(new(Group))
-	RegisterModel(new(Permission))
-	RegisterModel(new(GroupPermissions))
-	RegisterModel(new(InLine))
-	RegisterModel(new(InLineOneToOne))
-	RegisterModel(new(IntegerPk))
-	RegisterModel(new(UintPk))
-	RegisterModel(new(PtrPk))
-	RegisterModel(new(Index))
-	RegisterModel(new(StrPk))
-	RegisterModel(new(TM))
-	RegisterModel(new(DeptInfo))
+	models.DefaultModelCache.Clean()
+	registerAllModel()
 
 	BootStrap()
 
@@ -251,10 +240,10 @@ func TestModelSyntax(t *testing.T) {
 	user := &User{}
 	ind := reflect.ValueOf(user).Elem()
 	fn := models.GetFullName(ind.Type())
-	_, ok := defaultModelCache.GetByFullName(fn)
+	_, ok := models.DefaultModelCache.GetByFullName(fn)
 	throwFail(t, AssertIs(ok, true))
 
-	mi, ok := defaultModelCache.Get("user")
+	mi, ok := models.DefaultModelCache.Get("user")
 	throwFail(t, AssertIs(ok, true))
 	if ok {
 		throwFail(t, AssertIs(mi.Fields.GetByName("ShouldSkip") == nil, true))
@@ -2687,9 +2676,9 @@ func TestIgnoreCaseTag(t *testing.T) {
 		Name02 string `orm:"COLUMN(Name)"`
 		Name03 string `orm:"Column(name)"`
 	}
-	defaultModelCache.Clean()
+	models.DefaultModelCache.Clean()
 	RegisterModel(&testTagModel{})
-	info, ok := defaultModelCache.Get("test_tag_model")
+	info, ok := models.DefaultModelCache.Get("test_tag_model")
 	throwFail(t, AssertIs(ok, true))
 	throwFail(t, AssertNot(info, nil))
 	if t == nil {
@@ -2946,6 +2935,8 @@ func TestContextCanceled(t *testing.T) {
 }
 
 func TestDebugLog(t *testing.T) {
+	models.DefaultModelCache.Clean()
+	registerAllModel()
 	txCommitFn := func() {
 		o := NewOrm()
 		o.DoTx(func(ctx context.Context, txOrm TxOrmer) (txerr error) {
@@ -2998,4 +2989,35 @@ func captureDebugLogOutput(f func()) string {
 	}()
 	f()
 	return buf.String()
+}
+
+func TestReadRaw(t *testing.T) {
+	type TestModel struct {
+		Id   int64
+		Name string
+		Age  int8
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	RegisterModel(new(TestModel))
+	testModel := TestModel{Name: "user"}
+	SQL := "SELECT * FROM `test_model`;"
+	dORM = NewOrm()
+	err := dORM.ReadRaw(ctx, &testModel, SQL, nil)
+	cancel()
+	fmt.Print(err)
+}
+
+func TestExecRaw(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	SQL := "INSERT INTO `null_value`(`id`,`value`) VALUES(?,?),(?,?);"
+	dORM = NewOrm()
+	if dORM.Driver().Type() == DRPostgres {
+		SQL = "INSERT INTO \"null_value\"(\"id\",\"value\") VALUES($1, $2),($3, $4);"
+	}
+	res, err := dORM.ExecRaw(ctx, &NullValue{},
+		SQL, []interface{}{2, "Tom", 3, "Jerry"}...)
+	assert.Nil(t, err)
+	_, err = res.RowsAffected()
+	assert.Nil(t, err)
+	cancel()
 }

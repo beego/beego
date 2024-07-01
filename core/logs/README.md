@@ -68,3 +68,24 @@ log.SetLogger("smtp", `{"username":"beegotest@gmail.com","password":"xxxxxxxx","
 log.Critical("sendmail critical")
 time.Sleep(time.Second * 30)
 ```
+
+## AccessLog in beego
+
+Current support three format of accesslog:
+- apache format
+- json format
+- custom formt
+
+### how to using custom format in beego
+
+```
+// define the custom format function
+log.CustomAccessLogFunc = func(r *beelog.AccessLogRecord) string {
+	return fmt.Sprintf("custom access log %s", r.Request)
+}
+
+// open access log and set format in beego config.
+Config.Log.AccessLogs = true
+Config.Log.AccessLogsFormat = "JSON_FORMAT"
+	
+```

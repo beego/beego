@@ -316,7 +316,7 @@ func (o *rawSet) QueryRow(containers ...interface{}) error {
 
 			structMode = true
 			fn := models.GetFullName(typ)
-			if mi, ok := defaultModelCache.GetByFullName(fn); ok {
+			if mi, ok := models.DefaultModelCache.GetByFullName(fn); ok {
 				sMi = mi
 			}
 		} else {
@@ -477,7 +477,7 @@ func (o *rawSet) QueryRows(containers ...interface{}) (int64, error) {
 
 			structMode = true
 			fn := models.GetFullName(typ)
-			if mi, ok := defaultModelCache.GetByFullName(fn); ok {
+			if mi, ok := models.DefaultModelCache.GetByFullName(fn); ok {
 				sMi = mi
 			}
 		} else {

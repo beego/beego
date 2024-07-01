@@ -40,9 +40,11 @@ jobs:
         ports:
           - 11211:11211
       ssdb:
-        image: wendal/ssdb:latest
+        image: tsl0922/ssdb
+        env:
+          SSDB_PORT: 8888
         ports:
-          - 8888:8888
+          - "8888:8888"
       postgres:
         image: postgres:latest
         env:
@@ -122,6 +124,4 @@ jobs:
           go test -coverprofile=coverage.txt -covermode=atomic ./...
 
       - name: Upload codecov
-        env:
-          CODECOV_TOKEN: 4f4bc484-32a8-43b7-9f48-20966bd48ceb
         run: bash <(curl -s https://codecov.io/bash)

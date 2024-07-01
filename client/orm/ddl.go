@@ -23,23 +23,23 @@ import (
 )
 
 // getDbDropSQL Get database scheme drop sql queries
-func getDbDropSQL(mc *imodels.ModelCache, al *alias) (queries []string, err error) {
-	if mc.Empty() {
+func getDbDropSQL(registry *imodels.ModelCache, al *alias) (queries []string, err error) {
+	if registry.Empty() {
 		err = errors.New("no Model found, need Register your model")
 		return
 	}
 
 	Q := al.DbBaser.TableQuote()
 
-	for _, mi := range mc.AllOrdered() {
+	for _, mi := range registry.AllOrdered() {
 		queries = append(queries, fmt.Sprintf(`DROP TABLE IF EXISTS %s%s%s`, Q, mi.Table, Q))
 	}
 	return queries, nil
 }
 
 // getDbCreateSQL Get database scheme creation sql queries
-func getDbCreateSQL(mc *imodels.ModelCache, al *alias) (queries []string, tableIndexes map[string][]dbIndex, err error) {
-	if mc.Empty() {
+func getDbCreateSQL(registry *imodels.ModelCache, al *alias) (queries []string, tableIndexes map[string][]dbIndex, err error) {
+	if registry.Empty() {
 		err = errors.New("no Model found, need Register your model")
 		return
 	}
@@ -50,7 +50,7 @@ func getDbCreateSQL(mc *imodels.ModelCache, al *alias) (queries []string, tableI
 
 	tableIndexes = make(map[string][]dbIndex)
 
-	for _, mi := range mc.AllOrdered() {
+	for _, mi := range registry.AllOrdered() {
 		sql := fmt.Sprintf("-- %s\n", strings.Repeat("-", 50))
 		sql += fmt.Sprintf("--  Table Structure for `%s`\n", mi.FullName)
 		sql += fmt.Sprintf("-- %s\n", strings.Repeat("-", 50))

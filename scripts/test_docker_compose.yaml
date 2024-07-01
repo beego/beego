@@ -1,4 +1,3 @@
-version: "3.8"
 services:
   redis:
     container_name: "beego-redis"
@@ -28,7 +27,9 @@ services:
       - ALLOW_EMPTY_PASSWORD=yes
   ssdb:
     container_name: "beego-ssdb"
-    image: wendal/ssdb
+    image: tsl0922/ssdb
+    environment:
+      - SSDB_PORT=8888
     ports:
     - "8888:8888"
   memcache:

@@ -466,7 +466,6 @@ func RegisterDataBase(aliasName, driverName, dataSource string, params ...DBOpti
 		db  *sql.DB
 		al  *alias
 	)
-
 	db, err = sql.Open(driverName, dataSource)
 	if err != nil {
 		err = fmt.Errorf("Register db `%s`, %s", aliasName, err.Error())

@@ -34,9 +34,9 @@ func (i *Interface) TableEngine() string {
 }
 
 func TestDbBase_GetTables(t *testing.T) {
-	c := NewModelCacheHandler()
-	c.Register("", true, &Interface{})
-	mi, ok := c.Get("INTERFACE_")
+	registry := NewModelCacheHandler()
+	registry.Register("", true, &Interface{})
+	mi, ok := registry.Get("INTERFACE_")
 	assert.True(t, ok)
 	assert.NotNil(t, mi)
 

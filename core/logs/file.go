@@ -342,7 +342,7 @@ func (w *fileLogWriter) doRotate(logTime time.Time) error {
 	if w.Hourly {
 		format = "2006010215"
 		openTime = w.hourlyOpenTime
-	} else if w.Daily {
+	} else {
 		format = "2006-01-02"
 		openTime = w.dailyOpenTime
 	}

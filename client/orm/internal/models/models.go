@@ -16,11 +16,14 @@ package models
 
 import (
 	"fmt"
+	"github.com/beego/beego/v2/client/orm/qb/errs"
 	"reflect"
 	"runtime/debug"
 	"strings"
 	"sync"
 )
+
+var DefaultModelCache = NewModelCacheHandler()
 
 // ModelCache info collection
 type ModelCache struct {
@@ -78,6 +81,21 @@ func (mc *ModelCache) GetByMd(md interface{}) (*ModelInfo, bool) {
 	typ := ind.Type()
 	name := GetFullName(typ)
 	return mc.GetByFullName(name)
+}
+
+func (mc *ModelCache) GetOrRegisterByMd(md interface{}) (*ModelInfo, error) {
+	model, ok := mc.GetByMd(md)
+	if !ok {
+		err := mc.Register("", true, md)
+		if err != nil {
+			return nil, err
+		}
+		model, ok = mc.GetByMd(md)
+		if !ok {
+			return nil, errs.ErrGetByMd
+		}
+	}
+	return model, nil
 }
 
 // Set model info to collection

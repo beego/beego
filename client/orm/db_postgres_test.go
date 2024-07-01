@@ -1,4 +1,4 @@
-// Copyright 2020 astaxie
+// Copyright 2023 ecodeclub
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,21 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package beego
+package orm
 
-var (
-	BuildVersion     string
-	BuildGitRevision string
-	BuildStatus      string
-	BuildTag         string
-	BuildTime        string
-
-	GoVersion string
-
-	GitBranch string
+import (
+	imodels "github.com/beego/beego/v2/client/orm/internal/models"
+	"github.com/stretchr/testify/assert"
+	"reflect"
+	"testing"
 )
 
-const (
-	// VERSION represent beego web framework version.
-	VERSION = "2.1.2"
-)
+func TestDbBasePostgres_HasReturningID(t *testing.T) {
+	base := newdbBasePostgres()
+	val := reflect.ValueOf(&StringID{})
+	mi := imodels.NewModelInfo(val)
+	str := ""
+	ok := base.HasReturningID(mi, &str)
+	assert.False(t, ok)
+	assert.Equal(t, "", str)
+}
+
+type StringID struct {
+	ID string `orm:"pk"`
+}

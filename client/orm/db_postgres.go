@@ -87,7 +87,7 @@ func (d *dbBasePostgres) GenerateOperatorLeftCol(fi *models.FieldInfo, operator 
 	}
 }
 
-// postgresql unsupports updating joined record.
+// SupportUpdateJoin postgresql unsupports updating joined record.
 func (d *dbBasePostgres) SupportUpdateJoin() bool {
 	return false
 }
@@ -96,12 +96,12 @@ func (d *dbBasePostgres) MaxLimit() uint64 {
 	return 0
 }
 
-// postgresql quote is ".
+// TableQuote postgresql quote is ".
 func (d *dbBasePostgres) TableQuote() string {
 	return `"`
 }
 
-// postgresql value placeholder is $n.
+// ReplaceMarks postgresql value placeholder is $n.
 // replace default ? to $n.
 func (d *dbBasePostgres) ReplaceMarks(query *string) {
 	q := *query
@@ -129,13 +129,12 @@ func (d *dbBasePostgres) ReplaceMarks(query *string) {
 	*query = string(data)
 }
 
-// make returning sql support for postgresql.
+// HasReturningID make returning sql support for postgresql.
 func (d *dbBasePostgres) HasReturningID(mi *models.ModelInfo, query *string) bool {
 	fi := mi.Fields.Pk
 	if fi.FieldType&IsPositiveIntegerField == 0 && fi.FieldType&IsIntegerField == 0 {
 		return false
 	}
-
 	if query != nil {
 		*query = fmt.Sprintf(`%s RETURNING "%s"`, *query, fi.Column)
 	}

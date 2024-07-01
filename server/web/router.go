@@ -765,7 +765,7 @@ func (p *ControllerRegister) AddAutoPrefix(prefix string, c ControllerInterface)
 	reflectVal := reflect.ValueOf(c)
 	rt := reflectVal.Type()
 	ct := reflect.Indirect(reflectVal).Type()
-	controllerName := strings.TrimSuffix(ct.Name(), "Controller")
+	controllerName := strings.TrimSuffix(ct.Name(), p.cfg.ControllerSuffix)
 	for i := 0; i < rt.NumMethod(); i++ {
 		methodName := rt.Method(i).Name
 		if !utils.InSlice(methodName, exceptMethod) {
@@ -1358,19 +1358,15 @@ func (p *ControllerRegister) GetAllControllerInfo() (routerInfos []*ControllerIn
 }
 
 func composeControllerInfos(tree *Tree, routerInfos *[]*ControllerInfo) {
-	if tree.fixrouters != nil {
-		for _, subTree := range tree.fixrouters {
-			composeControllerInfos(subTree, routerInfos)
-		}
+	for _, subTree := range tree.fixrouters {
+		composeControllerInfos(subTree, routerInfos)
 	}
 	if tree.wildcard != nil {
 		composeControllerInfos(tree.wildcard, routerInfos)
 	}
-	if tree.leaves != nil {
-		for _, l := range tree.leaves {
-			if c, ok := l.runObject.(*ControllerInfo); ok {
-				*routerInfos = append(*routerInfos, c)
-			}
+	for _, l := range tree.leaves {
+		if c, ok := l.runObject.(*ControllerInfo); ok {
+			*routerInfos = append(*routerInfos, c)
 		}
 	}
 }
