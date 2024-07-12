@@ -91,10 +91,14 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 	app.initAddr(addr)
 	app.Handlers.Init()
 
-	addr = app.Cfg.Listen.HTTPAddr
+	if app.Cfg.Listen.HTTPAddr == "" {
+		app.Cfg.Listen.HTTPAddr = "localhost"
+	}
 
-	if app.Cfg.Listen.HTTPPort != 0 {
-		addr = fmt.Sprintf("%s:%d", app.Cfg.Listen.HTTPAddr, app.Cfg.Listen.HTTPPort)
+	addr = fmt.Sprintf("%s:%d", app.Cfg.Listen.HTTPAddr, app.Cfg.Listen.HTTPPort)
+
+	if app.Cfg.Listen.HTTPPort == 0 {
+		addr = app.Cfg.Listen.HTTPAddr
 	}
 
 	var (
