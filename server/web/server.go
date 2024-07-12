@@ -95,7 +95,7 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 		app.Cfg.Listen.HTTPAddr = "localhost"
 	}
 
-	addr = fmt.Sprintf("%s:%d", app.Cfg.Listen.HTTPAddr, app.Cfg.Listen.HTTPPort)
+	addr = net.JoinHostPort(app.Cfg.Listen.HTTPAddr, strconv.Itoa(app.Cfg.Listen.HTTPPort))
 
 	if app.Cfg.Listen.HTTPPort == 0 {
 		addr = app.Cfg.Listen.HTTPAddr
