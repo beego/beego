@@ -73,6 +73,20 @@ func NewHttpServerWithCfg(cfg *Config) *HttpServer {
 	return app
 }
 
+func (app *HttpServer) getHTTPAddr() string {
+	if app.Cfg.Listen.HTTPAddr == "" {
+		app.Cfg.Listen.HTTPAddr = "localhost"
+	}
+
+	addr := net.JoinHostPort(app.Cfg.Listen.HTTPAddr, strconv.Itoa(app.Cfg.Listen.HTTPPort))
+
+	if app.Cfg.Listen.HTTPPort == 0 {
+		addr = app.Cfg.Listen.HTTPAddr
+	}
+
+	return addr
+}
+
 // MiddleWare function for http.Handler
 type MiddleWare func(http.Handler) http.Handler
 
@@ -91,15 +105,7 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 	app.initAddr(addr)
 	app.Handlers.Init()
 
-	if app.Cfg.Listen.HTTPAddr == "" {
-		app.Cfg.Listen.HTTPAddr = "localhost"
-	}
-
-	addr = net.JoinHostPort(app.Cfg.Listen.HTTPAddr, strconv.Itoa(app.Cfg.Listen.HTTPPort))
-
-	if app.Cfg.Listen.HTTPPort == 0 {
-		addr = app.Cfg.Listen.HTTPAddr
-	}
+	addr = app.getHTTPAddr()
 
 	var (
 		err        error
