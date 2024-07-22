@@ -283,7 +283,7 @@ func (o *rawSet) loopSetRefs(refs []interface{}, sInds []reflect.Value, nIndsPtr
 	}
 }
 
-// query data and map to container
+// QueryRow query data and map to container
 func (o *rawSet) QueryRow(containers ...interface{}) error {
 	var (
 		refs  = make([]interface{}, 0, len(containers))

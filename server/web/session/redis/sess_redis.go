@@ -109,7 +109,8 @@ func (rs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWrite
 		return
 	}
 	c := rs.p
-	c.Set(ctx, rs.sid, string(b), time.Duration(rs.maxlifetime)*time.Second)
+	// issue https://github.com/beego/beego/issues/5681
+	c.SetXX(ctx, rs.sid, string(b), time.Duration(rs.maxlifetime)*time.Second)
 }
 
 // Provider redis session provider
@@ -158,12 +159,12 @@ func (rp *Provider) SessionInit(ctx context.Context, maxlifetime int64, cfgStr s
 	}
 
 	rp.poollist = redis.NewClient(&redis.Options{
-		Addr:               rp.SavePath,
-		Password:           rp.Password,
-		PoolSize:           rp.Poolsize,
-		DB:                 rp.DbNum,
-		ConnMaxIdleTime:    rp.idleTimeout,
-		MaxRetries:         rp.MaxRetries,
+		Addr:            rp.SavePath,
+		Password:        rp.Password,
+		PoolSize:        rp.Poolsize,
+		DB:              rp.DbNum,
+		ConnMaxIdleTime: rp.idleTimeout,
+		MaxRetries:      rp.MaxRetries,
 	})
 
 	return rp.poollist.Ping(ctx).Err()
