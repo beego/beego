@@ -125,6 +125,11 @@ func (st *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWrite
 		b, time.Now().Format(time.RFC3339), st.sid)
 }
 
+func (st *SessionStore) SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) {
+	//TODO implement me
+	panic("implement me")
+}
+
 // Provider postgresql session provider
 type Provider struct {
 	maxlifetime int64

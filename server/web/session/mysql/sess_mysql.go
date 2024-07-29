@@ -122,6 +122,11 @@ func (st *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWrite
 		b, time.Now().Unix(), st.sid)
 }
 
+func (st *SessionStore) SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) {
+	//TODO implement me
+	panic("implement me")
+}
+
 // Provider mysql session provider
 type Provider struct {
 	maxlifetime int64

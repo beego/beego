@@ -117,6 +117,10 @@ func (cs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWrite
 	cs.b.Set(cs.sid, int(cs.maxlifetime), bo)
 }
 
+// SessionReleaseIfPresent Write couchbase session with Gob string
+func (cs *SessionStore) SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) {
+}
+
 func (cp *Provider) getBucket() *couchbase.Bucket {
 	c, err := couchbase.Connect(cp.SavePath)
 	if err != nil {

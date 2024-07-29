@@ -80,6 +80,11 @@ func (ls *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWrite
 	c.Expire([]byte(ls.sid), ls.maxlifetime)
 }
 
+func (ls *SessionStore) SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) {
+	//TODO implement me
+	panic("implement me")
+}
+
 // Provider ledis session provider
 type Provider struct {
 	maxlifetime int64

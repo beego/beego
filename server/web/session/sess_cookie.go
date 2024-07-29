@@ -93,6 +93,12 @@ func (st *CookieSessionStore) SessionRelease(ctx context.Context, w http.Respons
 	}
 }
 
+// SessionReleaseIfPresent Write cookie session to http response cookie when it is present
+// This is a no-op for cookie sessions, because they are always present.
+func (st *CookieSessionStore) SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) {
+	st.SessionRelease(ctx, w)
+}
+
 type cookieConfig struct {
 	SecurityKey  string `json:"securityKey"`
 	BlockKey     string `json:"blockKey"`

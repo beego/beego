@@ -112,6 +112,11 @@ func (rs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWrite
 	c.Set(ctx, rs.sid, string(b), time.Duration(rs.maxlifetime)*time.Second)
 }
 
+func (rs *SessionStore) SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) {
+	//TODO implement me
+	panic("implement me")
+}
+
 // Provider redis_cluster session provider
 type Provider struct {
 	maxlifetime int64
@@ -156,11 +161,11 @@ func (rp *Provider) SessionInit(ctx context.Context, maxlifetime int64, cfgStr s
 	}
 
 	rp.poollist = rediss.NewClusterClient(&rediss.ClusterOptions{
-		Addrs:              strings.Split(rp.SavePath, ";"),
-		Password:           rp.Password,
-		PoolSize:           rp.Poolsize,
-		ConnMaxIdleTime:    rp.idleTimeout,
-		MaxRetries:         rp.MaxRetries,
+		Addrs:           strings.Split(rp.SavePath, ";"),
+		Password:        rp.Password,
+		PoolSize:        rp.Poolsize,
+		ConnMaxIdleTime: rp.idleTimeout,
+		MaxRetries:      rp.MaxRetries,
 	})
 	return rp.poollist.Ping(ctx).Err()
 }

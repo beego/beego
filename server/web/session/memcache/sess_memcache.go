@@ -108,6 +108,11 @@ func (rs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWrite
 	client.Set(&item)
 }
 
+func (rs *SessionStore) SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) {
+	//TODO implement me
+	panic("implement me")
+}
+
 // MemProvider memcache session provider
 type MemProvider struct {
 	maxlifetime int64

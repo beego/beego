@@ -425,3 +425,69 @@ func TestFileSessionStoreSessionRelease(t *testing.T) {
 		}
 	}
 }
+
+func TestFileSessionStoreSessionReleaseIfPresent(t *testing.T) {
+	mutex.Lock()
+	defer mutex.Unlock()
+	os.RemoveAll(sessionPath)
+	defer os.RemoveAll(sessionPath)
+	fp := &FileProvider{}
+
+	_ = fp.SessionInit(context.Background(), 180, sessionPath)
+	filepder.savePath = sessionPath
+	sessionCount := 85
+
+	for i := 1; i <= sessionCount; i++ {
+		s, err := fp.SessionRead(context.Background(), fmt.Sprintf("%s_%d", sid, i))
+		if err != nil {
+			t.Error(err)
+		}
+
+		s.Set(nil, i, i)
+		s.SessionReleaseIfPresent(nil, nil)
+	}
+
+	for i := 1; i <= sessionCount; i++ {
+		s, err := fp.SessionRead(context.Background(), fmt.Sprintf("%s_%d", sid, i))
+		if err != nil {
+			t.Error(err)
+		}
+
+		if s.Get(nil, i).(int) != i {
+			t.Error()
+		}
+	}
+}
+
+func TestFileSessionStoreSessionReleaseIfPresentAndSessionDestroy(t *testing.T) {
+	mutex.Lock()
+	defer mutex.Unlock()
+	os.RemoveAll(sessionPath)
+	defer os.RemoveAll(sessionPath)
+	fp := &FileProvider{}
+	s, err := fp.SessionRead(nil, sid)
+	if err != nil {
+		return
+	}
+
+	_ = fp.SessionInit(context.Background(), 180, sessionPath)
+	filepder.savePath = sessionPath
+	if err := fp.SessionDestroy(nil, sid); err != nil {
+		t.Error(err)
+		return
+	}
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		s.SessionReleaseIfPresent(nil, nil)
+	}()
+	wg.Wait()
+	exist, err := fp.SessionExist(nil, sid)
+	if err != nil {
+		t.Error(err)
+	}
+	if exist {
+		t.Fatalf("session %s should exist", sid)
+	}
+}

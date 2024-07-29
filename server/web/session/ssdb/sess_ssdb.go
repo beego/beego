@@ -215,6 +215,11 @@ func (s *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter
 	s.client.Do("setx", s.sid, string(b), s.maxLifetime)
 }
 
+func (s *SessionStore) SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) {
+	//TODO implement me
+	panic("implement me")
+}
+
 func init() {
 	session.Register("ssdb", ssdbProvider)
 }

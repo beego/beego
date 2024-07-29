@@ -110,6 +110,11 @@ func (s *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter
 	// Support in the future if necessary, now I think we don't need to implement this
 }
 
+// SessionReleaseIfPresent do nothing
+func (s *SessionStore) SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) {
+	// Support in the future if necessary, now I think we don't need to implement this
+}
+
 func (s *SessionStore) Flush(ctx context.Context) error {
 	s.values = make(map[interface{}]interface{}, 4)
 	return nil
