@@ -394,39 +394,14 @@ func TestFileSessionStoreSessionID(t *testing.T) {
 }
 
 func TestFileSessionStoreSessionRelease(t *testing.T) {
-	mutex.Lock()
-	defer mutex.Unlock()
-	os.RemoveAll(sessionPath)
-	defer os.RemoveAll(sessionPath)
-	fp := &FileProvider{}
-
-	_ = fp.SessionInit(context.Background(), 180, sessionPath)
-	filepder.savePath = sessionPath
-	sessionCount := 85
-
-	for i := 1; i <= sessionCount; i++ {
-		s, err := fp.SessionRead(context.Background(), fmt.Sprintf("%s_%d", sid, i))
-		if err != nil {
-			t.Error(err)
-		}
-
-		s.Set(nil, i, i)
-		s.SessionRelease(nil, nil)
-	}
-
-	for i := 1; i <= sessionCount; i++ {
-		s, err := fp.SessionRead(context.Background(), fmt.Sprintf("%s_%d", sid, i))
-		if err != nil {
-			t.Error(err)
-		}
-
-		if s.Get(nil, i).(int) != i {
-			t.Error()
-		}
-	}
+	releaseSession(t)
 }
 
 func TestFileSessionStoreSessionReleaseIfPresent(t *testing.T) {
+	releaseSession(t)
+}
+
+func releaseSession(t *testing.T) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	os.RemoveAll(sessionPath)
