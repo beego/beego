@@ -106,12 +106,12 @@ func (s *SessionStore) SessionID(ctx context.Context) string {
 }
 
 // SessionRelease do nothing
-func (_ *SessionStore) SessionRelease(_ context.Context, _ http.ResponseWriter) {
+func (s *SessionStore) SessionRelease(_ context.Context, _ http.ResponseWriter) {
 	// Support in the future if necessary, now I think we don't need to implement this
 }
 
 // SessionReleaseIfPresent do nothing
-func (_ *SessionStore) SessionReleaseIfPresent(_ context.Context, _ http.ResponseWriter) {
+func (s *SessionStore) SessionReleaseIfPresent(_ context.Context, _ http.ResponseWriter) {
 	// Support in the future if necessary, now I think we don't need to implement this
 }
 

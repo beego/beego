@@ -73,11 +73,11 @@ func (st *MemSessionStore) SessionID(context.Context) string {
 }
 
 // SessionRelease Implement method, no used.
-func (_ *MemSessionStore) SessionRelease(_ context.Context, _ http.ResponseWriter) {
+func (st *MemSessionStore) SessionRelease(_ context.Context, _ http.ResponseWriter) {
 }
 
 // SessionReleaseIfPresent Implement method, no used.
-func (_ *MemSessionStore) SessionReleaseIfPresent(_ context.Context, _ http.ResponseWriter) {
+func (st *MemSessionStore) SessionReleaseIfPresent(_ context.Context, _ http.ResponseWriter) {
 }
 
 // MemProvider Implement the provider interface
