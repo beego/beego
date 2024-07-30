@@ -77,7 +77,7 @@ func (st *MemSessionStore) SessionRelease(_ context.Context, _ http.ResponseWrit
 }
 
 // SessionReleaseIfPresent Implement method, no used.
-func (st *MemSessionStore) SessionReleaseIfPresent(_ context.Context, _ http.ResponseWriter) {
+func (*MemSessionStore) SessionReleaseIfPresent(_ context.Context, _ http.ResponseWriter) {
 }
 
 // MemProvider Implement the provider interface

@@ -111,7 +111,7 @@ func (s *SessionStore) SessionRelease(_ context.Context, _ http.ResponseWriter) 
 }
 
 // SessionReleaseIfPresent do nothing
-func (s *SessionStore) SessionReleaseIfPresent(_ context.Context, _ http.ResponseWriter) {
+func (*SessionStore) SessionReleaseIfPresent(_ context.Context, _ http.ResponseWriter) {
 	// Support in the future if necessary, now I think we don't need to implement this
 }
 
