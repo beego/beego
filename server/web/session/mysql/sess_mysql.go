@@ -122,9 +122,9 @@ func (st *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWrite
 		b, time.Now().Unix(), st.sid)
 }
 
+// SessionReleaseIfPresent save mysql session values to database.
 func (st *SessionStore) SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) {
-	//TODO implement me
-	panic("implement me")
+	st.SessionReleaseIfPresent(ctx, w)
 }
 
 // Provider mysql session provider

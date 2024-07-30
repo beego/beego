@@ -125,9 +125,9 @@ func (st *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWrite
 		b, time.Now().Format(time.RFC3339), st.sid)
 }
 
+// SessionReleaseIfPresent save postgresql session values to database when key is present
 func (st *SessionStore) SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) {
-	//TODO implement me
-	panic("implement me")
+	st.SessionRelease(ctx, w)
 }
 
 // Provider postgresql session provider
