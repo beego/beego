@@ -215,9 +215,27 @@ func (s *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter
 	s.client.Do("setx", s.sid, string(b), s.maxLifetime)
 }
 
+// SessionReleaseIfPresent Store the keyvalues into ssdb if the session is exist
+// it is not used in ssdb, because ssdb does not support lua script
 func (s *SessionStore) SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) {
-	//TODO implement me
-	panic("implement me")
+	s.lock.RLock()
+	values := s.values
+	s.lock.RUnlock()
+	b, err := session.EncodeGob(values)
+	if err != nil {
+		return
+	}
+
+	value, err := s.client.Get(s.sid)
+	if err != nil {
+		return
+	}
+
+	if value == nil || len(value.(string)) == 0 {
+		return
+	}
+
+	s.client.Do("setx", s.sid, string(b), s.maxLifetime)
 }
 
 func init() {
