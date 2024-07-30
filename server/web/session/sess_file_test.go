@@ -21,6 +21,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/beego/beego/v2/server/web/mock"
 )
 
 const (
@@ -452,7 +454,7 @@ func TestFileSessionStoreSessionReleaseIfPresentAndSessionDestroy(t *testing.T) 
 
 	_ = fp.SessionInit(context.Background(), 180, sessionPath)
 	filepder.savePath = sessionPath
-	if err := fp.SessionDestroy(nil, sid); err != nil {
+	if err := fp.SessionDestroy(context.Background(), sid); err != nil {
 		t.Error(err)
 		return
 	}
@@ -460,10 +462,10 @@ func TestFileSessionStoreSessionReleaseIfPresentAndSessionDestroy(t *testing.T) 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		s.SessionReleaseIfPresent(nil, nil)
+		s.SessionReleaseIfPresent(context.Background(), mock.NewMockHttpResponse())
 	}()
 	wg.Wait()
-	exist, err := fp.SessionExist(nil, sid)
+	exist, err := fp.SessionExist(context.Background(), sid)
 	if err != nil {
 		t.Error(err)
 	}
