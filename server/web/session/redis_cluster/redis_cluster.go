@@ -109,7 +109,7 @@ func (rs *SessionStore) SessionReleaseIfPresent(ctx context.Context, w http.Resp
 	rs.releaseSession(ctx, w, true)
 }
 
-func (rs *SessionStore) releaseSession(ctx context.Context, w http.ResponseWriter, createIfPresent bool) {
+func (rs *SessionStore) releaseSession(ctx context.Context, _ http.ResponseWriter, createIfPresent bool) {
 	rs.lock.RLock()
 	values := rs.values
 	rs.lock.RUnlock()

@@ -112,7 +112,7 @@ func (st *SessionStore) SessionID(context.Context) string {
 
 // SessionRelease save postgresql session values to database.
 // must call this method to save values to database.
-func (st *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
+func (st *SessionStore) SessionRelease(_ context.Context, _ http.ResponseWriter) {
 	defer st.c.Close()
 	st.lock.RLock()
 	values := st.values

@@ -104,7 +104,7 @@ func (cs *SessionStore) SessionID(context.Context) string {
 }
 
 // SessionRelease Write couchbase session with Gob string
-func (cs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
+func (cs *SessionStore) SessionRelease(_ context.Context, _ http.ResponseWriter) {
 	defer cs.b.Close()
 	cs.lock.RLock()
 	values := cs.values
@@ -120,7 +120,7 @@ func (cs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWrite
 // SessionReleaseIfPresent Write couchbase session with Gob string if the key is present in the session
 // It is not useful in couchbase session.
 // If we want to use couchbase, we may refactor the code to use couchbase collection.
-func (cs *SessionStore) SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) {
+func (cs *SessionStore) SessionReleaseIfPresent(_ context.Context, _ http.ResponseWriter) {
 	defer cs.b.Close()
 	cs.lock.RLock()
 	values := cs.values

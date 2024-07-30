@@ -68,7 +68,7 @@ func (ls *SessionStore) SessionID(context.Context) string {
 }
 
 // SessionRelease save session values to ledis
-func (ls *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
+func (ls *SessionStore) SessionRelease(_ context.Context, _ http.ResponseWriter) {
 	ls.lock.RLock()
 	values := ls.values
 	ls.lock.RUnlock()
@@ -84,7 +84,7 @@ func (ls *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWrite
 // it is not supported now, because ledis has no this feature like SETXX or atomic operation.
 // https://github.com/ledisdb/ledisdb/issues/251
 // https://github.com/ledisdb/ledisdb/issues/351
-func (ls *SessionStore) SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) {
+func (ls *SessionStore) SessionReleaseIfPresent(_ context.Context, _ http.ResponseWriter) {
 	ls.lock.RLock()
 	values := ls.values
 	ls.lock.RUnlock()

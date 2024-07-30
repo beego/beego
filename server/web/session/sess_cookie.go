@@ -74,7 +74,7 @@ func (st *CookieSessionStore) SessionID(context.Context) string {
 }
 
 // SessionRelease Write cookie session to http response cookie
-func (st *CookieSessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
+func (st *CookieSessionStore) SessionRelease(_ context.Context, w http.ResponseWriter) {
 	st.lock.RLock()
 	values := st.values
 	st.lock.RUnlock()

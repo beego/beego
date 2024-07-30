@@ -88,7 +88,7 @@ func (fs *FileSessionStore) SessionReleaseIfPresent(ctx context.Context, w http.
 	fs.releaseSession(ctx, w, false)
 }
 
-func (fs *FileSessionStore) releaseSession(ctx context.Context, w http.ResponseWriter, createIfNotExist bool) {
+func (fs *FileSessionStore) releaseSession(_ context.Context, _ http.ResponseWriter, createIfNotExist bool) {
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()
 	b, err := EncodeGob(fs.values)
