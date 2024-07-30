@@ -119,7 +119,7 @@ func (cs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWrite
 
 // SessionReleaseIfPresent Write couchbase session with Gob string if the key is present in the session
 // It is not useful in couchbase session.
-// If we want to use couchbase, we maybe refactor the code to use couchbase collection.
+// If we want to use couchbase, we may refactor the code to use couchbase collection.
 func (cs *SessionStore) SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) {
 	defer cs.b.Close()
 	cs.lock.RLock()
