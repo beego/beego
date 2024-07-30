@@ -199,7 +199,7 @@ func (cp *Provider) SessionRead(ctx context.Context, sid string) (session.Store,
 }
 
 // SessionExist Check couchbase session exist.
-// it checkes sid exist or not.
+// it checks sid exist or not.
 func (cp *Provider) SessionExist(ctx context.Context, sid string) (bool, error) {
 	cp.b = cp.getBucket()
 	defer cp.b.Close()

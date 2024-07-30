@@ -80,9 +80,23 @@ func (ls *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWrite
 	c.Expire([]byte(ls.sid), ls.maxlifetime)
 }
 
+// SessionReleaseIfPresent save session values to ledis when key is present
+// it is not supported now, because ledis has no this feature like SETXX or atomic operation.
+// https://github.com/ledisdb/ledisdb/issues/251
+// https://github.com/ledisdb/ledisdb/issues/351
 func (ls *SessionStore) SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) {
-	//TODO implement me
-	panic("implement me")
+	ls.lock.RLock()
+	values := ls.values
+	ls.lock.RUnlock()
+	b, err := session.EncodeGob(values)
+	if err != nil {
+		return
+	}
+	r, _ := c.Exists([]byte(ls.sid))
+	if r == 1 {
+		c.Set([]byte(ls.sid), b)
+		c.Expire([]byte(ls.sid), ls.maxlifetime)
+	}
 }
 
 // Provider ledis session provider
@@ -167,8 +181,8 @@ func (lp *Provider) SessionExist(ctx context.Context, sid string) (bool, error) 
 func (lp *Provider) SessionRegenerate(ctx context.Context, oldsid, sid string) (session.Store, error) {
 	count, _ := c.Exists([]byte(sid))
 	if count == 0 {
-		// oldsid doesn't exists, set the new sid directly
-		// ignore error here, since if it return error
+		// oldsid doesn't exist, set the new sid directly
+		// ignore error here, since if it returns error
 		// the existed value will be 0
 		c.Set([]byte(sid), []byte(""))
 		c.Expire([]byte(sid), lp.maxlifetime)
@@ -186,7 +200,7 @@ func (lp *Provider) SessionDestroy(ctx context.Context, sid string) error {
 	return nil
 }
 
-// SessionGC Impelment method, no used.
+// SessionGC Implement method, no used.
 func (lp *Provider) SessionGC(context.Context) {
 }
 
