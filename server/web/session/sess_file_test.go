@@ -336,15 +336,15 @@ func TestFileSessionStoreDelete(t *testing.T) {
 	_ = fp.SessionInit(context.Background(), 180, sessionPath)
 
 	s, _ := fp.SessionRead(context.Background(), sid)
-	s.Set(nil, "1", 1)
+	s.Set(context.Background(), "1", 1)
 
-	if s.Get(nil, "1") == nil {
+	if s.Get(context.Background(), "1") == nil {
 		t.Error()
 	}
 
-	s.Delete(nil, "1")
+	s.Delete(context.Background(), "1")
 
-	if s.Get(nil, "1") != nil {
+	if s.Get(context.Background(), "1") != nil {
 		t.Error()
 	}
 }
@@ -389,7 +389,7 @@ func TestFileSessionStoreSessionID(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		if s.SessionID(nil) != fmt.Sprintf("%s_%d", sid, i) {
+		if s.SessionID(context.Background()) != fmt.Sprintf("%s_%d", sid, i) {
 			t.Error(err)
 		}
 	}
@@ -420,11 +420,11 @@ func releaseSession(t *testing.T, createIfPresent bool) {
 			t.Error(err)
 		}
 
-		s.Set(nil, i, i)
+		s.Set(context.Background(), i, i)
 		if createIfPresent {
-			s.SessionReleaseIfPresent(nil, nil)
+			s.SessionReleaseIfPresent(context.Background(), common.NewMockHttpResponse())
 		} else {
-			s.SessionRelease(nil, nil)
+			s.SessionRelease(context.Background(), common.NewMockHttpResponse())
 		}
 
 	}
@@ -447,7 +447,7 @@ func TestFileSessionStoreSessionReleaseIfPresentAndSessionDestroy(t *testing.T) 
 	os.RemoveAll(sessionPath)
 	defer os.RemoveAll(sessionPath)
 	fp := &FileProvider{}
-	s, err := fp.SessionRead(nil, sid)
+	s, err := fp.SessionRead(context.Background(), sid)
 	if err != nil {
 		return
 	}
