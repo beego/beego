@@ -22,7 +22,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/beego/beego/v2/server/web/mock"
+	"github.com/beego/beego/v2/server/web/mock/common"
 )
 
 const (
@@ -462,7 +462,7 @@ func TestFileSessionStoreSessionReleaseIfPresentAndSessionDestroy(t *testing.T) 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		s.SessionReleaseIfPresent(context.Background(), mock.NewMockHttpResponse())
+		s.SessionReleaseIfPresent(context.Background(), common.NewMockHttpResponse())
 	}()
 	wg.Wait()
 	exist, err := fp.SessionExist(context.Background(), sid)
