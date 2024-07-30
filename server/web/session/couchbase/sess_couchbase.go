@@ -64,7 +64,7 @@ type Provider struct {
 	b           *couchbase.Bucket
 }
 
-// Set value to couchabse session
+// Set value to couchbase session
 func (cs *SessionStore) Set(ctx context.Context, key, value interface{}) error {
 	cs.lock.Lock()
 	defer cs.lock.Unlock()
@@ -72,7 +72,7 @@ func (cs *SessionStore) Set(ctx context.Context, key, value interface{}) error {
 	return nil
 }
 
-// Get value from couchabse session
+// Get value from couchbase session
 func (cs *SessionStore) Get(ctx context.Context, key interface{}) interface{} {
 	cs.lock.RLock()
 	defer cs.lock.RUnlock()
@@ -117,8 +117,28 @@ func (cs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWrite
 	cs.b.Set(cs.sid, int(cs.maxlifetime), bo)
 }
 
-// SessionReleaseIfPresent Write couchbase session with Gob string
+// SessionReleaseIfPresent Write couchbase session with Gob string if the key is present in the session
+// It is not useful in couchbase session.
+// If we want to use couchbase, we maybe refactor the code to use couchbase collection.
 func (cs *SessionStore) SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) {
+	defer cs.b.Close()
+	cs.lock.RLock()
+	values := cs.values
+	cs.lock.RUnlock()
+	bo, err := session.EncodeGob(values)
+	if err != nil {
+		return
+	}
+	var doc []byte
+	if err := cs.b.Get(cs.sid, &doc); err != nil {
+		return
+	}
+
+	if doc == nil {
+		return
+	}
+
+	cs.b.Set(cs.sid, int(cs.maxlifetime), bo)
 }
 
 func (cp *Provider) getBucket() *couchbase.Bucket {
