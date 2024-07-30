@@ -85,7 +85,7 @@ func (p *Provider) SessionRead(ctx context.Context, sid string) (session.Store, 
 	return rs, nil
 }
 
-// SessionExist judged whether sid is exist in session
+// SessionExist judged whether sid existed in session
 func (p *Provider) SessionExist(ctx context.Context, sid string) (bool, error) {
 	if p.client == nil {
 		if err := p.connectInit(); err != nil {

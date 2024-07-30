@@ -101,6 +101,15 @@ func (rs *SessionStore) SessionID(context.Context) string {
 
 // SessionRelease save session values to redis_cluster
 func (rs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
+	rs.releaseSession(ctx, w, false)
+}
+
+// SessionReleaseIfPresent save session values to redis_cluster when key is present
+func (rs *SessionStore) SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) {
+	rs.releaseSession(ctx, w, true)
+}
+
+func (rs *SessionStore) releaseSession(ctx context.Context, w http.ResponseWriter, createIfPresent bool) {
 	rs.lock.RLock()
 	values := rs.values
 	rs.lock.RUnlock()
@@ -109,12 +118,11 @@ func (rs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWrite
 		return
 	}
 	c := rs.p
-	c.Set(ctx, rs.sid, string(b), time.Duration(rs.maxlifetime)*time.Second)
-}
-
-func (rs *SessionStore) SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) {
-	//TODO implement me
-	panic("implement me")
+	if createIfPresent {
+		c.SetXX(ctx, rs.sid, string(b), time.Duration(rs.maxlifetime)*time.Second)
+	} else {
+		c.Set(ctx, rs.sid, string(b), time.Duration(rs.maxlifetime)*time.Second)
+	}
 }
 
 // Provider redis_cluster session provider
