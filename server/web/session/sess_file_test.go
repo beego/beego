@@ -394,14 +394,14 @@ func TestFileSessionStoreSessionID(t *testing.T) {
 }
 
 func TestFileSessionStoreSessionRelease(t *testing.T) {
-	releaseSession(t)
+	releaseSession(t, false)
 }
 
 func TestFileSessionStoreSessionReleaseIfPresent(t *testing.T) {
-	releaseSession(t)
+	releaseSession(t, true)
 }
 
-func releaseSession(t *testing.T) {
+func releaseSession(t *testing.T, createIfPresent bool) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	os.RemoveAll(sessionPath)
@@ -419,7 +419,12 @@ func releaseSession(t *testing.T) {
 		}
 
 		s.Set(nil, i, i)
-		s.SessionReleaseIfPresent(nil, nil)
+		if createIfPresent {
+			s.SessionReleaseIfPresent(nil, nil)
+		} else {
+			s.SessionRelease(nil, nil)
+		}
+
 	}
 
 	for i := 1; i <= sessionCount; i++ {
