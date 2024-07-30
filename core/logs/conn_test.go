@@ -51,7 +51,7 @@ func TestConn(t *testing.T) {
 func TestReconnect(t *testing.T) {
 	// Setup connection listener
 	newConns := make(chan net.Conn)
-	connNum := 2
+	connNum := 3
 	ln, err := net.Listen("tcp", ":6002")
 	if err != nil {
 		t.Log("Error listening:", err.Error())
