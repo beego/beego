@@ -80,23 +80,11 @@ func (ls *SessionStore) SessionRelease(_ context.Context, _ http.ResponseWriter)
 	c.Expire([]byte(ls.sid), ls.maxlifetime)
 }
 
-// SessionReleaseIfPresent save session values to ledis when key is present
-// it is not supported now, because ledis has no this feature like SETXX or atomic operation.
+// SessionReleaseIfPresent is not supported now, because ledis has no this feature like SETXX or atomic operation.
 // https://github.com/ledisdb/ledisdb/issues/251
 // https://github.com/ledisdb/ledisdb/issues/351
-func (ls *SessionStore) SessionReleaseIfPresent(_ context.Context, _ http.ResponseWriter) {
-	ls.lock.RLock()
-	values := ls.values
-	ls.lock.RUnlock()
-	b, err := session.EncodeGob(values)
-	if err != nil {
-		return
-	}
-	r, _ := c.Exists([]byte(ls.sid))
-	if r == 1 {
-		c.Set([]byte(ls.sid), b)
-		c.Expire([]byte(ls.sid), ls.maxlifetime)
-	}
+func (ls *SessionStore) SessionReleaseIfPresent(c context.Context, w http.ResponseWriter) {
+	ls.SessionRelease(c, w)
 }
 
 // Provider ledis session provider

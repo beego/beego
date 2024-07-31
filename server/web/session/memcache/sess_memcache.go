@@ -105,7 +105,7 @@ func (rs *SessionStore) SessionReleaseIfPresent(ctx context.Context, w http.Resp
 	rs.releaseSession(ctx, w, true)
 }
 
-func (rs *SessionStore) releaseSession(_ context.Context, _ http.ResponseWriter, createIfPresent bool) {
+func (rs *SessionStore) releaseSession(_ context.Context, _ http.ResponseWriter, requirePresent bool) {
 	rs.lock.RLock()
 	values := rs.values
 	rs.lock.RUnlock()
@@ -113,7 +113,7 @@ func (rs *SessionStore) releaseSession(_ context.Context, _ http.ResponseWriter,
 	if err != nil {
 		return
 	}
-	if createIfPresent {
+	if requirePresent {
 		item := memcache.Item{Key: rs.sid, Value: b, Expiration: int32(rs.maxlifetime)}
 		client.Replace(&item)
 	} else {

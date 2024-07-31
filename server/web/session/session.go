@@ -44,13 +44,13 @@ import (
 
 // Store contains all data for one session process with specific id.
 type Store interface {
-	Set(ctx context.Context, key, value interface{}) error              // set session value
-	Get(ctx context.Context, key interface{}) interface{}               // get session value
-	Delete(ctx context.Context, key interface{}) error                  // delete session value
-	SessionID(ctx context.Context) string                               // back current sessionID
-	SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) // release the resource & save data to provider & return the data when the session is present
-	SessionRelease(ctx context.Context, w http.ResponseWriter)          // release the resource & save data to provider & return the data
-	Flush(ctx context.Context) error                                    // delete all data
+	Set(ctx context.Context, key, value interface{}) error              // Set set session value
+	Get(ctx context.Context, key interface{}) interface{}               // Get get session value
+	Delete(ctx context.Context, key interface{}) error                  // Delete delete session value
+	SessionID(ctx context.Context) string                               // SessionID return current sessionID
+	SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) // SessionReleaseIfPresent release the resource & save data to provider & return the data when the session is present, not all implementation support this feature, you need to check if the specific implementation if support this feature.
+	SessionRelease(ctx context.Context, w http.ResponseWriter)          // SessionRelease release the resource & save data to provider & return the data
+	Flush(ctx context.Context) error                                    // Flush delete all data
 }
 
 // Provider contains global session methods and saved SessionStores.

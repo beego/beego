@@ -111,7 +111,7 @@ func (rs *SessionStore) SessionReleaseIfPresent(ctx context.Context, w http.Resp
 	rs.releaseSession(ctx, w, true)
 }
 
-func (rs *SessionStore) releaseSession(ctx context.Context, _ http.ResponseWriter, createIfPresent bool) {
+func (rs *SessionStore) releaseSession(ctx context.Context, _ http.ResponseWriter, requirePresent bool) {
 	rs.lock.RLock()
 	values := rs.values
 	rs.lock.RUnlock()
@@ -120,7 +120,7 @@ func (rs *SessionStore) releaseSession(ctx context.Context, _ http.ResponseWrite
 		return
 	}
 	c := rs.p
-	if createIfPresent {
+	if requirePresent {
 		c.SetXX(ctx, rs.sid, string(b), time.Duration(rs.maxlifetime)*time.Second)
 	} else {
 		c.Set(ctx, rs.sid, string(b), time.Duration(rs.maxlifetime)*time.Second)

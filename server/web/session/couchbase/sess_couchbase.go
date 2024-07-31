@@ -117,28 +117,10 @@ func (cs *SessionStore) SessionRelease(_ context.Context, _ http.ResponseWriter)
 	cs.b.Set(cs.sid, int(cs.maxlifetime), bo)
 }
 
-// SessionReleaseIfPresent Write couchbase session with Gob string if the key is present in the session
-// It is not useful in couchbase session.
+// SessionReleaseIfPresent is not supported
 // If we want to use couchbase, we may refactor the code to use couchbase collection.
-func (cs *SessionStore) SessionReleaseIfPresent(_ context.Context, _ http.ResponseWriter) {
-	defer cs.b.Close()
-	cs.lock.RLock()
-	values := cs.values
-	cs.lock.RUnlock()
-	bo, err := session.EncodeGob(values)
-	if err != nil {
-		return
-	}
-	var doc []byte
-	if err := cs.b.Get(cs.sid, &doc); err != nil {
-		return
-	}
-
-	if doc == nil {
-		return
-	}
-
-	cs.b.Set(cs.sid, int(cs.maxlifetime), bo)
+func (cs *SessionStore) SessionReleaseIfPresent(c context.Context, w http.ResponseWriter) {
+	cs.SessionRelease(c, w)
 }
 
 func (cp *Provider) getBucket() *couchbase.Bucket {

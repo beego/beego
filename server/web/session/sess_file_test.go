@@ -403,7 +403,7 @@ func TestFileSessionStoreSessionReleaseIfPresent(t *testing.T) {
 	releaseSession(t, true)
 }
 
-func releaseSession(t *testing.T, createIfPresent bool) {
+func releaseSession(t *testing.T, requirePresent bool) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	os.RemoveAll(sessionPath)
@@ -421,7 +421,7 @@ func releaseSession(t *testing.T, createIfPresent bool) {
 		}
 
 		s.Set(context.Background(), i, i)
-		if createIfPresent {
+		if requirePresent {
 			s.SessionReleaseIfPresent(context.Background(), common.NewMockHttpResponse())
 		} else {
 			s.SessionRelease(context.Background(), common.NewMockHttpResponse())
