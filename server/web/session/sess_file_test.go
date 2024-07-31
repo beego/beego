@@ -17,12 +17,11 @@ package session
 import (
 	"context"
 	"fmt"
+	"net/http/httptest"
 	"os"
 	"sync"
 	"testing"
 	"time"
-
-	"github.com/beego/beego/v2/server/web/mock/common"
 )
 
 const (
@@ -422,9 +421,9 @@ func releaseSession(t *testing.T, requirePresent bool) {
 
 		s.Set(context.Background(), i, i)
 		if requirePresent {
-			s.SessionReleaseIfPresent(context.Background(), common.NewMockHttpResponse())
+			s.SessionReleaseIfPresent(context.Background(), httptest.NewRecorder())
 		} else {
-			s.SessionRelease(context.Background(), common.NewMockHttpResponse())
+			s.SessionRelease(context.Background(), httptest.NewRecorder())
 		}
 
 	}
@@ -462,7 +461,7 @@ func TestFileSessionStoreSessionReleaseIfPresentAndSessionDestroy(t *testing.T) 
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		s.SessionReleaseIfPresent(context.Background(), common.NewMockHttpResponse())
+		s.SessionReleaseIfPresent(context.Background(), httptest.NewRecorder())
 	}()
 	wg.Wait()
 	exist, err := fp.SessionExist(context.Background(), sid)

@@ -10,7 +10,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/beego/beego/v2/server/web/mock/common"
 	"github.com/beego/beego/v2/server/web/session"
 )
 
@@ -125,7 +124,7 @@ func TestStoreSessionReleaseIfPresentAndSessionDestroy(t *testing.T) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		sess.SessionReleaseIfPresent(context.Background(), common.NewMockHttpResponse())
+		sess.SessionReleaseIfPresent(context.Background(), httptest.NewRecorder())
 	}()
 	wg.Wait()
 	exist, err := globalSessions.GetProvider().SessionExist(ctx, sess.SessionID(ctx))

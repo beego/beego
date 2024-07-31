@@ -40,7 +40,7 @@ func TestMockContext(t *testing.T) {
 		},
 	}
 	ctrl.HelloWorld()
-	result := resp.BodyToString()
+	result := resp.Body.String()
 	assert.Equal(t, "name=tom", result)
 }
 

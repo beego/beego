@@ -16,14 +16,14 @@ package mock
 
 import (
 	"net/http"
+	"net/http/httptest"
 
 	beegoCtx "github.com/beego/beego/v2/server/web/context"
-	"github.com/beego/beego/v2/server/web/mock/common"
 )
 
-func NewMockContext(req *http.Request) (*beegoCtx.Context, *common.HttpResponse) {
+func NewMockContext(req *http.Request) (*beegoCtx.Context, *httptest.ResponseRecorder) {
 	ctx := beegoCtx.NewContext()
-	resp := common.NewMockHttpResponse()
+	resp := httptest.NewRecorder()
 	ctx.Reset(resp, req)
 	return ctx, resp
 }
