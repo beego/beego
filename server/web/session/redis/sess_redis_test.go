@@ -17,25 +17,9 @@ import (
 )
 
 func TestRedis(t *testing.T) {
-	redisAddr := os.Getenv("REDIS_ADDR")
-	if redisAddr == "" {
-		redisAddr = "127.0.0.1:6379"
-	}
-	redisConfig := fmt.Sprintf("%s,100,,0,30", redisAddr)
-
-	sessionConfig := session.NewManagerConfig(
-		session.CfgCookieName(`gosessionid`),
-		session.CfgSetCookie(true),
-		session.CfgGcLifeTime(3600),
-		session.CfgMaxLifeTime(3600),
-		session.CfgSecure(false),
-		session.CfgCookieLifeTime(3600),
-		session.CfgProviderConfig(redisConfig),
-	)
-
-	globalSession, err := session.NewManager("redis", sessionConfig)
+	globalSession, err := initSession(t)
 	if err != nil {
-		t.Fatal("could not create manager:", err)
+		t.Fatal(err)
 	}
 
 	go globalSession.GC()
@@ -116,25 +100,9 @@ func TestProvider_SessionInit(t *testing.T) {
 }
 
 func TestStoreSessionReleaseIfPresentAndSessionDestroy(t *testing.T) {
-	redisAddr := os.Getenv("REDIS_ADDR")
-	if redisAddr == "" {
-		redisAddr = "127.0.0.1:6379"
-	}
-	redisConfig := fmt.Sprintf("%s,100,,0,30", redisAddr)
-
-	sessionConfig := session.NewManagerConfig(
-		session.CfgCookieName(`gosessionid`),
-		session.CfgSetCookie(true),
-		session.CfgGcLifeTime(3600),
-		session.CfgMaxLifeTime(3600),
-		session.CfgSecure(false),
-		session.CfgCookieLifeTime(3600),
-		session.CfgProviderConfig(redisConfig),
-	)
-	globalSessions, e := session.NewManager("redis", sessionConfig)
-	if e != nil {
-		t.Log(e)
-		return
+	globalSessions, err := initSession(t)
+	if err != nil {
+		t.Fatal(err)
 	}
 	// todo test if e==nil
 	go globalSessions.GC()
@@ -167,4 +135,28 @@ func TestStoreSessionReleaseIfPresentAndSessionDestroy(t *testing.T) {
 	if exist {
 		t.Fatalf("session %s should exist", sess.SessionID(ctx))
 	}
+}
+
+func initSession(t *testing.T) (*session.Manager, error) {
+	redisAddr := os.Getenv("REDIS_ADDR")
+	if redisAddr == "" {
+		redisAddr = "127.0.0.1:6379"
+	}
+	redisConfig := fmt.Sprintf("%s,100,,0,30", redisAddr)
+
+	sessionConfig := session.NewManagerConfig(
+		session.CfgCookieName(`gosessionid`),
+		session.CfgSetCookie(true),
+		session.CfgGcLifeTime(3600),
+		session.CfgMaxLifeTime(3600),
+		session.CfgSecure(false),
+		session.CfgCookieLifeTime(3600),
+		session.CfgProviderConfig(redisConfig),
+	)
+	globalSessions, err := session.NewManager("redis", sessionConfig)
+	if err != nil {
+		t.Log(err)
+		return nil, err
+	}
+	return globalSessions, nil
 }

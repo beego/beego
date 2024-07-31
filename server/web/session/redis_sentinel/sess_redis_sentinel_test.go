@@ -15,18 +15,9 @@ import (
 )
 
 func TestRedisSentinel(t *testing.T) {
-	sessionConfig := session.NewManagerConfig(
-		session.CfgCookieName(`gosessionid`),
-		session.CfgSetCookie(true),
-		session.CfgGcLifeTime(3600),
-		session.CfgMaxLifeTime(3600),
-		session.CfgSecure(false),
-		session.CfgCookieLifeTime(3600),
-		session.CfgProviderConfig("127.0.0.1:6379,100,,0,master"),
-	)
-	globalSessions, e := session.NewManager("redis_sentinel", sessionConfig)
-	if e != nil {
-		t.Log(e)
+	globalSessions, err := initSession(t)
+	if err != nil {
+		t.Log(err)
 		return
 	}
 	// todo test if e==nil
@@ -108,16 +99,7 @@ func TestProvider_SessionInit(t *testing.T) {
 }
 
 func TestStoreSessionReleaseIfPresentAndSessionDestroy(t *testing.T) {
-	sessionConfig := session.NewManagerConfig(
-		session.CfgCookieName(`gosessionid`),
-		session.CfgSetCookie(true),
-		session.CfgGcLifeTime(3600),
-		session.CfgMaxLifeTime(3600),
-		session.CfgSecure(false),
-		session.CfgCookieLifeTime(3600),
-		session.CfgProviderConfig("127.0.0.1:6379,100,,0,master"),
-	)
-	globalSessions, e := session.NewManager("redis_sentinel", sessionConfig)
+	globalSessions, e := initSession(t)
 	if e != nil {
 		t.Log(e)
 		return
@@ -153,4 +135,22 @@ func TestStoreSessionReleaseIfPresentAndSessionDestroy(t *testing.T) {
 	if exist {
 		t.Fatalf("session %s should exist", sess.SessionID(ctx))
 	}
+}
+
+func initSession(t *testing.T) (*session.Manager, error) {
+	sessionConfig := session.NewManagerConfig(
+		session.CfgCookieName(`gosessionid`),
+		session.CfgSetCookie(true),
+		session.CfgGcLifeTime(3600),
+		session.CfgMaxLifeTime(3600),
+		session.CfgSecure(false),
+		session.CfgCookieLifeTime(3600),
+		session.CfgProviderConfig("127.0.0.1:6379,100,,0,master"),
+	)
+	globalSessions, err := session.NewManager("redis_sentinel", sessionConfig)
+	if err != nil {
+		t.Log(err)
+		return nil, err
+	}
+	return globalSessions, nil
 }

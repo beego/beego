@@ -113,11 +113,10 @@ func (rs *SessionStore) releaseSession(_ context.Context, _ http.ResponseWriter,
 	if err != nil {
 		return
 	}
+	item := memcache.Item{Key: rs.sid, Value: b, Expiration: int32(rs.maxlifetime)}
 	if requirePresent {
-		item := memcache.Item{Key: rs.sid, Value: b, Expiration: int32(rs.maxlifetime)}
 		client.Replace(&item)
 	} else {
-		item := memcache.Item{Key: rs.sid, Value: b, Expiration: int32(rs.maxlifetime)}
 		client.Set(&item)
 	}
 }
