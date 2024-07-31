@@ -17,7 +17,7 @@ import (
 )
 
 func TestRedis(t *testing.T) {
-	globalSession, err := initSession(t)
+	globalSession, err := setupSessionManager(t)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -100,7 +100,7 @@ func TestProvider_SessionInit(t *testing.T) {
 }
 
 func TestStoreSessionReleaseIfPresentAndSessionDestroy(t *testing.T) {
-	globalSessions, err := initSession(t)
+	globalSessions, err := setupSessionManager(t)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -137,7 +137,7 @@ func TestStoreSessionReleaseIfPresentAndSessionDestroy(t *testing.T) {
 	}
 }
 
-func initSession(t *testing.T) (*session.Manager, error) {
+func setupSessionManager(t *testing.T) (*session.Manager, error) {
 	redisAddr := os.Getenv("REDIS_ADDR")
 	if redisAddr == "" {
 		redisAddr = "127.0.0.1:6379"

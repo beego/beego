@@ -15,7 +15,7 @@ import (
 )
 
 func TestRedisSentinel(t *testing.T) {
-	globalSessions, err := initSession(t)
+	globalSessions, err := setupSessionManager(t)
 	if err != nil {
 		t.Log(err)
 		return
@@ -99,7 +99,7 @@ func TestProvider_SessionInit(t *testing.T) {
 }
 
 func TestStoreSessionReleaseIfPresentAndSessionDestroy(t *testing.T) {
-	globalSessions, e := initSession(t)
+	globalSessions, e := setupSessionManager(t)
 	if e != nil {
 		t.Log(e)
 		return
@@ -137,7 +137,7 @@ func TestStoreSessionReleaseIfPresentAndSessionDestroy(t *testing.T) {
 	}
 }
 
-func initSession(t *testing.T) (*session.Manager, error) {
+func setupSessionManager(t *testing.T) (*session.Manager, error) {
 	sessionConfig := session.NewManagerConfig(
 		session.CfgCookieName(`gosessionid`),
 		session.CfgSetCookie(true),
