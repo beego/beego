@@ -17,6 +17,7 @@ package session
 import (
 	"context"
 	"fmt"
+	"net/http/httptest"
 	"os"
 	"sync"
 	"testing"
@@ -334,15 +335,15 @@ func TestFileSessionStoreDelete(t *testing.T) {
 	_ = fp.SessionInit(context.Background(), 180, sessionPath)
 
 	s, _ := fp.SessionRead(context.Background(), sid)
-	s.Set(nil, "1", 1)
+	s.Set(context.Background(), "1", 1)
 
-	if s.Get(nil, "1") == nil {
+	if s.Get(context.Background(), "1") == nil {
 		t.Error()
 	}
 
-	s.Delete(nil, "1")
+	s.Delete(context.Background(), "1")
 
-	if s.Get(nil, "1") != nil {
+	if s.Get(context.Background(), "1") != nil {
 		t.Error()
 	}
 }
@@ -387,13 +388,21 @@ func TestFileSessionStoreSessionID(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		if s.SessionID(nil) != fmt.Sprintf("%s_%d", sid, i) {
+		if s.SessionID(context.Background()) != fmt.Sprintf("%s_%d", sid, i) {
 			t.Error(err)
 		}
 	}
 }
 
 func TestFileSessionStoreSessionRelease(t *testing.T) {
+	releaseSession(t, false)
+}
+
+func TestFileSessionStoreSessionReleaseIfPresent(t *testing.T) {
+	releaseSession(t, true)
+}
+
+func releaseSession(t *testing.T, requirePresent bool) {
 	mutex.Lock()
 	defer mutex.Unlock()
 	os.RemoveAll(sessionPath)
@@ -410,8 +419,13 @@ func TestFileSessionStoreSessionRelease(t *testing.T) {
 			t.Error(err)
 		}
 
-		s.Set(nil, i, i)
-		s.SessionRelease(nil, nil)
+		s.Set(context.Background(), i, i)
+		if requirePresent {
+			s.SessionReleaseIfPresent(context.Background(), httptest.NewRecorder())
+		} else {
+			s.SessionRelease(context.Background(), httptest.NewRecorder())
+		}
+
 	}
 
 	for i := 1; i <= sessionCount; i++ {
@@ -423,5 +437,38 @@ func TestFileSessionStoreSessionRelease(t *testing.T) {
 		if s.Get(nil, i).(int) != i {
 			t.Error()
 		}
+	}
+}
+
+func TestFileSessionStoreSessionReleaseIfPresentAndSessionDestroy(t *testing.T) {
+	mutex.Lock()
+	defer mutex.Unlock()
+	os.RemoveAll(sessionPath)
+	defer os.RemoveAll(sessionPath)
+	fp := &FileProvider{}
+	s, err := fp.SessionRead(context.Background(), sid)
+	if err != nil {
+		return
+	}
+
+	_ = fp.SessionInit(context.Background(), 180, sessionPath)
+	filepder.savePath = sessionPath
+	if err := fp.SessionDestroy(context.Background(), sid); err != nil {
+		t.Error(err)
+		return
+	}
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		s.SessionReleaseIfPresent(context.Background(), httptest.NewRecorder())
+	}()
+	wg.Wait()
+	exist, err := fp.SessionExist(context.Background(), sid)
+	if err != nil {
+		t.Error(err)
+	}
+	if exist {
+		t.Fatalf("session %s should exist", sid)
 	}
 }
