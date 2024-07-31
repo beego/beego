@@ -117,7 +117,7 @@ func (cs *SessionStore) SessionRelease(_ context.Context, _ http.ResponseWriter)
 	cs.b.Set(cs.sid, int(cs.maxlifetime), bo)
 }
 
-// SessionReleaseIfPresent is not supported
+// SessionReleaseIfPresent is not supported now.
 // If we want to use couchbase, we may refactor the code to use couchbase collection.
 func (cs *SessionStore) SessionReleaseIfPresent(c context.Context, w http.ResponseWriter) {
 	cs.SessionRelease(c, w)

@@ -155,7 +155,7 @@ func setupSessionManager(t *testing.T) (*session.Manager, error) {
 	)
 	globalSessions, err := session.NewManager("redis", sessionConfig)
 	if err != nil {
-		t.Log(err)
+		t.Log("could not create manager: ", err)
 		return nil, err
 	}
 	return globalSessions, nil
