@@ -84,7 +84,7 @@ Finally in the handlerfunc you can use it like this
 When you develop a web app, maybe you want to write own provider because you must meet the requirements.
 
 Writing a provider is easy. You only need to define two struct types
-(Session and Provider), which satisfy the interface definition. Maybe you will find the **memory** provider is a good
+(Store and Provider), which satisfy the interface definition. Maybe you will find the **memory** provider is a good
 example.
 
 	// Store contains all data for one session process with specific id.
