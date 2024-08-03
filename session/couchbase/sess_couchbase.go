@@ -20,8 +20,10 @@
 //
 // Usage:
 // import(
-//   _ "github.com/beego/beego/session/couchbase"
-//   "github.com/beego/beego/session"
+//
+//	_ "github.com/beego/beego/session/couchbase"
+//	"github.com/beego/beego/session"
+//
 // )
 //
 //	func init() {
@@ -111,6 +113,12 @@ func (cs *SessionStore) SessionRelease(w http.ResponseWriter) {
 	}
 
 	cs.b.Set(cs.sid, int(cs.maxlifetime), bo)
+}
+
+// SessionReleaseIfPresent is not supported now.
+// If we want to use couchbase, we may refactor the code to use couchbase collection.
+func (cs *SessionStore) SessionReleaseIfPresent(w http.ResponseWriter) {
+	cs.SessionRelease(w)
 }
 
 func (cp *Provider) getBucket() *couchbase.Bucket {

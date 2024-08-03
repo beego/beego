@@ -80,6 +80,15 @@ func (fs *FileSessionStore) SessionID() string {
 
 // SessionRelease Write file session to local file with Gob string
 func (fs *FileSessionStore) SessionRelease(w http.ResponseWriter) {
+	fs.releaseSession(w, true)
+}
+
+// SessionReleaseIfPresent Write file session to local file with Gob string when session exists
+func (fs *FileSessionStore) SessionReleaseIfPresent(w http.ResponseWriter) {
+	fs.releaseSession(w, false)
+}
+
+func (fs *FileSessionStore) releaseSession(_ http.ResponseWriter, createIfNotExist bool) {
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()
 	b, err := EncodeGob(fs.values)
@@ -87,16 +96,16 @@ func (fs *FileSessionStore) SessionRelease(w http.ResponseWriter) {
 		SLogger.Println(err)
 		return
 	}
-	_, err = os.Stat(path.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid))
+	_, err = os.Stat(filepath.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid))
 	var f *os.File
 	if err == nil {
-		f, err = os.OpenFile(path.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid), os.O_RDWR, 0777)
+		f, err = os.OpenFile(filepath.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid), os.O_RDWR, 0o777)
 		if err != nil {
 			SLogger.Println(err)
 			return
 		}
-	} else if os.IsNotExist(err) {
-		f, err = os.Create(path.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid))
+	} else if os.IsNotExist(err) && createIfNotExist {
+		f, err = os.Create(filepath.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid))
 		if err != nil {
 			SLogger.Println(err)
 			return
@@ -221,7 +230,7 @@ func (fp *FileProvider) SessionAll() int {
 }
 
 // SessionRegenerate Generate new sid for file session.
-// it delete old file and create new file named from new sid.
+// it deletes old file and create new file named from new sid.
 func (fp *FileProvider) SessionRegenerate(oldsid, sid string) (Store, error) {
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()

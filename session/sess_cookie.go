@@ -88,6 +88,12 @@ func (st *CookieSessionStore) SessionRelease(w http.ResponseWriter) {
 	}
 }
 
+// SessionReleaseIfPresent Write cookie session to http response cookie when it is present
+// This is a no-op for cookie sessions, because they are always present.
+func (st *CookieSessionStore) SessionReleaseIfPresent(w http.ResponseWriter) {
+	st.SessionRelease(w)
+}
+
 type cookieConfig struct {
 	SecurityKey  string `json:"securityKey"`
 	BlockKey     string `json:"blockKey"`
@@ -107,11 +113,12 @@ type CookieProvider struct {
 // SessionInit Init cookie session provider with max lifetime and config json.
 // maxlifetime is ignored.
 // json config:
-// 	securityKey - hash string
-// 	blockKey - gob encode hash string. it's saved as aes crypto.
-// 	securityName - recognized name in encoded cookie string
-// 	cookieName - cookie name
-// 	maxage - cookie max life time.
+//
+//	securityKey - hash string
+//	blockKey - gob encode hash string. it's saved as aes crypto.
+//	securityName - recognized name in encoded cookie string
+//	cookieName - cookie name
+//	maxage - cookie max life time.
 func (pder *CookieProvider) SessionInit(maxlifetime int64, config string) error {
 	pder.config = &cookieConfig{}
 	err := json.Unmarshal([]byte(config), pder.config)

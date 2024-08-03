@@ -20,8 +20,10 @@
 //
 // Usage:
 // import(
-//   _ "github.com/beego/beego/session/memcache"
-//   "github.com/beego/beego/session"
+//
+//	_ "github.com/beego/beego/session/memcache"
+//	"github.com/beego/beego/session"
+//
 // )
 //
 //	func init() {
@@ -94,12 +96,28 @@ func (rs *SessionStore) SessionID() string {
 
 // SessionRelease save session values to memcache
 func (rs *SessionStore) SessionRelease(w http.ResponseWriter) {
-	b, err := session.EncodeGob(rs.values)
+	rs.releaseSession(w, false)
+}
+
+// SessionReleaseIfPresent save session values to memcache when key is present
+func (rs *SessionStore) SessionReleaseIfPresent(w http.ResponseWriter) {
+	rs.releaseSession(w, true)
+}
+
+func (rs *SessionStore) releaseSession(_ http.ResponseWriter, requirePresent bool) {
+	rs.lock.RLock()
+	values := rs.values
+	rs.lock.RUnlock()
+	b, err := session.EncodeGob(values)
 	if err != nil {
 		return
 	}
 	item := memcache.Item{Key: rs.sid, Value: b, Expiration: int32(rs.maxlifetime)}
-	client.Set(&item)
+	if requirePresent {
+		client.Replace(&item)
+	} else {
+		client.Set(&item)
+	}
 }
 
 // MemProvider memcache session provider
@@ -170,8 +188,8 @@ func (rp *MemProvider) SessionRegenerate(oldsid, sid string) (session.Store, err
 	}
 	var contain []byte
 	if item, err := client.Get(sid); err != nil || len(item.Value) == 0 {
-		// oldsid doesn't exists, set the new sid directly
-		// ignore error here, since if it return error
+		// oldsid doesn't exist, set the new sid directly
+		// ignore error here, since if it returns error
 		// the existed value will be 0
 		item.Key = sid
 		item.Value = []byte("")
