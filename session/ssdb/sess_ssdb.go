@@ -7,8 +7,9 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/beego/beego/session"
 	"github.com/ssdb/gossdb/ssdb"
+
+	"github.com/beego/beego/session"
 )
 
 var ssdbProvider = &Provider{}
@@ -67,7 +68,7 @@ func (p *Provider) SessionRead(sid string) (session.Store, error) {
 	return rs, nil
 }
 
-// SessionExist judged whether sid is exist in session
+// SessionExist judged whether sid is existed in session
 func (p *Provider) SessionExist(sid string) bool {
 	if p.client == nil {
 		if err := p.connectInit(); err != nil {
@@ -192,6 +193,12 @@ func (s *SessionStore) SessionRelease(w http.ResponseWriter) {
 		return
 	}
 	s.client.Do("setx", s.sid, string(b), s.maxLifetime)
+}
+
+// SessionReleaseIfPresent is not supported now
+// Because ssdb does not support lua script or SETXX command
+func (s *SessionStore) SessionReleaseIfPresent(w http.ResponseWriter) {
+	s.SessionRelease(w)
 }
 
 func init() {

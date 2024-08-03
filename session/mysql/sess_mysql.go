@@ -19,6 +19,7 @@
 // go install github.com/go-sql-driver/mysql
 //
 // mysql session support need create table as sql:
+//
 //	CREATE TABLE `session` (
 //	`session_key` char(64) NOT NULL,
 //	`session_data` blob,
@@ -28,8 +29,10 @@
 //
 // Usage:
 // import(
-//   _ "github.com/beego/beego/session/mysql"
-//   "github.com/beego/beego/session"
+//
+//	_ "github.com/beego/beego/session/mysql"
+//	"github.com/beego/beego/session"
+//
 // )
 //
 //	func init() {
@@ -115,6 +118,11 @@ func (st *SessionStore) SessionRelease(w http.ResponseWriter) {
 	}
 	st.c.Exec("UPDATE "+TableName+" set `session_data`=?, `session_expiry`=? where session_key=?",
 		b, time.Now().Unix(), st.sid)
+}
+
+// SessionReleaseIfPresent save mysql session values to database.
+func (st *SessionStore) SessionReleaseIfPresent(w http.ResponseWriter) {
+	st.SessionRelease(w)
 }
 
 // Provider mysql session provider

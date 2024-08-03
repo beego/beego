@@ -75,6 +75,10 @@ func (st *MemSessionStore) SessionID() string {
 func (st *MemSessionStore) SessionRelease(w http.ResponseWriter) {
 }
 
+// SessionReleaseIfPresent Implement method, no used.
+func (*MemSessionStore) SessionReleaseIfPresent(_ http.ResponseWriter) {
+}
+
 // MemProvider Implement the provider interface
 type MemProvider struct {
 	lock        sync.RWMutex             // locker

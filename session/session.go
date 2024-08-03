@@ -16,13 +16,15 @@
 //
 // Usage:
 // import(
-//   "github.com/beego/beego/session"
+//
+//	"github.com/beego/beego/session"
+//
 // )
 //
-//	func init() {
-//      globalSessions, _ = session.NewManager("memory", `{"cookieName":"gosessionid", "enableSetCookie,omitempty": true, "gclifetime":3600, "maxLifetime": 3600, "secure": false, "cookieLifeTime": 3600, "providerConfig": ""}`)
-//		go globalSessions.GC()
-//	}
+//		func init() {
+//	     globalSessions, _ = session.NewManager("memory", `{"cookieName":"gosessionid", "enableSetCookie,omitempty": true, "gclifetime":3600, "maxLifetime": 3600, "secure": false, "cookieLifeTime": 3600, "providerConfig": ""}`)
+//			go globalSessions.GC()
+//		}
 //
 // more docs: http://beego.me/docs/module/session.md
 package session
@@ -43,12 +45,13 @@ import (
 
 // Store contains all data for one session process with specific id.
 type Store interface {
-	Set(key, value interface{}) error     //set session value
-	Get(key interface{}) interface{}      //get session value
-	Delete(key interface{}) error         //delete session value
-	SessionID() string                    //back current sessionID
-	SessionRelease(w http.ResponseWriter) // release the resource & save data to provider & return the data
-	Flush() error                         //delete all data
+	Set(key, value interface{}) error              // Set set session value
+	Get(key interface{}) interface{}               // Get get session value
+	Delete(key interface{}) error                  // Delete delete session value
+	SessionID() string                             // SessionID return current sessionID
+	SessionReleaseIfPresent(w http.ResponseWriter) // SessionReleaseIfPresent release the resource & save data to provider & return the data when the session is present, not all implementation support this feature, you need to check if the specific implementation if support this feature.
+	SessionRelease(w http.ResponseWriter)          // SessionRelease release the resource & save data to provider & return the data
+	Flush() error                                  // Flush delete all data
 }
 
 // Provider contains global session methods and saved SessionStores.
@@ -81,7 +84,7 @@ func Register(name string, provide Provider) {
 	provides[name] = provide
 }
 
-//GetProvider
+// GetProvider
 func GetProvider(name string) (Provider, error) {
 	provider, ok := provides[name]
 	if !ok {

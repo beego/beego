@@ -20,14 +20,16 @@
 //
 // Usage:
 // import(
-//   _ "github.com/beego/beego/session/redis"
-//   "github.com/beego/beego/session"
+//
+//	_ "github.com/beego/beego/session/redis"
+//	"github.com/beego/beego/session"
+//
 // )
 //
-// 	func init() {
-// 		globalSessions, _ = session.NewManager("redis", ``{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig":"127.0.0.1:7070"}``)
-// 		go globalSessions.GC()
-// 	}
+//	func init() {
+//		globalSessions, _ = session.NewManager("redis", ``{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig":"127.0.0.1:7070"}``)
+//		go globalSessions.GC()
+//	}
 //
 // more docs: http://beego.me/docs/module/session.md
 package redis
@@ -99,13 +101,28 @@ func (rs *SessionStore) SessionID() string {
 
 // SessionRelease save session values to redis
 func (rs *SessionStore) SessionRelease(w http.ResponseWriter) {
-	b, err := session.EncodeGob(rs.values)
+	rs.releaseSession(w, false)
+}
+
+// SessionReleaseIfPresent save session values to redis when key is present
+func (rs *SessionStore) SessionReleaseIfPresent(w http.ResponseWriter) {
+	rs.releaseSession(w, true)
+}
+
+func (rs *SessionStore) releaseSession(_ http.ResponseWriter, requirePresent bool) {
+	rs.lock.RLock()
+	values := rs.values
+	rs.lock.RUnlock()
+	b, err := session.EncodeGob(values)
 	if err != nil {
 		return
 	}
 	c := rs.p.Get()
-	defer c.Close()
-	c.Do("SETEX", rs.sid, rs.maxlifetime, string(b))
+	if requirePresent {
+		c.Do("SETXX", rs.sid, string(b), time.Duration(rs.maxlifetime)*time.Second, "XX")
+	} else {
+		c.Do("SETEX", rs.sid, string(b), time.Duration(rs.maxlifetime)*time.Second)
+	}
 }
 
 // Provider redis session provider
@@ -227,8 +244,8 @@ func (rp *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error)
 	defer c.Close()
 
 	if existed, _ := redis.Int(c.Do("EXISTS", oldsid)); existed == 0 {
-		// oldsid doesn't exists, set the new sid directly
-		// ignore error here, since if it return error
+		// oldsid doesn't exist, set the new sid directly
+		// ignore error here, since if it returns error
 		// the existed value will be 0
 		c.Do("SET", sid, "", "EX", rp.maxlifetime)
 	} else {

@@ -20,8 +20,10 @@
 //
 // Usage:
 // import(
-//   _ "github.com/beego/beego/session/redis_sentinel"
-//   "github.com/beego/beego/session"
+//
+//	_ "github.com/beego/beego/session/redis_sentinel"
+//	"github.com/beego/beego/session"
+//
 // )
 //
 //	func init() {
@@ -39,8 +41,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/beego/beego/session"
 	"github.com/go-redis/redis"
+
+	"github.com/beego/beego/session"
 )
 
 var redispder = &Provider{}
@@ -98,12 +101,28 @@ func (rs *SessionStore) SessionID() string {
 
 // SessionRelease save session values to redis_sentinel
 func (rs *SessionStore) SessionRelease(w http.ResponseWriter) {
-	b, err := session.EncodeGob(rs.values)
+	rs.releaseSession(w, false)
+}
+
+// SessionReleaseIfPresent save session values to redis_sentinel when key is present
+func (rs *SessionStore) SessionReleaseIfPresent(w http.ResponseWriter) {
+	rs.releaseSession(w, true)
+}
+
+func (rs *SessionStore) releaseSession(_ http.ResponseWriter, requirePresent bool) {
+	rs.lock.RLock()
+	values := rs.values
+	rs.lock.RUnlock()
+	b, err := session.EncodeGob(values)
 	if err != nil {
 		return
 	}
 	c := rs.p
-	c.Set(rs.sid, string(b), time.Duration(rs.maxlifetime)*time.Second)
+	if requirePresent {
+		c.SetXX(rs.sid, string(b), time.Duration(rs.maxlifetime)*time.Second)
+	} else {
+		c.Set(rs.sid, string(b), time.Duration(rs.maxlifetime)*time.Second)
+	}
 }
 
 // Provider redis_sentinel session provider
@@ -203,8 +222,8 @@ func (rp *Provider) SessionRegenerate(oldsid, sid string) (session.Store, error)
 	c := rp.poollist
 
 	if existed, err := c.Exists(oldsid).Result(); err != nil || existed == 0 {
-		// oldsid doesn't exists, set the new sid directly
-		// ignore error here, since if it return error
+		// oldsid doesn't exist, set the new sid directly
+		// ignore error here, since if it returns error
 		// the existed value will be 0
 		c.Set(sid, "", time.Duration(rp.maxlifetime)*time.Second)
 	} else {
