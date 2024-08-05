@@ -66,7 +66,7 @@ Congratulations! You've just built your first **beego** app.
 
 ## Modules
 
-* [orm](https://github.com/beego/beedoc/tree/master/en-US/mvc/model)
+* [orm](https://github.com/beego/beedoc/blob/master/en-US/mvc/model/orm.md)
 * [session](https://github.com/beego/beedoc/blob/master/en-US/module/session.md)
 * [logs](https://github.com/beego/beedoc/blob/master/en-US/module/logs.md)
 * [config](https://github.com/beego/beedoc/blob/master/en-US/module/config.md)
