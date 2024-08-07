@@ -26,6 +26,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/server/web/context"
 )
 
@@ -290,10 +291,10 @@ func RenderForm(obj interface{}) template.HTML {
 	}
 	objT = objT.Elem()
 	objV = objV.Elem()
-
 	var raw []string
 	for i := 0; i < objT.NumField(); i++ {
 		fieldV := objV.Field(i)
+
 		if !fieldV.CanSet() || unKind[fieldV.Kind()] {
 			continue
 		}
@@ -327,6 +328,25 @@ func renderFormField(label, name, fType string, value interface{}, id string, cl
 
 	if isValidForInput(fType) {
 		return fmt.Sprintf(`%v<input%v%v name="%v" type="%v" value="%v"%v>`, label, id, class, name, fType, value, requiredString)
+	}
+
+	if fType == "select" {
+		valueStr, ok := value.(string)
+		if !ok {
+			logs.Error("for select value must comma separated string that are the options for select")
+			return ""
+		}
+
+		var selectBuilder strings.Builder
+		selectBuilder.WriteString(fmt.Sprintf(`%v<select%v%v name="%v"></br>`, label, id, class, name))
+
+		for _, option := range strings.Split(valueStr, ",") {
+			selectBuilder.WriteString(fmt.Sprintf(`  <option value="%v"> %v </option></br>`, option, option))
+		}
+
+		selectBuilder.WriteString(`</select></br>`)
+
+		return selectBuilder.String()
 	}
 
 	return fmt.Sprintf(`%v<%v%v%v name="%v"%v>%v</%v>`, label, fType, id, class, name, requiredString, value, fType)
