@@ -291,10 +291,10 @@ func RenderForm(obj interface{}) template.HTML {
 	}
 	objT = objT.Elem()
 	objV = objV.Elem()
+
 	var raw []string
 	for i := 0; i < objT.NumField(); i++ {
 		fieldV := objV.Field(i)
-
 		if !fieldV.CanSet() || unKind[fieldV.Kind()] {
 			continue
 		}
@@ -311,7 +311,8 @@ func RenderForm(obj interface{}) template.HTML {
 	return template.HTML(strings.Join(raw, "</br>"))
 }
 
-// renderFormField returns a string containing HTML of a single form field.
+// renderFormField returns a string containing HTML of a single form field. In case of select fType, it will retrun
+// select tag with options. Value for select fType must be comma separated string which are use are
 func renderFormField(label, name, fType string, value interface{}, id string, class string, required bool) string {
 	if id != "" {
 		id = " id=\"" + id + "\""
