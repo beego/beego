@@ -345,7 +345,7 @@ func renderFormField(label, name, fType string, value interface{}, id string, cl
 			selectBuilder.WriteString(fmt.Sprintf(`  <option value="%v"> %v </option></br>`, option, option))
 		}
 
-		selectBuilder.WriteString(`</select></br>`)
+		selectBuilder.WriteString(`</select>`)
 
 		return selectBuilder.String()
 	}
