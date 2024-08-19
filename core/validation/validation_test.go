@@ -642,14 +642,13 @@ func TestEnumString(t *testing.T) {
 		t.Error("\"bob\" is a valid enumstring should be true")
 	}
 
-	type User struct {
-		Name string `json:"name" valid:"EnumString(\"bob\",\"john\",\"lily\")"`
-	}
+	valid = Validation{}
 	type User1 struct {
-		Name string `json:"name" valid:"EnumString(\"bob\",\"john\")"`
+		//Name string `json:"name" valid:"EnumString(\"bob\",\"john\",\"lily\")"`
+		Name string `json:"name" valid:"EnumString(bob,john,lily)"`
 	}
 
-	u1 := User{Name: ""}
+	u1 := User1{Name: ""}
 	b, err := valid.Valid(u1)
 	if err != nil {
 		t.Fatal(err)
@@ -658,7 +657,11 @@ func TestEnumString(t *testing.T) {
 		t.Fatal("validation should not be passed")
 	}
 
-	u2 := User{Name: "bob"}
+	valid = Validation{}
+	type User2 struct {
+		Name string `json:"name" valid:"EnumString(bob,john,lily)"`
+	}
+	u2 := User2{Name: "bob"}
 	b, err = valid.Valid(u2)
 	if err != nil {
 		t.Fatal(err)

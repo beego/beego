@@ -247,7 +247,7 @@ func trim(name, key string, s []string) (ts []interface{}, err error) {
 		// in this case, eg. EnumString("bob", "john"), ts will be [[]string{"bob", "john"}, "Name.EnumString."]
 		// so create ts, len = 1, cap = 2
 		ts = make([]interface{}, 1, 2)
-		validStrings := make([]string, len(s), len(s))
+		validStrings := make([]string, len(s))
 		for i := 0; i < len(s); i++ {
 			validStrings[i] = strings.TrimSpace(s[i])
 		}
