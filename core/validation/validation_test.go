@@ -360,6 +360,30 @@ func TestZipCode(t *testing.T) {
 	}
 }
 
+func TestEnum(t *testing.T) {
+	valid := Validation{}
+
+	if !valid.Enum("sms", "sms|email|code", "enum").Ok {
+		t.Error("\"sms\" is in the enum list of \"sms|email|code\" should be true")
+	}
+
+	if valid.Enum("phone", "sms|code|email", "enum").Ok {
+		t.Error("\"phone\" is in the enum list of \"sms|code|email\" should be false")
+	}
+
+	if valid.Enum("", "email|sms|code", "enum").Ok {
+		t.Error("\"\" is in the enum list of \"email|sms|code\" should be false")
+	}
+
+	if valid.Enum("sms", "", "enum").Ok {
+		t.Error("\"sms\" is in the enum list of \"\" should be false")
+	}
+
+	if !valid.Enum("", "", "enum").Ok {
+		t.Error("\"\" is in the enum list of \"\" should be true")
+	}
+}
+
 func TestValid(t *testing.T) {
 	type user struct {
 		ID   int
