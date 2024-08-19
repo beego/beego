@@ -58,6 +58,7 @@ var MessageTmpls = map[string]string{
 	"Tel":          "Must be valid telephone number",
 	"Phone":        "Must be valid telephone or mobile phone number",
 	"ZipCode":      "Must be valid zipcode",
+	"EnumString":   "Must be valid string in %s",
 }
 
 var once sync.Once
@@ -737,4 +738,37 @@ func (z ZipCode) GetKey() string {
 // GetLimitValue return the limit value
 func (z ZipCode) GetLimitValue() interface{} {
 	return nil
+}
+
+// EnumString Requires a string to be at one of enum string.
+type EnumString struct {
+	Strings []string
+	Key     string
+}
+
+// IsSatisfied judge whether obj is valid
+func (e EnumString) IsSatisfied(obj interface{}) bool {
+	if str, ok := obj.(string); ok {
+		for _, s := range e.Strings {
+			if str == s {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// DefaultMessage return the default MinSize error message
+func (e EnumString) DefaultMessage() string {
+	return fmt.Sprintf(MessageTmpls["EnumString"], e.Strings)
+}
+
+// GetKey return the m.Key
+func (e EnumString) GetKey() string {
+	return e.Key
+}
+
+// GetLimitValue return the limit value
+func (e EnumString) GetLimitValue() interface{} {
+	return e.Strings
 }

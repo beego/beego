@@ -140,6 +140,7 @@ Struct Tag Functions:
 	Tel
 	Phone
 	ZipCode
+    EnumString(enumstring []string)
 
 ## LICENSE
 

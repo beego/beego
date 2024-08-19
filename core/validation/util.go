@@ -210,7 +210,7 @@ func parseFunc(vfunc, key string, label string) (v ValidFunc, err error) {
 
 	params := strings.Split(vfunc[start+1:end], ",")
 	// the num of param must be equal
-	if num != len(params) {
+	if num != len(params) && name != "EnumString" {
 		err = fmt.Errorf("%s require %d parameters", name, num)
 		return
 	}
@@ -241,13 +241,29 @@ func trim(name, key string, s []string) (ts []interface{}, err error) {
 		err = fmt.Errorf("doesn't exists %s valid function", name)
 		return
 	}
-	for i := 0; i < len(s); i++ {
-		var param interface{}
-		// skip *Validation and obj params
-		if param, err = parseParam(fn.Type().In(i+2), strings.TrimSpace(s[i])); err != nil {
-			return
+
+	var param interface{}
+	if fn.Type().In(2).Kind() == reflect.Slice {
+		// in this case, eg. EnumString("bob", "john"), ts will be [[]string{"bob", "john"}, "Name.EnumString."]
+		// so create ts, len = 1, cap = 2
+		ts = make([]interface{}, 1, 2)
+		validStrings := make([]string, len(s), len(s))
+		for i := 0; i < len(s); i++ {
+			validStrings[i] = strings.TrimSpace(s[i])
 		}
-		ts[i] = param
+		if len(s) > 0 {
+			ts[0] = validStrings
+		}
+	} else {
+		for i := 0; i < len(s); i++ {
+			// skip *Validation and obj params
+			a := fn.Type().In(i + 2)
+			fmt.Println(a)
+			if param, err = parseParam(fn.Type().In(i+2), strings.TrimSpace(s[i])); err != nil {
+				return
+			}
+			ts[i] = param
+		}
 	}
 	ts = append(ts, key)
 	return

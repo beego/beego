@@ -631,3 +631,39 @@ func TestFieldNoEmpty(t *testing.T) {
 		t.Fatal("validation should be passed")
 	}
 }
+
+func TestEnumString(t *testing.T) {
+	valid := Validation{}
+	if valid.EnumString("", []string{"bob", "john"}, "enumstring").Ok {
+		t.Error("\"\" is a valid enumstring should be false")
+	}
+
+	if !valid.EnumString("bob", []string{"bob", "john"}, "enumstring").Ok {
+		t.Error("\"bob\" is a valid enumstring should be true")
+	}
+
+	type User struct {
+		Name string `json:"name" valid:"EnumString(\"bob\",\"john\",\"lily\")"`
+	}
+	type User1 struct {
+		Name string `json:"name" valid:"EnumString(\"bob\",\"john\")"`
+	}
+
+	u1 := User{Name: ""}
+	b, err := valid.Valid(u1)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b {
+		t.Fatal("validation should not be passed")
+	}
+
+	u2 := User{Name: "bob"}
+	b, err = valid.Valid(u2)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !b {
+		t.Fatal("validation should be passed")
+	}
+}
