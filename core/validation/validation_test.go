@@ -635,7 +635,7 @@ func TestFieldNoEmpty(t *testing.T) {
 func TestEnumString(t *testing.T) {
 	valid := Validation{}
 	if valid.EnumString("", []string{"bob", "john"}, "enumstring").Ok {
-		t.Error("\"\" is a valid enumstring should be false")
+		t.Error("\"\" is a valid enumstring should not be false")
 	}
 
 	if !valid.EnumString("bob", []string{"bob", "john"}, "enumstring").Ok {
