@@ -58,7 +58,7 @@ var MessageTmpls = map[string]string{
 	"Tel":          "Must be valid telephone number",
 	"Phone":        "Must be valid telephone or mobile phone number",
 	"ZipCode":      "Must be valid zipcode",
-	"Enum":         "Must be in enum value and only support string",
+	"Enum":         "Must be a string value in \"%s\"",
 }
 
 var once sync.Once
@@ -760,8 +760,8 @@ func (e Enum) IsSatisfied(i interface{}) bool {
 }
 
 // DefaultMessage return the default Enum error message
-func (Enum) DefaultMessage() string {
-	return MessageTmpls["Enum"]
+func (e Enum) DefaultMessage() string {
+	return fmt.Sprintf(MessageTmpls["Enum"], e.Rules)
 }
 
 // GetKey return the e.Key
