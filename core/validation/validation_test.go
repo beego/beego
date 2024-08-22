@@ -653,7 +653,7 @@ type FuncTest struct {
 	Name string `json:"name" valid:"Func(ValidateUser)"`
 }
 
-func (u *FuncTest) ValidateUser(input string) error {
+func (*FuncTest) ValidateUser(input string) error {
 	if input == "/" {
 		return nil
 	}
