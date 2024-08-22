@@ -109,8 +109,9 @@ type Validation struct {
 	// it will skip those valid functions, see CanSkipFuncs
 	RequiredFirst bool
 
-	Errors    []*Error
-	ErrorsMap map[string][]*Error
+	Errors        []*Error
+	ErrorsMap     map[string][]*Error
+	MainInterface interface{}
 }
 
 // Clear Clean all ValidationError.
@@ -250,6 +251,12 @@ func (v *Validation) Enum(obj interface{}, vals string, key string) *Result {
 	return v.apply(Enum{vals, key}, obj)
 }
 
+// Func test that the method is valid and if method doesn't return any errors
+func (v *Validation) Func(obj interface{}, vals string, key string) *Result {
+	method := GetMethod(v.MainInterface, vals)
+	return v.apply(&Func{Method: method, Key: key}, obj)
+}
+
 func (v *Validation) apply(chk Validator, obj interface{}) *Result {
 	if nil == obj {
 		if chk.IsSatisfied(obj) {
@@ -370,6 +377,7 @@ func (v *Validation) Check(obj interface{}, checks ...Validator) *Result {
 // Valid Validate a struct.
 // the obj parameter must be a struct or a struct pointer
 func (v *Validation) Valid(obj interface{}) (b bool, err error) {
+	v.MainInterface = obj
 	objT := reflect.TypeOf(obj)
 	objV := reflect.ValueOf(obj)
 	switch {

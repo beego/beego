@@ -59,6 +59,7 @@ var MessageTmpls = map[string]string{
 	"Phone":        "Must be valid telephone or mobile phone number",
 	"ZipCode":      "Must be valid zipcode",
 	"Enum":         "Must be a string value in \"%s\"",
+	"Func":         "Validation failed",
 }
 
 var once sync.Once
@@ -771,5 +772,59 @@ func (e Enum) GetKey() string {
 
 // GetLimitValue return nil now
 func (Enum) GetLimitValue() interface{} {
+	return nil
+}
+
+type Func struct {
+	Method *reflect.Value
+	Key    string
+	Error  error
+}
+
+// IsSatisfied judge whether obj is valid
+func (e *Func) IsSatisfied(i interface{}) bool {
+	if e.Method == nil {
+		return false
+	}
+	result := e.Method.Call([]reflect.Value{reflect.ValueOf(i)})
+
+	if len(result) > 1 {
+		return false
+	}
+	if len(result) == 0 {
+		return true
+	}
+
+	output := result[0].Interface()
+	if output == nil {
+		return true
+	}
+
+	if err := output.(error); err != nil {
+		e.Error = err
+		return false
+	}
+
+	return false
+}
+
+// DefaultMessage return the error message from method or the default
+func (e *Func) DefaultMessage() string {
+	if e.Error != nil {
+		return e.Error.Error()
+	}
+	if e.Method == nil {
+		return "could not find the validation function"
+	}
+	return fmt.Sprintf(MessageTmpls["Func"])
+}
+
+// GetKey return the e.Key
+func (e Func) GetKey() string {
+	return e.Key
+}
+
+// GetLimitValue return nil now
+func (Func) GetLimitValue() interface{} {
 	return nil
 }

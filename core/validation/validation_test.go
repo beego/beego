@@ -15,6 +15,7 @@
 package validation
 
 import (
+	"errors"
 	"regexp"
 	"testing"
 	"time"
@@ -646,4 +647,60 @@ func TestFieldNoEmpty(t *testing.T) {
 	if len(validErr.Field) == 0 {
 		t.Fatal("validation should be passed")
 	}
+}
+
+type FuncTest struct {
+	Name string `json:"name" valid:"Func(ValidateUser)"`
+}
+
+func (u *FuncTest) ValidateUser(input string) error {
+	if input == "/" {
+		return nil
+	}
+	return errors.New("your name must be /")
+}
+
+func TestFunc(t *testing.T) {
+	u := FuncTest{
+		Name: "*",
+	}
+	valid := Validation{}
+	b, err := valid.Valid(u)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if b {
+		t.Fatal("validation should not be passed")
+	}
+	if len(valid.Errors) == 0 {
+		t.Fatal("validation should not be passed")
+	}
+	validErr := valid.Errors[0]
+	if len(validErr.Field) == 0 {
+		t.Fatal("validation should not be passed")
+	}
+
+	if validErr.Message != "Name your name must be /" {
+		t.Fatal("wrong error value")
+	}
+
+	u = FuncTest{
+		Name: "/",
+	}
+	valid2 := Validation{}
+	b, err = valid2.Valid(u)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !b {
+		t.Fatal("validation should be passed")
+	}
+	if len(valid2.Errors) != 0 {
+		t.Fatal("validation should be passed")
+	}
+
 }
