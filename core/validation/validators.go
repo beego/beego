@@ -820,11 +820,11 @@ func (e *Func) DefaultMessage() string {
 }
 
 // GetKey return the e.Key
-func (e Func) GetKey() string {
+func (e *Func) GetKey() string {
 	return e.Key
 }
 
 // GetLimitValue return nil now
-func (Func) GetLimitValue() interface{} {
+func (*Func) GetLimitValue() interface{} {
 	return nil
 }
