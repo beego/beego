@@ -58,6 +58,7 @@ var MessageTmpls = map[string]string{
 	"Tel":          "Must be valid telephone number",
 	"Phone":        "Must be valid telephone or mobile phone number",
 	"ZipCode":      "Must be valid zipcode",
+	"Enum":         "Must be a string value in \"%s\"",
 }
 
 var once sync.Once
@@ -736,5 +737,39 @@ func (z ZipCode) GetKey() string {
 
 // GetLimitValue return the limit value
 func (z ZipCode) GetLimitValue() interface{} {
+	return nil
+}
+
+// Enum Requires that the field must be within the enumerated value
+type Enum struct {
+	Rules string
+	Key   string
+}
+
+// IsSatisfied judge whether obj is valid
+func (e Enum) IsSatisfied(i interface{}) bool {
+	if val, ok := i.(string); ok {
+		roles := strings.Split(e.Rules, "|")
+		for _, v := range roles {
+			if val == strings.TrimSpace(v) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// DefaultMessage return the default Enum error message
+func (e Enum) DefaultMessage() string {
+	return fmt.Sprintf(MessageTmpls["Enum"], e.Rules)
+}
+
+// GetKey return the e.Key
+func (e Enum) GetKey() string {
+	return e.Key
+}
+
+// GetLimitValue return nil now
+func (Enum) GetLimitValue() interface{} {
 	return nil
 }

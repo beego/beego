@@ -245,6 +245,11 @@ func (v *Validation) ZipCode(obj interface{}, key string) *Result {
 	return v.apply(ZipCode{Match{Regexp: zipCodePattern}, key}, obj)
 }
 
+// Enum Test that the obj is in the specified enumeration if type is string
+func (v *Validation) Enum(obj interface{}, vals string, key string) *Result {
+	return v.apply(Enum{vals, key}, obj)
+}
+
 func (v *Validation) apply(chk Validator, obj interface{}) *Result {
 	if nil == obj {
 		if chk.IsSatisfied(obj) {
