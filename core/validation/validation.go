@@ -308,7 +308,7 @@ func (v *Validation) apply(chk Validator, obj interface{}) *Result {
 	}
 }
 
-// key must like aa.bb.cc or aa.bb.
+// AddError key must like aa.bb.cc or aa.bb.
 // AddError adds independent error message for the provided key
 func (v *Validation) AddError(key, message string) {
 	Name := key
