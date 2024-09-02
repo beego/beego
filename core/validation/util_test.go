@@ -15,6 +15,7 @@
 package validation
 
 import (
+	"fmt"
 	"log"
 	"reflect"
 	"testing"
@@ -125,4 +126,30 @@ func TestCall(t *testing.T) {
 	if len(valid.Errors) != 1 {
 		t.Error("age out of range should be has an error")
 	}
+}
+
+func ExampleAddCustomFunc() {
+	err := AddCustomFunc("MyFunc", func(v *Validation, obj interface{}, key string) {
+		// do validation, and if you find something wrong,
+		// call AddError
+		v.AddError(key, "this is my error")
+	})
+	if err != nil {
+		panic(err)
+	}
+	type MyUser struct {
+		Name string `valid:"MyFunc"`
+	}
+	v := Validation{}
+	ok, err := v.Valid(&MyUser{})
+	if err != nil {
+		panic(err)
+	}
+	if !ok {
+		// get the validation error here
+		errs := v.Errors
+		fmt.Println(errs[0].Error())
+	}
+	// Output:
+	// Name this is my error
 }
