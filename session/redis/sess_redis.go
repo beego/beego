@@ -119,9 +119,9 @@ func (rs *SessionStore) releaseSession(_ http.ResponseWriter, requirePresent boo
 	}
 	c := rs.p.Get()
 	if requirePresent {
-		c.Do("SETXX", rs.sid, string(b), time.Duration(rs.maxlifetime)*time.Second, "XX")
+		c.Do("SET", rs.sid, string(b), "EX", time.Duration(rs.maxlifetime)*time.Second, "XX")
 	} else {
-		c.Do("SETEX", rs.sid, string(b), time.Duration(rs.maxlifetime)*time.Second)
+		c.Do("SET", rs.sid, string(b), "EX", time.Duration(rs.maxlifetime)*time.Second)
 	}
 }
 
