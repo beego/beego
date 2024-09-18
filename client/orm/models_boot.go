@@ -45,8 +45,13 @@ func RegisterModelWithSuffix(suffix string, models ...interface{}) {
 // BootStrap Bootstrap models.
 // make All model parsed and can not add more models
 func BootStrap() {
-	if dataBaseCache.getDefault() == nil {
-		fmt.Println("must have one Register DataBase alias named `default`")
+	BootStrapWithAlias("default")
+}
+
+// BootStrap with alias
+func BootStrapWithAlias(alias string) {
+	if _, ok := dataBaseCache.get(alias); !ok {
+		fmt.Printf("must have one Register DataBase alias named %q\n", alias)
 		debug.PrintStack()
 		return
 	}
