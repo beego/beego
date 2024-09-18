@@ -621,7 +621,6 @@ func (t *txOrm) RollbackUnlessCommit() error {
 
 // NewOrm create new orm
 func NewOrm() Ormer {
-	BootStrap() // execute only once
 	return NewOrmUsingDB(`default`)
 }
 
@@ -644,6 +643,8 @@ func NewOrmWithDB(driverName, aliasName string, db *sql.DB, params ...DBOption) 
 }
 
 func newDBWithAlias(al *alias) Ormer {
+	BootStrapWithAlias(al.Name) // execute only once
+
 	o := new(orm)
 	o.alias = al
 
