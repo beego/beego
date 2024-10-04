@@ -20,6 +20,7 @@ import (
 	"runtime/debug"
 	"strings"
 	"sync"
+	"sync/atomic"
 )
 
 // ModelCache info collection
@@ -28,7 +29,7 @@ type ModelCache struct {
 	orders          []string
 	cache           map[string]*ModelInfo
 	cacheByFullName map[string]*ModelInfo
-	done            bool
+	done            atomic.Bool
 }
 
 // NewModelCacheHandler generator of ModelCache
@@ -99,16 +100,16 @@ func (mc *ModelCache) Clean() {
 	mc.orders = make([]string, 0)
 	mc.cache = make(map[string]*ModelInfo)
 	mc.cacheByFullName = make(map[string]*ModelInfo)
-	mc.done = false
+	mc.done.Store(false)
 }
 
 // Bootstrap Bootstrap for models
 func (mc *ModelCache) Bootstrap() {
-	mc.Lock()
-	defer mc.Unlock()
-	if mc.done {
+	// Return if already bootstrapped
+	if mc.done.Load() || !mc.done.CompareAndSwap(false, true) {
 		return
 	}
+
 	var (
 		err    error
 		models map[string]*ModelInfo
@@ -310,7 +311,6 @@ end:
 		fmt.Println(err)
 		debug.PrintStack()
 	}
-	mc.done = true
 }
 
 // Register Register models to model cache
