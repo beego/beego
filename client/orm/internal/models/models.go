@@ -24,11 +24,10 @@ import (
 
 // ModelCache info collection
 type ModelCache struct {
-	sync.RWMutex    // only used outsite for bootStrap
 	orders          []string
 	cache           map[string]*ModelInfo
 	cacheByFullName map[string]*ModelInfo
-	done            bool
+	bootstrapOnce   *sync.Once
 }
 
 // NewModelCacheHandler generator of ModelCache
@@ -36,6 +35,7 @@ func NewModelCacheHandler() *ModelCache {
 	return &ModelCache{
 		cache:           make(map[string]*ModelInfo),
 		cacheByFullName: make(map[string]*ModelInfo),
+		bootstrapOnce:   new(sync.Once),
 	}
 }
 
@@ -93,22 +93,20 @@ func (mc *ModelCache) Set(table string, mi *ModelInfo) *ModelInfo {
 
 // Clean All model info.
 func (mc *ModelCache) Clean() {
-	mc.Lock()
-	defer mc.Unlock()
-
 	mc.orders = make([]string, 0)
 	mc.cache = make(map[string]*ModelInfo)
 	mc.cacheByFullName = make(map[string]*ModelInfo)
-	mc.done = false
+	mc.bootstrapOnce = new(sync.Once)
 }
 
 // Bootstrap Bootstrap for models
 func (mc *ModelCache) Bootstrap() {
-	mc.Lock()
-	defer mc.Unlock()
-	if mc.done {
-		return
-	}
+	mc.bootstrapOnce.Do(func() {
+		mc.bootstrap()
+	})
+}
+
+func (mc *ModelCache) bootstrap() {
 	var (
 		err    error
 		models map[string]*ModelInfo
@@ -310,7 +308,6 @@ end:
 		fmt.Println(err)
 		debug.PrintStack()
 	}
-	mc.done = true
 }
 
 // Register Register models to model cache
