@@ -59,7 +59,7 @@ func TestCookie(t *testing.T) {
 	}
 }
 
-func TestDestorySessionCookie(t *testing.T) {
+func TestDestroySessionCookie(t *testing.T) {
 	config := `{"cookieName":"gosessionid","enableSetCookie":true,"gclifetime":3600,"ProviderConfig":"{\"cookieName\":\"gosessionid\",\"securityKey\":\"beegocookiehashkey\"}"}`
 	conf := new(ManagerConfig)
 	if err := json.Unmarshal([]byte(config), conf); err != nil {

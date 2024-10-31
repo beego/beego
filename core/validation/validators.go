@@ -58,32 +58,34 @@ var MessageTmpls = map[string]string{
 	"Tel":          "Must be valid telephone number",
 	"Phone":        "Must be valid telephone or mobile phone number",
 	"ZipCode":      "Must be valid zipcode",
+	"Enum":         "Must be a string value in \"%s\"",
 }
 
 var once sync.Once
 
 // SetDefaultMessage set default messages
 // if not set, the default messages are
-//  "Required":     "Can not be empty",
-//  "Min":          "Minimum is %d",
-//  "Max":          "Maximum is %d",
-//  "Range":        "Range is %d to %d",
-//  "MinSize":      "Minimum size is %d",
-//  "MaxSize":      "Maximum size is %d",
-//  "Length":       "Required length is %d",
-//  "Alpha":        "Must be valid alpha characters",
-//  "Numeric":      "Must be valid numeric characters",
-//  "AlphaNumeric": "Must be valid alpha or numeric characters",
-//  "Match":        "Must match %s",
-//  "NoMatch":      "Must not match %s",
-//  "AlphaDash":    "Must be valid alpha or numeric or dash(-_) characters",
-//  "Email":        "Must be a valid email address",
-//  "IP":           "Must be a valid ip address",
-//  "Base64":       "Must be valid base64 characters",
-//  "Mobile":       "Must be valid mobile number",
-//  "Tel":          "Must be valid telephone number",
-//  "Phone":        "Must be valid telephone or mobile phone number",
-//  "ZipCode":      "Must be valid zipcode",
+//
+//	"Required":     "Can not be empty",
+//	"Min":          "Minimum is %d",
+//	"Max":          "Maximum is %d",
+//	"Range":        "Range is %d to %d",
+//	"MinSize":      "Minimum size is %d",
+//	"MaxSize":      "Maximum size is %d",
+//	"Length":       "Required length is %d",
+//	"Alpha":        "Must be valid alpha characters",
+//	"Numeric":      "Must be valid numeric characters",
+//	"AlphaNumeric": "Must be valid alpha or numeric characters",
+//	"Match":        "Must match %s",
+//	"NoMatch":      "Must not match %s",
+//	"AlphaDash":    "Must be valid alpha or numeric or dash(-_) characters",
+//	"Email":        "Must be a valid email address",
+//	"IP":           "Must be a valid ip address",
+//	"Base64":       "Must be valid base64 characters",
+//	"Mobile":       "Must be valid mobile number",
+//	"Tel":          "Must be valid telephone number",
+//	"Phone":        "Must be valid telephone or mobile phone number",
+//	"ZipCode":      "Must be valid zipcode",
 func SetDefaultMessage(msg map[string]string) {
 	if len(msg) == 0 {
 		return
@@ -735,5 +737,39 @@ func (z ZipCode) GetKey() string {
 
 // GetLimitValue return the limit value
 func (z ZipCode) GetLimitValue() interface{} {
+	return nil
+}
+
+// Enum Requires that the field must be within the enumerated value
+type Enum struct {
+	Rules string
+	Key   string
+}
+
+// IsSatisfied judge whether obj is valid
+func (e Enum) IsSatisfied(i interface{}) bool {
+	if val, ok := i.(string); ok {
+		roles := strings.Split(e.Rules, "|")
+		for _, v := range roles {
+			if val == strings.TrimSpace(v) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// DefaultMessage return the default Enum error message
+func (e Enum) DefaultMessage() string {
+	return fmt.Sprintf(MessageTmpls["Enum"], e.Rules)
+}
+
+// GetKey return the e.Key
+func (e Enum) GetKey() string {
+	return e.Key
+}
+
+// GetLimitValue return nil now
+func (Enum) GetLimitValue() interface{} {
 	return nil
 }

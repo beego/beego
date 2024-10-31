@@ -42,8 +42,6 @@
 //			log.Println(v.Error.Key, v.Error.Message)
 //		}
 //	}
-//
-// more info: http://beego.vip/docs/mvc/controller/validation.md
 package validation
 
 import (
@@ -60,9 +58,9 @@ type ValidFormer interface {
 
 // Error show the error
 type Error struct {
-	Message, Key, Name, Field, Tmpl string
-	Value                           interface{}
-	LimitValue                      interface{}
+	Message, Key, Name, Field, Tmpl, Label string
+	Value                                  interface{}
+	LimitValue                             interface{}
 }
 
 // String Returns the Message.
@@ -247,6 +245,11 @@ func (v *Validation) ZipCode(obj interface{}, key string) *Result {
 	return v.apply(ZipCode{Match{Regexp: zipCodePattern}, key}, obj)
 }
 
+// Enum Test that the obj is in the specified enumeration if type is string
+func (v *Validation) Enum(obj interface{}, vals string, key string) *Result {
+	return v.apply(Enum{vals, key}, obj)
+}
+
 func (v *Validation) apply(chk Validator, obj interface{}) *Result {
 	if nil == obj {
 		if chk.IsSatisfied(obj) {
@@ -294,6 +297,7 @@ func (v *Validation) apply(chk Validator, obj interface{}) *Result {
 		Value:      obj,
 		Tmpl:       MessageTmpls[Name],
 		LimitValue: chk.GetLimitValue(),
+		Label:      Label,
 	}
 	v.setError(err)
 
@@ -304,7 +308,7 @@ func (v *Validation) apply(chk Validator, obj interface{}) *Result {
 	}
 }
 
-// key must like aa.bb.cc or aa.bb.
+// AddError key must like aa.bb.cc or aa.bb.
 // AddError adds independent error message for the provided key
 func (v *Validation) AddError(key, message string) {
 	Name := key
@@ -326,6 +330,7 @@ func (v *Validation) AddError(key, message string) {
 		Key:     key,
 		Name:    Name,
 		Field:   Field,
+		Label:   Label,
 	}
 	v.setError(err)
 }

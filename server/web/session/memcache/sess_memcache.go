@@ -20,16 +20,16 @@
 //
 // Usage:
 // import(
-//   _ "github.com/beego/beego/v2/server/web/session/memcache"
-//   "github.com/beego/beego/v2/server/web/session"
+//
+//	_ "github.com/beego/beego/v2/server/web/session/memcache"
+//	"github.com/beego/beego/v2/server/web/session"
+//
 // )
 //
 //	func init() {
 //		globalSessions, _ = session.NewManager("memcache", ``{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig":"127.0.0.1:11211"}``)
 //		go globalSessions.GC()
 //	}
-//
-// more docs: http://beego.vip/docs/module/session.md
 package memcache
 
 import (
@@ -97,12 +97,28 @@ func (rs *SessionStore) SessionID(context.Context) string {
 
 // SessionRelease save session values to memcache
 func (rs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
-	b, err := session.EncodeGob(rs.values)
+	rs.releaseSession(ctx, w, false)
+}
+
+// SessionReleaseIfPresent save session values to memcache when key is present
+func (rs *SessionStore) SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) {
+	rs.releaseSession(ctx, w, true)
+}
+
+func (rs *SessionStore) releaseSession(_ context.Context, _ http.ResponseWriter, requirePresent bool) {
+	rs.lock.RLock()
+	values := rs.values
+	rs.lock.RUnlock()
+	b, err := session.EncodeGob(values)
 	if err != nil {
 		return
 	}
 	item := memcache.Item{Key: rs.sid, Value: b, Expiration: int32(rs.maxlifetime)}
-	client.Set(&item)
+	if requirePresent {
+		client.Replace(&item)
+	} else {
+		client.Set(&item)
+	}
 }
 
 // MemProvider memcache session provider
@@ -173,8 +189,8 @@ func (rp *MemProvider) SessionRegenerate(ctx context.Context, oldsid, sid string
 	}
 	var contain []byte
 	if item, err := client.Get(sid); err != nil || len(item.Value) == 0 {
-		// oldsid doesn't exists, set the new sid directly
-		// ignore error here, since if it return error
+		// oldsid doesn't exist, set the new sid directly
+		// ignore error here, since if it returns error
 		// the existed value will be 0
 		item.Key = sid
 		item.Value = []byte("")
@@ -219,7 +235,7 @@ func (rp *MemProvider) connectInit() error {
 	return nil
 }
 
-// SessionGC Impelment method, no used.
+// SessionGC Implement method, no used.
 func (rp *MemProvider) SessionGC(context.Context) {
 }
 

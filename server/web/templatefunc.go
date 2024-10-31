@@ -26,6 +26,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/server/web/context"
 )
 
@@ -227,22 +228,21 @@ func Htmlunquote(text string) string {
 }
 
 // URLFor returns url string with another registered controller handler with params.
-//	usage:
 //
-//	URLFor(".index")
-//	print URLFor("index")
-//  router /login
-//	print URLFor("login")
-//	print URLFor("login", "next","/"")
-//  router /profile/:username
-//	print UrlFor("profile", ":username","John Doe")
-//	result:
-//	/
-//	/login
-//	/login?next=/
-//	/user/John%20Doe
+//		usage:
 //
-//  more detail http://beego.vip/docs/mvc/controller/urlbuilding.md
+//		URLFor(".index")
+//		print URLFor("index")
+//	 router /login
+//		print URLFor("login")
+//		print URLFor("login", "next","/"")
+//	 router /profile/:username
+//		print UrlFor("profile", ":username","John Doe")
+//		result:
+//		/
+//		/login
+//		/login?next=/
+//		/user/John%20Doe
 func URLFor(endpoint string, values ...interface{}) string {
 	return BeeApp.Handlers.URLFor(endpoint, values...)
 }
@@ -311,7 +311,8 @@ func RenderForm(obj interface{}) template.HTML {
 	return template.HTML(strings.Join(raw, "</br>"))
 }
 
-// renderFormField returns a string containing HTML of a single form field.
+// renderFormField returns a string containing HTML of a single form field. In case of select fType, it will retrun
+// select tag with options. Value for select fType must be comma separated string which are use are
 func renderFormField(label, name, fType string, value interface{}, id string, class string, required bool) string {
 	if id != "" {
 		id = " id=\"" + id + "\""
@@ -328,6 +329,25 @@ func renderFormField(label, name, fType string, value interface{}, id string, cl
 
 	if isValidForInput(fType) {
 		return fmt.Sprintf(`%v<input%v%v name="%v" type="%v" value="%v"%v>`, label, id, class, name, fType, value, requiredString)
+	}
+
+	if fType == "select" {
+		valueStr, ok := value.(string)
+		if !ok {
+			logs.Error("for select value must comma separated string that are the options for select")
+			return ""
+		}
+
+		var selectBuilder strings.Builder
+		selectBuilder.WriteString(fmt.Sprintf(`%v<select%v%v name="%v"></br>`, label, id, class, name))
+
+		for _, option := range strings.Split(valueStr, ",") {
+			selectBuilder.WriteString(fmt.Sprintf(`  <option value="%v"> %v </option></br>`, option, option))
+		}
+
+		selectBuilder.WriteString(`</select>`)
+
+		return selectBuilder.String()
 	}
 
 	return fmt.Sprintf(`%v<%v%v%v name="%v"%v>%v</%v>`, label, fType, id, class, name, requiredString, value, fType)
@@ -565,12 +585,13 @@ func ge(arg1, arg2 interface{}) (bool, error) {
 
 // MapGet getting value from map by keys
 // usage:
-// Data["m"] = M{
-//     "a": 1,
-//     "1": map[string]float64{
-//         "c": 4,
-//     },
-// }
+//
+//	Data["m"] = M{
+//	    "a": 1,
+//	    "1": map[string]float64{
+//	        "c": 4,
+//	    },
+//	}
 //
 // {{ map_get m "a" }} // return 1
 // {{ map_get m 1 "c" }} // return 4

@@ -37,6 +37,7 @@ var defaultCodeRegistry = &codeRegistry{
 func DefineCode(code uint32, module string, name string, desc string) Code {
 	res := &codeDefinition{
 		code:   code,
+		name:   name,
 		module: module,
 		desc:   desc,
 	}

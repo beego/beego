@@ -29,8 +29,6 @@
 //	log.Warn("warning")
 //	log.Debug("debug")
 //	log.Critical("critical")
-//
-//  more docs http://beego.vip/docs/module/logs.md
 package logs
 
 import (
@@ -41,8 +39,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-
-	"github.com/pkg/errors"
 )
 
 // RFC5424 log message levels.
@@ -118,13 +114,17 @@ type BeeLogger struct {
 	enableFuncCallDepth bool
 	enableFullFilePath  bool
 	asynchronous        bool
+	// Whether to discard logs when buffer is full and asynchronous is true
+	// No discard by default
+	logWithNonBlocking  bool
 	wg                  sync.WaitGroup
 	level               int
 	loggerFuncCallDepth int
 	prefix              string
 	msgChanLen          int64
 	msgChan             chan *LogMsg
-	signalChan          chan string
+	closeChan           chan struct{}
+	flushChan           chan struct{}
 	outputs             []*nameLogger
 	globalFormatter     string
 }
@@ -149,7 +149,8 @@ func NewLogger(channelLens ...int64) *BeeLogger {
 	if bl.msgChanLen <= 0 {
 		bl.msgChanLen = defaultAsyncMsgLen
 	}
-	bl.signalChan = make(chan string, 1)
+	bl.flushChan = make(chan struct{}, 1)
+	bl.closeChan = make(chan struct{}, 1)
 	bl.setLogger(AdapterConsole)
 	return bl
 }
@@ -176,8 +177,18 @@ func (bl *BeeLogger) Async(msgLen ...int64) *BeeLogger {
 	return bl
 }
 
+// AsyncNonBlockWrite Non-blocking write in asynchronous mode
+// Only works if asynchronous write logging is set
+func (bl *BeeLogger) AsyncNonBlockWrite() *BeeLogger {
+	if !bl.asynchronous {
+		return bl
+	}
+	bl.logWithNonBlocking = true
+	return bl
+}
+
 // SetLogger provides a given logger adapter into BeeLogger with config string.
-// config must in in JSON format like {"interval":360}}
+// config must in JSON format like {"interval":360}}
 func (bl *BeeLogger) setLogger(adapterName string, configs ...string) error {
 	config := append(configs, "{}")[0]
 	for _, l := range bl.outputs {
@@ -193,26 +204,26 @@ func (bl *BeeLogger) setLogger(adapterName string, configs ...string) error {
 
 	lg := logAdapter()
 
+	err := lg.Init(config)
+	if err != nil {
+		return err
+	}
+
 	// Global formatter overrides the default set formatter
 	if len(bl.globalFormatter) > 0 {
 		fmtr, ok := GetFormatter(bl.globalFormatter)
 		if !ok {
-			return errors.New(fmt.Sprintf("the formatter with name: %s not found", bl.globalFormatter))
+			return fmt.Errorf("the formatter with name: %s not found", bl.globalFormatter)
 		}
 		lg.SetFormatter(fmtr)
 	}
 
-	err := lg.Init(config)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, "logs.BeeLogger.SetLogger: "+err.Error())
-		return err
-	}
 	bl.outputs = append(bl.outputs, &nameLogger{name: adapterName, Logger: lg})
 	return nil
 }
 
 // SetLogger provides a given logger adapter into BeeLogger with config string.
-// config must in in JSON format like {"interval":360}}
+// config must in JSON format like {"interval":360}}
 func (bl *BeeLogger) SetLogger(adapterName string, configs ...string) error {
 	bl.lock.Lock()
 	defer bl.lock.Unlock()
@@ -227,7 +238,7 @@ func (bl *BeeLogger) SetLogger(adapterName string, configs ...string) error {
 func (bl *BeeLogger) DelLogger(adapterName string) error {
 	bl.lock.Lock()
 	defer bl.lock.Unlock()
-	outputs := []*nameLogger{}
+	outputs := make([]*nameLogger, 0, len(bl.outputs))
 	for _, lg := range bl.outputs {
 		if lg.name == adapterName {
 			lg.Destroy()
@@ -313,8 +324,17 @@ func (bl *BeeLogger) writeMsg(lm *LogMsg) error {
 		logM.FilePath = lm.FilePath
 		logM.LineNumber = lm.LineNumber
 		logM.Prefix = lm.Prefix
+
 		if bl.outputs != nil {
-			bl.msgChan <- lm
+			if bl.logWithNonBlocking {
+				select {
+				case bl.msgChan <- lm:
+				// discard log when channel is full
+				default:
+				}
+			} else {
+				bl.msgChan <- lm
+			}
 		} else {
 			logMsgPool.Put(lm)
 		}
@@ -362,19 +382,23 @@ func (bl *BeeLogger) startLogger() {
 	gameOver := false
 	for {
 		select {
-		case bm := <-bl.msgChan:
-			bl.writeToLoggers(bm)
-			logMsgPool.Put(bm)
-		case sg := <-bl.signalChan:
-			// Now should only send "flush" or "close" to bl.signalChan
-			bl.flush()
-			if sg == "close" {
-				for _, l := range bl.outputs {
-					l.Destroy()
-				}
-				bl.outputs = nil
-				gameOver = true
+		case bm, ok := <-bl.msgChan:
+			// this is a terrible design to have a signal channel that accept two inputs
+			// so we only handle the msg if the channel is not closed
+			if ok {
+				bl.writeToLoggers(bm)
+				logMsgPool.Put(bm)
 			}
+		case <-bl.closeChan:
+			bl.flush()
+			for _, l := range bl.outputs {
+				l.Destroy()
+			}
+			bl.outputs = nil
+			gameOver = true
+			bl.wg.Done()
+		case <-bl.flushChan:
+			bl.flush()
 			bl.wg.Done()
 		}
 		if gameOver {
@@ -568,7 +592,7 @@ func (bl *BeeLogger) Trace(format string, v ...interface{}) {
 // Flush flush all chan data.
 func (bl *BeeLogger) Flush() {
 	if bl.asynchronous {
-		bl.signalChan <- "flush"
+		bl.flushChan <- struct{}{}
 		bl.wg.Wait()
 		bl.wg.Add(1)
 		return
@@ -579,7 +603,7 @@ func (bl *BeeLogger) Flush() {
 // Close close logger, flush all chan data and destroy all adapters in BeeLogger.
 func (bl *BeeLogger) Close() {
 	if bl.asynchronous {
-		bl.signalChan <- "close"
+		bl.closeChan <- struct{}{}
 		bl.wg.Wait()
 		close(bl.msgChan)
 	} else {
@@ -589,7 +613,8 @@ func (bl *BeeLogger) Close() {
 		}
 		bl.outputs = nil
 	}
-	close(bl.signalChan)
+	close(bl.flushChan)
+	close(bl.closeChan)
 }
 
 // Reset close all outputs, and set bl.outputs to nil
@@ -605,7 +630,10 @@ func (bl *BeeLogger) flush() {
 	if bl.asynchronous {
 		for {
 			if len(bl.msgChan) > 0 {
-				bm := <-bl.msgChan
+				bm, ok := <-bl.msgChan
+				if !ok {
+					continue
+				}
 				bl.writeToLoggers(bm)
 				logMsgPool.Put(bm)
 				continue
@@ -687,7 +715,7 @@ func EnableFuncCallDepth(b bool) {
 	beeLogger.enableFuncCallDepth = b
 }
 
-// SetLogFuncCall set the CallDepth, default is 4
+// SetLogFuncCall set the CallDepth, default is 3
 func SetLogFuncCall(b bool) {
 	beeLogger.EnableFuncCallDepth(b)
 	beeLogger.SetLogFuncCallDepth(3)

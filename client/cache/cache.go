@@ -16,7 +16,9 @@
 // Usage:
 //
 // import(
-//   "github.com/beego/beego/v2/client/cache"
+//
+//	"github.com/beego/beego/v2/client/cache"
+//
 // )
 //
 // bm, err := cache.NewCache("memory", `{"interval":60}`)
@@ -27,8 +29,6 @@
 //	bm.Get("astaxie")
 //	bm.IsExist("astaxie")
 //	bm.Delete("astaxie")
-//
-//  more docs http://beego.vip/docs/module/cache.md
 package cache
 
 import (
@@ -40,6 +40,7 @@ import (
 
 // Cache interface contains all behaviors for cache adapter.
 // usage:
+//
 //	cache.Register("file",cache.NewFileCache) // this operation is run in init method of file.go.
 //	c,err := cache.NewCache("file","{....}")
 //	c.Put("key",value, 3600 * time.Second)
@@ -53,21 +54,21 @@ type Cache interface {
 	Get(ctx context.Context, key string) (interface{}, error)
 	// GetMulti is a batch version of Get.
 	GetMulti(ctx context.Context, keys []string) ([]interface{}, error)
-	// Set a cached value with key and expire time.
+	// Put Set a cached value with key and expire time.
 	Put(ctx context.Context, key string, val interface{}, timeout time.Duration) error
 	// Delete cached value by key.
 	// Should not return error if key not found
 	Delete(ctx context.Context, key string) error
-	// Increment a cached int value by key, as a counter.
+	// Incr Increment a cached int value by key, as a counter.
 	Incr(ctx context.Context, key string) error
-	// Decrement a cached int value by key, as a counter.
+	// Decr Decrement a cached int value by key, as a counter.
 	Decr(ctx context.Context, key string) error
-	// Check if a cached value exists or not.
+	// IsExist Check if a cached value exists or not.
 	// if key is expired, return (false, nil)
 	IsExist(ctx context.Context, key string) (bool, error)
-	// Clear all cache.
+	// ClearAll Clear all cache.
 	ClearAll(ctx context.Context) error
-	// Start gc routine based on config string settings.
+	// StartAndGC Start gc routine based on config string settings.
 	StartAndGC(config string) error
 }
 

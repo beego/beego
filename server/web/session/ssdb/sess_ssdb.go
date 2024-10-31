@@ -85,7 +85,7 @@ func (p *Provider) SessionRead(ctx context.Context, sid string) (session.Store, 
 	return rs, nil
 }
 
-// SessionExist judged whether sid is exist in session
+// SessionExist judged whether sid existed in session
 func (p *Provider) SessionExist(ctx context.Context, sid string) (bool, error) {
 	if p.client == nil {
 		if err := p.connectInit(); err != nil {
@@ -204,12 +204,21 @@ func (s *SessionStore) SessionID(context.Context) string {
 }
 
 // SessionRelease Store the keyvalues into ssdb
-func (s *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
-	b, err := session.EncodeGob(s.values)
+func (s *SessionStore) SessionRelease(_ context.Context, _ http.ResponseWriter) {
+	s.lock.RLock()
+	values := s.values
+	s.lock.RUnlock()
+	b, err := session.EncodeGob(values)
 	if err != nil {
 		return
 	}
 	s.client.Do("setx", s.sid, string(b), s.maxLifetime)
+}
+
+// SessionReleaseIfPresent is not supported now
+// Because ssdb does not support lua script or SETXX command
+func (s *SessionStore) SessionReleaseIfPresent(c context.Context, w http.ResponseWriter) {
+	s.SessionRelease(c, w)
 }
 
 func init() {

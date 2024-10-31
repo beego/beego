@@ -18,14 +18,12 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-
-	"github.com/pkg/errors"
 )
 
 // code, msg
 const errFmt = "ERROR-%d, %s"
 
-// Err returns an error representing c and msg.  If c is OK, returns nil.
+// Error returns an error representing c and msg.  If c is OK, returns nil.
 func Error(c Code, msg string) error {
 	return fmt.Errorf(errFmt, c.Code(), msg)
 }
@@ -39,7 +37,7 @@ func Wrap(err error, c Code, msg string) error {
 	if err == nil {
 		return nil
 	}
-	return errors.Wrap(err, fmt.Sprintf(errFmt, c.Code(), msg))
+	return fmt.Errorf(errFmt+": %w", c.Code(), msg, err)
 }
 
 func Wrapf(err error, c Code, format string, a ...interface{}) error {

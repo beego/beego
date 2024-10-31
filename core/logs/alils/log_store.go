@@ -3,7 +3,7 @@ package alils
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httputil"
 	"strconv"
@@ -41,7 +41,7 @@ func (s *LogStore) ListShards() (shardIDs []int, err error) {
 		return
 	}
 
-	buf, err := ioutil.ReadAll(r.Body)
+	buf, err := io.ReadAll(r.Body)
 	if err != nil {
 		return
 	}
@@ -79,7 +79,7 @@ func (s *LogStore) PutLogs(lg *LogGroup) (err error) {
 		return
 	}
 
-	// Compresse body with lz4
+	// Compress body with lz4
 	out := make([]byte, lz4.CompressBound(body))
 	n, err := lz4.Compress(body, out)
 	if err != nil {
@@ -98,7 +98,7 @@ func (s *LogStore) PutLogs(lg *LogGroup) (err error) {
 		return
 	}
 
-	buf, err := ioutil.ReadAll(r.Body)
+	buf, err := io.ReadAll(r.Body)
 	if err != nil {
 		return
 	}
@@ -134,7 +134,7 @@ func (s *LogStore) GetCursor(shardID int, from string) (cursor string, err error
 		return
 	}
 
-	buf, err := ioutil.ReadAll(r.Body)
+	buf, err := io.ReadAll(r.Body)
 	if err != nil {
 		return
 	}
@@ -185,7 +185,7 @@ func (s *LogStore) GetLogsBytes(shardID int, cursor string,
 		return
 	}
 
-	buf, err := ioutil.ReadAll(r.Body)
+	buf, err := io.ReadAll(r.Body)
 	if err != nil {
 		return
 	}
@@ -239,7 +239,7 @@ func (s *LogStore) GetLogsBytes(shardID int, cursor string,
 	return
 }
 
-// LogsBytesDecode decodes logs binary data retruned by GetLogsBytes API
+// LogsBytesDecode decodes logs binary data returned by GetLogsBytes API
 func LogsBytesDecode(data []byte) (gl *LogGroupList, err error) {
 	gl = &LogGroupList{}
 	err = proto.Unmarshal(data, gl)

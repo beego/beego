@@ -18,7 +18,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"strconv"
 	"strings"
@@ -40,7 +40,7 @@ func (js *JSONConfig) Parse(filename string) (config.Configer, error) {
 		return nil, err
 	}
 	defer file.Close()
-	content, err := ioutil.ReadAll(file)
+	content, err := io.ReadAll(file)
 	if err != nil {
 		return nil, err
 	}
@@ -99,12 +99,12 @@ func (c *JSONConfigContainer) sub(key string) (map[string]interface{}, error) {
 	}
 	value, ok := c.data[key]
 	if !ok {
-		return nil, errors.New(fmt.Sprintf("key is not found: %s", key))
+		return nil, fmt.Errorf("key is not found: %s", key)
 	}
 
 	res, ok := value.(map[string]interface{})
 	if !ok {
-		return nil, errors.New(fmt.Sprintf("the type of value is invalid, key: %s", key))
+		return nil, fmt.Errorf("the type of value is invalid, key: %s", key)
 	}
 	return res, nil
 }

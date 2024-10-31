@@ -27,7 +27,7 @@ type siprng struct {
 	k0, k1, ctr uint64
 }
 
-// siphash implements SipHash-2-4, accepting a uint64 as a message.
+// siphash implements SipHash-2-4, accepting an uint64 as a message.
 func siphash(k0, k1, m uint64) uint64 {
 	// Initialization.
 	v0 := k0 ^ 0x736f6d6570736575

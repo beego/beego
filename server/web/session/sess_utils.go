@@ -98,7 +98,7 @@ func encrypt(block cipher.Block, value []byte) ([]byte, error) {
 
 // decrypt decrypts a value using the given block in counter mode.
 //
-// The value to be decrypted must be prepended by a initialization vector
+// The value to be decrypted must be prepended by an initialization vector
 // (http://goo.gl/zF67k) with the length of the block size.
 func decrypt(block cipher.Block, value []byte) ([]byte, error) {
 	size := block.BlockSize()

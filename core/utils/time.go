@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-// short string format
+// ToShortTimeFormat short string format
 func ToShortTimeFormat(d time.Duration) string {
 	u := uint64(d)
 	if u < uint64(time.Second) {

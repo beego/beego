@@ -7,7 +7,7 @@ import (
 	"strings"
 )
 
-// the mock object must be pointer of struct
+// Mock have a mock object ,it must be pointer of struct
 // the element in mock object can be slices, structures, basic data types, pointers and interface
 func Mock(v interface{}) (err error) {
 	pv := reflect.ValueOf(v)

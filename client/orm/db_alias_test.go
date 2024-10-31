@@ -25,7 +25,8 @@ func TestRegisterDataBase(t *testing.T) {
 	err := RegisterDataBase("test-params", DBARGS.Driver, DBARGS.Source,
 		MaxIdleConnections(20),
 		MaxOpenConnections(300),
-		ConnMaxLifetime(time.Minute))
+		ConnMaxLifetime(time.Minute),
+		ConnMaxIdletime(time.Minute))
 	assert.Nil(t, err)
 
 	al := getDbAlias("test-params")
@@ -33,6 +34,7 @@ func TestRegisterDataBase(t *testing.T) {
 	assert.Equal(t, al.MaxIdleConns, 20)
 	assert.Equal(t, al.MaxOpenConns, 300)
 	assert.Equal(t, al.ConnMaxLifetime, time.Minute)
+	assert.Equal(t, al.ConnMaxIdletime, time.Minute)
 }
 
 func TestRegisterDataBaseMaxStmtCacheSizeNegative1(t *testing.T) {

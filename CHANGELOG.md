@@ -1,11 +1,94 @@
 # developing
 - [Fix issue 4961, `leafInfo.match()` use `path.join()` to deal with `wildcardValues`, which may lead to cross directory risk ](https://github.com/beego/beego/pull/4964)
+
+# v2.1.2
+- [refactor: CONTRIBUTING.md file grammatical improvements](https://github.com/beego/beego/issues/5411)
+- [fix: refactor Count method](https://github.com/beego/beego/pull/5300)
+- [support db_type in ddl ](https://github.com/beego/beego/pull/5404)
+- [orm: PostgreSQL change auto to bigserial](https://github.com/beego/beego/pull/5415)
+
+# v2.1.1
+- [httplib: fix unstable unit test which use the httplib.org](https://github.com/beego/beego/pull/5232)
+- [rft: remove adapter package](https://github.com/beego/beego/pull/5239)
+- [feat: add write-delete cache mode](https://github.com/beego/beego/pull/5242)
+- [feat: add write-double-delete cache mode](https://github.com/beego/beego/pull/5243)
+- [fix 5255: Check the rows.Err() if rows.Next() is false](https://github.com/beego/beego/pull/5256)
+- [orm: missing handling %COL% placeholder](https://github.com/beego/beego/pull/5257)
+- [fix: use of ioutil package](https://github.com/beego/beego/pull/5261)
+- [cache/redis: support skipEmptyPrefix option ](https://github.com/beego/beego/pull/5264)
+- [fix: refactor InsertValue method](https://github.com/beego/beego/pull/5267)
+- [fix: modify InsertOrUpdate method, Remove the isMulti variable and its associated code](https://github.com/beego/beego/pull/5269)
+- [refactor cache/redis: Use redisConfig to receive incoming JSON (previously using a map)](https://github.com/beego/beego/pull/5268)
+- [fix: refactor DeleteSQL method](https://github.com/beego/beego/pull/5271)
+- [fix: refactor UpdateSQL method](https://github.com/beego/beego/pull/5274)
+- [fix: refactor UpdateBatch method](https://github.com/beego/beego/pull/5295)
+- [fix: refactor InsertOrUpdate method](https://github.com/beego/beego/pull/5296)
+- [fix: refactor ReadBatch method](https://github.com/beego/beego/pull/5298)
+- [fix: refactor ReadValues method](https://github.com/beego/beego/pull/5303)
+
+## ORM refactoring
+- [introducing internal/models pkg](https://github.com/beego/beego/pull/5238)
+
+# v2.1.0
+- [unified gopkg.in/yaml version to v2](https://github.com/beego/beego/pull/5169)
+- [add non-block write log in asynchronous mode](https://github.com/beego/beego/pull/5150)
+- [Fix 5126: support bloom filter cache](https://github.com/beego/beego/pull/5126)
+- [Fix 5117: support write though cache](https://github.com/beego/beego/pull/5117)
+- [add read through for cache module](https://github.com/beego/beego/pull/5116)
+- [add singleflight cache for cache module](https://github.com/beego/beego/pull/5119)
+- [Fix 5129: must set formatter after init the logger](https://github.com/beego/beego/pull/5130)
+- [Fix 5079: only log msg when the channel is not closed](https://github.com/beego/beego/pull/5132)
+- [Fix 4435: Controller SaveToFile remove all temp file](https://github.com/beego/beego/pull/5138)
+- [Fix 5079: Split signalChan into flushChan and closeChan](https://github.com/beego/beego/pull/5139)
+- [Fix 5172: protect field access with lock to avoid possible data race](https://github.com/beego/beego/pull/5210)
+- [cache: fix typo and optimize the naming]()
+- [Fix 5176: beegoAppConfig String and Strings function has bug](https://github.com/beego/beego/pull/5211)
+
+# v2.1.0
+- [unified gopkg.in/yaml version to v2](https://github.com/beego/beego/pull/5169)
+- [add non-block write log in asynchronous mode](https://github.com/beego/beego/pull/5150)
+- [Fix 5126: support bloom filter cache](https://github.com/beego/beego/pull/5126)
+- [Fix 5117: support write though cache](https://github.com/beego/beego/pull/5117)
+- [add read through for cache module](https://github.com/beego/beego/pull/5116)
+- [add singleflight cache for cache module](https://github.com/beego/beego/pull/5119)
+- [Fix 5129: must set formatter after init the logger](https://github.com/beego/beego/pull/5130)
+- [Fix 5079: only log msg when the channel is not closed](https://github.com/beego/beego/pull/5132)
+- [Fix 4435: Controller SaveToFile remove all temp file](https://github.com/beego/beego/pull/5138)
+- [Fix 5079: Split signalChan into flushChan and closeChan](https://github.com/beego/beego/pull/5139)
+- [Fix 5172: protect field access with lock to avoid possible data race](https://github.com/beego/beego/pull/5210)
+- [cache: fix typo and optimize the naming]()
+
+# v2.0.7
+- [Upgrade github.com/go-kit/kit, CVE-2022-24450](https://github.com/beego/beego/pull/5121)
+# v2.0.6
+- [fix: revise the body wrapper to handle empty body case](https://github.com/beego/beego/pull/5102)
+
+# v2.0.5
+
+Note: now we force the web admin service serving HTTP only.
+
+- [Fix 4984: random expire cache](https://github.com/beego/beego/pull/4984)
+- [Fix 4907: make admin serve HTTP only](https://github.com/beego/beego/pull/5005)
+- [Feat 4999: add get all tasks function](https://github.com/beego/beego/pull/4999)
+- [Fix 5012: fix some bug, pass []any as any in variadic function](https://github.com/beego/beego/pull/5012)
+- [Fix 5022: Miss assigning listener to graceful Server](https://github.com/beego/beego/pull/5028)
+- [Fix 4955: Make commands and Docker compose for ORM unit tests](https://github.com/beego/beego/pull/5031)
+
+# v2.0.4
+
+Note: now we force the web admin service serving HTTP only.
+
+- [Fix issue 4961, `leafInfo.match()` use `path.join()` to deal with `wildcardValues`, which may lead to cross directory risk ](https://github.com/beego/beego/pull/4964)
+- [Fix 4975: graceful server listen the specific address](https://github.com/beego/beego/pull/4979)
+- [Fix 4976: make admin serve HTTP only](https://github.com/beego/beego/pull/4980)
+
 # v2.0.3
 - [upgrade redisgo to v1.8.8](https://github.com/beego/beego/pull/4872)
 - [fix prometheus CVE-2022-21698](https://github.com/beego/beego/pull/4878)
 - [upgrade to Go 1.18](https://github.com/beego/beego/pull/4896)
 - [make `PatternLogFormatter` handling the arguments](https://github.com/beego/beego/pull/4914/files)
 - [Add httplib OpenTelemetry Filter](https://github.com/beego/beego/pull/4888, https://github.com/beego/beego/pull/4915)
+- [Add orm OpenTelemetry Filter](https://github.com/beego/beego/issues/4944)
 - [Support NewBeegoRequestWithCtx in httplib](https://github.com/beego/beego/pull/4895)
 - [Support lifecycle callback](https://github.com/beego/beego/pull/4918)
 - [Append column comments to create table sentence when using postgres](https://github.com/beego/beego/pull/4940)

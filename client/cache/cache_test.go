@@ -31,13 +31,14 @@ func TestCacheIncr(t *testing.T) {
 	assert.Nil(t, err)
 	// timeoutDuration := 10 * time.Second
 
-	bm.Put(context.Background(), "edwardhey", 0, time.Second*20)
+	err = bm.Put(context.Background(), "edwardhey", 0, time.Second*20)
+	assert.Nil(t, err)
 	wg := sync.WaitGroup{}
 	wg.Add(10)
 	for i := 0; i < 10; i++ {
 		go func() {
 			defer wg.Done()
-			bm.Incr(context.Background(), "edwardhey")
+			_ = bm.Incr(context.Background(), "edwardhey")
 		}()
 	}
 	wg.Wait()
@@ -79,7 +80,7 @@ func TestCache(t *testing.T) {
 	testIncrOverFlow(t, bm, timeoutDuration)
 	testDecrOverFlow(t, bm, timeoutDuration)
 
-	bm.Delete(context.Background(), "astaxie")
+	assert.Nil(t, bm.Delete(context.Background(), "astaxie"))
 	res, _ := bm.IsExist(context.Background(), "astaxie")
 	assert.False(t, res)
 
@@ -128,7 +129,7 @@ func TestFileCache(t *testing.T) {
 	testIncrOverFlow(t, bm, timeoutDuration)
 	testDecrOverFlow(t, bm, timeoutDuration)
 
-	bm.Delete(context.Background(), "astaxie")
+	assert.Nil(t, bm.Delete(context.Background(), "astaxie"))
 	res, _ = bm.IsExist(context.Background(), "astaxie")
 	assert.False(t, res)
 
@@ -158,7 +159,7 @@ func TestFileCache(t *testing.T) {
 
 	assert.Equal(t, "author1", vv[1])
 	assert.NotNil(t, err)
-	os.RemoveAll("cache")
+	assert.Nil(t, os.RemoveAll("cache"))
 }
 
 func testMultiTypeIncrDecr(t *testing.T, c Cache, timeout time.Duration) {

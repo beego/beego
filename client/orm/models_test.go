@@ -22,6 +22,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/beego/beego/v2/client/orm/internal/models"
+
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
@@ -79,7 +81,7 @@ func (e *SliceStringField) RawValue() interface{} {
 	return e.String()
 }
 
-var _ Fielder = new(SliceStringField)
+var _ models.Fielder = new(SliceStringField)
 
 // A json field.
 type JSONFieldTest struct {
@@ -111,7 +113,7 @@ func (e *JSONFieldTest) RawValue() interface{} {
 	return e.String()
 }
 
-var _ Fielder = new(JSONFieldTest)
+var _ models.Fielder = new(JSONFieldTest)
 
 type Data struct {
 	ID       int `orm:"column(id)"`
@@ -505,11 +507,11 @@ var helpinfo = `need driver and source!
 
 	usage:
 
-	go get -u github.com/beego/beego/v2/client/orm
-	go get -u github.com/go-sql-driver/mysql
-	go get -u github.com/mattn/go-sqlite3
-	go get -u github.com/lib/pq
-	go get -u github.com/pingcap/tidb
+	go Get -u github.com/beego/beego/v2/client/orm
+	go Get -u github.com/go-sql-driver/mysql
+	go Get -u github.com/mattn/go-sqlite3
+	go Get -u github.com/lib/pq
+	go Get -u github.com/pingcap/tidb
 
 	#### MySQL
 	mysql -u root -e 'create database orm_test;'
@@ -548,7 +550,7 @@ func init() {
 
 	err := RegisterDataBase("default", DBARGS.Driver, DBARGS.Source, MaxIdleConnections(20))
 	if err != nil {
-		panic(fmt.Sprintf("can not register database: %v", err))
+		panic(fmt.Sprintf("can not Register database: %v", err))
 	}
 
 	alias := getDbAlias("default")

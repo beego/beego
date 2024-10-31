@@ -5,13 +5,14 @@ import (
 	"io"
 	"math"
 
-	"github.com/gogo/protobuf/proto"
 	github_com_gogo_protobuf_proto "github.com/gogo/protobuf/proto"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
-var _ = proto.Marshal
+var _ = github_com_gogo_protobuf_proto.Marshal
+
 var _ = fmt.Errorf
+
 var _ = math.Inf
 
 var (
@@ -32,7 +33,7 @@ type Log struct {
 func (m *Log) Reset() { *m = Log{} }
 
 // String returns the Compact Log
-func (m *Log) String() string { return proto.CompactTextString(m) }
+func (m *Log) String() string { return github_com_gogo_protobuf_proto.CompactTextString(m) }
 
 // ProtoMessage not implemented
 func (*Log) ProtoMessage() {}
@@ -64,7 +65,7 @@ type LogContent struct {
 func (m *LogContent) Reset() { *m = LogContent{} }
 
 // String returns the compact text
-func (m *LogContent) String() string { return proto.CompactTextString(m) }
+func (m *LogContent) String() string { return github_com_gogo_protobuf_proto.CompactTextString(m) }
 
 // ProtoMessage not implemented
 func (*LogContent) ProtoMessage() {}
@@ -98,7 +99,7 @@ type LogGroup struct {
 func (m *LogGroup) Reset() { *m = LogGroup{} }
 
 // String returns the compact text
-func (m *LogGroup) String() string { return proto.CompactTextString(m) }
+func (m *LogGroup) String() string { return github_com_gogo_protobuf_proto.CompactTextString(m) }
 
 // ProtoMessage not implemented
 func (*LogGroup) ProtoMessage() {}
@@ -148,7 +149,7 @@ type LogGroupList struct {
 func (m *LogGroupList) Reset() { *m = LogGroupList{} }
 
 // String returns compact text
-func (m *LogGroupList) String() string { return proto.CompactTextString(m) }
+func (m *LogGroupList) String() string { return github_com_gogo_protobuf_proto.CompactTextString(m) }
 
 // ProtoMessage not implemented
 func (*LogGroupList) ProtoMessage() {}
@@ -339,6 +340,7 @@ func encodeFixed64Log(data []byte, offset int, v uint64) int {
 	data[offset+7] = uint8(v >> 56)
 	return offset + 8
 }
+
 func encodeFixed32Log(data []byte, offset int, v uint32) int {
 	data[offset] = uint8(v)
 	data[offset+1] = uint8(v >> 8)
@@ -346,6 +348,7 @@ func encodeFixed32Log(data []byte, offset int, v uint32) int {
 	data[offset+3] = uint8(v >> 24)
 	return offset + 4
 }
+
 func encodeVarintLog(data []byte, offset int, v uint64) int {
 	for v >= 1<<7 {
 		data[offset] = uint8(v&0x7f | 0x80)
@@ -447,6 +450,7 @@ func sovLog(x uint64) (n int) {
 	}
 	return n
 }
+
 func sozLog(x uint64) (n int) {
 	return sovLog((x << 1) ^ (x >> 63))
 }

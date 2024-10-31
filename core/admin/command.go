@@ -15,7 +15,7 @@
 package admin
 
 import (
-	"github.com/pkg/errors"
+	"errors"
 )
 
 // Command is an experimental interface

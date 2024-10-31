@@ -17,7 +17,7 @@ package httplib
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 )
 
@@ -34,6 +34,6 @@ func NewHttpResponseWithJsonBody(data interface{}) *http.Response {
 	}
 	return &http.Response{
 		ContentLength: int64(len(body)),
-		Body:          ioutil.NopCloser(bytes.NewReader(body)),
+		Body:          io.NopCloser(bytes.NewReader(body)),
 	}
 }

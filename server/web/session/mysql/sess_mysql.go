@@ -19,6 +19,7 @@
 // go install github.com/go-sql-driver/mysql
 //
 // mysql session support need create table as sql:
+//
 //	CREATE TABLE `session` (
 //	`session_key` char(64) NOT NULL,
 //	`session_data` blob,
@@ -28,16 +29,16 @@
 //
 // Usage:
 // import(
-//   _ "github.com/beego/beego/v2/server/web/session/mysql"
-//   "github.com/beego/beego/v2/server/web/session"
+//
+//	_ "github.com/beego/beego/v2/server/web/session/mysql"
+//	"github.com/beego/beego/v2/server/web/session"
+//
 // )
 //
 //	func init() {
 //		globalSessions, _ = session.NewManager("mysql", ``{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig":"[username[:password]@][protocol[(address)]]/dbname[?param1=value1&...&paramN=valueN]"}``)
 //		go globalSessions.GC()
 //	}
-//
-// more docs: http://beego.vip/docs/module/session.md
 package mysql
 
 import (
@@ -47,7 +48,6 @@ import (
 	"sync"
 	"time"
 
-	// import mysql driver
 	_ "github.com/go-sql-driver/mysql"
 
 	"github.com/beego/beego/v2/server/web/session"
@@ -109,14 +109,22 @@ func (st *SessionStore) SessionID(context.Context) string {
 
 // SessionRelease save mysql session values to database.
 // must call this method to save values to database.
-func (st *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
+func (st *SessionStore) SessionRelease(_ context.Context, _ http.ResponseWriter) {
 	defer st.c.Close()
-	b, err := session.EncodeGob(st.values)
+	st.lock.RLock()
+	values := st.values
+	st.lock.RUnlock()
+	b, err := session.EncodeGob(values)
 	if err != nil {
 		return
 	}
 	st.c.Exec("UPDATE "+TableName+" set `session_data`=?, `session_expiry`=? where session_key=?",
 		b, time.Now().Unix(), st.sid)
+}
+
+// SessionReleaseIfPresent save mysql session values to database.
+func (st *SessionStore) SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) {
+	st.SessionRelease(ctx, w)
 }
 
 // Provider mysql session provider

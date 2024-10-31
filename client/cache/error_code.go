@@ -123,6 +123,25 @@ var InvalidSsdbCacheValue = berror.DefineCode(4002022, moduleName, "InvalidSsdbC
 SSDB cache only accept string value. Please check your input.
 `)
 
+var InvalidLoadFunc = berror.DefineCode(4002023, moduleName, "InvalidLoadFunc", `
+Invalid load function for read-through pattern decorator.
+You should pass a valid(non-nil) load function when initiate the decorator instance.
+`)
+
+var LoadFuncFailed = berror.DefineCode(4002024, moduleName, "LoadFuncFailed", `
+Failed to load data, please check whether the loadfunc is correct
+`)
+
+var InvalidInitParameters = berror.DefineCode(4002025, moduleName, "InvalidInitParameters", `
+Invalid init cache parameters.
+You can check the related function to confirm that if you pass correct parameters or configure to initiate a Cache instance.
+`)
+
+var PersistCacheFailed = berror.DefineCode(4002026, moduleName, "PersistCacheFailed", `
+Failed to execute the StoreFunc.
+Please check the log to make sure the StoreFunc works for the specific key and value.
+`)
+
 var DeleteFileCacheItemFailed = berror.DefineCode(5002001, moduleName, "DeleteFileCacheItemFailed", `
 Beego try to delete file cache item failed. 
 Please check whether Beego generated file correctly. 
@@ -166,8 +185,12 @@ When you try to use SSDB cache, it failed. There are many cases:
 `)
 
 var SsdbBadResponse = berror.DefineCode(5002007, moduleName, "SsdbBadResponse", `
-The reponse from SSDB server is invalid. 
+The response from SSDB server is invalid. 
 Usually it indicates something wrong on server side.
+`)
+
+var DeleteFailed = berror.DefineCode(5002008, moduleName, "DeleteFailed", `
+Beego attempt to delete cache item failed. Please check if the target key is correct.
 `)
 
 var (

@@ -20,6 +20,10 @@ import (
 	"reflect"
 	"time"
 
+	utils2 "github.com/beego/beego/v2/client/orm/internal/utils"
+
+	"github.com/beego/beego/v2/client/orm/internal/models"
+
 	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/core/utils"
 )
@@ -78,7 +82,7 @@ func (f *filterOrmDecorator) Read(md interface{}, cols ...string) error {
 }
 
 func (f *filterOrmDecorator) ReadWithCtx(ctx context.Context, md interface{}, cols ...string) error {
-	mi, _ := defaultModelCache.getByMd(md)
+	mi, _ := defaultModelCache.GetByMd(md)
 	inv := &Invocation{
 		Method:      "ReadWithCtx",
 		Args:        []interface{}{md, cols},
@@ -100,7 +104,7 @@ func (f *filterOrmDecorator) ReadForUpdate(md interface{}, cols ...string) error
 }
 
 func (f *filterOrmDecorator) ReadForUpdateWithCtx(ctx context.Context, md interface{}, cols ...string) error {
-	mi, _ := defaultModelCache.getByMd(md)
+	mi, _ := defaultModelCache.GetByMd(md)
 	inv := &Invocation{
 		Method:      "ReadForUpdateWithCtx",
 		Args:        []interface{}{md, cols},
@@ -122,7 +126,7 @@ func (f *filterOrmDecorator) ReadOrCreate(md interface{}, col1 string, cols ...s
 }
 
 func (f *filterOrmDecorator) ReadOrCreateWithCtx(ctx context.Context, md interface{}, col1 string, cols ...string) (bool, int64, error) {
-	mi, _ := defaultModelCache.getByMd(md)
+	mi, _ := defaultModelCache.GetByMd(md)
 	inv := &Invocation{
 		Method:      "ReadOrCreateWithCtx",
 		Args:        []interface{}{md, col1, cols},
@@ -144,7 +148,7 @@ func (f *filterOrmDecorator) LoadRelated(md interface{}, name string, args ...ut
 }
 
 func (f *filterOrmDecorator) LoadRelatedWithCtx(ctx context.Context, md interface{}, name string, args ...utils.KV) (int64, error) {
-	mi, _ := defaultModelCache.getByMd(md)
+	mi, _ := defaultModelCache.GetByMd(md)
 	inv := &Invocation{
 		Method:      "LoadRelatedWithCtx",
 		Args:        []interface{}{md, name, args},
@@ -162,7 +166,7 @@ func (f *filterOrmDecorator) LoadRelatedWithCtx(ctx context.Context, md interfac
 }
 
 func (f *filterOrmDecorator) QueryM2M(md interface{}, name string) QueryM2Mer {
-	mi, _ := defaultModelCache.getByMd(md)
+	mi, _ := defaultModelCache.GetByMd(md)
 	inv := &Invocation{
 		Method:      "QueryM2M",
 		Args:        []interface{}{md, name},
@@ -192,17 +196,17 @@ func (f *filterOrmDecorator) QueryTable(ptrStructOrTableName interface{}) QueryS
 	var (
 		name string
 		md   interface{}
-		mi   *modelInfo
+		mi   *models.ModelInfo
 	)
 
 	if table, ok := ptrStructOrTableName.(string); ok {
 		name = table
 	} else {
-		name = getFullName(indirectType(reflect.TypeOf(ptrStructOrTableName)))
+		name = models.GetFullName(utils2.IndirectType(reflect.TypeOf(ptrStructOrTableName)))
 		md = ptrStructOrTableName
 	}
 
-	if m, ok := defaultModelCache.getByFullName(name); ok {
+	if m, ok := defaultModelCache.GetByFullName(name); ok {
 		mi = m
 	}
 
@@ -256,7 +260,7 @@ func (f *filterOrmDecorator) Insert(md interface{}) (int64, error) {
 }
 
 func (f *filterOrmDecorator) InsertWithCtx(ctx context.Context, md interface{}) (int64, error) {
-	mi, _ := defaultModelCache.getByMd(md)
+	mi, _ := defaultModelCache.GetByMd(md)
 	inv := &Invocation{
 		Method:      "InsertWithCtx",
 		Args:        []interface{}{md},
@@ -278,7 +282,7 @@ func (f *filterOrmDecorator) InsertOrUpdate(md interface{}, colConflitAndArgs ..
 }
 
 func (f *filterOrmDecorator) InsertOrUpdateWithCtx(ctx context.Context, md interface{}, colConflitAndArgs ...string) (int64, error) {
-	mi, _ := defaultModelCache.getByMd(md)
+	mi, _ := defaultModelCache.GetByMd(md)
 	inv := &Invocation{
 		Method:      "InsertOrUpdateWithCtx",
 		Args:        []interface{}{md, colConflitAndArgs},
@@ -303,7 +307,7 @@ func (f *filterOrmDecorator) InsertMulti(bulk int, mds interface{}) (int64, erro
 func (f *filterOrmDecorator) InsertMultiWithCtx(ctx context.Context, bulk int, mds interface{}) (int64, error) {
 	var (
 		md interface{}
-		mi *modelInfo
+		mi *models.ModelInfo
 	)
 
 	sind := reflect.Indirect(reflect.ValueOf(mds))
@@ -311,7 +315,7 @@ func (f *filterOrmDecorator) InsertMultiWithCtx(ctx context.Context, bulk int, m
 	if (sind.Kind() == reflect.Array || sind.Kind() == reflect.Slice) && sind.Len() > 0 {
 		ind := reflect.Indirect(sind.Index(0))
 		md = ind.Interface()
-		mi, _ = defaultModelCache.getByMd(md)
+		mi, _ = defaultModelCache.GetByMd(md)
 	}
 
 	inv := &Invocation{
@@ -335,7 +339,7 @@ func (f *filterOrmDecorator) Update(md interface{}, cols ...string) (int64, erro
 }
 
 func (f *filterOrmDecorator) UpdateWithCtx(ctx context.Context, md interface{}, cols ...string) (int64, error) {
-	mi, _ := defaultModelCache.getByMd(md)
+	mi, _ := defaultModelCache.GetByMd(md)
 	inv := &Invocation{
 		Method:      "UpdateWithCtx",
 		Args:        []interface{}{md, cols},
@@ -357,7 +361,7 @@ func (f *filterOrmDecorator) Delete(md interface{}, cols ...string) (int64, erro
 }
 
 func (f *filterOrmDecorator) DeleteWithCtx(ctx context.Context, md interface{}, cols ...string) (int64, error) {
-	mi, _ := defaultModelCache.getByMd(md)
+	mi, _ := defaultModelCache.GetByMd(md)
 	inv := &Invocation{
 		Method:      "DeleteWithCtx",
 		Args:        []interface{}{md, cols},

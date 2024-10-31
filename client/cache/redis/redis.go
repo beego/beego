@@ -20,13 +20,13 @@
 //
 // Usage:
 // import(
-//   _ "github.com/beego/beego/v2/client/cache/redis"
-//   "github.com/beego/beego/v2/client/cache"
+//
+//	_ "github.com/beego/beego/v2/client/cache/redis"
+//	"github.com/beego/beego/v2/client/cache"
+//
 // )
 //
-//  bm, err := cache.NewCache("redis", `{"conn":"127.0.0.1:11211"}`)
-//
-//  more docs http://beego.vip/docs/module/cache.md
+//	bm, err := cache.NewCache("redis", `{"conn":"127.0.0.1:11211"}`)
 package redis
 
 import (
@@ -43,19 +43,32 @@ import (
 	"github.com/beego/beego/v2/core/berror"
 )
 
-// DefaultKey defines the collection name of redis for the cache adapter.
-var DefaultKey = "beecacheRedis"
+const (
+	// DefaultKey defines the collection name of redis for the cache adapter.
+	DefaultKey = "beecacheRedis"
+	// defaultMaxIdle defines the default max idle connection number.
+	defaultMaxIdle = 3
+	// defaultTimeout defines the default timeout .
+	defaultTimeout = time.Second * 180
+)
 
 // Cache is Redis cache adapter.
 type Cache struct {
 	p        *redis.Pool // redis connection pool
 	conninfo string
 	dbNum    int
+	// key actually is prefix.
 	key      string
 	password string
 	maxIdle  int
 
-	// Timeout value (less than the redis server's timeout value)
+	// skipEmptyPrefix for backward compatible,
+	// check function associate
+	// see https://github.com/beego/beego/issues/5248
+	skipEmptyPrefix bool
+
+	// Timeout value (less than the redis server's timeout value).
+	// Timeout used for idle connection
 	timeout time.Duration
 }
 
@@ -83,6 +96,9 @@ func (rc *Cache) do(commandName string, args ...interface{}) (interface{}, error
 
 // associate with config key.
 func (rc *Cache) associate(originKey interface{}) string {
+	if rc.key == "" && rc.skipEmptyPrefix {
+		return fmt.Sprintf("%s", originKey)
+	}
 	return fmt.Sprintf("%s:%s", rc.key, originKey)
 }
 
@@ -192,51 +208,12 @@ func (rc *Cache) Scan(pattern string) (keys []string, err error) {
 }
 
 // StartAndGC starts the redis cache adapter.
-// config: must be in this format {"key":"collection key","conn":"connection info","dbNum":"0"}
+// config: must be in this format {"key":"collection key","conn":"connection info","dbNum":"0", "skipEmptyPrefix":"true"}
 // Cached items in redis are stored forever, no garbage collection happens
 func (rc *Cache) StartAndGC(config string) error {
-	var cf map[string]string
-	err := json.Unmarshal([]byte(config), &cf)
+	err := rc.parseConf(config)
 	if err != nil {
-		return berror.Wrapf(err, cache.InvalidRedisCacheCfg, "could not unmarshal the config: %s", config)
-	}
-
-	if _, ok := cf["key"]; !ok {
-		cf["key"] = DefaultKey
-	}
-	if _, ok := cf["conn"]; !ok {
-		return berror.Wrapf(err, cache.InvalidRedisCacheCfg, "config missing conn field: %s", config)
-	}
-
-	// Format redis://<password>@<host>:<port>
-	cf["conn"] = strings.Replace(cf["conn"], "redis://", "", 1)
-	if i := strings.Index(cf["conn"], "@"); i > -1 {
-		cf["password"] = cf["conn"][0:i]
-		cf["conn"] = cf["conn"][i+1:]
-	}
-
-	if _, ok := cf["dbNum"]; !ok {
-		cf["dbNum"] = "0"
-	}
-	if _, ok := cf["password"]; !ok {
-		cf["password"] = ""
-	}
-	if _, ok := cf["maxIdle"]; !ok {
-		cf["maxIdle"] = "3"
-	}
-	if _, ok := cf["timeout"]; !ok {
-		cf["timeout"] = "180s"
-	}
-	rc.key = cf["key"]
-	rc.conninfo = cf["conn"]
-	rc.dbNum, _ = strconv.Atoi(cf["dbNum"])
-	rc.password = cf["password"]
-	rc.maxIdle, _ = strconv.Atoi(cf["maxIdle"])
-
-	if v, err := time.ParseDuration(cf["timeout"]); err == nil {
-		rc.timeout = v
-	} else {
-		rc.timeout = 180 * time.Second
+		return err
 	}
 
 	rc.connectInit()
@@ -251,6 +228,89 @@ func (rc *Cache) StartAndGC(config string) error {
 		return berror.Wrapf(err, cache.InvalidConnection,
 			"can not connect to remote redis server, please check the connection info and network state: %s", config)
 	}
+	return nil
+}
+
+func (rc *Cache) parseConf(config string) error {
+	var cf redisConfig
+	err := json.Unmarshal([]byte(config), &cf)
+	if err != nil {
+		return berror.Wrapf(err, cache.InvalidRedisCacheCfg, "could not unmarshal the config: %s", config)
+	}
+
+	err = cf.parse()
+	if err != nil {
+		return err
+	}
+
+	rc.dbNum = cf.dbNum
+	rc.key = cf.Key
+	rc.conninfo = cf.Conn
+	rc.password = cf.password
+	rc.maxIdle = cf.maxIdle
+	rc.timeout = cf.timeout
+	rc.skipEmptyPrefix = cf.skipEmptyPrefix
+
+	return nil
+}
+
+type redisConfig struct {
+	DbNum           string `json:"dbNum"`
+	SkipEmptyPrefix string `json:"skipEmptyPrefix"`
+	Key             string `json:"key"`
+	// Format redis://<password>@<host>:<port>
+	Conn       string `json:"conn"`
+	MaxIdle    string `json:"maxIdle"`
+	TimeoutStr string `json:"timeout"`
+
+	dbNum           int
+	skipEmptyPrefix bool
+	maxIdle         int
+	// parse from Conn
+	password string
+	// timeout used for idle connection, default is 180 seconds.
+	timeout time.Duration
+}
+
+// parse parses the config.
+// If the necessary settings have not been set, it will return an error.
+// It will fill the default values if some fields are missing.
+func (cf *redisConfig) parse() error {
+	if cf.Conn == "" {
+		return berror.Error(cache.InvalidRedisCacheCfg, "config missing conn field")
+	}
+
+	// Format redis://<password>@<host>:<port>
+	cf.Conn = strings.Replace(cf.Conn, "redis://", "", 1)
+	if i := strings.Index(cf.Conn, "@"); i > -1 {
+		cf.password = cf.Conn[0:i]
+		cf.Conn = cf.Conn[i+1:]
+	}
+
+	if cf.Key == "" {
+		cf.Key = DefaultKey
+	}
+
+	if cf.DbNum != "" {
+		cf.dbNum, _ = strconv.Atoi(cf.DbNum)
+	}
+
+	if cf.SkipEmptyPrefix != "" {
+		cf.skipEmptyPrefix, _ = strconv.ParseBool(cf.SkipEmptyPrefix)
+	}
+
+	if cf.MaxIdle == "" {
+		cf.maxIdle = defaultMaxIdle
+	} else {
+		cf.maxIdle, _ = strconv.Atoi(cf.MaxIdle)
+	}
+
+	if v, err := time.ParseDuration(cf.TimeoutStr); err == nil {
+		cf.timeout = v
+	} else {
+		cf.timeout = defaultTimeout
+	}
+
 	return nil
 }
 

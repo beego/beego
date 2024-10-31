@@ -16,6 +16,7 @@ package web
 
 import (
 	"fmt"
+	"net"
 	"net/http"
 	"reflect"
 	"time"
@@ -29,7 +30,8 @@ var beeAdminApp *adminApp
 // FilterMonitorFunc is default monitor filter when admin module is enable.
 // if this func returns, admin module records qps for this request by condition of this function logic.
 // usage:
-// 	func MyFilterMonitor(method, requestPath string, t time.Duration, pattern string, statusCode int) bool {
+//
+//	func MyFilterMonitor(method, requestPath string, t time.Duration, pattern string, statusCode int) bool {
 //	 	if method == "POST" {
 //			return false
 //	 	}
@@ -40,8 +42,8 @@ var beeAdminApp *adminApp
 //			return false
 //	 	}
 //	 	return true
-// 	}
-// 	beego.FilterMonitorFunc = MyFilterMonitor.
+//	}
+//	beego.FilterMonitorFunc = MyFilterMonitor.
 var FilterMonitorFunc func(string, string, time.Duration, string, int) bool
 
 func init() {
@@ -86,7 +88,7 @@ func (admin *adminApp) Run() {
 		" please invoke task.StartTask, or task will not be executed")
 	addr := BConfig.Listen.AdminAddr
 	if BConfig.Listen.AdminPort != 0 {
-		addr = fmt.Sprintf("%s:%d", BConfig.Listen.AdminAddr, BConfig.Listen.AdminPort)
+		addr = net.JoinHostPort(BConfig.Listen.AdminAddr, fmt.Sprintf("%d", BConfig.Listen.AdminPort))
 	}
 	logs.Info("Admin server Running on %s", addr)
 	admin.HttpServer.Run(addr)
@@ -101,6 +103,8 @@ func registerAdmin() error {
 
 		// copy config to avoid conflict
 		adminCfg := *BConfig
+		adminCfg.Listen.EnableHTTPS = false
+		adminCfg.Listen.EnableMutualHTTPS = false
 		beeAdminApp = &adminApp{
 			HttpServer: NewHttpServerWithCfg(&adminCfg),
 		}

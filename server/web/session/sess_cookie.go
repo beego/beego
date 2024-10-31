@@ -74,10 +74,12 @@ func (st *CookieSessionStore) SessionID(context.Context) string {
 }
 
 // SessionRelease Write cookie session to http response cookie
-func (st *CookieSessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
-	st.lock.Lock()
-	encodedCookie, err := encodeCookie(cookiepder.block, cookiepder.config.SecurityKey, cookiepder.config.SecurityName, st.values)
-	st.lock.Unlock()
+func (st *CookieSessionStore) SessionRelease(_ context.Context, w http.ResponseWriter) {
+	st.lock.RLock()
+	values := st.values
+	st.lock.RUnlock()
+	encodedCookie, err := encodeCookie(
+		cookiepder.block, cookiepder.config.SecurityKey, cookiepder.config.SecurityName, values)
 	if err == nil {
 		cookie := &http.Cookie{
 			Name:     cookiepder.config.CookieName,
@@ -89,6 +91,12 @@ func (st *CookieSessionStore) SessionRelease(ctx context.Context, w http.Respons
 		}
 		http.SetCookie(w, cookie)
 	}
+}
+
+// SessionReleaseIfPresent Write cookie session to http response cookie when it is present
+// This is a no-op for cookie sessions, because they are always present.
+func (st *CookieSessionStore) SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) {
+	st.SessionRelease(ctx, w)
 }
 
 type cookieConfig struct {
@@ -110,11 +118,12 @@ type CookieProvider struct {
 // SessionInit Init cookie session provider with max lifetime and config json.
 // maxlifetime is ignored.
 // json config:
-// 	securityKey - hash string
-// 	blockKey - gob encode hash string. it's saved as aes crypto.
-// 	securityName - recognized name in encoded cookie string
-// 	cookieName - cookie name
-// 	maxage - cookie max life time.
+//
+//	securityKey - hash string
+//	blockKey - gob encode hash string. it's saved as aes crypto.
+//	securityName - recognized name in encoded cookie string
+//	cookieName - cookie name
+//	maxage - cookie max life time.
 func (pder *CookieProvider) SessionInit(ctx context.Context, maxlifetime int64, config string) error {
 	pder.config = &cookieConfig{}
 	err := json.Unmarshal([]byte(config), pder.config)

@@ -18,8 +18,6 @@
 //	import "github.com/beego/beego/v2/server/web/context"
 //
 //	ctx := context.Context{Request:req,ResponseWriter:rw}
-//
-//  more docs http://beego.vip/docs/module/context.md
 package context
 
 import (
@@ -270,7 +268,7 @@ func (ctx *Context) XSRFToken(key string, expire int64) string {
 		if !ok {
 			token = string(utils.RandomCreateBytes(32))
 			// TODO make it configurable
-			ctx.SetSecureCookie(key, "_xsrf", token, expire, "/", "")
+			ctx.SetSecureCookie(key, "_xsrf", token, expire, "/", "", true, true)
 		}
 		ctx._xsrfToken = token
 	}

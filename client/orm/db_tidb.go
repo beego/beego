@@ -26,12 +26,12 @@ type dbBaseTidb struct {
 
 var _ dbBaser = new(dbBaseTidb)
 
-// get mysql operator.
+// Get mysql operator.
 func (d *dbBaseTidb) OperatorSQL(operator string) string {
 	return mysqlOperators[operator]
 }
 
-// get mysql table field types.
+// Get mysql table field types.
 func (d *dbBaseTidb) DbTypes() map[string]string {
 	return mysqlTypes
 }
@@ -41,9 +41,9 @@ func (d *dbBaseTidb) ShowTablesQuery() string {
 	return "SELECT table_name FROM information_schema.tables WHERE table_type = 'BASE TABLE' AND table_schema = DATABASE()"
 }
 
-// show columns sql of table for mysql.
+// show Columns sql of table for mysql.
 func (d *dbBaseTidb) ShowColumnsQuery(table string) string {
-	return fmt.Sprintf("SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE FROM information_schema.columns "+
+	return fmt.Sprintf("SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE FROM information_schema.Columns "+
 		"WHERE table_schema = DATABASE() AND table_name = '%s'", table)
 }
 

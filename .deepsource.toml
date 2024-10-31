@@ -9,4 +9,4 @@ name = "go"
 enabled = true
 
   [analyzers.meta]
-  import_paths = ["github.com/beego/beego"]
+  import_paths = ["github.com/beego/beego/v2"]

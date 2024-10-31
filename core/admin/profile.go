@@ -144,7 +144,7 @@ func avg(items []time.Duration) time.Duration {
 	return time.Duration(int64(sum) / int64(len(items)))
 }
 
-// format bytes number friendly
+// toH format bytes number friendly
 func toH(bytes uint64) string {
 	switch {
 	case bytes < 1024:

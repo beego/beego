@@ -22,6 +22,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/beego/beego/v2/client/orm/internal/models"
+
 	"github.com/beego/beego/v2/client/orm/hints"
 )
 
@@ -74,22 +76,22 @@ type dbBaseSqlite struct {
 var _ dbBaser = new(dbBaseSqlite)
 
 // override base db read for update behavior as SQlite does not support syntax
-func (d *dbBaseSqlite) Read(ctx context.Context, q dbQuerier, mi *modelInfo, ind reflect.Value, tz *time.Location, cols []string, isForUpdate bool) error {
+func (d *dbBaseSqlite) Read(ctx context.Context, q dbQuerier, mi *models.ModelInfo, ind reflect.Value, tz *time.Location, cols []string, isForUpdate bool) error {
 	if isForUpdate {
 		DebugLog.Println("[WARN] SQLite does not support SELECT FOR UPDATE query, isForUpdate param is ignored and always as false to do the work")
 	}
 	return d.dbBase.Read(ctx, q, mi, ind, tz, cols, false)
 }
 
-// get sqlite operator.
+// Get sqlite operator.
 func (d *dbBaseSqlite) OperatorSQL(operator string) string {
 	return sqliteOperators[operator]
 }
 
 // generate functioned sql for sqlite.
 // only support DATE(text).
-func (d *dbBaseSqlite) GenerateOperatorLeftCol(fi *fieldInfo, operator string, leftCol *string) {
-	if fi.fieldType == TypeDateField {
+func (d *dbBaseSqlite) GenerateOperatorLeftCol(fi *models.FieldInfo, operator string, leftCol *string) {
+	if fi.FieldType == TypeDateField {
 		*leftCol = fmt.Sprintf("DATE(%s)", *leftCol)
 	}
 }
@@ -104,17 +106,17 @@ func (d *dbBaseSqlite) MaxLimit() uint64 {
 	return 9223372036854775807
 }
 
-// get column types in sqlite.
+// Get column types in sqlite.
 func (d *dbBaseSqlite) DbTypes() map[string]string {
 	return sqliteTypes
 }
 
-// get show tables sql in sqlite.
+// Get show tables sql in sqlite.
 func (d *dbBaseSqlite) ShowTablesQuery() string {
 	return "SELECT name FROM sqlite_master WHERE type = 'table'"
 }
 
-// get columns in sqlite.
+// Get Columns in sqlite.
 func (d *dbBaseSqlite) GetColumns(ctx context.Context, db dbQuerier, table string) (map[string][3]string, error) {
 	query := d.ins.ShowColumnsQuery(table)
 	rows, err := db.QueryContext(ctx, query)
@@ -132,10 +134,10 @@ func (d *dbBaseSqlite) GetColumns(ctx context.Context, db dbQuerier, table strin
 		columns[name.String] = [3]string{name.String, typ.String, null.String}
 	}
 
-	return columns, nil
+	return columns, rows.Err()
 }
 
-// get show columns sql in sqlite.
+// Get show Columns sql in sqlite.
 func (d *dbBaseSqlite) ShowColumnsQuery(table string) string {
 	return fmt.Sprintf("pragma table_info('%s')", table)
 }

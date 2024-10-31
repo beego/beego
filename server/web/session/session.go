@@ -16,15 +16,15 @@
 //
 // Usage:
 // import(
-//   "github.com/beego/beego/v2/server/web/session"
+//
+//	"github.com/beego/beego/v2/server/web/session"
+//
 // )
 //
-//	func init() {
-//      globalSessions, _ = session.NewManager("memory", `{"cookieName":"gosessionid", "enableSetCookie,omitempty": true, "gclifetime":3600, "maxLifetime": 3600, "secure": false, "cookieLifeTime": 3600, "providerConfig": ""}`)
-//		go globalSessions.GC()
-//	}
-//
-// more docs: http://beego.vip/docs/module/session.md
+//		func init() {
+//	     globalSessions, _ = session.NewManager("memory", `{"cookieName":"gosessionid", "enableSetCookie,omitempty": true, "gclifetime":3600, "maxLifetime": 3600, "secure": false, "cookieLifeTime": 3600, "providerConfig": ""}`)
+//			go globalSessions.GC()
+//		}
 package session
 
 import (
@@ -44,12 +44,13 @@ import (
 
 // Store contains all data for one session process with specific id.
 type Store interface {
-	Set(ctx context.Context, key, value interface{}) error     // set session value
-	Get(ctx context.Context, key interface{}) interface{}      // get session value
-	Delete(ctx context.Context, key interface{}) error         // delete session value
-	SessionID(ctx context.Context) string                      // back current sessionID
-	SessionRelease(ctx context.Context, w http.ResponseWriter) // release the resource & save data to provider & return the data
-	Flush(ctx context.Context) error                           // delete all data
+	Set(ctx context.Context, key, value interface{}) error              // Set set session value
+	Get(ctx context.Context, key interface{}) interface{}               // Get get session value
+	Delete(ctx context.Context, key interface{}) error                  // Delete delete session value
+	SessionID(ctx context.Context) string                               // SessionID return current sessionID
+	SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) // SessionReleaseIfPresent release the resource & save data to provider & return the data when the session is present, not all implementation support this feature, you need to check if the specific implementation if support this feature.
+	SessionRelease(ctx context.Context, w http.ResponseWriter)          // SessionRelease release the resource & save data to provider & return the data
+	Flush(ctx context.Context) error                                    // Flush delete all data
 }
 
 // Provider contains global session methods and saved SessionStores.
@@ -127,7 +128,7 @@ func NewManager(provideName string, cf *ManagerConfig) (*Manager, error) {
 		}
 	}
 
-	err := provider.SessionInit(nil, cf.Maxlifetime, cf.ProviderConfig)
+	err := provider.SessionInit(context.Background(), cf.Maxlifetime, cf.ProviderConfig)
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +154,7 @@ func (manager *Manager) GetProvider() Provider {
 //
 // error is not nil when there is anything wrong.
 // sid is empty when need to generate a new session id
-// otherwise return an valid session id.
+// otherwise return a valid session id.
 func (manager *Manager) getSid(r *http.Request) (string, error) {
 	cookie, errs := r.Cookie(manager.config.CookieName)
 	if errs != nil || cookie.Value == "" {
@@ -191,12 +192,12 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 	}
 
 	if sid != "" {
-		exists, err := manager.provider.SessionExist(nil, sid)
+		exists, err := manager.provider.SessionExist(context.Background(), sid)
 		if err != nil {
 			return nil, err
 		}
 		if exists {
-			return manager.provider.SessionRead(nil, sid)
+			return manager.provider.SessionRead(context.Background(), sid)
 		}
 	}
 
@@ -206,7 +207,7 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 		return nil, errs
 	}
 
-	session, err = manager.provider.SessionRead(nil, sid)
+	session, err = manager.provider.SessionRead(context.Background(), sid)
 	if err != nil {
 		return nil, err
 	}
@@ -249,7 +250,7 @@ func (manager *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	sid, _ := url.QueryUnescape(cookie.Value)
-	manager.provider.SessionDestroy(nil, sid)
+	manager.provider.SessionDestroy(context.Background(), sid)
 	if manager.config.EnableSetCookie {
 		expiration := time.Now()
 		cookie = &http.Cookie{
@@ -268,7 +269,7 @@ func (manager *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
 
 // GetSessionStore Get SessionStore by its id.
 func (manager *Manager) GetSessionStore(sid string) (sessions Store, err error) {
-	sessions, err = manager.provider.SessionRead(nil, sid)
+	sessions, err = manager.provider.SessionRead(context.Background(), sid)
 	return
 }
 
@@ -279,7 +280,7 @@ func (manager *Manager) GC() {
 	time.AfterFunc(time.Duration(manager.config.Gclifetime)*time.Second, func() { manager.GC() })
 }
 
-// SessionRegenerateID Regenerate a session id for this SessionStore who's id is saving in http request.
+// SessionRegenerateID Regenerate a session id for this SessionStore whose id is saving in http request.
 func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Request) (Store, error) {
 	sid, err := manager.sessionID()
 	if err != nil {
@@ -287,52 +288,47 @@ func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Reque
 	}
 
 	var session Store
-
 	cookie, err := r.Cookie(manager.config.CookieName)
 	if err != nil || cookie.Value == "" {
 		// delete old cookie
-		session, err = manager.provider.SessionRead(nil, sid)
+		session, err = manager.provider.SessionRead(context.Background(), sid)
 		if err != nil {
 			return nil, err
 		}
 		cookie = &http.Cookie{
-			Name:     manager.config.CookieName,
-			Value:    url.QueryEscape(sid),
-			Path:     "/",
-			HttpOnly: !manager.config.DisableHTTPOnly,
-			Secure:   manager.isSecure(r),
-			Domain:   manager.config.Domain,
-			SameSite: manager.config.CookieSameSite,
+			Name:  manager.config.CookieName,
+			Value: url.QueryEscape(sid),
 		}
 	} else {
 		oldsid, err := url.QueryUnescape(cookie.Value)
 		if err != nil {
 			return nil, err
 		}
-
-		session, err = manager.provider.SessionRegenerate(nil, oldsid, sid)
+		session, err = manager.provider.SessionRegenerate(context.Background(), oldsid, sid)
 		if err != nil {
 			return nil, err
 		}
-
 		cookie.Value = url.QueryEscape(sid)
-		cookie.HttpOnly = true
-		cookie.Path = "/"
 	}
 	if manager.config.CookieLifeTime > 0 {
 		cookie.MaxAge = manager.config.CookieLifeTime
 		cookie.Expires = time.Now().Add(time.Duration(manager.config.CookieLifeTime) * time.Second)
 	}
+
+	cookie.HttpOnly = !manager.config.DisableHTTPOnly
+	cookie.Path = "/"
+	cookie.Secure = manager.isSecure(r)
+	cookie.Domain = manager.config.Domain
+	cookie.SameSite = manager.config.CookieSameSite
+
 	if manager.config.EnableSetCookie {
 		http.SetCookie(w, cookie)
 	}
 	r.AddCookie(cookie)
-
 	if manager.config.EnableSidInHTTPHeader {
 		r.Header.Set(manager.config.SessionNameInHTTPHeader, sid)
 		w.Header().Set(manager.config.SessionNameInHTTPHeader, sid)
 	}
-
 	return session, nil
 }
 

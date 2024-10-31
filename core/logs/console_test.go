@@ -63,6 +63,8 @@ func TestConsoleAsync(t *testing.T) {
 	for len(log.msgChan) != 0 {
 		time.Sleep(1 * time.Millisecond)
 	}
+	log.Flush()
+	log.Close()
 }
 
 func TestFormat(t *testing.T) {

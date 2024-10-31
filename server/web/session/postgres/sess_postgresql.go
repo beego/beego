@@ -18,7 +18,6 @@
 //
 // go install github.com/lib/pq
 //
-//
 // needs this table in your database:
 //
 // CREATE TABLE session (
@@ -35,19 +34,18 @@
 // SessionSavePath = "user=a password=b dbname=c sslmode=disable"
 // SessionName = session
 //
-//
 // Usage:
 // import(
-//   _ "github.com/beego/beego/v2/server/web/session/postgresql"
-//   "github.com/beego/beego/v2/server/web/session"
+//
+//	_ "github.com/beego/beego/v2/server/web/session/postgresql"
+//	"github.com/beego/beego/v2/server/web/session"
+//
 // )
 //
 //	func init() {
 //		globalSessions, _ = session.NewManager("postgresql", ``{"cookieName":"gosessionid","gclifetime":3600,"ProviderConfig":"user=pqgotest dbname=pqgotest sslmode=verify-full"}``)
 //		go globalSessions.GC()
 //	}
-//
-// more docs: http://beego.vip/docs/module/session.md
 package postgres
 
 import (
@@ -57,7 +55,6 @@ import (
 	"sync"
 	"time"
 
-	// import postgresql Driver
 	_ "github.com/lib/pq"
 
 	"github.com/beego/beego/v2/server/web/session"
@@ -115,14 +112,22 @@ func (st *SessionStore) SessionID(context.Context) string {
 
 // SessionRelease save postgresql session values to database.
 // must call this method to save values to database.
-func (st *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
+func (st *SessionStore) SessionRelease(_ context.Context, _ http.ResponseWriter) {
 	defer st.c.Close()
-	b, err := session.EncodeGob(st.values)
+	st.lock.RLock()
+	values := st.values
+	st.lock.RUnlock()
+	b, err := session.EncodeGob(values)
 	if err != nil {
 		return
 	}
 	st.c.Exec("UPDATE session set session_data=$1, session_expiry=$2 where session_key=$3",
 		b, time.Now().Format(time.RFC3339), st.sid)
+}
+
+// SessionReleaseIfPresent save postgresql session values to database when key is present
+func (st *SessionStore) SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) {
+	st.SessionRelease(ctx, w)
 }
 
 // Provider postgresql session provider

@@ -13,7 +13,7 @@ func request(project *LogProject, method, uri string, headers map[string]string,
 
 	// The caller should provide 'x-sls-bodyrawsize' header
 	if _, ok := headers["x-sls-bodyrawsize"]; !ok {
-		err = fmt.Errorf("Can't find 'x-sls-bodyrawsize' header")
+		err = fmt.Errorf("can't find 'x-sls-bodyrawsize' header")
 		return
 	}
 
@@ -27,7 +27,7 @@ func request(project *LogProject, method, uri string, headers map[string]string,
 		headers["Content-MD5"] = bodyMD5
 
 		if _, ok := headers["Content-Type"]; !ok {
-			err = fmt.Errorf("Can't find 'Content-Type' header")
+			err = fmt.Errorf("can't find 'Content-Type' header")
 			return
 		}
 	}

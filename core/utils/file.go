@@ -69,6 +69,7 @@ func GrepFile(patten string, filename string) (lines []string, err error) {
 	if err != nil {
 		return
 	}
+	defer fd.Close()
 	lines = make([]string, 0)
 	reader := bufio.NewReader(fd)
 	prefix := ""

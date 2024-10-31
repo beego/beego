@@ -19,8 +19,8 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -29,8 +29,6 @@ import (
 	"sync"
 
 	"github.com/mitchellh/mapstructure"
-
-	"github.com/beego/beego/v2/core/logs"
 )
 
 var (
@@ -54,7 +52,7 @@ func (ini *IniConfig) Parse(name string) (Configer, error) {
 }
 
 func (ini *IniConfig) parseFile(name string) (*IniConfigContainer, error) {
-	data, err := ioutil.ReadFile(name)
+	data, err := os.ReadFile(name)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +96,7 @@ func (ini *IniConfig) parseData(dir string, data []byte) (*IniConfigContainer, e
 				break
 			}
 
-			// It might be a good idea to throw a error on all unknonw errors?
+			// It might be a good idea to throw an error on all unknonw errors?
 			if _, ok := err.(*os.PathError); ok {
 				return nil, err
 			}
@@ -520,7 +518,7 @@ func init() {
 
 	err := InitGlobalInstance("ini", "conf/app.conf")
 	if err != nil {
-		logs.Debug("init global config instance failed. If you do not use this, just ignore it. ", err)
+		_, _ = fmt.Fprintln(os.Stderr, "init global config instance failed. If you do not use this, just ignore it. ", err)
 	}
 }
 

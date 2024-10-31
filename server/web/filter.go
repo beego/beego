@@ -43,8 +43,8 @@ type FilterRouter struct {
 }
 
 // params is for:
-//   1. setting the returnOnOutput value (false allows multiple filters to execute)
-//   2. determining whether or not params need to be reset.
+//  1. setting the returnOnOutput value (false allows multiple filters to execute)
+//  2. determining whether or not params need to be reset.
 func newFilterRouter(pattern string, filter FilterFunc, opts ...FilterOpt) *FilterRouter {
 	mr := &FilterRouter{
 		tree:       NewTree(),
