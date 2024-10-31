@@ -15,6 +15,8 @@
 package web
 
 import (
+	"fmt"
+	"github.com/beego/beego/v2/core/config"
 	"os"
 	"path/filepath"
 	"sync"
@@ -48,6 +50,13 @@ func AddAPPStartHook(hf ...hookfunc) {
 // beego.Run(":8089")
 // beego.Run("127.0.0.1:8089")
 func Run(params ...string) {
+
+	// lazy displayed init default config ini error
+	if config.InitDefaultGlobalInstanceErr != nil {
+		_, _ = fmt.Fprintln(os.Stderr, "init global config instance failed. If you do not use this, just ignore it. ", config.InitDefaultGlobalInstanceErr)
+		config.InitDefaultGlobalInstanceErr = nil
+	}
+
 	if len(params) > 0 && params[0] != "" {
 		BeeApp.Run(params[0])
 	} else {
