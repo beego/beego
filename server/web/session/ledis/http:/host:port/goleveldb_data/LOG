@@ -1,6 +1,0 @@
-=============== Sep 23, 2024 (IST) ===============
-13:20:45.857549 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
-13:20:45.857715 db@open opening
-13:20:46.025077 version@stat F·[] S·0B[] Sc·[]
-13:20:46.127801 db@janitor F·2 G·0
-13:20:46.127844 db@open done T·270.109817ms
