@@ -103,6 +103,15 @@ func (rs *SessionStore) SessionID(context.Context) string {
 
 // SessionRelease save session values to redis_sentinel
 func (rs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
+	rs.releaseSession(ctx, w, false)
+}
+
+// SessionReleaseIfPresent save session values to redis_sentinel when key is present
+func (rs *SessionStore) SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) {
+	rs.releaseSession(ctx, w, true)
+}
+
+func (rs *SessionStore) releaseSession(ctx context.Context, _ http.ResponseWriter, requirePresent bool) {
 	rs.lock.RLock()
 	values := rs.values
 	rs.lock.RUnlock()
@@ -111,7 +120,11 @@ func (rs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWrite
 		return
 	}
 	c := rs.p
-	c.Set(ctx, rs.sid, string(b), time.Duration(rs.maxlifetime)*time.Second)
+	if requirePresent {
+		c.SetXX(ctx, rs.sid, string(b), time.Duration(rs.maxlifetime)*time.Second)
+	} else {
+		c.Set(ctx, rs.sid, string(b), time.Duration(rs.maxlifetime)*time.Second)
+	}
 }
 
 // Provider redis_sentinel session provider

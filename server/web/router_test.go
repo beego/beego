@@ -541,7 +541,7 @@ func TestParamResetFilter(t *testing.T) {
 	mux.ServeHTTP(rw, r)
 
 	// The two functions, `beegoResetParams` and `beegoHandleResetParams` add
-	// a response header of `Splat`.  The expectation here is that that Header
+	// a response header of `Splat`.  The expectation here is that Header
 	// value should match what the _request's_ router set, not the filter's.
 
 	headers := rw.Result().Header

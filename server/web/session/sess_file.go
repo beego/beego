@@ -80,6 +80,15 @@ func (fs *FileSessionStore) SessionID(context.Context) string {
 
 // SessionRelease Write file session to local file with Gob string
 func (fs *FileSessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
+	fs.releaseSession(ctx, w, true)
+}
+
+// SessionReleaseIfPresent Write file session to local file with Gob string when session exists
+func (fs *FileSessionStore) SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) {
+	fs.releaseSession(ctx, w, false)
+}
+
+func (fs *FileSessionStore) releaseSession(_ context.Context, _ http.ResponseWriter, createIfNotExist bool) {
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()
 	b, err := EncodeGob(fs.values)
@@ -95,7 +104,7 @@ func (fs *FileSessionStore) SessionRelease(ctx context.Context, w http.ResponseW
 			SLogger.Println(err)
 			return
 		}
-	} else if os.IsNotExist(err) {
+	} else if os.IsNotExist(err) && createIfNotExist {
 		f, err = os.Create(filepath.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid))
 		if err != nil {
 			SLogger.Println(err)
@@ -228,7 +237,7 @@ func (fp *FileProvider) SessionAll(context.Context) int {
 }
 
 // SessionRegenerate Generate new sid for file session.
-// it delete old file and create new file named from new sid.
+// it deletes old file and create new file named from new sid.
 func (fp *FileProvider) SessionRegenerate(ctx context.Context, oldsid, sid string) (Store, error) {
 	filepder.lock.Lock()
 	defer filepder.lock.Unlock()

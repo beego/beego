@@ -31,7 +31,7 @@ type TestController struct {
 }
 
 func TestMockContext(t *testing.T) {
-	req, err := http.NewRequest("GET", "http://localhost:8080/hello?name=tom", bytes.NewReader([]byte{}))
+	req, err := http.NewRequest("GET", "https://localhost:8080/hello?name=tom", bytes.NewReader([]byte{}))
 	assert.Nil(t, err)
 	ctx, resp := NewMockContext(req)
 	ctrl := &TestController{
@@ -40,7 +40,7 @@ func TestMockContext(t *testing.T) {
 		},
 	}
 	ctrl.HelloWorld()
-	result := resp.BodyToString()
+	result := resp.Body.String()
 	assert.Equal(t, "name=tom", result)
 }
 

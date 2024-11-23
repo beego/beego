@@ -97,6 +97,15 @@ func (rs *SessionStore) SessionID(context.Context) string {
 
 // SessionRelease save session values to memcache
 func (rs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
+	rs.releaseSession(ctx, w, false)
+}
+
+// SessionReleaseIfPresent save session values to memcache when key is present
+func (rs *SessionStore) SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) {
+	rs.releaseSession(ctx, w, true)
+}
+
+func (rs *SessionStore) releaseSession(_ context.Context, _ http.ResponseWriter, requirePresent bool) {
 	rs.lock.RLock()
 	values := rs.values
 	rs.lock.RUnlock()
@@ -105,7 +114,11 @@ func (rs *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWrite
 		return
 	}
 	item := memcache.Item{Key: rs.sid, Value: b, Expiration: int32(rs.maxlifetime)}
-	client.Set(&item)
+	if requirePresent {
+		client.Replace(&item)
+	} else {
+		client.Set(&item)
+	}
 }
 
 // MemProvider memcache session provider
@@ -176,8 +189,8 @@ func (rp *MemProvider) SessionRegenerate(ctx context.Context, oldsid, sid string
 	}
 	var contain []byte
 	if item, err := client.Get(sid); err != nil || len(item.Value) == 0 {
-		// oldsid doesn't exists, set the new sid directly
-		// ignore error here, since if it return error
+		// oldsid doesn't exist, set the new sid directly
+		// ignore error here, since if it returns error
 		// the existed value will be 0
 		item.Key = sid
 		item.Value = []byte("")
@@ -222,7 +235,7 @@ func (rp *MemProvider) connectInit() error {
 	return nil
 }
 
-// SessionGC Impelment method, no used.
+// SessionGC Implement method, no used.
 func (rp *MemProvider) SessionGC(context.Context) {
 }
 

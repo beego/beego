@@ -112,7 +112,7 @@ func (st *SessionStore) SessionID(context.Context) string {
 
 // SessionRelease save postgresql session values to database.
 // must call this method to save values to database.
-func (st *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
+func (st *SessionStore) SessionRelease(_ context.Context, _ http.ResponseWriter) {
 	defer st.c.Close()
 	st.lock.RLock()
 	values := st.values
@@ -123,6 +123,11 @@ func (st *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWrite
 	}
 	st.c.Exec("UPDATE session set session_data=$1, session_expiry=$2 where session_key=$3",
 		b, time.Now().Format(time.RFC3339), st.sid)
+}
+
+// SessionReleaseIfPresent save postgresql session values to database when key is present
+func (st *SessionStore) SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) {
+	st.SessionRelease(ctx, w)
 }
 
 // Provider postgresql session provider

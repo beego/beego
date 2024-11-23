@@ -205,13 +205,13 @@ func TestRenderForm(t *testing.T) {
 		ID      int         `form:"-"`
 		Name    interface{} `form:"username"`
 		Age     int         `form:"age,text,年龄："`
-		Sex     string
+		Sex     string      `form:"sex,select"`
 		Email   []string
 		Intro   string `form:",textarea"`
 		Ignored string `form:"-"`
 	}
 
-	u := user{Name: "test", Intro: "Some Text"}
+	u := user{Name: "test", Intro: "Some Text", Sex: "Male,Female"}
 	output := RenderForm(u)
 	if output != template.HTML("") {
 		t.Errorf("output should be empty but got %v", output)
@@ -220,7 +220,10 @@ func TestRenderForm(t *testing.T) {
 	result := template.HTML(
 		`Name: <input name="username" type="text" value="test"></br>` +
 			`年龄：<input name="age" type="text" value="0"></br>` +
-			`Sex: <input name="Sex" type="text" value=""></br>` +
+			`Sex: <select name="sex"></br>` +
+			`  <option value="Male"> Male </option></br>` +
+			`  <option value="Female"> Female </option></br>` +
+			`</select></br>` +
 			`Intro: <textarea name="Intro">Some Text</textarea>`)
 	if output != result {
 		t.Errorf("output should equal `%v` but got `%v`", result, output)
