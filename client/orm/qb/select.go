@@ -39,6 +39,8 @@ type Selector[T any] struct {
 	columns   []Selectable
 	tableName string
 	db        orm.Ormer
+	// allow users to specify the registry
+	registry *models.ModelCache
 }
 
 func NewSelector[T any](db orm.Ormer) *Selector[T] {
@@ -47,6 +49,7 @@ func NewSelector[T any](db orm.Ormer) *Selector[T] {
 		builder: builder{
 			buffer: buffers.Get(),
 		},
+		registry: models.DefaultModelCache,
 	}
 }
 
@@ -56,8 +59,7 @@ func (s *Selector[T]) Build() (*Query, error) {
 		err error
 	)
 	defer buffers.Put(s.buffer)
-	registry := models.DefaultModelCache
-	s.model, err = registry.GetOrRegisterByMd(&t)
+	s.model, err = s.registry.GetOrRegisterByMd(&t)
 	if err != nil {
 		return nil, err
 	}
