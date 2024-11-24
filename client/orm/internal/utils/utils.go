@@ -62,7 +62,7 @@ func (f StrTo) Float64() (float64, error) {
 
 // Int string to int
 func (f StrTo) Int() (int, error) {
-	v, err := strconv.ParseInt(f.String(), 10, 32)
+	v, err := strconv.ParseInt(f.String(), 10, strconv.IntSize)
 	return int(v), err
 }
 
@@ -100,7 +100,7 @@ func (f StrTo) Int64() (int64, error) {
 
 // Uint string to uint
 func (f StrTo) Uint() (uint, error) {
-	v, err := strconv.ParseUint(f.String(), 10, 32)
+	v, err := strconv.ParseUint(f.String(), 10, strconv.IntSize)
 	return uint(v), err
 }
 
