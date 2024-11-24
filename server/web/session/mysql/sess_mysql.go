@@ -109,7 +109,7 @@ func (st *SessionStore) SessionID(context.Context) string {
 
 // SessionRelease save mysql session values to database.
 // must call this method to save values to database.
-func (st *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWriter) {
+func (st *SessionStore) SessionRelease(_ context.Context, _ http.ResponseWriter) {
 	defer st.c.Close()
 	st.lock.RLock()
 	values := st.values
@@ -120,6 +120,11 @@ func (st *SessionStore) SessionRelease(ctx context.Context, w http.ResponseWrite
 	}
 	st.c.Exec("UPDATE "+TableName+" set `session_data`=?, `session_expiry`=? where session_key=?",
 		b, time.Now().Unix(), st.sid)
+}
+
+// SessionReleaseIfPresent save mysql session values to database.
+func (st *SessionStore) SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) {
+	st.SessionRelease(ctx, w)
 }
 
 // Provider mysql session provider

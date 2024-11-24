@@ -84,17 +84,19 @@ Finally in the handlerfunc you can use it like this
 When you develop a web app, maybe you want to write own provider because you must meet the requirements.
 
 Writing a provider is easy. You only need to define two struct types
-(Session and Provider), which satisfy the interface definition. Maybe you will find the **memory** provider is a good
+(Store and Provider), which satisfy the interface definition. Maybe you will find the **memory** provider is a good
 example.
 
-	type SessionStore interface {
-		Set(key, value interface{}) error     //set session value
-		Get(key interface{}) interface{}      //get session value
-		Delete(key interface{}) error         //delete session value
-		SessionID() string                    //back current sessionID
-		SessionRelease(w http.ResponseWriter) // release the resource & save data to provider & return the data
-		Flush() error                         //delete all data
-	}
+	// Store contains all data for one session process with specific id.
+    type Store interface {
+        Set(ctx context.Context, key, value interface{}) error              // Set set session value
+        Get(ctx context.Context, key interface{}) interface{}               // Get get session value
+        Delete(ctx context.Context, key interface{}) error                  // Delete delete session value
+        SessionID(ctx context.Context) string                               // SessionID return current sessionID
+        SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) // SessionReleaseIfPresent release the resource & save data to provider & return the data when the session is present, not all implementation support this feature, you need to check if the specific implementation if support this feature.
+        SessionRelease(ctx context.Context, w http.ResponseWriter)          // SessionRelease release the resource & save data to provider & return the data
+        Flush(ctx context.Context) error                                    // Flush delete all data
+    }
 	
 	type Provider interface {
 		SessionInit(gclifetime int64, config string) error

@@ -44,12 +44,13 @@ import (
 
 // Store contains all data for one session process with specific id.
 type Store interface {
-	Set(ctx context.Context, key, value interface{}) error     // set session value
-	Get(ctx context.Context, key interface{}) interface{}      // get session value
-	Delete(ctx context.Context, key interface{}) error         // delete session value
-	SessionID(ctx context.Context) string                      // back current sessionID
-	SessionRelease(ctx context.Context, w http.ResponseWriter) // release the resource & save data to provider & return the data
-	Flush(ctx context.Context) error                           // delete all data
+	Set(ctx context.Context, key, value interface{}) error              // Set set session value
+	Get(ctx context.Context, key interface{}) interface{}               // Get get session value
+	Delete(ctx context.Context, key interface{}) error                  // Delete delete session value
+	SessionID(ctx context.Context) string                               // SessionID return current sessionID
+	SessionReleaseIfPresent(ctx context.Context, w http.ResponseWriter) // SessionReleaseIfPresent release the resource & save data to provider & return the data when the session is present, not all implementation support this feature, you need to check if the specific implementation if support this feature.
+	SessionRelease(ctx context.Context, w http.ResponseWriter)          // SessionRelease release the resource & save data to provider & return the data
+	Flush(ctx context.Context) error                                    // Flush delete all data
 }
 
 // Provider contains global session methods and saved SessionStores.
@@ -153,7 +154,7 @@ func (manager *Manager) GetProvider() Provider {
 //
 // error is not nil when there is anything wrong.
 // sid is empty when need to generate a new session id
-// otherwise return an valid session id.
+// otherwise return a valid session id.
 func (manager *Manager) getSid(r *http.Request) (string, error) {
 	cookie, errs := r.Cookie(manager.config.CookieName)
 	if errs != nil || cookie.Value == "" {
@@ -279,7 +280,7 @@ func (manager *Manager) GC() {
 	time.AfterFunc(time.Duration(manager.config.Gclifetime)*time.Second, func() { manager.GC() })
 }
 
-// SessionRegenerateID Regenerate a session id for this SessionStore who's id is saving in http request.
+// SessionRegenerateID Regenerate a session id for this SessionStore whose id is saving in http request.
 func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Request) (Store, error) {
 	sid, err := manager.sessionID()
 	if err != nil {

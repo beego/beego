@@ -37,12 +37,12 @@ func TestSessionProvider(t *testing.T) {
 		},
 	}
 	ctrl.HelloSession()
-	result := resp.BodyToString()
+	result := resp.Body.String()
 	assert.Equal(t, "set", result)
 
-	resp.Reset()
+	resp.Body.Reset()
 	ctrl.HelloSessionName()
-	result = resp.BodyToString()
+	result = resp.Body.String()
 
 	assert.Equal(t, "Tom", result)
 }

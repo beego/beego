@@ -170,20 +170,9 @@ func formTagName(fieldT reflect.StructField) (string, bool) {
 
 func formValue(tag string, form url.Values, fieldT reflect.StructField) (string, bool) {
 	formValues := form[tag]
-	var value string
 	if len(formValues) == 0 {
 		defaultValue := fieldT.Tag.Get("default")
-		if defaultValue != "" {
-			value = defaultValue
-		} else {
-			return "", false
-		}
+		return defaultValue, defaultValue != ""
 	}
-	if len(formValues) == 1 {
-		value = formValues[0]
-		if value == "" {
-			return "", false
-		}
-	}
-	return value, true
+	return formValues[0], true
 }

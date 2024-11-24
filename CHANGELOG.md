@@ -1,10 +1,6 @@
-# developing
-- [refactor: ORM Builder pattern that supports select statement](https://github.com/beego/beego/pull/5460)
-- [fix: catch missed error on migration](https://github.com/beego/beego/pull/5455)
-- [feature: add ExecRaw func](https://github.com/beego/beego/pull/5455)
-- [feature: add Exec Result](https://github.com/beego/beego/pull/5456)
-- [fix: refactor use global DefaultModelCache](https://github.com/beego/beego/pull/5457)
-- [feature: add deleter](https://github.com/beego/beego/pull/5458)
+# Change Log is deprecated
+
+Please refer to https://github.com/beego/beego/releases to find the CHANGELOG
 
 # v2.1.2
 - [refactor: CONTRIBUTING.md file grammatical improvements](https://github.com/beego/beego/issues/5411)
