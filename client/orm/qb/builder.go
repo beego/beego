@@ -95,6 +95,9 @@ func (b *builder) buildExpression(e Expression) error {
 		if rp {
 			b.writeByte(')')
 		}
+	case RawExpr:
+		b.writeString(exp.raw)
+		b.args = append(b.args, exp.args...)
 	default:
 		return errs.NewErrUnsupportedExpressionType(exp)
 	}

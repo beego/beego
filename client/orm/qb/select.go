@@ -244,3 +244,18 @@ func (s *Selector[T]) Get(ctx context.Context) (*T, error) {
 	err = s.db.ReadRaw(ctx, t, q.SQL, q.Args...)
 	return t, nil
 }
+
+func (s *Selector[T]) WhereMap(conds map[string]any) *Selector[T] {
+	psArr := make([]Predicate, 0, len(conds))
+	for k, v := range conds {
+		ps := C(k).EQ(v)
+		psArr = append(psArr, ps)
+	}
+	return s.Where(psArr...)
+}
+
+// WhereRaw("a=? AND b = ?", 1, 2)
+func (s *Selector[T]) WhereRaw(raw string, args ...any) *Selector[T] {
+	return s.Where(Raw(raw, args...).AsPredicate())
+	//return s.Where(toPs(raw, args))
+}
