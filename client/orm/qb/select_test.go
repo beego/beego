@@ -41,18 +41,36 @@ func TestSelector_RawAndWhereMap(t *testing.T) {
 			name: "WhereRaw",
 			q:    NewSelector[TestModel](db).WhereRaw("`age` = ? and `first_name` = ?", 18, "sep"),
 			wantQuery: &Query{
-				// There are two spaces before NOT because we did not perform any special processing on NOT
+				// There are two spaces at the end because we use predicate but not predicate.op
 				SQL:  "SELECT * FROM `test_model` WHERE `age` = ? and `first_name` = ?  ;",
 				Args: []any{18, "sep"},
 			},
 		},
+		// The WhereMap test might fail because the traversal of the map is unordered.
 		{
 			name: "WhereMap",
 			q:    NewSelector[TestModel](db).WhereMap(map[string]any{"Age": 18, "FirstName": "sep"}),
 			wantQuery: &Query{
-				// There are two spaces before NOT because we did not perform any special processing on NOT
 				SQL:  "SELECT * FROM `test_model` WHERE (`age` = ?) AND (`first_name` = ?);",
 				Args: []any{18, "sep"},
+			},
+		},
+		{
+			name: "WhereMapAndWhereRaw",
+			q:    NewSelector[TestModel](db).WhereMap(map[string]any{"Age": 18, "FirstName": "sep"}).WhereRaw("`id` = ? and `last_name` = ?", 1, "join"),
+			wantQuery: &Query{
+				SQL:  "SELECT * FROM `test_model` WHERE ((`age` = ?) AND (`first_name` = ?)) AND (`id` = ? and `last_name` = ?  );",
+				Args: []any{18, "sep", 1, "join"},
+			},
+		},
+
+		{
+			name: "Where_WhereMap_WhereRaw",
+			q:    NewSelector[TestModel](db).Where(C("LastName").EQ("join")).WhereMap(map[string]any{"Age": 18, "FirstName": "sep"}).WhereRaw("`id` = ?", 1),
+			wantQuery: &Query{
+				// There are two spaces before NOT because we did not perform any special processing on NOT
+				SQL:  "SELECT * FROM `test_model` WHERE (((`last_name` = ?) AND (`age` = ?)) AND (`first_name` = ?)) AND (`id` = ?  );",
+				Args: []any{"join", 18, "sep", 1},
 			},
 		},
 	}
