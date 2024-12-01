@@ -198,7 +198,7 @@ func (s *Selector[T]) From(table string) *Selector[T] {
 }
 
 func (s *Selector[T]) Where(ps ...Predicate) *Selector[T] {
-	s.where = ps
+	s.where = append(s.where, ps...)
 	return s
 }
 
@@ -243,4 +243,18 @@ func (s *Selector[T]) Get(ctx context.Context) (*T, error) {
 	t := new(T)
 	err = s.db.ReadRaw(ctx, t, q.SQL, q.Args...)
 	return t, nil
+}
+
+// The WhereRaw change the case like where do.
+func (s *Selector[T]) WhereMap(conds map[string]any) *Selector[T] {
+	for col, val := range conds {
+		ps := C(col).EQ(val)
+		s.Where(ps)
+	}
+	return s
+}
+
+// The WhereRaw does not change the case like where do.
+func (s *Selector[T]) WhereRaw(raw string, args ...any) *Selector[T] {
+	return s.Where(Raw(raw, args...).AsPredicate())
 }

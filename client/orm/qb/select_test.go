@@ -25,6 +25,68 @@ import (
 	"github.com/beego/beego/v2/client/orm/qb/errs"
 )
 
+func TestSelector_RawAndWhereMap(t *testing.T) {
+	err := orm.RegisterDataBase("default", "sqlite3", "")
+	if err != nil {
+		return
+	}
+	db := orm.NewOrm()
+	testCase := []struct {
+		name      string
+		q         QueryBuilder
+		wantQuery *Query
+		wantErr   error
+	}{
+		{
+			name: "WhereRaw",
+			q:    NewSelector[TestModel](db).WhereRaw("`age` = ? and `first_name` = ?", 18, "sep"),
+			wantQuery: &Query{
+				// There are two spaces at the end because we use predicate but not predicate.op
+				SQL:  "SELECT * FROM `test_model` WHERE `age` = ? and `first_name` = ?  ;",
+				Args: []any{18, "sep"},
+			},
+		},
+		// The WhereMap test might fail because the traversal of the map is unordered.
+		{
+			name: "WhereMap",
+			q:    NewSelector[TestModel](db).WhereMap(map[string]any{"Age": 18}),
+			wantQuery: &Query{
+				SQL:  "SELECT * FROM `test_model` WHERE `age` = ?;",
+				Args: []any{18},
+			},
+		},
+		{
+			name: "WhereMapAndWhereRaw",
+			q:    NewSelector[TestModel](db).WhereMap(map[string]any{"Age": 18}).WhereRaw("`id` = ? and `last_name` = ?", 1, "join"),
+			wantQuery: &Query{
+				SQL:  "SELECT * FROM `test_model` WHERE (`age` = ?) AND (`id` = ? and `last_name` = ?  );",
+				Args: []any{18, 1, "join"},
+			},
+		},
+
+		{
+			name: "Where_WhereMap_WhereRaw",
+			q:    NewSelector[TestModel](db).Where(C("LastName").EQ("join")).WhereMap(map[string]any{"Age": 18}).WhereRaw("`id` = ?", 1),
+			wantQuery: &Query{
+				// There are two spaces before NOT because we did not perform any special processing on NOT
+				SQL:  "SELECT * FROM `test_model` WHERE ((`last_name` = ?) AND (`age` = ?)) AND (`id` = ?  );",
+				Args: []any{"join", 18, 1},
+			},
+		},
+	}
+
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			q, err := tc.q.Build()
+			assert.Equal(t, tc.wantErr, err)
+			if err != nil {
+				return
+			}
+			assert.Equal(t, tc.wantQuery, q)
+		})
+	}
+}
+
 func TestSelector_Build(t *testing.T) {
 	err := orm.RegisterDataBase("default", "sqlite3", "")
 	if err != nil {
