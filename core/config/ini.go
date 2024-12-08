@@ -19,7 +19,6 @@ import (
 	"bytes"
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"os/user"
@@ -30,6 +29,12 @@ import (
 
 	"github.com/mitchellh/mapstructure"
 )
+
+// InitDefaultGlobalInstanceErr cache default ini config init error
+// when it as cli or only import some mod and not run web server or manually specify the configuration file in the code
+// The current default load will print errors directly in the console resulting in an unfriendly display
+// Here the error will be saved and lazy loaded, displayed if and only when it is run web server
+var InitDefaultGlobalInstanceErr error
 
 var (
 	defaultSection = "default"   // default section means if some ini items not in a section, make them in default section,
@@ -518,7 +523,7 @@ func init() {
 
 	err := InitGlobalInstance("ini", "conf/app.conf")
 	if err != nil {
-		fmt.Fprint(os.Stderr, "init global config instance failed. If you do not use this, just ignore it. ", err)
+		InitDefaultGlobalInstanceErr = err
 	}
 }
 
