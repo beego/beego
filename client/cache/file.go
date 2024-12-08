@@ -209,14 +209,12 @@ func (fc *FileCache) Put(ctx context.Context, key string, val interface{}, timeo
 	item.Lastaccess = time.Now()
 	data, err := GobEncode(item)
 	if err != nil {
-		fmt.Sprintf("111")
 		return err
 	}
 
 	fn, err := fc.getCacheFileName(key)
 
 	if err != nil {
-		fmt.Sprintf("111")
 		return err
 	}
 	return FilePutContents(fn, data)
