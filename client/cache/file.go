@@ -17,7 +17,7 @@ package cache
 import (
 	"bytes"
 	"context"
-	"crypto/md5"
+	"crypto/sha256"
 	"encoding/gob"
 	"encoding/hex"
 	"encoding/json"
@@ -123,7 +123,7 @@ func (fc *FileCache) Init() error {
 
 // getCacheFileName returns a md5 encoded file name.
 func (fc *FileCache) getCacheFileName(key string) (string, error) {
-	m := md5.New()
+	m := sha256.New()
 	_, _ = io.WriteString(m, key)
 	keyMd5 := hex.EncodeToString(m.Sum(nil))
 	cachePath := fc.CachePath
