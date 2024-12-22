@@ -34,7 +34,7 @@ type Dialect interface {
 
 type mysqlDialect struct{}
 
-func (d *mysqlDialect) Name() string {
+func (*mysqlDialect) Name() string {
 	return "MySQL"
 }
 
@@ -42,11 +42,11 @@ func NewMySQLDialect() Dialect {
 	return &mysqlDialect{}
 }
 
-func (d *mysqlDialect) quoter() byte {
+func (*mysqlDialect) quoter() byte {
 	return '`'
 }
 
-func (d *mysqlDialect) ColTypeOf(typ reflect.Value) string {
+func (*mysqlDialect) ColTypeOf(typ reflect.Value) string {
 	switch typ.Kind() {
 	case reflect.Bool:
 		return "bool"
@@ -71,7 +71,7 @@ func (d *mysqlDialect) ColTypeOf(typ reflect.Value) string {
 
 type sqlite3Dialect struct{}
 
-func (d *sqlite3Dialect) Name() string {
+func (*sqlite3Dialect) Name() string {
 	return "SQLite"
 }
 
@@ -79,11 +79,11 @@ func NewSqlite3Dialect() Dialect {
 	return &sqlite3Dialect{}
 }
 
-func (d *sqlite3Dialect) quoter() byte {
+func (*sqlite3Dialect) quoter() byte {
 	return '`'
 }
 
-func (d *sqlite3Dialect) ColTypeOf(typ reflect.Value) string {
+func (*sqlite3Dialect) ColTypeOf(typ reflect.Value) string {
 	switch typ.Kind() {
 	case reflect.Bool:
 		return "bool"

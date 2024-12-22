@@ -387,7 +387,7 @@ func addAliasWthDB(aliasName, driverName string, db *sql.DB, params ...DBOption)
 	return al, nil
 }
 
-func GetORSetAliasWthDB(aliasName, driverName string, db *sql.DB, params ...DBOption) (*alias, error) {
+func getORSetAliasWthDB(aliasName, driverName string, db *sql.DB, params ...DBOption) (*alias, error) {
 	al, err := dataBaseCache.getORSet(aliasName, driverName, db, params...)
 	if err != nil {
 		return nil, err
@@ -527,7 +527,7 @@ func RegisterDB(aliasName, driverName, dataSource string, params ...DBOption) er
 		goto end
 	}
 
-	al, err = GetORSetAliasWthDB(aliasName, driverName, db, params...)
+	al, err = getORSetAliasWthDB(aliasName, driverName, db, params...)
 	if err != nil {
 		goto end
 	}
