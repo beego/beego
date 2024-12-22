@@ -17,7 +17,7 @@ package cache
 import (
 	"bytes"
 	"context"
-	"crypto/md5"
+	"crypto/sha256"
 	"encoding/gob"
 	"encoding/hex"
 	"encoding/json"
@@ -123,21 +123,22 @@ func (fc *FileCache) Init() error {
 
 // getCacheFileName returns a md5 encoded file name.
 func (fc *FileCache) getCacheFileName(key string) (string, error) {
-	m := md5.New()
+	m := sha256.New()
 	_, _ = io.WriteString(m, key)
-	keyMd5 := hex.EncodeToString(m.Sum(nil))
+	keySha256 := hex.EncodeToString(m.Sum(nil))
 	cachePath := fc.CachePath
 	switch fc.DirectoryLevel {
 	case 2:
-		cachePath = filepath.Join(cachePath, keyMd5[0:2], keyMd5[2:4])
+		cachePath = filepath.Join(cachePath, keySha256[0:2], keySha256[2:4])
 	case 1:
-		cachePath = filepath.Join(cachePath, keyMd5[0:2])
+		cachePath = filepath.Join(cachePath, keySha256[0:2])
 	}
 	ok, err := exists(cachePath)
 	if err != nil {
 		return "", err
 	}
 	if !ok {
+		fmt.Printf("cachePath: %s\n", cachePath)
 		err = os.MkdirAll(cachePath, os.ModePerm)
 		if err != nil {
 			return "", berror.Wrapf(err, CreateFileCacheDirFailed,
@@ -145,7 +146,7 @@ func (fc *FileCache) getCacheFileName(key string) (string, error) {
 		}
 	}
 
-	return filepath.Join(cachePath, fmt.Sprintf("%s%s", keyMd5, fc.FileSuffix)), nil
+	return filepath.Join(cachePath, fmt.Sprintf("%s%s", keySha256, fc.FileSuffix)), nil
 }
 
 // Get value from file cache.
@@ -212,6 +213,7 @@ func (fc *FileCache) Put(ctx context.Context, key string, val interface{}, timeo
 	}
 
 	fn, err := fc.getCacheFileName(key)
+
 	if err != nil {
 		return err
 	}
