@@ -21,9 +21,18 @@ import (
 )
 
 type builder struct {
+	core
 	buffer buffers.Buffer
 	model  *models.ModelInfo
 	args   []any
+	quoter byte
+}
+
+func (b *builder) quote(name string) {
+	b.writeByte(b.quoter)
+	b.writeString(name)
+	b.writeByte(b.quoter)
+
 }
 
 func (b *builder) space() {

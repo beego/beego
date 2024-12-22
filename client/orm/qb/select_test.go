@@ -21,16 +21,11 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/beego/beego/v2/client/orm"
 	"github.com/beego/beego/v2/client/orm/qb/errs"
 )
 
 func TestSelector_RawAndWhereMap(t *testing.T) {
-	err := orm.RegisterDataBase("default", "sqlite3", "")
-	if err != nil {
-		return
-	}
-	db := orm.NewOrm()
+	db := memoryDB()
 	testCase := []struct {
 		name      string
 		q         QueryBuilder
@@ -88,11 +83,7 @@ func TestSelector_RawAndWhereMap(t *testing.T) {
 }
 
 func TestSelector_Build(t *testing.T) {
-	err := orm.RegisterDataBase("default", "sqlite3", "")
-	if err != nil {
-		return
-	}
-	db := orm.NewOrm()
+	db := memoryDB()
 	testCase := []struct {
 		name      string
 		q         QueryBuilder
@@ -123,17 +114,17 @@ func TestSelector_Build(t *testing.T) {
 			},
 		}, {
 			name: "test_db",
-			q:    NewSelector[TestModel](db).From("`test_db`.`db_model`"),
+			q:    NewSelector[TestModel](db).From("db_model"),
 			wantQuery: &Query{
-				SQL:  "SELECT * FROM `test_db`.`db_model`;",
+				SQL:  "SELECT * FROM `db_model`;",
 				Args: nil,
 			},
 		}, {
 			name: "single and simple predicate",
-			q: NewSelector[TestModel](db).From("`test_model_t`").
+			q: NewSelector[TestModel](db).From("test_model_t").
 				Where(C("Id").EQ(1)),
 			wantQuery: &Query{
-				SQL:  "SELECT * FROM `test_model_t` WHERE `Id` = ?;",
+				SQL:  "SELECT * FROM `test_model_t` WHERE `id` = ?;",
 				Args: []any{1},
 			},
 		},
@@ -142,7 +133,7 @@ func TestSelector_Build(t *testing.T) {
 			q: NewSelector[TestModel](db).
 				Where(C("Age").GT(18), C("Age").LT(35)),
 			wantQuery: &Query{
-				SQL:  "SELECT * FROM `test_model` WHERE (`Age` > ?) AND (`Age` < ?);",
+				SQL:  "SELECT * FROM `test_model` WHERE (`age` > ?) AND (`age` < ?);",
 				Args: []any{18, 35},
 			},
 		},
@@ -151,7 +142,7 @@ func TestSelector_Build(t *testing.T) {
 			q: NewSelector[TestModel](db).
 				Where(C("Age").GT(18).And(C("Age").LT(35))),
 			wantQuery: &Query{
-				SQL:  "SELECT * FROM `test_model` WHERE (`Age` > ?) AND (`Age` < ?);",
+				SQL:  "SELECT * FROM `test_model` WHERE (`age` > ?) AND (`age` < ?);",
 				Args: []any{18, 35},
 			},
 		},
@@ -160,7 +151,7 @@ func TestSelector_Build(t *testing.T) {
 			q: NewSelector[TestModel](db).
 				Where(C("Age").GT(18).Or(C("Age").LT(35))),
 			wantQuery: &Query{
-				SQL:  "SELECT * FROM `test_model` WHERE (`Age` > ?) OR (`Age` < ?);",
+				SQL:  "SELECT * FROM `test_model` WHERE (`age` > ?) OR (`age` < ?);",
 				Args: []any{18, 35},
 			},
 		},
@@ -169,7 +160,7 @@ func TestSelector_Build(t *testing.T) {
 			q:    NewSelector[TestModel](db).Where(Not(C("Age").GT(18))),
 			wantQuery: &Query{
 				// There are two spaces before NOT because we did not perform any special processing on NOT
-				SQL:  "SELECT * FROM `test_model` WHERE  NOT (`Age` > ?);",
+				SQL:  "SELECT * FROM `test_model` WHERE  NOT (`age` > ?);",
 				Args: []any{18},
 			},
 		},
@@ -188,11 +179,7 @@ func TestSelector_Build(t *testing.T) {
 }
 
 func TestSelector_OffsetLimit(t *testing.T) {
-	err := orm.RegisterDataBase("default", "sqlite3", "")
-	if err != nil {
-		return
-	}
-	db := orm.NewOrm()
+	db := memoryDB()
 	testCases := []struct {
 		name      string
 		q         QueryBuilder
@@ -238,11 +225,7 @@ func TestSelector_OffsetLimit(t *testing.T) {
 }
 
 func TestSelector_OrderBy(t *testing.T) {
-	err := orm.RegisterDataBase("default", "sqlite3", "")
-	if err != nil {
-		return
-	}
-	db := orm.NewOrm()
+	db := memoryDB()
 	testCases := []struct {
 		name      string
 		q         QueryBuilder
@@ -310,11 +293,7 @@ func TestSelector_OrderBy(t *testing.T) {
 }
 
 func TestSelector_Select(t *testing.T) {
-	err := orm.RegisterDataBase("default", "sqlite3", "")
-	if err != nil {
-		return
-	}
-	db := orm.NewOrm()
+	db := memoryDB()
 	testCases := []struct {
 		name      string
 		q         QueryBuilder

@@ -31,3 +31,14 @@ func NewErrUnknownField(fd string) error {
 func NewErrUnsupportedExpressionType(exp any) error {
 	return fmt.Errorf("orm: Unsupported expression %v", exp)
 }
+
+// NewUnsupportedDriverError 不支持驱动类型
+func NewUnsupportedDriverError(driver string) error {
+	return fmt.Errorf("orm: 不支持driver类型 %s", driver)
+}
+
+// NewErrFailToRollbackTx returns an error message that the transaction failed to start
+func NewErrFailToRollbackTx(bizErr error, rbErr error, panicked bool) error {
+	return fmt.Errorf("orm: 回滚事务失败, 业务错误 %w, 回滚错误 %s, panic: %t",
+		bizErr, rbErr.Error(), panicked)
+}

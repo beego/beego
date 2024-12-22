@@ -99,6 +99,22 @@ func (ac *_dbCache) get(name string) (al *alias, ok bool) {
 	return
 }
 
+func (ac *_dbCache) getORSet(aliasName, driverName string, db *sql.DB, params ...DBOption) (al *alias, err error) {
+	ac.mux.RLock()
+	al, ok := ac.cache[aliasName]
+	ac.mux.RUnlock()
+	if !ok {
+		ac.mux.Lock()
+		defer ac.mux.Unlock()
+		al, err = newAliasWithDb(aliasName, driverName, db, params...)
+		if err != nil {
+			return
+		}
+		ac.cache[aliasName] = al
+	}
+	return
+}
+
 // get default alias.
 func (ac *_dbCache) getDefault() (al *alias) {
 	al, _ = ac.get("default")
@@ -371,6 +387,15 @@ func addAliasWthDB(aliasName, driverName string, db *sql.DB, params ...DBOption)
 	return al, nil
 }
 
+func GetORSetAliasWthDB(aliasName, driverName string, db *sql.DB, params ...DBOption) (*alias, error) {
+	al, err := dataBaseCache.getORSet(aliasName, driverName, db, params...)
+	if err != nil {
+		return nil, err
+	}
+
+	return al, nil
+}
+
 func newAliasWithDb(aliasName, driverName string, db *sql.DB, params ...DBOption) (*alias, error) {
 	al := &alias{}
 	al.DB = &DB{
@@ -478,6 +503,38 @@ func RegisterDataBase(aliasName, driverName, dataSource string, params ...DBOpti
 	}
 
 	al.DataSource = dataSource
+
+end:
+	if err != nil {
+		if db != nil {
+			db.Close()
+		}
+		DebugLog.Println(err.Error())
+	}
+
+	return err
+}
+
+func RegisterDB(aliasName, driverName, dataSource string, params ...DBOption) error {
+	var (
+		err error
+		db  *sql.DB
+		al  *alias
+	)
+	db, err = sql.Open(driverName, dataSource)
+	if err != nil {
+		err = fmt.Errorf("Register db `%s`, %s", aliasName, err.Error())
+		goto end
+	}
+
+	al, err = GetORSetAliasWthDB(aliasName, driverName, db, params...)
+	if err != nil {
+		goto end
+	}
+
+	if al.DataSource != dataSource {
+		al.DataSource = dataSource
+	}
 
 end:
 	if err != nil {
