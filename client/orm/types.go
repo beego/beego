@@ -270,6 +270,8 @@ type TxOrmer interface {
 }
 
 // Inserter insert prepared statement
+//
+//go:generate mockgen -source=/Users/stone/go_project/beego/beego/client/orm/types.go -package=ormmocks -destination=/Users/stone/go_project/beego/beego/client/orm/qb/mocks/orm.mock.go
 type Inserter interface {
 	Insert(interface{}) (int64, error)
 	InsertWithCtx(context.Context, interface{}) (int64, error)

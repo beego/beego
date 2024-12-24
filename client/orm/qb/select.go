@@ -21,9 +21,6 @@ import (
 
 	"github.com/beego/beego/v2/client/orm/internal/buffers"
 
-	"github.com/beego/beego/v2/client/orm"
-
-	"github.com/beego/beego/v2/client/orm/internal/models"
 	"github.com/beego/beego/v2/client/orm/qb/errs"
 )
 
@@ -32,24 +29,25 @@ var _ QueryBuilder = &Selector[any]{}
 // The Selector is used to construct a SELECT statement
 type Selector[T any] struct {
 	builder
-	orderBy   []Column
-	where     []Predicate
-	offset    int
-	limit     int
-	columns   []Selectable
-	tableName string
-	db        orm.Ormer
+	orderBy []Column
+	where   []Predicate
+	offset  int
+	limit   int
+	columns []Selectable
+	table   interface{}
+	db      Session
 	// allow users to specify the registry
-	registry *models.ModelCache
 }
 
-func NewSelector[T any](db orm.Ormer) *Selector[T] {
+func NewSelector[T any](db Session) *Selector[T] {
+	c := db.getCore()
 	return &Selector[T]{
 		db: db,
 		builder: builder{
+			core:   c,
 			buffer: buffers.Get(),
+			quoter: c.dialect.quoter(),
 		},
-		registry: models.DefaultModelCache,
 	}
 }
 
@@ -68,7 +66,7 @@ func (s *Selector[T]) Build() (*Query, error) {
 		return nil, err
 	}
 	s.writeString(" FROM ")
-	s.buildTable()
+	s.buildTable(s.table)
 	if len(s.where) > 0 {
 		s.writeString(" WHERE ")
 		err = s.buildPredicates(s.where)
@@ -103,23 +101,26 @@ func (s *Selector[T]) Build() (*Query, error) {
 	}, nil
 }
 
-func (s *Selector[T]) buildTable() {
-	if s.tableName != "" {
-		s.writeByte('`')
-		s.writeString(s.tableName)
-		s.writeByte('`')
-	} else {
-		if s.model.Table == "" {
-			var t T
-			typ := reflect.TypeOf(t)
-			s.writeByte('`')
-			s.writeString(typ.Name())
-			s.writeByte('`')
+func (s *Selector[T]) buildTable(tableEntity interface{}) {
+	switch table := tableEntity.(type) {
+	case string:
+		if table == "" {
+			s.buildTableByModel()
 		} else {
-			s.writeByte('`')
-			s.writeString(s.model.Table)
-			s.writeByte('`')
+			s.quote(table)
 		}
+	default:
+		s.buildTableByModel()
+	}
+}
+
+func (s *Selector[T]) buildTableByModel() {
+	if s.model.Table == "" {
+		var t T
+		typ := reflect.TypeOf(t)
+		s.quote(typ.Name())
+	} else {
+		s.quote(s.model.Table)
 	}
 }
 
@@ -131,13 +132,11 @@ func (s *Selector[T]) addArgs(args ...any) {
 }
 
 func (s *Selector[T]) buildColumn(c Column, useAlias bool) error {
-	s.writeByte('`')
 	fd, ok := s.model.Fields.Fields[c.name]
 	if !ok {
 		return errs.NewErrUnknownField(c.name)
 	}
-	s.writeString(fd.Column)
-	s.writeByte('`')
+	s.quote(fd.Column)
 	if c.order != "" {
 		s.writeString(c.order)
 	}
@@ -179,21 +178,21 @@ func (s *Selector[T]) buildColumns() error {
 
 func (s *Selector[T]) buildAggregate(a Aggregate, useAlias bool) error {
 	s.writeString(a.fn)
-	s.writeString("(`")
+	s.writeString("(")
 	fd, ok := s.model.Fields.Fields[a.arg]
 	if !ok {
 		return errs.NewErrUnknownField(a.arg)
 	}
-	s.writeString(fd.Column)
-	s.writeString("`)")
+	s.quote(fd.Column)
+	s.writeString(")")
 	if useAlias {
 		s.buildAs(a.alias)
 	}
 	return nil
 }
 
-func (s *Selector[T]) From(table string) *Selector[T] {
-	s.tableName = table
+func (s *Selector[T]) From(table any) *Selector[T] {
+	s.table = table
 	return s
 }
 
@@ -229,9 +228,7 @@ type Selectable interface {
 func (s *Selector[T]) buildAs(alias string) {
 	if alias != "" {
 		s.writeString(" AS ")
-		s.writeByte('`')
-		s.writeString(alias)
-		s.writeByte('`')
+		s.quote(alias)
 	}
 }
 
@@ -241,7 +238,7 @@ func (s *Selector[T]) Get(ctx context.Context) (*T, error) {
 		return nil, err
 	}
 	t := new(T)
-	err = s.db.ReadRaw(ctx, t, q.SQL, q.Args...)
+	err = s.db.queryContext(ctx, t, q.SQL, q.Args...)
 	return t, nil
 }
 
