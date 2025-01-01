@@ -15,8 +15,8 @@
 package web
 
 import (
-	"context"
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"

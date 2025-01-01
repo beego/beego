@@ -50,8 +50,9 @@ func parseFormToStruct(form url.Values, objT reflect.Type, objV reflect.Value) e
 			continue
 		}
 
-		value, ok := formValue(tag, form, fieldT)
-		if !ok {
+		value, ok := formFirstValue(tag, form, fieldT)
+
+		if !ok && fieldT.Type.Kind() != reflect.Slice {
 			continue
 		}
 
@@ -168,11 +169,12 @@ func formTagName(fieldT reflect.StructField) (string, bool) {
 	return tag, true
 }
 
-func formValue(tag string, form url.Values, fieldT reflect.StructField) (string, bool) {
+func formFirstValue(tag string, form url.Values, fieldT reflect.StructField) (string, bool) {
 	formValues := form[tag]
 	if len(formValues) == 0 {
 		defaultValue := fieldT.Tag.Get("default")
 		return defaultValue, defaultValue != ""
 	}
-	return formValues[0], true
+	val := formValues[0]
+	return val, val != ""
 }

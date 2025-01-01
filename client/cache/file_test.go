@@ -17,10 +17,11 @@ package cache
 import (
 	"context"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestFileCacheStartAndGC(t *testing.T) {

@@ -22,7 +22,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestFormValue(t *testing.T) {
+func TestFormFirstValue(t *testing.T) {
 	typ := reflect.TypeOf(TestStruct{})
 	defField, _ := typ.FieldByName("DefaultField")
 	noDefField, _ := typ.FieldByName("NoDefaultField")
@@ -54,7 +54,17 @@ func TestFormValue(t *testing.T) {
 				"defaultField": {"", "bcd"},
 			},
 			wantRes: "",
-			wantOk:  true,
+			wantOk:  false,
+		},
+		{
+			name:  "empty default value",
+			tag:   "defaultField",
+			field: defField,
+			form: map[string][]string{
+				"defaultField": {"", "bcd"},
+			},
+			wantRes: "",
+			wantOk:  false,
 		},
 		{
 			name:    "use default value",
@@ -75,7 +85,7 @@ func TestFormValue(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			val, ok := formValue(tc.tag, tc.form, tc.field)
+			val, ok := formFirstValue(tc.tag, tc.form, tc.field)
 			assert.Equal(t, tc.wantRes, val)
 			assert.Equal(t, tc.wantOk, ok)
 		})
