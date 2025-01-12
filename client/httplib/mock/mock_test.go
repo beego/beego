@@ -42,7 +42,7 @@ func TestStartMock(t *testing.T) {
 	assert.Equal(t, expectedResp, resp)
 }
 
-// TestStartMock_Isolation Test StartMock that
+// TestStartMockIsolation Test StartMock that
 // mock only work for this request
 func TestStartMockIsolation(t *testing.T) {
 	// httplib.defaultSetting.FilterChains = []httplib.FilterChain{mockFilter.FilterChain}
