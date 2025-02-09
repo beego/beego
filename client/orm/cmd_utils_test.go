@@ -12,7 +12,7 @@ func Test_getColumnTyp(t *testing.T) {
 	testCases := []struct {
 		name string
 		fi   *models.FieldInfo
-		al   *alias
+		al   *DB
 
 		wantCol string
 	}{
@@ -23,7 +23,7 @@ func Test_getColumnTyp(t *testing.T) {
 				FieldType: TypePositiveIntegerField,
 				Column:    "my_col",
 			},
-			al: &alias{
+			al: &DB{
 				DbBaser: newdbBasePostgres(),
 			},
 			wantCol: `bigint CHECK("my_col" >= 0)`,

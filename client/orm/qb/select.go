@@ -17,6 +17,8 @@ package qb
 import (
 	"context"
 	"errors"
+	"github.com/beego/beego/v2/client/orm"
+	"github.com/beego/beego/v2/client/orm/internal/models"
 	"reflect"
 
 	"github.com/beego/beego/v2/client/orm/internal/buffers"
@@ -35,19 +37,18 @@ type Selector[T any] struct {
 	limit   int
 	columns []Selectable
 	table   interface{}
-	db      Session
+	db      orm.Ormer
 	// allow users to specify the registry
+	registry *models.ModelCache
 }
 
-func NewSelector[T any](db Session) *Selector[T] {
-	c := db.getCore()
+func NewSelector[T any](db orm.Ormer) *Selector[T] {
 	return &Selector[T]{
 		db: db,
 		builder: builder{
-			core:   c,
 			buffer: buffers.Get(),
-			quoter: c.dialect.quoter(),
 		},
+		registry: models.DefaultModelCache,
 	}
 }
 
@@ -238,7 +239,7 @@ func (s *Selector[T]) Get(ctx context.Context) (*T, error) {
 		return nil, err
 	}
 	t := new(T)
-	err = s.db.queryContext(ctx, t, q.SQL, q.Args...)
+	err = s.db.ReadRaw(ctx, t, q.SQL, q.Args...)
 	return t, nil
 }
 

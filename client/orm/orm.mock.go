@@ -5123,7 +5123,7 @@ func (mr *MockdbBaserMockRecorder) InsertMulti(arg0, arg1, arg2, arg3, arg4, arg
 }
 
 // InsertOrUpdate mocks base method.
-func (m *MockdbBaser) InsertOrUpdate(arg0 context.Context, arg1 dbQuerier, arg2 *models.ModelInfo, arg3 reflect.Value, arg4 *alias, arg5 ...string) (int64, error) {
+func (m *MockdbBaser) InsertOrUpdate(arg0 context.Context, arg1 dbQuerier, arg2 *models.ModelInfo, arg3 reflect.Value, arg4 *DB, arg5 ...string) (int64, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1, arg2, arg3, arg4}
 	for _, a := range arg5 {

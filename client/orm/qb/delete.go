@@ -16,6 +16,7 @@ package qb
 
 import (
 	"context"
+	"github.com/beego/beego/v2/client/orm"
 
 	"github.com/beego/beego/v2/client/orm/internal/buffers"
 	"github.com/beego/beego/v2/client/orm/internal/models"
@@ -27,19 +28,18 @@ var _ QueryBuilder = &Deleter[any]{}
 type Deleter[T any] struct {
 	builder
 	table interface{}
-	db    Session
 	where []Predicate
+	db    orm.Ormer
+	// allow users to specify the registry
+	registry *models.ModelCache
 }
 
 // NewDeleter starts building a Delete query
-func NewDeleter[T any](db Session) *Deleter[T] {
-	c := db.getCore()
+func NewDeleter[T any](db orm.Ormer) *Deleter[T] {
 	return &Deleter[T]{
 		db: db,
 		builder: builder{
-			core:   c,
 			buffer: buffers.Get(),
-			quoter: c.dialect.quoter(),
 		},
 	}
 }
@@ -87,6 +87,6 @@ func (d *Deleter[T]) Exec(ctx context.Context) Result {
 		return Result{err: err}
 	}
 	t := new(T)
-	res, err := d.db.execContext(ctx, t, q.SQL, q.Args...)
+	res, err := d.db.ExecRaw(ctx, t, q.SQL, q.Args...)
 	return Result{res: res, err: err}
 }

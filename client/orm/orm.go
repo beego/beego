@@ -96,7 +96,7 @@ type Params map[string]interface{}
 type ParamsList []interface{}
 
 type ormBase struct {
-	alias *alias
+	alias *DB
 	db    dbQuerier
 }
 
@@ -522,7 +522,7 @@ func (o *ormBase) Driver() Driver {
 // DBStats return sql.DBStats for current database
 func (o *ormBase) DBStats() *sql.DBStats {
 	if o.alias != nil && o.alias.DB != nil {
-		stats := o.alias.DB.DB.Stats()
+		stats := o.alias.DB.Stats()
 		return &stats
 	}
 	return nil
@@ -635,23 +635,23 @@ func NewOrm() Ormer {
 // NewOrmUsingDB create new orm with the name
 func NewOrmUsingDB(aliasName string) Ormer {
 	if al, ok := dataBaseCache.get(aliasName); ok {
-		return newDBWithAlias(al)
+		return newOrmWithDB(al)
 	}
 	panic(fmt.Errorf("<Ormer.Using> unknown db alias name `%s`", aliasName))
 }
 
 // NewOrmWithDB create a new ormer object with specify *sql.DB for query
 func NewOrmWithDB(driverName, aliasName string, db *sql.DB, params ...DBOption) (Ormer, error) {
-	al, err := newAliasWithDb(aliasName, driverName, db, params...)
+	al, err := newDB(aliasName, driverName, db, params...)
 	if err != nil {
 		return nil, err
 	}
 
-	return newDBWithAlias(al), nil
+	return newOrmWithDB(al), nil
 }
 
-func newDBWithAlias(al *alias) Ormer {
-	BootStrapWithAlias(al.Name) // execute only once
+func newOrmWithDB(al *DB) Ormer {
+	BootStrapWithDB(al.Name) // execute only once
 
 	o := new(orm)
 	o.alias = al

@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/beego/beego/v2/client/orm"
 )
 
 func ExampleDB_BeginTx() {
@@ -47,7 +48,11 @@ func ExampleOpen() {
 
 func ExampleNewSelector() {
 	tm := &TestModel{}
-	db := memoryDB()
+	err := orm.RegisterDataBase("default", "sqlite3", "")
+	if err != nil {
+		return
+	}
+	db := orm.NewOrm()
 	query, _ := NewSelector[TestModel](db).From(tm).Build()
 	fmt.Printf("SQL: %s", query.SQL)
 	// Output:
@@ -56,18 +61,13 @@ func ExampleNewSelector() {
 
 func ExampleNewDeleter() {
 	tm := &TestModel{}
-	db := memoryDB()
+	err := orm.RegisterDataBase("default", "sqlite3", "")
+	if err != nil {
+		return
+	}
+	db := orm.NewOrm()
 	query, _ := NewDeleter[TestModel](db).From(tm).Build()
 	fmt.Printf("SQL: %s", query.SQL)
 	// Output:
 	// SQL: DELETE FROM `test_model`;
-}
-
-// memoryDB 返回一个基于内存的 ORM，它使用的是 sqlite3 内存模式。
-func memoryDB() *DB {
-	db, err := Open("sqlite3", "file:test.db?cache=shared&mode=memory")
-	if err != nil {
-		panic(err)
-	}
-	return db
 }

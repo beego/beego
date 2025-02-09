@@ -29,9 +29,9 @@ type builder struct {
 }
 
 func (b *builder) quote(name string) {
-	b.writeByte(b.quoter)
+	b.writeByte('`')
 	b.writeString(name)
-	b.writeByte(b.quoter)
+	b.writeByte('`')
 
 }
 
@@ -69,13 +69,11 @@ func (b *builder) buildExpression(e Expression) error {
 	}
 	switch exp := e.(type) {
 	case Column:
-		b.writeByte('`')
 		fd, ok := b.model.Fields.Fields[exp.name]
 		if !ok {
 			return errs.NewErrUnknownField(exp.name)
 		}
-		b.writeString(fd.Column)
-		b.writeByte('`')
+		b.quote(fd.Column)
 	case value:
 		b.writeByte('?')
 		b.args = append(b.args, exp.val)

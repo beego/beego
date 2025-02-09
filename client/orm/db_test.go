@@ -670,7 +670,7 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 
 		names  []string
 		values []interface{}
-		a      *alias
+		a      *DB
 		args   []string
 
 		wantRes    string
@@ -689,7 +689,7 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 				18,
 				12,
 			},
-			a: &alias{
+			a: &DB{
 				Driver:     DRSqlite,
 				DriverName: "sqlite3",
 			},
@@ -717,7 +717,7 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 				18,
 				12,
 			},
-			a: &alias{
+			a: &DB{
 				Driver:     DRMySQL,
 				DriverName: "mysql",
 			},
@@ -746,7 +746,7 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 				18,
 				12,
 			},
-			a: &alias{
+			a: &DB{
 				Driver:     DRMySQL,
 				DriverName: "mysql",
 			},
@@ -773,7 +773,7 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 				18,
 				12,
 			},
-			a: &alias{
+			a: &DB{
 				Driver:     DRPostgres,
 				DriverName: "postgres",
 			},
@@ -804,7 +804,7 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 				18,
 				12,
 			},
-			a: &alias{
+			a: &DB{
 				Driver:     DRPostgres,
 				DriverName: "postgres",
 			},
@@ -828,7 +828,7 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 				"test_name",
 				18,
 			},
-			a: &alias{
+			a: &DB{
 				Driver:     DRPostgres,
 				DriverName: "postgres",
 			},
@@ -856,7 +856,7 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 				"test_name",
 				12,
 			},
-			a: &alias{
+			a: &DB{
 				Driver:     DRPostgres,
 				DriverName: "postgres",
 			},
