@@ -25,7 +25,7 @@ import (
 )
 
 // Get table alias.
-func getDbAlias(name string) *alias {
+func getDB(name string) *DB {
 	if al, ok := dataBaseCache.get(name); ok {
 		return al
 	}

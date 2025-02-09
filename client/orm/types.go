@@ -270,6 +270,8 @@ type TxOrmer interface {
 }
 
 // Inserter insert prepared statement
+//
+//go:generate mockgen -source=/Users/stone/go_project/beego/beego/client/orm/types.go -package=ormmocks -destination=/Users/stone/go_project/beego/beego/client/orm/qb/mocks/orm.mock.go
 type Inserter interface {
 	Insert(interface{}) (int64, error)
 	InsertWithCtx(context.Context, interface{}) (int64, error)
@@ -634,7 +636,7 @@ type dbBaser interface {
 
 	ExecRaw(ctx context.Context, q dbQuerier, query string, args ...any) (sql.Result, error)
 	Insert(context.Context, dbQuerier, *models.ModelInfo, reflect.Value, *time.Location) (int64, error)
-	InsertOrUpdate(context.Context, dbQuerier, *models.ModelInfo, reflect.Value, *alias, ...string) (int64, error)
+	InsertOrUpdate(context.Context, dbQuerier, *models.ModelInfo, reflect.Value, *DB, ...string) (int64, error)
 	InsertMulti(context.Context, dbQuerier, *models.ModelInfo, reflect.Value, int, *time.Location) (int64, error)
 	InsertValue(context.Context, dbQuerier, *models.ModelInfo, bool, []string, []interface{}) (int64, error)
 	InsertStmt(context.Context, stmtQuerier, *models.ModelInfo, reflect.Value, *time.Location) (int64, error)

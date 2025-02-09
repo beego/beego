@@ -15,11 +15,10 @@
 package qb
 
 import (
+	"github.com/beego/beego/v2/client/orm"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/beego/beego/v2/client/orm"
 )
 
 func TestDeleter_Build(t *testing.T) {
@@ -28,6 +27,7 @@ func TestDeleter_Build(t *testing.T) {
 		return
 	}
 	db := orm.NewOrm()
+
 	testCases := []struct {
 		name      string
 		builder   QueryBuilder

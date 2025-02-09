@@ -1,6 +1,6 @@
 module github.com/beego/beego/v2
 
-go 1.20
+go 1.22
 
 require (
 	github.com/DATA-DOG/go-sqlmock v1.5.1
@@ -37,6 +37,7 @@ require (
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.11.2
 	go.opentelemetry.io/otel/sdk v1.11.2
 	go.opentelemetry.io/otel/trace v1.11.2
+	go.uber.org/mock v0.5.0
 	golang.org/x/crypto v0.24.0
 	golang.org/x/sync v0.7.0
 	google.golang.org/grpc v1.63.0

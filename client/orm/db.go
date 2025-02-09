@@ -557,7 +557,7 @@ func (d *dbBase) InsertValueSQL(names []string, values []interface{}, isMulti bo
 // InsertOrUpdate a row
 // If your primary key or unique column conflict will update
 // If no will insert
-func (d *dbBase) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *models.ModelInfo, ind reflect.Value, a *alias, args ...string) (int64, error) {
+func (d *dbBase) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *models.ModelInfo, ind reflect.Value, a *DB, args ...string) (int64, error) {
 
 	names := make([]string, 0, len(mi.Fields.DBcols)-1)
 
@@ -595,7 +595,7 @@ func (d *dbBase) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *models.Mod
 	return id, err
 }
 
-func (d *dbBase) InsertOrUpdateSQL(names []string, values *[]interface{}, mi *models.ModelInfo, a *alias, args ...string) (string, error) {
+func (d *dbBase) InsertOrUpdateSQL(names []string, values *[]interface{}, mi *models.ModelInfo, a *DB, args ...string) (string, error) {
 
 	args0 := ""
 

@@ -35,7 +35,7 @@ func NewLog(out io.Writer) *logs.Log {
 // LogFunc costomer log func
 var LogFunc func(query map[string]interface{})
 
-func debugLogQueies(alias *alias, operation, query string, t time.Time, err error, args ...interface{}) {
+func debugLogQueies(alias *DB, operation, query string, t time.Time, err error, args ...interface{}) {
 	logMap := make(map[string]interface{})
 	sub := time.Since(t) / 1e5
 	elsp := float64(int(sub)) / 10.0
@@ -72,7 +72,7 @@ func debugLogQueies(alias *alias, operation, query string, t time.Time, err erro
 // statement query logger struct.
 // if dev mode, use stmtQueryLog, or use stmtQuerier.
 type stmtQueryLog struct {
-	alias *alias
+	alias *DB
 	query string
 	stmt  stmtQuerier
 }
@@ -119,7 +119,7 @@ func (d *stmtQueryLog) QueryRowContext(ctx context.Context, args ...interface{})
 	return res
 }
 
-func newStmtQueryLog(alias *alias, stmt stmtQuerier, query string) stmtQuerier {
+func newStmtQueryLog(alias *DB, stmt stmtQuerier, query string) stmtQuerier {
 	d := new(stmtQueryLog)
 	d.stmt = stmt
 	d.alias = alias
@@ -130,7 +130,7 @@ func newStmtQueryLog(alias *alias, stmt stmtQuerier, query string) stmtQuerier {
 // database query logger struct.
 // if dev mode, use dbQueryLog, or use dbQuerier.
 type dbQueryLog struct {
-	alias *alias
+	alias *DB
 	db    dbQuerier
 	tx    txer
 	txe   txEnder
@@ -222,7 +222,7 @@ func (d *dbQueryLog) SetDB(db dbQuerier) {
 	d.db = db
 }
 
-func newDbQueryLog(alias *alias, db dbQuerier) dbQuerier {
+func newDbQueryLog(alias *DB, db dbQuerier) dbQuerier {
 	d := new(dbQueryLog)
 	d.alias = alias
 	d.db = db

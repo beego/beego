@@ -21,9 +21,18 @@ import (
 )
 
 type builder struct {
+	core
 	buffer buffers.Buffer
 	model  *models.ModelInfo
 	args   []any
+	quoter byte
+}
+
+func (b *builder) quote(name string) {
+	b.writeByte('`')
+	b.writeString(name)
+	b.writeByte('`')
+
 }
 
 func (b *builder) space() {
@@ -60,13 +69,11 @@ func (b *builder) buildExpression(e Expression) error {
 	}
 	switch exp := e.(type) {
 	case Column:
-		b.writeByte('`')
 		fd, ok := b.model.Fields.Fields[exp.name]
 		if !ok {
 			return errs.NewErrUnknownField(exp.name)
 		}
-		b.writeString(fd.Column)
-		b.writeByte('`')
+		b.quote(fd.Column)
 	case value:
 		b.writeByte('?')
 		b.args = append(b.args, exp.val)
