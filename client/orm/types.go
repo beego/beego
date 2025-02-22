@@ -634,7 +634,7 @@ type dbBaser interface {
 
 	ExecRaw(ctx context.Context, q dbQuerier, query string, args ...any) (sql.Result, error)
 	Insert(context.Context, dbQuerier, *models.ModelInfo, reflect.Value, *time.Location) (int64, error)
-	InsertOrUpdate(context.Context, dbQuerier, *models.ModelInfo, reflect.Value, *alias, ...string) (int64, error)
+	InsertOrUpdate(context.Context, dbQuerier, *models.ModelInfo, reflect.Value, *DB, ...string) (int64, error)
 	InsertMulti(context.Context, dbQuerier, *models.ModelInfo, reflect.Value, int, *time.Location) (int64, error)
 	InsertValue(context.Context, dbQuerier, *models.ModelInfo, bool, []string, []interface{}) (int64, error)
 	InsertStmt(context.Context, stmtQuerier, *models.ModelInfo, reflect.Value, *time.Location) (int64, error)
