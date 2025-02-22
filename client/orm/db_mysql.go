@@ -108,7 +108,7 @@ func (d *dbBaseMysql) IndexExists(ctx context.Context, db dbQuerier, table strin
 // If your primary key or unique column conflict will update
 // If no will insert
 // Add "`" for mysql sql building
-func (d *dbBaseMysql) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *models.ModelInfo, ind reflect.Value, a *alias, args ...string) (int64, error) {
+func (d *dbBaseMysql) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *models.ModelInfo, ind reflect.Value, a *DB, args ...string) (int64, error) {
 	var iouStr string
 	argsMap := map[string]string{}
 

@@ -79,7 +79,7 @@ func RunCommand() {
 
 // sync database struct command interface.
 type commandSyncDb struct {
-	al        *alias
+	al        *DB
 	force     bool
 	verbose   bool
 	noInfo    bool
@@ -96,7 +96,7 @@ func (d *commandSyncDb) Parse(args []string) {
 	flagSet.BoolVar(&d.verbose, "v", false, "verbose info")
 	flagSet.Parse(args)
 
-	d.al = getDbAlias(name)
+	d.al = getDB(name)
 }
 
 // Run orm line command.
@@ -246,7 +246,7 @@ func (d *commandSyncDb) Run() error {
 
 // database creation commander interface implement.
 type commandSQLAll struct {
-	al *alias
+	al *DB
 }
 
 // Parse orm command line arguments.
@@ -257,7 +257,7 @@ func (d *commandSQLAll) Parse(args []string) {
 	flagSet.StringVar(&name, "db", "default", "DataBase alias name")
 	flagSet.Parse(args)
 
-	d.al = getDbAlias(name)
+	d.al = getDB(name)
 }
 
 // Run orm line command.
@@ -292,7 +292,7 @@ func init() {
 func RunSyncdb(name string, force bool, verbose bool) error {
 	BootStrap()
 
-	al := getDbAlias(name)
+	al := getDB(name)
 	cmd := new(commandSyncDb)
 	cmd.al = al
 	cmd.force = force
