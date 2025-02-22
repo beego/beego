@@ -56,7 +56,7 @@ func TestGetDbCreateSQLWithComment(t *testing.T) {
 		wantSQL string
 		wantErr error
 	}
-	al := getDbAlias("default")
+	al := getDB("default")
 	var testCases []TestCase
 	switch al.Driver {
 	case DRMySQL:
