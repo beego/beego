@@ -35,7 +35,7 @@ func bindataRead(data []byte, name string) ([]byte, error) {
 		return nil, fmt.Errorf("Read %q: %v", name, err)
 	}
 	if clErr != nil {
-		return nil, err
+		return nil, clErr
 	}
 
 	return buf.Bytes(), nil
