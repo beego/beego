@@ -17,6 +17,7 @@ package toml
 import (
 	"os"
 	"strings"
+	"syscall"
 
 	"github.com/pelletier/go-toml"
 
@@ -307,7 +308,7 @@ func (c *configContainer) OnChange(key string, fn func(value string)) {
 // SaveConfigFile create or override the file
 func (c *configContainer) SaveConfigFile(filename string) error {
 	// Write configuration file by filename.
-	f, err := os.Create(filename)
+	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|syscall.O_NOFOLLOW, 0600)
 	if err != nil {
 		return err
 	}
