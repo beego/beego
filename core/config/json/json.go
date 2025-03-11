@@ -23,6 +23,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 
 	"github.com/mitchellh/mapstructure"
 
@@ -245,7 +246,7 @@ func (c *JSONConfigContainer) GetSection(section string) (map[string]string, err
 // SaveConfigFile save the config into file
 func (c *JSONConfigContainer) SaveConfigFile(filename string) (err error) {
 	// Write configuration file by filename.
-	f, err := os.Create(filename)
+	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|syscall.O_NOFOLLOW, 0600)
 	if err != nil {
 		return err
 	}
