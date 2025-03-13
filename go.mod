@@ -13,7 +13,7 @@ require (
 	github.com/elazarl/go-bindata-assetfs v1.0.1
 	github.com/go-kit/kit v0.12.1-0.20220826005032-a7ba4fa4e289
 	github.com/go-kit/log v0.2.1
-	github.com/go-sql-driver/mysql v1.8.1
+	github.com/go-sql-driver/mysql v1.9.0
 	github.com/gogo/protobuf v1.3.2
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/google/uuid v1.6.0
