@@ -87,7 +87,7 @@ func (d *dbBaseOracle) ShowTablesQuery() string {
 
 // Oracle
 func (d *dbBaseOracle) ShowColumnsQuery(table string) string {
-	return fmt.Sprintf("SELECT COLUMN_NAME FROM ALL_TAB_COLUMNS "+
+	return fmt.Sprintf("SELECT COLUMN_NAME, DATA_TYPE, NULLABLE FROM ALL_TAB_COLUMNS "+
 		"WHERE TABLE_NAME ='%s'", strings.ToUpper(table))
 }
 
