@@ -18,6 +18,7 @@ import (
 	"html/template"
 	"net/url"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 )
@@ -581,5 +582,46 @@ func Test_lt(t *testing.T) {
 				t.Errorf("a:%v(%T) lt b:%v(%T) should be %v", test.a, test.a, test.b, test.b, test.result)
 			}
 		}
+	}
+}
+
+func TestRenderFormSecurity(t *testing.T) {
+	type UserProfile struct {
+		DisplayName string `form:"displayName,text,Name:"`
+		Bio         string `form:",textarea"`
+	}
+
+	// Test case 1: Test proper escaping of special characters in attributes
+	specialCharsProfile := UserProfile{
+		DisplayName: `Special " ' < > & Characters`,
+		Bio:         "Normal text content",
+	}
+
+	output := string(RenderForm(&specialCharsProfile))
+
+	// Verify the output has all special characters properly escaped
+	if strings.Contains(output, `"Special "`) {
+		t.Errorf("Quotation mark not properly escaped in attribute")
+	}
+
+	if !strings.Contains(output, `value="Special`) {
+		t.Errorf("Expected escaped attribute value not found")
+	}
+
+	// Test case 2: Test proper escaping of HTML-like content
+	htmlContentProfile := UserProfile{
+		DisplayName: "Normal Name",
+		Bio:         `<div>Sample HTML content</div>`,
+	}
+
+	output = string(RenderForm(&htmlContentProfile))
+
+	// Verify the output has HTML content properly escaped
+	if strings.Contains(output, `<div>`) {
+		t.Errorf("HTML tags not properly escaped in content")
+	}
+
+	if !strings.Contains(output, `&lt;div&gt;`) {
+		t.Errorf("Expected escaped HTML not found")
 	}
 }
