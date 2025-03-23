@@ -231,7 +231,7 @@ func TestRegisterModels(_ *testing.T) {
 	BootStrap()
 
 	dORM = NewOrm()
-	dDbBaser = getDB("default").DbBaser
+	dDbBaser = getDB("default").dbBaser
 }
 
 func TestModelSyntax(t *testing.T) {

@@ -58,7 +58,7 @@ func TestGetDbCreateSQLWithComment(t *testing.T) {
 	}
 	al := getDB("default")
 	var testCases []TestCase
-	switch al.Driver {
+	switch al.driver {
 	case DRMySQL:
 		testCases = append(testCases, TestCase{name: "model with comments for MySQL", model: &ModelWithComments{}, wantSQL: "-- --------------------------------------------------\n--  Table Structure for `github.com/beego/beego/v2/client/orm.ModelWithComments`\n-- --------------------------------------------------\nCREATE TABLE IF NOT EXISTS `model_with_comments` (\n    `id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY COMMENT 'user id',\n    `user_name` varchar(30) NOT NULL DEFAULT ''  UNIQUE COMMENT 'user name',\n    `email` varchar(100) NOT NULL DEFAULT ''  COMMENT 'email',\n    `password` varchar(100) NOT NULL DEFAULT ''  COMMENT 'password'\n) ENGINE=INNODB;", wantErr: nil})
 		testCases = append(testCases, TestCase{name: "model without comments for MySQL", model: &ModelWithoutComments{}, wantSQL: "-- --------------------------------------------------\n--  Table Structure for `github.com/beego/beego/v2/client/orm.ModelWithoutComments`\n-- --------------------------------------------------\nCREATE TABLE IF NOT EXISTS `model_without_comments` (\n    `id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY,\n    `user_name` varchar(30) NOT NULL DEFAULT ''  UNIQUE,\n    `email` varchar(100) NOT NULL DEFAULT '' ,\n    `password` varchar(100) NOT NULL DEFAULT '' \n) ENGINE=INNODB;", wantErr: nil})

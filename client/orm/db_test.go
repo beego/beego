@@ -690,8 +690,8 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 				12,
 			},
 			a: &DB{
-				Driver:     DRSqlite,
-				DriverName: "sqlite3",
+				driver:     DRSqlite,
+				driverName: "sqlite3",
 			},
 			args: []string{
 				"`age`=20",
@@ -718,8 +718,8 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 				12,
 			},
 			a: &DB{
-				Driver:     DRMySQL,
-				DriverName: "mysql",
+				driver:     DRMySQL,
+				driverName: "mysql",
 			},
 			args: []string{
 				"`age`=20",
@@ -747,8 +747,8 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 				12,
 			},
 			a: &DB{
-				Driver:     DRMySQL,
-				DriverName: "mysql",
+				driver:     DRMySQL,
+				driverName: "mysql",
 			},
 
 			wantRes: "INSERT INTO `test_tab` (`name`, `age`, `score`) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE `name`=?, `age`=?, `score`=?",
@@ -774,8 +774,8 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 				12,
 			},
 			a: &DB{
-				Driver:     DRPostgres,
-				DriverName: "postgres",
+				driver:     DRPostgres,
+				driverName: "postgres",
 			},
 			args: []string{
 				`"name"`,
@@ -805,8 +805,8 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 				12,
 			},
 			a: &DB{
-				Driver:     DRPostgres,
-				DriverName: "postgres",
+				driver:     DRPostgres,
+				driverName: "postgres",
 			},
 
 			wantErr: errors.New("`postgres` use InsertOrUpdate must have a conflict column"),
@@ -829,8 +829,8 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 				18,
 			},
 			a: &DB{
-				Driver:     DRPostgres,
-				DriverName: "postgres",
+				driver:     DRPostgres,
+				driverName: "postgres",
 			},
 			args: []string{
 				`"name"`,
@@ -857,8 +857,8 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 				12,
 			},
 			a: &DB{
-				Driver:     DRPostgres,
-				DriverName: "postgres",
+				driver:     DRPostgres,
+				driverName: "postgres",
 			},
 			args: []string{
 				`"name"`,

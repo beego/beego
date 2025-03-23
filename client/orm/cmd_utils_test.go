@@ -38,7 +38,7 @@ func Test_getColumnTyp(t *testing.T) {
 				Column:    "my_col",
 			},
 			al: &DB{
-				DbBaser: newdbBasePostgres(),
+				dbBaser: newdbBasePostgres(),
 			},
 			wantCol: `bigint CHECK("my_col" >= 0)`,
 		},

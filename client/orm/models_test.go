@@ -554,7 +554,7 @@ func init() {
 	}
 
 	alias := getDB("default")
-	if alias.Driver == DRMySQL {
-		alias.Engine = "INNODB"
+	if alias.driver == DRMySQL {
+		alias.engine = "INNODB"
 	}
 }

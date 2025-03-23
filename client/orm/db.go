@@ -561,7 +561,7 @@ func (d *dbBase) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *models.Mod
 
 	names := make([]string, 0, len(mi.Fields.DBcols)-1)
 
-	values, _, err := d.collectValues(mi, ind, mi.Fields.DBcols, true, true, &names, a.TZ)
+	values, _, err := d.collectValues(mi, ind, mi.Fields.DBcols, true, true, &names, a.tz)
 	if err != nil {
 		return 0, err
 	}
@@ -599,15 +599,15 @@ func (d *dbBase) InsertOrUpdateSQL(names []string, values *[]interface{}, mi *mo
 
 	args0 := ""
 
-	switch a.Driver {
+	switch a.driver {
 	case DRMySQL:
 	case DRPostgres:
 		if len(args) == 0 {
-			return "", fmt.Errorf("`%s` use InsertOrUpdate must have a conflict column", a.DriverName)
+			return "", fmt.Errorf("`%s` use InsertOrUpdate must have a conflict column", a.driverName)
 		}
 		args0 = strings.ToLower(args[0])
 	default:
-		return "", fmt.Errorf("`%s` nonsupport InsertOrUpdate in beego", a.DriverName)
+		return "", fmt.Errorf("`%s` nonsupport InsertOrUpdate in beego", a.driverName)
 	}
 
 	argsMap := map[string]string{}
@@ -650,7 +650,7 @@ func (d *dbBase) InsertOrUpdateSQL(names []string, values *[]interface{}, mi *mo
 
 	_, _ = buf.WriteString(") ")
 
-	switch a.Driver {
+	switch a.driver {
 	case DRMySQL:
 		_, _ = buf.WriteString("ON DUPLICATE KEY UPDATE ")
 	case DRPostgres:
@@ -671,7 +671,7 @@ func (d *dbBase) InsertOrUpdateSQL(names []string, values *[]interface{}, mi *mo
 			conflitValue = (*values)[i]
 		}
 		if valueStr != "" {
-			switch a.Driver {
+			switch a.driver {
 			case DRMySQL:
 				_, _ = buf.WriteString(v)
 				_, _ = buf.WriteString("=")
