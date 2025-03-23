@@ -29,7 +29,7 @@ func getDbDropSQL(registry *imodels.ModelCache, al *DB) (queries []string, err e
 		return
 	}
 
-	Q := al.DbBaser.TableQuote()
+	Q := al.dbBaser.TableQuote()
 
 	for _, mi := range registry.AllOrdered() {
 		queries = append(queries, fmt.Sprintf(`DROP TABLE IF EXISTS %s%s%s`, Q, mi.Table, Q))
@@ -44,8 +44,8 @@ func getDbCreateSQL(registry *imodels.ModelCache, al *DB) (queries []string, tab
 		return
 	}
 
-	Q := al.DbBaser.TableQuote()
-	T := al.DbBaser.DbTypes()
+	Q := al.dbBaser.TableQuote()
+	T := al.dbBaser.DbTypes()
 	sep := fmt.Sprintf("%s, %s", Q, Q)
 
 	tableIndexes = make(map[string][]dbIndex)
@@ -68,7 +68,7 @@ func getDbCreateSQL(registry *imodels.ModelCache, al *DB) (queries []string, tab
 			if fi.DBType != "" {
 				column += fi.DBType
 			} else if fi.Auto {
-				switch al.Driver {
+				switch al.driver {
 				case DRSqlite, DRPostgres:
 					column += T["auto"]
 				default:
@@ -103,8 +103,8 @@ func getDbCreateSQL(registry *imodels.ModelCache, al *DB) (queries []string, tab
 				column = strings.Replace(column, "%COL%", fi.Column, -1)
 			}
 
-			if fi.Description != "" && al.Driver != DRSqlite {
-				if al.Driver == DRPostgres {
+			if fi.Description != "" && al.driver != DRSqlite {
+				if al.driver == DRPostgres {
 					commentIndexes = append(commentIndexes, i)
 				} else {
 					column += " " + fmt.Sprintf("COMMENT '%s'", fi.Description)
@@ -136,19 +136,19 @@ func getDbCreateSQL(registry *imodels.ModelCache, al *DB) (queries []string, tab
 		sql += strings.Join(columns, ",\n")
 		sql += "\n)"
 
-		if al.Driver == DRMySQL {
+		if al.driver == DRMySQL {
 			var engine string
 			if mi.Model != nil {
 				engine = imodels.GetTableEngine(mi.AddrField)
 			}
 			if engine == "" {
-				engine = al.Engine
+				engine = al.engine
 			}
 			sql += " ENGINE=" + engine
 		}
 
 		sql += ";"
-		if al.Driver == DRPostgres && len(commentIndexes) > 0 {
+		if al.driver == DRPostgres && len(commentIndexes) > 0 {
 			// append comments for postgres only
 			for _, index := range commentIndexes {
 				sql += fmt.Sprintf("\nCOMMENT ON COLUMN %s%s%s.%s%s%s is '%s';",

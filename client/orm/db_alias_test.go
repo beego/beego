@@ -31,10 +31,10 @@ func TestRegisterDataBase(t *testing.T) {
 
 	al := getDB("test-params")
 	assert.NotNil(t, al)
-	assert.Equal(t, al.MaxIdleConns, 20)
-	assert.Equal(t, al.MaxOpenConns, 300)
-	assert.Equal(t, al.ConnMaxLifetime, time.Minute)
-	assert.Equal(t, al.ConnMaxIdletime, time.Minute)
+	assert.Equal(t, al.maxIdleConns, 20)
+	assert.Equal(t, al.maxOpenConns, 300)
+	assert.Equal(t, al.connMaxLifeTime, time.Minute)
+	assert.Equal(t, al.connMaxIdleTime, time.Minute)
 }
 
 func TestRegisterDataBaseMaxStmtCacheSizeNegative1(t *testing.T) {

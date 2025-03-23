@@ -46,8 +46,8 @@ func debugLogQueies(alias *DB, operation, query string, t time.Time, err error, 
 	}
 
 	logMap["flag"] = flag
-	con := fmt.Sprintf(" -[Queries/%s] - [  %s / %11s / %7.1fms] - [%s]", alias.Name, flag, operation, elsp, query)
-	logMap["alias_name"] = alias.Name
+	con := fmt.Sprintf(" -[Queries/%s] - [  %s / %11s / %7.1fms] - [%s]", alias.name, flag, operation, elsp, query)
+	logMap["alias_name"] = alias.name
 	logMap["operation"] = operation
 	logMap["query"] = query
 	cons := make([]string, 0, len(args))

@@ -39,7 +39,7 @@
 //		// insert
 //		id, err := o.Insert(&user)
 //		// update
-//		user.Name = "astaxie"
+//		user.name = "astaxie"
 //		num, err := o.Update(&user)
 //		// read one
 //		u := User{Id: user.Id}
@@ -151,11 +151,11 @@ func (o *ormBase) Read(md interface{}, cols ...string) error {
 
 func (o *ormBase) ReadRaw(ctx context.Context, md interface{}, query string, args ...any) error {
 	mi, ind := o.getPtrMiInd(md)
-	return o.alias.DbBaser.ReadRaw(ctx, o.db, mi, ind, o.alias.TZ, query, args...)
+	return o.alias.dbBaser.ReadRaw(ctx, o.db, mi, ind, o.alias.tz, query, args...)
 }
 func (o *ormBase) ReadWithCtx(ctx context.Context, md interface{}, cols ...string) error {
 	mi, ind := o.getPtrMiInd(md)
-	return o.alias.DbBaser.Read(ctx, o.db, mi, ind, o.alias.TZ, cols, false)
+	return o.alias.dbBaser.Read(ctx, o.db, mi, ind, o.alias.tz, cols, false)
 }
 
 // read data to model, like Read(), but use "SELECT FOR UPDATE" form
@@ -165,7 +165,7 @@ func (o *ormBase) ReadForUpdate(md interface{}, cols ...string) error {
 
 func (o *ormBase) ReadForUpdateWithCtx(ctx context.Context, md interface{}, cols ...string) error {
 	mi, ind := o.getPtrMiInd(md)
-	return o.alias.DbBaser.Read(ctx, o.db, mi, ind, o.alias.TZ, cols, true)
+	return o.alias.dbBaser.Read(ctx, o.db, mi, ind, o.alias.tz, cols, true)
 }
 
 // Try to read a row from the database, or insert one if it doesn't exist
@@ -176,7 +176,7 @@ func (o *ormBase) ReadOrCreate(md interface{}, col1 string, cols ...string) (boo
 func (o *ormBase) ReadOrCreateWithCtx(ctx context.Context, md interface{}, col1 string, cols ...string) (bool, int64, error) {
 	cols = append([]string{col1}, cols...)
 	mi, ind := o.getPtrMiInd(md)
-	err := o.alias.DbBaser.Read(ctx, o.db, mi, ind, o.alias.TZ, cols, false)
+	err := o.alias.dbBaser.Read(ctx, o.db, mi, ind, o.alias.tz, cols, false)
 	if err == ErrNoRows {
 		// Create
 		id, err := o.InsertWithCtx(ctx, md)
@@ -202,7 +202,7 @@ func (o *ormBase) Insert(md interface{}) (int64, error) {
 
 func (o *ormBase) InsertWithCtx(ctx context.Context, md interface{}) (int64, error) {
 	mi, ind := o.getPtrMiInd(md)
-	id, err := o.alias.DbBaser.Insert(ctx, o.db, mi, ind, o.alias.TZ)
+	id, err := o.alias.dbBaser.Insert(ctx, o.db, mi, ind, o.alias.tz)
 	if err != nil {
 		return id, err
 	}
@@ -246,7 +246,7 @@ func (o *ormBase) InsertMultiWithCtx(ctx context.Context, bulk int, mds interfac
 		for i := 0; i < sind.Len(); i++ {
 			ind := reflect.Indirect(sind.Index(i))
 			mi := o.getMi(ind.Interface())
-			id, err := o.alias.DbBaser.Insert(ctx, o.db, mi, ind, o.alias.TZ)
+			id, err := o.alias.dbBaser.Insert(ctx, o.db, mi, ind, o.alias.tz)
 			if err != nil {
 				return cnt, err
 			}
@@ -257,7 +257,7 @@ func (o *ormBase) InsertMultiWithCtx(ctx context.Context, bulk int, mds interfac
 		}
 	} else {
 		mi := o.getMi(sind.Index(0).Interface())
-		return o.alias.DbBaser.InsertMulti(ctx, o.db, mi, sind, bulk, o.alias.TZ)
+		return o.alias.dbBaser.InsertMulti(ctx, o.db, mi, sind, bulk, o.alias.tz)
 	}
 	return cnt, nil
 }
@@ -269,7 +269,7 @@ func (o *ormBase) InsertOrUpdate(md interface{}, colConflictAndArgs ...string) (
 
 func (o *ormBase) InsertOrUpdateWithCtx(ctx context.Context, md interface{}, colConflitAndArgs ...string) (int64, error) {
 	mi, ind := o.getPtrMiInd(md)
-	id, err := o.alias.DbBaser.InsertOrUpdate(ctx, o.db, mi, ind, o.alias, colConflitAndArgs...)
+	id, err := o.alias.dbBaser.InsertOrUpdate(ctx, o.db, mi, ind, o.alias, colConflitAndArgs...)
 	if err != nil {
 		return id, err
 	}
@@ -287,7 +287,7 @@ func (o *ormBase) Update(md interface{}, cols ...string) (int64, error) {
 
 func (o *ormBase) UpdateWithCtx(ctx context.Context, md interface{}, cols ...string) (int64, error) {
 	mi, ind := o.getPtrMiInd(md)
-	return o.alias.DbBaser.Update(ctx, o.db, mi, ind, o.alias.TZ, cols)
+	return o.alias.dbBaser.Update(ctx, o.db, mi, ind, o.alias.tz, cols)
 }
 
 // delete model in database
@@ -298,7 +298,7 @@ func (o *ormBase) Delete(md interface{}, cols ...string) (int64, error) {
 
 func (o *ormBase) DeleteWithCtx(ctx context.Context, md interface{}, cols ...string) (int64, error) {
 	mi, ind := o.getPtrMiInd(md)
-	num, err := o.alias.DbBaser.Delete(ctx, o.db, mi, ind, o.alias.TZ, cols)
+	num, err := o.alias.dbBaser.Delete(ctx, o.db, mi, ind, o.alias.tz, cols)
 	return num, err
 }
 
@@ -511,18 +511,18 @@ func (o *ormBase) RawWithCtx(_ context.Context, query string, args ...interface{
 }
 
 func (o *ormBase) ExecRaw(ctx context.Context, _ interface{}, query string, args ...any) (sql.Result, error) {
-	return o.alias.DbBaser.ExecRaw(ctx, o.db, query, args...)
+	return o.alias.dbBaser.ExecRaw(ctx, o.db, query, args...)
 }
 
 // Driver return current using database Driver
 func (o *ormBase) Driver() Driver {
-	return driver(o.alias.Name)
+	return driver(o.alias.name)
 }
 
-// DBStats return sql.DBStats for current database
+// DBStats return sql.dbStats for current database
 func (o *ormBase) DBStats() *sql.DBStats {
-	if o.alias != nil && o.alias.DB != nil {
-		stats := o.alias.DB.Stats()
+	if o.alias != nil && o.alias.db != nil {
+		stats := o.alias.db.Stats()
 		return &stats
 	}
 	return nil
@@ -640,7 +640,7 @@ func NewOrmUsingDB(aliasName string) Ormer {
 	panic(fmt.Errorf("<Ormer.Using> unknown db alias name `%s`", aliasName))
 }
 
-// NewOrmWithDB create a new ormer object with specify *sql.DB for query
+// NewOrmWithDB create a new ormer object with specify *sql.db for query
 func NewOrmWithDB(driverName, aliasName string, db *sql.DB, params ...DBOption) (Ormer, error) {
 	al, err := newDB(aliasName, driverName, db, params...)
 	if err != nil {
@@ -651,15 +651,15 @@ func NewOrmWithDB(driverName, aliasName string, db *sql.DB, params ...DBOption) 
 }
 
 func newOrmWithDB(al *DB) Ormer {
-	BootStrapWithDB(al.Name) // execute only once
+	BootStrapWithDB(al.name) // execute only once
 
 	o := new(orm)
 	o.alias = al
 
 	if Debug {
-		o.db = newDbQueryLog(al, al.DB)
+		o.db = newDbQueryLog(al, al.db)
 	} else {
-		o.db = al.DB
+		o.db = al.db
 	}
 
 	if len(globalFilterChains) > 0 {

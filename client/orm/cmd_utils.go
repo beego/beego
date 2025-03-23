@@ -29,7 +29,7 @@ type dbIndex struct {
 
 // Get database column type string.
 func getColumnTyp(db *DB, fi *models.FieldInfo) (col string) {
-	T := db.DbBaser.DbTypes()
+	T := db.dbBaser.DbTypes()
 	fieldType := fi.FieldType
 	fieldSize := fi.Size
 
@@ -43,7 +43,7 @@ checkColumn:
 	case TypeBooleanField:
 		col = T["bool"]
 	case TypeVarCharField:
-		if db.Driver == DRPostgres && fi.ToText {
+		if db.driver == DRPostgres && fi.ToText {
 			col = T["string-text"]
 		} else {
 			col = fmt.Sprintf(T["string"], fieldSize)
@@ -58,7 +58,7 @@ checkColumn:
 		col = T["time.Time-date"]
 	case TypeDateTimeField:
 		// the precision of sqlite is not implemented
-		if db.Driver == 2 || fi.TimePrecision == nil {
+		if db.driver == 2 || fi.TimePrecision == nil {
 			col = T["time.Time"]
 		} else {
 			s := T["time.Time-precision"]
@@ -72,7 +72,7 @@ checkColumn:
 	case TypeIntegerField:
 		col = T["int32"]
 	case TypeBigIntegerField:
-		if db.Driver == DRSqlite {
+		if db.driver == DRSqlite {
 			fieldType = TypeIntegerField
 			goto checkColumn
 		}
@@ -95,13 +95,13 @@ checkColumn:
 			col = fmt.Sprintf(s, fi.Digits, fi.Decimals)
 		}
 	case TypeJSONField:
-		if db.Driver != DRPostgres {
+		if db.driver != DRPostgres {
 			fieldType = TypeVarCharField
 			goto checkColumn
 		}
 		col = T["json"]
 	case TypeJsonbField:
-		if db.Driver != DRPostgres {
+		if db.driver != DRPostgres {
 			fieldType = TypeVarCharField
 			goto checkColumn
 		}
@@ -117,7 +117,7 @@ checkColumn:
 
 // create alter sql string.
 func getColumnAddQuery(al *DB, fi *models.FieldInfo) string {
-	Q := al.DbBaser.TableQuote()
+	Q := al.dbBaser.TableQuote()
 	typ := getColumnTyp(al, fi)
 
 	if !fi.Null {

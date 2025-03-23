@@ -124,7 +124,7 @@ func (d *dbBaseMysql) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *model
 
 	names := make([]string, 0, len(mi.Fields.DBcols)-1)
 	Q := d.ins.TableQuote()
-	values, _, err := d.collectValues(mi, ind, mi.Fields.DBcols, true, true, &names, a.TZ)
+	values, _, err := d.collectValues(mi, ind, mi.Fields.DBcols, true, true, &names, a.tz)
 	if err != nil {
 		return 0, err
 	}

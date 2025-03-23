@@ -110,7 +110,7 @@ func (d *commandSyncDb) Run() error {
 		}
 	}
 
-	db := d.al.DB
+	db := d.al.db
 
 	if d.force && len(drops) > 0 {
 		for i, mi := range models.DefaultModelCache.AllOrdered() {
@@ -136,7 +136,7 @@ func (d *commandSyncDb) Run() error {
 		return err
 	}
 
-	tables, err := d.al.DbBaser.GetTables(db)
+	tables, err := d.al.dbBaser.GetTables(db)
 	if err != nil {
 		if d.rtOnError {
 			return err
@@ -147,8 +147,8 @@ func (d *commandSyncDb) Run() error {
 	ctx := context.Background()
 	for i, mi := range models.DefaultModelCache.AllOrdered() {
 
-		if !models.IsApplicableTableForDB(mi.AddrField, d.al.Name) {
-			fmt.Printf("table `%s` is not applicable to database '%s'\n", mi.Table, d.al.Name)
+		if !models.IsApplicableTableForDB(mi.AddrField, d.al.name) {
+			fmt.Printf("table `%s` is not applicable to database '%s'\n", mi.Table, d.al.name)
 			continue
 		}
 
@@ -158,7 +158,7 @@ func (d *commandSyncDb) Run() error {
 			}
 
 			var fields []*models.FieldInfo
-			columns, err := d.al.DbBaser.GetColumns(ctx, db, mi.Table)
+			columns, err := d.al.dbBaser.GetColumns(ctx, db, mi.Table)
 			if err != nil {
 				if d.rtOnError {
 					return err
@@ -192,7 +192,7 @@ func (d *commandSyncDb) Run() error {
 			}
 
 			for _, idx := range indexes[mi.Table] {
-				if !d.al.DbBaser.IndexExists(ctx, db, idx.Table, idx.Name) {
+				if !d.al.dbBaser.IndexExists(ctx, db, idx.Table, idx.Name) {
 					if !d.noInfo {
 						fmt.Printf("create index `%s` for table `%s`\n", idx.Name, idx.Table)
 					}
