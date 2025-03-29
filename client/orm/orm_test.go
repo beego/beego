@@ -186,7 +186,7 @@ func TestGetDB(t *testing.T) {
 	if db, err := GetDB(); err != nil {
 		throwFailNow(t, err)
 	} else {
-		err = db.Ping()
+		err = db.DB.Ping()
 		throwFailNow(t, err)
 	}
 }
@@ -231,7 +231,7 @@ func TestRegisterModels(_ *testing.T) {
 	BootStrap()
 
 	dORM = NewOrm()
-	dDbBaser = getDbAlias("default").DbBaser
+	dDbBaser = getDB("default").dbBaser
 }
 
 func TestModelSyntax(t *testing.T) {

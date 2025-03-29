@@ -553,8 +553,8 @@ func init() {
 		panic(fmt.Sprintf("can not Register database: %v", err))
 	}
 
-	alias := getDbAlias("default")
-	if alias.Driver == DRMySQL {
-		alias.Engine = "INNODB"
+	alias := getDB("default")
+	if alias.driver == DRMySQL {
+		alias.engine = "INNODB"
 	}
 }

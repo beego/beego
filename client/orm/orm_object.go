@@ -51,7 +51,7 @@ func (o *insertSet) InsertWithCtx(ctx context.Context, md interface{}) (int64, e
 	if name != o.mi.FullName {
 		panic(fmt.Errorf("<Inserter.Insert> need model `%s` but found `%s`", o.mi.FullName, name))
 	}
-	id, err := o.orm.alias.DbBaser.InsertStmt(ctx, o.stmt, o.mi, ind, o.orm.alias.TZ)
+	id, err := o.orm.alias.dbBaser.InsertStmt(ctx, o.stmt, o.mi, ind, o.orm.alias.tz)
 	if err != nil {
 		return id, err
 	}
@@ -81,7 +81,7 @@ func newInsertSet(ctx context.Context, orm *ormBase, mi *models.ModelInfo) (Inse
 	bi := new(insertSet)
 	bi.orm = orm
 	bi.mi = mi
-	st, query, err := orm.alias.DbBaser.PrepareInsert(ctx, orm.db, mi)
+	st, query, err := orm.alias.dbBaser.PrepareInsert(ctx, orm.db, mi)
 	if err != nil {
 		return nil, err
 	}

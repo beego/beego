@@ -231,7 +231,7 @@ func (o querySet) Count() (int64, error) {
 }
 
 func (o querySet) CountWithCtx(ctx context.Context) (int64, error) {
-	return o.orm.alias.DbBaser.Count(ctx, o.orm.db, o, o.mi, o.cond, o.orm.alias.TZ)
+	return o.orm.alias.dbBaser.Count(ctx, o.orm.db, o, o.mi, o.cond, o.orm.alias.tz)
 }
 
 // check result empty or not after QuerySeter executed
@@ -240,7 +240,7 @@ func (o querySet) Exist() bool {
 }
 
 func (o querySet) ExistWithCtx(ctx context.Context) bool {
-	cnt, _ := o.orm.alias.DbBaser.Count(ctx, o.orm.db, o, o.mi, o.cond, o.orm.alias.TZ)
+	cnt, _ := o.orm.alias.dbBaser.Count(ctx, o.orm.db, o, o.mi, o.cond, o.orm.alias.tz)
 	return cnt > 0
 }
 
@@ -250,7 +250,7 @@ func (o querySet) Update(values Params) (int64, error) {
 }
 
 func (o querySet) UpdateWithCtx(ctx context.Context, values Params) (int64, error) {
-	return o.orm.alias.DbBaser.UpdateBatch(ctx, o.orm.db, &o, o.mi, o.cond, values, o.orm.alias.TZ)
+	return o.orm.alias.dbBaser.UpdateBatch(ctx, o.orm.db, &o, o.mi, o.cond, values, o.orm.alias.tz)
 }
 
 // execute delete
@@ -259,7 +259,7 @@ func (o querySet) Delete() (int64, error) {
 }
 
 func (o querySet) DeleteWithCtx(ctx context.Context) (int64, error) {
-	return o.orm.alias.DbBaser.DeleteBatch(ctx, o.orm.db, &o, o.mi, o.cond, o.orm.alias.TZ)
+	return o.orm.alias.dbBaser.DeleteBatch(ctx, o.orm.db, &o, o.mi, o.cond, o.orm.alias.tz)
 }
 
 // PrepareInsert return an insert queryer.
@@ -284,7 +284,7 @@ func (o querySet) All(container interface{}, cols ...string) (int64, error) {
 
 // AllWithCtx see All
 func (o querySet) AllWithCtx(ctx context.Context, container interface{}, cols ...string) (int64, error) {
-	return o.orm.alias.DbBaser.ReadBatch(ctx, o.orm.db, o, o.mi, o.cond, container, o.orm.alias.TZ, cols)
+	return o.orm.alias.dbBaser.ReadBatch(ctx, o.orm.db, o, o.mi, o.cond, container, o.orm.alias.tz, cols)
 }
 
 // One query one row data and map to containers.
@@ -296,7 +296,7 @@ func (o querySet) One(container interface{}, cols ...string) error {
 // OneWithCtx check One
 func (o querySet) OneWithCtx(ctx context.Context, container interface{}, cols ...string) error {
 	o.limit = 1
-	num, err := o.orm.alias.DbBaser.ReadBatch(ctx, o.orm.db, o, o.mi, o.cond, container, o.orm.alias.TZ, cols)
+	num, err := o.orm.alias.dbBaser.ReadBatch(ctx, o.orm.db, o, o.mi, o.cond, container, o.orm.alias.tz, cols)
 	if err != nil {
 		return err
 	}
@@ -319,7 +319,7 @@ func (o querySet) Values(results *[]Params, exprs ...string) (int64, error) {
 
 // ValuesWithCtx see Values
 func (o querySet) ValuesWithCtx(ctx context.Context, results *[]Params, exprs ...string) (int64, error) {
-	return o.orm.alias.DbBaser.ReadValues(ctx, o.orm.db, o, o.mi, o.cond, exprs, results, o.orm.alias.TZ)
+	return o.orm.alias.dbBaser.ReadValues(ctx, o.orm.db, o, o.mi, o.cond, exprs, results, o.orm.alias.tz)
 }
 
 // ValuesList query data and map to [][]interface
@@ -329,7 +329,7 @@ func (o querySet) ValuesList(results *[]ParamsList, exprs ...string) (int64, err
 }
 
 func (o querySet) ValuesListWithCtx(ctx context.Context, results *[]ParamsList, exprs ...string) (int64, error) {
-	return o.orm.alias.DbBaser.ReadValues(ctx, o.orm.db, o, o.mi, o.cond, exprs, results, o.orm.alias.TZ)
+	return o.orm.alias.dbBaser.ReadValues(ctx, o.orm.db, o, o.mi, o.cond, exprs, results, o.orm.alias.tz)
 }
 
 // ValuesFlat query all data and map to []interface.
@@ -340,7 +340,7 @@ func (o querySet) ValuesFlat(result *ParamsList, expr string) (int64, error) {
 
 // ValuesFlatWithCtx see ValuesFlat
 func (o querySet) ValuesFlatWithCtx(ctx context.Context, result *ParamsList, expr string) (int64, error) {
-	return o.orm.alias.DbBaser.ReadValues(ctx, o.orm.db, o, o.mi, o.cond, []string{expr}, result, o.orm.alias.TZ)
+	return o.orm.alias.dbBaser.ReadValues(ctx, o.orm.db, o, o.mi, o.cond, []string{expr}, result, o.orm.alias.tz)
 }
 
 // RowsToMap query rows into map[string]interface with specify key and value column name.

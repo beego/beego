@@ -49,7 +49,7 @@ func (o *queryM2M) AddWithCtx(ctx context.Context, mds ...interface{}) (int64, e
 	rfi := fi.ReverseFieldInfoTwo
 
 	orm := o.qs.orm
-	dbase := orm.alias.DbBaser
+	dbase := orm.alias.dbBaser
 
 	var models []interface{}
 	var otherValues []interface{}

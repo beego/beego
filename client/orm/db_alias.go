@@ -43,7 +43,7 @@ type driver string
 // Get type constant int of current driver..
 func (d driver) Type() DriverType {
 	a, _ := dataBaseCache.get(string(d))
-	return a.Driver
+	return a.driver
 }
 
 // Get name of current driver
@@ -55,7 +55,7 @@ func (d driver) Name() string {
 var _ Driver = new(driver)
 
 var (
-	dataBaseCache = &_dbCache{cache: make(map[string]*alias)}
+	dataBaseCache = &_dbCache{cache: make(map[string]*DB)}
 	drivers       = map[string]DriverType{
 		"mysql":    DRMySQL,
 		"postgres": DRPostgres,
@@ -77,31 +77,47 @@ var (
 // database alias cacher.
 type _dbCache struct {
 	mux   sync.RWMutex
-	cache map[string]*alias
+	cache map[string]*DB
 }
 
-// add database alias with original name.
-func (ac *_dbCache) add(name string, al *alias) (added bool) {
+// add database db with original name.
+func (ac *_dbCache) add(name string, db *DB) (added bool) {
 	ac.mux.Lock()
 	defer ac.mux.Unlock()
 	if _, ok := ac.cache[name]; !ok {
-		ac.cache[name] = al
+		ac.cache[name] = db
 		added = true
 	}
 	return
 }
 
 // get database alias if cached.
-func (ac *_dbCache) get(name string) (al *alias, ok bool) {
+func (ac *_dbCache) get(name string) (db *DB, ok bool) {
 	ac.mux.RLock()
 	defer ac.mux.RUnlock()
-	al, ok = ac.cache[name]
+	db, ok = ac.cache[name]
+	return
+}
+
+func (ac *_dbCache) getORSet(aliasName, driverName string, db *sql.DB, params ...DBOption) (al *DB, err error) {
+	ac.mux.RLock()
+	d, ok := ac.cache[aliasName]
+	ac.mux.RUnlock()
+	if !ok {
+		ac.mux.Lock()
+		defer ac.mux.Unlock()
+		al, err = newDB(aliasName, driverName, db, params...)
+		if err != nil {
+			return
+		}
+		ac.cache[aliasName] = d
+	}
 	return
 }
 
 // get default alias.
-func (ac *_dbCache) getDefault() (al *alias) {
-	al, _ = ac.get("default")
+func (ac *_dbCache) getDefault() (db *DB) {
+	db, _ = ac.get("default")
 	return
 }
 
@@ -110,6 +126,19 @@ type DB struct {
 	DB                  *sql.DB
 	stmtDecorators      *lru.Cache
 	stmtDecoratorsLimit int
+
+	name            string
+	driver          DriverType
+	driverName      string
+	dataSource      string
+	maxIdleConns    int
+	maxOpenConns    int
+	connMaxLifeTime time.Duration
+	connMaxIdleTime time.Duration
+	stmtCacheSize   int
+	dbBaser         dbBaser
+	tz              *time.Location
+	engine          string
 }
 
 var (
@@ -281,36 +310,23 @@ func (t *TxDB) QueryRowContext(ctx context.Context, query string, args ...interf
 	return t.tx.QueryRowContext(ctx, query, args...)
 }
 
-type alias struct {
-	Name            string
-	Driver          DriverType
-	DriverName      string
-	DataSource      string
-	MaxIdleConns    int
-	MaxOpenConns    int
-	ConnMaxLifetime time.Duration
-	ConnMaxIdletime time.Duration
-	StmtCacheSize   int
-	DB              *DB
-	DbBaser         dbBaser
-	TZ              *time.Location
-	Engine          string
-}
-
-func detectTZ(al *alias) {
+func detectTZ(al *DB) {
 	// orm timezone system match database
 	// default use Local
-	al.TZ = DefaultTimeLoc
+	al.tz = DefaultTimeLoc
 
-	if al.DriverName == "sphinx" {
+	if al.driverName == "sphinx" {
 		return
 	}
 
-	switch al.Driver {
+	switch al.driver {
 	case DRMySQL:
 		row := al.DB.QueryRow("SELECT TIMEDIFF(NOW(), UTC_TIMESTAMP)")
 		var tz string
-		row.Scan(&tz)
+		if err := row.Scan(&tz); err != nil {
+			DebugLog.Printf("Detect DB timezone: %s\n", err.Error())
+			return
+		}
 		if len(tz) >= 8 {
 			if tz[0] != '-' {
 				tz = "+" + tz
@@ -318,7 +334,7 @@ func detectTZ(al *alias) {
 			t, err := time.Parse("-07:00:00", tz)
 			if err == nil {
 				if t.Location().String() != "" {
-					al.TZ = t.Location()
+					al.tz = t.Location()
 				}
 			} else {
 				DebugLog.Printf("Detect DB timezone: %s %s\n", tz, err.Error())
@@ -329,37 +345,43 @@ func detectTZ(al *alias) {
 		row = al.DB.QueryRow("SELECT ENGINE, TRANSACTIONS FROM information_schema.engines WHERE SUPPORT = 'DEFAULT'")
 		var engine string
 		var tx bool
-		row.Scan(&engine, &tx)
+		if err := row.Scan(&engine, &tx); err != nil {
+			DebugLog.Printf("Detect DB engine: %s\n", err.Error())
+			return
+		}
 
 		if engine != "" {
-			al.Engine = engine
+			al.engine = engine
 		} else {
-			al.Engine = "INNODB"
+			al.engine = "INNODB"
 		}
 
 	case DRSqlite, DROracle:
-		al.TZ = time.UTC
+		al.tz = time.UTC
 
 	case DRPostgres:
 		row := al.DB.QueryRow("SELECT current_setting('TIMEZONE')")
 		var tz string
-		row.Scan(&tz)
+		if err := row.Scan(&tz); err != nil {
+			DebugLog.Printf("Detect DB timezone: %s\n", err.Error())
+			return
+		}
 		loc, err := time.LoadLocation(tz)
 		if err == nil {
-			al.TZ = loc
+			al.tz = loc
 		} else {
 			DebugLog.Printf("Detect DB timezone: %s %s\n", tz, err.Error())
 		}
 	}
 }
 
-func addAliasWthDB(aliasName, driverName string, db *sql.DB, params ...DBOption) (*alias, error) {
-	existErr := fmt.Errorf("DataBase alias name `%s` already registered, cannot reuse", aliasName)
+func addDB(aliasName, driverName string, db *sql.DB, params ...DBOption) (*DB, error) {
+	existErr := fmt.Errorf("DataBase DB name `%s` already registered, cannot reuse", aliasName)
 	if _, ok := dataBaseCache.get(aliasName); ok {
 		return nil, existErr
 	}
 
-	al, err := newAliasWithDb(aliasName, driverName, db, params...)
+	al, err := newDB(aliasName, driverName, db, params...)
 	if err != nil {
 		return nil, err
 	}
@@ -371,38 +393,51 @@ func addAliasWthDB(aliasName, driverName string, db *sql.DB, params ...DBOption)
 	return al, nil
 }
 
-func newAliasWithDb(aliasName, driverName string, db *sql.DB, params ...DBOption) (*alias, error) {
-	al := &alias{}
-	al.DB = &DB{
+func getORSetDB(aliasName, driverName string, db *sql.DB, params ...DBOption) (*DB, error) {
+	al, err := dataBaseCache.getORSet(aliasName, driverName, db, params...)
+	if err != nil {
+		return nil, err
+	}
+
+	return al, nil
+}
+
+func newDB(aliasName, driverName string, db *sql.DB, params ...DBOption) (*DB, error) {
+	//al := &alias{}
+	//al.DB = &DB{
+	//	RWMutex: new(sync.RWMutex),
+	//	DB:      db,
+	//}
+
+	res := &DB{
 		RWMutex: new(sync.RWMutex),
 		DB:      db,
 	}
-
 	for _, p := range params {
-		p(al)
+		p(res)
 	}
 
 	var stmtCache *lru.Cache
 	var stmtCacheSize int
 
-	if al.StmtCacheSize > 0 {
-		_stmtCache, errC := newStmtDecoratorLruWithEvict(al.StmtCacheSize)
+	if res.stmtCacheSize > 0 {
+		_stmtCache, errC := newStmtDecoratorLruWithEvict(res.stmtCacheSize)
 		if errC != nil {
 			return nil, errC
 		} else {
 			stmtCache = _stmtCache
-			stmtCacheSize = al.StmtCacheSize
+			stmtCacheSize = res.stmtCacheSize
 		}
 	}
 
-	al.Name = aliasName
-	al.DriverName = driverName
-	al.DB.stmtDecorators = stmtCache
-	al.DB.stmtDecoratorsLimit = stmtCacheSize
+	res.name = aliasName
+	res.driverName = driverName
+	res.stmtDecorators = stmtCache
+	res.stmtDecoratorsLimit = stmtCacheSize
 
 	if dr, ok := drivers[driverName]; ok {
-		al.DbBaser = dbBasers[dr]
-		al.Driver = dr
+		res.dbBaser = dbBasers[dr]
+		res.driver = dr
 	} else {
 		return nil, fmt.Errorf("driver name `%s` have not registered", driverName)
 	}
@@ -412,50 +447,50 @@ func newAliasWithDb(aliasName, driverName string, db *sql.DB, params ...DBOption
 		return nil, fmt.Errorf("Register db Ping `%s`, %s", aliasName, err.Error())
 	}
 
-	detectTZ(al)
+	detectTZ(res)
 
-	return al, nil
+	return res, nil
 }
 
 // SetMaxIdleConns Change the max idle conns for *sql.DB, use specify database alias name
 // Deprecated you should not use this, we will remove it in the future
 func SetMaxIdleConns(aliasName string, maxIdleConns int) {
-	al := getDbAlias(aliasName)
-	al.SetMaxIdleConns(maxIdleConns)
+	d := getDB(aliasName)
+	d.SetMaxIdleConns(maxIdleConns)
 }
 
 // SetMaxOpenConns Change the max open conns for *sql.DB, use specify database alias name
 // Deprecated you should not use this, we will remove it in the future
 func SetMaxOpenConns(aliasName string, maxOpenConns int) {
-	al := getDbAlias(aliasName)
-	al.SetMaxOpenConns(maxOpenConns)
+	d := getDB(aliasName)
+	d.SetMaxOpenConns(maxOpenConns)
 }
 
 // SetMaxIdleConns Change the max idle conns for *sql.DB, use specify database alias name
-func (al *alias) SetMaxIdleConns(maxIdleConns int) {
-	al.MaxIdleConns = maxIdleConns
-	al.DB.DB.SetMaxIdleConns(maxIdleConns)
+func (d *DB) SetMaxIdleConns(maxIdleConns int) {
+	d.maxIdleConns = maxIdleConns
+	d.DB.SetMaxIdleConns(maxIdleConns)
 }
 
 // SetMaxOpenConns Change the max open conns for *sql.DB, use specify database alias name
-func (al *alias) SetMaxOpenConns(maxOpenConns int) {
-	al.MaxOpenConns = maxOpenConns
-	al.DB.DB.SetMaxOpenConns(maxOpenConns)
+func (d *DB) SetMaxOpenConns(maxOpenConns int) {
+	d.maxOpenConns = maxOpenConns
+	d.DB.SetMaxOpenConns(maxOpenConns)
 }
 
-func (al *alias) SetConnMaxLifetime(lifeTime time.Duration) {
-	al.ConnMaxLifetime = lifeTime
-	al.DB.DB.SetConnMaxLifetime(lifeTime)
+func (d *DB) SetConnMaxLifetime(lifeTime time.Duration) {
+	d.connMaxLifeTime = lifeTime
+	d.DB.SetConnMaxLifetime(lifeTime)
 }
 
-func (al *alias) SetConnMaxIdleTime(idleTime time.Duration) {
-	al.ConnMaxIdletime = idleTime
-	al.DB.DB.SetConnMaxIdleTime(idleTime)
+func (d *DB) SetConnMaxIdleTime(idleTime time.Duration) {
+	d.connMaxIdleTime = idleTime
+	d.DB.SetConnMaxIdleTime(idleTime)
 }
 
-// AddAliasWthDB add a aliasName for the drivename
-func AddAliasWthDB(aliasName, driverName string, db *sql.DB, params ...DBOption) error {
-	_, err := addAliasWthDB(aliasName, driverName, db, params...)
+// AddDB add a aliasName for the drivename
+func AddDB(aliasName, driverName string, db *sql.DB, params ...DBOption) error {
+	_, err := addDB(aliasName, driverName, db, params...)
 	return err
 }
 
@@ -464,7 +499,37 @@ func RegisterDataBase(aliasName, driverName, dataSource string, params ...DBOpti
 	var (
 		err error
 		db  *sql.DB
-		al  *alias
+		res *DB
+	)
+	db, err = sql.Open(driverName, dataSource)
+	if err != nil {
+		err = fmt.Errorf("register db `%s`, %s", aliasName, err.Error())
+		goto end
+	}
+
+	res, err = addDB(aliasName, driverName, db, params...)
+	if err != nil {
+		goto end
+	}
+
+	res.dataSource = dataSource
+
+end:
+	if err != nil {
+		if db != nil {
+			_ = db.Close()
+		}
+		DebugLog.Println(err.Error())
+	}
+
+	return err
+}
+
+func RegisterDB(aliasName, driverName, dataSource string, params ...DBOption) error {
+	var (
+		err error
+		db  *sql.DB
+		res *DB
 	)
 	db, err = sql.Open(driverName, dataSource)
 	if err != nil {
@@ -472,17 +537,19 @@ func RegisterDataBase(aliasName, driverName, dataSource string, params ...DBOpti
 		goto end
 	}
 
-	al, err = addAliasWthDB(aliasName, driverName, db, params...)
+	res, err = getORSetDB(aliasName, driverName, db, params...)
 	if err != nil {
 		goto end
 	}
 
-	al.DataSource = dataSource
+	if res.dataSource != dataSource {
+		res.dataSource = dataSource
+	}
 
 end:
 	if err != nil {
 		if db != nil {
-			db.Close()
+			_ = db.Close()
 		}
 		DebugLog.Println(err.Error())
 	}
@@ -503,29 +570,29 @@ func RegisterDriver(driverName string, typ DriverType) error {
 }
 
 // SetDataBaseTZ Change the database default used timezone
-func SetDataBaseTZ(aliasName string, tz *time.Location) error {
-	if al, ok := dataBaseCache.get(aliasName); ok {
-		al.TZ = tz
+func SetDataBaseTZ(dbName string, tz *time.Location) error {
+	if db, ok := dataBaseCache.get(dbName); ok {
+		db.tz = tz
 	} else {
-		return fmt.Errorf("DataBase alias name `%s` not registered", aliasName)
+		return fmt.Errorf("DataBase DB name `%s` not registered", dbName)
 	}
 	return nil
 }
 
-// GetDB Get *sql.DB from registered database by db alias name.
-// Use "default" as alias name if you not Set.
-func GetDB(aliasNames ...string) (*sql.DB, error) {
+// GetDB Get *DB from registered database by db aDB name.
+// Use "default" as DB name if you not Set.
+func GetDB(dbNames ...string) (*DB, error) {
 	var name string
-	if len(aliasNames) > 0 {
-		name = aliasNames[0]
+	if len(dbNames) > 0 {
+		name = dbNames[0]
 	} else {
 		name = "default"
 	}
 	al, ok := dataBaseCache.get(name)
 	if ok {
-		return al.DB.DB, nil
+		return al, nil
 	}
-	return nil, fmt.Errorf("DataBase of alias name `%s` not found", name)
+	return nil, fmt.Errorf("DataBase of DB name `%s` not found", name)
 }
 
 type stmtDecorator struct {
@@ -573,39 +640,39 @@ func newStmtDecoratorLruWithEvict(cacheSize int) (*lru.Cache, error) {
 	return cache, nil
 }
 
-type DBOption func(al *alias)
+type DBOption func(d *DB)
 
 // MaxIdleConnections return a hint about MaxIdleConnections
 func MaxIdleConnections(maxIdleConn int) DBOption {
-	return func(al *alias) {
-		al.SetMaxIdleConns(maxIdleConn)
+	return func(d *DB) {
+		d.SetMaxIdleConns(maxIdleConn)
 	}
 }
 
 // MaxOpenConnections return a hint about MaxOpenConnections
 func MaxOpenConnections(maxOpenConn int) DBOption {
-	return func(al *alias) {
-		al.SetMaxOpenConns(maxOpenConn)
+	return func(d *DB) {
+		d.SetMaxOpenConns(maxOpenConn)
 	}
 }
 
 // ConnMaxLifetime return a hint about ConnMaxLifetime
 func ConnMaxLifetime(v time.Duration) DBOption {
-	return func(al *alias) {
-		al.SetConnMaxLifetime(v)
+	return func(d *DB) {
+		d.SetConnMaxLifetime(v)
 	}
 }
 
 // ConnMaxIdletime return a hint about ConnMaxIdletime
 func ConnMaxIdletime(v time.Duration) DBOption {
-	return func(al *alias) {
-		al.SetConnMaxIdleTime(v)
+	return func(d *DB) {
+		d.SetConnMaxIdleTime(v)
 	}
 }
 
 // MaxStmtCacheSize return a hint about MaxStmtCacheSize
 func MaxStmtCacheSize(v int) DBOption {
-	return func(al *alias) {
-		al.StmtCacheSize = v
+	return func(d *DB) {
+		d.stmtCacheSize = v
 	}
 }

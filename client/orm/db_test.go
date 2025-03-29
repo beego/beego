@@ -670,7 +670,7 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 
 		names  []string
 		values []interface{}
-		a      *alias
+		a      *DB
 		args   []string
 
 		wantRes    string
@@ -689,9 +689,9 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 				18,
 				12,
 			},
-			a: &alias{
-				Driver:     DRSqlite,
-				DriverName: "sqlite3",
+			a: &DB{
+				driver:     DRSqlite,
+				driverName: "sqlite3",
 			},
 			args: []string{
 				"`age`=20",
@@ -717,9 +717,9 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 				18,
 				12,
 			},
-			a: &alias{
-				Driver:     DRMySQL,
-				DriverName: "mysql",
+			a: &DB{
+				driver:     DRMySQL,
+				driverName: "mysql",
 			},
 			args: []string{
 				"`age`=20",
@@ -746,9 +746,9 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 				18,
 				12,
 			},
-			a: &alias{
-				Driver:     DRMySQL,
-				DriverName: "mysql",
+			a: &DB{
+				driver:     DRMySQL,
+				driverName: "mysql",
 			},
 
 			wantRes: "INSERT INTO `test_tab` (`name`, `age`, `score`) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE `name`=?, `age`=?, `score`=?",
@@ -773,9 +773,9 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 				18,
 				12,
 			},
-			a: &alias{
-				Driver:     DRPostgres,
-				DriverName: "postgres",
+			a: &DB{
+				driver:     DRPostgres,
+				driverName: "postgres",
 			},
 			args: []string{
 				`"name"`,
@@ -804,9 +804,9 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 				18,
 				12,
 			},
-			a: &alias{
-				Driver:     DRPostgres,
-				DriverName: "postgres",
+			a: &DB{
+				driver:     DRPostgres,
+				driverName: "postgres",
 			},
 
 			wantErr: errors.New("`postgres` use InsertOrUpdate must have a conflict column"),
@@ -828,9 +828,9 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 				"test_name",
 				18,
 			},
-			a: &alias{
-				Driver:     DRPostgres,
-				DriverName: "postgres",
+			a: &DB{
+				driver:     DRPostgres,
+				driverName: "postgres",
 			},
 			args: []string{
 				`"name"`,
@@ -856,9 +856,9 @@ func TestDbBase_InsertOrUpdateSQL(t *testing.T) {
 				"test_name",
 				12,
 			},
-			a: &alias{
-				Driver:     DRPostgres,
-				DriverName: "postgres",
+			a: &DB{
+				driver:     DRPostgres,
+				driverName: "postgres",
 			},
 			args: []string{
 				`"name"`,
