@@ -521,8 +521,8 @@ func (o *ormBase) Driver() Driver {
 
 // DBStats return sql.dbStats for current database
 func (o *ormBase) DBStats() *sql.DBStats {
-	if o.alias != nil && o.alias.db != nil {
-		stats := o.alias.db.Stats()
+	if o.alias != nil && o.alias.DB != nil {
+		stats := o.alias.DB.Stats()
 		return &stats
 	}
 	return nil
@@ -657,9 +657,9 @@ func newOrmWithDB(al *DB) Ormer {
 	o.alias = al
 
 	if Debug {
-		o.db = newDbQueryLog(al, al.db)
+		o.db = newDbQueryLog(al, al.DB)
 	} else {
-		o.db = al.db
+		o.db = al.DB
 	}
 
 	if len(globalFilterChains) > 0 {
