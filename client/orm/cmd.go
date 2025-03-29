@@ -110,7 +110,7 @@ func (d *commandSyncDb) Run() error {
 		}
 	}
 
-	db := d.al.db
+	db := d.al.DB
 
 	if d.force && len(drops) > 0 {
 		for i, mi := range models.DefaultModelCache.AllOrdered() {

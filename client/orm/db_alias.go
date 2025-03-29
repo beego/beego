@@ -123,7 +123,7 @@ func (ac *_dbCache) getDefault() (db *DB) {
 
 type DB struct {
 	*sync.RWMutex
-	db                  *sql.DB
+	DB                  *sql.DB
 	stmtDecorators      *lru.Cache
 	stmtDecoratorsLimit int
 
@@ -136,10 +136,9 @@ type DB struct {
 	connMaxLifeTime time.Duration
 	connMaxIdleTime time.Duration
 	stmtCacheSize   int
-	//DB              *DB
-	dbBaser dbBaser
-	tz      *time.Location
-	engine  string
+	dbBaser         dbBaser
+	tz              *time.Location
+	engine          string
 }
 
 var (
@@ -148,11 +147,11 @@ var (
 )
 
 func (d *DB) Begin() (*sql.Tx, error) {
-	return d.db.Begin()
+	return d.DB.Begin()
 }
 
 func (d *DB) BeginTx(ctx context.Context, opts *sql.TxOptions) (*sql.Tx, error) {
-	return d.db.BeginTx(ctx, opts)
+	return d.DB.BeginTx(ctx, opts)
 }
 
 // su must call release to release *sql.Stmt after using
@@ -188,11 +187,11 @@ func (d *DB) getStmtDecorator(query string) (*stmtDecorator, error) {
 }
 
 func (d *DB) Prepare(query string) (*sql.Stmt, error) {
-	return d.db.Prepare(query)
+	return d.DB.Prepare(query)
 }
 
 func (d *DB) PrepareContext(ctx context.Context, query string) (*sql.Stmt, error) {
-	return d.db.PrepareContext(ctx, query)
+	return d.DB.PrepareContext(ctx, query)
 }
 
 func (d *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
@@ -201,7 +200,7 @@ func (d *DB) Exec(query string, args ...interface{}) (sql.Result, error) {
 
 func (d *DB) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
 	if d.stmtDecorators == nil {
-		return d.db.ExecContext(ctx, query, args...)
+		return d.DB.ExecContext(ctx, query, args...)
 	}
 
 	sd, err := d.getStmtDecorator(query)
@@ -219,7 +218,7 @@ func (d *DB) Query(query string, args ...interface{}) (*sql.Rows, error) {
 
 func (d *DB) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
 	if d.stmtDecorators == nil {
-		return d.db.QueryContext(ctx, query, args...)
+		return d.DB.QueryContext(ctx, query, args...)
 	}
 
 	sd, err := d.getStmtDecorator(query)
@@ -237,7 +236,7 @@ func (d *DB) QueryRow(query string, args ...interface{}) *sql.Row {
 
 func (d *DB) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
 	if d.stmtDecorators == nil {
-		return d.db.QueryRowContext(ctx, query, args...)
+		return d.DB.QueryRowContext(ctx, query, args...)
 	}
 
 	sd, err := d.getStmtDecorator(query)
@@ -311,22 +310,6 @@ func (t *TxDB) QueryRowContext(ctx context.Context, query string, args ...interf
 	return t.tx.QueryRowContext(ctx, query, args...)
 }
 
-//type alias struct {
-//	Name            string
-//	Driver          DriverType
-//	DriverName      string
-//	DataSource      string
-//	MaxIdleConns    int
-//	MaxOpenConns    int
-//	ConnMaxLifetime time.Duration
-//	ConnMaxIdletime time.Duration
-//	StmtCacheSize   int
-//	DB              *DB
-//	DbBaser         dbBaser
-//	TZ              *time.Location
-//	Engine          string
-//}
-
 func detectTZ(al *DB) {
 	// orm timezone system match database
 	// default use Local
@@ -338,7 +321,7 @@ func detectTZ(al *DB) {
 
 	switch al.driver {
 	case DRMySQL:
-		row := al.db.QueryRow("SELECT TIMEDIFF(NOW(), UTC_TIMESTAMP)")
+		row := al.DB.QueryRow("SELECT TIMEDIFF(NOW(), UTC_TIMESTAMP)")
 		var tz string
 		if err := row.Scan(&tz); err != nil {
 			DebugLog.Printf("Detect DB timezone: %s\n", err.Error())
@@ -359,7 +342,7 @@ func detectTZ(al *DB) {
 		}
 
 		// Get default engine from current database
-		row = al.db.QueryRow("SELECT ENGINE, TRANSACTIONS FROM information_schema.engines WHERE SUPPORT = 'DEFAULT'")
+		row = al.DB.QueryRow("SELECT ENGINE, TRANSACTIONS FROM information_schema.engines WHERE SUPPORT = 'DEFAULT'")
 		var engine string
 		var tx bool
 		if err := row.Scan(&engine, &tx); err != nil {
@@ -377,7 +360,7 @@ func detectTZ(al *DB) {
 		al.tz = time.UTC
 
 	case DRPostgres:
-		row := al.db.QueryRow("SELECT current_setting('TIMEZONE')")
+		row := al.DB.QueryRow("SELECT current_setting('TIMEZONE')")
 		var tz string
 		if err := row.Scan(&tz); err != nil {
 			DebugLog.Printf("Detect DB timezone: %s\n", err.Error())
@@ -393,7 +376,7 @@ func detectTZ(al *DB) {
 }
 
 func addDB(aliasName, driverName string, db *sql.DB, params ...DBOption) (*DB, error) {
-	existErr := fmt.Errorf("DataBase alias name `%s` already registered, cannot reuse", aliasName)
+	existErr := fmt.Errorf("DataBase DB name `%s` already registered, cannot reuse", aliasName)
 	if _, ok := dataBaseCache.get(aliasName); ok {
 		return nil, existErr
 	}
@@ -428,7 +411,7 @@ func newDB(aliasName, driverName string, db *sql.DB, params ...DBOption) (*DB, e
 
 	res := &DB{
 		RWMutex: new(sync.RWMutex),
-		db:      db,
+		DB:      db,
 	}
 	for _, p := range params {
 		p(res)
@@ -486,23 +469,23 @@ func SetMaxOpenConns(aliasName string, maxOpenConns int) {
 // SetMaxIdleConns Change the max idle conns for *sql.DB, use specify database alias name
 func (d *DB) SetMaxIdleConns(maxIdleConns int) {
 	d.maxIdleConns = maxIdleConns
-	d.db.SetMaxIdleConns(maxIdleConns)
+	d.DB.SetMaxIdleConns(maxIdleConns)
 }
 
 // SetMaxOpenConns Change the max open conns for *sql.DB, use specify database alias name
 func (d *DB) SetMaxOpenConns(maxOpenConns int) {
 	d.maxOpenConns = maxOpenConns
-	d.db.SetMaxOpenConns(maxOpenConns)
+	d.DB.SetMaxOpenConns(maxOpenConns)
 }
 
 func (d *DB) SetConnMaxLifetime(lifeTime time.Duration) {
 	d.connMaxLifeTime = lifeTime
-	d.db.SetConnMaxLifetime(lifeTime)
+	d.DB.SetConnMaxLifetime(lifeTime)
 }
 
 func (d *DB) SetConnMaxIdleTime(idleTime time.Duration) {
 	d.connMaxIdleTime = idleTime
-	d.db.SetConnMaxIdleTime(idleTime)
+	d.DB.SetConnMaxIdleTime(idleTime)
 }
 
 // AddDB add a aliasName for the drivename
@@ -591,14 +574,14 @@ func SetDataBaseTZ(dbName string, tz *time.Location) error {
 	if db, ok := dataBaseCache.get(dbName); ok {
 		db.tz = tz
 	} else {
-		return fmt.Errorf("DataBase alias name `%s` not registered", dbName)
+		return fmt.Errorf("DataBase DB name `%s` not registered", dbName)
 	}
 	return nil
 }
 
-// GetSqlDB Get *sql.DB from registered database by db alias name.
-// Use "default" as alias name if you not Set.
-func GetSqlDB(dbNames ...string) (*sql.DB, error) {
+// GetDB Get *DB from registered database by db aDB name.
+// Use "default" as DB name if you not Set.
+func GetDB(dbNames ...string) (*DB, error) {
 	var name string
 	if len(dbNames) > 0 {
 		name = dbNames[0]
@@ -607,9 +590,9 @@ func GetSqlDB(dbNames ...string) (*sql.DB, error) {
 	}
 	al, ok := dataBaseCache.get(name)
 	if ok {
-		return al.db, nil
+		return al, nil
 	}
-	return nil, fmt.Errorf("DataBase of alias name `%s` not found", name)
+	return nil, fmt.Errorf("DataBase of DB name `%s` not found", name)
 }
 
 type stmtDecorator struct {
