@@ -20,6 +20,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/beego/beego/v2/core/utils"
+	"github.com/mitchellh/mapstructure"
 	"io"
 	"os"
 	"os/user"
@@ -27,9 +29,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"syscall"
-
-	"github.com/mitchellh/mapstructure"
 )
 
 var (
@@ -347,7 +346,7 @@ func (c *IniConfigContainer) GetSection(section string) (map[string]string, erro
 // BUG(env): The environment variable config item will be saved with real value in SaveConfigFile Function.
 func (c *IniConfigContainer) SaveConfigFile(filename string) (err error) {
 	// Write configuration file by filename.
-	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|syscall.O_NOFOLLOW, 0600)
+	f, err := utils.OpenFileSecure(filename, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
 		return err
 	}
