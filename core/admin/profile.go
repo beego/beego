@@ -24,7 +24,6 @@ import (
 	"runtime/debug"
 	"runtime/pprof"
 	"strconv"
-	"syscall"
 	"time"
 
 	"github.com/beego/beego/v2/core/utils"
@@ -66,7 +65,7 @@ func ProcessInput(input string, w io.Writer) {
 // MemProf record memory profile in pprof
 func MemProf(w io.Writer) {
 	filename := "mem-" + strconv.Itoa(pid) + ".memprof"
-	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|syscall.O_NOFOLLOW, 0600)
+	f, err := utils.OpenFileSecure(filename, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
 		fmt.Fprintf(w, "create file %s error %s\n", filename, err.Error())
 		log.Fatal("record heap profile failed: ", err)
@@ -84,7 +83,7 @@ func MemProf(w io.Writer) {
 func GetCPUProfile(w io.Writer) {
 	sec := 30
 	filename := "cpu-" + strconv.Itoa(pid) + ".pprof"
-	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|syscall.O_NOFOLLOW, 0600)
+	f, err := utils.OpenFileSecure(filename, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
 		fmt.Fprintf(w, "Could not enable CPU profiling: %s\n", err)
 		log.Fatal("record cpu profile failed: ", err)
