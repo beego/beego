@@ -24,6 +24,8 @@ import (
 
 // OpenFileSecure Secure file opening function
 // Check whether it is a symbolic connection in Windows
+// NOTE: This check does not prevent TOCTOU vulnerability on Windows,
+// due to lack of O_NOFOLLOW or equivalent low-level open options in Go stdlib.
 func OpenFileSecure(name string, flag int, perm os.FileMode) (*os.File, error) {
 	// Check if it's a symbolic link
 	if fi, err := os.Lstat(name); err == nil {
@@ -31,7 +33,7 @@ func OpenFileSecure(name string, flag int, perm os.FileMode) (*os.File, error) {
 			return nil, &os.PathError{
 				Op:   "open",
 				Path: name,
-				Err:  syscall.Errno(0x5B4), // ERROR_CANT_ACCESS_FILE
+				Err:  syscall.ERROR_ACCESS_DENIED,
 			}
 		}
 	}
@@ -41,7 +43,5 @@ func OpenFileSecure(name string, flag int, perm os.FileMode) (*os.File, error) {
 
 // isSymlink Check if the file is a symbolic link
 func isSymlink(fi os.FileInfo) bool {
-	return fi.Mode()&os.ModeSymlink != 0 ||
-		fi.Mode()&os.ModeDevice != 0 &&
-			fi.Mode()&os.ModeCharDevice == 0
+	return fi.Mode()&os.ModeSymlink != 0
 }
