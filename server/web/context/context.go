@@ -22,6 +22,7 @@ package context
 
 import (
 	"bufio"
+	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
@@ -75,6 +76,91 @@ type Context struct {
 	Request        *http.Request
 	ResponseWriter *Response
 	_xsrfToken     string
+}
+
+type StreamEvent struct {
+	Content          string
+	ReasoningContent string
+	Error            error
+	Done             bool
+}
+
+func (ctx *Context) EventStreamResp() chan<- StreamEvent {
+	eventCh := make(chan StreamEvent)
+	go func() {
+		for {
+			select {
+			case event, ok := <-eventCh:
+				if !ok || event.Done {
+					endEvent(ctx)
+					return
+				}
+
+				if event.Error != nil {
+					errorEvent(ctx, event.Error)
+					return
+				}
+				msgEvent(ctx, event)
+			case <-ctx.Request.Context().Done():
+				return
+			}
+		}
+	}()
+	return eventCh
+}
+
+func errorEvent(ctx *Context, err error) {
+	evt := Event{
+		Type: ErrEvt,
+		Err:  err.Error(),
+	}
+	evtStr, _ := json.Marshal(evt)
+	sendEvent(ctx, string(evtStr))
+}
+
+func msgEvent(ctx *Context, streamEvt StreamEvent) {
+	evt := Event{
+		Type: MsgEvt,
+		Data: EvtMsg{
+			Content:          streamEvt.Content,
+			ReasoningContent: streamEvt.ReasoningContent,
+		},
+	}
+	evtStr, _ := json.Marshal(evt)
+	sendEvent(ctx, string(evtStr))
+}
+
+func endEvent(ctx *Context) {
+	evt := Event{
+		Type: EndEvt,
+	}
+	evtStr, _ := json.Marshal(evt)
+	sendEvent(ctx, string(evtStr))
+}
+
+type Event struct {
+	Type string `json:"type"` // 事件类型 msg end err
+	Err  string `json:"error"`
+	Data EvtMsg `json:"data"`
+}
+
+type EvtMsg struct {
+	Content          string `json:"content"`
+	ReasoningContent string `json:"reasoning_content"`
+}
+
+const (
+	EndEvt = "end"
+	MsgEvt = "msg"
+	ErrEvt = "error"
+)
+
+func sendEvent(ctx *Context, data string) {
+	buf := bytes.Buffer{}
+	buf.WriteString(data)
+	buf.WriteByte('\n')
+	_, _ = ctx.ResponseWriter.Write(buf.Bytes())
+	ctx.ResponseWriter.Flush()
 }
 
 func (ctx *Context) Bind(obj interface{}) error {
