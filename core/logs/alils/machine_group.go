@@ -45,7 +45,7 @@ type MachineList struct {
 // ListMachines returns the machine list of this machine group.
 func (m *MachineGroup) ListMachines() (ms []*Machine, total int, err error) {
 	h := map[string]string{
-		"x-sls-bodyrawsize": "0",
+		"x-log-bodyrawsize": "0",
 	}
 
 	uri := fmt.Sprintf("/machinegroups/%v/machines", m.Name)
