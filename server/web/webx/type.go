@@ -4,7 +4,7 @@ import (
 	"github.com/beego/beego/v2/server/web/context"
 )
 
-// WrapperFromJson is a wrapper function for handling JSON in request's body.
+// WrapperFromJson is a internalWrapper function for handling JSON in request's body.
 // usage:
 //
 //	web.Post("/hello", WrapperFromJson(func(ctx *context.Context, param T) (any, error) {
@@ -15,12 +15,12 @@ import (
 // See test cases for details
 func WrapperFromJson[T any](
 	biz func(ctx *context.Context, param T) (any, error)) func(ctx *context.Context) {
-	return wrapper(biz, func(ctx *context.Context, params *T) error {
+	return internalWrapper(biz, func(ctx *context.Context, params *T) error {
 		return ctx.BindJSON(params)
 	})
 }
 
-// WrapperFromForm is a wrapper function for handling form data in request.
+// WrapperFromForm is a internalWrapper function for handling form data in request.
 // usage:
 //
 //	web.Post("/hello", WrapperFromForm(func(ctx *context.Context, param T) (any, error) {
@@ -31,7 +31,7 @@ func WrapperFromJson[T any](
 // See test cases for details
 func WrapperFromForm[T any](
 	biz func(ctx *context.Context, param T) (any, error)) func(ctx *context.Context) {
-	return wrapper(biz, func(ctx *context.Context, params *T) error {
+	return internalWrapper(biz, func(ctx *context.Context, params *T) error {
 		return ctx.BindForm(params)
 	})
 }
@@ -47,12 +47,13 @@ func WrapperFromForm[T any](
 // See test cases for details
 func Wrapper[T any](
 	biz func(ctx *context.Context, param T) (any, error)) func(ctx *context.Context) {
-	return wrapper(biz, func(ctx *context.Context, params *T) error {
+	return internalWrapper(biz, func(ctx *context.Context, params *T) error {
 		return ctx.Bind(params)
 	})
 }
 
-func wrapper[T any](
+// internalWrapper is a core helper function that wraps the business logic and the binding logic.
+func internalWrapper[T any](
 	biz func(ctx *context.Context, param T) (any, error),
 	wf func(ctx *context.Context, params *T) error) func(ctx *context.Context) {
 	return func(ctx *context.Context) {

@@ -23,7 +23,7 @@ func TestAllWrapperTestCase(t *testing.T) {
 	}
 
 	myStruct := MyStruct{Foo: "bar"}
-	webFunc := func(ctx *context.Context, s1 MyStruct) (any, error) {
+	webFunc := func(_ *context.Context, s1 MyStruct) (any, error) {
 		return s1, nil
 	}
 	testCases := []struct {
@@ -92,7 +92,7 @@ func TestAllWrapperTestCase(t *testing.T) {
 			},
 			contentType: context.ApplicationForm,
 			bizProvider: func() web.HandleFunc {
-				return wrapper(webFunc, func(ctx *context.Context, params *MyStruct) error {
+				return internalWrapper(webFunc, func(_ *context.Context, _ *MyStruct) error {
 					return errors.New("paras entity error")
 				})
 			},
@@ -107,7 +107,7 @@ func TestAllWrapperTestCase(t *testing.T) {
 			},
 			contentType: context.ApplicationForm,
 			bizProvider: func() web.HandleFunc {
-				testFunc := func(ctx *context.Context, s1 MyStruct) (any, error) {
+				testFunc := func(_ *context.Context, _ MyStruct) (any, error) {
 					return nil, errors.New("biz error")
 				}
 				return WrapperFromForm(testFunc)
