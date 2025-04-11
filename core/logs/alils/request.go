@@ -11,17 +11,17 @@ import (
 func request(project *LogProject, method, uri string, headers map[string]string,
 	body []byte) (resp *http.Response, err error) {
 
-	// The caller should provide 'x-sls-bodyrawsize' header
-	if _, ok := headers["x-sls-bodyrawsize"]; !ok {
-		err = fmt.Errorf("can't find 'x-sls-bodyrawsize' header")
+	// The caller should provide 'x-log-bodyrawsize' header
+	if _, ok := headers["x-log-bodyrawsize"]; !ok {
+		err = fmt.Errorf("can't find 'x-log-bodyrawsize' header")
 		return
 	}
 
 	// SLS public request headers
 	headers["Host"] = project.Name + "." + project.Endpoint
 	headers["Date"] = nowRFC1123()
-	headers["x-sls-apiversion"] = version
-	headers["x-sls-signaturemethod"] = signatureMethod
+	headers["x-log-apiversion"] = version
+	headers["x-log-signaturemethod"] = signatureMethod
 	if body != nil {
 		bodyMD5 := fmt.Sprintf("%X", md5.Sum(body))
 		headers["Content-MD5"] = bodyMD5
@@ -33,12 +33,12 @@ func request(project *LogProject, method, uri string, headers map[string]string,
 	}
 
 	// Calc Authorization
-	// Authorization = "SLS <AccessKeyID>:<Signature>"
+	// Authorization = "LOG <AccessKeyID>:<Signature>"
 	digest, err := signature(project, method, uri, headers)
 	if err != nil {
 		return
 	}
-	auth := fmt.Sprintf("SLS %v:%v", project.AccessKeyID, digest)
+	auth := fmt.Sprintf("LOG %v:%v", project.AccessKeyID, digest)
 	headers["Authorization"] = auth
 
 	// Initialize http request

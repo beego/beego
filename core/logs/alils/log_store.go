@@ -32,7 +32,7 @@ type Shard struct {
 // ListShards returns shard id list of this logstore.
 func (s *LogStore) ListShards() (shardIDs []int, err error) {
 	h := map[string]string{
-		"x-sls-bodyrawsize": "0",
+		"x-log-bodyrawsize": "0",
 	}
 
 	uri := fmt.Sprintf("/logstores/%v/shards", s.Name)
@@ -87,8 +87,8 @@ func (s *LogStore) PutLogs(lg *LogGroup) (err error) {
 	}
 
 	h := map[string]string{
-		"x-sls-compresstype": "lz4",
-		"x-sls-bodyrawsize":  fmt.Sprintf("%v", len(body)),
+		"x-log-compresstype": "lz4",
+		"x-log-bodyrawsize":  fmt.Sprintf("%v", len(body)),
 		"Content-Type":       "application/x-protobuf",
 	}
 
@@ -123,7 +123,7 @@ func (s *LogStore) PutLogs(lg *LogGroup) (err error) {
 // For more detail please read: http://gitlab.alibaba-inc.com/sls/doc/blob/master/api/shard.md#logstore
 func (s *LogStore) GetCursor(shardID int, from string) (cursor string, err error) {
 	h := map[string]string{
-		"x-sls-bodyrawsize": "0",
+		"x-log-bodyrawsize": "0",
 	}
 
 	uri := fmt.Sprintf("/logstores/%v/shards/%v?type=cursor&from=%v",
@@ -172,7 +172,7 @@ func (s *LogStore) GetLogsBytes(shardID int, cursor string,
 	logGroupMaxCount int) (out []byte, nextCursor string, err error) {
 
 	h := map[string]string{
-		"x-sls-bodyrawsize": "0",
+		"x-log-bodyrawsize": "0",
 		"Accept":            "application/x-protobuf",
 		"Accept-Encoding":   "lz4",
 	}
@@ -203,9 +203,9 @@ func (s *LogStore) GetLogsBytes(shardID int, cursor string,
 		return
 	}
 
-	v, ok := r.Header["X-Sls-Compresstype"]
+	v, ok := r.Header["X-Log-Compresstype"]
 	if !ok || len(v) == 0 {
-		err = fmt.Errorf("can't find 'x-sls-compresstype' header")
+		err = fmt.Errorf("can't find 'x-log-compresstype' header")
 		return
 	}
 	if v[0] != "lz4" {
@@ -213,16 +213,16 @@ func (s *LogStore) GetLogsBytes(shardID int, cursor string,
 		return
 	}
 
-	v, ok = r.Header["X-Sls-Cursor"]
+	v, ok = r.Header["X-Log-Cursor"]
 	if !ok || len(v) == 0 {
-		err = fmt.Errorf("can't find 'x-sls-cursor' header")
+		err = fmt.Errorf("can't find 'x-log-cursor' header")
 		return
 	}
 	nextCursor = v[0]
 
-	v, ok = r.Header["X-Sls-Bodyrawsize"]
+	v, ok = r.Header["X-Log-Bodyrawsize"]
 	if !ok || len(v) == 0 {
-		err = fmt.Errorf("can't find 'x-sls-bodyrawsize' header")
+		err = fmt.Errorf("can't find 'x-log-bodyrawsize' header")
 		return
 	}
 	bodyRawSize, err := strconv.Atoi(v[0])
