@@ -78,82 +78,24 @@ type Context struct {
 	_xsrfToken     string
 }
 
-type StreamEvent struct {
-	Content          string
-	ReasoningContent string
-	Error            error
-	Done             bool
-}
-
-func (ctx *Context) EventStreamResp() chan<- StreamEvent {
-	eventCh := make(chan StreamEvent)
+func (ctx *Context) EventStreamResp() chan<- []byte {
+	eventCh := make(chan []byte)
 	go func() {
 		for {
 			select {
-			case event, ok := <-eventCh:
-				if !ok || event.Done {
-					endEvent(ctx)
+			case eventData, ok := <-eventCh:
+				if !ok {
 					return
 				}
-
-				if event.Error != nil {
-					errorEvent(ctx, event.Error)
-					return
-				}
-				msgEvent(ctx, event)
+				sendEvent(ctx, string(eventData))
 			case <-ctx.Request.Context().Done():
+				close(eventCh)
 				return
 			}
 		}
 	}()
 	return eventCh
 }
-
-func errorEvent(ctx *Context, err error) {
-	evt := Event{
-		Type: ErrEvt,
-		Err:  err.Error(),
-	}
-	evtStr, _ := json.Marshal(evt)
-	sendEvent(ctx, string(evtStr))
-}
-
-func msgEvent(ctx *Context, streamEvt StreamEvent) {
-	evt := Event{
-		Type: MsgEvt,
-		Data: EvtMsg{
-			Content:          streamEvt.Content,
-			ReasoningContent: streamEvt.ReasoningContent,
-		},
-	}
-	evtStr, _ := json.Marshal(evt)
-	sendEvent(ctx, string(evtStr))
-}
-
-func endEvent(ctx *Context) {
-	evt := Event{
-		Type: EndEvt,
-	}
-	evtStr, _ := json.Marshal(evt)
-	sendEvent(ctx, string(evtStr))
-}
-
-type Event struct {
-	Type string `json:"type"` // 事件类型 msg end err
-	Err  string `json:"error"`
-	Data EvtMsg `json:"data"`
-}
-
-type EvtMsg struct {
-	Content          string `json:"content"`
-	ReasoningContent string `json:"reasoning_content"`
-}
-
-const (
-	EndEvt = "end"
-	MsgEvt = "msg"
-	ErrEvt = "error"
-)
 
 func sendEvent(ctx *Context, data string) {
 	buf := bytes.Buffer{}
