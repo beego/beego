@@ -1,6 +1,7 @@
 module github.com/beego/beego/v2
 
 go 1.20
+toolchain go1.24.1
 
 require (
 	github.com/beego/x2j v0.0.0-20131220205130-a0352aadc542
@@ -39,7 +40,7 @@ require (
 	golang.org/x/crypto v0.24.0
 	golang.org/x/sync v0.7.0
 	google.golang.org/grpc v1.63.0
-	google.golang.org/protobuf v1.34.2
+	google.golang.org/protobuf v1.36.6
 	gopkg.in/yaml.v3 v3.0.1
 )
 
