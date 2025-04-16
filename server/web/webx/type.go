@@ -1,70 +1,74 @@
 package webx
 
 import (
+	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/server/web/context"
+	"github.com/beego/beego/v2/server/web/session"
 )
 
+type BizFunc[T any] func(ctx *context.Context, param T) (any, error)
+type ExtractFunc[T any] func(ctx *context.Context) (params T, err error)
+
 // WrapperFromJson is a internalWrapper function for handling JSON in request's body.
-// usage:
-//
-//	web.Post("/hello", WrapperFromJson(func(ctx *context.Context, param T) (any, error) {
-//		 return param, nil
-//	}))
-//
 // It binds the JSON request body to the specified type T
 // See test cases for details
 func WrapperFromJson[T any](
-	biz func(ctx *context.Context, param T) (any, error)) func(ctx *context.Context) {
-	return internalWrapper(biz, func(ctx *context.Context, params *T) error {
-		return ctx.BindJSON(params)
-	})
+	biz BizFunc[T],
+	opts ...Option[T]) func(ctx *context.Context) {
+	return internalWrapper(biz, func(ctx *context.Context) (params T, err error) {
+		err = ctx.BindJSON(&params)
+		return
+	}, opts...)
 }
 
 // WrapperFromForm is a internalWrapper function for handling form data in request.
-// usage:
-//
-//	web.Post("/hello", WrapperFromForm(func(ctx *context.Context, param T) (any, error) {
-//		 return param, nil
-//	}))
-//
 // It binds the form data to the specified type T
 // See test cases for details
 func WrapperFromForm[T any](
-	biz func(ctx *context.Context, param T) (any, error)) func(ctx *context.Context) {
-	return internalWrapper(biz, func(ctx *context.Context, params *T) error {
-		return ctx.BindForm(params)
-	})
+	biz BizFunc[T],
+	opts ...Option[T]) func(ctx *context.Context) {
+	return internalWrapper(biz, func(ctx *context.Context) (params T, err error) {
+		err = ctx.BindForm(&params)
+		return
+	}, opts...)
 }
 
 // Wrapper is use by beego ctx.Bind(any) api
-// usage:
-//
-//	web.Post("/hello", Wrapper(func(ctx *context.Context, param T) (any, error) {
-//		 return param, nil
-//	}))
-//
 // It binds the data to the specified type T
 // See test cases for details
 func Wrapper[T any](
-	biz func(ctx *context.Context, param T) (any, error)) func(ctx *context.Context) {
-	return internalWrapper(biz, func(ctx *context.Context, params *T) error {
-		return ctx.Bind(params)
-	})
+	biz BizFunc[T],
+	opts ...Option[T]) func(ctx *context.Context) {
+	return internalWrapper(biz, func(ctx *context.Context) (params T, err error) {
+		err = ctx.Bind(&params)
+		return
+	}, opts...)
 }
 
-// internalWrapper is a core helper function that wraps the business logic and the binding logic.
 func internalWrapper[T any](
-	biz func(ctx *context.Context, param T) (any, error),
-	wf func(ctx *context.Context, params *T) error) func(ctx *context.Context) {
+	biz BizFunc[T],
+	sf ExtractFunc[T],
+	opts ...Option[T]) func(ctx *context.Context) {
 	return func(ctx *context.Context) {
-		var params T
-		err := wf(ctx, &params)
+		params, err := sf(ctx)
 		if err != nil {
+			logs.Error("err {%v} happen in subject ctx ", err)
 			ctx.Abort(400, err.Error())
 			return
 		}
+
+		for _, opt := range opts {
+			err = opt(ctx, &params)
+			if err != nil {
+				logs.Error("err {%v} happen in subject opts ctx ", err)
+				ctx.Abort(400, err.Error())
+				return
+			}
+		}
+
 		res, err := biz(ctx, params)
 		if err != nil {
+			logs.Error("err {%v} happen in biz ", err)
 			ctx.Abort(500, err.Error())
 			return
 		}
@@ -73,4 +77,26 @@ func internalWrapper[T any](
 			panic(err)
 		}
 	}
+}
+
+// Option options to T
+type Option[T any] func(ctx *context.Context, t *T) error
+
+// InjectSession is a option to inject session into T
+func InjectSession[T any]() Option[T] {
+	return func(ctx *context.Context, t *T) error {
+		if holder, ok := any(t).(SessionHolder); ok {
+			store, err := ctx.Session()
+			if err != nil {
+				return err
+			}
+			holder.setSession(store)
+		}
+		return nil
+	}
+}
+
+type SessionHolder interface {
+	GetSession() session.Store
+	setSession(s session.Store)
 }
