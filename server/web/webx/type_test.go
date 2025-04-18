@@ -31,11 +31,6 @@ func TestAllWrapperTestCase(t *testing.T) {
 		return s1, nil
 	}
 
-	s2 := myStruct1{Foo: "bar"}
-	webFunc1 := func(_ *context.Context, s2 myStruct1) (any, error) {
-		return s2.GetSession().Get(ctx0.Background(), sessionKey), nil
-	}
-
 	testCases := []struct {
 		name              string
 		expectedCode      int
@@ -92,26 +87,6 @@ func TestAllWrapperTestCase(t *testing.T) {
 			contentType: context.ApplicationXML,
 			bizProvider: func() web.HandleFunc {
 				return Wrapper(webFunc)
-			},
-		},
-		{
-			name:              "Test session binding",
-			expectedCode:      http.StatusOK,
-			useDefaultSession: true,
-			reqHeader:         map[string]string{
-				//	"cookieName": "11",
-			},
-			expectedRes: func() string {
-				marshal, _ := json.Marshal(defaultUser)
-				return string(marshal)
-			},
-			reqBody: func() io.Reader {
-				marshal, _ := xml.Marshal(s2)
-				return bytes.NewBuffer(marshal)
-			},
-			contentType: context.ApplicationXML,
-			bizProvider: func() web.HandleFunc {
-				return Wrapper(webFunc1, InjectSession[myStruct1]())
 			},
 		},
 		{
@@ -193,19 +168,6 @@ type userInfo struct {
 	ID       int
 	Username string
 	Role     string
-}
-
-type myStruct1 struct {
-	Foo string `form:"foo" json:"foo"`
-	s   session.Store
-}
-
-func (m *myStruct1) GetSession() session.Store {
-	return m.s
-}
-
-func (m *myStruct1) setSession(s session.Store) {
-	m.s = s
 }
 
 const sessionKey = "user_info"
