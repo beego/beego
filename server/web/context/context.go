@@ -87,7 +87,7 @@ func (ctx *Context) EventStreamResp() chan<- []byte {
 				if !ok {
 					return
 				}
-				sendEvent(ctx, string(eventData))
+				sendEvent(ctx, eventData)
 			case <-ctx.Request.Context().Done():
 				close(eventCh)
 				return
@@ -97,10 +97,9 @@ func (ctx *Context) EventStreamResp() chan<- []byte {
 	return eventCh
 }
 
-func sendEvent(ctx *Context, data string) {
+func sendEvent(ctx *Context, data []byte) {
 	buf := bytes.Buffer{}
-	buf.WriteString(data)
-	buf.WriteByte('\n')
+	buf.Write(data)
 	_, _ = ctx.ResponseWriter.Write(buf.Bytes())
 	ctx.ResponseWriter.Flush()
 }
