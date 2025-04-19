@@ -77,6 +77,30 @@ type Context struct {
 	_xsrfToken     string
 }
 
+func (ctx *Context) EventStreamResp() chan<- []byte {
+	eventCh := make(chan []byte)
+	go func() {
+		for {
+			select {
+			case eventData, ok := <-eventCh:
+				if !ok {
+					return
+				}
+				sendEvent(ctx, eventData)
+			case <-ctx.Request.Context().Done():
+				close(eventCh)
+				return
+			}
+		}
+	}()
+	return eventCh
+}
+
+func sendEvent(ctx *Context, data []byte) {
+	_, _ = ctx.ResponseWriter.Write(data)
+	ctx.ResponseWriter.Flush()
+}
+
 func (ctx *Context) Bind(obj interface{}) error {
 	ct, exist := ctx.Request.Header["Content-Type"]
 	if !exist || len(ct) == 0 {
