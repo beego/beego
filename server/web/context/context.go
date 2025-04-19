@@ -22,7 +22,6 @@ package context
 
 import (
 	"bufio"
-	"bytes"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/base64"
@@ -98,9 +97,7 @@ func (ctx *Context) EventStreamResp() chan<- []byte {
 }
 
 func sendEvent(ctx *Context, data []byte) {
-	buf := bytes.Buffer{}
-	buf.Write(data)
-	_, _ = ctx.ResponseWriter.Write(buf.Bytes())
+	_, _ = ctx.ResponseWriter.Write(data)
 	ctx.ResponseWriter.Flush()
 }
 
