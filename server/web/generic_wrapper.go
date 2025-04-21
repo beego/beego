@@ -1,4 +1,4 @@
-package webx
+package web
 
 import (
 	"github.com/beego/beego/v2/core/logs"
@@ -10,9 +10,6 @@ type bizFunc[T any] func(ctx *context.Context, param T) (any, error)
 
 // extractFunc is a function that extracts parameters from the context.
 type extractFunc[T any] func(ctx *context.Context) (params T, err error)
-
-// Option options to T
-type Option[T any] func(ctx *context.Context, t *T) error
 
 // WrapperFromJson is a internalWrapper function for handling JSON in request's body.
 // It binds the JSON request body to the specified type T
@@ -40,18 +37,16 @@ func WrapperFromForm[T any](
 // It binds the data to the specified type T
 // See test cases for details
 func Wrapper[T any](
-	biz bizFunc[T],
-	opts ...Option[T]) func(ctx *context.Context) {
+	biz bizFunc[T]) func(ctx *context.Context) {
 	return internalWrapper(biz, func(ctx *context.Context) (params T, err error) {
 		err = ctx.Bind(&params)
 		return
-	}, opts...)
+	})
 }
 
 func internalWrapper[T any](
 	biz bizFunc[T],
-	ef extractFunc[T],
-	opts ...Option[T]) func(ctx *context.Context) {
+	ef extractFunc[T]) func(ctx *context.Context) {
 	return func(ctx *context.Context) {
 		params, err := ef(ctx)
 		if err != nil {
@@ -59,16 +54,6 @@ func internalWrapper[T any](
 			ctx.Abort(400, err.Error())
 			return
 		}
-
-		for _, opt := range opts {
-			err = opt(ctx, &params)
-			if err != nil {
-				logs.Error("err {%v} happen in subject opts ctx ", err)
-				ctx.Abort(400, err.Error())
-				return
-			}
-		}
-
 		res, err := biz(ctx, params)
 		if err != nil {
 			logs.Error("err {%v} happen in biz ", err)

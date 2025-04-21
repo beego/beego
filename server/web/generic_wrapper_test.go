@@ -1,4 +1,4 @@
-package webx
+package web
 
 import (
 	"bytes"
@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
-	"github.com/beego/beego/v2/server/web"
 	"github.com/beego/beego/v2/server/web/context"
 	"github.com/beego/beego/v2/server/web/session"
 	"github.com/stretchr/testify/assert"
@@ -39,7 +38,7 @@ func TestAllWrapperTestCase(t *testing.T) {
 		reqHeader         map[string]string
 		useDefaultSession bool
 		contentType       string
-		bizProvider       func() web.HandleFunc
+		bizProvider       func() HandleFunc
 	}{
 		{
 			name:         "Test post json requestBody",
@@ -52,7 +51,7 @@ func TestAllWrapperTestCase(t *testing.T) {
 				return strings.NewReader(`{"foo": "bar"}`)
 			},
 			contentType: context.ApplicationJSON,
-			bizProvider: func() web.HandleFunc {
+			bizProvider: func() HandleFunc {
 				return WrapperFromJson(webFunc)
 			},
 		},
@@ -69,7 +68,7 @@ func TestAllWrapperTestCase(t *testing.T) {
 				return strings.NewReader(formData.Encode())
 			},
 			contentType: context.ApplicationForm,
-			bizProvider: func() web.HandleFunc {
+			bizProvider: func() HandleFunc {
 				return WrapperFromForm(webFunc)
 			},
 		},
@@ -85,7 +84,7 @@ func TestAllWrapperTestCase(t *testing.T) {
 				return bytes.NewBuffer(marshal)
 			},
 			contentType: context.ApplicationXML,
-			bizProvider: func() web.HandleFunc {
+			bizProvider: func() HandleFunc {
 				return Wrapper(webFunc)
 			},
 		},
@@ -98,7 +97,7 @@ func TestAllWrapperTestCase(t *testing.T) {
 				return strings.NewReader(formData.Encode())
 			},
 			contentType: context.ApplicationForm,
-			bizProvider: func() web.HandleFunc {
+			bizProvider: func() HandleFunc {
 				return internalWrapper(webFunc, func(ctx *context.Context) (params MyStruct, err error) {
 					err = errors.New("paras entity error")
 					return
@@ -114,7 +113,7 @@ func TestAllWrapperTestCase(t *testing.T) {
 				return strings.NewReader(formData.Encode())
 			},
 			contentType: context.ApplicationForm,
-			bizProvider: func() web.HandleFunc {
+			bizProvider: func() HandleFunc {
 				testFunc := func(_ *context.Context, _ MyStruct) (any, error) {
 					return nil, errors.New("biz error")
 				}
@@ -127,7 +126,7 @@ func TestAllWrapperTestCase(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 
 			// 1. init web server
-			app := web.NewHttpSever()
+			app := NewHttpSever()
 			// 2. set copy request body
 			app.Cfg.CopyRequestBody = true
 			// need to config session before register route
@@ -178,19 +177,19 @@ var defaultUser = userInfo{
 	Role:     "guest",
 }
 
-func defaultSessionOption(app *web.HttpServer) (cancel func()) {
+func defaultSessionOption(app *HttpServer) (cancel func()) {
 
 	config := `{"cookieName":"gosessionid","enableSetCookie":false,"gclifetime":3600,"ProviderConfig":"{\"cookieName\":\"gosessionid\",\"securityKey\":\"beegocookiehashkey\"}"}`
 	conf := new(session.ManagerConfig)
 	_ = json.Unmarshal([]byte(config), conf)
-	web.GlobalSessions, _ = session.NewManager("cookie", conf)
+	GlobalSessions, _ = session.NewManager("cookie", conf)
 
 	app.Cfg.WebConfig.Session.SessionOn = true
 	app.Cfg.WebConfig.Session.SessionProvider = "memory"
 	app.Cfg.WebConfig.Session.SessionName = "beegoSessionId"
 	app.Cfg.WebConfig.Session.SessionGCMaxLifetime = 3600
 
-	app.InsertFilter("*", web.BeforeExec, func(ctx *context.Context) {
+	app.InsertFilter("*", BeforeExec, func(ctx *context.Context) {
 		if ctx.Input.Session(sessionKey) == nil {
 			timeout, c := ctx0.WithTimeout(ctx0.Background(), time.Minute*10)
 			defer c()
@@ -199,7 +198,7 @@ func defaultSessionOption(app *web.HttpServer) (cancel func()) {
 	})
 
 	return func() {
-		web.GlobalSessions = nil
+		GlobalSessions = nil
 		app.Cfg.WebConfig.Session.SessionOn = false
 	}
 }
