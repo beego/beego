@@ -18,6 +18,100 @@ import (
 	"time"
 )
 
+// userRequest is a struct that represents the request parameters.
+type userRequest struct {
+	Name string `json:"name" form:"name"`
+	Age  int    `json:"age"`
+}
+
+// addUser is a sample business logic function that takes a context and userRequest as parameters.
+func addUser(_ *context.Context, params userRequest) (any, error) {
+	if params.Name == "" {
+		return nil, errors.New("name can't be null")
+	}
+	return []any{params.Name, params.Age}, nil
+}
+
+// TestWrapperFromJsonExample test the WrapperFromJson function.
+func TestWrapperFromJsonExample(t *testing.T) {
+
+	app := NewHttpSever()
+	app.Cfg.CopyRequestBody = true
+	path := "/api/data"
+	// to use wrapper
+	app.Post(path, Wrapper(addUser))
+
+	reader := strings.NewReader(`{"name": "rose", "age": 17}`)
+
+	req := httptest.NewRequest("POST", path, reader)
+	req.Header.Set("Content-Type", context.ApplicationJSON)
+	req.Header.Set("Accept", "*/*")
+
+	w := httptest.NewRecorder()
+	app.Handlers.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	if w.Code == http.StatusOK {
+		marshal, _ := json.Marshal([]any{"rose", 17})
+		assert.Equal(t, string(marshal), w.Body.String())
+	}
+}
+
+// TestWrapperFromFormExample test the WrapperFromForm function.
+func TestWrapperFromFormExample(t *testing.T) {
+
+	app := NewHttpSever()
+	app.Cfg.CopyRequestBody = true
+	path := "/api/data"
+	// to use wrapper
+	app.Post(path, Wrapper(addUser))
+
+	formData := url.Values{}
+	formData.Set("name", "jack")
+
+	req := httptest.NewRequest("POST", path, strings.NewReader(formData.Encode()))
+	req.Header.Set("Content-Type", context.ApplicationForm)
+	req.Header.Set("Accept", "*/*")
+
+	w := httptest.NewRecorder()
+	app.Handlers.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	if w.Code == http.StatusOK {
+		marshal, _ := json.Marshal([]any{"jack", 0})
+		assert.Equal(t, string(marshal), w.Body.String())
+	}
+}
+
+// TestWrapperExample test the Wrapper function.
+func TestWrapperExample(t *testing.T) {
+
+	app := NewHttpSever()
+	app.Cfg.CopyRequestBody = true
+	path := "/api/data"
+	// to use wrapper
+	app.Post(path, Wrapper(addUser))
+
+	request := userRequest{
+		Name: "tom",
+		Age:  18,
+	}
+	marshal, _ := xml.Marshal(request)
+
+	req := httptest.NewRequest("POST", path, bytes.NewBuffer(marshal))
+	req.Header.Set("Content-Type", context.ApplicationXML)
+	req.Header.Set("Accept", "*/*")
+
+	w := httptest.NewRecorder()
+	app.Handlers.ServeHTTP(w, req)
+
+	assert.Equal(t, http.StatusOK, w.Code)
+	if w.Code == http.StatusOK {
+		marshal, _ := json.Marshal([]any{"tom", 18})
+		assert.Equal(t, string(marshal), w.Body.String())
+	}
+}
+
 func TestAllWrapperTestCase(t *testing.T) {
 
 	type MyStruct struct {

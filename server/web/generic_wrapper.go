@@ -11,9 +11,9 @@ type bizFunc[T any] func(ctx *context.Context, param T) (any, error)
 // extractFunc is a function that extracts parameters from the context.
 type extractFunc[T any] func(ctx *context.Context) (params T, err error)
 
-// WrapperFromJson is a internalWrapper function for handling JSON in request's body.
+// WrapperFromJson  for handling JSON in request's body.
 // It binds the JSON request body to the specified type T
-// See test cases for details
+// Usage can see test cases : TestWrapperFromJsonExample
 func WrapperFromJson[T any](
 	biz bizFunc[T]) func(ctx *context.Context) {
 	return internalWrapper(biz, func(ctx *context.Context) (params T, err error) {
@@ -22,9 +22,9 @@ func WrapperFromJson[T any](
 	})
 }
 
-// WrapperFromForm is a internalWrapper function for handling form data in request.
+// WrapperFromForm  for handling form data in request.
 // It binds the form data to the specified type T
-// See test cases for details
+// Usage can see test cases : TestWrapperFromFormExample
 func WrapperFromForm[T any](
 	biz bizFunc[T]) func(ctx *context.Context) {
 	return internalWrapper(biz, func(ctx *context.Context) (params T, err error) {
@@ -35,7 +35,7 @@ func WrapperFromForm[T any](
 
 // Wrapper is use by beego ctx.Bind(any) api
 // It binds the data to the specified type T
-// See test cases for details
+// Usage can see test cases : TestWrapperExample
 func Wrapper[T any](
 	biz bizFunc[T]) func(ctx *context.Context) {
 	return internalWrapper(biz, func(ctx *context.Context) (params T, err error) {
