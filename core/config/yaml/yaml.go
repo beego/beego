@@ -26,12 +26,11 @@ package yaml
 import (
 	"errors"
 	"fmt"
+	"github.com/beego/beego/v2/core/utils"
+	"gopkg.in/yaml.v3"
 	"os"
 	"strings"
 	"sync"
-	"syscall"
-
-	"gopkg.in/yaml.v3"
 
 	"github.com/beego/beego/v2/core/config"
 	"github.com/beego/beego/v2/core/logs"
@@ -292,7 +291,7 @@ func (c *ConfigContainer) GetSection(section string) (map[string]string, error) 
 // SaveConfigFile save the config into file
 func (c *ConfigContainer) SaveConfigFile(filename string) (err error) {
 	// Write configuration file by filename.
-	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|syscall.O_NOFOLLOW, 0600)
+	f, err := utils.OpenFileSecure(filename, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
 		return err
 	}
