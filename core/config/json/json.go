@@ -18,14 +18,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/beego/beego/v2/core/utils"
+	"github.com/mitchellh/mapstructure"
 	"io"
 	"os"
 	"strconv"
 	"strings"
 	"sync"
-	"syscall"
-
-	"github.com/mitchellh/mapstructure"
 
 	"github.com/beego/beego/v2/core/config"
 	"github.com/beego/beego/v2/core/logs"
@@ -246,7 +245,7 @@ func (c *JSONConfigContainer) GetSection(section string) (map[string]string, err
 // SaveConfigFile save the config into file
 func (c *JSONConfigContainer) SaveConfigFile(filename string) (err error) {
 	// Write configuration file by filename.
-	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|syscall.O_NOFOLLOW, 0600)
+	f, err := utils.OpenFileSecure(filename, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
 		return err
 	}
