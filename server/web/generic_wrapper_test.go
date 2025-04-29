@@ -1,3 +1,17 @@
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package web
 
 import (
@@ -6,6 +20,7 @@ import (
 	"encoding/json"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"github.com/beego/beego/v2/server/web/context"
 	"github.com/beego/beego/v2/server/web/session"
 	"github.com/stretchr/testify/assert"
@@ -32,13 +47,12 @@ func addUser(_ *context.Context, params userRequest) (any, error) {
 	return []any{params.Name, params.Age}, nil
 }
 
-// TestWrapperFromJsonExample test the WrapperFromJson function.
-func TestWrapperFromJsonExample(t *testing.T) {
-
+// ExampleWrapperFromJson is an example of using WrapperFromJson to handle JSON requests.
+func ExampleWrapperFromJson() {
 	app := NewHttpSever()
 	app.Cfg.CopyRequestBody = true
 	path := "/api/data"
-	// to use wrapper
+	// 使用 wrapper
 	app.Post(path, Wrapper(addUser))
 
 	reader := strings.NewReader(`{"name": "rose", "age": 17}`)
@@ -50,20 +64,20 @@ func TestWrapperFromJsonExample(t *testing.T) {
 	w := httptest.NewRecorder()
 	app.Handlers.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
-	if w.Code == http.StatusOK {
-		marshal, _ := json.Marshal([]any{"rose", 17})
-		assert.Equal(t, string(marshal), w.Body.String())
-	}
+	// 输出结果
+	fmt.Println(w.Code)
+	fmt.Println(w.Body.String())
+	// Output:
+	// 200
+	// ["rose",17]
 }
 
-// TestWrapperFromFormExample test the WrapperFromForm function.
-func TestWrapperFromFormExample(t *testing.T) {
-
+// ExampleWrapperFromForm demonstrates the usage of WrapperFromForm to handle form data.
+func ExampleWrapperFromForm() {
 	app := NewHttpSever()
 	app.Cfg.CopyRequestBody = true
 	path := "/api/data"
-	// to use wrapper
+	// Use wrapper
 	app.Post(path, Wrapper(addUser))
 
 	formData := url.Values{}
@@ -76,20 +90,20 @@ func TestWrapperFromFormExample(t *testing.T) {
 	w := httptest.NewRecorder()
 	app.Handlers.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
-	if w.Code == http.StatusOK {
-		marshal, _ := json.Marshal([]any{"jack", 0})
-		assert.Equal(t, string(marshal), w.Body.String())
-	}
+	// Output the result
+	fmt.Println(w.Code)
+	fmt.Println(w.Body.String())
+	// Output:
+	// 200
+	// ["jack",0]
 }
 
-// TestWrapperExample test the Wrapper function.
-func TestWrapperExample(t *testing.T) {
-
+// ExampleWrapper demonstrates the usage of Wrapper to handle requests.
+func ExampleWrapper() {
 	app := NewHttpSever()
 	app.Cfg.CopyRequestBody = true
 	path := "/api/data"
-	// to use wrapper
+	// 使用 wrapper
 	app.Post(path, Wrapper(addUser))
 
 	request := userRequest{
@@ -105,11 +119,11 @@ func TestWrapperExample(t *testing.T) {
 	w := httptest.NewRecorder()
 	app.Handlers.ServeHTTP(w, req)
 
-	assert.Equal(t, http.StatusOK, w.Code)
-	if w.Code == http.StatusOK {
-		marshal, _ := json.Marshal([]any{"tom", 18})
-		assert.Equal(t, string(marshal), w.Body.String())
-	}
+	fmt.Println(w.Code)
+	fmt.Println(w.Body.String())
+	// Output:
+	// 200
+	// ["tom",18]
 }
 
 func TestAllWrapperTestCase(t *testing.T) {

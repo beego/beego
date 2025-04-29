@@ -1,3 +1,17 @@
+// Copyright 2014 beego Author. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package web
 
 import (
@@ -13,7 +27,7 @@ type extractFunc[T any] func(ctx *context.Context) (params T, err error)
 
 // WrapperFromJson  for handling JSON in request's body.
 // It binds the JSON request body to the specified type T
-// Usage can see test cases : TestWrapperFromJsonExample
+// Usage can see test cases : ExampleWrapperFromJson
 func WrapperFromJson[T any](
 	biz bizFunc[T]) func(ctx *context.Context) {
 	return internalWrapper(biz, func(ctx *context.Context) (params T, err error) {
@@ -24,7 +38,7 @@ func WrapperFromJson[T any](
 
 // WrapperFromForm  for handling form data in request.
 // It binds the form data to the specified type T
-// Usage can see test cases : TestWrapperFromFormExample
+// Usage can see test cases : ExampleWrapperFromForm
 func WrapperFromForm[T any](
 	biz bizFunc[T]) func(ctx *context.Context) {
 	return internalWrapper(biz, func(ctx *context.Context) (params T, err error) {
@@ -35,7 +49,7 @@ func WrapperFromForm[T any](
 
 // Wrapper is use by beego ctx.Bind(any) api
 // It binds the data to the specified type T
-// Usage can see test cases : TestWrapperExample
+// Usage can see test cases: ExampleWrapper
 func Wrapper[T any](
 	biz bizFunc[T]) func(ctx *context.Context) {
 	return internalWrapper(biz, func(ctx *context.Context) (params T, err error) {
