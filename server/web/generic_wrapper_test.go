@@ -33,6 +33,12 @@ import (
 	"time"
 )
 
+const (
+	sendUrl     = "/api/data"
+	contentType = "Content-Type"
+	accept      = "Accept"
+)
+
 // userRequest is a struct that represents the request parameters.
 type userRequest struct {
 	Name string `json:"name" form:"name"`
@@ -51,15 +57,15 @@ func addUser(_ *context.Context, params userRequest) (any, error) {
 func ExampleWrapperFromJson() {
 	app := NewHttpSever()
 	app.Cfg.CopyRequestBody = true
-	path := "/api/data"
+	path := sendUrl
 	// 使用 wrapper
 	app.Post(path, Wrapper(addUser))
 
 	reader := strings.NewReader(`{"name": "rose", "age": 17}`)
 
 	req := httptest.NewRequest("POST", path, reader)
-	req.Header.Set("Content-Type", context.ApplicationJSON)
-	req.Header.Set("Accept", "*/*")
+	req.Header.Set(contentType, context.ApplicationJSON)
+	req.Header.Set(accept, "*/*")
 
 	w := httptest.NewRecorder()
 	app.Handlers.ServeHTTP(w, req)
@@ -76,7 +82,7 @@ func ExampleWrapperFromJson() {
 func ExampleWrapperFromForm() {
 	app := NewHttpSever()
 	app.Cfg.CopyRequestBody = true
-	path := "/api/data"
+	path := sendUrl
 	// Use wrapper
 	app.Post(path, Wrapper(addUser))
 
@@ -84,8 +90,8 @@ func ExampleWrapperFromForm() {
 	formData.Set("name", "jack")
 
 	req := httptest.NewRequest("POST", path, strings.NewReader(formData.Encode()))
-	req.Header.Set("Content-Type", context.ApplicationForm)
-	req.Header.Set("Accept", "*/*")
+	req.Header.Set(contentType, context.ApplicationForm)
+	req.Header.Set(accept, "*/*")
 
 	w := httptest.NewRecorder()
 	app.Handlers.ServeHTTP(w, req)
@@ -102,7 +108,7 @@ func ExampleWrapperFromForm() {
 func ExampleWrapper() {
 	app := NewHttpSever()
 	app.Cfg.CopyRequestBody = true
-	path := "/api/data"
+	path := sendUrl
 	// 使用 wrapper
 	app.Post(path, Wrapper(addUser))
 
@@ -113,8 +119,8 @@ func ExampleWrapper() {
 	marshal, _ := xml.Marshal(request)
 
 	req := httptest.NewRequest("POST", path, bytes.NewBuffer(marshal))
-	req.Header.Set("Content-Type", context.ApplicationXML)
-	req.Header.Set("Accept", "*/*")
+	req.Header.Set(contentType, context.ApplicationXML)
+	req.Header.Set(accept, "*/*")
 
 	w := httptest.NewRecorder()
 	app.Handlers.ServeHTTP(w, req)
@@ -244,13 +250,13 @@ func TestAllWrapperTestCase(t *testing.T) {
 				defer c()
 			}
 			// 3. register route
-			path := "/api/data"
+			path := sendUrl
 			app.Post(path, tc.bizProvider())
 
 			// 4. create request
 			req := httptest.NewRequest("POST", path, tc.reqBody())
-			req.Header.Set("Content-Type", tc.contentType)
-			req.Header.Set("Accept", "*/*")
+			req.Header.Set(contentType, tc.contentType)
+			req.Header.Set(accept, "*/*")
 
 			for key, value := range tc.reqHeader {
 				req.Header.Set(key, value)
