@@ -55,7 +55,7 @@ func addUser(_ *context.Context, params userRequest) (any, error) {
 
 // ExampleWrapperFromJson is an example of using WrapperFromJson to handle JSON requests.
 func ExampleWrapperFromJson() {
-	app := NewHttpSever()
+	app := NewHttpServerWithCfg(newBConfig())
 	app.Cfg.CopyRequestBody = true
 	path := sendUrl
 	// 使用 wrapper
@@ -80,8 +80,8 @@ func ExampleWrapperFromJson() {
 
 // ExampleWrapperFromForm demonstrates the usage of WrapperFromForm to handle form data.
 func ExampleWrapperFromForm() {
-	app := NewHttpSever()
-	app.Cfg.CopyRequestBody = true
+	app := NewHttpServerWithCfg(newBConfig())
+	//app.Cfg.CopyRequestBody = true
 	path := sendUrl
 	// Use wrapper
 	app.Post(path, Wrapper(addUser))
@@ -106,7 +106,7 @@ func ExampleWrapperFromForm() {
 
 // ExampleWrapper demonstrates the usage of Wrapper to handle requests.
 func ExampleWrapper() {
-	app := NewHttpSever()
+	app := NewHttpServerWithCfg(newBConfig())
 	app.Cfg.CopyRequestBody = true
 	path := sendUrl
 	// 使用 wrapper
@@ -240,7 +240,7 @@ func TestAllWrapperTestCase(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 
 			// 1. init web server
-			app := NewHttpSever()
+			app := NewHttpServerWithCfg(newBConfig())
 			// 2. set copy request body
 			app.Cfg.CopyRequestBody = true
 			// need to config session before register route
