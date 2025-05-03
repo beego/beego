@@ -72,6 +72,14 @@ const (
 	DebugQueries = iota
 )
 
+// QueryCommenter interface for adding comments to queries
+type QueryCommenter interface {
+	// AddComment adds a comment that will be included in subsequent queries
+	AddComment(comment string)
+	// ClearComments removes all query comments
+	ClearComments()
+}
+
 // Define common vars
 var (
 	Debug            = false
@@ -101,9 +109,10 @@ type ormBase struct {
 }
 
 var (
-	_ DQL          = new(ormBase)
-	_ DML          = new(ormBase)
-	_ DriverGetter = new(ormBase)
+	_ DQL            = new(ormBase)
+	_ DML            = new(ormBase)
+	_ DriverGetter   = new(ormBase)
+	_ QueryCommenter = new(ormBase)
 )
 
 // Get model info and model reflect value
@@ -142,6 +151,16 @@ func (*ormBase) getFieldInfo(mi *models.ModelInfo, name string) *models.FieldInf
 		panic(fmt.Errorf("<Ormer> cannot find field `%s` for model `%s`", name, mi.FullName))
 	}
 	return fi
+}
+
+// AddComment adds a comment that will be included in subsequent queries
+func (o *ormBase) AddComment(comment string) {
+	AddQueryComment(comment)
+}
+
+// ClearComments removes all query comments
+func (o *ormBase) ClearComments() {
+	ClearQueryComments()
 }
 
 // read data to model

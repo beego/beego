@@ -481,6 +481,11 @@ func (d *dbBase) InsertValueSQL(names []string, values []interface{}, isMulti bo
 
 	Q := d.ins.TableQuote()
 
+	// Add query comments if any
+	if comments := DefaultQueryComments.String(); comments != "" {
+		_, _ = buf.WriteString(comments)
+	}
+
 	_, _ = buf.WriteString("INSERT INTO ")
 	_, _ = buf.WriteString(Q)
 	_, _ = buf.WriteString(mi.Table)
@@ -738,6 +743,11 @@ func (d *dbBase) UpdateSQL(setNames []string, pkName string, mi *models.ModelInf
 
 	Q := d.ins.TableQuote()
 
+	// Add query comments if any
+	if comments := DefaultQueryComments.String(); comments != "" {
+		_, _ = buf.WriteString(comments)
+	}
+
 	_, _ = buf.WriteString("UPDATE ")
 	_, _ = buf.WriteString(Q)
 	_, _ = buf.WriteString(mi.Table)
@@ -814,6 +824,11 @@ func (d *dbBase) DeleteSQL(whereCols []string, mi *models.ModelInfo) string {
 
 	Q := d.ins.TableQuote()
 
+	// Add query comments if any
+	if comments := DefaultQueryComments.String(); comments != "" {
+		_, _ = buf.WriteString(comments)
+	}
+
 	_, _ = buf.WriteString("DELETE FROM ")
 	_, _ = buf.WriteString(Q)
 	_, _ = buf.WriteString(mi.Table)
@@ -882,6 +897,11 @@ func (d *dbBase) UpdateBatchSQL(mi *models.ModelInfo, cols []string, values []in
 
 	buf := buffers.Get()
 	defer buffers.Put(buf)
+
+	// Add query comments if any
+	if comments := DefaultQueryComments.String(); comments != "" {
+		_, _ = buf.WriteString(comments)
+	}
 
 	_, _ = buf.WriteString("UPDATE ")
 	_, _ = buf.WriteString(quote)
@@ -1327,6 +1347,11 @@ func (d *dbBase) readSQL(buf buffers.Buffer, tables *dbTables, tCols []string, c
 	limit := tables.getLimitSQL(mi, qs.offset, qs.limit)
 	join := tables.getJoinSQL()
 	specifyIndexes := tables.getIndexSql(mi.Table, qs.useIndex, qs.indexes)
+
+	// Add query comments if any
+	if comments := DefaultQueryComments.String(); comments != "" {
+		_, _ = buf.WriteString(comments)
+	}
 
 	_, _ = buf.WriteString("SELECT ")
 
