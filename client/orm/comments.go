@@ -14,49 +14,73 @@
 
 package orm
 
-import "strings"
+import (
+	"strings"
+	"sync"
+)
 
-// QueryComments stores the comments to be added to queries
+// QueryComments stores SQL query comments and provides thread-safe access.
+// Comments will be included in generated SQL queries for improved debugging and tracing.
 type QueryComments struct {
+	mu       sync.RWMutex
 	comments []string
 }
 
-// NewQueryComments creates a new QueryComments instance
+// NewQueryComments creates a new QueryComments instance.
+// The returned instance is safe for concurrent use.
 func NewQueryComments() *QueryComments {
 	return &QueryComments{
 		comments: make([]string, 0),
 	}
 }
 
-// Add appends a new comment
-func (qc *QueryComments) Add(comment string) {
+// AddComment adds a comment to the query comments.
+// Multiple comments will be joined with semicolons in the final SQL query.
+// This method is safe for concurrent use.
+func (qc *QueryComments) AddComment(comment string) {
+	if comment == "" {
+		return
+	}
+	qc.mu.Lock()
 	qc.comments = append(qc.comments, comment)
+	qc.mu.Unlock()
 }
 
-// Clear removes all comments
-func (qc *QueryComments) Clear() {
+// ClearComments removes all comments.
+// This method is safe for concurrent use.
+func (qc *QueryComments) ClearComments() {
+	qc.mu.Lock()
 	qc.comments = qc.comments[:0]
+	qc.mu.Unlock()
 }
 
-// String returns all comments formatted as a SQL comment string
+// String returns all comments formatted as a SQL comment string.
+// Multiple comments are joined with semicolons.
+// Returns an empty string if there are no comments.
+// This method is safe for concurrent use.
 func (qc *QueryComments) String() string {
+	qc.mu.RLock()
+	defer qc.mu.RUnlock()
+
 	if len(qc.comments) == 0 {
 		return ""
 	}
 	return "/* " + strings.Join(qc.comments, "; ") + " */ "
 }
 
-var (
-	// DefaultQueryComments is the default QueryComments instance used by the ORM
-	DefaultQueryComments = NewQueryComments()
-)
+// DefaultQueryComments is the default QueryComments instance used by the ORM.
+var DefaultQueryComments = NewQueryComments()
 
-// AddQueryComment adds a comment that will be included in subsequent queries
+// AddQueryComment adds a comment that will be included in subsequent queries.
+// This is a convenience function that uses DefaultQueryComments.
 func AddQueryComment(comment string) {
-	DefaultQueryComments.Add(comment)
+	DefaultQueryComments.AddComment(comment)
 }
 
-// ClearQueryComments removes all query comments
+// ClearQueryComments removes all query comments.
+// This is a convenience function that uses DefaultQueryComments.
 func ClearQueryComments() {
-	DefaultQueryComments.Clear()
+	DefaultQueryComments.ClearComments()
 }
+
+var _ QueryCommenter = (*QueryComments)(nil)
