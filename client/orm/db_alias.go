@@ -386,8 +386,9 @@ func addAliasWthDB(aliasName, driverName string, db *sql.DB, params ...DBOption)
 func newAliasWithDb(aliasName, driverName string, db *sql.DB, params ...DBOption) (*alias, error) {
 	al := &alias{}
 	al.DB = &DB{
-		RWMutex: new(sync.RWMutex),
-		DB:      db,
+		RWMutex:       new(sync.RWMutex),
+		DB:            db,
+		queryComments: NewQueryComments(), // Initialize with new QueryComments instance
 	}
 
 	for _, p := range params {

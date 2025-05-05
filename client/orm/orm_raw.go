@@ -775,7 +775,10 @@ func (o *rawSet) queryRowsTo(container interface{}, keyCol, valueCol string) (in
 
 	args := getFlatParams(nil, o.args, o.orm.alias.TZ)
 
-	rs, err := o.orm.db.Query(query, args...)
+	// Prepend comments
+	fullQuery := prependComments(o.orm.db, query)
+
+	rs, err := o.orm.db.Query(fullQuery, args...) // Use fullQuery
 	if err != nil {
 		return 0, err
 	}

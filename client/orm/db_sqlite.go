@@ -206,6 +206,19 @@ func (d *dbBaseSqlite) GenerateSpecifyIndex(tableName string, useIndex int, inde
 	}
 }
 
+// Helper method to handle comment prepending with type assertion
+func (d *dbBaseSqlite) prependCommentsIfSupported(db dbQuerier, query string) string {
+	// Check if the dbQuerier supports getting comments (might be raw *sql.DB during syncdb)
+	if qcGetter, ok := db.(interface {
+		GetQueryComments() *QueryComments
+	}); ok {
+		if qc := qcGetter.GetQueryComments(); qc != nil {
+			return qc.String() + query
+		}
+	}
+	return query
+}
+
 // create new sqlite dbBaser.
 func newdbBaseSqlite() dbBaser {
 	b := new(dbBaseSqlite)

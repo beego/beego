@@ -70,7 +70,20 @@ func (d *dbBaseTidb) IndexExists(ctx context.Context, db dbQuerier, table string
 	return cnt > 0
 }
 
-// create new mysql dbBaser.
+// Helper method to handle comment prepending with type assertion
+func (d *dbBaseTidb) prependCommentsIfSupported(db dbQuerier, query string) string {
+	// Check if the dbQuerier supports getting comments (might be raw *sql.DB during syncdb)
+	if qcGetter, ok := db.(interface {
+		GetQueryComments() *QueryComments
+	}); ok {
+		if qc := qcGetter.GetQueryComments(); qc != nil {
+			return qc.String() + query
+		}
+	}
+	return query
+}
+
+// create new tidb dbBaser.
 func newdbBaseTidb() dbBaser {
 	b := new(dbBaseTidb)
 	b.ins = b

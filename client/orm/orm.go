@@ -564,20 +564,23 @@ func (o *orm) BeginWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions) (TxO
 		return nil, err
 	}
 
-	// Get comments from the parent dbQuerier
-	parentComments := o.db.GetQueryComments()
+	// Create a NEW QueryComments instance for the transaction
+	txComments := NewQueryComments()
+	// Optionally, copy comments from parent if desired (but usually isolation is better)
+	// parentComments := o.db.GetQueryComments()
+	// txComments.comments = append(txComments.comments, parentComments.comments...)
 
-	// Create TxDB and assign comments
+	// Create TxDB and assign the NEW comments instance
 	txDbInstance := &TxDB{
 		tx:            tx,
-		queryComments: parentComments, // Assign comments to TxDB
+		queryComments: txComments, // Assign NEW comments to TxDB
 	}
 
 	_txOrm := &txOrm{
 		ormBase: ormBase{
 			alias:         o.alias,
-			db:            txDbInstance,   // Use the TxDB instance with comments
-			queryComments: parentComments, // Assign comments to embedded ormBase
+			db:            txDbInstance, // Use the TxDB instance with NEW comments
+			queryComments: txComments,   // Assign NEW comments to embedded ormBase
 		},
 	}
 

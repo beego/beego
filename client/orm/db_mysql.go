@@ -194,6 +194,19 @@ func (d *dbBaseMysql) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *model
 	return id, err
 }
 
+// Helper method to handle comment prepending with type assertion
+func (d *dbBaseMysql) prependCommentsIfSupported(db dbQuerier, query string) string {
+	// Check if the dbQuerier supports getting comments (might be raw *sql.DB during syncdb)
+	if qcGetter, ok := db.(interface {
+		GetQueryComments() *QueryComments
+	}); ok {
+		if qc := qcGetter.GetQueryComments(); qc != nil {
+			return qc.String() + query
+		}
+	}
+	return query
+}
+
 // create new mysql dbBaser.
 func newdbBaseMysql() dbBaser {
 	b := new(dbBaseMysql)

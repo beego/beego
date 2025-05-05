@@ -63,6 +63,19 @@ type dbBaseOracle struct {
 
 var _ dbBaser = new(dbBaseOracle)
 
+// Helper method to handle comment prepending with type assertion
+func (d *dbBaseOracle) prependCommentsIfSupported(db dbQuerier, query string) string {
+	// Check if the dbQuerier supports getting comments (might be raw *sql.DB during syncdb)
+	if qcGetter, ok := db.(interface {
+		GetQueryComments() *QueryComments
+	}); ok {
+		if qc := qcGetter.GetQueryComments(); qc != nil {
+			return qc.String() + query
+		}
+	}
+	return query
+}
+
 // create oracle dbBaser.
 func newdbBaseOracle() dbBaser {
 	b := new(dbBaseOracle)

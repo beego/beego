@@ -204,6 +204,19 @@ func (d *dbBasePostgres) GenerateSpecifyIndex(tableName string, useIndex int, in
 	return ``
 }
 
+// Helper method to handle comment prepending with type assertion
+func (d *dbBasePostgres) prependCommentsIfSupported(db dbQuerier, query string) string {
+	// Check if the dbQuerier supports getting comments (might be raw *sql.DB during syncdb)
+	if qcGetter, ok := db.(interface {
+		GetQueryComments() *QueryComments
+	}); ok {
+		if qc := qcGetter.GetQueryComments(); qc != nil {
+			return qc.String() + query
+		}
+	}
+	return query
+}
+
 // create new postgresql dbBaser.
 func newdbBasePostgres() dbBaser {
 	b := new(dbBasePostgres)

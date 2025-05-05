@@ -167,14 +167,16 @@ func (d *DoNothingOrm) DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptio
 	return nil
 }
 
-// AddQueryComment does nothing.
+// AddQueryComment implements QueryCommenter interface but does nothing in this mock implementation.
+// In a real implementation, this would add SQL comments to be prepended to subsequent queries.
 func (d *DoNothingOrm) AddQueryComment(comment string) {
-	// Do nothing
+	// Do nothing - mock implementation
 }
 
-// ClearQueryComments does nothing.
+// ClearQueryComments implements QueryCommenter interface but does nothing in this mock implementation.
+// In a real implementation, this would clear any SQL comments previously added.
 func (d *DoNothingOrm) ClearQueryComments() {
-	// Do nothing
+	// Do nothing - mock implementation
 }
 
 // DoNothingTxOrm is similar with DoNothingOrm, usually you use it to test

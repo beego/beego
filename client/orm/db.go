@@ -2230,3 +2230,19 @@ func (d *dbBase) GenerateSpecifyIndex(tableName string, useIndex int, indexes []
 
 	return fmt.Sprintf(` %s INDEX(%s) `, useWay, strings.Join(s, `,`))
 }
+
+// prependComments prepends SQL comments from the querier to the query string.
+// It ensures a space is added between the comment and the query if comments exist.
+func prependComments(q dbQuerier, query string) string {
+	commentStr := q.GetQueryComments().String()
+	if commentStr == "" {
+		return query
+	}
+	// Use a strings.Builder for potentially better performance and clarity
+	var builder strings.Builder
+	builder.Grow(len(commentStr) + 1 + len(query)) // Pre-allocate approximate size
+	builder.WriteString(commentStr)
+	builder.WriteString(" ") // Add space separator
+	builder.WriteString(query)
+	return builder.String()
+}
