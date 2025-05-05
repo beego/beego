@@ -277,7 +277,7 @@ func (d *dbBase) PrepareInsert(ctx context.Context, q dbQuerier, mi *models.Mode
 		}
 	}
 	qmarks := strings.Join(marks, ", ")
-	sep := Q + ", " + Q // Simplified fmt.Sprintf
+	sep := fmt.Sprintf("%s, %s", Q, Q) // Reverted simplification
 	columns := strings.Join(dbcols, sep)
 
 	query := fmt.Sprintf("INSERT INTO %s%s%s (%s%s%s) VALUES (%s)", Q, mi.Table, Q, Q, columns, Q, qmarks)
@@ -339,7 +339,7 @@ func (d *dbBase) Read(ctx context.Context, q dbQuerier, mi *models.ModelInfo, in
 	sels := strings.Join(mi.Fields.DBcols, sep)
 	colsNum := len(mi.Fields.DBcols)
 
-	sep = Q + " = ? AND " + Q // Simplified fmt.Sprintf
+	sep = fmt.Sprintf("%s = ? AND %s", Q, Q) // Reverted simplification
 	wheres := strings.Join(whereCols, sep)
 
 	forUpdate := ""
