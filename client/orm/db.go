@@ -2232,17 +2232,45 @@ func (d *dbBase) GenerateSpecifyIndex(tableName string, useIndex int, indexes []
 }
 
 // prependComments prepends SQL comments from the querier to the query string.
-// It ensures a space is added between the comment and the query if comments exist.
+//
+// This helper function is used throughout the ORM to consistently handle SQL comment
+// prepending across all query types. Comments are used for tracing, debugging,
+// and monitoring purposes.
+//
+// The function:
+// 1. Gets comments from the dbQuerier interface
+// 2. If comments exist, prepends them with proper spacing to the query
+// 3. Uses strings.Builder for efficient string concatenation
+// 4. Handles nil querier and empty comments gracefully
+//
+// Example:
+//
+//	query := "SELECT * FROM users"
+//	// If querier has comment "/* trace_id:123 */"
+//	result := prependComments(querier, query)
+//	// result = "/* trace_id:123 */ SELECT * FROM users"
+//
+// The function ensures a space is added between comments and the query for readability.
 func prependComments(q dbQuerier, query string) string {
-	commentStr := q.GetQueryComments().String()
+	if q == nil {
+		return query
+	}
+
+	qc := q.GetQueryComments()
+	if qc == nil {
+		return query
+	}
+
+	commentStr := qc.String()
 	if commentStr == "" {
 		return query
 	}
-	// Use a strings.Builder for potentially better performance and clarity
+
+	// Use strings.Builder for efficient string concatenation
 	var builder strings.Builder
 	builder.Grow(len(commentStr) + 1 + len(query)) // Pre-allocate approximate size
 	builder.WriteString(commentStr)
-	builder.WriteString(" ") // Add space separator
+	builder.WriteString(" ") // Add space separator for readability
 	builder.WriteString(query)
 	return builder.String()
 }

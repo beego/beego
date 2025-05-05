@@ -911,7 +911,23 @@ func (o *rawSet) RowsToStruct(ptrStruct interface{}, keyCol, valueCol string) (i
 	return o.queryRowsTo(ptrStruct, keyCol, valueCol)
 }
 
-// return prepared raw statement for used in times.
+// Prepare returns a prepared raw statement that can be used multiple times.
+//
+// For example:
+//
+//	r := o.Raw("SELECT name FROM user WHERE id = ?")
+//	p, err := r.Prepare()
+//	if err != nil {
+//	    return err
+//	}
+//	defer p.Close()
+//
+//	// Execute multiple times with different parameters
+//	res1, err := p.Exec(1)  // id = 1
+//	res2, err := p.Exec(2)  // id = 2
+//
+// Note: SQL comments from QueryCommenter are applied when the statement
+// is prepared, not when it's executed.
 func (o *rawSet) Prepare() (RawPreparer, error) {
 	return newRawPreparer(o)
 }

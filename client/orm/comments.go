@@ -79,8 +79,14 @@ func AddQueryComment(comment string) {
 	DefaultQueryComments.AddComment(comment)
 }
 
-// ClearQueryComments removes all query comments.
+// ClearQueryComments removes all global query comments.
 // This is a convenience function that uses DefaultQueryComments.
+//
+// Example workflow:
+//
+//	orm.AddQueryComment("debug=true")
+//	// ... run some queries ...
+//	orm.ClearQueryComments() // Clean up when done debugging
 func ClearQueryComments() {
 	DefaultQueryComments.ClearComments()
 }

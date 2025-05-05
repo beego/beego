@@ -621,7 +621,13 @@ type dbQuerier interface {
 	QueryRow(query string, args ...interface{}) *sql.Row
 	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
 	// GetQueryComments returns the QueryComments object associated with this querier.
-	// This is used internally to retrieve comments to prepend to SQL queries.
+	//
+	// This method is used internally by the ORM to retrieve SQL comments that should
+	// be prepended to queries. It's part of the internal API and typically shouldn't
+	// be called directly by application code.
+	//
+	// Comments are retrieved just before query execution and are thread-safe.
+	// The returned QueryComments instance may be nil if no comments are configured.
 	GetQueryComments() *QueryComments
 }
 
