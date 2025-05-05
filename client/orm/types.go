@@ -610,7 +610,52 @@ type stmtQuerier interface {
 	QueryRowContext(ctx context.Context, args ...interface{}) *sql.Row
 }
 
-// db querier
+// QueryCommenter defines the interface for managing SQL query comments.
+// Objects implementing this interface can have SQL comments prepended to their queries
+// for debugging, tracing, or monitoring purposes.
+//
+// Example usage:
+//
+//	type MyQuerier struct {
+//	    comments *QueryComments
+//	}
+//
+//	func (q *MyQuerier) GetQueryComments() *QueryComments {
+//	    return q.comments
+//	}
+type QueryCommenter interface {
+	// GetQueryComments returns the QueryComments object associated with this querier.
+	//
+	// Comments are retrieved just before query execution and are thread-safe.
+	// The returned QueryComments instance may be nil if no comments are configured.
+	GetQueryComments() *QueryComments
+}
+
+// QueryCommenter defines the interface for adding SQL comments to queries.
+// Comments are prepended to SQL queries for debugging, tracing, or monitoring purposes.
+// Each comment is wrapped in /* */ and multiple comments are joined with semicolons.
+//
+// Example usage:
+//
+//	ormer := orm.NewOrm()
+//	ormer.AddQueryComment("trace_id:123")
+//	ormer.AddQueryComment("user_id:456")
+//	// Generated SQL will be: /* trace_id:123; user_id:456 */ SELECT * FROM table
+//
+// Comments are thread-safe and automatically cleared after each query execution.
+type QueryCommenter interface {
+	// AddComment adds a comment that will be included in subsequent queries for the current context.
+	// Multiple comments are joined with semicolons.
+	// Empty comments are ignored.
+	AddComment(comment string)
+
+	// ClearComments removes all previously added query comments for the current context.
+	// This is useful for explicitly clearing comments before they are automatically cleared
+	// after the next query execution.
+	ClearComments()
+}
+
+// db querier allows database operations and comment management
 type dbQuerier interface {
 	Prepare(query string) (*sql.Stmt, error)
 	PrepareContext(ctx context.Context, query string) (*sql.Stmt, error)

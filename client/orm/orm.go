@@ -72,11 +72,27 @@ const (
 	DebugQueries = iota
 )
 
-// QueryCommenter interface for adding comments to queries
+// QueryCommenter defines the interface for adding SQL comments to queries.
+// Comments are prepended to SQL queries for debugging, tracing, or monitoring purposes.
+// Each comment is wrapped in /* */ and multiple comments are joined with semicolons.
+//
+// Example usage:
+//
+//	ormer := orm.NewOrm()
+//	ormer.AddQueryComment("trace_id:123")
+//	ormer.AddQueryComment("user_id:456")
+//	// Generated SQL will be: /* trace_id:123; user_id:456 */ SELECT * FROM table
+//
+// Comments are thread-safe and automatically cleared after each query execution.
 type QueryCommenter interface {
-	// AddComment adds a comment that will be included in subsequent queries
+	// AddComment adds a comment that will be included in subsequent queries for the current context.
+	// Multiple comments are joined with semicolons.
+	// Empty comments are ignored.
 	AddComment(comment string)
-	// ClearComments removes all query comments
+
+	// ClearComments removes all previously added query comments for the current context.
+	// This is useful for explicitly clearing comments before they are automatically cleared
+	// after the next query execution.
 	ClearComments()
 }
 
