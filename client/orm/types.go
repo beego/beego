@@ -249,9 +249,14 @@ type ormer interface {
 	DML
 	DriverGetter
 
-	// AddQueryComment adds a comment to be prepended to the next query.
+	// AddQueryComment adds a comment string to be prepended to the next SQL query executed
+	// in the current goroutine's context. Multiple comments are joined with "; ".
+	// Example: o.AddQueryComment("user_id:123").AddQueryComment("trace_id:xyz").Update(&user)
+	// will prepend "/* user_id:123; trace_id:xyz */ " to the UPDATE statement.
+	// Comments are automatically cleared after the next query execution.
 	AddQueryComment(comment string)
-	// ClearQueryComments removes all comments for the next query.
+	// ClearQueryComments explicitly removes any comments previously added using AddQueryComment
+	// for the current goroutine's context before the next query executes.
 	ClearQueryComments()
 }
 
@@ -615,6 +620,8 @@ type dbQuerier interface {
 	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
 	QueryRow(query string, args ...interface{}) *sql.Row
 	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
+	// GetQueryComments returns the QueryComments object associated with this querier.
+	// This is used internally to retrieve comments to prepend to SQL queries.
 	GetQueryComments() *QueryComments
 }
 

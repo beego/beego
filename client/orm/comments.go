@@ -21,42 +21,44 @@ import (
 
 // QueryComments stores SQL query comments and provides thread-safe access.
 // Comments will be included in generated SQL queries for improved debugging and tracing.
+// Use the AddComment and ClearComments methods on an Ormer instance to manage comments.
 type QueryComments struct {
-	mu       sync.RWMutex
-	comments []string
+	mu       sync.RWMutex // mu protects the comments slice
+	comments []string     // comments stores the list of comments added
 }
 
-// NewQueryComments creates a new QueryComments instance.
+// NewQueryComments creates a new, empty QueryComments instance.
 // The returned instance is safe for concurrent use.
+// This is typically called internally when creating a new Ormer.
 func NewQueryComments() *QueryComments {
 	return &QueryComments{
 		comments: make([]string, 0),
 	}
 }
 
-// AddComment adds a comment to the query comments.
-// Multiple comments will be joined with semicolons in the final SQL query.
+// AddComment appends a new comment string to the list of comments for the current query context.
+// If multiple comments are added, they will be joined by "; " within the final SQL comment block (e.g., /* comment1; comment2 */).
+// An empty comment string is ignored.
 // This method is safe for concurrent use.
 func (qc *QueryComments) AddComment(comment string) {
 	if comment == "" {
 		return
 	}
 	qc.mu.Lock()
+	defer qc.mu.Unlock() // Use defer for unlock
 	qc.comments = append(qc.comments, comment)
-	qc.mu.Unlock()
 }
 
-// ClearComments removes all comments.
+// ClearComments removes all previously added comments for the current query context.
 // This method is safe for concurrent use.
 func (qc *QueryComments) ClearComments() {
 	qc.mu.Lock()
-	qc.comments = qc.comments[:0]
-	qc.mu.Unlock()
+	defer qc.mu.Unlock()          // Use defer for unlock
+	qc.comments = qc.comments[:0] // Reset slice length to 0, keeping allocated capacity
 }
 
-// String returns all comments formatted as a SQL comment string.
-// Multiple comments are joined with semicolons.
-// Returns an empty string if there are no comments.
+// String formats the collected comments into a single SQL comment string (e.g., "/* comment1; comment2 */ ").
+// If no comments have been added, it returns an empty string.
 // This method is safe for concurrent use.
 func (qc *QueryComments) String() string {
 	qc.mu.RLock()
