@@ -248,6 +248,11 @@ type ormer interface {
 	DQL
 	DML
 	DriverGetter
+
+	// AddQueryComment adds a comment to be prepended to the next query.
+	AddQueryComment(comment string)
+	// ClearQueryComments removes all comments for the next query.
+	ClearQueryComments()
 }
 
 // QueryExecutor wrapping for ormer
@@ -610,6 +615,7 @@ type dbQuerier interface {
 	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
 	QueryRow(query string, args ...interface{}) *sql.Row
 	QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row
+	GetQueryComments() *QueryComments
 }
 
 // type DB interface {

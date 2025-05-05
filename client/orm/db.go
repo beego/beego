@@ -357,7 +357,11 @@ func (d *dbBase) Read(ctx context.Context, q dbQuerier, mi *models.ModelInfo, in
 
 	d.ins.ReplaceMarks(&query)
 
-	row := q.QueryRowContext(ctx, query, args...)
+	// Prepend comments
+	commentStr := q.GetQueryComments().String()
+	fullQuery := commentStr + query
+
+	row := q.QueryRowContext(ctx, fullQuery, args...) // Use fullQuery
 	if err := row.Scan(refs...); err != nil {
 		if err == sql.ErrNoRows {
 			return ErrNoRows
@@ -452,8 +456,13 @@ func (d *dbBase) InsertMulti(ctx context.Context, q dbQuerier, mi *models.ModelI
 func (d *dbBase) InsertValue(ctx context.Context, q dbQuerier, mi *models.ModelInfo, isMulti bool, names []string, values []interface{}) (int64, error) {
 	query := d.InsertValueSQL(names, values, isMulti, mi)
 
-	if isMulti || !d.ins.HasReturningID(mi, &query) {
-		res, err := q.ExecContext(ctx, query, values...)
+	// Prepend comments
+	commentStr := q.GetQueryComments().String()
+	fullQuery := commentStr + query
+
+	// Note: HasReturningID might need adjustment if it relies on exact query prefix
+	if isMulti || !d.ins.HasReturningID(mi, &query) { // Check original query for HasReturningID
+		res, err := q.ExecContext(ctx, fullQuery, values...) // Use fullQuery
 		if err == nil {
 			if isMulti {
 				return res.RowsAffected()
@@ -469,7 +478,7 @@ func (d *dbBase) InsertValue(ctx context.Context, q dbQuerier, mi *models.ModelI
 		}
 		return 0, err
 	}
-	row := q.QueryRowContext(ctx, query, values...)
+	row := q.QueryRowContext(ctx, fullQuery, values...) // Use fullQuery
 	var id int64
 	err := row.Scan(&id)
 	return id, err
@@ -481,10 +490,7 @@ func (d *dbBase) InsertValueSQL(names []string, values []interface{}, isMulti bo
 
 	Q := d.ins.TableQuote()
 
-	// Add query comments if any
-	if comments := DefaultQueryComments.String(); comments != "" {
-		_, _ = buf.WriteString(comments)
-	}
+	// NOTE: Comment prepending is now done in InsertValue method
 
 	_, _ = buf.WriteString("INSERT INTO ")
 	_, _ = buf.WriteString(Q)
@@ -730,7 +736,11 @@ func (d *dbBase) Update(ctx context.Context, q dbQuerier, mi *models.ModelInfo, 
 
 	query := d.UpdateSQL(setNames, pkName, mi)
 
-	res, err := q.ExecContext(ctx, query, setValues...)
+	// Prepend comments
+	commentStr := q.GetQueryComments().String()
+	fullQuery := commentStr + query
+
+	res, err := q.ExecContext(ctx, fullQuery, setValues...) // Use fullQuery
 	if err == nil {
 		return res.RowsAffected()
 	}
@@ -801,7 +811,11 @@ func (d *dbBase) Delete(ctx context.Context, q dbQuerier, mi *models.ModelInfo, 
 
 	query := d.DeleteSQL(whereCols, mi)
 
-	res, err := q.ExecContext(ctx, query, args...)
+	// Prepend comments
+	commentStr := q.GetQueryComments().String()
+	fullQuery := commentStr + query
+
+	res, err := q.ExecContext(ctx, fullQuery, args...) // Use fullQuery
 	if err == nil {
 		num, err := res.RowsAffected()
 		if err != nil {
@@ -885,7 +899,11 @@ func (d *dbBase) UpdateBatch(ctx context.Context, q dbQuerier, qs *querySet, mi 
 
 	query := d.UpdateBatchSQL(mi, columns, values, specifyIndexes, join, where)
 
-	res, err := q.ExecContext(ctx, query, values...)
+	// Prepend comments
+	commentStr := q.GetQueryComments().String()
+	fullQuery := commentStr + query
+
+	res, err := q.ExecContext(ctx, fullQuery, values...) // Use fullQuery
 	if err == nil {
 		return res.RowsAffected()
 	}
@@ -1094,7 +1112,11 @@ func (d *dbBase) DeleteBatch(ctx context.Context, q dbQuerier, qs *querySet, mi 
 	query = fmt.Sprintf("DELETE FROM %s%s%s WHERE %s%s%s %s", Q, mi.Table, Q, Q, mi.Fields.Pk.Column, Q, sqlIn)
 
 	d.ins.ReplaceMarks(&query)
-	res, err := q.ExecContext(ctx, query, args...)
+	// Prepend comments
+	commentStr := q.GetQueryComments().String()
+	fullQuery := commentStr + query
+
+	res, err := q.ExecContext(ctx, fullQuery, args...) // Use fullQuery
 	if err == nil {
 		num, err := res.RowsAffected()
 		if err != nil {
@@ -1189,7 +1211,11 @@ func (d *dbBase) ReadBatch(ctx context.Context, q dbQuerier, qs querySet, mi *mo
 
 	query, args := d.readBatchSQL(tables, tCols, cond, qs, mi, tz)
 
-	rs, err := q.QueryContext(ctx, query, args...)
+	// Prepend comments
+	commentStr := q.GetQueryComments().String()
+	fullQuery := commentStr + query
+
+	rs, err := q.QueryContext(ctx, fullQuery, args...) // Use fullQuery
 	if err != nil {
 		return 0, err
 	}
@@ -1410,7 +1436,12 @@ func (d *dbBase) Count(ctx context.Context, q dbQuerier, qs querySet, mi *models
 
 	query, args := d.countSQL(qs, mi, cond, tz)
 
-	row := q.QueryRowContext(ctx, query, args...)
+	// Prepend comments
+	commentStr := q.GetQueryComments().String()
+	fullQuery := commentStr + query
+
+	// Use fullQuery in QueryRowContext
+	row := q.QueryRowContext(ctx, fullQuery, args...)
 	err = row.Scan(&cnt)
 	return
 }
@@ -1947,7 +1978,11 @@ func (d *dbBase) ReadValues(ctx context.Context, q dbQuerier, qs querySet, mi *m
 
 	query, args := d.readValuesSQL(tables, cols, qs, mi, cond, tz)
 
-	rs, err := q.QueryContext(ctx, query, args...)
+	// Prepend comments
+	commentStr := q.GetQueryComments().String()
+	fullQuery := commentStr + query
+
+	rs, err := q.QueryContext(ctx, fullQuery, args...) // Use fullQuery with args...
 	if err != nil {
 		return 0, err
 	}

@@ -29,15 +29,15 @@ func TestQueryComments(t *testing.T) {
 	assert.Equal(t, "", qc.String())
 
 	// Test single comment
-	qc.Add("test comment")
+	qc.AddComment("test comment") // Renamed from Add
 	assert.Equal(t, "/* test comment */ ", qc.String())
 
 	// Test multiple comments
-	qc.Add("another comment")
+	qc.AddComment("another comment") // Renamed from Add
 	assert.Equal(t, "/* test comment; another comment */ ", qc.String())
 
 	// Test clear
-	qc.Clear()
+	qc.ClearComments() // Renamed from Clear
 	assert.Equal(t, "", qc.String())
 }
 
@@ -66,8 +66,8 @@ func TestQueryCommentsWithOrm(t *testing.T) {
 	}
 
 	// Test comments in queries
-	DefaultQueryComments.Add("Test comment")
-	defer DefaultQueryComments.Clear()
+	DefaultQueryComments.AddComment("Test comment") // Renamed from Add
+	defer DefaultQueryComments.ClearComments()      // Renamed from Clear
 
 	// Create test components
 	mi := newModelInfo()

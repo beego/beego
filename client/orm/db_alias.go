@@ -110,6 +110,12 @@ type DB struct {
 	DB                  *sql.DB
 	stmtDecorators      *lru.Cache
 	stmtDecoratorsLimit int
+	queryComments       *QueryComments // Add this field
+}
+
+// GetQueryComments returns the QueryComments associated with this DB instance.
+func (d *DB) GetQueryComments() *QueryComments {
+	return d.queryComments
 }
 
 var (
@@ -220,7 +226,13 @@ func (d *DB) QueryRowContext(ctx context.Context, query string, args ...interfac
 }
 
 type TxDB struct {
-	tx *sql.Tx
+	tx            *sql.Tx
+	queryComments *QueryComments // Add this field
+}
+
+// GetQueryComments returns the QueryComments associated with this TxDB instance.
+func (t *TxDB) GetQueryComments() *QueryComments {
+	return t.queryComments
 }
 
 var (

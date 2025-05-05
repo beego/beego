@@ -186,6 +186,11 @@ func (d *dbQueryLog) QueryRowContext(ctx context.Context, query string, args ...
 	return res
 }
 
+// GetQueryComments returns the QueryComments from the wrapped dbQuerier.
+func (d *dbQueryLog) GetQueryComments() *QueryComments {
+	return d.db.GetQueryComments()
+}
+
 func (d *dbQueryLog) Begin() (*sql.Tx, error) {
 	return d.BeginTx(context.Background(), nil)
 }

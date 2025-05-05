@@ -119,7 +119,20 @@ func (d *dbBaseSqlite) ShowTablesQuery() string {
 // Get Columns in sqlite.
 func (d *dbBaseSqlite) GetColumns(ctx context.Context, db dbQuerier, table string) (map[string][3]string, error) {
 	query := d.ins.ShowColumnsQuery(table)
-	rows, err := db.QueryContext(ctx, query)
+
+	fullQuery := query // Default to original query
+	// Check if the dbQuerier supports getting comments (might be raw *sql.DB during syncdb)
+	if qcGetter, ok := db.(interface {
+		GetQueryComments() *QueryComments
+	}); ok {
+		qc := qcGetter.GetQueryComments()
+		if qc != nil {
+			commentStr := qc.String()
+			fullQuery = commentStr + query // Prepend only if supported and non-nil
+		}
+	}
+
+	rows, err := db.QueryContext(ctx, fullQuery)
 	if err != nil {
 		return nil, err
 	}
@@ -145,8 +158,23 @@ func (d *dbBaseSqlite) ShowColumnsQuery(table string) string {
 // check index exist in sqlite.
 func (d *dbBaseSqlite) IndexExists(ctx context.Context, db dbQuerier, table string, name string) bool {
 	query := fmt.Sprintf("PRAGMA index_list('%s')", table)
-	rows, err := db.QueryContext(ctx, query)
+
+	fullQuery := query // Default to original query
+	// Check if the dbQuerier supports getting comments (might be raw *sql.DB during syncdb)
+	if qcGetter, ok := db.(interface {
+		GetQueryComments() *QueryComments
+	}); ok {
+		qc := qcGetter.GetQueryComments()
+		if qc != nil {
+			commentStr := qc.String()
+			fullQuery = commentStr + query // Prepend only if supported and non-nil
+		}
+	}
+
+	rows, err := db.QueryContext(ctx, fullQuery)
 	if err != nil {
+		// Consider logging or returning the error instead of panicking
+		// For now, keeping the panic to match original behavior on error
 		panic(err)
 	}
 	defer rows.Close()

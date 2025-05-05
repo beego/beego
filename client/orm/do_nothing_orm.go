@@ -167,6 +167,16 @@ func (d *DoNothingOrm) DoTxWithCtxAndOpts(ctx context.Context, opts *sql.TxOptio
 	return nil
 }
 
+// AddQueryComment does nothing.
+func (d *DoNothingOrm) AddQueryComment(comment string) {
+	// Do nothing
+}
+
+// ClearQueryComments does nothing.
+func (d *DoNothingOrm) ClearQueryComments() {
+	// Do nothing
+}
+
 // DoNothingTxOrm is similar with DoNothingOrm, usually you use it to test
 type DoNothingTxOrm struct {
 	DoNothingOrm

@@ -93,9 +93,23 @@ func (d *dbBaseOracle) ShowColumnsQuery(table string) string {
 
 // check index is exist
 func (d *dbBaseOracle) IndexExists(ctx context.Context, db dbQuerier, table string, name string) bool {
-	row := db.QueryRowContext(ctx, "SELECT COUNT(*) FROM USER_IND_COLUMNS, USER_INDEXES "+
-		"WHERE USER_IND_COLUMNS.INDEX_NAME = USER_INDEXES.INDEX_NAME "+
-		"AND  USER_IND_COLUMNS.TABLE_NAME = ? AND USER_IND_COLUMNS.INDEX_NAME = ?", strings.ToUpper(table), strings.ToUpper(name))
+	query := "SELECT COUNT(*) FROM USER_IND_COLUMNS, USER_INDEXES " +
+		"WHERE USER_IND_COLUMNS.INDEX_NAME = USER_INDEXES.INDEX_NAME " +
+		"AND  USER_IND_COLUMNS.TABLE_NAME = ? AND USER_IND_COLUMNS.INDEX_NAME = ?"
+
+	fullQuery := query // Default to original query
+	// Check if the dbQuerier supports getting comments (might be raw *sql.DB during syncdb)
+	if qcGetter, ok := db.(interface {
+		GetQueryComments() *QueryComments
+	}); ok {
+		qc := qcGetter.GetQueryComments()
+		if qc != nil {
+			commentStr := qc.String()
+			fullQuery = commentStr + query // Prepend only if supported and non-nil
+		}
+	}
+
+	row := db.QueryRowContext(ctx, fullQuery, strings.ToUpper(table), strings.ToUpper(name))
 
 	var cnt int
 	row.Scan(&cnt)
@@ -149,8 +163,13 @@ func (d *dbBaseOracle) InsertValue(ctx context.Context, q dbQuerier, mi *models.
 
 	d.ins.ReplaceMarks(&query)
 
-	if isMulti || !d.ins.HasReturningID(mi, &query) {
-		res, err := q.ExecContext(ctx, query, values...)
+	// Prepend comments
+	commentStr := q.GetQueryComments().String()
+	fullQuery := commentStr + query
+
+	// Note: HasReturningID might need adjustment if it relies on exact query prefix
+	if isMulti || !d.ins.HasReturningID(mi, &query) { // Check original query for HasReturningID
+		res, err := q.ExecContext(ctx, fullQuery, values...) // Use fullQuery
 		if err == nil {
 			if isMulti {
 				return res.RowsAffected()
@@ -166,7 +185,7 @@ func (d *dbBaseOracle) InsertValue(ctx context.Context, q dbQuerier, mi *models.
 		}
 		return 0, err
 	}
-	row := q.QueryRowContext(ctx, query, values...)
+	row := q.QueryRowContext(ctx, fullQuery, values...) // Use fullQuery
 	var id int64
 	err := row.Scan(&id)
 	return id, err

@@ -104,15 +104,16 @@ type Params map[string]interface{}
 type ParamsList []interface{}
 
 type ormBase struct {
-	alias *alias
-	db    dbQuerier
+	alias         *alias
+	db            dbQuerier
+	queryComments *QueryComments // Add this field
 }
 
 var (
-	_ DQL            = new(ormBase)
-	_ DML            = new(ormBase)
-	_ DriverGetter   = new(ormBase)
-	_ QueryCommenter = new(ormBase)
+	_ DQL          = new(ormBase)
+	_ DML          = new(ormBase)
+	_ DriverGetter = new(ormBase)
+	// _ QueryCommenter = new(ormBase) // Removed this check as ormBase implements methods for ormer
 )
 
 // Get model info and model reflect value
@@ -153,14 +154,14 @@ func (*ormBase) getFieldInfo(mi *models.ModelInfo, name string) *models.FieldInf
 	return fi
 }
 
-// AddComment adds a comment that will be included in subsequent queries
-func (o *ormBase) AddComment(comment string) {
-	AddQueryComment(comment)
+// AddQueryComment adds a comment that will be included in subsequent queries
+func (o *ormBase) AddQueryComment(comment string) {
+	o.queryComments.AddComment(comment) // Use instance field
 }
 
-// ClearComments removes all query comments
-func (o *ormBase) ClearComments() {
-	ClearQueryComments()
+// ClearQueryComments removes all query comments
+func (o *ormBase) ClearQueryComments() {
+	o.queryComments.ClearComments() // Use instance field
 }
 
 // read data to model
@@ -563,10 +564,20 @@ func (o *orm) BeginWithCtxAndOpts(ctx context.Context, opts *sql.TxOptions) (TxO
 		return nil, err
 	}
 
+	// Get comments from the parent dbQuerier
+	parentComments := o.db.GetQueryComments()
+
+	// Create TxDB and assign comments
+	txDbInstance := &TxDB{
+		tx:            tx,
+		queryComments: parentComments, // Assign comments to TxDB
+	}
+
 	_txOrm := &txOrm{
 		ormBase: ormBase{
-			alias: o.alias,
-			db:    &TxDB{tx: tx},
+			alias:         o.alias,
+			db:            txDbInstance,   // Use the TxDB instance with comments
+			queryComments: parentComments, // Assign comments to embedded ormBase
 		},
 	}
 
@@ -624,6 +635,16 @@ type txOrm struct {
 	ormBase
 }
 
+// AddQueryComment adds a comment to the underlying ormBase.
+func (t *txOrm) AddQueryComment(comment string) {
+	t.ormBase.AddQueryComment(comment)
+}
+
+// ClearQueryComments clears comments from the underlying ormBase.
+func (t *txOrm) ClearQueryComments() {
+	t.ormBase.ClearQueryComments()
+}
+
 var _ TxOrmer = new(txOrm)
 
 func (t *txOrm) Commit() error {
@@ -665,12 +686,15 @@ func newDBWithAlias(al *alias) Ormer {
 	BootStrapWithAlias(al.Name) // execute only once
 
 	o := new(orm)
-	o.alias = al
+	// Initialize the embedded ormBase fields
+	o.ormBase.alias = al
+	o.ormBase.queryComments = NewQueryComments()  // Initialize comments
+	al.DB.queryComments = o.ormBase.queryComments // Initialize the underlying DB's comments
 
 	if Debug {
-		o.db = newDbQueryLog(al, al.DB)
+		o.ormBase.db = newDbQueryLog(al, al.DB) // Set embedded db
 	} else {
-		o.db = al.DB
+		o.ormBase.db = al.DB // Set embedded db
 	}
 
 	if len(globalFilterChains) > 0 {

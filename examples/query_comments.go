@@ -63,9 +63,10 @@ func main() {
 	}
 
 	fmt.Println("\n=== Inserting users with comments ===")
-	orm.AddQueryComment("Batch user creation")
-	orm.AddQueryComment("Initial data load")
+	o.AddQueryComment("Batch user creation") // Use instance method
+	o.AddQueryComment("Initial data load")   // Use instance method
 	for _, user := range users {
+		// Note: Comments added before the loop apply to each Insert within the loop
 		id, err := o.Insert(&user)
 		if err != nil {
 			fmt.Printf("Failed to insert user: %v\n", err)
@@ -73,12 +74,12 @@ func main() {
 		}
 		fmt.Printf("Inserted user with ID: %d\n", id)
 	}
-	orm.ClearQueryComments()
+	o.ClearQueryComments() // Use instance method
 
 	fmt.Println("\n=== Querying users with comments ===")
 	var fetchedUsers []User
-	orm.AddQueryComment("User listing query")
-	orm.AddQueryComment("Backend API request")
+	o.AddQueryComment("User listing query")  // Use instance method
+	o.AddQueryComment("Backend API request") // Use instance method
 	_, err := o.QueryTable("user").All(&fetchedUsers)
 	if err != nil {
 		fmt.Printf("Failed to query users: %v\n", err)
@@ -87,31 +88,43 @@ func main() {
 	for _, user := range fetchedUsers {
 		fmt.Printf("User: %s (Email: %s)\n", user.Name, user.Email)
 	}
-	orm.ClearQueryComments()
+	o.ClearQueryComments() // Use instance method
 
 	fmt.Println("\n=== Updating user with comments ===")
-	orm.AddQueryComment("Profile update")
-	orm.AddQueryComment("User requested change")
+	o.AddQueryComment("Profile update")        // Use instance method
+	o.AddQueryComment("User requested change") // Use instance method
 	alice := User{Id: 1, Profile: "Senior Developer"}
 	if num, err := o.Update(&alice, "Profile"); err == nil {
 		fmt.Printf("Updated %d user(s)\n", num)
 	}
-	orm.ClearQueryComments()
+	o.ClearQueryComments() // Use instance method
 
 	fmt.Println("\n=== Deleting user with comments ===")
-	orm.AddQueryComment("User deletion")
-	orm.AddQueryComment("Account closure request")
+	o.AddQueryComment("User deletion")           // Use instance method
+	o.AddQueryComment("Account closure request") // Use instance method
 	charlie := User{Id: 3}
 	if num, err := o.Delete(&charlie); err == nil {
 		fmt.Printf("Deleted %d user(s)\n", num)
 	}
-	orm.ClearQueryComments()
+	o.ClearQueryComments() // Use instance method
 
 	fmt.Println("\n=== Complex query with comments ===")
 	var developers []User
-	orm.AddQueryComment("Developer search")
-	orm.AddQueryComment("HR department request")
+	o.AddQueryComment("Developer search")      // Use instance method
+	o.AddQueryComment("HR department request") // Use instance method
 	_, err = o.QueryTable("user").
+		Filter("Profile__icontains", "developer").
+		OrderBy("Name").
+		All(&developers)
+	if err != nil {
+		fmt.Printf("Failed to query developers: %v\n", err)
+		return
+	}
+	for _, dev := range developers {
+		fmt.Printf("Developer: %s (Profile: %s)\n", dev.Name, dev.Profile)
+	}
+	o2 := orm.NewOrm()
+	_, err = o2.QueryTable("user").
 		Filter("Profile__icontains", "developer").
 		OrderBy("Name").
 		All(&developers)

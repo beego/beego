@@ -97,8 +97,21 @@ func (d *dbBaseMysql) ShowColumnsQuery(table string) string {
 
 // IndexExists execute sql to check index exist.
 func (d *dbBaseMysql) IndexExists(ctx context.Context, db dbQuerier, table string, name string) bool {
-	row := db.QueryRowContext(ctx, "SELECT count(*) FROM information_schema.statistics "+
-		"WHERE table_schema = DATABASE() AND table_name = ? AND index_name = ?", table, name)
+	query := "SELECT count(*) FROM information_schema.statistics " +
+		"WHERE table_schema = DATABASE() AND table_name = ? AND index_name = ?"
+	fullQuery := query // Default to original query
+	// Check if the dbQuerier supports getting comments (might be raw *sql.DB during syncdb)
+	if qcGetter, ok := db.(interface {
+		GetQueryComments() *QueryComments
+	}); ok {
+		qc := qcGetter.GetQueryComments()
+		if qc != nil {
+			commentStr := qc.String()
+			fullQuery = commentStr + query // Prepend only if supported and non-nil
+		}
+	}
+
+	row := db.QueryRowContext(ctx, fullQuery, table, name)
 	var cnt int
 	row.Scan(&cnt)
 	return cnt > 0
@@ -156,8 +169,13 @@ func (d *dbBaseMysql) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *model
 
 	d.ins.ReplaceMarks(&query)
 
+	// Prepend comments
+	commentStr := q.GetQueryComments().String()
+	fullQuery := commentStr + query
+
+	// Note: HasReturningID might need adjustment if it relies on exact query prefix
 	if !d.ins.HasReturningID(mi, &query) {
-		res, err := q.ExecContext(ctx, query, values...)
+		res, err := q.ExecContext(ctx, fullQuery, values...) // Use fullQuery
 		if err == nil {
 			lastInsertId, err := res.LastInsertId()
 			if err != nil {
@@ -170,7 +188,7 @@ func (d *dbBaseMysql) InsertOrUpdate(ctx context.Context, q dbQuerier, mi *model
 		return 0, err
 	}
 
-	row := q.QueryRowContext(ctx, query, values...)
+	row := q.QueryRowContext(ctx, fullQuery, values...) // Use fullQuery
 	var id int64
 	err = row.Scan(&id)
 	return id, err
