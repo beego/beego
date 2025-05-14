@@ -39,33 +39,62 @@ func NewLogProject(name, endpoint, AccessKeyID, accessKeySecret string) (p *LogP
 	return p, nil
 }
 
-// ListLogStore returns all logstore names of project p.
-func (p *LogProject) ListLogStore() (storeNames []string, err error) {
-	h := map[string]string{
-		"x-sls-bodyrawsize": "0",
-	}
-
-	uri := "/logstores"
-	r, err := request(p, "GET", uri, h, nil)
+// handleResponse is a helper function to process HTTP response and handle common error cases
+// Returns response body as []byte and error if any
+func handleResponse(r *http.Response, actionDesc string) ([]byte, error) {
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		return
-	}
-
-	buf, err := io.ReadAll(r.Body)
-	if err != nil {
-		return
+		return nil, err
 	}
 
 	if r.StatusCode != http.StatusOK {
 		errMsg := &errorMessage{}
-		err = json.Unmarshal(buf, errMsg)
+		err = json.Unmarshal(body, errMsg)
 		if err != nil {
-			err = fmt.Errorf("failed to list logstore")
+			err = fmt.Errorf("failed to %s", actionDesc)
 			dump, _ := httputil.DumpResponse(r, true)
 			fmt.Printf("%s\n", dump)
-			return
+			return nil, err
 		}
-		err = fmt.Errorf("%v:%v", errMsg.Code, errMsg.Message)
+		return nil, fmt.Errorf("%v:%v", errMsg.Code, errMsg.Message)
+	}
+
+	return body, nil
+}
+
+// sendRequest is a helper function to send HTTP request with specified method, uri, headers and body
+// Returns response body as []byte and error if any
+func (p *LogProject) sendRequest(method, uri string, headers map[string]string, body []byte) ([]byte, error) {
+	r, err := request(p, method, uri, headers, body)
+	if err != nil {
+		return nil, err
+	}
+
+	return handleResponse(r, "process request "+method+" "+uri)
+}
+
+// createStandardHeaders creates a map with standard headers for requests
+func createStandardHeaders(bodyLen int) map[string]string {
+	if bodyLen <= 0 {
+		return map[string]string{
+			"x-log-bodyrawsize": "0",
+		}
+	}
+
+	return map[string]string{
+		"x-log-bodyrawsize": fmt.Sprintf("%v", bodyLen),
+		"Content-Type":      "application/json",
+		"Accept-Encoding":   "deflate", // TODO: support lz4
+	}
+}
+
+// ListLogStore returns all logstore names of project p.
+func (p *LogProject) ListLogStore() (storeNames []string, err error) {
+	h := createStandardHeaders(0)
+	uri := "/logstores"
+
+	buf, err := p.sendRequest("GET", uri, h, nil)
+	if err != nil {
 		return
 	}
 
@@ -81,36 +110,15 @@ func (p *LogProject) ListLogStore() (storeNames []string, err error) {
 	}
 
 	storeNames = body.LogStores
-
 	return
 }
 
 // GetLogStore returns logstore according by logstore name.
 func (p *LogProject) GetLogStore(name string) (s *LogStore, err error) {
-	h := map[string]string{
-		"x-sls-bodyrawsize": "0",
-	}
+	h := createStandardHeaders(0)
 
-	r, err := request(p, "GET", "/logstores/"+name, h, nil)
+	buf, err := p.sendRequest("GET", "/logstores/"+name, h, nil)
 	if err != nil {
-		return
-	}
-
-	buf, err := io.ReadAll(r.Body)
-	if err != nil {
-		return
-	}
-
-	if r.StatusCode != http.StatusOK {
-		errMsg := &errorMessage{}
-		err = json.Unmarshal(buf, errMsg)
-		if err != nil {
-			err = fmt.Errorf("failed to get logstore")
-			dump, _ := httputil.DumpResponse(r, true)
-			fmt.Printf("%s\n", dump)
-			return
-		}
-		err = fmt.Errorf("%v:%v", errMsg.Code, errMsg.Message)
 		return
 	}
 
@@ -145,66 +153,15 @@ func (p *LogProject) CreateLogStore(name string, ttl, shardCnt int) (err error) 
 		return
 	}
 
-	h := map[string]string{
-		"x-sls-bodyrawsize": fmt.Sprintf("%v", len(body)),
-		"Content-Type":      "application/json",
-		"Accept-Encoding":   "deflate", // TODO: support lz4
-	}
-
-	r, err := request(p, "POST", "/logstores", h, body)
-	if err != nil {
-		return
-	}
-
-	body, err = io.ReadAll(r.Body)
-	if err != nil {
-		return
-	}
-
-	if r.StatusCode != http.StatusOK {
-		errMsg := &errorMessage{}
-		err = json.Unmarshal(body, errMsg)
-		if err != nil {
-			err = fmt.Errorf("failed to create logstore")
-			dump, _ := httputil.DumpResponse(r, true)
-			fmt.Printf("%s\n", dump)
-			return
-		}
-		err = fmt.Errorf("%v:%v", errMsg.Code, errMsg.Message)
-		return
-	}
-
+	h := createStandardHeaders(len(body))
+	_, err = p.sendRequest("POST", "/logstores", h, body)
 	return
 }
 
 // DeleteLogStore deletes a logstore according by logstore name.
 func (p *LogProject) DeleteLogStore(name string) (err error) {
-	h := map[string]string{
-		"x-sls-bodyrawsize": "0",
-	}
-
-	r, err := request(p, "DELETE", "/logstores/"+name, h, nil)
-	if err != nil {
-		return
-	}
-
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		return
-	}
-
-	if r.StatusCode != http.StatusOK {
-		errMsg := &errorMessage{}
-		err = json.Unmarshal(body, errMsg)
-		if err != nil {
-			err = fmt.Errorf("failed to delete logstore")
-			dump, _ := httputil.DumpResponse(r, true)
-			fmt.Printf("%s\n", dump)
-			return
-		}
-		err = fmt.Errorf("%v:%v", errMsg.Code, errMsg.Message)
-		return
-	}
+	h := createStandardHeaders(0)
+	_, err = p.sendRequest("DELETE", "/logstores/"+name, h, nil)
 	return
 }
 
@@ -228,70 +185,23 @@ func (p *LogProject) UpdateLogStore(name string, ttl, shardCnt int) (err error) 
 		return
 	}
 
-	h := map[string]string{
-		"x-sls-bodyrawsize": fmt.Sprintf("%v", len(body)),
-		"Content-Type":      "application/json",
-		"Accept-Encoding":   "deflate", // TODO: support lz4
-	}
-
-	r, err := request(p, "PUT", "/logstores", h, body)
-	if err != nil {
-		return
-	}
-
-	body, err = io.ReadAll(r.Body)
-	if err != nil {
-		return
-	}
-
-	if r.StatusCode != http.StatusOK {
-		errMsg := &errorMessage{}
-		err = json.Unmarshal(body, errMsg)
-		if err != nil {
-			err = fmt.Errorf("failed to update logstore")
-			dump, _ := httputil.DumpResponse(r, true)
-			fmt.Printf("%s\n", dump)
-			return
-		}
-		err = fmt.Errorf("%v:%v", errMsg.Code, errMsg.Message)
-		return
-	}
-
+	h := createStandardHeaders(len(body))
+	_, err = p.sendRequest("PUT", "/logstores", h, body)
 	return
 }
 
 // ListMachineGroup returns machine group name list and the total number of machine groups.
 // The offset starts from 0 and the size is the max number of machine groups could be returned.
 func (p *LogProject) ListMachineGroup(offset, size int) (m []string, total int, err error) {
-	h := map[string]string{
-		"x-sls-bodyrawsize": "0",
-	}
+	h := createStandardHeaders(0)
 
 	if size <= 0 {
 		size = 500
 	}
 
 	uri := fmt.Sprintf("/machinegroups?offset=%v&size=%v", offset, size)
-	r, err := request(p, "GET", uri, h, nil)
+	buf, err := p.sendRequest("GET", uri, h, nil)
 	if err != nil {
-		return
-	}
-
-	buf, err := io.ReadAll(r.Body)
-	if err != nil {
-		return
-	}
-
-	if r.StatusCode != http.StatusOK {
-		errMsg := &errorMessage{}
-		err = json.Unmarshal(buf, errMsg)
-		if err != nil {
-			err = fmt.Errorf("failed to list machine group")
-			dump, _ := httputil.DumpResponse(r, true)
-			fmt.Printf("%s\n", dump)
-			return
-		}
-		err = fmt.Errorf("%v:%v", errMsg.Code, errMsg.Message)
 		return
 	}
 
@@ -309,36 +219,15 @@ func (p *LogProject) ListMachineGroup(offset, size int) (m []string, total int, 
 
 	m = body.MachineGroups
 	total = body.Total
-
 	return
 }
 
 // GetMachineGroup retruns machine group according by machine group name.
 func (p *LogProject) GetMachineGroup(name string) (m *MachineGroup, err error) {
-	h := map[string]string{
-		"x-sls-bodyrawsize": "0",
-	}
+	h := createStandardHeaders(0)
 
-	r, err := request(p, "GET", "/machinegroups/"+name, h, nil)
+	buf, err := p.sendRequest("GET", "/machinegroups/"+name, h, nil)
 	if err != nil {
-		return
-	}
-
-	buf, err := io.ReadAll(r.Body)
-	if err != nil {
-		return
-	}
-
-	if r.StatusCode != http.StatusOK {
-		errMsg := &errorMessage{}
-		err = json.Unmarshal(buf, errMsg)
-		if err != nil {
-			err = fmt.Errorf("failed to get machine group:%v", name)
-			dump, _ := httputil.DumpResponse(r, true)
-			fmt.Printf("%s\n", dump)
-			return
-		}
-		err = fmt.Errorf("%v:%v", errMsg.Code, errMsg.Message)
 		return
 	}
 
@@ -358,35 +247,8 @@ func (p *LogProject) CreateMachineGroup(m *MachineGroup) (err error) {
 		return
 	}
 
-	h := map[string]string{
-		"x-sls-bodyrawsize": fmt.Sprintf("%v", len(body)),
-		"Content-Type":      "application/json",
-		"Accept-Encoding":   "deflate", // TODO: support lz4
-	}
-
-	r, err := request(p, "POST", "/machinegroups", h, body)
-	if err != nil {
-		return
-	}
-
-	body, err = io.ReadAll(r.Body)
-	if err != nil {
-		return
-	}
-
-	if r.StatusCode != http.StatusOK {
-		errMsg := &errorMessage{}
-		err = json.Unmarshal(body, errMsg)
-		if err != nil {
-			err = fmt.Errorf("failed to create machine group")
-			dump, _ := httputil.DumpResponse(r, true)
-			fmt.Printf("%s\n", dump)
-			return
-		}
-		err = fmt.Errorf("%v:%v", errMsg.Code, errMsg.Message)
-		return
-	}
-
+	h := createStandardHeaders(len(body))
+	_, err = p.sendRequest("POST", "/machinegroups", h, body)
 	return
 }
 
@@ -397,101 +259,30 @@ func (p *LogProject) UpdateMachineGroup(m *MachineGroup) (err error) {
 		return
 	}
 
-	h := map[string]string{
-		"x-sls-bodyrawsize": fmt.Sprintf("%v", len(body)),
-		"Content-Type":      "application/json",
-		"Accept-Encoding":   "deflate", // TODO: support lz4
-	}
-
-	r, err := request(p, "PUT", "/machinegroups/"+m.Name, h, body)
-	if err != nil {
-		return
-	}
-
-	body, err = io.ReadAll(r.Body)
-	if err != nil {
-		return
-	}
-
-	if r.StatusCode != http.StatusOK {
-		errMsg := &errorMessage{}
-		err = json.Unmarshal(body, errMsg)
-		if err != nil {
-			err = fmt.Errorf("failed to update machine group")
-			dump, _ := httputil.DumpResponse(r, true)
-			fmt.Printf("%s\n", dump)
-			return
-		}
-		err = fmt.Errorf("%v:%v", errMsg.Code, errMsg.Message)
-		return
-	}
-
+	h := createStandardHeaders(len(body))
+	_, err = p.sendRequest("PUT", "/machinegroups/"+m.Name, h, body)
 	return
 }
 
 // DeleteMachineGroup deletes machine group according machine group name.
 func (p *LogProject) DeleteMachineGroup(name string) (err error) {
-	h := map[string]string{
-		"x-sls-bodyrawsize": "0",
-	}
-
-	r, err := request(p, "DELETE", "/machinegroups/"+name, h, nil)
-	if err != nil {
-		return
-	}
-
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		return
-	}
-
-	if r.StatusCode != http.StatusOK {
-		errMsg := &errorMessage{}
-		err = json.Unmarshal(body, errMsg)
-		if err != nil {
-			err = fmt.Errorf("failed to delete machine group")
-			dump, _ := httputil.DumpResponse(r, true)
-			fmt.Printf("%s\n", dump)
-			return
-		}
-		err = fmt.Errorf("%v:%v", errMsg.Code, errMsg.Message)
-		return
-	}
+	h := createStandardHeaders(0)
+	_, err = p.sendRequest("DELETE", "/machinegroups/"+name, h, nil)
 	return
 }
 
 // ListConfig returns config names list and the total number of configs.
 // The offset starts from 0 and the size is the max number of configs could be returned.
 func (p *LogProject) ListConfig(offset, size int) (cfgNames []string, total int, err error) {
-	h := map[string]string{
-		"x-sls-bodyrawsize": "0",
-	}
+	h := createStandardHeaders(0)
 
 	if size <= 0 {
 		size = 100
 	}
 
 	uri := fmt.Sprintf("/configs?offset=%v&size=%v", offset, size)
-	r, err := request(p, "GET", uri, h, nil)
+	buf, err := p.sendRequest("GET", uri, h, nil)
 	if err != nil {
-		return
-	}
-
-	buf, err := io.ReadAll(r.Body)
-	if err != nil {
-		return
-	}
-
-	if r.StatusCode != http.StatusOK {
-		errMsg := &errorMessage{}
-		err = json.Unmarshal(buf, errMsg)
-		if err != nil {
-			err = fmt.Errorf("failed to delete machine group")
-			dump, _ := httputil.DumpResponse(r, true)
-			fmt.Printf("%s\n", dump)
-			return
-		}
-		err = fmt.Errorf("%v:%v", errMsg.Code, errMsg.Message)
 		return
 	}
 
@@ -513,30 +304,10 @@ func (p *LogProject) ListConfig(offset, size int) (cfgNames []string, total int,
 
 // GetConfig returns config according by config name.
 func (p *LogProject) GetConfig(name string) (c *LogConfig, err error) {
-	h := map[string]string{
-		"x-sls-bodyrawsize": "0",
-	}
+	h := createStandardHeaders(0)
 
-	r, err := request(p, "GET", "/configs/"+name, h, nil)
+	buf, err := p.sendRequest("GET", "/configs/"+name, h, nil)
 	if err != nil {
-		return
-	}
-
-	buf, err := io.ReadAll(r.Body)
-	if err != nil {
-		return
-	}
-
-	if r.StatusCode != http.StatusOK {
-		errMsg := &errorMessage{}
-		err = json.Unmarshal(buf, errMsg)
-		if err != nil {
-			err = fmt.Errorf("failed to delete config")
-			dump, _ := httputil.DumpResponse(r, true)
-			fmt.Printf("%s\n", dump)
-			return
-		}
-		err = fmt.Errorf("%v:%v", errMsg.Code, errMsg.Message)
 		return
 	}
 
@@ -556,35 +327,8 @@ func (p *LogProject) UpdateConfig(c *LogConfig) (err error) {
 		return
 	}
 
-	h := map[string]string{
-		"x-sls-bodyrawsize": fmt.Sprintf("%v", len(body)),
-		"Content-Type":      "application/json",
-		"Accept-Encoding":   "deflate", // TODO: support lz4
-	}
-
-	r, err := request(p, "PUT", "/configs/"+c.Name, h, body)
-	if err != nil {
-		return
-	}
-
-	body, err = io.ReadAll(r.Body)
-	if err != nil {
-		return
-	}
-
-	if r.StatusCode != http.StatusOK {
-		errMsg := &errorMessage{}
-		err = json.Unmarshal(body, errMsg)
-		if err != nil {
-			err = fmt.Errorf("failed to update config")
-			dump, _ := httputil.DumpResponse(r, true)
-			fmt.Printf("%s\n", dump)
-			return
-		}
-		err = fmt.Errorf("%v:%v", errMsg.Code, errMsg.Message)
-		return
-	}
-
+	h := createStandardHeaders(len(body))
+	_, err = p.sendRequest("PUT", "/configs/"+c.Name, h, body)
 	return
 }
 
@@ -595,96 +339,25 @@ func (p *LogProject) CreateConfig(c *LogConfig) (err error) {
 		return
 	}
 
-	h := map[string]string{
-		"x-sls-bodyrawsize": fmt.Sprintf("%v", len(body)),
-		"Content-Type":      "application/json",
-		"Accept-Encoding":   "deflate", // TODO: support lz4
-	}
-
-	r, err := request(p, "POST", "/configs", h, body)
-	if err != nil {
-		return
-	}
-
-	body, err = io.ReadAll(r.Body)
-	if err != nil {
-		return
-	}
-
-	if r.StatusCode != http.StatusOK {
-		errMsg := &errorMessage{}
-		err = json.Unmarshal(body, errMsg)
-		if err != nil {
-			err = fmt.Errorf("failed to update config")
-			dump, _ := httputil.DumpResponse(r, true)
-			fmt.Printf("%s\n", dump)
-			return
-		}
-		err = fmt.Errorf("%v:%v", errMsg.Code, errMsg.Message)
-		return
-	}
-
+	h := createStandardHeaders(len(body))
+	_, err = p.sendRequest("POST", "/configs", h, body)
 	return
 }
 
 // DeleteConfig deletes a config according by config name.
 func (p *LogProject) DeleteConfig(name string) (err error) {
-	h := map[string]string{
-		"x-sls-bodyrawsize": "0",
-	}
-
-	r, err := request(p, "DELETE", "/configs/"+name, h, nil)
-	if err != nil {
-		return
-	}
-
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		return
-	}
-
-	if r.StatusCode != http.StatusOK {
-		errMsg := &errorMessage{}
-		err = json.Unmarshal(body, errMsg)
-		if err != nil {
-			err = fmt.Errorf("failed to delete config")
-			dump, _ := httputil.DumpResponse(r, true)
-			fmt.Printf("%s\n", dump)
-			return
-		}
-		err = fmt.Errorf("%v:%v", errMsg.Code, errMsg.Message)
-		return
-	}
+	h := createStandardHeaders(0)
+	_, err = p.sendRequest("DELETE", "/configs/"+name, h, nil)
 	return
 }
 
 // GetAppliedMachineGroups returns applied machine group names list according config name.
 func (p *LogProject) GetAppliedMachineGroups(confName string) (groupNames []string, err error) {
-	h := map[string]string{
-		"x-sls-bodyrawsize": "0",
-	}
+	h := createStandardHeaders(0)
 
 	uri := fmt.Sprintf("/configs/%v/machinegroups", confName)
-	r, err := request(p, "GET", uri, h, nil)
+	buf, err := p.sendRequest("GET", uri, h, nil)
 	if err != nil {
-		return
-	}
-
-	buf, err := io.ReadAll(r.Body)
-	if err != nil {
-		return
-	}
-
-	if r.StatusCode != http.StatusOK {
-		errMsg := &errorMessage{}
-		err = json.Unmarshal(buf, errMsg)
-		if err != nil {
-			err = fmt.Errorf("failed to get applied machine groups")
-			dump, _ := httputil.DumpResponse(r, true)
-			fmt.Printf("%s\n", dump)
-			return
-		}
-		err = fmt.Errorf("%v:%v", errMsg.Code, errMsg.Message)
 		return
 	}
 
@@ -705,31 +378,11 @@ func (p *LogProject) GetAppliedMachineGroups(confName string) (groupNames []stri
 
 // GetAppliedConfigs returns applied config names list according machine group name groupName.
 func (p *LogProject) GetAppliedConfigs(groupName string) (confNames []string, err error) {
-	h := map[string]string{
-		"x-sls-bodyrawsize": "0",
-	}
+	h := createStandardHeaders(0)
 
 	uri := fmt.Sprintf("/machinegroups/%v/configs", groupName)
-	r, err := request(p, "GET", uri, h, nil)
+	buf, err := p.sendRequest("GET", uri, h, nil)
 	if err != nil {
-		return
-	}
-
-	buf, err := io.ReadAll(r.Body)
-	if err != nil {
-		return
-	}
-
-	if r.StatusCode != http.StatusOK {
-		errMsg := &errorMessage{}
-		err = json.Unmarshal(buf, errMsg)
-		if err != nil {
-			err = fmt.Errorf("failed to applied configs")
-			dump, _ := httputil.DumpResponse(r, true)
-			fmt.Printf("%s\n", dump)
-			return
-		}
-		err = fmt.Errorf("%v:%v", errMsg.Code, errMsg.Message)
 		return
 	}
 
@@ -750,64 +403,18 @@ func (p *LogProject) GetAppliedConfigs(groupName string) (confNames []string, er
 
 // ApplyConfigToMachineGroup applies config to machine group.
 func (p *LogProject) ApplyConfigToMachineGroup(confName, groupName string) (err error) {
-	h := map[string]string{
-		"x-sls-bodyrawsize": "0",
-	}
+	h := createStandardHeaders(0)
 
 	uri := fmt.Sprintf("/machinegroups/%v/configs/%v", groupName, confName)
-	r, err := request(p, "PUT", uri, h, nil)
-	if err != nil {
-		return
-	}
-
-	buf, err := io.ReadAll(r.Body)
-	if err != nil {
-		return
-	}
-
-	if r.StatusCode != http.StatusOK {
-		errMsg := &errorMessage{}
-		err = json.Unmarshal(buf, errMsg)
-		if err != nil {
-			err = fmt.Errorf("failed to apply config to machine group")
-			dump, _ := httputil.DumpResponse(r, true)
-			fmt.Printf("%s\n", dump)
-			return
-		}
-		err = fmt.Errorf("%v:%v", errMsg.Code, errMsg.Message)
-		return
-	}
+	_, err = p.sendRequest("PUT", uri, h, nil)
 	return
 }
 
 // RemoveConfigFromMachineGroup removes config from machine group.
 func (p *LogProject) RemoveConfigFromMachineGroup(confName, groupName string) (err error) {
-	h := map[string]string{
-		"x-sls-bodyrawsize": "0",
-	}
+	h := createStandardHeaders(0)
 
 	uri := fmt.Sprintf("/machinegroups/%v/configs/%v", groupName, confName)
-	r, err := request(p, "DELETE", uri, h, nil)
-	if err != nil {
-		return
-	}
-
-	buf, err := io.ReadAll(r.Body)
-	if err != nil {
-		return
-	}
-
-	if r.StatusCode != http.StatusOK {
-		errMsg := &errorMessage{}
-		err = json.Unmarshal(buf, errMsg)
-		if err != nil {
-			err = fmt.Errorf("failed to remove config from machine group")
-			dump, _ := httputil.DumpResponse(r, true)
-			fmt.Printf("%s\n", dump)
-			return
-		}
-		err = fmt.Errorf("%v:%v", errMsg.Code, errMsg.Message)
-		return
-	}
+	_, err = p.sendRequest("DELETE", uri, h, nil)
 	return
 }

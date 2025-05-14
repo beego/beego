@@ -32,13 +32,12 @@ import (
 	"encoding/xml"
 	"errors"
 	"fmt"
+	"github.com/beego/beego/v2/core/utils"
+	"github.com/mitchellh/mapstructure"
 	"os"
 	"strconv"
 	"strings"
 	"sync"
-	"syscall"
-
-	"github.com/mitchellh/mapstructure"
 
 	"github.com/beego/x2j"
 
@@ -248,7 +247,7 @@ func (c *ConfigContainer) GetSection(section string) (map[string]string, error) 
 // SaveConfigFile save the config into file
 func (c *ConfigContainer) SaveConfigFile(filename string) (err error) {
 	// Write configuration file by filename.
-	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|syscall.O_NOFOLLOW, 0600)
+	f, err := utils.OpenFileSecure(filename, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
 		return err
 	}

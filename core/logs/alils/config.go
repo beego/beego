@@ -1,7 +1,7 @@
 package alils
 
 const (
-	version         = "0.5.0"     // SDK version
+	version         = "0.6.0"     // SDK version
 	signatureMethod = "hmac-sha1" // Signature method
 
 	// OffsetNewest is the log head offset, i.e. the offset that will be
