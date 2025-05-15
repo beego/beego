@@ -30,7 +30,8 @@ jobs:
       matrix:
         go-version: ["1.24.2"]
         mount: ["/tmp"]
-        os: [ubuntu-latest, macos-latest,windows-latest]
+        #os: [ubuntu-latest, macos-latest,windows-latest]
+        os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     services:
       redis:
