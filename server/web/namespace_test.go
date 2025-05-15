@@ -69,7 +69,7 @@ func TestNamespaceGet(t *testing.T) {
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != "v1_user" {
-		t.Errorf("TestNamespaceGet can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceGet can't run, get the response is %s", w.Body.String())
 	}
 }
 
@@ -84,7 +84,7 @@ func TestNamespacePost(t *testing.T) {
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != "123" {
-		t.Errorf("TestNamespacePost can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespacePost can't run, get the response is %s", w.Body.String())
 	}
 }
 
@@ -102,7 +102,7 @@ func TestNamespaceNest(t *testing.T) {
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != "order" {
-		t.Errorf("TestNamespaceNest can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceNest can't run, get the response is %s", w.Body.String())
 	}
 }
 
@@ -120,7 +120,7 @@ func TestNamespaceNestParam(t *testing.T) {
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != "123" {
-		t.Errorf("TestNamespaceNestParam can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceNestParam can't run, get the response is %s", w.Body.String())
 	}
 }
 
@@ -133,7 +133,7 @@ func TestNamespaceRouter(t *testing.T) {
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != "i am list" {
-		t.Errorf("TestNamespaceRouter can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceRouter can't run, get the response is %s", w.Body.String())
 	}
 }
 
@@ -164,7 +164,7 @@ func TestNamespaceFilter(t *testing.T) {
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != "this is Filter" {
-		t.Errorf("TestNamespaceFilter can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceFilter can't run, get the response is %s", w.Body.String())
 	}
 }
 
@@ -180,7 +180,7 @@ func TestNamespaceCond(t *testing.T) {
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Code != 405 {
-		t.Errorf("TestNamespaceCond can't run get the result " + strconv.Itoa(w.Code))
+		t.Errorf("TestNamespaceCond can't run get the result %s", strconv.Itoa(w.Code))
 	}
 }
 
@@ -198,7 +198,7 @@ func TestNamespaceInside(t *testing.T) {
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != "123" {
-		t.Errorf("TestNamespaceInside can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceInside can't run, get the response is %s", w.Body.String())
 	}
 }
 
@@ -211,7 +211,7 @@ func TestNamespaceCtrlGet(t *testing.T) {
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestNamespaceCtrlGet can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceCtrlGet can't run, get the response is %s", w.Body.String())
 	}
 }
 
@@ -224,7 +224,7 @@ func TestNamespaceCtrlPost(t *testing.T) {
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestNamespaceCtrlPost can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceCtrlPost can't run, get the response is %s", w.Body.String())
 	}
 }
 
@@ -237,7 +237,7 @@ func TestNamespaceCtrlDelete(t *testing.T) {
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestNamespaceCtrlDelete can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceCtrlDelete can't run, get the response is %s", w.Body.String())
 	}
 }
 
@@ -250,7 +250,7 @@ func TestNamespaceCtrlPut(t *testing.T) {
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestNamespaceCtrlPut can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceCtrlPut can't run, get the response is %s", w.Body.String())
 	}
 }
 
@@ -263,7 +263,7 @@ func TestNamespaceCtrlHead(t *testing.T) {
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestNamespaceCtrlHead can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceCtrlHead can't run, get the response is %s", w.Body.String())
 	}
 }
 
@@ -276,7 +276,7 @@ func TestNamespaceCtrlOptions(t *testing.T) {
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestNamespaceCtrlOptions can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceCtrlOptions can't run, get the response is %s", w.Body.String())
 	}
 }
 
@@ -289,7 +289,7 @@ func TestNamespaceCtrlPatch(t *testing.T) {
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestNamespaceCtrlPatch can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceCtrlPatch can't run, get the response is %s", w.Body.String())
 	}
 }
 
@@ -303,7 +303,7 @@ func TestNamespaceCtrlAny(t *testing.T) {
 		r, _ := http.NewRequest(method, nsNamespacePath, nil)
 		BeeApp.Handlers.ServeHTTP(w, r)
 		if w.Body.String() != exampleBody {
-			t.Errorf("TestNamespaceCtrlAny can't run, get the response is " + w.Body.String())
+			t.Errorf("TestNamespaceCtrlAny can't run, get the response is %s", w.Body.String())
 		}
 	}
 }
@@ -317,7 +317,7 @@ func TestNamespaceNSCtrlGet(t *testing.T) {
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestNamespaceNSCtrlGet can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceNSCtrlGet can't run, get the response is %s", w.Body.String())
 	}
 }
 
@@ -330,7 +330,7 @@ func TestNamespaceNSCtrlPost(t *testing.T) {
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestNamespaceNSCtrlPost can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceNSCtrlPost can't run, get the response is %s", w.Body.String())
 	}
 }
 
@@ -343,7 +343,7 @@ func TestNamespaceNSCtrlDelete(t *testing.T) {
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestNamespaceNSCtrlDelete can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceNSCtrlDelete can't run, get the response is %s", w.Body.String())
 	}
 }
 
@@ -356,7 +356,7 @@ func TestNamespaceNSCtrlPut(t *testing.T) {
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestNamespaceNSCtrlPut can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceNSCtrlPut can't run, get the response is %s", w.Body.String())
 	}
 }
 
@@ -369,7 +369,7 @@ func TestNamespaceNSCtrlHead(t *testing.T) {
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestNamespaceNSCtrlHead can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceNSCtrlHead can't run, get the response is %s", w.Body.String())
 	}
 }
 
@@ -382,7 +382,7 @@ func TestNamespaceNSCtrlOptions(t *testing.T) {
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestNamespaceNSCtrlOptions can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceNSCtrlOptions can't run, get the response is %s", w.Body.String())
 	}
 }
 
@@ -395,7 +395,7 @@ func TestNamespaceNSCtrlPatch(t *testing.T) {
 	AddNamespace(ns)
 	BeeApp.Handlers.ServeHTTP(w, r)
 	if w.Body.String() != exampleBody {
-		t.Errorf("TestNamespaceNSCtrlPatch can't run, get the response is " + w.Body.String())
+		t.Errorf("TestNamespaceNSCtrlPatch can't run, get the response is %s", w.Body.String())
 	}
 }
 
@@ -409,7 +409,7 @@ func TestNamespaceNSCtrlAny(t *testing.T) {
 		r, _ := http.NewRequest(method, nsNamespacePath, nil)
 		BeeApp.Handlers.ServeHTTP(w, r)
 		if w.Body.String() != exampleBody {
-			t.Errorf("TestNamespaceNSCtrlAny can't run, get the response is " + w.Body.String())
+			t.Errorf("TestNamespaceNSCtrlAny can't run, get the response is %s", w.Body.String())
 		}
 	}
 }
