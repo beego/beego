@@ -28,8 +28,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go-version: ["1.20",1.21,1.22]
-    runs-on: ubuntu-latest
+        go-version: ["1.24.2"]
+        mount: ["/tmp"]
+        #os: [ubuntu-latest, macos-latest,windows-latest]
+        os: [ubuntu-latest]
+    runs-on: ${{ matrix.os }}
     services:
       redis:
         image: redis:latest
@@ -52,8 +55,18 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: orm_test
         ports:
-          - 5432/tcp
+          - "5432:5432/tcp"
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+
+      mysql:
+        image: mysql:latest
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: orm_test
+        ports:
+          - "3306:3306"
+        options: --health-cmd="mysqladmin ping -h localhost" --health-interval=10s --health-timeout=5s --health-retries=3
+
 
     steps:
       - name: Set up Go
@@ -70,13 +83,15 @@ jobs:
         env:
           ETCD_VERSION: v3.4.16
         run: |
-          rm -rf /tmp/etcd-data.tmp
-          mkdir -p /tmp/etcd-data.tmp
+          # If permissions are insufficient, it is necessary to create it in advance on the host machine.
+          # like this : mkdir /private/tmp/etcd-data.tmp
+          rm -rf ${{ matrix.mount }}/etcd-data.tmp
+          mkdir -p ${{ matrix.mount }}/etcd-data.tmp
           docker rmi gcr.io/etcd-development/etcd:${ETCD_VERSION} || true && \
           docker run -d \
             -p 2379:2379 \
             -p 2380:2380 \
-            --mount type=bind,source=/tmp/etcd-data.tmp,destination=/etcd-data \
+            --mount type=bind,source=${{ matrix.mount }}/etcd-data.tmp,destination=/etcd-data \
             --name etcd-gcr-${ETCD_VERSION} \
             gcr.io/etcd-development/etcd:${ETCD_VERSION} \
             /usr/local/bin/etcd \
@@ -100,16 +115,17 @@ jobs:
         env:
           GOPATH: /home/runner/go
           ORM_DRIVER: sqlite3
-          ORM_SOURCE: /tmp/sqlite3/orm_test.db
+          ORM_SOURCE: ${{ matrix.mount }}/sqlite3/orm_test.db
         run: |
-          mkdir -p /tmp/sqlite3 && touch /tmp/sqlite3/orm_test.db
+          mkdir -p ${{ matrix.mount }}/sqlite3 && touch ${{ matrix.mount }}/sqlite3/orm_test.db
           go test -coverprofile=coverage_sqlite3.txt -covermode=atomic $(go list ./... | grep client/orm)
 
       - name: Run ORM tests on postgres
         env:
           GOPATH: /home/runner/go
           ORM_DRIVER: postgres
-          ORM_SOURCE: host=localhost port=${{ job.services.postgres.ports[5432] }} user=postgres password=postgres dbname=orm_test sslmode=disable
+          #ORM_SOURCE: host=localhost port=${{ job.services.postgres.ports['5432'] }} user=postgres password=postgres dbname=orm_test sslmode=disable
+          ORM_SOURCE: host=localhost port=5432 user=postgres password=postgres dbname=orm_test sslmode=disable
         run: |
           go test -coverprofile=coverage_postgres.txt -covermode=atomic $(go list ./... | grep client/orm)
 
@@ -119,8 +135,6 @@ jobs:
           ORM_DRIVER: mysql
           ORM_SOURCE: root:root@/orm_test?charset=utf8
         run: |
-          sudo systemctl start mysql
-          mysql -u root -proot -e 'create database orm_test;'
           go test -coverprofile=coverage.txt -covermode=atomic ./...
 
       - name: Upload codecov

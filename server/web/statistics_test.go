@@ -33,7 +33,7 @@ func TestStatics(t *testing.T) {
 	data := StatisticsMap.GetMapData()
 	b, err := json.Marshal(data)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("%v", err.Error())
 	}
 
 	t.Log(string(b))

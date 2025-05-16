@@ -130,7 +130,7 @@ func TestUrlFor(t *testing.T) {
 		t.Errorf("TestController.List must equal to /api/list")
 	}
 	if a := handler.URLFor("TestController.Param", ":last", "xie", ":first", "asta"); a != "/person/xie/asta" {
-		t.Errorf("TestController.Param must equal to /person/xie/asta, but get " + a)
+		t.Errorf("TestController.Param must equal to /person/xie/asta, but get %s", a)
 	}
 }
 
@@ -139,11 +139,11 @@ func TestUrlFor3(t *testing.T) {
 	handler.AddAuto(&TestController{})
 	a := handler.URLFor("TestController.Myext")
 	if a != "/test/myext" && a != "/Test/Myext" {
-		t.Errorf("TestController.Myext must equal to /test/myext, but get " + a)
+		t.Errorf("TestController.Myext must equal to /test/myext, but get %s", a)
 	}
 	a = handler.URLFor("TestController.GetURL")
 	if a != "/test/geturl" && a != "/Test/GetURL" {
-		t.Errorf("TestController.GetURL must equal to /test/geturl, but get " + a)
+		t.Errorf("TestController.GetURL must equal to /test/geturl, but get %s", a)
 	}
 }
 
@@ -340,7 +340,7 @@ func TestPrepare(t *testing.T) {
 	handler.Add("/json/list", &JSONController{})
 	handler.ServeHTTP(w, r)
 	if w.Body.String() != `"prepare"` {
-		t.Errorf(w.Body.String() + "user define func can't run")
+		t.Errorf("%s user define func can't run", w.Body.String())
 	}
 }
 
@@ -549,10 +549,10 @@ func TestFilterBeforeRouter(t *testing.T) {
 	mux.ServeHTTP(rw, r)
 
 	if !strings.Contains(rw.Body.String(), "BeforeRouter1") {
-		t.Errorf(testName + " BeforeRouter did not run")
+		t.Errorf("%s BeforeRouter did not run", testName)
 	}
 	if strings.Contains(rw.Body.String(), "hello") {
-		t.Errorf(testName + " BeforeRouter did not return properly")
+		t.Errorf("%s BeforeRouter did not return properly", testName)
 	}
 }
 
@@ -572,13 +572,13 @@ func TestFilterBeforeExec(t *testing.T) {
 	mux.ServeHTTP(rw, r)
 
 	if !strings.Contains(rw.Body.String(), "BeforeExec1") {
-		t.Errorf(testName + " BeforeExec did not run")
+		t.Errorf("%s BeforeExec did not run", testName)
 	}
 	if strings.Contains(rw.Body.String(), "hello") {
-		t.Errorf(testName + " BeforeExec did not return properly")
+		t.Errorf("%s BeforeExec did not return properly", testName)
 	}
 	if strings.Contains(rw.Body.String(), "BeforeRouter") {
-		t.Errorf(testName + " BeforeRouter ran in error")
+		t.Errorf("%s BeforeRouter ran in error", testName)
 	}
 }
 
@@ -599,16 +599,16 @@ func TestFilterAfterExec(t *testing.T) {
 	mux.ServeHTTP(rw, r)
 
 	if !strings.Contains(rw.Body.String(), "AfterExec1") {
-		t.Errorf(testName + " AfterExec did not run")
+		t.Errorf("%s AfterExec did not run", testName)
 	}
 	if !strings.Contains(rw.Body.String(), "hello") {
-		t.Errorf(testName + " handler did not run properly")
+		t.Errorf("%s handler did not run properly", testName)
 	}
 	if strings.Contains(rw.Body.String(), "BeforeRouter") {
-		t.Errorf(testName + " BeforeRouter ran in error")
+		t.Errorf("%s BeforeRouter ran in error", testName)
 	}
 	if strings.Contains(rw.Body.String(), "BeforeExec") {
-		t.Errorf(testName + " BeforeExec ran in error")
+		t.Errorf("%s BeforeExec ran in error", testName)
 	}
 }
 
@@ -630,19 +630,19 @@ func TestFilterFinishRouter(t *testing.T) {
 	mux.ServeHTTP(rw, r)
 
 	if strings.Contains(rw.Body.String(), "FinishRouter1") {
-		t.Errorf(testName + " FinishRouter did not run")
+		t.Errorf("%s FinishRouter did not run", testName)
 	}
 	if !strings.Contains(rw.Body.String(), "hello") {
-		t.Errorf(testName + " handler did not run properly")
+		t.Errorf("%s handler did not run properly", testName)
 	}
 	if strings.Contains(rw.Body.String(), "AfterExec1") {
-		t.Errorf(testName + " AfterExec ran in error")
+		t.Errorf("%s AfterExec ran in error", testName)
 	}
 	if strings.Contains(rw.Body.String(), "BeforeRouter") {
-		t.Errorf(testName + " BeforeRouter ran in error")
+		t.Errorf("%s BeforeRouter ran in error", testName)
 	}
 	if strings.Contains(rw.Body.String(), "BeforeExec") {
-		t.Errorf(testName + " BeforeExec ran in error")
+		t.Errorf("%s BeforeExec ran in error", testName)
 	}
 }
 
@@ -662,14 +662,14 @@ func TestFilterFinishRouterMultiFirstOnly(t *testing.T) {
 	mux.ServeHTTP(rw, r)
 
 	if !strings.Contains(rw.Body.String(), "FinishRouter1") {
-		t.Errorf(testName + " FinishRouter1 did not run")
+		t.Errorf("%s FinishRouter1 did not run", testName)
 	}
 	if !strings.Contains(rw.Body.String(), "hello") {
-		t.Errorf(testName + " handler did not run properly")
+		t.Errorf("%s handler did not run properly", testName)
 	}
 	// not expected in body
 	if strings.Contains(rw.Body.String(), "FinishRouter2") {
-		t.Errorf(testName + " FinishRouter2 did run")
+		t.Errorf("%s FinishRouter2 did run", testName)
 	}
 }
 
@@ -689,13 +689,13 @@ func TestFilterFinishRouterMulti(t *testing.T) {
 	mux.ServeHTTP(rw, r)
 
 	if !strings.Contains(rw.Body.String(), "FinishRouter1") {
-		t.Errorf(testName + " FinishRouter1 did not run")
+		t.Errorf("%s FinishRouter1 did not run", testName)
 	}
 	if !strings.Contains(rw.Body.String(), "hello") {
-		t.Errorf(testName + " handler did not run properly")
+		t.Errorf("%s handler did not run properly", testName)
 	}
 	if !strings.Contains(rw.Body.String(), "FinishRouter2") {
-		t.Errorf(testName + " FinishRouter2 did not run properly")
+		t.Errorf("%s FinishRouter2 did not run properly", testName)
 	}
 }
 
@@ -753,7 +753,7 @@ func TestYAMLPrepare(t *testing.T) {
 	handler.Add("/yaml/list", &YAMLController{})
 	handler.ServeHTTP(w, r)
 	if strings.TrimSpace(w.Body.String()) != "prepare" {
-		t.Errorf(w.Body.String())
+		t.Errorf("%s", w.Body.String())
 	}
 }
 
@@ -919,7 +919,7 @@ func TestRouterCtrlAny(t *testing.T) {
 		r, _ := http.NewRequest(method, "/user", nil)
 		handler.ServeHTTP(w, r)
 		if w.Body.String() != exampleBody {
-			t.Errorf("TestRouterCtrlAny can't run, get the response is " + w.Body.String())
+			t.Errorf("TestRouterCtrlAny can't run, get the response is %s", w.Body.String())
 		}
 	}
 }
@@ -1005,7 +1005,7 @@ func TestRouterCtrlAnyPointerMethod(t *testing.T) {
 		r, _ := http.NewRequest(method, "/user", nil)
 		handler.ServeHTTP(w, r)
 		if w.Body.String() != examplePointerBody {
-			t.Errorf("TestRouterCtrlAnyPointerMethod can't run, get the response is " + w.Body.String())
+			t.Errorf("TestRouterCtrlAnyPointerMethod can't run, get the response is %s", w.Body.String())
 		}
 	}
 }
@@ -1021,7 +1021,7 @@ func TestRouterAddRouterMethodPanicInvalidMethod(t *testing.T) {
 				return
 			}
 		}
-		t.Errorf(fmt.Sprintf("TestRouterAddRouterMethodPanicInvalidMethod failed: %v", err))
+		t.Errorf("TestRouterAddRouterMethodPanicInvalidMethod failed: %v", err)
 	}()
 
 	handler := NewControllerRegister()
@@ -1039,7 +1039,7 @@ func TestRouterAddRouterMethodPanicNotAMethod(t *testing.T) {
 				return
 			}
 		}
-		t.Errorf(fmt.Sprintf("TestRouterAddRouterMethodPanicNotAMethod failed: %v", err))
+		t.Errorf("TestRouterAddRouterMethodPanicNotAMethod failed: %v", err)
 	}()
 
 	handler := NewControllerRegister()
@@ -1057,7 +1057,7 @@ func TestRouterAddRouterMethodPanicNotPublicMethod(t *testing.T) {
 				return
 			}
 		}
-		t.Errorf(fmt.Sprintf("TestRouterAddRouterMethodPanicNotPublicMethod failed: %v", err))
+		t.Errorf("TestRouterAddRouterMethodPanicNotPublicMethod failed: %v", err)
 	}()
 
 	handler := NewControllerRegister()
@@ -1075,7 +1075,7 @@ func TestRouterAddRouterMethodPanicNotImplementInterface(t *testing.T) {
 				return
 			}
 		}
-		t.Errorf(fmt.Sprintf("TestRouterAddRouterMethodPanicNotImplementInterface failed: %v", err))
+		t.Errorf("TestRouterAddRouterMethodPanicNotImplementInterface failed: %v", err)
 	}()
 
 	handler := NewControllerRegister()
@@ -1093,7 +1093,7 @@ func TestRouterAddRouterPointerMethodPanicNotImplementInterface(t *testing.T) {
 				return
 			}
 		}
-		t.Errorf(fmt.Sprintf("TestRouterAddRouterPointerMethodPanicNotImplementInterface failed: %v", err))
+		t.Errorf("TestRouterAddRouterPointerMethodPanicNotImplementInterface failed: %v", err)
 	}()
 
 	handler := NewControllerRegister()
