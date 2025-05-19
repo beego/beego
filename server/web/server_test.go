@@ -15,8 +15,11 @@
 package web
 
 import (
+	"fmt"
+	"github.com/beego/beego/v2/server/web/context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -106,4 +109,54 @@ func TestServerCtrlAny(t *testing.T) {
 			t.Errorf("TestServerCtrlAny can't run")
 		}
 	}
+}
+
+// ExampleInsertFilter is an example of how to use InsertFilter
+func ExampleInsertFilter() {
+
+	app := NewHttpServerWithCfg(newBConfig())
+	app.Cfg.CopyRequestBody = true
+	path := "/api/hello"
+	app.Get(path, func(ctx *context.Context) {
+		s := "hello world"
+		fmt.Println(s)
+		_ = ctx.Resp(s)
+	})
+
+	app.InsertFilter("*", BeforeStatic, func(ctx *context.Context) {
+		fmt.Println("BeforeStatic filter process")
+	})
+
+	app.InsertFilter("*", BeforeRouter, func(ctx *context.Context) {
+		fmt.Println("BeforeRouter filter process")
+	})
+
+	app.InsertFilter("*", BeforeExec, func(ctx *context.Context) {
+		fmt.Println("BeforeExec filter process")
+	})
+
+	// need to set the WithReturnOnOutput false
+	app.InsertFilter("*", AfterExec, func(ctx *context.Context) {
+		fmt.Println("AfterExec filter process")
+	}, WithReturnOnOutput(false))
+
+	// need to set the WithReturnOnOutput false
+	app.InsertFilter("*", FinishRouter, func(ctx *context.Context) {
+		fmt.Println("FinishRouter filter process")
+	}, WithReturnOnOutput(false))
+
+	reader := strings.NewReader("")
+	req := httptest.NewRequest("GET", path, reader)
+	req.Header.Set("Accept", "*/*")
+
+	w := httptest.NewRecorder()
+	app.Handlers.ServeHTTP(w, req)
+
+	// Output:
+	// BeforeStatic filter process
+	// BeforeRouter filter process
+	// BeforeExec filter process
+	// hello world
+	// AfterExec filter process
+	// FinishRouter filter process
 }
