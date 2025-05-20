@@ -16,6 +16,7 @@ package mock
 
 import (
 	"database/sql"
+	"github.com/beego/beego/v2/client/orm/internal/session"
 
 	"github.com/beego/beego/v2/client/orm"
 )
@@ -38,19 +39,19 @@ func (d *DoNothingRawSetter) SetArgs(i ...interface{}) orm.RawSeter {
 	return d
 }
 
-func (d *DoNothingRawSetter) Values(container *[]orm.Params, cols ...string) (int64, error) {
+func (d *DoNothingRawSetter) Values(container *[]session.Params, cols ...string) (int64, error) {
 	return 0, nil
 }
 
-func (d *DoNothingRawSetter) ValuesList(container *[]orm.ParamsList, cols ...string) (int64, error) {
+func (d *DoNothingRawSetter) ValuesList(container *[]session.ParamsList, cols ...string) (int64, error) {
 	return 0, nil
 }
 
-func (d *DoNothingRawSetter) ValuesFlat(container *orm.ParamsList, cols ...string) (int64, error) {
+func (d *DoNothingRawSetter) ValuesFlat(container *session.ParamsList, cols ...string) (int64, error) {
 	return 0, nil
 }
 
-func (d *DoNothingRawSetter) RowsToMap(result *orm.Params, keyCol, valueCol string) (int64, error) {
+func (d *DoNothingRawSetter) RowsToMap(result *session.Params, keyCol, valueCol string) (int64, error) {
 	return 0, nil
 }
 

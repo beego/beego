@@ -16,21 +16,21 @@ package qb
 
 import (
 	"database/sql"
+	"github.com/beego/beego/v2/client/orm/internal/session"
 	"testing"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/beego/beego/v2/client/orm"
 	"github.com/beego/beego/v2/client/orm/qb/errs"
 )
 
 func TestSelector_RawAndWhereMap(t *testing.T) {
-	err := orm.RegisterDataBase("default", "sqlite3", "")
+	err := session.RegisterDataBase("default", "sqlite3", "")
 	if err != nil {
 		return
 	}
-	db := orm.NewOrm()
+	db := session.NewOrm()
 	testCase := []struct {
 		name      string
 		q         QueryBuilder
@@ -88,11 +88,11 @@ func TestSelector_RawAndWhereMap(t *testing.T) {
 }
 
 func TestSelector_Build(t *testing.T) {
-	err := orm.RegisterDataBase("default", "sqlite3", "")
+	err := session.RegisterDataBase("default", "sqlite3", "")
 	if err != nil {
 		return
 	}
-	db := orm.NewOrm()
+	db := session.NewOrm()
 	testCase := []struct {
 		name      string
 		q         QueryBuilder
@@ -188,11 +188,11 @@ func TestSelector_Build(t *testing.T) {
 }
 
 func TestSelector_OffsetLimit(t *testing.T) {
-	err := orm.RegisterDataBase("default", "sqlite3", "")
+	err := session.RegisterDataBase("default", "sqlite3", "")
 	if err != nil {
 		return
 	}
-	db := orm.NewOrm()
+	db := session.NewOrm()
 	testCases := []struct {
 		name      string
 		q         QueryBuilder
@@ -238,11 +238,11 @@ func TestSelector_OffsetLimit(t *testing.T) {
 }
 
 func TestSelector_OrderBy(t *testing.T) {
-	err := orm.RegisterDataBase("default", "sqlite3", "")
+	err := session.RegisterDataBase("default", "sqlite3", "")
 	if err != nil {
 		return
 	}
-	db := orm.NewOrm()
+	db := session.NewOrm()
 	testCases := []struct {
 		name      string
 		q         QueryBuilder
@@ -310,11 +310,11 @@ func TestSelector_OrderBy(t *testing.T) {
 }
 
 func TestSelector_Select(t *testing.T) {
-	err := orm.RegisterDataBase("default", "sqlite3", "")
+	err := session.RegisterDataBase("default", "sqlite3", "")
 	if err != nil {
 		return
 	}
-	db := orm.NewOrm()
+	db := session.NewOrm()
 	testCases := []struct {
 		name      string
 		q         QueryBuilder

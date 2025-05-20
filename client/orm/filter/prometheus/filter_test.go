@@ -16,16 +16,15 @@ package prometheus
 
 import (
 	"context"
+	"github.com/beego/beego/v2/client/orm/internal/session"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/beego/beego/v2/client/orm"
 )
 
 func TestFilterChainBuilderFilterChain1(t *testing.T) {
-	next := func(ctx context.Context, inv *orm.Invocation) []interface{} {
+	next := func(ctx context.Context, inv *session.Invocation) []interface{} {
 		inv.Method = "coming"
 		return []interface{}{}
 	}
@@ -35,17 +34,17 @@ func TestFilterChainBuilderFilterChain1(t *testing.T) {
 	assert.NotNil(t, summaryVec)
 	assert.NotNil(t, filter)
 
-	inv := &orm.Invocation{}
+	inv := &session.Invocation{}
 	filter(context.Background(), inv)
 	assert.Equal(t, "coming", inv.Method)
 
-	inv = &orm.Invocation{
+	inv = &session.Invocation{
 		Method:      "Hello",
 		TxStartTime: time.Now(),
 	}
 	builder.reportTxn(context.Background(), inv)
 
-	inv = &orm.Invocation{
+	inv = &session.Invocation{
 		Method: "Begin",
 	}
 

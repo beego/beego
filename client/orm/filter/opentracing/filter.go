@@ -16,11 +16,10 @@ package opentracing
 
 import (
 	"context"
+	"github.com/beego/beego/v2/client/orm/internal/session"
 	"strings"
 
 	"github.com/opentracing/opentracing-go"
-
-	"github.com/beego/beego/v2/client/orm"
 )
 
 // FilterChainBuilder provides an extension point
@@ -32,11 +31,11 @@ import (
 // When use using those methods, it means that they want to manager their transaction manually, so we won't handle them.
 type FilterChainBuilder struct {
 	// CustomSpanFunc users are able to custom their span
-	CustomSpanFunc func(span opentracing.Span, ctx context.Context, inv *orm.Invocation)
+	CustomSpanFunc func(span opentracing.Span, ctx context.Context, inv *session.Invocation)
 }
 
-func (builder *FilterChainBuilder) FilterChain(next orm.Filter) orm.Filter {
-	return func(ctx context.Context, inv *orm.Invocation) []interface{} {
+func (builder *FilterChainBuilder) FilterChain(next session.Filter) session.Filter {
+	return func(ctx context.Context, inv *session.Invocation) []interface{} {
 		operationName := builder.operationName(ctx, inv)
 		if strings.HasPrefix(inv.Method, "Begin") || inv.Method == "Commit" || inv.Method == "Rollback" {
 			return next(ctx, inv)
@@ -50,11 +49,11 @@ func (builder *FilterChainBuilder) FilterChain(next orm.Filter) orm.Filter {
 	}
 }
 
-func (builder *FilterChainBuilder) buildSpan(span opentracing.Span, ctx context.Context, inv *orm.Invocation) {
+func (builder *FilterChainBuilder) buildSpan(span opentracing.Span, ctx context.Context, inv *session.Invocation) {
 	span.SetTag("orm.method", inv.Method)
 	span.SetTag("orm.table", inv.GetTableName())
 	span.SetTag("orm.insideTx", inv.InsideTx)
-	span.SetTag("orm.txName", ctx.Value(orm.TxNameKey))
+	span.SetTag("orm.txName", ctx.Value(session.TxNameKey))
 	span.SetTag("span.kind", "client")
 	span.SetTag("component", "beego")
 
@@ -63,8 +62,8 @@ func (builder *FilterChainBuilder) buildSpan(span opentracing.Span, ctx context.
 	}
 }
 
-func (builder *FilterChainBuilder) operationName(ctx context.Context, inv *orm.Invocation) string {
-	if n, ok := ctx.Value(orm.TxNameKey).(string); ok {
+func (builder *FilterChainBuilder) operationName(ctx context.Context, inv *session.Invocation) string {
+	if n, ok := ctx.Value(session.TxNameKey).(string); ok {
 		return inv.Method + "#tx(" + n + ")"
 	}
 	return inv.Method + "#" + inv.GetTableName()

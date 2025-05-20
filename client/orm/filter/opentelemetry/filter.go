@@ -16,17 +16,16 @@ package opentelemetry
 
 import (
 	"context"
+	"github.com/beego/beego/v2/client/orm/internal/session"
 	"strings"
 
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	otelTrace "go.opentelemetry.io/otel/trace"
-
-	"github.com/beego/beego/v2/client/orm"
 )
 
 type (
-	CustomSpanFunc    func(ctx context.Context, span otelTrace.Span, inv *orm.Invocation)
+	CustomSpanFunc    func(ctx context.Context, span otelTrace.Span, inv *session.Invocation)
 	FilterChainOption func(fcv *FilterChainBuilder)
 )
 
@@ -53,8 +52,8 @@ func WithCustomSpanFunc(customSpanFunc CustomSpanFunc) FilterChainOption {
 
 // FilterChain traces invocation with opentelemetry
 // Unless invocation.Method is Begin*, Commit or Rollback
-func (builder *FilterChainBuilder) FilterChain(next orm.Filter) orm.Filter {
-	return func(ctx context.Context, inv *orm.Invocation) []interface{} {
+func (builder *FilterChainBuilder) FilterChain(next session.Filter) session.Filter {
+	return func(ctx context.Context, inv *session.Invocation) []interface{} {
 		if strings.HasPrefix(inv.Method, "Begin") || inv.Method == "Commit" || inv.Method == "Rollback" {
 			return next(ctx, inv)
 		}
@@ -68,11 +67,11 @@ func (builder *FilterChainBuilder) FilterChain(next orm.Filter) orm.Filter {
 }
 
 // buildSpan add default span attributes and custom attributes with customSpanFunc
-func (builder *FilterChainBuilder) buildSpan(ctx context.Context, span otelTrace.Span, inv *orm.Invocation) {
+func (builder *FilterChainBuilder) buildSpan(ctx context.Context, span otelTrace.Span, inv *session.Invocation) {
 	span.SetAttributes(attribute.String("orm.method", inv.Method))
 	span.SetAttributes(attribute.String("orm.table", inv.GetTableName()))
 	span.SetAttributes(attribute.Bool("orm.insideTx", inv.InsideTx))
-	v, _ := ctx.Value(orm.TxNameKey).(string)
+	v, _ := ctx.Value(session.TxNameKey).(string)
 	span.SetAttributes(attribute.String("orm.txName", v))
 	span.SetAttributes(attribute.String("span.kind", "client"))
 	span.SetAttributes(attribute.String("component", "beego"))
@@ -82,8 +81,8 @@ func (builder *FilterChainBuilder) buildSpan(ctx context.Context, span otelTrace
 	}
 }
 
-func invOperationName(ctx context.Context, inv *orm.Invocation) string {
-	if n, ok := ctx.Value(orm.TxNameKey).(string); ok {
+func invOperationName(ctx context.Context, inv *session.Invocation) string {
+	if n, ok := ctx.Value(session.TxNameKey).(string); ok {
 		return inv.Method + "#tx(" + n + ")"
 	}
 	return inv.Method + "#" + inv.GetTableName()

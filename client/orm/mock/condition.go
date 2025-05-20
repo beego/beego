@@ -16,17 +16,16 @@ package mock
 
 import (
 	"context"
-
-	"github.com/beego/beego/v2/client/orm"
+	"github.com/beego/beego/v2/client/orm/internal/session"
 )
 
 type Mock struct {
 	cond Condition
 	resp []interface{}
-	cb   func(inv *orm.Invocation)
+	cb   func(inv *session.Invocation)
 }
 
-func NewMock(cond Condition, resp []interface{}, cb func(inv *orm.Invocation)) *Mock {
+func NewMock(cond Condition, resp []interface{}, cb func(inv *session.Invocation)) *Mock {
 	return &Mock{
 		cond: cond,
 		resp: resp,
@@ -35,7 +34,7 @@ func NewMock(cond Condition, resp []interface{}, cb func(inv *orm.Invocation)) *
 }
 
 type Condition interface {
-	Match(ctx context.Context, inv *orm.Invocation) bool
+	Match(ctx context.Context, inv *session.Invocation) bool
 }
 
 type SimpleCondition struct {
@@ -50,7 +49,7 @@ func NewSimpleCondition(tableName string, methodName string) Condition {
 	}
 }
 
-func (s *SimpleCondition) Match(ctx context.Context, inv *orm.Invocation) bool {
+func (s *SimpleCondition) Match(ctx context.Context, inv *session.Invocation) bool {
 	res := true
 	if len(s.tableName) != 0 {
 		res = res && (s.tableName == inv.GetTableName())

@@ -1,4 +1,4 @@
-// Copyright 2020 beego
+// Copyright 2023 ecodeclub
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,29 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package mock
+package session
 
 import (
-	"context"
-	"github.com/beego/beego/v2/client/orm/internal/session"
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
+	imodels "github.com/beego/beego/v2/client/orm/internal/models"
 )
 
-func TestSimpleCondition_Match(t *testing.T) {
-	cond := NewSimpleCondition("", "")
-	res := cond.Match(context.Background(), &session.Invocation{})
-	assert.True(t, res)
-	cond = NewSimpleCondition("hello", "")
-	assert.False(t, cond.Match(context.Background(), &session.Invocation{}))
+func TestDbBasePostgres_HasReturningID(t *testing.T) {
+	base := newdbBasePostgres()
+	val := reflect.ValueOf(&StringID{})
+	mi := imodels.NewModelInfo(val)
+	str := ""
+	ok := base.HasReturningID(mi, &str)
+	assert.False(t, ok)
+	assert.Equal(t, "", str)
+}
 
-	cond = NewSimpleCondition("", "A")
-	assert.False(t, cond.Match(context.Background(), &session.Invocation{
-		Method: "B",
-	}))
-
-	assert.True(t, cond.Match(context.Background(), &session.Invocation{
-		Method: "A",
-	}))
+type StringID struct {
+	ID string `orm:"pk"`
 }

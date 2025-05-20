@@ -17,6 +17,7 @@ package opentelemetry
 import (
 	"bytes"
 	"context"
+	"github.com/beego/beego/v2/client/orm/internal/session"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -25,8 +26,6 @@ import (
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/sdk/trace"
 	otelTrace "go.opentelemetry.io/otel/trace"
-
-	"github.com/beego/beego/v2/client/orm"
 )
 
 func TestFilterChainBuilderFilterChain(t *testing.T) {
@@ -40,13 +39,13 @@ func TestFilterChainBuilderFilterChain(t *testing.T) {
 	otel.SetTracerProvider(tp)
 
 	// Build FilterChain
-	csf := func(ctx context.Context, span otelTrace.Span, inv *orm.Invocation) {
+	csf := func(ctx context.Context, span otelTrace.Span, inv *session.Invocation) {
 		span.SetAttributes(attribute.String("hello", "work"))
 	}
 	builder := NewFilterChainBuilder(WithCustomSpanFunc(csf))
 
-	inv := &orm.Invocation{Method: "Hello"}
-	next := func(ctx context.Context, inv *orm.Invocation) []interface{} { return nil }
+	inv := &session.Invocation{Method: "Hello"}
+	next := func(ctx context.Context, inv *session.Invocation) []interface{} { return nil }
 
 	builder.FilterChain(next)(context.Background(), inv)
 

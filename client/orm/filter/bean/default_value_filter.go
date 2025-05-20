@@ -16,10 +16,10 @@ package bean
 
 import (
 	"context"
+	"github.com/beego/beego/v2/client/orm/internal/session"
 	"reflect"
 	"strings"
 
-	"github.com/beego/beego/v2/client/orm"
 	"github.com/beego/beego/v2/core/bean"
 	"github.com/beego/beego/v2/core/logs"
 )
@@ -75,8 +75,8 @@ func NewDefaultValueFilterChainBuilder(typeAdapters map[string]bean.TypeAdapter,
 	}
 }
 
-func (d *DefaultValueFilterChainBuilder) FilterChain(next orm.Filter) orm.Filter {
-	return func(ctx context.Context, inv *orm.Invocation) []interface{} {
+func (d *DefaultValueFilterChainBuilder) FilterChain(next session.Filter) session.Filter {
+	return func(ctx context.Context, inv *session.Invocation) []interface{} {
 		switch inv.Method {
 		case "Insert", "InsertWithCtx":
 			d.handleInsert(ctx, inv)
@@ -89,11 +89,11 @@ func (d *DefaultValueFilterChainBuilder) FilterChain(next orm.Filter) orm.Filter
 	}
 }
 
-func (d *DefaultValueFilterChainBuilder) handleInsert(ctx context.Context, inv *orm.Invocation) {
+func (d *DefaultValueFilterChainBuilder) handleInsert(ctx context.Context, inv *session.Invocation) {
 	d.setDefaultValue(ctx, inv.Args[0])
 }
 
-func (d *DefaultValueFilterChainBuilder) handleInsertOrUpdate(ctx context.Context, inv *orm.Invocation) {
+func (d *DefaultValueFilterChainBuilder) handleInsertOrUpdate(ctx context.Context, inv *session.Invocation) {
 	if d.includeInsertOrUpdate {
 		ins := inv.Args[0]
 		if ins == nil {
@@ -109,7 +109,7 @@ func (d *DefaultValueFilterChainBuilder) handleInsertOrUpdate(ctx context.Contex
 	}
 }
 
-func (d *DefaultValueFilterChainBuilder) handleInsertMulti(ctx context.Context, inv *orm.Invocation) {
+func (d *DefaultValueFilterChainBuilder) handleInsertMulti(ctx context.Context, inv *session.Invocation) {
 	mds := inv.Args[1]
 
 	if t := reflect.TypeOf(mds).Kind(); t != reflect.Array && t != reflect.Slice {

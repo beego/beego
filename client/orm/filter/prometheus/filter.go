@@ -16,14 +16,13 @@ package prometheus
 
 import (
 	"context"
+	"github.com/beego/beego/v2/client/orm/internal/session"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
-
-	"github.com/beego/beego/v2/client/orm"
 )
 
 // FilterChainBuilder is an extension point,
@@ -44,7 +43,7 @@ var (
 	initSummaryVec sync.Once
 )
 
-func (builder *FilterChainBuilder) FilterChain(next orm.Filter) orm.Filter {
+func (builder *FilterChainBuilder) FilterChain(next session.Filter) session.Filter {
 	initSummaryVec.Do(func() {
 		summaryVec = prometheus.NewSummaryVec(prometheus.SummaryOpts{
 			Name:      "beego",
@@ -59,7 +58,7 @@ func (builder *FilterChainBuilder) FilterChain(next orm.Filter) orm.Filter {
 		prometheus.MustRegister(summaryVec)
 	})
 
-	return func(ctx context.Context, inv *orm.Invocation) []interface{} {
+	return func(ctx context.Context, inv *session.Invocation) []interface{} {
 		startTime := time.Now()
 		res := next(ctx, inv)
 		endTime := time.Now()
@@ -72,7 +71,7 @@ func (builder *FilterChainBuilder) FilterChain(next orm.Filter) orm.Filter {
 	}
 }
 
-func (builder *FilterChainBuilder) report(ctx context.Context, inv *orm.Invocation, dur time.Duration) {
+func (builder *FilterChainBuilder) report(ctx context.Context, inv *session.Invocation, dur time.Duration) {
 	// start a transaction, we don't record it
 	if strings.HasPrefix(inv.Method, "Begin") {
 		return
@@ -85,7 +84,7 @@ func (builder *FilterChainBuilder) report(ctx context.Context, inv *orm.Invocati
 		strconv.FormatBool(inv.InsideTx), inv.TxName).Observe(float64(dur))
 }
 
-func (builder *FilterChainBuilder) reportTxn(ctx context.Context, inv *orm.Invocation) {
+func (builder *FilterChainBuilder) reportTxn(ctx context.Context, inv *session.Invocation) {
 	dur := time.Since(inv.TxStartTime) / time.Millisecond
 	summaryVec.WithLabelValues(inv.Method, inv.TxName,
 		strconv.FormatBool(inv.InsideTx), inv.TxName).Observe(float64(dur))

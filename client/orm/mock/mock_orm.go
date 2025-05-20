@@ -16,6 +16,7 @@ package mock
 
 import (
 	"database/sql"
+	"github.com/beego/beego/v2/client/orm/internal/session"
 	"os"
 	"path/filepath"
 
@@ -32,7 +33,7 @@ func init() {
 // you should not
 func RegisterMockDB(name string) {
 	source := filepath.Join(os.TempDir(), name+".db")
-	_ = orm.RegisterDataBase(name, "sqlite3", source)
+	_ = session.RegisterDataBase(name, "sqlite3", source)
 }
 
 // MockTable only check table name
@@ -48,7 +49,7 @@ func MockMethod(method string, resp ...interface{}) *Mock {
 // MockRead support orm.Read and orm.ReadWithCtx
 // cb is used to mock read data from DB
 func MockRead(tableName string, cb func(data interface{}), err error) *Mock {
-	return NewMock(NewSimpleCondition(tableName, "ReadWithCtx"), []interface{}{err}, func(inv *orm.Invocation) {
+	return NewMock(NewSimpleCondition(tableName, "ReadWithCtx"), []interface{}{err}, func(inv *session.Invocation) {
 		if cb != nil {
 			cb(inv.Args[0])
 		}
@@ -60,7 +61,7 @@ func MockRead(tableName string, cb func(data interface{}), err error) *Mock {
 func MockReadForUpdateWithCtx(tableName string, cb func(data interface{}), err error) *Mock {
 	return NewMock(NewSimpleCondition(tableName, "ReadForUpdateWithCtx"),
 		[]interface{}{err},
-		func(inv *orm.Invocation) {
+		func(inv *session.Invocation) {
 			cb(inv.Args[0])
 		})
 }
@@ -72,7 +73,7 @@ func MockReadOrCreateWithCtx(tableName string,
 	insert bool, id int64, err error) *Mock {
 	return NewMock(NewSimpleCondition(tableName, "ReadOrCreateWithCtx"),
 		[]interface{}{insert, id, err},
-		func(inv *orm.Invocation) {
+		func(inv *session.Invocation) {
 			cb(inv.Args[0])
 		})
 }

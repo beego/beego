@@ -29,11 +29,11 @@ package migration
 
 import (
 	"errors"
+	"github.com/beego/beego/v2/client/orm/internal/session"
 	"sort"
 	"strings"
 	"time"
 
-	"github.com/beego/beego/v2/client/orm"
 	"github.com/beego/beego/v2/core/logs"
 )
 
@@ -118,7 +118,7 @@ func (m *Migration) Reset() {
 
 // Exec execute the sql already add in the sql
 func (m *Migration) Exec(name, status string) error {
-	o := orm.NewOrm()
+	o := session.NewOrm()
 	for _, s := range m.sqls {
 		logs.Info("exec sql:", s)
 		r := o.Raw(s)
@@ -131,7 +131,7 @@ func (m *Migration) Exec(name, status string) error {
 }
 
 func (m *Migration) addOrUpdateRecord(name, status string) error {
-	o := orm.NewOrm()
+	o := session.NewOrm()
 	if status == "down" {
 		status = "rollback"
 		p, err := o.Raw("update migrations set status = ?, rollback_statements = ?, created_at = ? where name = ?").Prepare()
@@ -292,8 +292,8 @@ func sortMap(m map[string]Migrationer) dataSlice {
 }
 
 func isRollBack(name string) bool {
-	o := orm.NewOrm()
-	var maps []orm.Params
+	o := session.NewOrm()
+	var maps []session.Params
 	num, err := o.Raw("select * from migrations where `name` = ? order by id_migration desc", name).Values(&maps)
 	if err != nil {
 		logs.Info("get name has error", err)
@@ -309,8 +309,8 @@ func isRollBack(name string) bool {
 }
 
 func getAllMigrations() (map[string]string, error) {
-	o := orm.NewOrm()
-	var maps []orm.Params
+	o := session.NewOrm()
+	var maps []session.Params
 	migs := make(map[string]string)
 	num, err := o.Raw("select * from migrations order by id_migration desc").Values(&maps)
 	if err != nil {
