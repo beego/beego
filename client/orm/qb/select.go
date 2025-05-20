@@ -17,11 +17,10 @@ package qb
 import (
 	"context"
 	"errors"
+	"github.com/beego/beego/v2/client/orm/internal/session"
 	"reflect"
 
 	"github.com/beego/beego/v2/client/orm/internal/buffers"
-
-	"github.com/beego/beego/v2/client/orm"
 
 	"github.com/beego/beego/v2/client/orm/internal/models"
 	"github.com/beego/beego/v2/client/orm/qb/errs"
@@ -38,12 +37,12 @@ type Selector[T any] struct {
 	limit     int
 	columns   []Selectable
 	tableName string
-	db        orm.Ormer
+	db        session.Ormer
 	// allow users to specify the registry
 	registry *models.ModelCache
 }
 
-func NewSelector[T any](db orm.Ormer) *Selector[T] {
+func NewSelector[T any](db session.Ormer) *Selector[T] {
 	return &Selector[T]{
 		db: db,
 		builder: builder{

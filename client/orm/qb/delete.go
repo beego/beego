@@ -16,8 +16,8 @@ package qb
 
 import (
 	"context"
+	"github.com/beego/beego/v2/client/orm/internal/session"
 
-	"github.com/beego/beego/v2/client/orm"
 	"github.com/beego/beego/v2/client/orm/internal/buffers"
 	"github.com/beego/beego/v2/client/orm/internal/models"
 )
@@ -28,12 +28,12 @@ var _ QueryBuilder = &Deleter[any]{}
 type Deleter[T any] struct {
 	builder
 	table interface{}
-	db    orm.Ormer
+	db    session.Ormer
 	where []Predicate
 }
 
 // NewDeleter starts building a Delete query
-func NewDeleter[T any](db orm.Ormer) *Deleter[T] {
+func NewDeleter[T any](db session.Ormer) *Deleter[T] {
 	return &Deleter[T]{
 		db: db,
 		builder: builder{

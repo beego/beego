@@ -16,14 +16,13 @@ package mock
 
 import (
 	"context"
-
-	"github.com/beego/beego/v2/client/orm"
+	"github.com/beego/beego/v2/client/orm/internal/session"
 )
 
 var stub = newOrmStub()
 
 func init() {
-	orm.AddGlobalFilterChain(stub.FilterChain)
+	session.AddGlobalFilterChain(stub.FilterChain)
 }
 
 type Stub interface {
@@ -53,8 +52,8 @@ func (o *OrmStub) Clear() {
 	o.ms = make([]*Mock, 0, 4)
 }
 
-func (o *OrmStub) FilterChain(next orm.Filter) orm.Filter {
-	return func(ctx context.Context, inv *orm.Invocation) []interface{} {
+func (o *OrmStub) FilterChain(next session.Filter) session.Filter {
+	return func(ctx context.Context, inv *session.Invocation) []interface{} {
 		ms := mockFromCtx(ctx)
 		ms = append(ms, o.ms...)
 

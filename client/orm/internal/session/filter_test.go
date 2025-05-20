@@ -12,32 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package opentracing
+package session
 
 import (
 	"context"
-	"github.com/beego/beego/v2/client/orm/internal/session"
 	"testing"
-	"time"
 
-	"github.com/opentracing/opentracing-go"
+	"github.com/stretchr/testify/assert"
 )
 
-func TestFilterChainBuilderFilterChain(t *testing.T) {
-	next := func(ctx context.Context, inv *session.Invocation) []interface{} {
-		inv.TxName = "Hello"
-		return []interface{}{}
-	}
-
-	builder := &FilterChainBuilder{
-		CustomSpanFunc: func(span opentracing.Span, ctx context.Context, inv *session.Invocation) {
-			span.SetTag("hello", "hell")
-		},
-	}
-
-	inv := &session.Invocation{
-		Method:      "Hello",
-		TxStartTime: time.Now(),
-	}
-	builder.FilterChain(next)(context.Background(), inv)
+func TestAddGlobalFilterChain(t *testing.T) {
+	AddGlobalFilterChain(func(next Filter) Filter {
+		return func(ctx context.Context, inv *Invocation) []interface{} {
+			return next(ctx, inv)
+		}
+	})
+	assert.Equal(t, 1, len(globalFilterChains))
+	globalFilterChains = nil
 }

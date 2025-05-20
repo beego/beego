@@ -16,11 +16,10 @@ package mock
 
 import (
 	"context"
+	"github.com/beego/beego/v2/client/orm/internal/session"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/beego/beego/v2/client/orm"
 )
 
 func TestDoNothingQueryM2Mer(t *testing.T) {
@@ -47,17 +46,17 @@ func TestDoNothingQueryM2Mer(t *testing.T) {
 
 func TestNewQueryM2MerCondition(t *testing.T) {
 	cond := NewQueryM2MerCondition("", "")
-	res := cond.Match(context.Background(), &orm.Invocation{})
+	res := cond.Match(context.Background(), &session.Invocation{})
 	assert.True(t, res)
 	cond = NewQueryM2MerCondition("hello", "")
-	assert.False(t, cond.Match(context.Background(), &orm.Invocation{}))
+	assert.False(t, cond.Match(context.Background(), &session.Invocation{}))
 
 	cond = NewQueryM2MerCondition("", "A")
-	assert.False(t, cond.Match(context.Background(), &orm.Invocation{
+	assert.False(t, cond.Match(context.Background(), &session.Invocation{
 		Args: []interface{}{0, "B"},
 	}))
 
-	assert.True(t, cond.Match(context.Background(), &orm.Invocation{
+	assert.True(t, cond.Match(context.Background(), &session.Invocation{
 		Args: []interface{}{0, "A"},
 	}))
 }

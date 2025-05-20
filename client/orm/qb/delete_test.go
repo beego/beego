@@ -15,19 +15,18 @@
 package qb
 
 import (
+	"github.com/beego/beego/v2/client/orm/internal/session"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/beego/beego/v2/client/orm"
 )
 
 func TestDeleter_Build(t *testing.T) {
-	err := orm.RegisterDataBase("default", "sqlite3", "")
+	err := session.RegisterDataBase("default", "sqlite3", "")
 	if err != nil {
 		return
 	}
-	db := orm.NewOrm()
+	db := session.NewOrm()
 	testCases := []struct {
 		name      string
 		builder   QueryBuilder

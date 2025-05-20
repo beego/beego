@@ -15,16 +15,15 @@
 package bean
 
 import (
+	"github.com/beego/beego/v2/client/orm/internal/session"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/beego/beego/v2/client/orm"
 )
 
 func TestDefaultValueFilterChainBuilderFilterChain(t *testing.T) {
 	builder := NewDefaultValueFilterChainBuilder(nil, true, true)
-	o := orm.NewFilterOrmDecorator(&defaultValueTestOrm{}, builder.FilterChain)
+	o := session.NewFilterOrmDecorator(&defaultValueTestOrm{}, builder.FilterChain)
 
 	// test insert
 	entity := &DefaultValueTestEntity{}
@@ -35,7 +34,7 @@ func TestDefaultValueFilterChainBuilderFilterChain(t *testing.T) {
 
 	// test InsertOrUpdate
 	entity = &DefaultValueTestEntity{}
-	orm.RegisterModel(entity)
+	session.RegisterModel(entity)
 
 	_, _ = o.InsertOrUpdate(entity)
 	assert.Equal(t, 12, entity.Age)
@@ -60,7 +59,7 @@ func TestDefaultValueFilterChainBuilderFilterChain(t *testing.T) {
 }
 
 type defaultValueTestOrm struct {
-	orm.DoNothingOrm
+	session.DoNothingOrm
 }
 
 type DefaultValueTestEntity struct {

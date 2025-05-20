@@ -16,27 +16,26 @@ package mock
 
 import (
 	"context"
+	"github.com/beego/beego/v2/client/orm/internal/session"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/beego/beego/v2/client/orm"
 )
 
 func TestOrmStub_FilterChain(t *testing.T) {
 	os := newOrmStub()
-	inv := &orm.Invocation{
+	inv := &session.Invocation{
 		Args: []interface{}{10},
 	}
 	i := 1
-	os.FilterChain(func(ctx context.Context, inv *orm.Invocation) []interface{} {
+	os.FilterChain(func(ctx context.Context, inv *session.Invocation) []interface{} {
 		i++
 		return nil
 	})(context.Background(), inv)
 
 	assert.Equal(t, 2, i)
 
-	m := NewMock(NewSimpleCondition("", ""), nil, func(inv *orm.Invocation) {
+	m := NewMock(NewSimpleCondition("", ""), nil, func(inv *session.Invocation) {
 		arg := inv.Args[0]
 		j := arg.(int)
 		inv.Args[0] = j + 1
@@ -47,7 +46,7 @@ func TestOrmStub_FilterChain(t *testing.T) {
 	assert.Equal(t, 11, inv.Args[0])
 
 	inv.Args[0] = 10
-	ctxMock := NewMock(NewSimpleCondition("", ""), nil, func(inv *orm.Invocation) {
+	ctxMock := NewMock(NewSimpleCondition("", ""), nil, func(inv *session.Invocation) {
 		arg := inv.Args[0]
 		j := arg.(int)
 		inv.Args[0] = j + 3

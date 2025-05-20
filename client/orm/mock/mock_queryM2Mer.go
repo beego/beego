@@ -16,8 +16,7 @@ package mock
 
 import (
 	"context"
-
-	"github.com/beego/beego/v2/client/orm"
+	"github.com/beego/beego/v2/client/orm/internal/session"
 )
 
 // DoNothingQueryM2Mer do nothing
@@ -76,7 +75,7 @@ func NewQueryM2MerCondition(tableName string, name string) *QueryM2MerCondition 
 	}
 }
 
-func (q *QueryM2MerCondition) Match(ctx context.Context, inv *orm.Invocation) bool {
+func (q *QueryM2MerCondition) Match(ctx context.Context, inv *session.Invocation) bool {
 	res := true
 	if len(q.tableName) > 0 {
 		res = res && (q.tableName == inv.GetTableName())

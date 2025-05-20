@@ -18,6 +18,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"github.com/beego/beego/v2/client/orm/internal/session"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -28,7 +29,7 @@ import (
 const mockErrorMsg = "mock error"
 
 func init() {
-	orm.RegisterModel(&User{})
+	session.RegisterModel(&User{})
 }
 
 func TestMockDBStats(t *testing.T) {
@@ -37,7 +38,7 @@ func TestMockDBStats(t *testing.T) {
 	stats := &sql.DBStats{}
 	s.Mock(MockDBStats(stats))
 
-	o := orm.NewOrm()
+	o := session.NewOrm()
 
 	res := o.DBStats()
 
@@ -48,7 +49,7 @@ func TestMockDeleteWithCtx(t *testing.T) {
 	s := StartMock()
 	defer s.Clear()
 	s.Mock(MockDeleteWithCtx((&User{}).TableName(), 12, nil))
-	o := orm.NewOrm()
+	o := session.NewOrm()
 	rows, err := o.Delete(&User{})
 	assert.Equal(t, int64(12), rows)
 	assert.Nil(t, err)
@@ -58,7 +59,7 @@ func TestMockInsertOrUpdateWithCtx(t *testing.T) {
 	s := StartMock()
 	defer s.Clear()
 	s.Mock(MockInsertOrUpdateWithCtx((&User{}).TableName(), 12, nil))
-	o := orm.NewOrm()
+	o := session.NewOrm()
 	id, err := o.InsertOrUpdate(&User{})
 	assert.Equal(t, int64(12), id)
 	assert.Nil(t, err)
@@ -72,7 +73,7 @@ func TestMockRead(t *testing.T) {
 		u := data.(*User)
 		u.Name = "Tom"
 	}, err))
-	o := orm.NewOrm()
+	o := session.NewOrm()
 	u := &User{}
 	e := o.Read(u)
 	assert.Equal(t, err, e)
@@ -84,7 +85,7 @@ func TestMockQueryM2MWithCtx(t *testing.T) {
 	defer s.Clear()
 	mock := &DoNothingQueryM2Mer{}
 	s.Mock(MockQueryM2MWithCtx((&User{}).TableName(), "Tags", mock))
-	o := orm.NewOrm()
+	o := session.NewOrm()
 	res := o.QueryM2M(&User{}, "Tags")
 	assert.Equal(t, mock, res)
 }
@@ -94,7 +95,7 @@ func TestMockQueryTableWithCtx(t *testing.T) {
 	defer s.Clear()
 	mock := &DoNothingQuerySetter{}
 	s.Mock(MockQueryTableWithCtx((&User{}).TableName(), mock))
-	o := orm.NewOrm()
+	o := session.NewOrm()
 	res := o.QueryTable(&User{})
 	assert.Equal(t, mock, res)
 }
@@ -104,7 +105,7 @@ func TestMockTable(t *testing.T) {
 	defer s.Clear()
 	mock := errors.New(mockErrorMsg)
 	s.Mock(MockTable((&User{}).TableName(), mock))
-	o := orm.NewOrm()
+	o := session.NewOrm()
 	res := o.Read(&User{})
 	assert.Equal(t, mock, res)
 }
@@ -114,7 +115,7 @@ func TestMockInsertMultiWithCtx(t *testing.T) {
 	defer s.Clear()
 	mock := errors.New(mockErrorMsg)
 	s.Mock(MockInsertMultiWithCtx((&User{}).TableName(), 12, mock))
-	o := orm.NewOrm()
+	o := session.NewOrm()
 	res, err := o.InsertMulti(11, []interface{}{&User{}})
 	assert.Equal(t, int64(12), res)
 	assert.Equal(t, mock, err)
@@ -125,7 +126,7 @@ func TestMockInsertWithCtx(t *testing.T) {
 	defer s.Clear()
 	mock := errors.New(mockErrorMsg)
 	s.Mock(MockInsertWithCtx((&User{}).TableName(), 13, mock))
-	o := orm.NewOrm()
+	o := session.NewOrm()
 	res, err := o.Insert(&User{})
 	assert.Equal(t, int64(13), res)
 	assert.Equal(t, mock, err)
@@ -136,7 +137,7 @@ func TestMockUpdateWithCtx(t *testing.T) {
 	defer s.Clear()
 	mock := errors.New(mockErrorMsg)
 	s.Mock(MockUpdateWithCtx((&User{}).TableName(), 12, mock))
-	o := orm.NewOrm()
+	o := session.NewOrm()
 	res, err := o.Update(&User{})
 	assert.Equal(t, int64(12), res)
 	assert.Equal(t, mock, err)
@@ -147,7 +148,7 @@ func TestMockLoadRelatedWithCtx(t *testing.T) {
 	defer s.Clear()
 	mock := errors.New(mockErrorMsg)
 	s.Mock(MockLoadRelatedWithCtx((&User{}).TableName(), "T", 12, mock))
-	o := orm.NewOrm()
+	o := session.NewOrm()
 	res, err := o.LoadRelated(&User{}, "T")
 	assert.Equal(t, int64(12), res)
 	assert.Equal(t, mock, err)
@@ -158,7 +159,7 @@ func TestMockMethod(t *testing.T) {
 	defer s.Clear()
 	mock := errors.New(mockErrorMsg)
 	s.Mock(MockMethod("ReadWithCtx", mock))
-	o := orm.NewOrm()
+	o := session.NewOrm()
 	err := o.Read(&User{})
 	assert.Equal(t, mock, err)
 }
@@ -171,7 +172,7 @@ func TestMockReadForUpdateWithCtx(t *testing.T) {
 		u := data.(*User)
 		u.Name = "Tom"
 	}, mock))
-	o := orm.NewOrm()
+	o := session.NewOrm()
 	u := &User{}
 	err := o.ReadForUpdate(u)
 	assert.Equal(t, mock, err)
@@ -183,7 +184,7 @@ func TestMockRawWithCtx(t *testing.T) {
 	defer s.Clear()
 	mock := &DoNothingRawSetter{}
 	s.Mock(MockRawWithCtx(mock))
-	o := orm.NewOrm()
+	o := session.NewOrm()
 	res := o.Raw("")
 	assert.Equal(t, mock, res)
 }
@@ -196,7 +197,7 @@ func TestMockReadOrCreateWithCtx(t *testing.T) {
 		u := data.(*User)
 		u.Name = "Tom"
 	}, false, 12, mock))
-	o := orm.NewOrm()
+	o := session.NewOrm()
 	u := &User{}
 	inserted, id, err := o.ReadOrCreate(u, "")
 	assert.Equal(t, mock, err)
@@ -248,7 +249,7 @@ func TestTransactionRollbackUnlessCommit(t *testing.T) {
 	s.Mock(MockRollbackUnlessCommit(mock))
 
 	// u := &User{}
-	o := orm.NewOrm()
+	o := session.NewOrm()
 	txOrm, _ := o.Begin()
 	err := txOrm.RollbackUnlessCommit()
 	assert.Equal(t, mock, err)
@@ -270,7 +271,7 @@ func TestTransactionCommit(t *testing.T) {
 
 func originalTx() (*User, error) {
 	u := &User{}
-	o := orm.NewOrm()
+	o := session.NewOrm()
 	txOrm, _ := o.Begin()
 	err := txOrm.Read(u)
 	if err == nil {
@@ -284,7 +285,7 @@ func originalTx() (*User, error) {
 
 func originalTxManually() (*User, error) {
 	u := &User{}
-	o := orm.NewOrm()
+	o := session.NewOrm()
 	txOrm, _ := o.Begin()
 	err := txOrm.Read(u)
 	_ = txOrm.Commit()
@@ -294,7 +295,7 @@ func originalTxManually() (*User, error) {
 func originalTxUsingClosure() (*User, error) {
 	u := &User{}
 	var err error
-	o := orm.NewOrm()
+	o := session.NewOrm()
 	_ = o.DoTx(func(ctx context.Context, txOrm orm.TxOrmer) error {
 		err = txOrm.Read(u)
 		return nil
