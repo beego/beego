@@ -15,8 +15,11 @@
 package web
 
 import (
+	"fmt"
+	"github.com/beego/beego/v2/server/web/context"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -106,4 +109,200 @@ func TestServerCtrlAny(t *testing.T) {
 			t.Errorf("TestServerCtrlAny can't run")
 		}
 	}
+}
+
+// ExampleHttpServer_InsertFilter_withReturnOnOutput is an example of how to use HttpServer.InsertFilter use withReturnOnOutput opts
+// If you set WithReturnOnOutput to true at the beginning, all subsequent filters will be skipped.
+// Note that WithReturnOnOutput only takes effect on filters at the AfterExec and FinishRouter positions.
+func ExampleHttpServer_InsertFilter_withReturnOnOutputFirst() {
+
+	doBizWithFilter(func(app *HttpServer) {
+		app.InsertFilter("*", AfterExec, func(ctx *context.Context) {
+			fmt.Println("AfterExec filter process first")
+		}, WithReturnOnOutput(true))
+
+		// had set WithReturnOnOutput(true) this filter will be ignored
+		app.InsertFilter("*", AfterExec, func(ctx *context.Context) {
+			fmt.Println("AfterExec filter process second")
+		}, WithReturnOnOutput(false))
+
+		// had set WithReturnOnOutput(true) this filter will be ignored
+		app.InsertFilter("*", FinishRouter, func(ctx *context.Context) {
+			fmt.Println("FinishRouter filter process")
+		}, WithReturnOnOutput(false))
+	})
+
+	// Output:
+	// hello world
+}
+
+// ExampleHttpServer_InsertFilter_withReturnOnOutput1 is an example of how to use HttpServer.InsertFilter use withReturnOnOutput opts
+// If you set WithReturnOnOutput to false at the beginning, the current filter will take effect.
+// Note that WithReturnOnOutput only takes effect on filters at the AfterExec and FinishRouter positions.
+func ExampleHttpServer_InsertFilter_withReturnOnOutput() {
+
+	doBizWithFilter(func(app *HttpServer) {
+
+		app.InsertFilter("*", AfterExec, func(ctx *context.Context) {
+			fmt.Println("AfterExec filter process second")
+		}, WithReturnOnOutput(false))
+
+		app.InsertFilter("*", AfterExec, func(ctx *context.Context) {
+			fmt.Println("AfterExec filter process first")
+		}, WithReturnOnOutput(true))
+
+		// had set WithReturnOnOutput(true) this filter will be ignored
+		app.InsertFilter("*", FinishRouter, func(ctx *context.Context) {
+			fmt.Println("FinishRouter filter process")
+		}, WithReturnOnOutput(false))
+
+	})
+
+	// Output:
+	// hello world
+	// AfterExec filter process second
+}
+
+// ExampleHttpServer_InsertFilter is an example of how to use HttpServer.InsertFilter
+func ExampleHttpServer_InsertFilter() {
+
+	doBizWithFilter(func(app *HttpServer) {
+		app.InsertFilter("*", BeforeStatic, func(ctx *context.Context) {
+			fmt.Println("BeforeStatic filter process")
+		})
+
+		app.InsertFilter("*", BeforeRouter, func(ctx *context.Context) {
+			fmt.Println("BeforeRouter filter process")
+		})
+
+		app.InsertFilter("*", BeforeExec, func(ctx *context.Context) {
+			fmt.Println("BeforeExec filter process")
+		})
+
+		// need to set the WithReturnOnOutput false
+		app.InsertFilter("*", AfterExec, func(ctx *context.Context) {
+			fmt.Println("AfterExec filter process")
+		}, WithReturnOnOutput(false))
+
+		// need to set the WithReturnOnOutput false
+		app.InsertFilter("*", FinishRouter, func(ctx *context.Context) {
+			fmt.Println("FinishRouter filter process")
+		}, WithReturnOnOutput(false))
+
+	})
+	// Output:
+	// BeforeStatic filter process
+	// BeforeRouter filter process
+	// BeforeExec filter process
+	// hello world
+	// AfterExec filter process
+	// FinishRouter filter process
+}
+
+// ExampleInsertFilter_withReturnOnOutputFirst is an example of how to use InsertFilter use withReturnOnOutput opts
+// If you set WithReturnOnOutput to true at the beginning, all subsequent filters will be skipped.
+// Note that WithReturnOnOutput only takes effect on filters at the AfterExec and FinishRouter positions.
+func ExampleInsertFilter_withReturnOnOutputFirst() {
+
+	doBizWithFilter(func(app *HttpServer) {
+		app.InsertFilter("*", AfterExec, func(ctx *context.Context) {
+			fmt.Println("AfterExec filter process first")
+		}, WithReturnOnOutput(true))
+
+		// had set WithReturnOnOutput(true) this filter will be ignored
+		app.InsertFilter("*", AfterExec, func(ctx *context.Context) {
+			fmt.Println("AfterExec filter process second")
+		}, WithReturnOnOutput(false))
+
+		// had set WithReturnOnOutput(true) this filter will be ignored
+		app.InsertFilter("*", FinishRouter, func(ctx *context.Context) {
+			fmt.Println("FinishRouter filter process")
+		}, WithReturnOnOutput(false))
+	})
+
+	// Output:
+	// hello world
+}
+
+// ExampleInsertFilter_withReturnOnOutput is an example of how to use InsertFilter use withReturnOnOutput opts
+// If you set WithReturnOnOutput to false at the beginning, the current filter will take effect.
+// Note that WithReturnOnOutput only takes effect on filters at the AfterExec and FinishRouter positions.
+func ExampleInsertFilter_withReturnOnOutput() {
+
+	doBizWithFilter(func(app *HttpServer) {
+
+		app.InsertFilter("*", AfterExec, func(ctx *context.Context) {
+			fmt.Println("AfterExec filter process second")
+		}, WithReturnOnOutput(false))
+
+		app.InsertFilter("*", AfterExec, func(ctx *context.Context) {
+			fmt.Println("AfterExec filter process first")
+		}, WithReturnOnOutput(true))
+
+		// had set WithReturnOnOutput(true) this filter will be ignored
+		app.InsertFilter("*", FinishRouter, func(ctx *context.Context) {
+			fmt.Println("FinishRouter filter process")
+		}, WithReturnOnOutput(false))
+
+	})
+
+	// Output:
+	// hello world
+	// AfterExec filter process second
+}
+
+// ExampleInsertFilter is an example of how to use InsertFilter
+func ExampleInsertFilter() {
+
+	doBizWithFilter(func(app *HttpServer) {
+		app.InsertFilter("*", BeforeStatic, func(ctx *context.Context) {
+			fmt.Println("BeforeStatic filter process")
+		})
+
+		app.InsertFilter("*", BeforeRouter, func(ctx *context.Context) {
+			fmt.Println("BeforeRouter filter process")
+		})
+
+		app.InsertFilter("*", BeforeExec, func(ctx *context.Context) {
+			fmt.Println("BeforeExec filter process")
+		})
+
+		// need to set the WithReturnOnOutput false
+		app.InsertFilter("*", AfterExec, func(ctx *context.Context) {
+			fmt.Println("AfterExec filter process")
+		}, WithReturnOnOutput(false))
+
+		// need to set the WithReturnOnOutput false
+		app.InsertFilter("*", FinishRouter, func(ctx *context.Context) {
+			fmt.Println("FinishRouter filter process")
+		}, WithReturnOnOutput(false))
+
+	})
+	// Output:
+	// BeforeStatic filter process
+	// BeforeRouter filter process
+	// BeforeExec filter process
+	// hello world
+	// AfterExec filter process
+	// FinishRouter filter process
+}
+
+func doBizWithFilter(addFilter func(app *HttpServer)) {
+	app := NewHttpServerWithCfg(newBConfig())
+	app.Cfg.CopyRequestBody = true
+	path := "/api/hello"
+	app.Get(path, func(ctx *context.Context) {
+		s := "hello world"
+		fmt.Println(s)
+		_ = ctx.Resp(s)
+	})
+
+	addFilter(app)
+
+	reader := strings.NewReader("")
+	req := httptest.NewRequest("GET", path, reader)
+	req.Header.Set("Accept", "*/*")
+
+	w := httptest.NewRecorder()
+	app.Handlers.ServeHTTP(w, req)
 }
