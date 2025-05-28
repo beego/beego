@@ -25,6 +25,10 @@ import (
 	"github.com/beego/beego/v2/client/orm/qb/errs"
 )
 
+func TestTransactionSelector(t *testing.T) {
+
+}
+
 func TestSelector_RawAndWhereMap(t *testing.T) {
 	err := orm.RegisterDataBase("default", "sqlite3", "")
 	if err != nil {
