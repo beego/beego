@@ -26,7 +26,7 @@ require (
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pelletier/go-toml v1.9.5
 	github.com/prometheus/client_golang v1.22.0
-	github.com/redis/go-redis/v9 v9.8.0
+	github.com/redis/go-redis/v9 v9.9.0
 	github.com/shiena/ansicolor v0.0.0-20230509054315-a9deabde6e02
 	github.com/ssdb/gossdb v0.0.0-20180723034631-88f6b59b84ec
 	github.com/stretchr/testify v1.10.0
