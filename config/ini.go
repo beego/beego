@@ -26,6 +26,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"syscall"
 )
 
 var (
@@ -339,7 +340,7 @@ func (c *IniConfigContainer) GetSection(section string) (map[string]string, erro
 // BUG(env): The environment variable config item will be saved with real value in SaveConfigFile Function.
 func (c *IniConfigContainer) SaveConfigFile(filename string) (err error) {
 	// Write configuration file by filename.
-	f, err := os.Create(filename)
+	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|syscall.O_NOFOLLOW, 0600)
 	if err != nil {
 		return err
 	}

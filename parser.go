@@ -28,6 +28,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"syscall"
 	"unicode"
 
 	"github.com/beego/beego/context/param"
@@ -509,7 +510,7 @@ func genRouterCode(pkgRealpath string) {
 	}
 
 	if globalinfo != "" {
-		f, err := os.Create(filepath.Join(getRouterDir(pkgRealpath), commentFilename))
+		f, err := os.OpenFile(filepath.Join(getRouterDir(pkgRealpath), commentFilename), os.O_RDWR|os.O_CREATE|syscall.O_NOFOLLOW, 0600)
 		if err != nil {
 			panic(err)
 		}
