@@ -28,14 +28,14 @@ var _ QueryBuilder = &Deleter[any]{}
 type Deleter[T any] struct {
 	builder
 	table interface{}
-	db    orm.Ormer
+	sess  orm.QueryExecutor
 	where []Predicate
 }
 
 // NewDeleter starts building a Delete query
-func NewDeleter[T any](db orm.Ormer) *Deleter[T] {
+func NewDeleter[T any](sess orm.QueryExecutor) *Deleter[T] {
 	return &Deleter[T]{
-		db: db,
+		sess: sess,
 		builder: builder{
 			buffer: buffers.Get(),
 		},
@@ -87,6 +87,6 @@ func (d *Deleter[T]) Exec(ctx context.Context) Result {
 		return Result{err: err}
 	}
 	t := new(T)
-	res, err := d.db.ExecRaw(ctx, t, q.SQL, q.Args...)
+	res, err := d.sess.ExecRaw(ctx, t, q.SQL, q.Args...)
 	return Result{res: res, err: err}
 }
