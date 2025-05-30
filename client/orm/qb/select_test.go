@@ -16,6 +16,7 @@ package qb
 
 import (
 	"database/sql"
+	"golang.org/x/net/context"
 	"testing"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -25,8 +26,60 @@ import (
 	"github.com/beego/beego/v2/client/orm/qb/errs"
 )
 
-func TestTransactionSelector(t *testing.T) {
+func TestTx_Commit(t *testing.T) {
+	db := MustTestOrm()
 
+	tx, err := db.BeginWithCtxAndOpts(context.Background(), &sql.TxOptions{})
+	assert.Nil(t, err)
+
+	q := NewSelector[TestModel](tx).From("test_model").Where(C("Id").EQ(1))
+	query, er := q.Build()
+	assert.Nil(t, er)
+	assert.Equal(t, "SELECT * FROM `test_model` WHERE `id` = ?;", query.SQL)
+
+	err = tx.Commit()
+	assert.Nil(t, err)
+}
+
+func TestTx_Rollback(t *testing.T) {
+	db := MustTestOrm()
+
+	tx, err := db.BeginWithCtxAndOpts(context.Background(), &sql.TxOptions{})
+	assert.Nil(t, err)
+
+	q := NewSelector[TestModel](tx).From("test_model").Where(C("Id").EQ(1))
+	query, er := q.Build()
+	assert.Nil(t, er)
+	assert.Equal(t, "SELECT * FROM `test_model` WHERE `id` = ?;", query.SQL)
+
+	err = tx.Rollback()
+	assert.Nil(t, err)
+}
+
+func MustTestOrm() orm.Ormer {
+	err := orm.RegisterDataBase("default", "sqlite3", "")
+	if err != nil {
+		panic(err)
+	}
+	return orm.NewOrm()
+}
+
+func TestExampleTransactionSelector(t *testing.T) {
+	err := orm.RegisterDataBase("default", "sqlite3", "")
+	if err != nil {
+		return
+	}
+	db := orm.NewOrm()
+	err = db.DoTx(func(ctx context.Context, txOrm orm.TxOrmer) error {
+		q := NewSelector[TestModel](txOrm).From("test_model").Where(C("Id").EQ(1))
+		query, er := q.Build()
+		if er != nil {
+			return er
+		}
+		assert.Equal(t, "SELECT * FROM `test_model` WHERE `id` = ?;", query.SQL)
+		return nil
+	})
+	assert.Nil(t, err)
 }
 
 func TestSelector_RawAndWhereMap(t *testing.T) {
