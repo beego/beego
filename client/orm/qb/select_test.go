@@ -27,7 +27,11 @@ import (
 )
 
 func TestTx_Commit(t *testing.T) {
-	db := MustTestOrm()
+	err := orm.RegisterDataBase("default", "sqlite3", "")
+	if err != nil {
+		return
+	}
+	db := orm.NewOrm()
 
 	tx, err := db.BeginWithCtxAndOpts(context.Background(), &sql.TxOptions{})
 	assert.Nil(t, err)
@@ -42,7 +46,11 @@ func TestTx_Commit(t *testing.T) {
 }
 
 func TestTx_Rollback(t *testing.T) {
-	db := MustTestOrm()
+	err := orm.RegisterDataBase("default", "sqlite3", "")
+	if err != nil {
+		return
+	}
+	db := orm.NewOrm()
 
 	tx, err := db.BeginWithCtxAndOpts(context.Background(), &sql.TxOptions{})
 	assert.Nil(t, err)
@@ -54,14 +62,6 @@ func TestTx_Rollback(t *testing.T) {
 
 	err = tx.Rollback()
 	assert.Nil(t, err)
-}
-
-func MustTestOrm() orm.Ormer {
-	err := orm.RegisterDataBase("default", "sqlite3", "")
-	if err != nil {
-		panic(err)
-	}
-	return orm.NewOrm()
 }
 
 func TestExampleTransactionSelector(t *testing.T) {
