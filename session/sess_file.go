@@ -17,6 +17,7 @@ package session
 import (
 	"errors"
 	"fmt"
+	"github.com/beego/beego/utils"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -99,13 +100,14 @@ func (fs *FileSessionStore) releaseSession(_ http.ResponseWriter, createIfNotExi
 	_, err = os.Stat(filepath.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid))
 	var f *os.File
 	if err == nil {
-		f, err = os.OpenFile(filepath.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid), os.O_RDWR, 0o777)
+		f, err = utils.OpenFileSecure(filepath.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid), os.O_RDWR, 0o600)
 		if err != nil {
 			SLogger.Println(err)
 			return
 		}
 	} else if os.IsNotExist(err) && createIfNotExist {
-		f, err = os.Create(filepath.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid))
+		filename := path.Join(filepder.savePath, string(fs.sid[0]), string(fs.sid[1]), fs.sid)
+		f, err = utils.OpenFileSecure(filename, os.O_CREATE|os.O_EXCL|os.O_RDWR, 0o600)
 		if err != nil {
 			SLogger.Println(err)
 			return
@@ -281,7 +283,7 @@ func (fp *FileProvider) SessionRegenerate(oldsid, sid string) (Store, error) {
 	}
 
 	// if old sid file not exist, just create new sid file and return
-	newf, err := os.Create(newSidFile)
+	newf, err := os.OpenFile(newSidFile, os.O_RDWR|os.O_CREATE|os.O_EXCL, 0600)
 	if err != nil {
 		return nil, err
 	}

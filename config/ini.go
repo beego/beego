@@ -18,6 +18,7 @@ import (
 	"bufio"
 	"bytes"
 	"errors"
+	"github.com/beego/beego/utils"
 	"io"
 	"io/ioutil"
 	"os"
@@ -339,7 +340,7 @@ func (c *IniConfigContainer) GetSection(section string) (map[string]string, erro
 // BUG(env): The environment variable config item will be saved with real value in SaveConfigFile Function.
 func (c *IniConfigContainer) SaveConfigFile(filename string) (err error) {
 	// Write configuration file by filename.
-	f, err := os.Create(filename)
+	f, err := utils.OpenFileSecure(filename, os.O_RDWR|os.O_CREATE, 0600)
 	if err != nil {
 		return err
 	}

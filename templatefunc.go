@@ -472,24 +472,40 @@ func RenderForm(obj interface{}) template.HTML {
 
 // renderFormField returns a string containing HTML of a single form field.
 func renderFormField(label, name, fType string, value interface{}, id string, class string, required bool) string {
+	// Format attributes with spaces first
+	idAttr := ""
 	if id != "" {
-		id = " id=\"" + id + "\""
+		idAttr = " id=\"" + template.HTMLEscapeString(id) + "\""
 	}
 
+	classAttr := ""
 	if class != "" {
-		class = " class=\"" + class + "\""
+		classAttr = " class=\"" + template.HTMLEscapeString(class) + "\""
 	}
 
-	requiredString := ""
+	requiredAttr := ""
 	if required {
-		requiredString = " required"
+		requiredAttr = " required"
+	}
+
+	// Escape all string values
+	escapedName := template.HTMLEscapeString(name)
+	escapedLabel := template.HTMLEscapeString(label)
+	escapedType := template.HTMLEscapeString(fType)
+
+	// Handle value specially as it's an interface{}
+	escapedValue := ""
+	if value != nil {
+		escapedValue = template.HTMLEscapeString(fmt.Sprintf("%v", value))
 	}
 
 	if isValidForInput(fType) {
-		return fmt.Sprintf(`%v<input%v%v name="%v" type="%v" value="%v"%v>`, label, id, class, name, fType, value, requiredString)
+		return fmt.Sprintf(`%v<input%v%v name="%v" type="%v" value="%v"%v>`,
+			escapedLabel, idAttr, classAttr, escapedName, escapedType, escapedValue, requiredAttr)
 	}
 
-	return fmt.Sprintf(`%v<%v%v%v name="%v"%v>%v</%v>`, label, fType, id, class, name, requiredString, value, fType)
+	return fmt.Sprintf(`%v<%v%v%v name="%v"%v>%v</%v>`,
+		escapedLabel, escapedType, idAttr, classAttr, escapedName, requiredAttr, escapedValue, escapedType)
 }
 
 // isValidForInput checks if fType is a valid value for the `type` property of an HTML input element.

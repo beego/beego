@@ -509,7 +509,7 @@ func genRouterCode(pkgRealpath string) {
 	}
 
 	if globalinfo != "" {
-		f, err := os.Create(filepath.Join(getRouterDir(pkgRealpath), commentFilename))
+		f, err := utils.OpenFileSecure(filepath.Join(getRouterDir(pkgRealpath), commentFilename), os.O_RDWR|os.O_CREATE, 0600)
 		if err != nil {
 			panic(err)
 		}
