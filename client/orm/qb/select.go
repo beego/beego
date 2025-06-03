@@ -38,14 +38,14 @@ type Selector[T any] struct {
 	limit     int
 	columns   []Selectable
 	tableName string
-	db        orm.Ormer
+	sess      orm.QueryExecutor
 	// allow users to specify the registry
 	registry *models.ModelCache
 }
 
-func NewSelector[T any](db orm.Ormer) *Selector[T] {
+func NewSelector[T any](sess orm.QueryExecutor) *Selector[T] {
 	return &Selector[T]{
-		db: db,
+		sess: sess,
 		builder: builder{
 			buffer: buffers.Get(),
 		},
@@ -241,7 +241,7 @@ func (s *Selector[T]) Get(ctx context.Context) (*T, error) {
 		return nil, err
 	}
 	t := new(T)
-	err = s.db.ReadRaw(ctx, t, q.SQL, q.Args...)
+	err = s.sess.ReadRaw(ctx, t, q.SQL, q.Args...)
 	return t, nil
 }
 
