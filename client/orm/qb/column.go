@@ -28,9 +28,13 @@ func (c Column) As(alias string) Column {
 		order: c.order,
 	}
 }
+
 func (c Column) selectable() {}
 
+func (Column) assign() {}
+
 func (c Column) expr() {}
+
 func (c Column) Asc() Column {
 	return Column{
 		name:  c.name,
@@ -38,6 +42,7 @@ func (c Column) Asc() Column {
 		order: " ASC",
 	}
 }
+
 func (c Column) Desc() Column {
 	return Column{
 		name:  c.name,

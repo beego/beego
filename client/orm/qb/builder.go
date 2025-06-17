@@ -103,3 +103,12 @@ func (b *builder) buildExpression(e Expression) error {
 	}
 	return nil
 }
+
+func (b *builder) parameter(arg interface{}) {
+	if b.args == nil {
+		// TODO 4 may be not a good number
+		b.args = make([]interface{}, 0, 4)
+	}
+	b.writeByte('?')
+	b.args = append(b.args, arg)
+}

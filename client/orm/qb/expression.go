@@ -14,6 +14,11 @@
 
 package qb
 
+// Expr is the top interface. It represents everything.
+type Expr interface {
+	expr() (string, error)
+}
+
 // RawExpr Represents a native expression
 // It means that ORM will not handle it in any way
 type RawExpr struct {

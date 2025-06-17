@@ -19,7 +19,11 @@ import (
 	"fmt"
 )
 
-var ErrGetByMd = errors.New("orm: Unknown error in get model")
+var (
+	ErrGetByMd               = errors.New("orm: Unknown error in get model")
+	errValueNotSet           = errors.New("orm: Value is not set")
+	ErrUnsupportedAssignment = errors.New("orm: Unsupported assignments")
+)
 
 // NewErrUnknownField returns an error representing an unknown field
 // Generally, it means that you may have entered a column name or an incorrect field name
@@ -30,4 +34,8 @@ func NewErrUnknownField(fd string) error {
 // NewErrUnsupportedExpressionType returns an error message that does not support the expression
 func NewErrUnsupportedExpressionType(exp any) error {
 	return fmt.Errorf("orm: Unsupported expression %v", exp)
+}
+
+func NewValueNotSetError() error {
+	return errValueNotSet
 }
