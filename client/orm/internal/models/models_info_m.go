@@ -56,6 +56,7 @@ func AddModelFields(mi *ModelInfo, ind reflect.Value, mName string, index []int)
 
 	for i := 0; i < ind.NumField(); i++ {
 		field := ind.Field(i)
+
 		sf = ind.Type().Field(i)
 		// if the field is unexported skip
 		if sf.PkgPath != "" {
@@ -75,6 +76,7 @@ func AddModelFields(mi *ModelInfo, ind reflect.Value, mName string, index []int)
 			break
 		}
 		// record current field index
+		fi.AddrType = field.Type()
 		fi.FieldIndex = append(fi.FieldIndex, index...)
 		fi.FieldIndex = append(fi.FieldIndex, i)
 		fi.Mi = mi

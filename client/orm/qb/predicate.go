@@ -23,6 +23,8 @@ const (
 	opAnd   op = "AND"
 	opOr    op = "OR"
 	opNot   op = "NOT"
+	OpAdd   op = "+"
+	OpMulti op = "*"
 )
 
 func (o op) String() string {
@@ -30,16 +32,7 @@ func (o op) String() string {
 }
 
 // Predicate Represents a query condition
-type Predicate struct {
-	left  Expression
-	op    op
-	right Expression
-}
-
-// Expression Represents a statement
-type Expression interface {
-	expr()
-}
+type Predicate binaryExpr
 
 func (Predicate) expr() {}
 

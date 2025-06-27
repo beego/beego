@@ -124,6 +124,7 @@ type FieldInfo struct {
 	FullName            string
 	Column              string
 	AddrValue           reflect.Value
+	AddrType            reflect.Type
 	Sf                  reflect.StructField
 	Initial             utils.StrTo // store the default value
 	Size                int
@@ -244,7 +245,9 @@ checkType:
 				goto wrongTag
 			}
 		}
-
+		if sf.Name == "String" {
+			fmt.Println(sf.Name)
+		}
 		fieldType, err = getFieldType(addrField)
 		if err != nil {
 			goto end

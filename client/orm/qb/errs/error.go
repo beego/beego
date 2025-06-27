@@ -23,6 +23,7 @@ var (
 	ErrGetByMd               = errors.New("orm: Unknown error in get model")
 	errValueNotSet           = errors.New("orm: Value is not set")
 	ErrUnsupportedAssignment = errors.New("orm: Unsupported assignments")
+	ErrTooManyColumns        = errors.New("orm: Too many columns")
 )
 
 // NewErrUnknownField returns an error representing an unknown field

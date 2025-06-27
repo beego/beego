@@ -51,15 +51,36 @@ func (c Column) Desc() Column {
 	}
 }
 
-type value struct {
+// Add generate an additive expression
+func (c Column) Add(val interface{}) MathExpr {
+	return MathExpr{
+		left:  c,
+		op:    OpAdd,
+		right: valueOf(val),
+	}
+}
+
+// Multi generate a multiplication expression
+func (c Column) Multi(val interface{}) MathExpr {
+	return MathExpr{
+		left:  c,
+		op:    OpMulti,
+		right: valueOf(val),
+	}
+}
+
+type valueExpr struct {
 	val any
 }
 
-func (c value) expr() {}
+func (c valueExpr) expr() {}
 
-func valueOf(val any) value {
-	return value{
-		val: val,
+func valueOf(val interface{}) Expression {
+	switch v := val.(type) {
+	case Expression:
+		return v
+	default:
+		return valueExpr{val: val}
 	}
 }
 
@@ -87,5 +108,18 @@ func (c Column) LT(arg any) Predicate {
 		left:  c,
 		op:    opLT,
 		right: exprOf(arg),
+	}
+}
+
+type columns struct {
+	cs []string
+}
+
+func (columns) assign() {}
+
+// Columns specify columns
+func Columns(cs ...string) columns {
+	return columns{
+		cs: cs,
 	}
 }

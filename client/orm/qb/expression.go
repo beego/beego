@@ -14,9 +14,29 @@
 
 package qb
 
-// Expr is the top interface. It represents everything.
-type Expr interface {
-	expr() (string, error)
+// Expression Represents a statement
+type Expression interface {
+	expr()
+}
+
+type MathExpr binaryExpr
+
+func (MathExpr) expr() {}
+
+func (m MathExpr) Add(val interface{}) Expression {
+	return MathExpr{
+		left:  m,
+		op:    OpAdd,
+		right: valueOf(val),
+	}
+}
+
+func (m MathExpr) Multi(val interface{}) MathExpr {
+	return MathExpr{
+		left:  m,
+		op:    OpMulti,
+		right: valueOf(val),
+	}
 }
 
 // RawExpr Represents a native expression
@@ -43,3 +63,11 @@ func Raw(expr string, args ...interface{}) RawExpr {
 		args: args,
 	}
 }
+
+type binaryExpr struct {
+	left  Expression
+	op    op
+	right Expression
+}
+
+func (e binaryExpr) expr() {}

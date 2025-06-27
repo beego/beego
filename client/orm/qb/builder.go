@@ -60,16 +60,15 @@ func (b *builder) buildExpression(e Expression) error {
 	}
 	switch exp := e.(type) {
 	case Column:
-		b.writeByte('`')
 		fd, ok := b.model.Fields.Fields[exp.name]
 		if !ok {
 			return errs.NewErrUnknownField(exp.name)
 		}
+		b.writeByte('`')
 		b.writeString(fd.Column)
 		b.writeByte('`')
-	case value:
-		b.writeByte('?')
-		b.args = append(b.args, exp.val)
+	case valueExpr:
+		b.parameter(exp.val)
 	case Predicate:
 		_, lp := exp.left.(Predicate)
 		if lp {
@@ -98,8 +97,43 @@ func (b *builder) buildExpression(e Expression) error {
 	case RawExpr:
 		b.writeString(exp.raw)
 		b.args = append(b.args, exp.args...)
+	case binaryExpr:
+		if err := b.buildBinaryExpr(exp); err != nil {
+			return err
+		}
 	default:
 		return errs.NewErrUnsupportedExpressionType(exp)
+	}
+	return nil
+}
+
+func (b *builder) buildBinaryExpr(e binaryExpr) error {
+	err := b.buildSubExpr(e.left)
+	if err != nil {
+		return err
+	}
+	b.writeString(e.op.String())
+	return b.buildSubExpr(e.right)
+}
+
+func (b *builder) buildSubExpr(subExpr Expression) error {
+	switch r := subExpr.(type) {
+	case MathExpr:
+		b.writeByte('(')
+		if err := b.buildBinaryExpr(binaryExpr(r)); err != nil {
+			return err
+		}
+		b.writeByte(')')
+	case Predicate:
+		b.writeByte('(')
+		if err := b.buildBinaryExpr(binaryExpr(r)); err != nil {
+			return err
+		}
+		b.writeByte(')')
+	default:
+		if err := b.buildExpression(r); err != nil {
+			return err
+		}
 	}
 	return nil
 }

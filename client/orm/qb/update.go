@@ -1,7 +1,22 @@
+// Copyright 2020 beego
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package qb
 
 import (
 	"context"
+	"fmt"
 	"github.com/beego/beego/v2/client/orm"
 	"github.com/beego/beego/v2/client/orm/internal/buffers"
 	"github.com/beego/beego/v2/client/orm/internal/models"
@@ -26,10 +41,12 @@ type Updater[T any] struct {
 
 func (u *Updater[T]) Build() (*Query, error) {
 	defer buffers.Put(u.buffer)
-	var err error
-	t := new(T)
+	var (
+		t   T
+		err error
+	)
 	if u.table == nil {
-		u.table = t
+		u.table = &t
 	}
 	u.model, err = u.registry.GetOrRegisterByMd(&t)
 	if err != nil {
@@ -67,8 +84,8 @@ func (u *Updater[T]) Build() (*Query, error) {
 
 func (u *Updater[T]) buildDefaultColumns() error {
 	has := false
-	for _, c := range u.model.Fields.Columns {
-		refVal, _ := u.val.Field(c.Name)
+	for _, fi := range u.model.Fields.FieldsDB {
+		refVal, _ := u.val.Field(fi.Name)
 		if u.ignoreZeroVal && isZeroValue(refVal) {
 			continue
 		}
@@ -79,7 +96,7 @@ func (u *Updater[T]) buildDefaultColumns() error {
 			_ = u.buffer.WriteByte(',')
 		}
 		u.writeByte('`')
-		u.writeString(c.Column)
+		u.writeString(fi.Column)
 		u.writeByte('`')
 		_ = u.buffer.WriteByte('=')
 		u.parameter(refVal.Interface())
@@ -113,6 +130,7 @@ func (u *Updater[T]) buildAssigns() error {
 		}
 		switch a := assign.(type) {
 		case Column:
+			fmt.Print(a.name)
 			c, ok := u.model.Fields.Fields[a.name]
 			if !ok {
 				return errs.NewErrUnknownField(a.name)
@@ -123,6 +141,28 @@ func (u *Updater[T]) buildAssigns() error {
 			u.writeByte('`')
 			_ = u.buffer.WriteByte('=')
 			u.parameter(refVal.Interface())
+			has = true
+		case columns:
+			for _, name := range a.cs {
+				c, ok := u.model.Fields.Fields[name]
+				if !ok {
+					return errs.NewErrUnknownField(name)
+				}
+				refVal, _ := u.val.Field(name)
+				if has {
+					u.comma()
+				}
+				u.writeByte('`')
+				u.writeString(c.Column)
+				u.writeByte('`')
+				_ = u.buffer.WriteByte('=')
+				u.parameter(refVal.Interface())
+				has = true
+			}
+		case Assignment:
+			if err := u.buildExpression(binaryExpr(a)); err != nil {
+				return err
+			}
 			has = true
 		default:
 			return errs.ErrUnsupportedAssignment
