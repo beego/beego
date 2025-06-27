@@ -86,12 +86,6 @@ func (u *Updater[T]) buildDefaultColumns() error {
 	has := false
 	for _, fi := range u.model.Fields.FieldsDB {
 		refVal, _ := u.val.Field(fi.Name)
-		if u.ignoreZeroVal && isZeroValue(refVal) {
-			continue
-		}
-		if u.ignoreNilVal && isNilValue(refVal) {
-			continue
-		}
 		if has {
 			_ = u.buffer.WriteByte(',')
 		}
@@ -189,28 +183,6 @@ func (u *Updater[T]) Set(assigns ...Assignable) *Updater[T] {
 func (u *Updater[T]) Where(predicates ...Predicate) *Updater[T] {
 	u.where = predicates
 	return u
-}
-
-func (u *Updater[T]) SkipNilValue() *Updater[T] {
-	u.ignoreNilVal = true
-	return u
-}
-
-func isNilValue(val reflect.Value) bool {
-	switch val.Kind() {
-	case reflect.Chan, reflect.Func, reflect.Map, reflect.Ptr, reflect.UnsafePointer, reflect.Interface, reflect.Slice:
-		return val.IsNil()
-	}
-	return false
-}
-
-func (u *Updater[T]) SkipZeroValue() *Updater[T] {
-	u.ignoreZeroVal = true
-	return u
-}
-
-func isZeroValue(val reflect.Value) bool {
-	return val.IsZero()
 }
 
 func (u *Updater[T]) Exec(ctx context.Context) Result {
