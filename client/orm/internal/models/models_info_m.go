@@ -34,6 +34,10 @@ type ModelInfo struct {
 	Uniques   []string
 }
 
+func (m *ModelInfo) TableName() string {
+	return m.Table
+}
+
 // NewModelInfo new model info
 func NewModelInfo(val reflect.Value) (mi *ModelInfo) {
 	mi = &ModelInfo{}

@@ -16,39 +16,37 @@ package qb
 
 import (
 	"context"
-	"fmt"
 	"github.com/beego/beego/v2/client/orm"
 	"github.com/beego/beego/v2/client/orm/internal/buffers"
 	"github.com/beego/beego/v2/client/orm/internal/models"
 	"github.com/beego/beego/v2/client/orm/qb/errs"
-	"github.com/beego/beego/v2/client/orm/qb/valuer"
+	valuer2 "github.com/beego/beego/v2/client/orm/qb/internal/valuer"
 	"reflect"
 )
 
 // Updater is the builder responsible for building UPDATE query
 type Updater[T any] struct {
 	builder
-	val           valuer.Value
+	val           valuer2.Value
 	where         []Predicate
 	assigns       []Assignable
 	table         interface{}
 	sess          orm.QueryExecutor
 	registry      *models.ModelCache
-	valCreator    valuer.Creator
+	valCreator    valuer2.Creator
 	ignoreNilVal  bool
 	ignoreZeroVal bool
 }
 
 func (u *Updater[T]) Build() (*Query, error) {
 	defer buffers.Put(u.buffer)
-	var (
-		t   T
-		err error
-	)
-	if u.table == nil {
-		u.table = &t
+	t := u.table
+	if t == nil {
+		t = new(T)
+		u.table = t
 	}
-	u.model, err = u.registry.GetOrRegisterByMd(&t)
+	var err error
+	u.model, err = u.registry.GetOrRegisterByMd(t)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +88,7 @@ func (u *Updater[T]) buildDefaultColumns() error {
 			_ = u.buffer.WriteByte(',')
 		}
 		u.writeByte('`')
-		u.writeString(fi.Column)
+		u.writeString(fi.ColumnName())
 		u.writeByte('`')
 		_ = u.buffer.WriteByte('=')
 		u.parameter(refVal.Interface())
@@ -103,7 +101,8 @@ func (u *Updater[T]) buildDefaultColumns() error {
 }
 
 func (u *Updater[T]) buildTable() {
-	if u.model.Table == "" {
+	table := u.model.TableName()
+	if table == "" {
 		var t T
 		typ := reflect.TypeOf(t)
 		u.writeByte('`')
@@ -111,7 +110,7 @@ func (u *Updater[T]) buildTable() {
 		u.writeByte('`')
 	} else {
 		u.writeByte('`')
-		u.writeString(u.model.Table)
+		u.writeString(table)
 		u.writeByte('`')
 	}
 }
@@ -124,14 +123,13 @@ func (u *Updater[T]) buildAssigns() error {
 		}
 		switch a := assign.(type) {
 		case Column:
-			fmt.Print(a.name)
 			c, ok := u.model.Fields.Fields[a.name]
 			if !ok {
 				return errs.NewErrUnknownField(a.name)
 			}
 			refVal, _ := u.val.Field(a.name)
 			u.writeByte('`')
-			u.writeString(c.Column)
+			u.writeString(c.ColumnName())
 			u.writeByte('`')
 			_ = u.buffer.WriteByte('=')
 			u.parameter(refVal.Interface())
@@ -147,7 +145,7 @@ func (u *Updater[T]) buildAssigns() error {
 					u.comma()
 				}
 				u.writeByte('`')
-				u.writeString(c.Column)
+				u.writeString(c.ColumnName())
 				u.writeByte('`')
 				_ = u.buffer.WriteByte('=')
 				u.parameter(refVal.Interface())
@@ -202,6 +200,6 @@ func NewUpdater[T any](sess orm.QueryExecutor) *Updater[T] {
 			buffer: buffers.Get(),
 		},
 		registry:   models.DefaultModelCache,
-		valCreator: valuer.NewReflectValue,
+		valCreator: valuer2.NewReflectValue,
 	}
 }

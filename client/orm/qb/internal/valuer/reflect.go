@@ -67,7 +67,7 @@ func (r *reflectValue) SetColumns(rows *sql.Rows) error {
 	return nil
 }
 
-// Field 返回字段值
+// Field returns the field value by name.
 func (r *reflectValue) Field(name string) (reflect.Value, error) {
 	res, ok := r.fieldByIndex(name)
 	if !ok {

@@ -144,6 +144,10 @@ type FieldInfo struct {
 	DBType              string
 }
 
+func (f *FieldInfo) ColumnName() string {
+	return f.Column
+}
+
 // NewFieldInfo new field info
 func NewFieldInfo(mi *ModelInfo, field reflect.Value, sf reflect.StructField, mName string) (fi *FieldInfo, err error) {
 	var (
