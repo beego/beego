@@ -29,7 +29,7 @@ require (
 	github.com/redis/go-redis/v9 v9.8.0
 	github.com/shiena/ansicolor v0.0.0-20230509054315-a9deabde6e02
 	github.com/ssdb/gossdb v0.0.0-20180723034631-88f6b59b84ec
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.1
 	github.com/valyala/bytebufferpool v1.0.0
 	go.etcd.io/etcd/client/v3 v3.6.0
 	go.opentelemetry.io/otel v1.35.0
