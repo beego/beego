@@ -1,5 +1,5 @@
 <div align="center">
-	<a href="https://go.warp.dev/yazi" target="_blank">
+	<a href="https://go.warp.dev/beego" target="_blank">
 		<sup>Special thanks to:</sup>
 		<br>
 		<img alt="Warp sponsorship" width="400" src="https://github.com/warpdotdev/brand-assets/blob/main/Github/Sponsor/Warp-Github-LG-02.png">
