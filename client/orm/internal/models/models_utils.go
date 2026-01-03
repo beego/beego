@@ -244,7 +244,7 @@ func ParseStructTag(data string) (attrs map[string]bool, tags map[string]string)
 		v = strings.TrimSpace(v)
 		if t := strings.ToLower(v); supportTag[t] == 1 {
 			attrs[t] = true
-		} else if i := strings.Index(v, "("); i > 0 && strings.Index(v, ")") == len(v)-1 {
+		} else if i := strings.Index(v, "("); i > 0 && strings.LastIndex(v, ")") == len(v)-1 {
 			name := t[:i]
 			if supportTag[name] == 2 {
 				v = v[i+1 : len(v)-1]
