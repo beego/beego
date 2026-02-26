@@ -52,8 +52,10 @@ func parseFormToStruct(form url.Values, objT reflect.Type, objV reflect.Value) e
 
 		value, ok := formFirstValue(tag, form, fieldT)
 
-		if !ok && fieldT.Type.Kind() != reflect.Slice {
-			continue
+		if fieldT.Type.Kind() != reflect.String {// string == "" valid value
+		    if !ok && fieldT.Type.Kind() != reflect.Slice {
+			    continue
+		    }
 		}
 
 		switch fieldT.Type.Kind() {
