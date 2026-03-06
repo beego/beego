@@ -1,8 +1,6 @@
 package session
 
 import (
-	"context"
-
 	"github.com/beego/beego/v2/core/logs"
 	"github.com/beego/beego/v2/server/web"
 	webContext "github.com/beego/beego/v2/server/web/context"
@@ -27,7 +25,7 @@ func Session(providerType session.ProviderType, options ...session.ManagerConfig
 				logs.Error(`init session error:%s`, err.Error())
 			} else {
 				// release session at the end of request
-				defer sess.SessionRelease(context.Background(), ctx.ResponseWriter)
+				defer sess.SessionRelease(ctx.Request.Context(), ctx.ResponseWriter)
 				ctx.Input.CruSession = sess
 			}
 
