@@ -19,6 +19,7 @@ import (
 	"math/big"
 	"reflect"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -62,8 +63,17 @@ func (f StrTo) Float64() (float64, error) {
 
 // Int string to int
 func (f StrTo) Int() (int, error) {
-	v, err := strconv.ParseInt(f.String(), 10, strconv.IntSize)
-	return int(v), err
+	if v, err := strconv.ParseInt(f.String(), 10, strconv.IntSize); err == nil {
+		return int(v), nil
+	} else if strings.Contains(f.String(), ".") {
+		if fv, err := strconv.ParseFloat(f.String(), 64); err == nil {
+			return int(fv), nil
+		} else {
+			return 0, err
+		}
+	} else {
+		return 0, err
+	}
 }
 
 // Int8 string to int8
