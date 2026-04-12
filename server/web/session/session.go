@@ -118,13 +118,13 @@ func NewManager(provideName string, cf *ManagerConfig) (*Manager, error) {
 
 	if cf.EnableSidInHTTPHeader {
 		if cf.SessionNameInHTTPHeader == "" {
-			panic(errors.New("SessionNameInHTTPHeader is empty"))
+			return nil, errors.New("SessionNameInHTTPHeader is empty")
 		}
 
 		strMimeHeader := textproto.CanonicalMIMEHeaderKey(cf.SessionNameInHTTPHeader)
 		if cf.SessionNameInHTTPHeader != strMimeHeader {
 			strErrMsg := "SessionNameInHTTPHeader (" + cf.SessionNameInHTTPHeader + ") has the wrong format, it should be like this : " + strMimeHeader
-			panic(errors.New(strErrMsg))
+			return nil, errors.New(strErrMsg)
 		}
 	}
 
@@ -192,12 +192,12 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 	}
 
 	if sid != "" {
-		exists, err := manager.provider.SessionExist(context.Background(), sid)
+		exists, err := manager.provider.SessionExist(r.Context(), sid)
 		if err != nil {
 			return nil, err
 		}
 		if exists {
-			return manager.provider.SessionRead(context.Background(), sid)
+			return manager.provider.SessionRead(r.Context(), sid)
 		}
 	}
 
@@ -207,7 +207,7 @@ func (manager *Manager) SessionStart(w http.ResponseWriter, r *http.Request) (se
 		return nil, errs
 	}
 
-	session, err = manager.provider.SessionRead(context.Background(), sid)
+	session, err = manager.provider.SessionRead(r.Context(), sid)
 	if err != nil {
 		return nil, err
 	}
@@ -249,8 +249,14 @@ func (manager *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	sid, _ := url.QueryUnescape(cookie.Value)
-	manager.provider.SessionDestroy(context.Background(), sid)
+	sid, err := url.QueryUnescape(cookie.Value)
+	if err != nil {
+		// If sid is invalid, we can't destroy it in provider, but we should clear the cookie
+		SLogger.Printf("SessionDestroy: failed to unescape cookie value: %v", err)
+	} else {
+		_ = manager.provider.SessionDestroy(r.Context(), sid)
+	}
+
 	if manager.config.EnableSetCookie {
 		expiration := time.Now()
 		cookie = &http.Cookie{
@@ -268,16 +274,25 @@ func (manager *Manager) SessionDestroy(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetSessionStore Get SessionStore by its id.
-func (manager *Manager) GetSessionStore(sid string) (sessions Store, err error) {
-	sessions, err = manager.provider.SessionRead(context.Background(), sid)
+func (manager *Manager) GetSessionStore(ctx context.Context, sid string) (sessions Store, err error) {
+	sessions, err = manager.provider.SessionRead(ctx, sid)
 	return
 }
 
 // GC Start session gc process.
 // it can do gc in times after gc lifetime.
 func (manager *Manager) GC() {
-	manager.provider.SessionGC(nil)
-	time.AfterFunc(time.Duration(manager.config.Gclifetime)*time.Second, func() { manager.GC() })
+	// Use a ticker instead of recursive AfterFunc to avoid potential leaks and stack issues
+	if manager.config.Gclifetime <= 0 {
+		return
+	}
+
+	ticker := time.NewTicker(time.Duration(manager.config.Gclifetime) * time.Second)
+	go func() {
+		for range ticker.C {
+			manager.provider.SessionGC(context.Background())
+		}
+	}()
 }
 
 // SessionRegenerateID Regenerate a session id for this SessionStore whose id is saving in http request.
@@ -291,7 +306,7 @@ func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Reque
 	cookie, err := r.Cookie(manager.config.CookieName)
 	if err != nil || cookie.Value == "" {
 		// delete old cookie
-		session, err = manager.provider.SessionRead(context.Background(), sid)
+		session, err = manager.provider.SessionRead(r.Context(), sid)
 		if err != nil {
 			return nil, err
 		}
@@ -304,7 +319,7 @@ func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Reque
 		if err != nil {
 			return nil, err
 		}
-		session, err = manager.provider.SessionRegenerate(context.Background(), oldsid, sid)
+		session, err = manager.provider.SessionRegenerate(r.Context(), oldsid, sid)
 		if err != nil {
 			return nil, err
 		}
@@ -334,7 +349,7 @@ func (manager *Manager) SessionRegenerateID(w http.ResponseWriter, r *http.Reque
 
 // GetActiveSession Get all active sessions count number.
 func (manager *Manager) GetActiveSession() int {
-	return manager.provider.SessionAll(nil)
+	return manager.provider.SessionAll(context.Background())
 }
 
 // SetSecure Set cookie with https.
@@ -346,7 +361,7 @@ func (manager *Manager) sessionID() (string, error) {
 	b := make([]byte, manager.config.SessionIDLength)
 	n, err := rand.Read(b)
 	if n != len(b) || err != nil {
-		return "", fmt.Errorf("Could not successfully read from the system CSPRNG")
+		return "", fmt.Errorf("could not successfully read from the system CSPRNG")
 	}
 	return manager.config.SessionIDPrefix + hex.EncodeToString(b), nil
 }
@@ -373,6 +388,6 @@ type Log struct {
 // NewSessionLog set io.Writer to create a Logger for session.
 func NewSessionLog(out io.Writer) *Log {
 	sl := new(Log)
-	sl.Logger = log.New(out, "[SESSION]", 1e9)
+	sl.Logger = log.New(out, "[SESSION] ", log.LstdFlags)
 	return sl
 }
