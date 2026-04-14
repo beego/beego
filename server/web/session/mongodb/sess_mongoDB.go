@@ -195,7 +195,22 @@ func (mp *MongoProvider) SessionAll(ctx context.Context) int {
 }
 
 // SessionGC is a no-op because MongoDB handles cleanup via TTL indexes
-func (mp *MongoProvider) SessionGC(ctx context.Context) {}
+func (mp *MongoProvider) SessionGC(ctx context.Context) {
+	/*
+		Why is this empty?
+		
+		1. Native Cleanup: In the SessionInit function, a TTL (Time-To-Live) index 
+		   was set on the "last_access" field. MongoDB automatically deletes session 
+		   documents in the background once they exceed the configured 'gclifetime'.
+		   
+		2. Interface Requirement: Beego's session provider interface strictly 
+		   requires a SessionGC method to exist so it can trigger garbage collection.
+		
+		Leaving this empty acts as a "no-op" (no operation). It safely fulfills Beego's 
+		structural interface requirement without wasting resources duplicating the 
+		cleanup work that MongoDB is already handling natively.
+	*/
+}
 
 func encodeMongoData(data map[interface{}]interface{}) ([]byte, error) {
 	if data == nil || len(data) == 0 {
