@@ -62,6 +62,21 @@ Then in you web app init the global session manager
   		go globalSessions.GC()
   	}
 
+* Use **MongoDB** as provider, the `ProviderConfig` is the Connection URI, learn more
+  from [mongo-driver](https://www.mongodb.com/docs/drivers/go/current/fundamentals/connection/connection-string/):
+
+    func init() {
+        conf := &session.ManagerConfig{
+            CookieName:     "gosessionid",
+            Gclifetime:     3600,
+            ProviderConfig: "mongodb://username:password@localhost:27017/?authSource=admin",
+        }
+        globalSessions, _ = session.NewManager("mongodb", conf)
+        // Note: MongoDB handles GC automatically via TTL indexes, 
+        // but calling GC() is safe and fulfills the interface.
+        go globalSessions.GC()
+    }
+
 Finally in the handlerfunc you can use it like this
 
 	func login(w http.ResponseWriter, r *http.Request) {
