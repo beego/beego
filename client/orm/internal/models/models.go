@@ -16,8 +16,10 @@ package models
 
 import (
 	"fmt"
+	"maps"
 	"reflect"
 	"runtime/debug"
+	"slices"
 	"strings"
 	"sync"
 )
@@ -109,13 +111,16 @@ func (mc *ModelCache) Bootstrap() {
 func (mc *ModelCache) bootstrap() {
 	var (
 		err    error
-		models map[string]*ModelInfo
+		models []*ModelInfo
 	)
 	// Set rel and reverse model
 	// RelManyToMany Set the relTable
-	models = mc.All()
+	models = mc.AllOrdered()
 	for _, mi := range models {
-		for _, fi := range mi.Fields.Columns {
+		columnKeys := slices.Collect(maps.Keys(mi.Fields.Columns))
+		slices.Sort(columnKeys)
+		for _, columnKey := range columnKeys {
+			fi := mi.Fields.Columns[columnKey]
 			if fi.Rel || fi.Reverse {
 				elm := fi.AddrValue.Type().Elem()
 				if fi.FieldType == RelReverseMany || fi.FieldType == RelManyToMany {
@@ -167,7 +172,7 @@ func (mc *ModelCache) bootstrap() {
 
 	// check the rel filed while the relModelInfo also has filed point to current model
 	// if not exist, add a new field to the relModelInfo
-	models = mc.All()
+	models = mc.AllOrdered()
 	for _, mi := range models {
 		for _, fi := range mi.Fields.FieldsRel {
 			switch fi.FieldType {
@@ -212,7 +217,7 @@ func (mc *ModelCache) bootstrap() {
 		}
 	}
 
-	models = mc.All()
+	models = mc.AllOrdered()
 	for _, mi := range models {
 		for _, fi := range mi.Fields.FieldsRel {
 			switch fi.FieldType {
@@ -238,7 +243,7 @@ func (mc *ModelCache) bootstrap() {
 		}
 	}
 
-	models = mc.All()
+	models = mc.AllOrdered()
 	for _, mi := range models {
 		for _, fi := range mi.Fields.FieldsReverse {
 			switch fi.FieldType {
