@@ -114,7 +114,7 @@ func CfgSetSessionNameInHTTPHeader(name string) ManagerConfigOpt {
 	}
 }
 
-// EnableSidInURLQuery enable session id in query string
+// CfgEnableSidInURLQuery enable session id in query string
 func CfgEnableSidInURLQuery(enable bool) ManagerConfigOpt {
 	return func(config *ManagerConfig) {
 		config.EnableSidInURLQuery = enable

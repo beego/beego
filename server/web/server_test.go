@@ -111,7 +111,7 @@ func TestServerCtrlAny(t *testing.T) {
 	}
 }
 
-// ExampleHttpServer_InsertFilter_withReturnOnOutput is an example of how to use HttpServer.InsertFilter use withReturnOnOutput opts
+// ExampleHttpServer_InsertFilter_withReturnOnOutputFirst is an example of how to use HttpServer.InsertFilter use withReturnOnOutput opts
 // If you set WithReturnOnOutput to true at the beginning, all subsequent filters will be skipped.
 // Note that WithReturnOnOutput only takes effect on filters at the AfterExec and FinishRouter positions.
 func ExampleHttpServer_InsertFilter_withReturnOnOutputFirst() {
@@ -136,7 +136,7 @@ func ExampleHttpServer_InsertFilter_withReturnOnOutputFirst() {
 	// hello world
 }
 
-// ExampleHttpServer_InsertFilter_withReturnOnOutput1 is an example of how to use HttpServer.InsertFilter use withReturnOnOutput opts
+// ExampleHttpServer_InsertFilter_withReturnOnOutput is an example of how to use HttpServer.InsertFilter use withReturnOnOutput opts
 // If you set WithReturnOnOutput to false at the beginning, the current filter will take effect.
 // Note that WithReturnOnOutput only takes effect on filters at the AfterExec and FinishRouter positions.
 func ExampleHttpServer_InsertFilter_withReturnOnOutput() {
