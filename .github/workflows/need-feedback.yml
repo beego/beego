@@ -9,7 +9,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: luanpotter/changes-requested@master
+      - uses: luanpotter/changes-requested@8c0b8f6f671b87f546da089844c82b8e1e27a5c7 # master
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           # these are optional, if you want to configure:
