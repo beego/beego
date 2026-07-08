@@ -119,7 +119,7 @@ func (s *LogStore) PutLogs(lg *LogGroup) (err error) {
 }
 
 // GetCursor gets log cursor of one shard specified by shardID.
-// The from can be in three form: a) unix timestamp in seccond, b) "begin", c) "end".
+// The from can be in three form: a) unix timestamp in second, b) "begin", c) "end".
 // For more detail please read: http://gitlab.alibaba-inc.com/sls/doc/blob/master/api/shard.md#logstore
 func (s *LogStore) GetCursor(shardID int, from string) (cursor string, err error) {
 	h := map[string]string{

@@ -222,7 +222,7 @@ func (p *LogProject) ListMachineGroup(offset, size int) (m []string, total int, 
 	return
 }
 
-// GetMachineGroup retruns machine group according by machine group name.
+// GetMachineGroup returns machine group according by machine group name.
 func (p *LogProject) GetMachineGroup(name string) (m *MachineGroup, err error) {
 	h := createStandardHeaders(0)
 

@@ -96,7 +96,7 @@ func (ini *IniConfig) parseData(dir string, data []byte) (*IniConfigContainer, e
 				break
 			}
 
-			// It might be a good idea to throw an error on all unknonw errors?
+			// It might be a good idea to throw an error on all unknown errors?
 			if _, ok := err.(*os.PathError); ok {
 				return nil, err
 			}

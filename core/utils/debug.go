@@ -366,7 +366,7 @@ func printKeyValue(buf *bytes.Buffer, val reflect.Value, pointers **pointerInfo,
 	case reflect.Invalid:
 		fmt.Fprint(buf, "invalid")
 	default:
-		fmt.Fprint(buf, "unknow")
+		fmt.Fprint(buf, "unknown")
 	}
 }
 

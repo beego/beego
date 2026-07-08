@@ -36,7 +36,7 @@ var CanSkipFuncs = map[string]struct{}{
 	"ZipCode": {},
 }
 
-// MessageTmpls store commond validate template
+// MessageTmpls store common validate template
 var MessageTmpls = map[string]string{
 	"Required":     "Can not be empty",
 	"Min":          "Minimum is %d",

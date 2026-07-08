@@ -347,7 +347,7 @@ func (w *fileLogWriter) doRotate(logTime time.Time) error {
 		openTime = w.dailyOpenTime
 	}
 
-	// only when one of them be setted, then the file would be splited
+	// only when one of them be set, then the file would be split
 	if w.MaxLines > 0 || w.MaxSize > 0 {
 		for ; err == nil && num <= w.MaxFiles; num++ {
 			fName = w.fileNameOnly + fmt.Sprintf(".%s.%03d%s", logTime.Format(format), num, w.suffix)
