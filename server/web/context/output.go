@@ -30,6 +30,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf16"
 
 	"google.golang.org/protobuf/proto"
 	"gopkg.in/yaml.v3"
@@ -120,7 +121,7 @@ func (output *BeegoOutput) Cookie(name string, value string, others ...interface
 	// default "/"
 	tmpPath := "/"
 	if len(others) > 1 {
-		if v, ok := others[1].(string); ok && len(v) > 0 {
+		if v, ok := others[1].(string); ok && v != "" {
 			tmpPath = sanitizeValue(v)
 		}
 	}
@@ -128,7 +129,7 @@ func (output *BeegoOutput) Cookie(name string, value string, others ...interface
 
 	// default empty
 	if len(others) > 2 {
-		if v, ok := others[2].(string); ok && len(v) > 0 {
+		if v, ok := others[2].(string); ok && v != "" {
 			fmt.Fprintf(&b, "; Domain=%s", sanitizeValue(v))
 		}
 	}
@@ -158,7 +159,7 @@ func (output *BeegoOutput) Cookie(name string, value string, others ...interface
 
 	// default empty
 	if len(others) > 5 {
-		if v, ok := others[5].(string); ok && len(v) > 0 {
+		if v, ok := others[5].(string); ok && v != "" {
 			fmt.Fprintf(&b, "; SameSite=%s", sanitizeValue(v))
 		}
 	}
@@ -410,7 +411,7 @@ func stringsToJSON(str string) string {
 		rint := int(r)
 		if rint < 128 {
 			jsons.WriteRune(r)
-		} else {
+		} else if r <= 0xFFFF {
 			jsons.WriteString("\\u")
 			if rint < 0x100 {
 				jsons.WriteString("00")
@@ -418,6 +419,16 @@ func stringsToJSON(str string) string {
 				jsons.WriteString("0")
 			}
 			jsons.WriteString(strconv.FormatInt(int64(rint), 16))
+		} else {
+			r1, r2 := utf16.EncodeRune(r)
+			if r1 != '\uFFFD' || r2 != '\uFFFD' {
+				jsons.WriteString("\\u")
+				jsons.WriteString(strconv.FormatInt(int64(r1), 16))
+				jsons.WriteString("\\u")
+				jsons.WriteString(strconv.FormatInt(int64(r2), 16))
+			} else {
+				jsons.WriteString("\\ufffd")
+			}
 		}
 	}
 	return jsons.String()
