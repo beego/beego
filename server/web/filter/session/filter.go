@@ -14,7 +14,10 @@ import (
 // experimental feature, we may change this in the future
 func Session(providerType session.ProviderType, options ...session.ManagerConfigOpt) web.FilterChain {
 	sessionConfig := session.NewManagerConfig(options...)
-	sessionManager, _ := session.NewManager(string(providerType), sessionConfig)
+	sessionManager, err := session.NewManager(string(providerType), sessionConfig)
+	if err != nil {
+		panic(err)
+	}
 	go sessionManager.GC()
 
 	return func(next web.FilterFunc) web.FilterFunc {

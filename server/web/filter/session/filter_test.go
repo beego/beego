@@ -1,8 +1,11 @@
 package session
 
 import (
+	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/google/uuid"
@@ -11,6 +14,24 @@ import (
 	webContext "github.com/beego/beego/v2/server/web/context"
 	"github.com/beego/beego/v2/server/web/session"
 )
+
+var errProviderReconfigured = errors.New("test session provider is already initialized with a different configuration")
+
+type reinitializationProvider struct {
+	session.Provider
+	savePath string
+}
+
+func (p *reinitializationProvider) SessionInit(_ context.Context, _ int64, savePath string) error {
+	if p.savePath == "" {
+		p.savePath = savePath
+		return nil
+	}
+	if p.savePath != savePath {
+		return errProviderReconfigured
+	}
+	return nil
+}
 
 func testRequest(t *testing.T, handler *web.ControllerRegister, path string, method string, code int) {
 	r, _ := http.NewRequest(method, path, nil)
@@ -85,4 +106,41 @@ func TestSession1(t *testing.T) {
 	})
 
 	testRequest(t, handler, "/dataset1/resource1", "GET", 200)
+}
+
+func TestSessionPanicsSynchronouslyWhenProviderInitializationFails(t *testing.T) {
+	providerType := session.ProviderType("reinitialization-test-" + uuid.New().String())
+	provider := &reinitializationProvider{}
+	const initialSavePath = "user=test password=initial-secret dbname=first"
+	if err := provider.SessionInit(context.Background(), 3600, initialSavePath); err != nil {
+		t.Fatalf("initialize test provider: %v", err)
+	}
+	session.Register(string(providerType), provider)
+
+	const conflictingSavePath = "user=test password=conflicting-secret dbname=second"
+	returned := false
+	var recovered interface{}
+	func() {
+		defer func() {
+			recovered = recover()
+		}()
+		Session(
+			providerType,
+			session.CfgGcLifeTime(3600),
+			session.CfgMaxLifeTime(3600),
+			session.CfgProviderConfig(conflictingSavePath),
+		)
+		returned = true
+	}()
+
+	if returned {
+		t.Fatal("Session returned after provider initialization failed")
+	}
+	if recovered != errProviderReconfigured {
+		t.Fatalf("panic value = %v; want provider initialization error", recovered)
+	}
+	message := errProviderReconfigured.Error()
+	if strings.Contains(message, conflictingSavePath) || strings.Contains(message, "conflicting-secret") {
+		t.Fatalf("panic exposed provider credentials: %q", message)
+	}
 }
