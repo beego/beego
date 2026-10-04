@@ -385,46 +385,52 @@ func (b *BeegoHTTPRequest) buildURL(paramBody string) {
 	}
 }
 
+// handleFiles streams multipart data and propagates write errors through the body.
 func (b *BeegoHTTPRequest) handleFiles() {
 	pr, pw := io.Pipe()
 	bodyWriter := multipart.NewWriter(pw)
 	go func() {
 		for formname, filename := range b.files {
-			b.handleFileToBody(bodyWriter, formname, filename)
+			if err := b.handleFileToBody(bodyWriter, formname, filename); err != nil {
+				_ = pw.CloseWithError(err)
+				return
+			}
 		}
 		for k, v := range b.params {
 			for _, vv := range v {
-				_ = bodyWriter.WriteField(k, vv)
+				if err := bodyWriter.WriteField(k, vv); err != nil {
+					_ = pw.CloseWithError(err)
+					return
+				}
 			}
 		}
-		_ = bodyWriter.Close()
-		_ = pw.Close()
+		_ = pw.CloseWithError(bodyWriter.Close())
 	}()
 	b.Header(contentTypeKey, bodyWriter.FormDataContentType())
 	b.req.Body = io.NopCloser(pr)
 	b.Header("Transfer-Encoding", "chunked")
 }
 
-func (*BeegoHTTPRequest) handleFileToBody(bodyWriter *multipart.Writer, formname string, filename string) {
+// handleFileToBody writes a file part and returns wrapped creation or file errors.
+func (*BeegoHTTPRequest) handleFileToBody(bodyWriter *multipart.Writer, formname string, filename string) error {
 	fileWriter, err := bodyWriter.CreateFormFile(formname, filename)
-	const errFmt = "Httplib: %+v"
 	if err != nil {
-		logs.Error(errFmt, berror.Wrapf(err, CreateFormFileFailed,
-			"could not create form file, formname: %s, filename: %s", formname, filename))
+		return berror.Wrapf(err, CreateFormFileFailed,
+			"could not create form file, formname: %s, filename: %s", formname, filename)
 	}
 	fh, err := os.Open(filename)
 	if err != nil {
-		logs.Error(errFmt, berror.Wrapf(err, ReadFileFailed, "could not open this file %s", filename))
+		return berror.Wrapf(err, ReadFileFailed, "could not open this file %s", filename)
 	}
-	// iocopy
-	_, err = io.Copy(fileWriter, fh)
-	if err != nil {
-		logs.Error(errFmt, berror.Wrapf(err, CopyFileFailed, "could not copy this file %s", filename))
+	_, copyErr := io.Copy(fileWriter, fh)
+	closeErr := fh.Close()
+	if copyErr != nil {
+		return berror.Wrapf(copyErr, CopyFileFailed, "could not copy this file %s", filename)
 	}
-	err = fh.Close()
-	if err != nil {
-		logs.Error(errFmt, berror.Wrapf(err, CloseFileFailed, "could not close this file %s", filename))
+	if closeErr != nil {
+		return berror.Wrapf(closeErr, CloseFileFailed, "could not close this file %s", filename)
 	}
+	return nil
 }
 
 func (b *BeegoHTTPRequest) getResponse() (*http.Response, error) {

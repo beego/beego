@@ -2,6 +2,10 @@
 
 Please refer to https://github.com/beego/beego/releases to find the CHANGELOG
 
+# Developing
+
+- httplib: propagate multipart file errors to callers instead of completing an empty upload.
+
 # v2.1.2
 - [refactor: CONTRIBUTING.md file grammatical improvements](https://github.com/beego/beego/issues/5411)
 - [fix: refactor Count method](https://github.com/beego/beego/pull/5300)
