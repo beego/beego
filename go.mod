@@ -20,7 +20,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/hashicorp/golang-lru v1.0.2
 	github.com/ledisdb/ledisdb v0.0.0-20200510135210-d35789ec47e6
-	github.com/lib/pq v1.10.9
+	github.com/lib/pq v1.12.3
 	github.com/mattn/go-sqlite3 v1.14.28
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/opentracing/opentracing-go v1.2.0
