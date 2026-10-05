@@ -88,7 +88,11 @@ func (*multiFileLogWriter) Format(lm *LogMsg) string {
 }
 
 func (f *multiFileLogWriter) SetFormatter(fmt LogFormatter) {
-	f.fullLogWriter.SetFormatter(fmt)
+	for _, writer := range f.writers {
+		if writer != nil {
+			writer.SetFormatter(fmt)
+		}
+	}
 }
 
 func (f *multiFileLogWriter) Destroy() {
