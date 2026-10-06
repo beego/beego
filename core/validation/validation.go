@@ -456,6 +456,9 @@ func (v *Validation) RecursiveValid(objc interface{}) (bool, error) {
 			// Only valid the Public field recursively
 			if objV.Field(i).CanInterface() {
 				pass, err = v.RecursiveValid(objV.Field(i).Interface())
+				if err != nil {
+					return pass, err
+				}
 			}
 		}
 	}
