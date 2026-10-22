@@ -26,6 +26,9 @@ import (
 type listTaskCommand struct{}
 
 func (l *listTaskCommand) Execute(params ...interface{}) *admin.Result {
+	globalTaskManager.taskLock.RLock()
+	defer globalTaskManager.taskLock.RUnlock()
+
 	resultList := make([][]string, 0, len(globalTaskManager.adminTaskList))
 	for tname, tk := range globalTaskManager.adminTaskList {
 		result := []string{
@@ -62,7 +65,11 @@ func (r *runTaskCommand) Execute(params ...interface{}) *admin.Result {
 		}
 	}
 
-	if t, ok := globalTaskManager.adminTaskList[tn]; ok {
+	globalTaskManager.taskLock.RLock()
+	t, ok := globalTaskManager.adminTaskList[tn]
+	globalTaskManager.taskLock.RUnlock()
+
+	if ok {
 		err := t.Run(context.Background())
 		if err != nil {
 			return &admin.Result{

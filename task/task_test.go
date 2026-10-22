@@ -227,3 +227,33 @@ func TestGetAllTasks(t *testing.T) {
 
 	assert.Equal(t, 2, total)
 }
+
+func TestClearTaskConcurrentWithRun(t *testing.T) {
+	m := newTaskManager()
+	defer m.ClearTask()
+
+	tk := NewTask("task_concurrent", "* * * * * *", func(ctx context.Context) error {
+		return nil
+	})
+	m.AddTask("task_concurrent", tk)
+	m.StartTask()
+	defer m.StopTask()
+
+	var wg sync.WaitGroup
+	for i := 0; i < 8; i++ {
+		wg.Add(1)
+		go func(idx int) {
+			defer wg.Done()
+			for j := 0; j < 10; j++ {
+				m.ClearTask()
+				name := fmt.Sprintf("task_%d_%d", idx, j)
+				task := NewTask(name, "* * * * * *", func(ctx context.Context) error {
+					return nil
+				})
+				m.AddTask(name, task)
+				time.Sleep(2 * time.Millisecond)
+			}
+		}(i)
+	}
+	wg.Wait()
+}
