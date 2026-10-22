@@ -120,9 +120,9 @@ type taskerr struct {
 }
 
 // Task task struct
-// It's not a thread-safe structure.
 // Only nearest errors will be saved in ErrList
 type Task struct {
+	lock     sync.RWMutex
 	Taskname string
 	Spec     *Schedule
 	SpecStr  string
@@ -157,11 +157,15 @@ func NewTask(tname string, spec string, f TaskFunc, opts ...Option) *Task {
 
 // GetSpec get spec string
 func (t *Task) GetSpec(context.Context) string {
+	t.lock.RLock()
+	defer t.lock.RUnlock()
 	return t.SpecStr
 }
 
 // GetStatus get current task status
 func (t *Task) GetStatus(context.Context) string {
+	t.lock.RLock()
+	defer t.lock.RUnlock()
 	var str string
 	for _, v := range t.Errlist {
 		if v == nil {
@@ -176,35 +180,47 @@ func (t *Task) GetStatus(context.Context) string {
 func (t *Task) Run(ctx context.Context) error {
 	err := t.DoFunc(ctx)
 	if err != nil {
+		t.lock.Lock()
 		index := t.errCnt % t.ErrLimit
 		t.Errlist[index] = &taskerr{t: t.Next, errinfo: err.Error()}
 		t.errCnt++
+		t.lock.Unlock()
 	}
 	return err
 }
 
 // SetNext set next time for this task
 func (t *Task) SetNext(ctx context.Context, now time.Time) {
+	t.lock.Lock()
+	defer t.lock.Unlock()
 	t.Next = t.Spec.Next(now)
 }
 
 // GetNext get the next call time of this task
 func (t *Task) GetNext(context.Context) time.Time {
+	t.lock.RLock()
+	defer t.lock.RUnlock()
 	return t.Next
 }
 
 // SetPrev set prev time of this task
 func (t *Task) SetPrev(ctx context.Context, now time.Time) {
+	t.lock.Lock()
+	defer t.lock.Unlock()
 	t.Prev = now
 }
 
 // GetPrev get prev time of this task
 func (t *Task) GetPrev(context.Context) time.Time {
+	t.lock.RLock()
+	defer t.lock.RUnlock()
 	return t.Prev
 }
 
 // GetTimeout get timeout duration of this task
 func (t *Task) GetTimeout(context.Context) time.Duration {
+	t.lock.RLock()
+	defer t.lock.RUnlock()
 	return t.Timeout
 }
 
@@ -266,6 +282,8 @@ func TimeoutOption(timeout time.Duration) Option {
 //	0 2 8-20/3 * * *　　　　　　             8:02, 11:02, 14:02, 17:02, 20:02
 //	0 30 5 1,15 * *　　　　　　              5:30 on the 1st day and 15th day of month
 func (t *Task) SetCron(spec string) {
+	t.lock.Lock()
+	defer t.lock.Unlock()
 	t.Spec = t.parse(spec)
 }
 
@@ -512,7 +530,7 @@ func (m *taskManager) run() {
 		m.taskLock.RUnlock()
 		sortList.Sort()
 		var effective time.Time
-		if len(m.adminTaskList) == 0 || sortList.Vals[0].GetNext(context.Background()).IsZero() {
+		if sortList.Len() == 0 || sortList.Vals[0].GetNext(context.Background()).IsZero() {
 			// If there are no entries yet, just sleep - it still handles new entries
 			// and stop requests.
 			effective = now.AddDate(10, 0, 0)
