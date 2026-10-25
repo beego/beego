@@ -223,19 +223,19 @@ func (rp *Provider) initOldStyle(savePath string) {
 		rp.MasterName = "mymaster"
 	}
 	if len(configs) > 5 {
-		timeout, err := strconv.Atoi(configs[4])
+		timeout, err := strconv.Atoi(configs[5])
 		if err == nil && timeout > 0 {
 			rp.idleTimeout = time.Duration(timeout) * time.Second
 		}
 	}
 	if len(configs) > 6 {
-		checkFrequency, err := strconv.Atoi(configs[5])
+		checkFrequency, err := strconv.Atoi(configs[6])
 		if err == nil && checkFrequency > 0 {
 			rp.idleCheckFrequency = time.Duration(checkFrequency) * time.Second
 		}
 	}
 	if len(configs) > 7 {
-		retries, err := strconv.Atoi(configs[6])
+		retries, err := strconv.Atoi(configs[7])
 		if err == nil && retries > 0 {
 			rp.MaxRetries = retries
 		}
