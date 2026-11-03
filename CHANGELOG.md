@@ -1,4 +1,5 @@
 # developing
+- [fix: give the HTTPS listener its own http.Server in normal mode, so HTTP and HTTPS no longer race on Addr](https://github.com/beego/beego/issues/5930)
 - [Fix issue 4961, `leafInfo.match()` use `path.join()` to deal with `wildcardValues`, which may lead to cross directory risk ](https://github.com/beego/beego/pull/4964)
 
 # v2.1.2

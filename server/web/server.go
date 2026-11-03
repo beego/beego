@@ -236,23 +236,35 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 	}
 
 	// run normal mode
+	app.runNormalMode(addr)
+}
+
+// runNormalMode serves HTTP and/or HTTPS without the graceful module. It
+// returns when one of the listeners fails or is shut down.
+func (app *HttpServer) runNormalMode(addr string) {
+	endRunning := make(chan bool, 1)
+
 	if app.Cfg.Listen.EnableHTTPS || app.Cfg.Listen.EnableMutualHTTPS {
+		// The HTTPS listener gets its own http.Server, copied here before any
+		// goroutine starts. The HTTP goroutine below changes app.Server.Addr, and
+		// the two must not share one Addr or TLSConfig.
+		httpsServer := cloneHTTPServer(app.Server)
 		go func() {
 			time.Sleep(1000 * time.Microsecond)
 			if app.Cfg.Listen.HTTPSPort != 0 {
-				app.Server.Addr = fmt.Sprintf("%s:%d", app.Cfg.Listen.HTTPSAddr, app.Cfg.Listen.HTTPSPort)
+				httpsServer.Addr = fmt.Sprintf("%s:%d", app.Cfg.Listen.HTTPSAddr, app.Cfg.Listen.HTTPSPort)
 			} else if app.Cfg.Listen.EnableHTTP {
 				logs.Info("Start https server error, conflict with http. Please reset https port")
 				return
 			}
-			logs.Info("https server Running on https://%s", app.Server.Addr)
+			logs.Info("https server Running on https://%s", httpsServer.Addr)
 			if app.Cfg.Listen.AutoTLS {
 				m := autocert.Manager{
 					Prompt:     autocert.AcceptTOS,
 					HostPolicy: autocert.HostWhitelist(app.Cfg.Listen.Domains...),
 					Cache:      autocert.DirCache(app.Cfg.Listen.TLSCacheDir),
 				}
-				app.Server.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
+				httpsServer.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
 				app.Cfg.Listen.HTTPSCertFile, app.Cfg.Listen.HTTPSKeyFile = "", ""
 			} else if app.Cfg.Listen.EnableMutualHTTPS {
 				pool := x509.NewCertPool()
@@ -262,12 +274,12 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 					return
 				}
 				pool.AppendCertsFromPEM(data)
-				app.Server.TLSConfig = &tls.Config{
+				httpsServer.TLSConfig = &tls.Config{
 					ClientCAs:  pool,
 					ClientAuth: tls.ClientAuthType(app.Cfg.Listen.ClientAuth),
 				}
 			}
-			if err := app.Server.ListenAndServeTLS(app.Cfg.Listen.HTTPSCertFile, app.Cfg.Listen.HTTPSKeyFile); err != nil {
+			if err := httpsServer.ListenAndServeTLS(app.Cfg.Listen.HTTPSCertFile, app.Cfg.Listen.HTTPSKeyFile); err != nil {
 				logs.Critical("ListenAndServeTLS: ", err)
 				time.Sleep(100 * time.Microsecond)
 				endRunning <- true
@@ -302,6 +314,30 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 		}()
 	}
 	<-endRunning
+}
+
+// cloneHTTPServer returns a new http.Server with the same settings as src, so
+// that each listener can set its own Addr and TLSConfig. A plain struct copy
+// is not used because http.Server contains locks.
+func cloneHTTPServer(src *http.Server) *http.Server {
+	return &http.Server{
+		Addr:                         src.Addr,
+		Handler:                      src.Handler,
+		DisableGeneralOptionsHandler: src.DisableGeneralOptionsHandler,
+		TLSConfig:                    src.TLSConfig.Clone(),
+		ReadTimeout:                  src.ReadTimeout,
+		ReadHeaderTimeout:            src.ReadHeaderTimeout,
+		WriteTimeout:                 src.WriteTimeout,
+		IdleTimeout:                  src.IdleTimeout,
+		MaxHeaderBytes:               src.MaxHeaderBytes,
+		TLSNextProto:                 src.TLSNextProto,
+		ConnState:                    src.ConnState,
+		ErrorLog:                     src.ErrorLog,
+		BaseContext:                  src.BaseContext,
+		ConnContext:                  src.ConnContext,
+		HTTP2:                        src.HTTP2,
+		Protocols:                    src.Protocols,
+	}
 }
 
 // Router see HttpServer.Router
