@@ -103,9 +103,17 @@ func TestRunNormalModeHTTPAndHTTPS(t *testing.T) {
 		app.runNormalMode(fmt.Sprintf("127.0.0.1:%d", httpPort))
 	}()
 
+	// Trust the test certificate instead of skipping verification.
+	certPEM, err := os.ReadFile(certFile)
+	require.NoError(t, err)
+	roots := x509.NewCertPool()
+	require.True(t, roots.AppendCertsFromPEM(certPEM))
 	client := &http.Client{
-		Timeout:   time.Second,
-		Transport: &http.Transport{TLSClientConfig: &tls.Config{InsecureSkipVerify: true}},
+		Timeout: time.Second,
+		Transport: &http.Transport{TLSClientConfig: &tls.Config{
+			RootCAs:    roots,
+			MinVersion: tls.VersionTLS12,
+		}},
 	}
 	get := func(url string) string {
 		var lastErr error
@@ -145,7 +153,7 @@ func TestCloneHTTPServer(t *testing.T) {
 		WriteTimeout:      3 * time.Second,
 		IdleTimeout:       4 * time.Second,
 		MaxHeaderBytes:    5,
-		TLSConfig:         &tls.Config{ServerName: "x"},
+		TLSConfig:         &tls.Config{ServerName: "x", MinVersion: tls.VersionTLS12},
 	}
 	dst := cloneHTTPServer(src)
 	assert.Equal(t, src.Addr, dst.Addr)

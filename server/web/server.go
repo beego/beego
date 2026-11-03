@@ -264,7 +264,7 @@ func (app *HttpServer) runNormalMode(addr string) {
 					HostPolicy: autocert.HostWhitelist(app.Cfg.Listen.Domains...),
 					Cache:      autocert.DirCache(app.Cfg.Listen.TLSCacheDir),
 				}
-				httpsServer.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
+				httpsServer.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate, MinVersion: tls.VersionTLS12}
 				app.Cfg.Listen.HTTPSCertFile, app.Cfg.Listen.HTTPSKeyFile = "", ""
 			} else if app.Cfg.Listen.EnableMutualHTTPS {
 				pool := x509.NewCertPool()
@@ -277,6 +277,7 @@ func (app *HttpServer) runNormalMode(addr string) {
 				httpsServer.TLSConfig = &tls.Config{
 					ClientCAs:  pool,
 					ClientAuth: tls.ClientAuthType(app.Cfg.Listen.ClientAuth),
+					MinVersion: tls.VersionTLS12,
 				}
 			}
 			if err := httpsServer.ListenAndServeTLS(app.Cfg.Listen.HTTPSCertFile, app.Cfg.Listen.HTTPSKeyFile); err != nil {
