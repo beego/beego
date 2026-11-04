@@ -227,3 +227,40 @@ func TestGetAllTasks(t *testing.T) {
 
 	assert.Equal(t, 2, total)
 }
+
+// The clocks in Europe/London go back at 02:00 BST on 2026-10-25, so 01:00-01:59
+// local time happens twice. Next must not skip the repeated hour.
+func TestScheduleNextAcrossDSTFallback(t *testing.T) {
+	london, err := time.LoadLocation("Europe/London")
+	if err != nil {
+		t.Skipf("time zone data not available: %v", err)
+	}
+	utc := func(h, m, s int) time.Time {
+		return time.Date(2026, 10, 25, h, m, s, 0, time.UTC).In(london)
+	}
+
+	testCases := []struct {
+		name string
+		spec string
+		from time.Time
+		want time.Time
+	}{
+		{"every 15 seconds, first 01:00", "0/15 * * * * *", utc(0, 0, 0), utc(0, 0, 15)},
+		{"every 15 seconds, second 01:00", "0/15 * * * * *", utc(1, 0, 0), utc(1, 0, 15)},
+		{"every 15 seconds, from 00:59:59 UTC", "0/15 * * * * *", utc(0, 59, 59), utc(1, 0, 0)},
+		{"every 15 seconds, mid second", "0/15 * * * * *", utc(0, 0, 3), utc(0, 0, 15)},
+		{"every 10 minutes, first 01:xx", "0 */10 * * * *", utc(0, 5, 30), utc(0, 10, 0)},
+		{"every 10 minutes, second 01:xx", "0 */10 * * * *", utc(1, 5, 30), utc(1, 10, 0)},
+		{"every hour, first 01:00", "0 0 * * * *", utc(0, 0, 0), utc(0, 0, 0).Add(time.Hour)},
+		{"hourly spec, from first 01:30", "0 0 * * * *", utc(0, 30, 0), utc(1, 0, 0)},
+		{"hourly spec, from second 01:30", "0 0 * * * *", utc(1, 30, 0), utc(2, 0, 0)},
+		{"hours 1 and 3, from first 01:30", "0 0 1,3 * * *", utc(0, 30, 0), utc(1, 0, 0)},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			s := (&Task{}).parse(tc.spec)
+			got := s.Next(tc.from)
+			assert.Equal(t, tc.want.UTC(), got.UTC(), "got %s want %s", got, tc.want)
+		})
+	}
+}

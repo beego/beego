@@ -402,7 +402,9 @@ WRAP:
 	for 1<<uint(t.Hour())&s.Hour == 0 {
 		if !added {
 			added = true
-			t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), 0, 0, 0, t.Location())
+			// Subtract instead of calling time.Date: in the repeated hour after a DST
+			// fallback, time.Date may pick the wrong one of the two matching instants.
+			t = t.Add(-time.Duration(t.Minute())*time.Minute - time.Duration(t.Second())*time.Second)
 		}
 		t = t.Add(1 * time.Hour)
 
@@ -414,7 +416,7 @@ WRAP:
 	for 1<<uint(t.Minute())&s.Minute == 0 {
 		if !added {
 			added = true
-			t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), 0, 0, t.Location())
+			t = t.Add(-time.Duration(t.Second()) * time.Second)
 		}
 		t = t.Add(1 * time.Minute)
 
@@ -424,10 +426,8 @@ WRAP:
 	}
 
 	for 1<<uint(t.Second())&s.Second == 0 {
-		if !added {
-			added = true
-			t = time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), t.Minute(), t.Second(), 0, t.Location())
-		}
+		// t already has no sub-second part, so there is nothing to reset here.
+		added = true
 		t = t.Add(1 * time.Second)
 
 		if t.Second() == 0 {

@@ -1,4 +1,5 @@
 # developing
+- [Fix issue 5935, `Schedule.Next()` no longer skips an hour after the DST-to-standard-time fallback](https://github.com/beego/beego/issues/5935)
 - [Fix issue 4961, `leafInfo.match()` use `path.join()` to deal with `wildcardValues`, which may lead to cross directory risk ](https://github.com/beego/beego/pull/4964)
 
 # v2.1.2
