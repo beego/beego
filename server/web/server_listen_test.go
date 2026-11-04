@@ -120,9 +120,9 @@ func TestRunNormalModeHTTPAndHTTPS(t *testing.T) {
 		for i := 0; i < 100; i++ {
 			resp, err := client.Get(url)
 			if err == nil {
-				defer resp.Body.Close()
 				buf := make([]byte, 16)
 				n, _ := resp.Body.Read(buf)
+				_ = resp.Body.Close()
 				return string(buf[:n])
 			}
 			lastErr = err
@@ -170,5 +170,5 @@ func TestCloneHTTPServer(t *testing.T) {
 	assert.Equal(t, ":1", src.Addr)
 	assert.Equal(t, "x", src.TLSConfig.ServerName)
 
-	assert.Nil(t, cloneHTTPServer(&http.Server{}).TLSConfig)
+	assert.Nil(t, cloneHTTPServer(&http.Server{ReadHeaderTimeout: time.Second}).TLSConfig)
 }
