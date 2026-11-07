@@ -53,6 +53,7 @@ func (m *mockLogger) Init(config string) error {
 
 func (m *mockLogger) WriteMsg(lm *LogMsg) error {
 	m.Lock()
+	defer m.Unlock()
 	msg := lm.Msg
 	msg += "\n"
 
@@ -62,11 +63,12 @@ func (m *mockLogger) WriteMsg(lm *LogMsg) error {
 	}
 
 	m.writeCnt++
-	m.Unlock()
 	return nil
 }
 
 func (m *mockLogger) GetCnt() int {
+	m.Lock()
+	defer m.Unlock()
 	return m.writeCnt
 }
 
@@ -101,7 +103,7 @@ func TestBeeLogger_AsyncNonBlockWrite(t *testing.T) {
 			after: func() {
 				_ = beeLogger.DelLogger("mock2")
 			},
-			writeCnt:     5,
+			writeCnt:     6,
 			msgLen:       5,
 			writeCost:    200 * time.Millisecond,
 			sendInterval: 10 * time.Millisecond,
@@ -109,7 +111,9 @@ func TestBeeLogger_AsyncNonBlockWrite(t *testing.T) {
 	}
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			Register(tc.name, NewMockLogger)
+			if _, ok := adapters[tc.name]; !ok {
+				Register(tc.name, NewMockLogger)
+			}
 			err := beeLogger.SetLogger(tc.name, fmt.Sprintf(`{"write_cost": %d}`, tc.writeCost))
 			assert.Nil(t, err)
 
@@ -120,8 +124,8 @@ func TestBeeLogger_AsyncNonBlockWrite(t *testing.T) {
 				time.Sleep(tc.sendInterval)
 				l.Info(fmt.Sprintf("----%d----", i))
 			}
-			time.Sleep(1 * time.Second)
-			assert.Equal(t, tc.writeCnt, l.outputs[0].Logger.(*mockLogger).writeCnt)
+			l.Flush()
+			assert.Equal(t, tc.writeCnt, l.outputs[0].Logger.(*mockLogger).GetCnt())
 			tc.after()
 		})
 	}
