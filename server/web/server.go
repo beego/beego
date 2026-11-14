@@ -237,22 +237,35 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 
 	// run normal mode
 	if app.Cfg.Listen.EnableHTTPS || app.Cfg.Listen.EnableMutualHTTPS {
+		// Serve HTTPS on its own http.Server instead of sharing app.Server
+		// with the HTTP listener: the two startup goroutines raced on
+		// Server.Addr and Server.TLSConfig, so a listener could bind the
+		// other protocol's port. See https://github.com/beego/beego/issues/5930.
+		httpsAddr := app.Server.Addr
+		if app.Cfg.Listen.HTTPSPort != 0 {
+			httpsAddr = fmt.Sprintf("%s:%d", app.Cfg.Listen.HTTPSAddr, app.Cfg.Listen.HTTPSPort)
+		}
+		httpsServer := &http.Server{
+			Addr:         httpsAddr,
+			Handler:      app.Server.Handler,
+			ReadTimeout:  app.Server.ReadTimeout,
+			WriteTimeout: app.Server.WriteTimeout,
+			ErrorLog:     app.Server.ErrorLog,
+		}
 		go func() {
 			time.Sleep(1000 * time.Microsecond)
-			if app.Cfg.Listen.HTTPSPort != 0 {
-				app.Server.Addr = fmt.Sprintf("%s:%d", app.Cfg.Listen.HTTPSAddr, app.Cfg.Listen.HTTPSPort)
-			} else if app.Cfg.Listen.EnableHTTP {
+			if app.Cfg.Listen.HTTPSPort == 0 && app.Cfg.Listen.EnableHTTP {
 				logs.Info("Start https server error, conflict with http. Please reset https port")
 				return
 			}
-			logs.Info("https server Running on https://%s", app.Server.Addr)
+			logs.Info("https server Running on https://%s", httpsServer.Addr)
 			if app.Cfg.Listen.AutoTLS {
 				m := autocert.Manager{
 					Prompt:     autocert.AcceptTOS,
 					HostPolicy: autocert.HostWhitelist(app.Cfg.Listen.Domains...),
 					Cache:      autocert.DirCache(app.Cfg.Listen.TLSCacheDir),
 				}
-				app.Server.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
+				httpsServer.TLSConfig = &tls.Config{GetCertificate: m.GetCertificate}
 				app.Cfg.Listen.HTTPSCertFile, app.Cfg.Listen.HTTPSKeyFile = "", ""
 			} else if app.Cfg.Listen.EnableMutualHTTPS {
 				pool := x509.NewCertPool()
@@ -262,12 +275,12 @@ func (app *HttpServer) Run(addr string, mws ...MiddleWare) {
 					return
 				}
 				pool.AppendCertsFromPEM(data)
-				app.Server.TLSConfig = &tls.Config{
+				httpsServer.TLSConfig = &tls.Config{
 					ClientCAs:  pool,
 					ClientAuth: tls.ClientAuthType(app.Cfg.Listen.ClientAuth),
 				}
 			}
-			if err := app.Server.ListenAndServeTLS(app.Cfg.Listen.HTTPSCertFile, app.Cfg.Listen.HTTPSKeyFile); err != nil {
+			if err := httpsServer.ListenAndServeTLS(app.Cfg.Listen.HTTPSCertFile, app.Cfg.Listen.HTTPSKeyFile); err != nil {
 				logs.Critical("ListenAndServeTLS: ", err)
 				time.Sleep(100 * time.Microsecond)
 				endRunning <- true
