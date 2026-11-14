@@ -289,8 +289,12 @@ func (v *Validation) apply(chk Validator, obj interface{}) *Result {
 		}
 	}
 
+	msg := chk.DefaultMessage()
+	if len(Label) > 0 {
+		msg = Label + " " + msg
+	}
 	err := &Error{
-		Message:    Label + " " + chk.DefaultMessage(),
+		Message:    msg,
 		Key:        key,
 		Name:       Name,
 		Field:      Field,
@@ -316,7 +320,12 @@ func (v *Validation) AddError(key, message string) {
 
 	Label := ""
 	parts := strings.Split(key, ".")
-	if len(parts) == 3 {
+	switch len(parts) {
+	case 2:
+		Field = parts[0]
+		Name = parts[1]
+		Label = Field
+	case 3:
 		Field = parts[0]
 		Name = parts[1]
 		Label = parts[2]
@@ -325,8 +334,12 @@ func (v *Validation) AddError(key, message string) {
 		}
 	}
 
+	msg := message
+	if len(Label) > 0 {
+		msg = Label + " " + message
+	}
 	err := &Error{
-		Message: Label + " " + message,
+		Message: msg,
 		Key:     key,
 		Name:    Name,
 		Field:   Field,
